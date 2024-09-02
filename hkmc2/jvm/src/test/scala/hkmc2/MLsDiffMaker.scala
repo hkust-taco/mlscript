@@ -4,7 +4,7 @@ import mlscript.utils.*, shorthands.*
 
 import hkmc2.semantics.Elaborator
 import hkmc2.syntax.Keyword.all
-import utils.TraceLogger
+import utils.*
 
 
 abstract class MLsDiffMaker extends DiffMaker:
@@ -66,7 +66,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       case err: Throwable =>
         output("/!!!\\ Uncaught error during Predef import: " + err)
   
-  val tl = new TraceLogger:
+  given tl: TraceLogger with
     override def doTrace = debug.isSet
     override def emitDbg(str: String): Unit = output(str)
   

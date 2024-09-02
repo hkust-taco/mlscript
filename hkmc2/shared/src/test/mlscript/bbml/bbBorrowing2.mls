@@ -46,8 +46,9 @@ letreg of r =>
 //│ ║        	^^^^^^^^^^^
 //│ ║  l.35: 	  write(r)
 //│ ║        	^^^^^^^^^^
-//│ ╟── because: cannot constrain  α27_1  <:  <α>0_0
-//│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
+//│ ╟── because: cannot constrain  α26_1  <:  Alloc
+//│ ╟── because: cannot constrain  α26_1  <:  ¬(~{Alloc})
+//│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc})
 //│ Type: Int
 
 

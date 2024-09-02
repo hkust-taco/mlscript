@@ -19,7 +19,7 @@ false
 
 fun id(x) = x
 id
-//│ Type: α2_1 ->{⊥} α2_1
+//│ Type: α1_1 -> α1_1
 
 fun inc(x) = x + 1
 //│ Type: ⊤
@@ -28,10 +28,10 @@ fun mul(x, y) = x * y
 //│ Type: ⊤
 
 x => x
-//│ Type: (α8_1) ->{⊥} α8_1
+//│ Type: (α7_1) ->{⊥} α7_1
 
 +
-//│ Type: (Int, Int) ->{⊥} Int
+//│ Type: (Int, Int) -> Int
 
 (x, y) => x + y
 //│ Type: (Int, Int) ->{⊥} Int
@@ -107,14 +107,14 @@ class Some[A](value: A)
 //│ Type: ⊤
 
 new Some(true)
-//│ Type: Some[α15_1]
+//│ Type: Some[α14_1]
 //│ Where:
-//│   Bool <: α15_1
+//│   Bool <: α14_1
 
 new Some(42)
-//│ Type: Some[α16_1]
+//│ Type: Some[α15_1]
 //│ Where:
-//│   Int <: α16_1
+//│   Int <: α15_1
 
 let p = new Point(1.0, 0.0, 0.0) in p.Point#x
 //│ Type: Num
@@ -142,21 +142,24 @@ fun foofoo(x) =
 //│ Type: ⊤
 
 new Printer(foofoo)
-//│ Type: Printer[α22_1]
+//│ Type: Printer[α21_1]
 //│ Where:
-//│   α22_1 <: Int
+//│   α21_1 <: Int
 
 let ip = new Printer(foofoo) in ip.Printer#f(42)
 //│ Type: Str
 
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
-//│ ╔══[ERROR] Type error in string literal with expected type α27_1
+//│ ╔══[ERROR] Type error in string literal with expected type α26_1
 //│ ║  l.153: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ║         	                                             ^^^^
-//│ ╟── because: cannot constrain  Str  <:  α27_1
 //│ ╟── because: cannot constrain  Str  <:  α26_1
-//│ ╟── because: cannot constrain  Str  <:  α21_1
+//│ ╟── because: cannot constrain  Str  <:  α26_1
+//│ ╟── because: cannot constrain  Str  <:  ¬(~α25_1)
+//│ ╟── because: cannot constrain  Str  <:  α25_1
+//│ ╟── because: cannot constrain  Str  <:  ¬(~α20_1)
+//│ ╟── because: cannot constrain  Str  <:  α20_1
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Str
 
@@ -167,22 +170,25 @@ fun inc(x) = x + 1
 //│ Type: ⊤
 
 new TFun(inc)
-//│ Type: TFun[α31_1]
+//│ Type: TFun[α30_1]
 //│ Where:
-//│   Int <: α31_1
-//│   α31_1 <: Int
+//│   Int <: α30_1
+//│   α30_1 <: Int
 
 let tf = new TFun(inc) in tf.TFun#f(1)
 //│ Type: Int
 
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
-//│ ╔══[ERROR] Type error in string literal with expected type α36_1
-//│ ║  l.179: 	let tf = new TFun(inc) in tf.TFun#f("1")
+//│ ╔══[ERROR] Type error in string literal with expected type α35_1
+//│ ║  l.182: 	let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
-//│ ╟── because: cannot constrain  Str  <:  α36_1
 //│ ╟── because: cannot constrain  Str  <:  α35_1
-//│ ╟── because: cannot constrain  Str  <:  α30_1
+//│ ╟── because: cannot constrain  Str  <:  α35_1
+//│ ╟── because: cannot constrain  Str  <:  ¬(~α34_1)
+//│ ╟── because: cannot constrain  Str  <:  α34_1
+//│ ╟── because: cannot constrain  Str  <:  ¬(~α29_1)
+//│ ╟── because: cannot constrain  Str  <:  α29_1
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Str ∨ Int
 
@@ -209,7 +215,7 @@ if 1 is Int then 1 else 0
 fun test(x) =
   if x is Int then x + 1 else 0
 test
-//│ Type: (¬Int ∨ Int) ->{⊥} Int
+//│ Type: (¬Int ∨ Int) -> Int
 
 test(1)
 //│ Type: Int
@@ -224,7 +230,7 @@ fun fact(n) =
 //│ Type: ⊤
 
 fact
-//│ Type: Int ->{⊥} Int
+//│ Type: Int -> Int
 
 fact(1)
 //│ Type: Int
@@ -236,7 +242,7 @@ fun fact2 = case
 //│ Type: ⊤
 
 fact2
-//│ Type: Int ->{⊥} Int
+//│ Type: Int -> Int
 
 fact2(0)
 //│ Type: Int
@@ -246,16 +252,16 @@ class Foo[A](x: A -> A)
 //│ Type: ⊤
 
 new Foo(x => x)
-//│ Type: Foo[α71_1]
+//│ Type: Foo[α70_1]
 
 fun f(g) = new Foo(g)
 f
-//│ Type: (α74_1 ->{⊥} α74_1) ->{⊥} Foo[α74_1]
+//│ Type: (α73_1 -> α73_1) -> Foo[α73_1]
 
 f(x => x).Foo#x
-//│ Type: (α74_1) ->{⊥} α74_1
+//│ Type: (α73_1) ->{⊥} α73_1
 
 g => (new Foo(g)).Foo#x
-//│ Type: (α81_1 ->{⊥} α81_1) ->{⊥} (α81_1) ->{⊥} α81_1
+//│ Type: (α80_1 -> α80_1) ->{⊥} (α80_1) ->{⊥} α80_1
 
 

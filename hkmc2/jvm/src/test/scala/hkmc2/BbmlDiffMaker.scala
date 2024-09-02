@@ -23,7 +23,7 @@ abstract class BbmlDiffMaker extends MLsDiffMaker:
   if bbmlOpt.isUnset then super.processTerm(trm)
   else
     if bbmlTyper.isEmpty then
-      bbmlTyper = S(BBTyper(tl))
+      bbmlTyper = S(BBTyper())
     given hkmc2.bbml.Ctx = bbCtx.copy(raise = summon)
     val typer = bbmlTyper.get
     val ty = typer.typePurely(trm)

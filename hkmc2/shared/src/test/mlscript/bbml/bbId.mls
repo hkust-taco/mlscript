@@ -9,18 +9,18 @@ id(1)
 //│ Type: Int
 
 id
-//│ Type: α2_1 ->{⊥} α2_1
+//│ Type: α1_1 -> α1_1
 //│ Where:
-//│   Int <: α2_1
+//│   Int <: α1_1
 
 id(true)
 //│ Type: Bool ∨ Int
 
 id
-//│ Type: α2_1 ->{⊥} α2_1
+//│ Type: α1_1 -> α1_1
 //│ Where:
-//│   Bool <: α2_1
-//│   Int <: α2_1
+//│   Bool <: α1_1
+//│   Int <: α1_1
 
 
 fun id(x) = x
@@ -28,32 +28,35 @@ fun id(x) = x
 
 :e
 id : [A] -> A -> A
-//│ ╔══[ERROR] Type error in reference with expected type (<α>9_2) ->{⊥} <α>9_2
+//│ ╔══[ERROR] Type error in reference with expected type (<α>8_2) ->{⊥} <α>8_2
 //│ ║  l.30: 	id : [A] -> A -> A
 //│ ║        	^^
-//│ ╟── because: cannot constrain  α7_1  <:  <α>9_2 ->{⊥} <α>9_2
-//│ ╟── because: cannot constrain  α7_1  <:  ⊤ ->{⊥} ⊥
-//│ ╟── because: cannot constrain  α8_1 ->{⊥} α8_1  <:  ⊤ ->{⊥} ⊥
-//│ ╟── because: cannot constrain  α8_1  <:  ⊥
-//│ ╙── because: cannot constrain  ⊤  <:  ⊥
-//│ Type: forall α9_2: (α9_2) ->{⊥} α9_2
+//│ ╟── because: cannot constrain  α6_1  <:  <α>8_2 -> <α>8_2
+//│ ╟── because: cannot constrain  α6_1  <:  ⊤ -> ⊥
+//│ ╟── because: cannot constrain  (D( α7_1 )) ->{D()} (D( α7_1 ))  <:  ⊤ -> ⊥
+//│ ╟── because: cannot constrain  D( α7_1 )  <:  ⊥
+//│ ╟── because: cannot constrain  α7_1  <:  ¬()
+//│ ╙── because: cannot constrain    <:  ¬()
+//│ Type: forall α8_2: (α8_2) ->{⊥} α8_2
 
 
 (y => y) : [A] -> A -> A
-//│ Type: forall α10_2: (α10_2) ->{⊥} α10_2
+//│ Type: forall α9_2: (α9_2) ->{⊥} α9_2
 
 :fixme
 fun id(x) = x
 (y => id(y)) : [A] -> A -> A
-//│ ╔══[ERROR] Type error in function literal with expected type (<α>13_2) ->{⊥} <α>13_2
-//│ ║  l.47: 	(y => id(y)) : [A] -> A -> A
+//│ ╔══[ERROR] Type error in function literal with expected type (<α>12_2) ->{⊥} <α>12_2
+//│ ║  l.48: 	(y => id(y)) : [A] -> A -> A
 //│ ║        	 ^^^^^^^^^^
-//│ ╟── because: cannot constrain  α15_2  <:  <α>13_2
-//│ ╟── because: cannot constrain  α16_1  <:  <α>13_2
-//│ ╟── because: cannot constrain  α16_1  <:  ⊥
-//│ ╟── because: cannot constrain  α12_1  <:  ⊥
-//│ ╙── because: cannot constrain  ⊤  <:  ⊥
-//│ Type: forall α13_2: (α13_2) ->{⊥} α13_2
+//│ ╟── because: cannot constrain  α14_2  <:  <α>12_2
+//│ ╟── because: cannot constrain  α14_2  <:  ¬(~<α>12_2)
+//│ ╟── because: cannot constrain  α15_1  <:  ¬(~<α>12_2)
+//│ ╟── because: cannot constrain  α15_1  <:  ⊥
+//│ ╟── because: cannot constrain  α11_1  <:  ⊥
+//│ ╟── because: cannot constrain  α11_1  <:  ¬()
+//│ ╙── because: cannot constrain    <:  ¬()
+//│ Type: forall α12_2: (α12_2) ->{⊥} α12_2
 
 
 

@@ -2,6 +2,9 @@ package utils
 
 import mlscript.utils.*, shorthands.*
 
+type TL = TraceLogger
+def tl(using TL): TL = summon
+
 abstract class TraceLogger:
   def doTrace: Bool = true
   
@@ -15,7 +18,7 @@ abstract class TraceLogger:
     if post isnt noPostTrace then log(post(res))
     res
   }
-  inline def traceNot[T](pre: => Str)(thunk: => T)(post: T => Str = noPostTrace): T =
+  inline def traceNot[T](pre: => Str, post: T => Str = noPostTrace)(thunk: => T): T =
     thunk
   
   protected def emitDbg(str: Str): Unit = scala.Predef.println(str)

@@ -6,7 +6,7 @@ import scala.collection.mutable.{LinkedHashSet, HashMap, ListBuffer}
 import scala.annotation.tailrec
 
 import mlscript.utils.*, shorthands.*
-import utils.TraceLogger
+import utils.*
 
 import Message.MessageContext
 import semantics.*, semantics.Term.*
@@ -39,6 +39,7 @@ final case class Ctx(
 given (using ctx: Ctx): Raise = ctx.raise
 
 object Ctx:
+  def allocTy(using ctx: Ctx): Type = ClassType(ctx.getDef("Alloc").get.sym, Nil)
   def intTy(using ctx: Ctx): Type = ClassType(ctx.getDef("Int").get.sym, Nil)
   def numTy(using ctx: Ctx): Type = ClassType(ctx.getDef("Num").get.sym, Nil)
   def strTy(using ctx: Ctx): Type = ClassType(ctx.getDef("Str").get.sym, Nil)
@@ -56,7 +57,7 @@ object Ctx:
   private def tp(nme: Str)(using es: Elaborator.State) =
     TyParam(FldFlags.empty, N, VarSymbol(Ident(nme), es.nextUid))
   private def builtinClasses(using Elaborator.State): Ls[Str -> Ls[TyParam]] = Ls(
-    "Any", "Int", "Num", "Str", "Bool", "Nothing",
+    "Any", "Alloc", "Int", "Num", "Str", "Bool", "Nothing",
   ).map(_ -> Nil) ::: Ls(
     "CodeBase" -> (tp("T") :: tp("C") :: tp("V") :: Nil),
     "Region" -> (tp("R") :: Nil),
@@ -110,7 +111,7 @@ object Ctx:
     ctx
 
 
-class BBTyper(tl: TraceLogger)(using elState: Elaborator.State):
+class BBTyper(using elState: Elaborator.State, tl: TL):
   import elState.nextUid
   import tl.{trace, log}
   
@@ -127,7 +128,8 @@ class BBTyper(tl: TraceLogger)(using elState: Elaborator.State):
     // in.state.upperBounds ::= out // * Not needed for soundness; complicates inferred types
     Wildcard(in, out)
 
-  private val allocSkolem: InfVar = InfVar(0, infVarState.nextUid, new VarState(), true)
+  private def allocType(using Ctx): Type =
+    Ctx.allocTy
 
   private def error(msg: Ls[Message -> Opt[Loc]])(using Ctx) =
     raise(ErrorReport(msg))
@@ -149,7 +151,7 @@ class BBTyper(tl: TraceLogger)(using elState: Elaborator.State):
           case Some(ty) => ty
           case _ =>
             if sym.nme == "Alloc" then
-              allocSkolem
+              allocType
             else
               error(msg"Variable not found: ${sym.name}" -> ty.toLoc :: Nil)
     case FunTy(Term.Tup(params), ret, eff) =>
@@ -381,7 +383,7 @@ class BBTyper(tl: TraceLogger)(using elState: Elaborator.State):
 
   // * Note: currently, the returned type is not used or useful, but it could be in the future
   private def ascribe(lhs: Term, rhs: GeneralType)(using ctx: Ctx): (GeneralType, Type) =
-  trace[(GeneralType, Type)](s"${ctx.lvl}. Ascribing ${lhs.showDbg} : ${rhs}", res => s": ${res._2}"):
+  trace[(GeneralType, Type)](s"${ctx.lvl}. Ascribing ${lhs.showDbg} : ${rhs}", res => s"! ${res._2}"):
     given CCtx = CCtx.init(lhs, S(rhs))
     (lhs, rhs) match
     case (Term.Lam(params, body), ft @ PolyFunType(args, ret, eff)) => // * annoted functions
@@ -576,7 +578,7 @@ class BBTyper(tl: TraceLogger)(using elState: Elaborator.State):
         val (res, eff) = typeCheck(body)
         val tv = freshVar(using ctx)
         constrain(eff, tv | sk)
-        (extrude(res)(using ctx, true), tv | allocSkolem)
+        (extrude(res)(using ctx, true), tv | allocType)
       case Term.RegRef(reg, value) =>
         val (regTy, regEff) = typeCheck(reg)
         val (valTy, valEff) = typeCheck(value)
@@ -610,5 +612,5 @@ class BBTyper(tl: TraceLogger)(using elState: Elaborator.State):
   def typePurely(t: Term)(using Ctx): GeneralType =
     val (ty, eff) = typeCheck(t)
     given CCtx = CCtx.init(t, N)
-    constrain(eff, allocSkolem)
+    constrain(eff, allocType)
     ty

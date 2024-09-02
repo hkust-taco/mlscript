@@ -31,4 +31,5 @@ class TypeTraverser:
     case PolyFunType(args, ret, eff) =>
       args.foreach(apply(!pol))
       apply(pol)(ret)
-      apply(pol)(eff)  
+      apply(pol)(eff)
+    case ty: Type => apply(pol)(ty.toBasic) // TODO improve impl for all ctors

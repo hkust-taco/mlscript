@@ -6,7 +6,7 @@ import scala.collection.mutable
 import semantics.*
 import Message.MessageContext
 import mlscript.utils.*, shorthands.*
-import utils.TraceLogger
+import utils.*
 
 // * TODO use mutabnle cache instead for correct asymptotic complexity
 type Cache = Set[(Type, Type)]
@@ -41,7 +41,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
 
   def extrude(ty: Type)(using lvl: Int, pol: Bool, cache: ExtrudeCache): Type =
   trace[Type](s"Extruding[${printPol(pol)}] $ty", r => s"~> $r"):
-    if ty.lvl <= lvl then ty else ty match
+    if ty.lvl <= lvl then ty else ty.toBasic/*TODO improve extrude directly*/ match
     case ClassType(sym, targs) =>
       ClassType(sym, targs.map {
         case Wildcard(in, out) =>
@@ -69,14 +69,13 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
     case NegType(ty) => Type.mkNegType(extrude(ty)(using lvl, !pol))
     case Top | Bot => ty
 
-  private def constrainConj(conj: Conj)(using Ctx, CCtx): Unit = trace(s"Constraining $conj"):
+  private def constrainConj(conj: Conj)(using Ctx, CCtx, TL): Unit = trace(s"Constraining $conj"):
     conj match
       case Conj(i, u, (v, pol) :: tail) =>
         var rest = Conj(i, u, tail)
         if v.isSkolem then constrainConj(rest)
         else
-          val comp = rest.toType.simp
-          val bd = if v.lvl >= comp.lvl then comp else extrude(comp)(using v.lvl, true, mutable.HashMap.empty)
+          val bd = if v.lvl >= rest.lvl then rest else extrude(rest)(using v.lvl, true, mutable.HashMap.empty)
           if pol then
             val nc = Type.mkNegType(bd)
             log(s"New bound: $v <: $nc")
@@ -112,18 +111,19 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
           // raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
           cctx.err
 
-  private def constrainDNF(disj: Disj)(using Ctx, CCtx): Unit =
+  private def constrainDNF(disj: Disj)(using Ctx, CCtx, TL): Unit =
     disj.conjs.foreach(constrainConj(_))
 
-  private def constrainArgs(lhs: TypeArg, rhs: TypeArg)(using Ctx, CCtx): Unit =
+  private def constrainArgs(lhs: TypeArg, rhs: TypeArg)(using Ctx, CCtx, TL): Unit =
     constrainImpl(rhs.negPart, lhs.negPart)
     constrainImpl(lhs.posPart, rhs.posPart)
   
-  private def constrainImpl(lhs: Type, rhs: Type)(using Ctx, CCtx): Unit =
+  private def constrainImpl(lhs: Type, rhs: Type)(using Ctx, CCtx, TL): Unit =
     if cctx.cache((lhs, rhs)) then log(s"Cached!")
     else trace(s"CONSTRAINT $lhs <: $rhs"):
       cctx.nest(lhs -> rhs) givenIn:
-        constrainDNF(dnf(lhs & rhs.!)(using raise)) // TODO: inline skolem bounds
-  def constrain(lhs: Type, rhs: Type)(using Ctx, CCtx): Unit =
+        val ty = dnf(lhs & rhs.!) // TODO: inline skolem bounds
+        constrainDNF(ty)
+  def constrain(lhs: Type, rhs: Type)(using Ctx, CCtx, TL): Unit =
     constrainImpl(lhs, rhs)
 

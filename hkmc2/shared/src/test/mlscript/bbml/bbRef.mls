@@ -24,30 +24,32 @@ let r = region x in x.ref 42
 //│ ║        	                    ^^^^^^^^
 //│ ║  l.21: 	!r
 //│ ║        	^^
-//│ ╟── because: cannot constrain  (α17_1 ∨ α15_1) ∨ <α>0_0  <:  <α>0_0
-//│ ╟── because: cannot constrain  α17_1  <:  <α>0_0
-//│ ╟── because: cannot constrain  α16_1  <:  <α>0_0
-//│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
+//│ ╟── because: cannot constrain  (α16_1 ∨ α14_1) ∨ Alloc  <:  Alloc
+//│ ╟── because: cannot constrain  α16_1  <:  ¬(~{Alloc})
+//│ ╟── because: cannot constrain  α15_1  <:  ¬(~{Alloc})
+//│ ╟── because: cannot constrain  α15_1  <:  ¬(~{Alloc})
+//│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc})
 //│ Type: Int
 
 fun mkRef() = region x in x.ref 42
 mkRef
-//│ Type: () ->{<α>0_0} Ref[Int, ?]
+//│ Type: () ->{Alloc} Ref[Int, ?]
 
 :e
 let t = region x in x in t.ref 42
 //│ ╔══[ERROR] Type error in reference creation
-//│ ║  l.38: 	let t = region x in x in t.ref 42
+//│ ║  l.39: 	let t = region x in x in t.ref 42
 //│ ║        	                         ^^^^^^^^
-//│ ╟── because: cannot constrain  Region[?]  <:  Region[α26_1]
-//│ ╟── because: cannot constrain  ⊤  <:  α26_1
-//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ ╟── because: cannot constrain  Region[?]  <:  Region[α25_1]
+//│ ╟── because: cannot constrain  D(  )  <:  α25_1
+//│ ╟── because: cannot constrain    <:  α25_1
+//│ ╙── because: cannot constrain    <:  ¬()
 //│ ╔══[ERROR] Type error in block
-//│ ║  l.38: 	let t = region x in x in t.ref 42
+//│ ║  l.39: 	let t = region x in x in t.ref 42
 //│ ║        	                    ^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  (α26_1 ∨ α25_1) ∨ <α>0_0  <:  <α>0_0
-//│ ╟── because: cannot constrain  α26_1  <:  <α>0_0
-//│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
+//│ ╟── because: cannot constrain  (α25_1 ∨ α24_1) ∨ Alloc  <:  Alloc
+//│ ╟── because: cannot constrain  α25_1  <:  ¬(~{Alloc})
+//│ ╙── because: cannot constrain    <:  ¬(~{Alloc})
 //│ Type: Ref[Int, ?]
 
 
@@ -60,14 +62,15 @@ let t = region x in
   x.ref 42
 in t := 0
 //│ ╔══[ERROR] Type error in block
-//│ ║  l.60: 	  x.ref 42
+//│ ║  l.62: 	  x.ref 42
 //│ ║        	  ^^^^^^^^
-//│ ║  l.61: 	in t := 0
+//│ ║  l.63: 	in t := 0
 //│ ║        	^^^^^^^^^
-//│ ╟── because: cannot constrain  (α35_1 ∨ α33_1) ∨ <α>0_0  <:  <α>0_0
-//│ ╟── because: cannot constrain  α35_1  <:  <α>0_0
-//│ ╟── because: cannot constrain  α34_1  <:  <α>0_0
-//│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
+//│ ╟── because: cannot constrain  (α34_1 ∨ α32_1) ∨ Alloc  <:  Alloc
+//│ ╟── because: cannot constrain  α34_1  <:  ¬(~{Alloc})
+//│ ╟── because: cannot constrain  α33_1  <:  ¬(~{Alloc})
+//│ ╟── because: cannot constrain  α33_1  <:  ¬(~{Alloc})
+//│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc})
 //│ Type: Int
 
 
@@ -80,41 +83,48 @@ let t = region x in
   x.ref 42
 in !t
 //│ ╔══[ERROR] Type error in block
-//│ ║  l.80: 	  x.ref 42
+//│ ║  l.83: 	  x.ref 42
 //│ ║        	  ^^^^^^^^
-//│ ║  l.81: 	in !t
+//│ ║  l.84: 	in !t
 //│ ║        	^^^^^
-//│ ╟── because: cannot constrain  (α46_1 ∨ α44_1) ∨ <α>0_0  <:  <α>0_0
-//│ ╟── because: cannot constrain  α46_1  <:  <α>0_0
-//│ ╟── because: cannot constrain  α45_1  <:  <α>0_0
-//│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
+//│ ╟── because: cannot constrain  (α45_1 ∨ α43_1) ∨ Alloc  <:  Alloc
+//│ ╟── because: cannot constrain  α45_1  <:  ¬(~{Alloc})
+//│ ╟── because: cannot constrain  α44_1  <:  ¬(~{Alloc})
+//│ ╟── because: cannot constrain  α44_1  <:  ¬(~{Alloc})
+//│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc})
 //│ Type: Int
 
 region x in
   let r = x.ref 42 in let t = r := 0 in !r
 //│ Type: Int
 
+fun rid: [A] -> A ->{Alloc} A
+fun rid(x) =
+  let t = (region y in 42) in x
+//│ Type: ⊤
+
 :e
 fun rid: [A] -> A -> A
 fun rid(x) =
   let t = (region y in 42) in x
-//│ ╔══[ERROR] Type error in function literal with expected type (<α>56_2) ->{⊥} <α>56_2
-//│ ║  l.99: 	fun rid(x) =
-//│ ║        	        ^^^^
-//│ ║  l.100: 	  let t = (region y in 42) in x
+//│ ╔══[ERROR] Type error in function literal with expected type (<α>59_2) ->{⊥} <α>59_2
+//│ ║  l.108: 	fun rid(x) =
+//│ ║         	        ^^^^
+//│ ║  l.109: 	  let t = (region y in 42) in x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── because: cannot constrain  α58_2 ∨ <α>0_0  <:  ⊥
+//│ ╙── because: cannot constrain  α61_2 ∨ Alloc  <:  ⊥
 //│ Type: ⊤
 
 :e
 region x in
   (let dz = x.ref 42 in 42): [A] -> Int
-//│ ╔══[ERROR] Type error in block with expected type forall α60_3: Int
-//│ ║  l.111: 	  (let dz = x.ref 42 in 42): [A] -> Int
+//│ ╔══[ERROR] Type error in block with expected type forall α63_3: Int
+//│ ║  l.120: 	  (let dz = x.ref 42 in 42): [A] -> Int
 //│ ║         	            ^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  α61_3  <:  ⊥
-//│ ╙── because: cannot constrain  <α>59_2  <:  ⊥
-//│ Type: forall α60_3: Int
+//│ ╟── because: cannot constrain  α64_3  <:  ⊥
+//│ ╟── because: cannot constrain  α64_3  <:  ¬()
+//│ ╙── because: cannot constrain  <α>62_2  <:  ¬()
+//│ Type: forall α63_3: Int
 
 
 :e
@@ -123,14 +133,14 @@ let t =
     y => x.ref y
   in t(42)
 //│ ╔══[ERROR] Type error in block
-//│ ║  l.123: 	    y => x.ref y
+//│ ║  l.133: 	    y => x.ref y
 //│ ║         	    ^^^^^^^^^^^^
-//│ ║  l.124: 	  in t(42)
+//│ ║  l.134: 	  in t(42)
 //│ ║         	^^^^^^^^^^
-//│ ╟── because: cannot constrain  (α71_1 ∨ α66_1) ∨ <α>0_0  <:  <α>0_0
-//│ ╟── because: cannot constrain  α71_1  <:  <α>0_0
-//│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
-//│ Type: Ref[in α68_1 out α68_1 ∨ Int, ?]
+//│ ╟── because: cannot constrain  (α74_1 ∨ α69_1) ∨ Alloc  <:  Alloc
+//│ ╟── because: cannot constrain  α74_1  <:  ¬(~{Alloc})
+//│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc})
+//│ Type: Ref[in α71_1 out α71_1 ∨ Int, ?]
 
 fun foo: [A] -> Int ->{A | Alloc} Int
 fun foo(x) =

@@ -5,13 +5,8 @@
 class Reg[Rg, Br]
 //│ Type: ⊤
 
-// fun letreg: [E,Outer,Res] -> ([R] -> Reg[R, Out] ->{E | R} Res) ->{E} Res
-
 fun letreg: [E, Res] -> ([Rg] -> Reg[Rg, E] ->{E | Rg} Res) ->{E} Res
 //│ Type: ⊤
-
-letreg
-//│ Type: forall α1_2, α2_2: (forall α3_3: (Reg[α3_3, α1_2]) ->{α1_2 ∨ α3_3} α2_2) ->{α1_2} α2_2
 
 fun use: [Rg, Br] -> Reg[Rg, Br] ->{Rg} Int
 //│ Type: ⊤
@@ -26,13 +21,10 @@ fun mkVec: [A, Rg, Br] -> Reg[Rg, Br] -> MutVec[A, Rg, Br]
 fun clear: [A, Rg, Br] -> MutVec[A, Rg, Br] ->{Rg} Int
 //│ Type: ⊤
 
-clear
-//│ Type: forall α9_2, α10_2, α11_2: (MutVec[α9_2, α10_2, α11_2]) ->{α10_2} Int
-
 class Iter[A, Rg]
 //│ Type: ⊤
 
-fun iterate: [A, Rg, Br, Res] -> MutVec[A, Rg, Br] -> (Iter[A, Br] ->{Br} Res) ->{Br} Res
+fun iterate: [A, Rg, Br, Res] -> MutVec[A, Rg, Br] -> ([L] -> Iter[A, Br | L] ->{Br | L} Res) ->{Br} Res
 //│ Type: ⊤
 
 fun integers: [Rg, Br, Res] -> Reg[Rg, Br] ->{Rg} (Iter[Int, Br] ->{Br} Res) ->{Br} Res
@@ -45,7 +37,7 @@ fun next: [A, Br] -> Iter[A, Br] ->{Br} A
 letreg(r => r)
 //│ Type: Reg[?, α21_1]
 //│ Where:
-//│   α21_1 <: <α>0_0
+//│   α21_1 <: Alloc
 
 letreg of r =>
   let b = mkVec(r)
@@ -57,7 +49,49 @@ letreg of r =>
   r
 //│ Type: Reg[?, α23_1]
 //│ Where:
-//│   α23_1 <: <α>0_0
+//│   α23_1 <: Alloc
+
+// * Non-lexical borrowing pattern encoded with a thunk
+letreg of r =>
+  let b = mkVec(r)
+  clear(b)
+  let k = iterate(b) of it =>
+    next(it)
+    123
+    if next(it) > 0 then () => 0 else () => clear(b)
+  k()
+//│ Type: Int
+
+:e
+letreg of r =>
+  let b = mkVec(r)
+  clear(b)
+  let k = iterate(b) of it =>
+    next(it)
+    123
+    () => next(it)
+  k()
+//│ ╔══[ERROR] Type error in block
+//│ ║  l.66: 	letreg of r =>
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.67: 	  let b = mkVec(r)
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.68: 	  clear(b)
+//│ ║        	^^^^^^^^^^
+//│ ║  l.69: 	  let k = iterate(b) of it =>
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.70: 	    next(it)
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.71: 	    123
+//│ ║        	^^^^^^^
+//│ ║  l.72: 	    () => next(it)
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.73: 	  k()
+//│ ║        	^^^^^
+//│ ╟── because: cannot constrain  α62_1  <:  Alloc
+//│ ╟── because: cannot constrain  α62_1  <:  ¬(~{Alloc})
+//│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc})
+//│ Type: ⊥
 
 :e
 letreg of r =>
@@ -70,30 +104,31 @@ letreg of r =>
   clear(b)
   r
 //│ ╔══[ERROR] Type error in block
-//│ ║  l.63: 	letreg of r =>
+//│ ║  l.97: 	letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.64: 	  let b = mkVec(r)
+//│ ║  l.98: 	  let b = mkVec(r)
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	  clear(b)
+//│ ║  l.99: 	  clear(b)
 //│ ║        	^^^^^^^^^^
-//│ ║  l.66: 	  iterate(b) of it =>
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	    next(it)
-//│ ║        	^^^^^^^^^^^^
-//│ ║  l.68: 	    clear(b)
-//│ ║        	^^^^^^^^^^^^
-//│ ║  l.69: 	    123
-//│ ║        	^^^^^^^
-//│ ║  l.70: 	  clear(b)
-//│ ║        	^^^^^^^^^^
-//│ ║  l.71: 	  r
-//│ ║        	^^^
-//│ ╟── because: cannot constrain  α40_1  <:  <α>0_0
-//│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
-//│ Type: Reg[?, α40_1]
+//│ ║  l.100: 	  iterate(b) of it =>
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.101: 	    next(it)
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.102: 	    clear(b)
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.103: 	    123
+//│ ║         	^^^^^^^
+//│ ║  l.104: 	  clear(b)
+//│ ║         	^^^^^^^^^^
+//│ ║  l.105: 	  r
+//│ ║         	^^^
+//│ ╟── because: cannot constrain  α82_1  <:  Alloc
+//│ ╟── because: cannot constrain  α82_1  <:  ¬(~{Alloc})
+//│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc})
+//│ Type: Reg[?, α82_1]
 //│ Where:
-//│   ⊤ <: α40_1
-//│   α40_1 <: <α>0_0
+//│   ⊤ <: α82_1
+//│   α82_1 <: Alloc
 
 
 letreg of r =>
@@ -102,9 +137,9 @@ letreg of r =>
     next(it)
   use(r)
   r
-//│ Type: Reg[?, α60_1]
+//│ Type: Reg[?, α102_1]
 //│ Where:
-//│   α60_1 <: <α>0_0
+//│   α102_1 <: Alloc
 
 :e
 letreg of r =>
@@ -115,26 +150,27 @@ letreg of r =>
   use(r)
   r
 //│ ╔══[ERROR] Type error in block
-//│ ║  l.110: 	letreg of r =>
+//│ ║  l.145: 	letreg of r =>
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.111: 	  use(r)
+//│ ║  l.146: 	  use(r)
 //│ ║         	^^^^^^^^
-//│ ║  l.112: 	  integers(r) of it =>
+//│ ║  l.147: 	  integers(r) of it =>
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.113: 	    use(r)
+//│ ║  l.148: 	    use(r)
 //│ ║         	^^^^^^^^^^
-//│ ║  l.114: 	    next(it)
+//│ ║  l.149: 	    next(it)
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.115: 	  use(r)
+//│ ║  l.150: 	  use(r)
 //│ ║         	^^^^^^^^
-//│ ║  l.116: 	  r
+//│ ║  l.151: 	  r
 //│ ║         	^^^
-//│ ╟── because: cannot constrain  α71_1  <:  <α>0_0
-//│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
-//│ Type: Reg[?, α71_1]
+//│ ╟── because: cannot constrain  α113_1  <:  Alloc
+//│ ╟── because: cannot constrain  α113_1  <:  ¬(~{Alloc})
+//│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc})
+//│ Type: Reg[?, α113_1]
 //│ Where:
-//│   ⊤ <: α71_1
-//│   α71_1 <: <α>0_0
+//│   ⊤ <: α113_1
+//│   α113_1 <: Alloc
 
 letreg of r0 =>
   letreg of r1 =>
@@ -143,7 +179,24 @@ letreg of r0 =>
       next(it)
     use(r1)
     r1
-//│ Type: Reg[?, in α97_1]
+//│ Type: Reg[?, in α139_1]
 //│ Where:
-//│   α97_1 <: <α>0_0
+//│   α139_1 <: Alloc
+
+
+// * Can leak the iterator
+fun iterate_unsafe: [A, Rg, Br, Res] -> MutVec[A, Rg, Br] -> (Iter[A, Br] ->{Br} Res) ->{Br} Res
+//│ Type: ⊤
+// * Eg:
+letreg of r =>
+  let b = mkVec(r)
+  clear(b)
+  let k = iterate_unsafe(b) of it =>
+    next(it)
+    123
+    () => next(it)
+  clear(b)
+  k()
+//│ Type: ⊥
+
 

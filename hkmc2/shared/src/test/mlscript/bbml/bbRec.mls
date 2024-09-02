@@ -11,13 +11,13 @@ fun f x = f
 
 fun f(x) = f
 f
-//│ Type: ⊤ ->{⊥} α1_1
+//│ Type: ⊤ -> α0_1
 //│ Where:
-//│   ⊤ ->{⊥} α1_1 <: α1_1
+//│   ⊤ -> α0_1 <: α0_1
 
 fun f(x) = f(x)
 f
-//│ Type: ⊤ ->{⊥} ⊥
+//│ Type: ⊤ -> ⊥
 
 :todo
 fun f(x) = f(x.a)
@@ -38,9 +38,9 @@ Foo(123)
 //│ Type: ⊥
 
 new Foo(123)
-//│ Type: Foo[α13_1]
+//│ Type: Foo[α12_1]
 //│ Where:
-//│   Int <: α13_1
+//│   Int <: α12_1
 
 :todo proper error
 fun f(x) = f(Foo.a(x))
@@ -51,8 +51,8 @@ fun f(x) = f(Foo.a(x))
 
 fun f(x) = f(x.Foo#a)
 f
-//│ Type: Foo[out α21_1] ->{⊥} ⊥
+//│ Type: Foo[out α20_1] -> ⊥
 //│ Where:
-//│   α21_1 <: Foo[out α21_1]
+//│   α20_1 <: Foo[out α20_1]
 
 

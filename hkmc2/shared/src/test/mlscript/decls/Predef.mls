@@ -1,6 +1,7 @@
 
 
 class Any
+class Alloc
 class Int
 class Num
 class Str

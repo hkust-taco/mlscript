@@ -6,20 +6,26 @@ import scala.annotation.tailrec
 import semantics.*
 import Message.MessageContext
 import mlscript.utils.*, shorthands.*
+import utils.*
 
-final case class Disj(conjs: Ls[Conj]) extends NormalForm:
-  def toType: Type = ComposedType(conjs.foldLeft[Type](Bot)((res, c) => res | c.toType), Bot, true)
+final case class Disj(conjs: Ls[Conj]) extends NormalForm with CachedBasicType:
   def isBot: Bool = conjs.isEmpty
+  def mkBasic: BasicType =
+    BasicType.union(conjs.map(_.toBasic))
+  def toDnf(using TL): Disj = this
+  override def toString: Str =
+    if conjs.isEmpty then "D()"
+    else s"D( ${conjs.mkString(" || ")} )"
 object Disj:
   val bot: Disj = Disj(Nil)
   val top: Disj = Disj(Conj.empty :: Nil)
 
-sealed abstract case class Conj(i: Inter, u: Union, vars: Ls[(InfVar, Bool)]) extends NormalForm:
-  def toType: Type = i.toType &
-    vars.foldLeft(Type.mkNegType(u.toType))((res, v) => if v._2 then res & v._1 else res & Type.mkNegType(v._1))
-  def merge(other: Conj): Option[Conj] =
+sealed abstract case class Conj(i: Inter, u: Union, vars: Ls[(InfVar, Bool)])
+extends NormalForm with CachedBasicType:
+  def merge(that: Conj)(using TL): Option[Conj] =
+  tl.traceNot[Option[Conj]](s"merge $this and $that", r => s"= ${r}"):
     val Conj(i1, u1, vars1) = this
-    val Conj(i2, u2, vars2) = other
+    val Conj(i2, u2, vars2) = that
     i1.merge(i2) match
       case S(i) =>
         val u = u1.merge(u2)
@@ -36,6 +42,19 @@ sealed abstract case class Conj(i: Inter, u: Union, vars: Ls[(InfVar, Bool)]) ex
           case S(vars) => S(Conj(i, u, vars))
           case _ => N
       case N => N
+  def mkBasic: BasicType =
+    BasicType.inter(i.toBasic :: NegType(u.toBasic) :: vars.map{
+      case (tv, true) => tv
+      case (tv, false) => NegType(tv)
+    })
+  def toDnf(using TL): Disj = Disj(this :: Nil)
+  override def toString: Str =
+    ((i :: Nil).filterNot(_.isTop) :::
+      (u :: Nil).filterNot(_.isBot).map("~{"+_+"}") :::
+      vars.map:
+        case (tv, true) => tv.toString
+        case (tv, false) => "~" + tv.toString
+    ).mkString(" && ")
 object Conj:
   // * Conj objects cannot be created with `new` except in this file.
   // * This is because we want to sort the vars in the apply function.
@@ -44,15 +63,17 @@ object Conj:
   }){}
   lazy val empty: Conj = Conj(Inter.empty, Union.empty, Nil)
   def mkVar(v: InfVar, pol: Bool) = Conj(Inter.empty, Union.empty, (v, pol) :: Nil)
-  def mkInter(inter: ClassType | FunType) = Conj(Inter(S(inter)), Union.empty, Nil)
-  def mkUnion(union: ClassType | FunType) = Conj(Inter.empty, union match {
-    case cls: ClassType => Union(N, cls :: Nil)
-    case fun: FunType => Union(S(fun), Nil)
-  }, Nil)
+  def mkInter(inter: ClassType | FunType) =
+    Conj(Inter(S(inter)), Union.empty, Nil)
+  def mkUnion(union: ClassType | FunType) =
+    Conj(Inter.empty, union match {
+      case cls: ClassType => Union(N, cls :: Nil)
+      case fun: FunType => Union(S(fun), Nil)
+    }, Nil)
 
 // * Some(ClassType) -> C[in D_i out D_i], Some(FunType) -> D_1 ->{D_2} D_3, None -> Top
 final case class Inter(v: Opt[ClassType | FunType]) extends NormalForm:
-  def toType: Type = v.getOrElse(Top)
+  def isTop: Bool = v.isEmpty
   def merge(other: Inter): Option[Inter] = (v, other.v) match
     case (S(ClassType(cls1, targs1)), S(ClassType(cls2, targs2))) if cls1.uid === cls2.uid =>
       S(Inter(S(ClassType(cls1, targs1.lazyZip(targs2).map(_ & _)))))
@@ -62,11 +83,17 @@ final case class Inter(v: Opt[ClassType | FunType]) extends NormalForm:
     case (S(v), N) => S(Inter(S(v)))
     case (N, v) => S(Inter(v))
     case _ => N
+  def toBasic: BasicType = v.getOrElse(Top)
+  def toDnf(using TL): Disj = Disj(Conj(this, Union(N, Nil), Nil) :: Nil)
+  override def toString: Str =
+    toBasic.toString
 object Inter:
   lazy val empty: Inter = Inter(N)
 
 // * fun: Some(FunType) -> D_1 ->{D_2} D_3, None -> bot
-final case class Union(fun: Opt[FunType], cls: Ls[ClassType]) extends NormalForm:
+final case class Union(fun: Opt[FunType], cls: Ls[ClassType])
+extends NormalForm with CachedBasicType:
+  def isBot = fun.isEmpty && cls.isEmpty
   def toType = fun.getOrElse(Bot) |
     cls.foldLeft[Type](Bot)(_ | _)
   def merge(other: Union): Union = Union((fun, other.fun) match {
@@ -83,14 +110,25 @@ final case class Union(fun: Opt[FunType], cls: Ls[ClassType]) extends NormalForm
       ClassType(cls1, targs1.lazyZip(targs2).map(_ | _)) :: tail
     case (head :: tail, cls) => cls :: head :: tail
   }))
+  def mkBasic: BasicType =
+    BasicType.union(fun.toList ::: cls)
+  def toDnf(using TL): Disj = NormalForm.neg(this)
+  override def toString: Str =
+    toType.toString
 object Union:
   val empty: Union = Union(N, Nil)
 
-sealed abstract class NormalForm:
-  def toType: Type
+sealed abstract class NormalForm extends TypeExt:
+  def toBasic: BasicType
+  
+  lazy val lvl: Int = toBasic.lvl // TODO improve: avoid inefficient use of toBasic
+  
+  def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
+    toBasic.subst
 
 object NormalForm:
-  def inter(lhs: Disj, rhs: Disj): Disj =
+  def inter(lhs: Disj, rhs: Disj)(using TL): Disj =
+  tl.traceNot[Disj](s"inter $lhs and $rhs", r => s"= ${r}"):
     if lhs.isBot || rhs.isBot then Disj.bot
     else Disj(lhs.conjs.flatMap(lhs => rhs.conjs.flatMap(rhs => lhs.merge(rhs) match {
       case S(conj) => conj :: Nil
@@ -99,7 +137,11 @@ object NormalForm:
 
   def union(lhs: Disj, rhs: Disj): Disj = Disj(lhs.conjs ++ rhs.conjs)
 
-  def neg(ty: Type)(using raise: Raise): Disj = ty match
+  def neg(ty: Type)(using TL): Disj =
+  tl.traceNot[Disj](s"~DNF $ty ${ty.getClass} ${ty.toBasic}", r => s"= ${r}"):
+    ty match
+    case u: Union => Disj(Conj(Inter(N), u, Nil) :: Nil)
+    case _ => ty.toBasic match
     case Top => Disj.bot
     case Bot => Disj.top
     case v: InfVar => Disj(Conj.mkVar(v, false) :: Nil)
@@ -109,12 +151,18 @@ object NormalForm:
       if pol then inter(neg(lhs), neg(rhs)) else union(neg(lhs), neg(rhs))
     case NegType(ty) => dnf(ty)
 
-  def dnf(ty: Type)(using raise: Raise): Disj = ty match
+  def dnf(ty: Type)(using TL): Disj =
+  tl.traceNot[Disj](s"DNF $ty ${ty.getClass}", r => s"= ${r}"):
+    ty match
+    case d: Disj => d
+    case c: Conj => Disj(c :: Nil)
+    case i: Inter => Disj(Conj(i, Union(N, Nil), Nil) :: Nil)
+    case _ => ty.toBasic match
     case Top => Disj.top
     case Bot => Disj.bot
     case v: InfVar => Disj(Conj.mkVar(v, true) :: Nil)
-    case ct: ClassType => Disj(Conj.mkInter(ct) :: Nil)
-    case ft: FunType => Disj(Conj.mkInter(ft) :: Nil)
+    case ct: ClassType => Disj(Conj.mkInter(ct.toNorm) :: Nil)
+    case ft: FunType => Disj(Conj.mkInter(ft.toNorm) :: Nil)
     case ComposedType(lhs, rhs, pol) =>
       if pol then union(dnf(lhs), dnf(rhs)) else inter(dnf(lhs), dnf(rhs))
     case NegType(ty) => neg(ty)
