@@ -1,6 +1,6 @@
 
 :NoJS
-
+:NoApproximateOverload
 
 type IISS = int -> int & string -> string
 type BBNN = bool -> bool & number -> number

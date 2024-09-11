@@ -155,7 +155,7 @@ module A {
 //│ }
 
 A.g(0)
-//│ Int
+//│ Int | Str
 //│ res
 //│     = 0
 
@@ -174,13 +174,13 @@ s([Numbr(0),Numbr(0)])
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	s([Numbr(0),Numbr(0)])
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `(Numbr | Vectr, Numbr | Vectr) -> Int` is not a function
-//│ ║  l.136: 	fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
-//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `([?a, ?b]) -> ?c`
+//│ ╟── argument of type `[[?a, ?b]]` does not match type `[Numbr | Vectr, Numbr | Vectr]`
 //│ ║  l.+1: 	s([Numbr(0),Numbr(0)])
-//│ ╙──      	^
-//│ error
+//│ ║        	 ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.136: 	fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
+//│ ╙──       	        ^^^^^^^^^^^^^
+//│ Int | error
 // g <: 0 -> 'a
 
 :e

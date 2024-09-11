@@ -1,4 +1,5 @@
 :NewDefs
+:NoApproximateOverload
 
 
 
@@ -70,16 +71,16 @@ fun g = h
 fun g: (Int | Bool) -> (Int | Bool)
 fun g = f
 //│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.71: 	fun g = f
+//│ ║  l.72: 	fun g = f
 //│ ║        	    ^^^^^
 //│ ╟── type `Int -> Int & Bool -> Bool` is not a function
-//│ ║  l.50: 	fun f: (Int -> Int) & (Bool -> Bool)
+//│ ║  l.51: 	fun f: (Int -> Int) & (Bool -> Bool)
 //│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(Int | false | true) -> (Int | false | true)`
-//│ ║  l.71: 	fun g = f
+//│ ║  l.72: 	fun g = f
 //│ ║        	        ^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.70: 	fun g: (Int | Bool) -> (Int | Bool)
+//│ ║  l.71: 	fun g: (Int | Bool) -> (Int | Bool)
 //│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ fun g: Int -> Int & Bool -> Bool
 //│ fun g: (Int | false | true) -> (Int | false | true)
@@ -101,16 +102,16 @@ fun j = i
 fun j: (Int & Bool) -> (Int & Bool)
 fun j = f
 //│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.102: 	fun j = f
+//│ ║  l.103: 	fun j = f
 //│ ║         	    ^^^^^
 //│ ╟── type `Int -> Int & Bool -> Bool` is not a function
-//│ ║  l.50: 	fun f: (Int -> Int) & (Bool -> Bool)
+//│ ║  l.51: 	fun f: (Int -> Int) & (Bool -> Bool)
 //│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing -> nothing`
-//│ ║  l.102: 	fun j = f
+//│ ║  l.103: 	fun j = f
 //│ ║         	        ^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.101: 	fun j: (Int & Bool) -> (Int & Bool)
+//│ ║  l.102: 	fun j: (Int & Bool) -> (Int & Bool)
 //│ ╙──       	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ fun j: Int -> Int & Bool -> Bool
 //│ fun j: nothing -> nothing
@@ -146,13 +147,13 @@ x => f(x)
 :e
 f(if true then 0 else false)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.147: 	f(if true then 0 else false)
+//│ ║  l.148: 	f(if true then 0 else false)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Int -> Int & Bool -> Bool` is not a function
-//│ ║  l.50: 	fun f: (Int -> Int) & (Bool -> Bool)
+//│ ║  l.51: 	fun f: (Int -> Int) & (Bool -> Bool)
 //│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(0 | false) -> ?a`
-//│ ║  l.147: 	f(if true then 0 else false)
+//│ ║  l.148: 	f(if true then 0 else false)
 //│ ╙──       	^
 //│ error
 //│ res
@@ -164,22 +165,22 @@ f(if true then 0 else false)
 :w
 f(refined if true then 0 else false) // this one can be precise again!
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.165: 	f(refined if true then 0 else false) // this one can be precise again!
+//│ ║  l.166: 	f(refined if true then 0 else false) // this one can be precise again!
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal use of reserved operator: refined
-//│ ║  l.165: 	f(refined if true then 0 else false) // this one can be precise again!
+//│ ║  l.166: 	f(refined if true then 0 else false) // this one can be precise again!
 //│ ╙──       	  ^^^^^^^
 //│ ╔══[ERROR] identifier not found: refined
-//│ ║  l.165: 	f(refined if true then 0 else false) // this one can be precise again!
+//│ ║  l.166: 	f(refined if true then 0 else false) // this one can be precise again!
 //│ ╙──       	  ^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.165: 	f(refined if true then 0 else false) // this one can be precise again!
+//│ ║  l.166: 	f(refined if true then 0 else false) // this one can be precise again!
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Int -> Int & Bool -> Bool` is not a function
-//│ ║  l.50: 	fun f: (Int -> Int) & (Bool -> Bool)
+//│ ║  l.51: 	fun f: (Int -> Int) & (Bool -> Bool)
 //│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `?a -> ?b`
-//│ ║  l.165: 	f(refined if true then 0 else false) // this one can be precise again!
+//│ ║  l.166: 	f(refined if true then 0 else false) // this one can be precise again!
 //│ ╙──       	^
 //│ 'a
 //│   where
@@ -241,7 +242,7 @@ type T = List[Int]
 :e // TODO application types
 type Res = M(T)
 //│ ╔══[ERROR] Wrong number of type arguments – expected 0, found 1
-//│ ║  l.242: 	type Res = M(T)
+//│ ║  l.243: 	type Res = M(T)
 //│ ╙──       	           ^^^^
 //│ type Res = M
 
@@ -264,7 +265,7 @@ fun f: Int -> Int
 fun f: Bool -> Bool
 fun f = id
 //│ ╔══[ERROR] A type signature for 'f' was already given
-//│ ║  l.264: 	fun f: Bool -> Bool
+//│ ║  l.265: 	fun f: Bool -> Bool
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ fun f: forall 'a. 'a -> 'a
 //│ fun f: Int -> Int
@@ -272,13 +273,13 @@ fun f = id
 :e // TODO support
 f: (Int -> Int) & (Bool -> Bool)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.273: 	f: (Int -> Int) & (Bool -> Bool)
+//│ ║  l.274: 	f: (Int -> Int) & (Bool -> Bool)
 //│ ║         	^
 //│ ╟── type `Bool` is not an instance of type `Int`
-//│ ║  l.273: 	f: (Int -> Int) & (Bool -> Bool)
+//│ ║  l.274: 	f: (Int -> Int) & (Bool -> Bool)
 //│ ║         	                   ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.263: 	fun f: Int -> Int
+//│ ║  l.264: 	fun f: Int -> Int
 //│ ╙──       	       ^^^
 //│ Int -> Int & Bool -> Bool
 //│ res
@@ -345,17 +346,17 @@ fun test(x) = refined if x is
   A then 0
   B then 1
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.344: 	fun test(x) = refined if x is
+//│ ║  l.345: 	fun test(x) = refined if x is
 //│ ║         	              ^^^^^^^^^^^^^^^
-//│ ║  l.345: 	  A then 0
+//│ ║  l.346: 	  A then 0
 //│ ║         	^^^^^^^^^^
-//│ ║  l.346: 	  B then 1
+//│ ║  l.347: 	  B then 1
 //│ ╙──       	^^^^^^^^^^
 //│ ╔══[ERROR] Illegal use of reserved operator: refined
-//│ ║  l.344: 	fun test(x) = refined if x is
+//│ ║  l.345: 	fun test(x) = refined if x is
 //│ ╙──       	              ^^^^^^^
 //│ ╔══[ERROR] identifier not found: refined
-//│ ║  l.344: 	fun test(x) = refined if x is
+//│ ║  l.345: 	fun test(x) = refined if x is
 //│ ╙──       	              ^^^^^^^
 //│ fun test: (A | B) -> error
 //│ Code generation encountered an error:
@@ -411,11 +412,11 @@ x => q(x)
 :e
 (x => q(x))(1):Int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.412: 	(x => q(x))(1):Int
+//│ ║  l.413: 	(x => q(x))(1):Int
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── application of type `?a` does not match type `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.412: 	(x => q(x))(1):Int
+//│ ║  l.413: 	(x => q(x))(1):Int
 //│ ╙──       	               ^^^
 //│ Int
 //│ res
@@ -425,11 +426,11 @@ x => q(x)
 :e
 q(1):int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.426: 	q(1):int
+//│ ║  l.427: 	q(1):int
 //│ ║         	^^^^
 //│ ╟── application of type `?a` does not match type `int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.426: 	q(1):int
+//│ ║  l.427: 	q(1):int
 //│ ╙──       	     ^^^
 //│ int
 //│ res
@@ -459,7 +460,7 @@ fun r: Int -> Int & Bool -> Bool
 x => r(r(x))
 //│ ╔══[ERROR] ambiguous
 //│ ╟── cannot determine satisfiability of type ?a
-//│ ║  l.459: 	x => r(r(x))
+//│ ║  l.460: 	x => r(r(x))
 //│ ╙──       	       ^^^^
 //│ forall 'a 'b 'c. 'a -> 'c
 //│   where
@@ -515,11 +516,11 @@ let g = x => s(r(x))
 :e
 g(0)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.516: 	g(0)
+//│ ║  l.517: 	g(0)
 //│ ║         	^^^^
 //│ ╟── expression of type `Int` does not match type `?a`
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.506: 	let g = x => s(r(x))
+//│ ║  l.507: 	let g = x => s(r(x))
 //│ ╙──       	               ^^^^
 //│ error
 //│ res
@@ -550,13 +551,13 @@ fun snd: A -> Int -> Int & Str -> Str -> Str
 :e
 x => app2(snd)(x):Int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.551: 	x => app2(snd)(x):Int
+//│ ║  l.552: 	x => app2(snd)(x):Int
 //│ ║         	     ^^^^^^^^^^^^
 //│ ╟── type `Int` is not an instance of type `A`
-//│ ║  l.544: 	fun app2: ('a -> 'a -> 'a) -> 'a -> 'a
+//│ ║  l.545: 	fun app2: ('a -> 'a -> 'a) -> 'a -> 'a
 //│ ║         	                       ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.547: 	fun snd: A -> Int -> Int & Str -> Str -> Str
+//│ ║  l.548: 	fun snd: A -> Int -> Int & Str -> Str -> Str
 //│ ╙──       	         ^
 //│ nothing -> Int
 //│ res
@@ -574,3 +575,40 @@ app2_(snd)
 //│ res
 //│     = <no result>
 //│       snd is not implemented
+
+// * Example from WeirdUnions.mls.
+// * This type merges the input tuples:
+fun f: (Str => Str) & ((Str, Int) => Str)
+//│ fun f: (...Array[Int | Str] & {0: Str}) -> Str
+
+f("abc", "abc")
+//│ Str
+//│ res
+//│     = <no result>
+//│       f is not implemented
+
+fun f: (Str => Str) & ((Str, Int) => Int)
+//│ fun f: Str -> Str & (Str, Int) -> Int
+
+// * Different from WeirdUnions.mls:
+:e
+f("abc", "abc")
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.595: 	f("abc", "abc")
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ╟── type `Str -> Str & (Str, Int) -> Int` is not a function
+//│ ║  l.590: 	fun f: (Str => Str) & ((Str, Int) => Int)
+//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `("abc", "abc") -> ?a`
+//│ ║  l.595: 	f("abc", "abc")
+//│ ╙──       	^
+//│ error
+//│ res
+//│     = <no result>
+//│       f is not implemented
+
+f("abcabc")
+//│ Str
+//│ res
+//│     = <no result>
+//│       f is not implemented

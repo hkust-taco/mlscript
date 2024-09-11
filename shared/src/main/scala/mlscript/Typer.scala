@@ -34,6 +34,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   var constrainedTypes: Boolean = false
   
   var recordProvenances: Boolean = true
+  var noApproximateOverload: Boolean = false
   
   type Binding = Str -> SimpleType
   type Bindings = Map[Str, SimpleType]

@@ -627,7 +627,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               recLb(ar.inner, b.inner)
               rec(b.inner.ub, ar.inner.ub, false)
             case (LhsRefined(S(b: ArrayBase), ts, r, _), _) => reportError()
-            case (LhsRefined(S(ov: Overload), ts, r, trs), RhsBases(_, S(L(f: FunctionType)), _)) =>
+            case (LhsRefined(S(ov: Overload), ts, r, trs), RhsBases(_, S(L(f: FunctionType)), _)) if noApproximateOverload =>
               TupleSetConstraints.mk(ov, f) match {
                 case S(tsc) => if (!tsc.tvs.isEmpty && tsc.constraints.isEmpty) reportError()
                 case N => reportError()

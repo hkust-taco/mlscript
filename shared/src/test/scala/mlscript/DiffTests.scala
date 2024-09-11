@@ -216,6 +216,7 @@ class DiffTests(state: DiffTests.State)
     // Enable this to see the errors from unfinished `PreTyper`.
     var showPreTyperErrors = false
     var noTailRec = false
+    var noApproximateOverload = false
     
     // * This option makes some test cases pass which assume generalization should happen in arbitrary arguments
     // * but it's way too aggressive to be ON by default, as it leads to more extrusion, cycle errors, etc.
@@ -287,6 +288,7 @@ class DiffTests(state: DiffTests.State)
           case "GeneralizeArguments" => generalizeArguments = true; mode
           case "DontGeneralizeArguments" => generalizeArguments = false; mode
           case "IrregularTypes" => irregularTypes = true; mode
+          case "NoApproximateOverload" => noApproximateOverload = true; mode
           case str @ "Fuel" =>
             // println("'"+line.drop(str.length + 2)+"'")
             typer.startingFuel = line.drop(str.length + 2).toInt; mode
@@ -542,6 +544,7 @@ class DiffTests(state: DiffTests.State)
             typer.explainErrors = mode.explainErrors
             stdout = mode.stdout
             typer.preciselyTypeRecursion = mode.preciselyTypeRecursion
+            typer.noApproximateOverload = noApproximateOverload
             
             val oldCtx = ctx
             
