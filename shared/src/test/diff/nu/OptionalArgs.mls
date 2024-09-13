@@ -1,6 +1,6 @@
 :NewDefs
 
-fun (??) oops(a, b) = a + b
+fun (??) oops(a123, b123) = a123 + b123
 //│ fun (??) oops: (Int, Int) -> Int
 
 1 ?? 2
@@ -9,8 +9,8 @@ fun (??) oops(a, b) = a + b
 //│     = 3
 
 
-fun f1(a?: Int, b?: Int) = a + b
-//│ fun f1: (a: (Int)?, b: (Int)?) -> Int
+fun f1(aOpt?: Int, bOpt?: Int) = aOpt + bOpt
+//│ fun f1: (aOpt: (Int)?, bOpt: (Int)?) -> Int
 
 fun f1(a: Int, b: Int) = a + b
 //│ fun f1: (a: Int, b: Int) -> Int
@@ -116,3 +116,56 @@ fun foo(xs: [Int] & 'a) = xs : [Int, Int?]
 //│ fun foo: (xs: [Int]) -> [Int, (Int)?]
 
 // fun foo(xs: [Int] & 'a) = [xs : [Int, Int?], xs]
+
+:p
+fun foo0(x?: Int) = if x is undefined then 0 else x + 1
+//│ |#fun| |foo0|(|x|#?:| |Int|)| |#=| |#if| |x| |is| |#undefined| |#then| |0| |#else| |x| |+| |1|
+//│ AST: TypingUnit(List(NuFunDef(None,Var(foo0),None,List(),Left(Lam(Tup(List((Some(Var(x)),Fld(_,Var(Int))))),If(IfThen(App(Var(is),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,UnitLit(true)))))),IntLit(0)),Some(App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,IntLit(1)))))))))))))
+//│ Parsed: fun foo0 = (x: Int,) => if (is(x, undefined,)) then 0 else +(x, 1,);
+//│ fun foo0: (x: (Int)?) -> Int
+
+:p
+fun foo1(x?) = if x is undefined then 0 else x + 1
+//│ |#fun| |foo1|(|x|?|)| |#=| |#if| |x| |is| |#undefined| |#then| |0| |#else| |x| |+| |1|
+//│ AST: TypingUnit(List(NuFunDef(None,Var(foo1),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(x))))),If(IfThen(App(Var(is),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,UnitLit(true)))))),IntLit(0)),Some(App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,IntLit(1)))))))))))))
+//│ Parsed: fun foo1 = (x,) => if (is(x, undefined,)) then 0 else +(x, 1,);
+//│ fun foo1: ((Int | ())?) -> Int
+
+foo1(2)
+//│ Int
+//│ res
+//│     = 3
+
+fun foo0(x?:Int) = x + 1
+//│ fun foo0: (x: (Int)?) -> Int
+
+:e
+fun foo1(x?) = x + 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.143: 	fun foo1(x?) = x + 1
+//│ ║         	               ^^^^^
+//│ ╟── reference of type `()` is not an instance of type `Int`
+//│ ║  l.143: 	fun foo1(x?) = x + 1
+//│ ╙──       	               ^
+//│ fun foo1: ((Int | ())?) -> (Int | error)
+
+
+fun foo(x?) = if x is undefined then 0 else x + 1
+//│ fun foo: ((Int | ())?) -> Int
+
+
+fun foo: (x: Int) -> Int
+fun foo(x?) = if x is undefined then 0 else x + 1
+//│ fun foo: ((Int | ())?) -> Int
+//│ fun foo: (x: Int) -> Int
+
+fun foo: (x: Int?) -> Int
+fun foo(x) = x + 1
+//│ fun foo: Int -> Int
+//│ fun foo: (x: (Int)?) -> Int
+
+fun f(x) = (x : [Int, Int?]) : ['a, 'b]
+//│ fun f: ([Int, (Int)?]) -> [Int, Int]
+
+fun f(x) = (x : [Int, Int?]) : ['a, 'b]
+//│ fun f: ([Int, (Int)?]) -> [Int, Int]

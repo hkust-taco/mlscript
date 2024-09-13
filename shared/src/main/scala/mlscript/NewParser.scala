@@ -1427,37 +1427,34 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         S(l0)
       case _ => N
     }
-    val (argName, argOpt) = yeetSpaces match {
-      case (IDENT(idStr, false), l0) :: (IDENT("?:", true), l1) :: _ =>
+    val (argName, isOpt) = yeetSpaces match {
+      case (IDENT(idStr, false), l0) :: (KEYWORD("?:"), l1) :: _ => 
+        // println(s"dbg [NewParser.scala]: idStr: ${idStr}, l0: ${l0}, keyword: ?:, l1: ${l1}")
         consume
         consume
-        (S(Var(idStr).withLoc(S(l0))), S(l1))
+        (S(Var(idStr).withLoc(S(l0))), true)
       case (IDENT(idStr, false), l0) :: (KEYWORD(":"), _) :: _ => // TODO: | ...
         consume
         consume
-        (S(Var(idStr).withLoc(S(l0))), N)
-      case (LITVAL(IntLit(i)), l0) :: (IDENT("?:", true), l1) :: _ => // TODO: | ...
-        consume
-        consume
-        (S(Var(i.toString).withLoc(S(l0))), S(l1))
+        (S(Var(idStr).withLoc(S(l0))), false)
       case (LITVAL(IntLit(i)), l0) :: (KEYWORD(":"), _) :: _ => // TODO: | ...
         consume
         consume
-        (S(Var(i.toString).withLoc(S(l0))), N)
-      case _ => (N, N)
+        (S(Var(i.toString).withLoc(S(l0))), false)
+      case _ => (N, false)
     }
     val body = exprOrIf(prec, true, anns)
-    
-    // println(s"dbg [NewParser.scala]: argName: ${argName}, argOpt: ${argOpt.isDefined}")
-
-    val isOpt = cur match {
+    // println(s"dbg [NewParser.scala]: argName: ${argName}, argOpt: ${isOpt}")
+    val isOpt2 = cur match {
       case (IDENT("?", true), l0) :: _ =>
+        // println(s"dbg [NewParser.scala]: cur: ${cur}, isOpt2: true")
         consume
         true
       case _ =>
         false
     }
-    val e = body.map(Fld(FldFlags(argMut.isDefined, argSpec.isDefined, argOpt.isDefined || isOpt, argVal.isDefined), _))
+
+    val e = body.map(Fld(FldFlags(argMut.isDefined, argSpec.isDefined, isOpt || isOpt2, argVal.isDefined), _))
     def mkSeq = if (seqAcc.isEmpty) argName -> e else e match {
       case L(_) => ???
       case R(Fld(flags, res)) =>
