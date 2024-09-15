@@ -31,7 +31,7 @@ IISS : ZZII
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.30: 	IISS : ZZII
 //│ ║        	^^^^
-//│ ╟── type `int -> int & string -> string` is not a function
+//│ ╟── type `int -> int & string -> string` is not an instance of `0 -> 0`
 //│ ║  l.12: 	def IISS: int -> int & string -> string
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `0 -> 0`
@@ -50,7 +50,7 @@ IISS : BBNN
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.49: 	IISS : BBNN
 //│ ║        	^^^^
-//│ ╟── type `int -> int & string -> string` is not a function
+//│ ╟── type `int -> int & string -> string` is not an instance of `bool -> bool`
 //│ ║  l.12: 	def IISS: int -> int & string -> string
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `bool -> bool`
@@ -141,7 +141,7 @@ if true then IISS else BBNN
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.140: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int -> int & string -> string` is not a function
+//│ ╟── type `int -> int & string -> string` is not an instance of `(0 | 1 | true) -> number`
 //│ ║  l.12: 	def IISS: int -> int & string -> string
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(0 | 1 | true) -> number`

@@ -683,11 +683,11 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
           (u,l.reduce((x,y) => ComposedType(!p,x,y)(noProv)))
         }
       }
-      tvs.values.map(_.unwrapProxies).foreach {
-        case tv: TV => tv.tsc += this -> Set.empty
-        case _ => ()
-      }
       if (!u.isEmpty) {
+        tvs.values.map(_.unwrapProxies).foreach {
+          case tv: TV => tv.tsc += this -> Set.empty
+          case _ => ()
+        }
         tvs = u.flatMap(_.keys).distinct
         constraints = tvs.map(x => u.map(_.getOrElse(x,if (x._1) TopType else BotType))).transpose
         tvs.values.map(_.unwrapProxies).zipWithIndex.foreach {
@@ -721,6 +721,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     }
     def lcg(pol: Bool, first: ST, rest: ST)(implicit ctx: Ctx)
         : Opt[Ls[(Bool, ST) -> ST]] = (first.unwrapProxies, rest.unwrapProxies) match {
+      case (a, ExtrType(p)) if p =/= pol => S(Nil)
       case (a, ComposedType(p,l,r)) if p =/= pol =>
         for {
           lm <- lcg(pol,a,l)
@@ -781,24 +782,11 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       tvs.mapValuesIter(_.unwrapProxies).zipWithIndex.foreach {
         case ((true, tv: TV), i) =>
           tv.tsc.updateWith(tsc)(_.map(_ + i).orElse(S(Set(i))))
-          tv.lowerBounds.foreach(tsc.updateImpl(i, _))
         case ((false, tv: TV), i) =>
           tv.tsc.updateWith(tsc)(_.map(_ + i).orElse(S(Set(i))))
-          tv.upperBounds.foreach(tsc.updateImpl(i, _))
         case _ => ()
       }
       println(s"TSC mk: ${tsc.tvs} in ${tsc.constraints}")
-      if (tsc.constraints.sizeCompare(1) === 0) {
-        tvs.values.map(_.unwrapProxies).foreach {
-          case tv: TV => tv.tsc.remove(tsc)
-          case _ => ()
-        }
-        tsc.constraints.head.iterator.zip(tvs).foreach {
-          case (c, (pol, t)) =>
-            if (!pol) constrain(c, t)(raise, ov.prov, ctx)
-            if (pol) constrain(t, c)(raise, ov.prov, ctx)
-        }
-      }
       S(tsc)
     }
   }
