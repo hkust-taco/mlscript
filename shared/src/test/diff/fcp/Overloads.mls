@@ -87,10 +87,12 @@ IISS 0
 (if true then IISS else BBNN) 0
 //│ res: number
 
-// * TODO: should we still allow this? And maybe reduce it
-// * Conceptually we'd expect it to reduce to `int -> number`
-// * But it's tricky to do the actual reduction since technically
-// * 'a = Bot anf 'b = Top could satisfy all tuple alternatives
+// * Note that this is not considered ambiguous
+// * because the type variable occurrences are polar,
+// * meaning that the TSCs are always trivially satisfiable
+// * and thus the code is well-typed.
+// * Conceptually, we'd expect this inferred type to reduce to `int -> number`,
+// * but it's tricky to do such simplifications in general.
 def f = fun x -> (if true then IISS else BBNN) x
 //│ f: 'a -> 'b
 //│   where
