@@ -105,13 +105,13 @@ f(0)
 // FIXME
 f(0) + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.104: 	f(0) + 1
+//│ ║  l.106: 	f(0) + 1
 //│ ║         	^^^^^^
 //│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.13: 	def BBNN: bool -> bool & number -> number
 //│ ║        	                                   ^^^^^^
 //│ ╟── but it flows into application with expected type `int`
-//│ ║  l.104: 	f(0) + 1
+//│ ║  l.106: 	f(0) + 1
 //│ ╙──       	^^^^
 //│ res: error | int
 
@@ -121,10 +121,10 @@ f : int -> number
 :e
 f : number -> int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.120: 	f : number -> int
+//│ ║  l.122: 	f : number -> int
 //│ ║         	^
 //│ ╟── type `number` does not match type `?a`
-//│ ║  l.120: 	f : number -> int
+//│ ║  l.122: 	f : number -> int
 //│ ╙──       	    ^^^^^^
 //│ res: number -> int
 
@@ -141,16 +141,16 @@ if true then IISS else BBNN
 :e
 (if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.140: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.142: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `int -> int & string -> string` is not an instance of `(0 | 1 | true) -> number`
 //│ ║  l.12: 	def IISS: int -> int & string -> string
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(0 | 1 | true) -> number`
-//│ ║  l.140: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.142: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║         	              ^^^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.140: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.142: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╙──       	                                ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: (0 | 1 | true) -> number
 
@@ -169,13 +169,13 @@ not test
 //│   <:  test:
 //│ ~(int -> int)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.165: 	not test
+//│ ║  l.167: 	not test
 //│ ║         	^^^^^^^^
 //│ ╟── type `~(int -> int)` is not an instance of type `bool`
-//│ ║  l.159: 	def test: ~(int -> int)
+//│ ║  l.161: 	def test: ~(int -> int)
 //│ ║         	          ^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `bool`
-//│ ║  l.165: 	not test
+//│ ║  l.167: 	not test
 //│ ╙──       	    ^^^^
 //│ res: bool | error
 

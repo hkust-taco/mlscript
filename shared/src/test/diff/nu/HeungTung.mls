@@ -500,8 +500,12 @@ fun u: {x:0, y:Int} -> Int & {x:1, z: Str} -> Str
 fun s: Str -> Str & AA -> AA
 //│ fun s: Str -> Str & AA -> AA
 
-// FIXME
+:e // FIXME
 let g = x => s(r(x))
+//│ ╔══[ERROR] ambiguous
+//│ ╟── cannot determine satisfiability of type ?a
+//│ ║  l.504: 	let g = x => s(r(x))
+//│ ╙──       	               ^^^^
 //│ let g: forall 'a 'b 'c. 'a -> 'c
 //│   where
 //│     [+'a, -'b] in {[Int, Int], [Bool, Bool]}
@@ -511,14 +515,39 @@ let g = x => s(r(x))
 //│     s is not implemented
 
 :e
+fun g(x) = s(r(x))
+//│ ╔══[ERROR] ambiguous
+//│ ╟── cannot determine satisfiability of type ?a
+//│ ║  l.518: 	fun g(x) = s(r(x))
+//│ ╙──       	             ^^^^
+//│ fun g: forall 'a 'b 'c. 'a -> 'c
+//│   where
+//│     [+'a, -'b] in {[Int, Int], [Bool, Bool]}
+//│     [-'c, +'b] in {[Str, Str], [AA, AA]}
+
+:e
+x => s(r(x))
+//│ ╔══[ERROR] ambiguous
+//│ ╟── cannot determine satisfiability of type ?a
+//│ ║  l.529: 	x => s(r(x))
+//│ ╙──       	       ^^^^
+//│ forall 'a 'b 'c. 'a -> 'c
+//│   where
+//│     [+'a, -'b] in {[Int, Int], [Bool, Bool]}
+//│     [-'c, +'b] in {[Str, Str], [AA, AA]}
+//│ res
+//│     = <no result>
+//│       s is not implemented
+
+:e
 g(0)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.514: 	g(0)
+//│ ║  l.543: 	g(0)
 //│ ║         	^^^^
 //│ ╟── expression of type `Int` does not match type `?a`
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.504: 	let g = x => s(r(x))
-//│ ╙──       	               ^^^^
+//│ ║  l.518: 	fun g(x) = s(r(x))
+//│ ╙──       	             ^^^^
 //│ error
 //│ res
 //│     = <no result>
@@ -548,13 +577,13 @@ fun snd: A -> Int -> Int & Str -> Str -> Str
 :e
 x => app2(snd)(x):Int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.549: 	x => app2(snd)(x):Int
+//│ ║  l.578: 	x => app2(snd)(x):Int
 //│ ║         	     ^^^^^^^^^^^^
 //│ ╟── type `Int` is not an instance of type `A`
-//│ ║  l.542: 	fun app2: ('a -> 'a -> 'a) -> 'a -> 'a
+//│ ║  l.571: 	fun app2: ('a -> 'a -> 'a) -> 'a -> 'a
 //│ ║         	                       ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.545: 	fun snd: A -> Int -> Int & Str -> Str -> Str
+//│ ║  l.574: 	fun snd: A -> Int -> Int & Str -> Str -> Str
 //│ ╙──       	         ^
 //│ nothing -> Int
 //│ res
@@ -568,7 +597,7 @@ app2_(snd)
 //│ 'a -> 'b
 //│   where
 //│     'a <: 'b
-//│     [+'a, -'a, -'b] in {[A & Int, Int, Int], [Str, Str, Str]}
+//│     [-'b, -'a, +'a] in {[Int, Int, A & Int], [Str, Str, Str]}
 //│ res
 //│     = <no result>
 //│       snd is not implemented
@@ -591,13 +620,13 @@ fun f: (Str => Str) & ((Str, Int) => Int)
 :e
 f("abc", "abc")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.592: 	f("abc", "abc")
+//│ ║  l.621: 	f("abc", "abc")
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── type `Str -> Str & (Str, Int) -> Int` is not an instance of `("abc", "abc") -> ?a`
-//│ ║  l.587: 	fun f: (Str => Str) & ((Str, Int) => Int)
+//│ ║  l.616: 	fun f: (Str => Str) & ((Str, Int) => Int)
 //│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `("abc", "abc") -> ?a`
-//│ ║  l.592: 	f("abc", "abc")
+//│ ║  l.621: 	f("abc", "abc")
 //│ ╙──       	^
 //│ error
 //│ res
@@ -613,10 +642,10 @@ f("abcabc")
 :e
 x => rt([not(x)])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.614: 	x => rt([not(x)])
+//│ ║  l.643: 	x => rt([not(x)])
 //│ ║         	     ^^^^^^^^^^^^
 //│ ╟── application of type `Bool` does not match type `?a`
-//│ ║  l.614: 	x => rt([not(x)])
+//│ ║  l.643: 	x => rt([not(x)])
 //│ ╙──       	         ^^^^^^
 //│ forall 'a 'b. Bool -> 'a
 //│   where
@@ -630,13 +659,13 @@ x => rt([not(x)])
 :e
 rt(0)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.631: 	rt(0)
+//│ ║  l.660: 	rt(0)
 //│ ║         	^^^^^
 //│ ╟── type `{0: Int} -> Int & {0: Str} -> Str` is not an instance of `0 -> ?a`
-//│ ║  l.527: 	fun rt: {0: Int} -> Int & {0: Str} -> Str
+//│ ║  l.556: 	fun rt: {0: Int} -> Int & {0: Str} -> Str
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `0 -> ?a`
-//│ ║  l.631: 	rt(0)
+//│ ║  l.660: 	rt(0)
 //│ ╙──       	^^
 //│ error
 //│ res
