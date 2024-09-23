@@ -500,7 +500,7 @@ fun u: {x:0, y:Int} -> Int & {x:1, z: Str} -> Str
 fun s: Str -> Str & AA -> AA
 //│ fun s: Str -> Str & AA -> AA
 
-:e // FIXME
+:e
 let g = x => s(r(x))
 //│ ╔══[ERROR] ambiguous
 //│ ╟── cannot determine satisfiability of type ?a
