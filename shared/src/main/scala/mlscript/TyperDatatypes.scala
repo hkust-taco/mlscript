@@ -699,7 +699,6 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       }
     }
     def updateOn(index: Int, bound: ST)(implicit raise: Raise, ctx: Ctx) : Unit = {
-      println(s"TSC update: $tvs in $constraints")
       updateImpl(index, bound)
       println(s"TSC update: $tvs in $constraints")
     }
@@ -759,8 +758,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
           S(List((pol, first) -> rest))
         else N
     }
-    def lcgFunction(pol: Bool, first: FT, rest: FT)
-      (implicit ctx: Ctx)
+    def lcgFunction(pol: Bool, first: FT, rest: FT)(implicit ctx: Ctx)
         : Opt[Ls[(Bool, ST) -> ST]] = {
       for {
         lm <- lcg(!pol, first.lhs, rest.lhs)
@@ -779,11 +777,8 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       val tvs = u.flatMap(_.keys).distinct
       val m = tvs.map(x => u.map(_.getOrElse(x,if (x._1) TopType else BotType)))
       val tsc = new TupleSetConstraints(m.transpose, tvs)
-      tvs.mapValuesIter(_.unwrapProxies).zipWithIndex.foreach {
-        case ((true, tv: TV), i) =>
-          tv.tsc.updateWith(tsc)(_.map(_ + i).orElse(S(Set(i))))
-        case ((false, tv: TV), i) =>
-          tv.tsc.updateWith(tsc)(_.map(_ + i).orElse(S(Set(i))))
+      tvs.values.map(_.unwrapProxies).zipWithIndex.foreach {
+        case (tv: TV, i) => tv.tsc.updateWith(tsc)(_.map(_ + i).orElse(S(Set(i))))
         case _ => ()
       }
       println(s"TSC mk: ${tsc.tvs} in ${tsc.constraints}")

@@ -956,12 +956,11 @@ abstract class TyperHelpers { Typer: Typer =>
     def getVars: SortedSet[TypeVariable] = getVarsImpl(includeBounds = true)
     
     def showBounds: String =
-      getVars.iterator.filter(tv => (tv.assignedTo.nonEmpty || (tv.upperBounds ++ tv.lowerBounds).nonEmpty)).map {
+      getVars.iterator.filter(tv => tv.assignedTo.nonEmpty || (tv.upperBounds ++ tv.lowerBounds).nonEmpty).map {
       case tv @ AssignedVariable(ty) => "\n\t\t" + tv.toString + " := " + ty
       case tv => ("\n\t\t" + tv.toString
           + (if (tv.lowerBounds.isEmpty) "" else " :> " + tv.lowerBounds.mkString(" | "))
-          + (if (tv.upperBounds.isEmpty) "" else " <: " + tv.upperBounds.mkString(" & "))
-      )
+          + (if (tv.upperBounds.isEmpty) "" else " <: " + tv.upperBounds.mkString(" & ")))
       }.mkString + {
         val visited: MutSet[TupleSetConstraints] = MutSet.empty
         getVars.iterator.flatMap(_.tsc).map { case (tsc, i) =>
