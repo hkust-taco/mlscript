@@ -1,7 +1,7 @@
 package mlscript
 package compiler
 
-import utils.shorthands.*
+import mlscript.utils.shorthands._
 import scala.util.control.NonFatal
 import scala.collection.mutable.StringBuilder
 import mlscript.compiler.TreeDebug

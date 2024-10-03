@@ -43,12 +43,17 @@ abstract class ModeType {
   def showRepl: Bool
   def allowEscape: Bool
   def useIR: Bool
-  def noTailRecOpt: Bool
   def interpIR: Bool
   def irVerbose: Bool
+  def genCpp: Bool
+  def showCpp: Bool
+  def runCpp: Bool
+  def writeCpp: Bool
+  def noTailRecOpt: Bool
   def simpledef: Bool
   def lift: Bool
   def nolift: Bool
+  def prelude: Bool
 }
 
 class DiffTests(state: DiffTests.State)
@@ -185,10 +190,17 @@ class DiffTests(state: DiffTests.State)
       lift: Bool = false,
       nolift: Bool = false,
       // noProvs: Bool = false,
-      noTailRecOpt: Bool = false,
       useIR: Bool = false,
       interpIR: Bool = false,
       irVerbose: Bool = false,
+      irOpt: Bool = false,
+      irOptFuel: Int = 10,
+      genCpp: Bool = false,
+      showCpp: Bool = false,
+      runCpp: Bool = false,
+      writeCpp: Bool = false,
+      noTailRecOpt: Bool = false,
+      prelude: Bool = false,
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
     }
@@ -319,6 +331,11 @@ class DiffTests(state: DiffTests.State)
           case "useIR" => mode.copy(useIR = true)
           case "interpIR" => mode.copy(interpIR = true)
           case "irVerbose" => mode.copy(irVerbose = true)
+          case "genCpp" => mode.copy(genCpp = true)
+          case "showCpp" => mode.copy(showCpp = true)
+          case "runCpp" => mode.copy(runCpp = true)
+          case "writeCpp" => mode.copy(writeCpp = true)
+          case "prelude" => mode.copy(prelude = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -485,13 +502,13 @@ class DiffTests(state: DiffTests.State)
             
             if (mode.showParse)
               output(s"AST: $res")
+            
             val newMode = if (useIR) { mode.copy(useIR = true) } else mode
             val newNewMode = if (noTailRec) { newMode.copy(noTailRecOpt = true) } else newMode
 
-            val (postLines, nuRes) = 
-              postProcess(newNewMode, basePath, testName, res, output, raise)
-            postLines.foreach(output)            
-            
+            val (postLines, nuRes) = postProcess(newNewMode, basePath, testName, res, output, raise)
+            postLines.foreach(output)
+
             if (parseOnly)
               Success(Pgrm(Nil), 0)
             else if (mode.lift) {

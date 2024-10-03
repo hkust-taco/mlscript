@@ -1,0 +1,823 @@
+:NewDefs
+:ParseOnly
+:UseIR
+:NoTailRec
+
+:prelude
+module True
+module False
+module Callable {
+  fun apply0() = 0
+  fun apply1(x0) = 0
+  fun apply2(x0,x1) = 0
+  fun apply3(x0,x1,x2) = 0
+  fun apply4(x0,x1,x2,x3) = 0
+  fun apply5(x0,x1,x2,x3,x4) = 0
+}
+module List[A, B]
+class Cons[A, B](h: A, t: Cons[A, B]) extends List[A, B]
+module Nil[A, B] extends List[A, B]
+module Option[A]
+class Some[A](x: A) extends Option[A]
+module None[A] extends Option[A]
+class Pair[A, B](x: A, y: B)
+class Tuple2[A, B](x: A, y: B)
+class Tuple3[A, B, C](x: A, y: B, z: C)
+module Nat
+class S(s: Nat) extends Nat
+module O extends Nat
+class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O)
+//│ |#module| |True|↵|#module| |False|↵|#module| |Callable| |{|→|#fun| |apply0|(||)| |#=| |0|↵|#fun| |apply1|(|x0|)| |#=| |0|↵|#fun| |apply2|(|x0|,|x1|)| |#=| |0|↵|#fun| |apply3|(|x0|,|x1|,|x2|)| |#=| |0|↵|#fun| |apply4|(|x0|,|x1|,|x2|,|x3|)| |#=| |0|↵|#fun| |apply5|(|x0|,|x1|,|x2|,|x3|,|x4|)| |#=| |0|←|↵|}|↵|#module| |List|[|A|,| |B|]|↵|#class| |Cons|[|A|,| |B|]|(|h|#:| |A|,| |t|#:| |Cons|[|A|,| |B|]|)| |#extends| |List|[|A|,| |B|]|↵|#module| |Nil|[|A|,| |B|]| |#extends| |List|[|A|,| |B|]|↵|#module| |Option|[|A|]|↵|#class| |Some|[|A|]|(|x|#:| |A|)| |#extends| |Option|[|A|]|↵|#module| |None|[|A|]| |#extends| |Option|[|A|]|↵|#class| |Pair|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple2|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple3|[|A|,| |B|,| |C|]|(|x|#:| |A|,| |y|#:| |B|,| |z|#:| |C|)|↵|#module| |Nat|↵|#class| |S|(|s|#:| |Nat|)| |#extends| |Nat|↵|#module| |O| |#extends| |Nat|↵|#class| |HiddenTheseEntities|(|_0|#:| |HiddenTheseEntities|,| |_1|#:| |True|,| |_2|#:| |False|,| |_3|#:| |Callable|,| |_4|#:| |List|,| |_5|#:| |Cons|,| |_6|#:| |Nil|,| |_7|#:| |Option|,| |_8|#:| |Some|,| |_9|#:| |None|,| |_10|#:| |Pair|,| |_11|#:| |Tuple2|,| |_12|#:| |Tuple3|,| |_13|#:| |Nat|,| |_14|#:| |S|,| |_15|#:| |O|)|
+//│ Parsed: {module True {}; module False {}; module Callable {fun apply0 = () => 0; fun apply1 = (x0,) => 0; fun apply2 = (x0, x1,) => 0; fun apply3 = (x0, x1, x2,) => 0; fun apply4 = (x0, x1, x2, x3,) => 0; fun apply5 = (x0, x1, x2, x3, x4,) => 0}; module List‹A, B› {}; class Cons‹A, B›(h: A, t: Cons‹A, B›,): List‹A, B› {}; module Nil‹A, B›: List‹A, B› {}; module Option‹A› {}; class Some‹A›(x: A,): Option‹A› {}; module None‹A›: Option‹A› {}; class Pair‹A, B›(x: A, y: B,) {}; class Tuple2‹A, B›(x: A, y: B,) {}; class Tuple3‹A, B, C›(x: A, y: B, z: C,) {}; module Nat {}; class S(s: Nat,): Nat {}; module O: Nat {}; class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O,) {}}
+//│ 
+//│ Preluded.
+//│ 
+
+:genCpp
+:runCpp
+fun error() = builtin("error")
+fun z_of_int(x) = builtin("z_of_int", x)
+fun z_to_int(x) = builtin("z_to_int", x)
+fun z_add(x, y) = builtin("z_add", x, y)
+fun z_sub(x, y) = builtin("z_sub", x, y)
+fun z_div(x, y) = builtin("z_div", x, y)
+fun z_mul(x, y) = builtin("z_mul", x, y)
+fun z_mod(x, y) = builtin("z_mod", x, y)
+fun z_lt(x, y) = builtin("z_lt", x, y)
+fun z_leq(x, y) = builtin("z_leq", x, y)
+fun z_equal(x, y) = builtin("z_equal", x, y)
+fun z_gt(x, y) = builtin("z_gt", x, y)
+fun z_geq(x, y) = builtin("z_geq", x, y)
+fun println(x) = builtin("println", x)
+fun print(x) = builtin("print", x)
+fun debug(x) = builtin("debug", x)
+fun map(f, ls) =
+  if ls is
+    Cons (h, t) then
+      Cons (f(h), map(f, t))
+    Nil then
+      Nil
+fun filter(f_2, ls_2) =
+  if ls_2 is
+    Cons (h_2, t_2) then
+      if f_2(h_2) then
+        Cons (h_2, filter(f_2, t_2))
+      else
+        (filter(f_2, t_2))
+    Nil then
+      Nil
+fun foldl(f_4, i, ls_4) =
+  if ls_4 is
+    Cons (h_4, t_4) then
+      foldl(f_4, f_4(i, h_4), t_4)
+    Nil then
+      i
+fun foldr(f_5, i_1, ls_5) =
+  if ls_5 is
+    Cons (h_5, t_5) then
+      f_5(h_5, foldr(f_5, i_1, t_5))
+    Nil then
+      i_1
+fun zip(xs, ys) =
+  if xs is
+    Cons (hx, tx) then
+      if ys is
+        Cons (hy, ty) then
+          Cons (Tuple2 (hx, hy), zip(tx, ty))
+        Nil then
+          Nil
+    Nil then
+      Nil
+fun zipWith(f_7, xs_4, ys_4) =
+  if xs_4 is
+    Cons (hx_4, tx_4) then
+      if ys_4 is
+        Cons (hy_4, ty_4) then
+          Cons (f_7(hx_4, hy_4), zipWith(f_7, tx_4, ty_4))
+        Nil then
+          Nil
+    Nil then
+      Nil
+fun head(ls_7) =
+  if ls_7 is
+    Cons (h_7, t_7) then
+      h_7
+    Nil then
+      error
+fun tail(ls_9) =
+  if ls_9 is
+    Cons (h_9, t_9) then
+      t_9
+    Nil then
+      error
+fun enumFromTo(a, b) =
+  if a <= b then
+    Cons (a, enumFromTo(a + 1, b))
+  else
+    (Nil)
+fun enumFromThenTo(a_1, t_11, b_1) =
+  if a_1 <= b_1 then
+    Cons (a_1, enumFromThenTo(t_11, 2 * t_11 - a_1, b_1))
+  else
+    (Nil)
+fun take(n, ls_11) =
+  if n > 0 then
+    if ls_11 is
+      Cons (h_11, t_13) then
+        Cons (h_11, take(n - 1, t_13))
+      Nil then
+        Nil
+  else
+    (Nil)
+fun length(ls_13) =
+  if ls_13 is
+    Cons (h_13, t_15) then
+      1 + (length(t_15))
+    Nil then
+      0
+fun mappend(xs_8, ys_8) =
+  if xs_8 is
+    Cons (h_14, t_16) then
+      Cons (h_14, mappend(t_16, ys_8))
+    Nil then
+      ys_8
+fun sum(ls_14) =
+  sumAux(ls_14, 0)
+fun sumAux(ls_15, a_4) =
+  if ls_15 is
+    Nil then
+      a_4
+    Cons (h_15, t_17) then
+      sumAux(t_17, a_4 + h_15)
+fun atIndex(n_2, ls_16) =
+  if n_2 < 0 then
+    error
+  else
+    if ls_16 is
+      Cons (h_16, t_18) then
+        if n_2 == 0 then
+          h_16
+        else
+          (atIndex(n_2 - 1, t_18))
+      Nil then
+        error
+fun concat(lss) =
+  if lss is
+    Cons (h_18, t_20) then
+      mappend(h_18, concat(t_20))
+    Nil then
+      Nil
+fun reverse(ls_18) =
+  reverse_helper(ls_18, Nil)
+fun reverse_helper(ls_19, a_5) =
+  if ls_19 is
+    Cons (h_19, t_21) then
+      reverse_helper(t_21, Cons (h_19, a_5))
+    Nil then
+      a_5
+fun listcomp_fun1(ms, listcomp_fun_para) =
+  if listcomp_fun_para is
+      Cons(listcomp_fun_ls_h, listcomp_fun_ls_t) then
+        listcomp_fun2(ms, listcomp_fun_ls_h, listcomp_fun_ls_t, ms)
+      Nil then
+        Nil
+fun listcomp_fun2(ms, listcomp_fun_ls_h_out, listcomp_fun_ls_t_out, listcomp_fun_para) =
+  if listcomp_fun_para is
+    Cons(listcomp_fun_ls_h, listcomp_fun_ls_t) then
+      Cons(Tuple2 (listcomp_fun_ls_h_out, listcomp_fun_ls_h), listcomp_fun2(ms, listcomp_fun_ls_h_out, listcomp_fun_ls_t_out, listcomp_fun_ls_t))
+    Nil then
+      listcomp_fun1(ms, listcomp_fun_ls_t_out)
+fun test(test_arg1) =
+  let ns = z_enumFromTo(const5000(), z_add(const5000(), test_arg1))
+  let ms = z_enumFromTo(const10000(), z_add(const10000(), test_arg1))
+  let tripls = map(f1, listcomp_fun1(ms, ns))
+  let rs = map(f2, tripls)
+  max'(rs)
+fun const10000() =
+  z_of_int(10000)
+fun f1(f1_arg1) =
+  if f1_arg1 is
+    Tuple2 (f1_Tuple2_0, f1_Tuple2_1) then
+      Tuple3 (f1_Tuple2_0, f1_Tuple2_1, gcdE(f1_Tuple2_0, f1_Tuple2_1))
+fun quotRem(quotRem_arg1, quotRem_arg2) =
+  Tuple2 (z_div(quotRem_arg1, quotRem_arg2), z_mod(quotRem_arg1, quotRem_arg2))
+fun max'(max'_arg1) =
+  if max'_arg1 is
+    Cons (max'_Cons_0, max'_Cons_1) then
+      if max'_Cons_1 is
+        Nil then
+          max'_Cons_0
+        Cons (max'_Cons_0_1, max'_Cons_1_1) then
+          if z_lt(max'_Cons_0, max'_Cons_0_1) then
+            max'(Cons (max'_Cons_0_1, max'_Cons_1_1))
+          else
+            (max'(Cons (max'_Cons_0, max'_Cons_1_1)))
+fun g(g_arg1, g_arg2) =
+  if g_arg1 is
+    Tuple3 (g_Tuple3_0, g_Tuple3_1, g_Tuple3_2) then
+      if g_arg2 is
+        Tuple3 (g_Tuple3_0_1, g_Tuple3_1_1, g_Tuple3_2_1) then
+          if z_equal(g_Tuple3_2_1, const0()) then
+            Tuple3 (g_Tuple3_2, g_Tuple3_0, g_Tuple3_1)
+          else
+            let matchIdent = quotRem(g_Tuple3_2, g_Tuple3_2_1)
+            if matchIdent is
+              Tuple2 (g_Tuple2_0, g_Tuple2_1) then
+                g(Tuple3 (g_Tuple3_0_1, g_Tuple3_1_1, g_Tuple3_2_1), Tuple3 (z_sub(g_Tuple3_0, z_mul(g_Tuple2_0, g_Tuple3_0_1)), z_sub(g_Tuple3_1, z_mul(g_Tuple2_0, g_Tuple3_1_1)), g_Tuple2_1))
+fun abs(abs_arg1) =
+  if z_lt(abs_arg1, const0()) then
+    z_sub(const0(), abs_arg1)
+  else
+    abs_arg1
+fun f2(f2_arg1) =
+  if f2_arg1 is
+    Tuple3 (f2_Tuple3_0, f2_Tuple3_1, f2_Tuple3_2) then
+      if f2_Tuple3_2 is
+        Tuple3 (f2_Tuple3_0_1, f2_Tuple3_1_1, f2_Tuple3_2_1) then
+          abs(z_add(z_add(f2_Tuple3_0_1, f2_Tuple3_1_1), f2_Tuple3_2_1))
+fun const0() =
+  z_of_int(0)
+fun gcdE(gcdE_arg1, gcdE_arg2) =
+  if z_equal(gcdE_arg1, const0()) then
+    Tuple3 (gcdE_arg2, const0(), const1())
+  else
+    (g(Tuple3 (const1(), const0(), gcdE_arg1), Tuple3 (const0(), const1(), gcdE_arg2)))
+fun const1() =
+  z_of_int(1)
+fun const5000() =
+  z_of_int(5000)
+fun testGcd_nofib(testGcd_nofib_arg1) =
+  test(testGcd_nofib_arg1)
+fun z_enumFromTo(z_enumFromTo_arg1, z_enumFromTo_arg2) =
+  if z_leq(z_enumFromTo_arg1, z_enumFromTo_arg2) then
+    Cons (z_enumFromTo_arg1, z_enumFromTo(z_add(z_enumFromTo_arg1, const1()), z_enumFromTo_arg2))
+  else
+    (Nil)
+testGcd_nofib(z_of_int(400))
+//│ |#fun| |error|(||)| |#=| |builtin|(|"error"|)|↵|#fun| |z_of_int|(|x|)| |#=| |builtin|(|"z_of_int"|,| |x|)|↵|#fun| |z_to_int|(|x|)| |#=| |builtin|(|"z_to_int"|,| |x|)|↵|#fun| |z_add|(|x|,| |y|)| |#=| |builtin|(|"z_add"|,| |x|,| |y|)|↵|#fun| |z_sub|(|x|,| |y|)| |#=| |builtin|(|"z_sub"|,| |x|,| |y|)|↵|#fun| |z_div|(|x|,| |y|)| |#=| |builtin|(|"z_div"|,| |x|,| |y|)|↵|#fun| |z_mul|(|x|,| |y|)| |#=| |builtin|(|"z_mul"|,| |x|,| |y|)|↵|#fun| |z_mod|(|x|,| |y|)| |#=| |builtin|(|"z_mod"|,| |x|,| |y|)|↵|#fun| |z_lt|(|x|,| |y|)| |#=| |builtin|(|"z_lt"|,| |x|,| |y|)|↵|#fun| |z_leq|(|x|,| |y|)| |#=| |builtin|(|"z_leq"|,| |x|,| |y|)|↵|#fun| |z_equal|(|x|,| |y|)| |#=| |builtin|(|"z_equal"|,| |x|,| |y|)|↵|#fun| |z_gt|(|x|,| |y|)| |#=| |builtin|(|"z_gt"|,| |x|,| |y|)|↵|#fun| |z_geq|(|x|,| |y|)| |#=| |builtin|(|"z_geq"|,| |x|,| |y|)|↵|#fun| |println|(|x|)| |#=| |builtin|(|"println"|,| |x|)|↵|#fun| |print|(|x|)| |#=| |builtin|(|"print"|,| |x|)|↵|#fun| |debug|(|x|)| |#=| |builtin|(|"debug"|,| |x|)|↵|#fun| |map|(|f|,| |ls|)| |#=|→|#if| |ls| |is|→|Cons| |(|h|,| |t|)| |#then|→|Cons| |(|f|(|h|)|,| |map|(|f|,| |t|)|)|←|↵|Nil| |#then|→|Nil|←|←|←|↵|#fun| |filter|(|f_2|,| |ls_2|)| |#=|→|#if| |ls_2| |is|→|Cons| |(|h_2|,| |t_2|)| |#then|→|#if| |f_2|(|h_2|)| |#then|→|Cons| |(|h_2|,| |filter|(|f_2|,| |t_2|)|)|←|↵|#else|→|(|filter|(|f_2|,| |t_2|)|)|←|←|↵|Nil| |#then|→|Nil|←|←|←|↵|#fun| |foldl|(|f_4|,| |i|,| |ls_4|)| |#=|→|#if| |ls_4| |is|→|Cons| |(|h_4|,| |t_4|)| |#then|→|foldl|(|f_4|,| |f_4|(|i|,| |h_4|)|,| |t_4|)|←|↵|Nil| |#then|→|i|←|←|←|↵|#fun| |foldr|(|f_5|,| |i_1|,| |ls_5|)| |#=|→|#if| |ls_5| |is|→|Cons| |(|h_5|,| |t_5|)| |#then|→|f_5|(|h_5|,| |foldr|(|f_5|,| |i_1|,| |t_5|)|)|←|↵|Nil| |#then|→|i_1|←|←|←|↵|#fun| |zip|(|xs|,| |ys|)| |#=|→|#if| |xs| |is|→|Cons| |(|hx|,| |tx|)| |#then|→|#if| |ys| |is|→|Cons| |(|hy|,| |ty|)| |#then|→|Cons| |(|Tuple2| |(|hx|,| |hy|)|,| |zip|(|tx|,| |ty|)|)|←|↵|Nil| |#then|→|Nil|←|←|←|↵|Nil| |#then|→|Nil|←|←|←|↵|#fun| |zipWith|(|f_7|,| |xs_4|,| |ys_4|)| |#=|→|#if| |xs_4| |is|→|Cons| |(|hx_4|,| |tx_4|)| |#then|→|#if| |ys_4| |is|→|Cons| |(|hy_4|,| |ty_4|)| |#then|→|Cons| |(|f_7|(|hx_4|,| |hy_4|)|,| |zipWith|(|f_7|,| |tx_4|,| |ty_4|)|)|←|↵|Nil| |#then|→|Nil|←|←|←|↵|Nil| |#then|→|Nil|←|←|←|↵|#fun| |head|(|ls_7|)| |#=|→|#if| |ls_7| |is|→|Cons| |(|h_7|,| |t_7|)| |#then|→|h_7|←|↵|Nil| |#then|→|error|←|←|←|↵|#fun| |tail|(|ls_9|)| |#=|→|#if| |ls_9| |is|→|Cons| |(|h_9|,| |t_9|)| |#then|→|t_9|←|↵|Nil| |#then|→|error|←|←|←|↵|#fun| |enumFromTo|(|a|,| |b|)| |#=|→|#if| |a| |<=| |b| |#then|→|Cons| |(|a|,| |enumFromTo|(|a| |+| |1|,| |b|)|)|←|↵|#else|→|(|Nil|)|←|←|↵|#fun| |enumFromThenTo|(|a_1|,| |t_11|,| |b_1|)| |#=|→|#if| |a_1| |<=| |b_1| |#then|→|Cons| |(|a_1|,| |enumFromThenTo|(|t_11|,| |2| |*| |t_11| |-| |a_1|,| |b_1|)|)|←|↵|#else|→|(|Nil|)|←|←|↵|#fun| |take|(|n|,| |ls_11|)| |#=|→|#if| |n| |>| |0| |#then|→|#if| |ls_11| |is|→|Cons| |(|h_11|,| |t_13|)| |#then|→|Cons| |(|h_11|,| |take|(|n| |-| |1|,| |t_13|)|)|←|↵|Nil| |#then|→|Nil|←|←|←|↵|#else|→|(|Nil|)|←|←|↵|#fun| |length|(|ls_13|)| |#=|→|#if| |ls_13| |is|→|Cons| |(|h_13|,| |t_15|)| |#then|→|1| |+| |(|length|(|t_15|)|)|←|↵|Nil| |#then|→|0|←|←|←|↵|#fun| |mappend|(|xs_8|,| |ys_8|)| |#=|→|#if| |xs_8| |is|→|Cons| |(|h_14|,| |t_16|)| |#then|→|Cons| |(|h_14|,| |mappend|(|t_16|,| |ys_8|)|)|←|↵|Nil| |#then|→|ys_8|←|←|←|↵|#fun| |sum|(|ls_14|)| |#=|→|sumAux|(|ls_14|,| |0|)|←|↵|#fun| |sumAux|(|ls_15|,| |a_4|)| |#=|→|#if| |ls_15| |is|→|Nil| |#then|→|a_4|←|↵|Cons| |(|h_15|,| |t_17|)| |#then|→|sumAux|(|t_17|,| |a_4| |+| |h_15|)|←|←|←|↵|#fun| |atIndex|(|n_2|,| |ls_16|)| |#=|→|#if| |n_2| |<| |0| |#then|→|error|←|↵|#else|→|#if| |ls_16| |is|→|Cons| |(|h_16|,| |t_18|)| |#then|→|#if| |n_2| |==| |0| |#then|→|h_16|←|↵|#else|→|(|atIndex|(|n_2| |-| |1|,| |t_18|)|)|←|←|↵|Nil| |#then|→|error|←|←|←|←|↵|#fun| |concat|(|lss|)| |#=|→|#if| |lss| |is|→|Cons| |(|h_18|,| |t_20|)| |#then|→|mappend|(|h_18|,| |concat|(|t_20|)|)|←|↵|Nil| |#then|→|Nil|←|←|←|↵|#fun| |reverse|(|ls_18|)| |#=|→|reverse_helper|(|ls_18|,| |Nil|)|←|↵|#fun| |reverse_helper|(|ls_19|,| |a_5|)| |#=|→|#if| |ls_19| |is|→|Cons| |(|h_19|,| |t_21|)| |#then|→|reverse_helper|(|t_21|,| |Cons| |(|h_19|,| |a_5|)|)|←|↵|Nil| |#then|→|a_5|←|←|←|↵|#fun| |listcomp_fun1|(|ms|,| |listcomp_fun_para|)| |#=|→|#if| |listcomp_fun_para| |is|→|Cons|(|listcomp_fun_ls_h|,| |listcomp_fun_ls_t|)| |#then|→|listcomp_fun2|(|ms|,| |listcomp_fun_ls_h|,| |listcomp_fun_ls_t|,| |ms|)|←|↵|Nil| |#then|→|Nil|←|←|←|↵|#fun| |listcomp_fun2|(|ms|,| |listcomp_fun_ls_h_out|,| |listcomp_fun_ls_t_out|,| |listcomp_fun_para|)| |#=|→|#if| |listcomp_fun_para| |is|→|Cons|(|listcomp_fun_ls_h|,| |listcomp_fun_ls_t|)| |#then|→|Cons|(|Tuple2| |(|listcomp_fun_ls_h_out|,| |listcomp_fun_ls_h|)|,| |listcomp_fun2|(|ms|,| |listcomp_fun_ls_h_out|,| |listcomp_fun_ls_t_out|,| |listcomp_fun_ls_t|)|)|←|↵|Nil| |#then|→|listcomp_fun1|(|ms|,| |listcomp_fun_ls_t_out|)|←|←|←|↵|#fun| |test|(|test_arg1|)| |#=|→|#let| |ns| |#=| |z_enumFromTo|(|const5000|(||)|,| |z_add|(|const5000|(||)|,| |test_arg1|)|)|↵|#let| |ms| |#=| |z_enumFromTo|(|const10000|(||)|,| |z_add|(|const10000|(||)|,| |test_arg1|)|)|↵|#let| |tripls| |#=| |map|(|f1|,| |listcomp_fun1|(|ms|,| |ns|)|)|↵|#let| |rs| |#=| |map|(|f2|,| |tripls|)|↵|max'|(|rs|)|←|↵|#fun| |const10000|(||)| |#=|→|z_of_int|(|10000|)|←|↵|#fun| |f1|(|f1_arg1|)| |#=|→|#if| |f1_arg1| |is|→|Tuple2| |(|f1_Tuple2_0|,| |f1_Tuple2_1|)| |#then|→|Tuple3| |(|f1_Tuple2_0|,| |f1_Tuple2_1|,| |gcdE|(|f1_Tuple2_0|,| |f1_Tuple2_1|)|)|←|←|←|↵|#fun| |quotRem|(|quotRem_arg1|,| |quotRem_arg2|)| |#=|→|Tuple2| |(|z_div|(|quotRem_arg1|,| |quotRem_arg2|)|,| |z_mod|(|quotRem_arg1|,| |quotRem_arg2|)|)|←|↵|#fun| |max'|(|max'_arg1|)| |#=|→|#if| |max'_arg1| |is|→|Cons| |(|max'_Cons_0|,| |max'_Cons_1|)| |#then|→|#if| |max'_Cons_1| |is|→|Nil| |#then|→|max'_Cons_0|←|↵|Cons| |(|max'_Cons_0_1|,| |max'_Cons_1_1|)| |#then|→|#if| |z_lt|(|max'_Cons_0|,| |max'_Cons_0_1|)| |#then|→|max'|(|Cons| |(|max'_Cons_0_1|,| |max'_Cons_1_1|)|)|←|↵|#else|→|(|max'|(|Cons| |(|max'_Cons_0|,| |max'_Cons_1_1|)|)|)|←|←|←|←|←|←|↵|#fun| |g|(|g_arg1|,| |g_arg2|)| |#=|→|#if| |g_arg1| |is|→|Tuple3| |(|g_Tuple3_0|,| |g_Tuple3_1|,| |g_Tuple3_2|)| |#then|→|#if| |g_arg2| |is|→|Tuple3| |(|g_Tuple3_0_1|,| |g_Tuple3_1_1|,| |g_Tuple3_2_1|)| |#then|→|#if| |z_equal|(|g_Tuple3_2_1|,| |const0|(||)|)| |#then|→|Tuple3| |(|g_Tuple3_2|,| |g_Tuple3_0|,| |g_Tuple3_1|)|←|↵|#else|→|#let| |matchIdent| |#=| |quotRem|(|g_Tuple3_2|,| |g_Tuple3_2_1|)|↵|#if| |matchIdent| |is|→|Tuple2| |(|g_Tuple2_0|,| |g_Tuple2_1|)| |#then|→|g|(|Tuple3| |(|g_Tuple3_0_1|,| |g_Tuple3_1_1|,| |g_Tuple3_2_1|)|,| |Tuple3| |(|z_sub|(|g_Tuple3_0|,| |z_mul|(|g_Tuple2_0|,| |g_Tuple3_0_1|)|)|,| |z_sub|(|g_Tuple3_1|,| |z_mul|(|g_Tuple2_0|,| |g_Tuple3_1_1|)|)|,| |g_Tuple2_1|)|)|←|←|←|←|←|←|←|←|↵|#fun| |abs|(|abs_arg1|)| |#=|→|#if| |z_lt|(|abs_arg1|,| |const0|(||)|)| |#then|→|z_sub|(|const0|(||)|,| |abs_arg1|)|←|↵|#else|→|abs_arg1|←|←|↵|#fun| |f2|(|f2_arg1|)| |#=|→|#if| |f2_arg1| |is|→|Tuple3| |(|f2_Tuple3_0|,| |f2_Tuple3_1|,| |f2_Tuple3_2|)| |#then|→|#if| |f2_Tuple3_2| |is|→|Tuple3| |(|f2_Tuple3_0_1|,| |f2_Tuple3_1_1|,| |f2_Tuple3_2_1|)| |#then|→|abs|(|z_add|(|z_add|(|f2_Tuple3_0_1|,| |f2_Tuple3_1_1|)|,| |f2_Tuple3_2_1|)|)|←|←|←|←|←|↵|#fun| |const0|(||)| |#=|→|z_of_int|(|0|)|←|↵|#fun| |gcdE|(|gcdE_arg1|,| |gcdE_arg2|)| |#=|→|#if| |z_equal|(|gcdE_arg1|,| |const0|(||)|)| |#then|→|Tuple3| |(|gcdE_arg2|,| |const0|(||)|,| |const1|(||)|)|←|↵|#else|→|(|g|(|Tuple3| |(|const1|(||)|,| |const0|(||)|,| |gcdE_arg1|)|,| |Tuple3| |(|const0|(||)|,| |const1|(||)|,| |gcdE_arg2|)|)|)|←|←|↵|#fun| |const1|(||)| |#=|→|z_of_int|(|1|)|←|↵|#fun| |const5000|(||)| |#=|→|z_of_int|(|5000|)|←|↵|#fun| |testGcd_nofib|(|testGcd_nofib_arg1|)| |#=|→|test|(|testGcd_nofib_arg1|)|←|↵|#fun| |z_enumFromTo|(|z_enumFromTo_arg1|,| |z_enumFromTo_arg2|)| |#=|→|#if| |z_leq|(|z_enumFromTo_arg1|,| |z_enumFromTo_arg2|)| |#then|→|Cons| |(|z_enumFromTo_arg1|,| |z_enumFromTo|(|z_add|(|z_enumFromTo_arg1|,| |const1|(||)|)|,| |z_enumFromTo_arg2|)|)|←|↵|#else|→|(|Nil|)|←|←|↵|testGcd_nofib|(|z_of_int|(|400|)|)|
+//│ Parsed: {fun error = () => builtin("error",); fun z_of_int = (x,) => builtin("z_of_int", x,); fun z_to_int = (x,) => builtin("z_to_int", x,); fun z_add = (x, y,) => builtin("z_add", x, y,); fun z_sub = (x, y,) => builtin("z_sub", x, y,); fun z_div = (x, y,) => builtin("z_div", x, y,); fun z_mul = (x, y,) => builtin("z_mul", x, y,); fun z_mod = (x, y,) => builtin("z_mod", x, y,); fun z_lt = (x, y,) => builtin("z_lt", x, y,); fun z_leq = (x, y,) => builtin("z_leq", x, y,); fun z_equal = (x, y,) => builtin("z_equal", x, y,); fun z_gt = (x, y,) => builtin("z_gt", x, y,); fun z_geq = (x, y,) => builtin("z_geq", x, y,); fun println = (x,) => builtin("println", x,); fun print = (x,) => builtin("print", x,); fun debug = (x,) => builtin("debug", x,); fun map = (f, ls,) => {if ls is ‹(Cons(h, t,)) then {Cons(f(h,), map(f, t,),)}; (Nil) then {Nil}›}; fun filter = (f_2, ls_2,) => {if ls_2 is ‹(Cons(h_2, t_2,)) then {if (f_2(h_2,)) then {Cons(h_2, filter(f_2, t_2,),)} else {'(' filter(f_2, t_2,) ')'}}; (Nil) then {Nil}›}; fun foldl = (f_4, i, ls_4,) => {if ls_4 is ‹(Cons(h_4, t_4,)) then {foldl(f_4, f_4(i, h_4,), t_4,)}; (Nil) then {i}›}; fun foldr = (f_5, i_1, ls_5,) => {if ls_5 is ‹(Cons(h_5, t_5,)) then {f_5(h_5, foldr(f_5, i_1, t_5,),)}; (Nil) then {i_1}›}; fun zip = (xs, ys,) => {if xs is ‹(Cons(hx, tx,)) then {if ys is ‹(Cons(hy, ty,)) then {Cons(Tuple2(hx, hy,), zip(tx, ty,),)}; (Nil) then {Nil}›}; (Nil) then {Nil}›}; fun zipWith = (f_7, xs_4, ys_4,) => {if xs_4 is ‹(Cons(hx_4, tx_4,)) then {if ys_4 is ‹(Cons(hy_4, ty_4,)) then {Cons(f_7(hx_4, hy_4,), zipWith(f_7, tx_4, ty_4,),)}; (Nil) then {Nil}›}; (Nil) then {Nil}›}; fun head = (ls_7,) => {if ls_7 is ‹(Cons(h_7, t_7,)) then {h_7}; (Nil) then {error}›}; fun tail = (ls_9,) => {if ls_9 is ‹(Cons(h_9, t_9,)) then {t_9}; (Nil) then {error}›}; fun enumFromTo = (a, b,) => {if (<=(a, b,)) then {Cons(a, enumFromTo(+(a, 1,), b,),)} else {'(' Nil ')'}}; fun enumFromThenTo = (a_1, t_11, b_1,) => {if (<=(a_1, b_1,)) then {Cons(a_1, enumFromThenTo(t_11, -(*(2, t_11,), a_1,), b_1,),)} else {'(' Nil ')'}}; fun take = (n, ls_11,) => {if (>(n, 0,)) then {if ls_11 is ‹(Cons(h_11, t_13,)) then {Cons(h_11, take(-(n, 1,), t_13,),)}; (Nil) then {Nil}›} else {'(' Nil ')'}}; fun length = (ls_13,) => {if ls_13 is ‹(Cons(h_13, t_15,)) then {+(1, '(' length(t_15,) ')',)}; (Nil) then {0}›}; fun mappend = (xs_8, ys_8,) => {if xs_8 is ‹(Cons(h_14, t_16,)) then {Cons(h_14, mappend(t_16, ys_8,),)}; (Nil) then {ys_8}›}; fun sum = (ls_14,) => {sumAux(ls_14, 0,)}; fun sumAux = (ls_15, a_4,) => {if ls_15 is ‹(Nil) then {a_4}; (Cons(h_15, t_17,)) then {sumAux(t_17, +(a_4, h_15,),)}›}; fun atIndex = (n_2, ls_16,) => {if (<(n_2, 0,)) then {error} else {if ls_16 is ‹(Cons(h_16, t_18,)) then {if (==(n_2, 0,)) then {h_16} else {'(' atIndex(-(n_2, 1,), t_18,) ')'}}; (Nil) then {error}›}}; fun concat = (lss,) => {if lss is ‹(Cons(h_18, t_20,)) then {mappend(h_18, concat(t_20,),)}; (Nil) then {Nil}›}; fun reverse = (ls_18,) => {reverse_helper(ls_18, Nil,)}; fun reverse_helper = (ls_19, a_5,) => {if ls_19 is ‹(Cons(h_19, t_21,)) then {reverse_helper(t_21, Cons(h_19, a_5,),)}; (Nil) then {a_5}›}; fun listcomp_fun1 = (ms, listcomp_fun_para,) => {if listcomp_fun_para is ‹(Cons(listcomp_fun_ls_h, listcomp_fun_ls_t,)) then {listcomp_fun2(ms, listcomp_fun_ls_h, listcomp_fun_ls_t, ms,)}; (Nil) then {Nil}›}; fun listcomp_fun2 = (ms, listcomp_fun_ls_h_out, listcomp_fun_ls_t_out, listcomp_fun_para,) => {if listcomp_fun_para is ‹(Cons(listcomp_fun_ls_h, listcomp_fun_ls_t,)) then {Cons(Tuple2(listcomp_fun_ls_h_out, listcomp_fun_ls_h,), listcomp_fun2(ms, listcomp_fun_ls_h_out, listcomp_fun_ls_t_out, listcomp_fun_ls_t,),)}; (Nil) then {listcomp_fun1(ms, listcomp_fun_ls_t_out,)}›}; fun test = (test_arg1,) => {let ns = z_enumFromTo(const5000(), z_add(const5000(), test_arg1,),); let ms = z_enumFromTo(const10000(), z_add(const10000(), test_arg1,),); let tripls = map(f1, listcomp_fun1(ms, ns,),); let rs = map(f2, tripls,); max'(rs,)}; fun const10000 = () => {z_of_int(10000,)}; fun f1 = (f1_arg1,) => {if f1_arg1 is ‹(Tuple2(f1_Tuple2_0, f1_Tuple2_1,)) then {Tuple3(f1_Tuple2_0, f1_Tuple2_1, gcdE(f1_Tuple2_0, f1_Tuple2_1,),)}›}; fun quotRem = (quotRem_arg1, quotRem_arg2,) => {Tuple2(z_div(quotRem_arg1, quotRem_arg2,), z_mod(quotRem_arg1, quotRem_arg2,),)}; fun max' = (max'_arg1,) => {if max'_arg1 is ‹(Cons(max'_Cons_0, max'_Cons_1,)) then {if max'_Cons_1 is ‹(Nil) then {max'_Cons_0}; (Cons(max'_Cons_0_1, max'_Cons_1_1,)) then {if (z_lt(max'_Cons_0, max'_Cons_0_1,)) then {max'(Cons(max'_Cons_0_1, max'_Cons_1_1,),)} else {'(' max'(Cons(max'_Cons_0, max'_Cons_1_1,),) ')'}}›}›}; fun g = (g_arg1, g_arg2,) => {if g_arg1 is ‹(Tuple3(g_Tuple3_0, g_Tuple3_1, g_Tuple3_2,)) then {if g_arg2 is ‹(Tuple3(g_Tuple3_0_1, g_Tuple3_1_1, g_Tuple3_2_1,)) then {if (z_equal(g_Tuple3_2_1, const0(),)) then {Tuple3(g_Tuple3_2, g_Tuple3_0, g_Tuple3_1,)} else {let matchIdent = quotRem(g_Tuple3_2, g_Tuple3_2_1,); if matchIdent is ‹(Tuple2(g_Tuple2_0, g_Tuple2_1,)) then {g(Tuple3(g_Tuple3_0_1, g_Tuple3_1_1, g_Tuple3_2_1,), Tuple3(z_sub(g_Tuple3_0, z_mul(g_Tuple2_0, g_Tuple3_0_1,),), z_sub(g_Tuple3_1, z_mul(g_Tuple2_0, g_Tuple3_1_1,),), g_Tuple2_1,),)}›}}›}›}; fun abs = (abs_arg1,) => {if (z_lt(abs_arg1, const0(),)) then {z_sub(const0(), abs_arg1,)} else {abs_arg1}}; fun f2 = (f2_arg1,) => {if f2_arg1 is ‹(Tuple3(f2_Tuple3_0, f2_Tuple3_1, f2_Tuple3_2,)) then {if f2_Tuple3_2 is ‹(Tuple3(f2_Tuple3_0_1, f2_Tuple3_1_1, f2_Tuple3_2_1,)) then {abs(z_add(z_add(f2_Tuple3_0_1, f2_Tuple3_1_1,), f2_Tuple3_2_1,),)}›}›}; fun const0 = () => {z_of_int(0,)}; fun gcdE = (gcdE_arg1, gcdE_arg2,) => {if (z_equal(gcdE_arg1, const0(),)) then {Tuple3(gcdE_arg2, const0(), const1(),)} else {'(' g(Tuple3(const1(), const0(), gcdE_arg1,), Tuple3(const0(), const1(), gcdE_arg2,),) ')'}}; fun const1 = () => {z_of_int(1,)}; fun const5000 = () => {z_of_int(5000,)}; fun testGcd_nofib = (testGcd_nofib_arg1,) => {test(testGcd_nofib_arg1,)}; fun z_enumFromTo = (z_enumFromTo_arg1, z_enumFromTo_arg2,) => {if (z_leq(z_enumFromTo_arg1, z_enumFromTo_arg2,)) then {Cons(z_enumFromTo_arg1, z_enumFromTo(z_add(z_enumFromTo_arg1, const1(),), z_enumFromTo_arg2,),)} else {'(' Nil ')'}}; testGcd_nofib(z_of_int(400,),)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│   class Lambda$0() extends Callable {
+//│     def apply0() =
+//│       let* (x$270) = error() in -- #1354
+//│       x$270 -- #1353
+//│   }
+//│   class Lambda$1() extends Callable {
+//│     def apply0() =
+//│       let* (x$271) = error() in -- #1357
+//│       x$271 -- #1356
+//│   }
+//│   class Lambda$2() extends Callable {
+//│     def apply0() =
+//│       let* (x$272) = error() in -- #1360
+//│       x$272 -- #1359
+//│   }
+//│   class Lambda$3() extends Callable {
+//│     def apply0() =
+//│       let* (x$273) = error() in -- #1363
+//│       x$273 -- #1362
+//│   }
+//│   class Lambda$4() extends Callable {
+//│     def apply1(x$274) =
+//│       let* (x$275) = f1(x$274) in -- #1368
+//│       x$275 -- #1367
+//│   }
+//│   class Lambda$5() extends Callable {
+//│     def apply1(x$276) =
+//│       let* (x$277) = f2(x$276) in -- #1373
+//│       x$277 -- #1372
+//│   }
+//│   def error() =
+//│     let x$2 = Callable.apply1(builtin,error) in -- #14
+//│     x$2 -- #13
+//│   def z_of_int(x$3) =
+//│     let x$4 = Callable.apply2(builtin,z_of_int,x$3) in -- #22
+//│     x$4 -- #21
+//│   def z_to_int(x$5) =
+//│     let x$6 = Callable.apply2(builtin,z_to_int,x$5) in -- #30
+//│     x$6 -- #29
+//│   def z_add(x$7,y$0) =
+//│     let x$8 = Callable.apply3(builtin,z_add,x$7,y$0) in -- #40
+//│     x$8 -- #39
+//│   def z_sub(x$9,y$1) =
+//│     let x$10 = Callable.apply3(builtin,z_sub,x$9,y$1) in -- #50
+//│     x$10 -- #49
+//│   def z_div(x$11,y$2) =
+//│     let x$12 = Callable.apply3(builtin,z_div,x$11,y$2) in -- #60
+//│     x$12 -- #59
+//│   def z_mul(x$13,y$3) =
+//│     let x$14 = Callable.apply3(builtin,z_mul,x$13,y$3) in -- #70
+//│     x$14 -- #69
+//│   def z_mod(x$15,y$4) =
+//│     let x$16 = Callable.apply3(builtin,z_mod,x$15,y$4) in -- #80
+//│     x$16 -- #79
+//│   def z_lt(x$17,y$5) =
+//│     let x$18 = Callable.apply3(builtin,z_lt,x$17,y$5) in -- #90
+//│     x$18 -- #89
+//│   def z_leq(x$19,y$6) =
+//│     let x$20 = Callable.apply3(builtin,z_leq,x$19,y$6) in -- #100
+//│     x$20 -- #99
+//│   def z_equal(x$21,y$7) =
+//│     let x$22 = Callable.apply3(builtin,z_equal,x$21,y$7) in -- #110
+//│     x$22 -- #109
+//│   def z_gt(x$23,y$8) =
+//│     let x$24 = Callable.apply3(builtin,z_gt,x$23,y$8) in -- #120
+//│     x$24 -- #119
+//│   def z_geq(x$25,y$9) =
+//│     let x$26 = Callable.apply3(builtin,z_geq,x$25,y$9) in -- #130
+//│     x$26 -- #129
+//│   def println(x$27) =
+//│     let x$28 = Callable.apply2(builtin,println,x$27) in -- #138
+//│     x$28 -- #137
+//│   def print(x$29) =
+//│     let x$30 = Callable.apply2(builtin,print,x$29) in -- #146
+//│     x$30 -- #145
+//│   def debug(x$31) =
+//│     let x$32 = Callable.apply2(builtin,debug,x$31) in -- #154
+//│     x$32 -- #153
+//│   def map(f$0,ls$0) =
+//│     case ls$0 of -- #189
+//│       Cons =>
+//│         let x$34 = Cons.t(ls$0) in -- #185
+//│         let x$35 = Cons.h(ls$0) in -- #184
+//│         let x$36 = Callable.apply1(f$0,x$35) in -- #183
+//│         let* (x$37) = map(f$0,x$34) in -- #182
+//│         let x$38 = Cons(x$36,x$37) in -- #181
+//│         jump j$0(x$38) -- #180
+//│       Nil =>
+//│         let x$39 = Nil() in -- #188
+//│         jump j$0(x$39) -- #187
+//│   def j$0(x$33) =
+//│     x$33 -- #156
+//│   def filter(f_2$0,ls_2$0) =
+//│     case ls_2$0 of -- #236
+//│       Cons =>
+//│         let x$41 = Cons.t(ls_2$0) in -- #232
+//│         let x$42 = Cons.h(ls_2$0) in -- #231
+//│         let x$43 = Callable.apply1(f_2$0,x$42) in -- #230
+//│         if x$43 -- #229
+//│           true =>
+//│             let* (x$45) = filter(f_2$0,x$41) in -- #220
+//│             let x$46 = Cons(x$42,x$45) in -- #219
+//│             jump j$2(x$46) -- #218
+//│           false =>
+//│             let* (x$47) = filter(f_2$0,x$41) in -- #228
+//│             jump j$2(x$47) -- #227
+//│       Nil =>
+//│         let x$48 = Nil() in -- #235
+//│         jump j$1(x$48) -- #234
+//│   def j$1(x$40) =
+//│     x$40 -- #191
+//│   def j$2(x$44) =
+//│     jump j$1(x$44) -- #206
+//│   def foldl(f_4$0,i$0,ls_4$0) =
+//│     case ls_4$0 of -- #268
+//│       Cons =>
+//│         let x$50 = Cons.t(ls_4$0) in -- #265
+//│         let x$51 = Cons.h(ls_4$0) in -- #264
+//│         let x$52 = Callable.apply2(f_4$0,i$0,x$51) in -- #263
+//│         let* (x$53) = foldl(f_4$0,x$52,x$50) in -- #262
+//│         jump j$3(x$53) -- #261
+//│       Nil =>
+//│         jump j$3(i$0) -- #267
+//│   def j$3(x$49) =
+//│     x$49 -- #238
+//│   def foldr(f_5$0,i_1$0,ls_5$0) =
+//│     case ls_5$0 of -- #300
+//│       Cons =>
+//│         let x$55 = Cons.t(ls_5$0) in -- #297
+//│         let x$56 = Cons.h(ls_5$0) in -- #296
+//│         let* (x$57) = foldr(f_5$0,i_1$0,x$55) in -- #295
+//│         let x$58 = Callable.apply2(f_5$0,x$56,x$57) in -- #294
+//│         jump j$4(x$58) -- #293
+//│       Nil =>
+//│         jump j$4(i_1$0) -- #299
+//│   def j$4(x$54) =
+//│     x$54 -- #270
+//│   def zip(xs$0,ys$0) =
+//│     case xs$0 of -- #353
+//│       Cons =>
+//│         let x$60 = Cons.t(xs$0) in -- #349
+//│         let x$61 = Cons.h(xs$0) in -- #348
+//│         case ys$0 of -- #347
+//│           Cons =>
+//│             let x$63 = Cons.t(ys$0) in -- #343
+//│             let x$64 = Cons.h(ys$0) in -- #342
+//│             let x$65 = Tuple2(x$61,x$64) in -- #341
+//│             let* (x$66) = zip(x$60,x$63) in -- #340
+//│             let x$67 = Cons(x$65,x$66) in -- #339
+//│             jump j$6(x$67) -- #338
+//│           Nil =>
+//│             let x$68 = Nil() in -- #346
+//│             jump j$6(x$68) -- #345
+//│       Nil =>
+//│         let x$69 = Nil() in -- #352
+//│         jump j$5(x$69) -- #351
+//│   def j$5(x$59) =
+//│     x$59 -- #302
+//│   def j$6(x$62) =
+//│     jump j$5(x$62) -- #313
+//│   def zipWith(f_7$0,xs_4$0,ys_4$0) =
+//│     case xs_4$0 of -- #409
+//│       Cons =>
+//│         let x$71 = Cons.t(xs_4$0) in -- #405
+//│         let x$72 = Cons.h(xs_4$0) in -- #404
+//│         case ys_4$0 of -- #403
+//│           Cons =>
+//│             let x$74 = Cons.t(ys_4$0) in -- #399
+//│             let x$75 = Cons.h(ys_4$0) in -- #398
+//│             let x$76 = Callable.apply2(f_7$0,x$72,x$75) in -- #397
+//│             let* (x$77) = zipWith(f_7$0,x$71,x$74) in -- #396
+//│             let x$78 = Cons(x$76,x$77) in -- #395
+//│             jump j$8(x$78) -- #394
+//│           Nil =>
+//│             let x$79 = Nil() in -- #402
+//│             jump j$8(x$79) -- #401
+//│       Nil =>
+//│         let x$80 = Nil() in -- #408
+//│         jump j$7(x$80) -- #407
+//│   def j$7(x$70) =
+//│     x$70 -- #355
+//│   def j$8(x$73) =
+//│     jump j$7(x$73) -- #366
+//│   def head(ls_7$0) =
+//│     case ls_7$0 of -- #427
+//│       Cons =>
+//│         let x$82 = Cons.t(ls_7$0) in -- #423
+//│         let x$83 = Cons.h(ls_7$0) in -- #422
+//│         jump j$9(x$83) -- #421
+//│       Nil =>
+//│         let x$85 = Lambda$0() in -- #426
+//│         jump j$9(x$85) -- #425
+//│   def j$9(x$81) =
+//│     x$81 -- #411
+//│   def tail(ls_9$0) =
+//│     case ls_9$0 of -- #445
+//│       Cons =>
+//│         let x$87 = Cons.t(ls_9$0) in -- #441
+//│         let x$88 = Cons.h(ls_9$0) in -- #440
+//│         jump j$10(x$87) -- #439
+//│       Nil =>
+//│         let x$90 = Lambda$1() in -- #444
+//│         jump j$10(x$90) -- #443
+//│   def j$10(x$86) =
+//│     x$86 -- #429
+//│   def enumFromTo(a$0,b$0) =
+//│     let x$91 = <=(a$0,b$0) in -- #477
+//│     if x$91 -- #476
+//│       true =>
+//│         let x$93 = +(a$0,1) in -- #472
+//│         let* (x$94) = enumFromTo(x$93,b$0) in -- #471
+//│         let x$95 = Cons(a$0,x$94) in -- #470
+//│         jump j$11(x$95) -- #469
+//│       false =>
+//│         let x$96 = Nil() in -- #475
+//│         jump j$11(x$96) -- #474
+//│   def j$11(x$92) =
+//│     x$92 -- #452
+//│   def enumFromThenTo(a_1$0,t_11$0,b_1$0) =
+//│     let x$97 = <=(a_1$0,b_1$0) in -- #517
+//│     if x$97 -- #516
+//│       true =>
+//│         let x$99 = *(2,t_11$0) in -- #512
+//│         let x$100 = -(x$99,a_1$0) in -- #511
+//│         let* (x$101) = enumFromThenTo(t_11$0,x$100,b_1$0) in -- #510
+//│         let x$102 = Cons(a_1$0,x$101) in -- #509
+//│         jump j$12(x$102) -- #508
+//│       false =>
+//│         let x$103 = Nil() in -- #515
+//│         jump j$12(x$103) -- #514
+//│   def j$12(x$98) =
+//│     x$98 -- #484
+//│   def take(n$0,ls_11$0) =
+//│     let x$104 = >(n$0,0) in -- #566
+//│     if x$104 -- #565
+//│       true =>
+//│         case ls_11$0 of -- #561
+//│           Cons =>
+//│             let x$107 = Cons.t(ls_11$0) in -- #557
+//│             let x$108 = Cons.h(ls_11$0) in -- #556
+//│             let x$109 = -(n$0,1) in -- #555
+//│             let* (x$110) = take(x$109,x$107) in -- #554
+//│             let x$111 = Cons(x$108,x$110) in -- #553
+//│             jump j$14(x$111) -- #552
+//│           Nil =>
+//│             let x$112 = Nil() in -- #560
+//│             jump j$14(x$112) -- #559
+//│       false =>
+//│         let x$113 = Nil() in -- #564
+//│         jump j$13(x$113) -- #563
+//│   def j$13(x$105) =
+//│     x$105 -- #524
+//│   def j$14(x$106) =
+//│     jump j$13(x$106) -- #527
+//│   def length(ls_13$0) =
+//│     case ls_13$0 of -- #593
+//│       Cons =>
+//│         let x$115 = Cons.t(ls_13$0) in -- #590
+//│         let x$116 = Cons.h(ls_13$0) in -- #589
+//│         let* (x$117) = length(x$115) in -- #588
+//│         let x$118 = +(1,x$117) in -- #587
+//│         jump j$15(x$118) -- #586
+//│       Nil =>
+//│         jump j$15(0) -- #592
+//│   def j$15(x$114) =
+//│     x$114 -- #568
+//│   def mappend(xs_8$0,ys_8$0) =
+//│     case xs_8$0 of -- #622
+//│       Cons =>
+//│         let x$120 = Cons.t(xs_8$0) in -- #619
+//│         let x$121 = Cons.h(xs_8$0) in -- #618
+//│         let* (x$122) = mappend(x$120,ys_8$0) in -- #617
+//│         let x$123 = Cons(x$121,x$122) in -- #616
+//│         jump j$16(x$123) -- #615
+//│       Nil =>
+//│         jump j$16(ys_8$0) -- #621
+//│   def j$16(x$119) =
+//│     x$119 -- #595
+//│   def sum(ls_14$0) =
+//│     let* (x$124) = sumAux(ls_14$0,0) in -- #629
+//│     x$124 -- #628
+//│   def sumAux(ls_15$0,a_4$0) =
+//│     case ls_15$0 of -- #658
+//│       Nil =>
+//│         jump j$17(a_4$0) -- #633
+//│       Cons =>
+//│         let x$126 = Cons.t(ls_15$0) in -- #657
+//│         let x$127 = Cons.h(ls_15$0) in -- #656
+//│         let x$128 = +(a_4$0,x$127) in -- #655
+//│         let* (x$129) = sumAux(x$126,x$128) in -- #654
+//│         jump j$17(x$129) -- #653
+//│   def j$17(x$125) =
+//│     x$125 -- #631
+//│   def atIndex(n_2$0,ls_16$0) =
+//│     let x$130 = <(n_2$0,0) in -- #713
+//│     if x$130 -- #712
+//│       true =>
+//│         let x$133 = Lambda$2() in -- #668
+//│         jump j$18(x$133) -- #667
+//│       false =>
+//│         case ls_16$0 of -- #711
+//│           Cons =>
+//│             let x$135 = Cons.t(ls_16$0) in -- #707
+//│             let x$136 = Cons.h(ls_16$0) in -- #706
+//│             let x$137 = ==(n_2$0,0) in -- #705
+//│             if x$137 -- #704
+//│               true =>
+//│                 jump j$20(x$136) -- #689
+//│               false =>
+//│                 let x$139 = -(n_2$0,1) in -- #703
+//│                 let* (x$140) = atIndex(x$139,x$135) in -- #702
+//│                 jump j$20(x$140) -- #701
+//│           Nil =>
+//│             let x$142 = Lambda$3() in -- #710
+//│             jump j$19(x$142) -- #709
+//│   def j$18(x$131) =
+//│     x$131 -- #665
+//│   def j$19(x$134) =
+//│     jump j$18(x$134) -- #671
+//│   def j$20(x$138) =
+//│     jump j$19(x$138) -- #687
+//│   def concat(lss$0) =
+//│     case lss$0 of -- #741
+//│       Cons =>
+//│         let x$144 = Cons.t(lss$0) in -- #737
+//│         let x$145 = Cons.h(lss$0) in -- #736
+//│         let* (x$146) = concat(x$144) in -- #735
+//│         let* (x$147) = mappend(x$145,x$146) in -- #734
+//│         jump j$21(x$147) -- #733
+//│       Nil =>
+//│         let x$148 = Nil() in -- #740
+//│         jump j$21(x$148) -- #739
+//│   def j$21(x$143) =
+//│     x$143 -- #715
+//│   def reverse(ls_18$0) =
+//│     let x$149 = Nil() in -- #749
+//│     let* (x$150) = reverse_helper(ls_18$0,x$149) in -- #748
+//│     x$150 -- #747
+//│   def reverse_helper(ls_19$0,a_5$0) =
+//│     case ls_19$0 of -- #778
+//│       Cons =>
+//│         let x$152 = Cons.t(ls_19$0) in -- #775
+//│         let x$153 = Cons.h(ls_19$0) in -- #774
+//│         let x$154 = Cons(x$153,a_5$0) in -- #773
+//│         let* (x$155) = reverse_helper(x$152,x$154) in -- #772
+//│         jump j$22(x$155) -- #771
+//│       Nil =>
+//│         jump j$22(a_5$0) -- #777
+//│   def j$22(x$151) =
+//│     x$151 -- #751
+//│   def listcomp_fun1(ms$0,listcomp_fun_para$0) =
+//│     case listcomp_fun_para$0 of -- #806
+//│       Cons =>
+//│         let x$157 = Cons.t(listcomp_fun_para$0) in -- #802
+//│         let x$158 = Cons.h(listcomp_fun_para$0) in -- #801
+//│         let* (x$159) = listcomp_fun2(ms$0,x$158,x$157,ms$0) in -- #800
+//│         jump j$23(x$159) -- #799
+//│       Nil =>
+//│         let x$160 = Nil() in -- #805
+//│         jump j$23(x$160) -- #804
+//│   def j$23(x$156) =
+//│     x$156 -- #780
+//│   def listcomp_fun2(ms$1,listcomp_fun_ls_h_out$0,listcomp_fun_ls_t_out$0,listcomp_fun_para$1) =
+//│     case listcomp_fun_para$1 of -- #851
+//│       Cons =>
+//│         let x$162 = Cons.t(listcomp_fun_para$1) in -- #842
+//│         let x$163 = Cons.h(listcomp_fun_para$1) in -- #841
+//│         let x$164 = Tuple2(listcomp_fun_ls_h_out$0,x$163) in -- #840
+//│         let* (x$165) = listcomp_fun2(ms$1,listcomp_fun_ls_h_out$0,listcomp_fun_ls_t_out$0,x$162) in -- #839
+//│         let x$166 = Cons(x$164,x$165) in -- #838
+//│         jump j$24(x$166) -- #837
+//│       Nil =>
+//│         let* (x$167) = listcomp_fun1(ms$1,listcomp_fun_ls_t_out$0) in -- #850
+//│         jump j$24(x$167) -- #849
+//│   def j$24(x$161) =
+//│     x$161 -- #808
+//│   def test(test_arg1$0) =
+//│     let* (x$168) = const5000() in -- #912
+//│     let* (x$169) = const5000() in -- #911
+//│     let* (x$170) = z_add(x$169,test_arg1$0) in -- #910
+//│     let* (x$171) = z_enumFromTo(x$168,x$170) in -- #909
+//│     let* (x$172) = const10000() in -- #908
+//│     let* (x$173) = const10000() in -- #907
+//│     let* (x$174) = z_add(x$173,test_arg1$0) in -- #906
+//│     let* (x$175) = z_enumFromTo(x$172,x$174) in -- #905
+//│     let x$178 = Lambda$4() in -- #904
+//│     let* (x$179) = listcomp_fun1(x$175,x$171) in -- #903
+//│     let* (x$180) = map(x$178,x$179) in -- #902
+//│     let x$183 = Lambda$5() in -- #901
+//│     let* (x$184) = map(x$183,x$180) in -- #900
+//│     let* (x$185) = max'(x$184) in -- #899
+//│     x$185 -- #898
+//│   def const10000() =
+//│     let* (x$186) = z_of_int(10000) in -- #917
+//│     x$186 -- #916
+//│   def f1(f1_arg1$0) =
+//│     case f1_arg1$0 of -- #946
+//│       Tuple2 =>
+//│         let x$188 = Tuple2.y(f1_arg1$0) in -- #945
+//│         let x$189 = Tuple2.x(f1_arg1$0) in -- #944
+//│         let* (x$190) = gcdE(x$189,x$188) in -- #943
+//│         let x$191 = Tuple3(x$189,x$188,x$190) in -- #942
+//│         jump j$25(x$191) -- #941
+//│   def j$25(x$187) =
+//│     x$187 -- #919
+//│   def quotRem(quotRem_arg1$0,quotRem_arg2$0) =
+//│     let* (x$192) = z_div(quotRem_arg1$0,quotRem_arg2$0) in -- #965
+//│     let* (x$193) = z_mod(quotRem_arg1$0,quotRem_arg2$0) in -- #964
+//│     let x$194 = Tuple2(x$192,x$193) in -- #963
+//│     x$194 -- #962
+//│   def max'(max'_arg1$0) =
+//│     case max'_arg1$0 of -- #1028
+//│       Cons =>
+//│         let x$196 = Cons.t(max'_arg1$0) in -- #1027
+//│         let x$197 = Cons.h(max'_arg1$0) in -- #1026
+//│         case x$196 of -- #1025
+//│           Nil =>
+//│             jump j$27(x$197) -- #980
+//│           Cons =>
+//│             let x$199 = Cons.t(x$196) in -- #1024
+//│             let x$200 = Cons.h(x$196) in -- #1023
+//│             let* (x$201) = z_lt(x$197,x$200) in -- #1022
+//│             if x$201 -- #1021
+//│               true =>
+//│                 let x$203 = Cons(x$200,x$199) in -- #1008
+//│                 let* (x$204) = max'(x$203) in -- #1007
+//│                 jump j$28(x$204) -- #1006
+//│               false =>
+//│                 let x$205 = Cons(x$197,x$199) in -- #1020
+//│                 let* (x$206) = max'(x$205) in -- #1019
+//│                 jump j$28(x$206) -- #1018
+//│   def j$26(x$195) =
+//│     x$195 -- #967
+//│   def j$27(x$198) =
+//│     jump j$26(x$198) -- #978
+//│   def j$28(x$202) =
+//│     jump j$27(x$202) -- #996
+//│   def g(g_arg1$0,g_arg2$0) =
+//│     case g_arg1$0 of -- #1156
+//│       Tuple3 =>
+//│         let x$208 = Tuple3.z(g_arg1$0) in -- #1155
+//│         let x$209 = Tuple3.y(g_arg1$0) in -- #1154
+//│         let x$210 = Tuple3.x(g_arg1$0) in -- #1153
+//│         case g_arg2$0 of -- #1152
+//│           Tuple3 =>
+//│             let x$212 = Tuple3.z(g_arg2$0) in -- #1151
+//│             let x$213 = Tuple3.y(g_arg2$0) in -- #1150
+//│             let x$214 = Tuple3.x(g_arg2$0) in -- #1149
+//│             let* (x$215) = const0() in -- #1148
+//│             let* (x$216) = z_equal(x$212,x$215) in -- #1147
+//│             if x$216 -- #1146
+//│               true =>
+//│                 let x$218 = Tuple3(x$208,x$210,x$209) in -- #1076
+//│                 jump j$31(x$218) -- #1075
+//│               false =>
+//│                 let* (x$219) = quotRem(x$208,x$212) in -- #1145
+//│                 case x$219 of -- #1144
+//│                   Tuple2 =>
+//│                     let x$221 = Tuple2.y(x$219) in -- #1143
+//│                     let x$222 = Tuple2.x(x$219) in -- #1142
+//│                     let x$223 = Tuple3(x$214,x$213,x$212) in -- #1141
+//│                     let* (x$224) = z_mul(x$222,x$214) in -- #1140
+//│                     let* (x$225) = z_sub(x$210,x$224) in -- #1139
+//│                     let* (x$226) = z_mul(x$222,x$213) in -- #1138
+//│                     let* (x$227) = z_sub(x$209,x$226) in -- #1137
+//│                     let x$228 = Tuple3(x$225,x$227,x$221) in -- #1136
+//│                     let* (x$229) = g(x$223,x$228) in -- #1135
+//│                     jump j$32(x$229) -- #1134
+//│   def j$29(x$207) =
+//│     x$207 -- #1030
+//│   def j$30(x$211) =
+//│     jump j$29(x$211) -- #1045
+//│   def j$31(x$217) =
+//│     jump j$30(x$217) -- #1066
+//│   def j$32(x$220) =
+//│     jump j$31(x$220) -- #1085
+//│   def abs(abs_arg1$0) =
+//│     let* (x$230) = const0() in -- #1179
+//│     let* (x$231) = z_lt(abs_arg1$0,x$230) in -- #1178
+//│     if x$231 -- #1177
+//│       true =>
+//│         let* (x$233) = const0() in -- #1174
+//│         let* (x$234) = z_sub(x$233,abs_arg1$0) in -- #1173
+//│         jump j$33(x$234) -- #1172
+//│       false =>
+//│         jump j$33(abs_arg1$0) -- #1176
+//│   def j$33(x$232) =
+//│     x$232 -- #1164
+//│   def f2(f2_arg1$0) =
+//│     case f2_arg1$0 of -- #1234
+//│       Tuple3 =>
+//│         let x$236 = Tuple3.z(f2_arg1$0) in -- #1233
+//│         let x$237 = Tuple3.y(f2_arg1$0) in -- #1232
+//│         let x$238 = Tuple3.x(f2_arg1$0) in -- #1231
+//│         case x$236 of -- #1230
+//│           Tuple3 =>
+//│             let x$240 = Tuple3.z(x$236) in -- #1229
+//│             let x$241 = Tuple3.y(x$236) in -- #1228
+//│             let x$242 = Tuple3.x(x$236) in -- #1227
+//│             let* (x$243) = z_add(x$242,x$241) in -- #1226
+//│             let* (x$244) = z_add(x$243,x$240) in -- #1225
+//│             let* (x$245) = abs(x$244) in -- #1224
+//│             jump j$35(x$245) -- #1223
+//│   def j$34(x$235) =
+//│     x$235 -- #1181
+//│   def j$35(x$239) =
+//│     jump j$34(x$239) -- #1196
+//│   def const0() =
+//│     let* (x$246) = z_of_int(0) in -- #1239
+//│     x$246 -- #1238
+//│   def gcdE(gcdE_arg1$0,gcdE_arg2$0) =
+//│     let* (x$247) = const0() in -- #1296
+//│     let* (x$248) = z_equal(gcdE_arg1$0,x$247) in -- #1295
+//│     if x$248 -- #1294
+//│       true =>
+//│         let* (x$250) = const0() in -- #1261
+//│         let* (x$251) = const1() in -- #1260
+//│         let x$252 = Tuple3(gcdE_arg2$0,x$250,x$251) in -- #1259
+//│         jump j$36(x$252) -- #1258
+//│       false =>
+//│         let* (x$253) = const1() in -- #1293
+//│         let* (x$254) = const0() in -- #1292
+//│         let x$255 = Tuple3(x$253,x$254,gcdE_arg1$0) in -- #1291
+//│         let* (x$256) = const0() in -- #1290
+//│         let* (x$257) = const1() in -- #1289
+//│         let x$258 = Tuple3(x$256,x$257,gcdE_arg2$0) in -- #1288
+//│         let* (x$259) = g(x$255,x$258) in -- #1287
+//│         jump j$36(x$259) -- #1286
+//│   def j$36(x$249) =
+//│     x$249 -- #1247
+//│   def const1() =
+//│     let* (x$260) = z_of_int(1) in -- #1301
+//│     x$260 -- #1300
+//│   def const5000() =
+//│     let* (x$261) = z_of_int(5000) in -- #1306
+//│     x$261 -- #1305
+//│   def testGcd_nofib(testGcd_nofib_arg1$0) =
+//│     let* (x$262) = test(testGcd_nofib_arg1$0) in -- #1311
+//│     x$262 -- #1310
+//│   def z_enumFromTo(z_enumFromTo_arg1$0,z_enumFromTo_arg2$0) =
+//│     let* (x$263) = z_leq(z_enumFromTo_arg1$0,z_enumFromTo_arg2$0) in -- #1345
+//│     if x$263 -- #1344
+//│       true =>
+//│         let* (x$265) = const1() in -- #1340
+//│         let* (x$266) = z_add(z_enumFromTo_arg1$0,x$265) in -- #1339
+//│         let* (x$267) = z_enumFromTo(x$266,z_enumFromTo_arg2$0) in -- #1338
+//│         let x$268 = Cons(z_enumFromTo_arg1$0,x$267) in -- #1337
+//│         jump j$37(x$268) -- #1336
+//│       false =>
+//│         let x$269 = Nil() in -- #1343
+//│         jump j$37(x$269) -- #1342
+//│   def j$37(x$264) =
+//│     x$264 -- #1318
+//│   let* (x$0) = z_of_int(400) in -- #8
+//│   let* (x$1) = testGcd_nofib(x$0) in -- #7
+//│   x$1 -- #6
+//│ 
+//│ 
+//│ Execution succeeded: 
+//│ Z(5201)
+//│ 

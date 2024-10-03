@@ -1,0 +1,87 @@
+:NewDefs
+:ParseOnly
+:UseIR
+:NoTailRec
+
+:prelude
+module True
+module False
+module Callable {
+  fun apply0() = 0
+  fun apply1(x0) = 0
+  fun apply2(x0,x1) = 0
+  fun apply3(x0,x1,x2) = 0
+  fun apply4(x0,x1,x2,x3) = 0
+  fun apply5(x0,x1,x2,x3,x4) = 0
+}
+module List[A, B]
+class Cons[A, B](h: A, t: Cons[A, B]) extends List[A, B]
+module Nil[A, B] extends List[A, B]
+module Option[A]
+class Some[A](x: A) extends Option[A]
+module None[A] extends Option[A]
+class Pair[A, B](x: A, y: B)
+class Tuple2[A, B](x: A, y: B)
+class Tuple3[A, B, C](x: A, y: B, z: C)
+module Nat
+class S(s: Nat) extends Nat
+module O extends Nat
+class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O)
+//│ |#module| |True|↵|#module| |False|↵|#module| |Callable| |{|→|#fun| |apply0|(||)| |#=| |0|↵|#fun| |apply1|(|x0|)| |#=| |0|↵|#fun| |apply2|(|x0|,|x1|)| |#=| |0|↵|#fun| |apply3|(|x0|,|x1|,|x2|)| |#=| |0|↵|#fun| |apply4|(|x0|,|x1|,|x2|,|x3|)| |#=| |0|↵|#fun| |apply5|(|x0|,|x1|,|x2|,|x3|,|x4|)| |#=| |0|←|↵|}|↵|#module| |List|[|A|,| |B|]|↵|#class| |Cons|[|A|,| |B|]|(|h|#:| |A|,| |t|#:| |Cons|[|A|,| |B|]|)| |#extends| |List|[|A|,| |B|]|↵|#module| |Nil|[|A|,| |B|]| |#extends| |List|[|A|,| |B|]|↵|#module| |Option|[|A|]|↵|#class| |Some|[|A|]|(|x|#:| |A|)| |#extends| |Option|[|A|]|↵|#module| |None|[|A|]| |#extends| |Option|[|A|]|↵|#class| |Pair|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple2|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple3|[|A|,| |B|,| |C|]|(|x|#:| |A|,| |y|#:| |B|,| |z|#:| |C|)|↵|#module| |Nat|↵|#class| |S|(|s|#:| |Nat|)| |#extends| |Nat|↵|#module| |O| |#extends| |Nat|↵|#class| |HiddenTheseEntities|(|_0|#:| |HiddenTheseEntities|,| |_1|#:| |True|,| |_2|#:| |False|,| |_3|#:| |Callable|,| |_4|#:| |List|,| |_5|#:| |Cons|,| |_6|#:| |Nil|,| |_7|#:| |Option|,| |_8|#:| |Some|,| |_9|#:| |None|,| |_10|#:| |Pair|,| |_11|#:| |Tuple2|,| |_12|#:| |Tuple3|,| |_13|#:| |Nat|,| |_14|#:| |S|,| |_15|#:| |O|)|
+//│ Parsed: {module True {}; module False {}; module Callable {fun apply0 = () => 0; fun apply1 = (x0,) => 0; fun apply2 = (x0, x1,) => 0; fun apply3 = (x0, x1, x2,) => 0; fun apply4 = (x0, x1, x2, x3,) => 0; fun apply5 = (x0, x1, x2, x3, x4,) => 0}; module List‹A, B› {}; class Cons‹A, B›(h: A, t: Cons‹A, B›,): List‹A, B› {}; module Nil‹A, B›: List‹A, B› {}; module Option‹A› {}; class Some‹A›(x: A,): Option‹A› {}; module None‹A›: Option‹A› {}; class Pair‹A, B›(x: A, y: B,) {}; class Tuple2‹A, B›(x: A, y: B,) {}; class Tuple3‹A, B, C›(x: A, y: B, z: C,) {}; module Nat {}; class S(s: Nat,): Nat {}; module O: Nat {}; class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O,) {}}
+//│ 
+//│ Preluded.
+//│ 
+
+:genCpp
+:runCpp
+:interpIR
+fun compose(f)(g)(x) = f(g(x))
+fun main(x) =
+  let y = 1
+  let lam = z => x + y + z
+  compose(lam)(lam)(2)
+main(3)
+//│ |#fun| |compose|(|f|)|(|g|)|(|x|)| |#=| |f|(|g|(|x|)|)|↵|#fun| |main|(|x|)| |#=|→|#let| |y| |#=| |1|↵|#let| |lam| |#=| |z| |#=>| |x| |+| |y| |+| |z|↵|compose|(|lam|)|(|lam|)|(|2|)|←|↵|main|(|3|)|
+//│ Parsed: {fun compose = (f,) => (g,) => (x,) => f(g(x,),); fun main = (x,) => {let y = 1; let lam = (z,) => +(+(x, y,), z,); compose(lam,)(lam,)(2,)}; main(3,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│   class Lambda$0(f) extends Callable {
+//│     def apply1(g$0) =
+//│       let x$11 = Lambda$2(f,g$0) in -- #33
+//│       x$11 -- #32
+//│   }
+//│   class Lambda$1(x,y) extends Callable {
+//│     def apply1(z$0) =
+//│       let x$12 = +(x,y) in -- #46
+//│       let x$13 = +(x$12,z$0) in -- #45
+//│       x$13 -- #44
+//│   }
+//│   class Lambda$2(f,g) extends Callable {
+//│     def apply1(x$14) =
+//│       let x$15 = Callable.apply1(g,x$14) in -- #57
+//│       let x$16 = Callable.apply1(f,x$15) in -- #56
+//│       x$16 -- #55
+//│   }
+//│   def compose(f$0) =
+//│     let x$2 = Lambda$0(f$0) in -- #6
+//│     x$2 -- #5
+//│   def main(x$3) =
+//│     let x$4 = 1 in -- #25
+//│     let x$6 = Lambda$1(x$3,x$4) in -- #24
+//│     let* (x$7) = compose(x$6) in -- #23
+//│     let x$8 = Callable.apply1(x$7,x$6) in -- #22
+//│     let x$9 = Callable.apply1(x$8,2) in -- #21
+//│     x$9 -- #20
+//│   let* (x$0) = main(3) in -- #4
+//│   x$0 -- #3
+//│ 
+//│ Interpreted:
+//│ 10
+//│ 
+//│ 
+//│ Execution succeeded: 
+//│ 10
+//│ 

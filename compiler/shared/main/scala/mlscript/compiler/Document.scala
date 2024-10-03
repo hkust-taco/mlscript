@@ -1,4 +1,4 @@
-package mlscript.compiler.optimizer
+package mlscript.compiler.utils
 
 enum Document:
   case Indented(content: Document)
@@ -10,7 +10,7 @@ enum Document:
   def <:>(other: Document) = line(List(this, other))
   def <#>(other: Document) = line(List(this, other), sep = "")
 
-  override def toString(): String = print
+  override def toString: String = print
 
   def print: String = {
     val sb = StringBuffer()
