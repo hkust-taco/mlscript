@@ -67,7 +67,10 @@ abstract class DiffMaker:
     override def toString: Str = s"${if isGlobal then "global " else ""}$name: $currentValue"
   
   class NullaryCommand(name: Str) extends Command[Unit](name)(
-    line => assert(line.isEmpty))
+    line =>
+      val commentIndex = line.indexOf("//")
+      val body = if commentIndex == -1 then line else line.take(commentIndex)
+      assert(body.forall(_.isWhitespace)))
   
   
   val global = NullaryCommand("global")
@@ -151,16 +154,18 @@ abstract class DiffMaker:
     
     processOrigin(origin)(using raise)
     
-    if expectParseError.isSet && parseErrors == 0 then
+    // Note: when `todo` is set, we allow the lack of errors.
+    // Use `todo` when the errors are expected but not yet implemented.
+    if expectParseError.isSet && parseErrors == 0 && todo.isUnset then
       failures += globalStartLineNum
       unexpected("lack of parse error", blockLineNum)
-    if expectTypeErrors.isSet && typeErrors == 0 then
+    if expectTypeErrors.isSet && typeErrors == 0 && todo.isUnset then
       failures += globalStartLineNum
       unexpected("lack of type error", blockLineNum)
-    if expectRuntimeError.isSet && runtimeErrors == 0 then
+    if expectRuntimeError.isSet && runtimeErrors == 0 && todo.isUnset then
       failures += globalStartLineNum
       unexpected("lack of runtime error", blockLineNum)
-    if expectWarnings.isSet && warnings == 0 then
+    if expectWarnings.isSet && warnings == 0 && todo.isUnset then
       failures += globalStartLineNum
       unexpected("lack of warnings", blockLineNum)
     

@@ -67,46 +67,52 @@ f `=> x `=> y `=> f`(x, y)
 //│ Type: CodeBase[⊥, ⊥, ?]
 
 
+:fixme
 `if `true then `true else `false
-//│ Type: CodeBase[out Bool, ⊥, ?]
+//│ ╔══[ERROR] Cannot quote If(Let(scrut@71,Unquoted(Quoted(Lit(BoolLit(true)))),Cons(Branch(Ref(scrut@71),LitPat(BoolLit(true)),Else(Unquoted(Quoted(Lit(BoolLit(true)))))),Else(Unquoted(Quoted(Lit(BoolLit(false))))))))
+//│ ╙──
+//│ Type: CodeBase[⊥, ⊥, ?]
 
 
+:fixme
 x `=> `if x `== `0.0 then `1.0 else x
-//│ Type: CodeBase[out α140_3 -> (α140_3 ∨ Num), ⊥, ?]
+//│ ╔══[ERROR] Cannot quote If(Let(scrut@74,Unquoted(Quoted(App(Ref(==),Tup(List(Fld(‹›,Unquoted(Ref(x@73)),None), Fld(‹›,Unquoted(Quoted(Lit(DecLit(0.0)))),None)))))),Cons(Branch(Ref(scrut@74),LitPat(BoolLit(true)),Else(Unquoted(Quoted(Lit(DecLit(1.0)))))),Else(Unquoted(Ref(x@73))))))
+//│ ╙──
+//│ Type: CodeBase[out ⊤ -> ⊥, ⊥, ?]
 
 run(`1)
 //│ Type: Int
 
 :e
 run(1)
-//│ ╔══[ERROR] Type error in integer literal with expected type CodeBase[out α158_1, ⊥, ?]
-//│ ║  l.81: 	run(1)
+//│ ╔══[ERROR] Type error in integer literal with expected type CodeBase[out α140_1, ⊥, ?]
+//│ ║  l.87: 	run(1)
 //│ ║        	    ^
-//│ ╙── because: cannot constrain  Int  <:  CodeBase[out α158_1, ⊥, ?]
+//│ ╙── because: cannot constrain  Int  <:  CodeBase[out α140_1, ⊥, ?]
 //│ Type: ⊥
 
 :e
 x `=> run(x)
-//│ ╔══[ERROR] Type error in reference with expected type CodeBase[out α161_3, ⊥, ?]
-//│ ║  l.89: 	x `=> run(x)
+//│ ╔══[ERROR] Type error in reference with expected type CodeBase[out α143_3, ⊥, ?]
+//│ ║  l.95: 	x `=> run(x)
 //│ ║        	          ^
-//│ ╟── because: cannot constrain  CodeBase[α159_3, <α>160_3, ⊥]  <:  CodeBase[out α161_3, ⊥, ?]
-//│ ╙── because: cannot constrain  D( <α>160_3 )  <:  ⊥
-//│ Type: CodeBase[out CodeBase[out α162_3, ?, ?] -> α162_3, out α164_2, ?]
+//│ ╟── because: cannot constrain  CodeBase[α141_3, <α>142_3, ⊥]  <:  CodeBase[out α143_3, ⊥, ?]
+//│ ╙── because: cannot constrain  D( <α>142_3 )  <:  ⊥
+//│ Type: CodeBase[out CodeBase[out α144_3, ?, ?] -> α144_3, out α146_2, ?]
 
 :e
 `let x = `42 `in run(x)
-//│ ╔══[ERROR] Type error in reference with expected type CodeBase[out α168_3, ⊥, ?]
-//│ ║  l.98: 	`let x = `42 `in run(x)
-//│ ║        	                     ^
-//│ ╟── because: cannot constrain  CodeBase[α165_2, <α>167_3, ⊥]  <:  CodeBase[out α168_3, ⊥, ?]
-//│ ╙── because: cannot constrain  D( <α>167_3 )  <:  ⊥
+//│ ╔══[ERROR] Type error in reference with expected type CodeBase[out α150_3, ⊥, ?]
+//│ ║  l.104: 	`let x = `42 `in run(x)
+//│ ║         	                     ^
+//│ ╟── because: cannot constrain  CodeBase[α147_2, <α>149_3, ⊥]  <:  CodeBase[out α150_3, ⊥, ?]
+//│ ╙── because: cannot constrain  D( <α>149_3 )  <:  ⊥
 //│ ╔══[ERROR] Type error in unquoted term
-//│ ║  l.98: 	`let x = `42 `in run(x)
-//│ ║        	                 ^^^^^^
-//│ ╟── because: cannot constrain  α168_3  <:  CodeBase[out α169_3, out α170_3, ?]
-//│ ╟── because: cannot constrain  α168_3  <:  ¬(~{CodeBase[out α169_3, out α170_3, ?]})
-//│ ╟── because: cannot constrain  α165_2  <:  ¬(~{CodeBase[out α169_3, out α170_3, ?]})
-//│ ╟── because: cannot constrain  α165_2  <:  CodeBase[out α171_2, out α172_2, ?]
-//│ ╙── because: cannot constrain  Int  <:  CodeBase[out α171_2, out α172_2, ?]
+//│ ║  l.104: 	`let x = `42 `in run(x)
+//│ ║         	                 ^^^^^^
+//│ ╟── because: cannot constrain  α150_3  <:  CodeBase[out α151_3, out α152_3, ?]
+//│ ╟── because: cannot constrain  α150_3  <:  ¬(~{CodeBase[out α151_3, out α152_3, ?]})
+//│ ╟── because: cannot constrain  α147_2  <:  ¬(~{CodeBase[out α151_3, out α152_3, ?]})
+//│ ╟── because: cannot constrain  α147_2  <:  CodeBase[out α153_2, out α154_2, ?]
+//│ ╙── because: cannot constrain  Int  <:  CodeBase[out α153_2, out α154_2, ?]
 //│ Type: CodeBase[⊥, ⊥, ?]

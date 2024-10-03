@@ -1,0 +1,531 @@
+:NewDefs
+
+// Summon the underlying JavaScript `Object.is` function so that we can compare
+// any objects. For example, functions do not conforms to `Eql` so we cannot
+// compare them with `===` directly. But, we can use `Object.is`.
+declare fun Object: nothing
+let (=:=) objectEqual: (anything, anything) -> Bool = Object.is
+fun (=/=) objectNotEqual(x, y) = not(x =:= y)
+//│ let (=:=) objectEqual: (anything, anything) -> Bool
+//│ fun (=/=) objectNotEqual: (anything, anything) -> Bool
+//│ fun Object: nothing
+//│ objectEqual
+//│             = [Function: is]
+
+type NStr = Str & {
+  length: Int,
+  at: Int -> NStr,
+  charAt: Int -> NStr,
+  charCodeAt: Int -> Int,
+  slice: (Int, Int) -> NStr,
+  startsWith: Str -> Bool,
+  endsWith: Str -> Bool,
+  split: Str -> Array[NStr],
+  trim: () -> NStr,
+  trimStart: () -> NStr,
+  trimEnd: () -> NStr,
+  padStart: (Int, Str) -> NStr,
+  padEnd: (Int, Str) -> NStr,
+  repeat: Int -> NStr,
+  indexOf: Str -> Int,
+  lastIndexOf: Str -> Int,
+  includes: Str -> Bool,
+}
+declare fun String: anything -> NStr
+fun (++) strcat(a, b) = String of concat(a)(b)
+//│ type NStr = Str & {
+//│   at: Int -> NStr,
+//│   charAt: Int -> NStr,
+//│   charCodeAt: Int -> Int,
+//│   endsWith: Str -> Bool,
+//│   includes: Str -> Bool,
+//│   indexOf: Str -> Int,
+//│   lastIndexOf: Str -> Int,
+//│   length: Int,
+//│   padEnd: (Int, Str) -> NStr,
+//│   padStart: (Int, Str) -> NStr,
+//│   repeat: Int -> NStr,
+//│   slice: (Int, Int) -> NStr,
+//│   split: Str -> Array[NStr],
+//│   startsWith: Str -> Bool,
+//│   trim: () -> NStr,
+//│   trimEnd: () -> NStr,
+//│   trimStart: () -> NStr
+//│ }
+//│ fun (++) strcat: (Str, Str) -> NStr
+//│ fun String: anything -> NStr
+
+fun (!==) notEqual(x, y) = not(x === y)
+declare fun parseInt: (Str, Int) -> Int
+//│ fun (!==) notEqual: forall 'a. (Eql['a], 'a) -> Bool
+//│ fun parseInt: (Str, Int) -> Int
+
+// `List` and its utilities:
+abstract class List[out T]: Cons[T] | Nil
+class Cons[out T](head: T, tail: List[T]) extends List[T]
+module Nil extends List
+fun (::) cons(head: 'T, tail: List['T]): List['T] = Cons(head, tail)
+fun reverse(l: List['A]): List['A] =
+  let rec r(l', l) = if l is Cons(x, xs) then r(x :: l', xs) else l'
+  r(Nil, l)
+fun join(sep: Str, xs: List['B]) = if xs is
+  Cons(x, Nil) then toString(x)
+  Cons(x, xs) then toString(x) ++ sep ++ join(sep, xs)
+  Nil then ""
+fun showList(xs: List['C]) = "[" ++ join(", ", xs) ++ "]"
+fun map(f: 'D -> 'E, xs: List['D]): List['E] = if xs is
+  Cons(x, xs) then f(x) :: map(f, xs)
+  Nil then Nil
+fun equalList(xs: List['A], ys: List['A], equal: ('A, 'A) -> Bool): Bool = if xs is
+  Cons(x, xs') and ys is Cons(y, ys') then equal(x, y) and equalList(xs', ys', equal)
+  Nil and ys is Nil then true
+  else false
+// `Option` and its utilities:
+abstract class Option[out A]: Some[A] | None
+class Some[out A](value: A) extends Option[A]
+module None extends Option
+//│ abstract class List[T]: Cons[T] | Nil
+//│ class Cons[T](head: T, tail: List[T]) extends List
+//│ module Nil extends List
+//│ fun (::) cons: forall 'T. (head: 'T, tail: List['T]) -> List['T]
+//│ fun reverse: forall 'T0. (l: List['T0]) -> List['T0]
+//│ fun join: (sep: Str, xs: List[anything]) -> (Str | NStr)
+//│ fun showList: (xs: List[anything]) -> NStr
+//│ fun map: forall 'D 'T1. (f: 'D -> 'T1, xs: List['D]) -> List['T1]
+//│ fun equalList: forall 'A. (xs: List['A], ys: List['A], equal: ('A, 'A) -> Bool) -> Bool
+//│ abstract class Option[A]: None | Some[A]
+//│ class Some[A](value: A) extends Option
+//│ module None extends Option
+
+//     _    ____ _____
+//    / \  / ___|_   _|
+//   / _ \ \___ \ | |
+//  / ___ \ ___) || |
+// /_/   \_\____/ |_|
+//
+
+abstract class Expr: Lambda | BuiltIn | Instance | Thunk | StrLit | IntLit | ExprList
+class Lambda(f: List[Data] -> Data) extends Expr
+class BuiltIn(e: List[Data] -> Data) extends Expr
+class Instance(n: Str, m: List[[Str, Expr]]) extends Expr
+class Thunk(e: () -> Data) extends Expr
+class StrLit(s: Str) extends Expr
+class IntLit(n: Int) extends Expr
+class ExprList(l: List[Expr]) extends Expr
+fun (=@=) equalExpr(x: Expr, y: Expr): Bool = if x is
+  Lambda(f) and y is Lambda(g) then f =:= g
+  BuiltIn(f) and y is BuiltIn(g) then f =:= g
+  Instance(n, m) and y is Instance(n', m') then
+    let equalPair = ([k, v], [k', v']) => k =:= k' and equalExpr(v, v')
+    n === n' and equalList(m, m', equalPair)
+  Thunk(e) and y is Thunk(e') then e =:= e'
+  StrLit(s) and y is StrLit(s') then s === s'
+  IntLit(n) and y is IntLit(n') then n === n'
+  ExprList(l) and y is ExprList(l') then equalList(l, l', equalExpr)
+  else false
+fun showExpr(e: Expr): Str = if e is
+  Lambda(f) then "<lambda>"
+  BuiltIn(f) then "<built-in>"
+  Instance(n, m) then "<object " ++ n ++ ">"
+  Thunk(e) then "<thunk>"
+  // StrLit(s) then "str:" ++ s
+  // IntLit(n) then "int:" ++ toString(n)
+  StrLit(s) then s
+  IntLit(n) then toString(n)
+  ExprList(l) then showList(map(showExpr, l))
+abstract class Data: Literal | DataList | Symbol
+class Literal(e: Expr) extends Data
+class DataList(l: List[Data]) extends Data
+class Symbol(s: Str) extends Data
+fun (=#=) equalData(x: Data, y: Data): Bool = if x is
+  Literal(e) and y is Literal(e') then e =@= e'
+  DataList(l) and y is DataList(l') then equalList(l, l', equalData)
+  Symbol(s) and y is Symbol(s') then s === s'
+  else false
+fun showData(d: Data): Str = if d is
+  Literal(e) then showExpr(e)
+  DataList(l) then "(" ++ join(", ", map(showData, l)) ++ ")"
+  // Symbol(s) then "sym:" ++ s
+  Symbol(s) then s
+//│ abstract class Expr: BuiltIn | ExprList | Instance | IntLit | Lambda | StrLit | Thunk
+//│ class Lambda(f: List[Data] -> Data) extends Expr
+//│ class BuiltIn(e: List[Data] -> Data) extends Expr
+//│ class Instance(n: Str, m: List[[Str, Expr]]) extends Expr
+//│ class Thunk(e: () -> Data) extends Expr
+//│ class StrLit(s: Str) extends Expr
+//│ class IntLit(n: Int) extends Expr
+//│ class ExprList(l: List[Expr]) extends Expr
+//│ fun (=@=) equalExpr: (x: Expr, y: Expr) -> Bool
+//│ fun showExpr: (e: Expr) -> Str
+//│ abstract class Data: DataList | Literal | Symbol
+//│ class Literal(e: Expr) extends Data
+//│ class DataList(l: List[Data]) extends Data
+//│ class Symbol(s: Str) extends Data
+//│ fun (=#=) equalData: (x: Data, y: Data) -> Bool
+//│ fun showData: (d: Data) -> Str
+
+//  _____       _                 _
+// |_   _|___  | | __ ___  _ __  (_) ____ ___  _ __
+//   | | / _ \ | |/ // _ \| '_ \ | ||_  // _ \| '__|
+//   | || (_) ||   <|  __/| | | || | / /|  __/| |
+//   |_| \___/ |_|\_\\___||_| |_||_|/___|\___||_|
+//
+
+fun skipBlank(s: NStr, i: Int): Int =
+  if
+    i < 0 then skipBlank(s, 0)
+    i >= s.length then s.length
+    s.charCodeAt(i) == 32 then skipBlank(s, i + 1)
+    else i
+//│ fun skipBlank: (s: NStr, i: Int) -> Int
+
+fun scanWhile(s: NStr, i: Int, p: Str -> Bool): Option[[Str, Int]] =
+  let rec aux(acc, i) =
+    if i < s.length and s.charAt(i) is ch and p of ch
+      then aux(acc ++ ch, i + 1)
+      else [acc, i]
+  if aux("", i) is
+    ["", _] then None
+    [acc, i] then Some([acc, i])
+//│ fun scanWhile: (s: NStr, i: Int, p: Str -> Bool) -> Option[[Str, Int]]
+
+fun isDelimiter(ch) = ch !== " " and ch !== "(" and ch !== ")"
+//│ fun isDelimiter: Eql[" " | "(" | ")"] -> Bool
+
+fun nextToken(s: NStr, i: Int): Option[[Str, Int]] =
+  let i' = skipBlank(s, i)
+  if s.charAt(i') is
+    "(" then Some(["(", i' + 1])
+    ")" then Some([")", i' + 1])
+    else scanWhile(s, i', isDelimiter)
+//│ fun nextToken: (s: NStr, i: Int) -> Option[[Str, Int]]
+
+fun tokenize(s: Str): List[Str] =
+  let s' = String(s)
+  let rec aux(acc, i) =
+    if nextToken(s', i) is
+      None then reverse(acc)
+      Some([token, i']) then aux(token :: acc, i')
+  aux(Nil, 0)
+//│ fun tokenize: (s: Str) -> List[Str]
+
+showList of tokenize("")
+showList of tokenize("12")
+showList of tokenize("x")
+showList of tokenize("(quote (cons 1 nil))")
+showList of tokenize("(+ 1 2)")
+//│ NStr
+//│ res
+//│     = '[]'
+//│ res
+//│     = '[12]'
+//│ res
+//│     = '[x]'
+//│ res
+//│     = '[(, quote, (, cons, 1, nil, ), )]'
+//│ res
+//│     = '[(, +, 1, 2, )]'
+
+//  ____
+// |  _ \  __ _  _ __  ___   ___  _ __
+// | |_) |/ _` || '__|/ __| / _ \| '__|
+// |  __/| (_| || |   \__ \|  __/| |
+// |_|    \__,_||_|   |___/ \___||_|
+//
+
+fun isDigit(n) = 48 <= n and n <= 57
+fun isDigits(s: Str): Bool =
+  let s' = String(s)
+  let rec aux(i) =
+    if i < s'.length and isDigit of s'.charCodeAt(i)
+      then aux(i + 1)
+      else i === s'.length
+  aux(0)
+isDigits("123")
+isDigits("123jump")
+isDigits("bruh")
+//│ fun isDigit: Num -> Bool
+//│ fun isDigits: (s: Str) -> Bool
+//│ Bool
+//│ res
+//│     = true
+//│ res
+//│     = false
+//│ res
+//│     = false
+
+abstract class ParseResult[out A]: Success[A] | Failure
+class Success[out A](value: A) extends ParseResult[A]
+class Failure(error: Str) extends ParseResult[nothing]
+//│ abstract class ParseResult[A]: Failure | Success[A]
+//│ class Success[A](value: A) extends ParseResult
+//│ class Failure(error: Str) extends ParseResult
+
+// Notes
+// =====
+// Sometimes, the precedence of comma is less than `of`.
+// For example, in `[Success of DataList of reverse of acc, tail]`.
+fun parseExpr(tokens: List[Str]): [ParseResult[Data], List[Str]] =
+  if tokens is
+    Cons("(", tail) then parseList(tail)
+    Cons(")", _) then [Failure("Unmatched closing parenthesis."), tokens]
+    Cons(token, tail) and
+      isDigits(token) then [(Success of Literal of IntLit of parseInt(token, 10)), tail]
+      else [(Success of Symbol of token), tail]
+    Nil then [Failure("Unexpected end of input, expect either `)` or more tokens."), Nil]
+  
+fun parseList(tokens: List[Str]): [ParseResult[DataList], List[Str]] =
+  let rec collect(acc, ts) = if ts is
+    Cons(")", tail) then [(Success of DataList of reverse of acc), tail]
+    Cons and parseExpr(ts) is
+      [Success(data), rest] then collect(data :: acc, rest)
+      [Failure(_) as failure, rest] then [failure, rest]
+    Nil then [Failure("Unexpected end of input, expect either `)` or more tokens."), Nil]
+  collect(Nil, tokens)
+//│ fun parseExpr: (tokens: List[Str]) -> [ParseResult[Data], List[Str]]
+//│ fun parseList: (tokens: List[Str]) -> [ParseResult[DataList], List[Str]]
+
+fun showParse(source: Str): Str =
+  if parseExpr(tokenize(source)) is
+    [Success(data), _] then "Ok: " ++ showData(data)
+    [Failure(error), _] then "Error: " ++ error
+//│ fun showParse: (source: Str) -> Str
+
+showParse("(cons 1 nil)")
+showParse("(cons 1 (cons 2 nil))")
+showParse("(cons 1 (cons 2 (cons 3 nil)))")
+showParse("(+ 1 2)")
+showParse("(car (cons 1 nil))")
+//│ Str
+//│ res
+//│     = 'Ok: (cons, 1, nil)'
+//│ res
+//│     = 'Ok: (cons, 1, (cons, 2, nil))'
+//│ res
+//│     = 'Ok: (cons, 1, (cons, 2, (cons, 3, nil)))'
+//│ res
+//│     = 'Ok: (+, 1, 2)'
+//│ res
+//│     = 'Ok: (car, (cons, 1, nil))'
+
+//  _____
+// | ____| _ __ __   __
+// |  _|  | '_ \\ \ / /
+// | |___ | | | |\ V /
+// |_____||_| |_| \_/
+//
+
+// As of the time I wrote this code, MLscript did not yet support term
+// refinement, so I used lambda expression to implement `Env` first.
+type Env[T] = Str -> T
+let emptyEnv: Str -> nothing = _ => error
+// The lookup function becomes useless because we can just call the `Env`.
+fun lookup(env, name: Str): 'A = env(name)
+//│ type Env[T] = Str -> T
+//│ let emptyEnv: Str -> nothing
+//│ fun lookup: forall 'A. (Str -> 'A, name: Str) -> 'A
+//│ emptyEnv
+//│          = [Function: emptyEnv]
+
+// It is tricky to write an annotation that simplifies the inferred type.
+fun (+:) extend(env, [name, expr]: [Str, 'A]) =
+  (name': Str) => if name' === name then expr else env(name')
+//│ fun (+:) extend: forall 'A. (Str -> 'A, [Str, 'A]) -> (name': Str) -> 'A
+
+fun extendRec(env, name: Str, expr: (Str -> 'A) -> 'A) =
+  let rec env'(name': Str): 'A = if name' === name then expr(env') else env(name')
+  env'
+//│ fun extendRec: forall 'A. (Str -> 'A, name: Str, expr: (Str -> 'A) -> 'A) -> (name': Str) -> 'A
+
+fun extendParameters(env: Str -> 'A, ps: List[Str], vs: List['A]) =
+  if [ps, vs] is
+    [Nil, Nil] then env
+    [Cons(p, ps'), Cons(v, vs')] then extendParameters(extend(env, [p, v]), ps', vs')
+    else error
+//│ fun extendParameters: forall 'A. (env: Str -> 'A, ps: List[Str], vs: List['A]) -> Str -> 'A
+
+fun (++:) extendEntries(env, ps: List[[Str, 'A]]) =
+  if ps is
+    Nil then env
+    Cons(p, ps') then extendEntries(extend(env, p), ps')
+    else error
+//│ fun (++:) extendEntries: forall 'A 'a. (Str -> 'A & 'a, ps: List[[Str, 'A]]) -> ((name': Str) -> 'A | 'a)
+
+let intEnv1 = extend(emptyEnv, ["one", 1])
+let intEnv2 = extend(intEnv1, ["two", 2])
+let intEnv3 = extend(intEnv2, ["three", 3])
+//│ let intEnv1: (name': Str) -> 1
+//│ let intEnv2: (name': Str) -> (1 | 2)
+//│ let intEnv3: (name': Str) -> (1 | 2 | 3)
+//│ intEnv1
+//│         = [Function (anonymous)]
+//│ intEnv2
+//│         = [Function (anonymous)]
+//│ intEnv3
+//│         = [Function (anonymous)]
+
+// Make a tuple to save some lines.
+[intEnv1("one"), intEnv2("one"), intEnv3("one"), intEnv2("two"), intEnv3("two"), intEnv3("three")]
+//│ [1, 1 | 2, 1 | 2 | 3, 1 | 2, 1 | 2 | 3, 1 | 2 | 3]
+//│ res
+//│     = [ 1, 1, 1, 2, 2, 3 ]
+
+:re
+intEnv1("two")
+intEnv2("three")
+intEnv3("bruh")
+//│ 1 | 2 | 3
+//│ res
+//│ Runtime error:
+//│   Error: an error was thrown
+//│ res
+//│ Runtime error:
+//│   Error: an error was thrown
+//│ res
+//│ Runtime error:
+//│   Error: an error was thrown
+
+let intEnv6 = intEnv3 ++: (["four", 4] :: ["five", 5] :: ["six", 6] :: Nil)
+//│ let intEnv6: (name': Str) -> (1 | 2 | 3 | 4 | 5 | 6)
+//│ intEnv6
+//│         = [Function (anonymous)]
+
+[intEnv6("one"), intEnv6("two"), intEnv6("three"), intEnv6("four"), intEnv6("five"), intEnv6("six")]
+//│ [1 | 2 | 3 | 4 | 5 | 6, 1 | 2 | 3 | 4 | 5 | 6, 1 | 2 | 3 | 4 | 5 | 6, 1 | 2 | 3 | 4 | 5 | 6, 1 | 2 | 3 | 4 | 5 | 6, 1 | 2 | 3 | 4 | 5 | 6]
+//│ res
+//│     = [ 1, 2, 3, 4, 5, 6 ]
+
+:re
+intEnv6("seven")
+//│ 1 | 2 | 3 | 4 | 5 | 6
+//│ res
+//│ Runtime error:
+//│   Error: an error was thrown
+
+fun builtinEq(args: List[Data]): Data = if args is
+  Cons(x, Cons(y, Nil)) and
+    x =#= y then Literal(IntLit(1))
+    else Literal(IntLit(0))
+  else error
+fun builtinAdd(args: List[Data]): Data = if args is
+  Cons(Literal(IntLit(x)), Cons(Literal(IntLit(y)), Nil)) then Literal(IntLit(x + y))
+  else error
+fun builtinSub(args: List[Data]): Data = if args is
+  Cons(Literal(IntLit(x)), Cons(Literal(IntLit(y)), Nil)) then Literal(IntLit(x - y))
+  else error
+fun builtinMul(args: List[Data]): Data = if args is
+  Cons(Literal(IntLit(x)), Cons(Literal(IntLit(y)), Nil)) then Literal(IntLit(x * y))
+  else error
+let builtinNil = DataList(Nil)
+fun builtinCons(args: List[Data]): Data = if args is
+  Cons(x, Cons(DataList(xs), Nil)) then DataList(x :: xs)
+  else error
+fun builtinCar(args: List[Data]): Data = if args is
+  Cons(DataList(Cons(x, _)), Nil) then x
+  else error
+fun builtinCdr(args: List[Data]): Data = if args is
+  Cons(DataList(Cons(_, xs)), Nil) then DataList(xs)
+  else error
+fun builtinNull(args: List[Data]): Data = if args is
+  Cons(DataList(Nil), Nil) then Literal(IntLit(1))
+  else Literal(IntLit(0))
+//│ fun builtinEq: (args: List[Data]) -> Data
+//│ fun builtinAdd: (args: List[Data]) -> Data
+//│ fun builtinSub: (args: List[Data]) -> Data
+//│ fun builtinMul: (args: List[Data]) -> Data
+//│ let builtinNil: DataList
+//│ fun builtinCons: (args: List[Data]) -> Data
+//│ fun builtinCar: (args: List[Data]) -> Data
+//│ fun builtinCdr: (args: List[Data]) -> Data
+//│ fun builtinNull: (args: List[Data]) -> Data
+//│ builtinNil
+//│            = DataList {}
+
+let globalEnv = emptyEnv ++:
+  ["eq", Literal(Lambda(builtinEq))] :: ["+", Literal(Lambda(builtinAdd))] ::
+  ["-", Literal(Lambda(builtinSub))] :: ["*", Literal(Lambda(builtinMul))] ::
+  ["nil", builtinNil] :: ["cons", Literal(Lambda(builtinCons))] ::
+  ["car", Literal(Lambda(builtinCar))] :: ["cdr", Literal(Lambda(builtinCdr))] ::
+  ["null", Literal(Lambda(builtinNull))] :: Nil
+//│ let globalEnv: (name': Str) -> (DataList | Literal)
+//│ globalEnv
+//│           = [Function (anonymous)]
+
+fun toName(x: Data): Str = if x is Symbol(s) then s else error
+//│ fun toName: (x: Data) -> Str
+
+fun asList(x: Data): List[Data] = if x is DataList(ys) then ys else error
+//│ fun asList: (x: Data) -> List[Data]
+
+fun eval(x: Data, env: Str -> Data): Data = if x is
+  Literal(StrLit(_)) as lit then lit
+  Literal(IntLit(_)) as lit then lit
+  Symbol(name) then env(name)
+  DataList(Cons(Symbol("val"), tail)) and tail is
+    Cons(param, Cons(expr, Cons(rest, Nil))) then
+      eval(rest, env +: [toName(param), eval(expr, env)])
+    else error
+  DataList(Cons(Symbol("def"), Cons(param, Cons(body, Cons(rest, Nil))))) then
+    let env' = extendRec of env, toName(param), (env => eval(body, env))
+    eval(rest, env')
+  DataList(Cons(Symbol("if"), Cons(cond, Cons(thenPart, Cons(elsePart, Nil))))) and
+    eval(cond, env) is Literal(IntLit(0)) then eval(elsePart, env)
+    else eval(thenPart, env)
+  DataList(Cons(Symbol("quote"), Cons(y, Nil))) then y
+  DataList(Cons(Symbol("lambda"), Cons(params, Cons(body, Nil)))) then
+    let ps = map(toName, asList(params))
+    Literal(Lambda(args => eval(body, extendParameters(env, ps, args))))
+  DataList(Cons(operator, operands)) and eval(operator, env) is
+    Literal(Lambda(f)) then f of map((x) => eval(x, env), operands)
+    else error // application of a non-function
+  else error // unrecognized program
+//│ fun eval: (x: Data, env: Str -> Data) -> Data
+
+fun showEval(source: Str): Str =
+  if parseExpr(tokenize(source)) is
+    [Success(data), _] then "Ok: " ++ showData of eval(data, globalEnv)
+    [Failure(error), _] then "Error: " ++ error
+//│ fun showEval: (source: Str) -> Str
+
+showEval("1")
+showEval("(+ 1 2)")
+showEval("(val x 7 (val y 6 (* x y)))")
+showEval("(quote x)")
+showEval("(cons 1 nil)")
+showEval("(car (cons 1 nil))")
+showEval("(null 0)")
+showEval("(null nil)")
+showEval("(def id (lambda (x) x) (id 42))")
+//│ Str
+//│ res
+//│     = 'Ok: 1'
+//│ res
+//│     = 'Ok: 3'
+//│ res
+//│     = 'Ok: 42'
+//│ res
+//│     = 'Ok: x'
+//│ res
+//│     = 'Ok: (1)'
+//│ res
+//│     = 'Ok: 1'
+//│ res
+//│     = 'Ok: 0'
+//│ res
+//│     = 'Ok: 1'
+//│ res
+//│     = 'Ok: 42'
+
+showEval("(def fact (lambda (n) (if (eq n 0) 1 (* n (fact (- n 1))))) (fact 5))")
+showEval("(def fib (lambda (n) (if (eq n 0) 0 (if (eq n 1) 1 (+ (fib (- n 1)) (fib (- n 2)))))) (fib 10))")
+showEval("(def sum (lambda (n) (if (eq n 0) 0 (+ n (sum (- n 1))))) (sum 50))")
+showEval("(def ack (lambda (m n) (if (eq m 0) (+ n 1) (if (eq n 0) (ack (- m 1) 1) (ack (- m 1) (ack m (- n 1)))))) (ack 3 2))")
+//│ Str
+//│ res
+//│     = 'Ok: 120'
+//│ res
+//│     = 'Ok: 55'
+//│ res
+//│     = 'Ok: 1275'
+//│ res
+//│     = 'Ok: 29'

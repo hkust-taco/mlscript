@@ -320,7 +320,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val res = freshVar(using ctx)
       constrain(bodyCtx, bd | res)
       (bodyTy, rhsCtx | res, rhsEff | bodyEff)
-    case Term.If(Split.Cons(TermBranch.Boolean(cond, Split.Else(cons)), Split.Else(alts))) =>
+    case Term.If(Split.Cons(Branch(cond, Pattern.LitPat(BoolLit(true)), Split.Else(cons)), Split.Else(alts))) =>
       val (condTy, condCtx, condEff) = typeCode(cond)
       val (consTy, consCtx, consEff) = typeCode(cons)
       val (altsTy, altsCtx, altsEff) = typeCode(alts)
@@ -344,17 +344,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         constrain(monoOrErr(res, lam), funTy)(using ctx)
     case _ => error(msg"Function definition shape not yet supported for ${sym.nme}" -> lam.toLoc :: Nil)
 
-  private def typeSplit(split: TermSplit, sign: Opt[GeneralType])(using ctx: Ctx)(using CCtx): (GeneralType, Type) = split match
-    case Split.Cons(TermBranch.Boolean(cond, Split.Else(cons)), alts) => // * boolean condition
-      val (condTy, condEff) = typeCheck(cond)
-      val (consTy, consEff) = sign match
-        case S(sign) => ascribe(cons, sign)
-        case _=> typeCheck(cons)
-      val (altsTy, altsEff) = typeSplit(alts, sign)
-      val allEff = condEff | (consEff | altsEff)
-      constrain(monoOrErr(condTy, cond), Ctx.boolTy)
-      (sign.getOrElse(monoOrErr(consTy, cons) | monoOrErr(altsTy, split)), allEff)
-    case Split.Cons(TermBranch.Match(scrutinee, Split.Cons(PatternBranch(Pattern.Class(sym, _, _), cons), Split.NoSplit)), alts) =>
+  private def typeSplit(split: Split, sign: Opt[GeneralType])(using ctx: Ctx)(using CCtx): (GeneralType, Type) = split match
+    case Split.Cons(Branch(scrutinee, Pattern.Class(sym, _, _), cons), alts) =>
       // * Pattern matching
       val (clsTy, tv, emptyTy) = ctx.getDef(sym.nme) match
         case S(ClassDef.Parameterized(_, tparams, _, _, _)) =>
@@ -377,9 +368,18 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val (altsTy, altsEff) = typeSplit(alts, sign)(using nestCtx2)
       val allEff = scrutineeEff | (consEff | altsEff)
       (sign.getOrElse(monoOrErr(consTy, cons) | monoOrErr(altsTy, alts)), allEff)
+    case Split.Let(name, term, tail) =>
+      val nestCtx = ctx.nest
+      given Ctx = nestCtx
+      val (termTy, termEff) = typeCheck(term)
+      val sk = freshSkolem
+      nestCtx += name -> termTy
+      val (tailTy, tailEff) = typeSplit(tail, sign)(using nestCtx)
+      (tailTy, termEff | tailEff)
     case Split.Else(alts) => sign match
       case S(sign) => ascribe(alts, sign)
-      case _=> typeCheck(alts)
+      case _ => typeCheck(alts)
+    case Split.Nil => ???
 
   // * Note: currently, the returned type is not used or useful, but it could be in the future
   private def ascribe(lhs: Term, rhs: GeneralType)(using ctx: Ctx): (GeneralType, Type) =

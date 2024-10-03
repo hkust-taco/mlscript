@@ -1,0 +1,42 @@
+:NewDefs
+
+class A()
+class B()
+//│ class A()
+//│ class B()
+
+fun f(x) =
+  if x
+    is
+      A then 0
+      B then 1
+//│ fun f: (A | B) -> (0 | 1)
+
+// Precedence problem: should we restruct terms when push them to the stack?
+:e
+fun f(x) =
+  if x ==
+    1
+      + 2 then 0
+      + _ then 1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.20: 	      + 2 then 0
+//│ ║        	      ^^^
+//│ ╟── operator application of type `Bool` is not an instance of type `Int`
+//│ ║  l.18: 	  if x ==
+//│ ║        	     ^^^^
+//│ ║  l.19: 	    1
+//│ ╙──      	^^^^^^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.20: 	      + 2 then 0
+//│ ║        	      ^^^
+//│ ╙── application of type `Int` is not an instance of type `Bool`
+//│ fun f: Num -> (0 | 1)
+
+fun f(x, s, t) =
+  if x
+    is A()
+      and t then 0
+      and s then 0
+    is _ then 1
+//│ fun f: (Object, Bool, Bool) -> (0 | 1)

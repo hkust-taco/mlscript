@@ -1,0 +1,111 @@
+:global
+:noTypeCheck
+
+fun (++): (Str, Str) -> Str
+fun toString: Any -> Str
+
+fun (|>) pipe(x, f) = f(x)
+fun (~~>) toBe(x, y) = if x == y then () else error
+fun (<?) min(x, y) = if x < y then x else y
+fun (>?) max(x, y) = if x > y then x else y
+fun abs(x) = if x < 0 then -x else x
+
+
+abstract class Option[out T]: (Some[T] | None)
+class Some[out T](val value: T) extends Option[T]
+module None extends Option[nothing]
+
+fun (??) getOrElse(o, v) = if o is
+  Some(v') then v'
+  None then v
+
+abstract class List[out T]: (Cons[T] | Nil)
+class Cons[out T](val head: T, val tail: List[T]) extends List[T]
+module Nil extends List[nothing]
+
+fun (::) cons(head, tail) = Cons(head, tail)
+
+abstract class Tree[out A]: (Empty | Node[A])
+class Node[out A](value: A, left: Tree[A], right: Tree[A], rank: Int) extends Tree[A]
+module Empty extends Tree[nothing]
+
+fun show(t: Tree[Any]): Str = if t is
+  Node(v, l, r, _) then
+    "(" ++ show(l) ++ " " ++ toString(v) ++ " " ++ show(r) ++ ")"
+  Empty then "•"
+
+fun singleton(x) = Node(x, Empty, Empty, 1)
+fun rank(t) = if t is
+  Empty then 0
+  Node(_, _, _, r) then r
+
+// This can be improved. This can be better.
+fun merge(t1: Tree[Num], t2: Tree[Num]): Tree[Num] =
+  if
+    t1 is Node(v1, l1, r1, _) and t2 is Node(v2, _, _, _) and
+      v1 > v2 then merge(t2, t1)
+      _ and merge(r1, t2) is merged and
+        rank(l1) is rank_left and rank(r1) is rank_right and
+          rank_left >= rank_right then Node(v1, l1, merged, rank_right + 1)
+          else Node(v1, merged, l1, rank_left + 1)
+    t1 is Empty and t2 is Node then t2
+    t1 is Node and t2 is Empty then t1
+    t1 is Empty and t2 is Empty then Empty
+
+fun insert(t, v) = merge(t, singleton(v))
+
+fun getMin(t) =
+  if t is
+    Empty then None
+    Node(x, _, _, _) then Some(x)
+
+fun deleteMin(t) =
+  if t is
+    Empty then Empty
+    Node(_, l, r, _) then merge(l, r)
+
+fun fromList(t, xs) =
+  if xs is
+    Cons(x, xs') then fromList(insert(t, x), xs')
+    Nil then t
+
+let tree1 = fromList(Empty, 3 :: 4 :: 1 :: 2 :: Nil)
+tree1 |> show
+
+// Remove the smallest element. It should be 1.
+getMin(tree1) ?? "nothing"
+let tree1' = deleteMin(tree1)
+tree1' |> show
+
+// Remove one more element. It should be 2.
+getMin(tree1') ?? "nothing"
+let tree1'' = deleteMin(tree1')
+tree1'' |> show
+
+// Remove one more element. It should be 3.
+getMin(tree1'') ?? "nothing"
+let tree1''' = deleteMin(tree1'')
+tree1''' |> show
+
+// Remove the last element. It should be 4.
+getMin(tree1''') ?? "nothing"
+let tree1'''' = deleteMin(tree1''')
+tree1'''' |> show
+
+// ===========================================================================
+
+fun drain(t) =
+  if getMin(t) is
+    None then Nil
+    Some(x) then x :: drain(deleteMin(t))
+
+fun sorted(xs) = fromList(Empty, xs) |> drain
+
+fun showList(xs) =
+  if xs is
+    Cons(x, Nil) then toString(x)
+    Cons(x, xs') then toString(x) ++ ", " ++ showList(xs')
+    Nil then ""
+
+sorted(3 :: 4 :: 1 :: 2 :: Nil) |> showList
+sorted(42 :: 58 :: 19 :: 37 :: 44 :: 99 :: 68 :: 60 :: 77 :: 61 :: Nil) |> showList

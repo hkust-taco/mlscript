@@ -1,0 +1,28 @@
+:global
+:noTypeCheck
+
+type Option[out A] = Some[A] | None
+class Some[out A](value: A)
+module None
+
+type Tree[out A] = Node[A] | Empty
+module Empty
+class Node[out A](value: A, left: Tree[A], right: Tree[A])
+
+fun find(t, v) = if t is
+  Node(v', l, r) and
+    v < v' then find(l, v)
+    v > v' then find(r, v)
+    _ then Some(v)
+  Empty then None
+
+fun insert(t, v) = if t is
+  Node(v', l, r) and
+    v < v' then Node(v', insert(l, v), r)
+    v > v' then Node(v', l, insert(r, v))
+    _ then t
+  Empty then Node(v, Empty, Empty)
+
+find(Empty, 0)
+find(Node(0, Empty, Empty), 0)
+find(Node(1, Empty, Empty), 0)

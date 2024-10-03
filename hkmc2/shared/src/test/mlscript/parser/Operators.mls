@@ -62,26 +62,40 @@ x =>
 1 +
  2
 //│ Parsed:
-//│ 	App(Ident(+),Tup(List(IntLit(1), IntLit(2))))
+//│ 	App(Ident(+),Tup(List(IntLit(1), Block(List(IntLit(2))))))
 
-:pe
+
+:pt
 1 +
- 2
- 3
-//│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.70: 	 3
-//│ ╙──      	 ^
+2 +
+3
+//│ Parsed tree:
+//│ App:
+//│   lhs = Ident of "+"
+//│   rhs = Tup of Ls of 
+//│     App:
+//│       lhs = Ident of "+"
+//│       rhs = Tup of Ls of 
+//│         IntLit of 1
+//│         IntLit of 2
+//│     IntLit of 3
+
+1 +
+ let x = 2
+ class A
+ x
+ 42
 //│ Parsed:
-//│ 	App(Ident(+),Tup(List(IntLit(1), IntLit(2))))
+//│ 	App(Ident(+),Tup(List(IntLit(1), Block(List(Let(Ident(x),IntLit(2),None), TypeDef(Cls,None,Ident(A),None,None), Ident(x), IntLit(42))))))
 
 :pe
 1 +
  2,
  3
-//│ ╔══[PARSE ERROR] Unexpected comma here
-//│ ║  l.79: 	 2,
+//│ ╔══[PARSE ERROR] Unexpected comma in this position
+//│ ║  l.93: 	 2,
 //│ ╙──      	  ^
 //│ Parsed:
-//│ 	App(Ident(+),Tup(List(IntLit(1), IntLit(2))))
+//│ 	App(Ident(+),Tup(List(IntLit(1), Block(List(IntLit(2), IntLit(3))))))
 
 

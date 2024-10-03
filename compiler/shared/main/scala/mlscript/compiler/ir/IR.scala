@@ -239,7 +239,7 @@ case class DefnTag(inner: Int):
 
 case class DefnLocMarker(val defn: Str, val marker: LocMarker):
   override def toString: String = s"$defn:$marker"
-  def matches = marker.matches _
+  def matches = marker.matches
 
 enum LocMarker:
   case MRef(name: Str)

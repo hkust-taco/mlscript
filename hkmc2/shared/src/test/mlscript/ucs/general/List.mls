@@ -1,0 +1,44 @@
+:global
+:noTypeCheck
+
+abstract class List[out T]
+class Cons[out T](head: T, tail: List[T]) extends List[T]
+module Nil extends List[nothing]
+
+abstract class Option[out T]
+class Some[out T](value: T) extends Option[T]
+module None extends Option[nothing]
+
+
+fun length(xs) = if xs is
+  Nil then 0
+  Cons(_, xs) then 1 + length(xs)
+
+
+fun map(f, xs) = if xs is
+  Nil then Nil
+  Cons(x, xs) then Cons(f(x), map(f, xs))
+
+
+fun findFirst(f, xs) =
+  if xs is
+    Nil then None
+    Cons(x, _) and f(x) then Some(x)
+    Cons(_, xs) then findFirst(f, xs)
+
+
+fun findFirst(f, xs) =
+  if xs is
+    Nil then None
+    Cons(x, _) and
+      f(x) then Some(x)
+    Cons(_, xs) then findFirst(f, xs)
+
+
+fun findFirst(f, xs) =
+  if
+    xs is
+      Nil then None
+      Cons(x, _) and
+        f(x) then Some(x)
+      Cons(_, xs) then findFirst(f, xs)

@@ -1,0 +1,34 @@
+:NewDefs
+
+
+
+class Some[T](value: T)
+//│ class Some[T](value: T)
+
+
+
+fun f(a, b) = if a is
+  Some(av)
+    and b is Some(bv) then av + bv
+//│ fun f: (Some[Int], Some[Int]) -> Int
+
+fun f(a, b) = if a is Some(av)
+    and b is Some(bv)
+    then av + bv
+//│ fun f: (Some[Int], Some[Int]) -> Int
+
+fun f(a, b) = if a is
+  Some(av)
+    and b is Some(bv)
+    then av + bv
+//│ fun f: (Some[Int], Some[Int]) -> Int
+
+
+
+// FIXME (parser)
+fun f(a, b) = if a is
+  Some(av)
+    and b is Some(bv) then av + bv
+    
+//│ fun f: (Some[Int], Some[Int]) -> Int
+

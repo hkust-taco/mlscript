@@ -1,0 +1,33 @@
+:NewDefs
+
+
+// FIXME
+x => if x ==
+  0
+    then "a"
+  _ then "b"
+//│ ╔══[PARSE ERROR] Unexpected indented block here
+//│ ║  l.7: 	    then "a"
+//│ ║       	^^^^^^^^^^^^
+//│ ║  l.8: 	  _ then "b"
+//│ ╙──     	^^
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found operator application instead
+//│ ║  l.5: 	x => if x ==
+//│ ║       	        ^^^^
+//│ ║  l.6: 	  0
+//│ ║       	^^^
+//│ ╟── Note: 'if' expression starts here:
+//│ ║  l.5: 	x => if x ==
+//│ ╙──     	     ^^
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.6: 	  0
+//│ ╙──     	  ^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.6: 	  0
+//│ ║       	  ^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ Num -> ()
+//│ res
+//│     = [Function: res]
+
+

@@ -15,6 +15,8 @@ fun (*): (Int, Int) -> Int
 fun (/): (Int, Int) -> Num
 fun (<): (Int, Int) -> Bool
 fun (>): (Int, Int) -> Bool
+fun (<=): (Int, Int) -> Bool
+fun (>=): (Int, Int) -> Bool
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 fun (+.): (Num, Num) -> Num
@@ -30,4 +32,5 @@ fun (==): (Any, Any) -> Bool
 fun log: (Any) -> ()
 //│ Type: Ctor(lit:UnitLit(true),List())
 
-
+fun error: Nothing
+//│ Type: Ctor(lit:UnitLit(true),List())

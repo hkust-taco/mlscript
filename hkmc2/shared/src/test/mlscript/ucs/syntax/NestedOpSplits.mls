@@ -1,0 +1,56 @@
+:global
+:noTypeCheck
+
+// * Note that this always to the left
+:elt
+fun f(x) =
+  if x ==
+    1 +
+      2 then 0
+      _ then 1
+//│ Elaborated tree:
+//│ Blk:
+//│   stats = Ls of 
+//│     TermDefinition:
+//│       k = Fun
+//│       sym = f
+//│       params = S of Ls of 
+//│         Param:
+//│           flags = ()
+//│           sym = x@18
+//│           sign = N
+//│       sign = N
+//│       body = S of If of Let:
+//│         name = scrut@20
+//│         term = App:
+//│           lhs = Ref of ==
+//│           rhs = Tup of Ls of 
+//│             Fld:
+//│               flags = ()
+//│               value = Ref of x@18
+//│               asc = N
+//│             Fld:
+//│               flags = ()
+//│               value = Lit of IntLit of 1
+//│               asc = N
+//│         tail = Let:
+//│           name = scrut@22
+//│           term = App:
+//│             lhs = Ref of +
+//│             rhs = Tup of Ls of 
+//│               Fld:
+//│                 flags = ()
+//│                 value = Ref of scrut@20
+//│                 asc = N
+//│               Fld:
+//│                 flags = ()
+//│                 value = Lit of IntLit of 2
+//│                 asc = N
+//│           tail = Cons:
+//│             head = Branch:
+//│               scrutinee = Ref of scrut@22
+//│               pattern = LitPat of BoolLit of true
+//│               continuation = Else of Lit of IntLit of 0
+//│             tail = Else of Lit of IntLit of 1
+//│       resSym = ‹result of f›@23
+//│   res = Lit of UnitLit of true

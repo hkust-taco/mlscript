@@ -1,0 +1,376 @@
+:NewDefs
+
+fun (++) strcat(a, b) = concat(a)(b)
+//│ fun (++) strcat: (Str, Str) -> Str
+
+type Option[T] = None | Some[T]
+module None
+class Some[T](val value: T)
+//│ type Option[T] = None | Some[T]
+//│ module None
+//│ class Some[T](value: T)
+
+type Either[A, B] = Left[A] | Right[B]
+class Left[A](val leftValue: A)
+class Right[B](val rightValue: B)
+//│ type Either[A, B] = Left[A] | Right[B]
+//│ class Left[A](leftValue: A)
+//│ class Right[B](rightValue: B)
+
+
+fun w1(x, e_0, e_1) =
+  if x is
+    Left(None) then "Left of None"
+    Right(None) then "Right of None"
+    _ and e_0 is y_0 and x is
+      Left(Some(lv)) then "Left of Some of " ++ toString(lv)
+      _ and e_1 is y_1 and x is
+        Right(Some(rv)) then "Right of Some of " ++ toString(rv)
+//│ fun w1: forall 'a. (Left[None | Object & ~#None & ~#Some | Some[anything]] | Object & ~#Left & ~#Right | Right[None | Some[anything]], anything, 'a) -> (Str | 'a)
+
+w1(Left(None), "a", "b")
+w1(Right(None), "a", "b")
+w1(Left(Some(0)), "a", "b")
+w1(Right(Some(0)), "a", "b")
+//│ Str
+//│ res
+//│     = 'Left of None'
+//│ res
+//│     = 'Right of None'
+//│ res
+//│     = 'Left of Some of 0'
+//│ res
+//│     = 'Right of Some of 0'
+
+//  Should be
+//  case x of
+//    Some -> 1
+//    None ->
+//      case p(x) of
+//        true -> 2
+//        _ -> 4
+//    _ ->
+//      case p(x) of
+//        true -> 3
+//        _ -> 5
+:ducs:normalize.result,postprocess.result
+fun w2(x, p) =
+  if x is
+    Some then 1
+    _ and p(x) and
+      x is None then 2
+      _ then 3
+    None then 4
+    _ then 5
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   Some*◊ -> 1
+//│   _ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† ->
+//│         case x*‡ of
+//│           None*† -> 2
+//│           _ -> 3
+//│       _ ->
+//│         case x*‡ of
+//│           None*† -> 4
+//│           _ -> 5
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   Some*◊ -> 1
+//│   None*† ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true -> 2
+//│       _ -> 4
+//│   _ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true -> 3
+//│       _ -> 5
+//│ fun w2: forall 'a. (None | Object & 'a & ~#None & ~#Some | Some[anything], (None | 'a) -> Bool) -> (1 | 2 | 3 | 4 | 5)
+
+//  Should be
+//  case x of
+//    Some -> 1
+//    None ->
+//      case p(x) of
+//        true -> 2
+//        _ -> 3
+//    _ ->
+//      case p(x) of
+//        true -> 2
+//        _ -> 4
+:ducs:normalize.result,postprocess.result
+fun w2(x, p) =
+  if x is
+    Some then 1
+    _ and p(x) then 2
+    None then 3
+    _ then 4
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   Some*◊ -> 1
+//│   _ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† -> 2
+//│       _ ->
+//│         case x*‡ of
+//│           None*† -> 3
+//│           _ -> 4
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   Some*◊ -> 1
+//│   None*† ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true -> 2
+//│       _ -> 3
+//│   _ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true -> 2
+//│       _ -> 4
+//│ fun w2: forall 'a. (None | Object & 'a & ~#None & ~#Some | Some[anything], (None | 'a) -> Bool) -> (1 | 2 | 3 | 4)
+
+w2(Some(0), x => true)
+w2(None, x => true)
+w2(None, x => false)
+w2(0, x => false)
+//│ 1 | 2 | 3 | 4
+//│ res
+//│     = 1
+//│ res
+//│     = 2
+//│ res
+//│     = 3
+//│ res
+//│     = 4
+
+fun w3(x, p) = if x is
+  _ and p(x) then "r1"
+  Some(xv) then "r2: " ++ toString(xv)
+  None then "r3"
+  _ then "r4"
+//│ fun w3: forall 'a. ('a & (Object & ~#Some | Some[anything]), 'a -> Bool) -> Str
+
+// Expect "r1"
+w3(0, _ => true)
+w3(None, _ => true)
+w3(Some(0), _ => true)
+//│ Str
+//│ res
+//│     = 'r1'
+//│ res
+//│     = 'r1'
+//│ res
+//│     = 'r1'
+
+// Expect "r2"
+w3(Some(0), _ => false)
+//│ Str
+//│ res
+//│     = 'r2: 0'
+
+// Expect "r3"
+w3(None, _ => false)
+//│ Str
+//│ res
+//│     = 'r3'
+
+// Expect "r4"
+w3(0, _ => false)
+//│ Str
+//│ res
+//│     = 'r4'
+
+:w
+// Decision paths:
+// + «tmp2 @ f (x,) is any => 0
+// +  => 1
+fun w3_1(x, f) =
+  if f(x) is _ then 0 else 1
+//│ ╔══[WARNING] this case is unreachable
+//│ ║  l.194: 	  if f(x) is _ then 0 else 1
+//│ ║         	                           ^
+//│ ╟── because it is subsumed by the branch
+//│ ║  l.194: 	  if f(x) is _ then 0 else 1
+//│ ╙──       	                    ^
+//│ fun w3_1: forall 'a. ('a, 'a -> anything) -> 0
+
+w3_1(0, _ => true)
+w3_1(0, _ => false)
+//│ 0
+//│ res
+//│     = 0
+//│ res
+//│     = 0
+
+:w
+fun w3_1_1(x, f) =
+  if f(x) is a then a else 0
+//│ ╔══[WARNING] this case is unreachable
+//│ ║  l.213: 	  if f(x) is a then a else 0
+//│ ║         	                           ^
+//│ ╟── because it is subsumed by the branch
+//│ ║  l.213: 	  if f(x) is a then a else 0
+//│ ╙──       	                    ^
+//│ fun w3_1_1: forall 'a 'b. ('a, 'a -> 'b) -> 'b
+
+w3_1_1(0, x => x)
+w3_1_1(0, x => x + 1)
+//│ Int
+//│ res
+//│     = 0
+//│ res
+//│     = 1
+
+// Decision paths:
+// + «a = x» and «p (x,)» => "r1"
+// + «x is Some» => concat ("r2: ",) (toString (xv,),)
+// + «x is None» => "r3"
+fun w4(x, p) = if x is
+  a and p(x) then "r1"
+  Some(xv) then "r2: " ++ toString(xv)
+  None then "r3"
+  _ then "r4"
+//│ fun w4: forall 'a. ('a & (Object & ~#Some | Some[anything]), 'a -> Bool) -> Str
+
+
+// Expect "r1"
+w4(0, _ => true)
+w4(None, _ => true)
+w4(Some(0), _ => true)
+//│ Str
+//│ res
+//│     = 'r1'
+//│ res
+//│     = 'r1'
+//│ res
+//│     = 'r1'
+
+// Expect "r2"
+w4(Some(0), _ => false)
+//│ Str
+//│ res
+//│     = 'r2: 0'
+
+// Expect "r3"
+w4(None, _ => false)
+//│ Str
+//│ res
+//│     = 'r3'
+
+// Expect "r4"
+w4(0, _ => false)
+//│ Str
+//│ res
+//│     = 'r4'
+
+class Alpha()
+class Beta()
+class Gamma()
+class Delta()
+//│ class Alpha()
+//│ class Beta()
+//│ class Gamma()
+//│ class Delta()
+
+// This should generate only one case expression instead of a chain of case
+// expressions. DO check the desugared term!
+:ducs:postprocess.result
+fun w5(y) =
+  if y is
+    Alpha then "alpha"
+    _ and y is
+      Beta then "beta"
+      _ and y is
+        Gamma then "gamma"
+        _ and y is
+          Delta then "delta"
+          _ then "unknown"
+//│ Post-processed UCS term:
+//│ case y*‡ of
+//│   Alpha*◊ -> "alpha"
+//│   Gamma*◊ -> "gamma"
+//│   Delta*◊ -> "delta"
+//│   Beta*◊ -> "beta"
+//│   _ -> "unknown"
+//│ fun w5: Object -> ("alpha" | "beta" | "delta" | "gamma" | "unknown")
+
+w5(0)
+w5(Alpha())
+w5(Beta())
+w5(Gamma())
+w5(Delta())
+//│ "alpha" | "beta" | "delta" | "gamma" | "unknown"
+//│ res
+//│     = 'unknown'
+//│ res
+//│     = 'alpha'
+//│ res
+//│     = 'beta'
+//│ res
+//│     = 'gamma'
+//│ res
+//│     = 'delta'
+
+fun w6(x, y) =
+  if x is
+    _ and y is
+      Some(z) then z
+      None then 0
+    else x
+//│ fun w6: forall 'a. ('a, Object & ~#Some | Some['a]) -> (0 | 'a)
+
+w6("42", Some(42))
+w6("42", None)
+w6("42", "42")
+//│ "42" | 0
+//│ res
+//│     = 42
+//│ res
+//│     = 0
+//│ res
+//│     = '42'
+
+
+fun w7(x, f) =
+  if x is
+    _ and f(x) is
+      Some(v) then v
+      None then x
+    Left(x) then x + 1
+    Right(x) then x + 2
+//│ fun w7: forall 'a 'b. ('a & (Left[Int] | Right[Int]), 'a -> (Object & ~#Some | Some['b])) -> (Int | 'b | 'a)
+
+// The results are wrong:
+w7(Left(99), _ => Some(0)) // => 0
+w7(Left(99), _ => None) // => Left(99)
+w7(Right(99), _ => Some(0)) // => 0
+w7(Right(99), _ => None) // => Right(99)
+//│ Int | Right['B]
+//│   where
+//│     'B :> 99
+//│        <: Int
+//│ res
+//│     = 0
+//│ res
+//│     = Left {}
+//│ res
+//│     = 0
+//│ res
+//│     = Right {}
+
+w7(Left(99), _ => "test")
+w7(Right(99), _ => "test")
+//│ Int | Right['B]
+//│   where
+//│     'B :> 99
+//│        <: Int
+//│ res
+//│     = 100
+//│ res
+//│     = 101

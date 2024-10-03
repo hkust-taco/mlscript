@@ -99,8 +99,9 @@ high(x => x + 1)
 (let a = 0 in x => x): [A] -> A -> A
 //│ Type: forall α8_2: (α8_2) ->{⊥} α8_2
 
+:fixme
 (if false then x => x else y => y): [A] -> A -> A
-//│ Type: forall α9_2: (α9_2) ->{⊥} α9_2
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(scrut@90),LitPat(BoolLit(true)),Else(Lam(List(Param(‹›,x@91,None)),Ref(x@91)))),Else(Lam(List(Param(‹›,y@89,None)),Ref(y@89)))) (of class hkmc2.semantics.Split$Cons)
 
 fun baz: Int -> (([A] -> A -> A), Int) -> Int
 fun baz(z) =
@@ -111,27 +112,27 @@ fun baz(z) =
 :e
 baz: Int -> (([A] -> A -> A), Int) -> Int
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ║  l.112: 	baz: Int -> (([A] -> A -> A), Int) -> Int
+//│ ║  l.113: 	baz: Int -> (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ║  l.112: 	baz: Int -> (([A] -> A -> A), Int) -> Int
+//│ ║  l.113: 	baz: Int -> (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^
-//│ Type: (Int) ->{⊥} (forall α15_2: (α15_2) ->{⊥} α15_2, Int) ->{⊥} Int
+//│ Type: (Int) ->{⊥} (forall α16_2: (α16_2) ->{⊥} α16_2, Int) ->{⊥} Int
 
 
 baz(42)
-//│ Type: (forall α11_2: (α11_2) ->{⊥} α11_2, Int) ->{⊥} Int
+//│ Type: (forall α12_2: (α12_2) ->{⊥} α12_2, Int) ->{⊥} Int
 
 :fixme // toLoc
 :e
 baz(42): (([A] -> A -> A), Int) -> Int
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ║  l.127: 	baz(42): (([A] -> A -> A), Int) -> Int
+//│ ║  l.128: 	baz(42): (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^^^^^
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ║  l.127: 	baz(42): (([A] -> A -> A), Int) -> Int
+//│ ║  l.128: 	baz(42): (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^^^^^
-//│ Type: (forall α16_2: (α16_2) ->{⊥} α16_2, Int) ->{⊥} Int
+//│ Type: (forall α17_2: (α17_2) ->{⊥} α17_2, Int) ->{⊥} Int
 
 
 fun id: [A] -> A -> A
@@ -139,21 +140,21 @@ fun id(x) = x
 //│ Type: ⊤
 
 id: [A] -> A -> A
-//│ Type: forall α19_2: (α19_2) ->{⊥} α19_2
+//│ Type: forall α20_2: (α20_2) ->{⊥} α20_2
 
 
 (id: [A] -> A -> A): [A] -> A -> A
-//│ Type: forall α21_2: (α21_2) ->{⊥} α21_2
+//│ Type: forall α22_2: (α22_2) ->{⊥} α22_2
 
 42: Int | Num
 //│ Type: Int ∨ Num
 
 42: [A] -> Int
-//│ Type: forall α25_2: Int
+//│ Type: forall α26_2: Int
 
 
 42: [A] -> Int | Num
-//│ Type: forall α26_2: Int ∨ Num
+//│ Type: forall α27_2: Int ∨ Num
 
 fun foo: Int -> Int
 foo

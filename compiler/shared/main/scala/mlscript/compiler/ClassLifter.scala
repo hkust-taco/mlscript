@@ -222,7 +222,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
                   ).addT(flds._2.flatten.toSet).extV(supNms.flatten.map(x => Var(x.name)))
 
     log(s"ret ctx for ${cls.nme.name}: $tmpCtx")
-    val ret = ClassInfoCache(nm, genClassNm(nm.name), tmpCtx, MutSet(fields.toSeq: _*), MutMap(), supNms.flatten.toSet, outer, cls, outer.map(_.depth).getOrElse(0)+1)
+    val ret = ClassInfoCache(nm, genClassNm(nm.name), tmpCtx, MutSet(fields.toSeq*), MutMap(), supNms.flatten.toSet, outer, cls, outer.map(_.depth).getOrElse(0)+1)
     ret
   }
 
@@ -640,8 +640,8 @@ class ClassLifter(logDebugMsg: Boolean = false) {
   }
 
   private def mixClsInfos(clsInfos: Map[String, ClassInfoCache], funcInfos: Map[String, LocalContext])(using cache: ClassCache): (Map[String, ClassInfoCache], Map[String, LocalContext]) = {
-    val nameInfoMap: MutMap[String, ClassInfoCache] = MutMap(clsInfos.toSeq: _*)
-    val nameFuncMap: MutMap[String, LocalContext] = MutMap(funcInfos.toSeq: _*)
+    val nameInfoMap: MutMap[String, ClassInfoCache] = MutMap(clsInfos.toSeq*)
+    val nameFuncMap: MutMap[String, LocalContext] = MutMap(funcInfos.toSeq*)
     log(s"mix cls infos $nameInfoMap, $nameFuncMap")
     val clsNmsAsTypeNm = clsInfos.keySet.map(x => TypeName(x))
     val len = clsInfos.size + nameFuncMap.size

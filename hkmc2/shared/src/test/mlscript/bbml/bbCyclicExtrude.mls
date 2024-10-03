@@ -40,19 +40,22 @@ let foo = f => (f(x => x(x)) : [A] -> A -> A) in foo
 
 :todo
 let foo(f) = (f(x => x(x)) : [A] -> A -> A) in foo
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[ERROR] Variable not found: f
+//│ ║  l.42: 	let foo(f) = (f(x => x(x)) : [A] -> A -> A) in foo
+//│ ╙──      	              ^
+//│ Type: forall α62_2: (α62_2) ->{⊥} α62_2
 
 :todo
 fun foo(f) = (f(x => x(x)) : [A] -> A -> A)
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ║  l.46: 	fun foo(f) = (f(x => x(x)) : [A] -> A -> A)
+//│ ║  l.49: 	fun foo(f) = (f(x => x(x)) : [A] -> A -> A)
 //│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
 
 f => (let g = x => x(x) in let tmp = g(g) in f(g)) : [A] -> A -> A
-//│ Type: ((((α85_1 ∨ (α85_1 ->{α88_1} α87_1)) -> α87_1) ->{α88_1} α87_1) -> (⊤ -> ⊥)) ->{⊥} forall α79_2: (α79_2) ->{⊥} α79_2
+//│ Type: ((((α91_1 ∨ (α91_1 ->{α94_1} α93_1)) -> α93_1) ->{α94_1} α93_1) -> (⊤ -> ⊥)) ->{⊥} forall α85_2: (α85_2) ->{⊥} α85_2
 //│ Where:
-//│   α85_1 <: (α85_1 ∨ (α85_1 ->{α88_1} α87_1)) -> α87_1
+//│   α91_1 <: (α91_1 ∨ (α91_1 ->{α94_1} α93_1)) -> α93_1
 
 

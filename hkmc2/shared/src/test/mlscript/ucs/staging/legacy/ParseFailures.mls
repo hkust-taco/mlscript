@@ -1,0 +1,39 @@
+:NewDefs
+:NoJS
+
+type Tree[A] = Node[A] | Empty
+module Empty
+class Node[A](value: Int, left: Tree[A], right: Tree[A])
+//│ type Tree[A] = Empty | Node[A]
+//│ module Empty
+//│ class Node[A](value: Int, left: Tree[A], right: Tree[A])
+
+fun contains(node, wanted) =
+  if node is
+    Node(value, left, right) and wanted
+      <= value then contains(left, wanted)
+      >= value then contains(right, wanted)
+      else true
+    Empty then false
+//│ fun contains: forall 'A. (Empty | Node['A], Num) -> Bool
+
+fun contains'(node, wanted) =
+  if node is
+    Node(value, left, right) and wanted
+      <= value then contains'(left, wanted)
+      >= value then contains'(right, wanted)
+      _ then true
+    Empty then false
+//│ fun contains': forall 'A. (Empty | Node['A], Num) -> Bool
+
+:pe
+class Z()
+class O()
+fun foo(x, y) = if x is
+  Z() and y is O() then 0 else 1
+//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
+//│ ║  l.33: 	  Z() and y is O() then 0 else 1
+//│ ╙──      	                          ^^^^
+//│ class Z()
+//│ class O()
+//│ fun foo: (Z, O) -> 0

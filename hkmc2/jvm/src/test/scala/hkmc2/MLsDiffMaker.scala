@@ -15,8 +15,12 @@ abstract class MLsDiffMaker extends DiffMaker:
   val dbgParsing = NullaryCommand("dp")
   
   val showParse = NullaryCommand("p")
+  val showParsedTree = NullaryCommand("pt")
   val showElab = NullaryCommand("el")
+  val showElaboratedTree = NullaryCommand("elt")
+  val showContext = NullaryCommand("ctx")
   val parseOnly = NullaryCommand("parseOnly")
+  val noTypeCheck = NullaryCommand("noTypeCheck")
   
   val importCmd = Command("import"): ln =>
     importFile(file / os.up / os.RelPath(ln.trim), verbose = true)
@@ -72,6 +76,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   
   def processOrigin(origin: Origin)(using Raise): Unit =
+    val oldCtx = curCtx
     val lexer = new syntax.Lexer(origin, dbg = dbgParsing.isSet)
     val tokens = lexer.bracketedTokens
     
@@ -82,14 +87,29 @@ abstract class MLsDiffMaker extends DiffMaker:
       def doPrintDbg(msg: => Str): Unit = if dbg then output(msg)
     val res = p.parseAll(p.block(allowNewlines = true))
     
-    if parseOnly.isSet || showParse.isSet then
+    // If parsed tree is displayed, don't show the string serialization.
+    if (parseOnly.isSet || showParse.isSet) && !showParsedTree.isSet then
       output(s"Parsed:${res.map("\n\t"+_.showDbg).mkString}")
+
+    if showParsedTree.isSet then
+      output(s"Parsed tree:")
+      res.foreach(t => output(t.showAsTree))
     
     // if showParse.isSet then
     //   output(s"AST: $res")
     
     if parseOnly.isUnset then
       processTrees(res)(using raise)
+
+    if showContext.isSet then
+      output("Members:")
+      curCtx.members.foreach: (k, v) =>
+        if !(oldCtx.members contains k) then
+          output(s"  $k -> $v")
+      output("Locals:")
+      curCtx.locals.foreach: (k, v) =>
+        if !(oldCtx.locals contains k) then
+          output(s"  $k -> $v")
   
   
   def processTrees(trees: Ls[syntax.Tree])(using Raise): Unit =
@@ -97,9 +117,14 @@ abstract class MLsDiffMaker extends DiffMaker:
     given Elaborator.Ctx = curCtx
     val (e, newCtx) = elab.topLevel(trees)
     curCtx = newCtx
-    if showElab.isSet || debug.isSet then
+    // If elaborated tree is displayed, don't show the string serialization.
+    if (showElab.isSet || debug.isSet) && !showElaboratedTree.isSet then
       output(s"Elab: ${e.showDbg}")
-    processTerm(e)
+    if showElaboratedTree.isSet then
+      output(s"Elaborated tree:")
+      output(e.showAsTree)
+    if noTypeCheck.isUnset then
+      processTerm(e)
   
   
   def processTerm(trm: semantics.Term)(using Raise): Unit =

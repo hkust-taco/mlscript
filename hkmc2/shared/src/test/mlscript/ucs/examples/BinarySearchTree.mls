@@ -1,0 +1,302 @@
+:global
+:noTypeCheck
+
+fun (&&): (Bool, Bool) -> Bool
+fun (===): (Any, Any) -> Bool
+fun (++): (Str, Str) -> Str
+fun toString: Any -> Str
+
+fun (|>) pipe(x, f) = f(x)
+fun (~~>) toBe(x, y) = if x === y then () else error
+fun (<?) min(x, y) = if x < y then x else y
+fun (>?) max(x, y) = if x > y then x else y
+fun abs(x) = if x < 0 then -x else x
+
+
+abstract class Option[T]: (Some[T] | None)
+class Some[T](val value: T) extends Option[T]
+module None extends Option[nothing]
+
+fun (??) getOrElse(o, v) = if o is
+  Some(v') then v'
+  None then v
+
+let anyToString = toString
+
+abstract class List[out T]: (Cons[T] | Nil)
+class Cons[out T](val head: T, val tail: List[T]) extends List[T]
+module Nil extends List[nothing]
+
+fun (::) cons(head, tail) = Cons(head, tail)
+
+1 :: 2 :: 3 :: 4 :: Nil
+
+abstract class Tree[out A]: (Empty | Node[A])
+class Node[out A](value: A, left: Tree[A], right: Tree[A]) extends Tree[A]
+module Empty extends Tree
+
+fun single(v) = Node(v, Empty, Empty)
+
+fun show[A](t: Tree[A]): Str = if t is
+  Node(v, l, r) then
+    "(" ++ show(l) ++ " " ++ toString(v) ++ " " ++ show(r) ++ ")"
+  Empty then "•"
+
+show(Empty)
+show(Node(0, Empty, Empty))
+show(Node(1, Node(0, Empty, Empty), Empty))
+show(Node(1, Node(0, Empty, Empty), Node(2, Empty, Empty)))
+
+fun insert(t, v) = if t is
+  Node(v', l, r) and
+    v < v' then Node(v', insert(l, v), r)
+    v > v' then Node(v', l, insert(r, v))
+    _ then t
+  Empty then Node(v, Empty, Empty)
+
+fun insert'(t, v) = if t is
+  Node(v', l, r) and v
+    < v' then Node(v', insert(l, v), r)
+    > v' then Node(v', l, insert(r, v))
+    else t
+  Empty then Node(v, Empty, Empty)
+
+insert(Empty, 0) |> show
+insert(Node(0, Empty, Empty), 0) |> show
+insert(Node(1, Empty, Empty), 0) |> show
+insert(Node(1, Node(0, Empty, Empty), Empty), 0) |> show
+insert(Node(1, Node(0, Empty, Empty), Empty), 2) |> show
+
+fun fromList(l) =
+  let fromList'(t, xs) =
+    if xs is
+      Cons(x, xs') then fromList'(insert(t, x), xs')
+      Nil then t
+  fromList'(Empty, l)
+
+fromList(1 :: 2 :: 3 :: 4 :: Nil) |> show
+fromList(2 :: 1 :: 4 :: 3 :: Nil) |> show
+fromList(4 :: 3 :: 2 :: 1 :: Nil) |> show
+let example1 = fromList(1 :: 3 :: 2 :: 4 :: Nil)
+example1 |> show
+
+fun contains(t, v) = if t is
+  Node(v', l, r) and
+    v < v' then contains(l, v)
+    v > v' then contains(r, v)
+    _ then true
+  Empty then false
+
+// Writing tests like this is very interesting.
+contains(Empty, 0) ~~> false
+contains(Node(0, Empty, Empty), 0) ~~> true
+contains(Node(1, Empty, Empty), 0) ~~> false
+
+fun minValue(t) = if t is
+  Empty then None
+  Node(v, Empty, _) then Some(v)
+  Node(_, l, _) then minValue(l)
+
+minValue(Empty) ?? "not found"
+minValue(Node(0, Empty, Empty)) ?? "not found"
+minValue(example1) ?? "not found"
+
+fun maxValue(t) = if t is
+  Empty then None
+  Node(v, _, Empty) then Some(v)
+  Node(_, _, r) then maxValue(r)
+
+maxValue(Empty) ?? "not found"
+maxValue(Node(0, Empty, Empty)) ?? "not found"
+maxValue(example1) ?? "not found"
+
+fun lowerBound(t, v) = if t is
+  Node(v', l, r) and
+    v < v' then lowerBound(l, v)
+    v > v' then Some(lowerBound(r, v) ?? v')
+    _ then Some(v')
+  Empty then None
+
+lowerBound(Empty, 0) ?? "not found"
+lowerBound(Node(0, Empty, Empty), 0) ?? "not found"
+lowerBound(Node(1, Empty, Empty), 0) ?? "not found"
+lowerBound(Node(-1, Empty, Empty), 0) ?? "not found"
+
+lowerBound(example1, 0) ?? "not found"
+lowerBound(example1, 1) ?? "not found"
+lowerBound(example1, 2) ?? "not found"
+lowerBound(example1, 3) ?? "not found"
+lowerBound(example1, 4) ?? "not found"
+lowerBound(example1, 5) ?? "not found"
+
+let example2 = fromList(1 :: 5 :: 42 :: 10 :: 23 :: 59 :: 81 :: Nil)
+lowerBound(example2, 0) ?? "not found"
+lowerBound(example2, 25) ?? "not found"
+lowerBound(example2, 99) ?? "not found"
+lowerBound(example2, 7) ?? "not found"
+lowerBound(example2, 32) ?? "not found"
+lowerBound(example2, 41) ?? "not found"
+
+fun upperBound(t, v) = if t is
+  Node(v', l, r) and
+    v < v' then Some(upperBound(l, v) ?? v')
+    v > v' then upperBound(r, v)
+    _ then Some(v')
+  Empty then None
+
+upperBound(example2, 0) ?? "not found"
+upperBound(example2, 25) ?? "not found"
+upperBound(example2, 99) ?? "not found"
+upperBound(example2, 7) ?? "not found"
+upperBound(example2, 32) ?? "not found"
+upperBound(example2, 41) ?? "not found"
+
+fun remove(t, v) =
+  if t is
+    Node(v', l, r) and
+      v < v' then Node(v', remove(l, v), r)
+      v > v' then Node(v', l, remove(r, v))
+      minValue(r) is
+        None then l
+        Some(v'') then Node(v'', l, remove(r, v''))
+    Empty then Empty
+
+remove(Empty, 0) |> show
+remove(Node(0, Empty, Empty), 0) |> show
+remove(Node(1, Empty, Empty), 0) |> show
+remove(Node(1, Node(0, Empty, Empty), Empty), 0) |> show
+remove(Node(1, Empty, Node(2, Empty, Empty)), 2) |> show
+remove(Node(1, Node(0, Empty, Empty), Node(2, Empty, Empty)), 1) |> show
+
+example1 |> show
+remove(example1, 0) |> show
+remove(example1, 1) |> show
+remove(example1, 2) |> show
+remove(example1, 3) |> show
+remove(example1, 4) |> show
+
+class Pair[A, B](val first: A, val second: B)
+
+fun extractMin(t) =
+  if t is
+    Node(v, Empty, r) then Pair(Some(v), r)
+    Node(v, l, r) and
+      extractMin(l) is Pair(m, l') then
+        Pair(m, Node(v, l', r))
+    Empty then Pair(None, Empty)
+
+extractMin(example1).first ?? "not found"
+extractMin(example1).second |> show
+
+fun merge(l, r) =
+  if extractMin(r) is
+    Pair(None, _) then l
+    Pair(Some(m), r') then Node(m, l, r')
+
+merge(Empty, Empty) |> show
+merge(Empty, Node(0, Empty, Empty)) |> show
+merge(Node(0, Empty, Empty), Empty) |> show
+merge(Node(0, Empty, Empty), Node(1, Empty, Empty)) |> show
+merge(Node(0, Empty, Empty), Node(2, Node(1, Empty, Empty), Empty)) |> show
+
+fun removeGte(t, v) =
+  if t is
+    Node(v', l, r) and
+      v < v' then removeGte(l, v)
+      v > v' then Node(v', l, removeGte(r, v))
+      _ then l // lucky case
+    Empty then Empty
+
+removeGte(Empty, 0) |> show
+removeGte(example1, 0) |> show
+removeGte(example1, 1) |> show
+removeGte(example1, 2) |> show
+removeGte(example1, 3) |> show
+removeGte(example1, 4) |> show
+removeGte(example1, 5) |> show
+
+example2 |> show
+removeGte(example2, 10) |> show
+removeGte(example2, 22) |> show
+removeGte(example2, 23) |> show
+removeGte(example2, 24) |> show
+removeGte(example2, 70) |> show
+removeGte(example2, 99) |> show
+
+fun removeLt(t, v) =
+  if t is
+    Node(v', l, r) and
+      v' < v then removeLt(r, v)
+      else Node(v', removeLt(l, v), r)
+    Empty then Empty
+
+example2 |> show
+removeLt(example2, 10) |> show
+removeLt(example2, 22) |> show
+removeLt(example2, 23) |> show
+removeLt(example2, 24) |> show
+removeLt(example2, 70) |> show
+removeLt(example2, 99) |> show
+
+// Remove elements from `begin` until `end`.
+fun removeRange(t, begin, end) =
+  if t is
+    Node(v, l, r) and
+      begin > v then Node(v, l, removeRange(r, begin, end))
+      end <= v then Node(v, removeRange(l, begin, end), r)
+      _ then merge(removeGte(l, begin), removeLt(r, end))
+    Empty then Empty
+
+example2 |> show
+removeRange(example2, 1, 82) |> show
+removeRange(example2, 1, 50) |> show
+removeRange(example2, 50, 81) |> show
+removeRange(example2, 20, 60) |> show
+removeRange(example2, 20, 24) |> show
+removeRange(example2, 59, 60) |> show
+
+fun size(t) =
+  if t is
+    Node(_, l, r) then 1 + size(l) + size(r)
+    Empty then 0
+
+size(Empty) ~~> 0
+size(Node(0, Empty, Empty)) ~~> 1
+size(example1) ~~> 4
+size(example2) ~~> 7
+
+fun inverse(t) =
+  if t is
+    Node(v, l, r) then Node(v, inverse(r), inverse(l))
+    Empty then Empty
+
+inverse(Empty) |> show
+inverse(Node(0, Empty, Empty)) |> show
+inverse(example1) |> show
+inverse(example2) |> show
+
+fun height(t) =
+  if t is
+    Node(_, l, r) then 1 + max(height(l), height(r))
+    Empty then 0
+
+height(Empty) ~~> 0
+height(Node(0, Empty, Empty)) ~~> 1
+height(example1) ~~> 3
+height(example2) ~~> 5
+
+fun isBalanced(t) =
+  if t is
+    Empty then true
+    Node(_, l, r) and height(l) is hl and height(r) is hr then
+      // The precedence of `<=` seems to be broken.
+      (abs(hl - hr) <= 1) && isBalanced(l) && isBalanced(r)
+
+isBalanced(Empty) ~~> true
+isBalanced(Node(0, Empty, Empty)) ~~> true
+isBalanced(example1) ~~> false
+isBalanced(example2) ~~> false
+
+isBalanced(Node(1, single(-1), single(3))) ~~> true
+isBalanced(Node(1, single(-1), Node(3, single(2), Empty))) ~~> true
+isBalanced(Node(1, single(-1), Node(3, Empty, single(4)))) ~~> true

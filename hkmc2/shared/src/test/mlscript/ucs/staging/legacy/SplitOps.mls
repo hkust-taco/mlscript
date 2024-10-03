@@ -1,0 +1,115 @@
+:NewDefs
+
+abstract class Option[A]: Some[A] | None
+class Some[A](value: A) extends Option[A]
+module None extends Option
+//│ abstract class Option[A]: None | Some[A]
+//│ class Some[A](value: A) extends Option
+//│ module None extends Option
+
+abstract class Either[out A, out B]: Left[A] | Right[B]
+class Left[A](leftValue: A) extends Either[A, nothing]
+class Right[B](rightValue: B) extends Either[nothing, B]
+//│ abstract class Either[A, B]: Left[A] | Right[B]
+//│ class Left[A](leftValue: A) extends Either
+//│ class Right[B](rightValue: B) extends Either
+
+:e
+:ge
+fun f(x) =
+  if x
+    is Left(v) then 0
+    is Right(v) then 1
+    <> undefined then 2
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.23: 	    <> undefined then 2
+//│ ╙──      	                      ^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.20: 	  if x
+//│ ║        	     ^
+//│ ║  l.21: 	    is Left(v) then 0
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.22: 	    is Right(v) then 1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.23: 	    <> undefined then 2
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── undefined literal of type `()` is not an instance of type `Num`
+//│ ║  l.23: 	    <> undefined then 2
+//│ ╙──      	       ^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.23: 	    <> undefined then 2
+//│ ║        	                      ^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ fun f: (Left[anything] | Num | Right[anything]) -> (0 | 1 | 2)
+//│ Code generation encountered an error:
+//│   unresolved symbol <>
+
+:e
+:ge
+fun f(x) =
+  if x
+    is Some(xv) and y is Some(yv) then xv + yv
+    is None() and y is None() then 0
+//│ ╔══[ERROR] identifier `y` not found
+//│ ║  l.51: 	    is Some(xv) and y is Some(yv) then xv + yv
+//│ ╙──      	                    ^
+//│ ╔══[ERROR] identifier `y` not found
+//│ ║  l.52: 	    is None() and y is None() then 0
+//│ ╙──      	                  ^
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.51: 	    is Some(xv) and y is Some(yv) then xv + yv
+//│ ╙──      	                    ^
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.52: 	    is None() and y is None() then 0
+//│ ╙──      	                  ^
+//│ fun f: (None | Some[Int]) -> Int
+//│ Code generation encountered an error:
+//│   unresolved symbol y
+
+class A()
+class B()
+//│ class A()
+//│ class B()
+
+fun f(a, b) =
+  if a
+    is A() and b is B() then 0
+//│ fun f: (A, B) -> 0
+
+class C()
+//│ class C()
+
+:e
+fun f(a, b, c) =
+  if a
+    == 0 and b is B() and c is C() then 0
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.85: 	    == 0 and b is B() and c is C() then 0
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.85: 	    == 0 and b is B() and c is C() then 0
+//│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ fun f: (Num, B, C) -> 0
+
+fun f(x) =
+  if x
+    is A() then "A"
+    is B() then "B"
+//│ fun f: (A | B) -> ("A" | "B")
+
+fun sumOpt(x, y) =
+  if x
+    is Some(xv) and y is
+      Some(yv) then xv + yv
+      None() then xv
+    is None() and y is
+      Some(yv) then yv
+      None() then 0
+//│ fun sumOpt: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)
+
+fun f(x, y, z) =
+  if x is A() and y
+    == z then 1
+    is B() then 0
+//│ fun f: (A, nothing, Num) -> (0 | 1)

@@ -1,0 +1,121 @@
+:NewDefs
+
+// This test file contains the cases where inner cases are conflicting with outer cases.
+
+class X
+class Y
+class Z
+//│ class X {
+//│   constructor()
+//│ }
+//│ class Y {
+//│   constructor()
+//│ }
+//│ class Z {
+//│   constructor()
+//│ }
+
+:w
+:ducs:normalize.result
+fun f(x) = if
+  x is X and x is Y then 1
+  else 2
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   X*◊ -> 2
+//│   _ -> 2
+//│ ╔══[WARNING] possibly conflicting patterns for this scrutinee
+//│ ║  l.21: 	  x is X and x is Y then 1
+//│ ║        	  ^
+//│ ╟── the scrutinee was matched against X
+//│ ║  l.21: 	  x is X and x is Y then 1
+//│ ║        	       ^
+//│ ╟── which is unrelated with Y
+//│ ║  l.21: 	  x is X and x is Y then 1
+//│ ╙──      	                  ^
+//│ fun f: Object -> 2
+
+
+:w
+:ducs:normalize.result
+fun f(x) = if
+  x is X and
+    x is Y then 1
+    x is Y then 2
+  else 3
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   X*◊ -> 3
+//│   _ -> 3
+//│ ╔══[WARNING] possibly conflicting patterns for this scrutinee
+//│ ║  l.42: 	  x is X and
+//│ ║        	  ^
+//│ ╟── the scrutinee was matched against X
+//│ ║  l.42: 	  x is X and
+//│ ║        	       ^
+//│ ╟── which is unrelated with Y
+//│ ║  l.43: 	    x is Y then 1
+//│ ╙──      	         ^
+//│ ╔══[WARNING] possibly conflicting patterns for this scrutinee
+//│ ║  l.42: 	  x is X and
+//│ ║        	  ^
+//│ ╟── the scrutinee was matched against X
+//│ ║  l.42: 	  x is X and
+//│ ║        	       ^
+//│ ╟── which is unrelated with Y
+//│ ║  l.44: 	    x is Y then 2
+//│ ╙──      	         ^
+//│ fun f: Object -> 3
+
+:w
+:ducs:normalize.result
+fun f(x) = if
+  x is X and
+    x is Y then 1
+    x is Z then 2
+  else 3
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   X*◊ -> 3
+//│   _ -> 3
+//│ ╔══[WARNING] possibly conflicting patterns for this scrutinee
+//│ ║  l.73: 	  x is X and
+//│ ║        	  ^
+//│ ╟── the scrutinee was matched against X
+//│ ║  l.73: 	  x is X and
+//│ ║        	       ^
+//│ ╟── which is unrelated with Y
+//│ ║  l.74: 	    x is Y then 1
+//│ ╙──      	         ^
+//│ ╔══[WARNING] possibly conflicting patterns for this scrutinee
+//│ ║  l.73: 	  x is X and
+//│ ║        	  ^
+//│ ╟── the scrutinee was matched against X
+//│ ║  l.73: 	  x is X and
+//│ ║        	       ^
+//│ ╟── which is unrelated with Z
+//│ ║  l.75: 	    x is Z then 2
+//│ ╙──      	         ^
+//│ fun f: Object -> 3
+
+:w
+:ducs:normalize.result
+fun f(x) = if
+  x is X and
+    x is Y and
+      x is Z then 1
+  else 2
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   X*◊ -> 2
+//│   _ -> 2
+//│ ╔══[WARNING] possibly conflicting patterns for this scrutinee
+//│ ║  l.104: 	  x is X and
+//│ ║         	  ^
+//│ ╟── the scrutinee was matched against X
+//│ ║  l.104: 	  x is X and
+//│ ║         	       ^
+//│ ╟── which is unrelated with Y
+//│ ║  l.105: 	    x is Y and
+//│ ╙──       	         ^
+//│ fun f: Object -> 2

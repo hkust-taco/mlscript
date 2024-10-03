@@ -1,0 +1,127 @@
+:NewDefs
+
+class Some[T](value: T)
+module None
+type Option[T] = Some[T] | None
+class Pair[A, B](x: A, y: B)
+//│ class Some[T](value: T)
+//│ module None
+//│ type Option[T] = None | Some[T]
+//│ class Pair[A, B](x: A, y: B)
+
+fun f(x) = if x is Some(1) then true else false
+//│ fun f: (Object & ~#Some | Some[Object]) -> Bool
+
+[f(Some(1)), f(None), f(Some(2)), f(Some(-1))]
+//│ [Bool, Bool, Bool, Bool]
+//│ res
+//│     = [ true, false, false, false ]
+
+fun f(x) = if x is Some(1) then true
+//│ fun f: Some[1] -> true
+
+fun f(x) = if x is
+  Some(1) then true
+  Some(2) then false
+//│ fun f: Some[1 | 2] -> Bool
+
+[f(Some(1)), f(Some(2))]
+//│ [Bool, Bool]
+//│ res
+//│     = [ true, false ]
+
+fun g(x) = if x then 1 else 2
+//│ fun g: Bool -> (1 | 2)
+
+:e
+fun test_must_be_boolean(x) = if 0 then 1 else 2
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.37: 	fun test_must_be_boolean(x) = if 0 then 1 else 2
+//│ ║        	                                 ^
+//│ ╙── integer literal of type `0` is not an instance of type `Bool`
+//│ fun test_must_be_boolean: anything -> (1 | 2)
+
+fun g(x) = if x is true then 1 else 2
+//│ fun g: Object -> (1 | 2)
+
+[g(true), g(false), g(None)]
+//│ [1 | 2, 1 | 2, 1 | 2]
+//│ res
+//│     = [ 1, 2, 2 ]
+
+fun g(x) = if x && true is true then 1 else 2
+//│ fun g: Bool -> (1 | 2)
+
+fun h(x) = if (x : Bool) then 1 else 2
+//│ fun h: Bool -> (1 | 2)
+
+// Currently post-processing cannot handle this case. The desugared term is not
+// perfect. Also, is the inferred type wrong?
+fun mix(x) = if x is
+  true then "true"
+  Some(value) then "Some"
+  0 then "zero"
+//│ fun mix: (0 | Some[anything] | true) -> ("Some" | "true" | "zero")
+
+[mix(true), mix(Some(1)), mix(0)]
+//│ ["Some" | "true" | "zero", "Some" | "true" | "zero", "Some" | "true" | "zero"]
+//│ res
+//│     = [ 'true', 'Some', 'zero' ]
+
+:e
+[mix(false), mix(None)]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.72: 	[mix(false), mix(None)]
+//│ ║        	 ^^^^^^^^^^
+//│ ╟── reference of type `false` does not match type `0 | Some[?T] | true`
+//│ ║  l.72: 	[mix(false), mix(None)]
+//│ ║        	     ^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.60: 	fun mix(x) = if x is
+//│ ╙──      	                ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.72: 	[mix(false), mix(None)]
+//│ ║        	             ^^^^^^^^^
+//│ ╟── reference of type `None` does not match type `0 | Some[?T] | true`
+//│ ║  l.72: 	[mix(false), mix(None)]
+//│ ║        	                 ^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.60: 	fun mix(x) = if x is
+//│ ╙──      	                ^
+//│ ["Some" | "true" | "zero" | error, "Some" | "true" | "zero" | error]
+//│ res
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
+
+fun string_literals(x) =
+  if x is
+    "foo" then 0
+    "bar" then 1
+    "qax" then 2
+//│ fun string_literals: ("bar" | "foo" | "qax") -> (0 | 1 | 2)
+
+class Foo
+//│ class Foo {
+//│   constructor()
+//│ }
+
+fun mixed_patterns(x) =
+  if x is
+    Foo then 1
+    23 then 2
+    "test" then 3
+//│ fun mixed_patterns: ("test" | 23 | Foo) -> (1 | 2 | 3)
+
+fun bool_patterns(x) =
+  if x is
+    true then 1
+    false then 2
+//│ fun bool_patterns: Bool -> (1 | 2)
+
+fun dual_patterns(x, y) =
+  if
+    x is "some" and y is "none" then 0
+    x is "none" and y is "some" then 1
+    x is "some" and y is "some" then 2
+    x is "none" and y is "none" then 3
+//│ fun dual_patterns: ("none" | "some", "none" | "some") -> (0 | 1 | 2 | 3)

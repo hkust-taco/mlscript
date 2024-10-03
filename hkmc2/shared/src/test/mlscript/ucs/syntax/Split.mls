@@ -1,0 +1,130 @@
+:global
+:parseOnly
+:pt
+
+:pt
+1 +
+  2
+  3
+//│ Parsed tree:
+//│ App:
+//│   lhs = Ident of "+"
+//│   rhs = Tup of Ls of 
+//│     IntLit of 1
+//│     Block of Ls of 
+//│       IntLit of 2
+//│       IntLit of 3
+
+if f(x) ==
+  1 + 1 then 0
+  2 then 3
+//│ Parsed tree:
+//│ If of App:
+//│   lhs = Ident of "=="
+//│   rhs = Tup of Ls of 
+//│     App:
+//│       lhs = Ident of "f"
+//│       rhs = Tup of Ls of 
+//│         Ident of "x"
+//│     Block of Ls of 
+//│       InfixApp:
+//│         lhs = App:
+//│           lhs = Ident of "+"
+//│           rhs = Tup of Ls of 
+//│             IntLit of 1
+//│             IntLit of 1
+//│         kw = keyword 'then'
+//│         rhs = IntLit of 0
+//│       InfixApp:
+//│         lhs = IntLit of 2
+//│         kw = keyword 'then'
+//│         rhs = IntLit of 3
+
+if x +
+  1 *
+    2 then 3
+    4 then 5
+  y /
+    6 is
+      A then 7
+      B then 9
+      else 42
+    8 then 9
+//│ Parsed tree:
+//│ If of App:
+//│   lhs = Ident of "+"
+//│   rhs = Tup of Ls of 
+//│     Ident of "x"
+//│     Block of Ls of 
+//│       App:
+//│         lhs = Ident of "*"
+//│         rhs = Tup of Ls of 
+//│           IntLit of 1
+//│           Block of Ls of 
+//│             InfixApp:
+//│               lhs = IntLit of 2
+//│               kw = keyword 'then'
+//│               rhs = IntLit of 3
+//│             InfixApp:
+//│               lhs = IntLit of 4
+//│               kw = keyword 'then'
+//│               rhs = IntLit of 5
+//│       App:
+//│         lhs = Ident of "/"
+//│         rhs = Tup of Ls of 
+//│           Ident of "y"
+//│           Block of Ls of 
+//│             InfixApp:
+//│               lhs = IntLit of 6
+//│               kw = keyword 'is'
+//│               rhs = Block of Ls of 
+//│                 InfixApp:
+//│                   lhs = Ident of "A"
+//│                   kw = keyword 'then'
+//│                   rhs = IntLit of 7
+//│                 InfixApp:
+//│                   lhs = Ident of "B"
+//│                   kw = keyword 'then'
+//│                   rhs = IntLit of 9
+//│                 Modified:
+//│                   modifier = keyword 'else'
+//│                   body = IntLit of 42
+//│             InfixApp:
+//│               lhs = IntLit of 8
+//│               kw = keyword 'then'
+//│               rhs = IntLit of 9
+
+:todo
+if
+  x
+  is
+    A then "A"
+//│ /!!!\ Uncaught error: scala.NotImplementedError: List()
+
+x
+  + 1
+//│ Parsed tree:
+//│ App:
+//│   lhs = Ident of "x"
+//│   rhs = OpBlock of Ls of 
+//│     Tuple2:
+//│       _1 = Ident of "+"
+//│       _2 = IntLit of 1
+
+x
+  + 1
+  + 2
+  + 3
+//│ Parsed tree:
+//│ App:
+//│   lhs = Ident of "x"
+//│   rhs = OpBlock of Ls of 
+//│     Tuple2:
+//│       _1 = Ident of "+"
+//│       _2 = IntLit of 1
+//│     Tuple2:
+//│       _1 = Ident of "+"
+//│       _2 = IntLit of 2
+//│     Tuple2:
+//│       _1 = Ident of "+"
+//│       _2 = IntLit of 3

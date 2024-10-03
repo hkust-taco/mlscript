@@ -68,10 +68,9 @@ class DiffTestRunner(state: DiffTestRunner.State)
   
   // scala test will not execute a test if the test class has constructor parameters.
   // override this to get the correct paths of test files.
-  protected lazy val files = allFiles.filter { file =>
-    val fileName = file.baseName
-    modified(file.relativeTo(workingDir)) || modified.isEmpty
-  }
+  protected lazy val files = allFiles.filter: file =>
+    (modified(file.relativeTo(workingDir)) || modified.isEmpty) &&
+      !file.segments.contains("staging") // Exclude staging test files
   
   /* 
   println(pwd)

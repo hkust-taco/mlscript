@@ -213,7 +213,7 @@ class Monomorph(debug: Debug = DummyDebug):
             if (extractObjParams(p).length != args.length) throw MonomorphError("ObjValue param mismatch")
             extractObjParams(p).map(_._2.name).zip(args).toList // FIXME: Different structure for Obj Params
           case None => Nil)
-        val obj = ObjVal(tpName, ags.map((p, _) => p), MutMap(ags: _*)) // TODO: parent object fields
+        val obj = ObjVal(tpName, ags.map((p, _) => p), MutMap(ags*)) // TODO: parent object fields
         debug.writeLine(s"Parents term is ${parents}")
         val parentObjs = parents.map{
           case Var(name) => BoundedTerm(createObjValue(name, Nil))

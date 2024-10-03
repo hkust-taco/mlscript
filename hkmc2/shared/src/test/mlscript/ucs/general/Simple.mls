@@ -1,0 +1,24 @@
+// Simple.mls
+// ==========
+// Simple and single-line UCS expressions.
+
+:global
+:noTypeCheck
+
+
+class Box[T](value: T)
+class Bottle[T](value: T)
+
+
+fun foo(x) = if x is Box(y) then y
+
+
+fun foo(x) = if x is
+  Box(y) then y
+  Bottle(y) then y
+
+
+fun foo(x, y) = if x is Box(xv) and y is Bottle(yv) then xv + yv
+
+
+fun foo(x, y, z) = if x is Box(xv) and y is Box(yv) and z is Box(zv) then xv + yv + zv

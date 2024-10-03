@@ -1,0 +1,98 @@
+:NewDefs
+:NoJS
+
+fun abs(x) = if x < 0 then 0 - x else x
+//│ fun abs: Int -> Int
+
+abstract class Option[A]: Some[A] | None
+class Some[A](value: A) extends Option[A]
+module None extends Option
+//│ abstract class Option[A]: None | Some[A]
+//│ class Some[A](value: A) extends Option
+//│ module None extends Option
+
+fun getOrElse(opt, default) =
+  if opt is
+    Some(value) then value
+    None then default
+//│ fun getOrElse: forall 'a. (None | Some['a], 'a) -> 'a
+
+getOrElse(None, 0)
+//│ 0
+
+getOrElse(Some(42), 0)
+//│ 0 | 42
+
+fun map(v, f) =
+  if v is
+    Some(x) then Some(f(x))
+    None then None
+//│ fun map: forall 'a 'A. (None | Some['a], 'a -> 'A) -> (None | Some['A])
+
+fun inc(x) = x + 5
+//│ fun inc: Int -> Int
+
+map(Some(5), x => x + 5)
+//│ None | Some['A]
+//│   where
+//│     'A :> Int
+
+map(None, inc)
+//│ None | Some['A]
+//│   where
+//│     'A :> Int
+
+:e
+fun f(a, b) = if a and b then 0
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.46: 	fun f(a, b) = if a and b then 0
+//│ ╙──      	                       ^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.46: 	fun f(a, b) = if a and b then 0
+//│ ║        	                              ^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.46: 	fun f(a, b) = if a and b then 0
+//│ ║        	                       ^^^^^^^^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ fun f: (Bool, Bool) -> 0
+
+:e
+fun f(x, y) =
+  if x == y + 5 then 0
+  else if x == y + 7 then 0
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.63: 	  else if x == y + 7 then 0
+//│ ╙──      	                          ^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.63: 	  else if x == y + 7 then 0
+//│ ║        	                          ^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ fun f: (Num, Int) -> 0
+
+// TODO support
+fun foo(x) = if x is Some
+  (0) then 0
+  (1) then 1
+//│ ╔══[PARSE ERROR] Unexpected parenthesis section here
+//│ ║  l.76: 	  (1) then 1
+//│ ╙──      	  ^^^
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
+// TODO support
+fun foo(x) = if x is Some of
+  0 then 0
+  1 then 1
+//│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
+//│ ║  l.84: 	  0 then 0
+//│ ╙──      	    ^^^^
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found operator application instead
+//│ ║  l.83: 	fun foo(x) = if x is Some of
+//│ ║        	                ^^^^^^^^^^^^
+//│ ║  l.84: 	  0 then 0
+//│ ║        	^^^
+//│ ╟── Note: 'if' expression starts here:
+//│ ║  l.83: 	fun foo(x) = if x is Some of
+//│ ╙──      	             ^^
+//│ fun foo: Some[0] -> ()
+

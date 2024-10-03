@@ -16,7 +16,7 @@ enum Pattern extends Located:
     * Should be transformed from `Var("_")` or unrecognized terms.
     */
   case Empty(source: Term)
-  case Class(nme: ClassSymbol, parameters: Opt[List[Pattern]], refined: Bool)
+  case Class(nme: ClassSymbol, parameters: Opt[List[VarSymbol]], refined: Bool)
   case Tuple(fields: List[Pattern])
   case Record(entries: List[(VarSymbol -> Pattern)])
   

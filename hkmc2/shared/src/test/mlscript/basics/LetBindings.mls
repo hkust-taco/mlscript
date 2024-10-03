@@ -4,18 +4,18 @@ let x = 1
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 let x = 1 in x
-//│ Type: Flow(x@17)
+//│ Type: Flow(x@20)
 
 let x = 1
 let y = 2
 x + y
-//│ Type: Flow(‹app-res›@21)
+//│ Type: Flow(‹app-res›@24)
 
 x
-//│ Type: Lab(Flow(x@19),Exit(x@19,2,false))
+//│ Type: Lab(Flow(x@22),Exit(x@22,2,false))
 
 let z = 3
 x + y + z
-//│ Type: Flow(‹app-res›@25)
+//│ Type: Flow(‹app-res›@28)
 
 

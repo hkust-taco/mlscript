@@ -1,0 +1,162 @@
+:NewDefs
+
+
+class Foo[T](x: T)
+//│ class Foo[T](x: T)
+
+if 1 is 1 then 1 else 0
+//│ 0 | 1
+//│ res
+//│     = 1
+
+fun test(x) = if x is 1 then 0 else 1
+//│ fun test: Object -> (0 | 1)
+
+:w
+fun testF(x) = if x is
+  Foo(a) then a
+  Foo(a) then a
+//│ ╔══[WARNING] found a duplicated case
+//│ ║  l.18: 	  Foo(a) then a
+//│ ║        	  ^^^
+//│ ╟── there is an identical pattern Foo
+//│ ║  l.17: 	  Foo(a) then a
+//│ ╙──      	  ^^^
+//│ fun testF: forall 'a. Foo['a] -> 'a
+
+class Bar[Y, Z](y: Y, z: Z)
+//│ class Bar[Y, Z](y: Y, z: Z)
+
+fun test(f) = if f is
+  Foo(a) then a
+  Bar(b, c) then b + c
+//│ fun test: forall 'a. (Bar[Int, Int] | Foo['a]) -> (Int | 'a)
+
+
+class Pair[A, B](fst: A, snd: B)
+//│ class Pair[A, B](fst: A, snd: B)
+
+fun f(x) =
+  if x is
+    Pair(0, 0) then "zeros"
+    Pair(1, 1) then "ones"
+    Pair(y, 1) then x
+    _          then "nah"
+//│ fun f: (Object & ~#Pair | Pair[Object, Object]) -> ("nah" | "ones" | "zeros" | Pair[nothing, nothing])
+
+class Z()
+class O()
+//│ class Z()
+//│ class O()
+
+// This is not exhaustive.
+:e
+fun foo(x) = if x is
+  Pair(Z(), Z()) then "zeros"
+  Pair(O(), O()) then "ones"
+//│ ╔══[ERROR] when `x` is `Pair`, and
+//│ ║  l.55: 	  Pair(Z(), Z()) then "zeros"
+//│ ║        	  ^^^^
+//│ ╟── the first argument of `Pair` is `Z`,
+//│ ║  l.55: 	  Pair(Z(), Z()) then "zeros"
+//│ ║        	       ^
+//│ ╟── the second argument of `Pair` has 1 missing case
+//│ ╟── it can be class `O`
+//│ ║  l.56: 	  Pair(O(), O()) then "ones"
+//│ ╙──      	            ^
+//│ ╔══[ERROR] when `x` is `Pair`, and
+//│ ║  l.55: 	  Pair(Z(), Z()) then "zeros"
+//│ ║        	  ^^^^
+//│ ╟── the first argument of `Pair` is `O`,
+//│ ║  l.56: 	  Pair(O(), O()) then "ones"
+//│ ║        	       ^
+//│ ╟── the second argument of `Pair` has 1 missing case
+//│ ╟── it can be class `Z`
+//│ ║  l.55: 	  Pair(Z(), Z()) then "zeros"
+//│ ╙──      	            ^
+//│ fun foo: Pair[O | Z, nothing] -> ("ones" | "zeros")
+
+// Change `Pair` to a real pair.
+:e
+fun foo(x) = if x is
+  [Z(), Z()] then "zeros"
+  [O(), O()] then "ones"
+//│ ╔══[ERROR] when `x$Tuple$2_0` is `O`
+//│ ║  l.83: 	  [O(), O()] then "ones"
+//│ ║        	   ^
+//│ ╟── `x$Tuple$2_1` has 1 missing case
+//│ ╟── it can be class `Z`
+//│ ║  l.82: 	  [Z(), Z()] then "zeros"
+//│ ╙──      	        ^
+//│ fun foo: forall 'a. {0: O | Z, 1: O & 'a} -> ("ones" | "zeros" | 'a)
+
+fun foo(x) = if x is
+  Pair(a, b) then if a is
+    Z() then if b is
+      Z() then "zeros"
+    O() then if b is
+      O() then "ones"
+//│ fun foo: Pair[O | Z, nothing] -> ("ones" | "zeros")
+
+fun foo(x) = if x is
+  Pair(a, b) then if a is
+    Z() then if b is
+      Z() then "zeros"
+      else "???"
+    O() then if b is
+      O() then "ones"
+//│ fun foo: Pair[O | Z, O] -> ("???" | "ones" | "zeros")
+
+fun foo(x) = if x is
+  Pair(a, b) then if a is
+    Z() then if b is
+      Z() then "zeros"
+      else "???"
+    O() then if b is
+      O() then "zeros"
+      else "???"
+//│ fun foo: Pair[O | Z, Object] -> ("???" | "zeros")
+
+class S(pred: S | Z | O)
+//│ class S(pred: O | S | Z)
+
+// TODO: Cannot check exhaustiveness of nested UCS yet.
+fun foo(x) = if x is
+  Pair(a, b) then if a is
+    Z() then if b is
+      S(x) then x
+      else "???"
+    O() then if b is
+      O() then "zeros"
+      else "???"
+//│ fun foo: Pair[O | Z, Object] -> ("???" | "zeros" | O | S | Z)
+
+foo(Pair(Z(), Z()))
+//│ "???" | "zeros" | O | S | Z
+//│ res
+//│     = '???'
+
+:e
+fun foo(x) = if x is
+  Pair(Z(), Z()) then "zeros"
+  Pair(O(), O()) then "ones"
+  Pair(y, O()) then x
+//│ ╔══[ERROR] when `x` is `Pair`
+//│ ║  l.141: 	  Pair(Z(), Z()) then "zeros"
+//│ ║         	  ^^^^
+//│ ╟── the second argument of `Pair` has 1 missing case
+//│ ╟── it can be class `Z`
+//│ ║  l.141: 	  Pair(Z(), Z()) then "zeros"
+//│ ╙──       	            ^
+//│ fun foo: forall 'A 'B. Pair['A, O & 'B] -> ("ones" | "zeros" | Pair['A, 'B] | 'A)
+//│   where
+//│     'A <: Object
+
+fun foo(x, y) = if x is Z() and y is O() then 0 else 1
+//│ fun foo: (Object, Object) -> (0 | 1)
+
+fun foo(x, y) =
+  if x is
+    Z() and y is O() then 0
+    else 1
+//│ fun foo: (Object, Object) -> (0 | 1)

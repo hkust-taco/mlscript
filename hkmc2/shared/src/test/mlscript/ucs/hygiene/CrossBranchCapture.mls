@@ -1,0 +1,54 @@
+:global
+:noTypeCheck
+
+class Numb(n: Int)
+
+:e
+fun process(e) =
+  if e is
+    Numb(n) and n > 0 then n
+    Numb(m) then n
+//│ ╔══[ERROR] Name not found: n
+//│ ║  l.10: 	    Numb(m) then n
+//│ ╙──      	                 ^
+
+
+process(Numb(-10))
+
+fun process(e, n) =
+  if e is
+    Numb(n) and n > 0 then n
+    Numb(m) then n + m
+
+process(Numb(0), 10)
+process(Numb(-1), 10)
+process(Numb(1), 10)
+
+
+// class Vec(xs: Array[Numb | Vec]) // Array is not available
+abstract class Vec[out T]
+class Cons[out T](head: T, tail: Vec[T]) extends Vec[T]
+module Nil extends Vec[nothing]
+
+class Pair[A, B](a: A, b: B)
+
+:e
+fun process(e) =
+  if e is
+    Pair(Numb(n), Numb(m)) then Numb(n + m)
+    Pair(Vec(xs), Vec(ys)) then n
+    Pair(Vec(n),  Numb(n)) then n
+    Pair(Numb(n), Vec(n))  then n
+//│ ╔══[ERROR] Name not found: n
+//│ ║  l.39: 	    Pair(Vec(xs), Vec(ys)) then n
+//│ ╙──      	                                ^
+
+
+// * FIXME should warn, be rejected, or compare both values for equality
+fun process(e) =
+  if e is
+    Pair(Numb(n), Numb(n)) then n
+
+process(Pair(Numb(1), Numb(2)))
+
+

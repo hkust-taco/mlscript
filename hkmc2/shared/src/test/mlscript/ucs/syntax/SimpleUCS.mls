@@ -1,0 +1,249 @@
+:global
+:noTypeCheck
+
+abstract class Option[A]: Some[A] | None
+class Some[A](value: A) extends Option[A]
+module None extends Option
+
+abstract class Either[out A, out B]: Left[A] | Right[B]
+class Left[A](leftValue: A) extends Either[A, nothing]
+class Right[B](rightValue: B) extends Either[nothing, B]
+
+fun f(x, y) =
+  if x is
+    Left(xv) and y is Left(yv) then xv + yv
+    Right(xv) and y is Right(yv) then xv * yv
+    None and y is None then 0
+
+fun f(x, y) =
+  if x is
+    Left(xv) and y is Left(yv) then xv + yv
+    None then 0
+
+fun f(x, y) =
+  if x is
+    Left(xv) and y is
+      Left(yv) then xv + yv
+      Right(yv) then xv * yv
+    None then 0
+
+fun f(x) =
+  if x is
+    Some(v) and
+      v < 0 then "negative"
+      v > 0 then "positive"
+      _     then "zero"
+    None then "nothing"
+
+fun f(x, y) =
+  if x is
+    Some(x) and y is
+      Some(y) then 0
+
+class A[T](value: T)
+class B[T](value: T)
+
+fun f(x, y, u, v) =
+  if x is
+    A(a) and y ==
+      u then 0
+      v then 1
+    A(a) and y is
+      B(0) then 0
+      B(1) then 1
+    A(_) then 99
+
+fun f(x) =
+  if x is
+    A(_) then "A"
+    B(_) then "B"
+
+// :e
+fun f(x, y) =
+  if x is
+    Some(xv) and y is Some(yv) then xv + yv
+    None and y is None then 0
+
+// :e
+fun f(x, y) =
+  if x is
+    Some(xv) and y is
+      Some(yv) then xv + yv
+      None then xv * 2
+    None and y is
+      Some(yv) then yv * 3
+
+fun f(x, y) =
+  if x is
+    A and y is
+      B then "bruh"
+
+fun f(x, y, z) =
+  if x is
+    A and z == 0 and y == 0 and y is
+      B then "bruh"
+    A then "oui"
+
+
+:todo // Note: should report missing final else clause.
+:e
+fun f(x, y) =
+  if x is
+    Some(x) and y
+      >  0 then "gt"
+      <  0 then "le"
+      == 0 then "eq"
+
+
+fun isValid(x) = if x then false else true
+
+
+fun f(x, allowNone) =
+  if x is
+    Some(x) and isValid(x) then "good"
+    None and allowNone then "okay"
+    else "bad"
+
+fun f(x) =
+  if x is
+    None then "bruh"
+    Some(x) then "roll"
+    _ and x == 0 then 0
+    _ then "rock"
+
+fun f(x, a, b) =
+  if x is
+    A(aa) and a then aa
+    B(bb) and b then bb
+    _           then 0
+
+:fixme
+fun f(x, y, b) =
+  if x is
+    Some(xv) and y
+      is Some(yv) then "bruh"
+      is None then "bruh"
+    Some(xv) and b then xv + b
+    _ then "roll"
+//│ ╔══[PARSE ERROR] Unexpected 'is' keyword here
+//│ ║  l.124: 	      is Some(yv) then "bruh"
+//│ ╙──       	      ^^
+//│ ╔══[ERROR] Unrecognized term split.
+//│ ║  l.123: 	    Some(xv) and y
+//│ ╙──       	                 ^
+
+:fixme
+fun g(x, y, b) =
+  if x is
+    Some(xv) and y
+      is Some(yv) then yv
+      is None then "bruh"
+    Some(xv) and b then xv + b
+    _ then "roll"
+//│ ╔══[PARSE ERROR] Unexpected 'is' keyword here
+//│ ║  l.139: 	      is Some(yv) then yv
+//│ ╙──       	      ^^
+//│ ╔══[ERROR] Unrecognized term split.
+//│ ║  l.138: 	    Some(xv) and y
+//│ ╙──       	                 ^
+
+
+fun foo(x, y, z) =
+  if x - y > 0 then Some(x + y + z) else None
+
+// Uncomment this block to make the following block work.
+// fun foo(x, y, z) =
+//   if x - y > 0 then Some(
+//     if x % 2 == 0 then Left(x) else Right(x)
+//   ) else None
+
+
+fun f(u, v, w) =
+  if foo(u, v, w) is
+    Some(x) and x is
+      Left(_) then "left-defined"
+      Right(_) then "right-defined"
+    None then "undefined"
+
+
+fun p(x) = if x >= 0 then Right(x) else Left(x)
+
+
+fun g(a, b) =
+  if p(a) is
+    Left(x) and b is
+      Some(y) then x + y
+      None    then x * a
+    Right(x) and b is
+      Some(y) then x * y
+      None    then x
+
+g(5, None)
+g(5, Some(7))
+g(0 - 5, None)
+g(0 - 5, Some(9))
+
+class Var(name: Str)
+abstract class ValBase: (IntVal | BoolVal)
+class IntVal(value: Int) extends ValBase
+class BoolVal(value: Bool) extends ValBase
+class Lit(value: ValBase)
+
+fun p(e, context) =
+  if e is
+    Var(x) and context.get(x) is
+      Some(IntVal(v)) then Left(v)
+      Some(BoolVal(v)) then Right(v)
+    Lit(IntVal(v)) then Left(v)
+    Lit(BoolVal(v)) then Right(v)
+
+class Nil()
+
+// Support operator constructor like ::
+:todo
+:e
+fun f(x) =
+  if x is
+    0 ::
+      Nil() then "oh"
+//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ║  l.207: 	    0 ::
+//│ ║         	    ^^^^
+//│ ║  l.208: 	      Nil() then "oh"
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
+
+
+fun f(x) =
+  if x == 0 and x is
+    A(_) then "A"
+    B(_) then "B"
+  else "bruh"
+
+
+fun helper(x) =
+  if x == 0 then None else Some(x)
+
+
+fun g(x, y) =
+  if x == 0 and helper(x) is
+    Some(a) and helper(y) is
+      Some(b) then a + b
+      None then a + 1
+    None and helper(y) is
+      Some(b) then 2 + b
+      None then 1
+  else
+    0
+
+
+fun test(x) = if x then 0 else "oops"
+
+
+test(true)
+test(false)
+
+
+test(0)
+test(1)
+
+

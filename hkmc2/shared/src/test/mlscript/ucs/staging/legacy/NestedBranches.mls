@@ -1,0 +1,131 @@
+:NewDefs
+
+
+class Some[out A](val value: A)
+module None
+class Left[out A](val leftValue: A)
+class Right[out A](val rightValue: A)
+module Nil
+class Cons[out A](val head: A, val tail: Cons[A] | Nil)
+class Pair[out A, out B](val fst: A, val snd: B)
+//│ class Some[A](value: A)
+//│ module None
+//│ class Left[A](leftValue: A)
+//│ class Right[A](rightValue: A)
+//│ module Nil
+//│ class Cons[A](head: A, tail: Cons[A] | Nil)
+//│ class Pair[A, B](fst: A, snd: B)
+
+
+fun optionApply(x, y, f) =
+  if x is
+    Some(xv) and y is
+      Some(yv) then Some(f(xv, yv))
+      None then None
+    None then None
+//│ fun optionApply: forall 'a 'b 'A. (None | Some['a], None | Some['b], ('a, 'b) -> 'A) -> (None | Some['A])
+
+fun (::) cons(h, t) = Cons(h, t)
+//│ fun (::) cons: forall 'A. ('A, Cons['A] | Nil) -> Cons['A]
+
+let zeroToThree = 0 :: 1 :: 2 :: 3 :: Nil
+//│ let zeroToThree: Cons[0 | 1 | 2 | 3]
+//│ zeroToThree
+//│             = Cons {}
+
+fun f(x) = if x % 2 == 0 then Left(x) else Right(x)
+//│ fun f: forall 'A. (Int & 'A) -> (Left['A] | Right['A])
+
+
+fun mapPartition(f, xs) = if xs is
+  Nil then Pair(Nil, Nil)
+  Cons(x, xs) and mapPartition(f, xs) is Pair(l, r) and f(x) is
+    Left(v)  then Pair(Cons(v, l), r)
+    Right(v) then Pair(l, Cons(v, r))
+//│ fun mapPartition: forall 'a 'A 'A0. ('a -> (Left['A] | Right['A0]), Cons['a] | Nil) -> Pair[Cons['A] | Nil, Cons['A0] | Nil]
+
+
+mapPartition(x => Left(x + 1), zeroToThree)
+//│ Pair[Cons[Int] | Nil, Cons[nothing] | Nil]
+//│ res
+//│     = Pair {}
+
+
+mapPartition(f, zeroToThree)
+//│ Pair[Cons[0 | 1 | 2 | 3] | Nil, Cons[0 | 1 | 2 | 3] | Nil]
+//│ res
+//│     = Pair {}
+
+
+fun mapPartition(f, xs) = if xs is
+  Nil then Pair(Nil, Nil)
+  Cons(x, xs) and
+    mapPartition(f, xs) is Pair(l, r) and f(x) is
+      Left(v)  then Pair(Cons(v, l), r)
+      Right(v) then Pair(l, Cons(v, r))
+//│ fun mapPartition: forall 'a 'A 'A0. ('a -> (Left['A] | Right['A0]), Cons['a] | Nil) -> Pair[Cons['A] | Nil, Cons['A0] | Nil]
+
+mapPartition(f, zeroToThree)
+//│ Pair[Cons[0 | 1 | 2 | 3] | Nil, Cons[0 | 1 | 2 | 3] | Nil]
+//│ res
+//│     = Pair {}
+
+
+fun mapPartition(f, xs) = if xs is
+  Nil then
+    Pair(Nil, Nil)
+  Cons(x, xs) and
+    mapPartition(f, xs) is
+      Pair(l, r) and
+        f(x) is
+          Left(v)  then
+            Pair(Cons(v, l), r)
+          Right(v) then
+            Pair(l, Cons(v, r))
+//│ fun mapPartition: forall 'a 'A 'A0. ('a -> (Left['A] | Right['A0]), Cons['a] | Nil) -> Pair[Cons['A] | Nil, Cons['A0] | Nil]
+
+mapPartition(f, zeroToThree)
+//│ Pair[Cons[0 | 1 | 2 | 3] | Nil, Cons[0 | 1 | 2 | 3] | Nil]
+//│ res
+//│     = Pair {}
+
+fun mapPartition(f, xs) = if xs is
+  Nil then [Nil, Nil]
+  Cons(x, xs) and mapPartition(f, xs) is [l, r] and f(x) is
+    Left(v)  then [Cons(v, l), r]
+    Right(v) then [l, Cons(v, r)]
+//│ fun mapPartition: forall 'a 'A 'A0. ('a -> (Left['A] | Right['A0]), Cons['a] | Nil) -> [Cons['A] | Nil, Cons['A0] | Nil]
+
+
+mapPartition(f, zeroToThree)
+//│ [Cons[0 | 1 | 2 | 3] | Nil, Cons[0 | 1 | 2 | 3] | Nil]
+//│ res
+//│     = [ Cons {}, Cons {} ]
+
+// * Vertical alignment is not allowed! (good)
+:pe
+:w
+:e
+fun mapPartition(f, xs) = if xs is
+  Nil then [Nil, Nil]
+  Cons(x, xs) and mapPartition(f, xs) is [l, r]
+          and f(x) is Left(v)  then [Cons(v, l), r]
+                      Right(v) then [l, Cons(v, r)]
+//│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
+//│ ║  l.113: 	                      Right(v) then [l, Cons(v, r)]
+//│ ╙──       	                               ^^^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.112: 	          and f(x) is Left(v)  then [Cons(v, l), r]
+//│ ║         	                                    ^^^^^^^^^^^^^^^
+//│ ║  l.113: 	                      Right(v) then [l, Cons(v, r)]
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.112: 	          and f(x) is Left(v)  then [Cons(v, l), r]
+//│ ║         	                                    ^^^^^^^^^^^^^^^
+//│ ║  l.113: 	                      Right(v) then [l, Cons(v, r)]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── tuple literal of type `[?a, ?b]` is not a function
+//│ ║  l.112: 	          and f(x) is Left(v)  then [Cons(v, l), r]
+//│ ╙──       	                                    ^^^^^^^^^^^^^^^
+//│ fun mapPartition: forall 'a. ('a -> Left[anything], Cons['a] | Nil) -> (error | [Nil, Nil])
+

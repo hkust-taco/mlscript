@@ -1,0 +1,110 @@
+:NewDefs
+
+:w
+if
+  _ then 0
+  else 0
+else 1
+//│ ╔══[WARNING] this case is unreachable
+//│ ║  l.6: 	  else 0
+//│ ║       	       ^
+//│ ╟── because it is subsumed by the branch
+//│ ║  l.5: 	  _ then 0
+//│ ╙──     	         ^
+//│ ╔══[WARNING] this case is unreachable
+//│ ║  l.7: 	else 1
+//│ ║       	     ^
+//│ ╟── because it is subsumed by the branch
+//│ ║  l.5: 	  _ then 0
+//│ ╙──     	         ^
+//│ 0
+//│ res
+//│     = 0
+
+:w
+if else 0 else 1
+//│ ╔══[WARNING] this case is unreachable
+//│ ║  l.25: 	if else 0 else 1
+//│ ║        	               ^
+//│ ╟── because it is subsumed by the branch
+//│ ║  l.25: 	if else 0 else 1
+//│ ╙──      	        ^
+//│ 0
+//│ res
+//│     = 0
+
+:w
+fun f(x) = if x is else 0 else 1
+//│ ╔══[WARNING] this case is unreachable
+//│ ║  l.37: 	fun f(x) = if x is else 0 else 1
+//│ ║        	                               ^
+//│ ╟── because it is subsumed by the branch
+//│ ║  l.37: 	fun f(x) = if x is else 0 else 1
+//│ ╙──      	                        ^
+//│ fun f: anything -> 0
+
+fun f(x) = if x is else 0 
+//│ fun f: anything -> 0
+
+:e
+if true
+  then 0
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.51: 	  then 0
+//│ ╙──      	       ^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.51: 	  then 0
+//│ ║        	       ^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ 0
+//│ res
+//│     = 0
+
+// This cannot be parsed. But the next one works.
+:pe
+:e
+fun f(x) =
+  if x ===
+    else "bruh"
+//│ ╔══[PARSE ERROR] Unexpected indented block in expression position
+//│ ║  l.68: 	    else "bruh"
+//│ ╙──      	^^^^
+//│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
+//│ ║  l.68: 	    else "bruh"
+//│ ╙──      	    ^
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found operator application instead
+//│ ║  l.67: 	  if x ===
+//│ ║        	     ^^^^^
+//│ ║  l.68: 	    else "bruh"
+//│ ║        	^^^^
+//│ ╟── Note: 'if' expression starts here:
+//│ ║  l.67: 	  if x ===
+//│ ╙──      	  ^^
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.68: 	    else "bruh"
+//│ ╙──      	    ^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.68: 	    else "bruh"
+//│ ║        	    ^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ fun f: Eql[()] -> ()
+
+// But this works.
+fun f(x) =
+  if x ===
+    _ then "bruh"
+//│ fun f: anything -> "bruh"
+
+fun boolToStr(x) =
+  if x is
+    true then "yah"
+    false then "nah"
+//│ fun boolToStr: Bool -> ("nah" | "yah")
+
+boolToStr of true
+boolToStr of false
+//│ "nah" | "yah"
+//│ res
+//│     = 'yah'
+//│ res
+//│     = 'nah'

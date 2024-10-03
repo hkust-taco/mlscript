@@ -27,6 +27,8 @@ object Keyword:
     val res = _curPrec
     _curPrec += 1
     S(res)
+
+  val `class` = Keyword("class", N, curPrec)
   
   val eqPrec = nextPrec
   val ascPrec = nextPrec // * `x => x : T` should parsed as `x => (x : T)`
@@ -34,17 +36,17 @@ object Keyword:
   val `:` = Keyword(":", ascPrec, eqPrec)
   
   val `if` = Keyword("if", N, nextPrec)
-  val `then` = Keyword("then", curPrec, curPrec)
-  val `else` = Keyword("else", N, curPrec)
+  val `then` = Keyword("then", nextPrec, curPrec)
+  val `else` = Keyword("else", nextPrec, curPrec)
   val `case` = Keyword("case", N, N)
   val `fun` = Keyword("fun", N, N)
   val `val` = Keyword("val", N, N)
   val `var` = Keyword("var", N, N)
-  val `is` = Keyword("is", nextPrec, curPrec)
   val `as` = Keyword("as", N, N)
   val `of` = Keyword("of", N, N)
   val `or` = Keyword("or", nextPrec, curPrec)
-  val `and` = Keyword("and", nextPrec, curPrec)
+  val `and` = Keyword("and", nextPrec, nextPrec)
+  val `is` = Keyword("is", nextPrec, curPrec)
   val `let` = Keyword("let", nextPrec, curPrec)
   val `region` = Keyword("region", curPrec, curPrec)
   val `rec` = Keyword("rec", N, N)
@@ -55,7 +57,6 @@ object Keyword:
   val `do` = Keyword("do", N, N)
   val `while` = Keyword("while", N, N)
   val `declare` = Keyword("declare", N, N)
-  val `class` = Keyword("class", N, N)
   val `trait` = Keyword("trait", N, N)
   val `mixin` = Keyword("mixin", N, N)
   val `interface` = Keyword("interface", N, N)
@@ -89,7 +90,7 @@ object Keyword:
   val modifiers = Set(
     `abstract`, mut, virtual, `override`, declare, public, `private`)
   
-  type Infix = `and`.type | `or`.type | `then`.type | `is`.type | `:`.type | `->`.type | `=>`.type
+  type Infix = `and`.type | `or`.type | `then`.type | `else`.type | `is`.type | `:`.type | `->`.type | `=>`.type
   
   val maxPrec = curPrec
   

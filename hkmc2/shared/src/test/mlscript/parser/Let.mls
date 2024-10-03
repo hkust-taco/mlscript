@@ -178,7 +178,7 @@ x => let x = 1
 
 :pe
 if
-//│ ╔══[PARSE ERROR] Expected expression after `if` keyword; found end of input instead
+//│ ╔══[PARSE ERROR] Expected expression or indented block after `if` keyword; found end of input instead
 //│ ║  l.180: 	if
 //│ ╙──       	  ^
 //│ Parsed:

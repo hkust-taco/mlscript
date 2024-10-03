@@ -1,0 +1,64 @@
+// ConjunctMatches.mls
+// ===================
+// Examine the structure of conjunct matches.
+
+:global
+:parseOnly
+:pt
+
+
+// This test cases should be parsed as
+//     (((x is A) and (b is Y)) and (c is Z))
+// To achieve that, the following rules should be applied:
+// - is should be left associative
+// - and should be right associative
+// - is should have higher precedence than and
+if
+  x is A and y is B and c is Z then 1
+//│ Parsed tree:
+//│ If of Block of Ls of 
+//│   InfixApp:
+//│     lhs = InfixApp:
+//│       lhs = InfixApp:
+//│         lhs = InfixApp:
+//│           lhs = Ident of "x"
+//│           kw = keyword 'is'
+//│           rhs = Ident of "A"
+//│         kw = keyword 'and'
+//│         rhs = InfixApp:
+//│           lhs = Ident of "y"
+//│           kw = keyword 'is'
+//│           rhs = Ident of "B"
+//│       kw = keyword 'and'
+//│       rhs = InfixApp:
+//│         lhs = Ident of "c"
+//│         kw = keyword 'is'
+//│         rhs = Ident of "Z"
+//│     kw = keyword 'then'
+//│     rhs = IntLit of 1
+
+// But since naughty users may add parentheses,
+// we should also parse the following case.
+if
+  x is A and (y is B and c is Z) then 1
+//│ Parsed tree:
+//│ If of Block of Ls of 
+//│   InfixApp:
+//│     lhs = InfixApp:
+//│       lhs = InfixApp:
+//│         lhs = Ident of "x"
+//│         kw = keyword 'is'
+//│         rhs = Ident of "A"
+//│       kw = keyword 'and'
+//│       rhs = InfixApp:
+//│         lhs = InfixApp:
+//│           lhs = Ident of "y"
+//│           kw = keyword 'is'
+//│           rhs = Ident of "B"
+//│         kw = keyword 'and'
+//│         rhs = InfixApp:
+//│           lhs = Ident of "c"
+//│           kw = keyword 'is'
+//│           rhs = Ident of "Z"
+//│     kw = keyword 'then'
+//│     rhs = IntLit of 1

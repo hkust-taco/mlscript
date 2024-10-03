@@ -17,8 +17,8 @@ enum Document:
 
     def rec(d: Document)(implicit ind: Int, first: Boolean): Unit = d match {
       case Raw(s) =>
-        if (first && s.nonEmpty) sb append ("  " * ind)
-        sb append s
+        if (first && s.nonEmpty) sb.append("  " * ind)
+        sb.append(s)
       case Indented(doc) =>
         rec(doc)(ind + 1, first)
       case Unindented(doc) =>
@@ -35,8 +35,8 @@ enum Document:
       case Stacked(docs, emptyLines) =>
         rec(docs.head)
         docs.tail foreach { doc =>
-          sb append "\n"
-          if (emptyLines) sb append "\n"
+          sb.append("\n")
+          if (emptyLines) sb.append("\n")
           rec(doc)(ind, true)
         }
     }

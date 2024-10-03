@@ -54,8 +54,9 @@ object ParseRule:
   val standaloneExpr =
     Expr(ParseRule("expression")(End(())))((l, _: Unit) => l)
   
-  def modified(kw: Keyword) =
-    Kw(kw)(ParseRule(s"modifier keyword '${kw.name}'")(standaloneExpr)).map(Tree.Modified(kw, _))
+  def modified(kw: Keyword): Alt[Tree] = modified(kw, standaloneExpr)
+  def modified(kw: Keyword, body: Alt[Tree]) =
+    Kw(kw)(ParseRule(s"modifier keyword '${kw.name}'")(body)).map(Tree.Modified(kw, _))
   
   val typeDeclTemplate: Alt[Opt[Tree]] =
     Kw(`with`):
@@ -109,21 +110,39 @@ object ParseRule:
     ParseRule("type declaration start"):
       Expr(
         ParseRule("type declaration head")(
-          End((N, N)),
+          End((N, N, N)),
+          Expr(
+            ParseRule("type declaration name")(
+              End((N, N)),
+              Kw(`extends`):
+                ParseRule("extension clause")(
+                  Expr(
+                    ParseRule("parent specification")(
+                      typeDeclTemplate,
+                      End(N),
+                    )
+                  ) { case (ext, bod) => (S(ext), bod) }
+                ),
+              typeDeclTemplate.map(bod => (N, bod)),
+            )
+          ):
+            case (head, (ext, bod)) => (S(head), ext, bod)
+          ,
           Kw(`extends`):
             ParseRule("extension clause")(
-              // End((N, N)),
               Expr(
                 ParseRule("parent specification")(
                   typeDeclTemplate,
                   End(N),
                 )
-              ) { case (ext, bod) => (S(ext), bod) }
+              ) { case (ext, bod) => (N, S(ext), bod) }
             ),
-          typeDeclTemplate.map(bod => (N, bod)),
+          typeDeclTemplate.map(bod => (N, N, bod)),
         )
       // ) { case (head, ext, bod) => TypeDecl(head, ext, bod) }
-      ) { case (head, (ext, bod)) => TypeDef(k, head, ext, bod) }
+      ):
+        case (symName, (S(head), ext, bod)) => TypeDef(k, S(symName), head, ext, bod)
+        case (head, (N, ext, bod)) => TypeDef(k, N, head, ext, bod)
   
   val prefixRules: ParseRule[Tree] = ParseRule("start of statement")(
     Kw(`let`):
@@ -169,12 +188,33 @@ object ParseRule:
     Kw(`if`):
       ParseRule("`if` keyword")(
         Expr(
-          ParseRule("`if` expression"):
+          ParseRule("`if` expression")(
+            End(N),
             Kw(`else`):
-              ParseRule("`else` keyword")(
-                Expr(ParseRule("`else` branch")(End(())))((body, _: Unit) => body)
+              ParseRule(s"`then` operator `else` clause")(
+                Expr(ParseRule(s"`then` operator `else` body")(End(()))):
+                  case (body, _) => S(body)
               )
-        ) { case (cond, alt) => IfElse(cond, alt) }
+          )
+        ):
+          case (split, S(default)) =>
+            val clause = Modified(`else`, default)
+            val items = split match
+              case Block(stmts) => stmts.appended(clause)
+              case _ => split :: clause :: Nil
+            If(Block(items))
+          case (split, N) => If(split)
+        ,
+        Blk(
+          ParseRule("`if` block")(End(()))
+        ) { case (body, _) => If(body) }
+      )
+    ,
+    Kw(`else`):
+      ParseRule("`else` clause")(
+        Expr(
+          ParseRule("`else` body")(End(()))
+        ) { case (tree, _) => Modified(`else`, tree) },
       )
     ,
     Kw(`case`):
@@ -195,11 +235,22 @@ object ParseRule:
     ,
     Kw(`fun`)(termDefBody(Fun)),
     Kw(`val`)(termDefBody(Val)),
-    Kw(`type`)(typeDeclBody(Als)),
+    Kw(`type`):
+      ParseRule("type alias declaration"):
+        Expr(
+          ParseRule("type alias head"):
+            Kw(`=`):
+              ParseRule("type alias declaration equals sign"):
+                Expr(
+                  ParseRule("type alias declaration right-hand side")(
+                    End(())
+                  )
+                ) { (rhs, _) => rhs }
+        ) { (lhs, rhs) => TypeDef(Als, N, lhs, S(rhs), N) },
     Kw(`class`)(typeDeclBody(Cls)),
     Kw(`trait`)(typeDeclBody(Trt)),
     Kw(`module`)(typeDeclBody(Mod)),
-    modified(`abstract`),
+    modified(`abstract`, Kw(`class`)(typeDeclBody(Cls))),
     modified(`mut`),
     modified(`virtual`),
     modified(`override`),
@@ -234,10 +285,15 @@ object ParseRule:
   
   def funBody(k: TermDefKind): Alt[S[Tree]] =
     Kw(`=`):
-      ParseRule(s"'${k.str}' binding equals sign"):
+      ParseRule(s"'${k.str}' binding equals sign")(
         Expr(
           ParseRule(s"'${k.str}' binding right-hand side")(End(()))
         ) { case (rhs, ()) => S(rhs) }
+        ,
+        Blk(
+          ParseRule(s"'${k.str}' binding block")(End(()))
+        ) { case (rhs, _) => S(rhs) }
+      )
 
   def genInfixRule[A](kw: Keyword, k: (Tree, Unit) => A): Alt[A] =
     Kw(kw):

@@ -1,12 +1,13 @@
 :global
 :bbml
 
+:fixme
 fun power: [C] -> CodeBase[out Num, out C, out Any] -> Int -> CodeBase[out Num, out C, out Any]
 fun power(x) = case
   0 then `1.0
   n then x `*. power(x)(n - 1)
 power
-//│ Type: forall α1_2: (CodeBase[out Num, out α1_2, ?]) ->{⊥} (Int) ->{⊥} CodeBase[out Num, out α1_2, ?]
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(scrut@35),LitPat(BoolLit(true)),Else(Quoted(Lit(DecLit(1.0))))),Else(Quoted(App(Ref(*.),Tup(List(Fld(‹›,Unquoted(Ref(x@29)),None), Fld(‹›,Unquoted(App(App(Ref(power),Tup(List(Fld(‹›,Ref(x@29),None)))),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@30),None), Fld(‹›,Lit(IntLit(1)),None)))),None))))),None))))))) (of class hkmc2.semantics.Split$Cons)
 
 
 fun id: [A] -> A -> A
@@ -16,27 +17,32 @@ fun id(x) = x
 run(x `=> id(x) `* x)
 //│ Type: Int -> Int
 
+:fixme
 fun assertNotZero: [C] -> CodeBase[out Num, out C, out Any] -> CodeBase[out Num, out C, out Any]
 fun assertNotZero(x) =
   `if (x `== `0.0) then `error else x
 let checkedDiv = x `=> y `=> x `/. (assertNotZero(y))
 run(checkedDiv)
+//│ ╔══[ERROR] Cannot quote If(Let(scrut@59,Unquoted(Quoted(App(Ref(==),Tup(List(Fld(‹›,Unquoted(Ref(x@58)),None), Fld(‹›,Unquoted(Quoted(Lit(DecLit(0.0)))),None)))))),Cons(Branch(Ref(scrut@59),LitPat(BoolLit(true)),Else(Unquoted(Quoted(Ref(error))))),Else(Unquoted(Ref(x@58))))))
+//│ ╙──
 //│ Type: Num -> (Num -> Num)
 
 
+:todo // :fixme
 fun show: [T] -> CodeBase[out T, out Any, out Any] -> Str = s => "debug"
 show
-//│ Type: forall α63_2: (CodeBase[?, ?, ?]) ->{⊥} Str
+//│ Type: forall α46_2: (CodeBase[?, ?, ?]) ->{⊥} Str
 
 
 fun inc(dbg) =
   x `=> let c = x `+ `1 in let t = dbg(c) in c
 inc
-//│ Type: (CodeBase[out Int, ?, ?] ->{α79_1} ⊤) ->{α79_1} CodeBase[out Int -> Int, ⊥, ?]
+//│ Type: (CodeBase[out Int, ?, ?] ->{α62_1} ⊤) ->{α62_1} CodeBase[out Int -> Int, ⊥, ?]
 
 inc(c => log(show(c)))
 //│ Type: CodeBase[out Int -> Int, ⊥, ?]
 
+:fixme
 fun body: [T, C] -> (CodeBase[out Int, out T, out Any], CodeBase[out Int, out C, out Any]) -> Int -> CodeBase[out Int, out T | C, out Any]
 fun body(x, y) = case
   0 then x
@@ -45,105 +51,35 @@ fun body(x, y) = case
 fun gib_naive(n) =
   (x, y) `=> body(x, y)(n)
 let gn5 = run(gib_naive(5))
-//│ Type: ⊤
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(scrut@99),LitPat(BoolLit(true)),Else(Ref(x@90))),Let(scrut@97,App(Ref(==),Tup(List(Fld(‹›,Ref(n@92),None), Fld(‹›,Lit(IntLit(1)),None)))),Cons(Branch(Ref(scrut@97),LitPat(BoolLit(true)),Else(Ref(y@91))),Else(App(App(Ref(body),Tup(List(Fld(‹›,Ref(y@91),None), Fld(‹›,Quoted(App(Ref(+),Tup(List(Fld(‹›,Unquoted(Ref(x@90)),None), Fld(‹›,Unquoted(Ref(y@91)),None))))),None)))),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@92),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))))))) (of class hkmc2.semantics.Split$Cons)
 
 fun bind(rhs, k) = `let x = rhs `in k(x)
 bind
-//│ Type: (CodeBase[out α128_1, out α129_1, ?], CodeBase[in α133_1 out α133_1 ∨ α128_1, ?, ⊥] ->{α136_1} CodeBase[out α139_1, out α140_1, ?]) ->{α136_1} CodeBase[out α139_1, out α129_1 ∨ α140_1, ?]
+//│ Type: (CodeBase[out α86_1, out α87_1, ?], CodeBase[in α91_1 out α91_1 ∨ α86_1, ?, ⊥] ->{α94_1} CodeBase[out α97_1, out α98_1, ?]) ->{α94_1} CodeBase[out α97_1, out α87_1 ∨ α98_1, ?]
 
 :e
+:fixme
 fun body: [G] -> (CodeBase[out Int, out G, out Any], CodeBase[out Int, out G, out Any]) -> Int -> CodeBase[out Int, out G, out Any]
 fun body(x, y) = case
   0 then x
   1 then y
   n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
-//│ ╔══[ERROR] Type error in function literal with expected type (CodeBase[out Int, out <α>147_2, ?], CodeBase[out Int, out <α>147_2, ?]) ->{⊥} (Int) ->{⊥} CodeBase[out Int, out <α>147_2, ?]
-//│ ║  l.56: 	fun body(x, y) = case
-//│ ║        	         ^^^^^^^^^^^^
-//│ ║  l.57: 	  0 then x
-//│ ║        	^^^^^^^^^^
-//│ ║  l.58: 	  1 then y
-//│ ║        	^^^^^^^^^^
-//│ ║  l.59: 	  n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
-//│ ║        	^^^
-//│ ╟── because: cannot constrain  α148_2 ->{α158_2} (CodeBase[out Int, out <α>147_2, ?] ∨ α159_2)  <:  Int -> CodeBase[out Int, out <α>147_2, ?]
-//│ ╟── because: cannot constrain  D( CodeBase[in D() out D( Int ), in D() out D( <α>147_2 ), in D() out D(  )] || α159_2 )  <:  CodeBase[out Int, out <α>147_2, ?]
-//│ ╟── because: cannot constrain  α159_2  <:  ¬(~{CodeBase[out Int, out <α>147_2, ?]})
-//│ ╟── because: cannot constrain  α166_1  <:  ¬(~{CodeBase[out Int, out <α>147_2, ?]})
-//│ ╟── because: cannot constrain  α166_1  <:  CodeBase[out Int, ⊥, ?]
-//│ ╟── because: cannot constrain  CodeBase[in D() out D( α139_1 ), in D() out D( α129_1 || α140_1 ), in D() out D(  )]  <:  CodeBase[out Int, ⊥, ?]
-//│ ╟── because: cannot constrain  D( α129_1 || α140_1 )  <:  ⊥
-//│ ╟── because: cannot constrain  α129_1  <:  ¬()
-//│ ╙── because: cannot constrain    <:  ¬()
-//│ ╔══[ERROR] Type error in function literal with expected type (CodeBase[out Int, out <α>147_2, ?], CodeBase[out Int, out <α>147_2, ?]) ->{⊥} (Int) ->{⊥} CodeBase[out Int, out <α>147_2, ?]
-//│ ║  l.56: 	fun body(x, y) = case
-//│ ║        	         ^^^^^^^^^^^^
-//│ ║  l.57: 	  0 then x
-//│ ║        	^^^^^^^^^^
-//│ ║  l.58: 	  1 then y
-//│ ║        	^^^^^^^^^^
-//│ ║  l.59: 	  n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
-//│ ║        	^^^
-//│ ╟── because: cannot constrain  α148_2 ->{α158_2} (CodeBase[out Int, out <α>147_2, ?] ∨ α159_2)  <:  Int -> CodeBase[out Int, out <α>147_2, ?]
-//│ ╟── because: cannot constrain  D( CodeBase[in D() out D( Int ), in D() out D( <α>147_2 ), in D() out D(  )] || α159_2 )  <:  CodeBase[out Int, out <α>147_2, ?]
-//│ ╟── because: cannot constrain  α159_2  <:  ¬(~{CodeBase[out Int, out <α>147_2, ?]})
-//│ ╟── because: cannot constrain  α166_1  <:  ¬(~{CodeBase[out Int, out <α>147_2, ?]})
-//│ ╟── because: cannot constrain  α166_1  <:  CodeBase[out Int, ⊥, ?]
-//│ ╟── because: cannot constrain  CodeBase[in D() out D( α139_1 ), in D() out D( α129_1 || α140_1 ), in D() out D(  )]  <:  CodeBase[out Int, ⊥, ?]
-//│ ╟── because: cannot constrain  D( α129_1 || α140_1 )  <:  ⊥
-//│ ╟── because: cannot constrain  α129_1  <:  ¬()
-//│ ╙── because: cannot constrain    <:  ¬()
-//│ ╔══[ERROR] Type error in function literal with expected type (CodeBase[out Int, out <α>147_2, ?], CodeBase[out Int, out <α>147_2, ?]) ->{⊥} (Int) ->{⊥} CodeBase[out Int, out <α>147_2, ?]
-//│ ║  l.56: 	fun body(x, y) = case
-//│ ║        	         ^^^^^^^^^^^^
-//│ ║  l.57: 	  0 then x
-//│ ║        	^^^^^^^^^^
-//│ ║  l.58: 	  1 then y
-//│ ║        	^^^^^^^^^^
-//│ ║  l.59: 	  n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
-//│ ║        	^^^
-//│ ╟── because: cannot constrain  α148_2 ->{α158_2} (CodeBase[out Int, out <α>147_2, ?] ∨ α159_2)  <:  Int -> CodeBase[out Int, out <α>147_2, ?]
-//│ ╟── because: cannot constrain  D( CodeBase[in D() out D( Int ), in D() out D( <α>147_2 ), in D() out D(  )] || α159_2 )  <:  CodeBase[out Int, out <α>147_2, ?]
-//│ ╟── because: cannot constrain  α159_2  <:  ¬(~{CodeBase[out Int, out <α>147_2, ?]})
-//│ ╟── because: cannot constrain  α166_1  <:  ¬(~{CodeBase[out Int, out <α>147_2, ?]})
-//│ ╟── because: cannot constrain  α166_1  <:  CodeBase[out Int, ⊥, ?]
-//│ ╟── because: cannot constrain  CodeBase[in D() out D( α139_1 ), in D() out D( α129_1 || α140_1 ), in D() out D(  )]  <:  CodeBase[out Int, ⊥, ?]
-//│ ╟── because: cannot constrain  D( α129_1 || α140_1 )  <:  ⊥
-//│ ╟── because: cannot constrain  α140_1  <:  ¬()
-//│ ╙── because: cannot constrain    <:  ¬()
-//│ ╔══[ERROR] Type error in function literal with expected type (CodeBase[out Int, out <α>147_2, ?], CodeBase[out Int, out <α>147_2, ?]) ->{⊥} (Int) ->{⊥} CodeBase[out Int, out <α>147_2, ?]
-//│ ║  l.56: 	fun body(x, y) = case
-//│ ║        	         ^^^^^^^^^^^^
-//│ ║  l.57: 	  0 then x
-//│ ║        	^^^^^^^^^^
-//│ ║  l.58: 	  1 then y
-//│ ║        	^^^^^^^^^^
-//│ ║  l.59: 	  n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
-//│ ║        	^^^
-//│ ╟── because: cannot constrain  α148_2 ->{α158_2} (CodeBase[out Int, out <α>147_2, ?] ∨ α159_2)  <:  Int -> CodeBase[out Int, out <α>147_2, ?]
-//│ ╟── because: cannot constrain  D( CodeBase[in D() out D( Int ), in D() out D( <α>147_2 ), in D() out D(  )] || α159_2 )  <:  CodeBase[out Int, out <α>147_2, ?]
-//│ ╟── because: cannot constrain  α159_2  <:  ¬(~{CodeBase[out Int, out <α>147_2, ?]})
-//│ ╟── because: cannot constrain  α166_1  <:  ¬(~{CodeBase[out Int, out <α>147_2, ?]})
-//│ ╟── because: cannot constrain  α166_1  <:  CodeBase[out Int, ⊥, ?]
-//│ ╟── because: cannot constrain  CodeBase[in D() out D( α139_1 ), in D() out D( α129_1 || α140_1 ), in D() out D(  )]  <:  CodeBase[out Int, ⊥, ?]
-//│ ╟── because: cannot constrain  D( α129_1 || α140_1 )  <:  ⊥
-//│ ╟── because: cannot constrain  α140_1  <:  ¬()
-//│ ╙── because: cannot constrain    <:  ¬()
-//│ Type: ⊤
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(scrut@134),LitPat(BoolLit(true)),Else(Ref(x@122))),Let(scrut@132,App(Ref(==),Tup(List(Fld(‹›,Ref(n@124),None), Fld(‹›,Lit(IntLit(1)),None)))),Cons(Branch(Ref(scrut@132),LitPat(BoolLit(true)),Else(Ref(y@123))),Else(App(Ref(bind),Tup(List(Fld(‹›,Quoted(App(Ref(+),Tup(List(Fld(‹›,Unquoted(Ref(x@122)),None), Fld(‹›,Unquoted(Ref(y@123)),None))))),None), Fld(‹›,Lam(List(Param(‹›,z@127,None)),App(App(Ref(body),Tup(List(Fld(‹›,Ref(y@123),None), Fld(‹›,Ref(z@127),None)))),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@124),None), Fld(‹›,Lit(IntLit(1)),None)))),None))))),Some(Forall(List(C@131),FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(C@131))), WildcardTy(None,Some(Ref(class:Any))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(C@131))), WildcardTy(None,Some(Ref(class:Any))))),None))))))))))) (of class hkmc2.semantics.Split$Cons)
 
 fun bind: [G] -> (CodeBase[out Int, out G, out Any], [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out Int, out C | G, out Any]) -> CodeBase[out Int, out G, out Any]
 fun bind(rhs, k) = `let x = rhs `in k(x)
 bind
-//│ Type: forall α170_2: (CodeBase[out Int, out α170_2, ?], forall α171_3: (CodeBase[out Int, out α171_3, ?]) ->{⊥} CodeBase[out Int, out α171_3 ∨ α170_2, ?]) ->{⊥} CodeBase[out Int, out α170_2, ?]
+//│ Type: forall α111_2: (CodeBase[out Int, out α111_2, ?], forall α112_3: (CodeBase[out Int, out α112_3, ?]) ->{⊥} CodeBase[out Int, out α112_3 ∨ α111_2, ?]) ->{⊥} CodeBase[out Int, out α111_2, ?]
 
 
+:fixme
 fun body: [G] -> (CodeBase[out Int, out G, out Any], CodeBase[out Int, out G, out Any]) -> Int -> CodeBase[out Int, out G, out Any]
 fun body(x, y) = case
   0 then x
   1 then y
   n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out Int, out C, out Any]
 body
-//│ Type: forall α180_2: (CodeBase[out Int, out α180_2, ?], CodeBase[out Int, out α180_2, ?]) ->{⊥} (Int) ->{⊥} CodeBase[out Int, out α180_2, ?]
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(scrut@164),LitPat(BoolLit(true)),Else(Ref(x@152))),Let(scrut@162,App(Ref(==),Tup(List(Fld(‹›,Ref(n@154),None), Fld(‹›,Lit(IntLit(1)),None)))),Cons(Branch(Ref(scrut@162),LitPat(BoolLit(true)),Else(Ref(y@153))),Else(App(Ref(bind),Tup(List(Fld(‹›,Quoted(App(Ref(+),Tup(List(Fld(‹›,Unquoted(Ref(x@152)),None), Fld(‹›,Unquoted(Ref(y@153)),None))))),None), Fld(‹›,Lam(List(Param(‹›,z@157,None)),App(App(Ref(body),Tup(List(Fld(‹›,Ref(y@153),None), Fld(‹›,Ref(z@157),None)))),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@154),None), Fld(‹›,Lit(IntLit(1)),None)))),None))))),Some(Forall(List(C@161),FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(C@161))), WildcardTy(None,Some(Ref(class:Any))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(C@161))), WildcardTy(None,Some(Ref(class:Any))))),None))))))))))) (of class hkmc2.semantics.Split$Cons)
 
 fun gib(n) = (x, y) `=> body(x, y)(n)
 let g5 = run(gib(5))

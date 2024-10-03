@@ -1,0 +1,65 @@
+:NewDefs
+
+fun f(x, y) =
+  if x == 0 and
+    y == 0 then "bruh"
+    y == 1 then "lol"
+  else "okay"
+//│ fun f: (Num, Num) -> ("bruh" | "lol" | "okay")
+
+class A()
+class B()
+//│ class A()
+//│ class B()
+
+:e
+fun f(x) =
+  if x == 0 and
+    x is
+      A() then "A"
+      B() then "B"
+    x == 0 then "lol"
+    else "bruh"
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.18: 	    x is
+//│ ║        	    ^^^^
+//│ ║  l.19: 	      A() then "A"
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.20: 	      B() then "B"
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.21: 	    x == 0 then "lol"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.22: 	    else "bruh"
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.18: 	    x is
+//│ ║        	    ^^^^
+//│ ║  l.19: 	      A() then "A"
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.20: 	      B() then "B"
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.21: 	    x == 0 then "lol"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.22: 	    else "bruh"
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ fun f: Num -> ("A" | "B" | "bruh" | "lol")
+
+:e
+fun f(x, y) =
+  if
+    x == 0 and
+      y == 0 then "bruh"
+      else "lol"
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.52: 	      y == 0 then "bruh"
+//│ ║        	      ^^^^^^^^^^^^^^^^^^
+//│ ║  l.53: 	      else "lol"
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.52: 	      y == 0 then "bruh"
+//│ ║        	      ^^^^^^^^^^^^^^^^^^
+//│ ║  l.53: 	      else "lol"
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ fun f: (Num, Num) -> ("bruh" | "lol")

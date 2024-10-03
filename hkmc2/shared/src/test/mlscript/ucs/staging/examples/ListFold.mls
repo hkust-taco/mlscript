@@ -1,0 +1,225 @@
+:NewDefs
+
+fun (|>) pipe(x, f) = f(x)
+fun (++) strcat(s1, s2) = concat(s1)(s2)
+//│ fun (|>) pipe: forall 'a 'b. ('a, 'a -> 'b) -> 'b
+//│ fun (++) strcat: (Str, Str) -> Str
+
+abstract class List[out T]: (Cons[T] | Nil)
+class Cons[out T](val head: T, val tail: List[T]) extends List[T]
+module Nil extends List[nothing]
+//│ abstract class List[T]: Cons[T] | Nil
+//│ class Cons[T](head: T, tail: List[T]) extends List@?
+//│ module Nil extends List@?
+
+fun findFirst(f, xs) =
+  if xs is
+    Nil then None
+    Cons(x, _) and f(x) then Some(x)
+    Cons(_, xs) then findFirst(f, xs)
+//│ ╔══[ERROR] identifier not found: None
+//│ ║  l.17: 	    Nil then None
+//│ ╙──      	             ^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] identifier not found: Some
+//│ ║  l.18: 	    Cons(x, _) and f(x) then Some(x)
+//│ ╙──      	                             ^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ fun findFirst: forall 'a. ('a -> Bool, Cons['a] | Nil) -> error
+//│ Code generation encountered an error:
+//│   unresolved symbol None
+
+fun (::) cons(head, tail) = Cons(head, tail)
+//│ fun (::) cons: forall 'T. ('T, List['T]) -> Cons['T]
+
+let oneTwoThree = 1 :: 2 :: 3 :: Nil
+//│ let oneTwoThree: Cons[1 | 2 | 3]
+//│ oneTwoThree
+//│             = Cons {}
+
+// Note that JavaScript doesn't have tail call optimization. Therefore, this
+// implementation is still inefficient in practice.
+fun join(sep) =
+  let rec aux(acc, xs) =
+    if xs is
+      Nil then acc
+      Cons(x, xs') then aux(acc ++ sep ++ toString(x), xs')
+  (xs) =>
+    if xs is
+      Cons(x, xs') then aux(toString(x), xs')
+      Nil then ""
+//│ fun join: Str -> (Cons[anything] | Nil) -> Str
+
+join(", ")(1 :: 2 :: 3 :: Nil)
+(1 :: 2 :: 3 :: Nil) |> join(", ")
+//│ Str
+//│ res
+//│     = '1, 2, 3'
+//│ res
+//│     = '1, 2, 3'
+
+fun showList(xs) = "[" ++ join(", ")(xs) ++ "]"
+//│ fun showList: (Cons[anything] | Nil) -> Str
+
+fun (:::) appendAll(xs, ys) =
+  if xs is
+    Nil then ys
+    Cons(x, xs') then x :: (xs' ::: ys)
+//│ fun (:::) appendAll: forall 'T 'a. (Cons['T] | Nil, List['T] & 'a) -> (Cons['T] | 'a)
+
+((1 :: 2 :: 3 :: Nil) ::: (4 :: 5 :: 6 :: Nil)) |> showList
+//│ Str
+//│ res
+//│     = '[1, 2, 3, 4, 5, 6]'
+
+fun reverse(xs) =
+  let rec aux(acc, xs) =
+    if xs is
+      Nil then acc
+      Cons(x, xs') then aux(x :: acc, xs')
+  aux(Nil, xs)
+//│ fun reverse: (Cons[anything] | Nil) -> (Cons[nothing] | Nil)
+
+(1 :: 2 :: 3 :: Nil) |> showList
+reverse(1 :: 2 :: 3 :: Nil) |> showList
+//│ Str
+//│ res
+//│     = '[1, 2, 3]'
+//│ res
+//│     = '[3, 2, 1]'
+
+//   __       _     _ _          __ _
+//  / _| ___ | | __| | |    ___ / _| |_
+// | |_ / _ \| |/ _` | |   / _ \ |_| __|
+// |  _| (_) | | (_| | |__|  __/  _| |_
+// |_|  \___/|_|\__,_|_____\___|_|  \__|
+//
+
+fun foldLeft(f)(z) =
+  let rec aux(acc, xs) =
+    if xs is
+      Nil then acc
+      Cons(x, xs') then aux(f(acc, x), xs')
+  (xs) => aux(z, xs)
+//│ fun foldLeft: forall 'a 'b. (('a, 'b) -> 'a) -> 'a -> (Cons['b] | Nil) -> 'a
+
+let sum = foldLeft((acc, x) => acc + x)(0)
+sum(Nil)
+sum(1 :: 2 :: 3 :: Nil)
+//│ let sum: (Cons[Int] | Nil) -> Int
+//│ Int
+//│ sum
+//│     = [Function (anonymous)]
+//│ res
+//│     = 0
+//│ res
+//│     = 6
+
+let product = foldLeft((acc, x) => acc * x)(1)
+product(Nil)
+product(1 :: 2 :: 3 :: Nil)
+//│ let product: (Cons[Int] | Nil) -> Int
+//│ Int
+//│ product
+//│         = [Function (anonymous)]
+//│ res
+//│     = 1
+//│ res
+//│     = 6
+
+let length = foldLeft((acc, _) => acc + 1)(0)
+length(Nil)
+length(1 :: 2 :: 3 :: Nil)
+//│ let length: (Cons[anything] | Nil) -> Int
+//│ Int
+//│ length
+//│        = [Function (anonymous)]
+//│ res
+//│     = 0
+//│ res
+//│     = 3
+
+let reverse' = foldLeft((acc, x) => x :: acc)(Nil)
+reverse'(Nil)
+reverse'(1 :: 2 :: 3 :: Nil) |> showList
+//│ let reverse': (Cons['T] | Nil) -> (Cons[1 | 2 | 3 | 'T] | Nil)
+//│ Str
+//│ reverse'
+//│          = [Function (anonymous)]
+//│ res
+//│     = Nil { class: [class Nil extends List] }
+//│ res
+//│     = '[3, 2, 1]'
+
+
+//   __       _     _ ____  _       _     _
+//  / _| ___ | | __| |  _ \(_) __ _| |__ | |_
+// | |_ / _ \| |/ _` | |_) | |/ _` | '_ \| __|
+// |  _| (_) | | (_| |  _ <| | (_| | | | | |_
+// |_|  \___/|_|\__,_|_| \_\_|\__, |_| |_|\__|
+//                            |___/
+
+fun foldRight(f)(z) =
+  let rec aux(acc, xs) =
+    if xs is
+      Nil then acc
+      Cons(x, xs') then f(x, aux(acc, xs'))
+  (xs) => aux(z, xs)
+//│ fun foldRight: forall 'a 'b. (('a, 'b) -> 'b) -> 'b -> (Cons['a] | Nil) -> 'b
+
+let double = foldRight((x, acc) => x :: x :: acc)(Nil)
+double(Nil) |> showList
+double(1 :: 2 :: 3 :: Nil) |> showList
+//│ let double: (Cons[anything] | Nil) -> (Cons[1 | 2 | 3] | Nil)
+//│ Str
+//│ double
+//│        = [Function (anonymous)]
+//│ res
+//│     = '[]'
+//│ res
+//│     = '[1, 1, 2, 2, 3, 3]'
+
+let flatten = foldRight((xs, acc) => xs ::: acc)(Nil)
+flatten(Nil) |> showList
+flatten(oneTwoThree :: oneTwoThree :: oneTwoThree :: Nil) |> showList
+//│ let flatten: (Cons[Cons['T] | Nil] | Nil) -> (Cons[1 | 2 | 3 | 'T] | Nil)
+//│ Str
+//│ flatten
+//│         = [Function (anonymous)]
+//│ res
+//│     = '[]'
+//│ res
+//│     = '[1, 2, 3, 1, 2, 3, 1, 2, 3]'
+
+fun id(x) = x
+//│ fun id: forall 'a. 'a -> 'a
+
+fun foldLeft'(f: ('A, 'B) -> 'A)(z: 'A) =
+  let g(x, y)(z) = y(f(z, x))
+  (xs) => foldRight(g)(id)(xs)(z)
+//│ fun foldLeft': forall 'A 'B. (f: ('A, 'B) -> 'A) -> (z: 'A) -> (Cons['B] | Nil) -> 'A
+
+let minus = foldLeft'((acc, x) => acc - x)(0)
+minus(Nil)
+minus(1 :: 2 :: 3 :: Nil)
+//│ let minus: (Cons[Int] | Nil) -> Int
+//│ Int
+//│ minus
+//│       = [Function (anonymous)]
+//│ res
+//│     = 0
+//│ res
+//│     = -6
+
+let reverse'' = foldLeft'((acc, x) => x :: acc)(Nil)
+reverse(Nil)
+reverse(1 :: 2 :: 3 :: Nil) |> showList
+//│ let reverse'': (Cons[anything] | Nil) -> (Cons[nothing] | Nil)
+//│ Str
+//│ reverse''
+//│           = [Function (anonymous)]
+//│ res
+//│     = Nil { class: [class Nil extends List] }
+//│ res
+//│     = '[3, 2, 1]'
+

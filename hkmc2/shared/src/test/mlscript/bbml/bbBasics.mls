@@ -202,11 +202,13 @@ class Pair[A, B](fst: A, snd: B)
 //│ Type: Bool
 
 
+:fixme
 if 1 < 2 then 1 else 0
-//│ Type: Int
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(scrut@132),LitPat(BoolLit(true)),Else(Lit(IntLit(1)))),Else(Lit(IntLit(0)))) (of class hkmc2.semantics.Split$Cons)
 
+:fixme
 if false then 1 else "1"
-//│ Type: Int ∨ Str
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(scrut@134),LitPat(BoolLit(true)),Else(Lit(IntLit(1)))),Else(Lit(StrLit(1)))) (of class hkmc2.semantics.Split$Cons)
 
 
 if 1 is Int then 1 else 0
@@ -225,43 +227,45 @@ test("1")
 //│ Type: Int
 
 
+:fixme
 fun fact(n) =
   if n > 1 then n * fact(n - 1) else 1
-//│ Type: ⊤
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(scrut@148),LitPat(BoolLit(true)),Else(App(Ref(*),Tup(List(Fld(‹›,Ref(n@146),None), Fld(‹›,App(Ref(fact),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@146),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))),Else(Lit(IntLit(1)))) (of class hkmc2.semantics.Split$Cons)
 
 fact
-//│ Type: Int -> Int
+//│ Type: ⊥
 
 fact(1)
-//│ Type: Int
+//│ Type: ⊥
 
 
+:fixme
 fun fact2 = case
   0 then 1
   n then n * fact2(n - 1)
-//│ Type: ⊤
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(scrut@161),LitPat(BoolLit(true)),Else(Lit(IntLit(1)))),Else(App(Ref(*),Tup(List(Fld(‹›,Ref(n@157),None), Fld(‹›,App(Ref(fact2),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@157),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))) (of class hkmc2.semantics.Split$Cons)
 
 fact2
-//│ Type: Int -> Int
+//│ Type: ⊥
 
 fact2(0)
-//│ Type: Int
+//│ Type: ⊥
 
 
 class Foo[A](x: A -> A)
 //│ Type: ⊤
 
 new Foo(x => x)
-//│ Type: Foo[α70_1]
+//│ Type: Foo[α71_1]
 
 fun f(g) = new Foo(g)
 f
-//│ Type: (α73_1 -> α73_1) -> Foo[α73_1]
+//│ Type: (α74_1 -> α74_1) -> Foo[α74_1]
 
 f(x => x).Foo#x
-//│ Type: (α73_1) ->{⊥} α73_1
+//│ Type: (α74_1) ->{⊥} α74_1
 
 g => (new Foo(g)).Foo#x
-//│ Type: (α80_1 -> α80_1) ->{⊥} (α80_1) ->{⊥} α80_1
+//│ Type: (α81_1 -> α81_1) ->{⊥} (α81_1) ->{⊥} α81_1
 
 

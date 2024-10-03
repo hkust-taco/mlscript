@@ -4,23 +4,23 @@
 
 class Foo
 //│ Parsed:
-//│ 	TypeDef(Cls,Ident(Foo),None,None)
+//│ 	TypeDef(Cls,None,Ident(Foo),None,None)
 
 class Bar(x: Int)
 //│ Parsed:
-//│ 	TypeDef(Cls,App(Ident(Bar),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int))))),None,None)
+//│ 	TypeDef(Cls,None,App(Ident(Bar),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int))))),None,None)
 
 class Bar2(x: Int, y: Int)
 //│ Parsed:
-//│ 	TypeDef(Cls,App(Ident(Bar2),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int)), InfixApp(Ident(y),keyword ':',Ident(Int))))),None,None)
+//│ 	TypeDef(Cls,None,App(Ident(Bar2),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int)), InfixApp(Ident(y),keyword ':',Ident(Int))))),None,None)
 
 class Baz[A]
 //│ Parsed:
-//│ 	TypeDef(Cls,App(Ident(Baz),TyTup(List(Ident(A)))),None,None)
+//│ 	TypeDef(Cls,None,App(Ident(Baz),TyTup(List(Ident(A)))),None,None)
 
 class BazBaz[A](f: A -> A)
 //│ Parsed:
-//│ 	TypeDef(Cls,App(App(Ident(BazBaz),TyTup(List(Ident(A)))),Tup(List(InfixApp(Ident(f),keyword ':',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))))),None,None)
+//│ 	TypeDef(Cls,None,App(App(Ident(BazBaz),TyTup(List(Ident(A)))),Tup(List(InfixApp(Ident(f),keyword ':',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))))),None,None)
 
 Baz[Int]
 //│ Parsed:
@@ -121,27 +121,27 @@ fun id: [A] -> A -> A
 
 x => if x == 0 then 1 else x
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',IfElse(InfixApp(App(Ident(==),Tup(List(Ident(x), IntLit(0)))),keyword 'then',IntLit(1)),Ident(x)))
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',If(Block(List(InfixApp(App(Ident(==),Tup(List(Ident(x), IntLit(0)))),keyword 'then',IntLit(1)), Modified(keyword 'else',Ident(x))))))
 
 if 1 < 2 then 1 else 0
 //│ Parsed:
-//│ 	IfElse(InfixApp(App(Ident(<),Tup(List(IntLit(1), IntLit(2)))),keyword 'then',IntLit(1)),IntLit(0))
+//│ 	If(Block(List(InfixApp(App(Ident(<),Tup(List(IntLit(1), IntLit(2)))),keyword 'then',IntLit(1)), Modified(keyword 'else',IntLit(0)))))
 
 if false then 0 else 42
 //│ Parsed:
-//│ 	IfElse(InfixApp(BoolLit(false),keyword 'then',IntLit(0)),IntLit(42))
+//│ 	If(Block(List(InfixApp(BoolLit(false),keyword 'then',IntLit(0)), Modified(keyword 'else',IntLit(42)))))
 
 if 24 then false else true
 //│ Parsed:
-//│ 	IfElse(InfixApp(IntLit(24),keyword 'then',BoolLit(false)),BoolLit(true))
+//│ 	If(Block(List(InfixApp(IntLit(24),keyword 'then',BoolLit(false)), Modified(keyword 'else',BoolLit(true)))))
 
 if x then true else false
 //│ Parsed:
-//│ 	IfElse(InfixApp(Ident(x),keyword 'then',BoolLit(true)),BoolLit(false))
+//│ 	If(Block(List(InfixApp(Ident(x),keyword 'then',BoolLit(true)), Modified(keyword 'else',BoolLit(false)))))
 
 if 1 is Int then 1 else 0
 //│ Parsed:
-//│ 	IfElse(InfixApp(InfixApp(IntLit(1),keyword 'is',Ident(Int)),keyword 'then',IntLit(1)),IntLit(0))
+//│ 	If(Block(List(InfixApp(InfixApp(IntLit(1),keyword 'is',Ident(Int)),keyword 'then',IntLit(1)), Modified(keyword 'else',IntLit(0)))))
 
 fun fact = case
   0 then 1
@@ -191,7 +191,7 @@ g`(`1, `2)
 
 x `=> if 0 == 0 then x else `0
 //│ Parsed:
-//│ 	Quoted(InfixApp(Tup(List(Ident(x))),keyword '=>',Unquoted(IfElse(InfixApp(App(Ident(==),Tup(List(IntLit(0), IntLit(0)))),keyword 'then',Ident(x)),Quoted(IntLit(0))))))
+//│ 	Quoted(InfixApp(Tup(List(Ident(x))),keyword '=>',Unquoted(If(Block(List(InfixApp(App(Ident(==),Tup(List(IntLit(0), IntLit(0)))),keyword 'then',Ident(x)), Modified(keyword 'else',Quoted(IntLit(0)))))))))
 
 region x in 42
 //│ Parsed:

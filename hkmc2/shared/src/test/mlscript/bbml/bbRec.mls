@@ -21,7 +21,7 @@ f
 
 :todo
 fun f(x) = f(x.a)
-//│ ╔══[ERROR] Term shape not yet supported by BbML: Sel(Ref(x@38),Ident(a))
+//│ ╔══[ERROR] Term shape not yet supported by BbML: Sel(Ref(x@41),Ident(a))
 //│ ║  l.23: 	fun f(x) = f(x.a)
 //│ ╙──      	             ^
 //│ Type: ⊤

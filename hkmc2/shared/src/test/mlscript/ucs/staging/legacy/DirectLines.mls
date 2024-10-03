@@ -1,0 +1,55 @@
+:NewDefs
+
+fun f(x, y) =
+  if
+    x == 0 then "x"
+    y == 0 then "y"
+    _      then "nah"
+//│ fun f: (Num, Num) -> ("nah" | "x" | "y")
+
+abstract class Option[A]: Some[A] | None
+class Some[A](value: A) extends Option[A]
+module None extends Option
+//│ abstract class Option[A]: None | Some[A]
+//│ class Some[A](value: A) extends Option
+//│ module None extends Option
+
+fun isValid(x) = if x then false else true
+//│ fun isValid: Bool -> Bool
+
+fun f(x, allowNone) =
+  if x
+    is Some(x) and isValid(x) then "good"
+    is None and allowNone then "okay"
+    is _ then "bad"
+//│ fun f: (Object & ~#Some | Some[Bool], Bool) -> ("bad" | "good" | "okay")
+
+fun f(x, y, z) =
+  if
+    x == 0 then "x"
+    y ==
+      1 then "y = 1"
+      2 and z ==
+        0 then "z = 0"
+        9 then "z = 9"
+        _ then "bruh"
+      3 then "y = 3"
+      _ then "bruh"
+//│ fun f: (Num, Num, Num) -> ("bruh" | "x" | "y = 1" | "y = 3" | "z = 0" | "z = 9")
+
+:w
+fun f(a, b) =
+  if
+    a == 0 then 0
+    b ==
+      1 then 1
+      2 then 2
+      _ then 7
+    else 3
+//│ ╔══[WARNING] this case is unreachable
+//│ ║  l.48: 	    else 3
+//│ ║        	         ^
+//│ ╟── because it is subsumed by the branch
+//│ ║  l.47: 	      _ then 7
+//│ ╙──      	             ^
+//│ fun f: (Num, Num) -> (0 | 1 | 2 | 7)

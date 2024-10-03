@@ -1,0 +1,36 @@
+:global
+:noTypeCheck
+
+
+abstract class List[out T]
+class Cons[out T](head: T, tail: List[T]) extends List[T]
+module Nil extends List[nothing]
+
+
+fun map(f, xs) = if xs is
+  Nil then Nil
+  let xs' = map(f, xs)
+  Cons(x, xs) then Cons(f(x), xs')
+
+
+module Bot
+
+
+abstract class Option[T]
+class Some[T](value: T) extends Option[T]
+module None extends Option[nothing]
+
+
+fun normalize(tp) = ()
+fun glb(tp1, tp2) = ()
+
+
+// TODO: `as` keyword 
+fun merge(tp1, tp2) = if
+  let tp1_n = normalize(tp1)
+  tp1_n is Bot then Bot
+  let tp2_n = normalize(tp2)
+  tp2_n is Bot then Bot
+  let m = merge(tp1_n, tp2_n)
+  m is Some(tp) then tp
+  m is None     then glb(tp1_n, tp2_n)

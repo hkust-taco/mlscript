@@ -138,7 +138,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
           case Result(Ref(cond) :: Nil) => 
             if (!ctx.classCtx.contains("True") || !ctx.classCtx.contains("False"))
               throw IRError("True or False class not found, unable to use 'if then else'")
-            val jp = fresh make "j"
+            val jp = fresh.make("j")
             val res = fresh.make
             val jpbody = res |> ref |> sresult |> k
             val fvs = FreeVarAnalysis(extended_scope = false).run_with(jpbody, Set(res.str)).toList
@@ -170,7 +170,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
         }
         => buildResultFromTerm(lhs) {
           case Result(Ref(scrut) :: Nil) =>
-            val jp = fresh make "j"
+            val jp = fresh.make("j")
             val res = fresh.make
             val jpbody = res |> ref |> sresult |> k
             val fvs = FreeVarAnalysis(extended_scope = false).run_with(jpbody, Set(res.str)).toList

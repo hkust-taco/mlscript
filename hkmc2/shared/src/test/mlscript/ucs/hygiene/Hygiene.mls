@@ -1,0 +1,15 @@
+:global
+:noTypeCheck
+
+class Some[out T](value: T)
+class Left[out T](value: T)
+class Right[out T](value: T)
+
+
+fun foo(x) = if x is
+  Some(Left(y)) then x
+  Some(x) then x
+
+foo(Some(Left(1)))
+
+foo(Some(2))

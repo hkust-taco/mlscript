@@ -1,0 +1,46 @@
+:NewDefs
+:NoJS
+
+// FIXME: Interleaved let bindings are not implemented in `IfOpsApp`.
+if x
+  == 0 then "bad"
+  let y = f(z)
+  == y * y then 0
+//│ ╔══[PARSE ERROR] expect an operator
+//│ ║  l.7: 	  let y = f(z)
+//│ ╙──     	  ^^^
+//│ ╔══[PARSE ERROR] Unexpected 'let' keyword here
+//│ ║  l.7: 	  let y = f(z)
+//│ ╙──     	  ^^^
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.6: 	  == 0 then "bad"
+//│ ╙──     	            ^^^^^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.5: 	if x
+//│ ╙──     	   ^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.6: 	  == 0 then "bad"
+//│ ║       	            ^^^^^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ "bad"
+
+// FIXME: Interleaved let bindings are not implemented in `IfOpsApp`.
+fun tt(x) =
+  if x
+    is A() then "A"
+    let y = 0
+    is B() then "B"
+//│ ╔══[PARSE ERROR] expect an operator
+//│ ║  l.31: 	    let y = 0
+//│ ╙──      	    ^^^
+//│ ╔══[PARSE ERROR] Unexpected 'let' keyword here
+//│ ║  l.31: 	    let y = 0
+//│ ╙──      	    ^^^
+//│ ╔══[ERROR] type identifier `A` not found
+//│ ║  l.30: 	    is A() then "A"
+//│ ╙──      	       ^
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.30: 	    is A() then "A"
+//│ ╙──      	       ^
+//│ fun tt: nothing -> error
+

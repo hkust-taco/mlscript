@@ -1,0 +1,94 @@
+:NewDefs
+
+:e
+:ge
+if x
+  == 0 then 0
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.6: 	  == 0 then 0
+//│ ╙──     	            ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.5: 	if x
+//│ ╙──     	   ^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.6: 	  == 0 then 0
+//│ ║       	            ^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ 0
+//│ Code generation encountered an error:
+//│   unresolved symbol x
+
+:e
+:ge
+if x
+  is A and
+    y then 0
+//│ ╔══[ERROR] identifier `x` not found
+//│ ║  l.23: 	if x
+//│ ╙──      	   ^
+//│ ╔══[ERROR] type identifier `A` not found
+//│ ║  l.24: 	  is A and
+//│ ╙──      	     ^
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.25: 	    y then 0
+//│ ╙──      	           ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.23: 	if x
+//│ ╙──      	   ^
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.24: 	  is A and
+//│ ╙──      	     ^
+//│ error
+//│ Code generation encountered an error:
+//│   unresolved symbol x
+
+:e
+:ge
+if x
+  is A and
+    y then 0
+else 1
+//│ ╔══[ERROR] identifier `x` not found
+//│ ║  l.47: 	if x
+//│ ╙──      	   ^
+//│ ╔══[ERROR] type identifier `A` not found
+//│ ║  l.48: 	  is A and
+//│ ╙──      	     ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.47: 	if x
+//│ ╙──      	   ^
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.48: 	  is A and
+//│ ╙──      	     ^
+//│ error
+//│ Code generation encountered an error:
+//│   unresolved symbol x
+
+:e
+:ge
+if x
+  == 0 then 0
+  is
+    A() then "A"
+    B() then "B"
+//│ ╔══[ERROR] identifier `x` not found
+//│ ║  l.69: 	if x
+//│ ╙──      	   ^
+//│ ╔══[ERROR] type identifier `A` not found
+//│ ║  l.72: 	    A() then "A"
+//│ ╙──      	    ^
+//│ ╔══[ERROR] type identifier `B` not found
+//│ ║  l.73: 	    B() then "B"
+//│ ╙──      	    ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.69: 	if x
+//│ ╙──      	   ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.69: 	if x
+//│ ╙──      	   ^
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.72: 	    A() then "A"
+//│ ╙──      	    ^
+//│ 0 | error
+//│ Code generation encountered an error:
+//│   unresolved symbol x

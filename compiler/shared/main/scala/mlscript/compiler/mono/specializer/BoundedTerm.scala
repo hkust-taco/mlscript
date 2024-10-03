@@ -62,7 +62,7 @@ trait ObjValImpl { self: ObjVal =>
         (k -> s1)
       else (k -> (s1 ++ s2))
     })
-    ObjVal(self.name, self.params, MutMap(nFlds.toList: _*))
+    ObjVal(self.name, self.params, MutMap(nFlds.toList*))
   }
 
 }

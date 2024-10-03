@@ -1,0 +1,154 @@
+// DualOptions.mls
+// ===============
+// Matching two options in any possible order.
+
+:global
+:noTypeCheck
+
+abstract class Option[T]
+class Some[T](value: T) extends Option[T]
+module None extends Option[nothing]
+class Pair[A, B](x: A, y: B)
+
+// All `add_n` functions should be inferred to have the same type.
+
+fun add_1(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    x is Some(xv) and y is None     then xv
+    x is None     and y is Some(yv) then yv
+    x is None     and y is None     then 0
+
+add_1(None, None)
+add_1(Some(5), None)
+add_1(None, Some(9))
+add_1(Some(5), Some(9))
+
+fun add_2(x, y) =
+  if x is
+    Some(xv) and y is
+      Some(yv) then xv + yv
+      None     then xv
+    None and y is
+      Some(yv) then yv
+      None     then 0
+
+add_2(None, None)
+add_2(Some(5), None)
+add_2(None, Some(9))
+add_2(Some(5), Some(9))
+
+
+fun add_3(x, y) =
+  if Pair(x, y) is
+    Pair(Some(xv), Some(yv)) then xv + yv
+    Pair(Some(xv), None)     then xv
+    Pair(None,     Some(yv)) then yv
+    Pair(None,     None)     then 0
+
+add_3(None, None)
+add_3(Some(5), None)
+add_3(None, Some(9))
+add_3(Some(5), Some(9))
+
+
+:fixme
+fun add_4(x, y) =
+  if
+    x
+      is
+        Some(xv) and
+          y
+            is
+              Some(yv) then xv + yv
+            is
+              None     then xv
+        None and
+          y
+            is
+              Some(yv) then yv
+            is
+              None     then 0
+//│ ╔══[PARSE ERROR] Unexpected 'is' keyword here
+//│ ║  l.59: 	      is
+//│ ╙──      	      ^^
+//│ ╔══[ERROR] Unrecognized term split.
+//│ ║  l.58: 	    x
+//│ ╙──      	    ^
+
+
+add_4(None, None)
+add_4(Some(5), None)
+add_4(None, Some(9))
+add_4(Some(5), Some(9))
+
+
+fun add_5(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    y is None     and x is Some(xv) then xv
+    x is None     and y is Some(yv) then yv
+    y is None     and x is None     then 0
+
+
+add_5(None, None)
+add_5(Some(5), None)
+add_5(None, Some(9))
+add_5(Some(5), Some(9))
+
+
+:fixme
+fun add_6(x, y) =
+  if [x, y] is
+    [Some(xv), Some(yv)] then xv + yv
+    [Some(xv), None]     then xv
+    [None,     Some(yv)] then yv
+    [None,     None]     then 0
+//│ ╔══[ERROR] Name not found: yv
+//│ ║  l.105: 	    [None,     Some(yv)] then yv
+//│ ╙──       	                              ^^
+//│ ╔══[ERROR] Name not found: xv
+//│ ║  l.104: 	    [Some(xv), None]     then xv
+//│ ╙──       	                              ^^
+//│ ╔══[ERROR] Name not found: xv
+//│ ║  l.103: 	    [Some(xv), Some(yv)] then xv + yv
+//│ ╙──       	                              ^^
+//│ ╔══[ERROR] Name not found: yv
+//│ ║  l.103: 	    [Some(xv), Some(yv)] then xv + yv
+//│ ╙──       	                                   ^^
+
+add_6(None, None)
+add_6(Some(5), None)
+add_6(None, Some(9))
+add_6(Some(5), Some(9))
+
+
+fun p(x) = true
+
+
+// FIXME Remove `case p(x) of true -> 0; _ -> 0`
+fun add_6(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    y is None     and p(x) and x is Some(xv) then 42
+    y is None     and x is Some(xv) then xv
+    x is None     and y is Some(yv) then yv
+    y is None     and x is None     then 0
+
+fun add_7(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    // y is None    and p(x) and x is Some(xv) then 42
+    y is None     and x is Some(xv) then xv
+    y is Some(yv) and p(yv) and x is None then 36
+    y is Some(yv) and x is None then yv
+    y is None     and x is None     then 0
+
+fun add_8(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    y is None    and p(x) and x is Some(xv) then 42
+    y is None     and x is Some(xv) then xv
+    y is Some(yv) and p(yv) and x is None then 36
+    y is Some(yv) and x is None then yv
+    y is None     and x is None     then 0

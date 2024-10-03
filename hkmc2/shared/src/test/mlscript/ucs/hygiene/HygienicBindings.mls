@@ -1,0 +1,100 @@
+:global
+:noTypeCheck
+
+fun error = ()
+
+fun (~~>) expect(a, b) = if a == b then () else error
+
+type Option[out T] = None | Some[T]
+module None
+class Some[out T](val value: T)
+
+type Either[A, B] = Left[A] | Right[B]
+class Left[A](val leftValue: A)
+class Right[B](val rightValue: B)
+
+type List[out A] = Nil | Cons[A]
+module Nil
+class Cons[out A](head: A, tail: List[A])
+
+fun justTrue(_) = true
+fun justFalse(_) = false
+
+fun h0(a) =
+  if
+    a is Some(Left(y)) then y
+    a is Some(Right(z)) then z
+    a is None then 0
+
+// If a class parameter is bound to the same variable in different branches,
+// the bindings can be merged and can be typed and coverage checked. See the
+// desugared version below.
+// :ducs:postprocess.result
+fun h0'(a) =
+  if
+    a is Some(x) and x is Left(y) then y
+    a is Some(x) and x is Right(z) then z
+    a is None then 0
+
+// However, if the class parameter is bound to different variables in different
+// branches, the bindings cannot be merged and the type will miss the latter
+// branch. See the desugared version below.
+fun h1(a) =
+  if
+    a is Some(x) and x is Left(y) then y
+    a is Some(y) and y is Right(z) then z
+    a is None then 0
+
+// FIXME
+h1(Some(Left(0)))
+
+// FIXME: It is also impossible to merge bindings of different variables if one
+// of them is bound via a let binding.
+fun h2(a) =
+  if
+    a is Some(x) and x is x' and x' is Left(y) then y
+    a is Some(y) and
+      let y' = y
+      y' is Right(z) then z
+    a is None then 0
+
+// :ducs:postprocess.result
+// :w
+fun h3(x, y, f, p) =
+  if x is
+    _ and f(x) is y and p(x) then y
+    None then y
+    _ then "anyway"
+
+
+h3("anything", "not me", _ => "should be me", _ => true) ~~> "should be me"
+h3(None, "should be me", _ => "not me", _ => false) ~~> "should be me"
+h3("anything", "anything", _ => "not me", _ => false) ~~> "anyway"
+
+
+// :ducs:postprocess.result
+// :w
+fun h4(x, y, p) =
+  if x is
+    y and p(x) then y
+    None then y
+    _ then "default"
+
+h4("should be me", "not me", _ => true)
+h4(None, "not me", _ => true)
+h4(None, "should be me", _ => false)
+h4("anything", "not me", _ => false)
+
+// :ducs:postprocess.result
+fun h5(x, y, p) =
+  if x is
+    Some(y) and p(x) then y
+    None then y
+    _ then y
+
+h5(Some(1), 2, justTrue) ~~> 1
+h5(Some(1), 2, justFalse) ~~> 2
+h5(None, 0, justTrue) ~~> 0
+h5(None, 0, justFalse) ~~> 0
+h5("foo", 42, justTrue) ~~> 42
+h5("foo", 42, justFalse) ~~> 42

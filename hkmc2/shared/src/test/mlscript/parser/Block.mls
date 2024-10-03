@@ -24,7 +24,7 @@ a, b, c
 
 class A, res
 //│ Parsed:
-//│ 	TypeDef(Cls,Ident(A),None,None)
+//│ 	TypeDef(Cls,None,Ident(A),None,None)
 //│ 	Ident(res)
 
 

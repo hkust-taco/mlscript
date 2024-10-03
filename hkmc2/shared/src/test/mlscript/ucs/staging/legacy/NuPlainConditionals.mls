@@ -1,0 +1,115 @@
+:NewDefs
+
+
+class Pair[A](fst: A, snd: A)
+//│ class Pair[A](fst: A, snd: A)
+
+
+
+Pair(0, 1) is Pair
+//│ Bool
+//│ res
+//│     = true
+
+Pair(0, 1) is Pair(a, b)
+//│ Bool
+//│ res
+//│     = true
+
+Pair(0, 1) is Pair(0, _)
+//│ Bool
+//│ res
+//│     = true
+
+if Pair(0, 1) is Pair(a, b) then true else false
+//│ Bool
+//│ res
+//│     = true
+
+
+fun foo(x) = x is Pair(a, b)
+//│ fun foo: (Object & ~#Pair | Pair[anything]) -> Bool
+
+
+Pair(0, 1) is Pair(a, b) and a > b
+//│ Bool
+//│ res
+//│     = false
+
+if Pair(0, 1) is Pair(a, b) then a > b else false
+//│ Bool
+//│ res
+//│     = false
+
+
+fun foo(x) = x is Pair(a, b) and a > b
+//│ fun foo: (Object & ~#Pair | Pair[Num]) -> Bool
+
+fun foo(x) = if x is Pair(a, b) then a > b else false
+//│ fun foo: (Object & ~#Pair | Pair[Num]) -> Bool
+
+
+// TODO proper error
+fun foo(x) = x is
+  Pair
+  Int
+//│ ╔══[ERROR] unknown pattern {Pair; Int}
+//│ ║  l.54: 	  Pair
+//│ ║        	  ^^^^
+//│ ║  l.55: 	  Int
+//│ ╙──      	^^^^^
+//│ ╔══[WARNING] this case is unreachable
+//│ ╙── because it is subsumed by the branch
+//│ fun foo: anything -> true
+
+// TODO proper error
+fun foo(x) = x is
+  Pair(a, b) and a > b
+  Int
+//│ ╔══[ERROR] unknown pattern {and(Pair(a, b,), >(a, b,),); Int}
+//│ ║  l.67: 	  Pair(a, b) and a > b
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.68: 	  Int
+//│ ╙──      	^^^^^
+//│ ╔══[WARNING] this case is unreachable
+//│ ╙── because it is subsumed by the branch
+//│ fun foo: anything -> true
+
+// TODO support `|`
+fun foo1(x) = x is Pair(a, b) | Int
+fun foo2(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╔══[ERROR] type identifier `|` not found
+//│ ║  l.80: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╙──      	                                          ^
+//│ ╔══[ERROR] type identifier `and` not found
+//│ ║  l.80: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╙──      	                               ^^^
+//│ ╔══[ERROR] type identifier `>` not found
+//│ ║  l.80: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╙──      	                                     ^
+//│ ╔══[ERROR] type identifier `|` not found
+//│ ║  l.79: 	fun foo1(x) = x is Pair(a, b) | Int
+//│ ╙──      	                              ^
+//│ ╔══[ERROR] type identifier not found: |
+//│ ║  l.79: 	fun foo1(x) = x is Pair(a, b) | Int
+//│ ╙──      	                              ^
+//│ ╔══[ERROR] type identifier not found: |
+//│ ║  l.80: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╙──      	                                          ^
+//│ fun foo1: nothing -> error
+//│ fun foo2: nothing -> error
+//│ Code generation encountered an error:
+//│   unresolved symbol |
+
+
+
+class A(arg: Int)
+//│ class A(arg: Int)
+
+// TODO make `is` lower precedence than `=>`
+x => (x is A(_))
+//│ Object -> Bool
+//│ res
+//│     = [Function: res]
+
+

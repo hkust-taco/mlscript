@@ -1,0 +1,106 @@
+:NewDefs
+
+// This test file is to track possible name collision during specialization.
+
+fun (~~>) check(x, y) = if x === y then "passed" else error
+class Pair[out A, out B](val first: A, val second: B)
+//│ fun (~~>) check: forall 'a. (Eql['a], 'a) -> "passed"
+//│ class Pair[A, B](first: A, second: B)
+
+fun p1(x) = x < 0
+fun p2(x) = x > 0
+fun p3(x) = x == 0
+//│ fun p1: Num -> Bool
+//│ fun p2: Num -> Bool
+//│ fun p3: Num -> Bool
+
+fun example1(p) =
+  if p is
+    Pair(x, y) and p1(x) and p1(y) then "both negative"
+    Pair(a, b) and p2(a) and p2(b) then "both positive"
+    else "nah"
+//│ fun example1: (Object & ~#Pair | Pair[Num, Num]) -> ("both negative" | "both positive" | "nah")
+
+// FIXME: The following test case should fail, but it doesn't. The reason is
+// `x` and `y` are in the desugared lexical scope, although they don't in the
+// original lexical scope.
+fun example2(p) =
+  if p is
+    Pair(x, y) and p1(x) and p1(y) then "both negative"
+    Pair(a, b) and p2(a) and p2(b) then x + y
+    else "nah"
+//│ fun example2: (Object & ~#Pair | Pair[Int, Int]) -> ("both negative" | "nah" | Int)
+
+// Next, let's check the name collision between a class and its super class.
+
+class Base(x: Int)
+class Derived(y: Int) extends Base(y + 1)
+//│ class Base(x: Int)
+//│ class Derived(y: Int) extends Base
+
+// Notice that Derived is not in the inferred type.
+:ducs:postprocess.result
+fun example3(t) =
+  if t is
+    Base(x) and p1(x) then x
+    Derived(y) then y
+    else 42
+//│ Post-processed UCS term:
+//│ case t*‡ of
+//│   refined Base*◊ ->
+//│     let ucs$args_t$Base*† = (Base).unapply(t,)
+//│     let x*‡ = (ucs$args_t$Base).0
+//│     let ucs$test$0*† = p1(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† -> x
+//│       _ ->
+//│         case t*‡ of
+//│           Derived*◊ ->
+//│             let ucs$args_t$Derived*† = (Derived).unapply(t,)
+//│             let y*‡ = (ucs$args_t$Derived).0
+//│             y
+//│           _ -> 42
+//│   _ -> 42
+//│ fun example3: forall 'a. (Base & {#x: Num & 'a} | Object & ~#Base) -> (Int | 'a)
+
+example3(Derived(1))
+//│ Int
+//│ res
+//│     = 1
+
+fun example4(t, x) =
+  if t is
+    Base(x) and p1(x) then x
+    Derived(y) then y + x
+    //                  ^
+    // Note that this branch will be absorbed by the previous one. As the
+    // previous branch shadows the variable `x`, a correct implementation
+    // should restore the original value of `x` in this branch.
+    else 42
+//│ fun example4: forall 'a. (Base & {#x: Num & 'a} | Object & ~#Base, Int) -> (Int | 'a)
+
+example4(Base(-1), 0) ~~> -1
+example4(Base(1), 2) ~~> 42
+//│ "passed"
+//│ res
+//│     = 'passed'
+//│ res
+//│     = 'passed'
+
+example4(Derived(1), 4) ~~> 5
+//│ "passed"
+//│ res
+//│     = 'passed'
+
+class Base(x: Int)
+class Derived[A](y: A) extends Base(1)
+//│ class Base(x: Int)
+//│ class Derived[A](y: A) extends Base
+
+// Notice that now Derived is generic, so it's appear in the inferred type.
+fun example5(t) =
+  if t is
+    Base(x) and p1(x) then x
+    Derived(y) then y
+    else 42
+//│ fun example5: forall 'a 'b. (Base & {#x: Num & 'a} & ~#Derived | Derived['b] & {#x: Num & 'a} | Object & ~#Base) -> (42 | 'a | 'b)

@@ -1,0 +1,103 @@
+:NewDefs
+
+class Base()
+class Derived1() extends Base()
+class Derived2() extends Base()
+class Derived3() extends Derived2()
+//│ class Base()
+//│ class Derived1() extends Base
+//│ class Derived2() extends Base
+//│ class Derived3() extends Base, Derived2
+
+// The very basic case.
+// It should warn about that the last two cases are unreachable.
+:w
+:ducs:normalize.result
+fun f1(x) = if x is
+  Base then "b"
+  Derived1 then "d1"
+  Derived2 then "d2"
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   Base*◊ -> "b"
+//│ ╔══[WARNING] found a duplicated case
+//│ ║  l.18: 	  Derived1 then "d1"
+//│ ║        	  ^^^^^^^^
+//│ ╟── the case is covered by pattern Base
+//│ ║  l.17: 	  Base then "b"
+//│ ║        	  ^^^^
+//│ ╟── due to the subtyping relation
+//│ ║  l.4: 	class Derived1() extends Base()
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] found a duplicated case
+//│ ║  l.19: 	  Derived2 then "d2"
+//│ ║        	  ^^^^^^^^
+//│ ╟── the case is covered by pattern Base
+//│ ║  l.17: 	  Base then "b"
+//│ ║        	  ^^^^
+//│ ╟── due to the subtyping relation
+//│ ║  l.5: 	class Derived2() extends Base()
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ fun f1: Base -> "b"
+
+f1(Base())
+f1(Derived1())
+f1(Derived2())
+//│ "b"
+//│ res
+//│     = 'b'
+//│ res
+//│     = 'b'
+//│ res
+//│     = 'b'
+
+// Decision paths:
+// + «x is Base» and «p (x,)» => "b and p"
+// + «x is Derived1» => "d1"
+// + «x is Derived2» => "d2"
+// +  => "otherwise"
+// The case tree:
+//    «x» match
+//      case Base =>
+//        if «p (x,)»
+//          «"b and p"»
+//        else
+//          «x» match
+//            case Derived1 =>
+//              «"d1"»
+//            case Derived2 =>
+//              «"d2"»
+//            default
+//              «"otherwise"»
+//      default
+//        «"otherwise"»
+fun f2(x, p) = if x is
+  Base and p(x) then "b and p"
+  Derived1 then "d1"
+  Derived2 then "d2"
+  else "otherwise"
+//│ fun f2: forall 'a. (Object & ~#Base | 'a & (Base & ~#Derived1 & ~#Derived2 | Derived1 | Derived2), (Base & 'a) -> Bool) -> ("b and p" | "d1" | "d2" | "otherwise")
+
+f2(Base(), _ => true) // => b and p
+f2(Base(), _ => false) // otherwise
+//│ "b and p" | "d1" | "d2" | "otherwise"
+//│ res
+//│     = 'b and p'
+//│ res
+//│     = 'otherwise'
+
+f2(Derived1(), _ => true) // => b and p
+f2(Derived2(), _ => true) // => b and p
+//│ "b and p" | "d1" | "d2" | "otherwise"
+//│ res
+//│     = 'b and p'
+//│ res
+//│     = 'b and p'
+
+f2(Derived1(), _ => false) // => d1
+f2(Derived2(), _ => false) // => d2
+//│ "b and p" | "d1" | "d2" | "otherwise"
+//│ res
+//│     = 'd1'
+//│ res
+//│     = 'd2'

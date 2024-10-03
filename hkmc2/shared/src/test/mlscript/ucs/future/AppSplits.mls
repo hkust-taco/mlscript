@@ -1,0 +1,47 @@
+// AppSplits.mls
+// =============
+// Experimenting with conditional splits on function applications.
+
+fun foo(x) = x > 1
+//│ Type: Ctor(lit:UnitLit(true),List())
+
+:todo
+:pe
+:e
+if foo of
+  0 then "a"
+  1 then "b"
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IntLit(0),keyword 'then',StrLit(a)) (of class hkmc2.syntax.Tree$InfixApp)
+
+:todo
+:pe
+:e
+if foo of 1,
+  0 then "a"
+  1 then "b"
+//│ ╔══[PARSE ERROR] Expected an expression; found indented block instead
+//│ ║  l.20: 	  0 then "a"
+//│ ╙──      	  ^
+//│ ╔══[PARSE ERROR] Unexpected literal here
+//│ ║  l.20: 	  0 then "a"
+//│ ╙──      	  ^
+//│ ╔══[ERROR] Unrecognized term split.
+//│ ║  l.20: 	  0 then "a"
+//│ ╙──      	^^
+//│ /!!!\ Uncaught error: scala.MatchError: If(Let(scrut@23,Lit(IntLit(1)),Else(Error))) (of class hkmc2.semantics.Term$If)
+
+:todo
+:pe
+:e
+if foo
+  (0) then "a"
+  (1) then "b"
+//│ ╔══[PARSE ERROR] Unexpected parenthesis section here
+//│ ║  l.37: 	  (0) then "a"
+//│ ╙──      	  ^^^
+//│ ╔══[ERROR] Unrecognized term split.
+//│ ║  l.36: 	if foo
+//│ ╙──      	   ^^^
+//│ /!!!\ Uncaught error: scala.MatchError: If(Else(Error)) (of class hkmc2.semantics.Term$If)
+
+

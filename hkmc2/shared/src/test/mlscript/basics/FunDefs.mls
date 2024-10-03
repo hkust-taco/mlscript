@@ -4,7 +4,7 @@ fun foo = 1
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 foo
-//│ Type: Flow(‹result of foo›@15)
+//│ Type: Flow(‹result of foo›@18)
 
 fun (+) plus: Int
 //│ Type: Ctor(lit:UnitLit(true),List())
@@ -13,7 +13,7 @@ fun (+) : Int
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 1 + 2
-//│ Type: Flow(‹app-res›@22)
+//│ Type: Flow(‹app-res›@25)
 
 
 fun f = g
@@ -25,14 +25,14 @@ fun (++)(x, y) = 1
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 1 ++ 2
-//│ Type: Flow(‹app-res›@31)
+//│ Type: Flow(‹app-res›@34)
 
 
 fun (**) pow = 1
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 1 ** 2
-//│ Type: Flow(‹app-res›@35)
+//│ Type: Flow(‹app-res›@38)
 
 
 

@@ -1,0 +1,21 @@
+:global
+:noTypeCheck
+
+class Some[T](value: T)
+
+
+:fixme
+// TODO support `or` in UCS
+fun f(a, b) = if a is
+  Some(v)
+    and b is Some(v') then v + v'
+    or  b is Some(v)  then v
+  else 0
+//│ ╔══[PARSE ERROR] Unexpected 'and' keyword here
+//│ ║  l.11: 	    and b is Some(v') then v + v'
+//│ ╙──      	    ^^^
+//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ║  l.10: 	  Some(v)
+//│ ╙──      	  ^^^^^^^
+
+

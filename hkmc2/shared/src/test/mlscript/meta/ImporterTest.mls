@@ -1,9 +1,9 @@
 
 :import ImportedTest.mls
-//│ Imported 20 members
+//│ Imported 23 members
 
 
 hello
-//│ Type: Flow(‹result of hello›@15)
+//│ Type: Flow(‹result of hello›@18)
 
 

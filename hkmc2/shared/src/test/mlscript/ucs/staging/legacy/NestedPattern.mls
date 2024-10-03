@@ -1,0 +1,93 @@
+:NewDefs
+
+abstract class Option[A]: Some[A] | None
+class Some[A](value: A) extends Option[A]
+module None extends Option
+//│ abstract class Option[A]: None | Some[A]
+//│ class Some[A](value: A) extends Option
+//│ module None extends Option
+
+abstract class Either[out A, out B]: Left[A] | Right[B]
+class Left[A](leftValue: A) extends Either[A, nothing]
+class Right[B](rightValue: B) extends Either[nothing, B]
+//│ abstract class Either[A, B]: Left[A] | Right[B]
+//│ class Left[A](leftValue: A) extends Either
+//│ class Right[B](rightValue: B) extends Either
+
+fun compute(v) =
+  if v is
+    Left(Some(x)) then x * 5
+    Left(None()) then 1
+    Right(Some(x)) then x * 3
+    Right(None()) then 0
+//│ fun compute: (Left[None | Some[Int]] | Right[None | Some[Int]]) -> Int
+
+fun crazy(v) =
+  if v is
+    Some(Some(Some(Some(Some(Some(None())))))) then "bruh!"
+    _ then "lol"
+//│ fun crazy: (Object & ~#Some | Some[Object & ~#Some | Some[Object & ~#Some | Some[Object & ~#Some | Some[Object & ~#Some | Some[Object & ~#Some | Some[Object]]]]]]) -> ("bruh!" | "lol")
+
+
+// * TODO(@chengluyu) fix these missing locations
+
+fun f(x) =
+  if x is
+    [0, 0] then "zeros"
+    [1, 1] then "ones"
+    _      then "bruh"
+//│ fun f: {0: Object, 1: Object} -> ("bruh" | "ones" | "zeros")
+
+f([0, 0])
+f([1, 1])
+f([1, 0])
+//│ "bruh" | "ones" | "zeros"
+//│ res
+//│     = 'zeros'
+//│ res
+//│     = 'ones'
+//│ res
+//│     = 'bruh'
+
+fun f(x) =
+  if x is
+    [0, 0] then "zeros"
+    [1, 1] then "ones"
+    [y, 1] then x
+    _      then "que?"
+//│ fun f: forall 'a. ({0: Object, 1: Object} & 'a) -> ("ones" | "que?" | "zeros" | 'a)
+
+f([0, 0])
+f([1, 1])
+f([0, 1])
+f([1, 0])
+//│ "ones" | "que?" | "zeros" | [1, 0]
+//│ res
+//│     = 'zeros'
+//│ res
+//│     = 'ones'
+//│ res
+//│     = [ 0, 1 ]
+//│ res
+//│     = 'que?'
+
+fun f(p) =
+  if p is
+    Some([x, y]) then x + y
+    None()       then 0
+//│ fun f: (None | Some[{0: Int, 1: Int}]) -> Int
+
+class Union[A, B](a: A, b: B)
+//│ class Union[A, B](a: A, b: B)
+
+// Name conflict between the scrutinee and the positionals.
+// Desugar result: let tmp13 = x in case tmp13 of { Union => let x = (tmp13).a in let y = (tmp13).b in x }
+fun hmm(x) =
+  if x is Union(x, y) then x
+//│ fun hmm: forall 'a. Union['a, anything] -> 'a
+
+hmm(Union(1, 2))
+//│ 1
+//│ res
+//│     = 1
+
