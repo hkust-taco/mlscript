@@ -25,6 +25,7 @@ trait TypeSimplifier { self: Typer =>
     println(s"allVarPols: ${printPols(allVarPols)}")
     
     val renewed = MutMap.empty[TypeVariable, TypeVariable]
+    val renewedtsc = MutMap.empty[TupleSetConstraints, TupleSetConstraints]
     
     def renew(tv: TypeVariable): TypeVariable =
       renewed.getOrElseUpdate(tv,
@@ -78,8 +79,17 @@ trait TypeSimplifier { self: Typer =>
               ).map(process(_, S(false -> tv)))
                 .reduceOption(_ &- _).filterNot(_.isTop).toList
             else Nil
+          if (noApproximateOverload)
+            nv.tsc ++= tv.tsc.iterator.map { case (tsc, i) => renewedtsc.get(tsc) match {
+              case S(tsc) => (tsc, i)
+              case N if inPlace => (tsc, i)
+              case N =>
+                val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)
+                renewedtsc += tsc -> t
+                t.tvs = t.tvs.map(x => (x._1, process(x._2, N)))
+                (t, i)
+            }}
         }
-        
         nv
         
       case ComposedType(true, l, r) =>
@@ -549,9 +559,17 @@ trait TypeSimplifier { self: Typer =>
                 analyzed1.setAndIfUnset(tv -> pol(tv).getOrElse(false)) { apply(pol)(ty) }
               case N =>
                 if (pol(tv) =/= S(false))
-                  analyzed1.setAndIfUnset(tv -> true) { tv.lowerBounds.foreach(apply(pol.at(tv.level, true))) }
+                  analyzed1.setAndIfUnset(tv -> true) {
+                    tv.lowerBounds.foreach(apply(pol.at(tv.level, true)))
+                    if (noApproximateOverload)
+                      tv.tsc.keys.flatMap(_.tvs).foreach(u => apply(pol.at(tv.level,u._1))(u._2))
+                  }
                 if (pol(tv) =/= S(true))
-                  analyzed1.setAndIfUnset(tv -> false) { tv.upperBounds.foreach(apply(pol.at(tv.level, false))) }
+                  analyzed1.setAndIfUnset(tv -> false) {
+                    tv.upperBounds.foreach(apply(pol.at(tv.level, false)))
+                    if (noApproximateOverload)
+                      tv.tsc.keys.flatMap(_.tvs).foreach(u => apply(pol.at(tv.level,u._1))(u._2))
+                  }
             }
           case _ =>
             super.apply(pol)(st)
@@ -643,8 +661,11 @@ trait TypeSimplifier { self: Typer =>
             case tv: TypeVariable =>
               pol(tv) match {
                 case S(pol_tv) =>
-                  if (analyzed2.add(pol_tv -> tv))
+                  if (analyzed2.add(pol_tv -> tv)) {
                     processImpl(st, pol, pol_tv)
+                    if (noApproximateOverload)
+                      tv.tsc.keys.flatMap(_.tvs).foreach(u => processImpl(u._2,pol.at(tv.level,u._1),pol_tv))
+                  }
                 case N =>
                   if (analyzed2.add(true -> tv))
                     // * To compute the positive co-occurrences
@@ -690,6 +711,7 @@ trait TypeSimplifier { self: Typer =>
                 case S(p) =>
                   (if (p) tv2.lowerBounds else tv2.upperBounds).foreach(go)
                   // (if (p) getLbs(tv2) else getUbs(tv2)).foreach(go)
+                  if (noApproximateOverload) tv2.tsc.keys.flatMap(_.tvs).foreach(u => go(u._2))
                 case N =>
                   trace(s"Analyzing invar-occ of $tv2") {
                     analyze2(tv2, pol)
@@ -789,7 +811,7 @@ trait TypeSimplifier { self: Typer =>
     
     // * Remove variables that are 'dominated' by another type or variable
     // *  A variable v dominated by T if T is in both of v's positive and negative cooccurrences
-    allVars.foreach { case v => if (v.assignedTo.isEmpty && !varSubst.contains(v)) {
+    allVars.foreach { case v => if (v.assignedTo.isEmpty && !varSubst.contains(v) && v.tsc.isEmpty) {
       println(s"2[v] $v ${coOccurrences.get(true -> v)} ${coOccurrences.get(false -> v)}")
       
       coOccurrences.get(true -> v).iterator.flatMap(_.iterator).foreach {
@@ -807,6 +829,7 @@ trait TypeSimplifier { self: Typer =>
         
         case w: TV if !(w is v) && !varSubst.contains(w) && !varSubst.contains(v) && !recVars(v)
           && coOccurrences.get(false -> v).exists(_(w))
+          && w.tsc.isEmpty
         =>
           // * Here we know that v is 'dominated' by w, so v can be inlined.
           // * Note that we don't want to unify the two variables here
@@ -833,7 +856,7 @@ trait TypeSimplifier { self: Typer =>
     
     // * Unify equivalent variables based on polar co-occurrence analysis:
     allVars.foreach { case v =>
-      if (!v.assignedTo.isDefined && !varSubst.contains(v)) // TODO also handle v.assignedTo.isDefined?
+      if (!v.assignedTo.isDefined && !varSubst.contains(v) && v.tsc.isEmpty) // TODO also handle v.assignedTo.isDefined?
         trace(s"3[v] $v +${coOccurrences.get(true -> v).mkString} -${coOccurrences.get(false -> v).mkString}") {
         
         def go(pol: Bool): Unit = coOccurrences.get(pol -> v).iterator.flatMap(_.iterator).foreach {
@@ -850,6 +873,7 @@ trait TypeSimplifier { self: Typer =>
               )
               && (v.level === w.level)
               // ^ Don't merge variables of differing levels
+              && w.tsc.isEmpty
             =>
             trace(s"[w] $w ${printPol(S(pol))}${coOccurrences.get(pol -> w).mkString}") {
               
@@ -923,6 +947,7 @@ trait TypeSimplifier { self: Typer =>
     println(s"[rec] ${recVars}")
     
     val renewals = MutMap.empty[TypeVariable, TypeVariable]
+    val renewaltsc = MutMap.empty[TupleSetConstraints, TupleSetConstraints]
     
     val semp = Set.empty[TV]
     
@@ -999,7 +1024,7 @@ trait TypeSimplifier { self: Typer =>
               nv
             })
             pol(tv) match {
-              case S(p) if inlineBounds && !occursInvariantly(tv) && !recVars.contains(tv) =>
+              case S(p) if inlineBounds && !occursInvariantly(tv) && !recVars.contains(tv) && tv.tsc.isEmpty =>
                 // * Inline the bounds of non-rec non-invar-occ type variables
                 println(s"Inlining [${printPol(p)}] bounds of $tv (~> $res)")
                 // if (p) mergeTransform(true, pol, tv, Set.single(tv), canDistribForall) | res
@@ -1017,6 +1042,15 @@ trait TypeSimplifier { self: Typer =>
                           res.lowerBounds = tv.lowerBounds.map(transform(_, pol.at(tv.level, true), Set.single(tv)))
                         if (occNums.contains(false -> tv))
                           res.upperBounds = tv.upperBounds.map(transform(_, pol.at(tv.level, false), Set.single(tv)))
+                        if (noApproximateOverload)
+                          res.tsc ++= tv.tsc.map { case (tsc, i) => renewaltsc.get(tsc) match {
+                            case S(tsc) => (tsc, i)
+                            case N =>
+                              val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)
+                              renewaltsc += tsc -> t
+                              t.tvs = t.tvs.map(x => (x._1, transform(x._2, PolMap.neu, Set.empty)))
+                              (t, i)
+                          }}
                     }
                     res
                   }()

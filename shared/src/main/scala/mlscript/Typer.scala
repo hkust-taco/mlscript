@@ -34,6 +34,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   var constrainedTypes: Boolean = false
   
   var recordProvenances: Boolean = true
+  var noApproximateOverload: Boolean = false
   
   type Binding = Str -> SimpleType
   type Bindings = Map[Str, SimpleType]
@@ -168,7 +169,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               assert(b.level > lvl)
               if (p) (b, tv) else (tv, b) }
           }.toList, innerTy)
-        
+
+        if (noApproximateOverload) {
+          val ambiguous = innerTy.getVars.unsorted.flatMap(_.tsc.keys.flatMap(_.tvs))
+            .groupBy(_._2)
+            .filter { case (v,pvs) => pvs.sizeIs > 1 }
+          if (ambiguous.nonEmpty) raise(ErrorReport(
+            msg"ambiguous" -> N ::
+              ambiguous.map { case (v,_) => msg"cannot determine satisfiability of type ${v.expPos}" -> v.prov.loco }.toList
+              , true))
+        }
+
         println(s"Inferred poly constr: $cty  —— where ${cty.showBounds}")
         
         val cty_fresh =
@@ -662,7 +673,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         tv.assignedTo = S(bod)
         tv
       case Rem(base, fs) => Without(rec(base), fs.toSortedSet)(tyTp(ty.toLoc, "field removal type"))
-      case Constrained(base, tvbs, where) =>
+      case Constrained(base, tvbs, where, tscs) =>
         val res = rec(base match {
           case ty: Type => ty
           case _ => die
@@ -674,6 +685,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         where.foreach { case Bounds(lo, hi) =>
           constrain(rec(lo), rec(hi))(raise,
             tp(mergeOptions(lo.toLoc, hi.toLoc)(_ ++ _), "constraint specifiation"), ctx)
+        }
+        tscs.foreach { case (typevars, constrs) =>
+          val tvs = typevars.map(x => (x._1, rec(x._2)))
+          val tsc = new TupleSetConstraints(constrs.map(_.map(rec)), tvs)
+          tvs.values.map(_.unwrapProxies).zipWithIndex.foreach {
+            case (tv: TV, i) => tv.tsc.updateWith(tsc)(_.map(_ + i).orElse(S(Set(i))))
+            case _ => ()
+          }
         }
         res
       case PolyType(vars, ty) =>
@@ -1860,8 +1879,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     val expandType = ()
     
     var bounds: Ls[TypeVar -> Bounds] = Nil
+    var tscs: Ls[Ls[(Bool, Type)] -> Ls[Ls[Type]]] = Nil
     
     val seenVars = mutable.Set.empty[TV]
+    val seenTscs = mutable.Set.empty[TupleSetConstraints]
     
     def field(ft: FieldType)(implicit ectx: ExpCtx): Field = ft match {
       case FieldType(S(l: TV), u: TV) if l === u =>
@@ -1969,6 +1990,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                 if (l =/= Bot || u =/= Top)
                   bounds ::= nv -> Bounds(l, u)
             }
+            tv.tsc.foreachEntry {
+              case (tsc, i) =>
+                if (seenTscs.add(tsc)) {
+                  val tvs = tsc.tvs.map(x => (x._1,go(x._2)))
+                  val constrs = tsc.constraints.map(_.map(go))
+                  tscs ::= tvs -> constrs
+                }
+            }
           }
           nv
         })
@@ -2018,17 +2047,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         case Overload(as) => as.map(go).reduce(Inter)
         case PolymorphicType(lvl, bod) =>
           val boundsSize = bounds.size
+          val tscsSize = tscs.size
           val b = go(bod)
           
           // This is not completely correct: if we've already traversed TVs as part of a previous sibling PolymorphicType,
           // the bounds of these TVs won't be registered again...
           // FIXME in principle we'd want to compute a transitive closure...
           val newBounds = bounds.reverseIterator.drop(boundsSize).toBuffer
+          val newTscs = tscs.reverseIterator.drop(tscsSize).toBuffer
           
           val qvars = bod.varsBetween(lvl, MaxLevel).iterator
           val ftvs = b.freeTypeVariables ++
             newBounds.iterator.map(_._1) ++
-            newBounds.iterator.flatMap(_._2.freeTypeVariables)
+            newBounds.iterator.flatMap(_._2.freeTypeVariables) ++
+            newTscs.iterator.flatMap(_._1.map(_._2))
           val fvars = qvars.filter(tv => ftvs.contains(tv.asTypeVar))
           if (fvars.isEmpty) b else
             PolyType(fvars
@@ -2042,7 +2074,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           val lbs = groups2.toList
           val bounds = (ubs.mapValues(_.reduce(_ &- _)) ++ lbs.mapValues(_.reduce(_ | _)).map(_.swap))
           val processed = bounds.map { case (lo, hi) => Bounds(go(lo), go(hi)) }
-          Constrained(go(bod), Nil, processed)
+          Constrained(go(bod), Nil, processed, Nil)
         
         // case DeclType(lvl, info) =>
           
@@ -2050,8 +2082,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     // }(r => s"~> $r")
     
     val res = goLike(st)(new ExpCtx(Map.empty))
-    if (bounds.isEmpty) res
-    else Constrained(res, bounds, Nil)
+    if (bounds.isEmpty && tscs.isEmpty) res
+    else Constrained(res, bounds, Nil, tscs)
     
     // goLike(st)
   }

@@ -627,6 +627,35 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               recLb(ar.inner, b.inner)
               rec(b.inner.ub, ar.inner.ub, false)
             case (LhsRefined(S(b: ArrayBase), ts, r, _), _) => reportError()
+            case (LhsRefined(S(ov: Overload), ts, r, trs), RhsBases(_, S(L(f: FunctionType)), _)) if noApproximateOverload =>
+              TupleSetConstraints.mk(ov, f) match {
+                case S(tsc) =>
+                  if (tsc.tvs.nonEmpty) {
+                    tsc.tvs.mapValuesIter(_.unwrapProxies).zipWithIndex.flatMap {
+                      case ((true, tv: TV), i) => tv.lowerBounds.iterator.map((_,tv,i,true))
+                      case ((false, tv: TV), i) => tv.upperBounds.iterator.map((_,tv,i,false))
+                      case _ => Nil
+                    }.find {
+                      case (b,_,i,_) =>
+                        tsc.updateImpl(i,b)
+                        tsc.constraints.isEmpty
+                    }.foreach {
+                      case (b,tv,_,p) => if (p) rec(b,tv,false) else rec(tv,b,false)
+                    }
+                    if (tsc.constraints.sizeCompare(1) === 0) {
+                      tsc.tvs.values.map(_.unwrapProxies).foreach {
+                        case tv: TV => tv.tsc.remove(tsc)
+                        case _ => ()
+                      }
+                      tsc.constraints.head.iterator.zip(tsc.tvs).foreach {
+                        case (c, (pol, t)) =>
+                          if (!pol) rec(c, t, false)
+                          if (pol) rec(t, c, false)
+                      }
+                    }
+                  }
+                case N => reportError(S(msg"is not an instance of `${f.expNeg}`"))
+              }
             case (LhsRefined(S(ov: Overload), ts, r, trs), _) =>
               annoying(Nil, LhsRefined(S(ov.approximatePos), ts, r, trs), Nil, done_rs) // TODO remove approx. with ambiguous constraints
             case (LhsRefined(S(Without(b, ns)), ts, r, _), RhsBases(pts, N | S(L(_)), _)) =>
@@ -832,6 +861,28 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             lhs.upperBounds ::= newBound // update the bound
+            if (noApproximateOverload) {
+              lhs.tsc.foreachEntry { (tsc, v) =>
+                v.foreach { i =>
+                  if (!tsc.tvs(i)._1) {
+                    tsc.updateOn(i, rhs)
+                    if (tsc.constraints.isEmpty) reportError()
+                  }
+                }
+              }
+              val u = lhs.tsc.keysIterator.filter(_.constraints.sizeCompare(1)===0).duplicate
+              u._1.foreach { k =>
+                k.tvs.mapValuesIter(_.unwrapProxies).foreach {
+                  case (_,tv: TV) => tv.tsc.remove(k)
+                  case _ => ()
+                }
+              }
+              u._2.foreach { k =>
+                k.constraints.head.iterator.zip(k.tvs).foreach {
+                  case (c, (pol, t)) => if (pol) rec(t, c, false) else rec(c, t, false)
+                }
+              }
+            }
             lhs.lowerBounds.foreach(rec(_, rhs, true)) // propagate from the bound
             
           case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>
@@ -839,6 +890,28 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             rhs.lowerBounds ::= newBound // update the bound
+            if (noApproximateOverload) {
+              rhs.tsc.foreachEntry { (tsc, v) =>
+                v.foreach { i =>
+                  if(tsc.tvs(i)._1) {
+                    tsc.updateOn(i, lhs)
+                    if (tsc.constraints.isEmpty) reportError()
+                  }
+                }
+              }
+              val u = rhs.tsc.keysIterator.filter(_.constraints.sizeCompare(1)===0).duplicate
+              u._1.foreach { k =>
+                k.tvs.mapValuesIter(_.unwrapProxies).foreach {
+                  case (_,tv: TV) => tv.tsc.remove(k)
+                  case _ => ()
+                }
+              }
+              u._2.foreach { k =>
+                k.constraints.head.iterator.zip(k.tvs).foreach {
+                  case (c, (pol, t)) => if (pol) rec(t, c, false) else rec(c, t, false)
+                }
+              }
+            }
             rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
             
             
@@ -1562,9 +1635,24 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             assert(lvl <= below, "this condition should be false for the result to be correct")
             lvl
           })
+          val freshentsc = tv.tsc.flatMap { case (tsc,_) =>
+            if (tsc.tvs.values.map(_.unwrapProxies).forall {
+              case tv: TV => !freshened.contains(tv)
+              case _ => true
+            }) S(tsc) else N
+          }
           freshened += tv -> v
           v.lowerBounds = tv.lowerBounds.mapConserve(freshen)
           v.upperBounds = tv.upperBounds.mapConserve(freshen)
+          freshentsc.foreach { tsc =>
+            val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)
+            t.constraints = t.constraints.map(_.map(freshen))
+            t.tvs = t.tvs.map(x => (x._1,freshen(x._2)))
+            t.tvs.values.map(_.unwrapProxies).zipWithIndex.foreach {
+              case (tv: TV, i) => tv.tsc.updateWith(t)(_.map(_ + i).orElse(S(Set(i))))
+              case _ => ()
+            }
+          }
           v
       }
       

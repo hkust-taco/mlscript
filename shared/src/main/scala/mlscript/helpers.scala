@@ -1,5 +1,4 @@
 package mlscript
-
 import scala.util.chaining._
 import scala.collection.mutable.{Map => MutMap, SortedMap => SortedMutMap, Set => MutSet, Buffer}
 import scala.collection.immutable.SortedMap
@@ -115,7 +114,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
           .mkString("forall ", " ", ".")} ${body.showIn(0)}",
         outerPrec > 1 // or 0?
       )
-    case Constrained(b, bs, ws) =>
+    case Constrained(b, bs, ws, tscs) =>
       val oldCtx = ctx
       val bStr = b.showIn(0).stripSuffix("\n")
       val multiline = bStr.contains('\n')
@@ -138,6 +137,13 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
         }.mkString
       }${ws.map{
           case Bounds(lo, hi) => s"\n${ctx.indStr}${lo.showIn(0)} <: ${hi.showIn(0)}" // TODO print differently from bs?
+        }.mkString
+      }${tscs.map{
+          case (tvs, constrs) =>
+            val s = tvs.map(u => (if (u._1) "+" else "-") ++ u._2.showIn(0))
+              .mkString("[", ", ", "]")
+            s"\n${ctx.indStr}" + s +
+            s" in ${constrs.map(_.map(_.showIn(0)).mkString("[", ", ", "]")).mkString("{", ", ", "}")}"
         }.mkString}"
       }, outerPrec > 0)
     case fd @ NuFunDef(isLetRec, nme, snme, targs, rhs) =>
@@ -207,7 +213,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case WithExtension(b, r) => b :: r :: Nil
     case PolyType(targs, body) => targs.map(_.fold(identity, identity)) :+ body
     case Splice(fs) => fs.flatMap{ case L(l) => l :: Nil case R(r) => r.in.toList ++ (r.out :: Nil) }
-    case Constrained(b, bs, ws) => b :: bs.flatMap(c => c._1 :: c._2 :: Nil) ::: ws.flatMap(c => c.lb :: c.ub :: Nil)
+    case Constrained(b, bs, ws, tscs) => b :: bs.flatMap(c => c._1 :: c._2 :: Nil) ::: ws.flatMap(c => c.lb :: c.ub :: Nil) ::: tscs.flatMap(tsc => tsc._1.map(_._2) ::: tsc._2.flatten)
     case Signature(xs, res) => xs ::: res.toList
     case NuFunDef(isLetRec, nme, snme, targs, rhs) => targs ::: rhs.toOption.toList
     case NuTypeDef(kind, nme, tparams, params, ctor, sig, parents, sup, ths, body) =>
@@ -782,7 +788,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       Constrained(body.toType_!, Nil, where.map {
         case Asc(l, r) => Bounds(l.toType_!, r)
         case s => throw new NotAType(s)
-      })
+      }, Nil)
     case Forall(ps, bod) =>
       PolyType(ps.map(R(_)), bod.toType_!)
     // 

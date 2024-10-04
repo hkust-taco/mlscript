@@ -695,36 +695,6 @@ abstract class TyperHelpers { Typer: Typer =>
       case _ => this :: Nil
     }
     
-    def childrenPol(pol: Opt[Bool])(implicit ctx: Ctx): List[Opt[Bool] -> SimpleType] = {
-      def childrenPolField(fld: FieldType): List[Opt[Bool] -> SimpleType] =
-        fld.lb.map(pol.map(!_) -> _).toList ::: pol -> fld.ub :: Nil
-      this match {
-        case tv @ AssignedVariable(ty) =>
-          pol -> ty :: Nil
-        case tv: TypeVariable =>
-          (if (pol =/= S(false)) tv.lowerBounds.map(S(true) -> _) else Nil) :::
-          (if (pol =/= S(true)) tv.upperBounds.map(S(false) -> _) else Nil)
-        case FunctionType(l, r) => pol.map(!_) -> l :: pol -> r :: Nil
-        case Overload(as) => as.map(pol -> _)
-        case ComposedType(_, l, r) => pol -> l :: pol -> r :: Nil
-        case RecordType(fs) => fs.unzip._2.flatMap(childrenPolField)
-        case TupleType(fs) => fs.unzip._2.flatMap(childrenPolField)
-        case ArrayType(fld) => childrenPolField(fld)
-        case SpliceType(elems) => elems flatMap {case L(l) => pol -> l :: Nil case R(r) => childrenPolField(r)}
-        case NegType(n) => pol.map(!_) -> n :: Nil
-        case ExtrType(_) => Nil
-        case ProxyType(und) => pol -> und :: Nil
-        // case _: TypeTag => Nil
-        case _: ObjectTag | _: Extruded => Nil
-        case SkolemTag(id) => pol -> id :: Nil
-        case tr: TypeRef => tr.mapTargs(pol)(_ -> _)
-        case Without(b, ns) => pol -> b :: Nil
-        case TypeBounds(lb, ub) => S(false) -> lb :: S(true) -> ub :: Nil
-        case PolymorphicType(_, und) => pol -> und :: Nil
-        case ConstrainedType(cs, bod) =>
-          cs.flatMap(vbs => S(true) -> vbs._1 :: S(false) -> vbs._2 :: Nil) ::: pol -> bod :: Nil
-    }}
-    
     /** (exclusive, inclusive) */
     def varsBetween(lb: Level, ub: Level): Set[TV] = {
       val res = MutSet.empty[TypeVariable]
@@ -789,7 +759,8 @@ abstract class TyperHelpers { Typer: Typer =>
         case tv: TypeVariable =>
           val poltv = pol(tv)
           (if (poltv =/= S(false)) tv.lowerBounds.map(pol.at(tv.level, true) -> _) else Nil) :::
-          (if (poltv =/= S(true)) tv.upperBounds.map(pol.at(tv.level, false) -> _) else Nil)
+          (if (poltv =/= S(true)) tv.upperBounds.map(pol.at(tv.level, false) -> _) else Nil) ++
+          tv.tsc.keys.flatMap(_.tvs).map(u => pol.at(tv.level,u._1) -> u._2)
         case FunctionType(l, r) => pol.contravar -> l :: pol.covar -> r :: Nil
         case Overload(as) => as.map(pol -> _)
         case ComposedType(_, l, r) => pol -> l :: pol -> r :: Nil
@@ -946,7 +917,7 @@ abstract class TyperHelpers { Typer: Typer =>
     }
     def children(includeBounds: Bool): List[SimpleType] = this match {
       case tv @ AssignedVariable(ty) => if (includeBounds) ty :: Nil else Nil
-      case tv: TypeVariable => if (includeBounds) tv.lowerBounds ::: tv.upperBounds else Nil
+      case tv: TypeVariable => if (includeBounds) tv.lowerBounds ::: tv.upperBounds ++ tv.tsc.keys.flatMap(_.tvs.values) else Nil
       case FunctionType(l, r) => l :: r :: Nil
       case Overload(as) => as
       case ComposedType(_, l, r) => l :: r :: Nil
@@ -990,8 +961,16 @@ abstract class TyperHelpers { Typer: Typer =>
       case tv => ("\n\t\t" + tv.toString
           + (if (tv.lowerBounds.isEmpty) "" else " :> " + tv.lowerBounds.mkString(" | "))
           + (if (tv.upperBounds.isEmpty) "" else " <: " + tv.upperBounds.mkString(" & ")))
-      }.mkString
-    
+      }.mkString + {
+        val visited: MutSet[TupleSetConstraints] = MutSet.empty
+        getVars.iterator.flatMap(_.tsc).map { case (tsc, i) =>
+          if (visited.add(tsc))
+            ("\n\t\t[ "
+              + tsc.tvs.map(t => s"${printPol(t._1)}${t._2}").mkString(", ")
+              + " ] in { " + tsc.constraints.mkString(", ") + " }")
+          else ""
+        }.mkString
+      }
   }
   
   
@@ -1336,6 +1315,7 @@ abstract class TyperHelpers { Typer: Typer =>
         val poltv = pol(tv)
         if (poltv =/= S(false)) tv.lowerBounds.foreach(apply(pol.at(tv.level, true)))
         if (poltv =/= S(true)) tv.upperBounds.foreach(apply(pol.at(tv.level, false)))
+        tv.tsc.keys.flatMap(_.tvs).foreach(u => apply(pol.at(tv.level,u._1))(u._2))
       case FunctionType(l, r) => apply(pol.contravar)(l); apply(pol)(r)
       case Overload(as) => as.foreach(apply(pol))
       case ComposedType(_, l, r) => apply(pol)(l); apply(pol)(r)
