@@ -70,12 +70,6 @@ IISS 0
 (if true then IISS else BBNN) 0
 //│ res: bool | number | string
 
-// * Note that this is not considered ambiguous
-// * because the type variable occurrences are polar,
-// * meaning that the TSCs are always trivially satisfiable
-// * and thus the code is well-typed.
-// * Conceptually, we'd expect this inferred type to reduce to `int -> number`,
-// * but it's tricky to do such simplifications in general.
 def f = fun x -> (if true then IISS else BBNN) x
 //│ f: int -> (bool | number | string)
 
