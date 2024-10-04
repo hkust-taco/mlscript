@@ -79,15 +79,16 @@ trait TypeSimplifier { self: Typer =>
               ).map(process(_, S(false -> tv)))
                 .reduceOption(_ &- _).filterNot(_.isTop).toList
             else Nil
-          nv.tsc ++= tv.tsc.map { case (tsc, i) => renewedtsc.get(tsc) match {
-            case S(tsc) => (tsc, i)
-            case N if inPlace => (tsc, i)
-            case N =>
-              val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)
-              renewedtsc += tsc -> t
-              t.tvs = t.tvs.map(x => (x._1, process(x._2, N)))
-              (t, i)
-          }}
+          if (noApproximateOverload)
+            nv.tsc ++= tv.tsc.iterator.map { case (tsc, i) => renewedtsc.get(tsc) match {
+              case S(tsc) => (tsc, i)
+              case N if inPlace => (tsc, i)
+              case N =>
+                val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)
+                renewedtsc += tsc -> t
+                t.tvs = t.tvs.map(x => (x._1, process(x._2, N)))
+                (t, i)
+            }}
         }
         nv
         
@@ -560,12 +561,14 @@ trait TypeSimplifier { self: Typer =>
                 if (pol(tv) =/= S(false))
                   analyzed1.setAndIfUnset(tv -> true) {
                     tv.lowerBounds.foreach(apply(pol.at(tv.level, true)))
-                    tv.tsc.keys.flatMap(_.tvs).foreach(u => apply(pol.at(tv.level,u._1))(u._2))
+                    if (noApproximateOverload)
+                      tv.tsc.keys.flatMap(_.tvs).foreach(u => apply(pol.at(tv.level,u._1))(u._2))
                   }
                 if (pol(tv) =/= S(true))
                   analyzed1.setAndIfUnset(tv -> false) {
                     tv.upperBounds.foreach(apply(pol.at(tv.level, false)))
-                    tv.tsc.keys.flatMap(_.tvs).foreach(u => apply(pol.at(tv.level,u._1))(u._2))
+                    if (noApproximateOverload)
+                      tv.tsc.keys.flatMap(_.tvs).foreach(u => apply(pol.at(tv.level,u._1))(u._2))
                   }
             }
           case _ =>
@@ -660,7 +663,8 @@ trait TypeSimplifier { self: Typer =>
                 case S(pol_tv) =>
                   if (analyzed2.add(pol_tv -> tv)) {
                     processImpl(st, pol, pol_tv)
-                    tv.tsc.keys.flatMap(_.tvs).foreach(u => processImpl(u._2,pol.at(tv.level,u._1),pol_tv))
+                    if (noApproximateOverload)
+                      tv.tsc.keys.flatMap(_.tvs).foreach(u => processImpl(u._2,pol.at(tv.level,u._1),pol_tv))
                   }
                 case N =>
                   if (analyzed2.add(true -> tv))
@@ -707,7 +711,7 @@ trait TypeSimplifier { self: Typer =>
                 case S(p) =>
                   (if (p) tv2.lowerBounds else tv2.upperBounds).foreach(go)
                   // (if (p) getLbs(tv2) else getUbs(tv2)).foreach(go)
-                  tv2.tsc.keys.flatMap(_.tvs).foreach(u => go(u._2))
+                  if (noApproximateOverload) tv2.tsc.keys.flatMap(_.tvs).foreach(u => go(u._2))
                 case N =>
                   trace(s"Analyzing invar-occ of $tv2") {
                     analyze2(tv2, pol)
@@ -1038,14 +1042,15 @@ trait TypeSimplifier { self: Typer =>
                           res.lowerBounds = tv.lowerBounds.map(transform(_, pol.at(tv.level, true), Set.single(tv)))
                         if (occNums.contains(false -> tv))
                           res.upperBounds = tv.upperBounds.map(transform(_, pol.at(tv.level, false), Set.single(tv)))
-                        res.tsc ++= tv.tsc.map { case (tsc, i) => renewaltsc.get(tsc) match {
-                          case S(tsc) => (tsc, i)
-                          case N =>
-                            val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)
-                            renewaltsc += tsc -> t
-                            t.tvs = t.tvs.map(x => (x._1, transform(x._2, PolMap.neu, Set.empty)))
-                            (t, i)
-                        }}
+                        if (noApproximateOverload)
+                          res.tsc ++= tv.tsc.map { case (tsc, i) => renewaltsc.get(tsc) match {
+                            case S(tsc) => (tsc, i)
+                            case N =>
+                              val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)
+                              renewaltsc += tsc -> t
+                              t.tvs = t.tvs.map(x => (x._1, transform(x._2, PolMap.neu, Set.empty)))
+                              (t, i)
+                          }}
                     }
                     res
                   }()

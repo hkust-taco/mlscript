@@ -861,24 +861,26 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             lhs.upperBounds ::= newBound // update the bound
-            lhs.tsc.foreachEntry { (tsc, v) =>
-              v.foreach { i =>
-                if (!tsc.tvs(i)._1) {
-                  tsc.updateOn(i, rhs)
-                  if (tsc.constraints.isEmpty) reportError()
+            if (noApproximateOverload) {
+              lhs.tsc.foreachEntry { (tsc, v) =>
+                v.foreach { i =>
+                  if (!tsc.tvs(i)._1) {
+                    tsc.updateOn(i, rhs)
+                    if (tsc.constraints.isEmpty) reportError()
+                  }
                 }
               }
-            }
-            val u = lhs.tsc.keysIterator.filter(_.constraints.sizeCompare(1)===0).duplicate
-            u._1.foreach { k =>
-              k.tvs.mapValuesIter(_.unwrapProxies).foreach {
-                case (_,tv: TV) => tv.tsc.remove(k)
-                case _ => ()
+              val u = lhs.tsc.keysIterator.filter(_.constraints.sizeCompare(1)===0).duplicate
+              u._1.foreach { k =>
+                k.tvs.mapValuesIter(_.unwrapProxies).foreach {
+                  case (_,tv: TV) => tv.tsc.remove(k)
+                  case _ => ()
+                }
               }
-            }
-            u._2.foreach { k =>
-              k.constraints.head.iterator.zip(k.tvs).foreach {
-                case (c, (pol, t)) => if (pol) rec(t, c, false) else rec(c, t, false)
+              u._2.foreach { k =>
+                k.constraints.head.iterator.zip(k.tvs).foreach {
+                  case (c, (pol, t)) => if (pol) rec(t, c, false) else rec(c, t, false)
+                }
               }
             }
             lhs.lowerBounds.foreach(rec(_, rhs, true)) // propagate from the bound
@@ -888,24 +890,26 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             rhs.lowerBounds ::= newBound // update the bound
-            rhs.tsc.foreachEntry { (tsc, v) =>
-              v.foreach { i =>
-                if(tsc.tvs(i)._1) {
-                  tsc.updateOn(i, lhs)
-                  if (tsc.constraints.isEmpty) reportError()
+            if (noApproximateOverload) {
+              rhs.tsc.foreachEntry { (tsc, v) =>
+                v.foreach { i =>
+                  if(tsc.tvs(i)._1) {
+                    tsc.updateOn(i, lhs)
+                    if (tsc.constraints.isEmpty) reportError()
+                  }
                 }
               }
-            }
-            val u = rhs.tsc.keysIterator.filter(_.constraints.sizeCompare(1)===0).duplicate
-            u._1.foreach { k =>
-              k.tvs.mapValuesIter(_.unwrapProxies).foreach {
-                case (_,tv: TV) => tv.tsc.remove(k)
-                case _ => ()
+              val u = rhs.tsc.keysIterator.filter(_.constraints.sizeCompare(1)===0).duplicate
+              u._1.foreach { k =>
+                k.tvs.mapValuesIter(_.unwrapProxies).foreach {
+                  case (_,tv: TV) => tv.tsc.remove(k)
+                  case _ => ()
+                }
               }
-            }
-            u._2.foreach { k =>
-              k.constraints.head.iterator.zip(k.tvs).foreach {
-                case (c, (pol, t)) => if (pol) rec(t, c, false) else rec(c, t, false)
+              u._2.foreach { k =>
+                k.constraints.head.iterator.zip(k.tvs).foreach {
+                  case (c, (pol, t)) => if (pol) rec(t, c, false) else rec(c, t, false)
+                }
               }
             }
             rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound

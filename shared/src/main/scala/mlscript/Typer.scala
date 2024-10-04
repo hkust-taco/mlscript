@@ -170,13 +170,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               if (p) (b, tv) else (tv, b) }
           }.toList, innerTy)
 
-        val ambiguous = innerTy.getVars.unsorted.flatMap(_.tsc.keys.flatMap(_.tvs))
-          .groupBy(_._2)
-          .filter { case (v,pvs) => pvs.sizeIs > 1 }
-        if (ambiguous.nonEmpty) raise(ErrorReport(
-          msg"ambiguous" -> N ::
-          ambiguous.map { case (v,_) => msg"cannot determine satisfiability of type ${v.expPos}" -> v.prov.loco }.toList
-          , true))
+        if (noApproximateOverload) {
+          val ambiguous = innerTy.getVars.unsorted.flatMap(_.tsc.keys.flatMap(_.tvs))
+            .groupBy(_._2)
+            .filter { case (v,pvs) => pvs.sizeIs > 1 }
+          if (ambiguous.nonEmpty) raise(ErrorReport(
+            msg"ambiguous" -> N ::
+              ambiguous.map { case (v,_) => msg"cannot determine satisfiability of type ${v.expPos}" -> v.prov.loco }.toList
+              , true))
+        }
 
         println(s"Inferred poly constr: $cty  —— where ${cty.showBounds}")
         
