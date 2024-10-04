@@ -1,0 +1,48 @@
+:NewDefs
+:ParseOnly
+:UseIR
+:NoTailRec
+
+:genCpp
+:runCpp
+:interpIR
+module Base {
+  fun f() = 1
+}
+module Child extends Base {
+  fun f() = 2
+}
+fun main() =
+  let c = Child()
+  Base.f(c)
+  Child.f(c)
+main()
+//│ |#module| |Base| |{|→|#fun| |f|(||)| |#=| |1|←|↵|}|↵|#module| |Child| |#extends| |Base| |{|→|#fun| |f|(||)| |#=| |2|←|↵|}|↵|#fun| |main|(||)| |#=|→|#let| |c| |#=| |Child|(||)|↵|Base|.f|(|c|)|↵|Child|.f|(|c|)|←|↵|main|(||)|
+//│ Parsed: {module Base {fun f = () => 1}; module Child: Base {fun f = () => 2}; fun main = () => {let c = Child(); (Base).f(c,); (Child).f(c,)}; main()}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│   class Base() {
+//│     def f() =
+//│       1 -- #16
+//│   }
+//│   class Child() extends Base {
+//│     def f() =
+//│       2 -- #17
+//│   }
+//│   def main() =
+//│     let x$1 = Child() in -- #15
+//│     let x$2 = Base.f(x$1) in -- #14
+//│     let x$3 = Child.f(x$1) in -- #13
+//│     x$3 -- #12
+//│   let* (x$0) = main() in -- #2
+//│   x$0 -- #1
+//│ 
+//│ Interpreted:
+//│ 2
+//│ 
+//│ 
+//│ Execution succeeded: 
+//│ 2
+//│ 

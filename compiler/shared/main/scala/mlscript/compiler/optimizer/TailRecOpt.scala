@@ -80,7 +80,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
       case TailCallInfo(src, defn) => 
         f"TailCall { ${src.name}$$${src.id} -> ${defn.name}$$${defn.id} }"
       case ModConsCallInfo(src, startNode, defn, letCallNode, letCtorNode, _, _) =>
-        f"ModConsCall { ${src.name}$$${src.id} -> ${defn.name}$$${defn.id}, class: ${letCtorNode.cls.ident}, field: ${letCtorNode.fieldName} }"
+        f"ModConsCall { ${src.name}$$${src.id} -> ${defn.name}$$${defn.id}, class: ${letCtorNode.cls.name}, field: ${letCtorNode.fieldName} }"
 
     def getSrc = this match
       case NormalCallInfo(src, _) => src 
@@ -107,8 +107,8 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
 
   // Hack to make scala think discoverJoinPoints is tail recursive and be
   // partially optimized :P
-  def casesToJps(cases: List[(ClassInfo, Node)], acc: Set[Defn]): Set[Defn] =
-    cases.foldLeft(acc)((jps, branch) => discoverJoinPoints(branch._2, jps))
+  def casesToJps(cases: List[(Pat, Node)], default: Opt[Node], acc: Set[Defn]): Set[Defn] =
+    cases.foldLeft(default.fold(acc)(x => discoverJoinPoints(x, acc)))((jps, branch) => discoverJoinPoints(branch._2, jps))
   
   def discoverJoinPointsCont(defn: Defn, acc: Set[Defn]) =
     discoverJoinPoints(defn.body, acc) + defn
@@ -122,7 +122,8 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
         val ret = node match
           case Jump(defn, args) => isIdentityJp(defn.expectDefn)
           case _: LetCall => false
-          case Case(scrut, cases) => cases.foldLeft(true)((value, branch) => value && isPure(branch._2))
+          case LetMethodCall(names, cls, method, args, body) => false
+          case Case(scrut, cases, default) => cases.foldLeft(default.fold(false)(isPure))((value, branch) => value && isPure(branch._2))
           case LetExpr(name, expr: Expr.AssignField, body) => false
           case x: LetExpr => true
           case Result(res) => true
@@ -144,8 +145,9 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
         if isIdentityJp(defn) then acc
         else if acc.contains(defn) then acc
         else discoverJoinPointsCont(defn, acc + defn)
-      case Case(scrut, cases) => casesToJps(cases, acc)
+      case Case(scrut, cases, default) => casesToJps(cases, default, acc)
       case LetExpr(name, expr, body) => discoverJoinPoints(body, acc)
+      case LetMethodCall(names, cls, method, args, body) => discoverJoinPoints(body, acc)
       case LetCall(names, defn, args, isTailRec, body) => discoverJoinPoints(body, acc)
 
   private def getRetName(names: Set[Name], retVals: List[TrivialExpr]): Option[Name] =
@@ -234,7 +236,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
               case _ => returnNone
           case _ => returnNone
         
-      case Case(scrut, cases) => Right(cases.map(_._2))
+      case Case(scrut, cases, default) => Right(cases.map(_._2) ++ default.toList)
       case x @ LetExpr(name, expr, body) =>
         expr match
           // Check if this let binding references the mod cons call.
@@ -288,10 +290,10 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
                         case _ => false 
                       }
 
-                      val fieldName = clsInfo.fields(ctorArgIndex)
+                      val fieldName = clsInfo.expectClass.fields(ctorArgIndex)
                       
                       // populate required values
-                      searchOptCalls(body)(acc, src, scc, start, calledDefn, letCallNode, Some(LetCtorNodeInfo(x, y, clsInfo, name, fieldName, ctorArgIndex)), Set(name))
+                      searchOptCalls(body)(acc, src, scc, start, calledDefn, letCallNode, Some(LetCtorNodeInfo(x, y, clsInfo.expectClass, name, fieldName, ctorArgIndex)), Set(name))
                     case Some(_) =>
                       // another constructor is already using the call. Not OK
 
@@ -340,6 +342,10 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
                         // If this assignment overwrites the mod cons value, forget it
                         if containingCtors.contains(assignee) then invalidateAndCont(body)
                         else searchOptCalls(body)
+      case LetMethodCall(names, cls, method, args, body) =>
+        // method call is unresolved, just ignore it
+        // `containingCtors -- names.toSet` takes care of variable shadowing
+        searchOptCalls(body)(acc, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors -- names.toSet)
       case x @ LetCall(names, defn, args, isTailRec, body) =>
         val callInScc = scc.contains(defn.expectDefn)
         
@@ -468,8 +474,9 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
     node match
       case Result(res) => acc
       case Jump(defn, args) => acc
-      case Case(scrut, cases) => cases.foldLeft(acc)((acc, item) => searchCalls(item._2)(src, acc))
+      case Case(scrut, cases, default) => cases.foldLeft(default.fold(acc)(x => searchCalls(x)(src, acc)))((acc, item) => searchCalls(item._2)(src, acc))
       case LetExpr(name, expr, body) => searchCalls(body)
+      case LetMethodCall(names, cls, method, args, body) => searchCalls(body)
       case LetCall(names, defn, args, isTailRec, body) => 
         val newSet = acc.get(src.id) match
           case None => Set(defn.expectDefn)
@@ -580,7 +587,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
     //                  False -> e2
     def makeCaseBranch(value: Int, e1: Node, e2: Node): Node =
       val name = Name("scrut")
-      val cases = Case(name, List((trueClass, e1), (falseClass, e2))).attachTag(tag)
+      val cases = Case(name, List((Pat.Class(ClassRef(L(trueClass))), e1), (Pat.Class(ClassRef(L(falseClass))), e2)), None).attachTag(tag)
       LetExpr(
         name,
         Expr.BasicOp("==", List(asLit(value), Expr.Ref(scrutName))),
@@ -616,6 +623,8 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
   // The idea to use `ptr` and `field` to represent a pointer is by @LPTK.
   final val ID_CTX_CLASS = ClassInfo(classUid.make, ID_CONTEXT_NAME, Nil)
   final val CTX_CLASS = ClassInfo(classUid.make, CONTEXT_NAME, List("acc", "ptr", "field"))
+  final val ID_CTX_CLASS_REF = ClassRef(L(ID_CTX_CLASS))
+  final val CTX_CLASS_REF = ClassRef(L(CTX_CLASS))
   
   // Given a strongly connected component `defns` of mutually
   // tail recursive functions, returns a strongly connected component contaning the
@@ -632,8 +641,8 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
     if modConsCalls.isEmpty then
       (component, Set())
     else
-      val trueClass = classes.find(c => c.ident == "True").get
-      val falseClass = classes.find(c => c.ident == "False").get
+      val trueClass = classes.find(c => c.name == "True").get
+      val falseClass = classes.find(c => c.name == "False").get
       
       // CONTEXT APPLICATION
       
@@ -666,18 +675,18 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
         // acc
         val node = LetExpr(
           Name("ptr"), 
-          Expr.Select(appCtxName, CTX_CLASS, "ptr"),
+          Expr.Select(appCtxName, CTX_CLASS_REF, "ptr"),
           LetExpr(
             Name("_"), 
             Expr.AssignField(
               Name("ptr"), 
-              cls, 
+              ClassRef(L(cls)), 
               fieldName, 
               Expr.Ref(appValName)
             ),
             LetExpr(
               Name("acc"), 
-              Expr.Select(appCtxName, CTX_CLASS, "acc"), // this could be a join point but it's not that bad
+              Expr.Select(appCtxName, CTX_CLASS_REF, "acc"), // this could be a join point but it's not that bad
               Result(
                 List(Expr.Ref(Name("acc")))
               ).attachTag(tag)
@@ -690,7 +699,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
       
       
       val ctxBranch = LetExpr(
-        Name("field"), Expr.Select(appCtxName, CTX_CLASS, "field"),
+        Name("field"), Expr.Select(appCtxName, CTX_CLASS_REF, "field"),
         makeSwitch(Name("field"), assignmentCases.tail, assignmentCases.head._2)(trueClass, falseClass)
       ).attachTag(tag)
       
@@ -698,9 +707,10 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
 
       val appNode = Case(appCtxName,
         List(
-          (ID_CTX_CLASS, idBranch),
-          (CTX_CLASS, ctxBranch)
-        )
+          (Pat.Class(ID_CTX_CLASS_REF), idBranch),
+          (Pat.Class(CTX_CLASS_REF), ctxBranch)
+        ),
+        None
       ).attachTag(tag)
 
       val appDefn = Defn(ctxAppId, ctxAppName, List(appCtxName, appValName), 1, appNode, false)
@@ -721,20 +731,20 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
       // ret
       val cmpNode = LetExpr(
         Name("ctx2acc"), 
-        Expr.Select(cmpCtx2Name, CTX_CLASS, "acc"),
+        Expr.Select(cmpCtx2Name, CTX_CLASS_REF, "acc"),
         LetExpr(
           Name("ctx2ptr"), 
-          Expr.Select(cmpCtx2Name, CTX_CLASS, "ptr"),
+          Expr.Select(cmpCtx2Name, CTX_CLASS_REF, "ptr"),
           LetExpr(
             Name("ctx2field"), 
-            Expr.Select(cmpCtx2Name, CTX_CLASS, "field"),
+            Expr.Select(cmpCtx2Name, CTX_CLASS_REF, "field"),
             LetCall(
               List(Name("newAcc")), 
               DefnRef(Left(appDefn)), List(Expr.Ref(cmpCtx1Name), Expr.Ref(Name("ctx2acc"))),
               false,
               LetExpr(
                 Name("ret"), 
-                Expr.CtorApp(CTX_CLASS, List("newAcc", "ctx2ptr", "ctx2field").map(n => Expr.Ref(Name(n)))),
+                Expr.CtorApp(CTX_CLASS_REF, List("newAcc", "ctx2ptr", "ctx2field").map(n => Expr.Ref(Name(n)))),
                 Result(
                   List(Expr.Ref(Name("ret")))
                 ).attachTag(tag)
@@ -777,8 +787,9 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
                 case None => throw IRError("could not find jump point with id" + defn.expectDefn.id)
                 case Some(value) => Jump(value, Expr.Ref(Name("ctx")) :: args)
               
-            case Case(scrut, cases) => Case(scrut, cases.map { (cls, body) => (cls, transformNode(body)) }).attachTag(tag)
+            case Case(scrut, cases, default) => Case(scrut, cases.map { (cls, body) => (cls, transformNode(body)) }, default.map(transformNode)).attachTag(tag)
             case LetExpr(name, expr, body) => LetExpr(name, expr, transformNode(body)).attachTag(tag)
+            case LetMethodCall(names, cls, method, args, body) => LetMethodCall(names, cls, method, args, transformNode(body)).attachTag(tag)
             case LetCall(names, defn, args, isTailRec, body) =>
               // Handle the case when we see a tail call.
               // This case is not handled by the paper. The way to transform this is: 
@@ -803,7 +814,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
           // f(composed, *args)
           LetExpr(
             Name("ctx2"),
-            Expr.CtorApp(CTX_CLASS, List(Expr.Ref(call.retName), Expr.Ref(call.letCtorNode.ctorValName), asLit(field))),
+            Expr.CtorApp(CTX_CLASS_REF, List(Expr.Ref(call.retName), Expr.Ref(call.letCtorNode.ctorValName), asLit(field))),
             LetCall(
               List(Name("composed")),
               DefnRef(Left(cmpDefn)),
@@ -831,7 +842,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
               // rewrite the ctor, but set the field containing the call as to 0
               val idx = call.letCtorNode.idx
               val argsList = call.letCtorNode.ctor.args.updated(idx, asLit(0))
-              LetExpr(name, Expr.CtorApp(call.letCtorNode.cls, argsList), transformModConsBranch(body)).attachTag(tag)
+              LetExpr(name, Expr.CtorApp(ClassRef(L(call.letCtorNode.cls)), argsList), transformModConsBranch(body)).attachTag(tag)
             else
               LetExpr(name, expr, transformModConsBranch(body)).attachTag(tag)
           case LetCall(names, defn, args, isTailRec, body) =>
@@ -855,7 +866,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
         val modConsCall = 
           LetExpr(
             Name("idCtx"),
-            Expr.CtorApp(ID_CTX_CLASS, Nil),
+            Expr.CtorApp(ID_CTX_CLASS_REF, Nil),
               LetCall(
               List(Name("res")), 
               DefnRef(Left(modConsDefn)),
@@ -896,8 +907,8 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
   // Explicitly returns the merged function in case tailrec needs to be checked.
   private def optimizeTailRec(component: ScComponent, classes: Set[ClassInfo]): (Set[Defn], Defn) = 
     // To build the case block, we need to compare integers and check if the result is "True"
-    val trueClass = classes.find(c => c.ident == "True").get
-    val falseClass = classes.find(c => c.ident == "False").get
+    val trueClass = classes.find(c => c.name == "True").get
+    val falseClass = classes.find(c => c.name == "False").get
     // undefined for dummy values
     val dummyVal = Expr.Literal(UnitLit(true))
     
@@ -924,8 +935,9 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
       def transformNode(node: Node): Node = node match
         case Result(res) => node.attachTag(tag)
         case Jump(defn, args) => node.attachTag(tag)
-        case Case(scrut, cases) => Case(scrut, cases.map((cls, body) => (cls, transformNode(body)))).attachTag(tag)
+        case Case(scrut, cases, default) => Case(scrut, cases.map((cls, body) => (cls, transformNode(body))), default.map(transformNode)).attachTag(tag)
         case LetExpr(name, expr, body) => LetExpr(name, expr, transformNode(body)).attachTag(tag)
+        case LetMethodCall(names, cls, method, args, body) => LetMethodCall(names, cls, method, args, transformNode(body)).attachTag(tag)
         case LetCall(names, defn_, args, isTailRec, body) =>
           if isTailCall(node) && defn_.expectDefn.id == defn.id then
             Jump(jpDefnRef, args).attachTag(tag)
@@ -990,9 +1002,11 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
             Jump(jpDefnRef, transformStackFrame(args, defnInfoMap(defn.expectDefn.id))).attachTag(tag)
           else
             node.attachTag(tag)
-        case Result(_)                 => node.attachTag(tag)
-        case Case(scrut, cases)        => Case(scrut, cases.map(n => (n._1, transformNode(n._2)))).attachTag(tag)
+        case Result(_) => node.attachTag(tag)
+        case Case(scrut, cases, default) => Case(scrut, cases.map(n => (n._1, transformNode(n._2))), default.map(transformNode)).attachTag(tag)
         case LetExpr(name, expr, body) => LetExpr(name, expr, transformNode(body)).attachTag(tag)
+        case LetMethodCall(names, cls, method, args, body) =>
+          LetMethodCall(names, cls, method, args, transformNode(body)).attachTag(tag)
         case LetCall(names, defn, args, isTailRec, body) =>
           if isTailCall(node) && defnInfoMap.contains(defn.expectDefn.id) then
             Jump(jpDefnRef, transformStackFrame(args, defnInfoMap(defn.expectDefn.id))).attachTag(tag)
@@ -1075,11 +1089,12 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
     val partitions = partition(p.defs)
 
     val newDefs = partitions.flatMap { optimizeParition(_, p.classes) }.toSet
+    val newClasses = p.classes + ID_CTX_CLASS + CTX_CLASS
 
     // update the definition refs
-    newDefs.foreach { defn => resolveDefnRef(defn.body, newDefs, true) }
-    resolveDefnRef(p.main, newDefs, true)
+    newDefs.foreach { defn => resolveRef(defn.body, newDefs, newClasses, true) }
+    resolveRef(p.main, newDefs, newClasses, true)
 
-    (Program(p.classes + ID_CTX_CLASS + CTX_CLASS, newDefs, p.main), partitions.map(t => t.nodes.map(f => f.name)))
+    (Program(newClasses, newDefs, p.main), partitions.map(t => t.nodes.map(f => f.name)))
 
   def run(p: Program): Program = run_debug(p)._1

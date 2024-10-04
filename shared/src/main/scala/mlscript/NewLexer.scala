@@ -161,6 +161,60 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     }
   }
 
+  final
+  def char(i: Int): (Char, Int) = {
+    if (i < length) {
+      bytes(i) match {
+        case '\\' => {
+          val j = i + 1
+          if (j < length)
+            bytes(j) match {
+              case 'n' => ('\n', j + 1)
+              case 't' => ('\t', j + 1)
+              case 'r' => ('\r', j + 1)
+              case 'b' => ('\b', j + 1)
+              case 'f' => ('\f', j + 1)
+              case '\'' => ('\'', j + 1)
+              case '"' => ('"', j + 1)
+              case '\\' => ('\\', j + 1)
+              case ch =>
+                raise(ErrorReport(msg"Invalid escape character" -> S(loc(j, j + 1)) :: Nil,
+                  newDefs = true, source = Lexing))
+                ('\u0000', j + 1)
+            }
+          else {
+            raise(ErrorReport(msg"Expect an escape character" -> S(loc(i, i + 1)) :: Nil,
+              newDefs = true, source = Lexing))
+            ('\u0000', i + 1)
+          }
+        }
+        case '\n' | '\r' =>
+          raise(ErrorReport(msg"Unexpected newline in a char literal" -> S(loc(i, i + 1)) :: Nil,
+            newDefs = true, source = Lexing))
+          ('\u0000', i + 1)
+        case '\"' =>
+          raise(ErrorReport(msg"Empty character literal" -> S(loc(i, i + 1)) :: Nil,
+            newDefs = true, source = Lexing))
+          ('\u0000', i + 1)
+        case ch =>
+          (ch, i + 1)
+      }
+    }
+    else {
+      raise(ErrorReport(msg"Expect a character literal" -> S(loc(i, i + 1)) :: Nil,
+        newDefs = true, source = Lexing))
+      ('\u0000', i)
+    }
+  }
+
+  final def closeChar(i: Int): Int =
+    if (bytes.lift(i) === Some('\"')) i + 1
+    else {
+      raise(ErrorReport(msg"Unclosed character literal" -> S(loc(i, i + 1)) :: Nil,
+        newDefs = true, source = Lexing))
+      i
+    }
+
   // * Check the end of a string (either single quotation or triple quotation)
   final def closeStr(i: Int, isTriple: Bool): Int =
     if (!isTriple && bytes.lift(i) === Some('"')) i + 1

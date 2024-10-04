@@ -1,0 +1,23 @@
+name: Cpp Backend CI with Nix
+
+on:
+  pull_request:
+  push:
+    branches: [ mlscript ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      - uses: rrbutani/use-nix-shell-action@v1
+        with:
+          devShell: .#default
+      - name: Install TypeScript
+        run: npm ci
+      - name: Run test
+        run: sbt -J-Xmx4096M -J-Xss4M test
+      - name: Check no changes
+        run: git diff-files -p --exit-code
