@@ -96,6 +96,8 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
       Term.Lam(syms, term(rhs)(using nestCtx))
     case InfixApp(lhs, Keyword.`:`, rhs) =>
       Term.Asc(term(lhs), term(rhs))
+    case InfixApp(lhs, Keyword.`is` | Keyword.`and`, rhs) =>
+      Term.If(new Desugarer(tl, this).shorthands(tree)(ctx))
     case App(Ident("|"), Tree.Tup(lhs :: rhs :: Nil)) =>
       Term.CompType(term(lhs), term(rhs), true)
     case App(Ident("&"), Tree.Tup(lhs :: rhs :: Nil)) =>

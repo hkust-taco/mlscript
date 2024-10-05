@@ -1,0 +1,73 @@
+:global
+:noTypeCheck
+
+fun f: Any -> Bool
+fun g: Any -> Bool
+fun h: Any -> Bool
+
+class Pair[A, B](fst: A, snd: B)
+
+
+Pair(0, 1) is Pair
+
+Pair(0, 1) is Pair(a, b)
+
+Pair(0, 1) is Pair(0, _)
+
+if Pair(0, 1) is Pair(a, b) then true else false
+
+
+fun foo(x) = x is Pair(a, b)
+
+
+Pair(0, 1) is Pair(a, b) and a > b
+
+if Pair(0, 1) is Pair(a, b) then a > b else false
+
+
+fun foo(x) = x is Pair(a, b) and a > b
+
+fun foo(x) = if x is Pair(a, b) then a > b else false
+
+fun foo(x) = f(x) and g(x) and h(x)
+
+:e
+fun foo(x) = x is
+  Pair
+  Int
+//│ ╔══[ERROR] only one pattern is supported in shorthands
+//│ ║  l.36: 	  Pair
+//│ ║        	  ^^^^
+//│ ║  l.37: 	  Int
+//│ ╙──      	^^^^^
+
+:e
+fun foo(x) = x is
+  Pair(a, b) and a > b
+  Int
+//│ ╔══[ERROR] only one pattern is supported in shorthands
+//│ ║  l.46: 	  Pair(a, b) and a > b
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.47: 	  Int
+//│ ╙──      	^^^^^
+
+:todo // support `|`
+fun foo(x) = x is Pair(a, b) | Int
+//│ ╔══[ERROR] Unknown constructor `|`.
+//│ ║  l.55: 	fun foo(x) = x is Pair(a, b) | Int
+//│ ╙──      	                             ^
+
+:todo
+fun foo(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╔══[ERROR] Unknown constructor `|`.
+//│ ║  l.61: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╙──      	                                         ^
+
+
+
+class A[T](arg: T)
+
+
+x => (x is A(_))
+
+

@@ -51,6 +51,70 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
 
   def default: Split => Sequel = split => _ => split
 
+  /** Desugar UCS shorthands. */
+  def shorthands(tree: Tree): Sequel = termSplitShorthands(tree, identity):
+    Split.default(Term.Lit(Tree.BoolLit(false)))
+
+  private def termSplitShorthands(tree: Tree, finish: Term => Term): Split => Sequel = tree match
+    case Block(branches) => branches match
+      case Nil => lastWords("encountered empty block")
+      case branch :: rest => fallback => ctx =>
+        if rest.nonEmpty then
+          raise(ErrorReport(msg"only one branch is supported in shorthands" -> tree.toLoc :: Nil))
+        termSplitShorthands(branch, finish)(fallback)(ctx)
+    case coda is rhs => fallback => ctx =>
+      nominate(ctx, finish(term(coda)(using ctx))):
+        patternSplitShorthands(rhs, _)(fallback)
+    case matches => fallback =>
+      // There are N > 0 conjunct matches. We use `::[T]` instead of `List[T]`.
+      // Each match is represented by a pair of a _coda_ and a _pattern_
+      // that is yet to be elaborated.
+      val (headCoda, headPattern) :: tail = disaggregate(matches)
+      // The `consequent` serves as the innermost split, based on which we
+      // expand from the N-th to the second match.
+      lazy val tailSplit =
+        val innermostSplit = Function.const(Split.default(Term.Lit(Tree.BoolLit(true)))): Sequel
+        tail.foldRight(innermostSplit):
+          case ((coda, pat), sequel) => ctx => trace(
+            pre = s"conjunct matches <<< $tail",
+            post = (res: Split) => s"conjunct matches >>> $res"
+          ):
+            nominate(ctx, term(coda)(using ctx)):
+              expandMatch(_, pat, sequel)(fallback)
+      // We apply `finish` to the first coda and expand the first match.
+      // Note that the scrutinee might be not an identifier.
+      headCoda match
+        case Ident("_") => tailSplit
+        case _ => ctx => trace(
+          pre = s"shorthands <<< $matches",
+          post = (res: Split) => s"shorthands >>> $res"
+        ):
+          nominate(ctx, finish(term(headCoda)(using ctx))):
+            expandMatch(_, headPattern, tailSplit)(fallback)
+
+  private def patternSplitShorthands(tree: Tree, scrutSymbol: VarSymbol): Split => Sequel = tree match
+    case Block(branches) => branches match
+      case Nil => lastWords("encountered empty block")
+      case branch :: rest => fallback => ctx =>
+        if rest.nonEmpty then
+          raise(ErrorReport(msg"only one pattern is supported in shorthands" -> tree.toLoc :: Nil))
+        patternSplitShorthands(branch, scrutSymbol)(fallback)(ctx)
+    case patternAndMatches => fallback =>
+      // TODO: Deduplicate with `patternSplit`.
+      // There are N > 0 conjunct matches. We use `::[T]` instead of `List[T]`.
+      // Each match is represented by a pair of a _coda_ and a _pattern_
+      // that is yet to be elaborated.
+      val (headPattern, _) :: tail = disaggregate(patternAndMatches)
+      // The `consequent` serves as the innermost split, based on which we
+      // expand from the N-th to the second match.
+      val tailSplit = trace(s"conjunct matches <<< $tail"):
+        val innermostSplit = Function.const(Split.default(Term.Lit(Tree.BoolLit(true)))): Sequel
+        tail.foldRight(innermostSplit):
+          case ((coda, pat), sequel) => ctx =>
+            nominate(ctx, term(coda)(using ctx)):
+              expandMatch(_, pat, sequel)(fallback)
+      expandMatch(scrutSymbol, headPattern, tailSplit)(fallback)
+
   /** Desugar a _term split_ (TS) into a _split_ of core abstract syntax.
    *  @param tree the tree representing the term split.
    *  @param finish the accumulated partial term to be the LHS or the scrutinee
