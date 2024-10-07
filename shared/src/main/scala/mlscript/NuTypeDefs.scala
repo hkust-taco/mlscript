@@ -1165,7 +1165,19 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     ctx.nextLevel { implicit ctx: Ctx =>
                       assert(fd.tparams.sizeCompare(tparamsSkolems) === 0, (fd.tparams, tparamsSkolems))
                       vars ++ tparamsSkolems |> { implicit vars =>
-                        typeTerm(body)
+                        val ty = typeTerm(body)
+                        if (noApproximateOverload) {
+                          val ambiguous = ty.getVars.unsorted.flatMap(_.tsc.keys.flatMap(_.tvs))
+                            .groupBy(_._2)
+                            .filter { case (v,pvs) => pvs.sizeIs > 1 }
+                          if (ambiguous.nonEmpty) raise(ErrorReport(
+                            msg"ambiguous" -> N ::
+                              ambiguous.map { case (v,_) =>
+                                msg"cannot determine satisfiability of type ${v.expPos}" -> v.prov.loco
+                              }.toList
+                              , true))
+                        }
+                        ty
                       }
                     }
                   } else {

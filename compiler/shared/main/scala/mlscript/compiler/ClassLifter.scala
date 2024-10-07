@@ -510,7 +510,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val nlhs = liftType(lb)
       val nrhs = liftType(ub)
       Bounds(nlhs._1, nrhs._1) -> (nlhs._2 ++ nrhs._2)
-    case Constrained(base: Type, bounds, where) =>
+    case Constrained(base: Type, bounds, where, tscs) =>
       val (nTargs, nCtx) = bounds.map { case (tv, Bounds(lb, ub)) =>
         val nlhs = liftType(lb)
         val nrhs = liftType(ub)
@@ -521,10 +521,18 @@ class ClassLifter(logDebugMsg: Boolean = false) {
         val nrhs = liftType(ub)
         Bounds(nlhs._1, nrhs._1) -> (nlhs._2 ++ nrhs._2)
       }.unzip
+      val (tscs0, nCtx3) = tscs.map { case (tvs, cs) =>
+        val (ntvs,c0) = tvs.map { case (p,v) =>
+          val (nv, c) = liftType(v)
+          (p,nv) -> c
+        }.unzip
+        val (ncs,c1) = cs.map(_.map(liftType).unzip).unzip
+        (ntvs,ncs) -> (c0 ++ c1.flatten)
+      }.unzip
       val (nBase, bCtx) = liftType(base)
-      Constrained(nBase, nTargs, bounds2) ->
-        ((nCtx ++ nCtx2).fold(emptyCtx)(_ ++ _) ++ bCtx)
-    case Constrained(_, _, _) => die
+      Constrained(nBase, nTargs, bounds2, tscs0) ->
+        ((nCtx ++ nCtx2 ++ nCtx3.flatten).fold(emptyCtx)(_ ++ _) ++ bCtx)
+    case Constrained(_, _, _, _) => die
     case Function(lhs, rhs) =>
       val nlhs = liftType(lhs)
       val nrhs = liftType(rhs)

@@ -1,0 +1,182 @@
+:NewDefs
+:ParseOnly
+:UseIR
+:NoTailRec
+
+:prelude
+module True
+module False
+module Callable {
+  fun apply0() = 0
+  fun apply1(x0) = 0
+  fun apply2(x0,x1) = 0
+  fun apply3(x0,x1,x2) = 0
+  fun apply4(x0,x1,x2,x3) = 0
+  fun apply5(x0,x1,x2,x3,x4) = 0
+}
+module List[A, B]
+class Cons[A, B](h: A, t: Cons[A, B]) extends List[A, B]
+module Nil[A, B] extends List[A, B]
+module Option[A]
+class Some[A](x: A) extends Option[A]
+module None[A] extends Option[A]
+class Pair[A, B](x: A, y: B)
+class Tuple2[A, B](x: A, y: B)
+class Tuple3[A, B, C](x: A, y: B, z: C)
+module Nat
+class S(s: Nat) extends Nat
+module O extends Nat
+class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O)
+//│ |#module| |True|↵|#module| |False|↵|#module| |Callable| |{|→|#fun| |apply0|(||)| |#=| |0|↵|#fun| |apply1|(|x0|)| |#=| |0|↵|#fun| |apply2|(|x0|,|x1|)| |#=| |0|↵|#fun| |apply3|(|x0|,|x1|,|x2|)| |#=| |0|↵|#fun| |apply4|(|x0|,|x1|,|x2|,|x3|)| |#=| |0|↵|#fun| |apply5|(|x0|,|x1|,|x2|,|x3|,|x4|)| |#=| |0|←|↵|}|↵|#module| |List|[|A|,| |B|]|↵|#class| |Cons|[|A|,| |B|]|(|h|#:| |A|,| |t|#:| |Cons|[|A|,| |B|]|)| |#extends| |List|[|A|,| |B|]|↵|#module| |Nil|[|A|,| |B|]| |#extends| |List|[|A|,| |B|]|↵|#module| |Option|[|A|]|↵|#class| |Some|[|A|]|(|x|#:| |A|)| |#extends| |Option|[|A|]|↵|#module| |None|[|A|]| |#extends| |Option|[|A|]|↵|#class| |Pair|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple2|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple3|[|A|,| |B|,| |C|]|(|x|#:| |A|,| |y|#:| |B|,| |z|#:| |C|)|↵|#module| |Nat|↵|#class| |S|(|s|#:| |Nat|)| |#extends| |Nat|↵|#module| |O| |#extends| |Nat|↵|#class| |HiddenTheseEntities|(|_0|#:| |HiddenTheseEntities|,| |_1|#:| |True|,| |_2|#:| |False|,| |_3|#:| |Callable|,| |_4|#:| |List|,| |_5|#:| |Cons|,| |_6|#:| |Nil|,| |_7|#:| |Option|,| |_8|#:| |Some|,| |_9|#:| |None|,| |_10|#:| |Pair|,| |_11|#:| |Tuple2|,| |_12|#:| |Tuple3|,| |_13|#:| |Nat|,| |_14|#:| |S|,| |_15|#:| |O|)|
+//│ Parsed: {module True {}; module False {}; module Callable {fun apply0 = () => 0; fun apply1 = (x0,) => 0; fun apply2 = (x0, x1,) => 0; fun apply3 = (x0, x1, x2,) => 0; fun apply4 = (x0, x1, x2, x3,) => 0; fun apply5 = (x0, x1, x2, x3, x4,) => 0}; module List‹A, B› {}; class Cons‹A, B›(h: A, t: Cons‹A, B›,): List‹A, B› {}; module Nil‹A, B›: List‹A, B› {}; module Option‹A› {}; class Some‹A›(x: A,): Option‹A› {}; module None‹A›: Option‹A› {}; class Pair‹A, B›(x: A, y: B,) {}; class Tuple2‹A, B›(x: A, y: B,) {}; class Tuple3‹A, B, C›(x: A, y: B, z: C,) {}; module Nat {}; class S(s: Nat,): Nat {}; module O: Nat {}; class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O,) {}}
+//│ 
+//│ Preluded.
+//│ 
+
+:genCpp
+:runCpp
+:showCpp
+module Fn extends Callable {
+  fun apply1(x) = builtin("println", x)
+}
+class Fn2(a) extends Callable {
+  fun apply1(x) =
+    builtin("println", a)
+    builtin("println", x)
+}
+class Demo(n) {
+  fun x() = n
+}
+fun f(fn) = fn(1)
+fun main() =
+  let d1 = Demo(2)
+  Demo.x(d1)
+  let print = Fn()
+  Fn.apply1(print, 3)
+  f(print)
+  let print2 = Fn2(4)
+  Fn2.apply1(print2, 5)
+  print2(6)
+  f(print2)
+main()
+//│ |#module| |Fn| |#extends| |Callable| |{|→|#fun| |apply1|(|x|)| |#=| |builtin|(|"println"|,| |x|)|←|↵|}|↵|#class| |Fn2|(|a|)| |#extends| |Callable| |{|→|#fun| |apply1|(|x|)| |#=|→|builtin|(|"println"|,| |a|)|↵|builtin|(|"println"|,| |x|)|←|←|↵|}|↵|#class| |Demo|(|n|)| |{|→|#fun| |x|(||)| |#=| |n|←|↵|}|↵|#fun| |f|(|fn|)| |#=| |fn|(|1|)|↵|#fun| |main|(||)| |#=|→|#let| |d1| |#=| |Demo|(|2|)|↵|Demo|.x|(|d1|)|↵|#let| |print| |#=| |Fn|(||)|↵|Fn|.apply1|(|print|,| |3|)|↵|f|(|print|)|↵|#let| |print2| |#=| |Fn2|(|4|)|↵|Fn2|.apply1|(|print2|,| |5|)|↵|print2|(|6|)|↵|f|(|print2|)|←|↵|main|(||)|
+//│ Parsed: {module Fn: Callable {fun apply1 = (x,) => builtin("println", x,)}; class Fn2(a,): Callable {fun apply1 = (x,) => {builtin("println", a,); builtin("println", x,)}}; class Demo(n,) {fun x = () => n}; fun f = (fn,) => fn(1,); fun main = () => {let d1 = Demo(2,); (Demo).x(d1,); let print = Fn(); (Fn).apply1(print, 3,); f(print,); let print2 = Fn2(4,); (Fn2).apply1(print2, 5,); print2(6,); f(print2,)}; main()}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│   class Fn() extends Callable {
+//│     def apply1(x$11) =
+//│       let x$12 = Callable.apply2(builtin,println,x$11) in -- #64
+//│       x$12 -- #63
+//│   }
+//│   class Fn2(a) extends Callable {
+//│     def apply1(x$13) =
+//│       let x$14 = Callable.apply2(builtin,println,a) in -- #80
+//│       let x$15 = Callable.apply2(builtin,println,x$13) in -- #79
+//│       x$15 -- #78
+//│   }
+//│   class Demo(n) {
+//│     def x() =
+//│       n -- #81
+//│   }
+//│   def f(fn$0) =
+//│     let x$1 = Callable.apply1(fn$0,1) in -- #8
+//│     x$1 -- #7
+//│   def main() =
+//│     let x$2 = Demo(2) in -- #56
+//│     let x$3 = Demo.x(x$2) in -- #55
+//│     let x$4 = Fn() in -- #54
+//│     let x$5 = Fn.apply1(x$4,3) in -- #53
+//│     let* (x$6) = f(x$4) in -- #52
+//│     let x$7 = Fn2(4) in -- #51
+//│     let x$8 = Fn2.apply1(x$7,5) in -- #50
+//│     let x$9 = Callable.apply1(x$7,6) in -- #49
+//│     let* (x$10) = f(x$7) in -- #48
+//│     x$10 -- #47
+//│   let* (x$0) = main() in -- #2
+//│   x$0 -- #1
+//│ 
+//│ Cpp:
+//│ struct _mls_Demo: public _mlsObject {
+//│   _mlsValue _mls_n;
+//│   constexpr static inline const char *typeName = "Demo";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_n.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_n);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   static _mlsValue create(_mlsValue _mls_n) { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_Demo; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_n = _mls_n;  return _mlsValue(_mlsVal); }
+//│   virtual _mlsValue _mls_x(){
+//│     _mlsValue _mls_retval;
+//│     _mls_retval = _mls_n;
+//│     return _mls_retval;
+//│   }
+//│ };
+//│ struct _mls_Fn: public _mls_Callable {
+//│ 
+//│   constexpr static inline const char *typeName = "Fn";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   static _mlsValue create() { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_Fn; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│   virtual _mlsValue _mls_apply1(_mlsValue _mls_x_11){
+//│     _mlsValue _mls_retval;
+//│     auto _mls_x_12 = _mls_builtin_println(_mls_x_11);
+//│     _mls_retval = _mls_x_12;
+//│     return _mls_retval;
+//│   }
+//│ };
+//│ struct _mls_Fn2: public _mls_Callable {
+//│   _mlsValue _mls_a;
+//│   constexpr static inline const char *typeName = "Fn2";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_a.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_a);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   static _mlsValue create(_mlsValue _mls_a) { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_Fn2; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_a = _mls_a;  return _mlsValue(_mlsVal); }
+//│   virtual _mlsValue _mls_apply1(_mlsValue _mls_x_13){
+//│     _mlsValue _mls_retval;
+//│     auto _mls_x_14 = _mls_builtin_println(_mls_a);
+//│     auto _mls_x_15 = _mls_builtin_println(_mls_x_13);
+//│     _mls_retval = _mls_x_15;
+//│     return _mls_retval;
+//│   }
+//│ };
+//│ _mlsValue _mls_f(_mlsValue _mls_fn_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_1 = _mlsMethodCall<_mls_Callable>(_mls_fn_0)->_mls_apply1(_mlsValue::fromIntLit(1));
+//│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_2 = _mlsValue::create<_mls_Demo>(_mlsValue::fromIntLit(2));
+//│   auto _mls_x_3 = _mlsMethodCall<_mls_Demo>(_mls_x_2)->_mls_x();
+//│   auto _mls_x_4 = _mlsValue::create<_mls_Fn>();
+//│   auto _mls_x_5 = _mlsMethodCall<_mls_Fn>(_mls_x_4)->_mls_apply1(_mlsValue::fromIntLit(3));
+//│   auto _mls_x_6 = _mls_f(_mls_x_4);
+//│   auto _mls_x_7 = _mlsValue::create<_mls_Fn2>(_mlsValue::fromIntLit(4));
+//│   auto _mls_x_8 = _mlsMethodCall<_mls_Fn2>(_mls_x_7)->_mls_apply1(_mlsValue::fromIntLit(5));
+//│   auto _mls_x_9 = _mlsMethodCall<_mls_Callable>(_mls_x_7)->_mls_apply1(_mlsValue::fromIntLit(6));
+//│   auto _mls_x_10 = _mls_f(_mls_x_7);
+//│   _mls_retval = _mls_x_10;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_0 = _mls_main();
+//│   _mls_retval = _mls_x_0;
+//│   return _mls_retval;
+//│ }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
+//│ 
+//│ 
+//│ Execution succeeded: 
+//│ 3
+//│ 1
+//│ 4
+//│ 5
+//│ 4
+//│ 6
+//│ 4
+//│ 1
+//│ Unit
+//│ 
