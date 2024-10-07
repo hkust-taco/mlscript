@@ -25,11 +25,14 @@ abstract class MLsDiffMaker extends DiffMaker:
   val importCmd = Command("import"): ln =>
     importFile(file / os.up / os.RelPath(ln.trim), verbose = true)
   
+  val showUCS = Command("ucs"): ln =>
+    ln.split(" ").iterator.map(x => "ucs:" + x.trim).toSet
   
   given Elaborator.State = new Elaborator.State
   
   val etl = new TraceLogger:
-    override def doTrace = dbgElab.isSet
+    override def doTrace = dbgElab.isSet || scope.exists:
+      showUCS.get.getOrElse(Set.empty).contains
     override def emitDbg(str: String): Unit = output(str)
   
   var curCtx = Elaborator.Ctx.empty

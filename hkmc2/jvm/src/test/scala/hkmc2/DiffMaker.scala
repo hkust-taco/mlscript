@@ -149,7 +149,7 @@ abstract class DiffMaker:
           TODO(d.source)
       case Diagnostic.Kind.Warning =>
         warnings += 1
-        TODO(d.kind)
+        // TODO(d.kind)
       report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
     
     processOrigin(origin)(using raise)

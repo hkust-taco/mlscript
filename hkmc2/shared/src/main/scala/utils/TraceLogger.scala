@@ -25,3 +25,9 @@ abstract class TraceLogger:
   
   def log(msg: => Any): Unit = if doTrace then emitDbg("| " * indent + msg)
 
+  protected var scope: Opt[Str] = N
+
+  def scoped[T](flag: Str)(thunk: => T): T =
+    var oldScope = scope
+    scope = S(flag)
+    try thunk finally scope = oldScope

@@ -288,9 +288,12 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
         case (Modified(Keyword.`else`, default), rest) => fallback => ctx =>
           // TODO: report `rest` as unreachable
           Split.default(term(default)(using ctx))
-        case (branch, rest) => fallback => ctx =>
+        case (branch, rest) => fallback => ctx => trace(
+          pre = "patternSplit (nested)",
+          post = (res: Split) => s"patternSplit (nested) >>> ${res.showDbg}"
+        ):
           patternSplit(branch, scrutSymbol)(rest(fallback)(ctx))(ctx)
-    case patternAndMatches -> consequent => fallback => trace("patternSplit"):
+    case patternAndMatches -> consequent => fallback =>
       trace(s"patternSplit: $patternAndMatches -> $consequent"):
         // There are N > 0 conjunct matches. We use `::[T]` instead of `List[T]`.
         // Each match is represented by a pair of a _coda_ and a _pattern_
@@ -298,7 +301,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
         val (headPattern, _) :: tail = disaggregate(patternAndMatches)
         // The `consequent` serves as the innermost split, based on which we
         // expand from the N-th to the second match.
-        val tailSplit = trace(s"conjunct matches <<< $tail"):
+        lazy val tailSplit = trace(s"conjunct matches <<< $tail"):
           val innermostSplit = consequent match
             case L(tree) => termSplit(tree, identity)(fallback)
             case R(tree) => (ctx: Ctx) => Split.default(term(tree)(using ctx))
@@ -343,23 +346,14 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
           case S(sym: ClassSymbol) =>
             val params = args.zipWithIndex.map:
               (t, i) => VarSymbol(Ident(s"param$i"), nextUid)
-            val tupleSymbol = VarSymbol(Ident("args"), nextUid)
-            val unapplied =
-              val flowSymbol = FlowSymbol("‹unapplied-result›", nextUid)
-              val function = Term.Sel(sym.ref(ctor), Ident("unapply"))
-              val arguments = Term.Tup(Fld(FldFlags.empty, ref(), N) :: Nil)(Tree.Tup(Nil))
-              Term.App(function, arguments)(pat, flowSymbol)
-            val matches = params zip args // TODO: warn if params.size != args.size
-            val letBodySplit =
-              val splitOfSubMatches = (ctx: Ctx) => subMatches(matches, sequel)(fallback)(ctx)
-              params.zipWithIndex.foldRight(splitOfSubMatches):
-                case ((param, i), inner) => ctx =>
-                  val selection = Term.Sel(tupleSymbol.ref(tupleSymbol.id), Ident(i.toString))
-                  Split.Let(param, selection, inner(ctx + (param.nme -> param)))
+            if params.length != args.length then
+              val n = params.length.toString
+              val m = args.length.toString
+              raise(ErrorReport(msg"mismatched arity: expect $n, found $m" -> pat.toLoc :: Nil))
             Branch(
               ref(),
               Pattern.Class(sym, S(params), false), // TODO: refined?
-              Split.Let(tupleSymbol, unapplied, letBodySplit(ctx))
+              subMatches(params zip args, sequel)(Split.Nil)(ctx)
             ) :: fallback
           case _ =>
             raise(ErrorReport(msg"Unknown constructor `${ctor.name}`." -> ctor.toLoc :: Nil))
@@ -389,17 +383,8 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
     ):
       sequel(ctx)
     case (_, Ident("_")) :: rest => subMatches(rest, sequel)
-    case (scrutinee, aliasIdent @ Ident(alias)) :: rest => fallback => ctx =>
-      trace(
-        pre = s"subMatches (alias) <<< $scrutinee is $alias ;; $rest",
-        post = (r: Split) => s"subMatches (alias) >>> ${r.showDbg}"
-      ):
-        val aliasSymbol = VarSymbol(aliasIdent, nextUid)
-        val ctxWithAlias = ctx + (alias -> aliasSymbol)
-        val innerSplit = subMatches(rest, sequel)(fallback)(ctxWithAlias)
-        Split.Let(aliasSymbol, scrutinee.ref(scrutinee.id), innerSplit)
     case (scrutinee, pattern) :: rest => fallback => trace(
-      pre = "subMatches (nested) <<< ",
+      pre = s"subMatches (nested) <<< $scrutinee is $pattern",
       post = (r: Sequel) => s"subMatches (nested) >>>"
     ):
       val innermostSplit = subMatches(rest, sequel)(fallback)

@@ -18,7 +18,7 @@ enum Split extends AutoLocated:
   case Else(default: Term)
   case Nil
 
-  @inline def ::(head: Branch): Split = Split.Cons(head, this)
+  inline def ::(head: Branch): Split = Split.Cons(head, this)
   
   lazy val isFull: Bool = this match
     case Split.Cons(_, tail) => tail.isFull
@@ -43,6 +43,7 @@ enum Split extends AutoLocated:
     case Split.Else(default) => s"else ${default.showDbg}"
     case Split.Nil => ""
 
+  var isFallback: Bool = false
 end Split
 
 object Split:
@@ -76,29 +77,23 @@ object Split:
         case (0, line) :: lines if lines.forall(_._1 > 0) => (0, s"$prefix $line") :: lines
         case lines => (0, prefix) :: lines.indent
     
-    inline def apply(s: Split): Str = showSplit("if", s, false)
+    inline def apply(s: Split): Str = showSplit("if", s)
 
-    private def showSplit(prefix: Str, s: Split, showFirstLevel: Bool): Str =
-      def showVar(vs: Symbol): String = vs.toString
+    private def showSplit(prefix: Str, s: Split): Str =
       def split(s: Split, isFirst: Bool, isTopLevel: Bool): Lines = s match
         case Split.Cons(head, tail) => (branch(head, isTopLevel) match
           case (n, line) :: tail => (n, (if isTopLevel then "" else "and ") + line) :: tail
           case LNil => LNil
         ) ::: split(tail, false, isTopLevel)
         case Split.Let(nme, rhs, tail) =>
-          (0, s"let ${showVar(nme)} = ${rhs.showDbg}") :: split(tail, false, isTopLevel)
+          (0, s"let $nme = ${rhs.showDbg}") :: split(tail, false, true)
         case Split.Else(term) =>
           (if isFirst then (0, s"then ${term.showDbg}") else (0, s"else ${term.showDbg}")) :: LNil
         case Split.Nil => LNil
       def branch(b: Branch, isTopLevel: Bool): Lines =
-        val Branch(Term.Ref(scrutinee), pattern, continuation) = b
-        if showFirstLevel then {
-          val continuation = b.continuation match
-            case Split.Nil => "empty"
-            case Split.Else(_) => "then ..."
-            case _ => "and ..."
-          (0, s"${showVar(scrutinee)} is ${pattern.showDbg} " + continuation) :: LNil
-        }
-        else s"${showVar(scrutinee)} is ${pattern.showDbg}" #: split(continuation, true, isTopLevel)
+        val Branch(scrutinee, pattern, continuation) = b
+        val rest = split(continuation, true, isTopLevel)
+        (s"${scrutinee.sym} is ${pattern.showDbg}" + 
+          (if rest.length > 1 then " and" else s"")) #: rest
       val lines = split(s, true, true)
       (if prefix.isEmpty then lines else prefix #: lines).toIndentedString

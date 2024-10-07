@@ -1,0 +1,42 @@
+:global
+:noTypeCheck
+
+class Card[T](color: T)
+
+class Suit
+module Heart extends Suit
+module Diamond extends Suit
+module Spade extends Suit
+module Club extends Suit
+
+fun suit(x) = if x is Card(a) then a
+
+let card = Card(Heart)
+suit of card
+
+:ucs desugared normalized
+fun foo(x) = if x is
+  Card(Heart) then 0
+  Card(Diamond) then 1
+  Card(Spade) then 2
+  Card(Club) then 3
+  else 4
+//│ | | Desugared if: 
+//│ if
+//│   x@31 is Card(param0@35) param0@35 is Heart then 0
+//│   x@31 is Card(param0@34) param0@34 is Diamond then 1
+//│   x@31 is Card(param0@33) param0@33 is Spade then 2
+//│   x@31 is Card(param0@32) param0@32 is Club then 3
+//│   else 4
+//│ | | Desugared if: 
+//│ if
+//│   x@31 is Card(param0@35) and
+//│     param0@35 is Heart then 0
+//│     let param0@34 = param0@35#3
+//│     param0@34 is Diamond then 1
+//│     let param0@33 = param0@35#2
+//│     param0@33 is Spade then 2
+//│     let param0@32 = param0@35#1
+//│     param0@32 is Club then 3
+//│     else 4
+//│   else 4

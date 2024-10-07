@@ -130,11 +130,13 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
         raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
         Term.Error
     case Tree.If(split) =>
-      log(s"UCS translation started")
-      val desugarer = new Desugarer(tl, this)
-      val topmost = desugarer.termSplit(split, identity)(Split.Nil)(ctx)
-      log(s"Desugared if: \n${Split.display(topmost)}")
-      Term.If(topmost)
+      val desugared = new Desugarer(tl, this).termSplit(split, identity)(Split.Nil)(ctx)
+      scoped("ucs:desugared"):
+        log(s"Desugared if: \n${Split.display(desugared)}")
+      val normalized = new ucs.Normalization(tl)(desugared)
+      scoped("ucs:normalized"):
+        log(s"Desugared if: \n${Split.display(normalized)}")
+      Term.If(normalized)
     case IfElse(InfixApp(InfixApp(scrutinee, Keyword.`is`, Ident(cls)), Keyword.`then`, cons), alts) =>
       ctx.members.get(cls) match
         case S(sym: ClassSymbol) =>
