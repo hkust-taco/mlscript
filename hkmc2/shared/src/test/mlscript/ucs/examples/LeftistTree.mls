@@ -51,6 +51,97 @@ fun merge(t1: Tree[Num], t2: Tree[Num]): Tree[Num] =
     t1 is Empty and t2 is Node then t2
     t1 is Node and t2 is Empty then t1
     t1 is Empty and t2 is Empty then Empty
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] The following branches are unreachable.
+//│ ║  l.43: 	fun merge(t1: Tree[Num], t2: Tree[Num]): Tree[Num] =
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.44: 	  if
+//│ ║        	^^^^
+//│ ║  l.45: 	    t1 is Node(v1, l1, r1, _) and t2 is Node(v2, _, _, _) and
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.46: 	      v1 > v2 then merge(t2, t1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.47: 	      _ and merge(r1, t2) is merged and
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.48: 	        rank(l1) is rank_left and rank(r1) is rank_right and
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.49: 	          rank_left >= rank_right then Node(v1, l1, merged, rank_right + 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.50: 	          else Node(v1, merged, l1, rank_left + 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.51: 	    t1 is Empty and t2 is Node then t2
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.52: 	    t1 is Node and t2 is Empty then t1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.53: 	    t1 is Empty and t2 is Empty then Empty
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Because the previous split is full.
+//│ ║  l.49: 	          rank_left >= rank_right then Node(v1, l1, merged, rank_right + 1)
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.50: 	          else Node(v1, merged, l1, rank_left + 1)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] The following branches are unreachable.
+//│ ║  l.43: 	fun merge(t1: Tree[Num], t2: Tree[Num]): Tree[Num] =
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.44: 	  if
+//│ ║        	^^^^
+//│ ║  l.45: 	    t1 is Node(v1, l1, r1, _) and t2 is Node(v2, _, _, _) and
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.46: 	      v1 > v2 then merge(t2, t1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.47: 	      _ and merge(r1, t2) is merged and
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.48: 	        rank(l1) is rank_left and rank(r1) is rank_right and
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.49: 	          rank_left >= rank_right then Node(v1, l1, merged, rank_right + 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.50: 	          else Node(v1, merged, l1, rank_left + 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.51: 	    t1 is Empty and t2 is Node then t2
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.52: 	    t1 is Node and t2 is Empty then t1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.53: 	    t1 is Empty and t2 is Empty then Empty
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Because the previous split is full.
+//│ ║  l.48: 	        rank(l1) is rank_left and rank(r1) is rank_right and
+//│ ║        	                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.49: 	          rank_left >= rank_right then Node(v1, l1, merged, rank_right + 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.50: 	          else Node(v1, merged, l1, rank_left + 1)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] The following branches are unreachable.
+//│ ║  l.43: 	fun merge(t1: Tree[Num], t2: Tree[Num]): Tree[Num] =
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.44: 	  if
+//│ ║        	^^^^
+//│ ║  l.45: 	    t1 is Node(v1, l1, r1, _) and t2 is Node(v2, _, _, _) and
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.46: 	      v1 > v2 then merge(t2, t1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.47: 	      _ and merge(r1, t2) is merged and
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.48: 	        rank(l1) is rank_left and rank(r1) is rank_right and
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.49: 	          rank_left >= rank_right then Node(v1, l1, merged, rank_right + 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.50: 	          else Node(v1, merged, l1, rank_left + 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.51: 	    t1 is Empty and t2 is Node then t2
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.52: 	    t1 is Node and t2 is Empty then t1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.53: 	    t1 is Empty and t2 is Empty then Empty
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Because the previous split is full.
+//│ ║  l.48: 	        rank(l1) is rank_left and rank(r1) is rank_right and
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.49: 	          rank_left >= rank_right then Node(v1, l1, merged, rank_right + 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.50: 	          else Node(v1, merged, l1, rank_left + 1)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 fun insert(t, v) = merge(t, singleton(v))
 

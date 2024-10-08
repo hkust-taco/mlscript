@@ -21,14 +21,14 @@ fun foo(x) = if x is
   Card(Spade) then 2
   Card(Club) then 3
   else 4
-//│ | | Desugared if: 
+//│ Desugared:
 //│ if
 //│   x@31 is Card(param0@35) param0@35 is Heart then 0
 //│   x@31 is Card(param0@34) param0@34 is Diamond then 1
 //│   x@31 is Card(param0@33) param0@33 is Spade then 2
 //│   x@31 is Card(param0@32) param0@32 is Club then 3
 //│   else 4
-//│ | | Desugared if: 
+//│ Normalized:
 //│ if
 //│   x@31 is Card(param0@35) and
 //│     param0@35 is Heart then 0

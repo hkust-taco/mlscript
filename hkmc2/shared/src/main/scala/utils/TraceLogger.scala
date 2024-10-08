@@ -23,7 +23,10 @@ abstract class TraceLogger:
   
   protected def emitDbg(str: Str): Unit = scala.Predef.println(str)
   
-  def log(msg: => Any): Unit = if doTrace then emitDbg("| " * indent + msg)
+  inline def log(msg: => Any): Unit = log(msg, noIndent = false)
+
+  def log(msg: => Any, noIndent: Bool = false) =
+    if doTrace then emitDbg(if noIndent then msg.toString else "| " * indent + msg)
 
   protected var scope: Opt[Str] = N
 

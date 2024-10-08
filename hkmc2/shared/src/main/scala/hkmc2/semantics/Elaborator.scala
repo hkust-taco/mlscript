@@ -140,10 +140,10 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
     case Tree.If(split) =>
       val desugared = new Desugarer(tl, this).termSplit(split, identity)(Split.Nil)(ctx)
       scoped("ucs:desugared"):
-        log(s"Desugared if: \n${Split.display(desugared)}")
+        log(s"Desugared:\n${Split.display(desugared)}", noIndent = true)
       val normalized = new ucs.Normalization(tl)(desugared)
       scoped("ucs:normalized"):
-        log(s"Desugared if: \n${Split.display(normalized)}")
+        log(s"Normalized:\n${Split.display(normalized)}", noIndent = true)
       Term.If(normalized)
     case IfElse(InfixApp(InfixApp(scrutinee, Keyword.`is`, Ident(cls)), Keyword.`then`, cons), alts) =>
       ctx.members.get(cls) match

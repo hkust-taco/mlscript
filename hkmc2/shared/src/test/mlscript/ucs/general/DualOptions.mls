@@ -104,18 +104,18 @@ fun add_6(x, y) =
     [Some(xv), None]     then xv
     [None,     Some(yv)] then yv
     [None,     None]     then 0
-//│ ╔══[ERROR] Name not found: yv
+//│ ╔══[ERROR] Unrecognized pattern.
+//│ ║  l.106: 	    [None,     None]     then 0
+//│ ╙──       	    ^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Unrecognized pattern.
 //│ ║  l.105: 	    [None,     Some(yv)] then yv
-//│ ╙──       	                              ^^
-//│ ╔══[ERROR] Name not found: xv
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Unrecognized pattern.
 //│ ║  l.104: 	    [Some(xv), None]     then xv
-//│ ╙──       	                              ^^
-//│ ╔══[ERROR] Name not found: xv
+//│ ╙──       	    ^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Unrecognized pattern.
 //│ ║  l.103: 	    [Some(xv), Some(yv)] then xv + yv
-//│ ╙──       	                              ^^
-//│ ╔══[ERROR] Name not found: yv
-//│ ║  l.103: 	    [Some(xv), Some(yv)] then xv + yv
-//│ ╙──       	                                   ^^
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^
 
 add_6(None, None)
 add_6(Some(5), None)

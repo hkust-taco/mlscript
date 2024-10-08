@@ -1,0 +1,333 @@
+:import ../prelude/List.mls
+//│ Imported 26 members
+
+:import ../prelude/Option.mls
+//│ Imported 29 members
+
+:global
+:noTypeCheck
+:ucs desugared normalized
+
+fun sum(acc, xs) = 
+  if xs is
+    x :: xs then sum(acc + x, xs)
+    Nil     then acc
+//│ Desugared:
+//│ if
+//│   xs@28 is Cons(param0@29, param1@30) and
+//│     let x@31 = param0@29#0
+//│     let xs@32 = param1@30#0
+//│     else sum#0(+#0(acc@27#1, x@31#0), xs@32#0)
+//│   xs@28 is Nil then acc@27#0
+//│ Normalized:
+//│ if
+//│   xs@28 is Cons(param0@29, param1@30) and
+//│     let x@31 = param0@29#0
+//│     let xs@32 = param1@30#0
+//│     else sum#0(+#0(acc@27#1, x@31#0), xs@32#0)
+//│   xs@28 is Nil then acc@27#0
+
+:todo
+// The normalization does not distinguish between bindings and their aliases.
+// We may still need to substitute variables when merging branches or reuse
+// bindings at the same location. 
+fun test(xs) =
+  if xs is
+    Some(Cons("add", Cons(x, Cons(y, Nil)))) then x + y
+    Some(Cons("mul", Cons(x, Cons(y, Nil)))) then x * y
+    Some(Cons("sum", xs)) then sum(0, xs)
+    Some(Nil) then "nothing"
+    None then "nothing"
+//│ Desugared:
+//│ if
+//│   xs@37 is Some(param0@54) and param0@54 is Cons(param0@55, param1@56) and param0@55 is "add" and param1@56 is Cons(param0@57, param1@58) and
+//│     let x@59 = param0@57#0
+//│     param1@58 is Cons(param0@60, param1@61) and
+//│       let y@62 = param0@60#0
+//│       param1@61 is Nil then +#1(x@59#0, y@62#0)
+//│   xs@37 is Some(param0@44) and param0@44 is Cons(param0@45, param1@46) and param0@45 is "mul" and param1@46 is Cons(param0@47, param1@48) and
+//│     let x@49 = param0@47#0
+//│     param1@48 is Cons(param0@50, param1@51) and
+//│       let y@52 = param0@50#0
+//│       param1@51 is Nil then *#0(x@49#0, y@52#0)
+//│   xs@37 is Some(param0@39) and param0@39 is Cons(param0@40, param1@41) and param0@40 is "sum" and
+//│     let xs@42 = param1@41#0
+//│     else sum#1(0, xs@42#0)
+//│   xs@37 is Some(param0@38) param0@38 is Nil then "nothing"
+//│   xs@37 is None then "nothing"
+//│ Normalized:
+//│ if
+//│   xs@37 is Some(param0@54) and
+//│     param0@54 is Cons(param0@55, param1@56) and
+//│       param0@55 is "add" and
+//│         param1@56 is Cons(param0@57, param1@58) and
+//│           let x@59 = param0@57#0
+//│           param1@58 is Cons(param0@60, param1@61) and
+//│             let y@62 = param0@60#0
+//│             param1@61 is Nil then +#1(x@59#0, y@62#0)
+//│             let param0@44 = param0@54#3
+//│             param0@44 is Cons(param0@45, param1@46) and
+//│               param0@45 is "mul" and
+//│                 param1@46 is Cons(param0@47, param1@48) and
+//│                   let x@49 = param0@47#0
+//│                   param1@48 is Cons(param0@50, param1@51) and
+//│                     let y@52 = param0@50#0
+//│                     param1@51 is Nil then *#0(x@49#0, y@52#0)
+//│                     let param0@39 = param0@54#2
+//│                     param0@39 is Cons(param0@40, param1@41) and
+//│                       param0@40 is "sum" and
+//│                         let xs@42 = param1@41#0
+//│                         else sum#1(0, xs@42#0)
+//│                       let param0@38 = param0@54#1
+//│                       param0@38 is Nil then "nothing"
+//│                     let param0@38 = param0@54#1
+//│                     param0@38 is Nil then "nothing"
+//│                   let param0@39 = param0@54#2
+//│                   param0@39 is Cons(param0@40, param1@41) and
+//│                     param0@40 is "sum" and
+//│                       let xs@42 = param1@41#0
+//│                       else sum#1(0, xs@42#0)
+//│                     let param0@38 = param0@54#1
+//│                     param0@38 is Nil then "nothing"
+//│                   let param0@38 = param0@54#1
+//│                   param0@38 is Nil then "nothing"
+//│                 let param0@39 = param0@54#2
+//│                 param0@39 is Cons(param0@40, param1@41) and
+//│                   param0@40 is "sum" and
+//│                     let xs@42 = param1@41#0
+//│                     else sum#1(0, xs@42#0)
+//│                   let param0@38 = param0@54#1
+//│                   param0@38 is Nil then "nothing"
+//│                 let param0@38 = param0@54#1
+//│                 param0@38 is Nil then "nothing"
+//│               let param0@39 = param0@54#2
+//│               param0@39 is Cons(param0@40, param1@41) and
+//│                 param0@40 is "sum" and
+//│                   let xs@42 = param1@41#0
+//│                   else sum#1(0, xs@42#0)
+//│                 let param0@38 = param0@54#1
+//│                 param0@38 is Nil then "nothing"
+//│               let param0@38 = param0@54#1
+//│               param0@38 is Nil then "nothing"
+//│             let param0@39 = param0@54#2
+//│             param0@39 is Cons(param0@40, param1@41) and
+//│               param0@40 is "sum" and
+//│                 let xs@42 = param1@41#0
+//│                 else sum#1(0, xs@42#0)
+//│               let param0@38 = param0@54#1
+//│               param0@38 is Nil then "nothing"
+//│             let param0@38 = param0@54#1
+//│             param0@38 is Nil then "nothing"
+//│           let param0@44 = param0@54#3
+//│           param0@44 is Cons(param0@45, param1@46) and
+//│             param0@45 is "mul" and
+//│               param1@46 is Cons(param0@47, param1@48) and
+//│                 let x@49 = param0@47#0
+//│                 param1@48 is Cons(param0@50, param1@51) and
+//│                   let y@52 = param0@50#0
+//│                   param1@51 is Nil then *#0(x@49#0, y@52#0)
+//│                   let param0@39 = param0@54#2
+//│                   param0@39 is Cons(param0@40, param1@41) and
+//│                     param0@40 is "sum" and
+//│                       let xs@42 = param1@41#0
+//│                       else sum#1(0, xs@42#0)
+//│                     let param0@38 = param0@54#1
+//│                     param0@38 is Nil then "nothing"
+//│                   let param0@38 = param0@54#1
+//│                   param0@38 is Nil then "nothing"
+//│                 let param0@39 = param0@54#2
+//│                 param0@39 is Cons(param0@40, param1@41) and
+//│                   param0@40 is "sum" and
+//│                     let xs@42 = param1@41#0
+//│                     else sum#1(0, xs@42#0)
+//│                   let param0@38 = param0@54#1
+//│                   param0@38 is Nil then "nothing"
+//│                 let param0@38 = param0@54#1
+//│                 param0@38 is Nil then "nothing"
+//│               let param0@39 = param0@54#2
+//│               param0@39 is Cons(param0@40, param1@41) and
+//│                 param0@40 is "sum" and
+//│                   let xs@42 = param1@41#0
+//│                   else sum#1(0, xs@42#0)
+//│                 let param0@38 = param0@54#1
+//│                 param0@38 is Nil then "nothing"
+//│               let param0@38 = param0@54#1
+//│               param0@38 is Nil then "nothing"
+//│             let param0@39 = param0@54#2
+//│             param0@39 is Cons(param0@40, param1@41) and
+//│               param0@40 is "sum" and
+//│                 let xs@42 = param1@41#0
+//│                 else sum#1(0, xs@42#0)
+//│               let param0@38 = param0@54#1
+//│               param0@38 is Nil then "nothing"
+//│             let param0@38 = param0@54#1
+//│             param0@38 is Nil then "nothing"
+//│           let param0@39 = param0@54#2
+//│           param0@39 is Cons(param0@40, param1@41) and
+//│             param0@40 is "sum" and
+//│               let xs@42 = param1@41#0
+//│               else sum#1(0, xs@42#0)
+//│             let param0@38 = param0@54#1
+//│             param0@38 is Nil then "nothing"
+//│           let param0@38 = param0@54#1
+//│           param0@38 is Nil then "nothing"
+//│         let param0@44 = param0@54#3
+//│         param0@44 is Cons(param0@45, param1@46) and
+//│           param0@45 is "mul" and
+//│             param1@46 is Cons(param0@47, param1@48) and
+//│               let x@49 = param0@47#0
+//│               param1@48 is Cons(param0@50, param1@51) and
+//│                 let y@52 = param0@50#0
+//│                 param1@51 is Nil then *#0(x@49#0, y@52#0)
+//│                 let param0@39 = param0@54#2
+//│                 param0@39 is Cons(param0@40, param1@41) and
+//│                   param0@40 is "sum" and
+//│                     let xs@42 = param1@41#0
+//│                     else sum#1(0, xs@42#0)
+//│                   let param0@38 = param0@54#1
+//│                   param0@38 is Nil then "nothing"
+//│                 let param0@38 = param0@54#1
+//│                 param0@38 is Nil then "nothing"
+//│               let param0@39 = param0@54#2
+//│               param0@39 is Cons(param0@40, param1@41) and
+//│                 param0@40 is "sum" and
+//│                   let xs@42 = param1@41#0
+//│                   else sum#1(0, xs@42#0)
+//│                 let param0@38 = param0@54#1
+//│                 param0@38 is Nil then "nothing"
+//│               let param0@38 = param0@54#1
+//│               param0@38 is Nil then "nothing"
+//│             let param0@39 = param0@54#2
+//│             param0@39 is Cons(param0@40, param1@41) and
+//│               param0@40 is "sum" and
+//│                 let xs@42 = param1@41#0
+//│                 else sum#1(0, xs@42#0)
+//│               let param0@38 = param0@54#1
+//│               param0@38 is Nil then "nothing"
+//│             let param0@38 = param0@54#1
+//│             param0@38 is Nil then "nothing"
+//│           let param0@39 = param0@54#2
+//│           param0@39 is Cons(param0@40, param1@41) and
+//│             param0@40 is "sum" and
+//│               let xs@42 = param1@41#0
+//│               else sum#1(0, xs@42#0)
+//│             let param0@38 = param0@54#1
+//│             param0@38 is Nil then "nothing"
+//│           let param0@38 = param0@54#1
+//│           param0@38 is Nil then "nothing"
+//│         let param0@39 = param0@54#2
+//│         param0@39 is Cons(param0@40, param1@41) and
+//│           param0@40 is "sum" and
+//│             let xs@42 = param1@41#0
+//│             else sum#1(0, xs@42#0)
+//│           let param0@38 = param0@54#1
+//│           param0@38 is Nil then "nothing"
+//│         let param0@38 = param0@54#1
+//│         param0@38 is Nil then "nothing"
+//│       let param0@44 = param0@54#3
+//│       param0@44 is Cons(param0@45, param1@46) and
+//│         param0@45 is "mul" and
+//│           param1@46 is Cons(param0@47, param1@48) and
+//│             let x@49 = param0@47#0
+//│             param1@48 is Cons(param0@50, param1@51) and
+//│               let y@52 = param0@50#0
+//│               param1@51 is Nil then *#0(x@49#0, y@52#0)
+//│               let param0@39 = param0@54#2
+//│               param0@39 is Cons(param0@40, param1@41) and
+//│                 param0@40 is "sum" and
+//│                   let xs@42 = param1@41#0
+//│                   else sum#1(0, xs@42#0)
+//│                 let param0@38 = param0@54#1
+//│                 param0@38 is Nil then "nothing"
+//│               let param0@38 = param0@54#1
+//│               param0@38 is Nil then "nothing"
+//│             let param0@39 = param0@54#2
+//│             param0@39 is Cons(param0@40, param1@41) and
+//│               param0@40 is "sum" and
+//│                 let xs@42 = param1@41#0
+//│                 else sum#1(0, xs@42#0)
+//│               let param0@38 = param0@54#1
+//│               param0@38 is Nil then "nothing"
+//│             let param0@38 = param0@54#1
+//│             param0@38 is Nil then "nothing"
+//│           let param0@39 = param0@54#2
+//│           param0@39 is Cons(param0@40, param1@41) and
+//│             param0@40 is "sum" and
+//│               let xs@42 = param1@41#0
+//│               else sum#1(0, xs@42#0)
+//│             let param0@38 = param0@54#1
+//│             param0@38 is Nil then "nothing"
+//│           let param0@38 = param0@54#1
+//│           param0@38 is Nil then "nothing"
+//│         let param0@39 = param0@54#2
+//│         param0@39 is Cons(param0@40, param1@41) and
+//│           param0@40 is "sum" and
+//│             let xs@42 = param1@41#0
+//│             else sum#1(0, xs@42#0)
+//│           let param0@38 = param0@54#1
+//│           param0@38 is Nil then "nothing"
+//│         let param0@38 = param0@54#1
+//│         param0@38 is Nil then "nothing"
+//│       let param0@39 = param0@54#2
+//│       param0@39 is Cons(param0@40, param1@41) and
+//│         param0@40 is "sum" and
+//│           let xs@42 = param1@41#0
+//│           else sum#1(0, xs@42#0)
+//│         let param0@38 = param0@54#1
+//│         param0@38 is Nil then "nothing"
+//│       let param0@38 = param0@54#1
+//│       param0@38 is Nil then "nothing"
+//│     let param0@44 = param0@54#3
+//│     param0@44 is Cons(param0@45, param1@46) and
+//│       param0@45 is "mul" and
+//│         param1@46 is Cons(param0@47, param1@48) and
+//│           let x@49 = param0@47#0
+//│           param1@48 is Cons(param0@50, param1@51) and
+//│             let y@52 = param0@50#0
+//│             param1@51 is Nil then *#0(x@49#0, y@52#0)
+//│             let param0@39 = param0@54#2
+//│             param0@39 is Cons(param0@40, param1@41) and
+//│               param0@40 is "sum" and
+//│                 let xs@42 = param1@41#0
+//│                 else sum#1(0, xs@42#0)
+//│               let param0@38 = param0@54#1
+//│               param0@38 is Nil then "nothing"
+//│             let param0@38 = param0@54#1
+//│             param0@38 is Nil then "nothing"
+//│           let param0@39 = param0@54#2
+//│           param0@39 is Cons(param0@40, param1@41) and
+//│             param0@40 is "sum" and
+//│               let xs@42 = param1@41#0
+//│               else sum#1(0, xs@42#0)
+//│             let param0@38 = param0@54#1
+//│             param0@38 is Nil then "nothing"
+//│           let param0@38 = param0@54#1
+//│           param0@38 is Nil then "nothing"
+//│         let param0@39 = param0@54#2
+//│         param0@39 is Cons(param0@40, param1@41) and
+//│           param0@40 is "sum" and
+//│             let xs@42 = param1@41#0
+//│             else sum#1(0, xs@42#0)
+//│           let param0@38 = param0@54#1
+//│           param0@38 is Nil then "nothing"
+//│         let param0@38 = param0@54#1
+//│         param0@38 is Nil then "nothing"
+//│       let param0@39 = param0@54#2
+//│       param0@39 is Cons(param0@40, param1@41) and
+//│         param0@40 is "sum" and
+//│           let xs@42 = param1@41#0
+//│           else sum#1(0, xs@42#0)
+//│         let param0@38 = param0@54#1
+//│         param0@38 is Nil then "nothing"
+//│       let param0@38 = param0@54#1
+//│       param0@38 is Nil then "nothing"
+//│     let param0@39 = param0@54#2
+//│     param0@39 is Cons(param0@40, param1@41) and
+//│       param0@40 is "sum" and
+//│         let xs@42 = param1@41#0
+//│         else sum#1(0, xs@42#0)
+//│       let param0@38 = param0@54#1
+//│       param0@38 is Nil then "nothing"
+//│     let param0@38 = param0@54#1
+//│     param0@38 is Nil then "nothing"
+//│   xs@37 is None then "nothing"

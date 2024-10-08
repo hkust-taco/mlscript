@@ -5,6 +5,7 @@ import syntax.{Keyword, Tree}, Tree.*
 import mlscript.utils.*, shorthands.*
 import Message.MessageContext
 import utils.TraceLogger
+import hkmc2.syntax.Literal
 
 object Desugarer:
   object and:
@@ -48,6 +49,26 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
   // represents the context with bindings in the current match.
 
   type Sequel = Ctx => Split
+
+  extension (sequel: Sequel)
+    def traced(pre: Str, post: Split => Str): Sequel =
+      if doTrace then ctx => trace(pre, post)(sequel(ctx)) else sequel
+
+  extension (split: Split)
+    /** Concatenate two splits. */
+    def ++(fallback: Split): Split =
+      if fallback == Split.Nil then
+        split
+      else if split.isFull then
+        raise:
+          ErrorReport:
+            msg"The following branches are unreachable." -> fallback.toLoc ::
+            msg"Because the previous split is full." -> split.toLoc :: Nil
+        split
+      else (split match
+        case Split.Cons(head, tail) => Split.Cons(head, tail ++ fallback)
+        case Split.Let(name, term, tail) => Split.Let(name, term, tail ++ fallback)
+        case Split.Else(_) /* impossible */ | Split.Nil => fallback)
 
   def default: Split => Sequel = split => _ => split
 
@@ -279,37 +300,47 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
    *  @param scrutSymbol the symbol representing the elaborated scrutinee
    */
   def patternSplit(tree: Tree, scrutSymbol: VarSymbol): Split => Sequel = tree match
-    case Block(branches) =>
-      branches.foldRight(default):
-        case (Let(ident @ Ident(_), termTree, N), rest) => fallback => ctx =>
-          val sym = VarSymbol(ident, nextUid)
-          val restCtx = ctx + (ident.name -> sym)
-          Split.Let(sym, term(termTree)(using ctx), rest(fallback)(restCtx))
-        case (Modified(Keyword.`else`, default), rest) => fallback => ctx =>
-          // TODO: report `rest` as unreachable
-          Split.default(term(default)(using ctx))
-        case (branch, rest) => fallback => ctx => trace(
-          pre = "patternSplit (nested)",
-          post = (res: Split) => s"patternSplit (nested) >>> ${res.showDbg}"
-        ):
-          patternSplit(branch, scrutSymbol)(rest(fallback)(ctx))(ctx)
+    case Block(branches) => branches.foldRight(default):
+      // Terminology: _fallback_ refers to subsequent branches, _backup_ refers
+      // to the backup plan passed from the parent split.
+      case (Let(ident @ Ident(_), termTree, N), elabFallback) => backup => ctx =>
+        val sym = VarSymbol(ident, nextUid)
+        val fallbackCtx = ctx + (ident.name -> sym)
+        Split.Let(sym, term(termTree)(using ctx), elabFallback(backup)(fallbackCtx))
+      case (tree @ Modified(Keyword.`else`, body), elabFallback) => backup => ctx => trace(
+        pre = s"patternSplit (else) <<< $tree",
+        post = (res: Split) => s"patternSplit (else) >>> ${res.showDbg}"
+      ):
+        elabFallback(backup)(ctx) match
+          case Split.Nil => ()
+          case _ => raise(ErrorReport(msg"Any following branches are unreachable." -> tree.toLoc :: Nil))
+        Split.default(term(body)(using ctx))
+      case (branch, elabFallback) => backup => ctx => trace(
+        pre = "patternSplit (alternative)",
+        post = (res: Split) => s"patternSplit (alternative) >>> ${res.showDbg}"
+      ):
+        patternSplit(branch, scrutSymbol)(elabFallback(backup)(ctx))(ctx)
     case patternAndMatches -> consequent => fallback =>
-      trace(s"patternSplit: $patternAndMatches -> $consequent"):
-        // There are N > 0 conjunct matches. We use `::[T]` instead of `List[T]`.
-        // Each match is represented by a pair of a _coda_ and a _pattern_
-        // that is yet to be elaborated.
-        val (headPattern, _) :: tail = disaggregate(patternAndMatches)
-        // The `consequent` serves as the innermost split, based on which we
-        // expand from the N-th to the second match.
-        lazy val tailSplit = trace(s"conjunct matches <<< $tail"):
-          val innermostSplit = consequent match
-            case L(tree) => termSplit(tree, identity)(fallback)
-            case R(tree) => (ctx: Ctx) => Split.default(term(tree)(using ctx))
-          tail.foldRight(innermostSplit):
-            case ((coda, pat), sequel) => ctx =>
-              nominate(ctx, term(coda)(using ctx)):
-                expandMatch(_, pat, sequel)(fallback)
-        expandMatch(scrutSymbol, headPattern, tailSplit)(fallback)
+      // There are N > 0 conjunct matches. We use `::[T]` instead of `List[T]`.
+      // Each match is represented by a pair of a _coda_ and a _pattern_
+      // that is yet to be elaborated.
+      val (headPattern, _) :: tail = disaggregate(patternAndMatches)
+      // The `consequent` serves as the innermost split, based on which we
+      // expand from the N-th to the second match.
+      val tailSplit =
+        val innermostSplit = consequent match
+          case L(tree) => termSplit(tree, identity)(Split.Nil)
+          case R(tree) => (ctx: Ctx) => Split.default(term(tree)(using ctx))
+        tail.foldRight(innermostSplit):
+          case ((coda, pat), sequel) => ctx =>
+            nominate(ctx, term(coda)(using ctx)):
+              expandMatch(_, pat, sequel)(Split.Nil)
+        .traced(
+          pre = s"conjunct matches <<< $tail",
+          post = (res: Split) => s"conjunct matches >>> $res")
+      expandMatch(scrutSymbol, headPattern, tailSplit)(fallback).traced(
+        pre = s"patternBranch <<< $patternAndMatches -> ${consequent.fold(_.showDbg, _.showDbg)}",
+        post = (res: Split) => s"patternBranch >>> ${res.showDbg}")
     case _ =>
       raise(ErrorReport(msg"Unrecognized pattern split." -> tree.toLoc :: Nil))
       _ => _ => Split.default(Term.Error)
@@ -324,20 +355,24 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
   def expandMatch(scrutSymbol: VarSymbol, pattern: Tree, sequel: Sequel): Split => Sequel =
     val ref = () => scrutSymbol.ref(scrutSymbol.id)
     pattern match
+      // A single wildcard pattern.
       case Ident("_") => _ => ctx => sequel(ctx)
+      // A single variable pattern or constructor pattern without parameters.
       case ctor: Ident => fallback => ctx => ctx.members.get(ctor.name) match
         case S(sym: ClassSymbol) => // TODO: refined
           Branch(ref(), Pattern.Class(sym, N, false), sequel(ctx)) :: fallback
         case S(_: VarSymbol) | N =>
           // If the identifier refers to a variable or nothing, we interpret it
-          // as a variable pattern.
+          // as a variable pattern. If `fallback` is not used when `sequel`
+          // is full, then we raise an error.
           val aliasSymbol = VarSymbol(ctor, nextUid)
           val ctxWithAlias = ctx + (ctor.name -> aliasSymbol)
-          Split.Let(aliasSymbol, ref(), sequel(ctxWithAlias))
+          Split.Let(aliasSymbol, ref(), sequel(ctxWithAlias) ++ fallback)
         case S(_) =>
-          // The user might try to match a symbol that is not matchable.
-          raise(ErrorReport(msg"Unrecognized pattern." -> pattern.toLoc :: Nil))
-          Split.default(Term.Error)
+          // Raise an error and discard `sequel`. Use `fallback` instead.
+          raise(ErrorReport(msg"Unknown symbol `${ctor.name}`." -> ctor.toLoc :: Nil))
+          fallback
+      // A single constructor pattern.
       case pat @ App(ctor: Ident, Tup(args)) => fallback => ctx => trace(
         pre = s"expandMatch <<< ${ctor.name}(${args.iterator.map(_.showDbg).mkString(", ")})",
         post = (r: Split) => s"expandMatch >>> ${r.showDbg}"
@@ -356,20 +391,23 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
               subMatches(params zip args, sequel)(Split.Nil)(ctx)
             ) :: fallback
           case _ =>
+            // Raise an error and discard `sequel`. Use `fallback` instead.
             raise(ErrorReport(msg"Unknown constructor `${ctor.name}`." -> ctor.toLoc :: Nil))
-            Split.default(Term.Error)
-      case pattern and consequent => fallback =>
-        val innermostSplit: Sequel = ctx => termSplit(consequent, identity)(fallback)(ctx)
-        ctx => expandMatch(scrutSymbol, pattern, innermostSplit)(fallback)(ctx)
-      case test => fallback => ctx => trace(
-        pre = s"expandMatch: test <<< $test",
-        post = (r: Split) => s"expandMatch: test >>> ${r.showDbg}"
+            fallback
+      // A single literal pattern
+      case literal: Literal => fallback => ctx => trace(
+        pre = s"expandMatch: literal <<< $literal",
+        post = (r: Split) => s"expandMatch: literal >>> ${r.showDbg}"
       ):
-        Branch(
-          scrutSymbol.ref(scrutSymbol.id),
-          Pattern.LitPat(Tree.BoolLit(true)),
-          sequel(ctx)
-        ) :: fallback
+        Branch(ref(), Pattern.LitPat(literal), sequel(ctx)) :: fallback
+      // A single pattern in conjunction with more conditions
+      case pattern and consequent => fallback => ctx => 
+        val innerSplit = termSplit(consequent, identity)(Split.Nil)
+        expandMatch(scrutSymbol, pattern, innerSplit)(fallback)(ctx)
+      case _ => fallback => _ =>
+        // Raise an error and discard `sequel`. Use `fallback` instead.
+        raise(ErrorReport(msg"Unrecognized pattern." -> pattern.toLoc :: Nil))
+        fallback
 
   /** Desugar a list of sub-patterns (with their corresponding scrutinees).
    *  This is called when handling nested patterns. The caller is responsible
