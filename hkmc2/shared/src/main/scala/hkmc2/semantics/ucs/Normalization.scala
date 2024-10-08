@@ -187,6 +187,7 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
   private def aliasBindings(p: Pattern, q: Pattern): Split => Split = (p, q) match
     case (Pattern.Class(_, S(ps1), _), Pattern.Class(_, S(ps2), _)) =>
       ps1.iterator.zip(ps2.iterator).foldLeft(identity[Split]):
+        case (acc, (p1, p2)) if p1 == p2 => acc
         case (acc, (p1, p2)) => innermost => Split.Let(p2, p1.ref(p1.id), acc(innermost))
     case (_, _) => identity
 end Normalization

@@ -70,6 +70,17 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ++ fallback)
         case Split.Else(_) /* impossible */ | Split.Nil => fallback)
 
+  import collection.mutable.HashMap
+
+  private val subScrutineeMap = HashMap.empty[VarSymbol, HashMap[ClassSymbol, List[VarSymbol]]]
+
+  extension (symbol: VarSymbol)
+    def getSubScrutinees(cls: ClassSymbol): List[VarSymbol] =
+      subScrutineeMap.getOrElseUpdate(symbol, HashMap.empty).getOrElseUpdate(cls, {
+        val arity = cls.defn.flatMap(_.paramsOpt.map(_.length)).getOrElse(0)
+        (0 until arity).map(i => VarSymbol(Ident(s"param$i"), nextUid)).toList
+      })
+
   def default: Split => Sequel = split => _ => split
 
   /** Desugar UCS shorthands. */
@@ -378,16 +389,16 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
         post = (r: Split) => s"expandMatch >>> ${r.showDbg}"
       ):
         ctx.members.get(ctor.name) match
-          case S(sym: ClassSymbol) =>
-            val params = args.zipWithIndex.map:
-              (t, i) => VarSymbol(Ident(s"param$i"), nextUid)
-            if params.length != args.length then
-              val n = params.length.toString
+          case S(cls: ClassSymbol) =>
+            val arity = cls.defn.flatMap(_.paramsOpt.map(_.length)).getOrElse(0)
+            if args.length =/= arity then
+              val n = arity.toString
               val m = args.length.toString
               raise(ErrorReport(msg"mismatched arity: expect $n, found $m" -> pat.toLoc :: Nil))
+            val params = scrutSymbol.getSubScrutinees(cls)
             Branch(
               ref(),
-              Pattern.Class(sym, S(params), false), // TODO: refined?
+              Pattern.Class(cls, S(params), false), // TODO: refined?
               subMatches(params zip args, sequel)(Split.Nil)(ctx)
             ) :: fallback
           case _ =>

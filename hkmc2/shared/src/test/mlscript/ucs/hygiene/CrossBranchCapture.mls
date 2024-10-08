@@ -26,7 +26,7 @@ process(Numb(1), 10)
 
 
 // class Vec(xs: Array[Numb | Vec]) // Array is not available
-abstract class Vec[out T]
+abstract class Vec[out T](n: Int)
 class Cons[out T](head: T, tail: Vec[T]) extends Vec[T]
 module Nil extends Vec[nothing]
 
