@@ -92,6 +92,8 @@ enum Tree extends AutoLocated:
     case Region(name, body) => name :: body :: Nil
     case RegRef(reg, value) => reg :: value :: Nil
     case Effectful(eff, body) => eff :: body :: Nil
+    case TyTup(tys) => tys
+    case Sel(prefix, name) => prefix :: Nil
   
   def describe: Str = this match
     case Empty() => "empty"

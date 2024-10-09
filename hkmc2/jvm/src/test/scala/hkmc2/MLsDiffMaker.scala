@@ -8,16 +8,28 @@ import utils.*
 
 
 abstract class MLsDiffMaker extends DiffMaker:
-  
+  class DebugTreeCommand(name: Str) extends Command[Product => Str](name)(
+    line => if line.contains("loc") then
+      (t: Product) => t match
+        case t: Located => t.toLoc.fold("(no loc)"): loc =>
+          val (sl, _, sc) = loc.origin.fph.getLineColAt(loc.spanStart)
+          val (el, _, ec) = loc.origin.fph.getLineColAt(loc.spanEnd)
+          s"$sl:$sc-$el:$ec"
+        case _ => ""
+    else 
+      Function.const("")
+  ):
+    def post: Product => Str = get.getOrElse(Function.const(""))
+
   val predefFile: os.Path
   
   val dbgElab = NullaryCommand("de")
   val dbgParsing = NullaryCommand("dp")
   
   val showParse = NullaryCommand("p")
-  val showParsedTree = NullaryCommand("pt")
+  val showParsedTree = DebugTreeCommand("pt")
   val showElab = NullaryCommand("el")
-  val showElaboratedTree = NullaryCommand("elt")
+  val showElaboratedTree = DebugTreeCommand("elt")
   val showContext = NullaryCommand("ctx")
   val parseOnly = NullaryCommand("parseOnly")
   val noTypeCheck = NullaryCommand("noTypeCheck")
@@ -94,9 +106,9 @@ abstract class MLsDiffMaker extends DiffMaker:
     if (parseOnly.isSet || showParse.isSet) && !showParsedTree.isSet then
       output(s"Parsed:${res.map("\n\t"+_.showDbg).mkString}")
 
-    if showParsedTree.isSet then
+    showParsedTree.get.foreach: post =>
       output(s"Parsed tree:")
-      res.foreach(t => output(t.showAsTree))
+      res.foreach(t => output(t.showAsTree(using post)))  
     
     // if showParse.isSet then
     //   output(s"AST: $res")
@@ -123,9 +135,9 @@ abstract class MLsDiffMaker extends DiffMaker:
     // If elaborated tree is displayed, don't show the string serialization.
     if (showElab.isSet || debug.isSet) && !showElaboratedTree.isSet then
       output(s"Elab: ${e.showDbg}")
-    if showElaboratedTree.isSet then
+    showElaboratedTree.get.foreach: post =>
       output(s"Elaborated tree:")
-      output(e.showAsTree)
+      output(e.showAsTree(using post))
     if noTypeCheck.isUnset then
       processTerm(e)
   

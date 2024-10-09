@@ -27,8 +27,8 @@ import mlscript.utils.StringOps
 trait ProductWithTail extends Product
 
 extension (t: Product)
-  def showAsTree: String = showAsTree(false)
-  def showAsTree(inTailPos: Bool): String =
+  def showAsTree(using post: Product => String): String = showAsTree(false)
+  def showAsTree(inTailPos: Bool)(using post: Product => String): String =
     def aux(v: Any, inTailPos: Bool = false): String = v match
       case Some(v) => "S of " + aux(v)
       case None => "N"
@@ -43,13 +43,15 @@ extension (t: Product)
         if flags.isEmpty then "()" else flags.mkString("(", ", ", ")")
       case t: Product => t.showAsTree(inTailPos)
       case v => v.toString
+    val postfix = post(t)
+    val prefix = t.productPrefix + (if postfix.isEmpty then "" else s" ($postfix)")
     t.productArity match
-      case 0 => t.productPrefix
-      case 1 => t.productPrefix + " of " + aux(t.productElement(0))
+      case 0 => prefix
+      case 1 => prefix + " of " + aux(t.productElement(0))
       case a =>
         val args = t.productIterator.zipWithIndex.map:
           case (v, i) => t.productElementName(i) + " = " + aux(v, t.isInstanceOf[ProductWithTail] && i === a - 1)
-        t.productPrefix + locally:
+        prefix + locally:
           if inTailPos then ": \\\n" + args.mkString("\n")
           else ":\n" + args.mkString("\n").indent("  ")
 
