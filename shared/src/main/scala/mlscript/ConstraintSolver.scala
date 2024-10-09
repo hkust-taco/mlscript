@@ -510,7 +510,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           //    the original constraining context!
           (done_ls, done_rs) match {
             case (LhsRefined(S(Without(b, _)), _, _, _), RhsBot) => rec(b, BotType, true)
-            case (LhsTop, _) | (LhsRefined(N, empty(), RecordType(Nil), empty()), _) =>
+            case (LhsTop, _) | (LhsRefined(N, EmptyColl(), RecordType(Nil), EmptyColl()), _) =>
               // TODO ^ actually get rid of LhsTop and RhsBot...? (might make constraint solving slower)
               reportError()
             case (LhsRefined(_, ts, _, trs), RhsBases(pts, _, _)) if ts.exists(pts.contains) => ()

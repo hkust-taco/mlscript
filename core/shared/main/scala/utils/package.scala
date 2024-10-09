@@ -204,7 +204,8 @@ package object utils {
     def single[A: Ordering, B](ab: A -> B): SortedMap[A, B] = (SortedMap.newBuilder[A, B] += ab).result()
   }
   
-  def TODO(msg: Any): Nothing = throw new NotImplementedError(msg.toString)
+  def TODO(msg: Any): Nothing = throw new NotImplementedError(
+    msg.toString + s" (of class ${msg.getClass().getSimpleName()})")
   def TODO(msg: Any, cond: Bool): Unit = if (cond) TODO(msg)
   def die: Nothing = lastWords("Program reached and unexpected state.")
   def lastWords(msg: String): Nothing = throw new Exception(s"Internal Error: $msg")
@@ -226,7 +227,7 @@ package object utils {
     }
   
   
-  object empty {
+  object EmptyColl {
     def unapply(it: Iterable[Any]): Bool = it.isEmpty
   }
   

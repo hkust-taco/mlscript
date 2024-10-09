@@ -433,7 +433,7 @@ trait TypeSimplifier { self: Typer =>
                     S(ArrayType(inner.update(go(_, pol.map(!_)), go(_, pol)))(at.prov)) -> nFields
                   case S(sp @ SpliceType(elems)) =>
                     S(sp.updateElems(go(_, pol), go(_, pol.map(!_)), go(_, pol))) -> nFields
-                  case S(wt @ Without(b: ComposedType, ns @ empty())) =>
+                  case S(wt @ Without(b: ComposedType, ns @ EmptyColl())) =>
                     S(Without(b.map(go(_, pol)), ns)(wt.prov)) -> nFields // FIXME very hacky
                   case S(wt @ Without(b, ns)) => S(Without(go(b, pol), ns)(wt.prov)) -> nFields
                   case N => N -> nFields

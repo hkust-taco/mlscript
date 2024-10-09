@@ -23,8 +23,7 @@ fun assertNotZero(x) =
   `if (x `== `0.0) then `error else x
 let checkedDiv = x `=> y `=> x `/. (assertNotZero(y))
 run(checkedDiv)
-//│ ╔══[ERROR] Cannot quote If(Let(scrut@59,Unquoted(Quoted(App(Ref(==),Tup(List(Fld(‹›,Unquoted(Ref(x@58)),None), Fld(‹›,Unquoted(Quoted(Lit(DecLit(0.0)))),None)))))),Cons(Branch(Ref(scrut@59),LitPat(BoolLit(true)),Else(Unquoted(Quoted(Ref(error))))),Else(Unquoted(Ref(x@58))))))
-//│ ╙──
+//│ ═══[ERROR] Cannot quote If(Let(scrut@59,Unquoted(Quoted(App(Ref(==),Tup(List(Fld(‹›,Unquoted(Ref(x@58)),None), Fld(‹›,Unquoted(Quoted(Lit(DecLit(0.0)))),None)))))),Cons(Branch(Ref(scrut@59),LitPat(BoolLit(true)),Else(Unquoted(Quoted(Ref(error))))),Else(Unquoted(Ref(x@58))))))
 //│ Type: Num -> (Num -> Num)
 
 

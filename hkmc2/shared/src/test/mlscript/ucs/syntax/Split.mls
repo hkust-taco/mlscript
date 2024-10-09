@@ -99,7 +99,7 @@ if
   x
   is
     A then "A"
-//│ /!!!\ Uncaught error: scala.NotImplementedError: List()
+//│ /!!!\ Uncaught error: scala.NotImplementedError: List() (of class Nil$)
 
 x
   + 1

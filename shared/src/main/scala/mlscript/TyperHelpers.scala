@@ -258,7 +258,7 @@ abstract class TyperHelpers { Typer: Typer =>
     case TupleType(fields) => TupleType(fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(bt.prov)
     case ArrayType(inner) => ArrayType(inner.update(f(pol.map(!_), _), f(pol, _)))(bt.prov)
     case sp @SpliceType(elems) => sp.updateElems(f(pol, _), f(pol.map(!_), _), f(pol, _))
-    case wt @ Without(b: ComposedType, ns @ empty()) => Without(b.map(f(pol, _)), ns)(wt.prov) // FIXME very hacky
+    case wt @ Without(b: ComposedType, ns @ EmptyColl()) => Without(b.map(f(pol, _)), ns)(wt.prov) // FIXME very hacky
     case Without(base, names) => Without(f(pol, base), names)(bt.prov)
     case _: ClassTag => bt
   }

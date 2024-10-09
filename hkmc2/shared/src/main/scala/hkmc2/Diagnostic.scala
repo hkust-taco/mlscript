@@ -14,6 +14,7 @@ object Diagnostic:
   enum Kind:
     case Error
     case Warning
+    case Internal
   
   enum Source:
     case Lexing
@@ -34,6 +35,12 @@ final case class WarningReport(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]], s
 object WarningReport:
   def apply(msgs: Ls[Message -> Opt[Loc]], source: Source = Source.Typing): WarningReport =
     WarningReport(msgs.head._1.show, msgs, source)
+
+final case class InternalError(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]], source: Source) extends Diagnostic(mainMsg):
+  val kind: Kind = Kind.Internal
+object InternalError:
+  def apply(msgs: Ls[Message -> Opt[Loc]], source: Source = Source.Typing): InternalError =
+    InternalError(msgs.head._1.show, msgs, source)
 
 
 final case class Loc(spanStart: Int, spanEnd: Int, origin: Origin):

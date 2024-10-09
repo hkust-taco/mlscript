@@ -1,4 +1,8 @@
-package hkmc2.utils
+package hkmc2
+
+import scala.util.chaining.scalaUtilChainingOps
+
+import mlscript.utils.*, shorthands.*
 
 
 extension (s: String)
@@ -20,13 +24,16 @@ import hkmc2.semantics.FldFlags
 import scala.collection.mutable.Buffer
 import mlscript.utils.StringOps
 
+trait ProductWithTail extends Product
+
 extension (t: Product)
-  def showAsTree: String =
-    def aux(v: Any): String = v match
+  def showAsTree: String = showAsTree(false)
+  def showAsTree(inTailPos: Bool): String =
+    def aux(v: Any, inTailPos: Bool = false): String = v match
       case Some(v) => "S of " + aux(v)
       case None => "N"
       case Nil => "Nil"
-      case xs: List[_] => "Ls of \n" + xs.iterator.map(aux).mkString("\n").indent("  ")
+      case xs: List[_] => "Ls of \n" + xs.iterator.map(aux(_)).mkString("\n").indent("  ")
       case s: String => s.escaped
       case FldFlags(mut, spec, genGetter) =>
         val flags = Buffer.empty[String]
@@ -34,13 +41,15 @@ extension (t: Product)
         if spec then flags += "spec"
         if genGetter then flags += "gen"
         if flags.isEmpty then "()" else flags.mkString("(", ", ", ")")
-      case t: Product => t.showAsTree
+      case t: Product => t.showAsTree(inTailPos)
       case v => v.toString
     t.productArity match
       case 0 => t.productPrefix
       case 1 => t.productPrefix + " of " + aux(t.productElement(0))
-      case _ =>
+      case a =>
         val args = t.productIterator.zipWithIndex.map:
-          case (v, i) => t.productElementName(i) + " = " + aux(v)
-        t.productPrefix + ":\n" + args.mkString("\n").indent("  ")
+          case (v, i) => t.productElementName(i) + " = " + aux(v, t.isInstanceOf[ProductWithTail] && i === a - 1)
+        t.productPrefix + locally:
+          if inTailPos then ": \\\n" + args.mkString("\n")
+          else ":\n" + args.mkString("\n").indent("  ")
 

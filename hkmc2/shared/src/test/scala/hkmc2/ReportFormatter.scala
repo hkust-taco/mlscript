@@ -9,29 +9,33 @@ class ReportFormatter(output: Str => Unit):
   def apply(blockLineNum: Int, diags: Ls[Diagnostic], showRelativeLineNums: Bool): Unit =
     diags.foreach { diag =>
       val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
-      val headStr = diag match
+      val onlyOneLine = diag.allMsgs.size =:= 1 && diag.allMsgs.head._2.isEmpty
+      val headStr =
+        val headChar = if onlyOneLine then '═' else '╔'
+        diag match
         case ErrorReport(msg, loco, src) =>
           src match
             case Diagnostic.Source.Lexing =>
-              // totalParseErrors += 1
-              s"╔══[LEXICAL ERROR] "
+              s"$headChar══[LEXICAL ERROR] "
             case Diagnostic.Source.Parsing =>
-              // totalParseErrors += 1
-              s"╔══[PARSE ERROR] "
+              s"$headChar══[PARSE ERROR] "
+            case Diagnostic.Source.Runtime =>
+              s"$headChar══[RUNTIME ERROR] "
             case _ => // TODO customize too
-              // totalTypeErrors += 1
-              s"╔══[ERROR] "
+              s"$headChar══[ERROR] "
         case WarningReport(msg, loco, src) =>
-          // totalWarnings += 1
-          s"╔══[WARNING] "
+          s"$headChar══[WARNING] "
+        case InternalError(msg, loco, src) =>
+          s"$headChar══[INTERNAL ERROR] "
       val lastMsgNum = diag.allMsgs.size - 1
       var globalLineNum = blockLineNum
       diag.allMsgs.zipWithIndex.foreach { case ((msg, loco), msgNum) =>
         val isLast = msgNum =:= lastMsgNum
         val msgStr = msg.showIn(sctx)
         if msgNum =:= 0 then output(headStr + msgStr)
+        else if loco.isEmpty && diag.allMsgs.size =:= 1 then
+          if !onlyOneLine then output("╙──")
         else output(s"${if isLast && loco.isEmpty then "╙──" else "╟──"} ${msgStr}")
-        if loco.isEmpty && diag.allMsgs.size =:= 1 then output("╙──")
         loco.foreach { loc =>
           val (startLineNum, startLineStr, startLineCol) =
             loc.origin.fph.getLineColAt(loc.spanStart)
