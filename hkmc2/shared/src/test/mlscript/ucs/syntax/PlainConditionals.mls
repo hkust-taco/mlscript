@@ -1,5 +1,4 @@
-:global
-:noTypeCheck
+
 
 fun f: Any -> Bool
 fun g: Any -> Bool
@@ -36,9 +35,9 @@ fun foo(x) = x is
   Pair
   Int
 //│ ╔══[ERROR] only one pattern is supported in shorthands
-//│ ║  l.36: 	  Pair
+//│ ║  l.35: 	  Pair
 //│ ║        	  ^^^^
-//│ ║  l.37: 	  Int
+//│ ║  l.36: 	  Int
 //│ ╙──      	^^^^^
 
 :e
@@ -46,21 +45,21 @@ fun foo(x) = x is
   Pair(a, b) and a > b
   Int
 //│ ╔══[ERROR] only one pattern is supported in shorthands
-//│ ║  l.46: 	  Pair(a, b) and a > b
+//│ ║  l.45: 	  Pair(a, b) and a > b
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.47: 	  Int
+//│ ║  l.46: 	  Int
 //│ ╙──      	^^^^^
 
 :todo // support `|`
 fun foo(x) = x is Pair(a, b) | Int
 //│ ╔══[ERROR] Unknown constructor `|`.
-//│ ║  l.55: 	fun foo(x) = x is Pair(a, b) | Int
+//│ ║  l.54: 	fun foo(x) = x is Pair(a, b) | Int
 //│ ╙──      	                             ^
 
 :todo
 fun foo(x) = x is (Pair(a, b) and a > b) | Int
 //│ ╔══[ERROR] Unknown constructor `|`.
-//│ ║  l.61: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
+//│ ║  l.60: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
 //│ ╙──      	                                         ^
 
 
@@ -69,5 +68,6 @@ class A[T](arg: T)
 
 
 x => (x is A(_))
+
 
 

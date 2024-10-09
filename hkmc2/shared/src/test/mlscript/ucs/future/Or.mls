@@ -1,5 +1,4 @@
-:global
-:noTypeCheck
+
 
 class Some[T](value: T)
 
@@ -12,10 +11,10 @@ fun f(a, b) = if a is
     or  b is Some(v)  then v
   else 0
 //│ ╔══[PARSE ERROR] Unexpected 'and' keyword here
-//│ ║  l.11: 	    and b is Some(v') then v + v'
+//│ ║  l.10: 	    and b is Some(v') then v + v'
 //│ ╙──      	    ^^^
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.10: 	  Some(v)
-//│ ╙──      	  ^^^^^^^
+//│ ║  l.9: 	  Some(v)
+//│ ╙──     	  ^^^^^^^
 
 

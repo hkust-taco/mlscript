@@ -4,10 +4,10 @@
 
 mut let x = 1
 //│ Parsed:
-//│ 	Modified(keyword 'mut',Let(Ident(x),IntLit(1),None))
+//│ 	Modified(keyword 'mut',None,Let(Ident(x),IntLit(1),None))
 
 mut mut let x = 1
 //│ Parsed:
-//│ 	Modified(keyword 'mut',Modified(keyword 'mut',Let(Ident(x),IntLit(1),None)))
+//│ 	Modified(keyword 'mut',None,Modified(keyword 'mut',None,Let(Ident(x),IntLit(1),None)))
 
 

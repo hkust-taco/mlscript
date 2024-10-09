@@ -19,6 +19,8 @@ class ReportFormatter(output: Str => Unit):
               s"$headChar══[LEXICAL ERROR] "
             case Diagnostic.Source.Parsing =>
               s"$headChar══[PARSE ERROR] "
+            case Diagnostic.Source.Compilation =>
+              s"$headChar══[COMPILATION ERROR] "
             case Diagnostic.Source.Runtime =>
               s"$headChar══[RUNTIME ERROR] "
             case _ => // TODO customize too

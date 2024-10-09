@@ -1,5 +1,4 @@
-:global
-:noTypeCheck
+
 
 class Numb(n: Int)
 
@@ -9,8 +8,8 @@ fun process(e) =
     Numb(n) and n > 0 then n
     Numb(m) then n
 //│ ╔══[ERROR] Name not found: n
-//│ ║  l.10: 	    Numb(m) then n
-//│ ╙──      	                 ^
+//│ ║  l.9: 	    Numb(m) then n
+//│ ╙──     	                 ^
 
 
 process(Numb(-10))
@@ -40,7 +39,7 @@ fun process(e) =
     Pair(Vec(n),  Numb(n)) then n
     Pair(Numb(n), Vec(n))  then n
 //│ ╔══[ERROR] Name not found: n
-//│ ║  l.39: 	    Pair(Vec(xs), Vec(ys)) then n
+//│ ║  l.38: 	    Pair(Vec(xs), Vec(ys)) then n
 //│ ╙──      	                                ^
 
 

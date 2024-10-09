@@ -1,5 +1,4 @@
-:global
-:noTypeCheck
+
 
 type Option[out A] = Some[A] | None
 class Some[out A](value: A)
@@ -26,3 +25,5 @@ fun insert(t, v) = if t is
 find(Empty, 0)
 find(Node(0, Empty, Empty), 0)
 find(Node(1, Empty, Empty), 0)
+
+

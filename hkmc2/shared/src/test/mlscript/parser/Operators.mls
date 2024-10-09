@@ -1,4 +1,3 @@
-:global
 :parseOnly
 
 
@@ -93,7 +92,7 @@ x =>
  2,
  3
 //│ ╔══[PARSE ERROR] Unexpected comma in this position
-//│ ║  l.93: 	 2,
+//│ ║  l.92: 	 2,
 //│ ╙──      	  ^
 //│ Parsed:
 //│ 	App(Ident(+),Tup(List(IntLit(1), Block(List(IntLit(2), IntLit(3))))))

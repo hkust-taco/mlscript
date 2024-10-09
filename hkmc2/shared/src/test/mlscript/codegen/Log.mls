@@ -1,0 +1,39 @@
+:js
+
+
+declare val console
+//│ JS:
+//│ let res; res = undefined;
+//│ = undefined
+
+console.log("a")
+console.log("b")
+123
+//│ JS:
+//│ let res, tmp, tmp1; tmp = console.log("a"); tmp1 = console.log("b"); res = 123;
+//│ // Standard Output:
+//│ a
+//│ b
+//│ = 123
+
+let l = console.log
+l(123)
+//│ JS:
+//│ let l, res, tmp; l = console.log; tmp = l(123); res = tmp;
+//│ // Standard Output:
+//│ 123
+//│ = undefined
+
+42
+//│ JS:
+//│ let res; res = 42;
+//│ = 42
+
+
+console.log("a")
+//│ JS:
+//│ let res, tmp; tmp = console.log("a"); res = tmp;
+//│ // Standard Output:
+//│ a
+//│ = undefined
+

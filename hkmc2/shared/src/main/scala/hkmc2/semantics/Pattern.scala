@@ -10,7 +10,7 @@ enum Pattern extends Located:
   case Alias(nme: VarSymbol, pattern: Pattern)
   case LitPat(literal: Literal)
   case Concrete(nme: VarSymbol)
-  case Var(nme: VarSymbol)
+  case Var(nme: BlockLocalSymbol)
   /**
     * Represents wildcard patterns or missing patterns which match everything.
     * Should be transformed from `Var("_")` or unrecognized terms.

@@ -1,36 +1,27 @@
 
 
 class Foo[A]
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A]()
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A](x: A)
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A](x: A -> Int)
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A](x: Foo[A])
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A](x: Foo[A] -> A)
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A](x: Bar[A])
 class Bar[B](x: Foo[Int], y: B -> Int)
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A](x: Bar[A])
 class Baz[C](x: C)
 class Bar[B](x: Foo[Int], y: Baz[B] -> Int)
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 
 class Foo[A] with
   fun foo: A -> A
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 
 
@@ -39,16 +30,14 @@ class Foo[A] with
 :e
 class Foo[A](x: Foo[A, A])
 //│ ╔══[ERROR] Wrong number of type arguments
-//│ ║  l.40: 	class Foo[A](x: Foo[A, A])
+//│ ║  l.31: 	class Foo[A](x: Foo[A, A])
 //│ ╙──      	                ^^^^^^^^
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 :fixme
 :e
 class Foo[A](x: Bar[A])
 class Bar(x: Foo[Int])
 //│ ╔══[ERROR] Wrong number of type arguments
-//│ ║  l.48: 	class Foo[A](x: Bar[A])
+//│ ║  l.38: 	class Foo[A](x: Bar[A])
 //│ ╙──      	                ^^^^^
-//│ Type: Ctor(lit:UnitLit(true),List())
 

@@ -1,5 +1,4 @@
-:global
-:noTypeCheck
+
 
 fun (&&): (Bool, Bool) -> Bool
 fun (===): (Any, Any) -> Bool
@@ -300,3 +299,5 @@ isBalanced(example2) ~~> false
 isBalanced(Node(1, single(-1), single(3))) ~~> true
 isBalanced(Node(1, single(-1), Node(3, single(2), Empty))) ~~> true
 isBalanced(Node(1, single(-1), Node(3, Empty, single(4)))) ~~> true
+
+

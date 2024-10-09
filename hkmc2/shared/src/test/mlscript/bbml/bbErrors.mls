@@ -1,18 +1,17 @@
-:global
 :bbml
 :e
 
 
 2(2)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.6: 	2(2)
+//│ ║  l.5: 	2(2)
 //│ ║       	^^^^
 //│ ╙── because: cannot constrain  Int  <:  Int ->{α0_1} α1_1
 //│ Type: ⊥
 
 (x => x(0))(1)
 //│ ╔══[ERROR] Type error in integer literal with expected type α2_1
-//│ ║  l.13: 	(x => x(0))(1)
+//│ ║  l.12: 	(x => x(0))(1)
 //│ ║        	            ^
 //│ ╟── because: cannot constrain  Int  <:  α2_1
 //│ ╟── because: cannot constrain  Int  <:  α2_1
@@ -21,10 +20,10 @@
 
 (1).Foo#a()
 //│ ╔══[ERROR] Name not found: Foo
-//│ ║  l.22: 	(1).Foo#a()
+//│ ║  l.21: 	(1).Foo#a()
 //│ ╙──      	   ^^^^
 //│ ╔══[ERROR] Term shape not yet supported by BbML: SelProj(Lit(IntLit(1)),Error,Ident(a))
-//│ ║  l.22: 	(1).Foo#a()
+//│ ║  l.21: 	(1).Foo#a()
 //│ ╙──      	 ^^^^^^^^
 //│ Type: ⊥
 
@@ -32,7 +31,7 @@
 fun inc(x) = x + 1
 inc("oops")
 //│ ╔══[ERROR] Type error in string literal with expected type α9_1
-//│ ║  l.33: 	inc("oops")
+//│ ║  l.32: 	inc("oops")
 //│ ║        	    ^^^^^^
 //│ ╟── because: cannot constrain  Str  <:  α9_1
 //│ ╟── because: cannot constrain  Str  <:  α9_1
@@ -42,7 +41,7 @@ inc("oops")
 fun inc(x) = x + 1
 inc : Int
 //│ ╔══[ERROR] Type error in reference with expected type Int
-//│ ║  l.43: 	inc : Int
+//│ ║  l.42: 	inc : Int
 //│ ║        	^^^
 //│ ╙── because: cannot constrain  α12_1 -> Int  <:  Int
 //│ Type: Int

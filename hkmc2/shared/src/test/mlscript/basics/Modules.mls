@@ -1,3 +1,5 @@
+:typeCheck
+
 
 module Foo
 //│ Type: Ctor(lit:UnitLit(true),List())
@@ -5,17 +7,17 @@ module Foo
 :pe
 module Foo with
 //│ ╔══[PARSE ERROR] Expected indented block after type declaration body; found end of input instead
-//│ ║  l.6: 	module Foo with
+//│ ║  l.8: 	module Foo with
 //│ ╙──     	               ^
 //│ Type: Ctor(Bot,List())
 
 :fixme
 module Foo with val x = 1
 //│ ╔══[PARSE ERROR] Expected indented block after type declaration body; found 'val' keyword instead
-//│ ║  l.13: 	module Foo with val x = 1
+//│ ║  l.15: 	module Foo with val x = 1
 //│ ╙──      	                ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.13: 	module Foo with val x = 1
+//│ ║  l.15: 	module Foo with val x = 1
 //│ ╙──      	                    ^
 //│ Type: Ctor(Bot,List())
 
@@ -29,4 +31,5 @@ Foo
 :fixme
 Foo.x
 //│ /!!!\ Uncaught error: scala.MatchError: Sel(Ref(class:Foo),Ident(x)) (of class hkmc2.semantics.Term$Sel)
+
 

@@ -1,4 +1,3 @@
-:global
 :bbml
 
 
@@ -35,13 +34,13 @@ fun mapi = s => f =>
       i := !i + 1
       f(!i, x)
 //│ ╔══[ERROR] Type error in region expression with expected type Seq[out <α>23_2, out <α>24_2]
-//│ ║  l.33: 	    let i = r.ref 0
+//│ ║  l.32: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
-//│ ║  l.34: 	    map(s) of x =>
+//│ ║  l.33: 	    map(s) of x =>
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.35: 	      i := !i + 1
+//│ ║  l.34: 	      i := !i + 1
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.36: 	      f(!i, x)
+//│ ║  l.35: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  Seq[out α36_2, out α37_2]  <:  Seq[out <α>23_2, out <α>24_2]
 //│ ╟── because: cannot constrain  D( α37_2 )  <:  <α>24_2
@@ -50,13 +49,13 @@ fun mapi = s => f =>
 //│ ╟── because: cannot constrain  α38_2  <:  ¬(~<α>24_2)
 //│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~<α>24_2)
 //│ ╔══[ERROR] Type error in region expression with expected type Seq[out <α>23_2, out <α>24_2]
-//│ ║  l.33: 	    let i = r.ref 0
+//│ ║  l.32: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
-//│ ║  l.34: 	    map(s) of x =>
+//│ ║  l.33: 	    map(s) of x =>
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.35: 	      i := !i + 1
+//│ ║  l.34: 	      i := !i + 1
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.36: 	      f(!i, x)
+//│ ║  l.35: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  Seq[out α36_2, out α37_2]  <:  Seq[out <α>23_2, out <α>24_2]
 //│ ╟── because: cannot constrain  D( α37_2 )  <:  <α>24_2
@@ -65,13 +64,13 @@ fun mapi = s => f =>
 //│ ╟── because: cannot constrain  α38_2  <:  ¬(~<α>24_2)
 //│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~<α>24_2)
 //│ ╔══[ERROR] Type error in region expression with expected type Seq[out <α>23_2, out <α>24_2]
-//│ ║  l.33: 	    let i = r.ref 0
+//│ ║  l.32: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
-//│ ║  l.34: 	    map(s) of x =>
+//│ ║  l.33: 	    map(s) of x =>
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.35: 	      i := !i + 1
+//│ ║  l.34: 	      i := !i + 1
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.36: 	      f(!i, x)
+//│ ║  l.35: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  Seq[out α36_2, out α37_2]  <:  Seq[out <α>23_2, out <α>24_2]
 //│ ╟── because: cannot constrain  D( α37_2 )  <:  <α>24_2

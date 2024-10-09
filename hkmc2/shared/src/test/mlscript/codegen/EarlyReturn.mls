@@ -1,0 +1,18 @@
+:js
+
+
+:todo
+fun f() =
+  return 1
+//│ ╔══[PARSE ERROR] Unexpected literal here
+//│ ║  l.6: 	  return 1
+//│ ╙──     	         ^
+//│ ╔══[ERROR] Name not found: return
+//│ ║  l.6: 	  return 1
+//│ ╙──     	  ^^^^^^
+//│ JS:
+//│ let res; res = undefined;
+//│ = undefined
+
+
+

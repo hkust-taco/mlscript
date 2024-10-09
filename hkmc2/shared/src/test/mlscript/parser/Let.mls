@@ -1,11 +1,10 @@
-:global
 :parseOnly
 
 
 :pe
 let
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of input instead
-//│ ║  l.6: 	let
+//│ ║  l.5: 	let
 //│ ╙──     	   ^
 //│ Parsed:
 //│ 	Error()
@@ -13,7 +12,7 @@ let
 :pe
 let x
 //│ ╔══[PARSE ERROR] Expected '=' keyword after 'let' binding head; found end of input instead
-//│ ║  l.14: 	let x
+//│ ║  l.13: 	let x
 //│ ╙──      	     ^
 //│ Parsed:
 //│ 	Error()
@@ -21,7 +20,7 @@ let x
 :pe
 let x =
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding equals sign; found end of input instead
-//│ ║  l.22: 	let x =
+//│ ║  l.21: 	let x =
 //│ ╙──      	       ^
 //│ Parsed:
 //│ 	Error()
@@ -38,7 +37,7 @@ let x =
 :pe
 let x = y in
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding `in` clause; found end of input instead
-//│ ║  l.39: 	let x = y in
+//│ ║  l.38: 	let x = y in
 //│ ╙──      	            ^
 //│ Parsed:
 //│ 	Error()
@@ -50,7 +49,7 @@ let x = y in z
 :pe
 let x = y class
 //│ ╔══[PARSE ERROR] Expected end of input; found 'class' keyword instead
-//│ ║  l.51: 	let x = y class
+//│ ║  l.50: 	let x = y class
 //│ ╙──      	          ^^^^^
 //│ Parsed:
 //│ 	Let(Ident(x),Ident(y),None)
@@ -68,7 +67,7 @@ foo
 let
   x
 //│ ╔══[PARSE ERROR] Expected '=' keyword after 'let' binding head; found end of input instead
-//│ ║  l.69: 	  x
+//│ ║  l.68: 	  x
 //│ ╙──      	   ^
 //│ Parsed:
 //│ 	Error()
@@ -104,9 +103,9 @@ let
   x = 1
 in x
 //│ ╔══[PARSE ERROR] Expected end of input; found newline instead
-//│ ║  l.104: 	  x = 1
+//│ ║  l.103: 	  x = 1
 //│ ║         	       ^
-//│ ║  l.105: 	in x
+//│ ║  l.104: 	in x
 //│ ╙──       	
 //│ Parsed:
 //│ 	Let(Ident(x),IntLit(1),None)
@@ -116,10 +115,10 @@ let
 x = 1
 in x
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found newline instead
-//│ ║  l.117: 	in x
+//│ ║  l.116: 	in x
 //│ ╙──       	    ^
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.116: 	x = 1
+//│ ║  l.115: 	x = 1
 //│ ╙──       	  ^
 //│ Parsed:
 //│ 	Error()
@@ -129,7 +128,7 @@ in x
 let
   with
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found 'with' keyword instead
-//│ ║  l.130: 	  with
+//│ ║  l.129: 	  with
 //│ ╙──       	  ^^^^
 //│ Parsed:
 //│ 	Error()
@@ -170,7 +169,7 @@ x =>
 x => let x = 1
   x
 //│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.171: 	  x
+//│ ║  l.170: 	  x
 //│ ╙──       	  ^
 //│ Parsed:
 //│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Let(Ident(x),IntLit(1),None))
@@ -179,7 +178,7 @@ x => let x = 1
 :pe
 if
 //│ ╔══[PARSE ERROR] Expected expression or indented block after `if` keyword; found end of input instead
-//│ ║  l.180: 	if
+//│ ║  l.179: 	if
 //│ ╙──       	  ^
 //│ Parsed:
 //│ 	Error()

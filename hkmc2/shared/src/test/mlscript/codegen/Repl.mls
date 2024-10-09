@@ -1,0 +1,30 @@
+:js
+
+
+fun res
+//│ JS:
+//│ let res; res = undefined;
+//│ = undefined
+
+fun res() = 1
+//│ JS:
+//│ let res; res = undefined;
+//│ = undefined
+
+:showRepl
+1
+//│ JS:
+//│ let res; res = 1;
+//│ = 1
+
+res
+//│ JS:
+//│ let res; res = res;
+//│ = undefined
+
+2
+//│ JS:
+//│ let res; res = 2;
+//│ = 2
+
+

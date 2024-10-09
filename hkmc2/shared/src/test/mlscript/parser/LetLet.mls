@@ -1,14 +1,13 @@
-:global
 :parseOnly
 
 
 :pe
 let let
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of input instead
-//│ ║  l.6: 	let let
+//│ ║  l.5: 	let let
 //│ ╙──     	       ^
 //│ ╔══[PARSE ERROR] Expected '=' keyword after 'let' binding head; found end of input instead
-//│ ║  l.6: 	let let
+//│ ║  l.5: 	let let
 //│ ╙──     	       ^
 //│ Parsed:
 //│ 	Error()
@@ -16,7 +15,7 @@ let let
 :pe
 let x = 1 let y = 2
 //│ ╔══[PARSE ERROR] Expected end of input; found 'let' keyword instead
-//│ ║  l.17: 	let x = 1 let y = 2
+//│ ║  l.16: 	let x = 1 let y = 2
 //│ ╙──      	          ^^^
 //│ Parsed:
 //│ 	Let(Ident(x),IntLit(1),None)
@@ -40,10 +39,10 @@ let
   x
   y
 //│ ╔══[PARSE ERROR] Expected '=' keyword after 'let' binding head; found newline instead
-//│ ║  l.41: 	  y
+//│ ║  l.40: 	  y
 //│ ╙──      	   ^
 //│ ╔══[PARSE ERROR] Expected '=' keyword after 'let' binding head; found end of input instead
-//│ ║  l.41: 	  y
+//│ ║  l.40: 	  y
 //│ ╙──      	   ^
 //│ Parsed:
 //│ 	Error()

@@ -127,8 +127,8 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
     def rec(split: Split)(using mode: Mode, vs: VarSet): Split = split match
       case Split.Nil => log("CASE Nil"); split
       case Split.Else(_) => log("CASE Else"); split
-      case split @ Split.Let(nme, _, tail) =>
-        log(s"CASE Let ${nme.name}")
+      case split @ Split.Let(sym, _, tail) =>
+        log(s"CASE Let ${sym}")
         split.copy(tail = rec(tail))
       case split @ Split.Cons(head, tail) =>
         log(s"CASE Cons ${head.showDbg}")
@@ -218,10 +218,10 @@ object Normalization:
     case (Tree.UnitLit(true), s: ClassSymbol) if s.nme === "Unit" => true // TODO: how about undefined?
     case (_, _) => false
 
-  final case class VarSet(declared: Set[VarSymbol]):
-    def +(nme: VarSymbol): VarSet = copy(declared + nme)
-    infix def has(nme: VarSymbol): Bool = declared.contains(nme)
-    def showDbg: Str = declared.iterator.map(_.name).mkString("{", ", ", "}")
+  final case class VarSet(declared: Set[BlockLocalSymbol]):
+    def +(nme: BlockLocalSymbol): VarSet = copy(declared + nme)
+    infix def has(nme: BlockLocalSymbol): Bool = declared.contains(nme)
+    def showDbg: Str = declared.iterator.mkString("{", ", ", "}")
 
   object VarSet:
     def apply(): VarSet = VarSet(Set())

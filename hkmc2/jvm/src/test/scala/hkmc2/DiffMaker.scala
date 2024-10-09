@@ -51,12 +51,12 @@ abstract class DiffMaker:
   
   class Command[A](val name: Str, var isGlobal: Bool = false)(val process: Str => A):
     require(name.nonEmpty)
-    require(name.forall(_.isLetterOrDigit))
+    require(name.forall(l => l.isLetterOrDigit || l === '!'))
     if commands.contains(name) then
       throw new IllegalArgumentException(s"Option '$name' already exists")
     commands += name -> this
     private var currentValue: Opt[A] = N
-    private[DiffMaker] def setCurrentValue(a: A): Unit =
+    private[hkmc2] def setCurrentValue(a: A): Unit =
       currentValue = S(a)
       onSet()
     def get: Opt[A] = currentValue
@@ -72,8 +72,16 @@ abstract class DiffMaker:
       val body = if commentIndex == -1 then line else line.take(commentIndex)
       assert(body.forall(_.isWhitespace)))
   
+  class FlagCommand(init: Bool, name: Str) extends NullaryCommand(name):
+    self =>
+    val disable = new NullaryCommand("!" + name):
+      override def onSet(): Unit =
+        if isSet then self.unset
+        else self.setCurrentValue(())
+    if init then setCurrentValue(()) else disable.setCurrentValue(())
   
   val global = NullaryCommand("global")
+  global.setCurrentValue(()) // * Starts enabled at the top of the file
   
   val fixme = Command("fixme")(_ => ())
   val todo = Command("todo")(_ => ())
@@ -83,9 +91,11 @@ abstract class DiffMaker:
   
   val debug = NullaryCommand("d")
   
-  val expectParseError = NullaryCommand("pe")
+  val expectParseErrors = NullaryCommand("pe")
   val expectTypeErrors = NullaryCommand("e")
-  val expectRuntimeError = NullaryCommand("re")
+  val expectRuntimeErrors = NullaryCommand("re")
+  val expectCodeGenErrors = NullaryCommand("ge")
+  val allowRuntimeErrors = NullaryCommand("allowRuntimeErrors")
   val expectWarnings = NullaryCommand("w")
   val showRelativeLineNums = NullaryCommand("showRelativeLineNums")
   
@@ -126,12 +136,12 @@ abstract class DiffMaker:
         d.source match
         case Diagnostic.Source.Lexing =>
           parseErrors += 1
-          if expectParseError.isUnset && !tolerateErrors then
+          if expectParseErrors.isUnset && !tolerateErrors then
             failures += globalStartLineNum
             unexpected("lexing error", blockLineNum)
         case Diagnostic.Source.Parsing =>
           parseErrors += 1
-          if expectParseError.isUnset && !tolerateErrors then
+          if expectParseErrors.isUnset && !tolerateErrors then
             failures += globalStartLineNum
             // doFail(fileName, blockLineNum, "unexpected parse error at ")
             unexpected("parse error", blockLineNum)
@@ -143,26 +153,35 @@ abstract class DiffMaker:
             unexpected("type error", blockLineNum)
         case Diagnostic.Source.Compilation =>
           compilationErrors += 1
-          TODO(d.source)
+          if expectCodeGenErrors.isUnset && !tolerateErrors then
+            failures += globalStartLineNum
+            unexpected("runtime error", blockLineNum)
         case Diagnostic.Source.Runtime =>
           runtimeErrors += 1
-          TODO(d.source)
+          if expectRuntimeErrors.isUnset && !tolerateErrors then
+            failures += globalStartLineNum
+            unexpected("runtime error", blockLineNum)
       case Diagnostic.Kind.Warning =>
         warnings += 1
-        // TODO(d.kind)
+        if expectWarnings.isUnset && !tolerateErrors then
+          failures += globalStartLineNum
+          unexpected("warning", blockLineNum)
+      case Diagnostic.Kind.Internal =>
+        failures += globalStartLineNum
+        unexpected("internal error", blockLineNum)
       report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
     
     processOrigin(origin)(using raise)
     
     // Note: when `todo` is set, we allow the lack of errors.
     // Use `todo` when the errors are expected but not yet implemented.
-    if expectParseError.isSet && parseErrors == 0 && todo.isUnset then
+    if expectParseErrors.isSet && parseErrors == 0 && todo.isUnset then
       failures += globalStartLineNum
       unexpected("lack of parse error", blockLineNum)
     if expectTypeErrors.isSet && typeErrors == 0 && todo.isUnset then
       failures += globalStartLineNum
       unexpected("lack of type error", blockLineNum)
-    if expectRuntimeError.isSet && runtimeErrors == 0 && todo.isUnset then
+    if expectRuntimeErrors.isSet && runtimeErrors == 0 && todo.isUnset then
       failures += globalStartLineNum
       unexpected("lack of runtime error", blockLineNum)
     if expectWarnings.isSet && warnings == 0 && todo.isUnset then

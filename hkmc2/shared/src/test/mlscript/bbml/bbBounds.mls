@@ -1,4 +1,3 @@
-:global
 :bbml
 
 
@@ -30,7 +29,7 @@ iid
 :e
 iid("42")
 //│ ╔══[ERROR] Type error in string literal with expected type α9_1
-//│ ║  l.31: 	iid("42")
+//│ ║  l.30: 	iid("42")
 //│ ║        	    ^^^^
 //│ ╟── because: cannot constrain  Str  <:  α9_1
 //│ ╟── because: cannot constrain  Str  <:  α9_1
@@ -60,7 +59,7 @@ foo(bar)
 :e
 fun badfoo: [A extends Str restricts Int] -> A -> A
 //│ ╔══[ERROR] Type error in block
-//│ ║  l.61: 	fun badfoo: [A extends Str restricts Int] -> A -> A
+//│ ║  l.60: 	fun badfoo: [A extends Str restricts Int] -> A -> A
 //│ ║        	                                             ^^^^^^
 //│ ╙── because: cannot constrain  Int  <:  Str
 //│ Type: ⊤
@@ -111,7 +110,7 @@ fun h: [C] -> ([A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B
 :e
 bazbaz: [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
 //│ ╔══[ERROR] Cannot type non-function term Ref(bazbaz) as (<α>35_2) ->{⊥} (forall α34_3: α34_3) ->{⊥} <α>35_2
-//│ ║  l.112: 	bazbaz: [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
+//│ ║  l.111: 	bazbaz: [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
 //│ ╙──       	^^^^^^
 //│ Type: forall α33_2: (α33_2) ->{⊥} (forall α34_3: α33_2 -> α33_2) ->{⊥} α33_2
 //│ Where:
