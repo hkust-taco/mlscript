@@ -522,7 +522,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                       consume
                       if (tparams.nonEmpty) err(msg"Unsupported type parameters on 'let' binding" -> S(l1) :: Nil)
                       val rest = expr(0)
-                      R(Let(isLetRec.getOrElse(die), v, body, rest).withLoc(S(l0 ++ annotatedBody.toLoc)))
+                      R(Let(isLetRec.getOrElse(die), v, annotatedBody, rest).withLoc(S(l0 ++ annotatedBody.toLoc)))
                     case _ =>
                       R(NuFunDef(
                           isLetRec, v, opStr, tparams, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))
