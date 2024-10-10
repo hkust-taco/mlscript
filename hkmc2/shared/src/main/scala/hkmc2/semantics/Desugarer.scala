@@ -188,7 +188,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
       // expand from the N-th to the second match.
       lazy val tailSplit =
         val innermostSplit = consequent match
-          case L(tree) => termSplit(tree, identity)(fallback)
+          case L(tree) => termSplit(tree, identity)(Split.Nil)
           case R(tree) => (ctx: Ctx) => Split.default(term(tree)(using ctx))
         tail.foldRight(innermostSplit):
           case ((coda, pat), sequel) => ctx => trace(
@@ -196,7 +196,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
             post = (res: Split) => s"conjunct matches >>> $res"
           ):
             nominate(ctx, term(coda)(using ctx)):
-              expandMatch(_, pat, sequel)(fallback)
+              expandMatch(_, pat, sequel)(Split.Nil)
       // We apply `finish` to the first coda and expand the first match.
       // Note that the scrutinee might be not an identifier.
       headCoda match
