@@ -28,7 +28,7 @@ if foo of 1,
 //│ ╔══[ERROR] Unrecognized term split.
 //│ ║  l.20: 	  0 then "a"
 //│ ╙──      	^^
-//│ /!!!\ Uncaught error: scala.MatchError: If(Let(scrut@23,Lit(IntLit(1)),Else(Error))) (of class hkmc2.semantics.Term$If)
+//│ /!!!\ Uncaught error: scala.MatchError: If(Let(scrut@23,Lit(IntLit(1)),Nil)) (of class hkmc2.semantics.Term$If)
 
 :todo
 :pe
@@ -42,6 +42,6 @@ if foo
 //│ ╔══[ERROR] Unrecognized term split.
 //│ ║  l.36: 	if foo
 //│ ╙──      	   ^^^
-//│ /!!!\ Uncaught error: scala.MatchError: If(Else(Error)) (of class hkmc2.semantics.Term$If)
+//│ /!!!\ Uncaught error: scala.MatchError: If(Nil) (of class hkmc2.semantics.Term$If)
 
 

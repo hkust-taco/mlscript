@@ -145,7 +145,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
       scoped("ucs:normalized"):
         log(s"Normalized:\n${Split.display(normalized)}", noIndent = true)
       Term.If(normalized)
-    case IfElse(InfixApp(InfixApp(scrutinee, Keyword.`is`, Ident(cls)), Keyword.`then`, cons), alts) =>
+    case IfElse(InfixApp(InfixApp(scrutinee, Keyword.`is`, ctor @ Ident(cls)), Keyword.`then`, cons), alts) =>
       ctx.members.get(cls) match
         case S(sym: ClassSymbol) =>
           val scrutIdent = Ident("scrut"): Ident
@@ -154,7 +154,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
           Term.If:
             Split.Let(scrutVar, scrutTerm, Branch(
               scrutVar.ref(scrutIdent),
-              Pattern.Class(sym, N, true),
+              Pattern.Class(sym, N, true)(ctor),
               Split.default(term(cons))
             ) :: Split.default(term(alts)))
         case _ =>

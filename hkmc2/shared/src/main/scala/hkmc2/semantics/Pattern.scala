@@ -16,13 +16,16 @@ enum Pattern extends Located:
     * Should be transformed from `Var("_")` or unrecognized terms.
     */
   case Empty(source: Term)
-  case Class(nme: ClassSymbol, parameters: Opt[List[VarSymbol]], var refined: Bool)
+  case Class(nme: ClassSymbol, parameters: Opt[List[VarSymbol]], var refined: Bool)(val ident: Tree.Ident)
   case Tuple(fields: List[Pattern])
   case Record(entries: List[(VarSymbol -> Pattern)])
   
   def boundSymbols: Ls[Str -> Symbol] = ???
   
-  def toLoc: Opt[Loc] = N // TODO
+  def toLoc: Opt[Loc] = this match
+    case LitPat(literal) => literal.toLoc
+    case pat @ Class(_, _, _) => pat.ident.toLoc
+  
   
   /* 
   def toLoc: Opt[Loc] = Loc(children)

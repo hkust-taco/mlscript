@@ -43,6 +43,14 @@ enum Split extends AutoLocated:
     case Split.Else(default) => s"else ${default.showDbg}"
     case Split.Nil => ""
 
+  final override def withLoc(loco: Option[Loc]): this.type =
+    super.withLoc:
+      this match
+        // `Split.Nil` must not have a location. This prevents sharing locations,
+        // which causes the assertion of distinctness of origins to fail.
+        case Split.Nil => N
+        case _ => loco
+
   var isFallback: Bool = false
 end Split
 

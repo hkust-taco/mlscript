@@ -156,25 +156,26 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
    */
   def termSplit(tree: Tree, finish: Term => Term): Split => Sequel = tree match
     case Block(branches) =>
-      branches.foldRight(default):
-        case (Let(ident @ Ident(_), termTree, N), rest) => fallback => ctx => trace(
+      branches.foldRight(default): (t, elabFallback) =>
+        t match
+        case Let(ident @ Ident(_), termTree, N) => fallback => ctx => trace(
           pre = s"termSplit: let ${ident.name} = $termTree",
           post = (res: Split) => s"termSplit: let >>> $res"
         ):
           val sym = VarSymbol(ident, nextUid)
-          val restCtx = ctx + (ident.name -> sym)
-          Split.Let(sym, term(termTree)(using ctx), rest(fallback)(restCtx))
-        case (Modified(Keyword.`else`, default), rest) => fallback => ctx => trace(
+          val fallbackCtx = ctx + (ident.name -> sym)
+          Split.Let(sym, term(termTree)(using ctx), elabFallback(fallback)(fallbackCtx)).withLocOf(t)
+        case Modified(Keyword.`else`, default) => fallback => ctx => trace(
           pre = s"termSplit: else $default",
           post = (res: Split) => s"termSplit: else >>> $res"
         ):
           // TODO: report `rest` as unreachable
-          Split.default(term(default)(using ctx))
-        case (branch, rest) => fallback => ctx => trace(
+          Split.default(term(default)(using ctx)).withLocOf(t)
+        case branch => fallback => ctx => trace(
           pre = s"termSplit: $branch",
           post = (res: Split) => s"termSplit >>> $res"
         ):
-          termSplit(branch, finish)(rest(fallback)(ctx))(ctx)
+          termSplit(branch, finish)(elabFallback(fallback)(ctx))(ctx).withLocOf(t)
     case coda is rhs => fallback => ctx =>
       nominate(ctx, finish(term(coda)(using ctx))):
         patternSplit(rhs, _)(fallback)
@@ -211,11 +212,13 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
       post = (res: Split) => s"termSplit: after op >>> $res"
     ):
       // Resolve the operator.
-      val opRef = ctx.locals.get(opName).orElse(ctx.members.get(opName)) match
+      val opRef =
+        ctx.locals.get(opName).orElse(ctx.members.get(opName)) match
         case S(sym) => sym.ref(opIdent)
         case N =>
           raise(ErrorReport(msg"Name not found: $opName" -> tree.toLoc :: Nil))
           Term.Error
+      .withLocOf(opIdent)
       // Elaborate and finish the LHS. Nominate the LHS if necessary.
       nominate(ctx, finish(term(lhs)(using ctx))): lhsSymbol =>
         // Compose a function that takes the RHS and finishes the application.
@@ -235,24 +238,25 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
           val arguments = Term.Tup(first :: second :: Nil)(rawTup)
           val joint = FlowSymbol("‹applied-result›", nextUid)
           Term.App(op, arguments)(tree, joint)
-        opRhsApps.foldRight(Function.const(fallback): Sequel):
-          case ((Tree.Empty(), Let(ident @ Ident(_), termTree, N)), rest) => ctx =>
+        opRhsApps.foldRight(Function.const(fallback): Sequel): (tt, elabFallback) =>
+          tt match
+          case (Tree.Empty(), Let(ident @ Ident(_), termTree, N)) => ctx =>
             val sym = VarSymbol(ident, nextUid)
-            val restCtx = ctx + (ident.name -> sym)
-            Split.Let(sym, term(termTree)(using ctx), rest(restCtx))
-          case ((Tree.Empty(), Modified(Keyword.`else`, default)), rest) => ctx =>
+            val fallbackCtx = ctx + (ident.name -> sym)
+            Split.Let(sym, term(termTree)(using ctx), elabFallback(fallbackCtx))
+          case (Tree.Empty(), Modified(Keyword.`else`, default)) => ctx =>
             // TODO: report `rest` as unreachable
             Split.default(term(default)(using ctx))
-          case (((rawOp @ Ident(_)), rhs), rest) => ctx =>
+          case ((rawOp @ Ident(_)), rhs) => ctx =>
             val op = term(rawOp)(using ctx)
             val innerFinish = mkInnerFinish(op)
-            termSplit(rhs, innerFinish)(rest(ctx))(ctx)
-          case ((op, rhs), rest) => ctx =>
+            termSplit(rhs, innerFinish)(elabFallback(ctx))(ctx)
+          case (op, rhs) => ctx =>
             raise(ErrorReport(msg"Unrecognized operator branch." -> op.toLoc :: Nil))
-            rest(ctx)
-    case _ => _ => _ =>
+            elabFallback(ctx)
+    case _ => fallback => _ =>
       raise(ErrorReport(msg"Unrecognized term split." -> tree.toLoc :: Nil))
-      Split.default(Term.Error)
+      fallback
 
   /** Given a elaborated scrutinee, give it a name and add it to the context.
    *  @param baseCtx the context to be extended with the new symbol
@@ -311,22 +315,23 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
    *  @param scrutSymbol the symbol representing the elaborated scrutinee
    */
   def patternSplit(tree: Tree, scrutSymbol: VarSymbol): Split => Sequel = tree match
-    case Block(branches) => branches.foldRight(default):
+    case Block(branches) => branches.foldRight(default): (branch, elabFallback) =>
       // Terminology: _fallback_ refers to subsequent branches, _backup_ refers
       // to the backup plan passed from the parent split.
-      case (Let(ident @ Ident(_), termTree, N), elabFallback) => backup => ctx =>
+      branch match
+      case Let(ident @ Ident(_), termTree, N) => backup => ctx =>
         val sym = VarSymbol(ident, nextUid)
         val fallbackCtx = ctx + (ident.name -> sym)
         Split.Let(sym, term(termTree)(using ctx), elabFallback(backup)(fallbackCtx))
-      case (tree @ Modified(Keyword.`else`, body), elabFallback) => backup => ctx => trace(
+      case Modified(Keyword.`else`, body) => backup => ctx => trace(
         pre = s"patternSplit (else) <<< $tree",
         post = (res: Split) => s"patternSplit (else) >>> ${res.showDbg}"
       ):
         elabFallback(backup)(ctx) match
           case Split.Nil => ()
-          case _ => raise(ErrorReport(msg"Any following branches are unreachable." -> tree.toLoc :: Nil))
+          case _ => raise(ErrorReport(msg"Any following branches are unreachable." -> branch.toLoc :: Nil))
         Split.default(term(body)(using ctx))
-      case (branch, elabFallback) => backup => ctx => trace(
+      case branch => backup => ctx => trace(
         pre = "patternSplit (alternative)",
         post = (res: Split) => s"patternSplit (alternative) >>> ${res.showDbg}"
       ):
@@ -371,7 +376,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
       // A single variable pattern or constructor pattern without parameters.
       case ctor: Ident => fallback => ctx => ctx.members.get(ctor.name) match
         case S(sym: ClassSymbol) => // TODO: refined
-          Branch(ref(), Pattern.Class(sym, N, false), sequel(ctx)) :: fallback
+          Branch(ref(), Pattern.Class(sym, N, false)(ctor), sequel(ctx)) :: fallback
         case S(_: VarSymbol) | N =>
           // If the identifier refers to a variable or nothing, we interpret it
           // as a variable pattern. If `fallback` is not used when `sequel`
@@ -396,9 +401,10 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
               val m = args.length.toString
               raise(ErrorReport(msg"mismatched arity: expect $n, found $m" -> pat.toLoc :: Nil))
             val params = scrutSymbol.getSubScrutinees(cls)
+            val clsRef = cls.ref(ctor)
             Branch(
               ref(),
-              Pattern.Class(cls, S(params), false), // TODO: refined?
+              Pattern.Class(cls, S(params), false)(ctor), // TODO: refined?
               subMatches(params zip args, sequel)(Split.Nil)(ctx)
             ) :: fallback
           case _ =>
