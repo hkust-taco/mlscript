@@ -524,57 +524,60 @@ abstract class Parser(
       case _ => expr(prec, allowIndentedBlock = true)
       // case _ => Block.mk(blockMaybeIndented)
 
-  def splitOf()(using Line): Ls[Tree] = wrap("split")(splitOfImpl())
-  def splitOfImpl(): Ls[Tree] =
-    cur match
-    case Nil => Nil
-    case (NEWLINE | SPACE, _) :: _ => consume; splitOf()
-    case (tok @ (id: IDENT), loc) :: _ =>
-      val e =
-        Keyword.all.get(id.name) match
-        case S(kw) =>
-          consume
-          ParseRule.prefixRules.kwAlts.get(kw.name) match
-            case S(subRule) =>
-              parseRule(CommaPrecNext, subRule).getOrElse(errExpr)
-            case N => expr(0, false)
+  def split(using Line): Ls[Tree] = wrap("")(splitItem(Nil).reverse)
+
+  @tailrec final private def splitItem(acc: Ls[Tree]): Ls[Tree] =
+    val item = wrap(s"index = ${acc.size + 1}"):
+      cur match // `true | false | Tree`
+      case Nil => false
+      case (NEWLINE | SPACE, _) :: _ => consume; true
+      case (KEYWORD(kw), loc) :: _ =>
+        consume
+        ParseRule.prefixRules.kwAlts.get(kw.name) match
+        case S(subRule) =>
+          parseRule(CommaPrecNext, subRule).getOrElse(errExpr)
         case N => expr(0, false)
-      e :: (yeetSpaces match
-        case (COMMA | SEMI | NEWLINE, _) :: _ => consume; splitOf()
-        case _ => Nil)
-    case _ =>
-      printDbg(s"continue to parse expressions")
-      expr(0, false) :: (yeetSpaces match
-        case (COMMA | SEMI | NEWLINE, _) :: _ => consume; splitOf()
-        case _ => Nil)
+      case _ => expr(0, false)
+    item match
+      case true => splitItem(acc) // continue
+      case false => printDbg(s"! end of split"); acc // break
+      case e: Tree => // needs further inspection
+        yeetSpaces match
+        case (COMMA | SEMI | NEWLINE, _) :: _ =>
+          consume; splitItem(e :: acc)
+        case _ => printDbg(s"! end of split"); e :: acc
 
   /** Parse an operator block. Each block item should be a binary operator
    *  followed by an expression, a `let` binding, or an `else` clause.
    */
-  def operatorBlock()(using Line): OpBlock = wrap(""):
-    @tailrec
-    def item(acc: Ls[Tree -> Tree])(using Line): Ls[Tree -> Tree] =
-      printDbg(s"! start parsing #${acc.size + 1} block item")
+  def opBlock(using Line): OpBlock = wrap("")(OpBlock(opBlockItem(Nil).reverse))
+
+  @tailrec final private def opBlockItem(acc: Ls[Tree -> Tree])(using Line): Ls[Tree -> Tree] =
+    val item = wrap(s"index = ${acc.size + 1}"):
       cur match
-      case Nil => printDbg(s"! end of the operator block"); acc
-      case (NEWLINE | SPACE, _) :: _ => consume; item(acc)
+      case Nil => false
+      case (NEWLINE | SPACE, _) :: _ => true
       case (tok @ KEYWORD(kw @ (Keyword.`let` | Keyword.`else`)), loc) :: _ =>
         ParseRule.prefixRules.kwAlts.get(kw.name) match
         case S(subRule) =>
           consume
           val rhs = parseRule(kw.rightPrecOrMin, subRule).getOrElse(errExpr)
-          item(Tree.Empty().withLoc(S(loc)) -> rhs :: acc)
+          Tree.Empty().withLoc(S(loc)) -> rhs
         case N => lastWords(s"missing the parse rule for `${kw.name}`")
       case (tok @ IDENT(opStr, true), loc) :: _ if opPrec(opStr)._1 > 0 =>
         consume
-        val res = (Ident(opStr).withLoc(S(loc)) -> expr(0, false)) :: acc
-        yeetSpaces match
-        case (COMMA | SEMI | NEWLINE, _) :: _ => consume; item(res)
-        case _ => res
+        (Ident(opStr).withLoc(S(loc)) -> expr(0, false))
       case (tok, loc) :: _ =>
         err(msg"Expect an operator instead of ${tok.describe}" -> S(loc) :: Nil)
-        (Tree.Error() -> Tree.Error()) :: acc
-    OpBlock(item(Nil).reverse)
+        (Tree.Error() -> Tree.Error())
+    item match
+      case true => opBlockItem(acc) // continue
+      case false => printDbg(s"! end of split"); acc // break
+      case e: (Tree, Tree) => // needs further inspection
+        yeetSpaces match
+        case (COMMA | SEMI | NEWLINE, _) :: _ =>
+          consume; opBlockItem(e :: acc)
+        case _ => printDbg(s"! end of split"); e :: acc
   
   final def exprCont(acc: Tree, prec: Int, allowNewlines: Bool)(using Line): Tree =
     wrap(prec, s"`$acc`", allowNewlines)(exprContImpl(acc, prec, allowNewlines))
@@ -642,7 +645,7 @@ abstract class Parser(
         */
       case (br @ BRACKETS(Indent, toks @ ((IDENT(opStr, true), _) :: _)), loc) :: _ if opPrec(opStr)._1 > prec =>
         consume
-        App(acc, rec(toks, S(loc), "operator block").concludeWith(_.operatorBlock()))
+        App(acc, rec(toks, S(loc), "operator block").concludeWith(_.opBlock))
       case (OP(opStr), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
         consume
         val v = Ident(opStr).withLoc(S(l0))
@@ -655,7 +658,7 @@ abstract class Parser(
           case (BRACKETS(Indent, toks), l0) :: _ =>
             consume
             // rec(toks, S(br.innerLoc), br.describe).concludeWith(f(_, true))
-            val rhs = rec(toks, S(l0), "operator split").concludeWith(_.splitOf())
+            val rhs = rec(toks, S(l0), "operator split").concludeWith(_.split)
             App(v, PlainTup(acc, Block(rhs)))
           case _ => 
             // val rhs = simpleExpr(opPrec(opStr)._2)
