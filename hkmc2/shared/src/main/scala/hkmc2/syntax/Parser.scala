@@ -526,27 +526,27 @@ abstract class Parser(
 
   def splitOf()(using Line): Ls[Tree] = wrap("split")(splitOfImpl())
   def splitOfImpl(): Ls[Tree] =
-    def splitContOf(): Ls[Tree] = yeetSpaces match
-      case (COMMA, _) :: _ => consume; splitOf()
-      case (SEMI, _) :: _ => consume; splitOf()
-      case (NEWLINE, _) :: _ => consume; splitOf()
-      case _ => Nil
     cur match
     case Nil => Nil
-    case (NEWLINE, _) :: _ => consume; splitOf()
-    case (SPACE, _) :: _ => consume; splitOf()
+    case (NEWLINE | SPACE, _) :: _ => consume; splitOf()
     case (tok @ (id: IDENT), loc) :: _ =>
-      Keyword.all.get(id.name) match
-      case S(kw) =>
-        consume
-        ParseRule.prefixRules.kwAlts.get(kw.name) match
-          case S(subRule) =>
-            parseRule(CommaPrecNext, subRule).getOrElse(errExpr) :: splitContOf()
-          case N => expr(0, false) :: splitContOf()
-      case N => expr(0, false) :: splitContOf()
+      val e =
+        Keyword.all.get(id.name) match
+        case S(kw) =>
+          consume
+          ParseRule.prefixRules.kwAlts.get(kw.name) match
+            case S(subRule) =>
+              parseRule(CommaPrecNext, subRule).getOrElse(errExpr)
+            case N => expr(0, false)
+        case N => expr(0, false)
+      e :: (yeetSpaces match
+        case (COMMA | SEMI | NEWLINE, _) :: _ => consume; splitOf()
+        case _ => Nil)
     case _ =>
       printDbg(s"continue to parse expressions")
-      expr(0, false) :: splitContOf()
+      expr(0, false) :: (yeetSpaces match
+        case (COMMA | SEMI | NEWLINE, _) :: _ => consume; splitOf()
+        case _ => Nil)
 
   /** Parse an operator block. Each block item should be a binary operator
    *  followed by an expression, a `let` binding, or an `else` clause.

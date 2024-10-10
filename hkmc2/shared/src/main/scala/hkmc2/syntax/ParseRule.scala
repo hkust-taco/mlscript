@@ -212,9 +212,10 @@ object ParseRule:
     ,
     Kw(`else`):
       ParseRule("`else` clause")(
-        Expr(
-          ParseRule("`else` body")(End(()))
-        ) { case (tree, _) => Modified(`else`, tree) },
+        Expr(ParseRule("`else` expression")(End(()))):
+          case (tree, _) => Modified(`else`, tree),
+        Blk(ParseRule("`else` expression")(End(()))):
+          case (tree, _) => Modified(`else`, tree),
       )
     ,
     Kw(`case`):
