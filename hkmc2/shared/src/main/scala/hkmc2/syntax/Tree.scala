@@ -179,21 +179,29 @@ private def getName(t: Tree): Diagnostic \/ Ident =
 
 trait TermDefImpl:
   this: TermDef =>
-  lazy val (name, params, typeParams, signature): (Diagnostic \/ Ident, Opt[Tree], Opt[Tree], Opt[Tree]) =
-    alphaName.orElse(symName) match
-    case S(InfixApp(id: Ident, Keyword.`:`, sign)) =>
-      (R(id), N, N, S(sign))
-    // show(t: Tree): Str
-    case S(InfixApp(App(id: Ident, args), Keyword.`:`, ret)) =>
-      (R(id), S(args), N, N)
-    // show[A](t: Tree[A]): Str
-    case S(InfixApp(App(App(id: Ident, typeParams: TyTup), args), Keyword.`:`, ret)) =>
-      // val sign = S(InfixApp(typeParams, Keyword.`->`, InfixApp(args, Keyword.`->`, ret)))
-      (R(id), S(args), S(typeParams), N)
-    case S(id: Ident) =>
-      (R(id), N, N, N)
-    case S(App(id: Ident, args)) =>
-      (R(id), S(args), N, N)
+  lazy val (name, params, typeParams, signature): (Diagnostic \/ Ident, Opt[Ls[Tree]], Opt[Tree], Opt[Tree]) =
+    def rec(t: Opt[Tree]): (Diagnostic \/ Ident, Opt[Ls[Tree]], Opt[Tree], Opt[Tree]) = 
+      t match
+      case S(InfixApp(id: Ident, Keyword.`:`, sign)) =>
+        (R(id), N, N, S(sign))
+      // show(t: Tree): Str
+      case S(InfixApp(App(id: Ident, args), Keyword.`:`, ret)) =>
+        (R(id), S(args :: Nil), N, N)
+      // show[A](t: Tree[A]): Str
+      case S(InfixApp(App(App(id: Ident, typeParams: TyTup), args), Keyword.`:`, ret)) =>
+        // val sign = S(InfixApp(typeParams, Keyword.`->`, InfixApp(args, Keyword.`->`, ret)))
+        (R(id), S(args :: Nil), S(typeParams), N)
+      case S(id: Ident) =>
+        (R(id), N, N, N)
+      case S(App(id: Ident, typeParams: TyTup)) =>
+        (R(id), N, S(typeParams), N)
+      case S(App(id: Ident, args)) =>
+        (R(id), S(args :: Nil), N, N)
+      case S(App(primary: App, second)) =>
+        // TODO: handle the second parameter list
+        val (id, first, tps, sig) = rec(S(primary))
+        (id, S(first.fold(Ls(second))(_ :+ second)), tps, sig)
+    rec(alphaName orElse symName)
   lazy val symbolicName: Opt[Ident] = symName match
     case S(id: Ident) => S(id)
     case _ => N

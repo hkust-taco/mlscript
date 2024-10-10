@@ -1,0 +1,3 @@
+fun (++): Str -> Str -> Str
+fun toString: Any -> Str
+//│ Type: Ctor(lit:UnitLit(true),List())

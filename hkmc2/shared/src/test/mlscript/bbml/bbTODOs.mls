@@ -8,16 +8,19 @@ let id: [A] -> A -> A = x => x
 
 :todo
 fun id[A](x: A) = x
-//│ /!!!\ Uncaught error: scala.MatchError: Some(App(App(Ident(id),TyTup(List(Ident(A)))),Tup(List(InfixApp(Ident(x),keyword ':',Ident(A)))))) (of class scala.Some)
+//│ ╔══[ERROR] Variable not found: A
+//│ ║  l.10: 	fun id[A](x: A) = x
+//│ ╙──      	             ^
+//│ Type: ⊤
 
 :fixme
 fun id: [A] -> A -> A => x = x
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.14: 	fun id: [A] -> A -> A => x = x
+//│ ║  l.17: 	fun id: [A] -> A -> A => x = x
 //│ ╙──      	                             ^
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.14: 	fun id: [A] -> A -> A => x = x
+//│ ║  l.17: 	fun id: [A] -> A -> A => x = x
 //│ ╙──      	                         ^
-//│ /!!!\ Uncaught error: scala.MatchError: Lam(List(Param(‹›,A@31,None)),Error) (of class hkmc2.semantics.Term$Lam)
+//│ /!!!\ Uncaught error: scala.MatchError: Lam(List(Param(‹›,A@39,None)),Error) (of class hkmc2.semantics.Term$Lam)
 
 

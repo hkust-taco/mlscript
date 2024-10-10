@@ -309,7 +309,10 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
               case N => (N, ctx)
             // Add parameters to context
             val (ps, newCtx) = td.params match
-              case S(t) => params(t)(using newCtx1).mapFirst(some)
+              case S(ts) => // Go through all parameter lists
+                ts.foldLeft((Ls[Param](), newCtx1)):
+                  case ((ps, ctx), t) => params(t)(using ctx).mapFirst(ps ++ _)
+                .mapFirst(some)
               case N => (N, newCtx1)
             val b = rhs.map(term(_)(using newCtx))
             val r = FlowSymbol(s"‹result of ${s}›", nextUid)
@@ -417,6 +420,9 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
     case App(id @ Ident(name), tup @ Tup(params)) =>
       val idSym = VarSymbol(id, nextUid)
       (Pattern.Var(idSym), (name -> idSym) :: Nil, S(tup))
+    // Function declarations may have multiple parameter lists.
+    case App(inner: App, tup @ Tup(params)) =>
+      letPattern(inner)
     // Otherwise, we recursively elaborate the pattern. `App` is interpreted as
     // constructor patterns.
     case _ =>
@@ -427,7 +433,9 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
             raise(ErrorReport(msg"Duplicate bindings: $name" -> id.toLoc :: Nil))
           boundVars.getOrElseUpdate(name, VarSymbol(id, nextUid))
         case Tup(fields) => Pattern.Tuple(fields.map(go))
-        case _ => ???
+        case _ =>
+          log(s"bruh: $t")
+          ???
       (go(t), boundVars.toList, N)
   
   def importFrom(sts: Ls[Tree])(using c: Ctx): Ctx =
