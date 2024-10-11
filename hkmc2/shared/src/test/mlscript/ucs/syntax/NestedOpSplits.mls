@@ -33,24 +33,24 @@ fun f(x) =
 //│               flags = ()
 //│               value = Lit of IntLit of 1
 //│               asc = N
-//│         tail = Let:
-//│           name = scrut@22
-//│           term = App:
-//│             lhs = Ref of +
-//│             rhs = Tup of Ls of 
-//│               Fld:
-//│                 flags = ()
-//│                 value = Ref of scrut@20
-//│                 asc = N
-//│               Fld:
-//│                 flags = ()
-//│                 value = Lit of IntLit of 2
-//│                 asc = N
-//│           tail = Cons:
-//│             head = Branch:
-//│               scrutinee = Ref of scrut@22
-//│               pattern = LitPat of BoolLit of true
-//│               continuation = Else of Lit of IntLit of 0
-//│             tail = Else of Lit of IntLit of 1
+//│         tail = Let: \
+//│         name = scrut@22
+//│         term = App:
+//│           lhs = Ref of +
+//│           rhs = Tup of Ls of 
+//│             Fld:
+//│               flags = ()
+//│               value = Ref of scrut@20
+//│               asc = N
+//│             Fld:
+//│               flags = ()
+//│               value = Lit of IntLit of 2
+//│               asc = N
+//│         tail = Cons: \
+//│         head = Branch:
+//│           scrutinee = Ref of scrut@22
+//│           pattern = LitPat of BoolLit of true
+//│           continuation = Else of Lit of IntLit of 0
+//│         tail = Else of Lit of IntLit of 1
 //│       resSym = ‹result of f›@23
 //│   res = Lit of UnitLit of true

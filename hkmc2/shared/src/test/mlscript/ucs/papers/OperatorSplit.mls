@@ -85,91 +85,91 @@ fun example(args) =
 //│               flags = ()
 //│               value = Ref of args@29
 //│               asc = N
-//│         tail = Let:
-//│           name = scrut@41
-//│           term = App:
-//│             lhs = Ref of <
-//│             rhs = Tup of Ls of 
-//│               Fld:
-//│                 flags = ()
-//│                 value = Ref of scrut@31
-//│                 asc = N
-//│               Fld:
-//│                 flags = ()
-//│                 value = Lit of IntLit of 0
-//│                 asc = N
-//│           tail = Cons:
-//│             head = Branch:
-//│               scrutinee = Ref of scrut@41
-//│               pattern = LitPat of BoolLit of true
-//│               continuation = Else of Lit of StrLit of "invalid"
-//│             tail = Let:
-//│               name = scrut@39
-//│               term = App:
-//│                 lhs = Ref of ==
-//│                 rhs = Tup of Ls of 
-//│                   Fld:
-//│                     flags = ()
-//│                     value = Ref of scrut@31
-//│                     asc = N
-//│                   Fld:
-//│                     flags = ()
-//│                     value = Lit of IntLit of 0
-//│                     asc = N
-//│               tail = Cons:
-//│                 head = Branch:
-//│                   scrutinee = Ref of scrut@39
-//│                   pattern = LitPat of BoolLit of true
-//│                   continuation = Else of Lit of StrLit of "null"
-//│                 tail = Let:
-//│                   name = scrut@33
-//│                   term = App:
-//│                     lhs = Ref of pipe
-//│                     rhs = Tup of Ls of 
-//│                       Fld:
-//│                         flags = ()
-//│                         value = Ref of scrut@31
-//│                         asc = N
-//│                       Fld:
-//│                         flags = ()
-//│                         value = Ref of abs
-//│                         asc = N
-//│                   tail = Let:
-//│                     name = scrut@37
-//│                     term = App:
-//│                       lhs = Ref of >
-//│                       rhs = Tup of Ls of 
-//│                         Fld:
-//│                           flags = ()
-//│                           value = Ref of scrut@33
-//│                           asc = N
-//│                         Fld:
-//│                           flags = ()
-//│                           value = Lit of IntLit of 100
-//│                           asc = N
-//│                     tail = Cons:
-//│                       head = Branch:
-//│                         scrutinee = Ref of scrut@37
-//│                         pattern = LitPat of BoolLit of true
-//│                         continuation = Else of Lit of StrLit of "large"
-//│                       tail = Let:
-//│                         name = scrut@35
-//│                         term = App:
-//│                           lhs = Ref of <
-//│                           rhs = Tup of Ls of 
-//│                             Fld:
-//│                               flags = ()
-//│                               value = Ref of scrut@33
-//│                               asc = N
-//│                             Fld:
-//│                               flags = ()
-//│                               value = Lit of IntLit of 10
-//│                               asc = N
-//│                         tail = Cons:
-//│                           head = Branch:
-//│                             scrutinee = Ref of scrut@35
-//│                             pattern = LitPat of BoolLit of true
-//│                             continuation = Else of Lit of StrLit of "small"
-//│                           tail = Else of Lit of StrLit of "medium"
+//│         tail = Let: \
+//│         name = scrut@41
+//│         term = App:
+//│           lhs = Ref of <
+//│           rhs = Tup of Ls of 
+//│             Fld:
+//│               flags = ()
+//│               value = Ref of scrut@31
+//│               asc = N
+//│             Fld:
+//│               flags = ()
+//│               value = Lit of IntLit of 0
+//│               asc = N
+//│         tail = Cons: \
+//│         head = Branch:
+//│           scrutinee = Ref of scrut@41
+//│           pattern = LitPat of BoolLit of true
+//│           continuation = Else of Lit of StrLit of "invalid"
+//│         tail = Let: \
+//│         name = scrut@39
+//│         term = App:
+//│           lhs = Ref of ==
+//│           rhs = Tup of Ls of 
+//│             Fld:
+//│               flags = ()
+//│               value = Ref of scrut@31
+//│               asc = N
+//│             Fld:
+//│               flags = ()
+//│               value = Lit of IntLit of 0
+//│               asc = N
+//│         tail = Cons: \
+//│         head = Branch:
+//│           scrutinee = Ref of scrut@39
+//│           pattern = LitPat of BoolLit of true
+//│           continuation = Else of Lit of StrLit of "null"
+//│         tail = Let: \
+//│         name = scrut@33
+//│         term = App:
+//│           lhs = Ref of pipe
+//│           rhs = Tup of Ls of 
+//│             Fld:
+//│               flags = ()
+//│               value = Ref of scrut@31
+//│               asc = N
+//│             Fld:
+//│               flags = ()
+//│               value = Ref of abs
+//│               asc = N
+//│         tail = Let: \
+//│         name = scrut@37
+//│         term = App:
+//│           lhs = Ref of >
+//│           rhs = Tup of Ls of 
+//│             Fld:
+//│               flags = ()
+//│               value = Ref of scrut@33
+//│               asc = N
+//│             Fld:
+//│               flags = ()
+//│               value = Lit of IntLit of 100
+//│               asc = N
+//│         tail = Cons: \
+//│         head = Branch:
+//│           scrutinee = Ref of scrut@37
+//│           pattern = LitPat of BoolLit of true
+//│           continuation = Else of Lit of StrLit of "large"
+//│         tail = Let: \
+//│         name = scrut@35
+//│         term = App:
+//│           lhs = Ref of <
+//│           rhs = Tup of Ls of 
+//│             Fld:
+//│               flags = ()
+//│               value = Ref of scrut@33
+//│               asc = N
+//│             Fld:
+//│               flags = ()
+//│               value = Lit of IntLit of 10
+//│               asc = N
+//│         tail = Cons: \
+//│         head = Branch:
+//│           scrutinee = Ref of scrut@35
+//│           pattern = LitPat of BoolLit of true
+//│           continuation = Else of Lit of StrLit of "small"
+//│         tail = Else of Lit of StrLit of "medium"
 //│       resSym = ‹result of example›@42
 //│   res = Lit of UnitLit of true

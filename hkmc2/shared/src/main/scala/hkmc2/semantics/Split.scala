@@ -12,7 +12,7 @@ object Branch:
   def apply(scrutinee: Term.Ref, continuation: Split): Branch =
     Branch(scrutinee, Pattern.LitPat(Tree.BoolLit(true)), continuation)
 
-enum Split extends AutoLocated:
+enum Split extends AutoLocated with ProductWithTail:
   case Cons(head: Branch, tail: Split)
   case Let(name: VarSymbol, term: Term, tail: Split)
   case Else(default: Term)
