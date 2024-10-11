@@ -76,17 +76,25 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
       })
     case InfixApp(TyTup(tvs), Keyword.`->`, body) =>
       val boundVars = mutable.HashMap.empty[Str, VarSymbol]
-      val bds = tvs.collect:
-        case id: Tree.Ident =>
-          val sym = VarSymbol(id, nextUid)
-          sym.decl = S(TyParam(FldFlags.empty, N, sym)) // TODO vce
-          boundVars += id.name -> sym
-          sym          
-      if bds.length != tvs.length then
+      def genSym(id: Tree.Ident) =
+        val sym = VarSymbol(id, nextUid)
+        sym.decl = S(TyParam(FldFlags.empty, N, sym)) // TODO vce
+        boundVars += id.name -> sym
+        sym
+      val syms = (tvs.collect:
+        case id: Tree.Ident => (genSym(id), N, N)
+        case InfixApp(id: Tree.Ident, Keyword.`extends`, ub) => (genSym(id), S(ub), N)
+        case InfixApp(id: Tree.Ident, Keyword.`restricts`, lb) => (genSym(id), N, S(lb))
+        case InfixApp(InfixApp(id: Tree.Ident, Keyword.`extends`, ub), Keyword.`restricts`, lb) => (genSym(id), S(ub), S(lb))
+      )
+      if syms.length != tvs.length then
         raise(ErrorReport(msg"Illegal forall annotation." -> tree.toLoc :: Nil))
         Term.Error
       else
-        Term.Forall(bds, term(body)(using ctx.copy(locals = ctx.locals ++ boundVars)))
+        val nestCtx = ctx.copy(locals = ctx.locals ++ boundVars)
+        val bds = syms.map:
+          case (sym, ub, lb) => QuantVar(sym, ub.map(ub => term(ub)(using nestCtx)), lb.map(lb => term(lb)(using nestCtx)))
+        Term.Forall(bds, term(body)(using nestCtx))
     case InfixApp(lhs, Keyword.`->`, Effectful(eff, rhs)) =>
       Term.FunTy(term(lhs), term(rhs), S(term(eff)))
     case InfixApp(lhs, Keyword.`->`, rhs) =>
@@ -346,6 +354,9 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
           case InfixApp(lhs, Keyword.`:`, rhs) =>
             // Elaborate the signature
             processHead(lhs)
+          case InfixApp(derived, Keyword.`extends`, base) =>
+            processHead(derived)
+
           // case _ => ???
         val (nme, tps, ps, newCtx) = processHead(head)
         log(s"Processing type definition $nme")

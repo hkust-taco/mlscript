@@ -170,6 +170,8 @@ private def getName(t: Tree): Diagnostic \/ Ident =
       getName(base)
     case InfixApp(lhs, Keyword.`:`, rhs) =>
       getName(lhs)
+    case InfixApp(lhs, Keyword.`extends`, rhs) =>
+      getName(lhs)
     case _ => L(ErrorReport(
       msg"Expected a valid definition head, found ${t.describe} instead" -> t.toLoc :: Nil))
 

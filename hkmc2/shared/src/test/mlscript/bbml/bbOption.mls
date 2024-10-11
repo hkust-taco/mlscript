@@ -27,6 +27,6 @@ opt => opt : Option[out Int]
 //│ Type: (Option[out Int]) ->{⊥} Option[out Int]
 
 opt => (opt : Option[Int]) : Option[Int | Str]
-//│ Type: (Option[out Int]) ->{⊥} Option[out Int ∨ Str]
+//│ Type: (Option[out Int ∨ Str] ∧ Option[out Int]) ->{⊥} Option[out Int ∨ Str]
 
 

@@ -11,9 +11,9 @@ fun f x = f
 
 fun f(x) = f
 f
-//│ Type: ⊤ -> α0_1
+//│ Type: forall α0_2: ⊤ -> (⊤ -> α0_2)
 //│ Where:
-//│   ⊤ -> α0_1 <: α0_1
+//│   ⊤ -> α0_2 <: α0_2
 
 fun f(x) = f(x)
 f
@@ -51,8 +51,8 @@ fun f(x) = f(Foo.a(x))
 
 fun f(x) = f(x.Foo#a)
 f
-//│ Type: Foo[out α20_1] -> ⊥
+//│ Type: forall α20_2: Foo[out α20_2] -> ⊥
 //│ Where:
-//│   α20_1 <: Foo[out α20_1]
+//│   α20_2 <: Foo[out α20_2]
 
 

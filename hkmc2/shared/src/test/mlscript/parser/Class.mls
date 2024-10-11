@@ -16,15 +16,15 @@ class Foo
 
 :pe
 class Foo extends
-//│ ╔══[PARSE ERROR] Expected expression after extension clause; found end of input instead
+//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, expression, 'true' keyword, 'false' keyword, or indented block after start of statement; found end of input instead
 //│ ║  l.18: 	class Foo extends
 //│ ╙──      	                 ^
 //│ Parsed:
-//│ 	Error()
+//│ 	TypeDef(Cls,None,InfixApp(Ident(Foo),keyword 'extends',Error()),None,None)
 
 class Foo extends Bar
 //│ Parsed:
-//│ 	TypeDef(Cls,None,Ident(Foo),Some(Ident(Bar)),None)
+//│ 	TypeDef(Cls,None,InfixApp(Ident(Foo),keyword 'extends',Ident(Bar)),None,None)
 
 :pe
 class Foo extends Bar with
@@ -48,7 +48,7 @@ class Foo extends Bar with val x
 class Foo extends Bar with
   val x: Int
 //│ Parsed:
-//│ 	TypeDef(Cls,None,Ident(Foo),Some(Ident(Bar)),Some(Block(List(TermDef(Val,None,Some(InfixApp(Ident(x),keyword ':',Ident(Int))),None)))))
+//│ 	TypeDef(Cls,None,InfixApp(Ident(Foo),keyword 'extends',Ident(Bar)),None,Some(Block(List(TermDef(Val,None,Some(InfixApp(Ident(x),keyword ':',Ident(Int))),None)))))
 
 class Foo with
   val x: Int
@@ -82,7 +82,7 @@ class
   Bar with
     x
 //│ Parsed:
-//│ 	TypeDef(Cls,None,Ident(Foo),Some(Ident(Bar)),None)
+//│ 	TypeDef(Cls,None,InfixApp(Ident(Foo),keyword 'extends',Ident(Bar)),None,None)
 //│ 	TypeDef(Cls,None,Ident(Bar),None,Some(Block(List(Ident(x)))))
 
 

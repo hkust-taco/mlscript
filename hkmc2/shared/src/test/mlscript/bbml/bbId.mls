@@ -9,54 +9,28 @@ id(1)
 //│ Type: Int
 
 id
-//│ Type: α1_1 -> α1_1
-//│ Where:
-//│   Int <: α1_1
+//│ Type: forall α1_2: α1_2 -> α1_2
 
 id(true)
-//│ Type: Bool ∨ Int
+//│ Type: Bool
 
 id
-//│ Type: α1_1 -> α1_1
-//│ Where:
-//│   Bool <: α1_1
-//│   Int <: α1_1
+//│ Type: forall α1_2: α1_2 -> α1_2
 
 
 fun id(x) = x
 //│ Type: ⊤
 
-:e
 id : [A] -> A -> A
-//│ ╔══[ERROR] Type error in reference with expected type (<α>8_2) ->{⊥} <α>8_2
-//│ ║  l.30: 	id : [A] -> A -> A
-//│ ║        	^^
-//│ ╟── because: cannot constrain  α6_1  <:  <α>8_2 -> <α>8_2
-//│ ╟── because: cannot constrain  α6_1  <:  ⊤ -> ⊥
-//│ ╟── because: cannot constrain  (D( α7_1 )) ->{D()} (D( α7_1 ))  <:  ⊤ -> ⊥
-//│ ╟── because: cannot constrain  D( α7_1 )  <:  ⊥
-//│ ╟── because: cannot constrain  α7_1  <:  ¬()
-//│ ╙── because: cannot constrain    <:  ¬()
-//│ Type: forall α8_2: (α8_2) ->{⊥} α8_2
+//│ Type: forall α6_2: (α6_2) ->{⊥} α6_2
 
 
 (y => y) : [A] -> A -> A
 //│ Type: forall α9_2: (α9_2) ->{⊥} α9_2
 
-:fixme
 fun id(x) = x
 (y => id(y)) : [A] -> A -> A
-//│ ╔══[ERROR] Type error in function literal with expected type (<α>12_2) ->{⊥} <α>12_2
-//│ ║  l.48: 	(y => id(y)) : [A] -> A -> A
-//│ ║        	 ^^^^^^^^^^
-//│ ╟── because: cannot constrain  α14_2  <:  <α>12_2
-//│ ╟── because: cannot constrain  α14_2  <:  ¬(~<α>12_2)
-//│ ╟── because: cannot constrain  α15_1  <:  ¬(~<α>12_2)
-//│ ╟── because: cannot constrain  α15_1  <:  ⊥
-//│ ╟── because: cannot constrain  α11_1  <:  ⊥
-//│ ╟── because: cannot constrain  α11_1  <:  ¬()
-//│ ╙── because: cannot constrain    <:  ¬()
-//│ Type: forall α12_2: (α12_2) ->{⊥} α12_2
+//│ Type: forall α13_2: (α13_2) ->{⊥} α13_2
 
 
 

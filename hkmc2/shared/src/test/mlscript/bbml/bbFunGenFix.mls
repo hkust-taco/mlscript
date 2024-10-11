@@ -1,0 +1,36 @@
+:global
+:bbml
+
+
+class Reg[out Rg, out AccI]
+//│ Type: ⊤
+
+class BaseEff
+//│ Type: ⊤
+
+fun basereg: Reg[Any, BaseEff]
+//│ Type: ⊤
+
+fun subreg: [E, Rg, AccI, Res] -> Reg[Rg, AccI] ->
+  ([Rg2] -> Reg[Rg2 & AccI, AccI & ~Rg2] ->{E | Rg2} Res) ->{E} Res
+//│ Type: ⊤
+
+fun write: [Rg, AccI] -> Reg[Rg, AccI] ->{Rg} Int
+//│ Type: ⊤
+
+
+subreg(basereg) of r0 =>
+  fun helper(a) = write(a)
+  helper(r0)
+//│ Type: Int
+
+
+fun helper(a) = write(a)
+//│ Type: ⊤
+
+helper
+//│ Type: forall α21_2: Reg[out α21_2, ?] ->{α21_2} Int
+
+subreg(basereg) of r0 =>
+  helper(r0)
+//│ Type: Int

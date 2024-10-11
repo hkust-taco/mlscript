@@ -1,0 +1,53 @@
+:global
+:noTypeCheck
+:ctx
+
+// Plain extension
+class Base
+class Derived extends Base
+//│ Members:
+//│   Base -> class:Base
+//│   Derived -> class:Derived
+//│ Locals:
+
+// Extension with parameters
+abstract class Box
+class IntBox(val value: Int) extends Box
+class StrBox(val value: Str) extends Box
+//│ Members:
+//│   StrBox -> class:StrBox
+//│   Box -> class:Box
+//│   IntBox -> class:IntBox
+//│ Locals:
+
+// Extension with symbolic name
+abstract class Ring
+module End extends Ring
+class (++) Link(left: Ring, right: Ring) extends Ring
+//│ Members:
+//│   Ring -> class:Ring
+//│   End -> class:End
+//│   ++ -> class:Link
+//│   Link -> class:Link
+//│ Locals:
+
+// Extension with type parameters
+abstract class Option[T]: (Some[T] | None)
+class Some[T](val value: T) extends Option[T]
+module None extends Option[nothing]
+//│ Members:
+//│   Some -> class:Some
+//│   None -> class:None
+//│   Option -> class:Option
+//│ Locals:
+
+// Extension with type parameters and symbolic name
+abstract class List[T]: (Cons[T] | Nil)
+class (::) Cons[T](val head: T, val tail: List[T]) extends List[T]
+module Nil extends List[nothing]
+//│ Members:
+//│   Nil -> class:Nil
+//│   List -> class:List
+//│   :: -> class:Cons
+//│   Cons -> class:Cons
+//│ Locals:

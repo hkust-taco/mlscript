@@ -5,6 +5,7 @@ import mlscript.utils.*, shorthands.*
 import syntax.*
 import semantics.*, semantics.Term.*
 import utils.*
+import scala.collection.mutable.{Set => MutSet}
 
 // * General types include mono types (i.e., Type), forall quantified type, and poly function types
 sealed abstract class GeneralType:
@@ -254,7 +255,6 @@ object Type:
     else lhs & rhs
   def mkNegType(ty: Type): Type = ty.!
 
-// TODO: bounds
 // * Poly types can not be used as type arguments
 case class PolyType(tvs: Ls[InfVar], body: GeneralType) extends GeneralType:
   override protected type ThisType = GeneralType
@@ -265,7 +265,58 @@ case class PolyType(tvs: Ls[InfVar], body: GeneralType) extends GeneralType:
   override def monoOr(fallback: => Type): Type = fallback
   override def map(f: GeneralType => GeneralType): PolyType = PolyType(tvs, f(body))
 
-  override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = PolyType(tvs, body.subst)
+  override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
+    PolyType(tvs.map {
+      case InfVar(lvl, uid, state, skolem) =>
+        val newSt = new VarState()
+        newSt.lowerBounds = state.lowerBounds.map(_.subst)
+        newSt.upperBounds = state.upperBounds.map(_.subst)
+        InfVar(lvl, uid, newSt, skolem)
+    }, body.subst)
+
+  // * This function will only return the body after substitution
+  // * and \dom(map) should cover all tvs.
+  // * This function is dedicated to `skolemize` and `instantiate`.
+  private def substAndGetBody(using map: Map[Uid[InfVar], InfVar]): GeneralType =
+    tvs.foreach:
+      case InfVar(lvl, uid, state, skolem) =>
+        val v = map(uid)
+        v.state.lowerBounds = state.lowerBounds.map(_.subst)
+        v.state.upperBounds = state.upperBounds.map(_.subst)
+    body.subst
+
+  def skolemize(nextUid: => Uid[InfVar], lvl: Int)(tl: TL) =
+    // * Note that by this point, the state is supposed to be frozen/treated as immutable
+    val map = tvs.map(v =>
+      val sk = InfVar(lvl, nextUid, new VarState(), true)
+      tl.log(s"skolemize $v ~> $sk")
+      v.uid -> sk
+    ).toMap
+    substAndGetBody(using map)
+  
+  def instantiate(nextUid: => Uid[InfVar], lvl: Int)(tl: TL): GeneralType =
+    val map = tvs.map(v =>
+      val nv = InfVar(lvl, nextUid, new VarState(), false)
+      tl.log(s"instantiate $v ~> $nv")
+      v.uid -> nv
+    ).toMap
+    substAndGetBody(using map)
+
+object PolyType:
+  def generalize(ty: GeneralType, lvl: Int): PolyType =
+    val tvs = MutSet[InfVar]()
+    object CollectTVs extends TypeTraverser:
+      override def apply(pol: Boolean)(ty: GeneralType): Unit = ty match
+        case v @ InfVar(vlvl, _, state, _) if vlvl > lvl =>
+          if tvs.add(v) then
+            state.lowerBounds.foreach: bd =>
+              apply(true)(bd)
+            state.upperBounds.foreach: bd =>
+              apply(false)(bd)
+            super.apply(pol)(ty)
+        case _ => super.apply(pol)(ty)
+    CollectTVs(true)(ty)
+    PolyType(tvs.toList.sorted, ty)
 
 // * Functions that accept/return a polymorphic type.
 // * Note that effects are always monomorphic

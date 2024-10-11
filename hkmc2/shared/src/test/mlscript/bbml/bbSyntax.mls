@@ -225,4 +225,22 @@ A | B
 //│ Parsed:
 //│ 	App(Ident(|),Tup(List(Ident(A), Ident(B))))
 
+[A extends Int] -> A -> A
+//│ Parsed:
+//│ 	InfixApp(TyTup(List(InfixApp(Ident(A),keyword 'extends',Ident(Int)))),keyword '->',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))
 
+[A restricts Int] -> A -> A
+//│ Parsed:
+//│ 	InfixApp(TyTup(List(InfixApp(Ident(A),keyword 'restricts',Ident(Int)))),keyword '->',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))
+
+[A extends Int restricts Int] -> A -> A
+//│ Parsed:
+//│ 	InfixApp(TyTup(List(InfixApp(InfixApp(Ident(A),keyword 'extends',Ident(Int)),keyword 'restricts',Ident(Int)))),keyword '->',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))
+
+[A extends Int, B restricts Int] -> A -> B
+//│ Parsed:
+//│ 	InfixApp(TyTup(List(InfixApp(Ident(A),keyword 'extends',Ident(Int)), InfixApp(Ident(B),keyword 'restricts',Ident(Int)))),keyword '->',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(B)))
+
+[A extends Int restricts Int, B extends Int restricts Int] -> A -> B
+//│ Parsed:
+//│ 	InfixApp(TyTup(List(InfixApp(InfixApp(Ident(A),keyword 'extends',Ident(Int)),keyword 'restricts',Ident(Int)), InfixApp(InfixApp(Ident(B),keyword 'extends',Ident(Int)),keyword 'restricts',Ident(Int)))),keyword '->',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(B)))

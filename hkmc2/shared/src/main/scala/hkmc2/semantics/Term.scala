@@ -5,6 +5,8 @@ import mlscript.utils.*, shorthands.*
 import syntax.*
 
 
+final case class QuantVar(sym: VarSymbol, ub: Opt[Term], lb: Opt[Term])
+
 enum Term extends Statement:
   case Error
   case Lit(lit: Literal)
@@ -16,7 +18,7 @@ enum Term extends Statement:
   case If(body: Split)
   case Lam(params: Ls[Param], body: Term)
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
-  case Forall(tvs: Ls[VarSymbol], body: Term)
+  case Forall(tvs: Ls[QuantVar], body: Term)
   case WildcardTy(in: Opt[Term], out: Opt[Term])
   case Blk(stats: Ls[Statement], res: Term)
   case Quoted(body: Term)

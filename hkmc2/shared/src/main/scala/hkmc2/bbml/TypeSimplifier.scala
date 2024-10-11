@@ -18,7 +18,7 @@ class TypeSimplifier(tl: TraceLogger):
   import tl.{trace, log}
   
   def apply(pol: Bool, lvl: Int)(ty: GeneralType): GeneralType =
-    ty |> simplifyStructure(pol, lvl) |> simplifyBounds(pol, lvl)
+    ty |> simplifyStructure(pol, lvl) |> simplifyBounds(pol, lvl) |> simplifyForall
   
   def simplifyStructure(pol: Bool, lvl: Int)(ty: GeneralType): GeneralType =
     val done = MutSet.empty[InfVar]
@@ -184,3 +184,22 @@ class TypeSimplifier(tl: TraceLogger):
         case pf: PolyFunType => pf.map(subst)
     
     subst(ty)
+
+  def simplifyForall(ty: GeneralType): GeneralType = ty match
+    case PolyType(tvs, body) =>
+      val visited = MutSet.empty[InfVar]
+      object CollectTVs extends TypeTraverser:
+        override def apply(pol: Boolean)(ty: GeneralType): Unit = ty match
+          case v @ InfVar(_, _, state, _) =>
+            if visited.add(v) then
+              state.lowerBounds.foreach: bd =>
+                apply(true)(bd)
+              state.upperBounds.foreach: bd =>
+                apply(false)(bd)
+              super.apply(pol)(ty)
+          case _ => super.apply(pol)(ty)
+      CollectTVs(true)(ty)
+      val newTvs = tvs.filter(visited)
+      if newTvs.isEmpty then body
+      else PolyType(newTvs, body)
+    case _ => ty

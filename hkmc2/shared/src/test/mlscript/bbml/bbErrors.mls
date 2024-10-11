@@ -31,25 +31,20 @@
 
 fun inc(x) = x + 1
 inc("oops")
-//│ ╔══[ERROR] Type error in application
+//│ ╔══[ERROR] Type error in string literal with expected type α9_1
 //│ ║  l.33: 	inc("oops")
-//│ ║        	^^^^^^^^^^^
-//│ ╟── because: cannot constrain  α7_1  <:  Str ->{α9_1} α10_1
-//│ ╟── because: cannot constrain  α7_1  <:  ¬(~{Str ->{α9_1} α10_1})
-//│ ╟── because: cannot constrain  (D( α8_1 )) ->{D()} (D( Int ))  <:  ¬(~{Str ->{α9_1} α10_1})
-//│ ╟── because: cannot constrain  Str  <:  D( α8_1 )
-//│ ╟── because: cannot constrain  Str  <:  α8_1
-//│ ╙── because: cannot constrain  Str  <:  ¬(~{Int})
+//│ ║        	    ^^^^^^
+//│ ╟── because: cannot constrain  Str  <:  α9_1
+//│ ╟── because: cannot constrain  Str  <:  α9_1
+//│ ╙── because: cannot constrain  Str  <:  ¬¬Int
 //│ Type: Int
 
 fun inc(x) = x + 1
 inc : Int
 //│ ╔══[ERROR] Type error in reference with expected type Int
-//│ ║  l.46: 	inc : Int
+//│ ║  l.43: 	inc : Int
 //│ ║        	^^^
-//│ ╟── because: cannot constrain  α11_1  <:  Int
-//│ ╟── because: cannot constrain  α11_1  <:  ¬(~{Int})
-//│ ╙── because: cannot constrain  (D( α12_1 )) ->{D()} (D( Int ))  <:  ¬(~{Int})
+//│ ╙── because: cannot constrain  α12_1 -> Int  <:  Int
 //│ Type: Int
 
 

@@ -60,6 +60,7 @@ object Keyword:
   val `trait` = Keyword("trait", N, N)
   val `mixin` = Keyword("mixin", N, N)
   val `interface` = Keyword("interface", N, N)
+  val `restricts` = Keyword("restricts", eqPrec, nextPrec)
   val `extends` = Keyword("extends", nextPrec, nextPrec)
   val `with` = Keyword("with", curPrec, curPrec)
   val `override` = Keyword("override", N, N)
@@ -90,7 +91,7 @@ object Keyword:
   val modifiers = Set(
     `abstract`, mut, virtual, `override`, declare, public, `private`)
   
-  type Infix = `and`.type | `or`.type | `then`.type | `else`.type | `is`.type | `:`.type | `->`.type | `=>`.type
+  type Infix = `and`.type | `or`.type | `then`.type | `else`.type | `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type
   
   val maxPrec = curPrec
   
