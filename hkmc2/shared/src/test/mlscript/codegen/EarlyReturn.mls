@@ -36,7 +36,7 @@ fun f(x) =
 //│   if (tmp) {
 //│     tmp1 = log("whoops");
 //│     return 0
-//│   } 
+//│   }
 //│   return x + 1
 //│ };
 //│ res = undefined;

@@ -40,7 +40,7 @@ class JSBuilder extends CodeBuilder:
       doc"${result(fun)}(${args.map(result).mkDocument(", ")})"
     case Value.Lam(ps, bod) => scope.nest givenIn:
       val vars = ps.map(p => scope.allocateName(p.sym)).mkDocument(", ")
-      doc"function($vars) { #{  # ${
+      doc"($vars) => { #{  # ${
         body(bod)
       } #}  # }"
     case Select(qual, name) =>
@@ -61,10 +61,10 @@ class JSBuilder extends CodeBuilder:
     case Match(scrut, Case.Lit(syntax.Tree.BoolLit(true)) -> trm :: Nil, els, rest) =>
       val t = doc" # if (${ result(scrut) }) { #{ ${
           returningTerm(trm)
-        } #}  # } "
+        } #}  # }"
       val e = els match
       case S(el) =>
-        doc"else { #{ ${ returningTerm(el) } #}  # }"
+        doc" else { #{ ${ returningTerm(el) } #}  # }"
       case N  => doc""
       t :: e :: returningTerm(rest)
     case End("") => doc""
