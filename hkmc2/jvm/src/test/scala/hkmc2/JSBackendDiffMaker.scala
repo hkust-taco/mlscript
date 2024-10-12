@@ -53,7 +53,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
           if (isSyntaxError) then
             // If there is a syntax error in the generated code,
             // it should be a code generation error.
-            raise(ErrorReport(msg"${message}" -> N :: Nil,
+            raise(ErrorReport(msg"[Uncaught SyntaxError] ${message}" -> N :: Nil,
               source = Diagnostic.Source.Compilation))
           else
             // Otherwise, it is considered a simple runtime error.

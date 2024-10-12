@@ -48,6 +48,14 @@ class JSBuilder extends CodeBuilder:
   def returningTerm(t: Block)(using Raise, Scope): Document = t match
     case Assign(l, r, rst) =>
       doc" # ${scope.lookup_!(l)} = ${result(r)};${returningTerm(rst)}"
+    case Define(defn, rst) => scope.nest givenIn:
+      val defnJS = defn match
+      case TermDefn(syntax.Fun, sym, N, body) =>
+        TODO("getters")
+      case TermDefn(syntax.Fun, sym, S(ps), bod) =>
+        val vars = ps.map(p => scope.allocateName(p.sym)).mkDocument(", ")
+        doc"function ${sym.nme}($vars) { #{  # ${body(bod)} #}  # }"
+      doc" # ${defnJS};${returningTerm(rst)}"
     case Return(res) =>
       doc" # return ${result(res)}"
     case Match(scrut, Case.Lit(syntax.Tree.BoolLit(true)) -> trm :: Nil, els, rest) =>

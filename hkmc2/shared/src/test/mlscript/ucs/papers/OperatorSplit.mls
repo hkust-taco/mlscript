@@ -73,26 +73,26 @@ fun example(args) =
 //│       params = S of Ls of 
 //│         Param:
 //│           flags = ()
-//│           sym = args@31
+//│           sym = args@30
 //│           sign = N
 //│       sign = N
 //│       body = S of If of Let:
-//│         sym = $scrut@33
+//│         sym = $scrut@32
 //│         term = App:
 //│           lhs = Ref of foo
 //│           rhs = Tup of Ls of 
 //│             Fld:
 //│               flags = ()
-//│               value = Ref of args@31
+//│               value = Ref of args@30
 //│               asc = N
 //│         tail = Let:
-//│           sym = $scrut@43
+//│           sym = $scrut@42
 //│           term = App:
 //│             lhs = Ref of <
 //│             rhs = Tup of Ls of 
 //│               Fld:
 //│                 flags = ()
-//│                 value = Ref of $scrut@33
+//│                 value = Ref of $scrut@32
 //│                 asc = N
 //│               Fld:
 //│                 flags = ()
@@ -100,17 +100,17 @@ fun example(args) =
 //│                 asc = N
 //│           tail = Cons:
 //│             head = Branch:
-//│               scrutinee = Ref of $scrut@43
+//│               scrutinee = Ref of $scrut@42
 //│               pattern = LitPat of BoolLit of true
 //│               continuation = Else of Lit of StrLit of "invalid"
 //│             tail = Let:
-//│               sym = $scrut@41
+//│               sym = $scrut@40
 //│               term = App:
 //│                 lhs = Ref of ==
 //│                 rhs = Tup of Ls of 
 //│                   Fld:
 //│                     flags = ()
-//│                     value = Ref of $scrut@33
+//│                     value = Ref of $scrut@32
 //│                     asc = N
 //│                   Fld:
 //│                     flags = ()
@@ -118,30 +118,30 @@ fun example(args) =
 //│                     asc = N
 //│               tail = Cons:
 //│                 head = Branch:
-//│                   scrutinee = Ref of $scrut@41
+//│                   scrutinee = Ref of $scrut@40
 //│                   pattern = LitPat of BoolLit of true
 //│                   continuation = Else of Lit of StrLit of "null"
 //│                 tail = Let:
-//│                   sym = $scrut@35
+//│                   sym = $scrut@34
 //│                   term = App:
 //│                     lhs = Ref of pipe
 //│                     rhs = Tup of Ls of 
 //│                       Fld:
 //│                         flags = ()
-//│                         value = Ref of $scrut@33
+//│                         value = Ref of $scrut@32
 //│                         asc = N
 //│                       Fld:
 //│                         flags = ()
 //│                         value = Ref of abs
 //│                         asc = N
 //│                   tail = Let:
-//│                     sym = $scrut@39
+//│                     sym = $scrut@38
 //│                     term = App:
 //│                       lhs = Ref of >
 //│                       rhs = Tup of Ls of 
 //│                         Fld:
 //│                           flags = ()
-//│                           value = Ref of $scrut@35
+//│                           value = Ref of $scrut@34
 //│                           asc = N
 //│                         Fld:
 //│                           flags = ()
@@ -149,17 +149,17 @@ fun example(args) =
 //│                           asc = N
 //│                     tail = Cons:
 //│                       head = Branch:
-//│                         scrutinee = Ref of $scrut@39
+//│                         scrutinee = Ref of $scrut@38
 //│                         pattern = LitPat of BoolLit of true
 //│                         continuation = Else of Lit of StrLit of "large"
 //│                       tail = Let:
-//│                         sym = $scrut@37
+//│                         sym = $scrut@36
 //│                         term = App:
 //│                           lhs = Ref of <
 //│                           rhs = Tup of Ls of 
 //│                             Fld:
 //│                               flags = ()
-//│                               value = Ref of $scrut@35
+//│                               value = Ref of $scrut@34
 //│                               asc = N
 //│                             Fld:
 //│                               flags = ()
@@ -167,11 +167,11 @@ fun example(args) =
 //│                               asc = N
 //│                         tail = Cons:
 //│                           head = Branch:
-//│                             scrutinee = Ref of $scrut@37
+//│                             scrutinee = Ref of $scrut@36
 //│                             pattern = LitPat of BoolLit of true
 //│                             continuation = Else of Lit of StrLit of "small"
 //│                           tail = Else of Lit of StrLit of "medium"
-//│       resSym = ‹result of example›@44
+//│       resSym = ‹result of example›@43
 //│   res = Lit of UnitLit of true
 
 

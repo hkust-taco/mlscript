@@ -7,11 +7,11 @@ if true then 1 else 0
 //│ Blk:
 //│   stats = Nil
 //│   res = If of Let:
-//│     sym = $scrut@20
+//│     sym = $scrut@19
 //│     term = Lit of BoolLit of true
 //│     tail = Cons:
 //│       head = Branch:
-//│         scrutinee = Ref of $scrut@20
+//│         scrutinee = Ref of $scrut@19
 //│         pattern = LitPat of BoolLit of true
 //│         continuation = Else of Lit of IntLit of 1
 //│       tail = Else of Lit of IntLit of 0

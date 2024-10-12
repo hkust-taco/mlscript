@@ -23,9 +23,9 @@ abstract class Ring
 module End extends Ring
 class (++) Link(left: Ring, right: Ring) extends Ring
 //│ Members:
+//│   End -> class:End
 //│   Ring -> class:Ring
 //│   ++ -> class:Link
-//│   End -> class:End
 //│   Link -> class:Link
 //│ Locals:
 

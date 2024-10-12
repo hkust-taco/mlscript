@@ -23,6 +23,7 @@ sealed abstract class Block extends Product with AutoLocated:
     case Match(scrut, arms, dflt, rst) =>
       arms.flatMap(_._2.definedVars).toSet ++ dflt.toList.flatMap(_.definedVars) ++ rst.definedVars
     case End(_) => Set.empty
+    case Define(defn, rst) => rst.definedVars
 
 case class Match(
   scrut: Path,
@@ -38,6 +39,17 @@ case class Throw(exc: Result) extends Block
 case class Begin(sub: Block, rest: Block) extends Block with ProductWithTail
 
 case class Assign(lhs: Local, rhs: Result, rest: Block) extends Block with ProductWithTail
+
+case class Define(defn: Defn, rest: Block) extends Block with ProductWithTail
+
+sealed abstract class Defn
+
+final case class TermDefn(
+    k: syntax.TermDefKind,
+    sym: TermSymbol,
+    params: Opt[Ls[Param]],
+    body: Block,
+) extends Defn
 
 /* Represents either unreachable code (for functions that must return a result)
  * or the end of a non-returning function or a REPL block */

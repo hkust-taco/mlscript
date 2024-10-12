@@ -22,11 +22,10 @@ fun (-.): (Num, Num) -> Num
 fun (*.): (Num, Num) -> Num
 fun (/.): (Num, Num) -> Num
 
-// poly is not supported here
+// [CY:] poly is not supported here
 fun (==): (Any, Any) -> Bool
 
 fun log: (Any) -> ()
-fun log = builtin.console.log
 
 fun error: Nothing
 

@@ -6,10 +6,11 @@ fun res
 //│ let res; res = undefined;
 //│ = undefined
 
+:fixme
 fun res() = 1
 //│ JS:
-//│ let res; res = undefined;
-//│ = undefined
+//│ let res; function res() {  return 1 }; res = undefined;
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Identifier 'res' has already been declared
 
 :showRepl
 1

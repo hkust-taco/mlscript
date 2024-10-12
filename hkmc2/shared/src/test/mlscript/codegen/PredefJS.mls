@@ -1,0 +1,6 @@
+// JS implementations for decls/Predef.mls:
+
+
+fun log(msg) = globalThis.console.log(msg)
+
+

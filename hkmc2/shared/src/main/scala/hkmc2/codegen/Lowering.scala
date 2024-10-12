@@ -43,6 +43,8 @@ class Lowering(using TL, Raise, Elaborator.State):
   def term(t: st)(k: Result => Block)(using Subst): Block = t match
     case st.Lit(lit) => 
       k(Value.Lit(lit))
+    case st.Ret(res) =>
+      returnedTerm(res)
     case st.Ref(sym) =>
       sym match
       case sym: LocalSymbol =>
@@ -71,8 +73,18 @@ class Lowering(using TL, Raise, Elaborator.State):
       subTerm(st.Blk(stats, res))(k)
     case st.Blk((t: sem.Term) :: stats, res) =>
       subTerm(t)(r => term(st.Blk(stats, res))(k))
-    case st.Blk((d: Declaration) :: stats, res) => // TODO handle
-      term(st.Blk(stats, res))(k)
+    case st.Blk((d: Declaration) :: stats, res) =>
+      d match
+      case td: TermDefinition =>
+        td.body match
+        case N => // abstract declarations have no lowering
+          term(st.Blk(stats, res))(k)
+        case S(bod) =>
+          Define(TermDefn(td.k, td.sym, td.params, returnedTerm(bod)),
+            term(st.Blk(stats, res))(k))
+      case _ =>
+        // TODO handle
+        term(st.Blk(stats, res))(k)
     case st.Blk((let: LetBinding) :: stats, res) =>
       let.pat match
         case Pattern.Var(sym) =>
@@ -93,10 +105,15 @@ class Lowering(using TL, Raise, Elaborator.State):
       term(st.Blk(semantics.LetBinding(Pattern.Var(sym), trm) :: Nil, st.If(tl)))(k)
     case st.If(Split.Cons(
       Branch(scrut, Pattern.LitPat(tru @ Tree.BoolLit(true)), Split.Else(thn)),
-      Split.Else(els)
+      restSplit
     )) =>
       
-      if k is Ret then   
+      val elseBranch = restSplit match
+        case Split.Else(els) => S(els)
+        case Split.Nil => N
+      
+      elseBranch match
+      case S(els) if k is Ret =>
         subTerm(scrut): sr =>
           // Match(sr, Case.Lit(tru) -> term(thn)(k) :: Nil,
           //   Some(term(els)(k)), 
@@ -106,11 +123,11 @@ class Lowering(using TL, Raise, Elaborator.State):
             N, 
             term(els)(k)
           )
-      else
+      case _ =>
         val l = new TempSymbol(summon[Elaborator.State].nextUid, S(t))
         subTerm(scrut): sr =>
             Match(sr, Case.Lit(tru) -> subTerm(thn)(r => Assign(l, r, End())) :: Nil,
-              Some(subTerm(els)(r => Assign(l, r, End()))),
+              elseBranch.map(els => subTerm(els)(r => Assign(l, r, End()))),
               k(Value.Ref(l))
             )
     

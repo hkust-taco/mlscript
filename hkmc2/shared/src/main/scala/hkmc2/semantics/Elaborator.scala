@@ -18,8 +18,9 @@ object Elaborator:
     def +(local: (Str, BlockLocalSymbol)): Ctx = copy(locals = locals + local)
   object Ctx:
     val empty: Ctx = Ctx(N, Map.empty, Map.empty)
+    val globalThisSymbol = TermSymbol(Ident("globalThis"))
     def init(using State): Ctx = empty.copy(members = Map(
-      "builtin" -> VarSymbol(Ident("builtin"), 0)
+      "globalThis" -> globalThisSymbol
     ))
   type Ctxl[A] = Ctx ?=> A
   def ctx: Ctxl[Ctx] = summon
@@ -195,6 +196,8 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
       case _ =>
         raise(ErrorReport(msg"Unsupported default case branch." -> tree.toLoc :: Nil))
         Term.Error
+    case Modified(Keyword.`return`, kwLoc, body) =>
+      Term.Ret(term(body))
     case Tree.Region(id: Tree.Ident, body) =>
       val sym = VarSymbol(id, nextUid)
       val nestCtx = ctx.copy(locals = ctx.locals ++ Ls(id.name -> sym))
@@ -212,7 +215,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
       raise(ErrorReport(msg"Illegal type declaration in term position." -> tree.toLoc :: Nil))
       Term.Error
     case Modified(kw, kwLoc, body) =>
-      raise(ErrorReport(msg"Illegal position for modifier ${kw.name}." -> kwLoc :: Nil))
+      raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kwLoc :: Nil))
       term(body)
     // case _ =>
     //   ???

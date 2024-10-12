@@ -32,6 +32,7 @@ enum Term extends Statement:
   case RegRef(reg: Term, value: Term)
   case Assgn(lhs: Term, rhs: Term)
   case Deref(ref: Term)
+  case Ret(result: Term)
   
   var symbol: Opt[Symbol] = N
   
@@ -100,6 +101,7 @@ sealed trait Statement extends AutoLocated:
     case New(_, args) => args
     case SelProj(pre, cls, _) => pre :: cls :: Nil
     case Asc(term, ty) => term :: ty :: Nil
+    case Ret(res) => res :: Nil
     case Forall(_, body) => body :: Nil
     case WildcardTy(in, out) => in.toList ++ out.toList
     case CompType(lhs, rhs, _) => lhs :: rhs :: Nil

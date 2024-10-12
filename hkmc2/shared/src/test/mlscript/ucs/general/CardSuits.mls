@@ -22,21 +22,21 @@ fun foo(x) = if x is
   else 4
 //│ | | Desugared if: 
 //│ if
-//│   x@33 is Card(param0@37) param0@37 is Heart then 0
-//│   x@33 is Card(param0@36) param0@36 is Diamond then 1
-//│   x@33 is Card(param0@35) param0@35 is Spade then 2
-//│   x@33 is Card(param0@34) param0@34 is Club then 3
+//│   x@32 is Card(param0@36) param0@36 is Heart then 0
+//│   x@32 is Card(param0@35) param0@35 is Diamond then 1
+//│   x@32 is Card(param0@34) param0@34 is Spade then 2
+//│   x@32 is Card(param0@33) param0@33 is Club then 3
 //│   else 4
 //│ | | Desugared if: 
 //│ if
-//│   x@33 is Card(param0@37) and
-//│     param0@37 is Heart then 0
-//│     let param0@36 = param0@37#3
-//│     param0@36 is Diamond then 1
-//│     let param0@35 = param0@37#2
-//│     param0@35 is Spade then 2
-//│     let param0@34 = param0@37#1
-//│     param0@34 is Club then 3
+//│   x@32 is Card(param0@36) and
+//│     param0@36 is Heart then 0
+//│     let param0@35 = param0@36#3
+//│     param0@35 is Diamond then 1
+//│     let param0@34 = param0@36#2
+//│     param0@34 is Spade then 2
+//│     let param0@33 = param0@36#1
+//│     param0@33 is Club then 3
 //│     else 4
 //│   else 4
 

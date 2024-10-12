@@ -35,7 +35,7 @@ log("Hi")
 2
 //│ Lowered:
 //│ Assign:
-//│   lhs = $tmp@28
+//│   lhs = $tmp@27
 //│   rhs = Call:
 //│     fun = Ref of log
 //│     args = Ls of 
