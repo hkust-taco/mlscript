@@ -119,8 +119,8 @@ trait TypeSimplifier { self: Typer =>
               tvv(td.tparamsargs.find(_._1.name === postfix).getOrElse(die)._2) match {
                 case VarianceInfo(true, true) => Nil
                 case VarianceInfo(co, contra) =>
-                  if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil
-                  else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
+                  if (co) v -> FieldType(S(BotType), process(fty.ub, N), false)(fty.prov) :: Nil
+                  else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType, false)(fty.prov) :: Nil
                   else  v -> default :: Nil
               })
           case N =>
@@ -132,16 +132,16 @@ trait TypeSimplifier { self: Typer =>
                     cls.varianceOf(cls.tparams.find(_._1.name === postfix).getOrElse(die)._2) match {
                       case VarianceInfo(true, true) => Nil
                       case VarianceInfo(co, contra) =>
-                        if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil
-                        else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
+                        if (co) v -> FieldType(S(BotType), process(fty.ub, N), false)(fty.prov) :: Nil
+                        else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType, false)(fty.prov) :: Nil
                         else  v -> default :: Nil
                     }
                   case S(trt: TypedNuTrt) => // TODO factor w/ above & generalize
                     trt.tparams.iterator.find(_._1.name === postfix).flatMap(_._3).getOrElse(VarianceInfo.in) match {
                       case VarianceInfo(true, true) => Nil
                       case VarianceInfo(co, contra) =>
-                        if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil
-                        else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
+                        if (co) v -> FieldType(S(BotType), process(fty.ub, N), false)(fty.prov) :: Nil
+                        else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType, false)(fty.prov) :: Nil
                         else  v -> default :: Nil
                     }
                   case S(_) => ??? // TODO:
@@ -259,10 +259,10 @@ trait TypeSimplifier { self: Typer =>
                 // * Reconstruct a TypeRef from its current structural components
                 val typeRef = TypeRef(td.nme, td.tparamsargs.zipWithIndex.map { case ((tp, tv), tpidx) =>
                   val fieldTagNme = tparamField(clsTyNme, tp)
-                  val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
+                  val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta, false)(noProv) })
                   fromTyRef.++(rcd2.fields.iterator.filter(_._1 === fieldTagNme).map(_._2))
                     .foldLeft((BotType: ST, TopType: ST)) {
-                      case ((acc_lb, acc_ub), FieldType(lb, ub)) =>
+                      case ((acc_lb, acc_ub), FieldType(lb, ub, _)) =>
                         (acc_lb | lb.getOrElse(BotType), acc_ub & ub)
                     }.pipe {
                       case (lb, ub) =>
@@ -369,10 +369,10 @@ trait TypeSimplifier { self: Typer =>
                 // * Reconstruct a TypeRef from its current structural components
                 val typeRef = TypeRef(cls.td.nme, cls.tparams.zipWithIndex.map { case ((tp, tv, vi), tpidx) =>
                   val fieldTagNme = tparamField(clsTyNme, tp)
-                  val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
+                  val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta, false)(noProv) })
                   fromTyRef.++(rcd2.fields.iterator.filter(_._1 === fieldTagNme).map(_._2))
                     .foldLeft((BotType: ST, TopType: ST)) {
-                      case ((acc_lb, acc_ub), FieldType(lb, ub)) =>
+                      case ((acc_lb, acc_ub), FieldType(lb, ub, _)) =>
                         (acc_lb | lb.getOrElse(BotType), acc_ub & ub)
                     }.pipe {
                       case (lb, ub) =>
@@ -427,7 +427,7 @@ trait TypeSimplifier { self: Typer =>
                       .partitionMap(f => f._1.toIndexOption.filter((0 until arity).contains).map(_ -> f._2).toLeft(f))
                     val componentFieldsMap = componentFields.toMap
                     val tupleComponents = fs.iterator.zipWithIndex.map { case ((nme, ty), i) =>
-                      nme -> (ty && componentFieldsMap.getOrElse(i, TopType.toUpper(noProv))).update(go(_, pol.map(!_)), go(_, pol))
+                      nme -> (ty && componentFieldsMap.getOrElse(i, TopType.toUpper(noProv, true))).update(go(_, pol.map(!_)), go(_, pol))
                     }.toList
                     S(TupleType(tupleComponents)(tt.prov)) -> rcdFields.mapValues(_.update(go(_, pol.map(!_)), go(_, pol)))
                   case S(ct: ClassTag) => S(ct) -> nFields
@@ -964,9 +964,9 @@ trait TypeSimplifier { self: Typer =>
     def transform(st: SimpleType, pol: PolMap, parents: Set[TV], canDistribForall: Opt[Level] = N): SimpleType =
           trace(s"transform[${printPol(pol)}] $st   (${parents.mkString(", ")})  $pol  $canDistribForall") {
         def transformField(f: FieldType): FieldType = f match {
-          case FieldType(S(lb), ub) if lb === ub =>
+          case FieldType(S(lb), ub, _) if lb === ub =>
             val b = transform(ub, pol.invar, semp)
-            FieldType(S(b), b)(f.prov)
+            FieldType(S(b), b, false)(f.prov)
           case _ => f.update(transform(_, pol.contravar, semp), transform(_, pol, semp))
         }
         st match {
@@ -1237,8 +1237,8 @@ trait TypeSimplifier { self: Typer =>
                       def nope: false = { println(s"Nope(${ty1.getClass.getSimpleName}): $ty1 ~ $ty2"); false }
                       
                       def unifyF(f1: FieldType, f2: FieldType): Bool = (f1, f2) match {
-                        case (FieldType(S(l1), u1), FieldType(S(l2), u2)) => unify(l1, l2) && unify(u1, u2)
-                        case (FieldType(N, u1), FieldType(N, u2)) => unify(u1, u2)
+                        case (FieldType(S(l1), u1, _), FieldType(S(l2), u2, _)) => unify(l1, l2) && unify(u1, u2)
+                        case (FieldType(N, u1, _), FieldType(N, u2, _)) => unify(u1, u2)
                         case _ => nope
                       }
                       

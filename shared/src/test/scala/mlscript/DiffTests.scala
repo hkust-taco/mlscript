@@ -464,7 +464,10 @@ class DiffTests(state: DiffTests.State)
                   && !mode.expectTypeErrors && diag.isInstanceOf[ErrorReport] && diag.source =:= Diagnostic.Typing)
                 { output("TEST CASE FAILURE: There was an unexpected type error"); failures += globalLineNum }
               if (!allowParseErrors
-                  && !mode.expectParseErrors && diag.isInstanceOf[ErrorReport] && (diag.source =:= Diagnostic.Lexing || diag.source =:= Diagnostic.Parsing))
+                  && !mode.expectParseErrors && diag.isInstanceOf[ErrorReport] && diag.source =:= Diagnostic.Lexing)
+                { output("TEST CASE FAILURE: There was an unexpected lexer error"); failures += globalLineNum }
+              if (!allowParseErrors
+                  && !mode.expectParseErrors && diag.isInstanceOf[ErrorReport] && diag.source =:= Diagnostic.Parsing)
                 { output("TEST CASE FAILURE: There was an unexpected parse error"); failures += globalLineNum }
               if (!allowCompileErrors
                   && !mode.expectCompileErrors && diag.isInstanceOf[ErrorReport] && diag.source =:= Diagnostic.Compilation)

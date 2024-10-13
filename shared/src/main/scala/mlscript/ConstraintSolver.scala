@@ -99,7 +99,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                     Nil)
                 val ty = d.typeSignature
                 S(
-                  if (d.fd.isMut) FieldType(S(ty), ty)(d.prov)
+                  if (d.fd.isMut) FieldType(S(ty), ty, false)(d.prov)
                   else ty.toUpper(d.prov)
                 )
               case S(p: NuParam) =>
@@ -512,6 +512,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case (LhsRefined(S(Without(b, _)), _, _, _), RhsBot) => rec(b, BotType, true)
             case (LhsTop, _) | (LhsRefined(N, empty(), RecordType(Nil), empty()), _) =>
               // TODO ^ actually get rid of LhsTop and RhsBot...? (might make constraint solving slower)
+              println(s"REPORT ERROR 515")
               reportError()
             case (LhsRefined(_, ts, _, trs), RhsBases(pts, _, _)) if ts.exists(pts.contains) => ()
             
@@ -530,6 +531,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case (_, RhsBases(_, _, trs)) if trs.nonEmpty => die
             
             case (_, RhsBot) | (_, RhsBases(Nil, N, _)) =>
+              println("REPORT ERRROR LINE 534")
               reportError()
             
             case (LhsRefined(S(f0@FunctionType(l0, r0)), ts, r, _)
@@ -554,7 +556,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               lit match {
                 case _: IntLit |  _: DecLit => rec(fldTy.lb.getOrElse(TopType), DecType, false)
                 case _: StrLit => rec(fldTy.lb.getOrElse(TopType), StrType, false)
-                case _: UnitLit => reportError()
+                case _: UnitLit => {
+                  println(s"REPORT ERROR 560")
+                  reportError()
+                }
               }
               
             // * This deals with the implicit Eql type member for user-defined classes.
@@ -604,7 +609,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                     case S(Without(b, ns)) =>
                       if (ns(n)) rec(b, RhsBases(ots, N, trs).toType(), true)
                       else rec(b, done_rs.toType(), true)
-                    case _ => reportError()
+                    case _ => {
+                      println("REPORT ERROR 613")
+                      reportError()
+                    }
                   }
               }
             case (LhsRefined(N, ts, r, trs), RhsBases(pts, N, trs2))  =>
@@ -614,9 +622,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 case _ => Nil
               }.contains(p.id)))
                 println(s"OK $ts <: $pts")
-              else reportError()
+              else {
+                println(s"REPORT ERROR 624")
+                reportError()
+              }
             case (LhsRefined(N, ts, r, _), RhsBases(pts, S(L(_: FunctionType | _: ArrayBase)), _)) =>
-              reportError()
+              {
+                println(s"REPORT ERROR 627")
+                reportError()
+              }
             case (LhsRefined(S(b: TupleType), ts, r, _), RhsBases(pts, S(L(ty: TupleType)), _))
               if b.fields.size === ty.fields.size =>
                 (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach { (l, r) =>
@@ -952,7 +966,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             }
             
             
-          case (TupleType(fs0), TupleType(fs1)) if fs0.size === fs1.size => // TODO generalize (coerce compatible tuples)
+          case (t0 @ TupleType(fs0), t1 @ TupleType(fs1)) if t0.isLengthCompatibleWith(t1) => {
             fs0.lazyZip(fs1).foreach { case ((ln, l), (rn, r)) =>
               ln.foreach { ln => rn.foreach { rn =>
                 if (ln =/= rn) err(
@@ -962,6 +976,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               recLb(r, l)
               rec(l.ub, r.ub, false)
             }
+          }
           case (t: ArrayBase, a: ArrayType) =>
             recLb(a.inner, t.inner)
             rec(t.inner.ub, a.inner.ub, false)
@@ -984,7 +999,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (RecordType(fs0), RecordType(fs1)) =>
             fs1.foreach { case (n1, t1) =>
               fs0.find(_._1 === n1).fold {
-                reportError()
+                {
+                  println(s"REPORTERROR 933") 
+                  reportError()
+                }
               } { case (n0, t0) =>
                 recLb(t1, t0)
                 rec(t0.ub, t1.ub, false)
@@ -1040,7 +1058,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               if (tr1.mayHaveTransitiveSelfType) rec(tr1.expand, tr2.expand, true)
               else (tr1.mkClsTag, tr2.mkClsTag) match {
                 case (S(tag1), S(tag2)) if !(tag1 <:< tag2) =>
-                  reportError()
+                  {
+                    println(s"REPORTERROR 992") 
+                    reportError()
+                  }
                 case _ =>
                   rec(tr1.expand, tr2.expand, true)
               }
@@ -1139,14 +1160,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             goToWork(lhs, rhs)
           case (_: ClassTag | _: TraitTag, _: TraitTag) =>
             goToWork(lhs, rhs)
-          case _ => reportError()
+          case _ => {
+              println(s"REPORTERROR 1093") 
+              reportError()
+            }
       }}
     }}()
     
     def reportError(failureOpt: Opt[Message] = N)(implicit cctx: ConCtx, ctx: Ctx): Unit = {
       val lhs = cctx._1.head
       val rhs = cctx._2.head
-      
+
       println(s"CONSTRAINT FAILURE: $lhs <: $rhs")
       // println(s"CTX: ${cctx.map(_.map(lr => s"${lr._1} <: ${lr._2} [${lr._1.prov}] [${lr._2.prov}]"))}")
       
@@ -1309,7 +1333,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case _ => doesntMatch(rhs)
       })
       
-      
       val mismatchMessage =
         msg"Type mismatch in ${prov.desc}:" -> show(prov.loco) :: (
           msg"${printProv(lhsProv)} `${lhs.expPos}` $failure"
@@ -1321,6 +1344,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           msg"but it flows into ${l.prov.desc}$expTyMsg" -> show(l.prov.loco) :: Nil
         }.toList.flatten
       
+      println(s"dbg [ConstraintSolver]: ${flowHint}")
+
       val constraintProvenanceHints = mk_constraintProvenanceHints
       
       var first = true

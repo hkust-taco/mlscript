@@ -1202,10 +1202,10 @@ abstract class JSBackend {
 
     def prepare(nme: Str, fs: Ls[Opt[Var] -> Fld], pars: Ls[Term], unit: TypingUnit) = {
       val params = fs.map {
-        case (S(nme), Fld(FldFlags(mut, spec, _), trm)) =>
+        case (S(nme), Fld(FldFlags(mut, spec, opt, _), trm)) =>
           val ty = tt(trm)
-          nme -> Field(if (mut) S(ty) else N, ty)
-        case (N, Fld(FldFlags(mut, spec, _), nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
+          nme -> Field(if (mut) S(ty) else N, ty, opt)
+        case (N, Fld(FldFlags(mut, spec, opt, _), nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top, opt)
         case _ => die
       }
       val publicCtors = fs.filter {

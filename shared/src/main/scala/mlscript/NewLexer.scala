@@ -51,10 +51,11 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     ";",
     // ",",
     "#",
-    "`"
+    "`",
     // ".",
     // "<",
     // ">",
+    "?:"
   )
   
   private val isAlphaOp = Set(
@@ -396,9 +397,12 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
             lex(k, ind, next(k, SELECT(name)))
           }
           else lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))
+        } 
+        else {
+          // println(s"dbg [NewLexer.scala]: n: $n, j: $j, isSymKeyword: ${isSymKeyword.contains(n)}")
+          // else go(j, i   f (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
+          lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))
         }
-        // else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
-        else lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))
       case _ if isDigit(c) =>
         val (lit, j) = num(i)
         // go(j, LITVAL(IntLit(BigInt(str))))

@@ -1,0 +1,171 @@
+:NewDefs
+
+fun (??) oops(a123, b123) = a123 + b123
+//│ fun (??) oops: (Int, Int) -> Int
+
+1 ?? 2
+//│ Int
+//│ res
+//│     = 3
+
+
+fun f1(aOpt?: Int, bOpt?: Int) = aOpt + bOpt
+//│ fun f1: (aOpt: (Int)?, bOpt: (Int)?) -> Int
+
+fun f1(a: Int, b: Int) = a + b
+//│ fun f1: (a: Int, b: Int) -> Int
+
+
+class C1
+class C2 extends C1
+let x = new C2()
+let y: C1 = x
+//│ class C1 {
+//│   constructor()
+//│ }
+//│ class C2 extends C1 {
+//│   constructor()
+//│ }
+//│ let x: C2
+//│ let y: C1
+//│ x
+//│   = C2 {}
+//│ y
+//│   = C2 {}
+
+
+[x, y]: [C1, C1]
+//│ [C1, C1]
+//│ res
+//│     = [ C2 {}, C2 {} ]
+
+
+[x, y]: [C1, C1, C1?]
+//│ [C1, C1, (C1)?]
+//│ res
+//│     = [ C2 {}, C2 {} ]
+
+
+:e
+[x]: [C1, C1, C1?]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.50: 	[x]: [C1, C1, C1?]
+//│ ║        	^^^
+//│ ╟── expression of type `[?a]` does not match type `[C1, C1, (C1)?]`
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.50: 	[x]: [C1, C1, C1?]
+//│ ╙──      	     ^^^^^^^^^^^^^
+//│ [C1, C1, (C1)?]
+//│ res
+//│     = [ C2 {} ]
+
+
+[1, 2, 3]: [Int, Int, Int]
+//│ [Int, Int, Int]
+//│ res
+//│     = [ 1, 2, 3 ]
+
+[1, 2]: [Int, Int?]
+//│ [Int, (Int)?]
+//│ res
+//│     = [ 1, 2 ]
+
+[1]: [Int, Int?]
+//│ [Int, (Int)?]
+//│ res
+//│     = [ 1 ]
+
+:e
+[]: [Int, Int?]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.79: 	[]: [Int, Int?]
+//│ ║        	^^
+//│ ╟── expression of type `[]` does not match type `[Int, (Int)?]`
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.79: 	[]: [Int, Int?]
+//│ ╙──      	    ^^^^^^^^^^^
+//│ [Int, (Int)?]
+//│ res
+//│     = []
+
+:e
+[1, 2, 3]: [Int, Int?]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.92: 	[1, 2, 3]: [Int, Int?]
+//│ ║        	^^^^^^^^^
+//│ ╟── tuple literal of type `[1, 2, 3]` does not match type `[Int, (Int)?]`
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.92: 	[1, 2, 3]: [Int, Int?]
+//│ ╙──      	           ^^^^^^^^^^^
+//│ [Int, (Int)?]
+//│ res
+//│     = [ 1, 2, 3 ]
+
+[1, 2]: [Int, Int, Int?]
+//│ [Int, Int, (Int)?]
+//│ res
+//│     = [ 1, 2 ]
+
+
+// * Harder case:
+:p
+fun foo(xs: [Int] & 'a) = xs : [Int, Int?]
+//│ |#fun| |foo|(|xs|#:| |[|Int|]| |&| |'a|)| |#=| |xs| |#:| |[|Int|,| |Int|?|]|
+//│ AST: TypingUnit(List(NuFunDef(None,Var(foo),None,List(),Left(Lam(Tup(List((Some(Var(xs)),Fld(_,App(Var(&),Tup(List((None,Fld(_,Tup(List((None,Fld(_,Var(Int))))))), (None,Fld(_,Var('a)))))))))),Asc(Var(xs),Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true))))))))))
+//│ Parsed: fun foo = (xs: &([Int,], 'a,),) => xs : [Int, (Int)?];
+//│ fun foo: (xs: [Int]) -> [Int, (Int)?]
+
+// fun foo(xs: [Int] & 'a) = [xs : [Int, Int?], xs]
+
+:p
+fun foo0(x?: Int) = if x is undefined then 0 else x + 1
+//│ |#fun| |foo0|(|x|#?:| |Int|)| |#=| |#if| |x| |is| |#undefined| |#then| |0| |#else| |x| |+| |1|
+//│ AST: TypingUnit(List(NuFunDef(None,Var(foo0),None,List(),Left(Lam(Tup(List((Some(Var(x)),Fld(_,Var(Int))))),If(IfThen(App(Var(is),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,UnitLit(true)))))),IntLit(0)),Some(App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,IntLit(1)))))))))))))
+//│ Parsed: fun foo0 = (x: Int,) => if (is(x, undefined,)) then 0 else +(x, 1,);
+//│ fun foo0: (x: (Int)?) -> Int
+
+:p
+fun foo1(x?) = if x is undefined then 0 else x + 1
+//│ |#fun| |foo1|(|x|?|)| |#=| |#if| |x| |is| |#undefined| |#then| |0| |#else| |x| |+| |1|
+//│ AST: TypingUnit(List(NuFunDef(None,Var(foo1),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(x))))),If(IfThen(App(Var(is),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,UnitLit(true)))))),IntLit(0)),Some(App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,IntLit(1)))))))))))))
+//│ Parsed: fun foo1 = (x,) => if (is(x, undefined,)) then 0 else +(x, 1,);
+//│ fun foo1: ((Int | ())?) -> Int
+
+foo1(2)
+//│ Int
+//│ res
+//│     = 3
+
+fun foo0(x?:Int) = x + 1
+//│ fun foo0: (x: (Int)?) -> Int
+
+:e
+fun foo1(x?) = x + 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.143: 	fun foo1(x?) = x + 1
+//│ ║         	               ^^^^^
+//│ ╟── reference of type `()` is not an instance of type `Int`
+//│ ║  l.143: 	fun foo1(x?) = x + 1
+//│ ╙──       	               ^
+//│ fun foo1: ((Int | ())?) -> (Int | error)
+
+
+fun foo(x?) = if x is undefined then 0 else x + 1
+//│ fun foo: ((Int | ())?) -> Int
+
+
+fun foo: (x: Int) -> Int
+fun foo(x?) = if x is undefined then 0 else x + 1
+//│ fun foo: ((Int | ())?) -> Int
+//│ fun foo: (x: Int) -> Int
+
+fun foo: (x: Int?) -> Int
+fun foo(x) = x + 1
+//│ fun foo: Int -> Int
+//│ fun foo: (x: (Int)?) -> Int
+
+fun f(x) = (x : [Int, Int?]) : ['a, 'b]
+//│ fun f: ([Int, (Int)?]) -> [Int, Int]
+
+fun f(x) = (x : [Int, Int?]) : ['a, 'b]
+//│ fun f: ([Int, (Int)?]) -> [Int, Int]

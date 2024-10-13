@@ -120,7 +120,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       selPath2Term(l.map(x => genParName(x.name)).updated(0, "this").reverse, v)
     })
   }
-  private def toFldsEle(trm: Term): (Option[Var], Fld) = (None, Fld(FldFlags(false, false, false), trm))
+  private def toFldsEle(trm: Term): (Option[Var], Fld) = (None, Fld(FldFlags(false, false, false, false), trm))
 
   def getSupClsInfoByTerm(parentTerm: Term): (List[TypeName], List[(Var, Fld)]) = parentTerm match{
     case Var(nm) => List(TypeName(nm)) -> Nil
@@ -498,7 +498,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
   private def liftTypeField(target: Field)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (Field, LocalContext) = {
     val (inT, iCtx) = target.in.map(liftType).unzip
     val (outT, oCtx) = liftType(target.out)
-    Field(inT, outT) -> (iCtx.getOrElse(emptyCtx) ++ oCtx)
+    Field(inT, outT, false) -> (iCtx.getOrElse(emptyCtx) ++ oCtx)
   }
 
   private def liftType(target: Type)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (Type, LocalContext) = target match{

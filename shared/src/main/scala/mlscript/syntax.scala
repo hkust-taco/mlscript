@@ -108,10 +108,10 @@ final case class IfOpsApp(lhs: Term, opsRhss: Ls[Var -> IfBody]) extends IfBody
 final case class IfBlock(lines: Ls[IfBody \/ Statement]) extends IfBody
 // final case class IfApp(fun: Term, opsRhss: Ls[Var -> IfBody]) extends IfBody
 
-final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool) extends FldFlagsImpl // TODO make it a Located and use in diagnostics
+final case class FldFlags(mut: Bool, spec: Bool, opt: Bool, genGetter: Bool) extends FldFlagsImpl // TODO make it a Located and use in diagnostics
 final case class Fld(flags: FldFlags, value: Term) extends FldImpl
 
-object FldFlags { val empty: FldFlags = FldFlags(false, false, false) }
+object FldFlags { val empty: FldFlags = FldFlags(false, false, false, false) }
 
 sealed abstract class CaseBranches extends CaseBranchesImpl
 final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches)(val refined: Bool) extends CaseBranches
@@ -165,7 +165,7 @@ final case class Constrained(base: TypeLike, tvBounds: Ls[TypeVar -> Bounds], wh
 // final case class FirstClassDefn(defn: NuTypeDef)         extends Type // TODO
 // final case class Refinement(base: Type, decls: TypingUnit) extends Type // TODO
 
-final case class Field(in: Opt[Type], out: Type)         extends FieldImpl
+final case class Field(in: Opt[Type], out: Type, opt: Boolean)         extends FieldImpl
 
 sealed abstract class NullaryType                        extends Type
 

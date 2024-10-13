@@ -22,12 +22,23 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
   def show(newDefs: Bool): Str = showIn(0)(ShowCtx.mk(this :: Nil, newDefs))
   
   private def parensIf(str: Str, cnd: Boolean): Str = if (cnd) "(" + str + ")" else str
-  private def showField(f: Field)(implicit ctx: ShowCtx): Str = f match {
-    case Field(N, ub) => ub.showIn(0)
-    case Field(S(lb), ub) if lb === ub => ub.showIn(0)
-    case Field(S(Bot), ub) => s"out ${ub.showIn(0)}"
-    case Field(S(lb), Top) => s"in ${lb.showIn(0)}"
-    case Field(S(lb), ub) => s"in ${lb.showIn(0)} out ${ub.showIn(0)}"
+  private def showField(f: Field)(implicit ctx: ShowCtx): Str = {
+    val res = f match {
+      case Field(N, ub, _) => ub.showIn(0)
+      case Field(S(lb), ub, _) if lb === ub => ub.showIn(0)
+      case Field(S(Bot), ub, _) => s"out ${ub.showIn(0)}"
+      case Field(S(lb), Top, _) => s"in ${lb.showIn(0)}"
+      case Field(S(lb), ub, _) => s"in ${lb.showIn(0)} out ${ub.showIn(0)}"
+    }
+    val opt = f match {
+      case Field(_, _, true) => true
+      case Field(_, _, false) => false
+    }
+    // println(s"dbg: [helpers.scala] OK $f ### ${res} ${opt}")
+    if (opt)
+      s"($res)?"
+    else
+      res
   }
   private def showFields(fs: Ls[Opt[Var] -> Field])(implicit ctx: ShowCtx): Ls[Str] =
     fs.map(nt => s"${nt._2.mutStr}${nt._1.fold("")(_.name + ": ")}${showField(nt._2)}")
@@ -44,7 +55,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case Function(Tuple(fs), r) =>
       val innerStr = fs match {
         case Nil => "()"
-        case N -> Field(N, f) :: Nil if !f.isInstanceOf[Tuple] => f.showIn(31)
+        case N -> Field(N, f, false) :: Nil if !f.isInstanceOf[Tuple] => f.showIn(31)
         case _ =>
           val inner = showFields(fs)
           if (ctx.newDefs) inner.mkString("(", ", ", ")") else inner.mkString("(", ", ", ",)")
@@ -58,11 +69,11 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
       val strs = fs.map { nt =>
         val nme = nt._1.name
         if (nme.isCapitalized) nt._2 match {
-          case Field(N | S(Bot), Top) => s"$nme"
-          case Field(S(lb), ub) if lb === ub => s"$nme = ${ub.showIn(0)}"
-          case Field(N | S(Bot), ub) => s"$nme <: ${ub.showIn(0)}"
-          case Field(S(lb), Top) => s"$nme :> ${lb.showIn(0)}"
-          case Field(S(lb), ub) => s"$nme :> ${lb.showIn(0)} <: ${ub.showIn(0)}"
+          case Field(N | S(Bot), Top, _) => s"$nme"
+          case Field(S(lb), ub, _) if lb === ub => s"$nme = ${ub.showIn(0)}"
+          case Field(N | S(Bot), ub, _) => s"$nme <: ${ub.showIn(0)}"
+          case Field(S(lb), Top, _) => s"$nme :> ${lb.showIn(0)}"
+          case Field(S(lb), ub, _) => s"$nme :> ${lb.showIn(0)} <: ${ub.showIn(0)}"
         }
         else s"${nt._2.mutStr}${nme}: ${showField(nt._2)}"
       }
@@ -528,7 +539,7 @@ trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
 trait FldFlagsImpl extends Located { self: FldFlags =>
   def children: Ls[Located] = Nil
   override def toString(): String = {
-    val FldFlags(m, s, g) = this
+    val FldFlags(m, s, o, g) = this
     val res = (if (m) "m" else "") + (if (s) "s" else "") + (if (g) "g" else "")
     if (res.isEmpty) "_" else res
   }
@@ -638,11 +649,12 @@ trait TermImpl extends StatementImpl { self: Term =>
     case tup: Tup => "[" + tup.showElems + "]"
     case Splc(fields) => fields.map{
       case L(l) => s"...$l"
-      case R(Fld(FldFlags(m, s, g), r)) => (
+      case R(Fld(FldFlags(m, s, o, g), r)) => (
         (if (m) "mut " else "")
         + (if (g) "val " else "")
         + (if (s) "#" else "")
         + r
+        + (if (o) "?" else "")
       )
     }.mkString("(", ", ", ")")
     case Bind(l, r) => s"${l.showDbg} as ${r.showDbg}" |> bra
@@ -705,11 +717,12 @@ trait TermImpl extends StatementImpl { self: Term =>
       case tup: Tup => "[" + tup.showIn + "]"
       case Splc(fields) => fields.map{
         case L(l) => s"...${l.showIn(false)}"
-        case R(Fld(FldFlags(m, s, g), r)) => (
+        case R(Fld(FldFlags(m, s, o, g), r)) => (
           (if (m) "mut " else "")
           + (if (g) "val " else "")
           + (if (s) "#" else "")
           + r.showIn(false)
+          + (if (o) "?" else "")
         )
       }.mkString("(", ", ", ")")
       case Bind(l, r) => s"${l.showIn(false)} as ${r.showIn(false)}" |> bra
@@ -756,7 +769,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     // * ^ Note: don't think the plain _: Tup without a Bra can actually occur
       Function(lhs.toType_!, rhs.toType_!)
     case App(Var("->"), PlainTup(lhs, rhs)) =>
-      Function(Tuple(N -> Field(N, lhs.toType_!) :: Nil), rhs.toType_!)
+      Function(Tuple(N -> Field(N, lhs.toType_!, false) :: Nil), rhs.toType_!)
     case App(Var("|"), PlainTup(lhs, rhs)) =>
       Union(lhs.toType_!, rhs.toType_!)
     case App(Var("&"), PlainTup(lhs, rhs)) =>
@@ -771,7 +784,7 @@ trait TermImpl extends StatementImpl { self: Term =>
         case _ => throw new NotAType(this)
       }
     case Tup(fields) => Tuple(fields.map(fld => (fld._1, fld._2 match {
-      case Fld(FldFlags(m, s, _), v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty)
+      case Fld(FldFlags(m, s, o, _), v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty, o)
     })))
     case Bra(rcd, trm) => trm match {
       case _: Rcd => if (rcd) trm.toType_! else throw new NotAType(this)
@@ -782,7 +795,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       case _ => throw new NotAType(this)
     }
     case Rcd(fields) => Record(fields.map(fld => (fld._1, fld._2 match {
-      case Fld(FldFlags(m, s, _), v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty)
+      case Fld(FldFlags(m, s, o, _), v) => val ty = v.toType_!; Field(Option.when(m)(ty), ty, o)
     })))
     case Where(body, where) =>
       Constrained(body.toType_!, Nil, where.map {
@@ -1051,17 +1064,17 @@ trait StatementImpl extends Located { self: Statement =>
         case R(ty) => ty
       }
       val params = fs.map {
-        case (S(nme), Fld(FldFlags(mut, spec, _), trm)) =>
+        case (S(nme), Fld(FldFlags(mut, spec, opt, _), trm)) =>
           val ty = tt(trm)
-          nme -> Field(if (mut) S(ty) else N, ty)
-        case (N, Fld(FldFlags(mut, spec, _), nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
+          nme -> Field(if (mut) S(ty) else N, ty, opt)
+        case (N, Fld(FldFlags(mut, spec, opt, _), nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top, opt)
         case _ => die
       }
       val pos = params.unzip._1
       val bod = pars.map(tt).foldRight(Record(params): Type)(Inter)
       val termName = Var(nme.name).withLocOf(nme)
       val ctor = Def(false, termName, L(Lam(tup, App(termName, Tup(N -> Fld(FldFlags.empty, Rcd(fs.map {
-        case (S(nme), fld) => nme -> Fld(FldFlags(false, false, fld.flags.genGetter), nme)
+        case (S(nme), fld) => nme -> Fld(FldFlags(false, false, false, fld.flags.genGetter), nme)
         case (N, fld @ Fld(_, nme: Var)) => nme -> fld
         case _ => die
       })) :: Nil)))), true)
@@ -1109,25 +1122,25 @@ trait StatementImpl extends Located { self: Statement =>
             case Bra(false, t) => getFields(t)
             case Bra(true, Tup(fs)) =>
               Record(fs.map {
-                case (S(n) -> Fld(FldFlags(mut, _, _), t)) =>
+                case (S(n) -> Fld(FldFlags(mut, _, opt, _), t)) =>
                   val ty = t.toType match {
                     case L(d) => allDiags += d; Top
                     case R(t) => t
                   }
                   fields += n -> ty
-                  n -> Field(None, ty)
+                  n -> Field(None, ty, opt)
                 case _ => ???
               }) :: Nil
             case Bra(true, t) => lastWords(s"$t ${t.getClass}")
             case Tup(fs) => // TODO factor with case Bra(true, Tup(fs)) above
               Tuple(fs.map {
-                case (S(n) -> Fld(FldFlags(tmut, _, _), t)) =>
+                case (S(n) -> Fld(FldFlags(tmut, _, _, _), t)) =>
                   val ty = t.toType match {
                     case L(d) => allDiags += d; Top
                     case R(t) => t
                   }
                   fields += n -> ty
-                  S(n) -> Field(None, ty)
+                  S(n) -> Field(None, ty, false)
                 case _ => ???
               }) :: Nil
             case _ => ??? // TODO proper error
@@ -1137,7 +1150,7 @@ trait StatementImpl extends Located { self: Statement =>
           val tps = tparams.toList
           val ctor = Def(false, v, R(PolyType(tps.map(L(_)),
             params.foldRight(AppliedType(clsNme, tps):Type)(Function(_, _)))), true).withLocOf(stmt)
-          val td = TypeDef(Cls, clsNme, tps, Record(fields.toList.mapValues(Field(None, _))), Nil, Nil, Nil, N).withLocOf(stmt)
+          val td = TypeDef(Cls, clsNme, tps, Record(fields.toList.mapValues(Field(None, _, false))), Nil, Nil, Nil, N).withLocOf(stmt)
           td :: ctor :: cs
         case _ => ??? // TODO methods in data type defs? nested data type defs?
       }
