@@ -1,0 +1,75 @@
+:global
+:noTypeCheck
+
+abstract class List[out T]: Cons[T] | Nil
+class Cons[out T](head: T, tail: List[T]) extends List[T]
+module Nil extends List
+class Tup2[out T1, T2](fst: T1, snd: T2)
+fun reverse(l) =
+  fun r(l', l) = if l is Cons(x, xs) then r(Cons(x, l'), xs) else l'
+  r(Nil, l)
+fun map(f, xs) = if xs is
+  Cons(x, xs) then Cons(f(x), map(f, xs))
+  Nil then Nil
+fun listLen(ls) =
+  fun l(ls, a) = if ls is
+    Nil then a
+    Cons(h, t) then l(t, a + 1)
+  l(ls, 0)
+fun enumFromThenTo(a, t, b) = if a <= b then Cons(a, enumFromThenTo(t, 2 * t - a, b)) else Nil
+fun (.) compose(f, g) = x => f(g(x))
+fun intDiv(a, b) =
+  fun go(a, b, r) = if a >= b then go(a - b, b, r + 1) else r
+  go(a, b, 0)
+fun max(a, b) = if a > b then a else b
+fun drop(n, ls) = if
+  n <= 0 then ls
+  ls is
+    Nil then Nil
+    Cons(h, t) then drop(n - 1, t)
+fun take(n, ls) = if
+  n <= 0 then Nil
+  ls is
+    Nil then Nil
+    Cons(h, t) then Cons(h, take(n - 1, t))
+fun zip(xs, ys) = if xs is
+  Cons(x, xs) and ys is Cons(y, ys) then Cons(Tup2(x, y), zip(xs, ys))
+  else Nil
+fun snd(x)= if x is Tup2(f, s) then s
+fun inList(x, ls) = if ls is
+  Cons(h, t) then if x == h then true else inList(x, t)
+  Nil then false
+// prelude
+fun algb1(xss, yss) = if xss is
+  Nil then map(snd, yss)
+  Cons(x, xs) then algb1(xs, algb2(x, 0, 0, yss))
+fun algb2(x, k0j1, k1j1, yss) = if yss is
+  Nil then Nil
+  Cons(Tup2(y, k0j), ys) then
+    let kjcurr = if x == y then k0j1 + 1 else max(k1j1, k0j)
+    Cons(Tup2(y, kjcurr), algb2(x, k0j, kjcurr, ys))
+fun algb(xs, ys) = Cons(0, algb1(xs, map(y => Tup2(y, 0), ys)))
+fun findk(k, km, m, ls) = if ls is
+  Nil then km
+  Cons(Tup2(x,y), xys) then if (x + y) >= m then findk(k+1, k, x+y, xys) else findk(k+1, km, m, xys)
+fun algc(m, n, xs, ys) = if
+  ys is Nil then x => x
+  xs is
+    Cons(x, Nil) then if inList(x, ys) then t => Cons(x, t) else x => x
+  else
+    let m2 = intDiv(m, 2)
+    let xs1 = take(m2, xs)
+    let xs2 = drop(m2, xs)
+    let l1 = algb(xs1, ys)
+    let l2 = reverse(algb(reverse(xs2), reverse(ys)))
+    let k = findk(0, 0, -1, zip(l1, l2))
+    algc(m2, k, xs1, take(k, ys)) . algc(m-m2, n-k, xs2, drop(k, ys))
+fun lcss(xs, ys) = algc(listLen(xs), listLen(ys), xs, ys)(Nil)
+fun lcssMain(a, b ,c, d, e, f) = lcss(enumFromThenTo(a,b,c), enumFromThenTo(d,e,f))
+lcssMain(1,2,60,30,31,90)
+
+
+
+
+
+
