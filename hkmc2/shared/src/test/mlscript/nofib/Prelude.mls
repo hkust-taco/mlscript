@@ -17,22 +17,24 @@ fun listLen(ls) =
   l(ls, 0)
 fun enumFromTo(a, b) = if a <= b then Cons(a, enumFromTo(a + 1, b)) else Nil
 fun enumFromThenTo(a, t, b) = if a <= b then Cons(a, enumFromThenTo(t, 2 * t - a, b)) else Nil
-fun drop(n, ls) = if
-  n <= 0 then ls
-  ls is
-    Nil then Nil
-    Cons(h, t) then drop(n - 1, t)
-fun take(n, ls) = if
-  n <= 0 then Nil
-  ls is
-    Nil then Nil
-    Cons(h, t) then Cons(h, take(n - 1, t))
+fun drop(n, ls) = if ls is
+  Nil then Nil
+  Cons(h, t) and
+    n <= 0 then ls
+    else drop(n - 1, t)
+fun take(n, ls) = if ls is
+  Nil then Nil
+  Cons(h, t) and
+    n <= 0 then Nil
+    else Cons(h, take(n - 1, t))
 fun zip(xs, ys) = if xs is
   Cons(x, xs) and ys is Cons(y, ys) then Cons(Tup2(x, y), zip(xs, ys))
   else Nil
 fun snd(x)= if x is Tup2(f, s) then s
 fun inList(x, ls) = if ls is
-  Cons(h, t) then if x == h then true else inList(x, t)
+  Cons(h, t) and
+    x == h then true
+    else inList(x, t)
   Nil then false
 fun (++) append(xs, ys) = if xs is
   Nil then ys

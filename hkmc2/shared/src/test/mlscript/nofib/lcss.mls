@@ -20,7 +20,9 @@ fun findk(k, km, m, ls) = if ls is
 fun algc(m, n, xs, ys) = if
   ys is Nil then x => x
   xs is
-    Cons(x, Nil) then if inList(x, ys) then t => Cons(x, t) else x => x
+    Cons(x, Nil) and
+      inList(x, ys) then t => Cons(x, t)
+      else x => x
   else
     let m2 = intDiv(m, 2)
     let xs1 = take(m2, xs)
