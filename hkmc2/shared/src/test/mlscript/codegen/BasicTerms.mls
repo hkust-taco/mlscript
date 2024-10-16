@@ -1,0 +1,58 @@
+:js
+
+
+1
+//│ JS:
+//│ let res; res = 1;
+//│ = 1
+
+:lot
+:w
+1
+2
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.11: 	1
+//│ ╙──      	^
+//│ Lowered:
+//│ Assign:
+//│   lhs = res
+//│   rhs = Lit of IntLit of 2
+//│   rest = End of ""
+//│ JS:
+//│ let res; res = 2;
+//│ = 2
+
+
+:fixme
+log("Hi")
+//│ JS:
+//│ let res, tmp; tmp = log("Hi"); res = tmp;
+//│ ═══[RUNTIME ERROR] ReferenceError: log is not defined
+
+:fixme
+:lot
+log("Hi")
+2
+//│ Lowered:
+//│ Assign:
+//│   lhs = $tmp@27
+//│   rhs = Call:
+//│     fun = Ref of log
+//│     args = Ls of 
+//│       Lit of StrLit of "Hi"
+//│   rest = Assign: \
+//│   lhs = res
+//│   rhs = Lit of IntLit of 2
+//│   rest = End of ""
+//│ JS:
+//│ let res, tmp; tmp = log("Hi"); res = 2;
+//│ ═══[RUNTIME ERROR] ReferenceError: log is not defined
+
+
+:re
+2(2)
+//│ JS:
+//│ let res, tmp; tmp = 2(2); res = tmp;
+//│ ═══[RUNTIME ERROR] TypeError: 2 is not a function
+
+

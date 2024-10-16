@@ -14,7 +14,7 @@ object Branch:
 
 enum Split extends AutoLocated with ProductWithTail:
   case Cons(head: Branch, tail: Split)
-  case Let(name: VarSymbol, term: Term, tail: Split)
+  case Let(sym: BlockLocalSymbol, term: Term, tail: Split)
   case Else(default: Term)
   case Nil
 
@@ -39,7 +39,7 @@ enum Split extends AutoLocated with ProductWithTail:
 
   final def showDbg: String = this match
     case Split.Cons(head, tail) => s"${head.showDbg}; ${tail.showDbg}"
-    case Split.Let(name, term, tail) => s"let ${name.name} = ${term.showDbg}; ${tail.showDbg}"
+    case Split.Let(name, term, tail) => s"let ${name} = ${term.showDbg}; ${tail.showDbg}"
     case Split.Else(default) => s"else ${default.showDbg}"
     case Split.Nil => ""
 

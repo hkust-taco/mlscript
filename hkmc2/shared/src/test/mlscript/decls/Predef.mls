@@ -7,7 +7,6 @@ class Num
 class Str
 class Bool
 class Nothing
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 fun (+): (Int, Int) -> Int
 fun (-): (Int, Int) -> Int
@@ -17,20 +16,19 @@ fun (<): (Int, Int) -> Bool
 fun (>): (Int, Int) -> Bool
 fun (<=): (Int, Int) -> Bool
 fun (>=): (Int, Int) -> Bool
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 fun (+.): (Num, Num) -> Num
 fun (-.): (Num, Num) -> Num
 fun (*.): (Num, Num) -> Num
 fun (/.): (Num, Num) -> Num
-//│ Type: Ctor(lit:UnitLit(true),List())
 
-// poly is not supported here
+// [CY:] poly is not supported here
 fun (==): (Any, Any) -> Bool
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 fun log: (Any) -> ()
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 fun error: Nothing
-//│ Type: Ctor(lit:UnitLit(true),List())
+
+fun concat: (Str, Str) -> Str
+
+

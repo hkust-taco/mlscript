@@ -1,36 +1,25 @@
 
 
 1
-//│ Type: Ctor(lit:IntLit(1),List())
 
 ()
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 (1)
-//│ Type: Ctor(lit:IntLit(1),List())
 
 (1,)
-//│ Type: Ctor(lit:IntLit(1),List())
 
 (1, 2)
-//│ Type: Ctor(lit:IntLit(2),List())
 
 (1, 2,)
-//│ Type: Ctor(lit:IntLit(2),List())
 
 []
-//│ Type: Ctor(tup:Some(0),List())
 
 [1]
-//│ Type: Ctor(tup:Some(1),List(Ctor(lit:IntLit(1),List())))
 
 [1,]
-//│ Type: Ctor(tup:Some(1),List(Ctor(lit:IntLit(1),List())))
 
 [1, 2]
-//│ Type: Ctor(tup:Some(2),List(Ctor(lit:IntLit(1),List()), Ctor(lit:IntLit(2),List())))
 
 [1, 2,]
-//│ Type: Ctor(tup:Some(2),List(Ctor(lit:IntLit(1),List()), Ctor(lit:IntLit(2),List())))
 
 

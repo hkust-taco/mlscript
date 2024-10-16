@@ -1,0 +1,23 @@
+:js
+
+
+class Foo
+//│ JS:
+//│ let res; res = undefined;
+//│ = undefined
+
+:todo
+Foo
+//│ /!!!\ Uncaught error: scala.MatchError: class:Foo (of class hkmc2.semantics.ClassSymbol)
+
+class Foo()
+//│ JS:
+//│ let res; res = undefined;
+//│ = undefined
+
+class Foo(x)
+//│ JS:
+//│ let res; res = undefined;
+//│ = undefined
+
+

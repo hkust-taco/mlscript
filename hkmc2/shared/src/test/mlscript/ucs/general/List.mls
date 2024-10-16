@@ -1,5 +1,4 @@
-:global
-:noTypeCheck
+
 
 abstract class List[out T]
 class Cons[out T](head: T, tail: List[T]) extends List[T]
@@ -42,3 +41,5 @@ fun findFirst(f, xs) =
       Cons(x, _) and
         f(x) then Some(x)
       Cons(_, xs) then findFirst(f, xs)
+
+

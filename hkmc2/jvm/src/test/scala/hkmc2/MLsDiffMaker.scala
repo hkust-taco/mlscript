@@ -1,10 +1,13 @@
 package hkmc2
 
-import mlscript.utils.*, shorthands.*
+import scala.collection.mutable
 
-import hkmc2.semantics.Elaborator
-import hkmc2.syntax.Keyword.all
+import mlscript.utils.*, shorthands.*
 import utils.*
+
+import hkmc2.syntax.Keyword.all
+import hkmc2.semantics.MemberSymbol
+import hkmc2.semantics.Elaborator
 
 
 abstract class MLsDiffMaker extends DiffMaker:
@@ -30,9 +33,11 @@ abstract class MLsDiffMaker extends DiffMaker:
   val showParsedTree = DebugTreeCommand("pt")
   val showElab = NullaryCommand("el")
   val showElaboratedTree = DebugTreeCommand("elt")
+  val showLoweredTree = NullaryCommand("lot")
   val showContext = NullaryCommand("ctx")
   val parseOnly = NullaryCommand("parseOnly")
-  val noTypeCheck = NullaryCommand("noTypeCheck")
+  
+  val typeCheck = FlagCommand(false, "typeCheck")
   
   val importCmd = Command("import"): ln =>
     importFile(file / os.up / os.RelPath(ln.trim), verbose = true)
@@ -47,9 +52,11 @@ abstract class MLsDiffMaker extends DiffMaker:
       showUCS.get.getOrElse(Set.empty).contains
     override def emitDbg(str: String): Unit = output(str)
   
-  var curCtx = Elaborator.Ctx.empty
+  var curCtx = Elaborator.Ctx.init
   
-  if file =/= predefFile then importFile(predefFile, verbose = false)
+  override def run(): Unit =
+    if file =/= predefFile then importFile(predefFile, verbose = false)
+    super.run()
   
   def importFile(fileName: Str, verbose: Bool): Unit =
     importFile(file / os.up / os.RelPath(fileName), verbose)
@@ -77,10 +84,11 @@ abstract class MLsDiffMaker extends DiffMaker:
     given Elaborator.Ctx = curCtx
     val elab = Elaborator(etl)
     try
-      val imports = elab.importFrom(res)
+      val (e, imports) = elab.importFrom(res)
       if verbose then
         output(s"Imported ${imports.members.size} members")
       curCtx = curCtx.copy(members = curCtx.members ++ imports.members)
+      processTerm(e, inImport = true)
     catch
       case err: Throwable =>
         output("/!!!\\ Uncaught error during Predef import: " + err)
@@ -138,13 +146,13 @@ abstract class MLsDiffMaker extends DiffMaker:
     showElaboratedTree.get.foreach: post =>
       output(s"Elaborated tree:")
       output(e.showAsTree(using post))
-    if noTypeCheck.isUnset then
-      processTerm(e)
+    processTerm(e, inImport = false)
   
   
-  def processTerm(trm: semantics.Term)(using Raise): Unit =
-    val typer = typing.TypeChecker()
-    val ty = typer.typeProd(trm)
-    output(s"Type: ${ty}")
+  def processTerm(trm: semantics.Term, inImport: Bool)(using Raise): Unit =
+    if typeCheck.isSet then
+      val typer = typing.TypeChecker()
+      val ty = typer.typeProd(trm)
+      output(s"Type: ${ty}")
   
 

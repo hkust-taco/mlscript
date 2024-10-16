@@ -2,8 +2,6 @@
 // ===============
 // Matching two options in any possible order.
 
-:global
-:noTypeCheck
 
 abstract class Option[T]
 class Some[T](value: T) extends Option[T]
@@ -70,10 +68,10 @@ fun add_4(x, y) =
             is
               None     then 0
 //│ ╔══[PARSE ERROR] Unexpected 'is' keyword here
-//│ ║  l.59: 	      is
+//│ ║  l.57: 	      is
 //│ ╙──      	      ^^
 //│ ╔══[ERROR] Unrecognized term split.
-//│ ║  l.58: 	    x
+//│ ║  l.56: 	    x
 //│ ╙──      	    ^
 
 
@@ -105,16 +103,16 @@ fun add_6(x, y) =
     [None,     Some(yv)] then yv
     [None,     None]     then 0
 //│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.106: 	    [None,     None]     then 0
+//│ ║  l.104: 	    [None,     None]     then 0
 //│ ╙──       	    ^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.105: 	    [None,     Some(yv)] then yv
+//│ ║  l.103: 	    [None,     Some(yv)] then yv
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.104: 	    [Some(xv), None]     then xv
+//│ ║  l.102: 	    [Some(xv), None]     then xv
 //│ ╙──       	    ^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.103: 	    [Some(xv), Some(yv)] then xv + yv
+//│ ║  l.101: 	    [Some(xv), Some(yv)] then xv + yv
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^
 
 add_6(None, None)
@@ -152,3 +150,5 @@ fun add_8(x, y) =
     y is Some(yv) and p(yv) and x is None then 36
     y is Some(yv) and x is None then yv
     y is None     and x is None     then 0
+
+

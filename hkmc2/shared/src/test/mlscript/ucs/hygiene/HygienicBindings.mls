@@ -1,5 +1,4 @@
-:global
-:noTypeCheck
+
 
 fun error = ()
 

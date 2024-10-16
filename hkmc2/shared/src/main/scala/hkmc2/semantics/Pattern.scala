@@ -10,13 +10,13 @@ enum Pattern extends Located:
   case Alias(nme: VarSymbol, pattern: Pattern)
   case LitPat(literal: Literal)
   case Concrete(nme: VarSymbol)
-  case Var(nme: VarSymbol)
+  case Var(nme: BlockLocalSymbol)
   /**
     * Represents wildcard patterns or missing patterns which match everything.
     * Should be transformed from `Var("_")` or unrecognized terms.
     */
   case Empty(source: Term)
-  case Class(nme: ClassSymbol, parameters: Opt[List[VarSymbol]], var refined: Bool)(val ident: Tree.Ident)
+  case Class(nme: ClassSymbol, parameters: Opt[List[BlockLocalSymbol]], var refined: Bool)(val ident: Tree.Ident)
   case Tuple(fields: List[Pattern])
   case Record(entries: List[(VarSymbol -> Pattern)])
   

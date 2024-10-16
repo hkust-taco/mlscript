@@ -72,13 +72,13 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
 
   import collection.mutable.HashMap
 
-  private val subScrutineeMap = HashMap.empty[VarSymbol, HashMap[ClassSymbol, List[VarSymbol]]]
+  private val subScrutineeMap = HashMap.empty[BlockLocalSymbol, HashMap[ClassSymbol, List[BlockLocalSymbol]]]
 
-  extension (symbol: VarSymbol)
-    def getSubScrutinees(cls: ClassSymbol): List[VarSymbol] =
+  extension (symbol: BlockLocalSymbol)
+    def getSubScrutinees(cls: ClassSymbol): List[BlockLocalSymbol] =
       subScrutineeMap.getOrElseUpdate(symbol, HashMap.empty).getOrElseUpdate(cls, {
         val arity = cls.defn.flatMap(_.paramsOpt.map(_.length)).getOrElse(0)
-        (0 until arity).map(i => VarSymbol(Ident(s"param$i"), nextUid)).toList
+        (0 until arity).map(i => TempSymbol(nextUid, N, s"param$i")).toList
       })
 
   def default: Split => Sequel = split => _ => split
@@ -124,7 +124,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
           nominate(ctx, finish(term(headCoda)(using ctx))):
             expandMatch(_, headPattern, tailSplit)(fallback)
 
-  private def patternSplitShorthands(tree: Tree, scrutSymbol: VarSymbol): Split => Sequel = tree match
+  private def patternSplitShorthands(tree: Tree, scrutSymbol: BlockLocalSymbol): Split => Sequel = tree match
     case Block(branches) => branches match
       case Nil => lastWords("encountered empty block")
       case branch :: rest => fallback => ctx =>
@@ -165,7 +165,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
           val sym = VarSymbol(ident, nextUid)
           val fallbackCtx = ctx + (ident.name -> sym)
           Split.Let(sym, term(termTree)(using ctx), elabFallback(fallback)(fallbackCtx)).withLocOf(t)
-        case Modified(Keyword.`else`, default) => fallback => ctx => trace(
+        case Modified(Keyword.`else`, elsLoc, default) => fallback => ctx => trace(
           pre = s"termSplit: else $default",
           post = (res: Split) => s"termSplit: else >>> $res"
         ):
@@ -223,7 +223,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
       nominate(ctx, finish(term(lhs)(using ctx))): lhsSymbol =>
         // Compose a function that takes the RHS and finishes the application.
         val finishInner = (rhsTerm: Term) =>
-          val first = Fld(FldFlags.empty, lhsSymbol.ref(lhsSymbol.id), N)
+          val first = Fld(FldFlags.empty, lhsSymbol.ref(/* FIXME ident? */), N)
           val second = Fld(FldFlags.empty, rhsTerm, N)
           val arguments = Term.Tup(first :: second :: Nil)(rawTup)
           val joint = FlowSymbol("‹applied-result›", nextUid)
@@ -232,7 +232,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
     case tree @ App(lhs, blk @ OpBlock(opRhsApps)) => fallback => ctx =>
       nominate(ctx, finish(term(lhs)(using ctx))): vs =>
         val mkInnerFinish = (op: Term) => (rhsTerm: Term) =>
-          val first = Fld(FldFlags.empty, vs.ref(vs.id), N)
+          val first = Fld(FldFlags.empty, vs.ref(/* FIXME ident? */), N)
           val second = Fld(FldFlags.empty, rhsTerm, N)
           val rawTup = Tup(lhs :: Nil): Tup // <-- loc might be wrong
           val arguments = Term.Tup(first :: second :: Nil)(rawTup)
@@ -244,7 +244,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
             val sym = VarSymbol(ident, nextUid)
             val fallbackCtx = ctx + (ident.name -> sym)
             Split.Let(sym, term(termTree)(using ctx), elabFallback(fallbackCtx))
-          case (Tree.Empty(), Modified(Keyword.`else`, default)) => ctx =>
+          case (Tree.Empty(), Modified(Keyword.`else`, elsLoc, default)) => ctx =>
             // TODO: report `rest` as unreachable
             Split.default(term(default)(using ctx))
           case ((rawOp @ Ident(_)), rhs) => ctx =>
@@ -264,14 +264,14 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
    *  @param cont the continuation that needs the symbol and the context
    */
   def nominate(baseCtx: Ctx, scrutinee: Term)
-              (cont: VarSymbol => Sequel): Split = scrutinee match
+              (cont: BlockLocalSymbol => Sequel): Split = scrutinee match
     case ref @ Term.Ref(symbol: VarSymbol) =>
       val innerCtx = baseCtx + (ref.tree.name -> symbol)
       cont(symbol)(innerCtx)
     case _ =>
-      val ident = Ident("scrut"): Ident
-      val symbol = VarSymbol(ident, nextUid)
-      val innerCtx = baseCtx + (ident.name -> symbol)
+      val name = "scrut"
+      val symbol = TempSymbol(nextUid, N, name)
+      val innerCtx = baseCtx + (name -> symbol)
       Split.Let(symbol, scrutinee, cont(symbol)(innerCtx))
 
   /** Decompose a `Tree` of conjunct matches. The tree is from the same line in
@@ -314,7 +314,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
    *  @param tree the `Tree` representing the pattern split
    *  @param scrutSymbol the symbol representing the elaborated scrutinee
    */
-  def patternSplit(tree: Tree, scrutSymbol: VarSymbol): Split => Sequel = tree match
+  def patternSplit(tree: Tree, scrutSymbol: BlockLocalSymbol): Split => Sequel = tree match
     case Block(branches) => branches.foldRight(default): (branch, elabFallback) =>
       // Terminology: _fallback_ refers to subsequent branches, _backup_ refers
       // to the backup plan passed from the parent split.
@@ -323,7 +323,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
         val sym = VarSymbol(ident, nextUid)
         val fallbackCtx = ctx + (ident.name -> sym)
         Split.Let(sym, term(termTree)(using ctx), elabFallback(backup)(fallbackCtx))
-      case Modified(Keyword.`else`, body) => backup => ctx => trace(
+      case Modified(Keyword.`else`, elsLoc, body) => backup => ctx => trace(
         pre = s"patternSplit (else) <<< $tree",
         post = (res: Split) => s"patternSplit (else) >>> ${res.showDbg}"
       ):
@@ -368,8 +368,8 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
    *  @param sequel the innermost split
    *  @return a function that takes the tail of the split and a context
    */
-  def expandMatch(scrutSymbol: VarSymbol, pattern: Tree, sequel: Sequel): Split => Sequel =
-    val ref = () => scrutSymbol.ref(scrutSymbol.id)
+  def expandMatch(scrutSymbol: BlockLocalSymbol, pattern: Tree, sequel: Sequel): Split => Sequel =
+    val ref = () => scrutSymbol.ref(/* FIXME ident? */)
     pattern match
       // A single wildcard pattern.
       case Ident("_") => _ => ctx => sequel(ctx)
@@ -430,7 +430,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
    *  This is called when handling nested patterns. The caller is responsible
    *  for providing the symbols of scrutinees.
    */
-  def subMatches(matches: Ls[(VarSymbol, Tree)],
+  def subMatches(matches: Ls[(BlockLocalSymbol, Tree)],
                  sequel: Sequel): Split => Sequel = matches match
     case Nil => _ => ctx => trace(
       pre = s"subMatches (done) <<< Nil",

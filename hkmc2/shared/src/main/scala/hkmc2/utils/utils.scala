@@ -27,7 +27,8 @@ import mlscript.utils.StringOps
 trait ProductWithTail extends Product
 
 extension (t: Product)
-  def showAsTree(using post: Product => String): String = showAsTree(false)
+  def showAsTree(using post: Product => String = Function.const("")): String =
+    showAsTree(false)
   def showAsTree(inTailPos: Bool)(using post: Product => String): String =
     def aux(v: Any, inTailPos: Bool = false): String = v match
       case Some(v) => "S of " + aux(v)

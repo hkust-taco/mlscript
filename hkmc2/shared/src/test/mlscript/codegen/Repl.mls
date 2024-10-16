@@ -1,0 +1,31 @@
+:js
+
+
+fun res
+//│ JS:
+//│ let res; res = undefined;
+//│ = undefined
+
+:fixme
+fun res() = 1
+//│ JS:
+//│ let res; function res() {  return 1 }; res = undefined;
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Identifier 'res' has already been declared
+
+:showRepl
+1
+//│ JS:
+//│ let res; res = 1;
+//│ = 1
+
+res
+//│ JS:
+//│ let res; res = res;
+//│ = undefined
+
+2
+//│ JS:
+//│ let res; res = 2;
+//│ = 2
+
+

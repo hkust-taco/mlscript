@@ -1,20 +1,15 @@
 
 
 class Foo
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo()
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo(x: Int)
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo(x: Int, y: Str)
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo(x: Int) with
   val y = x
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 
 :fixme

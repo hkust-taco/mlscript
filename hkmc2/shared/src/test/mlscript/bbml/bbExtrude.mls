@@ -1,4 +1,3 @@
-:global
 :bbml
 
 fun f(y) =
@@ -35,7 +34,7 @@ g(foo)
 :e
 y `=> (let t = run(x `=> x `+ y) in y)
 //│ ╔══[ERROR] Type error in quoted term with expected type CodeBase[out α28_3, ⊥, ?]
-//│ ║  l.36: 	y `=> (let t = run(x `=> x `+ y) in y)
+//│ ║  l.35: 	y `=> (let t = run(x `=> x `+ y) in y)
 //│ ║        	                   ^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  CodeBase[out α29_5 -> α36_5, out α38_4, ?]  <:  CodeBase[out α28_3, ⊥, ?]
 //│ ╟── because: cannot constrain  D( α38_4 )  <:  ⊥
@@ -75,7 +74,7 @@ f(g)(foo)
 :fixme // ???
 f(g)(bar)
 //│ ╔══[ERROR] Type error in reference with expected type α55_1
-//│ ║  l.76: 	f(g)(bar)
+//│ ║  l.75: 	f(g)(bar)
 //│ ║        	     ^^^
 //│ ╟── because: cannot constrain  C[Int]  <:  α55_1
 //│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  α55_1

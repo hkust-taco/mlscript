@@ -1,4 +1,3 @@
-:global
 :bbml
 
 42: [A] -> Int
@@ -7,7 +6,7 @@
 :e
 42: [A] -> Str
 //│ ╔══[ERROR] Type error in integer literal with expected type Str
-//│ ║  l.8: 	42: [A] -> Str
+//│ ║  l.7: 	42: [A] -> Str
 //│ ║       	^^
 //│ ╙── because: cannot constrain  Int  <:  Str
 //│ Type: Str
@@ -22,11 +21,11 @@ id
 :e
 (x => x + 1): [A] -> A -> A
 //│ ╔══[ERROR] Type error in reference with expected type Int
-//│ ║  l.23: 	(x => x + 1): [A] -> A -> A
+//│ ║  l.22: 	(x => x + 1): [A] -> A -> A
 //│ ║        	      ^
 //│ ╙── because: cannot constrain  <α>8_2  <:  Int
 //│ ╔══[ERROR] Type error in application with expected type <α>8_2
-//│ ║  l.23: 	(x => x + 1): [A] -> A -> A
+//│ ║  l.22: 	(x => x + 1): [A] -> A -> A
 //│ ║        	      ^^^^^
 //│ ╙── because: cannot constrain  Int  <:  <α>8_2
 //│ Type: forall α7_2: (α7_2) ->{⊥} α7_2
@@ -154,10 +153,10 @@ gen(42)
 fun cnt: Some[out [A] -> A -> A] -> Int
 fun cnt(x) = 42
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ║  l.154: 	fun cnt: Some[out [A] -> A -> A] -> Int
+//│ ║  l.153: 	fun cnt: Some[out [A] -> A -> A] -> Int
 //│ ╙──       	                         ^^^^^^
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ║  l.154: 	fun cnt: Some[out [A] -> A -> A] -> Int
+//│ ║  l.153: 	fun cnt: Some[out [A] -> A -> A] -> Int
 //│ ╙──       	                         ^^^^^^
 //│ Type: ⊤
 

@@ -3,7 +3,6 @@
 // Experimenting with conditional splits on function applications.
 
 fun foo(x) = x > 1
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 :todo
 :pe
@@ -20,15 +19,14 @@ if foo of 1,
   0 then "a"
   1 then "b"
 //│ ╔══[PARSE ERROR] Expected an expression; found indented block instead
-//│ ║  l.20: 	  0 then "a"
+//│ ║  l.19: 	  0 then "a"
 //│ ╙──      	  ^
 //│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.20: 	  0 then "a"
+//│ ║  l.19: 	  0 then "a"
 //│ ╙──      	  ^
 //│ ╔══[ERROR] Unrecognized term split.
-//│ ║  l.20: 	  0 then "a"
+//│ ║  l.19: 	  0 then "a"
 //│ ╙──      	^^
-//│ /!!!\ Uncaught error: scala.MatchError: If(Let(scrut@23,Lit(IntLit(1)),Nil)) (of class hkmc2.semantics.Term$If)
 
 :todo
 :pe
@@ -37,11 +35,10 @@ if foo
   (0) then "a"
   (1) then "b"
 //│ ╔══[PARSE ERROR] Unexpected parenthesis section here
-//│ ║  l.37: 	  (0) then "a"
+//│ ║  l.35: 	  (0) then "a"
 //│ ╙──      	  ^^^
 //│ ╔══[ERROR] Unrecognized term split.
-//│ ║  l.36: 	if foo
+//│ ║  l.34: 	if foo
 //│ ╙──      	   ^^^
-//│ /!!!\ Uncaught error: scala.MatchError: If(Nil) (of class hkmc2.semantics.Term$If)
 
 

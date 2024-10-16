@@ -1,11 +1,11 @@
 :global
-:noTypeCheck
+:!typeCheck
 
 :import ../prelude/String.mls
-//│ Imported 24 members
+//│ Imported 26 members
 
 :import ../prelude/Option.mls
-//│ Imported 27 members
+//│ Imported 29 members
 
 abstract class EitherOrBoth[out A, out B]: (Left[A, B] | Right[A, B] | Both[A, B])
 class Left[out A, out B](value: A) extends EitherOrBoth[A, B]

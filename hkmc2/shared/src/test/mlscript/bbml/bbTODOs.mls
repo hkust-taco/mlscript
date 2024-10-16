@@ -1,4 +1,3 @@
-:global
 :bbml
 
 
@@ -9,18 +8,18 @@ let id: [A] -> A -> A = x => x
 :todo
 fun id[A](x: A) = x
 //│ ╔══[ERROR] Variable not found: A
-//│ ║  l.10: 	fun id[A](x: A) = x
-//│ ╙──      	             ^
+//│ ║  l.9: 	fun id[A](x: A) = x
+//│ ╙──     	             ^
 //│ Type: ⊤
 
 :fixme
 fun id: [A] -> A -> A => x = x
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.17: 	fun id: [A] -> A -> A => x = x
+//│ ║  l.16: 	fun id: [A] -> A -> A => x = x
 //│ ╙──      	                             ^
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.17: 	fun id: [A] -> A -> A => x = x
+//│ ║  l.16: 	fun id: [A] -> A -> A => x = x
 //│ ╙──      	                         ^
-//│ /!!!\ Uncaught error: scala.MatchError: Lam(List(Param(‹›,A@39,None)),Error) (of class hkmc2.semantics.Term$Lam)
+//│ /!!!\ Uncaught error: scala.MatchError: Lam(List(Param(‹›,A@40,None)),Error) (of class hkmc2.semantics.Term$Lam)
 
 

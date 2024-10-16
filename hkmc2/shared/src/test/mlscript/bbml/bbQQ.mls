@@ -1,4 +1,3 @@
-:global
 :bbml
 
 
@@ -24,7 +23,7 @@ x `=> `42
 :e
 x `=> 42
 //│ ╔══[ERROR] Type error in unquoted term
-//│ ║  l.25: 	x `=> 42
+//│ ║  l.24: 	x `=> 42
 //│ ║        	      ^^
 //│ ╙── because: cannot constrain  Int  <:  CodeBase[out α12_3, out α13_3, ?]
 //│ Type: CodeBase[out ⊤ -> ⊥, ⊥, ?]
@@ -53,7 +52,7 @@ f `=> x `=> y `=> f`(x, y)
 :e
 `let x = 42 `in x
 //│ ╔══[ERROR] Type error in unquoted term
-//│ ║  l.54: 	`let x = 42 `in x
+//│ ║  l.53: 	`let x = 42 `in x
 //│ ║        	         ^^
 //│ ╙── because: cannot constrain  Int  <:  CodeBase[out α122_2, out α123_2, ?]
 //│ Type: CodeBase[⊥, ⊥, ?]
@@ -61,7 +60,7 @@ f `=> x `=> y `=> f`(x, y)
 :e
 `let x = `0 `in 1
 //│ ╔══[ERROR] Type error in unquoted term
-//│ ║  l.62: 	`let x = `0 `in 1
+//│ ║  l.61: 	`let x = `0 `in 1
 //│ ║        	                ^
 //│ ╙── because: cannot constrain  Int  <:  CodeBase[out α131_3, out α132_3, ?]
 //│ Type: CodeBase[⊥, ⊥, ?]
@@ -69,13 +68,13 @@ f `=> x `=> y `=> f`(x, y)
 
 :fixme
 `if `true then `true else `false
-//│ ═══[ERROR] Cannot quote If(Let(scrut@71,Unquoted(Quoted(Lit(BoolLit(true)))),Cons(Branch(Ref(scrut@71),LitPat(BoolLit(true)),Else(Unquoted(Quoted(Lit(BoolLit(true)))))),Else(Unquoted(Quoted(Lit(BoolLit(false))))))))
+//│ ═══[ERROR] Cannot quote If(Let($scrut@72,Unquoted(Quoted(Lit(BoolLit(true)))),Cons(Branch(Ref($scrut@72),LitPat(BoolLit(true)),Else(Unquoted(Quoted(Lit(BoolLit(true)))))),Else(Unquoted(Quoted(Lit(BoolLit(false))))))))
 //│ Type: CodeBase[⊥, ⊥, ?]
 
 
 :fixme
 x `=> `if x `== `0.0 then `1.0 else x
-//│ ═══[ERROR] Cannot quote If(Let(scrut@74,Unquoted(Quoted(App(Ref(==),Tup(List(Fld(‹›,Unquoted(Ref(x@73)),None), Fld(‹›,Unquoted(Quoted(Lit(DecLit(0.0)))),None)))))),Cons(Branch(Ref(scrut@74),LitPat(BoolLit(true)),Else(Unquoted(Quoted(Lit(DecLit(1.0)))))),Else(Unquoted(Ref(x@73))))))
+//│ ═══[ERROR] Cannot quote If(Let($scrut@76,Unquoted(Quoted(App(Ref(==),Tup(List(Fld(‹›,Unquoted(Ref(x@74)),None), Fld(‹›,Unquoted(Quoted(Lit(DecLit(0.0)))),None)))))),Cons(Branch(Ref($scrut@76),LitPat(BoolLit(true)),Else(Unquoted(Quoted(Lit(DecLit(1.0)))))),Else(Unquoted(Ref(x@74))))))
 //│ Type: CodeBase[out ⊤ -> ⊥, ⊥, ?]
 
 run(`1)
@@ -84,7 +83,7 @@ run(`1)
 :e
 run(1)
 //│ ╔══[ERROR] Type error in integer literal with expected type CodeBase[out α140_1, ⊥, ?]
-//│ ║  l.85: 	run(1)
+//│ ║  l.84: 	run(1)
 //│ ║        	    ^
 //│ ╙── because: cannot constrain  Int  <:  CodeBase[out α140_1, ⊥, ?]
 //│ Type: ⊥
@@ -92,7 +91,7 @@ run(1)
 :e
 x `=> run(x)
 //│ ╔══[ERROR] Type error in reference with expected type CodeBase[out α143_3, ⊥, ?]
-//│ ║  l.93: 	x `=> run(x)
+//│ ║  l.92: 	x `=> run(x)
 //│ ║        	          ^
 //│ ╟── because: cannot constrain  CodeBase[α141_3, <α>142_3, ⊥]  <:  CodeBase[out α143_3, ⊥, ?]
 //│ ╙── because: cannot constrain  D( <α>142_3 )  <:  ⊥
@@ -101,12 +100,12 @@ x `=> run(x)
 :e
 `let x = `42 `in run(x)
 //│ ╔══[ERROR] Type error in reference with expected type CodeBase[out α150_3, ⊥, ?]
-//│ ║  l.102: 	`let x = `42 `in run(x)
+//│ ║  l.101: 	`let x = `42 `in run(x)
 //│ ║         	                     ^
 //│ ╟── because: cannot constrain  CodeBase[α147_2, <α>149_3, ⊥]  <:  CodeBase[out α150_3, ⊥, ?]
 //│ ╙── because: cannot constrain  D( <α>149_3 )  <:  ⊥
 //│ ╔══[ERROR] Type error in unquoted term
-//│ ║  l.102: 	`let x = `42 `in run(x)
+//│ ║  l.101: 	`let x = `42 `in run(x)
 //│ ║         	                 ^^^^^^
 //│ ╟── because: cannot constrain  α150_3  <:  CodeBase[out α151_3, out α152_3, ?]
 //│ ╟── because: cannot constrain  α150_3  <:  ¬(~{CodeBase[out α151_3, out α152_3, ?]})

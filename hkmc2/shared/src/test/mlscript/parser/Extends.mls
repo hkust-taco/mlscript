@@ -1,5 +1,3 @@
-:global
-:noTypeCheck
 :ctx
 
 // Plain extension
@@ -25,8 +23,8 @@ abstract class Ring
 module End extends Ring
 class (++) Link(left: Ring, right: Ring) extends Ring
 //│ Members:
-//│   Ring -> class:Ring
 //│   End -> class:End
+//│   Ring -> class:Ring
 //│   ++ -> class:Link
 //│   Link -> class:Link
 //│ Locals:

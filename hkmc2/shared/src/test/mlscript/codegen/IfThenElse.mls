@@ -1,0 +1,68 @@
+:js
+
+
+:elt
+if true then 1 else 0
+//│ Elaborated tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = If of Let:
+//│     sym = $scrut@19
+//│     term = Lit of BoolLit of true
+//│     tail = Cons: \
+//│     head = Branch:
+//│       scrutinee = Ref of $scrut@19
+//│       pattern = LitPat of BoolLit of true
+//│       continuation = Else of Lit of IntLit of 1
+//│     tail = Else of Lit of IntLit of 0
+//│ JS:
+//│ let res, tmp; if (true) { tmp = 1; } else { tmp = 0; } res = tmp;
+//│ = 1
+
+
+x => if x > 0 then log("Hi") else log("Bye")
+//│ JS:
+//│ let res; res = (x) => { let tmp; tmp = x > 0; if (tmp) { return log("Hi") } return log("Bye") };
+//│ = [Function: res]
+
+x => log(if true then "Hi" else "Bye")
+//│ JS:
+//│ let res; res = (x) => { let tmp; if (true) { tmp = "Hi"; } else { tmp = "Bye"; } return log(tmp) };
+//│ = [Function: res]
+
+x => log(if x + 1 > 0 then "Hi" else "Bye")
+//│ JS:
+//│ let res;
+//│ res = (x) => {
+//│   let tmp, tmp1, tmp2;
+//│   tmp = x + 1;
+//│   tmp1 = tmp > 0;
+//│   if (tmp1) {
+//│     tmp2 = "Hi";
+//│   } else {
+//│     tmp2 = "Bye";
+//│   }
+//│   return log(tmp2)
+//│ };
+//│ = [Function: res]
+
+x =>
+  let str = concat(if x + 1 > 0 then "Hello" else "Bye", "World")
+  log(str)
+//│ JS:
+//│ let res;
+//│ res = (x) => {
+//│   let tmp, tmp1, tmp2, str;
+//│   tmp = x + 1;
+//│   tmp1 = tmp > 0;
+//│   if (tmp1) {
+//│     tmp2 = "Hello";
+//│   } else {
+//│     tmp2 = "Bye";
+//│   }
+//│   str = concat(tmp2, "World");
+//│   return log(str)
+//│ };
+//│ = [Function: res]
+
+

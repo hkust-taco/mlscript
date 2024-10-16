@@ -40,6 +40,7 @@ fun f(x, y, z) = if x then y else z
 //│       rhs = Ident of "y"
 //│     Modified:
 //│       modifier = keyword 'else'
+//│       modLoc = N
 //│       body = Ident of "z"
 
 :pe
@@ -47,7 +48,7 @@ fun f(x, y, z) = if x
                  then y
                  else z
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.47: 	                 then y
+//│ ║  l.48: 	                 then y
 //│ ╙──      	                 ^^^^
 //│ Parsed tree:
 //│ TermDef:
@@ -65,7 +66,7 @@ fun f(x, y, z) = if x
 fun f(x, y, z) = if x then y
   else z
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.66: 	  else z
+//│ ║  l.67: 	  else z
 //│ ╙──      	  ^^^^
 //│ Parsed tree:
 //│ TermDef:
@@ -102,6 +103,7 @@ fun f(x, y, z) = if
 //│       rhs = Ident of "y"
 //│     Modified:
 //│       modifier = keyword 'else'
+//│       modLoc = N
 //│       body = Ident of "z"
 
 fun f(x, y, z) =
@@ -128,6 +130,7 @@ fun f(x, y, z) =
 //│           Ident of "y"
 //│       Modified:
 //│         modifier = keyword 'else'
+//│         modLoc = N
 //│         body = Ident of "z"
 
 fun f(x, y, z) =
@@ -151,6 +154,7 @@ fun f(x, y, z) =
 //│         rhs = Ident of "y"
 //│       Modified:
 //│         modifier = keyword 'else'
+//│         modLoc = N
 //│         body = Ident of "z"
 
 :pe
@@ -158,11 +162,11 @@ fun f(x, y, z) =
   if x
   then y
   else z
-//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'then' keyword instead
-//│ ║  l.159: 	  then y
+//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, 'return' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'then' keyword instead
+//│ ║  l.163: 	  then y
 //│ ╙──       	  ^^^^
 //│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.159: 	  then y
+//│ ║  l.163: 	  then y
 //│ ╙──       	       ^
 //│ Parsed tree:
 //│ TermDef:
@@ -184,7 +188,7 @@ fun f(x, y, z) =
     then y
     else z
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.184: 	    then y
+//│ ║  l.188: 	    then y
 //│ ╙──       	    ^^^^
 //│ Parsed tree:
 //│ TermDef:
@@ -204,7 +208,7 @@ fun f() =
   if
     x then y else z
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.205: 	    x then y else z
+//│ ║  l.209: 	    x then y else z
 //│ ╙──       	             ^^^^
 //│ Parsed tree:
 //│ TermDef:

@@ -14,10 +14,14 @@ import hkmc2.Message.MessageContext
 
 
 object Elaborator:
-  case class Ctx(parent: Opt[Ctx], members: Map[Str, Symbol], locals: Map[Str, VarSymbol]):
-    def +(local: (Str, VarSymbol)): Ctx = copy(locals = locals + local)
+  case class Ctx(parent: Opt[Ctx], members: Map[Str, Symbol], locals: Map[Str, BlockLocalSymbol]):
+    def +(local: (Str, BlockLocalSymbol)): Ctx = copy(locals = locals + local)
   object Ctx:
     val empty: Ctx = Ctx(N, Map.empty, Map.empty)
+    val globalThisSymbol = TermSymbol(Ident("globalThis"))
+    def init(using State): Ctx = empty.copy(members = Map(
+      "globalThis" -> globalThisSymbol
+    ))
   type Ctxl[A] = Ctx ?=> A
   def ctx: Ctxl[Ctx] = summon
   class State:
@@ -71,9 +75,9 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
               Term.Error
     case TyApp(lhs, targs) =>
       Term.TyApp(term(lhs), targs.map {
-        case Modified(Keyword.`in`, arg) => Term.WildcardTy(S(term(arg)), N)
-        case Modified(Keyword.`out`, arg) => Term.WildcardTy(N, S(term(arg)))
-        case Tup(Modified(Keyword.`in`, arg1) :: Modified(Keyword.`out`, arg2) :: Nil) =>
+        case Modified(Keyword.`in`, inLoc, arg) => Term.WildcardTy(S(term(arg)), N)
+        case Modified(Keyword.`out`, outLoc, arg) => Term.WildcardTy(N, S(term(arg)))
+        case Tup(Modified(Keyword.`in`, inLoc, arg1) :: Modified(Keyword.`out`, outLoc, arg2) :: Nil) =>
           Term.WildcardTy(S(term(arg1)), S(term(arg2)))
         case arg => term(arg)
       })
@@ -116,7 +120,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
     case App(Ident("&"), Tree.Tup(lhs :: rhs :: Nil)) =>
       Term.CompType(term(lhs), term(rhs), false)
     case App(Ident(":="), Tree.Tup(lhs :: rhs :: Nil)) =>
-      Term.Set(term(lhs), term(rhs))
+      Term.Assgn(term(lhs), term(rhs))
     case App(Ident("#"), Tree.Tup(Sel(pre, idn: Ident) :: (idp: Ident) :: Nil)) =>
       Term.SelProj(term(pre), term(idn), idp)
     case App(Ident("#"), Tree.Tup(Sel(pre, Ident(name)) :: App(Ident(proj), args) :: Nil)) =>
@@ -153,11 +157,10 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
     case IfElse(InfixApp(InfixApp(scrutinee, Keyword.`is`, ctor @ Ident(cls)), Keyword.`then`, cons), alts) =>
       ctx.members.get(cls) match
         case S(sym: ClassSymbol) =>
-          val scrutIdent = Ident("scrut"): Ident
-          val scrutVar = VarSymbol(scrutIdent, nextUid)
           val scrutTerm = term(scrutinee)
+          val scrutVar = TempSymbol(nextUid, S(scrutTerm), "scrut")
           val body = Split.Let(scrutVar, scrutTerm, Branch(
-            scrutVar.ref(scrutIdent),
+            scrutVar.ref(),
             Pattern.Class(sym, N, true)(ctor),
             Split.default(term(cons))
           ) :: Split.default(term(alts)))
@@ -166,11 +169,10 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
           raise(ErrorReport(msg"Illegal pattern $cls." -> tree.toLoc :: Nil))
           Term.Error
     case IfElse(InfixApp(cond, Keyword.`then`, cons), alts) =>
-      val scrutIdent = Ident("scrut"): Ident
-      val scrutVar = VarSymbol(scrutIdent, nextUid)
       val scrutTerm = term(cond)
+      val scrutVar = TempSymbol(nextUid, S(scrutTerm), "scrut")
       val body = Split.Let(scrutVar, scrutTerm, Branch(
-        scrutVar.ref(scrutIdent),
+        scrutVar.ref(),
         Split.default(term(cons))
       ) :: Split.default(term(alts)))
       Term.If(body)(body)
@@ -183,10 +185,10 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
         val body = branches.dropRight(1).foldRight(Split.default(term(dflt)(using nestCtx))):
           case (InfixApp(target, Keyword.`then`, cons), res) =>
             val scrutIdent = Ident("scrut"): Ident
-            val scrut = VarSymbol(scrutIdent, nextUid)
             val cond = term(App(Ident("=="), Tree.Tup(id :: target :: Nil)))(using nestCtx)
+            val scrut = TempSymbol(nextUid, S(cond), "scrut")
             Split.Let(scrut, cond, Branch(
-              scrut.ref(scrutIdent),
+              scrut.ref(),
               Pattern.LitPat(Tree.BoolLit(true)),
               Split.default(term(cons)(using nestCtx))
             ) :: res)
@@ -197,6 +199,8 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
       case _ =>
         raise(ErrorReport(msg"Unsupported default case branch." -> tree.toLoc :: Nil))
         Term.Error
+    case Modified(Keyword.`return`, kwLoc, body) =>
+      Term.Ret(term(body))
     case Tree.Region(id: Tree.Ident, body) =>
       val sym = VarSymbol(id, nextUid)
       val nestCtx = ctx.copy(locals = ctx.locals ++ Ls(id.name -> sym))
@@ -213,6 +217,9 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
     case TypeDef(k, symName, head, extension, body) =>
       raise(ErrorReport(msg"Illegal type declaration in term position." -> tree.toLoc :: Nil))
       Term.Error
+    case Modified(kw, kwLoc, body) =>
+      raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kwLoc :: Nil))
+      term(body)
     // case _ =>
     //   ???
   
@@ -276,7 +283,10 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
                     newMembers += nme -> s
               case S(_) | N =>
           case L(d) => raise(d)
-      case Modified(Keyword.`abstract`, body) =>
+      case Modified(Keyword.`abstract`, absLoc, body) =>
+        // TODO: Handle abstract
+        preprocessStatement(body)
+      case Modified(Keyword.`declare`, absLoc, body) =>
         // TODO: Handle abstract
         preprocessStatement(body)
       case tree =>
@@ -338,9 +348,9 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
                 val (id, vce) = targ match
                   case id: Ident =>
                     (id, N)
-                  case Modified(Keyword.`in`, id: Ident) =>
+                  case Modified(Keyword.`in`, inLoc, id: Ident) =>
                     (id, S(false))
-                  case Modified(Keyword.`out`, id: Ident) =>
+                  case Modified(Keyword.`out`, outLoc, id: Ident) =>
                     (id, S(true))
                 val vs = VarSymbol(id, nextUid)
                 val res = TyParam(FldFlags.empty, vce, vs)
@@ -378,8 +388,11 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
           ClassDef(sym, tps, ps, ObjBody(bod))
         sym.defn = S(cd)
         go(sts, cd :: acc)
-      case Modified(Keyword.`abstract`, body) :: sts =>
+      case Modified(Keyword.`abstract`, absLoc, body) :: sts =>
         // TODO: pass abstract to `go`
+        go(body :: sts, acc)
+      case Modified(Keyword.`declare`, absLoc, body) :: sts =>
+        // TODO: pass declare to `go`
         go(body :: sts, acc)
       case (result: Tree) :: Nil =>
         val res = term(result)
@@ -434,10 +447,10 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
         ???
     (go(t), boundVars.toList)
   
-  def importFrom(sts: Ls[Tree])(using c: Ctx): Ctx =
-    val (_, newCtx) = block(sts)
+  def importFrom(sts: Ls[Tree])(using c: Ctx): (Term.Blk, Ctx) =
+    val (res, newCtx) = block(sts)
     // TODO handle name clashes
-    newCtx
+    (res, newCtx)
   
   
   def topLevel(sts: Ls[Tree])(using c: Ctx): (Term, Ctx) =

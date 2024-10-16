@@ -142,8 +142,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       monoOrErr(typeAndSubstType(ty, pol), ty)
     ty match
     case Ref(cls: ClassSymbol) => typeAndSubstType(Term.TyApp(ty, Nil), pol)
-    case Ref(sym: VarSymbol) =>
-      log(s"Type lookup: ${sym.name} ${sym.uid} ${map.keySet}")
+    case Ref(sym: BlockLocalSymbol) =>
+      log(s"Type lookup: ${sym.nme} ${sym.uid} ${map.keySet}")
       map.get(sym.uid) match
         case Some(Wildcard(in, out)) => if pol then out else in
         case Some(ty: Type) => ty
@@ -153,7 +153,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             if sym.nme == "Alloc" then
               allocType
             else
-              error(msg"Variable not found: ${sym.name}" -> ty.toLoc :: Nil)
+              error(msg"Variable not found: ${sym.nme}" -> ty.toLoc :: Nil)
     case FunTy(Term.Tup(params), ret, eff) =>
       PolyFunType(params.map {
         case Fld(_, p, _) => typeAndSubstType(p, !pol)
@@ -334,7 +334,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val nestCtx1 = ctx.nest
       val nestCtx2 = ctx.nest
       scrutinee match // * refine
-        case Ref(sym: VarSymbol) =>
+        case Ref(sym: BlockLocalSymbol) =>
           nestCtx1 += sym -> clsTy
           nestCtx2 += sym -> tv
         case _ => () // TODO: refine all variables holding this value?
@@ -441,11 +441,11 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
   trace[(GeneralType, Type)](s"${ctx.lvl}. Typing ${t.showDbg}", res => s": $res"):
     given CCtx = CCtx.init(t, N)
     t match
-      case Ref(sym: VarSymbol) =>
+      case Ref(sym: BlockLocalSymbol) =>
         ctx.get(sym) match
           case Some(ty) => (ty, Bot)
           case _ =>
-            (error(msg"Variable not found: ${sym.name}" -> t.toLoc :: Nil), Bot)
+            (error(msg"Variable not found: ${sym.nme}" -> t.toLoc :: Nil), Bot)
       case Ref(sym: TermSymbol) =>
         ctx.get(sym) match
           case Some(ty) => (ty, Bot)
@@ -560,7 +560,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         val sk = freshVar
         constrain(tryMkMono(regTy, reg), Ctx.regionTy(sk))
         (Ctx.refTy(tryMkMono(valTy, value), sk), sk | (regEff | valEff))
-      case Term.Set(lhs, rhs) =>
+      case Term.Assgn(lhs, rhs) =>
         val (lhsTy, lhsEff) = typeCheck(lhs)
         val (rhsTy, rhsEff) = typeCheck(rhs)
         val sk = freshVar

@@ -10,7 +10,8 @@ import BracketKind._
 // * TODO: add lookahead to Expr as a PartialFunction[Ls[Token], Bool]
 
 enum Alt[+A]:
-  case Kw[Rest](kw: Keyword)(val rest: ParseRule[Rest]) extends Alt[Rest]
+  case Kw[Rest](kw: Keyword)(val rest: ParseRule[Rest]) extends Alt[//Loc -> // TODO
+    Rest]
   case Expr[Rest, +Res](rest: ParseRule[Rest])(val k: (Tree, Rest) => Res) extends Alt[Res]
   case Blk[Rest, +Res](rest: ParseRule[Rest])(val k: (Tree, Rest) => Res) extends Alt[Res]
   case End(a: A)
@@ -56,7 +57,7 @@ object ParseRule:
   
   def modified(kw: Keyword): Alt[Tree] = modified(kw, standaloneExpr)
   def modified(kw: Keyword, body: Alt[Tree]) =
-    Kw(kw)(ParseRule(s"modifier keyword '${kw.name}'")(body)).map(Tree.Modified(kw, _))
+    Kw(kw)(ParseRule(s"modifier keyword '${kw.name}'")(body)).map(Tree.Modified(kw, N, _))
   
   val typeDeclTemplate: Alt[Opt[Tree]] =
     Kw(`with`):
@@ -177,12 +178,12 @@ object ParseRule:
       ParseRule("modifier keyword `in`"):
         Expr(
           ParseRule("`in` expression")(
-            Kw(`out`)(ParseRule(s"modifier keyword `out`")(standaloneExpr)).map(s => S(Tree.Modified(`out`, s))),
+            Kw(`out`)(ParseRule(s"modifier keyword `out`")(standaloneExpr)).map(s => S(Tree.Modified(`out`, N/* TODO */, s))),
             End(N),
           )
         ) {
-          case (lhs, N) => Tree.Modified(`in`, lhs)
-          case (lhs, S(rhs)) => Tup(Tree.Modified(`in`, lhs) :: rhs :: Nil)
+          case (lhs, N) => Tree.Modified(`in`, N/* TODO */, lhs)
+          case (lhs, S(rhs)) => Tup(Tree.Modified(`in`, N/* TODO */, lhs) :: rhs :: Nil)
         }
     ,
     Kw(`if`):
@@ -198,7 +199,7 @@ object ParseRule:
           )
         ):
           case (split, S(default)) =>
-            val clause = Modified(`else`, default)
+            val clause = Modified(`else`, N/* TODO */, default)
             val items = split match
               case Block(stmts) => stmts.appended(clause)
               case _ => split :: clause :: Nil
@@ -213,9 +214,9 @@ object ParseRule:
     Kw(`else`):
       ParseRule("`else` clause")(
         Expr(ParseRule("`else` expression")(End(()))):
-          case (tree, _) => Modified(`else`, tree),
+          case (tree, _) => Modified(`else`, N/* TODO */, tree),
         Blk(ParseRule("`else` expression")(End(()))):
-          case (tree, _) => Modified(`else`, tree),
+          case (tree, _) => Modified(`else`, N/* TODO */, tree),
       )
     ,
     Kw(`case`):
@@ -259,6 +260,7 @@ object ParseRule:
     modified(`public`),
     modified(`private`),
     modified(`out`),
+    modified(`return`),
     standaloneExpr,
     Kw(`true`)(ParseRule("'true' keyword")(End(BoolLit(true)))),
     Kw(`false`)(ParseRule("'false' keyword")(End(BoolLit(false)))),

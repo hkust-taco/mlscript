@@ -1,5 +1,4 @@
-:global
-:noTypeCheck
+
 
 :ctx
 type List = Nil | Cons
@@ -19,3 +18,5 @@ Cons(1, Nil)
 fun map(f, xs) = if xs is
   Nil then Nil
   x :: xs' then f(x) :: map(f, xs')
+
+

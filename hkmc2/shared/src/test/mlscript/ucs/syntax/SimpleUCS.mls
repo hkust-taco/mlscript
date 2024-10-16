@@ -1,5 +1,4 @@
-:global
-:noTypeCheck
+
 
 abstract class Option[A]: Some[A] | None
 class Some[A](value: A) extends Option[A]
@@ -126,10 +125,10 @@ fun f(x, y, b) =
     Some(xv) and b then xv + b
     _ then "roll"
 //│ ╔══[PARSE ERROR] Unexpected 'is' keyword here
-//│ ║  l.124: 	      is Some(yv) then "bruh"
+//│ ║  l.123: 	      is Some(yv) then "bruh"
 //│ ╙──       	      ^^
 //│ ╔══[ERROR] Unrecognized term split.
-//│ ║  l.123: 	    Some(xv) and y
+//│ ║  l.122: 	    Some(xv) and y
 //│ ╙──       	                 ^
 
 :fixme
@@ -141,10 +140,10 @@ fun g(x, y, b) =
     Some(xv) and b then xv + b
     _ then "roll"
 //│ ╔══[PARSE ERROR] Unexpected 'is' keyword here
-//│ ║  l.139: 	      is Some(yv) then yv
+//│ ║  l.138: 	      is Some(yv) then yv
 //│ ╙──       	      ^^
 //│ ╔══[ERROR] Unrecognized term split.
-//│ ║  l.138: 	    Some(xv) and y
+//│ ║  l.137: 	    Some(xv) and y
 //│ ╙──       	                 ^
 
 
@@ -207,9 +206,9 @@ fun f(x) =
     0 ::
       Nil() then "oh"
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.207: 	    0 ::
+//│ ║  l.206: 	    0 ::
 //│ ║         	    ^^^^
-//│ ║  l.208: 	      Nil() then "oh"
+//│ ║  l.207: 	      Nil() then "oh"
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
 
 

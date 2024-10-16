@@ -1,5 +1,4 @@
-:global
-:noTypeCheck
+
 
 class Card[T](color: T)
 
@@ -23,17 +22,19 @@ fun foo(x) = if x is
   else 4
 //│ Desugared:
 //│ if
-//│   x@31 is Card(param0@32) param0@32 is Heart then 0
-//│   x@31 is Card(param0@32) param0@32 is Diamond then 1
-//│   x@31 is Card(param0@32) param0@32 is Spade then 2
-//│   x@31 is Card(param0@32) param0@32 is Club then 3
+//│   x@32 is Card($param0@33) $param0@33 is Heart then 0
+//│   x@32 is Card($param0@33) $param0@33 is Diamond then 1
+//│   x@32 is Card($param0@33) $param0@33 is Spade then 2
+//│   x@32 is Card($param0@33) $param0@33 is Club then 3
 //│   else 4
 //│ Normalized:
 //│ if
-//│   x@31 is Card(param0@32) and
-//│     param0@32 is Heart then 0
-//│     param0@32 is Diamond then 1
-//│     param0@32 is Spade then 2
-//│     param0@32 is Club then 3
+//│   x@32 is Card($param0@33) and
+//│     $param0@33 is Heart then 0
+//│     $param0@33 is Diamond then 1
+//│     $param0@33 is Spade then 2
+//│     $param0@33 is Club then 3
 //│     else 4
 //│   else 4
+
+

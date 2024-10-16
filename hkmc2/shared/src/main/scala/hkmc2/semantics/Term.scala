@@ -15,7 +15,7 @@ enum Term extends Statement:
   case TyApp(lhs: Term, targs: Ls[Term])
   case Sel(prefix: Term, nme: Tree.Ident)
   case Tup(fields: Ls[Fld])(val tree: Tree.Tup)
-  case If(desugared: Split)(normalized: Split)
+  case If(desugared: Split)(val normalized: Split)
   case Lam(params: Ls[Param], body: Term)
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
   case Forall(tvs: Ls[QuantVar], body: Term)
@@ -30,8 +30,9 @@ enum Term extends Statement:
   case Neg(rhs: Term)
   case Region(name: VarSymbol, body: Term)
   case RegRef(reg: Term, value: Term)
-  case Set(lhs: Term, rhs: Term)
+  case Assgn(lhs: Term, rhs: Term)
   case Deref(ref: Term)
+  case Ret(result: Term)
   
   var symbol: Opt[Symbol] = N
   
@@ -75,7 +76,7 @@ enum Term extends Statement:
     case Neg(rhs) => "negation type"
     case Region(name, body) => "region expression"
     case RegRef(reg, value) => "reference creation"
-    case Set(lhs, rhs) => "assignment"
+    case Assgn(lhs, rhs) => "assignment"
     case Deref(ref) => "dereference"
   
 import Term.*
@@ -100,20 +101,21 @@ sealed trait Statement extends AutoLocated:
     case New(_, args) => args
     case SelProj(pre, cls, _) => pre :: cls :: Nil
     case Asc(term, ty) => term :: ty :: Nil
+    case Ret(res) => res :: Nil
     case Forall(_, body) => body :: Nil
     case WildcardTy(in, out) => in.toList ++ out.toList
     case CompType(lhs, rhs, _) => lhs :: rhs :: Nil
     case LetBinding(pat, rhs) => rhs :: Nil
     case Region(_, body) => body :: Nil
     case RegRef(reg, value) => reg :: value :: Nil
-    case Set(lhs, rhs) => lhs :: rhs :: Nil
+    case Assgn(lhs, rhs) => lhs :: rhs :: Nil
     case Deref(term) => term :: Nil
     case TermDefinition(k, _, ps, sign, body, res) =>
       ps.toList.flatMap(_.flatMap(_.subTerms)) ::: sign.toList ::: body.toList
     case cls: ClassDef =>
       cls.paramsOpt.toList.flatMap(_.flatMap(_.subTerms)) ::: cls.body.blk :: Nil
   
-  protected def children: Ls[Located] =this match
+  protected def children: Ls[Located] = this match
     case t: Lit => t.lit.asTree :: Nil
     case t: Ref => t.tree :: Nil
     case t: Tup => t.tree :: Nil
@@ -160,7 +162,7 @@ sealed trait Statement extends AutoLocated:
     case LetBinding(pat, rhs) => s"let ${pat.showDbg} = ${rhs.showDbg}"
     case Region(name, body) => s"region ${name.nme} in ${body.showDbg}"
     case RegRef(reg, value) => s"(${reg.showDbg}).ref ${value.showDbg}"
-    case Set(lhs, rhs) => s"${lhs.showDbg} := ${rhs.showDbg}"
+    case Assgn(lhs, rhs) => s"${lhs.showDbg} := ${rhs.showDbg}"
     case Deref(term) => s"!$term"
     case CompType(lhs, rhs, pol) => s"${lhs.showDbg} ${if pol then "|" else "&"} ${rhs.showDbg}"
     case Error => "<error>"

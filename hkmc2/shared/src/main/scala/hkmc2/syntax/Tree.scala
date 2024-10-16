@@ -52,7 +52,7 @@ enum Tree extends AutoLocated:
   // case TermDef(k: TermDefKind, symName: Opt[Tree], alphaName: Opt[Tree], sign: Opt[Tree], rhs: Opt[Tree])
   case TermDef(k: TermDefKind, symName: Opt[Tree], alphaName: Opt[Tree], rhs: Opt[Tree]) extends Tree with TermDefImpl
   case TypeDef(k: TypeDefKind, symName: Opt[Tree], head: Tree, extension: Opt[Tree], body: Opt[Tree]) extends Tree with TypeDefImpl
-  case Modified(modifier: Keyword, body: Tree)
+  case Modified(modifier: Keyword, modLoc: Opt[Loc], body: Tree)
   case Quoted(body: Tree)
   case Unquoted(body: Tree)
   case Tup(fields: Ls[Tree])
@@ -78,7 +78,7 @@ enum Tree extends AutoLocated:
     case Let(lhs, rhs, body) => Ls(lhs, rhs) ++ body
     case TypeDef(k, symName, head, extension, body) =>
       symName.toList ++ Ls(head) ++ extension ++ body
-    case Modified(_, body) => Ls(body)
+    case Modified(_, _, body) => Ls(body)
     case Quoted(body) => Ls(body)
     case Unquoted(body) => Ls(body)
     case Tup(fields) => fields
@@ -109,7 +109,7 @@ enum Tree extends AutoLocated:
     case Let(lhs, rhs, body) => "let"
     case TermDef(k, symName, alphaName, rhs) => "term definition"
     case TypeDef(k, symName, head, extension, body) => "type definition"
-    case Modified(modifier, body) => "modified"
+    case Modified(kw, _, body) => s"${kw.name}-modified ${body.describe}"
     case Quoted(body) => "quoted"
     case Unquoted(body) => "unquoted"
     case Tup(fields) => "tuple"

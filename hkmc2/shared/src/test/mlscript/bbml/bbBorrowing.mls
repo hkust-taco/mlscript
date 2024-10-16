@@ -1,4 +1,3 @@
-:global
 :bbml
 
 
@@ -61,7 +60,7 @@ letreg of r =>
     123
     if next(it) > 0 then () => 0 else () => clear(b)
   k()
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(scrut@104),LitPat(BoolLit(true)),Else(Lam(List(),Lit(IntLit(0))))),Else(Lam(List(),App(Ref(clear),Tup(List(Fld(‹›,Ref(b@93),None))))))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@105),LitPat(BoolLit(true)),Else(Lam(List(),Lit(IntLit(0))))),Else(Lam(List(),App(Ref(clear),Tup(List(Fld(‹›,Ref(b@94),None))))))) (of class hkmc2.semantics.Split$Cons)
 
 :e
 letreg of r =>
@@ -73,21 +72,21 @@ letreg of r =>
     () => next(it)
   k()
 //│ ╔══[ERROR] Type error in block
-//│ ║  l.67: 	letreg of r =>
+//│ ║  l.66: 	letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.68: 	  let b = mkVec(r)
+//│ ║  l.67: 	  let b = mkVec(r)
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.69: 	  clear(b)
+//│ ║  l.68: 	  clear(b)
 //│ ║        	^^^^^^^^^^
-//│ ║  l.70: 	  let k = iterate(b) of it =>
+//│ ║  l.69: 	  let k = iterate(b) of it =>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.71: 	    next(it)
+//│ ║  l.70: 	    next(it)
 //│ ║        	^^^^^^^^^^^^
-//│ ║  l.72: 	    123
+//│ ║  l.71: 	    123
 //│ ║        	^^^^^^^
-//│ ║  l.73: 	    () => next(it)
+//│ ║  l.72: 	    () => next(it)
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.74: 	  k()
+//│ ║  l.73: 	  k()
 //│ ║        	^^^^^
 //│ ╟── because: cannot constrain  α62_1  <:  Alloc
 //│ ╟── because: cannot constrain  α62_1  <:  ¬(~{Alloc})
@@ -105,23 +104,23 @@ letreg of r =>
   clear(b)
   r
 //│ ╔══[ERROR] Type error in block
-//│ ║  l.98: 	letreg of r =>
+//│ ║  l.97: 	letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.99: 	  let b = mkVec(r)
+//│ ║  l.98: 	  let b = mkVec(r)
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.100: 	  clear(b)
-//│ ║         	^^^^^^^^^^
-//│ ║  l.101: 	  iterate(b) of it =>
+//│ ║  l.99: 	  clear(b)
+//│ ║        	^^^^^^^^^^
+//│ ║  l.100: 	  iterate(b) of it =>
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.102: 	    next(it)
+//│ ║  l.101: 	    next(it)
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.103: 	    clear(b)
+//│ ║  l.102: 	    clear(b)
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.104: 	    123
+//│ ║  l.103: 	    123
 //│ ║         	^^^^^^^
-//│ ║  l.105: 	  clear(b)
+//│ ║  l.104: 	  clear(b)
 //│ ║         	^^^^^^^^^^
-//│ ║  l.106: 	  r
+//│ ║  l.105: 	  r
 //│ ║         	^^^
 //│ ╟── because: cannot constrain  α84_1  <:  Alloc
 //│ ╟── because: cannot constrain  α84_1  <:  ¬(~{Alloc})
@@ -151,19 +150,19 @@ letreg of r =>
   use(r)
   r
 //│ ╔══[ERROR] Type error in block
-//│ ║  l.146: 	letreg of r =>
+//│ ║  l.145: 	letreg of r =>
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.147: 	  use(r)
+//│ ║  l.146: 	  use(r)
 //│ ║         	^^^^^^^^
-//│ ║  l.148: 	  integers(r) of it =>
+//│ ║  l.147: 	  integers(r) of it =>
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.149: 	    use(r)
+//│ ║  l.148: 	    use(r)
 //│ ║         	^^^^^^^^^^
-//│ ║  l.150: 	    next(it)
+//│ ║  l.149: 	    next(it)
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.151: 	  use(r)
+//│ ║  l.150: 	  use(r)
 //│ ║         	^^^^^^^^
-//│ ║  l.152: 	  r
+//│ ║  l.151: 	  r
 //│ ║         	^^^
 //│ ╟── because: cannot constrain  α118_1  <:  Alloc
 //│ ╟── because: cannot constrain  α118_1  <:  ¬(~{Alloc})

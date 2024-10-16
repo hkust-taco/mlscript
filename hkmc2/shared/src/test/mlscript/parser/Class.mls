@@ -1,11 +1,10 @@
-:global
 :parseOnly
 
 
 :pe
 class
 //│ ╔══[PARSE ERROR] Expected expression after type declaration start; found end of input instead
-//│ ║  l.6: 	class
+//│ ║  l.5: 	class
 //│ ╙──     	     ^
 //│ Parsed:
 //│ 	Error()
@@ -16,8 +15,8 @@ class Foo
 
 :pe
 class Foo extends
-//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, expression, 'true' keyword, 'false' keyword, or indented block after start of statement; found end of input instead
-//│ ║  l.18: 	class Foo extends
+//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, 'return' keyword, expression, 'true' keyword, 'false' keyword, or indented block after start of statement; found end of input instead
+//│ ║  l.17: 	class Foo extends
 //│ ╙──      	                 ^
 //│ Parsed:
 //│ 	TypeDef(Cls,None,InfixApp(Ident(Foo),keyword 'extends',Error()),None,None)
@@ -29,7 +28,7 @@ class Foo extends Bar
 :pe
 class Foo extends Bar with
 //│ ╔══[PARSE ERROR] Expected indented block after type declaration body; found end of input instead
-//│ ║  l.30: 	class Foo extends Bar with
+//│ ║  l.29: 	class Foo extends Bar with
 //│ ╙──      	                          ^
 //│ Parsed:
 //│ 	Error()
@@ -37,10 +36,10 @@ class Foo extends Bar with
 :fixme
 class Foo extends Bar with val x
 //│ ╔══[PARSE ERROR] Expected indented block after type declaration body; found 'val' keyword instead
-//│ ║  l.38: 	class Foo extends Bar with val x
+//│ ║  l.37: 	class Foo extends Bar with val x
 //│ ╙──      	                           ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.38: 	class Foo extends Bar with val x
+//│ ║  l.37: 	class Foo extends Bar with val x
 //│ ╙──      	                               ^
 //│ Parsed:
 //│ 	Error()
@@ -58,8 +57,8 @@ class Foo with
 
 :pe
 with
-//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'with' keyword instead
-//│ ║  l.60: 	with
+//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, 'return' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'with' keyword instead
+//│ ║  l.59: 	with
 //│ ╙──      	^^^^
 //│ Parsed:
 //│ 	Error()
@@ -90,7 +89,7 @@ class
 class
 Foo
 //│ ╔══[PARSE ERROR] Expected expression after type declaration start; found newline instead
-//│ ║  l.91: 	Foo
+//│ ║  l.90: 	Foo
 //│ ╙──      	   ^
 //│ Parsed:
 //│ 	Error()
@@ -101,9 +100,9 @@ class
   Foo
 extends Bar
 //│ ╔══[PARSE ERROR] Expected end of input; found newline instead
-//│ ║  l.101: 	  Foo
+//│ ║  l.100: 	  Foo
 //│ ║         	     ^
-//│ ║  l.102: 	extends Bar
+//│ ║  l.101: 	extends Bar
 //│ ╙──       	
 //│ Parsed:
 //│ 	TypeDef(Cls,None,Ident(Foo),None,None)

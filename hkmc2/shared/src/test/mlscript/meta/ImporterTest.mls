@@ -1,9 +1,12 @@
+:typeCheck
+
 
 :import ImportedTest.mls
-//│ Imported 23 members
+//│ Imported 25 members
+//│ Type: Ctor(lit:UnitLit(true),List())
 
 
 hello
-//│ Type: Flow(‹result of hello›@18)
+//│ Type: Flow(‹result of hello›@19)
 
 

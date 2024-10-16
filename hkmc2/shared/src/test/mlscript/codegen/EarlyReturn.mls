@@ -1,0 +1,57 @@
+:js
+
+:import PredefJS.mls
+//│ Imported 24 members
+//│ JS:
+//│ let res; function log(msg) {  return globalThis.console.log(msg) }; res = undefined;
+//│ = undefined
+
+
+fun f() =
+  log("--- pre ---")
+  return 1
+  log("--- post ---")
+  
+//│ JS:
+//│ let res; function f() { let tmp; tmp = log("--- pre ---"); return 1 }; res = undefined;
+//│ = undefined
+
+f()
+//│ JS:
+//│ let res, tmp; tmp = f(); res = tmp;
+//│ // Standard Output:
+//│ --- pre ---
+//│ = 1
+
+fun f(x) =
+  if x < 0 then
+    log("whoops")
+    return 0
+  x + 1
+//│ JS:
+//│ let res;
+//│ function f(x) {
+//│   let tmp, tmp1;
+//│   tmp = x < 0;
+//│   if (tmp) {
+//│     tmp1 = log("whoops");
+//│     return 0
+//│   }
+//│   return x + 1
+//│ };
+//│ res = undefined;
+//│ = undefined
+
+f(1)
+//│ JS:
+//│ let res, tmp; tmp = f(1); res = tmp;
+//│ = 2
+
+f(-1)
+//│ JS:
+//│ let res, tmp, tmp1; tmp = -(1); tmp1 = f(tmp); res = tmp1;
+//│ // Standard Output:
+//│ whoops
+//│ = 0
+
+

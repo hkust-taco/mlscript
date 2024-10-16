@@ -1,6 +1,5 @@
 
 
 fun hello = "Hello!"
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 

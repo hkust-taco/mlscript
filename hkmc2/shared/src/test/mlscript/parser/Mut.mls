@@ -1,53 +1,52 @@
-:global
 :parseOnly
 
 
 :pe
 mut
 //│ ╔══[PARSE ERROR] Expected expression after modifier keyword 'mut'; found end of input instead
-//│ ║  l.6: 	mut
+//│ ║  l.5: 	mut
 //│ ╙──     	   ^
 //│ Parsed:
 //│ 	Error()
 
 mut x
 //│ Parsed:
-//│ 	Modified(keyword 'mut',Ident(x))
+//│ 	Modified(keyword 'mut',None,Ident(x))
 
 mut
   x
   y
 //│ Parsed:
-//│ 	Modified(keyword 'mut',Ident(x))
-//│ 	Modified(keyword 'mut',Ident(y))
+//│ 	Modified(keyword 'mut',None,Ident(x))
+//│ 	Modified(keyword 'mut',None,Ident(y))
 
 mut let x = 1
 //│ Parsed:
-//│ 	Modified(keyword 'mut',Let(Ident(x),IntLit(1),None))
+//│ 	Modified(keyword 'mut',None,Let(Ident(x),IntLit(1),None))
 
 mut
   let x = 1
 //│ Parsed:
-//│ 	Modified(keyword 'mut',Let(Ident(x),IntLit(1),None))
+//│ 	Modified(keyword 'mut',None,Let(Ident(x),IntLit(1),None))
 
 mut
   let x = 1
   in x
 //│ Parsed:
-//│ 	Modified(keyword 'mut',Let(Ident(x),IntLit(1),Some(Ident(x))))
+//│ 	Modified(keyword 'mut',None,Let(Ident(x),IntLit(1),Some(Ident(x))))
 
 mut
   let x = 1
   let y = 2
 //│ Parsed:
-//│ 	Modified(keyword 'mut',Let(Ident(x),IntLit(1),None))
-//│ 	Modified(keyword 'mut',Let(Ident(y),IntLit(2),None))
+//│ 	Modified(keyword 'mut',None,Let(Ident(x),IntLit(1),None))
+//│ 	Modified(keyword 'mut',None,Let(Ident(y),IntLit(2),None))
 
 mut
   let
     x = 1
 //│ Parsed:
-//│ 	Modified(keyword 'mut',Let(Ident(x),IntLit(1),None))
+//│ 	Modified(keyword 'mut',None,Let(Ident(x),IntLit(1),None))
 
 mut
   let
@@ -55,22 +54,22 @@ mut
   let
     y = 1
 //│ Parsed:
-//│ 	Modified(keyword 'mut',Let(Ident(x),IntLit(1),None))
-//│ 	Modified(keyword 'mut',Let(Ident(y),IntLit(1),None))
+//│ 	Modified(keyword 'mut',None,Let(Ident(x),IntLit(1),None))
+//│ 	Modified(keyword 'mut',None,Let(Ident(y),IntLit(1),None))
 
 mut
   let
     x = 1
     y = 2
 //│ Parsed:
-//│ 	Modified(keyword 'mut',Let(Ident(x),IntLit(1),None))
-//│ 	Modified(keyword 'mut',Let(Ident(y),IntLit(2),None))
+//│ 	Modified(keyword 'mut',None,Let(Ident(x),IntLit(1),None))
+//│ 	Modified(keyword 'mut',None,Let(Ident(y),IntLit(2),None))
 
 mut
   let
     x = 1 in x
 //│ Parsed:
-//│ 	Modified(keyword 'mut',Let(Ident(x),IntLit(1),Some(Ident(x))))
+//│ 	Modified(keyword 'mut',None,Let(Ident(x),IntLit(1),Some(Ident(x))))
 
 mut
   let
@@ -78,8 +77,8 @@ mut
   let
     y = 2 in y
 //│ Parsed:
-//│ 	Modified(keyword 'mut',Let(Ident(x),IntLit(1),Some(Ident(x))))
-//│ 	Modified(keyword 'mut',Let(Ident(y),IntLit(2),Some(Ident(y))))
+//│ 	Modified(keyword 'mut',None,Let(Ident(x),IntLit(1),Some(Ident(x))))
+//│ 	Modified(keyword 'mut',None,Let(Ident(y),IntLit(2),Some(Ident(y))))
 
 // TODO currently we only look at the next token to see if it's an indented block...
 :fixme
@@ -87,9 +86,9 @@ mut let
   x = 1
   y = 2
 //│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.88: 	  y = 2
+//│ ║  l.87: 	  y = 2
 //│ ╙──      	  ^
 //│ Parsed:
-//│ 	Modified(keyword 'mut',Let(Ident(x),IntLit(1),None))
+//│ 	Modified(keyword 'mut',None,Let(Ident(x),IntLit(1),None))
 
 
