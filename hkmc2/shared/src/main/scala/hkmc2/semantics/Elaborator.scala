@@ -44,14 +44,17 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
       block(sts)._1
     case lit: Literal =>
       Term.Lit(lit)
+    case Let(Apps(id, tups), rhs, bodo) if id.name.headOption.exists(_.isLower) =>
+      val rrhs = tups.foldRight(rhs):
+        Tree.InfixApp(_, Keyword.`=>`, _)
+      val fs = VarSymbol(id, nextUid)
+      val ctxx = ctx.copy(locals = ctx.locals + (id.name -> fs))
+      val r = term(rrhs)(using ctxx)
+      val b = bodo.map(term(_)(using ctxx)).getOrElse(unit)
+      Term.Blk(List(LetBinding(Pattern.Var(fs), r)), b)
     case Let(lhs, rhs, bodo) =>
-      val (pat, syms, optTup) = letPattern(lhs)
-      val r = term(rhs)(using optTup match // TODO: dedup with the other usage
-        case S(tup) =>
-          val ctx1 = ctx.copy(locals = ctx.locals ++ syms)
-          val (_, ctx2) = params(tup)(using ctx1)
-          ctx2
-        case N => ctx)
+      val (pat, syms) = pattern(lhs)
+      val r = term(rhs)
       val b = bodo.map(term(_)(using ctx.copy(locals = ctx.locals ++ syms))).getOrElse(unit)
       Term.Blk(List(LetBinding(pat, r)), b)
     case Ident("true") => Term.Lit(Tree.BoolLit(true))
@@ -289,14 +292,16 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
       case Nil =>
         val res = unit
         (Term.Blk(acc.reverse, res), ctx)
+      case (hd @ Let(Apps(id, tups), rhs, bodo)) :: sts if id.name.headOption.exists(_.isLower) =>
+        val rrhs = tups.foldRight(rhs):
+          Tree.InfixApp(_, Keyword.`=>`, _)
+        val fs = VarSymbol(id, nextUid)
+        val ctxx = ctx.copy(locals = ctx.locals + (id.name -> fs))
+        val rhsTerm = term(rrhs)(using ctxx)
+        go(sts, LetBinding(Pattern.Var(fs), rhsTerm) :: acc)(using ctxx)
       case Let(lhs, rhs, N) :: sts =>
-        val (pat, syms, optTup) = letPattern(lhs)
-        val rhsTerm = term(rhs)(using optTup match
-          case S(tup) =>
-            val ctx1 = ctx.copy(locals = ctx.locals ++ syms)
-            val (_, ctx2) = params(tup)(using ctx1)
-            ctx2
-          case N => ctx)
+        val (pat, syms) = pattern(lhs)
+        val rhsTerm = term(rhs)
         go(sts, LetBinding(pat, rhsTerm) :: acc)(using ctx.copy(locals = ctx.locals ++ syms))
       case (td @ TermDef(k, sym, nme, rhs)) :: sts =>
         td.name match
@@ -411,31 +416,23 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
 
       
   
-  /** Elaborate the left-hand side of `let` expressions. */
-  def letPattern(t: Tree): Ctxl[(Pattern, Ls[Str -> VarSymbol], Opt[Tup])] =
-    t match
-    // If the top-level pattern is function declaration, the only bound variable
-    // is the function name and the parameters are bound in the body.
-    case App(id @ Ident(name), tup @ Tup(params)) =>
-      val idSym = VarSymbol(id, nextUid)
-      (Pattern.Var(idSym), (name -> idSym) :: Nil, S(tup))
-    // Function declarations may have multiple parameter lists.
-    case App(inner: App, tup @ Tup(params)) =>
-      letPattern(inner)
-    // Otherwise, we recursively elaborate the pattern. `App` is interpreted as
-    // constructor patterns.
-    case _ =>
-      val boundVars = mutable.HashMap.empty[Str, VarSymbol]
-      def go(t: Tree): Pattern = t match
-        case id @ Ident(name) => Pattern.Var:
-          if boundVars contains name then
-            raise(ErrorReport(msg"Duplicate bindings: $name" -> id.toLoc :: Nil))
-          boundVars.getOrElseUpdate(name, VarSymbol(id, nextUid))
-        case Tup(fields) => Pattern.Tuple(fields.map(go))
-        case _ =>
-          log(s"bruh: $t")
-          ???
-      (go(t), boundVars.toList, N)
+  def pattern(t: Tree): Ctxl[(Pattern, Ls[Str -> VarSymbol])] =
+    val boundVars = mutable.HashMap.empty[Str, VarSymbol]
+    def go(t: Tree): Pattern = t match
+      case id @ Ident(name) =>
+        val sym = boundVars.getOrElseUpdate(name, VarSymbol(id, nextUid))
+        Pattern.Var(sym)
+      case Tup(fields) =>
+        val pats = fields.map(
+          f => pattern(f) match
+            case (pat, vars) =>
+              boundVars ++= vars
+              pat
+        )
+        Pattern.Tuple(pats)
+      case _ =>
+        ???
+    (go(t), boundVars.toList)
   
   def importFrom(sts: Ls[Tree])(using c: Ctx): Ctx =
     val (_, newCtx) = block(sts)

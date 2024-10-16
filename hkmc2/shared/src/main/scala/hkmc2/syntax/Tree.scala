@@ -143,6 +143,11 @@ object Tree:
 object PlainTup:
   def apply(fields: Tree*): Tree = Tup(fields.toList)
 
+object Apps:
+  def unapply(t: Tree): Opt[(Ident, Ls[Tup])] = t match
+    case App(id: Ident, args: Tup) => S(id, args :: Nil)
+    case App(Apps(id, args), arg: Tup) => S(id, args :+ arg)
+    case _ => N
 
 
 sealed abstract class OuterKind(val desc: Str)

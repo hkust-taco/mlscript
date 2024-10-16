@@ -40,22 +40,19 @@ let foo = f => (f(x => x(x)) : [A] -> A -> A) in foo
 
 :todo
 let foo(f) = (f(x => x(x)) : [A] -> A -> A) in foo
-//│ ╔══[ERROR] Variable not found: f
-//│ ║  l.42: 	let foo(f) = (f(x => x(x)) : [A] -> A -> A) in foo
-//│ ╙──      	              ^
-//│ Type: forall α69_2: (α69_2) ->{⊥} α69_2
+//│ Type: ⊤
 
 :todo
 fun foo(f) = (f(x => x(x)) : [A] -> A -> A)
-//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but (α77_2) ->{⊥} forall α78_3: (α78_3) ->{⊥} α78_3 found
-//│ ║  l.49: 	fun foo(f) = (f(x => x(x)) : [A] -> A -> A)
+//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but (α86_2) ->{⊥} forall α87_3: (α87_3) ->{⊥} α87_3 found
+//│ ║  l.46: 	fun foo(f) = (f(x => x(x)) : [A] -> A -> A)
 //│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
 
 f => (let g = x => x(x) in let tmp = g(g) in f(g)) : [A] -> A -> A
-//│ Type: ((((α101_1 ∨ (α101_1 ->{α104_1} α103_1)) -> α103_1) ->{α104_1} α103_1) -> (⊤ -> ⊥)) ->{⊥} forall α94_2: (α94_2) ->{⊥} α94_2
+//│ Type: ((((α110_1 ∨ (α110_1 ->{α113_1} α112_1)) -> α112_1) ->{α113_1} α112_1) -> (⊤ -> ⊥)) ->{⊥} forall α103_2: (α103_2) ->{⊥} α103_2
 //│ Where:
-//│   α101_1 <: (α101_1 ∨ (α101_1 ->{α104_1} α103_1)) -> α103_1
+//│   α110_1 <: (α110_1 ∨ (α110_1 ->{α113_1} α112_1)) -> α112_1
 
 
