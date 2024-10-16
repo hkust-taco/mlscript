@@ -1,5 +1,5 @@
 :import Prelude.mls
-//│ Imported 41 members
+//│ Imported 52 members
 
 fun algb1(xss, yss) = if xss is
   Nil then map(snd, yss)
@@ -9,7 +9,11 @@ fun algb2(x, k0j1, k1j1, yss) = if yss is
   Cons(Tup2(y, k0j), ys) then
     let kjcurr = if x == y then k0j1 + 1 else max(k1j1, k0j)
     Cons(Tup2(y, kjcurr), algb2(x, k0j, kjcurr, ys))
-fun algb(xs, ys) = Cons(0, algb1(xs, map(y => Tup2(y, 0), ys)))
+fun algb(xs, ys) =
+  fun listcomp_fun(listcomp_fun_para) = if listcomp_fun_para is
+      Cons(listcomp_fun_ls_h, listcomp_fun_ls_t) then Cons(Tup2(listcomp_fun_ls_h, 0), listcomp_fun(listcomp_fun_ls_t))
+      Nil then Nil
+  Cons(0, algb1(xs, listcomp_fun(ys)))
 fun findk(k, km, m, ls) = if ls is
   Nil then km
   Cons(Tup2(x,y), xys) then if (x + y) >= m then findk(k+1, k, x+y, xys) else findk(k+1, km, m, xys)
@@ -27,5 +31,6 @@ fun algc(m, n, xs, ys) = if
     algc(m2, k, xs1, take(k, ys)) . algc(m-m2, n-k, xs2, drop(k, ys))
 fun lcss(xs, ys) = algc(listLen(xs), listLen(ys), xs, ys)(Nil)
 fun lcssMain(a, b ,c, d, e, f) = lcss(enumFromThenTo(a,b,c), enumFromThenTo(d,e,f))
-lcssMain(1,2,60,30,31,90)
+fun testLCSS_nofib(d) = lcssMain(1,2,60,30,31,90)
+testLCSS_nofib(0)
 
