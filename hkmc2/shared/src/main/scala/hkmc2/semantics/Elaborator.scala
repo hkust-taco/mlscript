@@ -149,10 +149,10 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
     case Tree.If(split) =>
       val desugared = new Desugarer(tl, this).termSplit(split, identity)(Split.Nil)(ctx)
       scoped("ucs:desugared"):
-        log(s"Desugared:\n${Split.display(desugared)}", noIndent = true)
+        log(s"Desugared:\n${Split.display(desugared)}")
       val normalized = new ucs.Normalization(tl)(desugared)
       scoped("ucs:normalized"):
-        log(s"Normalized:\n${Split.display(normalized)}", noIndent = true)
+        log(s"Normalized:\n${Split.display(normalized)}")
       Term.If(desugared)(normalized)
     case IfElse(InfixApp(InfixApp(scrutinee, Keyword.`is`, ctor @ Ident(cls)), Keyword.`then`, cons), alts) =>
       ctx.members.get(cls) match
@@ -231,7 +231,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
   def unit: Term.Lit = Term.Lit(UnitLit(true))
   
   def block(sts: Ls[Tree])(using c: Ctx): (Term.Blk, Ctx) = trace[(Term.Blk, Ctx)](
-    pre = s"Elab block ${sts.toString.take(20)}[...]", r => s"~> ${r._1}"
+    pre = s"Elab block ${sts.toString.truncate(20, "[...]")}", r => s"~> ${r._1}"
   ):
     val newMembers = mutable.Map.empty[Str, MemberSymbol[?]] // * Definitions with implementations
     val newSignatures = mutable.Map.empty[Str, MemberSymbol[?]] // * Definitions containing only signatures

@@ -1,0 +1,13 @@
+:js
+
+
+class Some[out A](value: A)
+//│ JS:
+//│ let res; res = undefined;
+//│ = undefined
+
+:todo
+let Some(x) = Some(42)
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+

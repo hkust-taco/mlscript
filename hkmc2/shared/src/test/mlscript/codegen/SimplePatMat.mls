@@ -1,0 +1,50 @@
+:js
+
+
+class Some[out A](value: A)
+//│ JS:
+//│ let res; res = undefined;
+//│ = undefined
+
+:todo
+x => if x is Some(x) then x
+//│ /!!!\ Uncaught error: scala.MatchError: If(Cons(Branch(Ref(x@22),Class(class:Some,Some(List($param0@23)),false),Let(x@24,Ref($param0@23),Else(Ref(x@24)))),Nil)) (of class hkmc2.semantics.Term$If)
+
+:todo
+:elt
+x => if x is
+  Some(0) then 0
+  else log("oops")
+//│ Elaborated tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Lam:
+//│     params = Ls of 
+//│       Param:
+//│         flags = ()
+//│         sym = x@26
+//│         sign = N
+//│     body = If of Cons:
+//│       head = Branch:
+//│         scrutinee = Ref of x@26
+//│         pattern = Class:
+//│           nme = class:Some
+//│           parameters = S of Ls of 
+//│             $param0@28
+//│           refined = false
+//│         continuation = Cons:
+//│           head = Branch:
+//│             scrutinee = Ref of $param0@28
+//│             pattern = LitPat of IntLit of 0
+//│             continuation = Else of Lit of IntLit of 0
+//│           tail = Nil
+//│       tail = Else of App:
+//│         lhs = Ref of log
+//│         rhs = Tup of Ls of 
+//│           Fld:
+//│             flags = ()
+//│             value = Lit of StrLit of "oops"
+//│             asc = N
+//│ /!!!\ Uncaught error: scala.MatchError: If(Cons(Branch(Ref(x@26),Class(class:Some,Some(List($param0@28)),false),Cons(Branch(Ref($param0@28),LitPat(IntLit(0)),Else(Lit(IntLit(0)))),Nil)),Else(App(Ref(log),Tup(List(Fld(‹›,Lit(StrLit(oops)),None))))))) (of class hkmc2.semantics.Term$If)
+
+

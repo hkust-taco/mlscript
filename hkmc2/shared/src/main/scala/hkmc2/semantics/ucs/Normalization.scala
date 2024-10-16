@@ -73,7 +73,7 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
       case _ => ()
   
   inline def apply(split: Split): Split = normalize(split)(using VarSet())
-
+  
   /**
     * Normalize core abstract syntax to MLscript syntax.
     *

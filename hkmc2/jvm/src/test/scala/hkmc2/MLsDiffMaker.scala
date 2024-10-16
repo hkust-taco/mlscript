@@ -8,6 +8,7 @@ import utils.*
 import hkmc2.syntax.Keyword.all
 import hkmc2.semantics.MemberSymbol
 import hkmc2.semantics.Elaborator
+import hkmc2.syntax.Keyword.`override`
 
 
 abstract class MLsDiffMaker extends DiffMaker:
@@ -51,6 +52,9 @@ abstract class MLsDiffMaker extends DiffMaker:
     override def doTrace = dbgElab.isSet || scope.exists:
       showUCS.get.getOrElse(Set.empty).contains
     override def emitDbg(str: String): Unit = output(str)
+    override def trace[T](pre: => Str, post: T => Str = noPostTrace)(thunk: => T): T =
+      if doTrace then super.trace(pre, post)(thunk)
+      else thunk
   
   var curCtx = Elaborator.Ctx.init
   

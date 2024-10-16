@@ -26,7 +26,8 @@ abstract class TraceLogger:
   inline def log(msg: => Any): Unit = log(msg, noIndent = false)
 
   def log(msg: => Any, noIndent: Bool = false) =
-    if doTrace then emitDbg(if noIndent then msg.toString else "| " * indent + msg)
+    if doTrace then emitDbg(if noIndent then msg.toString
+      else "| " * indent + msg.toString.indentNewLines("| " * indent + ">  "))
 
   protected var scope: Opt[Str] = N
 
@@ -34,3 +35,4 @@ abstract class TraceLogger:
     var oldScope = scope
     scope = S(flag)
     try thunk finally scope = oldScope
+
