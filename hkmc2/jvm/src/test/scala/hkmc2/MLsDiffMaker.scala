@@ -89,9 +89,10 @@ abstract class MLsDiffMaker extends DiffMaker:
     val elab = Elaborator(etl)
     try
       val (e, imports) = elab.importFrom(res)
+      // TODO don't pick up allMembers! just pick anything on top of the original ctx
       if verbose then
-        output(s"Imported ${imports.members.size} members")
-      curCtx = curCtx.copy(members = curCtx.members ++ imports.members)
+        output(s"Imported ${imports.allMembers.size} members")
+      curCtx = curCtx.copy(members = curCtx.members ++ imports.allMembers)
       processTerm(e, inImport = true)
     catch
       case err: Throwable =>
@@ -139,9 +140,13 @@ abstract class MLsDiffMaker extends DiffMaker:
           output(s"  $k -> $v")
   
   
+  private var blockNum = 0
+  
   def processTrees(trees: Ls[syntax.Tree])(using Raise): Unit =
     val elab = Elaborator(etl)
-    given Elaborator.Ctx = curCtx
+    val blockSymbol = semantics.ModuleSymbol(syntax.Tree.Ident("block#"+blockNum))
+    blockNum += 1
+    given Elaborator.Ctx = curCtx.nest(S(blockSymbol))
     val (e, newCtx) = elab.topLevel(trees)
     curCtx = newCtx
     // If elaborated tree is displayed, don't show the string serialization.

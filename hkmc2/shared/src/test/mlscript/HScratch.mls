@@ -1,0 +1,30 @@
+
+:p
+fun f() = 1
+//│ |fun| |f|(||)| |=| |1|
+//│ Parsed:
+//│ 	TermDef(Fun,None,Some(App(Ident(f),Tup(List()))),Some(IntLit(1)))
+
+:p
+fun (+) f() = 1
+//│ |fun| |(|+|)| |f|(||)| |=| |1|
+//│ Parsed:
+//│ 	TermDef(Fun,Some(Ident(+)),Some(App(Ident(f),Tup(List()))),Some(IntLit(1)))
+
+let x
+
+x = 1
+
+:elt
+let x
+x = 1
+//│ Elaborated tree:
+//│ Blk:
+//│   stats = Ls of 
+//│     LetDecl of module:block#4.x
+//│     DefineVar:
+//│       sym = module:block#4.x
+//│       rhs = Lit of IntLit of 1
+//│   res = Lit of UnitLit of true
+
+

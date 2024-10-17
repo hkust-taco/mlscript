@@ -142,7 +142,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       monoOrErr(typeAndSubstType(ty, pol), ty)
     ty match
     case Ref(cls: ClassSymbol) => typeAndSubstType(Term.TyApp(ty, Nil), pol)
-    case Ref(sym: BlockLocalSymbol) =>
+    case Ref(sym: LocalSymbol) =>
       log(s"Type lookup: ${sym.nme} ${sym.uid} ${map.keySet}")
       map.get(sym.uid) match
         case Some(Wildcard(in, out)) => if pol then out else in
@@ -334,7 +334,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val nestCtx1 = ctx.nest
       val nestCtx2 = ctx.nest
       scrutinee match // * refine
-        case Ref(sym: BlockLocalSymbol) =>
+        case Ref(sym: LocalSymbol) =>
           nestCtx1 += sym -> clsTy
           nestCtx2 += sym -> tv
         case _ => () // TODO: refine all variables holding this value?
@@ -441,35 +441,44 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
   trace[(GeneralType, Type)](s"${ctx.lvl}. Typing ${t.showDbg}", res => s": $res"):
     given CCtx = CCtx.init(t, N)
     t match
-      case Ref(sym: BlockLocalSymbol) =>
+      case Ref(sym: LocalSymbol) =>
         ctx.get(sym) match
           case Some(ty) => (ty, Bot)
           case _ =>
             (error(msg"Variable not found: ${sym.nme}" -> t.toLoc :: Nil), Bot)
-      case Ref(sym: TermSymbol) =>
-        ctx.get(sym) match
-          case Some(ty) => (ty, Bot)
-          case _ =>
-            (error(msg"Definition not found: ${sym.nme}" -> t.toLoc :: Nil), Bot)
       case Blk(stats, res) =>
         val nestCtx = ctx.nest
         given Ctx = nestCtx
         val effBuff = ListBuffer.empty[Type]
-        stats.foreach:
-          case term: Term => effBuff += typeCheck(term)._2
-          case LetBinding(Pattern.Var(sym), rhs) =>
+        def goStats(stats: Ls[Statement]): Unit = stats match
+          case Nil => ()
+          case (term: Term) :: stats =>
+            effBuff += typeCheck(term)._2
+            goStats(stats)
+          case LetDecl(sym) :: DefineVar(sym2, rhs) :: stats =>
+            require(sym2 is sym)
             val (rhsTy, eff) = typeCheck(rhs)
             effBuff += eff
             nestCtx += sym -> rhsTy
-          case TermDefinition(Fun, sym, params, sig, Some(body), _) =>
+            goStats(stats)
+          case LetBinding(Pattern.Var(sym), rhs) :: stats =>
+            val (rhsTy, eff) = typeCheck(rhs)
+            effBuff += eff
+            nestCtx += sym -> rhsTy
+            goStats(stats)
+          case TermDefinition(Fun, sym, params, sig, Some(body), _) :: stats =>
             typeFunDef(sym, params match {
               case S(params) => Term.Lam(params, body)
               case _ => body // * may be a case expressions
             }, sig, ctx)
-          case TermDefinition(Fun, sym, _, S(sig), None, _) =>
+            goStats(stats)
+          case TermDefinition(Fun, sym, _, S(sig), None, _) :: stats =>
             ctx += sym -> typeType(sig)
-          case clsDef: ClassDef => ctx *= clsDef
-          case _ => () // TODO
+            goStats(stats)
+          case (clsDef: ClassDef) :: stats =>
+            ctx *= clsDef
+            goStats(stats)
+        goStats(stats)
         val (ty, eff) = typeCheck(res)
         (ty, effBuff.foldLeft(eff)((res, e) => res | e))
       case Lit(lit) => ((lit match

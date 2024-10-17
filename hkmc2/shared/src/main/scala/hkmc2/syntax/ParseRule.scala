@@ -154,10 +154,10 @@ object ParseRule:
     Kw(`let`):
       ParseRule("'let' binding keyword")(
         Expr(
-          ParseRule("'let' binding head"):
+          ParseRule("'let' binding head")(
             Kw(`=`):
-              ParseRule("'let' binding equals sign"):
-                Expr(
+              ParseRule("'let' binding equals sign")(
+                exprOrBlk(
                   ParseRule("'let' binding right-hand side")(
                     Kw(`in`):
                       ParseRule("'let' binding `in` clause"):
@@ -165,7 +165,14 @@ object ParseRule:
                     ,
                     End(N)
                   )
-                ) { (rhs, body) => (rhs, body) }
+                ) { (rhs, body) => (S(rhs), body) }*
+              ),
+            Kw(`in`):
+              ParseRule("'let' binding `in` clause"):
+                Expr(ParseRule("'let' binding body")(End(())))((body, _: Unit) => S(body) -> N)
+            ,
+            End(N -> N)
+          )
         ) { case (lhs, (rhs, body)) => Let(lhs, rhs, body) }
         ,
         // Blk(

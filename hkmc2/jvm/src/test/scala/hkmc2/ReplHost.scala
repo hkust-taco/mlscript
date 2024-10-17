@@ -1,11 +1,12 @@
 package hkmc2
 
 import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*
 
 /**
  * A helper class to manipulate an interactive Node.js process.
  */
-final case class ReplHost() {
+class ReplHost(using TL) {
   import java.io.{BufferedWriter, BufferedReader, InputStreamReader, OutputStreamWriter}
   private val builder = new java.lang.ProcessBuilder()
   // `--interactive` always enters the REPL even if stdin is not a terminal
@@ -38,7 +39,8 @@ final case class ReplHost() {
     // Remove the trailing `"\n> "`
     buffer.delete(buffer.length - 3, buffer.length)
     val reply = buffer.toString()
-    reply.linesIterator.find(_.startsWith(ReplHost.syntaxErrorHead)) match {
+    // tl.log(s"REPL> Collected (raw):\n${reply}")
+    val res = reply.linesIterator.find(_.startsWith(ReplHost.syntaxErrorHead)) match {
       case None => reply.linesIterator.find(_.startsWith(ReplHost.uncaughtErrorHead)) match {
         case None => reply
         case Some(uncaughtErrorLine) => {
@@ -50,6 +52,8 @@ final case class ReplHost() {
         val message = syntaxErrorLine.substring(ReplHost.syntaxErrorHead.length)
         ReplHost.Error(true, message)
     }
+    tl.log(s"REPL> Collected:\n${res}")
+    res
   }
 
   private def consumeStderr(): String = {
@@ -69,59 +73,44 @@ final case class ReplHost() {
    * - Otherwise, returns the result string.
    */
   private def parseQueryResult(): ReplHost.Error | Str =
-    collectUntilPrompt() match
-    case reply: Str =>
-      // Find error boundaries.
-      val begin = reply.indexOf(0x200b)
-      val end = reply.lastIndexOf(0x200b)
-      // If there is an error, returns `ReplHost.Error`.
-      if begin >= 0 && end >= 0 then
-        // `console.log` inserts a space between every two arguments,
-        // so + 1 and - 1 is necessary to get correct length.
-        ReplHost.Error(false, reply.substring(begin + 1, end))
-      else reply
-    case error: ReplHost.Error => error
+    val parsed = collectUntilPrompt() match
+      case reply: Str =>
+        // Find error boundaries.
+        val begin = reply.indexOf(0x200b)
+        val end = reply.lastIndexOf(0x200b)
+        // If there is an error, returns `ReplHost.Error`.
+        if begin >= 0 && end >= 0 then
+          // `console.log` inserts a space between every two arguments,
+          // so + 1 and - 1 is necessary to get correct length.
+          ReplHost.Error(false, reply.substring(begin + 1, end))
+        else reply
+      case error: ReplHost.Error => error
+    tl.log(s"REPL> Parsed:\n${parsed}")
+    parsed
   
   /**
     * Send code to Node.js process.
     *
     * @param code the code to execute
     */
-  private def send(code: Str): Unit = {
+  private def send(code: Str): Unit =
+    tl.log(s"REPL> Sending: ${code}")
     stdin.write(if code.endsWith("\n") then code else code + "\n")
     stdin.flush()
-  }
-
-  /**
-    * Send code to the Node.js process.
-    *
-    * @param prelude the prelude code
-    * @param code the main code
-    * @param res the result identifier name
-    * @return reply string and stderr string
-    */
-  def query(prelude: Str, code: Str, res: Str): (ReplHost.Reply, Str) =
-    // For empty queries, returns empty.
-    if prelude.isEmpty && code.isEmpty then
-      (ReplHost.Empty, "")
-    else
-      // Wrap the code with `try`-`catch` block.
-      val wrapped =
-        s"$prelude try { $code } catch (e) { console.log('\\u200B' + e + '\\u200B'); }"
-      // Send the code
-      send(wrapped)
-      (parseQueryResult() match
-        case intermediate: Str =>
-          // Since the result might not be the result of the expression, we need
-          // to retrieve the value again.
-          send(s"globalThis[\"${res}\"]")
-          parseQueryResult() match
-          case result: Str =>
-            // Add the intermediate result to the reply.
-            ReplHost.Result(result, Some(intermediate))
-          case error: ReplHost.Error => error
-        case error: ReplHost.Error => error
-      , consumeStderr())
+  
+  def query(code: Str): (ReplHost.Reply, Str) =
+    // Wrap the code with `try`-`catch` block.
+    val wrapped =
+      s"try { $code } catch (e) { console.log('\\u200B' + e + '\\u200B'); }"
+    // Send the code
+    send(wrapped)
+    (parseQueryResult() match
+      case intermediate: Str =>
+        val lines = intermediate.splitSane('\n')
+        val result = lines.lastOption.getOrElse("")
+        ReplHost.Result(result, if lines.size < 2 then N else S(lines.init.mkString("\n")))
+      case error: ReplHost.Error => error
+    , consumeStderr())
   
   /**
     * Execute class and function declarations.

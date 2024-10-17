@@ -1,0 +1,42 @@
+:js
+:sjs
+
+
+let x
+//│ JS:
+//│ undefined
+
+x = 1
+//│ JS:
+//│ this.x = 1; undefined
+
+x
+//│ JS:
+//│ this.x
+//│ = 1
+
+let y = 1
+//│ JS:
+//│ this.y = 1; undefined
+//│ y = 1
+
+:e
+z = 1
+//│ ╔══[ERROR] Name not found: z
+//│ ║  l.24: 	z = 1
+//│ ╙──      	^
+//│ JS:
+//│ /* error */
+
+fun f() = 1
+//│ JS:
+//│ function f() {  return 1 }; undefined
+
+f
+//│ JS:
+//│ this.f
+//│ = [Function: f]
+
+
+
+

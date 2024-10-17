@@ -109,7 +109,7 @@ fun h: [C] -> ([A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B
 
 :e
 bazbaz: [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
-//│ ╔══[ERROR] Cannot type non-function term Ref(bazbaz) as (<α>35_2) ->{⊥} (forall α34_3: α34_3) ->{⊥} <α>35_2
+//│ ╔══[ERROR] Cannot type non-function term Ref(module:block#16.bazbaz) as (<α>35_2) ->{⊥} (forall α34_3: α34_3) ->{⊥} <α>35_2
 //│ ║  l.111: 	bazbaz: [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
 //│ ╙──       	^^^^^^
 //│ Type: forall α33_2: (α33_2) ->{⊥} (forall α34_3: α33_2 -> α33_2) ->{⊥} α33_2

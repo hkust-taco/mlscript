@@ -158,7 +158,8 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
     case Block(branches) =>
       branches.foldRight(default): (t, elabFallback) =>
         t match
-        case Let(ident @ Ident(_), termTree, N) => fallback => ctx => trace(
+        case Let(ident @ Ident(_), N, N) => ???
+        case Let(ident @ Ident(_), S(termTree), N) => fallback => ctx => trace(
           pre = s"termSplit: let ${ident.name} = $termTree",
           post = (res: Split) => s"termSplit: let >>> $res"
         ):
@@ -213,7 +214,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
     ):
       // Resolve the operator.
       val opRef =
-        ctx.locals.get(opName).orElse(ctx.members.get(opName)) match
+        ctx.get(opName) match
         case S(sym) => sym.ref(opIdent)
         case N =>
           raise(ErrorReport(msg"Name not found: $opName" -> tree.toLoc :: Nil))
@@ -241,9 +242,11 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
         opRhsApps.foldRight(Function.const(fallback): Sequel): (tt, elabFallback) =>
           tt match
           case (Tree.Empty(), Let(ident @ Ident(_), termTree, N)) => ctx =>
-            val sym = VarSymbol(ident, nextUid)
-            val fallbackCtx = ctx + (ident.name -> sym)
-            Split.Let(sym, term(termTree)(using ctx), elabFallback(fallbackCtx))
+            termTree match
+            case S(termTree) =>
+              val sym = VarSymbol(ident, nextUid)
+              val fallbackCtx = ctx + (ident.name -> sym)
+              Split.Let(sym, term(termTree)(using ctx), elabFallback(fallbackCtx))
           case (Tree.Empty(), Modified(Keyword.`else`, elsLoc, default)) => ctx =>
             // TODO: report `rest` as unreachable
             Split.default(term(default)(using ctx))
@@ -320,9 +323,11 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
       // to the backup plan passed from the parent split.
       branch match
       case Let(ident @ Ident(_), termTree, N) => backup => ctx =>
-        val sym = VarSymbol(ident, nextUid)
-        val fallbackCtx = ctx + (ident.name -> sym)
-        Split.Let(sym, term(termTree)(using ctx), elabFallback(backup)(fallbackCtx))
+        termTree match
+        case S(termTree) =>
+          val sym = VarSymbol(ident, nextUid)
+          val fallbackCtx = ctx + (ident.name -> sym)
+          Split.Let(sym, term(termTree)(using ctx), elabFallback(backup)(fallbackCtx))
       case Modified(Keyword.`else`, elsLoc, body) => backup => ctx => trace(
         pre = s"patternSplit (else) <<< $tree",
         post = (res: Split) => s"patternSplit (else) >>> ${res.showDbg}"
@@ -374,7 +379,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
       // A single wildcard pattern.
       case Ident("_") => _ => ctx => sequel(ctx)
       // A single variable pattern or constructor pattern without parameters.
-      case ctor: Ident => fallback => ctx => ctx.members.get(ctor.name) match
+      case ctor: Ident => fallback => ctx => ctx.get(ctor.name) match
         case S(sym: ClassSymbol) => // TODO: refined
           Branch(ref, Pattern.Class(sym, N, false)(ctor), sequel(ctx)) :: fallback
         case S(_: VarSymbol) | N =>
@@ -393,7 +398,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
         pre = s"expandMatch <<< ${ctor.name}(${args.iterator.map(_.showDbg).mkString(", ")})",
         post = (r: Split) => s"expandMatch >>> ${r.showDbg}"
       ):
-        ctx.members.get(ctor.name) match
+        ctx.get(ctor.name) match
           case S(cls: ClassSymbol) =>
             val arity = cls.defn.flatMap(_.paramsOpt.map(_.length)).getOrElse(0)
             if args.length =/= arity then

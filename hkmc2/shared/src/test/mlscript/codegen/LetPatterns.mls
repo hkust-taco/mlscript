@@ -2,9 +2,6 @@
 
 
 class Some[out A](value: A)
-//│ JS:
-//│ let res; res = undefined;
-//│ = undefined
 
 :todo
 let Some(x) = Some(42)

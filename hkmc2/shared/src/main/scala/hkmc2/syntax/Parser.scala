@@ -258,7 +258,14 @@ abstract class Parser(
             errExpr :: blockContOf(rule)
             
       case N =>
-        tryParseExp(CommaPrecNext, tok, loc, rule).getOrElse(errExpr) :: blockContOf(rule)
+        val lhs = tryParseExp(CommaPrecNext, tok, loc, rule).getOrElse(errExpr)
+        cur match
+        case (KEYWORD(kw @ (Keyword.`=`)), l0) :: _ /* if kw.leftPrecOrMin > prec */ =>
+          consume
+          val rhs = tryParseExp(CommaPrecNext, tok, loc, rule).getOrElse(errExpr)
+          Def(lhs, rhs) :: blockContOf(rule)
+        case _ =>
+          lhs :: blockContOf(rule)
     case (tok, loc) :: _ =>
       tryParseExp(CommaPrecNext, tok, loc, rule).getOrElse(errExpr) :: blockContOf(rule)
   
@@ -472,7 +479,7 @@ abstract class Parser(
               err(msg"Expected '`in'; found end of input instead" -> lastLoc :: Nil)
               errExpr
           bs.foldRight(body) {
-            case ((v, r), acc) => Quoted(Let(v, Unquoted(r), S(Unquoted(acc))))
+            case ((v, r), acc) => Quoted(Let(v, S(Unquoted(r)), S(Unquoted(acc))))
           }
         case (IDENT("if", _), l0) :: _ =>
           consume

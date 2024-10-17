@@ -57,11 +57,12 @@ abstract class MemberSymbol[Defn <: Definition] extends Symbol:
   def nme: Str
   var defn: Opt[Defn] = N
 
-class TermSymbol(val id: Tree.Ident) extends MemberSymbol[Definition] with LocalSymbol with NamedSymbol:
+class TermSymbol(val owner: Opt[MemberSymbol[?]], val id: Tree.Ident)
+extends MemberSymbol[Definition] with LocalSymbol with NamedSymbol:
   def nme: Str = id.name
   def name: Str = nme
   def toLoc: Option[Loc] = id.toLoc
-  override def toString: Str = s"${id.name}"
+  override def toString: Str = s"${owner.getOrElse("")}.${id.name}"
 
 sealed trait CtorSymbol extends Symbol
 

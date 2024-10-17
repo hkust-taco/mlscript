@@ -27,11 +27,18 @@ class JSBuilder extends CodeBuilder:
     case Argument
     case Operand(prec: Int)
   
+  def getVar(l: Local)(using Raise, Scope): Document = l match
+    case ts: semantics.TermSymbol =>
+      ts.owner match
+      case S(owner) =>
+        doc"${result(Value.This(owner))}.${ts.id.name}"
+      case N =>
+        ts.id.name
+    case _ => summon[Scope].lookup_!(l)
+  
   def result(r: Result)(using Raise, Scope): Document = r match
-    case Value.Ref(m: semantics.MemberSymbol[?]) =>
-      m.nme // TODO qualify if necessary? (maybe never needed)
-    case Value.Ref(l: semantics.BlockLocalSymbol) =>
-      summon[Scope].lookup_!(l)
+    case Value.This(sym) => doc"this" // TODO qualify if necessary
+    case Value.Ref(l) => getVar(l)
     case Value.Lit(lit) =>
       lit.idStr
     case Call(Value.Ref(l: semantics.MemberSymbol[?]), lhs :: rhs :: Nil) if builtinOps contains l.nme =>
@@ -47,7 +54,7 @@ class JSBuilder extends CodeBuilder:
       doc"${result(qual)}.${name.name}"
   def returningTerm(t: Block)(using Raise, Scope): Document = t match
     case Assign(l, r, rst) =>
-      doc" # ${scope.lookup_!(l)} = ${result(r)};${returningTerm(rst)}"
+      doc" # ${getVar(l)} = ${result(r)};${returningTerm(rst)}"
     case Define(defn, rst) => scope.nest givenIn:
       val defnJS = defn match
       case TermDefn(syntax.Fun, sym, N, body) =>
@@ -56,8 +63,8 @@ class JSBuilder extends CodeBuilder:
         val vars = ps.map(p => scope.allocateName(p.sym)).mkDocument(", ")
         doc"function ${sym.nme}($vars) { #{  # ${body(bod)} #}  # }"
       doc" # ${defnJS};${returningTerm(rst)}"
-    case Return(res) =>
-      doc" # return ${result(res)}"
+    case Return(res, true) => doc" # ${result(res)}"
+    case Return(res, false) => doc" # return ${result(res)}"
     case Match(scrut, Case.Lit(syntax.Tree.BoolLit(true)) -> trm :: Nil, els, rest) =>
       val t = doc" # if (${ result(scrut) }) { #{ ${
           returningTerm(trm)
@@ -72,13 +79,16 @@ class JSBuilder extends CodeBuilder:
       doc" # /* $msg */"
     // case _ => ???
   
-  def body(t: Block)(using Raise, Scope): Document = scope.nest givenIn:
+  def block(t: Block)(using Raise, Scope): Document =
     val prelude = if t.definedVars.isEmpty then doc"" else
       val vars = t.definedVars.toSeq.sortBy(_.uid).iterator.map(l =>
         l -> scope.allocateName(l))
-      doc"let " ::  vars.map: (_, nme) =>
+      doc"let " :: vars.map: (_, nme) =>
         nme
       .toList.mkDocument(", ")
       :: doc";"
     prelude :: returningTerm(t)
+  
+  def body(t: Block)(using Raise, Scope): Document = scope.nest givenIn:
+    block(t)
   

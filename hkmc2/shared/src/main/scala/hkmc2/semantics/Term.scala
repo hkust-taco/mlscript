@@ -106,6 +106,8 @@ sealed trait Statement extends AutoLocated:
     case WildcardTy(in, out) => in.toList ++ out.toList
     case CompType(lhs, rhs, _) => lhs :: rhs :: Nil
     case LetBinding(pat, rhs) => rhs :: Nil
+    case LetDecl(sym) => Nil
+    case DefineVar(sym, rhs) => rhs :: Nil
     case Region(_, body) => body :: Nil
     case RegRef(reg, value) => reg :: value :: Nil
     case Assgn(lhs, rhs) => lhs :: rhs :: Nil
@@ -160,6 +162,8 @@ sealed trait Statement extends AutoLocated:
     case SelProj(pre, cls, proj) => s"${pre.showDbg}.${cls.showDbg}#${proj.name}"
     case Asc(term, ty) => s"${term.toString}: ${ty.toString}"
     case LetBinding(pat, rhs) => s"let ${pat.showDbg} = ${rhs.showDbg}"
+    case LetDecl(sym) => s"let ${sym}"
+    case DefineVar(sym, rhs) => s"${sym} = ${rhs.showDbg}"
     case Region(name, body) => s"region ${name.nme} in ${body.showDbg}"
     case RegRef(reg, value) => s"(${reg.showDbg}).ref ${value.showDbg}"
     case Assgn(lhs, rhs) => s"${lhs.showDbg} := ${rhs.showDbg}"
@@ -180,6 +184,10 @@ sealed trait Statement extends AutoLocated:
         cls.paramsOpt.fold("")(_.map(_.showDbg).mkString("(", ", ", ")"))} ${cls.body}"
 
 final case class LetBinding(pat: Pattern, rhs: Term) extends Statement
+
+final case class LetDecl(sym: LocalSymbol) extends Statement
+
+final case class DefineVar(sym: LocalSymbol, rhs: Term) extends Statement
 
 final case class TermDefinition(
     k: TermDefKind,

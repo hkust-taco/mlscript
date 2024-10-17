@@ -19,6 +19,7 @@ sealed abstract class Block extends Product with AutoLocated:
   lazy val definedVars: Set[Local] = this match
     case _: Return | _: Throw => Set.empty
     case Begin(sub, rst) => rst.definedVars
+    case Assign(l: TermSymbol, r, rst) => rst.definedVars
     case Assign(l, r, rst) => rst.definedVars + l
     case Match(scrut, arms, dflt, rst) =>
       arms.flatMap(_._2.definedVars).toSet ++ dflt.toList.flatMap(_.definedVars) ++ rst.definedVars
@@ -32,7 +33,8 @@ case class Match(
   rest: Block,
 ) extends Block with ProductWithTail
 
-case class Return(res: Result) extends Block
+// * `implct`: whether it's a JS implicit return, without the `return` keyword
+case class Return(res: Result, implct: Bool) extends Block
 
 case class Throw(exc: Result) extends Block
 
@@ -71,6 +73,7 @@ case class Select(qual: Path, name: Tree.Ident) extends Path
 
 enum Value extends Path:
   case Ref(l: Local)
+  case This(sym: MemberSymbol[?])
   case Lit(lit: Literal)
   case Lam(params: Ls[Param], body: Block)
 

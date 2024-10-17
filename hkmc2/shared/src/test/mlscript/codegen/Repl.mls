@@ -2,30 +2,72 @@
 
 
 fun res
-//│ JS:
-//│ let res; res = undefined;
-//│ = undefined
 
 :fixme
+:showRepl
 fun res() = 1
-//│ JS:
-//│ let res; function res() {  return 1 }; res = undefined;
+//│ REPL> Sending: try { function res() {  return 1 }; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Collected:
+//│ >  [syntax error] Identifier 'res' has already been declared
+//│ REPL> Parsed:
+//│ >  [syntax error] Identifier 'res' has already been declared
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Identifier 'res' has already been declared
 
 :showRepl
-1
-//│ JS:
-//│ let res; res = 1;
-//│ = 1
+2 + 2
+//│ REPL> Sending: try { 2 + 2 } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Collected:
+//│ >  4
+//│ REPL> Parsed:
+//│ >  4
+//│ = 4
 
+:showRepl
 res
-//│ JS:
-//│ let res; res = res;
-//│ = undefined
+//│ REPL> Sending: try { this.res } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
 
-2
-//│ JS:
-//│ let res; res = 2;
-//│ = 2
+
+:showRepl
+:re
+let x = 1; log(x); x
+//│ REPL> Sending: try { let tmp; this.x = 1; tmp = log(this.x); this.x } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Collected:
+//│ >  ​ReferenceError: log is not defined​
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  [runtime error] ReferenceError: log is not defined
+//│ ═══[RUNTIME ERROR] ReferenceError: log is not defined
+//│ REPL> Sending: try { this.x } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Collected:
+//│ >  1
+//│ REPL> Parsed:
+//│ >  1
+//│ x = 1
+
+:import PredefJS.mls
+//│ Imported 25 members
+//│ x = 1
+
+:showRepl
+let x = 1; log(x); x
+//│ REPL> Sending: try { let tmp1; this.x = 1; tmp1 = this.log(this.x); this.x } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Collected:
+//│ >  1
+//│ >  1
+//│ REPL> Parsed:
+//│ >  1
+//│ >  1
+//│ > 1
+//│ = 1
+//│ REPL> Sending: try { this.x } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Collected:
+//│ >  1
+//│ REPL> Parsed:
+//│ >  1
+//│ x = 1
 
 

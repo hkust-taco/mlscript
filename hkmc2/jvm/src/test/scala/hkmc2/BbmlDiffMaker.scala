@@ -15,7 +15,8 @@ abstract class BbmlDiffMaker extends JSBackendDiffMaker:
       importFile("bbPredef.mls", verbose = false)
   
   
-  lazy val bbCtx = bbml.Ctx.init(_ => die, curCtx.members)
+  lazy val bbCtx =
+    bbml.Ctx.init(_ => die, curCtx.allMembers)
   
   
   var bbmlTyper: Opt[BBTyper] = None

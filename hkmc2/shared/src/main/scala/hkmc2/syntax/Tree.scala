@@ -48,7 +48,8 @@ enum Tree extends AutoLocated:
   case BoolLit(value: Bool)           extends Tree with Literal
   case Block(stmts: Ls[Tree])
   case OpBlock(items: Ls[Tree -> Tree])
-  case Let(lhs: Tree, rhs: Tree, body: Opt[Tree])
+  case Let(lhs: Tree, rhs: Opt[Tree], body: Opt[Tree])
+  case Def(lhs: Tree, rhs: Tree)
   // case TermDef(k: TermDefKind, symName: Opt[Tree], alphaName: Opt[Tree], sign: Opt[Tree], rhs: Opt[Tree])
   case TermDef(k: TermDefKind, symName: Opt[Tree], alphaName: Opt[Tree], rhs: Opt[Tree]) extends Tree with TermDefImpl
   case TypeDef(k: TypeDefKind, symName: Opt[Tree], head: Tree, extension: Opt[Tree], body: Opt[Tree]) extends Tree with TypeDefImpl
@@ -75,7 +76,7 @@ enum Tree extends AutoLocated:
     case Block(stmts) => stmts
     case OpBlock(items) => items.flatMap:
       case (op, body) => op :: body :: Nil
-    case Let(lhs, rhs, body) => Ls(lhs, rhs) ++ body
+    case Let(lhs, rhs, body) => lhs :: Nil ++ rhs ++ body
     case TypeDef(k, symName, head, extension, body) =>
       symName.toList ++ Ls(head) ++ extension ++ body
     case Modified(_, _, body) => Ls(body)
@@ -196,6 +197,8 @@ trait TermDefImpl:
   lazy val (name, params, typeParams, signature): (Diagnostic \/ Ident, Opt[Ls[Tree]], Opt[Tree], Opt[Tree]) =
     def rec(t: Opt[Tree]): (Diagnostic \/ Ident, Opt[Ls[Tree]], Opt[Tree], Opt[Tree]) = 
       t match
+      case S(InfixApp(lhs, Keyword.`=`, rhs)) =>
+        rec(S(lhs))
       case S(InfixApp(id: Ident, Keyword.`:`, sign)) =>
         (R(id), N, N, S(sign))
       // show(t: Tree): Str

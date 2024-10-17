@@ -6,62 +6,50 @@ let let
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of input instead
 //│ ║  l.5: 	let let
 //│ ╙──     	       ^
-//│ ╔══[PARSE ERROR] Expected '=' keyword after 'let' binding head; found end of input instead
-//│ ║  l.5: 	let let
-//│ ╙──     	       ^
 //│ Parsed:
-//│ 	Error()
+//│ 	Let(Error(),None,None)
 
 :pe
 let x = 1 let y = 2
 //│ ╔══[PARSE ERROR] Expected end of input; found 'let' keyword instead
-//│ ║  l.16: 	let x = 1 let y = 2
+//│ ║  l.13: 	let x = 1 let y = 2
 //│ ╙──      	          ^^^
 //│ Parsed:
-//│ 	Let(Ident(x),IntLit(1),None)
+//│ 	Let(Ident(x),Some(IntLit(1)),None)
 
 let x = 1 in let y = 2
 //│ Parsed:
-//│ 	Let(Ident(x),IntLit(1),Some(Let(Ident(y),IntLit(2),None)))
+//│ 	Let(Ident(x),Some(IntLit(1)),Some(Let(Ident(y),Some(IntLit(2)),None)))
 
 let x = 1 in let y = 2 in let z = 3
 //│ Parsed:
-//│ 	Let(Ident(x),IntLit(1),Some(Let(Ident(y),IntLit(2),Some(Let(Ident(z),IntLit(3),None)))))
+//│ 	Let(Ident(x),Some(IntLit(1)),Some(Let(Ident(y),Some(IntLit(2)),Some(Let(Ident(z),Some(IntLit(3)),None)))))
 
 let x = 1
 let y = 2
 //│ Parsed:
-//│ 	Let(Ident(x),IntLit(1),None)
-//│ 	Let(Ident(y),IntLit(2),None)
+//│ 	Let(Ident(x),Some(IntLit(1)),None)
+//│ 	Let(Ident(y),Some(IntLit(2)),None)
 
-:pe
 let
   x
   y
-//│ ╔══[PARSE ERROR] Expected '=' keyword after 'let' binding head; found newline instead
-//│ ║  l.39: 	  x
-//│ ║        	   ^
-//│ ║  l.40: 	  y
-//│ ╙──      	^^
-//│ ╔══[PARSE ERROR] Expected '=' keyword after 'let' binding head; found end of input instead
-//│ ║  l.40: 	  y
-//│ ╙──      	   ^
 //│ Parsed:
-//│ 	Error()
-//│ 	Error()
+//│ 	Let(Ident(x),None,None)
+//│ 	Let(Ident(y),None,None)
 
 let
   x = 1
   y = 2
 //│ Parsed:
-//│ 	Let(Ident(x),IntLit(1),None)
-//│ 	Let(Ident(y),IntLit(2),None)
+//│ 	Let(Ident(x),Some(IntLit(1)),None)
+//│ 	Let(Ident(y),Some(IntLit(2)),None)
 
 let
   x = 1 in x
   y = 2 in y
 //│ Parsed:
-//│ 	Let(Ident(x),IntLit(1),Some(Ident(x)))
-//│ 	Let(Ident(y),IntLit(2),Some(Ident(y)))
+//│ 	Let(Ident(x),Some(IntLit(1)),Some(Ident(x)))
+//│ 	Let(Ident(y),Some(IntLit(2)),Some(Ident(y)))
 
 

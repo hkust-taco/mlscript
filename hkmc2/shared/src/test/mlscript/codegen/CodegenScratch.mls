@@ -1,0 +1,39 @@
+:js
+:sjs
+:lot
+
+
+let x = 1
+//│ Lowered:
+//│ Assign:
+//│   lhs = module:block#0.x
+//│   rhs = Lit of IntLit of 1
+//│   rest = Return: \
+//│   res = Lit of UnitLit of true
+//│   implct = true
+//│ JS:
+//│ this.x = 1; undefined
+//│ x = 1
+
+
+
+
+
+class Some[out A](value: A)
+//│ Lowered:
+//│ Return:
+//│   res = Lit of UnitLit of true
+//│   implct = true
+//│ JS:
+//│ undefined
+
+// let Some(x) = Some(42)
+
+// :de
+// :elt
+:todo
+x => if x is
+  Some(0) then 0
+  else log("oops")
+//│ /!!!\ Uncaught error: scala.MatchError: If(Cons(Branch(Ref(x@25),Class(class:Some,Some(List($param0@27)),false),Cons(Branch(Ref($param0@27),LitPat(IntLit(0)),Else(Lit(IntLit(0)))),Nil)),Else(App(Ref(.log),Tup(List(Fld(‹›,Lit(StrLit(oops)),None))))))) (of class hkmc2.semantics.Term$If)
+
