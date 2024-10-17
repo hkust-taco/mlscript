@@ -16,6 +16,21 @@ new Foo
 //│ new Foo()
 //│ = Foo {}
 
+new Foo()
+//│ JS:
+//│ new Foo()
+//│ = Foo {}
+
+Foo
+//│ JS:
+//│ () => {  return new Foo() }
+//│ = [Function (anonymous)]
+
+Foo()
+//│ JS:
+//│ (() => {  return new Foo() })()
+//│ = Foo {}
+
 
 class Foo with
   val x = 1
@@ -115,15 +130,6 @@ log(a.bar(1))
 // ——— TODO ———
 
 
-class Foo
-//│ JS:
-//│ this.Foo = class Foo { constructor() { undefined } }; undefined
-
-:todo
-Foo
-//│ /!!!\ Uncaught error: scala.MatchError: class:Foo (of class hkmc2.semantics.ClassSymbol)
-
-
 // FIXME reject duplicated member names
 class Foo with
   val x = 1
@@ -135,10 +141,10 @@ class Foo with
 :fixme
 class Foo with val x = 1
 //│ ╔══[PARSE ERROR] Expected indented block after type declaration body; found 'val' keyword instead
-//│ ║  l.136: 	class Foo with val x = 1
+//│ ║  l.142: 	class Foo with val x = 1
 //│ ╙──       	               ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.136: 	class Foo with val x = 1
+//│ ║  l.142: 	class Foo with val x = 1
 //│ ╙──       	                   ^
 //│ JS:
 //│ /* error */

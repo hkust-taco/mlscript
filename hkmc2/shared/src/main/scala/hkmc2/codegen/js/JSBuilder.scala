@@ -45,7 +45,10 @@ class JSBuilder extends CodeBuilder:
     case Call(Value.Ref(l: semantics.MemberSymbol[?]), lhs :: rhs :: Nil) if builtinOps contains l.nme =>
       doc"${result(lhs)} ${l.nme} ${result(rhs)}"
     case Call(fun, args) =>
-      doc"${result(fun)}(${args.map(result).mkDocument(", ")})"
+      val base = fun match
+        case _: Value.Lam => doc"(${result(fun)})"
+        case _ => result(fun)
+      doc"${base}(${args.map(result).mkDocument(", ")})"
     case Value.Lam(ps, bod) => scope.nest givenIn:
       val vars = ps.map(p => scope.allocateName(p.sym)).mkDocument(", ")
       doc"($vars) => { #{  # ${

@@ -11,9 +11,29 @@ class Foo()
 //│ JS:
 //│ this.Foo = class Foo { constructor() { undefined } }; undefined
 
+Foo
+//│ JS:
+//│ () => {  return new Foo() }
+//│ = [Function (anonymous)]
+
+Foo()
+//│ JS:
+//│ (() => {  return new Foo() })()
+//│ = Foo {}
+
+
 class Foo(x)
 //│ JS:
 //│ this.Foo = class Foo { constructor() { undefined } }; undefined
 
+Foo
+//│ JS:
+//│ (x) => {  return new Foo(x) }
+//│ = [Function (anonymous)]
+
+Foo(1)
+//│ JS:
+//│ ((x) => {  return new Foo(x) })(1)
+//│ = Foo {}
 
 

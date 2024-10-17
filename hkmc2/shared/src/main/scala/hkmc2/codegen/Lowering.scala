@@ -53,8 +53,13 @@ class Lowering(using TL, Raise, Elaborator.State):
       sym match
       case sym: Local =>
         k(subst(Value.Ref(sym)))
-      // case sym: MemberSymbol[?] =>
-      //   k(subst(Value.Ref(sym)))
+      case sym: ClassSymbol =>
+        // k(subst(Value.Ref(sym)))
+        sym.defn match
+        case N => End("error: class has no declaration") // TODO report?
+        case S(cls) =>
+          val ps = cls.paramsOpt.getOrElse(Nil)
+          k(Value.Lam(ps, Return(Instantiate(sym, ps.map(p => Value.Ref(p.sym))), false)))
     case st.App(f, arg) =>
       arg match
       case Tup(fs) =>
