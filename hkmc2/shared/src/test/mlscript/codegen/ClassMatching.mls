@@ -6,12 +6,19 @@
 
 class Some[out A](value: A)
 
+module None
+
 
 let s = Some(0)
 //│ s = Some { value: 0 }
 
 if s is
   Some(x) then x
+//│ = 0
+
+if s is
+  Some(x) then x
+  None then 1
 //│ = 0
 
 if s is
@@ -22,14 +29,14 @@ if s is
 :sjs
 x => if x is Some(x) then x
 //│ JS:
-//│ (x1) => {
-//│   let param01, x2, tmp3;
-//│   if (x1 instanceof Some) {
-//│     param01 = x1.value;
-//│     x2 = param01;
-//│     tmp3 = x2;
+//│ (x2) => {
+//│   let param02, x3, tmp4;
+//│   if (x2 instanceof this.Some) {
+//│     param02 = x2.value;
+//│     x3 = param02;
+//│     tmp4 = x3;
 //│   }
-//│   return tmp3
+//│   return tmp4
 //│ }
 //│ = [Function (anonymous)]
 
@@ -38,24 +45,30 @@ x => if x is Some(x) then x
 :sjs
 fun f(x) = if x is
   Some(0) then 42
+  None then "ok"
   else log("oops")
 //│ JS:
-//│ function f(x1) {
-//│   let param01, tmp3, tmp4, tmp5;
-//│   if (x1 instanceof Some) {
-//│     param01 = x1.value;
-//│     if (param01 === 0) {
-//│       tmp3 = 42;
+//│ function f(x2) {
+//│   let param02, tmp4, tmp5, tmp6;
+//│   if (x2 instanceof this.Some) {
+//│     param02 = x2.value;
+//│     if (param02 === 0) {
+//│       tmp4 = 42;
 //│     } else {
-//│       tmp4 = log("oops");
-//│       tmp3 = tmp4;
+//│       tmp6 = log("oops");
+//│       tmp4 = tmp6;
 //│     }
-//│     return tmp3
+//│     return tmp4
 //│   } else {
-//│     tmp5 = log("oops");
-//│     tmp3 = tmp5;
+//│     if (x2 === this.None) {
+//│       tmp4 = "ok";
+//│     } else {
+//│       tmp5 = log("oops");
+//│       tmp4 = tmp5;
+//│     }
+//│     return tmp4
 //│   }
-//│   return tmp3
+//│   return tmp4
 //│ };
 //│ undefined
 
@@ -65,7 +78,46 @@ f(Some(0))
 f(Some(1))
 //│ > oops
 
+f(None)
+//│ = 'ok'
+
 f(0)
 //│ > oops
+
+
+class Pair[out A, out B](fst: A, snd: B)
+
+
+:sjs
+fun f(x) = if x is
+  Some(u) then u
+  Pair(a, b) then a + b
+//│ JS:
+//│ function f(x2) {
+//│   let param02, param1, a, b, param03, u, tmp6;
+//│   if (x2 instanceof this.Some) {
+//│     param03 = x2.value;
+//│     u = param03;
+//│     tmp6 = u;
+//│   } else {
+//│     if (x2 instanceof this.Pair) {
+//│       param02 = x2.fst;
+//│       param1 = x2.snd;
+//│       a = param02;
+//│       b = param1;
+//│       tmp6 = a + b;
+//│     }
+//│     return tmp6
+//│   }
+//│   return tmp6
+//│ };
+//│ undefined
+
+f(Some(123))
+//│ = 123
+
+f(Pair(10, 5))
+//│ = 15
+
 
 

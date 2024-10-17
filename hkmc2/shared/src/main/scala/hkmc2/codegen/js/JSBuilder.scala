@@ -35,6 +35,12 @@ class JSBuilder extends CodeBuilder:
         doc"${result(Value.This(owner))}.${ts.id.name}"
       case N =>
         ts.id.name
+    case ts: semantics.ClassSymbol => // TODO dedup
+      ts.owner match
+      case S(owner) =>
+        doc"${result(Value.This(owner))}.${ts.id.name}"
+      case N =>
+        ts.id.name
     case _ => summon[Scope].lookup_!(l)
   
   def result(r: Result)(using Raise, Scope): Document = r match
@@ -89,7 +95,12 @@ class JSBuilder extends CodeBuilder:
             } #}  # }"
           .mkDocument(" ")
         } #}  # }"
-        sym.owner match
+        if clsDefn.kind is syntax.Mod then sym.owner match
+        case S(owner) =>
+          assert(clsDefn.paramsOpt.isEmpty)
+          doc"${result(Value.This(owner))}.${sym.nme} = new ${clsJS}"
+        case N => doc"const ${sym.nme} = new $clsJS"
+        else sym.owner match
         case S(owner) =>
           doc"${result(Value.This(owner))}.${sym.nme} = ${clsJS}"
         case N => clsJS
@@ -108,8 +119,10 @@ class JSBuilder extends CodeBuilder:
       case N  => doc""
       t :: e :: returningTerm(rest)
     case Match(scrut, Case.Cls(cls) -> trm :: Nil, els, rest) =>
-      val t = doc" # if (${ result(scrut) } instanceof ${cls.nme // FIXME
-      }) { #{ ${
+      val test = cls.defn.getOrElse(die).kind match
+        case syntax.Mod => doc"=== ${getVar(cls)}"
+        case _ => doc"instanceof ${getVar(cls)}"
+      val t = doc" # if (${ result(scrut) } $test) { #{ ${
           returningTerm(trm)
         } #}  # }"
       val e = els match

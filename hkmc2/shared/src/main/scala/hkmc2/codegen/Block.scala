@@ -71,7 +71,8 @@ enum Case:
 
 sealed abstract class Result
 
-type Local = LocalSymbol
+// type Local = LocalSymbol
+type Local = Symbol
 
 case class Call(fun: Path, args: Ls[Path]) extends Result
 

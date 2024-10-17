@@ -115,6 +115,8 @@ sealed trait Statement extends AutoLocated:
       ps.toList.flatMap(_.flatMap(_.subTerms)) ::: sign.toList ::: body.toList
     case cls: ClassDef =>
       cls.paramsOpt.toList.flatMap(_.flatMap(_.subTerms)) ::: cls.body.blk :: Nil
+    case td: TypeDef =>
+      td.rhs.toList
   
   protected def children: Ls[Located] = this match
     case t: Lit => t.lit.asTree :: Nil
@@ -208,25 +210,31 @@ sealed abstract class ModuleDef extends Companion:
   val sym: ModuleSymbol
 
 sealed abstract class ClassDef extends Definition:
+  val kind: ClsLikeKind
   val sym: ClassSymbol
   val tparams: Ls[TyParam]
   val paramsOpt: Opt[Ls[Param]]
   val body: ObjBody
   val companion: Opt[Companion]
 object ClassDef:
-  def apply(sym: ClassSymbol, tparams: Ls[TyParam], paramsOpt: Opt[Ls[Param]], body: ObjBody): ClassDef =
+  def apply(kind: ClsLikeKind, sym: ClassSymbol, tparams: Ls[TyParam], paramsOpt: Opt[Ls[Param]], body: ObjBody): ClassDef =
     paramsOpt match
-      case S(params) => Parameterized(sym, tparams, params, body, N)
-      case N => Plain(sym, tparams, body, N)
+      case S(params) => Parameterized(kind, sym, tparams, params, body, N)
+      case N => Plain(kind, sym, tparams, body, N)
   def unapply(cls: ClassDef): Opt[(ClassSymbol, Ls[TyParam], Opt[Ls[Param]], ObjBody)] =
     S((cls.sym, cls.tparams, cls.paramsOpt, cls.body))
-  case class Parameterized(sym: ClassSymbol, tparams: Ls[TyParam], params: Ls[Param], body: ObjBody, companion: Opt[ModuleDef]) extends ClassDef:
+  case class Parameterized(kind: ClsLikeKind, sym: ClassSymbol, tparams: Ls[TyParam], params: Ls[Param], body: ObjBody, companion: Opt[ModuleDef]) extends ClassDef:
     val paramsOpt: Opt[Ls[Param]] = S(params)
-  case class Plain(sym: ClassSymbol, tparams: Ls[TyParam], body: ObjBody, companion: Opt[Companion]) extends ClassDef:
+  case class Plain(kind: ClsLikeKind, sym: ClassSymbol, tparams: Ls[TyParam], body: ObjBody, companion: Opt[Companion]) extends ClassDef:
     val paramsOpt: Opt[Ls[Param]] = N
 end ClassDef
 
-case class TypeDef(sym: TypeAliasSymbol, companion: Opt[Companion]) extends Statement
+case class TypeDef(
+  sym: TypeAliasSymbol,
+  tparams: Ls[TyParam],
+  rhs: Opt[Term],
+  companion: Opt[Companion]
+) extends Definition
 
 // TODO Store optional source locations for the flags instead of booleans
 final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool):

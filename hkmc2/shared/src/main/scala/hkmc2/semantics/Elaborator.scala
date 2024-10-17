@@ -273,7 +273,12 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
         log(s"Found TypeDef ${td.name}")
         td.name match
           case R(id) =>
-            lazy val s = ClassSymbol(ctx.outer, id)
+            lazy val s =
+              td.k match
+                case Als => TypeAliasSymbol(id)
+                // case Cls => // TODO
+                case _ =>
+                  ClassSymbol(ctx.outer, id)
             newMembers.get(id.name) match
               // TODO pair up companions
               case S(sym) =>
@@ -407,20 +412,32 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
 
           // case _ => ???
         val (nme, _, _, _) = processHead(head) // ! FIXME dumb!!!! recomputation
-        val sym = newMembers(nme.name).asInstanceOf[ClassSymbol] // TODO improve
-        ctx.nest(S(sym)).givenIn:
-          val (nme, tps, ps, newCtx) = processHead(head)
-          log(s"Processing type definition $nme")
-          // log(s"newMembers: ${newMembers.keys}")
-          val cd =
-            given Ctx = newCtx
-            val (bod, c) = body match
-              case S(Tree.Block(sts)) => block(sts)
-              case S(t) => block(t :: Nil)
-              case N => (new Term.Blk(Nil, Term.Lit(UnitLit(true))), ctx)
-            ClassDef(sym, tps, ps, ObjBody(bod))
-          sym.defn = S(cd)
-          go(sts, cd :: acc)
+        k match
+        case Als =>
+          val sym = newMembers(nme.name).asInstanceOf[TypeAliasSymbol] // TODO improve
+          ctx.nest(S(sym)).givenIn:
+            val (nme, tps, ps, newCtx) = processHead(head)
+            assert(ps.isEmpty)
+            assert(body.isEmpty)
+            val d =
+              given Ctx = newCtx
+              semantics.TypeDef(sym, tps, extension.map(term), N)
+            sym.defn = S(d)
+            go(sts, d :: acc)
+        case k: ClsLikeKind =>
+          val sym = newMembers(nme.name).asInstanceOf[ClassSymbol] // TODO improve
+          ctx.nest(S(sym)).givenIn:
+            val (nme, tps, ps, newCtx) = processHead(head)
+            log(s"Processing type definition $nme")
+            val cd =
+              given Ctx = newCtx
+              val (bod, c) = body match
+                case S(Tree.Block(sts)) => block(sts)
+                case S(t) => block(t :: Nil)
+                case N => (new Term.Blk(Nil, Term.Lit(UnitLit(true))), ctx)
+              ClassDef(k, sym, tps, ps, ObjBody(bod))
+            sym.defn = S(cd)
+            go(sts, cd :: acc)
       case Modified(Keyword.`abstract`, absLoc, body) :: sts =>
         // TODO: pass abstract to `go`
         go(body :: sts, acc)
@@ -519,15 +536,27 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
         lhs.resolveSymbol match
           case S(sym: ClassSymbol) =>
             sym.defn match
-              case S(td: ClassDef) =>
-                if td.tparams.sizeCompare(targs) =/= 0 then
-                  raise(ErrorReport(msg"Wrong number of type arguments" -> trm.toLoc :: Nil)) // TODO BE
-                td.tparams.zip(targs).foreach:
-                  case (tp, targ) =>
-                    if !tp.isContravariant then traverseType(pol)(targ)
-                    if !tp.isCovariant then traverseType(pol.!)(targ)
-              case N =>
-                TODO(sym->sym.uid)
+            case S(td: ClassDef) =>
+              if td.tparams.sizeCompare(targs) =/= 0 then
+                raise(ErrorReport(msg"Wrong number of type arguments" -> trm.toLoc :: Nil)) // TODO BE
+              td.tparams.zip(targs).foreach:
+                case (tp, targ) =>
+                  if !tp.isContravariant then traverseType(pol)(targ)
+                  if !tp.isCovariant then traverseType(pol.!)(targ)
+            case N =>
+              TODO(sym->sym.uid)
+          case S(sym: TypeAliasSymbol) =>
+            // TODO dedup with above...
+            sym.defn match
+            case S(td: semantics.TypeDef) =>
+              if td.tparams.sizeCompare(targs) =/= 0 then
+                raise(ErrorReport(msg"Wrong number of type arguments" -> trm.toLoc :: Nil)) // TODO BE
+              td.tparams.zip(targs).foreach:
+                case (tp, targ) =>
+                  if !tp.isContravariant then traverseType(pol)(targ)
+                  if !tp.isCovariant then traverseType(pol.!)(targ)
+            case N =>
+              TODO(sym->sym.uid)
           case S(sym) => ???
           case N => ???
       case Term.Ref(sym: VarSymbol) =>

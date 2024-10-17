@@ -45,21 +45,24 @@ class Lowering(using TL, Raise, Elaborator.State):
   def returnedTerm(t: st)(using Subst): Block = term(t)(Ret)
   
   def term(t: st)(k: Result => Block)(using Subst): Block = t match
-    case st.Lit(lit) => 
+    case st.Lit(lit) =>
       k(Value.Lit(lit))
     case st.Ret(res) =>
       returnedTerm(res)
     case st.Ref(sym) =>
       sym match
-      case sym: Local =>
+      case sym: LocalSymbol =>
         k(subst(Value.Ref(sym)))
       case sym: ClassSymbol =>
         // k(subst(Value.Ref(sym)))
         sym.defn match
         case N => End("error: class has no declaration") // TODO report?
-        case S(cls) =>
-          val ps = cls.paramsOpt.getOrElse(Nil)
-          k(Value.Lam(ps, Return(Instantiate(sym, ps.map(p => Value.Ref(p.sym))), false)))
+        case S(clsDefn) =>
+          if clsDefn.kind is syntax.Mod then
+            k(Value.Ref(sym))
+          else
+            val ps = clsDefn.paramsOpt.getOrElse(Nil)
+            k(Value.Lam(ps, Return(Instantiate(sym, ps.map(p => Value.Ref(p.sym))), false)))
     case st.App(f, arg) =>
       arg match
       case Tup(fs) =>
@@ -172,8 +175,10 @@ class Lowering(using TL, Raise, Elaborator.State):
             Assign(sym, r, go(tl))
         case Split.Cons(Branch(scrut, pat, tl), restSplit) =>
           val elseBranch = restSplit match
-            case Split.Else(els) => S(els)
             case Split.Nil => N
+            case Split.Else(els) => S(subTerm(els)(r => Assign(l, r, End())))
+            case _ => S:
+              go(restSplit)
           subTerm(scrut): sr =>
             val cse = pat match
               case Pattern.LitPat(lit) => Case.Lit(lit) -> go(tl)
@@ -191,7 +196,7 @@ class Lowering(using TL, Raise, Elaborator.State):
                     (cse, Assign(arg, Select(sr, param.sym.id/*FIXME incorrect Ident?*/), blk))
                 mkArgs(clsParams.zip(args))
             Match(sr, cse :: Nil,
-              elseBranch.map(els => subTerm(els)(r => Assign(l, r, End()))),
+              elseBranch,
               k(Value.Ref(l))
             )
         case Split.Else(els) =>

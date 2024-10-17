@@ -102,7 +102,7 @@ object Ctx:
     builtinClasses.foreach: (cls, tps) =>
       predefs.get(cls) match
         case Some(cls: ClassSymbol) =>
-          ctx *= ClassDef.Plain(cls, tps, ObjBody(Term.Blk(Nil, Term.Lit(Tree.UnitLit(true)))), None)
+          ctx *= ClassDef.Plain(Cls, cls, tps, ObjBody(Term.Blk(Nil, Term.Lit(Tree.UnitLit(true)))), None)
         case _ => ???
     (builtinOps ++ builtinVals).foreach: p =>
       predefs.get(p._1) match
@@ -318,10 +318,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
     case Split.Cons(Branch(scrutinee, Pattern.Class(sym, _, _), cons), alts) =>
       // * Pattern matching
       val (clsTy, tv, emptyTy) = ctx.getDef(sym.nme) match
-        case S(ClassDef.Parameterized(_, tparams, _, _, _)) =>
-          (ClassType(sym, tparams.map(_ => freshWildcard)), freshVar, ClassType(sym, tparams.map(_ => Wildcard.empty)))
-        case S(ClassDef.Plain(_, tparams, _, _)) =>
-          (ClassType(sym, tparams.map(_ => freshWildcard)), freshVar, ClassType(sym, tparams.map(_ => Wildcard.empty)))
+        case S(cls) =>
+          (ClassType(sym, cls.tparams.map(_ => freshWildcard)), freshVar, ClassType(sym, cls.tparams.map(_ => Wildcard.empty)))
         case _ =>
           error(msg"Cannot match ${scrutinee.toString} as ${sym.toString}" -> split.toLoc :: Nil)
           (Bot, Bot, Bot)
@@ -484,22 +482,21 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       case Term.SelProj(term, Term.Ref(cls: ClassSymbol), field) =>
         val (ty, eff) = typeCheck(term)
         cls.defn match
-          case S(ClassDef.Parameterized(_, tparams, params, _, _)) =>
+          case S(clsDfn) =>
             val map = HashMap[Uid[Symbol], TypeArg]()
-            val targs = tparams.map {
+            val targs = clsDfn.tparams.map {
               case TyParam(_, _, targ) =>
                 val ty = freshWildcard
                 map += targ.uid -> ty
                 ty
             }
             constrain(tryMkMono(ty, term), ClassType(cls, targs))
-            (params.map {
+            (clsDfn.paramsOpt.getOrElse(Nil).map {
               case Param(_, sym, sign) =>
                 if sym.nme == field.name then sign else N
             }.filter(_.isDefined)) match
               case S(res) :: Nil => (typeAndSubstType(res, pol = true)(using map.toMap), eff)
               case _ => (error(msg"${field.name} is not a valid member in class ${cls.nme}" -> t.toLoc :: Nil), Bot)
-          case S(ClassDef.Plain(_, tparams, _, _)) => ??? // TODO
           case N => 
             (error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil), Bot)
       case Term.App(lhs, Term.Tup(rhs)) =>
@@ -507,12 +504,12 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         app((funTy, lhsEff), rhs, t)
       case Term.New(cls, args) =>
         cls.defn match
-        case S(ClassDef.Parameterized(_, tparams, params, _, _)) =>
-          if args.length != params.length then
+        case S(clsDfn: ClassDef.Parameterized) =>
+          if args.length != clsDfn.params.length then
             (error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil), Bot)
           else
             val map = HashMap[Uid[Symbol], TypeArg]()
-            val targs = tparams.map {
+            val targs = clsDfn.tparams.map {
               case TyParam(_, S(_), targ) =>
                 val ty = freshVar
                 map += targ.uid -> ty
@@ -524,14 +521,14 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
                 ty
             }
             val effBuff = ListBuffer.empty[Type]
-            args.iterator.zip(params).foreach {
+            args.iterator.zip(clsDfn.params).foreach {
               case (arg, Param(_, _, S(sign))) =>
                 val (ty, eff) = ascribe(arg, typeAndSubstType(sign, pol = true)(using map.toMap))
                 effBuff += eff
               case _ => ???
             }
             (ClassType(cls, targs), effBuff.foldLeft[Type](Bot)((res, e) => res | e))
-        case S(ClassDef.Plain(_, tparams, _, _)) => ??? // TODO
+        case S(clsDfn: ClassDef.Plain) => ??? // TODO
         case N => 
           (error(msg"Class definition not found: ${cls.nme}" -> t.toLoc :: Nil), Bot)
       case Term.Asc(term, ty) =>
