@@ -168,7 +168,8 @@ abstract class DiffMaker:
           unexpected("warning", blockLineNum)
       case Diagnostic.Kind.Internal =>
         failures += globalStartLineNum
-        unexpected("internal error", blockLineNum)
+        // unexpected("internal error", blockLineNum)
+        throw d
       report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
     
     processOrigin(origin)(using raise)

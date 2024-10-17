@@ -390,7 +390,20 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
                 raise(ErrorReport(msg"Mistmatched closing ${k1.name}" -> S(l1) ::
                   msg"does not correspond to opening ${k0.name}" -> S(l0) :: Nil,
                   source = Parsing))
-              go(rest, true, stack, BRACKETS(k0, acc.reverse)(l0.right ++ l1.left) -> (l0 ++ l1) :: oldAcc)
+              val accr = acc match
+                // * This is to flatten nested brackets like `BRACES(INDENT(acc))`
+                // * ie to make:
+                // *    foo {
+                // *      a
+                // *      b
+                // *      c
+                // *    }
+                // * parse the same as:
+                // *    foo { a, b, c }
+                case (BRACKETS(Indent, acc), _) :: Nil if k0 is Curly => acc
+                case (NEWLINE, _) :: (BRACKETS(Indent, acc), _) :: Nil if k0 is Curly => acc
+                case _ => acc.reverse
+              go(rest, true, stack, BRACKETS(k0, accr)(l0.right ++ l1.left) -> (l0 ++ l1) :: oldAcc)
             case Nil =>
               raise(ErrorReport(msg"Unexpected closing ${k1.name}" -> S(l1) :: Nil,
                 source = Parsing))

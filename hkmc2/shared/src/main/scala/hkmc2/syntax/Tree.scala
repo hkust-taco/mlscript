@@ -48,7 +48,8 @@ enum Tree extends AutoLocated:
   case BoolLit(value: Bool)           extends Tree with Literal
   case Block(stmts: Ls[Tree])
   case OpBlock(items: Ls[Tree -> Tree])
-  case Let(lhs: Tree, rhs: Tree, body: Opt[Tree])
+  case Let(lhs: Tree, rhs: Opt[Tree], body: Opt[Tree])
+  case Def(lhs: Tree, rhs: Tree)
   // case TermDef(k: TermDefKind, symName: Opt[Tree], alphaName: Opt[Tree], sign: Opt[Tree], rhs: Opt[Tree])
   case TermDef(k: TermDefKind, symName: Opt[Tree], alphaName: Opt[Tree], rhs: Opt[Tree]) extends Tree with TermDefImpl
   case TypeDef(k: TypeDefKind, symName: Opt[Tree], head: Tree, extension: Opt[Tree], body: Opt[Tree]) extends Tree with TypeDefImpl
@@ -75,7 +76,7 @@ enum Tree extends AutoLocated:
     case Block(stmts) => stmts
     case OpBlock(items) => items.flatMap:
       case (op, body) => op :: body :: Nil
-    case Let(lhs, rhs, body) => Ls(lhs, rhs) ++ body
+    case Let(lhs, rhs, body) => lhs :: Nil ++ rhs ++ body
     case TypeDef(k, symName, head, extension, body) =>
       symName.toList ++ Ls(head) ++ extension ++ body
     case Modified(_, _, body) => Ls(body)
@@ -126,6 +127,11 @@ enum Tree extends AutoLocated:
     case Effectful(eff, body) => "effectful"
   
   def showDbg: Str = toString // TODO
+  
+  lazy val desugared: Tree = this match
+    case Modified(Keyword.`mut`, modLoc, TermDef(ImmutVal, snme, anme, rhs)) =>
+      TermDef(MutVal, snme, anme, rhs)
+    case _ => this
 
 object Tree:
   object Block:
@@ -145,8 +151,8 @@ object PlainTup:
 
 object Apps:
   def unapply(t: Tree): Opt[(Ident, Ls[Tup])] = t match
-    case App(id: Ident, args: Tup) => S(id, args :: Nil)
     case App(Apps(id, args), arg: Tup) => S(id, args :+ arg)
+    case id: Ident => S(id -> Nil)
     case _ => N
 
 
@@ -154,7 +160,9 @@ sealed abstract class OuterKind(val desc: Str)
 case object BlockKind extends OuterKind("block")
 sealed abstract class DeclKind(desc: Str) extends OuterKind(desc)
 sealed abstract class TermDefKind(val str: Str, desc: Str) extends DeclKind(desc)
-case object Val extends TermDefKind("val", "value")
+sealed abstract class Val(str: Str, desc: Str) extends TermDefKind(str, desc)
+case object ImmutVal extends Val("val", "value")
+case object MutVal extends Val("mut val", "mutable value")
 case object Fun extends TermDefKind("fun", "function")
 sealed abstract class TypeDefKind(desc: Str) extends DeclKind(desc)
 sealed trait ObjDefKind

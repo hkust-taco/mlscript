@@ -1,0 +1,33 @@
+:js
+
+:import PredefJS.mls
+//│ Imported 1 member(s)
+
+
+:sjs
+module None
+//│ JS:
+//│ this.None = new class None { constructor() { undefined } }; undefined
+
+
+:sjs
+None
+//│ JS:
+//│ this.None
+//│ = None {}
+
+:sjs
+:re
+None()
+//│ JS:
+//│ this.None()
+//│ ═══[RUNTIME ERROR] TypeError: this.None is not a function
+
+:sjs
+:re
+new None
+//│ JS:
+//│ new None()
+//│ ═══[RUNTIME ERROR] TypeError: None is not a constructor
+
+

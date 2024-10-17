@@ -85,7 +85,7 @@ x =>
  x
  42
 //│ Parsed:
-//│ 	App(Ident(+),Tup(List(IntLit(1), Block(List(Let(Ident(x),IntLit(2),None), TypeDef(Cls,None,Ident(A),None,None), Ident(x), IntLit(42))))))
+//│ 	App(Ident(+),Tup(List(IntLit(1), Block(List(Let(Ident(x),Some(IntLit(2)),None), TypeDef(Cls,None,Ident(A),None,None), Ident(x), IntLit(42))))))
 
 :pe
 1 +

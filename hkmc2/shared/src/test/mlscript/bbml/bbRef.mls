@@ -130,12 +130,12 @@ region x in
 let t =
   region x in
     y => x.ref y
-  in t(42)
+in t(42)
 //│ ╔══[ERROR] Type error in block
 //│ ║  l.132: 	    y => x.ref y
 //│ ║         	    ^^^^^^^^^^^^
-//│ ║  l.133: 	  in t(42)
-//│ ║         	^^^^^^^^^^
+//│ ║  l.133: 	in t(42)
+//│ ║         	^^^^^^^^
 //│ ╟── because: cannot constrain  (α77_1 ∨ α72_1) ∨ Alloc  <:  Alloc
 //│ ╟── because: cannot constrain  α77_1  <:  ¬(~{Alloc})
 //│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc})

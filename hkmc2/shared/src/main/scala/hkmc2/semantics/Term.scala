@@ -105,7 +105,8 @@ sealed trait Statement extends AutoLocated:
     case Forall(_, body) => body :: Nil
     case WildcardTy(in, out) => in.toList ++ out.toList
     case CompType(lhs, rhs, _) => lhs :: rhs :: Nil
-    case LetBinding(pat, rhs) => rhs :: Nil
+    case LetDecl(sym) => Nil
+    case DefineVar(sym, rhs) => rhs :: Nil
     case Region(_, body) => body :: Nil
     case RegRef(reg, value) => reg :: value :: Nil
     case Assgn(lhs, rhs) => lhs :: rhs :: Nil
@@ -114,6 +115,8 @@ sealed trait Statement extends AutoLocated:
       ps.toList.flatMap(_.flatMap(_.subTerms)) ::: sign.toList ::: body.toList
     case cls: ClassDef =>
       cls.paramsOpt.toList.flatMap(_.flatMap(_.subTerms)) ::: cls.body.blk :: Nil
+    case td: TypeDef =>
+      td.rhs.toList
   
   protected def children: Ls[Located] = this match
     case t: Lit => t.lit.asTree :: Nil
@@ -159,7 +162,8 @@ sealed trait Statement extends AutoLocated:
     case New(cls, args) => s"new ${cls.toString}(${args.mkString(", ")})"
     case SelProj(pre, cls, proj) => s"${pre.showDbg}.${cls.showDbg}#${proj.name}"
     case Asc(term, ty) => s"${term.toString}: ${ty.toString}"
-    case LetBinding(pat, rhs) => s"let ${pat.showDbg} = ${rhs.showDbg}"
+    case LetDecl(sym) => s"let ${sym}"
+    case DefineVar(sym, rhs) => s"${sym} = ${rhs.showDbg}"
     case Region(name, body) => s"region ${name.nme} in ${body.showDbg}"
     case RegRef(reg, value) => s"(${reg.showDbg}).ref ${value.showDbg}"
     case Assgn(lhs, rhs) => s"${lhs.showDbg} := ${rhs.showDbg}"
@@ -179,7 +183,9 @@ sealed trait Statement extends AutoLocated:
         cls.tparams.map(_.showDbg).mkStringOr(", ", "[", "]")}${
         cls.paramsOpt.fold("")(_.map(_.showDbg).mkString("(", ", ", ")"))} ${cls.body}"
 
-final case class LetBinding(pat: Pattern, rhs: Term) extends Statement
+final case class LetDecl(sym: LocalSymbol) extends Statement
+
+final case class DefineVar(sym: LocalSymbol, rhs: Term) extends Statement
 
 final case class TermDefinition(
     k: TermDefKind,
@@ -204,25 +210,31 @@ sealed abstract class ModuleDef extends Companion:
   val sym: ModuleSymbol
 
 sealed abstract class ClassDef extends Definition:
+  val kind: ClsLikeKind
   val sym: ClassSymbol
   val tparams: Ls[TyParam]
   val paramsOpt: Opt[Ls[Param]]
   val body: ObjBody
   val companion: Opt[Companion]
 object ClassDef:
-  def apply(sym: ClassSymbol, tparams: Ls[TyParam], paramsOpt: Opt[Ls[Param]], body: ObjBody): ClassDef =
+  def apply(kind: ClsLikeKind, sym: ClassSymbol, tparams: Ls[TyParam], paramsOpt: Opt[Ls[Param]], body: ObjBody): ClassDef =
     paramsOpt match
-      case S(params) => Parameterized(sym, tparams, params, body, N)
-      case N => Plain(sym, tparams, body, N)
+      case S(params) => Parameterized(kind, sym, tparams, params, body, N)
+      case N => Plain(kind, sym, tparams, body, N)
   def unapply(cls: ClassDef): Opt[(ClassSymbol, Ls[TyParam], Opt[Ls[Param]], ObjBody)] =
     S((cls.sym, cls.tparams, cls.paramsOpt, cls.body))
-  case class Parameterized(sym: ClassSymbol, tparams: Ls[TyParam], params: Ls[Param], body: ObjBody, companion: Opt[ModuleDef]) extends ClassDef:
+  case class Parameterized(kind: ClsLikeKind, sym: ClassSymbol, tparams: Ls[TyParam], params: Ls[Param], body: ObjBody, companion: Opt[ModuleDef]) extends ClassDef:
     val paramsOpt: Opt[Ls[Param]] = S(params)
-  case class Plain(sym: ClassSymbol, tparams: Ls[TyParam], body: ObjBody, companion: Opt[Companion]) extends ClassDef:
+  case class Plain(kind: ClsLikeKind, sym: ClassSymbol, tparams: Ls[TyParam], body: ObjBody, companion: Opt[Companion]) extends ClassDef:
     val paramsOpt: Opt[Ls[Param]] = N
 end ClassDef
 
-case class TypeDef(sym: TypeAliasSymbol, companion: Opt[Companion]) extends Statement
+case class TypeDef(
+  sym: TypeAliasSymbol,
+  tparams: Ls[TyParam],
+  rhs: Opt[Term],
+  companion: Opt[Companion]
+) extends Definition
 
 // TODO Store optional source locations for the flags instead of booleans
 final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool):

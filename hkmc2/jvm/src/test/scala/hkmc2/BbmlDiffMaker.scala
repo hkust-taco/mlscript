@@ -15,13 +15,14 @@ abstract class BbmlDiffMaker extends JSBackendDiffMaker:
       importFile("bbPredef.mls", verbose = false)
   
   
-  lazy val bbCtx = bbml.Ctx.init(_ => die, curCtx.members)
+  lazy val bbCtx =
+    bbml.Ctx.init(_ => die, curCtx.allMembers)
   
   
   var bbmlTyper: Opt[BBTyper] = None
   
   
-  override def processTerm(trm: semantics.Term, inImport: Bool)(using Raise): Unit =
+  override def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Raise): Unit =
     super.processTerm(trm, inImport)
     if bbmlOpt.isSet && !inImport then
       if bbmlTyper.isEmpty then

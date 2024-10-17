@@ -52,7 +52,7 @@ object Scope:
   
   def scope(using scp: Scope): Scope = scp
   
-  val empty: Scope = Scope(None, MutMap.empty)
+  def empty: Scope = Scope(None, MutMap.empty)
   
   def replaceTicks(str: Str): Str = str.replace('\'', '$')
   

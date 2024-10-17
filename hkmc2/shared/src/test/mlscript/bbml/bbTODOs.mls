@@ -3,7 +3,7 @@
 
 :todo
 let id: [A] -> A -> A = x => x
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ /!!!\ Uncaught error: scala.MatchError: Let(InfixApp(Ident(id),keyword ':',InfixApp(TyTup(List(Ident(A))),keyword '->',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))),Some(InfixApp(Tup(List(Ident(x))),keyword '=>',Ident(x))),None) (of class hkmc2.syntax.Tree$Let)
 
 :todo
 fun id[A](x: A) = x
@@ -20,6 +20,6 @@ fun id: [A] -> A -> A => x = x
 //│ ╔══[ERROR] Name not found: x
 //│ ║  l.16: 	fun id: [A] -> A -> A => x = x
 //│ ╙──      	                         ^
-//│ /!!!\ Uncaught error: scala.MatchError: Lam(List(Param(‹›,A@40,None)),Error) (of class hkmc2.semantics.Term$Lam)
+//│ /!!!\ Uncaught error: scala.MatchError: Lam(List(Param(‹›,A@46,None)),Error) (of class hkmc2.semantics.Term$Lam)
 
 

@@ -1,0 +1,89 @@
+:js
+:sjs
+
+
+// FIXME multiline result is treated as part stdout
+declare val console
+//│ JS:
+//│ undefined
+//│ > Object [console] {
+//│ >   log: [Function: log],
+//│ >   warn: [Function: warn],
+//│ >   error: [Function: error],
+//│ >   dir: [Function: dir],
+//│ >   time: [Function: time],
+//│ >   timeEnd: [Function: timeEnd],
+//│ >   timeLog: [Function: timeLog],
+//│ >   trace: [Function: trace],
+//│ >   assert: [Function: assert],
+//│ >   clear: [Function: clear],
+//│ >   count: [Function: count],
+//│ >   countReset: [Function: countReset],
+//│ >   group: [Function: group],
+//│ >   groupEnd: [Function: groupEnd],
+//│ >   table: [Function: table],
+//│ >   debug: [Function: debug],
+//│ >   info: [Function: error],
+//│ >   dirxml: [Function: dirxml],
+//│ >   groupCollapsed: [Function: groupCollapsed],
+//│ >   Console: [Function: Console],
+//│ >   profile: [Function: profile],
+//│ >   profileEnd: [Function: profileEnd],
+//│ >   timeStamp: [Function: timeStamp],
+//│ >   context: [Function: context],
+//│ >   createTask: [Function: createTask]
+//│ console = }
+
+
+console.log("a")
+console.log("b")
+123
+//│ JS:
+//│ let tmp, tmp1; tmp = this.console.log("a"); tmp1 = this.console.log("b"); 123
+//│ > a
+//│ > b
+//│ = 123
+
+let l = console.log
+l(123)
+//│ JS:
+//│ this.l = this.console.log; this.l(123)
+//│ > 123
+//│ l = [Function: log]
+
+42
+//│ JS:
+//│ 42
+//│ = 42
+
+
+console.log("a")
+//│ JS:
+//│ this.console.log("a")
+//│ > a
+
+
+let x =
+  console.log("a")
+  123
+console.log("b")
+let y = x + 1
+console.log("c")
+y * 2
+//│ JS:
+//│ let tmp2, tmp3, tmp4, tmp5;
+//│ tmp2 = this.console.log("a");
+//│ this.x = 123;
+//│ tmp3 = this.console.log("b");
+//│ tmp4 = this.x + 1;
+//│ this.y = tmp4;
+//│ tmp5 = this.console.log("c");
+//│ this.y * 2
+//│ > a
+//│ > b
+//│ > c
+//│ = 248
+//│ x = 123
+//│ y = 124
+
+

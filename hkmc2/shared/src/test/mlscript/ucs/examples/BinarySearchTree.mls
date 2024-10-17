@@ -67,7 +67,7 @@ insert(Node(1, Node(0, Empty, Empty), Empty), 0) |> show
 insert(Node(1, Node(0, Empty, Empty), Empty), 2) |> show
 
 fun fromList(l) =
-  let fromList'(t, xs) =
+  fun fromList'(t, xs) =
     if xs is
       Cons(x, xs') then fromList'(insert(t, x), xs')
       Nil then t

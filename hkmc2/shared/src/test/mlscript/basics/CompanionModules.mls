@@ -1,0 +1,17 @@
+
+
+:todo
+class Test with
+  fun hi = 0
+module Test with
+  fun test = 1
+//│ ╔══[ERROR] Duplicate definition of Test
+//│ ║  l.6: 	module Test with
+//│ ║       	       ^^^^^^^^^
+//│ ║  l.7: 	  fun test = 1
+//│ ║       	^^^^^^^^^^^^^^
+//│ ╟── aready defined here
+//│ ║  l.6: 	module Test with
+//│ ╙──     	       ^^^^
+
+

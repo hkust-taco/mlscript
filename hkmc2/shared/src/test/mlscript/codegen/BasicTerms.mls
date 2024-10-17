@@ -1,9 +1,10 @@
 :js
+:sjs
 
 
 1
 //│ JS:
-//│ let res; res = 1;
+//│ 1
 //│ = 1
 
 :lot
@@ -11,22 +12,21 @@
 1
 2
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.11: 	1
+//│ ║  l.12: 	1
 //│ ╙──      	^
 //│ Lowered:
-//│ Assign:
-//│   lhs = res
-//│   rhs = Lit of IntLit of 2
-//│   rest = End of ""
+//│ Return:
+//│   res = Lit of IntLit of 2
+//│   implct = true
 //│ JS:
-//│ let res; res = 2;
+//│ 2
 //│ = 2
 
 
-:fixme
+:fixme // should be a "linking" error
 log("Hi")
 //│ JS:
-//│ let res, tmp; tmp = log("Hi"); res = tmp;
+//│ log("Hi")
 //│ ═══[RUNTIME ERROR] ReferenceError: log is not defined
 
 :fixme
@@ -35,24 +35,23 @@ log("Hi")
 2
 //│ Lowered:
 //│ Assign:
-//│   lhs = $tmp@27
+//│   lhs = $tmp@26
 //│   rhs = Call:
-//│     fun = Ref of log
+//│     fun = Ref of .log
 //│     args = Ls of 
 //│       Lit of StrLit of "Hi"
-//│   rest = Assign: \
-//│   lhs = res
-//│   rhs = Lit of IntLit of 2
-//│   rest = End of ""
+//│   rest = Return: \
+//│   res = Lit of IntLit of 2
+//│   implct = true
 //│ JS:
-//│ let res, tmp; tmp = log("Hi"); res = 2;
+//│ let tmp; tmp = log("Hi"); 2
 //│ ═══[RUNTIME ERROR] ReferenceError: log is not defined
 
 
 :re
 2(2)
 //│ JS:
-//│ let res, tmp; tmp = 2(2); res = tmp;
+//│ 2(2)
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not a function
 
 

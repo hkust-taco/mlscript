@@ -56,7 +56,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       if doTrace then super.trace(pre, post)(thunk)
       else thunk
   
-  var curCtx = Elaborator.Ctx.init
+  var curCtx = Elaborator.Ctx.init.nest(N)
   
   override def run(): Unit =
     if file =/= predefFile then importFile(predefFile, verbose = false)
@@ -88,10 +88,13 @@ abstract class MLsDiffMaker extends DiffMaker:
     given Elaborator.Ctx = curCtx
     val elab = Elaborator(etl)
     try
-      val (e, imports) = elab.importFrom(res)
+      val oldSymbols = curCtx.allMembers.valuesIterator.toSet
+      val (e, newCtx) = elab.importFrom(res)
+      val imports = newCtx.allMembers.filterNot(kv => oldSymbols.contains(kv._2))
+      // TODO don't pick up allMembers! just pick anything on top of the original ctx
       if verbose then
-        output(s"Imported ${imports.members.size} members")
-      curCtx = curCtx.copy(members = curCtx.members ++ imports.members)
+        output(s"Imported ${imports.size} member(s)")
+      curCtx = curCtx.copy(members = curCtx.members ++ imports)
       processTerm(e, inImport = true)
     catch
       case err: Throwable =>
@@ -139,9 +142,13 @@ abstract class MLsDiffMaker extends DiffMaker:
           output(s"  $k -> $v")
   
   
+  private var blockNum = 0
+  
   def processTrees(trees: Ls[syntax.Tree])(using Raise): Unit =
     val elab = Elaborator(etl)
-    given Elaborator.Ctx = curCtx
+    val blockSymbol = semantics.ModuleSymbol(syntax.Tree.Ident("block#"+blockNum))
+    blockNum += 1
+    given Elaborator.Ctx = curCtx.nest(S(blockSymbol))
     val (e, newCtx) = elab.topLevel(trees)
     curCtx = newCtx
     // If elaborated tree is displayed, don't show the string serialization.
@@ -153,7 +160,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     processTerm(e, inImport = false)
   
   
-  def processTerm(trm: semantics.Term, inImport: Bool)(using Raise): Unit =
+  def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Raise): Unit =
     if typeCheck.isSet then
       val typer = typing.TypeChecker()
       val ty = typer.typeProd(trm)

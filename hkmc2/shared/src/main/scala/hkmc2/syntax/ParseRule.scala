@@ -59,6 +59,11 @@ object ParseRule:
   def modified(kw: Keyword, body: Alt[Tree]) =
     Kw(kw)(ParseRule(s"modifier keyword '${kw.name}'")(body)).map(Tree.Modified(kw, N, _))
   
+  def exprOrBlk[Rest, Res](body: ParseRule[Rest])(k: (Tree, Rest) => Res): List[Alt[Res]] =
+    Expr(body)(k) ::
+    Blk(body)(k) ::
+    Nil
+  
   val typeDeclTemplate: Alt[Opt[Tree]] =
     Kw(`with`):
       ParseRule("type declaration body")(
@@ -108,7 +113,7 @@ object ParseRule:
       )
   
   def typeDeclBody(k: TypeDefKind): ParseRule[TypeDef] =
-    ParseRule("type declaration start"):
+    ParseRule("type declaration keyword"):
       Expr(
         ParseRule("type declaration head")(
           End((N, N, N)),
@@ -149,10 +154,10 @@ object ParseRule:
     Kw(`let`):
       ParseRule("'let' binding keyword")(
         Expr(
-          ParseRule("'let' binding head"):
+          ParseRule("'let' binding head")(
             Kw(`=`):
-              ParseRule("'let' binding equals sign"):
-                Expr(
+              ParseRule("'let' binding equals sign")(
+                exprOrBlk(
                   ParseRule("'let' binding right-hand side")(
                     Kw(`in`):
                       ParseRule("'let' binding `in` clause"):
@@ -160,7 +165,14 @@ object ParseRule:
                     ,
                     End(N)
                   )
-                ) { (rhs, body) => (rhs, body) }
+                ) { (rhs, body) => (S(rhs), body) }*
+              ),
+            Kw(`in`):
+              ParseRule("'let' binding `in` clause"):
+                Expr(ParseRule("'let' binding body")(End(())))((body, _: Unit) => S(body) -> N)
+            ,
+            End(N -> N)
+          )
         ) { case (lhs, (rhs, body)) => Let(lhs, rhs, body) }
         ,
         // Blk(
@@ -236,7 +248,7 @@ object ParseRule:
         ) { case (name, body) => Region(name, body) }
     ,
     Kw(`fun`)(termDefBody(Fun)),
-    Kw(`val`)(termDefBody(Val)),
+    Kw(`val`)(termDefBody(ImmutVal)),
     Kw(`type`):
       ParseRule("type alias declaration"):
         Expr(
@@ -261,6 +273,7 @@ object ParseRule:
     modified(`private`),
     modified(`out`),
     modified(`return`),
+    // modified(`type`),
     standaloneExpr,
     Kw(`true`)(ParseRule("'true' keyword")(End(BoolLit(true)))),
     Kw(`false`)(ParseRule("'false' keyword")(End(BoolLit(false)))),
@@ -297,7 +310,7 @@ object ParseRule:
           ParseRule(s"'${k.str}' binding block")(End(()))
         ) { case (rhs, _) => S(rhs) }
       )
-
+  
   def genInfixRule[A](kw: Keyword, k: (Tree, Unit) => A): Alt[A] =
     Kw(kw):
       ParseRule(s"'${kw}' operator")(

@@ -1,0 +1,15 @@
+:js
+
+
+// TODO raise initialization error at CT and RT
+// TODO show undefined-valued defined bindings
+val a = b
+val b = 1
+//│ b = 1
+
+
+val a = ()
+
+a
+
+
