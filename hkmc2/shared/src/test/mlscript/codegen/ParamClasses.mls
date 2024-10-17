@@ -24,7 +24,7 @@ Foo()
 
 class Foo(x)
 //│ JS:
-//│ this.Foo = class Foo { constructor() { undefined } }; undefined
+//│ this.Foo = class Foo { constructor(x) { this.x = x; undefined } }; undefined
 
 Foo
 //│ JS:
@@ -34,6 +34,6 @@ Foo
 Foo(1)
 //│ JS:
 //│ ((x) => {  return new Foo(x) })(1)
-//│ = Foo {}
+//│ = Foo { x: 1 }
 
 

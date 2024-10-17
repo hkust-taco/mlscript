@@ -129,8 +129,11 @@ class Lowering(using TL, Raise, Elaborator.State):
       
     case st.Lam(params, body) =>
       k(Value.Lam(params, returnedTerm(body)))
+    
     case t @ st.If(Split.Let(sym, trm, tl)) =>
       term(st.Blk(semantics.LetDecl(sym) :: semantics.DefineVar(sym, trm) :: Nil, st.If(tl)(t.normalized)))(k)
+    
+    // TODO rm
     case st.If(Split.Cons(
       Branch(scrut, Pattern.LitPat(tru @ Tree.BoolLit(true)), Split.Else(thn)),
       restSplit
@@ -159,6 +162,43 @@ class Lowering(using TL, Raise, Elaborator.State):
               k(Value.Ref(l))
             )
     
+    case iftrm: st.If =>
+      
+      val l = new TempSymbol(summon[Elaborator.State].nextUid, S(t))
+      
+      def go(split: Split)(using Subst): Block = split match
+        case Split.Let(sym, trm, tl) =>
+          term(trm): r =>
+            Assign(sym, r, go(tl))
+        case Split.Cons(Branch(scrut, pat, tl), restSplit) =>
+          val elseBranch = restSplit match
+            case Split.Else(els) => S(els)
+            case Split.Nil => N
+          subTerm(scrut): sr =>
+            val cse = pat match
+              case Pattern.LitPat(lit) => Case.Lit(lit) -> go(tl)
+              case Pattern.Class(cls, args0, _refined) =>
+                val args = args0.getOrElse(Nil)
+                val clsDefn = cls.defn.getOrElse(die)
+                val clsParams = clsDefn.paramsOpt.getOrElse(Nil)
+                assert(args0.isEmpty || clsParams.length === args.length)
+                def mkArgs(args: Ls[Param -> BlockLocalSymbol])(using Subst): Case -> Block = args match
+                  case Nil => Case.Cls(cls) -> go(tl)
+                  case (param, arg) :: args =>
+                    // summon[Subst].+(arg -> Value.Ref(new TempSymbol(summon[Elaborator.State].nextUid, N)))
+                    // Assign(arg, Select(sr, Tree.Ident("head")), mkArgs(args))
+                    val (cse, blk) = mkArgs(args)
+                    (cse, Assign(arg, Select(sr, param.sym.id/*FIXME incorrect Ident?*/), blk))
+                mkArgs(clsParams.zip(args))
+            Match(sr, cse :: Nil,
+              elseBranch.map(els => subTerm(els)(r => Assign(l, r, End()))),
+              k(Value.Ref(l))
+            )
+        case Split.Else(els) =>
+          term(els)(r => Assign(l, r, End()))
+      
+      go(iftrm.normalized)
+      
     case Sel(prefix, nme) =>
       subTerm(prefix): p =>
         k(Select(p, nme))

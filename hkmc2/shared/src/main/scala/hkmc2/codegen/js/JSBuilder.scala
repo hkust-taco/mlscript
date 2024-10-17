@@ -69,10 +69,18 @@ class JSBuilder extends CodeBuilder:
         val vars = ps.map(p => scope.allocateName(p.sym)).mkDocument(", ")
         doc"function ${sym.nme}($vars) { #{  # ${body(bod)} #}  # }"
       case ClsDefn(sym, syntax.Cls, mtds, flds, ctor) =>
+        val clsDefn = sym.defn.getOrElse(die)
+        val clsParams = clsDefn.paramsOpt.getOrElse(Nil)
+        val ctorParams = clsParams.map(p => p.sym -> scope.allocateName(p.sym))
+        val ctorCode = ctorParams.foldRight(body(ctor)):
+          case ((sym, nme), acc) =>
+            doc" # this.${sym.name} = $nme;${acc}"
         val clsJS = doc"class ${sym.nme} { #{ ${
           flds.map(f => doc" # #${f.nme};").mkDocument(doc"")
-        } # constructor() { #{ ${
-          body(ctor)
+        } # constructor(${
+          ctorParams.unzip._2.mkDocument(", ")
+        }) { #{ ${
+          ctorCode
         } #}  # }${
           mtds.map: td =>
             val vars = td.params.get.map(p => scope.allocateName(p.sym)).mkDocument(", ")
@@ -88,6 +96,8 @@ class JSBuilder extends CodeBuilder:
       doc" # ${defnJS};${returningTerm(rst)}"
     case Return(res, true) => doc" # ${result(res)}"
     case Return(res, false) => doc" # return ${result(res)}"
+    
+    // TODO factor out common logic
     case Match(scrut, Case.Lit(syntax.Tree.BoolLit(true)) -> trm :: Nil, els, rest) =>
       val t = doc" # if (${ result(scrut) }) { #{ ${
           returningTerm(trm)
@@ -97,6 +107,26 @@ class JSBuilder extends CodeBuilder:
         doc" else { #{ ${ returningTerm(el) } #}  # }"
       case N  => doc""
       t :: e :: returningTerm(rest)
+    case Match(scrut, Case.Cls(cls) -> trm :: Nil, els, rest) =>
+      val t = doc" # if (${ result(scrut) } instanceof ${cls.nme // FIXME
+      }) { #{ ${
+          returningTerm(trm)
+        } #}  # }"
+      val e = els match
+      case S(el) =>
+        doc" else { #{ ${ returningTerm(el) } #}  # }"
+      case N  => doc""
+      t :: e :: returningTerm(rest)
+    case Match(scrut, Case.Lit(lit) -> trm :: Nil, els, rest) =>
+      val t = doc" # if (${ result(scrut) } === ${lit.idStr}) { #{ ${
+          returningTerm(trm)
+        } #}  # }"
+      val e = els match
+      case S(el) =>
+        doc" else { #{ ${ returningTerm(el) } #}  # }"
+      case N  => doc""
+      t :: e :: returningTerm(rest)
+    
     case End("") => doc""
     case End(msg) =>
       doc" # /* $msg */"

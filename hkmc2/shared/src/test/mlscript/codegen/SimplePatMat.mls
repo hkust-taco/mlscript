@@ -3,45 +3,9 @@
 
 class Some[out A](value: A)
 
-:todo
-x => if x is Some(x) then x
-//│ /!!!\ Uncaught error: scala.MatchError: If(Cons(Branch(Ref(x@24),Class(class:Some,Some(List($param0@25)),false),Let(x@26,Ref($param0@25),Else(Ref(x@26)))),Nil)) (of class hkmc2.semantics.Term$If)
 
 :todo
-:elt
-x => if x is
-  Some(0) then 0
-  else log("oops")
-//│ Elaborated tree:
-//│ Blk:
-//│   stats = Nil
-//│   res = Lam:
-//│     params = Ls of 
-//│       Param:
-//│         flags = ()
-//│         sym = x@28
-//│         sign = N
-//│     body = If of Cons:
-//│       head = Branch:
-//│         scrutinee = Ref of x@28
-//│         pattern = Class:
-//│           nme = class:Some
-//│           parameters = S of Ls of 
-//│             $param0@30
-//│           refined = false
-//│         continuation = Cons:
-//│           head = Branch:
-//│             scrutinee = Ref of $param0@30
-//│             pattern = LitPat of IntLit of 0
-//│             continuation = Else of Lit of IntLit of 0
-//│           tail = Nil
-//│       tail = Else of App:
-//│         lhs = Ref of .log
-//│         rhs = Tup of Ls of 
-//│           Fld:
-//│             flags = ()
-//│             value = Lit of StrLit of "oops"
-//│             asc = N
-//│ /!!!\ Uncaught error: scala.MatchError: If(Cons(Branch(Ref(x@28),Class(class:Some,Some(List($param0@30)),false),Cons(Branch(Ref($param0@30),LitPat(IntLit(0)),Else(Lit(IntLit(0)))),Nil)),Else(App(Ref(.log),Tup(List(Fld(‹›,Lit(StrLit(oops)),None))))))) (of class hkmc2.semantics.Term$If)
+let Some(x) = Some(42)
+//│ /!!!\ Uncaught error: scala.MatchError: Let(App(Ident(Some),Tup(List(Ident(x)))),Some(App(Ident(Some),Tup(List(IntLit(42))))),None) (of class hkmc2.syntax.Tree$Let)
 
 

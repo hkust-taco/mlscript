@@ -1,23 +1,71 @@
 :js
-:sjs
+
+:import PredefJS.mls
+//│ Imported 1 member(s)
 
 
 class Some[out A](value: A)
+
+
+let s = Some(0)
+//│ s = Some { value: 0 }
+
+if s is
+  Some(x) then x
+//│ = 0
+
+if s is
+  Some then s.value
+//│ = 0
+
+
+:sjs
+x => if x is Some(x) then x
 //│ JS:
-//│ this.Some = class Some { constructor() { undefined } }; undefined
+//│ (x1) => {
+//│   let param01, x2, tmp3;
+//│   if (x1 instanceof Some) {
+//│     param01 = x1.value;
+//│     x2 = param01;
+//│     tmp3 = x2;
+//│   }
+//│   return tmp3
+//│ }
+//│ = [Function (anonymous)]
 
 
-:todo
-let Some(x) = Some(42)
-//│ /!!!\ Uncaught error: scala.MatchError: Let(App(Ident(Some),Tup(List(Ident(x)))),Some(App(Ident(Some),Tup(List(IntLit(42))))),None) (of class hkmc2.syntax.Tree$Let)
-
-
-// :de
-// :elt
-:todo
-x => if x is
-  Some(0) then 0
+// TODO produce simpler code (see: useless bindings)
+:sjs
+fun f(x) = if x is
+  Some(0) then 42
   else log("oops")
-//│ /!!!\ Uncaught error: scala.MatchError: If(Cons(Branch(Ref(x@25),Class(class:Some,Some(List($param0@27)),false),Cons(Branch(Ref($param0@27),LitPat(IntLit(0)),Else(Lit(IntLit(0)))),Nil)),Else(App(Ref(.log),Tup(List(Fld(‹›,Lit(StrLit(oops)),None))))))) (of class hkmc2.semantics.Term$If)
+//│ JS:
+//│ function f(x1) {
+//│   let param01, tmp3, tmp4, tmp5;
+//│   if (x1 instanceof Some) {
+//│     param01 = x1.value;
+//│     if (param01 === 0) {
+//│       tmp3 = 42;
+//│     } else {
+//│       tmp4 = log("oops");
+//│       tmp3 = tmp4;
+//│     }
+//│     return tmp3
+//│   } else {
+//│     tmp5 = log("oops");
+//│     tmp3 = tmp5;
+//│   }
+//│   return tmp3
+//│ };
+//│ undefined
+
+f(Some(0))
+//│ = 42
+
+f(Some(1))
+//│ > oops
+
+f(0)
+//│ > oops
 
 
