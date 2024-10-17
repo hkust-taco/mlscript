@@ -59,6 +59,11 @@ object ParseRule:
   def modified(kw: Keyword, body: Alt[Tree]) =
     Kw(kw)(ParseRule(s"modifier keyword '${kw.name}'")(body)).map(Tree.Modified(kw, N, _))
   
+  def exprOrBlk[Rest, Res](body: ParseRule[Rest])(k: (Tree, Rest) => Res): List[Alt[Res]] =
+    Expr(body)(k) ::
+    Blk(body)(k) ::
+    Nil
+  
   val typeDeclTemplate: Alt[Opt[Tree]] =
     Kw(`with`):
       ParseRule("type declaration body")(
@@ -108,7 +113,7 @@ object ParseRule:
       )
   
   def typeDeclBody(k: TypeDefKind): ParseRule[TypeDef] =
-    ParseRule("type declaration start"):
+    ParseRule("type declaration keyword"):
       Expr(
         ParseRule("type declaration head")(
           End((N, N, N)),
@@ -261,6 +266,7 @@ object ParseRule:
     modified(`private`),
     modified(`out`),
     modified(`return`),
+    // modified(`type`),
     standaloneExpr,
     Kw(`true`)(ParseRule("'true' keyword")(End(BoolLit(true)))),
     Kw(`false`)(ParseRule("'false' keyword")(End(BoolLit(false)))),
@@ -297,7 +303,7 @@ object ParseRule:
           ParseRule(s"'${k.str}' binding block")(End(()))
         ) { case (rhs, _) => S(rhs) }
       )
-
+  
   def genInfixRule[A](kw: Keyword, k: (Tree, Unit) => A): Alt[A] =
     Kw(kw):
       ParseRule(s"'${kw}' operator")(

@@ -310,6 +310,7 @@ abstract class Parser(
           case _ =>
             parseRule(kw.assumeRightPrec, subRule)
         case N =>
+          printDbg(s"$$ cannot find a rule starting with: ${id.name}")
           rule.exprAlt match
           case S(exprAlt) =>
             consume
@@ -323,7 +324,6 @@ abstract class Parser(
           case N =>
             tryEmpty(tok, loc)
       case N =>
-        printDbg(s"$$ cannot find a rule starting with: ${id.name}")
         tryParseExp(prec, tok, loc, rule)
     case (tok @ NEWLINE, l0) :: (id: IDENT, l1) :: _ if rule.kwAlts.contains(id.name) =>
       consume
@@ -333,7 +333,8 @@ abstract class Parser(
       rule.emptyAlt match
         case S(res) => S(res)
         case N =>
-          err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> lastLoc :: Nil))
+          // err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> lastLoc :: Nil))
+          err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(l0) :: Nil))
           N
     case (br @ BRACKETS(Indent, toks), loc) :: _ =>
       // rule.blkAlt match
@@ -582,7 +583,7 @@ abstract class Parser(
   final def exprCont(acc: Tree, prec: Int, allowNewlines: Bool)(using Line): Tree =
     wrap(prec, s"`$acc`", allowNewlines)(exprContImpl(acc, prec, allowNewlines))
   final def exprContImpl(acc: Tree, prec: Int, allowNewlines: Bool): Tree =
-    cur match {
+    cur match
       case (QUOTE, l) :: _ => cur match {
         case _ :: (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ if kw.leftPrecOrMin > prec =>
           consume
@@ -628,6 +629,9 @@ abstract class Parser(
         val rhs = Blk(typingUnit.entities)
         R(Lam(PlainTup(acc), rhs))
         */
+      // case (KEYWORD(kw @ (Keyword.`=`)), l0) :: _ if kw.leftPrecOrMin > prec =>
+      //   consume
+      //   ???
       case (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ if kw.leftPrecOrMin > prec =>
         consume
         val rhs = effectfulRhs(kw.rightPrecOrMin)
@@ -840,7 +844,6 @@ abstract class Parser(
       case Nil =>
         printDbg(s"stops at the end of input")
         acc
-    }
   
 
 

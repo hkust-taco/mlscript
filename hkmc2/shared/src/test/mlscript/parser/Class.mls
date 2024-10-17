@@ -3,7 +3,7 @@
 
 :pe
 class
-//│ ╔══[PARSE ERROR] Expected expression after type declaration start; found end of input instead
+//│ ╔══[PARSE ERROR] Expected expression after type declaration keyword; found end of input instead
 //│ ║  l.5: 	class
 //│ ╙──     	     ^
 //│ Parsed:
@@ -88,9 +88,11 @@ class
 :pe
 class
 Foo
-//│ ╔══[PARSE ERROR] Expected expression after type declaration start; found newline instead
+//│ ╔══[PARSE ERROR] Expected expression after type declaration keyword; found newline instead
+//│ ║  l.89: 	class
+//│ ║        	     ^
 //│ ║  l.90: 	Foo
-//│ ╙──      	   ^
+//│ ╙──      	
 //│ Parsed:
 //│ 	Error()
 //│ 	Ident(Foo)
@@ -100,9 +102,9 @@ class
   Foo
 extends Bar
 //│ ╔══[PARSE ERROR] Expected end of input; found newline instead
-//│ ║  l.100: 	  Foo
+//│ ║  l.102: 	  Foo
 //│ ║         	     ^
-//│ ║  l.101: 	extends Bar
+//│ ║  l.103: 	extends Bar
 //│ ╙──       	
 //│ Parsed:
 //│ 	TypeDef(Cls,None,Ident(Foo),None,None)

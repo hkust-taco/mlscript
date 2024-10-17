@@ -126,6 +126,11 @@ enum Tree extends AutoLocated:
     case Effectful(eff, body) => "effectful"
   
   def showDbg: Str = toString // TODO
+  
+  lazy val desugared: Tree = this match
+    case Modified(Keyword.`type`, modLoc, InfixApp(lhs, Keyword.`=`, rhs)) =>
+      TypeDef(Als, N, lhs, N, S(rhs))
+    case _ => this
 
 object Tree:
   object Block:

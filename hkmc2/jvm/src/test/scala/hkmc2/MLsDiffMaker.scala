@@ -153,7 +153,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     processTerm(e, inImport = false)
   
   
-  def processTerm(trm: semantics.Term, inImport: Bool)(using Raise): Unit =
+  def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Raise): Unit =
     if typeCheck.isSet then
       val typer = typing.TypeChecker()
       val ty = typer.typeProd(trm)

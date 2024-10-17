@@ -115,8 +115,10 @@ let
 x = 1
 in x
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found newline instead
-//│ ║  l.116: 	in x
-//│ ╙──       	    ^
+//│ ║  l.114: 	let
+//│ ║         	   ^
+//│ ║  l.115: 	x = 1
+//│ ╙──       	
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
 //│ ║  l.115: 	x = 1
 //│ ╙──       	  ^
@@ -128,7 +130,7 @@ in x
 let
   with
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found 'with' keyword instead
-//│ ║  l.129: 	  with
+//│ ║  l.131: 	  with
 //│ ╙──       	  ^^^^
 //│ Parsed:
 //│ 	Error()
@@ -169,7 +171,7 @@ x =>
 x => let x = 1
   x
 //│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.170: 	  x
+//│ ║  l.172: 	  x
 //│ ╙──       	  ^
 //│ Parsed:
 //│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Let(Ident(x),IntLit(1),None))
@@ -178,7 +180,7 @@ x => let x = 1
 :pe
 if
 //│ ╔══[PARSE ERROR] Expected expression or indented block after `if` keyword; found end of input instead
-//│ ║  l.179: 	if
+//│ ║  l.181: 	if
 //│ ╙──       	  ^
 //│ Parsed:
 //│ 	Error()

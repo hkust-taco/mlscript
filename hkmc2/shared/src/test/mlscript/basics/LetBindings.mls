@@ -13,4 +13,12 @@ x
 let z = 3
 x + y + z
 
+:pe
+let x =
+  log("computing x")
+  123
+//│ ╔══[PARSE ERROR] Unexpected literal here
+//│ ║  l.19: 	  123
+//│ ╙──      	  ^^^
+
 

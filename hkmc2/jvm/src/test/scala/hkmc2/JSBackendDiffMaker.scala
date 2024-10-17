@@ -21,7 +21,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   override def run(): Unit =
     try super.run() finally if hostCreated then host.terminate()
   
-  override def processTerm(trm: semantics.Term, inImport: Bool)(using Raise): Unit =
+  override def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Raise): Unit =
     super.processTerm(trm, inImport)
     if js.isSet then
       val low = codegen.Lowering()

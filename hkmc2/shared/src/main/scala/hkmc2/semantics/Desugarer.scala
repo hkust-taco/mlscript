@@ -369,21 +369,21 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
    *  @return a function that takes the tail of the split and a context
    */
   def expandMatch(scrutSymbol: BlockLocalSymbol, pattern: Tree, sequel: Sequel): Split => Sequel =
-    val ref = () => scrutSymbol.ref(/* FIXME ident? */)
+    def ref = scrutSymbol.ref(/* FIXME ident? */)
     pattern match
       // A single wildcard pattern.
       case Ident("_") => _ => ctx => sequel(ctx)
       // A single variable pattern or constructor pattern without parameters.
       case ctor: Ident => fallback => ctx => ctx.members.get(ctor.name) match
         case S(sym: ClassSymbol) => // TODO: refined
-          Branch(ref(), Pattern.Class(sym, N, false)(ctor), sequel(ctx)) :: fallback
+          Branch(ref, Pattern.Class(sym, N, false)(ctor), sequel(ctx)) :: fallback
         case S(_: VarSymbol) | N =>
           // If the identifier refers to a variable or nothing, we interpret it
           // as a variable pattern. If `fallback` is not used when `sequel`
           // is full, then we raise an error.
           val aliasSymbol = VarSymbol(ctor, nextUid)
           val ctxWithAlias = ctx + (ctor.name -> aliasSymbol)
-          Split.Let(aliasSymbol, ref(), sequel(ctxWithAlias) ++ fallback)
+          Split.Let(aliasSymbol, ref, sequel(ctxWithAlias) ++ fallback)
         case S(_) =>
           // Raise an error and discard `sequel`. Use `fallback` instead.
           raise(ErrorReport(msg"Unknown symbol `${ctor.name}`." -> ctor.toLoc :: Nil))
@@ -403,7 +403,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
             val params = scrutSymbol.getSubScrutinees(cls)
             val clsRef = cls.ref(ctor)
             Branch(
-              ref(),
+              ref,
               Pattern.Class(cls, S(params), false)(ctor), // TODO: refined?
               subMatches(params zip args, sequel)(Split.Nil)(ctx)
             ) :: fallback
@@ -416,7 +416,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
         pre = s"expandMatch: literal <<< $literal",
         post = (r: Split) => s"expandMatch: literal >>> ${r.showDbg}"
       ):
-        Branch(ref(), Pattern.LitPat(literal), sequel(ctx)) :: fallback
+        Branch(ref, Pattern.LitPat(literal), sequel(ctx)) :: fallback
       // A single pattern in conjunction with more conditions
       case pattern and consequent => fallback => ctx => 
         val innerSplit = termSplit(consequent, identity)(Split.Nil)

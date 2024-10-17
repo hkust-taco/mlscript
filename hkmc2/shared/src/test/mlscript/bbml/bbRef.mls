@@ -130,12 +130,13 @@ region x in
 let t =
   region x in
     y => x.ref y
-  in t(42)
+in t(42)
+//│ ═══[ERROR] Illegal position for 'in' modifier.
 //│ ╔══[ERROR] Type error in block
 //│ ║  l.132: 	    y => x.ref y
 //│ ║         	    ^^^^^^^^^^^^
-//│ ║  l.133: 	  in t(42)
-//│ ║         	^^^^^^^^^^
+//│ ║  l.133: 	in t(42)
+//│ ║         	^^^^^^^^
 //│ ╟── because: cannot constrain  (α77_1 ∨ α72_1) ∨ Alloc  <:  Alloc
 //│ ╟── because: cannot constrain  α77_1  <:  ¬(~{Alloc})
 //│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc})
@@ -174,6 +175,6 @@ bar
 :e
 region x in x.ref bar
 //│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but (forall α103_2: (α103_2) ->{⊥} α103_2) ->{⊥} Int found
-//│ ║  l.175: 	region x in x.ref bar
+//│ ║  l.176: 	region x in x.ref bar
 //│ ╙──       	                  ^^^
 //│ Type: Ref[⊥, ?]
