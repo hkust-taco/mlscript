@@ -53,6 +53,14 @@ final case class TermDefn(
     body: Block,
 ) extends Defn
 
+final case class ClsDefn(
+  sym: ClassSymbol,
+  k: syntax.ClsLikeKind,
+  methods: Ls[TermDefn],
+  fields: Ls[TermSymbol],
+  ctor: Block,
+) extends Defn
+
 /* Represents either unreachable code (for functions that must return a result)
  * or the end of a non-returning function or a REPL block */
 case class End(msg: Str = "") extends Block with ProductWithTail
@@ -66,6 +74,8 @@ sealed abstract class Result
 type Local = LocalSymbol
 
 case class Call(fun: Path, args: Ls[Path]) extends Result
+
+case class Instantiate(cls: ClassSymbol, args: Ls[Path]) extends Result
 
 abstract class Path extends Result
 

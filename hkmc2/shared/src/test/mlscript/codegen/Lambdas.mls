@@ -1,0 +1,12 @@
+:js
+:sjs
+
+
+x =>
+  let y = x
+  y
+//│ JS:
+//│ (x) => { let y; y = x; return y }
+//│ = [Function (anonymous)]
+
+

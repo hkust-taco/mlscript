@@ -7,6 +7,7 @@ import utils.*
 import document.*
 
 import Scope.scope
+import hkmc2.syntax.ImmutVal
 
 
 // TODO factor some logic for other codegen backends
@@ -52,6 +53,8 @@ class JSBuilder extends CodeBuilder:
       } #}  # }"
     case Select(qual, name) =>
       doc"${result(qual)}.${name.name}"
+    case Instantiate(sym, as) =>
+      doc"new ${sym.nme}(${as.map(result).mkDocument(", ")})"
   def returningTerm(t: Block)(using Raise, Scope): Document = t match
     case Assign(l, r, rst) =>
       doc" # ${getVar(l)} = ${result(r)};${returningTerm(rst)}"
@@ -62,6 +65,23 @@ class JSBuilder extends CodeBuilder:
       case TermDefn(syntax.Fun, sym, S(ps), bod) =>
         val vars = ps.map(p => scope.allocateName(p.sym)).mkDocument(", ")
         doc"function ${sym.nme}($vars) { #{  # ${body(bod)} #}  # }"
+      case ClsDefn(sym, syntax.Cls, mtds, flds, ctor) =>
+        val clsJS = doc"class ${sym.nme} { #{ ${
+          flds.map(f => doc" # #${f.nme};").mkDocument(doc"")
+        } # constructor() { #{ ${
+          body(ctor)
+        } #}  # }${
+          mtds.map: td =>
+            val vars = td.params.get.map(p => scope.allocateName(p.sym)).mkDocument(", ")
+            doc" # ${td.sym.nme}($vars) { #{  # ${
+              body(td.body)
+            } #}  # }"
+          .mkDocument(" ")
+        } #}  # }"
+        sym.owner match
+        case S(owner) =>
+          doc"${result(Value.This(owner))}.${sym.nme} = ${clsJS}"
+        case N => clsJS
       doc" # ${defnJS};${returningTerm(rst)}"
     case Return(res, true) => doc" # ${result(res)}"
     case Return(res, false) => doc" # return ${result(res)}"

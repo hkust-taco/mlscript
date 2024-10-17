@@ -2,13 +2,13 @@
 :!typeCheck
 
 :import ../prelude/List.mls
-//│ Imported 28 members
+//│ Imported 4 member(s)
 
 :import ../prelude/Option.mls
-//│ Imported 31 members
+//│ Imported 3 member(s)
 
 :import ../prelude/String.mls
-//│ Imported 33 members
+//│ Imported 2 member(s)
 
 fun (|>) pipe(x, f) = f(x)
 

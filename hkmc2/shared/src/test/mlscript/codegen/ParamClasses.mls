@@ -1,0 +1,19 @@
+:js
+
+:import PredefJS.mls
+//│ Imported 1 member(s)
+
+:global
+:sjs
+
+
+class Foo()
+//│ JS:
+//│ this.Foo = class Foo { constructor() { undefined } }; undefined
+
+class Foo(x)
+//│ JS:
+//│ this.Foo = class Foo { constructor() { undefined } }; undefined
+
+
+

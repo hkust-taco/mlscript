@@ -1,0 +1,146 @@
+:js
+
+:import PredefJS.mls
+//│ Imported 1 member(s)
+
+:global
+:sjs
+
+
+class Foo
+//│ JS:
+//│ this.Foo = class Foo { constructor() { undefined } }; undefined
+
+new Foo
+//│ JS:
+//│ new Foo()
+//│ = Foo {}
+
+
+class Foo with
+  val x = 1
+  let y = 2
+  fun z() = 3
+//│ JS:
+//│ this.Foo = class Foo {
+//│   #y;
+//│   constructor() {
+//│     this.x = 1;
+//│     this.y = 2;
+//│     undefined
+//│   }
+//│   z() {
+//│     
+//│     return 3
+//│   }
+//│ };
+//│ undefined
+
+
+class Foo with
+  val x1 = 1
+  val x2 = 2
+  let y1 = 3
+  let y2 = 4
+  fun z1() = 5
+  fun z2() = 6
+  log("hello")
+//│ JS:
+//│ this.Foo = class Foo {
+//│   #y1;
+//│   #y2;
+//│   constructor() {
+//│     this.x1 = 1;
+//│     this.x2 = 2;
+//│     this.y1 = 3;
+//│     this.y2 = 4;
+//│     log("hello")
+//│   }
+//│   z1() {
+//│     
+//│     return 5
+//│   } 
+//│   z2() {
+//│     
+//│     return 6
+//│   }
+//│ };
+//│ undefined
+
+
+class Foo with
+  val x = 1
+  fun foo(y) = x + y
+  fun bar(z) = foo(z) + 1
+//│ JS:
+//│ this.Foo = class Foo {
+//│   constructor() {
+//│     this.x = 1;
+//│     undefined
+//│   }
+//│   foo(y) {
+//│     
+//│     return this.x + y
+//│   } 
+//│   bar(z) {
+//│     let tmp;
+//│     tmp = this.foo(z);
+//│     return tmp + 1
+//│   }
+//│ };
+//│ undefined
+
+let a = new Foo
+log(a.x)
+log(a.foo(1))
+log(a.bar(1))
+//│ JS:
+//│ let tmp, tmp1, tmp2, tmp3, tmp4;
+//│ tmp = new Foo();
+//│ this.a = tmp;
+//│ tmp1 = log(this.a.x);
+//│ tmp2 = this.a.foo(1);
+//│ tmp3 = log(tmp2);
+//│ tmp4 = this.a.bar(1);
+//│ log(tmp4)
+//│ > 1
+//│ > 2
+//│ > 3
+//│ a = Foo { x: 1 }
+
+
+
+
+
+// ——— TODO ———
+
+
+class Foo
+//│ JS:
+//│ this.Foo = class Foo { constructor() { undefined } }; undefined
+
+:todo
+Foo
+//│ /!!!\ Uncaught error: scala.MatchError: class:Foo (of class hkmc2.semantics.ClassSymbol)
+
+
+// FIXME reject duplicated member names
+class Foo with
+  val x = 1
+  let x = 2
+//│ JS:
+//│ this.Foo = class Foo { #x; constructor() { this.x = 1; this.x = 2; undefined } }; undefined
+
+
+:fixme
+class Foo with val x = 1
+//│ ╔══[PARSE ERROR] Expected indented block after type declaration body; found 'val' keyword instead
+//│ ║  l.136: 	class Foo with val x = 1
+//│ ╙──       	               ^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
+//│ ║  l.136: 	class Foo with val x = 1
+//│ ╙──       	                   ^
+//│ JS:
+//│ /* error */
+
+

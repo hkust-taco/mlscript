@@ -3,9 +3,9 @@
 
 
 :import ../prelude/List.mls
-//│ Imported 28 members
+//│ Imported 4 member(s)
 :import ../prelude/String.mls
-//│ Imported 30 members
+//│ Imported 2 member(s)
 
 
 fun (|>) pipe(x, f) = f(x)

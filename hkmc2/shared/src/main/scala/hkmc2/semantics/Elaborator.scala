@@ -22,7 +22,7 @@ object Elaborator:
     lazy val allMembers: Map[Str, Symbol] = parent.fold(Map.empty)(_.allMembers) ++ members
   object Ctx:
     val empty: Ctx = Ctx(N, N, Map.empty, Map.empty)
-    val globalThisSymbol = TermSymbol(N, Ident("globalThis"))
+    val globalThisSymbol = TermSymbol(ImmutVal, N, Ident("globalThis"))
     def init(using State): Ctx = empty.copy(members = Map(
       "globalThis" -> globalThisSymbol
     ))
@@ -138,13 +138,18 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
       Term.Sel(term(pre), nme)
     case tree @ Tup(fields) =>
       Term.Tup(fields.map(fld(_)))(tree)
-    case New(body) => body match
-      case App(Ident(cls), Tup(params)) =>
-        ctx.get(cls) match
-          case S(sym: ClassSymbol) => Term.New(sym, params.map(term))
+    case New(body) =>
+      def go(clsId: Ident, as: Ls[Tree]) =
+        ctx.get(clsId.name) match
+          case S(sym: ClassSymbol) => Term.New(sym, as.map(term)).withLocOf(tree)
           case _ =>
-            raise(ErrorReport(msg"Class $cls not found." -> tree.toLoc :: Nil))
+            raise(ErrorReport(msg"Class '${clsId.name}' not found." -> tree.toLoc :: Nil))
             Term.Error
+      body match
+      case App(clsId: Ident, Tup(params)) =>
+        go(clsId, params)
+      case clsId: Ident =>
+        go(clsId, Nil)
       case _ =>
         raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
         Term.Error
@@ -233,7 +238,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
   def unit: Term.Lit = Term.Lit(UnitLit(true))
   
   def block(_sts: Ls[Tree])(using c: Ctx): (Term.Blk, Ctx) = trace[(Term.Blk, Ctx)](
-    pre = s"Elab block ${_sts.toString.truncate(20, "[...]")}", r => s"~> ${r._1}"
+    pre = s"Elab block ${_sts.toString.truncate(20, "[...]")} ${ctx.outer}", r => s"~> ${r._1}"
   ):
     val sts = _sts.map(_.desugared)
     val newMembers = mutable.Map.empty[Str, MemberSymbol[?]] // * Definitions with implementations
@@ -244,7 +249,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
         log(s"Found TermDef ${td.name}")
         td.name match
           case R(id) =>
-            lazy val sym = TermSymbol(ctx.outer, id)
+            lazy val sym = TermSymbol(td.k, ctx.outer, id)
             val members = if td.signature.isEmpty then newMembers else newSignatures
             members.get(id.name) match
               case S(sym) =>
@@ -268,7 +273,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
         log(s"Found TypeDef ${td.name}")
         td.name match
           case R(id) =>
-            lazy val s = ClassSymbol(id)
+            lazy val s = ClassSymbol(ctx.outer, id)
             newMembers.get(id.name) match
               // TODO pair up companions
               case S(sym) =>
@@ -306,8 +311,9 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
         (Term.Blk(acc.reverse, res), ctx)
       case (hd @ Let(Apps(id, tups), rhso, N)) :: sts if id.name.headOption.exists(_.isLower) =>
         val sym =
-          if ctx.outer.isDefined then TermSymbol(ctx.outer, id)
+          if ctx.outer.isDefined then TermSymbol(ImmutVal, ctx.outer, id)
           else VarSymbol(id, nextUid)
+        log(s"Processing `let` statement $id (${sym}) ${ctx.outer}")
         val newAcc = rhso match
           case S(rhs) =>
             val rrhs = tups.foldRight(rhs):
@@ -339,7 +345,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
         td.name match
           case R(id) =>
             val sym = newMembers(id.name).asInstanceOf[TermSymbol] // TODO improve
-            ctx.nest(N).givenIn:
+            val tdf = ctx.nest(N).givenIn:
               // Add type parameters to context
               val (tps, newCtx1) = td.typeParams match
                 case S(t) => typeParams(t)
@@ -356,7 +362,8 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
               val tdf = TermDefinition(k, sym, ps,
                 td.signature.orElse(newSignatureTrees.get(id.name)).map(term), b, r)
               sym.defn = S(tdf)
-              go(sts, tdf :: acc)
+              tdf
+            go(sts, tdf :: acc)
           case L(d) => go(sts, acc) // error already raised in newMembers initialization
       case TypeDef(k, symName, head, extension, body) :: sts =>
         assert((k is Als) || (k is Cls) || (k is Mod), k)

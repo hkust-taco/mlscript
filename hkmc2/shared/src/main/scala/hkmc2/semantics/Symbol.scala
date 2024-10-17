@@ -57,7 +57,7 @@ abstract class MemberSymbol[Defn <: Definition] extends Symbol:
   def nme: Str
   var defn: Opt[Defn] = N
 
-class TermSymbol(val owner: Opt[MemberSymbol[?]], val id: Tree.Ident)
+class TermSymbol(val k: TermDefKind, val owner: Opt[MemberSymbol[?]], val id: Tree.Ident)
 extends MemberSymbol[Definition] with LocalSymbol with NamedSymbol:
   def nme: Str = id.name
   def name: Str = nme
@@ -80,7 +80,7 @@ case class TupSymbol(arity: Opt[Int]) extends CtorSymbol:
   def toLoc: Option[Loc] = N
   override def toString: Str = s"tup:$arity"
 
-class ClassSymbol(val id: Tree.Ident) extends MemberSymbol[ClassDef] with CtorSymbol:
+class ClassSymbol(val owner: Opt[MemberSymbol[?]], val id: Tree.Ident) extends MemberSymbol[ClassDef] with CtorSymbol:
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source trees of classes
   override def toString: Str = s"class:$nme"

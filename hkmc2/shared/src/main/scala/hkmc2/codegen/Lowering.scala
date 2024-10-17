@@ -53,6 +53,8 @@ class Lowering(using TL, Raise, Elaborator.State):
       sym match
       case sym: Local =>
         k(subst(Value.Ref(sym)))
+      // case sym: MemberSymbol[?] =>
+      //   k(subst(Value.Ref(sym)))
     case st.App(f, arg) =>
       arg match
       case Tup(fs) =>
@@ -84,8 +86,31 @@ class Lowering(using TL, Raise, Elaborator.State):
         case N => // abstract declarations have no lowering
           term(st.Blk(stats, res))(k)
         case S(bod) =>
-          Define(TermDefn(td.k, td.sym, td.params, returnedTerm(bod)),
-            term(st.Blk(stats, res))(k))
+          td.k match
+          case _: syntax.Val =>
+            assert(td.params.isEmpty)
+            term(bod)(r =>
+              Assign(td.sym, r,
+                term(st.Blk(stats, res))(k)))
+          case _ =>
+            Define(TermDefn(td.k, td.sym, td.params, returnedTerm(bod)),
+              term(st.Blk(stats, res))(k))
+      case cls: ClassDef =>
+        val bodBlk = cls.body.blk
+        val (mtds, rest1) = bodBlk.stats.partitionMap:
+          case td: TermDefinition if td.k is syntax.Fun => L(td)
+          case s => R(s)
+        val (flds, rest2) = rest1.partitionMap:
+          case LetDecl(sym: TermSymbol) => L(sym)
+          case s => R(s)
+        Define(ClsDefn(cls.sym, syntax.Cls,
+            mtds.flatMap: td =>
+              td.body.map: bod =>
+                TermDefn(td.k, td.sym, td.params, term(bod)(Ret))
+            ,
+            flds, term(Blk(rest2, bodBlk.res))(k)
+          ),
+        term(st.Blk(stats, res))(k))
       case _ =>
         // TODO handle
         term(st.Blk(stats, res))(k)
@@ -132,6 +157,14 @@ class Lowering(using TL, Raise, Elaborator.State):
     case Sel(prefix, nme) =>
       subTerm(prefix): p =>
         k(Select(p, nme))
+        
+    case New(sym, as) =>
+      def rec(as: Ls[st], asr: Ls[Path]): Block = as match
+        case Nil => k(Instantiate(sym, asr.reverse))
+        case a :: as =>
+          subTerm(a): ar =>
+            rec(as, ar :: asr)
+      rec(as, Nil)
     
     case Error => End("error")
     

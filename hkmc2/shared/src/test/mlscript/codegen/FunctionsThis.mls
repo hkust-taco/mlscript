@@ -1,0 +1,23 @@
+:js
+:sjs
+
+
+val x = 2
+fun foo() =
+  x + 1
+//│ JS:
+//│ this.x = 2; function foo() {  return this.x + 1 }; undefined
+//│ x = 2
+
+class Test with
+  log(foo())
+//│ JS:
+//│ this.Test = class Test { constructor() {let tmp; tmp = this.foo(); log(tmp) } }; undefined
+
+:fixme
+new Test
+//│ JS:
+//│ new Test()
+//│ ═══[RUNTIME ERROR] TypeError: this.foo is not a function
+
+

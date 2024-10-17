@@ -22,7 +22,6 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     hostCreated = true
     given TL = replTL
     val h = ReplHost()
-    h.execute("let res")
     h
   
   private var hostCreated = false
@@ -75,7 +74,10 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
       mkQuery("", jsStr)
       
-      curCtx.locals.foreach: (nme, sym) =>
+      val definedValues = (curCtx.locals ++ curCtx.members).iterator.collect:
+        case (nme, sym: TermSymbol) if sym.k.isInstanceOf[syntax.Val] => (nme, sym)
+      
+      definedValues.toSeq.sortBy(_._2.uid).foreach: (nme, sym) =>
         val le = codegen.Return(codegen.Value.Ref(sym), implct = true)
         val je = jsb.block(le)
         val jsStr = je.stripBreaks.mkString(100)

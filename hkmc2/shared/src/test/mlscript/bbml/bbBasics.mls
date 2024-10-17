@@ -69,7 +69,7 @@ class Foo(x: Int)
 
 :e
 new Nothingness(0)
-//│ ╔══[ERROR] Class Nothingness not found.
+//│ ╔══[ERROR] Class 'Nothingness' not found.
 //│ ║  l.71: 	new Nothingness(0)
 //│ ╙──      	    ^^^^^^^^^^^^^^
 //│ Type: ⊥

@@ -3,15 +3,13 @@
 
 fun res
 
-:fixme
 :showRepl
 fun res() = 1
 //│ REPL> Sending: try { function res() {  return 1 }; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ REPL> Collected:
-//│ >  [syntax error] Identifier 'res' has already been declared
+//│ >  undefined
 //│ REPL> Parsed:
-//│ >  [syntax error] Identifier 'res' has already been declared
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Identifier 'res' has already been declared
+//│ >  undefined
 
 :showRepl
 2 + 2
@@ -26,9 +24,10 @@ fun res() = 1
 res
 //│ REPL> Sending: try { this.res } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ REPL> Collected:
-//│ >  undefined
+//│ >  [Function: res]
 //│ REPL> Parsed:
-//│ >  undefined
+//│ >  [Function: res]
+//│ = [Function: res]
 
 
 :showRepl
@@ -49,7 +48,7 @@ let x = 1; log(x); x
 //│ x = 1
 
 :import PredefJS.mls
-//│ Imported 25 members
+//│ Imported 1 member(s)
 //│ x = 1
 
 :showRepl

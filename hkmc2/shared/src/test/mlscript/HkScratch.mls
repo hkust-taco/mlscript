@@ -4,35 +4,4 @@
 // :elt
 
 
-class Foo(x: Int)
-//│ JS:
-//│ undefined
-
-// new Foo(42)
-
-
-
-
-
-
-// :import decls/Predef.mls
-
-// :de
-// fun run: Any
-
-
-// // :de
-// fun f() = 0
-
-// f
-
-x =>
-  let y = x
-  y
-//│ JS:
-//│ (x) => { let y; y = x; return y }
-//│ = [Function (anonymous)]
-
-
-
 

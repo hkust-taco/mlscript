@@ -1,8 +1,8 @@
 :import ../prelude/List.mls
-//│ Imported 28 members
+//│ Imported 4 member(s)
 
 :import ../prelude/Option.mls
-//│ Imported 31 members
+//│ Imported 3 member(s)
 
 :global
 :!typeCheck

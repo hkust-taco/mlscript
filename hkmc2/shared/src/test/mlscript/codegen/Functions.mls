@@ -1,5 +1,8 @@
 :js
 
+:import PredefJS.mls
+//│ Imported 1 member(s)
+
 
 fun foo() =
   1 + 2
@@ -36,22 +39,20 @@ let r = foo()
 fun bar() = 42
 r
 //│ = 42
+//│ r = 42
 
-// TODO raise initialization error at CT and RT
+// Note that this initializes fine
 fun foo() = bar()
 let r = foo()
 fun bar() = r
-r
-//│ = 42
+//│ r = 42
 
-
-declare val console
 
 fun outer(x) =
   let r = x + 1
   fun nested(y) =
     r + x + y
-  console.log(nested(x))
+  log(nested(x))
   nested
 
 let f = outer(100)

@@ -1,7 +1,7 @@
 :js
 
 :import PredefJS.mls
-//│ Imported 24 members
+//│ Imported 1 member(s)
 
 
 fun f() =
