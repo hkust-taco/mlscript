@@ -1,17 +1,5 @@
-// :de
-
-
-:todo
-class Lazy[out A](init: () => A) with
-  mut val cached: Option[A] = ()
-//│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.6: 	  mut val cached: Option[A] = ()
-//│ ╙──     	                  ^^^^^^
-//│ ═══[ERROR] Illegal position for 'mut' modifier.
-//│ ╔══[ERROR] Illegal definition in term position.
-//│ ║  l.6: 	  mut val cached: Option[A] = ()
-//│ ╙──     	          ^^^^^^
-//│ /!!!\ Uncaught error: scala.MatchError: Lam(List(),Ref(A@19)) (of class hkmc2.semantics.Term$Lam)
+// :pt
+// :elt
 
 
 

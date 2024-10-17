@@ -4,35 +4,35 @@
 // :pe
 val 1
 //│ Parsed:
-//│ 	TermDef(Val,None,Some(IntLit(1)),None)
+//│ 	TermDef(ImmutVal,None,Some(IntLit(1)),None)
 
 // :pe
 val x
 //│ Parsed:
-//│ 	TermDef(Val,None,Some(Ident(x)),None)
+//│ 	TermDef(ImmutVal,None,Some(Ident(x)),None)
 
 val x = 1
 //│ Parsed:
-//│ 	TermDef(Val,None,Some(Ident(x)),Some(IntLit(1)))
+//│ 	TermDef(ImmutVal,None,Some(Ident(x)),Some(IntLit(1)))
 
 // :pe
 val
   x
 //│ Parsed:
-//│ 	TermDef(Val,None,Some(Ident(x)),None)
+//│ 	TermDef(ImmutVal,None,Some(Ident(x)),None)
 
 val
   x = 1
 //│ Parsed:
-//│ 	TermDef(Val,None,Some(Ident(x)),Some(IntLit(1)))
+//│ 	TermDef(ImmutVal,None,Some(Ident(x)),Some(IntLit(1)))
 
 val
   x = 1
   y = 2
   z = 3
 //│ Parsed:
-//│ 	TermDef(Val,None,Some(Ident(x)),Some(IntLit(1)))
-//│ 	TermDef(Val,None,Some(Ident(y)),Some(IntLit(2)))
-//│ 	TermDef(Val,None,Some(Ident(z)),Some(IntLit(3)))
+//│ 	TermDef(ImmutVal,None,Some(Ident(x)),Some(IntLit(1)))
+//│ 	TermDef(ImmutVal,None,Some(Ident(y)),Some(IntLit(2)))
+//│ 	TermDef(ImmutVal,None,Some(Ident(z)),Some(IntLit(3)))
 
 

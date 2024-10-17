@@ -1,0 +1,39 @@
+
+
+class Foo { }
+
+:todo
+class Foo() {
+  val x = 1
+}
+//│ ╔══[ERROR] Expected a valid definition head, found term definition instead
+//│ ║  l.7: 	  val x = 1
+//│ ╙──     	      ^^^^^
+//│ /!!!\ Uncaught error: scala.MatchError: TermDef(ImmutVal,None,Some(Ident(x)),Some(IntLit(1))) (of class hkmc2.syntax.Tree$TermDef)
+
+:todo
+class Foo()
+  val x = 1
+//│ ╔══[ERROR] Expected a valid definition head, found term definition instead
+//│ ║  l.16: 	  val x = 1
+//│ ╙──      	      ^^^^^
+//│ /!!!\ Uncaught error: scala.MatchError: TermDef(ImmutVal,None,Some(Ident(x)),Some(IntLit(1))) (of class hkmc2.syntax.Tree$TermDef)
+
+:todo
+class Bar { val x: Int }
+//│ ╔══[ERROR] Expected a valid definition head, found term definition instead
+//│ ║  l.23: 	class Bar { val x: Int }
+//│ ╙──      	                ^^^^^^
+//│ /!!!\ Uncaught error: scala.MatchError: TermDef(ImmutVal,None,Some(InfixApp(Ident(x),keyword ':',Ident(Int))),None) (of class hkmc2.syntax.Tree$TermDef)
+
+:todo
+class Foo() extends Bar { x = 1 } with
+  val y = this.x
+//│ ╔══[PARSE ERROR] Unexpected identifier here
+//│ ║  l.30: 	class Foo() extends Bar { x = 1 } with
+//│ ╙──      	                          ^
+//│ ╔══[ERROR] Name not found: this
+//│ ║  l.31: 	  val y = this.x
+//│ ╙──      	          ^^^^
+
+

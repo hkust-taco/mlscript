@@ -1,0 +1,14 @@
+
+
+mut val cached: Int = 1
+
+:todo
+set cached = 2
+//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, 'return' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'set' keyword instead
+//│ ║  l.6: 	set cached = 2
+//│ ╙──     	^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
+//│ ║  l.6: 	set cached = 2
+//│ ╙──     	    ^^^^^^
+
+

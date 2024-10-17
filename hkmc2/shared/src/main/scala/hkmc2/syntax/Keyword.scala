@@ -10,7 +10,7 @@ class Keyword(val name: String, val leftPrec: Opt[Int], val rightPrec: Opt[Int])
   def assumeLeftPrec: Int = leftPrec.getOrElse(lastWords(s"$this does not have left precedence"))
   def assumeRightPrec: Int = rightPrec.getOrElse(lastWords(s"$this does not have right precedence"))
   def leftPrecOrMin: Int = leftPrec.getOrElse(Int.MinValue)
-  def rightPrecOrMin: Int = rightPrec.getOrElse(Int.MaxValue)
+  def rightPrecOrMax: Int = rightPrec.getOrElse(Int.MaxValue)
   override def toString: Str = s"keyword '$name'"
 
 object Keyword:
@@ -29,6 +29,8 @@ object Keyword:
     S(res)
 
   val `class` = Keyword("class", N, curPrec)
+  val `val` = Keyword("val", N, curPrec)
+  val `mut` = Keyword("mut", N, curPrec)
   
   val eqPrec = nextPrec
   val ascPrec = nextPrec // * `x => x : T` should parsed as `x => (x : T)`
@@ -40,7 +42,7 @@ object Keyword:
   val `else` = Keyword("else", nextPrec, curPrec)
   val `case` = Keyword("case", N, N)
   val `fun` = Keyword("fun", N, N)
-  val `val` = Keyword("val", N, N)
+  // val `val` = Keyword("val", N, N)
   val `var` = Keyword("var", N, N)
   val `as` = Keyword("as", N, N)
   val `of` = Keyword("of", N, N)
@@ -52,7 +54,6 @@ object Keyword:
   val `rec` = Keyword("rec", N, N)
   val `in` = Keyword("in", curPrec, curPrec)
   val `out` = Keyword("out", N, curPrec)
-  val `mut` = Keyword("mut", N, nextPrec)
   val `set` = Keyword("set", N, N)
   val `do` = Keyword("do", N, N)
   val `while` = Keyword("while", N, N)

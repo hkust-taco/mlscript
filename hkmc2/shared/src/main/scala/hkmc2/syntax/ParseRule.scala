@@ -241,7 +241,7 @@ object ParseRule:
         ) { case (name, body) => Region(name, body) }
     ,
     Kw(`fun`)(termDefBody(Fun)),
-    Kw(`val`)(termDefBody(Val)),
+    Kw(`val`)(termDefBody(ImmutVal)),
     Kw(`type`):
       ParseRule("type alias declaration"):
         Expr(

@@ -412,7 +412,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
     case InfixApp(lhs: Ident, Keyword.`:`, rhs) =>
       Param(FldFlags.empty, VarSymbol(lhs, nextUid), S(term(rhs))) :: Nil
     case App(Ident(","), list) => params(list)._1
-    case TermDef(Val, _, S(inner), _) => param(inner)
+    case TermDef(ImmutVal, _, S(inner), _) => param(inner)
   
   def params(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
     case Tup(ps) =>

@@ -128,8 +128,10 @@ enum Tree extends AutoLocated:
   def showDbg: Str = toString // TODO
   
   lazy val desugared: Tree = this match
-    case Modified(Keyword.`type`, modLoc, InfixApp(lhs, Keyword.`=`, rhs)) =>
+    case Modified(Keyword.`type`, modLoc, InfixApp(lhs, Keyword.`=`, rhs)) => // TODO rm
       TypeDef(Als, N, lhs, N, S(rhs))
+    case Modified(Keyword.`mut`, modLoc, TermDef(ImmutVal, snme, anme, rhs)) =>
+      TermDef(MutVal, snme, anme, rhs)
     case _ => this
 
 object Tree:
@@ -159,7 +161,9 @@ sealed abstract class OuterKind(val desc: Str)
 case object BlockKind extends OuterKind("block")
 sealed abstract class DeclKind(desc: Str) extends OuterKind(desc)
 sealed abstract class TermDefKind(val str: Str, desc: Str) extends DeclKind(desc)
-case object Val extends TermDefKind("val", "value")
+sealed abstract class Val(str: Str, desc: Str) extends TermDefKind(str, desc)
+case object ImmutVal extends TermDefKind("val", "value")
+case object MutVal extends TermDefKind("mut val", "mutable value")
 case object Fun extends TermDefKind("fun", "function")
 sealed abstract class TypeDefKind(desc: Str) extends DeclKind(desc)
 sealed trait ObjDefKind
