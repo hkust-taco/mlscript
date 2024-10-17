@@ -9,7 +9,6 @@ declare val console
 //│ > Object [console] {
 //│ >   log: [Function: log],
 //│ >   warn: [Function: warn],
-//│ >   error: [Function: error],
 //│ >   dir: [Function: dir],
 //│ >   time: [Function: time],
 //│ >   timeEnd: [Function: timeEnd],
@@ -25,13 +24,13 @@ declare val console
 //│ >   debug: [Function: debug],
 //│ >   info: [Function: error],
 //│ >   dirxml: [Function: dirxml],
+//│ >   error: [Function: error],
 //│ >   groupCollapsed: [Function: groupCollapsed],
 //│ >   Console: [Function: Console],
 //│ >   profile: [Function: profile],
 //│ >   profileEnd: [Function: profileEnd],
 //│ >   timeStamp: [Function: timeStamp],
-//│ >   context: [Function: context],
-//│ >   createTask: [Function: createTask]
+//│ >   context: [Function: context]
 //│ console = }
 
 

@@ -1,5 +1,5 @@
 :import Prelude.mls
-//│ Imported 74 members
+//│ Imported 50 member(s)
 
 fun condition(thirywelvn) = if thirywelvn is
   Cons(t, Cons(h, Cons(i, Cons(r, Cons(y, Cons(w, Cons(e, Cons(l, Cons(v, Cons(n, Nil)))))))))) then
