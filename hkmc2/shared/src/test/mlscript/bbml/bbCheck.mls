@@ -115,24 +115,24 @@ fun baz(z) =
 
 :e
 baz: Int -> (([A] -> A -> A), Int) -> Int
-//│ ╔══[ERROR] Cannot type non-function term Ref(module:block#17.baz) as (Int) ->{⊥} (forall α24_2: (α24_2) ->{⊥} α24_2, Int) ->{⊥} Int
+//│ ╔══[ERROR] Cannot type non-function term Ref(module:block#17.baz) as (Int) ->{⊥} (forall α25_2: (α25_2) ->{⊥} α25_2, Int) ->{⊥} Int
 //│ ║  l.117: 	baz: Int -> (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^
 //│ Type: ⊥
 
 
 baz(42)
-//│ Type: (forall α20_2: (α20_2) ->{⊥} α20_2, Int) ->{⊥} Int
+//│ Type: (forall α21_2: (α21_2) ->{⊥} α21_2, Int) ->{⊥} Int
 
 :e
 baz(42): (([A] -> A -> A), Int) -> Int
-//│ ╔══[ERROR] Cannot type non-function term App(Ref(module:block#17.baz),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))) as (forall α25_2: (α25_2) ->{⊥} α25_2, Int) ->{⊥} Int
+//│ ╔══[ERROR] Cannot type non-function term App(Ref(module:block#17.baz),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))) as (forall α26_2: (α26_2) ->{⊥} α26_2, Int) ->{⊥} Int
 //│ ║  l.128: 	baz(42): (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^^^^^
 //│ Type: ⊥
 
 (z => (f, x) => baz(z)(f, x)): Int -> (([A] -> A -> A), Int) -> Int
-//│ Type: (Int) ->{⊥} (forall α26_2: (α26_2) ->{⊥} α26_2, Int) ->{⊥} Int
+//│ Type: (Int) ->{⊥} (forall α27_2: (α27_2) ->{⊥} α27_2, Int) ->{⊥} Int
 
 
 fun id: [A] -> A -> A
@@ -140,11 +140,11 @@ fun id(x) = x
 //│ Type: ⊤
 
 id: [A] -> A -> A
-//│ Type: forall α32_2: (α32_2) ->{⊥} α32_2
+//│ Type: forall α33_2: (α33_2) ->{⊥} α33_2
 
 
 (id: [A] -> A -> A): [A] -> A -> A
-//│ Type: forall α35_2: (α35_2) ->{⊥} α35_2
+//│ Type: forall α36_2: (α36_2) ->{⊥} α36_2
 
 42: Int | Num
 //│ Type: Int ∨ Num

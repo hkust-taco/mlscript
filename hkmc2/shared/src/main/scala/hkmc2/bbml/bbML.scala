@@ -277,19 +277,15 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val cr = freshVar
       constrain(tryMkMono(ty, body), Ctx.codeTy(tv, cr))
       (tv, cr, eff)
-    case Term.Blk(LetBinding(pat, rhs) :: Nil, body) => // TODO: more than one?
+    case Term.Blk(LetDecl(sym) :: DefineVar(sym2, rhs) :: Nil, body) if sym2 is sym => // TODO: more than one!!
       val (rhsTy, rhsCtx, rhsEff) = typeCode(rhs)(using ctx)
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx
-      val bd = pat match
-        case Pattern.Var(sym) =>
-          val sk = freshSkolem
-          nestCtx &= (sym, rhsTy, sk)
-          sk
-        case _ => ???
+      val sk = freshSkolem
+      nestCtx &= (sym, rhsTy, sk)
       val (bodyTy, bodyCtx, bodyEff) = typeCode(body)
       val res = freshVar(using ctx)
-      constrain(bodyCtx, bd | res)
+      constrain(bodyCtx, sk | res)
       (bodyTy, rhsCtx | res, rhsEff | bodyEff)
     case Term.If(Split.Cons(Branch(cond, Pattern.LitPat(BoolLit(true)), Split.Else(cons)), Split.Else(alts))) =>
       val (condTy, condCtx, condEff) = typeCode(cond)
@@ -379,13 +375,6 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       given Ctx = nextCtx
       constrain(ascribe(term, skolemize(pt))._2, Bot) // * never generalize terms with effects
       (pt, Bot)
-    case (Term.Blk(LetBinding(Pattern.Var(sym), rhs) :: Nil, body), ty) => // * propagate
-      val nestCtx = ctx.nest
-      given Ctx = nestCtx
-      val (rhsTy, eff) = typeCheck(rhs)
-      nestCtx += sym -> rhsTy
-      val (resTy, resEff) = ascribe(body, ty)
-      (resTy, eff | resEff)
     case (Term.If(branches), ty) => // * propagate
       typeSplit(branches, S(ty))
     case (Term.Asc(term, ty), rhs) =>
@@ -457,11 +446,6 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             goStats(stats)
           case LetDecl(sym) :: DefineVar(sym2, rhs) :: stats =>
             require(sym2 is sym)
-            val (rhsTy, eff) = typeCheck(rhs)
-            effBuff += eff
-            nestCtx += sym -> rhsTy
-            goStats(stats)
-          case LetBinding(Pattern.Var(sym), rhs) :: stats =>
             val (rhsTy, eff) = typeCheck(rhs)
             effBuff += eff
             nestCtx += sym -> rhsTy

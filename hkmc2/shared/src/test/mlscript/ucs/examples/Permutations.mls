@@ -17,13 +17,13 @@ fun (:::) appendAll[A](xs: List[A], ys: List[A]): List[A] =
     Cons(x, xs') then x :: (xs' ::: ys)
 fun (:+) append[A](xs, x): List[A] = xs ::: (x :: Nil)
 fun reverse(xs) =
-  let aux(acc, xs) =
+  fun aux(acc, xs) =
     if xs is
       Nil then acc
       Cons(x, xs') then aux(x :: acc, xs')
   aux(Nil, xs)
 fun join(sep) =
-  let aux(acc, xs) =
+  fun aux(acc, xs) =
     if xs is
       Nil then acc
       Cons(x, xs') then aux(acc ++ sep ++ toString(x), xs')
@@ -33,7 +33,7 @@ fun join(sep) =
       Nil then ""
 fun showList(xs) = "[" ++ join(", ")(xs) ++ "]"
 fun foldLeft(f)(z) =
-  let aux(acc, xs) =
+  fun aux(acc, xs) =
     if xs is
       Nil then acc
       Cons(x, xs') then aux(f(acc, x), xs')
@@ -45,7 +45,7 @@ fun map(f, xs) =
 fun showListList(xs) = "[" ++ join(", ")(map(showList, xs)) ++ "]"
 
 fun insertAllPositions(z) =
-  let aux(prev, acc, xs) =
+  fun aux(prev, acc, xs) =
     if xs is
       Nil then ((prev :+ z) :: acc) |> reverse
       Cons(head, tail) then

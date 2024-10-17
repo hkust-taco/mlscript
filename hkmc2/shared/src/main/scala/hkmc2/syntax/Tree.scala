@@ -129,8 +129,6 @@ enum Tree extends AutoLocated:
   def showDbg: Str = toString // TODO
   
   lazy val desugared: Tree = this match
-    case Modified(Keyword.`type`, modLoc, InfixApp(lhs, Keyword.`=`, rhs)) => // TODO rm
-      TypeDef(Als, N, lhs, N, S(rhs))
     case Modified(Keyword.`mut`, modLoc, TermDef(ImmutVal, snme, anme, rhs)) =>
       TermDef(MutVal, snme, anme, rhs)
     case _ => this
@@ -153,8 +151,8 @@ object PlainTup:
 
 object Apps:
   def unapply(t: Tree): Opt[(Ident, Ls[Tup])] = t match
-    case App(id: Ident, args: Tup) => S(id, args :: Nil)
     case App(Apps(id, args), arg: Tup) => S(id, args :+ arg)
+    case id: Ident => S(id -> Nil)
     case _ => N
 
 
@@ -197,8 +195,6 @@ trait TermDefImpl:
   lazy val (name, params, typeParams, signature): (Diagnostic \/ Ident, Opt[Ls[Tree]], Opt[Tree], Opt[Tree]) =
     def rec(t: Opt[Tree]): (Diagnostic \/ Ident, Opt[Ls[Tree]], Opt[Tree], Opt[Tree]) = 
       t match
-      case S(InfixApp(lhs, Keyword.`=`, rhs)) =>
-        rec(S(lhs))
       case S(InfixApp(id: Ident, Keyword.`:`, sign)) =>
         (R(id), N, N, S(sign))
       // show(t: Tree): Str

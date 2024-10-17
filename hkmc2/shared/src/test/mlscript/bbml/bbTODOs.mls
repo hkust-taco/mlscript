@@ -3,7 +3,7 @@
 
 :todo
 let id: [A] -> A -> A = x => x
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ /!!!\ Uncaught error: scala.MatchError: Let(InfixApp(Ident(id),keyword ':',InfixApp(TyTup(List(Ident(A))),keyword '->',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))),Some(InfixApp(Tup(List(Ident(x))),keyword '=>',Ident(x))),None) (of class hkmc2.syntax.Tree$Let)
 
 :todo
 fun id[A](x: A) = x

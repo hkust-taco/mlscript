@@ -45,7 +45,7 @@ class TypeChecker(using raise: Raise):
           P.Ctor(LitSymbol(Tree.UnitLit(true)), Nil)
         case t: Term =>
           typeProd(t)
-        case _: ClassDef | _: LetBinding =>
+        case _: ClassDef =>
           // println(s"TODO ${t.showDbg}")
           // TODO
       typeProd(res)

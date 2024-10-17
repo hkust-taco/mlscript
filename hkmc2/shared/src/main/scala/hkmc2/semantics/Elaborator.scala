@@ -43,6 +43,9 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
   private val allocSkolemDef = TyParam(FldFlags.empty, N, allocSkolemSym)
   allocSkolemSym.decl = S(allocSkolemDef)
   
+  def mkLetBinding(sym: LocalSymbol, rhs: Term): Ls[Statement] =
+    LetDecl(sym) :: DefineVar(sym, rhs) :: Nil
+  
   def term(tree: Tree): Ctxl[Term] =
   trace[Term](s"Elab term ${tree.showDbg}", r => s"~> $r"):
     tree match
@@ -59,12 +62,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
       val ctxx = ctx.copy(locals = ctx.locals + (id.name -> fs))
       val r = term(rrhs)(using ctxx)
       val b = bodo.map(term(_)(using ctxx)).getOrElse(unit)
-      Term.Blk(List(LetBinding(Pattern.Var(fs), r)), b)
-    case Let(lhs, S(rhs), bodo) =>
-      val (pat, syms) = pattern(lhs)
-      val r = term(rhs)
-      val b = bodo.map(term(_)(using ctx.copy(locals = ctx.locals ++ syms))).getOrElse(unit)
-      Term.Blk(List(LetBinding(pat, r)), b)
+      Term.Blk(mkLetBinding(fs, r), b)
     case Let(lhs, N, bodo) => // TODO
       ???
     case Ident("true") => Term.Lit(Tree.BoolLit(true))
@@ -306,27 +304,21 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
       case Nil =>
         val res = unit
         (Term.Blk(acc.reverse, res), ctx)
-      case (hd @ Let(Apps(id, tups), S(rhs), bodo)) :: sts if id.name.headOption.exists(_.isLower) =>
-        val rrhs = tups.foldRight(rhs):
-          Tree.InfixApp(_, Keyword.`=>`, _)
-        val fs = VarSymbol(id, nextUid)
-        val ctxx = ctx.copy(locals = ctx.locals + (id.name -> fs))
-        val rhsTerm = term(rrhs)(using ctxx)
-        go(sts, LetBinding(Pattern.Var(fs), rhsTerm) :: acc)(using ctxx)
-      case Let(id: Ident, rhso, N) :: sts =>
+      case (hd @ Let(Apps(id, tups), rhso, N)) :: sts if id.name.headOption.exists(_.isLower) =>
         val sym =
           if ctx.outer.isDefined then TermSymbol(ctx.outer, id)
           else VarSymbol(id, nextUid)
-        val defn = rhso.map(rhs => DefineVar(sym, term(rhs))).toList
-        go(sts, defn ::: LetDecl(sym) :: acc)(using
-          ctx.copy(locals = ctx.locals + (id.name -> sym)))
-      case Let(lhs, N, bodo) :: sts => // TODO dedup
-        lhs match
-        case InfixApp(lhs, Keyword.`=`, rhs) =>
-          go(Let(lhs, S(rhs), bodo) :: sts, acc)
-        case id: Ident =>
-          val idSym = VarSymbol(id, nextUid)
-          go(sts, LetDecl(idSym) :: acc)(using ctx.copy(locals = ctx.locals + (id.name -> idSym)))
+        val newAcc = rhso match
+          case S(rhs) =>
+            val rrhs = tups.foldRight(rhs):
+              Tree.InfixApp(_, Keyword.`=>`, _)
+            mkLetBinding(sym, term(rrhs)) reverse_::: acc
+          case N =>
+            if tups.nonEmpty then
+              raise(ErrorReport(msg"Expected a right-hand side for let bindings with parameters" -> hd.toLoc :: Nil))
+            LetDecl(sym) :: acc
+        ctx.copy(locals = ctx.locals + (id.name -> sym)) givenIn:
+          go(sts, newAcc)
       case Def(lhs, rhs) :: sts =>
         lhs match
         case id: Ident =>

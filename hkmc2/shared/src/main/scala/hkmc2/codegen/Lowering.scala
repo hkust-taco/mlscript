@@ -89,10 +89,6 @@ class Lowering(using TL, Raise, Elaborator.State):
       case _ =>
         // TODO handle
         term(st.Blk(stats, res))(k)
-    case st.Blk((let: LetBinding) :: stats, res) =>
-      subTerm(let.rhs): pth =>
-        letPat(let.pat, pth):
-          term(st.Blk(stats, res))(k)
     case st.Blk((LetDecl(sym)) :: stats, res) =>
       term(st.Blk(stats, res))(k)
     case st.Blk((DefineVar(sym, rhs)) :: stats, res) =>
@@ -104,7 +100,7 @@ class Lowering(using TL, Raise, Elaborator.State):
     case st.Lam(params, body) =>
       k(Value.Lam(params, returnedTerm(body)))
     case t @ st.If(Split.Let(sym, trm, tl)) =>
-      term(st.Blk(semantics.LetBinding(Pattern.Var(sym), trm) :: Nil, st.If(tl)(t.normalized)))(k)
+      term(st.Blk(semantics.LetDecl(sym) :: semantics.DefineVar(sym, trm) :: Nil, st.If(tl)(t.normalized)))(k)
     case st.If(Split.Cons(
       Branch(scrut, Pattern.LitPat(tru @ Tree.BoolLit(true)), Split.Else(thn)),
       restSplit
@@ -149,17 +145,6 @@ class Lowering(using TL, Raise, Elaborator.State):
       case r =>
         val l = new TempSymbol(summon[Elaborator.State].nextUid, N)
         Assign(l, r, k(l |> Value.Ref.apply))
-  
-  def letPat(pat: Pattern, rhs: Path)(using sub: Subst)(k: Subst ?=> Block): Block =
-    pat match
-    case Pattern.Var(sym) =>
-      def bind = Assign(sym, rhs, k)
-      rhs match
-      case _: Value.Lam => bind
-      case Value.Lit(Tree.StrLit(str)) if str.length > 10 => bind
-      case rhs: Value => summon[Subst] + (sym -> rhs) givenIn:
-        k
-      case _: Path => bind
   
   
   // val resSym = new TermSymbol(N, Tree.Ident("$res"))
