@@ -1,5 +1,8 @@
 :js
 
+:import PredefJS.mls
+//│ Imported 1 member(s)
+
 
 :elt
 if true then 1 else 0
@@ -7,15 +10,51 @@ if true then 1 else 0
 //│ Blk:
 //│   stats = Nil
 //│   res = If of Let:
-//│     sym = $scrut@19
+//│     sym = $scrut@24
 //│     term = Lit of BoolLit of true
 //│     tail = Cons: \
 //│     head = Branch:
-//│       scrutinee = Ref of $scrut@19
+//│       scrutinee = Ref of $scrut@24
 //│       pattern = LitPat of BoolLit of true
 //│       continuation = Else of Lit of IntLit of 1
 //│     tail = Else of Lit of IntLit of 0
-//│ = 0
+//│ = 1
+
+
+:sjs
+let f = x => if x then log("ok") else log("ko")
+//│ JS:
+//│ this.f = (x) => { if (x) { return log("ok") } else { return log("ko") } }; undefined
+//│ f = [Function (anonymous)]
+
+f(true)
+//│ > ok
+
+f(false)
+//│ > ko
+
+
+:sjs
+let f = x => log((if x then "ok" else "ko") + "!")
+//│ JS:
+//│ this.f = (x) => {
+//│   let tmp, tmp1;
+//│   if (x) {
+//│     tmp = "ok";
+//│   } else {
+//│     tmp = "ko";
+//│   }
+//│   tmp1 = tmp + "!";
+//│   return log(tmp1)
+//│ };
+//│ undefined
+//│ f = [Function (anonymous)]
+
+f(true)
+//│ > ok!
+
+f(false)
+//│ > ko!
 
 
 x => if x > 0 then log("Hi") else log("Bye")

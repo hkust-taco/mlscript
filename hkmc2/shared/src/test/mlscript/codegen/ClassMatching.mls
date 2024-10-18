@@ -9,26 +9,20 @@ class Some[out A](value: A)
 module None
 
 
-// FIXME duplication of scrutinee
 :sjs
 if Some(0) is Some(x) then x
 //│ JS:
-//│ let scrut, param0, x, tmp, tmp1;
-//│ tmp = ((value) => {
-//│   return new Some(value)
-//│ })(0);
-//│ scrut = tmp;
+//│ let scrut, param0, x;
 //│ scrut = ((value) => {
 //│   return new Some(value)
 //│ })(0);
 //│ if (scrut instanceof this.Some) {
 //│   param0 = scrut.value;
 //│   x = param0;
-//│   tmp1 = x;
+//│   x
 //│ } else {
 //│   throw new Error("match error")
 //│ }
-//│ tmp1
 //│ = 0
 
 
@@ -39,17 +33,15 @@ let s = Some(0)
 if s is
   Some(x) then x
 //│ JS:
-//│ let scrut, param0, x, tmp;
-//│ scrut = this.s;
+//│ let scrut, param0, x;
 //│ scrut = this.s;
 //│ if (scrut instanceof this.Some) {
 //│   param0 = scrut.value;
 //│   x = param0;
-//│   tmp = x;
+//│   x
 //│ } else {
 //│   throw new Error("match error")
 //│ }
-//│ tmp
 //│ = 0
 
 if s is
@@ -72,20 +64,19 @@ if s is
 x => if x is Some(x) then x
 //│ JS:
 //│ (x) => {
-//│   let param0, x1, tmp;
+//│   let param0, x1;
 //│   if (x instanceof this.Some) {
 //│     param0 = x.value;
 //│     x1 = param0;
-//│     tmp = x1;
+//│     return x1
 //│   } else {
 //│     throw new Error("match error")
 //│   }
-//│   return tmp
 //│ }
 //│ = [Function (anonymous)]
 
 
-// TODO produce simpler code (see: useless bindings)
+// TODO dedup branches duplicated by UCS normalization
 :sjs
 fun f(x) = if x is
   Some(0) then 42
@@ -93,24 +84,21 @@ fun f(x) = if x is
   else log("oops")
 //│ JS:
 //│ function f(x) {
-//│   let param0, tmp, tmp1, tmp2;
+//│   let param0;
 //│   if (x instanceof this.Some) {
 //│     param0 = x.value;
 //│     if (param0 === 0) {
-//│       tmp = 42;
+//│       return 42
 //│     } else {
-//│       tmp2 = log("oops");
-//│       tmp = tmp2;
+//│       return log("oops")
 //│     }
 //│   } else {
 //│     if (x === this.None) {
-//│       tmp = "ok";
+//│       return "ok"
 //│     } else {
-//│       tmp1 = log("oops");
-//│       tmp = tmp1;
+//│       return log("oops")
 //│     }
 //│   }
-//│   return tmp
 //│ };
 //│ undefined
 
@@ -136,23 +124,22 @@ fun f(x) = if x is
   Pair(a, b) then a + b
 //│ JS:
 //│ function f(x) {
-//│   let param0, param1, a, b, param01, u, tmp;
+//│   let param0, param1, a, b, param01, u;
 //│   if (x instanceof this.Some) {
 //│     param01 = x.value;
 //│     u = param01;
-//│     tmp = u;
+//│     return u
 //│   } else {
 //│     if (x instanceof this.Pair) {
 //│       param0 = x.fst;
 //│       param1 = x.snd;
 //│       a = param0;
 //│       b = param1;
-//│       tmp = a + b;
+//│       return a + b
 //│     } else {
 //│       throw new Error("match error")
 //│     }
 //│   }
-//│   return tmp
 //│ };
 //│ undefined
 

@@ -240,7 +240,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
   def unit: Term.Lit = Term.Lit(UnitLit(true))
   
   def block(_sts: Ls[Tree])(using c: Ctx): (Term.Blk, Ctx) = trace[(Term.Blk, Ctx)](
-    pre = s"Elab block ${_sts.toString.truncate(20, "[...]")} ${ctx.outer}", r => s"~> ${r._1}"
+    pre = s"Elab block ${_sts.toString.truncate(30, "[...]")} ${ctx.outer}", r => s"~> ${r._1}"
   ):
     val sts = _sts.map(_.desugared)
     val newMembers = mutable.Map.empty[Str, MemberSymbol[?]] // * Definitions with implementations

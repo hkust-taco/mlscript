@@ -1,4 +1,9 @@
 :js
+
+:import PredefJS.mls
+//│ Imported 1 member(s)
+
+:global
 :sjs
 :lot
 
