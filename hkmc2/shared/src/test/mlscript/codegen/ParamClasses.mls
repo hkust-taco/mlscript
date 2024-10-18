@@ -13,27 +13,27 @@ class Foo()
 
 Foo
 //│ JS:
-//│ () => {  return new Foo() }
+//│ () => { return new Foo() }
 //│ = [Function (anonymous)]
 
 Foo()
 //│ JS:
-//│ (() => {  return new Foo() })()
+//│ (() => { return new Foo() })()
 //│ = Foo {}
 
 
 class Foo(x)
 //│ JS:
-//│ this.Foo = class Foo { constructor(x) { this.x = x; undefined } }; undefined
+//│ this.Foo = class Foo { constructor(x) {  this.x = x;undefined } }; undefined
 
 Foo
 //│ JS:
-//│ (x) => {  return new Foo(x) }
+//│ (x) => { return new Foo(x) }
 //│ = [Function (anonymous)]
 
 Foo(1)
 //│ JS:
-//│ ((x) => {  return new Foo(x) })(1)
+//│ ((x) => { return new Foo(x) })(1)
 //│ = Foo { x: 1 }
 
 

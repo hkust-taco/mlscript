@@ -225,7 +225,7 @@ test("1")
 :fixme
 fun fact(n) =
   if n > 1 then n * fact(n - 1) else 1
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@169),LitPat(BoolLit(true)),Else(App(Ref(.*),Tup(List(Fld(‹›,Ref(n@167),None), Fld(‹›,App(Ref(module:block#49.fact),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@167),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))),Else(Lit(IntLit(1)))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@169),LitPat(BoolLit(true)),Else(App(Ref(.*),Tup(List(Fld(‹›,Ref(n@167),None), Fld(‹›,App(Ref(globalThis:blockNme.fact),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@167),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))),Else(Lit(IntLit(1)))) (of class hkmc2.semantics.Split$Cons)
 
 fact
 //│ Type: ⊥
@@ -238,7 +238,7 @@ fact(1)
 fun fact2 = case
   0 then 1
   n then n * fact2(n - 1)
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@183),LitPat(BoolLit(true)),Else(Lit(IntLit(1)))),Else(App(Ref(.*),Tup(List(Fld(‹›,Ref(n@178),None), Fld(‹›,App(Ref(module:block#52.fact2),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@178),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@183),LitPat(BoolLit(true)),Else(Lit(IntLit(1)))),Else(App(Ref(.*),Tup(List(Fld(‹›,Ref(n@178),None), Fld(‹›,App(Ref(globalThis:blockNme.fact2),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@178),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))) (of class hkmc2.semantics.Split$Cons)
 
 fact2
 //│ Type: ⊥

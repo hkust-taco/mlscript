@@ -197,12 +197,15 @@ class Lowering(using TL, Raise, Elaborator.State):
                 mkArgs(clsParams.zip(args))
             Match(sr, cse :: Nil,
               elseBranch,
-              k(Value.Ref(l))
+              End()
             )
         case Split.Else(els) =>
           term(els)(r => Assign(l, r, End()))
       
-      go(iftrm.normalized)
+      Begin(
+        go(iftrm.normalized),
+        k(Value.Ref(l))
+      )
       
     case Sel(prefix, nme) =>
       subTerm(prefix): p =>

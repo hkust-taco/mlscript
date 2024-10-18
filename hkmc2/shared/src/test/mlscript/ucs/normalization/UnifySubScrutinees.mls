@@ -44,14 +44,14 @@ fun sum(acc, xs) =
 //│ >    xs@54 is Cons($param0@55, $param1@56) and
 //│ >      let x@57 = $param0@55#0
 //│ >      let xs@58 = $param1@56#0
-//│ >      else module:block#2.sum#0(.+#0(acc@53#1, x@57#0), xs@58#0)
+//│ >      else globalThis:blockNme.sum#0(.+#0(acc@53#1, x@57#0), xs@58#0)
 //│ >    xs@54 is Nil then acc@53#0
 //│ Normalized:
 //│ >  if
 //│ >    xs@54 is Cons($param0@55, $param1@56) and
 //│ >      let x@57 = $param0@55#0
 //│ >      let xs@58 = $param1@56#0
-//│ >      else module:block#2.sum#0(.+#0(acc@53#1, x@57#0), xs@58#0)
+//│ >      else globalThis:blockNme.sum#0(.+#0(acc@53#1, x@57#0), xs@58#0)
 //│ >    xs@54 is Nil then acc@53#0
 
 :todo
@@ -79,7 +79,7 @@ fun test(xs) =
 //│ >        $param1@73 is Nil then .*#0(x@71#0, y@74#0)
 //│ >    xs@63 is Some($param0@64) and $param0@64 is Cons($param0@65, $param1@66) and $param0@65 is "sum" and
 //│ >      let xs@67 = $param1@66#0
-//│ >      else module:block#2.sum#1(0, xs@67#0)
+//│ >      else globalThis:blockNme.sum#1(0, xs@67#0)
 //│ >    xs@63 is Some($param0@64) $param0@64 is Nil then "nothing"
 //│ >    xs@63 is None then "nothing"
 //│ Normalized:
@@ -98,6 +98,6 @@ fun test(xs) =
 //│ >            $param1@73 is Nil then .*#0(x@71#0, y@74#0)
 //│ >        $param0@65 is "sum" and
 //│ >          let xs@67 = $param1@66#0
-//│ >          else module:block#2.sum#1(0, xs@67#0)
+//│ >          else globalThis:blockNme.sum#1(0, xs@67#0)
 //│ >      $param0@64 is Nil then "nothing"
 //│ >    xs@63 is None then "nothing"

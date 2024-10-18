@@ -23,30 +23,31 @@ new Foo()
 
 Foo
 //│ JS:
-//│ () => {  return new Foo() }
+//│ () => { return new Foo() }
 //│ = [Function (anonymous)]
 
 Foo()
 //│ JS:
-//│ (() => {  return new Foo() })()
+//│ (() => { return new Foo() })()
 //│ = Foo {}
 
 
 class Foo with
   val x = 1
-  let y = 2
-  fun z() = 3
+  let y = x + 1
+  fun z() = y + x
 //│ JS:
 //│ this.Foo = class Foo {
 //│   #y;
 //│   constructor() {
+//│     let tmp;
 //│     this.x = 1;
-//│     this.y = 2;
+//│     tmp = this.x + 1;
+//│     this.#y = tmp;
 //│     undefined
 //│   }
 //│   z() {
-//│     
-//│     return 3
+//│     return this.#y + this.x
 //│   }
 //│ };
 //│ undefined
@@ -67,16 +68,14 @@ class Foo with
 //│   constructor() {
 //│     this.x1 = 1;
 //│     this.x2 = 2;
-//│     this.y1 = 3;
-//│     this.y2 = 4;
+//│     this.#y1 = 3;
+//│     this.#y2 = 4;
 //│     log("hello")
 //│   }
 //│   z1() {
-//│     
 //│     return 5
 //│   } 
 //│   z2() {
-//│     
 //│     return 6
 //│   }
 //│ };
@@ -94,7 +93,6 @@ class Foo with
 //│     undefined
 //│   }
 //│   foo(y) {
-//│     
 //│     return this.x + y
 //│   } 
 //│   bar(z) {
@@ -135,16 +133,16 @@ class Foo with
   val x = 1
   let x = 2
 //│ JS:
-//│ this.Foo = class Foo { #x; constructor() { this.x = 1; this.x = 2; undefined } }; undefined
+//│ this.Foo = class Foo { #x; constructor() { this.x = 1; this.#x = 2; undefined } }; undefined
 
 
 :fixme
 class Foo with val x = 1
 //│ ╔══[PARSE ERROR] Expected indented block after type declaration body; found 'val' keyword instead
-//│ ║  l.142: 	class Foo with val x = 1
+//│ ║  l.140: 	class Foo with val x = 1
 //│ ╙──       	               ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.142: 	class Foo with val x = 1
+//│ ║  l.140: 	class Foo with val x = 1
 //│ ╙──       	                   ^
 //│ JS:
 //│ /* error */

@@ -32,7 +32,11 @@ class JSBuilder extends CodeBuilder:
     case ts: semantics.TermSymbol =>
       ts.owner match
       case S(owner) =>
-        doc"${result(Value.This(owner))}.${ts.id.name}"
+        doc"${result(Value.This(owner))}.${
+          if (ts.k is syntax.LetBind) && !owner.isInstanceOf[semantics.TopLevelSymbol]
+          then "#" + ts.id.name
+          else ts.id.name
+        }"
       case N =>
         ts.id.name
     case ts: semantics.ClassSymbol => // TODO dedup
@@ -85,7 +89,7 @@ class JSBuilder extends CodeBuilder:
           flds.map(f => doc" # #${f.nme};").mkDocument(doc"")
         } # constructor(${
           ctorParams.unzip._2.mkDocument(", ")
-        }) { #{ ${
+        }) { #{  # ${
           ctorCode
         } #}  # }${
           mtds.map: td =>
@@ -140,20 +144,22 @@ class JSBuilder extends CodeBuilder:
       case N  => doc""
       t :: e :: returningTerm(rest)
     
+    case Begin(sub, thn) =>
+      doc"${returningTerm(sub)}${returningTerm(thn)}"
+      
     case End("") => doc""
     case End(msg) =>
       doc" # /* $msg */"
     // case _ => ???
   
   def block(t: Block)(using Raise, Scope): Document =
-    val prelude = if t.definedVars.isEmpty then doc"" else
+    if t.definedVars.isEmpty then returningTerm(t).stripBreaks else
       val vars = t.definedVars.toSeq.sortBy(_.uid).iterator.map(l =>
         l -> scope.allocateName(l))
       doc"let " :: vars.map: (_, nme) =>
         nme
       .toList.mkDocument(", ")
-      :: doc";"
-    prelude :: returningTerm(t)
+      :: doc";" :: returningTerm(t)
   
   def body(t: Block)(using Raise, Scope): Document = scope.nest givenIn:
     block(t)

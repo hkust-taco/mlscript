@@ -69,7 +69,7 @@ fun example(args) =
 //│   stats = Ls of 
 //│     TermDefinition:
 //│       k = Fun
-//│       sym = module:block#1.example
+//│       sym = globalThis:blockNme.example
 //│       params = S of Ls of 
 //│         Param:
 //│           flags = ()
@@ -79,7 +79,7 @@ fun example(args) =
 //│       body = S of If of Let:
 //│         sym = $scrut@32
 //│         term = App:
-//│           lhs = Ref of module:block#0.foo
+//│           lhs = Ref of globalThis:blockNme.foo
 //│           rhs = Tup of Ls of 
 //│             Fld:
 //│               flags = ()
@@ -124,7 +124,7 @@ fun example(args) =
 //│         tail = Let: \
 //│         sym = $scrut@34
 //│         term = App:
-//│           lhs = Ref of module:block#0.pipe
+//│           lhs = Ref of globalThis:blockNme.pipe
 //│           rhs = Tup of Ls of 
 //│             Fld:
 //│               flags = ()
@@ -132,7 +132,7 @@ fun example(args) =
 //│               asc = N
 //│             Fld:
 //│               flags = ()
-//│               value = Ref of module:block#0.abs
+//│               value = Ref of globalThis:blockNme.abs
 //│               asc = N
 //│         tail = Let: \
 //│         sym = $scrut@38
@@ -171,7 +171,7 @@ fun example(args) =
 //│           pattern = LitPat of BoolLit of true
 //│           continuation = Else of Lit of StrLit of "small"
 //│         tail = Else of Lit of StrLit of "medium"
-//│       resSym = ‹result of module:block#1.example›@43
+//│       resSym = ‹result of globalThis:blockNme.example›@43
 //│   res = Lit of UnitLit of true
 
 

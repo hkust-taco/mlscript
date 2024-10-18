@@ -5,7 +5,7 @@ fun res
 
 :showRepl
 fun res() = 1
-//│ REPL> Sending: try { function res() {  return 1 }; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Sending: try { function res() { return 1 }; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ REPL> Parsed:

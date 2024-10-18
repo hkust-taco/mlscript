@@ -316,7 +316,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
         (Term.Blk(acc.reverse, res), ctx)
       case (hd @ Let(Apps(id, tups), rhso, N)) :: sts if id.name.headOption.exists(_.isLower) =>
         val sym =
-          if ctx.outer.isDefined then TermSymbol(ImmutVal, ctx.outer, id)
+          if ctx.outer.isDefined then TermSymbol(LetBind, ctx.outer, id)
           else VarSymbol(id, nextUid)
         log(s"Processing `let` statement $id (${sym}) ${ctx.outer}")
         val newAcc = rhso match

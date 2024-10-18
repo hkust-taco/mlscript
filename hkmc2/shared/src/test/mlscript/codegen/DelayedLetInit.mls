@@ -30,7 +30,7 @@ z = 1
 
 fun f() = 1
 //│ JS:
-//│ function f() {  return 1 }; undefined
+//│ function f() { return 1 }; undefined
 
 f
 //│ JS:

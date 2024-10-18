@@ -18,7 +18,7 @@ sealed abstract class Block extends Product with AutoLocated:
   protected def children: Ls[Located] = ??? // Maybe extending AutoLocated is unnecessary
   lazy val definedVars: Set[Local] = this match
     case _: Return | _: Throw => Set.empty
-    case Begin(sub, rst) => rst.definedVars
+    case Begin(sub, rst) => sub.definedVars ++ rst.definedVars
     case Assign(l: TermSymbol, r, rst) => rst.definedVars
     case Assign(l, r, rst) => rst.definedVars + l
     case Match(scrut, arms, dflt, rst) =>

@@ -146,7 +146,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   def processTrees(trees: Ls[syntax.Tree])(using Raise): Unit =
     val elab = Elaborator(etl)
-    val blockSymbol = semantics.ModuleSymbol(syntax.Tree.Ident("block#"+blockNum))
+    val blockSymbol =
+      semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1
     given Elaborator.Ctx = curCtx.nest(S(blockSymbol))
     val (e, newCtx) = elab.topLevel(trees)

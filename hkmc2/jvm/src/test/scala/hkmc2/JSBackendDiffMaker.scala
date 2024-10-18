@@ -75,7 +75,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       mkQuery("", jsStr)
       
       val definedValues = (curCtx.locals ++ curCtx.members).iterator.collect:
-        case (nme, sym: TermSymbol) if sym.k.isInstanceOf[syntax.Val] => (nme, sym)
+        case (nme, sym: TermSymbol) if sym.k.isInstanceOf[syntax.ValLike] => (nme, sym)
       
       definedValues.toSeq.sortBy(_._2.uid).foreach: (nme, sym) =>
         val le = codegen.Return(codegen.Value.Ref(sym), implct = true)
