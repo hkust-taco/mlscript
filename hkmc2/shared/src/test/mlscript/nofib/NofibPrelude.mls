@@ -1,10 +1,12 @@
+
+
 abstract class Option[out T]: Some[T] | None
 class Some[out T](x: T) extends Option[T]
 class None extends Option
 
 class Lazy[out A](init: () -> A) with
   mut val cached: Option[A] = None
-  fun get =
+  fun get() =
     if cached is
       Some(v) then v
       else
@@ -12,12 +14,12 @@ class Lazy[out A](init: () -> A) with
         // set cached = Some(v) // TODO: need mut val set support
         v
 fun lazy(x) = Lazy(x)
-fun force(x) = if x is Lazy then x.get
+fun force(x) = if x is Lazy then x.get()
 
 abstract class List[out T]: Cons[T] | Nil
 class Cons[out T](head: T, tail: List[T]) extends List[T]
 module Nil extends List
-
+fun (::) cons(x, xs) = Cons(x, xs)
 
 type LazyList[out T] = Lazy[LzList[T]]
 abstract class LzList[out T]: LzCons[T] | LzNil
@@ -27,8 +29,28 @@ module LzNil extends LzList
 class Tup2[out T1, T2](fst: T1, snd: T2)
 class Tup3[out T1, T2, T3](fst: T1, snd: T2, thd: T3)
 
+fun (.) compose(f, g) = x => f(g(x))
 
-fun (::) cons(x, xs) = Cons(x, xs)
+fun flip(f, x, y) = f(y)(x)
+
+fun not(x) = if x then false else true
+
+fun power(a, n) = if n == 0 then 1 else a * power(a, n - 1)
+
+fun intDiv(a, b) =
+  fun go(a, b, r) = if a >= b then go(a - b, b, r + 1) else r
+  go(a, b, 0)
+
+fun (%) intMod(a, b) =
+  fun go(a, b) = if a >= b then go(a - b, b) else a
+  go(a, b)
+
+fun quotRem(a, b) = Tup2(intDiv(a, b), a % b)
+
+fun max(a, b) = if a > b then a else b
+
+fun abs(x) = if x > 0 then x else -x
+
 
 fun reverse(l) =
   fun r(l', l) = if l is Cons(x, xs) then r(Cons(x, l'), xs) else l'
@@ -109,7 +131,7 @@ fun maximum(xs) = foldl1(x => y => if x > y then x else y, xs)
 
 fun nubBy(eq, ls) = if ls is
   Nil then Nil
-  Cons(h, t) then h :: nubBy(eq, filter(y => !eq(h, y), t))
+  Cons(h, t) then h :: nubBy(eq, filter(y => eq(h, y), t))
 
 
 fun filter_lz(p, ls) = Lazy of () =>
@@ -122,7 +144,7 @@ fun filter_lz(p, ls) = Lazy of () =>
 fun nubBy_lz(eq, ls) = Lazy of () =>
   if force(ls) is
     LzNil then LzNil
-    LzCons(h, t) then LzCons(h, nubBy_lz(eq, filter(y => !eq(h, y), t)))
+    LzCons(h, t) then LzCons(h, nubBy_lz(eq, filter(y => not(eq(h, y)), t)))
 
 fun take_lz(n, ls) = if force(ls) is
   LzNil then Nil
@@ -131,16 +153,3 @@ fun take_lz(n, ls) = if force(ls) is
     else Cons(h, take_lz(n - 1, t))
 
 
-fun (.) compose(f, g) = x => f(g(x))
-fun flip(f, x, y) = f(y)(x)
-
-fun power(a, n) = if n == 0 then 1 else a * power(a, n - 1)
-fun intDiv(a, b) =
-  fun go(a, b, r) = if a >= b then go(a - b, b, r + 1) else r
-  go(a, b, 0)
-fun (%) intMod(a, b) =
-  fun go(a, b) = if a >= b then go(a - b, b) else a
-  go(a, b)
-fun quotRem(a, b) = Tup2(intDiv(a, b), a % b)
-fun max(a, b) = if a > b then a else b
-fun abs(x) = if x > 0 then x else -x

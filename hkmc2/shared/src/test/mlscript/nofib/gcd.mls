@@ -1,5 +1,5 @@
-:import Prelude.mls
-//│ Imported 50 member(s)
+:import NofibPrelude.mls
+//│ Imported 51 member(s)
 
 fun test(d) =
   let ns = enumFromTo(5000, 5000 + d)
