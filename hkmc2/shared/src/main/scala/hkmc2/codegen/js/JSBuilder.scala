@@ -9,6 +9,7 @@ import document.*
 import Scope.scope
 import hkmc2.syntax.ImmutVal
 import hkmc2.semantics.Elaborator
+import hkmc2.syntax.Tree
 
 
 // TODO factor some logic for other codegen backends
@@ -52,8 +53,8 @@ class JSBuilder extends CodeBuilder:
     case Value.This(Elaborator.Ctx.globalThisSymbol) => doc"globalThis"
     case Value.This(sym) => doc"this" // TODO qualify if necessary
     case Value.Ref(l) => getVar(l)
-    case Value.Lit(lit) =>
-      lit.idStr
+    case Value.Lit(Tree.StrLit(value)) => JSBuilder.makeStringLiteral(value)
+    case Value.Lit(lit) => lit.idStr
     case Call(Value.Ref(l: semantics.MemberSymbol[?]), lhs :: rhs :: Nil) if builtinOps contains l.nme =>
       doc"${result(lhs)} ${l.nme} ${result(rhs)}"
     case Call(fun, args) =>
@@ -66,10 +67,19 @@ class JSBuilder extends CodeBuilder:
       doc"($vars) => { #{  # ${
         body(bod)
       } #}  # }"
-    case Select(qual, name) =>
-      doc"${result(qual)}.${name.name}"
+    case Select(qual, id) =>
+      val name = id.name
+      doc"${result(qual)}${
+        if JSBuilder.isValidFieldName(name)
+        then doc".$name"
+        else name.toIntOption match
+          case S(index) => s"[$index]"
+          case N => s"[${JSBuilder.makeStringLiteral(name)}]"
+      }"
     case Instantiate(sym, as) =>
       doc"new ${getVar(sym)}(${as.map(result).mkDocument(", ")})"
+    case Value.Arr(es) =>
+      doc"[ #{  # ${es.map(result).mkDocument(doc", # ")} #}  # ]"
   def returningTerm(t: Block)(using Raise, Scope): Document = t match
     case Assign(l, r, rst) =>
       doc" # ${getVar(l)} = ${result(r)};${returningTerm(rst)}"
@@ -170,3 +180,91 @@ class JSBuilder extends CodeBuilder:
   def body(t: Block)(using Raise, Scope): Document = scope.nest givenIn:
     block(t)
   
+  
+object JSBuilder:
+  import scala.util.matching.Regex
+  
+  private val identifierPattern: Regex = "^[A-Za-z$][A-Za-z0-9$]*$".r
+
+  def isValidIdentifier(s: Str): Bool = identifierPattern.matches(s) && !keywords.contains(s)
+  
+  // in this case, a keyword can be used as a field name
+  // e.g. `something.class` is valid
+  def isValidFieldName(s: Str): Bool = identifierPattern.matches(s)
+  
+  val keywords: Set[Str] = Set(
+    // Reserved keywords as of ECMAScript 2015
+    "break",
+    "case",
+    "catch",
+    "class",
+    "const",
+    "continue",
+    "debugger",
+    "default",
+    "delete",
+    "do",
+    "else",
+    "export",
+    "extends",
+    "finally",
+    "for",
+    "function",
+    "if",
+    "import",
+    "in",
+    "instanceof",
+    "new",
+    "return",
+    "super",
+    "switch",
+    "this",
+    "throw",
+    "try",
+    "typeof",
+    "var",
+    "void",
+    "while",
+    "with",
+    "yield",
+    // The following are reserved as future keywords by the ECMAScript specification.
+    // They have no special functionality at present, but they might at some future time,
+    // so they cannot be used as identifiers. These are always reserved:
+    "enum",
+    // The following are only reserved when they are found in strict mode code:
+    "abstract",
+    "boolean",
+    "byte",
+    "char",
+    "double",
+    "final",
+    "float",
+    "goto",
+    "int",
+    "long",
+    "native",
+    "short",
+    "synchronized",
+    "throws",
+    "transient",
+    "volatile",
+  )
+  
+  def makeStringLiteral(s: Str): Str =
+    s.map[Str] {
+      case '"'  => "\\\""
+      case '\\' => "\\\\"
+      case '\b' => "\\b"
+      case '\f' => "\\f"
+      case '\n' => "\\n"
+      case '\r' => "\\r"
+      case '\t' => "\\t"
+      case c =>
+        if 0 < c && c <= 255 && !c.isControl
+        then c.toString
+        else f"\\u${c.toInt}%04X"
+    }.mkString("\"", "", "\"")
+  
+end JSBuilder
+
+

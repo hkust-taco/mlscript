@@ -318,8 +318,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
         (Term.Blk(acc.reverse, res), ctx)
       case (hd @ Let(Apps(id, tups), rhso, N)) :: sts if id.name.headOption.exists(_.isLower) =>
         val sym =
-          if ctx.outer.isDefined then TermSymbol(LetBind, ctx.outer, id)
-          else VarSymbol(id, nextUid)
+          fieldOrVarSym(LetBind, id)
         log(s"Processing `let` statement $id (${sym}) ${ctx.outer}")
         val newAcc = rhso match
           case S(rhs) =>
@@ -457,12 +456,16 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
         case (_: TermDef | _: TypeDef) :: _ => go(sts, Nil)
         // case s :: Nil => (term(s), ctx)
         case _ => go(sts, Nil)
-
+  
+  def fieldOrVarSym(k: TermDefKind, id: Ident)(using Ctx): LocalSymbol & NamedSymbol =
+    if ctx.outer.isDefined then TermSymbol(k, ctx.outer, id)
+    else VarSymbol(id, nextUid)
+  
   def param(t: Tree): Ctxl[Ls[Param]] = t match
     case id: Ident =>
-      Param(FldFlags.empty, VarSymbol(id, nextUid), N) :: Nil
+      Param(FldFlags.empty, fieldOrVarSym(ParamBind, id), N) :: Nil
     case InfixApp(lhs: Ident, Keyword.`:`, rhs) =>
-      Param(FldFlags.empty, VarSymbol(lhs, nextUid), S(term(rhs))) :: Nil
+      Param(FldFlags.empty, fieldOrVarSym(ParamBind, lhs), S(term(rhs))) :: Nil
     case App(Ident(","), list) => params(list)._1
     case TermDef(ImmutVal, _, S(inner), _) => param(inner)
   
@@ -470,7 +473,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
     case Tup(ps) =>
       val res = ps.flatMap(param)
       (res, ctx.copy(locals = ctx.locals ++ res.map(p => p.sym.name -> p.sym)))
-
+  
   def typeParams(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
     case TyTup(ps) =>
       val vs = ps.map:

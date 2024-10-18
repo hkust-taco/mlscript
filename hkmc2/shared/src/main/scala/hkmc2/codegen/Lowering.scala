@@ -51,6 +51,10 @@ class Lowering(using TL, Raise, Elaborator.State):
       k(Value.Lit(lit))
     case st.Ret(res) =>
       returnedTerm(res)
+    case st.Tup(fs) =>
+      fs.foldRight[Ls[Path] => Block](args => k(Value.Arr(args.reverse)))((a, acc) =>
+        args => subTerm(a.value)(r => acc(r :: args))
+      )(Nil)
     case st.Ref(sym) =>
       sym match
       case sym: LocalSymbol =>
@@ -64,7 +68,9 @@ class Lowering(using TL, Raise, Elaborator.State):
             k(Value.Ref(sym))
           else
             val ps = clsDefn.paramsOpt.getOrElse(Nil)
-            k(Value.Lam(ps, Return(Instantiate(sym, ps.map(p => Value.Ref(p.sym))), false)))
+            val psSyms = ps.map(p => 
+              p.copy(sym = new VarSymbol(p.sym.id, summon[Elaborator.State].nextUid)))
+            k(Value.Lam(psSyms, Return(Instantiate(sym, psSyms.map(p => Value.Ref(p.sym))), false)))
     case st.App(Ref(sym: ClassSymbol), Tup(args)) => // TODO check kind is Cls
       args.foldRight[Ls[Path] => Block](args => k(Instantiate(sym, args.reverse)))((a, acc) =>
         args => subTerm(a.value)(r => acc(r :: args))

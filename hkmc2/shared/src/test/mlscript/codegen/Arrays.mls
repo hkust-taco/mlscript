@@ -1,0 +1,34 @@
+:js
+
+:import PredefJS.mls
+//│ Imported 1 member(s)
+
+
+let empty = []
+//│ empty = []
+
+empty.0
+
+val single = [1]
+//│ single = [ 1 ]
+
+single.0
+//│ = 1
+
+val pair = [1, 2]
+//│ pair = [ 1, 2 ]
+
+pair.0
+//│ = 1
+
+pair.1
+//│ = 2
+
+val triple = [1, 2, 3]
+//│ triple = [ 1, 2, 3 ]
+
+triple.3
+
+triple.4
+
+

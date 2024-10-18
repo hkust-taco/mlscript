@@ -102,4 +102,5 @@ enum Value extends Path:
   case This(sym: MemberSymbol[?])
   case Lit(lit: Literal)
   case Lam(params: Ls[Param], body: Block)
+  case Arr(elems: Ls[Path])
 

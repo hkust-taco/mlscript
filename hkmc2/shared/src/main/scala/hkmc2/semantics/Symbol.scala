@@ -40,6 +40,7 @@ class FlowSymbol(label: Str, uid: Int) extends Symbol:
 sealed trait LocalSymbol extends Symbol
 sealed trait NamedSymbol extends Symbol:
   def name: Str
+  def id: Ident
 
 abstract class BlockLocalSymbol(name: Str, uid: Int) extends FlowSymbol(name, uid) with LocalSymbol:
   var decl: Opt[Declaration] = N

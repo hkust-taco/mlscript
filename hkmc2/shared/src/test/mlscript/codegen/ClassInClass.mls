@@ -1,0 +1,83 @@
+:js
+
+:import PredefJS.mls
+//│ Imported 1 member(s)
+
+
+:sjs
+class Outer(a, b) with
+  class Inner(c) with
+    fun i1(d) = [b, c, d]
+    log(a)
+    log(c)
+    log(i1(a))
+  fun o1(c) = Inner(c)
+  fun o2(c, d) = Inner(c).i1(d)
+  val i = Inner(a)
+  log(i.c)
+  log(i.i1(1))
+//│ JS:
+//│ this.Outer = class Outer {
+//│   constructor(a, b) {
+//│     this.a = a;
+//│     this.b = b;
+//│     let tmp, tmp1;
+//│     this.Inner = class Inner {
+//│       constructor(c) {
+//│         this.c = c;
+//│         let tmp2, tmp3, tmp4;
+//│         tmp2 = log(this.a);
+//│         tmp3 = log(this.c);
+//│         tmp4 = this.i1(this.a);
+//│         log(tmp4)
+//│       }
+//│       i1(d) {
+//│         return [
+//│           this.b,
+//│           this.c,
+//│           d
+//│         ]
+//│       }
+//│     };
+//│     this.i = new this.Inner(this.a);
+//│     tmp = log(this.i.c);
+//│     tmp1 = this.i.i1(1);
+//│     log(tmp1)
+//│   }
+//│   o1(c) {
+//│     return new this.Inner(c)
+//│   } 
+//│   o2(c1, d) {
+//│     let tmp;
+//│     tmp = new this.Inner(c1);
+//│     return tmp.i1(d)
+//│   }
+//│ };
+//│ undefined
+
+
+// FIXME undefined due to unqualified `this`
+val o = Outer(100, 200)
+//│ > undefined
+//│ > 100
+//│ > [ undefined, 100, undefined ]
+//│ > 100
+//│ > [ undefined, 100, 1 ]
+//│ o = Outer { a: 100, b: 200, Inner: [class Inner], i: Inner { c: 100 } }
+
+o.o1(30)
+//│ > undefined
+//│ > 30
+//│ > [ undefined, 30, undefined ]
+//│ = Inner { c: 30 }
+
+o.o2(30, 40)
+//│ > undefined
+//│ > 30
+//│ > [ undefined, 30, undefined ]
+//│ = [ undefined, 30, 40 ]
+
+o.i
+//│ = Inner { c: 100 }
+
+

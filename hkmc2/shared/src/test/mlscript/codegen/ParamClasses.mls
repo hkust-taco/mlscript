@@ -46,10 +46,25 @@ class Foo(a, b)
 //│ JS:
 //│ this.Foo = class Foo { constructor(a, b) { this.a = a; this.b = b;  } }; undefined
 
-Foo
+let f = Foo
 //│ JS:
-//│ (a, b) => { return new this.Foo(a, b) }
-//│ = [Function (anonymous)]
+//│ this.f = (a, b) => { return new this.Foo(a, b) }; undefined
+//│ f = [Function (anonymous)]
+
+let f = f(1, 2)
+//│ JS:
+//│ let tmp; tmp = this.f(1, 2); this.f = tmp; undefined
+//│ f = Foo { a: 1, b: 2 }
+
+f.a
+//│ JS:
+//│ this.f.a
+//│ = 1
+
+f.b
+//│ JS:
+//│ this.f.b
+//│ = 2
 
 let f = Foo(1, 2)
 //│ JS:
@@ -72,5 +87,32 @@ Foo(log(1), log(2))
 //│ > 1
 //│ > 2
 //│ = Foo { a: undefined, b: undefined }
+
+
+class Inner(c) with
+  fun i1(d) = c + d
+  log(c)
+//│ JS:
+//│ this.Inner = class Inner {
+//│   constructor(c) {
+//│     this.c = c;
+//│     log(this.c)
+//│   }
+//│   i1(d) {
+//│     return this.c + d
+//│   }
+//│ };
+//│ undefined
+
+let i = new Inner(100)
+//│ JS:
+//│ let tmp; tmp = new this.Inner(100); this.i = tmp; undefined
+//│ > 100
+//│ i = Inner { c: 100 }
+
+i.i1(20)
+//│ JS:
+//│ this.i.i1(20)
+//│ = 120
 
 

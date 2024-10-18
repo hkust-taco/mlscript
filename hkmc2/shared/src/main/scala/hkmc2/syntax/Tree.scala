@@ -16,7 +16,7 @@ sealed trait Literal extends AutoLocated:
   val idStr: Str = this match
     case IntLit(value) => value.toString
     case DecLit(value) => value.toString
-    case StrLit(value) => value.iterator.map:
+    case StrLit(value) => value.iterator.map: // TODO dedup logi with `JSBuilder.makeStringLiteral`?
         case '\b' => "\\b" case '\t' => "\\t" case '\n' => "\\n" case '\r' => "\\r"
         case '\f' => "\\f" case '"' => "\\\"" case '\\' => "\\\\"
         case c if c.isControl => f"\\u${c.toInt}%04x"
@@ -165,6 +165,7 @@ sealed abstract class Val(str: Str, desc: Str) extends ValLike(str, desc)
 case object ImmutVal extends Val("val", "value")
 case object MutVal extends Val("mut val", "mutable value")
 case object LetBind extends ValLike("let", "let binding")
+case object ParamBind extends ValLike("", "parameter")
 case object Fun extends TermDefKind("fun", "function")
 sealed abstract class TypeDefKind(desc: Str) extends DeclKind(desc)
 sealed trait ObjDefKind

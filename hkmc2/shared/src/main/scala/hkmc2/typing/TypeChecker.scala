@@ -67,7 +67,7 @@ class TypeChecker(using raise: Raise):
                   args.size.toString}" -> t.toLoc :: Nil))
             // val p1 = ps.zip(args).map: (p, a) =>
             val p1 = ps.zip(args).foreach: (p, a) =>
-              constrain(P.enterIf(typeProd(a.value), ts, r.refNum, rc), C.Flow(p.sym))
+              constrain(P.enterIf(typeProd(a.value), ts, r.refNum, rc), C.Flow(p.sym.asInstanceOf/*FIXME*/))
             constrain(P.Flow(td.resSym), C.Flow(app.resSym))
         // P.Flow(td.resSym)
         P.Flow(app.resSym)
@@ -85,7 +85,7 @@ class TypeChecker(using raise: Raise):
   
   def typeParams(ps: Ls[Param]): Ls[(C, P)] =
     ps.map: p =>
-      (C.Flow(p.sym), P.Flow(p.sym))
+      (C.Flow(p.sym.asInstanceOf/*FIXME*/), P.Flow(p.sym.asInstanceOf/*FIXME*/))
   
   def typeCons(t: Term): Consumer = t match
     case Ref(sym: VarSymbol) => C.Flow(sym)

@@ -38,7 +38,7 @@ class Scope(val parent: Opt[Scope], val bindings: MutMap[Local, Str]):
     
     val name =
       // Try just prefix.
-      if !inScope(realPrefix) && !keywords.contains(realPrefix) then realPrefix
+      if !inScope(realPrefix) && !JSBuilder.keywords.contains(realPrefix) then realPrefix
       else
         // Try prefix with an integer.
         (1 to Int.MaxValue).iterator.map(i => s"$realPrefix$i").filterNot(inScope).next
@@ -55,64 +55,6 @@ object Scope:
   def empty: Scope = Scope(None, MutMap.empty)
   
   def replaceTicks(str: Str): Str = str.replace('\'', '$')
-  
-  val keywords: Set[Str] = Set(
-    // Reserved keywords as of ECMAScript 2015
-    "break",
-    "case",
-    "catch",
-    "class",
-    "const",
-    "continue",
-    "debugger",
-    "default",
-    "delete",
-    "do",
-    "else",
-    "export",
-    "extends",
-    "finally",
-    "for",
-    "function",
-    "if",
-    "import",
-    "in",
-    "instanceof",
-    "new",
-    "return",
-    "super",
-    "switch",
-    "this",
-    "throw",
-    "try",
-    "typeof",
-    "var",
-    "void",
-    "while",
-    "with",
-    "yield",
-    // The following are reserved as future keywords by the ECMAScript specification.
-    // They have no special functionality at present, but they might at some future time,
-    // so they cannot be used as identifiers. These are always reserved:
-    "enum",
-    // The following are only reserved when they are found in strict mode code:
-    "abstract",
-    "boolean",
-    "byte",
-    "char",
-    "double",
-    "final",
-    "float",
-    "goto",
-    "int",
-    "long",
-    "native",
-    "short",
-    "synchronized",
-    "throws",
-    "transient",
-    "volatile",
-  )
   
 end Scope
 
