@@ -1,23 +1,32 @@
 :js
+
+:import PredefJS.mls
+//│ Imported 1 member(s)
+
+
 :sjs
-
-
 val x = 2
 fun foo() =
   x + 1
 //│ JS:
-//│ this.x = 2; function foo() { return this.x + 1 }; undefined
+//│ globalThis.x = 2; function foo() { return globalThis.x + 1 }; undefined
 //│ x = 2
 
+:sjs
 class Test with
   log(foo())
 //│ JS:
-//│ this.Test = class Test { constructor() { let tmp; tmp = this.foo(); log(tmp) } }; undefined
+//│ globalThis.Test = class Test {
+//│   constructor() {
+//│     let tmp;
+//│     tmp = globalThis.foo();
+//│     log(tmp)
+//│   }
+//│ };
+//│ undefined
 
-:fixme
 new Test
-//│ JS:
-//│ new this.Test()
-//│ ═══[RUNTIME ERROR] TypeError: this.foo is not a function
+//│ > 3
+//│ = Test {}
 
 

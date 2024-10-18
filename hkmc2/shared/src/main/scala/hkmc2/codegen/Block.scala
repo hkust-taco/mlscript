@@ -59,7 +59,8 @@ case class Assign(lhs: Local, rhs: Result, rest: Block) extends Block with Produ
 
 case class Define(defn: Defn, rest: Block) extends Block with ProductWithTail
 
-sealed abstract class Defn
+sealed abstract class Defn:
+  val sym: MemberSymbol[?]
 
 final case class TermDefn(
     k: syntax.TermDefKind,

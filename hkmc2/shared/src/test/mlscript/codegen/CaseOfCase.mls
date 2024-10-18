@@ -20,25 +20,25 @@ fun test(x) =
 //│ JS:
 //│ function test(x) {
 //│   let param0, v, scrut, param01, v1, tmp, tmp1;
-//│   if (x instanceof this.Some) {
+//│   if (x instanceof globalThis.Some) {
 //│     param0 = x.value;
 //│     v = param0;
 //│     tmp = v + 1;
-//│     tmp1 = new this.Some(tmp);
+//│     tmp1 = new globalThis.Some(tmp);
 //│   } else {
-//│     if (x === this.None) {
-//│       tmp1 = this.None;
+//│     if (x === globalThis.None) {
+//│       tmp1 = globalThis.None;
 //│     } else {
 //│       throw new globalThis.Error("match error")
 //│     }
 //│   }
 //│   scrut = tmp1;
-//│   if (scrut instanceof this.Some) {
+//│   if (scrut instanceof globalThis.Some) {
 //│     param01 = scrut.value;
 //│     v1 = param01;
 //│     return log(v1)
 //│   } else {
-//│     if (scrut === this.None) {
+//│     if (scrut === globalThis.None) {
 //│       return log("none")
 //│     } else {
 //│       throw new globalThis.Error("match error")

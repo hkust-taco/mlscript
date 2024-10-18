@@ -17,23 +17,24 @@ class Outer(a, b) with
   log(i.c)
   log(i.i1(1))
 //│ JS:
-//│ this.Outer = class Outer {
+//│ globalThis.Outer = class Outer {
 //│   constructor(a, b) {
 //│     this.a = a;
 //│     this.b = b;
 //│     let tmp, tmp1;
+//│     const this$Outer = this;
 //│     this.Inner = class Inner {
 //│       constructor(c) {
 //│         this.c = c;
 //│         let tmp2, tmp3, tmp4;
-//│         tmp2 = log(this.a);
+//│         tmp2 = log(this$Outer.a);
 //│         tmp3 = log(this.c);
-//│         tmp4 = this.i1(this.a);
+//│         tmp4 = this.i1(this$Outer.a);
 //│         log(tmp4)
 //│       }
 //│       i1(d) {
 //│         return [
-//│           this.b,
+//│           this$Outer.b,
 //│           this.c,
 //│           d
 //│         ]
@@ -56,26 +57,25 @@ class Outer(a, b) with
 //│ undefined
 
 
-// FIXME undefined due to unqualified `this`
 val o = Outer(100, 200)
-//│ > undefined
 //│ > 100
-//│ > [ undefined, 100, undefined ]
 //│ > 100
-//│ > [ undefined, 100, 1 ]
+//│ > [ 200, 100, 100 ]
+//│ > 100
+//│ > [ 200, 100, 1 ]
 //│ o = Outer { a: 100, b: 200, Inner: [class Inner], i: Inner { c: 100 } }
 
 o.o1(30)
-//│ > undefined
+//│ > 100
 //│ > 30
-//│ > [ undefined, 30, undefined ]
+//│ > [ 200, 30, 100 ]
 //│ = Inner { c: 30 }
 
 o.o2(30, 40)
-//│ > undefined
+//│ > 100
 //│ > 30
-//│ > [ undefined, 30, undefined ]
-//│ = [ undefined, 30, 40 ]
+//│ > [ 200, 30, 100 ]
+//│ = [ 200, 30, 40 ]
 
 o.i
 //│ = Inner { c: 100 }

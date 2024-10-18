@@ -9,33 +9,33 @@
 
 class Foo
 //│ JS:
-//│ this.Foo = class Foo { constructor() {  } }; undefined
+//│ globalThis.Foo = class Foo { constructor() {  } }; undefined
 
 new Foo
 //│ JS:
-//│ new this.Foo()
+//│ new globalThis.Foo()
 //│ = Foo {}
 
 new Foo()
 //│ JS:
-//│ new this.Foo()
+//│ new globalThis.Foo()
 //│ = Foo {}
 
 Foo
 //│ JS:
-//│ () => { return new this.Foo() }
+//│ () => { return new globalThis.Foo() }
 //│ = [Function (anonymous)]
 
 Foo()
 //│ JS:
-//│ new this.Foo()
+//│ new globalThis.Foo()
 //│ = Foo {}
 
 
 class Foo with { log("hi") }
 log("ok")
 //│ JS:
-//│ this.Foo = class Foo { constructor() { log("hi") } }; log("ok")
+//│ globalThis.Foo = class Foo { constructor() { log("hi") } }; log("ok")
 //│ > ok
 
 fun test() =
@@ -50,7 +50,7 @@ class Foo with
   let y = x + 1
   fun z() = y + x
 //│ JS:
-//│ this.Foo = class Foo {
+//│ globalThis.Foo = class Foo {
 //│   #y;
 //│   constructor() {
 //│     let tmp;
@@ -74,7 +74,7 @@ class Foo with
   fun z2() = 6
   log("hello")
 //│ JS:
-//│ this.Foo = class Foo {
+//│ globalThis.Foo = class Foo {
 //│   #y1;
 //│   #y2;
 //│   constructor() {
@@ -99,7 +99,7 @@ class Foo with
   fun foo(y) = x + y
   fun bar(z) = foo(z) + 1
 //│ JS:
-//│ this.Foo = class Foo {
+//│ globalThis.Foo = class Foo {
 //│   constructor() {
 //│     this.x = 1;
 //│   }
@@ -120,12 +120,12 @@ log(a.foo(1))
 log(a.bar(1))
 //│ JS:
 //│ let tmp, tmp1, tmp2, tmp3, tmp4;
-//│ tmp = new this.Foo();
-//│ this.a = tmp;
-//│ tmp1 = log(this.a.x);
-//│ tmp2 = this.a.foo(1);
+//│ tmp = new globalThis.Foo();
+//│ globalThis.a = tmp;
+//│ tmp1 = log(globalThis.a.x);
+//│ tmp2 = globalThis.a.foo(1);
 //│ tmp3 = log(tmp2);
-//│ tmp4 = this.a.bar(1);
+//│ tmp4 = globalThis.a.bar(1);
 //│ log(tmp4)
 //│ > 1
 //│ > 2
@@ -144,7 +144,7 @@ class Foo with
   val x = 1
   let x = 2
 //│ JS:
-//│ this.Foo = class Foo { #x; constructor() { this.x = 1; this.#x = 2; } }; undefined
+//│ globalThis.Foo = class Foo { #x; constructor() { this.x = 1; this.#x = 2; } }; undefined
 
 
 :fixme

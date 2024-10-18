@@ -13,8 +13,8 @@ module None
 if Some(0) is Some(x) then x
 //│ JS:
 //│ let scrut, param0, x;
-//│ scrut = new this.Some(0);
-//│ if (scrut instanceof this.Some) {
+//│ scrut = new globalThis.Some(0);
+//│ if (scrut instanceof globalThis.Some) {
 //│   param0 = scrut.value;
 //│   x = param0;
 //│   x
@@ -32,8 +32,8 @@ if s is
   Some(x) then x
 //│ JS:
 //│ let scrut, param0, x;
-//│ scrut = this.s;
-//│ if (scrut instanceof this.Some) {
+//│ scrut = globalThis.s;
+//│ if (scrut instanceof globalThis.Some) {
 //│   param0 = scrut.value;
 //│   x = param0;
 //│   x
@@ -63,7 +63,7 @@ x => if x is Some(x) then x
 //│ JS:
 //│ (x) => {
 //│   let param0, x1;
-//│   if (x instanceof this.Some) {
+//│   if (x instanceof globalThis.Some) {
 //│     param0 = x.value;
 //│     x1 = param0;
 //│     return x1
@@ -83,7 +83,7 @@ fun f(x) = if x is
 //│ JS:
 //│ function f(x) {
 //│   let param0, x1, scrut;
-//│   if (x instanceof this.Some) {
+//│   if (x instanceof globalThis.Some) {
 //│     param0 = x.value;
 //│     x1 = param0;
 //│     scrut = x1 > 0;
@@ -93,7 +93,7 @@ fun f(x) = if x is
 //│       return log("oops")
 //│     }
 //│   } else {
-//│     if (x === this.None) {
+//│     if (x === globalThis.None) {
 //│       return "ok"
 //│     } else {
 //│       return log("oops")
@@ -125,12 +125,12 @@ fun f(x) = if x is
 //│ JS:
 //│ function f(x) {
 //│   let param0, param1, a, b, param01, u;
-//│   if (x instanceof this.Some) {
+//│   if (x instanceof globalThis.Some) {
 //│     param01 = x.value;
 //│     u = param01;
 //│     return u
 //│   } else {
-//│     if (x instanceof this.Pair) {
+//│     if (x instanceof globalThis.Pair) {
 //│       param0 = x.fst;
 //│       param1 = x.snd;
 //│       a = param0;
@@ -159,7 +159,7 @@ fun f(x) = log of if x is
 //│ JS:
 //│ function f(x) {
 //│   let param0, tmp;
-//│   if (x instanceof this.Some) {
+//│   if (x instanceof globalThis.Some) {
 //│     param0 = x.value;
 //│     if (param0 === 0) {
 //│       tmp = "0";
@@ -167,7 +167,7 @@ fun f(x) = log of if x is
 //│       tmp = "oops";
 //│     }
 //│   } else {
-//│     if (x === this.None) {
+//│     if (x === globalThis.None) {
 //│       tmp = "ok";
 //│     } else {
 //│       tmp = "oops";

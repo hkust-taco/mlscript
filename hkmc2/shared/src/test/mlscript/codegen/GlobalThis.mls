@@ -27,10 +27,8 @@ globalThis
 
 // FIXME prevent rebinding of this name
 let globalThis = "oops"
-//│ globalThis = 'oops'
 
 globalThis
-//│ = 'oops'
 
 // Notice the failed exception throw
 :re

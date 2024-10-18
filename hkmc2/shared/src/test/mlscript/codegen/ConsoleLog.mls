@@ -39,7 +39,7 @@ console.log("a")
 console.log("b")
 123
 //│ JS:
-//│ let tmp, tmp1; tmp = this.console.log("a"); tmp1 = this.console.log("b"); 123
+//│ let tmp, tmp1; tmp = globalThis.console.log("a"); tmp1 = globalThis.console.log("b"); 123
 //│ > a
 //│ > b
 //│ = 123
@@ -47,7 +47,7 @@ console.log("b")
 let l = console.log
 l(123)
 //│ JS:
-//│ this.l = this.console.log; this.l(123)
+//│ globalThis.l = globalThis.console.log; globalThis.l(123)
 //│ > 123
 //│ l = [Function: log]
 
@@ -59,7 +59,7 @@ l(123)
 
 console.log("a")
 //│ JS:
-//│ this.console.log("a")
+//│ globalThis.console.log("a")
 //│ > a
 
 
@@ -72,13 +72,13 @@ console.log("c")
 y * 2
 //│ JS:
 //│ let tmp, tmp1, tmp2, tmp3;
-//│ tmp = this.console.log("a");
-//│ this.x = 123;
-//│ tmp1 = this.console.log("b");
-//│ tmp2 = this.x + 1;
-//│ this.y = tmp2;
-//│ tmp3 = this.console.log("c");
-//│ this.y * 2
+//│ tmp = globalThis.console.log("a");
+//│ globalThis.x = 123;
+//│ tmp1 = globalThis.console.log("b");
+//│ tmp2 = globalThis.x + 1;
+//│ globalThis.y = tmp2;
+//│ tmp3 = globalThis.console.log("c");
+//│ globalThis.y * 2
 //│ > a
 //│ > b
 //│ > c

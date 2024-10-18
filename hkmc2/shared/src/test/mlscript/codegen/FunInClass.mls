@@ -1,0 +1,58 @@
+:js
+
+:import PredefJS.mls
+//│ Imported 1 member(s)
+
+
+:sjs
+fun test(a) =
+  class Inner(b) with
+    log(a)
+    fun f(c) = [a, b, c]
+    fun g(d) =
+      fun h(e) = [a, b, d, e]
+      h(d)
+  Inner(42)
+//│ JS:
+//│ function test(a) {
+//│   class Inner {
+//│     constructor(b) {
+//│       this.b = b;
+//│       let tmp;
+//│       tmp = log(a);
+//│     }
+//│     f(c) {
+//│       return [
+//│         a,
+//│         this.b,
+//│         c
+//│       ]
+//│     } 
+//│     g(d) {
+//│       const this$Inner = this;
+//│       function h(e) {
+//│         return [
+//│           a,
+//│           this$Inner.b,
+//│           d,
+//│           e
+//│         ]
+//│       };
+//│       return h(d)
+//│     }
+//│   };
+//│   return new Inner(42)
+//│ };
+//│ undefined
+
+let i = test(100)
+//│ > 100
+//│ i = Inner { b: 42 }
+
+i.f(200)
+//│ = [ 100, 42, 200 ]
+
+i.g(200)
+//│ = [ 100, 42, 200, 200 ]
+
+
