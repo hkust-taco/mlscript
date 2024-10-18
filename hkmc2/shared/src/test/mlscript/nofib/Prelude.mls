@@ -2,14 +2,23 @@ abstract class Option[out T]: Some[T] | None
 class Some[out T](x: T) extends Option[T]
 class None extends Option
 
-// FIXME:
-class Lazy[out A](init: A)
+class Lazy[out A](init: () -> A) with
+  mut val cached: Option[A] = None
+  fun get =
+    if cached is
+      Some(v) then v
+      else
+        let v = init()
+        // set cached = Some(v) // TODO: need mut val set support
+        v
+fun lazy(x) = Lazy(x)
+fun force(x) = if x is Lazy then x.get
 
 abstract class List[out T]: Cons[T] | Nil
 class Cons[out T](head: T, tail: List[T]) extends List[T]
 module Nil extends List
 
-// TODO:
+
 type LazyList[out T] = Lazy[LzList[T]]
 abstract class LzList[out T]: LzCons[T] | LzNil
 class LzCons[out T](head: T, tail: LazyList[T]) extends LzList[T]
@@ -19,87 +28,102 @@ class Tup2[out T1, T2](fst: T1, snd: T2)
 class Tup3[out T1, T2, T3](fst: T1, snd: T2, thd: T3)
 
 
-
-fun lazy(f) = Lazy(f)
-fun force(l) = l //FIXME:
-
 fun (::) cons(x, xs) = Cons(x, xs)
+
 fun reverse(l) =
   fun r(l', l) = if l is Cons(x, xs) then r(Cons(x, l'), xs) else l'
   r(Nil, l)
+
 fun map(f, xs) = if xs is
   Cons(x, xs) then Cons(f(x), map(f, xs))
   Nil then Nil
+
 fun listLen(ls) =
   fun l(ls, a) = if ls is
     Nil then a
     Cons(h, t) then l(t, a + 1)
   l(ls, 0)
+
 fun enumFromTo(a, b) = if a <= b then Cons(a, enumFromTo(a + 1, b)) else Nil
+
 fun enumFromThenTo(a, t, b) = if a <= b then Cons(a, enumFromThenTo(t, 2 * t - a, b)) else Nil
+
 fun drop(n, ls) = if ls is
   Nil then Nil
   Cons(h, t) and
     n <= 0 then ls
     else drop(n - 1, t)
+
 fun take(n, ls) = if ls is
   Nil then Nil
   Cons(h, t) and
     n <= 0 then Nil
     else Cons(h, take(n - 1, t))
+
 fun zip(xs, ys) = if xs is
   Cons(x, xs) and ys is Cons(y, ys) then Cons(Tup2(x, y), zip(xs, ys))
   else Nil
+
 fun snd(x)= if x is Tup2(f, s) then s
+
 fun inList(x, ls) = if ls is
   Cons(h, t) and
     x == h then true
     else inList(x, t)
   Nil then false
+
 fun (++) append(xs, ys) = if xs is
   Nil then ys
   Cons(x, xs) then Cons(x, append(xs, ys))
+
 fun filter(f, ls) = if ls is
   Nil then Nil
   Cons(h, t) and
     f(h) then h :: filter(f, t)
     else filter(f, t)
+
 fun all(p, ls) = if ls is
   Nil then true
   Cons(h, t) and
     p(h) then all(p, t)
     else false
+
 fun dropWhile(f, ls) = if ls is
   Nil then Nil
   Cons(h, t) and
     f(h) then dropWhile(f, t)
     else h :: t
+
 fun foldl(f, a, xs) = if xs is
   Nil then a
   Cons(h, t) then foldl(f, f(a, h), t)
+
 fun foldr(f, z, xs) = if xs is
   Nil then z
   Cons(h, t) then f(h, foldr(f, z, t))
+
 fun foldl1(f, ls) = if
   ls is Cons(x, xs) then foldl(f, x, xs)
+
 fun maximum(xs) = foldl1(x => y => if x > y then x else y, xs)
+
 fun nubBy(eq, ls) = if ls is
   Nil then Nil
   Cons(h, t) then h :: nubBy(eq, filter(y => !eq(h, y), t))
 
 
-fun filter_lz(p, ls) = Lazy(
+fun filter_lz(p, ls) = Lazy of () =>
   if force(ls) is
     LzNil then LzNil
     LzCons(h, t) and
       p(h) then LzCons(h, filter_lz(p, t))
       else force(filter_lz(p, t))
-)
-fun nubBy_lz(eq, ls) = Lazy(
+
+fun nubBy_lz(eq, ls) = Lazy of () =>
   if force(ls) is
     LzNil then LzNil
     LzCons(h, t) then LzCons(h, nubBy_lz(eq, filter(y => !eq(h, y), t)))
-)
+
 fun take_lz(n, ls) = if force(ls) is
   LzNil then Nil
   LzCons(h, t) and
