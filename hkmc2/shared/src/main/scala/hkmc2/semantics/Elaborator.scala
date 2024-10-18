@@ -413,7 +413,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
 
           // case _ => ???
         val (nme, _, _, _) = processHead(head) // ! FIXME dumb!!!! recomputation
-        k match
+        val defn = k match
         case Als =>
           val sym = newMembers(nme.name).asInstanceOf[TypeAliasSymbol] // TODO improve
           ctx.nest(S(sym)).givenIn:
@@ -424,7 +424,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
               given Ctx = newCtx
               semantics.TypeDef(sym, tps, extension.map(term), N)
             sym.defn = S(d)
-            go(sts, d :: acc)
+            d
         case k: ClsLikeKind =>
           val sym = newMembers(nme.name).asInstanceOf[ClassSymbol] // TODO improve
           ctx.nest(S(sym)).givenIn:
@@ -438,7 +438,8 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
                 case N => (new Term.Blk(Nil, Term.Lit(UnitLit(true))), ctx)
               ClassDef(k, sym, tps, ps, ObjBody(bod))
             sym.defn = S(cd)
-            go(sts, cd :: acc)
+            cd
+        go(sts, defn :: acc)
       case Modified(Keyword.`abstract`, absLoc, body) :: sts =>
         // TODO: pass abstract to `go`
         go(body :: sts, acc)

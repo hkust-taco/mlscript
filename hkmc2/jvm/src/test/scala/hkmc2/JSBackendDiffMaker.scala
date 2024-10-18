@@ -13,7 +13,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val sjs = NullaryCommand("sjs")
   val showRepl = NullaryCommand("showRepl")
   
-  private val baseScp: codegen.js.Scope = codegen.js.Scope.empty
+  private val baseScp: codegen.js.Scope =
+    codegen.js.Scope.empty
   
   val ltl = new TraceLogger:
     override def doTrace = debugLowering.isSet
@@ -45,7 +46,13 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       if showLoweredTree.isSet then
         output(s"Lowered:")
         output(le.showAsTree)
+      
+      // * Note that the codegen scope is not in sync with curCtx in terms of its `this` symbol.
+      // * We do not nest TopLevelSymbol in codegen `Scope`s
+      // * to avoid needlessly generating new variable names in separate blocks.
       val nestedScp = baseScp.nest
+      // val nestedScp = codegen.js.Scope(S(baseScp), curCtx.outer, collection.mutable.Map.empty) // * not needed
+      
       val je = nestedScp.givenIn:
         jsb.block(le)
       val jsStr = je.stripBreaks.mkString(100)

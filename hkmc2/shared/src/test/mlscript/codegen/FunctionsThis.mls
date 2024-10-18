@@ -9,21 +9,14 @@ val x = 2
 fun foo() =
   x + 1
 //│ JS:
-//│ globalThis.x = 2; function foo() { return globalThis.x + 1 }; undefined
+//│ this.x = 2; function foo() { return globalThis.x + 1 }; undefined
 //│ x = 2
 
 :sjs
 class Test with
   log(foo())
 //│ JS:
-//│ globalThis.Test = class Test {
-//│   constructor() {
-//│     let tmp;
-//│     tmp = globalThis.foo();
-//│     log(tmp)
-//│   }
-//│ };
-//│ undefined
+//│ this.Test = class Test { constructor() { let tmp; tmp = globalThis.foo(); log(tmp) } }; undefined
 
 new Test
 //│ > 3

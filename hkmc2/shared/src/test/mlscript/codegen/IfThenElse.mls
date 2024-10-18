@@ -24,7 +24,7 @@ if true then 1 else 0
 :sjs
 let f = x => if x then log("ok") else log("ko")
 //│ JS:
-//│ globalThis.f = (x) => { if (x) { return log("ok") } else { return log("ko") } }; undefined
+//│ this.f = (x) => { if (x) { return log("ok") } else { return log("ko") } }; undefined
 //│ f = [Function (anonymous)]
 
 f(true)
@@ -37,7 +37,7 @@ f(false)
 :sjs
 let f = x => log((if x then "ok" else "ko") + "!")
 //│ JS:
-//│ globalThis.f = (x) => {
+//│ this.f = (x) => {
 //│   let tmp, tmp1;
 //│   if (x) {
 //│     tmp = "ok";
@@ -53,7 +53,7 @@ let f = x => log((if x then "ok" else "ko") + "!")
 :sjs
 let f = x => log((if x and x then "ok" else "ko") + "!")
 //│ JS:
-//│ globalThis.f = (x) => {
+//│ this.f = (x) => {
 //│   let tmp, tmp1;
 //│   if (x) {
 //│     if (x) {

@@ -12,7 +12,7 @@ fun f(x) =
 //│   stats = Ls of 
 //│     TermDefinition:
 //│       k = Fun
-//│       sym = globalThis:blockNme.f
+//│       sym = globalThis:block#0.f
 //│       params = S of Ls of 
 //│         Param:
 //│           flags = ()
@@ -51,7 +51,7 @@ fun f(x) =
 //│           pattern = LitPat of BoolLit of true
 //│           continuation = Else of Lit of IntLit of 0
 //│         tail = Else of Lit of IntLit of 1
-//│       resSym = ‹result of globalThis:blockNme.f›@24
+//│       resSym = ‹result of globalThis:block#0.f›@24
 //│   res = Lit of UnitLit of true
 
 

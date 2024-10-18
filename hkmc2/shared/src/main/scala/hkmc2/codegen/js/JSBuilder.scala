@@ -52,8 +52,6 @@ class JSBuilder extends CodeBuilder:
     case _ => summon[Scope].lookup_!(l)
   
   def result(r: Result)(using Raise, Scope): Document = r match
-    case Value.This(Elaborator.Ctx.globalThisSymbol) => doc"globalThis"
-    case Value.This(_: TopLevelSymbol) => doc"globalThis"
     case Value.This(sym) => summon[Scope].findThis_!(sym)
     case Value.Ref(l) => getVar(l)
     case Value.Lit(Tree.StrLit(value)) => JSBuilder.makeStringLiteral(value)

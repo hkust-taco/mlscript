@@ -17,7 +17,7 @@ class Outer(a, b) with
   log(i.c)
   log(i.i1(1))
 //│ JS:
-//│ globalThis.Outer = class Outer {
+//│ this.Outer = class Outer {
 //│   constructor(a, b) {
 //│     this.a = a;
 //│     this.b = b;

@@ -11,14 +11,20 @@ import hkmc2.Message.MessageContext
 import Scope.*
 import hkmc2.semantics.MemberSymbol
 import hkmc2.semantics.VarSymbol
+import hkmc2.semantics.Elaborator
+import hkmc2.semantics.TopLevelSymbol
 
 
 class Scope(val parent: Opt[Scope], val curThis: Opt[MemberSymbol[?]], val bindings: MutMap[Local, Str]):
   
   private var thisProxyAccessed = false
   lazy val thisProxy =
-    thisProxyAccessed = true
-    allocateName(curThis.get, "this$")
+    curThis match
+    case N => die
+    case S(Elaborator.Ctx.globalThisSymbol) => "globalThis"
+    case S(thisSym) => 
+      thisProxyAccessed = true
+      allocateName(curThis.get, "this$")
   
   private def thisError(thisSym: MemberSymbol[?])(using Raise): Nothing =
     raise(InternalError(msg"`this` not in scope: ${thisSym.toString}" -> N :: Nil,
@@ -26,13 +32,24 @@ class Scope(val parent: Opt[Scope], val curThis: Opt[MemberSymbol[?]], val bindi
     die
   
   def findThis_!(thisSym: MemberSymbol[?])(using Raise): Str =
+    // println(s"findThis_! $thisSym")
+    def getParent = parent.fold(
+      if thisSym.isInstanceOf[TopLevelSymbol]
+      // * TopLevelSymbol scopes are special and not nested in codegen `Scope`s
+      // * to avoid needlessly generating new variable names in separate blocks.
+      then "this"
+      else thisError(thisSym)
+    )
     curThis match
-      case S(`thisSym`) => "this" // no need to qualify `this`
-      case S(_) => parent.fold(thisError(thisSym))(_.findThisProxy_!(thisSym))
-      case N => parent.fold(thisError(thisSym))(_.findThis_!(thisSym))
+    case S(`thisSym`) => "this" // no need to qualify `this`
+    case S(_) => getParent(_.findThisProxy_!(thisSym))
+    case N => getParent(_.findThis_!(thisSym))
   
   def findThisProxy_!(thisSym: MemberSymbol[?])(using Raise): Str =
-    curThis match
+    // println(s"findThisProxy_! $thisSym")
+    if thisSym.isInstanceOf[TopLevelSymbol]
+    then "globalThis"
+    else curThis match
       case S(`thisSym`) => thisProxy
       case _ => parent.fold(thisError(thisSym))(_.findThisProxy_!(thisSym))
   
@@ -86,7 +103,8 @@ object Scope:
   
   def scope(using scp: Scope): Scope = scp
   
-  def empty: Scope = Scope(N, N, MutMap.empty)
+  def empty: Scope =
+    Scope(N, S(Elaborator.Ctx.globalThisSymbol), MutMap.empty)
   
   def replaceTicks(str: Str): Str = str.replace('\'', '$')
   

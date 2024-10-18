@@ -27,13 +27,23 @@ globalThis
 
 // FIXME prevent rebinding of this name
 let globalThis = "oops"
+//│ globalThis = 'oops'
 
 globalThis
+//│ = 'oops'
 
-// Notice the failed exception throw
+
+// * This one uses `this.Error` so it's fine
 :re
 if false then 0
-//│ ═══[RUNTIME ERROR] TypeError: globalThis.Error is not a constructor
+//│ ═══[RUNTIME ERROR] Error: match error
 
+// * This one uses `globalThis.Error`
+// * Notice the failed exception throw
+:re
+fun foo() =
+  if false then 0
+foo()
+//│ ═══[RUNTIME ERROR] TypeError: globalThis.Error is not a constructor
 
 

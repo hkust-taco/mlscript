@@ -13,13 +13,13 @@ module None
 if Some(0) is Some(x) then x
 //│ JS:
 //│ let scrut, param0, x;
-//│ scrut = new globalThis.Some(0);
-//│ if (scrut instanceof globalThis.Some) {
+//│ scrut = new this.Some(0);
+//│ if (scrut instanceof this.Some) {
 //│   param0 = scrut.value;
 //│   x = param0;
 //│   x
 //│ } else {
-//│   throw new globalThis.Error("match error")
+//│   throw new this.Error("match error")
 //│ }
 //│ = 0
 
@@ -32,13 +32,13 @@ if s is
   Some(x) then x
 //│ JS:
 //│ let scrut, param0, x;
-//│ scrut = globalThis.s;
-//│ if (scrut instanceof globalThis.Some) {
+//│ scrut = this.s;
+//│ if (scrut instanceof this.Some) {
 //│   param0 = scrut.value;
 //│   x = param0;
 //│   x
 //│ } else {
-//│   throw new globalThis.Error("match error")
+//│   throw new this.Error("match error")
 //│ }
 //│ = 0
 
@@ -63,12 +63,12 @@ x => if x is Some(x) then x
 //│ JS:
 //│ (x) => {
 //│   let param0, x1;
-//│   if (x instanceof globalThis.Some) {
+//│   if (x instanceof this.Some) {
 //│     param0 = x.value;
 //│     x1 = param0;
 //│     return x1
 //│   } else {
-//│     throw new globalThis.Error("match error")
+//│     throw new this.Error("match error")
 //│   }
 //│ }
 //│ = [Function (anonymous)]

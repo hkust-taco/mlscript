@@ -7,27 +7,27 @@
 :sjs
 module None
 //│ JS:
-//│ globalThis.None = new class None { constructor() {  } }; undefined
+//│ this.None = new class None { constructor() {  } }; undefined
 
 
 :sjs
 None
 //│ JS:
-//│ globalThis.None
+//│ this.None
 //│ = None {}
 
 :sjs
 :re
 None()
 //│ JS:
-//│ new globalThis.None()
-//│ ═══[RUNTIME ERROR] TypeError: globalThis.None is not a constructor
+//│ new this.None()
+//│ ═══[RUNTIME ERROR] TypeError: this.None is not a constructor
 
 :sjs
 :re
 new None
 //│ JS:
-//│ new globalThis.None()
-//│ ═══[RUNTIME ERROR] TypeError: globalThis.None is not a constructor
+//│ new this.None()
+//│ ═══[RUNTIME ERROR] TypeError: this.None is not a constructor
 
 

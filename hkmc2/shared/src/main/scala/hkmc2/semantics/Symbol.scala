@@ -96,6 +96,6 @@ class TypeAliasSymbol(val id: Tree.Ident) extends MemberSymbol:
 class TopLevelSymbol(blockNme: Str) extends MemberSymbol[ModuleDef]:
   def nme = blockNme
   def toLoc: Option[Loc] = N
-  override def toString: Str = s"globalThis:blockNme"
+  override def toString: Str = s"globalThis:$blockNme"
 
 

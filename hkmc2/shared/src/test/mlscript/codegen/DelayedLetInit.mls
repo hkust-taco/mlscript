@@ -8,16 +8,16 @@ let x
 
 x = 1
 //│ JS:
-//│ globalThis.x = 1; undefined
+//│ this.x = 1; undefined
 
 x
 //│ JS:
-//│ globalThis.x
+//│ this.x
 //│ = 1
 
 let y = 1
 //│ JS:
-//│ globalThis.y = 1; undefined
+//│ this.y = 1; undefined
 //│ y = 1
 
 :e
@@ -34,7 +34,7 @@ fun f() = 1
 
 f
 //│ JS:
-//│ globalThis.f
+//│ this.f
 //│ = [Function: f]
 
 
