@@ -44,7 +44,9 @@ class Lowering(using TL, Raise, Elaborator.State):
   
   def returnedTerm(t: st)(using Subst): Block = term(t)(Ret)
   
-  def term(t: st)(k: Result => Block)(using Subst): Block = t match
+  def term(t: st)(k: Result => Block)(using Subst): Block =
+  tl.trace[Block](s"Lowering.term ${t.showDbg}", r => s"~> $r"):
+    t match
     case st.Lit(lit) =>
       k(Value.Lit(lit))
     case st.Ret(res) =>

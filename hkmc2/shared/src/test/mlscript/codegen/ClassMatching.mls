@@ -39,17 +39,17 @@ let s = Some(0)
 if s is
   Some(x) then x
 //│ JS:
-//│ let scrut1, param01, x1, tmp3;
-//│ scrut1 = this.s;
-//│ scrut1 = this.s;
-//│ if (scrut1 instanceof this.Some) {
-//│   param01 = scrut1.value;
-//│   x1 = param01;
-//│   tmp3 = x1;
+//│ let scrut, param0, x, tmp;
+//│ scrut = this.s;
+//│ scrut = this.s;
+//│ if (scrut instanceof this.Some) {
+//│   param0 = scrut.value;
+//│   x = param0;
+//│   tmp = x;
 //│ } else {
 //│   throw new Error("match error")
 //│ }
-//│ tmp3
+//│ tmp
 //│ = 0
 
 if s is
@@ -71,16 +71,16 @@ if s is
 :sjs
 x => if x is Some(x) then x
 //│ JS:
-//│ (x3) => {
-//│   let param04, x4, tmp7;
-//│   if (x3 instanceof this.Some) {
-//│     param04 = x3.value;
-//│     x4 = param04;
-//│     tmp7 = x4;
+//│ (x) => {
+//│   let param0, x1, tmp;
+//│   if (x instanceof this.Some) {
+//│     param0 = x.value;
+//│     x1 = param0;
+//│     tmp = x1;
 //│   } else {
 //│     throw new Error("match error")
 //│   }
-//│   return tmp7
+//│   return tmp
 //│ }
 //│ = [Function (anonymous)]
 
@@ -92,25 +92,25 @@ fun f(x) = if x is
   None then "ok"
   else log("oops")
 //│ JS:
-//│ function f(x3) {
-//│   let param04, tmp7, tmp8, tmp9;
-//│   if (x3 instanceof this.Some) {
-//│     param04 = x3.value;
-//│     if (param04 === 0) {
-//│       tmp7 = 42;
+//│ function f(x) {
+//│   let param0, tmp, tmp1, tmp2;
+//│   if (x instanceof this.Some) {
+//│     param0 = x.value;
+//│     if (param0 === 0) {
+//│       tmp = 42;
 //│     } else {
-//│       tmp9 = log("oops");
-//│       tmp7 = tmp9;
+//│       tmp2 = log("oops");
+//│       tmp = tmp2;
 //│     }
 //│   } else {
-//│     if (x3 === this.None) {
-//│       tmp7 = "ok";
+//│     if (x === this.None) {
+//│       tmp = "ok";
 //│     } else {
-//│       tmp8 = log("oops");
-//│       tmp7 = tmp8;
+//│       tmp1 = log("oops");
+//│       tmp = tmp1;
 //│     }
 //│   }
-//│   return tmp7
+//│   return tmp
 //│ };
 //│ undefined
 
@@ -135,24 +135,24 @@ fun f(x) = if x is
   Some(u) then u
   Pair(a, b) then a + b
 //│ JS:
-//│ function f(x3) {
-//│   let param04, param1, a, b, param05, u, tmp9;
-//│   if (x3 instanceof this.Some) {
-//│     param05 = x3.value;
-//│     u = param05;
-//│     tmp9 = u;
+//│ function f(x) {
+//│   let param0, param1, a, b, param01, u, tmp;
+//│   if (x instanceof this.Some) {
+//│     param01 = x.value;
+//│     u = param01;
+//│     tmp = u;
 //│   } else {
-//│     if (x3 instanceof this.Pair) {
-//│       param04 = x3.fst;
-//│       param1 = x3.snd;
-//│       a = param04;
+//│     if (x instanceof this.Pair) {
+//│       param0 = x.fst;
+//│       param1 = x.snd;
+//│       a = param0;
 //│       b = param1;
-//│       tmp9 = a + b;
+//│       tmp = a + b;
 //│     } else {
 //│       throw new Error("match error")
 //│     }
 //│   }
-//│   return tmp9
+//│   return tmp
 //│ };
 //│ undefined
 
@@ -170,23 +170,23 @@ fun f(x) = log of if x is
   None then "ok"
   else "oops"
 //│ JS:
-//│ function f(x3) {
-//│   let param04, tmp11;
-//│   if (x3 instanceof this.Some) {
-//│     param04 = x3.value;
-//│     if (param04 === 0) {
-//│       tmp11 = "0";
+//│ function f(x) {
+//│   let param0, tmp;
+//│   if (x instanceof this.Some) {
+//│     param0 = x.value;
+//│     if (param0 === 0) {
+//│       tmp = "0";
 //│     } else {
-//│       tmp11 = "oops";
+//│       tmp = "oops";
 //│     }
 //│   } else {
-//│     if (x3 === this.None) {
-//│       tmp11 = "ok";
+//│     if (x === this.None) {
+//│       tmp = "ok";
 //│     } else {
-//│       tmp11 = "oops";
+//│       tmp = "oops";
 //│     }
 //│   }
-//│   return log(tmp11)
+//│   return log(tmp)
 //│ };
 //│ undefined
 

@@ -53,7 +53,7 @@ let x = 1; log(x); x
 
 :showRepl
 let x = 1; log(x); x
-//│ REPL> Sending: try { let tmp1; this.x = 1; tmp1 = this.log(this.x); this.x } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Sending: try { let tmp; this.x = 1; tmp = this.log(this.x); this.x } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
 //│ >  1

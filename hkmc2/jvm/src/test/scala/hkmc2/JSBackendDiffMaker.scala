@@ -8,11 +8,16 @@ import utils.*
 
 abstract class JSBackendDiffMaker extends MLsDiffMaker:
   
+  val debugLowering = NullaryCommand("dl")
   val js = NullaryCommand("js")
   val sjs = NullaryCommand("sjs")
   val showRepl = NullaryCommand("showRepl")
   
-  given codegen.js.Scope = codegen.js.Scope.empty
+  private val baseScp: codegen.js.Scope = codegen.js.Scope.empty
+  
+  val ltl = new TraceLogger:
+    override def doTrace = debugLowering.isSet
+    override def emitDbg(str: String): Unit = output(str)
   
   val replTL = new TraceLogger:
     override def doTrace = showRepl.isSet
@@ -31,7 +36,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   override def processTerm(blk: semantics.Term.Blk, inImport: Bool)(using Raise): Unit =
     super.processTerm(blk, inImport)
     if js.isSet then
-      val low = codegen.Lowering()
+      val low = ltl.givenIn:
+        codegen.Lowering()
       val jsb = codegen.js.JSBuilder()
       import semantics.*
       import codegen.*
@@ -39,7 +45,9 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       if showLoweredTree.isSet then
         output(s"Lowered:")
         output(le.showAsTree)
-      val je = jsb.block(le)
+      val nestedScp = baseScp.nest
+      val je = nestedScp.givenIn:
+        jsb.block(le)
       val jsStr = je.stripBreaks.mkString(100)
       if sjs.isSet then
         output(s"JS:")
@@ -79,7 +87,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
       definedValues.toSeq.sortBy(_._2.uid).foreach: (nme, sym) =>
         val le = codegen.Return(codegen.Value.Ref(sym), implct = true)
-        val je = jsb.block(le)
+        val je = nestedScp.givenIn:
+          jsb.block(le)
         val jsStr = je.stripBreaks.mkString(100)
         mkQuery(s"$nme ", jsStr)
       

@@ -71,13 +71,13 @@ let y = x + 1
 console.log("c")
 y * 2
 //│ JS:
-//│ let tmp2, tmp3, tmp4, tmp5;
-//│ tmp2 = this.console.log("a");
+//│ let tmp, tmp1, tmp2, tmp3;
+//│ tmp = this.console.log("a");
 //│ this.x = 123;
-//│ tmp3 = this.console.log("b");
-//│ tmp4 = this.x + 1;
-//│ this.y = tmp4;
-//│ tmp5 = this.console.log("c");
+//│ tmp1 = this.console.log("b");
+//│ tmp2 = this.x + 1;
+//│ this.y = tmp2;
+//│ tmp3 = this.console.log("c");
 //│ this.y * 2
 //│ > a
 //│ > b
