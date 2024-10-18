@@ -1,7 +1,8 @@
+0
+
+:js
 :import NofibPrelude.mls
 //│ Imported 51 member(s)
-
-
 fun stronglyConnComp(es, vs) =
   fun swap(a) = if a is Tup2(f, s) then Tup2(s, f)
   fun new_range(xys, w) = if xys is
@@ -14,8 +15,8 @@ fun stronglyConnComp(es, vs) =
       Nil then Tup2(vs, ns)
       Cons(x, xs) and
         inList(x, vs) then span_tree(r, Tup2(vs, ns), xs)
-        dfs(r, Tup2(Cons(x, vs), Nil), r(x)) is Tup2(vs', ns') then span_tree(r, Tup2(vs', Cons(Cons(x:ns'), ns)), xs)
-  (snd(span_tree(new_range(map(swap, es)), Tup2(Nil, Nil), snd(dfs(new_range(es), Tup2(Nil, Nil), vs)))))
+        dfs(r, Tup2(Cons(x, vs), Nil), r(x)) is Tup2(vs', ns') then span_tree(r, Tup2(vs', Cons(Cons(x, ns'), ns)), xs)
+  (snd(span_tree(x => new_range(map(swap, es), x), Tup2(Nil, Nil), snd(dfs(x => new_range(es, x), Tup2(Nil, Nil), vs)))))
 fun dfs(r, vsns, xs) = if vsns is Tup2(vs, ns) and
   xs is
     Nil then Tup2(vs, ns)
@@ -34,3 +35,10 @@ fun testScc_nofib(d) =
   let edges = Tup2(b, a) :: Tup2(c, b) :: Tup2(c, d) :: Tup2(c, h) :: Tup2(d, c) :: Tup2(f, a) :: Tup2(f, g) :: Tup2(f, h) :: Tup2(g, f) :: Tup2(h, g) :: Nil
   stronglyConnComp(edges, vertices)
 testScc_nofib(0)
+//│ > Cons {
+//│ >   head: Cons { head: 1, tail: Nil {} },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: 2, tail: Nil {} },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   }
+//│ = }
