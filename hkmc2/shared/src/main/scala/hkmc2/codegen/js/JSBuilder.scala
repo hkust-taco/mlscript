@@ -150,6 +150,10 @@ class JSBuilder extends CodeBuilder:
     case End("") => doc""
     case End(msg) =>
       doc" # /* $msg */"
+    
+    case Throw(res) =>
+      doc" # throw ${result(res)}"
+    
     // case _ => ???
   
   def block(t: Block)(using Raise, Scope): Document =

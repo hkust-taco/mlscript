@@ -9,17 +9,59 @@ class Some[out A](value: A)
 module None
 
 
+// FIXME duplication of scrutinee
+:sjs
+if Some(0) is Some(x) then x
+//│ JS:
+//│ let scrut, param0, x, tmp, tmp1;
+//│ tmp = ((value) => {
+//│   return new Some(value)
+//│ })(0);
+//│ scrut = tmp;
+//│ scrut = ((value) => {
+//│   return new Some(value)
+//│ })(0);
+//│ if (scrut instanceof this.Some) {
+//│   param0 = scrut.value;
+//│   x = param0;
+//│   tmp1 = x;
+//│ } else {
+//│   throw new Error("match error")
+//│ }
+//│ tmp1
+//│ = 0
+
+
 let s = Some(0)
 //│ s = Some { value: 0 }
 
+:sjs
 if s is
   Some(x) then x
+//│ JS:
+//│ let scrut1, param01, x1, tmp3;
+//│ scrut1 = this.s;
+//│ scrut1 = this.s;
+//│ if (scrut1 instanceof this.Some) {
+//│   param01 = scrut1.value;
+//│   x1 = param01;
+//│   tmp3 = x1;
+//│ } else {
+//│   throw new Error("match error")
+//│ }
+//│ tmp3
 //│ = 0
 
 if s is
   Some(x) then x
   None then 1
 //│ = 0
+
+:re
+if s is
+  Some(1) then 0
+  None then 1
+//│ ═══[RUNTIME ERROR] Error: match error
 
 if s is
   Some then s.value
@@ -29,14 +71,16 @@ if s is
 :sjs
 x => if x is Some(x) then x
 //│ JS:
-//│ (x2) => {
-//│   let param02, x3, tmp4;
-//│   if (x2 instanceof this.Some) {
-//│     param02 = x2.value;
-//│     x3 = param02;
-//│     tmp4 = x3;
+//│ (x3) => {
+//│   let param04, x4, tmp7;
+//│   if (x3 instanceof this.Some) {
+//│     param04 = x3.value;
+//│     x4 = param04;
+//│     tmp7 = x4;
+//│   } else {
+//│     throw new Error("match error")
 //│   }
-//│   return tmp4
+//│   return tmp7
 //│ }
 //│ = [Function (anonymous)]
 
@@ -48,25 +92,25 @@ fun f(x) = if x is
   None then "ok"
   else log("oops")
 //│ JS:
-//│ function f(x2) {
-//│   let param02, tmp4, tmp5, tmp6;
-//│   if (x2 instanceof this.Some) {
-//│     param02 = x2.value;
-//│     if (param02 === 0) {
-//│       tmp4 = 42;
+//│ function f(x3) {
+//│   let param04, tmp7, tmp8, tmp9;
+//│   if (x3 instanceof this.Some) {
+//│     param04 = x3.value;
+//│     if (param04 === 0) {
+//│       tmp7 = 42;
 //│     } else {
-//│       tmp6 = log("oops");
-//│       tmp4 = tmp6;
+//│       tmp9 = log("oops");
+//│       tmp7 = tmp9;
 //│     }
 //│   } else {
-//│     if (x2 === this.None) {
-//│       tmp4 = "ok";
+//│     if (x3 === this.None) {
+//│       tmp7 = "ok";
 //│     } else {
-//│       tmp5 = log("oops");
-//│       tmp4 = tmp5;
+//│       tmp8 = log("oops");
+//│       tmp7 = tmp8;
 //│     }
 //│   }
-//│   return tmp4
+//│   return tmp7
 //│ };
 //│ undefined
 
@@ -91,22 +135,24 @@ fun f(x) = if x is
   Some(u) then u
   Pair(a, b) then a + b
 //│ JS:
-//│ function f(x2) {
-//│   let param02, param1, a, b, param03, u, tmp6;
-//│   if (x2 instanceof this.Some) {
-//│     param03 = x2.value;
-//│     u = param03;
-//│     tmp6 = u;
+//│ function f(x3) {
+//│   let param04, param1, a, b, param05, u, tmp9;
+//│   if (x3 instanceof this.Some) {
+//│     param05 = x3.value;
+//│     u = param05;
+//│     tmp9 = u;
 //│   } else {
-//│     if (x2 instanceof this.Pair) {
-//│       param02 = x2.fst;
-//│       param1 = x2.snd;
-//│       a = param02;
+//│     if (x3 instanceof this.Pair) {
+//│       param04 = x3.fst;
+//│       param1 = x3.snd;
+//│       a = param04;
 //│       b = param1;
-//│       tmp6 = a + b;
+//│       tmp9 = a + b;
+//│     } else {
+//│       throw new Error("match error")
 //│     }
 //│   }
-//│   return tmp6
+//│   return tmp9
 //│ };
 //│ undefined
 
@@ -124,23 +170,23 @@ fun f(x) = log of if x is
   None then "ok"
   else "oops"
 //│ JS:
-//│ function f(x2) {
-//│   let param02, tmp8;
-//│   if (x2 instanceof this.Some) {
-//│     param02 = x2.value;
-//│     if (param02 === 0) {
-//│       tmp8 = "0";
+//│ function f(x3) {
+//│   let param04, tmp11;
+//│   if (x3 instanceof this.Some) {
+//│     param04 = x3.value;
+//│     if (param04 === 0) {
+//│       tmp11 = "0";
 //│     } else {
-//│       tmp8 = "oops";
+//│       tmp11 = "oops";
 //│     }
 //│   } else {
-//│     if (x2 === this.None) {
-//│       tmp8 = "ok";
+//│     if (x3 === this.None) {
+//│       tmp11 = "ok";
 //│     } else {
-//│       tmp8 = "oops";
+//│       tmp11 = "oops";
 //│     }
 //│   }
-//│   return log(tmp8)
+//│   return log(tmp11)
 //│ };
 //│ undefined
 

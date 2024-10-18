@@ -23,8 +23,10 @@ object Elaborator:
   object Ctx:
     val empty: Ctx = Ctx(N, N, Map.empty, Map.empty)
     val globalThisSymbol = TermSymbol(ImmutVal, N, Ident("globalThis"))
+    val errorSymbol = ClassSymbol(S(globalThisSymbol), Ident("Error"))
     def init(using State): Ctx = empty.copy(members = Map(
-      "globalThis" -> globalThisSymbol
+      "globalThis" -> globalThisSymbol,
+      "Error" -> errorSymbol,
     ))
   type Ctxl[A] = Ctx ?=> A
   def ctx: Ctxl[Ctx] = summon

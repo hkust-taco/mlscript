@@ -175,8 +175,11 @@ class Lowering(using TL, Raise, Elaborator.State):
             Assign(sym, r, go(tl))
         case Split.Cons(Branch(scrut, pat, tl), restSplit) =>
           val elseBranch = restSplit match
-            case Split.Nil => N
-            case Split.Else(els) => S(subTerm(els)(r => Assign(l, r, End())))
+            case Split.Nil => S:
+              Throw(Instantiate(Elaborator.Ctx.errorSymbol,
+                Value.Lit(syntax.Tree.StrLit("match error")) :: Nil)) // TODO add failed-match scrutinee
+            case Split.Else(els) => S:
+              subTerm(els)(r => Assign(l, r, End()))
             case _ => S:
               go(restSplit)
           subTerm(scrut): sr =>

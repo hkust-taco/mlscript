@@ -36,4 +36,9 @@ Foo(1)
 //│ ((x) => { return new Foo(x) })(1)
 //│ = Foo { x: 1 }
 
+Foo(1).x
+//│ JS:
+//│ let tmp; tmp = ((x) => { return new Foo(x) })(1); tmp.x
+//│ = 1
+
 
