@@ -9,27 +9,40 @@
 
 class Foo
 //│ JS:
-//│ this.Foo = class Foo { constructor() { undefined } }; undefined
+//│ this.Foo = class Foo { constructor() {  } }; undefined
 
 new Foo
 //│ JS:
-//│ new Foo()
+//│ new this.Foo()
 //│ = Foo {}
 
 new Foo()
 //│ JS:
-//│ new Foo()
+//│ new this.Foo()
 //│ = Foo {}
 
 Foo
 //│ JS:
-//│ () => { return new Foo() }
+//│ () => { return new this.Foo() }
 //│ = [Function (anonymous)]
 
 Foo()
 //│ JS:
-//│ (() => { return new Foo() })()
+//│ new this.Foo()
 //│ = Foo {}
+
+
+class Foo with { log("hi") }
+log("ok")
+//│ JS:
+//│ this.Foo = class Foo { constructor() { log("hi") } }; log("ok")
+//│ > ok
+
+fun test() =
+  class Foo with { log("hi") }
+  log("ok")
+//│ JS:
+//│ function test() { class Foo { constructor() { log("hi") } }; return log("ok") }; undefined
 
 
 class Foo with
@@ -44,7 +57,6 @@ class Foo with
 //│     this.x = 1;
 //│     tmp = this.x + 1;
 //│     this.#y = tmp;
-//│     undefined
 //│   }
 //│   z() {
 //│     return this.#y + this.x
@@ -90,7 +102,6 @@ class Foo with
 //│ this.Foo = class Foo {
 //│   constructor() {
 //│     this.x = 1;
-//│     undefined
 //│   }
 //│   foo(y) {
 //│     return this.x + y
@@ -109,7 +120,7 @@ log(a.foo(1))
 log(a.bar(1))
 //│ JS:
 //│ let tmp, tmp1, tmp2, tmp3, tmp4;
-//│ tmp = new Foo();
+//│ tmp = new this.Foo();
 //│ this.a = tmp;
 //│ tmp1 = log(this.a.x);
 //│ tmp2 = this.a.foo(1);
@@ -133,16 +144,16 @@ class Foo with
   val x = 1
   let x = 2
 //│ JS:
-//│ this.Foo = class Foo { #x; constructor() { this.x = 1; this.#x = 2; undefined } }; undefined
+//│ this.Foo = class Foo { #x; constructor() { this.x = 1; this.#x = 2; } }; undefined
 
 
 :fixme
 class Foo with val x = 1
 //│ ╔══[PARSE ERROR] Expected indented block after type declaration body; found 'val' keyword instead
-//│ ║  l.140: 	class Foo with val x = 1
+//│ ║  l.151: 	class Foo with val x = 1
 //│ ╙──       	               ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.140: 	class Foo with val x = 1
+//│ ║  l.151: 	class Foo with val x = 1
 //│ ╙──       	                   ^
 //│ JS:
 //│ /* error */

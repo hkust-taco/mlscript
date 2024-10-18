@@ -17,7 +17,7 @@ class Test with
 :fixme
 new Test
 //│ JS:
-//│ new Test()
+//│ new this.Test()
 //│ ═══[RUNTIME ERROR] TypeError: this.foo is not a function
 
 

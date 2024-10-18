@@ -14,12 +14,26 @@ f()
 //│ > --- pre ---
 //│ = 1
 
+:sjs
 fun f(x) =
   if x < 0 then
     log("whoops")
     return 0
   else ()
   x + 1
+//│ JS:
+//│ function f(x) {
+//│   let scrut, tmp, tmp1;
+//│   scrut = x < 0;
+//│   if (scrut) {
+//│     tmp = log("whoops");
+//│     return 0
+//│   } else {
+//│     tmp1 = undefined;
+//│   }
+//│   return x + 1
+//│ };
+//│ undefined
 
 f(1)
 //│ = 2

@@ -1,0 +1,51 @@
+:js
+
+:import PredefJS.mls
+//│ Imported 1 member(s)
+
+
+class Some[out A](value: A)
+
+module None
+
+
+:sjs
+fun test(x) =
+  if (if x is
+    Some(v) then Some(v + 1)
+    None then None
+  ) is
+    Some(v) then log(v)
+    None then log("none")
+//│ JS:
+//│ function test(x) {
+//│   let param0, v, scrut, param01, v1, tmp, tmp1;
+//│   if (x instanceof this.Some) {
+//│     param0 = x.value;
+//│     v = param0;
+//│     tmp = v + 1;
+//│     tmp1 = new this.Some(tmp);
+//│   } else {
+//│     if (x === this.None) {
+//│       tmp1 = this.None;
+//│     } else {
+//│       throw new globalThis.Error("match error")
+//│     }
+//│   }
+//│   scrut = tmp1;
+//│   if (scrut instanceof this.Some) {
+//│     param01 = scrut.value;
+//│     v1 = param01;
+//│     return log(v1)
+//│   } else {
+//│     if (scrut === this.None) {
+//│       return log("none")
+//│     } else {
+//│       throw new globalThis.Error("match error")
+//│     }
+//│   }
+//│ };
+//│ undefined
+
+
+

@@ -15,7 +15,9 @@ import semantics.Term.*
 
 
 sealed abstract class Block extends Product with AutoLocated:
+  
   protected def children: Ls[Located] = ??? // Maybe extending AutoLocated is unnecessary
+  
   lazy val definedVars: Set[Local] = this match
     case _: Return | _: Throw => Set.empty
     case Begin(sub, rst) => sub.definedVars ++ rst.definedVars
@@ -25,6 +27,19 @@ sealed abstract class Block extends Product with AutoLocated:
       arms.flatMap(_._2.definedVars).toSet ++ dflt.toList.flatMap(_.definedVars) ++ rst.definedVars
     case End(_) => Set.empty
     case Define(defn, rst) => rst.definedVars
+  
+  // TODO conserve if no changes
+  def mapTail(f: BlockTail => BlockTail): Block = this match
+    case b: BlockTail => f(b)
+    case Begin(sub, rst) => Begin(sub, rst.mapTail(f))
+    case Assign(lhs, rhs, rst) => Assign(lhs, rhs, rst.mapTail(f))
+    case Define(defn, rst) => Define(defn, rst.mapTail(f))
+    case Match(scrut, arms, dflt, rst) =>
+      Match(scrut, arms.map(_ -> _.mapTail(f)), dflt.map(_.mapTail(f)), rst.mapTail(f))
+  
+end Block
+
+sealed abstract class BlockTail extends Block
 
 case class Match(
   scrut: Path,
@@ -34,9 +49,9 @@ case class Match(
 ) extends Block with ProductWithTail
 
 // * `implct`: whether it's a JS implicit return, without the `return` keyword
-case class Return(res: Result, implct: Bool) extends Block
+case class Return(res: Result, implct: Bool) extends BlockTail
 
-case class Throw(exc: Result) extends Block
+case class Throw(exc: Result) extends BlockTail
 
 case class Begin(sub: Block, rest: Block) extends Block with ProductWithTail
 
@@ -63,7 +78,7 @@ final case class ClsDefn(
 
 /* Represents either unreachable code (for functions that must return a result)
  * or the end of a non-returning function or a REPL block */
-case class End(msg: Str = "") extends Block with ProductWithTail
+case class End(msg: Str = "") extends BlockTail with ProductWithTail
 
 enum Case:
   case Lit(lit: Literal)

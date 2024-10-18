@@ -8,6 +8,7 @@ import document.*
 
 import Scope.scope
 import hkmc2.syntax.ImmutVal
+import hkmc2.semantics.Elaborator
 
 
 // TODO factor some logic for other codegen backends
@@ -48,6 +49,7 @@ class JSBuilder extends CodeBuilder:
     case _ => summon[Scope].lookup_!(l)
   
   def result(r: Result)(using Raise, Scope): Document = r match
+    case Value.This(Elaborator.Ctx.globalThisSymbol) => doc"globalThis"
     case Value.This(sym) => doc"this" // TODO qualify if necessary
     case Value.Ref(l) => getVar(l)
     case Value.Lit(lit) =>
@@ -67,7 +69,7 @@ class JSBuilder extends CodeBuilder:
     case Select(qual, name) =>
       doc"${result(qual)}.${name.name}"
     case Instantiate(sym, as) =>
-      doc"new ${sym.nme}(${as.map(result).mkDocument(", ")})"
+      doc"new ${getVar(sym)}(${as.map(result).mkDocument(", ")})"
   def returningTerm(t: Block)(using Raise, Scope): Document = t match
     case Assign(l, r, rst) =>
       doc" # ${getVar(l)} = ${result(r)};${returningTerm(rst)}"
@@ -84,13 +86,13 @@ class JSBuilder extends CodeBuilder:
         val ctorParams = clsParams.map(p => p.sym -> scope.allocateName(p.sym))
         val ctorCode = ctorParams.foldRight(body(ctor)):
           case ((sym, nme), acc) =>
-            doc" # this.${sym.name} = $nme;${acc}"
+            doc"this.${sym.name} = $nme; # ${acc}"
         val clsJS = doc"class ${sym.nme} { #{ ${
           flds.map(f => doc" # #${f.nme};").mkDocument(doc"")
         } # constructor(${
           ctorParams.unzip._2.mkDocument(", ")
         }) { #{  # ${
-          ctorCode
+          ctorCode.stripBreaks
         } #}  # }${
           mtds.map: td =>
             val vars = td.params.get.map(p => scope.allocateName(p.sym)).mkDocument(", ")
@@ -145,7 +147,7 @@ class JSBuilder extends CodeBuilder:
       t :: e :: returningTerm(rest)
     
     case Begin(sub, thn) =>
-      doc"${returningTerm(sub)}${returningTerm(thn)}"
+      doc"${returningTerm(sub)} # ${returningTerm(thn).stripBreaks}"
       
     case End("") => doc""
     case End(msg) =>

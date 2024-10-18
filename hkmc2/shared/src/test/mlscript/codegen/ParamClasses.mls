@@ -9,36 +9,68 @@
 
 class Foo()
 //│ JS:
-//│ this.Foo = class Foo { constructor() { undefined } }; undefined
+//│ this.Foo = class Foo { constructor() {  } }; undefined
 
 Foo
 //│ JS:
-//│ () => { return new Foo() }
+//│ () => { return new this.Foo() }
 //│ = [Function (anonymous)]
 
 Foo()
 //│ JS:
-//│ (() => { return new Foo() })()
+//│ new this.Foo()
 //│ = Foo {}
 
 
-class Foo(x)
+class Foo(a)
 //│ JS:
-//│ this.Foo = class Foo { constructor(x) {  this.x = x;undefined } }; undefined
+//│ this.Foo = class Foo { constructor(a) { this.a = a;  } }; undefined
 
 Foo
 //│ JS:
-//│ (x) => { return new Foo(x) }
+//│ (a) => { return new this.Foo(a) }
 //│ = [Function (anonymous)]
 
 Foo(1)
 //│ JS:
-//│ ((x) => { return new Foo(x) })(1)
-//│ = Foo { x: 1 }
+//│ new this.Foo(1)
+//│ = Foo { a: 1 }
 
-Foo(1).x
+Foo(1).a
 //│ JS:
-//│ let tmp; tmp = ((x) => { return new Foo(x) })(1); tmp.x
+//│ let tmp; tmp = new this.Foo(1); tmp.a
 //│ = 1
+
+
+class Foo(a, b)
+//│ JS:
+//│ this.Foo = class Foo { constructor(a, b) { this.a = a; this.b = b;  } }; undefined
+
+Foo
+//│ JS:
+//│ (a, b) => { return new this.Foo(a, b) }
+//│ = [Function (anonymous)]
+
+let f = Foo(1, 2)
+//│ JS:
+//│ let tmp; tmp = new this.Foo(1, 2); this.f = tmp; undefined
+//│ f = Foo { a: 1, b: 2 }
+
+f.a
+//│ JS:
+//│ this.f.a
+//│ = 1
+
+f.b
+//│ JS:
+//│ this.f.b
+//│ = 2
+
+Foo(log(1), log(2))
+//│ JS:
+//│ let tmp, tmp1; tmp = log(1); tmp1 = log(2); new this.Foo(tmp, tmp1)
+//│ > 1
+//│ > 2
+//│ = Foo { a: undefined, b: undefined }
 
 

@@ -65,6 +65,10 @@ class Lowering(using TL, Raise, Elaborator.State):
           else
             val ps = clsDefn.paramsOpt.getOrElse(Nil)
             k(Value.Lam(ps, Return(Instantiate(sym, ps.map(p => Value.Ref(p.sym))), false)))
+    case st.App(Ref(sym: ClassSymbol), Tup(args)) => // TODO check kind is Cls
+      args.foldRight[Ls[Path] => Block](args => k(Instantiate(sym, args.reverse)))((a, acc) =>
+        args => subTerm(a.value)(r => acc(r :: args))
+      )(Nil)
     case st.App(f, arg) =>
       arg match
       case Tup(fs) =>
@@ -118,7 +122,9 @@ class Lowering(using TL, Raise, Elaborator.State):
               td.body.map: bod =>
                 TermDefn(td.k, td.sym, td.params, term(bod)(Ret))
             ,
-            flds, term(Blk(rest2, bodBlk.res))(k)
+            flds, term(Blk(rest2, bodBlk.res))(ImplctRet).mapTail:
+              case Return(Value.Lit(syntax.Tree.UnitLit(true)), true) => End()
+              case t => t
           ),
         term(st.Blk(stats, res))(k))
       case _ =>
@@ -173,7 +179,10 @@ class Lowering(using TL, Raise, Elaborator.State):
       
       tl.log(s"If $iftrm")
       
-      lazy val l = new TempSymbol(summon[Elaborator.State].nextUid, S(t))
+      var usesResTmp = false
+      lazy val l =
+        usesResTmp = true
+        new TempSymbol(summon[Elaborator.State].nextUid, S(t))
       
       def go(split: Split)(using Subst): Block = split match
         case Split.Let(sym, trm, tl) =>
@@ -207,12 +216,13 @@ class Lowering(using TL, Raise, Elaborator.State):
           else term(els)(r => Assign(l, r, End()))
         case Split.Nil =>
           Throw(Instantiate(Elaborator.Ctx.errorSymbol,
-            Value.Lit(syntax.Tree.StrLit("match error")) :: Nil)) // TODO add failed-match scrutinee
+            Value.Lit(syntax.Tree.StrLit("match error")) :: Nil)) // TODO add failed-match scrutinee info
       
       if k.isInstanceOf[Ret] then go(iftrm.normalized)
       else Begin(
           go(iftrm.normalized),
-          k(Value.Ref(l))
+          if usesResTmp then k(Value.Ref(l))
+          else k(Value.Lit(syntax.Tree.UnitLit(true))) // * it seems this currently never happens
         )
       
     case Sel(prefix, nme) =>

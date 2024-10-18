@@ -72,6 +72,19 @@ outer(100)(200)
 //│ = 401
 
 
+// * Notice this strange JS phenomenon:
+// * functions leak from the `try` scope, although things like classes do not...
 
+:showRepl
+fun test1(x) = test2(x)
+fun test2(y) = y + 1
+//│ REPL> Sending: try { function test1(x) { return this.test2(x) }; function test2(y) { return y + 1 }; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+
+test1(1)
+//│ = 2
 
 
