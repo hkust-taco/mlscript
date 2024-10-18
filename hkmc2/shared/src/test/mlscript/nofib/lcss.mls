@@ -1,6 +1,9 @@
+0
+
+:fixme
+:js
 :import NofibPrelude.mls
 //│ Imported 51 member(s)
-
 fun algb1(xss, yss) = if xss is
   Nil then map(snd, yss)
   Cons(x, xs) then algb1(xs, algb2(x, 0, 0, yss))
@@ -35,4 +38,5 @@ fun lcss(xs, ys) = algc(listLen(xs), listLen(ys), xs, ys)(Nil)
 fun lcssMain(a, b ,c, d, e, f) = lcss(enumFromThenTo(a,b,c), enumFromThenTo(d,e,f))
 fun testLCSS_nofib(d) = lcssMain(1,2,60,30,31,90)
 testLCSS_nofib(0)
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
