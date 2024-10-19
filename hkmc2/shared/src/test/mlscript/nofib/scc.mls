@@ -2,7 +2,7 @@
 
 :js
 :import NofibPrelude.mls
-//│ Imported 51 member(s)
+//│ Imported 52 member(s)
 fun stronglyConnComp(es, vs) =
   fun swap(a) = if a is Tup2(f, s) then Tup2(s, f)
   fun new_range(xys, w) = if xys is
@@ -34,11 +34,6 @@ fun testScc_nofib(d) =
   let vertices = a :: b :: c :: d :: f :: g :: h :: Nil
   let edges = Tup2(b, a) :: Tup2(c, b) :: Tup2(c, d) :: Tup2(c, h) :: Tup2(d, c) :: Tup2(f, a) :: Tup2(f, g) :: Tup2(f, h) :: Tup2(g, f) :: Tup2(h, g) :: Nil
   stronglyConnComp(edges, vertices)
-testScc_nofib(0)
-//│ > Cons {
-//│ >   head: Cons { head: 1, tail: Nil {} },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: 2, tail: Nil {} },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   }
-//│ = }
+nofibPrint(testScc_nofib(0))
+//│ > {"head":{"head":1,"tail":{}},"tail":{"head":{"head":2,"tail":{}},"tail":{"head":{"head":7,"tail":{"head":5,"tail":{"head":6,"tail":{}}}},"tail":{"head":{"head":3,"tail":{"head":4,"tail":{}}},"tail":{}}}}}
+//│ = true

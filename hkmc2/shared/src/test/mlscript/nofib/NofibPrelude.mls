@@ -1,4 +1,5 @@
 
+fun nofibPrint(x) = globalThis.process.stdout.write(globalThis.JSON.stringify(x) + "\n")
 
 abstract class Option[out T]: Some[T] | None
 class Some[out T](x: T) extends Option[T]

@@ -3,7 +3,7 @@
 :fixme
 :js
 :import NofibPrelude.mls
-//│ Imported 51 member(s)
+//│ Imported 52 member(s)
 fun test(d) =
   let ns = enumFromTo(5000, 5000 + d)
   let ms = enumFromTo(10000, 10000 + d)
@@ -32,5 +32,5 @@ fun gcdE(x, y) = if
   x == 0 then Tup3(y, 0, 1)
   else g(Tup3(1, 0, x), Tup3(0, 1, y))
 fun testGcd_nofib(x) = test(x)
-testGcd_nofib(400)
+nofibPrint(testGcd_nofib(400))
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded

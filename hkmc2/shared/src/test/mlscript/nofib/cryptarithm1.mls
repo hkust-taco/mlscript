@@ -3,7 +3,7 @@
 :fixme
 :js
 :import NofibPrelude.mls
-//│ Imported 51 member(s)
+//│ Imported 52 member(s)
 fun condition(thirywelvn) = if thirywelvn is
   Cons(t, Cons(h, Cons(i, Cons(r, Cons(y, Cons(w, Cons(e, Cons(l, Cons(v, Cons(n, Nil)))))))))) then
     (expand(t, h, i, r, t, y) + 5 * expand(t, w, e, l, v, e)) == expand(n, i, n, e, t, y)
@@ -28,5 +28,5 @@ fun permutations(ls) = if ls is
     lscomp1(permutations(js))
 fun testCryptarithm_nofib(n) = 
   map((i => let p0 = take(10, enumFromTo(0, 9 + i)) in filter(condition, permutations(p0))), enumFromTo(1, n))
-testCryptarithm_nofib(1)
+nofibPrint(testCryptarithm_nofib(1))
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
