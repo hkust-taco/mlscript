@@ -3,7 +3,7 @@ fun nofibPrint(x) = globalThis.process.stdout.write(globalThis.JSON.stringify(x)
 
 abstract class Option[out T]: Some[T] | None
 class Some[out T](x: T) extends Option[T]
-class None extends Option
+module None extends Option
 
 class Lazy[out A](init: () -> A) with
   mut val cached: Option[A] = None
