@@ -8,6 +8,10 @@ type List = Nil | Cons
 module Nil
 class (::) Cons(head: Int, tail: List)
 //│ Members:
+//│   :: -> class:Cons
+//│   Nil -> class:Nil
+//│   Cons -> class:Cons
+//│   List -> module:List
 //│ Locals:
 
 Cons(1, Nil)

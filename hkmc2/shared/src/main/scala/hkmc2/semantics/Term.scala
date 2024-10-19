@@ -256,7 +256,7 @@ final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extend
       if isContravariant then "" else "out "
       else if isContravariant then "in " else "in out ") +
     flags.showDbg + sym
-final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term]):
+final case class Param(flags: FldFlags, sym: LocalSymbol & NamedSymbol, sign: Opt[Term]):
   def subTerms: Ls[Term] = sign.toList
   // def children: Ls[Located] = self.value :: self.asc.toList ::: Nil
   // def showDbg: Str = flags.showDbg + sym.name + ": " + sign.showDbg

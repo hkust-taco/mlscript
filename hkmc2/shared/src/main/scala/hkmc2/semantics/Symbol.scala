@@ -40,6 +40,7 @@ class FlowSymbol(label: Str, uid: Int) extends Symbol:
 sealed trait LocalSymbol extends Symbol
 sealed trait NamedSymbol extends Symbol:
   def name: Str
+  def id: Ident
 
 abstract class BlockLocalSymbol(name: Str, uid: Int) extends FlowSymbol(name, uid) with LocalSymbol:
   var decl: Opt[Declaration] = N
@@ -92,5 +93,9 @@ class TypeAliasSymbol(val id: Tree.Ident) extends MemberSymbol:
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source trees of type aliases
   override def toString: Str = s"module:${id.name}"
+class TopLevelSymbol(blockNme: Str) extends MemberSymbol[ModuleDef]:
+  def nme = blockNme
+  def toLoc: Option[Loc] = N
+  override def toString: Str = s"globalThis:$blockNme"
 
 

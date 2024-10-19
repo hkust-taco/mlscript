@@ -9,17 +9,49 @@ class Some[out A](value: A)
 module None
 
 
+:sjs
+if Some(0) is Some(x) then x
+//│ JS:
+//│ let scrut, param0, x;
+//│ scrut = new this.Some(0);
+//│ if (scrut instanceof this.Some) {
+//│   param0 = scrut.value;
+//│   x = param0;
+//│   x
+//│ } else {
+//│   throw new this.Error("match error")
+//│ }
+//│ = 0
+
+
 let s = Some(0)
 //│ s = Some { value: 0 }
 
+:sjs
 if s is
   Some(x) then x
+//│ JS:
+//│ let scrut, param0, x;
+//│ scrut = this.s;
+//│ if (scrut instanceof this.Some) {
+//│   param0 = scrut.value;
+//│   x = param0;
+//│   x
+//│ } else {
+//│   throw new this.Error("match error")
+//│ }
 //│ = 0
 
 if s is
   Some(x) then x
   None then 1
 //│ = 0
+
+:re
+if s is
+  Some(1) then 0
+  None then 1
+//│ ═══[RUNTIME ERROR] Error: match error
 
 if s is
   Some then s.value
@@ -29,54 +61,52 @@ if s is
 :sjs
 x => if x is Some(x) then x
 //│ JS:
-//│ (x2) => {
-//│   let param02, x3, tmp4;
-//│   if (x2 instanceof this.Some) {
-//│     param02 = x2.value;
-//│     x3 = param02;
-//│     tmp4 = x3;
+//│ (x) => {
+//│   let param0, x1;
+//│   if (x instanceof this.Some) {
+//│     param0 = x.value;
+//│     x1 = param0;
+//│     return x1
+//│   } else {
+//│     throw new this.Error("match error")
 //│   }
-//│   return tmp4
 //│ }
 //│ = [Function (anonymous)]
 
 
-// TODO produce simpler code (see: useless bindings)
+// TODO dedup branches duplicated by UCS normalization
 :sjs
 fun f(x) = if x is
-  Some(0) then 42
+  Some(x) and x > 0 then 42
   None then "ok"
   else log("oops")
 //│ JS:
-//│ function f(x2) {
-//│   let param02, tmp4, tmp5, tmp6;
-//│   if (x2 instanceof this.Some) {
-//│     param02 = x2.value;
-//│     if (param02 === 0) {
-//│       tmp4 = 42;
+//│ function f(x) {
+//│   let param0, x1, scrut;
+//│   if (x instanceof globalThis.Some) {
+//│     param0 = x.value;
+//│     x1 = param0;
+//│     scrut = x1 > 0;
+//│     if (scrut) {
+//│       return 42
 //│     } else {
-//│       tmp6 = log("oops");
-//│       tmp4 = tmp6;
+//│       return log("oops")
 //│     }
-//│     return tmp4
 //│   } else {
-//│     if (x2 === this.None) {
-//│       tmp4 = "ok";
+//│     if (x === globalThis.None) {
+//│       return "ok"
 //│     } else {
-//│       tmp5 = log("oops");
-//│       tmp4 = tmp5;
+//│       return log("oops")
 //│     }
-//│     return tmp4
 //│   }
-//│   return tmp4
 //│ };
 //│ undefined
 
 f(Some(0))
-//│ = 42
+//│ > oops
 
 f(Some(1))
-//│ > oops
+//│ = 42
 
 f(None)
 //│ = 'ok'
@@ -93,23 +123,23 @@ fun f(x) = if x is
   Some(u) then u
   Pair(a, b) then a + b
 //│ JS:
-//│ function f(x2) {
-//│   let param02, param1, a, b, param03, u, tmp6;
-//│   if (x2 instanceof this.Some) {
-//│     param03 = x2.value;
-//│     u = param03;
-//│     tmp6 = u;
+//│ function f(x) {
+//│   let param0, param1, a, b, param01, u;
+//│   if (x instanceof globalThis.Some) {
+//│     param01 = x.value;
+//│     u = param01;
+//│     return u
 //│   } else {
-//│     if (x2 instanceof this.Pair) {
-//│       param02 = x2.fst;
-//│       param1 = x2.snd;
-//│       a = param02;
+//│     if (x instanceof globalThis.Pair) {
+//│       param0 = x.fst;
+//│       param1 = x.snd;
+//│       a = param0;
 //│       b = param1;
-//│       tmp6 = a + b;
+//│       return a + b
+//│     } else {
+//│       throw new globalThis.Error("match error")
 //│     }
-//│     return tmp6
 //│   }
-//│   return tmp6
 //│ };
 //│ undefined
 
@@ -118,6 +148,46 @@ f(Some(123))
 
 f(Pair(10, 5))
 //│ = 15
+
+
+// UCS term not in tail position
+:sjs
+fun f(x) = log of if x is
+  Some(0) then "0"
+  None then "ok"
+  else "oops"
+//│ JS:
+//│ function f(x) {
+//│   let param0, tmp;
+//│   if (x instanceof globalThis.Some) {
+//│     param0 = x.value;
+//│     if (param0 === 0) {
+//│       tmp = "0";
+//│     } else {
+//│       tmp = "oops";
+//│     }
+//│   } else {
+//│     if (x === globalThis.None) {
+//│       tmp = "ok";
+//│     } else {
+//│       tmp = "oops";
+//│     }
+//│   }
+//│   return log(tmp)
+//│ };
+//│ undefined
+
+f(Some(0))
+//│ > 0
+
+f(Some(1))
+//│ > oops
+
+f(None)
+//│ > ok
+
+f(0)
+//│ > oops
 
 
 

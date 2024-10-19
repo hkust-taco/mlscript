@@ -44,11 +44,17 @@ class Lowering(using TL, Raise, Elaborator.State):
   
   def returnedTerm(t: st)(using Subst): Block = term(t)(Ret)
   
-  def term(t: st)(k: Result => Block)(using Subst): Block = t match
+  def term(t: st)(k: Result => Block)(using Subst): Block =
+    tl.log(s"Lowering.term ${t.showDbg.truncate(30, "[...]")}")
+    t match
     case st.Lit(lit) =>
       k(Value.Lit(lit))
     case st.Ret(res) =>
       returnedTerm(res)
+    case st.Tup(fs) =>
+      fs.foldRight[Ls[Path] => Block](args => k(Value.Arr(args.reverse)))((a, acc) =>
+        args => subTerm(a.value)(r => acc(r :: args))
+      )(Nil)
     case st.Ref(sym) =>
       sym match
       case sym: LocalSymbol =>
@@ -62,7 +68,13 @@ class Lowering(using TL, Raise, Elaborator.State):
             k(Value.Ref(sym))
           else
             val ps = clsDefn.paramsOpt.getOrElse(Nil)
-            k(Value.Lam(ps, Return(Instantiate(sym, ps.map(p => Value.Ref(p.sym))), false)))
+            val psSyms = ps.map(p => 
+              p.copy(sym = new VarSymbol(p.sym.id, summon[Elaborator.State].nextUid)))
+            k(Value.Lam(psSyms, Return(Instantiate(sym, psSyms.map(p => Value.Ref(p.sym))), false)))
+    case st.App(Ref(sym: ClassSymbol), Tup(args)) => // TODO check kind is Cls
+      args.foldRight[Ls[Path] => Block](args => k(Instantiate(sym, args.reverse)))((a, acc) =>
+        args => subTerm(a.value)(r => acc(r :: args))
+      )(Nil)
     case st.App(f, arg) =>
       arg match
       case Tup(fs) =>
@@ -116,7 +128,9 @@ class Lowering(using TL, Raise, Elaborator.State):
               td.body.map: bod =>
                 TermDefn(td.k, td.sym, td.params, term(bod)(Ret))
             ,
-            flds, term(Blk(rest2, bodBlk.res))(k)
+            flds, term(Blk(rest2, bodBlk.res))(ImplctRet).mapTail:
+              case Return(Value.Lit(syntax.Tree.UnitLit(true)), true) => End()
+              case t => t
           ),
         term(st.Blk(stats, res))(k))
       case _ =>
@@ -127,14 +141,15 @@ class Lowering(using TL, Raise, Elaborator.State):
     case st.Blk((DefineVar(sym, rhs)) :: stats, res) =>
       subTerm(rhs): r =>
         Assign(sym, r, term(st.Blk(stats, res))(k))
-    case st.Blk(s :: stats, res) =>
-      TODO(s)
       
     case st.Lam(params, body) =>
       k(Value.Lam(params, returnedTerm(body)))
     
-    case t @ st.If(Split.Let(sym, trm, tl)) =>
-      term(st.Blk(semantics.LetDecl(sym) :: semantics.DefineVar(sym, trm) :: Nil, st.If(tl)(t.normalized)))(k)
+    /* 
+    case t @ st.If(Split.Let(sym, trm, tail)) =>
+      // term(st.Blk(semantics.LetDecl(sym) :: semantics.DefineVar(sym, trm) :: Nil, st.If(tail)(t.normalized)))(k)
+      term(trm): r =>
+        Assign(sym, r, term(st.If(tail)(t.normalized))(k))
     
     // TODO rm
     case st.If(Split.Cons(
@@ -164,31 +179,33 @@ class Lowering(using TL, Raise, Elaborator.State):
               elseBranch.map(els => subTerm(els)(r => Assign(l, r, End()))),
               k(Value.Ref(l))
             )
+    */
     
     case iftrm: st.If =>
       
-      val l = new TempSymbol(summon[Elaborator.State].nextUid, S(t))
+      tl.log(s"If $iftrm")
+      
+      var usesResTmp = false
+      lazy val l =
+        usesResTmp = true
+        new TempSymbol(summon[Elaborator.State].nextUid, S(t))
       
       def go(split: Split)(using Subst): Block = split match
         case Split.Let(sym, trm, tl) =>
           term(trm): r =>
             Assign(sym, r, go(tl))
-        case Split.Cons(Branch(scrut, pat, tl), restSplit) =>
-          val elseBranch = restSplit match
-            case Split.Nil => N
-            case Split.Else(els) => S(subTerm(els)(r => Assign(l, r, End())))
-            case _ => S:
-              go(restSplit)
+        case Split.Cons(Branch(scrut, pat, tail), restSplit) =>
           subTerm(scrut): sr =>
+            tl.log(s"Binding scrut $scrut to $sr ${summon[Subst].map}")
             val cse = pat match
-              case Pattern.LitPat(lit) => Case.Lit(lit) -> go(tl)
+              case Pattern.LitPat(lit) => Case.Lit(lit) -> go(tail)
               case Pattern.Class(cls, args0, _refined) =>
                 val args = args0.getOrElse(Nil)
                 val clsDefn = cls.defn.getOrElse(die)
                 val clsParams = clsDefn.paramsOpt.getOrElse(Nil)
                 assert(args0.isEmpty || clsParams.length === args.length)
                 def mkArgs(args: Ls[Param -> BlockLocalSymbol])(using Subst): Case -> Block = args match
-                  case Nil => Case.Cls(cls) -> go(tl)
+                  case Nil => Case.Cls(cls) -> go(tail)
                   case (param, arg) :: args =>
                     // summon[Subst].+(arg -> Value.Ref(new TempSymbol(summon[Elaborator.State].nextUid, N)))
                     // Assign(arg, Select(sr, Tree.Ident("head")), mkArgs(args))
@@ -196,13 +213,23 @@ class Lowering(using TL, Raise, Elaborator.State):
                     (cse, Assign(arg, Select(sr, param.sym.id/*FIXME incorrect Ident?*/), blk))
                 mkArgs(clsParams.zip(args))
             Match(sr, cse :: Nil,
-              elseBranch,
-              k(Value.Ref(l))
+              // elseBranch,
+              S(go(restSplit)),
+              End()
             )
         case Split.Else(els) =>
-          term(els)(r => Assign(l, r, End()))
+          if k.isInstanceOf[Ret] then term(els)(k)
+          else term(els)(r => Assign(l, r, End()))
+        case Split.Nil =>
+          Throw(Instantiate(Elaborator.Ctx.errorSymbol,
+            Value.Lit(syntax.Tree.StrLit("match error")) :: Nil)) // TODO add failed-match scrutinee info
       
-      go(iftrm.normalized)
+      if k.isInstanceOf[Ret] then go(iftrm.normalized)
+      else Begin(
+          go(iftrm.normalized),
+          if usesResTmp then k(Value.Ref(l))
+          else k(Value.Lit(syntax.Tree.UnitLit(true))) // * it seems this currently never happens
+        )
       
     case Sel(prefix, nme) =>
       subTerm(prefix): p =>

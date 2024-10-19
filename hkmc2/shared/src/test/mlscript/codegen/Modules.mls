@@ -7,7 +7,7 @@
 :sjs
 module None
 //│ JS:
-//│ this.None = new class None { constructor() { undefined } }; undefined
+//│ this.None = new class None { constructor() {  } }; undefined
 
 
 :sjs
@@ -20,14 +20,14 @@ None
 :re
 None()
 //│ JS:
-//│ this.None()
-//│ ═══[RUNTIME ERROR] TypeError: this.None is not a function
+//│ new this.None()
+//│ ═══[RUNTIME ERROR] TypeError: this.None is not a constructor
 
 :sjs
 :re
 new None
 //│ JS:
-//│ new None()
-//│ ═══[RUNTIME ERROR] TypeError: None is not a constructor
+//│ new this.None()
+//│ ═══[RUNTIME ERROR] TypeError: this.None is not a constructor
 
 

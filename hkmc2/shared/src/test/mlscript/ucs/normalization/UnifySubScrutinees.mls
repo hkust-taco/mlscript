@@ -17,23 +17,23 @@ fun foo(xs) =
     Nil then 3
 //│ Desugared:
 //│ >  if
-//│ >    xs@44 is Cons($param0@45, $param1@46) and $param0@45 is "abc" and $param1@46 is Cons($param0@47, $param1@48) and $param0@47 is "xyz" and
-//│ >      let xs@50 = $param1@48#1
+//│ >    xs@37 is Cons($param0@38, $param1@39) and $param0@38 is "abc" and $param1@39 is Cons($param0@40, $param1@41) and $param0@40 is "xyz" and
+//│ >      let xs@43 = $param1@41#1
 //│ >      else 0
-//│ >    xs@44 is Cons($param0@45, $param1@46) and $param0@45 is "abc" and $param1@46 is Cons($param0@47, $param1@48) and $param0@47 is "uvw" and
-//│ >      let xs@49 = $param1@48#0
+//│ >    xs@37 is Cons($param0@38, $param1@39) and $param0@38 is "abc" and $param1@39 is Cons($param0@40, $param1@41) and $param0@40 is "uvw" and
+//│ >      let xs@42 = $param1@41#0
 //│ >      else 1
-//│ >    xs@44 is Nil then 3
+//│ >    xs@37 is Nil then 3
 //│ Normalized:
 //│ >  if
-//│ >    xs@44 is Cons($param0@45, $param1@46) and $param0@45 is "abc" and $param1@46 is Cons($param0@47, $param1@48) and
-//│ >      $param0@47 is "xyz" and
-//│ >        let xs@50 = $param1@48#1
+//│ >    xs@37 is Cons($param0@38, $param1@39) and $param0@38 is "abc" and $param1@39 is Cons($param0@40, $param1@41) and
+//│ >      $param0@40 is "xyz" and
+//│ >        let xs@43 = $param1@41#1
 //│ >        else 0
-//│ >      $param0@47 is "uvw" and
-//│ >        let xs@49 = $param1@48#0
+//│ >      $param0@40 is "uvw" and
+//│ >        let xs@42 = $param1@41#0
 //│ >        else 1
-//│ >    xs@44 is Nil then 3
+//│ >    xs@37 is Nil then 3
 
 fun sum(acc, xs) = 
   if xs is
@@ -41,18 +41,18 @@ fun sum(acc, xs) =
     Nil     then acc
 //│ Desugared:
 //│ >  if
-//│ >    xs@54 is Cons($param0@55, $param1@56) and
-//│ >      let x@57 = $param0@55#0
-//│ >      let xs@58 = $param1@56#0
-//│ >      else module:block#2.sum#0(.+#0(acc@53#1, x@57#0), xs@58#0)
-//│ >    xs@54 is Nil then acc@53#0
+//│ >    xs@47 is Cons($param0@48, $param1@49) and
+//│ >      let x@50 = $param0@48#0
+//│ >      let xs@51 = $param1@49#0
+//│ >      else globalThis:block#2.sum#0(.+#0(acc@46#1, x@50#0), xs@51#0)
+//│ >    xs@47 is Nil then acc@46#0
 //│ Normalized:
 //│ >  if
-//│ >    xs@54 is Cons($param0@55, $param1@56) and
-//│ >      let x@57 = $param0@55#0
-//│ >      let xs@58 = $param1@56#0
-//│ >      else module:block#2.sum#0(.+#0(acc@53#1, x@57#0), xs@58#0)
-//│ >    xs@54 is Nil then acc@53#0
+//│ >    xs@47 is Cons($param0@48, $param1@49) and
+//│ >      let x@50 = $param0@48#0
+//│ >      let xs@51 = $param1@49#0
+//│ >      else globalThis:block#2.sum#0(.+#0(acc@46#1, x@50#0), xs@51#0)
+//│ >    xs@47 is Nil then acc@46#0
 
 :todo
 // The normalization does not distinguish between bindings and their aliases.
@@ -67,37 +67,37 @@ fun test(xs) =
     None then "nothing"
 //│ Desugared:
 //│ >  if
-//│ >    xs@63 is Some($param0@64) and $param0@64 is Cons($param0@65, $param1@66) and $param0@65 is "add" and $param1@66 is Cons($param0@69, $param1@70) and
-//│ >      let x@76 = $param0@69#1
-//│ >      $param1@70 is Cons($param0@72, $param1@73) and
-//│ >        let y@77 = $param0@72#1
-//│ >        $param1@73 is Nil then .+#1(x@76#0, y@77#0)
-//│ >    xs@63 is Some($param0@64) and $param0@64 is Cons($param0@65, $param1@66) and $param0@65 is "mul" and $param1@66 is Cons($param0@69, $param1@70) and
-//│ >      let x@71 = $param0@69#0
-//│ >      $param1@70 is Cons($param0@72, $param1@73) and
-//│ >        let y@74 = $param0@72#0
-//│ >        $param1@73 is Nil then .*#0(x@71#0, y@74#0)
-//│ >    xs@63 is Some($param0@64) and $param0@64 is Cons($param0@65, $param1@66) and $param0@65 is "sum" and
-//│ >      let xs@67 = $param1@66#0
-//│ >      else module:block#2.sum#1(0, xs@67#0)
-//│ >    xs@63 is Some($param0@64) $param0@64 is Nil then "nothing"
-//│ >    xs@63 is None then "nothing"
+//│ >    xs@56 is Some($param0@57) and $param0@57 is Cons($param0@58, $param1@59) and $param0@58 is "add" and $param1@59 is Cons($param0@62, $param1@63) and
+//│ >      let x@69 = $param0@62#1
+//│ >      $param1@63 is Cons($param0@65, $param1@66) and
+//│ >        let y@70 = $param0@65#1
+//│ >        $param1@66 is Nil then .+#1(x@69#0, y@70#0)
+//│ >    xs@56 is Some($param0@57) and $param0@57 is Cons($param0@58, $param1@59) and $param0@58 is "mul" and $param1@59 is Cons($param0@62, $param1@63) and
+//│ >      let x@64 = $param0@62#0
+//│ >      $param1@63 is Cons($param0@65, $param1@66) and
+//│ >        let y@67 = $param0@65#0
+//│ >        $param1@66 is Nil then .*#0(x@64#0, y@67#0)
+//│ >    xs@56 is Some($param0@57) and $param0@57 is Cons($param0@58, $param1@59) and $param0@58 is "sum" and
+//│ >      let xs@60 = $param1@59#0
+//│ >      else globalThis:block#2.sum#1(0, xs@60#0)
+//│ >    xs@56 is Some($param0@57) $param0@57 is Nil then "nothing"
+//│ >    xs@56 is None then "nothing"
 //│ Normalized:
 //│ >  if
-//│ >    xs@63 is Some($param0@64) and
-//│ >      $param0@64 is Cons($param0@65, $param1@66) and
-//│ >        $param0@65 is "add" and $param1@66 is Cons($param0@69, $param1@70) and
-//│ >          let x@76 = $param0@69#1
-//│ >          $param1@70 is Cons($param0@72, $param1@73) and
-//│ >            let y@77 = $param0@72#1
-//│ >            $param1@73 is Nil then .+#1(x@76#0, y@77#0)
-//│ >        $param0@65 is "mul" and $param1@66 is Cons($param0@69, $param1@70) and
-//│ >          let x@71 = $param0@69#0
-//│ >          $param1@70 is Cons($param0@72, $param1@73) and
-//│ >            let y@74 = $param0@72#0
-//│ >            $param1@73 is Nil then .*#0(x@71#0, y@74#0)
-//│ >        $param0@65 is "sum" and
-//│ >          let xs@67 = $param1@66#0
-//│ >          else module:block#2.sum#1(0, xs@67#0)
-//│ >      $param0@64 is Nil then "nothing"
-//│ >    xs@63 is None then "nothing"
+//│ >    xs@56 is Some($param0@57) and
+//│ >      $param0@57 is Cons($param0@58, $param1@59) and
+//│ >        $param0@58 is "add" and $param1@59 is Cons($param0@62, $param1@63) and
+//│ >          let x@69 = $param0@62#1
+//│ >          $param1@63 is Cons($param0@65, $param1@66) and
+//│ >            let y@70 = $param0@65#1
+//│ >            $param1@66 is Nil then .+#1(x@69#0, y@70#0)
+//│ >        $param0@58 is "mul" and $param1@59 is Cons($param0@62, $param1@63) and
+//│ >          let x@64 = $param0@62#0
+//│ >          $param1@63 is Cons($param0@65, $param1@66) and
+//│ >            let y@67 = $param0@65#0
+//│ >            $param1@66 is Nil then .*#0(x@64#0, y@67#0)
+//│ >        $param0@58 is "sum" and
+//│ >          let xs@60 = $param1@59#0
+//│ >          else globalThis:block#2.sum#1(0, xs@60#0)
+//│ >      $param0@57 is Nil then "nothing"
+//│ >    xs@56 is None then "nothing"

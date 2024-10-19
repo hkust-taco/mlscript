@@ -23,8 +23,10 @@ object Elaborator:
   object Ctx:
     val empty: Ctx = Ctx(N, N, Map.empty, Map.empty)
     val globalThisSymbol = TermSymbol(ImmutVal, N, Ident("globalThis"))
+    val errorSymbol = ClassSymbol(S(globalThisSymbol), Ident("Error"))
     def init(using State): Ctx = empty.copy(members = Map(
-      "globalThis" -> globalThisSymbol
+      "globalThis" -> globalThisSymbol,
+      "Error" -> errorSymbol,
     ))
   type Ctxl[A] = Ctx ?=> A
   def ctx: Ctxl[Ctx] = summon
@@ -238,7 +240,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
   def unit: Term.Lit = Term.Lit(UnitLit(true))
   
   def block(_sts: Ls[Tree])(using c: Ctx): (Term.Blk, Ctx) = trace[(Term.Blk, Ctx)](
-    pre = s"Elab block ${_sts.toString.truncate(20, "[...]")} ${ctx.outer}", r => s"~> ${r._1}"
+    pre = s"Elab block ${_sts.toString.truncate(30, "[...]")} ${ctx.outer}", r => s"~> ${r._1}"
   ):
     val sts = _sts.map(_.desugared)
     val newMembers = mutable.Map.empty[Str, MemberSymbol[?]] // * Definitions with implementations
@@ -316,8 +318,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
         (Term.Blk(acc.reverse, res), ctx)
       case (hd @ Let(Apps(id, tups), rhso, N)) :: sts if id.name.headOption.exists(_.isLower) =>
         val sym =
-          if ctx.outer.isDefined then TermSymbol(ImmutVal, ctx.outer, id)
-          else VarSymbol(id, nextUid)
+          fieldOrVarSym(LetBind, id)
         log(s"Processing `let` statement $id (${sym}) ${ctx.outer}")
         val newAcc = rhso match
           case S(rhs) =>
@@ -412,7 +413,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
 
           // case _ => ???
         val (nme, _, _, _) = processHead(head) // ! FIXME dumb!!!! recomputation
-        k match
+        val defn = k match
         case Als =>
           val sym = newMembers(nme.name).asInstanceOf[TypeAliasSymbol] // TODO improve
           ctx.nest(S(sym)).givenIn:
@@ -423,7 +424,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
               given Ctx = newCtx
               semantics.TypeDef(sym, tps, extension.map(term), N)
             sym.defn = S(d)
-            go(sts, d :: acc)
+            d
         case k: ClsLikeKind =>
           val sym = newMembers(nme.name).asInstanceOf[ClassSymbol] // TODO improve
           ctx.nest(S(sym)).givenIn:
@@ -437,7 +438,8 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
                 case N => (new Term.Blk(Nil, Term.Lit(UnitLit(true))), ctx)
               ClassDef(k, sym, tps, ps, ObjBody(bod))
             sym.defn = S(cd)
-            go(sts, cd :: acc)
+            cd
+        go(sts, defn :: acc)
       case Modified(Keyword.`abstract`, absLoc, body) :: sts =>
         // TODO: pass abstract to `go`
         go(body :: sts, acc)
@@ -455,12 +457,16 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
         case (_: TermDef | _: TypeDef) :: _ => go(sts, Nil)
         // case s :: Nil => (term(s), ctx)
         case _ => go(sts, Nil)
-
+  
+  def fieldOrVarSym(k: TermDefKind, id: Ident)(using Ctx): LocalSymbol & NamedSymbol =
+    if ctx.outer.isDefined then TermSymbol(k, ctx.outer, id)
+    else VarSymbol(id, nextUid)
+  
   def param(t: Tree): Ctxl[Ls[Param]] = t match
     case id: Ident =>
-      Param(FldFlags.empty, VarSymbol(id, nextUid), N) :: Nil
+      Param(FldFlags.empty, fieldOrVarSym(ParamBind, id), N) :: Nil
     case InfixApp(lhs: Ident, Keyword.`:`, rhs) =>
-      Param(FldFlags.empty, VarSymbol(lhs, nextUid), S(term(rhs))) :: Nil
+      Param(FldFlags.empty, fieldOrVarSym(ParamBind, lhs), S(term(rhs))) :: Nil
     case App(Ident(","), list) => params(list)._1
     case TermDef(ImmutVal, _, S(inner), _) => param(inner)
   
@@ -468,7 +474,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
     case Tup(ps) =>
       val res = ps.flatMap(param)
       (res, ctx.copy(locals = ctx.locals ++ res.map(p => p.sym.name -> p.sym)))
-
+  
   def typeParams(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
     case TyTup(ps) =>
       val vs = ps.map:

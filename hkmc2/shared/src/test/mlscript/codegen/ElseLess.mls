@@ -1,0 +1,24 @@
+:js
+
+:import PredefJS.mls
+//│ Imported 1 member(s)
+
+
+class Foo(a)
+
+
+:todo // Treat else-less single-branch UCS as implicitly returning () in default case
+if Foo(0) is
+  Foo(x) and x > 0 then
+    log("ok")
+//│ ═══[RUNTIME ERROR] Error: match error
+
+
+let x = 1
+//│ x = 1
+
+:todo
+if x > 0 and x < 0 then log("wat")
+//│ ═══[RUNTIME ERROR] Error: match error
+
+

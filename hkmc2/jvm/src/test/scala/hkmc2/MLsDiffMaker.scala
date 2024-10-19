@@ -53,6 +53,9 @@ abstract class MLsDiffMaker extends DiffMaker:
       showUCS.get.getOrElse(Set.empty).contains
     override def emitDbg(str: String): Unit = output(str)
     override def trace[T](pre: => Str, post: T => Str = noPostTrace)(thunk: => T): T =
+      // * This override is for avoiding to increase the indentation when tracing if doTrace is false,
+      // * so that selectively-enabled tracing doesn't get strange indentation.
+      // * Perhaps this should be the default behavior of TraceLogger.
       if doTrace then super.trace(pre, post)(thunk)
       else thunk
   
@@ -146,7 +149,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   def processTrees(trees: Ls[syntax.Tree])(using Raise): Unit =
     val elab = Elaborator(etl)
-    val blockSymbol = semantics.ModuleSymbol(syntax.Tree.Ident("block#"+blockNum))
+    val blockSymbol =
+      semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1
     given Elaborator.Ctx = curCtx.nest(S(blockSymbol))
     val (e, newCtx) = elab.topLevel(trees)
