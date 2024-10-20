@@ -1,6 +1,5 @@
 0
 
-:fixme
 :js
 :import NofibPrelude.mls
 //│ Imported 52 member(s)
@@ -33,10 +32,15 @@ fun algc(m, n, xs, ys) = if
     let l1 = algb(xs1, ys)
     let l2 = reverse(algb(reverse(xs2), reverse(ys)))
     let k = findk(0, 0, -1, zip(l1, l2))
-    algc(m2, k, xs1, take(k, ys)) . algc(m-m2, n-k, xs2, drop(k, ys))
+    algc(m2, k, xs1, take(k, ys)) . (algc(m-m2, n-k, xs2, drop(k, ys)))
 fun lcss(xs, ys) = algc(listLen(xs), listLen(ys), xs, ys)(Nil)
 fun lcssMain(a, b ,c, d, e, f) = lcss(enumFromThenTo(a,b,c), enumFromThenTo(d,e,f))
 fun testLCSS_nofib(d) = lcssMain(1,2,60,30,31,90)
-nofibPrint(testLCSS_nofib(0))
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+testLCSS_nofib(0)
+// lcss(1 :: 2 :: Nil, 3 :: Nil)
+//│ > Cons {
+//│ >   head: 30,
+//│ >   tail: Cons { head: 31, tail: Cons { head: 32, tail: [Cons] } }
+//│ = }
+
 
