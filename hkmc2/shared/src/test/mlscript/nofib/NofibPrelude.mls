@@ -67,6 +67,11 @@ fun listLen(ls) =
     Cons(h, t) then l(t, a + 1)
   l(ls, 0)
 
+fun listEq(xs, ys) = if
+  xs is Nil and ys is Nil then true
+  xs is Cons(hx, tx) and ys is Cons(hy, ty) and (hx == hy) then listEq(tx, ty)
+  else false
+
 fun enumFromTo(a, b) = if a <= b then Cons(a, enumFromTo(a + 1, b)) else Nil
 
 fun enumFromThenTo(a, t, b) = if a <= b then Cons(a, enumFromThenTo(t, 2 * t - a, b)) else Nil
@@ -145,7 +150,9 @@ fun filter_lz(p, ls) = Lazy of () =>
 fun nubBy_lz(eq, ls) = Lazy of () =>
   if force(ls) is
     LzNil then LzNil
-    LzCons(h, t) then LzCons(h, nubBy_lz(eq, filter(y => not(eq(h, y)), t)))
+    LzCons(h, t) then LzCons(h, nubBy_lz(eq, filter_lz(y => not(eq(h, y)), t)))
+
+fun nub_lz(ls) = nubBy_lz((x, y) => x == y, ls)
 
 fun take_lz(n, ls) = if force(ls) is
   LzNil then Nil
