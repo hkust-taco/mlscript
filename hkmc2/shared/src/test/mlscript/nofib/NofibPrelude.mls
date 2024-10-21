@@ -1,6 +1,4 @@
 
-fun nofibPrint(x) = globalThis.process.stdout.write(globalThis.JSON.stringify(x) + "\n")
-
 abstract class Option[out T]: Some[T] | None
 class Some[out T](x: T) extends Option[T]
 module None extends Option
@@ -104,6 +102,10 @@ fun (++) append(xs, ys) = if xs is
   Nil then ys
   Cons(x, xs) then Cons(x, append(xs, ys))
 
+fun concat(ls) = if ls is
+  Nil then Nil
+  Cons(x, xs) then append(x, concat(xs))
+
 fun filter(f, ls) = if ls is
   Nil then Nil
   Cons(h, t) and
@@ -139,6 +141,9 @@ fun nubBy(eq, ls) = if ls is
   Nil then Nil
   Cons(h, t) then h :: nubBy(eq, filter(y => eq(h, y), t))
 
+fun zipWith(f, xss, yss) = if
+  xss is Cons(x, xs) and yss is Cons(y, ys) then Cons(f(x, y), zipWith(f, xs, ys))
+  else Nil
 
 fun filter_lz(p, ls) = Lazy of () =>
   if force(ls) is
@@ -160,4 +165,18 @@ fun take_lz(n, ls) = if force(ls) is
     n <= 0 then Nil
     else Cons(h, take_lz(n - 1, t))
 
+fun zipWith_lz_lz(f, xss, yss) = lazy of () => if
+  force(xss) is LzCons(x, xs) and (force(yss)) is LzCons(y, ys) then LzCons(f(x, y), zipWith_lz_lz(f, xs, ys))
+  else LzNil
 
+// =====================
+
+
+
+fun nofibPrint(x) = globalThis.process.stdout.write(globalThis.JSON.stringify(x) + "\n")
+fun stringOfFloat(x) = x + ""
+fun stringOfInt(x) = x + ""
+fun stringConcat(x, y) = x + y
+fun stringListConcat(ls) = if ls is
+  Nil then ""
+  Cons(h, t) then stringConcat(h, stringListConcat(t))
