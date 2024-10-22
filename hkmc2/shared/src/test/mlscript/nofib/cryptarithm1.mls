@@ -3,7 +3,7 @@
 :fixme
 :js
 :import NofibPrelude.mls
-//│ Imported 61 member(s)
+//│ Imported 64 member(s)
 fun condition(thirywelvn) = if thirywelvn is
   Cons(t, Cons(h, Cons(i, Cons(r, Cons(y, Cons(w, Cons(e, Cons(l, Cons(v, Cons(n, Nil)))))))))) then
     (expand(t, h, i, r, t, y) + 5 * expand(t, w, e, l, v, e)) == expand(n, i, n, e, t, y)

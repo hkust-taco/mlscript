@@ -26,6 +26,12 @@ class LzCons[out T](head: T, tail: LazyList[T]) extends LzList[T]
 module LzNil extends LzList
 
 class Tup2[out T1, T2](fst: T1, snd: T2)
+fun leTup2(t1, t2) = if t1 is Tup2(a, b) and t2 is Tup2(c, d) then
+  if
+    a < c then true
+    a > c then false
+    b < d then true
+    else false
 class Tup3[out T1, T2, T3](fst: T1, snd: T2, thd: T3)
 
 fun (.) compose(f, g) = x => f(g(x))
@@ -144,6 +150,19 @@ fun nubBy(eq, ls) = if ls is
 fun zipWith(f, xss, yss) = if
   xss is Cons(x, xs) and yss is Cons(y, ys) then Cons(f(x, y), zipWith(f, xs, ys))
   else Nil
+
+fun deleteBy(eq, x, ys) = if ys is
+  Nil then Nil
+  Cons(y, ys) and
+    eq(x, y) then ys
+    else Cons(y, deleteBy(eq, x, ys))
+
+fun sum(xs) =
+  fun go(xs, a) = if xs is
+    Nil then a
+    Cons(h, t) then go(t, a + h)
+  go(xs, 0)
+// =====================
 
 fun filter_lz(p, ls) = Lazy of () =>
   if force(ls) is
