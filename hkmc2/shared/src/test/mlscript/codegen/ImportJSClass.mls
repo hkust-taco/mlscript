@@ -1,0 +1,44 @@
+:js
+
+
+
+:sjs
+import "../../js/MyClass.mjs"
+//│ JS:
+//│ this.MyClass = await import("/Users/parreaux/work/Research/experiments/hkmc2/hkmc2/shared/src/test/js/MyClass.mjs");
+//│ undefined
+//│ MyClass = [Module: null prototype] { default: [class MyClass] }
+
+MyClass
+//│ = [Module: null prototype] { default: [class MyClass] }
+
+MyClass.default
+//│ = [class MyClass]
+
+new MyClass.default("Bob")
+//│ = MyClass { name: 'Bob' }
+
+:fixme
+let C = MyClass.default
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+let c = MyClass.default
+//│ c = [class MyClass]
+
+:todo
+new c("Bob")
+//│ = MyClass { name: 'Bob' }
+
+globalThis.MyClass
+//│ = [Module: null prototype] { default: [class MyClass] }
+
+
+:ge
+fun foo() =
+  import "../../js/MyClass.mjs"
+  ()
+//│ ╔══[COMPILATION ERROR] Imports must be at the top level
+//│ ║  l.38: 	  import "../../js/MyClass.mjs"
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^
+
+

@@ -6,6 +6,6 @@ class Some[out A](value: A)
 
 :todo
 let Some(x) = Some(42)
-//│ /!!!\ Uncaught error: scala.MatchError: Let(App(Ident(Some),Tup(List(Ident(x)))),Some(App(Ident(Some),Tup(List(IntLit(42))))),None) (of class hkmc2.syntax.Tree$Let)
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 

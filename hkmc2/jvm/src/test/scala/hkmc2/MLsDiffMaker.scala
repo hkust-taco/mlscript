@@ -89,7 +89,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       def doPrintDbg(msg: => Str): Unit = if dbg then output(msg)
     val res = p.parseAll(p.block(allowNewlines = true))
     given Elaborator.Ctx = curCtx
-    val elab = Elaborator(etl)
+    val elab = Elaborator(etl, file / os.up)
     try
       val oldSymbols = curCtx.allMembers.valuesIterator.toSet
       val (e, newCtx) = elab.importFrom(res)
@@ -148,7 +148,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   private var blockNum = 0
   
   def processTrees(trees: Ls[syntax.Tree])(using Raise): Unit =
-    val elab = Elaborator(etl)
+    val elab = Elaborator(etl, file / os.up)
     val blockSymbol =
       semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1

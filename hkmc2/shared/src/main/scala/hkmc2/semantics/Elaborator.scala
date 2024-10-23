@@ -35,7 +35,9 @@ object Elaborator:
     def nextUid: Int = { curUi += 1; curUi }
 import Elaborator.*
 
-class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
+class Elaborator(val tl: TraceLogger, val wd: os.Path)
+(using val raise: Raise, val state: State)
+extends Importer:
   import state.nextUid
   import tl.*
   
@@ -66,6 +68,8 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
       val b = bodo.map(term(_)(using ctxx)).getOrElse(unit)
       Term.Blk(mkLetBinding(fs, r), b)
     case Let(lhs, N, bodo) => // TODO
+      ???
+    case Let(lhs, S(rhs), bodo) => // TODO
       ???
     case Ident("true") => Term.Lit(Tree.BoolLit(true))
     case Ident("false") => Term.Lit(Tree.BoolLit(false))
@@ -141,20 +145,13 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
     case tree @ Tup(fields) =>
       Term.Tup(fields.map(fld(_)))(tree)
     case New(body) =>
-      def go(clsId: Ident, as: Ls[Tree]) =
-        ctx.get(clsId.name) match
-          case S(sym: ClassSymbol) => Term.New(sym, as.map(term)).withLocOf(tree)
-          case _ =>
-            raise(ErrorReport(msg"Class '${clsId.name}' not found." -> tree.toLoc :: Nil))
-            Term.Error
       body match
-      case App(clsId: Ident, Tup(params)) =>
-        go(clsId, params)
-      case clsId: Ident =>
-        go(clsId, Nil)
-      case _ =>
-        raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
-        Term.Error
+      case App(cls, Tup(params)) =>
+        Term.New(term(cls), params.map(term)).withLocOf(tree)
+      case cls => // we'll catch bad `new` targets during type checking
+        Term.New(term(cls), Nil).withLocOf(tree)
+      // case _ =>
+      //   raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
     case Tree.If(split) =>
       val desugared = new Desugarer(tl, this).termSplit(split, identity)(Split.Nil)(ctx)
       scoped("ucs:desugared"):
@@ -316,6 +313,19 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
       case Nil =>
         val res = unit
         (Term.Blk(acc.reverse, res), ctx)
+      case (m @ Modified(Keyword.`import`, absLoc, arg)) :: sts =>
+        val (newCtx, newAcc) = arg match
+          case Tree.StrLit(path) =>
+            val stmt = importPath(path)
+            (ctx.copy(locals = ctx.locals + (stmt.sym.name -> stmt.sym)),
+            stmt.withLocOf(m) :: acc)
+          case _ =>
+            raise(ErrorReport(
+              msg"Expected string literal after 'import' keyword" ->
+              arg.toLoc :: Nil))
+            (ctx, acc)
+        newCtx.givenIn:
+          go(sts, newAcc)
       case (hd @ Let(Apps(id, tups), rhso, N)) :: sts if id.name.headOption.exists(_.isLower) =>
         val sym =
           fieldOrVarSym(LetBind, id)

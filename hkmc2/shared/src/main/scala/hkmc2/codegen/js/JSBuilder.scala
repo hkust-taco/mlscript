@@ -77,8 +77,8 @@ class JSBuilder extends CodeBuilder:
           case S(index) => s"[$index]"
           case N => s"[${JSBuilder.makeStringLiteral(name)}]"
       }"
-    case Instantiate(sym, as) =>
-      doc"new ${getVar(sym)}(${as.map(result).mkDocument(", ")})"
+    case Instantiate(cls, as) =>
+      doc"new ${result(cls)}(${as.map(result).mkDocument(", ")})"
     case Value.Arr(es) =>
       doc"[ #{  # ${es.map(result).mkDocument(doc", # ")} #}  # ]"
   def returningTerm(t: Block)(using Raise, Scope): Document = t match
@@ -174,6 +174,13 @@ class JSBuilder extends CodeBuilder:
       doc" # throw ${result(res)}"
     
     // case _ => ???
+  
+  def program(p: Program)(using Raise, Scope): Document =
+    p.imports.foreach: i =>
+      i._1 -> scope.allocateName(i._1)
+    val imps = p.imports.map: i =>
+      doc"""this.${getVar(i._1)} = await import("${i._2.toString}");"""
+    imps.mkDocument(doc" # ") :/: block(p.main)
   
   def block(t: Block)(using Raise, Scope): Document =
     if t.definedVars.isEmpty then returningTerm(t).stripBreaks else

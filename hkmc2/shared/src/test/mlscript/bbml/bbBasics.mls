@@ -69,15 +69,18 @@ class Foo(x: Int)
 
 :e
 new Nothingness(0)
-//│ ╔══[ERROR] Class 'Nothingness' not found.
+//│ ╔══[ERROR] Name not found: Nothingness
+//│ ║  l.71: 	new Nothingness(0)
+//│ ╙──      	    ^^^^^^^^^^^
+//│ ╔══[ERROR] Cannot instantiate Error
 //│ ║  l.71: 	new Nothingness(0)
 //│ ╙──      	    ^^^^^^^^^^^^^^
 //│ Type: ⊥
 
 :e
 new 42
-//│ ╔══[ERROR] Illegal new expression.
-//│ ║  l.78: 	new 42
+//│ ╔══[ERROR] Cannot instantiate Lit(IntLit(42))
+//│ ║  l.81: 	new 42
 //│ ╙──      	    ^^
 //│ Type: ⊥
 
@@ -96,8 +99,8 @@ new Point(0.0, 0.0, 0.0)
 :e
 new Foo("1!5!")
 //│ ╔══[ERROR] Type error in string literal with expected type Int
-//│ ║  l.97: 	new Foo("1!5!")
-//│ ║        	        ^^^^^^
+//│ ║  l.100: 	new Foo("1!5!")
+//│ ║         	        ^^^^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Foo
 
@@ -125,10 +128,10 @@ let t = new Some(true) in t.Some#value
 :pe
 42.Some#value
 //│ ╔══[LEXICAL ERROR] Expect at least one digit after the  decimal point
-//│ ║  l.126: 	42.Some#value
+//│ ║  l.129: 	42.Some#value
 //│ ╙──       	   ^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.126: 	42.Some#value
+//│ ║  l.129: 	42.Some#value
 //│ ╙──       	   ^^^^
 //│ Type: Num
 
@@ -151,7 +154,7 @@ let ip = new Printer(foofoo) in ip.Printer#f(42)
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ╔══[ERROR] Type error in string literal with expected type α28_1
-//│ ║  l.152: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
+//│ ║  l.155: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ║         	                                             ^^^^
 //│ ╟── because: cannot constrain  Str  <:  α28_1
 //│ ╟── because: cannot constrain  Str  <:  α28_1
@@ -178,7 +181,7 @@ let tf = new TFun(inc) in tf.TFun#f(1)
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ╔══[ERROR] Type error in string literal with expected type α40_1
-//│ ║  l.179: 	let tf = new TFun(inc) in tf.TFun#f("1")
+//│ ║  l.182: 	let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
 //│ ╟── because: cannot constrain  Str  <:  α40_1
 //│ ╟── because: cannot constrain  Str  <:  α40_1

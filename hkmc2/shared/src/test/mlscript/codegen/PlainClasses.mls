@@ -23,8 +23,8 @@ new Foo()
 
 Foo
 //│ JS:
-//│ () => { return new this.Foo() }
-//│ = [Function (anonymous)]
+//│ this.Foo
+//│ = [class Foo]
 
 Foo()
 //│ JS:
@@ -41,8 +41,37 @@ log("ok")
 fun test() =
   class Foo with { log("hi") }
   log("ok")
+  Foo
 //│ JS:
-//│ function test() { class Foo { constructor() { log("hi") } }; return log("ok") }; undefined
+//│ function test() {
+//│   let tmp;
+//│   class Foo {
+//│     constructor() {
+//│       log("hi")
+//│     }
+//│   };
+//│   tmp = log("ok");
+//│   return Foo
+//│ };
+//│ undefined
+
+let t = test()
+//│ JS:
+//│ let tmp; tmp = this.test(); this.t = tmp; undefined
+//│ > ok
+//│ t = [class Foo]
+
+new t
+//│ JS:
+//│ new this.t()
+//│ > hi
+//│ = Foo {}
+
+new t()
+//│ JS:
+//│ new this.t()
+//│ > hi
+//│ = Foo {}
 
 
 class Foo with
@@ -150,10 +179,10 @@ class Foo with
 :fixme
 class Foo with val x = 1
 //│ ╔══[PARSE ERROR] Expected indented block after type declaration body; found 'val' keyword instead
-//│ ║  l.151: 	class Foo with val x = 1
+//│ ║  l.180: 	class Foo with val x = 1
 //│ ╙──       	               ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.151: 	class Foo with val x = 1
+//│ ║  l.180: 	class Foo with val x = 1
 //│ ╙──       	                   ^
 //│ JS:
 //│ /* error */

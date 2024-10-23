@@ -14,6 +14,12 @@ import semantics.*
 import semantics.Term.*
 
 
+case class Program(
+  imports: Ls[Local -> os.Path],
+  main: Block,
+)
+
+
 sealed abstract class Block extends Product with AutoLocated:
   
   protected def children: Ls[Located] = ??? // Maybe extending AutoLocated is unnecessary
@@ -92,7 +98,7 @@ type Local = Symbol
 
 case class Call(fun: Path, args: Ls[Path]) extends Result
 
-case class Instantiate(cls: ClassSymbol, args: Ls[Path]) extends Result
+case class Instantiate(cls: Path, args: Ls[Path]) extends Result
 
 abstract class Path extends Result
 

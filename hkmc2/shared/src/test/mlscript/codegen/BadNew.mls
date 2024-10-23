@@ -1,0 +1,35 @@
+:js
+
+
+:pe
+new
+//│ ╔══[PARSE ERROR] Expected expression after `new` keyword; found end of input instead
+//│ ║  l.5: 	new
+//│ ╙──     	   ^
+
+:re
+new 2
+//│ ═══[RUNTIME ERROR] TypeError: 2 is not a constructor
+
+:ge
+new 2 + 2
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '+'
+
+:re
+new()
+//│ ═══[RUNTIME ERROR] TypeError: undefined is not a constructor
+
+:pe
+new {}
+//│ ╔══[PARSE ERROR] Expected expression after `new` keyword; found end of block instead
+//│ ║  l.23: 	new {}
+//│ ╙──      	    ^^
+
+// FIXME the error...
+:todo
+new { x = 1 }
+//│ ╔══[ERROR] Wrong number of type arguments
+//│ ║  l.30: 	new { x = 1 }
+//│ ╙──      	      ^
+
+

@@ -74,6 +74,46 @@ let x
 //│ 	IntLit(1)
 
 
+:pe
+let {}
+//│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of block instead
+//│ ║  l.78: 	let {}
+//│ ╙──      	    ^^
+//│ Parsed:
+
+let ()
+//│ Parsed:
+//│ 	Let(UnitLit(true),None,None)
+
+:pe
+let // a
+//│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of input instead
+//│ ║  l.89: 	let // a
+//│ ╙──      	        ^
+//│ Parsed:
+//│ 	Error()
+
+:pe
+let
+  // a
+//│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of block instead
+//│ ║  l.98: 	  // a
+//│ ╙──      	^^
+//│ Parsed:
+
+:pe
+let
+  // a
+1
+//│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of block instead
+//│ ║  l.106: 	  // a
+//│ ║         	^^^^^^
+//│ ║  l.107: 	1
+//│ ╙──       	^
+//│ Parsed:
+//│ 	IntLit(1)
+
+
 
 let x = y
 foo
@@ -126,26 +166,22 @@ let x = 1
 //│ Parsed:
 //│ 	Let(Ident(x),Some(IntLit(1)),Some(Ident(x)))
 
-:pe
+// Awkward... parses `in x` as a separate statement
 let
   x = 1
 in x
-//│ ╔══[PARSE ERROR] Expected end of input; found newline instead
-//│ ║  l.131: 	  x = 1
-//│ ║         	       ^
-//│ ║  l.132: 	in x
-//│ ╙──       	
 //│ Parsed:
 //│ 	Let(Ident(x),Some(IntLit(1)),None)
+//│ 	Modified(keyword 'in',None,Ident(x))
 
 :pe
 let
 x = 1
 in x
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found newline instead
-//│ ║  l.142: 	let
+//│ ║  l.178: 	let
 //│ ║         	   ^
-//│ ║  l.143: 	x = 1
+//│ ║  l.179: 	x = 1
 //│ ╙──       	
 //│ Parsed:
 //│ 	Error()
@@ -156,7 +192,7 @@ in x
 let
   with
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found 'with' keyword instead
-//│ ║  l.157: 	  with
+//│ ║  l.193: 	  with
 //│ ╙──       	  ^^^^
 //│ Parsed:
 //│ 	Error()
@@ -197,7 +233,7 @@ x =>
 x => let x = 1
   x
 //│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.198: 	  x
+//│ ║  l.234: 	  x
 //│ ╙──       	  ^
 //│ Parsed:
 //│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Let(Ident(x),Some(IntLit(1)),None))
@@ -206,7 +242,7 @@ x => let x = 1
 :pe
 if
 //│ ╔══[PARSE ERROR] Expected expression or indented block after `if` keyword; found end of input instead
-//│ ║  l.207: 	if
+//│ ║  l.243: 	if
 //│ ╙──       	  ^
 //│ Parsed:
 //│ 	Error()

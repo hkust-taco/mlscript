@@ -224,7 +224,11 @@ abstract class Parser(
           yeetSpaces match
           case (tok @ BRACKETS(Indent | Curly, toks), loc) :: _ if subRule.blkAlt.isEmpty =>
             consume
-            rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.blockOf(subRule, allowNewlines)) // FIXME allowNewlines?
+            val blk = rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.blockOf(subRule, allowNewlines)) // FIXME allowNewlines?
+            if blk.isEmpty then
+              err((msg"Expected ${subRule.whatComesAfter} after ${subRule.name}; found end of block instead" -> S(loc) :: Nil))
+              errExpr
+            blk ::: blockContOf(rule)
           case _ =>
             val res = parseRule(CommaPrecNext, subRule).getOrElse(errExpr)
             exprCont(res, CommaPrecNext, false) :: blockContOf(rule)

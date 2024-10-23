@@ -83,6 +83,7 @@ object Keyword:
   val `public` = Keyword("public", N, N)
   val `private` = Keyword("private", N, N)
   val `return` = Keyword("return", N, curPrec)
+  val `import` = Keyword("import", N, curPrec)
   
   // * The lambda operator is special:
   // *  it should associate very strongly on the left and very loosely on the right

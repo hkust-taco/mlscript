@@ -15,9 +15,11 @@
 //│ ║  l.12: 	1
 //│ ╙──      	^
 //│ Lowered:
-//│ Return:
-//│   res = Lit of IntLit of 2
-//│   implct = true
+//│ Program:
+//│   imports = Nil
+//│   main = Return:
+//│     res = Lit of IntLit of 2
+//│     implct = true
 //│ JS:
 //│ 2
 //│ = 2
@@ -34,15 +36,17 @@ log("Hi")
 log("Hi")
 2
 //│ Lowered:
-//│ Assign:
-//│   lhs = $tmp@26
-//│   rhs = Call:
-//│     fun = Ref of .log
-//│     args = Ls of 
-//│       Lit of StrLit of "Hi"
-//│   rest = Return: \
-//│   res = Lit of IntLit of 2
-//│   implct = true
+//│ Program:
+//│   imports = Nil
+//│   main = Assign:
+//│     lhs = $tmp@26
+//│     rhs = Call:
+//│       fun = Ref of .log
+//│       args = Ls of 
+//│         Lit of StrLit of "Hi"
+//│     rest = Return: \
+//│     res = Lit of IntLit of 2
+//│     implct = true
 //│ JS:
 //│ let tmp; tmp = log("Hi"); 2
 //│ ═══[RUNTIME ERROR] ReferenceError: log is not defined

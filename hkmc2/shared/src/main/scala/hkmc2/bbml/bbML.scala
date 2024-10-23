@@ -502,7 +502,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       case Term.App(lhs, Term.Tup(rhs)) =>
         val (funTy, lhsEff) = typeCheck(lhs)
         app((funTy, lhsEff), rhs, t)
-      case Term.New(cls, args) =>
+      case Term.New(Ref(cls: ClassSymbol), args) =>
         cls.defn match
         case S(clsDfn: ClassDef.Parameterized) =>
           if args.length != clsDfn.params.length then
@@ -531,6 +531,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         case S(clsDfn: ClassDef.Plain) => ??? // TODO
         case N => 
           (error(msg"Class definition not found: ${cls.nme}" -> t.toLoc :: Nil), Bot)
+      case Term.New(cls, args) =>
+        (error(msg"Cannot instantiate ${cls.toString}" -> t.toLoc :: Nil), Bot)
       case Term.Asc(term, ty) =>
         val res = typeType(ty)(using ctx)
         ascribe(term, res)

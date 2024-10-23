@@ -42,7 +42,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val jsb = codegen.js.JSBuilder()
       import semantics.*
       import codegen.*
-      val le = low.topLevel(blk)
+      val le = low.program(blk)
       if showLoweredTree.isSet then
         output(s"Lowered:")
         output(le.showAsTree)
@@ -54,7 +54,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       // val nestedScp = codegen.js.Scope(S(baseScp), curCtx.outer, collection.mutable.Map.empty) // * not needed
       
       val je = nestedScp.givenIn:
-        jsb.block(le)
+        jsb.program(le)
       val jsStr = je.stripBreaks.mkString(100)
       if sjs.isSet then
         output(s"JS:")

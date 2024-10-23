@@ -13,8 +13,8 @@ class Foo()
 
 Foo
 //│ JS:
-//│ () => { return new this.Foo() }
-//│ = [Function (anonymous)]
+//│ this.Foo
+//│ = [class Foo]
 
 Foo()
 //│ JS:
@@ -28,8 +28,8 @@ class Foo(a)
 
 Foo
 //│ JS:
-//│ (a) => { return new this.Foo(a) }
-//│ = [Function (anonymous)]
+//│ this.Foo
+//│ = [class Foo]
 
 Foo(1)
 //│ JS:
@@ -46,14 +46,20 @@ class Foo(a, b)
 //│ JS:
 //│ this.Foo = class Foo { constructor(a, b) { this.a = a; this.b = b;  } }; undefined
 
-let f = Foo
+let foo = Foo
 //│ JS:
-//│ this.f = (a, b) => { return new this.Foo(a, b) }; undefined
-//│ f = [Function (anonymous)]
+//│ this.foo = this.Foo; undefined
+//│ foo = [class Foo]
 
-let f = f(1, 2)
+:re
+let f = foo(1, 2)
 //│ JS:
-//│ let tmp; tmp = this.f(1, 2); this.f = tmp; undefined
+//│ let tmp; tmp = this.foo(1, 2); this.f = tmp; undefined
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
+
+let f = new foo(1, 2)
+//│ JS:
+//│ let tmp; tmp = new this.foo(1, 2); this.f = tmp; undefined
 //│ f = Foo { a: 1, b: 2 }
 
 f.a

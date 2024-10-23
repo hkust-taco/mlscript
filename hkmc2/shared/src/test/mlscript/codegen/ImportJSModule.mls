@@ -1,0 +1,16 @@
+:js
+
+:sjs
+import "../../js/Test.mjs"
+//│ JS:
+//│ this.Test = await import("/Users/parreaux/work/Research/experiments/hkmc2/hkmc2/shared/src/test/js/Test.mjs");
+//│ undefined
+//│ Test = [Module: null prototype] { greet: [Function: greet] }
+
+Test
+//│ = [Module: null prototype] { greet: [Function: greet] }
+
+Test.greet()
+//│ > Hello from Test.mjs!
+
+
