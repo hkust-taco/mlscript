@@ -2,7 +2,7 @@
 
 :js
 :import NofibPrelude.mls
-//│ Imported 65 member(s)
+//│ Imported 73 member(s)
 fun stronglyConnComp(es, vs) =
   fun swap(a) = if a is Tup2(f, s) then Tup2(s, f)
   fun new_range(xys, w) = if xys is

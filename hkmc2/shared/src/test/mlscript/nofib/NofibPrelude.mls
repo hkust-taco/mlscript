@@ -40,21 +40,19 @@ fun flip(f, x, y) = f(y)(x)
 
 fun not(x) = if x then false else true
 
-fun power(a, n) = if n == 0 then 1 else a * power(a, n - 1)
+fun power(a, n) = globalThis.Math.pow(a, n)
 
-fun intDiv(a, b) =
-  fun go(a, b, r) = if a >= b then go(a - b, b, r + 1) else r
-  go(a, b, 0)
+fun intDiv(a, b) = globalThis.Math.floor(a / b)
+fun intQuot(a, b) = globalThis.Math.trunc(a / b)
 
-fun (%) intMod(a, b) =
-  fun go(a, b) = if a >= b then go(a - b, b) else a
-  go(a, b)
+fun (%) intMod(a, b) = a - (b * intDiv(a, b))
+fun intRem(a, b) = a - (b * intQuot(a, b))
 
-fun quotRem(a, b) = Tup2(intDiv(a, b), a % b)
+fun quotRem(a, b) = Tup2(intQuot(a, b), intRem(a, b))
 
-fun max(a, b) = if a > b then a else b
+fun max(a, b) = globalThis.Math.max(a, b)
 
-fun abs(x) = if x > 0 then x else -x
+fun abs(x) = globalThis.Math.abs(x)
 
 
 fun reverse(l) =
@@ -96,7 +94,8 @@ fun zip(xs, ys) = if xs is
   Cons(x, xs) and ys is Cons(y, ys) then Cons(Tup2(x, y), zip(xs, ys))
   else Nil
 
-fun snd(x)= if x is Tup2(f, s) then s
+fun snd(x) = if x is Tup2(f, s) then s
+fun fst(x) = if x is Tup2(f, s) then f
 
 fun inList(x, ls) = if ls is
   Cons(h, t) and
@@ -162,6 +161,10 @@ fun sum(xs) =
     Nil then a
     Cons(h, t) then go(t, a + h)
   go(xs, 0)
+
+fun null_(ls) = if ls is
+  Nil then true
+  else false
 // =====================
 
 fun filter_lz(p, ls) = Lazy of () =>
@@ -199,3 +202,7 @@ fun stringConcat(x, y) = x + y
 fun stringListConcat(ls) = if ls is
   Nil then ""
   Cons(h, t) then stringConcat(h, stringListConcat(t))
+fun sqrt(x) = globalThis.Math.sqrt(x)
+fun tan(x) = globalThis.Math.tan(x)
+fun sin(x) = globalThis.Math.sin(x)
+fun cos(x) = globalThis.Math.cos(x)
