@@ -191,7 +191,7 @@ fun zipWith_lz_lz(f, xss, yss) = lazy of () => if
 // =====================
 
 
-
+fun nofibError(e) = globalThis.console.log(globalThis.Error(e))
 fun nofibPrint(x) = globalThis.process.stdout.write(globalThis.JSON.stringify(x) + "\n")
 fun stringOfFloat(x) = x + ""
 fun stringOfInt(x) = x + ""
