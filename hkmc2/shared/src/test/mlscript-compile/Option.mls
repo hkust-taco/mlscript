@@ -1,0 +1,11 @@
+
+
+class Some(value)
+module None
+
+type Option[A] = Some(A) | None
+
+module Option with ...
+
+
+

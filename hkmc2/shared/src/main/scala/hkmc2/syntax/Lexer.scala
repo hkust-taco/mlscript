@@ -60,15 +60,6 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
     // ">",
   )
   
-  // TODO rm
-  private val isAlphaOp = Set[Str](
-    // "with",
-    // "and",
-    // "or",
-    // "is",
-    // "as",
-  )
-  
   @tailrec final
   def takeWhile(i: Int, cur: Ls[Char] = Nil)(pred: Char => Bool): (Str, Int) =
     if i < length && pred(bytes(i)) then takeWhile(i + 1, bytes(i) :: cur)(pred)
@@ -202,6 +193,10 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
   
   def loc(start: Int, end: Int): Loc = Loc(start, end, origin)
   
+  def mkSymIdent(nme: Str) = nme match
+    case "..." => SUSPENSION
+    case _ => IDENT(nme, true)
+  
   @tailrec final
   def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc])(implicit qqList: Ls[BracketKind]): Ls[TokLoc] = if i >= length then acc.reverse else
     
@@ -244,7 +239,7 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
         val (n, j) = takeWhile(i + 1)(isIdentChar)
         lex(j, ind, next(j, BRACKETS(BracketKind.Unquote, (
             // if keywords.contains(n) then KEYWRD(n) else IDENT(n, isAlphaOp(n)),
-            IDENT(n, isAlphaOp(n)),
+            IDENT(n, false),
             loc(i + 1, j)
           ) :: Nil)(loc(i, j))))
       case ';' =>
@@ -315,7 +310,7 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
         // go(j, if (keywords.contains(n)) KEYWRD(n) else IDENT(n, isAlphaOp(n)))
         lex(j, ind, next(j,
             // if keywords.contains(n) then KEYWRD(n) else IDENT(n, isAlphaOp(n))
-            IDENT(n, isAlphaOp(n))
+            IDENT(n, false)
           ))
       case _ if isOpChar(c) =>
         val (n, j) = takeWhile(i)(isOpChar)
@@ -335,12 +330,12 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
             lex(k, ind, next(k, SELECT(name)))
           else lex(j, ind, next(j,
               // if isSymKeyword.contains(n) then KEYWRD(n) else IDENT(n, true)
-              IDENT(n, true)
+              mkSymIdent(n)
             ))
         // else go(j, if (isSymKeyword.contains(n)) KEYWRD(n) else IDENT(n, true))
         else lex(j, ind, next(j,
             // if isSymKeyword.contains(n) then KEYWRD(n) else IDENT(n, true)
-            IDENT(n, true)
+            mkSymIdent(n)
           ))
       case _ if isDigit(c) =>
         val (lit, j) = num(i)
@@ -365,13 +360,19 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
       else String.valueOf(ch)
   
   
+  
   lazy val tokens: Ls[Token -> Loc] = lex(0, Nil, Nil)(Nil)
+  
   
   /** Converts the lexed tokens into structured tokens. */
   lazy val bracketedTokens: Ls[Stroken -> Loc] =
     import BracketKind._
     def go(toks: Ls[Token -> Loc], canStartAngles: Bool, stack: Ls[BracketKind -> Loc -> Ls[Stroken -> Loc]], acc: Ls[Stroken -> Loc]): Ls[Stroken -> Loc] =
       toks match
+        case (SUSPENSION, l0) :: Nil =>
+          go(OPEN_BRACKET(Indent) -> l0 :: LITVAL(Tree.UnitLit(true)) -> l0 :: Nil, false, stack, acc)
+        case (SUSPENSION, l0) :: (NEWLINE, l1) :: rest =>
+          go(OPEN_BRACKET(Indent) -> (l0 ++ l1) :: rest, false, stack, acc)
         case (QUOTE, l0) :: (IDENT("<", true), l1) :: rest =>
           go(rest, false, stack, (IDENT("<", true), l1) :: (QUOTE, l0) :: acc)
         case (QUOTE, l0) :: (IDENT(">", true), l1) :: rest =>
@@ -524,6 +525,7 @@ object Lexer:
     case (BRACKETS(k, contents), _) =>
       k.beg + printTokens(contents) + k.end
     case (COMMENT(text: String), _) => "/*" + text + "*/"
+    case (SUSPENSION, _) => "..."
   def printTokens(ts: Ls[TokLoc]): Str =
     ts.iterator.map(printToken).mkString("|", "|", "|")
   
