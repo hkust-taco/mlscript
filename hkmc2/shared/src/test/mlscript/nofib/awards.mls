@@ -2,7 +2,7 @@
 
 :js
 :import NofibPrelude.mls
-//│ Imported 73 member(s)
+//│ Imported 74 member(s)
 fun delete_(xs, e) = deleteBy((x, y) => x == y, e, xs)
 fun listDiff(a, ls) = foldl(delete_, a, ls)
 fun sort(l) = qsort((a, b) => leTup2(a, b), l, Nil)
@@ -37,7 +37,7 @@ fun awards(scores) =
   append(append(award(Tup2("Gold", 70)), award(Tup2("Silver", 60))), award(Tup2("Bronze", 50)))
 fun findawards(scores) = if awards(scores) is
   Nil then Nil
-  Cons(head, tail) and head is Tup2(award, Tup2(sum_, perm)) then
+  Cons(head_, tail) and head_ is Tup2(award, Tup2(sum_, perm)) then
     Cons(Tup2(award, Tup2(sum_, perm)), findawards(listDiff(scores, perm)))
 fun findallawards(competitors) =
   map(name_scores => if name_scores is Tup2(name, scores) then Tup2(name, findawards(scores)), competitors)

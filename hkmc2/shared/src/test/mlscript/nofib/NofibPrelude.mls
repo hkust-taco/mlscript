@@ -54,6 +54,7 @@ fun max(a, b) = globalThis.Math.max(a, b)
 
 fun abs(x) = globalThis.Math.abs(x)
 
+fun head(l) = if l is Cons(h, t) then h
 
 fun reverse(l) =
   fun r(l', l) = if l is Cons(x, xs) then r(Cons(x, l'), xs) else l'
