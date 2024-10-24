@@ -150,30 +150,30 @@ object ParseRule:
         case (symName, (S(head), ext, bod)) => TypeDef(k, S(symName), head, ext, bod)
         case (head, (N, ext, bod)) => TypeDef(k, N, head, ext, bod)
   
-  val prefixRules: ParseRule[Tree] = ParseRule("start of statement")(
-    Kw(`let`):
-      ParseRule("'let' binding keyword")(
+  def letLike(kw: Keyword.letLike) = 
+    Kw(kw):
+      ParseRule(s"'${kw.name}' binding keyword")(
         Expr(
-          ParseRule("'let' binding head")(
+          ParseRule(s"'${kw.name}' binding head")(
             Kw(`=`):
-              ParseRule("'let' binding equals sign")(
+              ParseRule(s"'${kw.name}' binding equals sign")(
                 exprOrBlk(
-                  ParseRule("'let' binding right-hand side")(
+                  ParseRule(s"'${kw.name}' binding right-hand side")(
                     Kw(`in`):
-                      ParseRule("'let' binding `in` clause"):
-                        Expr(ParseRule("'let' binding body")(End(())))((body, _: Unit) => S(body))
+                      ParseRule(s"'${kw.name}' binding `in` clause"):
+                        Expr(ParseRule(s"'${kw.name}' binding body")(End(())))((body, _: Unit) => S(body))
                     ,
                     End(N)
                   )
                 ) { (rhs, body) => (S(rhs), body) }*
               ),
             Kw(`in`):
-              ParseRule("'let' binding `in` clause"):
-                Expr(ParseRule("'let' binding body")(End(())))((body, _: Unit) => S(body) -> N)
+              ParseRule(s"'${kw.name}' binding `in` clause"):
+                Expr(ParseRule(s"'${kw.name}' binding body")(End(())))((body, _: Unit) => N -> S(body))
             ,
             End(N -> N)
           )
-        ) { case (lhs, (rhs, body)) => Let(lhs, rhs, body) }
+        ) { case (lhs, (rhs, body)) => LetLike(kw, lhs, rhs, body) }
         ,
         // Blk(
         //   ParseRule("let block"):
@@ -181,7 +181,10 @@ object ParseRule:
         //       typeDeclBody
         // ) { case (lhs, body) => Let(lhs, lhs, body) }
       )
-    ,
+  
+  val prefixRules: ParseRule[Tree] = ParseRule("start of statement")(
+    letLike(`let`),
+    letLike(`set`),
     Kw(`new`):
       ParseRule("`new` keyword"):
         Expr(ParseRule("`new` expression")(End(())))((body, _: Unit) => New(body))

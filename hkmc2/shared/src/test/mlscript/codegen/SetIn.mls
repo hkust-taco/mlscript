@@ -1,0 +1,85 @@
+:js
+
+:import PredefJS.mls
+//│ Imported 1 member(s)
+
+
+let x = 0
+//│ x = 0
+
+:sjs
+let x += 1
+//│ JS:
+//│ let tmp; tmp = this.x + 1; this.x = tmp; undefined
+//│ x = 1
+
+x
+//│ = 1
+
+:sjs
+set x = 0
+//│ JS:
+//│ this.x = 0; undefined
+
+:sjs
+set x += 1
+//│ JS:
+//│ let tmp; tmp = this.x + 1; this.x = tmp; undefined
+
+x
+//│ = 1
+
+
+:sjs
+set x += 1 in log(x)
+//│ JS:
+//│ let old, tmp, tmp1;
+//│ old = this.x;
+//│ try {
+//│   tmp1 = this.x + 1;
+//│   this.x = tmp1;
+//│   tmp = log(this.x);
+//│ } finally {
+//│   this.x = old;
+//│ }
+//│ tmp
+//│ > 2
+
+x
+//│ = 1
+
+
+:sjs
+fun example() =
+  let x = 0
+  let get_x() = x
+  let y =
+    set x += 1 in log(x); x
+  log(x)
+  log(get_x())
+example()
+//│ JS:
+//│ function example() {
+//│   let x, get_x, y, old, tmp, tmp1, tmp2, tmp3;
+//│   x = 0;
+//│   get_x = () => {
+//│     return x
+//│   };
+//│   old = x;
+//│   try {
+//│     tmp1 = x + 1;
+//│     x = tmp1;
+//│     tmp = log(x);
+//│   } finally {
+//│     x = old;
+//│   }
+//│   y = x;
+//│   tmp2 = log(x);
+//│   tmp3 = get_x();
+//│   return log(tmp3)
+//│ };
+//│ this.example()
+//│ > 1
+//│ > 0
+//│ > 0
+

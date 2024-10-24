@@ -11,6 +11,8 @@ import Tree.*
 import Parser.*
 import scala.annotation.tailrec
 
+import Keyword.`let`
+
 
 object Parser:
   
@@ -483,7 +485,7 @@ abstract class Parser(
               err(msg"Expected '`in'; found end of input instead" -> lastLoc :: Nil)
               errExpr
           bs.foldRight(body) {
-            case ((v, r), acc) => Quoted(Let(v, S(Unquoted(r)), S(Unquoted(acc))))
+            case ((v, r), acc) => Quoted(LetLike(`let`, v, S(Unquoted(r)), S(Unquoted(acc))))
           }
         case (IDENT("if", _), l0) :: _ =>
           consume

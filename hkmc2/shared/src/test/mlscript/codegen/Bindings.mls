@@ -9,6 +9,15 @@ x + 1
 //│ = 2
 //│ x = 1
 
+x
+//│ = 1
+
+let x = 2
+//│ x = 2
+
+x
+//│ = 2
+
 let x = 1
 let y = x
 x + y
@@ -28,5 +37,55 @@ x * 2
 //│ = 6
 //│ x = 3
 
+
+let x = 1
+//│ x = 1
+
+fun incr(n) = n + 1
+fun (|>) pipe(x, f) = f(x)
+
+let x = x |> incr
+//│ x = 2
+
+let x |>= incr
+//│ x = 3
+
+
+:todo // proper error
+let 2
+//│ /!!!\ Uncaught error: scala.MatchError: LetLike(keyword 'let',IntLit(2),None,None) (of class hkmc2.syntax.Tree$LetLike)
+
+:e
+let x += 1 = 0
+//│ ╔══[ERROR] Unsupported let binding shape
+//│ ║  l.59: 	let x += 1 = 0
+//│ ╙──      	    ^^^^^^^^^^
+
+:e
+let x += 1 = 0 in x
+//│ ╔══[ERROR] Unsupported let binding shape
+//│ ║  l.65: 	let x += 1 = 0 in x
+//│ ╙──      	    ^^^^^^^^^^
+
+
+(let x = 1)
+//│ x = 1
+
+:e
+(let x = 1) + 1
+//│ ╔══[ERROR] Expected a right-hand side for let bindings in expression position
+//│ ║  l.75: 	(let x = 1) + 1
+//│ ╙──      	     ^^^^^
+//│ = NaN
+
+:e
+(let f(x) = x) + 1
+//│ ╔══[ERROR] Expected a right-hand side for let bindings in expression position
+//│ ║  l.82: 	(let f(x) = x) + 1
+//│ ╙──      	     ^^^^^^^^
+//│ = NaN
+
+(let f(x) = x + 1 in f(42)) + 1
+//│ = 44
 
 

@@ -12,6 +12,8 @@ import syntax.*
 import Tree.*
 import hkmc2.Message.MessageContext
 
+import Keyword.{`let`, `set`}
+
 
 object Elaborator:
   case class Ctx(outer: Opt[MemberSymbol[?]], parent: Opt[Ctx], members: Map[Str, Symbol], locals: Map[Str, LocalSymbol]):
@@ -59,18 +61,25 @@ extends Importer:
       block(sts)._1
     case lit: Literal =>
       Term.Lit(lit)
-    case Let(Apps(id, tups), S(rhs), bodo) if id.name.headOption.exists(_.isLower) =>
-      val rrhs = tups.foldRight(rhs):
-        Tree.InfixApp(_, Keyword.`=>`, _)
-      val fs = VarSymbol(id, nextUid)
-      val ctxx = ctx.copy(locals = ctx.locals + (id.name -> fs))
-      val r = term(rrhs)(using ctxx)
-      val b = bodo.map(term(_)(using ctxx)).getOrElse(unit)
-      Term.Blk(mkLetBinding(fs, r), b)
-    case Let(lhs, N, bodo) => // TODO
-      ???
-    case Let(lhs, S(rhs), bodo) => // TODO
-      ???
+    case LetLike(`let`, lhs, rhso, S(bod)) =>
+      term(Block(LetLike(`let`, lhs, rhso, N) :: bod :: Nil))
+    case LetLike(`let`, lhs, S(rhs), N) =>
+      raise(ErrorReport(msg"Expected a right-hand side for let bindings in expression position" -> tree.toLoc :: Nil))
+      block(LetLike(`let`, lhs, S(rhs), N) :: Nil)._1
+    case LetLike(`set`, lhs, S(rhs), N) =>
+      Term.Assgn(term(lhs), term(rhs))
+    case LetLike(`set`, lhs, S(rhs), S(bod)) =>
+      // * Backtracking assignment
+      lhs match
+      case id: Ident =>
+        val lt = term(lhs)
+        val sym = TempSymbol(nextUid, S(lt), "old")
+        Term.Blk(
+        LetDecl(sym) :: DefineVar(sym, lt) :: Nil, Term.Try(Term.Blk(
+          Term.Assgn(lt, term(rhs)) :: Nil,
+          term(bod),
+        ), Term.Assgn(lt, sym.ref(id))))
+      case _ => ??? // TODO error
     case Ident("true") => Term.Lit(Tree.BoolLit(true))
     case Ident("false") => Term.Lit(Tree.BoolLit(false))
     case id @ Ident("Alloc") => Term.Ref(allocSkolemSym)(id, 1)
@@ -326,7 +335,7 @@ extends Importer:
             (ctx, acc)
         newCtx.givenIn:
           go(sts, newAcc)
-      case (hd @ Let(Apps(id, tups), rhso, N)) :: sts if id.name.headOption.exists(_.isLower) =>
+      case (hd @ LetLike(`let`, Apps(id, tups), rhso, N)) :: sts if id.name.headOption.exists(_.isLower) =>
         val sym =
           fieldOrVarSym(LetBind, id)
         log(s"Processing `let` statement $id (${sym}) ${ctx.outer}")
@@ -341,6 +350,9 @@ extends Importer:
             LetDecl(sym) :: acc
         ctx.copy(locals = ctx.locals + (id.name -> sym)) givenIn:
           go(sts, newAcc)
+      case (tree @ LetLike(`let`, lhs, S(rhs), N)) :: sts =>
+        raise(ErrorReport(msg"Unsupported let binding shape" -> tree.toLoc :: Nil))
+        go(sts, Term.Error :: acc)
       case Def(lhs, rhs) :: sts =>
         lhs match
         case id: Ident =>

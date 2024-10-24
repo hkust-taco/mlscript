@@ -162,7 +162,7 @@ fun f(x, y, z) =
   if x
   then y
   else z
-//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, 'return' keyword, 'import' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'then' keyword instead
+//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'set' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, 'return' keyword, 'import' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'then' keyword instead
 //│ ║  l.163: 	  then y
 //│ ╙──       	  ^^^^
 //│ ╔══[PARSE ERROR] Unexpected identifier here

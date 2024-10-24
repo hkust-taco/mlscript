@@ -6,6 +6,7 @@ import mlscript.utils.*, shorthands.*
 import Message.MessageContext
 import utils.TraceLogger
 import hkmc2.syntax.Literal
+import Keyword.`let`
 
 object Desugarer:
   object and:
@@ -158,8 +159,8 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
     case Block(branches) =>
       branches.foldRight(default): (t, elabFallback) =>
         t match
-        case Let(ident @ Ident(_), N, N) => ???
-        case Let(ident @ Ident(_), S(termTree), N) => fallback => ctx => trace(
+        case LetLike(`let`, ident @ Ident(_), N, N) => ???
+        case LetLike(`let`, ident @ Ident(_), S(termTree), N) => fallback => ctx => trace(
           pre = s"termSplit: let ${ident.name} = $termTree",
           post = (res: Split) => s"termSplit: let >>> $res"
         ):
@@ -241,7 +242,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
           Term.App(op, arguments)(tree, joint)
         opRhsApps.foldRight(Function.const(fallback): Sequel): (tt, elabFallback) =>
           tt match
-          case (Tree.Empty(), Let(ident @ Ident(_), termTree, N)) => ctx =>
+          case (Tree.Empty(), LetLike(`let`, ident @ Ident(_), termTree, N)) => ctx =>
             termTree match
             case S(termTree) =>
               val sym = VarSymbol(ident, nextUid)
@@ -322,7 +323,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
       // Terminology: _fallback_ refers to subsequent branches, _backup_ refers
       // to the backup plan passed from the parent split.
       branch match
-      case Let(ident @ Ident(_), termTree, N) => backup => ctx =>
+      case LetLike(`let`, ident @ Ident(_), termTree, N) => backup => ctx =>
         termTree match
         case S(termTree) =>
           val sym = VarSymbol(ident, nextUid)

@@ -48,7 +48,7 @@ enum Tree extends AutoLocated:
   case BoolLit(value: Bool)           extends Tree with Literal
   case Block(stmts: Ls[Tree])
   case OpBlock(items: Ls[Tree -> Tree])
-  case Let(lhs: Tree, rhs: Opt[Tree], body: Opt[Tree])
+  case LetLike(kw: Keyword.letLike, lhs: Tree, rhs: Opt[Tree], body: Opt[Tree])
   case Def(lhs: Tree, rhs: Tree)
   // case TermDef(k: TermDefKind, symName: Opt[Tree], alphaName: Opt[Tree], sign: Opt[Tree], rhs: Opt[Tree])
   case TermDef(k: TermDefKind, symName: Opt[Tree], alphaName: Opt[Tree], rhs: Opt[Tree]) extends Tree with TermDefImpl
@@ -76,7 +76,7 @@ enum Tree extends AutoLocated:
     case Block(stmts) => stmts
     case OpBlock(items) => items.flatMap:
       case (op, body) => op :: body :: Nil
-    case Let(lhs, rhs, body) => lhs :: Nil ++ rhs ++ body
+    case LetLike(kw, lhs, rhs, body) => lhs :: Nil ++ rhs ++ body
     case TypeDef(k, symName, head, extension, body) =>
       symName.toList ++ Ls(head) ++ extension ++ body
     case Modified(_, _, body) => Ls(body)
@@ -107,7 +107,7 @@ enum Tree extends AutoLocated:
     case BoolLit(value) => s"$value literal"
     case Block(stmts) => "block"
     case OpBlock(_) => "operator block"
-    case Let(lhs, rhs, body) => "let"
+    case LetLike(kw, lhs, rhs, body) => kw.name
     case TermDef(k, symName, alphaName, rhs) => "term definition"
     case TypeDef(k, symName, head, extension, body) => "type definition"
     case Modified(kw, _, body) => s"${kw.name}-modified ${body.describe}"
@@ -130,7 +130,9 @@ enum Tree extends AutoLocated:
   
   lazy val desugared: Tree = this match
     case Modified(Keyword.`mut`, modLoc, TermDef(ImmutVal, snme, anme, rhs)) =>
-      TermDef(MutVal, snme, anme, rhs)
+      TermDef(MutVal, snme, anme, rhs).desugared
+    case LetLike(letLike, App(f @ Ident(nme), Tup((id: Ident) :: r :: Nil)), N, bodo) if nme.endsWith("=") =>
+      LetLike(letLike, id, S(App(Ident(nme.init), Tup(id :: r :: Nil))), bodo).desugared
     case _ => this
 
 object Tree:

@@ -6,6 +6,8 @@ class Some[out A](value: A)
 
 :todo
 let Some(x) = Some(42)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[ERROR] Unsupported let binding shape
+//│ ║  l.8: 	let Some(x) = Some(42)
+//│ ╙──     	    ^^^^^^^^^^^^^^^^^^
 
 

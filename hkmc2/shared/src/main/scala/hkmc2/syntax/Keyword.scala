@@ -27,7 +27,7 @@ object Keyword:
     val res = _curPrec
     _curPrec += 1
     S(res)
-
+  
   val `class` = Keyword("class", N, curPrec)
   val `val` = Keyword("val", N, curPrec)
   val `mut` = Keyword("mut", N, curPrec)
@@ -96,6 +96,8 @@ object Keyword:
   
   type Infix = `and`.type | `or`.type | `then`.type | `else`.type | `is`.type | `:`.type | `->`.type |
     `=>`.type | `extends`.type | `restricts`.type
+  
+  type letLike = `let`.type | `set`.type
   
   val maxPrec = curPrec
   

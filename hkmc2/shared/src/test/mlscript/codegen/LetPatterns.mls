@@ -5,17 +5,26 @@ class Some[out A](value: A)
 
 :todo
 let Some(x) = Some(42)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[ERROR] Unsupported let binding shape
+//│ ║  l.7: 	let Some(x) = Some(42)
+//│ ╙──     	    ^^^^^^^^^^^^^^^^^^
 
 
 class Foo(a)
 
 :todo
 let Foo(x) = Foo(1) in log(x)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[ERROR] Unsupported let binding shape
+//│ ║  l.16: 	let Foo(x) = Foo(1) in log(x)
+//│ ╙──      	    ^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.16: 	let Foo(x) = Foo(1) in log(x)
+//│ ╙──      	                           ^
 
 :todo
 let Foo(x) and x > 0 = Foo(1) in log("ok")
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[ERROR] Unsupported let binding shape
+//│ ║  l.25: 	let Foo(x) and x > 0 = Foo(1) in log("ok")
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

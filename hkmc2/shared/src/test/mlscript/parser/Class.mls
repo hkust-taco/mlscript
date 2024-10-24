@@ -15,7 +15,7 @@ class Foo
 
 :pe
 class Foo extends
-//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, 'return' keyword, 'import' keyword, expression, 'true' keyword, 'false' keyword, or indented block after start of statement; found end of input instead
+//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'set' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, 'return' keyword, 'import' keyword, expression, 'true' keyword, 'false' keyword, or indented block after start of statement; found end of input instead
 //│ ║  l.17: 	class Foo extends
 //│ ╙──      	                 ^
 //│ Parsed:
@@ -57,7 +57,7 @@ class Foo with
 
 :pe
 with
-//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, 'return' keyword, 'import' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'with' keyword instead
+//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'set' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, 'return' keyword, 'import' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'with' keyword instead
 //│ ║  l.59: 	with
 //│ ╙──      	^^^^
 //│ Parsed:
@@ -101,7 +101,7 @@ Foo
 class
   Foo
 extends Bar
-//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, 'return' keyword, 'import' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'extends' keyword instead
+//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'set' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, 'return' keyword, 'import' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'extends' keyword instead
 //│ ║  l.103: 	extends Bar
 //│ ╙──       	^^^^^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead

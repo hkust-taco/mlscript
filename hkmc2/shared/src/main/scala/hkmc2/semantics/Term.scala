@@ -33,6 +33,7 @@ enum Term extends Statement:
   case Assgn(lhs: Term, rhs: Term)
   case Deref(ref: Term)
   case Ret(result: Term)
+  case Try(body: Term, finallyDo: Term)
   
   var symbol: Opt[Symbol] = N
   
@@ -118,6 +119,7 @@ sealed trait Statement extends AutoLocated:
     case td: TypeDef =>
       td.rhs.toList
     case Import(sym, pth) => Nil
+    case Try(body, finallyDo) => body :: finallyDo :: Nil
   
   protected def children: Ls[Located] = this match
     case t: Lit => t.lit.asTree :: Nil

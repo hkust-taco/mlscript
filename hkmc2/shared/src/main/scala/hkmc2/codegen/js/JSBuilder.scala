@@ -172,6 +172,11 @@ class JSBuilder extends CodeBuilder:
     
     case Throw(res) =>
       doc" # throw ${result(res)}"
+      
+    case TryBlock(sub, fin, rst) =>
+      doc" # try { #{ ${returningTerm(sub)
+        } #}  # } finally { #{ ${returningTerm(fin)} #}  # } # ${
+        returningTerm(rst).stripBreaks}"
     
     // case _ => ???
   

@@ -148,6 +148,11 @@ class Lowering(using TL, Raise, Elaborator.State):
     case st.Blk((DefineVar(sym, rhs)) :: stats, res) =>
       subTerm(rhs): r =>
         Assign(sym, r, term(st.Blk(stats, res))(k))
+    case Assgn(lhs, rhs) =>
+      lhs match
+      case Ref(sym: LocalSymbol) =>
+        subTerm(rhs): r =>
+          Assign(sym, r, k(Value.Lit(syntax.Tree.UnitLit(true))))
       
     case st.Blk((imp @ Import(sym, path)) :: stats, res) =>
       raise(ErrorReport(
@@ -257,6 +262,14 @@ class Lowering(using TL, Raise, Elaborator.State):
             subTerm(a): ar =>
               rec(as, ar :: asr)
         rec(as, Nil)
+    
+    case Try(sub, finallyDo) =>
+      val l = new TempSymbol(summon[Elaborator.State].nextUid, S(sub))
+      TryBlock(
+        term(sub)(p => Assign(l, p, End())),
+        term(finallyDo)(_ => End()),
+        k(Value.Ref(l))
+      )
     
     case Error => End("error")
     
