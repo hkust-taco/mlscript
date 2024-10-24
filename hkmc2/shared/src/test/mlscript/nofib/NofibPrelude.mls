@@ -55,6 +55,7 @@ fun max(a, b) = globalThis.Math.max(a, b)
 fun abs(x) = globalThis.Math.abs(x)
 
 fun head(l) = if l is Cons(h, t) then h
+fun tail(l) = if l is Cons(h, t) then t
 
 fun reverse(l) =
   fun r(l', l) = if l is Cons(x, xs) then r(Cons(x, l'), xs) else l'
@@ -207,3 +208,4 @@ fun sqrt(x) = globalThis.Math.sqrt(x)
 fun tan(x) = globalThis.Math.tan(x)
 fun sin(x) = globalThis.Math.sin(x)
 fun cos(x) = globalThis.Math.cos(x)
+fun round(x) = globalThis.Math.round(x)
