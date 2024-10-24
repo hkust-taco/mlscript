@@ -39,7 +39,7 @@ log("Hi")
 //│ Program:
 //│   imports = Nil
 //│   main = Assign:
-//│     lhs = $tmp@26
+//│     lhs = $tmp@31
 //│     rhs = Call:
 //│       fun = Ref of .log
 //│       args = Ls of 

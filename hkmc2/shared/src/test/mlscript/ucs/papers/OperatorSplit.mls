@@ -73,26 +73,26 @@ fun example(args) =
 //│       params = S of Ls of 
 //│         Param:
 //│           flags = ()
-//│           sym = args@30
+//│           sym = args@35
 //│           sign = N
 //│       sign = N
 //│       body = S of If of Let:
-//│         sym = $scrut@32
+//│         sym = $scrut@37
 //│         term = App:
 //│           lhs = Ref of globalThis:block#0.foo
 //│           rhs = Tup of Ls of 
 //│             Fld:
 //│               flags = ()
-//│               value = Ref of args@30
+//│               value = Ref of args@35
 //│               asc = N
 //│         tail = Let: \
-//│         sym = $scrut@42
+//│         sym = $scrut@47
 //│         term = App:
 //│           lhs = Ref of .<
 //│           rhs = Tup of Ls of 
 //│             Fld:
 //│               flags = ()
-//│               value = Ref of $scrut@32
+//│               value = Ref of $scrut@37
 //│               asc = N
 //│             Fld:
 //│               flags = ()
@@ -100,17 +100,17 @@ fun example(args) =
 //│               asc = N
 //│         tail = Cons: \
 //│         head = Branch:
-//│           scrutinee = Ref of $scrut@42
+//│           scrutinee = Ref of $scrut@47
 //│           pattern = LitPat of BoolLit of true
 //│           continuation = Else of Lit of StrLit of "invalid"
 //│         tail = Let: \
-//│         sym = $scrut@40
+//│         sym = $scrut@45
 //│         term = App:
 //│           lhs = Ref of .==
 //│           rhs = Tup of Ls of 
 //│             Fld:
 //│               flags = ()
-//│               value = Ref of $scrut@32
+//│               value = Ref of $scrut@37
 //│               asc = N
 //│             Fld:
 //│               flags = ()
@@ -118,30 +118,30 @@ fun example(args) =
 //│               asc = N
 //│         tail = Cons: \
 //│         head = Branch:
-//│           scrutinee = Ref of $scrut@40
+//│           scrutinee = Ref of $scrut@45
 //│           pattern = LitPat of BoolLit of true
 //│           continuation = Else of Lit of StrLit of "null"
 //│         tail = Let: \
-//│         sym = $scrut@34
+//│         sym = $scrut@39
 //│         term = App:
 //│           lhs = Ref of globalThis:block#0.pipe
 //│           rhs = Tup of Ls of 
 //│             Fld:
 //│               flags = ()
-//│               value = Ref of $scrut@32
+//│               value = Ref of $scrut@37
 //│               asc = N
 //│             Fld:
 //│               flags = ()
 //│               value = Ref of globalThis:block#0.abs
 //│               asc = N
 //│         tail = Let: \
-//│         sym = $scrut@38
+//│         sym = $scrut@43
 //│         term = App:
 //│           lhs = Ref of .>
 //│           rhs = Tup of Ls of 
 //│             Fld:
 //│               flags = ()
-//│               value = Ref of $scrut@34
+//│               value = Ref of $scrut@39
 //│               asc = N
 //│             Fld:
 //│               flags = ()
@@ -149,17 +149,17 @@ fun example(args) =
 //│               asc = N
 //│         tail = Cons: \
 //│         head = Branch:
-//│           scrutinee = Ref of $scrut@38
+//│           scrutinee = Ref of $scrut@43
 //│           pattern = LitPat of BoolLit of true
 //│           continuation = Else of Lit of StrLit of "large"
 //│         tail = Let: \
-//│         sym = $scrut@36
+//│         sym = $scrut@41
 //│         term = App:
 //│           lhs = Ref of .<
 //│           rhs = Tup of Ls of 
 //│             Fld:
 //│               flags = ()
-//│               value = Ref of $scrut@34
+//│               value = Ref of $scrut@39
 //│               asc = N
 //│             Fld:
 //│               flags = ()
@@ -167,11 +167,11 @@ fun example(args) =
 //│               asc = N
 //│         tail = Cons: \
 //│         head = Branch:
-//│           scrutinee = Ref of $scrut@36
+//│           scrutinee = Ref of $scrut@41
 //│           pattern = LitPat of BoolLit of true
 //│           continuation = Else of Lit of StrLit of "small"
 //│         tail = Else of Lit of StrLit of "medium"
-//│       resSym = ‹result of globalThis:block#1.example›@43
+//│       resSym = ‹result of globalThis:block#1.example›@48
 //│   res = Lit of UnitLit of true
 
 

@@ -16,30 +16,30 @@ fun f(x) =
 //│       params = S of Ls of 
 //│         Param:
 //│           flags = ()
-//│           sym = x@19
+//│           sym = x@24
 //│           sign = N
 //│       sign = N
 //│       body = S of If of Let:
-//│         sym = $scrut@21
+//│         sym = $scrut@26
 //│         term = App:
 //│           lhs = Ref of .==
 //│           rhs = Tup of Ls of 
 //│             Fld:
 //│               flags = ()
-//│               value = Ref of x@19
+//│               value = Ref of x@24
 //│               asc = N
 //│             Fld:
 //│               flags = ()
 //│               value = Lit of IntLit of 1
 //│               asc = N
 //│         tail = Let: \
-//│         sym = $scrut@23
+//│         sym = $scrut@28
 //│         term = App:
 //│           lhs = Ref of .+
 //│           rhs = Tup of Ls of 
 //│             Fld:
 //│               flags = ()
-//│               value = Ref of $scrut@21
+//│               value = Ref of $scrut@26
 //│               asc = N
 //│             Fld:
 //│               flags = ()
@@ -47,11 +47,11 @@ fun f(x) =
 //│               asc = N
 //│         tail = Cons: \
 //│         head = Branch:
-//│           scrutinee = Ref of $scrut@23
+//│           scrutinee = Ref of $scrut@28
 //│           pattern = LitPat of BoolLit of true
 //│           continuation = Else of Lit of IntLit of 0
 //│         tail = Else of Lit of IntLit of 1
-//│       resSym = ‹result of globalThis:block#0.f›@24
+//│       resSym = ‹result of globalThis:block#0.f›@29
 //│   res = Lit of UnitLit of true
 
 

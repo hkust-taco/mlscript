@@ -30,8 +30,9 @@ object Elaborator:
     def init(using State): Ctx = empty.copy(members = Map(
       "globalThis" -> globalThisSymbol,
       "console" -> TermSymbol(ImmutVal, N, Ident("console")),
+      "process" -> TermSymbol(ImmutVal, N, Ident("process")),
+      "fs" -> TermSymbol(ImmutVal, N, Ident("fs")),
       "Error" -> errorSymbol,
-      ";" -> seqSymbol,
     ))
   type Ctxl[A] = Ctx ?=> A
   def ctx: Ctxl[Ctx] = summon

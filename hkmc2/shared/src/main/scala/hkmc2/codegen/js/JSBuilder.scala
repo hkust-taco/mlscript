@@ -25,6 +25,7 @@ class JSBuilder extends CodeBuilder:
   val builtinOpsBase: Ls[Str] = Ls(
     "+", "-", "*", "/", "%",
     "==", "!=", "<", "<=", ">", ">=",
+    "===",
     "&&", "||")
   val builtinOpsMap: Map[Str, Str] = (
     builtinOpsBase.map(op => op -> op).toMap

@@ -29,13 +29,14 @@ object Parser:
       ",",
       // ^ for keywords
       // ";",
-      "=",
+      // "=", // higher than || means `a == 1 || b` parses surprisingly
       "@",
       ":",
       "|",
+      "&",
+      "=",
       "/ \\",
       "^",
-      "&",
       // "= !",
       "!",
       "< >",

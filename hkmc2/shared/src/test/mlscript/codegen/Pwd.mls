@@ -1,0 +1,22 @@
+:js
+
+
+// * Note: `||` is currently not shortcircuiting
+:sjs
+let folderName = process.cwd().split("/").pop() in
+  folderName === "hkmc2" || folderName === "jvm"
+//│ JS:
+//│ let tmp, tmp1, tmp2, tmp3, tmp4;
+//│ tmp = process.cwd();
+//│ tmp1 = tmp.split("/");
+//│ tmp2 = tmp1.pop();
+//│ this.folderName = tmp2;
+//│ tmp3 = this.folderName === "hkmc2";
+//│ tmp4 = this.folderName === "jvm";
+//│ tmp3 || tmp4
+//│ = true
+
+process.env.PWD.split("/").pop()
+//│ = 'hkmc2'
+
+

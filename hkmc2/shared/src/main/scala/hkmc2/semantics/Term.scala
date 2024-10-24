@@ -205,7 +205,7 @@ case class ObjBody(blk: Term.Blk):
   override def toString: String = blk.showDbg
 
 
-case class Import(sym: TermSymbol, file: os.Path) extends Statement
+case class Import(sym: TermSymbol, file: Str) extends Statement
 
 
 sealed abstract class Declaration

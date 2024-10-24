@@ -100,7 +100,7 @@ high(x => x + 1)
 
 :fixme
 (if false then x => x else y => y): [A] -> A -> A
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@96),LitPat(BoolLit(true)),Else(Lam(List(Param(‹›,x@97,None)),Ref(x@97)))),Else(Lam(List(Param(‹›,y@95,None)),Ref(y@95)))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@101),LitPat(BoolLit(true)),Else(Lam(List(Param(‹›,x@102,None)),Ref(x@102)))),Else(Lam(List(Param(‹›,y@100,None)),Ref(y@100)))) (of class hkmc2.semantics.Split$Cons)
 
 
 fun baz: Int -> (([A] -> A -> A), Int) -> Int

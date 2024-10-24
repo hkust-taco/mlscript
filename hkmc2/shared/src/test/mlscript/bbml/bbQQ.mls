@@ -68,13 +68,13 @@ f `=> x `=> y `=> f`(x, y)
 
 :fixme
 `if `true then `true else `false
-//│ ═══[ERROR] Cannot quote If(Let($scrut@75,Unquoted(Quoted(Lit(BoolLit(true)))),Cons(Branch(Ref($scrut@75),LitPat(BoolLit(true)),Else(Unquoted(Quoted(Lit(BoolLit(true)))))),Else(Unquoted(Quoted(Lit(BoolLit(false))))))))
+//│ ═══[ERROR] Cannot quote If(Let($scrut@80,Unquoted(Quoted(Lit(BoolLit(true)))),Cons(Branch(Ref($scrut@80),LitPat(BoolLit(true)),Else(Unquoted(Quoted(Lit(BoolLit(true)))))),Else(Unquoted(Quoted(Lit(BoolLit(false))))))))
 //│ Type: CodeBase[⊥, ⊥, ?]
 
 
 :fixme
 x `=> `if x `== `0.0 then `1.0 else x
-//│ ═══[ERROR] Cannot quote If(Let($scrut@79,Unquoted(Quoted(App(Ref(.==),Tup(List(Fld(‹›,Unquoted(Ref(x@77)),None), Fld(‹›,Unquoted(Quoted(Lit(DecLit(0.0)))),None)))))),Cons(Branch(Ref($scrut@79),LitPat(BoolLit(true)),Else(Unquoted(Quoted(Lit(DecLit(1.0)))))),Else(Unquoted(Ref(x@77))))))
+//│ ═══[ERROR] Cannot quote If(Let($scrut@84,Unquoted(Quoted(App(Ref(.==),Tup(List(Fld(‹›,Unquoted(Ref(x@82)),None), Fld(‹›,Unquoted(Quoted(Lit(DecLit(0.0)))),None)))))),Cons(Branch(Ref($scrut@84),LitPat(BoolLit(true)),Else(Unquoted(Quoted(Lit(DecLit(1.0)))))),Else(Unquoted(Ref(x@82))))))
 //│ Type: CodeBase[out ⊤ -> ⊥, ⊥, ?]
 
 run(`1)

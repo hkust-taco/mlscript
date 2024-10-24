@@ -15,7 +15,7 @@ import semantics.Term.*
 
 
 case class Program(
-  imports: Ls[Local -> os.Path],
+  imports: Ls[Local -> Str],
   main: Block,
 )
 

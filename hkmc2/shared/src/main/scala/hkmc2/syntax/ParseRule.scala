@@ -276,7 +276,7 @@ object ParseRule:
     modified(`private`),
     modified(`out`),
     modified(`return`),
-    modified(`import`),
+    modified(`import`), // TODO improve – only allow strings
     // modified(`type`),
     standaloneExpr,
     Kw(`true`)(ParseRule("'true' keyword")(End(BoolLit(true)))),

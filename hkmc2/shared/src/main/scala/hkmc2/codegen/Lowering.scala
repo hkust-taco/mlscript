@@ -293,10 +293,10 @@ class Lowering(using TL, Raise, Elaborator.State):
     term(t)(ImplctRet)(using Subst.empty)
   
   def program(main: st): Program =
-    def go(acc: Ls[Local -> os.Path], trm: st): Program =
+    def go(acc: Ls[Local -> Str], trm: st): Program =
       trm match
       case st.Blk((imp @ Import(sym, path)) :: stats, res) =>
-        go(sym -> path :: acc, st.Blk(stats, res))
+        go(sym -> path.toString :: acc, st.Blk(stats, res))
       case _ => Program(acc.reverse, topLevel(trm))
     go(Nil, main)
 

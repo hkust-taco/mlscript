@@ -202,11 +202,11 @@ class Pair[A, B](fst: A, snd: B)
 
 :fixme
 if 1 < 2 then 1 else 0
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@125),LitPat(BoolLit(true)),Else(Lit(IntLit(1)))),Else(Lit(IntLit(0)))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@130),LitPat(BoolLit(true)),Else(Lit(IntLit(1)))),Else(Lit(IntLit(0)))) (of class hkmc2.semantics.Split$Cons)
 
 :fixme
 if false then 1 else "1"
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@127),LitPat(BoolLit(true)),Else(Lit(IntLit(1)))),Else(Lit(StrLit(1)))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@132),LitPat(BoolLit(true)),Else(Lit(IntLit(1)))),Else(Lit(StrLit(1)))) (of class hkmc2.semantics.Split$Cons)
 
 
 if 1 is Int then 1 else 0
@@ -228,7 +228,7 @@ test("1")
 :fixme
 fun fact(n) =
   if n > 1 then n * fact(n - 1) else 1
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@141),LitPat(BoolLit(true)),Else(App(Ref(.*),Tup(List(Fld(‹›,Ref(n@139),None), Fld(‹›,App(Ref(globalThis:block#49.fact),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@139),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))),Else(Lit(IntLit(1)))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@146),LitPat(BoolLit(true)),Else(App(Ref(.*),Tup(List(Fld(‹›,Ref(n@144),None), Fld(‹›,App(Ref(globalThis:block#49.fact),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@144),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))),Else(Lit(IntLit(1)))) (of class hkmc2.semantics.Split$Cons)
 
 fact
 //│ Type: ⊥
@@ -241,7 +241,7 @@ fact(1)
 fun fact2 = case
   0 then 1
   n then n * fact2(n - 1)
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@155),LitPat(BoolLit(true)),Else(Lit(IntLit(1)))),Else(App(Ref(.*),Tup(List(Fld(‹›,Ref(n@150),None), Fld(‹›,App(Ref(globalThis:block#52.fact2),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@150),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@160),LitPat(BoolLit(true)),Else(Lit(IntLit(1)))),Else(App(Ref(.*),Tup(List(Fld(‹›,Ref(n@155),None), Fld(‹›,App(Ref(globalThis:block#52.fact2),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@155),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))) (of class hkmc2.semantics.Split$Cons)
 
 fact2
 //│ Type: ⊥

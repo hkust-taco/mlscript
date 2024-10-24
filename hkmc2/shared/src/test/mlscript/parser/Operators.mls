@@ -98,3 +98,8 @@ x =>
 //│ 	App(Ident(+),Tup(List(IntLit(1), Block(List(IntLit(2), IntLit(3))))))
 
 
+a === "a" || b === "b"
+//│ Parsed:
+//│ 	App(Ident(||),Tup(List(App(Ident(===),Tup(List(Ident(a), StrLit(a)))), App(Ident(===),Tup(List(Ident(b), StrLit(b)))))))
+
+
