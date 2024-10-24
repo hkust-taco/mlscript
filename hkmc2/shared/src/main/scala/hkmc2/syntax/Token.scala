@@ -34,7 +34,7 @@ sealed trait Stroken extends Token
 
 case object SPACE extends Token with Stroken
 case object COMMA extends Token with Stroken
-case object SEMI extends Token with Stroken
+@deprecated("now a simple identifier") case object SEMI extends Token with Stroken
 case object NEWLINE extends Token with Stroken // TODO rm
 case object INDENT extends Token
 case object DEINDENT extends Token

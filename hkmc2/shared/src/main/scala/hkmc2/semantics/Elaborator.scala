@@ -26,9 +26,12 @@ object Elaborator:
     val empty: Ctx = Ctx(N, N, Map.empty, Map.empty)
     val globalThisSymbol = TermSymbol(ImmutVal, N, Ident("globalThis"))
     val errorSymbol = ClassSymbol(S(globalThisSymbol), Ident("Error"))
+    val seqSymbol = TermSymbol(ImmutVal, N, Ident(";"))
     def init(using State): Ctx = empty.copy(members = Map(
       "globalThis" -> globalThisSymbol,
+      "console" -> TermSymbol(ImmutVal, N, Ident("console")),
       "Error" -> errorSymbol,
+      ";" -> seqSymbol,
     ))
   type Ctxl[A] = Ctx ?=> A
   def ctx: Ctxl[Ctx] = summon
@@ -54,7 +57,7 @@ extends Importer:
   
   def term(tree: Tree): Ctxl[Term] =
   trace[Term](s"Elab term ${tree.showDbg}", r => s"~> $r"):
-    tree match
+    tree.desugared match
     case Block(s :: Nil) =>
       term(s)
     case Block(sts) =>
@@ -64,7 +67,9 @@ extends Importer:
     case LetLike(`let`, lhs, rhso, S(bod)) =>
       term(Block(LetLike(`let`, lhs, rhso, N) :: bod :: Nil))
     case LetLike(`let`, lhs, S(rhs), N) =>
-      raise(ErrorReport(msg"Expected a right-hand side for let bindings in expression position" -> tree.toLoc :: Nil))
+      raise(ErrorReport(
+        msg"Expected a right-hand side for let bindings in expression position" ->
+          tree.toLoc :: Nil))
       block(LetLike(`let`, lhs, S(rhs), N) :: Nil)._1
     case LetLike(`set`, lhs, S(rhs), N) =>
       Term.Assgn(term(lhs), term(rhs))

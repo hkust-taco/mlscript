@@ -537,9 +537,9 @@ abstract class Parser(
         Effectful(eff, simpleExpr(prec))
       case _ => expr(prec, allowIndentedBlock = true)
       // case _ => Block.mk(blockMaybeIndented)
-
+  
   def split(using Line): Ls[Tree] = wrap("")(splitItem(Nil).reverse)
-
+  
   @tailrec final private def splitItem(acc: Ls[Tree]): Ls[Tree] =
     val item = wrap(s"index = ${acc.size + 1}"):
       cur match // `true | false | Tree`

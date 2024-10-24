@@ -49,18 +49,37 @@ x
 //│ = 1
 
 
+fun example() =
+  let x = 0
+  let get_x() = x
+  let x += 1
+  log(x)
+  log(get_x())
+example()
+//│ > 1
+//│ > 0
+
+fun example() =
+  let x = 0
+  let get_x() = x
+  set x += 1
+  log(x)
+  log(get_x())
+example()
+//│ > 1
+//│ > 1
+
 :sjs
 fun example() =
   let x = 0
   let get_x() = x
-  let y =
-    set x += 1 in log(x); x
+  set x += 1 in log(x); log(get_x())
   log(x)
   log(get_x())
 example()
 //│ JS:
 //│ function example() {
-//│   let x, get_x, y, old, tmp, tmp1, tmp2, tmp3;
+//│   let x, get_x, old, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
 //│   x = 0;
 //│   get_x = () => {
 //│     return x
@@ -69,17 +88,58 @@ example()
 //│   try {
 //│     tmp1 = x + 1;
 //│     x = tmp1;
-//│     tmp = log(x);
+//│     tmp2 = log(x);
+//│     tmp3 = (tmp2 , log);
+//│     tmp4 = get_x();
+//│     tmp = tmp3(tmp4);
 //│   } finally {
 //│     x = old;
 //│   }
-//│   y = x;
-//│   tmp2 = log(x);
-//│   tmp3 = get_x();
-//│   return log(tmp3)
+//│   tmp5 = log(x);
+//│   tmp6 = get_x();
+//│   return log(tmp6)
+//│ };
+//│ this.example()
+//│ > 1
+//│ > 1
+//│ > 0
+//│ > 0
+
+:sjs
+fun example() =
+  let x = 0
+  let get_x() = x
+  let y =
+    set x += 1 in log(x); x
+  log(x)
+  log(get_x())
+  y
+example()
+//│ JS:
+//│ function example() {
+//│   let x, get_x, y, old, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+//│   x = 0;
+//│   get_x = () => {
+//│     return x
+//│   };
+//│   old = x;
+//│   try {
+//│     tmp1 = x + 1;
+//│     x = tmp1;
+//│     tmp2 = log(x);
+//│     tmp = (tmp2 , x);
+//│   } finally {
+//│     x = old;
+//│   }
+//│   y = tmp;
+//│   tmp3 = log(x);
+//│   tmp4 = get_x();
+//│   tmp5 = log(tmp4);
+//│   return y
 //│ };
 //│ this.example()
 //│ > 1
 //│ > 0
 //│ > 0
+//│ = 1
 

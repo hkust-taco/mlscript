@@ -89,3 +89,15 @@ let x += 1 = 0 in x
 //│ = 44
 
 
+let x = 1 in console.log(x); x
+//│ > 1
+//│ = 1
+
+
+let x = 1 in
+  console.log(x)
+  console.log(x)
+//│ > 1
+//│ > 1
+
+

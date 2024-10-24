@@ -32,7 +32,7 @@ let x =
 
 :pe
 let x = y in
-//│ ╔══[PARSE ERROR] Expected expression after 'let' binding `in` clause; found end of input instead
+//│ ╔══[PARSE ERROR] Expected expression or indented block after 'let' binding `in` clause; found end of input instead
 //│ ║  l.34: 	let x = y in
 //│ ╙──      	            ^
 //│ Parsed:
@@ -211,7 +211,13 @@ let
 let x = 1 in
   x
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(Ident(x)))
+//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(Block(List(Ident(x)))))
+
+let x = 1 in
+  x
+  y
+//│ Parsed:
+//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(Block(List(Ident(x), Ident(y)))))
 
 x => let x = 1 in x
 //│ Parsed:
@@ -220,7 +226,7 @@ x => let x = 1 in x
 x => let x = 1 in
   x
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(Ident(x))))
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(Block(List(Ident(x))))))
 
 x => let x = 1
   in x
@@ -243,7 +249,7 @@ x =>
 x => let x = 1
   x
 //│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.244: 	  x
+//│ ║  l.250: 	  x
 //│ ╙──       	  ^
 //│ Parsed:
 //│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None))
@@ -252,7 +258,7 @@ x => let x = 1
 :pe
 if
 //│ ╔══[PARSE ERROR] Expected expression or indented block after `if` keyword; found end of input instead
-//│ ║  l.253: 	if
+//│ ║  l.259: 	if
 //│ ╙──       	  ^
 //│ Parsed:
 //│ 	Error()

@@ -249,7 +249,8 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
           ) :: Nil)(loc(i, j))))
       case ';' =>
         val j = i + 1
-        lex(j, ind, next(j, SEMI))
+        // lex(j, ind, next(j, SEMI))
+        lex(j, ind, next(j, IDENT(";", true)))
       case '"' =>
         val (isTripleQQ, cons) = qqList match
           case h :: t => (h === BracketKind.QuasiquoteTriple, t)

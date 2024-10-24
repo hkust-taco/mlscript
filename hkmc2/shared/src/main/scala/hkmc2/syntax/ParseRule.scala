@@ -160,9 +160,9 @@ object ParseRule:
                 exprOrBlk(
                   ParseRule(s"'${kw.name}' binding right-hand side")(
                     Kw(`in`):
-                      ParseRule(s"'${kw.name}' binding `in` clause"):
-                        Expr(ParseRule(s"'${kw.name}' binding body")(End(())))((body, _: Unit) => S(body))
-                    ,
+                      ParseRule(s"'${kw.name}' binding `in` clause")(
+                        exprOrBlk(ParseRule(s"'${kw.name}' binding body")(End(())))((body, _: Unit) => S(body))
+                    *),
                     End(N)
                   )
                 ) { (rhs, body) => (S(rhs), body) }*

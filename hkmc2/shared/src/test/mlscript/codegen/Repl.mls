@@ -32,7 +32,7 @@ res
 
 :showRepl
 :re
-let x = 1; log(x); x
+let x = 1, log(x), x
 //│ REPL> Sending: try { let tmp; this.x = 1; tmp = log(this.x); this.x } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ REPL> Collected:
 //│ >  ​ReferenceError: log is not defined​
@@ -52,7 +52,7 @@ let x = 1; log(x); x
 //│ x = 1
 
 :showRepl
-let x = 1; log(x); x
+let x = 1, log(x), x
 //│ REPL> Sending: try { let tmp; this.x = 1; tmp = this.log(this.x); this.x } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1

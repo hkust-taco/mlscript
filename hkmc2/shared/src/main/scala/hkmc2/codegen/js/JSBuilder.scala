@@ -22,8 +22,15 @@ abstract class CodeBuilder:
 
 class JSBuilder extends CodeBuilder:
   
-  val builtinOps: Set[Str] =
-    Set("+", "-", "*", "/", "%", "==", "!=", "<", "<=", ">", ">=", "&&", "||")
+  val builtinOpsBase: Ls[Str] = Ls(
+    "+", "-", "*", "/", "%",
+    "==", "!=", "<", "<=", ">", ">=",
+    "&&", "||")
+  val builtinOpsMap: Map[Str, Str] = (
+    builtinOpsBase.map(op => op -> op).toMap
+    + (";" -> ",")
+  )
+  val needsParens: Set[Str] = Set(",")
   
   // TODO use this to avoid parens when we generate recomposed expressions later
   enum Context:
@@ -56,8 +63,10 @@ class JSBuilder extends CodeBuilder:
     case Value.Ref(l) => getVar(l)
     case Value.Lit(Tree.StrLit(value)) => JSBuilder.makeStringLiteral(value)
     case Value.Lit(lit) => lit.idStr
-    case Call(Value.Ref(l: semantics.MemberSymbol[?]), lhs :: rhs :: Nil) if builtinOps contains l.nme =>
-      doc"${result(lhs)} ${l.nme} ${result(rhs)}"
+    case Call(Value.Ref(l: semantics.MemberSymbol[?]), lhs :: rhs :: Nil) if builtinOpsMap contains l.nme =>
+      val op = builtinOpsMap(l.nme)
+      val res = doc"${result(lhs)} ${op} ${result(rhs)}"
+      if needsParens(op) then doc"(${res})" else res
     case Call(fun, args) =>
       val base = fun match
         case _: Value.Lam => doc"(${result(fun)})"

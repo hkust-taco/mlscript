@@ -131,7 +131,8 @@ enum Tree extends AutoLocated:
   lazy val desugared: Tree = this match
     case Modified(Keyword.`mut`, modLoc, TermDef(ImmutVal, snme, anme, rhs)) =>
       TermDef(MutVal, snme, anme, rhs).desugared
-    case LetLike(letLike, App(f @ Ident(nme), Tup((id: Ident) :: r :: Nil)), N, bodo) if nme.endsWith("=") =>
+    case LetLike(letLike, App(f @ Ident(nme), Tup((id: Ident) :: r :: Nil)), N, bodo)
+    if nme.endsWith("=") =>
       LetLike(letLike, id, S(App(Ident(nme.init), Tup(id :: r :: Nil))), bodo).desugared
     case _ => this
 
