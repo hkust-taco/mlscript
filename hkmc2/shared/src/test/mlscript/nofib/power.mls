@@ -3,7 +3,7 @@
 // FIXME: input 14 seems to be too much
 :js
 :import NofibPrelude.mls
-//│ Imported 76 member(s)
+//│ Imported 78 member(s)
 abstract class Pss[T]: Pz | Pc[T]
 type Ps[T] = Lazy[Pss[T]]
 class Pc[T](f: T, s: Ps[T])

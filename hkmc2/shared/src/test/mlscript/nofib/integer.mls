@@ -3,7 +3,7 @@
 :fixme
 :js
 :import NofibPrelude.mls
-//│ Imported 76 member(s)
+//│ Imported 78 member(s)
 fun runalltests(astart, astep, alim, bstart, bstep, blim) =
   fun z_add(a, b) = a + b
   fun z_sub(a, b) = a - b

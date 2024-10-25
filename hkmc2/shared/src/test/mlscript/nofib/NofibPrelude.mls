@@ -169,6 +169,11 @@ fun null_(ls) = if ls is
   else false
 // =====================
 
+fun map_lz(f, ls) = lazy of () =>
+  if force(ls) is
+    LzNil then LzNil
+    LzCons(h, t) then LzCons(f(h), map_lz(f, t))
+
 fun filter_lz(p, ls) = Lazy of () =>
   if force(ls) is
     LzNil then LzNil
@@ -188,6 +193,13 @@ fun take_lz(n, ls) = if force(ls) is
   LzCons(h, t) and
     n <= 0 then Nil
     else Cons(h, take_lz(n - 1, t))
+
+fun take_lz_lz(n, ls) = lazy of () =>
+  if force(ls) is
+    LzNil then LzNil
+    LzCons(h, t) and
+      n <= 0 then LzNil
+      else LzCons(h, take_lz_lz(n - 1, t))
 
 fun zipWith_lz_lz(f, xss, yss) = lazy of () => if
   force(xss) is LzCons(x, xs) and (force(yss)) is LzCons(y, ys) then LzCons(f(x, y), zipWith_lz_lz(f, xs, ys))
