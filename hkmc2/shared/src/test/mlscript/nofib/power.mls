@@ -21,29 +21,29 @@ fun extract(n, ps) = if
     Pc(x, ps) then Cons(x, extract(n - 1, ps))
 fun dotMult(c, ps) = lazy of () => if force(ps) is
   Pz then Pz
-  Pc(f, fs) then Pc(c * f, dotMult(c, fs))
+  Pc(f, fs_) then Pc(c * f, dotMult(c, fs_))
 fun dotMultSndLz(c, ps) = lazy of () => if force(force(ps)) is
   Pz then Pz
-  Pc(f, fs) then Pc(c * f, dotMult(c, fs))
+  Pc(f, fs_) then Pc(c * f, dotMult(c, fs_))
 fun negatePs(ps) = lazy of () => if force(ps) is
   Pz then Pz
-  Pc(f, fs) then Pc(-f, negatePs(fs))
+  Pc(f, fs_) then Pc(-f, negatePs(fs_))
 fun addPs(fss, gs) = lazy of () => if force(fss) is
   Pz then force(gs)
-  Pc(f, fs) and force(gs) is
+  Pc(f, fs_) and force(gs) is
     Pz then force(fss)
-    Pc(g, gs) then Pc(f+g, addPs(fs, gs))
+    Pc(g, gs) then Pc(f+g, addPs(fs_, gs))
 fun minusPs(a, b) = addPs(a, negatePs(b))
 fun multPs(fss, gss) = lazy of () => if force(fss) is
   Pz then Pz
-  Pc(f, fs) and force(gss) is
+  Pc(f, fs_) and force(gss) is
     Pz then Pz
-    Pc(g, gs) then Pc(f*g, addPs(addPs(dotMult(f, gs), dotMult(g, fs)), multPs(multPs(x_(), fs), gs)))
+    Pc(g, gs) then Pc(f*g, addPs(addPs(dotMult(f, gs), dotMult(g, fs_)), multPs(multPs(x_(), fs_), gs)))
 fun multPsFstLz(fss, gss) = lazy of () => if force(force(fss)) is
   Pz then Pz
-  Pc(f, fs) and force(gss) is
+  Pc(f, fs_) and force(gss) is
     Pz then Pz
-    Pc(g, gs) then Pc(f*g, addPs(addPs(dotMult(f, gs), dotMult(g, fs)), multPs(multPs(x_(), fs), gs)))
+    Pc(g, gs) then Pc(f*g, addPs(addPs(dotMult(f, gs), dotMult(g, fs_)), multPs(multPs(x_(), fs_), gs)))
 fun powerPs(a, n) = if n <= 0 then fromIntegerPs(1) else multPs(a, powerPs(a, n - 1))
 fun fromIntegerPs(c) = if
   c == 0 then lazy of () => Pz
@@ -53,55 +53,55 @@ fun divPs(fss, gss) = lazy of () => if force(fss) is
     Pz then nofibError("power series 0/0")
     Pc(0, gs) then force(divPs(lazy of () => Pz, gs))
     else Pz
-  Pc(0, fs) and force(gss) is
-    Pc(0, gs) then force(divPs(fs, gs))
+  Pc(0, fs_) and force(gss) is
+    Pc(0, gs) then force(divPs(fs_, gs))
     Pc(g, gs) then
       let q = 0
-      Pc(q, divPs(addPs(fs, negatePs(dotMult(q, gs))), lazy of () => Pc(g, gs)))
-  Pc(f, fs) and force(gss) is
+      Pc(q, divPs(addPs(fs_, negatePs(dotMult(q, gs))), lazy of () => Pc(g, gs)))
+  Pc(f, fs_) and force(gss) is
     Pc(g, gs) then
       let q = f/g
-      Pc(q, divPs(addPs(fs, negatePs(dotMult(q, gs))), lazy of () => Pc(g, gs)))
+      Pc(q, divPs(addPs(fs_, negatePs(dotMult(q, gs))), lazy of () => Pc(g, gs)))
 fun compose_(fss, gss) = lazy of () => if force(fss) is
   Pz then Pz
-  Pc(f, fs) and force(gss) is
+  Pc(f, fs_) and force(gss) is
     Pz then Pc(f, lazy of () => Pz)
-    Pc(0, gs) then Pc(f, multPs(gs, compose_(fs, lazy of () => Pc(0, gs))))
-    else force(addPs(lazy of () => Pc(f, lazy of () => Pz)), multPs(gss, compose_(fs, gss)))
+    Pc(0, gs) then Pc(f, multPs(gs, compose_(fs_, lazy of () => Pc(0, gs))))
+    else force(addPs(lazy of () => Pc(f, lazy of () => Pz)), multPs(gss, compose_(fs_, gss)))
 fun composeSndLz_(fss, gss) = lazy of () => if force(fss) is
   Pz then Pz
-  Pc(f, fs) and force(force(gss)) is
+  Pc(f, fs_) and force(force(gss)) is
     Pz then Pc(f, lazy of () => Pz)
-    Pc(0, gs) then Pc(f, multPs(gs, compose_(fs, lazy of () => Pc(0, gs))))
-    else force(addPs(lazy of () => Pc(f, lazy of () => Pz)), multPs(gss, composeSndLz_(fs, gss)))
+    Pc(0, gs) then Pc(f, multPs(gs, compose_(fs_, lazy of () => Pc(0, gs))))
+    else force(addPs(lazy of () => Pc(f, lazy of () => Pz)), multPs(gss, composeSndLz_(fs_, gss)))
 fun revert(fss) = lazy of () => if force(fss) is
-  Pc(0, fs) then
-    fun rs() = lazy of () => Pc(0, divPs(fromIntegerPs(1), compose_(fs, rs())))
+  Pc(0, fs_) then
+    fun rs() = lazy of () => Pc(0, divPs(fromIntegerPs(1), compose_(fs_, rs())))
     force(rs())
   Pc(f0, kss) and force(kss) is Pc(f1, gss) and force(gss) is Pz then
     Pc(-1/f1, lazy of () => Pc(1/f1, lazy of () => Pz))
 fun deriv(fss) = lazy of () => if force(fss) is
   Pz then Pz
-  Pc(_, fs) then
+  Pc(_, fs_) then
     fun deriv1(gss, n) = lazy of () => if force(gss) is
       Pz then Pz
-      Pc(f, fs) then Pc(n * f, deriv1(fs, n+1))
-    force(deriv1(fs, 1))
-fun integral(fs) =
+      Pc(f, fs_) then Pc(n * f, deriv1(fs_, n+1))
+    force(deriv1(fs_, 1))
+fun integral(fs_) =
   fun int1(fss, n) = lazy of () => if force(fss) is
     Pz then Pz
-    Pc(f, fs) then Pc(f/n, int1(fs, n + 1))
-  lazy of () => Pc(0, int1(fs, 1))
-fun integralLz(fs) =
+    Pc(f, fs_) then Pc(f/n, int1(fs_, n + 1))
+  lazy of () => Pc(0, int1(fs_, 1))
+fun integralLz(fs_) =
   fun int1(fss, n) = lazy of () => if force(fss) is
     Pz then Pz
-    Pc(f, fs) then Pc(f/n, int1(fs, n + 1))
-  lazy of () => Pc(0, int1(fs(), 1))
+    Pc(f, fs_) then Pc(f/n, int1(fs_, n + 1))
+  lazy of () => Pc(0, int1(fs_(), 1))
 fun sqrtPs(fss) = lazy of () => if force(fss) is
   Pz then Pz
-  Pc(0, gss) and force(gss) is Pc(0, fs) then Pc(0, sqrtPs(fs))
-  Pc(1, fs) then
-    fun qs() = lazy of () => addPs(fromIntegerPs(1), integral(divPs(deriv(lazy of () => Pc(1, fs)), dotMultSndLz(2, qs()))))
+  Pc(0, gss) and force(gss) is Pc(0, fs_) then Pc(0, sqrtPs(fs_))
+  Pc(1, fs_) then
+    fun qs() = lazy of () => addPs(fromIntegerPs(1), integral(divPs(deriv(lazy of () => Pc(1, fs_)), dotMultSndLz(2, qs()))))
     force(force(qs()))
 fun testPower_nofib(p) =
   extract(p, minusPs(sinx(), sqrtPs(minusPs(fromIntegerPs(1), powerPs(cosx(), 2)))));
