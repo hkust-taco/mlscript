@@ -67,18 +67,26 @@ fun add_4(x, y) =
               Some(yv) then yv
             is
               None     then 0
-//│ ╔══[PARSE ERROR] Unexpected 'is' keyword here
-//│ ║  l.57: 	      is
-//│ ╙──      	      ^^
-//│ ╔══[ERROR] Unrecognized term split.
-//│ ║  l.56: 	    x
-//│ ╙──      	    ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: List() (of class Nil$)
 
 
+:fixme
 add_4(None, None)
 add_4(Some(5), None)
 add_4(None, Some(9))
 add_4(Some(5), Some(9))
+//│ ╔══[ERROR] Name not found: add_4
+//│ ║  l.74: 	add_4(None, None)
+//│ ╙──      	^^^^^
+//│ ╔══[ERROR] Name not found: add_4
+//│ ║  l.75: 	add_4(Some(5), None)
+//│ ╙──      	^^^^^
+//│ ╔══[ERROR] Name not found: add_4
+//│ ║  l.76: 	add_4(None, Some(9))
+//│ ╙──      	^^^^^
+//│ ╔══[ERROR] Name not found: add_4
+//│ ║  l.77: 	add_4(Some(5), Some(9))
+//│ ╙──      	^^^^^
 
 
 fun add_5(x, y) =
@@ -103,16 +111,16 @@ fun add_6(x, y) =
     [None,     Some(yv)] then yv
     [None,     None]     then 0
 //│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.104: 	    [None,     None]     then 0
+//│ ║  l.112: 	    [None,     None]     then 0
 //│ ╙──       	    ^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.103: 	    [None,     Some(yv)] then yv
+//│ ║  l.111: 	    [None,     Some(yv)] then yv
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.102: 	    [Some(xv), None]     then xv
+//│ ║  l.110: 	    [Some(xv), None]     then xv
 //│ ╙──       	    ^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.101: 	    [Some(xv), Some(yv)] then xv + yv
+//│ ║  l.109: 	    [Some(xv), Some(yv)] then xv + yv
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^
 
 add_6(None, None)

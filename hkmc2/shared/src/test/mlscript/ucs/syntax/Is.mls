@@ -1,0 +1,24 @@
+:parseOnly
+
+
+x
+  is A
+//│ Parsed:
+//│ 	InfixApp(Ident(x),keyword 'is',Ident(A))
+
+
+:pe
+x
+  is A
+  is B
+//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'set' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'open' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, 'return' keyword, 'import' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'is' keyword instead
+//│ ║  l.13: 	  is B
+//│ ╙──      	  ^^
+//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
+//│ ║  l.13: 	  is B
+//│ ╙──      	     ^
+//│ Parsed:
+//│ 	InfixApp(Ident(x),keyword 'is',Ident(A))
+//│ 	Error()
+
+

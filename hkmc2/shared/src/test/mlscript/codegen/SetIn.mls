@@ -1,0 +1,145 @@
+:js
+
+:import PredefJS.mls
+//│ Imported 1 member(s)
+
+
+let x = 0
+//│ x = 0
+
+:sjs
+let x += 1
+//│ JS:
+//│ let tmp; tmp = this.x + 1; this.x = tmp; undefined
+//│ x = 1
+
+x
+//│ = 1
+
+:sjs
+set x = 0
+//│ JS:
+//│ this.x = 0; undefined
+
+:sjs
+set x += 1
+//│ JS:
+//│ let tmp; tmp = this.x + 1; this.x = tmp; undefined
+
+x
+//│ = 1
+
+
+:sjs
+set x += 1 in log(x)
+//│ JS:
+//│ let old, tmp, tmp1;
+//│ old = this.x;
+//│ try {
+//│   tmp1 = this.x + 1;
+//│   this.x = tmp1;
+//│   tmp = log(this.x);
+//│ } finally {
+//│   this.x = old;
+//│ }
+//│ tmp
+//│ > 2
+
+x
+//│ = 1
+
+
+fun example() =
+  let x = 0
+  let get_x() = x
+  let x += 1
+  log(x)
+  log(get_x())
+example()
+//│ > 1
+//│ > 0
+
+fun example() =
+  let x = 0
+  let get_x() = x
+  set x += 1
+  log(x)
+  log(get_x())
+example()
+//│ > 1
+//│ > 1
+
+:sjs
+fun example() =
+  let x = 0
+  let get_x() = x
+  set x += 1 in log(x); log(get_x())
+  log(x)
+  log(get_x())
+example()
+//│ JS:
+//│ function example() {
+//│   let x, get_x, old, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
+//│   x = 0;
+//│   get_x = () => {
+//│     return x
+//│   };
+//│   old = x;
+//│   try {
+//│     tmp1 = x + 1;
+//│     x = tmp1;
+//│     tmp2 = log(x);
+//│     tmp3 = (tmp2 , log);
+//│     tmp4 = get_x();
+//│     tmp = tmp3(tmp4);
+//│   } finally {
+//│     x = old;
+//│   }
+//│   tmp5 = log(x);
+//│   tmp6 = get_x();
+//│   return log(tmp6)
+//│ };
+//│ this.example()
+//│ > 1
+//│ > 1
+//│ > 0
+//│ > 0
+
+:sjs
+fun example() =
+  let x = 0
+  let get_x() = x
+  let y =
+    set x += 1 in log(x); x
+  log(x)
+  log(get_x())
+  y
+example()
+//│ JS:
+//│ function example() {
+//│   let x, get_x, y, old, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+//│   x = 0;
+//│   get_x = () => {
+//│     return x
+//│   };
+//│   old = x;
+//│   try {
+//│     tmp1 = x + 1;
+//│     x = tmp1;
+//│     tmp2 = log(x);
+//│     tmp = (tmp2 , x);
+//│   } finally {
+//│     x = old;
+//│   }
+//│   y = tmp;
+//│   tmp3 = log(x);
+//│   tmp4 = get_x();
+//│   tmp5 = log(tmp4);
+//│   return y
+//│ };
+//│ this.example()
+//│ > 1
+//│ > 0
+//│ > 0
+//│ = 1
+

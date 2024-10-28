@@ -10,11 +10,11 @@ if true then 1 else 0
 //│ Blk:
 //│   stats = Nil
 //│   res = If of Let:
-//│     sym = $scrut@24
+//│     sym = $scrut@29
 //│     term = Lit of BoolLit of true
 //│     tail = Cons: \
 //│     head = Branch:
-//│       scrutinee = Ref of $scrut@24
+//│       scrutinee = Ref of $scrut@29
 //│       pattern = LitPat of BoolLit of true
 //│       continuation = Else of Lit of IntLit of 1
 //│     tail = Else of Lit of IntLit of 0
@@ -69,7 +69,7 @@ let f = x => log((if x and x then "ok" else "ko") + "!")
 //│ };
 //│ undefined
 //│ f = [Function (anonymous)]
-// --- What we want ---
+// --- TODO: What we want ---
 // this.f = (x) => {
 //   let tmp, tmp1, flag;
 //   if (x) {
@@ -110,5 +110,34 @@ x =>
   let str = concat(if x + 1 > 0 then "Hello" else "Bye", "World")
   log(str)
 //│ = [Function (anonymous)]
+
+
+fun f(x, y) =
+  if x
+    then y
+
+f(true)
+
+:re
+f(false)
+//│ ═══[RUNTIME ERROR] Error: match error
+
+
+fun f(x, y, z) = if x then y else z
+
+f(true, 0, 1)
+//│ = 0
+
+
+fun f(x, y, z) =
+  if x
+    then y
+    else z
+
+f(true, 1, 0)
+//│ = 1
+
+f(false, 1, 0)
+//│ = 0
 
 

@@ -12,6 +12,8 @@ import syntax.*
 import Tree.*
 import hkmc2.Message.MessageContext
 
+import Keyword.{`let`, `set`}
+
 
 object Elaborator:
   case class Ctx(outer: Opt[MemberSymbol[?]], parent: Opt[Ctx], members: Map[Str, Symbol], locals: Map[Str, LocalSymbol]):
@@ -24,8 +26,13 @@ object Elaborator:
     val empty: Ctx = Ctx(N, N, Map.empty, Map.empty)
     val globalThisSymbol = TermSymbol(ImmutVal, N, Ident("globalThis"))
     val errorSymbol = ClassSymbol(S(globalThisSymbol), Ident("Error"))
+    val seqSymbol = TermSymbol(ImmutVal, N, Ident(";"))
     def init(using State): Ctx = empty.copy(members = Map(
       "globalThis" -> globalThisSymbol,
+      "console" -> TermSymbol(ImmutVal, N, Ident("console")),
+      "process" -> TermSymbol(ImmutVal, N, Ident("process")),
+      "fs" -> TermSymbol(ImmutVal, N, Ident("fs")),
+      "String" -> TermSymbol(ImmutVal, N, Ident("String")),
       "Error" -> errorSymbol,
     ))
   type Ctxl[A] = Ctx ?=> A
@@ -35,7 +42,9 @@ object Elaborator:
     def nextUid: Int = { curUi += 1; curUi }
 import Elaborator.*
 
-class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
+class Elaborator(val tl: TraceLogger, val wd: os.Path)
+(using val raise: Raise, val state: State)
+extends Importer:
   import state.nextUid
   import tl.*
   
@@ -50,23 +59,34 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
   
   def term(tree: Tree): Ctxl[Term] =
   trace[Term](s"Elab term ${tree.showDbg}", r => s"~> $r"):
-    tree match
+    tree.desugared match
     case Block(s :: Nil) =>
       term(s)
     case Block(sts) =>
       block(sts)._1
     case lit: Literal =>
       Term.Lit(lit)
-    case Let(Apps(id, tups), S(rhs), bodo) if id.name.headOption.exists(_.isLower) =>
-      val rrhs = tups.foldRight(rhs):
-        Tree.InfixApp(_, Keyword.`=>`, _)
-      val fs = VarSymbol(id, nextUid)
-      val ctxx = ctx.copy(locals = ctx.locals + (id.name -> fs))
-      val r = term(rrhs)(using ctxx)
-      val b = bodo.map(term(_)(using ctxx)).getOrElse(unit)
-      Term.Blk(mkLetBinding(fs, r), b)
-    case Let(lhs, N, bodo) => // TODO
-      ???
+    case LetLike(`let`, lhs, rhso, S(bod)) =>
+      term(Block(LetLike(`let`, lhs, rhso, N) :: bod :: Nil))
+    case LetLike(`let`, lhs, S(rhs), N) =>
+      raise(ErrorReport(
+        msg"Expected a right-hand side for let bindings in expression position" ->
+          tree.toLoc :: Nil))
+      block(LetLike(`let`, lhs, S(rhs), N) :: Nil)._1
+    case LetLike(`set`, lhs, S(rhs), N) =>
+      Term.Assgn(term(lhs), term(rhs))
+    case LetLike(`set`, lhs, S(rhs), S(bod)) =>
+      // * Backtracking assignment
+      lhs match
+      case id: Ident =>
+        val lt = term(lhs)
+        val sym = TempSymbol(nextUid, S(lt), "old")
+        Term.Blk(
+        LetDecl(sym) :: DefineVar(sym, lt) :: Nil, Term.Try(Term.Blk(
+          Term.Assgn(lt, term(rhs)) :: Nil,
+          term(bod),
+        ), Term.Assgn(lt, sym.ref(id))))
+      case _ => ??? // TODO error
     case Ident("true") => Term.Lit(Tree.BoolLit(true))
     case Ident("false") => Term.Lit(Tree.BoolLit(false))
     case id @ Ident("Alloc") => Term.Ref(allocSkolemSym)(id, 1)
@@ -141,20 +161,13 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
     case tree @ Tup(fields) =>
       Term.Tup(fields.map(fld(_)))(tree)
     case New(body) =>
-      def go(clsId: Ident, as: Ls[Tree]) =
-        ctx.get(clsId.name) match
-          case S(sym: ClassSymbol) => Term.New(sym, as.map(term)).withLocOf(tree)
-          case _ =>
-            raise(ErrorReport(msg"Class '${clsId.name}' not found." -> tree.toLoc :: Nil))
-            Term.Error
       body match
-      case App(clsId: Ident, Tup(params)) =>
-        go(clsId, params)
-      case clsId: Ident =>
-        go(clsId, Nil)
-      case _ =>
-        raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
-        Term.Error
+      case App(cls, Tup(params)) =>
+        Term.New(term(cls), params.map(term)).withLocOf(tree)
+      case cls => // we'll catch bad `new` targets during type checking
+        Term.New(term(cls), Nil).withLocOf(tree)
+      // case _ =>
+      //   raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
     case Tree.If(split) =>
       val desugared = new Desugarer(tl, this).termSplit(split, identity)(Split.Nil)(ctx)
       scoped("ucs:desugared"):
@@ -220,15 +233,44 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
       Term.Error
     case Error() =>
       Term.Error
-    case TermDef(k, sym, nme, rhs) =>
+    case TermDef(k, nme, rhs) =>
       raise(ErrorReport(msg"Illegal definition in term position." -> tree.toLoc :: Nil))
       Term.Error
-    case TypeDef(k, symName, head, extension, body) =>
+    case TypeDef(k, head, extension, body) =>
       raise(ErrorReport(msg"Illegal type declaration in term position." -> tree.toLoc :: Nil))
       Term.Error
     case Modified(kw, kwLoc, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kwLoc :: Nil))
       term(body)
+    case Jux(lhs, rhs) =>
+      def go(acc: Term, trees: Ls[Tree]): Term =
+        trees match
+        case Nil => acc
+        
+        // * FIXME this `f.name.head.isLetter` test is a big hack...
+        // * TODO would be better to keep the fixity of applications part of the Tree repr.
+        case (ap @ App(f: Ident, tup @ Tup(lhs :: args))) :: trees if !f.name.head.isLetter =>
+          val res = go(acc, lhs :: Nil)
+          val sym = FlowSymbol("‹app-res›", nextUid)
+          val fl = Fld(FldFlags.empty, res, N)
+          val app = Term.App(term(f), Term.Tup(
+            fl :: args.map(fld))(tup))(ap, sym)
+          go(app, trees)
+        case (ap @ App(f, tup @ Tup(args))) :: trees =>
+          val sym = FlowSymbol("‹app-res›", nextUid)
+          go(Term.App(term(f),
+              Term.Tup(Fld(FldFlags.empty, acc, N) :: args.map(fld))(tup)
+            )(ap, sym), trees)
+        case Block(sts) :: trees =>
+          go(acc, sts ::: trees)
+        case tree :: trees =>
+          raise(ErrorReport(msg"Illegal juxtaposition right-hand side." -> tree.toLoc :: Nil))
+          go(acc, trees)
+      
+      go(term(lhs), rhs :: Nil)
+    case Open(body) =>
+      raise(ErrorReport(msg"Illegal position for 'open' statement." -> tree.toLoc :: Nil))
+      Term.Error
     // case _ =>
     //   ???
   
@@ -239,14 +281,23 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
   
   def unit: Term.Lit = Term.Lit(UnitLit(true))
   
+  
+  
+  
   def block(_sts: Ls[Tree])(using c: Ctx): (Term.Blk, Ctx) = trace[(Term.Blk, Ctx)](
     pre = s"Elab block ${_sts.toString.truncate(30, "[...]")} ${ctx.outer}", r => s"~> ${r._1}"
   ):
+    
     val sts = _sts.map(_.desugared)
     val newMembers = mutable.Map.empty[Str, MemberSymbol[?]] // * Definitions with implementations
     val newSignatures = mutable.Map.empty[Str, MemberSymbol[?]] // * Definitions containing only signatures
     val newSignatureTrees = mutable.Map.empty[Str, Tree] // * Store trees of signatures, passing them to definition objects
+    
     @tailrec def preprocessStatement(statement: Tree): Unit = statement match
+      case Open(body) =>
+        body match
+        case _ =>
+          raise(ErrorReport(msg"Illegal 'open' statement shape." -> body.toLoc :: Nil))
       case td: TermDef =>
         log(s"Found TermDef ${td.name}")
         td.name match
@@ -306,17 +357,34 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
         preprocessStatement(body)
       case tree =>
         log(s"Found something else $tree")
-    sts.foreach(preprocessStatement)      
+    end preprocessStatement
+    sts.foreach(preprocessStatement)
+    
     newSignatures.foreach:
       case (name, sym) =>
         if !newMembers.contains(name) then
           newMembers += name -> sym
+    
     @tailrec
     def go(sts: Ls[Tree], acc: Ls[Statement]): Ctxl[(Term.Blk, Ctx)] = sts match
       case Nil =>
         val res = unit
         (Term.Blk(acc.reverse, res), ctx)
-      case (hd @ Let(Apps(id, tups), rhso, N)) :: sts if id.name.headOption.exists(_.isLower) =>
+      case Open(_) :: sts => go(sts, acc)
+      case (m @ Modified(Keyword.`import`, absLoc, arg)) :: sts =>
+        val (newCtx, newAcc) = arg match
+          case Tree.StrLit(path) =>
+            val stmt = importPath(path)
+            (ctx.copy(locals = ctx.locals + (stmt.sym.name -> stmt.sym)),
+            stmt.withLocOf(m) :: acc)
+          case _ =>
+            raise(ErrorReport(
+              msg"Expected string literal after 'import' keyword" ->
+              arg.toLoc :: Nil))
+            (ctx, acc)
+        newCtx.givenIn:
+          go(sts, newAcc)
+      case (hd @ LetLike(`let`, Apps(id, tups), rhso, N)) :: sts if id.name.headOption.exists(_.isLower) =>
         val sym =
           fieldOrVarSym(LetBind, id)
         log(s"Processing `let` statement $id (${sym}) ${ctx.outer}")
@@ -331,6 +399,9 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
             LetDecl(sym) :: acc
         ctx.copy(locals = ctx.locals + (id.name -> sym)) givenIn:
           go(sts, newAcc)
+      case (tree @ LetLike(`let`, lhs, S(rhs), N)) :: sts =>
+        raise(ErrorReport(msg"Unsupported let binding shape" -> tree.toLoc :: Nil))
+        go(sts, Term.Error :: acc)
       case Def(lhs, rhs) :: sts =>
         lhs match
         case id: Ident =>
@@ -346,7 +417,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
         case _ =>
           raise(ErrorReport(msg"Wrong number of type arguments" -> lhs.toLoc :: Nil)) // TODO BE
           go(sts, Term.Error :: acc)
-      case (td @ TermDef(k, sym, nme, rhs)) :: sts =>
+      case (td @ TermDef(k, nme, rhs)) :: sts =>
         log(s"Processing term definition $nme")
         td.name match
           case R(id) =>
@@ -371,9 +442,10 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
               tdf
             go(sts, tdf :: acc)
           case L(d) => go(sts, acc) // error already raised in newMembers initialization
-      case TypeDef(k, symName, head, extension, body) :: sts =>
+      case TypeDef(k, head, extension, body) :: sts =>
         assert((k is Als) || (k is Cls) || (k is Mod), k)
-        def processHead(head: Tree): Ctxl[(Ident, Ls[TyParam], Opt[Ls[Param]], Ctx)] = head match
+        def processHead(head: Tree): Ctxl[(Ident, Ls[TyParam], Opt[Ls[Param]], Ctx)] =
+          head match
           case TyApp(base, tparams) =>
             
             val (name, tas, as, newCtx) = processHead(base)
@@ -410,6 +482,9 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
             processHead(lhs)
           case InfixApp(derived, Keyword.`extends`, base) =>
             processHead(derived)
+          case Jux(lhs, rhs) =>
+            processHead(rhs)
+          // case _ => ???
 
           // case _ => ???
         val (nme, _, _, _) = processHead(head) // ! FIXME dumb!!!! recomputation
@@ -426,7 +501,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
             sym.defn = S(d)
             d
         case k: ClsLikeKind =>
-          val sym = newMembers(nme.name).asInstanceOf[ClassSymbol] // TODO improve
+          val sym = newMembers.getOrElse(nme.name, ???).asInstanceOf[ClassSymbol] // TODO improve
           ctx.nest(S(sym)).givenIn:
             val (nme, tps, ps, newCtx) = processHead(head)
             log(s"Processing type definition $nme")
@@ -452,11 +527,14 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
       case (st: Tree) :: sts =>
         val res = term(st) // TODO reject plain term statements? Currently, `(1, 2)` is allowed to elaborate (tho it should be rejected in type checking later)
         go(sts, res :: acc)
+    end go
+    
     c.copy(members = c.members ++ newMembers).givenIn:
       sts match
         case (_: TermDef | _: TypeDef) :: _ => go(sts, Nil)
         // case s :: Nil => (term(s), ctx)
         case _ => go(sts, Nil)
+  
   
   def fieldOrVarSym(k: TermDefKind, id: Ident)(using Ctx): LocalSymbol & NamedSymbol =
     if ctx.outer.isDefined then TermSymbol(k, ctx.outer, id)
@@ -468,7 +546,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
     case InfixApp(lhs: Ident, Keyword.`:`, rhs) =>
       Param(FldFlags.empty, fieldOrVarSym(ParamBind, lhs), S(term(rhs))) :: Nil
     case App(Ident(","), list) => params(list)._1
-    case TermDef(ImmutVal, _, S(inner), _) => param(inner)
+    case TermDef(ImmutVal, inner, _) => param(inner)
   
   def params(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
     case Tup(ps) =>

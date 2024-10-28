@@ -1,0 +1,39 @@
+:js
+
+
+
+import "../../js/MyClass.mjs"
+//│ MyClass = [class MyClass]
+
+MyClass
+//│ = [class MyClass]
+
+new MyClass("Bob")
+//│ = MyClass { name: 'Bob' }
+
+:todo
+let C = MyClass
+//│ ╔══[ERROR] Unsupported let binding shape
+//│ ║  l.15: 	let C = MyClass
+//│ ╙──      	    ^^^^^^^^^^^
+
+let c = MyClass
+//│ c = [class MyClass]
+
+:todo
+new c("Bob")
+//│ = MyClass { name: 'Bob' }
+
+globalThis.MyClass
+//│ = [class MyClass]
+
+
+:ge
+fun foo() =
+  import "../../js/MyClass.mjs"
+  ()
+//│ ╔══[COMPILATION ERROR] Imports must be at the top level
+//│ ║  l.33: 	  import "../../js/MyClass.mjs"
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^
+
+

@@ -6,6 +6,7 @@ import mlscript.utils.*, shorthands.*
 import Message.MessageContext
 import utils.TraceLogger
 import hkmc2.syntax.Literal
+import Keyword.`let`
 
 object Desugarer:
   object and:
@@ -154,12 +155,13 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
    *          accepts a context with additional bindings from the enclosing
    *          matches and splits
    */
-  def termSplit(tree: Tree, finish: Term => Term): Split => Sequel = tree match
+  def termSplit(tree: Tree, finish: Term => Term): Split => Sequel =
+    tree match
     case Block(branches) =>
       branches.foldRight(default): (t, elabFallback) =>
         t match
-        case Let(ident @ Ident(_), N, N) => ???
-        case Let(ident @ Ident(_), S(termTree), N) => fallback => ctx => trace(
+        case LetLike(`let`, ident @ Ident(_), N, N) => ???
+        case LetLike(`let`, ident @ Ident(_), S(termTree), N) => fallback => ctx => trace(
           pre = s"termSplit: let ${ident.name} = $termTree",
           post = (res: Split) => s"termSplit: let >>> $res"
         ):
@@ -241,7 +243,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
           Term.App(op, arguments)(tree, joint)
         opRhsApps.foldRight(Function.const(fallback): Sequel): (tt, elabFallback) =>
           tt match
-          case (Tree.Empty(), Let(ident @ Ident(_), termTree, N)) => ctx =>
+          case (Tree.Empty(), LetLike(`let`, ident @ Ident(_), termTree, N)) => ctx =>
             termTree match
             case S(termTree) =>
               val sym = VarSymbol(ident, nextUid)
@@ -258,9 +260,9 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
             raise(ErrorReport(msg"Unrecognized operator branch." -> op.toLoc :: Nil))
             elabFallback(ctx)
     case _ => fallback => _ =>
-      raise(ErrorReport(msg"Unrecognized term split." -> tree.toLoc :: Nil))
-      fallback
-
+      raise(ErrorReport(msg"Unrecognized term split (${tree.describe})." -> tree.toLoc :: Nil))
+      fallback.withoutLoc // Hacky... a loc is always added for the result
+  
   /** Given a elaborated scrutinee, give it a name and add it to the context.
    *  @param baseCtx the context to be extended with the new symbol
    *  @param scrutinee the elaborated scrutinee
@@ -322,7 +324,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
       // Terminology: _fallback_ refers to subsequent branches, _backup_ refers
       // to the backup plan passed from the parent split.
       branch match
-      case Let(ident @ Ident(_), termTree, N) => backup => ctx =>
+      case LetLike(`let`, ident @ Ident(_), termTree, N) => backup => ctx =>
         termTree match
         case S(termTree) =>
           val sym = VarSymbol(ident, nextUid)

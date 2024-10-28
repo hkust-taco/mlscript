@@ -22,8 +22,16 @@ abstract class CodeBuilder:
 
 class JSBuilder extends CodeBuilder:
   
-  val builtinOps: Set[Str] =
-    Set("+", "-", "*", "/", "%", "==", "!=", "<", "<=", ">", ">=", "&&", "||")
+  val builtinOpsBase: Ls[Str] = Ls(
+    "+", "-", "*", "/", "%",
+    "==", "!=", "<", "<=", ">", ">=",
+    "===",
+    "&&", "||")
+  val builtinOpsMap: Map[Str, Str] = (
+    builtinOpsBase.map(op => op -> op).toMap
+    + (";" -> ",")
+  )
+  val needsParens: Set[Str] = Set(",")
   
   // TODO use this to avoid parens when we generate recomposed expressions later
   enum Context:
@@ -56,8 +64,10 @@ class JSBuilder extends CodeBuilder:
     case Value.Ref(l) => getVar(l)
     case Value.Lit(Tree.StrLit(value)) => JSBuilder.makeStringLiteral(value)
     case Value.Lit(lit) => lit.idStr
-    case Call(Value.Ref(l: semantics.MemberSymbol[?]), lhs :: rhs :: Nil) if builtinOps contains l.nme =>
-      doc"${result(lhs)} ${l.nme} ${result(rhs)}"
+    case Call(Value.Ref(l: semantics.MemberSymbol[?]), lhs :: rhs :: Nil) if builtinOpsMap contains l.nme =>
+      val op = builtinOpsMap(l.nme)
+      val res = doc"${result(lhs)} ${op} ${result(rhs)}"
+      if needsParens(op) then doc"(${res})" else res
     case Call(fun, args) =>
       val base = fun match
         case _: Value.Lam => doc"(${result(fun)})"
@@ -77,8 +87,8 @@ class JSBuilder extends CodeBuilder:
           case S(index) => s"[$index]"
           case N => s"[${JSBuilder.makeStringLiteral(name)}]"
       }"
-    case Instantiate(sym, as) =>
-      doc"new ${getVar(sym)}(${as.map(result).mkDocument(", ")})"
+    case Instantiate(cls, as) =>
+      doc"new ${result(cls)}(${as.map(result).mkDocument(", ")})"
     case Value.Arr(es) =>
       doc"[ #{  # ${es.map(result).mkDocument(doc", # ")} #}  # ]"
   def returningTerm(t: Block)(using Raise, Scope): Document = t match
@@ -109,11 +119,23 @@ class JSBuilder extends CodeBuilder:
             ctorCode.stripBreaks
           } #}  # }${
             mtds.map: td =>
-              val vars = td.params.get.map(p => scope.allocateName(p.sym)).mkDocument(", ")
+              val vars = td.params.getOrElse(Nil).map(p => scope.allocateName(p.sym)).mkDocument(", ")
               doc" # ${td.sym.nme}($vars) { #{  # ${
                 body(td.body)
               } #}  # }"
             .mkDocument(" ")
+          }${
+            if mtds.exists(_.sym.nme == "toString")
+            then doc""
+            else doc""" # toString() { return "${sym.nme}${
+              if clsDefn.paramsOpt.isEmpty then doc"""""""
+              else doc"""(" + ${
+                  ctorParams.headOption.fold("")("this." + _._2)
+                }${
+                  ctorParams.tailOption.fold("")(_.map(
+                    """ + ", " + this.""" + _._2).mkString)
+                } + ")""""
+            }; }"""
           } #}  # }"
           if clsDefn.kind is syntax.Mod then sym.owner match
           case S(owner) =>
@@ -172,8 +194,26 @@ class JSBuilder extends CodeBuilder:
     
     case Throw(res) =>
       doc" # throw ${result(res)}"
+      
+    case TryBlock(sub, fin, rst) =>
+      doc" # try { #{ ${returningTerm(sub)
+        } #}  # } finally { #{ ${returningTerm(fin)} #}  # } # ${
+        returningTerm(rst).stripBreaks}"
     
     // case _ => ???
+  
+  def program(p: Program, exprt: Opt[Str])(using Raise, Scope): Document =
+    p.imports.foreach: i =>
+      i._1 -> scope.allocateName(i._1)
+    val imps = p.imports.map: i =>
+      val v = doc"this.${getVar(i._1)}"
+      doc"""$v = await import("${i._2.toString
+        }"); # if ($v.default !== undefined) $v = $v.default;"""
+    imps.mkDocument(doc" # ") :/: block(p.main) :: (
+      exprt match
+        case S(e) => doc"\nexport default ${e};\n"
+        case N => doc""
+      )
   
   def block(t: Block)(using Raise, Scope): Document =
     if t.definedVars.isEmpty then returningTerm(t).stripBreaks else

@@ -51,6 +51,8 @@ class Lowering(using TL, Raise, Elaborator.State):
       k(Value.Lit(lit))
     case st.Ret(res) =>
       returnedTerm(res)
+    case st.Asc(lhs, rhs) =>
+      term(lhs)(k)
     case st.Tup(fs) =>
       fs.foldRight[Ls[Path] => Block](args => k(Value.Arr(args.reverse)))((a, acc) =>
         args => subTerm(a.value)(r => acc(r :: args))
@@ -60,6 +62,9 @@ class Lowering(using TL, Raise, Elaborator.State):
       case sym: LocalSymbol =>
         k(subst(Value.Ref(sym)))
       case sym: ClassSymbol =>
+        k(subst(Value.Ref(sym)))
+      /* // * Old logic that auto-lifted `C` ~> `(...) => new C(...)`
+      case sym: ClassSymbol => // TODO rm
         // k(subst(Value.Ref(sym)))
         sym.defn match
         case N => End("error: class has no declaration") // TODO report?
@@ -70,9 +75,13 @@ class Lowering(using TL, Raise, Elaborator.State):
             val ps = clsDefn.paramsOpt.getOrElse(Nil)
             val psSyms = ps.map(p => 
               p.copy(sym = new VarSymbol(p.sym.id, summon[Elaborator.State].nextUid)))
-            k(Value.Lam(psSyms, Return(Instantiate(sym, psSyms.map(p => Value.Ref(p.sym))), false)))
+            k(Value.Lam(psSyms,
+              Return(Instantiate(Value.Ref(sym),
+                psSyms.map(p => Value.Ref(p.sym))), false)))
+      */
+    // * Perhaps this `new` insertion should also be removed...?
     case st.App(Ref(sym: ClassSymbol), Tup(args)) => // TODO check kind is Cls
-      args.foldRight[Ls[Path] => Block](args => k(Instantiate(sym, args.reverse)))((a, acc) =>
+      args.foldRight[Ls[Path] => Block](args => k(Instantiate(Value.Ref(sym), args.reverse)))((a, acc) =>
         args => subTerm(a.value)(r => acc(r :: args))
       )(Nil)
     case st.App(f, arg) =>
@@ -141,6 +150,18 @@ class Lowering(using TL, Raise, Elaborator.State):
     case st.Blk((DefineVar(sym, rhs)) :: stats, res) =>
       subTerm(rhs): r =>
         Assign(sym, r, term(st.Blk(stats, res))(k))
+    case Assgn(lhs, rhs) =>
+      lhs match
+      case Ref(sym: LocalSymbol) =>
+        subTerm(rhs): r =>
+          Assign(sym, r, k(Value.Lit(syntax.Tree.UnitLit(true))))
+      
+    case st.Blk((imp @ Import(sym, path)) :: stats, res) =>
+      raise(ErrorReport(
+        msg"Imports must be at the top level" ->
+        imp.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation))
+        term(st.Blk(stats, res))(k)
       
     case st.Lam(params, body) =>
       k(Value.Lam(params, returnedTerm(body)))
@@ -221,7 +242,7 @@ class Lowering(using TL, Raise, Elaborator.State):
           if k.isInstanceOf[Ret] then term(els)(k)
           else term(els)(r => Assign(l, r, End()))
         case Split.Nil =>
-          Throw(Instantiate(Elaborator.Ctx.errorSymbol,
+          Throw(Instantiate(Value.Ref(Elaborator.Ctx.errorSymbol),
             Value.Lit(syntax.Tree.StrLit("match error")) :: Nil)) // TODO add failed-match scrutinee info
       
       if k.isInstanceOf[Ret] then go(iftrm.normalized)
@@ -235,13 +256,22 @@ class Lowering(using TL, Raise, Elaborator.State):
       subTerm(prefix): p =>
         k(Select(p, nme))
         
-    case New(sym, as) =>
-      def rec(as: Ls[st], asr: Ls[Path]): Block = as match
-        case Nil => k(Instantiate(sym, asr.reverse))
-        case a :: as =>
-          subTerm(a): ar =>
-            rec(as, ar :: asr)
-      rec(as, Nil)
+    case New(cls, as) =>
+      subTerm(cls): sr =>
+        def rec(as: Ls[st], asr: Ls[Path]): Block = as match
+          case Nil => k(Instantiate(sr, asr.reverse))
+          case a :: as =>
+            subTerm(a): ar =>
+              rec(as, ar :: asr)
+        rec(as, Nil)
+    
+    case Try(sub, finallyDo) =>
+      val l = new TempSymbol(summon[Elaborator.State].nextUid, S(sub))
+      TryBlock(
+        term(sub)(p => Assign(l, p, End())),
+        term(finallyDo)(_ => End()),
+        k(Value.Ref(l))
+      )
     
     case Error => End("error")
     
@@ -263,5 +293,13 @@ class Lowering(using TL, Raise, Elaborator.State):
   
   def topLevel(t: st): Block =
     term(t)(ImplctRet)(using Subst.empty)
+  
+  def program(main: st): Program =
+    def go(acc: Ls[Local -> Str], trm: st): Program =
+      trm match
+      case st.Blk((imp @ Import(sym, path)) :: stats, res) =>
+        go(sym -> path.toString :: acc, st.Blk(stats, res))
+      case _ => Program(acc.reverse, topLevel(trm))
+    go(Nil, main)
 
 

@@ -1,0 +1,107 @@
+:js
+
+
++2
+//│ = 2
+
+2 + +3
+//│ = 5
+
+2 + -3
+//│ = -1
+
+:w
+:sjs
+1
++ 2
++ 3
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.15: 	1
+//│ ╙──      	^
+//│ JS:
+//│ let tmp, tmp1; tmp = +(2); tmp1 = +(3); tmp1
+//│ = 3
+
+:w
+:pe
+:ge
+1
+* 2
+* 3
+//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
+//│ ║  l.29: 	* 2
+//│ ╙──      	  ^
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.28: 	1
+//│ ╙──      	^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '*'
+
+
+:fixme
++
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '}'
+
+:fixme
+*
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '*'
+
+:w
+:pt
+:ge
+1
+*
+//│ Parsed tree:
+//│ IntLit of 1
+//│ Ident of "*"
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.51: 	1
+//│ ╙──      	^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '*'
+
+
+fun (??) foo(x, y) = x + y
+
+??
+//│ = [Function: foo]
+
+(??)
+//│ = [Function: foo]
+
+??(1, 2)
+//│ = 3
+
+?? of 1, 2
+//│ = 3
+
+1 ??(2)
+//│ = 3
+
+1 ?? 2
+//│ = 3
+
+// `??` is not in the list of prefix operators...
+:pe
+?? 1
+//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
+//│ ║  l.84: 	?? 1
+//│ ╙──      	   ^
+//│ = [Function: foo]
+
+:w
+:pe
+1
+?? 2
+//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
+//│ ║  l.93: 	?? 2
+//│ ╙──      	   ^
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.92: 	1
+//│ ╙──      	^
+//│ = [Function: foo]
+
+:fixme
+1
+  ?? 2
+//│ /!!!\ Uncaught error: scala.MatchError: OpBlock(List((Ident(??),IntLit(2)))) (of class hkmc2.syntax.Tree$OpBlock)
+
+

@@ -7,7 +7,7 @@ let let
 //│ ║  l.5: 	let let
 //│ ╙──     	       ^
 //│ Parsed:
-//│ 	Let(Error(),None,None)
+//│ 	LetLike(keyword 'let',Error(),None,None)
 
 :pe
 let x = 1 let y = 2
@@ -15,41 +15,41 @@ let x = 1 let y = 2
 //│ ║  l.13: 	let x = 1 let y = 2
 //│ ╙──      	          ^^^
 //│ Parsed:
-//│ 	Let(Ident(x),Some(IntLit(1)),None)
+//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None)
 
 let x = 1 in let y = 2
 //│ Parsed:
-//│ 	Let(Ident(x),Some(IntLit(1)),Some(Let(Ident(y),Some(IntLit(2)),None)))
+//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(LetLike(keyword 'let',Ident(y),Some(IntLit(2)),None)))
 
 let x = 1 in let y = 2 in let z = 3
 //│ Parsed:
-//│ 	Let(Ident(x),Some(IntLit(1)),Some(Let(Ident(y),Some(IntLit(2)),Some(Let(Ident(z),Some(IntLit(3)),None)))))
+//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(LetLike(keyword 'let',Ident(y),Some(IntLit(2)),Some(LetLike(keyword 'let',Ident(z),Some(IntLit(3)),None)))))
 
 let x = 1
 let y = 2
 //│ Parsed:
-//│ 	Let(Ident(x),Some(IntLit(1)),None)
-//│ 	Let(Ident(y),Some(IntLit(2)),None)
+//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None)
+//│ 	LetLike(keyword 'let',Ident(y),Some(IntLit(2)),None)
 
 let
   x
   y
 //│ Parsed:
-//│ 	Let(Ident(x),None,None)
-//│ 	Let(Ident(y),None,None)
+//│ 	LetLike(keyword 'let',Ident(x),None,None)
+//│ 	LetLike(keyword 'let',Ident(y),None,None)
 
 let
   x = 1
   y = 2
 //│ Parsed:
-//│ 	Let(Ident(x),Some(IntLit(1)),None)
-//│ 	Let(Ident(y),Some(IntLit(2)),None)
+//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None)
+//│ 	LetLike(keyword 'let',Ident(y),Some(IntLit(2)),None)
 
 let
   x = 1 in x
   y = 2 in y
 //│ Parsed:
-//│ 	Let(Ident(x),Some(IntLit(1)),Some(Ident(x)))
-//│ 	Let(Ident(y),Some(IntLit(2)),Some(Ident(y)))
+//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(Ident(x)))
+//│ 	LetLike(keyword 'let',Ident(y),Some(IntLit(2)),Some(Ident(y)))
 
 

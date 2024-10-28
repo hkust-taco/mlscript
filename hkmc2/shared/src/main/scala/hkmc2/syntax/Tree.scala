@@ -48,17 +48,18 @@ enum Tree extends AutoLocated:
   case BoolLit(value: Bool)           extends Tree with Literal
   case Block(stmts: Ls[Tree])
   case OpBlock(items: Ls[Tree -> Tree])
-  case Let(lhs: Tree, rhs: Opt[Tree], body: Opt[Tree])
+  case LetLike(kw: Keyword.letLike, lhs: Tree, rhs: Opt[Tree], body: Opt[Tree])
   case Def(lhs: Tree, rhs: Tree)
-  // case TermDef(k: TermDefKind, symName: Opt[Tree], alphaName: Opt[Tree], sign: Opt[Tree], rhs: Opt[Tree])
-  case TermDef(k: TermDefKind, symName: Opt[Tree], alphaName: Opt[Tree], rhs: Opt[Tree]) extends Tree with TermDefImpl
-  case TypeDef(k: TypeDefKind, symName: Opt[Tree], head: Tree, extension: Opt[Tree], body: Opt[Tree]) extends Tree with TypeDefImpl
+  case TermDef(k: TermDefKind, head: Tree, rhs: Opt[Tree]) extends Tree with TermDefImpl
+  case TypeDef(k: TypeDefKind, head: Tree, extension: Opt[Tree], body: Opt[Tree]) extends Tree with TypeDefImpl
+  case Open(body: Tree)
   case Modified(modifier: Keyword, modLoc: Opt[Loc], body: Tree)
   case Quoted(body: Tree)
   case Unquoted(body: Tree)
   case Tup(fields: Ls[Tree])
   case TyTup(tys: Ls[Tree])
   case App(lhs: Tree, rhs: Tree)
+  case Jux(lhs: Tree, rhs: Tree)
   case Sel(prefix: Tree, name: Ident)
   case InfixApp(lhs: Tree, kw: Keyword.Infix, rhs: Tree)
   case New(body: Tree)
@@ -76,16 +77,17 @@ enum Tree extends AutoLocated:
     case Block(stmts) => stmts
     case OpBlock(items) => items.flatMap:
       case (op, body) => op :: body :: Nil
-    case Let(lhs, rhs, body) => lhs :: Nil ++ rhs ++ body
-    case TypeDef(k, symName, head, extension, body) =>
-      symName.toList ++ Ls(head) ++ extension ++ body
+    case LetLike(kw, lhs, rhs, body) => lhs :: Nil ++ rhs ++ body
+    case TypeDef(k, head, extension, body) =>
+      head :: extension.toList ::: body.toList
     case Modified(_, _, body) => Ls(body)
     case Quoted(body) => Ls(body)
     case Unquoted(body) => Ls(body)
     case Tup(fields) => fields
     case App(lhs, rhs) => Ls(lhs, rhs)
+    case Jux(lhs, rhs) => Ls(lhs, rhs)
     case InfixApp(lhs, _, rhs) => Ls(lhs, rhs)
-    case TermDef(k, symName, alphaName, rhs) => symName.toList ++ alphaName ++ rhs
+    case TermDef(k, head, rhs) => head :: rhs.toList
     case New(body) => body :: Nil
     case If(split) => split :: Nil
     case IfElse(cond, alt) => cond :: alt :: Nil
@@ -95,6 +97,7 @@ enum Tree extends AutoLocated:
     case Effectful(eff, body) => eff :: body :: Nil
     case TyTup(tys) => tys
     case Sel(prefix, name) => prefix :: Nil
+    case Open(bod) => bod :: Nil
   
   def describe: Str = this match
     case Empty() => "empty"
@@ -107,15 +110,16 @@ enum Tree extends AutoLocated:
     case BoolLit(value) => s"$value literal"
     case Block(stmts) => "block"
     case OpBlock(_) => "operator block"
-    case Let(lhs, rhs, body) => "let"
-    case TermDef(k, symName, alphaName, rhs) => "term definition"
-    case TypeDef(k, symName, head, extension, body) => "type definition"
+    case LetLike(kw, lhs, rhs, body) => kw.name
+    case TermDef(k, alphaName, rhs) => "term definition"
+    case TypeDef(k, head, extension, body) => "type definition"
     case Modified(kw, _, body) => s"${kw.name}-modified ${body.describe}"
     case Quoted(body) => "quoted"
     case Unquoted(body) => "unquoted"
     case Tup(fields) => "tuple"
     case TyTup(tys) => "type tuple"
     case App(lhs, rhs) => "application"
+    case Jux(lhs, rhs) => "juxtaposition"
     case Sel(prefix, name) => "selection"
     case InfixApp(lhs, kw, rhs) => "infix application"
     case New(body) => "new"
@@ -129,8 +133,11 @@ enum Tree extends AutoLocated:
   def showDbg: Str = toString // TODO
   
   lazy val desugared: Tree = this match
-    case Modified(Keyword.`mut`, modLoc, TermDef(ImmutVal, snme, anme, rhs)) =>
-      TermDef(MutVal, snme, anme, rhs)
+    case Modified(Keyword.`mut`, modLoc, TermDef(ImmutVal, anme, rhs)) =>
+      TermDef(MutVal, anme, rhs).desugared
+    case LetLike(letLike, App(f @ Ident(nme), Tup((id: Ident) :: r :: Nil)), N, bodo)
+    if nme.endsWith("=") =>
+      LetLike(letLike, id, S(App(Ident(nme.init), Tup(id :: r :: Nil))), bodo).desugared
     case _ => this
 
 object Tree:
@@ -178,51 +185,60 @@ case object Mod extends TypeDefKind("module") with ClsLikeKind
 
 
 
-private def getName(t: Tree): Diagnostic \/ Ident =
+private def getName(t: Tree, symNme: Opt[Tree]): (Opt[Tree], Diagnostic \/ Ident) =
   t match
     case id: Ident =>
-      R(id)
+      symNme -> R(id)
     case TyApp(base, args) =>
-      getName(base)
+      getName(base, symNme)
     case App(base, args) =>
-      getName(base)
+      getName(base, symNme)
+    case Jux(symNme2, rest) =>
+      require(symNme.isEmpty) // TODO
+      getName(rest, S(symNme2))
     case InfixApp(lhs, Keyword.`:`, rhs) =>
-      getName(lhs)
+      getName(lhs, symNme)
     case InfixApp(lhs, Keyword.`extends`, rhs) =>
-      getName(lhs)
-    case _ => L(ErrorReport(
+      getName(lhs, symNme)
+    case _ => symNme -> L(ErrorReport(
       msg"Expected a valid definition head, found ${t.describe} instead" -> t.toLoc :: Nil))
 
 trait TermDefImpl:
   this: TermDef =>
-  lazy val (name, params, typeParams, signature): (Diagnostic \/ Ident, Opt[Ls[Tree]], Opt[Tree], Opt[Tree]) =
-    def rec(t: Opt[Tree]): (Diagnostic \/ Ident, Opt[Ls[Tree]], Opt[Tree], Opt[Tree]) = 
+  lazy val (symName, name, params, typeParams, signature): (Opt[Tree], Diagnostic \/ Ident, Opt[Ls[Tree]], Opt[Tree], Opt[Tree]) =
+    def rec(t: Tree, symName: Opt[Tree]):
+    (Opt[Tree], Diagnostic \/ Ident, Opt[Ls[Tree]], Opt[Tree], Opt[Tree]) =
       t match
-      case S(InfixApp(id: Ident, Keyword.`:`, sign)) =>
-        (R(id), N, N, S(sign))
+      case InfixApp(id: Ident, Keyword.`:`, sign) =>
+        (symName, R(id), N, N, S(sign))
       // show(t: Tree): Str
-      case S(InfixApp(App(id: Ident, args), Keyword.`:`, ret)) =>
-        (R(id), S(args :: Nil), N, N)
+      case InfixApp(App(id: Ident, args), Keyword.`:`, ret) =>
+        (symName, R(id), S(args :: Nil), N, N)
       // show[A](t: Tree[A]): Str
-      case S(InfixApp(App(App(id: Ident, typeParams: TyTup), args), Keyword.`:`, ret)) =>
+      case InfixApp(App(App(id: Ident, typeParams: TyTup), args), Keyword.`:`, ret) =>
         // val sign = S(InfixApp(typeParams, Keyword.`->`, InfixApp(args, Keyword.`->`, ret)))
-        (R(id), S(args :: Nil), S(typeParams), N)
-      case S(id: Ident) =>
-        (R(id), N, N, N)
-      case S(App(id: Ident, typeParams: TyTup)) =>
-        (R(id), N, S(typeParams), N)
-      case S(App(id: Ident, args)) =>
-        (R(id), S(args :: Nil), N, N)
-      case S(App(primary: App, second)) =>
+        (symName, R(id), S(args :: Nil), S(typeParams), N)
+      case InfixApp(Jux(lhs, rhs), Keyword.`:`, ret) =>
+        rec(InfixApp(rhs, Keyword.`:`, ret), S(lhs))
+      case id: Ident =>
+        (symName, R(id), N, N, N)
+      case App(id: Ident, typeParams: TyTup) =>
+        (symName, R(id), N, S(typeParams), N)
+      case App(id: Ident, args) =>
+        (symName, R(id), S(args :: Nil), N, N)
+      case App(primary: App, second) =>
         // TODO: handle the second parameter list
-        val (id, first, tps, sig) = rec(S(primary))
-        (id, S(first.fold(Ls(second))(_ :+ second)), tps, sig)
-    rec(alphaName orElse symName)
+        val (sn, id, first, tps, sig) = rec(primary, symName)
+        (sn, id, S(first.fold(Ls(second))(_ :+ second)), tps, sig)
+      case Jux(lhs, rhs) => // happens in `fun (op) nme` form
+        require(symName.isEmpty) // TOOD
+        rec(rhs, S(lhs))
+    rec(head, N)
   lazy val symbolicName: Opt[Ident] = symName match
     case S(id: Ident) => S(id)
     case _ => N
 
 trait TypeDefImpl:
   this: TypeDef =>
-  lazy val name: Diagnostic \/ Ident = getName(head)
+  lazy val (symName, name): (Opt[Tree], Diagnostic \/ Ident) = getName(head, N)
 

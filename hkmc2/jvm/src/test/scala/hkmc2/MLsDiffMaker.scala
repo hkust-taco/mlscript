@@ -5,13 +5,11 @@ import scala.collection.mutable
 import mlscript.utils.*, shorthands.*
 import utils.*
 
-import hkmc2.syntax.Keyword.all
-import hkmc2.semantics.MemberSymbol
 import hkmc2.semantics.Elaborator
-import hkmc2.syntax.Keyword.`override`
 
 
 abstract class MLsDiffMaker extends DiffMaker:
+  
   class DebugTreeCommand(name: Str) extends Command[Product => Str](name)(
     line => if line.contains("loc") then
       (t: Product) => t match
@@ -89,7 +87,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       def doPrintDbg(msg: => Str): Unit = if dbg then output(msg)
     val res = p.parseAll(p.block(allowNewlines = true))
     given Elaborator.Ctx = curCtx
-    val elab = Elaborator(etl)
+    val elab = Elaborator(etl, file / os.up)
     try
       val oldSymbols = curCtx.allMembers.valuesIterator.toSet
       val (e, newCtx) = elab.importFrom(res)
@@ -148,7 +146,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   private var blockNum = 0
   
   def processTrees(trees: Ls[syntax.Tree])(using Raise): Unit =
-    val elab = Elaborator(etl)
+    val elab = Elaborator(etl, file / os.up)
     val blockSymbol =
       semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1

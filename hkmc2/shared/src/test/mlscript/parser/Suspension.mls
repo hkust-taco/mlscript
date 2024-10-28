@@ -1,0 +1,65 @@
+:parseOnly
+
+
+log of ...
+123
+//│ Parsed:
+//│ 	App(Ident(log),Tup(List(IntLit(123))))
+
+log of...
+123
+//│ Parsed:
+//│ 	App(Ident(log),Tup(List(IntLit(123))))
+
+log of
+  123
+//│ Parsed:
+//│ 	App(Ident(log),Tup(List(IntLit(123))))
+
+
+module Option with ...
+//│ Parsed:
+//│ 	TypeDef(Mod,Ident(Option),None,Some(Block(List(UnitLit(true)))))
+
+module Option with ...
+val a = 1
+//│ Parsed:
+//│ 	TypeDef(Mod,Ident(Option),None,Some(Block(List(TermDef(ImmutVal,Ident(a),Some(IntLit(1)))))))
+
+module Option with ...
+// 
+val a = 1
+// 
+//│ Parsed:
+//│ 	TypeDef(Mod,Ident(Option),None,Some(Block(List(TermDef(ImmutVal,Ident(a),Some(IntLit(1)))))))
+
+:pt
+module A with
+  
+  module B with ...
+  
+  val a = 1
+  
+  val b = 2
+//│ Parsed tree:
+//│ TypeDef:
+//│   k = Mod
+//│   head = Ident of "A"
+//│   extension = N
+//│   body = S of Block of Ls of 
+//│     TypeDef:
+//│       k = Mod
+//│       head = Ident of "B"
+//│       extension = N
+//│       body = S of Block of Ls of 
+//│         TermDef:
+//│           k = ImmutVal
+//│           head = Ident of "a"
+//│           rhs = S of IntLit of 1
+//│         TermDef:
+//│           k = ImmutVal
+//│           head = Ident of "b"
+//│           rhs = S of IntLit of 2
+
+
+

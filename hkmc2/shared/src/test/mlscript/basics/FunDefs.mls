@@ -25,4 +25,11 @@ fun (**) pow = 1
 1 ** 2
 
 
+fun (:::) appendAll[A](a, b): A = a + b
+
+
+fun (>>) foo(a, b) = a * b
+
+2 >> 2
+
 

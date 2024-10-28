@@ -1,0 +1,34 @@
+:js
+
+
+class Foo
+
+new Foo
+//│ = Foo {}
+
+new Foo()
+//│ = Foo {}
+
+new
+  Foo
+//│ = Foo {}
+
+new
+  Foo
+  Foo
+//│ = Foo {}
+
+new
+  Foo()
+//│ = Foo {}
+
+:todo
+new
+  Foo
+    ()
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side.
+//│ ║  l.28: 	    ()
+//│ ╙──      	    ^^
+//│ = Foo {}
+
+

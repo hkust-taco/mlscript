@@ -6,10 +6,10 @@ fun id(x) = x
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 id(1)
-//│ Type: Flow(‹app-res›@22)
+//│ Type: Flow(‹app-res›@27)
 
 id(true)
-//│ Type: Flow(‹app-res›@24)
+//│ Type: Flow(‹app-res›@29)
 
 
 fun foo(x) = x + x
@@ -21,10 +21,10 @@ fun foo(x) = x + x
 
 :fixme
 (x, x) => x
-//│ /!!!\ Uncaught error: scala.MatchError: Lam(List(Param(‹›,x@30,None), Param(‹›,x@31,None)),Ref(x@31)) (of class hkmc2.semantics.Term$Lam)
+//│ /!!!\ Uncaught error: scala.MatchError: Lam(List(Param(‹›,x@35,None), Param(‹›,x@36,None)),Ref(x@36)) (of class hkmc2.semantics.Term$Lam)
 :fixme
 (x, y) => x
-//│ /!!!\ Uncaught error: scala.MatchError: Lam(List(Param(‹›,x@33,None), Param(‹›,y@34,None)),Ref(x@33)) (of class hkmc2.semantics.Term$Lam)
+//│ /!!!\ Uncaught error: scala.MatchError: Lam(List(Param(‹›,x@38,None), Param(‹›,y@39,None)),Ref(x@38)) (of class hkmc2.semantics.Term$Lam)
 
 
 

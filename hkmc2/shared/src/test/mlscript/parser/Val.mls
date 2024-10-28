@@ -1,38 +1,37 @@
-:global
 :parseOnly
 
 // :pe
 val 1
 //│ Parsed:
-//│ 	TermDef(ImmutVal,None,Some(IntLit(1)),None)
+//│ 	TermDef(ImmutVal,IntLit(1),None)
 
 // :pe
 val x
 //│ Parsed:
-//│ 	TermDef(ImmutVal,None,Some(Ident(x)),None)
+//│ 	TermDef(ImmutVal,Ident(x),None)
 
 val x = 1
 //│ Parsed:
-//│ 	TermDef(ImmutVal,None,Some(Ident(x)),Some(IntLit(1)))
+//│ 	TermDef(ImmutVal,Ident(x),Some(IntLit(1)))
 
 // :pe
 val
   x
 //│ Parsed:
-//│ 	TermDef(ImmutVal,None,Some(Ident(x)),None)
+//│ 	TermDef(ImmutVal,Ident(x),None)
 
 val
   x = 1
 //│ Parsed:
-//│ 	TermDef(ImmutVal,None,Some(Ident(x)),Some(IntLit(1)))
+//│ 	TermDef(ImmutVal,Ident(x),Some(IntLit(1)))
 
 val
   x = 1
   y = 2
   z = 3
 //│ Parsed:
-//│ 	TermDef(ImmutVal,None,Some(Ident(x)),Some(IntLit(1)))
-//│ 	TermDef(ImmutVal,None,Some(Ident(y)),Some(IntLit(2)))
-//│ 	TermDef(ImmutVal,None,Some(Ident(z)),Some(IntLit(3)))
+//│ 	TermDef(ImmutVal,Ident(x),Some(IntLit(1)))
+//│ 	TermDef(ImmutVal,Ident(y),Some(IntLit(2)))
+//│ 	TermDef(ImmutVal,Ident(z),Some(IntLit(3)))
 
 

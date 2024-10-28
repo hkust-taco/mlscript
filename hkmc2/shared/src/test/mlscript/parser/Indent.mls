@@ -1,4 +1,3 @@
-:global
 :parseOnly
 
 
@@ -6,16 +5,9 @@ x
 //│ Parsed:
 //│ 	Ident(x)
 
-:pe
 x
   y
-//│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.11: 	  y
-//│ ╙──      	  ^
 //│ Parsed:
-//│ 	Ident(x)
-
-
-
+//│ 	Jux(Ident(x),Block(List(Ident(y))))
 
 

@@ -124,12 +124,15 @@ fun f(x, y, b) =
       is None then "bruh"
     Some(xv) and b then xv + b
     _ then "roll"
-//│ ╔══[PARSE ERROR] Unexpected 'is' keyword here
-//│ ║  l.123: 	      is Some(yv) then "bruh"
+//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'set' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'open' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, 'return' keyword, 'import' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'is' keyword instead
+//│ ║  l.124: 	      is None then "bruh"
 //│ ╙──       	      ^^
-//│ ╔══[ERROR] Unrecognized term split.
-//│ ║  l.122: 	    Some(xv) and y
-//│ ╙──       	                 ^
+//│ ╔══[PARSE ERROR] Unexpected identifier here
+//│ ║  l.124: 	      is None then "bruh"
+//│ ╙──       	         ^^^^
+//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ║  l.124: 	      is None then "bruh"
+//│ ╙──       	         ^^^^
 
 :fixme
 fun g(x, y, b) =
@@ -139,12 +142,15 @@ fun g(x, y, b) =
       is None then "bruh"
     Some(xv) and b then xv + b
     _ then "roll"
-//│ ╔══[PARSE ERROR] Unexpected 'is' keyword here
-//│ ║  l.138: 	      is Some(yv) then yv
+//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'set' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'open' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, 'return' keyword, 'import' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'is' keyword instead
+//│ ║  l.142: 	      is None then "bruh"
 //│ ╙──       	      ^^
-//│ ╔══[ERROR] Unrecognized term split.
-//│ ║  l.137: 	    Some(xv) and y
-//│ ╙──       	                 ^
+//│ ╔══[PARSE ERROR] Unexpected identifier here
+//│ ║  l.142: 	      is None then "bruh"
+//│ ╙──       	         ^^^^
+//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ║  l.142: 	      is None then "bruh"
+//│ ╙──       	         ^^^^
 
 
 fun foo(x, y, z) =
@@ -206,9 +212,9 @@ fun f(x) =
     0 ::
       Nil() then "oh"
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.206: 	    0 ::
+//│ ║  l.212: 	    0 ::
 //│ ║         	    ^^^^
-//│ ║  l.207: 	      Nil() then "oh"
+//│ ║  l.213: 	      Nil() then "oh"
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
 
 

@@ -10,11 +10,12 @@ fun f(a, b) = if a is
     and b is Some(v') then v + v'
     or  b is Some(v)  then v
   else 0
-//│ ╔══[PARSE ERROR] Unexpected 'and' keyword here
-//│ ║  l.10: 	    and b is Some(v') then v + v'
-//│ ╙──      	    ^^^
-//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ╔══[ERROR] Unrecognized pattern.
 //│ ║  l.9: 	  Some(v)
-//│ ╙──     	  ^^^^^^^
+//│ ║       	  ^^^^^^^
+//│ ║  l.10: 	    and b is Some(v') then v + v'
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.11: 	    or  b is Some(v)  then v
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 
 

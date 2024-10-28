@@ -1,0 +1,16 @@
+:js
+
+
+// FIXME elbaoration is currently wrong
+
+:sjs
+fun foo(x)(y) = x * y
+//│ JS:
+//│ function foo(x, y) { return x * y }; undefined
+
+:sjs
+fun foo(x)(y)(z) = x * y + z
+//│ JS:
+//│ function foo(x, y, z) { let tmp; tmp = x * y; return tmp + z }; undefined
+
+

@@ -7,7 +7,7 @@
 :sjs
 module None
 //│ JS:
-//│ this.None = new class None { constructor() {  } }; undefined
+//│ this.None = new class None { constructor() {  } toString() { return "None"; } }; undefined
 
 
 :sjs

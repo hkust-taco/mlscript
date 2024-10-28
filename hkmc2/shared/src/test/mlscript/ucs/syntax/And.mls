@@ -1,0 +1,203 @@
+:parseOnly
+:pt
+
+
+x and y
+//│ Parsed tree:
+//│ InfixApp:
+//│   lhs = Ident of "x"
+//│   kw = keyword 'and'
+//│   rhs = Ident of "y"
+
+x
+  and y
+//│ Parsed tree:
+//│ InfixApp:
+//│   lhs = Ident of "x"
+//│   kw = keyword 'and'
+//│   rhs = Ident of "y"
+
+if x
+  and y then z
+//│ Parsed tree:
+//│ If of InfixApp:
+//│   lhs = InfixApp:
+//│     lhs = Ident of "x"
+//│     kw = keyword 'and'
+//│     rhs = Ident of "y"
+//│   kw = keyword 'then'
+//│   rhs = Ident of "z"
+
+if x
+  and y then z
+  else d
+//│ Parsed tree:
+//│ If of Block of Ls of 
+//│   InfixApp:
+//│     lhs = InfixApp:
+//│       lhs = Ident of "x"
+//│       kw = keyword 'and'
+//│       rhs = Ident of "y"
+//│     kw = keyword 'then'
+//│     rhs = Ident of "z"
+//│   Modified:
+//│     modifier = keyword 'else'
+//│     modLoc = N
+//│     body = Ident of "d"
+
+if x is
+  A and y then z
+//│ Parsed tree:
+//│ If of InfixApp:
+//│   lhs = Ident of "x"
+//│   kw = keyword 'is'
+//│   rhs = Block of Ls of 
+//│     InfixApp:
+//│       lhs = InfixApp:
+//│         lhs = Ident of "A"
+//│         kw = keyword 'and'
+//│         rhs = Ident of "y"
+//│       kw = keyword 'then'
+//│       rhs = Ident of "z"
+
+if x is
+  A(u, v, w)
+    and y then z
+  B then C
+//│ Parsed tree:
+//│ If of InfixApp:
+//│   lhs = Ident of "x"
+//│   kw = keyword 'is'
+//│   rhs = Block of Ls of 
+//│     InfixApp:
+//│       lhs = InfixApp:
+//│         lhs = App:
+//│           lhs = Ident of "A"
+//│           rhs = Tup of Ls of 
+//│             Ident of "u"
+//│             Ident of "v"
+//│             Ident of "w"
+//│         kw = keyword 'and'
+//│         rhs = Ident of "y"
+//│       kw = keyword 'then'
+//│       rhs = Ident of "z"
+//│     InfixApp:
+//│       lhs = Ident of "B"
+//│       kw = keyword 'then'
+//│       rhs = Ident of "C"
+
+if x is
+  A(u, v, w)
+    and v is
+      B then z
+  B then C
+//│ Parsed tree:
+//│ If of InfixApp:
+//│   lhs = Ident of "x"
+//│   kw = keyword 'is'
+//│   rhs = Block of Ls of 
+//│     InfixApp:
+//│       lhs = App:
+//│         lhs = Ident of "A"
+//│         rhs = Tup of Ls of 
+//│           Ident of "u"
+//│           Ident of "v"
+//│           Ident of "w"
+//│       kw = keyword 'and'
+//│       rhs = InfixApp:
+//│         lhs = Ident of "v"
+//│         kw = keyword 'is'
+//│         rhs = Block of Ls of 
+//│           InfixApp:
+//│             lhs = Ident of "B"
+//│             kw = keyword 'then'
+//│             rhs = Ident of "z"
+//│     InfixApp:
+//│       lhs = Ident of "B"
+//│       kw = keyword 'then'
+//│       rhs = Ident of "C"
+
+:todo
+if x is
+  A(u, v, w)
+    and v is
+    B then z
+  B then C
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+if x is
+  A(u, v, w)
+    and v is B
+    and w is B then z
+  B then C
+//│ Parsed tree:
+//│ If of InfixApp:
+//│   lhs = Ident of "x"
+//│   kw = keyword 'is'
+//│   rhs = Block of Ls of 
+//│     InfixApp:
+//│       lhs = InfixApp:
+//│         lhs = InfixApp:
+//│           lhs = App:
+//│             lhs = Ident of "A"
+//│             rhs = Tup of Ls of 
+//│               Ident of "u"
+//│               Ident of "v"
+//│               Ident of "w"
+//│           kw = keyword 'and'
+//│           rhs = InfixApp:
+//│             lhs = Ident of "v"
+//│             kw = keyword 'is'
+//│             rhs = Ident of "B"
+//│         kw = keyword 'and'
+//│         rhs = InfixApp:
+//│           lhs = Ident of "w"
+//│           kw = keyword 'is'
+//│           rhs = Ident of "B"
+//│       kw = keyword 'then'
+//│       rhs = Ident of "z"
+//│     InfixApp:
+//│       lhs = Ident of "B"
+//│       kw = keyword 'then'
+//│       rhs = Ident of "C"
+
+if x is
+  A(u, v, w)
+    and v is B then z
+    and w is B then z
+  B then C
+//│ Parsed tree:
+//│ If of InfixApp:
+//│   lhs = Ident of "x"
+//│   kw = keyword 'is'
+//│   rhs = Block of Ls of 
+//│     InfixApp:
+//│       lhs = InfixApp:
+//│         lhs = InfixApp:
+//│           lhs = App:
+//│             lhs = Ident of "A"
+//│             rhs = Tup of Ls of 
+//│               Ident of "u"
+//│               Ident of "v"
+//│               Ident of "w"
+//│           kw = keyword 'and'
+//│           rhs = InfixApp:
+//│             lhs = Ident of "v"
+//│             kw = keyword 'is'
+//│             rhs = Ident of "B"
+//│         kw = keyword 'then'
+//│         rhs = InfixApp:
+//│           lhs = Ident of "z"
+//│           kw = keyword 'and'
+//│           rhs = InfixApp:
+//│             lhs = Ident of "w"
+//│             kw = keyword 'is'
+//│             rhs = Ident of "B"
+//│       kw = keyword 'then'
+//│       rhs = Ident of "z"
+//│     InfixApp:
+//│       lhs = Ident of "B"
+//│       kw = keyword 'then'
+//│       rhs = Ident of "C"
+
+

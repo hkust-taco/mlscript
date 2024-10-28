@@ -14,6 +14,12 @@ import semantics.*
 import semantics.Term.*
 
 
+case class Program(
+  imports: Ls[Local -> Str],
+  main: Block,
+)
+
+
 sealed abstract class Block extends Product with AutoLocated:
   
   protected def children: Ls[Located] = ??? // Maybe extending AutoLocated is unnecessary
@@ -27,6 +33,7 @@ sealed abstract class Block extends Product with AutoLocated:
       arms.flatMap(_._2.definedVars).toSet ++ dflt.toList.flatMap(_.definedVars) ++ rst.definedVars
     case End(_) => Set.empty
     case Define(defn, rst) => rst.definedVars
+    case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
   
   // TODO conserve if no changes
   def mapTail(f: BlockTail => BlockTail): Block = this match
@@ -54,6 +61,8 @@ case class Return(res: Result, implct: Bool) extends BlockTail
 case class Throw(exc: Result) extends BlockTail
 
 case class Begin(sub: Block, rest: Block) extends Block with ProductWithTail
+
+case class TryBlock(sub: Block, finallyDo: Block, rest: Block) extends Block with ProductWithTail
 
 case class Assign(lhs: Local, rhs: Result, rest: Block) extends Block with ProductWithTail
 
@@ -92,7 +101,7 @@ type Local = Symbol
 
 case class Call(fun: Path, args: Ls[Path]) extends Result
 
-case class Instantiate(cls: ClassSymbol, args: Ls[Path]) extends Result
+case class Instantiate(cls: Path, args: Ls[Path]) extends Result
 
 abstract class Path extends Result
 

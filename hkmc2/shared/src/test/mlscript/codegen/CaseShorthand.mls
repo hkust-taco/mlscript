@@ -1,0 +1,59 @@
+:js
+
+
+:fixme
+case x then x
+//│ ╔══[PARSE ERROR] Expected block after `case` keyword; found identifier instead
+//│ ║  l.5: 	case x then x
+//│ ╙──     	     ^
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Jux(Error(),Ident(x)),keyword 'then',Ident(x)) (of class hkmc2.syntax.Tree$InfixApp)
+
+:sjs
+case { x then x }
+//│ JS:
+//│ (x) => { return x }
+//│ = [Function (anonymous)]
+
+:sjs
+x => if x is
+  0 then true
+//│ JS:
+//│ (x) => { if (x === 0) { return true } else { throw new this.Error("match error") } }
+//│ = [Function (anonymous)]
+
+:fixme
+case
+  0 then true
+//│ ╔══[ERROR] Unsupported default case branch.
+//│ ║  l.26: 	  0 then true
+//│ ╙──      	  ^
+
+:sjs
+case
+  0 then true
+  _ then false
+//│ JS:
+//│ (_) => { let scrut; scrut = _ == 0; if (scrut) { return true } else { return false } }
+//│ = [Function (anonymous)]
+
+class Some(value)
+module None
+
+// FIXME
+:sjs
+val isDefined = case
+  Some then true
+  None then false
+//│ JS:
+//│ this.isDefined = (None) => {
+//│   let scrut;
+//│   scrut = None == this.Some;
+//│   if (scrut) {
+//│     return true
+//│   } else {
+//│     return false
+//│   }
+//│ };
+//│ undefined
+//│ isDefined = [Function (anonymous)]
+

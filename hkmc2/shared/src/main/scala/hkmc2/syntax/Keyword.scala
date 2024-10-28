@@ -5,7 +5,27 @@ import collection.mutable
 import mlscript.utils.*, shorthands.*
 
 
-class Keyword(val name: String, val leftPrec: Opt[Int], val rightPrec: Opt[Int]):
+class Keyword(
+    val name: String,
+    val leftPrec: Opt[Int],
+    val rightPrec: Opt[Int],
+    
+    /** If the operator can be used infix, can it be done on a newline (witth no indent)?
+        For instance, if `via` has `canStartInfixOnNewLine`, then one can write:
+          foo
+          via f
+          via g
+        But `is` does not have `canStartInfixOnNewLine` so that
+          if x
+            is A then foo
+            is B then bar
+        does not parse as
+          if x { is A then foo { is B then ... } }
+        Note: Currently, this just fails to parse.
+        We should probably rather make `is` a normal operator like `+`; then it would work.
+      */
+    val canStartInfixOnNewLine: Bool = true
+):
   Keyword.all += name -> this
   def assumeLeftPrec: Int = leftPrec.getOrElse(lastWords(s"$this does not have left precedence"))
   def assumeRightPrec: Int = rightPrec.getOrElse(lastWords(s"$this does not have right precedence"))
@@ -27,7 +47,7 @@ object Keyword:
     val res = _curPrec
     _curPrec += 1
     S(res)
-
+  
   val `class` = Keyword("class", N, curPrec)
   val `val` = Keyword("val", N, curPrec)
   val `mut` = Keyword("mut", N, curPrec)
@@ -36,6 +56,7 @@ object Keyword:
   val ascPrec = nextPrec // * `x => x : T` should parsed as `x => (x : T)`
   val `=` = Keyword("=", eqPrec, eqPrec)
   val `:` = Keyword(":", ascPrec, eqPrec)
+  // val `;` = Keyword(";", ascPrec, eqPrec)
   
   val `if` = Keyword("if", N, nextPrec)
   val `then` = Keyword("then", nextPrec, curPrec)
@@ -48,7 +69,7 @@ object Keyword:
   val `of` = Keyword("of", N, N)
   val `or` = Keyword("or", nextPrec, curPrec)
   val `and` = Keyword("and", nextPrec, nextPrec)
-  val `is` = Keyword("is", nextPrec, curPrec)
+  val `is` = Keyword("is", nextPrec, curPrec, canStartInfixOnNewLine = false)
   val `let` = Keyword("let", nextPrec, curPrec)
   val `region` = Keyword("region", curPrec, curPrec)
   val `rec` = Keyword("rec", N, N)
@@ -69,6 +90,7 @@ object Keyword:
   val `new` = Keyword("new", N, curPrec) // TODO: check the prec
   // val `namespace` = Keyword("namespace", N, N)
   val `module` = Keyword("module", N, N)
+  val `open` = Keyword("open", N, curPrec)
   val `type` = Keyword("type", N, N)
   val `where` = Keyword("where", N, N)
   val `forall` = Keyword("forall", N, N)
@@ -83,6 +105,7 @@ object Keyword:
   val `public` = Keyword("public", N, N)
   val `private` = Keyword("private", N, N)
   val `return` = Keyword("return", N, curPrec)
+  val `import` = Keyword("import", N, curPrec)
   
   // * The lambda operator is special:
   // *  it should associate very strongly on the left and very loosely on the right
@@ -95,6 +118,8 @@ object Keyword:
   
   type Infix = `and`.type | `or`.type | `then`.type | `else`.type | `is`.type | `:`.type | `->`.type |
     `=>`.type | `extends`.type | `restricts`.type
+  
+  type letLike = `let`.type | `set`.type
   
   val maxPrec = curPrec
   

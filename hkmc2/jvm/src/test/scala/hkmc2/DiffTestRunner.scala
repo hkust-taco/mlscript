@@ -13,9 +13,19 @@ class MainDiffMaker(val file: os.Path, val predefFile: os.Path, val relativeName
   extends BbmlDiffMaker
 
 
+
+class AllTests extends org.scalatest.Suites(
+  new CompileTestRunner(DiffTestRunner.State){},
+  new DiffTestRunner(DiffTestRunner.State){},
+)
+
+
+
 object DiffTestRunner:
   
   class State:
+    
+    println(s"INITIALIZING DiffTestRunner.State")
     
     val TimeLimit =
       if sys.env.get("CI").isDefined then Span(60, Seconds)
@@ -25,7 +35,8 @@ object DiffTestRunner:
     val workingDir = if pwd.last == "jvm"
       then pwd/up/up // For some reason, when run from ~hkmc2JVM/Test/run in sbt, the pwd is ".../hkmc2/jvm"
       else pwd
-    val dir = workingDir/"hkmc2"/"shared"/"src"/"test"/"mlscript"
+    // val dir = workingDir/"hkmc2"/"shared"/"src"/"test"/"mlscript"
+    val dir = workingDir/"hkmc2"/"shared"/"src"/"test"
     
     val validExt = Set("mls")
     
@@ -50,34 +61,18 @@ object DiffTestRunner:
   end State
   
   lazy val State = new State
-
+  
 end DiffTestRunner
 
 
-class DiffTestRunner(state: DiffTestRunner.State)
+abstract class DiffTestRunner(state: DiffTestRunner.State)
   extends funsuite.AnyFunSuite
   with ParallelTestExecution
   with TimeLimitedTests
 :
   import state.*
   
-  // def newInstance = ???
-  def this() = this(DiffTestRunner.State)
-  
   private val inParallel = isInstanceOf[ParallelTestExecution]
-  
-  // scala test will not execute a test if the test class has constructor parameters.
-  // override this to get the correct paths of test files.
-  protected lazy val files = allFiles.filter: file =>
-    (modified(file.relativeTo(workingDir)) || modified.isEmpty) &&
-      !file.segments.contains("staging") // Exclude staging test files
-  
-  /* 
-  println(pwd)
-  println(workingDir)
-  println(modified)
-  println(allFiles.map(_.relativeTo(workingDir)))
-  */
   
   val timeLimit = TimeLimit
   
@@ -93,12 +88,20 @@ class DiffTestRunner(state: DiffTestRunner.State)
       // * with ugly `Thread.isInterrupted` checks everywhere...
       testThread.stop()
   
-  files.foreach: file =>
+  protected lazy val diffTestFiles = allFiles.filter: file =>
+    (
+      !file.segments.contains("staging") // Exclude staging test files
+      && !file.segments.contains("mlscript-compile")
+    )
+  
+  diffTestFiles.foreach: file =>
+    
     val basePath = file.segments.drop(dir.segmentCount).toList.init
     val relativeName = basePath.map(_ + "/").mkString + file.baseName
+    
     test(relativeName):
       
-      val predefPath = dir/"decls"/"Predef.mls"
+      val predefPath = dir/"mlscript"/"decls"/"Predef.mls"
       
       val dm = new MainDiffMaker(file, predefPath, relativeName)
       
@@ -109,5 +112,37 @@ class DiffTestRunner(state: DiffTestRunner.State)
           dm.failures.distinct.map("\n\t"+relativeName+"."+file.ext+":"+_).mkString(", "))
   
 end DiffTestRunner
+
+
+abstract class CompileTestRunner(state: DiffTestRunner.State)
+  extends funsuite.AnyFunSuite
+  with ParallelTestExecution
+  with TimeLimitedTests
+:
+  import state.*
+  
+  private val inParallel = isInstanceOf[ParallelTestExecution]
+  
+  val timeLimit = TimeLimit
+  
+  protected lazy val compileTestFiles = allFiles.filter: file =>
+      file.segments.contains("mlscript-compile")
+  
+  compileTestFiles.foreach: file =>
+    
+    // TODO dedup with DiffTestRunner?
+    
+    val basePath = file.segments.drop(dir.segmentCount).toList.init
+    val relativeName = basePath.map(_ + "/").mkString + file.baseName
+    
+    test(relativeName):
+      
+      println(s"Compiling: $relativeName")
+      
+      val predefPath = dir/"decls"/"Predef.mls"
+      
+      MLsCompiler(predefPath).compileModule(file)
+  
+end CompileTestRunner
 
 

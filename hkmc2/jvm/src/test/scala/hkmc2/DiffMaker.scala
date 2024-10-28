@@ -102,7 +102,12 @@ abstract class DiffMaker:
   
   val tests = Command("tests"):
     case "" =>
-      new DiffTestRunner(new DiffTestRunner.State).execute()
+      new DiffTestRunner(
+        // * I don't understand why when I use `new` here
+        // * the test framework seems to reinstantiate `State` for every test
+        // new DiffTestRunner.State
+        DiffTestRunner.State
+      ){}.execute()
   
   
   val fileName = file.last

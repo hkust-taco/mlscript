@@ -39,6 +39,7 @@ class Outer(a, b) with
 //│           d
 //│         ]
 //│       }
+//│       toString() { return "Inner(" + this.c + ")"; }
 //│     };
 //│     this.i = new this.Inner(this.a);
 //│     tmp = log(this.i.c);
@@ -53,6 +54,7 @@ class Outer(a, b) with
 //│     tmp = new this.Inner(c1);
 //│     return tmp.i1(d)
 //│   }
+//│   toString() { return "Outer(" + this.a + ", " + this.b + ")"; }
 //│ };
 //│ undefined
 

@@ -16,7 +16,15 @@ fun foo() =
 class Test with
   log(foo())
 //│ JS:
-//│ this.Test = class Test { constructor() { let tmp; tmp = globalThis.foo(); log(tmp) } }; undefined
+//│ this.Test = class Test {
+//│   constructor() {
+//│     let tmp;
+//│     tmp = globalThis.foo();
+//│     log(tmp)
+//│   }
+//│   toString() { return "Test"; }
+//│ };
+//│ undefined
 
 new Test
 //│ > 3

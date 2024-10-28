@@ -12,6 +12,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val js = NullaryCommand("js")
   val sjs = NullaryCommand("sjs")
   val showRepl = NullaryCommand("showRepl")
+  val silent = NullaryCommand("silent")
   
   private val baseScp: codegen.js.Scope =
     codegen.js.Scope.empty
@@ -42,7 +43,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val jsb = codegen.js.JSBuilder()
       import semantics.*
       import codegen.*
-      val le = low.topLevel(blk)
+      val le = low.program(blk)
       if showLoweredTree.isSet then
         output(s"Lowered:")
         output(le.showAsTree)
@@ -54,7 +55,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       // val nestedScp = codegen.js.Scope(S(baseScp), curCtx.outer, collection.mutable.Map.empty) // * not needed
       
       val je = nestedScp.givenIn:
-        jsb.block(le)
+        jsb.program(le, N)
       val jsStr = je.stripBreaks.mkString(100)
       if sjs.isSet then
         output(s"JS:")
@@ -64,14 +65,15 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         val (reply, stderr) = host.query(queryStr)
         reply match
           case ReplHost.Result(content, stdout) =>
-            stdout match
-              case None | Some("") =>
-              case Some(str) =>
-                str.splitSane('\n').foreach: line =>
-                  output(s"> ${line}")
-            content match
-            case "undefined" =>
-            case _ => output(s"$prefix= ${content}")
+            if silent.isUnset then
+              stdout match
+                case None | Some("") =>
+                case Some(str) =>
+                  str.splitSane('\n').foreach: line =>
+                    output(s"> ${line}")
+              content match
+              case "undefined" =>
+              case _ => output(s"$prefix= ${content}")
           case ReplHost.Empty =>
           case ReplHost.Unexecuted(message) => ???
           case ReplHost.Error(isSyntaxError, message) =>

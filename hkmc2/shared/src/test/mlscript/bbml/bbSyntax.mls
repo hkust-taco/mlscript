@@ -3,23 +3,23 @@
 
 class Foo
 //│ Parsed:
-//│ 	TypeDef(Cls,None,Ident(Foo),None,None)
+//│ 	TypeDef(Cls,Ident(Foo),None,None)
 
 class Bar(x: Int)
 //│ Parsed:
-//│ 	TypeDef(Cls,None,App(Ident(Bar),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int))))),None,None)
+//│ 	TypeDef(Cls,App(Ident(Bar),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int))))),None,None)
 
 class Bar2(x: Int, y: Int)
 //│ Parsed:
-//│ 	TypeDef(Cls,None,App(Ident(Bar2),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int)), InfixApp(Ident(y),keyword ':',Ident(Int))))),None,None)
+//│ 	TypeDef(Cls,App(Ident(Bar2),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int)), InfixApp(Ident(y),keyword ':',Ident(Int))))),None,None)
 
 class Baz[A]
 //│ Parsed:
-//│ 	TypeDef(Cls,None,App(Ident(Baz),TyTup(List(Ident(A)))),None,None)
+//│ 	TypeDef(Cls,App(Ident(Baz),TyTup(List(Ident(A)))),None,None)
 
 class BazBaz[A](f: A -> A)
 //│ Parsed:
-//│ 	TypeDef(Cls,None,App(App(Ident(BazBaz),TyTup(List(Ident(A)))),Tup(List(InfixApp(Ident(f),keyword ':',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))))),None,None)
+//│ 	TypeDef(Cls,App(App(Ident(BazBaz),TyTup(List(Ident(A)))),Tup(List(InfixApp(Ident(f),keyword ':',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))))),None,None)
 
 Baz[Int]
 //│ Parsed:
@@ -51,11 +51,11 @@ foo(42).Bar#baz(42)
 
 let x = 42 in x + 0
 //│ Parsed:
-//│ 	Let(Ident(x),Some(IntLit(42)),Some(App(Ident(+),Tup(List(Ident(x), IntLit(0))))))
+//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(42)),Some(App(Ident(+),Tup(List(Ident(x), IntLit(0))))))
 
 fun id(x) = x
 //│ Parsed:
-//│ 	TermDef(Fun,None,Some(App(Ident(id),Tup(List(Ident(x))))),Some(Ident(x)))
+//│ 	TermDef(Fun,App(Ident(id),Tup(List(Ident(x)))),Some(Ident(x)))
 
 x => x + 1
 //│ Parsed:
@@ -75,11 +75,11 @@ f of false
 
 let bar = new Bar(42)
 //│ Parsed:
-//│ 	Let(Ident(bar),Some(New(App(Ident(Bar),Tup(List(IntLit(42)))))),None)
+//│ 	LetLike(keyword 'let',Ident(bar),Some(New(App(Ident(Bar),Tup(List(IntLit(42)))))),None)
 
 let bar = new Bar2(1, 1)
 //│ Parsed:
-//│ 	Let(Ident(bar),Some(New(App(Ident(Bar2),Tup(List(IntLit(1), IntLit(1)))))),None)
+//│ 	LetLike(keyword 'let',Ident(bar),Some(New(App(Ident(Bar2),Tup(List(IntLit(1), IntLit(1)))))),None)
 
 new Bar(0)
 //│ Parsed:
@@ -91,7 +91,7 @@ new Bar2(114, 514)
 
 fun inc: Int -> Int
 //│ Parsed:
-//│ 	TermDef(Fun,None,Some(InfixApp(Ident(inc),keyword ':',InfixApp(Tup(List(Ident(Int))),keyword '->',Ident(Int)))),None)
+//│ 	TermDef(Fun,InfixApp(Ident(inc),keyword ':',InfixApp(Tup(List(Ident(Int))),keyword '->',Ident(Int))),None)
 
 [A] -> A -> A
 //│ Parsed:
@@ -99,7 +99,7 @@ fun inc: Int -> Int
 
 fun id: [A] -> A -> A
 //│ Parsed:
-//│ 	TermDef(Fun,None,Some(InfixApp(Ident(id),keyword ':',InfixApp(TyTup(List(Ident(A))),keyword '->',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A))))),None)
+//│ 	TermDef(Fun,InfixApp(Ident(id),keyword ':',InfixApp(TyTup(List(Ident(A))),keyword '->',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))),None)
 
 [A] => (x: A) => x
 //│ Parsed:
@@ -146,7 +146,7 @@ fun fact = case
   0 then 1
   n then n * fact(n - 1)
 //│ Parsed:
-//│ 	TermDef(Fun,None,Some(Ident(fact)),Some(Case(Block(List(InfixApp(IntLit(0),keyword 'then',IntLit(1)), InfixApp(Ident(n),keyword 'then',App(Ident(*),Tup(List(Ident(n), App(Ident(fact),Tup(List(App(Ident(-),Tup(List(Ident(n), IntLit(1))))))))))))))))
+//│ 	TermDef(Fun,Ident(fact),Some(Case(Block(List(InfixApp(IntLit(0),keyword 'then',IntLit(1)), InfixApp(Ident(n),keyword 'then',App(Ident(*),Tup(List(Ident(n), App(Ident(fact),Tup(List(App(Ident(-),Tup(List(Ident(n), IntLit(1))))))))))))))))
 
 
 `42
@@ -181,7 +181,7 @@ g`(`1, `2)
 
 `let x = `42 `in x
 //│ Parsed:
-//│ 	Quoted(Let(Ident(x),Some(Unquoted(Quoted(IntLit(42)))),Some(Unquoted(Ident(x)))))
+//│ 	Quoted(LetLike(keyword 'let',Ident(x),Some(Unquoted(Quoted(IntLit(42)))),Some(Unquoted(Ident(x)))))
 
 `if x `== `0.0 then `1.0 else x
 //│ Parsed:
@@ -206,7 +206,7 @@ region x in
 region x in
   let r = x.ref 42 in let t = r := 0 in !r
 //│ Parsed:
-//│ 	Region(Ident(x),Block(List(Let(Ident(r),Some(RegRef(Ident(x),IntLit(42))),Some(Let(Ident(t),Some(App(Ident(:=),Tup(List(Ident(r), IntLit(0))))),Some(App(Ident(!),Tup(List(Ident(r)))))))))))
+//│ 	Region(Ident(x),Block(List(LetLike(keyword 'let',Ident(r),Some(RegRef(Ident(x),IntLit(42))),Some(LetLike(keyword 'let',Ident(t),Some(App(Ident(:=),Tup(List(Ident(r), IntLit(0))))),Some(App(Ident(!),Tup(List(Ident(r)))))))))))
 
 !r + 1
 //│ Parsed:

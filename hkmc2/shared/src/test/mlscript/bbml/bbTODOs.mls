@@ -3,23 +3,26 @@
 
 :todo
 let id: [A] -> A -> A = x => x
-//│ /!!!\ Uncaught error: scala.MatchError: Let(InfixApp(Ident(id),keyword ':',InfixApp(TyTup(List(Ident(A))),keyword '->',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))),Some(InfixApp(Tup(List(Ident(x))),keyword '=>',Ident(x))),None) (of class hkmc2.syntax.Tree$Let)
+//│ ╔══[ERROR] Unsupported let binding shape
+//│ ║  l.5: 	let id: [A] -> A -> A = x => x
+//│ ╙──     	    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Type: ⊤
 
 :todo
 fun id[A](x: A) = x
 //│ ╔══[ERROR] Variable not found: A
-//│ ║  l.9: 	fun id[A](x: A) = x
-//│ ╙──     	             ^
+//│ ║  l.12: 	fun id[A](x: A) = x
+//│ ╙──      	             ^
 //│ Type: ⊤
 
 :fixme
 fun id: [A] -> A -> A => x = x
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.16: 	fun id: [A] -> A -> A => x = x
+//│ ║  l.19: 	fun id: [A] -> A -> A => x = x
 //│ ╙──      	                             ^
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.16: 	fun id: [A] -> A -> A => x = x
+//│ ║  l.19: 	fun id: [A] -> A -> A => x = x
 //│ ╙──      	                         ^
-//│ /!!!\ Uncaught error: scala.MatchError: Lam(List(Param(‹›,A@46,None)),Error) (of class hkmc2.semantics.Term$Lam)
+//│ /!!!\ Uncaught error: scala.MatchError: Lam(List(Param(‹›,A@51,None)),Error) (of class hkmc2.semantics.Term$Lam)
 
 

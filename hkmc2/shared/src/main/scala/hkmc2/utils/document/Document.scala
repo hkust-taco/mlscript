@@ -26,7 +26,7 @@ abstract class Document {
   def :\\:(hd: Document): Document = hd :: DocBreak(force = true) :: this
 
   def stripBreaks: Document = this match
-    case DocBreak(_) => DocNil
+    case DocBreak(false) => DocNil
     case DocCons(DocText(""), t) => t.stripBreaks
     case DocCons(h, t) =>
       val res = h.stripBreaks

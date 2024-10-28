@@ -23,7 +23,7 @@ enum Term extends Statement:
   case Blk(stats: Ls[Statement], res: Term)
   case Quoted(body: Term)
   case Unquoted(body: Term)
-  case New(cls: ClassSymbol, args: Ls[Term])
+  case New(cls: Term, args: Ls[Term])
   case SelProj(prefix: Term, cls: Term, proj: Tree.Ident)
   case Asc(term: Term, ty: Term)
   case CompType(lhs: Term, rhs: Term, pol: Bool)
@@ -33,6 +33,7 @@ enum Term extends Statement:
   case Assgn(lhs: Term, rhs: Term)
   case Deref(ref: Term)
   case Ret(result: Term)
+  case Try(body: Term, finallyDo: Term)
   
   var symbol: Opt[Symbol] = N
   
@@ -117,6 +118,8 @@ sealed trait Statement extends AutoLocated:
       cls.paramsOpt.toList.flatMap(_.flatMap(_.subTerms)) ::: cls.body.blk :: Nil
     case td: TypeDef =>
       td.rhs.toList
+    case Import(sym, pth) => Nil
+    case Try(body, finallyDo) => body :: finallyDo :: Nil
   
   protected def children: Ls[Located] = this match
     case t: Lit => t.lit.asTree :: Nil
@@ -182,6 +185,7 @@ sealed trait Statement extends AutoLocated:
       s"class ${cls.sym.nme}${
         cls.tparams.map(_.showDbg).mkStringOr(", ", "[", "]")}${
         cls.paramsOpt.fold("")(_.map(_.showDbg).mkString("(", ", ", ")"))} ${cls.body}"
+    case Import(sym, file) => s"import ${sym} from ${file}"
 
 final case class LetDecl(sym: LocalSymbol) extends Statement
 
@@ -199,6 +203,10 @@ final case class TermDefinition(
 case class ObjBody(blk: Term.Blk):
   // override def toString: String = statmts.mkString("{ ", "; ", " }")
   override def toString: String = blk.showDbg
+
+
+case class Import(sym: TermSymbol, file: Str) extends Statement
+
 
 sealed abstract class Declaration
 

@@ -9,7 +9,7 @@
 
 class Foo
 //│ JS:
-//│ this.Foo = class Foo { constructor() {  } }; undefined
+//│ this.Foo = class Foo { constructor() {  } toString() { return "Foo"; } }; undefined
 
 new Foo
 //│ JS:
@@ -23,8 +23,8 @@ new Foo()
 
 Foo
 //│ JS:
-//│ () => { return new this.Foo() }
-//│ = [Function (anonymous)]
+//│ this.Foo
+//│ = [class Foo]
 
 Foo()
 //│ JS:
@@ -35,14 +35,44 @@ Foo()
 class Foo with { log("hi") }
 log("ok")
 //│ JS:
-//│ this.Foo = class Foo { constructor() { log("hi") } }; log("ok")
+//│ this.Foo = class Foo { constructor() { log("hi") } toString() { return "Foo"; } }; log("ok")
 //│ > ok
 
 fun test() =
   class Foo with { log("hi") }
   log("ok")
+  Foo
 //│ JS:
-//│ function test() { class Foo { constructor() { log("hi") } }; return log("ok") }; undefined
+//│ function test() {
+//│   let tmp;
+//│   class Foo {
+//│     constructor() {
+//│       log("hi")
+//│     }
+//│     toString() { return "Foo"; }
+//│   };
+//│   tmp = log("ok");
+//│   return Foo
+//│ };
+//│ undefined
+
+let t = test()
+//│ JS:
+//│ let tmp; tmp = this.test(); this.t = tmp; undefined
+//│ > ok
+//│ t = [class Foo]
+
+new t
+//│ JS:
+//│ new this.t()
+//│ > hi
+//│ = Foo {}
+
+new t()
+//│ JS:
+//│ new this.t()
+//│ > hi
+//│ = Foo {}
 
 
 class Foo with
@@ -61,6 +91,7 @@ class Foo with
 //│   z() {
 //│     return this.#y + this.x
 //│   }
+//│   toString() { return "Foo"; }
 //│ };
 //│ undefined
 
@@ -90,6 +121,7 @@ class Foo with
 //│   z2() {
 //│     return 6
 //│   }
+//│   toString() { return "Foo"; }
 //│ };
 //│ undefined
 
@@ -111,6 +143,7 @@ class Foo with
 //│     tmp = this.foo(z);
 //│     return tmp + 1
 //│   }
+//│   toString() { return "Foo"; }
 //│ };
 //│ undefined
 
@@ -144,16 +177,27 @@ class Foo with
   val x = 1
   let x = 2
 //│ JS:
-//│ this.Foo = class Foo { #x; constructor() { this.x = 1; this.#x = 2; } }; undefined
+//│ this.Foo = class Foo {
+//│   #x;
+//│   constructor() {
+//│     this.x = 1;
+//│     this.#x = 2;
+//│   }
+//│   toString() { return "Foo"; }
+//│ };
+//│ undefined
 
 
 :fixme
 class Foo with val x = 1
-//│ ╔══[PARSE ERROR] Expected indented block after type declaration body; found 'val' keyword instead
-//│ ║  l.151: 	class Foo with val x = 1
+//│ ╔══[PARSE ERROR] Expected block after type declaration body; found 'val' keyword instead
+//│ ║  l.192: 	class Foo with val x = 1
 //│ ╙──       	               ^^^
-//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.151: 	class Foo with val x = 1
+//│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
+//│ ║  l.192: 	class Foo with val x = 1
+//│ ╙──       	                     ^
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side.
+//│ ║  l.192: 	class Foo with val x = 1
 //│ ╙──       	                   ^
 //│ JS:
 //│ /* error */

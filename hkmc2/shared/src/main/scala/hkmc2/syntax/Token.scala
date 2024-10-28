@@ -27,6 +27,7 @@ sealed abstract class Token:
     case BRACKETS(BracketKind.Indent, contents) => s"indented block"
     case BRACKETS(k, contents) => s"${k.name} section"
     case COMMENT(text) => "comment"
+    case SUSPENSION => "'...' suspension"
 
 /** Type of 'Structured Tokens' aka 'Strokens',
   * which use a `BRACKETS` construct instead of `OPEN_BRACKET`/`CLOSE_BRACKET` and `INDENT`/`DEINDENT` */
@@ -34,7 +35,7 @@ sealed trait Stroken extends Token
 
 case object SPACE extends Token with Stroken
 case object COMMA extends Token with Stroken
-case object SEMI extends Token with Stroken
+@deprecated("now a simple identifier") case object SEMI extends Token with Stroken
 case object NEWLINE extends Token with Stroken // TODO rm
 case object INDENT extends Token
 case object DEINDENT extends Token
@@ -48,6 +49,7 @@ final case class OPEN_BRACKET(k: BracketKind) extends Token
 final case class CLOSE_BRACKET(k: BracketKind) extends Token
 final case class BRACKETS(k: BracketKind, contents: Ls[Stroken -> Loc])(val innerLoc: Loc) extends Token with Stroken
 final case class COMMENT(text: String) extends Token with Stroken
+object SUSPENSION extends Token with Stroken
 
 
 sealed abstract class BracketKind:

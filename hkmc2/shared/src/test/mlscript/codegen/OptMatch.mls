@@ -1,0 +1,72 @@
+:js
+
+
+class Some(value)
+module None
+
+
+:sjs
+fun isDefined(x) = if x is
+  Some then true
+  None then false
+//│ JS:
+//│ function isDefined(x) {
+//│   if (x instanceof globalThis.Some) {
+//│     return true
+//│   } else {
+//│     if (x === globalThis.None) {
+//│       return false
+//│     } else {
+//│       throw new globalThis.Error("match error")
+//│     }
+//│   }
+//│ };
+//│ undefined
+
+isDefined(Some(1))
+//│ = true
+
+isDefined(None)
+//│ = false
+
+
+:fixme
+val isDefined = case
+  Some(_) then true
+  None    then false
+//│ ╔══[ERROR] Name not found: _
+//│ ║  l.35: 	  Some(_) then true
+//│ ╙──      	       ^
+//│ isDefined = [Function (anonymous)]
+
+isDefined(Some(1))
+
+isDefined(None)
+
+
+val isDefined = x => if x is
+  Some(_) then true
+  None    then false
+//│ isDefined = [Function (anonymous)]
+
+isDefined(Some(1))
+//│ = true
+
+isDefined(None)
+//│ = false
+
+
+module Foo with
+  class Other(v)
+
+:fixme
+val isOther = x => if x is
+  Foo.Other(_) then true
+  None    then false
+//│ ╔══[ERROR] Unrecognized pattern.
+//│ ║  l.64: 	  Foo.Other(_) then true
+//│ ╙──      	  ^^^^^^^^^^^^
+//│ isOther = [Function (anonymous)]
+
+
+

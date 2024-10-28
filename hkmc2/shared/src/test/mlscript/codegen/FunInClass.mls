@@ -40,6 +40,7 @@ fun test(a) =
 //│       };
 //│       return h(d)
 //│     }
+//│     toString() { return "Inner(" + this.b + ")"; }
 //│   };
 //│   return new Inner(42)
 //│ };
