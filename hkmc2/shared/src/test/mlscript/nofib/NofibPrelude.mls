@@ -49,6 +49,7 @@ fun (%) intMod(a, b) = a - (b * intDiv(a, b))
 fun intRem(a, b) = a - (b * intQuot(a, b))
 
 fun quotRem(a, b) = Tup2(intQuot(a, b), intRem(a, b))
+fun divMod(a, b) = Tup2(intDiv(a, b), intMod(a, b))
 
 fun max(a, b) = globalThis.Math.max(a, b)
 
@@ -201,9 +202,19 @@ fun take_lz_lz(n, ls) = lazy of () =>
       n <= 0 then LzNil
       else LzCons(h, take_lz_lz(n - 1, t))
 
+fun drop_lz(n, ls) = if force(ls) is
+    LzNil then lazy of () => LzNil
+    LzCons(h, t) and
+      n > 0 then drop_lz(n - 1, t)
+      else t
+
+fun splitAt_lz(n, ls) = Tup2(take_lz(n, ls), drop_lz(n, ls))
+
 fun zipWith_lz_lz(f, xss, yss) = lazy of () => if
   force(xss) is LzCons(x, xs) and (force(yss)) is LzCons(y, ys) then LzCons(f(x, y), zipWith_lz_lz(f, xs, ys))
   else LzNil
+
+fun iterate(f, x) = lazy of () => LzCons(x, iterate(f, f(x)))
 
 // =====================
 
@@ -221,3 +232,4 @@ fun tan(x) = globalThis.Math.tan(x)
 fun sin(x) = globalThis.Math.sin(x)
 fun cos(x) = globalThis.Math.cos(x)
 fun round(x) = globalThis.Math.round(x)
+fun int_of_char(x) = x.charCodeAt(0)
