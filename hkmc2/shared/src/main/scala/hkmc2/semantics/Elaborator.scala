@@ -428,12 +428,9 @@ extends Importer:
                 case S(t) => typeParams(t)
                 case N => (N, ctx)
               // Add parameters to context
-              val (ps, newCtx) = td.params match
-                case S(ts) => // Go through all parameter lists
-                  ts.foldLeft((Ls[Param](), newCtx1)):
+              val (ps, newCtx) = td.paramLists.foldLeft((Ls[Param](), newCtx1)):
                     case ((ps, ctx), t) => params(t)(using ctx).mapFirst(ps ++ _)
                   .mapFirst(some)
-                case N => (N, newCtx1)
               val b = rhs.map(term(_)(using newCtx))
               val r = FlowSymbol(s"‹result of ${sym}›", nextUid)
               val tdf = TermDefinition(k, sym, ps,
