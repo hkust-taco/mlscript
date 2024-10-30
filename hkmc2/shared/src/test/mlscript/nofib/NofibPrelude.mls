@@ -10,7 +10,7 @@ class Lazy[out A](init: () -> A) with
       Some(v) then v
       else
         let v = init()
-        // set cached = Some(v) // TODO: need mut val set support
+        set cached = Some(v)
         v
 fun lazy(x) = Lazy(x)
 fun force(x) = if x is Lazy then x.get()
