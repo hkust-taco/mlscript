@@ -1,16 +1,64 @@
 :js
-
-
-// FIXME elbaoration is currently wrong
-
 :sjs
-fun foo(x)(y) = x * y
+
+fun f(n1: Int): Int = n1
 //│ JS:
-//│ function foo(x, y) { return x * y }; undefined
+//│ function f(n1) { return n1 }; undefined
 
-:sjs
-fun foo(x)(y)(z) = x * y + z
+f(42)
 //│ JS:
-//│ function foo(x, y, z) { let tmp; tmp = x * y; return tmp + z }; undefined
+//│ this.f(42)
+//│ = 42
 
+fun f(n1: Int)(n2: Int): Int =  (10 * n1 + n2)
+//│ JS:
+//│ function f(n1) { return (n2) => { let tmp; tmp = 10 * n1; return tmp + n2 } }; undefined
 
+f(4)(2)
+//│ JS:
+//│ let tmp; tmp = this.f(4); tmp(2)
+//│ = 42
+
+fun f(n1: Int)(n2: Int)(n3: Int): Int = 10 * (10 * n1 + n2) + n3
+//│ JS:
+//│ function f(n1) {
+//│   return (n2) => {
+//│     return (n3) => {
+//│       let tmp, tmp1, tmp2;
+//│       tmp = 10 * n1;
+//│       tmp1 = tmp + n2;
+//│       tmp2 = 10 * tmp1;
+//│       return tmp2 + n3
+//│     }
+//│   }
+//│ };
+//│ undefined
+
+f(4)(2)(0)
+//│ JS:
+//│ let tmp, tmp1; tmp = this.f(4); tmp1 = tmp(2); tmp1(0)
+//│ = 420
+
+fun f(n1: Int)(n2: Int)(n3: Int)(n4: Int): Int = 10 * (10 * (10 * n1 + n2) + n3) + n4
+//│ JS:
+//│ function f(n1) {
+//│   return (n2) => {
+//│     return (n3) => {
+//│       return (n4) => {
+//│         let tmp, tmp1, tmp2, tmp3, tmp4;
+//│         tmp = 10 * n1;
+//│         tmp1 = tmp + n2;
+//│         tmp2 = 10 * tmp1;
+//│         tmp3 = tmp2 + n3;
+//│         tmp4 = 10 * tmp3;
+//│         return tmp4 + n4
+//│       }
+//│     }
+//│   }
+//│ };
+//│ undefined
+
+f(3)(0)(3)(1)
+//│ JS:
+//│ let tmp, tmp1, tmp2; tmp = this.f(3); tmp1 = tmp(0); tmp2 = tmp1(3); tmp2(1)
+//│ = 3031
