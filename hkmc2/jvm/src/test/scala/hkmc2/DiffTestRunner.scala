@@ -88,7 +88,7 @@ abstract class DiffTestRunner(state: DiffTestRunner.State)
       // * It would feel extremely wrong to intersperse the pure type checker algorithms
       // * with ugly `Thread.isInterrupted` checks everywhere...
       testThread.stop()
-  protected lazy val diffTestFiles = modified.filter: file =>
+  protected lazy val diffTestFiles = (if modified.isEmpty then allFiles else modified).filter: file =>
     (
       !file.segments.contains("staging") // Exclude staging test files
       && !file.segments.contains("mlscript-compile")
