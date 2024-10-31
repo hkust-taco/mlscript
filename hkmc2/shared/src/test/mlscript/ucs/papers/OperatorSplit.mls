@@ -69,11 +69,14 @@ fun example(args) =
 //│     TermDefinition:
 //│       k = Fun
 //│       sym = globalThis:block#1.example
-//│       params = S of Ls of 
-//│         Param:
-//│           flags = ()
-//│           sym = args@35
-//│           sign = N
+//│       params = Ls of 
+//│         ParamList:
+//│           flags = ParamListFlags of false
+//│           params = Ls of 
+//│             Param:
+//│               flags = ()
+//│               sym = args@35
+//│               sign = N
 //│       sign = N
 //│       body = S of If of Let:
 //│         sym = $scrut@37
