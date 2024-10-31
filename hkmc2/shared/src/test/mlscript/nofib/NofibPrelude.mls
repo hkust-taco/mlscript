@@ -1,4 +1,7 @@
 
+fun nofibPrint(x) = globalThis.process.stdout.write(globalThis.JSON.stringify(x) + "\n")
+fun nofibError(e) = globalThis.eval("throw new Error('" + e + "')")
+
 abstract class Option[out T]: Some[T] | None
 class Some[out T](x: T) extends Option[T]
 module None extends Option
@@ -168,6 +171,9 @@ fun sum(xs) =
 fun null_(ls) = if ls is
   Nil then true
   else false
+
+fun replicate(n, x) = if n == 0 then Nil else Cons(x, replicate(n - 1, x))
+
 // =====================
 
 fun map_lz(f, ls) = lazy of () =>
@@ -219,8 +225,6 @@ fun iterate(f, x) = lazy of () => LzCons(x, iterate(f, f(x)))
 // =====================
 
 
-fun nofibError(e) = globalThis.console.log(globalThis.Error(e))
-fun nofibPrint(x) = globalThis.process.stdout.write(globalThis.JSON.stringify(x) + "\n")
 fun stringOfFloat(x) = x + ""
 fun stringOfInt(x) = x + ""
 fun stringConcat(x, y) = x + y
