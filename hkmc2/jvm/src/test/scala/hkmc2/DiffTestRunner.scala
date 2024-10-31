@@ -45,18 +45,19 @@ object DiffTestRunner:
       .filter(_.ext in validExt)
     
     // Aggregate unstaged modified files to only run the tests on them, if there are any
-    val modified: Set[os.RelPath] =
+    val modified: Set[os.Path] =
       try os.proc("git", "status", "--porcelain", dir).call().out.lines().iterator.flatMap { gitStr =>
         println(" [git] " + gitStr)
         val prefix = gitStr.take(2)
-        val filePath = os.RelPath(gitStr.drop(3))
+        val filePath = os.Path(workingDir.toString() + "/" + gitStr.drop(3))
         if prefix =:= "A " || prefix =:= "M " || prefix =:= "R " || prefix =:= "D " then
           N // * Disregard modified files that are staged
         else if filePath.ext =/= "mls" then N
         else S(filePath)
-      }.toSet catch
+      }.toSet catch {
         case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
         Set.empty
+      }
     
   end State
   
@@ -87,8 +88,7 @@ abstract class DiffTestRunner(state: DiffTestRunner.State)
       // * It would feel extremely wrong to intersperse the pure type checker algorithms
       // * with ugly `Thread.isInterrupted` checks everywhere...
       testThread.stop()
-  
-  protected lazy val diffTestFiles = allFiles.filter: file =>
+  protected lazy val diffTestFiles = modified.filter: file =>
     (
       !file.segments.contains("staging") // Exclude staging test files
       && !file.segments.contains("mlscript-compile")
