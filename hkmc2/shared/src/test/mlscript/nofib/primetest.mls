@@ -2,7 +2,7 @@
 
 :js
 :import NofibPrelude.mls
-//│ Imported 83 member(s)
+//│ Imported 88 member(s)
 fun even(x) = intMod(x, 2) == 0
 fun int_val_of_char(x) = int_of_char(x) - 48
 fun int_val_of_string(s) =

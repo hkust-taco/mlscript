@@ -2,7 +2,7 @@
 
 :js
 :import NofibPrelude.mls
-//│ Imported 83 member(s)
+//│ Imported 88 member(s)
 fun algb1(xss, yss) = if xss is
   Nil then map(snd, yss)
   Cons(x, xs) then algb1(xs, algb2(x, 0, 0, yss))
