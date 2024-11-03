@@ -1,0 +1,94 @@
+0
+
+:js
+:import NofibPrelude.mls
+//│ Imported 108 member(s)
+let blank =
+  Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Nil)))))
+let alphas =
+  Cons(Cons(Cons(" ", Cons(" ", Cons("A", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons("A", Cons(" ", Cons("A", Cons(" ", Nil))))), Cons(Cons("A", Cons("A", Cons("A", Cons("A", Cons("A", Nil))))), Cons(Cons("A", Cons(" ", Cons(" ", Cons(" ", Cons("A", Nil))))), Cons(Cons("A", Cons(" ", Cons(" ", Cons(" ", Cons("A", Nil))))), Nil))))), Cons(Cons(Cons("B", Cons("B", Cons("B", Cons("B", Cons(" ", Nil))))), Cons(Cons("B", Cons(" ", Cons(" ", Cons(" ", Cons("B", Nil))))), Cons(Cons("B", Cons("B", Cons("B", Cons("B", Cons(" ", Nil))))), Cons(Cons("B", Cons(" ", Cons(" ", Cons(" ", Cons("B", Nil))))), Cons(Cons("B", Cons("B", Cons("B", Cons("B", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons(" ", Cons("C", Cons("C", Cons("C", Cons("C", Nil))))), Cons(Cons("C", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons("C", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons("C", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons("C", Cons("C", Cons("C", Cons("C", Nil))))), Nil))))), Cons(Cons(Cons("D", Cons("D", Cons("D", Cons("D", Cons(" ", Nil))))), Cons(Cons("D", Cons(" ", Cons(" ", Cons(" ", Cons("D", Nil))))), Cons(Cons("D", Cons(" ", Cons(" ", Cons(" ", Cons("D", Nil))))), Cons(Cons("D", Cons(" ", Cons(" ", Cons(" ", Cons("D", Nil))))), Cons(Cons("D", Cons("D", Cons("D", Cons("D", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons("E", Cons("E", Cons("E", Cons("E", Cons("E", Nil))))), Cons(Cons("E", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons("E", Cons("E", Cons("E", Cons("E", Cons("E", Nil))))), Cons(Cons("E", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons("E", Cons("E", Cons("E", Cons("E", Cons("E", Nil))))), Nil))))), Cons(Cons(Cons("F", Cons("F", Cons("F", Cons("F", Cons("F", Nil))))), Cons(Cons("F", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons("F", Cons("F", Cons("F", Cons("F", Cons(" ", Nil))))), Cons(Cons("F", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons("F", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons(" ", Cons("G", Cons("G", Cons("G", Cons("G", Nil))))), Cons(Cons("G", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons("G", Cons(" ", Cons(" ", Cons("G", Cons("G", Nil))))), Cons(Cons("G", Cons(" ", Cons(" ", Cons(" ", Cons("G", Nil))))), Cons(Cons(" ", Cons("G", Cons("G", Cons("G", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons("H", Cons(" ", Cons(" ", Cons(" ", Cons("H", Nil))))), Cons(Cons("H", Cons(" ", Cons(" ", Cons(" ", Cons("H", Nil))))), Cons(Cons("H", Cons("H", Cons("H", Cons("H", Cons("H", Nil))))), Cons(Cons("H", Cons(" ", Cons(" ", Cons(" ", Cons("H", Nil))))), Cons(Cons("H", Cons(" ", Cons(" ", Cons(" ", Cons("H", Nil))))), Nil))))), Cons(Cons(Cons("I", Cons("I", Cons("I", Cons("I", Cons("I", Nil))))), Cons(Cons(" ", Cons(" ", Cons("I", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("I", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("I", Cons(" ", Cons(" ", Nil))))), Cons(Cons("I", Cons("I", Cons("I", Cons("I", Cons("I", Nil))))), Nil))))), Cons(Cons(Cons("J", Cons("J", Cons("J", Cons("J", Cons("J", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons("J", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons("J", Cons(" ", Nil))))), Cons(Cons("J", Cons(" ", Cons(" ", Cons("J", Cons(" ", Nil))))), Cons(Cons(" ", Cons("J", Cons("J", Cons(" ", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons("K", Cons(" ", Cons(" ", Cons(" ", Cons("K", Nil))))), Cons(Cons("K", Cons(" ", Cons(" ", Cons("K", Cons(" ", Nil))))), Cons(Cons("K", Cons("K", Cons("K", Cons(" ", Cons(" ", Nil))))), Cons(Cons("K", Cons(" ", Cons(" ", Cons("K", Cons(" ", Nil))))), Cons(Cons("K", Cons(" ", Cons(" ", Cons(" ", Cons("K", Nil))))), Nil))))), Cons(Cons(Cons("L", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons("L", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons("L", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons("L", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons("L", Cons("L", Cons("L", Cons("L", Cons("L", Nil))))), Nil))))), Cons(Cons(Cons("M", Cons(" ", Cons(" ", Cons(" ", Cons("M", Nil))))), Cons(Cons("M", Cons("M", Cons(" ", Cons("M", Cons("M", Nil))))), Cons(Cons("M", Cons(" ", Cons("M", Cons(" ", Cons("M", Nil))))), Cons(Cons("M", Cons(" ", Cons(" ", Cons(" ", Cons("M", Nil))))), Cons(Cons("M", Cons(" ", Cons(" ", Cons(" ", Cons("M", Nil))))), Nil))))), Cons(Cons(Cons("N", Cons(" ", Cons(" ", Cons(" ", Cons("N", Nil))))), Cons(Cons("N", Cons("N", Cons(" ", Cons(" ", Cons("N", Nil))))), Cons(Cons("N", Cons(" ", Cons("N", Cons(" ", Cons("N", Nil))))), Cons(Cons("N", Cons(" ", Cons(" ", Cons("N", Cons("N", Nil))))), Cons(Cons("N", Cons(" ", Cons(" ", Cons(" ", Cons("N", Nil))))), Nil))))), Cons(Cons(Cons(" ", Cons("O", Cons("O", Cons("O", Cons(" ", Nil))))), Cons(Cons("O", Cons(" ", Cons(" ", Cons(" ", Cons("O", Nil))))), Cons(Cons("O", Cons(" ", Cons(" ", Cons(" ", Cons("O", Nil))))), Cons(Cons("O", Cons(" ", Cons(" ", Cons(" ", Cons("O", Nil))))), Cons(Cons(" ", Cons("O", Cons("O", Cons("O", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons("P", Cons("P", Cons("P", Cons("P", Cons(" ", Nil))))), Cons(Cons("P", Cons(" ", Cons(" ", Cons(" ", Cons("P", Nil))))), Cons(Cons("P", Cons("P", Cons("P", Cons("P", Cons(" ", Nil))))), Cons(Cons("P", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons("P", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons(" ", Cons("Q", Cons("Q", Cons("Q", Cons(" ", Nil))))), Cons(Cons("Q", Cons(" ", Cons(" ", Cons(" ", Cons("Q", Nil))))), Cons(Cons("Q", Cons(" ", Cons("Q", Cons(" ", Cons("Q", Nil))))), Cons(Cons("Q", Cons(" ", Cons(" ", Cons("Q", Cons(" ", Nil))))), Cons(Cons(" ", Cons("Q", Cons("Q", Cons(" ", Cons("Q", Nil))))), Nil))))), Cons(Cons(Cons("R", Cons("R", Cons("R", Cons("R", Cons(" ", Nil))))), Cons(Cons("R", Cons(" ", Cons(" ", Cons(" ", Cons("R", Nil))))), Cons(Cons("R", Cons("R", Cons("R", Cons("R", Cons(" ", Nil))))), Cons(Cons("R", Cons(" ", Cons(" ", Cons("R", Cons(" ", Nil))))), Cons(Cons("R", Cons(" ", Cons(" ", Cons(" ", Cons("R", Nil))))), Nil))))), Cons(Cons(Cons(" ", Cons("S", Cons("S", Cons("S", Cons("S", Nil))))), Cons(Cons("S", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons("S", Cons("S", Cons("S", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons("S", Nil))))), Cons(Cons("S", Cons("S", Cons("S", Cons("S", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons("T", Cons("T", Cons("T", Cons("T", Cons("T", Nil))))), Cons(Cons(" ", Cons(" ", Cons("T", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("T", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("T", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("T", Cons(" ", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons("U", Cons(" ", Cons(" ", Cons(" ", Cons("U", Nil))))), Cons(Cons("U", Cons(" ", Cons(" ", Cons(" ", Cons("U", Nil))))), Cons(Cons("U", Cons(" ", Cons(" ", Cons(" ", Cons("U", Nil))))), Cons(Cons("U", Cons(" ", Cons(" ", Cons(" ", Cons("U", Nil))))), Cons(Cons(" ", Cons("U", Cons("U", Cons("U", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons("V", Cons(" ", Cons(" ", Cons(" ", Cons("V", Nil))))), Cons(Cons("V", Cons(" ", Cons(" ", Cons(" ", Cons("V", Nil))))), Cons(Cons("V", Cons(" ", Cons(" ", Cons(" ", Cons("V", Nil))))), Cons(Cons(" ", Cons("V", Cons(" ", Cons("V", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("V", Cons(" ", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons("W", Cons(" ", Cons(" ", Cons(" ", Cons("W", Nil))))), Cons(Cons("W", Cons(" ", Cons(" ", Cons(" ", Cons("W", Nil))))), Cons(Cons("W", Cons(" ", Cons(" ", Cons(" ", Cons("W", Nil))))), Cons(Cons("W", Cons(" ", Cons("W", Cons(" ", Cons("W", Nil))))), Cons(Cons(" ", Cons("W", Cons(" ", Cons("W", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons("X", Cons(" ", Cons(" ", Cons(" ", Cons("X", Nil))))), Cons(Cons(" ", Cons("X", Cons(" ", Cons("X", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("X", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons("X", Cons(" ", Cons("X", Cons(" ", Nil))))), Cons(Cons("X", Cons(" ", Cons(" ", Cons(" ", Cons("X", Nil))))), Nil))))), Cons(Cons(Cons("Y", Cons(" ", Cons(" ", Cons(" ", Cons("Y", Nil))))), Cons(Cons(" ", Cons("Y", Cons(" ", Cons("Y", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("Y", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("Y", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("Y", Cons(" ", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons("Z", Cons("Z", Cons("Z", Cons("Z", Cons("Z", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons("Z", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("Z", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons("Z", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons("Z", Cons("Z", Cons("Z", Cons("Z", Cons("Z", Nil))))), Nil))))), Nil))))))))))))))))))))))))))
+let slant =
+  Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil)))), Cons(Cons(" ", Cons(" ", Cons(" ", Nil))), Cons(Cons(" ", Cons(" ", Nil)), Cons(Cons(" ", Nil), Cons(Nil, Nil)))))
+let punct =
+  Cons(Tup2(".", Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(".", Cons(".", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(".", Cons(".", Cons(" ", Nil))))), Nil)))))), Cons(Tup2("?", Cons(Cons(" ", Cons("?", Cons("?", Cons("?", Cons(" ", Nil))))), Cons(Cons("?", Cons(" ", Cons(" ", Cons(" ", Cons("?", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons("?", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("?", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(".", Cons(" ", Cons(" ", Nil))))), Nil)))))), Cons(Tup2("!", Cons(Cons(" ", Cons(" ", Cons("!", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("!", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("!", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("!", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(".", Cons(" ", Cons(" ", Nil))))), Nil)))))), Cons(Tup2("-", Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons("-", Cons("-", Cons("-", Cons("-", Cons("-", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Nil)))))), Cons(Tup2("+", Cons(Cons(" ", Cons(" ", Cons("+", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("+", Cons(" ", Cons(" ", Nil))))), Cons(Cons("+", Cons("+", Cons("+", Cons("+", Cons("+", Nil))))), Cons(Cons(" ", Cons(" ", Cons("+", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("+", Cons(" ", Cons(" ", Nil))))), Nil)))))), Cons(Tup2(":", Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(":", Cons(":", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(":", Cons(":", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Nil)))))), Cons(Tup2(";", Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(";", Cons(";", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(";", Cons(";", Cons(" ", Nil))))), Cons(Cons(" ", Cons(";", Cons(";", Cons(" ", Cons(" ", Nil))))), Nil)))))), Nil)))))))
+let digits =
+  Cons(Cons(Cons(" ", Cons("O", Cons("O", Cons("O", Cons(" ", Nil))))), Cons(Cons("0", Cons(" ", Cons(" ", Cons("0", Cons("0", Nil))))), Cons(Cons("0", Cons(" ", Cons("0", Cons(" ", Cons("0", Nil))))), Cons(Cons("0", Cons("0", Cons(" ", Cons(" ", Cons("0", Nil))))), Cons(Cons(" ", Cons("0", Cons("0", Cons("0", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons(" ", Cons(" ", Cons("1", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons("1", Cons("1", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("1", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("1", Cons(" ", Cons(" ", Nil))))), Cons(Cons("1", Cons("1", Cons("1", Cons("1", Cons("1", Nil))))), Nil))))), Cons(Cons(Cons(" ", Cons("2", Cons("2", Cons("2", Cons(" ", Nil))))), Cons(Cons("2", Cons(" ", Cons(" ", Cons(" ", Cons("2", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons("2", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("2", Cons(" ", Cons(" ", Nil))))), Cons(Cons("2", Cons("2", Cons("2", Cons("2", Cons("2", Nil))))), Nil))))), Cons(Cons(Cons("3", Cons("3", Cons("3", Cons("3", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons("3", Nil))))), Cons(Cons(" ", Cons("3", Cons("3", Cons("3", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons("3", Nil))))), Cons(Cons("3", Cons("3", Cons("3", Cons("3", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons(" ", Cons(" ", Cons(" ", Cons("4", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("4", Cons("4", Cons(" ", Nil))))), Cons(Cons(" ", Cons("4", Cons(" ", Cons("4", Cons(" ", Nil))))), Cons(Cons("4", Cons("4", Cons("4", Cons("4", Cons("4", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons("4", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons("5", Cons("5", Cons("5", Cons("5", Cons("5", Nil))))), Cons(Cons("5", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons("5", Cons("5", Cons("5", Cons("5", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons("5", Nil))))), Cons(Cons("5", Cons("5", Cons("5", Cons("5", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons(" ", Cons(" ", Cons(" ", Cons("6", Cons("6", Nil))))), Cons(Cons(" ", Cons(" ", Cons("6", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons("6", Cons("6", Cons("6", Cons(" ", Nil))))), Cons(Cons("6", Cons(" ", Cons(" ", Cons(" ", Cons("6", Nil))))), Cons(Cons(" ", Cons("6", Cons("6", Cons("6", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons("7", Cons("7", Cons("7", Cons("7", Cons("7", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons("7", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons("7", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons("7", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("7", Cons(" ", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons(" ", Cons("8", Cons("8", Cons("8", Cons(" ", Nil))))), Cons(Cons("8", Cons(" ", Cons(" ", Cons(" ", Cons("8", Nil))))), Cons(Cons(" ", Cons("8", Cons("8", Cons("8", Cons(" ", Nil))))), Cons(Cons("8", Cons(" ", Cons(" ", Cons(" ", Cons("8", Nil))))), Cons(Cons(" ", Cons("8", Cons("8", Cons("8", Cons(" ", Nil))))), Nil))))), Cons(Cons(Cons(" ", Cons("9", Cons("9", Cons("9", Cons(" ", Nil))))), Cons(Cons("9", Cons(" ", Cons(" ", Cons(" ", Cons("9", Nil))))), Cons(Cons(" ", Cons("9", Cons("9", Cons("9", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons("9", Cons(" ", Cons(" ", Nil))))), Cons(Cons("9", Cons("9", Cons(" ", Cons(" ", Cons(" ", Nil))))), Nil))))), Nil))))))))))
+fun unlines(ls) = concat(map(x => append(x, ("\n" :: Nil)), ls))
+fun join(ls) = foldr1((xs, ys) => append(xs, append((" " :: " " :: Nil), ys)), ls)
+fun say(s) = "\n" :: (unlines(map(join, transpose(map(picChar, s)))))
+fun isUpper(c) =
+  let n = int_of_char(c)
+  (n >= 65) and (n <= 90)
+fun isLower(c) =
+  let n = int_of_char(c)
+  (n >= 97) and (n <= 122)
+fun isDigit(c) =
+  let n = int_of_char(c)
+  (n >= 48) and (n <= 57)
+fun isSpace(c) =
+  let n = int_of_char(c)
+  (n == 32)
+fun picChar(c) =
+  fun lscomp(ls) = if ls is
+    Nil then Nil
+    Cons(h, t) and
+      h is Tup2(c_, letter) and c_ === c then Cons(letter, lscomp(t))
+      else lscomp(t)
+  if
+    isUpper(c) then atIndex(int_of_char(c) - int_of_char("A"), alphas)
+    isLower(c) then atIndex(int_of_char(c) - int_of_char("a"), alphas)
+    isSpace(c) then blank
+    isDigit(c) then atIndex(int_of_char(c) - int_of_char("0"), digits)
+    c === "/" then slant
+    c === "=" then reverse(slant)
+    else head(append(lscomp(punct), Nil :: Nil :: Nil))
+fun testBanner_nofib(n) =
+  let x = Cons("I", Cons("s", Cons(" ", Cons("t", Cons("h", Cons("i", Cons("s", Cons(" ", Cons("n", Cons("o", Cons("t", Cons(" ", Cons("a", Cons(" ", Cons("g", Cons("r", Cons("e", Cons("a", Cons("t", Cons(" ", Cons("b", Cons("a", Cons("n", Cons("n", Cons("e", Cons("r", Cons("?", Nil)))))))))))))))))))))))))))
+  say(concat(replicate(n, x)))
+testBanner_nofib(1)
+// nofibListToString(testBanner_nofib(1))
+//│ > Cons {
+//│ >   head: '\n',
+//│ >   tail: Cons { head: 'I', tail: Cons { head: 'I', tail: [Cons] } }
+//│ = }
+//│ > Cons {
+//│ >   head: Cons { head: ' ', tail: Cons { head: ' ', tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: ' ', tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   }
+//│ blank = }
+//│ > Cons {
+//│ >   head: Cons {
+//│ >     head: Cons { head: ' ', tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: [Cons], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   }
+//│ alphas = }
+//│ > Cons {
+//│ >   head: Cons { head: ' ', tail: Cons { head: ' ', tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: ' ', tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   }
+//│ slant = }
+//│ > Cons {
+//│ >   head: Tup2 { fst: '.', snd: Cons { head: [Cons], tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Tup2 { fst: '?', snd: [Cons] },
+//│ >     tail: Cons { head: [Tup2], tail: [Cons] }
+//│ >   }
+//│ punct = }
+//│ > Cons {
+//│ >   head: Cons {
+//│ >     head: Cons { head: ' ', tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: [Cons], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   }
+//│ digits = }

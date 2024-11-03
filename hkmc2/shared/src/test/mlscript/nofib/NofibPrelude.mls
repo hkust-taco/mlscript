@@ -161,12 +161,20 @@ fun scanl(f, q, ls) = if ls is
   Nil then Cons(q, Nil)
   Cons(x, xs) then Cons(q, scanl(f, f(q, x), xs))
 
+fun scanr(f, q, ls) = if ls is
+  Nil then Cons(q, Nil)
+  Cons(x, xs) and scanr(f, q, xs) is Cons(q, t) then Cons(f(x, q), Cons(q, t))
+
 fun foldr(f, z, xs) = if xs is
   Nil then z
   Cons(h, t) then f(h, foldr(f, z, t))
 
 fun foldl1(f, ls) = if
   ls is Cons(x, xs) then foldl(f, x, xs)
+
+fun foldr1(f, ls) = if ls is
+  Cons(x, Nil) then x
+  Cons(x, xs) then f(x, foldr1(f, xs))
 
 fun maximum(xs) = foldl1((x, y) => if x > y then x else y, xs)
 
@@ -299,3 +307,9 @@ fun sin(x) = globalThis.Math.sin(x)
 fun cos(x) = globalThis.Math.cos(x)
 fun round(x) = globalThis.Math.round(x)
 fun int_of_char(x) = x.charCodeAt(0)
+fun nofibStringToList(s) =
+  fun go(i) = if i < s.length then Cons(s.charAt(i), go(i + 1)) else Nil
+  go(0)
+fun nofibListToString(ls) = if ls is
+  Nil then ""
+  Cons(h, t) then h + nofibListToString(t)

@@ -3,7 +3,7 @@
 :fixme
 :js
 :import NofibPrelude.mls
-//│ Imported 104 member(s)
+//│ Imported 108 member(s)
 let pi = globalThis.Math.PI
 let epsilon  = 0.000001
 let infinity = 100000000.0
