@@ -384,7 +384,7 @@ extends Importer:
             (ctx, acc)
         newCtx.givenIn:
           go(sts, newAcc)
-      case (hd @ LetLike(`let`, Apps(id, tups), rhso, N)) :: sts if id.name.headOption.exists(_.isLower) =>
+      case (hd @ LetLike(`let`, Apps(id: Ident, tups), rhso, N)) :: sts if id.name.headOption.exists(_.isLower) =>
         val sym =
           fieldOrVarSym(LetBind, id)
         log(s"Processing `let` statement $id (${sym}) ${ctx.outer}")
@@ -428,15 +428,14 @@ extends Importer:
                 case S(t) => typeParams(t)
                 case N => (N, ctx)
               // Add parameters to context
-              val (ps, newCtx) = td.params match
-                case S(ts) => // Go through all parameter lists
-                  ts.foldLeft((Ls[Param](), newCtx1)):
-                    case ((ps, ctx), t) => params(t)(using ctx).mapFirst(ps ++ _)
-                  .mapFirst(some)
-                case N => (N, newCtx1)
+              val (pss, newCtx) = 
+                td.paramLists.foldLeft(Ls[ParamList](), newCtx1):
+                  case ((pss, ctx), ps) => 
+                    val (qs, newCtx) = params(ps)(using ctx)
+                    (pss :+ ParamList(ParamListFlags.empty, qs), newCtx)
               val b = rhs.map(term(_)(using newCtx))
               val r = FlowSymbol(s"‹result of ${sym}›", nextUid)
-              val tdf = TermDefinition(k, sym, ps,
+              val tdf = TermDefinition(k, sym, pss,
                 td.signature.orElse(newSignatureTrees.get(id.name)).map(term), b, r)
               sym.defn = S(tdf)
               tdf
@@ -595,8 +594,8 @@ extends Importer:
   def computeVariances(s: Statement): Unit =
     val trav = VarianceTraverser()
     def go(s: Statement): Unit = s match
-      case TermDefinition(k, sym, ps, sign, body, r) =>
-        ps.foreach(_.foreach(trav.traverseType(S(false))))
+      case TermDefinition(k, sym, pss, sign, body, r) =>
+        pss.foreach(ps => ps.params.foreach(trav.traverseType(S(false))))
         sign.foreach(trav.traverseType(S(true)))
         body match
           case S(b) =>

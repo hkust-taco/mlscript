@@ -113,7 +113,7 @@ sealed trait Statement extends AutoLocated:
     case Assgn(lhs, rhs) => lhs :: rhs :: Nil
     case Deref(term) => term :: Nil
     case TermDefinition(k, _, ps, sign, body, res) =>
-      ps.toList.flatMap(_.flatMap(_.subTerms)) ::: sign.toList ::: body.toList
+      ps.toList.flatMap(_.subTerms) ::: sign.toList ::: body.toList
     case cls: ClassDef =>
       cls.paramsOpt.toList.flatMap(_.flatMap(_.subTerms)) ::: cls.body.blk :: Nil
     case td: TypeDef =>
@@ -175,7 +175,7 @@ sealed trait Statement extends AutoLocated:
     case Error => "<error>"
     case Tup(fields) => fields.map(_.showDbg).mkString("[", ", ", "]")
     case TermDefinition(k, sym, ps, sign, body, res) => s"${k.str} ${sym}${
-      ps.fold("")(_.map(_.showDbg).mkString("(", ", ", ")"))
+      ps.map(_.showDbg).mkString("")
     }${sign.fold("")(": "+_.showDbg)}${
       body match
         case S(x) => " = " + x.showDbg
@@ -194,7 +194,7 @@ final case class DefineVar(sym: LocalSymbol, rhs: Term) extends Statement
 final case class TermDefinition(
     k: TermDefKind,
     sym: TermSymbol,
-    params: Opt[Ls[Param]],
+    params: Ls[ParamList],
     sign: Opt[Term],
     body: Opt[Term],
     resSym: FlowSymbol,
@@ -271,6 +271,17 @@ final case class Param(flags: FldFlags, sym: LocalSymbol & NamedSymbol, sign: Op
   def showDbg: Str = flags.showDbg + sym + sign.fold("")(": " + _.showDbg)
 
 object FldFlags { val empty: FldFlags = FldFlags(false, false, false) }
+
+final case class ParamListFlags(ctx: Bool):
+  def showDbg: Str = (if ctx then "ctx " else "")
+  override def toString: String = "‹" + showDbg + "›"
+
+object ParamListFlags:
+  val empty = ParamListFlags(false)
+
+final case class ParamList(flags: ParamListFlags, params: Ls[Param]):
+  def subTerms: Ls[Term] = params.flatMap(_.subTerms)
+  def showDbg: Str = flags.showDbg + params.mkString("(", ", ", ")")
 
 trait FldImpl extends AutoLocated:
   self: Fld =>

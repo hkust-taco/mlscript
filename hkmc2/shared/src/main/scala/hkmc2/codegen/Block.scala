@@ -74,7 +74,7 @@ sealed abstract class Defn:
 final case class TermDefn(
     k: syntax.TermDefKind,
     sym: TermSymbol,
-    params: Opt[Ls[Param]],
+    params: Ls[ParamList],
     body: Block,
 ) extends Defn
 

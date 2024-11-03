@@ -1,37 +1,8 @@
 :js
 
 
+:silent
 globalThis
-//│ > <ref *1> Object [global] {
-//│ >   global: [Circular *1],
-//│ >   clearInterval: [Function: clearInterval],
-//│ >   clearTimeout: [Function: clearTimeout],
-//│ >   setInterval: [Function: setInterval],
-//│ >   setTimeout: [Function: setTimeout] {
-//│ >     [Symbol(nodejs.util.promisify.custom)]: [Getter]
-//│ >   },
-//│ >   queueMicrotask: [Function: queueMicrotask],
-//│ >   performance: Performance {
-//│ >     nodeTiming: PerformanceNodeTiming {
-//│ >       name: 'node',
-//│ >       entryType: 'node',
-//│ >       startTime: 0,
-//│ >       duration: 60.831000089645386,
-//│ >       nodeStart: 0.6668329238891602,
-//│ >       v8Start: 18.42420792579651,
-//│ >       bootstrapComplete: 45.082249879837036,
-//│ >       environment: 26.717665910720825,
-//│ >       loopStart: 56.63504099845886,
-//│ >       loopExit: -1,
-//│ >       idleTime: 0.946876
-//│ >     },
-//│ >     timeOrigin: 1729825829161.282
-//│ >   },
-//│ >   clearImmediate: [Function: clearImmediate],
-//│ >   setImmediate: [Function: setImmediate] {
-//│ >     [Symbol(nodejs.util.promisify.custom)]: [Getter]
-//│ >   }
-//│ = }
 
 
 // prevent rebinding of this name?
