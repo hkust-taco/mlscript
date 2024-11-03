@@ -3,7 +3,7 @@
 :fixme
 :js
 :import NofibPrelude.mls
-//│ Imported 88 member(s)
+//│ Imported 104 member(s)
 let pi = globalThis.Math.PI
 let epsilon  = 0.000001
 let infinity = 100000000.0
@@ -283,7 +283,7 @@ fun hash(param) =
 fun run(winsize) = hash(map(snd, ray(winsize)))
 fun testSphere_nofib(n) = run(n)
 testSphere_nofib(30)
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+//│ ═══[RUNTIME ERROR] Error: match error
 //│ pi = 3.141592653589793
 //│ epsilon = 0.000001
 //│ infinity = 100000000

@@ -2,7 +2,7 @@
 
 :js
 :import NofibPrelude.mls
-//│ Imported 88 member(s)
+//│ Imported 104 member(s)
 // -- Figure 1. CSPs in Haskell.
 class Assign(varr: Int, value: Int)
 class CSP(vars: Int, vals: Int, rel: Int)
