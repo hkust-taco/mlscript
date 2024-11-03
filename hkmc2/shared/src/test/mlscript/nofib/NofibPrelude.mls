@@ -219,6 +219,10 @@ fun unzip(l) =
     Cons(Tup2(x, y), t) then f(t, Cons(x, a), Cons(y, b))
   f(l, Nil, Nil)
 
+fun zip3(xs, ys, zs) = if
+  xs is Cons(x, xs) and ys is Cons(y, ys) and zs is Cons(z, zs) then Cons(Tup3(x, y, z), zip3(xs, ys, zs))
+  else Nil
+
 fun transpose(xss) =
   fun lscomp(ls) = if ls is
     Nil then Nil
