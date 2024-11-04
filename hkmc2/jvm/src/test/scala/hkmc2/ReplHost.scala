@@ -101,7 +101,7 @@ class ReplHost(using TL) {
   def query(code: Str): (ReplHost.Reply, Str) =
     // Wrap the code with `try`-`catch` block.
     val wrapped =
-      s"try { $code } catch (e) { console.log('\\u200B' + e + '\\u200B'); }"
+      s"try { $code } catch (e) { console.log('\\u200B' + e.stack + '\\u200B'); }"
     // Send the code
     send(wrapped)
     (parseQueryResult() match
