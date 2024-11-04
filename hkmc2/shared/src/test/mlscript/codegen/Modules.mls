@@ -22,16 +22,6 @@ None()
 //│ JS:
 //│ new this.None()
 //│ ═══[RUNTIME ERROR] TypeError: this.None is not a constructor
-//│     at REPL5:1:7
-//│     at Script.runInThisContext (node:vm:129:12)
-//│     at REPLServer.defaultEval (node:repl:572:29)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:902:10)
-//│     at REPLServer.emit (node:events:513:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at REPLServer.Interface._onLine (node:readline:491:10)
-//│     at REPLServer.Interface._normalWrite (node:readline:665:12)
 
 :sjs
 :re
@@ -39,15 +29,5 @@ new None
 //│ JS:
 //│ new this.None()
 //│ ═══[RUNTIME ERROR] TypeError: this.None is not a constructor
-//│     at REPL6:1:7
-//│     at Script.runInThisContext (node:vm:129:12)
-//│     at REPLServer.defaultEval (node:repl:572:29)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:902:10)
-//│     at REPLServer.emit (node:events:513:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at REPLServer.Interface._onLine (node:readline:491:10)
-//│     at REPLServer.Interface._normalWrite (node:readline:665:12)
 
 

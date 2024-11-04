@@ -33,44 +33,14 @@ res
 :showRepl
 :re
 let x = 1, log(x), x
-//│ REPL> Sending: try { let tmp; this.x = 1; tmp = log(this.x); this.x } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { let tmp; this.x = 1; tmp = log(this.x); this.x } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ REPL> Collected:
-//│ >  ​ReferenceError: log is not defined
-//│ >      at REPL6:1:28
-//│ >      at Script.runInThisContext (node:vm:129:12)
-//│ >      at REPLServer.defaultEval (node:repl:572:29)
-//│ >      at bound (node:domain:433:15)
-//│ >      at REPLServer.runBound [as eval] (node:domain:444:12)
-//│ >      at REPLServer.onLine (node:repl:902:10)
-//│ >      at REPLServer.emit (node:events:513:28)
-//│ >      at REPLServer.emit (node:domain:489:12)
-//│ >      at REPLServer.Interface._onLine (node:readline:491:10)
-//│ >      at REPLServer.Interface._normalWrite (node:readline:665:12)​
+//│ >  ​ReferenceError: log is not defined​
 //│ >  undefined
 //│ REPL> Parsed:
 //│ >  [runtime error] ReferenceError: log is not defined
-//│ >      at REPL6:1:28
-//│ >      at Script.runInThisContext (node:vm:129:12)
-//│ >      at REPLServer.defaultEval (node:repl:572:29)
-//│ >      at bound (node:domain:433:15)
-//│ >      at REPLServer.runBound [as eval] (node:domain:444:12)
-//│ >      at REPLServer.onLine (node:repl:902:10)
-//│ >      at REPLServer.emit (node:events:513:28)
-//│ >      at REPLServer.emit (node:domain:489:12)
-//│ >      at REPLServer.Interface._onLine (node:readline:491:10)
-//│ >      at REPLServer.Interface._normalWrite (node:readline:665:12)
 //│ ═══[RUNTIME ERROR] ReferenceError: log is not defined
-//│     at REPL6:1:28
-//│     at Script.runInThisContext (node:vm:129:12)
-//│     at REPLServer.defaultEval (node:repl:572:29)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:902:10)
-//│     at REPLServer.emit (node:events:513:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at REPLServer.Interface._onLine (node:readline:491:10)
-//│     at REPLServer.Interface._normalWrite (node:readline:665:12)
-//│ REPL> Sending: try { this.x } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { this.x } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
 //│ REPL> Parsed:

@@ -71,16 +71,6 @@ let f = foo(1, 2)
 //│ JS:
 //│ let tmp; tmp = this.foo(1, 2); this.f = tmp; undefined
 //│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
-//│     at REPL13:1:27
-//│     at Script.runInThisContext (node:vm:129:12)
-//│     at REPLServer.defaultEval (node:repl:572:29)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:902:10)
-//│     at REPLServer.emit (node:events:513:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at REPLServer.Interface._onLine (node:readline:491:10)
-//│     at REPLServer.Interface._normalWrite (node:readline:665:12)
 
 let f = new foo(1, 2)
 //│ JS:
