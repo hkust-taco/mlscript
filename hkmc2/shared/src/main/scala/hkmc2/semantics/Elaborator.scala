@@ -294,10 +294,6 @@ extends Importer:
     val newSignatureTrees = mutable.Map.empty[Str, Tree] // * Store trees of signatures, passing them to definition objects
     
     @tailrec def preprocessStatement(statement: Tree): Unit = statement match
-      case Open(body) =>
-        body match
-        case _ =>
-          raise(ErrorReport(msg"Illegal 'open' statement shape." -> body.toLoc :: Nil))
       case td: TermDef =>
         log(s"Found TermDef ${td.name}")
         td.name match
@@ -370,7 +366,36 @@ extends Importer:
       case Nil =>
         val res = unit
         (Term.Blk(acc.reverse, res), ctx)
-      case Open(_) :: sts => go(sts, acc)
+      case Open(bod) :: sts =>
+        bod match
+          case Jux(bse, Block(sts)) =>
+            S(bse -> sts)
+          // * There could be other shapes of open statements...
+          case _ =>
+            raise(ErrorReport(msg"Illegal 'open' statement shape." -> bod.toLoc :: Nil))
+            N
+        match
+        case N => go(sts, acc)
+        case S(base, importedTrees) =>
+          base match
+          case baseId: Ident =>
+            ctx.get(baseId.name) match
+            case S(baseSym) =>
+              val importedNames = importedTrees.flatMap:
+                case id: Ident =>
+                  val sym = ImportedSymbol(baseSym, id, nextUid)
+                  id.name -> sym :: Nil
+                case t =>
+                  raise(ErrorReport(msg"Illegal 'open' statement element." -> t.toLoc :: Nil))
+                  Nil
+              ctx.copy(locals = ctx.locals ++ importedNames).givenIn:
+                go(sts, acc)
+            case N =>
+              raise(ErrorReport(msg"Name not found: ${baseId.name}" -> baseId.toLoc :: Nil))
+              go(sts, acc)
+          case _ =>
+            raise(ErrorReport(msg"Illegal 'open' statement base." -> base.toLoc :: Nil))
+            go(sts, acc)
       case (m @ Modified(Keyword.`import`, absLoc, arg)) :: sts =>
         val (newCtx, newAcc) = arg match
           case Tree.StrLit(path) =>

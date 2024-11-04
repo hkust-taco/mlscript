@@ -54,6 +54,10 @@ class VarSymbol(val id: Ident, uid: Int) extends BlockLocalSymbol(id.name, uid) 
   val name: Str = id.name
   // override def toString: Str = s"$name@$uid"
 
+// TODO rm uid?
+class ImportedSymbol(val base: Symbol, val id: Ident, uid: Int) extends BlockLocalSymbol(id.name, uid) with NamedSymbol:
+  val name = id.name
+
 abstract class MemberSymbol[Defn <: Definition] extends Symbol:
   def nme: Str
   var defn: Opt[Defn] = N

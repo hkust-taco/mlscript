@@ -1,0 +1,27 @@
+:js
+
+
+:todo // check init
+:sjs
+:re
+module Bar with
+  val x = 1
+  module Baz with
+    val a = Bar.x
+//│ JS:
+//│ this.Bar = new class Bar {
+//│   constructor() {
+//│     this.x = 1;
+//│     this.Baz = new class Baz {
+//│       constructor() {
+//│         this.a = globalThis.Bar.x;
+//│       }
+//│       toString() { return "Baz"; }
+//│     };
+//│   }
+//│   toString() { return "Bar"; }
+//│ };
+//│ undefined
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
+
+

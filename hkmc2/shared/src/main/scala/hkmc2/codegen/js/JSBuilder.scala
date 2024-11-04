@@ -14,6 +14,7 @@ import hkmc2.semantics.TopLevelSymbol
 import hkmc2.semantics.MemberSymbol
 import hkmc2.semantics.ParamList
 import hkmc2.codegen.Value.Lam
+import hkmc2.semantics.ImportedSymbol
 
 
 // TODO factor some logic for other codegen backends
@@ -59,6 +60,8 @@ class JSBuilder extends CodeBuilder:
         doc"${result(Value.This(owner))}.${ts.id.name}"
       case N =>
         ts.id.name
+    case imp: ImportedSymbol =>
+      doc"${getVar(imp.base)}.${imp.id.name}"
     case _ => summon[Scope].lookup_!(l)
   
   def result(r: Result)(using Raise, Scope): Document = r match

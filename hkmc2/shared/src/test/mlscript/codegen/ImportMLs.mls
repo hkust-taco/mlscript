@@ -4,50 +4,45 @@
 import "../../mlscript-compile/Option.mls"
 //│ Option = Option { Some: [class Some], None: None {}, Both: [class Both] }
 
-:todo
-:p
+
 open Option { isDefined }
-//│ |open| |Option| |{|isDefined| |}|
-//│ Parsed:
-//│ 	Open(Jux(Ident(Option),Block(List(Ident(isDefined)))))
-//│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.9: 	open Option { isDefined }
-//│ ╙──     	     ^^^^^^^^^^^^^^^^^^
 
-:todo
-:p
+Option.None isDefined()
+//│ = false
+
+
 open Option
-  Some
-  None
+  Some, None
   isDefined
-//│ |open| |Option|→|Some|↵|None|↵|isDefined|←|
-//│ Parsed:
-//│ 	Open(Jux(Ident(Option),Block(List(Ident(Some), Ident(None), Ident(isDefined)))))
-//│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.19: 	open Option
-//│ ║        	     ^^^^^^
-//│ ║  l.20: 	  Some
-//│ ║        	^^^^^^
-//│ ║  l.21: 	  None
-//│ ║        	^^^^^^
-//│ ║  l.22: 	  isDefined
-//│ ╙──      	^^^^^^^^^^^
 
-:todo
-:p
-open Option { Some, None, isDefined }
-//│ |open| |Option| |{|Some|,| |None|,| |isDefined| |}|
-//│ Parsed:
-//│ 	Open(Jux(Ident(Option),Block(List(Ident(Some), Ident(None), Ident(isDefined)))))
-//│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.38: 	open Option { Some, None, isDefined }
-//│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:sjs
+None isDefined()
+//│ JS:
+//│ Option.isDefined(Option.None)
+//│ = false
 
-
-(new Option.Some(1)) Option.isDefined()
+(new Some(1)) isDefined()
 //│ = true
 
-Option.None Option.isDefined()
+:re
+new Some(1) isDefined()
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor Some cannot be invoked without 'new'
+
+:re
+new Some(1)
+  isDefined()
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor Some cannot be invoked without 'new'
+
+
+open Option { Some, None, isDefined }
+
+(new Some(1)) isDefined()
+//│ = true
+
+None isDefined()
 //│ = false
+
+None == Option.None
+//│ = true
 
 
