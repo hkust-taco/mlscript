@@ -10,6 +10,16 @@ new
 :re
 new 2
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not a constructor
+//│     at REPL3:1:7
+//│     at Script.runInThisContext (node:vm:129:12)
+//│     at REPLServer.defaultEval (node:repl:572:29)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:902:10)
+//│     at REPLServer.emit (node:events:513:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at REPLServer.Interface._onLine (node:readline:491:10)
+//│     at REPLServer.Interface._normalWrite (node:readline:665:12)
 
 :ge
 new 2 + 2
@@ -18,18 +28,28 @@ new 2 + 2
 :re
 new()
 //│ ═══[RUNTIME ERROR] TypeError: undefined is not a constructor
+//│     at REPL5:1:7
+//│     at Script.runInThisContext (node:vm:129:12)
+//│     at REPLServer.defaultEval (node:repl:572:29)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:902:10)
+//│     at REPLServer.emit (node:events:513:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at REPLServer.Interface._onLine (node:readline:491:10)
+//│     at REPLServer.Interface._normalWrite (node:readline:665:12)
 
 :pe
 new {}
 //│ ╔══[PARSE ERROR] Expected expression after `new` keyword; found end of block instead
-//│ ║  l.23: 	new {}
+//│ ║  l.43: 	new {}
 //│ ╙──      	    ^^
 
 // FIXME the error...
 :todo
 new { x = 1 }
 //│ ╔══[ERROR] Wrong number of type arguments
-//│ ║  l.30: 	new { x = 1 }
+//│ ║  l.50: 	new { x = 1 }
 //│ ╙──      	      ^
 
 

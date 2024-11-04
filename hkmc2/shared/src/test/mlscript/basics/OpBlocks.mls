@@ -106,6 +106,16 @@ f(0)
 :re
 f(1)
 //│ ═══[RUNTIME ERROR] Error: match error
+//│     at f (REPL2:1:183)
+//│     at REPL4:1:12
+//│     at Script.runInThisContext (node:vm:129:12)
+//│     at REPLServer.defaultEval (node:repl:572:29)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:902:10)
+//│     at REPLServer.emit (node:events:513:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at REPLServer.Interface._onLine (node:readline:491:10)
 
 f(2)
 //│ = 'b'
@@ -118,10 +128,10 @@ fun f(x) = if x
   > 0 then "a"
   is 0 then "b"
 //│ ╔══[PARSE ERROR] Expect an operator instead of 'is' keyword
-//│ ║  l.119: 	  is 0 then "b"
+//│ ║  l.129: 	  is 0 then "b"
 //│ ╙──       	  ^^
 //│ ╔══[PARSE ERROR] Unexpected 'is' keyword here
-//│ ║  l.119: 	  is 0 then "b"
+//│ ║  l.129: 	  is 0 then "b"
 //│ ╙──       	  ^^
 //│ Parsed tree:
 //│ TermDef:
@@ -176,11 +186,11 @@ fun f(x) = if x
 //│         kw = keyword 'then'
 //│         rhs = Ident of "b"
 //│ ╔══[ERROR] Unrecognized term split (juxtaposition).
-//│ ║  l.151: 	fun f(x) = if x
+//│ ║  l.161: 	fun f(x) = if x
 //│ ║         	              ^
-//│ ║  l.152: 	  foo(A) then a
+//│ ║  l.162: 	  foo(A) then a
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.153: 	  bar(B) then b
+//│ ║  l.163: 	  bar(B) then b
 //│ ╙──       	^^^^^^^^^^^^^^^
 
 
@@ -189,10 +199,10 @@ fun f(x) = if x
   is 0 then "a"
   is 1 then "b"
 //│ ╔══[PARSE ERROR] Expected 'let' keyword, 'set' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'open' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, 'return' keyword, 'import' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'is' keyword instead
-//│ ║  l.190: 	  is 1 then "b"
+//│ ║  l.200: 	  is 1 then "b"
 //│ ╙──       	  ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.190: 	  is 1 then "b"
+//│ ║  l.200: 	  is 1 then "b"
 //│ ╙──       	     ^
 //│ = [Function: f]
 
