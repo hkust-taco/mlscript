@@ -34,7 +34,7 @@ enum Term extends Statement:
   case Deref(ref: Term)
   case Ret(result: Term)
   case Try(body: Term, finallyDo: Term)
-  case Handle(lhs: LocalSymbol, rhs: Term, defs: Term.Blk, body: Term)
+  case Handle(lhs: LocalSymbol, rhs: Term, defs: Term.Blk)
   
   var symbol: Opt[Symbol] = N
   
@@ -121,7 +121,7 @@ sealed trait Statement extends AutoLocated:
       td.rhs.toList
     case Import(sym, pth) => Nil
     case Try(body, finallyDo) => body :: finallyDo :: Nil
-    case Handle(lhs, rhs, defs, body) => rhs :: defs :: body :: Nil
+    case Handle(lhs, rhs, defs) => rhs :: defs :: Nil
   
   protected def children: Ls[Located] = this match
     case t: Lit => t.lit.asTree :: Nil
@@ -169,7 +169,7 @@ sealed trait Statement extends AutoLocated:
     case Asc(term, ty) => s"${term.toString}: ${ty.toString}"
     case LetDecl(sym) => s"let ${sym}"
     case DefineVar(sym, rhs) => s"${sym} = ${rhs.showDbg}"
-    case Handle(lhs, rhs, defs, body) => s"handle ${lhs} = ${rhs} ${defs} in ${body}"
+    case Handle(lhs, rhs, defs) => s"handle ${lhs} = ${rhs} ${defs}"
     case Region(name, body) => s"region ${name.nme} in ${body.showDbg}"
     case RegRef(reg, value) => s"(${reg.showDbg}).ref ${value.showDbg}"
     case Assgn(lhs, rhs) => s"${lhs.showDbg} := ${rhs.showDbg}"

@@ -43,11 +43,7 @@ in
 //│ ║  l.38: 	handle 1 = 1 with
 //│ ║        	       ^^^^^^^^^^
 //│ ║  l.39: 	  fun f(r) = r(0)
-//│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.40: 	in
-//│ ║        	^^
-//│ ║  l.41: 	  foo(h)
-//│ ╙──      	^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^
 
 :elt
 class Eff
@@ -78,30 +74,32 @@ in
 //│       sign = N
 //│       body = S of Lit of IntLit of 0
 //│       resSym = ‹result of globalThis:block#5.foo›@30
-//│   res = Handle:
-//│     lhs = globalThis:block#5.h
-//│     rhs = Ref of class:Eff
-//│     defs = Blk:
-//│       stats = Ls of 
-//│         TermDefinition:
-//│           k = Fun
-//│           sym = globalThis:block#5.f
-//│           params = S of Ls of 
-//│             Param:
-//│               flags = ()
-//│               sym = r@31
+//│   res = Blk:
+//│     stats = Ls of 
+//│       Handle:
+//│         lhs = globalThis:block#5.h
+//│         rhs = Ref of class:Eff
+//│         defs = Blk:
+//│           stats = Ls of 
+//│             TermDefinition:
+//│               k = Fun
+//│               sym = globalThis:block#5.f
+//│               params = S of Ls of 
+//│                 Param:
+//│                   flags = ()
+//│                   sym = r@31
+//│                   sign = N
 //│               sign = N
-//│           sign = N
-//│           body = S of App:
-//│             lhs = Ref of r@31
-//│             rhs = Tup of Ls of 
-//│               Fld:
-//│                 flags = ()
-//│                 value = Lit of IntLit of 0
-//│                 asc = N
-//│           resSym = ‹result of globalThis:block#5.f›@33
-//│       res = Lit of UnitLit of true
-//│     body = App:
+//│               body = S of App:
+//│                 lhs = Ref of r@31
+//│                 rhs = Tup of Ls of 
+//│                   Fld:
+//│                     flags = ()
+//│                     value = Lit of IntLit of 0
+//│                     asc = N
+//│               resSym = ‹result of globalThis:block#5.f›@33
+//│           res = Lit of UnitLit of true
+//│     res = App:
 //│       lhs = Ref of globalThis:block#5.foo
 //│       rhs = Tup of Ls of 
 //│         Fld:

@@ -91,7 +91,11 @@ extends Importer:
       val sym =
         fieldOrVarSym(Handler, id)
       val newCtx = ctx.copy(locals = ctx.locals + (id.name -> sym))
-      Term.Handle(sym, term(cls)(using newCtx), block(sts)._1, term(body)(using newCtx))
+      Term.Blk(
+        Term.Handle(sym, term(cls)(using newCtx), block(sts)._1) :: Nil,
+        term(body)(using newCtx)
+      )
+      
     case h: Handle =>
       raise(ErrorReport(
         msg"Unsupported handle binding shape" ->

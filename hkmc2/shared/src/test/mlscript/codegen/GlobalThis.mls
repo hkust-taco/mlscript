@@ -15,13 +15,13 @@ globalThis
 //│ >     [Symbol(nodejs.util.promisify.custom)]: [Getter]
 //│ >   },
 //│ >   queueMicrotask: [Function: queueMicrotask],
-//│ >   structuredClone: [Function: structuredClone],
+//│ >   structuredClone: [Getter/Setter],
 //│ >   atob: [Getter/Setter],
 //│ >   btoa: [Getter/Setter],
 //│ >   performance: [Getter/Setter],
 //│ >   fetch: [Function: fetch],
-//│ >   navigator: [Getter],
-//│ >   crypto: [Getter]
+//│ >   crypto: [Getter],
+//│ >   navigator: [Getter]
 //│ = }
 
 
