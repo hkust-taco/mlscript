@@ -247,7 +247,7 @@ fact(1)
 fun fact2 = case
   0 then 1
   n then n * fact2(n - 1)
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@161),LitPat(BoolLit(true)),Else(Lit(IntLit(1)))),Else(App(Ref(.*),Tup(List(Fld(‹›,Ref(n@156),None), Fld(‹›,App(Ref(globalThis:block#52.fact2),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@156),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(caseScrut@156),LitPat(IntLit(0)),Else(Lit(IntLit(1)))),Let(n@157,Ref(caseScrut@156),Else(App(Ref(.*),Tup(List(Fld(‹›,Ref(n@157),None), Fld(‹›,App(Ref(globalThis:block#52.fact2),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@157),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None))))))) (of class hkmc2.semantics.Split$Cons)
 
 fact2
 //│ Type: ⊥
@@ -260,16 +260,16 @@ class Foo[A](x: A -> A)
 //│ Type: ⊤
 
 new Foo(x => x)
-//│ Type: Foo[α76_1]
+//│ Type: Foo[α74_1]
 
 fun f(g) = new Foo(g)
 f
-//│ Type: forall α79_2: (α79_2 -> α79_2) -> Foo[α79_2]
+//│ Type: forall α77_2: (α77_2 -> α77_2) -> Foo[α77_2]
 
 f(x => x).Foo#x
-//│ Type: (α81_1) ->{⊥} α81_1
+//│ Type: (α79_1) ->{⊥} α79_1
 
 g => (new Foo(g)).Foo#x
-//│ Type: (α86_1 -> α86_1) ->{⊥} (α86_1) ->{⊥} α86_1
+//│ Type: (α84_1 -> α84_1) ->{⊥} (α84_1) ->{⊥} α84_1
 
 

@@ -65,11 +65,11 @@ object Keyword:
   val `fun` = Keyword("fun", N, N)
   // val `val` = Keyword("val", N, N)
   val `var` = Keyword("var", N, N)
-  val `as` = Keyword("as", N, N)
   val `of` = Keyword("of", N, N)
   val `or` = Keyword("or", nextPrec, curPrec)
   val `and` = Keyword("and", nextPrec, nextPrec)
   val `is` = Keyword("is", nextPrec, curPrec, canStartInfixOnNewLine = false)
+  val `as` = Keyword("as", nextPrec, curPrec)
   val `let` = Keyword("let", nextPrec, curPrec)
   val `region` = Keyword("region", curPrec, curPrec)
   val `rec` = Keyword("rec", N, N)
@@ -117,7 +117,7 @@ object Keyword:
     `abstract`, mut, virtual, `override`, declare, public, `private`)
   
   type Infix = `and`.type | `or`.type | `then`.type | `else`.type | `is`.type | `:`.type | `->`.type |
-    `=>`.type | `extends`.type | `restricts`.type
+    `=>`.type | `extends`.type | `restricts`.type | `as`.type
   
   type letLike = `let`.type | `set`.type
   

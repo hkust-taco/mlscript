@@ -30,18 +30,32 @@ isDefined(None)
 //│ = false
 
 
-:fixme
+:sjs
 val isDefined = case
   Some(_) then true
   None    then false
-//│ ╔══[ERROR] Name not found: _
-//│ ║  l.35: 	  Some(_) then true
-//│ ╙──      	       ^
+//│ JS:
+//│ this.isDefined = (caseScrut) => {
+//│   let param0;
+//│   if (caseScrut instanceof this.Some) {
+//│     param0 = caseScrut.value;
+//│     return true
+//│   } else {
+//│     if (caseScrut === this.None) {
+//│       return false
+//│     } else {
+//│       throw new this.Error("match error")
+//│     }
+//│   }
+//│ };
+//│ undefined
 //│ isDefined = [Function (anonymous)]
 
 isDefined(Some(1))
+//│ = true
 
 isDefined(None)
+//│ = false
 
 
 val isDefined = x => if x is
@@ -64,7 +78,7 @@ val isOther = x => if x is
   Foo.Other(_) then true
   None    then false
 //│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.64: 	  Foo.Other(_) then true
+//│ ║  l.78: 	  Foo.Other(_) then true
 //│ ╙──      	  ^^^^^^^^^^^^
 //│ isOther = [Function (anonymous)]
 

@@ -66,7 +66,6 @@ enum Tree extends AutoLocated:
   case If(split: Tree)
   @deprecated("Use If instead", "hkmc2-ucs")
   case IfElse(cond: Tree, alt: Tree)
-  @deprecated("Use If instead", "hkmc2-ucs")
   case Case(branches: Tree)
   case Region(name: Tree, body: Tree)
   case RegRef(reg: Tree, value: Tree)

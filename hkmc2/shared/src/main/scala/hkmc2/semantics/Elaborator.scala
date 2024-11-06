@@ -200,27 +200,16 @@ extends Importer:
       Term.If(body)(body)
     case Tree.Quoted(body) => Term.Quoted(term(body))
     case Tree.Unquoted(body) => Term.Unquoted(term(body))
-    case Tree.Case(Block(branches)) => branches.lastOption match
-      case S(InfixApp(id: Ident, Keyword.`then`, dflt)) =>
-        val sym = VarSymbol(id, nextUid)
-        val nestCtx = ctx.copy(locals = ctx.locals ++ Ls(id.name -> sym))
-        val body = branches.dropRight(1).foldRight(Split.default(term(dflt)(using nestCtx))):
-          case (InfixApp(target, Keyword.`then`, cons), res) =>
-            val scrutIdent = Ident("scrut"): Ident
-            val cond = term(App(Ident("=="), Tree.Tup(id :: target :: Nil)))(using nestCtx)
-            val scrut = TempSymbol(nextUid, S(cond), "scrut")
-            Split.Let(scrut, cond, Branch(
-              scrut.ref(),
-              Pattern.LitPat(Tree.BoolLit(true)),
-              Split.default(term(cons)(using nestCtx))
-            ) :: res)
-          case _ =>
-            raise(ErrorReport(msg"Unsupported case branch." -> tree.toLoc :: Nil))
-            Split.default(Term.Error)
-        Term.Lam(Param(FldFlags.empty, sym, N) :: Nil, Term.If(body)(body))
-      case _ =>
-        raise(ErrorReport(msg"Unsupported default case branch." -> tree.toLoc :: Nil))
-        Term.Error
+    case Tree.Case(branches) =>
+      val scrut = VarSymbol(Ident("caseScrut"), nextUid)
+      val desugarer = new Desugarer(tl, this)
+      val des = desugarer.patternSplit(branches, scrut)(Split.Nil)(ctx)
+      scoped("ucs:desugared"):
+        log(s"Desugared:\n${Split.display(des)}")
+      val nor = new ucs.Normalization(tl)(des)
+      scoped("ucs:normalized"):
+        log(s"Normalized:\n${Split.display(nor)}")
+      Term.Lam(Param(FldFlags.empty, scrut, N) :: Nil, Term.If(des)(nor))
     case Modified(Keyword.`return`, kwLoc, body) =>
       Term.Ret(term(body))
     case Tree.Region(id: Tree.Ident, body) =>

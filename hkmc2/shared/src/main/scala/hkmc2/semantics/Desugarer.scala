@@ -14,6 +14,11 @@ object Desugarer:
       case InfixApp(lhs, Keyword.and, rhs) => S((lhs, rhs))
       case _ => N
 
+  object as:
+    infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match
+      case InfixApp(lhs, Keyword.`as`, rhs) => S((lhs, rhs))
+      case _ => N
+
   object is:
     infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match
       case InfixApp(lhs, Keyword.is, rhs) => S((lhs, rhs))
@@ -380,6 +385,13 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
     pattern match
       // A single wildcard pattern.
       case Ident("_") => _ => ctx => sequel(ctx)
+      // Alias pattern
+      case pat as (alias @ Ident(_)) => fallback =>
+        val aliasSymbol = VarSymbol(alias, nextUid)
+        val inner = (ctx: Ctx) =>
+          val ctxWithAlias = ctx + (alias.name -> aliasSymbol)
+          Split.Let(aliasSymbol, ref, sequel(ctxWithAlias))
+        expandMatch(scrutSymbol, pat, inner)(fallback)
       // A single variable pattern or constructor pattern without parameters.
       case ctor: Ident => fallback => ctx => ctx.get(ctor.name) match
         case S(sym: ClassSymbol) => // TODO: refined

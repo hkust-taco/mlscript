@@ -6,7 +6,7 @@ fun power(x) = case
   0 then `1.0
   n then x `*. power(x)(n - 1)
 power
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@48),LitPat(BoolLit(true)),Else(Quoted(Lit(DecLit(1.0))))),Else(Quoted(App(Ref(.*.),Tup(List(Fld(‹›,Unquoted(Ref(x@41)),None), Fld(‹›,Unquoted(App(App(Ref(globalThis:block#0.power),Tup(List(Fld(‹›,Ref(x@41),None)))),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@42),None), Fld(‹›,Lit(IntLit(1)),None)))),None))))),None))))))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(caseScrut@42),LitPat(IntLit(0)),Else(Quoted(Lit(DecLit(1.0))))),Let(n@43,Ref(caseScrut@42),Else(Quoted(App(Ref(.*.),Tup(List(Fld(‹›,Unquoted(Ref(x@41)),None), Fld(‹›,Unquoted(App(App(Ref(globalThis:block#0.power),Tup(List(Fld(‹›,Ref(x@41),None)))),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@43),None), Fld(‹›,Lit(IntLit(1)),None)))),None))))),None)))))))) (of class hkmc2.semantics.Split$Cons)
 
 
 fun id: [A] -> A -> A
@@ -22,7 +22,7 @@ fun assertNotZero(x) =
   `if (x `== `0.0) then `error else x
 let checkedDiv = x `=> y `=> x `/. (assertNotZero(y))
 run(checkedDiv)
-//│ ═══[ERROR] Cannot quote If(Let($scrut@72,Unquoted(Quoted(App(Ref(.==),Tup(List(Fld(‹›,Unquoted(Ref(x@70)),None), Fld(‹›,Unquoted(Quoted(Lit(DecLit(0.0)))),None)))))),Cons(Branch(Ref($scrut@72),LitPat(BoolLit(true)),Else(Unquoted(Quoted(Ref(.error))))),Else(Unquoted(Ref(x@70))))))
+//│ ═══[ERROR] Cannot quote If(Let($scrut@71,Unquoted(Quoted(App(Ref(.==),Tup(List(Fld(‹›,Unquoted(Ref(x@69)),None), Fld(‹›,Unquoted(Quoted(Lit(DecLit(0.0)))),None)))))),Cons(Branch(Ref($scrut@71),LitPat(BoolLit(true)),Else(Unquoted(Quoted(Ref(.error))))),Else(Unquoted(Ref(x@69))))))
 //│ Type: Num -> (Num -> Num)
 
 
@@ -35,7 +35,7 @@ show
 fun inc(dbg) =
   x `=> let c = x `+ `1 in let t = dbg(c) in c
 inc
-//│ Type: forall α65_2: (CodeBase[out Int, ?, ?] ->{α65_2} ⊤) ->{α65_2} CodeBase[out Int -> Int, ⊥, ?]
+//│ Type: forall α63_2: (CodeBase[out Int, ?, ?] ->{α63_2} ⊤) ->{α63_2} CodeBase[out Int -> Int, ⊥, ?]
 
 inc(c => log(show(c)))
 //│ Type: CodeBase[out Int -> Int, ⊥, ?]
@@ -49,11 +49,11 @@ fun body(x, y) = case
 fun gib_naive(n) =
   (x, y) `=> body(x, y)(n)
 let gn5 = run(gib_naive(5))
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@111),LitPat(BoolLit(true)),Else(Ref(x@101))),Let($scrut@109,App(Ref(.==),Tup(List(Fld(‹›,Ref(n@103),None), Fld(‹›,Lit(IntLit(1)),None)))),Cons(Branch(Ref($scrut@109),LitPat(BoolLit(true)),Else(Ref(y@102))),Else(App(App(Ref(globalThis:block#7.body),Tup(List(Fld(‹›,Ref(y@102),None), Fld(‹›,Quoted(App(Ref(.+),Tup(List(Fld(‹›,Unquoted(Ref(x@101)),None), Fld(‹›,Unquoted(Ref(y@102)),None))))),None)))),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@103),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))))))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(caseScrut@102),LitPat(IntLit(0)),Else(Ref(x@100))),Cons(Branch(Ref(caseScrut@102),LitPat(IntLit(1)),Else(Ref(y@101))),Let(n@103,Ref(caseScrut@102),Else(App(App(Ref(globalThis:block#7.body),Tup(List(Fld(‹›,Ref(y@101),None), Fld(‹›,Quoted(App(Ref(.+),Tup(List(Fld(‹›,Unquoted(Ref(x@100)),None), Fld(‹›,Unquoted(Ref(y@101)),None))))),None)))),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@103),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))))))) (of class hkmc2.semantics.Split$Cons)
 
 fun bind(rhs, k) = `let x = rhs `in k(x)
 bind
-//│ Type: forall α102_2, α103_2, α107_2, α110_2, α113_2, α114_2: (CodeBase[out α102_2, out α103_2, ?], CodeBase[in α107_2 out α107_2 ∨ α102_2, ?, ⊥] ->{α110_2} CodeBase[out α113_2, out α114_2, ?]) ->{α110_2} CodeBase[out α113_2, out α103_2 ∨ α114_2, ?]
+//│ Type: forall α98_2, α99_2, α103_2, α106_2, α109_2, α110_2: (CodeBase[out α98_2, out α99_2, ?], CodeBase[in α103_2 out α103_2 ∨ α98_2, ?, ⊥] ->{α106_2} CodeBase[out α109_2, out α110_2, ?]) ->{α106_2} CodeBase[out α109_2, out α99_2 ∨ α110_2, ?]
 
 :e
 :fixme
@@ -62,12 +62,12 @@ fun body(x, y) = case
   0 then x
   1 then y
   n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@145),LitPat(BoolLit(true)),Else(Ref(x@132))),Let($scrut@143,App(Ref(.==),Tup(List(Fld(‹›,Ref(n@134),None), Fld(‹›,Lit(IntLit(1)),None)))),Cons(Branch(Ref($scrut@143),LitPat(BoolLit(true)),Else(Ref(y@133))),Else(App(Ref(globalThis:block#8.bind),Tup(List(Fld(‹›,Quoted(App(Ref(.+),Tup(List(Fld(‹›,Unquoted(Ref(x@132)),None), Fld(‹›,Unquoted(Ref(y@133)),None))))),None), Fld(‹›,Lam(List(Param(‹›,z@137,None)),App(App(Ref(globalThis:block#9.body),Tup(List(Fld(‹›,Ref(y@133),None), Fld(‹›,Ref(z@137),None)))),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@134),None), Fld(‹›,Lit(IntLit(1)),None)))),None))))),Some(Forall(List(QuantVar(C@141,None,None)),FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(C@141))), WildcardTy(None,Some(Ref(class:Any))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(C@141))), WildcardTy(None,Some(Ref(class:Any))))),None))))))))))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(caseScrut@130),LitPat(IntLit(0)),Else(Ref(x@128))),Cons(Branch(Ref(caseScrut@130),LitPat(IntLit(1)),Else(Ref(y@129))),Let(n@131,Ref(caseScrut@130),Else(App(Ref(globalThis:block#8.bind),Tup(List(Fld(‹›,Quoted(App(Ref(.+),Tup(List(Fld(‹›,Unquoted(Ref(x@128)),None), Fld(‹›,Unquoted(Ref(y@129)),None))))),None), Fld(‹›,Lam(List(Param(‹›,z@134,None)),App(App(Ref(globalThis:block#9.body),Tup(List(Fld(‹›,Ref(y@129),None), Fld(‹›,Ref(z@134),None)))),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@131),None), Fld(‹›,Lit(IntLit(1)),None)))),None))))),Some(Forall(List(QuantVar(C@138,None,None)),FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(C@138))), WildcardTy(None,Some(Ref(class:Any))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(C@138))), WildcardTy(None,Some(Ref(class:Any))))),None))))))))))) (of class hkmc2.semantics.Split$Cons)
 
 fun bind: [G] -> (CodeBase[out Int, out G, out Any], [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out Int, out C | G, out Any]) -> CodeBase[out Int, out G, out Any]
 fun bind(rhs, k) = `let x = rhs `in k(x)
 bind
-//│ Type: forall α127_2: (CodeBase[out Int, out α127_2, ?], forall α128_3: (CodeBase[out Int, out α128_3, ?]) ->{⊥} CodeBase[out Int, out α128_3 ∨ α127_2, ?]) ->{⊥} CodeBase[out Int, out α127_2, ?]
+//│ Type: forall α121_2: (CodeBase[out Int, out α121_2, ?], forall α122_3: (CodeBase[out Int, out α122_3, ?]) ->{⊥} CodeBase[out Int, out α122_3 ∨ α121_2, ?]) ->{⊥} CodeBase[out Int, out α121_2, ?]
 
 
 :fixme
@@ -77,7 +77,7 @@ fun body(x, y) = case
   1 then y
   n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out Int, out C, out Any]
 body
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@175),LitPat(BoolLit(true)),Else(Ref(x@162))),Let($scrut@173,App(Ref(.==),Tup(List(Fld(‹›,Ref(n@164),None), Fld(‹›,Lit(IntLit(1)),None)))),Cons(Branch(Ref($scrut@173),LitPat(BoolLit(true)),Else(Ref(y@163))),Else(App(Ref(globalThis:block#10.bind),Tup(List(Fld(‹›,Quoted(App(Ref(.+),Tup(List(Fld(‹›,Unquoted(Ref(x@162)),None), Fld(‹›,Unquoted(Ref(y@163)),None))))),None), Fld(‹›,Lam(List(Param(‹›,z@167,None)),App(App(Ref(globalThis:block#11.body),Tup(List(Fld(‹›,Ref(y@163),None), Fld(‹›,Ref(z@167),None)))),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@164),None), Fld(‹›,Lit(IntLit(1)),None)))),None))))),Some(Forall(List(QuantVar(C@171,None,None)),FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(C@171))), WildcardTy(None,Some(Ref(class:Any))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(C@171))), WildcardTy(None,Some(Ref(class:Any))))),None))))))))))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(caseScrut@157),LitPat(IntLit(0)),Else(Ref(x@155))),Cons(Branch(Ref(caseScrut@157),LitPat(IntLit(1)),Else(Ref(y@156))),Let(n@158,Ref(caseScrut@157),Else(App(Ref(globalThis:block#10.bind),Tup(List(Fld(‹›,Quoted(App(Ref(.+),Tup(List(Fld(‹›,Unquoted(Ref(x@155)),None), Fld(‹›,Unquoted(Ref(y@156)),None))))),None), Fld(‹›,Lam(List(Param(‹›,z@161,None)),App(App(Ref(globalThis:block#11.body),Tup(List(Fld(‹›,Ref(y@156),None), Fld(‹›,Ref(z@161),None)))),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@158),None), Fld(‹›,Lit(IntLit(1)),None)))),None))))),Some(Forall(List(QuantVar(C@165,None,None)),FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(C@165))), WildcardTy(None,Some(Ref(class:Any))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(C@165))), WildcardTy(None,Some(Ref(class:Any))))),None))))))))))) (of class hkmc2.semantics.Split$Cons)
 
 fun gib(n) = (x, y) `=> body(x, y)(n)
 let g5 = run(gib(5))
