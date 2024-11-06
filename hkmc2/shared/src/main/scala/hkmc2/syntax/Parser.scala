@@ -453,7 +453,8 @@ abstract class Parser(
   }
   
   
-  def expr(prec: Int, allowIndentedBlock: Bool = false)(using Line): Tree =
+  // TODO: rm `allowIndentedBlock`? Seems it can always be `true`
+  def expr(prec: Int, allowIndentedBlock: Bool = true)(using Line): Tree =
     parseRule(prec,
       if allowIndentedBlock then ParseRule.prefixRulesAllowIndentedBlock else prefixRules
     ).getOrElse(errExpr) // * a `None` result means an alread-reported error
@@ -581,7 +582,7 @@ abstract class Parser(
         consume
         val eff = rec(toks, S(loc), "effect type").concludeWith(_.simpleExpr(0))
         Effectful(eff, simpleExpr(prec))
-      case _ => expr(prec, allowIndentedBlock = true)
+      case _ => expr(prec)
       // case _ => Block.mk(blockMaybeIndented)
   
   
@@ -597,8 +598,8 @@ abstract class Parser(
         prefixRules.kwAlts.get(kw.name) match
         case S(subRule) =>
           parseRule(CommaPrecNext, subRule).getOrElse(errExpr)
-        case N => expr(0, false)
-      case _ => expr(0, false)
+        case N => expr(0)
+      case _ => expr(0)
     item match
       case true => splitItem(acc) // continue
       case false => printDbg(s"! end of split"); acc // break
@@ -629,7 +630,7 @@ abstract class Parser(
       case (tok @ IDENT(opStr, true), loc) :: _ if opPrec(opStr)._1 > 0 =>
         consume
         (Ident(opStr).withLoc(S(loc)) ->
-          expr(0, false)
+          expr(0)
           // expr(CommaPrecNext, false) // FIXME this weirdly leads to "java.lang.OutOfMemoryError: Required array length 2147483638 + 44 is too large"
         )
       case (tok, loc) :: _ =>
@@ -917,7 +918,7 @@ abstract class Parser(
                     ???
                   case _ =>
                 if verbose then printDbg("$ parsing the right-hand side")
-                val rhs = expr(kw.rightPrecOrMax, true)
+                val rhs = expr(kw.rightPrecOrMax)
                 parseRule(kw.rightPrecOrMax, exprAlt.rest).map: rest =>
                   exprCont(exprAlt.k(rhs, rest)(acc), prec, allowNewlines) // FIXME prec??
                 .getOrElse(errExpr)
@@ -940,7 +941,7 @@ abstract class Parser(
       exprJux(acc, prec, allowNewlines)
     case (IDENT(id, false), _) :: _
     if prec < AppPrec && !Keyword.all.contains(id) =>
-      val res = exprCont(Jux(acc, expr(AppPrec, allowNewlines)), prec, allowNewlines)
+      val res = exprCont(Jux(acc, expr(AppPrec)), prec, allowNewlines)
       exprJux(res, prec, allowNewlines)
     case (br @ BRACKETS(Curly | Indent, toks), _) :: _
     if prec < AppPrec && (toks.headOption match

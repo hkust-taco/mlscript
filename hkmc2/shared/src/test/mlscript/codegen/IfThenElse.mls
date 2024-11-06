@@ -141,3 +141,28 @@ f(false, 1, 0)
 //│ = 0
 
 
+if true then
+  100
+//│ = 100
+
+if true then
+  100
+else
+  0
+//│ = 100
+
+if true then
+  100
+else
+  fun f(x) = x
+  f(3)
+//│ = 100
+
+if true then
+  fun f(x) = x
+  f(3)
+else
+  100
+//│ = 3
+
+

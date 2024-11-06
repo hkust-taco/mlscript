@@ -5,7 +5,7 @@ fun res
 
 :showRepl
 fun res() = 1
-//│ REPL> Sending: try { function res() { return 1 }; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Sending: try { function res() { return 1 }; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ REPL> Parsed:
@@ -13,7 +13,7 @@ fun res() = 1
 
 :showRepl
 2 + 2
-//│ REPL> Sending: try { 2 + 2 } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Sending: try { 2 + 2 } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  4
 //│ REPL> Parsed:
@@ -22,7 +22,7 @@ fun res() = 1
 
 :showRepl
 res
-//│ REPL> Sending: try { this.res } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Sending: try { this.res } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  [Function: res]
 //│ REPL> Parsed:
@@ -53,7 +53,7 @@ let x = 1, log(x), x
 
 :showRepl
 let x = 1, log(x), x
-//│ REPL> Sending: try { let tmp; this.x = 1; tmp = this.log(this.x); this.x } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Sending: try { let tmp; this.x = 1; tmp = this.log(this.x); this.x } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
 //│ >  1
@@ -62,7 +62,7 @@ let x = 1, log(x), x
 //│ >  1
 //│ > 1
 //│ = 1
-//│ REPL> Sending: try { this.x } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Sending: try { this.x } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
 //│ REPL> Parsed:

@@ -156,7 +156,8 @@ fun f(x, y, z) =
 //│       Modified:
 //│         modifier = keyword 'else'
 //│         modLoc = N
-//│         body = Ident of "z"
+//│         body = Block of Ls of 
+//│           Ident of "z"
 
 fun f(x, y, z) =
   if x then y
@@ -257,7 +258,7 @@ fun f(x, y, z) =
   if
     x then y else z
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.258: 	    x then y else z
+//│ ║  l.259: 	    x then y else z
 //│ ╙──       	             ^^^^
 //│ Parsed tree:
 //│ TermDef:

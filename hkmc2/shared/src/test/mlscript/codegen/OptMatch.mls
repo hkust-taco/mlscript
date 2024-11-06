@@ -69,4 +69,32 @@ val isOther = x => if x is
 //│ isOther = [Function (anonymous)]
 
 
+fun keepIfGreaterThan(x, y) =
+  if x > y then Some(x) else None
+
+
+1 keepIfGreaterThan(0) isDefined()
+//│ = true
+
+1
+  keepIfGreaterThan(0)
+  isDefined()
+  console.log()
+//│ > true
+
+
+:todo // alternative syntax?
+1
+  . keepIfGreaterThan(0)
+  . isDefined()
+  . console.log()
+//│ /!!!\ Uncaught error: scala.MatchError: OpBlock(List((Ident(.),App(Ident(keepIfGreaterThan),Tup(List(IntLit(0))))), (Ident(.),App(Ident(isDefined),Tup(List()))), (Ident(.),App(Sel(Ident(console),Ident(log)),Tup(List()))))) (of class hkmc2.syntax.Tree$OpBlock)
+
+
+:todo
+1
+  |> keepIfGreaterThan(_, 0)
+  |> isDefined(_)
+//│ /!!!\ Uncaught error: scala.MatchError: OpBlock(List((Ident(|>),App(Ident(keepIfGreaterThan),Tup(List(Ident(_), IntLit(0))))), (Ident(|>),App(Ident(isDefined),Tup(List(Ident(_))))))) (of class hkmc2.syntax.Tree$OpBlock)
+
 

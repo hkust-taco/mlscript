@@ -182,9 +182,10 @@ object ParseRule:
           ParseRule("`if` expression")(
             End(N),
             Kw(`else`):
-              ParseRule(s"`then` operator `else` clause")(
-                Expr(ParseRule(s"`then` operator `else` body")(End(()))):
+              ParseRule(s"`else` keyword")(
+                exprOrBlk(ParseRule(s"`else` expression")(End(()))):
                   case (body, _) => S(body)
+                *
               )
           )
         ):
