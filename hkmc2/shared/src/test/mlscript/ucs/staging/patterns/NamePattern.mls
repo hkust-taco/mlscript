@@ -1,9 +1,0 @@
-:NewDefs
-
-fun id(x) = x
-//│ fun id: forall 'a. 'a -> 'a
-
-if id(0) is t then t
-//│ 0
-//│ res
-//│     = 0

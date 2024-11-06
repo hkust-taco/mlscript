@@ -1,0 +1,9 @@
+fun id(x) = x
+
+:ucs desugared
+if id(0) is t then t
+//│ Desugared:
+//│ >  if
+//│ >    let $scrut@28 = globalThis:block#0.id#0(0)
+//│ >    let t@29 = $scrut@28#0
+//│ >    else t@29#0

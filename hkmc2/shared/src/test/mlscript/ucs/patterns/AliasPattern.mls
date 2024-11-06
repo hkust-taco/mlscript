@@ -1,0 +1,47 @@
+:import ../prelude/Option.mls
+//│ Imported 3 member(s)
+
+:todo
+fun map(f) = case
+  Some(x)   then Some(f(x))
+  None as n then n
+//│ ╔══[PARSE ERROR] Unexpected 'as' keyword here
+//│ ║  l.7: 	  None as n then n
+//│ ╙──     	       ^^
+//│ ╔══[ERROR] Unsupported default case branch.
+//│ ║  l.6: 	  Some(x)   then Some(f(x))
+//│ ║       	  ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.7: 	  None as n then n
+//│ ╙──     	^^^^^^
+
+:todo
+fun map(f) = case
+  Some(x as n) then Some of f(n)
+  None as n then n
+//│ ╔══[PARSE ERROR] Unexpected 'as' keyword here
+//│ ║  l.19: 	  Some(x as n) then Some of f(n)
+//│ ╙──      	         ^^
+//│ ╔══[PARSE ERROR] Unexpected 'as' keyword here
+//│ ║  l.20: 	  None as n then n
+//│ ╙──      	       ^^
+//│ ╔══[ERROR] Unsupported default case branch.
+//│ ║  l.19: 	  Some(x as n) then Some of f(n)
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.20: 	  None as n then n
+//│ ╙──      	^^^^^^
+
+:todo
+fun foo = case
+  Some(Some(a as b) as c) as d then [a, b, c, d]
+//│ ╔══[PARSE ERROR] Unexpected 'as' keyword here
+//│ ║  l.35: 	  Some(Some(a as b) as c) as d then [a, b, c, d]
+//│ ╙──      	              ^^
+//│ ╔══[PARSE ERROR] Unexpected 'as' keyword here
+//│ ║  l.35: 	  Some(Some(a as b) as c) as d then [a, b, c, d]
+//│ ╙──      	                    ^^
+//│ ╔══[PARSE ERROR] Unexpected 'as' keyword here
+//│ ║  l.35: 	  Some(Some(a as b) as c) as d then [a, b, c, d]
+//│ ╙──      	                          ^^
+//│ ╔══[ERROR] Unsupported default case branch.
+//│ ║  l.35: 	  Some(Some(a as b) as c) as d then [a, b, c, d]
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^
