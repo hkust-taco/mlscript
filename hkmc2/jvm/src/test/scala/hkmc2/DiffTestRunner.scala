@@ -55,8 +55,9 @@ object DiffTestRunner:
         else if filePath.ext =/= "mls" then N
         else S(filePath)
       }.toSet catch
-        case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
-        Set.empty
+        case err: Throwable =>
+          System.err.println("/!\\ git command failed with: " + err)
+          Set.empty
     
   end State
   
