@@ -6,38 +6,19 @@ import mlscript.utils.*, shorthands.*
 import Message.MessageContext
 import utils.TraceLogger
 import hkmc2.syntax.Literal
-import Keyword.`let`
+import Keyword.{as, and, `else`, is, let, `then`}
 
 object Desugarer:
-  object and:
+  extension (op: Keyword.Infix)
     infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match
-      case InfixApp(lhs, Keyword.and, rhs) => S((lhs, rhs))
+      case InfixApp(lhs, `op`, rhs) => S((lhs, rhs))
       case _ => N
 
-  object as:
-    infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match
-      case InfixApp(lhs, Keyword.`as`, rhs) => S((lhs, rhs))
-      case _ => N
-
-  object is:
-    infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match
-      case InfixApp(lhs, Keyword.is, rhs) => S((lhs, rhs))
-      case _ => N
-
-  object `then`:
-    infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match
-      case InfixApp(lhs, Keyword.`then`, rhs) => S((lhs, rhs))
-      case _ => N
-
-  object `->`:
+  /** An extractor that accepts either `A and B` or `A then B`. */
+  object `~>`:
     infix def unapply(tree: Tree): Opt[(Tree, Tree \/ Tree)] = tree match
-      case InfixApp(lhs, Keyword.and, rhs) => S((lhs, L(rhs)))
-      case InfixApp(lhs, Keyword.`then`, rhs) => S((lhs, R(rhs)))
-      case _ => N
-
-  object `else`:
-    infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match
-      case InfixApp(lhs, Keyword.`else`, rhs) => S((lhs, rhs))
+      case lhs and rhs => S((lhs, L(rhs)))
+      case lhs `then` rhs => S((lhs, R(rhs)))
       case _ => N
 end Desugarer
 
@@ -187,7 +168,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
     case coda is rhs => fallback => ctx =>
       nominate(ctx, finish(term(coda)(using ctx))):
         patternSplit(rhs, _)(fallback)
-    case matches -> consequent => fallback =>
+    case matches ~> consequent => fallback =>
       // There are N > 0 conjunct matches. We use `::[T]` instead of `List[T]`.
       // Each match is represented by a pair of a _coda_ and a _pattern_
       // that is yet to be elaborated.
@@ -348,7 +329,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
         post = (res: Split) => s"patternSplit (alternative) >>> ${res.showDbg}"
       ):
         patternSplit(branch, scrutSymbol)(elabFallback(backup)(ctx))(ctx)
-    case patternAndMatches -> consequent => fallback =>
+    case patternAndMatches ~> consequent => fallback =>
       // There are N > 0 conjunct matches. We use `::[T]` instead of `List[T]`.
       // Each match is represented by a pair of a _coda_ and a _pattern_
       // that is yet to be elaborated.
