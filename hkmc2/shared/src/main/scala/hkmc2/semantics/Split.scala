@@ -10,7 +10,7 @@ final case class Branch(scrutinee: Term.Ref, pattern: Pattern, continuation: Spl
 
 object Branch:
   def apply(scrutinee: Term.Ref, continuation: Split): Branch =
-    Branch(scrutinee, Pattern.LitPat(Tree.BoolLit(true)), continuation)
+    Branch(scrutinee, Pattern.Lit(Tree.BoolLit(true)), continuation)
 
 enum Split extends AutoLocated with ProductWithTail:
   case Cons(head: Branch, tail: Split)

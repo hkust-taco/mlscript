@@ -411,7 +411,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
         pre = s"expandMatch: literal <<< $literal",
         post = (r: Split) => s"expandMatch: literal >>> ${r.showDbg}"
       ):
-        Branch(ref, Pattern.LitPat(literal), sequel(ctx)) ~: fallback
+        Branch(ref, Pattern.Lit(literal), sequel(ctx)) ~: fallback
       // A single pattern in conjunction with more conditions
       case pattern and consequent => fallback => ctx => 
         val innerSplit = termSplit(consequent, identity)(Split.End)

@@ -215,7 +215,7 @@ class Lowering(using TL, Raise, Elaborator.State):
                 End()
               )
             pat match
-              case Pattern.LitPat(lit) => mkMatch(Case.Lit(lit) -> go(tail, topLevel = false))
+              case Pattern.Lit(lit) => mkMatch(Case.Lit(lit) -> go(tail, topLevel = false))
               case Pattern.ClassLike(cls, trm, args0, _refined) =>
                 subTerm(trm): st =>
                   val args = args0.getOrElse(Nil)

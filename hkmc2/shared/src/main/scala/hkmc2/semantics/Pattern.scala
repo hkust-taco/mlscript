@@ -8,7 +8,7 @@ import syntax.*
 enum Pattern extends AutoLocated:
 
   case Alias(nme: VarSymbol, pattern: Pattern)
-  case LitPat(literal: Literal)
+  case Lit(literal: Literal)
   case Concrete(nme: VarSymbol)
   case Var(nme: BlockLocalSymbol)
   /**
@@ -24,7 +24,7 @@ enum Pattern extends AutoLocated:
   
   def subTerms: Ls[Term] = this match
     case Alias(nme, pattern) => pattern.subTerms
-    case LitPat(literal) => Nil
+    case Lit(literal) => Nil
     case Concrete(nme) => Nil
     case Var(nme) => Nil
     case Empty(source) => source :: Nil
@@ -34,7 +34,7 @@ enum Pattern extends AutoLocated:
   
   def children: Ls[Located] = this match
     case Alias(nme, pattern) => nme :: pattern :: Nil
-    case LitPat(literal) => Nil
+    case Lit(literal) => Nil
     case Concrete(nme) => Nil
     case Var(nme) => Nil
     case Empty(source) => source :: Nil
@@ -44,7 +44,7 @@ enum Pattern extends AutoLocated:
   
   def showDbg: Str = this match
     case Alias(nme, pattern) => s"($nme as $pattern)"
-    case LitPat(literal) => literal.idStr
+    case Lit(literal) => literal.idStr
     case Concrete(nme) => s"`${nme.name}`"
     case Var(nme) => nme.toString
     case Empty(_) => "•"

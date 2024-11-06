@@ -46,13 +46,13 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
     /** Checks if two patterns are the same. */
     def =:=(rhs: Pattern): Bool = (lhs, rhs) match
       case (c1: Pattern.ClassLike, c2: Pattern.ClassLike) => c1.sym === c2.sym
-      case (Pattern.LitPat(l1), Pattern.LitPat(l2)) => l1 === l2
+      case (Pattern.Lit(l1), Pattern.Lit(l2)) => l1 === l2
       case (_, _) => false
     /** Checks if `self` can be subsumed under `rhs`. */
     def <:<(rhs: Pattern): Bool =
       def mk(pattern: Pattern): Option[Literal | ClassSymbol | ModuleSymbol] = lhs match
         case c: Pattern.ClassLike => S(c.sym)
-        case Pattern.LitPat(l) => S(l)
+        case Pattern.Lit(l) => S(l)
         case _ => N
       compareCasePattern(mk(lhs), mk(rhs))
     /**
@@ -90,7 +90,7 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
         case Pattern.Var(vs) =>
           log(s"ALIAS: $scrutinee is $vs")
           Split.Let(vs, scrutinee, rec(consequent ++ alternative))
-        case pattern @ (Pattern.LitPat(_) | _: Pattern.ClassLike) =>
+        case pattern @ (Pattern.Lit(_) | _: Pattern.ClassLike) =>
           log(s"MATCH: $scrutinee is $pattern")
           val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
           val whenFalse = rec(specialize(alternative, -, scrutinee, pattern).clearFallback)
@@ -136,7 +136,7 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
         head match
           case Branch(thatScrutineeVar, Pattern.Var(alias), continuation) =>
             Split.Let(alias, thatScrutineeVar, rec(continuation))
-          case Branch(test, Pattern.LitPat(Tree.BoolLit(true)), continuation) =>
+          case Branch(test, Pattern.Lit(Tree.BoolLit(true)), continuation) =>
             head.copy(continuation = rec(continuation)) ~: rec(tail)
           case Branch(thatScrutinee, thatPattern, continuation) =>
             if scrutinee === thatScrutinee then mode match

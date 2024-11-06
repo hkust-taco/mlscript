@@ -207,11 +207,11 @@ class Pair[A, B](fst: A, snd: B)
 
 :fixme
 if 1 < 2 then 1 else 0
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@112),LitPat(BoolLit(true)),Else(Lit(IntLit(1)))),Else(Lit(IntLit(0)))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@112),Lit(BoolLit(true)),Else(Lit(IntLit(1)))),Else(Lit(IntLit(0)))) (of class hkmc2.semantics.Split$Cons)
 
 :fixme
 if false then 1 else "1"
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@114),LitPat(BoolLit(true)),Else(Lit(IntLit(1)))),Else(Lit(StrLit(1)))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@114),Lit(BoolLit(true)),Else(Lit(IntLit(1)))),Else(Lit(StrLit(1)))) (of class hkmc2.semantics.Split$Cons)
 
 
 if 1 is Int then 1 else 0
@@ -240,7 +240,7 @@ test("1")
 :fixme
 fun fact(n) =
   if n > 1 then n * fact(n - 1) else 1
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@128),LitPat(BoolLit(true)),Else(App(Sel(Ref(globalThis:import#bbPredef),Ident(*)),Tup(List(Fld(‹›,Ref(n@126),None), Fld(‹›,App(Sel(Ref(globalThis:block#49),Ident(fact)),Tup(List(Fld(‹›,App(Sel(Ref(globalThis:import#bbPredef),Ident(-)),Tup(List(Fld(‹›,Ref(n@126),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))),Else(Lit(IntLit(1)))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@128),Lit(BoolLit(true)),Else(App(Sel(Ref(globalThis:import#bbPredef),Ident(*)),Tup(List(Fld(‹›,Ref(n@126),None), Fld(‹›,App(Sel(Ref(globalThis:block#49),Ident(fact)),Tup(List(Fld(‹›,App(Sel(Ref(globalThis:import#bbPredef),Ident(-)),Tup(List(Fld(‹›,Ref(n@126),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))),Else(Lit(IntLit(1)))) (of class hkmc2.semantics.Split$Cons)
 
 fact
 //│ Type: ⊥
@@ -253,7 +253,7 @@ fact(1)
 fun fact2 = case
   0 then 1
   n then n * fact2(n - 1)
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(caseScrut@137),LitPat(IntLit(0)),Else(Lit(IntLit(1)))),Let(n@138,Ref(caseScrut@137),Else(App(Sel(Ref(globalThis:import#bbPredef),Ident(*)),Tup(List(Fld(‹›,Ref(n@138),None), Fld(‹›,App(Sel(Ref(globalThis:block#52),Ident(fact2)),Tup(List(Fld(‹›,App(Sel(Ref(globalThis:import#bbPredef),Ident(-)),Tup(List(Fld(‹›,Ref(n@138),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None))))))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(caseScrut@137),Lit(IntLit(0)),Else(Lit(IntLit(1)))),Let(n@138,Ref(caseScrut@137),Else(App(Sel(Ref(globalThis:import#bbPredef),Ident(*)),Tup(List(Fld(‹›,Ref(n@138),None), Fld(‹›,App(Sel(Ref(globalThis:block#52),Ident(fact2)),Tup(List(Fld(‹›,App(Sel(Ref(globalThis:import#bbPredef),Ident(-)),Tup(List(Fld(‹›,Ref(n@138),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None))))))) (of class hkmc2.semantics.Split$Cons)
 
 fact2
 //│ Type: ⊥
