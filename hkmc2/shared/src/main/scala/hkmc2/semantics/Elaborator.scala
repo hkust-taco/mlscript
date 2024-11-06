@@ -92,7 +92,7 @@ extends Importer:
         fieldOrVarSym(Handler, id)
       val newCtx = ctx.copy(locals = ctx.locals + (id.name -> sym))
       Term.Blk(
-        Term.Handle(sym, term(cls)(using newCtx), block(sts)._1) :: Nil,
+        Term.Handle(sym, term(cls)(using newCtx), ObjBody(block(sts)._1)) :: Nil,
         term(body)(using newCtx)
       )
       

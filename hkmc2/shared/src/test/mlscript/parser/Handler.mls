@@ -79,7 +79,7 @@ in
 //│       Handle:
 //│         lhs = globalThis:block#5.h
 //│         rhs = Ref of class:Eff
-//│         defs = Blk:
+//│         defs = ObjBody of Blk:
 //│           stats = Ls of 
 //│             TermDefinition:
 //│               k = Fun

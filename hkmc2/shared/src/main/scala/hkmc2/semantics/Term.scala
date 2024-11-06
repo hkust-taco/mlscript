@@ -34,7 +34,7 @@ enum Term extends Statement:
   case Deref(ref: Term)
   case Ret(result: Term)
   case Try(body: Term, finallyDo: Term)
-  case Handle(lhs: LocalSymbol, rhs: Term, defs: Term.Blk)
+  case Handle(lhs: LocalSymbol, rhs: Term, defs: ObjBody)
   
   var symbol: Opt[Symbol] = N
   
@@ -121,7 +121,7 @@ sealed trait Statement extends AutoLocated:
       td.rhs.toList
     case Import(sym, pth) => Nil
     case Try(body, finallyDo) => body :: finallyDo :: Nil
-    case Handle(lhs, rhs, defs) => rhs :: defs :: Nil
+    case Handle(lhs, rhs, defs) => rhs :: defs._1 :: Nil
   
   protected def children: Ls[Located] = this match
     case t: Lit => t.lit.asTree :: Nil
