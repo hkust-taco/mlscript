@@ -12,7 +12,7 @@ sum'([1, 2])
 :e
 fun sum''(pair) =
   if pair is [x, y] then x + y
-sum'([1, 2])
+sum''([1, 2])
 //│ ╔══[ERROR] Unrecognized pattern.
 //│ ║  l.14: 	  if pair is [x, y] then x + y
 //│ ╙──      	             ^^^^^^
