@@ -5,55 +5,65 @@ fun sum(x, y) = x + y
 sum(1, 2)
 
 :fixme
-fun sum'([x, y]) = x + y
-sum'([1, 2])
+fun sum([x, y]) = x + y
+sum([1, 2])
 //│ /!!!\ Uncaught error: scala.MatchError: Tup(List(Ident(x), Ident(y))) (of class hkmc2.syntax.Tree$Tup)
 
-:todo
+:ucs desugared
 fun sum''(pair) =
   if pair is [x, y] then x + y
 sum''([1, 2])
-//│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.14: 	  if pair is [x, y] then x + y
-//│ ╙──      	             ^^^^^^
+//│ Desugared:
+//│ >  if pair@18 is [$elem0@19, $elem1@20] and
+//│ >    let x@21 = $elem0@19#0
+//│ >    let y@22 = $elem1@20#0
+//│ >    else builtin:+#0(x@21#666, y@22#666)
 
-// We need native support for tuple patterns in MLscript syntax.
-// Otherwise the following cases work.
-
-:todo
+:ucs desugared
 fun test(thing) =
   if thing is [] then 0
 test("")
 test(12)
-//│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.25: 	  if thing is [] then 0
-//│ ╙──      	              ^^
+//│ Desugared:
+//│ >  if thing@27 is [] then 0
 
-:todo
-// Since pattern destruction is desugared to let bindings, matching with other
-// classes after the tuple pattern will not work.
+:ucs desugared
 class Point(x: Int, y: Int)
 fun discarded_cases(thing) =
   if thing is
     [x, y] then x + y
     Point(x, y) then x + y
-//│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.38: 	    [x, y] then x + y
-//│ ╙──      	    ^^^^^^
+//│ Desugared:
+//│ >  if
+//│ >    thing@32 is [$elem0@38, $elem1@39] and
+//│ >      let x@40 = $elem0@38#0
+//│ >      let y@41 = $elem1@39#0
+//│ >      else builtin:+#1(x@40#666, y@41#666)
+//│ >    thing@32 is Point($param0@33, $param1@34) and
+//│ >      let x@35 = $param0@33#0
+//│ >      let y@36 = $param1@34#0
+//│ >      else builtin:+#0(x@35#666, y@36#666)
 
 :e
 :todo
 discarded_cases(Point(0, 0))
 
 // A workaround is to move the tuple pattern to the last case.
-:todo
+:ucs desugared
 fun working_cases(thing) =
   if thing is
     Point(x, y) then x + y
     [x, y] then x + y
-//│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.53: 	    [x, y] then x + y
-//│ ╙──      	    ^^^^^^
+//│ Desugared:
+//│ >  if
+//│ >    thing@48 is Point($param0@54, $param1@55) and
+//│ >      let x@56 = $param0@54#0
+//│ >      let y@57 = $param1@55#0
+//│ >      else builtin:+#1(x@56#666, y@57#666)
+//│ >    thing@48 is [$elem0@49, $elem1@50] and
+//│ >      let x@51 = $elem0@49#0
+//│ >      let y@52 = $elem1@50#0
+//│ >      else builtin:+#0(x@51#666, y@52#666)
 
 working_cases(Point(0, 0))
 
@@ -61,16 +71,13 @@ working_cases(Point(0, 0))
 :todo
 working_cases([0, 0])
 
-:todo
+
 fun not_working(x) =
   if x is
     [a, b, c] then
       a + b + c
     else
       0
-//│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.67: 	    [a, b, c] then
-//│ ╙──      	    ^^^^^^^^^
 
 not_working([1, 2, 3])
 

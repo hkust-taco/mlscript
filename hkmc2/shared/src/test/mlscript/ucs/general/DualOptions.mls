@@ -103,25 +103,12 @@ add_5(None, Some(9))
 add_5(Some(5), Some(9))
 
 
-:fixme
 fun add_6(x, y) =
   if [x, y] is
     [Some(xv), Some(yv)] then xv + yv
     [Some(xv), None]     then xv
     [None,     Some(yv)] then yv
     [None,     None]     then 0
-//│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.112: 	    [None,     None]     then 0
-//│ ╙──       	    ^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.111: 	    [None,     Some(yv)] then yv
-//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.110: 	    [Some(xv), None]     then xv
-//│ ╙──       	    ^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.109: 	    [Some(xv), Some(yv)] then xv + yv
-//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^
 
 add_6(None, None)
 add_6(Some(5), None)

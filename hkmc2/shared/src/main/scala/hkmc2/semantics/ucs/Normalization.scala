@@ -47,6 +47,7 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
     def =:=(rhs: Pattern): Bool = (lhs, rhs) match
       case (c1: Pattern.ClassLike, c2: Pattern.ClassLike) => c1.sym === c2.sym
       case (Pattern.Lit(l1), Pattern.Lit(l2)) => l1 === l2
+      case (Pattern.Tuple(fs1), Pattern.Tuple(fs2)) => fs1.length === fs2.length
       case (_, _) => false
     /** Checks if `self` can be subsumed under `rhs`. */
     def <:<(rhs: Pattern): Bool =
@@ -90,7 +91,7 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
         case Pattern.Var(vs) =>
           log(s"ALIAS: $scrutinee is $vs")
           Split.Let(vs, scrutinee, rec(consequent ++ alternative))
-        case pattern @ (Pattern.Lit(_) | _: Pattern.ClassLike) =>
+        case pattern @ (Pattern.Lit(_) | _: Pattern.ClassLike | Pattern.Tuple(_)) =>
           log(s"MATCH: $scrutinee is $pattern")
           val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
           val whenFalse = rec(specialize(alternative, -, scrutinee, pattern).clearFallback)
@@ -146,7 +147,7 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
                   log(s"Case 1.1.1: $pattern =:= $thatPattern")
                   thatPattern reportInconsistentRefinedWith pattern
                   aliasBindings(pattern, thatPattern)(rec(continuation) ++ rec(tail))
-                else if (thatPattern <:< pattern) then
+                else if thatPattern <:< pattern then
                   log(s"Case 1.1.2: $pattern <:< $thatPattern")
                   pattern.markAsRefined; split
                 else if split.isFallback then

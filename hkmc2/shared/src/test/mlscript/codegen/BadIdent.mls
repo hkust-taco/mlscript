@@ -1,0 +1,17 @@
+:js
+
+
+:global
+:sjs
+
+let x = 0
+//│ JS:
+//│ this.x = 0; undefined
+//│ x = 0
+
+:fixme
+let x' = 0
+//│ JS:
+//│ this.x' = 0; undefined
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string

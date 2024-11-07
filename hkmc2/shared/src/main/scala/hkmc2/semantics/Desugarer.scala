@@ -7,6 +7,7 @@ import Message.MessageContext
 import utils.TraceLogger
 import hkmc2.syntax.Literal
 import Keyword.{as, and, `else`, is, let, `then`}
+import collection.mutable.HashMap
 
 object Desugarer:
   extension (op: Keyword.Infix)
@@ -20,6 +21,10 @@ object Desugarer:
       case lhs and rhs => S((lhs, L(rhs)))
       case lhs `then` rhs => S((lhs, R(rhs)))
       case _ => N
+
+  class ScrutineeData:
+    val classes: HashMap[ClassSymbol, List[BlockLocalSymbol]] = HashMap.empty
+    val tuples: HashMap[Int, List[BlockLocalSymbol]] = HashMap.empty
 end Desugarer
 
 class Desugarer(tl: TraceLogger, elaborator: Elaborator)
@@ -58,15 +63,17 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ++ fallback)
         case Split.Else(_) /* impossible */ | Split.End => fallback)
 
-  import collection.mutable.HashMap
-
-  private val subScrutineeMap = HashMap.empty[BlockLocalSymbol, HashMap[ClassSymbol, List[BlockLocalSymbol]]]
+  private val subScrutineeMap = HashMap.empty[BlockLocalSymbol, ScrutineeData]
 
   extension (symbol: BlockLocalSymbol)
     def getSubScrutinees(cls: ClassSymbol): List[BlockLocalSymbol] =
-      subScrutineeMap.getOrElseUpdate(symbol, HashMap.empty).getOrElseUpdate(cls, {
+      subScrutineeMap.getOrElseUpdate(symbol, new ScrutineeData).classes.getOrElseUpdate(cls, {
         val arity = cls.defn.flatMap(_.paramsOpt.map(_.length)).getOrElse(0)
         (0 until arity).map(i => TempSymbol(nextUid, N, s"param$i")).toList
+      })
+    def getSubScrutinees(arity: Int): List[BlockLocalSymbol] =
+      subScrutineeMap.getOrElseUpdate(symbol, new ScrutineeData).tuples.getOrElseUpdate(arity, {
+        (0 until arity).map(i => TempSymbol(nextUid, N, s"elem$i")).toList
       })
 
   def default: Split => Sequel = split => _ => split
@@ -383,6 +390,16 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
           // Raise an error and discard `sequel`. Use `fallback` instead.
           raise(ErrorReport(msg"Cannot use this ${ctor.describe} as a pattern" -> ctor.toLoc :: Nil))
           fallback
+      case Tree.Tup(args) => fallback => ctx => trace(
+        pre = s"expandMatch <<< ${args.mkString(", ")}",
+        post = (r: Split) => s"expandMatch >>> ${r.showDbg}"
+      ):
+        val params = scrutSymbol.getSubScrutinees(args.length)
+        Branch(
+          ref,
+          Pattern.Tuple(params),
+          subMatches(params zip args, sequel)(Split.End)(ctx)
+        ) ~: fallback
       // A single constructor pattern.
       case pat @ App(ctor @ (_: Ident | _: Sel), Tup(args)) => fallback => ctx => trace(
         pre = s"expandMatch <<< ${ctor}(${args.iterator.map(_.showDbg).mkString(", ")})",

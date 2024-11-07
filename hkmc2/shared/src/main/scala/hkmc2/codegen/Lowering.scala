@@ -239,6 +239,11 @@ class Lowering(using TL, Raise, Elaborator.State):
                   // val (cse, blk) =
                   // mkMatch(cse -> blk)
                   mkMatch(mkArgs(clsParams.zip(args)))
+              case Pattern.Tuple(args) =>
+                val cse = Case.Tup(args.length) -> go(tail, topLevel = false)
+                val blk = args.iterator.zipWithIndex.foldRight[Block](cse._2):
+                  case ((f, i), acc) => Assign(f, Select(sr, Tree.Ident(s"$i")), acc)
+                mkMatch((cse._1, blk))
             // Match(sr, cse :: Nil,
             //   S(go(restSplit, topLevel = true)),
             //   End()

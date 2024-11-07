@@ -255,6 +255,16 @@ class JSBuilder extends CodeBuilder:
         doc" else { #{ ${ returningTerm(el) } #}  # }"
       case N  => doc""
       t :: e :: returningTerm(rest)
+    case Match(scrut, Case.Tup(len) -> trm :: Nil, els, rest) =>
+      val test = doc"Array.isArray(${ result(scrut) }) && ${ result(scrut) }.length === ${len}"
+      val t = doc" # if (${ test }) { #{ ${
+          returningTerm(trm)
+        } #}  # }"
+      val e = els match
+      case S(el) =>
+        doc" else { #{ ${ returningTerm(el) } #}  # }"
+      case N  => doc""
+      t :: e :: returningTerm(rest)
     
     case Begin(sub, thn) =>
       doc"${returningTerm(sub)} # ${returningTerm(thn).stripBreaks}"

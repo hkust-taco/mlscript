@@ -658,14 +658,14 @@ extends Importer:
       case id @ Ident(name) =>
         val sym = boundVars.getOrElseUpdate(name, VarSymbol(id, nextUid))
         Pattern.Var(sym)
-      case Tup(fields) =>
-        val pats = fields.map(
-          f => pattern(f) match
-            case (pat, vars) =>
-              boundVars ++= vars
-              pat
-        )
-        Pattern.Tuple(pats)
+      // case Tup(fields) =>
+      //   val pats = fields.map(
+      //     f => pattern(f) match
+      //       case (pat, vars) =>
+      //         boundVars ++= vars
+      //         pat
+      //   )
+      //   Pattern.Tuple(pats)
       case _ =>
         ???
     (go(t), boundVars.toList)
