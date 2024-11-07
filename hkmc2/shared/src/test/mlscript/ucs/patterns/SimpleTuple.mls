@@ -16,9 +16,6 @@ sum''([1, 2])
 //│ ╔══[ERROR] Unrecognized pattern.
 //│ ║  l.14: 	  if pair is [x, y] then x + y
 //│ ╙──      	             ^^^^^^
-//│ ╔══[ERROR] Name not found: sum'
-//│ ║  l.15: 	sum'([1, 2])
-//│ ╙──      	^^^^
 
 // We need native support for tuple patterns in MLscript syntax.
 // Otherwise the following cases work.
@@ -29,7 +26,7 @@ fun test(thing) =
 test("")
 test(12)
 //│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.28: 	  if thing is [] then 0
+//│ ║  l.25: 	  if thing is [] then 0
 //│ ╙──      	              ^^
 
 :todo
@@ -41,7 +38,7 @@ fun discarded_cases(thing) =
     [x, y] then x + y
     Point(x, y) then x + y
 //│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.41: 	    [x, y] then x + y
+//│ ║  l.38: 	    [x, y] then x + y
 //│ ╙──      	    ^^^^^^
 
 :e
@@ -55,7 +52,7 @@ fun working_cases(thing) =
     Point(x, y) then x + y
     [x, y] then x + y
 //│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.56: 	    [x, y] then x + y
+//│ ║  l.53: 	    [x, y] then x + y
 //│ ╙──      	    ^^^^^^
 
 working_cases(Point(0, 0))
@@ -72,7 +69,7 @@ fun not_working(x) =
     else
       0
 //│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.70: 	    [a, b, c] then
+//│ ║  l.67: 	    [a, b, c] then
 //│ ╙──      	    ^^^^^^^^^
 
 not_working([1, 2, 3])
