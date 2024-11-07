@@ -98,10 +98,10 @@ class ReplHost(using TL) {
     stdin.write(if code.endsWith("\n") then code else code + "\n")
     stdin.flush()
   
-  def query(code: Str): (ReplHost.Reply, Str) =
+  def query(code: Str, showStackTrace: Bool): (ReplHost.Reply, Str) =
     // Wrap the code with `try`-`catch` block.
     val wrapped =
-      s"try { $code } catch (e) { console.log('\\u200B' + e + '\\u200B'); }"
+      s"try { $code } catch (e) { console.log('\\u200B' + ${if showStackTrace then "e.stack" else "e"} + '\\u200B'); }"
     // Send the code
     send(wrapped)
     (parseQueryResult() match

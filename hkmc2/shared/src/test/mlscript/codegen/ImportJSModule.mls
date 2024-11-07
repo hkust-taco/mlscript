@@ -1,11 +1,6 @@
 :js
 
-:sjs
 import "../../js/Test.mjs"
-//│ JS:
-//│ this.Test = await import("/storage/mark/Repos/mlscript/hkmc2/shared/src/test/js/Test.mjs");
-//│ if (this.Test.default !== undefined) this.Test = this.Test.default;
-//│ undefined
 //│ Test = [Module: null prototype] { greet: [Function: greet] }
 
 Test

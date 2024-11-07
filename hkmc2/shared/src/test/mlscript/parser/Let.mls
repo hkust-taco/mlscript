@@ -245,20 +245,16 @@ x =>
 //│ Parsed:
 //│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Block(List(LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None), Ident(x))))
 
-:pe
 x => let x = 1
   x
-//│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.250: 	  x
-//│ ╙──       	  ^
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None))
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',LetLike(keyword 'let',Ident(x),Some(Jux(IntLit(1),Block(List(Ident(x))))),None))
 
 
 :pe
 if
-//│ ╔══[PARSE ERROR] Expected expression or block after `if` keyword; found end of input instead
-//│ ║  l.259: 	if
+//│ ╔══[PARSE ERROR] Expected expression or block after 'if' keyword; found end of input instead
+//│ ║  l.255: 	if
 //│ ╙──       	  ^
 //│ Parsed:
 //│ 	Error()

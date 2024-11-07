@@ -26,6 +26,15 @@ enum Pattern extends Located:
     case LitPat(literal) => literal.toLoc
     case pat @ Class(_, _, _) => pat.ident.toLoc
   
+  def subTerms: Ls[Term] = this match
+    case Alias(nme, pattern) => pattern.subTerms
+    case LitPat(literal) => Nil
+    case Concrete(nme) => Nil
+    case Var(nme) => Nil
+    case Empty(source) => source :: Nil
+    case Class(_, parameters, _) => Nil
+    case Tuple(fields) => fields.flatMap(_.subTerms)
+    case Record(entries) => entries.flatMap(_._2.subTerms)
   
   /* 
   def toLoc: Opt[Loc] = Loc(children)

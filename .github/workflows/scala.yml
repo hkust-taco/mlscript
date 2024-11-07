@@ -24,4 +24,6 @@ jobs:
     - name: Run tests
       run: sbt -J-Xmx4096M -J-Xss4M test
     - name: Check no changes
-      run: git diff-files -p --exit-code
+      run: |
+        git update-index -q --refresh
+        git diff-files -p --exit-code

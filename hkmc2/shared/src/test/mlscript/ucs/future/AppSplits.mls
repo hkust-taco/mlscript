@@ -21,12 +21,13 @@ if foo of 1,
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
 //│ ║  l.19: 	  0 then "a"
 //│ ╙──      	  ^
-//│ ╔══[PARSE ERROR] Unexpected literal here
+//│ ╔══[ERROR] Unrecognized term split (juxtaposition).
+//│ ║  l.18: 	if foo of 1,
+//│ ║        	   ^^^^^^^^^
 //│ ║  l.19: 	  0 then "a"
-//│ ╙──      	  ^
-//│ ╔══[ERROR] Unrecognized term split.
-//│ ║  l.19: 	  0 then "a"
-//│ ╙──      	^^
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.20: 	  1 then "b"
+//│ ╙──      	^^^^^^^^^^^^
 
 :todo
 :pe
@@ -34,11 +35,12 @@ if foo of 1,
 if foo
   (0) then "a"
   (1) then "b"
-//│ ╔══[PARSE ERROR] Unexpected parenthesis section here
-//│ ║  l.35: 	  (0) then "a"
-//│ ╙──      	  ^^^
-//│ ╔══[ERROR] Unrecognized term split.
-//│ ║  l.34: 	if foo
-//│ ╙──      	   ^^^
+//│ ╔══[ERROR] Unrecognized term split (juxtaposition).
+//│ ║  l.35: 	if foo
+//│ ║        	   ^^^
+//│ ║  l.36: 	  (0) then "a"
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.37: 	  (1) then "b"
+//│ ╙──      	^^^^^^^^^^^^^^
 
 

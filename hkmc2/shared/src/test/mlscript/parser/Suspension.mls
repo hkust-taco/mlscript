@@ -1,6 +1,22 @@
 :parseOnly
 
 
+log of ...
+123
+//│ Parsed:
+//│ 	App(Ident(log),Tup(List(IntLit(123))))
+
+log of...
+123
+//│ Parsed:
+//│ 	App(Ident(log),Tup(List(IntLit(123))))
+
+log of
+  123
+//│ Parsed:
+//│ 	App(Ident(log),Tup(List(IntLit(123))))
+
+
 module Option with ...
 //│ Parsed:
 //│ 	TypeDef(Mod,Ident(Option),None,Some(Block(List(UnitLit(true)))))

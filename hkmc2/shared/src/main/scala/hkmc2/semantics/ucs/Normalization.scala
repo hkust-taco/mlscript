@@ -39,7 +39,7 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
       else (these match
         case Split.Cons(head, tail) => Split.Cons(head, tail ++ those)
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ++ those)
-        case Split.Else(_) /* impossible */ | Split.Nil => those)
+        case Split.Else(_) /* impossible */ | Split.End => those)
 
   /** We don't care about `Pattern.Name` because they won't appear in `specialize`. */
   extension (lhs: Pattern)
@@ -93,7 +93,7 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
           log(s"MATCH: $scrutinee is $pattern")
           val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
           val whenFalse = rec(specialize(alternative, -, scrutinee, pattern).clearFallback)
-          Branch(scrutinee, pattern, whenTrue) :: whenFalse
+          Branch(scrutinee, pattern, whenTrue) ~: whenFalse
         case _ =>
           raiseDesugaringError(msg"unsupported pattern matching: ${scrutinee.toString} is ${pattern.toString}" -> pattern.toLoc)
           Split.default(Term.Error)
@@ -106,7 +106,7 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
       case Split.Else(default) =>
         log(s"DFLT: ${default.showDbg}")
         Split.Else(default)
-      case Split.Nil => Split.Nil
+      case Split.End => Split.End
     rec(split)
 
   /**
@@ -125,7 +125,7 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
     post = (r: Split) => s"S$mode >>> ${Split.display(r)}"
   ):
     def rec(split: Split)(using mode: Mode, vs: VarSet): Split = split match
-      case Split.Nil => log("CASE Nil"); split
+      case Split.End => log("CASE Nil"); split
       case Split.Else(_) => log("CASE Else"); split
       case split @ Split.Let(sym, _, tail) =>
         log(s"CASE Let ${sym}")
@@ -136,7 +136,7 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
           case Branch(thatScrutineeVar, Pattern.Var(alias), continuation) =>
             Split.Let(alias, thatScrutineeVar, rec(continuation))
           case Branch(test, Pattern.LitPat(Tree.BoolLit(true)), continuation) =>
-            head.copy(continuation = rec(continuation)) :: rec(tail)
+            head.copy(continuation = rec(continuation)) ~: rec(tail)
           case Branch(thatScrutinee, thatPattern, continuation) =>
             if scrutinee === thatScrutinee then mode match
               case + =>
@@ -179,7 +179,7 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
                   split.copy(tail = rec(tail))
             else
               log(s"Case 2: $scrutinee =/= $thatScrutinee")
-              head.copy(continuation = rec(continuation)) :: rec(tail)
+              head.copy(continuation = rec(continuation)) ~: rec(tail)
         end match
     end rec
     rec(split)(using mode, summon)

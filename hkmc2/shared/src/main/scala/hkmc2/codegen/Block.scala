@@ -32,8 +32,10 @@ sealed abstract class Block extends Product with AutoLocated:
     case Match(scrut, arms, dflt, rst) =>
       arms.flatMap(_._2.definedVars).toSet ++ dflt.toList.flatMap(_.definedVars) ++ rst.definedVars
     case End(_) => Set.empty
+    case Break(_, _) => Set.empty
     case Define(defn, rst) => rst.definedVars
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
+    case Label(lbl, bod, rst) => bod.definedVars ++ rst.definedVars
   
   // TODO conserve if no changes
   def mapTail(f: BlockTail => BlockTail): Block = this match
@@ -60,6 +62,11 @@ case class Return(res: Result, implct: Bool) extends BlockTail
 
 case class Throw(exc: Result) extends BlockTail
 
+case class Label(label: Local, body: Block, rest: Block) extends BlockTail
+
+case class Break(label: Local, toBeginning: Bool) extends BlockTail
+
+// TODO: remove this form?
 case class Begin(sub: Block, rest: Block) extends Block with ProductWithTail
 
 case class TryBlock(sub: Block, finallyDo: Block, rest: Block) extends Block with ProductWithTail
@@ -74,7 +81,7 @@ sealed abstract class Defn:
 final case class TermDefn(
     k: syntax.TermDefKind,
     sym: TermSymbol,
-    params: Opt[Ls[Param]],
+    params: Ls[ParamList],
     body: Block,
 ) extends Defn
 

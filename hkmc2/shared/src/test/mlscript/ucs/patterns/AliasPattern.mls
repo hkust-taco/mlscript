@@ -1,0 +1,40 @@
+:import ../prelude/Option.mls
+//│ Imported 3 member(s)
+
+:global
+:ucs desugared
+
+fun map(f) = case
+  Some(x)   then Some(f(x))
+  None as n then n
+//│ Desugared:
+//│ >  if
+//│ >    caseScrut@31 is Some($param0@33) and
+//│ >      let x@34 = $param0@33#0
+//│ >      else class:Some#1(f@30#0(x@34#0))
+//│ >    caseScrut@31 is None and
+//│ >      let n@32 = caseScrut@31#1
+//│ >      else n@32#0
+
+fun map(f) = case
+  Some(x as n) then Some of f(n)
+  None as n then n
+//│ Desugared:
+//│ >  if
+//│ >    caseScrut@40 is Some($param0@42) and
+//│ >      let x@44 = $param0@42#0
+//│ >      let n@43 = $param0@42#1
+//│ >      else class:Some#3(f@39#0(n@43#0))
+//│ >    caseScrut@40 is None and
+//│ >      let n@41 = caseScrut@40#1
+//│ >      else n@41#0
+
+fun foo = case
+  Some(Some(a as b) as c) as d then [a, b, c, d]
+//│ Desugared:
+//│ >  if caseScrut@49 is Some($param0@51) and $param0@51 is Some($param0@53) and
+//│ >    let a@55 = $param0@53#0
+//│ >    let b@54 = $param0@53#1
+//│ >    let c@52 = $param0@51#1
+//│ >    let d@50 = caseScrut@49#1
+//│ >    else [a@55#0, b@54#0, c@52#0, d@50#0]

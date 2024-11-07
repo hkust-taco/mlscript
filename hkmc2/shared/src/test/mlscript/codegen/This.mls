@@ -1,0 +1,54 @@
+:js
+
+
+:sjs
+fun test(x) =
+  [this.a, x]
+//│ JS:
+//│ function test(x) { return [ globalThis.a, x ] }; undefined
+
+test(123)
+//│ = [ undefined, 123 ]
+
+val a = 1
+//│ a = 1
+
+test(123)
+//│ = [ 1, 123 ]
+
+:sjs
+module Test with
+  val a = 2
+  fun test1(x) =
+    test(x)
+  fun test2(x) =
+    [this.a, x]
+//│ JS:
+//│ this.Test = new class Test {
+//│   constructor() {
+//│     this.a = 2;
+//│   }
+//│   test1(x) {
+//│     return globalThis.test(x)
+//│   } 
+//│   test2(x1) {
+//│     return [
+//│       this.a,
+//│       x1
+//│     ]
+//│   }
+//│   toString() { return "Test"; }
+//│ };
+//│ undefined
+
+
+Test.test1(123)
+//│ = [ 1, 123 ]
+
+Test.test2(123)
+//│ = [ 2, 123 ]
+
+
+
+
+

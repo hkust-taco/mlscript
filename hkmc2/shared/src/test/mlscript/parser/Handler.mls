@@ -66,11 +66,14 @@ in
 //│     TermDefinition:
 //│       k = Fun
 //│       sym = globalThis:block#5.foo
-//│       params = S of Ls of 
-//│         Param:
-//│           flags = ()
-//│           sym = h@29
-//│           sign = N
+//│       params = Ls of 
+//│         ParamList:
+//│           flags = ParamListFlags of false
+//│           params = Ls of 
+//│             Param:
+//│               flags = ()
+//│               sym = h@29
+//│               sign = N
 //│       sign = N
 //│       body = S of Lit of IntLit of 0
 //│       resSym = ‹result of globalThis:block#5.foo›@30
@@ -84,11 +87,14 @@ in
 //│             TermDefinition:
 //│               k = Fun
 //│               sym = globalThis:block#5.f
-//│               params = S of Ls of 
-//│                 Param:
-//│                   flags = ()
-//│                   sym = r@31
-//│                   sign = N
+//│               params = Ls of 
+//│                 ParamList:
+//│                   flags = ParamListFlags of false
+//│                   params = Ls of 
+//│                     Param:
+//│                       flags = ()
+//│                       sym = r@31
+//│                       sign = N
 //│               sign = N
 //│               body = S of App:
 //│                 lhs = Ref of r@31

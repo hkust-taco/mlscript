@@ -12,6 +12,9 @@ import hkmc2.semantics.Elaborator
 import hkmc2.syntax.Tree
 import hkmc2.semantics.TopLevelSymbol
 import hkmc2.semantics.MemberSymbol
+import hkmc2.semantics.ParamList
+import hkmc2.codegen.Value.Lam
+import hkmc2.semantics.ImportedSymbol
 
 
 // TODO factor some logic for other codegen backends
@@ -57,6 +60,8 @@ class JSBuilder extends CodeBuilder:
         doc"${result(Value.This(owner))}.${ts.id.name}"
       case N =>
         ts.id.name
+    case imp: ImportedSymbol =>
+      doc"${getVar(imp.base)}.${imp.id.name}"
     case _ => summon[Scope].lookup_!(l)
   
   def result(r: Result)(using Raise, Scope): Document = r match
@@ -99,11 +104,14 @@ class JSBuilder extends CodeBuilder:
         result(Value.This(sym))
       val (thisProxy, res) = scope.nestRebindThis(defn.sym):
         val defnJS = defn match
-        case TermDefn(syntax.Fun, sym, N, body) =>
+        case TermDefn(syntax.Fun, sym, Nil, body) =>
           TODO("getters")
-        case TermDefn(syntax.Fun, sym, S(ps), bod) =>
-          val vars = ps.map(p => scope.allocateName(p.sym)).mkDocument(", ")
-          doc"function ${sym.nme}($vars) { #{  # ${body(bod)} #}  # }"
+        case TermDefn(syntax.Fun, sym, ParamList(_, ps) :: pss, bod) =>
+          val paramList = ps.map(p => scope.allocateName(p.sym)).mkDocument(", ")
+          val result = pss.foldRight(bod):
+            case (ParamList(_, ps), block) => 
+              Return(Lam(ps, block), false)
+          doc"function ${sym.nme}(${paramList}) { #{  # ${body(result)} #}  # }"
         case ClsDefn(sym, syntax.Cls, mtds, flds, ctor) =>
           val clsDefn = sym.defn.getOrElse(die)
           val clsParams = clsDefn.paramsOpt.getOrElse(Nil)
@@ -118,11 +126,12 @@ class JSBuilder extends CodeBuilder:
           }) { #{  # ${
             ctorCode.stripBreaks
           } #}  # }${
-            mtds.map: td =>
-              val vars = td.params.getOrElse(Nil).map(p => scope.allocateName(p.sym)).mkDocument(", ")
-              doc" # ${td.sym.nme}($vars) { #{  # ${
-                body(td.body)
-              } #}  # }"
+            mtds.map: 
+              case td @ TermDefn(_, _, ParamList(_, ps) :: Nil, _) =>
+                val vars = ps.map(p => scope.allocateName(p.sym)).mkDocument(", ")
+                doc" # ${td.sym.nme}($vars) { #{  # ${
+                  body(td.body)
+                } #}  # }"
             .mkDocument(" ")
           }${
             if mtds.exists(_.sym.nme == "toString")
@@ -194,6 +203,18 @@ class JSBuilder extends CodeBuilder:
     
     case Throw(res) =>
       doc" # throw ${result(res)}"
+    
+    case Break(lbl, false) =>
+      doc" # break ${getVar(lbl)}"
+    
+    case Break(lbl, true) =>
+      doc" # continue ${getVar(lbl)}"
+    
+    case Label(lbl, bod, rst) =>
+      scope.allocateName(lbl)
+      doc" # ${getVar(lbl)}: while (true) { #{ ${
+        returningTerm(bod)
+      } # break; #}  # }${returningTerm(rst)}"
       
     case TryBlock(sub, fin, rst) =>
       doc" # try { #{ ${returningTerm(sub)

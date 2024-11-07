@@ -1,0 +1,37 @@
+:js
+
+
+module Foo with
+  val x = 1
+  val y = 2
+  val z = 3
+
+:sjs
+open Foo { x }
+//│ JS:
+//│ undefined
+
+open Foo { x, y }
+
+x + y
+//│ = 3
+
+:e
+z
+//│ ╔══[ERROR] Name not found: z
+//│ ║  l.20: 	z
+//│ ╙──      	^
+
+
+open Bar { y, Baz }
+open Baz { b }
+module Bar with
+  val x = 1
+  val y = 2
+  module Baz with
+    val a = 4
+    val b = 5
+  open Baz { a }
+  fun f() = [a, b, y]
+
+

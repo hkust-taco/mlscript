@@ -55,8 +55,9 @@ object DiffTestRunner:
         else if filePath.ext =/= "mls" then N
         else S(filePath)
       }.toSet catch
-        case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
-        Set.empty
+        case err: Throwable =>
+          System.err.println("/!\\ git command failed with: " + err)
+          Set.empty
     
   end State
   
@@ -82,7 +83,7 @@ abstract class DiffTestRunner(state: DiffTestRunner.State)
         "\n\tNote: you can increase this limit by changing DiffTests.TimeLimit")
       // * Thread.stop() is considered bad practice because normally it's better to implement proper logic
       // * to terminate threads gracefully, avoiding leaving applications in a bad state.
-      // * But here we DGAF since all the test is doing is runnign a type checker and some Node REPL,
+      // * But here we DGAF since all the test is doing is running a type checker and some Node REPL,
       // * which would be a much bigger pain to make receptive to "gentle" interruption.
       // * It would feel extremely wrong to intersperse the pure type checker algorithms
       // * with ugly `Thread.isInterrupted` checks everywhere...

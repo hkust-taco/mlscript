@@ -61,3 +61,17 @@ f of
 //│ 	App(Ident(f),Tup(List(IntLit(1), IntLit(2), IntLit(3))))
 
 
+:pe
+log
+of 1
+//│ ╔══[PARSE ERROR] Expected start of statement in this position; found 'of' keyword instead
+//│ ║  l.66: 	of 1
+//│ ╙──      	^^
+//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
+//│ ║  l.66: 	of 1
+//│ ╙──      	   ^
+//│ Parsed:
+//│ 	Ident(log)
+//│ 	Error()
+
+

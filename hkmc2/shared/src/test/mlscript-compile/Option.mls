@@ -13,5 +13,9 @@ fun isDefined(x) = if x is
 
 fun test() = 2134
 
+// TODO
+// fun test2(x) = 2134 + x
+
 class Both(fst, snd)
+
 

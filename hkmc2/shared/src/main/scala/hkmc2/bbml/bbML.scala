@@ -287,7 +287,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val res = freshVar(using ctx)
       constrain(bodyCtx, sk | res)
       (bodyTy, rhsCtx | res, rhsEff | bodyEff)
-    case Term.If(Split.Cons(Branch(cond, Pattern.LitPat(BoolLit(true)), Split.Else(cons)), Split.Else(alts))) =>
+    case Term.IfLike(Keyword.`if`, Split.Cons(Branch(cond, Pattern.LitPat(BoolLit(true)), Split.Else(cons)), Split.Else(alts))) =>
       val (condTy, condCtx, condEff) = typeCode(cond)
       val (consTy, consCtx, consEff) = typeCode(cons)
       val (altsTy, altsCtx, altsEff) = typeCode(alts)
@@ -347,7 +347,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
     case Split.Else(alts) => sign match
       case S(sign) => ascribe(alts, sign)
       case _ => typeCheck(alts)
-    case Split.Nil => ???
+    case Split.End => ???
 
   // * Note: currently, the returned type is not used or useful, but it could be in the future
   private def ascribe(lhs: Term, rhs: GeneralType)(using ctx: Ctx): (GeneralType, Type) =
@@ -373,7 +373,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       given Ctx = nextCtx
       constrain(ascribe(term, skolemize(pt))._2, Bot) // * never generalize terms with effects
       (pt, Bot)
-    case (Term.If(branches), ty) => // * propagate
+    case (Term.IfLike(Keyword.`if`, branches), ty) => // * propagate
       typeSplit(branches, S(ty))
     case (Term.Asc(term, ty), rhs) =>
       ascribe(term, typeType(ty))
@@ -448,11 +448,11 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             effBuff += eff
             nestCtx += sym -> rhsTy
             goStats(stats)
-          case TermDefinition(Fun, sym, params, sig, Some(body), _) :: stats =>
-            typeFunDef(sym, params match {
-              case S(params) => Term.Lam(params, body)
-              case _ => body // * may be a case expressions
-            }, sig, ctx)
+          case TermDefinition(Fun, sym, ParamList(_, ps) :: Nil, sig, Some(body), _) :: stats =>
+            typeFunDef(sym, Term.Lam(ps, body), sig, ctx)
+            goStats(stats)
+          case TermDefinition(Fun, sym, Nil, sig, Some(body), _) :: stats =>
+            typeFunDef(sym, body, sig, ctx)  // * may be a case expressions
             goStats(stats)
           case TermDefinition(Fun, sym, _, S(sig), None, _) :: stats =>
             ctx += sym -> typeType(sig)
@@ -536,7 +536,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       case Term.Asc(term, ty) =>
         val res = typeType(ty)(using ctx)
         ascribe(term, res)
-      case Term.If(branches) => typeSplit(branches, N)
+      case Term.IfLike(Keyword.`if`, branches) => typeSplit(branches, N)
       case Term.Region(sym, body) =>
         val nestCtx = ctx.nextLevel
         given Ctx = nestCtx

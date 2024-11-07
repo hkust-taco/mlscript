@@ -12,8 +12,18 @@ Option.isDefined(Option.None)
 //│ = false
 
 
+(new Option.Some(1)) Option.isDefined()
+//│ = true
+
+Option.None Option.isDefined()
+//│ = false
+
+
 Option.test()
 //│ = 2134
+
+// TODO
+// Option.test2()
 
 
 String(Option.None)
@@ -24,5 +34,27 @@ String(new Option.Some(1))
 
 String(new Option.Both(1, 2))
 //│ = 'Both(1, 2)'
+
+
+Option.None String()
+//│ = 'None'
+
+// * Not sure this should be fixed.
+// * The weird precedence of `new` is always a pain
+:pt
+:fixme
+new Option.Some(1) String()
+//│ Parsed tree:
+//│ New of Jux:
+//│   lhs = App:
+//│     lhs = Sel:
+//│       prefix = Ident of "Option"
+//│       name = Ident of "Some"
+//│     rhs = Tup of Ls of 
+//│       IntLit of 1
+//│   rhs = App:
+//│     lhs = Ident of "String"
+//│     rhs = Tup of Nil
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor Some cannot be invoked without 'new'
 
 

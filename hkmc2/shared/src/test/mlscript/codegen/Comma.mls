@@ -1,0 +1,19 @@
+:js
+:sjs
+
+
+fun f() =
+  console.log("ok"), 42
+//│ JS:
+//│ function f() { let tmp; tmp = console.log("ok"); return 42 }; undefined
+
+fun f() = { console.log("ok"), 42 }
+//│ JS:
+//│ function f() { let tmp; tmp = console.log("ok"); return 42 }; undefined
+
+fun f() = console.log("ok"), 42
+//│ JS:
+//│ function f() { return console.log("ok") }; 42
+//│ = 42
+
+

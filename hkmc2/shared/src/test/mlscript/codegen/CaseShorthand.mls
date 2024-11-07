@@ -11,7 +11,7 @@ case x then x
 :sjs
 case { x then x }
 //│ JS:
-//│ (x) => { return x }
+//│ (caseScrut) => { let x; x = caseScrut; return x }
 //│ = [Function (anonymous)]
 
 :sjs
@@ -21,19 +21,19 @@ x => if x is
 //│ (x) => { if (x === 0) { return true } else { throw new this.Error("match error") } }
 //│ = [Function (anonymous)]
 
-:fixme
+:sjs
 case
   0 then true
-//│ ╔══[ERROR] Unsupported default case branch.
-//│ ║  l.26: 	  0 then true
-//│ ╙──      	  ^
+//│ JS:
+//│ (caseScrut) => { if (caseScrut === 0) { return true } else { throw new this.Error("match error") } }
+//│ = [Function (anonymous)]
 
 :sjs
 case
   0 then true
   _ then false
 //│ JS:
-//│ (_) => { let scrut; scrut = _ == 0; if (scrut) { return true } else { return false } }
+//│ (caseScrut) => { if (caseScrut === 0) { return true } else { return false } }
 //│ = [Function (anonymous)]
 
 class Some(value)
@@ -45,13 +45,15 @@ val isDefined = case
   Some then true
   None then false
 //│ JS:
-//│ this.isDefined = (None) => {
-//│   let scrut;
-//│   scrut = None == this.Some;
-//│   if (scrut) {
+//│ this.isDefined = (caseScrut) => {
+//│   if (caseScrut instanceof this.Some) {
 //│     return true
 //│   } else {
-//│     return false
+//│     if (caseScrut === this.None) {
+//│       return false
+//│     } else {
+//│       throw new this.Error("match error")
+//│     }
 //│   }
 //│ };
 //│ undefined

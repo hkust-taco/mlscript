@@ -2,7 +2,7 @@ import Wart._
 
 enablePlugins(ScalaJSPlugin)
 
-val scala3Version = "3.5.1"
+val scala3Version = "3.5.2"
 val directoryWatcherVersion = "0.18.0"
 
 ThisBuild / scalaVersion     := "2.13.13"

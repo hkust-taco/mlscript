@@ -5,7 +5,6 @@
 //│ Imported 3 member(s)
 
 :global
-:!typeCheck
 :ucs desugared normalized
 
 class Pair[A, B](x: A, y: B)

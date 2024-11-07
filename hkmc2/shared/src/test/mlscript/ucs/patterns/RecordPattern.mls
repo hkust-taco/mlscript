@@ -1,0 +1,15 @@
+:pe
+:e
+fun take_1(p) =
+  if p is
+    { x, y } then x + y
+    else 0
+//│ ╔══[PARSE ERROR] Expected an expression; found block instead
+//│ ║  l.6: 	    else 0
+//│ ╙──     	          ^
+//│ ╔══[PARSE ERROR] Unexpected curly brace section here
+//│ ║  l.5: 	    { x, y } then x + y
+//│ ╙──     	    ^^^^^^^^
+//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ║  l.5: 	    { x, y } then x + y
+//│ ╙──     	    ^^^^^^^^

@@ -11,11 +11,12 @@ enum Term extends Statement:
   case Error
   case Lit(lit: Literal)
   case Ref(sym: Symbol)(val tree: Tree.Ident, val refNum: Int)
+  case This(sym: MemberSymbol[?])
   case App(lhs: Term, rhs: Term)(val tree: Tree.App, val resSym: FlowSymbol)
   case TyApp(lhs: Term, targs: Ls[Term])
   case Sel(prefix: Term, nme: Tree.Ident)
   case Tup(fields: Ls[Fld])(val tree: Tree.Tup)
-  case If(desugared: Split)(val normalized: Split)
+  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split)(val normalized: Split)
   case Lam(params: Ls[Param], body: Term)
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
   case Forall(tvs: Ls[QuantVar], body: Term)
@@ -63,7 +64,8 @@ enum Term extends Statement:
     case TyApp(lhs, targs) => "type application"
     case Sel(pre, nme) => "selection"
     case Tup(fields) => "tuple literal"
-    case If(body) => "`if` expression"
+    case IfLike(Keyword.`if`, body) => "`if` expression"
+    case IfLike(Keyword.`while`, body) => "`while` expression"
     case Lam(params, body) => "function literal"
     case FunTy(lhs, rhs, eff) => "function type"
     case Forall(tvs, body) => "universal quantification"
@@ -95,7 +97,7 @@ sealed trait Statement extends AutoLocated:
     case TyApp(pre, tarsg) => pre :: tarsg
     case Sel(pre, _) => pre :: Nil
     case Tup(fields) => fields.map(_.value)
-    case If(body) => Nil // TODO
+    case IfLike(_, body) => body.subTerms
     case Lam(params, body) => body :: Nil
     case Blk(stats, res) => stats.flatMap(_.subTerms) ::: res :: Nil
     case Quoted(term) => term :: Nil
@@ -114,7 +116,7 @@ sealed trait Statement extends AutoLocated:
     case Assgn(lhs, rhs) => lhs :: rhs :: Nil
     case Deref(term) => term :: Nil
     case TermDefinition(k, _, ps, sign, body, res) =>
-      ps.toList.flatMap(_.flatMap(_.subTerms)) ::: sign.toList ::: body.toList
+      ps.toList.flatMap(_.subTerms) ::: sign.toList ::: body.toList
     case cls: ClassDef =>
       cls.paramsOpt.toList.flatMap(_.flatMap(_.subTerms)) ::: cls.body.blk :: Nil
     case td: TypeDef =>
@@ -122,6 +124,8 @@ sealed trait Statement extends AutoLocated:
     case Import(sym, pth) => Nil
     case Try(body, finallyDo) => body :: finallyDo :: Nil
     case Handle(lhs, rhs, defs) => rhs :: defs._1 :: Nil
+    case This(_) => Nil
+    case Neg(e) => e :: Nil
   
   protected def children: Ls[Located] = this match
     case t: Lit => t.lit.asTree :: Nil
@@ -157,7 +161,7 @@ sealed trait Statement extends AutoLocated:
     case Forall(tvs, body) => s"forall ${tvs.mkString(", ")}: ${body.toString}"
     case WildcardTy(in, out) => s"in ${in.map(_.toString).getOrElse("⊥")} out ${out.map(_.toString).getOrElse("⊤")}"
     case Sel(pre, nme) => s"${pre.showDbg}.${nme.name}"
-    case If(body) => s"if { ${body.showDbg} }"
+    case IfLike(kw, body) => s"${kw.name} { ${body.showDbg} }"
     case Lam(params, body) => s"λ${params.map(_.showDbg).mkString(", ")}. ${body.showDbg}"
     case Blk(stats, res) =>
       (stats.map(_.showDbg + "; ") :+ (res match { case Lit(Tree.UnitLit(true)) => "" case x => x.showDbg + " " }))
@@ -178,7 +182,7 @@ sealed trait Statement extends AutoLocated:
     case Error => "<error>"
     case Tup(fields) => fields.map(_.showDbg).mkString("[", ", ", "]")
     case TermDefinition(k, sym, ps, sign, body, res) => s"${k.str} ${sym}${
-      ps.fold("")(_.map(_.showDbg).mkString("(", ", ", ")"))
+      ps.map(_.showDbg).mkString("")
     }${sign.fold("")(": "+_.showDbg)}${
       body match
         case S(x) => " = " + x.showDbg
@@ -197,7 +201,7 @@ final case class DefineVar(sym: LocalSymbol, rhs: Term) extends Statement
 final case class TermDefinition(
     k: TermDefKind,
     sym: TermSymbol,
-    params: Opt[Ls[Param]],
+    params: Ls[ParamList],
     sign: Opt[Term],
     body: Opt[Term],
     resSym: FlowSymbol,
@@ -274,6 +278,17 @@ final case class Param(flags: FldFlags, sym: LocalSymbol & NamedSymbol, sign: Op
   def showDbg: Str = flags.showDbg + sym + sign.fold("")(": " + _.showDbg)
 
 object FldFlags { val empty: FldFlags = FldFlags(false, false, false) }
+
+final case class ParamListFlags(ctx: Bool):
+  def showDbg: Str = (if ctx then "ctx " else "")
+  override def toString: String = "‹" + showDbg + "›"
+
+object ParamListFlags:
+  val empty = ParamListFlags(false)
+
+final case class ParamList(flags: ParamListFlags, params: Ls[Param]):
+  def subTerms: Ls[Term] = params.flatMap(_.subTerms)
+  def showDbg: Str = flags.showDbg + params.mkString("(", ", ", ")")
 
 trait FldImpl extends AutoLocated:
   self: Fld =>

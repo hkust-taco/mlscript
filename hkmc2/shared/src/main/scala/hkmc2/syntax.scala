@@ -48,6 +48,9 @@ trait AutoLocated extends Located:
       val _ = withLoc(res)
       res
     else loc
+  def withoutLoc: this.type =
+    loc = N
+    this
   private[hkmc2] def getLoc: Opt[Loc] = ???
   
 

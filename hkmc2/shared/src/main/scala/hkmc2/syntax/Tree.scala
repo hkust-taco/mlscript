@@ -53,6 +53,7 @@ enum Tree extends AutoLocated:
   case Def(lhs: Tree, rhs: Tree)
   case TermDef(k: TermDefKind, head: Tree, rhs: Opt[Tree]) extends Tree with TermDefImpl
   case TypeDef(k: TypeDefKind, head: Tree, extension: Opt[Tree], body: Opt[Tree]) extends Tree with TypeDefImpl
+  case Open(body: Tree)
   case Modified(modifier: Keyword, modLoc: Opt[Loc], body: Tree)
   case Quoted(body: Tree)
   case Unquoted(body: Tree)
@@ -63,10 +64,9 @@ enum Tree extends AutoLocated:
   case Sel(prefix: Tree, name: Ident)
   case InfixApp(lhs: Tree, kw: Keyword.Infix, rhs: Tree)
   case New(body: Tree)
-  case If(split: Tree)
+  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, split: Tree)
   @deprecated("Use If instead", "hkmc2-ucs")
   case IfElse(cond: Tree, alt: Tree)
-  @deprecated("Use If instead", "hkmc2-ucs")
   case Case(branches: Tree)
   case Region(name: Tree, body: Tree)
   case RegRef(reg: Tree, value: Tree)
@@ -90,7 +90,7 @@ enum Tree extends AutoLocated:
     case InfixApp(lhs, _, rhs) => Ls(lhs, rhs)
     case TermDef(k, head, rhs) => head :: rhs.toList
     case New(body) => body :: Nil
-    case If(split) => split :: Nil
+    case IfLike(_, split) => split :: Nil
     case IfElse(cond, alt) => cond :: alt :: Nil
     case Case(bs) => Ls(bs)
     case Region(name, body) => name :: body :: Nil
@@ -98,6 +98,7 @@ enum Tree extends AutoLocated:
     case Effectful(eff, body) => eff :: body :: Nil
     case TyTup(tys) => tys
     case Sel(prefix, name) => prefix :: Nil
+    case Open(bod) => bod :: Nil
   
   def describe: Str = this match
     case Empty() => "empty"
@@ -123,7 +124,8 @@ enum Tree extends AutoLocated:
     case Sel(prefix, name) => "selection"
     case InfixApp(lhs, kw, rhs) => "infix application"
     case New(body) => "new"
-    case If(split) => "if expression"
+    case IfLike(Keyword.`if`, split) => "if expression"
+    case IfLike(Keyword.`while`, split) => "while expression"
     case IfElse(cond, alt) => "if-then-else"
     case Case(branches) => "case"
     case Region(name, body) => "region"
@@ -157,10 +159,9 @@ object PlainTup:
   def apply(fields: Tree*): Tree = Tup(fields.toList)
 
 object Apps:
-  def unapply(t: Tree): Opt[(Ident, Ls[Tup])] = t match
+  def unapply(t: Tree): S[(Tree, Ls[Tup])] = t match
     case App(Apps(id, args), arg: Tup) => S(id, args :+ arg)
-    case id: Ident => S(id -> Nil)
-    case _ => N
+    case t => S(t, Nil)
 
 
 sealed abstract class OuterKind(val desc: Str)
@@ -206,31 +207,35 @@ private def getName(t: Tree, symNme: Opt[Tree]): (Opt[Tree], Diagnostic \/ Ident
 
 trait TermDefImpl:
   this: TermDef =>
-  lazy val (symName, name, params, typeParams, signature): (Opt[Tree], Diagnostic \/ Ident, Opt[Ls[Tree]], Opt[Tree], Opt[Tree]) =
-    def rec(t: Tree, symName: Opt[Tree]):
-    (Opt[Tree], Diagnostic \/ Ident, Opt[Ls[Tree]], Opt[Tree], Opt[Tree]) =
+  lazy val (symName, name, paramLists, typeParams, signature): (Opt[Tree], Diagnostic \/ Ident, Ls[Tup], Opt[Tree], Opt[Tree]) =
+    def rec(t: Tree, symName: Opt[Tree]): 
+      (Opt[Tree], Diagnostic \/ Ident, Ls[Tup], Opt[Tree], Opt[Tree]) = 
       t match
-      case InfixApp(id: Ident, Keyword.`:`, sign) =>
-        (symName, R(id), N, N, S(sign))
-      // show(t: Tree): Str
-      case InfixApp(App(id: Ident, args), Keyword.`:`, ret) =>
-        (symName, R(id), S(args :: Nil), N, N)
-      // show[A](t: Tree[A]): Str
-      case InfixApp(App(App(id: Ident, typeParams: TyTup), args), Keyword.`:`, ret) =>
-        // val sign = S(InfixApp(typeParams, Keyword.`->`, InfixApp(args, Keyword.`->`, ret)))
-        (symName, R(id), S(args :: Nil), S(typeParams), N)
+      // fun f: Int
+      // fun f(n1: Int): Int
+      // fun f(n1: Int)(nn: Int): Int
+      case InfixApp(Apps(id: Ident, paramLists), Keyword.`:`, sign) =>
+        (symName, R(id), paramLists, N, S(sign))
+      // fun f[T]: Int
+      // fun f[T](n1: Int): Int
+      // fun f[T](n1: Int)(nn: Int): Int
+      case InfixApp(Apps(App(id: Ident, typeParams: TyTup), paramLists), Keyword.`:`, ret) =>
+        (symName, R(id), paramLists, S(typeParams), N)
+      
       case InfixApp(Jux(lhs, rhs), Keyword.`:`, ret) =>
         rec(InfixApp(rhs, Keyword.`:`, ret), S(lhs))
-      case id: Ident =>
-        (symName, R(id), N, N, N)
-      case App(id: Ident, typeParams: TyTup) =>
-        (symName, R(id), N, S(typeParams), N)
-      case App(id: Ident, args) =>
-        (symName, R(id), S(args :: Nil), N, N)
-      case App(primary: App, second) =>
-        // TODO: handle the second parameter list
-        val (sn, id, first, tps, sig) = rec(primary, symName)
-        (sn, id, S(first.fold(Ls(second))(_ :+ second)), tps, sig)
+      
+      // fun f
+      // fun f(n1: Int)
+      // fun f(n1: Int)(nn: Int)
+      case Apps(id: Ident, paramLists) =>
+        (symName, R(id), paramLists, N, N)
+      // fun f[T]
+      // fun f[T](n1: Int)
+      // fun f[T](n1: Int)(nn: Int)
+      case Apps(App(id: Ident, typeParams: TyTup), paramLists) =>
+        (symName, R(id), paramLists, S(typeParams), N)
+
       case Jux(lhs, rhs) => // happens in `fun (op) nme` form
         require(symName.isEmpty) // TOOD
         rec(rhs, S(lhs))

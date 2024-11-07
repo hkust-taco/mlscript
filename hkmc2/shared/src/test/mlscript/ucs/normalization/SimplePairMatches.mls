@@ -1,0 +1,67 @@
+:js
+
+
+class Pair(a, b)
+class A
+class B
+
+
+:sjs
+x => if x is Pair(A, B) then 1
+//│ JS:
+//│ (x) => {
+//│   let param0, param1;
+//│   if (x instanceof this.Pair) {
+//│     param0 = x.a;
+//│     param1 = x.b;
+//│     if (param0 instanceof this.A) {
+//│       if (param1 instanceof this.B) {
+//│         return 1
+//│       } else {
+//│         throw new this.Error("match error")
+//│       }
+//│     } else {
+//│       throw new this.Error("match error")
+//│     }
+//│   } else {
+//│     throw new this.Error("match error")
+//│   }
+//│ }
+//│ = [Function (anonymous)]
+
+
+// :e // FIXME: should be an exhaustiveness error
+:sjs
+fun f(x) = if x is
+  Pair(A, A) then 1
+  Pair(B, B) then 2
+//│ JS:
+//│ function f(x) {
+//│   let param0, param1;
+//│   if (x instanceof globalThis.Pair) {
+//│     param0 = x.a;
+//│     param1 = x.b;
+//│     if (param0 instanceof globalThis.A) {
+//│       if (param1 instanceof globalThis.A) {
+//│         return 1
+//│       } else {
+//│         throw new globalThis.Error("match error")
+//│       }
+//│     } else {
+//│       if (param0 instanceof globalThis.B) {
+//│         if (param1 instanceof globalThis.B) {
+//│           return 2
+//│         } else {
+//│           throw new globalThis.Error("match error")
+//│         }
+//│       } else {
+//│         throw new globalThis.Error("match error")
+//│       }
+//│     }
+//│   } else {
+//│     throw new globalThis.Error("match error")
+//│   }
+//│ };
+//│ undefined
+
+

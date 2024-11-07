@@ -1,0 +1,20 @@
+:js
+
+
+module Foo with
+  val x = 1
+
+
+:todo // TODO report error
+:sjs
+:e
+open Foo { y }
+//│ JS:
+//│ undefined
+
+:sjs
+y
+//│ JS:
+//│ this.Foo.y
+
+

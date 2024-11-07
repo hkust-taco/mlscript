@@ -401,11 +401,12 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
                 // *      c
                 // *    }
                 // * parse the same as:
-                // *    foo { a, b, c }
+                // *    foo {a, b, c}
                 case (BRACKETS(Indent, acc), _) :: Nil if k0 is Curly => acc
                 case (NEWLINE, _) :: (BRACKETS(Indent, acc), _) :: Nil if k0 is Curly => acc
                 case _ => acc.reverse
-              go(rest, true, stack, BRACKETS(k0, accr)(l0.right ++ l1.left) -> (l0 ++ l1) :: oldAcc)
+              val accr2 = accr.dropWhile(_._1 === SPACE)
+              go(rest, true, stack, BRACKETS(k0, accr2)(l0.right ++ l1.left) -> (l0 ++ l1) :: oldAcc)
             case Nil =>
               raise(ErrorReport(msg"Unexpected closing ${k1.name}" -> S(l1) :: Nil,
                 source = Parsing))

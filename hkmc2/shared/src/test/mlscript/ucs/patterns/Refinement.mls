@@ -1,0 +1,46 @@
+:import ../prelude/Option.mls
+//│ Imported 3 member(s)
+
+:global
+:todo
+:ucs normalized
+
+// OK
+x => if x is
+  refined(None) then x
+//│ ╔══[ERROR] Unknown constructor `refined`.
+//│ ║  l.10: 	  refined(None) then x
+//│ ╙──      	  ^^^^^^^
+//│ Normalized:
+//│ >  if
+
+// OK
+x => if x is
+  refined(Some) then x
+//│ ╔══[ERROR] Unknown constructor `refined`.
+//│ ║  l.19: 	  refined(Some) then x
+//│ ╙──      	  ^^^^^^^
+//│ Normalized:
+//│ >  if
+
+// Should warn about the inconsistent refinement
+x => if x is
+  refined(None) then x
+  Some then x
+//│ ╔══[ERROR] Unknown constructor `refined`.
+//│ ║  l.28: 	  refined(None) then x
+//│ ╙──      	  ^^^^^^^
+//│ Normalized:
+//│ >  if x@34 is Some then x@34#2
+
+x => if x is
+  refined(None) then x
+  refined(Some) then x
+//│ ╔══[ERROR] Unknown constructor `refined`.
+//│ ║  l.38: 	  refined(Some) then x
+//│ ╙──      	  ^^^^^^^
+//│ ╔══[ERROR] Unknown constructor `refined`.
+//│ ║  l.37: 	  refined(None) then x
+//│ ╙──      	  ^^^^^^^
+//│ Normalized:
+//│ >  if

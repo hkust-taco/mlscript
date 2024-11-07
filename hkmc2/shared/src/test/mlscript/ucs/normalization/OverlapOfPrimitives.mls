@@ -1,5 +1,4 @@
 :global
-:!typeCheck
 :ucs desugared
 
 fun test(x, p) = if x is

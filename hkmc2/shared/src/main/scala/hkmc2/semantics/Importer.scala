@@ -41,9 +41,9 @@ class Importer:
         val block = os.read(file)
         val fph = new FastParseHelpers(block)
         val origin = Origin(file.toString, 0, fph)
-        // TODO import symbolsfrom MLs file
-        val jsFile = ??? // TODO resolve corresponding JS file
-        Import(sym, jsFile)
+        // TODO import symbols from MLs file...
+        val jsFile = file / os.up / (file.baseName + ".mjs")
+        Import(sym, jsFile.toString)
       case _ =>
         raise(ErrorReport(msg"Unsupported file extension: ${file.ext}" -> N :: Nil))
         Import(sym, file.toString)

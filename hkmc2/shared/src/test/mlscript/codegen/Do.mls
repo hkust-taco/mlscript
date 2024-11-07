@@ -1,0 +1,40 @@
+:js
+
+
+:elt
+do ()
+//│ Elaborated tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Blk:
+//│     stats = Ls of 
+//│       Lit of UnitLit of true
+//│     res = Lit of UnitLit of true
+
+do console.log("ok")
+//│ > ok
+
+:w
+do 1
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.18: 	do 1
+//│ ╙──      	   ^
+
+:todo
+val f = case
+  0 then "null"
+  do console.log("non-null")
+  1 then "unit"
+  _ then "other"
+//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ║  l.26: 	  do console.log("non-null")
+//│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^
+//│ f = [Function (anonymous)]
+
+f(0)
+//│ = 'null'
+
+f(1)
+
+f(2)
+

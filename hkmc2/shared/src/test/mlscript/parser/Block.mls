@@ -91,38 +91,29 @@ foo a
 //│ Parsed:
 //│ 	Jux(Ident(foo),Ident(a))
 
+foo
+  a
+//│ Parsed:
+//│ 	Jux(Ident(foo),Block(List(Ident(a))))
+
+foo
+  a
+  b
+//│ Parsed:
+//│ 	Jux(Ident(foo),Block(List(Ident(a), Ident(b))))
+
+foo
+  a,
+  b
+//│ Parsed:
+//│ 	Jux(Ident(foo),Block(List(Ident(a), Ident(b))))
+
 
 
 // --- ERROR CASES ---
 
 :global
 :pe
-
-foo
-  a
-//│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.102: 	  a
-//│ ╙──       	  ^
-//│ Parsed:
-//│ 	Ident(foo)
-
-foo
-  a
-  b
-//│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.110: 	  a
-//│ ╙──       	  ^
-//│ Parsed:
-//│ 	Ident(foo)
-
-foo
-  a,
-  b
-//│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.119: 	  a,
-//│ ╙──       	  ^
-//│ Parsed:
-//│ 	Ident(foo)
 
 
 

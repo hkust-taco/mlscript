@@ -1,0 +1,261 @@
+:js
+
+:import PredefJS.mls
+//│ Imported 2 member(s)
+
+
+:sjs
+() => (while true then 0)
+//│ JS:
+//│ () => {
+//│   let scrut, tmp;
+//│   tmp1: while (true) {
+//│     scrut = true;
+//│     if (scrut) {
+//│       tmp = 0;
+//│       continue tmp1
+//│     } else {
+//│       throw new this.Error("match error")
+//│     }
+//│     break;
+//│   }
+//│   return tmp
+//│ }
+//│ = [Function (anonymous)]
+
+() =>
+  while true then 0
+//│ = [Function (anonymous)]
+
+
+let x = true
+//│ x = true
+
+:re
+while x then set x = false
+//│ ═══[RUNTIME ERROR] Error: match error
+
+
+let x = true
+//│ x = true
+
+while x then set x = false else ()
+
+
+let x = true
+let y = false
+//│ x = true
+//│ y = false
+
+:sjs
+while x
+  then
+    log("Hello World")
+    set x = false
+  else 42
+//│ JS:
+//│ let scrut, tmp, tmp1;
+//│ tmp2: while (true) {
+//│   scrut = this.x;
+//│   if (scrut) {
+//│     tmp = log("Hello World");
+//│     this.x = false;
+//│     tmp1 = undefined;
+//│     continue tmp2
+//│   } else {
+//│     tmp1 = 42;
+//│   }
+//│   break;
+//│ }
+//│ tmp1
+//│ > Hello World
+//│ = 42
+
+while (log("Hello World"), false)
+  then 0(0)
+  else 1
+//│ > Hello World
+//│ = 1
+
+
+let i = 0
+//│ i = 0
+
+while i < 3 then set i = i + 1 else i
+//│ = 3
+
+
+let i = 0
+while log("checking"); i < 3
+  then log("not yet"); set i = i + 1
+  else log("ok")
+//│ > checking
+//│ > not yet
+//│ > checking
+//│ > not yet
+//│ > checking
+//│ > not yet
+//│ > checking
+//│ > ok
+//│ i = 3
+
+
+// * Infinite loop!
+:sjs
+() =>
+while
+  let i = 0
+  i < 10 then set i += 1
+//│ JS:
+//│ () => {
+//│   let i, scrut, tmp, tmp1;
+//│   tmp2: while (true) {
+//│     i = 0;
+//│     scrut = i < 10;
+//│     if (scrut) {
+//│       tmp = i + 1;
+//│       i = tmp;
+//│       tmp1 = undefined;
+//│       continue tmp2
+//│     } else {
+//│       throw new this.Error("match error")
+//│     }
+//│     break;
+//│   }
+//│   return tmp1
+//│ }
+//│ = [Function (anonymous)]
+
+
+let i = 0 in
+  while i < 10 then set i += 1
+  else i
+//│ = 10
+
+
+let i = 0 in while
+  let _ = log(i)
+  i < 3 then set i += 1
+  else ()
+//│ > 0
+//│ > 1
+//│ > 2
+//│ > 3
+
+
+// * Note that the semantics of UCS-while is quite subtle.
+// * Currently, we only treat the *top-level* `else` as terminating the loop;
+// * indeed, other `else` branches are currently indistinguishable from `then` branches
+// * in normalized UCS form.
+
+// * Consider:
+
+:ucs normalized
+if x
+  and
+    y then 0
+    else 1 // this one will not terminate the loop, if we're in a `while`
+  else 42
+//│ Normalized:
+//│ >  if
+//│ >    let $scrut@129 = globalThis:block#6.x#2
+//│ >    $scrut@129 is true and
+//│ >      let $scrut@130 = globalThis:block#6.y#0
+//│ >      $scrut@130 is true then 0
+//│ >      else 1
+//│ >    else 42
+//│ = 42
+
+:ucs normalized
+if x
+  and
+    y then 0
+    _ then 1
+  else 42
+//│ Normalized:
+//│ >  if
+//│ >    let $scrut@132 = globalThis:block#6.x#3
+//│ >    $scrut@132 is true and
+//│ >      let $scrut@133 = globalThis:block#6.y#1
+//│ >      $scrut@133 is true then 0
+//│ >      else 1
+//│ >    else 42
+//│ = 42
+
+
+// TODO use
+// import "../../mlscript-compile/Stack.mls"
+
+class Cons(hd, tl)
+
+:sjs
+fun f(ls) =
+  while ls is
+    Cons(h, tl) then
+      set ls = tl
+      log(h)
+  else log("Done!")
+//│ JS:
+//│ function f(ls) {
+//│   let ls1, param0, param1, h, tl, tmp;
+//│   tmp1: while (true) {
+//│     if (ls1 instanceof globalThis.Cons) {
+//│       param0 = ls1.hd;
+//│       param1 = ls1.tl;
+//│       h = param0;
+//│       tl = param1;
+//│       ls1 = tl;
+//│       tmp = log(h);
+//│       continue tmp1
+//│     } else {
+//│       tmp = log("Done!");
+//│     }
+//│     break;
+//│   }
+//│   return tmp
+//│ };
+//│ undefined
+
+f(0)
+//│ > Done!
+
+f(Cons(1, 0))
+//│ > Done!
+
+f(Cons(1, Cons(2, Cons(3, 0))))
+//│ > Done!
+
+
+
+// ——— FIXME: ———
+
+
+:fixme
+() => while true then 0
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(InfixApp(Tup(List()),keyword '=>',IfLike(keyword 'while',BoolLit(true))),keyword 'then',IntLit(0)) (of class hkmc2.syntax.Tree$InfixApp)
+
+:fixme
+while log("Hello World"); false
+  then 0(0)
+  else 1
+//│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
+//│ ║  l.239: 	  then 0(0)
+//│ ╙──       	  ^^^^
+//│ ═══[ERROR] Unrecognized term split (false literal).
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token 'break'
+
+:fixme
+while { log("Hello World"), false }
+  then 0(0)
+  else 1
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',Block(List(App(Ident(log),Tup(List(StrLit(Hello World)))), BoolLit(false)))),keyword 'then',App(IntLit(0),Tup(List(IntLit(0))))) (of class hkmc2.syntax.Tree$InfixApp)
+
+:fixme
+while
+    log("Hello World")
+    false
+  then 0(0)
+  else 1
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',Block(List(App(Ident(log),Tup(List(StrLit(Hello World)))), BoolLit(false)))),keyword 'then',App(IntLit(0),Tup(List(IntLit(0))))) (of class hkmc2.syntax.Tree$InfixApp)
+
+
