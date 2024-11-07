@@ -9,7 +9,7 @@ fun sum'([x, y]) = x + y
 sum'([1, 2])
 //│ /!!!\ Uncaught error: scala.MatchError: Tup(List(Ident(x), Ident(y))) (of class hkmc2.syntax.Tree$Tup)
 
-:e
+:todo
 fun sum''(pair) =
   if pair is [x, y] then x + y
 sum''([1, 2])
@@ -23,7 +23,7 @@ sum''([1, 2])
 // We need native support for tuple patterns in MLscript syntax.
 // Otherwise the following cases work.
 
-:e
+:todo
 fun test(thing) =
   if thing is [] then 0
 test("")
@@ -32,7 +32,7 @@ test(12)
 //│ ║  l.28: 	  if thing is [] then 0
 //│ ╙──      	              ^^
 
-:e
+:todo
 // Since pattern destruction is desugared to let bindings, matching with other
 // classes after the tuple pattern will not work.
 class Point(x: Int, y: Int)
@@ -49,7 +49,7 @@ fun discarded_cases(thing) =
 discarded_cases(Point(0, 0))
 
 // A workaround is to move the tuple pattern to the last case.
-:e
+:todo
 fun working_cases(thing) =
   if thing is
     Point(x, y) then x + y
@@ -61,11 +61,10 @@ fun working_cases(thing) =
 working_cases(Point(0, 0))
 
 // However, the `Object` type forbids tuples to be used.
-:e
 :todo
 working_cases([0, 0])
 
-:e
+:todo
 fun not_working(x) =
   if x is
     [a, b, c] then
@@ -73,11 +72,10 @@ fun not_working(x) =
     else
       0
 //│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.71: 	    [a, b, c] then
+//│ ║  l.70: 	    [a, b, c] then
 //│ ╙──      	    ^^^^^^^^^
 
 not_working([1, 2, 3])
 
-:e
 :todo
 not_working([1, 2])

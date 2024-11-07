@@ -28,8 +28,6 @@ fun g(x) = if x && true is true then 1 else 2
 
 fun h(x) = if (x : Bool) then 1 else 2
 
-// Currently post-processing cannot handle this case. The desugared term is not
-// perfect. Also, is the inferred type wrong?
 fun mix(x) = if x is
   true then "true"
   Some(value) then "Some"
