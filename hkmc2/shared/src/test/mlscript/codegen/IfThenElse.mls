@@ -1,7 +1,7 @@
 :js
 
 :import PredefJS.mls
-//│ Imported 1 member(s)
+//│ Imported 2 member(s)
 
 
 :elt
@@ -10,11 +10,11 @@ if true then 1 else 0
 //│ Blk:
 //│   stats = Nil
 //│   res = If of Let:
-//│     sym = $scrut@29
+//│     sym = $scrut@31
 //│     term = Lit of BoolLit of true
 //│     tail = Cons: \
 //│     head = Branch:
-//│       scrutinee = Ref of $scrut@29
+//│       scrutinee = Ref of $scrut@31
 //│       pattern = LitPat of BoolLit of true
 //│       continuation = Else of Lit of IntLit of 1
 //│     tail = Else of Lit of IntLit of 0

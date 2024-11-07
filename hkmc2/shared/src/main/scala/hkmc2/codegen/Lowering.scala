@@ -57,6 +57,8 @@ class Lowering(using TL, Raise, Elaborator.State):
       fs.foldRight[Ls[Path] => Block](args => k(Value.Arr(args.reverse)))((a, acc) =>
         args => subTerm(a.value)(r => acc(r :: args))
       )(Nil)
+    case st.This(sym) =>
+      k(subst(Value.This(sym)))
     case st.Ref(sym) =>
       sym match
       case sym: LocalSymbol =>

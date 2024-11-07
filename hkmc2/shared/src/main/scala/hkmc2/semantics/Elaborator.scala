@@ -21,6 +21,7 @@ object Elaborator:
     def nest(outer: Opt[MemberSymbol[?]]): Ctx = Ctx(outer, Some(this), Map.empty, Map.empty)
     def get(name: Str): Opt[Symbol] =
       locals.get(name).orElse(members.get(name)).orElse(parent.flatMap(_.get(name)))
+    def getOuter: Opt[Symbol] = outer.orElse(parent.flatMap(_.getOuter))
     lazy val allMembers: Map[Str, Symbol] = parent.fold(Map.empty)(_.allMembers) ++ members
   object Ctx:
     val empty: Ctx = Ctx(N, N, Map.empty, Map.empty)
@@ -87,8 +88,13 @@ extends Importer:
           term(bod),
         ), Term.Assgn(lt, sym.ref(id))))
       case _ => ??? // TODO error
-    case Ident("true") => Term.Lit(Tree.BoolLit(true))
-    case Ident("false") => Term.Lit(Tree.BoolLit(false))
+    case id @ Ident("this") =>
+      ctx.getOuter match
+      case S(sym) =>
+        Term.This(sym.asInstanceOf)
+      case N =>
+        raise(ErrorReport(msg"Cannot use 'this' outside of an object scope." -> tree.toLoc :: Nil))
+        Term.Error
     case id @ Ident("Alloc") => Term.Ref(allocSkolemSym)(id, 1)
     case id @ Ident(name) =>
       ctx.get(name) match

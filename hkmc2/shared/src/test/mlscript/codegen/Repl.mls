@@ -48,7 +48,7 @@ let x = 1, log(x), x
 //│ x = 1
 
 :import PredefJS.mls
-//│ Imported 1 member(s)
+//│ Imported 2 member(s)
 //│ x = 1
 
 :showRepl

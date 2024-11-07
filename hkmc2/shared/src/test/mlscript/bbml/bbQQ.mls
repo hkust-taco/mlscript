@@ -4,8 +4,17 @@
 `42
 //│ Type: CodeBase[out Int, ⊥, ?]
 
+:p
+:fixme // this should created a quoted keyword
 `false
-//│ Type: CodeBase[out Bool, ⊥, ?]
+//│ |`|false|
+//│ Parsed:
+//│ 	Quoted(Ident(false))
+//│ ╔══[ERROR] Name not found: false
+//│ ║  l.9: 	`false
+//│ ╙──     	 ^^^^^
+//│ ═══[ERROR] Cannot quote Error
+//│ Type: CodeBase[⊥, ⊥, ?]
 
 `"rua"
 //│ Type: CodeBase[out Str, ⊥, ?]
@@ -23,7 +32,7 @@ x `=> `42
 :e
 x `=> 42
 //│ ╔══[ERROR] Type error in unquoted term
-//│ ║  l.24: 	x `=> 42
+//│ ║  l.33: 	x `=> 42
 //│ ║        	      ^^
 //│ ╙── because: cannot constrain  Int  <:  CodeBase[out α12_3, out α13_3, ?]
 //│ Type: CodeBase[out ⊤ -> ⊥, ⊥, ?]
@@ -52,7 +61,7 @@ f `=> x `=> y `=> f`(x, y)
 :e
 `let x = 42 `in x
 //│ ╔══[ERROR] Type error in unquoted term
-//│ ║  l.53: 	`let x = 42 `in x
+//│ ║  l.62: 	`let x = 42 `in x
 //│ ║        	         ^^
 //│ ╙── because: cannot constrain  Int  <:  CodeBase[out α122_2, out α123_2, ?]
 //│ Type: CodeBase[⊥, ⊥, ?]
@@ -60,7 +69,7 @@ f `=> x `=> y `=> f`(x, y)
 :e
 `let x = `0 `in 1
 //│ ╔══[ERROR] Type error in unquoted term
-//│ ║  l.61: 	`let x = `0 `in 1
+//│ ║  l.70: 	`let x = `0 `in 1
 //│ ║        	                ^
 //│ ╙── because: cannot constrain  Int  <:  CodeBase[out α131_3, out α132_3, ?]
 //│ Type: CodeBase[⊥, ⊥, ?]
@@ -68,7 +77,16 @@ f `=> x `=> y `=> f`(x, y)
 
 :fixme
 `if `true then `true else `false
-//│ ═══[ERROR] Cannot quote If(Let($scrut@80,Unquoted(Quoted(Lit(BoolLit(true)))),Cons(Branch(Ref($scrut@80),LitPat(BoolLit(true)),Else(Unquoted(Quoted(Lit(BoolLit(true)))))),Else(Unquoted(Quoted(Lit(BoolLit(false))))))))
+//│ ╔══[ERROR] Name not found: true
+//│ ║  l.79: 	`if `true then `true else `false
+//│ ╙──      	     ^^^^
+//│ ╔══[ERROR] Name not found: true
+//│ ║  l.79: 	`if `true then `true else `false
+//│ ╙──      	                ^^^^
+//│ ╔══[ERROR] Name not found: false
+//│ ║  l.79: 	`if `true then `true else `false
+//│ ╙──      	                           ^^^^^
+//│ ═══[ERROR] Cannot quote If(Let($scrut@80,Unquoted(Quoted(Error)),Cons(Branch(Ref($scrut@80),LitPat(BoolLit(true)),Else(Unquoted(Quoted(Error)))),Else(Unquoted(Quoted(Error))))))
 //│ Type: CodeBase[⊥, ⊥, ?]
 
 
@@ -83,16 +101,16 @@ run(`1)
 :e
 run(1)
 //│ ╔══[ERROR] Type error in integer literal with expected type CodeBase[out α140_1, ⊥, ?]
-//│ ║  l.84: 	run(1)
-//│ ║        	    ^
+//│ ║  l.102: 	run(1)
+//│ ║         	    ^
 //│ ╙── because: cannot constrain  Int  <:  CodeBase[out α140_1, ⊥, ?]
 //│ Type: ⊥
 
 :e
 x `=> run(x)
 //│ ╔══[ERROR] Type error in reference with expected type CodeBase[out α143_3, ⊥, ?]
-//│ ║  l.92: 	x `=> run(x)
-//│ ║        	          ^
+//│ ║  l.110: 	x `=> run(x)
+//│ ║         	          ^
 //│ ╟── because: cannot constrain  CodeBase[α141_3, <α>142_3, ⊥]  <:  CodeBase[out α143_3, ⊥, ?]
 //│ ╙── because: cannot constrain  D( <α>142_3 )  <:  ⊥
 //│ Type: CodeBase[out CodeBase[out α144_3, ?, ?] -> α144_3, out α146_2, ?]
@@ -100,12 +118,12 @@ x `=> run(x)
 :e
 `let x = `42 `in run(x)
 //│ ╔══[ERROR] Type error in reference with expected type CodeBase[out α150_3, ⊥, ?]
-//│ ║  l.101: 	`let x = `42 `in run(x)
+//│ ║  l.119: 	`let x = `42 `in run(x)
 //│ ║         	                     ^
 //│ ╟── because: cannot constrain  CodeBase[α147_2, <α>149_3, ⊥]  <:  CodeBase[out α150_3, ⊥, ?]
 //│ ╙── because: cannot constrain  D( <α>149_3 )  <:  ⊥
 //│ ╔══[ERROR] Type error in unquoted term
-//│ ║  l.101: 	`let x = `42 `in run(x)
+//│ ║  l.119: 	`let x = `42 `in run(x)
 //│ ║         	                 ^^^^^^
 //│ ╟── because: cannot constrain  α150_3  <:  CodeBase[out α151_3, out α152_3, ?]
 //│ ╟── because: cannot constrain  α150_3  <:  ¬(~{CodeBase[out α151_3, out α152_3, ?]})

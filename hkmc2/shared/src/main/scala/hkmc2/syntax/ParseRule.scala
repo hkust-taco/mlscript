@@ -23,7 +23,7 @@ enum Alt[+A]:
     case End(a) => End(f(a))
     case b: Blk[rest, A] => Blk(b.rest)((tree, rest) => f(b.k(tree, rest)))
 
-class ParseRule[+A](val name: Str)(val alts: Alt[A]*):
+class ParseRule[+A](val name: Str, val omitAltsStr: Bool = false)(val alts: Alt[A]*):
   def map[B](f: A => B): ParseRule[B] =
     ParseRule(name)(alts.map(_.map(f))*)
   
@@ -34,7 +34,9 @@ class ParseRule[+A](val name: Str)(val alts: Alt[A]*):
   lazy val exprAlt = alts.collectFirst { case alt: Alt.Expr[rst, A] => alt }
   lazy val blkAlt = alts.collectFirst { case alt: Alt.Blk[rst, A] => alt }
   
-  def whatComesAfter: Str =
+  def mkAfterStr: Str = if omitAltsStr then "in this position" else s"after $name"
+  
+  def whatComesAfter: Str = if omitAltsStr then name else
     alts.map:
       case Alt.Kw(kw) => s"'${kw.name}' keyword"
       case Alt.Expr(rest) => "expression"
@@ -157,7 +159,7 @@ object ParseRule:
         // ) { case (lhs, body) => Let(lhs, lhs, body) }
       )
   
-  val prefixRules: ParseRule[Tree] = ParseRule("start of statement")(
+  val prefixRules: ParseRule[Tree] = ParseRule("start of statement", omitAltsStr = true)(
     letLike(`let`),
     letLike(`set`),
     Kw(`new`):
@@ -258,13 +260,20 @@ object ParseRule:
     modified(`return`),
     modified(`import`), // TODO improve – only allow strings
     // modified(`type`),
+    singleKw(`true`)(BoolLit(true)),
+    singleKw(`false`)(BoolLit(false)),
+    singleKw(`undefined`)(UnitLit(true)),
+    singleKw(`null`)(UnitLit(false)),
+    singleKw(`this`)(Ident("this")),
     standaloneExpr,
-    Kw(`true`)(ParseRule("'true' keyword")(End(BoolLit(true)))),
-    Kw(`false`)(ParseRule("'false' keyword")(End(BoolLit(false)))),
   )
   
+  def singleKw[T](kw: Keyword)(v: T): Alt[T] =
+    Kw(kw)(ParseRule(s"'${kw.name}' keyword")(End(v)))
+  
+  
   val prefixRulesAllowIndentedBlock: ParseRule[Tree] =
-    ParseRule(prefixRules.name)(prefixRules.alts :+ 
+    ParseRule(prefixRules.name, prefixRules.omitAltsStr)(prefixRules.alts :+ 
         (Blk(
           ParseRule("block"):
             End(())

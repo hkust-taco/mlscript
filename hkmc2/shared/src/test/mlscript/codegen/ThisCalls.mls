@@ -1,0 +1,79 @@
+:js
+
+:import PredefJS.mls
+//│ Imported 2 member(s)
+
+
+module Example with
+  val a = 1
+  fun f(x) = [x, a]
+
+Example.f(2)
+//│ = [ 2, 1 ]
+
+let oops = Example.f
+//│ oops = [Function: f]
+
+
+// * JavaScript nonsense
+oops(2)
+//│ = [ 2, undefined ]
+
+oops.call(Example, 2)
+//│ = [ 2, 1 ]
+
+
+// * We could use that syntax as a shorthand:
+// * TODO need to support varargs... 
+fun (.) call(receiver, f)(arg) = f.call(receiver, arg)
+
+
+// * Notice how it parses with the correct precedence:
+:pt
+:sjs
+Example . oops(2)
+//│ Parsed tree:
+//│ App:
+//│   lhs = App:
+//│     lhs = Ident of "."
+//│     rhs = Tup of Ls of 
+//│       Ident of "Example"
+//│       Ident of "oops"
+//│   rhs = Tup of Ls of 
+//│     IntLit of 2
+//│ JS:
+//│ let tmp; tmp = this.call(this.Example, this.oops); tmp(2)
+//│ = [ 2, 1 ]
+
+Example. oops(2)
+//│ = [ 2, 1 ]
+
+// * This one is a normal method call; there is no `oops` in `Example`
+:re
+Example .oops(2)
+//│ ═══[RUNTIME ERROR] TypeError: this.Example.oops is not a function
+
+
+id(Example) . oops(2)
+//│ = [ 2, 1 ]
+
+
+class Example2(val a) with
+  val a = 1
+  fun f(inc) = Example2(a + inc)
+
+let oops = Example2(0).f
+//│ oops = [Function: f]
+
+:todo
+new Example(1)
+  . oops(2)
+//│ /!!!\ Uncaught error: scala.MatchError: OpBlock(List((Ident(.),App(Ident(oops),Tup(List(IntLit(2))))))) (of class hkmc2.syntax.Tree$OpBlock)
+
+:todo
+new Example(1)
+  . oops(2)
+  . oops(2)
+//│ /!!!\ Uncaught error: scala.MatchError: OpBlock(List((Ident(.),App(Ident(oops),Tup(List(IntLit(2))))), (Ident(.),App(Ident(oops),Tup(List(IntLit(2))))))) (of class hkmc2.syntax.Tree$OpBlock)
+
+

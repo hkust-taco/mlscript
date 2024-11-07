@@ -30,11 +30,7 @@ class Bar { val x: Int }
 //│ ║  l.28: 	class Bar { val x: Int }
 //│ ╙──      	          ^^^^^^^^^^^^^^
 
-:todo
 class Foo() extends Bar { x = 1 } with
   val y = this.x
-//│ ╔══[ERROR] Name not found: this
-//│ ║  l.35: 	  val y = this.x
-//│ ╙──      	          ^^^^
 
 

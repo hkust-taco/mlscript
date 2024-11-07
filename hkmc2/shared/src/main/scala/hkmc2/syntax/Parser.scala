@@ -253,7 +253,7 @@ abstract class Parser(
             consume
             val blk = rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.blockOf(subRule, allowNewlines)) // FIXME allowNewlines?
             if blk.isEmpty then
-              err((msg"Expected ${subRule.whatComesAfter} after ${subRule.name}; found end of block instead" -> S(loc) :: Nil))
+              err((msg"Expected ${subRule.whatComesAfter} ${subRule.mkAfterStr}; found end of block instead" -> S(loc) :: Nil))
               errExpr
             blk ::: blockContOf(rule)
           case _ =>
@@ -282,10 +282,10 @@ abstract class Parser(
                 parseRule(CommaPrecNext, exprAlt.rest).map(res => exprAlt.k(e, res)).getOrElse(errExpr) :: blockContOf(rule)
               case N =>
                 // TODO dedup?
-                err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
+                err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> S(loc) :: Nil))
                 errExpr :: blockContOf(rule)
           case N =>
-            err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
+            err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> S(loc) :: Nil))
             errExpr :: blockContOf(rule)
             
       case N =>
@@ -312,7 +312,7 @@ abstract class Parser(
         case S(res) =>
           S(res)
         case N =>
-          err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
+          err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> S(loc) :: Nil))
           N
   
   
@@ -324,7 +324,7 @@ abstract class Parser(
       case S(res) => S(res)
       case N =>
         consume
-        err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
+        err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> S(loc) :: Nil))
         N
     yeetSpaces match
     // case (tok @ (id: IDENT), loc) :: _ if Keyword.all.get(id.name).exists(_.leftPrecOrMin < prec) =>
@@ -334,7 +334,7 @@ abstract class Parser(
     //     case S(res) =>
     //       S(res)
     //     case N =>
-    //       err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found end of phrase instead" -> S(loc.left) :: Nil))
+    //       err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found end of phrase instead" -> S(loc.left) :: Nil))
     //       N
     case (tok @ (id: IDENT), loc) :: _ =>
       Keyword.all.get(id.name) match
@@ -373,14 +373,14 @@ abstract class Parser(
       rule.emptyAlt match
         case S(res) => S(res)
         case N =>
-          // err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> lastLoc :: Nil))
-          err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(l0) :: Nil))
+          // err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> lastLoc :: Nil))
+          err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> S(l0) :: Nil))
           N
     case (br @ BRACKETS(Indent | Curly, toks), loc) :: _ =>
       // rule.blkAlt match
       //   case S(res) => S(res)
       //   case N =>
-      //     err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> lastLoc :: Nil))
+      //     err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> lastLoc :: Nil))
       //     N
       
       if verbose then printDbg("$ found an indented" + (toks match
@@ -421,7 +421,7 @@ abstract class Parser(
         case S(res) =>
           S(res)
         case N =>
-          err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found end of input instead" -> lastLoc :: Nil))
+          err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found end of input instead" -> lastLoc :: Nil))
           N
   
   
@@ -924,7 +924,7 @@ abstract class Parser(
                 .getOrElse(errExpr)
               case N =>
                 // TODO other alts...?
-                err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${kw.name} instead" -> S(l0) :: Nil))
+                err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${kw.name} instead" -> S(l0) :: Nil))
                 acc
           case _ => acc
       case _ =>

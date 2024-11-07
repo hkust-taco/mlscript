@@ -11,6 +11,7 @@ enum Term extends Statement:
   case Error
   case Lit(lit: Literal)
   case Ref(sym: Symbol)(val tree: Tree.Ident, val refNum: Int)
+  case This(sym: MemberSymbol[?])
   case App(lhs: Term, rhs: Term)(val tree: Tree.App, val resSym: FlowSymbol)
   case TyApp(lhs: Term, targs: Ls[Term])
   case Sel(prefix: Term, nme: Tree.Ident)
@@ -120,6 +121,8 @@ sealed trait Statement extends AutoLocated:
       td.rhs.toList
     case Import(sym, pth) => Nil
     case Try(body, finallyDo) => body :: finallyDo :: Nil
+    case This(_) => Nil
+    case Neg(e) => e :: Nil
   
   protected def children: Ls[Located] = this match
     case t: Lit => t.lit.asTree :: Nil

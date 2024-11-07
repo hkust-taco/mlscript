@@ -1,7 +1,7 @@
 :js
 
 :import PredefJS.mls
-//│ Imported 1 member(s)
+//│ Imported 2 member(s)
 
 
 class Foo(a)

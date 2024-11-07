@@ -188,7 +188,7 @@ fun f(x) = if x
 fun f(x) = if x
   is 0 then "a"
   is 1 then "b"
-//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'set' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'else' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'open' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, 'return' keyword, 'import' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'is' keyword instead
+//│ ╔══[PARSE ERROR] Expected start of statement in this position; found 'is' keyword instead
 //│ ║  l.190: 	  is 1 then "b"
 //│ ╙──       	  ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead

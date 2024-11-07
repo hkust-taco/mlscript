@@ -1,0 +1,57 @@
+:js
+
+
+let
+  x = 0
+  y = 0
+//│ x = 0
+//│ y = 0
+
+set
+  x += 1
+  y += 2
+
+[x, y]
+//│ = [ 1, 2 ]
+
+
+:p
+abstract
+  class
+    Foo(a)
+    Bar(b)
+//│ |abstract|→|class|→|Foo|(|a|)|↵|Bar|(|b|)|←|←|
+//│ Parsed:
+//│ 	Modified(keyword 'abstract',None,TypeDef(Cls,App(Ident(Foo),Tup(List(Ident(a)))),None,None))
+//│ 	Modified(keyword 'abstract',None,TypeDef(Cls,App(Ident(Bar),Tup(List(Ident(b)))),None,None))
+
+:todo
+abstract class
+    Foo(a)
+    Bar(b)
+//│ ╔══[PARSE ERROR] Unexpected identifier here
+//│ ║  l.31: 	    Bar(b)
+//│ ╙──      	    ^^^
+
+
+abstract class Foo
+module
+  A extends Foo
+  B extends Foo
+
+
+// * Would be cool if something like this was supported:
+:pe
+:ge
+module \$ extends Foo
+  A
+  B
+//│ ╔══[LEXICAL ERROR] unexpected character '$'
+//│ ║  l.46: 	module \$ extends Foo
+//│ ╙──      	        ^
+//│ ╔══[PARSE ERROR] Expected end of input; found error instead
+//│ ║  l.46: 	module \$ extends Foo
+//│ ╙──      	        ^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
+
+
