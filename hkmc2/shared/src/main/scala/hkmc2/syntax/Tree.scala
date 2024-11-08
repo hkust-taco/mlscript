@@ -78,7 +78,9 @@ enum Tree extends AutoLocated:
     case OpBlock(items) => items.flatMap:
       case (op, body) => op :: body :: Nil
     case LetLike(kw, lhs, rhs, body) => lhs :: Nil ++ rhs ++ body
-    case Handle(lhs, rhs, defs, body) => lhs :: rhs :: defs :: Nil
+    case Handle(lhs, rhs, defs, body) => body match
+      case Some(value) => lhs :: rhs :: defs :: value :: Nil
+      case None => lhs :: rhs :: defs :: Nil
     case TypeDef(k, head, extension, body) =>
       head :: extension.toList ::: body.toList
     case Modified(_, _, body) => Ls(body)
@@ -131,6 +133,7 @@ enum Tree extends AutoLocated:
     case Region(name, body) => "region"
     case RegRef(reg, value) => "region reference"
     case Effectful(eff, body) => "effectful"
+    case Handle(_, _, _, _) => "handle"
   
   def showDbg: Str = toString // TODO
   
