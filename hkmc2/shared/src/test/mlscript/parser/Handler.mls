@@ -60,10 +60,10 @@ foo(h)
     fun f(r) = r(0)
     fun g(a, r) = r(1)
 ) + 1
-//│ ╔══[ERROR] Expected a right-hand side for handle bindings in expression position
-//│ ║  l.62: 	  handle h = Eff with
+//│ ╔══[ERROR] Expected a body for handle bindings in expression position
+//│ ║  l.59: 	  handle h = Eff with
 //│ ║        	         ^^^^^^^^^^^^
-//│ ║  l.63: 	    fun f(r) = r(0)
+//│ ║  l.60: 	    fun f(r) = r(0)
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.64: 	    fun g(a, r) = r(1)
+//│ ║  l.61: 	    fun g(a, r) = r(1)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^

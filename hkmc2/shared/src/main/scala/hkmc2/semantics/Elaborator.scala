@@ -72,7 +72,7 @@ extends Importer:
       term(Block(LetLike(`let`, lhs, rhso, N) :: bod :: Nil))
     case LetLike(`let`, lhs, S(rhs), N) =>
       raise(ErrorReport(
-        msg"Expected a right-hand side for let bindings in expression position" ->
+        msg"Expected a body for let bindings in expression position" ->
           tree.toLoc :: Nil))
       block(LetLike(`let`, lhs, S(rhs), N) :: Nil)._1
     case LetLike(`set`, lhs, S(rhs), N) =>
@@ -93,7 +93,7 @@ extends Importer:
       term(Block(Handle(id, cls, blk, N) :: bod :: Nil))
     case Handle(id: Ident, cls: Ident, Block(sts), N) =>
       raise(ErrorReport(
-        msg"Expected a right-hand side for handle bindings in expression position" ->
+        msg"Expected a body for handle bindings in expression position" ->
           tree.toLoc :: Nil))
           
       val sym =
