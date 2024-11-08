@@ -10,6 +10,7 @@ class Some[T](value: T) extends Option[T]
 module None extends Option[nothing]
 class Pair[A, B](x: A, y: B)
 
+// All `add_n` functions should be inferred to have the same type.
 
 fun add_1(x, y) =
   if
@@ -95,25 +96,25 @@ fun add_4(x, y) =
 :fixme
 add_4(None, None)
 //│ ╔══[ERROR] Name not found: add_4
-//│ ║  l.96: 	add_4(None, None)
+//│ ║  l.97: 	add_4(None, None)
 //│ ╙──      	^^^^^
 
 :fixme
 add_4(Some(5), None)
 //│ ╔══[ERROR] Name not found: add_4
-//│ ║  l.102: 	add_4(Some(5), None)
+//│ ║  l.103: 	add_4(Some(5), None)
 //│ ╙──       	^^^^^
 
 :fixme
 add_4(None, Some(9))
 //│ ╔══[ERROR] Name not found: add_4
-//│ ║  l.108: 	add_4(None, Some(9))
+//│ ║  l.109: 	add_4(None, Some(9))
 //│ ╙──       	^^^^^
 
 :fixme
 add_4(Some(5), Some(9))
 //│ ╔══[ERROR] Name not found: add_4
-//│ ║  l.114: 	add_4(Some(5), Some(9))
+//│ ║  l.115: 	add_4(Some(5), Some(9))
 //│ ╙──       	^^^^^
 
 
@@ -158,6 +159,7 @@ add_6(Some(5), Some(9))
 //│ = 14
 
 
+// Functions from now on have a predicate `p` that can be used to add some preconditions.
 
 
 fun add_6(p, x, y) =
@@ -169,15 +171,23 @@ fun add_6(p, x, y) =
     y is None     and x is None     then 0
 
 
+:expect 0
 add_6((x) => true, None, None)
 //│ = 0
 
+:expect 42
 add_6((x) => true, Some(5), None)
 //│ = 42
 
+:expect 5
+add_6((x) => false, Some(5), None)
+//│ = 5
+
+:expect 9
 add_6((x) => true, None, Some(9))
 //│ = 9
 
+:expect 14
 add_6((x) => true, Some(5), Some(9))
 //│ = 14
 
@@ -192,18 +202,23 @@ fun add_7(p, x, y) =
     y is None     and x is None     then 0
 
 
+:expect 0
 add_7((x) => x > 0, None, None)
 //│ = 0
 
+:expect 5
 add_7((x) => x > 0, Some(5), None)
 //│ = 5
 
+:expect 36
 add_7((x) => x > 0, None, Some(9))
 //│ = 36
 
+:expect -9
 add_7((x) => x > 0, None, Some(-9))
 //│ = -9
 
+:expect 14
 add_7((x) => x > 0, Some(5), Some(9))
 //│ = 14
 
@@ -218,21 +233,27 @@ fun add_8(p, x, y) =
     y is None     and x is None     then 0
 
 
+:expect 0
 add_8((x) => x > 0, None, None)
 //│ = 0
 
+:expect 42
 add_8((x) => true, Some(9), None)
 //│ = 42
 
+:expect 5
 add_8((x) => x > 0, Some(5), None)
 //│ = 5
 
+:expect 36
 add_8((x) => x > 0, None, Some(9))
 //│ = 36
 
+:expect -9
 add_8((x) => x > 0, None, Some(-9))
 //│ = -9
 
+:expect 14
 add_8((x) => x > 0, Some(5), Some(9))
 //│ = 14
 
