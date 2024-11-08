@@ -1,3 +1,5 @@
+:js
+
 // DualOptions.mls
 // ===============
 // Matching two options in any possible order.
@@ -8,7 +10,6 @@ class Some[T](value: T) extends Option[T]
 module None extends Option[nothing]
 class Pair[A, B](x: A, y: B)
 
-// All `add_n` functions should be inferred to have the same type.
 
 fun add_1(x, y) =
   if
@@ -18,9 +19,16 @@ fun add_1(x, y) =
     x is None     and y is None     then 0
 
 add_1(None, None)
+//│ = 0
+
 add_1(Some(5), None)
+//│ = 5
+
 add_1(None, Some(9))
+//│ = 9
+
 add_1(Some(5), Some(9))
+//│ = 14
 
 fun add_2(x, y) =
   if x is
@@ -32,9 +40,16 @@ fun add_2(x, y) =
       None     then 0
 
 add_2(None, None)
+//│ = 0
+
 add_2(Some(5), None)
+//│ = 5
+
 add_2(None, Some(9))
+//│ = 9
+
 add_2(Some(5), Some(9))
+//│ = 14
 
 
 fun add_3(x, y) =
@@ -45,9 +60,16 @@ fun add_3(x, y) =
     Pair(None,     None)     then 0
 
 add_3(None, None)
+//│ = 0
+
 add_3(Some(5), None)
+//│ = 5
+
 add_3(None, Some(9))
+//│ = 9
+
 add_3(Some(5), Some(9))
+//│ = 14
 
 
 :fixme
@@ -72,21 +94,27 @@ fun add_4(x, y) =
 
 :fixme
 add_4(None, None)
+//│ ╔══[ERROR] Name not found: add_4
+//│ ║  l.96: 	add_4(None, None)
+//│ ╙──      	^^^^^
+
+:fixme
 add_4(Some(5), None)
+//│ ╔══[ERROR] Name not found: add_4
+//│ ║  l.102: 	add_4(Some(5), None)
+//│ ╙──       	^^^^^
+
+:fixme
 add_4(None, Some(9))
+//│ ╔══[ERROR] Name not found: add_4
+//│ ║  l.108: 	add_4(None, Some(9))
+//│ ╙──       	^^^^^
+
+:fixme
 add_4(Some(5), Some(9))
 //│ ╔══[ERROR] Name not found: add_4
-//│ ║  l.74: 	add_4(None, None)
-//│ ╙──      	^^^^^
-//│ ╔══[ERROR] Name not found: add_4
-//│ ║  l.75: 	add_4(Some(5), None)
-//│ ╙──      	^^^^^
-//│ ╔══[ERROR] Name not found: add_4
-//│ ║  l.76: 	add_4(None, Some(9))
-//│ ╙──      	^^^^^
-//│ ╔══[ERROR] Name not found: add_4
-//│ ║  l.77: 	add_4(Some(5), Some(9))
-//│ ╙──      	^^^^^
+//│ ║  l.114: 	add_4(Some(5), Some(9))
+//│ ╙──       	^^^^^
 
 
 fun add_5(x, y) =
@@ -98,9 +126,16 @@ fun add_5(x, y) =
 
 
 add_5(None, None)
+//│ = 0
+
 add_5(Some(5), None)
+//│ = 5
+
 add_5(None, Some(9))
+//│ = 9
+
 add_5(Some(5), Some(9))
+//│ = 14
 
 
 fun add_6(x, y) =
@@ -111,16 +146,21 @@ fun add_6(x, y) =
     [None,     None]     then 0
 
 add_6(None, None)
+//│ = 0
+
 add_6(Some(5), None)
+//│ = 5
+
 add_6(None, Some(9))
+//│ = 9
+
 add_6(Some(5), Some(9))
+//│ = 14
 
 
-fun p(x) = true
 
 
-// FIXME Remove `case p(x) of true -> 0; _ -> 0`
-fun add_6(x, y) =
+fun add_6(p, x, y) =
   if
     x is Some(xv) and y is Some(yv) then xv + yv
     y is None     and p(x) and x is Some(xv) then 42
@@ -128,7 +168,21 @@ fun add_6(x, y) =
     x is None     and y is Some(yv) then yv
     y is None     and x is None     then 0
 
-fun add_7(x, y) =
+
+add_6((x) => true, None, None)
+//│ = 0
+
+add_6((x) => true, Some(5), None)
+//│ = 42
+
+add_6((x) => true, None, Some(9))
+//│ = 9
+
+add_6((x) => true, Some(5), Some(9))
+//│ = 14
+
+
+fun add_7(p, x, y) =
   if
     x is Some(xv) and y is Some(yv) then xv + yv
     // y is None    and p(x) and x is Some(xv) then 42
@@ -137,7 +191,24 @@ fun add_7(x, y) =
     y is Some(yv) and x is None then yv
     y is None     and x is None     then 0
 
-fun add_8(x, y) =
+
+add_7((x) => x > 0, None, None)
+//│ = 0
+
+add_7((x) => x > 0, Some(5), None)
+//│ = 5
+
+add_7((x) => x > 0, None, Some(9))
+//│ = 36
+
+add_7((x) => x > 0, None, Some(-9))
+//│ = -9
+
+add_7((x) => x > 0, Some(5), Some(9))
+//│ = 14
+
+
+fun add_8(p, x, y) =
   if
     x is Some(xv) and y is Some(yv) then xv + yv
     y is None    and p(x) and x is Some(xv) then 42
@@ -146,4 +217,22 @@ fun add_8(x, y) =
     y is Some(yv) and x is None then yv
     y is None     and x is None     then 0
 
+
+add_8((x) => x > 0, None, None)
+//│ = 0
+
+add_8((x) => true, Some(9), None)
+//│ = 42
+
+add_8((x) => x > 0, Some(5), None)
+//│ = 5
+
+add_8((x) => x > 0, None, Some(9))
+//│ = 36
+
+add_8((x) => x > 0, None, Some(-9))
+//│ = -9
+
+add_8((x) => x > 0, Some(5), Some(9))
+//│ = 14
 
