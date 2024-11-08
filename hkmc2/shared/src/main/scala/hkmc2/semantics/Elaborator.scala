@@ -97,7 +97,7 @@ extends Importer:
           tree.toLoc :: Nil))
           
       val sym =
-      fieldOrVarSym(Handler, id)
+        fieldOrVarSym(Handler, id)
       val newCtx = ctx.copy(locals = ctx.locals + (id.name -> sym))
       Term.Handle(sym, term(cls)(using newCtx), ObjBody(block(sts)._1))
       
