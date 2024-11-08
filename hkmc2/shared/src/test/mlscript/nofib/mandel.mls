@@ -2,7 +2,7 @@
 
 :js
 :import NofibPrelude.mls
-//│ Imported 109 member(s)
+//│ Imported 110 member(s)
 class Complex(r: Num, i: Num)
 fun comp_magnitude(c) = if c is Complex(a, b) then a * a + b * b
 fun comp_times(x, y) = if

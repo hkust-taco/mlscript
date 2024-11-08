@@ -2,7 +2,7 @@
 
 :js
 :import NofibPrelude.mls
-//│ Imported 109 member(s)
+//│ Imported 110 member(s)
 let blank =
   Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Cons(Cons(" ", Cons(" ", Cons(" ", Cons(" ", Cons(" ", Nil))))), Nil)))))
 let alphas =

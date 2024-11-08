@@ -2,7 +2,7 @@
 
 :js
 :import NofibPrelude.mls
-//│ Imported 109 member(s)
+//│ Imported 110 member(s)
 fun delete_(xs, e) = deleteBy((x, y) => x == y, e, xs)
 fun listDiff(a, ls) = foldl(delete_, a, ls)
 fun sort(l) = qsort((a, b) => leTup2(a, b), l, Nil)
