@@ -4,4 +4,9 @@
 // :elt
 
 
-
+:parseOnly
+(let x = 1) + 1
+x
+//│ Parsed:
+//│ 	App(Ident(+),Tup(List(LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None), IntLit(1))))
+//│ 	Ident(x)

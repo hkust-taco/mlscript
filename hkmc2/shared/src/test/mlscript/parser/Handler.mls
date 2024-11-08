@@ -1,114 +1,69 @@
 
-
 :pe
 handle
 //│ ╔══[PARSE ERROR] Expected expression after 'handle' binding keyword; found end of input instead
-//│ ║  l.4: 	handle
+//│ ║  l.3: 	handle
 //│ ╙──     	      ^
 
 :pe
 handle h
 //│ ╔══[PARSE ERROR] Expected '=' keyword after 'handle' binding head; found end of input instead
-//│ ║  l.10: 	handle h
-//│ ╙──      	        ^
+//│ ║  l.9: 	handle h
+//│ ╙──     	        ^
 
 :pe
 handle h = Eff
 //│ ╔══[PARSE ERROR] Expected 'with' keyword after 'handle' binding class name; found end of input instead
-//│ ║  l.16: 	handle h = Eff
+//│ ║  l.15: 	handle h = Eff
 //│ ╙──      	              ^
 
-:pe
+:parseOnly
 handle h = Eff with
   fun f(r) = r(0)
   fun g(a, r) = r(1)
-//│ ╔══[PARSE ERROR] Expected 'in' keyword after type declaration block; found end of input instead
-//│ ║  l.23: 	  fun f(r) = r(0)
-//│ ╙──      	  ^
-
-:parseOnly
-handle 1 = 1 with
-  fun f(r) = r(0)
-in
-  foo(h)
 //│ Parsed:
-//│ 	Handle(IntLit(1),IntLit(1),Block(List(TermDef(Fun,App(Ident(f),Tup(List(Ident(r)))),Some(App(Ident(r),Tup(List(IntLit(0)))))))),Block(List(App(Ident(foo),Tup(List(Ident(h)))))))
+//│ 	Handle(Ident(h),Ident(Eff),Block(List(TermDef(Fun,App(Ident(f),Tup(List(Ident(r)))),Some(App(Ident(r),Tup(List(IntLit(0)))))), TermDef(Fun,App(Ident(g),Tup(List(Ident(a), Ident(r)))),Some(App(Ident(r),Tup(List(IntLit(1)))))))),None)
+
 
 :e
+fun foo(x) = 1
 handle 1 = 1 with
   fun f(r) = r(0)
 in
   foo(h)
 //│ ╔══[ERROR] Unsupported handle binding shape
-//│ ║  l.38: 	handle 1 = 1 with
+//│ ║  l.30: 	handle 1 = 1 with
 //│ ║        	       ^^^^^^^^^^
-//│ ║  l.39: 	  fun f(r) = r(0)
+//│ ║  l.31: 	  fun f(r) = r(0)
 //│ ╙──      	^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: h
+//│ ║  l.33: 	  foo(h)
+//│ ╙──      	      ^
 
-:elt
 class Eff
 fun foo(h) = 0
 handle h = Eff with
   fun f(r) = r(0)
 in
   foo(h)
-//│ Elaborated tree:
-//│ Blk:
-//│   stats = Ls of 
-//│     Plain:
-//│       kind = Cls
-//│       sym = class:Eff
-//│       tparams = Nil
-//│       body = ObjBody of Blk:
-//│         stats = Nil
-//│         res = Lit of UnitLit of true
-//│       companion = N
-//│     TermDefinition:
-//│       k = Fun
-//│       sym = globalThis:block#5.foo
-//│       params = Ls of 
-//│         ParamList:
-//│           flags = ParamListFlags of false
-//│           params = Ls of 
-//│             Param:
-//│               flags = ()
-//│               sym = h@29
-//│               sign = N
-//│       sign = N
-//│       body = S of Lit of IntLit of 0
-//│       resSym = ‹result of globalThis:block#5.foo›@30
-//│   res = Blk:
-//│     stats = Ls of 
-//│       Handle:
-//│         lhs = globalThis:block#5.h
-//│         rhs = Ref of class:Eff
-//│         defs = ObjBody of Blk:
-//│           stats = Ls of 
-//│             TermDefinition:
-//│               k = Fun
-//│               sym = globalThis:block#5.f
-//│               params = Ls of 
-//│                 ParamList:
-//│                   flags = ParamListFlags of false
-//│                   params = Ls of 
-//│                     Param:
-//│                       flags = ()
-//│                       sym = r@31
-//│                       sign = N
-//│               sign = N
-//│               body = S of App:
-//│                 lhs = Ref of r@31
-//│                 rhs = Tup of Ls of 
-//│                   Fld:
-//│                     flags = ()
-//│                     value = Lit of IntLit of 0
-//│                     asc = N
-//│               resSym = ‹result of globalThis:block#5.f›@33
-//│           res = Lit of UnitLit of true
-//│     res = App:
-//│       lhs = Ref of globalThis:block#5.foo
-//│       rhs = Tup of Ls of 
-//│         Fld:
-//│           flags = ()
-//│           value = Ref of globalThis:block#5.h
-//│           asc = N
+
+class Eff
+fun foo(h) = 0
+handle h = Eff with
+  fun f(r) = r(0)
+  fun g(a, r) = r(1)
+foo(h)
+
+:e
+(
+  handle h = Eff with
+    fun f(r) = r(0)
+    fun g(a, r) = r(1)
+) + 1
+//│ ╔══[ERROR] Expected a right-hand side for handle bindings in expression position
+//│ ║  l.62: 	  handle h = Eff with
+//│ ║        	         ^^^^^^^^^^^^
+//│ ║  l.63: 	    fun f(r) = r(0)
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.64: 	    fun g(a, r) = r(1)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^

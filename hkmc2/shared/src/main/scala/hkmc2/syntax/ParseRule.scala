@@ -66,12 +66,11 @@ object ParseRule:
     Blk(body)(k) ::
     Nil
 
-  def typeDeclTemplateThen[A](after: Alt[A]): Alt[(S[Tree], A)] =
+  def typeDeclTemplateThen[A](after: Alt[A]*): Alt[(S[Tree], A)] =
     Kw(`with`):
       ParseRule("type declaration body")(
         Blk(
-          ParseRule("type declaration block"):
-            after
+          ParseRule("type declaration block")(after*)
         ) { case (res, t) => (S(res), t) }
       )
   
@@ -140,8 +139,8 @@ object ParseRule:
                   ParseRule(s"'${kw.name}' binding right-hand side")(
                     Kw(`in`):
                       ParseRule(s"'${kw.name}' binding `in` clause")(
-                        exprOrBlk(ParseRule(s"'${kw.name}' binding body")(End(())))((body, _: Unit) => S(body))
-                    *),
+                        exprOrBlk(ParseRule(s"'${kw.name}' binding body")(End(())))((body, _: Unit) => S(body))*
+                      ),
                     End(N)
                   )
                 ) { (rhs, body) => (S(rhs), body) }*
@@ -203,12 +202,13 @@ object ParseRule:
                     typeDeclTemplateThen(
                       Kw(`in`):
                         ParseRule(s"'handle' binding `in` clause")(
-                          exprOrBlk(ParseRule(s"'handle' binding body")(End(())))((body, _: Unit) => S(body))
-                      *),
+                          exprOrBlk(ParseRule(s"'handle' binding body")(End(())))((body, _: Unit) => S(body))*
+                        ),
+                      End(None)
                     )
-                ) { case (rhs, (S(defs), S(body))) => (rhs, defs, body) }
+                ) { case (rhs, (S(defs), body)) => (rhs, defs, body) }
         ) { case (lhs, (rhs, defs, body))=> Handle(lhs, rhs, defs, body) }
-      ,
+    ,
     Kw(`new`):
       ParseRule("`new` keyword"):
         Expr(ParseRule("`new` expression")(End(())))((body, _: Unit) => New(body))

@@ -89,14 +89,17 @@ extends Importer:
           term(bod),
         ), Term.Assgn(lt, sym.ref(id))))
       case _ => ??? // TODO error
-    case Handle(id: Ident, cls: Ident, Block(sts), body) =>
+    case Handle(id, cls, blk, S(bod)) =>
+      term(Block(Handle(id, cls, blk, N) :: bod :: Nil))
+    case Handle(id: Ident, cls: Ident, Block(sts), N) =>
+      raise(ErrorReport(
+        msg"Expected a right-hand side for handle bindings in expression position" ->
+          tree.toLoc :: Nil))
+          
       val sym =
-        fieldOrVarSym(Handler, id)
+      fieldOrVarSym(Handler, id)
       val newCtx = ctx.copy(locals = ctx.locals + (id.name -> sym))
-      Term.Blk(
-        Term.Handle(sym, term(cls)(using newCtx), ObjBody(block(sts)._1)) :: Nil,
-        term(body)(using newCtx)
-      )
+      Term.Handle(sym, term(cls)(using newCtx), ObjBody(block(sts)._1))
       
     case h: Handle =>
       raise(ErrorReport(
@@ -439,6 +442,17 @@ extends Importer:
       case (tree @ LetLike(`let`, lhs, S(rhs), N)) :: sts =>
         raise(ErrorReport(msg"Unsupported let binding shape" -> tree.toLoc :: Nil))
         go(sts, Term.Error :: acc)
+      case (hd @ Handle(id: Ident, cls: Ident, Block(sts_), N)) :: sts =>
+        val sym =
+          fieldOrVarSym(LetBind, id)
+        log(s"Processing `handle` statement $id (${sym}) ${ctx.outer}")
+        val newAcc = Term.Handle(sym, term(cls), ObjBody(block(sts_)._1)) :: acc
+        ctx.copy(locals = ctx.locals + (id.name -> sym)) givenIn:
+          go(sts, newAcc)
+      case (tree @ Handle(_, _, _, N)) :: sts =>
+        raise(ErrorReport(msg"Unsupported handle binding shape" -> tree.toLoc :: Nil))
+        go(sts, Term.Error :: acc)
+
       case Def(lhs, rhs) :: sts =>
         lhs match
         case id: Ident =>
