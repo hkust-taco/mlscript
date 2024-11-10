@@ -68,6 +68,7 @@ class Lowering(using TL, Raise, Elaborator.State):
       case Tup(fs) =>
         val as = fs.map:
           case sem.Fld(sem.FldFlags.empty, value, N) => value
+          case sem.Fld(sem.FldFlags(false, false, false, true), value, N) => value
           case sem.Fld(flags, value, asc) =>
             TODO("Other argument forms")
         val l = new TempSymbol(summon[Elaborator.State].nextUid, S(t))

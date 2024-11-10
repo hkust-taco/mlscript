@@ -633,8 +633,11 @@ extends Importer:
     if ctx.outer.isDefined then TermSymbol(k, ctx.outer, id)
     else VarSymbol(id, nextUid)
   
-  def param(t: Tree): Ctxl[Ls[Param]] = t.param.map: (p, t) =>
-    Param(FldFlags.empty, fieldOrVarSym(ParamBind, p), t.map(term))
+  def param(t: Tree): Ctxl[Ls[Param]] = t match
+    case TypeDef(Mod, inner, N, N) => param(inner)
+      .map(p => p.copy(flags = p.flags.copy(mod = true)))
+    case _ => t.param.map: (p, t) =>
+      Param(FldFlags.empty, fieldOrVarSym(ParamBind, p), t.map(term))
   
   def params(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
     case Tup(ps) =>
@@ -705,10 +708,21 @@ extends Importer:
   class VarianceTraverser(var changed: Bool = true) extends Traverser:
     override def traverseType(pol: Pol)(trm: Term): Unit = trm match
       case Term.TyApp(lhs, targs) =>
-        lhs.symbol.flatMap(_.asTpe) match
+        lhs.symbol.flatMap(sym => sym.asTpe orElse sym.asMod) match
           case S(sym: ClassSymbol) =>
             sym.defn match
             case S(td: ClassDef) =>
+              if td.tparams.sizeCompare(targs) =/= 0 then
+                raise(ErrorReport(msg"Wrong number of type arguments" -> trm.toLoc :: Nil)) // TODO BE
+              td.tparams.zip(targs).foreach:
+                case (tp, targ) =>
+                  if !tp.isContravariant then traverseType(pol)(targ)
+                  if !tp.isCovariant then traverseType(pol.!)(targ)
+            case N =>
+              // TODO(sym->sym.uid)
+          case S(sym: ModuleSymbol) =>
+            sym.defn match
+            case S(td: ModuleDef) =>
               if td.tparams.sizeCompare(targs) =/= 0 then
                 raise(ErrorReport(msg"Wrong number of type arguments" -> trm.toLoc :: Nil)) // TODO BE
               td.tparams.zip(targs).foreach:
