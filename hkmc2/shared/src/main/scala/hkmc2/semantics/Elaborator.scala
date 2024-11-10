@@ -503,6 +503,7 @@ extends Importer:
           case R(id) =>
             val sym = members.getOrElse(id.name, die)
             val owner = ctx.outer
+            val isModMember = owner.fold(false)(_.isInstanceOf[ModuleSymbol])
             val tdf = ctx.nest(N).givenIn:
               // * Add type parameters to context
               val (tps, newCtx1) = td.typeParams match
@@ -517,7 +518,8 @@ extends Importer:
               val b = rhs.map(term(_)(using newCtx))
               val r = FlowSymbol(s"‹result of ${sym}›", nextUid)
               val tdf = TermDefinition(owner, k, sym, pss,
-                td.signature.orElse(newSignatureTrees.get(id.name)).map(term), b, r)
+                td.signature.orElse(newSignatureTrees.get(id.name)).map(term), b, r,
+                TermDefFlags(isModMember))
               sym.defn = S(tdf)
               tdf
             go(sts, tdf :: acc)
@@ -681,7 +683,7 @@ extends Importer:
   def computeVariances(s: Statement): Unit =
     val trav = VarianceTraverser()
     def go(s: Statement): Unit = s match
-      case TermDefinition(_, k, sym, pss, sign, body, r) =>
+      case TermDefinition(_, k, sym, pss, sign, body, r, _) =>
         pss.foreach(ps => ps.params.foreach(trav.traverseType(S(false))))
         sign.foreach(trav.traverseType(S(true)))
         body match

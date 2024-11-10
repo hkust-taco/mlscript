@@ -3,6 +3,7 @@ package semantics
 
 import mlscript.utils.*, shorthands.*
 import syntax.*
+import scala.collection.mutable.Buffer
 
 
 final case class QuantVar(sym: VarSymbol, ub: Opt[Term], lb: Opt[Term])
@@ -104,7 +105,7 @@ sealed trait Statement extends AutoLocated:
     case RegRef(reg, value) => reg :: value :: Nil
     case Assgn(lhs, rhs) => lhs :: rhs :: Nil
     case Deref(term) => term :: Nil
-    case TermDefinition(_, k, _, ps, sign, body, res) =>
+    case TermDefinition(_, k, _, ps, sign, body, res, _) =>
       ps.toList.flatMap(_.subTerms) ::: sign.toList ::: body.toList
     case cls: ClassDef =>
       cls.paramsOpt.toList.flatMap(_.flatMap(_.subTerms)) ::: cls.body.blk :: Nil
@@ -172,7 +173,7 @@ sealed trait Statement extends AutoLocated:
     case CompType(lhs, rhs, pol) => s"${lhs.showDbg} ${if pol then "|" else "&"} ${rhs.showDbg}"
     case Error => "<error>"
     case Tup(fields) => fields.map(_.showDbg).mkString("[", ", ", "]")
-    case TermDefinition(_, k, sym, ps, sign, body, res) => s"${k.str} ${sym}${
+    case TermDefinition(_, k, sym, ps, sign, body, res, flags) => s"${flags} ${k.str} ${sym}${
       ps.map(_.showDbg).mkString("")
     }${sign.fold("")(": "+_.showDbg)}${
       body match
@@ -189,6 +190,15 @@ final case class LetDecl(sym: LocalSymbol) extends Statement
 
 final case class DefineVar(sym: LocalSymbol, rhs: Term) extends Statement
 
+final case class TermDefFlags(isModMember: Bool):
+  def showDbg: Str = 
+    val flags = Buffer.empty[String]
+    if isModMember then flags += "module"
+    flags.mkString(" ")
+  override def toString: String = "‹" + showDbg + "›"
+
+object TermDefFlags { val empty: TermDefFlags = TermDefFlags(false) }
+
 final case class TermDefinition(
     owner: Opt[InnerSymbol],
     k: TermDefKind,
@@ -197,6 +207,7 @@ final case class TermDefinition(
     sign: Opt[Term],
     body: Opt[Term],
     resSym: FlowSymbol,
+    flags: TermDefFlags,
 ) extends Companion
 
 case class ObjBody(blk: Term.Blk):
@@ -279,8 +290,14 @@ case class TypeDef(
 
 
 // TODO Store optional source locations for the flags instead of booleans
-final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool):
-  def showDbg: Str = (if mut then "mut " else "") + (if spec then "spec " else "") + (if genGetter then "val " else "")
+final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool, mod: Bool):
+  def showDbg: Str = 
+    val flags = Buffer.empty[String]
+    if mut then flags += "mut"
+    if spec then flags += "spec"
+    if genGetter then flags += "gen"
+    if mod then flags += "module"
+    flags.mkString(" ")
   override def toString: String = "‹" + showDbg + "›"
 
 final case class Fld(flags: FldFlags, value: Term, asc: Opt[Term]) extends FldImpl
@@ -304,7 +321,7 @@ final case class Param(flags: FldFlags, sym: LocalSymbol & NamedSymbol, sign: Op
   // def showDbg: Str = flags.showDbg + sym.name + ": " + sign.showDbg
   def showDbg: Str = flags.showDbg + sym + sign.fold("")(": " + _.showDbg)
 
-object FldFlags { val empty: FldFlags = FldFlags(false, false, false) }
+object FldFlags { val empty: FldFlags = FldFlags(false, false, false, false) }
 
 final case class ParamListFlags(ctx: Bool):
   def showDbg: Str = (if ctx then "ctx " else "")

@@ -1,0 +1,9 @@
+class C with {
+  // regular method foo
+  fun foo(x) = x
+}
+
+module M with {
+  // module method foo
+  fun foo(x) = x
+}
