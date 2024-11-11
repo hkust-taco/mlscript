@@ -92,14 +92,8 @@ fun uniform(nns, rrs) = if
 fun testPrimetest_nofib(d) =
   let cts = Cons("2", Cons("4", Cons("|", Cons("4", Cons("8", Cons("|", Cons("4", Cons("7", Cons("|", Cons("1", Cons("3", Cons("1", Cons("7", Cons("|", Cons("8", Cons("9", Cons("0", Cons("1", Nil))))))))))))))))))
   process(lines(cts))
-testPrimetest_nofib(0)
-//│ > Cons {
-//│ >   head: 'Composite',
-//│ >   tail: Cons {
-//│ >     head: 'Composite',
-//│ >     tail: Cons { head: 'Probably prime', tail: [Cons] }
-//│ >   }
-//│ = }
+testPrimetest_nofib(0).toString()
+//│ = '[Composite,Composite,Probably prime,Composite,Composite]'
 
 
 

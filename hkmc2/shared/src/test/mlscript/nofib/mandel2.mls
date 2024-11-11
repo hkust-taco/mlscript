@@ -81,10 +81,9 @@ fun finite(t) = if t is
   NS(t1, t2) then finite(t1) and finite(t2)
   EW(t1, t2) then finite(t1) and finite(t2)
 fun testMandel2_nofib(n) =
-  let size_ = max(listLen(n), size)
-  let tree = build_tree(Tup2(0,0), Tup2(size_, intDiv(size_, 2)))
-  finite(tree)
-testMandel2_nofib(60 :: Nil)
+  finite(build_tree(Tup2(0,0), Tup2(size, intDiv(size, 2))))
+nofibPrint(testMandel2_nofib(0).toString())
+//│ > "true"
 //│ = true
 //│ size = 200
 //│ pmn = -2.25
