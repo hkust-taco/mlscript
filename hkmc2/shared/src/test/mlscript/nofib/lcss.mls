@@ -36,11 +36,8 @@ fun algc(m, n, xs, ys) = if
 fun lcss(xs, ys) = algc(listLen(xs), listLen(ys), xs, ys)(Nil)
 fun lcssMain(a, b ,c, d, e, f) = lcss(enumFromThenTo(a,b,c), enumFromThenTo(d,e,f))
 fun testLCSS_nofib(d) = lcssMain(1,2,60,30,31,90)
-testLCSS_nofib(0)
+testLCSS_nofib(0).toString()
 // lcss(1 :: 2 :: Nil, 3 :: Nil)
-//│ > Cons {
-//│ >   head: 30,
-//│ >   tail: Cons { head: 31, tail: Cons { head: 32, tail: [Cons] } }
-//│ = }
+//│ = '[30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60]'
 
 

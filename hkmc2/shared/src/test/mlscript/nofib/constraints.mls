@@ -187,8 +187,5 @@ fun domainWipeout(csp, t) = if csp is CSP(vars, vals, rel) then
   mapTree(f8, t)
 fun try_(n, algorithm) = listLen(search(algorithm, queens(n)))
 fun testConstraints_nofib(n) = map(x => try_(n, x), bt :: bm :: bjbt :: bjbt_ :: fc :: Nil)
-testConstraints_nofib(6)
-//│ > Cons {
-//│ >   head: 4,
-//│ >   tail: Cons { head: 4, tail: Cons { head: 4, tail: [Cons] } }
-//│ = }
+testConstraints_nofib(6).toString()
+//│ = '[4,4,4,4,4]'

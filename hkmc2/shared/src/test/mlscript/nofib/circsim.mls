@@ -205,14 +205,8 @@ fun run(num_bits, num_cycles) =
   let inputs = replicate(num_bits + 1, T)
   let cycles = replicate(num_cycles, inputs)
   circuit_simulate(cycles, example)
-testCircsim_nofib(40)
-//│ > Cons {
-//│ >   head: Cons { head: F {}, tail: Cons { head: F {}, tail: [Cons] } },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: T {}, tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   }
-//│ = }
+testCircsim_nofib(40).toString()
+//│ = '[[F,F,F,F,F,F,F,F],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T]]'
 //│ > PS {
 //│ >   pid: -1,
 //│ >   compType: None_ {},
