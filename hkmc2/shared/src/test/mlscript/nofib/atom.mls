@@ -1,9 +1,9 @@
 0
 
-//FIXME: original input 1000 seems to be too much
+// NOTE: original input 1000
 :js
 :import NofibPrelude.mls
-//│ Imported 110 member(s)
+//│ Imported 111 member(s)
 class State(position: List[Num], velocity: List[Num])
 fun dotPlus(fs, gs) = if
   fs is Nil then gs

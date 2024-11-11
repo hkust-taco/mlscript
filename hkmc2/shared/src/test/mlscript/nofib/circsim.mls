@@ -3,7 +3,7 @@
 
 :js
 :import NofibPrelude.mls
-//│ Imported 110 member(s)
+//│ Imported 111 member(s)
 abstract class BinTree[T, U]: Cell[T] | Node[T, U]
 class Cell[T](value: T) extends BinTree[T, U]
 class Node[T, U](value: U, left: BinTree[T, U], right: BinTree[T, U]) extends BinTree[T, U]

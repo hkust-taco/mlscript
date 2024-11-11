@@ -29,6 +29,14 @@ fun _internal_cons_to_str(ls) = if ls is
   Nil then ""
   Cons(h, Nil) then h.toString()
   Cons(h, t) then h.toString() + "," + _internal_cons_to_str(t)
+fun ltList(xs, ys, lt, gt) = if xs is
+  Nil then true
+  Cons(x, xs) and ys is
+    Nil then false
+    Cons(y, ys) and
+      lt(x, y) then true
+      gt(x, y) then false
+      else ltList(xs, ys, lt, gt)
 
 
 type LazyList[out T] = Lazy[LzList[T]]
@@ -38,12 +46,10 @@ module LzNil extends LzList
 
 class Tup2[out T1, T2](fst: T1, snd: T2) with
   fun toString() = "(" + fst.toString() + "," + snd.toString() + ")"
-fun leTup2(t1, t2) = if t1 is Tup2(a, b) and t2 is Tup2(c, d) then
-  if
-    a < c then true
-    a > c then false
-    b < d then true
-    else false
+fun ltTup2(t1, t2, lt1, gt1, lt2) = if t1 is Tup2(a, b) and t2 is Tup2(c, d) and
+  lt1(a, c) then true
+  gt1(a, c) then false
+  else lt2(b, d)
 fun eqTup2(t1, t2) = if t1 is Tup2(a, b) and t2 is Tup2(c, d) then a == c and b == d
 class Tup3[out T1, T2, T3](fst: T1, snd: T2, thd: T3)
 class Tup4[out T1, T2, T3, T4](fst: T1, snd: T2, thd: T3, fth: T4)

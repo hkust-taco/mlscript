@@ -2,7 +2,7 @@
 
 :js
 :import NofibPrelude.mls
-//│ Imported 110 member(s)
+//│ Imported 111 member(s)
 abstract class MandTree: NS | EW | Leaf
 class NS(l: MandTree, r: MandTree)
 class EW(l: MandTree, r: MandTree)
