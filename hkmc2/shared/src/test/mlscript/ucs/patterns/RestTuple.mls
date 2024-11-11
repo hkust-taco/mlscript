@@ -1,0 +1,135 @@
+:js
+:ucs desugared
+
+fun tupleSlice(xs, i, j) = globalThis.Array.prototype.slice.call(xs, i, xs.length - j)
+fun tupleGet(xs, i) = globalThis.Array.prototype.at.call(xs, i)
+
+// Drop the first and last elements.
+tupleSlice([1, 2, 3, 4], 1, -1)
+//│ = [ 2, 3, 4 ]
+
+// Get the first element.
+tupleGet([1, 2, 3, 4], 0)
+//│ = 1
+
+// Get the last element.
+tupleGet([1, 2, 3, 4], -1)
+//│ = 4
+
+:sjs
+fun stupid(xs) = if xs is
+  [..ys] then ys
+  [] then "empty"
+//│ Desugared:
+//│ >  if
+//│ >    xs@41 is []>=0 and
+//│ >      let $rest@42 = globalThis:block#1#666.tupleSlice‹member:tupleSlice›(xs@41#2, 0, 0)
+//│ >      let ys@43 = $rest@42#0
+//│ >      else ys@43#666
+//│ >    xs@41 is []=0 then "empty"
+//│ JS:
+//│ function stupid(xs) {
+//│   let rest, ys;
+//│   if (Array.isArray(xs) && xs.length >= 0) {
+//│     rest = globalThis.tupleSlice(xs, 0, 0);
+//│     ys = rest;
+//│     return ys;
+//│   } else {
+//│     if (Array.isArray(xs) && xs.length === 0) {
+//│       return "empty";
+//│     } else {
+//│       throw new globalThis.Error("match error");
+//│     }
+//│   }
+//│ }
+//│ undefined
+
+stupid([])
+//│ = []
+
+stupid([1, 2, 3, 4])
+//│ = [ 1, 2, 3, 4 ]
+
+:sjs
+fun foo(xs) = if xs is
+  [x, ..ys, y] then x + y
+  [] then 0
+//│ Desugared:
+//│ >  if
+//│ >    xs@53 is []>=2 and
+//│ >      let $first0@56 = xs@53#2.0
+//│ >      let $rest@55 = globalThis:block#1#666.tupleSlice‹member:tupleSlice›(xs@53#3, 1, 1)
+//│ >      let $last0@54 = globalThis:block#1#666.tupleGet‹member:tupleGet›(xs@53#4, -1)
+//│ >      let x@57 = $first0@56#0
+//│ >      let ys@58 = $rest@55#0
+//│ >      let y@59 = $last0@54#0
+//│ >      else builtin:+#0(x@57#666, y@59#666)
+//│ >    xs@53 is []=0 then 0
+//│ JS:
+//│ function foo(xs) {
+//│   let last0, rest, first0, x, ys, y;
+//│   if (Array.isArray(xs) && xs.length >= 2) {
+//│     first0 = xs[0];
+//│     rest = globalThis.tupleSlice(xs, 1, 1);
+//│     last0 = globalThis.tupleGet(xs, -1);
+//│     x = first0;
+//│     ys = rest;
+//│     y = last0;
+//│     return x + y;
+//│   } else {
+//│     if (Array.isArray(xs) && xs.length === 0) {
+//│       return 0;
+//│     } else {
+//│       throw new globalThis.Error("match error");
+//│     }
+//│   }
+//│ }
+//│ undefined
+
+foo(["foo", "bar"])
+//│ = 'foobar'
+
+foo([1, 2, 3, 4])
+//│ = 5
+
+foo([])
+//│ = 0
+
+:re
+foo(["boom"])
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:sjs
+:todo // Better using ... instead of .. for the rest pattern.
+fun nested_tuple_patterns(xs) = if xs is
+  [x, ..[y, z], w] then x + y + z + w
+  [] then 0
+//│ ╔══[ERROR] Unrecognized pattern.
+//│ ║  l.105: 	  [x, ..[y, z], w] then x + y + z + w
+//│ ╙──       	      ^^^^^^^^
+//│ Desugared:
+//│ >  if
+//│ >    xs@78 is []=3 and
+//│ >      let $first0@81 = xs@78#2.0
+//│ >      let $first1@80 = xs@78#3.1
+//│ >      let $first2@79 = xs@78#4.2
+//│ >      let x@82 = $first0@81#0
+//│ >    xs@78 is []=0 then 0
+//│ JS:
+//│ function nested_tuple_patterns(xs) {
+//│   let first2, first1, first0, x;
+//│   if (Array.isArray(xs) && xs.length === 3) {
+//│     first0 = xs[0];
+//│     first1 = xs[1];
+//│     first2 = xs[2];
+//│     x = first0;
+//│     throw new globalThis.Error("match error");
+//│   } else {
+//│     if (Array.isArray(xs) && xs.length === 0) {
+//│       return 0;
+//│     } else {
+//│       throw new globalThis.Error("match error");
+//│     }
+//│   }
+//│ }
+//│ undefined

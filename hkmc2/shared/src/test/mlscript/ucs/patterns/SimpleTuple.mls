@@ -17,9 +17,11 @@ fun sum(pair) =
   if pair is [x, y] then x + y
 sum([1, 2])
 //│ Desugared:
-//│ >  if pair@20 is [$elem0@21, $elem1@22] and
-//│ >    let x@23 = $elem0@21#0
-//│ >    let y@24 = $elem1@22#0
+//│ >  if pair@20 is []=2 and
+//│ >    let $first0@22 = pair@20#1.0
+//│ >    let $first1@21 = pair@20#2.1
+//│ >    let x@23 = $first0@22#0
+//│ >    let y@24 = $first1@21#0
 //│ >    else builtin:+#0(x@23#666, y@24#666)
 //│ = 3
 
@@ -27,7 +29,7 @@ sum([1, 2])
 fun test(thing) =
   if thing is [] then 0
 //│ Desugared:
-//│ >  if thing@31 is [] then 0
+//│ >  if thing@31 is []=0 then 0
 
 :re
 test("")
@@ -45,9 +47,11 @@ fun discarded_cases(thing) =
     Point(x, y) then x + y
 //│ Desugared:
 //│ >  if
-//│ >    thing@40 is [$elem0@46, $elem1@47] and
-//│ >      let x@48 = $elem0@46#0
-//│ >      let y@49 = $elem1@47#0
+//│ >    thing@40 is []=2 and
+//│ >      let $first0@47 = thing@40#2.0
+//│ >      let $first1@46 = thing@40#3.1
+//│ >      let x@48 = $first0@47#0
+//│ >      let y@49 = $first1@46#0
 //│ >      else builtin:+#1(x@48#666, y@49#666)
 //│ >    thing@40 is Point($param0@41, $param1@42) and
 //│ >      let x@43 = $param0@41#0
@@ -71,9 +75,11 @@ fun working_cases(thing) =
 //│ >      let x@69 = $param0@67#0
 //│ >      let y@70 = $param1@68#0
 //│ >      else builtin:+#1(x@69#666, y@70#666)
-//│ >    thing@61 is [$elem0@62, $elem1@63] and
-//│ >      let x@64 = $elem0@62#0
-//│ >      let y@65 = $elem1@63#0
+//│ >    thing@61 is []=2 and
+//│ >      let $first0@63 = thing@61#1.0
+//│ >      let $first1@62 = thing@61#2.1
+//│ >      let x@64 = $first0@63#0
+//│ >      let y@65 = $first1@62#0
 //│ >      else builtin:+#0(x@64#666, y@65#666)
 
 working_cases(Point(0, 0))
@@ -97,3 +103,76 @@ not_working([1, 2, 3])
 
 not_working([1, 2])
 //│ = 0
+
+:ucs desugared
+fun multiple_checks(xs) =
+  if xs is
+    [] then 0
+    [x] then x + 1
+    [x, y] then x + y + 2
+    [x, y, z] then x + y + z + 3
+//│ Desugared:
+//│ >  if
+//│ >    xs@105 is []=0 then 0
+//│ >    xs@105 is []=1 and
+//│ >      let $first0@121 = xs@105#8.0
+//│ >      let x@122 = $first0@121#0
+//│ >      else builtin:+#5(x@122#666, 1)
+//│ >    xs@105 is []=2 and
+//│ >      let $first0@116 = xs@105#5.0
+//│ >      let $first1@115 = xs@105#6.1
+//│ >      let x@117 = $first0@116#0
+//│ >      let y@118 = $first1@115#0
+//│ >      else builtin:+#3(builtin:+#4(x@117#666, y@118#666), 2)
+//│ >    xs@105 is []=3 and
+//│ >      let $first0@108 = xs@105#1.0
+//│ >      let $first1@107 = xs@105#2.1
+//│ >      let $first2@106 = xs@105#3.2
+//│ >      let x@109 = $first0@108#0
+//│ >      let y@110 = $first1@107#0
+//│ >      let z@111 = $first2@106#0
+//│ >      else builtin:+#0(builtin:+#1(builtin:+#2(x@109#666, y@110#666), z@111#666), 3)
+
+:expect 0
+multiple_checks([])
+//│ = 0
+
+:expect 18
+multiple_checks([17])
+//│ = 18
+
+:expect 22
+multiple_checks([9, 11])
+//│ = 22
+
+:expect 42
+multiple_checks([13, 13, 13])
+//│ = 42
+
+:import ../Prelude/Option.mls
+//│ Imported 3 member(s)
+
+:ucs desugared normalized
+:todo // Sub-scrutinees are not memorized thus the normalization is not correct.
+fun multiple_checks(xs) =
+  if xs is
+    [Some(x)] then x + 1
+    [None] then 0
+//│ Desugared:
+//│ >  if
+//│ >    xs@150 is []=1 and
+//│ >      let $first0@152 = xs@150#3.0
+//│ >      $first0@152 is Some($param0@153) and
+//│ >        let x@154 = $param0@153#0
+//│ >        else builtin:+#0(x@154#666, 1)
+//│ >    xs@150 is []=1 and
+//│ >      let $first0@151 = xs@150#1.0
+//│ >      $first0@151 is None then 0
+//│ Normalized:
+//│ >  if xs@150 is []=1 and
+//│ >    let $first0@152 = xs@150#3.0
+//│ >    $first0@152 is Some($param0@153) and
+//│ >      let x@154 = $param0@153#0
+//│ >      else builtin:+#0(x@154#666, 1)
+//│ >    let $first0@151 = xs@150#1.0
+//│ >    $first0@151 is None then 0

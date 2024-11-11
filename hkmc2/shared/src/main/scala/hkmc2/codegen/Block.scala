@@ -122,7 +122,7 @@ case class End(msg: Str = "") extends BlockTail with ProductWithTail
 enum Case:
   case Lit(lit: Literal)
   case Cls(cls: ClassSymbol | ModuleSymbol, path: Path)
-  case Tup(len: Int)
+  case Tup(len: Int, inf: Bool)
 
 sealed abstract class Result
 

@@ -47,7 +47,7 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
     def =:=(rhs: Pattern): Bool = (lhs, rhs) match
       case (c1: Pattern.ClassLike, c2: Pattern.ClassLike) => c1.sym === c2.sym
       case (Pattern.Lit(l1), Pattern.Lit(l2)) => l1 === l2
-      case (Pattern.Tuple(fs1), Pattern.Tuple(fs2)) => fs1.length === fs2.length
+      case (Pattern.Tuple(n1, b1), Pattern.Tuple(n2, b2)) => n1 == n2 && b1 == b2
       case (_, _) => false
     /** Checks if `self` can be subsumed under `rhs`. */
     def <:<(rhs: Pattern): Bool =
@@ -91,7 +91,7 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
         case Pattern.Var(vs) =>
           log(s"ALIAS: $scrutinee is $vs")
           Split.Let(vs, scrutinee, rec(consequent ++ alternative))
-        case pattern @ (Pattern.Lit(_) | _: Pattern.ClassLike | Pattern.Tuple(_)) =>
+        case pattern @ (Pattern.Lit(_) | _: Pattern.ClassLike | Pattern.Tuple(_, _)) =>
           log(s"MATCH: $scrutinee is $pattern")
           val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
           val whenFalse = rec(specialize(alternative, -, scrutinee, pattern).clearFallback)
@@ -110,7 +110,7 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
         Split.Else(default)
       case Split.End => Split.End
     rec(split)
-
+  
   /**
     * Specialize `split` with the assumption that `scrutinee` matches `pattern`.
     * If `matchOrNot` is `true`, the function _keeps_ branches that agree on

@@ -8,6 +8,7 @@ import utils.TraceLogger
 import hkmc2.syntax.Literal
 import Keyword.{as, and, `else`, is, let, `then`}
 import collection.mutable.HashMap
+import Elaborator.{ctx, Ctxl}
 
 object Desugarer:
   extension (op: Keyword.Infix)
@@ -356,6 +357,12 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
       raise(ErrorReport(msg"Unrecognized pattern split." -> tree.toLoc :: Nil))
       _ => _ => Split.default(Term.Error)
 
+  private def tupleSlice: Ctxl[Ctx.Elem] =
+    ctx.get("tupleSlice").getOrElse(lastWords("tupleSlice not found"))
+
+  private def tupleGet: Ctxl[Ctx.Elem] =
+    ctx.get("tupleGet").getOrElse(lastWords("tupleGet not found"))
+
   /** Elaborate a single match (a scrutinee and a pattern) and forms a split
    *  with an innermost split as the sequel of the match.
    *  @param scrutSymbol the symbol representing the scrutinee
@@ -394,11 +401,50 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
         pre = s"expandMatch <<< ${args.mkString(", ")}",
         post = (r: Split) => s"expandMatch >>> ${r.showDbg}"
       ):
-        val params = scrutSymbol.getSubScrutinees(args.length)
+        // Break tuple into three parts:
+        // 1. A fixed number of leading patterns.
+        // 2. A variable number of middle patterns indicated by `..`.
+        // 3. A fixed number of trailing patterns.
+        val (lead, rest) = args.foldLeft[(Ls[Tree], Opt[(Opt[Tree], Ls[Tree])])]((Nil, N)):
+          case ((lead, N), Jux(Ident(".."), pat)) => (lead, S((S(pat), Nil)))
+          case ((lead, N), Ident("..")) => (lead, S((N, Nil)))
+          case ((lead, N), pat) => (lead :+ pat, N)
+          case ((lead, S((rest, last))), pat) => (lead, S((rest, last :+ pat)))
+        // Some helper functions. TODO: deduplicate
+        def int(i: Int) = Term.Lit(IntLit(BigInt(i)))
+        def fld(t: Term) = Fld(FldFlags.empty, t, N)
+        def tup(xs: Fld*) = Term.Tup(xs.toList)(Tup(Nil))
+        def app(lhs: Term, rhs: Term, sym: FlowSymbol) = Term.App(lhs, rhs)(Tree.App(Tree.Empty(), Tree.Empty()), sym)
+        def getLast(i: Int) = TempSymbol(nextUid, N, s"last$i")
+        // `wrap`: add let bindings for tuple elements
+        // `matches`: pairs of patterns and symbols to be elaborated
+        val (wrapRest, restMatches) = rest match
+          case S((rest, last)) =>
+            val (wrapLast, reversedLastMatches) = last.reverseIterator.zipWithIndex
+              .foldLeft[(Split => Split, Ls[(BlockLocalSymbol, Tree)])]((identity, Nil)):
+                case ((wrapInner, matches), (pat, lastIndex)) =>
+                  val sym = TempSymbol(nextUid, N, s"last$lastIndex")
+                  val wrap = (split: Split) =>
+                    Split.Let(sym, app(tupleGet(using ctx).ref((Ident("tupleGet"): Ident).withLoc(pat.toLoc)), tup(fld(ref), fld(int(-1 - lastIndex))), sym), wrapInner(split))
+                  (wrap, (sym, pat) :: matches)
+            val lastMatches = reversedLastMatches.reverse
+            rest match
+              case N => (wrapLast, lastMatches)
+              case S(pat) =>
+                val sym = TempSymbol(nextUid, N, "rest")
+                val wrap = (split: Split) =>
+                  Split.Let(sym, app(tupleSlice(using ctx).ref((Ident("tupleSlice"): Ident).withLoc(pat.toLoc)), tup(fld(ref), fld(int(lead.length)), fld(int(last.length))), sym), wrapLast(split))
+                (wrap, (sym, pat) :: lastMatches)
+          case N => (identity: Split => Split, Nil)
+        val (wrap, matches) = lead.zipWithIndex.foldRight((wrapRest, restMatches)):
+          case ((pat, i), (wrapInner, matches)) =>
+            val sym = TempSymbol(nextUid, N, s"first$i")
+            val wrap = (split: Split) => Split.Let(sym, Term.Sel(ref, Ident(s"$i"))(N), wrapInner(split))
+            (wrap, (sym, pat) :: matches)
         Branch(
           ref,
-          Pattern.Tuple(params),
-          subMatches(params zip args, sequel)(Split.End)(ctx)
+          Pattern.Tuple(lead.length + rest.fold(0)(_._2.length), rest.isDefined),
+          wrap(subMatches(matches, sequel)(Split.End)(ctx))
         ) ~: fallback
       // A single constructor pattern.
       case pat @ App(ctor @ (_: Ident | _: Sel), Tup(args)) => fallback => ctx => trace(
@@ -433,6 +479,9 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
       case pattern and consequent => fallback => ctx => 
         val innerSplit = termSplit(consequent, identity)(Split.End)
         expandMatch(scrutSymbol, pattern, innerSplit)(fallback)(ctx)
+      case Jux(Ident(".."), Ident(_)) => fallback => _ =>
+        raise(ErrorReport(msg"Illgeal rest pattern." -> pattern.toLoc :: Nil))
+        fallback
       case _ => fallback => _ =>
         // Raise an error and discard `sequel`. Use `fallback` instead.
         raise(ErrorReport(msg"Unrecognized pattern." -> pattern.toLoc :: Nil))
