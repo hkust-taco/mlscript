@@ -1,0 +1,108 @@
+:js
+:ucs desugared normalized
+
+:import ../Prelude/Option.mls
+//│ Imported 3 member(s)
+
+fun add_6(x, y) =
+  if [x, y] is
+    [Some(xv), Some(yv)] then xv + yv
+    [Some(xv), None]     then xv
+    [None,     Some(yv)] then yv
+    [None,     None]     then 0
+//│ Desugared:
+//│ >  if
+//│ >    let $scrut@16 = [x@14#666, y@15#666]
+//│ >    $scrut@16 is []=2 and
+//│ >      let $first0@28 = $scrut@16#10.0
+//│ >      let $first1@27 = $scrut@16#11.1
+//│ >      $first0@28 is Some($param0@29) and
+//│ >        let xv@30 = $param0@29#0
+//│ >        $first1@27 is Some($param0@31) and
+//│ >          let yv@32 = $param0@31#0
+//│ >          else builtin:+#0(xv@30#666, yv@32#666)
+//│ >    $scrut@16 is []=2 and
+//│ >      let $first0@24 = $scrut@16#7.0
+//│ >      let $first1@23 = $scrut@16#8.1
+//│ >      $first0@24 is Some($param0@25) and
+//│ >        let xv@26 = $param0@25#0
+//│ >        $first1@23 is None then xv@26#666
+//│ >    $scrut@16 is []=2 and
+//│ >      let $first0@20 = $scrut@16#4.0
+//│ >      let $first1@19 = $scrut@16#5.1
+//│ >      $first0@20 is None and $first1@19 is Some($param0@21) and
+//│ >        let yv@22 = $param0@21#0
+//│ >        else yv@22#666
+//│ >    $scrut@16 is []=2 and
+//│ >      let $first0@18 = $scrut@16#1.0
+//│ >      let $first1@17 = $scrut@16#2.1
+//│ >      $first0@18 is None $first1@17 is None then 0
+//│ Normalized:
+//│ >  if
+//│ >    let $scrut@16 = [x@14#666, y@15#666]
+//│ >    $scrut@16 is []=2 and
+//│ >      let $first0@28 = $scrut@16#10.0
+//│ >      let $first1@27 = $scrut@16#11.1
+//│ >      $first0@28 is Some($param0@29) and
+//│ >        let xv@30 = $param0@29#0
+//│ >        $first1@27 is Some($param0@31) and
+//│ >          let yv@32 = $param0@31#0
+//│ >          else builtin:+#0(xv@30#666, yv@32#666)
+//│ >        let $first0@24 = $scrut@16#7.0
+//│ >        let $first1@23 = $scrut@16#8.1
+//│ >        $first0@24 is Some($param0@25) and
+//│ >          let xv@26 = $param0@25#0
+//│ >          $first1@23 is None then xv@26#666
+//│ >          let $first0@20 = $scrut@16#4.0
+//│ >          let $first1@19 = $scrut@16#5.1
+//│ >          $first0@20 is None and
+//│ >            $first1@19 is Some($param0@21) and
+//│ >              let yv@22 = $param0@21#0
+//│ >              else yv@22#666
+//│ >            let $first0@18 = $scrut@16#1.0
+//│ >            let $first1@17 = $scrut@16#2.1
+//│ >            $first0@18 is None $first1@17 is None then 0
+//│ >          let $first0@18 = $scrut@16#1.0
+//│ >          let $first1@17 = $scrut@16#2.1
+//│ >          $first0@18 is None $first1@17 is None then 0
+//│ >        let $first0@20 = $scrut@16#4.0
+//│ >        let $first1@19 = $scrut@16#5.1
+//│ >        $first0@20 is None and
+//│ >          $first1@19 is Some($param0@21) and
+//│ >            let yv@22 = $param0@21#0
+//│ >            else yv@22#666
+//│ >          let $first0@18 = $scrut@16#1.0
+//│ >          let $first1@17 = $scrut@16#2.1
+//│ >          $first0@18 is None $first1@17 is None then 0
+//│ >        let $first0@18 = $scrut@16#1.0
+//│ >        let $first1@17 = $scrut@16#2.1
+//│ >        $first0@18 is None $first1@17 is None then 0
+//│ >      let $first0@24 = $scrut@16#7.0
+//│ >      let $first1@23 = $scrut@16#8.1
+//│ >      $first0@24 is Some($param0@25) and
+//│ >        let xv@26 = $param0@25#0
+//│ >        $first1@23 is None then xv@26#666
+//│ >        let $first0@20 = $scrut@16#4.0
+//│ >        let $first1@19 = $scrut@16#5.1
+//│ >        $first0@20 is None and
+//│ >          $first1@19 is Some($param0@21) and
+//│ >            let yv@22 = $param0@21#0
+//│ >            else yv@22#666
+//│ >          let $first0@18 = $scrut@16#1.0
+//│ >          let $first1@17 = $scrut@16#2.1
+//│ >          $first0@18 is None $first1@17 is None then 0
+//│ >        let $first0@18 = $scrut@16#1.0
+//│ >        let $first1@17 = $scrut@16#2.1
+//│ >        $first0@18 is None $first1@17 is None then 0
+//│ >      let $first0@20 = $scrut@16#4.0
+//│ >      let $first1@19 = $scrut@16#5.1
+//│ >      $first0@20 is None and
+//│ >        $first1@19 is Some($param0@21) and
+//│ >          let yv@22 = $param0@21#0
+//│ >          else yv@22#666
+//│ >        let $first0@18 = $scrut@16#1.0
+//│ >        let $first1@17 = $scrut@16#2.1
+//│ >        $first0@18 is None $first1@17 is None then 0
+//│ >      let $first0@18 = $scrut@16#1.0
+//│ >      let $first1@17 = $scrut@16#2.1
+//│ >      $first0@18 is None $first1@17 is None then 0
