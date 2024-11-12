@@ -104,26 +104,41 @@ foo(["boom"])
 fun nested_tuple_patterns(xs) = if xs is
   [x, ..[y, z], w] then x + y + z + w
   [] then 0
-//│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.105: 	  [x, ..[y, z], w] then x + y + z + w
-//│ ╙──       	      ^^^^^^^^
 //│ Desugared:
 //│ >  if
-//│ >    xs@78 is []=3 and
+//│ >    xs@78 is []>=2 and
 //│ >      let $first0@81 = xs@78#2.0
-//│ >      let $first1@80 = xs@78#3.1
-//│ >      let $first2@79 = xs@78#4.2
+//│ >      let $rest@80 = globalThis:block#1#666.tupleSlice‹member:tupleSlice›(xs@78#3, 1, 1)
+//│ >      let $last0@79 = globalThis:block#1#666.tupleGet‹member:tupleGet›(xs@78#4, -1)
 //│ >      let x@82 = $first0@81#0
+//│ >      $rest@80 is []=2 and
+//│ >        let $first0@84 = $rest@80#1.0
+//│ >        let $first1@83 = $rest@80#2.1
+//│ >        let y@85 = $first0@84#0
+//│ >        let z@86 = $first1@83#0
+//│ >        let w@87 = $last0@79#0
+//│ >        else builtin:+#0(builtin:+#1(builtin:+#2(x@82#666, y@85#666), z@86#666), w@87#666)
 //│ >    xs@78 is []=0 then 0
 //│ JS:
 //│ function nested_tuple_patterns(xs) {
-//│   let first2, first1, first0, x;
-//│   if (Array.isArray(xs) && xs.length === 3) {
+//│   let last0, rest, first0, x, first1, first01, y, z, w, tmp, tmp1;
+//│   if (Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];
-//│     first1 = xs[1];
-//│     first2 = xs[2];
+//│     rest = globalThis.tupleSlice(xs, 1, 1);
+//│     last0 = globalThis.tupleGet(xs, -1);
 //│     x = first0;
-//│     throw new globalThis.Error("match error");
+//│     if (Array.isArray(rest) && rest.length === 2) {
+//│       first01 = rest[0];
+//│       first1 = rest[1];
+//│       y = first01;
+//│       z = first1;
+//│       w = last0;
+//│       tmp = x + y;
+//│       tmp1 = tmp + z;
+//│       return tmp1 + w;
+//│     } else {
+//│       throw new globalThis.Error("match error");
+//│     }
 //│   } else {
 //│     if (Array.isArray(xs) && xs.length === 0) {
 //│       return 0;

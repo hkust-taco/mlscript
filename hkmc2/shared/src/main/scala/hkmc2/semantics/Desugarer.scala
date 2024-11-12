@@ -25,7 +25,8 @@ object Desugarer:
 
   class ScrutineeData:
     val classes: HashMap[ClassSymbol, List[BlockLocalSymbol]] = HashMap.empty
-    val tuples: HashMap[Int, List[BlockLocalSymbol]] = HashMap.empty
+    val tupleLead: HashMap[Int, BlockLocalSymbol] = HashMap.empty
+    val tupleLast: HashMap[Int, BlockLocalSymbol] = HashMap.empty
 end Desugarer
 
 class Desugarer(tl: TraceLogger, elaborator: Elaborator)
@@ -72,10 +73,13 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
         val arity = cls.defn.flatMap(_.paramsOpt.map(_.length)).getOrElse(0)
         (0 until arity).map(i => TempSymbol(nextUid, N, s"param$i")).toList
       })
-    def getSubScrutinees(arity: Int): List[BlockLocalSymbol] =
-      subScrutineeMap.getOrElseUpdate(symbol, new ScrutineeData).tuples.getOrElseUpdate(arity, {
-        (0 until arity).map(i => TempSymbol(nextUid, N, s"elem$i")).toList
-      })
+    def getTupleLeadSubScrutinee(index: Int): BlockLocalSymbol =
+      val data = subScrutineeMap.getOrElseUpdate(symbol, new ScrutineeData)
+      data.tupleLead.getOrElseUpdate(index, TempSymbol(nextUid, N, s"first$index"))
+    def getTupleLastSubScrutinee(index: Int): BlockLocalSymbol =
+      val data = subScrutineeMap.getOrElseUpdate(symbol, new ScrutineeData)
+      data.tupleLast.getOrElseUpdate(index, TempSymbol(nextUid, N, s"last$index"))
+      
 
   def default: Split => Sequel = split => _ => split
 
@@ -407,6 +411,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
         // 3. A fixed number of trailing patterns.
         val (lead, rest) = args.foldLeft[(Ls[Tree], Opt[(Opt[Tree], Ls[Tree])])]((Nil, N)):
           case ((lead, N), Jux(Ident(".."), pat)) => (lead, S((S(pat), Nil)))
+          case ((lead, N), App(Ident(".."), TyTup(tys))) => (lead, S((S(Tup(tys)), Nil)))
           case ((lead, N), Ident("..")) => (lead, S((N, Nil)))
           case ((lead, N), pat) => (lead :+ pat, N)
           case ((lead, S((rest, last))), pat) => (lead, S((rest, last :+ pat)))
@@ -423,7 +428,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
             val (wrapLast, reversedLastMatches) = last.reverseIterator.zipWithIndex
               .foldLeft[(Split => Split, Ls[(BlockLocalSymbol, Tree)])]((identity, Nil)):
                 case ((wrapInner, matches), (pat, lastIndex)) =>
-                  val sym = TempSymbol(nextUid, N, s"last$lastIndex")
+                  val sym = scrutSymbol.getTupleLastSubScrutinee(lastIndex)
                   val wrap = (split: Split) =>
                     Split.Let(sym, app(tupleGet(using ctx).ref((Ident("tupleGet"): Ident).withLoc(pat.toLoc)), tup(fld(ref), fld(int(-1 - lastIndex))), sym), wrapInner(split))
                   (wrap, (sym, pat) :: matches)
@@ -438,7 +443,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
           case N => (identity: Split => Split, Nil)
         val (wrap, matches) = lead.zipWithIndex.foldRight((wrapRest, restMatches)):
           case ((pat, i), (wrapInner, matches)) =>
-            val sym = TempSymbol(nextUid, N, s"first$i")
+            val sym = scrutSymbol.getTupleLeadSubScrutinee(i)
             val wrap = (split: Split) => Split.Let(sym, Term.Sel(ref, Ident(s"$i"))(N), wrapInner(split))
             (wrap, (sym, pat) :: matches)
         Branch(

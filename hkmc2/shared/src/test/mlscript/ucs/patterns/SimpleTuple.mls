@@ -115,15 +115,15 @@ fun multiple_checks(xs) =
 //│ >  if
 //│ >    xs@105 is []=0 then 0
 //│ >    xs@105 is []=1 and
-//│ >      let $first0@121 = xs@105#8.0
-//│ >      let x@122 = $first0@121#0
-//│ >      else builtin:+#5(x@122#666, 1)
+//│ >      let $first0@108 = xs@105#8.0
+//│ >      let x@119 = $first0@108#2
+//│ >      else builtin:+#5(x@119#666, 1)
 //│ >    xs@105 is []=2 and
-//│ >      let $first0@116 = xs@105#5.0
-//│ >      let $first1@115 = xs@105#6.1
-//│ >      let x@117 = $first0@116#0
-//│ >      let y@118 = $first1@115#0
-//│ >      else builtin:+#3(builtin:+#4(x@117#666, y@118#666), 2)
+//│ >      let $first0@108 = xs@105#5.0
+//│ >      let $first1@107 = xs@105#6.1
+//│ >      let x@115 = $first0@108#1
+//│ >      let y@116 = $first1@107#1
+//│ >      else builtin:+#3(builtin:+#4(x@115#666, y@116#666), 2)
 //│ >    xs@105 is []=3 and
 //│ >      let $first0@108 = xs@105#1.0
 //│ >      let $first1@107 = xs@105#2.1
@@ -160,19 +160,18 @@ fun multiple_checks(xs) =
     [None] then 0
 //│ Desugared:
 //│ >  if
-//│ >    xs@150 is []=1 and
-//│ >      let $first0@152 = xs@150#3.0
-//│ >      $first0@152 is Some($param0@153) and
-//│ >        let x@154 = $param0@153#0
-//│ >        else builtin:+#0(x@154#666, 1)
-//│ >    xs@150 is []=1 and
-//│ >      let $first0@151 = xs@150#1.0
-//│ >      $first0@151 is None then 0
+//│ >    xs@147 is []=1 and
+//│ >      let $first0@148 = xs@147#3.0
+//│ >      $first0@148 is Some($param0@149) and
+//│ >        let x@150 = $param0@149#0
+//│ >        else builtin:+#0(x@150#666, 1)
+//│ >    xs@147 is []=1 and
+//│ >      let $first0@148 = xs@147#1.0
+//│ >      $first0@148 is None then 0
 //│ Normalized:
-//│ >  if xs@150 is []=1 and
-//│ >    let $first0@152 = xs@150#3.0
-//│ >    $first0@152 is Some($param0@153) and
-//│ >      let x@154 = $param0@153#0
-//│ >      else builtin:+#0(x@154#666, 1)
-//│ >    let $first0@151 = xs@150#1.0
-//│ >    $first0@151 is None then 0
+//│ >  if xs@147 is []=1 and
+//│ >    let $first0@148 = xs@147#3.0
+//│ >    $first0@148 is Some($param0@149) and
+//│ >      let x@150 = $param0@149#0
+//│ >      else builtin:+#0(x@150#666, 1)
+//│ >    $first0@148 is None then 0
