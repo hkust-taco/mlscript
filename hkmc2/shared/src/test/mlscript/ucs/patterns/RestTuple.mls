@@ -1,8 +1,8 @@
 :js
 :ucs desugared
 
-fun tupleSlice(xs, i, j) = globalThis.Array.prototype.slice.call(xs, i, xs.length - j)
-fun tupleGet(xs, i) = globalThis.Array.prototype.at.call(xs, i)
+:import ../Prelude/Tuple.mls
+//│ Imported 2 member(s)
 
 // Drop the first and last elements.
 tupleSlice([1, 2, 3, 4], 1, -1)
@@ -23,7 +23,7 @@ fun stupid(xs) = if xs is
 //│ Desugared:
 //│ >  if
 //│ >    xs@41 is []>=0 and
-//│ >      let $rest@42 = globalThis:block#1#666.tupleSlice‹member:tupleSlice›(xs@41#2, 0, 0)
+//│ >      let $rest@42 = globalThis:import#Tuple#666.tupleSlice‹member:tupleSlice›(xs@41#2, 0, 0)
 //│ >      let ys@43 = $rest@42#0
 //│ >      else ys@43#666
 //│ >    xs@41 is []=0 then "empty"
@@ -58,8 +58,8 @@ fun foo(xs) = if xs is
 //│ >  if
 //│ >    xs@53 is []>=2 and
 //│ >      let $first0@56 = xs@53#2.0
-//│ >      let $rest@55 = globalThis:block#1#666.tupleSlice‹member:tupleSlice›(xs@53#3, 1, 1)
-//│ >      let $last0@54 = globalThis:block#1#666.tupleGet‹member:tupleGet›(xs@53#4, -1)
+//│ >      let $rest@55 = globalThis:import#Tuple#666.tupleSlice‹member:tupleSlice›(xs@53#3, 1, 1)
+//│ >      let $last0@54 = globalThis:import#Tuple#666.tupleGet‹member:tupleGet›(xs@53#4, -1)
 //│ >      let x@57 = $first0@56#0
 //│ >      let ys@58 = $rest@55#0
 //│ >      let y@59 = $last0@54#0
@@ -108,8 +108,8 @@ fun nested_tuple_patterns(xs) = if xs is
 //│ >  if
 //│ >    xs@78 is []>=2 and
 //│ >      let $first0@81 = xs@78#2.0
-//│ >      let $rest@80 = globalThis:block#1#666.tupleSlice‹member:tupleSlice›(xs@78#3, 1, 1)
-//│ >      let $last0@79 = globalThis:block#1#666.tupleGet‹member:tupleGet›(xs@78#4, -1)
+//│ >      let $rest@80 = globalThis:import#Tuple#666.tupleSlice‹member:tupleSlice›(xs@78#3, 1, 1)
+//│ >      let $last0@79 = globalThis:import#Tuple#666.tupleGet‹member:tupleGet›(xs@78#4, -1)
 //│ >      let x@82 = $first0@81#0
 //│ >      $rest@80 is []=2 and
 //│ >        let $first0@84 = $rest@80#1.0
