@@ -35,11 +35,7 @@ fun stupid(xs) = if xs is
 //│     ys = rest;
 //│     return ys;
 //│   } else {
-//│     if (Array.isArray(xs) && xs.length === 0) {
-//│       return "empty";
-//│     } else {
-//│       throw new globalThis.Error("match error");
-//│     }
+//│     throw new globalThis.Error("match error");
 //│   }
 //│ }
 //│ undefined

@@ -41,7 +41,7 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ++ those)
         case Split.Else(_) /* impossible */ | Split.End => those)
 
-  /** We don't care about `Pattern.Name` because they won't appear in `specialize`. */
+  /** We don't care about `Pattern.Var` because they won't appear in `specialize`. */
   extension (lhs: Pattern)
     /** Checks if two patterns are the same. */
     def =:=(rhs: Pattern): Bool = (lhs, rhs) match
@@ -49,13 +49,8 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
       case (Pattern.Lit(l1), Pattern.Lit(l2)) => l1 === l2
       case (Pattern.Tuple(n1, b1), Pattern.Tuple(n2, b2)) => n1 == n2 && b1 == b2
       case (_, _) => false
-    /** Checks if `self` can be subsumed under `rhs`. */
-    def <:<(rhs: Pattern): Bool =
-      def mk(pattern: Pattern): Option[Literal | ClassSymbol | ModuleSymbol] = lhs match
-        case c: Pattern.ClassLike => S(c.sym)
-        case Pattern.Lit(l) => S(l)
-        case _ => N
-      compareCasePattern(mk(lhs), mk(rhs))
+    /** Checks if `lhs` can be subsumed under `rhs`. */
+    def <:<(rhs: Pattern): Bool = compareCasePattern(lhs, rhs)
     /**
       * If two class-like patterns has different `refined` flag. Report the
       * inconsistency as a warning.
@@ -197,29 +192,19 @@ end Normalization
 object Normalization:
   /**
     * Hard-coded subtyping relations used in normalization and coverage checking.
-    */
-  def compareCasePattern(
-      lhs: Opt[Literal | ClassSymbol | ModuleSymbol],
-      rhs: Opt[Literal | ClassSymbol | ModuleSymbol]
-  ): Bool = (lhs, rhs) match
-    case (S(lhs), S(rhs)) => compareCasePattern(lhs, rhs)
-    case (_, _) => false
-  /**
-    * Hard-coded subtyping relations used in normalization and coverage checking.
     * TODO use base classes and also handle modules
     */
-  def compareCasePattern(
-      lhs: Literal | ClassSymbol | ModuleSymbol,
-      rhs: Literal | ClassSymbol | ModuleSymbol
-  ): Bool = (lhs, rhs) match
-    case (_, s: ClassSymbol) if s.nme === "Object" => true
-    case (s1: ClassSymbol, s2: ClassSymbol) if s1.nme === "Int" && s2.nme === "Num" => true
+  def compareCasePattern(lhs: Pattern, rhs: Pattern): Bool = (lhs, rhs) match
+    case (_, Pattern.ClassLike(s: ClassSymbol, _, _, _)) if s.nme === "Object" => true
+    case (Pattern.Tuple(n1, false), Pattern.Tuple(n2, false)) if n1 == n2 => true
+    case (Pattern.Tuple(n1, _), Pattern.Tuple(n2, true)) if n2 <= n1 => true
+    case (Pattern.ClassLike(s1: ClassSymbol, _, _, _), Pattern.ClassLike(s2: ClassSymbol, _, _, _)) if s1.nme === "Int" && s2.nme === "Num" => true
     // case (s1: ClassSymbol, s2: ClassSymbol) => s1 <:< s2 // TODO: find a way to check inheritance
-    case (Tree.IntLit(_), s: ClassSymbol) if s.nme === "Int" || s.nme === "Num" => true
-    case (Tree.StrLit(_), s: ClassSymbol) if s.nme === "Str" => true
-    case (Tree.DecLit(_), s: ClassSymbol) if s.nme === "Num" => true
-    case (Tree.BoolLit(_), s: ClassSymbol) if s.nme === "Bool" => true
-    case (Tree.UnitLit(true), s: ClassSymbol) if s.nme === "Unit" => true // TODO: how about undefined?
+    case (Pattern.Lit(Tree.IntLit(_)), Pattern.ClassLike(s: ClassSymbol, _, _, _)) if s.nme === "Int" || s.nme === "Num" => true
+    case (Pattern.Lit(Tree.StrLit(_)), Pattern.ClassLike(s: ClassSymbol, _, _, _)) if s.nme === "Str" => true
+    case (Pattern.Lit(Tree.DecLit(_)), Pattern.ClassLike(s: ClassSymbol, _, _, _)) if s.nme === "Num" => true
+    case (Pattern.Lit(Tree.BoolLit(_)), Pattern.ClassLike(s: ClassSymbol, _, _, _)) if s.nme === "Bool" => true
+    case (Pattern.Lit(Tree.UnitLit(true)), Pattern.ClassLike(s: ClassSymbol, _, _, _)) if s.nme === "Unit" => true // TODO: how about undefined?
     case (_, _) => false
 
   final case class VarSet(declared: Set[BlockLocalSymbol]):

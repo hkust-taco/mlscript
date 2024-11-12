@@ -4,7 +4,11 @@
 :import ../Prelude/Option.mls
 //│ Imported 3 member(s)
 
-fun add_6(x, y) =
+:import ../Prelude/Tuple.mls
+//│ Imported 2 member(s)
+
+// Normalization should unify fixed-length tuple patterns.
+fun sum_options(x, y) =
   if [x, y] is
     [Some(xv), Some(yv)] then xv + yv
     [Some(xv), None]     then xv
@@ -12,46 +16,153 @@ fun add_6(x, y) =
     [None,     None]     then 0
 //│ Desugared:
 //│ >  if
-//│ >    let $scrut@16 = [x@14#666, y@15#666]
-//│ >    $scrut@16 is []=2 and
-//│ >      let $first0@18 = $scrut@16#10.0
-//│ >      let $first1@17 = $scrut@16#11.1
-//│ >      $first0@18 is Some($param0@21) and
-//│ >        let xv@23 = $param0@21#1
-//│ >        $first1@17 is Some($param0@19) and
-//│ >          let yv@24 = $param0@19#1
-//│ >          else builtin:+#0(xv@23#666, yv@24#666)
-//│ >    $scrut@16 is []=2 and
-//│ >      let $first0@18 = $scrut@16#7.0
-//│ >      let $first1@17 = $scrut@16#8.1
-//│ >      $first0@18 is Some($param0@21) and
-//│ >        let xv@22 = $param0@21#0
-//│ >        $first1@17 is None then xv@22#666
-//│ >    $scrut@16 is []=2 and
-//│ >      let $first0@18 = $scrut@16#4.0
-//│ >      let $first1@17 = $scrut@16#5.1
-//│ >      $first0@18 is None and $first1@17 is Some($param0@19) and
-//│ >        let yv@20 = $param0@19#0
-//│ >        else yv@20#666
-//│ >    $scrut@16 is []=2 and
-//│ >      let $first0@18 = $scrut@16#1.0
-//│ >      let $first1@17 = $scrut@16#2.1
-//│ >      $first0@18 is None $first1@17 is None then 0
+//│ >    let $scrut@31 = [x@29#666, y@30#666]
+//│ >    $scrut@31 is []=2 and
+//│ >      let $first0@33 = $scrut@31#10.0
+//│ >      let $first1@32 = $scrut@31#11.1
+//│ >      $first0@33 is Some($param0@36) and
+//│ >        let xv@38 = $param0@36#1
+//│ >        $first1@32 is Some($param0@34) and
+//│ >          let yv@39 = $param0@34#1
+//│ >          else builtin:+#0(xv@38#666, yv@39#666)
+//│ >    $scrut@31 is []=2 and
+//│ >      let $first0@33 = $scrut@31#7.0
+//│ >      let $first1@32 = $scrut@31#8.1
+//│ >      $first0@33 is Some($param0@36) and
+//│ >        let xv@37 = $param0@36#0
+//│ >        $first1@32 is None then xv@37#666
+//│ >    $scrut@31 is []=2 and
+//│ >      let $first0@33 = $scrut@31#4.0
+//│ >      let $first1@32 = $scrut@31#5.1
+//│ >      $first0@33 is None and $first1@32 is Some($param0@34) and
+//│ >        let yv@35 = $param0@34#0
+//│ >        else yv@35#666
+//│ >    $scrut@31 is []=2 and
+//│ >      let $first0@33 = $scrut@31#1.0
+//│ >      let $first1@32 = $scrut@31#2.1
+//│ >      $first0@33 is None $first1@32 is None then 0
 //│ Normalized:
 //│ >  if
-//│ >    let $scrut@16 = [x@14#666, y@15#666]
-//│ >    $scrut@16 is []=2 and
-//│ >      let $first0@18 = $scrut@16#10.0
-//│ >      let $first1@17 = $scrut@16#11.1
-//│ >      $first0@18 is Some($param0@21) and
-//│ >        let xv@23 = $param0@21#1
-//│ >        $first1@17 is Some($param0@19) and
-//│ >          let yv@24 = $param0@19#1
-//│ >          else builtin:+#0(xv@23#666, yv@24#666)
-//│ >        let xv@22 = $param0@21#0
-//│ >        $first1@17 is None then xv@22#666
-//│ >      $first0@18 is None and
-//│ >        $first1@17 is Some($param0@19) and
-//│ >          let yv@20 = $param0@19#0
-//│ >          else yv@20#666
-//│ >        $first1@17 is None then 0
+//│ >    let $scrut@31 = [x@29#666, y@30#666]
+//│ >    $scrut@31 is []=2 and
+//│ >      let $first0@33 = $scrut@31#10.0
+//│ >      let $first1@32 = $scrut@31#11.1
+//│ >      $first0@33 is Some($param0@36) and
+//│ >        let xv@38 = $param0@36#1
+//│ >        $first1@32 is Some($param0@34) and
+//│ >          let yv@39 = $param0@34#1
+//│ >          else builtin:+#0(xv@38#666, yv@39#666)
+//│ >        let xv@37 = $param0@36#0
+//│ >        $first1@32 is None then xv@37#666
+//│ >      $first0@33 is None and
+//│ >        $first1@32 is Some($param0@34) and
+//│ >          let yv@35 = $param0@34#0
+//│ >          else yv@35#666
+//│ >        $first1@32 is None then 0
+
+
+
+
+// ========================================================================== //
+
+
+// Normalization should also unify the sub-scrutinees at the same position of
+// tuple patterns of different lengths.
+
+
+fun foo(xs) = if xs is
+  [Some(x)] then x
+  [Some(y), ..rest] then y
+//│ Desugared:
+//│ >  if
+//│ >    xs@44 is []=1 and
+//│ >      let $first0@46 = xs@44#4.0
+//│ >      $first0@46 is Some($param0@47) and
+//│ >        let x@50 = $param0@47#1
+//│ >        else x@50#666
+//│ >    xs@44 is []>=1 and
+//│ >      let $first0@46 = xs@44#1.0
+//│ >      let $rest@45 = globalThis:import#Tuple#666.tupleSlice‹member:tupleSlice›(xs@44#2, 1, 0)
+//│ >      $first0@46 is Some($param0@47) and
+//│ >        let y@48 = $param0@47#0
+//│ >        let rest@49 = $rest@45#0
+//│ >        else y@48#666
+//│ Normalized:
+//│ >  if
+//│ >    xs@44 is []=1 and
+//│ >      let $first0@46 = xs@44#4.0
+//│ >      $first0@46 is Some($param0@47) and
+//│ >        let x@50 = $param0@47#1
+//│ >        else x@50#666
+//│ >      let $rest@45 = globalThis:import#Tuple#666.tupleSlice‹member:tupleSlice›(xs@44#2, 1, 0)
+//│ >    xs@44 is []>=1 and
+//│ >      let $first0@46 = xs@44#1.0
+//│ >      let $rest@45 = globalThis:import#Tuple#666.tupleSlice‹member:tupleSlice›(xs@44#2, 1, 0)
+//│ >      $first0@46 is Some($param0@47) and
+//│ >        let y@48 = $param0@47#0
+//│ >        let rest@49 = $rest@45#0
+//│ >        else y@48#666
+
+fun do_something(x) = "done"
+
+
+fun foo(zs) = if zs is
+  [Some(x), Some(y)] then x + y
+  [None, ..rest] then do_something(rest)
+//│ Desugared:
+//│ >  if
+//│ >    zs@58 is []=2 and
+//│ >      let $first0@60 = zs@58#4.0
+//│ >      let $first1@63 = zs@58#5.1
+//│ >      $first0@60 is Some($param0@64) and
+//│ >        let x@65 = $param0@64#0
+//│ >        $first1@63 is Some($param0@66) and
+//│ >          let y@67 = $param0@66#0
+//│ >          else builtin:+#0(x@65#666, y@67#666)
+//│ >    zs@58 is []>=1 and
+//│ >      let $first0@60 = zs@58#1.0
+//│ >      let $rest@59 = globalThis:import#Tuple#666.tupleSlice‹member:tupleSlice›(zs@58#2, 1, 0)
+//│ >      $first0@60 is None and
+//│ >        let rest@61 = $rest@59#0
+//│ >        else globalThis:block#3#666.do_something‹member:do_something›(rest@61#666)
+//│ Normalized:
+//│ >  if
+//│ >    zs@58 is []=2 and
+//│ >      let $first0@60 = zs@58#4.0
+//│ >      let $first1@63 = zs@58#5.1
+//│ >      $first0@60 is Some($param0@64) and
+//│ >        let x@65 = $param0@64#0
+//│ >        $first1@63 is Some($param0@66) and
+//│ >          let y@67 = $param0@66#0
+//│ >          else builtin:+#0(x@65#666, y@67#666)
+//│ >        let $rest@59 = globalThis:import#Tuple#666.tupleSlice‹member:tupleSlice›(zs@58#2, 1, 0)
+//│ >      let $rest@59 = globalThis:import#Tuple#666.tupleSlice‹member:tupleSlice›(zs@58#2, 1, 0)
+//│ >      $first0@60 is None and
+//│ >        let rest@61 = $rest@59#0
+//│ >        else globalThis:block#3#666.do_something‹member:do_something›(rest@61#666)
+//│ >    zs@58 is []>=1 and
+//│ >      let $first0@60 = zs@58#1.0
+//│ >      let $rest@59 = globalThis:import#Tuple#666.tupleSlice‹member:tupleSlice›(zs@58#2, 1, 0)
+//│ >      $first0@60 is None and
+//│ >        let rest@61 = $rest@59#0
+//│ >        else globalThis:block#3#666.do_something‹member:do_something›(rest@61#666)
+
+:expect 4
+foo([Some(1), Some(3)])
+//│ = 4
+
+:expect 'done'
+foo([None, Some(1), Some(2)])
+//│ = 'done'
+
+:re
+foo([Some(0)])
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:re
+foo([Some(0), Some(1), Some(2)])
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:re
+foo([])
+//│ ═══[RUNTIME ERROR] Error: match error
