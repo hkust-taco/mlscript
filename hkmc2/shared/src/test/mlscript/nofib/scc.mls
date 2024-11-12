@@ -34,6 +34,5 @@ fun testScc_nofib(d) =
   let vertices = a :: b :: c :: d :: f :: g :: h :: Nil
   let edges = Tup2(b, a) :: Tup2(c, b) :: Tup2(c, d) :: Tup2(c, h) :: Tup2(d, c) :: Tup2(f, a) :: Tup2(f, g) :: Tup2(f, h) :: Tup2(g, f) :: Tup2(h, g) :: Nil
   stronglyConnComp(edges, vertices)
-nofibPrint(testScc_nofib(0))
-//│ > {"head":{"head":1,"tail":{}},"tail":{"head":{"head":2,"tail":{}},"tail":{"head":{"head":7,"tail":{"head":5,"tail":{"head":6,"tail":{}}}},"tail":{"head":{"head":3,"tail":{"head":4,"tail":{}}},"tail":{}}}}}
-//│ = true
+testScc_nofib(0).toString()
+//│ = '[[1],[2],[7,5,6],[3,4]]'

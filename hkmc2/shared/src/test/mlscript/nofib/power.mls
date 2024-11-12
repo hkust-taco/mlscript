@@ -1,6 +1,6 @@
 0
 
-// FIXME: input 14 seems to be too much
+// NOTE: original input 14
 :js
 :import NofibPrelude.mls
 //│ Imported 111 member(s)
@@ -105,10 +105,9 @@ fun sqrtPs(fss) = lazy of () => if force(fss) is
     force(force(qs()))
 fun testPower_nofib(p) =
   extract(p, minusPs(sinx(), sqrtPs(minusPs(fromIntegerPs(1), powerPs(cosx(), 2)))));
-  extract(p, minusPs(divPs(sinx(), cosx()), revert(integral(divPs(fromIntegerPs(1), addPs(fromIntegerPs(1), powerPs(x_(), 2)))))))
+  extract(p, minusPs(divPs(sinx(), cosx()), revert(integral(divPs(fromIntegerPs(1), addPs(fromIntegerPs(1), powerPs(x_(), 2)))))));
   extract(p, ts());
   extract(p, tree())
-nofibPrint(testPower_nofib(6))
-//│ > {"head":0,"tail":{"head":1,"tail":{"head":1,"tail":{"head":2,"tail":{"head":5,"tail":{"head":14,"tail":{}}}}}}}
-//│ = true
+testPower_nofib(6).toString()
+//│ = '[0,1,1,2,5,14]'
 
