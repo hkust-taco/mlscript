@@ -1,10 +1,10 @@
 :js
 :ucs desugared normalized
 
-:import ../Prelude/Option.mls
+:import ../prelude/Option.mls
 //│ Imported 3 member(s)
 
-:import ../Prelude/Tuple.mls
+:import ../prelude/Tuple.mls
 //│ Imported 2 member(s)
 
 // Normalization should unify fixed-length tuple patterns.

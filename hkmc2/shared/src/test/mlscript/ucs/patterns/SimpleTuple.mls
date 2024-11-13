@@ -153,7 +153,7 @@ match_against_different_length([9, 11])
 match_against_different_length([13, 13, 13])
 //│ = 42
 
-:import ../Prelude/Option.mls
+:import ../prelude/Option.mls
 //│ Imported 3 member(s)
 
 :ucs desugared normalized

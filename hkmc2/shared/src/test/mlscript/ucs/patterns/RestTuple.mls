@@ -1,7 +1,7 @@
 :js
 :ucs desugared
 
-:import ../Prelude/Tuple.mls
+:import ../prelude/Tuple.mls
 //│ Imported 2 member(s)
 
 // Drop the first and last elements.
