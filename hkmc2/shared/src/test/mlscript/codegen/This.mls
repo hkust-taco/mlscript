@@ -5,7 +5,7 @@
 fun test(x) =
   [this.a, x]
 //│ JS:
-//│ function test(x) { return [ globalThis.a, x ]; }; undefined
+//│ function test(x) { return [ globalThis.a, x ]; } undefined
 
 test(123)
 //│ = [ undefined, 123 ]

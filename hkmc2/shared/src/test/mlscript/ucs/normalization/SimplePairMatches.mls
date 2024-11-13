@@ -61,7 +61,7 @@ fun f(x) = if x is
 //│   } else {
 //│     throw new globalThis.Error("match error");
 //│   }
-//│ };
+//│ }
 //│ undefined
 
 

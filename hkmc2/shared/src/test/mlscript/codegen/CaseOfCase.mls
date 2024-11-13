@@ -44,7 +44,7 @@ fun test(x) =
 //│       throw new globalThis.Error("match error");
 //│     }
 //│   }
-//│ };
+//│ }
 //│ undefined
 
 

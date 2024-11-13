@@ -6,7 +6,7 @@
 
 fun f(n1: Int): Int = n1
 //│ JS:
-//│ function f(n1) { return n1; }; undefined
+//│ function f(n1) { return n1; } undefined
 
 f(42)
 //│ JS:
@@ -15,7 +15,7 @@ f(42)
 
 fun f(n1: Int)(n2: Int): Int =  (10 * n1 + n2)
 //│ JS:
-//│ function f(n1) { return (n2) => { let tmp; tmp = 10 * n1; return tmp + n2; }; }; undefined
+//│ function f(n1) { return (n2) => { let tmp; tmp = 10 * n1; return tmp + n2; }; } undefined
 
 f(4)(2)
 //│ JS:
@@ -34,7 +34,7 @@ fun f(n1: Int)(n2: Int)(n3: Int): Int = 10 * (10 * n1 + n2) + n3
 //│       return tmp2 + n3;
 //│     };
 //│   };
-//│ };
+//│ }
 //│ undefined
 
 f(4)(2)(0)
@@ -58,7 +58,7 @@ fun f(n1: Int)(n2: Int)(n3: Int)(n4: Int): Int = 10 * (10 * (10 * n1 + n2) + n3)
 //│       };
 //│     };
 //│   };
-//│ };
+//│ }
 //│ undefined
 
 f(3)(0)(3)(1)

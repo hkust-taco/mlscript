@@ -98,7 +98,7 @@ example()
 //│   tmp5 = globalThis.log(x);
 //│   tmp6 = get_x();
 //│   return globalThis.log(tmp6);
-//│ };
+//│ }
 //│ this.example()
 //│ > 1
 //│ > 1
@@ -136,7 +136,7 @@ example()
 //│   tmp4 = get_x();
 //│   tmp5 = globalThis.log(tmp4);
 //│   return y;
-//│ };
+//│ }
 //│ this.example()
 //│ > 1
 //│ > 0

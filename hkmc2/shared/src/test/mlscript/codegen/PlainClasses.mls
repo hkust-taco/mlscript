@@ -67,10 +67,10 @@ fun test() =
 //│       globalThis.log("hi")
 //│     }
 //│     toString() { return "Foo"; }
-//│   };
+//│   }
 //│   tmp = globalThis.log("ok");
 //│   return Foo;
-//│ };
+//│ }
 //│ undefined
 
 let t = test()

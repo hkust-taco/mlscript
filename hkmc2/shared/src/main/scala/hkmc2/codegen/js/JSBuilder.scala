@@ -194,9 +194,9 @@ class JSBuilder extends CodeBuilder:
                 assert(clsDefn.paramsOpt.isEmpty)
                 // doc"${mkThis(owner)}.${sym.nme} = new ${clsJS}"
                 doc"const $clsTmp = ${clsJS}; # ${mkThis(owner)}.${sym.nme} = new ${clsTmp
-                  }; # ${mkThis(owner)}.${sym.nme}.class = $clsTmp"
+                  }; # ${mkThis(owner)}.${sym.nme}.class = $clsTmp;"
               case N => doc"const $clsTmp = ${clsJS}; const ${sym.nme} = new ${clsTmp
-                  }; # ${sym.nme}.class = $clsTmp"
+                  }; # ${sym.nme}.class = $clsTmp;"
             else
               val fun = clsDefn.paramsOpt match
                 case S(params) =>
@@ -208,16 +208,16 @@ class JSBuilder extends CodeBuilder:
                 val ths = mkThis(owner)
                 fun match
                 case S(f) =>
-                  doc"${ths}.${sym.nme} = ${f}; # ${ths}.${sym.nme}.class = ${clsJS}"
+                  doc"${ths}.${sym.nme} = ${f}; # ${ths}.${sym.nme}.class = ${clsJS};"
                 case N =>
-                  doc"${ths}.${sym.nme} = ${clsJS}"
+                  doc"${ths}.${sym.nme} = ${clsJS};"
               case N =>
                 fun match
-                case S(f) => doc"${f}; # ${sym.nme}.class = ${clsJS}"
+                case S(f) => doc"${f}; # ${sym.nme}.class = ${clsJS};"
                 case N => clsJS
         thisProxy match
-          case S(proxy) => doc" # const $proxy = this; # ${res.stripBreaks};${returningTerm(rst)}"
-          case N => doc"$res;${returningTerm(rst)}"
+          case S(proxy) => doc" # const $proxy = this; # ${res.stripBreaks}${returningTerm(rst)}"
+          case N => doc"$res${returningTerm(rst)}"
       doc" # ${resJS}"
     case Return(res, true) => doc" # ${result(res)}"
     case Return(res, false) => doc" # return ${result(res)};"

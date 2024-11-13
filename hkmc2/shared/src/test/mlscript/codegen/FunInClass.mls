@@ -47,13 +47,13 @@ fun test(a) =
 //│           d,
 //│           e
 //│         ];
-//│       };
+//│       }
 //│       return h(d);
 //│     }
 //│     toString() { return "Inner(" + this.b + ")"; }
 //│   };
 //│   return Inner(42);
-//│ };
+//│ }
 //│ undefined
 
 let i = test(100)

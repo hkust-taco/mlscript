@@ -37,7 +37,7 @@ foo()
 //│   } else {
 //│     throw new globalThis.Error("match error");
 //│   }
-//│ };
+//│ }
 //│ this.foo()
 //│ ═══[RUNTIME ERROR] TypeError: globalThis.Error is not a constructor
 
