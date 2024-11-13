@@ -1,8 +1,8 @@
 :js
 
 
-globalThis.navigator
-//│ = Navigator {}
+globalThis.fetch
+//│ = [Function: fetch]
 
 class A
 
@@ -16,7 +16,7 @@ if 0 is A then 1
 val globalThis = "oops"
 //│ globalThis = 'oops'
 
-globalThis.navigator
+globalThis.fetch
 
 :re
 if 0 is A then 1
