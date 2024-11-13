@@ -273,24 +273,23 @@ fun nubBy_lz(eq, ls) = Lazy of () =>
 
 fun nub_lz(ls) = nubBy_lz((x, y) => x == y, ls)
 
-fun take_lz(n, ls) = if force(ls) is
-  LzNil then Nil
-  LzCons(h, t) and
-    n <= 0 then Nil
-    else Cons(h, take_lz(n - 1, t))
+fun take_lz(n, ls) = if
+  n > 0 and force(ls) is
+    LzNil then Nil
+    LzCons(h, t) then Cons(h, take_lz(n - 1, t))
+  else Nil
 
 fun take_lz_lz(n, ls) = lazy of () =>
-  if force(ls) is
+  if n > 0 and force(ls) is
     LzNil then LzNil
-    LzCons(h, t) and
-      n <= 0 then LzNil
-      else LzCons(h, take_lz_lz(n - 1, t))
+    LzCons(h, t) then LzCons(h, take_lz_lz(n - 1, t))
+  else LzNil
 
-fun drop_lz(n, ls) = if force(ls) is
+fun drop_lz(n, ls) = if
+  n <= 0 then ls
+  force(ls) is
     LzNil then lazy of () => LzNil
-    LzCons(h, t) and
-      n > 0 then drop_lz(n - 1, t)
-      else t
+    LzCons(h, t) then drop_lz(n - 1, t)
 
 fun splitAt_lz(n, ls) = Tup2(take_lz(n, ls), drop_lz(n, ls))
 
