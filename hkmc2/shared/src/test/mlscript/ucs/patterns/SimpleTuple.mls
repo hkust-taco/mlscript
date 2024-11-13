@@ -39,73 +39,77 @@ test("")
 test(12)
 //│ ═══[RUNTIME ERROR] Error: match error
 
-:ucs desugared
 class Point(x: Int, y: Int)
-fun discarded_cases(thing) =
+
+:ucs desugared
+fun with_other_constructors(thing) =
   if thing is
-    [x, y] then x + y
+    [x, y] then x * y
     Point(x, y) then x + y
 //│ Desugared:
 //│ >  if
-//│ >    thing@40 is []=2 and
-//│ >      let $first0@47 = thing@40#2.0
-//│ >      let $first1@46 = thing@40#3.1
-//│ >      let x@48 = $first0@47#0
-//│ >      let y@49 = $first1@46#0
-//│ >      else builtin:+#1(x@48#666, y@49#666)
-//│ >    thing@40 is Point($param0@41, $param1@42) and
-//│ >      let x@43 = $param0@41#0
-//│ >      let y@44 = $param1@42#0
-//│ >      else builtin:+#0(x@43#666, y@44#666)
+//│ >    thing@41 is []=2 and
+//│ >      let $first0@48 = thing@41#2.0
+//│ >      let $first1@47 = thing@41#3.1
+//│ >      let x@49 = $first0@48#0
+//│ >      let y@50 = $first1@47#0
+//│ >      else builtin:*#0(x@49#666, y@50#666)
+//│ >    thing@41 is Point($param0@42, $param1@43) and
+//│ >      let x@44 = $param0@42#0
+//│ >      let y@45 = $param1@43#0
+//│ >      else builtin:+#0(x@44#666, y@45#666)
 
-:e
-:todo
-discarded_cases(Point(0, 0))
-//│ = 0
+:expect 7
+with_other_constructors(Point(3, 4))
+//│ = 7
+
+:expect 12
+with_other_constructors([3, 4])
+//│ = 12
 
 // A workaround is to move the tuple pattern to the last case.
 :ucs desugared
-fun working_cases(thing) =
+fun with_other_constructors(thing) =
   if thing is
     Point(x, y) then x + y
-    [x, y] then x + y
+    [x, y] then x * y
 //│ Desugared:
 //│ >  if
-//│ >    thing@61 is Point($param0@67, $param1@68) and
-//│ >      let x@69 = $param0@67#0
-//│ >      let y@70 = $param1@68#0
-//│ >      else builtin:+#1(x@69#666, y@70#666)
-//│ >    thing@61 is []=2 and
-//│ >      let $first0@63 = thing@61#1.0
-//│ >      let $first1@62 = thing@61#2.1
-//│ >      let x@64 = $first0@63#0
-//│ >      let y@65 = $first1@62#0
-//│ >      else builtin:+#0(x@64#666, y@65#666)
+//│ >    thing@65 is Point($param0@71, $param1@72) and
+//│ >      let x@73 = $param0@71#0
+//│ >      let y@74 = $param1@72#0
+//│ >      else builtin:+#0(x@73#666, y@74#666)
+//│ >    thing@65 is []=2 and
+//│ >      let $first0@67 = thing@65#1.0
+//│ >      let $first1@66 = thing@65#2.1
+//│ >      let x@68 = $first0@67#0
+//│ >      let y@69 = $first1@66#0
+//│ >      else builtin:*#0(x@68#666, y@69#666)
 
-working_cases(Point(0, 0))
-//│ = 0
+:expect 7
+with_other_constructors(Point(3, 4))
+//│ = 7
 
-// However, the `Object` type forbids tuples to be used.
-:todo
-working_cases([0, 0])
-//│ = 0
+:expect 12
+with_other_constructors([3, 4])
+//│ = 12
 
 
-fun not_working(x) =
+fun with_else(x) =
   if x is
     [a, b, c] then
       a + b + c
     else
       0
 
-not_working([1, 2, 3])
+with_else([1, 2, 3])
 //│ = 6
 
-not_working([1, 2])
+with_else([1, 2])
 //│ = 0
 
 :ucs desugared
-fun multiple_checks(xs) =
+fun match_against_different_length(xs) =
   if xs is
     [] then 0
     [x] then x + 1
@@ -113,40 +117,40 @@ fun multiple_checks(xs) =
     [x, y, z] then x + y + z + 3
 //│ Desugared:
 //│ >  if
-//│ >    xs@105 is []=0 then 0
-//│ >    xs@105 is []=1 and
-//│ >      let $first0@108 = xs@105#8.0
-//│ >      let x@119 = $first0@108#2
-//│ >      else builtin:+#5(x@119#666, 1)
-//│ >    xs@105 is []=2 and
-//│ >      let $first0@108 = xs@105#5.0
-//│ >      let $first1@107 = xs@105#6.1
-//│ >      let x@115 = $first0@108#1
-//│ >      let y@116 = $first1@107#1
-//│ >      else builtin:+#3(builtin:+#4(x@115#666, y@116#666), 2)
-//│ >    xs@105 is []=3 and
-//│ >      let $first0@108 = xs@105#1.0
-//│ >      let $first1@107 = xs@105#2.1
-//│ >      let $first2@106 = xs@105#3.2
-//│ >      let x@109 = $first0@108#0
-//│ >      let y@110 = $first1@107#0
-//│ >      let z@111 = $first2@106#0
-//│ >      else builtin:+#0(builtin:+#1(builtin:+#2(x@109#666, y@110#666), z@111#666), 3)
+//│ >    xs@109 is []=0 then 0
+//│ >    xs@109 is []=1 and
+//│ >      let $first0@112 = xs@109#8.0
+//│ >      let x@123 = $first0@112#2
+//│ >      else builtin:+#5(x@123#666, 1)
+//│ >    xs@109 is []=2 and
+//│ >      let $first0@112 = xs@109#5.0
+//│ >      let $first1@111 = xs@109#6.1
+//│ >      let x@119 = $first0@112#1
+//│ >      let y@120 = $first1@111#1
+//│ >      else builtin:+#3(builtin:+#4(x@119#666, y@120#666), 2)
+//│ >    xs@109 is []=3 and
+//│ >      let $first0@112 = xs@109#1.0
+//│ >      let $first1@111 = xs@109#2.1
+//│ >      let $first2@110 = xs@109#3.2
+//│ >      let x@113 = $first0@112#0
+//│ >      let y@114 = $first1@111#0
+//│ >      let z@115 = $first2@110#0
+//│ >      else builtin:+#0(builtin:+#1(builtin:+#2(x@113#666, y@114#666), z@115#666), 3)
 
 :expect 0
-multiple_checks([])
+match_against_different_length([])
 //│ = 0
 
 :expect 18
-multiple_checks([17])
+match_against_different_length([17])
 //│ = 18
 
 :expect 22
-multiple_checks([9, 11])
+match_against_different_length([9, 11])
 //│ = 22
 
 :expect 42
-multiple_checks([13, 13, 13])
+match_against_different_length([13, 13, 13])
 //│ = 42
 
 :import ../Prelude/Option.mls
@@ -154,24 +158,24 @@ multiple_checks([13, 13, 13])
 
 :ucs desugared normalized
 :todo // Sub-scrutinees are not memorized thus the normalization is not correct.
-fun multiple_checks(xs) =
+fun with_the_common_prefix(xs) =
   if xs is
     [Some(x)] then x + 1
     [None] then 0
 //│ Desugared:
 //│ >  if
-//│ >    xs@147 is []=1 and
-//│ >      let $first0@148 = xs@147#3.0
-//│ >      $first0@148 is Some($param0@149) and
-//│ >        let x@150 = $param0@149#0
-//│ >        else builtin:+#0(x@150#666, 1)
-//│ >    xs@147 is []=1 and
-//│ >      let $first0@148 = xs@147#1.0
-//│ >      $first0@148 is None then 0
+//│ >    xs@151 is []=1 and
+//│ >      let $first0@152 = xs@151#3.0
+//│ >      $first0@152 is Some($param0@153) and
+//│ >        let x@154 = $param0@153#0
+//│ >        else builtin:+#0(x@154#666, 1)
+//│ >    xs@151 is []=1 and
+//│ >      let $first0@152 = xs@151#1.0
+//│ >      $first0@152 is None then 0
 //│ Normalized:
-//│ >  if xs@147 is []=1 and
-//│ >    let $first0@148 = xs@147#3.0
-//│ >    $first0@148 is Some($param0@149) and
-//│ >      let x@150 = $param0@149#0
-//│ >      else builtin:+#0(x@150#666, 1)
-//│ >    $first0@148 is None then 0
+//│ >  if xs@151 is []=1 and
+//│ >    let $first0@152 = xs@151#3.0
+//│ >    $first0@152 is Some($param0@153) and
+//│ >      let x@154 = $param0@153#0
+//│ >      else builtin:+#0(x@154#666, 1)
+//│ >    $first0@152 is None then 0

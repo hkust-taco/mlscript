@@ -17,7 +17,7 @@ tupleGet([1, 2, 3, 4], -1)
 //│ = 4
 
 :sjs
-fun stupid(xs) = if xs is
+fun nonsense(xs) = if xs is
   [..ys] then ys
   [] then "empty"
 //│ Desugared:
@@ -28,7 +28,7 @@ fun stupid(xs) = if xs is
 //│ >      else ys@43#666
 //│ >    xs@41 is []=0 then "empty"
 //│ JS:
-//│ function stupid(xs) {
+//│ function nonsense(xs) {
 //│   let rest, ys;
 //│   if (Array.isArray(xs) && xs.length >= 0) {
 //│     rest = globalThis.tupleSlice(xs, 0, 0);
@@ -40,14 +40,14 @@ fun stupid(xs) = if xs is
 //│ }
 //│ undefined
 
-stupid([])
+nonsense([])
 //│ = []
 
-stupid([1, 2, 3, 4])
+nonsense([1, 2, 3, 4])
 //│ = [ 1, 2, 3, 4 ]
 
 :sjs
-fun foo(xs) = if xs is
+fun lead_and_last(xs) = if xs is
   [x, ..ys, y] then x + y
   [] then 0
 //│ Desugared:
@@ -62,7 +62,7 @@ fun foo(xs) = if xs is
 //│ >      else builtin:+#0(x@57#666, y@59#666)
 //│ >    xs@53 is []=0 then 0
 //│ JS:
-//│ function foo(xs) {
+//│ function lead_and_last(xs) {
 //│   let last0, rest, first0, x, ys, y;
 //│   if (Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];
@@ -82,21 +82,20 @@ fun foo(xs) = if xs is
 //│ }
 //│ undefined
 
-foo(["foo", "bar"])
+lead_and_last(["foo", "bar"])
 //│ = 'foobar'
 
-foo([1, 2, 3, 4])
+lead_and_last([1, 2, 3, 4])
 //│ = 5
 
-foo([])
+lead_and_last([])
 //│ = 0
 
 :re
-foo(["boom"])
+lead_and_last(["boom"])
 //│ ═══[RUNTIME ERROR] Error: match error
 
 :sjs
-:todo // Better using ... instead of .. for the rest pattern.
 fun nested_tuple_patterns(xs) = if xs is
   [x, ..[y, z], w] then x + y + z + w
   [] then 0
