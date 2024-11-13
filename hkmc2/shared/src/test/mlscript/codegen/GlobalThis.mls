@@ -5,7 +5,7 @@
 globalThis
 
 
-// prevent rebinding of this name?
+// FIXME prevent rebinding of this name
 let globalThis = "oops"
 //│ globalThis = 'oops'
 
