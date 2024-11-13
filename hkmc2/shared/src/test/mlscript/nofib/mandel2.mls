@@ -84,18 +84,18 @@ fun testMandel2_nofib(n) =
   finite(build_tree(Tup2(0,0), Tup2(size, intDiv(size, 2))))
 testMandel2_nofib(0)
 //│ = true
-//│ size = 200
+//│ delta_p = 0.01507537688442211
+//│ delta_q = 0.01507537688442211
+//│ down = Tup2 { fst: 0, snd: 1 }
+//│ left = Tup2 { fst: -1, snd: 0 }
+//│ m = 20
+//│ num_cols = 26
 //│ pmn = -2.25
 //│ pmx = 0.75
 //│ qmn = -1.5
 //│ qmx = 1.5
-//│ m = 20
-//│ num_cols = 26
-//│ delta_p = 0.01507537688442211
-//│ delta_q = 0.01507537688442211
-//│ up = Tup2 { fst: 0, snd: -1 }
-//│ down = Tup2 { fst: 0, snd: 1 }
-//│ left = Tup2 { fst: -1, snd: 0 }
 //│ right = Tup2 { fst: 1, snd: 0 }
+//│ size = 200
+//│ up = Tup2 { fst: 0, snd: -1 }
 
       

@@ -101,13 +101,6 @@ nofibListToString(testBanner_nofib(1))
 //│ >   '  I        S           T    H   H    I        S         N  NN  O   O    T           A   A         G   G  R  R   E      A   A    T           B   B  A   A  N  NN  N  NN  E      R  R     ?  \n' +
 //│ =   'IIIII  SSSS            T    H   H  IIIII  SSSS          N   N   OOO     T           A   A          GGG   R   R  EEEEE  A   A    T           BBBB   A   A  N   N  N   N  EEEEE  R   R    .  \n'
 //│ > Cons {
-//│ >   head: Cons { head: ' ', tail: Cons { head: ' ', tail: [Cons] } },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: ' ', tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   }
-//│ blank = }
-//│ > Cons {
 //│ >   head: Cons {
 //│ >     head: Cons { head: ' ', tail: [Cons] },
 //│ >     tail: Cons { head: [Cons], tail: [Cons] }
@@ -123,14 +116,7 @@ nofibListToString(testBanner_nofib(1))
 //│ >     head: Cons { head: ' ', tail: [Cons] },
 //│ >     tail: Cons { head: [Cons], tail: [Cons] }
 //│ >   }
-//│ slant = }
-//│ > Cons {
-//│ >   head: Tup2 { fst: '.', snd: Cons { head: [Cons], tail: [Cons] } },
-//│ >   tail: Cons {
-//│ >     head: Tup2 { fst: '?', snd: [Cons] },
-//│ >     tail: Cons { head: [Tup2], tail: [Cons] }
-//│ >   }
-//│ punct = }
+//│ blank = }
 //│ > Cons {
 //│ >   head: Cons {
 //│ >     head: Cons { head: ' ', tail: [Cons] },
@@ -141,3 +127,17 @@ nofibListToString(testBanner_nofib(1))
 //│ >     tail: Cons { head: [Cons], tail: [Cons] }
 //│ >   }
 //│ digits = }
+//│ > Cons {
+//│ >   head: Tup2 { fst: '.', snd: Cons { head: [Cons], tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Tup2 { fst: '?', snd: [Cons] },
+//│ >     tail: Cons { head: [Tup2], tail: [Cons] }
+//│ >   }
+//│ punct = }
+//│ > Cons {
+//│ >   head: Cons { head: ' ', tail: Cons { head: ' ', tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: ' ', tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   }
+//│ slant = }

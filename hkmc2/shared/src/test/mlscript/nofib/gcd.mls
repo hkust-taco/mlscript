@@ -3,7 +3,7 @@
 // NOTE: original input 400
 :js
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 fun test(d) =
   let ns = enumFromTo(5000, 5000 + d)
   let ms = enumFromTo(10000, 10000 + d)
