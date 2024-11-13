@@ -1,7 +1,7 @@
 :js
 
 :import PredefJS.mls
-//│ Imported 1 member(s)
+//│ Imported 2 member(s)
 
 
 :sjs
@@ -17,42 +17,46 @@ class Outer(a, b) with
   log(i.c)
   log(i.i1(1))
 //│ JS:
-//│ this.Outer = class Outer {
+//│ this.Outer = function Outer(a1, b1) { return new Outer.class(a1, b1); };
+//│ this.Outer.class = class Outer {
 //│   constructor(a, b) {
 //│     this.a = a;
 //│     this.b = b;
-//│     let tmp, tmp1;
+//│     let tmp, tmp1, tmp2;
+//│     
 //│     const this$Outer = this;
-//│     this.Inner = class Inner {
+//│     this.Inner = function Inner(c1) { return new Inner.class(c1); };
+//│     this.Inner.class = class Inner {
 //│       constructor(c) {
 //│         this.c = c;
-//│         let tmp2, tmp3, tmp4;
-//│         tmp2 = log(this$Outer.a);
-//│         tmp3 = log(this.c);
-//│         tmp4 = this.i1(this$Outer.a);
-//│         log(tmp4)
+//│         let tmp3, tmp4, tmp5;
+//│         tmp3 = globalThis.log(this$Outer.a);
+//│         tmp4 = globalThis.log(this.c);
+//│         tmp5 = this.i1(this$Outer.a);
+//│         globalThis.log(tmp5)
 //│       }
 //│       i1(d) {
 //│         return [
 //│           this$Outer.b,
 //│           this.c,
 //│           d
-//│         ]
+//│         ];
 //│       }
 //│       toString() { return "Inner(" + this.c + ")"; }
 //│     };
-//│     this.i = new this.Inner(this.a);
-//│     tmp = log(this.i.c);
-//│     tmp1 = this.i.i1(1);
-//│     log(tmp1)
+//│     tmp = this.Inner(this.a);
+//│     this.i = tmp;
+//│     tmp1 = globalThis.log(this.i.c);
+//│     tmp2 = this.i.i1(1);
+//│     globalThis.log(tmp2)
 //│   }
 //│   o1(c) {
-//│     return new this.Inner(c)
+//│     return this.Inner(c);
 //│   } 
 //│   o2(c1, d) {
 //│     let tmp;
-//│     tmp = new this.Inner(c1);
-//│     return tmp.i1(d)
+//│     tmp = this.Inner(c1);
+//│     return tmp.i1(d);
 //│   }
 //│   toString() { return "Outer(" + this.a + ", " + this.b + ")"; }
 //│ };
@@ -65,7 +69,12 @@ val o = Outer(100, 200)
 //│ > [ 200, 100, 100 ]
 //│ > 100
 //│ > [ 200, 100, 1 ]
-//│ o = Outer { a: 100, b: 200, Inner: [class Inner], i: Inner { c: 100 } }
+//│ > Outer {
+//│ >   a: 100,
+//│ >   b: 200,
+//│ >   Inner: [Function: Inner] { class: [class Inner] },
+//│ >   i: Inner { c: 100 }
+//│ o = }
 
 o.o1(30)
 //│ > 100

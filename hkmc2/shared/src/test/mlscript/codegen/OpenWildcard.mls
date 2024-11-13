@@ -1,0 +1,84 @@
+:js
+
+
+import "../../mlscript-compile/Option.mls"
+
+module OtherModule with
+  val None = 123
+
+
+:sjs
+open Option
+//│ JS:
+//│ undefined
+
+:sjs
+None isDefined()
+//│ JS:
+//│ Option.isDefined(Option.None)
+//│ = false
+
+Some(1) isDefined()
+//│ = true
+
+None === Option.None
+//│ = true
+
+
+fun none() = None
+
+open OtherModule
+
+None === Option.None
+//│ = false
+
+none() === Option.None
+//│ = true
+
+
+open Option
+fun none() = None
+console.log(None)
+open OtherModule
+console.log(None)
+none()
+//│ > None { class: [class None] }
+//│ > 123
+//│ = None { class: [class None] }
+
+
+// * `open` statements are currently unhygienic and are affected by redefinitions
+
+:sjs
+val Option = "Oops"
+//│ JS:
+//│ this.Option = "Oops"; undefined
+//│ Option = 'Oops'
+
+:fixme
+:sjs
+Some(123)
+//│ JS:
+//│ Option.Some(123)
+//│ ═══[RUNTIME ERROR] TypeError: Option.Some is not a function
+
+module Option with
+  val None = 123
+
+:sjs
+open Option
+//│ JS:
+//│ undefined
+
+:sjs
+Some
+//│ JS:
+//│ Option.Some
+
+:sjs
+None
+//│ JS:
+//│ this.Option.None
+//│ = 123
+
+

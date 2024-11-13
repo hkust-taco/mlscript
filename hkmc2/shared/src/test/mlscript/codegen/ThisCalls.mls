@@ -1,0 +1,25 @@
+:js
+
+
+class Example with
+  val a = 456
+  fun f(x) = [x, a]
+
+val ex = new Example
+//│ ex = Example { a: 456 }
+
+let s = ex.f
+//│ s = [Function: f]
+
+:todo
+:e
+s(123)
+//│ = [ 123, undefined ]
+
+:sjs
+ex |>. s(123)
+//│ JS:
+//│ let tmp; tmp = Predef.call(this.ex, this.s); tmp(123)
+//│ = [ 123, 456 ]
+
+

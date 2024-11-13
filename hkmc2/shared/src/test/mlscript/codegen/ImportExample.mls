@@ -1,0 +1,42 @@
+:js
+
+
+import "../../mlscript-compile/Example.mls"
+
+
+Example.inc(123)
+//│ = 124
+
+
+Example.funnySlash(Example.inc, 123)
+//│ = 124
+
+
+let n = 42
+//│ n = 42
+
+:sjs
+n / 2
+//│ JS:
+//│ this.n / 2
+//│ = 21
+
+
+// * Builtin operators can be shadowed/rebound
+
+open Example
+
+:sjs
+inc / 2
+//│ JS:
+//│ Example.funnySlash(Example.inc, 2)
+//│ = 3
+
+:sjs
+:re
+n / 2
+//│ JS:
+//│ Example.funnySlash(this.n, 2)
+//│ ═══[RUNTIME ERROR] TypeError: f is not a function
+
+

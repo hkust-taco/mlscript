@@ -10,6 +10,10 @@ import hkmc2.semantics.Elaborator
 
 abstract class MLsDiffMaker extends DiffMaker:
   
+  val bbmlOpt: Command[?]
+  
+  val wd = file / os.up
+  
   class DebugTreeCommand(name: Str) extends Command[Product => Str](name)(
     line => if line.contains("loc") then
       (t: Product) => t match
@@ -22,8 +26,9 @@ abstract class MLsDiffMaker extends DiffMaker:
       Function.const("")
   ):
     def post: Product => Str = get.getOrElse(Function.const(""))
-
-  val predefFile: os.Path
+  
+  val preludeFile: os.Path // * Contains declarations of JS builtins
+  val predefFile: os.Path // * Contains MLscript standard library definitions
   
   val dbgElab = NullaryCommand("de")
   val dbgParsing = NullaryCommand("dp")
@@ -59,12 +64,26 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   var curCtx = Elaborator.Ctx.init.nest(N)
   
+  
   override def run(): Unit =
-    if file =/= predefFile then importFile(predefFile, verbose = false)
+    if file =/= preludeFile then importFile(preludeFile, verbose = false)
     super.run()
   
-  def importFile(fileName: Str, verbose: Bool): Unit =
-    importFile(file / os.up / os.RelPath(fileName), verbose)
+  
+  override def init(): Unit =
+    if bbmlOpt.isUnset then
+      import syntax.*
+      import Tree.*
+      import Keyword.*
+      given raise: Raise = d =>
+        output(s"Error: $d")
+        ()
+      processTrees(
+        Modified(`import`, N, StrLit(predefFile.toString))
+        :: Open(Ident("Predef"))
+        :: Nil)
+    super.init()
+  
   
   def importFile(file: os.Path, verbose: Bool): Unit =
     
@@ -86,20 +105,21 @@ abstract class MLsDiffMaker extends DiffMaker:
     val p = new syntax.Parser(origin, tokens, raise, dbg = dbgParsing.isSet):
       def doPrintDbg(msg: => Str): Unit = if dbg then output(msg)
     val res = p.parseAll(p.block(allowNewlines = true))
-    given Elaborator.Ctx = curCtx
-    val elab = Elaborator(etl, file / os.up)
+    val imprtSymbol =
+      semantics.TopLevelSymbol("import#"+file.baseName)
+    given Elaborator.Ctx = curCtx.nest(S(imprtSymbol))
+    val elab = Elaborator(etl, wd)
     try
-      val oldSymbols = curCtx.allMembers.valuesIterator.toSet
-      val (e, newCtx) = elab.importFrom(res)
-      val imports = newCtx.allMembers.filterNot(kv => oldSymbols.contains(kv._2))
-      // TODO don't pick up allMembers! just pick anything on top of the original ctx
+      val resBlk = new syntax.Tree.Block(res)
+      val (e, newCtx) = elab.importFrom(resBlk)
+      val ctxWithImports = newCtx.withMembers(resBlk.definedSymbols)
       if verbose then
-        output(s"Imported ${imports.size} member(s)")
-      curCtx = curCtx.copy(members = curCtx.members ++ imports)
+        output(s"Imported ${resBlk.definedSymbols.size} member(s)")
+      curCtx = ctxWithImports
       processTerm(e, inImport = true)
     catch
       case err: Throwable =>
-        output("/!!!\\ Uncaught error during Predef import: " + err)
+        uncaught(err)
   
   given tl: TraceLogger with
     override def doTrace = debug.isSet
@@ -108,6 +128,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   def processOrigin(origin: Origin)(using Raise): Unit =
     val oldCtx = curCtx
+    
     val lexer = new syntax.Lexer(origin, dbg = dbgParsing.isSet)
     val tokens = lexer.bracketedTokens
     
@@ -131,15 +152,11 @@ abstract class MLsDiffMaker extends DiffMaker:
     
     if parseOnly.isUnset then
       processTrees(res)(using raise)
-
+    
     if showContext.isSet then
-      output("Members:")
-      curCtx.members.foreach: (k, v) =>
-        if !(oldCtx.members contains k) then
-          output(s"  $k -> $v")
-      output("Locals:")
-      curCtx.locals.foreach: (k, v) =>
-        if !(oldCtx.locals contains k) then
+      output("Env:")
+      curCtx.env.foreach: (k, v) =>
+        if !(oldCtx.env contains k) then
           output(s"  $k -> $v")
   
   
@@ -151,7 +168,8 @@ abstract class MLsDiffMaker extends DiffMaker:
       semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1
     given Elaborator.Ctx = curCtx.nest(S(blockSymbol))
-    val (e, newCtx) = elab.topLevel(trees)
+    val blk = new syntax.Tree.Block(trees)
+    val (e, newCtx) = elab.topLevel(blk)
     curCtx = newCtx
     // If elaborated tree is displayed, don't show the string serialization.
     if (showElab.isSet || debug.isSet) && !showElaboratedTree.isSet then
@@ -160,6 +178,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       output(s"Elaborated tree:")
       output(e.showAsTree(using post))
     processTerm(e, inImport = false)
+      
   
   
   def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Raise): Unit =

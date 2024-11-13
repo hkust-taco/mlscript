@@ -5,7 +5,7 @@ import mlscript.utils.*, shorthands.*
 import syntax.*
 
 
-enum Pattern extends Located:
+enum Pattern extends AutoLocated:
 
   case Alias(nme: VarSymbol, pattern: Pattern)
   case LitPat(literal: Literal)
@@ -16,40 +16,31 @@ enum Pattern extends Located:
     * Should be transformed from `Var("_")` or unrecognized terms.
     */
   case Empty(source: Term)
-  case Class(nme: ClassSymbol, parameters: Opt[List[BlockLocalSymbol]], var refined: Bool)(val ident: Tree.Ident)
+  case ClassLike(sym: ClassSymbol | ModuleSymbol, trm: Term, parameters: Opt[List[BlockLocalSymbol]], var refined: Bool)(val tree: Tree)
   case Tuple(fields: List[Pattern])
   case Record(entries: List[(VarSymbol -> Pattern)])
   
   def boundSymbols: Ls[Str -> Symbol] = ???
   
-  def toLoc: Opt[Loc] = this match
-    case LitPat(literal) => literal.toLoc
-    case pat @ Class(_, _, _) => pat.ident.toLoc
-  
-  
-  /* 
-  def toLoc: Opt[Loc] = Loc(children)
+  def subTerms: Ls[Term] = this match
+    case Alias(nme, pattern) => pattern.subTerms
+    case LitPat(literal) => Nil
+    case Concrete(nme) => Nil
+    case Var(nme) => Nil
+    case Empty(source) => source :: Nil
+    case ClassLike(_, t, parameters, _) => t :: Nil
+    case Tuple(fields) => fields.flatMap(_.subTerms)
+    case Record(entries) => entries.flatMap(_._2.subTerms)
   
   def children: Ls[Located] = this match
-    case Alias(nme, pattern) =>
-      nme :: pattern :: Nil
-    case LitPat(literal) =>
-      literal :: Nil
-    case Concrete(nme) =>
-      nme :: Nil
-    case Var(nme) =>
-      nme :: Nil
-    case Empty(source) =>
-      source :: Nil
-    case Class(nme, parameters, refined) =>
-      // nme :: parameters.getOrElse(Nil)
-      ???
-    case Tuple(fields: List[Pattern]) =>
-      fields
-    case Record(entries: List[(VarSymbol -> Pattern)]) =>
-      // entries.iterator.flatMap { case (nme, als) => nme :: als :: Nil }.toList
-      ???
-  */
+    case Alias(nme, pattern) => nme :: pattern :: Nil
+    case LitPat(literal) => Nil
+    case Concrete(nme) => Nil
+    case Var(nme) => Nil
+    case Empty(source) => source :: Nil
+    case ClassLike(_, t, parameters, _) => t :: parameters.toList.flatten
+    case Tuple(fields) => fields
+    case Record(entries) => entries.flatMap { case (nme, als) => nme :: als :: Nil }
   
   def showDbg: Str = this match
     case Alias(nme, pattern) => s"($nme as $pattern)"
@@ -57,7 +48,7 @@ enum Pattern extends Located:
     case Concrete(nme) => s"`${nme.name}`"
     case Var(nme) => nme.toString
     case Empty(_) => "•"
-    case Class(sym, ps, rfd) => (if rfd then "refined " else "") + (ps match {
+    case ClassLike(sym, t, ps, rfd) => (if rfd then "refined " else "") + (ps match {
       case N => sym.nme
       case S(parameters) => parameters.mkString(s"${sym.nme}(", ", ", ")")
     })

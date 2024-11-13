@@ -45,7 +45,7 @@ class Lowering(using TL, Raise, Elaborator.State):
   def returnedTerm(t: st)(using Subst): Block = term(t)(Ret)
   
   def term(t: st)(k: Result => Block)(using Subst): Block =
-    tl.log(s"Lowering.term ${t.showDbg.truncate(30, "[...]")}")
+    tl.log(s"Lowering.term ${t.showDbg.truncate(100, "[...]")}")
     t match
     case st.Lit(lit) =>
       k(Value.Lit(lit))
@@ -58,32 +58,7 @@ class Lowering(using TL, Raise, Elaborator.State):
         args => subTerm(a.value)(r => acc(r :: args))
       )(Nil)
     case st.Ref(sym) =>
-      sym match
-      case sym: LocalSymbol =>
-        k(subst(Value.Ref(sym)))
-      case sym: ClassSymbol =>
-        k(subst(Value.Ref(sym)))
-      /* // * Old logic that auto-lifted `C` ~> `(...) => new C(...)`
-      case sym: ClassSymbol => // TODO rm
-        // k(subst(Value.Ref(sym)))
-        sym.defn match
-        case N => End("error: class has no declaration") // TODO report?
-        case S(clsDefn) =>
-          if clsDefn.kind is syntax.Mod then
-            k(Value.Ref(sym))
-          else
-            val ps = clsDefn.paramsOpt.getOrElse(Nil)
-            val psSyms = ps.map(p => 
-              p.copy(sym = new VarSymbol(p.sym.id, summon[Elaborator.State].nextUid)))
-            k(Value.Lam(psSyms,
-              Return(Instantiate(Value.Ref(sym),
-                psSyms.map(p => Value.Ref(p.sym))), false)))
-      */
-    // * Perhaps this `new` insertion should also be removed...?
-    case st.App(Ref(sym: ClassSymbol), Tup(args)) => // TODO check kind is Cls
-      args.foldRight[Ls[Path] => Block](args => k(Instantiate(Value.Ref(sym), args.reverse)))((a, acc) =>
-        args => subTerm(a.value)(r => acc(r :: args))
-      )(Nil)
+      k(subst(Value.Ref(sym)))
     case st.App(f, arg) =>
       arg match
       case Tup(fs) =>
@@ -101,8 +76,9 @@ class Lowering(using TL, Raise, Elaborator.State):
           rec(as, Nil)
       case _ =>
         TODO("Other argument list forms")
-    
     case st.Blk(Nil, res) => term(res)(k)
+    case st.Blk(Lit(Tree.UnitLit(true)) :: stats, res) =>
+      subTerm(st.Blk(stats, res))(k)
     case st.Blk((p @ (_: Ref | _: Lit)) :: stats, res) =>
       raise(WarningReport(msg"Pure expression in statement position" -> p.toLoc :: Nil))
       subTerm(st.Blk(stats, res))(k)
@@ -116,15 +92,18 @@ class Lowering(using TL, Raise, Elaborator.State):
           term(st.Blk(stats, res))(k)
         case S(bod) =>
           td.k match
-          case _: syntax.Val =>
+          case knd: syntax.Val =>
             assert(td.params.isEmpty)
-            term(bod)(r =>
-              Assign(td.sym, r,
+            subTerm(bod)(r =>
+              // Assign(td.sym, r,
+              //   term(st.Blk(stats, res))(k)))
+              Define(ValDefn(td.owner, knd, td.sym, r),
                 term(st.Blk(stats, res))(k)))
-          case _ =>
-            Define(TermDefn(td.k, td.sym, td.params, returnedTerm(bod)),
+          case syntax.Fun =>
+            Define(FunDefn(td.sym, td.params, returnedTerm(bod)),
               term(st.Blk(stats, res))(k))
-      case cls: ClassDef =>
+      // case cls: ClassDef =>
+      case cls: ClassLikeDef =>
         val bodBlk = cls.body.blk
         val (mtds, rest1) = bodBlk.stats.partitionMap:
           case td: TermDefinition if td.k is syntax.Fun => L(td)
@@ -132,10 +111,10 @@ class Lowering(using TL, Raise, Elaborator.State):
         val (flds, rest2) = rest1.partitionMap:
           case LetDecl(sym: TermSymbol) => L(sym)
           case s => R(s)
-        Define(ClsDefn(cls.sym, syntax.Cls,
+        Define(ClsLikeDefn(cls.sym, syntax.Cls,
             mtds.flatMap: td =>
               td.body.map: bod =>
-                TermDefn(td.k, td.sym, td.params, term(bod)(Ret))
+                FunDefn(td.sym, td.params, term(bod)(Ret))
             ,
             flds, term(Blk(rest2, bodBlk.res))(ImplctRet).mapTail:
               case Return(Value.Lit(syntax.Tree.UnitLit(true)), true) => End()
@@ -155,13 +134,17 @@ class Lowering(using TL, Raise, Elaborator.State):
       case Ref(sym: LocalSymbol) =>
         subTerm(rhs): r =>
           Assign(sym, r, k(Value.Lit(syntax.Tree.UnitLit(true))))
+      case Sel(prefix, nme) =>
+        subTerm(prefix): p =>
+          subTerm(rhs): r =>
+            AssignField(p, nme, r, k(Value.Lit(syntax.Tree.UnitLit(true))))
       
     case st.Blk((imp @ Import(sym, path)) :: stats, res) =>
       raise(ErrorReport(
         msg"Imports must be at the top level" ->
         imp.toLoc :: Nil,
         source = Diagnostic.Source.Compilation))
-        term(st.Blk(stats, res))(k)
+      term(st.Blk(stats, res))(k)
       
     case st.Lam(params, body) =>
       k(Value.Lam(params, returnedTerm(body)))
@@ -202,52 +185,84 @@ class Lowering(using TL, Raise, Elaborator.State):
             )
     */
     
-    case iftrm: st.If =>
+    case iftrm: st.IfLike =>
       
-      tl.log(s"If $iftrm")
+      tl.log(s"${iftrm.kw} $iftrm")
+      
+      val isIf = iftrm.kw match
+        case syntax.Keyword.`if` => true
+        case syntax.Keyword.`while` => false
+      val isWhile = !isIf
       
       var usesResTmp = false
       lazy val l =
         usesResTmp = true
         new TempSymbol(summon[Elaborator.State].nextUid, S(t))
       
-      def go(split: Split)(using Subst): Block = split match
+      lazy val lbl =
+        new TempSymbol(summon[Elaborator.State].nextUid, S(t))
+      
+      def go(split: Split, topLevel: Bool)(using Subst): Block = split match
         case Split.Let(sym, trm, tl) =>
           term(trm): r =>
-            Assign(sym, r, go(tl))
+            Assign(sym, r, go(tl, topLevel))
         case Split.Cons(Branch(scrut, pat, tail), restSplit) =>
           subTerm(scrut): sr =>
             tl.log(s"Binding scrut $scrut to $sr ${summon[Subst].map}")
-            val cse = pat match
-              case Pattern.LitPat(lit) => Case.Lit(lit) -> go(tail)
-              case Pattern.Class(cls, args0, _refined) =>
-                val args = args0.getOrElse(Nil)
-                val clsDefn = cls.defn.getOrElse(die)
-                val clsParams = clsDefn.paramsOpt.getOrElse(Nil)
-                assert(args0.isEmpty || clsParams.length === args.length)
-                def mkArgs(args: Ls[Param -> BlockLocalSymbol])(using Subst): Case -> Block = args match
-                  case Nil => Case.Cls(cls) -> go(tail)
-                  case (param, arg) :: args =>
-                    // summon[Subst].+(arg -> Value.Ref(new TempSymbol(summon[Elaborator.State].nextUid, N)))
-                    // Assign(arg, Select(sr, Tree.Ident("head")), mkArgs(args))
-                    val (cse, blk) = mkArgs(args)
-                    (cse, Assign(arg, Select(sr, param.sym.id/*FIXME incorrect Ident?*/), blk))
-                mkArgs(clsParams.zip(args))
-            Match(sr, cse :: Nil,
-              // elseBranch,
-              S(go(restSplit)),
-              End()
-            )
+            // val cse = 
+            def mkMatch(cse: Case -> Block) = Match(sr, cse :: Nil,
+                S(go(restSplit, topLevel = true)),
+                End()
+              )
+            pat match
+              case Pattern.LitPat(lit) => mkMatch(Case.Lit(lit) -> go(tail, topLevel = false))
+              case Pattern.ClassLike(cls, trm, args0, _refined) =>
+                subTerm(trm): st =>
+                  val args = args0.getOrElse(Nil)
+                  val clsDefn = cls.defn.getOrElse(die)
+                  val clsParams = clsDefn.paramsOpt.getOrElse(Nil)
+                  assert(args0.isEmpty || clsParams.length === args.length)
+                  def mkArgs(args: Ls[Param -> BlockLocalSymbol])(using Subst): Case -> Block = args match
+                  // def mkArgs(args: Ls[Param -> BlockLocalSymbol])(using Subst): Block = args match
+                    case Nil =>
+                      // mkMatch(Case.Cls(cls, st) -> go(tail, topLevel = false))
+                      Case.Cls(cls, st) -> go(tail, topLevel = false)
+                    case (param, arg) :: args =>
+                      // summon[Subst].+(arg -> Value.Ref(new TempSymbol(summon[Elaborator.State].nextUid, N)))
+                      // Assign(arg, Select(sr, Tree.Ident("head")), mkArgs(args))
+                      
+                      val (cse, blk) = mkArgs(args)
+                      (cse, Assign(arg, Select(sr, param.sym.id/*FIXME incorrect Ident?*/), blk))
+                      // mkMatch(cse -> Assign(arg, Select(sr, param.sym.id/*FIXME incorrect Ident?*/), blk))
+                      // Assign(arg, Select(sr, param.sym.id/*FIXME incorrect Ident?*/), mkArgs(args))
+                      
+                  // val (cse, blk) =
+                  // mkMatch(cse -> blk)
+                  mkMatch(mkArgs(clsParams.zip(args)))
+            // Match(sr, cse :: Nil,
+            //   S(go(restSplit, topLevel = true)),
+            //   End()
+            // )
         case Split.Else(els) =>
-          if k.isInstanceOf[Ret] then term(els)(k)
-          else term(els)(r => Assign(l, r, End()))
-        case Split.Nil =>
-          Throw(Instantiate(Value.Ref(Elaborator.Ctx.errorSymbol),
+          if k.isInstanceOf[Ret] && isIf then term(els)(k)
+          else
+            term(els): r =>
+              Assign(l, r,
+                if isWhile && !topLevel then Break(lbl, toBeginning = true)
+                // if isWhile then Break(lbl, toBeginning = !topLevel)
+                else End()
+              )
+        case Split.End =>
+          Throw(Instantiate(Select(Value.Ref(Elaborator.Ctx.globalThisSymbol), Tree.Ident("Error")),
             Value.Lit(syntax.Tree.StrLit("match error")) :: Nil)) // TODO add failed-match scrutinee info
       
-      if k.isInstanceOf[Ret] then go(iftrm.normalized)
-      else Begin(
-          go(iftrm.normalized),
+      if k.isInstanceOf[Ret] && isIf then go(iftrm.normalized, topLevel = true)
+      else
+        val body = if isWhile
+          then Label(lbl, go(iftrm.normalized, topLevel = true), End())
+          else go(iftrm.normalized, topLevel = true)
+        Begin(
+          body,
           if usesResTmp then k(Value.Ref(l))
           else k(Value.Lit(syntax.Tree.UnitLit(true))) // * it seems this currently never happens
         )

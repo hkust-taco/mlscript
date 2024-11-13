@@ -1,7 +1,15 @@
 :js
 
 :import PredefJS.mls
-//│ Imported 1 member(s)
+//│ Imported 2 member(s)
+
+
+fun test() =
+  class C(a) with { fun f() = a }
+  C(0).f()
+
+test()
+//│ = 0
 
 
 :sjs
@@ -15,20 +23,22 @@ fun test(a) =
   Inner(42)
 //│ JS:
 //│ function test(a) {
-//│   class Inner {
+//│   function Inner(b1) { return new Inner.class(b1); };
+//│   Inner.class = class Inner {
 //│     constructor(b) {
 //│       this.b = b;
 //│       let tmp;
-//│       tmp = log(a);
+//│       tmp = globalThis.log(a);
 //│     }
 //│     f(c) {
 //│       return [
 //│         a,
 //│         this.b,
 //│         c
-//│       ]
+//│       ];
 //│     } 
 //│     g(d) {
+//│       
 //│       const this$Inner = this;
 //│       function h(e) {
 //│         return [
@@ -36,14 +46,14 @@ fun test(a) =
 //│           this$Inner.b,
 //│           d,
 //│           e
-//│         ]
-//│       };
-//│       return h(d)
+//│         ];
+//│       }
+//│       return h(d);
 //│     }
 //│     toString() { return "Inner(" + this.b + ")"; }
 //│   };
-//│   return new Inner(42)
-//│ };
+//│   return Inner(42);
+//│ }
 //│ undefined
 
 let i = test(100)

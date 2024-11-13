@@ -31,7 +31,7 @@ class Foo[A] with
 class Foo[A](x: Foo[A, A])
 //│ ╔══[ERROR] Wrong number of type arguments
 //│ ║  l.31: 	class Foo[A](x: Foo[A, A])
-//│ ╙──      	                ^^^^^^^^
+//│ ╙──      	                    ^^^^
 
 :fixme
 :e
@@ -39,5 +39,5 @@ class Foo[A](x: Bar[A])
 class Bar(x: Foo[Int])
 //│ ╔══[ERROR] Wrong number of type arguments
 //│ ║  l.38: 	class Foo[A](x: Bar[A])
-//│ ╙──      	                ^^^^^
+//│ ╙──      	                    ^
 

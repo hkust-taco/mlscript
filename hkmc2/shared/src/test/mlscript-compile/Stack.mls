@@ -1,0 +1,12 @@
+
+// TODO
+// type Stack[A] = Stack.Cons[A] | Stack.Nil
+
+module Stack with ...
+
+class Cons[A](head: A, tail)
+module Nil
+
+fun isEmpty(xs) = xs is Nil
+
+

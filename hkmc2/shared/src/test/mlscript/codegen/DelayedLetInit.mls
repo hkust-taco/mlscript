@@ -1,4 +1,6 @@
 :js
+
+:global
 :sjs
 
 
@@ -23,14 +25,14 @@ let y = 1
 :e
 z = 1
 //│ ╔══[ERROR] Name not found: z
-//│ ║  l.24: 	z = 1
+//│ ║  l.26: 	z = 1
 //│ ╙──      	^
 //│ JS:
 //│ /* error */
 
 fun f() = 1
 //│ JS:
-//│ function f() { return 1 }; undefined
+//│ function f() { return 1; } undefined
 
 f
 //│ JS:

@@ -1,4 +1,5 @@
 :bbml
+//│ Type: ⊤
 
 
 class Option[out A](inspect: [E, Res] -> (() ->{E} Res, A ->{E} Res) ->{E} Res)

@@ -1,4 +1,5 @@
 :bbml
+//│ Type: ⊤
 
 
 fun f(x, y) = x(y)

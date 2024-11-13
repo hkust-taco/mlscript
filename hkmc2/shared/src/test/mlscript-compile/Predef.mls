@@ -1,0 +1,16 @@
+
+declare val String
+declare val console
+
+module Predef with ...
+
+fun id(x) = x
+
+fun (|>) pipe(x, f) = f(x)
+
+fun (|>.) call(receiver, f)(arg) = f.call(receiver, arg)
+
+fun print(x) =
+  console.log(String(x))
+
+

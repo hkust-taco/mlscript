@@ -6,37 +6,24 @@ import mlscript.utils.*, shorthands.*
 import Message.MessageContext
 import utils.TraceLogger
 import hkmc2.syntax.Literal
-import Keyword.`let`
+import Keyword.{as, and, `else`, is, let, `then`}
 
 object Desugarer:
-  object and:
+  extension (op: Keyword.Infix)
     infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match
-      case InfixApp(lhs, Keyword.and, rhs) => S((lhs, rhs))
+      case InfixApp(lhs, `op`, rhs) => S((lhs, rhs))
       case _ => N
 
-  object is:
-    infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match
-      case InfixApp(lhs, Keyword.is, rhs) => S((lhs, rhs))
-      case _ => N
-
-  object `then`:
-    infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match
-      case InfixApp(lhs, Keyword.`then`, rhs) => S((lhs, rhs))
-      case _ => N
-
-  object `->`:
+  /** An extractor that accepts either `A and B` or `A then B`. */
+  object `~>`:
     infix def unapply(tree: Tree): Opt[(Tree, Tree \/ Tree)] = tree match
-      case InfixApp(lhs, Keyword.and, rhs) => S((lhs, L(rhs)))
-      case InfixApp(lhs, Keyword.`then`, rhs) => S((lhs, R(rhs)))
-      case _ => N
-
-  object `else`:
-    infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match
-      case InfixApp(lhs, Keyword.`else`, rhs) => S((lhs, rhs))
+      case lhs and rhs => S((lhs, L(rhs)))
+      case lhs `then` rhs => S((lhs, R(rhs)))
       case _ => N
 end Desugarer
 
-class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, state: Elaborator.State):
+class Desugarer(tl: TraceLogger, elaborator: Elaborator)
+    (using raise: Raise, state: Elaborator.State, c: Elaborator.Ctx):
   import Desugarer.*
   import Elaborator.Ctx
   import elaborator.term
@@ -58,7 +45,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
   extension (split: Split)
     /** Concatenate two splits. */
     def ++(fallback: Split): Split =
-      if fallback == Split.Nil then
+      if fallback == Split.End then
         split
       else if split.isFull then
         raise:
@@ -69,7 +56,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
       else (split match
         case Split.Cons(head, tail) => Split.Cons(head, tail ++ fallback)
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ++ fallback)
-        case Split.Else(_) /* impossible */ | Split.Nil => fallback)
+        case Split.Else(_) /* impossible */ | Split.End => fallback)
 
   import collection.mutable.HashMap
 
@@ -182,7 +169,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
     case coda is rhs => fallback => ctx =>
       nominate(ctx, finish(term(coda)(using ctx))):
         patternSplit(rhs, _)(fallback)
-    case matches -> consequent => fallback =>
+    case matches ~> consequent => fallback =>
       // There are N > 0 conjunct matches. We use `::[T]` instead of `List[T]`.
       // Each match is represented by a pair of a _coda_ and a _pattern_
       // that is yet to be elaborated.
@@ -191,7 +178,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
       // expand from the N-th to the second match.
       lazy val tailSplit =
         val innermostSplit = consequent match
-          case L(tree) => termSplit(tree, identity)(Split.Nil)
+          case L(tree) => termSplit(tree, identity)(Split.End)
           case R(tree) => (ctx: Ctx) => Split.default(term(tree)(using ctx))
         tail.foldRight(innermostSplit):
           case ((coda, pat), sequel) => ctx => trace(
@@ -199,7 +186,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
             post = (res: Split) => s"conjunct matches >>> $res"
           ):
             nominate(ctx, term(coda)(using ctx)):
-              expandMatch(_, pat, sequel)(Split.Nil)
+              expandMatch(_, pat, sequel)(Split.End)
       // We apply `finish` to the first coda and expand the first match.
       // Note that the scrutinee might be not an identifier.
       headCoda match
@@ -215,13 +202,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
       post = (res: Split) => s"termSplit: after op >>> $res"
     ):
       // Resolve the operator.
-      val opRef =
-        ctx.get(opName) match
-        case S(sym) => sym.ref(opIdent)
-        case N =>
-          raise(ErrorReport(msg"Name not found: $opName" -> tree.toLoc :: Nil))
-          Term.Error
-      .withLocOf(opIdent)
+      val opRef = term(opIdent)
       // Elaborate and finish the LHS. Nominate the LHS if necessary.
       nominate(ctx, finish(term(lhs)(using ctx))): lhsSymbol =>
         // Compose a function that takes the RHS and finishes the application.
@@ -335,7 +316,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
         post = (res: Split) => s"patternSplit (else) >>> ${res.showDbg}"
       ):
         elabFallback(backup)(ctx) match
-          case Split.Nil => ()
+          case Split.End => ()
           case _ => raise(ErrorReport(msg"Any following branches are unreachable." -> branch.toLoc :: Nil))
         Split.default(term(body)(using ctx))
       case branch => backup => ctx => trace(
@@ -343,7 +324,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
         post = (res: Split) => s"patternSplit (alternative) >>> ${res.showDbg}"
       ):
         patternSplit(branch, scrutSymbol)(elabFallback(backup)(ctx))(ctx)
-    case patternAndMatches -> consequent => fallback =>
+    case patternAndMatches ~> consequent => fallback =>
       // There are N > 0 conjunct matches. We use `::[T]` instead of `List[T]`.
       // Each match is represented by a pair of a _coda_ and a _pattern_
       // that is yet to be elaborated.
@@ -352,12 +333,12 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
       // expand from the N-th to the second match.
       val tailSplit =
         val innermostSplit = consequent match
-          case L(tree) => termSplit(tree, identity)(Split.Nil)
+          case L(tree) => termSplit(tree, identity)(Split.End)
           case R(tree) => (ctx: Ctx) => Split.default(term(tree)(using ctx))
         tail.foldRight(innermostSplit):
           case ((coda, pat), sequel) => ctx =>
             nominate(ctx, term(coda)(using ctx)):
-              expandMatch(_, pat, sequel)(Split.Nil)
+              expandMatch(_, pat, sequel)(Split.End)
         .traced(
           pre = s"conjunct matches <<< $tail",
           post = (res: Split) => s"conjunct matches >>> $res")
@@ -380,53 +361,60 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
     pattern match
       // A single wildcard pattern.
       case Ident("_") => _ => ctx => sequel(ctx)
-      // A single variable pattern or constructor pattern without parameters.
-      case ctor: Ident => fallback => ctx => ctx.get(ctor.name) match
-        case S(sym: ClassSymbol) => // TODO: refined
-          Branch(ref, Pattern.Class(sym, N, false)(ctor), sequel(ctx)) :: fallback
-        case S(_: VarSymbol) | N =>
-          // If the identifier refers to a variable or nothing, we interpret it
-          // as a variable pattern. If `fallback` is not used when `sequel`
-          // is full, then we raise an error.
-          val aliasSymbol = VarSymbol(ctor, nextUid)
-          val ctxWithAlias = ctx + (ctor.name -> aliasSymbol)
-          Split.Let(aliasSymbol, ref, sequel(ctxWithAlias) ++ fallback)
-        case S(_) =>
+      // Alias pattern
+      case pat as (alias @ Ident(_)) => fallback =>
+        val aliasSymbol = VarSymbol(alias, nextUid)
+        val inner = (ctx: Ctx) =>
+          val ctxWithAlias = ctx + (alias.name -> aliasSymbol)
+          Split.Let(aliasSymbol, ref, sequel(ctxWithAlias))
+        expandMatch(scrutSymbol, pat, inner)(fallback)
+      case id @ Ident(nme) if nme.headOption.forall(_.isLower) => fallback => ctx =>
+        val aliasSymbol = VarSymbol(id, nextUid)
+        val ctxWithAlias = ctx + (nme -> aliasSymbol)
+        Split.Let(aliasSymbol, ref, sequel(ctxWithAlias) ++ fallback)
+      case ctor @ (_: Ident | _: Sel) => fallback => ctx =>
+        val clsTrm = elaborator.cls(ctor)
+        clsTrm.symbol.flatMap(_.asClsLike) match
+        case S(cls: ClassSymbol) =>
+            Branch(ref, Pattern.ClassLike(cls, clsTrm, N, false)(ctor), sequel(ctx)) ~: fallback
+        case S(cls: ModuleSymbol) =>
+          Branch(ref, Pattern.ClassLike(cls, clsTrm, N, false)(ctor), sequel(ctx)) ~: fallback
+        case N =>
           // Raise an error and discard `sequel`. Use `fallback` instead.
-          raise(ErrorReport(msg"Unknown symbol `${ctor.name}`." -> ctor.toLoc :: Nil))
+          raise(ErrorReport(msg"Cannot use this ${ctor.describe} as a pattern" -> ctor.toLoc :: Nil))
           fallback
       // A single constructor pattern.
-      case pat @ App(ctor: Ident, Tup(args)) => fallback => ctx => trace(
-        pre = s"expandMatch <<< ${ctor.name}(${args.iterator.map(_.showDbg).mkString(", ")})",
+      case pat @ App(ctor @ (_: Ident | _: Sel), Tup(args)) => fallback => ctx => trace(
+        pre = s"expandMatch <<< ${ctor}(${args.iterator.map(_.showDbg).mkString(", ")})",
         post = (r: Split) => s"expandMatch >>> ${r.showDbg}"
       ):
-        ctx.get(ctor.name) match
-          case S(cls: ClassSymbol) =>
-            val arity = cls.defn.flatMap(_.paramsOpt.map(_.length)).getOrElse(0)
-            if args.length =/= arity then
-              val n = arity.toString
-              val m = args.length.toString
-              raise(ErrorReport(msg"mismatched arity: expect $n, found $m" -> pat.toLoc :: Nil))
-            val params = scrutSymbol.getSubScrutinees(cls)
-            val clsRef = cls.ref(ctor)
-            Branch(
-              ref,
-              Pattern.Class(cls, S(params), false)(ctor), // TODO: refined?
-              subMatches(params zip args, sequel)(Split.Nil)(ctx)
-            ) :: fallback
-          case _ =>
-            // Raise an error and discard `sequel`. Use `fallback` instead.
-            raise(ErrorReport(msg"Unknown constructor `${ctor.name}`." -> ctor.toLoc :: Nil))
-            fallback
+        val clsTrm = elaborator.cls(ctor)
+        clsTrm.symbol.flatMap(_.asClsLike) match
+        case S(cls: ClassSymbol) =>
+          val arity = cls.defn.flatMap(_.paramsOpt.map(_.length)).getOrElse(0)
+          if args.length =/= arity then
+            val n = arity.toString
+            val m = args.length.toString
+            raise(ErrorReport(msg"mismatched arity: expect $n, found $m" -> pat.toLoc :: Nil))
+          val params = scrutSymbol.getSubScrutinees(cls)
+          Branch(
+            ref,
+            Pattern.ClassLike(cls, clsTrm, S(params), false)(ctor), // TODO: refined?
+            subMatches(params zip args, sequel)(Split.End)(ctx)
+          ) ~: fallback
+        case _ =>
+          // Raise an error and discard `sequel`. Use `fallback` instead.
+          raise(ErrorReport(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc :: Nil))
+          fallback
       // A single literal pattern
       case literal: Literal => fallback => ctx => trace(
         pre = s"expandMatch: literal <<< $literal",
         post = (r: Split) => s"expandMatch: literal >>> ${r.showDbg}"
       ):
-        Branch(ref, Pattern.LitPat(literal), sequel(ctx)) :: fallback
+        Branch(ref, Pattern.LitPat(literal), sequel(ctx)) ~: fallback
       // A single pattern in conjunction with more conditions
       case pattern and consequent => fallback => ctx => 
-        val innerSplit = termSplit(consequent, identity)(Split.Nil)
+        val innerSplit = termSplit(consequent, identity)(Split.End)
         expandMatch(scrutSymbol, pattern, innerSplit)(fallback)(ctx)
       case _ => fallback => _ =>
         // Raise an error and discard `sequel`. Use `fallback` instead.

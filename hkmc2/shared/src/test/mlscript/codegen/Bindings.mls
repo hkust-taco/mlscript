@@ -73,14 +73,14 @@ let x += 1 = 0 in x
 
 :e
 (let x = 1) + 1
-//│ ╔══[ERROR] Expected a right-hand side for let bindings in expression position
+//│ ╔══[ERROR] Expected a body for let bindings in expression position
 //│ ║  l.75: 	(let x = 1) + 1
 //│ ╙──      	     ^^^^^
 //│ = NaN
 
 :e
 (let f(x) = x) + 1
-//│ ╔══[ERROR] Expected a right-hand side for let bindings in expression position
+//│ ╔══[ERROR] Expected a body for let bindings in expression position
 //│ ║  l.82: 	(let f(x) = x) + 1
 //│ ╙──      	     ^^^^^^^^
 //│ = NaN

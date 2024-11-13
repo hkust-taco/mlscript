@@ -63,21 +63,21 @@ object Conj:
   }){}
   lazy val empty: Conj = Conj(Inter.empty, Union.empty, Nil)
   def mkVar(v: InfVar, pol: Bool) = Conj(Inter.empty, Union.empty, (v, pol) :: Nil)
-  def mkInter(inter: ClassType | FunType) =
+  def mkInter(inter: ClassLikeType | FunType) =
     Conj(Inter(S(inter)), Union.empty, Nil)
-  def mkUnion(union: ClassType | FunType) =
+  def mkUnion(union: ClassLikeType | FunType) =
     Conj(Inter.empty, union match {
-      case cls: ClassType => Union(N, cls :: Nil)
+      case cls: ClassLikeType => Union(N, cls :: Nil)
       case fun: FunType => Union(S(fun), Nil)
     }, Nil)
 
 // * Some(ClassType) -> C[in D_i out D_i], Some(FunType) -> D_1 ->{D_2} D_3, None -> Top
-final case class Inter(v: Opt[ClassType | FunType]) extends NormalForm:
+final case class Inter(v: Opt[ClassLikeType | FunType]) extends NormalForm:
   def isTop: Bool = v.isEmpty
   def merge(other: Inter): Option[Inter] = (v, other.v) match
-    case (S(ClassType(cls1, targs1)), S(ClassType(cls2, targs2))) if cls1.uid === cls2.uid =>
-      S(Inter(S(ClassType(cls1, targs1.lazyZip(targs2).map(_ & _)))))
-    case (S(_: ClassType), S(_: ClassType)) => N
+    case (S(ClassLikeType(cls1, targs1)), S(ClassLikeType(cls2, targs2))) if cls1.uid === cls2.uid =>
+      S(Inter(S(ClassLikeType(cls1, targs1.lazyZip(targs2).map(_ & _)))))
+    case (S(_: ClassLikeType), S(_: ClassLikeType)) => N
     case (S(FunType(a1, r1, e1)), S(FunType(a2, r2, e2))) =>
       S(Inter(S(FunType(a1.lazyZip(a2).map(_ | _), r1 & r2, e1 & e2))))
     case (S(v), N) => S(Inter(S(v)))
@@ -91,7 +91,7 @@ object Inter:
   lazy val empty: Inter = Inter(N)
 
 // * fun: Some(FunType) -> D_1 ->{D_2} D_3, None -> bot
-final case class Union(fun: Opt[FunType], cls: Ls[ClassType])
+final case class Union(fun: Opt[FunType], cls: Ls[ClassLikeType])
 extends NormalForm with CachedBasicType:
   def isBot = fun.isEmpty && cls.isEmpty
   def toType = fun.getOrElse(Bot) |
@@ -104,10 +104,10 @@ extends NormalForm with CachedBasicType:
     case (N, N) => N
   }, (cls ++ other.cls).sortWith { // * Merge the same classes
     case (cls1, cls2) => cls1.name.uid <= cls2.name.uid
-  }.foldLeft[Ls[ClassType]](Nil)((res, cls) => (res, cls) match {
+  }.foldLeft[Ls[ClassLikeType]](Nil)((res, cls) => (res, cls) match {
     case (Nil, cls) => cls :: Nil
-    case (ClassType(cls1, targs1) :: tail, ClassType(cls2, targs2)) if cls1.uid === cls2.uid => 
-      ClassType(cls1, targs1.lazyZip(targs2).map(_ | _)) :: tail
+    case (ClassLikeType(cls1, targs1) :: tail, ClassLikeType(cls2, targs2)) if cls1.uid === cls2.uid => 
+      ClassLikeType(cls1, targs1.lazyZip(targs2).map(_ | _)) :: tail
     case (head :: tail, cls) => cls :: head :: tail
   }))
   def mkBasic: BasicType =
@@ -145,7 +145,7 @@ object NormalForm:
     case Top => Disj.bot
     case Bot => Disj.top
     case v: InfVar => Disj(Conj.mkVar(v, false) :: Nil)
-    case ct: ClassType => Disj(Conj.mkUnion(ct) :: Nil)
+    case ct: ClassLikeType => Disj(Conj.mkUnion(ct) :: Nil)
     case ft: FunType => Disj(Conj.mkUnion(ft) :: Nil)
     case ComposedType(lhs, rhs, pol) =>
       if pol then inter(neg(lhs), neg(rhs)) else union(neg(lhs), neg(rhs))
@@ -161,7 +161,7 @@ object NormalForm:
     case Top => Disj.top
     case Bot => Disj.bot
     case v: InfVar => Disj(Conj.mkVar(v, true) :: Nil)
-    case ct: ClassType => Disj(Conj.mkInter(ct.toNorm) :: Nil)
+    case ct: ClassLikeType => Disj(Conj.mkInter(ct.toNorm) :: Nil)
     case ft: FunType => Disj(Conj.mkInter(ft.toNorm) :: Nil)
     case ComposedType(lhs, rhs, pol) =>
       if pol then union(dnf(lhs), dnf(rhs)) else inter(dnf(lhs), dnf(rhs))

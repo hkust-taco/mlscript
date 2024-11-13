@@ -1,12 +1,11 @@
-:typeCheck
+:js
 
 
 :import ImportedTest.mls
 //│ Imported 1 member(s)
-//│ Type: Ctor(lit:UnitLit(true),List())
 
 
-hello
-//│ Type: Flow(‹result of .hello›@24)
+hello()
+//│ = 'Hello!'
 
 

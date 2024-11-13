@@ -1,7 +1,7 @@
 :js
 
 :import PredefJS.mls
-//│ Imported 1 member(s)
+//│ Imported 2 member(s)
 
 
 let x = 0
@@ -38,7 +38,7 @@ set x += 1 in log(x)
 //│ try {
 //│   tmp1 = this.x + 1;
 //│   this.x = tmp1;
-//│   tmp = log(this.x);
+//│   tmp = this.log(this.x);
 //│ } finally {
 //│   this.x = old;
 //│ }
@@ -82,23 +82,23 @@ example()
 //│   let x, get_x, old, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
 //│   x = 0;
 //│   get_x = () => {
-//│     return x
+//│     return x;
 //│   };
 //│   old = x;
 //│   try {
 //│     tmp1 = x + 1;
 //│     x = tmp1;
-//│     tmp2 = log(x);
-//│     tmp3 = (tmp2 , log);
+//│     tmp2 = globalThis.log(x);
+//│     tmp3 = (tmp2 , globalThis.log);
 //│     tmp4 = get_x();
 //│     tmp = tmp3(tmp4);
 //│   } finally {
 //│     x = old;
 //│   }
-//│   tmp5 = log(x);
+//│   tmp5 = globalThis.log(x);
 //│   tmp6 = get_x();
-//│   return log(tmp6)
-//│ };
+//│   return globalThis.log(tmp6);
+//│ }
 //│ this.example()
 //│ > 1
 //│ > 1
@@ -120,23 +120,23 @@ example()
 //│   let x, get_x, y, old, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
 //│   x = 0;
 //│   get_x = () => {
-//│     return x
+//│     return x;
 //│   };
 //│   old = x;
 //│   try {
 //│     tmp1 = x + 1;
 //│     x = tmp1;
-//│     tmp2 = log(x);
+//│     tmp2 = globalThis.log(x);
 //│     tmp = (tmp2 , x);
 //│   } finally {
 //│     x = old;
 //│   }
 //│   y = tmp;
-//│   tmp3 = log(x);
+//│   tmp3 = globalThis.log(x);
 //│   tmp4 = get_x();
-//│   tmp5 = log(tmp4);
-//│   return y
-//│ };
+//│   tmp5 = globalThis.log(tmp4);
+//│   return y;
+//│ }
 //│ this.example()
 //│ > 1
 //│ > 0

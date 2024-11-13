@@ -22,10 +22,11 @@ class TypeChecker(using raise: Raise):
   def typeProd(t: Term): Producer = t match
     case Ref(sym: VarSymbol) =>
       val rc = sym.refsNumber
-      assert(rc > 0)
+      // assert(rc > 0) // FIXME
       if rc === 1 then P.Flow(sym)
       else P.Lab(P.Flow(sym), L.Exit(sym, rc, false))
     case Ref(cls: ClassSymbol) => P.Ctor(cls, Nil)
+    case Ref(cls: ModuleSymbol) => P.Ctor(cls, Nil)
     case Ref(ts: TermSymbol) =>
       ts.defn match
         case S(td: TermDefinition) =>
@@ -47,6 +48,8 @@ class TypeChecker(using raise: Raise):
           typeProd(t)
         case _: ClassDef =>
           // println(s"TODO ${t.showDbg}")
+          // TODO
+        case _: ModuleDef =>
           // TODO
       typeProd(res)
     case Lit(lit) =>
@@ -84,6 +87,7 @@ class TypeChecker(using raise: Raise):
       P.Ctor(TupSymbol(S(fields.size)), fields.map(f => typeProd(f.value)))
     case Error =>
       P.Ctor(Extr(false), Nil)
+    case _ => P.Flow(FlowSymbol("TODO", 666)) // TODO
   
   def typeParams(ps: Ls[Param]): Ls[(C, P)] =
     ps.map: p =>

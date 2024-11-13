@@ -9,7 +9,7 @@ import mlscript.utils._, shorthands._
 
 
 
-class MainDiffMaker(val file: os.Path, val predefFile: os.Path, val relativeName: Str)
+class MainDiffMaker(val file: os.Path, val preludeFile: os.Path, val predefFile: os.Path, val relativeName: Str)
   extends BbmlDiffMaker
 
 
@@ -54,10 +54,10 @@ object DiffTestRunner:
           N // * Disregard modified files that are staged
         else if filePath.ext =/= "mls" then N
         else S(filePath)
-      }.toSet catch {
-        case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
-        Set.empty
-      }
+      }.toSet catch
+        case err: Throwable =>
+          System.err.println("/!\\ git command failed with: " + err)
+          Set.empty
     
   end State
   
@@ -83,7 +83,7 @@ abstract class DiffTestRunner(state: DiffTestRunner.State)
         "\n\tNote: you can increase this limit by changing DiffTests.TimeLimit")
       // * Thread.stop() is considered bad practice because normally it's better to implement proper logic
       // * to terminate threads gracefully, avoiding leaving applications in a bad state.
-      // * But here we DGAF since all the test is doing is runnign a type checker and some Node REPL,
+      // * But here we DGAF since all the test is doing is running a type checker and some Node REPL,
       // * which would be a much bigger pain to make receptive to "gentle" interruption.
       // * It would feel extremely wrong to intersperse the pure type checker algorithms
       // * with ugly `Thread.isInterrupted` checks everywhere...
@@ -101,9 +101,10 @@ abstract class DiffTestRunner(state: DiffTestRunner.State)
     
     test(relativeName):
       
-      val predefPath = dir/"mlscript"/"decls"/"Predef.mls"
+      val preludePath = dir/"mlscript"/"decls"/"Prelude.mls"
+      val predefPath = dir/"mlscript-compile"/"Predef.mls"
       
-      val dm = new MainDiffMaker(file, predefPath, relativeName)
+      val dm = new MainDiffMaker(file, preludePath, predefPath, relativeName)
       
       dm.run()
       
@@ -139,9 +140,9 @@ abstract class CompileTestRunner(state: DiffTestRunner.State)
       
       println(s"Compiling: $relativeName")
       
-      val predefPath = dir/"decls"/"Predef.mls"
+      val preludePath = dir/"decls"/"Prelude.mls"
       
-      MLsCompiler(predefPath).compileModule(file)
+      MLsCompiler(preludePath).compileModule(file)
   
 end CompileTestRunner
 

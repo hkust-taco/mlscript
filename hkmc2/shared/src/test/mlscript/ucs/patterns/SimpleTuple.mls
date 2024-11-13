@@ -1,0 +1,78 @@
+// We test the support for simple tuple patterns in this file.
+// Splice tuple patterns will be implement in the future.
+
+fun sum(x, y) = x + y
+sum(1, 2)
+
+:fixme
+fun sum'([x, y]) = x + y
+sum'([1, 2])
+//│ /!!!\ Uncaught error: scala.MatchError: Tup(List(Ident(x), Ident(y))) (of class hkmc2.syntax.Tree$Tup)
+
+:todo
+fun sum''(pair) =
+  if pair is [x, y] then x + y
+sum''([1, 2])
+//│ ╔══[ERROR] Unrecognized pattern.
+//│ ║  l.14: 	  if pair is [x, y] then x + y
+//│ ╙──      	             ^^^^^^
+
+// We need native support for tuple patterns in MLscript syntax.
+// Otherwise the following cases work.
+
+:todo
+fun test(thing) =
+  if thing is [] then 0
+test("")
+test(12)
+//│ ╔══[ERROR] Unrecognized pattern.
+//│ ║  l.25: 	  if thing is [] then 0
+//│ ╙──      	              ^^
+
+:todo
+// Since pattern destruction is desugared to let bindings, matching with other
+// classes after the tuple pattern will not work.
+class Point(x: Int, y: Int)
+fun discarded_cases(thing) =
+  if thing is
+    [x, y] then x + y
+    Point(x, y) then x + y
+//│ ╔══[ERROR] Unrecognized pattern.
+//│ ║  l.38: 	    [x, y] then x + y
+//│ ╙──      	    ^^^^^^
+
+:e
+:todo
+discarded_cases(Point(0, 0))
+
+// A workaround is to move the tuple pattern to the last case.
+:todo
+fun working_cases(thing) =
+  if thing is
+    Point(x, y) then x + y
+    [x, y] then x + y
+//│ ╔══[ERROR] Unrecognized pattern.
+//│ ║  l.53: 	    [x, y] then x + y
+//│ ╙──      	    ^^^^^^
+
+working_cases(Point(0, 0))
+
+// However, the `Object` type forbids tuples to be used.
+:todo
+working_cases([0, 0])
+
+:todo
+fun not_working(x) =
+  if x is
+    [a, b, c] then
+      a + b + c
+    else
+      0
+//│ ╔══[ERROR] Unrecognized pattern.
+//│ ║  l.67: 	    [a, b, c] then
+//│ ╙──      	    ^^^^^^^^^
+
+not_working([1, 2, 3])
+
+:todo
+not_working([1, 2])

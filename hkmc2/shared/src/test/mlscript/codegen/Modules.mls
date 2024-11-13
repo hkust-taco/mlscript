@@ -1,33 +1,124 @@
 :js
 
 :import PredefJS.mls
-//│ Imported 1 member(s)
+//│ Imported 2 member(s)
 
 
 :sjs
 module None
 //│ JS:
-//│ this.None = new class None { constructor() {  } toString() { return "None"; } }; undefined
-
+//│ const None$class = class None {
+//│   constructor() {
+//│     
+//│   }
+//│   toString() { return "None"; }
+//│ };
+//│ this.None = new None$class;
+//│ this.None.class = None$class;
+//│ undefined
 
 :sjs
 None
 //│ JS:
 //│ this.None
-//│ = None {}
+//│ = None { class: [class None] }
 
 :sjs
 :re
 None()
 //│ JS:
-//│ new this.None()
-//│ ═══[RUNTIME ERROR] TypeError: this.None is not a constructor
+//│ this.None()
+//│ ═══[RUNTIME ERROR] TypeError: this.None is not a function
 
 :sjs
-:re
 new None
 //│ JS:
-//│ new this.None()
-//│ ═══[RUNTIME ERROR] TypeError: this.None is not a constructor
+//│ new this.None.class()
+//│ = None {}
+
+
+:sjs
+module M with
+  class C
+  class D()
+  val x = 1
+  val y = x + 1
+//│ JS:
+//│ const M$class = class M {
+//│   constructor() {
+//│     let tmp;
+//│     this.C = class C {
+//│       constructor() {
+//│         
+//│       }
+//│       toString() { return "C"; }
+//│     };
+//│     this.D = function D() { return new D.class(); };
+//│     this.D.class = class D {
+//│       constructor() {
+//│         
+//│       }
+//│       toString() { return "D(" +  + ")"; }
+//│     };
+//│     this.x = 1;
+//│     tmp = this.x + 1;
+//│     this.y = tmp;
+//│   }
+//│   toString() { return "M"; }
+//│ };
+//│ this.M = new M$class;
+//│ this.M.class = M$class;
+//│ undefined
+
+M.C
+//│ = [class C]
+
+new M.C
+//│ = C {}
+
+M.D()
+//│ = D {}
+
+M.x
+//│ = 1
+
+M.y
+//│ = 2
+
+:e
+M.oops
+//│ ╔══[ERROR] Module 'M' does not contain member 'oops'
+//│ ║  l.89: 	M.oops
+//│ ╙──      	 ^^^^^
+
+
+:sjs
+module M with
+  val m = M
+//│ JS:
+//│ const M$class = class M {
+//│   constructor() {
+//│     this.m = globalThis.M;
+//│   }
+//│   toString() { return "M"; }
+//│ };
+//│ this.M = new M$class;
+//│ this.M.class = M$class;
+//│ undefined
+
+M.m
+//│ > M {
+//│ >   C: [class C],
+//│ >   D: [Function: D] { class: [class D] },
+//│ >   x: 1,
+//│ >   y: 2,
+//│ >   class: [class M]
+//│ = }
+
+
+
+:todo
+module M()
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
 
 

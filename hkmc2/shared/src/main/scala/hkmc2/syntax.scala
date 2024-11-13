@@ -31,7 +31,7 @@ trait AutoLocated extends Located:
   def withLoc(s: Int, e: Int, ori: Origin): this.type =
     withLoc(S(Loc(s, e, ori)))
   def withLoc(loco: Opt[Loc]): this.type =
-    require(loc.isEmpty)
+    require(loc.isEmpty, s"'$this' already has a location: $loc")
     loc = loco
     this
   def withLocOf(that: Located): this.type = withLoc(that.toLoc)

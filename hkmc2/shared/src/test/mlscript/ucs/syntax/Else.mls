@@ -2,25 +2,10 @@
 // ========
 // Examine how the `else` keyword is parsed.
 
-:global
-:pt
-:parseOnly
 
 fun f(x, y, z) = if x then y
-//│ Parsed tree:
-//│ TermDef:
-//│   k = Fun
-//│   head = App:
-//│     lhs = Ident of "f"
-//│     rhs = Tup of Ls of 
-//│       Ident of "x"
-//│       Ident of "y"
-//│       Ident of "z"
-//│   rhs = S of If of InfixApp:
-//│     lhs = Ident of "x"
-//│     kw = keyword 'then'
-//│     rhs = Ident of "y"
 
+:pt
 fun f(x, y, z) = if x then y else z
 //│ Parsed tree:
 //│ TermDef:
@@ -31,31 +16,9 @@ fun f(x, y, z) = if x then y else z
 //│       Ident of "x"
 //│       Ident of "y"
 //│       Ident of "z"
-//│   rhs = S of If of Block of Ls of 
-//│     InfixApp:
-//│       lhs = Ident of "x"
-//│       kw = keyword 'then'
-//│       rhs = Ident of "y"
-//│     Modified:
-//│       modifier = keyword 'else'
-//│       modLoc = N
-//│       body = Ident of "z"
-
-fun f(x, y, z) =
-  if x
-    then y
-    else z
-//│ Parsed tree:
-//│ TermDef:
-//│   k = Fun
-//│   head = App:
-//│     lhs = Ident of "f"
-//│     rhs = Tup of Ls of 
-//│       Ident of "x"
-//│       Ident of "y"
-//│       Ident of "z"
-//│   rhs = S of Block of Ls of 
-//│     If of Block of Ls of 
+//│   rhs = S of IfLike:
+//│     kw = keyword 'if'
+//│     split = Block of Ls of 
 //│       InfixApp:
 //│         lhs = Ident of "x"
 //│         kw = keyword 'then'
@@ -65,231 +28,58 @@ fun f(x, y, z) =
 //│         modLoc = N
 //│         body = Ident of "z"
 
-// :pe
+
+fun f(x, y, z) =
+  if x
+    then y
+    else z
+
 fun f(x, y, z) = if x
                  then y
                  else z
-//│ Parsed tree:
-//│ TermDef:
-//│   k = Fun
-//│   head = App:
-//│     lhs = Ident of "f"
-//│     rhs = Tup of Ls of 
-//│       Ident of "x"
-//│       Ident of "y"
-//│       Ident of "z"
-//│   rhs = S of If of Block of Ls of 
-//│     InfixApp:
-//│       lhs = Ident of "x"
-//│       kw = keyword 'then'
-//│       rhs = Ident of "y"
-//│     Modified:
-//│       modifier = keyword 'else'
-//│       modLoc = N
-//│       body = Ident of "z"
 
-// :pe
 fun f(x, y, z) = if x then y
   else z
-//│ Parsed tree:
-//│ TermDef:
-//│   k = Fun
-//│   head = App:
-//│     lhs = Ident of "f"
-//│     rhs = Tup of Ls of 
-//│       Ident of "x"
-//│       Ident of "y"
-//│       Ident of "z"
-//│   rhs = S of If of Block of Ls of 
-//│     InfixApp:
-//│       lhs = Ident of "x"
-//│       kw = keyword 'then'
-//│       rhs = Ident of "y"
-//│     Modified:
-//│       modifier = keyword 'else'
-//│       modLoc = N
-//│       body = Ident of "z"
 
 fun f(x, y, z) = if
   x then y
   else z
-//│ Parsed tree:
-//│ TermDef:
-//│   k = Fun
-//│   head = App:
-//│     lhs = Ident of "f"
-//│     rhs = Tup of Ls of 
-//│       Ident of "x"
-//│       Ident of "y"
-//│       Ident of "z"
-//│   rhs = S of If of Block of Ls of 
-//│     InfixApp:
-//│       lhs = Ident of "x"
-//│       kw = keyword 'then'
-//│       rhs = Ident of "y"
-//│     Modified:
-//│       modifier = keyword 'else'
-//│       modLoc = N
-//│       body = Ident of "z"
 
 fun f(x, y, z) =
   if x then
     y
   else
     z
-//│ Parsed tree:
-//│ TermDef:
-//│   k = Fun
-//│   head = App:
-//│     lhs = Ident of "f"
-//│     rhs = Tup of Ls of 
-//│       Ident of "x"
-//│       Ident of "y"
-//│       Ident of "z"
-//│   rhs = S of Block of Ls of 
-//│     If of Block of Ls of 
-//│       InfixApp:
-//│         lhs = Ident of "x"
-//│         kw = keyword 'then'
-//│         rhs = Block of Ls of 
-//│           Ident of "y"
-//│       Modified:
-//│         modifier = keyword 'else'
-//│         modLoc = N
-//│         body = Block of Ls of 
-//│           Ident of "z"
 
 fun f(x, y, z) =
   if x then y
   else z
-//│ Parsed tree:
-//│ TermDef:
-//│   k = Fun
-//│   head = App:
-//│     lhs = Ident of "f"
-//│     rhs = Tup of Ls of 
-//│       Ident of "x"
-//│       Ident of "y"
-//│       Ident of "z"
-//│   rhs = S of Block of Ls of 
-//│     If of Block of Ls of 
-//│       InfixApp:
-//│         lhs = Ident of "x"
-//│         kw = keyword 'then'
-//│         rhs = Ident of "y"
-//│       Modified:
-//│         modifier = keyword 'else'
-//│         modLoc = N
-//│         body = Ident of "z"
 
 fun f(x, y, z) =
   if x then y
     else z
-//│ Parsed tree:
-//│ TermDef:
-//│   k = Fun
-//│   head = App:
-//│     lhs = Ident of "f"
-//│     rhs = Tup of Ls of 
-//│       Ident of "x"
-//│       Ident of "y"
-//│       Ident of "z"
-//│   rhs = S of Block of Ls of 
-//│     If of Block of Ls of 
-//│       InfixApp:
-//│         lhs = Ident of "x"
-//│         kw = keyword 'then'
-//│         rhs = Ident of "y"
-//│       Modified:
-//│         modifier = keyword 'else'
-//│         modLoc = N
-//│         body = Ident of "z"
 
 fun f(x, y, z) =
   if x
   then y
   else z
-//│ Parsed tree:
-//│ TermDef:
-//│   k = Fun
-//│   head = App:
-//│     lhs = Ident of "f"
-//│     rhs = Tup of Ls of 
-//│       Ident of "x"
-//│       Ident of "y"
-//│       Ident of "z"
-//│   rhs = S of Block of Ls of 
-//│     If of Block of Ls of 
-//│       InfixApp:
-//│         lhs = Ident of "x"
-//│         kw = keyword 'then'
-//│         rhs = Ident of "y"
-//│       Modified:
-//│         modifier = keyword 'else'
-//│         modLoc = N
-//│         body = Ident of "z"
 
 fun f(x, y, z) =
   if x
     then y
     else z
-//│ Parsed tree:
-//│ TermDef:
-//│   k = Fun
-//│   head = App:
-//│     lhs = Ident of "f"
-//│     rhs = Tup of Ls of 
-//│       Ident of "x"
-//│       Ident of "y"
-//│       Ident of "z"
-//│   rhs = S of Block of Ls of 
-//│     If of Block of Ls of 
-//│       InfixApp:
-//│         lhs = Ident of "x"
-//│         kw = keyword 'then'
-//│         rhs = Ident of "y"
-//│       Modified:
-//│         modifier = keyword 'else'
-//│         modLoc = N
-//│         body = Ident of "z"
 
 :fixme
 fun f(x, y, z) =
   if
     x then y else z
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.259: 	    x then y else z
-//│ ╙──       	             ^^^^
-//│ Parsed tree:
-//│ TermDef:
-//│   k = Fun
-//│   head = App:
-//│     lhs = Ident of "f"
-//│     rhs = Tup of Ls of 
-//│       Ident of "x"
-//│       Ident of "y"
-//│       Ident of "z"
-//│   rhs = S of Block of Ls of 
-//│     If of Block of Ls of 
-//│       InfixApp:
-//│         lhs = Ident of "x"
-//│         kw = keyword 'then'
-//│         rhs = Ident of "y"
+//│ ║  l.75: 	    x then y else z
+//│ ╙──      	             ^^^^
 
 
 fun f(x, y) =
   if x
     then y
-//│ Parsed tree:
-//│ TermDef:
-//│   k = Fun
-//│   head = App:
-//│     lhs = Ident of "f"
-//│     rhs = Tup of Ls of 
-//│       Ident of "x"
-//│       Ident of "y"
-//│   rhs = S of Block of Ls of 
-//│     If of InfixApp:
-//│       lhs = Ident of "x"
-//│       kw = keyword 'then'
-//│       rhs = Ident of "y"
+
+

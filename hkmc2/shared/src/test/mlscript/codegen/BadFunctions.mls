@@ -1,0 +1,11 @@
+:js
+
+
+:fixme
+fun (let) oops = 1
+//│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of input instead
+//│ ║  l.5: 	fun (let) oops = 1
+//│ ╙──     	        ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: getters (of class String)
+
+

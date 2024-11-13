@@ -1,0 +1,69 @@
+
+:pe
+handle
+//│ ╔══[PARSE ERROR] Expected expression after 'handle' binding keyword; found end of input instead
+//│ ║  l.3: 	handle
+//│ ╙──     	      ^
+
+:pe
+handle h
+//│ ╔══[PARSE ERROR] Expected '=' keyword after 'handle' binding head; found end of input instead
+//│ ║  l.9: 	handle h
+//│ ╙──     	        ^
+
+:pe
+handle h = Eff
+//│ ╔══[PARSE ERROR] Expected 'with' keyword after 'handle' binding class name; found end of input instead
+//│ ║  l.15: 	handle h = Eff
+//│ ╙──      	              ^
+
+:parseOnly
+handle h = Eff with
+  fun f(r) = r(0)
+  fun g(a, r) = r(1)
+//│ Parsed:
+//│ 	Handle(Ident(h),Ident(Eff),Block(List(TermDef(Fun,App(Ident(f),Tup(List(Ident(r)))),Some(App(Ident(r),Tup(List(IntLit(0)))))), TermDef(Fun,App(Ident(g),Tup(List(Ident(a), Ident(r)))),Some(App(Ident(r),Tup(List(IntLit(1)))))))),None)
+
+
+:e
+fun foo(x) = 1
+handle 1 = 1 with
+  fun f(r) = r(0)
+in
+  foo(h)
+//│ ╔══[ERROR] Unsupported handle binding shape
+//│ ║  l.30: 	handle 1 = 1 with
+//│ ║        	       ^^^^^^^^^^
+//│ ║  l.31: 	  fun f(r) = r(0)
+//│ ╙──      	^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: h
+//│ ║  l.33: 	  foo(h)
+//│ ╙──      	      ^
+
+class Eff
+fun foo(h) = 0
+handle h = Eff with
+  fun f(r) = r(0)
+in
+  foo(h)
+
+class Eff
+fun foo(h) = 0
+handle h = Eff with
+  fun f(r) = r(0)
+  fun g(a, r) = r(1)
+foo(h)
+
+:e
+(
+  handle h = Eff with
+    fun f(r) = r(0)
+    fun g(a, r) = r(1)
+) + 1
+//│ ╔══[ERROR] Expected a body for handle bindings in expression position
+//│ ║  l.59: 	  handle h = Eff with
+//│ ║        	         ^^^^^^^^^^^^
+//│ ║  l.60: 	    fun f(r) = r(0)
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.61: 	    fun g(a, r) = r(1)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^

@@ -16,9 +16,38 @@
 if
   x is A and y is B and c is Z then 1
 //│ Parsed tree:
-//│ If of Block of Ls of 
-//│   InfixApp:
-//│     lhs = InfixApp:
+//│ IfLike:
+//│   kw = keyword 'if'
+//│   split = Block of Ls of 
+//│     InfixApp:
+//│       lhs = InfixApp:
+//│         lhs = InfixApp:
+//│           lhs = InfixApp:
+//│             lhs = Ident of "x"
+//│             kw = keyword 'is'
+//│             rhs = Ident of "A"
+//│           kw = keyword 'and'
+//│           rhs = InfixApp:
+//│             lhs = Ident of "y"
+//│             kw = keyword 'is'
+//│             rhs = Ident of "B"
+//│         kw = keyword 'and'
+//│         rhs = InfixApp:
+//│           lhs = Ident of "c"
+//│           kw = keyword 'is'
+//│           rhs = Ident of "Z"
+//│       kw = keyword 'then'
+//│       rhs = IntLit of 1
+
+// But since naughty users may add parentheses,
+// we should also parse the following case.
+if
+  x is A and (y is B and c is Z) then 1
+//│ Parsed tree:
+//│ IfLike:
+//│   kw = keyword 'if'
+//│   split = Block of Ls of 
+//│     InfixApp:
 //│       lhs = InfixApp:
 //│         lhs = InfixApp:
 //│           lhs = Ident of "x"
@@ -26,39 +55,14 @@ if
 //│           rhs = Ident of "A"
 //│         kw = keyword 'and'
 //│         rhs = InfixApp:
-//│           lhs = Ident of "y"
-//│           kw = keyword 'is'
-//│           rhs = Ident of "B"
-//│       kw = keyword 'and'
-//│       rhs = InfixApp:
-//│         lhs = Ident of "c"
-//│         kw = keyword 'is'
-//│         rhs = Ident of "Z"
-//│     kw = keyword 'then'
-//│     rhs = IntLit of 1
-
-// But since naughty users may add parentheses,
-// we should also parse the following case.
-if
-  x is A and (y is B and c is Z) then 1
-//│ Parsed tree:
-//│ If of Block of Ls of 
-//│   InfixApp:
-//│     lhs = InfixApp:
-//│       lhs = InfixApp:
-//│         lhs = Ident of "x"
-//│         kw = keyword 'is'
-//│         rhs = Ident of "A"
-//│       kw = keyword 'and'
-//│       rhs = InfixApp:
-//│         lhs = InfixApp:
-//│           lhs = Ident of "y"
-//│           kw = keyword 'is'
-//│           rhs = Ident of "B"
-//│         kw = keyword 'and'
-//│         rhs = InfixApp:
-//│           lhs = Ident of "c"
-//│           kw = keyword 'is'
-//│           rhs = Ident of "Z"
-//│     kw = keyword 'then'
-//│     rhs = IntLit of 1
+//│           lhs = InfixApp:
+//│             lhs = Ident of "y"
+//│             kw = keyword 'is'
+//│             rhs = Ident of "B"
+//│           kw = keyword 'and'
+//│           rhs = InfixApp:
+//│             lhs = Ident of "c"
+//│             kw = keyword 'is'
+//│             rhs = Ident of "Z"
+//│       kw = keyword 'then'
+//│       rhs = IntLit of 1

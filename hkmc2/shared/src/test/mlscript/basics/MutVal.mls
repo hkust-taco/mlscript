@@ -1,5 +1,6 @@
 :js
 
+
 mut val cached: Int = 1
 //│ cached = 1
 
@@ -7,4 +8,5 @@ set cached = 2
 
 cached
 //│ = 2
+
 

@@ -1,6 +1,3 @@
-:global
-:!typeCheck
-
 :import ../prelude/String.mls
 //│ Imported 2 member(s)
 

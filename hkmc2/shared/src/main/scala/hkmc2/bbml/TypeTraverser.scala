@@ -12,7 +12,7 @@ class TypeTraverser:
       args.foreach(apply(!pol))
       apply(pol)(ret)
       apply(pol)(eff)
-    case ClassType(name, targs) =>
+    case ClassLikeType(name, targs) =>
       targs.foreach:
         case Wildcard(in, out) =>
           apply(!pol)(in)

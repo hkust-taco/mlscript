@@ -125,13 +125,13 @@ sealed abstract class Type extends GeneralType with TypeArg:
     case _ => NegType(this)
   
   protected[bbml] def paren: Str = toBasic match
-    case _: InfVar | _: ClassType | _: NegType | Top | Bot => toString
+    case _: InfVar | _: ClassLikeType | _: NegType | Top | Bot => toString
     case _: ComposedType | _: FunType => s"($toString)"
 
 sealed abstract class BasicType extends Type:
   
   lazy val lvl: Int = this match
-    case ClassType(name, targs) =>
+    case ClassLikeType(name, targs) =>
       targs.map(_.lvl).maxOption.getOrElse(0)
     case InfVar(lvl, _, _, _) => lvl
     case FunType(args, ret, eff) =>
@@ -142,7 +142,7 @@ sealed abstract class BasicType extends Type:
     case Top | Bot => 0
   
   def mapBasic(f: Type => Type): Type = this match
-    case ClassType(name, targs) => ClassType(name, targs.map(_.mapArg(f)))
+    case ClassLikeType(name, targs) => ClassLikeType(name, targs.map(_.mapArg(f)))
     case FunType(args, ret, eff) => FunType(args.map(f), f(ret), f(eff))
     case ComposedType(lhs, rhs, pol) => Type.mkComposedType(f(lhs), f(rhs), pol)
     case NegType(ty) => Type.mkNegType(f(ty))
@@ -154,7 +154,7 @@ sealed abstract class BasicType extends Type:
       // case ty if ty == allocSkolem => ""
       case _ => s"{$eff}"
     this match
-    case ClassType(name, targs) =>
+    case ClassLikeType(name, targs) =>
       if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.mkString(", ")}]"
     case InfVar(lvl, uid, _, isSkolem) => if isSkolem then s"<α>${uid}_$lvl" else s"α${uid}_$lvl"
     case FunType(arg :: Nil, ret, eff) => s"${arg.paren} ->${printEff(eff)} ${ret.paren}"
@@ -209,15 +209,15 @@ object BasicType:
     case ty :: Nil => ty
     case ty :: tys => ComposedType(ty, inter(tys), false)
 
-case class ClassType(name: ClassSymbol, targs: Ls[TypeArg]) extends BasicType with CachedNorm[ClassType]:
-  def mkNorm(using TL): ClassType =
-    ClassType(name,
+case class ClassLikeType(name: TypeSymbol | ModuleSymbol, targs: Ls[TypeArg]) extends BasicType with CachedNorm[ClassLikeType]:
+  def mkNorm(using TL): ClassLikeType =
+    ClassLikeType(name,
       targs.map:
         case ty: Type => ty.toDnf
         case Wildcard(i, o) => Wildcard(i.toDnf, o.toDnf)
     )
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
-    ClassType(name, targs.map {
+    ClassLikeType(name, targs.map {
         case Wildcard(in, out) => Wildcard(in.subst, out.subst)
         case ty: Type => ty.subst
       })

@@ -1,4 +1,6 @@
 :js
+
+:global
 :sjs
 
 
@@ -12,7 +14,7 @@
 1
 2
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.12: 	1
+//│ ║  l.14: 	1
 //│ ╙──      	^
 //│ Lowered:
 //│ Program:
@@ -28,8 +30,8 @@
 :fixme // should be a "linking" error
 log("Hi")
 //│ JS:
-//│ log("Hi")
-//│ ═══[RUNTIME ERROR] ReferenceError: log is not defined
+//│ this.log("Hi")
+//│ ═══[RUNTIME ERROR] TypeError: this.log is not a function
 
 :fixme
 :lot
@@ -39,17 +41,19 @@ log("Hi")
 //│ Program:
 //│   imports = Nil
 //│   main = Assign:
-//│     lhs = $tmp@31
+//│     lhs = $tmp@18
 //│     rhs = Call:
-//│       fun = Ref of .log
+//│       fun = Select:
+//│         qual = Ref of globalThis:import#Prelude
+//│         name = Ident of "log"
 //│       args = Ls of 
 //│         Lit of StrLit of "Hi"
 //│     rest = Return: \
 //│     res = Lit of IntLit of 2
 //│     implct = true
 //│ JS:
-//│ let tmp; tmp = log("Hi"); 2
-//│ ═══[RUNTIME ERROR] ReferenceError: log is not defined
+//│ let tmp; tmp = this.log("Hi"); 2
+//│ ═══[RUNTIME ERROR] TypeError: this.log is not a function
 
 
 :re

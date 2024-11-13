@@ -2,21 +2,17 @@
 
 // TODO should make better error messages!
 
-:pe
-:fixme
+:e
 class Foo { log("hi") }
 //│ ╔══[ERROR] Expected a valid definition head, found block instead
-//│ ║  l.7: 	class Foo { log("hi") }
+//│ ║  l.6: 	class Foo { log("hi") }
 //│ ╙──     	            ^^^^^^^^^
-//│ /!!!\ Uncaught error: scala.MatchError: Block(List(App(Ident(log),Tup(List(StrLit(hi)))))) (of class hkmc2.syntax.Tree$Block)
 
-:pe
-:fixme
+:e
 class Foo { 1 }
 //│ ╔══[ERROR] Expected a valid definition head, found block instead
-//│ ║  l.15: 	class Foo { 1 }
+//│ ║  l.12: 	class Foo { 1 }
 //│ ╙──      	            ^
-//│ /!!!\ Uncaught error: scala.MatchError: Block(List(IntLit(1))) (of class hkmc2.syntax.Tree$Block)
 
 // Note that these work:
 

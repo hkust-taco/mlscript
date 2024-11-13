@@ -3,9 +3,11 @@
 
 fun res
 
+val res: Int
+
 :showRepl
 fun res() = 1
-//│ REPL> Sending: try { function res() { return 1 }; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { function res() { return 1; } undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ REPL> Parsed:
@@ -33,13 +35,13 @@ res
 :showRepl
 :re
 let x = 1, log(x), x
-//│ REPL> Sending: try { let tmp; this.x = 1; tmp = log(this.x); this.x } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Sending: try { let tmp; this.x = 1; tmp = this.log(this.x); this.x } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ REPL> Collected:
-//│ >  ​ReferenceError: log is not defined​
+//│ >  ​TypeError: this.log is not a function​
 //│ >  undefined
 //│ REPL> Parsed:
-//│ >  [runtime error] ReferenceError: log is not defined
-//│ ═══[RUNTIME ERROR] ReferenceError: log is not defined
+//│ >  [runtime error] TypeError: this.log is not a function
+//│ ═══[RUNTIME ERROR] TypeError: this.log is not a function
 //│ REPL> Sending: try { this.x } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
@@ -48,8 +50,7 @@ let x = 1, log(x), x
 //│ x = 1
 
 :import PredefJS.mls
-//│ Imported 1 member(s)
-//│ x = 1
+//│ Imported 2 member(s)
 
 :showRepl
 let x = 1, log(x), x

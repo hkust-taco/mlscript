@@ -7,12 +7,11 @@
 type List = Nil | Cons
 module Nil
 class (::) Cons(head: Int, tail: List)
-//│ Members:
-//│   :: -> class:Cons
-//│   Nil -> class:Nil
-//│   Cons -> class:Cons
-//│   List -> module:List
-//│ Locals:
+//│ Env:
+//│   :: -> SelElem(RefElem(globalThis:block#1),Cons,Some(member:Cons))
+//│   Cons -> SelElem(RefElem(globalThis:block#1),Cons,Some(member:Cons))
+//│   List -> SelElem(RefElem(globalThis:block#1),List,Some(member:List))
+//│   Nil -> SelElem(RefElem(globalThis:block#1),Nil,Some(member:Nil))
 
 Cons(1, Nil)
 

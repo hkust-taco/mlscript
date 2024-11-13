@@ -11,9 +11,13 @@ new
 new 2
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not a constructor
 
+:sjs
 :ge
 new 2 + 2
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '+'
+//│ ═══[COMPILATION ERROR] Illegal reference to builtin symbol '+'
+//│ JS:
+//│ new (()=>{throw globalThis.Error("Illegal reference to builtin symbol '+'")})()(2, 2)
+//│ ═══[RUNTIME ERROR] TypeError: (intermediate value) is not a constructor
 
 :re
 new()
@@ -22,14 +26,14 @@ new()
 :pe
 new {}
 //│ ╔══[PARSE ERROR] Expected expression after `new` keyword; found end of block instead
-//│ ║  l.23: 	new {}
+//│ ║  l.27: 	new {}
 //│ ╙──      	    ^^
 
 // FIXME the error...
 :todo
 new { x = 1 }
 //│ ╔══[ERROR] Wrong number of type arguments
-//│ ║  l.30: 	new { x = 1 }
+//│ ║  l.34: 	new { x = 1 }
 //│ ╙──      	      ^
 
 

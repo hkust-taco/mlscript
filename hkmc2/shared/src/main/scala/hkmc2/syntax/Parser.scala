@@ -253,7 +253,7 @@ abstract class Parser(
             consume
             val blk = rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.blockOf(subRule, allowNewlines)) // FIXME allowNewlines?
             if blk.isEmpty then
-              err((msg"Expected ${subRule.whatComesAfter} after ${subRule.name}; found end of block instead" -> S(loc) :: Nil))
+              err((msg"Expected ${subRule.whatComesAfter} ${subRule.mkAfterStr}; found end of block instead" -> S(loc) :: Nil))
               errExpr
             blk ::: blockContOf(rule)
           case _ =>
@@ -282,10 +282,10 @@ abstract class Parser(
                 parseRule(CommaPrecNext, exprAlt.rest).map(res => exprAlt.k(e, res)).getOrElse(errExpr) :: blockContOf(rule)
               case N =>
                 // TODO dedup?
-                err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
+                err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> S(loc) :: Nil))
                 errExpr :: blockContOf(rule)
           case N =>
-            err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
+            err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> S(loc) :: Nil))
             errExpr :: blockContOf(rule)
             
       case N =>
@@ -312,7 +312,7 @@ abstract class Parser(
         case S(res) =>
           S(res)
         case N =>
-          err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
+          err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> S(loc) :: Nil))
           N
   
   
@@ -324,7 +324,7 @@ abstract class Parser(
       case S(res) => S(res)
       case N =>
         consume
-        err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
+        err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> S(loc) :: Nil))
         N
     yeetSpaces match
     // case (tok @ (id: IDENT), loc) :: _ if Keyword.all.get(id.name).exists(_.leftPrecOrMin < prec) =>
@@ -334,7 +334,7 @@ abstract class Parser(
     //     case S(res) =>
     //       S(res)
     //     case N =>
-    //       err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found end of phrase instead" -> S(loc.left) :: Nil))
+    //       err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found end of phrase instead" -> S(loc.left) :: Nil))
     //       N
     case (tok @ (id: IDENT), loc) :: _ =>
       Keyword.all.get(id.name) match
@@ -357,7 +357,7 @@ abstract class Parser(
             prefixRules.kwAlts.get(id.name) match
             case S(subRule) =>
               // parse(subRule)
-              val e = exprCont(parseRule(kw.rightPrecOrMax, subRule).getOrElse(errExpr), prec, false)
+              val e = exprCont(parseRule(kw.rightPrecOrMin, subRule).getOrElse(errExpr), prec, false)
               parseRule(prec, exprAlt.rest).map(res => exprAlt.k(e, res))
             case N =>
               tryEmpty(tok, loc)
@@ -373,14 +373,14 @@ abstract class Parser(
       rule.emptyAlt match
         case S(res) => S(res)
         case N =>
-          // err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> lastLoc :: Nil))
-          err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(l0) :: Nil))
+          // err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> lastLoc :: Nil))
+          err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> S(l0) :: Nil))
           N
     case (br @ BRACKETS(Indent | Curly, toks), loc) :: _ =>
       // rule.blkAlt match
       //   case S(res) => S(res)
       //   case N =>
-      //     err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> lastLoc :: Nil))
+      //     err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> lastLoc :: Nil))
       //     N
       
       if verbose then printDbg("$ found an indented" + (toks match
@@ -421,7 +421,7 @@ abstract class Parser(
         case S(res) =>
           S(res)
         case N =>
-          err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found end of input instead" -> lastLoc :: Nil))
+          err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found end of input instead" -> lastLoc :: Nil))
           N
   
   
@@ -489,7 +489,7 @@ abstract class Parser(
         case (QUOTE, l) :: (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ =>
             consume
             consume
-            val rhs = effectfulRhs(kw.rightPrecOrMax)
+            val rhs = effectfulRhs(kw.rightPrecOrMin)
             val lhs = bk match
               case Round => Tup(ps)
               case Square => TyTup(ps)
@@ -498,7 +498,7 @@ abstract class Parser(
               prec, allowNewlines = true)
         case (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ =>
           consume
-          val rhs = effectfulRhs(kw.rightPrecOrMax)
+          val rhs = effectfulRhs(kw.rightPrecOrMin)
           val lhs = bk match
             case Round => Tup(ps)
             case Square => TyTup(ps)
@@ -624,7 +624,7 @@ abstract class Parser(
         prefixRules.kwAlts.get(kw.name) match
         case S(subRule) =>
           consume
-          val rhs = parseRule(kw.rightPrecOrMax, subRule).getOrElse(errExpr)
+          val rhs = parseRule(kw.rightPrecOrMin, subRule).getOrElse(errExpr)
           Tree.Empty().withLoc(S(loc)) -> rhs
         case N => lastWords(s"missing the parse rule for `${kw.name}`")
       case (tok @ IDENT(opStr, true), loc) :: _ if opPrec(opStr)._1 > 0 =>
@@ -654,7 +654,7 @@ abstract class Parser(
         case _ :: (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ if kw.leftPrecOrMin > prec =>
           consume
           consume
-          val rhs = effectfulRhs(kw.rightPrecOrMax)
+          val rhs = effectfulRhs(kw.rightPrecOrMin)
           exprCont(Quoted(InfixApp(PlainTup(acc), kw, Unquoted(rhs))), prec, allowNewlines)
         case _ :: (br @ BRACKETS(Round, toks), loc) :: _ =>
           consume
@@ -700,7 +700,7 @@ abstract class Parser(
       //   ???
       case (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ if kw.leftPrecOrMin > prec =>
         consume
-        val rhs = effectfulRhs(kw.rightPrecOrMax)
+        val rhs = effectfulRhs(kw.rightPrecOrMin)
         val res = acc match
           case _ => InfixApp(PlainTup(acc), kw, rhs)
         exprCont(res, prec, allowNewlines)
@@ -918,13 +918,13 @@ abstract class Parser(
                     ???
                   case _ =>
                 if verbose then printDbg("$ parsing the right-hand side")
-                val rhs = expr(kw.rightPrecOrMax)
-                parseRule(kw.rightPrecOrMax, exprAlt.rest).map: rest =>
+                val rhs = expr(kw.rightPrecOrMin)
+                parseRule(kw.rightPrecOrMin, exprAlt.rest).map: rest =>
                   exprCont(exprAlt.k(rhs, rest)(acc), prec, allowNewlines) // FIXME prec??
                 .getOrElse(errExpr)
               case N =>
                 // TODO other alts...?
-                err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${kw.name} instead" -> S(l0) :: Nil))
+                err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${kw.name} instead" -> S(l0) :: Nil))
                 acc
           case _ => acc
       case _ =>

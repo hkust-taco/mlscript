@@ -22,158 +22,169 @@ fun example(args) =
 //│     rhs = Tup of Ls of 
 //│       Ident of "args"
 //│   rhs = S of Block of Ls of 
-//│     If of App:
-//│       lhs = App:
-//│         lhs = Ident of "foo"
-//│         rhs = Tup of Ls of 
-//│           Ident of "args"
-//│       rhs = OpBlock of Ls of 
-//│         Tuple2:
-//│           _1 = Ident of "<"
-//│           _2 = InfixApp:
-//│             lhs = IntLit of 0
-//│             kw = keyword 'then'
-//│             rhs = StrLit of "invalid"
-//│         Tuple2:
-//│           _1 = Ident of "=="
-//│           _2 = InfixApp:
-//│             lhs = IntLit of 0
-//│             kw = keyword 'then'
-//│             rhs = StrLit of "null"
-//│         Tuple2:
-//│           _1 = Ident of "|>"
-//│           _2 = App:
-//│             lhs = Ident of "abs"
-//│             rhs = OpBlock of Ls of 
-//│               Tuple2:
-//│                 _1 = Ident of ">"
-//│                 _2 = InfixApp:
-//│                   lhs = IntLit of 100
-//│                   kw = keyword 'then'
-//│                   rhs = StrLit of "large"
-//│               Tuple2:
-//│                 _1 = Ident of "<"
-//│                 _2 = InfixApp:
-//│                   lhs = IntLit of 10
-//│                   kw = keyword 'then'
-//│                   rhs = StrLit of "small"
-//│               Tuple2:
-//│                 _1 = Empty
-//│                 _2 = Modified:
-//│                   modifier = keyword 'else'
-//│                   modLoc = N
-//│                   body = StrLit of "medium"
+//│     IfLike:
+//│       kw = keyword 'if'
+//│       split = App:
+//│         lhs = App:
+//│           lhs = Ident of "foo"
+//│           rhs = Tup of Ls of 
+//│             Ident of "args"
+//│         rhs = OpBlock of Ls of 
+//│           Tuple2:
+//│             _1 = Ident of "<"
+//│             _2 = InfixApp:
+//│               lhs = IntLit of 0
+//│               kw = keyword 'then'
+//│               rhs = StrLit of "invalid"
+//│           Tuple2:
+//│             _1 = Ident of "=="
+//│             _2 = InfixApp:
+//│               lhs = IntLit of 0
+//│               kw = keyword 'then'
+//│               rhs = StrLit of "null"
+//│           Tuple2:
+//│             _1 = Ident of "|>"
+//│             _2 = App:
+//│               lhs = Ident of "abs"
+//│               rhs = OpBlock of Ls of 
+//│                 Tuple2:
+//│                   _1 = Ident of ">"
+//│                   _2 = InfixApp:
+//│                     lhs = IntLit of 100
+//│                     kw = keyword 'then'
+//│                     rhs = StrLit of "large"
+//│                 Tuple2:
+//│                   _1 = Ident of "<"
+//│                   _2 = InfixApp:
+//│                     lhs = IntLit of 10
+//│                     kw = keyword 'then'
+//│                     rhs = StrLit of "small"
+//│                 Tuple2:
+//│                   _1 = Empty
+//│                   _2 = Modified:
+//│                     modifier = keyword 'else'
+//│                     modLoc = N
+//│                     body = StrLit of "medium"
 //│ Elaborated tree:
 //│ Blk:
 //│   stats = Ls of 
 //│     TermDefinition:
+//│       owner = S of globalThis:block#2
 //│       k = Fun
-//│       sym = globalThis:block#1.example
+//│       sym = member:example
 //│       params = Ls of 
 //│         ParamList:
 //│           flags = ParamListFlags of false
 //│           params = Ls of 
 //│             Param:
 //│               flags = ()
-//│               sym = args@35
+//│               sym = args@22
 //│               sign = N
 //│       sign = N
-//│       body = S of If of Let:
-//│         sym = $scrut@37
-//│         term = App:
-//│           lhs = Ref of globalThis:block#0.foo
-//│           rhs = Tup of Ls of 
-//│             Fld:
-//│               flags = ()
-//│               value = Ref of args@35
-//│               asc = N
-//│         tail = Let: \
-//│         sym = $scrut@47
-//│         term = App:
-//│           lhs = Ref of .<
-//│           rhs = Tup of Ls of 
-//│             Fld:
-//│               flags = ()
-//│               value = Ref of $scrut@37
-//│               asc = N
-//│             Fld:
-//│               flags = ()
-//│               value = Lit of IntLit of 0
-//│               asc = N
-//│         tail = Cons: \
-//│         head = Branch:
-//│           scrutinee = Ref of $scrut@47
-//│           pattern = LitPat of BoolLit of true
-//│           continuation = Else of Lit of StrLit of "invalid"
-//│         tail = Let: \
-//│         sym = $scrut@45
-//│         term = App:
-//│           lhs = Ref of .==
-//│           rhs = Tup of Ls of 
-//│             Fld:
-//│               flags = ()
-//│               value = Ref of $scrut@37
-//│               asc = N
-//│             Fld:
-//│               flags = ()
-//│               value = Lit of IntLit of 0
-//│               asc = N
-//│         tail = Cons: \
-//│         head = Branch:
-//│           scrutinee = Ref of $scrut@45
-//│           pattern = LitPat of BoolLit of true
-//│           continuation = Else of Lit of StrLit of "null"
-//│         tail = Let: \
-//│         sym = $scrut@39
-//│         term = App:
-//│           lhs = Ref of globalThis:block#0.pipe
-//│           rhs = Tup of Ls of 
-//│             Fld:
-//│               flags = ()
-//│               value = Ref of $scrut@37
-//│               asc = N
-//│             Fld:
-//│               flags = ()
-//│               value = Ref of globalThis:block#0.abs
-//│               asc = N
-//│         tail = Let: \
-//│         sym = $scrut@43
-//│         term = App:
-//│           lhs = Ref of .>
-//│           rhs = Tup of Ls of 
-//│             Fld:
-//│               flags = ()
-//│               value = Ref of $scrut@39
-//│               asc = N
-//│             Fld:
-//│               flags = ()
-//│               value = Lit of IntLit of 100
-//│               asc = N
-//│         tail = Cons: \
-//│         head = Branch:
-//│           scrutinee = Ref of $scrut@43
-//│           pattern = LitPat of BoolLit of true
-//│           continuation = Else of Lit of StrLit of "large"
-//│         tail = Let: \
-//│         sym = $scrut@41
-//│         term = App:
-//│           lhs = Ref of .<
-//│           rhs = Tup of Ls of 
-//│             Fld:
-//│               flags = ()
-//│               value = Ref of $scrut@39
-//│               asc = N
-//│             Fld:
-//│               flags = ()
-//│               value = Lit of IntLit of 10
-//│               asc = N
-//│         tail = Cons: \
-//│         head = Branch:
-//│           scrutinee = Ref of $scrut@41
-//│           pattern = LitPat of BoolLit of true
-//│           continuation = Else of Lit of StrLit of "small"
-//│         tail = Else of Lit of StrLit of "medium"
-//│       resSym = ‹result of globalThis:block#1.example›@48
+//│       body = S of IfLike:
+//│         kw = keyword 'if'
+//│         desugared = Let:
+//│           sym = $scrut@24
+//│           term = App:
+//│             lhs = Sel:
+//│               prefix = Ref of globalThis:block#1
+//│               nme = Ident of "foo"
+//│             rhs = Tup of Ls of 
+//│               Fld:
+//│                 flags = ()
+//│                 value = Ref of args@22
+//│                 asc = N
+//│           tail = Let: \
+//│           sym = $scrut@34
+//│           term = App:
+//│             lhs = Ref of builtin:<
+//│             rhs = Tup of Ls of 
+//│               Fld:
+//│                 flags = ()
+//│                 value = Ref of $scrut@24
+//│                 asc = N
+//│               Fld:
+//│                 flags = ()
+//│                 value = Lit of IntLit of 0
+//│                 asc = N
+//│           tail = Cons: \
+//│           head = Branch:
+//│             scrutinee = Ref of $scrut@34
+//│             pattern = LitPat of BoolLit of true
+//│             continuation = Else of Lit of StrLit of "invalid"
+//│           tail = Let: \
+//│           sym = $scrut@32
+//│           term = App:
+//│             lhs = Ref of builtin:==
+//│             rhs = Tup of Ls of 
+//│               Fld:
+//│                 flags = ()
+//│                 value = Ref of $scrut@24
+//│                 asc = N
+//│               Fld:
+//│                 flags = ()
+//│                 value = Lit of IntLit of 0
+//│                 asc = N
+//│           tail = Cons: \
+//│           head = Branch:
+//│             scrutinee = Ref of $scrut@32
+//│             pattern = LitPat of BoolLit of true
+//│             continuation = Else of Lit of StrLit of "null"
+//│           tail = Let: \
+//│           sym = $scrut@26
+//│           term = App:
+//│             lhs = Sel:
+//│               prefix = Ref of globalThis:block#1
+//│               nme = Ident of "pipe"
+//│             rhs = Tup of Ls of 
+//│               Fld:
+//│                 flags = ()
+//│                 value = Ref of $scrut@24
+//│                 asc = N
+//│               Fld:
+//│                 flags = ()
+//│                 value = Sel:
+//│                   prefix = Ref of globalThis:block#1
+//│                   nme = Ident of "abs"
+//│                 asc = N
+//│           tail = Let: \
+//│           sym = $scrut@30
+//│           term = App:
+//│             lhs = Ref of builtin:>
+//│             rhs = Tup of Ls of 
+//│               Fld:
+//│                 flags = ()
+//│                 value = Ref of $scrut@26
+//│                 asc = N
+//│               Fld:
+//│                 flags = ()
+//│                 value = Lit of IntLit of 100
+//│                 asc = N
+//│           tail = Cons: \
+//│           head = Branch:
+//│             scrutinee = Ref of $scrut@30
+//│             pattern = LitPat of BoolLit of true
+//│             continuation = Else of Lit of StrLit of "large"
+//│           tail = Let: \
+//│           sym = $scrut@28
+//│           term = App:
+//│             lhs = Ref of builtin:<
+//│             rhs = Tup of Ls of 
+//│               Fld:
+//│                 flags = ()
+//│                 value = Ref of $scrut@26
+//│                 asc = N
+//│               Fld:
+//│                 flags = ()
+//│                 value = Lit of IntLit of 10
+//│                 asc = N
+//│           tail = Cons: \
+//│           head = Branch:
+//│             scrutinee = Ref of $scrut@28
+//│             pattern = LitPat of BoolLit of true
+//│             continuation = Else of Lit of StrLit of "small"
+//│           tail = Else of Lit of StrLit of "medium"
+//│       resSym = ‹result of member:example›@35
 //│   res = Lit of UnitLit of true
 
 

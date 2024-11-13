@@ -1,25 +1,60 @@
+:js
 
 
 1
+//│ = 1
 
 ()
 
 (1)
+//│ = 1
 
 (1,)
+//│ = 1
 
+:w
 (1, 2)
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.16: 	(1, 2)
+//│ ╙──      	 ^
+//│ = 2
 
+:w
 (1, 2,)
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.23: 	(1, 2,)
+//│ ╙──      	 ^
+//│ = 2
 
 []
+//│ = []
 
 [1]
+//│ = [ 1 ]
 
 [1,]
+//│ = [ 1 ]
 
 [1, 2]
+//│ = [ 1, 2 ]
 
 [1, 2,]
+//│ = [ 1, 2 ]
+
+
+null
+//│ = null
+
+undefined
+
+
+0.5
+//│ = 0.5
+
+:todo
+NaN
+//│ ╔══[ERROR] Name not found: NaN
+//│ ║  l.55: 	NaN
+//│ ╙──      	^^^
 
 

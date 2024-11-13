@@ -85,14 +85,15 @@ class Watcher(dir: File):
       val path = os.Path(file.pathAsString)
       val basePath = path.segments.drop(dirPath.segmentCount).toList.init
       val relativeName = basePath.map(_ + "/").mkString + path.baseName
-      val predefPath = os.pwd/os.up/"shared"/"src"/"test"/"mlscript"/"decls"/"Predef.mls"
+      val preludePath = os.pwd/os.up/"shared"/"src"/"test"/"mlscript"/"decls"/"Prelude.mls"
+      val predefPath = os.pwd/os.up/"shared"/"src"/"test"/"mlscript-compile"/"Predef.mls"
       semantics.suid.reset // FIXME hack
       val isModuleFile = path.segments.contains("mlscript-compile")
       if isModuleFile
       then
-        MLsCompiler(predefPath).compileModule(path)
+        MLsCompiler(preludePath).compileModule(path)
       else
-        val dm = new MainDiffMaker(path, predefPath, relativeName):
+        val dm = new MainDiffMaker(path, preludePath, predefPath, relativeName):
           override def unhandled(blockLineNum: Int, exc: Throwable): Unit =
             exc.printStackTrace()
             super.unhandled(blockLineNum, exc)

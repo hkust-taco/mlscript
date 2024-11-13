@@ -1,7 +1,27 @@
 :js
 
 :import PredefJS.mls
-//│ Imported 1 member(s)
+//│ Imported 2 member(s)
+
+
+:sjs
+fun test(a) =
+  class C with { val x = a }
+  new C
+//│ JS:
+//│ function test(a) {
+//│   class C {
+//│     constructor() {
+//│       this.x = a;
+//│     }
+//│     toString() { return "C"; }
+//│   }
+//│   return new C();
+//│ }
+//│ undefined
+
+test(12)
+//│ = C { x: 12 }
 
 
 :sjs
@@ -11,7 +31,8 @@ fun test(x) =
 //│ JS:
 //│ function test(x) {
 //│   let tmp;
-//│   class Foo {
+//│   function Foo(a1, b1) { return new Foo.class(a1, b1); };
+//│   Foo.class = class Foo {
 //│     constructor(a, b) {
 //│       this.a = a;
 //│       this.b = b;
@@ -20,8 +41,8 @@ fun test(x) =
 //│     toString() { return "Foo(" + this.a + ", " + this.b + ")"; }
 //│   };
 //│   tmp = x + 1;
-//│   return new Foo(x, tmp)
-//│ };
+//│   return Foo(x, tmp);
+//│ }
 //│ undefined
 
 

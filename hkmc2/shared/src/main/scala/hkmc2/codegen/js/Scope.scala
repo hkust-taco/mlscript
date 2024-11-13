@@ -9,29 +9,34 @@ import utils.*
 
 import hkmc2.Message.MessageContext
 import Scope.*
-import hkmc2.semantics.MemberSymbol
+import hkmc2.semantics.InnerSymbol
 import hkmc2.semantics.VarSymbol
 import hkmc2.semantics.Elaborator
 import hkmc2.semantics.TopLevelSymbol
 
 
-class Scope(val parent: Opt[Scope], val curThis: Opt[MemberSymbol[?]], val bindings: MutMap[Local, Str]):
+/** When `curThis`, it means this scope does not rebind `this`.
+  * When `curThis` is Some(None), it means the scope rebinds `this`
+  * to something unknown, following JavaScript's inane `this` handling in `function`s.
+  * When `curThis` is Some(Some(sym)), it means the scope rebinds `this`
+  * to an inner symbol (e.g., class or module). */
+class Scope(val parent: Opt[Scope], val curThis: Opt[Opt[InnerSymbol]], val bindings: MutMap[Local, Str]):
   
   private var thisProxyAccessed = false
   lazy val thisProxy =
     curThis match
-    case N => die
-    case S(Elaborator.Ctx.globalThisSymbol) => "globalThis"
-    case S(thisSym) => 
+    case N | S(N) => die
+    case S(S(Elaborator.Ctx.globalThisSymbol)) => "globalThis"
+    case S(S(thisSym)) => 
       thisProxyAccessed = true
-      allocateName(curThis.get, "this$")
+      allocateName(thisSym, "this$")
   
-  private def thisError(thisSym: MemberSymbol[?])(using Raise): Nothing =
+  private def thisError(thisSym: InnerSymbol)(using Raise): Nothing =
     raise(InternalError(msg"`this` not in scope: ${thisSym.toString}" -> N :: Nil,
       source = Diagnostic.Source.Compilation))
     die
   
-  def findThis_!(thisSym: MemberSymbol[?])(using Raise): Str =
+  def findThis_!(thisSym: InnerSymbol)(using Raise): Str =
     // println(s"findThis_! $thisSym")
     def getParent = parent.fold(
       if thisSym.isInstanceOf[TopLevelSymbol]
@@ -41,16 +46,16 @@ class Scope(val parent: Opt[Scope], val curThis: Opt[MemberSymbol[?]], val bindi
       else thisError(thisSym)
     )
     curThis match
-    case S(`thisSym`) => "this" // no need to qualify `this`
+    case S(S(`thisSym`)) => "this" // no need to qualify `this`
     case S(_) => getParent(_.findThisProxy_!(thisSym))
     case N => getParent(_.findThis_!(thisSym))
   
-  def findThisProxy_!(thisSym: MemberSymbol[?])(using Raise): Str =
+  def findThisProxy_!(thisSym: InnerSymbol)(using Raise): Str =
     // println(s"findThisProxy_! $thisSym")
     if thisSym.isInstanceOf[TopLevelSymbol]
     then "globalThis"
     else curThis match
-      case S(`thisSym`) => thisProxy
+      case S(S(`thisSym`)) => thisProxy
       case _ => parent.fold(thisError(thisSym))(_.findThisProxy_!(thisSym))
   
   def nest: Scope = Scope(Some(this), N, MutMap.empty)
@@ -58,7 +63,7 @@ class Scope(val parent: Opt[Scope], val curThis: Opt[MemberSymbol[?]], val bindi
   def getOuterThisScope: Opt[Scope] =
     curThis.fold(parent)(thisSym => parent.flatMap(_.getOuterThisScope))
   
-  def nestRebindThis[R](thisSym: MemberSymbol[?])(k: Scope ?=> R): (Opt[Str], R) =
+  def nestRebindThis[R](thisSym: Opt[InnerSymbol])(k: Scope ?=> R): (Opt[Str], R) =
     val nested = Scope(Some(this), S(thisSym), MutMap.empty)
     val res = k(using nested)
     getOuterThisScope match
@@ -70,6 +75,7 @@ class Scope(val parent: Opt[Scope], val curThis: Opt[MemberSymbol[?]], val bindi
     bindings.valuesIterator.contains(name) || parent.exists(_.inScope(name))
   
   def lookup(l: Local): Opt[Str] =
+    // curThis.filter(_ is l).map(_ => thisProxy) orElse
     bindings.get(l).orElse(parent.flatMap(_.lookup(l)))
   
   def lookup_!(l: Local)(using Raise): Str =
@@ -104,7 +110,7 @@ object Scope:
   def scope(using scp: Scope): Scope = scp
   
   def empty: Scope =
-    Scope(N, S(Elaborator.Ctx.globalThisSymbol), MutMap.empty)
+    Scope(N, S(S(Elaborator.Ctx.globalThisSymbol)), MutMap.empty)
   
   def replaceTicks(str: Str): Str = str.replace('\'', '$')
   

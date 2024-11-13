@@ -1,0 +1,80 @@
+:js
+
+
+:sjs
+module Test with
+  val x = 12
+  fun foo() = Test.x
+//│ JS:
+//│ const Test$class = class Test {
+//│   constructor() {
+//│     this.x = 12;
+//│   }
+//│   foo() {
+//│     return globalThis.Test.x;
+//│   }
+//│   toString() { return "Test"; }
+//│ };
+//│ this.Test = new Test$class;
+//│ this.Test.class = Test$class;
+//│ undefined
+
+:sjs
+Test.foo()
+//│ JS:
+//│ this.Test.foo()
+//│ = 12
+
+:sjs
+val Test = "oops"
+//│ JS:
+//│ this.Test = "oops"; undefined
+//│ Test = 'oops'
+
+:fixme
+Test.foo()
+//│ ═══[RUNTIME ERROR] TypeError: this.Test.foo is not a function
+
+
+// FIXME
+:sjs
+let x = 1
+let f = () => x
+let x = 2
+f()
+//│ JS:
+//│ this.x = 1; this.f = () => { return this.x; }; this.x = 2; this.f()
+//│ = 2
+//│ f = [Function (anonymous)]
+//│ x = 2
+
+
+:sjs
+module Test with
+  val x = 1
+  let x = 2
+//│ JS:
+//│ const Test$class = class Test {
+//│   #x;
+//│   constructor() {
+//│     this.x = 1;
+//│     this.#x = 2;
+//│   }
+//│   toString() { return "Test"; }
+//│ };
+//│ this.Test = new Test$class;
+//│ this.Test.class = Test$class;
+//│ undefined
+
+Test.x
+//│ = 1
+
+:fixme
+module Test with
+  let x = 1
+  let f = () => x
+  let x = 2
+  log(f())
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Identifier '#x' has already been declared
+
+

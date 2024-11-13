@@ -5,13 +5,16 @@ class Test with
   fun hi = 0
 module Test with
   fun test = 1
-//│ ╔══[ERROR] Duplicate definition of Test
+//│ ╔══[ERROR] Multiple definitions of symbol 'Test'
+//│ ╟── defined here
+//│ ║  l.4: 	class Test with
+//│ ║       	      ^^^^^^^^^
+//│ ║  l.5: 	  fun hi = 0
+//│ ║       	^^^^^^^^^^^^
+//│ ╟── defined here
 //│ ║  l.6: 	module Test with
 //│ ║       	       ^^^^^^^^^
 //│ ║  l.7: 	  fun test = 1
-//│ ║       	^^^^^^^^^^^^^^
-//│ ╟── aready defined here
-//│ ║  l.6: 	module Test with
-//│ ╙──     	       ^^^^
+//│ ╙──     	^^^^^^^^^^^^^^
 
 

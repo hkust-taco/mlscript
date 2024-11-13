@@ -10,6 +10,7 @@ import utils.*
 
 import Message.MessageContext
 import semantics.*, semantics.Term.*
+import Elaborator.Ctx
 import syntax.*
 import Tree.*
 
@@ -17,9 +18,10 @@ import Tree.*
 object InfVarUid extends Uid.Handler[InfVar]
 
 
-final case class Ctx(
+final case class BbCtx(
   raise: Raise,
-  parent: Option[Ctx],
+  ctx: Ctx,
+  parent: Option[BbCtx],
   lvl: Int,
   clsDefs: HashMap[Str, ClassDef],
   env: HashMap[Uid[Symbol], GeneralType],
@@ -28,87 +30,40 @@ final case class Ctx(
   def +=(p: Symbol -> GeneralType): Unit = env += p._1.uid -> p._2
   def get(sym: Symbol): Option[GeneralType] = env.get(sym.uid) orElse parent.dlof(_.get(sym))(None)
   def *=(cls: ClassDef): Unit = clsDefs += cls.sym.id.name -> cls
-  def getDef(name: Str): Option[ClassDef] = clsDefs.get(name) orElse parent.dlof(_.getDef(name))(None)
+  def getCls(name: Str): Option[TypeSymbol] =
+    for
+      elem <- ctx.get(name)
+      sym <- elem.symbol
+      cls <- sym.asTpe
+    yield cls
   def &=(p: (Symbol, Type, InfVar)): Unit =
-    env += p._1.uid -> Ctx.varTy(p._2, p._3)(using this)
+    env += p._1.uid -> BbCtx.varTy(p._2, p._3)(using this)
     quoteSkolemEnv += p._1.uid -> p._3
   def getSk(sym: Symbol): Option[Type] = quoteSkolemEnv.get(sym.uid) orElse parent.dlof(_.getSk(sym))(None)
-  def nest: Ctx = Ctx(raise, Some(this), lvl, HashMap.empty, HashMap.empty, quoteSkolemEnv)
-  def nextLevel: Ctx = Ctx(raise, Some(this), lvl + 1, HashMap.empty, HashMap.empty, quoteSkolemEnv)
+  def nest: BbCtx = copy(parent = Some(this))
+  def nextLevel: BbCtx = copy(lvl = lvl + 1)
 
-given (using ctx: Ctx): Raise = ctx.raise
+given (using ctx: BbCtx): Raise = ctx.raise
 
-object Ctx:
-  def allocTy(using ctx: Ctx): Type = ClassType(ctx.getDef("Alloc").get.sym, Nil)
-  def intTy(using ctx: Ctx): Type = ClassType(ctx.getDef("Int").get.sym, Nil)
-  def numTy(using ctx: Ctx): Type = ClassType(ctx.getDef("Num").get.sym, Nil)
-  def strTy(using ctx: Ctx): Type = ClassType(ctx.getDef("Str").get.sym, Nil)
-  def boolTy(using ctx: Ctx): Type = ClassType(ctx.getDef("Bool").get.sym, Nil)
-  private def codeBaseTy(ct: TypeArg, cr: TypeArg, isVar: TypeArg)(using ctx: Ctx): Type =
-    ClassType(ctx.getDef("CodeBase").get.sym, ct :: cr :: isVar :: Nil)
-  def codeTy(ct: Type, cr: Type)(using ctx: Ctx): Type =
+object BbCtx:
+  def allocTy(using ctx: BbCtx): Type = ClassLikeType(ctx.getCls("Alloc").get, Nil)
+  def intTy(using ctx: BbCtx): Type = ClassLikeType(ctx.getCls("Int").get, Nil)
+  def numTy(using ctx: BbCtx): Type = ClassLikeType(ctx.getCls("Num").get, Nil)
+  def strTy(using ctx: BbCtx): Type = ClassLikeType(ctx.getCls("Str").get, Nil)
+  def boolTy(using ctx: BbCtx): Type = ClassLikeType(ctx.getCls("Bool").get, Nil)
+  private def codeBaseTy(ct: TypeArg, cr: TypeArg, isVar: TypeArg)(using ctx: BbCtx): Type =
+    ClassLikeType(ctx.getCls("CodeBase").get, ct :: cr :: isVar :: Nil)
+  def codeTy(ct: Type, cr: Type)(using ctx: BbCtx): Type =
     codeBaseTy(Wildcard.out(ct), Wildcard.out(cr), Wildcard.out(Top))
-  def varTy(ct: Type, cr: Type)(using ctx: Ctx): Type =
+  def varTy(ct: Type, cr: Type)(using ctx: BbCtx): Type =
     codeBaseTy(ct, Wildcard(cr, cr), Wildcard.out(Bot))
-  def regionTy(sk: Type)(using ctx: Ctx): Type =
-    ClassType(ctx.getDef("Region").get.sym, Wildcard(sk, sk) :: Nil)
-  def refTy(ct: Type, sk: Type)(using ctx: Ctx): Type =
-    ClassType(ctx.getDef("Ref").get.sym, Wildcard(ct, ct) :: Wildcard.out(sk) :: Nil)
-  private def tp(nme: Str)(using es: Elaborator.State) =
-    TyParam(FldFlags.empty, N, VarSymbol(Ident(nme), es.nextUid))
-  private def builtinClasses(using Elaborator.State): Ls[Str -> Ls[TyParam]] = Ls(
-    "Any", "Alloc", "Int", "Num", "Str", "Bool", "Nothing",
-  ).map(_ -> Nil) ::: Ls(
-    "CodeBase" -> (tp("T") :: tp("C") :: tp("V") :: Nil),
-    "Region" -> (tp("R") :: Nil),
-    "Ref" -> (tp("R") :: Nil),
-  )
-  private val infVarState = new InfVarUid.State()
-  private val int2IntBinTy =
-    (ctx: Ctx) => FunType(intTy(using ctx) :: intTy(using ctx) :: Nil, intTy(using ctx), Bot)
-  private val int2BoolBinTy =
-    (ctx: Ctx) => FunType(intTy(using ctx) :: intTy(using ctx) :: Nil, boolTy(using ctx), Bot)
-  private val int2NumBinTy =
-    (ctx: Ctx) => FunType(intTy(using ctx) :: intTy(using ctx) :: Nil, numTy(using ctx), Bot)
-  private val num2NumBinTy =
-    (ctx: Ctx) => FunType(numTy(using ctx) :: numTy(using ctx) :: Nil, numTy(using ctx), Bot)
-  private val builtinOps = Map(
-    "+" -> int2IntBinTy,
-    "-" -> int2IntBinTy,
-    "*" -> int2IntBinTy,
-    "/" -> int2NumBinTy,
-    "<" -> int2BoolBinTy,
-    ">" -> int2BoolBinTy,
-    "+." -> num2NumBinTy,
-    "-." -> num2NumBinTy,
-    "*." -> num2NumBinTy,
-    "/." -> num2NumBinTy,
-    "==" -> ((ctx: Ctx) => {
-      val tv: InfVar = InfVar(1, infVarState.nextUid, new VarState(), false)
-      PolyType(tv :: Nil, FunType(tv :: tv :: Nil, boolTy(using ctx), Bot))
-    })
-  )
-  private val builtinVals = Map(
-    "run" -> ((ctx: Ctx) => {
-      val tv: InfVar = InfVar(1, infVarState.nextUid, new VarState(), false)
-      PolyType(tv :: Nil, FunType(codeTy(tv, Bot)(using ctx) :: Nil, tv, Bot))
-    }),
-    "error" -> ((ctx: Ctx) => Bot),
-    "log" -> ((ctx: Ctx) => FunType(strTy(using ctx) :: Nil, Top, Bot)),
-  )
-  def isOp(name: Str): Bool = builtinOps.contains(name)
-  def init(raise: Raise, predefs: Map[Str, Symbol])(using Elaborator.State): Ctx =
-    val ctx = new Ctx(raise, None, 1, HashMap.empty, HashMap.empty, HashMap.empty)
-    builtinClasses.foreach: (cls, tps) =>
-      predefs.get(cls) match
-        case Some(cls: ClassSymbol) =>
-          ctx *= ClassDef.Plain(Cls, cls, tps, ObjBody(Term.Blk(Nil, Term.Lit(Tree.UnitLit(true)))), None)
-        case _ => ???
-    (builtinOps ++ builtinVals).foreach: p =>
-      predefs.get(p._1) match
-        case Some(v: Symbol) => ctx += v -> p._2(ctx)
-        case _ => ???
-    ctx
+  def regionTy(sk: Type)(using ctx: BbCtx): Type =
+    ClassLikeType(ctx.getCls("Region").get, Wildcard(sk, sk) :: Nil)
+  def refTy(ct: Type, sk: Type)(using ctx: BbCtx): Type =
+    ClassLikeType(ctx.getCls("Ref").get, Wildcard(ct, ct) :: Wildcard.out(sk) :: Nil)
+  def init(raise: Raise)(using Elaborator.State, Elaborator.Ctx): BbCtx =
+    new BbCtx(raise, summon, None, 1, HashMap.empty, HashMap.empty, HashMap.empty)
+end BbCtx
 
 
 class BBTyper(using elState: Elaborator.State, tl: TL):
@@ -118,30 +73,31 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
   private val infVarState = new InfVarUid.State()
   private val solver = new ConstraintSolver(infVarState, tl)
 
-  private def freshSkolem(using ctx: Ctx): InfVar =
+  private def freshSkolem(using ctx: BbCtx): InfVar =
     InfVar(ctx.lvl, infVarState.nextUid, new VarState(), true)
-  private def freshVar(using ctx: Ctx): InfVar =
+  private def freshVar(using ctx: BbCtx): InfVar =
     InfVar(ctx.lvl, infVarState.nextUid, new VarState(), false)
-  private def freshWildcard(using ctx: Ctx) =
+  private def freshWildcard(using ctx: BbCtx) =
     val in = freshVar
     val out = freshVar
     // in.state.upperBounds ::= out // * Not needed for soundness; complicates inferred types
     Wildcard(in, out)
 
-  private def allocType(using Ctx): Type =
-    Ctx.allocTy
+  private def allocType(using BbCtx): Type =
+    BbCtx.allocTy
 
-  private def error(msg: Ls[Message -> Opt[Loc]])(using Ctx) =
+  private def error(msg: Ls[Message -> Opt[Loc]])(using BbCtx) =
     raise(ErrorReport(msg))
     Bot // TODO: error type?
 
 
-  private def typeAndSubstType(ty: Term, pol: Bool)(using map: Map[Uid[Symbol], TypeArg])(using ctx: Ctx, cctx: CCtx): GeneralType =
+  private def typeAndSubstType
+      (ty: Term, pol: Bool)(using map: Map[Uid[Symbol], TypeArg])(using ctx: BbCtx, cctx: CCtx)
+      : GeneralType =
   trace[GeneralType](s"${ctx.lvl}. Typing type ${ty.toString}", r => s"~> $r"):
     def mono(ty: Term, pol: Bool): Type =
       monoOrErr(typeAndSubstType(ty, pol), ty)
     ty match
-    case Ref(cls: ClassSymbol) => typeAndSubstType(Term.TyApp(ty, Nil), pol)
     case Ref(sym: LocalSymbol) =>
       log(s"Type lookup: ${sym.nme} ${sym.uid} ${map.keySet}")
       map.get(sym.uid) match
@@ -150,7 +106,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         case N => ctx.get(sym) match
           case Some(ty) => ty
           case _ =>
-            if sym.nme == "Alloc" then
+            if sym.nme === "Alloc" then
               allocType
             else
               error(msg"Variable not found: ${sym.nme}" -> ty.toLoc :: Nil)
@@ -163,18 +119,19 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       }).getOrElse(Bot))
     case Term.Forall(tvs, body) =>
       val nestCtx = ctx.nextLevel
-      given Ctx = nestCtx
+      given BbCtx = nestCtx
       genPolyType(tvs, typeAndSubstType(body, pol))
-    case Term.TyApp(Ref(cls: ClassSymbol), targs) =>
+    case Term.TyApp(cls, targs) =>
       // log(s"Type application: ${cls.nme} with ${targs}")
-      cls.defn match
-      case S(cd) =>
-        if cls.nme == "Any" then Top
-        else if cls.nme == "Nothing" then Bot
+      cls.symbol.flatMap(_.asTpe) match
+      case S(tpeSym) =>
+        if tpeSym.nme === "Any" then Top
+        else if tpeSym.nme === "Nothing" then Bot
         else
-          if targs.length != cd.tparams.length then
+          val defn = tpeSym.defn.get
+          if targs.length != defn.tparams.length then
             error(msg"Type arguments do not match class definition" -> ty.toLoc :: Nil)
-          val ts = cd.tparams.lazyZip(targs).map: (tp, t) =>
+          val ts = defn.tparams.lazyZip(targs).map: (tp, t) =>
             t match
             case Term.WildcardTy(in, out) => Wildcard(
                 in.map(t => mono(t, pol)).getOrElse(Bot),
@@ -186,16 +143,19 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
                 case S(false) => Wildcard.in(ta)
                 case S(true) => Wildcard.out(ta)
                 case N => ta
-          ClassType(cls, ts)
+          ClassLikeType(tpeSym, ts)
       case N =>
-        error(msg"Class definition not found: ${cls.nme}" -> cls.toLoc :: Nil)
+        error(msg"Not a valid class: ${cls.describe}" -> cls.toLoc :: Nil)
     case Neg(rhs) =>
       mono(rhs, !pol).!
     case CompType(lhs, rhs, pol) =>
       Type.mkComposedType(typeMonoType(lhs), typeMonoType(rhs), pol)
-    case _ => error(msg"${ty.toString} is not a valid type" -> ty.toLoc :: Nil) // TODO
+    case _ =>
+      ty.symbol.flatMap(_.asTpe) match
+      case S(cls: (ClassSymbol | TypeAliasSymbol)) => typeAndSubstType(Term.TyApp(ty, Nil), pol)
+      case _ => error(msg"${ty.symbol.get.getClass.toString()} is not a valid type" -> ty.toLoc :: Nil) // TODO
 
-  private def genPolyType(tvs: Ls[QuantVar], body: => GeneralType)(using ctx: Ctx, cctx: CCtx) =
+  private def genPolyType(tvs: Ls[QuantVar], body: => GeneralType)(using ctx: BbCtx, cctx: CCtx) =
     val bds = tvs.map:
       case qv @ QuantVar(sym, ub, lb) =>
         val tv = freshVar
@@ -210,36 +170,36 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         constrain(lbty, ubty)
     PolyType(bds.map(_._1), body)
 
-  private def typeMonoType(ty: Term)(using ctx: Ctx, cctx: CCtx): Type = monoOrErr(typeType(ty), ty)
+  private def typeMonoType(ty: Term)(using ctx: BbCtx, cctx: CCtx): Type = monoOrErr(typeType(ty), ty)
 
-  private def typeType(ty: Term)(using ctx: Ctx, cctx: CCtx): GeneralType =
+  private def typeType(ty: Term)(using ctx: BbCtx, cctx: CCtx): GeneralType =
     typeAndSubstType(ty, pol = true)(using Map.empty)
   
-  private def instantiate(ty: PolyType)(using ctx: Ctx): GeneralType = ty.instantiate(infVarState.nextUid, ctx.lvl)(tl)
+  private def instantiate(ty: PolyType)(using ctx: BbCtx): GeneralType = ty.instantiate(infVarState.nextUid, ctx.lvl)(tl)
 
-  private def extrude(ty: GeneralType)(using ctx: Ctx, pol: Bool): GeneralType = ty match
+  private def extrude(ty: GeneralType)(using ctx: BbCtx, pol: Bool): GeneralType = ty match
     case ty: Type => solver.extrude(ty)(using ctx.lvl, pol, HashMap.empty)
     case PolyType(tvs, body) => PolyType(tvs, extrude(body))
     case PolyFunType(args, ret, eff) =>
       PolyFunType(args.map(extrude(_)(using ctx, !pol)), extrude(ret), solver.extrude(eff)(using ctx.lvl, pol, HashMap.empty))
 
-  private def constrain(lhs: Type, rhs: Type)(using ctx: Ctx, cctx: CCtx): Unit =
+  private def constrain(lhs: Type, rhs: Type)(using ctx: BbCtx, cctx: CCtx): Unit =
     solver.constrain(lhs, rhs)
 
   // TODO: content type
-  private def typeCode(code: Term)(using ctx: Ctx): (Type, Type, Type) =
+  private def typeCode(code: Term)(using ctx: BbCtx): (Type, Type, Type) =
     given CCtx = CCtx.init(code, N)
     code match
     case Lit(lit) => ((lit match
-      case _: IntLit => Ctx.intTy
-      case _: DecLit => Ctx.numTy
-      case _: StrLit => Ctx.strTy
+      case _: IntLit => BbCtx.intTy
+      case _: DecLit => BbCtx.numTy
+      case _: StrLit => BbCtx.strTy
       case _: UnitLit => Top
-      case _: BoolLit => Ctx.boolTy), Bot, Bot)
-    case Ref(sym: Symbol) if sym.nme == "error" => (Bot, Bot, Bot)
+      case _: BoolLit => BbCtx.boolTy), Bot, Bot)
+    case Ref(sym: Symbol) if sym.nme === "error" => (Bot, Bot, Bot)
     case Lam(params, body) =>
       val nestCtx = ctx.nextLevel
-      given Ctx = nestCtx
+      given BbCtx = nestCtx
       val bds = params.map:
         case Param(_, sym, _) =>
           val tv = freshVar
@@ -250,18 +210,6 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val res = freshVar(using ctx)
       constrain(ctxTy, bds.foldLeft[Type](res)((res, bd) => res | bd._2))
       (FunType(bds.map(_._1), bodyTy, Bot), res, eff)
-    case Term.App(Ref(sym: TermSymbol), Term.Tup(lhs :: rhs :: Nil)) if Ctx.isOp(sym.nme) =>
-      val op = ctx.get(sym) match
-        case Some(ty) => ty
-        case _ => error(msg"Operator not found: ${sym.nme}" -> code.toLoc :: Nil)
-      val (lhsTy, lhsCtx, lhsEff) = typeCode(lhs.value)
-      val (rhsTy, rhsCtx, rhsEff) = typeCode(rhs.value)
-      val resTy = freshVar
-      constrain(tryMkMono(op match {
-        case ty: PolyType => instantiate(ty)
-        case _ => op
-      }, code), FunType(lhsTy :: rhsTy :: Nil, resTy, Bot))
-      (resTy, lhsCtx | rhsCtx, lhsEff | rhsEff)
     case Term.App(lhs, Term.Tup(rhs)) =>
       val (lhsTy, lhsCtx, lhsEff) = typeCode(lhs)
       val (rhsTy, rhsCtx, rhsEff) = rhs.foldLeft[(Ls[Type], Type, Type)]((Nil, Bot, Bot))((res, p) =>
@@ -275,28 +223,28 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val (ty, eff) = typeCheck(body)
       val tv = freshVar
       val cr = freshVar
-      constrain(tryMkMono(ty, body), Ctx.codeTy(tv, cr))
+      constrain(tryMkMono(ty, body), BbCtx.codeTy(tv, cr))
       (tv, cr, eff)
     case Term.Blk(LetDecl(sym) :: DefineVar(sym2, rhs) :: Nil, body) if sym2 is sym => // TODO: more than one!!
       val (rhsTy, rhsCtx, rhsEff) = typeCode(rhs)(using ctx)
       val nestCtx = ctx.nextLevel
-      given Ctx = nestCtx
+      given BbCtx = nestCtx
       val sk = freshSkolem
       nestCtx &= (sym, rhsTy, sk)
       val (bodyTy, bodyCtx, bodyEff) = typeCode(body)
       val res = freshVar(using ctx)
       constrain(bodyCtx, sk | res)
       (bodyTy, rhsCtx | res, rhsEff | bodyEff)
-    case Term.If(Split.Cons(Branch(cond, Pattern.LitPat(BoolLit(true)), Split.Else(cons)), Split.Else(alts))) =>
+    case Term.IfLike(Keyword.`if`, Split.Cons(Branch(cond, Pattern.LitPat(BoolLit(true)), Split.Else(cons)), Split.Else(alts))) =>
       val (condTy, condCtx, condEff) = typeCode(cond)
       val (consTy, consCtx, consEff) = typeCode(cons)
       val (altsTy, altsCtx, altsEff) = typeCode(alts)
-      constrain(condTy, Ctx.boolTy)
+      constrain(condTy, BbCtx.boolTy)
       (consTy | altsTy, condCtx | consCtx | altsCtx, condEff | consEff | altsEff)
     case _ =>
       (error(msg"Cannot quote ${code.toString}" -> code.toLoc :: Nil), Bot, Bot)
 
-  private def typeFunDef(sym: Symbol, lam: Term, sig: Opt[Term], pctx: Ctx)(using ctx: Ctx, cctx: CCtx) = lam match
+  private def typeFunDef(sym: Symbol, lam: Term, sig: Opt[Term], pctx: BbCtx)(using ctx: BbCtx, cctx: CCtx) = lam match
     case Term.Lam(params, body) => sig match
       case S(sig) =>
         val sigTy = typeType(sig)(using ctx)
@@ -304,7 +252,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         ascribe(lam, sigTy)
         ()
       case N =>
-        given Ctx = ctx.nextLevel
+        given BbCtx = ctx.nextLevel
         val funTyV = freshVar
         pctx += sym -> funTyV // for recursive functions
         val (res, _) = typeCheck(lam)
@@ -314,12 +262,15 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         pctx += sym -> PolyType.generalize(funTy, 1)
     case _ => error(msg"Function definition shape not yet supported for ${sym.nme}" -> lam.toLoc :: Nil)
 
-  private def typeSplit(split: Split, sign: Opt[GeneralType])(using ctx: Ctx)(using CCtx): (GeneralType, Type) = split match
-    case Split.Cons(Branch(scrutinee, Pattern.Class(sym, _, _), cons), alts) =>
+  private def typeSplit
+      (split: Split, sign: Opt[GeneralType])(using ctx: BbCtx)(using CCtx)
+      : (GeneralType, Type) =
+    split match
+    case Split.Cons(Branch(scrutinee, Pattern.ClassLike(sym, _, _, _), cons), alts) =>
       // * Pattern matching
-      val (clsTy, tv, emptyTy) = ctx.getDef(sym.nme) match
+      val (clsTy, tv, emptyTy) = ctx.getCls(sym.nme).flatMap(_.defn) match
         case S(cls) =>
-          (ClassType(sym, cls.tparams.map(_ => freshWildcard)), freshVar, ClassType(sym, cls.tparams.map(_ => Wildcard.empty)))
+          (ClassLikeType(sym, cls.tparams.map(_ => freshWildcard)), freshVar, ClassLikeType(sym, cls.tparams.map(_ => Wildcard.empty)))
         case _ =>
           error(msg"Cannot match ${scrutinee.toString} as ${sym.toString}" -> split.toLoc :: Nil)
           (Bot, Bot, Bot)
@@ -338,7 +289,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       (sign.getOrElse(tryMkMono(consTy, cons) | tryMkMono(altsTy, alts)), allEff)
     case Split.Let(name, term, tail) =>
       val nestCtx = ctx.nest
-      given Ctx = nestCtx
+      given BbCtx = nestCtx
       val (termTy, termEff) = typeCheck(term)
       val sk = freshSkolem
       nestCtx += name -> termTy
@@ -347,10 +298,10 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
     case Split.Else(alts) => sign match
       case S(sign) => ascribe(alts, sign)
       case _ => typeCheck(alts)
-    case Split.Nil => ???
+    case Split.End => ???
 
   // * Note: currently, the returned type is not used or useful, but it could be in the future
-  private def ascribe(lhs: Term, rhs: GeneralType)(using ctx: Ctx): (GeneralType, Type) =
+  private def ascribe(lhs: Term, rhs: GeneralType)(using ctx: BbCtx): (GeneralType, Type) =
   trace[(GeneralType, Type)](s"${ctx.lvl}. Ascribing ${lhs.showDbg} : ${rhs}", res => s"! ${res._2}"):
     given CCtx = CCtx.init(lhs, S(rhs))
     (lhs, rhs) match
@@ -363,17 +314,17 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
           case (Param(_, sym, _), ty) =>
             nestCtx += sym -> ty
             ty
-        given Ctx = nestCtx
+        given BbCtx = nestCtx
         val (_, effTy) = ascribe(body, ret)
         constrain(effTy, eff)
         (ft, Bot)
     case (Term.Lam(params, body), ft @ FunType(args, ret, eff)) => ascribe(lhs, PolyFunType(args, ret, eff))
     case (term, pt: PolyType) => // * generalize
       val nextCtx = ctx.nextLevel
-      given Ctx = nextCtx
+      given BbCtx = nextCtx
       constrain(ascribe(term, skolemize(pt))._2, Bot) // * never generalize terms with effects
       (pt, Bot)
-    case (Term.If(branches), ty) => // * propagate
+    case (Term.IfLike(Keyword.`if`, branches), ty) => // * propagate
       typeSplit(branches, S(ty))
     case (Term.Asc(term, ty), rhs) =>
       ascribe(term, typeType(ty))
@@ -388,7 +339,10 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
           (rhs, eff)
 
   // TODO: t -> loc when toLoc is implemented
-  private def app(lhs: (GeneralType, Type), rhs: Ls[Fld], t: Term)(using ctx: Ctx)(using CCtx): (GeneralType, Type) = lhs match
+  private def app(lhs: (GeneralType, Type), rhs: Ls[Fld], t: Term)
+      (using ctx: BbCtx)(using CCtx)
+      : (GeneralType, Type) =
+    lhs match
     case (PolyFunType(params, ret, eff), lhsEff) =>
       // * if the function type is known, we can directly use it
       if params.length != rhs.length
@@ -411,31 +365,36 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       constrain(tryMkMono(funTy, t), FunType(argTy.map((tryMkMono(_, t))), retVar, effVar))
       (retVar, argEff.foldLeft[Type](effVar | lhsEff)((res, e) => res | e))
 
-  private def skolemize(ty: PolyType)(using ctx: Ctx) = ty.skolemize(infVarState.nextUid, ctx.lvl)(tl)
+  private def skolemize(ty: PolyType)(using ctx: BbCtx) = ty.skolemize(infVarState.nextUid, ctx.lvl)(tl)
 
   // TODO: implement toLoc
-  private def monoOrErr(ty: GeneralType, sc: Located)(using Ctx) =
+  private def monoOrErr(ty: GeneralType, sc: Located)(using BbCtx) =
     ty.monoOr(error(msg"General type is not allowed here." -> sc.toLoc :: Nil))
 
   // * Try to instantiate the given type if it is forall quantified
-  private def tryMkMono(ty: GeneralType, sc: Located)(using Ctx): Type = ty match
+  private def tryMkMono(ty: GeneralType, sc: Located)(using BbCtx): Type = ty match
     case pt: PolyType => tryMkMono(instantiate(pt), sc)
     case ft: PolyFunType =>
       ft.monoOr(error(msg"Expected a monomorphic type or an instantiable type here, but ${ty.toString} found" -> sc.toLoc :: Nil))
     case ty: Type => ty
   
-  private def typeCheck(t: Term)(using ctx: Ctx): (GeneralType, Type) =
+  private def typeCheck(t: Term)(using ctx: BbCtx): (GeneralType, Type) =
   trace[(GeneralType, Type)](s"${ctx.lvl}. Typing ${t.showDbg}", res => s": $res"):
     given CCtx = CCtx.init(t, N)
     t match
-      case Ref(sym: LocalSymbol) =>
+      case sel @ Term.Sel(Ref(_: TopLevelSymbol), nme)
+        if sel.symbol.isDefined =>
+        typeCheck(Ref(sel.symbol.get)(sel.nme, 666)) // FIXME 666
+      case Ref(sym) =>
         ctx.get(sym) match
           case Some(ty) => (ty, Bot)
           case _ =>
-            (error(msg"Variable not found: ${sym.nme}" -> t.toLoc :: Nil), Bot)
+            // (error(msg"Variable not found: ${sym.nme} (${sym.toString} @ ${sym.uid.toString})"
+            (error(msg"Variable not found: ${sym.nme}"
+              -> t.toLoc :: Nil), Bot)
       case Blk(stats, res) =>
         val nestCtx = ctx.nest
-        given Ctx = nestCtx
+        given BbCtx = nestCtx
         val effBuff = ListBuffer.empty[Type]
         def goStats(stats: Ls[Statement]): Unit = stats match
           case Nil => ()
@@ -448,13 +407,13 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             effBuff += eff
             nestCtx += sym -> rhsTy
             goStats(stats)
-          case TermDefinition(Fun, sym, ParamList(_, ps) :: Nil, sig, Some(body), _) :: stats =>
+          case TermDefinition(_, Fun, sym, ParamList(_, ps) :: Nil, sig, Some(body), _) :: stats =>
             typeFunDef(sym, Term.Lam(ps, body), sig, ctx)
             goStats(stats)
-          case TermDefinition(Fun, sym, Nil, sig, Some(body), _) :: stats =>
+          case TermDefinition(_, Fun, sym, Nil, sig, Some(body), _) :: stats =>
             typeFunDef(sym, body, sig, ctx)  // * may be a case expressions
             goStats(stats)
-          case TermDefinition(Fun, sym, _, S(sig), None, _) :: stats =>
+          case TermDefinition(_, Fun, sym, _, S(sig), None, _) :: stats =>
             ctx += sym -> typeType(sig)
             goStats(stats)
           case (clsDef: ClassDef) :: stats =>
@@ -464,14 +423,14 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         val (ty, eff) = typeCheck(res)
         (ty, effBuff.foldLeft(eff)((res, e) => res | e))
       case Lit(lit) => ((lit match
-        case _: IntLit => Ctx.intTy
-        case _: DecLit => Ctx.numTy
-        case _: StrLit => Ctx.strTy
+        case _: IntLit => BbCtx.intTy
+        case _: DecLit => BbCtx.numTy
+        case _: StrLit => BbCtx.strTy
         case _: UnitLit => Top
-        case _: BoolLit => Ctx.boolTy), Bot)
+        case _: BoolLit => BbCtx.boolTy), Bot)
       case Lam(params, body) =>
         val nestCtx = ctx.nest
-        given Ctx = nestCtx
+        given BbCtx = nestCtx
         val tvs = params.map:
           case Param(_, sym, sign) =>
             val ty = sign.map(s => typeType(s)(using nestCtx)).getOrElse(freshVar)
@@ -479,10 +438,10 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             ty
         val (bodyTy, eff) = typeCheck(body)
         (PolyFunType(tvs, bodyTy, eff), Bot)
-      case Term.SelProj(term, Term.Ref(cls: ClassSymbol), field) =>
+      case Term.SelProj(term, cls, field) =>
         val (ty, eff) = typeCheck(term)
-        cls.defn match
-          case S(clsDfn) =>
+        cls.symbol.flatMap(_.asCls.flatMap(sym => sym.defn.map(sym -> _))) match
+          case S(clsSym -> clsDfn) =>
             val map = HashMap[Uid[Symbol], TypeArg]()
             val targs = clsDfn.tparams.map {
               case TyParam(_, _, targ) =>
@@ -490,20 +449,20 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
                 map += targ.uid -> ty
                 ty
             }
-            constrain(tryMkMono(ty, term), ClassType(cls, targs))
+            constrain(tryMkMono(ty, term), ClassLikeType(clsSym, targs))
             (clsDfn.paramsOpt.getOrElse(Nil).map {
               case Param(_, sym, sign) =>
-                if sym.nme == field.name then sign else N
+                if sym.nme === field.name then sign else N
             }.filter(_.isDefined)) match
               case S(res) :: Nil => (typeAndSubstType(res, pol = true)(using map.toMap), eff)
-              case _ => (error(msg"${field.name} is not a valid member in class ${cls.nme}" -> t.toLoc :: Nil), Bot)
+              case _ => (error(msg"${field.name} is not a valid member in class ${clsSym.nme}" -> t.toLoc :: Nil), Bot)
           case N => 
-            (error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil), Bot)
+            (error(msg"Not a valid class: ${cls.describe}" -> cls.toLoc :: Nil), Bot)
       case Term.App(lhs, Term.Tup(rhs)) =>
         val (funTy, lhsEff) = typeCheck(lhs)
         app((funTy, lhsEff), rhs, t)
-      case Term.New(Ref(cls: ClassSymbol), args) =>
-        cls.defn match
+      case Term.New(cls, args) =>
+        cls.symbol.flatMap(_.asCls.flatMap(_.defn)) match
         case S(clsDfn: ClassDef.Parameterized) =>
           if args.length != clsDfn.params.length then
             (error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil), Bot)
@@ -527,21 +486,19 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
                 effBuff += eff
               case _ => ???
             }
-            (ClassType(cls, targs), effBuff.foldLeft[Type](Bot)((res, e) => res | e))
+            (ClassLikeType(clsDfn.sym, targs), effBuff.foldLeft[Type](Bot)((res, e) => res | e))
         case S(clsDfn: ClassDef.Plain) => ??? // TODO
         case N => 
-          (error(msg"Class definition not found: ${cls.nme}" -> t.toLoc :: Nil), Bot)
-      case Term.New(cls, args) =>
-        (error(msg"Cannot instantiate ${cls.toString}" -> t.toLoc :: Nil), Bot)
+          (error(msg"Not a valid class: ${cls.describe}" -> cls.toLoc :: Nil), Bot)
       case Term.Asc(term, ty) =>
         val res = typeType(ty)(using ctx)
         ascribe(term, res)
-      case Term.If(branches) => typeSplit(branches, N)
+      case Term.IfLike(Keyword.`if`, branches) => typeSplit(branches, N)
       case Term.Region(sym, body) =>
         val nestCtx = ctx.nextLevel
-        given Ctx = nestCtx
+        given BbCtx = nestCtx
         val sk = freshSkolem
-        nestCtx += sym -> Ctx.regionTy(sk)
+        nestCtx += sym -> BbCtx.regionTy(sk)
         val (res, eff) = typeCheck(body)
         val tv = freshVar(using ctx)
         constrain(eff, tv | sk)
@@ -550,25 +507,25 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         val (regTy, regEff) = typeCheck(reg)
         val (valTy, valEff) = typeCheck(value)
         val sk = freshVar
-        constrain(tryMkMono(regTy, reg), Ctx.regionTy(sk))
-        (Ctx.refTy(tryMkMono(valTy, value), sk), sk | (regEff | valEff))
+        constrain(tryMkMono(regTy, reg), BbCtx.regionTy(sk))
+        (BbCtx.refTy(tryMkMono(valTy, value), sk), sk | (regEff | valEff))
       case Term.Assgn(lhs, rhs) =>
         val (lhsTy, lhsEff) = typeCheck(lhs)
         val (rhsTy, rhsEff) = typeCheck(rhs)
         val sk = freshVar
-        constrain(tryMkMono(lhsTy, lhs), Ctx.refTy(tryMkMono(rhsTy, rhs), sk))
+        constrain(tryMkMono(lhsTy, lhs), BbCtx.refTy(tryMkMono(rhsTy, rhs), sk))
         (tryMkMono(rhsTy, rhs), sk | (lhsEff | rhsEff))
       case Term.Deref(ref) =>
         val (refTy, refEff) = typeCheck(ref)
         val sk = freshVar
         val ctnt = freshVar
-        constrain(tryMkMono(refTy, ref), Ctx.refTy(ctnt, sk))
+        constrain(tryMkMono(refTy, ref), BbCtx.refTy(ctnt, sk))
         (ctnt, sk | refEff)
       case Term.Quoted(body) =>
         val nestCtx = ctx.nextLevel
-        given Ctx = nestCtx
+        given BbCtx = nestCtx
         val (ty, ctxTy, eff) = typeCode(body)
-        (Ctx.codeTy(ty, ctxTy), eff)
+        (BbCtx.codeTy(ty, ctxTy), eff)
       case _: Term.Unquoted =>
         (error(msg"Unquote should nest in quasiquote" -> t.toLoc :: Nil), Bot)
       case Term.Error =>
@@ -576,7 +533,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       case _ =>
         (error(msg"Term shape not yet supported by BbML: ${t.toString}" -> t.toLoc :: Nil), Bot)
 
-  def typePurely(t: Term)(using Ctx): GeneralType =
+  def typePurely(t: Term)(using BbCtx): GeneralType =
     val (ty, eff) = typeCheck(t)
     given CCtx = CCtx.init(t, N)
     constrain(eff, allocType)

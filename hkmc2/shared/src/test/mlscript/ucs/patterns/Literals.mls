@@ -1,0 +1,65 @@
+:import ../prelude/Option.mls
+//│ Imported 3 member(s)
+
+class Pair[A, B](x: A, y: B)
+
+fun f(x) = if x is Some(1) then true else false
+
+[f(Some(1)), f(None), f(Some(2)), f(Some(-1))]
+
+fun f(x) = if x is Some(1) then true
+
+fun f(x) = if x is
+  Some(1) then true
+  Some(2) then false
+
+[f(Some(1)), f(Some(2))]
+
+fun g(x) = if x then 1 else 2
+
+// :e
+fun test_must_be_boolean(x) = if 0 then 1 else 2
+
+fun g(x) = if x is true then 1 else 2
+
+[g(true), g(false), g(None)]
+
+fun g(x) = if x && true is true then 1 else 2
+
+fun h(x) = if (x : Bool) then 1 else 2
+
+fun mix(x) = if x is
+  true then "true"
+  Some(value) then "Some"
+  0 then "zero"
+
+[mix(true), mix(Some(1)), mix(0)]
+
+// :e
+[mix(false), mix(None)]
+
+fun string_literals(x) =
+  if x is
+    "foo" then 0
+    "bar" then 1
+    "qax" then 2
+
+class Foo
+
+fun mixed_patterns(x) =
+  if x is
+    Foo then 1
+    23 then 2
+    "test" then 3
+
+fun bool_patterns(x) =
+  if x is
+    true then 1
+    false then 2
+
+fun dual_patterns(x, y) =
+  if
+    x is "some" and y is "none" then 0
+    x is "none" and y is "some" then 1
+    x is "some" and y is "some" then 2
+    x is "none" and y is "none" then 3

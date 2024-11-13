@@ -1,4 +1,5 @@
 :bbml
+//│ Type: ⊤
 
 
 fun foo: Int ->{Int} Int

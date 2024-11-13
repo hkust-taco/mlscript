@@ -2,21 +2,26 @@ package hkmc2
 
 import mlscript.utils.*, shorthands.*
 
+import hkmc2.semantics.*
 import hkmc2.bbml.*
 
 
 abstract class BbmlDiffMaker extends JSBackendDiffMaker:
+  
+  val bbPredefFile = file / os.up / os.RelPath("bbPredef.mls")
   
   val bbmlOpt = new NullaryCommand("bbml"):
     override def onSet(): Unit =
       super.onSet()
       if isGlobal then typeCheck.disable.isGlobal = true
       typeCheck.disable.setCurrentValue(())
-      importFile("bbPredef.mls", verbose = false)
+      if file =/= bbPredefFile then
+        importFile(bbPredefFile, verbose = false)
   
   
   lazy val bbCtx =
-    bbml.Ctx.init(_ => die, curCtx.allMembers)
+    given Elaborator.Ctx = curCtx
+    bbml.BbCtx.init(_ => die)
   
   
   var bbmlTyper: Opt[BBTyper] = None
@@ -24,10 +29,10 @@ abstract class BbmlDiffMaker extends JSBackendDiffMaker:
   
   override def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Raise): Unit =
     super.processTerm(trm, inImport)
-    if bbmlOpt.isSet && !inImport then
+    if bbmlOpt.isSet then
       if bbmlTyper.isEmpty then
         bbmlTyper = S(BBTyper())
-      given hkmc2.bbml.Ctx = bbCtx.copy(raise = summon)
+      given hkmc2.bbml.BbCtx = bbCtx.copy(raise = summon)
       val typer = bbmlTyper.get
       val ty = typer.typePurely(trm)
       val printer = PrettyPrinter((msg: String) => output(msg))

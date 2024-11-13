@@ -1,0 +1,9 @@
+fun id(x) = x
+
+:ucs desugared
+if id(0) is t then t
+//│ Desugared:
+//│ >  if
+//│ >    let $scrut@15 = member:Predef#666.id‹member:id›(0)
+//│ >    let t@16 = $scrut@15#0
+//│ >    else t@16#666

@@ -1,7 +1,7 @@
 :js
 
 :import PredefJS.mls
-//│ Imported 1 member(s)
+//│ Imported 2 member(s)
 
 
 fun f() =
@@ -26,13 +26,13 @@ fun f(x) =
 //│   let scrut, tmp, tmp1;
 //│   scrut = x < 0;
 //│   if (scrut) {
-//│     tmp = log("whoops");
-//│     return 0
+//│     tmp = globalThis.log("whoops");
+//│     return 0;
 //│   } else {
 //│     tmp1 = undefined;
 //│   }
-//│   return x + 1
-//│ };
+//│   return x + 1;
+//│ }
 //│ undefined
 
 f(1)

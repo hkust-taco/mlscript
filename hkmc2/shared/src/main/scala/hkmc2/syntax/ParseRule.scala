@@ -23,7 +23,7 @@ enum Alt[+A]:
     case End(a) => End(f(a))
     case b: Blk[rest, A] => Blk(b.rest)((tree, rest) => f(b.k(tree, rest)))
 
-class ParseRule[+A](val name: Str)(val alts: Alt[A]*):
+class ParseRule[+A](val name: Str, val omitAltsStr: Bool = false)(val alts: Alt[A]*):
   def map[B](f: A => B): ParseRule[B] =
     ParseRule(name)(alts.map(_.map(f))*)
   
@@ -34,7 +34,9 @@ class ParseRule[+A](val name: Str)(val alts: Alt[A]*):
   lazy val exprAlt = alts.collectFirst { case alt: Alt.Expr[rst, A] => alt }
   lazy val blkAlt = alts.collectFirst { case alt: Alt.Blk[rst, A] => alt }
   
-  def whatComesAfter: Str =
+  def mkAfterStr: Str = if omitAltsStr then "in this position" else s"after $name"
+  
+  def whatComesAfter: Str = if omitAltsStr then name else
     alts.map:
       case Alt.Kw(kw) => s"'${kw.name}' keyword"
       case Alt.Expr(rest) => "expression"
@@ -63,15 +65,16 @@ object ParseRule:
     Expr(body)(k) ::
     Blk(body)(k) ::
     Nil
-  
-  val typeDeclTemplate: Alt[Opt[Tree]] =
+
+  def typeDeclTemplateThen[A](after: Alt[A]*): Alt[(S[Tree], A)] =
     Kw(`with`):
       ParseRule("type declaration body")(
         Blk(
-          ParseRule("type declaration block"):
-            End(())
-        ) { case (res, ()) => S(res) }
+          ParseRule("type declaration block")(after*)
+        ) { case (res, t) => (S(res), t) }
       )
+  
+  val typeDeclTemplate: Alt[Opt[Tree]] = typeDeclTemplateThen(End(())).map((res, _) => res)
   
   /*
   def termDefBody(k: TermDefKind): ParseRule[Tree] = 
@@ -136,8 +139,8 @@ object ParseRule:
                   ParseRule(s"'${kw.name}' binding right-hand side")(
                     Kw(`in`):
                       ParseRule(s"'${kw.name}' binding `in` clause")(
-                        exprOrBlk(ParseRule(s"'${kw.name}' binding body")(End(())))((body, _: Unit) => S(body))
-                    *),
+                        exprOrBlk(ParseRule(s"'${kw.name}' binding body")(End(())))((body, _: Unit) => S(body))*
+                      ),
                     End(N)
                   )
                 ) { (rhs, body) => (S(rhs), body) }*
@@ -157,9 +160,55 @@ object ParseRule:
         // ) { case (lhs, body) => Let(lhs, lhs, body) }
       )
   
-  val prefixRules: ParseRule[Tree] = ParseRule("start of statement")(
+  def ifLike(kw: `if`.type | `while`.type): Alt[Tree] =
+    Kw(kw):
+      ParseRule(s"'${kw.name}' keyword")(
+        Expr(
+          ParseRule(s"'${kw.name}' expression")(
+            End(N),
+            Kw(`else`):
+              ParseRule(s"`else` keyword")(
+                exprOrBlk(ParseRule(s"`else` expression")(End(()))):
+                  case (body, _) => S(body)
+                *
+              )
+          )
+        ):
+          case (split, S(default)) =>
+            val clause = Modified(`else`, N/* TODO */, default)
+            val items = split match
+              case Block(stmts) => stmts.appended(clause)
+              case _ => split :: clause :: Nil
+            IfLike(kw, Block(items))
+          case (split, N) => IfLike(kw, split)
+        ,
+        Blk(
+          ParseRule(s"'${kw.name}' block")(End(()))
+        ) { case (body, _) => IfLike(kw, body) }
+      )
+  
+  val prefixRules: ParseRule[Tree] = ParseRule("start of statement", omitAltsStr = true)(
     letLike(`let`),
     letLike(`set`),
+    
+    Kw(`handle`):
+      ParseRule("'handle' binding keyword"):
+        Expr(
+          ParseRule("'handle' binding head"):
+            Kw(`=`):
+              ParseRule("'handle' binding equals sign"):
+                Expr(
+                  ParseRule("'handle' binding class name"):
+                    typeDeclTemplateThen(
+                      Kw(`in`):
+                        ParseRule(s"'handle' binding `in` clause")(
+                          exprOrBlk(ParseRule(s"'handle' binding body")(End(())))((body, _: Unit) => S(body))*
+                        ),
+                      End(None)
+                    )
+                ) { case (rhs, (S(defs), body)) => (rhs, defs, body) }
+        ) { case (lhs, (rhs, defs, body))=> Handle(lhs, rhs, defs, body) }
+    ,
     Kw(`new`):
       ParseRule("`new` keyword"):
         Expr(ParseRule("`new` expression")(End(())))((body, _: Unit) => New(body))
@@ -176,32 +225,8 @@ object ParseRule:
           case (lhs, S(rhs)) => Tup(Tree.Modified(`in`, N/* TODO */, lhs) :: rhs :: Nil)
         }
     ,
-    Kw(`if`):
-      ParseRule("`if` keyword")(
-        Expr(
-          ParseRule("`if` expression")(
-            End(N),
-            Kw(`else`):
-              ParseRule(s"`else` keyword")(
-                exprOrBlk(ParseRule(s"`else` expression")(End(()))):
-                  case (body, _) => S(body)
-                *
-              )
-          )
-        ):
-          case (split, S(default)) =>
-            val clause = Modified(`else`, N/* TODO */, default)
-            val items = split match
-              case Block(stmts) => stmts.appended(clause)
-              case _ => split :: clause :: Nil
-            If(Block(items))
-          case (split, N) => If(split)
-        ,
-        Blk(
-          ParseRule("`if` block")(End(()))
-        ) { case (body, _) => If(body) }
-      )
-    ,
+    ifLike(`if`),
+    ifLike(`while`),
     Kw(`else`):
       ParseRule("`else` clause")(
         Expr(ParseRule("`else` expression")(End(()))):
@@ -231,15 +256,17 @@ object ParseRule:
     Kw(`type`):
       ParseRule("type alias declaration"):
         Expr(
-          ParseRule("type alias head"):
+          ParseRule("type alias head")(
             Kw(`=`):
               ParseRule("type alias declaration equals sign"):
                 Expr(
                   ParseRule("type alias declaration right-hand side")(
                     End(())
                   )
-                ) { (rhs, _) => rhs }
-        ) { (lhs, rhs) => TypeDef(Als, lhs, S(rhs), N) },
+                ) { case (rhs, ()) => S(rhs) },
+            End(N),
+          )
+        ) { (lhs, rhs) => TypeDef(Als, lhs, rhs, N) },
     Kw(`class`)(typeDeclBody(Cls)),
     Kw(`trait`)(typeDeclBody(Trt)),
     Kw(`module`)(typeDeclBody(Mod)),
@@ -249,6 +276,7 @@ object ParseRule:
           case (body, _) => Open(body)}*),
     modified(`abstract`, Kw(`class`)(typeDeclBody(Cls))),
     modified(`mut`),
+    modified(`do`),
     modified(`virtual`),
     modified(`override`),
     modified(`declare`),
@@ -258,13 +286,20 @@ object ParseRule:
     modified(`return`),
     modified(`import`), // TODO improve – only allow strings
     // modified(`type`),
+    singleKw(`true`)(BoolLit(true)),
+    singleKw(`false`)(BoolLit(false)),
+    singleKw(`undefined`)(UnitLit(true)),
+    singleKw(`null`)(UnitLit(false)),
+    singleKw(`this`)(Ident("this")),
     standaloneExpr,
-    Kw(`true`)(ParseRule("'true' keyword")(End(BoolLit(true)))),
-    Kw(`false`)(ParseRule("'false' keyword")(End(BoolLit(false)))),
   )
   
+  def singleKw[T](kw: Keyword)(v: T): Alt[T] =
+    Kw(kw)(ParseRule(s"'${kw.name}' keyword")(End(v)))
+  
+  
   val prefixRulesAllowIndentedBlock: ParseRule[Tree] =
-    ParseRule(prefixRules.name)(prefixRules.alts :+ 
+    ParseRule(prefixRules.name, prefixRules.omitAltsStr)(prefixRules.alts :+ 
         (Blk(
           ParseRule("block"):
             End(())
@@ -304,6 +339,7 @@ object ParseRule:
     genInfixRule(`and`, (rhs, _: Unit) => lhs => InfixApp(lhs, `and`, rhs)),
     genInfixRule(`or`, (rhs, _: Unit) => lhs => InfixApp(lhs, `or`, rhs)),
     genInfixRule(`is`, (rhs, _: Unit) => lhs => InfixApp(lhs, `is`, rhs)),
+    genInfixRule(`as`, (rhs, _: Unit) => lhs => InfixApp(lhs, `as`, rhs)),
     genInfixRule(`then`, (rhs, _: Unit) => lhs => InfixApp(lhs, `then`, rhs)),
     // genInfixRule(`else`, (rhs, _: Unit) => lhs => InfixApp(lhs, `else`, rhs)),
     genInfixRule(`:`, (rhs, _: Unit) => lhs => InfixApp(lhs, `:`, rhs)),

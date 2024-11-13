@@ -29,11 +29,14 @@ sealed abstract class Block extends Product with AutoLocated:
     case Begin(sub, rst) => sub.definedVars ++ rst.definedVars
     case Assign(l: TermSymbol, r, rst) => rst.definedVars
     case Assign(l, r, rst) => rst.definedVars + l
+    case AssignField(l, n, r, rst) => rst.definedVars
     case Match(scrut, arms, dflt, rst) =>
       arms.flatMap(_._2.definedVars).toSet ++ dflt.toList.flatMap(_.definedVars) ++ rst.definedVars
     case End(_) => Set.empty
+    case Break(_, _) => Set.empty
     case Define(defn, rst) => rst.definedVars
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
+    case Label(lbl, bod, rst) => bod.definedVars ++ rst.definedVars
   
   // TODO conserve if no changes
   def mapTail(f: BlockTail => BlockTail): Block = this match
@@ -60,28 +63,54 @@ case class Return(res: Result, implct: Bool) extends BlockTail
 
 case class Throw(exc: Result) extends BlockTail
 
+case class Label(label: Local, body: Block, rest: Block) extends BlockTail
+
+case class Break(label: Local, toBeginning: Bool) extends BlockTail
+
+// TODO: remove this form?
 case class Begin(sub: Block, rest: Block) extends Block with ProductWithTail
 
 case class TryBlock(sub: Block, finallyDo: Block, rest: Block) extends Block with ProductWithTail
 
 case class Assign(lhs: Local, rhs: Result, rest: Block) extends Block with ProductWithTail
+// case class Assign(lhs: Path, rhs: Result, rest: Block) extends Block with ProductWithTail
+
+case class AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block) extends Block with ProductWithTail
 
 case class Define(defn: Defn, rest: Block) extends Block with ProductWithTail
 
 sealed abstract class Defn:
   val sym: MemberSymbol[?]
 
-final case class TermDefn(
-    k: syntax.TermDefKind,
-    sym: TermSymbol,
+// final case class TermDefn(
+//     k: syntax.TermDefKind,
+//     // sym: TermSymbol,
+//     sym: BlockMemberSymbol,
+//     params: Ls[ParamList],
+//     body: Block,
+// ) extends Defn
+final case class FunDefn(
+    // k: syntax.TermDefKind,
+    // sym: TermSymbol,
+    sym: BlockMemberSymbol,
     params: Ls[ParamList],
     body: Block,
 ) extends Defn
 
-final case class ClsDefn(
-  sym: ClassSymbol,
+final case class ValDefn(
+    owner: Opt[InnerSymbol],
+    k: syntax.Val,
+    sym: BlockMemberSymbol,
+    // params: Ls[ParamList],
+    rhs: Path,
+) extends Defn
+
+final case class ClsLikeDefn(
+  // sym: ClassSymbol,
+  // sym: MemberSymbol[ClassLikeDef],
+  sym: MemberSymbol[? <: ClassLikeDef],
   k: syntax.ClsLikeKind,
-  methods: Ls[TermDefn],
+  methods: Ls[FunDefn],
   fields: Ls[TermSymbol],
   ctor: Block,
 ) extends Defn
@@ -92,7 +121,7 @@ case class End(msg: Str = "") extends BlockTail with ProductWithTail
 
 enum Case:
   case Lit(lit: Literal)
-  case Cls(cls: ClassSymbol)
+  case Cls(cls: ClassSymbol | ModuleSymbol, path: Path)
 
 sealed abstract class Result
 
@@ -109,7 +138,7 @@ case class Select(qual: Path, name: Tree.Ident) extends Path
 
 enum Value extends Path:
   case Ref(l: Local)
-  case This(sym: MemberSymbol[?])
+  case This(sym: InnerSymbol) // TODO rm – just use Ref
   case Lit(lit: Literal)
   case Lam(params: Ls[Param], body: Block)
   case Arr(elems: Ls[Path])

@@ -1,4 +1,5 @@
 :bbml
+//│ Type: ⊤
 
 
 123
@@ -30,7 +31,7 @@ x => x
 //│ Type: (α7_1) ->{⊥} α7_1
 
 +
-//│ Type: (Int, Int) -> Int
+//│ Type: (Int, Int) ->{⊥} Int
 
 (x, y) => x + y
 //│ Type: (Int, Int) ->{⊥} Int
@@ -41,7 +42,7 @@ x => x
 :e
 114 + "514"
 //│ ╔══[ERROR] Type error in string literal with expected type Int
-//│ ║  l.42: 	114 + "514"
+//│ ║  l.43: 	114 + "514"
 //│ ║        	      ^^^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Int
@@ -59,7 +60,7 @@ let x = 1 in let y = 2 in x + y
 :e
 let x = 0 in x + "1"
 //│ ╔══[ERROR] Type error in string literal with expected type Int
-//│ ║  l.60: 	let x = 0 in x + "1"
+//│ ║  l.61: 	let x = 0 in x + "1"
 //│ ║        	                 ^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Int
@@ -70,17 +71,15 @@ class Foo(x: Int)
 :e
 new Nothingness(0)
 //│ ╔══[ERROR] Name not found: Nothingness
-//│ ║  l.71: 	new Nothingness(0)
+//│ ║  l.72: 	new Nothingness(0)
 //│ ╙──      	    ^^^^^^^^^^^
-//│ ╔══[ERROR] Cannot instantiate Error
-//│ ║  l.71: 	new Nothingness(0)
-//│ ╙──      	    ^^^^^^^^^^^^^^
+//│ ═══[ERROR] Not a valid class: <error>
 //│ Type: ⊥
 
 :e
 new 42
-//│ ╔══[ERROR] Cannot instantiate Lit(IntLit(42))
-//│ ║  l.81: 	new 42
+//│ ╔══[ERROR] Not a valid class: integer literal
+//│ ║  l.80: 	new 42
 //│ ╙──      	    ^^
 //│ Type: ⊥
 
@@ -99,8 +98,8 @@ new Point(0.0, 0.0, 0.0)
 :e
 new Foo("1!5!")
 //│ ╔══[ERROR] Type error in string literal with expected type Int
-//│ ║  l.100: 	new Foo("1!5!")
-//│ ║         	        ^^^^^^
+//│ ║  l.99: 	new Foo("1!5!")
+//│ ║        	        ^^^^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Foo
 
@@ -128,16 +127,16 @@ let t = new Some(true) in t.Some#value
 :pe
 42.Some#value
 //│ ╔══[LEXICAL ERROR] Expect at least one digit after the  decimal point
-//│ ║  l.129: 	42.Some#value
+//│ ║  l.128: 	42.Some#value
 //│ ╙──       	   ^
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
-//│ ║  l.129: 	42.Some#value
+//│ ║  l.128: 	42.Some#value
 //│ ╙──       	   ^^^^
 //│ ╔══[ERROR] Name not found: #
-//│ ║  l.129: 	42.Some#value
+//│ ║  l.128: 	42.Some#value
 //│ ╙──       	       ^
 //│ ╔══[ERROR] Name not found: value
-//│ ║  l.129: 	42.Some#value
+//│ ║  l.128: 	42.Some#value
 //│ ╙──       	        ^^^^^
 //│ Type: ⊥
 
@@ -160,7 +159,7 @@ let ip = new Printer(foofoo) in ip.Printer#f(42)
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ╔══[ERROR] Type error in string literal with expected type α30_1
-//│ ║  l.161: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
+//│ ║  l.160: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ║         	                                             ^^^^
 //│ ╟── because: cannot constrain  Str  <:  α30_1
 //│ ╟── because: cannot constrain  Str  <:  α30_1
@@ -187,7 +186,7 @@ let tf = new TFun(inc) in tf.TFun#f(1)
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ╔══[ERROR] Type error in string literal with expected type α42_1
-//│ ║  l.188: 	let tf = new TFun(inc) in tf.TFun#f("1")
+//│ ║  l.187: 	let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
 //│ ╟── because: cannot constrain  Str  <:  α42_1
 //│ ╟── because: cannot constrain  Str  <:  α42_1
@@ -208,11 +207,11 @@ class Pair[A, B](fst: A, snd: B)
 
 :fixme
 if 1 < 2 then 1 else 0
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@131),LitPat(BoolLit(true)),Else(Lit(IntLit(1)))),Else(Lit(IntLit(0)))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@112),LitPat(BoolLit(true)),Else(Lit(IntLit(1)))),Else(Lit(IntLit(0)))) (of class hkmc2.semantics.Split$Cons)
 
 :fixme
 if false then 1 else "1"
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@133),LitPat(BoolLit(true)),Else(Lit(IntLit(1)))),Else(Lit(StrLit(1)))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@114),LitPat(BoolLit(true)),Else(Lit(IntLit(1)))),Else(Lit(StrLit(1)))) (of class hkmc2.semantics.Split$Cons)
 
 
 if 1 is Int then 1 else 0
@@ -221,20 +220,27 @@ if 1 is Int then 1 else 0
 fun test(x) =
   if x is Int then x + 1 else 0
 test
-//│ Type: (¬Int ∨ Int) -> Int
+//│ Type: (Int ∧ (¬Int ∨ Int)) -> Int
 
 test(1)
 //│ Type: Int
 
 
+:fixme // FIXME[CY]
 test("1")
+//│ ╔══[ERROR] Type error in string literal with expected type α64_1
+//│ ║  l.230: 	test("1")
+//│ ║         	     ^^^
+//│ ╟── because: cannot constrain  Str  <:  α64_1
+//│ ╟── because: cannot constrain  Str  <:  α64_1
+//│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Int
 
 
 :fixme
 fun fact(n) =
   if n > 1 then n * fact(n - 1) else 1
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@147),LitPat(BoolLit(true)),Else(App(Ref(.*),Tup(List(Fld(‹›,Ref(n@145),None), Fld(‹›,App(Ref(globalThis:block#49.fact),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@145),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))),Else(Lit(IntLit(1)))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@128),LitPat(BoolLit(true)),Else(App(Sel(Ref(globalThis:import#bbPredef),Ident(*)),Tup(List(Fld(‹›,Ref(n@126),None), Fld(‹›,App(Sel(Ref(globalThis:block#49),Ident(fact)),Tup(List(Fld(‹›,App(Sel(Ref(globalThis:import#bbPredef),Ident(-)),Tup(List(Fld(‹›,Ref(n@126),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))),Else(Lit(IntLit(1)))) (of class hkmc2.semantics.Split$Cons)
 
 fact
 //│ Type: ⊥
@@ -247,7 +253,7 @@ fact(1)
 fun fact2 = case
   0 then 1
   n then n * fact2(n - 1)
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@161),LitPat(BoolLit(true)),Else(Lit(IntLit(1)))),Else(App(Ref(.*),Tup(List(Fld(‹›,Ref(n@156),None), Fld(‹›,App(Ref(globalThis:block#52.fact2),Tup(List(Fld(‹›,App(Ref(.-),Tup(List(Fld(‹›,Ref(n@156),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(caseScrut@137),LitPat(IntLit(0)),Else(Lit(IntLit(1)))),Let(n@138,Ref(caseScrut@137),Else(App(Sel(Ref(globalThis:import#bbPredef),Ident(*)),Tup(List(Fld(‹›,Ref(n@138),None), Fld(‹›,App(Sel(Ref(globalThis:block#52),Ident(fact2)),Tup(List(Fld(‹›,App(Sel(Ref(globalThis:import#bbPredef),Ident(-)),Tup(List(Fld(‹›,Ref(n@138),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None))))))) (of class hkmc2.semantics.Split$Cons)
 
 fact2
 //│ Type: ⊥
@@ -260,16 +266,16 @@ class Foo[A](x: A -> A)
 //│ Type: ⊤
 
 new Foo(x => x)
-//│ Type: Foo[α76_1]
+//│ Type: Foo[α74_1]
 
 fun f(g) = new Foo(g)
 f
-//│ Type: forall α79_2: (α79_2 -> α79_2) -> Foo[α79_2]
+//│ Type: forall α77_2: (α77_2 -> α77_2) -> Foo[α77_2]
 
 f(x => x).Foo#x
-//│ Type: (α81_1) ->{⊥} α81_1
+//│ Type: (α79_1) ->{⊥} α79_1
 
 g => (new Foo(g)).Foo#x
-//│ Type: (α86_1 -> α86_1) ->{⊥} (α86_1) ->{⊥} α86_1
+//│ Type: (α84_1 -> α84_1) ->{⊥} (α84_1) ->{⊥} α84_1
 
 

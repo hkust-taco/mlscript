@@ -26,12 +26,16 @@ class Foo(x: Int)
 //│ ║  l.24: 	  val y = x
 //│ ╙──      	^^
 
+:sjs
 :fixme
+:e
 class Foo(x: Int) { log("Hello!") }
 //│ ╔══[ERROR] Expected a valid definition head, found block instead
-//│ ║  l.30: 	class Foo(x: Int) { log("Hello!") }
+//│ ║  l.32: 	class Foo(x: Int) { log("Hello!") }
 //│ ╙──      	                    ^^^^^^^^^^^^^
-//│ /!!!\ Uncaught error: scala.MatchError: Block(List(App(Ident(log),Tup(List(StrLit(Hello!)))))) (of class hkmc2.syntax.Tree$Block)
+//│ JS:
+//│ this.<error> = class <error> { constructor() {  } toString() { return "<error>"; } }; undefined
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '<'
 
 
 

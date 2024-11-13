@@ -1,7 +1,7 @@
 :js
 
 :import PredefJS.mls
-//│ Imported 1 member(s)
+//│ Imported 2 member(s)
 
 :global
 :sjs
@@ -10,6 +10,16 @@
 class Foo
 //│ JS:
 //│ this.Foo = class Foo { constructor() {  } toString() { return "Foo"; } }; undefined
+
+Foo is Foo
+//│ JS:
+//│ let scrut; scrut = this.Foo; if (scrut instanceof this.Foo) { true } else { false }
+//│ = false
+
+(new Foo) is Foo
+//│ JS:
+//│ let scrut; scrut = new this.Foo(); if (scrut instanceof this.Foo) { true } else { false }
+//│ = true
 
 new Foo
 //│ JS:
@@ -26,16 +36,23 @@ Foo
 //│ this.Foo
 //│ = [class Foo]
 
+:re
 Foo()
 //│ JS:
-//│ new this.Foo()
-//│ = Foo {}
+//│ this.Foo()
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
 
 
 class Foo with { log("hi") }
 log("ok")
 //│ JS:
-//│ this.Foo = class Foo { constructor() { log("hi") } toString() { return "Foo"; } }; log("ok")
+//│ this.Foo = class Foo {
+//│   constructor() {
+//│     globalThis.log("hi")
+//│   }
+//│   toString() { return "Foo"; }
+//│ };
+//│ this.log("ok")
 //│ > ok
 
 fun test() =
@@ -47,13 +64,13 @@ fun test() =
 //│   let tmp;
 //│   class Foo {
 //│     constructor() {
-//│       log("hi")
+//│       globalThis.log("hi")
 //│     }
 //│     toString() { return "Foo"; }
-//│   };
-//│   tmp = log("ok");
-//│   return Foo
-//│ };
+//│   }
+//│   tmp = globalThis.log("ok");
+//│   return Foo;
+//│ }
 //│ undefined
 
 let t = test()
@@ -89,7 +106,7 @@ class Foo with
 //│     this.#y = tmp;
 //│   }
 //│   z() {
-//│     return this.#y + this.x
+//│     return this.#y + this.x;
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
@@ -113,13 +130,13 @@ class Foo with
 //│     this.x2 = 2;
 //│     this.#y1 = 3;
 //│     this.#y2 = 4;
-//│     log("hello")
+//│     globalThis.log("hello")
 //│   }
 //│   z1() {
-//│     return 5
+//│     return 5;
 //│   } 
 //│   z2() {
-//│     return 6
+//│     return 6;
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
@@ -136,12 +153,12 @@ class Foo with
 //│     this.x = 1;
 //│   }
 //│   foo(y) {
-//│     return this.x + y
+//│     return this.x + y;
 //│   } 
 //│   bar(z) {
 //│     let tmp;
 //│     tmp = this.foo(z);
-//│     return tmp + 1
+//│     return tmp + 1;
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
@@ -155,11 +172,11 @@ log(a.bar(1))
 //│ let tmp, tmp1, tmp2, tmp3, tmp4;
 //│ tmp = new this.Foo();
 //│ this.a = tmp;
-//│ tmp1 = log(this.a.x);
+//│ tmp1 = this.log(this.a.x);
 //│ tmp2 = this.a.foo(1);
-//│ tmp3 = log(tmp2);
+//│ tmp3 = this.log(tmp2);
 //│ tmp4 = this.a.bar(1);
-//│ log(tmp4)
+//│ this.log(tmp4)
 //│ > 1
 //│ > 2
 //│ > 3
@@ -191,13 +208,13 @@ class Foo with
 :fixme
 class Foo with val x = 1
 //│ ╔══[PARSE ERROR] Expected block after type declaration body; found 'val' keyword instead
-//│ ║  l.192: 	class Foo with val x = 1
+//│ ║  l.209: 	class Foo with val x = 1
 //│ ╙──       	               ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.192: 	class Foo with val x = 1
+//│ ║  l.209: 	class Foo with val x = 1
 //│ ╙──       	                     ^
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
-//│ ║  l.192: 	class Foo with val x = 1
+//│ ║  l.209: 	class Foo with val x = 1
 //│ ╙──       	                   ^
 //│ JS:
 //│ /* error */
