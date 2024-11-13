@@ -1,8 +1,8 @@
 :js
 
 
-globalThis.fetch
-//│ = [Function: fetch]
+globalThis.clearInterval
+//│ = [Function: clearInterval]
 
 class A
 
@@ -16,7 +16,7 @@ if 0 is A then 1
 val globalThis = "oops"
 //│ globalThis = 'oops'
 
-globalThis.fetch
+globalThis.clearInterval
 
 :re
 if 0 is A then 1
