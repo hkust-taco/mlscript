@@ -40,7 +40,7 @@ class Outer(a, b) with
 //│           this$Outer.b,
 //│           this.c,
 //│           d
-//│         ]
+//│         ];
 //│       }
 //│       toString() { return "Inner(" + this.c + ")"; }
 //│     };
@@ -51,12 +51,12 @@ class Outer(a, b) with
 //│     globalThis.log(tmp2)
 //│   }
 //│   o1(c) {
-//│     return this.Inner(c)
+//│     return this.Inner(c);
 //│   } 
 //│   o2(c1, d) {
 //│     let tmp;
 //│     tmp = this.Inner(c1);
-//│     return tmp.i1(d)
+//│     return tmp.i1(d);
 //│   }
 //│   toString() { return "Outer(" + this.a + ", " + this.b + ")"; }
 //│ };

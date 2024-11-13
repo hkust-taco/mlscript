@@ -12,7 +12,7 @@ if true then 1 else 0
 :sjs
 let f = x => if x then log("ok") else log("ko")
 //│ JS:
-//│ this.f = (x) => { if (x) { return this.log("ok") } else { return this.log("ko") } }; undefined
+//│ this.f = (x) => { if (x) { return this.log("ok"); } else { return this.log("ko"); } }; undefined
 //│ f = [Function (anonymous)]
 
 f(true)
@@ -33,7 +33,7 @@ let f = x => log((if x then "ok" else "ko") + "!")
 //│     tmp = "ko";
 //│   }
 //│   tmp1 = tmp + "!";
-//│   return this.log(tmp1)
+//│   return this.log(tmp1);
 //│ };
 //│ undefined
 //│ f = [Function (anonymous)]
@@ -53,7 +53,7 @@ let f = x => log((if x and x then "ok" else "ko") + "!")
 //│     tmp = "ko";
 //│   }
 //│   tmp1 = tmp + "!";
-//│   return this.log(tmp1)
+//│   return this.log(tmp1);
 //│ };
 //│ undefined
 //│ f = [Function (anonymous)]

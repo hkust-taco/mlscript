@@ -15,7 +15,7 @@ module Example with
 //│     return [
 //│       x,
 //│       this.a
-//│     ]
+//│     ];
 //│   }
 //│   toString() { return "Example"; }
 //│ };

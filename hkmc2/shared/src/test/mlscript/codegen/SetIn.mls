@@ -82,7 +82,7 @@ example()
 //│   let x, get_x, old, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
 //│   x = 0;
 //│   get_x = () => {
-//│     return x
+//│     return x;
 //│   };
 //│   old = x;
 //│   try {
@@ -97,7 +97,7 @@ example()
 //│   }
 //│   tmp5 = globalThis.log(x);
 //│   tmp6 = get_x();
-//│   return globalThis.log(tmp6)
+//│   return globalThis.log(tmp6);
 //│ };
 //│ this.example()
 //│ > 1
@@ -120,7 +120,7 @@ example()
 //│   let x, get_x, y, old, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
 //│   x = 0;
 //│   get_x = () => {
-//│     return x
+//│     return x;
 //│   };
 //│   old = x;
 //│   try {
@@ -135,7 +135,7 @@ example()
 //│   tmp3 = globalThis.log(x);
 //│   tmp4 = get_x();
 //│   tmp5 = globalThis.log(tmp4);
-//│   return y
+//│   return y;
 //│ };
 //│ this.example()
 //│ > 1

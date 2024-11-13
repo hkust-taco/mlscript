@@ -11,7 +11,7 @@ module Test with
 //│     this.x = 12;
 //│   }
 //│   foo() {
-//│     return globalThis.Test.x
+//│     return globalThis.Test.x;
 //│   }
 //│   toString() { return "Test"; }
 //│ };
@@ -43,7 +43,7 @@ let f = () => x
 let x = 2
 f()
 //│ JS:
-//│ this.x = 1; this.f = () => { return this.x }; this.x = 2; this.f()
+//│ this.x = 1; this.f = () => { return this.x; }; this.x = 2; this.f()
 //│ = 2
 //│ f = [Function (anonymous)]
 //│ x = 2

@@ -13,13 +13,13 @@
 //│     scrut = true;
 //│     if (scrut) {
 //│       tmp = 0;
-//│       continue tmp1
+//│       continue tmp1;
 //│     } else {
-//│       throw new this.Error("match error")
+//│       throw new this.Error("match error");
 //│     }
 //│     break;
 //│   }
-//│   return tmp
+//│   return tmp;
 //│ }
 //│ = [Function (anonymous)]
 
@@ -61,7 +61,7 @@ while x
 //│     tmp = this.log("Hello World");
 //│     this.x = false;
 //│     tmp1 = undefined;
-//│     continue tmp2
+//│     continue tmp2;
 //│   } else {
 //│     tmp1 = 42;
 //│   }
@@ -116,13 +116,13 @@ while
 //│       tmp = i + 1;
 //│       i = tmp;
 //│       tmp1 = undefined;
-//│       continue tmp2
+//│       continue tmp2;
 //│     } else {
-//│       throw new this.Error("match error")
+//│       throw new this.Error("match error");
 //│     }
 //│     break;
 //│   }
-//│   return tmp1
+//│   return tmp1;
 //│ }
 //│ = [Function (anonymous)]
 
@@ -206,13 +206,13 @@ fun f(ls) =
 //│       tl = param1;
 //│       ls1 = tl;
 //│       tmp = globalThis.log(h);
-//│       continue tmp1
+//│       continue tmp1;
 //│     } else {
 //│       tmp = globalThis.log("Done!");
 //│     }
 //│     break;
 //│   }
-//│   return tmp
+//│   return tmp;
 //│ };
 //│ undefined
 
@@ -242,7 +242,7 @@ while log("Hello World"); false
 //│ ║  l.239: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ═══[ERROR] Unrecognized term split (false literal).
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token 'break'
+//│ ═══[RUNTIME ERROR] Error: match error
 
 :fixme
 while { log("Hello World"), false }

@@ -64,7 +64,7 @@ Foo(1).a
 fun foo(y) = Foo(y)
 foo(27)
 //│ JS:
-//│ function foo(y) { return globalThis.Foo(y) }; this.foo(27)
+//│ function foo(y) { return globalThis.Foo(y); }; this.foo(27)
 //│ = Foo { a: 27 }
 
 
@@ -140,7 +140,7 @@ class Inner(c) with
 //│     globalThis.log(this.c)
 //│   }
 //│   i1(d) {
-//│     return this.c + d
+//│     return this.c + d;
 //│   }
 //│   toString() { return "Inner(" + this.c + ")"; }
 //│ };

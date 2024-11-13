@@ -19,7 +19,7 @@ if Some(0) is Some(x) then x
 //│   x = param0;
 //│   x
 //│ } else {
-//│   throw new this.Error("match error")
+//│   throw new this.Error("match error");
 //│ }
 //│ = 0
 
@@ -38,7 +38,7 @@ if s is
 //│   x = param0;
 //│   x
 //│ } else {
-//│   throw new this.Error("match error")
+//│   throw new this.Error("match error");
 //│ }
 //│ = 0
 
@@ -66,9 +66,9 @@ x => if x is Some(x) then x
 //│   if (x instanceof this.Some.class) {
 //│     param0 = x.value;
 //│     x1 = param0;
-//│     return x1
+//│     return x1;
 //│   } else {
-//│     throw new this.Error("match error")
+//│     throw new this.Error("match error");
 //│   }
 //│ }
 //│ = [Function (anonymous)]
@@ -127,15 +127,15 @@ fun f(x) = if x is
 //│     x1 = param0;
 //│     scrut = x1 > 0;
 //│     if (scrut) {
-//│       return 42
+//│       return 42;
 //│     } else {
-//│       return globalThis.log("oops")
+//│       return globalThis.log("oops");
 //│     }
 //│   } else {
 //│     if (x instanceof globalThis.None.class) {
-//│       return "ok"
+//│       return "ok";
 //│     } else {
-//│       return globalThis.log("oops")
+//│       return globalThis.log("oops");
 //│     }
 //│   }
 //│ };
@@ -167,16 +167,16 @@ fun f(x) = if x is
 //│   if (x instanceof globalThis.Some.class) {
 //│     param01 = x.value;
 //│     u = param01;
-//│     return u
+//│     return u;
 //│   } else {
 //│     if (x instanceof globalThis.Pair.class) {
 //│       param0 = x.fst;
 //│       param1 = x.snd;
 //│       a = param0;
 //│       b = param1;
-//│       return a + b
+//│       return a + b;
 //│     } else {
-//│       throw new globalThis.Error("match error")
+//│       throw new globalThis.Error("match error");
 //│     }
 //│   }
 //│ };
@@ -212,7 +212,7 @@ fun f(x) = log of if x is
 //│       tmp = "oops";
 //│     }
 //│   }
-//│   return globalThis.log(tmp)
+//│   return globalThis.log(tmp);
 //│ };
 //│ undefined
 

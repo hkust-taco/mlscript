@@ -20,9 +20,9 @@ const Stack$class = class Stack {
   }
   isEmpty(xs) {
     if (xs instanceof this.Nil.class) {
-      return true
+      return true;
     } else {
-      return false
+      return false;
     }
   }
   toString() { return "Stack"; }

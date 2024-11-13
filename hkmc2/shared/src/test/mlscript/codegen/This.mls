@@ -5,7 +5,7 @@
 fun test(x) =
   [this.a, x]
 //│ JS:
-//│ function test(x) { return [ globalThis.a, x ] }; undefined
+//│ function test(x) { return [ globalThis.a, x ]; }; undefined
 
 test(123)
 //│ = [ undefined, 123 ]
@@ -29,13 +29,13 @@ module Test with
 //│     this.a = 2;
 //│   }
 //│   test1(x) {
-//│     return globalThis.test(x)
+//│     return globalThis.test(x);
 //│   } 
 //│   test2(x1) {
 //│     return [
 //│       this.a,
 //│       x1
-//│     ]
+//│     ];
 //│   }
 //│   toString() { return "Test"; }
 //│ };

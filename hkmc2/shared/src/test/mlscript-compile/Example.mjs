@@ -4,10 +4,10 @@ const Example$class = class Example {
     
   }
   funnySlash(f, arg) {
-    return f(arg)
+    return f(arg);
   } 
   inc(x) {
-    return x + 1
+    return x + 1;
   }
   toString() { return "Example"; }
 }; const Example = new Example$class;

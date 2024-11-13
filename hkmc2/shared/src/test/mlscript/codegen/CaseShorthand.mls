@@ -11,21 +11,27 @@ case x then x
 :sjs
 case { x then x }
 //│ JS:
-//│ (caseScrut) => { let x; x = caseScrut; return x }
+//│ (caseScrut) => { let x; x = caseScrut; return x; }
 //│ = [Function (anonymous)]
 
 :sjs
 x => if x is
   0 then true
 //│ JS:
-//│ (x) => { if (x === 0) { return true } else { throw new this.Error("match error") } }
+//│ (x) => { if (x === 0) { return true; } else { throw new this.Error("match error"); } }
 //│ = [Function (anonymous)]
 
 :sjs
 case
   0 then true
 //│ JS:
-//│ (caseScrut) => { if (caseScrut === 0) { return true } else { throw new this.Error("match error") } }
+//│ (caseScrut) => {
+//│   if (caseScrut === 0) {
+//│     return true;
+//│   } else {
+//│     throw new this.Error("match error");
+//│   }
+//│ }
 //│ = [Function (anonymous)]
 
 :sjs
@@ -33,7 +39,7 @@ case
   0 then true
   _ then false
 //│ JS:
-//│ (caseScrut) => { if (caseScrut === 0) { return true } else { return false } }
+//│ (caseScrut) => { if (caseScrut === 0) { return true; } else { return false; } }
 //│ = [Function (anonymous)]
 
 class Some(value)
@@ -46,12 +52,12 @@ val isDefined = case
 //│ JS:
 //│ this.isDefined = (caseScrut) => {
 //│   if (caseScrut instanceof this.Some.class) {
-//│     return true
+//│     return true;
 //│   } else {
 //│     if (caseScrut instanceof this.None.class) {
-//│       return false
+//│       return false;
 //│     } else {
-//│       throw new this.Error("match error")
+//│       throw new this.Error("match error");
 //│     }
 //│   }
 //│ };

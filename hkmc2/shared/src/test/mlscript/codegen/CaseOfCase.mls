@@ -29,19 +29,19 @@ fun test(x) =
 //│     if (x instanceof globalThis.None.class) {
 //│       tmp1 = globalThis.None;
 //│     } else {
-//│       throw new globalThis.Error("match error")
+//│       throw new globalThis.Error("match error");
 //│     }
 //│   }
 //│   scrut = tmp1;
 //│   if (scrut instanceof globalThis.Some.class) {
 //│     param01 = scrut.value;
 //│     v1 = param01;
-//│     return globalThis.log(v1)
+//│     return globalThis.log(v1);
 //│   } else {
 //│     if (scrut instanceof globalThis.None.class) {
-//│       return globalThis.log("none")
+//│       return globalThis.log("none");
 //│     } else {
-//│       throw new globalThis.Error("match error")
+//│       throw new globalThis.Error("match error");
 //│     }
 //│   }
 //│ };

@@ -220,7 +220,7 @@ class JSBuilder extends CodeBuilder:
           case N => doc"$res;${returningTerm(rst)}"
       doc" # ${resJS}"
     case Return(res, true) => doc" # ${result(res)}"
-    case Return(res, false) => doc" # return ${result(res)}"
+    case Return(res, false) => doc" # return ${result(res)};"
     
     // TODO factor out common logic
     case Match(scrut, Case.Lit(syntax.Tree.BoolLit(true)) -> trm :: Nil, els, rest) =>
@@ -262,13 +262,13 @@ class JSBuilder extends CodeBuilder:
       doc" # /* $msg */"
     
     case Throw(res) =>
-      doc" # throw ${result(res)}"
+      doc" # throw ${result(res)};"
     
     case Break(lbl, false) =>
-      doc" # break ${getVar(lbl)}"
+      doc" # break ${getVar(lbl)};"
     
     case Break(lbl, true) =>
-      doc" # continue ${getVar(lbl)}"
+      doc" # continue ${getVar(lbl)};"
     
     case Label(lbl, bod, rst) =>
       scope.allocateName(lbl)

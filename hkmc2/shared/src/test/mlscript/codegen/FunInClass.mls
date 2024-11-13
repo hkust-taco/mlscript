@@ -35,7 +35,7 @@ fun test(a) =
 //│         a,
 //│         this.b,
 //│         c
-//│       ]
+//│       ];
 //│     } 
 //│     g(d) {
 //│       
@@ -46,13 +46,13 @@ fun test(a) =
 //│           this$Inner.b,
 //│           d,
 //│           e
-//│         ]
+//│         ];
 //│       };
-//│       return h(d)
+//│       return h(d);
 //│     }
 //│     toString() { return "Inner(" + this.b + ")"; }
 //│   };
-//│   return Inner(42)
+//│   return Inner(42);
 //│ };
 //│ undefined
 

@@ -69,7 +69,7 @@ fun test() =
 //│     toString() { return "Foo"; }
 //│   };
 //│   tmp = globalThis.log("ok");
-//│   return Foo
+//│   return Foo;
 //│ };
 //│ undefined
 
@@ -106,7 +106,7 @@ class Foo with
 //│     this.#y = tmp;
 //│   }
 //│   z() {
-//│     return this.#y + this.x
+//│     return this.#y + this.x;
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
@@ -133,10 +133,10 @@ class Foo with
 //│     globalThis.log("hello")
 //│   }
 //│   z1() {
-//│     return 5
+//│     return 5;
 //│   } 
 //│   z2() {
-//│     return 6
+//│     return 6;
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
@@ -153,12 +153,12 @@ class Foo with
 //│     this.x = 1;
 //│   }
 //│   foo(y) {
-//│     return this.x + y
+//│     return this.x + y;
 //│   } 
 //│   bar(z) {
 //│     let tmp;
 //│     tmp = this.foo(z);
-//│     return tmp + 1
+//│     return tmp + 1;
 //│   }
 //│   toString() { return "Foo"; }
 //│ };

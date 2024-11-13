@@ -29,17 +29,17 @@ const Option$class = class Option {
   }
   isDefined(x) {
     if (x instanceof this.Some.class) {
-      return true
+      return true;
     } else {
       if (x instanceof this.None.class) {
-        return false
+        return false;
       } else {
-        throw new globalThis.Error("match error")
+        throw new globalThis.Error("match error");
       }
     }
   } 
   test() {
-    return Predef.pipe(2134, Predef.print)
+    return Predef.pipe(2134, Predef.print);
   }
   toString() { return "Option"; }
 }; const Option = new Option$class;
