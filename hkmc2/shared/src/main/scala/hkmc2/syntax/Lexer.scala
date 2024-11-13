@@ -194,7 +194,8 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
   def loc(start: Int, end: Int): Loc = Loc(start, end, origin)
   
   def mkSymIdent(nme: Str) = nme match
-    case "..." => SUSPENSION
+    case ".." => SUSPENSION(false)
+    case "..." => SUSPENSION(true)
     case _ => IDENT(nme, true)
   
   @tailrec final
@@ -369,9 +370,9 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
     import BracketKind._
     def go(toks: Ls[Token -> Loc], canStartAngles: Bool, stack: Ls[BracketKind -> Loc -> Ls[Stroken -> Loc]], acc: Ls[Stroken -> Loc]): Ls[Stroken -> Loc] =
       toks match
-        case (SUSPENSION, l0) :: Nil =>
+        case (SUSPENSION(true), l0) :: Nil =>
           go(OPEN_BRACKET(Indent) -> l0 :: LITVAL(Tree.UnitLit(true)) -> l0 :: Nil, false, stack, acc)
-        case (SUSPENSION, l0) :: (NEWLINE, l1) :: rest =>
+        case (SUSPENSION(true), l0) :: (NEWLINE, l1) :: rest =>
           go(OPEN_BRACKET(Indent) -> (l0 ++ l1) :: rest, false, stack, acc)
         case (QUOTE, l0) :: (IDENT("<", true), l1) :: rest =>
           go(rest, false, stack, (IDENT("<", true), l1) :: (QUOTE, l0) :: acc)
@@ -526,7 +527,8 @@ object Lexer:
     case (BRACKETS(k, contents), _) =>
       k.beg + printTokens(contents) + k.end
     case (COMMENT(text: String), _) => "/*" + text + "*/"
-    case (SUSPENSION, _) => "..."
+    case (SUSPENSION(true), _) => "..."
+    case (SUSPENSION(false), _) => ".."
   def printTokens(ts: Ls[TokLoc]): Str =
     ts.iterator.map(printToken).mkString("|", "|", "|")
   

@@ -1,0 +1,127 @@
+:parseOnly
+:pt
+
+fun f(xs) = if xs is
+  [..xs] then 0
+  [...xs] then 1
+  [..[]] then 2
+  [...[]] then 3
+  [..Cons(x, xs)] then 4
+  [...Cons(x, xs)] then 5
+  [..] then 6
+  [...] then 7
+  [.., x] then 8
+  [..., x] then 9
+  [... , x] then 10
+//│ Parsed tree:
+//│ TermDef:
+//│   k = Fun
+//│   head = App:
+//│     lhs = Ident of "f"
+//│     rhs = Tup of Ls of 
+//│       Ident of "xs"
+//│   rhs = S of IfLike:
+//│     kw = keyword 'if'
+//│     split = InfixApp:
+//│       lhs = Ident of "xs"
+//│       kw = keyword 'is'
+//│       rhs = Block of Ls of 
+//│         InfixApp:
+//│           lhs = Tup of Ls of 
+//│             Spread:
+//│               kw = keyword '..'
+//│               kwLoc = S of Loc at :2:4-2:6
+//│               body = S of Ident of "xs"
+//│           kw = keyword 'then'
+//│           rhs = IntLit of 0
+//│         InfixApp:
+//│           lhs = Tup of Ls of 
+//│             Spread:
+//│               kw = keyword '...'
+//│               kwLoc = S of Loc at :3:4-3:7
+//│               body = S of Ident of "xs"
+//│           kw = keyword 'then'
+//│           rhs = IntLit of 1
+//│         InfixApp:
+//│           lhs = Tup of Ls of 
+//│             Spread:
+//│               kw = keyword '..'
+//│               kwLoc = S of Loc at :4:4-4:6
+//│               body = S of Tup of Nil
+//│           kw = keyword 'then'
+//│           rhs = IntLit of 2
+//│         InfixApp:
+//│           lhs = Tup of Ls of 
+//│             Spread:
+//│               kw = keyword '...'
+//│               kwLoc = S of Loc at :5:4-5:7
+//│               body = S of Tup of Nil
+//│           kw = keyword 'then'
+//│           rhs = IntLit of 3
+//│         InfixApp:
+//│           lhs = Tup of Ls of 
+//│             Spread:
+//│               kw = keyword '..'
+//│               kwLoc = S of Loc at :6:4-6:6
+//│               body = S of App:
+//│                 lhs = Ident of "Cons"
+//│                 rhs = Tup of Ls of 
+//│                   Ident of "x"
+//│                   Ident of "xs"
+//│           kw = keyword 'then'
+//│           rhs = IntLit of 4
+//│         InfixApp:
+//│           lhs = Tup of Ls of 
+//│             Spread:
+//│               kw = keyword '...'
+//│               kwLoc = S of Loc at :7:4-7:7
+//│               body = S of App:
+//│                 lhs = Ident of "Cons"
+//│                 rhs = Tup of Ls of 
+//│                   Ident of "x"
+//│                   Ident of "xs"
+//│           kw = keyword 'then'
+//│           rhs = IntLit of 5
+//│         InfixApp:
+//│           lhs = Tup of Ls of 
+//│             Spread:
+//│               kw = keyword '..'
+//│               kwLoc = S of Loc at :8:4-8:6
+//│               body = N
+//│           kw = keyword 'then'
+//│           rhs = IntLit of 6
+//│         InfixApp:
+//│           lhs = Tup of Ls of 
+//│             Spread:
+//│               kw = keyword '...'
+//│               kwLoc = S of Loc at :9:4-9:7
+//│               body = N
+//│           kw = keyword 'then'
+//│           rhs = IntLit of 7
+//│         InfixApp:
+//│           lhs = Tup of Ls of 
+//│             Spread:
+//│               kw = keyword '..'
+//│               kwLoc = S of Loc at :10:4-10:6
+//│               body = N
+//│             Ident of "x"
+//│           kw = keyword 'then'
+//│           rhs = IntLit of 8
+//│         InfixApp:
+//│           lhs = Tup of Ls of 
+//│             Spread:
+//│               kw = keyword '...'
+//│               kwLoc = S of Loc at :11:4-11:7
+//│               body = N
+//│             Ident of "x"
+//│           kw = keyword 'then'
+//│           rhs = IntLit of 9
+//│         InfixApp:
+//│           lhs = Tup of Ls of 
+//│             Spread:
+//│               kw = keyword '...'
+//│               kwLoc = S of Loc at :12:4-12:7
+//│               body = N
+//│             Ident of "x"
+//│           kw = keyword 'then'
+//│           rhs = IntLit of 10

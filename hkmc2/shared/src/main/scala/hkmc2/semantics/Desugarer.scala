@@ -410,9 +410,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
         // 2. A variable number of middle patterns indicated by `..`.
         // 3. A fixed number of trailing patterns.
         val (lead, rest) = args.foldLeft[(Ls[Tree], Opt[(Opt[Tree], Ls[Tree])])]((Nil, N)):
-          case ((lead, N), Jux(Ident(".."), pat)) => (lead, S((S(pat), Nil)))
-          case ((lead, N), App(Ident(".."), TyTup(tys))) => (lead, S((S(Tup(tys)), Nil)))
-          case ((lead, N), Ident("..")) => (lead, S((N, Nil)))
+          case ((lead, N), Spread(_, _, patOpt)) => (lead, S((patOpt, Nil)))
           case ((lead, N), pat) => (lead :+ pat, N)
           case ((lead, S((rest, last))), pat) => (lead, S((rest, last :+ pat)))
         // Some helper functions. TODO: deduplicate
