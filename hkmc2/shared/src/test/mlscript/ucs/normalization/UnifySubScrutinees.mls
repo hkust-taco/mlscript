@@ -43,14 +43,14 @@ fun sum(acc, xs) =
 //│ >    xs@30 is Cons($param0@31, $param1@32) and
 //│ >      let x@33 = $param0@31#0
 //│ >      let xs@34 = $param1@32#0
-//│ >      else globalThis:block#3#666.sum‹member:sum›(builtin:+#87(acc@29#666, x@33#666), xs@34#666)
+//│ >      else globalThis:block#3#666.sum‹member:sum›(builtin:+#0(acc@29#666, x@33#666), xs@34#666)
 //│ >    xs@30 is Nil then acc@29#666
 //│ Normalized:
 //│ >  if
 //│ >    xs@30 is Cons($param0@31, $param1@32) and
 //│ >      let x@33 = $param0@31#0
 //│ >      let xs@34 = $param1@32#0
-//│ >      else globalThis:block#3#666.sum‹member:sum›(builtin:+#87(acc@29#666, x@33#666), xs@34#666)
+//│ >      else globalThis:block#3#666.sum‹member:sum›(builtin:+#0(acc@29#666, x@33#666), xs@34#666)
 //│ >    xs@30 is Nil then acc@29#666
 
 :todo
@@ -70,12 +70,12 @@ fun test(xs) =
 //│ >      let x@52 = $param0@45#1
 //│ >      $param1@46 is Cons($param0@48, $param1@49) and
 //│ >        let y@53 = $param0@48#1
-//│ >        $param1@49 is Nil then builtin:+#88(x@52#666, y@53#666)
+//│ >        $param1@49 is Nil then builtin:+#0(x@52#666, y@53#666)
 //│ >    xs@39 is Some($param0@40) and $param0@40 is Cons($param0@41, $param1@42) and $param0@41 is "mul" and $param1@42 is Cons($param0@45, $param1@46) and
 //│ >      let x@47 = $param0@45#0
 //│ >      $param1@46 is Cons($param0@48, $param1@49) and
 //│ >        let y@50 = $param0@48#0
-//│ >        $param1@49 is Nil then builtin:*#23(x@47#666, y@50#666)
+//│ >        $param1@49 is Nil then builtin:*#0(x@47#666, y@50#666)
 //│ >    xs@39 is Some($param0@40) and $param0@40 is Cons($param0@41, $param1@42) and $param0@41 is "sum" and
 //│ >      let xs@43 = $param1@42#0
 //│ >      else globalThis:block#3#666.sum‹member:sum›(0, xs@43#666)
@@ -89,12 +89,12 @@ fun test(xs) =
 //│ >          let x@52 = $param0@45#1
 //│ >          $param1@46 is Cons($param0@48, $param1@49) and
 //│ >            let y@53 = $param0@48#1
-//│ >            $param1@49 is Nil then builtin:+#88(x@52#666, y@53#666)
+//│ >            $param1@49 is Nil then builtin:+#0(x@52#666, y@53#666)
 //│ >        $param0@41 is "mul" and $param1@42 is Cons($param0@45, $param1@46) and
 //│ >          let x@47 = $param0@45#0
 //│ >          $param1@46 is Cons($param0@48, $param1@49) and
 //│ >            let y@50 = $param0@48#0
-//│ >            $param1@49 is Nil then builtin:*#23(x@47#666, y@50#666)
+//│ >            $param1@49 is Nil then builtin:*#0(x@47#666, y@50#666)
 //│ >        $param0@41 is "sum" and
 //│ >          let xs@43 = $param1@42#0
 //│ >          else globalThis:block#3#666.sum‹member:sum›(0, xs@43#666)

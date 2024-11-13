@@ -18,23 +18,20 @@ import Keyword.{`let`, `set`}
 
 object Elaborator:
   
-  val builtinOpsMap: Map[Str, BuiltinSymbol] =
-    val binOps: Ls[Str] = Ls(
-      ",",
-      "+", "-", "*", "/", "%",
-      "==", "!=", "<", "<=", ">", ">=",
-      "===",
-      "&&", "||")
-    val isUnary: Str => Bool = Set("-", "+", "!", "~").contains
-    val baseBuiltins = binOps.map: op =>
-        op -> BuiltinSymbol(op, binary = true, unary = isUnary(op), nullary = false)
-      .toMap
-    baseBuiltins
-      + (";" -> baseBuiltins(","))
-      + ("+." -> baseBuiltins("+"))
-      + ("-." -> baseBuiltins("-"))
-      + ("*." -> baseBuiltins("*"))
-  val reservedNames = builtinOpsMap.keySet + "NaN" + "Infinity"
+  private val binaryOps = Ls(
+    ",",
+    "+", "-", "*", "/", "%",
+    "==", "!=", "<", "<=", ">", ">=",
+    "===",
+    "&&", "||")
+  private val unaryOps = Set("-", "+", "!", "~")
+  private val aliasOps = Map(
+    ";" -> ",",
+    "+." -> "+",
+    "-." -> "-",
+    "*." -> "*")
+
+  val reservedNames = binaryOps.toSet ++ aliasOps.keySet + "NaN" + "Infinity"
   
   case class Ctx(outer: Opt[InnerSymbol], parent: Opt[Ctx], env: Map[Str, Ctx.Elem]):
     def +(local: Str -> Symbol): Ctx = copy(outer, env = env + local.mapSecond(Ctx.RefElem(_)))
@@ -103,6 +100,13 @@ extends Importer:
   private val allocSkolemSym = VarSymbol(Ident("Alloc"), allocSkolemUID)
   private val allocSkolemDef = TyParam(FldFlags.empty, N, allocSkolemSym)
   allocSkolemSym.decl = S(allocSkolemDef)
+
+  private val builtinOpsMap =
+    val baseBuiltins = binaryOps.map: op =>
+        op -> BuiltinSymbol(op, binary = true, unary = unaryOps(op), nullary = false)
+      .toMap
+    baseBuiltins ++ aliasOps.map:
+      case (alias, base) => alias -> baseBuiltins(base)
   
   def mkLetBinding(sym: LocalSymbol, rhs: Term): Ls[Statement] =
     LetDecl(sym) :: DefineVar(sym, rhs) :: Nil
