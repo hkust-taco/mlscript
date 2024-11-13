@@ -2,7 +2,7 @@
 
 :js
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 fun even(x) = intMod(x, 2) == 0
 fun int_val_of_char(x) = int_of_char(x) - 48
 fun int_val_of_string(s) =
@@ -18,7 +18,7 @@ fun break_(p, ls) = if ls is
 fun lines(s) = if break_(x => x == "|", s) is Tup2(l, s_) then
   let tt = if s_ is
     Nil then Nil
-    Cons(_h, s__) then lines(s__)
+    Cons(_, s__) then lines(s__)
   l :: tt
 fun process(process_arg1) = doInput(randomInts(111, 47), process_arg1)
 fun doInput(state, lls) = if lls is

@@ -124,7 +124,7 @@ fun dtor(x) = x * pi / 180.0
 fun camparams(lookfrom, lookat, vup, fov, winsize) =
   let initfirstray = vecsub(lookat, lookfrom)
   if vecnorm(initfirstray) is
-    Tup2(lookdir, dist) and vecnorm(veccross(lookdir, vup)) is Tup2(scrni, _d1) and vecnorm(veccross(scrni, lookdir)) is Tup2(scrnj, _d2) then
+    Tup2(lookdir, dist) and vecnorm(veccross(lookdir, vup)) is Tup2(scrni, _) and vecnorm(veccross(scrni, lookdir)) is Tup2(scrnj, _) then
       let xfov = fov
       let yfov = fov
       let xwinsize = winsize
@@ -253,7 +253,7 @@ fun shadowed(pos, dir, lcolour) =
       else
         Tup2(true, lcolour)
 fun sphereintersect(pos, dir, sp) =
-  if sp is Sphere(spos, rad, _d) then
+  if sp is Sphere(spos, rad, _) then
     let m = vecsub(pos, spos)
     let bm = vecdot(m, dir)
     let m2 = vecdot(m, m)
@@ -266,7 +266,7 @@ fun sphereintersect(pos, dir, sp) =
         shi < 0.0 then Tup2(false, 0.0)
         else Tup2(true, shi)
       else Tup2(true, slo)
-fun spherenormal(pos, sp) = if sp is Sphere(spos, rad, _d) then
+fun spherenormal(pos, sp) = if sp is Sphere(spos, rad, _) then
   vecscale(vecsub(pos, spos), 1 / rad)
 fun hash(param) =
   fun u8(x) = nofibBigInt(round(255 * x))
@@ -275,12 +275,13 @@ fun run(winsize) = hash(map(snd, ray(winsize)))
 fun testSphere_nofib(n) = run(n)
 testSphere_nofib(30)
 //│ = 5303517076988315313332949801059915491159227238911114869988477691048042454660240028235263286419219487056215941279053460510402913638191134284712332734906453769177119866479549825710564164275378353165954211251783583776613466486364346857260327927988942302708582821755390617347892889203137614326710267631036346563969292879841889783895830486185094255970382302038580666396338511666737651046972647664365680026395064916507788381669683616268208254545568013323075147569343527502482992453415977736934966646039451380029114116189124196276320031764844380624699920031305131672697387138852897706575918870327168611841752330951914241998117147850328297747558099955601889252104175852174057287066122859365466714696330034330699419079661953966001855819730466637347813009964893758393398194456345159379187006376036876209312080525632387380670119254556148852520127502599030787981579016179740021934386773631075580149533017386555553650112461351624483964765154488441338857870911043358714412530793575995251653967501366725439356901586292297118595437194582661104059821332957540366106419721198265755243343224842512131366898546251377194773492369372328808207397107344802194547364640358333075609512226775541628703229778371160920064859614452908773471314342954366183109912759985134547433205776906834992238207194263830836275456360444786309396200054415810563334317160702817096977297265083167419253864506146719603442916146256166128051227049046678660445048488558024838465181996990391375870148258607829684558969016638984826787347541150003498463027973936442463090071589323955227296902474986841480537918878837478902992973202305608637036765245465738479448312n
-//│ pi = 3.141592653589793
+//│ background = Tup3 { fst: 0.078, snd: 0.361, thd: 0.753 }
 //│ epsilon = 0.000001
+//│ fov = 45
 //│ infinity = 100000000
 //│ lookat = Tup3 { fst: 0, snd: 0, thd: 0 }
-//│ vup = Tup3 { fst: 0, snd: 0, thd: 1 }
-//│ fov = 45
+//│ lookfrom = Tup3 { fst: 2.1, snd: 1.3, thd: 1.7 }
+//│ pi = 3.141592653589793
 //│ > Cons {
 //│ >   head: Ambient { v: Tup3 { fst: 0.035, snd: 0.0325, thd: 0.025 } },
 //│ >   tail: Cons {
@@ -288,6 +289,16 @@ testSphere_nofib(30)
 //│ >     tail: Cons { head: [Specular], tail: [Cons] }
 //│ >   }
 //│ s2 = }
+//│ > Cons {
+//│ >   head: Point {
+//│ >     x: Tup3 { fst: 4, snd: 3, thd: 2 },
+//│ >     y: Tup3 { fst: 0.288675, snd: 0.288675, thd: 0.288675 }
+//│ >   },
+//│ >   tail: Cons {
+//│ >     head: Point { x: [Tup3], y: [Tup3] },
+//│ >     tail: Cons { head: [Point], tail: [Nil] }
+//│ >   }
+//│ testlights = }
 //│ > Cons {
 //│ >   head: Sphere {
 //│ >     pos: Tup3 { fst: 0, snd: 0, thd: 0 },
@@ -299,15 +310,4 @@ testSphere_nofib(30)
 //│ >     tail: Cons { head: [Sphere], tail: [Cons] }
 //│ >   }
 //│ testspheres = }
-//│ > Cons {
-//│ >   head: Point {
-//│ >     x: Tup3 { fst: 4, snd: 3, thd: 2 },
-//│ >     y: Tup3 { fst: 0.288675, snd: 0.288675, thd: 0.288675 }
-//│ >   },
-//│ >   tail: Cons {
-//│ >     head: Point { x: [Tup3], y: [Tup3] },
-//│ >     tail: Cons { head: [Point], tail: Nil {} }
-//│ >   }
-//│ testlights = }
-//│ lookfrom = Tup3 { fst: 2.1, snd: 1.3, thd: 1.7 }
-//│ background = Tup3 { fst: 0.078, snd: 0.361, thd: 0.753 }
+//│ vup = Tup3 { fst: 0, snd: 0, thd: 1 }

@@ -3,7 +3,7 @@
 
 :js
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 abstract class BinTree[T, U]: Cell[T] | Node[T, U]
 class Cell[T](value: T) extends BinTree[T, U]
 class Node[T, U](value: U, left: BinTree[T, U], right: BinTree[T, U]) extends BinTree[T, U]
@@ -18,11 +18,11 @@ module Or2 extends Componenet
 module Xor extends Componenet
 module Unit
 class PS[T](pid: Int, compType: Componenet, pathDepth: Int, inports: List[Tup3(Int, Int, T)], outports: List[Tup6(Int, T, Bool, Int, Bool, Int)])
-fun pid(p) = if p is PS(_pid, _, _, _, _) then _pid
-fun compType(p) = if p is PS(_, _compType, _, _, _) then _compType
-fun pathDepth(p) = if p is PS(_, _, _pathDepth, _, _) then _pathDepth
-fun inports(p) = if p is PS(_, _, _, _inports, _) then _inports
-fun outports(p) = if p is PS(_, _, _, _, _outports) then _outports
+fun pid(p) = if p is PS(pid_, _, _, _, _) then pid_
+fun compType(p) = if p is PS(_, compType_, _, _, _) then compType_
+fun pathDepth(p) = if p is PS(_, _, pathDepth_, _, _) then pathDepth_
+fun inports(p) = if p is PS(_, _, _, inports_, _) then inports_
+fun outports(p) = if p is PS(_, _, _, _, outports_) then outports_
 fun updateOutports(p, noutports) = PS(pid(p), compType(p), pathDepth(p), inports(p), noutports)
 fun updateInports(p, ninports) = PS(pid(p), compType(p), pathDepth(p), ninports, outports(p))
 abstract class Boolean: F | T
@@ -172,7 +172,7 @@ fun apply_component(comp, signals) = if
   comp is Xor and signals is Cons(x, Cons(y, Nil)) then Some(xor(x, y))
   comp is None_ then None
 fun store_inputs(label_inputs, state) = if state is
-  PS(pid_, Inp, _b, _c, _d) then
+  PS(pid_, Inp, _, _, _) then
     fun lscomp(ls) = if ls is
       Nil then Nil
       Cons(h, t) and
@@ -207,20 +207,20 @@ fun run(num_bits, num_cycles) =
   circuit_simulate(cycles, example)
 testCircsim_nofib(40).toString()
 //│ = '[[F,F,F,F,F,F,F,F],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T]]'
-//│ > PS {
-//│ >   pid: -1,
-//│ >   compType: None_ {},
-//│ >   pathDepth: -1,
-//│ >   inports: Nil {},
-//│ >   outports: Nil {}
-//│ emptyState = }
 //│ > Tup8 {
 //│ >   fst: -1,
 //│ >   snd: -1,
-//│ >   thd: F {},
+//│ >   thd: F { class: [class F] },
 //│ >   fth: false,
 //│ >   ffth: 0,
 //│ >   sxth: false,
 //│ >   svth: 0,
 //│ >   eghth: 1
 //│ emptyPacket = }
+//│ > PS {
+//│ >   pid: -1,
+//│ >   compType: None_ { class: [class None_] },
+//│ >   pathDepth: -1,
+//│ >   inports: Nil { class: [class Nil] },
+//│ >   outports: Nil { class: [class Nil] }
+//│ emptyState = }
