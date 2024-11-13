@@ -2,7 +2,7 @@
 
 :js
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 abstract class MandTree: NS | EW | Leaf
 class NS(l: MandTree, r: MandTree)
 class EW(l: MandTree, r: MandTree)
@@ -82,8 +82,7 @@ fun finite(t) = if t is
   EW(t1, t2) then finite(t1) and finite(t2)
 fun testMandel2_nofib(n) =
   finite(build_tree(Tup2(0,0), Tup2(size, intDiv(size, 2))))
-nofibPrint(testMandel2_nofib(0).toString())
-//│ > "true"
+testMandel2_nofib(0)
 //│ = true
 //│ size = 200
 //│ pmn = -2.25

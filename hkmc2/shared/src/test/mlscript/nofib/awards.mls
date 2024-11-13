@@ -1,5 +1,6 @@
 0
 
+// NOTE: original input 1000
 :js
 :import NofibPrelude.mls
 //│ Imported 111 member(s)

@@ -1,9 +1,8 @@
 0
 
-// NOTE: original input 14
 :js
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 abstract class Pss[T]: Pz | Pc[T]
 type Ps[T] = Lazy[Pss[T]]
 class Pc[T](f: T, s: Ps[T])
@@ -108,6 +107,6 @@ fun testPower_nofib(p) =
   extract(p, minusPs(divPs(sinx(), cosx()), revert(integral(divPs(fromIntegerPs(1), addPs(fromIntegerPs(1), powerPs(x_(), 2)))))));
   extract(p, ts());
   extract(p, tree())
-testPower_nofib(6).toString()
-//│ = '[0,1,1,2,5,14]'
+testPower_nofib(14).toString()
+//│ = '[0,1,1,2,5,14,42,132,429,1430,4862,16796,58786,208012]'
 
