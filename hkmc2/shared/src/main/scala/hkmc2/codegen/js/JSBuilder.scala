@@ -256,7 +256,7 @@ class JSBuilder extends CodeBuilder:
       case N  => doc""
       t :: e :: returningTerm(rest)
     case Match(scrut, Case.Tup(len, inf) -> trm :: Nil, els, rest) =>
-      val test = doc"Array.isArray(${ result(scrut) }) && ${ result(scrut) }.length ${if inf then ">=" else "==="} ${len}"
+      val test = doc"globalThis.Array.isArray(${ result(scrut) }) && ${ result(scrut) }.length ${if inf then ">=" else "==="} ${len}"
       val t = doc" # if (${ test }) { #{ ${
           returningTerm(trm)
         } #}  # }"

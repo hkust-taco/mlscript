@@ -27,7 +27,7 @@ fun nonsense(xs) = if xs is
 //│ JS:
 //│ function nonsense(xs) {
 //│   let rest, ys;
-//│   if (Array.isArray(xs) && xs.length >= 0) {
+//│   if (globalThis.Array.isArray(xs) && xs.length >= 0) {
 //│     rest = globalThis.Predef.tupleSlice(xs, 0, 0);
 //│     ys = rest;
 //│     return ys;
@@ -61,7 +61,7 @@ fun lead_and_last(xs) = if xs is
 //│ JS:
 //│ function lead_and_last(xs) {
 //│   let last0, rest, first0, x, ys, y;
-//│   if (Array.isArray(xs) && xs.length >= 2) {
+//│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];
 //│     rest = globalThis.Predef.tupleSlice(xs, 1, 1);
 //│     last0 = globalThis.Predef.tupleGet(xs, -1);
@@ -70,7 +70,7 @@ fun lead_and_last(xs) = if xs is
 //│     y = last0;
 //│     return x + y;
 //│   } else {
-//│     if (Array.isArray(xs) && xs.length === 0) {
+//│     if (globalThis.Array.isArray(xs) && xs.length === 0) {
 //│       return 0;
 //│     } else {
 //│       throw new globalThis.Error("match error");
@@ -114,12 +114,12 @@ fun nested_tuple_patterns(xs) = if xs is
 //│ JS:
 //│ function nested_tuple_patterns(xs) {
 //│   let last0, rest, first0, x, first1, first01, y, z, w, tmp, tmp1;
-//│   if (Array.isArray(xs) && xs.length >= 2) {
+//│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];
 //│     rest = globalThis.Predef.tupleSlice(xs, 1, 1);
 //│     last0 = globalThis.Predef.tupleGet(xs, -1);
 //│     x = first0;
-//│     if (Array.isArray(rest) && rest.length === 2) {
+//│     if (globalThis.Array.isArray(rest) && rest.length === 2) {
 //│       first01 = rest[0];
 //│       first1 = rest[1];
 //│       y = first01;
@@ -132,7 +132,7 @@ fun nested_tuple_patterns(xs) = if xs is
 //│       throw new globalThis.Error("match error");
 //│     }
 //│   } else {
-//│     if (Array.isArray(xs) && xs.length === 0) {
+//│     if (globalThis.Array.isArray(xs) && xs.length === 0) {
 //│       return 0;
 //│     } else {
 //│       throw new globalThis.Error("match error");
