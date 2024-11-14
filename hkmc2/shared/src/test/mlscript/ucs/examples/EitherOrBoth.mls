@@ -1,8 +1,8 @@
-:import ../prelude/String.mls
-//│ Imported 2 member(s)
+import "../../../mlscript-compile/String.mls"
+import "../../../mlscript-compile/Option.mls"
 
-:import ../prelude/Option.mls
-//│ Imported 3 member(s)
+open Option
+open String
 
 abstract class EitherOrBoth[out A, out B]: (Left[A, B] | Right[A, B] | Both[A, B])
 class Left[out A, out B](value: A) extends EitherOrBoth[A, B]

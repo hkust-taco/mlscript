@@ -219,10 +219,11 @@ class Lowering(using TL, Raise, Elaborator.State):
               case Pattern.ClassLike(cls, trm, args0, _refined) =>
                 subTerm(trm): st =>
                   val args = args0.getOrElse(Nil)
-                  val clsDefn = cls.defn.getOrElse(die)
-                  val clsParams = clsDefn.paramsOpt.getOrElse(Nil)
+                  val clsParams = cls match
+                    case cls: ClassSymbol => cls.params
+                    case _: ModuleSymbol => Nil
                   assert(args0.isEmpty || clsParams.length === args.length)
-                  def mkArgs(args: Ls[Param -> BlockLocalSymbol])(using Subst): Case -> Block = args match
+                  def mkArgs(args: Ls[(LocalSymbol & NamedSymbol) -> BlockLocalSymbol])(using Subst): Case -> Block = args match
                   // def mkArgs(args: Ls[Param -> BlockLocalSymbol])(using Subst): Block = args match
                     case Nil =>
                       // mkMatch(Case.Cls(cls, st) -> go(tail, topLevel = false))
@@ -232,7 +233,7 @@ class Lowering(using TL, Raise, Elaborator.State):
                       // Assign(arg, Select(sr, Tree.Ident("head")), mkArgs(args))
                       
                       val (cse, blk) = mkArgs(args)
-                      (cse, Assign(arg, Select(sr, param.sym.id/*FIXME incorrect Ident?*/), blk))
+                      (cse, Assign(arg, Select(sr, param.id/*FIXME incorrect Ident?*/), blk))
                       // mkMatch(cse -> Assign(arg, Select(sr, param.sym.id/*FIXME incorrect Ident?*/), blk))
                       // Assign(arg, Select(sr, param.sym.id/*FIXME incorrect Ident?*/), mkArgs(args))
                       

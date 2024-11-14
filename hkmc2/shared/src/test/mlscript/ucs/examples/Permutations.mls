@@ -1,11 +1,12 @@
-:import ../prelude/List.mls
-//│ Imported 4 member(s)
-:import ../prelude/String.mls
-//│ Imported 2 member(s)
+:todo
 
+import "../../../mlscript-compile/List.mls"
+import "../../../mlscript-compile/String.mls"
+
+open List
+open String
 
 fun (|>) pipe(x, f) = f(x)
-
 
 fun (:::) appendAll[A](xs: List[A], ys: List[A]): List[A] =
   if xs is
@@ -39,6 +40,7 @@ fun map(f, xs) =
     Nil then Nil
     Cons(x, xs') then f(x) :: map(f, xs')
 fun showListList(xs) = "[" ++ join(", ")(map(showList, xs)) ++ "]"
+//│ /!!!\ Uncaught error: scala.NotImplementedError: (class:List,45003) (of class Tuple2)
 
 fun insertAllPositions(z) =
   fun aux(prev, acc, xs) =
@@ -48,19 +50,55 @@ fun insertAllPositions(z) =
         let nu = ((prev :+ z) ::: xs)
         aux(prev :+ head, nu :: acc, tail)
   xs => aux(Nil, Nil, xs)
+//│ ╔══[ERROR] Name not found: :::
+//│ ║  l.50: 	        let nu = ((prev :+ z) ::: xs)
+//│ ╙──      	                              ^^^
+//│ ╔══[ERROR] Name not found: :+
+//│ ║  l.50: 	        let nu = ((prev :+ z) ::: xs)
+//│ ╙──      	                        ^^
+//│ ╔══[ERROR] Name not found: :+
+//│ ║  l.51: 	        aux(prev :+ head, nu :: acc, tail)
+//│ ╙──      	                 ^^
+//│ ╔══[ERROR] Name not found: :+
+//│ ║  l.48: 	      Nil then ((prev :+ z) :: acc) |> reverse
+//│ ╙──      	                      ^^
+//│ ╔══[ERROR] Name not found: reverse
+//│ ║  l.48: 	      Nil then ((prev :+ z) :: acc) |> reverse
+//│ ╙──      	                                       ^^^^^^^
 
 insertAllPositions(0)(1 :: 2 :: 3 :: Nil) |> showListList
+//│ ╔══[ERROR] Name not found: showListList
+//│ ║  l.69: 	insertAllPositions(0)(1 :: 2 :: 3 :: Nil) |> showListList
+//│ ╙──      	                                             ^^^^^^^^^^^^
 
 fun permutations(xs) =
   if xs is
     Nil then Nil
     Cons(x, Nil) then (x :: Nil) :: Nil
     Cons(x, xs') then foldLeft((acc, ys) => acc ::: insertAllPositions(x)(ys))(Nil)(permutations(xs'))
+//│ ╔══[ERROR] Name not found: foldLeft
+//│ ║  l.78: 	    Cons(x, xs') then foldLeft((acc, ys) => acc ::: insertAllPositions(x)(ys))(Nil)(permutations(xs'))
+//│ ╙──      	                      ^^^^^^^^
+//│ ╔══[ERROR] Name not found: :::
+//│ ║  l.78: 	    Cons(x, xs') then foldLeft((acc, ys) => acc ::: insertAllPositions(x)(ys))(Nil)(permutations(xs'))
+//│ ╙──      	                                                ^^^
 
 permutations(Nil) |> showListList
 permutations(1 :: Nil) |> showListList
 permutations(1 :: 2 :: Nil) |> showListList
 permutations(1 :: 2 :: 3 :: Nil) |> showListList
+//│ ╔══[ERROR] Name not found: showListList
+//│ ║  l.86: 	permutations(Nil) |> showListList
+//│ ╙──      	                     ^^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: showListList
+//│ ║  l.87: 	permutations(1 :: Nil) |> showListList
+//│ ╙──      	                          ^^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: showListList
+//│ ║  l.88: 	permutations(1 :: 2 :: Nil) |> showListList
+//│ ╙──      	                               ^^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: showListList
+//│ ║  l.89: 	permutations(1 :: 2 :: 3 :: Nil) |> showListList
+//│ ╙──      	                                    ^^^^^^^^^^^^
 
 fun filterNot(f, xs) =
   if xs is
@@ -76,8 +114,29 @@ fun permutations'(xs) =
     else
       let f(acc, x) = acc ::: map((ys) => x :: ys, permutations'(filterNot((y) => x == y, xs)))
       foldLeft(f)(Nil)(xs)
+//│ ╔══[ERROR] Name not found: :::
+//│ ║  l.115: 	      let f(acc, x) = acc ::: map((ys) => x :: ys, permutations'(filterNot((y) => x == y, xs)))
+//│ ╙──       	                          ^^^
+//│ ╔══[ERROR] Name not found: map
+//│ ║  l.115: 	      let f(acc, x) = acc ::: map((ys) => x :: ys, permutations'(filterNot((y) => x == y, xs)))
+//│ ╙──       	                              ^^^
+//│ ╔══[ERROR] Name not found: foldLeft
+//│ ║  l.116: 	      foldLeft(f)(Nil)(xs)
+//│ ╙──       	      ^^^^^^^^
 
 permutations'(Nil) |> showListList
 permutations'(1 :: Nil) |> showListList
 permutations'(1 :: 2 :: Nil) |> showListList
 permutations'(1 :: 2 :: 3 :: Nil) |> showListList
+//│ ╔══[ERROR] Name not found: showListList
+//│ ║  l.127: 	permutations'(Nil) |> showListList
+//│ ╙──       	                      ^^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: showListList
+//│ ║  l.128: 	permutations'(1 :: Nil) |> showListList
+//│ ╙──       	                           ^^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: showListList
+//│ ║  l.129: 	permutations'(1 :: 2 :: Nil) |> showListList
+//│ ╙──       	                                ^^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: showListList
+//│ ║  l.130: 	permutations'(1 :: 2 :: 3 :: Nil) |> showListList
+//│ ╙──       	                                     ^^^^^^^^^^^^

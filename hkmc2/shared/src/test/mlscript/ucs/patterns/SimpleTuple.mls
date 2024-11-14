@@ -153,8 +153,9 @@ match_against_different_length([9, 11])
 match_against_different_length([13, 13, 13])
 //│ = 42
 
-:import ../prelude/Option.mls
-//│ Imported 3 member(s)
+import "../../../mlscript-compile/Option.mls"
+
+open Option
 
 :ucs desugared normalized
 :todo // Sub-scrutinees are not memorized thus the normalization is not correct.
@@ -164,18 +165,18 @@ fun with_the_common_prefix(xs) =
     [None] then 0
 //│ Desugared:
 //│ >  if
-//│ >    xs@151 is []=1 and
-//│ >      let $first0@152 = xs@151#3.0
-//│ >      $first0@152 is Some($param0@153) and
-//│ >        let x@154 = $param0@153#0
-//│ >        else builtin:+#0(x@154#666, 1)
-//│ >    xs@151 is []=1 and
-//│ >      let $first0@152 = xs@151#1.0
-//│ >      $first0@152 is None then 0
+//│ >    xs@150 is []=1 and
+//│ >      let $first0@151 = xs@150#3.0
+//│ >      $first0@151 is Some($param0@152) and
+//│ >        let x@153 = $param0@152#0
+//│ >        else builtin:+#0(x@153#666, 1)
+//│ >    xs@150 is []=1 and
+//│ >      let $first0@151 = xs@150#1.0
+//│ >      $first0@151 is None then 0
 //│ Normalized:
-//│ >  if xs@151 is []=1 and
-//│ >    let $first0@152 = xs@151#3.0
-//│ >    $first0@152 is Some($param0@153) and
-//│ >      let x@154 = $param0@153#0
-//│ >      else builtin:+#0(x@154#666, 1)
-//│ >    $first0@152 is None then 0
+//│ >  if xs@150 is []=1 and
+//│ >    let $first0@151 = xs@150#3.0
+//│ >    $first0@151 is Some($param0@152) and
+//│ >      let x@153 = $param0@152#0
+//│ >      else builtin:+#0(x@153#666, 1)
+//│ >    $first0@151 is None then 0

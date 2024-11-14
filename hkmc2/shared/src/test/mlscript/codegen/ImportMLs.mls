@@ -34,15 +34,8 @@ case Some(x) then x
 //│ ╙──      	     ^^^^
 //│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Jux(Error(),App(Ident(Some),Tup(List(Ident(x))))),keyword 'then',Ident(x)) (of class hkmc2.syntax.Tree$InfixApp)
 
-:fixme
 case { Some(x) then x }
-//│ ╔══[ERROR] mismatched arity: expect 0, found 1
-//│ ║  l.38: 	case { Some(x) then x }
-//│ ╙──      	       ^^^^^^^
-//│ ╔══[ERROR] Name not found: x
-//│ ║  l.38: 	case { Some(x) then x }
-//│ ╙──      	                    ^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ = [Function (anonymous)]
 
 Some(1) isDefined()
 //│ = true
@@ -82,13 +75,13 @@ None == Option.None
 :e
 Option.oops
 //│ ╔══[ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.83: 	Option.oops
+//│ ║  l.76: 	Option.oops
 //│ ╙──      	      ^^^^^
 
 :e
 open Option { oops }
 //│ ╔══[ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.89: 	open Option { oops }
+//│ ║  l.82: 	open Option { oops }
 //│ ╙──      	              ^^^^
 
 oops
@@ -96,7 +89,7 @@ oops
 :e
 Option.None.oops
 //│ ╔══[ERROR] Module 'None' does not contain member 'oops'
-//│ ║  l.97: 	Option.None.oops
+//│ ║  l.90: 	Option.None.oops
 //│ ╙──      	           ^^^^^
 
 

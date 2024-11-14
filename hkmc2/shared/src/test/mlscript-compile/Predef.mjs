@@ -24,6 +24,14 @@ const Predef$class = class Predef {
     let tmp;
     tmp = String(x3);
     return console.log(tmp);
+  } 
+  tupleSlice(xs, i, j) {
+    let tmp;
+    tmp = xs.length - j;
+    return globalThis.Array.prototype.slice.call(xs, i, tmp);
+  } 
+  tupleGet(xs1, i1) {
+    return globalThis.Array.prototype.at.call(xs1, i1);
   }
   toString() { return "Predef"; }
 }; const Predef = new Predef$class;

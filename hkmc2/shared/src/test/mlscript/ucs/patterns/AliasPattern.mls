@@ -1,40 +1,40 @@
-:import ../prelude/Option.mls
-//│ Imported 3 member(s)
-
-:global
 :ucs desugared
+
+import "../../../mlscript-compile/Option.mls"
+
+open Option
 
 fun map(f) = case
   Some(x)   then Some(f(x))
   None as n then n
 //│ Desugared:
 //│ >  if
-//│ >    caseScrut@15 is Some($param0@17) and
-//│ >      let x@18 = $param0@17#0
-//│ >      else globalThis:import#Option#666.Some‹member:Some›(f@14#666(x@18#666))
-//│ >    caseScrut@15 is None and
-//│ >      let n@16 = caseScrut@15#1
-//│ >      else n@16#666
+//│ >    caseScrut@14 is Some($param0@16) and
+//│ >      let x@17 = $param0@16#0
+//│ >      else member:Option#666.Some‹member:Some›(f@13#666(x@17#666))
+//│ >    caseScrut@14 is None and
+//│ >      let n@15 = caseScrut@14#1
+//│ >      else n@15#666
 
 fun map(f) = case
   Some(x as n) then Some of f(n)
   None as n then n
 //│ Desugared:
 //│ >  if
-//│ >    caseScrut@24 is Some($param0@26) and
-//│ >      let x@28 = $param0@26#0
-//│ >      let n@27 = $param0@26#1
-//│ >      else globalThis:import#Option#666.Some‹member:Some›(f@23#666(n@27#666))
-//│ >    caseScrut@24 is None and
-//│ >      let n@25 = caseScrut@24#1
-//│ >      else n@25#666
+//│ >    caseScrut@23 is Some($param0@25) and
+//│ >      let x@27 = $param0@25#0
+//│ >      let n@26 = $param0@25#1
+//│ >      else member:Option#666.Some‹member:Some›(f@22#666(n@26#666))
+//│ >    caseScrut@23 is None and
+//│ >      let n@24 = caseScrut@23#1
+//│ >      else n@24#666
 
 fun foo = case
   Some(Some(a as b) as c) as d then [a, b, c, d]
 //│ Desugared:
-//│ >  if caseScrut@33 is Some($param0@35) and $param0@35 is Some($param0@37) and
-//│ >    let a@39 = $param0@37#0
-//│ >    let b@38 = $param0@37#1
-//│ >    let c@36 = $param0@35#1
-//│ >    let d@34 = caseScrut@33#1
-//│ >    else [a@39#666, b@38#666, c@36#666, d@34#666]
+//│ >  if caseScrut@32 is Some($param0@34) and $param0@34 is Some($param0@36) and
+//│ >    let a@38 = $param0@36#0
+//│ >    let b@37 = $param0@36#1
+//│ >    let c@35 = $param0@34#1
+//│ >    let d@33 = caseScrut@32#1
+//│ >    else [a@38#666, b@37#666, c@35#666, d@33#666]

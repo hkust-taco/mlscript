@@ -70,8 +70,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
   extension (symbol: BlockLocalSymbol)
     def getSubScrutinees(cls: ClassSymbol): List[BlockLocalSymbol] =
       subScrutineeMap.getOrElseUpdate(symbol, new ScrutineeData).classes.getOrElseUpdate(cls, {
-        val arity = cls.defn.flatMap(_.paramsOpt.map(_.length)).getOrElse(0)
-        (0 until arity).map(i => TempSymbol(nextUid, N, s"param$i")).toList
+        (0 until cls.arity).map(i => TempSymbol(nextUid, N, s"param$i")).toList
       })
     def getTupleLeadSubScrutinee(index: Int): BlockLocalSymbol =
       val data = subScrutineeMap.getOrElseUpdate(symbol, new ScrutineeData)
@@ -457,11 +456,14 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
         val clsTrm = elaborator.cls(ctor)
         clsTrm.symbol.flatMap(_.asClsLike) match
         case S(cls: ClassSymbol) =>
-          val arity = cls.defn.flatMap(_.paramsOpt.map(_.length)).getOrElse(0)
-          if args.length =/= arity then
-            val n = arity.toString
+          val arity = cls.arity
+          if arity =/= args.length then
             val m = args.length.toString
-            raise(ErrorReport(msg"mismatched arity: expect $n, found $m" -> pat.toLoc :: Nil))
+            ErrorReport:
+              if arity == 0 then
+                msg"the constructor does not take any arguments but found $m" -> pat.toLoc :: Nil
+              else
+                msg"mismatched arity: expect ${arity.toString}, found $m" -> pat.toLoc :: Nil
           val params = scrutSymbol.getSubScrutinees(cls)
           Branch(
             ref,

@@ -1,2 +1,0 @@
-fun (++): Str -> Str -> Str
-fun toString: Any -> Str

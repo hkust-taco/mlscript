@@ -155,6 +155,12 @@ enum Tree extends AutoLocated:
       LetLike(letLike, id, S(App(Ident(nme.init), Tup(id :: r :: Nil))), bodo).desugared
     case _ => this
 
+  def param: Ls[(Ident, Opt[Tree])] = this match
+    case id: Ident => (id, N) :: Nil
+    case InfixApp(lhs: Ident, Keyword.`:`, rhs) => (lhs, S(rhs)) :: Nil
+    case App(Ident(","), Tup(ps)) => ps.flatMap(_.param)
+    case TermDef(ImmutVal, inner, _) => inner.param
+
 object Tree:
   object Block:
     def mk(stmts: Ls[Tree]): Tree = stmts match

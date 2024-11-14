@@ -125,7 +125,9 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   override def toString: Str = s"${owner.getOrElse("")}.${id.name}"
 
 
-sealed trait CtorSymbol extends Symbol
+sealed trait CtorSymbol extends Symbol:
+  /** Get parameter symbols. */
+  def params: Ls[LocalSymbol & NamedSymbol] = Nil
 
 case class Extr(isTop: Bool) extends CtorSymbol:
   def nme: Str = if isTop then "Top" else "Bot"
@@ -155,6 +157,17 @@ class ClassSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of classe here
   override def toString: Str = s"class:$nme"
+  /** Compute the arity. */
+  def arity: Int = defn match
+    case S(d) => d.paramsOpt.fold(0)(_.length)
+    case N => tree.paramLists.headOption.fold(0)(_.fields.length)
+  /** Get parameter symbols. Create new symbols if not elaborated. */
+  override lazy val params: Ls[LocalSymbol & NamedSymbol] = defn match
+    case S(d) => d.paramsOpt.fold(Nil)(_.map(_._2))
+    case N => tree.paramLists.headOption.fold(Nil): tup =>
+      tup.fields.iterator.flatMap(_.param).map:
+        case (id, _) => TermSymbol(ParamBind, S(this), id)
+      .toList
 
 class ModuleSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)
     extends MemberSymbol[ModuleDef] with CtorSymbol with InnerSymbol:

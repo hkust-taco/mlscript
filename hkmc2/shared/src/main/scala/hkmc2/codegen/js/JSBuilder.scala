@@ -235,8 +235,8 @@ class JSBuilder extends CodeBuilder:
       case N  => doc""
       t :: e :: returningTerm(rest)
     case Match(scrut, Case.Cls(cls, pth) -> trm :: Nil, els, rest) =>
-      val test = cls.defn.getOrElse(die).kind match
-        // case syntax.Mod => doc"=== ${result(pth)}"
+      val test = cls match
+        // case _: semantics.ModuleSymbol => doc"=== ${result(pth)}"
         case _ => doc"instanceof ${result(pth)}"
       val t = doc" # if (${ result(scrut) } $test) { #{ ${
           returningTerm(trm)

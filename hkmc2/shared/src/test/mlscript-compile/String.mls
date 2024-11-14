@@ -1,0 +1,6 @@
+module String with ...
+
+fun (++) concat(lhs, rhs) =
+  globalThis.String.prototype.concat.call(lhs, rhs)
+
+fun toString(value) = globalThis.String(value)

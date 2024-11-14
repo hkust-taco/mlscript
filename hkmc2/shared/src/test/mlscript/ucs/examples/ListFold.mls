@@ -1,11 +1,10 @@
-:import ../prelude/List.mls
-//│ Imported 4 member(s)
+import "../../../mlscript-compile/List.mls"
+import "../../../mlscript-compile/Option.mls"
+import "../../../mlscript-compile/String.mls"
 
-:import ../prelude/Option.mls
-//│ Imported 3 member(s)
-
-:import ../prelude/String.mls
-//│ Imported 2 member(s)
+open List
+open Option
+open String
 
 fun (|>) pipe(x, f) = f(x)
 

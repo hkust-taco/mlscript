@@ -629,13 +629,8 @@ extends Importer:
     if ctx.outer.isDefined then TermSymbol(k, ctx.outer, id)
     else VarSymbol(id, nextUid)
   
-  def param(t: Tree): Ctxl[Ls[Param]] = t match
-    case id: Ident =>
-      Param(FldFlags.empty, fieldOrVarSym(ParamBind, id), N) :: Nil
-    case InfixApp(lhs: Ident, Keyword.`:`, rhs) =>
-      Param(FldFlags.empty, fieldOrVarSym(ParamBind, lhs), S(term(rhs))) :: Nil
-    case App(Ident(","), list) => params(list)._1
-    case TermDef(ImmutVal, inner, _) => param(inner)
+  def param(t: Tree): Ctxl[Ls[Param]] = t.param.map: (p, t) =>
+    Param(FldFlags.empty, fieldOrVarSym(ParamBind, p), t.map(term))
   
   def params(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
     case Tup(ps) =>
