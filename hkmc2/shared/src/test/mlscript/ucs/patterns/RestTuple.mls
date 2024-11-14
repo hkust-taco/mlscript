@@ -20,7 +20,7 @@ fun nonsense(xs) = if xs is
 //│ Desugared:
 //│ >  if
 //│ >    xs@26 is []>=0 and
-//│ >      let $rest@27 = member:Predef#666.tupleSlice‹member:tupleSlice›(xs@26#2, 0, 0)
+//│ >      let $rest@27 = globalThis:globalThis#666.Predef.tupleSlice(xs@26#2, 0, 0)
 //│ >      let ys@28 = $rest@27#0
 //│ >      else ys@28#666
 //│ >    xs@26 is []=0 then "empty"
@@ -28,7 +28,7 @@ fun nonsense(xs) = if xs is
 //│ function nonsense(xs) {
 //│   let rest, ys;
 //│   if (Array.isArray(xs) && xs.length >= 0) {
-//│     rest = Predef.tupleSlice(xs, 0, 0);
+//│     rest = globalThis.Predef.tupleSlice(xs, 0, 0);
 //│     ys = rest;
 //│     return ys;
 //│   } else {
@@ -51,8 +51,8 @@ fun lead_and_last(xs) = if xs is
 //│ >  if
 //│ >    xs@38 is []>=2 and
 //│ >      let $first0@41 = xs@38#2.0
-//│ >      let $rest@40 = member:Predef#666.tupleSlice‹member:tupleSlice›(xs@38#3, 1, 1)
-//│ >      let $last0@39 = member:Predef#666.tupleGet‹member:tupleGet›(xs@38#4, -1)
+//│ >      let $rest@40 = globalThis:globalThis#666.Predef.tupleSlice(xs@38#3, 1, 1)
+//│ >      let $last0@39 = globalThis:globalThis#666.Predef.tupleGet(xs@38#4, -1)
 //│ >      let x@42 = $first0@41#0
 //│ >      let ys@43 = $rest@40#0
 //│ >      let y@44 = $last0@39#0
@@ -63,8 +63,8 @@ fun lead_and_last(xs) = if xs is
 //│   let last0, rest, first0, x, ys, y;
 //│   if (Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];
-//│     rest = Predef.tupleSlice(xs, 1, 1);
-//│     last0 = Predef.tupleGet(xs, -1);
+//│     rest = globalThis.Predef.tupleSlice(xs, 1, 1);
+//│     last0 = globalThis.Predef.tupleGet(xs, -1);
 //│     x = first0;
 //│     ys = rest;
 //│     y = last0;
@@ -100,8 +100,8 @@ fun nested_tuple_patterns(xs) = if xs is
 //│ >  if
 //│ >    xs@63 is []>=2 and
 //│ >      let $first0@66 = xs@63#2.0
-//│ >      let $rest@65 = member:Predef#666.tupleSlice‹member:tupleSlice›(xs@63#3, 1, 1)
-//│ >      let $last0@64 = member:Predef#666.tupleGet‹member:tupleGet›(xs@63#4, -1)
+//│ >      let $rest@65 = globalThis:globalThis#666.Predef.tupleSlice(xs@63#3, 1, 1)
+//│ >      let $last0@64 = globalThis:globalThis#666.Predef.tupleGet(xs@63#4, -1)
 //│ >      let x@67 = $first0@66#0
 //│ >      $rest@65 is []=2 and
 //│ >        let $first0@69 = $rest@65#1.0
@@ -116,8 +116,8 @@ fun nested_tuple_patterns(xs) = if xs is
 //│   let last0, rest, first0, x, first1, first01, y, z, w, tmp, tmp1;
 //│   if (Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];
-//│     rest = Predef.tupleSlice(xs, 1, 1);
-//│     last0 = Predef.tupleGet(xs, -1);
+//│     rest = globalThis.Predef.tupleSlice(xs, 1, 1);
+//│     last0 = globalThis.Predef.tupleGet(xs, -1);
 //│     x = first0;
 //│     if (Array.isArray(rest) && rest.length === 2) {
 //│       first01 = rest[0];
@@ -140,3 +140,17 @@ fun nested_tuple_patterns(xs) = if xs is
 //│   }
 //│ }
 //│ undefined
+
+fun hack(tupleSlice) = if tupleSlice is
+  [..tupleGet, x] then x
+//│ Desugared:
+//│ >  if tupleSlice@85 is []>=1 and
+//│ >    let $rest@87 = globalThis:globalThis#666.Predef.tupleSlice(tupleSlice@85#1, 0, 1)
+//│ >    let $last0@86 = globalThis:globalThis#666.Predef.tupleGet(tupleSlice@85#2, -1)
+//│ >    let tupleGet@88 = $rest@87#0
+//│ >    let x@89 = $last0@86#0
+//│ >    else x@89#666
+
+:expect 4
+hack([1, 2, 3, 4])
+//│ = 4

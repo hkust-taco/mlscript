@@ -80,7 +80,7 @@ fun foo(xs) = if xs is
 //│ >        else x@34#666
 //│ >    xs@28 is []>=1 and
 //│ >      let $first0@30 = xs@28#1.0
-//│ >      let $rest@29 = member:Predef#666.tupleSlice‹member:tupleSlice›(xs@28#2, 1, 0)
+//│ >      let $rest@29 = globalThis:globalThis#666.Predef.tupleSlice(xs@28#2, 1, 0)
 //│ >      $first0@30 is Some($param0@31) and
 //│ >        let y@32 = $param0@31#0
 //│ >        let rest@33 = $rest@29#0
@@ -92,10 +92,10 @@ fun foo(xs) = if xs is
 //│ >      $first0@30 is Some($param0@31) and
 //│ >        let x@34 = $param0@31#1
 //│ >        else x@34#666
-//│ >      let $rest@29 = member:Predef#666.tupleSlice‹member:tupleSlice›(xs@28#2, 1, 0)
+//│ >      let $rest@29 = globalThis:globalThis#666.Predef.tupleSlice(xs@28#2, 1, 0)
 //│ >    xs@28 is []>=1 and
 //│ >      let $first0@30 = xs@28#1.0
-//│ >      let $rest@29 = member:Predef#666.tupleSlice‹member:tupleSlice›(xs@28#2, 1, 0)
+//│ >      let $rest@29 = globalThis:globalThis#666.Predef.tupleSlice(xs@28#2, 1, 0)
 //│ >      $first0@30 is Some($param0@31) and
 //│ >        let y@32 = $param0@31#0
 //│ >        let rest@33 = $rest@29#0
@@ -119,7 +119,7 @@ fun foo(zs) = if zs is
 //│ >          else builtin:+#0(x@49#666, y@51#666)
 //│ >    zs@42 is []>=1 and
 //│ >      let $first0@44 = zs@42#1.0
-//│ >      let $rest@43 = member:Predef#666.tupleSlice‹member:tupleSlice›(zs@42#2, 1, 0)
+//│ >      let $rest@43 = globalThis:globalThis#666.Predef.tupleSlice(zs@42#2, 1, 0)
 //│ >      $first0@44 is None and
 //│ >        let rest@45 = $rest@43#0
 //│ >        else globalThis:block#5#666.do_something‹member:do_something›(rest@45#666)
@@ -133,14 +133,14 @@ fun foo(zs) = if zs is
 //│ >        $first1@47 is Some($param0@50) and
 //│ >          let y@51 = $param0@50#0
 //│ >          else builtin:+#0(x@49#666, y@51#666)
-//│ >        let $rest@43 = member:Predef#666.tupleSlice‹member:tupleSlice›(zs@42#2, 1, 0)
-//│ >      let $rest@43 = member:Predef#666.tupleSlice‹member:tupleSlice›(zs@42#2, 1, 0)
+//│ >        let $rest@43 = globalThis:globalThis#666.Predef.tupleSlice(zs@42#2, 1, 0)
+//│ >      let $rest@43 = globalThis:globalThis#666.Predef.tupleSlice(zs@42#2, 1, 0)
 //│ >      $first0@44 is None and
 //│ >        let rest@45 = $rest@43#0
 //│ >        else globalThis:block#5#666.do_something‹member:do_something›(rest@45#666)
 //│ >    zs@42 is []>=1 and
 //│ >      let $first0@44 = zs@42#1.0
-//│ >      let $rest@43 = member:Predef#666.tupleSlice‹member:tupleSlice›(zs@42#2, 1, 0)
+//│ >      let $rest@43 = globalThis:globalThis#666.Predef.tupleSlice(zs@42#2, 1, 0)
 //│ >      $first0@44 is None and
 //│ >        let rest@45 = $rest@43#0
 //│ >        else globalThis:block#5#666.do_something‹member:do_something›(rest@45#666)

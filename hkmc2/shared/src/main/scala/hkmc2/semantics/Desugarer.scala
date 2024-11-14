@@ -9,6 +9,7 @@ import hkmc2.syntax.Literal
 import Keyword.{as, and, `else`, is, let, `then`}
 import collection.mutable.HashMap
 import Elaborator.{ctx, Ctxl}
+import hkmc2.semantics.Elaborator.Ctx.globalThisSymbol
 
 object Desugarer:
   extension (op: Keyword.Infix)
@@ -360,11 +361,11 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
       raise(ErrorReport(msg"Unrecognized pattern split." -> tree.toLoc :: Nil))
       _ => _ => Split.default(Term.Error)
 
-  private def tupleSlice: Ctxl[Ctx.Elem] =
-    ctx.get("tupleSlice").getOrElse(lastWords("tupleSlice not found"))
+  private lazy val tupleSlice =
+    term(Sel(Sel(Ident("globalThis"), Ident("Predef")), Ident("tupleSlice")))
 
-  private def tupleGet: Ctxl[Ctx.Elem] =
-    ctx.get("tupleGet").getOrElse(lastWords("tupleGet not found"))
+  private lazy val tupleGet =
+    term(Sel(Sel(Ident("globalThis"), Ident("Predef")), Ident("tupleGet")))
 
   /** Elaborate a single match (a scrutinee and a pattern) and forms a split
    *  with an innermost split as the sequel of the match.
@@ -427,7 +428,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
                 case ((wrapInner, matches), (pat, lastIndex)) =>
                   val sym = scrutSymbol.getTupleLastSubScrutinee(lastIndex)
                   val wrap = (split: Split) =>
-                    Split.Let(sym, app(tupleGet(using ctx).ref((Ident("tupleGet"): Ident).withLoc(pat.toLoc)), tup(fld(ref), fld(int(-1 - lastIndex))), sym), wrapInner(split))
+                    Split.Let(sym, app(tupleGet, tup(fld(ref), fld(int(-1 - lastIndex))), sym), wrapInner(split))
                   (wrap, (sym, pat) :: matches)
             val lastMatches = reversedLastMatches.reverse
             rest match
@@ -435,7 +436,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
               case S(pat) =>
                 val sym = TempSymbol(nextUid, N, "rest")
                 val wrap = (split: Split) =>
-                  Split.Let(sym, app(tupleSlice(using ctx).ref((Ident("tupleSlice"): Ident).withLoc(pat.toLoc)), tup(fld(ref), fld(int(lead.length)), fld(int(last.length))), sym), wrapLast(split))
+                  Split.Let(sym, app(tupleSlice, tup(fld(ref), fld(int(lead.length)), fld(int(last.length))), sym), wrapLast(split))
                 (wrap, (sym, pat) :: lastMatches)
           case N => (identity: Split => Split, Nil)
         val (wrap, matches) = lead.zipWithIndex.foldRight((wrapRest, restMatches)):
