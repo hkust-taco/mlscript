@@ -1,9 +1,32 @@
-0
-
-// NOTE: original input -2100000000 14000001 2100000000
 :js
 :import NofibPrelude.mls
 //│ Imported 112 member(s)
+
+
+fun integerbench(op, astart, astep, alim, bstart, bstep, blim) =
+  fun lscomp1(ls) = if ls is
+    Nil then Nil
+    Cons(a, t1) then
+      fun lscomp2(ls) = if ls is
+        Nil then lscomp1(t1)
+        Cons(b, t2) then Cons(op(a, b), lscomp2(t2))
+      lscomp2(enumFromThenTo(bstart, bstart + bstep, blim))
+  lscomp1(enumFromThenTo(astart, astart + astep, alim))
+
+fun intbench(op, astart, astep, alim, bstart, bstep, blim) =
+  fun lscomp1(ls) = if ls is
+    Nil then Nil
+    Cons(a, t1) then
+      fun lscomp2(ls) = if ls is
+        Nil then lscomp1(t1)
+        Cons(b, t2) then Cons(op(a, b), lscomp2(t2))
+      lscomp2(enumFromThenTo(bstart, bstart + bstep, blim))
+  lscomp1(enumFromThenTo(astart, astart + astep, alim))
+
+fun runbench(jop, iop, opstr, astart, astep, alim, bstart, bstep, blim) =
+  intbench(iop, astart, astep, alim, astart, astep, alim);
+  integerbench(jop, astart, astep, alim, astart, astep, alim)
+
 fun runalltests(astart, astep, alim, bstart, bstep, blim) =
   fun z_add(a, b) = a + b
   fun z_sub(a, b) = a - b
@@ -25,27 +48,10 @@ fun runalltests(astart, astep, alim, bstart, bstep, blim) =
   runbench((a, b) => z_leq(a, b), (a, b) => a <= b, "(<=)", astart, astep, alim, astart, astep, alim);
   runbench((a, b) => z_gt(a, b), (a, b) => a > b, "(>)", astart, astep, alim, astart, astep, alim);
   runbench((a, b) => z_geq(a, b), (a, b) => a >= b, "(>=)", astart, astep, alim, astart, astep, alim)
-fun runbench(jop, iop, opstr, astart, astep, alim, bstart, bstep, blim) =
-  intbench(iop, astart, astep, alim, astart, astep, alim);
-  integerbench(jop, astart, astep, alim, astart, astep, alim)
-fun integerbench(op, astart, astep, alim, bstart, bstep, blim) =
-  fun lscomp1(ls) = if ls is
-    Nil then Nil
-    Cons(a, t1) then
-      fun lscomp2(ls) = if ls is
-        Nil then lscomp1(t1)
-        Cons(b, t2) then Cons(op(a, b), lscomp2(t2))
-      lscomp2(enumFromThenTo(bstart, bstart + bstep, blim))
-  lscomp1(enumFromThenTo(astart, astart + astep, alim))
-fun intbench(op, astart, astep, alim, bstart, bstep, blim) =
-  fun lscomp1(ls) = if ls is
-    Nil then Nil
-    Cons(a, t1) then
-      fun lscomp2(ls) = if ls is
-        Nil then lscomp1(t1)
-        Cons(b, t2) then Cons(op(a, b), lscomp2(t2))
-      lscomp2(enumFromThenTo(bstart, bstart + bstep, blim))
-  lscomp1(enumFromThenTo(astart, astart + astep, alim))
+
 fun testInteger_nofib(n) = runalltests(-2100000000, n, 2100000000, -2100000000, n, -2100000000)
+
+
+// NOTE: original input -2100000000 14000001 2100000000
 testInteger_nofib(700000001).toString()
 //│ = '[true,false,false,false,false,false,true,true,false,false,false,false,true,true,true,false,false,false,true,true,true,true,false,false,true,true,true,true,true,false,true,true,true,true,true,true]'

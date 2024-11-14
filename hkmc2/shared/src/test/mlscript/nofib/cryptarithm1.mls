@@ -1,13 +1,14 @@
-0
-
-:fixme
 :js
 :import NofibPrelude.mls
 //│ Imported 112 member(s)
+
+
+fun expand(a, b, c, d, e, f) = f + (e*10) + (d*100) + (c*1000) + (b*10000) + (a*100000)
+
 fun condition(thirywelvn) = if thirywelvn is
   Cons(t, Cons(h, Cons(i, Cons(r, Cons(y, Cons(w, Cons(e, Cons(l, Cons(v, Cons(n, Nil)))))))))) then
     (expand(t, h, i, r, t, y) + 5 * expand(t, w, e, l, v, e)) == expand(n, i, n, e, t, y)
-fun expand(a, b, c, d, e, f) = f + (e*10) + (d*100) + (c*1000) + (b*10000) + (a*100000)
+
 fun addj(j, ls) = if ls is
   Nil then (j :: Nil) :: Nil
   Cons(k, ks) then
@@ -15,6 +16,7 @@ fun addj(j, ls) = if ls is
       Nil then Nil
       Cons(h1, t1) then (k :: h1) :: lscomp(t1)
     (j :: (k :: ks)) :: lscomp(addj(j, ks))
+
 fun permutations(ls) = if ls is
   Nil then Nil :: Nil
   Cons(j, js) then
@@ -26,7 +28,11 @@ fun permutations(ls) = if ls is
           Cons(r, t2) then r :: lscomp2(t2)
         lscomp2(addj(j, pjs))
     lscomp1(permutations(js))
+
 fun testCryptarithm_nofib(n) = 
   map((i => let p0 = take(10, enumFromTo(0, 9 + i)) in filter(condition, permutations(p0))), enumFromTo(1, n))
+
+
+:re
 nofibPrint(testCryptarithm_nofib(1))
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded

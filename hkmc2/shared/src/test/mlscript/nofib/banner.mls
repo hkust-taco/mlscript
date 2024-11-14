@@ -1,14 +1,22 @@
-0
-
 :js
 :import NofibPrelude.mls
 //│ Imported 112 member(s)
+
+
 let blank =
   nofibStringToList("     ") ::
   nofibStringToList("     ") ::
   nofibStringToList("     ") ::
   nofibStringToList("     ") ::
   nofibStringToList("     ") :: Nil
+//│ > Cons {
+//│ >   head: Cons { head: ' ', tail: Cons { head: ' ', tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: ' ', tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   }
+//│ blank = }
+
 let alphas =
   (nofibStringToList("  A  ") :: nofibStringToList(" A A ") :: nofibStringToList("AAAAA") :: nofibStringToList("A   A") :: nofibStringToList("A   A") :: Nil) ::
   (nofibStringToList("BBBB ") :: nofibStringToList("B   B") :: nofibStringToList("BBBB ") :: nofibStringToList("B   B") :: nofibStringToList("BBBB ") :: Nil) ::
@@ -36,12 +44,31 @@ let alphas =
   (nofibStringToList("X   X") :: nofibStringToList(" X X ") :: nofibStringToList("  X  ") :: nofibStringToList(" X X ") :: nofibStringToList("X   X") :: Nil) ::
   (nofibStringToList("Y   Y") :: nofibStringToList(" Y Y ") :: nofibStringToList("  Y  ") :: nofibStringToList("  Y  ") :: nofibStringToList("  Y  ") :: Nil) ::
   (nofibStringToList("ZZZZZ") :: nofibStringToList("   Z ") :: nofibStringToList("  Z  ") :: nofibStringToList(" Z   ") :: nofibStringToList("ZZZZZ") :: Nil) :: Nil
+//│ > Cons {
+//│ >   head: Cons {
+//│ >     head: Cons { head: ' ', tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: [Cons], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   }
+//│ alphas = }
+
 let slant =
   nofibStringToList("    ") ::
   nofibStringToList("   ") ::
   nofibStringToList("  ") ::
   nofibStringToList(" ") ::
   nofibStringToList("") :: Nil
+//│ > Cons {
+//│ >   head: Cons { head: ' ', tail: Cons { head: ' ', tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: ' ', tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   }
+//│ slant = }
+
 let punct =
   Tup2(".", nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("  .. ") :: nofibStringToList("  .. ") :: Nil) ::
   Tup2("?", nofibStringToList(" ??? ") :: nofibStringToList("?   ?") :: nofibStringToList("   ? ") :: nofibStringToList("  ?  ") :: nofibStringToList("  .  ") :: Nil) ::
@@ -50,6 +77,14 @@ let punct =
   Tup2("+", nofibStringToList("  +  ") :: nofibStringToList("  +  ") :: nofibStringToList("+++++") :: nofibStringToList("  +  ") :: nofibStringToList("  +  ") :: Nil) ::
   Tup2(":", nofibStringToList("     ") :: nofibStringToList("  :: ") :: nofibStringToList("     ") :: nofibStringToList("  :: ") :: nofibStringToList("     ") :: Nil) ::
   Tup2(";", nofibStringToList("     ") :: nofibStringToList("  ;; ") :: nofibStringToList("     ") :: nofibStringToList("  ;; ") :: nofibStringToList(" ;;  ") :: Nil) :: Nil
+//│ > Cons {
+//│ >   head: Tup2 { fst: '.', snd: Cons { head: [Cons], tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Tup2 { fst: '?', snd: [Cons] },
+//│ >     tail: Cons { head: [Tup2], tail: [Cons] }
+//│ >   }
+//│ punct = }
+
 let digits =
   (nofibStringToList(" OOO ") :: nofibStringToList("0  00") :: nofibStringToList("0 0 0") :: nofibStringToList("00  0") :: nofibStringToList(" 000 ") :: Nil) ::
   (nofibStringToList("  1  ") :: nofibStringToList(" 11  ") :: nofibStringToList("  1  ") :: nofibStringToList("  1  ") :: nofibStringToList("11111") :: Nil) ::
@@ -61,21 +96,37 @@ let digits =
   (nofibStringToList("77777") :: nofibStringToList("    7") :: nofibStringToList("   7 ") :: nofibStringToList("   7 ") :: nofibStringToList("  7  ") :: Nil) ::
   (nofibStringToList(" 888 ") :: nofibStringToList("8   8") :: nofibStringToList(" 888 ") :: nofibStringToList("8   8") :: nofibStringToList(" 888 ") :: Nil) ::
   (nofibStringToList(" 999 ") :: nofibStringToList("9   9") :: nofibStringToList(" 999 ") :: nofibStringToList("  9  ") :: nofibStringToList("99   ") :: Nil) :: Nil
+//│ > Cons {
+//│ >   head: Cons {
+//│ >     head: Cons { head: ' ', tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: [Cons], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   }
+//│ digits = }
+
 fun unlines(ls) = concat(map(x => append(x, ("\n" :: Nil)), ls))
+
 fun join(ls) = foldr1((xs, ys) => append(xs, append((" " :: " " :: Nil), ys)), ls)
-fun say(s) = "\n" :: (unlines(map(join, transpose(map(picChar, s)))))
+
 fun isUpper(c) =
   let n = int_of_char(c)
   (n >= 65) and (n <= 90)
+
 fun isLower(c) =
   let n = int_of_char(c)
   (n >= 97) and (n <= 122)
+
 fun isDigit(c) =
   let n = int_of_char(c)
   (n >= 48) and (n <= 57)
+
 fun isSpace(c) =
   let n = int_of_char(c)
   (n == 32)
+
 fun picChar(c) =
   fun lscomp(ls) = if ls is
     Nil then Nil
@@ -90,9 +141,14 @@ fun picChar(c) =
     c === "/" then slant
     c === "=" then reverse(slant)
     else head(append(lscomp(punct), Nil :: Nil :: Nil))
+
+fun say(s) = "\n" :: (unlines(map(join, transpose(map(picChar, s)))))
+
 fun testBanner_nofib(n) =
   let x = Cons("I", Cons("s", Cons(" ", Cons("t", Cons("h", Cons("i", Cons("s", Cons(" ", Cons("n", Cons("o", Cons("t", Cons(" ", Cons("a", Cons(" ", Cons("g", Cons("r", Cons("e", Cons("a", Cons("t", Cons(" ", Cons("b", Cons("a", Cons("n", Cons("n", Cons("e", Cons("r", Cons("?", Nil)))))))))))))))))))))))))))
   say(concat(replicate(n, x)))
+
+
 nofibListToString(testBanner_nofib(1))
 //│ > '\n' +
 //│ >   'IIIII   SSSS         TTTTT  H   H  IIIII   SSSS         N   N   OOO   TTTTT           A            GGGG  RRRR   EEEEE    A    TTTTT         BBBB     A    N   N  N   N  EEEEE  RRRR    ??? \n' +
@@ -100,44 +156,3 @@ nofibListToString(testBanner_nofib(1))
 //│ >   '  I     SSS            T    HHHHH    I     SSS          N N N  O   O    T           AAAAA         G  GG  RRRR   EEEEE  AAAAA    T           BBBB   AAAAA  N N N  N N N  EEEEE  RRRR      ? \n' +
 //│ >   '  I        S           T    H   H    I        S         N  NN  O   O    T           A   A         G   G  R  R   E      A   A    T           B   B  A   A  N  NN  N  NN  E      R  R     ?  \n' +
 //│ =   'IIIII  SSSS            T    H   H  IIIII  SSSS          N   N   OOO     T           A   A          GGG   R   R  EEEEE  A   A    T           BBBB   A   A  N   N  N   N  EEEEE  R   R    .  \n'
-//│ > Cons {
-//│ >   head: Cons {
-//│ >     head: Cons { head: ' ', tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: [Cons], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   }
-//│ alphas = }
-//│ > Cons {
-//│ >   head: Cons { head: ' ', tail: Cons { head: ' ', tail: [Cons] } },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: ' ', tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   }
-//│ blank = }
-//│ > Cons {
-//│ >   head: Cons {
-//│ >     head: Cons { head: ' ', tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: [Cons], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   }
-//│ digits = }
-//│ > Cons {
-//│ >   head: Tup2 { fst: '.', snd: Cons { head: [Cons], tail: [Cons] } },
-//│ >   tail: Cons {
-//│ >     head: Tup2 { fst: '?', snd: [Cons] },
-//│ >     tail: Cons { head: [Tup2], tail: [Cons] }
-//│ >   }
-//│ punct = }
-//│ > Cons {
-//│ >   head: Cons { head: ' ', tail: Cons { head: ' ', tail: [Cons] } },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: ' ', tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   }
-//│ slant = }

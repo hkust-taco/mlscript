@@ -1,79 +1,98 @@
-0
-
-
 :js
 :import NofibPrelude.mls
 //│ Imported 112 member(s)
+
+
 abstract class Id: A | B | C | D | X | Y | Z | U | W | ADD1 | AND | APPEND | CONS | CONSP | DIFFERENCE | DIVIDES | EQUAL | EVEN | EXP | F | FALSE | FOUR | GCD | GREATEREQP | GREATERP | IF | IFF | IMPLIES | LENGTH | LESSEQP | LESSP | LISTP | MEMBER | NIL | NILP | NLISTP | NOT | ODD | ONE | OR | PLUS | QUOTIENT | REMAINDER | REVERSE | SUB1 | TIMES | TRUE | TWO | ZERO | ZEROP
-module A extends Id
-module B extends Id
-module C extends Id
-module D extends Id
-module X extends Id
-module Y extends Id
-module Z extends Id
-module U extends Id
-module W extends Id
-module ADD1 extends Id
-module AND extends Id
-module APPEND extends Id
-module CONS extends Id
-module CONSP extends Id
-module DIFFERENCE extends Id
-module DIVIDES extends Id
-module EQUAL extends Id
-module EVEN extends Id
-module EXP extends Id
-module F extends Id
-module FALSE extends Id
-module FOUR extends Id
-module GCD extends Id
-module GREATEREQP extends Id
-module GREATERP extends Id
-module IF extends Id
-module IFF extends Id
-module IMPLIES extends Id
-module LENGTH extends Id
-module LESSEQP extends Id
-module LESSP extends Id
-module LISTP extends Id
-module MEMBER extends Id
-module NIL extends Id
-module NILP extends Id
-module NLISTP extends Id
-module NOT extends Id
-module ODD extends Id
-module ONE extends Id
-module OR extends Id
-module PLUS extends Id
-module QUOTIENT extends Id
-module REMAINDER extends Id
-module REVERSE extends Id
-module SUB1 extends Id
-module TIMES extends Id
-module TRUE extends Id
-module TWO extends Id
-module ZERO extends Id
-module ZEROP extends Id
+
+module
+  A extends Id
+  B extends Id
+  C extends Id
+  D extends Id
+  X extends Id
+  Y extends Id
+  Z extends Id
+  U extends Id
+  W extends Id
+  ADD1 extends Id
+  AND extends Id
+  APPEND extends Id
+  CONS extends Id
+  CONSP extends Id
+  DIFFERENCE extends Id
+  DIVIDES extends Id
+  EQUAL extends Id
+  EVEN extends Id
+  EXP extends Id
+  F extends Id
+  FALSE extends Id
+  FOUR extends Id
+  GCD extends Id
+  GREATEREQP extends Id
+  GREATERP extends Id
+  IF extends Id
+  IFF extends Id
+  IMPLIES extends Id
+  LENGTH extends Id
+  LESSEQP extends Id
+  LESSP extends Id
+  LISTP extends Id
+  MEMBER extends Id
+  NIL extends Id
+  NILP extends Id
+  NLISTP extends Id
+  NOT extends Id
+  ODD extends Id
+  ONE extends Id
+  OR extends Id
+  PLUS extends Id
+  QUOTIENT extends Id
+  REMAINDER extends Id
+  REVERSE extends Id
+  SUB1 extends Id
+  TIMES extends Id
+  TRUE extends Id
+  TWO extends Id
+  ZERO extends Id
+  ZEROP extends Id
+
 abstract class Term: Var | Fun | ERROR
-class Var(i: Id) extends Term
-class Fun(i: Id, t: List[Term], l: [Tup2[Term, Term]]) extends Term
+
+class
+  Var(i: Id) extends Term
+  Fun(i: Id, t: List[Term], l: [Tup2[Term, Term]]) extends Term
 module ERROR extends Term
-fun termInList(term, ht) = if ht is
-  Cons(h, t) and
-    termEq(term, h) then true
-    else termInList(term, t)
-  Nil then false
+
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
 fun termLsEq(h1t1, h2t2) = if
   h1t1 is Cons(h1, t1) and h2t2 is Cons(h2, t2) and
     termEq(h1, h2) then termLsEq(t1, t2)
     else false
   else true
+
 fun termEq(t1, t2) = if
   t1 is Var(i1) and t2 is Var(i2) then i1 === i2
   t1 is Fun(f1, ts1, _) and t2 is Fun(f2, ts2, _) then (f1 === f2) and termLsEq(ts1, ts2)
   else false
-fun one_way_unify(term1, term2) = one_way_unify1(term1, term2, Nil)
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+fun termInList(term, ht) = if ht is
+  Cons(h, t) and
+    termEq(term, h) then true
+    else termInList(term, t)
+  Nil then false
+
+fun find(vid, ls) = if ls is
+  Nil then Tup2(false, ERROR)
+  Cons(Tup2(vid2, val2), bs) and
+    vid === vid2 then Tup2(true, val2)
+    else find(vid, bs)
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
 fun one_way_unify1(term1, term2, subst) = if
   term2 is Var(vid2) and find(vid2, subst) is Tup2(found, v2) and
     found then Tup2(termEq(term1, v2), subst)
@@ -82,30 +101,44 @@ fun one_way_unify1(term1, term2, subst) = if
     f1 === f2 then one_way_unify1_lst(as1, as2, subst)
     else Tup2(false, Nil)
   else Tup2(false, Nil)
+
 fun one_way_unify1_lst(tts1, tts2, subst) = if
   tts1 is Nil and tts2 is Nil then Tup2(true, subst)
   tts1 is Cons(t1, ts1) and tts2 is Cons(t2, ts2) and one_way_unify1(t1, t2, subst) is Tup2(hd_ok, subst_) and one_way_unify1_lst(ts1, ts2, subst_) is Tup2(tl_ok, subst__) then Tup2(hd_ok and tl_ok, subst__)
   else Tup2(false, Nil)
-fun find(vid, ls) = if ls is
-  Nil then Tup2(false, ERROR)
-  Cons(Tup2(vid2, val2), bs) and
-    vid === vid2 then Tup2(true, val2)
-    else find(vid, bs)
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+fun one_way_unify(term1, term2) = one_way_unify1(term1, term2, Nil)
+
 fun apply_subst(subst, t) = if t is
   Var(vid) and find(vid, subst) is Tup2(found, value) and
     found then value
     else Var(vid)
   Fun(f, args, ls) then Fun(f, map(x => apply_subst(subst, x), args), ls)
-fun rewrite(t) = if t is
-  Var(v) then Var(v)
-  Fun(f, args, lemmas) then rewrite_with_lemmas(Fun(f, map(rewrite, args), lemmas), lemmas)
-fun rewrite_with_lemmas(term, lss) = rewrite_with_lemmas_helper(term, force(lss))
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
 fun rewrite_with_lemmas_helper(term, lss) = if lss is
   Nil then term
   Cons(Tup2(lhs, rhs), ls) and one_way_unify(term, lhs) is Tup2(unified, subst) and
     unified then rewrite(apply_subst(subst, rhs))
     else rewrite_with_lemmas_helper(term, ls)
-fun tautp(x) = tautologyp(rewrite(x), Nil, Nil)
+
+fun rewrite_with_lemmas(term, lss) = rewrite_with_lemmas_helper(term, force(lss))
+
+fun rewrite(t) = if t is
+  Var(v) then Var(v)
+  Fun(f, args, lemmas) then rewrite_with_lemmas(Fun(f, map(rewrite, args), lemmas), lemmas)
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+fun truep(x, l) = if x is
+  Fun(TRUE, _, _) then true
+  else termInList(x, l)
+
+fun falsep(x, l) = if x is
+  Fun(FALSE, _, _) then true
+  else termInList(x, l)
+
 fun tautologyp(x, true_lst, false_lst) = if
   truep(x, true_lst) then true
   falsep(x, false_lst) then false
@@ -115,12 +148,9 @@ fun tautologyp(x, true_lst, false_lst) = if
       falsep(cond, false_lst) then tautologyp(e, true_lst, false_lst)
       else tautologyp(t, cond :: true_lst, false_lst) and tautologyp(e, true_lst, cond :: false_lst)
     else false
-fun truep(x, l) = if x is
-  Fun(TRUE, _, _) then true
-  else termInList(x, l)
-fun falsep(x, l) = if x is
-  Fun(FALSE, _, _) then true
-  else termInList(x, l)
+
+fun tautp(x) = tautologyp(rewrite(x), Nil, Nil)
+
 fun test0(xxxx) =
   let a       =    Var(A)
   let b       =    Var(B)
@@ -206,6 +236,9 @@ fun test0(xxxx) =
   let subst0 = Cons(Tup2(X, f(plus(plus(a, b), plus(c, zero)))), Cons(Tup2(Y, f(times(times(a, b), plus(c, d)))), Cons(Tup2(Z, f(reverse_(append_(append_(a, b), nil)))), Cons(Tup2(U, equal(plus(a, b), difference(x, y))), Cons(Tup2(W, lessp(remainder(a, b), member(a, length_(b)))), Nil)))))
   let theorem = implies(and_(implies(xxxx, y), and_(implies(y, z), and_(implies(z, u), implies(u, w)))), implies(x, w))
   tautp(apply_subst(subst0, theorem))
+
 fun testBoyer_nofib(n) = all(test0, replicate(n, Var(X)))
+
+
 testBoyer_nofib(5)
 //│ = true

@@ -1,34 +1,44 @@
-0
-
-// NOTE: original input 1000
 :js
 :import NofibPrelude.mls
 //│ Imported 112 member(s)
+
+
 fun delete_(xs, e) = deleteBy((x, y) => x == y, e, xs)
+
 fun listDiff(a, ls) = foldl(delete_, a, ls)
-fun sort(l) = qsort((a, b) => ltTup2(a, b, (a, b) => a < b, (a, b) => a > b, (a, b) => ltList(a, b, (a, b) => a < b, (a, b) => a > b)), l, Nil)
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
 fun qsort(le, ls, r) = if ls is
   Nil then r
   Cons(x, Nil) then Cons(x, r)
   Cons(x, xs) then qpart(le, x, xs, Nil, Nil, r)
+
 fun qpart(le, x, ys, rlt, rge, r) = if ys is
   Nil then rqsort(le, rlt, Cons(x, rqsort(le, rge, r)))
   Cons(y, ys) and
     le(x, y) then qpart(le, x, ys, rlt, Cons(y, rge), r)
     else qpart(le, x, ys, Cons(y, rlt), rge, r)
+
 fun rqsort(le, ls, r) = if ls is
   Nil then r
   Cons(x, Nil) then Cons(x, r)
   Cons(x, xs) then rqpart(le, x, xs, Nil, Nil, r)
+
 fun rqpart(le, x, yss, rle, rgt, r) = if yss is
   Nil then qsort(le, rle, Cons(x, qsort(le, rgt, r)))
   Cons(y, ys) and
     le(y, x) then rqpart(le, x, ys, Cons(y, rle), rgt, r)
     else rqpart(le, x, ys, rle, Cons(y, rgt), r)
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+fun sort(l) = qsort((a, b) => ltTup2(a, b, (a, b) => a < b, (a, b) => a > b, (a, b) => ltList(a, b, (a, b) => a < b, (a, b) => a > b)), l, Nil)
+
 fun perms(m, nns) = if
   nns is Nil then Nil
   m == 1 then map(x => Cons(x, Nil), nns)
   nns is Cons(n, ns) then append(map(x => Cons(n, x), perms(m-1, ns)), perms(m, ns))
+
 fun awards(scores) =
   let sumscores = map(p => Tup2(sum(p), p), perms(3, scores))
   fun atleast(threshold) =
@@ -36,19 +46,26 @@ fun awards(scores) =
   fun award(name_threshold) = if name_threshold is Tup2(name, threshold) then
     map(ps => Tup2(name, ps), sort(atleast(threshold)))
   append(append(award(Tup2("Gold", 70)), award(Tup2("Silver", 60))), award(Tup2("Bronze", 50)))
+
 fun findawards(scores) = if awards(scores) is
   Nil then Nil
   Cons(head_, tail_) and head_ is Tup2(award, Tup2(sum_, perm)) then
     Cons(Tup2(award, Tup2(sum_, perm)), findawards(listDiff(scores, perm)))
+
 fun findallawards(competitors) =
   map(name_scores => if name_scores is Tup2(name, scores) then Tup2(name, findawards(scores)), competitors)
+
 fun competitors(i) = 
   Tup2("Simon", 35::27::40::i::34::21::Nil) ::
   Tup2("Hans", 23::19::45::i::17::10::5::8::14::Nil) ::
   Tup2("Phil", 1::18::i::20::21::19::34::8::16::21::Nil) ::
   Tup2("Kevin", 9::23::17::54::i::41::9::18::14::Nil) :: Nil
+
 fun testAwards_nofib(n) =
   map(x => nofibPrint(findallawards(competitors(x % 100)).toString()), enumFromTo(1, n))
+
+
+// NOTE: original input 1000
 testAwards_nofib(100)
 //│ > "[(Simon,[(Gold,(70,[35,1,34])),(Gold,(88,[27,40,21]))]),(Hans,[(Gold,(70,[45,17,8])),(Bronze,(52,[23,19,10]))]),(Phil,[(Gold,(70,[20,34,16])),(Silver,(60,[18,21,21]))]),(Kevin,[(Gold,(72,[9,54,9])),(Gold,(72,[17,41,14]))])]"
 //│ > "[(Simon,[(Gold,(71,[35,2,34])),(Gold,(88,[27,40,21]))]),(Hans,[(Gold,(70,[23,45,2])),(Bronze,(50,[19,17,14]))]),(Phil,[(Gold,(70,[20,34,16])),(Silver,(60,[18,21,21]))]),(Kevin,[(Gold,(70,[54,2,14])),(Gold,(73,[9,23,41]))])]"
