@@ -67,3 +67,85 @@ i.g(200)
 //│ = [ 100, 42, 200, 200 ]
 
 
+:sjs
+fun test(a) =
+  class C1(b) with
+    print of [a, b]
+  class C2(b) with
+    print of [a, b]
+  [C1(1), C2(2)]
+//│ JS:
+//│ function test(a) {
+//│   let tmp, tmp1;
+//│   function C1(b1) { return new C1.class(b1); };
+//│   C1.class = class C1 {
+//│     constructor(b) {
+//│       this.b = b;
+//│       Predef.print([
+//│         a,
+//│         this.b
+//│       ])
+//│     }
+//│     toString() { return "C1(" + this.b + ")"; }
+//│   };
+//│   function C2(b1) { return new C2.class(b1); };
+//│   C2.class = class C2 {
+//│     constructor(b) {
+//│       this.b = b;
+//│       Predef.print([
+//│         a,
+//│         this.b
+//│       ])
+//│     }
+//│     toString() { return "C2(" + this.b + ")"; }
+//│   };
+//│   tmp = C1(1);
+//│   tmp1 = C2(2);
+//│   return [
+//│     tmp,
+//│     tmp1
+//│   ];
+//│ }
+//│ undefined
+
+test(123)
+//│ > 123,1
+//│ > 123,2
+//│ = [ C1 { b: 1 }, C2 { b: 2 } ]
+
+
+:sjs
+class Foo(a) with
+  fun foo() =
+    fun bar() = a
+    fun baz() = a
+    bar()
+    baz()
+  foo()
+Foo(123)
+//│ JS:
+//│ this.Foo = function Foo(a1) { return new Foo.class(a1); };
+//│ this.Foo.class = class Foo {
+//│   constructor(a) {
+//│     this.a = a;
+//│     this.foo()
+//│   }
+//│   foo() {
+//│     let tmp;
+//│     
+//│     const this$Foo = this;
+//│     function bar() {
+//│       return this$Foo.a;
+//│     }
+//│     function baz() {
+//│       return this$Foo.a;
+//│     }
+//│     tmp = bar();
+//│     return baz();
+//│   }
+//│   toString() { return "Foo(" + this.a + ")"; }
+//│ };
+//│ this.Foo(123)
+//│ = Foo { a: 123 }
+
+

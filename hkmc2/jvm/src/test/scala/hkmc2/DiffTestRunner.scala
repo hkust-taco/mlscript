@@ -9,7 +9,7 @@ import mlscript.utils._, shorthands._
 
 
 
-class MainDiffMaker(val file: os.Path, val preludeFile: os.Path, val predefFile: os.Path, val relativeName: Str)
+class MainDiffMaker(val rootPath: Str, val file: os.Path, val preludeFile: os.Path, val predefFile: os.Path, val relativeName: Str)
   extends BbmlDiffMaker
 
 
@@ -105,7 +105,7 @@ abstract class DiffTestRunner(state: DiffTestRunner.State)
       val preludePath = dir/"mlscript"/"decls"/"Prelude.mls"
       val predefPath = dir/"mlscript-compile"/"Predef.mls"
       
-      val dm = new MainDiffMaker(file, preludePath, predefPath, relativeName)
+      val dm = new MainDiffMaker(state.workingDir.toString, file, preludePath, predefPath, relativeName)
       
       dm.run()
       

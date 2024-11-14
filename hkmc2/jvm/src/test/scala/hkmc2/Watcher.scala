@@ -93,7 +93,7 @@ class Watcher(dir: File):
       then
         MLsCompiler(preludePath).compileModule(path)
       else
-        val dm = new MainDiffMaker(path, preludePath, predefPath, relativeName):
+        val dm = new MainDiffMaker((dirPath/os.up).toString, path, preludePath, predefPath, relativeName):
           override def unhandled(blockLineNum: Int, exc: Throwable): Unit =
             exc.printStackTrace()
             super.unhandled(blockLineNum, exc)

@@ -5,17 +5,24 @@ const Predef$class = class Predef {
   id(x) {
     return x;
   } 
-  pipe(x1, f) {
-    return f(x1);
+  not(x1) {
+    if (x1 === false) {
+      return true;
+    } else {
+      return false;
+    }
+  } 
+  pipe(x2, f) {
+    return f(x2);
   } 
   call(receiver, f1) {
     return (arg) => {
       return f1.call(receiver, arg);
     };
   } 
-  print(x2) {
+  print(x3) {
     let tmp;
-    tmp = String(x2);
+    tmp = String(x3);
     return console.log(tmp);
   }
   toString() { return "Predef"; }

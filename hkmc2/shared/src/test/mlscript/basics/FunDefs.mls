@@ -33,3 +33,11 @@ fun (>>) foo(a, b) = a * b
 2 >> 2
 
 
+:todo // error
+fun ~ concat(a, b) = a + b
+//│ /!!!\ Uncaught error: scala.MatchError: App(Ident(concat),Tup(List(Ident(a), Ident(b)))) (of class hkmc2.syntax.Tree$App)
+
+:todo // error
+fun not(b) = !b
+
+

@@ -31,6 +31,9 @@ class Scope(val parent: Opt[Scope], val curThis: Opt[Opt[InnerSymbol]], val bind
       thisProxyAccessed = true
       allocateName(thisSym, "this$")
   
+  /** Whether the code generator has produced a binding for `thisProxy` yet. */
+  var thisProxyDefined: Bool = false
+  
   private def thisError(thisSym: InnerSymbol)(using Raise): Nothing =
     raise(InternalError(msg"`this` not in scope: ${thisSym.toString}" -> N :: Nil,
       source = Diagnostic.Source.Compilation))

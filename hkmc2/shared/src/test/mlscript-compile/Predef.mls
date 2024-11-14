@@ -6,6 +6,8 @@ module Predef with ...
 
 fun id(x) = x
 
+fun not(x) = x is false
+
 fun (|>) pipe(x, f) = f(x)
 
 fun (|>.) call(receiver, f)(arg) = f.call(receiver, arg)

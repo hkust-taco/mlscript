@@ -74,4 +74,9 @@ of 1
 //│ 	Ident(log)
 //│ 	Error()
 
+:fixme
+print of 
+123
+//│ /!!!\ Uncaught error: scala.NotImplementedError: NEWLINE (of class NEWLINE$)
+
 

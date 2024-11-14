@@ -1,0 +1,83 @@
+
+import "fs"
+
+import "../Str.mls"
+open Str
+
+import "../Predef.mls"
+open Predef
+
+
+declare class Num
+declare class Bool
+
+declare val String
+
+
+class Accounting with ...
+
+
+fun display(amt): Str = (amt / 1000).toFixed(1)
+
+val warnings = []
+
+
+class Project(val num: Str)
+
+
+class Line(val name: Str, val proj: Project, val starting_balance: Num, val isMatchable: Bool) with
+  mut val balance = starting_balance
+  fun expense(amt) =
+    set balance = balance -. amt
+  fun mustBeEmpty() =
+    if balance > 10_000 then
+      warnings.push of "> **❗️** Unspent balance of " ~ name ~ ": `" ~ display(balance) ~ "`"
+    else () // TODO allow omitting else branch
+
+val lines = []
+
+fun mkLine(nme, proj, starting_balance, matchable) =
+  let line = Line(nme, proj, starting_balance, matchable)
+  lines.push(line)
+  line
+
+
+class Report(fileName) with
+  
+  fs.writeFileSync(fileName, "# Accounting\n")
+  
+  fun w(txt) =
+    fs.appendFileSync(fileName, txt)
+  fun wln(txt) =
+    fs.appendFileSync(fileName, txt ~ "\n")
+  
+  fun init() =
+    wln of ""
+    wln of "|" ~ "Year" ~ "|" ~ lines.map(x => x.name).join("|") ~ "|"
+    wln of "|" ~ "---" ~ "|" ~ lines.map(x => "--:").join("|") ~ "|"
+  
+  fun snapShot(label) =
+    wln of "|" ~ String(label) ~ "|" ~ lines.map(x => display(x.balance)).join("|") ~ "|"
+    
+  fun wrapUp() =
+    wln of ""
+    warnings.forEach of x => (wln(x), wln(""))
+    wln of "### Remaining Available Funds"
+    wln of ""
+    wln of "|" ~ "Summary" ~ "|   |"
+    wln of "|" ~ "---" ~ "|--:|"
+    wln of "|" ~ "Matchable" ~ "|" ~ display(
+      lines.filter(x => x.isMatchable).map(x => x.balance).reduce((a, b) => a +. b, 0)
+    ) ~ "|"
+    wln of "|" ~ "Non-matchable" ~ "|" ~ display(
+      lines.filter(x => not(x.isMatchable)).map(x => x.balance).reduce((a, b) => a +. b, 0)
+    ) ~ "|"
+
+fun process(filename, k) =
+  let report = Report(filename)
+  report.init()
+  k(report)
+  report.wrapUp()
+  print of "Report written to " ~ filename
+
+

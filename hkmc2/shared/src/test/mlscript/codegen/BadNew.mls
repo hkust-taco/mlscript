@@ -3,7 +3,7 @@
 
 :pe
 new
-//│ ╔══[PARSE ERROR] Expected expression after `new` keyword; found end of input instead
+//│ ╔══[PARSE ERROR] Expected expression or block after `new` keyword; found end of input instead
 //│ ║  l.5: 	new
 //│ ╙──     	   ^
 
@@ -23,17 +23,24 @@ new 2 + 2
 new()
 //│ ═══[RUNTIME ERROR] TypeError: undefined is not a constructor
 
-:pe
+:re
 new {}
-//│ ╔══[PARSE ERROR] Expected expression after `new` keyword; found end of block instead
-//│ ║  l.27: 	new {}
-//│ ╙──      	    ^^
+//│ ═══[RUNTIME ERROR] TypeError: undefined is not a constructor
 
-// FIXME the error...
+
+// * Note that thanks to the parser "feature" for keyword-block stutter
+// * this used to parse as `((new x) = 1)`;
+// * it no longer does, since I make `new` accept `exprOrBlk`
+:pt
 :todo
 new { x = 1 }
-//│ ╔══[ERROR] Wrong number of type arguments
-//│ ║  l.34: 	new { x = 1 }
+//│ Parsed tree:
+//│ New of Block of Ls of 
+//│   Def:
+//│     lhs = Ident of "x"
+//│     rhs = IntLit of 1
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.36: 	new { x = 1 }
 //│ ╙──      	      ^
 
 

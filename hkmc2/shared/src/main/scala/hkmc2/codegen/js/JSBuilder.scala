@@ -216,8 +216,10 @@ class JSBuilder extends CodeBuilder:
                 case S(f) => doc"${f}; # ${sym.nme}.class = ${clsJS};"
                 case N => clsJS
         thisProxy match
-          case S(proxy) => doc" # const $proxy = this; # ${res.stripBreaks}${returningTerm(rst)}"
-          case N => doc"$res${returningTerm(rst)}"
+          case S(proxy) if !scope.thisProxyDefined =>
+            scope.thisProxyDefined = true
+            doc" # const $proxy = this; # ${res.stripBreaks}${returningTerm(rst)}"
+          case _ => doc"$res${returningTerm(rst)}"
       doc" # ${resJS}"
     case Return(res, true) => doc" # ${result(res)}"
     case Return(res, false) => doc" # return ${result(res)};"
@@ -290,8 +292,11 @@ class JSBuilder extends CodeBuilder:
     val imps = p.imports.map: i =>
       if compilingFile
       then
-        val relPath = os.Path(i._2.toString).relativeTo(wd).toString
-        doc"""import "./${relPath}";"""
+        val path = i._2
+        val relPath = if path.startsWith("/")
+          then "./" + os.Path(path).relativeTo(wd).toString
+          else path
+        doc"""import ${getVar(i._1)} from "${relPath}";"""
       else
         val v = doc"this.${getVar(i._1)}"
         doc"""$v = await import("${i._2.toString

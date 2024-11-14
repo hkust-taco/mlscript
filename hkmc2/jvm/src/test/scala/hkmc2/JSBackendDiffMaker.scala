@@ -28,7 +28,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   lazy val host =
     hostCreated = true
     given TL = replTL
-    val h = ReplHost()
+    val h = ReplHost(rootPath)
     h
   
   private var hostCreated = false

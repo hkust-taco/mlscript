@@ -140,6 +140,8 @@ extends Importer:
       block(sts)._1
     case lit: Literal =>
       Term.Lit(lit)
+    case d: Def =>
+      term(Block(d :: UnitLit(true) :: Nil))
     case LetLike(`let`, lhs, rhso, S(bod)) =>
       term(Block(LetLike(`let`, lhs, rhso, N) :: bod :: Nil))
     case LetLike(`let`, lhs, S(rhs), N) =>
@@ -483,8 +485,11 @@ extends Importer:
             // TODO lookup in members? inherited/refined stuff?
             raise(ErrorReport(msg"Name not found: ${id.name}" -> id.toLoc :: Nil))
             go(sts, Term.Error :: acc)
+        case App(base, args) =>
+          go(Def(base, InfixApp(args, Keyword.`=>`, rhs)) :: sts, acc)
         case _ =>
-          raise(ErrorReport(msg"Wrong number of type arguments" -> lhs.toLoc :: Nil)) // TODO BE
+          raise(ErrorReport(msg"Unrecognized definitional assignment left-hand side: ${lhs.describe}"
+            -> lhs.toLoc :: Nil)) // TODO BE
           go(sts, Term.Error :: acc)
       case (td @ TermDef(k, nme, rhs)) :: sts =>
         log(s"Processing term definition $nme")

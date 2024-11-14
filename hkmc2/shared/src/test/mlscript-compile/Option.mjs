@@ -1,4 +1,4 @@
-import "./Predef.mjs";
+import Predef from "./Predef.mjs";
 const Option$class = class Option {
   constructor() {
     this.Some = function Some(value1) { return new Some.class(value1); };

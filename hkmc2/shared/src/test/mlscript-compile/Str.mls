@@ -1,0 +1,5 @@
+
+module Str with ...
+
+fun (~) concat(a, b) = a + b
+

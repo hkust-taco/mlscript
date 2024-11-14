@@ -49,6 +49,7 @@ object Parser:
       "+ -",
       // "* / %",
       "* %",
+      "~",
       "", // Precedence of prefix operators
       "", // Precedence of application
       ".",
@@ -293,7 +294,7 @@ abstract class Parser(
         cur match
         case (KEYWORD(kw @ (Keyword.`=`)), l0) :: _ /* if kw.leftPrecOrMin > prec */ =>
           consume
-          val rhs = tryParseExp(CommaPrecNext, tok, loc, rule).getOrElse(errExpr)
+          val rhs = expr(CommaPrecNext)
           Def(lhs, rhs) :: blockContOf(rule)
         case _ =>
           lhs :: blockContOf(rule)

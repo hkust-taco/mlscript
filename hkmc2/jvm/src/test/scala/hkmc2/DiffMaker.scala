@@ -16,6 +16,9 @@ class Outputter(val out: java.io.PrintWriter):
   val diffEndMarker = ">>>>>>>"
 
   val exitMarker = "=" * 100
+  val blockSeparator = "—" * 80
+  
+  val fullBlockSeparator = outputMarker + blockSeparator
   
   def apply(str: String) =
     // out.println(outputMarker + str)
@@ -51,7 +54,7 @@ abstract class DiffMaker:
   
   class Command[A](val name: Str, var isGlobal: Bool = false)(val process: Str => A):
     require(name.nonEmpty)
-    require(name.forall(l => l.isLetterOrDigit || l === '!'))
+    // require(name.forall(l => l.isLetterOrDigit || l === '!'))
     if commands.contains(name) then
       throw new IllegalArgumentException(s"Option '$name' already exists")
     commands += name -> this
@@ -66,11 +69,13 @@ abstract class DiffMaker:
     def onSet(): Unit = ()
     override def toString: Str = s"${if isGlobal then "global " else ""}$name: $currentValue"
   
-  class NullaryCommand(name: Str) extends Command[Unit](name)(
+  class NullaryCommand[R](name: Str, k: () => R = () => ()) extends Command[R](name)(
     line =>
       val commentIndex = line.indexOf("//")
       val body = if commentIndex == -1 then line else line.take(commentIndex)
-      assert(body.forall(_.isWhitespace)))
+      assert(body.forall(_.isWhitespace))
+      k()
+    )
   
   class FlagCommand(init: Bool, name: Str) extends NullaryCommand(name):
     self =>
@@ -84,6 +89,10 @@ abstract class DiffMaker:
   initCmd.setCurrentValue(()) // * Starts enabled at the top of the file
   val global = NullaryCommand("global")
   global.setCurrentValue(()) // * Starts enabled at the top of the file
+  
+  val consumeEmptyLines = NullaryCommand("...", () =>
+    output(output.blockSeparator)
+  )
   
   val fixme = Command("fixme")(_ => ())
   val breakme = Command("breakme")(_ => ())
@@ -218,7 +227,7 @@ abstract class DiffMaker:
   @annotation.tailrec
   final def rec(lines: List[String]): Unit = lines match
     case "" :: Nil => // To prevent adding an extra newline at the end
-    case (line @ "") :: ls =>
+    case (line @ "") :: ls if consumeEmptyLines.isUnset =>
       out.println(line)
       if initCmd.isSet then
         init()
@@ -274,7 +283,7 @@ abstract class DiffMaker:
       
       val blockLineNum = allLines.size - lines.size + 1
       
-      val block = (l :: ls.takeWhile(l => l.nonEmpty && !(
+      val block = (l :: ls.takeWhile(l => (l.nonEmpty || consumeEmptyLines.isSet) && !(
         l.startsWith(output.outputMarker)
         || l.startsWith(output.diffBegMarker)
         // || l.startsWith(oldOutputMarker)
@@ -299,6 +308,10 @@ abstract class DiffMaker:
           // err.printStackTrace(out)
           // println(err.getCause())
           uncaught(err)
+      
+      if consumeEmptyLines.isSet then
+        output(output.blockSeparator)
+        consumeEmptyLines.unset
       
       rec(lines.drop(block.size))
       

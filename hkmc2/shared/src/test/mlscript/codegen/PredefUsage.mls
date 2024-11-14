@@ -1,6 +1,13 @@
 :js
 
 
+not(true)
+//│ = false
+
+not(false)
+//│ = true
+
+
 print(12)
 //│ > 12
 

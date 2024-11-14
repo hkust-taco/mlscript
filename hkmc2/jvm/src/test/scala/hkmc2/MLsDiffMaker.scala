@@ -12,6 +12,10 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   val bbmlOpt: Command[?]
   
+  val rootPath: Str // * Absolute path to the root of the project
+  val preludeFile: os.Path // * Contains declarations of JS builtins
+  val predefFile: os.Path // * Contains MLscript standard library definitions
+  
   val wd = file / os.up
   
   class DebugTreeCommand(name: Str) extends Command[Product => Str](name)(
@@ -26,9 +30,6 @@ abstract class MLsDiffMaker extends DiffMaker:
       Function.const("")
   ):
     def post: Product => Str = get.getOrElse(Function.const(""))
-  
-  val preludeFile: os.Path // * Contains declarations of JS builtins
-  val predefFile: os.Path // * Contains MLscript standard library definitions
   
   val dbgElab = NullaryCommand("de")
   val dbgParsing = NullaryCommand("dp")

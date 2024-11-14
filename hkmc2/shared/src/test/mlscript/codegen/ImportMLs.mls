@@ -27,6 +27,23 @@ None isDefined()
 //│ Option.isDefined(Option.None)
 //│ = false
 
+:fixme
+case Some(x) then x
+//│ ╔══[PARSE ERROR] Expected block after `case` keyword; found identifier instead
+//│ ║  l.31: 	case Some(x) then x
+//│ ╙──      	     ^^^^
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Jux(Error(),App(Ident(Some),Tup(List(Ident(x))))),keyword 'then',Ident(x)) (of class hkmc2.syntax.Tree$InfixApp)
+
+:fixme
+case { Some(x) then x }
+//│ ╔══[ERROR] mismatched arity: expect 0, found 1
+//│ ║  l.38: 	case { Some(x) then x }
+//│ ╙──      	       ^^^^^^^
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.38: 	case { Some(x) then x }
+//│ ╙──      	                    ^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+
 Some(1) isDefined()
 //│ = true
 
@@ -65,13 +82,13 @@ None == Option.None
 :e
 Option.oops
 //│ ╔══[ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.66: 	Option.oops
+//│ ║  l.83: 	Option.oops
 //│ ╙──      	      ^^^^^
 
 :e
 open Option { oops }
 //│ ╔══[ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.72: 	open Option { oops }
+//│ ║  l.89: 	open Option { oops }
 //│ ╙──      	              ^^^^
 
 oops
@@ -79,7 +96,7 @@ oops
 :e
 Option.None.oops
 //│ ╔══[ERROR] Module 'None' does not contain member 'oops'
-//│ ║  l.80: 	Option.None.oops
+//│ ║  l.97: 	Option.None.oops
 //│ ╙──      	           ^^^^^
 
 

@@ -210,8 +210,9 @@ object ParseRule:
         ) { case (lhs, (rhs, defs, body))=> Handle(lhs, rhs, defs, body) }
     ,
     Kw(`new`):
-      ParseRule("`new` keyword"):
-        Expr(ParseRule("`new` expression")(End(())))((body, _: Unit) => New(body))
+      ParseRule("`new` keyword")(
+        exprOrBlk(ParseRule("`new` expression")(End(())))((body, _: Unit) => New(body))*
+      )
     ,
     Kw(`in`):
       ParseRule("modifier keyword `in`"):
@@ -333,6 +334,8 @@ object ParseRule:
     Kw(kw):
       ParseRule(s"'${kw}' operator")(
         Expr(ParseRule(s"'${kw}' operator right-hand side")(End(())))(k)
+        // * Interestingly, this does not seem to change anything:
+        // exprOrBlk(ParseRule(s"'${kw}' operator right-hand side")(End(())))(k)*
       )
   
   val infixRules: ParseRule[Tree => Tree] = ParseRule("continuation of statement")(
