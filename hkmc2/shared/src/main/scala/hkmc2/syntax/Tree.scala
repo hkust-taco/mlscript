@@ -288,4 +288,9 @@ trait TypeDefImpl extends TypeOrTermDef:
     case _ =>
       Map.empty
   
+  lazy val params: Ls[semantics.TermSymbol] =
+    this.paramLists.headOption.fold(Nil): tup =>
+      tup.fields.iterator.flatMap(_.param).map:
+        case (id, _) => semantics.TermSymbol(ParamBind, symbol.asClsLike, id)
+      .toList
 
