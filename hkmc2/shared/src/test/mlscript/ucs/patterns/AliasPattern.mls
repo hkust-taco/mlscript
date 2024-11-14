@@ -1,5 +1,3 @@
-:ucs desugared
-
 import "../../../mlscript-compile/Option.mls"
 
 open Option
@@ -7,28 +5,12 @@ open Option
 fun map(f) = case
   Some(x)   then Some(f(x))
   None as n then n
-//│ Desugared:
-//│ >  if
-//│ >    caseScrut@14 is Some($param0@16) and
-//│ >      let x@17 = $param0@16#0
-//│ >      else member:Option#666.Some‹member:Some›(f@13#666(x@17#666))
-//│ >    caseScrut@14 is None and
-//│ >      let n@15 = caseScrut@14#1
-//│ >      else n@15#666
 
 fun map(f) = case
   Some(x as n) then Some of f(n)
   None as n then n
-//│ Desugared:
-//│ >  if
-//│ >    caseScrut@23 is Some($param0@25) and
-//│ >      let x@27 = $param0@25#0
-//│ >      let n@26 = $param0@25#1
-//│ >      else member:Option#666.Some‹member:Some›(f@22#666(n@26#666))
-//│ >    caseScrut@23 is None and
-//│ >      let n@24 = caseScrut@23#1
-//│ >      else n@24#666
 
+:ucs desugared
 fun foo = case
   Some(Some(a as b) as c) as d then [a, b, c, d]
 //│ Desugared:

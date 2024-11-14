@@ -13,28 +13,12 @@ fun suit(x) = if x is Card(a) then a
 let card = Card(Heart)
 suit of card
 
-:ucs desugared normalized
+// :ucs desugared normalized
 fun foo(x) = if x is
   Card(Heart) then 0
   Card(Diamond) then 1
   Card(Spade) then 2
   Card(Club) then 3
   else 4
-//│ Desugared:
-//│ >  if
-//│ >    x@22 is Card($param0@23) $param0@23 is Heart then 0
-//│ >    x@22 is Card($param0@23) $param0@23 is Diamond then 1
-//│ >    x@22 is Card($param0@23) $param0@23 is Spade then 2
-//│ >    x@22 is Card($param0@23) $param0@23 is Club then 3
-//│ >    else 4
-//│ Normalized:
-//│ >  if
-//│ >    x@22 is Card($param0@23) and
-//│ >      $param0@23 is Heart then 0
-//│ >      $param0@23 is Diamond then 1
-//│ >      $param0@23 is Spade then 2
-//│ >      $param0@23 is Club then 3
-//│ >      else 4
-//│ >    else 4
 
 

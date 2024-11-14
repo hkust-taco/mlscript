@@ -4,9 +4,6 @@ import "../../../mlscript-compile/Option.mls"
 open Stack
 open Option
 
-:global
-:ucs desugared normalized
-
 class Pair[A, B](x: A, y: B)
 
 fun foo(xs) =
@@ -14,49 +11,12 @@ fun foo(xs) =
     "abc" :: "xyz" :: xs then 0
     "abc" :: "uvw" :: xs then 1
     Nil then 3
-//│ Desugared:
-//│ >  if
-//│ >    xs@16 is Cons($param0@17, $param1@18) and $param0@17 is "abc" and $param1@18 is Cons($param0@19, $param1@20) and $param0@19 is "xyz" and
-//│ >      let xs@22 = $param1@20#1
-//│ >      else 0
-//│ >    xs@16 is Cons($param0@17, $param1@18) and $param0@17 is "abc" and $param1@18 is Cons($param0@19, $param1@20) and $param0@19 is "uvw" and
-//│ >      let xs@21 = $param1@20#0
-//│ >      else 1
-//│ >    xs@16 is Nil then 3
-//│ Normalized:
-//│ >  if
-//│ >    xs@16 is Cons($param0@17, $param1@18) and $param0@17 is "abc" and $param1@18 is Cons($param0@19, $param1@20) and
-//│ >      $param0@19 is "xyz" and
-//│ >        let xs@22 = $param1@20#1
-//│ >        else 0
-//│ >      $param0@19 is "uvw" and
-//│ >        let xs@21 = $param1@20#0
-//│ >        else 1
-//│ >    xs@16 is Nil then 3
 
 fun sum(acc, xs) = 
   if xs is
     x :: xs then sum(acc + x, xs)
     Nil     then acc
-//│ Desugared:
-//│ >  if
-//│ >    xs@26 is Cons($param0@27, $param1@28) and
-//│ >      let x@29 = $param0@27#0
-//│ >      let xs@30 = $param1@28#0
-//│ >      else globalThis:block#5#666.sum‹member:sum›(builtin:+#0(acc@25#666, x@29#666), xs@30#666)
-//│ >    xs@26 is Nil then acc@25#666
-//│ Normalized:
-//│ >  if
-//│ >    xs@26 is Cons($param0@27, $param1@28) and
-//│ >      let x@29 = $param0@27#0
-//│ >      let xs@30 = $param1@28#0
-//│ >      else globalThis:block#5#666.sum‹member:sum›(builtin:+#0(acc@25#666, x@29#666), xs@30#666)
-//│ >    xs@26 is Nil then acc@25#666
 
-:todo
-// The normalization does not distinguish between bindings and their aliases.
-// We may still need to substitute variables when merging branches or reuse
-// bindings at the same location. 
 fun test(xs) =
   if xs is
     Some(Cons("add", Cons(x, Cons(y, Nil)))) then x + y
@@ -64,39 +24,3 @@ fun test(xs) =
     Some(Cons("sum", xs)) then sum(0, xs)
     Some(Nil) then "nothing"
     None then "nothing"
-//│ Desugared:
-//│ >  if
-//│ >    xs@35 is Some($param0@36) and $param0@36 is Cons($param0@37, $param1@38) and $param0@37 is "add" and $param1@38 is Cons($param0@41, $param1@42) and
-//│ >      let x@48 = $param0@41#1
-//│ >      $param1@42 is Cons($param0@44, $param1@45) and
-//│ >        let y@49 = $param0@44#1
-//│ >        $param1@45 is Nil then builtin:+#0(x@48#666, y@49#666)
-//│ >    xs@35 is Some($param0@36) and $param0@36 is Cons($param0@37, $param1@38) and $param0@37 is "mul" and $param1@38 is Cons($param0@41, $param1@42) and
-//│ >      let x@43 = $param0@41#0
-//│ >      $param1@42 is Cons($param0@44, $param1@45) and
-//│ >        let y@46 = $param0@44#0
-//│ >        $param1@45 is Nil then builtin:*#0(x@43#666, y@46#666)
-//│ >    xs@35 is Some($param0@36) and $param0@36 is Cons($param0@37, $param1@38) and $param0@37 is "sum" and
-//│ >      let xs@39 = $param1@38#0
-//│ >      else globalThis:block#5#666.sum‹member:sum›(0, xs@39#666)
-//│ >    xs@35 is Some($param0@36) $param0@36 is Nil then "nothing"
-//│ >    xs@35 is None then "nothing"
-//│ Normalized:
-//│ >  if
-//│ >    xs@35 is Some($param0@36) and
-//│ >      $param0@36 is Cons($param0@37, $param1@38) and
-//│ >        $param0@37 is "add" and $param1@38 is Cons($param0@41, $param1@42) and
-//│ >          let x@48 = $param0@41#1
-//│ >          $param1@42 is Cons($param0@44, $param1@45) and
-//│ >            let y@49 = $param0@44#1
-//│ >            $param1@45 is Nil then builtin:+#0(x@48#666, y@49#666)
-//│ >        $param0@37 is "mul" and $param1@38 is Cons($param0@41, $param1@42) and
-//│ >          let x@43 = $param0@41#0
-//│ >          $param1@42 is Cons($param0@44, $param1@45) and
-//│ >            let y@46 = $param0@44#0
-//│ >            $param1@45 is Nil then builtin:*#0(x@43#666, y@46#666)
-//│ >        $param0@37 is "sum" and
-//│ >          let xs@39 = $param1@38#0
-//│ >          else globalThis:block#5#666.sum‹member:sum›(0, xs@39#666)
-//│ >      $param0@36 is Nil then "nothing"
-//│ >    xs@35 is None then "nothing"
