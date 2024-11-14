@@ -123,6 +123,7 @@ sealed trait Statement extends AutoLocated:
     case t: Tup => t.tree :: Nil
     case l: Lam => l.params.map(_.sym.id) ::: l.body :: Nil
     case t: App => t.tree :: Nil
+    case Sel(pre, nme) => pre :: nme :: Nil
     case SelProj(prefix, cls, proj) => prefix :: cls :: proj :: Nil
     case _ =>
       subTerms // TODO more precise (include located things that aren't terms)

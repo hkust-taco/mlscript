@@ -16,7 +16,9 @@ fun id(x) = x
 
 :fixme // FIXME[CY]
 run(x `=> id(x) `* x)
-//│ ═══[ERROR] Cannot quote Sel(Ref(globalThis:import#bbPredef),Ident(*))
+//│ ╔══[ERROR] Cannot quote Sel(Ref(globalThis:import#bbPredef),Ident(*))
+//│ ║  l.18: 	run(x `=> id(x) `* x)
+//│ ╙──      	                 ^
 //│ Type: ⊤
 
 :fixme
@@ -38,7 +40,9 @@ show
 fun inc(dbg) =
   x `=> let c = x `+ `1 in let t = dbg(c) in c
 inc
-//│ ═══[ERROR] Cannot quote Sel(Ref(globalThis:import#bbPredef),Ident(+))
+//│ ╔══[ERROR] Cannot quote Sel(Ref(globalThis:import#bbPredef),Ident(+))
+//│ ║  l.41: 	  x `=> let c = x `+ `1 in let t = dbg(c) in c
+//│ ╙──      	                   ^
 //│ Type: forall α34_2: (CodeBase[⊥, ?, ?] ->{α34_2} ⊤) ->{α34_2} CodeBase[out ⊤ -> ⊥, ⊥, ?]
 
 inc(c => log(show(c)))
