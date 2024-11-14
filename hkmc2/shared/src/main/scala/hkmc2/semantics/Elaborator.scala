@@ -712,7 +712,7 @@ extends Importer:
                   if !tp.isContravariant then traverseType(pol)(targ)
                   if !tp.isCovariant then traverseType(pol.!)(targ)
             case N =>
-              TODO(sym->sym.uid)
+              // TODO(sym->sym.uid)
           case S(sym: TypeAliasSymbol) =>
             // TODO dedup with above...
             sym.defn match
