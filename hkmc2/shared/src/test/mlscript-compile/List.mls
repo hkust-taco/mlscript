@@ -1,5 +1,0 @@
-module List with ...
-
-abstract class List[out T]: Cons[T] | Nil
-class (::) Cons[out T](head: T, tail: List[T]) extends List[T]
-module Nil extends List[nothing]

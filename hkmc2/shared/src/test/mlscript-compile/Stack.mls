@@ -4,7 +4,7 @@
 
 module Stack with ...
 
-class Cons[A](head: A, tail)
+class (::) Cons[A](head: A, tail)
 module Nil
 
 fun isEmpty(xs) = xs is Nil

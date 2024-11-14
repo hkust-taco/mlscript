@@ -1,8 +1,8 @@
-import "../../../mlscript-compile/String.mls"
+import "../../../mlscript-compile/Str.mls"
 import "../../../mlscript-compile/Option.mls"
 
 open Option
-open String
+open Str
 
 abstract class EitherOrBoth[out A, out B]: (Left[A, B] | Right[A, B] | Both[A, B])
 class Left[out A, out B](value: A) extends EitherOrBoth[A, B]
@@ -73,6 +73,6 @@ fun isBoth[A, B](eob: EitherOrBoth[A, B]): Bool =
 
 fun eobToString[A, B](eob: EitherOrBoth[A, B]): Str =
   if eob is
-    Left(left) then "Left(" ++ toString(left) ++ ")"
-    Right(right) then "Right(" ++ toString(right) ++ ")"
-    Both(left, right) then "Both(" ++ toString(left) ++ ", " ++ toString(right) ++ ")"
+    Left(left) then "Left(" ~ string(left) ~ ")"
+    Right(right) then "Right(" ~ string(right) ~ ")"
+    Both(left, right) then "Both(" ~ string(left) ~ ", " ~ string(right) ~ ")"
