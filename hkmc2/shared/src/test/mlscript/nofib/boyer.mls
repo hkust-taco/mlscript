@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 112 member(s)
+//│ Imported 109 member(s)
 
 
 abstract class Id: A | B | C | D | X | Y | Z | U | W | ADD1 | AND | APPEND | CONS | CONSP | DIFFERENCE | DIVIDES | EQUAL | EVEN | EXP | F | FALSE | FOUR | GCD | GREATEREQP | GREATERP | IF | IFF | IMPLIES | LENGTH | LESSEQP | LESSP | LISTP | MEMBER | NIL | NILP | NLISTP | NOT | ODD | ONE | OR | PLUS | QUOTIENT | REMAINDER | REVERSE | SUB1 | TIMES | TRUE | TWO | ZERO | ZEROP
@@ -165,76 +165,116 @@ fun test0(xxxx) =
   let nil =        Fun(NIL  , Nil, lazy of () => Nil)
   let boyerTrue =  Fun(TRUE , Nil, lazy of () => Nil)
   let zero    =    Fun(ZERO , Nil, lazy of () => Nil)
+  
   fun one()   =    Fun(ONE, Nil, lazy of () => Cons(Tup2(one(), add1(zero)), Nil))
+  
   fun two()   =    Fun(TWO, Nil, lazy of () => Cons(Tup2(two(), add1(one())), Nil))
+  
   fun four()  =   Fun(FOUR, Nil, lazy of () => Cons(Tup2(four(), add1(add1(two()))), Nil))
+  
   fun add1(a) =   Fun(ADD1, a :: Nil, lazy of () => Nil)
+  
   fun if_(a, b, c) = Fun(IF, Cons(a, Cons(b, Cons(c, Nil))), lazy of () => Cons(Tup2(if_(if_(x, y, z), u, w), if_(x, if_(y, u, w), if_(z, u, w))), Nil))
+  
   fun not_(a) = Fun(NOT, a :: Nil, lazy of () => Tup2(not_(x), if_(x, boyerFalse, boyerTrue)) :: Nil)
+  
   fun and_(a, b) =
     Fun(AND, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(and_(x, y), if_(x, if_(y, boyerTrue, boyerFalse), boyerFalse)), Nil))
+  
   fun append_(a, b) =
     Fun(APPEND, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(append_(append_(x, y), z), append_(x, append_(y, z))), Nil))
+  
   fun cons(a, b) =
     Fun(CONS, Cons(a, Cons(b, Nil)), lazy of () => Nil)
+  
   fun consp(a) =
     Fun(CONSP, Cons(a, Nil), lazy of () => Cons(Tup2(consp(cons(x, y)), boyerTrue), Nil))
+  
   fun difference(a, b) =
     Fun(DIFFERENCE, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(difference(x, x), zero), Cons(Tup2(difference(plus(x, y), x), y), Cons(Tup2(difference(plus(y, x), x), y), Cons(Tup2(difference(plus(x, y), plus(x, z)), difference(y, z)), Cons(Tup2(difference(plus(y, plus(x, z)), x), plus(y, z)), Cons(Tup2(difference(add1(plus(y, z)), z), add1(y)), Cons(Tup2(difference(add1(add1(x)), two()), x), Nil))))))))
+  
   fun divides(a, b) =
     Fun(DIVIDES, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(divides(x, y), zerop(remainder(y, x))), Nil))
+  
   fun equal(a, b) =
     Fun(EQUAL, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(equal(plus(x, y), zero), and_(zerop(x), zerop(y))), Cons(Tup2(equal(plus(x, y), plus(x, z)), equal(y, z)), Cons(Tup2(equal(zero, difference(x, y)), not_(lessp(y, x))), Cons(Tup2(equal(x, difference(x, y)), or_(equal(x, zero), zerop(y))), Cons(Tup2(equal(times(x, y), zero), or_(zerop(x), zerop(y))), Cons(Tup2(equal(append_(x, y), append_(x, z)), equal(y, z)), Cons(Tup2(equal(y, times(x, y)), or_(equal(y, zero), equal(x, one()))), Cons(Tup2(equal(x, times(x, y)), or_(equal(x, zero), equal(y, one()))), Cons(Tup2(equal(times(x, y), one()), and_(equal(x, one()), equal(y, one()))), Cons(Tup2(equal(difference(x, y), difference(z, y)), if_(lessp(x, y), not_(lessp(y, z)), if_(lessp(z, y), not_(lessp(y, x)), equal(x, z)))), Cons(Tup2(equal(lessp(x, y), z), if_(lessp(x, y), equal(boyerTrue, z), equal(boyerFalse, z))), Nil))))))))))))
+  
   fun even_(a) =
     Fun(EVEN, Cons(a, Nil), lazy of () => Cons(Tup2(even_(x), if_(zerop(x), boyerTrue, odd_(sub1(x)))), Nil))
+  
   fun exp_(a, b) =
     Fun(EXP, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(exp_(x, plus(y, z)), times(exp_(x, y), exp_(x, z))), Cons(Tup2(exp_(x, times(y, z)), exp_(exp_(x, y), z)), Nil)))
+  
   fun f(a) =
     Fun(F, Cons(a, Nil), lazy of () => Nil)
+  
   fun gcd_(a, b) =
     Fun(GCD, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(gcd_(x, y), gcd_(y, x)), Cons(Tup2(gcd_(times(x, z), times(y, z)), times(z, gcd_(x, y))), Nil)))
+  
   fun greatereqp(a, b) =
     Fun(GREATEREQP, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(greatereqp(x, y), not_(lessp(x, y))), Nil))
+  
   fun greaterp(a, b) =
     Fun(GREATERP, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(greaterp(x, y), lessp(y, x)), Nil))
+  
   fun implies(a, b) =
     Fun(IMPLIES, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(implies(x, y), if_(x, if_(y, boyerTrue, boyerFalse), boyerTrue)), Nil))
+  
   fun iff(a, b) =
     Fun(IFF, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(iff(x, y), and_(implies(x, y), implies(y, x))), Nil))
+  
   fun length_(a) =
     Fun(LENGTH, Cons(a, Nil), lazy of () => Cons(Tup2(length_(reverse_(x)), length_(x)), Cons(Tup2(length_(cons(x, cons(y, cons(z, cons(u, w))))), plus(four(), length_(w))), Nil)))
+  
   fun lesseqp(a, b) =
     Fun(LESSEQP, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(lesseqp(x, y), not_(lessp(y, x))), Nil))
+  
   fun lessp(a, b) =
     Fun(LESSP, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(lessp(remainder(x, y), y), not_(zerop(y))), Cons(Tup2(lessp(quotient(x, y), x), and_(not_(zerop(x)), lessp(one(), y))), Cons(Tup2(lessp(plus(x, y), plus(x, z)), lessp(y, z)), Cons(Tup2(lessp(times(x, z), times(y, z)), and_(not_(zerop(z)), lessp(x, y))), Cons(Tup2(lessp(y, plus(x, y)), not_(zerop(x))), Nil))))))
+  
   fun nilp(a) =
     Fun(NILP, Cons(a, Nil), lazy of () => Cons(Tup2(nilp(x), equal(x, nil)), Nil))
+  
   fun listp(a) =
     Fun(LISTP, Cons(a, Nil), lazy of () => Cons(Tup2(listp(x), or_(nilp(x), consp(x))), Nil))
+  
   fun member(a, b) =
     Fun(MEMBER, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(member(x, append_(y, z)), or_(member(x, y), member(x, z))), Cons(Tup2(member(x, reverse_(y)), member(x, y)), Nil)))
+  
   fun nlistp(a) =
     Fun(NLISTP, Cons(a, Nil), lazy of () => Cons(Tup2(nlistp(x), not_(listp(x))), Nil))
+  
   fun odd_(a) =
     Fun(ODD, Cons(a, Nil), lazy of () => Cons(Tup2(odd_(x), even_(sub1(x))), Nil))
+  
   fun or_(a, b) =
     Fun(OR, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(or_(x, y), if_(x, boyerTrue, if_(y, boyerTrue, boyerFalse))), Nil))
+  
   fun plus(a, b) =
     Fun(PLUS, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(plus(plus(x, y), z), plus(x, plus(y, z))), Cons(Tup2(plus(remainder(x, y), times(y, quotient(x, y))), x), Cons(Tup2(plus(x, add1(y)), add1(plus(x, y))), Nil))))
+  
   fun quotient(a, b) =
     Fun(QUOTIENT, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(quotient(plus(x, plus(x, y)), two()), plus(x, quotient(y, two()))), Cons(Tup2(quotient(times(y, x), y), if_(zerop(y), zero, x)), Nil)))
+  
   fun remainder(a, b) =
     Fun(REMAINDER, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(remainder(x, one()), zero), Cons(Tup2(remainder(x, x), zero), Cons(Tup2(remainder(times(x, y), x), zero), Cons(Tup2(remainder(times(x, y), y), zero), Nil)))))
+  
   fun reverse_(a) =
     Fun(REVERSE, Cons(a, Nil), lazy of () => Cons(Tup2(reverse_(append_(x, y)), append_(reverse_(y), reverse_(x))), Nil))
+  
   fun sub1(a) =
     Fun(SUB1, Cons(a, Nil), lazy of () => Cons(Tup2(sub1(add1(x)), x), Nil))
+  
   fun times(a, b) =
     Fun(TIMES, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(times(x, plus(y, z)), plus(times(x, y), times(x, z))), Cons(Tup2(times(times(x, y), z), times(x, times(y, z))), Cons(Tup2(times(x, difference(y, z)), difference(times(y, x), times(z, x))), Cons(Tup2(times(x, add1(y)), plus(x, times(x, y))), Nil)))))
+  
   fun zerop(a) =
     Fun(ZEROP, Cons(a, Nil), lazy of () => Cons(Tup2(zerop(x), equal(x, zero)), Nil))
+  
   let subst0 = Cons(Tup2(X, f(plus(plus(a, b), plus(c, zero)))), Cons(Tup2(Y, f(times(times(a, b), plus(c, d)))), Cons(Tup2(Z, f(reverse_(append_(append_(a, b), nil)))), Cons(Tup2(U, equal(plus(a, b), difference(x, y))), Cons(Tup2(W, lessp(remainder(a, b), member(a, length_(b)))), Nil)))))
+  
   let theorem = implies(and_(implies(xxxx, y), and_(implies(y, z), and_(implies(z, u), implies(u, w)))), implies(x, w))
+  
   tautp(apply_subst(subst0, theorem))
 
 fun testBoyer_nofib(n) = all(test0, replicate(n, Var(X)))

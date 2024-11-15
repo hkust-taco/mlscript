@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 112 member(s)
+//│ Imported 109 member(s)
 
 
 fun algb2(x, k0j1, k1j1, yss) = if yss is
@@ -17,7 +17,9 @@ fun algb(xs, ys) =
   fun listcomp_fun(listcomp_fun_para) = if listcomp_fun_para is
       Cons(listcomp_fun_ls_h, listcomp_fun_ls_t) then Cons(Tup2(listcomp_fun_ls_h, 0), listcomp_fun(listcomp_fun_ls_t))
       Nil then Nil
+  
   Cons(0, algb1(xs, listcomp_fun(ys)))
+
 
 fun findk(k, km, m, ls) = if ls is
   Nil then km
@@ -36,13 +38,14 @@ fun algc(m, n, xs, ys) = if
     let l1 = algb(xs1, ys)
     let l2 = reverse(algb(reverse(xs2), reverse(ys)))
     let k = findk(0, 0, -1, zip(l1, l2))
-    algc(m2, k, xs1, take(k, ys)) . (algc(m-m2, n-k, xs2, drop(k, ys)))
+    compose(algc(m2, k, xs1, take(k, ys)), (algc(m-m2, n-k, xs2, drop(k, ys))))
 
 fun lcss(xs, ys) = algc(listLen(xs), listLen(ys), xs, ys)(Nil)
 
 fun lcssMain(a, b ,c, d, e, f) = lcss(enumFromThenTo(a,b,c), enumFromThenTo(d,e,f))
 
 fun testLCSS_nofib(d) = lcssMain(1,2,60,30,31,90)
+
 
 
 testLCSS_nofib(0).toString()

@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 112 member(s)
+//│ Imported 109 member(s)
 
 
 abstract class MandTree: NS | EW | Leaf
@@ -69,6 +69,7 @@ fun point_colour(xy) = if xy is Tup2(x, y) then check_radius(np(x), nq(y), 0, 0.
 fun check_perim(x1y1, x2y2) =
   let col1         = point_colour(x1y1)
   if x1y1 is Tup2(x1, y1) and x2y2 is Tup2(x2, y2) then
+    
     fun check_line(xcyc, xdyd) =
       if xcyc is Tup2(xc, yc) and xdyd is Tup2(xd, yd) and
         let finished = if
@@ -79,6 +80,7 @@ fun check_perim(x1y1, x2y2) =
         finished then true
         not(point_colour(xcyc) == col1) then false
         else check_line(Tup2(xc + xd, yc + yd), Tup2(xd, yd))
+    
     if
       equalp(x1y1, x2y2) then col1
       let col2         = point_colour(Tup2(x2, y1))
@@ -88,6 +90,7 @@ fun check_perim(x1y1, x2y2) =
       corners_diff then -1
       check_line(Tup2(x1+1,y1), right) and check_line(Tup2(x2,y1+1), down) and check_line(Tup2(x2-1,y2), left) and check_line(Tup2(x1,y2-1), up) then col1
       else -1
+
 
 fun build_tree(x1y1, x2y2) =
   if x1y1 is Tup2(x1, y1) and x2y2 is Tup2(x2, y2) then
@@ -110,6 +113,7 @@ fun build_tree(x1y1, x2y2) =
 
 fun testMandel2_nofib(n) =
   finite(build_tree(Tup2(0,0), Tup2(size, intDiv(size, 2))))
+
 
 
 testMandel2_nofib(0)

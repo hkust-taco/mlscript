@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 112 member(s)
+//│ Imported 109 member(s)
 
 
 fun integerbench(op, astart, astep, alim, bstart, bstep, blim) =
@@ -11,6 +11,7 @@ fun integerbench(op, astart, astep, alim, bstart, bstep, blim) =
         Nil then lscomp1(t1)
         Cons(b, t2) then Cons(op(a, b), lscomp2(t2))
       lscomp2(enumFromThenTo(bstart, bstart + bstep, blim))
+  
   lscomp1(enumFromThenTo(astart, astart + astep, alim))
 
 fun intbench(op, astart, astep, alim, bstart, bstep, blim) =
@@ -21,6 +22,7 @@ fun intbench(op, astart, astep, alim, bstart, bstep, blim) =
         Nil then lscomp1(t1)
         Cons(b, t2) then Cons(op(a, b), lscomp2(t2))
       lscomp2(enumFromThenTo(bstart, bstart + bstep, blim))
+  
   lscomp1(enumFromThenTo(astart, astart + astep, alim))
 
 fun runbench(jop, iop, opstr, astart, astep, alim, bstart, bstep, blim) =
@@ -38,6 +40,7 @@ fun runalltests(astart, astep, alim, bstart, bstep, blim) =
   fun z_leq(a, b) = a <= b
   fun z_gt(a, b) = a > b
   fun z_geq(a, b) = a >= b
+  
   runbench((a, b) => z_add(a, b), (a, b) => a + b, "(+)", astart, astep, alim, astart, astep, alim);
   runbench((a, b) => z_sub(a, b), (a, b) => a - b, "(-)", astart, astep, alim, astart, astep, alim);
   runbench((a, b) => z_mul(a, b), (a, b) => a * b, "(*)", astart, astep, alim, astart, astep, alim);

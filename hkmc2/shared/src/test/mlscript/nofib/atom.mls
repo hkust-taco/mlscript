@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 112 member(s)
+//│ Imported 109 member(s)
 
 
 class State(position: List[Num], velocity: List[Num])

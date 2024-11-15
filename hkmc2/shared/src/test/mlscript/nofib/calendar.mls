@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 112 member(s)
+//│ Imported 109 member(s)
 
 
 fun unlines(ls) = concat(map(x => append(x, ("\n" :: Nil)), ls))
@@ -79,6 +79,7 @@ fun cal(year) =
   fun table(fd, ml) = append(daynames, entries(fd, ml))
   fun entries(fd, ml) = block(7, dates(fd, ml))
   fun months(yer) = zip3(monthNames, firstDays(yer), monthLengths(yer))
+  
   unlines(append(banner(year), body(year)))
 
 fun testCalendar_nofib(n) = map(x => cal(x), enumFromTo(1993, 1993 + n))

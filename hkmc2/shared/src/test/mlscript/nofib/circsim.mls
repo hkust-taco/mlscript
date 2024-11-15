@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 112 member(s)
+//│ Imported 109 member(s)
 
 
 abstract class BinTree[T, U]: Cell[T] | Node[T, U]
@@ -76,9 +76,12 @@ fun scanR(f, u, xs) =
 
 fun scanlr(f, g, lu, ru, xs) =
   fun up(f, g, lxly, rxry) = if lxly is Tup2(lx, ly) and rxry is Tup2(rx, ry) then Tup2(f(lx, rx), g(ly, ry))
+  
   fun down3(f, g, lxly, rxry, ab) = if lxly is Tup2(lx, ly) and rxry is Tup2(rx, ry) and ab is Tup2(a, b) then
     Tup2(Tup2(a, g(ry, b)), Tup2(f(a, lx), b))
+  
   let xs_ = map(x => Tup2(x, x), xs)
+  
   if sweep_ud((a, b) => up(f, g, a, b), (a, b, c) => down3(f, g, a, b, c), Tup2(lu, ru), put(xs_)) is Tup2(Tup2(l_ans, r_ans), t_) then
     let ans = Tup2(g(r_ans, ru), f(lu, l_ans))
     Tup2(ans, get(t_))
@@ -135,12 +138,15 @@ fun update_outports(state, value) =
     Cons(h, t) and
       h is Tup6(p, m, ql, dl, qr, dr) then Cons(Tup6(p, value, ql, dl, qr, dr), lscomp(t))
       else lscomp(t)
+  
   updateOutports(state, lscomp(outports(state)))
+
 
 fun critical_path_depth(siot) = if siot is Tup4(size, ins, outs, states) then maximum(map(pathDepth, states))
 
 fun collect_outputs(tp4) = if tp4 is Tup4(size, ins, outs, states) then
   fun thrid(tp3) = if tp3 is Tup3(_, _, v) then v
+  
   fun get_output(states, label_p) = if label_p is Tup2(label, p) then
     fun lscomp(ls) = if ls is
       Nil then Nil
@@ -148,7 +154,9 @@ fun collect_outputs(tp4) = if tp4 is Tup4(size, ins, outs, states) then
         p == pid(s) then Cons(head(inports(s)), lscomp(t))
         else lscomp(t)
     thrid(head(lscomp(states)))
+  
   map(p => get_output(states, p), outs)
+
 
 fun store_inputs(label_inputs, state) = if state is
   PS(pid_, Inp, _, _, _) then
@@ -160,22 +168,25 @@ fun store_inputs(label_inputs, state) = if state is
     head(lscomp(label_inputs))
   else state
 
-fun apply_component(comp, signals) = if
-  comp is Inp then None
-  comp is Outp and signals is Cons(x, Nil) then Some(x)
-  comp is Dff and signals is Cons(x, Nil) then Some(x)
-  comp is Inv and signals is Cons(x, Nil) then Some(inv(x))
-  comp is And2 and signals is Cons(x, Cons(y, Nil)) then Some(and2(x, y))
-  comp is Or2 and signals is Cons(x, Cons(y, Nil)) then Some(or2(x, y))
-  comp is Xor and signals is Cons(x, Cons(y, Nil)) then Some(xor(x, y))
-  comp is None_ then None
+fun apply_component(comp, signals) = if comp is
+  Inp then None
+  Outp and signals is Cons(x, Nil) then Some(x)
+  Dff and signals is Cons(x, Nil) then Some(x)
+  Inv and signals is Cons(x, Nil) then Some(inv(x))
+  And2 and signals is Cons(x, Cons(y, Nil)) then Some(and2(x, y))
+  Or2 and signals is Cons(x, Cons(y, Nil)) then Some(or2(x, y))
+  Xor and signals is Cons(x, Cons(y, Nil)) then Some(xor(x, y))
+  None_ then None
 
 fun init_dffs(state) = if compType(state) === Dff then update_outports(state, F) else state
 
 fun restore_requests(old_states, new_states) =
   fun restore(os, ns) = updateOutports(ns, zipWith(restore_outport, outports(os), outports(ns)))
+  
   fun restore_outport(pql, mdq) = if pql is Tup6(p, _, ql, dl, qr, dq) and mdq is Tup6(_, m, _, _, _, _) then Tup6(p, m, ql, dl, qr, dq)
+  
   zipWith(restore, old_states, new_states)
+
 
 fun update_requests(b, state) =
   fun lscomp(ls) = if ls is
@@ -189,15 +200,21 @@ fun check_depth(d, state) = if pathDepth(state) == d then state else update_requ
 
 fun acknowledge(d, states) =
   fun check_requests(xs) = orList(map(check_lr_requests, xs))
+  
   fun check_lr_requests(pql) = if pql is Tup6(p,m,ql,dl,qr,dr) then ql || qr
+  
   let states1 = map(s => check_depth(d, s), states)
+  
   not(orList(map(s => check_requests(outports(s)), states1)))
+
 
 fun pad_packets(pss) =
   fun pad(xs) =
     let max_ps = maximum(map(x => listLen(x), pss))
     take_lz(max_ps, append_nl_lz(xs, replicate_lz(max_ps, emptyPacket)))
+  
   map(x => pad(x), pss)
+
 
 fun make_packet(state) =
   fun lscomp(ls) = if ls is
@@ -205,7 +222,9 @@ fun make_packet(state) =
     Cons(h, t) and
       h is Tup6(p, m, ql, dl, qr, dr) then Cons(Tup8(pid(state), p, m, ql, dl, qr, dr, 1), lscomp(t))
       else lscomp(t)
+  
   lscomp(outports(state))
+
 
 fun compare_and_update(ipm_, pid_port_m) =
   if ipm_ is Tup3(i, p, m_) and pid_port_m is Tup3(pid_, port, m) and
@@ -228,14 +247,19 @@ fun update_o(lp_rp, out_) = if lp_rp is Tup2(lp, rp) then check_left(lp, check_r
 
 fun update_io(d, lrps, state) =
   fun update_is(state) = updateInports(state, foldr(update_i, inports(state), lrps))
+  
   fun update_os(state) = if pathDepth(state) == d then updateOutports(state, zipWith(update_o, lrps, outports(state))) else state
+  
   update_os(update_is(state))
+
 
 fun do_send(d, states) =
   let states1 = map(s => check_depth(d, s), states)
   let send_results = map(x => snd(send(x)), transpose(pad_packets(map(make_packet, states1))))
   let pss_ = transpose(send_results)
+  
   zipWith((x, y) => update_io(d, x, y), pss_, states)
+
 
 fun do_sends(d, states) = until(s => acknowledge(d, s), x => do_send(d, x), states)
 
@@ -245,8 +269,10 @@ fun simulate_component(d, state) =
     Cons(h, t) and
       h is Tup3(_, _, sig) then Cons(sig, lscomp(t))
       else lscomp(t)
+  
   let out_signals = lscomp(inports(state))
   let new_value = apply_component(compType(state), out_signals)
+  
   if
     d == pathDepth(state) and not(new_value === None) and new_value is Some(v) then update_outports(state, v)
     else state
@@ -255,6 +281,7 @@ fun simulate_components(depth, states) = map(s => simulate_component(depth, s), 
 
 fun do_cycle(cpd, tp4, inputs) =
   fun sim_then_send(state, d) = do_sends(d, simulate_components(d, state))
+  
   if tp4 is Tup4(size, ins, outs, states) then
     let states1 = map(s => store_inputs(zip(ins, inputs), s), states)
     let states2 = do_sends(0, states1)
@@ -276,7 +303,9 @@ fun regs(bits) =
   let os = zipWith_lz_nl(olabel, enumFrom(0), map(x => (7 * x) + 7, enumFromTo(0, bits - 1)))
   let sto = PS(0, Inp, 0, Nil, Cons(Tup6(0, F, false, 0, true, (8 * (bits - 1)) + 5), Nil))
   let states = Cons(sto, concat(map(x => reg(0, x), map(x => (7 * x) + 1, enumFromTo(0, bits - 1)))))
+  
   Tup4(1 + (7 * bits), is_, os, states)
+
 
 fun circuit_simulate(inputs_list, circuit) = map(collect_outputs, simulate(inputs_list, circuit))
 
@@ -284,9 +313,12 @@ fun run(num_bits, num_cycles) =
   let example = pad_circuit(regs(num_bits))
   let inputs = replicate(num_bits + 1, T)
   let cycles = replicate(num_cycles, inputs)
+  
   circuit_simulate(cycles, example)
 
+
 fun testCircsim_nofib(n) = run(8, n)
+
 
 
 testCircsim_nofib(40).toString()

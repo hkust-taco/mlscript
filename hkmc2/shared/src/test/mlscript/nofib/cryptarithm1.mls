@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 112 member(s)
+//│ Imported 109 member(s)
 
 
 fun expand(a, b, c, d, e, f) = f + (e*10) + (d*100) + (c*1000) + (b*10000) + (a*100000)
@@ -15,6 +15,7 @@ fun addj(j, ls) = if ls is
     fun lscomp(p1) = if p1 is
       Nil then Nil
       Cons(h1, t1) then (k :: h1) :: lscomp(t1)
+    
     (j :: (k :: ks)) :: lscomp(addj(j, ks))
 
 fun permutations(ls) = if ls is
@@ -27,6 +28,7 @@ fun permutations(ls) = if ls is
           Nil then lscomp1(t1)
           Cons(r, t2) then r :: lscomp2(t2)
         lscomp2(addj(j, pjs))
+    
     lscomp1(permutations(js))
 
 fun testCryptarithm_nofib(n) = 

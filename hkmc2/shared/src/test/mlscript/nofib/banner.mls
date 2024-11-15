@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 112 member(s)
+//│ Imported 109 member(s)
 
 
 let blank =
@@ -128,11 +128,13 @@ fun isSpace(c) =
   (n == 32)
 
 fun picChar(c) =
+  
   fun lscomp(ls) = if ls is
     Nil then Nil
     Cons(h, t) and
       h is Tup2(c_, letter) and c_ === c then Cons(letter, lscomp(t))
       else lscomp(t)
+  
   if
     isUpper(c) then atIndex(int_of_char(c) - int_of_char("A"), alphas)
     isLower(c) then atIndex(int_of_char(c) - int_of_char("a"), alphas)

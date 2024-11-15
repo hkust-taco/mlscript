@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 112 member(s)
+//│ Imported 109 member(s)
 
 
 let pi = globalThis.Math.PI
@@ -69,7 +69,9 @@ fun ambientsurf(ss) =
     Cons(x, t) and
       x is Ambient(s) then Cons(s, lscomp(t))
       else lscomp(t)
-  head(lscomp(ss) ++ (Tup3(0.0, 0.0, 0.0) :: Nil))
+  
+  head(append(lscomp(ss), (Tup3(0.0, 0.0, 0.0) :: Nil)))
+
 
 fun diffusesurf(ss) =
   fun lscomp(ls) = if ls is
@@ -77,7 +79,9 @@ fun diffusesurf(ss) =
     Cons(x, t) and
       x is Diffuse(s) then Cons(s, lscomp(t))
       else lscomp(t)
-  head(lscomp(ss) ++ (Tup3(0.0, 0.0, 0.0) :: Nil))
+  
+  head(append(lscomp(ss), (Tup3(0.0, 0.0, 0.0) :: Nil)))
+
 
 fun specularsurf(ss) =
   fun lscomp(ls) = if ls is
@@ -85,7 +89,9 @@ fun specularsurf(ss) =
     Cons(x, t) and
       x is Specular(s) then Cons(s, lscomp(t))
       else lscomp(t)
-  head(lscomp(ss) ++ (Tup3(0.0, 0.0, 0.0) :: Nil))
+  
+  head(append(lscomp(ss), (Tup3(0.0, 0.0, 0.0) :: Nil)))
+
 
 fun specpowsurf(ss) =
   fun lscomp(ls) = if ls is
@@ -93,7 +99,9 @@ fun specpowsurf(ss) =
     Cons(x, t) and
       x is Specpow(s) then Cons(s, lscomp(t))
       else lscomp(t)
-  head(lscomp(ss) ++ (8.0 :: Nil))
+  
+  head(append(lscomp(ss), (8.0 :: Nil)))
+
 
 fun reflectsurf(ss) =
   fun lscomp(ls) = if ls is
@@ -101,7 +109,9 @@ fun reflectsurf(ss) =
     Cons(x, t) and
       x is Reflect(s) then Cons(s, lscomp(t))
       else lscomp(t)
-  head(lscomp(ss) ++ (0.0 :: Nil))
+  
+  head(append(lscomp(ss), (0.0 :: Nil)))
+
 
 fun transmitsurf(ss) =
   fun lscomp(ls) = if ls is
@@ -109,7 +119,9 @@ fun transmitsurf(ss) =
     Cons(x, t) and
       x is Transmit(s) then Cons(s, lscomp(t))
       else lscomp(t)
-  head(lscomp(ss) ++ (0.0 :: Nil))
+  
+  head(append(lscomp(ss), (0.0 :: Nil)))
+
 
 fun refractsurf(ss) =
   fun lscomp(ls) = if ls is
@@ -117,7 +129,9 @@ fun refractsurf(ss) =
     Cons(x, t) and
       x is Refract(s) then Cons(s, lscomp(t))
       else lscomp(t)
-  head(lscomp(ss) ++ (1.0 :: Nil))
+  
+  head(append(lscomp(ss), (1.0 :: Nil)))
+
 
 fun bodysurf(ss) =
   fun lscomp(ls) = if ls is
@@ -125,7 +139,9 @@ fun bodysurf(ss) =
     Cons(x, t) and
       x is Body(s) then Cons(s, lscomp(t))
       else lscomp(t)
-  head(lscomp(ss) ++ (Tup3(1.0, 1.0, 1.0) :: Nil))
+  
+  head(append(lscomp(ss), (Tup3(1.0, 1.0, 1.0) :: Nil)))
+
 
 class Sphere(pos: Tup3[Num, Num, Num], radius: Num, surface: List[Surfspec])
 
@@ -214,18 +230,22 @@ fun trace(spheres, pos, dir) =
     if d1s1 is Tup2(d1, s1) and d2s2 is Tup2(d2, s2_) and
       d1 < d2 then Tup2(d1, s1)
       else Tup2(d2, s2_)
+  
   fun sphmap(xss) =
     if xss is
       Nil then Nil
       Cons(x, xs) and sphereintersect(pos, dir, x) is Tup2(is_hit, where_hit) and
         is_hit then Tup2(where_hit, x) :: sphmap(xs)
         else sphmap(xs)
+  
   let dists = sphmap(spheres)
+  
   if (null_(dists)) then
     Tup3(false, infinity, head(spheres))
   else
     if foldr(f, head(dists), tail(dists)) is Tup2(mindist, sp) then
       Tup3(true, mindist, sp)
+
 
 fun refractray(newindex, olddir, innorm) =
   let dotp = -vecdot(olddir, innorm)

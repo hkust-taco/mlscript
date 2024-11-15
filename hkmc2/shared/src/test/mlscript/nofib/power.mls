@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 112 member(s)
+//│ Imported 109 member(s)
 
 
 abstract class Pss[T]: Pz | Pc[T]
@@ -107,19 +107,24 @@ fun integral(fs_) =
   fun int1(fss, n) = lazy of () => if force(fss) is
     Pz then Pz
     Pc(f, fs_) then Pc(f/n, int1(fs_, n + 1))
+  
   lazy of () => Pc(0, int1(fs_, 1))
+
 
 fun integralLz(fs_) =
   fun int1(fss, n) = lazy of () => if force(fss) is
     Pz then Pz
     Pc(f, fs_) then Pc(f/n, int1(fs_, n + 1))
+  
   lazy of () => Pc(0, int1(fs_(), 1))
+
 
 fun sqrtPs(fss) = lazy of () => if force(fss) is
   Pz then Pz
   Pc(0, gss) and force(gss) is Pc(0, fs_) then Pc(0, sqrtPs(fs_))
   Pc(1, fs_) then
     fun qs() = lazy of () => addPs(fromIntegerPs(1), integral(divPs(deriv(lazy of () => Pc(1, fs_)), dotMultSndLz(2, qs()))))
+    
     force(force(qs()))
 
 fun ts() = lazy of () => Pc(1, multPs(ts(), ts()))

@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 112 member(s)
+//│ Imported 109 member(s)
 
 
 fun delete_(xs, e) = deleteBy((x, y) => x == y, e, xs)
@@ -41,10 +41,13 @@ fun perms(m, nns) = if
 
 fun awards(scores) =
   let sumscores = map(p => Tup2(sum(p), p), perms(3, scores))
+  
   fun atleast(threshold) =
     filter(sum_p => if sum_p is Tup2(sum_, p) then sum_ >= threshold, sumscores)
+  
   fun award(name_threshold) = if name_threshold is Tup2(name, threshold) then
     map(ps => Tup2(name, ps), sort(atleast(threshold)))
+  
   append(append(award(Tup2("Gold", 70)), award(Tup2("Silver", 60))), award(Tup2("Bronze", 50)))
 
 fun findawards(scores) = if awards(scores) is
@@ -62,7 +65,7 @@ fun competitors(i) =
   Tup2("Kevin", 9::23::17::54::i::41::9::18::14::Nil) :: Nil
 
 fun testAwards_nofib(n) =
-  map(x => nofibPrint(findallawards(competitors(x % 100)).toString()), enumFromTo(1, n))
+  map(x => nofibPrint(findallawards(competitors(intMod(x, 100))).toString()), enumFromTo(1, n))
 
 
 // NOTE: original input 1000

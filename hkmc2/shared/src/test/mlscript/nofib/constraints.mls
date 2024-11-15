@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 112 member(s)
+//│ Imported 109 member(s)
 
 
 // -- Figure 1. CSPs in Haskell.
@@ -56,7 +56,9 @@ fun generate(csp) =
       Cons(Nil, Nil)
     else
       lscomp1(enumFromTo(1, vals))
+  
   if csp is CSP(vars, vals, rel) then g(vals, vars)
+
 
 fun inconsistencies(csp, as_) = if csp is CSP(vars, vals, rel) then
   fun lscomp1(ls) = if ls is
@@ -68,7 +70,9 @@ fun inconsistencies(csp, as_) = if csp is CSP(vars, vals, rel) then
           a > b and not(rel(a, b)) then Cons(Tup2(level(a), (b)), lscomp2(t2))
           else lscomp2(t2)
       lscomp2(reverse(as_))
+  
   lscomp1(as_)
+
 
 fun consistent(csp, x) = null_(inconsistencies(csp, x))
 
@@ -112,7 +116,9 @@ fun mkTree(csp) = if csp is CSP(vars, vals, rel) then
       lscomp1(enumFromTo(1, vals))
     else
       Nil
+  
   initTree(next, Nil)
+
 
 fun earliestInconsistency(csp, aas) = if csp is CSP(vars, vals, rel) and aas is
   Nil then None
@@ -122,7 +128,9 @@ fun earliestInconsistency(csp, aas) = if csp is CSP(vars, vals, rel) and aas is
 
 fun labelInconsistencies(csp, t) =
   fun f2(s) = Tup2(s, earliestInconsistency(csp, s))
+  
   mapTree(f2, t)
+
 
 fun btsolver0(csp) =
   filter(x => complete(csp, x), leaves(mapTree(fst, prune(x => not(snd(x) === None), labelInconsistencies(csp, mkTree(csp))))))
@@ -147,9 +155,11 @@ fun search(labeler, csp) =
 
 fun bt(csp, t) =
   fun f3(s) = Tup2(s, (if earliestInconsistency(csp, s) is Some(Tup2(a, b)) then Known(a :: b :: Nil) else checkComplete(csp, s)))
+  
   mapTree(f3, t)
 
 // -- Figure 8. Backmarking.
+
 fun emptyTable(csp) = if csp is CSP(vars, vals, rel) then
   fun lscomp1(ls) = if ls is
     Nil then Nil
@@ -159,7 +169,9 @@ fun emptyTable(csp) = if csp is CSP(vars, vals, rel) then
         Cons(m, t2) then
           Cons(Unknown, lscomp2(t2))
       Cons(lscomp2(enumFromTo(1, vals)), lscomp1(t1))
+  
   Nil :: lscomp1(enumFromTo(1, vars))
+
 
 fun fillTable(s, csp, tbl) = if s is
   Nil then tbl
@@ -167,6 +179,7 @@ fun fillTable(s, csp, tbl) = if s is
     fun f4(cs, varval) = if varval is Tup2(varr, vall) and
       cs === Unknown and not(rel(Assign(var_, val_), Assign(varr, vall))) then Known(Cons(var_, Cons(varr, Nil)))
       else cs
+    
     fun lscomp1(ls) = if ls is
       Nil then Nil
       Cons(varrr, t1) then
@@ -174,7 +187,9 @@ fun fillTable(s, csp, tbl) = if s is
           Nil then Nil
           Cons(valll, t2) then Cons(Tup2(varrr, valll), lscomp2(t2))
         Cons(lscomp2(enumFromTo(1, vals)), lscomp1(t1))
+    
     zipWith((x, y) => zipWith(f4, x, y), tbl, lscomp1(enumFromTo(var_ + 1, vars)))
+
 
 fun lookupCache(csp, t) =
   fun f5(csp, tp) = if tp is
@@ -183,7 +198,9 @@ fun lookupCache(csp, t) =
       let tableEntry = atIndex(value(a) - 1, head(tbl))
       let cs = if tableEntry === Unknown then checkComplete(csp, Cons(a, as_)) else tableEntry
       Tup2(Tup2(Cons(a, as_), cs), tbl)
+  
   mapTree(x => f5(csp, x), t)
+
 
 fun cacheChecks(csp, tbl, n) = if n is Node(s, cs) then
   Node(Tup2(s, tbl), map(x => cacheChecks(csp, fillTable(s, csp, tail(tbl)), x), cs))
@@ -204,13 +221,17 @@ fun bj_(csp, t) =
       let cs_ = Known(combine(map(label, chs), Nil))
       knownConflict(cs_) then Node(Tup2(a, cs_), Nil)
       else Node(Tup2(a, cs_), chs)
+  
   foldTree(f7, t)
+
 
 fun bj(csp, t) =
   fun f6(tp2, chs) = if tp2 is
     Tup2(a, Known(cs)) then Node(Tup2(a, Known(cs)), chs)
     Tup2(a, Unknown) then Node(Tup2(a, Known(combine(map(label, chs), Nil))), chs)
+  
   foldTree(f6, t)
+
 
 fun bjbt(csp, t) = bj(csp, bt(csp, t))
 
@@ -232,13 +253,16 @@ fun domainWipeout(csp, t) = if csp is CSP(vars, vals, rel) then
       lscomp1(tbl)
     let cs_ = if null_(wipedDomains) then cs else Known(collect(head(wipedDomains)))
     Tup2(as_, cs_)
+  
   mapTree(f8, t)
+
 
 fun fc(csp, t) = domainWipeout(csp, lookupCache(csp, cacheChecks(csp, emptyTable(csp), t)))
 
 fun try_(n, algorithm) = listLen(search(algorithm, queens(n)))
 
 fun testConstraints_nofib(n) = map(x => try_(n, x), bt :: bm :: bjbt :: bjbt_ :: fc :: Nil)
+
 
 
 testConstraints_nofib(6).toString()
