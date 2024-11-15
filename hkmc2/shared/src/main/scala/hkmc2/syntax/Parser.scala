@@ -14,6 +14,7 @@ import scala.annotation.tailrec
 import Keyword.`let`
 import hkmc2.syntax.ParseRule.prefixRules
 import hkmc2.syntax.ParseRule.infixRules
+import hkmc2.syntax.Keyword.Ellipsis
 
 
 object Parser:
@@ -564,6 +565,12 @@ abstract class Parser(
     case (BRACKETS(Indent | Curly, _), loc) :: _ =>
       err((msg"Expected an expression; found block instead" -> lastLoc :: Nil))
       errExpr
+    case (SUSPENSION(dotDotDot), loc) :: _ =>
+      consume
+      val bod = yeetSpaces match
+        case Nil | (COMMA, _) :: _ => N
+        case _ => S(simpleExprImpl(prec))
+      Spread(if dotDotDot then Keyword.`...` else Keyword.`..`, S(loc), bod)
     case (tok, loc) :: _ =>
       TODO(tok)
     case Nil =>

@@ -1,5 +1,6 @@
-:import ../prelude/Option.mls
-//│ Imported 3 member(s)
+import "../../../mlscript-compile/Option.mls"
+
+open Option
 
 class Pair[A, B](x: A, y: B)
 

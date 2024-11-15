@@ -155,6 +155,8 @@ class ClassSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of classe here
   override def toString: Str = s"class:$nme"
+  /** Compute the arity. */
+  def arity: Int = tree.paramLists.headOption.fold(0)(_.fields.length)
 
 class ModuleSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)
     extends MemberSymbol[ModuleDef] with CtorSymbol with InnerSymbol:

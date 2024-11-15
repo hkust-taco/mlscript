@@ -13,6 +13,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val sjs = NullaryCommand("sjs")
   val showRepl = NullaryCommand("showRepl")
   val silent = NullaryCommand("silent")
+  val expect = Command("expect"): ln =>
+    ln.trim
   
   private val baseScp: codegen.js.Scope =
     codegen.js.Scope.empty
@@ -61,6 +63,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         output(s"JS:")
         output(jsStr)
       def mkQuery(prefix: Str, jsStr: Str) =
+        import hkmc2.Message.MessageContext
         val queryStr = jsStr.replaceAll("\n", " ")
         val (reply, stderr) = host.query(queryStr, !expectRuntimeOrCodeGenErrors && fixme.isUnset && todo.isUnset)
         reply match
@@ -73,11 +76,15 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
                     output(s"> ${line}")
               content match
               case "undefined" =>
-              case _ => output(s"$prefix= ${content}")
+              case _ =>
+                expect.get match
+                  case S(expected) if content != expected => raise:
+                    ErrorReport(msg"Expected: ${expected}, got: ${content}" -> N :: Nil,
+                      source = Diagnostic.Source.Runtime)
+                  case _ => output(s"$prefix= ${content}")
           case ReplHost.Empty =>
           case ReplHost.Unexecuted(message) => ???
           case ReplHost.Error(isSyntaxError, message) =>
-            import hkmc2.Message.MessageContext
             if (isSyntaxError) then
               // If there is a syntax error in the generated code,
               // it should be a code generation error.

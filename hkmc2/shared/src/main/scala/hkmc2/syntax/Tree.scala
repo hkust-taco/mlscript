@@ -71,6 +71,7 @@ enum Tree extends AutoLocated:
   case Region(name: Tree, body: Tree)
   case RegRef(reg: Tree, value: Tree)
   case Effectful(eff: Tree, body: Tree)
+  case Spread(kw: Keyword.Ellipsis, kwLoc: Opt[Loc], body: Opt[Tree])
 
   def children: Ls[Tree] = this match
     case _: Empty | _: Error | _: Ident | _: Literal => Nil
@@ -102,6 +103,7 @@ enum Tree extends AutoLocated:
     case Sel(prefix, name) => prefix :: Nil
     case Open(bod) => bod :: Nil
     case Def(lhs, rhs) => lhs :: rhs :: Nil
+    case Spread(_, _, body) => body.toList
   
   def describe: Str = this match
     case Empty() => "empty"
@@ -135,6 +137,7 @@ enum Tree extends AutoLocated:
     case Effectful(eff, body) => "effectful"
     case Handle(_, _, _, _) => "handle"
     case Def(lhs, rhs) => "defining assignment"
+    case Spread(_, _, _) => "spread"
   
   def showDbg: Str = toString // TODO
   
@@ -151,6 +154,12 @@ enum Tree extends AutoLocated:
     if nme.endsWith("=") =>
       LetLike(letLike, id, S(App(Ident(nme.init), Tup(id :: r :: Nil))), bodo).desugared
     case _ => this
+
+  def param: Ls[(Ident, Opt[Tree])] = this match
+    case id: Ident => (id, N) :: Nil
+    case InfixApp(lhs: Ident, Keyword.`:`, rhs) => (lhs, S(rhs)) :: Nil
+    case App(Ident(","), Tup(ps)) => ps.flatMap(_.param)
+    case TermDef(ImmutVal, inner, _) => inner.param
 
 object Tree:
   object Block:
@@ -279,4 +288,9 @@ trait TypeDefImpl extends TypeOrTermDef:
     case _ =>
       Map.empty
   
+  lazy val params: Ls[semantics.TermSymbol] =
+    this.paramLists.headOption.fold(Nil): tup =>
+      tup.fields.iterator.flatMap(_.param).map:
+        case (id, _) => semantics.TermSymbol(ParamBind, symbol.asClsLike, id)
+      .toList
 

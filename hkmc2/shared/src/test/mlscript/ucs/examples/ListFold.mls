@@ -1,11 +1,10 @@
-:import ../prelude/List.mls
-//│ Imported 4 member(s)
+import "../../../mlscript-compile/Stack.mls"
+import "../../../mlscript-compile/Option.mls"
+import "../../../mlscript-compile/Str.mls"
 
-:import ../prelude/Option.mls
-//│ Imported 3 member(s)
-
-:import ../prelude/String.mls
-//│ Imported 2 member(s)
+open Stack
+open Option
+open Str
 
 fun (|>) pipe(x, f) = f(x)
 
@@ -25,16 +24,16 @@ fun join(sep) =
   fun aux(acc, xs) =
     if xs is
       Nil then acc
-      Cons(x, xs') then aux(acc ++ sep ++ toString(x), xs')
+      Cons(x, xs') then aux(acc ~ sep ~ string(x), xs')
   (xs) =>
     if xs is
-      Cons(x, xs') then aux(toString(x), xs')
+      Cons(x, xs') then aux(string(x), xs')
       Nil then ""
 
 join(", ")(1 :: 2 :: 3 :: Nil)
 (1 :: 2 :: 3 :: Nil) |> join(", ")
 
-fun showList(xs) = "[" ++ join(", ")(xs) ++ "]"
+fun showList(xs) = "[" ~ join(", ")(xs) ~ "]"
 
 fun (:::) appendAll(xs, ys) =
   if xs is

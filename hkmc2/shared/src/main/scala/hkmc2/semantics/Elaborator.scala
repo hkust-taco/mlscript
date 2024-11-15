@@ -18,23 +18,20 @@ import Keyword.{`let`, `set`}
 
 object Elaborator:
   
-  val builtinOpsMap: Map[Str, BuiltinSymbol] =
-    val binOps: Ls[Str] = Ls(
-      ",",
-      "+", "-", "*", "/", "%",
-      "==", "!=", "<", "<=", ">", ">=",
-      "===",
-      "&&", "||")
-    val isUnary: Str => Bool = Set("-", "+", "!", "~").contains
-    val baseBuiltins = binOps.map: op =>
-        op -> BuiltinSymbol(op, binary = true, unary = isUnary(op), nullary = false)
-      .toMap
-    baseBuiltins
-      + (";" -> baseBuiltins(","))
-      + ("+." -> baseBuiltins("+"))
-      + ("-." -> baseBuiltins("-"))
-      + ("*." -> baseBuiltins("*"))
-  val reservedNames = builtinOpsMap.keySet + "NaN" + "Infinity"
+  private val binaryOps = Ls(
+    ",",
+    "+", "-", "*", "/", "%",
+    "==", "!=", "<", "<=", ">", ">=",
+    "===",
+    "&&", "||")
+  private val unaryOps = Set("-", "+", "!", "~")
+  private val aliasOps = Map(
+    ";" -> ",",
+    "+." -> "+",
+    "-." -> "-",
+    "*." -> "*")
+
+  val reservedNames = binaryOps.toSet ++ aliasOps.keySet + "NaN" + "Infinity"
   
   case class Ctx(outer: Opt[InnerSymbol], parent: Opt[Ctx], env: Map[Str, Ctx.Elem]):
     def +(local: Str -> Symbol): Ctx = copy(outer, env = env + local.mapSecond(Ctx.RefElem(_)))
@@ -103,6 +100,13 @@ extends Importer:
   private val allocSkolemSym = VarSymbol(Ident("Alloc"), allocSkolemUID)
   private val allocSkolemDef = TyParam(FldFlags.empty, N, allocSkolemSym)
   allocSkolemSym.decl = S(allocSkolemDef)
+
+  private val builtinOpsMap =
+    val baseBuiltins = binaryOps.map: op =>
+        op -> BuiltinSymbol(op, binary = true, unary = unaryOps(op), nullary = false)
+      .toMap
+    baseBuiltins ++ aliasOps.map:
+      case (alias, base) => alias -> baseBuiltins(base)
   
   def mkLetBinding(sym: LocalSymbol, rhs: Term): Ls[Statement] =
     LetDecl(sym) :: DefineVar(sym, rhs) :: Nil
@@ -625,13 +629,8 @@ extends Importer:
     if ctx.outer.isDefined then TermSymbol(k, ctx.outer, id)
     else VarSymbol(id, nextUid)
   
-  def param(t: Tree): Ctxl[Ls[Param]] = t match
-    case id: Ident =>
-      Param(FldFlags.empty, fieldOrVarSym(ParamBind, id), N) :: Nil
-    case InfixApp(lhs: Ident, Keyword.`:`, rhs) =>
-      Param(FldFlags.empty, fieldOrVarSym(ParamBind, lhs), S(term(rhs))) :: Nil
-    case App(Ident(","), list) => params(list)._1
-    case TermDef(ImmutVal, inner, _) => param(inner)
+  def param(t: Tree): Ctxl[Ls[Param]] = t.param.map: (p, t) =>
+    Param(FldFlags.empty, fieldOrVarSym(ParamBind, p), t.map(term))
   
   def params(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
     case Tup(ps) =>
@@ -654,14 +653,14 @@ extends Importer:
       case id @ Ident(name) =>
         val sym = boundVars.getOrElseUpdate(name, VarSymbol(id, nextUid))
         Pattern.Var(sym)
-      case Tup(fields) =>
-        val pats = fields.map(
-          f => pattern(f) match
-            case (pat, vars) =>
-              boundVars ++= vars
-              pat
-        )
-        Pattern.Tuple(pats)
+      // case Tup(fields) =>
+      //   val pats = fields.map(
+      //     f => pattern(f) match
+      //       case (pat, vars) =>
+      //         boundVars ++= vars
+      //         pat
+      //   )
+      //   Pattern.Tuple(pats)
       case _ =>
         ???
     (go(t), boundVars.toList)
@@ -713,7 +712,7 @@ extends Importer:
                   if !tp.isContravariant then traverseType(pol)(targ)
                   if !tp.isCovariant then traverseType(pol.!)(targ)
             case N =>
-              TODO(sym->sym.uid)
+              // TODO(sym->sym.uid)
           case S(sym: TypeAliasSymbol) =>
             // TODO dedup with above...
             sym.defn match

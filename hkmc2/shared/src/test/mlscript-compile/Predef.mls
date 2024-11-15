@@ -15,4 +15,8 @@ fun (|>.) call(receiver, f)(arg) = f.call(receiver, arg)
 fun print(x) =
   console.log(String(x))
 
+fun tupleSlice(xs, i, j) =
+  globalThis.Array.prototype.slice.call(xs, i, xs.length - j)
 
+fun tupleGet(xs, i) =
+  globalThis.Array.prototype.at.call(xs, i)

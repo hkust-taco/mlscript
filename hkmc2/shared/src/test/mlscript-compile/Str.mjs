@@ -4,6 +4,9 @@ const Str$class = class Str {
   }
   concat(a, b) {
     return a + b;
+  } 
+  string(value) {
+    return globalThis.String(value);
   }
   toString() { return "Str"; }
 }; const Str = new Str$class;

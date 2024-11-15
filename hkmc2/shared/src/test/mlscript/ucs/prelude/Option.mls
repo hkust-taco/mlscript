@@ -1,3 +1,0 @@
-abstract class Option[out T]: Some[T] | None
-class Some[out T](value: T) extends Option[T]
-module None extends Option[nothing]

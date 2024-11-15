@@ -1,9 +1,9 @@
-:import ../prelude/Option.mls
-//│ Imported 3 member(s)
-
-:global
 :todo
 :ucs normalized
+
+import "../../../mlscript-compile/Option.mls"
+
+open Option
 
 // OK
 x => if x is
@@ -40,7 +40,7 @@ x => if x is
 //│ ║  l.34: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^
 //│ Normalized:
-//│ >  if x@18 is Some then x@18#666
+//│ >  if x@17 is Some then x@17#666
 
 x => if x is
   refined(None) then x

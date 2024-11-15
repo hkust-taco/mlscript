@@ -235,8 +235,8 @@ class JSBuilder extends CodeBuilder:
       case N  => doc""
       t :: e :: returningTerm(rest)
     case Match(scrut, Case.Cls(cls, pth) -> trm :: Nil, els, rest) =>
-      val test = cls.defn.getOrElse(die).kind match
-        // case syntax.Mod => doc"=== ${result(pth)}"
+      val test = cls match
+        // case _: semantics.ModuleSymbol => doc"=== ${result(pth)}"
         case _ => doc"instanceof ${result(pth)}"
       val t = doc" # if (${ result(scrut) } $test) { #{ ${
           returningTerm(trm)
@@ -248,6 +248,16 @@ class JSBuilder extends CodeBuilder:
       t :: e :: returningTerm(rest)
     case Match(scrut, Case.Lit(lit) -> trm :: Nil, els, rest) =>
       val t = doc" # if (${ result(scrut) } === ${lit.idStr}) { #{ ${
+          returningTerm(trm)
+        } #}  # }"
+      val e = els match
+      case S(el) =>
+        doc" else { #{ ${ returningTerm(el) } #}  # }"
+      case N  => doc""
+      t :: e :: returningTerm(rest)
+    case Match(scrut, Case.Tup(len, inf) -> trm :: Nil, els, rest) =>
+      val test = doc"globalThis.Array.isArray(${ result(scrut) }) && ${ result(scrut) }.length ${if inf then ">=" else "==="} ${len}"
+      val t = doc" # if (${ test }) { #{ ${
           returningTerm(trm)
         } #}  # }"
       val e = els match
