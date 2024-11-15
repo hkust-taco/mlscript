@@ -1,0 +1,13 @@
+
+import "./Predef.mls"
+open Predef
+
+
+module Example with ...
+
+
+fun (/) funnySlash(f, arg) = f(arg)
+
+fun inc(x) = x + 1
+
+

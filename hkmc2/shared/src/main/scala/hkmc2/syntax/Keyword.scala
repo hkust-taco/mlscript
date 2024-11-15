@@ -30,7 +30,8 @@ class Keyword(
   def assumeLeftPrec: Int = leftPrec.getOrElse(lastWords(s"$this does not have left precedence"))
   def assumeRightPrec: Int = rightPrec.getOrElse(lastWords(s"$this does not have right precedence"))
   def leftPrecOrMin: Int = leftPrec.getOrElse(Int.MinValue)
-  def rightPrecOrMax: Int = rightPrec.getOrElse(Int.MaxValue)
+  def rightPrecOrMin: Int = rightPrec.getOrElse(Int.MinValue)
+  // def rightPrecOrMax: Int = rightPrec.getOrElse(Int.MaxValue)
   override def toString: Str = s"keyword '$name'"
 
 object Keyword:
@@ -56,6 +57,8 @@ object Keyword:
   val ascPrec = nextPrec // * `x => x : T` should parsed as `x => (x : T)`
   val `=` = Keyword("=", eqPrec, eqPrec)
   val `:` = Keyword(":", ascPrec, eqPrec)
+  val `..` = Keyword("..", N, N)
+  val `...` = Keyword("...", N, N)
   // val `;` = Keyword(";", ascPrec, eqPrec)
   
   val `if` = Keyword("if", N, nextPrec)
@@ -120,6 +123,8 @@ object Keyword:
   
   type Infix = `and`.type | `or`.type | `then`.type | `else`.type | `is`.type | `:`.type | `->`.type |
     `=>`.type | `extends`.type | `restricts`.type | `as`.type
+
+  type Ellipsis = `...`.type | `..`.type
   
   type letLike = `let`.type | `set`.type
   

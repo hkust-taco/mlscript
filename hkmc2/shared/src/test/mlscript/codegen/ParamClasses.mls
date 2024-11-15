@@ -9,22 +9,35 @@
 
 class Foo()
 //│ JS:
-//│ this.Foo = class Foo { constructor() {  } toString() { return "Foo(" +  + ")"; } }; undefined
+//│ this.Foo = function Foo() { return new Foo.class(); };
+//│ this.Foo.class = class Foo {
+//│   constructor() {
+//│     
+//│   }
+//│   toString() { return "Foo(" +  + ")"; }
+//│ };
+//│ undefined
 
 Foo
 //│ JS:
 //│ this.Foo
-//│ = [class Foo]
+//│ = [Function: Foo] { class: [class Foo] }
 
 Foo()
 //│ JS:
-//│ new this.Foo()
+//│ this.Foo()
 //│ = Foo {}
+
+Foo.class
+//│ JS:
+//│ this.Foo.class
+//│ = [class Foo]
 
 
 class Foo(a)
 //│ JS:
-//│ this.Foo = class Foo {
+//│ this.Foo = function Foo(a1) { return new Foo.class(a1); };
+//│ this.Foo.class = class Foo {
 //│   constructor(a) {
 //│     this.a = a;
 //│     
@@ -36,22 +49,29 @@ class Foo(a)
 Foo
 //│ JS:
 //│ this.Foo
-//│ = [class Foo]
+//│ = [Function: Foo] { class: [class Foo] }
 
 Foo(1)
 //│ JS:
-//│ new this.Foo(1)
+//│ this.Foo(1)
 //│ = Foo { a: 1 }
 
 Foo(1).a
 //│ JS:
-//│ let tmp; tmp = new this.Foo(1); tmp.a
+//│ let tmp; tmp = this.Foo(1); tmp.a
 //│ = 1
+
+fun foo(y) = Foo(y)
+foo(27)
+//│ JS:
+//│ function foo(y) { return globalThis.Foo(y); } this.foo(27)
+//│ = Foo { a: 27 }
 
 
 class Foo(a, b)
 //│ JS:
-//│ this.Foo = class Foo {
+//│ this.Foo = function Foo(a1, b1) { return new Foo.class(a1, b1); };
+//│ this.Foo.class = class Foo {
 //│   constructor(a, b) {
 //│     this.a = a;
 //│     this.b = b;
@@ -64,13 +84,12 @@ class Foo(a, b)
 let foo = Foo
 //│ JS:
 //│ this.foo = this.Foo; undefined
-//│ foo = [class Foo]
+//│ foo = [Function: Foo] { class: [class Foo] }
 
-:re
 let f = foo(1, 2)
 //│ JS:
 //│ let tmp; tmp = this.foo(1, 2); this.f = tmp; undefined
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
+//│ f = Foo { a: 1, b: 2 }
 
 let f = new foo(1, 2)
 //│ JS:
@@ -89,7 +108,7 @@ f.b
 
 let f = Foo(1, 2)
 //│ JS:
-//│ let tmp; tmp = new this.Foo(1, 2); this.f = tmp; undefined
+//│ let tmp; tmp = this.Foo(1, 2); this.f = tmp; undefined
 //│ f = Foo { a: 1, b: 2 }
 
 f.a
@@ -104,7 +123,7 @@ f.b
 
 Foo(log(1), log(2))
 //│ JS:
-//│ let tmp, tmp1; tmp = log(1); tmp1 = log(2); new this.Foo(tmp, tmp1)
+//│ let tmp, tmp1; tmp = this.log(1); tmp1 = this.log(2); this.Foo(tmp, tmp1)
 //│ > 1
 //│ > 2
 //│ = Foo { a: undefined, b: undefined }
@@ -114,13 +133,14 @@ class Inner(c) with
   fun i1(d) = c + d
   log(c)
 //│ JS:
-//│ this.Inner = class Inner {
+//│ this.Inner = function Inner(c1) { return new Inner.class(c1); };
+//│ this.Inner.class = class Inner {
 //│   constructor(c) {
 //│     this.c = c;
-//│     log(this.c)
+//│     globalThis.log(this.c)
 //│   }
 //│   i1(d) {
-//│     return this.c + d
+//│     return this.c + d;
 //│   }
 //│   toString() { return "Inner(" + this.c + ")"; }
 //│ };
@@ -128,7 +148,7 @@ class Inner(c) with
 
 let i = new Inner(100)
 //│ JS:
-//│ let tmp; tmp = new this.Inner(100); this.i = tmp; undefined
+//│ let tmp; tmp = new this.Inner.class(100); this.i = tmp; undefined
 //│ > 100
 //│ i = Inner { c: 100 }
 

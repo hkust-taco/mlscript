@@ -42,6 +42,10 @@ extension (t: Product)
         if spec then flags += "spec"
         if genGetter then flags += "gen"
         if flags.isEmpty then "()" else flags.mkString("(", ", ", ")")
+      case Loc(start, end, origin) =>
+        val (sl, _, sc) = origin.fph.getLineColAt(start)
+        val (el, _, ec) = origin.fph.getLineColAt(end)
+        s"Loc at :$sl:$sc-$el:$ec"
       case t: Product => t.showAsTree(inTailPos)
       case v => v.toString
     val postfix = post(t)

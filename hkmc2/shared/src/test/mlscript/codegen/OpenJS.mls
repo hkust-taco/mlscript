@@ -1,0 +1,11 @@
+:js
+
+
+open console { log }
+open Math { pow }
+
+
+log(123 pow(2))
+//│ > 15129
+
+

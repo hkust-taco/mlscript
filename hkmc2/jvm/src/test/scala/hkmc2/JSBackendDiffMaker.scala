@@ -13,6 +13,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val sjs = NullaryCommand("sjs")
   val showRepl = NullaryCommand("showRepl")
   val silent = NullaryCommand("silent")
+  val expect = Command("expect"): ln =>
+    ln.trim
   
   private val baseScp: codegen.js.Scope =
     codegen.js.Scope.empty
@@ -28,7 +30,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   lazy val host =
     hostCreated = true
     given TL = replTL
-    val h = ReplHost()
+    val h = ReplHost(rootPath)
     h
   
   private var hostCreated = false
@@ -55,14 +57,15 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       // val nestedScp = codegen.js.Scope(S(baseScp), curCtx.outer, collection.mutable.Map.empty) // * not needed
       
       val je = nestedScp.givenIn:
-        jsb.program(le, N)
+        jsb.program(le, N, wd)
       val jsStr = je.stripBreaks.mkString(100)
       if sjs.isSet then
         output(s"JS:")
         output(jsStr)
       def mkQuery(prefix: Str, jsStr: Str) =
+        import hkmc2.Message.MessageContext
         val queryStr = jsStr.replaceAll("\n", " ")
-        val (reply, stderr) = host.query(queryStr, expectRuntimeErrors.isUnset && fixme.isUnset && todo.isUnset)
+        val (reply, stderr) = host.query(queryStr, !expectRuntimeOrCodeGenErrors && fixme.isUnset && todo.isUnset)
         reply match
           case ReplHost.Result(content, stdout) =>
             if silent.isUnset then
@@ -73,11 +76,15 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
                     output(s"> ${line}")
               content match
               case "undefined" =>
-              case _ => output(s"$prefix= ${content}")
+              case _ =>
+                expect.get match
+                  case S(expected) if content != expected => raise:
+                    ErrorReport(msg"Expected: ${expected}, got: ${content}" -> N :: Nil,
+                      source = Diagnostic.Source.Runtime)
+                  case _ => output(s"$prefix= ${content}")
           case ReplHost.Empty =>
           case ReplHost.Unexecuted(message) => ???
           case ReplHost.Error(isSyntaxError, message) =>
-            import hkmc2.Message.MessageContext
             if (isSyntaxError) then
               // If there is a syntax error in the generated code,
               // it should be a code generation error.
@@ -91,10 +98,16 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
       mkQuery("", jsStr)
       
-      val definedValues = (curCtx.locals ++ curCtx.members).iterator.collect:
-        case (nme, sym: TermSymbol) if sym.k.isInstanceOf[syntax.ValLike] => (nme, sym)
-      
-      definedValues.toSeq.sortBy(_._2.uid).foreach: (nme, sym) =>
+      import Elaborator.Ctx.*
+      def definedValues = curCtx.env.iterator.flatMap:
+        case (nme, e @ (_: RefElem | SelElem(RefElem(_: InnerSymbol), _, _))) =>
+          e.symbol match
+          case S(ts: TermSymbol) if ts.k.isInstanceOf[syntax.ValLike] => S((nme, ts))
+          case S(ts: BlockMemberSymbol)
+            if ts.trmImplTree.exists(_.k.isInstanceOf[syntax.ValLike]) => S((nme, ts))
+          case _ => N
+        case _ => N
+      definedValues.toSeq.sortBy(_._1).foreach: (nme, sym) =>
         val le = codegen.Return(codegen.Value.Ref(sym), implct = true)
         val je = nestedScp.givenIn:
           jsb.block(le)

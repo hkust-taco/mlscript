@@ -1,14 +1,17 @@
-:import ../prelude/Option.mls
-//│ Imported 3 member(s)
-
-:global
 :todo
 :ucs normalized
+
+import "../../../mlscript-compile/Option.mls"
+
+open Option
 
 // OK
 x => if x is
   refined(None) then x
-//│ ╔══[ERROR] Unknown constructor `refined`.
+//│ ╔══[ERROR] Name not found: refined
+//│ ║  l.10: 	  refined(None) then x
+//│ ╙──      	  ^^^^^^^
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
 //│ ║  l.10: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^
 //│ Normalized:
@@ -17,8 +20,11 @@ x => if x is
 // OK
 x => if x is
   refined(Some) then x
-//│ ╔══[ERROR] Unknown constructor `refined`.
-//│ ║  l.19: 	  refined(Some) then x
+//│ ╔══[ERROR] Name not found: refined
+//│ ║  l.22: 	  refined(Some) then x
+//│ ╙──      	  ^^^^^^^
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.22: 	  refined(Some) then x
 //│ ╙──      	  ^^^^^^^
 //│ Normalized:
 //│ >  if
@@ -27,20 +33,29 @@ x => if x is
 x => if x is
   refined(None) then x
   Some then x
-//│ ╔══[ERROR] Unknown constructor `refined`.
-//│ ║  l.28: 	  refined(None) then x
+//│ ╔══[ERROR] Name not found: refined
+//│ ║  l.34: 	  refined(None) then x
+//│ ╙──      	  ^^^^^^^
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.34: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^
 //│ Normalized:
-//│ >  if x@34 is Some then x@34#2
+//│ >  if x@17 is Some then x@17#666
 
 x => if x is
   refined(None) then x
   refined(Some) then x
-//│ ╔══[ERROR] Unknown constructor `refined`.
-//│ ║  l.38: 	  refined(Some) then x
+//│ ╔══[ERROR] Name not found: refined
+//│ ║  l.47: 	  refined(Some) then x
 //│ ╙──      	  ^^^^^^^
-//│ ╔══[ERROR] Unknown constructor `refined`.
-//│ ║  l.37: 	  refined(None) then x
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.47: 	  refined(Some) then x
+//│ ╙──      	  ^^^^^^^
+//│ ╔══[ERROR] Name not found: refined
+//│ ║  l.46: 	  refined(None) then x
+//│ ╙──      	  ^^^^^^^
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.46: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^
 //│ Normalized:
 //│ >  if

@@ -1,4 +1,5 @@
 :bbml
+//│ Type: ⊤
 
 fun f(y) =
   let local = ((x => y(x) + 1): [A] -> A -> Int) in y
@@ -33,16 +34,8 @@ g(foo)
 
 :e
 y `=> (let t = run(x `=> x `+ y) in y)
-//│ ╔══[ERROR] Type error in quoted term with expected type CodeBase[out α28_3, ⊥, ?]
-//│ ║  l.35: 	y `=> (let t = run(x `=> x `+ y) in y)
-//│ ║        	                   ^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  CodeBase[out α29_5 -> α36_5, out α38_4, ?]  <:  CodeBase[out α28_3, ⊥, ?]
-//│ ╟── because: cannot constrain  D( α38_4 )  <:  ⊥
-//│ ╟── because: cannot constrain  α38_4  <:  ¬()
-//│ ╙── because: cannot constrain  ¬⊥ ∧ <α>27_3  <:  ¬()
+//│ ═══[ERROR] Cannot quote Sel(Ref(globalThis:import#bbPredef),Ident(+))
 //│ Type: CodeBase[out α26_3 -> α26_3, ⊥, ?]
-//│ Where:
-//│   α26_3 <: Int
 
 class C[A](m: A, n: A -> Int)
 //│ Type: ⊤
@@ -50,11 +43,11 @@ class C[A](m: A, n: A -> Int)
 
 fun f: [A] -> ([B] -> (C[out B] & A) -> B) -> A -> Int
 f
-//│ Type: forall α44_2: (forall α45_3: (C[out α45_3] ∧ α44_2) ->{⊥} α45_3) ->{⊥} (α44_2) ->{⊥} Int
+//│ Type: forall α41_2: (forall α42_3: (C[out α42_3] ∧ α41_2) ->{⊥} α42_3) ->{⊥} (α41_2) ->{⊥} Int
 
 fun g: [D] -> C[in Int out D] -> D
 g
-//│ Type: forall α46_2: (C[in Int out α46_2]) ->{⊥} α46_2
+//│ Type: forall α43_2: (C[in Int out α43_2]) ->{⊥} α43_2
 
 
 f(g)
@@ -73,13 +66,11 @@ f(g)(foo)
 
 :fixme // ???
 f(g)(bar)
-//│ ╔══[ERROR] Type error in reference with expected type α55_1
-//│ ║  l.75: 	f(g)(bar)
-//│ ║        	     ^^^
-//│ ╟── because: cannot constrain  C[Int]  <:  α55_1
-//│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  α55_1
-//│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  ¬C[in D() out ¬⊥] ∨ C[in D( Int ) out ¬⊥ ∧ α58_1]
-//│ ╟── because: cannot constrain  (D( Int )) ∧ (D(  ))  <:  ¬⊥ ∧ α58_1
-//│ ╟── because: cannot constrain  Int  <:  α58_1
+//│ ╔══[ERROR] Type error in selection with expected type α52_1
+//│ ╟── because: cannot constrain  C[Int]  <:  α52_1
+//│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  α52_1
+//│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  ¬C[in D() out ¬⊥] ∨ C[in D( Int ) out ¬⊥ ∧ α55_1]
+//│ ╟── because: cannot constrain  (D( Int )) ∧ (D(  ))  <:  ¬⊥ ∧ α55_1
+//│ ╟── because: cannot constrain  Int  <:  α55_1
 //│ ╙── because: cannot constrain  Int  <:  ⊥
 //│ Type: Int

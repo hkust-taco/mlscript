@@ -22,8 +22,8 @@ foo()
 
 let x = 1
 let f = () => x
-//│ x = 1
 //│ f = [Function (anonymous)]
+//│ x = 1
 
 f()
 //│ = 1

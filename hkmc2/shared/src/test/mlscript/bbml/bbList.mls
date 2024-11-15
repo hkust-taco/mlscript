@@ -1,4 +1,5 @@
 :bbml
+//│ Type: ⊤
 
 
 
@@ -50,13 +51,13 @@ fun mapi = s =>
       i := !i + 1
       f(!i, x)
 //│ ╔══[ERROR] Type error in region expression with expected type ((Int, <α>50_2) ->{<α>51_2} <α>50_2) ->{Alloc ∨ <α>51_2} List[out <α>50_2]
-//│ ║  l.48: 	    let i = r.ref 0
+//│ ║  l.49: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
-//│ ║  l.49: 	    f => map(s) of x =>
+//│ ║  l.50: 	    f => map(s) of x =>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.50: 	      i := !i + 1
+//│ ║  l.51: 	      i := !i + 1
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.51: 	      f(!i, x)
+//│ ║  l.52: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  α66_2 ->{α74_2} List[out α73_2]  <:  ((Int, <α>50_2) ->{<α>51_2} <α>50_2) ->{Alloc ∨ <α>51_2} List[out <α>50_2]
 //│ ╟── because: cannot constrain  D( α74_2 )  <:  Alloc ∨ <α>51_2
@@ -65,13 +66,13 @@ fun mapi = s =>
 //│ ╟── because: cannot constrain  α75_2  <:  ¬(~{Alloc} && ~<α>51_2)
 //│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc} && ~<α>51_2)
 //│ ╔══[ERROR] Type error in region expression with expected type ((Int, <α>50_2) ->{<α>51_2} <α>50_2) ->{Alloc ∨ <α>51_2} List[out <α>50_2]
-//│ ║  l.48: 	    let i = r.ref 0
+//│ ║  l.49: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
-//│ ║  l.49: 	    f => map(s) of x =>
+//│ ║  l.50: 	    f => map(s) of x =>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.50: 	      i := !i + 1
+//│ ║  l.51: 	      i := !i + 1
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.51: 	      f(!i, x)
+//│ ║  l.52: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  α66_2 ->{α74_2} List[out α73_2]  <:  ((Int, <α>50_2) ->{<α>51_2} <α>50_2) ->{Alloc ∨ <α>51_2} List[out <α>50_2]
 //│ ╟── because: cannot constrain  D( α74_2 )  <:  Alloc ∨ <α>51_2
@@ -80,13 +81,13 @@ fun mapi = s =>
 //│ ╟── because: cannot constrain  α75_2  <:  ¬(~{Alloc} && ~<α>51_2)
 //│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc} && ~<α>51_2)
 //│ ╔══[ERROR] Type error in region expression with expected type ((Int, <α>50_2) ->{<α>51_2} <α>50_2) ->{Alloc ∨ <α>51_2} List[out <α>50_2]
-//│ ║  l.48: 	    let i = r.ref 0
+//│ ║  l.49: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
-//│ ║  l.49: 	    f => map(s) of x =>
+//│ ║  l.50: 	    f => map(s) of x =>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.50: 	      i := !i + 1
+//│ ║  l.51: 	      i := !i + 1
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.51: 	      f(!i, x)
+//│ ║  l.52: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  α66_2 ->{α74_2} List[out α73_2]  <:  ((Int, <α>50_2) ->{<α>51_2} <α>50_2) ->{Alloc ∨ <α>51_2} List[out <α>50_2]
 //│ ╟── because: cannot constrain  D( α74_2 )  <:  Alloc ∨ <α>51_2
@@ -95,17 +96,17 @@ fun mapi = s =>
 //│ ╟── because: cannot constrain  α75_2  <:  ¬(~{Alloc} && ~<α>51_2)
 //│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc} && ~<α>51_2)
 //│ ╔══[ERROR] Type error in function literal with expected type (List[out <α>50_2]) ->{⊥} ((Int, <α>50_2) ->{<α>51_2} <α>50_2) ->{Alloc ∨ <α>51_2} List[out <α>50_2]
-//│ ║  l.46: 	fun mapi = s =>
+//│ ║  l.47: 	fun mapi = s =>
 //│ ║        	           ^^^^
-//│ ║  l.47: 	  region r in
+//│ ║  l.48: 	  region r in
 //│ ║        	^^^^^^^^^^^^^
-//│ ║  l.48: 	    let i = r.ref 0
+//│ ║  l.49: 	    let i = r.ref 0
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.49: 	    f => map(s) of x =>
+//│ ║  l.50: 	    f => map(s) of x =>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.50: 	      i := !i + 1
+//│ ║  l.51: 	      i := !i + 1
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.51: 	      f(!i, x)
+//│ ║  l.52: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╙── because: cannot constrain  α65_2 ∨ Alloc  <:  ⊥
 //│ Type: ⊤

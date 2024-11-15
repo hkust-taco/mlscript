@@ -1,5 +1,6 @@
 :global
 :bbml
+//│ Type: ⊤
 
 
 class Reg[out Rg, out AccI]

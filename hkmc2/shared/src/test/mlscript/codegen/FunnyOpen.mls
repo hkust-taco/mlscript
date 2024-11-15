@@ -1,0 +1,63 @@
+:js
+
+
+module Mod with
+  fun print(x) = console.log(x)
+  fun (|>) pipe(x, f) = f(x)
+
+:ctx
+open Mod
+//│ Env:
+//│   pipe -> SelElem(SelElem(RefElem(globalThis:block#1),Mod,Some(member:Mod)),pipe,Some(member:pipe))
+//│   print -> SelElem(SelElem(RefElem(globalThis:block#1),Mod,Some(member:Mod)),print,Some(member:print))
+//│   |> -> SelElem(SelElem(RefElem(globalThis:block#1),Mod,Some(member:Mod)),pipe,Some(member:pipe))
+
+pipe
+//│ = [Function: pipe]
+
+(|>)
+//│ = [Function: pipe]
+
+|>
+//│ = [Function: pipe]
+
+:pe
+:e
+Mod.|>
+//│ ╔══[PARSE ERROR] Expected start of statement in this position; found end of input instead
+//│ ║  l.26: 	Mod.|>
+//│ ╙──      	      ^
+//│ ╔══[ERROR] Name not found: .|>
+//│ ║  l.26: 	Mod.|>
+//│ ╙──      	   ^^^
+
+
+:fixme
+1 |> x => print(x)
+//│ /!!!\ Uncaught error: scala.MatchError: App(Ident(|>),Tup(List(IntLit(1), Ident(x)))) (of class hkmc2.syntax.Tree$App)
+
+
+:fixme
+open Mod { |> }
+//│ ╔══[PARSE ERROR] Expected start of statement in this position; found end of input instead
+//│ ║  l.41: 	open Mod { |> }
+//│ ╙──      	              ^
+//│ ╔══[ERROR] Illegal 'open' statement shape.
+//│ ║  l.41: 	open Mod { |> }
+//│ ╙──      	     ^^^^^^^^^
+
+
+open Mod { (|>) }
+
+:fixme
+12 |> print
+//│ ═══[RUNTIME ERROR] TypeError: this.Mod.|> is not a function
+
+
+open Mod { print, |> }
+
+:fixme
+12 |> print
+//│ ═══[RUNTIME ERROR] TypeError: this.Mod.|> is not a function
+
+

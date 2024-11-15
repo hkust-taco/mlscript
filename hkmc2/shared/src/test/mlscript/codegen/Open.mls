@@ -22,6 +22,12 @@ z
 //│ ║  l.20: 	z
 //│ ╙──      	^
 
+:e
+open Foo { a }
+//│ ╔══[ERROR] Module 'Foo' does not contain member 'a'
+//│ ║  l.26: 	open Foo { a }
+//│ ╙──      	           ^
+
 
 open Bar { y, Baz }
 open Baz { b }
@@ -33,5 +39,17 @@ module Bar with
     val b = 5
   open Baz { a }
   fun f() = [a, b, y]
+
+
+val str = "oops"
+//│ str = 'oops'
+
+open str { length, oops }
+
+length
+//│ = 4
+
+oops === ()
+//│ = true
 
 

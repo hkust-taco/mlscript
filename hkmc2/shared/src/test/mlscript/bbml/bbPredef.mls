@@ -1,3 +1,6 @@
+// :bbml
+
+class Alloc
 
 class CodeBase[T, C, S]
 class Region[T]
@@ -5,5 +8,19 @@ class Ref[T, S]
 
 // the type here is fake.
 fun run: Any -> Any
-val error: Nothing
+fun log: Any -> Str
+fun error: Nothing
+
+fun (+): (Int, Int) -> Int
+fun (-): (Int, Int) -> Int
+fun (*): (Int, Int) -> Int
+fun (/): (Int, Int) -> Int
+
+fun (<): (Int, Int) -> Bool
+fun (>): (Int, Int) -> Bool
+fun (<=): (Int, Int) -> Bool
+fun (>=): (Int, Int) -> Bool
+
+fun (&&): (Bool, Bool) -> Bool
+fun (||): (Bool, Bool) -> Bool
 

@@ -11,16 +11,16 @@ fun isDefined(x) = if x is
   None then false
 //│ JS:
 //│ function isDefined(x) {
-//│   if (x instanceof globalThis.Some) {
-//│     return true
+//│   if (x instanceof globalThis.Some.class) {
+//│     return true;
 //│   } else {
-//│     if (x === globalThis.None) {
-//│       return false
+//│     if (x instanceof globalThis.None.class) {
+//│       return false;
 //│     } else {
-//│       throw new globalThis.Error("match error")
+//│       throw new globalThis.Error("match error");
 //│     }
 //│   }
-//│ };
+//│ }
 //│ undefined
 
 isDefined(Some(1))
@@ -37,14 +37,14 @@ val isDefined = case
 //│ JS:
 //│ this.isDefined = (caseScrut) => {
 //│   let param0;
-//│   if (caseScrut instanceof this.Some) {
+//│   if (caseScrut instanceof this.Some.class) {
 //│     param0 = caseScrut.value;
-//│     return true
+//│     return true;
 //│   } else {
-//│     if (caseScrut === this.None) {
-//│       return false
+//│     if (caseScrut instanceof this.None.class) {
+//│       return false;
 //│     } else {
-//│       throw new this.Error("match error")
+//│       throw new this.Error("match error");
 //│     }
 //│   }
 //│ };
@@ -73,13 +73,9 @@ isDefined(None)
 module Foo with
   class Other(v)
 
-:fixme
 val isOther = x => if x is
   Foo.Other(_) then true
   None    then false
-//│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.78: 	  Foo.Other(_) then true
-//│ ╙──      	  ^^^^^^^^^^^^
 //│ isOther = [Function (anonymous)]
 
 

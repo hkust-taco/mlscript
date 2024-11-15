@@ -1,19 +1,21 @@
 :js
+
+:global
 :sjs
 
 
 fun f() =
   console.log("ok"), 42
 //│ JS:
-//│ function f() { let tmp; tmp = console.log("ok"); return 42 }; undefined
+//│ function f() { let tmp; tmp = globalThis.console.log("ok"); return 42; } undefined
 
 fun f() = { console.log("ok"), 42 }
 //│ JS:
-//│ function f() { let tmp; tmp = console.log("ok"); return 42 }; undefined
+//│ function f() { let tmp; tmp = globalThis.console.log("ok"); return 42; } undefined
 
 fun f() = console.log("ok"), 42
 //│ JS:
-//│ function f() { return console.log("ok") }; 42
+//│ function f() { return globalThis.console.log("ok"); } 42
 //│ = 42
 
 

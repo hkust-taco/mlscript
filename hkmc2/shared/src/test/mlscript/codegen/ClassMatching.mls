@@ -13,13 +13,13 @@ module None
 if Some(0) is Some(x) then x
 //│ JS:
 //│ let scrut, param0, x;
-//│ scrut = new this.Some(0);
-//│ if (scrut instanceof this.Some) {
+//│ scrut = this.Some(0);
+//│ if (scrut instanceof this.Some.class) {
 //│   param0 = scrut.value;
 //│   x = param0;
 //│   x
 //│ } else {
-//│   throw new this.Error("match error")
+//│   throw new this.Error("match error");
 //│ }
 //│ = 0
 
@@ -33,12 +33,12 @@ if s is
 //│ JS:
 //│ let scrut, param0, x;
 //│ scrut = this.s;
-//│ if (scrut instanceof this.Some) {
+//│ if (scrut instanceof this.Some.class) {
 //│   param0 = scrut.value;
 //│   x = param0;
 //│   x
 //│ } else {
-//│   throw new this.Error("match error")
+//│   throw new this.Error("match error");
 //│ }
 //│ = 0
 
@@ -63,15 +63,54 @@ x => if x is Some(x) then x
 //│ JS:
 //│ (x) => {
 //│   let param0, x1;
-//│   if (x instanceof this.Some) {
+//│   if (x instanceof this.Some.class) {
 //│     param0 = x.value;
 //│     x1 = param0;
-//│     return x1
+//│     return x1;
 //│   } else {
-//│     throw new this.Error("match error")
+//│     throw new this.Error("match error");
 //│   }
 //│ }
 //│ = [Function (anonymous)]
+
+
+class C(a)
+
+fun f(x) = if x is C(a) then a else 0
+
+f(C(27))
+//│ = 27
+
+
+fun f(x) = if x is C then 1 else 0
+
+f(C(27))
+//│ = 1
+
+
+module M with
+  class D(a)
+  val d = D(27)
+
+M.d
+//│ = D { a: 27 }
+
+fun f(x) = if x is M.D then 1 else 0
+
+f(M.d)
+//│ = 1
+
+f(M.D(27))
+//│ = 1
+
+
+fun f(x) = if x is M.D(a) then a else 0
+
+f(M.d)
+//│ = 27
+
+f(M.D(27))
+//│ = 27
 
 
 // TODO dedup branches duplicated by UCS normalization
@@ -83,23 +122,23 @@ fun f(x) = if x is
 //│ JS:
 //│ function f(x) {
 //│   let param0, x1, scrut;
-//│   if (x instanceof globalThis.Some) {
+//│   if (x instanceof globalThis.Some.class) {
 //│     param0 = x.value;
 //│     x1 = param0;
 //│     scrut = x1 > 0;
 //│     if (scrut) {
-//│       return 42
+//│       return 42;
 //│     } else {
-//│       return log("oops")
+//│       return globalThis.log("oops");
 //│     }
 //│   } else {
-//│     if (x === globalThis.None) {
-//│       return "ok"
+//│     if (x instanceof globalThis.None.class) {
+//│       return "ok";
 //│     } else {
-//│       return log("oops")
+//│       return globalThis.log("oops");
 //│     }
 //│   }
-//│ };
+//│ }
 //│ undefined
 
 f(Some(0))
@@ -125,22 +164,22 @@ fun f(x) = if x is
 //│ JS:
 //│ function f(x) {
 //│   let param0, param1, a, b, param01, u;
-//│   if (x instanceof globalThis.Some) {
+//│   if (x instanceof globalThis.Some.class) {
 //│     param01 = x.value;
 //│     u = param01;
-//│     return u
+//│     return u;
 //│   } else {
-//│     if (x instanceof globalThis.Pair) {
+//│     if (x instanceof globalThis.Pair.class) {
 //│       param0 = x.fst;
 //│       param1 = x.snd;
 //│       a = param0;
 //│       b = param1;
-//│       return a + b
+//│       return a + b;
 //│     } else {
-//│       throw new globalThis.Error("match error")
+//│       throw new globalThis.Error("match error");
 //│     }
 //│   }
-//│ };
+//│ }
 //│ undefined
 
 f(Some(123))
@@ -159,7 +198,7 @@ fun f(x) = log of if x is
 //│ JS:
 //│ function f(x) {
 //│   let param0, tmp;
-//│   if (x instanceof globalThis.Some) {
+//│   if (x instanceof globalThis.Some.class) {
 //│     param0 = x.value;
 //│     if (param0 === 0) {
 //│       tmp = "0";
@@ -167,14 +206,14 @@ fun f(x) = log of if x is
 //│       tmp = "oops";
 //│     }
 //│   } else {
-//│     if (x === globalThis.None) {
+//│     if (x instanceof globalThis.None.class) {
 //│       tmp = "ok";
 //│     } else {
 //│       tmp = "oops";
 //│     }
 //│   }
-//│   return log(tmp)
-//│ };
+//│   return globalThis.log(tmp);
+//│ }
 //│ undefined
 
 f(Some(0))

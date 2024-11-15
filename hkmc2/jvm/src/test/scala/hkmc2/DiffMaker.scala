@@ -16,6 +16,9 @@ class Outputter(val out: java.io.PrintWriter):
   val diffEndMarker = ">>>>>>>"
 
   val exitMarker = "=" * 100
+  val blockSeparator = "—" * 80
+  
+  val fullBlockSeparator = outputMarker + blockSeparator
   
   def apply(str: String) =
     // out.println(outputMarker + str)
@@ -51,7 +54,7 @@ abstract class DiffMaker:
   
   class Command[A](val name: Str, var isGlobal: Bool = false)(val process: Str => A):
     require(name.nonEmpty)
-    require(name.forall(l => l.isLetterOrDigit || l === '!'))
+    // require(name.forall(l => l.isLetterOrDigit || l === '!'))
     if commands.contains(name) then
       throw new IllegalArgumentException(s"Option '$name' already exists")
     commands += name -> this
@@ -66,11 +69,13 @@ abstract class DiffMaker:
     def onSet(): Unit = ()
     override def toString: Str = s"${if isGlobal then "global " else ""}$name: $currentValue"
   
-  class NullaryCommand(name: Str) extends Command[Unit](name)(
+  class NullaryCommand[R](name: Str, k: () => R = () => ()) extends Command[R](name)(
     line =>
       val commentIndex = line.indexOf("//")
       val body = if commentIndex == -1 then line else line.take(commentIndex)
-      assert(body.forall(_.isWhitespace)))
+      assert(body.forall(_.isWhitespace))
+      k()
+    )
   
   class FlagCommand(init: Bool, name: Str) extends NullaryCommand(name):
     self =>
@@ -80,10 +85,17 @@ abstract class DiffMaker:
         else self.setCurrentValue(())
     if init then setCurrentValue(()) else disable.setCurrentValue(())
   
+  val initCmd = NullaryCommand("init")
+  initCmd.setCurrentValue(()) // * Starts enabled at the top of the file
   val global = NullaryCommand("global")
   global.setCurrentValue(()) // * Starts enabled at the top of the file
   
+  val consumeEmptyLines = NullaryCommand("...", () =>
+    output(output.blockSeparator)
+  )
+  
   val fixme = Command("fixme")(_ => ())
+  val breakme = Command("breakme")(_ => ())
   val todo = Command("todo")(_ => ())
   def tolerateErrors = fixme.isSet || todo.isSet
   
@@ -95,6 +107,7 @@ abstract class DiffMaker:
   val expectTypeErrors = NullaryCommand("e")
   val expectRuntimeErrors = NullaryCommand("re")
   val expectCodeGenErrors = NullaryCommand("ge")
+  def expectRuntimeOrCodeGenErrors = expectRuntimeErrors.isSet || expectCodeGenErrors.isSet
   val allowRuntimeErrors = NullaryCommand("allowRuntimeErrors")
   val expectWarnings = NullaryCommand("w")
   val showRelativeLineNums = NullaryCommand("showRelativeLineNums")
@@ -126,6 +139,14 @@ abstract class DiffMaker:
   var _allowTypeErrors = false
   var _showRelativeLineNums = false
   
+  
+  def uncaught(err: Throwable): Unit =
+    output("/!!!\\ Uncaught error: " + err +
+      err.getStackTrace().take(
+        if fullExceptionStack.isSet || debug.isSet then Int.MaxValue
+        else if tolerateErrors || err.isInstanceOf[StackOverflowError] then 0
+        else 10
+      ).map("\n" + "\tat: " + _).mkString)
   
   
   def processBlock(origin: Origin): Unit =
@@ -163,7 +184,7 @@ abstract class DiffMaker:
             unexpected("runtime error", blockLineNum)
         case Diagnostic.Source.Runtime =>
           runtimeErrors += 1
-          if expectRuntimeErrors.isUnset && !tolerateErrors then
+          if !expectRuntimeOrCodeGenErrors && !tolerateErrors then
             failures += globalStartLineNum
             unexpected("runtime error", blockLineNum)
       case Diagnostic.Kind.Warning =>
@@ -181,16 +202,19 @@ abstract class DiffMaker:
     
     // Note: when `todo` is set, we allow the lack of errors.
     // Use `todo` when the errors are expected but not yet implemented.
-    if expectParseErrors.isSet && parseErrors == 0 && todo.isUnset then
+    if expectParseErrors.isSet && parseErrors == 0 && todo.isUnset && breakme.isUnset then
       failures += globalStartLineNum
       unexpected("lack of parse error", blockLineNum)
-    if expectTypeErrors.isSet && typeErrors == 0 && todo.isUnset then
+    if expectTypeErrors.isSet && typeErrors == 0 && todo.isUnset && breakme.isUnset then
       failures += globalStartLineNum
       unexpected("lack of type error", blockLineNum)
-    if expectRuntimeErrors.isSet && runtimeErrors == 0 && todo.isUnset then
+    if expectCodeGenErrors.isSet && compilationErrors == 0 && todo.isUnset && breakme.isUnset then
+      failures += globalStartLineNum
+      unexpected("lack of compilation error", blockLineNum)
+    if expectRuntimeErrors.isSet && runtimeErrors == 0 && todo.isUnset && breakme.isUnset then
       failures += globalStartLineNum
       unexpected("lack of runtime error", blockLineNum)
-    if expectWarnings.isSet && warnings == 0 && todo.isUnset then
+    if expectWarnings.isSet && warnings == 0 && todo.isUnset && breakme.isUnset then
       failures += globalStartLineNum
       unexpected("lack of warnings", blockLineNum)
     
@@ -203,8 +227,10 @@ abstract class DiffMaker:
   @annotation.tailrec
   final def rec(lines: List[String]): Unit = lines match
     case "" :: Nil => // To prevent adding an extra newline at the end
-    case (line @ "") :: ls =>
+    case (line @ "") :: ls if consumeEmptyLines.isUnset =>
       out.println(line)
+      if initCmd.isSet then
+        init()
       resetCommands
       rec(ls)
     case ":exit" :: ls =>
@@ -257,7 +283,7 @@ abstract class DiffMaker:
       
       val blockLineNum = allLines.size - lines.size + 1
       
-      val block = (l :: ls.takeWhile(l => l.nonEmpty && !(
+      val block = (l :: ls.takeWhile(l => (l.nonEmpty || consumeEmptyLines.isSet) && !(
         l.startsWith(output.outputMarker)
         || l.startsWith(output.diffBegMarker)
         // || l.startsWith(oldOutputMarker)
@@ -281,12 +307,11 @@ abstract class DiffMaker:
             unhandled(blockLineNum, err)
           // err.printStackTrace(out)
           // println(err.getCause())
-          output("/!!!\\ Uncaught error: " + err +
-            err.getStackTrace().take(
-              if fullExceptionStack.isSet || debug.isSet then Int.MaxValue
-              else if tolerateErrors || err.isInstanceOf[StackOverflowError] then 0
-              else 10
-            ).map("\n" + "\tat: " + _).mkString)
+          uncaught(err)
+      
+      if consumeEmptyLines.isSet then
+        output(output.blockSeparator)
+        consumeEmptyLines.unset
       
       rec(lines.drop(block.size))
       
@@ -301,6 +326,10 @@ abstract class DiffMaker:
       println(s"Updating $file...")
       os.write.over(file, result)
   
+  // * Called after the very first command block
+  // * and every time a further command block with `:init` finishes
+  def init(): Unit =
+    ()
   
   
 end DiffMaker

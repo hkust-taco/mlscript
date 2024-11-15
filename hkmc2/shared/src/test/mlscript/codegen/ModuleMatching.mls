@@ -1,0 +1,27 @@
+:js
+
+
+module Foo
+
+fun test(x) = x is Foo
+
+test(Foo)
+//│ = true
+
+
+fun foo() =
+  module Foo
+  Foo is Foo
+
+foo()
+//│ = true
+
+
+fun foo() =
+  class Foo
+  (new Foo) is Foo
+
+foo()
+//│ = true
+
+

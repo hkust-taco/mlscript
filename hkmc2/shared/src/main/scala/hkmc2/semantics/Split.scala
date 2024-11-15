@@ -10,7 +10,7 @@ final case class Branch(scrutinee: Term.Ref, pattern: Pattern, continuation: Spl
 
 object Branch:
   def apply(scrutinee: Term.Ref, continuation: Split): Branch =
-    Branch(scrutinee, Pattern.LitPat(Tree.BoolLit(true)), continuation)
+    Branch(scrutinee, Pattern.Lit(Tree.BoolLit(true)), continuation)
 
 enum Split extends AutoLocated with ProductWithTail:
   case Cons(head: Branch, tail: Split)
@@ -55,6 +55,7 @@ enum Split extends AutoLocated with ProductWithTail:
         // `Split.Nil` must not have a location. This prevents sharing locations,
         // which causes the assertion of distinctness of origins to fail.
         case Split.End => N
+        case _: Split.Else => N // FIXME: @Luyu pls clean up this mess
         case _ => loco
 
   var isFallback: Bool = false

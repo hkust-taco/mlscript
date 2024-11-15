@@ -210,8 +210,9 @@ object ParseRule:
         ) { case (lhs, (rhs, defs, body))=> Handle(lhs, rhs, defs, body) }
     ,
     Kw(`new`):
-      ParseRule("`new` keyword"):
-        Expr(ParseRule("`new` expression")(End(())))((body, _: Unit) => New(body))
+      ParseRule("`new` keyword")(
+        exprOrBlk(ParseRule("`new` expression")(End(())))((body, _: Unit) => New(body))*
+      )
     ,
     Kw(`in`):
       ParseRule("modifier keyword `in`"):
@@ -256,15 +257,17 @@ object ParseRule:
     Kw(`type`):
       ParseRule("type alias declaration"):
         Expr(
-          ParseRule("type alias head"):
+          ParseRule("type alias head")(
             Kw(`=`):
               ParseRule("type alias declaration equals sign"):
                 Expr(
                   ParseRule("type alias declaration right-hand side")(
                     End(())
                   )
-                ) { (rhs, _) => rhs }
-        ) { (lhs, rhs) => TypeDef(Als, lhs, S(rhs), N) },
+                ) { case (rhs, ()) => S(rhs) },
+            End(N),
+          )
+        ) { (lhs, rhs) => TypeDef(Als, lhs, rhs, N) },
     Kw(`class`)(typeDeclBody(Cls)),
     Kw(`trait`)(typeDeclBody(Trt)),
     Kw(`module`)(typeDeclBody(Mod)),
@@ -331,6 +334,8 @@ object ParseRule:
     Kw(kw):
       ParseRule(s"'${kw}' operator")(
         Expr(ParseRule(s"'${kw}' operator right-hand side")(End(())))(k)
+        // * Interestingly, this does not seem to change anything:
+        // exprOrBlk(ParseRule(s"'${kw}' operator right-hand side")(End(())))(k)*
       )
   
   val infixRules: ParseRule[Tree => Tree] = ParseRule("continuation of statement")(

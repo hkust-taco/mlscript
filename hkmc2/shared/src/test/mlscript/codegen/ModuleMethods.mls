@@ -1,0 +1,35 @@
+:js
+
+
+// TODO could use `globalThis.Example` instead of `this` in the generated code
+:sjs
+module Example with
+  val a = 456
+  fun f(x) = [x, a]
+//│ JS:
+//│ const Example$class = class Example {
+//│   constructor() {
+//│     this.a = 456;
+//│   }
+//│   f(x) {
+//│     return [
+//│       x,
+//│       this.a
+//│     ];
+//│   }
+//│   toString() { return "Example"; }
+//│ };
+//│ this.Example = new Example$class;
+//│ this.Example.class = Example$class;
+//│ undefined
+
+let s = Example.f
+//│ s = [Function: f]
+
+s(123)
+//│ = [ 123, undefined ]
+
+Example |>. s(123)
+//│ = [ 123, 456 ]
+
+

@@ -13,13 +13,13 @@
 //│     scrut = true;
 //│     if (scrut) {
 //│       tmp = 0;
-//│       continue tmp1
+//│       continue tmp1;
 //│     } else {
-//│       throw new this.Error("match error")
+//│       throw new this.Error("match error");
 //│     }
 //│     break;
 //│   }
-//│   return tmp
+//│   return tmp;
 //│ }
 //│ = [Function (anonymous)]
 
@@ -58,10 +58,10 @@ while x
 //│ tmp2: while (true) {
 //│   scrut = this.x;
 //│   if (scrut) {
-//│     tmp = log("Hello World");
+//│     tmp = this.log("Hello World");
 //│     this.x = false;
 //│     tmp1 = undefined;
-//│     continue tmp2
+//│     continue tmp2;
 //│   } else {
 //│     tmp1 = 42;
 //│   }
@@ -116,13 +116,13 @@ while
 //│       tmp = i + 1;
 //│       i = tmp;
 //│       tmp1 = undefined;
-//│       continue tmp2
+//│       continue tmp2;
 //│     } else {
-//│       throw new this.Error("match error")
+//│       throw new this.Error("match error");
 //│     }
 //│     break;
 //│   }
-//│   return tmp1
+//│   return tmp1;
 //│ }
 //│ = [Function (anonymous)]
 
@@ -158,10 +158,10 @@ if x
   else 42
 //│ Normalized:
 //│ >  if
-//│ >    let $scrut@129 = globalThis:block#6.x#2
-//│ >    $scrut@129 is true and
-//│ >      let $scrut@130 = globalThis:block#6.y#0
-//│ >      $scrut@130 is true then 0
+//│ >    let $scrut@116 = globalThis:block#7.x#666
+//│ >    $scrut@116 is true and
+//│ >      let $scrut@117 = globalThis:block#7.y#666
+//│ >      $scrut@117 is true then 0
 //│ >      else 1
 //│ >    else 42
 //│ = 42
@@ -174,10 +174,10 @@ if x
   else 42
 //│ Normalized:
 //│ >  if
-//│ >    let $scrut@132 = globalThis:block#6.x#3
-//│ >    $scrut@132 is true and
-//│ >      let $scrut@133 = globalThis:block#6.y#1
-//│ >      $scrut@133 is true then 0
+//│ >    let $scrut@119 = globalThis:block#7.x#666
+//│ >    $scrut@119 is true and
+//│ >      let $scrut@120 = globalThis:block#7.y#666
+//│ >      $scrut@120 is true then 0
 //│ >      else 1
 //│ >    else 42
 //│ = 42
@@ -199,21 +199,21 @@ fun f(ls) =
 //│ function f(ls) {
 //│   let ls1, param0, param1, h, tl, tmp;
 //│   tmp1: while (true) {
-//│     if (ls1 instanceof globalThis.Cons) {
+//│     if (ls1 instanceof globalThis.Cons.class) {
 //│       param0 = ls1.hd;
 //│       param1 = ls1.tl;
 //│       h = param0;
 //│       tl = param1;
 //│       ls1 = tl;
-//│       tmp = log(h);
-//│       continue tmp1
+//│       tmp = globalThis.log(h);
+//│       continue tmp1;
 //│     } else {
-//│       tmp = log("Done!");
+//│       tmp = globalThis.log("Done!");
 //│     }
 //│     break;
 //│   }
-//│   return tmp
-//│ };
+//│   return tmp;
+//│ }
 //│ undefined
 
 f(0)
@@ -242,7 +242,7 @@ while log("Hello World"); false
 //│ ║  l.239: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ═══[ERROR] Unrecognized term split (false literal).
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token 'break'
+//│ ═══[RUNTIME ERROR] Error: match error
 
 :fixme
 while { log("Hello World"), false }

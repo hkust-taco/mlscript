@@ -1,4 +1,8 @@
 
+import "./Predef.mls"
+open Predef
+
+
 // TODO
 // type Option[A] = Option.Some(A) | Option.None
 
@@ -11,10 +15,7 @@ fun isDefined(x) = if x is
   Some then true
   None then false
 
-fun test() = 2134
-
-// TODO
-// fun test2(x) = 2134 + x
+fun test() = 2134 |> print
 
 class Both(fst, snd)
 

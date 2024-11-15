@@ -4,6 +4,6 @@ fun id(x) = x
 if id(0) is t then t
 //│ Desugared:
 //│ >  if
-//│ >    let $scrut@28 = globalThis:block#0.id#0(0)
-//│ >    let t@29 = $scrut@28#0
-//│ >    else t@29#0
+//│ >    let $scrut@15 = member:Predef#666.id‹member:id›(0)
+//│ >    let t@16 = $scrut@15#0
+//│ >    else t@16#666

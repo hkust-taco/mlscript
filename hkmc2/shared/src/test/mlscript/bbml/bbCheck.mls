@@ -1,4 +1,5 @@
 :bbml
+//│ Type: ⊤
 
 
 fun add: (Int, Int) -> Int
@@ -9,30 +10,32 @@ fun add(x, y) = x + y
 :e
 fun foo: Int -> Int
 fun foo: Int -> Int
-//│ ╔══[ERROR] Duplicate definition of foo
+//│ ╔══[ERROR] Multiple declarations of symbol 'foo'
+//│ ╟── declared here
 //│ ║  l.11: 	fun foo: Int -> Int
 //│ ║        	    ^^^^^^^^^^^^^^^
-//│ ╟── aready defined here
-//│ ║  l.11: 	fun foo: Int -> Int
-//│ ╙──      	    ^^^
+//│ ╟── declared here
+//│ ║  l.12: 	fun foo: Int -> Int
+//│ ╙──      	    ^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
 :e
 fun id(x) = x
 fun id(y) = y
-//│ ╔══[ERROR] Duplicate definition of id
-//│ ║  l.22: 	fun id(y) = y
+//│ ╔══[ERROR] Multiple definitions of symbol 'id'
+//│ ╟── defined here
+//│ ║  l.23: 	fun id(x) = x
 //│ ║        	    ^^^^^^^^^
-//│ ╟── aready defined here
-//│ ║  l.22: 	fun id(y) = y
-//│ ╙──      	    ^^
+//│ ╟── defined here
+//│ ║  l.24: 	fun id(y) = y
+//│ ╙──      	    ^^^^^^^^^
 //│ Type: ⊤
 
 :e
 fun bar: Str -> Str
 fun bar(x) = let t = x + 1 in "aaa"
 //│ ╔══[ERROR] Type error in reference with expected type Int
-//│ ║  l.33: 	fun bar(x) = let t = x + 1 in "aaa"
+//│ ║  l.36: 	fun bar(x) = let t = x + 1 in "aaa"
 //│ ║        	                     ^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: ⊤
@@ -41,7 +44,7 @@ fun bar(x) = let t = x + 1 in "aaa"
 fun baz: Int -> Int
 fun baz(x) = "bbb"
 //│ ╔══[ERROR] Type error in string literal with expected type Int
-//│ ║  l.42: 	fun baz(x) = "bbb"
+//│ ║  l.45: 	fun baz(x) = "bbb"
 //│ ║        	             ^^^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: ⊤
@@ -56,7 +59,7 @@ add(1, 2): Int
 :e
 add(0, 0): Str
 //│ ╔══[ERROR] Type error in application with expected type Str
-//│ ║  l.57: 	add(0, 0): Str
+//│ ║  l.60: 	add(0, 0): Str
 //│ ║        	^^^^^^^^^
 //│ ╙── because: cannot constrain  Int  <:  Str
 //│ Type: Str
@@ -64,7 +67,7 @@ add(0, 0): Str
 :e
 fun errAdd(x: Int) = x + "1"
 //│ ╔══[ERROR] Type error in string literal with expected type Int
-//│ ║  l.65: 	fun errAdd(x: Int) = x + "1"
+//│ ║  l.68: 	fun errAdd(x: Int) = x + "1"
 //│ ║        	                         ^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: ⊤
@@ -86,11 +89,11 @@ high(x => x)
 :e
 high(x => x + 1)
 //│ ╔══[ERROR] Type error in reference with expected type Int
-//│ ║  l.87: 	high(x => x + 1)
+//│ ║  l.90: 	high(x => x + 1)
 //│ ║        	          ^
 //│ ╙── because: cannot constrain  <α>10_2  <:  Int
 //│ ╔══[ERROR] Type error in application with expected type <α>10_2
-//│ ║  l.87: 	high(x => x + 1)
+//│ ║  l.90: 	high(x => x + 1)
 //│ ║        	          ^^^^^
 //│ ╙── because: cannot constrain  Int  <:  <α>10_2
 //│ Type: Int
@@ -100,7 +103,7 @@ high(x => x + 1)
 
 :fixme
 (if false then x => x else y => y): [A] -> A -> A
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@101),LitPat(BoolLit(true)),Else(Lam(List(Param(‹›,x@102,None)),Ref(x@102)))),Else(Lam(List(Param(‹›,y@100,None)),Ref(y@100)))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@87),Lit(BoolLit(true)),Else(Lam(List(Param(‹›,x@88,None)),Ref(x@88)))),Else(Lam(List(Param(‹›,y@86,None)),Ref(y@86)))) (of class hkmc2.semantics.Split$Cons)
 
 
 fun baz: Int -> (([A] -> A -> A), Int) -> Int
@@ -115,9 +118,7 @@ fun baz(z) =
 
 :e
 baz: Int -> (([A] -> A -> A), Int) -> Int
-//│ ╔══[ERROR] Cannot type non-function term Ref(globalThis:block#17.baz) as (Int) ->{⊥} (forall α25_2: (α25_2) ->{⊥} α25_2, Int) ->{⊥} Int
-//│ ║  l.117: 	baz: Int -> (([A] -> A -> A), Int) -> Int
-//│ ╙──       	^^^
+//│ ═══[ERROR] Cannot type non-function term Sel(Ref(globalThis:block#17),Ident(baz)) as (Int) ->{⊥} (forall α25_2: (α25_2) ->{⊥} α25_2, Int) ->{⊥} Int
 //│ Type: ⊥
 
 
@@ -126,8 +127,8 @@ baz(42)
 
 :e
 baz(42): (([A] -> A -> A), Int) -> Int
-//│ ╔══[ERROR] Cannot type non-function term App(Ref(globalThis:block#17.baz),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))) as (forall α26_2: (α26_2) ->{⊥} α26_2, Int) ->{⊥} Int
-//│ ║  l.128: 	baz(42): (([A] -> A -> A), Int) -> Int
+//│ ╔══[ERROR] Cannot type non-function term App(Sel(Ref(globalThis:block#17),Ident(baz)),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))) as (forall α26_2: (α26_2) ->{⊥} α26_2, Int) ->{⊥} Int
+//│ ║  l.129: 	baz(42): (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^^^^^
 //│ Type: ⊥
 

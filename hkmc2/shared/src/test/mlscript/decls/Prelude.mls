@@ -1,0 +1,31 @@
+
+
+declare type Any
+declare type Nothing
+
+declare class Object
+declare class Bool
+declare class Int
+declare class Num
+declare class Str
+declare class Error(msg)
+
+declare module String
+
+// declare module Math // TODO: list members
+declare val Math // so we can, eg, `open { pow }` in the meantime
+
+declare val console
+declare val process
+declare val fs
+
+
+// TODO: rm
+
+declare fun log: (Any) -> ()
+
+declare fun error: Nothing
+
+declare fun concat: (Str, Str) -> Str
+
+

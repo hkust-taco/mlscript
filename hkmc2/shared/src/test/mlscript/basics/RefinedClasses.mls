@@ -1,35 +1,35 @@
 
 
-:fixme
+:todo
 class Foo { }
 //│ ═══[ERROR] Expected a valid definition head, found block instead
-//│ /!!!\ Uncaught error: scala.MatchError: Block(List()) (of class hkmc2.syntax.Tree$Block)
 
 :todo
 class Foo() {
   val x = 1
 }
 //│ ╔══[PARSE ERROR] Expected end of input; found curly brace section instead
-//│ ║  l.9: 	class Foo() {
+//│ ║  l.8: 	class Foo() {
 //│ ║       	            ^
-//│ ║  l.10: 	  val x = 1
-//│ ║        	^^^^^^^^^^^
-//│ ║  l.11: 	}
+//│ ║  l.9: 	  val x = 1
+//│ ║       	^^^^^^^^^^^
+//│ ║  l.10: 	}
 //│ ╙──      	^
 
 :todo
 class Foo()
   val x = 1
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.22: 	  val x = 1
+//│ ║  l.21: 	  val x = 1
 //│ ╙──      	^^
 
 :todo
 class Bar { val x: Int }
 //│ ╔══[PARSE ERROR] Expected end of input; found curly brace section instead
-//│ ║  l.28: 	class Bar { val x: Int }
+//│ ║  l.27: 	class Bar { val x: Int }
 //│ ╙──      	          ^^^^^^^^^^^^^^
 
+:todo
 class Foo() extends Bar { x = 1 } with
   val y = this.x
 

@@ -2,13 +2,19 @@
 
 
 import "../../mlscript-compile/Option.mls"
-//│ Option = Option { Some: [class Some], None: None {}, Both: [class Both] }
+
+
+Option.test()
+//│ > 2134
 
 
 open Option { isDefined }
 
 Option.None isDefined()
 //│ = false
+
+Option.Some(1) isDefined()
+//│ = true
 
 
 open Option
@@ -21,17 +27,37 @@ None isDefined()
 //│ Option.isDefined(Option.None)
 //│ = false
 
+:fixme
+case Some(x) then x
+//│ ╔══[PARSE ERROR] Expected block after `case` keyword; found identifier instead
+//│ ║  l.31: 	case Some(x) then x
+//│ ╙──      	     ^^^^
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Jux(Error(),App(Ident(Some),Tup(List(Ident(x))))),keyword 'then',Ident(x)) (of class hkmc2.syntax.Tree$InfixApp)
+
+case { Some(x) then x }
+//│ = [Function (anonymous)]
+
+Some(1) isDefined()
+//│ = true
+
+Some(1)
+  isDefined()
+//│ = true
+
+:sjs
 (new Some(1)) isDefined()
+//│ JS:
+//│ let tmp; tmp = new Option.Some.class(1); Option.isDefined(tmp)
 //│ = true
 
 :re
 new Some(1) isDefined()
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor Some cannot be invoked without 'new'
+//│ ═══[RUNTIME ERROR] TypeError: tmp1 is not a constructor
 
 :re
 new Some(1)
   isDefined()
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor Some cannot be invoked without 'new'
+//│ ═══[RUNTIME ERROR] TypeError: tmp1 is not a constructor
 
 
 open Option { Some, None, isDefined }
@@ -44,5 +70,26 @@ None isDefined()
 
 None == Option.None
 //│ = true
+
+
+:e
+Option.oops
+//│ ╔══[ERROR] Module 'Option' does not contain member 'oops'
+//│ ║  l.76: 	Option.oops
+//│ ╙──      	      ^^^^^
+
+:e
+open Option { oops }
+//│ ╔══[ERROR] Module 'Option' does not contain member 'oops'
+//│ ║  l.82: 	open Option { oops }
+//│ ╙──      	              ^^^^
+
+oops
+
+:e
+Option.None.oops
+//│ ╔══[ERROR] Module 'None' does not contain member 'oops'
+//│ ║  l.90: 	Option.None.oops
+//│ ╙──      	           ^^^^^
 
 

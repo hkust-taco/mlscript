@@ -8,10 +8,10 @@ in let folderName2 = process.cwd().split("/").pop()
 in folderName2 === folderName1 || folderName2 === "jvm"
 //│ JS:
 //│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
-//│ tmp = process.env.PWD.split("/");
+//│ tmp = this.process.env.PWD.split("/");
 //│ tmp1 = tmp.pop();
 //│ this.folderName1 = tmp1;
-//│ tmp2 = process.cwd();
+//│ tmp2 = this.process.cwd();
 //│ tmp3 = tmp2.split("/");
 //│ tmp4 = tmp3.pop();
 //│ this.folderName2 = tmp4;

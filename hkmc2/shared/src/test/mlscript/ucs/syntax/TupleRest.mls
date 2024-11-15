@@ -1,0 +1,19 @@
+// :parseOnly
+// :pt
+
+import "../../../mlscript-compile/Stack.mls"
+
+open Stack
+
+fun f(xs) = if xs is
+  [..xs] then 0
+  [...xs] then 1
+  [..[]] then 2
+  [...[]] then 3
+  [..Cons(x, xs)] then 4
+  [...Cons(x, xs)] then 5
+  [..] then 6
+  [...] then 7
+  [.., x] then 8
+  [..., x] then 9
+  [... , x] then 10

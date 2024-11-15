@@ -1,0 +1,54 @@
+:js
+
+import "../../../mlscript-compile/Option.mls"
+
+open Option
+
+// Normalization should unify fixed-length tuple patterns.
+fun sum_options(x, y) =
+  if [x, y] is
+    [Some(xv), Some(yv)] then xv + yv
+    [Some(xv), None]     then xv
+    [None,     Some(yv)] then yv
+    [None,     None]     then 0
+
+
+
+
+// ========================================================================== //
+
+
+// Normalization should also unify the sub-scrutinees at the same position of
+// tuple patterns of different lengths.
+
+
+fun foo(xs) = if xs is
+  [Some(x)] then x
+  [Some(y), ..rest] then y
+
+fun do_something(x) = "done"
+
+
+fun foo(zs) = if zs is
+  [Some(x), Some(y)] then x + y
+  [None, ..rest] then do_something(rest)
+
+:expect 4
+foo([Some(1), Some(3)])
+//│ = 4
+
+:expect 'done'
+foo([None, Some(1), Some(2)])
+//│ = 'done'
+
+:re
+foo([Some(0)])
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:re
+foo([Some(0), Some(1), Some(2)])
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:re
+foo([])
+//│ ═══[RUNTIME ERROR] Error: match error

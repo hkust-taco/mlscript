@@ -7,6 +7,9 @@ import Message.MessageContext
 import utils.TraceLogger
 import hkmc2.syntax.Literal
 import Keyword.{as, and, `else`, is, let, `then`}
+import collection.mutable.HashMap
+import Elaborator.{ctx, Ctxl}
+import hkmc2.semantics.Elaborator.Ctx.globalThisSymbol
 
 object Desugarer:
   extension (op: Keyword.Infix)
@@ -20,9 +23,15 @@ object Desugarer:
       case lhs and rhs => S((lhs, L(rhs)))
       case lhs `then` rhs => S((lhs, R(rhs)))
       case _ => N
+
+  class ScrutineeData:
+    val classes: HashMap[ClassSymbol, List[BlockLocalSymbol]] = HashMap.empty
+    val tupleLead: HashMap[Int, BlockLocalSymbol] = HashMap.empty
+    val tupleLast: HashMap[Int, BlockLocalSymbol] = HashMap.empty
 end Desugarer
 
-class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, state: Elaborator.State):
+class Desugarer(tl: TraceLogger, elaborator: Elaborator)
+    (using raise: Raise, state: Elaborator.State, c: Elaborator.Ctx):
   import Desugarer.*
   import Elaborator.Ctx
   import elaborator.term
@@ -57,16 +66,20 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ++ fallback)
         case Split.Else(_) /* impossible */ | Split.End => fallback)
 
-  import collection.mutable.HashMap
-
-  private val subScrutineeMap = HashMap.empty[BlockLocalSymbol, HashMap[ClassSymbol, List[BlockLocalSymbol]]]
+  private val subScrutineeMap = HashMap.empty[BlockLocalSymbol, ScrutineeData]
 
   extension (symbol: BlockLocalSymbol)
     def getSubScrutinees(cls: ClassSymbol): List[BlockLocalSymbol] =
-      subScrutineeMap.getOrElseUpdate(symbol, HashMap.empty).getOrElseUpdate(cls, {
-        val arity = cls.defn.flatMap(_.paramsOpt.map(_.length)).getOrElse(0)
-        (0 until arity).map(i => TempSymbol(nextUid, N, s"param$i")).toList
+      subScrutineeMap.getOrElseUpdate(symbol, new ScrutineeData).classes.getOrElseUpdate(cls, {
+        (0 until cls.arity).map(i => TempSymbol(nextUid, N, s"param$i")).toList
       })
+    def getTupleLeadSubScrutinee(index: Int): BlockLocalSymbol =
+      val data = subScrutineeMap.getOrElseUpdate(symbol, new ScrutineeData)
+      data.tupleLead.getOrElseUpdate(index, TempSymbol(nextUid, N, s"first$index"))
+    def getTupleLastSubScrutinee(index: Int): BlockLocalSymbol =
+      val data = subScrutineeMap.getOrElseUpdate(symbol, new ScrutineeData)
+      data.tupleLast.getOrElseUpdate(index, TempSymbol(nextUid, N, s"last$index"))
+      
 
   def default: Split => Sequel = split => _ => split
 
@@ -201,13 +214,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
       post = (res: Split) => s"termSplit: after op >>> $res"
     ):
       // Resolve the operator.
-      val opRef =
-        ctx.get(opName) match
-        case S(sym) => sym.ref(opIdent)
-        case N =>
-          raise(ErrorReport(msg"Name not found: $opName" -> tree.toLoc :: Nil))
-          Term.Error
-      .withLocOf(opIdent)
+      val opRef = term(opIdent)
       // Elaborate and finish the LHS. Nominate the LHS if necessary.
       nominate(ctx, finish(term(lhs)(using ctx))): lhsSymbol =>
         // Compose a function that takes the RHS and finishes the application.
@@ -354,6 +361,12 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
       raise(ErrorReport(msg"Unrecognized pattern split." -> tree.toLoc :: Nil))
       _ => _ => Split.default(Term.Error)
 
+  private lazy val tupleSlice =
+    term(Sel(Sel(Ident("globalThis"), Ident("Predef")), Ident("tupleSlice")))
+
+  private lazy val tupleGet =
+    term(Sel(Sel(Ident("globalThis"), Ident("Predef")), Ident("tupleGet")))
+
   /** Elaborate a single match (a scrutinee and a pattern) and forms a split
    *  with an innermost split as the sequel of the match.
    *  @param scrutSymbol the symbol representing the scrutinee
@@ -373,54 +386,108 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)(using raise: Raise, sta
           val ctxWithAlias = ctx + (alias.name -> aliasSymbol)
           Split.Let(aliasSymbol, ref, sequel(ctxWithAlias))
         expandMatch(scrutSymbol, pat, inner)(fallback)
-      // A single variable pattern or constructor pattern without parameters.
-      case ctor: Ident => fallback => ctx => ctx.get(ctor.name) match
-        case S(sym: ClassSymbol) => // TODO: refined
-          Branch(ref, Pattern.Class(sym, N, false)(ctor), sequel(ctx)) ~: fallback
-        case S(_: VarSymbol) | N =>
-          // If the identifier refers to a variable or nothing, we interpret it
-          // as a variable pattern. If `fallback` is not used when `sequel`
-          // is full, then we raise an error.
-          val aliasSymbol = VarSymbol(ctor, nextUid)
-          val ctxWithAlias = ctx + (ctor.name -> aliasSymbol)
-          Split.Let(aliasSymbol, ref, sequel(ctxWithAlias) ++ fallback)
-        case S(_) =>
+      case id @ Ident(nme) if nme.headOption.forall(_.isLower) => fallback => ctx =>
+        val aliasSymbol = VarSymbol(id, nextUid)
+        val ctxWithAlias = ctx + (nme -> aliasSymbol)
+        Split.Let(aliasSymbol, ref, sequel(ctxWithAlias) ++ fallback)
+      case ctor @ (_: Ident | _: Sel) => fallback => ctx =>
+        val clsTrm = elaborator.cls(ctor)
+        clsTrm.symbol.flatMap(_.asClsLike) match
+        case S(cls: ClassSymbol) =>
+            Branch(ref, Pattern.ClassLike(cls, clsTrm, N, false)(ctor), sequel(ctx)) ~: fallback
+        case S(cls: ModuleSymbol) =>
+          Branch(ref, Pattern.ClassLike(cls, clsTrm, N, false)(ctor), sequel(ctx)) ~: fallback
+        case N =>
           // Raise an error and discard `sequel`. Use `fallback` instead.
-          raise(ErrorReport(msg"Unknown symbol `${ctor.name}`." -> ctor.toLoc :: Nil))
+          raise(ErrorReport(msg"Cannot use this ${ctor.describe} as a pattern" -> ctor.toLoc :: Nil))
           fallback
-      // A single constructor pattern.
-      case pat @ App(ctor: Ident, Tup(args)) => fallback => ctx => trace(
-        pre = s"expandMatch <<< ${ctor.name}(${args.iterator.map(_.showDbg).mkString(", ")})",
+      case Tree.Tup(args) => fallback => ctx => trace(
+        pre = s"expandMatch <<< ${args.mkString(", ")}",
         post = (r: Split) => s"expandMatch >>> ${r.showDbg}"
       ):
-        ctx.get(ctor.name) match
-          case S(cls: ClassSymbol) =>
-            val arity = cls.defn.flatMap(_.paramsOpt.map(_.length)).getOrElse(0)
-            if args.length =/= arity then
-              val n = arity.toString
-              val m = args.length.toString
-              raise(ErrorReport(msg"mismatched arity: expect $n, found $m" -> pat.toLoc :: Nil))
-            val params = scrutSymbol.getSubScrutinees(cls)
-            val clsRef = cls.ref(ctor)
-            Branch(
-              ref,
-              Pattern.Class(cls, S(params), false)(ctor), // TODO: refined?
-              subMatches(params zip args, sequel)(Split.End)(ctx)
-            ) ~: fallback
-          case _ =>
-            // Raise an error and discard `sequel`. Use `fallback` instead.
-            raise(ErrorReport(msg"Unknown constructor `${ctor.name}`." -> ctor.toLoc :: Nil))
-            fallback
+        // Break tuple into three parts:
+        // 1. A fixed number of leading patterns.
+        // 2. A variable number of middle patterns indicated by `..`.
+        // 3. A fixed number of trailing patterns.
+        val (lead, rest) = args.foldLeft[(Ls[Tree], Opt[(Opt[Tree], Ls[Tree])])]((Nil, N)):
+          case ((lead, N), Spread(_, _, patOpt)) => (lead, S((patOpt, Nil)))
+          case ((lead, N), pat) => (lead :+ pat, N)
+          case ((lead, S((rest, last))), pat) => (lead, S((rest, last :+ pat)))
+        // Some helper functions. TODO: deduplicate
+        def int(i: Int) = Term.Lit(IntLit(BigInt(i)))
+        def fld(t: Term) = Fld(FldFlags.empty, t, N)
+        def tup(xs: Fld*) = Term.Tup(xs.toList)(Tup(Nil))
+        def app(lhs: Term, rhs: Term, sym: FlowSymbol) = Term.App(lhs, rhs)(Tree.App(Tree.Empty(), Tree.Empty()), sym)
+        def getLast(i: Int) = TempSymbol(nextUid, N, s"last$i")
+        // `wrap`: add let bindings for tuple elements
+        // `matches`: pairs of patterns and symbols to be elaborated
+        val (wrapRest, restMatches) = rest match
+          case S((rest, last)) =>
+            val (wrapLast, reversedLastMatches) = last.reverseIterator.zipWithIndex
+              .foldLeft[(Split => Split, Ls[(BlockLocalSymbol, Tree)])]((identity, Nil)):
+                case ((wrapInner, matches), (pat, lastIndex)) =>
+                  val sym = scrutSymbol.getTupleLastSubScrutinee(lastIndex)
+                  val wrap = (split: Split) =>
+                    Split.Let(sym, app(tupleGet, tup(fld(ref), fld(int(-1 - lastIndex))), sym), wrapInner(split))
+                  (wrap, (sym, pat) :: matches)
+            val lastMatches = reversedLastMatches.reverse
+            rest match
+              case N => (wrapLast, lastMatches)
+              case S(pat) =>
+                val sym = TempSymbol(nextUid, N, "rest")
+                val wrap = (split: Split) =>
+                  Split.Let(sym, app(tupleSlice, tup(fld(ref), fld(int(lead.length)), fld(int(last.length))), sym), wrapLast(split))
+                (wrap, (sym, pat) :: lastMatches)
+          case N => (identity: Split => Split, Nil)
+        val (wrap, matches) = lead.zipWithIndex.foldRight((wrapRest, restMatches)):
+          case ((pat, i), (wrapInner, matches)) =>
+            val sym = scrutSymbol.getTupleLeadSubScrutinee(i)
+            val wrap = (split: Split) => Split.Let(sym, Term.Sel(ref, Ident(s"$i"))(N), wrapInner(split))
+            (wrap, (sym, pat) :: matches)
+        Branch(
+          ref,
+          Pattern.Tuple(lead.length + rest.fold(0)(_._2.length), rest.isDefined),
+          wrap(subMatches(matches, sequel)(Split.End)(ctx))
+        ) ~: fallback
+      // A single constructor pattern.
+      case pat @ App(ctor @ (_: Ident | _: Sel), Tup(args)) => fallback => ctx => trace(
+        pre = s"expandMatch <<< ${ctor}(${args.iterator.map(_.showDbg).mkString(", ")})",
+        post = (r: Split) => s"expandMatch >>> ${r.showDbg}"
+      ):
+        val clsTrm = elaborator.cls(ctor)
+        clsTrm.symbol.flatMap(_.asClsLike) match
+        case S(cls: ClassSymbol) =>
+          val arity = cls.arity
+          if arity =/= args.length then
+            val m = args.length.toString
+            ErrorReport:
+              if arity == 0 then
+                msg"the constructor does not take any arguments but found $m" -> pat.toLoc :: Nil
+              else
+                msg"mismatched arity: expect ${arity.toString}, found $m" -> pat.toLoc :: Nil
+          val params = scrutSymbol.getSubScrutinees(cls)
+          Branch(
+            ref,
+            Pattern.ClassLike(cls, clsTrm, S(params), false)(ctor), // TODO: refined?
+            subMatches(params zip args, sequel)(Split.End)(ctx)
+          ) ~: fallback
+        case _ =>
+          // Raise an error and discard `sequel`. Use `fallback` instead.
+          raise(ErrorReport(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc :: Nil))
+          fallback
       // A single literal pattern
       case literal: Literal => fallback => ctx => trace(
         pre = s"expandMatch: literal <<< $literal",
         post = (r: Split) => s"expandMatch: literal >>> ${r.showDbg}"
       ):
-        Branch(ref, Pattern.LitPat(literal), sequel(ctx)) ~: fallback
+        Branch(ref, Pattern.Lit(literal), sequel(ctx)) ~: fallback
       // A single pattern in conjunction with more conditions
       case pattern and consequent => fallback => ctx => 
         val innerSplit = termSplit(consequent, identity)(Split.End)
         expandMatch(scrutSymbol, pattern, innerSplit)(fallback)(ctx)
+      case Jux(Ident(".."), Ident(_)) => fallback => _ =>
+        raise(ErrorReport(msg"Illgeal rest pattern." -> pattern.toLoc :: Nil))
+        fallback
       case _ => fallback => _ =>
         // Raise an error and discard `sequel`. Use `fallback` instead.
         raise(ErrorReport(msg"Unrecognized pattern." -> pattern.toLoc :: Nil))

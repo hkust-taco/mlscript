@@ -18,16 +18,18 @@ new
   Foo
 //│ = Foo {}
 
+// * Interesting... it tries to call `Foo()` and instantiate the resulting class value...
+:re
 new
   Foo()
-//│ = Foo {}
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
 
 :todo
 new
   Foo
     ()
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
-//│ ║  l.28: 	    ()
+//│ ║  l.30: 	    ()
 //│ ╙──      	    ^^
 //│ = Foo {}
 

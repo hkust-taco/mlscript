@@ -1,13 +1,15 @@
 package hkmc2
 
+import java.io.{BufferedWriter, BufferedReader, InputStreamReader, OutputStreamWriter}
+
 import mlscript.utils.*, shorthands.*
 import hkmc2.utils.*
 
 /**
  * A helper class to manipulate an interactive Node.js process.
  */
-class ReplHost(using TL) {
-  import java.io.{BufferedWriter, BufferedReader, InputStreamReader, OutputStreamWriter}
+class ReplHost(rootPath: Str)(using TL) {
+  
   private val builder = new java.lang.ProcessBuilder()
   // `--interactive` always enters the REPL even if stdin is not a terminal
   builder.command("node", "--interactive")
@@ -16,11 +18,12 @@ class ReplHost(using TL) {
   private val stdin = new BufferedWriter(new OutputStreamWriter(proc.getOutputStream))
   private val stdout = new BufferedReader(new InputStreamReader(proc.getInputStream))
   private val stderr = new BufferedReader(new InputStreamReader(proc.getErrorStream))
-
+  
   // Skip the welcome message.
   collectUntilPrompt()
   execute("console.info = console.error")
-
+  execute(s"process.chdir('$rootPath')")
+  
   /**
    * This function simply collects output from Node.js until meeting `"\n> "`.
    * It is useful to skip the welcome message and collect REPL reply from

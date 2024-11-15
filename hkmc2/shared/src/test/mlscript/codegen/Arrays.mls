@@ -9,6 +9,13 @@ let empty = []
 
 empty.0
 
+let single = [1]
+//│ single = [ 1 ]
+
+single.0
+//│ = 1
+
+
 val single = [1]
 //│ single = [ 1 ]
 
@@ -26,6 +33,9 @@ pair.1
 
 val triple = [1, 2, 3]
 //│ triple = [ 1, 2, 3 ]
+
+triple.2
+//│ = 3
 
 triple.3
 

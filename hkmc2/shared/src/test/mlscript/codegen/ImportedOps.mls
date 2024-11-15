@@ -1,0 +1,31 @@
+:js
+
+
+module M with
+  fun (~) concat(a, b) = a + b
+
+open M
+
+:sjs
+fun foo() =
+  "a" ~ "b" ~ "c"
+foo()
+//│ JS:
+//│ function foo() {
+//│   let tmp;
+//│   tmp = globalThis.M.concat("a", "b");
+//│   return globalThis.M.concat(tmp, "c");
+//│ }
+//│ this.foo()
+//│ = 'abc'
+
+let name = "_"
+//│ name = '_'
+
+let display(balance) = balance
+//│ display = [Function (anonymous)]
+
+"b" ~ display("-")
+//│ = 'b-'
+
+

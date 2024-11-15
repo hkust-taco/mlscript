@@ -3,7 +3,7 @@
 
 :pe
 new
-//│ ╔══[PARSE ERROR] Expected expression after `new` keyword; found end of input instead
+//│ ╔══[PARSE ERROR] Expected expression or block after `new` keyword; found end of input instead
 //│ ║  l.5: 	new
 //│ ╙──     	   ^
 
@@ -11,25 +11,36 @@ new
 new 2
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not a constructor
 
+:sjs
 :ge
 new 2 + 2
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '+'
+//│ ═══[COMPILATION ERROR] Illegal reference to builtin symbol '+'
+//│ JS:
+//│ new (()=>{throw globalThis.Error("Illegal reference to builtin symbol '+'")})()(2, 2)
+//│ ═══[RUNTIME ERROR] TypeError: (intermediate value) is not a constructor
 
 :re
 new()
 //│ ═══[RUNTIME ERROR] TypeError: undefined is not a constructor
 
-:pe
+:re
 new {}
-//│ ╔══[PARSE ERROR] Expected expression after `new` keyword; found end of block instead
-//│ ║  l.23: 	new {}
-//│ ╙──      	    ^^
+//│ ═══[RUNTIME ERROR] TypeError: undefined is not a constructor
 
-// FIXME the error...
+
+// * Note that thanks to the parser "feature" for keyword-block stutter
+// * this used to parse as `((new x) = 1)`;
+// * it no longer does, since I make `new` accept `exprOrBlk`
+:pt
 :todo
 new { x = 1 }
-//│ ╔══[ERROR] Wrong number of type arguments
-//│ ║  l.30: 	new { x = 1 }
+//│ Parsed tree:
+//│ New of Block of Ls of 
+//│   Def:
+//│     lhs = Ident of "x"
+//│     rhs = IntLit of 1
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.36: 	new { x = 1 }
 //│ ╙──      	      ^
 
 

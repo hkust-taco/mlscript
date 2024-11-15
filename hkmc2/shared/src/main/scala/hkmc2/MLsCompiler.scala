@@ -10,7 +10,7 @@ import hkmc2.semantics.Elaborator
 import hkmc2.syntax.Keyword.`override`
 
 
-class MLsCompiler(predefFile: os.Path):
+class MLsCompiler(preludeFile: os.Path):
   
   
   given raise: Raise = d =>
@@ -45,8 +45,10 @@ class MLsCompiler(predefFile: os.Path):
     val res = p.parseAll(p.block(allowNewlines = true))
     given Elaborator.State = new Elaborator.State
     given Elaborator.Ctx = Elaborator.Ctx.init.nest(N)
-    val elab = Elaborator(etl, file / os.up)
-    val (blk, newCtx) = elab.importFrom(res)
+    val wd = file / os.up
+    val elab = Elaborator(etl, wd)
+    val resBlk = new syntax.Tree.Block(res)
+    val (blk, newCtx) = elab.importFrom(resBlk)
     val low = ltl.givenIn:
       codegen.Lowering()
     val jsb = codegen.js.JSBuilder()
@@ -55,7 +57,7 @@ class MLsCompiler(predefFile: os.Path):
       codegen.js.Scope.empty
     val nestedScp = baseScp.nest
     val je = nestedScp.givenIn:
-      jsb.program(le, S(file.baseName))
+      jsb.program(le, S(file.baseName), wd)
     val jsStr = je.stripBreaks.mkString(100)
     val out = file / os.up / (file.baseName + ".mjs")
     os.write.over(out, jsStr)

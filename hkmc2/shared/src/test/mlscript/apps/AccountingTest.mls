@@ -1,0 +1,68 @@
+:js
+
+import "../../mlscript-compile/apps/Accounting.mls"
+
+
+val acc = new Accounting
+//│ > Accounting {
+//│ >   warnings: [],
+//│ >   Project: [Function: Project] { class: [class Project] },
+//│ >   Line: [Function: Line] { class: [class Line] },
+//│ >   lines: [],
+//│ >   Report: [Function: Report] { class: [class Report] }
+//│ acc = }
+
+val proj = acc.Project("P1")
+//│ proj = Project { num: 'P1' }
+
+val l1 = acc.mkLine("L1", proj, 200_000, true)
+val l2 = acc.mkLine("L2", proj, 1_000_000, true)
+//│ > Line {
+//│ >   name: 'L1',
+//│ >   proj: Project { num: 'P1' },
+//│ >   starting_balance: 200000,
+//│ >   isMatchable: true,
+//│ >   balance: 200000
+//│ l1 = }
+//│ > Line {
+//│ >   name: 'L2',
+//│ >   proj: Project { num: 'P1' },
+//│ >   starting_balance: 1000000,
+//│ >   isMatchable: true,
+//│ >   balance: 1000000
+//│ l2 = }
+
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+acc.process of "out/apps/AccountingTest.md", report => ...
+
+
+report.snapShot of "Initial"
+
+l1.expense(33_880.87)
+l2.expense(666_666) // Luyu's juicy post-PQE salary
+
+
+report.snapShot of "Y1"
+
+l1.expense(10_000)
+l2.expense(200_000)
+
+
+report.snapShot of "Y2"
+
+l1.expense(10_000)
+l2.expense(130_000)
+
+
+report.snapShot of "Y3"
+
+l1.mustBeEmpty()
+l2.mustBeEmpty()
+
+
+//│ > Report written to out/apps/AccountingTest.md
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+
