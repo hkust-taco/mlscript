@@ -96,9 +96,9 @@ class JSBuilder extends CodeBuilder:
         case _ => result(fun)
       doc"${base}(${args.map(result).mkDocument(", ")})"
     case Value.Lam(ps, bod) => scope.nest givenIn:
-      val vars = ps.map(p => scope.allocateName(p.sym)).mkDocument(", ")
-      doc"($vars) => { #{  # ${
-        body(bod)
+      val (params, bodyDoc) = handleFunction(ps, bod)
+      doc"($params) => { #{  # ${
+        bodyDoc
       } #}  # }"
     case Select(qual, id) =>
       val name = id.name
@@ -145,11 +145,11 @@ class JSBuilder extends CodeBuilder:
           case FunDefn(sym, Nil, body) =>
             TODO("getters")
           case FunDefn(sym, ParamList(_, ps) :: pss, bod) =>
-            val paramList = ps.map(p => scope.allocateName(p.sym)).mkDocument(", ")
             val result = pss.foldRight(bod):
               case (ParamList(_, ps), block) => 
                 Return(Lam(ps, block), false)
-            doc"function ${sym.nme}(${paramList}) { #{  # ${body(result)} #}  # }"
+            val (params, bodyDoc) = handleFunction(ps, result)
+            doc"function ${sym.nme}($params) { #{  # ${bodyDoc} #}  # }"
           case ClsLikeDefn(sym, syntax.Cls, mtds, flds, ctor) =>
             val clsDefn = sym.defn.getOrElse(die)
             val clsParams = clsDefn.paramsOpt.getOrElse(Nil)
@@ -166,12 +166,12 @@ class JSBuilder extends CodeBuilder:
               } #}  # }${
                 mtds.map: 
                   case td @ FunDefn(_, ParamList(_, ps) :: pss, bod) =>
-                    val vars = ps.map(p => scope.allocateName(p.sym)).mkDocument(", ")
                     val result = pss.foldRight(bod):
                       case (ParamList(_, ps), block) => 
                         Return(Lam(ps, block), false)
-                    doc" # ${td.sym.nme}($vars) { #{  # ${
-                      body(result)
+                    val (params, bodyDoc) = handleFunction(ps, result)
+                    doc" # ${td.sym.nme}($params) { #{  # ${
+                      bodyDoc
                     } #}  # }"
                 .mkDocument(" ")
               }${
@@ -329,7 +329,12 @@ class JSBuilder extends CodeBuilder:
   def body(t: Block)(using Raise, Scope): Document = scope.nest givenIn:
     block(t)
   
-  
+  def handleFunction(ps: List[semantics.Param], b: Block)(using Raise, Scope): (Document, Document) =
+    val params = ps.map(p => scope.allocateName(p.sym)).mkDocument(", ")
+    (params, body(b))
+
+
+
 object JSBuilder:
   import scala.util.matching.Regex
   

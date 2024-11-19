@@ -1,0 +1,184 @@
+:js
+
+
+
+:sjs
+:jsSanityCheck
+fun f(x, y) = x + y
+f(2, 3)
+//│ JS:
+//│ function f(...args_x_y) {
+//│   if (args_x_y.length !== 2) { throw new globalThis.Error('got ' + args_x_y.length + ' arguments, expecting ' + 2) }
+//│   const x = args_x_y[0];
+//│   const y = args_x_y[1];
+//│   return x + y;
+//│ }
+//│ this.f(2, 3)
+//│ = 5
+
+
+:sjs
+fun f(x, y) = x + y
+f(2)
+//│ JS:
+//│ function f(x, y) { return x + y; } this.f(2)
+//│ = NaN
+
+:sjs
+:re
+:jsSanityCheck
+fun f(x, y) = x + y
+f(2)
+//│ JS:
+//│ function f(...args_x_y) {
+//│   if (args_x_y.length !== 2) { throw new globalThis.Error('got ' + args_x_y.length + ' arguments, expecting ' + 2) }
+//│   const x = args_x_y[0];
+//│   const y = args_x_y[1];
+//│   return x + y;
+//│ }
+//│ this.f(2)
+//│ ═══[RUNTIME ERROR] Error: got 1 arguments, expecting 2
+
+
+:sjs
+:re
+:jsSanityCheck
+fun f(x)(y, z) = x + y + z
+f(3)(4)
+//│ JS:
+//│ let tmp;
+//│ function f(...args_x) {
+//│   if (args_x.length !== 1) { throw new globalThis.Error('got ' + args_x.length + ' arguments, expecting ' + 1) }
+//│   const x = args_x[0];
+//│   return (...args_y_z) => {
+//│     if (args_y_z.length !== 2) { throw new globalThis.Error('got ' + args_y_z.length + ' arguments, expecting ' + 2) }
+//│     const y = args_y_z[0];
+//│     const z = args_y_z[1];
+//│     let tmp1;
+//│     tmp1 = x + y;
+//│     return tmp1 + z;
+//│   };
+//│ }
+//│ tmp = this.f(3);
+//│ tmp(4)
+//│ ═══[RUNTIME ERROR] Error: got 1 arguments, expecting 2
+
+
+:sjs
+let f = (x, y) => x + y
+f(2)
+//│ JS:
+//│ this.f = (x, y) => { return x + y; }; this.f(2)
+//│ = NaN
+//│ f = [Function (anonymous)]
+
+:sjs
+:re
+:jsSanityCheck
+let f = (x, y) => x + y
+f(2)
+//│ JS:
+//│ this.f = (...args_x_y) => {
+//│   if (args_x_y.length !== 2) { throw new globalThis.Error('got ' + args_x_y.length + ' arguments, expecting ' + 2) }
+//│   const x = args_x_y[0];
+//│   const y = args_x_y[1];
+//│   return x + y;
+//│ };
+//│ this.f(2)
+//│ ═══[RUNTIME ERROR] Error: got 1 arguments, expecting 2
+//│ f = [Function (anonymous)]
+
+
+:sjs
+class Cls(x, y) with
+  fun f(z, p) = x + y + z + p
+Cls(1, 2).f(3)
+//│ JS:
+//│ let tmp;
+//│ this.Cls = function Cls(x1, y1) { return new Cls.class(x1, y1); };
+//│ this.Cls.class = class Cls {
+//│   constructor(x, y) {
+//│     this.x = x;
+//│     this.y = y;
+//│     
+//│   }
+//│   f(z, p) {
+//│     let tmp1, tmp2;
+//│     tmp1 = this.x + this.y;
+//│     tmp2 = tmp1 + z;
+//│     return tmp2 + p;
+//│   }
+//│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
+//│ };
+//│ tmp = this.Cls(1, 2);
+//│ tmp.f(3)
+//│ = NaN
+
+:sjs
+:re
+:jsSanityCheck
+class Cls(x, y) with
+  fun f(z, p) = x + y + z + p
+Cls(1, 2).f(3)
+//│ JS:
+//│ let tmp;
+//│ this.Cls = function Cls(x1, y1) { return new Cls.class(x1, y1); };
+//│ this.Cls.class = class Cls {
+//│   constructor(x, y) {
+//│     this.x = x;
+//│     this.y = y;
+//│     
+//│   }
+//│   f(...args_z_p) {
+//│     if (args_z_p.length !== 2) { throw new globalThis.Error('got ' + args_z_p.length + ' arguments, expecting ' + 2) }
+//│     const z = args_z_p[0];
+//│     const p = args_z_p[1];
+//│     let tmp1, tmp2;
+//│     tmp1 = this.x + this.y;
+//│     tmp2 = tmp1 + z;
+//│     return tmp2 + p;
+//│   }
+//│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
+//│ };
+//│ tmp = this.Cls(1, 2);
+//│ tmp.f(3)
+//│ ═══[RUNTIME ERROR] Error: got 1 arguments, expecting 2
+
+
+:sjs
+:re
+:jsSanityCheck
+class Cls(x, y) with
+  fun f(z, p)(q, s) = x + y + z + p + q + s
+Cls(1, 2).f(3, 4)(5)
+//│ JS:
+//│ let tmp, tmp1;
+//│ this.Cls = function Cls(x1, y1) { return new Cls.class(x1, y1); };
+//│ this.Cls.class = class Cls {
+//│   constructor(x, y) {
+//│     this.x = x;
+//│     this.y = y;
+//│     
+//│   }
+//│   f(...args_z_p) {
+//│     if (args_z_p.length !== 2) { throw new globalThis.Error('got ' + args_z_p.length + ' arguments, expecting ' + 2) }
+//│     const z = args_z_p[0];
+//│     const p = args_z_p[1];
+//│     return (...args_q_s) => {
+//│       if (args_q_s.length !== 2) { throw new globalThis.Error('got ' + args_q_s.length + ' arguments, expecting ' + 2) }
+//│       const q = args_q_s[0];
+//│       const s = args_q_s[1];
+//│       let tmp2, tmp3, tmp4, tmp5;
+//│       tmp2 = this.x + this.y;
+//│       tmp3 = tmp2 + z;
+//│       tmp4 = tmp3 + p;
+//│       tmp5 = tmp4 + q;
+//│       return tmp5 + s;
+//│     };
+//│   }
+//│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
+//│ };
+//│ tmp = this.Cls(1, 2);
+//│ tmp1 = tmp.f(3, 4);
+//│ tmp1(5)
+//│ ═══[RUNTIME ERROR] Error: got 1 arguments, expecting 2

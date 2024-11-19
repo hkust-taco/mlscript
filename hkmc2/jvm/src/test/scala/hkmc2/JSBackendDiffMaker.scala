@@ -4,7 +4,12 @@ import scala.collection.mutable
 
 import mlscript.utils.*, shorthands.*
 import utils.*
-
+import codegen.js.JSBuilder
+import document.*
+import codegen.Block
+import codegen.js.Scope
+import hkmc2.syntax.Tree.Ident
+import hkmc2.codegen.Path
 
 abstract class JSBackendDiffMaker extends MLsDiffMaker:
   
@@ -13,6 +18,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val sjs = NullaryCommand("sjs")
   val showRepl = NullaryCommand("showRepl")
   val silent = NullaryCommand("silent")
+  val jsSanityCheck = NullaryCommand("jsSanityCheck")
   val expect = Command("expect"): ln =>
     ln.trim
   
@@ -42,7 +48,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     if js.isSet then
       val low = ltl.givenIn:
         codegen.Lowering()
-      val jsb = codegen.js.JSBuilder()
+      val jsb = if jsSanityCheck.isSet then JSBuilderSanityCheck() else JSBuilder()
       import semantics.*
       import codegen.*
       val le = low.program(blk)
@@ -115,4 +121,14 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         mkQuery(s"$nme ", jsStr)
       
       
+
+
+class JSBuilderSanityCheck extends JSBuilder:
+  override def handleFunction(ps: List[semantics.Param], b: Block)(using Raise, Scope): (Document, Document) =
+    val params = ps.map(p => Scope.scope.allocateName(p.sym))
+    val paramsStr = doc"args_" :: params.mkDocument("_")
+    val checkArgsNum = doc"if ($paramsStr.length !== ${ps.length}) { throw new globalThis.Error('got ' + $paramsStr.length + ' arguments, expecting ' + ${ps.length}) }\n"
+    val paramsAssign = params.zipWithIndex.map{(nme, i) =>
+      doc"const ${nme} = ${paramsStr}[$i];\n"}.mkDocument("")
+    (doc"...$paramsStr", doc"$checkArgsNum$paramsAssign${body(b)}")
 
