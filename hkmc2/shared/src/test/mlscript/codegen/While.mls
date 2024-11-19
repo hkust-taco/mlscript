@@ -197,14 +197,14 @@ fun f(ls) =
   else log("Done!")
 //│ JS:
 //│ function f(ls) {
-//│   let ls1, param0, param1, h, tl, tmp;
+//│   let param0, param1, h, tl, tmp;
 //│   tmp1: while (true) {
-//│     if (ls1 instanceof globalThis.Cons.class) {
-//│       param0 = ls1.hd;
-//│       param1 = ls1.tl;
+//│     if (ls instanceof globalThis.Cons.class) {
+//│       param0 = ls.hd;
+//│       param1 = ls.tl;
 //│       h = param0;
 //│       tl = param1;
-//│       ls1 = tl;
+//│       ls = tl;
 //│       tmp = globalThis.log(h);
 //│       continue tmp1;
 //│     } else {
@@ -220,9 +220,13 @@ f(0)
 //│ > Done!
 
 f(Cons(1, 0))
+//│ > 1
 //│ > Done!
 
 f(Cons(1, Cons(2, Cons(3, 0))))
+//│ > 1
+//│ > 2
+//│ > 3
 //│ > Done!
 
 
@@ -239,7 +243,7 @@ while log("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.239: 	  then 0(0)
+//│ ║  l.243: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ═══[ERROR] Unrecognized term split (false literal).
 //│ ═══[RUNTIME ERROR] Error: match error
