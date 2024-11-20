@@ -219,6 +219,9 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val resTy = freshVar
       constrain(lhsTy, FunType(rhsTy.reverse, resTy, Bot)) // TODO: right
       (resTy, lhsCtx | rhsCtx, lhsEff | rhsEff)
+    case sel @ Term.Sel(Term.Ref(_: TopLevelSymbol), _) if sel.symbol.isDefined =>
+      val (opTy, eff) = typeCheck(Ref(sel.symbol.get)(sel.nme, 666)) // FIXME 666
+      (tryMkMono(opTy, sel), Bot, eff)
     case Term.Unquoted(body) =>
       val (ty, eff) = typeCheck(body)
       val tv = freshVar

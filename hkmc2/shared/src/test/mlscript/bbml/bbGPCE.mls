@@ -14,9 +14,8 @@ fun id: [A] -> A -> A
 fun id(x) = x
 //│ Type: ⊤
 
-:fixme // FIXME[CY]
+
 run(x `=> id(x) `* x)
-//│ ═══[ERROR] Cannot quote Sel(Ref(globalThis:import#bbPredef),Ident(*))
 //│ Type: ⊤
 
 :fixme
@@ -34,15 +33,14 @@ show
 //│ Type: (CodeBase[?, ?, ?]) ->{⊥} Str
 
 
-:fixme // FIXME[CY]
+
 fun inc(dbg) =
   x `=> let c = x `+ `1 in let t = dbg(c) in c
 inc
-//│ ═══[ERROR] Cannot quote Sel(Ref(globalThis:import#bbPredef),Ident(+))
-//│ Type: forall α34_2: (CodeBase[⊥, ?, ?] ->{α34_2} ⊤) ->{α34_2} CodeBase[out ⊤ -> ⊥, ⊥, ?]
+//│ Type: forall α34_2: (CodeBase[out Int, ?, ?] ->{α34_2} ⊤) ->{α34_2} CodeBase[out Int -> Int, ⊥, ?]
 
 inc(c => log(show(c)))
-//│ Type: CodeBase[out ⊤ -> ⊥, ⊥, ?]
+//│ Type: CodeBase[out Int -> Int, ⊥, ?]
 
 :fixme
 fun body: [T, C] -> (CodeBase[out Int, out T, out Any], CodeBase[out Int, out C, out Any]) -> Int -> CodeBase[out Int, out T | C, out Any]

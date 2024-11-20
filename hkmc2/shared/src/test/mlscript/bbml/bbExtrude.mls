@@ -32,10 +32,11 @@ g
 g(foo)
 //│ Type: (⊤) ->{⊥} Int
 
-:e
+
 y `=> (let t = run(x `=> x `+ y) in y)
-//│ ═══[ERROR] Cannot quote Sel(Ref(globalThis:import#bbPredef),Ident(+))
 //│ Type: CodeBase[out α26_3 -> α26_3, ⊥, ?]
+//│ Where:
+//│   α26_3 <: Int
 
 class C[A](m: A, n: A -> Int)
 //│ Type: ⊤
