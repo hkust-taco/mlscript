@@ -5,7 +5,15 @@
 fun test(x) =
   [this.a, x]
 //│ JS:
-//│ function test(x) { return [ globalThis.a, x ]; } undefined
+//│ function test(...args) {
+//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   let x = args[0];
+//│   return [
+//│     globalThis.a,
+//│     x
+//│   ];
+//│ }
+//│ undefined
 
 test(123)
 //│ = [ undefined, 123 ]
@@ -28,10 +36,14 @@ module Test with
 //│   constructor() {
 //│     this.a = 2;
 //│   }
-//│   test1(x) {
+//│   test1(...args) {
+//│     if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│     let x = args[0];
 //│     return globalThis.test(x);
 //│   } 
-//│   test2(x1) {
+//│   test2(...args1) {
+//│     if (args1.length !== 1) { throw new globalThis.Error('got ' + args1.length + ' arguments, expecting ' + 1) }
+//│     let x1 = args1[0];
 //│     return [
 //│       this.a,
 //│       x1

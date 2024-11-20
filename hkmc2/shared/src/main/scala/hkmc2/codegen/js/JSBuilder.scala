@@ -422,7 +422,7 @@ object JSBuilder:
 end JSBuilder
 
 
-trait JSBuilderSanityChecks(val instrument: Bool) extends JSBuilder:
+trait JSBuilderSanityChecks(instrument: Bool) extends JSBuilder:
   
   val functionParamVarargSymbol = semantics.TempSymbol(0, N, "args")
   

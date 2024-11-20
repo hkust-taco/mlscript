@@ -10,7 +10,9 @@ fun isDefined(x) = if x is
   Some then true
   None then false
 //│ JS:
-//│ function isDefined(x) {
+//│ function isDefined(...args) {
+//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   let x = args[0];
 //│   if (x instanceof globalThis.Some.class) {
 //│     return true;
 //│   } else {
@@ -35,7 +37,9 @@ val isDefined = case
   Some(_) then true
   None    then false
 //│ JS:
-//│ this.isDefined = (caseScrut) => {
+//│ this.isDefined = (...args) => {
+//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   let caseScrut = args[0];
 //│   let param0;
 //│   if (caseScrut instanceof this.Some.class) {
 //│     param0 = caseScrut.value;

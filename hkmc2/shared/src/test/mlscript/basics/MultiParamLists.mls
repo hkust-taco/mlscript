@@ -6,7 +6,12 @@
 
 fun f(n1: Int): Int = n1
 //│ JS:
-//│ function f(n1) { return n1; } undefined
+//│ function f(...args) {
+//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   let n1 = args[0];
+//│   return n1;
+//│ }
+//│ undefined
 
 f(42)
 //│ JS:
@@ -15,7 +20,18 @@ f(42)
 
 fun f(n1: Int)(n2: Int): Int =  (10 * n1 + n2)
 //│ JS:
-//│ function f(n1) { return (n2) => { let tmp; tmp = 10 * n1; return tmp + n2; }; } undefined
+//│ function f(...args) {
+//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   let n1 = args[0];
+//│   return (...args1) => {
+//│     if (args1.length !== 1) { throw new globalThis.Error('got ' + args1.length + ' arguments, expecting ' + 1) }
+//│     let n2 = args1[0];
+//│     let tmp;
+//│     tmp = 10 * n1;
+//│     return tmp + n2;
+//│   };
+//│ }
+//│ undefined
 
 f(4)(2)
 //│ JS:
@@ -24,9 +40,15 @@ f(4)(2)
 
 fun f(n1: Int)(n2: Int)(n3: Int): Int = 10 * (10 * n1 + n2) + n3
 //│ JS:
-//│ function f(n1) {
-//│   return (n2) => {
-//│     return (n3) => {
+//│ function f(...args) {
+//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   let n1 = args[0];
+//│   return (...args1) => {
+//│     if (args1.length !== 1) { throw new globalThis.Error('got ' + args1.length + ' arguments, expecting ' + 1) }
+//│     let n2 = args1[0];
+//│     return (...args2) => {
+//│       if (args2.length !== 1) { throw new globalThis.Error('got ' + args2.length + ' arguments, expecting ' + 1) }
+//│       let n3 = args2[0];
 //│       let tmp, tmp1, tmp2;
 //│       tmp = 10 * n1;
 //│       tmp1 = tmp + n2;
@@ -44,10 +66,18 @@ f(4)(2)(0)
 
 fun f(n1: Int)(n2: Int)(n3: Int)(n4: Int): Int = 10 * (10 * (10 * n1 + n2) + n3) + n4
 //│ JS:
-//│ function f(n1) {
-//│   return (n2) => {
-//│     return (n3) => {
-//│       return (n4) => {
+//│ function f(...args) {
+//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   let n1 = args[0];
+//│   return (...args1) => {
+//│     if (args1.length !== 1) { throw new globalThis.Error('got ' + args1.length + ' arguments, expecting ' + 1) }
+//│     let n2 = args1[0];
+//│     return (...args2) => {
+//│       if (args2.length !== 1) { throw new globalThis.Error('got ' + args2.length + ' arguments, expecting ' + 1) }
+//│       let n3 = args2[0];
+//│       return (...args3) => {
+//│         if (args3.length !== 1) { throw new globalThis.Error('got ' + args3.length + ' arguments, expecting ' + 1) }
+//│         let n4 = args3[0];
 //│         let tmp, tmp1, tmp2, tmp3, tmp4;
 //│         tmp = 10 * n1;
 //│         tmp1 = tmp + n2;

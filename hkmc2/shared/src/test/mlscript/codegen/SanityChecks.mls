@@ -3,7 +3,6 @@
 
 
 :sjs
-:jsSanityCheck
 fun f(x, y) = x + y
 f(2, 3)
 //│ JS:
@@ -17,7 +16,9 @@ f(2, 3)
 //│ = 5
 
 
+:expect NaN
 :sjs
+:noSanityCheck
 fun f2(x, y) = x + y
 f2(2)
 //│ JS:
@@ -26,7 +27,6 @@ f2(2)
 
 :sjs
 :re
-:jsSanityCheck
 f(2)
 //│ JS:
 //│ this.f(2)
@@ -35,7 +35,6 @@ f(2)
 
 :sjs
 :re
-:jsSanityCheck
 fun f(x)(y, z) = x + y + z
 f(3)(4)
 //│ JS:
@@ -57,17 +56,16 @@ f(3)(4)
 //│ ═══[RUNTIME ERROR] Error: got 1 arguments, expecting 2
 
 
+:expect NaN
 :sjs
-let f = (x, y) => x + y
-f(2)
+:noSanityCheck
+let f = (x, y) => x + y in f(2)
 //│ JS:
 //│ this.f = (x, y) => { return x + y; }; this.f(2)
 //│ = NaN
-//│ f = [Function (anonymous)]
 
 :sjs
 :re
-:jsSanityCheck
 let f = (x, y) => x + y
 f(2)
 //│ JS:
@@ -82,7 +80,9 @@ f(2)
 //│ f = [Function (anonymous)]
 
 
+:expect NaN
 :sjs
+:noSanityCheck
 class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 Cls(1, 2).f(3)
@@ -109,7 +109,6 @@ Cls(1, 2).f(3)
 
 :sjs
 :re
-:jsSanityCheck
 class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 Cls(1, 2).f(3)
@@ -140,7 +139,6 @@ Cls(1, 2).f(3)
 
 :sjs
 :re
-:jsSanityCheck
 class Cls(x, y) with
   fun f(z, p)(q, s) = x + y + z + p + q + s
 Cls(1, 2).f(3, 4)(5)

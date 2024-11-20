@@ -8,7 +8,13 @@ x =>
   let y = x
   y
 //│ JS:
-//│ (x) => { let y; y = x; return y; }
+//│ (...args) => {
+//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   let x = args[0];
+//│   let y;
+//│   y = x;
+//│   return y;
+//│ }
 //│ = [Function (anonymous)]
 
 

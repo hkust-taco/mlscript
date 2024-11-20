@@ -9,7 +9,12 @@ val x = 2
 fun foo() =
   x + 1
 //│ JS:
-//│ this.x = 2; function foo() { return globalThis.x + 1; } undefined
+//│ this.x = 2;
+//│ function foo(...args) {
+//│   if (args.length !== 0) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 0) }
+//│   return globalThis.x + 1;
+//│ }
+//│ undefined
 //│ x = 2
 
 :sjs

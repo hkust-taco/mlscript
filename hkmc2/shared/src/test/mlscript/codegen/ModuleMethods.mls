@@ -11,7 +11,9 @@ module Example with
 //│   constructor() {
 //│     this.a = 456;
 //│   }
-//│   f(x) {
+//│   f(...args) {
+//│     if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│     let x = args[0];
 //│     return [
 //│       x,
 //│       this.a

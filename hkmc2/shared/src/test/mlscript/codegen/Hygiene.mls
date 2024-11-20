@@ -10,7 +10,8 @@ module Test with
 //│   constructor() {
 //│     this.x = 12;
 //│   }
-//│   foo() {
+//│   foo(...args) {
+//│     if (args.length !== 0) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 0) }
 //│     return globalThis.Test.x;
 //│   }
 //│   toString() { return "Test"; }
@@ -43,7 +44,13 @@ let f = () => x
 let x = 2
 f()
 //│ JS:
-//│ this.x = 1; this.f = () => { return this.x; }; this.x = 2; this.f()
+//│ this.x = 1;
+//│ this.f = (...args) => {
+//│   if (args.length !== 0) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 0) }
+//│   return this.x;
+//│ };
+//│ this.x = 2;
+//│ this.f()
 //│ = 2
 //│ f = [Function (anonymous)]
 //│ x = 2

@@ -35,7 +35,9 @@ class Outer(a, b) with
 //│         tmp5 = this.i1(this$Outer.a);
 //│         globalThis.log(tmp5)
 //│       }
-//│       i1(d) {
+//│       i1(...args) {
+//│         if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│         let d = args[0];
 //│         return [
 //│           this$Outer.b,
 //│           this.c,
@@ -50,10 +52,15 @@ class Outer(a, b) with
 //│     tmp2 = this.i.i1(1);
 //│     globalThis.log(tmp2)
 //│   }
-//│   o1(c) {
+//│   o1(...args) {
+//│     if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│     let c = args[0];
 //│     return this.Inner(c);
 //│   } 
-//│   o2(c1, d) {
+//│   o2(...args1) {
+//│     if (args1.length !== 2) { throw new globalThis.Error('got ' + args1.length + ' arguments, expecting ' + 2) }
+//│     let c1 = args1[0];
+//│     let d = args1[1];
 //│     let tmp;
 //│     tmp = this.Inner(c1);
 //│     return tmp.i1(d);

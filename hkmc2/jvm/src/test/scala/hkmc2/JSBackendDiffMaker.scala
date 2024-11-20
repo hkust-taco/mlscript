@@ -19,7 +19,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val sjs = NullaryCommand("sjs")
   val showRepl = NullaryCommand("showRepl")
   val silent = NullaryCommand("silent")
-  val jsSanityCheck = NullaryCommand("jsSanityCheck")
+  val noSanityCheck = NullaryCommand("noSanityCheck")
   val expect = Command("expect"): ln =>
     ln.trim
   
@@ -49,7 +49,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     if js.isSet then
       val low = ltl.givenIn:
         codegen.Lowering()
-      val jsb = new JSBuilder with JSBuilderSanityChecks(jsSanityCheck.isSet)
+      val jsb = new JSBuilder with JSBuilderSanityChecks(noSanityCheck.isUnset)
       import semantics.*
       import codegen.*
       val le = low.program(blk)

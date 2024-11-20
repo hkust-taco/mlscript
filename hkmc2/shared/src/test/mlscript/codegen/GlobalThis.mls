@@ -29,7 +29,8 @@ fun foo() =
   if false then 0
 foo()
 //│ JS:
-//│ function foo() {
+//│ function foo(...args) {
+//│   if (args.length !== 0) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 0) }
 //│   let scrut;
 //│   scrut = false;
 //│   if (scrut) {

@@ -11,21 +11,37 @@ case x then x
 :sjs
 case { x then x }
 //│ JS:
-//│ (caseScrut) => { let x; x = caseScrut; return x; }
+//│ (...args) => {
+//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   let caseScrut = args[0];
+//│   let x;
+//│   x = caseScrut;
+//│   return x;
+//│ }
 //│ = [Function (anonymous)]
 
 :sjs
 x => if x is
   0 then true
 //│ JS:
-//│ (x) => { if (x === 0) { return true; } else { throw new this.Error("match error"); } }
+//│ (...args) => {
+//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   let x = args[0];
+//│   if (x === 0) {
+//│     return true;
+//│   } else {
+//│     throw new this.Error("match error");
+//│   }
+//│ }
 //│ = [Function (anonymous)]
 
 :sjs
 case
   0 then true
 //│ JS:
-//│ (caseScrut) => {
+//│ (...args) => {
+//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   let caseScrut = args[0];
 //│   if (caseScrut === 0) {
 //│     return true;
 //│   } else {
@@ -39,7 +55,15 @@ case
   0 then true
   _ then false
 //│ JS:
-//│ (caseScrut) => { if (caseScrut === 0) { return true; } else { return false; } }
+//│ (...args) => {
+//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   let caseScrut = args[0];
+//│   if (caseScrut === 0) {
+//│     return true;
+//│   } else {
+//│     return false;
+//│   }
+//│ }
 //│ = [Function (anonymous)]
 
 class Some(value)
@@ -50,7 +74,9 @@ val isDefined = case
   Some then true
   None then false
 //│ JS:
-//│ this.isDefined = (caseScrut) => {
+//│ this.isDefined = (...args) => {
+//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   let caseScrut = args[0];
 //│   if (caseScrut instanceof this.Some.class) {
 //│     return true;
 //│   } else {
