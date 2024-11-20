@@ -300,6 +300,8 @@ extends Importer:
       Term.Throw(term(body))
     case Modified(Keyword.`do`, kwLoc, body) =>
       Term.Blk(term(body) :: Nil, unit)
+    case TypeDef(Mod, head, N, N) =>
+      term(head)
     case Tree.Region(id: Tree.Ident, body) =>
       val sym = VarSymbol(id, nextUid)
       val nestCtx = ctx + (id.name -> sym)
@@ -354,7 +356,11 @@ extends Importer:
   def fld(tree: Tree): Ctxl[Fld] = tree match
     case InfixApp(lhs, Keyword.`:`, rhs) =>
       Fld(FldFlags.empty, term(lhs), S(term(rhs)))
-    case _ => Fld(FldFlags.empty, term(tree), N)
+    case _ => 
+      val t = term(tree)
+      t.symbol.flatMap(_.asMod) match
+        case S(_) => Fld(FldFlags.empty.copy(mod = true), t, N)
+        case N => Fld(FldFlags.empty, t, N)
   
   def unit: Term.Lit = Term.Lit(UnitLit(true))
   

@@ -93,7 +93,7 @@ object Keyword:
   val `super` = Keyword("super", N, N)
   val `new` = Keyword("new", N, curPrec) // TODO: check the prec
   // val `namespace` = Keyword("namespace", N, N)
-  val `module` = Keyword("module", N, N)
+  val `module` = Keyword("module", N, curPrec)
   val `open` = Keyword("open", N, curPrec)
   val `type` = Keyword("type", N, N)
   val `where` = Keyword("where", N, N)
