@@ -9,8 +9,8 @@ f(2, 3)
 //│ JS:
 //│ function f(...args) {
 //│   if (args.length !== 2) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 2) }
-//│   const x = args[0];
-//│   const y = args[1];
+//│   let x = args[0];
+//│   let y = args[1];
 //│   return x + y;
 //│ }
 //│ this.f(2, 3)
@@ -42,11 +42,11 @@ f(3)(4)
 //│ let tmp;
 //│ function f(...args) {
 //│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
-//│   const x = args[0];
+//│   let x = args[0];
 //│   return (...args1) => {
 //│     if (args1.length !== 2) { throw new globalThis.Error('got ' + args1.length + ' arguments, expecting ' + 2) }
-//│     const y = args1[0];
-//│     const z = args1[1];
+//│     let y = args1[0];
+//│     let z = args1[1];
 //│     let tmp1;
 //│     tmp1 = x + y;
 //│     return tmp1 + z;
@@ -73,8 +73,8 @@ f(2)
 //│ JS:
 //│ this.f = (...args) => {
 //│   if (args.length !== 2) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 2) }
-//│   const x = args[0];
-//│   const y = args[1];
+//│   let x = args[0];
+//│   let y = args[1];
 //│   return x + y;
 //│ };
 //│ this.f(2)
@@ -124,8 +124,8 @@ Cls(1, 2).f(3)
 //│   }
 //│   f(...args) {
 //│     if (args.length !== 2) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 2) }
-//│     const z = args[0];
-//│     const p = args[1];
+//│     let z = args[0];
+//│     let p = args[1];
 //│     let tmp1, tmp2;
 //│     tmp1 = this.x + this.y;
 //│     tmp2 = tmp1 + z;
@@ -155,12 +155,12 @@ Cls(1, 2).f(3, 4)(5)
 //│   }
 //│   f(...args) {
 //│     if (args.length !== 2) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 2) }
-//│     const z = args[0];
-//│     const p = args[1];
+//│     let z = args[0];
+//│     let p = args[1];
 //│     return (...args1) => {
 //│       if (args1.length !== 2) { throw new globalThis.Error('got ' + args1.length + ' arguments, expecting ' + 2) }
-//│       const q = args1[0];
-//│       const s = args1[1];
+//│       let q = args1[0];
+//│       let s = args1[1];
 //│       let tmp2, tmp3, tmp4, tmp5;
 //│       tmp2 = this.x + this.y;
 //│       tmp3 = tmp2 + z;
