@@ -203,6 +203,7 @@ case object Trt extends TypeDefKind("trait") with ObjDefKind
 case object Mxn extends TypeDefKind("mixin")
 case object Als extends TypeDefKind("type alias")
 case object Mod extends TypeDefKind("module") with ClsLikeKind
+case object Obj extends TypeDefKind("object") with ClsLikeKind
 
 
 
@@ -275,7 +276,7 @@ trait TypeDefImpl extends TypeOrTermDef:
   
   lazy val symbol = k match
     case Cls => semantics.ClassSymbol(this, name.getOrElse(Ident("<error>")))
-    case Mod => semantics.ModuleSymbol(this, name.getOrElse(Ident("<error>")))
+    case Mod | Obj => semantics.ModuleSymbol(this, name.getOrElse(Ident("<error>")))
     case Als => semantics.TypeAliasSymbol(name.getOrElse(Ident("<error>")))
     case Trt | Mxn => ???
   

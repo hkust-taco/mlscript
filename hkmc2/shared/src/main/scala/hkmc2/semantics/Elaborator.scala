@@ -521,19 +521,54 @@ extends Importer:
                   case ((pss, ctx), ps) => 
                     val (qs, newCtx) = params(ps)(using ctx)
                     (pss :+ ParamList(ParamListFlags.empty, qs), newCtx)
+              // * Elaborate signature
+              val st = td.signature.orElse(newSignatureTrees.get(id.name))
+              val s = st.map(term(_)(using newCtx))
               val b = rhs.map(term(_)(using newCtx))
               val r = FlowSymbol(s"‹result of ${sym}›", nextUid)
-              val tdf = TermDefinition(owner, k, sym, pss,
-                td.signature.orElse(newSignatureTrees.get(id.name)).map(term), b, r,
-                TermDefFlags(isModMember))
+              val tdf = TermDefinition(owner, k, sym, pss, s, b, r, 
+                TermDefFlags.empty.copy(isModMember = isModMember))
               sym.defn = S(tdf)
+
+              // the return type of the function
+              val result = td.head match
+                case InfixApp(_, Keyword.`:`, rhs) => S(term(rhs)(using newCtx))
+                case _ => N
+              
+              // indicates if the function really returns a module
+              val em = b.fold(false)(ModuleChecker.evalsToModule)
+              // indicates if the function marks its result as "module"
+              val mm = st match
+                case Some(TypeDef(Mod, _, N, N)) => true
+                case _ => false
+              
+              // checks rules regarding module methods
+              s match
+                case N if em => raise:
+                  ErrorReport:
+                    msg"Function returning module values must have explicit return types." ->
+                    td.head.toLoc :: Nil
+                case S(t) if em && ModuleChecker.isTypeParam(t) => raise:
+                  ErrorReport:
+                    msg"Function returning module values must have concrete return types." ->
+                    td.head.toLoc :: Nil
+                case S(_) if em && !mm => raise:
+                  ErrorReport:
+                    msg"The return type of functions returning module values must be prefixed with module keyword." ->
+                    td.head.toLoc :: Nil
+                case S(_) if mm && !isModMember => raise:
+                  ErrorReport:
+                    msg"Only module methods may return module values." ->
+                    td.head.toLoc :: Nil
+                case _ => ()
+              
               tdf
             go(sts, tdf :: acc)
           case L(d) =>
             raise(d)
             go(sts, acc)
       case (td @ TypeDef(k, head, extension, body)) :: sts =>
-        assert((k is Als) || (k is Cls) || (k is Mod), k)
+        assert((k is Als) || (k is Cls) || (k is Mod) || (k is Obj), k)
         val nme = td.name match
           case R(id) => id
           case L(d) =>
@@ -585,7 +620,7 @@ extends Importer:
               semantics.TypeDef(alsSym, tps, extension.map(term), N)
             alsSym.defn = S(d)
             d
-        case Mod =>
+        case k: (Mod.type | Obj.type) =>
           val clsSym = td.symbol.asInstanceOf[ModuleSymbol] // TODO: improve `asInstanceOf`
           val owner = ctx.outer
           newCtx.nest(S(clsSym)).givenIn:
@@ -596,7 +631,7 @@ extends Importer:
                 // case S(t) => block(t :: Nil)
                 case S(t) => ???
                 case N => (new Term.Blk(Nil, Term.Lit(UnitLit(true))), ctx)
-              ModuleDef(owner, clsSym, tps, ps, ObjBody(bod))
+              ModuleDef(owner, clsSym, tps, ps, k, ObjBody(bod))
             clsSym.defn = S(cd)
             cd
         case Cls =>
@@ -620,7 +655,6 @@ extends Importer:
         // TODO: pass abstract to `go`
         go(body :: sts, acc)
       case Modified(Keyword.`declare`, absLoc, body) :: sts =>
-        ???
         // TODO: pass declare to `go`
         go(body :: sts, acc)
       case (result: Tree) :: Nil =>
@@ -725,6 +759,23 @@ extends Importer:
       .filter(_.isInstanceOf[VarSymbol])
       .flatMap(_.asInstanceOf[VarSymbol].decl)
       .fold(false)(_.isInstanceOf[TyParam])
+    
+    /** Checks if a term evaluates to a module value. */
+    def evalsToModule(t: Term): Bool = 
+      def isModule(t: Tree): Bool = t match
+        case TypeDef(Mod, _, _, _) => true
+        case _ => false
+      def returnsModule(t: TermDef): Bool = t.signature match
+        case S(TypeDef(Mod, _, N, N)) => true
+        case _ => false
+      t match
+        case Term.Blk(_, res) => evalsToModule(res)
+        case Term.App(lhs, rhs) => lhs.symbol match
+          case S(sym: BlockMemberSymbol) => sym.trmTree.fold(false)(returnsModule)
+          case _ => false
+        case t => t.symbol match
+          case S(sym: BlockMemberSymbol) => sym.modTree.fold(false)(isModule)
+          case _ => false
   
   class VarianceTraverser(var changed: Bool = true) extends Traverser:
     override def traverseType(pol: Pol)(trm: Term): Unit = trm match

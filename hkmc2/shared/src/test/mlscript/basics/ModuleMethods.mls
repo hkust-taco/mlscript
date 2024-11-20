@@ -20,5 +20,39 @@ fun f2[T](module m: T)
 //│ ║  l.18: 	fun f2[T](module m: T)
 //│ ╙──      	                 ^^^^
 
+:e
+module N with {
+  fun f3() = M
+}
+//│ ╔══[ERROR] Function returning module values must have explicit return types.
+//│ ║  l.25: 	  fun f3() = M
+//│ ╙──      	      ^^^^
+
+:e
+module N with {
+  fun f4[T](): module T = M
+}
+//│ ╔══[ERROR] Function returning module values must have explicit return types.
+//│ ║  l.33: 	  fun f4[T](): module T = M
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^
+
+:e
+module N with {
+  fun f5(): M = M
+}
+//│ ╔══[ERROR] The return type of functions returning module values must be prefixed with module keyword.
+//│ ║  l.41: 	  fun f5(): M = M
+//│ ╙──      	      ^^^^^^^
+
+:e
+fun f7(): module M
+//│ ╔══[ERROR] Only module methods may return module values.
+//│ ║  l.48: 	fun f7(): module M
+//│ ╙──      	    ^^^^^^^^^^^^^^
+
 
 fun ok1(module m: M)
+
+module N with {
+  fun ok2(): module M = M
+}

@@ -9,7 +9,7 @@ open Predef
 module Option with ...
 
 class Some(value)
-module None
+object None
 
 fun isDefined(x) = if x is
   Some then true

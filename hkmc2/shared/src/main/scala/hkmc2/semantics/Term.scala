@@ -238,9 +238,14 @@ sealed abstract class ClassLikeDef extends TypeLikeDef:
   val body: ObjBody
 
 
-case class ModuleDef(owner: Opt[InnerSymbol], sym: ModuleSymbol, tparams: Ls[TyParam], paramsOpt: Opt[Ls[Param]], body: ObjBody) extends ClassLikeDef with Companion:
-  self =>
-  val kind: ClsLikeKind = Mod
+case class ModuleDef(
+  owner: Opt[InnerSymbol], 
+  sym: ModuleSymbol, 
+  tparams: Ls[TyParam], 
+  paramsOpt: Opt[Ls[Param]], 
+  kind: ClsLikeKind,
+  body: ObjBody,
+) extends ClassLikeDef with Companion
 
 
 sealed abstract class ClassDef extends ClassLikeDef:
