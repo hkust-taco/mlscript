@@ -7,3 +7,18 @@ module M with {
   // module method foo
   fun foo(x) = x
 }
+
+:e
+fun f1(module m)
+//│ ╔══[ERROR] Module parameters must have explicit types.
+//│ ║  l.12: 	fun f1(module m)
+//│ ╙──      	              ^
+
+:e
+fun f2[T](module m: T)
+//│ ╔══[ERROR] Module parameters must have concrete types.
+//│ ║  l.18: 	fun f2[T](module m: T)
+//│ ╙──      	                 ^^^^
+
+
+fun ok1(module m: M)

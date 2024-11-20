@@ -640,8 +640,15 @@ extends Importer:
     else VarSymbol(id, nextUid)
   
   def param(t: Tree): Ctxl[Ls[Param]] = t match
-    case TypeDef(Mod, inner, N, N) => param(inner)
-      .map(p => p.copy(flags = p.flags.copy(mod = true)))
+    case TypeDef(Mod, inner, N, N) =>
+      val ps = param(inner).map(p => p.copy(flags = p.flags.copy(mod = true)))
+      for p <- ps if p.flags.mod do p.sign match
+        case N =>
+          raise(ErrorReport(msg"Module parameters must have explicit types." -> t.toLoc :: Nil))
+        case S(ret) if ModuleChecker.isTypeParam(ret) => 
+          raise(ErrorReport(msg"Module parameters must have concrete types." -> t.toLoc :: Nil))
+        case _ => ()
+      ps
     case _ => t.param.map: (p, t) =>
       Param(FldFlags.empty, fieldOrVarSym(ParamBind, p), t.map(term))
   
@@ -710,7 +717,15 @@ extends Importer:
     while trav.changed do
       trav.changed = false
       go(s)
+  
+  object ModuleChecker:
     
+    /** Checks if a term is a reference to a type parameter. */
+    def isTypeParam(t: Term): Bool = t.symbol
+      .filter(_.isInstanceOf[VarSymbol])
+      .flatMap(_.asInstanceOf[VarSymbol].decl)
+      .fold(false)(_.isInstanceOf[TyParam])
+  
   class VarianceTraverser(var changed: Bool = true) extends Traverser:
     override def traverseType(pol: Pol)(trm: Term): Unit = trm match
       case Term.TyApp(lhs, targs) =>
