@@ -1,0 +1,197 @@
+
+:NoJS
+:NoApproximateOverload
+
+type IISS = int -> int & string -> string
+type BBNN = bool -> bool & number -> number
+type ZZII = 0 -> 0 & int -> int
+//│ Defined type alias IISS
+//│ Defined type alias BBNN
+//│ Defined type alias ZZII
+
+def IISS: int -> int & string -> string
+def BBNN: bool -> bool & number -> number
+def ZZII: 0 -> 0 & int -> int
+//│ IISS: int -> int & string -> string
+//│ BBNN: bool -> bool & number -> number
+//│ ZZII: 0 -> 0 & int -> int
+
+
+IISS : IISS
+//│ res: IISS
+
+IISS : int -> int & string -> string
+//│ res: int -> int & string -> string
+
+IISS : IISS | BBNN
+//│ res: BBNN | IISS
+
+:e
+IISS : ZZII
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.30: 	IISS : ZZII
+//│ ║        	^^^^
+//│ ╟── type `int -> int & string -> string` is not an instance of `0 -> 0`
+//│ ║  l.12: 	def IISS: int -> int & string -> string
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `0 -> 0`
+//│ ║  l.30: 	IISS : ZZII
+//│ ║        	^^^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.7: 	type ZZII = 0 -> 0 & int -> int
+//│ ║       	            ^^^^^^
+//│ ╟── from type reference:
+//│ ║  l.30: 	IISS : ZZII
+//│ ╙──      	       ^^^^
+//│ res: ZZII
+
+:e
+IISS : BBNN
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.49: 	IISS : BBNN
+//│ ║        	^^^^
+//│ ╟── type `int -> int & string -> string` is not an instance of `bool -> bool`
+//│ ║  l.12: 	def IISS: int -> int & string -> string
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `bool -> bool`
+//│ ║  l.49: 	IISS : BBNN
+//│ ║        	^^^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.6: 	type BBNN = bool -> bool & number -> number
+//│ ║       	            ^^^^^^^^^^^^
+//│ ╟── from type reference:
+//│ ║  l.49: 	IISS : BBNN
+//│ ╙──      	       ^^^^
+//│ res: BBNN
+
+
+// * These tests show that we currently throw away information when constraining LHS overloading sets:
+
+IISS : int -> int
+//│ res: int -> int
+
+IISS : (0 | 1) -> number
+//│ res: (0 | 1) -> number
+
+IISS : 'a -> 'a
+//│ res: 'a -> 'a
+//│   where
+//│     [-'a, +'a] in {[int, int], [string, string]}
+
+IISS 0
+//│ res: int
+
+(IISS : int -> int) 0
+//│ res: int
+
+(if true then IISS else BBNN) 0
+//│ res: number
+
+// * Note that this is not considered ambiguous
+// * because the type variable occurrences are polar,
+// * meaning that the TSCs are always trivially satisfiable
+// * and thus the code is well-typed.
+// * Conceptually, we'd expect this inferred type to reduce to `int -> number`,
+// * but it's tricky to do such simplifications in general.
+def f = fun x -> (if true then IISS else BBNN) x
+//│ f: 'a -> 'b
+//│   where
+//│     [+'a, -'b] in {[int, int], [string, string]}
+//│     [+'a, -'b] in {[bool, bool], [number, number]}
+
+f(0)
+//│ res: number
+
+:e
+f(0) + 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.106: 	f(0) + 1
+//│ ║         	^^^^^^
+//│ ╟── type `number` is not an instance of type `int`
+//│ ║  l.13: 	def BBNN: bool -> bool & number -> number
+//│ ║        	                                   ^^^^^^
+//│ ╟── but it flows into application with expected type `int`
+//│ ║  l.106: 	f(0) + 1
+//│ ╙──       	^^^^
+//│ res: error | int
+
+f : int -> number
+//│ res: int -> number
+
+:e
+f : number -> int
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.122: 	f : number -> int
+//│ ║         	^
+//│ ╟── type `number` does not match type `?a`
+//│ ║  l.122: 	f : number -> int
+//│ ╙──       	    ^^^^^^
+//│ res: number -> int
+
+
+if true then IISS else BBNN
+//│ res: bool -> bool & number -> number | int -> int & string -> string
+
+(if true then IISS else ZZII) : int -> int
+//│ res: int -> int
+
+(if true then IISS else BBNN) : (0 | 1) -> number
+//│ res: (0 | 1) -> number
+
+:e
+(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.142: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `int -> int & string -> string` is not an instance of `(0 | 1 | true) -> number`
+//│ ║  l.12: 	def IISS: int -> int & string -> string
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `(0 | 1 | true) -> number`
+//│ ║  l.142: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║         	              ^^^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.142: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ╙──       	                                ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ res: (0 | 1 | true) -> number
+
+
+// * Note that type normalization used to be very aggressive at approximating non-tag type negations,
+// * to simplify the result, but this was changed as it was unsound
+
+def test: ~(int -> int)
+//│ test: ~(int -> int)
+
+// * See also test file BooleanFail.mls about this previous unsoundness
+:e
+test = 42
+not test
+//│ 42
+//│   <:  test:
+//│ ~(int -> int)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.167: 	not test
+//│ ║         	^^^^^^^^
+//│ ╟── type `~(int -> int)` is not an instance of type `bool`
+//│ ║  l.161: 	def test: ~(int -> int)
+//│ ║         	          ^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `bool`
+//│ ║  l.167: 	not test
+//│ ╙──       	    ^^^^
+//│ res: bool | error
+
+def test: ~(int -> int) & ~bool
+//│ test: ~bool & ~(int -> int)
+
+def test: ~(int -> int) & bool
+//│ test: bool
+
+def test: ~(int -> int) & ~(bool -> bool)
+//│ test: ~(nothing -> (bool | int))
+
+def test: ~(int -> int | bool -> bool)
+//│ test: ~(nothing -> (bool | int))
+
+def test: ~(int -> int & string -> string) & ~(bool -> bool & number -> number)
+//│ test: in ~(nothing -> (number | string) & int -> number & nothing -> (bool | string) & nothing -> (bool | int)) out ~(nothing -> (bool | int) & nothing -> (bool | string) & int -> number & nothing -> (number | string))
+
+

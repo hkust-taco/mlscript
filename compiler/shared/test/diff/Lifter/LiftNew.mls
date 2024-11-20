@@ -4,10 +4,6 @@
 class A(num: Int) {
 }
 new A(5)
-//│ TypingUnit {
-//│   class A([num: Int,]) {}
-//│   Code(List((new A)(5,)))
-//│ }
 //│ Lifted:
 //│ TypingUnit {
 //│   class A$1([num: Int,]) {}

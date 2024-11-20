@@ -77,7 +77,7 @@ final case class Asc(trm: Term, ty: Type)                            extends Ter
 final case class Bind(lhs: Term, rhs: Term)                          extends Term
 final case class Test(trm: Term, ty: Term)                           extends Term
 final case class With(trm: Term, fields: Rcd)                        extends Term
-final case class CaseOf(trm: Term, cases: CaseBranches)              extends Term
+final case class CaseOf(trm: Term, cases: CaseBranches)              extends Term with CaseOfImpl
 final case class Subs(arr: Term, idx: Term)                          extends Term
 final case class Assign(lhs: Term, rhs: Term)                        extends Term
 final case class Splc(fields: Ls[Either[Term, Fld]])                 extends Term
@@ -114,8 +114,9 @@ final case class Fld(flags: FldFlags, value: Term) extends FldImpl
 object FldFlags { val empty: FldFlags = FldFlags(false, false, false) }
 
 sealed abstract class CaseBranches extends CaseBranchesImpl
-final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches) extends CaseBranches
+final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches)(val refined: Bool) extends CaseBranches
 final case class Wildcard(body: Term) extends CaseBranches
+// final case class TupleCase(numElems: Int, canHaveMore: Bool, body: Term, rest: CaseBranches) extends CaseBranches
 final case object NoCases extends CaseBranches
 
 final case class IntLit(value: BigInt)            extends Lit
@@ -160,7 +161,7 @@ final case class Rem(base: Type, names: Ls[Var])         extends Type
 final case class Bounds(lb: Type, ub: Type)              extends Type
 final case class WithExtension(base: Type, rcd: Record)  extends Type
 final case class Splice(fields: Ls[Either[Type, Field]]) extends Type
-final case class Constrained(base: TypeLike, tvBounds: Ls[TypeVar -> Bounds], where: Ls[Bounds]) extends Type
+final case class Constrained(base: TypeLike, tvBounds: Ls[TypeVar -> Bounds], where: Ls[Bounds], tscs: Ls[Ls[(Bool, Type)] -> Ls[Ls[Type]]]) extends Type
 // final case class FirstClassDefn(defn: NuTypeDef)         extends Type // TODO
 // final case class Refinement(base: Type, decls: TypingUnit) extends Type // TODO
 

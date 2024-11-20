@@ -1,0 +1,186 @@
+:NewDefs
+:ParseOnly
+:UseIR
+:NoTailRec
+
+:prelude
+module True
+module False
+module Callable {
+  fun apply0() = 0
+  fun apply1(x0) = 0
+  fun apply2(x0,x1) = 0
+  fun apply3(x0,x1,x2) = 0
+  fun apply4(x0,x1,x2,x3) = 0
+  fun apply5(x0,x1,x2,x3,x4) = 0
+}
+module List[A, B]
+class Cons[A, B](h: A, t: Cons[A, B]) extends List[A, B]
+module Nil[A, B] extends List[A, B]
+module Option[A]
+class Some[A](x: A) extends Option[A]
+module None[A] extends Option[A]
+class Pair[A, B](x: A, y: B)
+class Tuple2[A, B](x: A, y: B)
+class Tuple3[A, B, C](x: A, y: B, z: C)
+module Nat
+class S(s: Nat) extends Nat
+module O extends Nat
+class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O)
+//│ |#module| |True|↵|#module| |False|↵|#module| |Callable| |{|→|#fun| |apply0|(||)| |#=| |0|↵|#fun| |apply1|(|x0|)| |#=| |0|↵|#fun| |apply2|(|x0|,|x1|)| |#=| |0|↵|#fun| |apply3|(|x0|,|x1|,|x2|)| |#=| |0|↵|#fun| |apply4|(|x0|,|x1|,|x2|,|x3|)| |#=| |0|↵|#fun| |apply5|(|x0|,|x1|,|x2|,|x3|,|x4|)| |#=| |0|←|↵|}|↵|#module| |List|[|A|,| |B|]|↵|#class| |Cons|[|A|,| |B|]|(|h|#:| |A|,| |t|#:| |Cons|[|A|,| |B|]|)| |#extends| |List|[|A|,| |B|]|↵|#module| |Nil|[|A|,| |B|]| |#extends| |List|[|A|,| |B|]|↵|#module| |Option|[|A|]|↵|#class| |Some|[|A|]|(|x|#:| |A|)| |#extends| |Option|[|A|]|↵|#module| |None|[|A|]| |#extends| |Option|[|A|]|↵|#class| |Pair|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple2|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple3|[|A|,| |B|,| |C|]|(|x|#:| |A|,| |y|#:| |B|,| |z|#:| |C|)|↵|#module| |Nat|↵|#class| |S|(|s|#:| |Nat|)| |#extends| |Nat|↵|#module| |O| |#extends| |Nat|↵|#class| |HiddenTheseEntities|(|_0|#:| |HiddenTheseEntities|,| |_1|#:| |True|,| |_2|#:| |False|,| |_3|#:| |Callable|,| |_4|#:| |List|,| |_5|#:| |Cons|,| |_6|#:| |Nil|,| |_7|#:| |Option|,| |_8|#:| |Some|,| |_9|#:| |None|,| |_10|#:| |Pair|,| |_11|#:| |Tuple2|,| |_12|#:| |Tuple3|,| |_13|#:| |Nat|,| |_14|#:| |S|,| |_15|#:| |O|)|
+//│ Parsed: {module True {}; module False {}; module Callable {fun apply0 = () => 0; fun apply1 = (x0,) => 0; fun apply2 = (x0, x1,) => 0; fun apply3 = (x0, x1, x2,) => 0; fun apply4 = (x0, x1, x2, x3,) => 0; fun apply5 = (x0, x1, x2, x3, x4,) => 0}; module List‹A, B› {}; class Cons‹A, B›(h: A, t: Cons‹A, B›,): List‹A, B› {}; module Nil‹A, B›: List‹A, B› {}; module Option‹A› {}; class Some‹A›(x: A,): Option‹A› {}; module None‹A›: Option‹A› {}; class Pair‹A, B›(x: A, y: B,) {}; class Tuple2‹A, B›(x: A, y: B,) {}; class Tuple3‹A, B, C›(x: A, y: B, z: C,) {}; module Nat {}; class S(s: Nat,): Nat {}; module O: Nat {}; class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O,) {}}
+//│ 
+//│ Preluded.
+//│ 
+
+:genCpp
+:runCpp
+:interpIR
+fun main(init, key) =
+  fun r(x) = if x <= 0 then key else r(x - 1)
+  r(init)
+main(1, 42)
+//│ |#fun| |main|(|init|,| |key|)| |#=|→|#fun| |r|(|x|)| |#=| |#if| |x| |<=| |0| |#then| |key| |#else| |r|(|x| |-| |1|)|↵|r|(|init|)|←|↵|main|(|1|,| |42|)|
+//│ Parsed: {fun main = (init, key,) => {fun r = (x,) => if (<=(x, 0,)) then key else r(-(x, 1,),); r(init,)}; main(1, 42,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│   def main(init$0,key$0) =
+//│     let* (x$1) = r(init$0,key$0) in -- #11
+//│     x$1 -- #10
+//│   def r(x$2,key$1) =
+//│     let x$3 = <=(x$2,0) in -- #40
+//│     if x$3 -- #39
+//│       true =>
+//│         jump j$0(key$1) -- #26
+//│       false =>
+//│         let x$5 = -(x$2,1) in -- #38
+//│         let* (x$6) = r(x$5,key$1) in -- #37
+//│         jump j$0(x$6) -- #36
+//│   def j$0(x$4) =
+//│     x$4 -- #24
+//│   let* (x$0) = main(1,42) in -- #6
+//│   x$0 -- #5
+//│ 
+//│ Interpreted:
+//│ 42
+//│ 
+//│ 
+//│ Execution succeeded: 
+//│ 42
+//│ 
+
+:genCpp
+:runCpp
+:interpIR
+fun main(init, key) =
+  fun ping(x) = if x <= 0 then key + 1 else pong(x - 1)
+  fun pong(x) = if x <= 0 then key + 2 else ping(x - 1)
+  ping(init)
+main(1, 42)
+//│ |#fun| |main|(|init|,| |key|)| |#=|→|#fun| |ping|(|x|)| |#=| |#if| |x| |<=| |0| |#then| |key| |+| |1| |#else| |pong|(|x| |-| |1|)|↵|#fun| |pong|(|x|)| |#=| |#if| |x| |<=| |0| |#then| |key| |+| |2| |#else| |ping|(|x| |-| |1|)|↵|ping|(|init|)|←|↵|main|(|1|,| |42|)|
+//│ Parsed: {fun main = (init, key,) => {fun ping = (x,) => if (<=(x, 0,)) then +(key, 1,) else pong(-(x, 1,),); fun pong = (x,) => if (<=(x, 0,)) then +(key, 2,) else ping(-(x, 1,),); ping(init,)}; main(1, 42,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│   def main(init$0,key$0) =
+//│     let* (x$1) = ping(init$0,key$0) in -- #11
+//│     x$1 -- #10
+//│   def ping(x$2,key$1) =
+//│     let x$3 = <=(x$2,0) in -- #46
+//│     if x$3 -- #45
+//│       true =>
+//│         let x$5 = +(key$1,1) in -- #32
+//│         jump j$0(x$5) -- #31
+//│       false =>
+//│         let x$6 = -(x$2,1) in -- #44
+//│         let* (x$7) = pong(x$6,key$1) in -- #43
+//│         jump j$0(x$7) -- #42
+//│   def j$0(x$4) =
+//│     x$4 -- #24
+//│   def pong(x$8,key$2) =
+//│     let x$9 = <=(x$8,0) in -- #75
+//│     if x$9 -- #74
+//│       true =>
+//│         let x$11 = +(key$2,2) in -- #61
+//│         jump j$1(x$11) -- #60
+//│       false =>
+//│         let x$12 = -(x$8,1) in -- #73
+//│         let* (x$13) = ping(x$12,key$2) in -- #72
+//│         jump j$1(x$13) -- #71
+//│   def j$1(x$10) =
+//│     x$10 -- #53
+//│   let* (x$0) = main(1,42) in -- #6
+//│   x$0 -- #5
+//│ 
+//│ Interpreted:
+//│ 44
+//│ 
+//│ 
+//│ Execution succeeded: 
+//│ 44
+//│ 
+
+:genCpp
+:runCpp
+:interpIR
+fun main(init, key) =
+  let ping =
+    fun ping(x) = if x <= 0 then key + 1 else pong(x - 1)
+    fun pong(x) = if x <= 0 then key + 2 else ping(x - 1)
+    ping
+  ping(init)
+main(1, 42)
+//│ |#fun| |main|(|init|,| |key|)| |#=|→|#let| |ping| |#=|→|#fun| |ping|(|x|)| |#=| |#if| |x| |<=| |0| |#then| |key| |+| |1| |#else| |pong|(|x| |-| |1|)|↵|#fun| |pong|(|x|)| |#=| |#if| |x| |<=| |0| |#then| |key| |+| |2| |#else| |ping|(|x| |-| |1|)|↵|ping|←|↵|ping|(|init|)|←|↵|main|(|1|,| |42|)|
+//│ Parsed: {fun main = (init, key,) => {let ping = {fun ping = (x,) => if (<=(x, 0,)) then +(key, 1,) else pong(-(x, 1,),); fun pong = (x,) => if (<=(x, 0,)) then +(key, 2,) else ping(-(x, 1,),); ping}; ping(init,)}; main(1, 42,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│   class Lambda$0(key) extends Callable {
+//│     def apply1(x$17) =
+//│       let* (x$18) = ping(x$17,key) in -- #85
+//│       x$18 -- #84
+//│   }
+//│   def main(init$0,key$0) =
+//│     let x$3 = Lambda$0(key$0) in -- #14
+//│     let x$4 = Callable.apply1(x$3,init$0) in -- #13
+//│     x$4 -- #12
+//│   def ping(x$5,key$1) =
+//│     let x$6 = <=(x$5,0) in -- #49
+//│     if x$6 -- #48
+//│       true =>
+//│         let x$8 = +(key$1,1) in -- #35
+//│         jump j$0(x$8) -- #34
+//│       false =>
+//│         let x$9 = -(x$5,1) in -- #47
+//│         let* (x$10) = pong(x$9,key$1) in -- #46
+//│         jump j$0(x$10) -- #45
+//│   def j$0(x$7) =
+//│     x$7 -- #27
+//│   def pong(x$11,key$2) =
+//│     let x$12 = <=(x$11,0) in -- #78
+//│     if x$12 -- #77
+//│       true =>
+//│         let x$14 = +(key$2,2) in -- #64
+//│         jump j$1(x$14) -- #63
+//│       false =>
+//│         let x$15 = -(x$11,1) in -- #76
+//│         let* (x$16) = ping(x$15,key$2) in -- #75
+//│         jump j$1(x$16) -- #74
+//│   def j$1(x$13) =
+//│     x$13 -- #56
+//│   let* (x$0) = main(1,42) in -- #6
+//│   x$0 -- #5
+//│ 
+//│ Interpreted:
+//│ 44
+//│ 
+//│ 
+//│ Execution succeeded: 
+//│ 44
+//│ 

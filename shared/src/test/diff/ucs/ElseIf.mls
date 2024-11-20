@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 
@@ -26,23 +25,28 @@ module Fals
 //│ module Fals
 
 :e
-:ge
 fun f(x, y) = if x is
     Tru and y is Tru then true
     Fals and y is Fals then false
-//│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.31: 	    Tru and y is Tru then true
-//│ ║        	            ^^^^^^^^
-//│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.31: 	    Tru and y is Tru then true
+//│ ╔══[ERROR] when `x` is `Tru`
+//│ ║  l.29: 	    Tru and y is Tru then true
+//│ ║        	    ^^^
+//│ ╟── `y` has 1 missing case
+//│ ║  l.29: 	    Tru and y is Tru then true
 //│ ║        	            ^
-//│ ╟── [Missing Case 1/1] `Fals`
-//│ ╟── It first appears here.
-//│ ║  l.32: 	    Fals and y is Fals then false
+//│ ╟── it can be module `Fals`
+//│ ║  l.30: 	    Fals and y is Fals then false
 //│ ╙──      	                  ^^^^
-//│ fun f: (anything, anything) -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[ERROR] when `x` is `Fals`
+//│ ║  l.30: 	    Fals and y is Fals then false
+//│ ║        	    ^^^^
+//│ ╟── `y` has 1 missing case
+//│ ║  l.30: 	    Fals and y is Fals then false
+//│ ║        	             ^
+//│ ╟── it can be module `Tru`
+//│ ║  l.29: 	    Tru and y is Tru then true
+//│ ╙──      	                 ^^^
+//│ fun f: (Fals | Tru, nothing) -> Bool
 
 // The base case.
 fun f(x, y) = if x is
@@ -75,6 +79,24 @@ f(Fals, Fals)
 //│ res
 //│     = false
 
+:e
+fun g(x, y) = if x is
+  true and y is true then true
+  false and y is false then false
+//│ ╔══[ERROR] `y` has 1 missing case
+//│ ║  l.84: 	  true and y is true then true
+//│ ║        	           ^
+//│ ╟── it can be Boolean value `false`
+//│ ║  l.85: 	  false and y is false then false
+//│ ╙──      	                 ^^^^^
+//│ ╔══[ERROR] `y` has 1 missing case
+//│ ║  l.85: 	  false and y is false then false
+//│ ║        	            ^
+//│ ╟── it can be Boolean value `true`
+//│ ║  l.84: 	  true and y is true then true
+//│ ╙──      	                ^^^^
+//│ fun g: (Bool, nothing) -> Bool
+
 // Test with real booleans
 fun g(x, y) = if x is
   true and y is true then true
@@ -82,7 +104,7 @@ fun g(x, y) = if x is
   _ and y is
     true then true
     false then false
-//│ fun g: (Object, nothing) -> Bool
+//│ fun g: (Object, Bool) -> Bool
 
 // Chained UCS terms
 fun f(x, y) = if x is
@@ -93,12 +115,55 @@ fun f(x, y) = if x is
     Fals then false
 //│ fun f: (Object, Fals | Tru) -> Bool
 
+:e
 fun f(x, y) = if x is
     Tru and y is Tru then true
     Fals and y is Fals then false
   else if y is
     Tru and x is Fals then true
     Fals and x is Tru then false
+//│ ╔══[ERROR] when `y` is `Tru`
+//│ ║  l.123: 	    Tru and x is Fals then true
+//│ ║         	    ^^^
+//│ ╟── `x` has 1 missing case
+//│ ║  l.123: 	    Tru and x is Fals then true
+//│ ║         	            ^
+//│ ╟── it can be module `Tru`
+//│ ║  l.124: 	    Fals and x is Tru then false
+//│ ╙──       	                  ^^^
+//│ ╔══[ERROR] when `y` is `Fals`
+//│ ║  l.124: 	    Fals and x is Tru then false
+//│ ║         	    ^^^^
+//│ ╟── `x` has 1 missing case
+//│ ║  l.124: 	    Fals and x is Tru then false
+//│ ║         	             ^
+//│ ╟── it can be module `Fals`
+//│ ║  l.123: 	    Tru and x is Fals then true
+//│ ╙──       	                 ^^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.123: 	    Tru and x is Fals then true
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^
+//│ ╟── class pattern of type `Tru` is not an instance of type `Fals`
+//│ ║  l.120: 	    Tru and y is Tru then true
+//│ ║         	    ^^^
+//│ ╟── but it flows into reference with expected type `Fals`
+//│ ║  l.123: 	    Tru and x is Fals then true
+//│ ║         	            ^
+//│ ╟── Note: constraint arises from class pattern:
+//│ ║  l.123: 	    Tru and x is Fals then true
+//│ ╙──       	                 ^^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.124: 	    Fals and x is Tru then false
+//│ ║         	             ^^^^^^^^^^^^^^^^^^^
+//│ ╟── class pattern of type `Fals` is not an instance of type `Tru`
+//│ ║  l.121: 	    Fals and y is Fals then false
+//│ ║         	    ^^^^
+//│ ╟── but it flows into reference with expected type `Tru`
+//│ ║  l.124: 	    Fals and x is Tru then false
+//│ ║         	             ^
+//│ ╟── Note: constraint arises from class pattern:
+//│ ║  l.124: 	    Fals and x is Tru then false
+//│ ╙──       	                  ^^^
 //│ fun f: (Fals | Tru, Fals | Tru) -> Bool
 
 fun h(x, y, p) = if
@@ -106,4 +171,4 @@ fun h(x, y, p) = if
   y is
     Tru then 1
     Fals then 2
-//│ fun h: (Object, Fals | Tru, true -> Object) -> (0 | 1 | 2)
+//│ fun h: forall 'a. ('a & Bool, Fals | Tru, 'a -> Bool) -> (0 | 1 | 2)

@@ -1,0 +1,47 @@
+:NewDefs
+
+:DontDistributeForalls
+
+
+// * This test reproduces a situation where ?A <: ?B <: ?A and we extrude both ?A and ?B to a lower level.
+// * The goal was to check how the resulting approximants were related.
+// * It turns out that in the current implementation,
+// * since we (arbitrarily) only register upper bounds in this case (i.e., ?B ∈ UB(?A) and ?A ∈ UB(?B))
+// * then the lower approximants end up being subtypes of each other,
+// * which happens when they are extruded negatively and their corresponding bounds are copied,
+// * but the upper approximants remain unrelated.
+// * This is sound, but the extra lower approximants bounds are not necessary,
+// * and indeed the SuperF constraining specification will not add them.
+
+
+class Invar[X, Y] { fun x: X -> X = id; fun y: Y -> Y = id }
+//│ class Invar[X, Y] {
+//│   constructor()
+//│   fun x: X -> X
+//│   fun y: Y -> Y
+//│ }
+
+fun bar[A, B]: () -> [A -> A, (B -> B) -> Invar[A, B]] = () => [id, _ => new Invar]
+//│ fun bar: forall 'A 'B. () -> ['A -> 'A, ('B -> 'B) -> Invar['A, 'B]]
+
+// :d
+:ns
+fun foo(x) =
+  let inner() =
+    let tmp = bar()
+    let r = tmp.1(tmp.0)
+    x(r)
+    r
+//│ fun foo: forall 'a 'b 'A 'B 'A0 'B0 'c. 'a -> ()
+//│   where
+//│     'a <: 'b -> 'c
+//│     'c <: ()
+//│     'b :> Invar[in 'A out 'A0, in 'B out 'B0]
+//│     'B0 :> 'B
+//│     'A0 :> 'A
+//│     'A <: 'B
+//│     'B <: 'A
+
+// * Above, 'A and 'B are the lower approximants and 'A0 and 'B0 are the upper approximants.
+
+

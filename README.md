@@ -44,6 +44,14 @@ We recommend you to install JDK and sbt via [coursier][coursier]. The versions o
 [node.js]: https://nodejs.org/
 [coursier]: https://get-coursier.io/
 
+Some tests in the `compiler` subproject generate and compile C++ while making use of some libraries.
+You can run these by installing `nix` (for MacOS, we recommend https://determinate.systems/posts/graphical-nix-installer/)
+and running `nix develop` before launching SBT.
+If you don't want to use nix, you can install the dependencies manually as follows, but this has not been tested on non-MacOS systems:
+```bash
+brew install mimalloc boost gmp
+```
+
 ### Running the tests
 
 Running the main MLscript tests only requires the Scala Build Tool installed.

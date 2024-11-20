@@ -1,132 +1,108 @@
-:NewParser
+:NewDefs
 :ParseOnly
 :UseIR
+:NoTailRec
+
+:prelude
+module True
+module False
+module Callable {
+  fun apply0() = 0
+  fun apply1(x0) = 0
+  fun apply2(x0,x1) = 0
+  fun apply3(x0,x1,x2) = 0
+  fun apply4(x0,x1,x2,x3) = 0
+  fun apply5(x0,x1,x2,x3,x4) = 0
+}
+module List[A, B]
+class Cons[A, B](h: A, t: Cons[A, B]) extends List[A, B]
+module Nil[A, B] extends List[A, B]
+module Option[A]
+class Some[A](x: A) extends Option[A]
+module None[A] extends Option[A]
+class Pair[A, B](x: A, y: B)
+class Tuple2[A, B](x: A, y: B)
+class Tuple3[A, B, C](x: A, y: B, z: C)
+module Nat
+class S(s: Nat) extends Nat
+module O extends Nat
+module Either[A, B]
+class Left[A, B](x: A) extends Either[A, B]
+class Right[A, B](y: B) extends Either[A, B]
+class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O, _16: Either, _17: Left, _18: Right)
+//│ |#module| |True|↵|#module| |False|↵|#module| |Callable| |{|→|#fun| |apply0|(||)| |#=| |0|↵|#fun| |apply1|(|x0|)| |#=| |0|↵|#fun| |apply2|(|x0|,|x1|)| |#=| |0|↵|#fun| |apply3|(|x0|,|x1|,|x2|)| |#=| |0|↵|#fun| |apply4|(|x0|,|x1|,|x2|,|x3|)| |#=| |0|↵|#fun| |apply5|(|x0|,|x1|,|x2|,|x3|,|x4|)| |#=| |0|←|↵|}|↵|#module| |List|[|A|,| |B|]|↵|#class| |Cons|[|A|,| |B|]|(|h|#:| |A|,| |t|#:| |Cons|[|A|,| |B|]|)| |#extends| |List|[|A|,| |B|]|↵|#module| |Nil|[|A|,| |B|]| |#extends| |List|[|A|,| |B|]|↵|#module| |Option|[|A|]|↵|#class| |Some|[|A|]|(|x|#:| |A|)| |#extends| |Option|[|A|]|↵|#module| |None|[|A|]| |#extends| |Option|[|A|]|↵|#class| |Pair|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple2|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple3|[|A|,| |B|,| |C|]|(|x|#:| |A|,| |y|#:| |B|,| |z|#:| |C|)|↵|#module| |Nat|↵|#class| |S|(|s|#:| |Nat|)| |#extends| |Nat|↵|#module| |O| |#extends| |Nat|↵|#module| |Either|[|A|,| |B|]|↵|#class| |Left|[|A|,| |B|]|(|x|#:| |A|)| |#extends| |Either|[|A|,| |B|]|↵|#class| |Right|[|A|,| |B|]|(|y|#:| |B|)| |#extends| |Either|[|A|,| |B|]|↵|#class| |HiddenTheseEntities|(|_0|#:| |HiddenTheseEntities|,| |_1|#:| |True|,| |_2|#:| |False|,| |_3|#:| |Callable|,| |_4|#:| |List|,| |_5|#:| |Cons|,| |_6|#:| |Nil|,| |_7|#:| |Option|,| |_8|#:| |Some|,| |_9|#:| |None|,| |_10|#:| |Pair|,| |_11|#:| |Tuple2|,| |_12|#:| |Tuple3|,| |_13|#:| |Nat|,| |_14|#:| |S|,| |_15|#:| |O|,| |_16|#:| |Either|,| |_17|#:| |Left|,| |_18|#:| |Right|)|
+//│ Parsed: {module True {}; module False {}; module Callable {fun apply0 = () => 0; fun apply1 = (x0,) => 0; fun apply2 = (x0, x1,) => 0; fun apply3 = (x0, x1, x2,) => 0; fun apply4 = (x0, x1, x2, x3,) => 0; fun apply5 = (x0, x1, x2, x3, x4,) => 0}; module List‹A, B› {}; class Cons‹A, B›(h: A, t: Cons‹A, B›,): List‹A, B› {}; module Nil‹A, B›: List‹A, B› {}; module Option‹A› {}; class Some‹A›(x: A,): Option‹A› {}; module None‹A›: Option‹A› {}; class Pair‹A, B›(x: A, y: B,) {}; class Tuple2‹A, B›(x: A, y: B,) {}; class Tuple3‹A, B, C›(x: A, y: B, z: C,) {}; module Nat {}; class S(s: Nat,): Nat {}; module O: Nat {}; module Either‹A, B› {}; class Left‹A, B›(x: A,): Either‹A, B› {}; class Right‹A, B›(y: B,): Either‹A, B› {}; class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O, _16: Either, _17: Left, _18: Right,) {}}
+//│ 
+//│ Preluded.
+//│ 
+
 
 :interpIR
-class Pair(x, y)
 fun mktup2(x, y) = mktup(x, y)
 fun mktup(x, y) = Pair(x, y)
 fun foo() =
   mktup2(1, 2)
 foo()
-//│ |#class| |Pair|(|x|,| |y|)|↵|#fun| |mktup2|(|x|,| |y|)| |#=| |mktup|(|x|,| |y|)|↵|#fun| |mktup|(|x|,| |y|)| |#=| |Pair|(|x|,| |y|)|↵|#fun| |foo|(||)| |#=|→|mktup2|(|1|,| |2|)|←|↵|foo|(||)|
-//│ Parsed: {class Pair(x, y,) {}; fun mktup2 = (x, y,) => mktup(x, y,); fun mktup = (x, y,) => Pair(x, y,); fun foo = () => {mktup2(1, 2,)}; foo()}
+//│ |#fun| |mktup2|(|x|,| |y|)| |#=| |mktup|(|x|,| |y|)|↵|#fun| |mktup|(|x|,| |y|)| |#=| |Pair|(|x|,| |y|)|↵|#fun| |foo|(||)| |#=|→|mktup2|(|1|,| |2|)|←|↵|foo|(||)|
+//│ Parsed: {fun mktup2 = (x, y,) => mktup(x, y,); fun mktup = (x, y,) => Pair(x, y,); fun foo = () => {mktup2(1, 2,)}; foo()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, mktup2, [x$0,y$0],
-//│ 1, 
-//│ let* (x$1) = mktup(x$0,y$0) in -- #7
-//│ x$1 -- #6
-//│ )
-//│ Def(1, mktup, [x$2,y$1],
-//│ 1, 
-//│ let x$3 = Pair(x$2,y$1) in -- #14
-//│ x$3 -- #13
-//│ )
-//│ Def(2, foo, [],
-//│ 1, 
-//│ let* (x$4) = mktup2(1,2) in -- #22
-//│ x$4 -- #21
-//│ )
-//│ },
-//│ let* (x$5) = foo() in -- #26
-//│ x$5 -- #25)
+//│ Program:
 //│ 
-//│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, mktup2, [x$0,y$0],
-//│ 1, 
-//│ let* (x$1) = mktup(x$0,y$0) in -- #7
-//│ x$1 -- #6
-//│ )
-//│ Def(1, mktup, [x$2,y$1],
-//│ 1, 
-//│ let x$3 = Pair(x$2,y$1) in -- #14
-//│ x$3 -- #13
-//│ )
-//│ Def(2, foo, [],
-//│ 1, 
-//│ let* (x$4) = mktup2(1,2) in -- #22
-//│ x$4 -- #21
-//│ )
-//│ },
-//│ let* (x$5) = foo() in -- #26
-//│ x$5 -- #25)
+//│   def mktup2(x$1,y$0) =
+//│     let* (x$2) = mktup(x$1,y$0) in -- #9
+//│     x$2 -- #8
+//│   def mktup(x$3,y$1) =
+//│     let x$4 = Pair(x$3,y$1) in -- #16
+//│     x$4 -- #15
+//│   def foo() =
+//│     let* (x$5) = mktup2(1,2) in -- #23
+//│     x$5 -- #22
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ Pair(1,2)
+//│ 
 
 :interpIR
-class Pair(x, y)
 fun foo(pair) =
   if pair is
     Pair(x, y) then Pair(x, y)
 fun bar() =
   foo(Pair(1, 2))
 bar()
-//│ |#class| |Pair|(|x|,| |y|)|↵|#fun| |foo|(|pair|)| |#=|→|#if| |pair| |is|→|Pair|(|x|,| |y|)| |#then| |Pair|(|x|,| |y|)|←|←|↵|#fun| |bar|(||)| |#=|→|foo|(|Pair|(|1|,| |2|)|)|←|↵|bar|(||)|
-//│ Parsed: {class Pair(x, y,) {}; fun foo = (pair,) => {if pair is ‹(Pair(x, y,)) then Pair(x, y,)›}; fun bar = () => {foo(Pair(1, 2,),)}; bar()}
+//│ |#fun| |foo|(|pair|)| |#=|→|#if| |pair| |is|→|Pair|(|x|,| |y|)| |#then| |Pair|(|x|,| |y|)|←|←|↵|#fun| |bar|(||)| |#=|→|foo|(|Pair|(|1|,| |2|)|)|←|↵|bar|(||)|
+//│ Parsed: {fun foo = (pair,) => {if pair is ‹(Pair(x, y,)) then Pair(x, y,)›}; fun bar = () => {foo(Pair(1, 2,),)}; bar()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, foo, [pair$0],
-//│ 1, 
-//│ case pair$0 of -- #16
-//│   Pair =>
-//│     let x$1 = pair$0.y in -- #15
-//│     let x$2 = pair$0.x in -- #14
-//│     let x$3 = Pair(x$2,x$1) in -- #13
-//│     jump j$0(x$3) -- #12
-//│ )
-//│ Def(1, j$0, [x$0],
-//│ 1, 
-//│ x$0 -- #1
-//│ )
-//│ Def(2, bar, [],
-//│ 1, 
-//│ let x$4 = Pair(1,2) in -- #28
-//│ let* (x$5) = foo(x$4) in -- #27
-//│ x$5 -- #26
-//│ )
-//│ },
-//│ let* (x$6) = bar() in -- #32
-//│ x$6 -- #31)
+//│ Program:
 //│ 
-//│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, foo, [pair$0],
-//│ 1, 
-//│ case pair$0 of -- #16
-//│   Pair =>
-//│     let x$1 = pair$0.y in -- #15
-//│     let x$2 = pair$0.x in -- #14
-//│     let x$3 = Pair(x$2,x$1) in -- #13
-//│     jump j$0(x$3) -- #12
-//│ )
-//│ Def(1, j$0, [x$0],
-//│ 1, 
-//│ x$0 -- #1
-//│ )
-//│ Def(2, bar, [],
-//│ 1, 
-//│ let x$4 = Pair(1,2) in -- #28
-//│ let* (x$5) = foo(x$4) in -- #27
-//│ x$5 -- #26
-//│ )
-//│ },
-//│ let* (x$6) = bar() in -- #32
-//│ x$6 -- #31)
+//│   def foo(pair$0) =
+//│     case pair$0 of -- #23
+//│       Pair =>
+//│         let x$2 = Pair.y(pair$0) in -- #22
+//│         let x$3 = Pair.x(pair$0) in -- #21
+//│         let x$4 = Pair(x$3,x$2) in -- #20
+//│         jump j$0(x$4) -- #19
+//│   def j$0(x$1) =
+//│     x$1 -- #4
+//│   def bar() =
+//│     let x$5 = Pair(1,2) in -- #34
+//│     let* (x$6) = foo(x$5) in -- #33
+//│     x$6 -- #32
+//│   let* (x$0) = bar() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ Pair(1,2)
+//│ 
 
 
 
 :interpIR
-class Pair(x, y) {}
 fun silly(pair) =
   let _ = 0
   let n = if pair is
@@ -139,88 +115,45 @@ fun foo() =
     let b = silly(a)
     b
 foo()
-//│ |#class| |Pair|(|x|,| |y|)| |{||}|↵|#fun| |silly|(|pair|)| |#=|→|#let| |_| |#=| |0|↵|#let| |n| |#=| |#if| |pair| |is|→|Pair|(|x1|,| |x2|)| |#then|→|#if| |pair| |is|→|Pair| |(|x3|,| |x4|)| |#then| |x3| |+| |1|←|←|←|↵|n| |+| |1|←|↵|#fun| |foo|(||)| |#=|→|#let| |a| |#=| |Pair|(|0|,| |1|)|↵|#let| |b| |#=| |silly|(|a|)|↵|b|←|↵|foo|(||)|
-//│ Parsed: {class Pair(x, y,) {}; fun silly = (pair,) => {let _ = 0; let n = if pair is ‹(Pair(x1, x2,)) then {if pair is ‹(Pair(x3, x4,)) then +(x3,)(1,)›}›; +(n,)(1,)}; fun foo = () => {let a = Pair(0, 1,); let b = silly(a,); b}; foo()}
+//│ |#fun| |silly|(|pair|)| |#=|→|#let| |_| |#=| |0|↵|#let| |n| |#=| |#if| |pair| |is|→|Pair|(|x1|,| |x2|)| |#then|→|#if| |pair| |is|→|Pair| |(|x3|,| |x4|)| |#then| |x3| |+| |1|←|←|←|↵|n| |+| |1|←|↵|#fun| |foo|(||)| |#=|→|#let| |a| |#=| |Pair|(|0|,| |1|)|↵|#let| |b| |#=| |silly|(|a|)|↵|b|←|↵|foo|(||)|
+//│ Parsed: {fun silly = (pair,) => {let _ = 0; let n = if pair is ‹(Pair(x1, x2,)) then {if pair is ‹(Pair(x3, x4,)) then +(x3, 1,)›}›; +(n, 1,)}; fun foo = () => {let a = Pair(0, 1,); let b = silly(a,); b}; foo()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, silly, [pair$0],
-//│ 1, 
-//│ let x$0 = 0 in -- #29
-//│ case pair$0 of -- #28
-//│   Pair =>
-//│     let x$3 = pair$0.y in -- #27
-//│     let x$4 = pair$0.x in -- #26
-//│     case pair$0 of -- #25
-//│       Pair =>
-//│         let x$6 = pair$0.y in -- #24
-//│         let x$7 = pair$0.x in -- #23
-//│         let x$8 = +(x$7,1) in -- #22
-//│         jump j$1(x$8) -- #21
-//│ )
-//│ Def(1, j$0, [x$1],
-//│ 1, 
-//│ let x$2 = +(x$1,1) in -- #6
-//│ x$2 -- #5
-//│ )
-//│ Def(2, j$1, [x$5],
-//│ 1, 
-//│ jump j$0(x$5) -- #13
-//│ )
-//│ Def(3, foo, [],
-//│ 1, 
-//│ let x$9 = Pair(0,1) in -- #43
-//│ let* (x$10) = silly(x$9) in -- #42
-//│ x$10 -- #41
-//│ )
-//│ },
-//│ let* (x$11) = foo() in -- #47
-//│ x$11 -- #46)
+//│ Program:
 //│ 
-//│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, silly, [pair$0],
-//│ 1, 
-//│ let x$0 = 0 in -- #29
-//│ case pair$0 of -- #28
-//│   Pair =>
-//│     let x$3 = pair$0.y in -- #27
-//│     let x$4 = pair$0.x in -- #26
-//│     case pair$0 of -- #25
+//│   def silly(pair$0) =
+//│     let x$1 = 0 in -- #46
+//│     case pair$0 of -- #45
 //│       Pair =>
-//│         let x$6 = pair$0.y in -- #24
-//│         let x$7 = pair$0.x in -- #23
-//│         let x$8 = +(x$7,1) in -- #22
-//│         jump j$1(x$8) -- #21
-//│ )
-//│ Def(1, j$0, [x$1],
-//│ 1, 
-//│ let x$2 = +(x$1,1) in -- #6
-//│ x$2 -- #5
-//│ )
-//│ Def(2, j$1, [x$5],
-//│ 1, 
-//│ jump j$0(x$5) -- #13
-//│ )
-//│ Def(3, foo, [],
-//│ 1, 
-//│ let x$9 = Pair(0,1) in -- #43
-//│ let* (x$10) = silly(x$9) in -- #42
-//│ x$10 -- #41
-//│ )
-//│ },
-//│ let* (x$11) = foo() in -- #47
-//│ x$11 -- #46)
+//│         let x$4 = Pair.y(pair$0) in -- #44
+//│         let x$5 = Pair.x(pair$0) in -- #43
+//│         case pair$0 of -- #42
+//│           Pair =>
+//│             let x$7 = Pair.y(pair$0) in -- #41
+//│             let x$8 = Pair.x(pair$0) in -- #40
+//│             let x$9 = +(x$8,1) in -- #39
+//│             jump j$1(x$9) -- #38
+//│   def j$0(x$2) =
+//│     let x$3 = +(x$2,1) in -- #12
+//│     x$3 -- #11
+//│   def j$1(x$6) =
+//│     jump j$0(x$6) -- #23
+//│   def foo() =
+//│     let x$10 = Pair(0,1) in -- #59
+//│     let* (x$11) = silly(x$10) in -- #58
+//│     x$11 -- #57
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ 2
+//│ 
 
 
 
 
 :interpIR
-class Pair(x, y)
 fun inc_fst(pair) =
   let c = 2
   if pair is
@@ -230,67 +163,35 @@ fun foo() =
     let b = inc_fst(a)
     b
 foo()
-//│ |#class| |Pair|(|x|,| |y|)|↵|#fun| |inc_fst|(|pair|)| |#=|→|#let| |c| |#=| |2|↵|#if| |pair| |is|→|Pair|(|x1|,| |x2|)| |#then| |x1| |+| |c|←|←|↵|#fun| |foo|(||)| |#=|→|#let| |a| |#=| |Pair|(|0|,| |1|)|↵|#let| |b| |#=| |inc_fst|(|a|)|↵|b|←|↵|foo|(||)|
-//│ Parsed: {class Pair(x, y,) {}; fun inc_fst = (pair,) => {let c = 2; if pair is ‹(Pair(x1, x2,)) then +(x1,)(c,)›}; fun foo = () => {let a = Pair(0, 1,); let b = inc_fst(a,); b}; foo()}
+//│ |#fun| |inc_fst|(|pair|)| |#=|→|#let| |c| |#=| |2|↵|#if| |pair| |is|→|Pair|(|x1|,| |x2|)| |#then| |x1| |+| |c|←|←|↵|#fun| |foo|(||)| |#=|→|#let| |a| |#=| |Pair|(|0|,| |1|)|↵|#let| |b| |#=| |inc_fst|(|a|)|↵|b|←|↵|foo|(||)|
+//│ Parsed: {fun inc_fst = (pair,) => {let c = 2; if pair is ‹(Pair(x1, x2,)) then +(x1, c,)›}; fun foo = () => {let a = Pair(0, 1,); let b = inc_fst(a,); b}; foo()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, inc_fst, [pair$0],
-//│ 1, 
-//│ let x$0 = 2 in -- #15
-//│ case pair$0 of -- #14
-//│   Pair =>
-//│     let x$2 = pair$0.y in -- #13
-//│     let x$3 = pair$0.x in -- #12
-//│     let x$4 = +(x$3,x$0) in -- #11
-//│     jump j$0(x$4) -- #10
-//│ )
-//│ Def(1, j$0, [x$1],
-//│ 1, 
-//│ x$1 -- #2
-//│ )
-//│ Def(2, foo, [],
-//│ 1, 
-//│ let x$5 = Pair(0,1) in -- #29
-//│ let* (x$6) = inc_fst(x$5) in -- #28
-//│ x$6 -- #27
-//│ )
-//│ },
-//│ let* (x$7) = foo() in -- #33
-//│ x$7 -- #32)
+//│ Program:
 //│ 
-//│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, inc_fst, [pair$0],
-//│ 1, 
-//│ let x$0 = 2 in -- #15
-//│ case pair$0 of -- #14
-//│   Pair =>
-//│     let x$2 = pair$0.y in -- #13
-//│     let x$3 = pair$0.x in -- #12
-//│     let x$4 = +(x$3,x$0) in -- #11
-//│     jump j$0(x$4) -- #10
-//│ )
-//│ Def(1, j$0, [x$1],
-//│ 1, 
-//│ x$1 -- #2
-//│ )
-//│ Def(2, foo, [],
-//│ 1, 
-//│ let x$5 = Pair(0,1) in -- #29
-//│ let* (x$6) = inc_fst(x$5) in -- #28
-//│ x$6 -- #27
-//│ )
-//│ },
-//│ let* (x$7) = foo() in -- #33
-//│ x$7 -- #32)
+//│   def inc_fst(pair$0) =
+//│     let x$1 = 2 in -- #25
+//│     case pair$0 of -- #24
+//│       Pair =>
+//│         let x$3 = Pair.y(pair$0) in -- #23
+//│         let x$4 = Pair.x(pair$0) in -- #22
+//│         let x$5 = +(x$4,x$1) in -- #21
+//│         jump j$0(x$5) -- #20
+//│   def j$0(x$2) =
+//│     x$2 -- #5
+//│   def foo() =
+//│     let x$6 = Pair(0,1) in -- #38
+//│     let* (x$7) = inc_fst(x$6) in -- #37
+//│     x$7 -- #36
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ 2
+//│ 
 
 :interpIR
-class Pair(x, y)
 fun inc_fst(pair) =
   let _ = 0
   if pair is
@@ -299,68 +200,35 @@ fun foo() =
     let b = inc_fst(Pair(0, 1))
     b
 foo()
-//│ |#class| |Pair|(|x|,| |y|)|↵|#fun| |inc_fst|(|pair|)| |#=|→|#let| |_| |#=| |0|↵|#if| |pair| |is|→|Pair|(|x1|,| |x2|)| |#then| |x2| |+| |1|←|←|↵|#fun| |foo|(||)| |#=|→|#let| |b| |#=| |inc_fst|(|Pair|(|0|,| |1|)|)|↵|b|←|↵|foo|(||)|
-//│ Parsed: {class Pair(x, y,) {}; fun inc_fst = (pair,) => {let _ = 0; if pair is ‹(Pair(x1, x2,)) then +(x2,)(1,)›}; fun foo = () => {let b = inc_fst(Pair(0, 1,),); b}; foo()}
+//│ |#fun| |inc_fst|(|pair|)| |#=|→|#let| |_| |#=| |0|↵|#if| |pair| |is|→|Pair|(|x1|,| |x2|)| |#then| |x2| |+| |1|←|←|↵|#fun| |foo|(||)| |#=|→|#let| |b| |#=| |inc_fst|(|Pair|(|0|,| |1|)|)|↵|b|←|↵|foo|(||)|
+//│ Parsed: {fun inc_fst = (pair,) => {let _ = 0; if pair is ‹(Pair(x1, x2,)) then +(x2, 1,)›}; fun foo = () => {let b = inc_fst(Pair(0, 1,),); b}; foo()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, inc_fst, [pair$0],
-//│ 1, 
-//│ let x$0 = 0 in -- #15
-//│ case pair$0 of -- #14
-//│   Pair =>
-//│     let x$2 = pair$0.y in -- #13
-//│     let x$3 = pair$0.x in -- #12
-//│     let x$4 = +(x$2,1) in -- #11
-//│     jump j$0(x$4) -- #10
-//│ )
-//│ Def(1, j$0, [x$1],
-//│ 1, 
-//│ x$1 -- #2
-//│ )
-//│ Def(2, foo, [],
-//│ 1, 
-//│ let x$5 = Pair(0,1) in -- #28
-//│ let* (x$6) = inc_fst(x$5) in -- #27
-//│ x$6 -- #26
-//│ )
-//│ },
-//│ let* (x$7) = foo() in -- #32
-//│ x$7 -- #31)
+//│ Program:
 //│ 
-//│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, inc_fst, [pair$0],
-//│ 1, 
-//│ let x$0 = 0 in -- #15
-//│ case pair$0 of -- #14
-//│   Pair =>
-//│     let x$2 = pair$0.y in -- #13
-//│     let x$3 = pair$0.x in -- #12
-//│     let x$4 = +(x$2,1) in -- #11
-//│     jump j$0(x$4) -- #10
-//│ )
-//│ Def(1, j$0, [x$1],
-//│ 1, 
-//│ x$1 -- #2
-//│ )
-//│ Def(2, foo, [],
-//│ 1, 
-//│ let x$5 = Pair(0,1) in -- #28
-//│ let* (x$6) = inc_fst(x$5) in -- #27
-//│ x$6 -- #26
-//│ )
-//│ },
-//│ let* (x$7) = foo() in -- #32
-//│ x$7 -- #31)
+//│   def inc_fst(pair$0) =
+//│     let x$1 = 0 in -- #25
+//│     case pair$0 of -- #24
+//│       Pair =>
+//│         let x$3 = Pair.y(pair$0) in -- #23
+//│         let x$4 = Pair.x(pair$0) in -- #22
+//│         let x$5 = +(x$3,1) in -- #21
+//│         jump j$0(x$5) -- #20
+//│   def j$0(x$2) =
+//│     x$2 -- #5
+//│   def foo() =
+//│     let x$6 = Pair(0,1) in -- #37
+//│     let* (x$7) = inc_fst(x$6) in -- #36
+//│     x$7 -- #35
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ 2
+//│ 
 
 :interpIR
-class Left(x)
-class Right(y)
 fun foo(a, b) =
   let t = if a is
     Left(x) then Left(x + 1)
@@ -371,222 +239,81 @@ fun foo(a, b) =
 fun bar() =
   foo(Right(2), 2)
 bar()
-//│ |#class| |Left|(|x|)|↵|#class| |Right|(|y|)|↵|#fun| |foo|(|a|,| |b|)| |#=|→|#let| |t| |#=| |#if| |a| |is|→|Left|(|x|)| |#then| |Left|(|x| |+| |1|)|↵|Right|(|y|)| |#then| |Right|(|b|)|←|↵|#if| |t| |is|→|Left|(|x|)| |#then| |x|↵|Right|(|y|)| |#then| |y|←|←|↵|#fun| |bar|(||)| |#=|→|foo|(|Right|(|2|)|,| |2|)|←|↵|bar|(||)|
-//│ Parsed: {class Left(x,) {}; class Right(y,) {}; fun foo = (a, b,) => {let t = if a is ‹(Left(x,)) then Left(+(x,)(1,),); (Right(y,)) then Right(b,)›; if t is ‹(Left(x,)) then x; (Right(y,)) then y›}; fun bar = () => {foo(Right(2,), 2,)}; bar()}
+//│ |#fun| |foo|(|a|,| |b|)| |#=|→|#let| |t| |#=| |#if| |a| |is|→|Left|(|x|)| |#then| |Left|(|x| |+| |1|)|↵|Right|(|y|)| |#then| |Right|(|b|)|←|↵|#if| |t| |is|→|Left|(|x|)| |#then| |x|↵|Right|(|y|)| |#then| |y|←|←|↵|#fun| |bar|(||)| |#=|→|foo|(|Right|(|2|)|,| |2|)|←|↵|bar|(||)|
+//│ Parsed: {fun foo = (a, b,) => {let t = if a is ‹(Left(x,)) then Left(+(x, 1,),); (Right(y,)) then Right(b,)›; if t is ‹(Left(x,)) then x; (Right(y,)) then y›}; fun bar = () => {foo(Right(2,), 2,)}; bar()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
-//│ Def(0, foo, [a$0,b$0],
-//│ 1, 
-//│ case a$0 of -- #36
-//│   Left =>
-//│     let x$4 = a$0.x in -- #26
-//│     let x$5 = +(x$4,1) in -- #25
-//│     let x$6 = Left(x$5) in -- #24
-//│     jump j$0(x$6) -- #23
-//│   Right =>
-//│     let x$7 = a$0.y in -- #35
-//│     let x$8 = Right(b$0) in -- #34
-//│     jump j$0(x$8) -- #33
-//│ )
-//│ Def(1, j$1, [x$1],
-//│ 1, 
-//│ x$1 -- #3
-//│ )
-//│ Def(2, j$0, [x$0],
-//│ 1, 
-//│ case x$0 of -- #14
-//│   Left =>
-//│     let x$2 = x$0.x in -- #8
-//│     jump j$1(x$2) -- #7
-//│   Right =>
-//│     let x$3 = x$0.y in -- #13
-//│     jump j$1(x$3) -- #12
-//│ )
-//│ Def(3, bar, [],
-//│ 1, 
-//│ let x$9 = Right(2) in -- #48
-//│ let* (x$10) = foo(x$9,2) in -- #47
-//│ x$10 -- #46
-//│ )
-//│ },
-//│ let* (x$11) = bar() in -- #52
-//│ x$11 -- #51)
+//│ Program:
 //│ 
-//│ Promoted:
-//│ Program({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
-//│ Def(0, foo, [a$0,b$0],
-//│ 1, 
-//│ case a$0 of -- #36
-//│   Left =>
-//│     let x$4 = a$0.x in -- #26
-//│     let x$5 = +(x$4,1) in -- #25
-//│     let x$6 = Left(x$5) in -- #24
-//│     jump j$0(x$6) -- #23
-//│   Right =>
-//│     let x$7 = a$0.y in -- #35
-//│     let x$8 = Right(b$0) in -- #34
-//│     jump j$0(x$8) -- #33
-//│ )
-//│ Def(1, j$1, [x$1],
-//│ 1, 
-//│ x$1 -- #3
-//│ )
-//│ Def(2, j$0, [x$0],
-//│ 1, 
-//│ case x$0 of -- #14
-//│   Left =>
-//│     let x$2 = x$0.x in -- #8
-//│     jump j$1(x$2) -- #7
-//│   Right =>
-//│     let x$3 = x$0.y in -- #13
-//│     jump j$1(x$3) -- #12
-//│ )
-//│ Def(3, bar, [],
-//│ 1, 
-//│ let x$9 = Right(2) in -- #48
-//│ let* (x$10) = foo(x$9,2) in -- #47
-//│ x$10 -- #46
-//│ )
-//│ },
-//│ let* (x$11) = bar() in -- #52
-//│ x$11 -- #51)
+//│   def foo(a$0,b$0) =
+//│     case a$0 of -- #50
+//│       Left =>
+//│         let x$5 = Left.x(a$0) in -- #38
+//│         let x$6 = +(x$5,1) in -- #37
+//│         let x$7 = Left(x$6) in -- #36
+//│         jump j$0(x$7) -- #35
+//│       Right =>
+//│         let x$8 = Right.y(a$0) in -- #49
+//│         let x$9 = Right(b$0) in -- #48
+//│         jump j$0(x$9) -- #47
+//│   def j$1(x$2) =
+//│     x$2 -- #6
+//│   def j$0(x$1) =
+//│     case x$1 of -- #21
+//│       Left =>
+//│         let x$3 = Left.x(x$1) in -- #13
+//│         jump j$1(x$3) -- #12
+//│       Right =>
+//│         let x$4 = Right.y(x$1) in -- #20
+//│         jump j$1(x$4) -- #19
+//│   def bar() =
+//│     let x$10 = Right(2) in -- #61
+//│     let* (x$11) = foo(x$10,2) in -- #60
+//│     x$11 -- #59
+//│   let* (x$0) = bar() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ 2
+//│ 
 
 :interpIR
-class True
-class False
-class Pair(x, y)
-fun foo(a) = a.x + a.y
+fun foo(a) = Pair.x(a) + Pair.y(a)
 fun bar() =
   foo(Pair(1, 0))
 bar()
-//│ |#class| |True|↵|#class| |False|↵|#class| |Pair|(|x|,| |y|)|↵|#fun| |foo|(|a|)| |#=| |a|.x| |+| |a|.y|↵|#fun| |bar|(||)| |#=|→|foo|(|Pair|(|1|,| |0|)|)|←|↵|bar|(||)|
-//│ Parsed: {class True {}; class False {}; class Pair(x, y,) {}; fun foo = (a,) => +((a).x,)((a).y,); fun bar = () => {foo(Pair(1, 0,),)}; bar()}
+//│ |#fun| |foo|(|a|)| |#=| |Pair|.x|(|a|)| |+| |Pair|.y|(|a|)|↵|#fun| |bar|(||)| |#=|→|foo|(|Pair|(|1|,| |0|)|)|←|↵|bar|(||)|
+//│ Parsed: {fun foo = (a,) => +((Pair).x(a,), (Pair).y(a,),); fun bar = () => {foo(Pair(1, 0,),)}; bar()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Pair, [x,y])}, {
-//│ Def(0, foo, [a$0],
-//│ 1, 
-//│ let x$0 = a$0.x in -- #7
-//│ let x$1 = a$0.y in -- #6
-//│ let x$2 = +(x$0,x$1) in -- #5
-//│ x$2 -- #4
-//│ )
-//│ Def(1, bar, [],
-//│ 1, 
-//│ let x$3 = Pair(1,0) in -- #19
-//│ let* (x$4) = foo(x$3) in -- #18
-//│ x$4 -- #17
-//│ )
-//│ },
-//│ let* (x$5) = bar() in -- #23
-//│ x$5 -- #22)
+//│ Program:
 //│ 
-//│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Pair, [x,y])}, {
-//│ Def(0, foo, [a$0],
-//│ 1, 
-//│ let x$0 = a$0.x in -- #7
-//│ let x$1 = a$0.y in -- #6
-//│ let x$2 = +(x$0,x$1) in -- #5
-//│ x$2 -- #4
-//│ )
-//│ Def(1, bar, [],
-//│ 1, 
-//│ let x$3 = Pair(1,0) in -- #19
-//│ let* (x$4) = foo(x$3) in -- #18
-//│ x$4 -- #17
-//│ )
-//│ },
-//│ let* (x$5) = bar() in -- #23
-//│ x$5 -- #22)
+//│   def foo(a$0) =
+//│     let x$1 = Pair.x(a$0) in -- #17
+//│     let x$2 = Pair.y(a$0) in -- #16
+//│     let x$3 = +(x$1,x$2) in -- #15
+//│     x$3 -- #14
+//│   def bar() =
+//│     let x$4 = Pair(1,0) in -- #28
+//│     let* (x$5) = foo(x$4) in -- #27
+//│     x$5 -- #26
+//│   let* (x$0) = bar() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ 1
+//│ 
 
 
-:interpIR
-class C1(x, y)
-class C2(z)
-fun foo(a) = if a is
-  C1(x, y) then x
-  C2(z) then z
-fun bar() =
-  foo(C1(0, 1))
-bar()
-//│ |#class| |C1|(|x|,| |y|)|↵|#class| |C2|(|z|)|↵|#fun| |foo|(|a|)| |#=| |#if| |a| |is|→|C1|(|x|,| |y|)| |#then| |x|↵|C2|(|z|)| |#then| |z|←|↵|#fun| |bar|(||)| |#=|→|foo|(|C1|(|0|,| |1|)|)|←|↵|bar|(||)|
-//│ Parsed: {class C1(x, y,) {}; class C2(z,) {}; fun foo = (a,) => if a is ‹(C1(x, y,)) then x; (C2(z,)) then z›; fun bar = () => {foo(C1(0, 1,),)}; bar()}
-//│ 
-//│ 
-//│ IR:
-//│ Program({ClassInfo(0, C1, [x,y]),ClassInfo(1, C2, [z])}, {
-//│ Def(0, foo, [a$0],
-//│ 1, 
-//│ case a$0 of -- #15
-//│   C1 =>
-//│     let x$1 = a$0.y in -- #9
-//│     let x$2 = a$0.x in -- #8
-//│     jump j$0(x$2) -- #7
-//│   C2 =>
-//│     let x$3 = a$0.z in -- #14
-//│     jump j$0(x$3) -- #13
-//│ )
-//│ Def(1, j$0, [x$0],
-//│ 1, 
-//│ x$0 -- #1
-//│ )
-//│ Def(2, bar, [],
-//│ 1, 
-//│ let x$4 = C1(0,1) in -- #27
-//│ let* (x$5) = foo(x$4) in -- #26
-//│ x$5 -- #25
-//│ )
-//│ },
-//│ let* (x$6) = bar() in -- #31
-//│ x$6 -- #30)
-//│ 
-//│ Promoted:
-//│ Program({ClassInfo(0, C1, [x,y]),ClassInfo(1, C2, [z])}, {
-//│ Def(0, foo, [a$0],
-//│ 1, 
-//│ case a$0 of -- #15
-//│   C1 =>
-//│     let x$1 = a$0.y in -- #9
-//│     let x$2 = a$0.x in -- #8
-//│     jump j$0(x$2) -- #7
-//│   C2 =>
-//│     let x$3 = a$0.z in -- #14
-//│     jump j$0(x$3) -- #13
-//│ )
-//│ Def(1, j$0, [x$0],
-//│ 1, 
-//│ x$0 -- #1
-//│ )
-//│ Def(2, bar, [],
-//│ 1, 
-//│ let x$4 = C1(0,1) in -- #27
-//│ let* (x$5) = foo(x$4) in -- #26
-//│ x$5 -- #25
-//│ )
-//│ },
-//│ let* (x$6) = bar() in -- #31
-//│ x$6 -- #30)
-//│ 
-//│ Interpreted:
-//│ 0
 
 :interpIR
-class Pair(x, y)
 fun foo(a, b) =
-  let x1 = a.x
-  let y1 = a.y
-  let x2 = b.x
-  let y2 = b.y
+  let x1 = Pair.x(a)
+  let y1 = Pair.y(a)
+  let x2 = Pair.x(b)
+  let y2 = Pair.y(b)
   x1 + y1 + x2 + y2
 fun bar(c) =
   foo(Pair(0, 1), c)
@@ -595,122 +322,67 @@ fun bar(c) =
 fun baz() =
   bar(Pair(4,5))
 baz()
-//│ |#class| |Pair|(|x|,| |y|)|↵|#fun| |foo|(|a|,| |b|)| |#=|→|#let| |x1| |#=| |a|.x|↵|#let| |y1| |#=| |a|.y|↵|#let| |x2| |#=| |b|.x|↵|#let| |y2| |#=| |b|.y|↵|x1| |+| |y1| |+| |x2| |+| |y2|←|↵|#fun| |bar|(|c|)| |#=|→|foo|(|Pair|(|0|,| |1|)|,| |c|)|↵|foo|(|c|,| |Pair|(|2|,| |3|)|)|↵|foo|(|Pair|(|0|,| |1|)|,| |Pair|(|2|,| |3|)|)|←|↵|#fun| |baz|(||)| |#=|→|bar|(|Pair|(|4|,|5|)|)|←|↵|baz|(||)|
-//│ Parsed: {class Pair(x, y,) {}; fun foo = (a, b,) => {let x1 = (a).x; let y1 = (a).y; let x2 = (b).x; let y2 = (b).y; +(+(+(x1,)(y1,),)(x2,),)(y2,)}; fun bar = (c,) => {foo(Pair(0, 1,), c,); foo(c, Pair(2, 3,),); foo(Pair(0, 1,), Pair(2, 3,),)}; fun baz = () => {bar(Pair(4, 5,),)}; baz()}
+//│ |#fun| |foo|(|a|,| |b|)| |#=|→|#let| |x1| |#=| |Pair|.x|(|a|)|↵|#let| |y1| |#=| |Pair|.y|(|a|)|↵|#let| |x2| |#=| |Pair|.x|(|b|)|↵|#let| |y2| |#=| |Pair|.y|(|b|)|↵|x1| |+| |y1| |+| |x2| |+| |y2|←|↵|#fun| |bar|(|c|)| |#=|→|foo|(|Pair|(|0|,| |1|)|,| |c|)|↵|foo|(|c|,| |Pair|(|2|,| |3|)|)|↵|foo|(|Pair|(|0|,| |1|)|,| |Pair|(|2|,| |3|)|)|←|↵|#fun| |baz|(||)| |#=|→|bar|(|Pair|(|4|,|5|)|)|←|↵|baz|(||)|
+//│ Parsed: {fun foo = (a, b,) => {let x1 = (Pair).x(a,); let y1 = (Pair).y(a,); let x2 = (Pair).x(b,); let y2 = (Pair).y(b,); +(+(+(x1, y1,), x2,), y2,)}; fun bar = (c,) => {foo(Pair(0, 1,), c,); foo(c, Pair(2, 3,),); foo(Pair(0, 1,), Pair(2, 3,),)}; fun baz = () => {bar(Pair(4, 5,),)}; baz()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, foo, [a$0,b$0],
-//│ 1, 
-//│ let x$0 = a$0.x in -- #21
-//│ let x$1 = a$0.y in -- #20
-//│ let x$2 = b$0.x in -- #19
-//│ let x$3 = b$0.y in -- #18
-//│ let x$4 = +(x$0,x$1) in -- #17
-//│ let x$5 = +(x$4,x$2) in -- #16
-//│ let x$6 = +(x$5,x$3) in -- #15
-//│ x$6 -- #14
-//│ )
-//│ Def(1, bar, [c$0],
-//│ 1, 
-//│ let x$7 = Pair(0,1) in -- #69
-//│ let* (x$8) = foo(x$7,c$0) in -- #68
-//│ let x$9 = Pair(2,3) in -- #67
-//│ let* (x$10) = foo(c$0,x$9) in -- #66
-//│ let x$11 = Pair(0,1) in -- #65
-//│ let x$12 = Pair(2,3) in -- #64
-//│ let* (x$13) = foo(x$11,x$12) in -- #63
-//│ x$13 -- #62
-//│ )
-//│ Def(2, baz, [],
-//│ 1, 
-//│ let x$14 = Pair(4,5) in -- #81
-//│ let* (x$15) = bar(x$14) in -- #80
-//│ x$15 -- #79
-//│ )
-//│ },
-//│ let* (x$16) = baz() in -- #85
-//│ x$16 -- #84)
+//│ Program:
 //│ 
-//│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, foo, [a$0,b$0],
-//│ 1, 
-//│ let x$0 = a$0.x in -- #21
-//│ let x$1 = a$0.y in -- #20
-//│ let x$2 = b$0.x in -- #19
-//│ let x$3 = b$0.y in -- #18
-//│ let x$4 = +(x$0,x$1) in -- #17
-//│ let x$5 = +(x$4,x$2) in -- #16
-//│ let x$6 = +(x$5,x$3) in -- #15
-//│ x$6 -- #14
-//│ )
-//│ Def(1, bar, [c$0],
-//│ 1, 
-//│ let x$7 = Pair(0,1) in -- #69
-//│ let* (x$8) = foo(x$7,c$0) in -- #68
-//│ let x$9 = Pair(2,3) in -- #67
-//│ let* (x$10) = foo(c$0,x$9) in -- #66
-//│ let x$11 = Pair(0,1) in -- #65
-//│ let x$12 = Pair(2,3) in -- #64
-//│ let* (x$13) = foo(x$11,x$12) in -- #63
-//│ x$13 -- #62
-//│ )
-//│ Def(2, baz, [],
-//│ 1, 
-//│ let x$14 = Pair(4,5) in -- #81
-//│ let* (x$15) = bar(x$14) in -- #80
-//│ x$15 -- #79
-//│ )
-//│ },
-//│ let* (x$16) = baz() in -- #85
-//│ x$16 -- #84)
+//│   def foo(a$0,b$0) =
+//│     let x$1 = Pair.x(a$0) in -- #41
+//│     let x$2 = Pair.y(a$0) in -- #40
+//│     let x$3 = Pair.x(b$0) in -- #39
+//│     let x$4 = Pair.y(b$0) in -- #38
+//│     let x$5 = +(x$1,x$2) in -- #37
+//│     let x$6 = +(x$5,x$3) in -- #36
+//│     let x$7 = +(x$6,x$4) in -- #35
+//│     x$7 -- #34
+//│   def bar(c$0) =
+//│     let x$8 = Pair(0,1) in -- #86
+//│     let* (x$9) = foo(x$8,c$0) in -- #85
+//│     let x$10 = Pair(2,3) in -- #84
+//│     let* (x$11) = foo(c$0,x$10) in -- #83
+//│     let x$12 = Pair(0,1) in -- #82
+//│     let x$13 = Pair(2,3) in -- #81
+//│     let* (x$14) = foo(x$12,x$13) in -- #80
+//│     x$14 -- #79
+//│   def baz() =
+//│     let x$15 = Pair(4,5) in -- #97
+//│     let* (x$16) = bar(x$15) in -- #96
+//│     x$16 -- #95
+//│   let* (x$0) = baz() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ 6
+//│ 
 
 :interpIR
-class Pair(x, y)
 fun foo() =
   let p = Pair(0, 1)
-  let b = p.x
+  let b = Pair.x(p)
   b
 foo()
-//│ |#class| |Pair|(|x|,| |y|)|↵|#fun| |foo|(||)| |#=|→|#let| |p| |#=| |Pair|(|0|,| |1|)|↵|#let| |b| |#=| |p|.x|↵|b|←|↵|foo|(||)|
-//│ Parsed: {class Pair(x, y,) {}; fun foo = () => {let p = Pair(0, 1,); let b = (p).x; b}; foo()}
+//│ |#fun| |foo|(||)| |#=|→|#let| |p| |#=| |Pair|(|0|,| |1|)|↵|#let| |b| |#=| |Pair|.x|(|p|)|↵|b|←|↵|foo|(||)|
+//│ Parsed: {fun foo = () => {let p = Pair(0, 1,); let b = (Pair).x(p,); b}; foo()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, foo, [],
-//│ 1, 
-//│ let x$0 = Pair(0,1) in -- #10
-//│ let x$1 = x$0.x in -- #9
-//│ x$1 -- #8
-//│ )
-//│ },
-//│ let* (x$2) = foo() in -- #14
-//│ x$2 -- #13)
+//│ Program:
 //│ 
-//│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, foo, [],
-//│ 1, 
-//│ let x$0 = Pair(0,1) in -- #10
-//│ let x$1 = x$0.x in -- #9
-//│ x$1 -- #8
-//│ )
-//│ },
-//│ let* (x$2) = foo() in -- #14
-//│ x$2 -- #13)
+//│   def foo() =
+//│     let x$1 = Pair(0,1) in -- #15
+//│     let x$2 = Pair.x(x$1) in -- #14
+//│     x$2 -- #13
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ 0
+//│ 
 
 :interpIR
-class S(s)
-class O
 fun foo() =
   bar(S(O))
 fun bar(x) =
@@ -720,71 +392,33 @@ fun baz(x) =
     S(s) then s
     O then x
 foo()
-//│ |#class| |S|(|s|)|↵|#class| |O|↵|#fun| |foo|(||)| |#=|→|bar|(|S|(|O|)|)|←|↵|#fun| |bar|(|x|)| |#=|→|baz|(|x|)|←|↵|#fun| |baz|(|x|)| |#=|→|#if| |x| |is|→|S|(|s|)| |#then| |s|↵|O| |#then| |x|←|←|↵|foo|(||)|
-//│ Parsed: {class S(s,) {}; class O {}; fun foo = () => {bar(S(O,),)}; fun bar = (x,) => {baz(x,)}; fun baz = (x,) => {if x is ‹(S(s,)) then s; (O) then x›}; foo()}
+//│ |#fun| |foo|(||)| |#=|→|bar|(|S|(|O|)|)|←|↵|#fun| |bar|(|x|)| |#=|→|baz|(|x|)|←|↵|#fun| |baz|(|x|)| |#=|→|#if| |x| |is|→|S|(|s|)| |#then| |s|↵|O| |#then| |x|←|←|↵|foo|(||)|
+//│ Parsed: {fun foo = () => {bar(S(O,),)}; fun bar = (x,) => {baz(x,)}; fun baz = (x,) => {if x is ‹(S(s,)) then s; (O) then x›}; foo()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, S, [s]),ClassInfo(1, O, [])}, {
-//│ Def(0, foo, [],
-//│ 1, 
-//│ let x$0 = O() in -- #10
-//│ let x$1 = S(x$0) in -- #9
-//│ let* (x$2) = bar(x$1) in -- #8
-//│ x$2 -- #7
-//│ )
-//│ Def(1, bar, [x$3],
-//│ 1, 
-//│ let* (x$4) = baz(x$3) in -- #16
-//│ x$4 -- #15
-//│ )
-//│ Def(2, baz, [x$5],
-//│ 1, 
-//│ case x$5 of -- #26
-//│   S =>
-//│     let x$7 = x$5.s in -- #23
-//│     jump j$0(x$7) -- #22
-//│   O =>
-//│     jump j$0(x$5) -- #25
-//│ )
-//│ Def(3, j$0, [x$6],
-//│ 1, 
-//│ x$6 -- #18
-//│ )
-//│ },
-//│ let* (x$8) = foo() in -- #30
-//│ x$8 -- #29)
+//│ Program:
 //│ 
-//│ Promoted:
-//│ Program({ClassInfo(0, S, [s]),ClassInfo(1, O, [])}, {
-//│ Def(0, foo, [],
-//│ 1, 
-//│ let x$0 = O() in -- #10
-//│ let x$1 = S(x$0) in -- #9
-//│ let* (x$2) = bar(x$1) in -- #8
-//│ x$2 -- #7
-//│ )
-//│ Def(1, bar, [x$3],
-//│ 1, 
-//│ let* (x$4) = baz(x$3) in -- #16
-//│ x$4 -- #15
-//│ )
-//│ Def(2, baz, [x$5],
-//│ 1, 
-//│ case x$5 of -- #26
-//│   S =>
-//│     let x$7 = x$5.s in -- #23
-//│     jump j$0(x$7) -- #22
-//│   O =>
-//│     jump j$0(x$5) -- #25
-//│ )
-//│ Def(3, j$0, [x$6],
-//│ 1, 
-//│ x$6 -- #18
-//│ )
-//│ },
-//│ let* (x$8) = foo() in -- #30
-//│ x$8 -- #29)
+//│   def foo() =
+//│     let x$1 = O() in -- #12
+//│     let x$2 = S(x$1) in -- #11
+//│     let* (x$3) = bar(x$2) in -- #10
+//│     x$3 -- #9
+//│   def bar(x$4) =
+//│     let* (x$5) = baz(x$4) in -- #17
+//│     x$5 -- #16
+//│   def baz(x$6) =
+//│     case x$6 of -- #29
+//│       S =>
+//│         let x$8 = S.s(x$6) in -- #26
+//│         jump j$0(x$8) -- #25
+//│       O =>
+//│         jump j$0(x$6) -- #28
+//│   def j$0(x$7) =
+//│     x$7 -- #19
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ O()
+//│ 

@@ -1,9 +1,8 @@
 :NewDefs
 
 
-:mono
-class Arithmetic() {
-    fun use(num1, num2) = 0
+abstract class Arithmetic() {
+    virtual fun use(num1: Int, num2: Int): Int
 }
 class Add() extends Arithmetic {
     fun use(num1, num2) = num1+num2
@@ -14,37 +13,29 @@ class Sub() extends Arithmetic {
 fun getArith(choice) = if choice == 1 then Add() else Sub()
 getArith(1).use(4,6)
 getArith(2).use(4,6)
-//│ Lifted:
-//│ TypingUnit {
-//│   class Arithmetic$1([]) {fun use = (num1, num2,) => 0}
-//│   class Add$2([]): Arithmetic$1 {fun use = (num1, num2,) => +(num1, num2,)}
-//│   class Sub$3([]): Arithmetic$1 {fun use = (num1, num2,) => -(num1, num2,)}
-//│   fun getArith$1 = (choice,) => if (==(choice, 1,)) then Add$2() else Sub$3()
-//│   Code(List((getArith$1(1,)).use(4, 6,)))
-//│   Code(List((getArith$1(2,)).use(4, 6,)))
+//│ abstract class Arithmetic() {
+//│   fun use: (num1: Int, num2: Int) -> Int
 //│ }
-//│ Mono:
-//│ TypingUnit {
-//│   class Arithmetic$1([]) {}
-//│   class Sub$3([]): Arithmetic$1 {}
-//│   class Add$2([]): Arithmetic$1 {}
-//│   fun getArith$1 = (choice,) => if (==(choice, 1,)) then Add$2() else Sub$3()
-//│   fun use$Add$2 = (this, num1, num2,) => +(num1, num2,)
-//│   fun use$Sub$3 = (this, num1, num2,) => -(num1, num2,)
-//│   fun main$$5 = () => let obj = getArith$1(2,) in if obj is ‹(Sub$3) then use$Sub$3(obj, 4, 6,); (Add$2) then use$Add$2(obj, 4, 6,); else error›
-//│   fun main$$4 = () => let obj = getArith$1(1,) in if obj is ‹(Sub$3) then use$Sub$3(obj, 4, 6,); (Add$2) then use$Add$2(obj, 4, 6,); else error›
-//│   Code(List(main$$4()))
-//│   Code(List(main$$5()))
+//│ class Add() extends Arithmetic {
+//│   fun use: (Int, Int) -> Int
 //│ }
-//│ class Arithmetic$1()
-//│ class Sub$3() extends Arithmetic$1
-//│ class Add$2() extends Arithmetic$1
-//│ fun getArith$1: Num -> (Add$2 | Sub$3)
-//│ fun use$Add$2: (anything, Int, Int) -> Int
-//│ fun use$Sub$3: (anything, Int, Int) -> Int
-//│ fun main$$5: () -> Int
-//│ fun main$$4: () -> Int
+//│ class Sub() extends Arithmetic {
+//│   fun use: (Int, Int) -> Int
+//│ }
+//│ fun getArith: Num -> (Add | Sub)
 //│ Int
+//│ 
+//│ Simpledef:
+//│ {class Arithmetic() {fun use: (num1: Int, num2: Int) -> Int}
+//│  class Add(): Arithmetic {fun use = (num1::0, num2::1,) => +(num1, num2,)}
+//│  class Sub(): Arithmetic {fun use = (num1::2, num2::3,) => -(num1, num2,)}
+//│  fun getArith = (choice::4,) => if (==(choice, 1,)) then Add() else Sub()
+//│  let selRes$58 = getArith(1,) in case selRes$58 of { Sub => (selRes$58).use(4, 6,)
+//│  Add => (selRes$58).use(4, 6,) }
+//│  let selRes$76 = getArith(2,) in case selRes$76 of { Sub => (selRes$76).use(4, 6,)
+//│  Add => (selRes$76).use(4, 6,) }}
+//│ End simpledef
+//│ 
 //│ res
 //│     = 10
 //│ res

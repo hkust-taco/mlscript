@@ -70,8 +70,51 @@ IISS 0
 (if true then IISS else BBNN) 0
 //│ res: bool | number | string
 
-fun x -> (if true then IISS else BBNN) x
-//│ res: int -> (bool | number | string)
+def f = fun x -> (if true then IISS else BBNN) x
+//│ f: int -> (bool | number | string)
+
+f(0)
+//│ res: bool | number | string
+
+:e
+f(0) + 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.80: 	f(0) + 1
+//│ ║        	^^^^^^
+//│ ╟── type `bool` is not an instance of type `int`
+//│ ║  l.13: 	def BBNN: bool -> bool & number -> number
+//│ ║        	                  ^^^^
+//│ ╟── but it flows into application with expected type `int`
+//│ ║  l.80: 	f(0) + 1
+//│ ╙──      	^^^^
+//│ res: error | int
+
+:e
+f : int -> number
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.93: 	f : int -> number
+//│ ║        	^
+//│ ╟── type `bool` is not an instance of type `number`
+//│ ║  l.13: 	def BBNN: bool -> bool & number -> number
+//│ ║        	                  ^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.93: 	f : int -> number
+//│ ╙──      	           ^^^^^^
+//│ res: int -> number
+
+:e
+f : number -> int
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.106: 	f : number -> int
+//│ ║         	^
+//│ ╟── type `number` does not match type `int | string`
+//│ ║  l.106: 	f : number -> int
+//│ ║         	    ^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.73: 	def f = fun x -> (if true then IISS else BBNN) x
+//│ ╙──      	                                               ^
+//│ res: number -> int
+
 
 if true then IISS else BBNN
 //│ res: bool -> bool & number -> number | int -> int & string -> string
@@ -85,41 +128,51 @@ if true then IISS else BBNN
 :e
 (if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.86: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.129: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `true` does not match type `int | string`
-//│ ║  l.86: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
-//│ ╙──      	                                         ^^^^
+//│ ║  l.129: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ╙──       	                                         ^^^^
 //│ res: (0 | 1 | true) -> number
 
 
-// * Note that type normalization is currently very aggressive at approximating negative non-tag types, to simplify the result:
+// * Note that type normalization used to be very aggressive at approximating non-tag type negations,
+// * to simplify the result, but this was changed as it was unsound
 
 def test: ~(int -> int)
-//│ test: in ~(int -> int) out nothing
+//│ test: ~(int -> int)
 
-// * Note about this known unsoundness: see test file BooleanFail.mls
+// * See also test file BooleanFail.mls about this previous unsoundness
+:e
 test = 42
 not test
 //│ 42
 //│   <:  test:
 //│ ~(int -> int)
-//│ res: bool
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.148: 	not test
+//│ ║         	^^^^^^^^
+//│ ╟── type `~(int -> int)` is not an instance of type `bool`
+//│ ║  l.142: 	def test: ~(int -> int)
+//│ ║         	          ^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `bool`
+//│ ║  l.148: 	not test
+//│ ╙──       	    ^^^^
+//│ res: bool | error
 
-// :ds
 def test: ~(int -> int) & ~bool
-//│ test: in ~bool & ~(int -> int) out nothing
+//│ test: ~bool & ~(int -> int)
 
 def test: ~(int -> int) & bool
-//│ test: in bool out nothing
+//│ test: bool
 
 def test: ~(int -> int) & ~(bool -> bool)
-//│ test: in ~(nothing -> (bool | int)) out nothing
+//│ test: ~(nothing -> (bool | int))
 
 def test: ~(int -> int | bool -> bool)
-//│ test: in ~(nothing -> (bool | int)) out nothing
+//│ test: ~(nothing -> (bool | int))
 
 def test: ~(int -> int & string -> string) & ~(bool -> bool & number -> number)
-//│ test: in ~(nothing -> (number | string) & int -> number & nothing -> (bool | string) & nothing -> (bool | int)) out nothing
+//│ test: in ~(nothing -> (number | string) & int -> number & nothing -> (bool | string) & nothing -> (bool | int)) out ~(nothing -> (bool | int) & nothing -> (bool | string) & int -> number & nothing -> (number | string))
 
 

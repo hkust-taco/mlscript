@@ -26,7 +26,7 @@ mixin EvalAddLit {
 //│       eval(e) {
 //│         return ((() => {
 //│           let a;
-//│           return (a = e, a instanceof qualifier.Lit.class ? (([n]) => n)(qualifier.Lit.unapply(e)) : (() => {
+//│           return (a = e, a instanceof qualifier.Lit.class ? ((ucs$args_e$Lit) => ((n) => n)(ucs$args_e$Lit[0]))(qualifier.Lit.unapply(e)) : (() => {
 //│             throw new Error("non-exhaustive case expression");
 //│           })());
 //│         })());

@@ -19,21 +19,19 @@ fun f(x, y) =
     y is B and
       x is
         A then 4
-//│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.20: 	      x is
-//│ ║        	      ^^^^
-//│ ╟── The scrutinee at this position misses 2 cases.
+//│ ╔══[ERROR] when `y` is `B`
+//│ ║  l.19: 	    y is B and
+//│ ║        	         ^
+//│ ╟── `x` has 2 missing cases
 //│ ║  l.20: 	      x is
 //│ ║        	      ^
-//│ ╟── [Missing Case 1/2] `B`
-//│ ╟── It first appears here.
+//│ ╟── it can be class `B`
 //│ ║  l.17: 	        B then 1
 //│ ║        	        ^
-//│ ╟── [Missing Case 2/2] `C`
-//│ ╟── It first appears here.
+//│ ╟── it can be class `C`
 //│ ║  l.18: 	        C then 2
 //│ ╙──      	        ^
-//│ fun f: (anything, anything) -> error
+//│ fun f: (A, A | B) -> (0 | 1 | 2 | 4)
 
 :e
 // These operators are uninterpreted. So, it's impossible to reason the
@@ -48,19 +46,62 @@ class Node[A](value: int, left: Tree[A], right: Tree[A]) {
     >= value then right.find(wanted)
     == value then true
 }
-//│ ╔══[ERROR] The case when this is false is not handled: ==(wanted, value,)
-//│ ║  l.46: 	  fun contains(wanted) = if wanted
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.47: 	    == value then true
+//│ ╙──      	                  ^^^^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.44: 	  fun contains(wanted) = if wanted
 //│ ║        	                            ^^^^^^
-//│ ║  l.47: 	    <= value then left.find(wanted)
+//│ ║  l.45: 	    <= value then left.find(wanted)
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── type `int` is not an instance of type `Num`
+//│ ║  l.43: 	class Node[A](value: int, left: Tree[A], right: Tree[A]) {
+//│ ║        	                     ^^^
+//│ ╟── but it flows into reference with expected type `Num`
+//│ ║  l.45: 	    <= value then left.find(wanted)
+//│ ╙──      	       ^^^^^
+//│ ╔══[ERROR] Type `#Node & {Node#A = A}` does not contain member `find`
+//│ ║  l.45: 	    <= value then left.find(wanted)
+//│ ╙──      	                      ^^^^^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.44: 	  fun contains(wanted) = if wanted
+//│ ║        	                            ^^^^^^
+//│ ║  l.45: 	    <= value then left.find(wanted)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.48: 	    >= value then right.find(wanted)
+//│ ║  l.46: 	    >= value then right.find(wanted)
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── type `int` is not an instance of type `Num`
+//│ ║  l.43: 	class Node[A](value: int, left: Tree[A], right: Tree[A]) {
+//│ ║        	                     ^^^
+//│ ╟── but it flows into reference with expected type `Num`
+//│ ║  l.46: 	    >= value then right.find(wanted)
+//│ ╙──      	       ^^^^^
+//│ ╔══[ERROR] Type `#Node & {Node#A = A}` does not contain member `find`
+//│ ║  l.46: 	    >= value then right.find(wanted)
+//│ ╙──      	                       ^^^^^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.44: 	  fun contains(wanted) = if wanted
+//│ ║        	                            ^^^^^^
+//│ ║  l.45: 	    <= value then left.find(wanted)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.46: 	    >= value then right.find(wanted)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.49: 	    == value then true
-//│ ╙──      	^^^^^^^^^^^^
+//│ ║  l.47: 	    == value then true
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── type `int` is not an instance of type `Num`
+//│ ║  l.43: 	class Node[A](value: int, left: Tree[A], right: Tree[A]) {
+//│ ║        	                     ^^^
+//│ ╟── but it flows into reference with expected type `Num`
+//│ ║  l.47: 	    == value then true
+//│ ╙──      	       ^^^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.47: 	    == value then true
+//│ ║        	                  ^^^^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
 //│ type Tree[A] = Empty | Node[A]
 //│ module Empty {
 //│   fun contains: anything -> false
 //│ }
 //│ class Node[A](value: int, left: Tree[A], right: Tree[A]) {
-//│   fun contains: anything -> error
+//│   fun contains: Num -> (error | true)
 //│ }

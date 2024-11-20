@@ -1,0 +1,18 @@
+:NewDefs
+
+abstract class List[T]: (Cons[T] | Nil)
+class Cons[T](val head: T, val tail: List[T]) extends List[T]
+module Nil extends List
+//│ abstract class List[T]: Cons[T] | Nil
+//│ class Cons[T](head: T, tail: List[T]) extends List
+//│ module Nil extends List
+
+fun (::) cons(head, tail) = Cons(head, tail)
+//│ fun (::) cons: forall 'T. ('T, List['T]) -> Cons['T]
+
+1 :: 2 :: 3 :: 4 :: 5 :: 6 :: 7 :: 8 :: Nil
+//│ Cons['T]
+//│   where
+//│     'T :> 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
+//│ res
+//│     = Cons {}

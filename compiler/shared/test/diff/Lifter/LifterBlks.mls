@@ -1,6 +1,7 @@
 :NewDefs
 :ParseOnly
 
+:lift
 fun foo =
   print("ok")
   print("ko")
@@ -10,6 +11,7 @@ fun foo =
 //│ TypingUnit {fun foo$1 = {print("ok",); print("ko",)}}
 //│ 
 
+:lift
 class A{
   class B {}
   fun foo(x: B) = (x : B)
@@ -23,6 +25,7 @@ class A{
 //│ }
 //│ 
 
+:lift
 fun foo =
   let local(x) =
     class Foo {
@@ -45,6 +48,7 @@ fun foo =
 //│ }
 //│ 
 
+:lift
 class A(y){}
 let f = x => new A(0){fun bar = x+y}
 f(0)
@@ -59,6 +63,7 @@ f(0)
 //│ }
 //│ 
 
+:lift
 class A(x){
   fun w = x
   fun foo(y) = 
@@ -82,6 +87,7 @@ class A(x){
 //│ }
 //│ 
 
+:lift
 fun f(x,y,z) = 
   class A{
     fun foo = new B
@@ -111,6 +117,7 @@ fun f(x,y,z) =
 //│ }
 //│ 
 
+:lift
 fun f(x,y,z) = 
   class C{
     class A{
@@ -142,33 +149,25 @@ fun f(x,y,z) =
 //│ }
 //│ 
 
+:lift
 fun f(y) =
   let g(x) = x + y + 1
   class Foo(x) {
     fun h = g(x)
   }
-//│ |#fun| |f|(|y|)| |#=|→|#let| |g|(|x|)| |#=| |x| |+| |y| |+| |1|↵|#class| |Foo|(|x|)| |{|→|#fun| |h| |#=| |g|(|x|)|←|↵|}|←|
-//│ Parsed: {fun f = (y,) => {let g = (x,) => +(+(x, y,), 1,); class Foo(x,) {fun h = g(x,)}}}
+  Foo(1).h 
+  Foo(x).h
+//│ |#fun| |f|(|y|)| |#=|→|#let| |g|(|x|)| |#=| |x| |+| |y| |+| |1|↵|#class| |Foo|(|x|)| |{|→|#fun| |h| |#=| |g|(|x|)|←|↵|}|↵|Foo|(|1|)|.h| |↵|Foo|(|x|)|.h|←|
+//│ Parsed: {fun f = (y,) => {let g = (x,) => +(+(x, y,), 1,); class Foo(x,) {fun h = g(x,)}; (Foo(1,)).h; (Foo(x,)).h}}
 //│ Lifted:
 //│ TypingUnit {
 //│   class Foo$1([x, y,]) {fun h = g$2((this).x, y,)}
 //│   let g$2 = (x, y,) => +(+(x, y,), 1,)
-//│   fun f$1 = (y,) => {}
+//│   fun f$1 = (y,) => {(Foo$1(1, y,)).h; (Foo$1(x, y,)).h}
 //│ }
 //│ 
-  Foo(1).h
-//│ | |Foo|(|1|)|.h|
-//│ Parsed: {(Foo(1,)).h}
-//│ Lifted:
-//│ TypingUnit {Code(List((Foo(1,)).h))}
-//│ 
-  Foo(x).h
-//│ | |Foo|(|x|)|.h|
-//│ Parsed: {(Foo(x,)).h}
-//│ Lifted:
-//│ TypingUnit {Code(List((Foo(x,)).h))}
-//│ 
 
+:lift
 fun f(x) =
   let g(x) = 
     let h(x) = x + 2
@@ -188,6 +187,7 @@ fun f(x) =
 //│ }
 //│ 
 
+:lift
 class Foo(x, y) extends Bar(y, x), Baz(x + y)
 //│ |#class| |Foo|(|x|,| |y|)| |#extends| |Bar|(|y|,| |x|)|,| |Baz|(|x| |+| |y|)|
 //│ Parsed: {class Foo(x, y,): Bar(y, x,), Baz(+(x, y,),) {}}
@@ -197,6 +197,7 @@ class Foo(x, y) extends Bar(y, x), Baz(x + y)
 //│ }
 //│ 
 
+:lift
 fun foo<T, U>(x: T): string = 
   class A(y) extends B<T>, C(y: U) {
     fun bar = this
@@ -211,6 +212,7 @@ fun foo<T, U>(x: T): string =
 //│ }
 //│ 
 
+:lift
 class A<T>{
   class B{
     fun f = x => y => x
@@ -230,6 +232,7 @@ class A<T>{
 //│ }
 //│ 
 
+:lift
 class Foo<T>{
   class RectangleBox: Box<T> & { breadth: T }
   class StackedRectangleBoxes<N> : RectangleBox<T> & { size: N }
@@ -246,6 +249,7 @@ class Foo<T>{
 //│ }
 //│ 
 
+:lift
 class Func<T, U> {
   fun apply: T => U
 }
@@ -267,6 +271,7 @@ fun ctx(a,b) =
 //│ }
 //│ 
 
+:lift
 fun f(T) = 
   new T()
 f(MyClass)
@@ -276,6 +281,7 @@ f(MyClass)
 //│ Lifting failed: mlscript.codegen.CodeGenError: Cannot find type T. Class values are not supported in lifter. 
 //│ 
 
+:lift
 class A {
   fun foo = 
     fun bar = foo()

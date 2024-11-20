@@ -6,13 +6,13 @@ import fastparse.Parsed.Success
 import sourcecode.Line
 import scala.collection.mutable
 import scala.collection.mutable.{Map => MutMap}
-import scala.collection.immutable
 import mlscript.utils._, shorthands._
 import mlscript.codegen.typescript.TsTypegenCodeBuilder
 import org.scalatest.{funsuite, ParallelTestExecution}
 import org.scalatest.time._
 import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
-
+import pretyper.PreTyper
+import os.Path
 
 abstract class ModeType {
   def expectTypeErrors: Bool
@@ -26,9 +26,10 @@ abstract class ModeType {
   def dbg: Bool
   def dbgParsing: Bool
   def dbgSimplif: Bool
-  def dbgUCS: Bool
+  def dbgUCS: Opt[Set[Str]]
   def dbgLifting: Bool
   def dbgDefunc: Bool
+  def dbgSimpledef: Bool
   def fullExceptionStack: Bool
   def stats: Bool
   def stdout: Bool
@@ -41,36 +42,44 @@ abstract class ModeType {
   def expectCodeGenErrors: Bool
   def showRepl: Bool
   def allowEscape: Bool
-  def mono: Bool
   def useIR: Bool
   def interpIR: Bool
   def irVerbose: Bool
+  def genCpp: Bool
+  def showCpp: Bool
+  def runCpp: Bool
+  def writeCpp: Bool
+  def noTailRecOpt: Bool
+  def simpledef: Bool
   def lift: Bool
   def nolift: Bool
+  def prelude: Bool
 }
 
-class DiffTests
+class DiffTests(state: DiffTests.State)
   extends funsuite.AnyFunSuite
   with ParallelTestExecution
   with TimeLimitedTests
 {
   
+  def this() = this(DiffTests.State)
+  
+  import state._
   
   /**  Hook for dependent projects, like the monomorphizer. */
-  def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (Ls[Str], Option[TypingUnit]) = (Nil, None)
+  def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit, output: Str => Unit, raise: Diagnostic => Unit): (Ls[Str], Option[TypingUnit]) = (Nil, None)
+  def postTypingProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit, output: Str => Unit): Option[TypingUnit] = None
   
   
   @SuppressWarnings(Array("org.wartremover.warts.RedundantIsInstanceOf"))
   private val inParallel = isInstanceOf[ParallelTestExecution]
   
-  import DiffTests._
-
   // scala test will not execute a test if the test class has constructor parameters.
   // override this to get the correct paths of test files.
   protected lazy val files = allFiles.filter { file =>
       val fileName = file.baseName
       // validExt(file.ext) && filter(fileName)
-      validExt(file.ext) && filter(file.relativeTo(pwd))
+      validExt(file.ext) && filter(file.relativeTo(DiffTests.pwd))
   }
   
   val timeLimit = TimeLimit
@@ -145,9 +154,11 @@ class DiffTests
     var declared: Map[Str, typer.ST] = Map.empty
     val failures = mutable.Buffer.empty[Int]
     val unmergedChanges = mutable.Buffer.empty[Int]
+    var preTyperScope = mlscript.pretyper.Scope.global
     
     case class Mode(
       expectTypeErrors: Bool = false,
+      expectCompileErrors: Bool = false,
       expectWarnings: Bool = false,
       expectParseErrors: Bool = false,
       fixme: Bool = false,
@@ -158,9 +169,10 @@ class DiffTests
       dbg: Bool = false,
       dbgParsing: Bool = false,
       dbgSimplif: Bool = false,
-      dbgUCS: Bool = false,
+      dbgUCS: Opt[Set[Str]] = N,
       dbgLifting: Bool = false,
       dbgDefunc: Bool = false,
+      dbgSimpledef: Bool = false,
       fullExceptionStack: Bool = false,
       stats: Bool = false,
       stdout: Bool = false,
@@ -174,13 +186,21 @@ class DiffTests
       expectCodeGenErrors: Bool = false,
       showRepl: Bool = false,
       allowEscape: Bool = false,
-      mono: Bool = false,
+      simpledef: Bool = false,
       lift: Bool = false,
       nolift: Bool = false,
       // noProvs: Bool = false,
       useIR: Bool = false,
       interpIR: Bool = false,
       irVerbose: Bool = false,
+      irOpt: Bool = false,
+      irOptFuel: Int = 10,
+      genCpp: Bool = false,
+      showCpp: Bool = false,
+      runCpp: Bool = false,
+      writeCpp: Bool = false,
+      noTailRecOpt: Bool = false,
+      prelude: Bool = false,
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
     }
@@ -188,6 +208,7 @@ class DiffTests
     
     var parseOnly = basePath.headOption.contains("parser")
     var allowTypeErrors = false
+    var allowCompileErrors = false
     var allowParseErrors = false
     var showRelativeLineNums = false
     var noJavaScript = false
@@ -204,6 +225,10 @@ class DiffTests
     var irregularTypes = false
     var prettyPrintQQ = false
     var useIR = false
+    // Enable this to see the errors from unfinished `PreTyper`.
+    var showPreTyperErrors = false
+    var noTailRec = false
+    var noApproximateOverload = false
     
     // * This option makes some test cases pass which assume generalization should happen in arbitrary arguments
     // * but it's way too aggressive to be ON by default, as it leads to more extrusion, cycle errors, etc.
@@ -212,7 +237,7 @@ class DiffTests
     var newParser = basePath.headOption.contains("parser") || basePath.headOption.contains("compiler")
     
     val backend = new JSTestBackend {
-      def oldDefs = !newDefs
+      override def oldDefs: Bool = !newDefs
     }
     var hostCreated = false
     lazy val host = { hostCreated = true; ReplHost() }
@@ -224,15 +249,17 @@ class DiffTests
         out.println(line)
         val newMode = line.tail.takeWhile(!_.isWhitespace) match {
           case "e" => mode.copy(expectTypeErrors = true)
+          case "ce" => mode.copy(expectCompileErrors = true)
           case "w" => mode.copy(expectWarnings = true)
           case "pe" => mode.copy(expectParseErrors = true)
           case "p" => mode.copy(showParse = true)
           case "d" => mode.copy(dbg = true)
           case "dp" => mode.copy(dbgParsing = true)
+          case DiffTests.DebugUCSFlags(x) => mode.copy(dbgUCS = mode.dbgUCS.fold(S(x))(y => S(y ++ x)))
           case "ds" => mode.copy(dbgSimplif = true)
           case "dl" => mode.copy(dbgLifting = true)
           case "dd" => mode.copy(dbgDefunc = true)
-          case "ducs" => mode.copy(dbg = true, dbgUCS = true)
+          case "dsd" => mode.copy(dbgSimpledef = true)
           case "s" => mode.copy(fullExceptionStack = true)
           case "v" | "verbose" => mode.copy(verbose = true)
           case "ex" | "explain" => mode.copy(expectTypeErrors = true, explainErrors = true)
@@ -243,12 +270,14 @@ class DiffTests
           case "precise-rec-typing" => mode.copy(preciselyTypeRecursion = true)
           case "ParseOnly" => parseOnly = true; mode
           case "AllowTypeErrors" => allowTypeErrors = true; mode
+          case "AllowCompileErrors" => allowCompileErrors = true; mode
           case "AllowParseErrors" => allowParseErrors = true; mode
           case "AllowRuntimeErrors" => allowRuntimeErrors = true; mode
           case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
           case "NewParser" => newParser = true; mode
           case "NewDefs" => newParser = true; newDefs = true; mode
           case "NoJS" => noJavaScript = true; mode
+          case "NoTailRec" => noTailRec = true; mode
           case "NoProvs" => noProvs = true; mode
           case "GeneralizeCurriedFunctions" => generalizeCurriedFunctions = true; mode
           case "DontGeneralizeCurriedFunctions" => generalizeCurriedFunctions = false; mode
@@ -271,11 +300,14 @@ class DiffTests
           case "GeneralizeArguments" => generalizeArguments = true; mode
           case "DontGeneralizeArguments" => generalizeArguments = false; mode
           case "IrregularTypes" => irregularTypes = true; mode
+          case "NoApproximateOverload" => noApproximateOverload = true; mode
           case str @ "Fuel" =>
             // println("'"+line.drop(str.length + 2)+"'")
             typer.startingFuel = line.drop(str.length + 2).toInt; mode
           case "ResetFuel" => typer.startingFuel = typer.defaultStartingFuel; mode
           case "QQ" => prettyPrintQQ = true; mode
+          // Enable this to see the errors from unfinished `PreTyper`.
+          case "ShowPreTyperErrors" => newParser = true; newDefs = true; showPreTyperErrors = true; mode
           case "ne" => mode.copy(noExecution = true)
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
@@ -285,8 +317,9 @@ class DiffTests
           case "re" => mode.copy(expectRuntimeErrors = true)
           case "r" | "showRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
-          case "mono" => {mode.copy(mono = true)}
+          case "sd" => {mode.copy(simpledef = true)}
           case "lift" => {mode.copy(lift = true)}
+          case "noTailRec" => mode.copy(noTailRecOpt = true)
           case "nolift" => {mode.copy(nolift = true)}
           case "exit" =>
             out.println(exitMarker)
@@ -300,6 +333,11 @@ class DiffTests
           case "useIR" => mode.copy(useIR = true)
           case "interpIR" => mode.copy(interpIR = true)
           case "irVerbose" => mode.copy(irVerbose = true)
+          case "genCpp" => mode.copy(genCpp = true)
+          case "showCpp" => mode.copy(showCpp = true)
+          case "runCpp" => mode.copy(runCpp = true)
+          case "writeCpp" => mode.copy(writeCpp = true)
+          case "prelude" => mode.copy(prelude = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -351,6 +389,7 @@ class DiffTests
         
         var totalTypeErrors = 0
         var totalParseErrors = 0
+        var totalCompileErrors = 0
         var totalWarnings = 0
         var totalRuntimeErrors = 0
         var totalCodeGenErrors = 0
@@ -368,6 +407,9 @@ class DiffTests
                   case Diagnostic.Parsing =>
                     totalParseErrors += 1
                     s"╔══[PARSE ERROR] "
+                  case Diagnostic.Compilation =>
+                    totalCompileErrors += 1
+                    s"╔══[COMPILATION ERROR] "
                   case _ => // TODO customize too
                     totalTypeErrors += 1
                     s"╔══[ERROR] "
@@ -424,6 +466,9 @@ class DiffTests
               if (!allowParseErrors
                   && !mode.expectParseErrors && diag.isInstanceOf[ErrorReport] && (diag.source =:= Diagnostic.Lexing || diag.source =:= Diagnostic.Parsing))
                 { output("TEST CASE FAILURE: There was an unexpected parse error"); failures += globalLineNum }
+              if (!allowCompileErrors
+                  && !mode.expectCompileErrors && diag.isInstanceOf[ErrorReport] && diag.source =:= Diagnostic.Compilation)
+                { output("TEST CASE FAILURE: There was an unexpected compilation error"); failures += globalLineNum }
               if (!allowTypeErrors && !allowParseErrors
                   && !mode.expectWarnings && diag.isInstanceOf[WarningReport])
                 { output("TEST CASE FAILURE: There was an unexpected warning"); failures += globalLineNum }
@@ -461,12 +506,14 @@ class DiffTests
               output(s"AST: $res")
             
             val newMode = if (useIR) { mode.copy(useIR = true) } else mode
-            val (postLines, nuRes) = postProcess(newMode, basePath, testName, res, output)
-            postLines.foreach(output)  
-            
+            val newNewMode = if (noTailRec) { newMode.copy(noTailRecOpt = true) } else newMode
+
+            val (postLines, nuRes) = postProcess(newNewMode, basePath, testName, res, output, raise)
+            postLines.foreach(output)
+
             if (parseOnly)
               Success(Pgrm(Nil), 0)
-            else if (mode.mono || mode.lift) {
+            else if (mode.lift) {
               import Message._
               Success(Pgrm(nuRes.getOrElse({
                 raise(ErrorReport(msg"Post-process failed to produce AST." -> None :: Nil, true, Diagnostic.Compilation))
@@ -500,7 +547,6 @@ class DiffTests
             // if (mode.isDebugging) typer.resetState()
             if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg
-            typer.dbgUCS = mode.dbgUCS
             // typer.recordProvenances = !noProvs
             typer.recordProvenances = !noProvs && !mode.dbg && !mode.dbgSimplif || mode.explainErrors
             typer.generalizeCurriedFunctions = generalizeCurriedFunctions
@@ -515,6 +561,7 @@ class DiffTests
             typer.explainErrors = mode.explainErrors
             stdout = mode.stdout
             typer.preciselyTypeRecursion = mode.preciselyTypeRecursion
+            typer.noApproximateOverload = noApproximateOverload
             
             val oldCtx = ctx
             
@@ -544,16 +591,25 @@ class DiffTests
                 exp match {
                   // * Strip top-level implicitly-quantified type variables
                   case pt: PolyType => stripPoly(pt)
-                  case Constrained(pt: PolyType, bs, cs) => Constrained(stripPoly(pt), bs, cs)
+                  case Constrained(pt: PolyType, bs, cs, tscs) => Constrained(stripPoly(pt), bs, cs, tscs)
                   case ty => ty
                 }
               }
             }
             
             val (typeDefs, stmts, newDefsResults) = if (newDefs) {
-              
               val vars: Map[Str, typer.SimpleType] = Map.empty
-              val tpd = typer.typeTypingUnit(TypingUnit(p.tops), N)(ctx, raise, vars)
+              val rootTypingUnit = TypingUnit(p.tops)
+              val preTyper = new PreTyper {
+                override def debugTopicFilters = mode.dbgUCS
+                override def emitString(str: String): Unit = output(str)
+              }
+              // This scope will be passed to typer and code generator after
+              // pretyper is completed.
+              preTyperScope = preTyper(rootTypingUnit, preTyperScope, "<root>")
+              report(preTyper.filterDiagnostics(_.source is Diagnostic.Desugaring))
+              if (showPreTyperErrors) report(preTyper.filterDiagnostics(_.source is Diagnostic.PreTyping))
+              val tpd = typer.typeTypingUnit(rootTypingUnit, N)(ctx, raise, vars)
               
               def showTTU(ttu: typer.TypedTypingUnit, ind: Int): Unit = {
                 val indStr = "  " * ind
@@ -890,6 +946,11 @@ class DiffTests
             val executionResults: Result \/ Ls[(ReplHost.Reply, Str)] = if (!allowTypeErrors &&
                 file.ext =:= "mls" && !mode.noGeneration && !noJavaScript) {
               import codeGenTestHelpers._
+              val pp = 
+                postTypingProcess(mode, basePath, testName, TypingUnit(p.tops), output) match {
+                  case Some(stmts) => Pgrm(stmts.entities)
+                  case _ => p
+                }
               backend(p, mode.allowEscape, newDefs && newParser, prettyPrintQQ) match {
                 case testCode @ TestCode(prelude, queries) => {
                   // Display the generated code.
@@ -1041,6 +1102,8 @@ class DiffTests
               { output("TEST CASE FAILURE: There was an unexpected lack of parse error"); failures += blockLineNum }
             if (mode.expectTypeErrors && totalTypeErrors =:= 0)
               { output("TEST CASE FAILURE: There was an unexpected lack of type error"); failures += blockLineNum }
+            if (mode.expectCompileErrors && totalCompileErrors =:= 0)
+              { output("TEST CASE FAILURE: There was an unexpected lack of compilation error"); failures += blockLineNum }
             if (mode.expectWarnings && totalWarnings =:= 0)
               { output("TEST CASE FAILURE: There was an unexpected lack of warning"); failures += blockLineNum }
             if (mode.expectCodeGenErrors && totalCodeGenErrors =:= 0)
@@ -1098,58 +1161,48 @@ class DiffTests
 
 object DiffTests {
   
-  private val TimeLimit =
-    if (sys.env.get("CI").isDefined) Span(60, Seconds)
-    else Span(30, Seconds)
+  val pwd: Path = os.pwd
   
-  private val pwd = os.pwd
-  private val dir = pwd/"shared"/"src"/"test"/"diff"
+  lazy val State = new State(pwd/"shared"/"src"/"test"/"diff")
   
-  private val allFiles = os.walk(dir).filter(_.toIO.isFile)
+  class State(val dir: Path) {
+      
+    val TimeLimit: Span =
+      if (sys.env.get("CI").isDefined) Span(60, Seconds)
+      else Span(30, Seconds)
+    
+    val allFiles: IndexedSeq[Path] = os.walk(dir).filter(_.toIO.isFile)
+    
+    val validExt: Set[String] = Set("fun", "mls")
+    
+    // Aggregate unstaged modified files to only run the tests on them, if there are any
+    val modified: Set[os.RelPath] =
+      try os.proc("git", "status", "--porcelain", dir).call().out.lines().iterator.flatMap { gitStr =>
+        println(" [git] " + gitStr)
+        val prefix = gitStr.take(2)
+        val filePath = os.RelPath(gitStr.drop(3))
+        if (prefix =:= "A " || prefix =:= "M " || prefix =:= "R " || prefix =:= "D ")
+          N // * Disregard modified files that are staged
+        else S(filePath)
+      }.toSet catch {
+        case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
+        Set.empty
+      }
+    
+    // private def filter(name: Str): Bool =
+    def filter(file: os.RelPath): Bool =
+      modified(file) || modified.isEmpty
+    
+  }
   
-  private val validExt = Set("fun", "mls")
-  
-  // Aggregate unstaged modified files to only run the tests on them, if there are any
-  private val modified: Set[os.RelPath] =
-    try os.proc("git", "status", "--porcelain", dir).call().out.lines().iterator.flatMap { gitStr =>
-      println(" [git] " + gitStr)
-      val prefix = gitStr.take(2)
-      val filePath = os.RelPath(gitStr.drop(3))
-      if (prefix =:= "A " || prefix =:= "M " || prefix =:= "R " || prefix =:= "D ")
-        N // * Disregard modified files that are staged
-      else S(filePath)
-    }.toSet catch {
-      case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
-      Set.empty
-    }
-  
-  // Allow overriding which specific tests to run, sometimes easier for development:
-  private val focused = Set[Str](
-    // "LetRec"
-    // "Ascribe",
-    // "Repro",
-    // "RecursiveTypes",
-    // "Simple",
-    // "Inherit",
-    // "Basics",
-    // "Paper",
-    // "Negations",
-    // "RecFuns",
-    // "With",
-    // "Annoying",
-    // "Tony",
-    // "Lists",
-    // "Traits",
-    // "BadTraits",
-    // "TraitMatching",
-    // "Subsume",
-    // "Methods",
-  ).map(os.RelPath(_))
-  // private def filter(name: Str): Bool =
-  def filter(file: os.RelPath): Bool = {
-    if (focused.nonEmpty) focused(file) else modified(file) || modified.isEmpty &&
-      true
-      // name.startsWith("new/")
-      // file.segments.toList.init.lastOption.contains("parser")
+  object DebugUCSFlags {
+    // E.g. "ducs", "ducs:foo", "ducs:foo,bar", "ducs:a.b.c,foo"
+    private val pattern = "^ducs(?::(\\s*(?:[A-Za-z\\.-]+)(?:,\\s*[A-Za-z\\.-]+)*))?$".r
+    def unapply(flagsString: Str): Opt[Set[Str]] =
+      flagsString match {
+        case "ducs" => S(Set.empty)
+        case pattern(flags) => Option(flags).map(_.split(",\\s*").toSet)
+        case _ => N
+      }
   }
 }

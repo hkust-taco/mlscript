@@ -5,7 +5,7 @@ enablePlugins(ScalaJSPlugin)
 val scala3Version = "3.6.1"
 val directoryWatcherVersion = "0.18.0"
 
-ThisBuild / scalaVersion     := "2.13.13"
+ThisBuild / scalaVersion     := "2.13.14"
 ThisBuild / version          := "0.1.0-SNAPSHOT"
 ThisBuild / organization     := "hkust-taco.github.io"
 ThisBuild / organizationName := "HKUST-TACO"
@@ -97,7 +97,7 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
   )
   .jsSettings(
     scalaJSUseMainModuleInitializer := true,
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.1.0",
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.2.0",
   )
   .dependsOn(core)
 
@@ -129,6 +129,8 @@ lazy val compiler = crossProject(JSPlatform, JVMPlatform).in(file("compiler"))
     sourceDirectory := baseDirectory.value.getParentFile()/"shared",
     watchSources += WatchSource(
       baseDirectory.value.getParentFile()/"shared"/"test"/"diff", "*.mls", NothingFilter),
+    watchSources += WatchSource(
+      baseDirectory.value.getParentFile()/"shared"/"test"/"diff-ir", "*.mls", NothingFilter),
   )
   .dependsOn(mlscript % "compile->compile;test->test")
 

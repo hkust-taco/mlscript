@@ -8,7 +8,8 @@ import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
 import scala.collection.mutable.ArrayBuffer as ArrayBuffer
 import mlscript.codegen.CodeGenError
-import mlscript.compiler.mono.MonomorphError
+
+class CompilerError(error: String) extends Error(error)
 
 class ClassLifter(logDebugMsg: Boolean = false) {
   type ClassName = String
@@ -227,14 +228,14 @@ class ClassLifter(logDebugMsg: Boolean = false) {
   }
 
   private def liftCaseBranch(brn: CaseBranches)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (CaseBranches, LocalContext) = brn match{
-    case Case(v: Var, body, rest) => 
+    case k @ Case(v: Var, body, rest) => 
       val nTrm = liftTerm(body)(using ctx.addV(v))
       val nRest = liftCaseBranch(rest)
-      (Case(v, nTrm._1, nRest._1), nTrm._2 ++ nRest._2)
-    case Case(pat, body, rest) =>
+      (Case(v, nTrm._1, nRest._1)(k.refined), nTrm._2 ++ nRest._2)
+    case k @ Case(pat, body, rest) =>
       val nTrm = liftTerm(body)
       val nRest = liftCaseBranch(rest)
-      (Case(pat, nTrm._1, nRest._1), nTrm._2 ++ nRest._2)
+      (Case(pat, nTrm._1, nRest._1)(k.refined), nTrm._2 ++ nRest._2)
     case Wildcard(body) =>
       val nTrm = liftTerm(body)
       (Wildcard(nTrm._1), nTrm._2)
@@ -249,7 +250,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val nE = liftTerm(expr)
       val nR = liftTerm(rhs)
       (IfThen(nE._1, nR._1), nE._2 ++ nR._2)
-    case _ => throw MonomorphError(s"Unknown IfBody: ${body}")
+    case _ => throw CompilerError(s"Unknown IfBody: ${body}")
   }
 
   private def liftTuple(tup: Tup)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (Tup, LocalContext) = {
@@ -399,7 +400,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     case Sel(receiver, fieldName) =>
       val nRec = liftTerm(receiver)
       (Sel(nRec._1, fieldName), nRec._2)
-    case Splc(fields) => throw MonomorphError(s"Unimplemented liftTerm: ${target}")
+    case Splc(fields) => throw CompilerError(s"Unimplemented liftTerm: ${target}")
     case Subs(arr, idx) =>
       val (ltrm, lctx) = liftTerm(arr)
       val (rtrm, rctx) = liftTerm(idx)
@@ -412,7 +413,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val ret = liftTerm(lhs)
       val nTs = targs.map(liftType).unzip
       (TyApp(ret._1, nTs._1), nTs._2.fold(ret._2)(_ ++ _))
-    case With(trm, fields) => throw MonomorphError(s"Unimplemented liftTerm: ${target}")
+    case With(trm, fields) => throw CompilerError(s"Unimplemented liftTerm: ${target}")
     case New(Some((t: TypeName, prm: Tup)), TypingUnit(Nil)) =>
       val ret = liftConstr(t, prm)
       (New(Some((ret._1, ret._2)), TypingUnit(Nil)), ret._3)
@@ -432,7 +433,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val nSta = New(Some((nTpNm, Tup(Nil))), TypingUnit(Nil))
       val ret = liftEntities(List(anoCls, nSta))
       (Blk(ret._1), ret._2)
-    case New(head, body) => throw MonomorphError(s"Unimplemented liftTerm: ${target}")
+    case New(head, body) => throw CompilerError(s"Unimplemented liftTerm: ${target}")
     case Blk(stmts) =>
       val ret = liftEntities(stmts)
       (Blk(ret._1), ret._2)
@@ -447,7 +448,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val (bod2, ctx) = liftTerm(bod)
       val (sts2, ctx2) = liftEntities(sts)
       (Where(bod2, sts2), ctx2)
-    case _: Eqn | _: Super | _: Rft | _: While | _: Quoted | _: Unquoted | _: Ann => throw MonomorphError(s"Unimplemented liftTerm: ${target}") // TODO
+    case _: Eqn | _: Super | _: Rft | _: While | _: Quoted | _: Unquoted | _: Ann => throw CompilerError(s"Unimplemented liftTerm: ${target}") // TODO
     case patmat: AdtMatchWith => lastWords(s"Cannot liftTermNew ${patmat}")
   }
 
@@ -484,7 +485,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
           ((v, Fld(flags, tmp._1)), tmp._2)
       }.unzip
       (Rcd(ret._1), ret._2.fold(emptyCtx)(_ ++ _))
-    case _ => throw MonomorphError(s"Unimplemented liftTermAsType: ${target}")
+    case _ => throw CompilerError(s"Unimplemented liftTermAsType: ${target}")
   }
 
   private def liftTypeName(target: TypeName)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (TypeName, LocalContext) = {
@@ -509,7 +510,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val nlhs = liftType(lb)
       val nrhs = liftType(ub)
       Bounds(nlhs._1, nrhs._1) -> (nlhs._2 ++ nrhs._2)
-    case Constrained(base: Type, bounds, where) =>
+    case Constrained(base: Type, bounds, where, tscs) =>
       val (nTargs, nCtx) = bounds.map { case (tv, Bounds(lb, ub)) =>
         val nlhs = liftType(lb)
         val nrhs = liftType(ub)
@@ -520,10 +521,18 @@ class ClassLifter(logDebugMsg: Boolean = false) {
         val nrhs = liftType(ub)
         Bounds(nlhs._1, nrhs._1) -> (nlhs._2 ++ nrhs._2)
       }.unzip
+      val (tscs0, nCtx3) = tscs.map { case (tvs, cs) =>
+        val (ntvs,c0) = tvs.map { case (p,v) =>
+          val (nv, c) = liftType(v)
+          (p,nv) -> c
+        }.unzip
+        val (ncs,c1) = cs.map(_.map(liftType).unzip).unzip
+        (ntvs,ncs) -> (c0 ++ c1.flatten)
+      }.unzip
       val (nBase, bCtx) = liftType(base)
-      Constrained(nBase, nTargs, bounds2) ->
-        ((nCtx ++ nCtx2).fold(emptyCtx)(_ ++ _) ++ bCtx)
-    case Constrained(_, _, _) => die
+      Constrained(nBase, nTargs, bounds2, tscs0) ->
+        ((nCtx ++ nCtx2 ++ nCtx3.flatten).fold(emptyCtx)(_ ++ _) ++ bCtx)
+    case Constrained(_, _, _, _) => die
     case Function(lhs, rhs) =>
       val nlhs = liftType(lhs)
       val nrhs = liftType(rhs)
@@ -578,7 +587,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val (body2, ctx) = liftType(body)
       PolyType(targs, body2) -> ctx
     case Top | Bot | _: Literal | _: TypeTag | _: TypeVar => target.asInstanceOf[Type] -> emptyCtx
-    case _: Selection => throw MonomorphError(s"Unimplemented liftType: ${target}") // TODO
+    case _: Selection => throw CompilerError(s"Unimplemented liftType: ${target}") // TODO
   }
   
 
@@ -602,7 +611,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
         }.unzip
         (func.copy(rhs = Right(PolyType(nTargs._1, nBody._1)))(func.declareLoc, func.virtualLoc, func.mutLoc, func.signature, func.outer, func.genField, func.annotations),
           nTargs._2.fold(nBody._2)(_ ++ _))
-      case _ => throw MonomorphError(s"Unimplemented liftMemberFunc: ${func}") // TODO
+      case _ => throw CompilerError(s"Unimplemented liftMemberFunc: ${func}") // TODO
     }
   }
 
@@ -629,7 +638,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
               case (tn, ctx) => (L(tn), ctx)
           case R(tv) => R(tv) -> emptyCtx}).unzip
         NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, Right(PolyType(nTargs._1, nBody._1)))(N, N, N, N, N, true, Nil) 
-      case _ => throw MonomorphError(s"Unimplemented liftGlobalFunc: ${func}")
+      case _ => throw CompilerError(s"Unimplemented liftGlobalFunc: ${func}")
     })
   }
   

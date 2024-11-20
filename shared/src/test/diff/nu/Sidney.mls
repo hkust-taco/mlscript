@@ -1,0 +1,53 @@
+:NewDefs
+
+
+fun swapMaybe(x, y) =
+  if true then [x, y] else [y, x]
+//│ fun swapMaybe: forall 'a. ('a, 'a) -> ['a, 'a]
+
+swapMaybe : forall 'a, 'b: ('a, 'b) -> ['a | 'b, 'b | 'a]
+//│ forall 'a. ('a, 'a) -> ['a, 'a]
+//│ res
+//│     = [Function: swapMaybe]
+
+
+fun test(x, y, z) =
+  let xy = swapMaybe(x, y)
+  let yz = swapMaybe(xy.1, z)
+  [xy.0, yz.0, yz.1]
+//│ fun test: forall 'a 'b. ('a, 'a, 'b) -> ['a, 'a | 'b, 'b | 'a]
+
+:e
+test : forall 'a, 'b: ('a, 'b, 'b) -> ['a | 'b, 'a | 'b, 'b]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.21: 	test : forall 'a, 'b: ('a, 'b, 'b) -> ['a | 'b, 'a | 'b, 'b]
+//│ ║        	^^^^
+//│ ╟── type `'a` does not match type `'b`
+//│ ║  l.21: 	test : forall 'a, 'b: ('a, 'b, 'b) -> ['a | 'b, 'a | 'b, 'b]
+//│ ║        	                       ^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.21: 	test : forall 'a, 'b: ('a, 'b, 'b) -> ['a | 'b, 'a | 'b, 'b]
+//│ ║        	                                                         ^^
+//│ ╟── Note: quantified type variable 'a is defined at:
+//│ ║  l.21: 	test : forall 'a, 'b: ('a, 'b, 'b) -> ['a | 'b, 'a | 'b, 'b]
+//│ ╙──      	              ^^
+//│ forall 'a 'b. ('a, 'b, 'b) -> ['a | 'b, 'a | 'b, 'b]
+//│ res
+//│     = [Function: test]
+
+
+fun test(x, y, z) =
+  if true then
+    let xy = swapMaybe(x, y)
+    [xy.0, xy.1, z]
+  else
+    let yz = swapMaybe(y, z)
+    [x, yz.0, yz.1]
+//│ fun test: forall 'a 'b. ('a, 'a & 'b, 'b) -> ['a, 'a | 'b, 'b]
+
+test : forall 'a: ('a, 'a, 'a) -> ['a, 'a, 'a]
+//│ forall 'a. ('a, 'a, 'a) -> ['a, 'a, 'a]
+//│ res
+//│     = [Function: test1]
+
+

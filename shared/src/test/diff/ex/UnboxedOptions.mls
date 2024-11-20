@@ -1,0 +1,302 @@
+:NewDefs
+
+
+// * Similar in spirit to https://github.com/sjrd/scala-unboxed-option
+
+// * In these tests, we need to use an `Object` bound to allow pattern-matching on unboxed option values.
+// * This bound is needed by the type system in order to preserve parametricity in the general case.
+// * However, a real implementation could keep the definition of Opt abstract and do away with the `Object` bound
+// * through unchecked casts without compromising safety or parametricity.
+
+
+module None
+class Some[out A](val value: A)
+//│ module None
+//│ class Some[A](value: A)
+
+type Opt[out A] = Some[A] | None | A & ~Some & ~None
+//│ type Opt[A] = None | Some[A] | A & ~None & ~#Some
+
+
+fun some(x) = if x is
+  refined(None) then Some(x)
+  refined(Some) then Some(x)
+  else x
+//│ fun some: forall 'a 'b 'c. (None & 'a | Object & 'b & ~#None & ~#Some | Some[anything] & 'c) -> (Some[None & 'a | Some[anything] & 'c] | 'b)
+
+let some_ = some : forall 'a: (Object & 'a) -> Opt['a]
+//│ let some_: forall 'a. (Object & 'a) -> Opt['a]
+//│ some_
+//│       = [Function: some]
+
+
+fun fold(opt, k, d) = if opt is
+  refined(None) then d
+  refined(Some) then k(opt.value)
+  else k(opt)
+//│ fun fold: forall 'value 'a. (None | Object & 'value & ~#None & ~#Some | Some[anything] & {value: 'value}, 'value -> 'a, 'a) -> 'a
+
+let fold_ = fold : forall 'a, 'b: (Opt['a] & Object, 'a -> 'b, 'b) -> 'b
+//│ let fold_: forall 'a 'b. (Opt['a] & Object, 'a -> 'b, 'b) -> 'b
+//│ fold_
+//│       = [Function: fold]
+
+let fold_ = fold : forall 'a, 'b: (Opt['a & Object], 'a -> 'b, 'b) -> 'b
+//│ let fold_: forall 'a 'b. (Opt[Object & 'a], 'a -> 'b, 'b) -> 'b
+//│ fold_
+//│       = [Function: fold]
+
+
+// * Examples using the annotated definitions, which is what things will look like from the outside world.
+
+let s = some_(42)
+//│ let s: Opt[42]
+//│ s
+//│   = 42
+
+s : Opt[Int]
+//│ Opt[Int]
+//│ res
+//│     = 42
+
+fold_(s, id, 0)
+//│ 0 | 42
+//│ res
+//│     = 42
+
+// * This wont work when `Opt` is made opaque to the outside:
+s : Opt[Opt[Int]]
+//│ Opt[Opt[Int]]
+//│ res
+//│     = 42
+
+let ss = some_(some_(42))
+//│ let ss: Opt[Opt[42]]
+//│ ss
+//│    = 42
+
+:e
+ss : Opt[Int]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.79: 	ss : Opt[Int]
+//│ ║        	^^
+//│ ╟── type `Some['a]` is not an instance of type `Int`
+//│ ║  l.17: 	type Opt[out A] = Some[A] | None | A & ~Some & ~None
+//│ ║        	                  ^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.79: 	ss : Opt[Int]
+//│ ╙──      	         ^^^
+//│ Opt[Int]
+//│ res
+//│     = 42
+
+ss : Opt[Opt[Int]]
+//│ Opt[Opt[Int]]
+//│ res
+//│     = 42
+
+fold_(ss, o => fold_(o, id, -1), 0)
+//│ -1 | 0 | 42
+//│ res
+//│     = 42
+
+
+let s = some_(None)
+//│ let s: Opt[None]
+//│ s
+//│   = Some {}
+
+:e
+s : Opt[Int]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.110: 	s : Opt[Int]
+//│ ║         	^
+//│ ╟── reference of type `None` is not an instance of `Int`
+//│ ║  l.104: 	let s = some_(None)
+//│ ║         	              ^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.110: 	s : Opt[Int]
+//│ ╙──       	        ^^^
+//│ Opt[Int]
+//│ res
+//│     = Some {}
+
+s : Opt[Opt[Int]]
+//│ Opt[Opt[Int]]
+//│ res
+//│     = Some {}
+
+fold_(s, o => fold_(o, id, -1), 0)
+//│ -1 | 0
+//│ res
+//│     = -1
+
+some_(some_(None))
+//│ Opt[Opt[None]]
+//│ res
+//│     = Some {}
+
+:e
+ss : Opt[Int]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.140: 	ss : Opt[Int]
+//│ ║         	^^
+//│ ╟── type `Some['a]` is not an instance of type `Int`
+//│ ║  l.17: 	type Opt[out A] = Some[A] | None | A & ~Some & ~None
+//│ ║        	                  ^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.140: 	ss : Opt[Int]
+//│ ╙──       	         ^^^
+//│ Opt[Int]
+//│ res
+//│     = 42
+
+ss : Opt[Opt[Int]]
+//│ Opt[Opt[Int]]
+//│ res
+//│     = 42
+
+fold_(ss, o => fold_(o, id, -1), 0)
+//│ -1 | 0 | 42
+//│ res
+//│     = 42
+
+
+// * Here we use the precise, unannotated types directly to showcase precise inferred types.
+
+let s = some(42)
+//│ let s: 42 | Some[nothing]
+//│ s
+//│   = 42
+
+s : Opt[Int]
+//│ Opt[Int]
+//│ res
+//│     = 42
+
+fold(s, id, 0)
+//│ 0 | 42
+//│ res
+//│     = 42
+
+s : Opt[Opt[Int]]
+//│ Opt[Opt[Int]]
+//│ res
+//│     = 42
+
+let ss = some(some(42))
+//│ let ss: 42 | Some[Some[nothing]]
+//│ ss
+//│    = 42
+
+:e
+ss : Opt[Int]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.193: 	ss : Opt[Int]
+//│ ║         	^^
+//│ ╟── application of type `Some[?A]` does not match type `Int | ~Some[anything]`
+//│ ║  l.23: 	  refined(Some) then Some(x)
+//│ ╙──      	                     ^^^^^^^
+//│ Opt[Int]
+//│ res
+//│     = 42
+
+ss : Opt[Opt[Int]]
+//│ Opt[Opt[Int]]
+//│ res
+//│     = 42
+
+fold(ss, o => fold(o, id, -1), 0)
+//│ -1 | 0 | 42
+//│ res
+//│     = 42
+
+
+let s = some(None)
+//│ let s: Some[None]
+//│ s
+//│   = Some {}
+
+:e
+s : Opt[Int]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.221: 	s : Opt[Int]
+//│ ║         	^
+//│ ╟── reference of type `None` does not match type `Int | ~None`
+//│ ║  l.215: 	let s = some(None)
+//│ ╙──       	             ^^^^
+//│ Opt[Int]
+//│ res
+//│     = Some {}
+
+s : Opt[Opt[Int]]
+//│ Opt[Opt[Int]]
+//│ res
+//│     = Some {}
+
+fold(s, o => fold(o, id, -1), 0)
+//│ -1 | 0
+//│ res
+//│     = -1
+
+some(some(None))
+//│ Some[Some[None]]
+//│ res
+//│     = Some {}
+
+:e
+ss : Opt[Int]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.248: 	ss : Opt[Int]
+//│ ║         	^^
+//│ ╟── application of type `Some[?A]` does not match type `Int | ~Some[anything]`
+//│ ║  l.23: 	  refined(Some) then Some(x)
+//│ ╙──      	                     ^^^^^^^
+//│ Opt[Int]
+//│ res
+//│     = 42
+
+ss : Opt[Opt[Int]]
+//│ Opt[Opt[Int]]
+//│ res
+//│     = 42
+
+fold(ss, o => fold(o, id, -1), 0)
+//│ -1 | 0 | 42
+//│ res
+//│     = 42
+
+
+// * Demonstration that we can't lift a parametric value into an unboxed option without casts.
+
+fun mk(x: Object) = some(x)
+//│ fun mk: (x: Object) -> (Object & ~#None & ~#Some | Some[None | Some[anything]])
+
+:e
+fun mk[A](x: A) = some(x)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.276: 	fun mk[A](x: A) = some(x)
+//│ ║         	                  ^^^^^^^
+//│ ╟── reference of type `A` is not an instance of type `Object`
+//│ ║  l.276: 	fun mk[A](x: A) = some(x)
+//│ ║         	                       ^
+//│ ╟── Note: constraint arises from `case` expression:
+//│ ║  l.21: 	fun some(x) = if x is
+//│ ║        	                 ^^^^
+//│ ║  l.22: 	  refined(None) then Some(x)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.23: 	  refined(Some) then Some(x)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.24: 	  else x
+//│ ║        	^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.21: 	fun some(x) = if x is
+//│ ║        	                 ^
+//│ ╟── Note: method type parameter A is defined at:
+//│ ║  l.276: 	fun mk[A](x: A) = some(x)
+//│ ╙──       	       ^
+//│ fun mk: forall 'A. (x: 'A) -> (Some['A & (None | Some[anything])] | error | 'A & ~#None & ~#Some)
+
+fun mk[A](x: A & Object) = some(x)
+//│ fun mk: forall 'A. (x: Object & 'A) -> (Object & 'A & ~#None & ~#Some | Some['A & (None | Some[anything])])
+

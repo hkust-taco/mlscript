@@ -1,0 +1,430 @@
+:NewDefs
+
+// This test file explores implementing a calculator using UCS.
+
+fun (++) concatOp(a, b) = concat(a)(b)
+fun (|>) pipe(a, f) = f(a)
+fun (!==) notEqual(x, y) = not(x === y)
+let anyToString = toString
+//│ fun (++) concatOp: (Str, Str) -> Str
+//│ fun (|>) pipe: forall 'a 'b. ('a, 'a -> 'b) -> 'b
+//│ fun (!==) notEqual: forall 'c. (Eql['c], 'c) -> Bool
+//│ let anyToString: anything -> Str
+//│ anyToString
+//│             = [Function: toString]
+
+fun par(s, p) = if p then "(" ++ s ++ ")" else s
+//│ fun par: (Str, Bool) -> Str
+
+type StringOps = {
+  length: Int,
+  charAt: Int => Str,
+  charCodeAt: Int => Int,
+  slice: Int => Str
+}
+declare fun String: nothing
+let toStringOps: anything => StringOps = String
+//│ type StringOps = {charAt: Int -> Str, charCodeAt: Int -> Int, length: Int, slice: Int -> Str}
+//│ let toStringOps: anything -> StringOps
+//│ fun String: nothing
+//│ toStringOps
+//│             = [Function: String]
+
+type Option[A] = Some[A] | None
+class Some[A](value: A)
+module None
+//│ type Option[A] = None | Some[A]
+//│ class Some[A](value: A)
+//│ module None
+
+fun showOption(x) = if x is
+  Some(value) then "Some(" ++ toString(value) ++ ")"
+  None then "None"
+fun mapOption(f, x) = if x is
+  Some(value) then Some(f(value))
+  None then None
+fun (??) getOrElse(x, default) = if x is
+  Some(value) then value
+  None then default
+fun flatten(x) = if x is
+  Some(value) then value
+  other then other
+//│ fun showOption: (None | Some[anything]) -> Str
+//│ fun mapOption: forall 'a 'A. ('a -> 'A, None | Some['a]) -> (None | Some['A])
+//│ fun (??) getOrElse: forall 'b. (None | Some['b], 'b) -> 'b
+//│ fun flatten: forall 'c. (Object & 'c & ~#Some | Some['c]) -> 'c
+
+type List[A] = Cons[A] | Nil
+class Cons[A](head: A, tail: List[A])
+module Nil
+fun (::) cons(head, tail) = Cons(head, tail)
+fun reverse(xs) =
+  let rec aux(acc, xs) =
+    if xs is
+      Nil then acc
+      Cons(x, xs') then aux(x :: acc, xs')
+  aux(Nil, xs)
+fun join(sep) =
+  let rec aux(acc, xs) =
+    if xs is
+      Nil then acc
+      Cons(x, xs') then aux(acc ++ sep ++ toString(x), xs')
+  (xs) =>
+    if xs is
+      Cons(x, xs') then aux(toString(x), xs')
+      Nil then ""
+fun showList(xs) = "[" ++ join(", ")(xs) ++ "]"
+//│ type List[A] = Cons[A] | Nil
+//│ class Cons[A](head: A, tail: List[A])
+//│ module Nil
+//│ fun (::) cons: forall 'A. ('A, List['A]) -> Cons['A]
+//│ fun reverse: forall 'A0 'A1. (Cons['A0] | Nil) -> (Cons['A1] | Nil)
+//│ fun join: Str -> (forall 'A2. (Cons['A2] | Nil) -> Str)
+//│ fun showList: forall 'A3. (Cons['A3] | Nil) -> Str
+//│ where
+//│   'A0 <: 'A1
+
+//  _
+// | |    _____  _____ _ __
+// | |   / _ \ \/ / _ \ '__|
+// | |__|  __/>  <  __/ |
+// |_____\___/_/\_\___|_|
+// 
+
+fun isDigit(n) = (48 <= n) && (n <= 57)
+fun isBlank(n) = (n === 32) || (n === 9) || (n === 10) || (n === 13)
+//│ fun isDigit: Num -> Bool
+//│ fun isBlank: Eql[10 | 13 | 32 | 9] -> Bool
+
+fun scanInt(text: StringOps, at: Int): Option[[Int, Int]] =
+  let rec aux(acc, i: Int): Option[[Int, Int]] = if
+    i < 0 then None
+    i >= text.length then mapOption(n => [n, i], acc)
+    let c = text.charCodeAt(i)
+    isDigit(c) then aux(Some((acc ?? 0) * 10 + c - 48), i + 1)
+    else mapOption(n => [n, i], acc)
+  aux(None, at)
+//│ fun scanInt: (text: StringOps, at: Int) -> Option[[Int, Int]]
+
+scanInt("a123" |> toStringOps, 0) |> showOption
+scanInt("a123" |> toStringOps, 1) |> showOption
+scanInt("a123" |> toStringOps, 2) |> showOption
+scanInt("a123" |> toStringOps, 3) |> showOption
+scanInt("a123" |> toStringOps, 4) |> showOption
+//│ Str
+//│ res
+//│     = 'None'
+//│ res
+//│     = 'Some(123,4)'
+//│ res
+//│     = 'Some(23,4)'
+//│ res
+//│     = 'Some(3,4)'
+//│ res
+//│     = 'None'
+
+fun skipBlank(text: StringOps, at: Int): Int =
+  let rec aux(i: Int): Int = if
+    i >= text.length then i
+    isBlank(text.charCodeAt(i)) then aux(i + 1)
+    else i
+  aux(at)
+//│ fun skipBlank: (text: StringOps, at: Int) -> Int
+
+skipBlank("abc" |> toStringOps, 0)
+skipBlank("abc" |> toStringOps, 1)
+skipBlank("abc" |> toStringOps, 2)
+skipBlank("  \t\n\r123" |> toStringOps, 0)
+//│ Int
+//│ res
+//│     = 0
+//│ res
+//│     = 1
+//│ res
+//│     = 2
+//│ res
+//│     = 5
+
+class Span(val start: Int, val end: Int)
+//│ class Span(start: Int, end: Int)
+
+abstract class Token(val span: Span)
+class IntegerLiteral(value: Int, span2: Span) extends Token(span2) { // It seems that constructor parameters is not sanitized
+  fun toString(): Str = "IntegerLiteral(" ++ anyToString(value) ++ ")"
+}
+class LeftParen(at: Int) extends Token(Span(at, at + 1)) {
+  fun toString(): Str = "LeftParen"
+}
+class RightParen(at: Int) extends Token(Span(at, at + 1)) {
+  fun toString(): Str = "RightParen"
+}
+class BinaryOperator(value: Str, val bp: Int, at: Int) extends Token(Span(at, at + 1)) {
+  fun toString(): Str = "BinaryOperator(" ++ value ++ ", " ++ anyToString(bp) ++ ")"
+}
+class EndOfInput(at: Int) extends Token(Span(at, at)) {
+  fun toString(): Str = "EndOfInput"
+}
+class UnknownInput(rest: Str, at: Int, length: Int) extends Token(Span(at, at + length)) {
+  fun toString(): Str = "UnknownInput(" ++ rest ++ ")"
+}
+//│ abstract class Token(span: Span)
+//│ class IntegerLiteral(value: Int, span2: Span) extends Token {
+//│   fun toString: () -> Str
+//│ }
+//│ class LeftParen(at: Int) extends Token {
+//│   fun toString: () -> Str
+//│ }
+//│ class RightParen(at: Int) extends Token {
+//│   fun toString: () -> Str
+//│ }
+//│ class BinaryOperator(value: Str, bp: Int, at: Int) extends Token {
+//│   fun toString: () -> Str
+//│ }
+//│ class EndOfInput(at: Int) extends Token {
+//│   fun toString: () -> Str
+//│ }
+//│ class UnknownInput(rest: Str, at: Int, length: Int) extends Token {
+//│   fun toString: () -> Str
+//│ }
+
+fun scanToken(text: StringOps, at: Int): [Token, Int] =
+  if
+    let at' = skipBlank(text, at)
+    at' >= text.length then [EndOfInput(at'), at']
+    let head = text.charCodeAt(at')
+    head ===
+      37 then [BinaryOperator("%", 20, at'), at' + 1]
+      40 then [LeftParen(at'), at' + 1]
+      41 then [RightParen(at'), at' + 1]
+      42 then [BinaryOperator("*", 20, at'), at' + 1]
+      43 then [BinaryOperator("+", 10, at'), at' + 1]
+      45 then [BinaryOperator("-", 10, at'), at' + 1]
+      47 then [BinaryOperator("/", 20, at'), at' + 1]
+    (48 <= head) && (head <= 57) and
+      scanInt(text, at') is Some([n, at'']) then
+        [IntegerLiteral(n, Span(at', at'')), at'']
+    else [UnknownInput(text.slice(at'), at', text.length - at'), at']
+//│ fun scanToken: (text: StringOps, at: Int) -> [Token, Int]
+
+scanToken("bruh" |> toStringOps, 0)
+scanToken("1" |> toStringOps, 0)
+scanToken("+" |> toStringOps, 0)
+scanToken("  42" |> toStringOps, 0)
+//│ [Token, Int]
+//│ res
+//│     = [ UnknownInput {}, 0 ]
+//│ res
+//│     = [ IntegerLiteral {}, 1 ]
+//│ res
+//│     = [ BinaryOperator {}, 1 ]
+//│ res
+//│     = [ IntegerLiteral {}, 4 ]
+
+fun tokenize(str: Str): List[Token] =
+  let text = str |> toStringOps
+  let rec aux(acc, at) =
+    if scanToken(text, at) is [token, at'] and token is
+      UnknownInput then (token :: acc) |> reverse
+      EndOfInput then acc |> reverse
+      else aux(token :: acc, at')
+  aux(Nil, 0)
+//│ fun tokenize: (str: Str) -> List[Token]
+
+tokenize("0") |> showList
+tokenize("1 + 2 * 3") |> showList
+tokenize("bruh") |> showList
+//│ Str
+//│ res
+//│     = '[IntegerLiteral(0)]'
+//│ res
+//│     = '[IntegerLiteral(1), BinaryOperator(+, 10), IntegerLiteral(2), BinaryOperator(*, 20), IntegerLiteral(3)]'
+//│ res
+//│     = '[UnknownInput(bruh)]'
+
+//  ____                _
+// |  _ \ __ _ _ __ ___(_)_ __   __ _
+// | |_) / _` | '__/ __| | '_ \ / _` |
+// |  __/ (_| | |  \__ \ | | | | (_| |
+// |_|   \__,_|_|  |___/_|_| |_|\__, |
+//                              |___/
+
+type Expression = IntegerLiteral | BinaryExpression
+class BinaryExpression(op: BinaryOperator, left: Expression, right: Expression)
+//│ type Expression = BinaryExpression | IntegerLiteral
+//│ class BinaryExpression(op: BinaryOperator, left: Expression, right: Expression)
+
+fun bindingPower(t: Expression): Int =
+  if t is
+    IntegerLiteral then 30
+    BinaryExpression(op, _, _) then op.bp
+//│ fun bindingPower: (t: Expression) -> Int
+
+fun showExpression(t: Expression): Str =
+  if t is
+    IntegerLiteral(n) then anyToString(n)
+    BinaryExpression(BinaryOperator(op, bp), left, right) then
+      let lbp = bindingPower of left
+      let rbp = bindingPower of right
+      par(showExpression(left), lbp < bp) ++ " " ++ op ++ " " ++ par(showExpression(right), rbp < bp)
+//│ fun showExpression: (t: Expression) -> Str
+
+let s = Span(0, 0)
+IntegerLiteral(42, s) |> showExpression
+let t1 = BinaryExpression(BinaryOperator("+", 10, 0), IntegerLiteral(1, s), IntegerLiteral(2, s))
+t1 |> showExpression
+let t2 = BinaryExpression(BinaryOperator("*", 20, 0), t1, IntegerLiteral(3, s))
+t2 |> showExpression
+let t3 = BinaryExpression(BinaryOperator("*", 20, 0), t2, IntegerLiteral(4, s))
+t3 |> showExpression
+//│ let s: Span
+//│ let t1: BinaryExpression
+//│ let t2: BinaryExpression
+//│ let t3: BinaryExpression
+//│ Str
+//│ s
+//│   = Span {}
+//│ res
+//│     = '42'
+//│ t1
+//│    = BinaryExpression {}
+//│ res
+//│     = '1 + 2'
+//│ t2
+//│    = BinaryExpression {}
+//│ res
+//│     = '(1 + 2) * 3'
+//│ t3
+//│    = BinaryExpression {}
+//│ res
+//│     = '(1 + 2) * 3 * 4'
+
+type ParseResult[A] = Some[A] | Failed
+class Failed(message: Str)
+fun showParseResult(r: ParseResult['A]) = if r is
+  Some(value) then "Some(" ++ toString(value) ++ ")"
+  Failed(message) then "Failed(" ++ message ++ ")"
+fun (?>) mapParseResult(x, f) = if x is
+  Some(value) then Some(f(value))
+  failed then failed
+//│ type ParseResult[A] = Failed | Some[A]
+//│ class Failed(message: Str)
+//│ fun showParseResult: forall 'A. (r: ParseResult['A]) -> Str
+//│ fun (?>) mapParseResult: forall 'a 'b 'A0. (Object & 'a & ~#Some | Some['b], 'b -> 'A0) -> (Some['A0] | 'a)
+
+fun showParsedExpression(r: ParseResult[Expression]) = if r is
+  Some(value) then "Some(" ++ showExpression(value) ++ ")"
+  Failed(message) then "Failed(" ++ message ++ ")"
+//│ fun showParsedExpression: (r: ParseResult[Expression]) -> Str
+
+fun lastPosition(t: Expression): Int =
+  if t is
+    IntegerLiteral(_, span) then span.end
+    BinaryExpression(_, _, right) then lastPosition(right)
+//│ fun lastPosition: (t: Expression) -> Int
+
+fun parseAtom(ts: List[Token]): ParseResult[[Expression, List[Token]]] =
+  if ts is
+    Cons(IntegerLiteral(n, span), ts') then Some([IntegerLiteral(n, span), ts'])
+    Cons(LeftParen, ts') and parseExpression(0, ts') is
+      Some([body, Cons(RightParen, ts'')]) then Some([body, ts''])
+      Some([body, _]) then Failed("Expected a right parenthesis at " ++ toString(lastPosition of body))
+      failed then failed
+    Cons(token, _) then Failed("Unexpected token " ++ toString(token) ++ " at " ++ toString(token.span.start))
+    Nil then Failed("Unexpected end of input")
+fun parseExpression(bp: Int, ts: List[Token]): ParseResult[[Expression, List[Token]]] =
+  if parseAtom(ts) is
+    Some([leftmost, ts']) then
+      let rec aux(left, ts) = if ts is
+        Cons(BinaryOperator(op, bp', opAt), ts') and bp < bp' and
+          parseExpression(bp', ts') is
+            Some([right, ts'']) then
+              aux(BinaryExpression(BinaryOperator(op, bp', opAt), left, right), ts'')
+            failed then failed
+        else Some([left, ts])
+      aux(leftmost, ts')
+    failed then failed
+fun parse(source: Str): ParseResult[Expression] =
+  if parseExpression(0, tokenize(source)) is
+    Some([expr, Nil]) then Some(expr)
+    Some([expr, rest]) then Failed("Unexpected token: " ++ showList(rest) ++ " at " ++ toString(lastPosition of expr))
+    failed then failed
+//│ fun parseAtom: (ts: List[Token]) -> ParseResult[[Expression, List[Token]]]
+//│ fun parseExpression: (bp: Int, ts: List[Token]) -> ParseResult[[Expression, List[Token]]]
+//│ fun parse: (source: Str) -> ParseResult[Expression]
+
+parse("1 + 2 * 3") |> showParsedExpression
+parse("(1 + 2) * 3") |> showParsedExpression
+parse("2 * (1 + 3 + 5 + 7 + 9 + 11) - 2 - 4 - 6") |> showParsedExpression
+parse("2 * (1 + 3) * (5 + 7) * (9 - 11)") |> showParsedExpression
+parse("(((((((((42)))))))))") |> showParsedExpression
+//│ Str
+//│ res
+//│     = 'Some(1 + 2 * 3)'
+//│ res
+//│     = 'Some((1 + 2) * 3)'
+//│ res
+//│     = 'Some(2 * (1 + 3 + 5 + 7 + 9 + 11) - 2 - 4 - 6)'
+//│ res
+//│     = 'Some(2 * (1 + 3) * (5 + 7) * (9 - 11))'
+//│ res
+//│     = 'Some(42)'
+
+parse("1 + ") |> showParsedExpression
+parse("1 bruh") |> showParsedExpression
+parse("1 * (2 + 3") |> showParsedExpression
+parse("1 - bruh") |> showParsedExpression
+//│ Str
+//│ res
+//│     = 'Failed(Unexpected end of input)'
+//│ res
+//│     = 'Failed(Unexpected token: [UnknownInput(bruh)] at 1)'
+//│ res
+//│     = 'Failed(Expected a right parenthesis at 10)'
+//│ res
+//│     = 'Failed(Unexpected token UnknownInput(bruh) at 4)'
+
+//  _____            _             _   _
+// | ____|_   ____ _| |_   _  __ _| |_(_) ___  _ __
+// |  _| \ \ / / _` | | | | |/ _` | __| |/ _ \| '_ \
+// | |___ \ V / (_| | | |_| | (_| | |_| | (_) | | | |
+// |_____| \_/ \__,_|_|\__,_|\__,_|\__|_|\___/|_| |_|
+//
+
+fun evaluate(t: Expression): Option[Int] =
+  if t is
+    IntegerLiteral(n) then Some(n)
+    BinaryExpression(BinaryOperator(op, _, _), left, right) and
+      evaluate(left) is Some(leftResult) and
+        evaluate(right) is Some(rightResult) and op ===
+          "+" then Some(leftResult + rightResult)
+          "-" then Some(leftResult - rightResult)
+          "*" then Some(leftResult * rightResult)
+          // "/" then Some(leftResult / rightResult)
+          "%" then Some(leftResult % rightResult)
+    else None
+//│ fun evaluate: (t: Expression) -> Option[Int]
+
+fun evaluation(source: Str): Str =
+  if parse(source) is
+    Some(expression) and evaluate(expression) is
+      Some(result) then toString(result)
+      None then "Evaluation failed"
+    Failed(message) then "Parsing failed: " ++ message
+//│ fun evaluation: (source: Str) -> Str
+
+evaluation("1 + 2 * 3")
+evaluation("(((((42)))))")
+evaluation("1 * (3 + 4) - 5")
+evaluation("1 + ")
+evaluation("1 bruh")
+//│ Str
+//│ res
+//│     = '7'
+//│ res
+//│     = '42'
+//│ res
+//│     = '2'
+//│ res
+//│     = 'Parsing failed: Unexpected end of input'
+//│ res
+//│     = 'Parsing failed: Unexpected token: [UnknownInput(bruh)] at 1'

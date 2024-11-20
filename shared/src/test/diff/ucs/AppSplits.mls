@@ -20,14 +20,17 @@ if foo of
 //│ ╟── Note: 'if' expression starts here:
 //│ ║  l.9: 	if foo of
 //│ ╙──     	^^
-//│ ╔══[ERROR] The case when this is false is not handled: foo(0,)
-//│ ║  l.9: 	if foo of
-//│ ║       	   ^^^^^^
+//│ ╔══[ERROR] missing else branch
 //│ ║  l.10: 	  0 then "a"
-//│ ╙──      	^^^^
-//│ error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╙──      	  ^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.10: 	  0 then "a"
+//│ ║        	  ^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ ()
+//│ res
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
 
 :pe // TODO
 :e
@@ -35,26 +38,39 @@ if foo of 1,
   0 then "a"
   1 then "b"
 //│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
-//│ ║  l.35: 	  0 then "a"
+//│ ║  l.38: 	  0 then "a"
 //│ ║        	  ^^^^^^^^^^
-//│ ║  l.36: 	  1 then "b"
+//│ ║  l.39: 	  1 then "b"
 //│ ╙──      	^^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found application instead
-//│ ║  l.34: 	if foo of 1,
+//│ ║  l.37: 	if foo of 1,
 //│ ║        	   ^^^^^^^^^
-//│ ║  l.35: 	  0 then "a"
+//│ ║  l.38: 	  0 then "a"
 //│ ║        	^^
 //│ ╟── Note: 'if' expression starts here:
-//│ ║  l.34: 	if foo of 1,
+//│ ║  l.37: 	if foo of 1,
 //│ ╙──      	^^
-//│ ╔══[ERROR] The case when this is false is not handled: foo(1, undefined,)
-//│ ║  l.34: 	if foo of 1,
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.38: 	  0 then "a"
+//│ ╙──      	  ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.37: 	if foo of 1,
 //│ ║        	   ^^^^^^^^^
-//│ ║  l.35: 	  0 then "a"
+//│ ║  l.38: 	  0 then "a"
+//│ ║        	^^
+//│ ╟── argument list of type `[1, ()]` does not match type `[?a]`
+//│ ║  l.37: 	if foo of 1,
+//│ ║        	          ^^
+//│ ║  l.38: 	  0 then "a"
 //│ ╙──      	^^
-//│ error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.38: 	  0 then "a"
+//│ ║        	  ^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ ()
+//│ res
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
 
 :pe // TODO
 :e
@@ -62,15 +78,18 @@ if foo
   (0) then "a"
   (1) then "b"
 //│ ╔══[PARSE ERROR] Unexpected parenthesis section here
-//│ ║  l.63: 	  (1) then "b"
+//│ ║  l.79: 	  (1) then "b"
 //│ ╙──      	  ^^^
-//│ ╔══[ERROR] The case when this is false is not handled: foo(0,)
-//│ ║  l.61: 	if foo
-//│ ║        	   ^^^
-//│ ║  l.62: 	  (0) then "a"
-//│ ╙──      	^^^^^
-//│ error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.78: 	  (0) then "a"
+//│ ╙──      	           ^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.78: 	  (0) then "a"
+//│ ║        	           ^^^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ "a"
+//│ res
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
 
 

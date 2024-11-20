@@ -28,11 +28,14 @@ if false is false then 0
 
 fun foo(x) = if x is
   false then 0
-//│ fun foo: nothing -> 0
+//│ fun foo: false -> 0
 
 fun foo(x) = if x is
   false then 0
   true  then 1
-//│ fun foo: nothing -> (0 | 1)
+//│ fun foo: Bool -> (0 | 1)
 
-
+fun foo(x) = if x is
+  0 then "zero"
+  true then "true"
+//│ fun foo: (0 | true) -> ("true" | "zero")

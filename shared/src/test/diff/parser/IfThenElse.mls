@@ -128,7 +128,7 @@ if a
   == 1 then "true"
   _    then "true"
 //│ |#if| |a|→|>| |0| |#then| |"false"|↵|==| |1| |#then| |"true"|↵|_| |#then| |"true"|←|
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ Parsed: {if ‹a ‹· > (0) then "false"; · == (1) then "true"›; else "true"›}
 
 if a ==
   0 then "false"

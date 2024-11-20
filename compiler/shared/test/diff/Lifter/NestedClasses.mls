@@ -6,10 +6,6 @@ class X() {
     class Y() {}
 }
 X.Y()
-//│ TypingUnit {
-//│   class X([]) {class Y([]) {}}
-//│   Code(List((X).Y()))
-//│ }
 //│ Lifted:
 //│ TypingUnit {
 //│   class X$1_Y$2([par$X$1,]) {}
