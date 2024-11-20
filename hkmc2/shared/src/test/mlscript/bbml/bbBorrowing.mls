@@ -51,7 +51,7 @@ letreg of r =>
 //│ Where:
 //│   α24_1 <: Alloc
 
-:fixme
+
 // * Non-lexical borrowing pattern encoded with a thunk
 letreg of r =>
   let b = mkVec(r)
@@ -61,7 +61,7 @@ letreg of r =>
     123
     if next(it) > 0 then () => 0 else () => clear(b)
   k()
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@102),Lit(BoolLit(true)),Else(Lam(List(),Lit(IntLit(0))))),Else(Lam(List(),App(Sel(Ref(globalThis:block#5),Ident(clear)),Tup(List(Fld(‹›,Ref(b@91),None))))))) (of class hkmc2.semantics.Split$Cons)
+//│ Type: Int
 
 :e
 letreg of r =>
@@ -89,8 +89,8 @@ letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ║  l.74: 	  k()
 //│ ║        	^^^^^
-//│ ╟── because: cannot constrain  α62_1  <:  Alloc
-//│ ╟── because: cannot constrain  α62_1  <:  ¬(~{Alloc})
+//│ ╟── because: cannot constrain  α68_1  <:  Alloc
+//│ ╟── because: cannot constrain  α68_1  <:  ¬(~{Alloc})
 //│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc})
 //│ Type: ⊥
 
@@ -123,13 +123,13 @@ letreg of r =>
 //│ ║         	^^^^^^^^^^
 //│ ║  l.106: 	  r
 //│ ║         	^^^
-//│ ╟── because: cannot constrain  α84_1  <:  Alloc
-//│ ╟── because: cannot constrain  α84_1  <:  ¬(~{Alloc})
+//│ ╟── because: cannot constrain  α90_1  <:  Alloc
+//│ ╟── because: cannot constrain  α90_1  <:  ¬(~{Alloc})
 //│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc})
-//│ Type: Reg[?, α84_1]
+//│ Type: Reg[?, α90_1]
 //│ Where:
-//│   ⊤ <: α84_1
-//│   α84_1 <: Alloc
+//│   ⊤ <: α90_1
+//│   α90_1 <: Alloc
 
 
 letreg of r =>
@@ -138,9 +138,9 @@ letreg of r =>
     next(it)
   use(r)
   r
-//│ Type: Reg[?, α106_1]
+//│ Type: Reg[?, α112_1]
 //│ Where:
-//│   α106_1 <: Alloc
+//│   α112_1 <: Alloc
 
 :e
 letreg of r =>
@@ -165,13 +165,13 @@ letreg of r =>
 //│ ║         	^^^^^^^^
 //│ ║  l.152: 	  r
 //│ ║         	^^^
-//│ ╟── because: cannot constrain  α118_1  <:  Alloc
-//│ ╟── because: cannot constrain  α118_1  <:  ¬(~{Alloc})
+//│ ╟── because: cannot constrain  α124_1  <:  Alloc
+//│ ╟── because: cannot constrain  α124_1  <:  ¬(~{Alloc})
 //│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc})
-//│ Type: Reg[?, α118_1]
+//│ Type: Reg[?, α124_1]
 //│ Where:
-//│   ⊤ <: α118_1
-//│   α118_1 <: Alloc
+//│   ⊤ <: α124_1
+//│   α124_1 <: Alloc
 
 letreg of r0 =>
   letreg of r1 =>
@@ -180,9 +180,9 @@ letreg of r0 =>
       next(it)
     use(r1)
     r1
-//│ Type: Reg[?, in α147_1]
+//│ Type: Reg[?, in α153_1]
 //│ Where:
-//│   α147_1 <: Alloc
+//│   α153_1 <: Alloc
 
 
 // * Can leak the iterator

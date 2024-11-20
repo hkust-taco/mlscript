@@ -205,13 +205,13 @@ class Pair[A, B](fst: A, snd: B)
 //│ Type: Bool
 
 
-:fixme
-if 1 < 2 then 1 else 0
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@112),Lit(BoolLit(true)),Else(Lit(IntLit(1)))),Else(Lit(IntLit(0)))) (of class hkmc2.semantics.Split$Cons)
 
-:fixme
+if 1 < 2 then 1 else 0
+//│ Type: Int
+
+
 if false then 1 else "1"
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@114),Lit(BoolLit(true)),Else(Lit(IntLit(1)))),Else(Lit(StrLit(1)))) (of class hkmc2.semantics.Split$Cons)
+//│ Type: Int ∨ Str
 
 
 if 1 is Int then 1 else 0
@@ -237,17 +237,15 @@ test("1")
 //│ Type: Int
 
 
-:fixme
 fun fact(n) =
   if n > 1 then n * fact(n - 1) else 1
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@128),Lit(BoolLit(true)),Else(App(Sel(Ref(globalThis:import#bbPredef),Ident(*)),Tup(List(Fld(‹›,Ref(n@126),None), Fld(‹›,App(Sel(Ref(globalThis:block#49),Ident(fact)),Tup(List(Fld(‹›,App(Sel(Ref(globalThis:import#bbPredef),Ident(-)),Tup(List(Fld(‹›,Ref(n@126),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))),Else(Lit(IntLit(1)))) (of class hkmc2.semantics.Split$Cons)
+//│ Type: ⊤
 
 fact
-//│ Type: ⊥
+//│ Type: Int -> Int
 
 fact(1)
-//│ Type: ⊥
-
+//│ Type: Int
 
 :fixme
 fun fact2 = case
@@ -266,16 +264,16 @@ class Foo[A](x: A -> A)
 //│ Type: ⊤
 
 new Foo(x => x)
-//│ Type: Foo[α74_1]
+//│ Type: Foo[α76_1]
 
 fun f(g) = new Foo(g)
 f
-//│ Type: forall α77_2: (α77_2 -> α77_2) -> Foo[α77_2]
+//│ Type: forall α79_2: (α79_2 -> α79_2) -> Foo[α79_2]
 
 f(x => x).Foo#x
-//│ Type: (α79_1) ->{⊥} α79_1
+//│ Type: (α81_1) ->{⊥} α81_1
 
 g => (new Foo(g)).Foo#x
-//│ Type: (α84_1 -> α84_1) ->{⊥} (α84_1) ->{⊥} α84_1
+//│ Type: (α86_1 -> α86_1) ->{⊥} (α86_1) ->{⊥} α86_1
 
 
