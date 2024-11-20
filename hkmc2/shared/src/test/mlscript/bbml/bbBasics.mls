@@ -217,23 +217,17 @@ if false then 1 else "1"
 if 1 is Int then 1 else 0
 //│ Type: Int
 
+
 fun test(x) =
   if x is Int then x + 1 else 0
 test
-//│ Type: (Int ∧ (¬Int ∨ Int)) -> Int
+//│ Type: (¬Int ∨ Int) -> Int
 
 test(1)
 //│ Type: Int
 
 
-:fixme // FIXME[CY]
 test("1")
-//│ ╔══[ERROR] Type error in string literal with expected type α64_1
-//│ ║  l.230: 	test("1")
-//│ ║         	     ^^^
-//│ ╟── because: cannot constrain  Str  <:  α64_1
-//│ ╟── because: cannot constrain  Str  <:  α64_1
-//│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Int
 
 
