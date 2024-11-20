@@ -2,10 +2,10 @@
 
 type Option[out A] = Some[A] | None
 class Some[out A](value: A)
-module None
+object None
 
 type Tree[out A] = Node[A] | Empty
-module Empty
+object Empty
 class Node[out A](value: A, left: Tree[A], right: Tree[A])
 
 fun find(t, v) = if t is

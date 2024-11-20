@@ -2,7 +2,7 @@
 
 
 class Some(value)
-module None
+object None
 
 
 :sjs

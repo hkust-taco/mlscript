@@ -14,7 +14,7 @@ fun abs(x) = if x < 0 then -x else x
 
 abstract class Option[T]: (Some[T] | None)
 class Some[T](val value: T) extends Option[T]
-module None extends Option[nothing]
+object None extends Option[nothing]
 
 fun (??) getOrElse(o, v) = if o is
   Some(v') then v'
@@ -24,7 +24,7 @@ let anyToString = toString
 
 abstract class List[out T]: (Cons[T] | Nil)
 class Cons[out T](val head: T, val tail: List[T]) extends List[T]
-module Nil extends List[nothing]
+object Nil extends List[nothing]
 
 fun (::) cons(head, tail) = Cons(head, tail)
 
@@ -32,7 +32,7 @@ fun (::) cons(head, tail) = Cons(head, tail)
 
 abstract class Tree[out A]: (Empty | Node[A])
 class Node[out A](value: A, left: Tree[A], right: Tree[A]) extends Tree[A]
-module Empty extends Tree
+object Empty extends Tree
 
 fun single(v) = Node(v, Empty, Empty)
 

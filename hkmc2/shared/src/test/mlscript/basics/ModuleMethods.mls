@@ -6,18 +6,20 @@ class C with {
 module M with {
   // module method foo
   fun foo(x) = x
+  // module method self
+  fun self(): module M = M
 }
 
 :e
 fun f1(module m)
 //│ ╔══[ERROR] Module parameters must have explicit types.
-//│ ║  l.12: 	fun f1(module m)
+//│ ║  l.14: 	fun f1(module m)
 //│ ╙──      	              ^
 
 :e
 fun f2[T](module m: T)
 //│ ╔══[ERROR] Module parameters must have concrete types.
-//│ ║  l.18: 	fun f2[T](module m: T)
+//│ ║  l.20: 	fun f2[T](module m: T)
 //│ ╙──      	                 ^^^^
 
 :e
@@ -25,7 +27,7 @@ module N with {
   fun f3() = M
 }
 //│ ╔══[ERROR] Function returning module values must have explicit return types.
-//│ ║  l.25: 	  fun f3() = M
+//│ ║  l.27: 	  fun f3() = M
 //│ ╙──      	      ^^^^
 
 :e
@@ -33,7 +35,7 @@ module N with {
   fun f4[T](): module T = M
 }
 //│ ╔══[ERROR] Function returning module values must have explicit return types.
-//│ ║  l.33: 	  fun f4[T](): module T = M
+//│ ║  l.35: 	  fun f4[T](): module T = M
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^
 
 :e
@@ -41,13 +43,28 @@ module N with {
   fun f5(): M = M
 }
 //│ ╔══[ERROR] The return type of functions returning module values must be prefixed with module keyword.
-//│ ║  l.41: 	  fun f5(): M = M
+//│ ║  l.43: 	  fun f5(): M = M
 //│ ╙──      	      ^^^^^^^
+
+
+fun f6(m: M)
+
+:e
+f6(M)
+//│ ╔══[ERROR] Only module parameters may receive module arguments (values).
+//│ ║  l.53: 	f6(M)
+//│ ╙──      	   ^
+
+:e
+f6(M.self())
+//│ ╔══[ERROR] Only module parameters may receive module arguments (values).
+//│ ║  l.59: 	f6(M.self())
+//│ ╙──      	   ^^^^^^^^
 
 :e
 fun f7(): module M
 //│ ╔══[ERROR] Only module methods may return module values.
-//│ ║  l.48: 	fun f7(): module M
+//│ ║  l.65: 	fun f7(): module M
 //│ ╙──      	    ^^^^^^^^^^^^^^
 
 
@@ -56,3 +73,7 @@ fun ok1(module m: M)
 module N with {
   fun ok2(): module M = M
 }
+
+ok1(M)
+
+ok1(M.self())

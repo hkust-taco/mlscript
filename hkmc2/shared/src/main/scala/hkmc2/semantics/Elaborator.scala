@@ -259,7 +259,34 @@ extends Importer:
       term(rhs)
     case tree @ App(lhs, rhs) =>
       val sym = FlowSymbol("‹app-res›", nextUid)
-      Term.App(term(lhs), term(rhs))(tree, sym)
+      val lt = term(lhs)
+      val rt = term(rhs)
+
+      // Check if module arguments match module parameters
+      val args = rt match
+        case Term.Tup(fields) => S(fields)
+        case _ => N
+      val params = lt.symbol
+        .collect:
+          case sym: BlockMemberSymbol => sym.trmTree
+        .flatten
+        .collect:
+          case td: TermDef => td.paramLists.headOption
+        .flatten
+      for
+        (args, params) <- (args zip params)
+        (arg, param) <- (args zip params.fields)
+      do 
+        val argMod = arg.flags.mod
+        val paramMod = param match
+          case Tree.TypeDef(Mod, _, N, N) => true
+          case _ => false
+        if argMod && !paramMod then raise:
+          ErrorReport:
+            msg"Only module parameters may receive module arguments (values)." -> 
+            arg.toLoc :: Nil
+      
+      Term.App(lt, rt)(tree, sym)
     case Sel(pre, nme) =>
       val preTrm = term(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
@@ -358,9 +385,10 @@ extends Importer:
       Fld(FldFlags.empty, term(lhs), S(term(rhs)))
     case _ => 
       val t = term(tree)
-      t.symbol.flatMap(_.asMod) match
-        case S(_) => Fld(FldFlags.empty.copy(mod = true), t, N)
-        case N => Fld(FldFlags.empty, t, N)
+      val flags = FldFlags.empty
+      if ModuleChecker.evalsToModule(t) 
+      then Fld(flags.copy(mod = true), t, N)
+      else Fld(flags, t, N)
   
   def unit: Term.Lit = Term.Lit(UnitLit(true))
   

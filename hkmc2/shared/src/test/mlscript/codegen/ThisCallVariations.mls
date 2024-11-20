@@ -4,7 +4,7 @@
 //│ Imported 2 member(s)
 
 
-module Example with
+object Example with
   val a = 1
   fun f(x) = [x, a]
 
