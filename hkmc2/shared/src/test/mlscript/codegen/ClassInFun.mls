@@ -10,7 +10,7 @@ fun test(a) =
   new C
 //│ JS:
 //│ function test(...args) {
-//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   if (args.length !== 1) { throw new globalThis.Error('Function \'test\' expected ' + 1 + ' arguments but got ' + args.length) }
 //│   let a = args[0];
 //│   class C {
 //│     constructor() {
@@ -32,7 +32,7 @@ fun test(x) =
   Foo(x, x + 1)
 //│ JS:
 //│ function test(...args) {
-//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   if (args.length !== 1) { throw new globalThis.Error('Function \'test\' expected ' + 1 + ' arguments but got ' + args.length) }
 //│   let x = args[0];
 //│   let tmp;
 //│   function Foo(a1, b1) { return new Foo.class(a1, b1); };
@@ -57,6 +57,6 @@ test(123)
 // * Forgot to pass the arg:
 :re
 test()
-//│ ═══[RUNTIME ERROR] Error: got 0 arguments, expecting 1
+//│ ═══[RUNTIME ERROR] Error: Function 'test' expected 1 arguments but got 0
 
 

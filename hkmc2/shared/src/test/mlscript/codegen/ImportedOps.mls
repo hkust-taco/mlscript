@@ -12,7 +12,7 @@ fun foo() =
 foo()
 //│ JS:
 //│ function foo(...args) {
-//│   if (args.length !== 0) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 0) }
+//│   if (args.length !== 0) { throw new globalThis.Error('Function \'foo\' expected ' + 0 + ' arguments but got ' + args.length) }
 //│   let tmp;
 //│   tmp = globalThis.M.concat("a", "b");
 //│   return globalThis.M.concat(tmp, "c");

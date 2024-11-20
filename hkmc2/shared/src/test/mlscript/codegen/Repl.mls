@@ -7,7 +7,7 @@ val res: Int
 
 :showRepl
 fun res() = 1
-//│ REPL> Sending: try { function res(...args) {   if (args.length !== 0) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 0) }   return 1; } undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { function res(...args) {   if (args.length !== 0) { throw new globalThis.Error('Function \'res\' expected ' + 0 + ' arguments but got ' + args.length) }   return 1; } undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ REPL> Parsed:

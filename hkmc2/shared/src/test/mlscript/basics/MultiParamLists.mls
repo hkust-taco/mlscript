@@ -7,7 +7,7 @@
 fun f(n1: Int): Int = n1
 //│ JS:
 //│ function f(...args) {
-//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   if (args.length !== 1) { throw new globalThis.Error('Function \'f\' expected ' + 1 + ' arguments but got ' + args.length) }
 //│   let n1 = args[0];
 //│   return n1;
 //│ }
@@ -21,10 +21,10 @@ f(42)
 fun f(n1: Int)(n2: Int): Int =  (10 * n1 + n2)
 //│ JS:
 //│ function f(...args) {
-//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   if (args.length !== 1) { throw new globalThis.Error('Function \'f\' expected ' + 1 + ' arguments but got ' + args.length) }
 //│   let n1 = args[0];
 //│   return (...args1) => {
-//│     if (args1.length !== 1) { throw new globalThis.Error('got ' + args1.length + ' arguments, expecting ' + 1) }
+//│     if (args1.length !== 1) { throw new globalThis.Error('Function \'arrow function\' expected ' + 1 + ' arguments but got ' + args1.length) }
 //│     let n2 = args1[0];
 //│     let tmp;
 //│     tmp = 10 * n1;
@@ -41,13 +41,13 @@ f(4)(2)
 fun f(n1: Int)(n2: Int)(n3: Int): Int = 10 * (10 * n1 + n2) + n3
 //│ JS:
 //│ function f(...args) {
-//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   if (args.length !== 1) { throw new globalThis.Error('Function \'f\' expected ' + 1 + ' arguments but got ' + args.length) }
 //│   let n1 = args[0];
 //│   return (...args1) => {
-//│     if (args1.length !== 1) { throw new globalThis.Error('got ' + args1.length + ' arguments, expecting ' + 1) }
+//│     if (args1.length !== 1) { throw new globalThis.Error('Function \'arrow function\' expected ' + 1 + ' arguments but got ' + args1.length) }
 //│     let n2 = args1[0];
 //│     return (...args2) => {
-//│       if (args2.length !== 1) { throw new globalThis.Error('got ' + args2.length + ' arguments, expecting ' + 1) }
+//│       if (args2.length !== 1) { throw new globalThis.Error('Function \'arrow function\' expected ' + 1 + ' arguments but got ' + args2.length) }
 //│       let n3 = args2[0];
 //│       let tmp, tmp1, tmp2;
 //│       tmp = 10 * n1;
@@ -67,16 +67,16 @@ f(4)(2)(0)
 fun f(n1: Int)(n2: Int)(n3: Int)(n4: Int): Int = 10 * (10 * (10 * n1 + n2) + n3) + n4
 //│ JS:
 //│ function f(...args) {
-//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   if (args.length !== 1) { throw new globalThis.Error('Function \'f\' expected ' + 1 + ' arguments but got ' + args.length) }
 //│   let n1 = args[0];
 //│   return (...args1) => {
-//│     if (args1.length !== 1) { throw new globalThis.Error('got ' + args1.length + ' arguments, expecting ' + 1) }
+//│     if (args1.length !== 1) { throw new globalThis.Error('Function \'arrow function\' expected ' + 1 + ' arguments but got ' + args1.length) }
 //│     let n2 = args1[0];
 //│     return (...args2) => {
-//│       if (args2.length !== 1) { throw new globalThis.Error('got ' + args2.length + ' arguments, expecting ' + 1) }
+//│       if (args2.length !== 1) { throw new globalThis.Error('Function \'arrow function\' expected ' + 1 + ' arguments but got ' + args2.length) }
 //│       let n3 = args2[0];
 //│       return (...args3) => {
-//│         if (args3.length !== 1) { throw new globalThis.Error('got ' + args3.length + ' arguments, expecting ' + 1) }
+//│         if (args3.length !== 1) { throw new globalThis.Error('Function \'arrow function\' expected ' + 1 + ' arguments but got ' + args3.length) }
 //│         let n4 = args3[0];
 //│         let tmp, tmp1, tmp2, tmp3, tmp4;
 //│         tmp = 10 * n1;

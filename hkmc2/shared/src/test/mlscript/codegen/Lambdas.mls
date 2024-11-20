@@ -9,7 +9,7 @@ x =>
   y
 //│ JS:
 //│ (...args) => {
-//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   if (args.length !== 1) { throw new globalThis.Error('Function \'arrow function\' expected ' + 1 + ' arguments but got ' + args.length) }
 //│   let x = args[0];
 //│   let y;
 //│   y = x;

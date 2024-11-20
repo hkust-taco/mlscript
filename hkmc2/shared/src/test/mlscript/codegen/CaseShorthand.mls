@@ -12,7 +12,7 @@ case x then x
 case { x then x }
 //│ JS:
 //│ (...args) => {
-//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   if (args.length !== 1) { throw new globalThis.Error('Function \'arrow function\' expected ' + 1 + ' arguments but got ' + args.length) }
 //│   let caseScrut = args[0];
 //│   let x;
 //│   x = caseScrut;
@@ -25,7 +25,7 @@ x => if x is
   0 then true
 //│ JS:
 //│ (...args) => {
-//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   if (args.length !== 1) { throw new globalThis.Error('Function \'arrow function\' expected ' + 1 + ' arguments but got ' + args.length) }
 //│   let x = args[0];
 //│   if (x === 0) {
 //│     return true;
@@ -40,7 +40,7 @@ case
   0 then true
 //│ JS:
 //│ (...args) => {
-//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   if (args.length !== 1) { throw new globalThis.Error('Function \'arrow function\' expected ' + 1 + ' arguments but got ' + args.length) }
 //│   let caseScrut = args[0];
 //│   if (caseScrut === 0) {
 //│     return true;
@@ -56,7 +56,7 @@ case
   _ then false
 //│ JS:
 //│ (...args) => {
-//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   if (args.length !== 1) { throw new globalThis.Error('Function \'arrow function\' expected ' + 1 + ' arguments but got ' + args.length) }
 //│   let caseScrut = args[0];
 //│   if (caseScrut === 0) {
 //│     return true;
@@ -75,7 +75,7 @@ val isDefined = case
   None then false
 //│ JS:
 //│ this.isDefined = (...args) => {
-//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   if (args.length !== 1) { throw new globalThis.Error('Function \'arrow function\' expected ' + 1 + ' arguments but got ' + args.length) }
 //│   let caseScrut = args[0];
 //│   if (caseScrut instanceof this.Some.class) {
 //│     return true;

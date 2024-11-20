@@ -7,7 +7,7 @@ fun f(x, y) = x + y
 f(2, 3)
 //│ JS:
 //│ function f(...args) {
-//│   if (args.length !== 2) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 2) }
+//│   if (args.length !== 2) { throw new globalThis.Error('Function \'f\' expected ' + 2 + ' arguments but got ' + args.length) }
 //│   let x = args[0];
 //│   let y = args[1];
 //│   return x + y;
@@ -30,7 +30,7 @@ f2(2)
 f(2)
 //│ JS:
 //│ this.f(2)
-//│ ═══[RUNTIME ERROR] Error: got 1 arguments, expecting 2
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
 :sjs
@@ -40,10 +40,10 @@ f(3)(4)
 //│ JS:
 //│ let tmp;
 //│ function f(...args) {
-//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   if (args.length !== 1) { throw new globalThis.Error('Function \'f\' expected ' + 1 + ' arguments but got ' + args.length) }
 //│   let x = args[0];
 //│   return (...args1) => {
-//│     if (args1.length !== 2) { throw new globalThis.Error('got ' + args1.length + ' arguments, expecting ' + 2) }
+//│     if (args1.length !== 2) { throw new globalThis.Error('Function \'arrow function\' expected ' + 2 + ' arguments but got ' + args1.length) }
 //│     let y = args1[0];
 //│     let z = args1[1];
 //│     let tmp1;
@@ -53,7 +53,7 @@ f(3)(4)
 //│ }
 //│ tmp = this.f(3);
 //│ tmp(4)
-//│ ═══[RUNTIME ERROR] Error: got 1 arguments, expecting 2
+//│ ═══[RUNTIME ERROR] Error: Function 'arrow function' expected 2 arguments but got 1
 
 
 :expect NaN
@@ -70,13 +70,13 @@ let f = (x, y) => x + y
 f(2)
 //│ JS:
 //│ this.f = (...args) => {
-//│   if (args.length !== 2) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 2) }
+//│   if (args.length !== 2) { throw new globalThis.Error('Function \'arrow function\' expected ' + 2 + ' arguments but got ' + args.length) }
 //│   let x = args[0];
 //│   let y = args[1];
 //│   return x + y;
 //│ };
 //│ this.f(2)
-//│ ═══[RUNTIME ERROR] Error: got 1 arguments, expecting 2
+//│ ═══[RUNTIME ERROR] Error: Function 'arrow function' expected 2 arguments but got 1
 //│ f = [Function (anonymous)]
 
 
@@ -122,7 +122,7 @@ Cls(1, 2).f(3)
 //│     
 //│   }
 //│   f(...args) {
-//│     if (args.length !== 2) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 2) }
+//│     if (args.length !== 2) { throw new globalThis.Error('Function \'f\' expected ' + 2 + ' arguments but got ' + args.length) }
 //│     let z = args[0];
 //│     let p = args[1];
 //│     let tmp1, tmp2;
@@ -134,7 +134,7 @@ Cls(1, 2).f(3)
 //│ };
 //│ tmp = this.Cls(1, 2);
 //│ tmp.f(3)
-//│ ═══[RUNTIME ERROR] Error: got 1 arguments, expecting 2
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
 :sjs
@@ -152,11 +152,11 @@ Cls(1, 2).f(3, 4)(5)
 //│     
 //│   }
 //│   f(...args) {
-//│     if (args.length !== 2) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 2) }
+//│     if (args.length !== 2) { throw new globalThis.Error('Function \'f\' expected ' + 2 + ' arguments but got ' + args.length) }
 //│     let z = args[0];
 //│     let p = args[1];
 //│     return (...args1) => {
-//│       if (args1.length !== 2) { throw new globalThis.Error('got ' + args1.length + ' arguments, expecting ' + 2) }
+//│       if (args1.length !== 2) { throw new globalThis.Error('Function \'arrow function\' expected ' + 2 + ' arguments but got ' + args1.length) }
 //│       let q = args1[0];
 //│       let s = args1[1];
 //│       let tmp2, tmp3, tmp4, tmp5;
@@ -172,4 +172,4 @@ Cls(1, 2).f(3, 4)(5)
 //│ tmp = this.Cls(1, 2);
 //│ tmp1 = tmp.f(3, 4);
 //│ tmp1(5)
-//│ ═══[RUNTIME ERROR] Error: got 1 arguments, expecting 2
+//│ ═══[RUNTIME ERROR] Error: Function 'arrow function' expected 2 arguments but got 1

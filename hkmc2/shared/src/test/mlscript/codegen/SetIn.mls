@@ -79,11 +79,11 @@ fun example() =
 example()
 //│ JS:
 //│ function example(...args) {
-//│   if (args.length !== 0) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 0) }
+//│   if (args.length !== 0) { throw new globalThis.Error('Function \'example\' expected ' + 0 + ' arguments but got ' + args.length) }
 //│   let x, get_x, old, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
 //│   x = 0;
 //│   get_x = (...args1) => {
-//│     if (args1.length !== 0) { throw new globalThis.Error('got ' + args1.length + ' arguments, expecting ' + 0) }
+//│     if (args1.length !== 0) { throw new globalThis.Error('Function \'arrow function\' expected ' + 0 + ' arguments but got ' + args1.length) }
 //│     return x;
 //│   };
 //│   old = x;
@@ -119,11 +119,11 @@ fun example() =
 example()
 //│ JS:
 //│ function example(...args) {
-//│   if (args.length !== 0) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 0) }
+//│   if (args.length !== 0) { throw new globalThis.Error('Function \'example\' expected ' + 0 + ' arguments but got ' + args.length) }
 //│   let x, get_x, y, old, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
 //│   x = 0;
 //│   get_x = (...args1) => {
-//│     if (args1.length !== 0) { throw new globalThis.Error('got ' + args1.length + ' arguments, expecting ' + 0) }
+//│     if (args1.length !== 0) { throw new globalThis.Error('Function \'arrow function\' expected ' + 0 + ' arguments but got ' + args1.length) }
 //│     return x;
 //│   };
 //│   old = x;
