@@ -9,9 +9,9 @@ fun f x = f
 
 fun f(x) = f
 f
-//│ Type: forall α0_2: ⊤ -> (⊤ -> α0_2)
+//│ Type: forall α1_2: ⊤ -> (⊤ -> α1_2)
 //│ Where:
-//│   ⊤ -> α0_2 <: α0_2
+//│   ⊤ -> α1_2 <: α1_2
 
 fun f(x) = f(x)
 f
@@ -19,7 +19,7 @@ f
 
 :todo
 fun f(x) = f(x.a)
-//│ ╔══[ERROR] Term shape not yet supported by BbML: Sel(Ref(x@39),Ident(a))
+//│ ╔══[ERROR] Term shape not yet supported by BbML: Sel(Ref(x@40),Ident(a))
 //│ ║  l.21: 	fun f(x) = f(x.a)
 //│ ╙──      	             ^
 //│ Type: ⊤
@@ -36,9 +36,9 @@ Foo(123)
 //│ Type: ⊥
 
 new Foo(123)
-//│ Type: Foo[α12_1]
+//│ Type: Foo[α13_1]
 //│ Where:
-//│   Int <: α12_1
+//│   Int <: α13_1
 
 :todo proper error
 fun f(x) = f(Foo.a(x))
@@ -47,8 +47,8 @@ fun f(x) = f(Foo.a(x))
 
 fun f(x) = f(x.Foo#a)
 f
-//│ Type: forall α20_2: Foo[out α20_2] -> ⊥
+//│ Type: forall α21_2: Foo[out α21_2] -> ⊥
 //│ Where:
-//│   α20_2 <: Foo[out α20_2]
+//│   α21_2 <: Foo[out α21_2]
 
 

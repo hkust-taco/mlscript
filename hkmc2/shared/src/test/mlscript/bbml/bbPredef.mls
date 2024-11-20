@@ -7,7 +7,7 @@ class Region[T]
 class Ref[T, S]
 
 // the type here is fake.
-fun run: Any -> Any
+fun run: [T] -> CodeBase[out T, out Nothing, out Any] -> T
 fun log: Any -> Str
 fun error: Nothing
 

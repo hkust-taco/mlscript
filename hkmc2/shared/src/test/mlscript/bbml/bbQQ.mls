@@ -25,7 +25,7 @@
 
 
 x `=> x
-//│ Type: CodeBase[out α0_3 -> α0_3, ⊥, ?]
+//│ Type: CodeBase[out α1_3 -> α1_3, ⊥, ?]
 
 x `=> `42
 //│ Type: CodeBase[out ⊤ -> Int, ⊥, ?]
@@ -35,12 +35,12 @@ x `=> 42
 //│ ╔══[ERROR] Type error in unquoted term
 //│ ║  l.34: 	x `=> 42
 //│ ║        	      ^^
-//│ ╙── because: cannot constrain  Int  <:  CodeBase[out α12_3, out α13_3, ?]
+//│ ╙── because: cannot constrain  Int  <:  CodeBase[out α13_3, out α14_3, ?]
 //│ Type: CodeBase[out ⊤ -> ⊥, ⊥, ?]
 
 
 f `=> x `=> f`(x)
-//│ Type: CodeBase[out (α25_3 -> α26_3) -> (α25_3 -> α26_3), ⊥, ?]
+//│ Type: CodeBase[out (α26_3 -> α27_3) -> (α26_3 -> α27_3), ⊥, ?]
 
 
 
@@ -57,7 +57,7 @@ x `=> y `=> x `+ y
 //│ Type: CodeBase[out (Int, Int, Int) -> Int, ⊥, ?]
 
 f `=> x `=> y `=> f`(x, y)
-//│ Type: CodeBase[out ((α97_3, α99_3) -> α100_3) -> (α97_3 -> (α99_3 -> α100_3)), ⊥, ?]
+//│ Type: CodeBase[out ((α98_3, α100_3) -> α101_3) -> (α98_3 -> (α100_3 -> α101_3)), ⊥, ?]
 
 `let x = `42 `in x
 //│ Type: CodeBase[out Int, ⊥, ?]
@@ -67,7 +67,7 @@ f `=> x `=> y `=> f`(x, y)
 //│ ╔══[ERROR] Type error in unquoted term
 //│ ║  l.66: 	`let x = 42 `in x
 //│ ║        	         ^^
-//│ ╙── because: cannot constrain  Int  <:  CodeBase[out α122_2, out α123_2, ?]
+//│ ╙── because: cannot constrain  Int  <:  CodeBase[out α123_2, out α124_2, ?]
 //│ Type: CodeBase[⊥, ⊥, ?]
 
 :e
@@ -75,7 +75,7 @@ f `=> x `=> y `=> f`(x, y)
 //│ ╔══[ERROR] Type error in unquoted term
 //│ ║  l.74: 	`let x = `0 `in 1
 //│ ║        	                ^
-//│ ╙── because: cannot constrain  Int  <:  CodeBase[out α131_3, out α132_3, ?]
+//│ ╙── because: cannot constrain  Int  <:  CodeBase[out α132_3, out α133_3, ?]
 //│ Type: CodeBase[⊥, ⊥, ?]
 
 
@@ -89,25 +89,39 @@ x `=> `if x `== `0.0 then `1.0 else x
 //│ /!!!\ Uncaught error: scala.MatchError: IfElse(InfixApp(Unquoted(Quoted(App(Ident(==),Tup(List(Unquoted(Ident(x)), Unquoted(Quoted(DecLit(0.0)))))))),keyword 'then',Unquoted(Quoted(DecLit(1.0)))),Unquoted(Ident(x))) (of class hkmc2.syntax.Tree$IfElse)
 
 run(`1)
-//│ Type: ⊤
+//│ Type: Int
 
-:breakme // FIXME[CY]
+
 :e
 run(1)
-//│ Type: ⊤
+//│ ╔══[ERROR] Type error in integer literal with expected type CodeBase[out α136_1, ⊥, ?]
+//│ ║  l.96: 	run(1)
+//│ ║        	    ^
+//│ ╙── because: cannot constrain  Int  <:  CodeBase[out α136_1, ⊥, ?]
+//│ Type: ⊥
 
 :e
 x `=> run(x)
-//│ ╔══[ERROR] Type error in unquoted term
-//│ ║  l.100: 	x `=> run(x)
-//│ ║         	      ^^^^^^
-//│ ╙── because: cannot constrain  ⊤  <:  CodeBase[out α136_3, out α137_3, ?]
-//│ Type: CodeBase[out ⊤ -> ⊥, ⊥, ?]
+//│ ╔══[ERROR] Type error in reference with expected type CodeBase[out α139_3, ⊥, ?]
+//│ ║  l.104: 	x `=> run(x)
+//│ ║         	          ^
+//│ ╟── because: cannot constrain  CodeBase[α137_3, <α>138_3, ⊥]  <:  CodeBase[out α139_3, ⊥, ?]
+//│ ╙── because: cannot constrain  D( <α>138_3 )  <:  ⊥
+//│ Type: CodeBase[out CodeBase[out α140_3, ?, ?] -> α140_3, out α142_2, ?]
 
 :e
 `let x = `42 `in run(x)
+//│ ╔══[ERROR] Type error in reference with expected type CodeBase[out α146_3, ⊥, ?]
+//│ ║  l.113: 	`let x = `42 `in run(x)
+//│ ║         	                     ^
+//│ ╟── because: cannot constrain  CodeBase[α143_2, <α>145_3, ⊥]  <:  CodeBase[out α146_3, ⊥, ?]
+//│ ╙── because: cannot constrain  D( <α>145_3 )  <:  ⊥
 //│ ╔══[ERROR] Type error in unquoted term
-//│ ║  l.108: 	`let x = `42 `in run(x)
+//│ ║  l.113: 	`let x = `42 `in run(x)
 //│ ║         	                 ^^^^^^
-//│ ╙── because: cannot constrain  ⊤  <:  CodeBase[out α142_3, out α143_3, ?]
+//│ ╟── because: cannot constrain  α146_3  <:  CodeBase[out α147_3, out α148_3, ?]
+//│ ╟── because: cannot constrain  α146_3  <:  ¬(~{CodeBase[out α147_3, out α148_3, ?]})
+//│ ╟── because: cannot constrain  α143_2  <:  ¬(~{CodeBase[out α147_3, out α148_3, ?]})
+//│ ╟── because: cannot constrain  α143_2  <:  CodeBase[out α149_2, out α150_2, ?]
+//│ ╙── because: cannot constrain  Int  <:  CodeBase[out α149_2, out α150_2, ?]
 //│ Type: CodeBase[⊥, ⊥, ?]

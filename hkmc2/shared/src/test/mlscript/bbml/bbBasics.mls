@@ -19,7 +19,7 @@ false
 
 fun id(x) = x
 id
-//│ Type: forall α1_2: α1_2 -> α1_2
+//│ Type: forall α2_2: α2_2 -> α2_2
 
 fun inc(x) = x + 1
 //│ Type: ⊤
@@ -28,7 +28,7 @@ fun mul(x, y) = x * y
 //│ Type: ⊤
 
 x => x
-//│ Type: (α7_1) ->{⊥} α7_1
+//│ Type: (α8_1) ->{⊥} α8_1
 
 +
 //│ Type: (Int, Int) ->{⊥} Int
@@ -108,14 +108,14 @@ class Some[A](value: A)
 //│ Type: ⊤
 
 new Some(true)
-//│ Type: Some[α13_1]
-//│ Where:
-//│   Bool <: α13_1
-
-new Some(42)
 //│ Type: Some[α14_1]
 //│ Where:
-//│   Int <: α14_1
+//│   Bool <: α14_1
+
+new Some(42)
+//│ Type: Some[α15_1]
+//│ Where:
+//│   Int <: α15_1
 
 let p = new Point(1.0, 0.0, 0.0) in p.Point#x
 //│ Type: Num
@@ -149,22 +149,22 @@ fun foofoo(x) =
 //│ Type: ⊤
 
 new Printer(foofoo)
-//│ Type: Printer[α22_1]
+//│ Type: Printer[α23_1]
 //│ Where:
-//│   α22_1 <: Int
+//│   α23_1 <: Int
 
 let ip = new Printer(foofoo) in ip.Printer#f(42)
 //│ Type: Str
 
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
-//│ ╔══[ERROR] Type error in string literal with expected type α30_1
+//│ ╔══[ERROR] Type error in string literal with expected type α31_1
 //│ ║  l.160: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ║         	                                             ^^^^
-//│ ╟── because: cannot constrain  Str  <:  α30_1
-//│ ╟── because: cannot constrain  Str  <:  α30_1
-//│ ╟── because: cannot constrain  Str  <:  ¬(~α28_1)
-//│ ╟── because: cannot constrain  Str  <:  α28_1
+//│ ╟── because: cannot constrain  Str  <:  α31_1
+//│ ╟── because: cannot constrain  Str  <:  α31_1
+//│ ╟── because: cannot constrain  Str  <:  ¬(~α29_1)
+//│ ╟── because: cannot constrain  Str  <:  α29_1
 //│ ╙── because: cannot constrain  Str  <:  ¬(~{Int})
 //│ Type: Str
 
@@ -175,23 +175,23 @@ fun inc(x) = x + 1
 //│ Type: ⊤
 
 new TFun(inc)
-//│ Type: TFun[α34_1]
+//│ Type: TFun[α35_1]
 //│ Where:
-//│   Int <: α34_1
-//│   α34_1 <: Int
+//│   Int <: α35_1
+//│   α35_1 <: Int
 
 let tf = new TFun(inc) in tf.TFun#f(1)
 //│ Type: Int
 
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
-//│ ╔══[ERROR] Type error in string literal with expected type α42_1
+//│ ╔══[ERROR] Type error in string literal with expected type α43_1
 //│ ║  l.187: 	let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
-//│ ╟── because: cannot constrain  Str  <:  α42_1
-//│ ╟── because: cannot constrain  Str  <:  α42_1
-//│ ╟── because: cannot constrain  Str  <:  ¬(~α40_1)
-//│ ╟── because: cannot constrain  Str  <:  α40_1
+//│ ╟── because: cannot constrain  Str  <:  α43_1
+//│ ╟── because: cannot constrain  Str  <:  α43_1
+//│ ╟── because: cannot constrain  Str  <:  ¬(~α41_1)
+//│ ╟── because: cannot constrain  Str  <:  α41_1
 //│ ╙── because: cannot constrain  Str  <:  ¬(~{Int})
 //│ Type: Str ∨ Int
 
@@ -245,7 +245,7 @@ fact(1)
 fun fact2 = case
   0 then 1
   n then n * fact2(n - 1)
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(caseScrut@137),Lit(IntLit(0)),Else(Lit(IntLit(1)))),Let(n@138,Ref(caseScrut@137),Else(App(Sel(Ref(globalThis:import#bbPredef),Ident(*)),Tup(List(Fld(‹›,Ref(n@138),None), Fld(‹›,App(Sel(Ref(globalThis:block#52),Ident(fact2)),Tup(List(Fld(‹›,App(Sel(Ref(globalThis:import#bbPredef),Ident(-)),Tup(List(Fld(‹›,Ref(n@138),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None))))))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(caseScrut@138),Lit(IntLit(0)),Else(Lit(IntLit(1)))),Let(n@139,Ref(caseScrut@138),Else(App(Sel(Ref(globalThis:import#bbPredef),Ident(*)),Tup(List(Fld(‹›,Ref(n@139),None), Fld(‹›,App(Sel(Ref(globalThis:block#52),Ident(fact2)),Tup(List(Fld(‹›,App(Sel(Ref(globalThis:import#bbPredef),Ident(-)),Tup(List(Fld(‹›,Ref(n@139),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None))))))) (of class hkmc2.semantics.Split$Cons)
 
 fact2
 //│ Type: ⊥
@@ -258,16 +258,16 @@ class Foo[A](x: A -> A)
 //│ Type: ⊤
 
 new Foo(x => x)
-//│ Type: Foo[α76_1]
+//│ Type: Foo[α77_1]
 
 fun f(g) = new Foo(g)
 f
-//│ Type: forall α79_2: (α79_2 -> α79_2) -> Foo[α79_2]
+//│ Type: forall α80_2: (α80_2 -> α80_2) -> Foo[α80_2]
 
 f(x => x).Foo#x
-//│ Type: (α81_1) ->{⊥} α81_1
+//│ Type: (α82_1) ->{⊥} α82_1
 
 g => (new Foo(g)).Foo#x
-//│ Type: (α86_1 -> α86_1) ->{⊥} (α86_1) ->{⊥} α86_1
+//│ Type: (α87_1 -> α87_1) ->{⊥} (α87_1) ->{⊥} α87_1
 
 
