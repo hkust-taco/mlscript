@@ -96,7 +96,7 @@ class JSBuilder extends CodeBuilder:
         case _ => result(fun)
       doc"${base}(${args.map(result).mkDocument(", ")})"
     case Value.Lam(ps, bod) => scope.nest givenIn:
-      val (params, bodyDoc) = handleFunction(ps, bod)
+      val (params, bodyDoc) = setupFunction(ps, bod)
       doc"($params) => { #{  # ${
         bodyDoc
       } #}  # }"
@@ -148,7 +148,7 @@ class JSBuilder extends CodeBuilder:
             val result = pss.foldRight(bod):
               case (ParamList(_, ps), block) => 
                 Return(Lam(ps, block), false)
-            val (params, bodyDoc) = handleFunction(ps, result)
+            val (params, bodyDoc) = setupFunction(ps, result)
             doc"function ${sym.nme}($params) { #{  # ${bodyDoc} #}  # }"
           case ClsLikeDefn(sym, syntax.Cls, mtds, flds, ctor) =>
             val clsDefn = sym.defn.getOrElse(die)
@@ -169,7 +169,7 @@ class JSBuilder extends CodeBuilder:
                     val result = pss.foldRight(bod):
                       case (ParamList(_, ps), block) => 
                         Return(Lam(ps, block), false)
-                    val (params, bodyDoc) = handleFunction(ps, result)
+                    val (params, bodyDoc) = setupFunction(ps, result)
                     doc" # ${td.sym.nme}($params) { #{  # ${
                       bodyDoc
                     } #}  # }"
@@ -329,7 +329,7 @@ class JSBuilder extends CodeBuilder:
   def body(t: Block)(using Raise, Scope): Document = scope.nest givenIn:
     block(t)
   
-  def handleFunction(ps: List[semantics.Param], b: Block)(using Raise, Scope): (Document, Document) =
+  def setupFunction(ps: List[semantics.Param], b: Block)(using Raise, Scope): (Document, Document) =
     val params = ps.map(p => scope.allocateName(p.sym)).mkDocument(", ")
     (params, body(b))
 
@@ -421,4 +421,19 @@ object JSBuilder:
   
 end JSBuilder
 
+
+trait JSBuilderSanityChecks(val instrument: Bool) extends JSBuilder:
+  
+  val functionParamVarargSymbol = semantics.TempSymbol(0, N, "args")
+  
+  override def setupFunction(params: List[semantics.Param], body: Block)(using Raise, Scope): (Document, Document) =
+    if instrument then
+      val paramsList = params.map(p => Scope.scope.allocateName(p.sym))
+      val paramsStr = Scope.scope.allocateName(functionParamVarargSymbol)
+      val checkArgsNum = doc"if ($paramsStr.length !== ${params.length}) { throw new globalThis.Error('got ' + $paramsStr.length + ' arguments, expecting ' + ${params.length}) }\n"
+      val paramsAssign = paramsList.zipWithIndex.map{(nme, i) =>
+        doc"const ${nme} = ${paramsStr}[$i];\n"}.mkDocument("")
+      (doc"...$paramsStr", doc"$checkArgsNum$paramsAssign${this.body(body)}")
+    else
+      super.setupFunction(params, body)
 

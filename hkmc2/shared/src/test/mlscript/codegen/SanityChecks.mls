@@ -7,10 +7,10 @@
 fun f(x, y) = x + y
 f(2, 3)
 //│ JS:
-//│ function f(...args_x_y) {
-//│   if (args_x_y.length !== 2) { throw new globalThis.Error('got ' + args_x_y.length + ' arguments, expecting ' + 2) }
-//│   const x = args_x_y[0];
-//│   const y = args_x_y[1];
+//│ function f(...args) {
+//│   if (args.length !== 2) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 2) }
+//│   const x = args[0];
+//│   const y = args[1];
 //│   return x + y;
 //│ }
 //│ this.f(2, 3)
@@ -18,24 +18,17 @@ f(2, 3)
 
 
 :sjs
-fun f(x, y) = x + y
-f(2)
+fun f2(x, y) = x + y
+f2(2)
 //│ JS:
-//│ function f(x, y) { return x + y; } this.f(2)
+//│ function f2(x, y) { return x + y; } this.f2(2)
 //│ = NaN
 
 :sjs
 :re
 :jsSanityCheck
-fun f(x, y) = x + y
 f(2)
 //│ JS:
-//│ function f(...args_x_y) {
-//│   if (args_x_y.length !== 2) { throw new globalThis.Error('got ' + args_x_y.length + ' arguments, expecting ' + 2) }
-//│   const x = args_x_y[0];
-//│   const y = args_x_y[1];
-//│   return x + y;
-//│ }
 //│ this.f(2)
 //│ ═══[RUNTIME ERROR] Error: got 1 arguments, expecting 2
 
@@ -47,13 +40,13 @@ fun f(x)(y, z) = x + y + z
 f(3)(4)
 //│ JS:
 //│ let tmp;
-//│ function f(...args_x) {
-//│   if (args_x.length !== 1) { throw new globalThis.Error('got ' + args_x.length + ' arguments, expecting ' + 1) }
-//│   const x = args_x[0];
-//│   return (...args_y_z) => {
-//│     if (args_y_z.length !== 2) { throw new globalThis.Error('got ' + args_y_z.length + ' arguments, expecting ' + 2) }
-//│     const y = args_y_z[0];
-//│     const z = args_y_z[1];
+//│ function f(...args) {
+//│   if (args.length !== 1) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 1) }
+//│   const x = args[0];
+//│   return (...args1) => {
+//│     if (args1.length !== 2) { throw new globalThis.Error('got ' + args1.length + ' arguments, expecting ' + 2) }
+//│     const y = args1[0];
+//│     const z = args1[1];
 //│     let tmp1;
 //│     tmp1 = x + y;
 //│     return tmp1 + z;
@@ -78,10 +71,10 @@ f(2)
 let f = (x, y) => x + y
 f(2)
 //│ JS:
-//│ this.f = (...args_x_y) => {
-//│   if (args_x_y.length !== 2) { throw new globalThis.Error('got ' + args_x_y.length + ' arguments, expecting ' + 2) }
-//│   const x = args_x_y[0];
-//│   const y = args_x_y[1];
+//│ this.f = (...args) => {
+//│   if (args.length !== 2) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 2) }
+//│   const x = args[0];
+//│   const y = args[1];
 //│   return x + y;
 //│ };
 //│ this.f(2)
@@ -129,10 +122,10 @@ Cls(1, 2).f(3)
 //│     this.y = y;
 //│     
 //│   }
-//│   f(...args_z_p) {
-//│     if (args_z_p.length !== 2) { throw new globalThis.Error('got ' + args_z_p.length + ' arguments, expecting ' + 2) }
-//│     const z = args_z_p[0];
-//│     const p = args_z_p[1];
+//│   f(...args) {
+//│     if (args.length !== 2) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 2) }
+//│     const z = args[0];
+//│     const p = args[1];
 //│     let tmp1, tmp2;
 //│     tmp1 = this.x + this.y;
 //│     tmp2 = tmp1 + z;
@@ -160,14 +153,14 @@ Cls(1, 2).f(3, 4)(5)
 //│     this.y = y;
 //│     
 //│   }
-//│   f(...args_z_p) {
-//│     if (args_z_p.length !== 2) { throw new globalThis.Error('got ' + args_z_p.length + ' arguments, expecting ' + 2) }
-//│     const z = args_z_p[0];
-//│     const p = args_z_p[1];
-//│     return (...args_q_s) => {
-//│       if (args_q_s.length !== 2) { throw new globalThis.Error('got ' + args_q_s.length + ' arguments, expecting ' + 2) }
-//│       const q = args_q_s[0];
-//│       const s = args_q_s[1];
+//│   f(...args) {
+//│     if (args.length !== 2) { throw new globalThis.Error('got ' + args.length + ' arguments, expecting ' + 2) }
+//│     const z = args[0];
+//│     const p = args[1];
+//│     return (...args1) => {
+//│       if (args1.length !== 2) { throw new globalThis.Error('got ' + args1.length + ' arguments, expecting ' + 2) }
+//│       const q = args1[0];
+//│       const s = args1[1];
 //│       let tmp2, tmp3, tmp4, tmp5;
 //│       tmp2 = this.x + this.y;
 //│       tmp3 = tmp2 + z;
