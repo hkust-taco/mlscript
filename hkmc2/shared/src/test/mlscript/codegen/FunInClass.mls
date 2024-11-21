@@ -23,7 +23,7 @@ fun test(a) =
   Inner(42)
 //│ JS:
 //│ function test(...args) {
-//│   if (args.length !== 1) { throw new globalThis.Error('Function \'test\' expected ' + 1 + ' arguments but got ' + args.length) }
+//│   if (args.length !== 1) { throw new globalThis.Error("Function 'test' expected 1 arguments but got " + args.length) }
 //│   let a = args[0];
 //│   function Inner(b1) { return new Inner.class(b1); };
 //│   Inner.class = class Inner {
@@ -33,7 +33,7 @@ fun test(a) =
 //│       tmp = globalThis.log(a);
 //│     }
 //│     f(...args1) {
-//│       if (args1.length !== 1) { throw new globalThis.Error('Function \'f\' expected ' + 1 + ' arguments but got ' + args1.length) }
+//│       if (args1.length !== 1) { throw new globalThis.Error("Function 'f' expected 1 arguments but got " + args1.length) }
 //│       let c = args1[0];
 //│       return [
 //│         a,
@@ -42,12 +42,12 @@ fun test(a) =
 //│       ];
 //│     } 
 //│     g(...args2) {
-//│       if (args2.length !== 1) { throw new globalThis.Error('Function \'g\' expected ' + 1 + ' arguments but got ' + args2.length) }
+//│       if (args2.length !== 1) { throw new globalThis.Error("Function 'g' expected 1 arguments but got " + args2.length) }
 //│       let d = args2[0];
 //│       
 //│       const this$Inner = this;
 //│       function h(...args1) {
-//│         if (args1.length !== 1) { throw new globalThis.Error('Function \'h\' expected ' + 1 + ' arguments but got ' + args1.length) }
+//│         if (args1.length !== 1) { throw new globalThis.Error("Function 'h' expected 1 arguments but got " + args1.length) }
 //│         let e = args1[0];
 //│         return [
 //│           a,
@@ -84,7 +84,7 @@ fun test(a) =
   [C1(1), C2(2)]
 //│ JS:
 //│ function test(...args) {
-//│   if (args.length !== 1) { throw new globalThis.Error('Function \'test\' expected ' + 1 + ' arguments but got ' + args.length) }
+//│   if (args.length !== 1) { throw new globalThis.Error("Function 'test' expected 1 arguments but got " + args.length) }
 //│   let a = args[0];
 //│   let tmp, tmp1;
 //│   function C1(b1) { return new C1.class(b1); };
@@ -141,16 +141,16 @@ Foo(123)
 //│     this.foo()
 //│   }
 //│   foo(...args) {
-//│     if (args.length !== 0) { throw new globalThis.Error('Function \'foo\' expected ' + 0 + ' arguments but got ' + args.length) }
+//│     if (args.length !== 0) { throw new globalThis.Error("Function 'foo' expected 0 arguments but got " + args.length) }
 //│     let tmp;
 //│     
 //│     const this$Foo = this;
 //│     function bar(...args1) {
-//│       if (args1.length !== 0) { throw new globalThis.Error('Function \'bar\' expected ' + 0 + ' arguments but got ' + args1.length) }
+//│       if (args1.length !== 0) { throw new globalThis.Error("Function 'bar' expected 0 arguments but got " + args1.length) }
 //│       return this$Foo.a;
 //│     }
 //│     function baz(...args1) {
-//│       if (args1.length !== 0) { throw new globalThis.Error('Function \'baz\' expected ' + 0 + ' arguments but got ' + args1.length) }
+//│       if (args1.length !== 0) { throw new globalThis.Error("Function 'baz' expected 0 arguments but got " + args1.length) }
 //│       return this$Foo.a;
 //│     }
 //│     tmp = bar();

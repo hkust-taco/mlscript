@@ -12,7 +12,7 @@ module Example with
 //│     this.a = 456;
 //│   }
 //│   f(...args) {
-//│     if (args.length !== 1) { throw new globalThis.Error('Function \'f\' expected ' + 1 + ' arguments but got ' + args.length) }
+//│     if (args.length !== 1) { throw new globalThis.Error("Function 'f' expected 1 arguments but got " + args.length) }
 //│     let x = args[0];
 //│     return [
 //│       x,

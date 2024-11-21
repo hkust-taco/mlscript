@@ -11,7 +11,7 @@ fun foo() =
 //│ JS:
 //│ this.x = 2;
 //│ function foo(...args) {
-//│   if (args.length !== 0) { throw new globalThis.Error('Function \'foo\' expected ' + 0 + ' arguments but got ' + args.length) }
+//│   if (args.length !== 0) { throw new globalThis.Error("Function 'foo' expected 0 arguments but got " + args.length) }
 //│   return globalThis.x + 1;
 //│ }
 //│ undefined

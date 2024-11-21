@@ -6,7 +6,7 @@ fun test(x) =
   [this.a, x]
 //│ JS:
 //│ function test(...args) {
-//│   if (args.length !== 1) { throw new globalThis.Error('Function \'test\' expected ' + 1 + ' arguments but got ' + args.length) }
+//│   if (args.length !== 1) { throw new globalThis.Error("Function 'test' expected 1 arguments but got " + args.length) }
 //│   let x = args[0];
 //│   return [
 //│     globalThis.a,
@@ -37,12 +37,12 @@ module Test with
 //│     this.a = 2;
 //│   }
 //│   test1(...args) {
-//│     if (args.length !== 1) { throw new globalThis.Error('Function \'test1\' expected ' + 1 + ' arguments but got ' + args.length) }
+//│     if (args.length !== 1) { throw new globalThis.Error("Function 'test1' expected 1 arguments but got " + args.length) }
 //│     let x = args[0];
 //│     return globalThis.test(x);
 //│   } 
 //│   test2(...args1) {
-//│     if (args1.length !== 1) { throw new globalThis.Error('Function \'test2\' expected ' + 1 + ' arguments but got ' + args1.length) }
+//│     if (args1.length !== 1) { throw new globalThis.Error("Function 'test2' expected 1 arguments but got " + args1.length) }
 //│     let x1 = args1[0];
 //│     return [
 //│       this.a,

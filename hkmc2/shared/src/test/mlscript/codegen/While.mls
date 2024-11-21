@@ -8,7 +8,7 @@
 () => (while true then 0)
 //│ JS:
 //│ (...args) => {
-//│   if (args.length !== 0) { throw new globalThis.Error('Function \'arrow function\' expected ' + 0 + ' arguments but got ' + args.length) }
+//│   if (args.length !== 0) { throw new globalThis.Error("Function expected 0 arguments but got " + args.length) }
 //│   let scrut, tmp;
 //│   tmp1: while (true) {
 //│     scrut = true;
@@ -109,7 +109,7 @@ while
   i < 10 then set i += 1
 //│ JS:
 //│ (...args) => {
-//│   if (args.length !== 0) { throw new globalThis.Error('Function \'arrow function\' expected ' + 0 + ' arguments but got ' + args.length) }
+//│   if (args.length !== 0) { throw new globalThis.Error("Function expected 0 arguments but got " + args.length) }
 //│   let i, scrut, tmp, tmp1;
 //│   tmp2: while (true) {
 //│     i = 0;
@@ -199,7 +199,7 @@ fun f(ls) =
   else log("Done!")
 //│ JS:
 //│ function f(...args) {
-//│   if (args.length !== 1) { throw new globalThis.Error('Function \'f\' expected ' + 1 + ' arguments but got ' + args.length) }
+//│   if (args.length !== 1) { throw new globalThis.Error("Function 'f' expected 1 arguments but got " + args.length) }
 //│   let ls = args[0];
 //│   let param0, param1, h, tl, tmp;
 //│   tmp1: while (true) {

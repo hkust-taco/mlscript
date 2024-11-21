@@ -18,7 +18,7 @@ fun nonsense(xs) = if xs is
   [] then "empty"
 //│ JS:
 //│ function nonsense(...args) {
-//│   if (args.length !== 1) { throw new globalThis.Error('Function \'nonsense\' expected ' + 1 + ' arguments but got ' + args.length) }
+//│   if (args.length !== 1) { throw new globalThis.Error("Function 'nonsense' expected 1 arguments but got " + args.length) }
 //│   let xs = args[0];
 //│   let rest, ys;
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 0) {
@@ -43,7 +43,7 @@ fun lead_and_last(xs) = if xs is
   [] then 0
 //│ JS:
 //│ function lead_and_last(...args) {
-//│   if (args.length !== 1) { throw new globalThis.Error('Function \'lead_and_last\' expected ' + 1 + ' arguments but got ' + args.length) }
+//│   if (args.length !== 1) { throw new globalThis.Error("Function 'lead_and_last' expected 1 arguments but got " + args.length) }
 //│   let xs = args[0];
 //│   let last0, rest, first0, x, ys, y;
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
@@ -83,7 +83,7 @@ fun nested_tuple_patterns(xs) = if xs is
   [] then 0
 //│ JS:
 //│ function nested_tuple_patterns(...args) {
-//│   if (args.length !== 1) { throw new globalThis.Error('Function \'nested_tuple_patterns\' expected ' + 1 + ' arguments but got ' + args.length) }
+//│   if (args.length !== 1) { throw new globalThis.Error("Function 'nested_tuple_patterns' expected 1 arguments but got " + args.length) }
 //│   let xs = args[0];
 //│   let last0, rest, first0, x, first1, first01, y, z, w, tmp, tmp1;
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
