@@ -296,6 +296,8 @@ extends Importer:
       Term.Lam(Param(FldFlags.empty, scrut, N) :: Nil, Term.IfLike(Keyword.`if`, des)(nor))
     case Modified(Keyword.`return`, kwLoc, body) =>
       Term.Ret(term(body))
+    case Modified(Keyword.`throw`, kwLoc, body) =>
+      Term.Throw(term(body))
     case Modified(Keyword.`do`, kwLoc, body) =>
       Term.Blk(term(body) :: Nil, unit)
     case Tree.Region(id: Tree.Ident, body) =>

@@ -285,6 +285,7 @@ object ParseRule:
     modified(`private`),
     modified(`out`),
     modified(`return`),
+    modified(`throw`),
     modified(`import`), // TODO improve – only allow strings
     // modified(`type`),
     singleKw(`true`)(BoolLit(true)),
