@@ -232,7 +232,7 @@ trait TypeOrTermDef:
       // fun f[T](n1: Int): Int
       // fun f[T](n1: Int)(nn: Int): Int
       case InfixApp(Apps(App(id: Ident, typeParams: TyTup), paramLists), Keyword.`:`, ret) =>
-        (symbName, R(id), paramLists, S(typeParams), N)
+        (symbName, R(id), paramLists, S(typeParams), S(ret))
       
       case InfixApp(Jux(lhs, rhs), Keyword.`:`, ret) =>
         rec(InfixApp(rhs, Keyword.`:`, ret), S(lhs))

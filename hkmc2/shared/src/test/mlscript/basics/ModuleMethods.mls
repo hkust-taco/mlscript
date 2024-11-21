@@ -34,7 +34,7 @@ module N with {
 module N with {
   fun f4[T](): module T = M
 }
-//│ ╔══[ERROR] Function returning module values must have explicit return types.
+//│ ╔══[ERROR] Function returning module values must have concrete return types.
 //│ ║  l.35: 	  fun f4[T](): module T = M
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^
 
