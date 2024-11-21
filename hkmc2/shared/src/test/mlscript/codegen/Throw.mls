@@ -32,7 +32,7 @@ fun f(x) =
 f(1)
 //│ JS:
 //│ function f(...args) {
-//│   if (args.length !== 1) { throw new globalThis.Error("Function 'f' expected 1 arguments but got " + args.length) }
+//│   globalThis.Predef.checkArgs("f", 1, args.length);
 //│   let x = args[0];
 //│   throw globalThis.Error("e");
 //│ }
@@ -47,7 +47,7 @@ fun f(x) =
 f(false)
 //│ JS:
 //│ function f(...args) {
-//│   if (args.length !== 1) { throw new globalThis.Error("Function 'f' expected 1 arguments but got " + args.length) }
+//│   globalThis.Predef.checkArgs("f", 1, args.length);
 //│   let x = args[0];
 //│   if (x) {
 //│     throw globalThis.Error("x");

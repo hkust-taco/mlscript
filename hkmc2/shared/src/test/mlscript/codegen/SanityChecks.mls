@@ -7,7 +7,7 @@ fun f(x, y) = x + y
 f(2, 3)
 //│ JS:
 //│ function f(...args) {
-//│   if (args.length !== 2) { throw new globalThis.Error("Function 'f' expected 2 arguments but got " + args.length) }
+//│   globalThis.Predef.checkArgs("f", 2, args.length);
 //│   let x = args[0];
 //│   let y = args[1];
 //│   return x + y;
@@ -40,10 +40,10 @@ f(3)(4)
 //│ JS:
 //│ let tmp;
 //│ function f(...args) {
-//│   if (args.length !== 1) { throw new globalThis.Error("Function 'f' expected 1 arguments but got " + args.length) }
+//│   globalThis.Predef.checkArgs("f", 1, args.length);
 //│   let x = args[0];
 //│   return (...args1) => {
-//│     if (args1.length !== 2) { throw new globalThis.Error("Function expected 2 arguments but got " + args1.length) }
+//│     globalThis.Predef.checkArgs("", 2, args1.length);
 //│     let y = args1[0];
 //│     let z = args1[1];
 //│     let tmp1;
@@ -70,7 +70,7 @@ let f = (x, y) => x + y
 f(2)
 //│ JS:
 //│ this.f = (...args) => {
-//│   if (args.length !== 2) { throw new globalThis.Error("Function expected 2 arguments but got " + args.length) }
+//│   globalThis.Predef.checkArgs("", 2, args.length);
 //│   let x = args[0];
 //│   let y = args[1];
 //│   return x + y;
@@ -122,7 +122,7 @@ Cls(1, 2).f(3)
 //│     
 //│   }
 //│   f(...args) {
-//│     if (args.length !== 2) { throw new globalThis.Error("Function 'f' expected 2 arguments but got " + args.length) }
+//│     globalThis.Predef.checkArgs("f", 2, args.length);
 //│     let z = args[0];
 //│     let p = args[1];
 //│     let tmp1, tmp2;
@@ -152,11 +152,11 @@ Cls(1, 2).f(3, 4)(5)
 //│     
 //│   }
 //│   f(...args) {
-//│     if (args.length !== 2) { throw new globalThis.Error("Function 'f' expected 2 arguments but got " + args.length) }
+//│     globalThis.Predef.checkArgs("f", 2, args.length);
 //│     let z = args[0];
 //│     let p = args[1];
 //│     return (...args1) => {
-//│       if (args1.length !== 2) { throw new globalThis.Error("Function expected 2 arguments but got " + args1.length) }
+//│       globalThis.Predef.checkArgs("", 2, args1.length);
 //│       let q = args1[0];
 //│       let s = args1[1];
 //│       let tmp2, tmp3, tmp4, tmp5;

@@ -65,7 +65,7 @@ fun foo(y) = Foo(y)
 foo(27)
 //│ JS:
 //│ function foo(...args) {
-//│   if (args.length !== 1) { throw new globalThis.Error("Function 'foo' expected 1 arguments but got " + args.length) }
+//│   globalThis.Predef.checkArgs("foo", 1, args.length);
 //│   let y = args[0];
 //│   return globalThis.Foo(y);
 //│ }
@@ -145,7 +145,7 @@ class Inner(c) with
 //│     globalThis.log(this.c)
 //│   }
 //│   i1(...args) {
-//│     if (args.length !== 1) { throw new globalThis.Error("Function 'i1' expected 1 arguments but got " + args.length) }
+//│     globalThis.Predef.checkArgs("i1", 1, args.length);
 //│     let d = args[0];
 //│     return this.c + d;
 //│   }

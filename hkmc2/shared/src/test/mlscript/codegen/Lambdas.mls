@@ -9,7 +9,7 @@ x =>
   y
 //│ JS:
 //│ (...args) => {
-//│   if (args.length !== 1) { throw new globalThis.Error("Function expected 1 arguments but got " + args.length) }
+//│   globalThis.Predef.checkArgs("", 1, args.length);
 //│   let x = args[0];
 //│   let y;
 //│   y = x;

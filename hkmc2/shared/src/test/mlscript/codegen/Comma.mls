@@ -8,7 +8,7 @@ fun f() =
   console.log("ok"), 42
 //│ JS:
 //│ function f(...args) {
-//│   if (args.length !== 0) { throw new globalThis.Error("Function 'f' expected 0 arguments but got " + args.length) }
+//│   globalThis.Predef.checkArgs("f", 0, args.length);
 //│   let tmp;
 //│   tmp = globalThis.console.log("ok");
 //│   return 42;
@@ -18,7 +18,7 @@ fun f() =
 fun f() = { console.log("ok"), 42 }
 //│ JS:
 //│ function f(...args) {
-//│   if (args.length !== 0) { throw new globalThis.Error("Function 'f' expected 0 arguments but got " + args.length) }
+//│   globalThis.Predef.checkArgs("f", 0, args.length);
 //│   let tmp;
 //│   tmp = globalThis.console.log("ok");
 //│   return 42;
@@ -28,7 +28,7 @@ fun f() = { console.log("ok"), 42 }
 fun f() = console.log("ok"), 42
 //│ JS:
 //│ function f(...args) {
-//│   if (args.length !== 0) { throw new globalThis.Error("Function 'f' expected 0 arguments but got " + args.length) }
+//│   globalThis.Predef.checkArgs("f", 0, args.length);
 //│   return globalThis.console.log("ok");
 //│ }
 //│ 42

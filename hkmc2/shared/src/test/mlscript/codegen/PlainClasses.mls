@@ -61,7 +61,7 @@ fun test() =
   Foo
 //│ JS:
 //│ function test(...args) {
-//│   if (args.length !== 0) { throw new globalThis.Error("Function 'test' expected 0 arguments but got " + args.length) }
+//│   globalThis.Predef.checkArgs("test", 0, args.length);
 //│   let tmp;
 //│   class Foo {
 //│     constructor() {
@@ -107,7 +107,7 @@ class Foo with
 //│     this.#y = tmp;
 //│   }
 //│   z(...args) {
-//│     if (args.length !== 0) { throw new globalThis.Error("Function 'z' expected 0 arguments but got " + args.length) }
+//│     globalThis.Predef.checkArgs("z", 0, args.length);
 //│     return this.#y + this.x;
 //│   }
 //│   toString() { return "Foo"; }
@@ -135,11 +135,11 @@ class Foo with
 //│     globalThis.log("hello")
 //│   }
 //│   z1(...args) {
-//│     if (args.length !== 0) { throw new globalThis.Error("Function 'z1' expected 0 arguments but got " + args.length) }
+//│     globalThis.Predef.checkArgs("z1", 0, args.length);
 //│     return 5;
 //│   } 
 //│   z2(...args1) {
-//│     if (args1.length !== 0) { throw new globalThis.Error("Function 'z2' expected 0 arguments but got " + args1.length) }
+//│     globalThis.Predef.checkArgs("z2", 0, args1.length);
 //│     return 6;
 //│   }
 //│   toString() { return "Foo"; }
@@ -157,12 +157,12 @@ class Foo with
 //│     this.x = 1;
 //│   }
 //│   foo(...args) {
-//│     if (args.length !== 1) { throw new globalThis.Error("Function 'foo' expected 1 arguments but got " + args.length) }
+//│     globalThis.Predef.checkArgs("foo", 1, args.length);
 //│     let y = args[0];
 //│     return this.x + y;
 //│   } 
 //│   bar(...args1) {
-//│     if (args1.length !== 1) { throw new globalThis.Error("Function 'bar' expected 1 arguments but got " + args1.length) }
+//│     globalThis.Predef.checkArgs("bar", 1, args1.length);
 //│     let z = args1[0];
 //│     let tmp;
 //│     tmp = this.foo(z);

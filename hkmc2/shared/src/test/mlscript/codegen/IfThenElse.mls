@@ -13,7 +13,7 @@ if true then 1 else 0
 let f = x => if x then log("ok") else log("ko")
 //│ JS:
 //│ this.f = (...args) => {
-//│   if (args.length !== 1) { throw new globalThis.Error("Function expected 1 arguments but got " + args.length) }
+//│   globalThis.Predef.checkArgs("", 1, args.length);
 //│   let x = args[0];
 //│   if (x) {
 //│     return this.log("ok");
@@ -35,7 +35,7 @@ f(false)
 let f = x => log((if x then "ok" else "ko") + "!")
 //│ JS:
 //│ this.f = (...args) => {
-//│   if (args.length !== 1) { throw new globalThis.Error("Function expected 1 arguments but got " + args.length) }
+//│   globalThis.Predef.checkArgs("", 1, args.length);
 //│   let x = args[0];
 //│   let tmp, tmp1;
 //│   if (x) {
@@ -53,7 +53,7 @@ let f = x => log((if x then "ok" else "ko") + "!")
 let f = x => log((if x and x then "ok" else "ko") + "!")
 //│ JS:
 //│ this.f = (...args) => {
-//│   if (args.length !== 1) { throw new globalThis.Error("Function expected 1 arguments but got " + args.length) }
+//│   globalThis.Predef.checkArgs("", 1, args.length);
 //│   let x = args[0];
 //│   let tmp, tmp1;
 //│   if (x) {

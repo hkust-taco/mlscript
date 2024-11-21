@@ -433,9 +433,8 @@ trait JSBuilderSanityChecks(instrument: Bool) extends JSBuilder:
     if instrument then
       val paramsList = params.map(p => Scope.scope.allocateName(p.sym))
       val paramsStr = Scope.scope.allocateName(functionParamVarargSymbol)
-      val fname = name.fold(" ")(n => s" '${JSBuilder.escapeStringCharacters(n)}' ")
-      val errMsg = s"Function${fname}expected ${params.length} arguments but got "
-      val checkArgsNum = doc"if ($paramsStr.length !== ${params.length}) { throw new globalThis.Error(${JSBuilder.makeStringLiteral(errMsg)} + $paramsStr.length) }\n"
+      val functionName = JSBuilder.makeStringLiteral(name.fold("")(n => s"${JSBuilder.escapeStringCharacters(n)}"))
+      val checkArgsNum = doc"globalThis.Predef.checkArgs($functionName, ${params.length}, $paramsStr.length);\n"
       val paramsAssign = paramsList.zipWithIndex.map{(nme, i) =>
         doc"let ${nme} = ${paramsStr}[$i];\n"}.mkDocument("")
       (doc"...$paramsStr", doc"$checkArgsNum$paramsAssign${this.body(body)}")
