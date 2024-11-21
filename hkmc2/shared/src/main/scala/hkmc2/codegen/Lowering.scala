@@ -11,7 +11,7 @@ import hkmc2.semantics.{Term => st}
 
 import syntax.{Literal, Tree}
 import semantics.*
-import semantics.Term.*
+import semantics.Term.{Throw => _, *}
 
 
 abstract class Ret extends (Result => Block)
@@ -19,6 +19,10 @@ object Ret extends Ret:
   def apply(r: Result): Block = Return(r, implct = false)
 object ImplctRet extends Ret:
   def apply(r: Result): Block = Return(r, implct = true)
+
+abstract class Thrw extends (Result => Block)
+object Thrw extends Thrw:
+  def apply(r: Result): Block = Throw(r)
 
 
 class Subst(initMap: Map[Local, Value]):
@@ -51,6 +55,8 @@ class Lowering(using TL, Raise, Elaborator.State):
       k(Value.Lit(lit))
     case st.Ret(res) =>
       returnedTerm(res)
+    case st.Throw(res) =>
+      term(res)(Thrw)
     case st.Asc(lhs, rhs) =>
       term(lhs)(k)
     case st.Tup(fs) =>
@@ -246,7 +252,7 @@ class Lowering(using TL, Raise, Elaborator.State):
             //   End()
             // )
         case Split.Else(els) =>
-          if k.isInstanceOf[Ret] && isIf then term(els)(k)
+          if (k.isInstanceOf[Ret] || k.isInstanceOf[Thrw]) && isIf then term(els)(k)
           else
             term(els): r =>
               Assign(l, r,
@@ -258,7 +264,7 @@ class Lowering(using TL, Raise, Elaborator.State):
           Throw(Instantiate(Select(Value.Ref(Elaborator.Ctx.globalThisSymbol), Tree.Ident("Error")),
             Value.Lit(syntax.Tree.StrLit("match error")) :: Nil)) // TODO add failed-match scrutinee info
       
-      if k.isInstanceOf[Ret] && isIf then go(iftrm.normalized, topLevel = true)
+      if (k.isInstanceOf[Ret] || k.isInstanceOf[Thrw]) && isIf then go(iftrm.normalized, topLevel = true)
       else
         val body = if isWhile
           then Label(lbl, go(iftrm.normalized, topLevel = true), End())

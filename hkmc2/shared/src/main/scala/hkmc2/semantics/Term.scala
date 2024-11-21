@@ -34,6 +34,7 @@ enum Term extends Statement:
   case Assgn(lhs: Term, rhs: Term)
   case Deref(ref: Term)
   case Ret(result: Term)
+  case Throw(result: Term)
   case Try(body: Term, finallyDo: Term)
   case Handle(lhs: LocalSymbol, rhs: Term, defs: ObjBody)
   
@@ -93,6 +94,7 @@ sealed trait Statement extends AutoLocated:
     case SelProj(pre, cls, _) => pre :: cls :: Nil
     case Asc(term, ty) => term :: ty :: Nil
     case Ret(res) => res :: Nil
+    case Throw(res) => res :: Nil
     case Forall(_, body) => body :: Nil
     case WildcardTy(in, out) => in.toList ++ out.toList
     case CompType(lhs, rhs, _) => lhs :: rhs :: Nil

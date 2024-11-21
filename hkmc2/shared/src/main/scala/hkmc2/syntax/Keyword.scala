@@ -109,6 +109,7 @@ object Keyword:
   val `public` = Keyword("public", N, N)
   val `private` = Keyword("private", N, N)
   val `return` = Keyword("return", N, curPrec)
+  val `throw` = Keyword("throw", N, curPrec)
   val `import` = Keyword("import", N, curPrec)
   val `this` = Keyword("this", N, N)
   

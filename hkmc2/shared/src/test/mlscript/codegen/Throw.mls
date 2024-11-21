@@ -1,0 +1,52 @@
+:js
+
+
+:re
+throw Error("e")
+//│ ═══[RUNTIME ERROR] Error: e
+
+
+:re
+fun f(x, y) = throw Error("e")
+f(2, 2)
+//│ ═══[RUNTIME ERROR] Error: e
+
+
+:re
+fun f(x, y) = if
+  x == y then x + y
+  x == (y + 1) then throw Error("not equal")
+f(3, 2)
+//│ ═══[RUNTIME ERROR] Error: not equal
+
+:re
+f(2, 3)
+//│ ═══[RUNTIME ERROR] Error: match error
+
+
+:re
+:sjs
+fun f(x) =
+  let y = throw Error("e")
+  return y
+f(1)
+//│ JS:
+//│ function f(x) { throw globalThis.Error("e"); } this.f(1)
+//│ ═══[RUNTIME ERROR] Error: e
+
+
+:re
+:sjs
+fun f(x) =
+  throw (if x then Error("x") else Error("y"))
+f(false)
+//│ JS:
+//│ function f(x) {
+//│   if (x) {
+//│     throw globalThis.Error("x");
+//│   } else {
+//│     throw globalThis.Error("y");
+//│   }
+//│ }
+//│ this.f(false)
+//│ ═══[RUNTIME ERROR] Error: y
