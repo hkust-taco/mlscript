@@ -556,7 +556,9 @@ abstract class Parser(
               errExpr
         case (IDENT(nme, sym), loc) :: _ =>
           consume
-          exprCont(Tree.Quoted(Tree.Ident(nme).withLoc(S(loc))), prec, allowNewlines = false)
+          val res =
+            if nme === "true" then Tree.BoolLit(true) else if nme === "false" then Tree.BoolLit(false) else Tree.Ident(nme)
+          exprCont(Tree.Quoted(res.withLoc(S(loc))), prec, allowNewlines = false)
         case (LITVAL(lit), l0) :: _ =>
           consume
           exprCont(Tree.Quoted(lit.asTree.withLoc(S(l0))), prec, allowNewlines = false)
