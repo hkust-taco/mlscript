@@ -216,7 +216,7 @@ trait TypeOrTermDef:
   
   def head: Tree
   
-  lazy val (symbName, name, paramLists, typeParams, signature)
+  lazy val (symbName, name, paramLists, typeParams, annotatedResultType)
       : (Opt[Tree], Diagnostic \/ Ident, Ls[Tup], Opt[TyTup], Opt[Tree]) =
     def rec(t: Tree, symbName: Opt[Tree]): 
       (Opt[Tree], Diagnostic \/ Ident, Ls[Tup], Opt[TyTup], Opt[Tree]) = 

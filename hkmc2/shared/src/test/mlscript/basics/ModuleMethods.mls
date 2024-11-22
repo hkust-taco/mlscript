@@ -1,14 +1,14 @@
-class C with {
+:js
+
+class C with
   // regular method foo
   fun foo(x) = x
-}
 
-module M with {
+module M with
   // module method foo
   fun foo(x) = x
   // module method self
   fun self(): module M = M
-}
 
 :e
 fun f1(module m)
@@ -23,57 +23,72 @@ fun f2[T](module m: T)
 //│ ╙──      	                 ^^^^
 
 :e
-module N with {
+module N with
   fun f3() = M
-}
 //│ ╔══[ERROR] Function returning module values must have explicit return types.
 //│ ║  l.27: 	  fun f3() = M
 //│ ╙──      	      ^^^^
 
 :e
-module N with {
+module N with
   fun f4[T](): module T = M
-}
 //│ ╔══[ERROR] Function returning module values must have concrete return types.
-//│ ║  l.35: 	  fun f4[T](): module T = M
+//│ ║  l.34: 	  fun f4[T](): module T = M
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^
 
 :e
-module N with {
+module N with
   fun f5(): M = M
-}
 //│ ╔══[ERROR] The return type of functions returning module values must be prefixed with module keyword.
-//│ ║  l.43: 	  fun f5(): M = M
+//│ ║  l.41: 	  fun f5(): M = M
 //│ ╙──      	      ^^^^^^^
 
 
-fun f6(m: M)
+fun f6(m: M) = m
 
 :e
 f6(M)
 //│ ╔══[ERROR] Only module parameters may receive module arguments (values).
-//│ ║  l.53: 	f6(M)
+//│ ║  l.50: 	f6(M)
 //│ ╙──      	   ^
+//│ = M { class: [class M] }
 
 :e
 f6(M.self())
 //│ ╔══[ERROR] Only module parameters may receive module arguments (values).
-//│ ║  l.59: 	f6(M.self())
+//│ ║  l.57: 	f6(M.self())
 //│ ╙──      	   ^^^^^^^^
+//│ = M { class: [class M] }
 
 :e
 fun f7(): module M
 //│ ╔══[ERROR] Only module methods may return module values.
-//│ ║  l.65: 	fun f7(): module M
+//│ ║  l.64: 	fun f7(): module M
 //│ ╙──      	    ^^^^^^^^^^^^^^
 
 
-fun ok1(module m: M)
+:todo // should be an error
+:e
+fun f8(module m: M) = m
 
-module N with {
+:e
+fun f9(module m: M): module M = m
+//│ ╔══[ERROR] Only module methods may return module values.
+//│ ║  l.75: 	fun f9(module m: M): module M = m
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+module Test with
+  fun ok1(module m: M): module M = m
+
+let ok1 = Test.ok1
+//│ ok1 = [Function: ok1]
+
+module N with
   fun ok2(): module M = M
-}
 
 ok1(M)
+//│ = M { class: [class M] }
 
 ok1(M.self())
+//│ = M { class: [class M] }
+

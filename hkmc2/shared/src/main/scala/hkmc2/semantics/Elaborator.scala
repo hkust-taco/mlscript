@@ -419,7 +419,10 @@ extends Importer:
           raise(ErrorReport(msg"Multiple declarations of symbol '$name'" -> N ::
             decls.map(msg"declared here" -> _.toLoc)))
         val sig = decls.collectFirst:
-          case td if td.signature.isDefined => td.signature.get
+          case td
+            if td.annotatedResultType.isDefined
+            && td.paramLists.isEmpty
+            => td.annotatedResultType.get
         sig.foreach: sig =>
           newSignatureTrees += name -> sig
     
@@ -537,34 +540,29 @@ extends Importer:
           case R(id) =>
             val sym = members.getOrElse(id.name, die)
             val owner = ctx.outer
-            val isModMember = owner.fold(false)(_.isInstanceOf[ModuleSymbol])
+            val isModMember = owner.exists(_.isInstanceOf[ModuleSymbol])
             val tdf = ctx.nest(N).givenIn:
               // * Add type parameters to context
               val (tps, newCtx1) = td.typeParams match
                 case S(t) => typeParams(t)
                 case N => (N, ctx)
               // * Add parameters to context
-              val (pss, newCtx) = 
+              val (pss, newCtx) =
                 td.paramLists.foldLeft(Ls[ParamList](), newCtx1):
                   case ((pss, ctx), ps) => 
                     val (qs, newCtx) = params(ps)(using ctx)
                     (pss :+ ParamList(ParamListFlags.empty, qs), newCtx)
               // * Elaborate signature
-              val st = td.signature.orElse(newSignatureTrees.get(id.name))
+              val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name))
               val s = st.map(term(_)(using newCtx))
               val b = rhs.map(term(_)(using newCtx))
               val r = FlowSymbol(s"‹result of ${sym}›", nextUid)
               val tdf = TermDefinition(owner, k, sym, pss, s, b, r, 
                 TermDefFlags.empty.copy(isModMember = isModMember))
               sym.defn = S(tdf)
-
-              // the return type of the function
-              val result = td.head match
-                case InfixApp(_, Keyword.`:`, rhs) => S(term(rhs)(using newCtx))
-                case _ => N
               
               // indicates if the function really returns a module
-              val em = b.fold(false)(ModuleChecker.evalsToModule)
+              val em = b.exists(ModuleChecker.evalsToModule)
               // indicates if the function marks its result as "module"
               val mm = st match
                 case Some(TypeDef(Mod, _, N, N)) => true
@@ -786,23 +784,23 @@ extends Importer:
     def isTypeParam(t: Term): Bool = t.symbol
       .filter(_.isInstanceOf[VarSymbol])
       .flatMap(_.asInstanceOf[VarSymbol].decl)
-      .fold(false)(_.isInstanceOf[TyParam])
+      .exists(_.isInstanceOf[TyParam])
     
     /** Checks if a term evaluates to a module value. */
     def evalsToModule(t: Term): Bool = 
       def isModule(t: Tree): Bool = t match
         case TypeDef(Mod, _, _, _) => true
         case _ => false
-      def returnsModule(t: TermDef): Bool = t.signature match
+      def returnsModule(t: TermDef): Bool = t.annotatedResultType match
         case S(TypeDef(Mod, _, N, N)) => true
         case _ => false
       t match
         case Term.Blk(_, res) => evalsToModule(res)
         case Term.App(lhs, rhs) => lhs.symbol match
-          case S(sym: BlockMemberSymbol) => sym.trmTree.fold(false)(returnsModule)
+          case S(sym: BlockMemberSymbol) => sym.trmTree.exists(returnsModule)
           case _ => false
         case t => t.symbol match
-          case S(sym: BlockMemberSymbol) => sym.modTree.fold(false)(isModule)
+          case S(sym: BlockMemberSymbol) => sym.modTree.exists(isModule)
           case _ => false
   
   class VarianceTraverser(var changed: Bool = true) extends Traverser:

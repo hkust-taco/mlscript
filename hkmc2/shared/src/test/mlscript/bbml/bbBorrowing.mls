@@ -61,7 +61,7 @@ letreg of r =>
     123
     if next(it) > 0 then () => 0 else () => clear(b)
   k()
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@123),Lit(BoolLit(true)),Else(Lam(List(),Lit(IntLit(0))))),Else(Lam(List(),App(Sel(Ref(globalThis:block#5),Ident(clear)),Tup(List(Fld(‹›,Ref(b@112),None))))))) (of class hkmc2.semantics.Split$Cons)
+//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref($scrut@102),Lit(BoolLit(true)),Else(Lam(List(),Lit(IntLit(0))))),Else(Lam(List(),App(Sel(Ref(globalThis:block#5),Ident(clear)),Tup(List(Fld(‹›,Ref(b@91),None))))))) (of class hkmc2.semantics.Split$Cons)
 
 :e
 letreg of r =>
