@@ -5,7 +5,7 @@
 
 abstract class Id: A | B | C | D | X | Y | Z | U | W | ADD1 | AND | APPEND | CONS | CONSP | DIFFERENCE | DIVIDES | EQUAL | EVEN | EXP | F | FALSE | FOUR | GCD | GREATEREQP | GREATERP | IF | IFF | IMPLIES | LENGTH | LESSEQP | LESSP | LISTP | MEMBER | NIL | NILP | NLISTP | NOT | ODD | ONE | OR | PLUS | QUOTIENT | REMAINDER | REVERSE | SUB1 | TIMES | TRUE | TWO | ZERO | ZEROP
 
-module
+object
   A extends Id
   B extends Id
   C extends Id
@@ -62,7 +62,7 @@ abstract class Term: Var | Fun | ERROR
 class
   Var(i: Id) extends Term
   Fun(i: Id, t: List[Term], l: [Tup2[Term, Term]]) extends Term
-module ERROR extends Term
+object ERROR extends Term
 
 
 :...

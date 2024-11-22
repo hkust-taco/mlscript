@@ -11,7 +11,7 @@ class
 
 abstract class Componenet: None_ | Inp | Outp | Dff | Inv | And2 | Or2 | Xor
 
-module
+object
   None_ extends Componenet
   Inp extends Componenet
   Outp extends Componenet
@@ -21,7 +21,7 @@ module
   Or2 extends Componenet
   Xor extends Componenet
 
-module Unit
+object Unit
 
 class PS[T](pid: Int, compType: Componenet, pathDepth: Int, inports: List[Tup3(Int, Int, T)], outports: List[Tup6(Int, T, Bool, Int, Bool, Int)])
 
@@ -41,7 +41,7 @@ fun updateInports(p, ninports) = PS(pid(p), compType(p), pathDepth(p), ninports,
 
 abstract class Boolean: F | T
 
-module
+object
   F extends Boolean
   T extends Boolean
 

@@ -9,7 +9,7 @@ type Ps[T] = Lazy[Pss[T]]
 
 class Pc[T](f: T, s: Ps[T]) extends Pss[T]
 
-module Pz extends Pss
+object Pz extends Pss
 
 fun list() = lazy of () => Pc(1, list())
 
