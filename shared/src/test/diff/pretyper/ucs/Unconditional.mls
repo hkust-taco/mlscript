@@ -1,0 +1,26 @@
+:NewDefs
+
+class Point(x: Int, y: Int)
+class Rectangle(x: Int, y: Int, width: Int, height: Int)
+//│ class Point(x: Int, y: Int)
+//│ class Rectangle(x: Int, y: Int, width: Int, height: Int)
+
+fun sum(p) = if p is Point(x, y) then x + y
+//│ fun sum: Point -> Int
+
+sum(Point(1, 2))
+//│ Int
+//│ res
+//│     = 3
+
+fun abs(x) = if x < 0 then -x else x
+//│ fun abs: Int -> Int
+
+fun dist(p, q) = if p is Point(x1, y1) and q is Point(x2, y2) then
+  abs(x1 - x2) + abs(y1 - y2)
+//│ fun dist: (Point, Point) -> Int
+
+dist(Point(1, 2), Point(3, 4))
+//│ Int
+//│ res
+//│     = 4

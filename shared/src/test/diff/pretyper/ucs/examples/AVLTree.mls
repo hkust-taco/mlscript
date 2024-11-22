@@ -1,0 +1,309 @@
+:NewDefs
+
+fun (|>) pipe(x, f) = f(x)
+fun (~~>) toBe(x, y) = if x === y then () else error
+fun (<?) min(x, y) = if x < y then x else y
+fun (>?) max(x, y) = if x > y then x else y
+fun abs(x) = if x < 0 then -x else x
+//│ fun (|>) pipe: forall 'a 'b. ('a, 'a -> 'b) -> 'b
+//│ fun (~~>) toBe: forall 'c. (Eql['c], 'c) -> ()
+//│ fun (<?) min: forall 'd. (Num & 'd, Num & 'd) -> 'd
+//│ fun (>?) max: forall 'e. (Num & 'e, Num & 'e) -> 'e
+//│ fun abs: Int -> Int
+
+abstract class Option[out T]: (Some[T] | None)
+class Some[out T](val value: T) extends Option[T]
+module None extends Option[nothing]
+//│ abstract class Option[T]: None | Some[T]
+//│ class Some[T](value: T) extends Option
+//│ module None extends Option
+
+fun (??) getOrElse(o, v) = if o is
+  Some(v') then v'
+  None then v
+//│ fun (??) getOrElse: forall 'a. (None | Some['a], 'a) -> 'a
+
+fun (++) strcat(s1, s2) = concat(s1)(s2)
+//│ fun (++) strcat: (Str, Str) -> Str
+
+let anyToString = toString
+//│ let anyToString: anything -> Str
+//│ anyToString
+//│             = [Function: toString]
+
+abstract class List[out T]: (Cons[T] | Nil)
+class Cons[out T](val head: T, val tail: List[T]) extends List[T]
+module Nil extends List[nothing]
+//│ abstract class List[T]: Cons[T] | Nil
+//│ class Cons[T](head: T, tail: List[T]) extends List
+//│ module Nil extends List
+
+fun (::) cons(head, tail) = Cons(head, tail)
+//│ fun (::) cons: forall 'T. ('T, List['T]) -> Cons['T]
+
+abstract class Tree[out A]: (Empty | Node[A])
+class Node[out A](value: A, left: Tree[A], right: Tree[A], height: Int) extends Tree[A]
+module Empty extends Tree[nothing]
+//│ abstract class Tree[A]: Empty | Node[A]
+//│ class Node[A](value: A, left: Tree[A], right: Tree[A], height: Int) extends Tree
+//│ module Empty extends Tree
+
+fun showTree(t: Tree[anything]): Str = if t is
+  Node(v, l, r, _) then
+    "(" ++ showTree(l) ++ " " ++ toString(v) ++ " " ++ showTree(r) ++ ")"
+  Empty then "•"
+//│ fun showTree: (t: Tree[anything]) -> Str
+
+fun showTreeWithHeight(t: Tree[anything]): Str = if t is
+  Node(v, l, r, h) then
+    "(" ++ showTreeWithHeight(l) ++ " " ++ toString(v) ++ " [" ++ toString(h) ++ "]" ++ " " ++ showTreeWithHeight(r) ++ ")"
+  Empty then "•"
+//│ fun showTreeWithHeight: (t: Tree[anything]) -> Str
+
+fun height(t) =
+  if t is
+    Node(_, _, _, h) then h
+    Empty then 0
+//│ fun height: (Empty | Node[anything]) -> Int
+
+let nil = Empty
+fun node(v, l, r) = Node(v, l, r, max(height(l), height(r)) + 1)
+fun single(v) = Node(v, Empty, Empty, 1)
+//│ let nil: Empty
+//│ fun node: forall 'A. ('A, Empty & Tree['A] | Node[anything] & Tree['A], Empty & Tree['A] | Node[anything] & Tree['A]) -> Node['A]
+//│ fun single: forall 'A0. 'A0 -> Node['A0]
+//│ nil
+//│     = Empty { class: [class Empty extends Tree] }
+
+fun isBalanced(t) =
+  if t is
+    Node(t, l, r, _) then
+      (abs(height(l) - height(r)) <= 1) && isBalanced(l) && isBalanced(r)
+    Empty then true
+//│ fun isBalanced: (Empty | Node[anything]) -> Bool
+
+isBalanced(nil) ~~> true
+//│ ()
+//│ res
+//│     = undefined
+
+//      _             _                    _        _
+//  ___(_)_ __   __ _| | ___     _ __ ___ | |_ __ _| |_ ___
+// / __| | '_ \ / _` | |/ _ \   | '__/ _ \| __/ _` | __/ _ \
+// \__ \ | | | | (_| | |  __/   | | | (_) | || (_| | ||  __/
+// |___/_|_| |_|\__, |_|\___|   |_|  \___/ \__\__,_|\__\___|
+//              |___/
+
+fun rotateLeft(t: Tree['A]): Tree['A] =
+  if t is
+    Node(v, l, Node(v', l', r', _), _) and
+      max(height(l), height(l')) + 1 is h and
+        max(h, height(r')) + 1 is h' then
+          Node(v', Node(v, l, l', h), r', h')
+    _ then t
+//│ fun rotateLeft: forall 'A. (t: Tree['A]) -> Tree['A]
+
+rotateLeft(nil) |> showTree
+rotateLeft(single(0)) |> showTree
+//│ Str
+//│ res
+//│     = '•'
+//│ res
+//│     = '(• 0 •)'
+
+let unbalanced1 = node(0, nil, node(1, nil, single(2)))
+isBalanced(unbalanced1) ~~> false
+unbalanced1 |> showTree
+rotateLeft(unbalanced1) |> showTree
+//│ let unbalanced1: Node[0 | 1 | 2]
+//│ Str
+//│ unbalanced1
+//│             = Node {}
+//│ res
+//│     = undefined
+//│ res
+//│     = '(• 0 (• 1 (• 2 •)))'
+//│ res
+//│     = '((• 0 •) 1 (• 2 •))'
+
+fun rotateRight(t: Tree['A]): Tree['A] =
+  if t is
+    Node(v, Node(v', l', r', _), r, _) then
+      Node(v', l', Node(v, r', r, 0), 0)
+    _ then t
+//│ fun rotateRight: forall 'A. (t: Tree['A]) -> Tree['A]
+
+rotateRight(nil) |> showTree
+rotateRight(single(0)) |> showTree
+//│ Str
+//│ res
+//│     = '•'
+//│ res
+//│     = '(• 0 •)'
+
+let unbalanced2 = node(2, node(1, single(0), nil), nil)
+isBalanced(unbalanced2) ~~> false
+unbalanced2 |> showTree
+rotateRight(unbalanced2) |> showTree
+//│ let unbalanced2: Node[0 | 1 | 2]
+//│ Str
+//│ unbalanced2
+//│             = Node {}
+//│ res
+//│     = undefined
+//│ res
+//│     = '(((• 0 •) 1 •) 2 •)'
+//│ res
+//│     = '((• 0 •) 1 (• 2 •))'
+
+//      _             _     _                    _        _
+//   __| | ___  _   _| |__ | | ___     _ __ ___ | |_ __ _| |_ ___
+//  / _` |/ _ \| | | | '_ \| |/ _ \   | '__/ _ \| __/ _` | __/ _ \
+// | (_| | (_) | |_| | |_) | |  __/   | | | (_) | || (_| | ||  __/
+//  \__,_|\___/ \__,_|_.__/|_|\___|   |_|  \___/ \__\__,_|\__\___|
+//
+
+fun rotateRightLeft(t: Tree['A]): Tree['A] =
+  if t is
+    Node(v, t1, Node(v', Node(v'', t2, t3, _), t4, _), _) then
+      Node(v'', Node(v, t1, t2, 0), Node(v', t3, t4, 0), 0)
+    else t
+//│ fun rotateRightLeft: forall 'A. (t: Tree['A]) -> Tree['A]
+
+// Should remain the same.
+rotateRightLeft(nil) |> showTree
+rotateRightLeft(single(0)) |> showTree
+rotateRightLeft(unbalanced1) |> showTree
+rotateRightLeft(unbalanced2) |> showTree
+//│ Str
+//│ res
+//│     = '•'
+//│ res
+//│     = '(• 0 •)'
+//│ res
+//│     = '(• 0 (• 1 (• 2 •)))'
+//│ res
+//│     = '(((• 0 •) 1 •) 2 •)'
+
+let unbalanced3 = node(0, nil, node(3, node(1, nil, single(2)), nil))
+isBalanced(unbalanced3) ~~> false
+unbalanced3 |> showTree
+rotateRightLeft(unbalanced3) |> showTree
+//│ let unbalanced3: Node[0 | 1 | 2 | 3]
+//│ Str
+//│ unbalanced3
+//│             = Node {}
+//│ res
+//│     = undefined
+//│ res
+//│     = '(• 0 ((• 1 (• 2 •)) 3 •))'
+//│ res
+//│     = '((• 0 •) 1 ((• 2 •) 3 •))'
+
+fun rotateLeftRight(t: Tree['A]): Tree['A] =
+  if t is
+    Node(v, Node(v', t1, Node(v'', t2, t3, _), _), t4, _) then
+      Node(v'', Node(v', t1, t2, 0), Node(v, t3, t4, 0), 0)
+    else t
+//│ fun rotateLeftRight: forall 'A. (t: Tree['A]) -> Tree['A]
+
+// Should remain the same.
+rotateLeftRight(nil) |> showTree
+rotateLeftRight(single(0)) |> showTree
+rotateLeftRight(unbalanced1) |> showTree
+rotateLeftRight(unbalanced2) |> showTree
+//│ Str
+//│ res
+//│     = '•'
+//│ res
+//│     = '(• 0 •)'
+//│ res
+//│     = '(• 0 (• 1 (• 2 •)))'
+//│ res
+//│     = '(((• 0 •) 1 •) 2 •)'
+
+let unbalanced4 = node(3, node(0, nil, node(2, single(1), nil)), nil)
+isBalanced(unbalanced4) ~~> false
+unbalanced4 |> showTree
+rotateRightLeft(unbalanced4) |> showTree
+//│ let unbalanced4: Node[0 | 1 | 2 | 3]
+//│ Str
+//│ unbalanced4
+//│             = Node {}
+//│ res
+//│     = undefined
+//│ res
+//│     = '((• 0 ((• 1 •) 2 •)) 3 •)'
+//│ res
+//│     = '((• 0 ((• 1 •) 2 •)) 3 •)'
+
+fun bf(t) =
+  if t is
+    Node(_, l, r, _) then height(l) - height(r)
+    Empty then 0
+//│ fun bf: (Empty | Node[anything]) -> Int
+
+//  _                     _
+// (_)_ __  ___  ___ _ __| |_
+// | | '_ \/ __|/ _ \ '__| __|
+// | | | | \__ \  __/ |  | |_
+// |_|_| |_|___/\___|_|   \__|
+//
+
+// This function does not work for now as it exposed a lot of problems we have
+// in desugaring and normalization. For example:
+// 
+// - [x] We need to mark the Boolean scrutinees and skip the specialization of
+//   these scrutinees in the normalization process, otherwise, it would result
+//   in many futile computations.
+// - [x] We should cache the expressions that are broken by conditional splits,
+//   otherwise, they will be evaluated for more than one time.
+// - [ ] The branches of an operator split should be "chained" rather
+//   than placed in parallel, otherwise, the later branches will appear in the
+//   else branch of all its previous branches. **WORK IN PROGRESS**
+//
+// :ducs:postprocess
+fun balance(t: Tree['A]): Tree['A] =
+  if t is
+    Node(x, l, r, _) and height(r) - height(l)
+      > 1 and r is Node(y, l', r', _) and height(r') - height(l')
+        > 0 then rotateLeft(t)
+        < 0 and l' is Node then rotateRightLeft(t)
+      < 1 and l is Node(y, l', r', _) and height(r') - height(l')
+        > 0 and r' is Node then rotateLeftRight(t)
+        < 0 then rotateRight(t)
+    _ then t
+//│ fun balance: forall 'A. (t: Tree['A]) -> Tree['A]
+
+fun insert(t: Tree[Num], v: Num) = if t is
+  Node(v', l, r, h) and
+    v < v' then Node(v', insert(l, v), r, h) |> balance
+    v > v' then Node(v', l, insert(r, v), h) |> balance
+    _ then t
+  Empty then Node(v, Empty, Empty, 1)
+//│ fun insert: (t: Tree[Num], v: Num) -> (Node[Num] | Tree[Num])
+
+
+insert(nil, 0) |> showTree
+insert(single(0), 1) |> showTree
+insert(single(0), -1) |> showTree
+//│ Str
+//│ res
+//│     = '(• 0 •)'
+//│ res
+//│     = '(• 0 (• 1 •))'
+//│ res
+//│     = '((• -1 •) 0 •)'
+
+insert(node(0, nil, single(1)), 2) |> showTreeWithHeight
+insert(node(0, nil, single(1)), 2) |> showTree
+//│ Str
+//│ res
+//│     = '(• 0 [2] (• 1 [1] (• 2 [1] •)))'
+//│ res
+//│     = '(• 0 (• 1 (• 2 •)))'
+
+insert(unbalanced1, 3) |> showTree
+//│ Str
+//│ res
+//│     = '((• 0 •) 1 (• 2 (• 3 •)))'

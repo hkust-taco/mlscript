@@ -5,7 +5,7 @@ fun error = ()
 fun (~~>) expect(a, b) = if a == b then () else error
 
 type Option[out T] = None | Some[T]
-module None
+object None
 class Some[out T](val value: T)
 
 type Either[A, B] = Left[A] | Right[B]
@@ -13,7 +13,7 @@ class Left[A](val leftValue: A)
 class Right[B](val rightValue: B)
 
 type List[out A] = Nil | Cons[A]
-module Nil
+object Nil
 class Cons[out A](head: A, tail: List[A])
 
 fun justTrue(_) = true

@@ -1,0 +1,82 @@
+:NewDefs
+
+class X {
+    val num = 5
+}
+class Y(val num: Int) {
+    constructor(y: Int) {
+        num = y+5
+    }
+}
+let y = new Y(6)
+let x = new X
+(if true then y else x).num
+//│ class X {
+//│   constructor()
+//│   val num: 5
+//│ }
+//│ class Y(num: Int) {
+//│   constructor(y: Int)
+//│ }
+//│ let y: Y
+//│ let x: X
+//│ Int
+//│ 
+//│ Simpledef:
+//│ {class X {let num = 5}
+//│  class Y(val num: Int,) {}
+//│  let y = (new Y)(6,)
+//│  let x = new X
+//│  let selRes$40 = '(' if (true) then y else x ')' in case selRes$40 of { Y => (selRes$40).num
+//│  X => (selRes$40).num }}
+//│ End simpledef
+//│ 
+//│ y
+//│   = Y {}
+//│ x
+//│   = X {}
+//│ res
+//│     = 11
+
+class Z(val num1: Int) {
+    constructor(y, x) {
+        num1 = y+x
+    }
+}
+class W(val num1: Int, val num2: Int) {
+    constructor(w) {
+        num1 = w
+        num2 = w
+    }
+}
+val w = new W(3)
+val z = new Z(6, 11)
+(if true then w else z).num1
+//│ class Z(num1: Int) {
+//│   constructor(y: Int, x: Int)
+//│ }
+//│ class W(num1: Int, num2: Int) {
+//│   constructor(w: Int)
+//│ }
+//│ val w: W
+//│ val z: Z
+//│ Int
+//│ 
+//│ Simpledef:
+//│ {class Z(val num1: Int,) {}
+//│  class W(val num1: Int, val num2: Int,) {}
+//│  let w = (new W)(3,)
+//│  let z = (new Z)(6, 11,)
+//│  let selRes$58 = '(' if (true) then w else z ')' in case selRes$58 of { W => (selRes$58).num1
+//│  Z => (selRes$58).num1 }}
+//│ End simpledef
+//│ 
+//│ w
+//│   = W {}
+//│ z
+//│   = Z {}
+//│ res
+//│     = 3
+
+
+

@@ -1,6 +1,7 @@
 :NewDefs
 :ParseOnly
 
+:lift
 class CTX{
   class A {}
   fun foo(f: A => A): (A => A) => A = f(new A)
@@ -16,6 +17,7 @@ class CTX{
 //│ }
 //│ 
 
+:lift
 class CTX(x, y){
   class A{ fun foo = x}
   class B: A { fun foo = y}
@@ -33,6 +35,7 @@ class CTX(x, y){
 //│ }
 //│ 
 
+:lift
 class CTX(x, y){
   class A{ fun foo = x}
   class B: A { fun foo = y}
@@ -50,6 +53,7 @@ class CTX(x, y){
 //│ }
 //│ 
 
+:lift
 class CTX(x, y){
   class A{ fun foo = x}
   class B<T> { fun foo = y}
@@ -67,6 +71,7 @@ class CTX(x, y){
 //│ }
 //│ 
 
+:lift
 class CTX{
   fun ctx(x,y) = 
     class A{ fun foo = x }

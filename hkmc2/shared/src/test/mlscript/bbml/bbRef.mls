@@ -174,5 +174,7 @@ bar
 
 :e
 region x in x.ref bar
-//│ ═══[ERROR] Expected a monomorphic type or an instantiable type here, but (forall α103_2: (α103_2) ->{⊥} α103_2) ->{⊥} Int found
+//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but (forall α103_2: (α103_2) ->{⊥} α103_2) ->{⊥} Int found
+//│ ║  l.176: 	region x in x.ref bar
+//│ ╙──       	                  ^^^
 //│ Type: Ref[⊥, ?]

@@ -60,177 +60,12 @@ n4: PerfectTree[int]
 //│    = Node1 { subTree: Node1 { subTree: Leaf { value: [Array] } } }
 
 
-:e // * Needs precise-rec-typing (see below)
-rec def map f tree = case tree of {
-  | Leaf -> Leaf { value = f tree.value }
-  | Node -> Node { subTree = map (mapTwo f) tree.subTree }
-  }
-//│ ╔══[ERROR] Inferred recursive type: 'a
-//│   where
-//│     'a <: {subTree: Leaf[?] & {value: ((?, (?, ?,),), ((?, ?,), ?,),)} | Node[?] & 'a}
-//│ ║  l.64: 	rec def map f tree = case tree of {
-//│ ╙──      	                          ^^^^
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.64: 	rec def map f tree = case tree of {
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	  | Leaf -> Leaf { value = f tree.value }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  | Node -> Node { subTree = map (mapTwo f) tree.subTree }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	  }
-//│ ║        	^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.64: 	rec def map f tree = case tree of {
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	  | Leaf -> Leaf { value = f tree.value }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  | Node -> Node { subTree = map (mapTwo f) tree.subTree }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	  }
-//│ ║        	^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.64: 	rec def map f tree = case tree of {
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	  | Leaf -> Leaf { value = f tree.value }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  | Node -> Node { subTree = map (mapTwo f) tree.subTree }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	  }
-//│ ║        	^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.64: 	rec def map f tree = case tree of {
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	  | Leaf -> Leaf { value = f tree.value }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  | Node -> Node { subTree = map (mapTwo f) tree.subTree }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	  }
-//│ ║        	^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.64: 	rec def map f tree = case tree of {
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	  | Leaf -> Leaf { value = f tree.value }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  | Node -> Node { subTree = map (mapTwo f) tree.subTree }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	  }
-//│ ║        	^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.64: 	rec def map f tree = case tree of {
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	  | Leaf -> Leaf { value = f tree.value }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  | Node -> Node { subTree = map (mapTwo f) tree.subTree }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	  }
-//│ ║        	^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.64: 	rec def map f tree = case tree of {
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	  | Leaf -> Leaf { value = f tree.value }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  | Node -> Node { subTree = map (mapTwo f) tree.subTree }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	  }
-//│ ║        	^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.64: 	rec def map f tree = case tree of {
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	  | Leaf -> Leaf { value = f tree.value }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  | Node -> Node { subTree = map (mapTwo f) tree.subTree }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	  }
-//│ ║        	^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.64: 	rec def map f tree = case tree of {
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	  | Leaf -> Leaf { value = f tree.value }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  | Node -> Node { subTree = map (mapTwo f) tree.subTree }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	  }
-//│ ║        	^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.64: 	rec def map f tree = case tree of {
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	  | Leaf -> Leaf { value = f tree.value }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  | Node -> Node { subTree = map (mapTwo f) tree.subTree }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	  }
-//│ ║        	^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.64: 	rec def map f tree = case tree of {
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	  | Leaf -> Leaf { value = f tree.value }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  | Node -> Node { subTree = map (mapTwo f) tree.subTree }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	  }
-//│ ║        	^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.64: 	rec def map f tree = case tree of {
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	  | Leaf -> Leaf { value = f tree.value }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  | Node -> Node { subTree = map (mapTwo f) tree.subTree }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	  }
-//│ ║        	^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.64: 	rec def map f tree = case tree of {
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	  | Leaf -> Leaf { value = f tree.value }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  | Node -> Node { subTree = map (mapTwo f) tree.subTree }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	  }
-//│ ║        	^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.64: 	rec def map f tree = case tree of {
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	  | Leaf -> Leaf { value = f tree.value }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  | Node -> Node { subTree = map (mapTwo f) tree.subTree }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	  }
-//│ ║        	^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b -> (?c | ?d) <: ?map` exceeded recursion depth limit (250)
-//│ ║  l.64: 	rec def map f tree = case tree of {
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	  | Leaf -> Leaf { value = f tree.value }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  | Node -> Node { subTree = map (mapTwo f) tree.subTree }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	  }
-//│ ║        	^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ map: ('value -> (Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two['A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'value0) & 'a -> (Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two['A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'b & 'A) & 'c -> (Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two['A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'd & 'A) & 'e -> (Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two['A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'f & 'A) & 'g -> (Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two['A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'h & 'A)) -> 'i -> (Leaf[((nothing, (nothing, nothing,) | 'd,) | 'b, ((nothing, nothing,) | 'h, nothing,) | 'f,) | 'value0] | 'j)
-//│   where
-//│     'j :> Node['A] with {
-//│       subTree: Leaf[((nothing, (nothing, nothing,) | 'd,) | 'b, ((nothing, nothing,) | 'h, nothing,) | 'f,) | 'value0] | 'j
-//│     }
-//│     'i <: Leaf[?] & {
-//│       value: ((anything, (anything, anything,) & 'c,) & 'a, ((anything, anything,) & 'g, anything,) & 'e,) & 'value
-//│     } | (Node[?] with {subTree: 'i})
-//│     'A :> ((nothing, nothing,) | 'h, (nothing, nothing,) | 'd,)
-//│        <: Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two[Two['A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A] & 'A]
-//│    = [Function: map]
+// * On some systems, the default -Xss4M is not enough for this case
+// :e // * Needs precise-rec-typing (see below)
+// rec def map f tree = case tree of {
+//   | Leaf -> Leaf { value = f tree.value }
+//   | Node -> Node { subTree = map (mapTwo f) tree.subTree }
+//   }
 
 :e // occurs-check
 :precise-rec-typing
@@ -255,7 +90,7 @@ rec def map f tree = case tree of {
 //│           where
 //│             'a <: 'b -> 'c & 'd -> 'e) -> 'subTree -> (PerfectTree[Two['A]] & 'subTree0)
 //│         'a <: 'value -> 'value0)
-//│    = [Function: map1]
+//│    = [Function: map]
 
 :e
 map succ n4
@@ -269,8 +104,8 @@ map succ n4
 //│         'a <: 'value -> 'value0)
 //│ ╙──
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.261: 	map succ n4
-//│ ║         	^^^^^^^^^^^
+//│ ║  l.96: 	map succ n4
+//│ ║        	^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
 //│    = Node1 { subTree: Node1 { subTree: Leaf { value: [Array] } } }

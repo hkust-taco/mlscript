@@ -78,10 +78,12 @@ fun example() =
   log(get_x())
 example()
 //│ JS:
-//│ function example() {
+//│ function example(...args) {
+//│   globalThis.Predef.checkArgs("example", 0, args.length);
 //│   let x, get_x, old, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
 //│   x = 0;
-//│   get_x = () => {
+//│   get_x = (...args1) => {
+//│     globalThis.Predef.checkArgs("", 0, args1.length);
 //│     return x;
 //│   };
 //│   old = x;
@@ -116,10 +118,12 @@ fun example() =
   y
 example()
 //│ JS:
-//│ function example() {
+//│ function example(...args) {
+//│   globalThis.Predef.checkArgs("example", 0, args.length);
 //│   let x, get_x, y, old, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
 //│   x = 0;
-//│   get_x = () => {
+//│   get_x = (...args1) => {
+//│     globalThis.Predef.checkArgs("", 0, args1.length);
 //│     return x;
 //│   };
 //│   old = x;

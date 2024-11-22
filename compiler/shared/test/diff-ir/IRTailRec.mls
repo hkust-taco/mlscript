@@ -1,0 +1,1600 @@
+:NewParser
+:ParseOnly
+:UseIR
+
+:prelude
+module True
+module False
+module Callable {
+  fun apply0() = 0
+  fun apply1(x0) = 0
+  fun apply2(x0,x1) = 0
+  fun apply3(x0,x1,x2) = 0
+  fun apply4(x0,x1,x2,x3) = 0
+  fun apply5(x0,x1,x2,x3,x4) = 0
+}
+module List[A, B]
+class Cons[A, B](h: A, t: Cons[A, B]) extends List[A, B]
+module Nil[A, B] extends List[A, B]
+module Option[A]
+class Some[A](x: A) extends Option[A]
+module None[A] extends Option[A]
+class Pair[A, B](x: A, y: B)
+class Tuple2[A, B](x: A, y: B)
+class Tuple3[A, B, C](x: A, y: B, z: C)
+module Nat
+class S(s: Nat) extends Nat
+module O extends Nat
+class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O)
+//│ |#module| |True|↵|#module| |False|↵|#module| |Callable| |{|→|#fun| |apply0|(||)| |#=| |0|↵|#fun| |apply1|(|x0|)| |#=| |0|↵|#fun| |apply2|(|x0|,|x1|)| |#=| |0|↵|#fun| |apply3|(|x0|,|x1|,|x2|)| |#=| |0|↵|#fun| |apply4|(|x0|,|x1|,|x2|,|x3|)| |#=| |0|↵|#fun| |apply5|(|x0|,|x1|,|x2|,|x3|,|x4|)| |#=| |0|←|↵|}|↵|#module| |List|[|A|,| |B|]|↵|#class| |Cons|[|A|,| |B|]|(|h|#:| |A|,| |t|#:| |Cons|[|A|,| |B|]|)| |#extends| |List|[|A|,| |B|]|↵|#module| |Nil|[|A|,| |B|]| |#extends| |List|[|A|,| |B|]|↵|#module| |Option|[|A|]|↵|#class| |Some|[|A|]|(|x|#:| |A|)| |#extends| |Option|[|A|]|↵|#module| |None|[|A|]| |#extends| |Option|[|A|]|↵|#class| |Pair|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple2|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple3|[|A|,| |B|,| |C|]|(|x|#:| |A|,| |y|#:| |B|,| |z|#:| |C|)|↵|#module| |Nat|↵|#class| |S|(|s|#:| |Nat|)| |#extends| |Nat|↵|#module| |O| |#extends| |Nat|↵|#class| |HiddenTheseEntities|(|_0|#:| |HiddenTheseEntities|,| |_1|#:| |True|,| |_2|#:| |False|,| |_3|#:| |Callable|,| |_4|#:| |List|,| |_5|#:| |Cons|,| |_6|#:| |Nil|,| |_7|#:| |Option|,| |_8|#:| |Some|,| |_9|#:| |None|,| |_10|#:| |Pair|,| |_11|#:| |Tuple2|,| |_12|#:| |Tuple3|,| |_13|#:| |Nat|,| |_14|#:| |S|,| |_15|#:| |O|)|
+//│ Parsed: {module True {}; module False {}; module Callable {fun apply0 = () => 0; fun apply1 = (x0,) => 0; fun apply2 = (x0, x1,) => 0; fun apply3 = (x0, x1, x2,) => 0; fun apply4 = (x0, x1, x2, x3,) => 0; fun apply5 = (x0, x1, x2, x3, x4,) => 0}; module List‹A, B› {}; class Cons‹A, B›(h: A, t: Cons‹A, B›,): List‹A, B› {}; module Nil‹A, B›: List‹A, B› {}; module Option‹A› {}; class Some‹A›(x: A,): Option‹A› {}; module None‹A›: Option‹A› {}; class Pair‹A, B›(x: A, y: B,) {}; class Tuple2‹A, B›(x: A, y: B,) {}; class Tuple3‹A, B, C›(x: A, y: B, z: C,) {}; module Nat {}; class S(s: Nat,): Nat {}; module O: Nat {}; class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O,) {}}
+//│ 
+//│ Preluded.
+
+:noTailRec
+:interpIR
+fun fact(acc, n) =
+  if n == 0 then acc
+  else fact(acc * n, n - 1)
+fact(1, 5)
+//│ |#fun| |fact|(|acc|,| |n|)| |#=|→|#if| |n| |==| |0| |#then| |acc|↵|#else| |fact|(|acc| |*| |n|,| |n| |-| |1|)|←|↵|fact|(|1|,| |5|)|
+//│ Parsed: {fun fact = (acc, n,) => {if (==(n,)(0,)) then acc else fact(*(acc,)(n,), -(n,)(1,),)}; fact(1, 5,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│   def fact(acc$0,n$0) =
+//│     let x$1 = ==(n$0,0) in -- #28
+//│     if x$1 -- #27
+//│       true =>
+//│         jump j$0(acc$0) -- #12
+//│       false =>
+//│         let x$3 = *(acc$0,n$0) in -- #26
+//│         let x$4 = -(n$0,1) in -- #25
+//│         let* (x$5) = fact(x$3,x$4) in -- #24
+//│         jump j$0(x$5) -- #23
+//│   def j$0(x$2) =
+//│     x$2 -- #10
+//│   let* (x$0) = fact(1,5) in -- #6
+//│   x$0 -- #5
+//│ 
+//│ Interpreted:
+//│ 120
+
+:interpIR
+@tailrec
+fun fact(acc, n) =
+  if n == 0 then acc
+  else fact(acc * n, n - 1)
+fact(1, 5)
+//│ |@|tailrec|↵|#fun| |fact|(|acc|,| |n|)| |#=|→|#if| |n| |==| |0| |#then| |acc|↵|#else| |fact|(|acc| |*| |n|,| |n| |-| |1|)|←|↵|fact|(|1|,| |5|)|
+//│ Parsed: {fun fact = (acc, n,) => {if (==(n,)(0,)) then acc else fact(*(acc,)(n,), -(n,)(1,),)}; fact(1, 5,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│   def fact(acc$0,n$0) =
+//│     let x$1 = ==(n$0,0) in -- #28
+//│     if x$1 -- #27
+//│       true =>
+//│         jump j$0(acc$0) -- #12
+//│       false =>
+//│         let x$3 = *(acc$0,n$0) in -- #26
+//│         let x$4 = -(n$0,1) in -- #25
+//│         let* (x$5) = fact(x$3,x$4) in -- #24
+//│         jump j$0(x$5) -- #23
+//│   def j$0(x$2) =
+//│     x$2 -- #10
+//│   let* (x$0) = fact(1,5) in -- #6
+//│   x$0 -- #5
+//│ 
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(j$0), Set(fact))
+//│ Program:
+//│   class _IdContext()
+//│   class _Context(acc,ptr,field)
+//│   def j$0(x$2) =
+//│     x$2 -- #10
+//│   def fact_jp(acc$0,n$0) =
+//│     let x$1 = ==(n$0,0) in -- #40
+//│     if x$1 -- #39
+//│       true =>
+//│         jump j$0(acc$0) -- #35
+//│       false =>
+//│         let x$3 = *(acc$0,n$0) in -- #38
+//│         let x$4 = -(n$0,1) in -- #37
+//│         jump fact_jp(x$3,x$4) -- #36
+//│   def fact(acc$0,n$0) =
+//│     let* (r0) = fact_jp(acc$0,n$0) in -- #42
+//│     r0 -- #41
+//│   let* (x$0) = fact(1,5) in -- #6
+//│   x$0 -- #5
+//│ 
+//│ Interpreted:
+//│ 120
+
+:interpIR
+@tailrec
+fun fact(acc, n) =
+  val x = if n > 0 then n - 1
+    else 0
+  if x <= 0 then
+    acc
+  else 
+    @tailcall fact(n * acc, x) 
+fact(1, 5)
+//│ |@|tailrec|↵|#fun| |fact|(|acc|,| |n|)| |#=|→|#val| |x| |#=| |#if| |n| |>| |0| |#then| |n| |-| |1|→|#else| |0|←|↵|#if| |x| |<=| |0| |#then|→|acc|←|↵|#else| |→|@|tailcall| |fact|(|n| |*| |acc|,| |x|)| |←|←|↵|fact|(|1|,| |5|)|
+//│ Parsed: {fun fact = (acc, n,) => {let x = if (>(n,)(0,)) then -(n,)(1,) else 0; if (<=(x,)(0,)) then {acc} else {@tailcall fact(*(n,)(acc,), x,)}}; fact(1, 5,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│   def fact(acc$0,n$0) =
+//│     let x$1 = >(n$0,0) in -- #38
+//│     if x$1 -- #37
+//│       true =>
+//│         let x$7 = -(n$0,1) in -- #34
+//│         jump j$0(x$7,acc$0,n$0) -- #33
+//│       false =>
+//│         jump j$0(0,acc$0,n$0) -- #36
+//│   def j$1(x$4) =
+//│     x$4 -- #14
+//│   def j$0(x$2,acc$0,n$0) =
+//│     let x$3 = <=(x$2,0) in -- #29
+//│     if x$3 -- #28
+//│       true =>
+//│         jump j$1(acc$0) -- #16
+//│       false =>
+//│         let x$5 = *(n$0,acc$0) in -- #27
+//│         let* (x$6) = @tailcall fact(x$5,x$2) in -- #26
+//│         jump j$1(x$6) -- #25
+//│   let* (x$0) = fact(1,5) in -- #6
+//│   x$0 -- #5
+//│ 
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(j$1), Set(fact))
+//│ Program:
+//│   class _IdContext()
+//│   class _Context(acc,ptr,field)
+//│   def fact(acc$0,n$0) =
+//│     let* (r0) = _fact_j$0_opt$9(0,acc$0,n$0,true,true,true) in -- #64
+//│     r0 -- #63
+//│   def j$1(x$4) =
+//│     x$4 -- #14
+//│   def _fact_j$0_opt$9(tailrecBranch$,fact_acc$0,fact_n$0,j$0_x$2,j$0_acc$0,j$0_n$0) =
+//│     jump _fact_j$0_opt_jp$10(tailrecBranch$,fact_acc$0,fact_n$0,j$0_x$2,j$0_acc$0,j$0_n$0) -- #62
+//│   def _fact_j$0_opt_jp$10(tailrecBranch$,fact_acc$0,fact_n$0,j$0_x$2,j$0_acc$0,j$0_n$0) =
+//│     let scrut = ==(2,tailrecBranch$) in -- #61
+//│     if scrut -- #60
+//│       true =>
+//│         let x$3 = <=(j$0_x$2,0) in -- #59
+//│         if x$3 -- #58
+//│           true =>
+//│             jump j$1(j$0_acc$0) -- #55
+//│           false =>
+//│             let x$5 = *(j$0_n$0,j$0_acc$0) in -- #57
+//│             jump _fact_j$0_opt_jp$10(0,x$5,j$0_x$2,j$0_x$2,j$0_acc$0,j$0_n$0) -- #56
+//│       false =>
+//│         let x$1 = >(fact_n$0,0) in -- #54
+//│         if x$1 -- #53
+//│           true =>
+//│             let x$7 = -(fact_n$0,1) in -- #51
+//│             jump _fact_j$0_opt_jp$10(2,fact_acc$0,fact_n$0,x$7,fact_acc$0,fact_n$0) -- #50
+//│           false =>
+//│             jump _fact_j$0_opt_jp$10(2,fact_acc$0,fact_n$0,0,fact_acc$0,fact_n$0) -- #52
+//│   let* (x$0) = fact(1,5) in -- #6
+//│   x$0 -- #5
+//│ 
+//│ Interpreted:
+//│ 120
+
+:noTailRec
+:interpIR
+fun double(x) = x * 2
+fun f(n, acc) = if n == 0 then double(acc) else g(n - 1, acc + 1)
+fun g(m, acc) = if m == 0 then -double(acc) else f(m - 1, acc + 1)
+g(6, 0)
+//│ |#fun| |double|(|x|)| |#=| |x| |*| |2|↵|#fun| |f|(|n|,| |acc|)| |#=| |#if| |n| |==| |0| |#then| |double|(|acc|)| |#else| |g|(|n| |-| |1|,| |acc| |+| |1|)|↵|#fun| |g|(|m|,| |acc|)| |#=| |#if| |m| |==| |0| |#then| |-|double|(|acc|)| |#else| |f|(|m| |-| |1|,| |acc| |+| |1|)|↵|g|(|6|,| |0|)|
+//│ Parsed: {fun double = (x,) => *(x,)(2,); fun f = (n, acc,) => if (==(n,)(0,)) then double(acc,) else g(-(n,)(1,), +(acc,)(1,),); fun g = (m, acc,) => if (==(m,)(0,)) then -(0,)(double(acc,),) else f(-(m,)(1,), +(acc,)(1,),); g(6, 0,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│   def double(x$1) =
+//│     let x$2 = *(x$1,2) in -- #10
+//│     x$2 -- #9
+//│   def f(n$0,acc$0) =
+//│     let x$3 = ==(n$0,0) in -- #36
+//│     if x$3 -- #35
+//│       true =>
+//│         let* (x$5) = double(acc$0) in -- #20
+//│         jump j$0(x$5) -- #19
+//│       false =>
+//│         let x$6 = -(n$0,1) in -- #34
+//│         let x$7 = +(acc$0,1) in -- #33
+//│         let* (x$8) = g(x$6,x$7) in -- #32
+//│         jump j$0(x$8) -- #31
+//│   def j$0(x$4) =
+//│     x$4 -- #14
+//│   def g(m$0,acc$1) =
+//│     let x$9 = ==(m$0,0) in -- #65
+//│     if x$9 -- #64
+//│       true =>
+//│         let* (x$11) = double(acc$1) in -- #49
+//│         let x$12 = -(0,x$11) in -- #48
+//│         jump j$1(x$12) -- #47
+//│       false =>
+//│         let x$13 = -(m$0,1) in -- #63
+//│         let x$14 = +(acc$1,1) in -- #62
+//│         let* (x$15) = f(x$13,x$14) in -- #61
+//│         jump j$1(x$15) -- #60
+//│   def j$1(x$10) =
+//│     x$10 -- #40
+//│   let* (x$0) = g(6,0) in -- #6
+//│   x$0 -- #5
+//│ 
+//│ Interpreted:
+//│ -12
+
+:interpIR
+fun double(x) = x * 2
+@tailrec fun f(n, acc) = if n == 0 then double(acc) else g(n - 1, acc + 1)
+@tailrec fun g(m, acc) = if m == 0 then -double(acc) else f(m - 1, acc + 1)
+g(6, 0)
+//│ |#fun| |double|(|x|)| |#=| |x| |*| |2|↵|@|tailrec| |#fun| |f|(|n|,| |acc|)| |#=| |#if| |n| |==| |0| |#then| |double|(|acc|)| |#else| |g|(|n| |-| |1|,| |acc| |+| |1|)|↵|@|tailrec| |#fun| |g|(|m|,| |acc|)| |#=| |#if| |m| |==| |0| |#then| |-|double|(|acc|)| |#else| |f|(|m| |-| |1|,| |acc| |+| |1|)|↵|g|(|6|,| |0|)|
+//│ Parsed: {fun double = (x,) => *(x,)(2,); fun f = (n, acc,) => if (==(n,)(0,)) then double(acc,) else g(-(n,)(1,), +(acc,)(1,),); fun g = (m, acc,) => if (==(m,)(0,)) then -(0,)(double(acc,),) else f(-(m,)(1,), +(acc,)(1,),); g(6, 0,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│   def double(x$1) =
+//│     let x$2 = *(x$1,2) in -- #10
+//│     x$2 -- #9
+//│   def f(n$0,acc$0) =
+//│     let x$3 = ==(n$0,0) in -- #36
+//│     if x$3 -- #35
+//│       true =>
+//│         let* (x$5) = double(acc$0) in -- #20
+//│         jump j$0(x$5) -- #19
+//│       false =>
+//│         let x$6 = -(n$0,1) in -- #34
+//│         let x$7 = +(acc$0,1) in -- #33
+//│         let* (x$8) = g(x$6,x$7) in -- #32
+//│         jump j$0(x$8) -- #31
+//│   def j$0(x$4) =
+//│     x$4 -- #14
+//│   def g(m$0,acc$1) =
+//│     let x$9 = ==(m$0,0) in -- #65
+//│     if x$9 -- #64
+//│       true =>
+//│         let* (x$11) = double(acc$1) in -- #49
+//│         let x$12 = -(0,x$11) in -- #48
+//│         jump j$1(x$12) -- #47
+//│       false =>
+//│         let x$13 = -(m$0,1) in -- #63
+//│         let x$14 = +(acc$1,1) in -- #62
+//│         let* (x$15) = f(x$13,x$14) in -- #61
+//│         jump j$1(x$15) -- #60
+//│   def j$1(x$10) =
+//│     x$10 -- #40
+//│   let* (x$0) = g(6,0) in -- #6
+//│   x$0 -- #5
+//│ 
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(j$1), Set(j$0), Set(g, f), Set(double))
+//│ Program:
+//│   class _IdContext()
+//│   class _Context(acc,ptr,field)
+//│   def double(x$1) =
+//│     let x$2 = *(x$1,2) in -- #10
+//│     x$2 -- #9
+//│   def f(n$0,acc$0) =
+//│     let* (r0) = _g_f_opt$11(1,true,true,n$0,acc$0) in -- #101
+//│     r0 -- #100
+//│   def j$0(x$4) =
+//│     x$4 -- #14
+//│   def g(m$0,acc$1) =
+//│     let* (r0) = _g_f_opt$11(3,m$0,acc$1,true,true) in -- #99
+//│     r0 -- #98
+//│   def j$1(x$10) =
+//│     x$10 -- #40
+//│   def _g_f_opt$11(tailrecBranch$,g_m$0,g_acc$1,f_n$0,f_acc$0) =
+//│     jump _g_f_opt_jp$12(tailrecBranch$,g_m$0,g_acc$1,f_n$0,f_acc$0) -- #97
+//│   def _g_f_opt_jp$12(tailrecBranch$,g_m$0,g_acc$1,f_n$0,f_acc$0) =
+//│     let scrut = ==(1,tailrecBranch$) in -- #96
+//│     if scrut -- #95
+//│       true =>
+//│         let x$3 = ==(f_n$0,0) in -- #94
+//│         if x$3 -- #93
+//│           true =>
+//│             let* (x$5) = double(f_acc$0) in -- #89
+//│             jump j$0(x$5) -- #88
+//│           false =>
+//│             let x$6 = -(f_n$0,1) in -- #92
+//│             let x$7 = +(f_acc$0,1) in -- #91
+//│             jump _g_f_opt_jp$12(3,x$6,x$7,f_n$0,f_acc$0) -- #90
+//│       false =>
+//│         let x$9 = ==(g_m$0,0) in -- #87
+//│         if x$9 -- #86
+//│           true =>
+//│             let* (x$11) = double(g_acc$1) in -- #82
+//│             let x$12 = -(0,x$11) in -- #81
+//│             jump j$1(x$12) -- #80
+//│           false =>
+//│             let x$13 = -(g_m$0,1) in -- #85
+//│             let x$14 = +(g_acc$1,1) in -- #84
+//│             jump _g_f_opt_jp$12(1,g_m$0,g_acc$1,x$13,x$14) -- #83
+//│   let* (x$0) = g(6,0) in -- #6
+//│   x$0 -- #5
+//│ 
+//│ Interpreted:
+//│ -12
+
+@tailrec fun f(a, b, c) = g(0, 0)
+@tailrec fun g(d, e) = h(0, 0, 0, 0)
+@tailrec fun h(p, q, r, s) = f(0, 0, 0)
+2 
+//│ |@|tailrec| |#fun| |f|(|a|,| |b|,| |c|)| |#=| |g|(|0|,| |0|)|↵|@|tailrec| |#fun| |g|(|d|,| |e|)| |#=| |h|(|0|,| |0|,| |0|,| |0|)|↵|@|tailrec| |#fun| |h|(|p|,| |q|,| |r|,| |s|)| |#=| |f|(|0|,| |0|,| |0|)|↵|2| |
+//│ Parsed: {fun f = (a, b, c,) => g(0, 0,); fun g = (d, e,) => h(0, 0, 0, 0,); fun h = (p, q, r, s,) => f(0, 0, 0,); 2}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│   def f(a$0,b$0,c$0) =
+//│     let* (x$0) = g(0,0) in -- #7
+//│     x$0 -- #6
+//│   def g(d$0,e$0) =
+//│     let* (x$1) = h(0,0,0,0) in -- #18
+//│     x$1 -- #17
+//│   def h(p$0,q$0,r$0,s$0) =
+//│     let* (x$2) = f(0,0,0) in -- #27
+//│     x$2 -- #26
+//│   2 -- #0
+//│ 
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(h, g, f))
+//│ Program:
+//│   class _IdContext()
+//│   class _Context(acc,ptr,field)
+//│   def f(a$0,b$0,c$0) =
+//│     let* (r0) = _h_g_f_opt$9(0,true,true,true,true,true,true,a$0,b$0,c$0) in -- #48
+//│     r0 -- #47
+//│   def g(d$0,e$0) =
+//│     let* (r0) = _h_g_f_opt$9(1,true,true,true,true,d$0,e$0,true,true,true) in -- #46
+//│     r0 -- #45
+//│   def h(p$0,q$0,r$0,s$0) =
+//│     let* (r0) = _h_g_f_opt$9(2,p$0,q$0,r$0,s$0,true,true,true,true,true) in -- #44
+//│     r0 -- #43
+//│   def _h_g_f_opt$9(tailrecBranch$,h_p$0,h_q$0,h_r$0,h_s$0,g_d$0,g_e$0,f_a$0,f_b$0,f_c$0) =
+//│     jump _h_g_f_opt_jp$10(tailrecBranch$,h_p$0,h_q$0,h_r$0,h_s$0,g_d$0,g_e$0,f_a$0,f_b$0,f_c$0) -- #42
+//│   def _h_g_f_opt_jp$10(tailrecBranch$,h_p$0,h_q$0,h_r$0,h_s$0,g_d$0,g_e$0,f_a$0,f_b$0,f_c$0) =
+//│     let scrut = ==(0,tailrecBranch$) in -- #41
+//│     if scrut -- #40
+//│       true =>
+//│         jump _h_g_f_opt_jp$10(1,h_p$0,h_q$0,h_r$0,h_s$0,0,0,f_a$0,f_b$0,f_c$0) -- #37
+//│       false =>
+//│         let scrut = ==(1,tailrecBranch$) in -- #39
+//│         if scrut -- #38
+//│           true =>
+//│             jump _h_g_f_opt_jp$10(2,0,0,0,0,g_d$0,g_e$0,f_a$0,f_b$0,f_c$0) -- #36
+//│           false =>
+//│             jump _h_g_f_opt_jp$10(0,h_p$0,h_q$0,h_r$0,h_s$0,g_d$0,g_e$0,0,0,0) -- #35
+//│   2 -- #0
+
+:ce
+fun hello() =
+    @tailcall hello()
+    @tailcall hello()
+    2
+hello() 
+//│ |#fun| |hello|(||)| |#=|→|@|tailcall| |hello|(||)|↵|@|tailcall| |hello|(||)|↵|2|←|↵|hello|(||)| |
+//│ Parsed: {fun hello = () => {@tailcall hello(); @tailcall hello(); 2}; hello()}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│   def hello() =
+//│     let* (x$1) = @tailcall hello() in -- #9
+//│     let* (x$2) = @tailcall hello() in -- #8
+//│     2 -- #7
+//│   let* (x$0) = hello() in -- #2
+//│   x$0 -- #1
+//│ ╔══[COMPILATION ERROR] not a tail call, as the remaining functions may be impure
+//│ ║  l.396: 	    @tailcall hello()
+//│ ╙──       	              ^^^^^
+//│ ╔══[COMPILATION ERROR] not a tail call
+//│ ║  l.397: 	    @tailcall hello()
+//│ ╙──       	              ^^^^^
+//│ 
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(hello))
+//│ Program:
+//│   class _IdContext()
+//│   class _Context(acc,ptr,field)
+//│   def hello() =
+//│     let* (x$1) = @tailcall hello() in -- #9
+//│     let* (x$2) = @tailcall hello() in -- #8
+//│     2 -- #7
+//│   let* (x$0) = hello() in -- #2
+//│   x$0 -- #1
+
+:ce
+fun hello() =
+    @tailcall hello()
+    2
+hello() 
+//│ |#fun| |hello|(||)| |#=|→|@|tailcall| |hello|(||)|↵|2|←|↵|hello|(||)| |
+//│ Parsed: {fun hello = () => {@tailcall hello(); 2}; hello()}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│   def hello() =
+//│     let* (x$1) = @tailcall hello() in -- #6
+//│     2 -- #5
+//│   let* (x$0) = hello() in -- #2
+//│   x$0 -- #1
+//│ ╔══[COMPILATION ERROR] not a tail call
+//│ ║  l.435: 	    @tailcall hello()
+//│ ╙──       	              ^^^^^
+//│ 
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(hello))
+//│ Program:
+//│   class _IdContext()
+//│   class _Context(acc,ptr,field)
+//│   def hello() =
+//│     let* (x$1) = @tailcall hello() in -- #6
+//│     2 -- #5
+//│   let* (x$0) = hello() in -- #2
+//│   x$0 -- #1
+
+:interpIR
+@tailrec fun addOne(xs) =
+  if xs is
+    Cons(h, t) then Cons(h + 1, @tailcall addOne(t))
+    Nil then Nil
+addOne(Cons(1, Cons(2, Cons(3, Nil))))
+//│ |@|tailrec| |#fun| |addOne|(|xs|)| |#=|→|#if| |xs| |is|→|Cons|(|h|,| |t|)| |#then| |Cons|(|h| |+| |1|,| |@|tailcall| |addOne|(|t|)|)|↵|Nil| |#then| |Nil|←|←|↵|addOne|(|Cons|(|1|,| |Cons|(|2|,| |Cons|(|3|,| |Nil|)|)|)|)|
+//│ Parsed: {fun addOne = (xs,) => {if xs is ‹(Cons(h, t,)) then Cons(+(h,)(1,), @tailcall addOne(t,),); (Nil) then Nil›}; addOne(Cons(1, Cons(2, Cons(3, Nil,),),),)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│   def addOne(xs$0) =
+//│     case xs$0 of -- #54
+//│       Cons =>
+//│         let x$6 = Cons.t(xs$0) in -- #50
+//│         let x$7 = Cons.h(xs$0) in -- #49
+//│         let x$8 = +(x$7,1) in -- #48
+//│         let* (x$9) = @tailcall addOne(x$6) in -- #47
+//│         let x$10 = Cons(x$8,x$9) in -- #46
+//│         jump j$0(x$10) -- #45
+//│       Nil =>
+//│         let x$11 = Nil() in -- #53
+//│         jump j$0(x$11) -- #52
+//│   def j$0(x$5) =
+//│     x$5 -- #25
+//│   let x$0 = Nil() in -- #23
+//│   let x$1 = Cons(3,x$0) in -- #22
+//│   let x$2 = Cons(2,x$1) in -- #21
+//│   let x$3 = Cons(1,x$2) in -- #20
+//│   let* (x$4) = addOne(x$3) in -- #19
+//│   x$4 -- #18
+//│ 
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(j$0), Set(addOne))
+//│ Program:
+//│   class _IdContext()
+//│   class _Context(acc,ptr,field)
+//│   def addOne(xs$0) =
+//│     let idCtx = _IdContext() in -- #88
+//│     let* (res) = addOne_modcons$10(idCtx,xs$0) in -- #87
+//│     res -- #86
+//│   def j$0(x$5) =
+//│     x$5 -- #25
+//│   def _addOne_ctx_app$8(ctx,x) =
+//│     case ctx of -- #67
+//│       _IdContext =>
+//│         x -- #66
+//│       _Context =>
+//│         let field = _Context.field(ctx) in -- #65
+//│         let ptr = _Context.ptr(ctx) in -- #64
+//│         let _ = assign ptr.t := x in -- #63
+//│         let acc = _Context.acc(ctx) in -- #62
+//│         acc -- #61
+//│   def _addOne_ctx_comp$9(ctx1,ctx2) =
+//│     let ctx2acc = _Context.acc(ctx2) in -- #73
+//│     let ctx2ptr = _Context.ptr(ctx2) in -- #72
+//│     let ctx2field = _Context.field(ctx2) in -- #71
+//│     let* (newAcc) = _addOne_ctx_app$8(ctx1,ctx2acc) in -- #70
+//│     let ret = _Context(newAcc,ctx2ptr,ctx2field) in -- #69
+//│     ret -- #68
+//│   def addOne_modcons$10_jp(ctx,xs$0) =
+//│     case xs$0 of -- #99
+//│       Cons =>
+//│         let x$6 = Cons.t(xs$0) in -- #95
+//│         let x$7 = Cons.h(xs$0) in -- #94
+//│         let x$8 = +(x$7,1) in -- #93
+//│         let x$10 = Cons(x$8,0) in -- #92
+//│         let ctx2 = _Context(x$10,x$10,0) in -- #91
+//│         let* (composed) = _addOne_ctx_comp$9(ctx,ctx2) in -- #90
+//│         jump addOne_modcons$10_jp(composed,x$6) -- #89
+//│       Nil =>
+//│         let x$11 = Nil() in -- #98
+//│         let* (res) = _addOne_ctx_app$8(ctx,x$11) in -- #97
+//│         res -- #96
+//│   def addOne_modcons$10(ctx,xs$0) =
+//│     let* (r0) = addOne_modcons$10_jp(ctx,xs$0) in -- #101
+//│     r0 -- #100
+//│   let x$0 = Nil() in -- #23
+//│   let x$1 = Cons(3,x$0) in -- #22
+//│   let x$2 = Cons(2,x$1) in -- #21
+//│   let x$3 = Cons(1,x$2) in -- #20
+//│   let* (x$4) = addOne(x$3) in -- #19
+//│   x$4 -- #18
+//│ 
+//│ Interpreted:
+//│ Cons(2,0)
+
+:noTailRec
+:interpIR
+class Zero
+class S(x)
+fun a(n) =
+  if n is
+    S(x) then S(@tailcall b(x))
+    Zero then S(Zero)
+fun b(n) =
+  if n is
+    S(x) then S(S(@tailcall a(x)))
+    Zero then S(S(Zero))
+a(S(S(S(Zero))))
+//│ |#class| |Zero|↵|#class| |S|(|x|)|↵|#fun| |a|(|n|)| |#=|→|#if| |n| |is|→|S|(|x|)| |#then| |S|(|@|tailcall| |b|(|x|)|)|↵|Zero| |#then| |S|(|Zero|)|←|←|↵|#fun| |b|(|n|)| |#=|→|#if| |n| |is|→|S|(|x|)| |#then| |S|(|S|(|@|tailcall| |a|(|x|)|)|)|↵|Zero| |#then| |S|(|S|(|Zero|)|)|←|←|↵|a|(|S|(|S|(|S|(|Zero|)|)|)|)|
+//│ Parsed: {class Zero {}; class S(x,) {}; fun a = (n,) => {if n is ‹(S(x,)) then S(@tailcall b(x,),); (Zero) then S(Zero,)›}; fun b = (n,) => {if n is ‹(S(x,)) then S(S(@tailcall a(x,),),); (Zero) then S(S(Zero,),)›}; a(S(S(S(Zero,),),),)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│   class Zero()
+//│   def a(n$0) =
+//│     case n$0 of -- #42
+//│       S =>
+//│         let x$6 = S.s(n$0) in -- #34
+//│         let* (x$7) = @tailcall b(x$6) in -- #33
+//│         let x$8 = S(x$7) in -- #32
+//│         jump j$0(x$8) -- #31
+//│       Zero =>
+//│         let x$9 = Zero() in -- #41
+//│         let x$10 = S(x$9) in -- #40
+//│         jump j$0(x$10) -- #39
+//│   def j$0(x$5) =
+//│     x$5 -- #19
+//│   def b(n$1) =
+//│     case n$1 of -- #75
+//│       S =>
+//│         let x$12 = S.s(n$1) in -- #63
+//│         let* (x$13) = @tailcall a(x$12) in -- #62
+//│         let x$14 = S(x$13) in -- #61
+//│         let x$15 = S(x$14) in -- #60
+//│         jump j$1(x$15) -- #59
+//│       Zero =>
+//│         let x$16 = Zero() in -- #74
+//│         let x$17 = S(x$16) in -- #73
+//│         let x$18 = S(x$17) in -- #72
+//│         jump j$1(x$18) -- #71
+//│   def j$1(x$11) =
+//│     x$11 -- #44
+//│   let x$0 = Zero() in -- #17
+//│   let x$1 = S(x$0) in -- #16
+//│   let x$2 = S(x$1) in -- #15
+//│   let x$3 = S(x$2) in -- #14
+//│   let* (x$4) = a(x$3) in -- #13
+//│   x$4 -- #12
+//│ 
+//│ Interpreted:
+//│ S(S(S(S(S(S(Zero()))))))
+
+:interpIR
+class Zero
+class S(x)
+@tailrec fun a(n) =
+  if n is
+    S(x) then S(@tailcall b(x))
+    Zero then S(Zero)
+@tailrec fun b(n) =
+  if n is
+    S(x) then S(S(@tailcall a(x)))
+    Zero then S(S(Zero))
+a(S(S(S(Zero))))
+//│ |#class| |Zero|↵|#class| |S|(|x|)|↵|@|tailrec| |#fun| |a|(|n|)| |#=|→|#if| |n| |is|→|S|(|x|)| |#then| |S|(|@|tailcall| |b|(|x|)|)|↵|Zero| |#then| |S|(|Zero|)|←|←|↵|@|tailrec| |#fun| |b|(|n|)| |#=|→|#if| |n| |is|→|S|(|x|)| |#then| |S|(|S|(|@|tailcall| |a|(|x|)|)|)|↵|Zero| |#then| |S|(|S|(|Zero|)|)|←|←|↵|a|(|S|(|S|(|S|(|Zero|)|)|)|)|
+//│ Parsed: {class Zero {}; class S(x,) {}; fun a = (n,) => {if n is ‹(S(x,)) then S(@tailcall b(x,),); (Zero) then S(Zero,)›}; fun b = (n,) => {if n is ‹(S(x,)) then S(S(@tailcall a(x,),),); (Zero) then S(S(Zero,),)›}; a(S(S(S(Zero,),),),)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│   class Zero()
+//│   def a(n$0) =
+//│     case n$0 of -- #42
+//│       S =>
+//│         let x$6 = S.s(n$0) in -- #34
+//│         let* (x$7) = @tailcall b(x$6) in -- #33
+//│         let x$8 = S(x$7) in -- #32
+//│         jump j$0(x$8) -- #31
+//│       Zero =>
+//│         let x$9 = Zero() in -- #41
+//│         let x$10 = S(x$9) in -- #40
+//│         jump j$0(x$10) -- #39
+//│   def j$0(x$5) =
+//│     x$5 -- #19
+//│   def b(n$1) =
+//│     case n$1 of -- #75
+//│       S =>
+//│         let x$12 = S.s(n$1) in -- #63
+//│         let* (x$13) = @tailcall a(x$12) in -- #62
+//│         let x$14 = S(x$13) in -- #61
+//│         let x$15 = S(x$14) in -- #60
+//│         jump j$1(x$15) -- #59
+//│       Zero =>
+//│         let x$16 = Zero() in -- #74
+//│         let x$17 = S(x$16) in -- #73
+//│         let x$18 = S(x$17) in -- #72
+//│         jump j$1(x$18) -- #71
+//│   def j$1(x$11) =
+//│     x$11 -- #44
+//│   let x$0 = Zero() in -- #17
+//│   let x$1 = S(x$0) in -- #16
+//│   let x$2 = S(x$1) in -- #15
+//│   let x$3 = S(x$2) in -- #14
+//│   let* (x$4) = a(x$3) in -- #13
+//│   x$4 -- #12
+//│ 
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(j$1), Set(j$0), Set(b, a))
+//│ Program:
+//│   class Zero()
+//│   class _IdContext()
+//│   class _Context(acc,ptr,field)
+//│   def a(n$0) =
+//│     let idCtx = _IdContext() in -- #124
+//│     let* (res) = a_modcons$13(idCtx,n$0) in -- #123
+//│     res -- #122
+//│   def j$0(x$5) =
+//│     x$5 -- #19
+//│   def b(n$1) =
+//│     let idCtx = _IdContext() in -- #110
+//│     let* (res) = b_modcons$12(idCtx,n$1) in -- #109
+//│     res -- #108
+//│   def j$1(x$11) =
+//│     x$11 -- #44
+//│   def _b_a_ctx_app$10(ctx,x) =
+//│     case ctx of -- #88
+//│       _IdContext =>
+//│         x -- #87
+//│       _Context =>
+//│         let field = _Context.field(ctx) in -- #86
+//│         let ptr = _Context.ptr(ctx) in -- #85
+//│         let _ = assign ptr.s := x in -- #84
+//│         let acc = _Context.acc(ctx) in -- #83
+//│         acc -- #82
+//│   def _b_a_ctx_comp$11(ctx1,ctx2) =
+//│     let ctx2acc = _Context.acc(ctx2) in -- #94
+//│     let ctx2ptr = _Context.ptr(ctx2) in -- #93
+//│     let ctx2field = _Context.field(ctx2) in -- #92
+//│     let* (newAcc) = _b_a_ctx_app$10(ctx1,ctx2acc) in -- #91
+//│     let ret = _Context(newAcc,ctx2ptr,ctx2field) in -- #90
+//│     ret -- #89
+//│   def b_modcons$12(ctx,n$1) =
+//│     let* (r0) = _b_modcons$12_a_modcons$13_opt$14(12,ctx,n$1,true,true) in -- #163
+//│     r0 -- #162
+//│   def a_modcons$13(ctx,n$0) =
+//│     let* (r0) = _b_modcons$12_a_modcons$13_opt$14(13,true,true,ctx,n$0) in -- #165
+//│     r0 -- #164
+//│   def _b_modcons$12_a_modcons$13_opt$14(tailrecBranch$,b_modcons$12_ctx,b_modcons$12_n$1,a_modcons$13_ctx,a_modcons$13_n$0) =
+//│     jump _b_modcons$12_a_modcons$13_opt_jp$15(tailrecBranch$,b_modcons$12_ctx,b_modcons$12_n$1,a_modcons$13_ctx,a_modcons$13_n$0) -- #161
+//│   def _b_modcons$12_a_modcons$13_opt_jp$15(tailrecBranch$,b_modcons$12_ctx,b_modcons$12_n$1,a_modcons$13_ctx,a_modcons$13_n$0) =
+//│     let scrut = ==(13,tailrecBranch$) in -- #160
+//│     if scrut -- #159
+//│       true =>
+//│         case a_modcons$13_n$0 of -- #158
+//│           S =>
+//│             let x$6 = S.s(a_modcons$13_n$0) in -- #153
+//│             let x$8 = S(0) in -- #152
+//│             let ctx2 = _Context(x$8,x$8,0) in -- #151
+//│             let* (composed) = _b_a_ctx_comp$11(a_modcons$13_ctx,ctx2) in -- #150
+//│             jump _b_modcons$12_a_modcons$13_opt_jp$15(12,composed,x$6,a_modcons$13_ctx,a_modcons$13_n$0) -- #149
+//│           Zero =>
+//│             let x$9 = Zero() in -- #157
+//│             let x$10 = S(x$9) in -- #156
+//│             let* (res) = _b_a_ctx_app$10(a_modcons$13_ctx,x$10) in -- #155
+//│             res -- #154
+//│       false =>
+//│         case b_modcons$12_n$1 of -- #148
+//│           S =>
+//│             let x$12 = S.s(b_modcons$12_n$1) in -- #142
+//│             let x$14 = S(0) in -- #141
+//│             let x$15 = S(x$14) in -- #140
+//│             let ctx2 = _Context(x$15,x$14,0) in -- #139
+//│             let* (composed) = _b_a_ctx_comp$11(b_modcons$12_ctx,ctx2) in -- #138
+//│             jump _b_modcons$12_a_modcons$13_opt_jp$15(13,b_modcons$12_ctx,b_modcons$12_n$1,composed,x$12) -- #137
+//│           Zero =>
+//│             let x$16 = Zero() in -- #147
+//│             let x$17 = S(x$16) in -- #146
+//│             let x$18 = S(x$17) in -- #145
+//│             let* (res) = _b_a_ctx_app$10(b_modcons$12_ctx,x$18) in -- #144
+//│             res -- #143
+//│   let x$0 = Zero() in -- #17
+//│   let x$1 = S(x$0) in -- #16
+//│   let x$2 = S(x$1) in -- #15
+//│   let x$3 = S(x$2) in -- #14
+//│   let* (x$4) = a(x$3) in -- #13
+//│   x$4 -- #12
+//│ 
+//│ Interpreted:
+//│ S(0)
+
+:interpIR
+@tailrec fun addOne(xs) =
+  if xs is 
+    Cons(h, t) then
+      val next = @tailcall addOne(t)
+      val ret = Cons(h + 1, next)
+      val rett = ret
+      rett
+    Nil then 
+      Nil
+addOne(Cons(1, Cons(2, Cons(3, Nil))))
+//│ |@|tailrec| |#fun| |addOne|(|xs|)| |#=|→|#if| |xs| |is| |→|Cons|(|h|,| |t|)| |#then|→|#val| |next| |#=| |@|tailcall| |addOne|(|t|)|↵|#val| |ret| |#=| |Cons|(|h| |+| |1|,| |next|)|↵|#val| |rett| |#=| |ret|↵|rett|←|↵|Nil| |#then| |→|Nil|←|←|←|↵|addOne|(|Cons|(|1|,| |Cons|(|2|,| |Cons|(|3|,| |Nil|)|)|)|)|
+//│ Parsed: {fun addOne = (xs,) => {if xs is ‹(Cons(h, t,)) then {let next = @tailcall addOne(t,); let ret = Cons(+(h,)(1,), next,); let rett = ret; rett}; (Nil) then {Nil}›}; addOne(Cons(1, Cons(2, Cons(3, Nil,),),),)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│   def addOne(xs$0) =
+//│     case xs$0 of -- #57
+//│       Cons =>
+//│         let x$6 = Cons.t(xs$0) in -- #53
+//│         let x$7 = Cons.h(xs$0) in -- #52
+//│         let* (x$8) = @tailcall addOne(x$6) in -- #51
+//│         let x$9 = +(x$7,1) in -- #50
+//│         let x$10 = Cons(x$9,x$8) in -- #49
+//│         jump j$0(x$10) -- #48
+//│       Nil =>
+//│         let x$11 = Nil() in -- #56
+//│         jump j$0(x$11) -- #55
+//│   def j$0(x$5) =
+//│     x$5 -- #25
+//│   let x$0 = Nil() in -- #23
+//│   let x$1 = Cons(3,x$0) in -- #22
+//│   let x$2 = Cons(2,x$1) in -- #21
+//│   let x$3 = Cons(1,x$2) in -- #20
+//│   let* (x$4) = addOne(x$3) in -- #19
+//│   x$4 -- #18
+//│ 
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(j$0), Set(addOne))
+//│ Program:
+//│   class _IdContext()
+//│   class _Context(acc,ptr,field)
+//│   def addOne(xs$0) =
+//│     let idCtx = _IdContext() in -- #91
+//│     let* (res) = addOne_modcons$10(idCtx,xs$0) in -- #90
+//│     res -- #89
+//│   def j$0(x$5) =
+//│     x$5 -- #25
+//│   def _addOne_ctx_app$8(ctx,x) =
+//│     case ctx of -- #70
+//│       _IdContext =>
+//│         x -- #69
+//│       _Context =>
+//│         let field = _Context.field(ctx) in -- #68
+//│         let ptr = _Context.ptr(ctx) in -- #67
+//│         let _ = assign ptr.t := x in -- #66
+//│         let acc = _Context.acc(ctx) in -- #65
+//│         acc -- #64
+//│   def _addOne_ctx_comp$9(ctx1,ctx2) =
+//│     let ctx2acc = _Context.acc(ctx2) in -- #76
+//│     let ctx2ptr = _Context.ptr(ctx2) in -- #75
+//│     let ctx2field = _Context.field(ctx2) in -- #74
+//│     let* (newAcc) = _addOne_ctx_app$8(ctx1,ctx2acc) in -- #73
+//│     let ret = _Context(newAcc,ctx2ptr,ctx2field) in -- #72
+//│     ret -- #71
+//│   def addOne_modcons$10_jp(ctx,xs$0) =
+//│     case xs$0 of -- #102
+//│       Cons =>
+//│         let x$6 = Cons.t(xs$0) in -- #98
+//│         let x$7 = Cons.h(xs$0) in -- #97
+//│         let x$9 = +(x$7,1) in -- #96
+//│         let x$10 = Cons(x$9,0) in -- #95
+//│         let ctx2 = _Context(x$10,x$10,0) in -- #94
+//│         let* (composed) = _addOne_ctx_comp$9(ctx,ctx2) in -- #93
+//│         jump addOne_modcons$10_jp(composed,x$6) -- #92
+//│       Nil =>
+//│         let x$11 = Nil() in -- #101
+//│         let* (res) = _addOne_ctx_app$8(ctx,x$11) in -- #100
+//│         res -- #99
+//│   def addOne_modcons$10(ctx,xs$0) =
+//│     let* (r0) = addOne_modcons$10_jp(ctx,xs$0) in -- #104
+//│     r0 -- #103
+//│   let x$0 = Nil() in -- #23
+//│   let x$1 = Cons(3,x$0) in -- #22
+//│   let x$2 = Cons(2,x$1) in -- #21
+//│   let x$3 = Cons(1,x$2) in -- #20
+//│   let* (x$4) = addOne(x$3) in -- #19
+//│   x$4 -- #18
+//│ 
+//│ Interpreted:
+//│ Cons(2,0)
+
+:interpIR
+@tailrec fun a(x) =
+  if x is
+    Cons(m, n) then
+      if m < 0 then
+        Cons(-1, Nil)
+      else 
+        Cons(m * 4, b(m - 2))
+    Nil then Nil
+@tailrec fun b(n) =
+  if n <= 0 then 
+    Cons(0, Nil)
+  else 
+    a(Cons(n, Nil))
+b(16)
+//│ |@|tailrec| |#fun| |a|(|x|)| |#=|→|#if| |x| |is|→|Cons|(|m|,| |n|)| |#then|→|#if| |m| |<| |0| |#then|→|Cons|(|-|1|,| |Nil|)|←|↵|#else| |→|Cons|(|m| |*| |4|,| |b|(|m| |-| |2|)|)|←|←|↵|Nil| |#then| |Nil|←|←|↵|@|tailrec| |#fun| |b|(|n|)| |#=|→|#if| |n| |<=| |0| |#then| |→|Cons|(|0|,| |Nil|)|←|↵|#else| |→|a|(|Cons|(|n|,| |Nil|)|)|←|←|↵|b|(|16|)|
+//│ Parsed: {fun a = (x,) => {if x is ‹(Cons(m, n,)) then {if (<(m,)(0,)) then {Cons(-1, Nil,)} else {Cons(*(m,)(4,), b(-(m,)(2,),),)}}; (Nil) then Nil›}; fun b = (n,) => {if (<=(n,)(0,)) then {Cons(0, Nil,)} else {a(Cons(n, Nil,),)}}; b(16,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│   def a(x$1) =
+//│     case x$1 of -- #54
+//│       Cons =>
+//│         let x$3 = Cons.t(x$1) in -- #50
+//│         let x$4 = Cons.h(x$1) in -- #49
+//│         let x$5 = <(x$4,0) in -- #48
+//│         if x$5 -- #47
+//│           true =>
+//│             let x$7 = Nil() in -- #28
+//│             let x$8 = Cons(-1,x$7) in -- #27
+//│             jump j$1(x$8) -- #26
+//│           false =>
+//│             let x$9 = *(x$4,4) in -- #46
+//│             let x$10 = -(x$4,2) in -- #45
+//│             let* (x$11) = b(x$10) in -- #44
+//│             let x$12 = Cons(x$9,x$11) in -- #43
+//│             jump j$1(x$12) -- #42
+//│       Nil =>
+//│         let x$13 = Nil() in -- #53
+//│         jump j$0(x$13) -- #52
+//│   def j$0(x$2) =
+//│     x$2 -- #6
+//│   def j$1(x$6) =
+//│     jump j$0(x$6) -- #19
+//│   def b(n$0) =
+//│     let x$14 = <=(n$0,0) in -- #82
+//│     if x$14 -- #81
+//│       true =>
+//│         let x$16 = Nil() in -- #67
+//│         let x$17 = Cons(0,x$16) in -- #66
+//│         jump j$2(x$17) -- #65
+//│       false =>
+//│         let x$18 = Nil() in -- #80
+//│         let x$19 = Cons(n$0,x$18) in -- #79
+//│         let* (x$20) = a(x$19) in -- #78
+//│         jump j$2(x$20) -- #77
+//│   def j$2(x$15) =
+//│     x$15 -- #58
+//│   let* (x$0) = b(16) in -- #4
+//│   x$0 -- #3
+//│ 
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(j$2), Set(j$1), Set(j$0), Set(b, a))
+//│ Program:
+//│   class _IdContext()
+//│   class _Context(acc,ptr,field)
+//│   def a(x$1) =
+//│     let idCtx = _IdContext() in -- #136
+//│     let* (res) = a_modcons$14(idCtx,x$1) in -- #135
+//│     res -- #134
+//│   def j$0(x$2) =
+//│     x$2 -- #6
+//│   def j$1(x$6) =
+//│     jump j$0(x$6) -- #19
+//│   def b(n$0) =
+//│     let idCtx = _IdContext() in -- #114
+//│     let* (res) = b_modcons$13(idCtx,n$0) in -- #113
+//│     res -- #112
+//│   def j$2(x$15) =
+//│     x$15 -- #58
+//│   def _b_a_ctx_app$11(ctx,x) =
+//│     case ctx of -- #95
+//│       _IdContext =>
+//│         x -- #94
+//│       _Context =>
+//│         let field = _Context.field(ctx) in -- #93
+//│         let ptr = _Context.ptr(ctx) in -- #92
+//│         let _ = assign ptr.t := x in -- #91
+//│         let acc = _Context.acc(ctx) in -- #90
+//│         acc -- #89
+//│   def _b_a_ctx_comp$12(ctx1,ctx2) =
+//│     let ctx2acc = _Context.acc(ctx2) in -- #101
+//│     let ctx2ptr = _Context.ptr(ctx2) in -- #100
+//│     let ctx2field = _Context.field(ctx2) in -- #99
+//│     let* (newAcc) = _b_a_ctx_app$11(ctx1,ctx2acc) in -- #98
+//│     let ret = _Context(newAcc,ctx2ptr,ctx2field) in -- #97
+//│     ret -- #96
+//│   def b_modcons$13(ctx,n$0) =
+//│     let* (r0) = _b_modcons$13_a_modcons$14_opt$15(13,ctx,n$0,true,true) in -- #177
+//│     r0 -- #176
+//│   def a_modcons$14(ctx,x$1) =
+//│     let* (r0) = _b_modcons$13_a_modcons$14_opt$15(14,true,true,ctx,x$1) in -- #179
+//│     r0 -- #178
+//│   def _b_modcons$13_a_modcons$14_opt$15(tailrecBranch$,b_modcons$13_ctx,b_modcons$13_n$0,a_modcons$14_ctx,a_modcons$14_x$1) =
+//│     jump _b_modcons$13_a_modcons$14_opt_jp$16(tailrecBranch$,b_modcons$13_ctx,b_modcons$13_n$0,a_modcons$14_ctx,a_modcons$14_x$1) -- #175
+//│   def _b_modcons$13_a_modcons$14_opt_jp$16(tailrecBranch$,b_modcons$13_ctx,b_modcons$13_n$0,a_modcons$14_ctx,a_modcons$14_x$1) =
+//│     let scrut = ==(14,tailrecBranch$) in -- #174
+//│     if scrut -- #173
+//│       true =>
+//│         case a_modcons$14_x$1 of -- #172
+//│           Cons =>
+//│             let x$3 = Cons.t(a_modcons$14_x$1) in -- #168
+//│             let x$4 = Cons.h(a_modcons$14_x$1) in -- #167
+//│             let x$5 = <(x$4,0) in -- #166
+//│             if x$5 -- #165
+//│               true =>
+//│                 let x$7 = Nil() in -- #158
+//│                 let x$8 = Cons(-1,x$7) in -- #157
+//│                 let* (res) = _b_a_ctx_app$11(a_modcons$14_ctx,x$8) in -- #156
+//│                 res -- #155
+//│               false =>
+//│                 let x$9 = *(x$4,4) in -- #164
+//│                 let x$10 = -(x$4,2) in -- #163
+//│                 let x$12 = Cons(x$9,0) in -- #162
+//│                 let ctx2 = _Context(x$12,x$12,0) in -- #161
+//│                 let* (composed) = _b_a_ctx_comp$12(a_modcons$14_ctx,ctx2) in -- #160
+//│                 jump _b_modcons$13_a_modcons$14_opt_jp$16(13,composed,x$10,a_modcons$14_ctx,a_modcons$14_x$1) -- #159
+//│           Nil =>
+//│             let x$13 = Nil() in -- #171
+//│             let* (res) = _b_a_ctx_app$11(a_modcons$14_ctx,x$13) in -- #170
+//│             res -- #169
+//│       false =>
+//│         let x$14 = <=(b_modcons$13_n$0,0) in -- #154
+//│         if x$14 -- #153
+//│           true =>
+//│             let x$16 = Nil() in -- #149
+//│             let x$17 = Cons(0,x$16) in -- #148
+//│             let* (res) = _b_a_ctx_app$11(b_modcons$13_ctx,x$17) in -- #147
+//│             res -- #146
+//│           false =>
+//│             let x$18 = Nil() in -- #152
+//│             let x$19 = Cons(b_modcons$13_n$0,x$18) in -- #151
+//│             jump _b_modcons$13_a_modcons$14_opt_jp$16(14,b_modcons$13_ctx,b_modcons$13_n$0,b_modcons$13_ctx,x$19) -- #150
+//│   let* (x$0) = b(16) in -- #4
+//│   x$0 -- #3
+//│ 
+//│ Interpreted:
+//│ Cons(64,0)
+
+:noTailRec
+:interpIR
+fun foo(xs) =
+  if xs is 
+    Cons(h, t) then
+      if h > 5 then foo(t)
+      else 
+        val item = if h < 3 then -1 else 100 
+        Cons(item, Cons(h, foo(t)))
+    Nil then 
+      Nil
+foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil))))))))
+//│ |#fun| |foo|(|xs|)| |#=|→|#if| |xs| |is| |→|Cons|(|h|,| |t|)| |#then|→|#if| |h| |>| |5| |#then| |foo|(|t|)|↵|#else| |→|#val| |item| |#=| |#if| |h| |<| |3| |#then| |-|1| |#else| |100| |↵|Cons|(|item|,| |Cons|(|h|,| |foo|(|t|)|)|)|←|←|↵|Nil| |#then| |→|Nil|←|←|←|↵|foo|(|Cons|(|1|,| |Cons|(|6|,| |Cons|(|7|,| |Cons|(|4|,| |Cons|(|2|,| |Cons|(|3|,| |Cons|(|9|,| |Nil|)|)|)|)|)|)|)|)|
+//│ Parsed: {fun foo = (xs,) => {if xs is ‹(Cons(h, t,)) then {if (>(h,)(5,)) then foo(t,) else {let item = if (<(h,)(3,)) then -1 else 100; Cons(item, Cons(h, foo(t,),),)}}; (Nil) then {Nil}›}; foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil,),),),),),),),)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│   def foo(xs$0) =
+//│     case xs$0 of -- #104
+//│       Cons =>
+//│         let x$10 = Cons.t(xs$0) in -- #100
+//│         let x$11 = Cons.h(xs$0) in -- #99
+//│         let x$12 = >(x$11,5) in -- #98
+//│         if x$12 -- #97
+//│           true =>
+//│             let* (x$14) = foo(x$10) in -- #68
+//│             jump j$1(x$14) -- #67
+//│           false =>
+//│             let x$15 = <(x$11,3) in -- #96
+//│             if x$15 -- #95
+//│               true =>
+//│                 jump j$2(-1,x$10,x$11) -- #92
+//│               false =>
+//│                 jump j$2(100,x$10,x$11) -- #94
+//│       Nil =>
+//│         let x$20 = Nil() in -- #103
+//│         jump j$0(x$20) -- #102
+//│   def j$0(x$9) =
+//│     x$9 -- #49
+//│   def j$1(x$13) =
+//│     jump j$0(x$13) -- #62
+//│   def j$2(x$16,x$10,x$11) =
+//│     let* (x$17) = foo(x$10) in -- #90
+//│     let x$18 = Cons(x$11,x$17) in -- #89
+//│     let x$19 = Cons(x$16,x$18) in -- #88
+//│     jump j$1(x$19) -- #87
+//│   let x$0 = Nil() in -- #47
+//│   let x$1 = Cons(9,x$0) in -- #46
+//│   let x$2 = Cons(3,x$1) in -- #45
+//│   let x$3 = Cons(2,x$2) in -- #44
+//│   let x$4 = Cons(4,x$3) in -- #43
+//│   let x$5 = Cons(7,x$4) in -- #42
+//│   let x$6 = Cons(6,x$5) in -- #41
+//│   let x$7 = Cons(1,x$6) in -- #40
+//│   let* (x$8) = foo(x$7) in -- #39
+//│   x$8 -- #38
+//│ 
+//│ Interpreted:
+//│ Cons(-1,Cons(1,Cons(100,Cons(4,Cons(-1,Cons(2,Cons(100,Cons(3,Nil()))))))))
+
+:interpIR
+@tailrec fun foo(xs) =
+  if xs is 
+    Cons(h, t) then
+      if h > 5 then @tailcall foo(t)
+      else 
+        val item = if h < 3 then -1 else 100 
+        Cons(item, Cons(h, @tailcall foo(t)))
+    Nil then 
+      Nil
+foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil))))))))
+//│ |@|tailrec| |#fun| |foo|(|xs|)| |#=|→|#if| |xs| |is| |→|Cons|(|h|,| |t|)| |#then|→|#if| |h| |>| |5| |#then| |@|tailcall| |foo|(|t|)|↵|#else| |→|#val| |item| |#=| |#if| |h| |<| |3| |#then| |-|1| |#else| |100| |↵|Cons|(|item|,| |Cons|(|h|,| |@|tailcall| |foo|(|t|)|)|)|←|←|↵|Nil| |#then| |→|Nil|←|←|←|↵|foo|(|Cons|(|1|,| |Cons|(|6|,| |Cons|(|7|,| |Cons|(|4|,| |Cons|(|2|,| |Cons|(|3|,| |Cons|(|9|,| |Nil|)|)|)|)|)|)|)|)|
+//│ Parsed: {fun foo = (xs,) => {if xs is ‹(Cons(h, t,)) then {if (>(h,)(5,)) then @tailcall foo(t,) else {let item = if (<(h,)(3,)) then -1 else 100; Cons(item, Cons(h, @tailcall foo(t,),),)}}; (Nil) then {Nil}›}; foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil,),),),),),),),)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│   def foo(xs$0) =
+//│     case xs$0 of -- #104
+//│       Cons =>
+//│         let x$10 = Cons.t(xs$0) in -- #100
+//│         let x$11 = Cons.h(xs$0) in -- #99
+//│         let x$12 = >(x$11,5) in -- #98
+//│         if x$12 -- #97
+//│           true =>
+//│             let* (x$14) = @tailcall foo(x$10) in -- #68
+//│             jump j$1(x$14) -- #67
+//│           false =>
+//│             let x$15 = <(x$11,3) in -- #96
+//│             if x$15 -- #95
+//│               true =>
+//│                 jump j$2(-1,x$10,x$11) -- #92
+//│               false =>
+//│                 jump j$2(100,x$10,x$11) -- #94
+//│       Nil =>
+//│         let x$20 = Nil() in -- #103
+//│         jump j$0(x$20) -- #102
+//│   def j$0(x$9) =
+//│     x$9 -- #49
+//│   def j$1(x$13) =
+//│     jump j$0(x$13) -- #62
+//│   def j$2(x$16,x$10,x$11) =
+//│     let* (x$17) = @tailcall foo(x$10) in -- #90
+//│     let x$18 = Cons(x$11,x$17) in -- #89
+//│     let x$19 = Cons(x$16,x$18) in -- #88
+//│     jump j$1(x$19) -- #87
+//│   let x$0 = Nil() in -- #47
+//│   let x$1 = Cons(9,x$0) in -- #46
+//│   let x$2 = Cons(3,x$1) in -- #45
+//│   let x$3 = Cons(2,x$2) in -- #44
+//│   let x$4 = Cons(4,x$3) in -- #43
+//│   let x$5 = Cons(7,x$4) in -- #42
+//│   let x$6 = Cons(6,x$5) in -- #41
+//│   let x$7 = Cons(1,x$6) in -- #40
+//│   let* (x$8) = foo(x$7) in -- #39
+//│   x$8 -- #38
+//│ 
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(j$1), Set(j$0), Set(foo))
+//│ Program:
+//│   class _IdContext()
+//│   class _Context(acc,ptr,field)
+//│   def foo(xs$0) =
+//│     let idCtx = _IdContext() in -- #144
+//│     let* (res) = foo_modcons$13(idCtx,xs$0) in -- #143
+//│     res -- #142
+//│   def j$0(x$9) =
+//│     x$9 -- #49
+//│   def j$1(x$13) =
+//│     jump j$0(x$13) -- #62
+//│   def _foo_ctx_app$10(ctx,x) =
+//│     case ctx of -- #117
+//│       _IdContext =>
+//│         x -- #116
+//│       _Context =>
+//│         let field = _Context.field(ctx) in -- #115
+//│         let ptr = _Context.ptr(ctx) in -- #114
+//│         let _ = assign ptr.t := x in -- #113
+//│         let acc = _Context.acc(ctx) in -- #112
+//│         acc -- #111
+//│   def _foo_ctx_comp$11(ctx1,ctx2) =
+//│     let ctx2acc = _Context.acc(ctx2) in -- #123
+//│     let ctx2ptr = _Context.ptr(ctx2) in -- #122
+//│     let ctx2field = _Context.field(ctx2) in -- #121
+//│     let* (newAcc) = _foo_ctx_app$10(ctx1,ctx2acc) in -- #120
+//│     let ret = _Context(newAcc,ctx2ptr,ctx2field) in -- #119
+//│     ret -- #118
+//│   def foo_modcons$13(ctx,xs$0) =
+//│     let* (r0) = _foo_modcons$13_j$2_modcons$12_opt$14(13,ctx,xs$0,true,true,true,true) in -- #180
+//│     r0 -- #179
+//│   def _foo_modcons$13_j$2_modcons$12_opt$14(tailrecBranch$,foo_modcons$13_ctx,foo_modcons$13_xs$0,j$2_modcons$12_ctx,j$2_modcons$12_x$16,j$2_modcons$12_x$10,j$2_modcons$12_x$11) =
+//│     jump _foo_modcons$13_j$2_modcons$12_opt_jp$15(tailrecBranch$,foo_modcons$13_ctx,foo_modcons$13_xs$0,j$2_modcons$12_ctx,j$2_modcons$12_x$16,j$2_modcons$12_x$10,j$2_modcons$12_x$11) -- #178
+//│   def _foo_modcons$13_j$2_modcons$12_opt_jp$15(tailrecBranch$,foo_modcons$13_ctx,foo_modcons$13_xs$0,j$2_modcons$12_ctx,j$2_modcons$12_x$16,j$2_modcons$12_x$10,j$2_modcons$12_x$11) =
+//│     let scrut = ==(12,tailrecBranch$) in -- #177
+//│     if scrut -- #176
+//│       true =>
+//│         let x$18 = Cons(j$2_modcons$12_x$11,0) in -- #175
+//│         let x$19 = Cons(j$2_modcons$12_x$16,x$18) in -- #174
+//│         let ctx2 = _Context(x$19,x$18,0) in -- #173
+//│         let* (composed) = _foo_ctx_comp$11(j$2_modcons$12_ctx,ctx2) in -- #172
+//│         jump _foo_modcons$13_j$2_modcons$12_opt_jp$15(13,composed,j$2_modcons$12_x$10,j$2_modcons$12_ctx,j$2_modcons$12_x$16,j$2_modcons$12_x$10,j$2_modcons$12_x$11) -- #171
+//│       false =>
+//│         case foo_modcons$13_xs$0 of -- #170
+//│           Cons =>
+//│             let x$10 = Cons.t(foo_modcons$13_xs$0) in -- #166
+//│             let x$11 = Cons.h(foo_modcons$13_xs$0) in -- #165
+//│             let x$12 = >(x$11,5) in -- #164
+//│             if x$12 -- #163
+//│               true =>
+//│                 jump _foo_modcons$13_j$2_modcons$12_opt_jp$15(13,foo_modcons$13_ctx,x$10,j$2_modcons$12_ctx,j$2_modcons$12_x$16,j$2_modcons$12_x$10,j$2_modcons$12_x$11) -- #158
+//│               false =>
+//│                 let x$15 = <(x$11,3) in -- #162
+//│                 if x$15 -- #161
+//│                   true =>
+//│                     jump _foo_modcons$13_j$2_modcons$12_opt_jp$15(12,foo_modcons$13_ctx,foo_modcons$13_xs$0,foo_modcons$13_ctx,-1,x$10,x$11) -- #159
+//│                   false =>
+//│                     jump _foo_modcons$13_j$2_modcons$12_opt_jp$15(12,foo_modcons$13_ctx,foo_modcons$13_xs$0,foo_modcons$13_ctx,100,x$10,x$11) -- #160
+//│           Nil =>
+//│             let x$20 = Nil() in -- #169
+//│             let* (res) = _foo_ctx_app$10(foo_modcons$13_ctx,x$20) in -- #168
+//│             res -- #167
+//│   let x$0 = Nil() in -- #47
+//│   let x$1 = Cons(9,x$0) in -- #46
+//│   let x$2 = Cons(3,x$1) in -- #45
+//│   let x$3 = Cons(2,x$2) in -- #44
+//│   let x$4 = Cons(4,x$3) in -- #43
+//│   let x$5 = Cons(7,x$4) in -- #42
+//│   let x$6 = Cons(6,x$5) in -- #41
+//│   let x$7 = Cons(1,x$6) in -- #40
+//│   let* (x$8) = foo(x$7) in -- #39
+//│   x$8 -- #38
+//│ 
+//│ Interpreted:
+//│ Cons(-1,Cons(1,0))
+
+:ce
+fun b() =
+  a()
+  a()
+@tailrec 
+fun a() = 
+  if 0 < 1 then a()
+  else b()
+a()
+//│ |#fun| |b|(||)| |#=|→|a|(||)|↵|a|(||)|←|↵|@|tailrec| |↵|#fun| |a|(||)| |#=| |→|#if| |0| |<| |1| |#then| |a|(||)|↵|#else| |b|(||)|←|↵|a|(||)|
+//│ Parsed: {fun b = () => {a(); a()}; fun a = () => {if (<(0,)(1,)) then a() else b()}; a()}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│   def b() =
+//│     let* (x$1) = a() in -- #8
+//│     let* (x$2) = a() in -- #7
+//│     x$2 -- #6
+//│   def a() =
+//│     let x$3 = <(0,1) in -- #22
+//│     if x$3 -- #21
+//│       true =>
+//│         let* (x$5) = a() in -- #16
+//│         jump j$0(x$5) -- #15
+//│       false =>
+//│         let* (x$6) = b() in -- #20
+//│         jump j$0(x$6) -- #19
+//│   def j$0(x$4) =
+//│     x$4 -- #12
+//│   let* (x$0) = a() in -- #2
+//│   x$0 -- #1
+//│ ╔══[COMPILATION ERROR] function `a` is not tail-recursive, but is marked as @tailrec
+//│ ║  l.1203: 	@tailrec 
+//│ ║          	 ^^^^^^^
+//│ ╟── it could self-recurse through this call, which may not be a tail-call
+//│ ║  l.1201: 	  a()
+//│ ╙──        	  ^
+//│ 
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(j$0), Set(a, b))
+//│ Program:
+//│   class _IdContext()
+//│   class _Context(acc,ptr,field)
+//│   def b() =
+//│     let* (r0) = _a_b_opt$9(0) in -- #45
+//│     r0 -- #44
+//│   def a() =
+//│     let* (r0) = _a_b_opt$9(1) in -- #43
+//│     r0 -- #42
+//│   def j$0(x$4) =
+//│     x$4 -- #12
+//│   def _a_b_opt$9(tailrecBranch$) =
+//│     jump _a_b_opt_jp$10(tailrecBranch$) -- #41
+//│   def _a_b_opt_jp$10(tailrecBranch$) =
+//│     let scrut = ==(0,tailrecBranch$) in -- #40
+//│     if scrut -- #39
+//│       true =>
+//│         let* (x$1) = a() in -- #38
+//│         jump _a_b_opt_jp$10(1) -- #37
+//│       false =>
+//│         let x$3 = <(0,1) in -- #36
+//│         if x$3 -- #35
+//│           true =>
+//│             jump _a_b_opt_jp$10(1) -- #33
+//│           false =>
+//│             jump _a_b_opt_jp$10(0) -- #34
+//│   let* (x$0) = a() in -- #2
+//│   x$0 -- #1
+
+:ce
+class A(a, b)
+@tailrec
+fun a() = A(b(), 1)
+fun b() = A(c(), @tailcall a())
+fun c() = A(b(), 1)
+a()
+//│ |#class| |A|(|a|,| |b|)|↵|@|tailrec|↵|#fun| |a|(||)| |#=| |A|(|b|(||)|,| |1|)|↵|#fun| |b|(||)| |#=| |A|(|c|(||)|,| |@|tailcall| |a|(||)|)|↵|#fun| |c|(||)| |#=| |A|(|b|(||)|,| |1|)|↵|a|(||)|
+//│ Parsed: {class A(a, b,) {}; fun a = () => A(b(), 1,); fun b = () => A(c(), @tailcall a(),); fun c = () => A(b(), 1,); a()}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│   class A(a,b)
+//│   def a() =
+//│     let* (x$1) = b() in -- #11
+//│     let x$2 = A(x$1,1) in -- #10
+//│     x$2 -- #9
+//│   def b() =
+//│     let* (x$3) = c() in -- #22
+//│     let* (x$4) = @tailcall a() in -- #21
+//│     let x$5 = A(x$3,x$4) in -- #20
+//│     x$5 -- #19
+//│   def c() =
+//│     let* (x$6) = b() in -- #31
+//│     let x$7 = A(x$6,1) in -- #30
+//│     x$7 -- #29
+//│   let* (x$0) = a() in -- #2
+//│   x$0 -- #1
+//│ ╔══[COMPILATION ERROR] function `a` is not tail-recursive, but is marked as @tailrec
+//│ ║  l.1273: 	@tailrec
+//│ ║          	 ^^^^^^^
+//│ ╟── it could self-recurse through this call, which may not be a tail-call
+//│ ║  l.1275: 	fun b() = A(c(), @tailcall a())
+//│ ╙──        	            ^
+//│ 
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(c, b, a))
+//│ Program:
+//│   class A(a,b)
+//│   class _IdContext()
+//│   class _Context(acc,ptr,field)
+//│   def a() =
+//│     let idCtx = _IdContext() in -- #81
+//│     let* (res) = a_modcons$13(idCtx) in -- #80
+//│     res -- #79
+//│   def b() =
+//│     let idCtx = _IdContext() in -- #73
+//│     let* (res) = b_modcons$12(idCtx) in -- #72
+//│     res -- #71
+//│   def c() =
+//│     let idCtx = _IdContext() in -- #64
+//│     let* (res) = c_modcons$11(idCtx) in -- #63
+//│     res -- #62
+//│   def _c_b_a_ctx_app$9(ctx,x) =
+//│     case ctx of -- #50
+//│       _IdContext =>
+//│         x -- #49
+//│       _Context =>
+//│         let field = _Context.field(ctx) in -- #48
+//│         let scrut = ==(1,field) in -- #47
+//│         if scrut -- #46
+//│           true =>
+//│             let ptr = _Context.ptr(ctx) in -- #45
+//│             let _ = assign ptr.b := x in -- #44
+//│             let acc = _Context.acc(ctx) in -- #43
+//│             acc -- #42
+//│           false =>
+//│             let ptr = _Context.ptr(ctx) in -- #41
+//│             let _ = assign ptr.a := x in -- #40
+//│             let acc = _Context.acc(ctx) in -- #39
+//│             acc -- #38
+//│   def _c_b_a_ctx_comp$10(ctx1,ctx2) =
+//│     let ctx2acc = _Context.acc(ctx2) in -- #56
+//│     let ctx2ptr = _Context.ptr(ctx2) in -- #55
+//│     let ctx2field = _Context.field(ctx2) in -- #54
+//│     let* (newAcc) = _c_b_a_ctx_app$9(ctx1,ctx2acc) in -- #53
+//│     let ret = _Context(newAcc,ctx2ptr,ctx2field) in -- #52
+//│     ret -- #51
+//│   def c_modcons$11(ctx) =
+//│     let* (r0) = _c_modcons$11_b_modcons$12_a_modcons$13_opt$14(11,ctx,true,true) in -- #105
+//│     r0 -- #104
+//│   def b_modcons$12(ctx) =
+//│     let* (r0) = _c_modcons$11_b_modcons$12_a_modcons$13_opt$14(12,true,ctx,true) in -- #107
+//│     r0 -- #106
+//│   def a_modcons$13(ctx) =
+//│     let* (r0) = _c_modcons$11_b_modcons$12_a_modcons$13_opt$14(13,true,true,ctx) in -- #109
+//│     r0 -- #108
+//│   def _c_modcons$11_b_modcons$12_a_modcons$13_opt$14(tailrecBranch$,c_modcons$11_ctx,b_modcons$12_ctx,a_modcons$13_ctx) =
+//│     jump _c_modcons$11_b_modcons$12_a_modcons$13_opt_jp$15(tailrecBranch$,c_modcons$11_ctx,b_modcons$12_ctx,a_modcons$13_ctx) -- #103
+//│   def _c_modcons$11_b_modcons$12_a_modcons$13_opt_jp$15(tailrecBranch$,c_modcons$11_ctx,b_modcons$12_ctx,a_modcons$13_ctx) =
+//│     let scrut = ==(13,tailrecBranch$) in -- #102
+//│     if scrut -- #101
+//│       true =>
+//│         let x$2 = A(0,1) in -- #98
+//│         let ctx2 = _Context(x$2,x$2,0) in -- #97
+//│         let* (composed) = _c_b_a_ctx_comp$10(a_modcons$13_ctx,ctx2) in -- #96
+//│         jump _c_modcons$11_b_modcons$12_a_modcons$13_opt_jp$15(12,c_modcons$11_ctx,composed,a_modcons$13_ctx) -- #95
+//│       false =>
+//│         let scrut = ==(12,tailrecBranch$) in -- #100
+//│         if scrut -- #99
+//│           true =>
+//│             let* (x$3) = c() in -- #94
+//│             let x$5 = A(x$3,0) in -- #93
+//│             let ctx2 = _Context(x$5,x$5,1) in -- #92
+//│             let* (composed) = _c_b_a_ctx_comp$10(b_modcons$12_ctx,ctx2) in -- #91
+//│             jump _c_modcons$11_b_modcons$12_a_modcons$13_opt_jp$15(13,c_modcons$11_ctx,b_modcons$12_ctx,composed) -- #90
+//│           false =>
+//│             let x$7 = A(0,1) in -- #89
+//│             let ctx2 = _Context(x$7,x$7,0) in -- #88
+//│             let* (composed) = _c_b_a_ctx_comp$10(c_modcons$11_ctx,ctx2) in -- #87
+//│             jump _c_modcons$11_b_modcons$12_a_modcons$13_opt_jp$15(12,c_modcons$11_ctx,composed,a_modcons$13_ctx) -- #86
+//│   let* (x$0) = a() in -- #2
+//│   x$0 -- #1
+
+// TODO: Purity check
+class A(a, b)
+@tailrec
+fun a() = A(b(), 1)
+fun b() = A(@tailcall a(), c())
+fun c() = A(0, 1)
+a()
+//│ |#class| |A|(|a|,| |b|)|↵|@|tailrec|↵|#fun| |a|(||)| |#=| |A|(|b|(||)|,| |1|)|↵|#fun| |b|(||)| |#=| |A|(|@|tailcall| |a|(||)|,| |c|(||)|)|↵|#fun| |c|(||)| |#=| |A|(|0|,| |1|)|↵|a|(||)|
+//│ Parsed: {class A(a, b,) {}; fun a = () => A(b(), 1,); fun b = () => A(@tailcall a(), c(),); fun c = () => A(0, 1,); a()}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│   class A(a,b)
+//│   def a() =
+//│     let* (x$1) = b() in -- #11
+//│     let x$2 = A(x$1,1) in -- #10
+//│     x$2 -- #9
+//│   def b() =
+//│     let* (x$3) = @tailcall a() in -- #22
+//│     let* (x$4) = c() in -- #21
+//│     let x$5 = A(x$3,x$4) in -- #20
+//│     x$5 -- #19
+//│   def c() =
+//│     let x$6 = A(0,1) in -- #29
+//│     x$6 -- #28
+//│   let* (x$0) = a() in -- #2
+//│   x$0 -- #1
+//│ ╔══[COMPILATION ERROR] not a tail call, as the remaining functions may be impure
+//│ ║  l.1391: 	fun b() = A(@tailcall a(), c())
+//│ ╙──        	                      ^
+//│ ╔══[COMPILATION ERROR] function `a` is not tail-recursive, but is marked as @tailrec
+//│ ║  l.1389: 	@tailrec
+//│ ║          	 ^^^^^^^
+//│ ╟── it could self-recurse through this call, which may not be a tail-call
+//│ ║  l.1391: 	fun b() = A(@tailcall a(), c())
+//│ ╙──        	                      ^
+//│ 
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(b, a), Set(c))
+//│ Program:
+//│   class A(a,b)
+//│   class _IdContext()
+//│   class _Context(acc,ptr,field)
+//│   def a() =
+//│     let idCtx = _IdContext() in -- #64
+//│     let* (res) = a_modcons$12(idCtx) in -- #63
+//│     res -- #62
+//│   def b() =
+//│     let idCtx = _IdContext() in -- #56
+//│     let* (res) = b_modcons$11(idCtx) in -- #55
+//│     res -- #54
+//│   def c() =
+//│     let x$6 = A(0,1) in -- #29
+//│     x$6 -- #28
+//│   def _b_a_ctx_app$9(ctx,x) =
+//│     case ctx of -- #42
+//│       _IdContext =>
+//│         x -- #41
+//│       _Context =>
+//│         let field = _Context.field(ctx) in -- #40
+//│         let ptr = _Context.ptr(ctx) in -- #39
+//│         let _ = assign ptr.a := x in -- #38
+//│         let acc = _Context.acc(ctx) in -- #37
+//│         acc -- #36
+//│   def _b_a_ctx_comp$10(ctx1,ctx2) =
+//│     let ctx2acc = _Context.acc(ctx2) in -- #48
+//│     let ctx2ptr = _Context.ptr(ctx2) in -- #47
+//│     let ctx2field = _Context.field(ctx2) in -- #46
+//│     let* (newAcc) = _b_a_ctx_app$9(ctx1,ctx2acc) in -- #45
+//│     let ret = _Context(newAcc,ctx2ptr,ctx2field) in -- #44
+//│     ret -- #43
+//│   def b_modcons$11(ctx) =
+//│     let* (r0) = _b_modcons$11_a_modcons$12_opt$13(11,ctx,true) in -- #83
+//│     r0 -- #82
+//│   def a_modcons$12(ctx) =
+//│     let* (r0) = _b_modcons$11_a_modcons$12_opt$13(12,true,ctx) in -- #85
+//│     r0 -- #84
+//│   def _b_modcons$11_a_modcons$12_opt$13(tailrecBranch$,b_modcons$11_ctx,a_modcons$12_ctx) =
+//│     jump _b_modcons$11_a_modcons$12_opt_jp$14(tailrecBranch$,b_modcons$11_ctx,a_modcons$12_ctx) -- #81
+//│   def _b_modcons$11_a_modcons$12_opt_jp$14(tailrecBranch$,b_modcons$11_ctx,a_modcons$12_ctx) =
+//│     let scrut = ==(12,tailrecBranch$) in -- #80
+//│     if scrut -- #79
+//│       true =>
+//│         let x$2 = A(0,1) in -- #78
+//│         let ctx2 = _Context(x$2,x$2,0) in -- #77
+//│         let* (composed) = _b_a_ctx_comp$10(a_modcons$12_ctx,ctx2) in -- #76
+//│         jump _b_modcons$11_a_modcons$12_opt_jp$14(11,composed,a_modcons$12_ctx) -- #75
+//│       false =>
+//│         let* (x$3) = @tailcall a() in -- #74
+//│         let* (x$4) = c() in -- #73
+//│         let x$5 = A(x$3,x$4) in -- #72
+//│         let* (res) = _b_a_ctx_app$9(b_modcons$11_ctx,x$5) in -- #71
+//│         res -- #70
+//│   let* (x$0) = a() in -- #2
+//│   x$0 -- #1
+
+:ce
+@tailcall 1
+//│ |@|tailcall| |1|
+//│ Parsed: {@tailcall 1}
+//│ ╔══[COMPILATION ERROR] @tailcall may only be used to annotate function calls
+//│ ║  l.1486: 	@tailcall 1
+//│ ╙──        	 ^^^^^^^^
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│ 
+//│   1 -- #0
+//│ 
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List()
+//│ Program:
+//│   class _IdContext()
+//│   class _Context(acc,ptr,field)
+//│ 
+//│   1 -- #0
+
+:ce
+@tailrec 1
+//│ |@|tailrec| |1|
+//│ Parsed: {@tailrec 1}
+//│ ╔══[COMPILATION ERROR] @tailrec may only be used to annotate functions
+//│ ║  l.1510: 	@tailrec 1
+//│ ╙──        	 ^^^^^^^
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│ 
+//│   1 -- #0
+//│ 
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List()
+//│ Program:
+//│   class _IdContext()
+//│   class _Context(acc,ptr,field)
+//│ 
+//│   1 -- #0
+
+:ce
+fun foo() =
+  @tailrec foo()
+foo()
+//│ |#fun| |foo|(||)| |#=|→|@|tailrec| |foo|(||)|←|↵|foo|(||)|
+//│ Parsed: {fun foo = () => {@tailrec foo()}; foo()}
+//│ ╔══[COMPILATION ERROR] @tailrec is for annotating functions; try @tailcall instead
+//│ ║  l.1535: 	  @tailrec foo()
+//│ ╙──        	   ^^^^^^^
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│   def foo() =
+//│     let* (x$1) = foo() in -- #5
+//│     x$1 -- #4
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
+//│ 
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(foo))
+//│ Program:
+//│   class _IdContext()
+//│   class _Context(acc,ptr,field)
+//│   def foo_jp() =
+//│     jump foo_jp() -- #12
+//│   def foo() =
+//│     let* (r0) = foo_jp() in -- #14
+//│     r0 -- #13
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
+
+:ce
+@tailcall
+fun foo() =
+  foo()
+foo()
+//│ |@|tailcall|↵|#fun| |foo|(||)| |#=|→|foo|(||)|←|↵|foo|(||)|
+//│ Parsed: {fun foo = () => {foo()}; foo()}
+//│ ╔══[COMPILATION ERROR] @tailcall is for annotating function calls; try @tailrec instead
+//│ ║  l.1568: 	@tailcall
+//│ ╙──        	 ^^^^^^^^
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│ 
+//│   def foo() =
+//│     let* (x$1) = foo() in -- #5
+//│     x$1 -- #4
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
+//│ 
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(foo))
+//│ Program:
+//│   class _IdContext()
+//│   class _Context(acc,ptr,field)
+//│   def foo_jp() =
+//│     jump foo_jp() -- #12
+//│   def foo() =
+//│     let* (r0) = foo_jp() in -- #14
+//│     r0 -- #13
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1

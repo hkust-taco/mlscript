@@ -1,12 +1,11 @@
 :NewDefs
 
-:mono
-class List {
+
+abstract class List() {
     fun getRes: Str
-    fun getRes = ""
-    fun map(f) = error
+    fun map: error
 }
-class Cons(x: Int, xs: List) extends List {
+class Cons(val x: Int, val xs: List) extends List {
     fun getRes = concat(concat(toString(x))(" :: "))(xs.getRes)
     fun map(f) = Cons(f(x), xs.map(f))
 }
@@ -14,52 +13,39 @@ class Nil() extends List {
     fun getRes = "Nil"
     fun map(f) = Nil()
 }
-fun mkList(len: Int) =
+fun mkList(len) =
     if len == 0 then Nil()
     else Cons(len, mkList(len-1))
-mkList(5).map((x) => x*2).getRes
-//│ Lifted:
-//│ TypingUnit {
-//│   class List$1([]) {
-//│     fun getRes = Str
-//│     fun getRes = ""
-//│     fun map = (f,) => error
-//│   }
-//│   class Cons$2([x: Int, xs: List$1,]): List$1 {
-//│     fun getRes = concat(concat(toString((this).x,),)(" :: ",),)(((this).xs).getRes,)
-//│     fun map = (f,) => Cons$2(f((this).x,), ((this).xs).map(f,),)
-//│   }
-//│   class Nil$3([]): List$1 {fun getRes = "Nil"; fun map = (f,) => Nil$3()}
-//│   class Lambda1$2$4([]) {fun apply = ('(' x ')',) => *(x, 2,)}
-//│   fun mkList$1 = (len: Int,) => {if (==(len, 0,)) then Nil$3() else Cons$2(len, mkList$1(-(len, 1,),),)}
-//│   Code(List(((mkList$1(5,)).map({Lambda1$2$4()},)).getRes))
+mkList(5).map(x => x*2).getRes
+//│ abstract class List() {
+//│   fun getRes: Str
+//│   fun map: error
 //│ }
-//│ Mono:
-//│ TypingUnit {
-//│   class Lambda1$2$4([]) {}
-//│   class List$1([]) {}
-//│   class Cons$2([x: Int, xs: List$1,]): List$1 {}
-//│   class Nil$3([]): List$1 {}
-//│   fun mkList$1 = (len: Int,) => {if (==(len, 0,)) then Nil$3() else Cons$2(len, mkList$1(-(len, 1,),),)}
-//│   fun map$Nil$3 = (this, f,) => Nil$3()
-//│   fun getRes$Nil$3 = (this,) => "Nil"
-//│   fun getRes$Cons$2 = (this,) => concat(concat(toString(let obj = this in if obj is ‹(Cons$2(x, xs,)) then x; else error›,),)(" :: ",),)(let obj = let obj = this in if obj is ‹(Cons$2(x, xs,)) then xs; else error› in if obj is ‹(Cons$2) then getRes$Cons$2(obj,); (Nil$3) then getRes$Nil$3(obj,); else error›,)
-//│   fun main$$5 = () => let obj = let obj = mkList$1(5,) in if obj is ‹(Cons$2) then map$Cons$2(obj, {Lambda1$2$4()},); (Nil$3) then map$Nil$3(obj, {Lambda1$2$4()},); else error› in if obj is ‹(Cons$2) then getRes$Cons$2(obj,); (Nil$3) then getRes$Nil$3(obj,); else error›
-//│   fun map$Cons$2 = (this, f,) => Cons$2(let obj = f in if obj is ‹(Lambda1$2$4) then apply$Lambda1$2$4(obj, let obj = this in if obj is ‹(Cons$2(x, xs,)) then x; else error›,); else error›, let obj = let obj = this in if obj is ‹(Cons$2(x, xs,)) then xs; else error› in if obj is ‹(Cons$2) then map$Cons$2(obj, f,); (Nil$3) then map$Nil$3(obj, f,); else error›,)
-//│   fun apply$Lambda1$2$4 = (this, '(' x ')',) => *(x, 2,)
-//│   Code(List(main$$5()))
+//│ class Cons(x: Int, xs: List) extends List {
+//│   fun getRes: Str
+//│   fun map: (Int -> Int) -> Cons
 //│ }
-//│ class Lambda1$2$4()
-//│ class List$1()
-//│ class Cons$2(x: Int, xs: List$1) extends List$1
-//│ class Nil$3() extends List$1
-//│ fun mkList$1: (len: Int) -> (Cons$2 | Nil$3)
-//│ fun map$Nil$3: (anything, anything) -> Nil$3
-//│ fun getRes$Nil$3: anything -> "Nil"
-//│ fun getRes$Cons$2: Object -> Str
-//│ fun main$$5: () -> Str
-//│ fun map$Cons$2: (Object, Object) -> Cons$2
-//│ fun apply$Lambda1$2$4: (anything, Int) -> Int
+//│ class Nil() extends List {
+//│   fun getRes: "Nil"
+//│   fun map: anything -> Nil
+//│ }
+//│ fun mkList: Int -> (Cons | Nil)
 //│ Str
+//│ 
+//│ Simpledef:
+//│ {class List() {fun getRes: Str
+//│  fun map: error}
+//│  class Cons(val x: Int, val xs: List,): List {fun getRes = concat(concat(toString(x,),)(" :: ",),)(let selRes$30 = xs in case selRes$30 of { Nil => (selRes$30).getRes
+//│  Cons => (selRes$30).getRes },)
+//│  fun map = (f::0,) => Cons(f(x,), let selRes$50 = xs in case selRes$50 of { Nil => (selRes$50).map(f,)
+//│  Cons => (selRes$50).map(f,) },)}
+//│  class Nil(): List {fun getRes = "Nil"
+//│  fun map = (f::1,) => Nil()}
+//│  fun mkList = (len::2,) => {if (==(len, 0,)) then Nil() else Cons(len, mkList(-(len, 1,),),)}
+//│  let selRes$126 = let selRes$128 = mkList(5,) in case selRes$128 of { Cons => (selRes$128).map((x::3,) => *(x, 2,),)
+//│  Nil => (selRes$128).map((x::3,) => *(x, 2,),) } in case selRes$126 of { Cons => (selRes$126).getRes
+//│  Nil => (selRes$126).getRes }}
+//│ End simpledef
+//│ 
 //│ res
 //│     = '10 :: 8 :: 6 :: 4 :: 2 :: Nil'

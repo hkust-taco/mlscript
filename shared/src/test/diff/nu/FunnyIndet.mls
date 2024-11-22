@@ -28,15 +28,11 @@
 //│     = 4
 
 
-:e // TODO support
 2 is
   2
-//│ ╔══[ERROR] illegal pattern
-//│ ║  l.33: 	  2
-//│ ╙──      	  ^
-//│ error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ Bool
+//│ res
+//│     = true
 
 if 2 is 2 then true
 //│ true
@@ -61,7 +57,7 @@ if 2 is
 2 then true
 1 then false
 //│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
-//│ ║  l.62: 	1 then false
+//│ ║  l.58: 	1 then false
 //│ ╙──      	^^^^^^^^^^^^
 //│ ()
 //│ res

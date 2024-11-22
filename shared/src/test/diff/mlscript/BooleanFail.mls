@@ -3,28 +3,52 @@
 
 // * The MLscript subtyping system is currently ill-formed in some corner cases.
 // * Notably, it considers functions and classes to intersect to nothing
-// * and also considers positive negated function/record types equivalent to nothing.
+// * and also used to considers positive negated function/record types equivalent to nothing.
 
 // * (This isn't the case in MLstruct, which has a sound subtyping lattice.)
 
 
-// * Example 1
+
+// * Example 1 – now fixed
+
 oops = 42 : ~(int -> int)
-not oops
-//│ oops: nothing
+//│ oops: ~(int -> int)
 //│     = 42
-//│ res: bool
+
+:e
+not oops
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.19: 	not oops
+//│ ║        	^^^^^^^^
+//│ ╟── type `~(int -> int)` is not an instance of type `bool`
+//│ ║  l.14: 	oops = 42 : ~(int -> int)
+//│ ║        	            ^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `bool`
+//│ ║  l.19: 	not oops
+//│ ╙──      	    ^^^^
+//│ res: bool | error
 //│    = false
 
 
-// * OTOH, this doesn't lead to immediate unsoundness:
+// * This was accepted but didn't immediately lead to immediate unsoundness:
 def f: (~{x: int}) -> 'a
-f = id
-//│ f: in nothing -> nothing out ~{x: int} -> nothing
+//│ f: ~{x: int} -> nothing
 //│  = <missing implementation>
+
+:e
+f = id
 //│ 'a -> 'a
 //│   <:  f:
-//│ nothing -> nothing
+//│ ~{x: int} -> nothing
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.39: 	f = id
+//│ ║        	^^^^^^
+//│ ╟── type `~{x: int}` does not match type `'a`
+//│ ║  l.34: 	def f: (~{x: int}) -> 'a
+//│ ║        	       ^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.34: 	def f: (~{x: int}) -> 'a
+//│ ╙──      	                      ^^
 //│  = [Function: id]
 
 :e
@@ -33,48 +57,148 @@ f id
 f {}
 f (forall 'a. fun (x: 'a) -> x)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.31: 	f 0
+//│ ║  l.55: 	f 0
 //│ ║        	^^^
 //│ ╟── integer literal of type `0` does not match type `~{x: int}`
-//│ ║  l.31: 	f 0
+//│ ║  l.55: 	f 0
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.21: 	def f: (~{x: int}) -> 'a
+//│ ║  l.34: 	def f: (~{x: int}) -> 'a
 //│ ╙──      	       ^^^^^^^^^^^
 //│ res: error
 //│    = 0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.32: 	f id
+//│ ║  l.56: 	f id
 //│ ║        	^^^^
 //│ ╟── reference of type `?a -> ?a` does not match type `~{x: int}`
-//│ ║  l.32: 	f id
+//│ ║  l.56: 	f id
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.21: 	def f: (~{x: int}) -> 'a
+//│ ║  l.34: 	def f: (~{x: int}) -> 'a
 //│ ╙──      	       ^^^^^^^^^^^
 //│ res: error
 //│    = [Function: id]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.33: 	f {}
+//│ ║  l.57: 	f {}
 //│ ║        	^^^^
 //│ ╟── record literal of type `anything` does not match type `~{x: int}`
-//│ ║  l.33: 	f {}
+//│ ║  l.57: 	f {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.21: 	def f: (~{x: int}) -> 'a
+//│ ║  l.34: 	def f: (~{x: int}) -> 'a
 //│ ╙──      	       ^^^^^^^^^^^
 //│ res: error
 //│    = {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.34: 	f (forall 'a. fun (x: 'a) -> x)
+//│ ║  l.58: 	f (forall 'a. fun (x: 'a) -> x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `'a -> 'a` does not match type `~{x: int}`
-//│ ║  l.34: 	f (forall 'a. fun (x: 'a) -> x)
+//│ ║  l.58: 	f (forall 'a. fun (x: 'a) -> x)
 //│ ║        	              ^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.21: 	def f: (~{x: int}) -> 'a
+//│ ║  l.34: 	def f: (~{x: int}) -> 'a
 //│ ╙──      	       ^^^^^^^^^^^
 //│ res: error
 //│    = [Function (anonymous)]
+
+
+// * Example 2 – now fixed
+
+def g(x: 'a | {f: nothing}) = x.f(0)
+//│ g: {f: 0 -> 'a} -> 'a
+//│  = [Function: g]
+
+:e
+foo = forall 'x. fun (x: 'x) -> g(x)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.112: 	foo = forall 'x. fun (x: 'x) -> g(x)
+//│ ║         	                                ^^^^
+//│ ╟── expression of type `'x & ~{f: nothing}` does not have field 'f'
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.107: 	def g(x: 'a | {f: nothing}) = x.f(0)
+//│ ║         	                              ^^^
+//│ ╟── from type variable:
+//│ ║  l.107: 	def g(x: 'a | {f: nothing}) = x.f(0)
+//│ ╙──       	         ^^
+//│ foo: anything -> error
+//│    = [Function: foo]
+
+:re
+foo 0
+//│ res: error
+//│ Runtime error:
+//│   TypeError: x.f is not a function
+
+
+
+// * Now let's consider why functions and classes can't intersect to nothing due to distributivity
+
+
+class Foo: { x: anything }
+//│ Defined class Foo
+
+
+// * These two types should be equivalent, but they visibly aren't:
+
+def a: (int -> int | {x: int}) & Foo
+def b: int -> int & Foo | {x: int} & Foo
+//│ a: Foo
+//│  = <missing implementation>
+//│ b: Foo & {x: int}
+//│  = <missing implementation>
+
+:ne
+ax = a.x
+bx = b.x
+//│ ax: anything
+//│ bx: int
+
+
+// * Yet, this does not immediately lead to unsoundness due to the aggressive normalization
+// * performed during constraint solving:
+
+:ne
+a = b
+//│ Foo & {x: int}
+//│   <:  a:
+//│ Foo
+
+:e
+:ne
+b = a
+//│ Foo
+//│   <:  b:
+//│ Foo & {x: int}
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.168: 	b = a
+//│ ║         	^^^^^
+//│ ╟── expression of type `anything` is not an instance of type `int`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.144: 	def b: int -> int & Foo | {x: int} & Foo
+//│ ╙──       	                              ^^^
+
+
+// * To expose the unsoundness, we need some indirection with abstract types
+// * that prevent eagerly distributing the intersection type:
+
+class Test1[A, B]: { f: A & Foo }
+  method M: B & Foo | {x: int} & Foo
+//│ Defined class Test1[+A, +B]
+//│ Declared Test1.M: Test1[?, 'B] -> (Foo & 'B | Foo & {x: int})
+
+class Test2[B]: Test1[B | {x: int}, B]
+  method M = this.f : B & Foo | {x: int} & Foo
+//│ Defined class Test2[+B]
+//│ Defined Test2.M: Test2['B] -> (Foo & 'B | Foo & {x: int})
+
+oops = (Test2{f = Foo{x = "oops"}} : Test1[anything, int -> int]).M 
+//│ oops: Foo & {x: int}
+//│     = Foo { x: 'oops' }
+
+// * Notice the type confusion:
+oops.x + 1
+//│ res: int
+//│    = 'oops1'
+
 
 

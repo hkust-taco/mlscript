@@ -7,15 +7,31 @@
 fun f() =
   console.log("ok"), 42
 //│ JS:
-//│ function f() { let tmp; tmp = globalThis.console.log("ok"); return 42; } undefined
+//│ function f(...args) {
+//│   globalThis.Predef.checkArgs("f", 0, args.length);
+//│   let tmp;
+//│   tmp = globalThis.console.log("ok");
+//│   return 42;
+//│ }
+//│ undefined
 
 fun f() = { console.log("ok"), 42 }
 //│ JS:
-//│ function f() { let tmp; tmp = globalThis.console.log("ok"); return 42; } undefined
+//│ function f(...args) {
+//│   globalThis.Predef.checkArgs("f", 0, args.length);
+//│   let tmp;
+//│   tmp = globalThis.console.log("ok");
+//│   return 42;
+//│ }
+//│ undefined
 
 fun f() = console.log("ok"), 42
 //│ JS:
-//│ function f() { return globalThis.console.log("ok"); } 42
+//│ function f(...args) {
+//│   globalThis.Predef.checkArgs("f", 0, args.length);
+//│   return globalThis.console.log("ok");
+//│ }
+//│ 42
 //│ = 42
 
 

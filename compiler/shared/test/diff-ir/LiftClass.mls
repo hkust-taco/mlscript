@@ -1,0 +1,158 @@
+:NewDefs
+:ParseOnly
+:UseIR
+:NoTailRec
+
+:prelude
+module True
+module False
+module Callable {
+  fun apply0() = 0
+  fun apply1(x0) = 0
+  fun apply2(x0,x1) = 0
+  fun apply3(x0,x1,x2) = 0
+  fun apply4(x0,x1,x2,x3) = 0
+  fun apply5(x0,x1,x2,x3,x4) = 0
+}
+module List[A, B]
+class Cons[A, B](h: A, t: Cons[A, B]) extends List[A, B]
+module Nil[A, B] extends List[A, B]
+module Option[A]
+class Some[A](x: A) extends Option[A]
+module None[A] extends Option[A]
+class Pair[A, B](x: A, y: B)
+class Tuple2[A, B](x: A, y: B)
+class Tuple3[A, B, C](x: A, y: B, z: C)
+module Nat
+class S(s: Nat) extends Nat
+module O extends Nat
+class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O)
+//│ |#module| |True|↵|#module| |False|↵|#module| |Callable| |{|→|#fun| |apply0|(||)| |#=| |0|↵|#fun| |apply1|(|x0|)| |#=| |0|↵|#fun| |apply2|(|x0|,|x1|)| |#=| |0|↵|#fun| |apply3|(|x0|,|x1|,|x2|)| |#=| |0|↵|#fun| |apply4|(|x0|,|x1|,|x2|,|x3|)| |#=| |0|↵|#fun| |apply5|(|x0|,|x1|,|x2|,|x3|,|x4|)| |#=| |0|←|↵|}|↵|#module| |List|[|A|,| |B|]|↵|#class| |Cons|[|A|,| |B|]|(|h|#:| |A|,| |t|#:| |Cons|[|A|,| |B|]|)| |#extends| |List|[|A|,| |B|]|↵|#module| |Nil|[|A|,| |B|]| |#extends| |List|[|A|,| |B|]|↵|#module| |Option|[|A|]|↵|#class| |Some|[|A|]|(|x|#:| |A|)| |#extends| |Option|[|A|]|↵|#module| |None|[|A|]| |#extends| |Option|[|A|]|↵|#class| |Pair|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple2|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple3|[|A|,| |B|,| |C|]|(|x|#:| |A|,| |y|#:| |B|,| |z|#:| |C|)|↵|#module| |Nat|↵|#class| |S|(|s|#:| |Nat|)| |#extends| |Nat|↵|#module| |O| |#extends| |Nat|↵|#class| |HiddenTheseEntities|(|_0|#:| |HiddenTheseEntities|,| |_1|#:| |True|,| |_2|#:| |False|,| |_3|#:| |Callable|,| |_4|#:| |List|,| |_5|#:| |Cons|,| |_6|#:| |Nil|,| |_7|#:| |Option|,| |_8|#:| |Some|,| |_9|#:| |None|,| |_10|#:| |Pair|,| |_11|#:| |Tuple2|,| |_12|#:| |Tuple3|,| |_13|#:| |Nat|,| |_14|#:| |S|,| |_15|#:| |O|)|
+//│ Parsed: {module True {}; module False {}; module Callable {fun apply0 = () => 0; fun apply1 = (x0,) => 0; fun apply2 = (x0, x1,) => 0; fun apply3 = (x0, x1, x2,) => 0; fun apply4 = (x0, x1, x2, x3,) => 0; fun apply5 = (x0, x1, x2, x3, x4,) => 0}; module List‹A, B› {}; class Cons‹A, B›(h: A, t: Cons‹A, B›,): List‹A, B› {}; module Nil‹A, B›: List‹A, B› {}; module Option‹A› {}; class Some‹A›(x: A,): Option‹A› {}; module None‹A›: Option‹A› {}; class Pair‹A, B›(x: A, y: B,) {}; class Tuple2‹A, B›(x: A, y: B,) {}; class Tuple3‹A, B, C›(x: A, y: B, z: C,) {}; module Nat {}; class S(s: Nat,): Nat {}; module O: Nat {}; class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O,) {}}
+//│ 
+//│ Preluded.
+//│ 
+
+:genCpp
+:runCpp
+:interpIR
+fun main(x) =
+  class InnerClass(y) extends Callable {
+    fun apply1(z) = x + y + z
+  }
+  let ic = InnerClass(1)
+  ic(2) + ic(3)
+main(4)
+//│ |#fun| |main|(|x|)| |#=|→|#class| |InnerClass|(|y|)| |#extends| |Callable| |{|→|#fun| |apply1|(|z|)| |#=| |x| |+| |y| |+| |z|←|↵|}|↵|#let| |ic| |#=| |InnerClass|(|1|)|↵|ic|(|2|)| |+| |ic|(|3|)|←|↵|main|(|4|)|
+//│ Parsed: {fun main = (x,) => {class InnerClass(y,): Callable {fun apply1 = (z,) => +(+(x, y,), z,)}; let ic = InnerClass(1,); +(ic(2,), ic(3,),)}; main(4,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│   class InnerClass(y,x) extends Callable {
+//│     def apply1(z$0) =
+//│       let x$6 = +(x,y) in -- #45
+//│       let x$7 = +(x$6,z$0) in -- #44
+//│       x$7 -- #43
+//│   }
+//│   def main(x$1) =
+//│     let x$2 = InnerClass(1,x$1) in -- #26
+//│     let x$3 = Callable.apply1(x$2,2) in -- #25
+//│     let x$4 = Callable.apply1(x$2,3) in -- #24
+//│     let x$5 = +(x$3,x$4) in -- #23
+//│     x$5 -- #22
+//│   let* (x$0) = main(4) in -- #4
+//│   x$0 -- #3
+//│ 
+//│ Interpreted:
+//│ 15
+//│ 
+//│ 
+//│ Execution succeeded: 
+//│ 15
+//│ 
+
+:genCpp
+:runCpp
+:interpIR
+fun main(x) =
+  class InnerClass(y) extends Callable {
+    fun apply1(z) =
+      module InnerClass2 extends Callable {
+        fun apply1(w) = w + z
+      }
+      InnerClass2
+  }
+  let ic = InnerClass(1)
+  ic(2)(2) + ic(3)(1)
+main(4)
+//│ |#fun| |main|(|x|)| |#=|→|#class| |InnerClass|(|y|)| |#extends| |Callable| |{|→|#fun| |apply1|(|z|)| |#=|→|#module| |InnerClass2| |#extends| |Callable| |{|→|#fun| |apply1|(|w|)| |#=| |w| |+| |z|←|↵|}|↵|InnerClass2|←|←|↵|}|↵|#let| |ic| |#=| |InnerClass|(|1|)|↵|ic|(|2|)|(|2|)| |+| |ic|(|3|)|(|1|)|←|↵|main|(|4|)|
+//│ Parsed: {fun main = (x,) => {class InnerClass(y,): Callable {fun apply1 = (z,) => {module InnerClass2: Callable {fun apply1 = (w,) => +(w, z,)}; InnerClass2}}; let ic = InnerClass(1,); +(ic(2,)(2,), ic(3,)(1,),)}; main(4,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│   class InnerClass(y) extends Callable {
+//│     def apply1(z$0) =
+//│       let x$8 = InnerClass2(z$0) in -- #44
+//│       x$8 -- #43
+//│   }
+//│   class InnerClass2(z) extends Callable {
+//│     def apply1(w$0) =
+//│       let x$9 = +(w$0,z) in -- #51
+//│       x$9 -- #50
+//│   }
+//│   def main(x$1) =
+//│     let x$2 = InnerClass(1) in -- #36
+//│     let x$3 = Callable.apply1(x$2,2) in -- #35
+//│     let x$4 = Callable.apply1(x$3,2) in -- #34
+//│     let x$5 = Callable.apply1(x$2,3) in -- #33
+//│     let x$6 = Callable.apply1(x$5,1) in -- #32
+//│     let x$7 = +(x$4,x$6) in -- #31
+//│     x$7 -- #30
+//│   let* (x$0) = main(4) in -- #4
+//│   x$0 -- #3
+//│ 
+//│ Interpreted:
+//│ 8
+//│ 
+//│ 
+//│ Execution succeeded: 
+//│ 8
+//│ 
+
+:genCpp
+:runCpp
+:interpIR
+fun main(x) =
+  class InnerClass(y) extends Callable {
+    fun f(x) = y
+  }
+  let ic = InnerClass(1)
+  InnerClass.f(ic, Nil)
+main(2)
+//│ |#fun| |main|(|x|)| |#=|→|#class| |InnerClass|(|y|)| |#extends| |Callable| |{|→|#fun| |f|(|x|)| |#=| |y|←|↵|}|↵|#let| |ic| |#=| |InnerClass|(|1|)|↵|InnerClass|.f|(|ic|,| |Nil|)|←|↵|main|(|2|)|
+//│ Parsed: {fun main = (x,) => {class InnerClass(y,): Callable {fun f = (x,) => y}; let ic = InnerClass(1,); (InnerClass).f(ic, Nil,)}; main(2,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│   class InnerClass(y) extends Callable {
+//│     def f(x$5) =
+//│       y -- #24
+//│   }
+//│   def main(x$1) =
+//│     let x$2 = InnerClass(1) in -- #17
+//│     let x$3 = Nil() in -- #16
+//│     let x$4 = InnerClass.f(x$2,x$3) in -- #15
+//│     x$4 -- #14
+//│   let* (x$0) = main(2) in -- #4
+//│   x$0 -- #3
+//│ 
+//│ Interpreted:
+//│ 1
+//│ 
+//│ 
+//│ Execution succeeded: 
+//│ 1
+//│ 

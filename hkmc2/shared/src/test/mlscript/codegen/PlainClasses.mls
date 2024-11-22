@@ -60,7 +60,8 @@ fun test() =
   log("ok")
   Foo
 //│ JS:
-//│ function test() {
+//│ function test(...args) {
+//│   globalThis.Predef.checkArgs("test", 0, args.length);
 //│   let tmp;
 //│   class Foo {
 //│     constructor() {
@@ -105,7 +106,8 @@ class Foo with
 //│     tmp = this.x + 1;
 //│     this.#y = tmp;
 //│   }
-//│   z() {
+//│   z(...args) {
+//│     globalThis.Predef.checkArgs("z", 0, args.length);
 //│     return this.#y + this.x;
 //│   }
 //│   toString() { return "Foo"; }
@@ -132,10 +134,12 @@ class Foo with
 //│     this.#y2 = 4;
 //│     globalThis.log("hello")
 //│   }
-//│   z1() {
+//│   z1(...args) {
+//│     globalThis.Predef.checkArgs("z1", 0, args.length);
 //│     return 5;
 //│   } 
-//│   z2() {
+//│   z2(...args1) {
+//│     globalThis.Predef.checkArgs("z2", 0, args1.length);
 //│     return 6;
 //│   }
 //│   toString() { return "Foo"; }
@@ -152,10 +156,14 @@ class Foo with
 //│   constructor() {
 //│     this.x = 1;
 //│   }
-//│   foo(y) {
+//│   foo(...args) {
+//│     globalThis.Predef.checkArgs("foo", 1, args.length);
+//│     let y = args[0];
 //│     return this.x + y;
 //│   } 
-//│   bar(z) {
+//│   bar(...args1) {
+//│     globalThis.Predef.checkArgs("bar", 1, args1.length);
+//│     let z = args1[0];
 //│     let tmp;
 //│     tmp = this.foo(z);
 //│     return tmp + 1;
@@ -208,13 +216,13 @@ class Foo with
 :fixme
 class Foo with val x = 1
 //│ ╔══[PARSE ERROR] Expected block after type declaration body; found 'val' keyword instead
-//│ ║  l.209: 	class Foo with val x = 1
+//│ ║  l.217: 	class Foo with val x = 1
 //│ ╙──       	               ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.209: 	class Foo with val x = 1
+//│ ║  l.217: 	class Foo with val x = 1
 //│ ╙──       	                     ^
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
-//│ ║  l.209: 	class Foo with val x = 1
+//│ ║  l.217: 	class Foo with val x = 1
 //│ ╙──       	                   ^
 //│ JS:
 //│ /* error */

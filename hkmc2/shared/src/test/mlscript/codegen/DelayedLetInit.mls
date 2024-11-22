@@ -44,7 +44,11 @@ z = 1
 
 fun f() = 1
 //│ JS:
-//│ function f() { return 1; } undefined
+//│ function f(...args) {
+//│   globalThis.Predef.checkArgs("f", 0, args.length);
+//│   return 1;
+//│ }
+//│ undefined
 
 f
 //│ JS:
@@ -55,7 +59,12 @@ f
 let f
 f(x) = x + 1
 //│ JS:
-//│ this.f = (x) => { return x + 1; }; undefined
+//│ this.f = (...args) => {
+//│   globalThis.Predef.checkArgs("", 1, args.length);
+//│   let x = args[0];
+//│   return x + 1;
+//│ };
+//│ undefined
 //│ f = [Function (anonymous)]
 
 f(1)
@@ -76,7 +85,7 @@ if true
 then foo = 0
 else foo = 1
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.76: 	then foo = 0
+//│ ║  l.85: 	then foo = 0
 //│ ╙──      	         ^
 //│ JS:
 //│ let scrut; scrut = true; if (scrut) { this.foo } else { throw new this.Error("match error"); }
@@ -97,7 +106,12 @@ else
 fun f() =
   foo = 42
 //│ JS:
-//│ function f() { globalThis.foo = 42; return undefined; } undefined
+//│ function f(...args) {
+//│   globalThis.Predef.checkArgs("f", 0, args.length);
+//│   globalThis.foo = 42;
+//│   return undefined;
+//│ }
+//│ undefined
 
 f()
 //│ JS:
@@ -112,9 +126,13 @@ foo
 :fixme
 fun f() = foo = 0
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.113: 	fun f() = foo = 0
+//│ ║  l.127: 	fun f() = foo = 0
 //│ ╙──       	              ^
 //│ JS:
-//│ function f() { return globalThis.foo; } undefined
+//│ function f(...args) {
+//│   globalThis.Predef.checkArgs("f", 0, args.length);
+//│   return globalThis.foo;
+//│ }
+//│ undefined
 
 

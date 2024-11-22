@@ -22,7 +22,9 @@ fun test(a) =
       h(d)
   Inner(42)
 //│ JS:
-//│ function test(a) {
+//│ function test(...args) {
+//│   globalThis.Predef.checkArgs("test", 1, args.length);
+//│   let a = args[0];
 //│   function Inner(b1) { return new Inner.class(b1); };
 //│   Inner.class = class Inner {
 //│     constructor(b) {
@@ -30,17 +32,23 @@ fun test(a) =
 //│       let tmp;
 //│       tmp = globalThis.log(a);
 //│     }
-//│     f(c) {
+//│     f(...args1) {
+//│       globalThis.Predef.checkArgs("f", 1, args1.length);
+//│       let c = args1[0];
 //│       return [
 //│         a,
 //│         this.b,
 //│         c
 //│       ];
 //│     } 
-//│     g(d) {
+//│     g(...args2) {
+//│       globalThis.Predef.checkArgs("g", 1, args2.length);
+//│       let d = args2[0];
 //│       
 //│       const this$Inner = this;
-//│       function h(e) {
+//│       function h(...args1) {
+//│         globalThis.Predef.checkArgs("h", 1, args1.length);
+//│         let e = args1[0];
 //│         return [
 //│           a,
 //│           this$Inner.b,
@@ -75,7 +83,9 @@ fun test(a) =
     print of [a, b]
   [C1(1), C2(2)]
 //│ JS:
-//│ function test(a) {
+//│ function test(...args) {
+//│   globalThis.Predef.checkArgs("test", 1, args.length);
+//│   let a = args[0];
 //│   let tmp, tmp1;
 //│   function C1(b1) { return new C1.class(b1); };
 //│   C1.class = class C1 {
@@ -130,14 +140,17 @@ Foo(123)
 //│     this.a = a;
 //│     this.foo()
 //│   }
-//│   foo() {
+//│   foo(...args) {
+//│     globalThis.Predef.checkArgs("foo", 0, args.length);
 //│     let tmp;
 //│     
 //│     const this$Foo = this;
-//│     function bar() {
+//│     function bar(...args1) {
+//│       globalThis.Predef.checkArgs("bar", 0, args1.length);
 //│       return this$Foo.a;
 //│     }
-//│     function baz() {
+//│     function baz(...args1) {
+//│       globalThis.Predef.checkArgs("baz", 0, args1.length);
 //│       return this$Foo.a;
 //│     }
 //│     tmp = bar();

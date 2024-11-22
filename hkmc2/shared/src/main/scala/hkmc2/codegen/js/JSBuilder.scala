@@ -96,9 +96,9 @@ class JSBuilder extends CodeBuilder:
         case _ => result(fun)
       doc"${base}(${args.map(result).mkDocument(", ")})"
     case Value.Lam(ps, bod) => scope.nest givenIn:
-      val vars = ps.map(p => scope.allocateName(p.sym)).mkDocument(", ")
-      doc"($vars) => { #{  # ${
-        body(bod)
+      val (params, bodyDoc) = setupFunction(none, ps, bod)
+      doc"($params) => { #{  # ${
+        bodyDoc
       } #}  # }"
     case Select(qual, id) =>
       val name = id.name
@@ -145,11 +145,11 @@ class JSBuilder extends CodeBuilder:
           case FunDefn(sym, Nil, body) =>
             TODO("getters")
           case FunDefn(sym, ParamList(_, ps) :: pss, bod) =>
-            val paramList = ps.map(p => scope.allocateName(p.sym)).mkDocument(", ")
             val result = pss.foldRight(bod):
               case (ParamList(_, ps), block) => 
                 Return(Lam(ps, block), false)
-            doc"function ${sym.nme}(${paramList}) { #{  # ${body(result)} #}  # }"
+            val (params, bodyDoc) = setupFunction(some(sym.nme), ps, result)
+            doc"function ${sym.nme}($params) { #{  # ${bodyDoc} #}  # }"
           case ClsLikeDefn(sym, syntax.Cls, mtds, flds, ctor) =>
             val clsDefn = sym.defn.getOrElse(die)
             val clsParams = clsDefn.paramsOpt.getOrElse(Nil)
@@ -166,12 +166,12 @@ class JSBuilder extends CodeBuilder:
               } #}  # }${
                 mtds.map: 
                   case td @ FunDefn(_, ParamList(_, ps) :: pss, bod) =>
-                    val vars = ps.map(p => scope.allocateName(p.sym)).mkDocument(", ")
                     val result = pss.foldRight(bod):
                       case (ParamList(_, ps), block) => 
                         Return(Lam(ps, block), false)
-                    doc" # ${td.sym.nme}($vars) { #{  # ${
-                      body(result)
+                    val (params, bodyDoc) = setupFunction(some(td.sym.nme), ps, result)
+                    doc" # ${td.sym.nme}($params) { #{  # ${
+                      bodyDoc
                     } #}  # }"
                 .mkDocument(" ")
               }${
@@ -187,7 +187,7 @@ class JSBuilder extends CodeBuilder:
                     } + ")""""
                 }; }"""
               } #}  # }"
-            if clsDefn.kind is syntax.Mod then
+            if (clsDefn.kind is syntax.Mod) || (clsDefn.kind is syntax.Obj) then
               val clsTmp = summon[Scope].allocateName(new semantics.TempSymbol(0/*TODO rm this useless param*/, N, sym.nme+"$"+"class"))
               clsDefn.owner match
               case S(owner) =>
@@ -318,9 +318,9 @@ class JSBuilder extends CodeBuilder:
       )
   
   def block(t: Block)(using Raise, Scope): Document =
-    if t.definedVars.isEmpty then returningTerm(t).stripBreaks else
-      val vars = t.definedVars.toSeq.sortBy(_.uid).iterator.map(l =>
-        l -> scope.allocateName(l))
+    val vars = t.definedVars.toSeq.filter(scope.lookup(_).isEmpty).sortBy(_.uid).iterator.map(l =>
+      l -> scope.allocateName(l))
+    if vars.isEmpty then returningTerm(t).stripBreaks else
       doc"let " :: vars.map: (_, nme) =>
         nme
       .toList.mkDocument(", ")
@@ -329,7 +329,12 @@ class JSBuilder extends CodeBuilder:
   def body(t: Block)(using Raise, Scope): Document = scope.nest givenIn:
     block(t)
   
-  
+  def setupFunction(name: Option[Str], params: List[semantics.Param], body: Block)(using Raise, Scope): (Document, Document) =
+    val paramsList = params.map(p => scope.allocateName(p.sym)).mkDocument(", ")
+    (paramsList, this.body(body))
+
+
+
 object JSBuilder:
   import scala.util.matching.Regex
   
@@ -400,6 +405,9 @@ object JSBuilder:
   )
   
   def makeStringLiteral(s: Str): Str =
+    s"\"${escapeStringCharacters(s)}\""
+  
+  def escapeStringCharacters(s: Str): Str =
     s.map[Str] {
       case '"'  => "\\\""
       case '\\' => "\\\\"
@@ -412,8 +420,24 @@ object JSBuilder:
         if 0 < c && c <= 255 && !c.isControl
         then c.toString
         else f"\\u${c.toInt}%04X"
-    }.mkString("\"", "", "\"")
+    }.mkString
   
 end JSBuilder
 
+
+trait JSBuilderSanityChecks(instrument: Bool) extends JSBuilder:
+  
+  val functionParamVarargSymbol = semantics.TempSymbol(0, N, "args")
+  
+  override def setupFunction(name: Option[Str], params: List[semantics.Param], body: Block)(using Raise, Scope): (Document, Document) =
+    if instrument then
+      val paramsList = params.map(p => Scope.scope.allocateName(p.sym))
+      val paramsStr = Scope.scope.allocateName(functionParamVarargSymbol)
+      val functionName = JSBuilder.makeStringLiteral(name.fold("")(n => s"${JSBuilder.escapeStringCharacters(n)}"))
+      val checkArgsNum = doc"globalThis.Predef.checkArgs($functionName, ${params.length}, $paramsStr.length);\n"
+      val paramsAssign = paramsList.zipWithIndex.map{(nme, i) =>
+        doc"let ${nme} = ${paramsStr}[$i];\n"}.mkDocument("")
+      (doc"...$paramsStr", doc"$checkArgsNum$paramsAssign${this.body(body)}")
+    else
+      super.setupFunction(name, params, body)
 

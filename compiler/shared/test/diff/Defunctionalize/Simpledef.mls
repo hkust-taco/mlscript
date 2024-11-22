@@ -1,0 +1,82 @@
+:NewDefs
+
+class X() {
+    val num = 6
+}
+class Y() {
+    val num = true
+}
+fun foo(pred) = if pred then X() else Y()
+foo(true).num
+//│ class X() {
+//│   val num: 6
+//│ }
+//│ class Y() {
+//│   val num: true
+//│ }
+//│ fun foo: Bool -> (X | Y)
+//│ 6 | true
+//│ 
+//│ Simpledef:
+//│ {class X() {let num = 6}
+//│  class Y() {let num = true}
+//│  fun foo = (pred::0,) => if (pred) then X() else Y()
+//│  let selRes$26 = foo(true,) in case selRes$26 of { Y => (selRes$26).num
+//│  X => (selRes$26).num }}
+//│ End simpledef
+//│ 
+//│ res
+//│     = 6
+
+class X() {
+    val num = 6
+}
+class Y() {
+    val num = true
+}
+class A() {
+    val num = X()
+}
+class B() {
+    val num = Y()
+}
+class C() {
+    val num = X()
+}
+fun foo(pred) =
+    if pred == 1 then A() else 
+        if pred == 2 then B() else C()
+foo(5).num.num
+//│ class X() {
+//│   val num: 6
+//│ }
+//│ class Y() {
+//│   val num: true
+//│ }
+//│ class A() {
+//│   val num: X
+//│ }
+//│ class B() {
+//│   val num: Y
+//│ }
+//│ class C() {
+//│   val num: X
+//│ }
+//│ fun foo: Num -> (A | B | C)
+//│ 6 | true
+//│ 
+//│ Simpledef:
+//│ {class X() {let num = 6}
+//│  class Y() {let num = true}
+//│  class A() {let num = X()}
+//│  class B() {let num = Y()}
+//│  class C() {let num = X()}
+//│  fun foo = (pred::1,) => {if (==(pred, 1,)) then A() else {if (==(pred, 2,)) then B() else C()}}
+//│  let selRes$74 = let selRes$76 = foo(5,) in case selRes$76 of { B => (selRes$76).num
+//│  C => (selRes$76).num
+//│  A => (selRes$76).num } in case selRes$74 of { X => (selRes$74).num
+//│  Y => (selRes$74).num }}
+//│ End simpledef
+//│ 
+//│ res
+//│     = 6

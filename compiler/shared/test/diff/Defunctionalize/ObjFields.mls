@@ -1,0 +1,34 @@
+:NewDefs
+
+
+class X(val bar: Int) {}
+class Y(val bar: Str) {}
+class A(val foo: X) {}
+class B(val foo: Y) {}
+fun getObj(pred) = if pred then A(X(1)) else B(Y("abc"))
+val x = getObj(true)
+x.foo.bar
+//│ class X(bar: Int)
+//│ class Y(bar: Str)
+//│ class A(foo: X)
+//│ class B(foo: Y)
+//│ fun getObj: Bool -> (A | B)
+//│ val x: A | B
+//│ Int | Str
+//│ 
+//│ Simpledef:
+//│ {class X(val bar: Int,) {}
+//│  class Y(val bar: Str,) {}
+//│  class A(val foo: X,) {}
+//│  class B(val foo: Y,) {}
+//│  fun getObj = (pred::0,) => if (pred) then A(X(1,),) else B(Y("abc",),)
+//│  let x = getObj(true,)
+//│  let selRes$54 = let selRes$56 = x in case selRes$56 of { A => (selRes$56).foo
+//│  B => (selRes$56).foo } in case selRes$54 of { Y => (selRes$54).bar
+//│  X => (selRes$54).bar }}
+//│ End simpledef
+//│ 
+//│ x
+//│   = A {}
+//│ res
+//│     = 1

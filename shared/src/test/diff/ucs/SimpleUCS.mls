@@ -1,71 +1,76 @@
-:NewParser
+:NewDefs
 
-class Option
-class Some(value): Option
-class None: Option
-//│ Defined class Option
-//│ Defined class Some
-//│ Defined class None
-//│ Option: () -> Option
-//│       = [Function: Option1]
-//│ Some: 'value -> (Some & {value: 'value})
-//│     = [Function: Some1]
-//│ None: () -> None
-//│     = [Function: None1]
+abstract class Option[A]: Some[A] | None
+class Some[A](value: A) extends Option[A]
+module None extends Option
+//│ abstract class Option[A]: None | Some[A]
+//│ class Some[A](value: A) extends Option
+//│ module None extends Option
 
-class Either
-class Left(leftValue): Either
-class Right(rightValue): Either
-//│ Defined class Either
-//│ Defined class Left
-//│ Defined class Right
-//│ Either: () -> Either
-//│       = [Function: Either1]
-//│ Left: 'leftValue -> (Left & {leftValue: 'leftValue})
-//│     = [Function: Left1]
-//│ Right: 'rightValue -> (Right & {rightValue: 'rightValue})
-//│      = [Function: Right1]
+abstract class Either[out A, out B]: Left[A] | Right[B]
+class Left[A](leftValue: A) extends Either[A, nothing]
+class Right[B](rightValue: B) extends Either[nothing, B]
+//│ abstract class Either[A, B]: Left[A] | Right[B]
+//│ class Left[A](leftValue: A) extends Either
+//│ class Right[B](rightValue: B) extends Either
 
 :e
-:ge
 fun f(x, y) =
   if x is
     Left(xv) and y is Left(yv) then xv + yv
     Right(xv) and y is Right(yv) then xv * yv
-    None() and y is None() then 0
-//│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.33: 	    Left(xv) and y is Left(yv) then xv + yv
-//│ ║        	                 ^^^^^^^^^^^^^
-//│ ╟── The scrutinee at this position misses 2 cases.
-//│ ║  l.33: 	    Left(xv) and y is Left(yv) then xv + yv
+    None and y is None then 0
+//│ ╔══[ERROR] when `x` is `Left`
+//│ ║  l.20: 	    Left(xv) and y is Left(yv) then xv + yv
+//│ ║        	    ^^^^
+//│ ╟── `y` has 2 missing cases
+//│ ║  l.20: 	    Left(xv) and y is Left(yv) then xv + yv
 //│ ║        	                 ^
-//│ ╟── [Missing Case 1/2] `None`
-//│ ╟── It first appears here.
-//│ ║  l.35: 	    None() and y is None() then 0
-//│ ║        	                    ^^^^^^
-//│ ╟── [Missing Case 2/2] `Right`
-//│ ╟── It first appears here.
-//│ ║  l.34: 	    Right(xv) and y is Right(yv) then xv * yv
-//│ ╙──      	                       ^^^^^^^^^
-//│ f: (anything, anything,) -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╟── it can be module `None`
+//│ ║  l.22: 	    None and y is None then 0
+//│ ║        	                  ^^^^
+//│ ╟── it can be class `Right`
+//│ ║  l.21: 	    Right(xv) and y is Right(yv) then xv * yv
+//│ ╙──      	                       ^^^^^
+//│ ╔══[ERROR] when `x` is `Right`
+//│ ║  l.21: 	    Right(xv) and y is Right(yv) then xv * yv
+//│ ║        	    ^^^^^
+//│ ╟── `y` has 2 missing cases
+//│ ║  l.21: 	    Right(xv) and y is Right(yv) then xv * yv
+//│ ║        	                  ^
+//│ ╟── it can be class `Left`
+//│ ║  l.20: 	    Left(xv) and y is Left(yv) then xv + yv
+//│ ║        	                      ^^^^
+//│ ╟── it can be module `None`
+//│ ║  l.22: 	    None and y is None then 0
+//│ ╙──      	                  ^^^^
+//│ ╔══[ERROR] when `x` is `None`
+//│ ║  l.22: 	    None and y is None then 0
+//│ ║        	    ^^^^
+//│ ╟── `y` has 2 missing cases
+//│ ║  l.22: 	    None and y is None then 0
+//│ ║        	             ^
+//│ ╟── it can be class `Left`
+//│ ║  l.20: 	    Left(xv) and y is Left(yv) then xv + yv
+//│ ║        	                      ^^^^
+//│ ╟── it can be class `Right`
+//│ ║  l.21: 	    Right(xv) and y is Right(yv) then xv * yv
+//│ ╙──      	                       ^^^^^
+//│ fun f: (Left[Int] | None | Right[Int], nothing) -> Int
 
 fun f(x, y) =
   if x is
     Left(xv) and y is Left(yv) then xv + yv
-    None() then 0
-//│ f: (Left & {leftValue: int} | None, Left & {leftValue: int},) -> int
-//│  = [Function: f1]
+    None then 0
+//│ fun f: (Left[Int] | None, Left[Int]) -> Int
 
 fun f(x, y) =
   if x is
     Left(xv) and y is
       Left(yv) then xv + yv
       Right(yv) then xv * yv
-    None() then 0
-//│ f: (Left & {leftValue: int} | None, Left & {leftValue: int} | Right & {rightValue: int},) -> int
-//│  = [Function: f2]
+    None then 0
+//│ fun f: (Left[Int] | None, Left[Int] | Right[Int]) -> Int
 
 fun f(x) =
   if x is
@@ -73,25 +78,19 @@ fun f(x) =
       v < 0 then "negative"
       v > 0 then "positive"
       _     then "zero"
-    None() then "nothing"
-//│ f: (None | Some & {value: number}) -> ("negative" | "nothing" | "positive" | "zero")
-//│  = [Function: f3]
+    None then "nothing"
+//│ fun f: (None | Some[Num]) -> ("negative" | "nothing" | "positive" | "zero")
 
 fun f(x, y) =
   if x is
     Some(x) and y is
       Some(y) then 0
-//│ f: (Some, Some,) -> 0
-//│  = [Function: f4]
+//│ fun f: (Some[anything], Some[anything]) -> 0
 
-class A(value)
-class B(value)
-//│ Defined class A
-//│ Defined class B
-//│ A: 'value -> (A & {value: 'value})
-//│  = [Function: A1]
-//│ B: 'value -> (B & {value: 'value})
-//│  = [Function: B1]
+class A[T](value: T)
+class B[T](value: T)
+//│ class A[T](value: T)
+//│ class B[T](value: T)
 
 fun f(x, y, u, v) =
   if x is
@@ -102,107 +101,97 @@ fun f(x, y, u, v) =
       B(0) then 0
       B(1) then 1
     A(_) then 99
-//│ f: (A, number, number, number,) -> (0 | 1 | 99)
-//│  = [Function: f5]
+//│ fun f: (A[anything], Num, Num, Num) -> (0 | 1 | 99)
 
 fun f(x) =
   if x is
     A(_) then "A"
     B(_) then "B"
-//│ f: (A | B) -> ("A" | "B")
-//│  = [Function: f6]
+//│ fun f: (A[anything] | B[anything]) -> ("A" | "B")
 
 :e
-:ge
 fun f(x, y) =
   if x is
     Some(xv) and y is Some(yv) then xv + yv
-    None() and y is None() then 0
-//│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.119: 	    Some(xv) and y is Some(yv) then xv + yv
-//│ ║         	                 ^^^^^^^^^^^^^
-//│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.119: 	    Some(xv) and y is Some(yv) then xv + yv
+    None and y is None then 0
+//│ ╔══[ERROR] when `x` is `Some`
+//│ ║  l.115: 	    Some(xv) and y is Some(yv) then xv + yv
+//│ ║         	    ^^^^
+//│ ╟── `y` has 1 missing case
+//│ ║  l.115: 	    Some(xv) and y is Some(yv) then xv + yv
 //│ ║         	                 ^
-//│ ╟── [Missing Case 1/1] `None`
-//│ ╟── It first appears here.
-//│ ║  l.120: 	    None() and y is None() then 0
-//│ ╙──       	                    ^^^^^^
-//│ f: (anything, anything,) -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╟── it can be module `None`
+//│ ║  l.116: 	    None and y is None then 0
+//│ ╙──       	                  ^^^^
+//│ ╔══[ERROR] when `x` is `None`
+//│ ║  l.116: 	    None and y is None then 0
+//│ ║         	    ^^^^
+//│ ╟── `y` has 1 missing case
+//│ ║  l.116: 	    None and y is None then 0
+//│ ║         	             ^
+//│ ╟── it can be class `Some`
+//│ ║  l.115: 	    Some(xv) and y is Some(yv) then xv + yv
+//│ ╙──       	                      ^^^^
+//│ fun f: (None | Some[Int], nothing) -> Int
 
 :e
-:ge
 fun f(x, y) =
   if x is
     Some(xv) and y is
       Some(yv) then xv + yv
-      None() then xv * 2
-    None() and y is
+      None then xv * 2
+    None and y is
       Some(yv) then yv * 3
-//│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.142: 	    None() and y is
-//│ ║         	               ^^^^
-//│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.142: 	    None() and y is
-//│ ║         	               ^
-//│ ╟── [Missing Case 1/1] `None`
-//│ ╟── It first appears here.
-//│ ║  l.141: 	      None() then xv * 2
-//│ ╙──       	      ^^^^^^
-//│ f: (anything, anything,) -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[ERROR] when `x` is `None`
+//│ ║  l.143: 	    None and y is
+//│ ║         	    ^^^^
+//│ ╟── `y` has 1 missing case
+//│ ║  l.143: 	    None and y is
+//│ ║         	             ^
+//│ ╟── it can be module `None`
+//│ ║  l.142: 	      None then xv * 2
+//│ ╙──       	      ^^^^
+//│ fun f: (None | Some[Int], Some[Int]) -> Int
 
 fun f(x, y) =
   if x is
     A and y is
       B then "bruh"
-//│ f: (A, B,) -> "bruh"
-//│  = [Function: f9]
+//│ fun f: (A[anything], B[anything]) -> "bruh"
 
 fun f(x, y, z) =
   if x is
     A and z == 0 and y == 0 and y is
       B then "bruh"
     A then "oui"
-//│ f: (A, number, number,) -> ("bruh" | "oui")
-//│  = [Function: f10]
+//│ fun f: (A[anything], Num, Num) -> ("bruh" | "oui")
 
 // We do need a syntax to specify default branch in IfOpsApp...
 :e
-:ge
 fun f(x, y) =
   if x is
     Some(x) and y
       >  0 then "gt"
       <  0 then "le"
       == 0 then "eq"
-//│ ╔══[ERROR] The case when this is false is not handled: ==(y,)(0,)
-//│ ║  l.178: 	    Some(x) and y
-//│ ║         	                ^
-//│ ║  l.179: 	      >  0 then "gt"
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.180: 	      <  0 then "le"
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.181: 	      == 0 then "eq"
-//│ ╙──       	^^^^^^^^^^
-//│ f: (anything, anything,) -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.176: 	      == 0 then "eq"
+//│ ╙──       	                ^^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.176: 	      == 0 then "eq"
+//│ ║         	                ^^^^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ fun f: (Some[anything], Num) -> ("eq" | "gt" | "le")
 
 fun isValid(x) = if x then false else true
-//│ isValid: anything -> Bool
-//│        = [Function: isValid]
+//│ fun isValid: Bool -> Bool
 
 fun f(x, allowNone) =
   if x is
     Some(x) and isValid(x) then "good"
-    None() and allowNone then "okay"
+    None and allowNone then "okay"
     else "bad"
-//│ f: (anything, anything,) -> ("bad" | "good" | "okay")
-//│  = [Function: f12]
+//│ fun f: (Object & ~#Some | Some[Bool], Bool) -> ("bad" | "good" | "okay")
 
 fun f(x) =
   if x is
@@ -210,47 +199,44 @@ fun f(x) =
     Some(x) then "roll"
     _ and x == 0 then 0
     _ then "rock"
-//│ f: (None | Some | number) -> ("bruh" | "rock" | "roll" | 0)
-//│  = [Function: f13]
+//│ fun f: (None | Num | Some[anything]) -> ("bruh" | "rock" | "roll" | 0)
 
 fun f(x, a, b) =
   if x is
     A(aa) and a then aa
     B(bb) and b then bb
     _           then 0
-//│ f: (A & {value: 'value} | B & {value: 'value} | ~A & ~B, anything, anything,) -> (0 | 'value)
-//│  = [Function: f14]
+//│ fun f: forall 'a. (A['a] | B['a] | Object & ~#A & ~#B, Bool, Bool) -> (0 | 'a)
 
 fun f(x, y, b) =
   if x is
     Some(xv) and y
       is Some(yv) then "bruh"
-      is None() then "bruh"
+      is None then "bruh"
     Some(xv) and b then xv + b
     _ then "roll"
-//│ f: (Some & {value: int} | ~Some, anything, ~true,) -> ("bruh" | "roll" | int)
-//│  = [Function: f15]
+//│ fun f: (Object & ~#Some | Some[Int], Object & ~#Some | Some[anything], nothing) -> ("bruh" | "roll" | Int)
 
 fun g(x, y, b) =
   if x is
     Some(xv) and y
       is Some(yv) then yv
-      is None() then "bruh"
+      is None then "bruh"
     Some(xv) and b then xv + b
     _ then "roll"
-//│ g: (Some & {value: int} | ~Some, Some & {value: 'value} | ~Some, ~true,) -> ("bruh" | "roll" | int | 'value)
-//│  = [Function: g]
+//│ fun g: forall 'a. (Object & ~#Some | Some[Int], Object & ~#Some | Some['a], nothing) -> ("bruh" | "roll" | Int | 'a)
 
 fun foo(x, y, z) =
-  if x - y > 0 then Some(x + y + z) else None()
-//│ foo: (int, int, int,) -> (None | Some & {value: int})
-//│    = [Function: foo]
+  if x - y > 0 then Some(x + y + z) else None
+//│ fun foo: forall 'A. (Int, Int, Int) -> (None | Some['A])
+//│   where
+//│     'A :> Int
 
 // Uncomment this block to make the following block work.
 // fun foo(x, y, z) =
 //   if x - y > 0 then Some(
 //     if x % 2 == 0 then Left(x) else Right(x)
-//   ) else None()
+//   ) else None
 
 :e
 fun f(u, v, w) =
@@ -260,31 +246,30 @@ fun f(u, v, w) =
       Right(_) then "right-defined"
     None then "undefined"
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.257: 	  if foo(u, v, w) is
-//│ ║         	     ^^^^^^^^^^^^^^^
-//│ ║  l.258: 	    Some(x) and x is
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.259: 	      Left(_) then "left-defined"
+//│ ║  l.244: 	    Some(x) and x is
+//│ ║         	    ^^^^^^^^^^^^^^^^
+//│ ║  l.245: 	      Left(_) then "left-defined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.260: 	      Right(_) then "right-defined"
+//│ ║  l.246: 	      Right(_) then "right-defined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.261: 	    None then "undefined"
+//│ ║  l.247: 	    None then "undefined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `int` does not match type `Left & ?a | Right & ?b`
-//│ ║  l.245: 	  if x - y > 0 then Some(x + y + z) else None()
+//│ ╟── operator application of type `Int` does not match type `Left[?A] | Right[?B]`
+//│ ║  l.230: 	  if x - y > 0 then Some(x + y + z) else None
 //│ ║         	                         ^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.258: 	    Some(x) and x is
+//│ ║  l.244: 	    Some(x) and x is
 //│ ║         	                ^
-//│ ╟── from application:
-//│ ║  l.257: 	  if foo(u, v, w) is
-//│ ╙──       	     ^^^^^^^^^^^^
-//│ f: (int, int, int,) -> ("left-defined" | "right-defined" | "undefined")
-//│  = [Function: f16]
+//│ ╟── from field selection:
+//│ ║  l.4: 	class Some[A](value: A) extends Option[A]
+//│ ║       	              ^^^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.4: 	class Some[A](value: A) extends Option[A]
+//│ ╙──     	           ^
+//│ fun f: (Int, Int, Int) -> ("left-defined" | "right-defined" | "undefined")
 
 fun p(x) = if x >= 0 then Right(x) else Left(x)
-//│ p: (number & 'rightValue) -> (Left & {leftValue: 'rightValue} | Right & {rightValue: 'rightValue})
-//│  = [Function: p]
+//│ fun p: forall 'B 'A. (Num & 'B & 'A) -> (Left['A] | Right['B])
 
 fun g(a, b) =
   if p(a) is
@@ -294,42 +279,32 @@ fun g(a, b) =
     Right(x) and b is
       Some(y) then x * y
       None    then x
-//│ g: (int, None | Some & {value: int},) -> int
-//│  = [Function: g1]
+//│ fun g: (Int, None | Some[Int]) -> Int
 
-g(5, None())
+g(5, None)
 g(5, Some(7))
-g(0 - 5, None())
+g(0 - 5, None)
 g(0 - 5, Some(9))
-//│ res: int
-//│    = 5
-//│ res: int
-//│    = 35
-//│ res: int
-//│    = 25
-//│ res: int
-//│    = 4
+//│ Int
+//│ res
+//│     = 5
+//│ res
+//│     = 35
+//│ res
+//│     = 25
+//│ res
+//│     = 4
 
-class Var(name)
-class ValBase
-class IntVal(value): ValBase
-class BoolVal(value): ValBase
-class Lit(value)
-//│ Defined class Var
-//│ Defined class ValBase
-//│ Defined class IntVal
-//│ Defined class BoolVal
-//│ Defined class Lit
-//│ Var: 'name -> (Var & {name: 'name})
-//│    = [Function: Var2]
-//│ ValBase: () -> ValBase
-//│        = [Function: ValBase1]
-//│ IntVal: 'value -> (IntVal & {value: 'value})
-//│       = [Function: IntVal1]
-//│ BoolVal: 'value -> (BoolVal & {value: 'value})
-//│        = [Function: BoolVal1]
-//│ Lit: 'value -> (Lit & {value: 'value})
-//│    = [Function: Lit1]
+class Var(name: Str)
+abstract class ValBase: (IntVal | BoolVal)
+class IntVal(value: Int) extends ValBase
+class BoolVal(value: Bool) extends ValBase
+class Lit(value: ValBase)
+//│ class Var(name: Str)
+//│ abstract class ValBase: BoolVal | IntVal
+//│ class IntVal(value: Int) extends ValBase
+//│ class BoolVal(value: Bool) extends ValBase
+//│ class Lit(value: ValBase)
 
 fun p(e, context) =
   if e is
@@ -338,72 +313,82 @@ fun p(e, context) =
       Some(BoolVal(v)) then Right(v)
     Lit(IntVal(v)) then Left(v)
     Lit(BoolVal(v)) then Right(v)
-//│ p: (Lit & {value: BoolVal & {value: 'value} | IntVal & {value: 'value0}} | Var & {name: 'name}, {
-//│   get: 'name -> (Some & {value: BoolVal & {value: 'value} | IntVal & {value: 'value0}})
-//│ },) -> (Left & {leftValue: 'value0} | Right & {rightValue: 'value})
-//│  = [Function: p1]
+//│ fun p: forall 'A 'B. (Lit | Var, {get: Str -> Some[BoolVal | IntVal]}) -> (Left[in 'A out Int | 'A] | Right[in 'B out Bool | 'B])
 
 class Nil()
-//│ Defined class Nil
-//│ Nil: () -> Nil
-//│    = [Function: Nil1]
+//│ class Nil()
 
 // Support operator constructor like ::
 :e
-:ge
 fun f(x) =
   if x is
     0 ::
       Nil() then "oh"
-//│ ╔══[ERROR] Cannot find operator `::` in the context
-//│ ║  l.356: 	    0 ::
+//│ ╔══[ERROR] Syntactic split of patterns are not supported
+//│ ║  l.325: 	    0 ::
 //│ ╙──       	      ^^
-//│ f: anything -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ fun f: anything -> nothing
 
 fun f(x) =
   if x == 0 and x is
     A(_) then "A"
     B(_) then "B"
   else "bruh"
-//│ f: number -> ("A" | "B" | "bruh")
-//│  = [Function: f18]
+//│ fun f: Num -> ("A" | "B" | "bruh")
 
 fun helper(x) =
-  if x == 0 then None() else Some(x)
-//│ helper: (number & 'value) -> (None | Some & {value: 'value})
-//│       = [Function: helper]
+  if x == 0 then None else Some(x)
+//│ fun helper: forall 'A. (Num & 'A) -> (None | Some['A])
 
 fun g(x, y) =
   if x == 0 and helper(x) is
     Some(a) and helper(y) is
       Some(b) then a + b
-      None() then a + 1
-    None() and helper(y) is
+      None then a + 1
+    None and helper(y) is
       Some(b) then 2 + b
-      None() then 1
+      None then 1
   else
     0
-//│ g: (int, int,) -> int
-//│  = [Function: g2]
+//│ fun g: (Int, Int) -> Int
 
 
 fun test(x) = if x then 0 else "oops"
-//│ test: anything -> ("oops" | 0)
-//│     = [Function: test]
+//│ fun test: Bool -> ("oops" | 0)
 
 test(true)
 test(false)
+//│ "oops" | 0
+//│ res
+//│     = 0
+//│ res
+//│     = 'oops'
+
+:e
 test(0)
 test(1)
-//│ res: "oops" | 0
-//│    = 0
-//│ res: "oops" | 0
-//│    = 'oops'
-//│ res: "oops" | 0
-//│    = 'oops'
-//│ res: "oops" | 0
-//│    = 'oops'
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.368: 	test(0)
+//│ ║         	^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type `Bool`
+//│ ║  l.368: 	test(0)
+//│ ║         	     ^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.356: 	fun test(x) = if x then 0 else "oops"
+//│ ╙──       	                 ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.369: 	test(1)
+//│ ║         	^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `Bool`
+//│ ║  l.369: 	test(1)
+//│ ║         	     ^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.356: 	fun test(x) = if x then 0 else "oops"
+//│ ╙──       	                 ^
+//│ "oops" | 0 | error
+//│ res
+//│     = 'oops'
+//│ res
+//│     = 'oops'
 
 

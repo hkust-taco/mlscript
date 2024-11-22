@@ -107,3 +107,82 @@ c()
 //│     = C {}
 
 
+:js
+class X(val a: Int)
+new X(1).a
+//│ class X(a: Int)
+//│ Int
+//│ // Prelude
+//│ class TypingUnit10 {
+//│   #X;
+//│   constructor() {
+//│   }
+//│   get X() {
+//│     const qualifier = this;
+//│     if (this.#X === undefined) {
+//│       class X {
+//│         #a;
+//│         get a() { return this.#a; }
+//│         constructor(a) {
+//│           this.#a = a;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#a];
+//│         }
+//│       };
+//│       this.#X = ((a) => Object.freeze(new X(a)));
+//│       this.#X.class = X;
+//│       this.#X.unapply = X.unapply;
+//│     }
+//│     return this.#X;
+//│   }
+//│ }
+//│ const typing_unit10 = new TypingUnit10;
+//│ globalThis.X = typing_unit10.X;
+//│ // Query 1
+//│ res = new X.class(1).a;
+//│ // End of generated code
+//│ res
+//│     = 1
+
+:js
+class X {
+  val a = 1
+}
+(new X).a
+//│ class X {
+//│   constructor()
+//│   val a: 1
+//│ }
+//│ 1
+//│ // Prelude
+//│ class TypingUnit11 {
+//│   #X;
+//│   constructor() {
+//│   }
+//│   get X() {
+//│     const qualifier = this;
+//│     if (this.#X === undefined) {
+//│       class X {
+//│         #a;
+//│         get a() { return this.#a; }
+//│         constructor() {
+//│           this.#a = 1;
+//│           const a = this.#a;
+//│         }
+//│       };
+//│       this.#X = X;
+//│     }
+//│     return this.#X;
+//│   }
+//│ }
+//│ const typing_unit11 = new TypingUnit11;
+//│ globalThis.X = typing_unit11.X;
+//│ // Query 1
+//│ res = (new X).a;
+//│ // End of generated code
+//│ res
+//│     = 1
+
+

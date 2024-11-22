@@ -49,3 +49,10 @@ foo(123:Int):Int
 //│ Code generation encountered an error:
 //│   unresolved symbol Int
 
+fun foo(f) =
+  let g = (x => f(x)): forall 'a : 'a -> 'a in g(123)
+//│ fun foo: (??a -> ??a0) -> 123
+
+fun foo(f) =
+  let g: forall 'a : 'a -> 'a = x => f(x) in g(123)
+//│ fun foo: (??a -> ??a0) -> 123

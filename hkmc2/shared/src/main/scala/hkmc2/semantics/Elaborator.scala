@@ -259,7 +259,34 @@ extends Importer:
       term(rhs)
     case tree @ App(lhs, rhs) =>
       val sym = FlowSymbol("‹app-res›", nextUid)
-      Term.App(term(lhs), term(rhs))(tree, sym)
+      val lt = term(lhs)
+      val rt = term(rhs)
+
+      // Check if module arguments match module parameters
+      val args = rt match
+        case Term.Tup(fields) => S(fields)
+        case _ => N
+      val params = lt.symbol
+        .collect:
+          case sym: BlockMemberSymbol => sym.trmTree
+        .flatten
+        .collect:
+          case td: TermDef => td.paramLists.headOption
+        .flatten
+      for
+        (args, params) <- (args zip params)
+        (arg, param) <- (args zip params.fields)
+      do 
+        val argMod = arg.flags.mod
+        val paramMod = param match
+          case Tree.TypeDef(Mod, _, N, N) => true
+          case _ => false
+        if argMod && !paramMod then raise:
+          ErrorReport:
+            msg"Only module parameters may receive module arguments (values)." -> 
+            arg.toLoc :: Nil
+      
+      Term.App(lt, rt)(tree, sym)
     case Sel(pre, nme) =>
       val preTrm = term(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
@@ -296,8 +323,12 @@ extends Importer:
       Term.Lam(Param(FldFlags.empty, scrut, N) :: Nil, Term.IfLike(Keyword.`if`, des)(nor))
     case Modified(Keyword.`return`, kwLoc, body) =>
       Term.Ret(term(body))
+    case Modified(Keyword.`throw`, kwLoc, body) =>
+      Term.Throw(term(body))
     case Modified(Keyword.`do`, kwLoc, body) =>
       Term.Blk(term(body) :: Nil, unit)
+    case TypeDef(Mod, head, N, N) =>
+      term(head)
     case Tree.Region(id: Tree.Ident, body) =>
       val sym = VarSymbol(id, nextUid)
       val nestCtx = ctx + (id.name -> sym)
@@ -352,7 +383,12 @@ extends Importer:
   def fld(tree: Tree): Ctxl[Fld] = tree match
     case InfixApp(lhs, Keyword.`:`, rhs) =>
       Fld(FldFlags.empty, term(lhs), S(term(rhs)))
-    case _ => Fld(FldFlags.empty, term(tree), N)
+    case _ => 
+      val t = term(tree)
+      val flags = FldFlags.empty
+      if ModuleChecker.evalsToModule(t) 
+      then Fld(flags.copy(mod = true), t, N)
+      else Fld(flags, t, N)
   
   def unit: Term.Lit = Term.Lit(UnitLit(true))
   
@@ -383,7 +419,10 @@ extends Importer:
           raise(ErrorReport(msg"Multiple declarations of symbol '$name'" -> N ::
             decls.map(msg"declared here" -> _.toLoc)))
         val sig = decls.collectFirst:
-          case td if td.signature.isDefined => td.signature.get
+          case td
+            if td.annotatedResultType.isDefined
+            && td.paramLists.isEmpty
+            => td.annotatedResultType.get
         sig.foreach: sig =>
           newSignatureTrees += name -> sig
     
@@ -501,29 +540,61 @@ extends Importer:
           case R(id) =>
             val sym = members.getOrElse(id.name, die)
             val owner = ctx.outer
+            val isModMember = owner.exists(_.isInstanceOf[ModuleSymbol])
             val tdf = ctx.nest(N).givenIn:
               // * Add type parameters to context
               val (tps, newCtx1) = td.typeParams match
                 case S(t) => typeParams(t)
                 case N => (N, ctx)
               // * Add parameters to context
-              val (pss, newCtx) = 
+              val (pss, newCtx) =
                 td.paramLists.foldLeft(Ls[ParamList](), newCtx1):
                   case ((pss, ctx), ps) => 
                     val (qs, newCtx) = params(ps)(using ctx)
                     (pss :+ ParamList(ParamListFlags.empty, qs), newCtx)
+              // * Elaborate signature
+              val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name))
+              val s = st.map(term(_)(using newCtx))
               val b = rhs.map(term(_)(using newCtx))
               val r = FlowSymbol(s"‹result of ${sym}›", nextUid)
-              val tdf = TermDefinition(owner, k, sym, pss,
-                td.signature.orElse(newSignatureTrees.get(id.name)).map(term), b, r)
+              val tdf = TermDefinition(owner, k, sym, pss, s, b, r, 
+                TermDefFlags.empty.copy(isModMember = isModMember))
               sym.defn = S(tdf)
+              
+              // indicates if the function really returns a module
+              val em = b.exists(ModuleChecker.evalsToModule)
+              // indicates if the function marks its result as "module"
+              val mm = st match
+                case Some(TypeDef(Mod, _, N, N)) => true
+                case _ => false
+              
+              // checks rules regarding module methods
+              s match
+                case N if em => raise:
+                  ErrorReport:
+                    msg"Function returning module values must have explicit return types." ->
+                    td.head.toLoc :: Nil
+                case S(t) if em && ModuleChecker.isTypeParam(t) => raise:
+                  ErrorReport:
+                    msg"Function returning module values must have concrete return types." ->
+                    td.head.toLoc :: Nil
+                case S(_) if em && !mm => raise:
+                  ErrorReport:
+                    msg"The return type of functions returning module values must be prefixed with module keyword." ->
+                    td.head.toLoc :: Nil
+                case S(_) if mm && !isModMember => raise:
+                  ErrorReport:
+                    msg"Only module methods may return module values." ->
+                    td.head.toLoc :: Nil
+                case _ => ()
+              
               tdf
             go(sts, tdf :: acc)
           case L(d) =>
             raise(d)
             go(sts, acc)
       case (td @ TypeDef(k, head, extension, body)) :: sts =>
-        assert((k is Als) || (k is Cls) || (k is Mod), k)
+        assert((k is Als) || (k is Cls) || (k is Mod) || (k is Obj), k)
         val nme = td.name match
           case R(id) => id
           case L(d) =>
@@ -575,7 +646,7 @@ extends Importer:
               semantics.TypeDef(alsSym, tps, extension.map(term), N)
             alsSym.defn = S(d)
             d
-        case Mod =>
+        case k: (Mod.type | Obj.type) =>
           val clsSym = td.symbol.asInstanceOf[ModuleSymbol] // TODO: improve `asInstanceOf`
           val owner = ctx.outer
           newCtx.nest(S(clsSym)).givenIn:
@@ -586,7 +657,7 @@ extends Importer:
                 // case S(t) => block(t :: Nil)
                 case S(t) => ???
                 case N => (new Term.Blk(Nil, Term.Lit(UnitLit(true))), ctx)
-              ModuleDef(owner, clsSym, tps, ps, ObjBody(bod))
+              ModuleDef(owner, clsSym, tps, ps, k, ObjBody(bod))
             clsSym.defn = S(cd)
             cd
         case Cls =>
@@ -610,7 +681,6 @@ extends Importer:
         // TODO: pass abstract to `go`
         go(body :: sts, acc)
       case Modified(Keyword.`declare`, absLoc, body) :: sts =>
-        ???
         // TODO: pass declare to `go`
         go(body :: sts, acc)
       case (result: Tree) :: Nil =>
@@ -629,8 +699,18 @@ extends Importer:
     if ctx.outer.isDefined then TermSymbol(k, ctx.outer, id)
     else VarSymbol(id, nextUid)
   
-  def param(t: Tree): Ctxl[Ls[Param]] = t.param.map: (p, t) =>
-    Param(FldFlags.empty, fieldOrVarSym(ParamBind, p), t.map(term))
+  def param(t: Tree): Ctxl[Ls[Param]] = t match
+    case TypeDef(Mod, inner, N, N) =>
+      val ps = param(inner).map(p => p.copy(flags = p.flags.copy(mod = true)))
+      for p <- ps if p.flags.mod do p.sign match
+        case N =>
+          raise(ErrorReport(msg"Module parameters must have explicit types." -> t.toLoc :: Nil))
+        case S(ret) if ModuleChecker.isTypeParam(ret) => 
+          raise(ErrorReport(msg"Module parameters must have concrete types." -> t.toLoc :: Nil))
+        case _ => ()
+      ps
+    case _ => t.param.map: (p, t) =>
+      Param(FldFlags.empty, fieldOrVarSym(ParamBind, p), t.map(term))
   
   def params(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
     case Tup(ps) =>
@@ -679,7 +759,7 @@ extends Importer:
   def computeVariances(s: Statement): Unit =
     val trav = VarianceTraverser()
     def go(s: Statement): Unit = s match
-      case TermDefinition(_, k, sym, pss, sign, body, r) =>
+      case TermDefinition(_, k, sym, pss, sign, body, r, _) =>
         pss.foreach(ps => ps.params.foreach(trav.traverseType(S(false))))
         sign.foreach(trav.traverseType(S(true)))
         body match
@@ -697,14 +777,50 @@ extends Importer:
     while trav.changed do
       trav.changed = false
       go(s)
+  
+  object ModuleChecker:
     
+    /** Checks if a term is a reference to a type parameter. */
+    def isTypeParam(t: Term): Bool = t.symbol
+      .filter(_.isInstanceOf[VarSymbol])
+      .flatMap(_.asInstanceOf[VarSymbol].decl)
+      .exists(_.isInstanceOf[TyParam])
+    
+    /** Checks if a term evaluates to a module value. */
+    def evalsToModule(t: Term): Bool = 
+      def isModule(t: Tree): Bool = t match
+        case TypeDef(Mod, _, _, _) => true
+        case _ => false
+      def returnsModule(t: TermDef): Bool = t.annotatedResultType match
+        case S(TypeDef(Mod, _, N, N)) => true
+        case _ => false
+      t match
+        case Term.Blk(_, res) => evalsToModule(res)
+        case Term.App(lhs, rhs) => lhs.symbol match
+          case S(sym: BlockMemberSymbol) => sym.trmTree.exists(returnsModule)
+          case _ => false
+        case t => t.symbol match
+          case S(sym: BlockMemberSymbol) => sym.modTree.exists(isModule)
+          case _ => false
+  
   class VarianceTraverser(var changed: Bool = true) extends Traverser:
     override def traverseType(pol: Pol)(trm: Term): Unit = trm match
       case Term.TyApp(lhs, targs) =>
-        lhs.symbol.flatMap(_.asTpe) match
+        lhs.symbol.flatMap(sym => sym.asTpe orElse sym.asMod) match
           case S(sym: ClassSymbol) =>
             sym.defn match
             case S(td: ClassDef) =>
+              if td.tparams.sizeCompare(targs) =/= 0 then
+                raise(ErrorReport(msg"Wrong number of type arguments" -> trm.toLoc :: Nil)) // TODO BE
+              td.tparams.zip(targs).foreach:
+                case (tp, targ) =>
+                  if !tp.isContravariant then traverseType(pol)(targ)
+                  if !tp.isCovariant then traverseType(pol.!)(targ)
+            case N =>
+              // TODO(sym->sym.uid)
+          case S(sym: ModuleSymbol) =>
+            sym.defn match
+            case S(td: ModuleDef) =>
               if td.tparams.sizeCompare(targs) =/= 0 then
                 raise(ErrorReport(msg"Wrong number of type arguments" -> trm.toLoc :: Nil)) // TODO BE
               td.tparams.zip(targs).foreach:

@@ -1,0 +1,81 @@
+:NewDefs
+
+class A()
+class B() extends A()
+//│ class A()
+//│ class B() extends A
+
+fun p(x) = true
+//│ fun p: anything -> true
+
+:w
+:ducs:normalize.result
+fun f(x) = if
+  x is B and
+    x is A then 1
+  x is A then 31
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   B*◊ -> 1
+//│   _ ->
+//│     case x*‡ of
+//│       A*◊ -> 31
+//│ ╔══[WARNING] the pattern always matches
+//│ ║  l.15: 	    x is A then 1
+//│ ║        	         ^
+//│ ╟── the scrutinee was matched against B
+//│ ║  l.14: 	  x is B and
+//│ ║        	       ^
+//│ ╟── which is a subtype of A
+//│ ║  l.4: 	class B() extends A()
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^
+//│ fun f: (A & ~#B | B) -> (1 | 31)
+
+// FIXME: wrong missing cases
+:w
+:ducs:normalize.result
+fun f(x) = if
+  x is 1 and
+    x is Int then true
+  x is 2 then false
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   1 -> true
+//│   _ ->
+//│     case x*‡ of
+//│       2 -> false
+//│ ╔══[WARNING] the pattern always matches
+//│ ║  l.39: 	    x is Int then true
+//│ ║        	         ^^^
+//│ ╟── the scrutinee was matched against 1
+//│ ║  l.38: 	  x is 1 and
+//│ ║        	       ^
+//│ ╟── which is a subtype of Int
+//│ ║  l.39: 	    x is Int then true
+//│ ╙──      	         ^^^
+//│ ╔══[ERROR] `x` has 1 missing case
+//│ ║  l.38: 	  x is 1 and
+//│ ║        	  ^
+//│ ╟── it can be class `Int`
+//│ ║  l.39: 	    x is Int then true
+//│ ╙──      	         ^^^
+//│ fun f: (1 | 2) -> Bool
+
+:w
+fun f(x) = if
+  x is B and
+    x is A then 1
+    p(x) then 2
+  x is A then 31
+  x is B then 3
+  else 4
+//│ ╔══[WARNING] the pattern always matches
+//│ ║  l.67: 	    x is A then 1
+//│ ║        	         ^
+//│ ╟── the scrutinee was matched against B
+//│ ║  l.66: 	  x is B and
+//│ ║        	       ^
+//│ ╟── which is a subtype of A
+//│ ║  l.4: 	class B() extends A()
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^
+//│ fun f: (B | Object & ~#B) -> (1 | 31 | 4)

@@ -1,0 +1,145 @@
+:NewDefs
+
+fun (|>) pipe(x, f) = f(x)
+fun (++) strcat(s1, s2) = concat(s1)(s2)
+//│ fun (|>) pipe: forall 'a 'b. ('a, 'a -> 'b) -> 'b
+//│ fun (++) strcat: (Str, Str) -> Str
+
+abstract class List[out T]: (Cons[T] | Nil)
+class Cons[out T](val head: T, val tail: List[T]) extends List[T]
+module Nil extends List[nothing]
+fun (::) cons(head, tail) = Cons(head, tail)
+fun (:::) appendAll(xs: List['A], ys: List['A]): List['A] =
+  if xs is
+    Nil then ys
+    Cons(x, xs') then x :: (xs' ::: ys)
+fun (:+) append(xs, x): List['A] = xs ::: (x :: Nil)
+fun reverse(xs) =
+  let rec aux(acc, xs) =
+    if xs is
+      Nil then acc
+      Cons(x, xs') then aux(x :: acc, xs')
+  aux(Nil, xs)
+fun join(sep) =
+  let rec aux(acc, xs) =
+    if xs is
+      Nil then acc
+      Cons(x, xs') then aux(acc ++ sep ++ toString(x), xs')
+  (xs) =>
+    if xs is
+      Cons(x, xs') then aux(toString(x), xs')
+      Nil then ""
+fun showList(xs) = "[" ++ join(", ")(xs) ++ "]"
+fun foldLeft(f)(z) =
+  let rec aux(acc, xs) =
+    if xs is
+      Nil then acc
+      Cons(x, xs') then aux(f(acc, x), xs')
+  (xs) => aux(z, xs)
+fun map(f, xs) =
+  if xs is
+    Nil then Nil
+    Cons(x, xs') then f(x) :: map(f, xs')
+fun showListList(xs) = "[" ++ join(", ")(map(showList, xs)) ++ "]"
+//│ abstract class List[T]: Cons[T] | Nil
+//│ class Cons[T](head: T, tail: List[T]) extends List
+//│ module Nil extends List
+//│ fun (::) cons: forall 'T. ('T, List['T]) -> Cons['T]
+//│ fun (:::) appendAll: forall 'T0. (xs: List['T0], ys: List['T0]) -> List['T0]
+//│ fun (:+) append: forall 'T1. (List['T1], 'T1) -> List['T1]
+//│ fun reverse: (Cons[anything] | Nil) -> (Cons[nothing] | Nil)
+//│ fun join: Str -> (Cons[anything] | Nil) -> Str
+//│ fun showList: (Cons[anything] | Nil) -> Str
+//│ fun foldLeft: forall 'a 'b. (('a, 'b) -> 'a) -> 'a -> (Cons['b] | Nil) -> 'a
+//│ fun map: forall 'c 'T2. ('c -> 'T2, Cons['c] | Nil) -> (Cons['T2] | Nil)
+//│ fun showListList: (Cons[Cons[anything] | Nil] | Nil) -> Str
+
+fun insertAllPositions(z) =
+  let rec aux(prev, acc, xs) =
+    if xs is
+      Nil then ((prev :+ z) :: acc) |> reverse
+      Cons(head, tail) then
+        let nu = ((prev :+ z) ::: xs)
+        aux(prev :+ head, nu :: acc, tail)
+  xs => aux(Nil, Nil, xs)
+//│ fun insertAllPositions: forall 'a. 'a -> (forall 'A 'A0. (Cons['A & 'A0] | Nil) -> (Cons[List['a | 'A0]] | Nil))
+//│   where
+//│     'A <: 'A0
+//│     'A0 :> 'a
+//│         <: 'A
+
+insertAllPositions(0)(1 :: 2 :: 3 :: Nil) |> showListList
+//│ Str
+//│ res
+//│     = '[[0, 1, 2, 3], [1, 0, 2, 3], [1, 2, 0, 3], [1, 2, 3, 0]]'
+
+:js
+fun permutations(xs) =
+  if xs is
+    Nil then Nil
+    Cons(x, Nil) then (x :: Nil) :: Nil
+    Cons(x, xs') then foldLeft((acc, ys) => acc ::: insertAllPositions(x)(ys))(Nil)(permutations(xs'))
+//│ fun permutations: forall 'T 'A. (Cons['T] | Nil) -> (Cons[Cons['T]] | List[List['A]] | Nil)
+//│   where
+//│     'T <: 'A
+//│     'A := 'T
+//│ // Prelude
+//│ class TypingUnit4 {}
+//│ const typing_unit4 = new TypingUnit4;
+//│ // Query 1
+//│ globalThis.permutations = function permutations(xs) {
+//│   return ((() => {
+//│     let a;
+//│     return (a = xs, a instanceof Nil.class ? Nil : a instanceof Cons.class ? ((ucs$args_xs$Cons) => ((x) => ((xs$Cons_1) => xs$Cons_1 instanceof Nil.class ? cons(cons(x, Nil), Nil) : ((xs$) => foldLeft((acc, ys) => appendAll(acc, insertAllPositions(x)(ys)))(Nil)(permutations(xs$)))(ucs$args_xs$Cons[1]))(ucs$args_xs$Cons[1]))(ucs$args_xs$Cons[0]))(Cons.unapply(xs)) : (() => {
+//│       throw new Error("non-exhaustive case expression");
+//│     })());
+//│   })());
+//│ };
+//│ // End of generated code
+
+permutations(Nil) |> showListList
+permutations(1 :: Nil) |> showListList
+permutations(1 :: 2 :: Nil) |> showListList
+permutations(1 :: 2 :: 3 :: Nil) |> showListList
+//│ Str
+//│ res
+//│     = '[]'
+//│ res
+//│     = '[[1]]'
+//│ res
+//│     = '[[1, 2], [2, 1]]'
+//│ res
+//│     = '[[1, 2, 3], [2, 1, 3], [2, 3, 1], [1, 3, 2], [3, 1, 2], [3, 2, 1]]'
+
+fun filterNot(f, xs) =
+  if xs is
+    Nil then Nil
+    Cons(x, xs') then
+      if f(x) then filterNot(f, xs')
+      else x :: filterNot(f, xs')
+//│ fun filterNot: forall 'T. ('T -> Bool, Cons['T] | Nil) -> (Cons['T] | Nil)
+
+fun permutations'(xs) =
+  if xs is
+    Nil then Nil
+    Cons(x, Nil) then (x :: Nil) :: Nil
+    else
+      let f(acc, x) = acc ::: map((ys) => x :: ys, permutations'(filterNot((y) => x === y, xs)))
+      foldLeft(f)(Nil)(xs)
+//│ fun permutations': forall 'T. (Cons['T] | Nil) -> (Cons[Cons['T]] | List[Cons['T]] | Nil)
+//│   where
+//│     'T <: Eql['T]
+
+permutations'(Nil) |> showListList
+permutations'(1 :: Nil) |> showListList
+permutations'(1 :: 2 :: Nil) |> showListList
+permutations'(1 :: 2 :: 3 :: Nil) |> showListList
+//│ Str
+//│ res
+//│     = '[]'
+//│ res
+//│     = '[[1]]'
+//│ res
+//│     = '[[1, 2], [2, 1]]'
+//│ res
+//│     = '[[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]]'

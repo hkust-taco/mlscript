@@ -1,0 +1,29 @@
+:js
+
+:expect 4
+fun f(y) =
+  let x = 0
+  class A() with
+    fun g() =
+      set x += 1
+      set y += 1
+  fun h() =
+    set x += 1
+    set y += 1
+  A().g()
+  h()
+  x + y
+f(0)
+//│ = 4
+
+:expect 0
+fun f() =
+  let x = 0
+  class A() with
+    let x = 2
+    fun g() =
+      set x += 1
+  A().g()
+  x
+f()
+//│ = 0

@@ -5,7 +5,15 @@
 fun test(x) =
   [this.a, x]
 //│ JS:
-//│ function test(x) { return [ globalThis.a, x ]; } undefined
+//│ function test(...args) {
+//│   globalThis.Predef.checkArgs("test", 1, args.length);
+//│   let x = args[0];
+//│   return [
+//│     globalThis.a,
+//│     x
+//│   ];
+//│ }
+//│ undefined
 
 test(123)
 //│ = [ undefined, 123 ]
@@ -28,10 +36,14 @@ module Test with
 //│   constructor() {
 //│     this.a = 2;
 //│   }
-//│   test1(x) {
+//│   test1(...args) {
+//│     globalThis.Predef.checkArgs("test1", 1, args.length);
+//│     let x = args[0];
 //│     return globalThis.test(x);
 //│   } 
-//│   test2(x1) {
+//│   test2(...args1) {
+//│     globalThis.Predef.checkArgs("test2", 1, args1.length);
+//│     let x1 = args1[0];
 //│     return [
 //│       this.a,
 //│       x1

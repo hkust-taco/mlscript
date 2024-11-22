@@ -22,7 +22,9 @@ fun f(x) =
   else ()
   x + 1
 //│ JS:
-//│ function f(x) {
+//│ function f(...args) {
+//│   globalThis.Predef.checkArgs("f", 1, args.length);
+//│   let x = args[0];
 //│   let scrut, tmp, tmp1;
 //│   scrut = x < 0;
 //│   if (scrut) {

@@ -522,7 +522,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                       consume
                       if (tparams.nonEmpty) err(msg"Unsupported type parameters on 'let' binding" -> S(l1) :: Nil)
                       val rest = expr(0)
-                      R(Let(isLetRec.getOrElse(die), v, body, rest).withLoc(S(l0 ++ annotatedBody.toLoc)))
+                      R(Let(isLetRec.getOrElse(die), v, annotatedBody, rest).withLoc(S(l0 ++ annotatedBody.toLoc)))
                     case _ =>
                       R(NuFunDef(
                           isLetRec, v, opStr, tparams, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))
@@ -794,6 +794,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             Bra(false, elt)
           case (Round, _) =>
             yeetSpaces match {
+              case (KEYWORD(opStr @ "=>"), l1) :: (NEWLINE, l2) :: _ /* if opPrec(opStr)._1 > prec */ =>
+                consume
+                val rhs = Blk(typingUnit.entities)
+                Lam(Tup(res), rhs)
               case (KEYWORD("=>"), l1) :: _ =>
                 consume
                 val e = expr(NewParser.opPrec("=>")._2)
@@ -1245,14 +1249,26 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
               R(res)
           }
         case L(rhs) =>
-          L(IfOpsApp(acc, opIfBlock(opv -> rhs :: Nil)))
+          val (opsRhss, els) = opIfBlock(opv -> rhs :: Nil)
+          val opsApp = IfOpsApp(acc, opsRhss)
+          L(els.fold[IfBody](opsApp)(trm => IfBlock(L(opsApp) :: L(IfElse(trm)) :: Nil)))
       }
   }
-  final def opIfBlock(acc: Ls[Var -> IfBody])(implicit et: ExpectThen, fe: FoundErr): Ls[Var -> IfBody] = wrap(acc) { l =>
+  final def opIfBlock(acc: Ls[Var -> IfBody])(implicit et: ExpectThen, fe: FoundErr): (Ls[Var -> IfBody], Opt[Term]) = wrap(acc) { l =>
       cur match {
         case (NEWLINE, _) :: c => // TODO allow let bindings...
           consume
           c match {
+            case (IDENT("_", false), wcLoc) :: _ =>
+              exprOrIf(0) match {
+                case R(rhs) =>
+                  err(msg"expect an operator branch" -> S(wcLoc) :: Nil)
+                  (acc.reverse, N)
+                case L(IfThen(_, els)) => (acc.reverse, S(els))
+                case L(rhs) =>
+                  err(msg"expect 'then' after the wildcard" -> rhs.toLoc :: Nil)
+                  (acc.reverse, N)
+              }
             case (IDENT(opStr2, true), opLoc2) :: _ =>
               consume
               val rhs = exprOrIf(0)
@@ -1262,12 +1278,23 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 case L(rhs) =>
                   opIfBlock(Var(opStr2).withLoc(S(opLoc2)) -> rhs :: acc)
               }
-            case _ =>
+            case (KEYWORD("else"), elseLoc) :: tail =>
+              consume
+              exprOrIf(0) match {
+                case R(rhs) => (acc.reverse, S(rhs))
+                case L(rhs) =>
+                  err(msg"expect a term" -> rhs.toLoc :: Nil)
+                  (acc.reverse, N)
+              }
+            case (_, headLoc) :: _ =>
               // printDbg(c)
-              ???
+              err(msg"expect an operator" -> S(headLoc) :: Nil)
+              (acc.reverse, N)
+            case Nil =>
+              (acc.reverse, N)
           }
         case _ =>
-          acc.reverse
+          (acc.reverse, N)
       }
   }
   
@@ -1358,6 +1385,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   final def argsOrIf(acc: Ls[Opt[Var] -> (IfBody \/ Fld)], seqAcc: Ls[Statement], allowNewlines: Bool, prec: Int = NoElsePrec)
         (implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> (IfBody \/ Fld)] =
       wrap(acc, seqAcc) { l =>
+      
+    val anns = parseAnnotations(false)
     
     cur match {
       case Nil =>
@@ -1409,8 +1438,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         S(Var(i.toString).withLoc(S(l0)))
       case _ => N
     }
+
     // val e = expr(NoElsePrec) -> argMut.isDefined
-    val e = exprOrIf(prec).map(Fld(FldFlags(argMut.isDefined, argSpec.isDefined, argVal.isDefined), _))
+    val e = exprOrIf(prec, true, anns).map(Fld(FldFlags(argMut.isDefined, argSpec.isDefined, argVal.isDefined), _))
     
     def mkSeq = if (seqAcc.isEmpty) argName -> e else e match {
       case L(_) => ???

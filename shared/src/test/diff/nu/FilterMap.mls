@@ -14,25 +14,58 @@
 // 9 { true , Y } -> [ Y | filtermap (F , XS )]
 // 10 end.
 
-
-module Nil
+type List[A] = Cons[A] | Nil
 class Cons[out A](head: A, tail: Cons[A] | Nil)
-//│ module Nil
+module Nil
+//│ type List[A] = Cons[A] | Nil
 //│ class Cons[A](head: A, tail: Cons[A] | Nil)
+//│ module Nil
 
+fun (::) cons(h, t) = Cons(h, t)
+//│ fun (::) cons: forall 'A. ('A, Cons['A] | Nil) -> Cons['A]
 
-// FIXME UCS
-fun filtermap(f, xs) = if xs is
+fun filtermap(f, xs: List['A]) = if xs is
   Nil then Nil
-  Cons(y, ys) and f(ys) is
+  Cons(y, ys) and f(y) is
     false then filtermap(f, ys)
     true then Cons(y, filtermap(f, ys))
-    [true, z] then Cons(y, filtermap(f, ys))
-//│ ╔══[ERROR] type identifier not found: Tuple#2
-//│ ╙──
-//│ fun filtermap: ((Cons[nothing] | Nil) -> nothing, Cons[anything] | Nil) -> (Cons[nothing] | Nil | error)
-//│ Code generation encountered an error:
-//│   unknown match case: Tuple#2
+    [true, z] then Cons(z, filtermap(f, ys))
+//│ fun filtermap: forall 'A 'A0. ('A -> (Object & {0: true, 1: 'A0} & ~false & ~true | false | true), xs: List['A]) -> (Cons['A0] | Nil)
+//│   where
+//│     'A <: 'A0
+
+let xs = 0 :: 1 :: 2 :: 3 :: 4 :: 5 :: 6 :: 7 :: Nil
+//│ let xs: Cons[0 | 1 | 2 | 3 | 4 | 5 | 6 | 7]
+//│ xs
+//│    = Cons {}
+
+fun f(x) = if x % 3 is
+  0 then [true, -x]
+  1 then false
+  _ then true
+//│ fun f: Int -> (Bool | [true, Int])
+
+:e // TODO: Records are not `Object`s
+filtermap(f, xs)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.49: 	filtermap(f, xs)
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── tuple literal of type `[true, ?a]` is not an instance of type `Object`
+//│ ║  l.43: 	  0 then [true, -x]
+//│ ║        	         ^^^^^^^^^^
+//│ ╟── Note: constraint arises from `case` expression:
+//│ ║  l.30: 	    false then filtermap(f, ys)
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.31: 	    true then Cons(y, filtermap(f, ys))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.32: 	    [true, z] then Cons(z, filtermap(f, ys))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from application:
+//│ ║  l.29: 	  Cons(y, ys) and f(y) is
+//│ ╙──      	                  ^^^^
+//│ Cons[Int] | Nil | error
+//│ res
+//│     = Cons {}
 
 
 module Tru

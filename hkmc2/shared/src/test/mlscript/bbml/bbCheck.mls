@@ -118,7 +118,9 @@ fun baz(z) =
 
 :e
 baz: Int -> (([A] -> A -> A), Int) -> Int
-//│ ═══[ERROR] Cannot type non-function term Sel(Ref(globalThis:block#17),Ident(baz)) as (Int) ->{⊥} (forall α25_2: (α25_2) ->{⊥} α25_2, Int) ->{⊥} Int
+//│ ╔══[ERROR] Cannot type non-function term Sel(Ref(globalThis:block#17),Ident(baz)) as (Int) ->{⊥} (forall α25_2: (α25_2) ->{⊥} α25_2, Int) ->{⊥} Int
+//│ ║  l.120: 	baz: Int -> (([A] -> A -> A), Int) -> Int
+//│ ╙──       	^^^
 //│ Type: ⊥
 
 
@@ -128,7 +130,7 @@ baz(42)
 :e
 baz(42): (([A] -> A -> A), Int) -> Int
 //│ ╔══[ERROR] Cannot type non-function term App(Sel(Ref(globalThis:block#17),Ident(baz)),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))) as (forall α26_2: (α26_2) ->{⊥} α26_2, Int) ->{⊥} Int
-//│ ║  l.129: 	baz(42): (([A] -> A -> A), Int) -> Int
+//│ ║  l.131: 	baz(42): (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^^^^^
 //│ Type: ⊥
 

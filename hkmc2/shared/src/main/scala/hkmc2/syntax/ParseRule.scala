@@ -271,6 +271,7 @@ object ParseRule:
     Kw(`class`)(typeDeclBody(Cls)),
     Kw(`trait`)(typeDeclBody(Trt)),
     Kw(`module`)(typeDeclBody(Mod)),
+    Kw(`object`)(typeDeclBody(Obj)),
     Kw(`open`):
       ParseRule("'open' keyword")(
         exprOrBlk(ParseRule("'open' declaration")(End(()))){
@@ -285,6 +286,7 @@ object ParseRule:
     modified(`private`),
     modified(`out`),
     modified(`return`),
+    modified(`throw`),
     modified(`import`), // TODO improve – only allow strings
     // modified(`type`),
     singleKw(`true`)(BoolLit(true)),

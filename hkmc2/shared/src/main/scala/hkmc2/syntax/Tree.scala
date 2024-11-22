@@ -203,6 +203,7 @@ case object Trt extends TypeDefKind("trait") with ObjDefKind
 case object Mxn extends TypeDefKind("mixin")
 case object Als extends TypeDefKind("type alias")
 case object Mod extends TypeDefKind("module") with ClsLikeKind
+case object Obj extends TypeDefKind("object") with ClsLikeKind
 
 
 
@@ -215,7 +216,7 @@ trait TypeOrTermDef:
   
   def head: Tree
   
-  lazy val (symbName, name, paramLists, typeParams, signature)
+  lazy val (symbName, name, paramLists, typeParams, annotatedResultType)
       : (Opt[Tree], Diagnostic \/ Ident, Ls[Tup], Opt[TyTup], Opt[Tree]) =
     def rec(t: Tree, symbName: Opt[Tree]): 
       (Opt[Tree], Diagnostic \/ Ident, Ls[Tup], Opt[TyTup], Opt[Tree]) = 
@@ -231,7 +232,7 @@ trait TypeOrTermDef:
       // fun f[T](n1: Int): Int
       // fun f[T](n1: Int)(nn: Int): Int
       case InfixApp(Apps(App(id: Ident, typeParams: TyTup), paramLists), Keyword.`:`, ret) =>
-        (symbName, R(id), paramLists, S(typeParams), N)
+        (symbName, R(id), paramLists, S(typeParams), S(ret))
       
       case InfixApp(Jux(lhs, rhs), Keyword.`:`, ret) =>
         rec(InfixApp(rhs, Keyword.`:`, ret), S(lhs))
@@ -275,7 +276,7 @@ trait TypeDefImpl extends TypeOrTermDef:
   
   lazy val symbol = k match
     case Cls => semantics.ClassSymbol(this, name.getOrElse(Ident("<error>")))
-    case Mod => semantics.ModuleSymbol(this, name.getOrElse(Ident("<error>")))
+    case Mod | Obj => semantics.ModuleSymbol(this, name.getOrElse(Ident("<error>")))
     case Als => semantics.TypeAliasSymbol(name.getOrElse(Ident("<error>")))
     case Trt | Mxn => ???
   

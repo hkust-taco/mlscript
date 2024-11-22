@@ -1,0 +1,281 @@
+:NewDefs
+
+
+abstract class Option[T]
+class Some[T](value: T) extends Option[T]
+module None extends Option[nothing]
+class Pair[A, B](x: A, y: B)
+//│ abstract class Option[T]
+//│ class Some[T](value: T) extends Option
+//│ module None extends Option
+//│ class Pair[A, B](x: A, y: B)
+
+// All `add_n` functions should be inferred to have the same type.
+
+fun add_1(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    x is Some(xv) and y is None     then xv
+    x is None     and y is Some(yv) then yv
+    x is None     and y is None     then 0
+//│ fun add_1: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)
+
+add_1(None, None)
+add_1(Some(5), None)
+add_1(None, Some(9))
+add_1(Some(5), Some(9))
+//│ Int
+//│ res
+//│     = 0
+//│ res
+//│     = 5
+//│ res
+//│     = 9
+//│ res
+//│     = 14
+
+fun add_2(x, y) =
+  if x is
+    Some(xv) and y is
+      Some(yv) then xv + yv
+      None     then xv
+    None and y is
+      Some(yv) then yv
+      None     then 0
+//│ fun add_2: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)
+
+add_2(None, None)
+add_2(Some(5), None)
+add_2(None, Some(9))
+add_2(Some(5), Some(9))
+//│ Int
+//│ res
+//│     = 0
+//│ res
+//│     = 5
+//│ res
+//│     = 9
+//│ res
+//│     = 14
+
+
+fun add_3(x, y) =
+  if Pair(x, y) is
+    Pair(Some(xv), Some(yv)) then xv + yv
+    Pair(Some(xv), None)     then xv
+    Pair(None,     Some(yv)) then yv
+    Pair(None,     None)     then 0
+//│ fun add_3: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)
+
+add_3(None, None)
+add_3(Some(5), None)
+add_3(None, Some(9))
+add_3(Some(5), Some(9))
+//│ Int
+//│ res
+//│     = 0
+//│ res
+//│     = 5
+//│ res
+//│     = 9
+//│ res
+//│     = 14
+
+
+fun add_4(x, y) =
+  if
+    x
+      is
+        Some(xv) and
+          y
+            is
+              Some(yv) then xv + yv
+            is
+              None     then xv
+        None and
+          y
+            is
+              Some(yv) then yv
+            is
+              None     then 0
+//│ fun add_4: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)
+
+
+add_4(None, None)
+add_4(Some(5), None)
+add_4(None, Some(9))
+add_4(Some(5), Some(9))
+//│ Int
+//│ res
+//│     = 0
+//│ res
+//│     = 5
+//│ res
+//│     = 9
+//│ res
+//│     = 14
+
+
+fun add_5(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    y is None     and x is Some(xv) then xv
+    x is None     and y is Some(yv) then yv
+    y is None     and x is None     then 0
+//│ fun add_5: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)
+
+
+add_5(None, None)
+add_5(Some(5), None)
+add_5(None, Some(9))
+add_5(Some(5), Some(9))
+//│ Int
+//│ res
+//│     = 0
+//│ res
+//│     = 5
+//│ res
+//│     = 9
+//│ res
+//│     = 14
+
+
+fun add_6(x, y) =
+  if [x, y] is
+    [Some(xv), Some(yv)] then xv + yv
+    [Some(xv), None]     then xv
+    [None,     Some(yv)] then yv
+    [None,     None]     then 0
+//│ fun add_6: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)
+
+
+add_6(None, None)
+add_6(Some(5), None)
+add_6(None, Some(9))
+add_6(Some(5), Some(9))
+//│ Int
+//│ res
+//│     = 0
+//│ res
+//│     = 5
+//│ res
+//│     = 9
+//│ res
+//│     = 14
+
+
+fun p(x) = true
+//│ fun p: anything -> true
+
+
+// FIXME Remove `case p(x) of true -> 0; _ -> 0`
+:ducs:postprocess.result
+fun add_6(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    y is None     and p(x) and x is Some(xv) then 42
+    y is None     and x is Some(xv) then xv
+    x is None     and y is Some(yv) then yv
+    y is None     and x is None     then 0
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   Some*◊ ->
+//│     let ucs$args_x$Some*† = (Some).unapply(x,)
+//│     let xv*‡ = (ucs$args_x$Some).0
+//│     case y*‡ of
+//│       Some*◊ ->
+//│         let ucs$args_y$Some*† = (Some).unapply(y,)
+//│         let yv*‡ = (ucs$args_y$Some).0
+//│         +(xv, yv,)
+//│       None*† ->
+//│         let ucs$test$0*† = p(x,) : Bool
+//│         case ucs$test$0*† of
+//│           true*† -> 42
+//│           _ -> xv
+//│   None*† ->
+//│     case y*‡ of
+//│       None*† ->
+//│         let ucs$test$0*† = p(x,) : Bool
+//│         case ucs$test$0*† of
+//│           true -> 0
+//│           _ -> 0
+//│       Some*◊ ->
+//│         let ucs$args_y$Some*† = (Some).unapply(y,)
+//│         let yv*‡ = (ucs$args_y$Some).0
+//│         yv
+//│ fun add_6: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)
+
+
+:ducs:postprocess.result
+fun add_7(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    // y is None    and p(x) and x is Some(xv) then 42
+    y is None     and x is Some(xv) then xv
+    y is Some(yv) and p(yv) and x is None then 36
+    y is Some(yv) and x is None then yv
+    y is None     and x is None     then 0
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   Some*◊ ->
+//│     let ucs$args_x$Some*† = (Some).unapply(x,)
+//│     let xv*‡ = (ucs$args_x$Some).0
+//│     case y*‡ of
+//│       Some*◊ ->
+//│         let ucs$args_y$Some*† = (Some).unapply(y,)
+//│         let yv*‡ = (ucs$args_y$Some).0
+//│         +(xv, yv,)
+//│       None*† -> xv
+//│   None*† ->
+//│     case y*‡ of
+//│       None*† -> 0
+//│       Some*◊ ->
+//│         let ucs$args_y$Some*† = (Some).unapply(y,)
+//│         let yv*‡ = (ucs$args_y$Some).0
+//│         let ucs$test$0*† = p(yv,) : Bool
+//│         case ucs$test$0*† of
+//│           true -> 36
+//│           _ -> yv
+//│ fun add_7: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)
+
+
+// FIXME Remove `case p(x) of true -> 0; _ -> 0`
+:ducs:postprocess.result
+fun add_8(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    y is None    and p(x) and x is Some(xv) then 42
+    y is None     and x is Some(xv) then xv
+    y is Some(yv) and p(yv) and x is None then 36
+    y is Some(yv) and x is None then yv
+    y is None     and x is None     then 0
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   Some*◊ ->
+//│     let ucs$args_x$Some*† = (Some).unapply(x,)
+//│     let xv*‡ = (ucs$args_x$Some).0
+//│     case y*‡ of
+//│       Some*◊ ->
+//│         let ucs$args_y$Some*† = (Some).unapply(y,)
+//│         let yv*‡ = (ucs$args_y$Some).0
+//│         +(xv, yv,)
+//│       None*† ->
+//│         let ucs$test$0*† = p(x,) : Bool
+//│         case ucs$test$0*† of
+//│           true*† -> 42
+//│           _ -> xv
+//│   None*† ->
+//│     case y*‡ of
+//│       None*† ->
+//│         let ucs$test$0*† = p(x,) : Bool
+//│         case ucs$test$0*† of
+//│           true -> 0
+//│           _ -> 0
+//│       Some*◊ ->
+//│         let ucs$args_y$Some*† = (Some).unapply(y,)
+//│         let yv*‡ = (ucs$args_y$Some).0
+//│         let ucs$test$1*† = p(yv,) : Bool
+//│         case ucs$test$1*† of
+//│           true -> 36
+//│           _ -> yv
+//│ fun add_8: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)

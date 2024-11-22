@@ -12,7 +12,16 @@ if true then 1 else 0
 :sjs
 let f = x => if x then log("ok") else log("ko")
 //│ JS:
-//│ this.f = (x) => { if (x) { return this.log("ok"); } else { return this.log("ko"); } }; undefined
+//│ this.f = (...args) => {
+//│   globalThis.Predef.checkArgs("", 1, args.length);
+//│   let x = args[0];
+//│   if (x) {
+//│     return this.log("ok");
+//│   } else {
+//│     return this.log("ko");
+//│   }
+//│ };
+//│ undefined
 //│ f = [Function (anonymous)]
 
 f(true)
@@ -25,7 +34,9 @@ f(false)
 :sjs
 let f = x => log((if x then "ok" else "ko") + "!")
 //│ JS:
-//│ this.f = (x) => {
+//│ this.f = (...args) => {
+//│   globalThis.Predef.checkArgs("", 1, args.length);
+//│   let x = args[0];
 //│   let tmp, tmp1;
 //│   if (x) {
 //│     tmp = "ok";
@@ -41,7 +52,9 @@ let f = x => log((if x then "ok" else "ko") + "!")
 :sjs
 let f = x => log((if x and x then "ok" else "ko") + "!")
 //│ JS:
-//│ this.f = (x) => {
+//│ this.f = (...args) => {
+//│   globalThis.Predef.checkArgs("", 1, args.length);
+//│   let x = args[0];
 //│   let tmp, tmp1;
 //│   if (x) {
 //│     if (x) {
@@ -104,10 +117,11 @@ fun f(x, y) =
   if x
     then y
 
-f(true)
+f(true, 42)
+//│ = 42
 
 :re
-f(false)
+f(false, 42)
 //│ ═══[RUNTIME ERROR] Error: match error
 
 

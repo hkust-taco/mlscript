@@ -1,7 +1,5 @@
 :NewDefs
 
-// FIXME: Preserve local state in classes
-:mono
 class X() {
     val a = 
         log("ok")
@@ -12,43 +10,24 @@ val object = X()
 (new X()).a
 object.a
 object.a
-//│ Lifted:
-//│ TypingUnit {
-//│   class X$1([]) {let a = {log("ok",); 6}}
-//│   let object$1 = X$1()
-//│   Code(List(('(' (new X$1)() ')').a))
-//│   Code(List(('(' (new X$1)() ')').a))
-//│   Code(List((object$1).a))
-//│   Code(List((object$1).a))
+//│ class X() {
+//│   val a: 6
 //│ }
-//│ Mono:
-//│ TypingUnit {
-//│   class X$1([]) {}
-//│   let object$1 = X$1()
-//│   let a$X$1 = (this,) => {log("ok",); 6}
-//│   fun main$$5 = () => let obj = object$1 in if obj is ‹(X$1) then a$X$1(obj,); else error›
-//│   fun main$$4 = () => let obj = object$1 in if obj is ‹(X$1) then a$X$1(obj,); else error›
-//│   fun main$$3 = () => let obj = '(' (new X$1)() ')' in if obj is ‹(X$1) then a$X$1(obj,); else error›
-//│   fun main$$2 = () => let obj = '(' (new X$1)() ')' in if obj is ‹(X$1) then a$X$1(obj,); else error›
-//│   Code(List(main$$2()))
-//│   Code(List(main$$3()))
-//│   Code(List(main$$4()))
-//│   Code(List(main$$5()))
-//│ }
-//│ class X$1()
-//│ let object$1: X$1
-//│ let a$X$1: anything -> 6
-//│ fun main$$5: () -> 6
-//│ fun main$$4: () -> 6
-//│ fun main$$3: () -> 6
-//│ fun main$$2: () -> 6
+//│ val object: X
 //│ 6
-//│ object$1
-//│          = X$1 {}
-//│ a$X$1
-//│       = [Function: a$X$1]
-//│ res
-//│     = 6
+//│ 
+//│ Simpledef:
+//│ {class X() {let a = {log("ok",)
+//│  6}}
+//│  let object = X()
+//│  let selRes$20 = '(' (new X)() ')' in case selRes$20 of { X => (selRes$20).a }
+//│  let selRes$30 = '(' (new X)() ')' in case selRes$30 of { X => (selRes$30).a }
+//│  let selRes$40 = object in case selRes$40 of { X => (selRes$40).a }
+//│  let selRes$44 = object in case selRes$44 of { X => (selRes$44).a }}
+//│ End simpledef
+//│ 
+//│ object
+//│        = X {}
 //│ // Output
 //│ ok
 //│ res
@@ -61,5 +40,5 @@ object.a
 //│ ok
 //│ res
 //│     = 6
-//│ // Output
-//│ ok
+//│ res
+//│     = 6

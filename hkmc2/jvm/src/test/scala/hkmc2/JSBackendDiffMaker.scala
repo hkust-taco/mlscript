@@ -5,6 +5,12 @@ import scala.collection.mutable
 import mlscript.utils.*, shorthands.*
 import utils.*
 
+import codegen.js.{JSBuilder, JSBuilderSanityChecks}
+import document.*
+import codegen.Block
+import codegen.js.Scope
+import hkmc2.syntax.Tree.Ident
+import hkmc2.codegen.Path
 
 abstract class JSBackendDiffMaker extends MLsDiffMaker:
   
@@ -13,6 +19,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val sjs = NullaryCommand("sjs")
   val showRepl = NullaryCommand("showRepl")
   val silent = NullaryCommand("silent")
+  val noSanityCheck = NullaryCommand("noSanityCheck")
   val expect = Command("expect"): ln =>
     ln.trim
   
@@ -42,7 +49,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     if js.isSet then
       val low = ltl.givenIn:
         codegen.Lowering()
-      val jsb = codegen.js.JSBuilder()
+      val jsb = new JSBuilder with JSBuilderSanityChecks(noSanityCheck.isUnset)
       import semantics.*
       import codegen.*
       val le = low.program(blk)

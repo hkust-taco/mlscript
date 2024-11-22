@@ -6,7 +6,7 @@
 
 class Some[out A](value: A)
 
-module None
+object None
 
 
 :sjs
@@ -61,7 +61,9 @@ if s is
 :sjs
 x => if x is Some(x) then x
 //│ JS:
-//│ (x) => {
+//│ (...args) => {
+//│   globalThis.Predef.checkArgs("", 1, args.length);
+//│   let x = args[0];
 //│   let param0, x1;
 //│   if (x instanceof this.Some.class) {
 //│     param0 = x.value;
@@ -120,7 +122,9 @@ fun f(x) = if x is
   None then "ok"
   else log("oops")
 //│ JS:
-//│ function f(x) {
+//│ function f(...args) {
+//│   globalThis.Predef.checkArgs("f", 1, args.length);
+//│   let x = args[0];
 //│   let param0, x1, scrut;
 //│   if (x instanceof globalThis.Some.class) {
 //│     param0 = x.value;
@@ -162,7 +166,9 @@ fun f(x) = if x is
   Some(u) then u
   Pair(a, b) then a + b
 //│ JS:
-//│ function f(x) {
+//│ function f(...args) {
+//│   globalThis.Predef.checkArgs("f", 1, args.length);
+//│   let x = args[0];
 //│   let param0, param1, a, b, param01, u;
 //│   if (x instanceof globalThis.Some.class) {
 //│     param01 = x.value;
@@ -196,7 +202,9 @@ fun f(x) = log of if x is
   None then "ok"
   else "oops"
 //│ JS:
-//│ function f(x) {
+//│ function f(...args) {
+//│   globalThis.Predef.checkArgs("f", 1, args.length);
+//│   let x = args[0];
 //│   let param0, tmp;
 //│   if (x instanceof globalThis.Some.class) {
 //│     param0 = x.value;

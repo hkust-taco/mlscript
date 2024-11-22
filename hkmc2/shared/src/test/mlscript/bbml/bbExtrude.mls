@@ -34,7 +34,9 @@ g(foo)
 
 :e
 y `=> (let t = run(x `=> x `+ y) in y)
-//│ ═══[ERROR] Cannot quote Sel(Ref(globalThis:import#bbPredef),Ident(+))
+//│ ╔══[ERROR] Cannot quote Sel(Ref(globalThis:import#bbPredef),Ident(+))
+//│ ║  l.36: 	y `=> (let t = run(x `=> x `+ y) in y)
+//│ ╙──      	                            ^
 //│ Type: CodeBase[out α26_3 -> α26_3, ⊥, ?]
 
 class C[A](m: A, n: A -> Int)
@@ -67,6 +69,8 @@ f(g)(foo)
 :fixme // ???
 f(g)(bar)
 //│ ╔══[ERROR] Type error in selection with expected type α52_1
+//│ ║  l.70: 	f(g)(bar)
+//│ ║        	     ^^^
 //│ ╟── because: cannot constrain  C[Int]  <:  α52_1
 //│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  α52_1
 //│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  ¬C[in D() out ¬⊥] ∨ C[in D( Int ) out ¬⊥ ∧ α55_1]

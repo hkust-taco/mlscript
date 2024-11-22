@@ -1,0 +1,12 @@
+:NewDefs
+
+class Point(x: Int, y: Int, z: Int)
+//│ class Point(x: Int, y: Int, z: Int)
+
+fun f_0(p) = if p is Point(x, _, z) then x + z
+//│ fun f_0: Point -> Int
+
+f_0(Point(1, 2, 3))
+//│ Int
+//│ res
+//│     = 4

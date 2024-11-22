@@ -1,0 +1,42 @@
+:NewDefs
+
+class X() {
+    val num = 6
+}
+class Y() {
+    val num = true
+}
+fun foo(pred) = if pred then X() else Y()
+fun id(x) = x
+val a = foo(true)
+val b = id(a)
+b.num
+//│ class X() {
+//│   val num: 6
+//│ }
+//│ class Y() {
+//│   val num: true
+//│ }
+//│ fun foo: Bool -> (X | Y)
+//│ fun id: forall 'a. 'a -> 'a
+//│ val a: X | Y
+//│ val b: X | Y
+//│ 6 | true
+//│ 
+//│ Simpledef:
+//│ {class X() {let num = 6}
+//│  class Y() {let num = true}
+//│  fun foo = (pred::0,) => if (pred) then X() else Y()
+//│  fun id = (x::1,) => x
+//│  let a = foo(true,)
+//│  let b = id(a,)
+//│  let selRes$48 = b in case selRes$48 of { Y => (selRes$48).num
+//│  X => (selRes$48).num }}
+//│ End simpledef
+//│ 
+//│ a
+//│   = X {}
+//│ b
+//│   = X {}
+//│ res
+//│     = 6

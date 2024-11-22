@@ -58,6 +58,7 @@ fun f(x) =
 //│             continuation = Else of Lit of IntLit of 0
 //│           tail = Else of Lit of IntLit of 1
 //│       resSym = ‹result of member:f›@16
+//│       flags = ()
 //│   res = Lit of UnitLit of true
 
 
