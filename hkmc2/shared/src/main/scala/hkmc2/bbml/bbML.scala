@@ -23,13 +23,10 @@ final case class BbCtx(
   ctx: Ctx,
   parent: Option[BbCtx],
   lvl: Int,
-  clsDefs: HashMap[Str, ClassDef],
-  env: HashMap[Uid[Symbol], GeneralType],
-  quoteSkolemEnv: HashMap[Uid[Symbol], InfVar], // * SkolemTag for variables in quasiquotes
+  env: HashMap[Uid[Symbol], GeneralType]
 ):
   def +=(p: Symbol -> GeneralType): Unit = env += p._1.uid -> p._2
   def get(sym: Symbol): Option[GeneralType] = env.get(sym.uid) orElse parent.dlof(_.get(sym))(None)
-  def *=(cls: ClassDef): Unit = clsDefs += cls.sym.id.name -> cls
   def getCls(name: Str): Option[TypeSymbol] =
     for
       elem <- ctx.get(name)
@@ -38,10 +35,8 @@ final case class BbCtx(
     yield cls
   def &=(p: (Symbol, Type, InfVar)): Unit =
     env += p._1.uid -> BbCtx.varTy(p._2, p._3)(using this)
-    quoteSkolemEnv += p._1.uid -> p._3
-  def getSk(sym: Symbol): Option[Type] = quoteSkolemEnv.get(sym.uid) orElse parent.dlof(_.getSk(sym))(None)
-  def nest: BbCtx = copy(parent = Some(this))
-  def nextLevel: BbCtx = copy(lvl = lvl + 1)
+  def nest: BbCtx = copy(parent = Some(this), env = HashMap.empty)
+  def nextLevel: BbCtx = copy(parent = Some(this), lvl = lvl + 1, env = HashMap.empty)
 
 given (using ctx: BbCtx): Raise = ctx.raise
 
@@ -62,7 +57,7 @@ object BbCtx:
   def refTy(ct: Type, sk: Type)(using ctx: BbCtx): Type =
     ClassLikeType(ctx.getCls("Ref").get, Wildcard(ct, ct) :: Wildcard.out(sk) :: Nil)
   def init(raise: Raise)(using Elaborator.State, Elaborator.Ctx): BbCtx =
-    new BbCtx(raise, summon, None, 1, HashMap.empty, HashMap.empty, HashMap.empty)
+    new BbCtx(raise, summon, None, 1, HashMap.empty)
 end BbCtx
 
 
@@ -186,7 +181,6 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
   private def constrain(lhs: Type, rhs: Type)(using ctx: BbCtx, cctx: CCtx): Unit =
     solver.constrain(lhs, rhs)
 
-  // TODO: content type
   private def typeCode(code: Term)(using ctx: BbCtx): (Type, Type, Type) =
     given CCtx = CCtx.init(code, N)
     code match
@@ -408,8 +402,6 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             (error(msg"Variable not found: ${sym.nme}"
               -> t.toLoc :: Nil), Bot)
       case Blk(stats, res) =>
-        val nestCtx = ctx.nest
-        given BbCtx = nestCtx
         val effBuff = ListBuffer.empty[Type]
         def goStats(stats: Ls[Statement]): Unit = stats match
           case Nil => ()
@@ -420,7 +412,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             require(sym2 is sym)
             val (rhsTy, eff) = typeCheck(rhs)
             effBuff += eff
-            nestCtx += sym -> rhsTy
+            ctx += sym -> rhsTy
             goStats(stats)
           case TermDefinition(_, Fun, sym, ParamList(_, ps) :: Nil, sig, Some(body), _) :: stats =>
             typeFunDef(sym, Term.Lam(ps, body), sig, ctx)
@@ -432,7 +424,6 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             ctx += sym -> typeType(sig)
             goStats(stats)
           case (clsDef: ClassDef) :: stats =>
-            ctx *= clsDef
             goStats(stats)
         goStats(stats)
         val (ty, eff) = typeCheck(res)
