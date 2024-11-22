@@ -69,7 +69,7 @@ fun body(x, y) = case
 fun bind: [G] -> (CodeBase[out Int, out G, out Any], [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out Int, out C | G, out Any]) -> CodeBase[out Int, out G, out Any]
 fun bind(rhs, k) = `let x = rhs `in k(x)
 bind
-//│ Type: forall α96_2: (CodeBase[out Int, out α96_2, ?], forall α97_3: (CodeBase[out Int, out α97_3, ?]) ->{⊥} CodeBase[out Int, out α97_3 ∨ α96_2, ?]) ->{⊥} CodeBase[out Int, out α96_2, ?]
+//│ Type: forall G96_2: (CodeBase[out Int, out G96_2, ?], forall C97_3: (CodeBase[out Int, out C97_3, ?]) ->{⊥} CodeBase[out Int, out C97_3 ∨ G96_2, ?]) ->{⊥} CodeBase[out Int, out G96_2, ?]
 
 
 :fixme

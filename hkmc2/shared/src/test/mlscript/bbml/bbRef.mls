@@ -107,7 +107,7 @@ fun rid(x) =
 fun rid: [A] -> A -> A
 fun rid(x) =
   let t = (region y in 42) in x
-//│ ╔══[ERROR] Type error in function literal with expected type (<α>62_2) ->{⊥} <α>62_2
+//│ ╔══[ERROR] Type error in function literal with expected type (<A>62_2) ->{⊥} <A>62_2
 //│ ║  l.108: 	fun rid(x) =
 //│ ║         	        ^^^^
 //│ ║  l.109: 	  let t = (region y in 42) in x
@@ -118,12 +118,12 @@ fun rid(x) =
 :e
 region x in
   (let dz = x.ref 42 in 42): [A] -> Int
-//│ ╔══[ERROR] Type error in block with expected type forall α66_3: Int
+//│ ╔══[ERROR] Type error in block with expected type forall A66_3: Int
 //│ ║  l.120: 	  (let dz = x.ref 42 in 42): [A] -> Int
 //│ ║         	            ^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  α68_3  <:  ⊥
 //│ ╟── because: cannot constrain  α68_3  <:  ¬()
-//│ ╙── because: cannot constrain  <α>65_2  <:  ¬()
+//│ ╙── because: cannot constrain  <x>65_2  <:  ¬()
 //│ Type: Int
 
 
@@ -140,7 +140,7 @@ in t(42)
 //│ ╟── because: cannot constrain  (α78_1 ∨ α73_1) ∨ Alloc  <:  Alloc
 //│ ╟── because: cannot constrain  α78_1  <:  ¬(~{Alloc})
 //│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc})
-//│ Type: Ref[in α75_1 out α75_1 ∨ Int, ?]
+//│ Type: Ref[in y75_1 out y75_1 ∨ Int, ?]
 
 fun foo: [A] -> Int ->{A | Alloc} Int
 fun foo(x) =
@@ -150,7 +150,7 @@ fun foo(x) =
 
 region x in
   x.ref ((x => x): [A] -> A -> A)
-//│ Type: Ref[α90_1 -> α90_1, ?]
+//│ Type: Ref[A90_1 -> A90_1, ?]
 
 
 fun foo: [A extends Int] -> A -> A
@@ -158,21 +158,21 @@ fun foo(x) = x
 //│ Type: ⊤
 
 foo
-//│ Type: forall α94_2: (α94_2) ->{⊥} α94_2
+//│ Type: forall A94_2: (A94_2) ->{⊥} A94_2
 //│ Where:
-//│   α94_2 <: Int
+//│   A94_2 <: Int
 
 region x in x.ref foo
-//│ Type: Ref[in α100_1 -> (α100_1 ∧ Int) out (α100_1 ∧ Int) -> α100_1, ?]
+//│ Type: Ref[in A100_1 -> (A100_1 ∧ Int) out (A100_1 ∧ Int) -> A100_1, ?]
 
 fun bar: ([A] -> A -> A) -> Int
 fun bar(f) = f(42)
 //│ Type: ⊤
 
 bar
-//│ Type: (forall α104_2: (α104_2) ->{⊥} α104_2) ->{⊥} Int
+//│ Type: (forall A104_2: (A104_2) ->{⊥} A104_2) ->{⊥} Int
 
 :e
 region x in x.ref bar
-//│ ═══[ERROR] Expected a monomorphic type or an instantiable type here, but (forall α104_2: (α104_2) ->{⊥} α104_2) ->{⊥} Int found
+//│ ═══[ERROR] Expected a monomorphic type or an instantiable type here, but (forall A104_2: (A104_2) ->{⊥} A104_2) ->{⊥} Int found
 //│ Type: Ref[⊥, ?]

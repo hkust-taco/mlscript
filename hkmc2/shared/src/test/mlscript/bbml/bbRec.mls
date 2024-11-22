@@ -9,9 +9,9 @@ fun f x = f
 
 fun f(x) = f
 f
-//│ Type: forall α1_2: ⊤ -> (⊤ -> α1_2)
+//│ Type: forall f1_2: ⊤ -> (⊤ -> f1_2)
 //│ Where:
-//│   ⊤ -> α1_2 <: α1_2
+//│   ⊤ -> f1_2 <: f1_2
 
 fun f(x) = f(x)
 f
@@ -47,8 +47,8 @@ fun f(x) = f(Foo.a(x))
 
 fun f(x) = f(x.Foo#a)
 f
-//│ Type: forall α21_2: Foo[out α21_2] -> ⊥
+//│ Type: forall x21_2: Foo[out x21_2] -> ⊥
 //│ Where:
-//│   α21_2 <: Foo[out α21_2]
+//│   x21_2 <: Foo[out x21_2]
 
 

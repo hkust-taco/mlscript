@@ -7,9 +7,9 @@ fun f(y) =
 
 // * the parameter type of y is extruded.
 f
-//│ Type: forall α2_2: α2_2 -> α2_2
+//│ Type: forall y2_2: y2_2 -> y2_2
 //│ Where:
-//│   α2_2 <: ⊤ -> Int
+//│   y2_2 <: ⊤ -> Int
 
 fun foo: [A] -> A -> Int
 fun foo(x) = 0
@@ -27,23 +27,23 @@ fun g(y) =
 //│ Type: ⊤
 
 g
-//│ Type: (forall α18_2: (⊥) ->{⊥} Int) ->{⊥} forall α19_2: (⊤) ->{⊥} Int
+//│ Type: (forall A18_2: (⊥) ->{⊥} Int) ->{⊥} forall A19_2: (⊤) ->{⊥} Int
 
 g(foo)
 //│ Type: (⊤) ->{⊥} Int
 
 :e
 y `=> (let t = run(x `=> x `+ y) in y)
-//│ ╔══[ERROR] Type error in quoted term with expected type CodeBase[out α29_3, ⊥, ?]
+//│ ╔══[ERROR] Type error in quoted term with expected type CodeBase[out T29_3, ⊥, ?]
 //│ ║  l.36: 	y `=> (let t = run(x `=> x `+ y) in y)
 //│ ║        	                   ^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  CodeBase[out α30_5 -> α37_5, out α39_4, ?]  <:  CodeBase[out α29_3, ⊥, ?]
+//│ ╟── because: cannot constrain  CodeBase[out x30_5 -> α37_5, out α39_4, ?]  <:  CodeBase[out T29_3, ⊥, ?]
 //│ ╟── because: cannot constrain  D( α39_4 )  <:  ⊥
 //│ ╟── because: cannot constrain  α39_4  <:  ¬()
-//│ ╙── because: cannot constrain  ¬⊥ ∧ <α>28_3  <:  ¬()
-//│ Type: CodeBase[out α27_3 -> α27_3, ⊥, ?]
+//│ ╙── because: cannot constrain  ¬⊥ ∧ <y>28_3  <:  ¬()
+//│ Type: CodeBase[out y27_3 -> y27_3, ⊥, ?]
 //│ Where:
-//│   α27_3 <: Int
+//│   y27_3 <: Int
 
 class C[A](m: A, n: A -> Int)
 //│ Type: ⊤
@@ -51,11 +51,11 @@ class C[A](m: A, n: A -> Int)
 
 fun f: [A] -> ([B] -> (C[out B] & A) -> B) -> A -> Int
 f
-//│ Type: forall α45_2: (forall α46_3: (C[out α46_3] ∧ α45_2) ->{⊥} α46_3) ->{⊥} (α45_2) ->{⊥} Int
+//│ Type: forall A45_2: (forall B46_3: (C[out B46_3] ∧ A45_2) ->{⊥} B46_3) ->{⊥} (A45_2) ->{⊥} Int
 
 fun g: [D] -> C[in Int out D] -> D
 g
-//│ Type: forall α47_2: (C[in Int out α47_2]) ->{⊥} α47_2
+//│ Type: forall D47_2: (C[in Int out D47_2]) ->{⊥} D47_2
 
 
 f(g)
@@ -74,11 +74,11 @@ f(g)(foo)
 
 :fixme // ???
 f(g)(bar)
-//│ ╔══[ERROR] Type error in selection with expected type α56_1
-//│ ╟── because: cannot constrain  C[Int]  <:  α56_1
-//│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  α56_1
-//│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  ¬C[in D() out ¬⊥] ∨ C[in D( Int ) out ¬⊥ ∧ α59_1]
-//│ ╟── because: cannot constrain  (D( Int )) ∧ (D(  ))  <:  ¬⊥ ∧ α59_1
-//│ ╟── because: cannot constrain  Int  <:  α59_1
+//│ ╔══[ERROR] Type error in selection with expected type A56_1
+//│ ╟── because: cannot constrain  C[Int]  <:  A56_1
+//│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  A56_1
+//│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  ¬C[in D() out ¬⊥] ∨ C[in D( Int ) out ¬⊥ ∧ D59_1]
+//│ ╟── because: cannot constrain  (D( Int )) ∧ (D(  ))  <:  ¬⊥ ∧ D59_1
+//│ ╟── because: cannot constrain  Int  <:  D59_1
 //│ ╙── because: cannot constrain  Int  <:  ⊥
 //│ Type: Int

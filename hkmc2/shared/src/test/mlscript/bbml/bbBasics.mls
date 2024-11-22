@@ -19,7 +19,7 @@ false
 
 fun id(x) = x
 id
-//│ Type: forall α2_2: α2_2 -> α2_2
+//│ Type: forall x2_2: x2_2 -> x2_2
 
 fun inc(x) = x + 1
 //│ Type: ⊤
@@ -28,7 +28,7 @@ fun mul(x, y) = x * y
 //│ Type: ⊤
 
 x => x
-//│ Type: (α8_1) ->{⊥} α8_1
+//│ Type: (x8_1) ->{⊥} x8_1
 
 +
 //│ Type: (Int, Int) ->{⊥} Int
@@ -258,16 +258,16 @@ class Foo[A](x: A -> A)
 //│ Type: ⊤
 
 new Foo(x => x)
-//│ Type: Foo[α77_1]
+//│ Type: Foo[α73_1]
 
 fun f(g) = new Foo(g)
 f
-//│ Type: forall α80_2: (α80_2 -> α80_2) -> Foo[α80_2]
+//│ Type: forall α76_2: (α76_2 -> α76_2) -> Foo[α76_2]
 
 f(x => x).Foo#x
-//│ Type: (α82_1) ->{⊥} α82_1
+//│ Type: (α78_1) ->{⊥} α78_1
 
 g => (new Foo(g)).Foo#x
-//│ Type: (α87_1 -> α87_1) ->{⊥} (α87_1) ->{⊥} α87_1
+//│ Type: (α83_1 -> α83_1) ->{⊥} (α83_1) ->{⊥} α83_1
 
 

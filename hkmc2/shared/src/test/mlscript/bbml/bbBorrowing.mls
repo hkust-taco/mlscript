@@ -35,9 +35,9 @@ fun next: [A, Br] -> Iter[A, Br] ->{Br} A
 //│ Type: ⊤
 
 letreg(r => r)
-//│ Type: Reg[?, α22_1]
+//│ Type: Reg[?, E22_1]
 //│ Where:
-//│   α22_1 <: Alloc
+//│   E22_1 <: Alloc
 
 letreg of r =>
   let b = mkVec(r)
@@ -47,9 +47,9 @@ letreg of r =>
     123
   clear(b)
   r
-//│ Type: Reg[?, α25_1]
+//│ Type: Reg[?, E25_1]
 //│ Where:
-//│   α25_1 <: Alloc
+//│   E25_1 <: Alloc
 
 
 // * Non-lexical borrowing pattern encoded with a thunk
@@ -89,8 +89,8 @@ letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ║  l.74: 	  k()
 //│ ║        	^^^^^
-//│ ╟── because: cannot constrain  α69_1  <:  Alloc
-//│ ╟── because: cannot constrain  α69_1  <:  ¬(~{Alloc})
+//│ ╟── because: cannot constrain  E68_1  <:  Alloc
+//│ ╟── because: cannot constrain  E68_1  <:  ¬(~{Alloc})
 //│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc})
 //│ Type: ⊥
 
@@ -123,13 +123,13 @@ letreg of r =>
 //│ ║         	^^^^^^^^^^
 //│ ║  l.106: 	  r
 //│ ║         	^^^
-//│ ╟── because: cannot constrain  α91_1  <:  Alloc
-//│ ╟── because: cannot constrain  α91_1  <:  ¬(~{Alloc})
+//│ ╟── because: cannot constrain  E90_1  <:  Alloc
+//│ ╟── because: cannot constrain  E90_1  <:  ¬(~{Alloc})
 //│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc})
-//│ Type: Reg[?, α91_1]
+//│ Type: Reg[?, E90_1]
 //│ Where:
-//│   ⊤ <: α91_1
-//│   α91_1 <: Alloc
+//│   ⊤ <: E90_1
+//│   E90_1 <: Alloc
 
 
 letreg of r =>
@@ -138,9 +138,9 @@ letreg of r =>
     next(it)
   use(r)
   r
-//│ Type: Reg[?, α113_1]
+//│ Type: Reg[?, E112_1]
 //│ Where:
-//│   α113_1 <: Alloc
+//│   E112_1 <: Alloc
 
 :e
 letreg of r =>
@@ -165,13 +165,13 @@ letreg of r =>
 //│ ║         	^^^^^^^^
 //│ ║  l.152: 	  r
 //│ ║         	^^^
-//│ ╟── because: cannot constrain  α125_1  <:  Alloc
-//│ ╟── because: cannot constrain  α125_1  <:  ¬(~{Alloc})
+//│ ╟── because: cannot constrain  E124_1  <:  Alloc
+//│ ╟── because: cannot constrain  E124_1  <:  ¬(~{Alloc})
 //│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~{Alloc})
-//│ Type: Reg[?, α125_1]
+//│ Type: Reg[?, E124_1]
 //│ Where:
-//│   ⊤ <: α125_1
-//│   α125_1 <: Alloc
+//│   ⊤ <: E124_1
+//│   E124_1 <: Alloc
 
 letreg of r0 =>
   letreg of r1 =>
@@ -180,9 +180,9 @@ letreg of r0 =>
       next(it)
     use(r1)
     r1
-//│ Type: Reg[?, in α154_1]
+//│ Type: Reg[?, in E153_1]
 //│ Where:
-//│   α154_1 <: Alloc
+//│   E153_1 <: Alloc
 
 
 // * Can leak the iterator

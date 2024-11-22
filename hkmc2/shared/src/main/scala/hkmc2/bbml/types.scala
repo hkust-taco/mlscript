@@ -156,7 +156,9 @@ sealed abstract class BasicType extends Type:
     this match
     case ClassLikeType(name, targs) =>
       if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.mkString(", ")}]"
-    case InfVar(lvl, uid, _, isSkolem) => if isSkolem then s"<α>${uid}_$lvl" else s"α${uid}_$lvl"
+    case v @ InfVar(lvl, uid, _, isSkolem) =>
+      val name = v.hint.getOrElse("α")
+      if isSkolem then s"<$name>${uid}_$lvl" else s"$name${uid}_$lvl"
     case FunType(arg :: Nil, ret, eff) => s"${arg.paren} ->${printEff(eff)} ${ret.paren}"
     case FunType(args, ret, eff) => s"(${args.mkString(", ")}) ->${printEff(eff)} ${ret.paren}"
     case ComposedType(lhs, rhs, pol) => s"${lhs.paren} ${if pol then "∨" else "∧"} ${rhs.paren}"
@@ -222,7 +224,7 @@ case class ClassLikeType(name: TypeSymbol | ModuleSymbol, targs: Ls[TypeArg]) ex
         case ty: Type => ty.subst
       })
 
-final case class InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, isSkolem: Bool) extends BasicType:
+final case class InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, isSkolem: Bool)(val hint: Option[Str]) extends BasicType:
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = map.get(uid).getOrElse(this)
 
 given Ordering[InfVar] = Ordering.by(_.uid)
@@ -267,11 +269,11 @@ case class PolyType(tvs: Ls[InfVar], body: GeneralType) extends GeneralType:
 
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
     PolyType(tvs.map {
-      case InfVar(lvl, uid, state, skolem) =>
+      case v @ InfVar(lvl, uid, state, skolem) =>
         val newSt = new VarState()
         newSt.lowerBounds = state.lowerBounds.map(_.subst)
         newSt.upperBounds = state.upperBounds.map(_.subst)
-        InfVar(lvl, uid, newSt, skolem)
+        InfVar(lvl, uid, newSt, skolem)(v.hint)
     }, body.subst)
 
   // * This function will only return the body after substitution
@@ -288,7 +290,7 @@ case class PolyType(tvs: Ls[InfVar], body: GeneralType) extends GeneralType:
   def skolemize(nextUid: => Uid[InfVar], lvl: Int)(tl: TL) =
     // * Note that by this point, the state is supposed to be frozen/treated as immutable
     val map = tvs.map(v =>
-      val sk = InfVar(lvl, nextUid, new VarState(), true)
+      val sk = InfVar(lvl, nextUid, new VarState(), true)(v.hint)
       tl.log(s"skolemize $v ~> $sk")
       v.uid -> sk
     ).toMap
@@ -296,7 +298,7 @@ case class PolyType(tvs: Ls[InfVar], body: GeneralType) extends GeneralType:
   
   def instantiate(nextUid: => Uid[InfVar], lvl: Int)(tl: TL): GeneralType =
     val map = tvs.map(v =>
-      val nv = InfVar(lvl, nextUid, new VarState(), false)
+      val nv = InfVar(lvl, nextUid, new VarState(), false)(v.hint)
       tl.log(s"instantiate $v ~> $nv")
       v.uid -> nv
     ).toMap

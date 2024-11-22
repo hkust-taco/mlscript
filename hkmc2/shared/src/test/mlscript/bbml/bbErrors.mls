@@ -11,11 +11,11 @@
 //│ Type: ⊥
 
 (x => x(0))(1)
-//│ ╔══[ERROR] Type error in integer literal with expected type α3_1
+//│ ╔══[ERROR] Type error in integer literal with expected type x3_1
 //│ ║  l.13: 	(x => x(0))(1)
 //│ ║        	            ^
-//│ ╟── because: cannot constrain  Int  <:  α3_1
-//│ ╟── because: cannot constrain  Int  <:  α3_1
+//│ ╟── because: cannot constrain  Int  <:  x3_1
+//│ ╟── because: cannot constrain  Int  <:  x3_1
 //│ ╙── because: cannot constrain  Int  <:  ¬(~{Int ->{α4_1} α5_1})
 //│ Type: ⊥
 
@@ -29,18 +29,18 @@
 
 fun inc(x) = x + 1
 inc("oops")
-//│ ╔══[ERROR] Type error in string literal with expected type α10_1
+//│ ╔══[ERROR] Type error in string literal with expected type x10_1
 //│ ║  l.31: 	inc("oops")
 //│ ║        	    ^^^^^^
-//│ ╟── because: cannot constrain  Str  <:  α10_1
-//│ ╟── because: cannot constrain  Str  <:  α10_1
+//│ ╟── because: cannot constrain  Str  <:  x10_1
+//│ ╟── because: cannot constrain  Str  <:  x10_1
 //│ ╙── because: cannot constrain  Str  <:  ¬¬Int
 //│ Type: Int
 
 fun inc(x) = x + 1
 inc : Int
 //│ ╔══[ERROR] Type error in selection with expected type Int
-//│ ╙── because: cannot constrain  α13_1 -> Int  <:  Int
+//│ ╙── because: cannot constrain  x13_1 -> Int  <:  Int
 //│ Type: Int
 
 
