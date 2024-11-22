@@ -187,7 +187,7 @@ class JSBuilder extends CodeBuilder:
                     } + ")""""
                 }; }"""
               } #}  # }"
-            if clsDefn.kind is syntax.Mod then
+            if (clsDefn.kind is syntax.Mod) || (clsDefn.kind is syntax.Obj) then
               val clsTmp = summon[Scope].allocateName(new semantics.TempSymbol(0/*TODO rm this useless param*/, N, sym.nme+"$"+"class"))
               clsDefn.owner match
               case S(owner) =>

@@ -185,6 +185,7 @@ fun example(args) =
 //│             continuation = Else of Lit of StrLit of "small"
 //│           tail = Else of Lit of StrLit of "medium"
 //│       resSym = ‹result of member:example›@35
+//│       flags = ()
 //│   res = Lit of UnitLit of true
 
 

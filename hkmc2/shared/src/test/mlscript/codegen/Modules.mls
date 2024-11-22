@@ -94,7 +94,7 @@ M.oops
 
 :sjs
 module M with
-  val m = M
+  val m: module M = M
 //│ JS:
 //│ const M$class = class M {
 //│   constructor() {

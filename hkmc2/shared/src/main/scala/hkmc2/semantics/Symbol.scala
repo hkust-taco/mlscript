@@ -96,7 +96,7 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[Tree]) extends MemberSymbol[
   def clsTree: Opt[Tree.TypeDef] = trees.collectFirst:
     case t: Tree.TypeDef if t.k is Cls => t
   def modTree: Opt[Tree.TypeDef] = trees.collectFirst:
-    case t: Tree.TypeDef if t.k is Mod => t
+    case t: Tree.TypeDef if (t.k is Mod) || (t.k is Obj) => t
   def alsTree: Opt[Tree.TypeDef] = trees.collectFirst:
     case t: Tree.TypeDef if t.k is Als => t
   def trmTree: Opt[Tree.TermDef] = trees.collectFirst:

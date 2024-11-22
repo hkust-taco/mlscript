@@ -1,7 +1,7 @@
 :js
 
 
-module Foo
+object Foo
 
 fun test(x) = x is Foo
 
@@ -10,7 +10,7 @@ test(Foo)
 
 
 fun foo() =
-  module Foo
+  object Foo
   Foo is Foo
 
 foo()

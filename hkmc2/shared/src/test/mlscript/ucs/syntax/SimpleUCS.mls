@@ -2,7 +2,7 @@
 
 abstract class Option[A]: Some[A] | None
 class Some[A](value: A) extends Option[A]
-module None extends Option
+object None extends Option
 
 abstract class Either[out A, out B]: Left[A] | Right[B]
 class Left[A](leftValue: A) extends Either[A, nothing]

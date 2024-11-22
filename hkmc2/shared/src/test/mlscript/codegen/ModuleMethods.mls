@@ -3,7 +3,7 @@
 
 // TODO could use `globalThis.Example` instead of `this` in the generated code
 :sjs
-module Example with
+object Example with
   val a = 456
   fun f(x) = [x, a]
 //│ JS:
