@@ -241,33 +241,33 @@ fact
 fact(1)
 //│ Type: Int
 
-:fixme
+
 fun fact2 = case
   0 then 1
   n then n * fact2(n - 1)
-//│ /!!!\ Uncaught error: scala.MatchError: Cons(Branch(Ref(caseScrut@138),Lit(IntLit(0)),Else(Lit(IntLit(1)))),Let(n@139,Ref(caseScrut@138),Else(App(Sel(Ref(globalThis:import#bbPredef),Ident(*)),Tup(List(Fld(‹›,Ref(n@139),None), Fld(‹›,App(Sel(Ref(globalThis:block#52),Ident(fact2)),Tup(List(Fld(‹›,App(Sel(Ref(globalThis:import#bbPredef),Ident(-)),Tup(List(Fld(‹›,Ref(n@139),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None))))))) (of class hkmc2.semantics.Split$Cons)
+//│ Type: ⊤
 
 fact2
-//│ Type: ⊥
+//│ Type: Int -> Int
 
 fact2(0)
-//│ Type: ⊥
+//│ Type: Int
 
 
 class Foo[A](x: A -> A)
 //│ Type: ⊤
 
 new Foo(x => x)
-//│ Type: Foo[α73_1]
+//│ Type: Foo[α75_1]
 
 fun f(g) = new Foo(g)
 f
-//│ Type: forall α76_2: (α76_2 -> α76_2) -> Foo[α76_2]
+//│ Type: forall α78_2: (α78_2 -> α78_2) -> Foo[α78_2]
 
 f(x => x).Foo#x
-//│ Type: (α78_1) ->{⊥} α78_1
+//│ Type: (α80_1) ->{⊥} α80_1
 
 g => (new Foo(g)).Foo#x
-//│ Type: (α83_1 -> α83_1) ->{⊥} (α83_1) ->{⊥} α83_1
+//│ Type: (α85_1 -> α85_1) ->{⊥} (α85_1) ->{⊥} α85_1
 
 

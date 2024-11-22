@@ -287,9 +287,16 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val allEff = scrutineeEff | (consEff | altsEff)
       (sign.getOrElse(tryMkMono(consTy, cons) | tryMkMono(altsTy, alts)), allEff)
     // * Normal if
-    case Split.Cons(Branch(scrutinee, Pattern.Lit(Tree.BoolLit(_)), cons), alts) =>
+    case Split.Cons(Branch(scrutinee, Pattern.Lit(lit), cons), alts) =>
       val (scrutineeTy, scrutineeEff) = typeCheck(scrutinee)
-      constrain(tryMkMono(scrutineeTy, scrutinee), BbCtx.boolTy)
+      val litTy = lit match
+        case _: Tree.BoolLit => BbCtx.boolTy
+        case _: Tree.IntLit => BbCtx.intTy
+        case _: Tree.DecLit => BbCtx.numTy
+        case _: Tree.StrLit => BbCtx.strTy
+        case _: Tree.UnitLit => Top // TODO: null & undefined?
+      
+      constrain(tryMkMono(scrutineeTy, scrutinee), litTy)
       val nestCtx1 = ctx.nest
       val nestCtx2 = ctx.nest
       val (consTy, consEff) = typeSplit(cons, sign)(using nestCtx1)
