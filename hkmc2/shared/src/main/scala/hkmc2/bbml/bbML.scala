@@ -232,7 +232,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val res = freshVar(N)(using ctx)
       constrain(bodyCtx, sk | res)
       (bodyTy, rhsCtx | res, rhsEff | bodyEff)
-    case Term.IfLike(Keyword.`if`, Split.Cons(Branch(cond, Pattern.Lit(BoolLit(true)), Split.Else(cons)), Split.Else(alts))) =>
+    case Term.IfLike(Keyword.`if`, Split.Let(_, cond, Split.Cons(Branch(_, Pattern.Lit(BoolLit(true)), Split.Else(cons)), Split.Else(alts)))) =>
       val (condTy, condCtx, condEff) = typeCode(cond)
       val (consTy, consCtx, consEff) = typeCode(cons)
       val (altsTy, altsCtx, altsEff) = typeCode(alts)

@@ -544,7 +544,9 @@ abstract class Parser(
               val ele = simpleExprImpl(prec)
               term match
                 case InfixApp(lhs, Keyword.`then`, rhs) =>
-                  Quoted(IfElse(InfixApp(Unquoted(lhs), Keyword.`then`, Unquoted(rhs)), Unquoted(ele)))
+                  Quoted(IfLike(Keyword.`if`, Block(
+                    InfixApp(Unquoted(lhs), Keyword.`then`, Unquoted(rhs)) :: Modified(Keyword.`else`, N, Unquoted(ele)) :: Nil
+                  )))
                 case tk =>
                   err(msg"Expected '`in'; found ${tk.toString} instead" -> tk.toLoc :: Nil)
                   errExpr

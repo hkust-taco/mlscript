@@ -27,7 +27,14 @@ fun assertNotZero(x) =
   `if (x `== `0.0) then `error else x
 let checkedDiv = x `=> y `=> x `/. (assertNotZero(y))
 run(checkedDiv)
-//│ /!!!\ Uncaught error: scala.MatchError: IfElse(InfixApp(Unquoted(Quoted(App(Ident(==),Tup(List(Unquoted(Ident(x)), Unquoted(Quoted(DecLit(0.0)))))))),keyword 'then',Unquoted(Quoted(Ident(error)))),Unquoted(Ident(x))) (of class hkmc2.syntax.Tree$IfElse)
+//│ ╔══[ERROR] Name not found: /.
+//│ ║  l.28: 	let checkedDiv = x `=> y `=> x `/. (assertNotZero(y))
+//│ ╙──      	                                ^^
+//│ ╔══[ERROR] Cannot quote Ref(builtin:==)
+//│ ║  l.27: 	  `if (x `== `0.0) then `error else x
+//│ ╙──      	          ^^
+//│ ═══[ERROR] Cannot quote Error
+//│ Type: ⊤ -> (Num -> ⊥)
 
 
 
@@ -40,7 +47,7 @@ show
 fun inc(dbg) =
   x `=> let c = x `+ `1 in let t = dbg(c) in c
 inc
-//│ Type: forall α44_2: (CodeBase[out Int, ?, ?] ->{α44_2} ⊤) ->{α44_2} CodeBase[out Int -> Int, ⊥, ?]
+//│ Type: forall α81_2: (CodeBase[out Int, ?, ?] ->{α81_2} ⊤) ->{α81_2} CodeBase[out Int -> Int, ⊥, ?]
 
 inc(c => log(show(c)))
 //│ Type: CodeBase[out Int -> Int, ⊥, ?]
@@ -58,7 +65,7 @@ let gn5 = run(gib_naive(5))
 
 fun bind(rhs, k) = `let x = rhs `in k(x)
 bind
-//│ Type: forall α111_2, α112_2, α116_2, α119_2, α122_2, α123_2: (CodeBase[out α111_2, out α112_2, ?], CodeBase[in α116_2 out α116_2 ∨ α111_2, ?, ⊥] ->{α119_2} CodeBase[out α122_2, out α123_2, ?]) ->{α119_2} CodeBase[out α122_2, out α112_2 ∨ α123_2, ?]
+//│ Type: forall α148_2, α149_2, α153_2, α156_2, α159_2, α160_2: (CodeBase[out α148_2, out α149_2, ?], CodeBase[in α153_2 out α153_2 ∨ α148_2, ?, ⊥] ->{α156_2} CodeBase[out α159_2, out α160_2, ?]) ->{α156_2} CodeBase[out α159_2, out α149_2 ∨ α160_2, ?]
 
 :e
 fun body: [G] -> (CodeBase[out Int, out G, out Any], CodeBase[out Int, out G, out Any]) -> Int -> CodeBase[out Int, out G, out Any]
@@ -66,21 +73,21 @@ fun body(x, y) = case
   0 then x
   1 then y
   n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
-//│ ╔══[ERROR] Type error in application with expected type CodeBase[out Int, out <G>131_2, ?]
-//│ ║  l.68: 	  n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
+//│ ╔══[ERROR] Type error in application with expected type CodeBase[out Int, out <G>168_2, ?]
+//│ ║  l.75: 	  n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  CodeBase[out α142_2, out α134_2 ∨ α145_2, ?]  <:  CodeBase[out Int, out <G>131_2, ?]
-//│ ╟── because: cannot constrain  D( α134_2 || α145_2 )  <:  <G>131_2
-//│ ╟── because: cannot constrain  α145_2  <:  ¬(~<G>131_2)
-//│ ╟── because: cannot constrain  α144_2  <:  ¬(~<G>131_2)
-//│ ╟── because: cannot constrain  α144_2  <:  ¬(~<G>131_2)
-//│ ╙── because: cannot constrain    <:  ¬(~<G>131_2)
+//│ ╟── because: cannot constrain  CodeBase[out α179_2, out α171_2 ∨ α182_2, ?]  <:  CodeBase[out Int, out <G>168_2, ?]
+//│ ╟── because: cannot constrain  D( α171_2 || α182_2 )  <:  <G>168_2
+//│ ╟── because: cannot constrain  α182_2  <:  ¬(~<G>168_2)
+//│ ╟── because: cannot constrain  α181_2  <:  ¬(~<G>168_2)
+//│ ╟── because: cannot constrain  α181_2  <:  ¬(~<G>168_2)
+//│ ╙── because: cannot constrain    <:  ¬(~<G>168_2)
 //│ Type: ⊤
 
 fun bind: [G] -> (CodeBase[out Int, out G, out Any], [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out Int, out C | G, out Any]) -> CodeBase[out Int, out G, out Any]
 fun bind(rhs, k) = `let x = rhs `in k(x)
 bind
-//│ Type: forall G162_2: (CodeBase[out Int, out G162_2, ?], forall C163_3: (CodeBase[out Int, out C163_3, ?]) ->{⊥} CodeBase[out Int, out C163_3 ∨ G162_2, ?]) ->{⊥} CodeBase[out Int, out G162_2, ?]
+//│ Type: forall G199_2: (CodeBase[out Int, out G199_2, ?], forall C200_3: (CodeBase[out Int, out C200_3, ?]) ->{⊥} CodeBase[out Int, out C200_3 ∨ G199_2, ?]) ->{⊥} CodeBase[out Int, out G199_2, ?]
 
 
 fun body: [G] -> (CodeBase[out Int, out G, out Any], CodeBase[out Int, out G, out Any]) -> Int -> CodeBase[out Int, out G, out Any]
@@ -89,7 +96,7 @@ fun body(x, y) = case
   1 then y
   n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out Int, out C, out Any]
 body
-//│ Type: forall G173_2: (CodeBase[out Int, out G173_2, ?], CodeBase[out Int, out G173_2, ?]) ->{⊥} (Int) ->{⊥} CodeBase[out Int, out G173_2, ?]
+//│ Type: forall G210_2: (CodeBase[out Int, out G210_2, ?], CodeBase[out Int, out G210_2, ?]) ->{⊥} (Int) ->{⊥} CodeBase[out Int, out G210_2, ?]
 
 fun gib(n) = (x, y) `=> body(x, y)(n)
 let g5 = run(gib(5))
