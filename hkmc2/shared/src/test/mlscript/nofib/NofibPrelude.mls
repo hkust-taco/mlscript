@@ -1,0 +1,335 @@
+
+fun nofibPrint(x) = globalThis.process.stdout.write(globalThis.JSON.stringify(x) + "\n")
+fun nofibError(e) = globalThis.eval("throw new Error('" + e + "')")
+fun nofibBigInt(i) = globalThis.BigInt(i)
+
+abstract class Option[out T]: Some[T] | None
+class Some[out T](x: T) extends Option[T]
+object None extends Option
+
+class Lazy[out A](init: () -> A) with
+  mut val cached: Option[A] = None
+  fun get() =
+    if cached is
+      Some(v) then v
+      else
+        let v = init()
+        set cached = Some(v)
+        v
+fun lazy(x) = Lazy(x)
+fun force(x) = if x is Lazy then x.get()
+
+abstract class List[out T]: Cons[T] | Nil
+class Cons[out T](head: T, tail: List[T]) extends List[T] with
+  fun toString() =
+    "[" + _internal_cons_to_str(Cons(head, tail)) + "]"
+object Nil extends List with
+  fun toString() = "[]"
+fun (::) cons(x, xs) = Cons(x, xs)
+fun _internal_cons_to_str(ls) = if ls is
+  Nil then ""
+  Cons(h, Nil) then h.toString()
+  Cons(h, t) then h.toString() + "," + _internal_cons_to_str(t)
+fun ltList(xs, ys, lt, gt) = if xs is
+  Nil then true
+  Cons(x, xs) and ys is
+    Nil then false
+    Cons(y, ys) and
+      lt(x, y) then true
+      gt(x, y) then false
+      else ltList(xs, ys, lt, gt)
+
+
+type LazyList[out T] = Lazy[LzList[T]]
+abstract class LzList[out T]: LzCons[T] | LzNil
+class LzCons[out T](head: T, tail: LazyList[T]) extends LzList[T]
+object LzNil extends LzList
+
+class Tup2[out T1, T2](fst: T1, snd: T2) with
+  fun toString() = "(" + fst.toString() + "," + snd.toString() + ")"
+fun ltTup2(t1, t2, lt1, gt1, lt2) = if t1 is Tup2(a, b) and t2 is Tup2(c, d) and
+  lt1(a, c) then true
+  gt1(a, c) then false
+  else lt2(b, d)
+fun eqTup2(t1, t2) = if t1 is Tup2(a, b) and t2 is Tup2(c, d) then a == c and b == d
+class Tup3[out T1, T2, T3](fst: T1, snd: T2, thd: T3) with
+  fun toString() = "(" + fst.toString() + "," + snd.toString() + "," + thd.toString() + ")"
+class Tup4[out T1, T2, T3, T4](fst: T1, snd: T2, thd: T3, fth: T4)
+class Tup5[out T1, T2, T3, T4, T5](fst: T1, snd: T2, thd: T3, fth: T4, ffth: T5)
+class Tup6[out T1, T2, T3, T4, T5, T6](fst: T1, snd: T2, thd: T3, fth: T4, ffth: T5, sxth: T6)
+class Tup7[out T1, T2, T3, T4, T5, T6, T7](fst: T1, snd: T2, thd: T3, fth: T4, ffth: T5, sxth: T6, svth: T7)
+class Tup8[out T1, T2, T3, T4, T5, T6, T7, T8](fst: T1, snd: T2, thd: T3, fth: T4, ffth: T5, sxth: T6, svth: T7, eghth: T8)
+
+fun compose(f, g) = x => f(g(x))
+
+fun snd(x) = if x is Tup2(f, s) then s
+fun fst(x) = if x is Tup2(f, s) then f
+
+fun until(p, f, i) = if p(i) then i else until(p, f, f(i))
+
+fun flip(f, x, y) = f(y)(x)
+
+fun not(x) = if x then false else true
+
+fun power(a, n) = globalThis.Math.pow(a, n)
+
+fun intDiv(a, b) = globalThis.Math.floor(a / b)
+fun intQuot(a, b) = globalThis.Math.trunc(a / b)
+
+fun intMod(a, b) = a - (b * intDiv(a, b))
+fun intRem(a, b) = a - (b * intQuot(a, b))
+
+fun quotRem(a, b) = Tup2(intQuot(a, b), intRem(a, b))
+fun divMod(a, b) = Tup2(intDiv(a, b), intMod(a, b))
+
+fun max(a, b) = globalThis.Math.max(a, b)
+
+fun abs(x) = globalThis.Math.abs(x)
+
+fun head(l) = if l is Cons(h, t) then h
+fun tail(l) = if l is Cons(h, t) then t
+
+fun reverse(l) =
+  fun r(l', l) = if l is Cons(x, xs) then r(Cons(x, l'), xs) else l'
+  r(Nil, l)
+
+fun map(f, xs) = if xs is
+  Cons(x, xs) then Cons(f(x), map(f, xs))
+  Nil then Nil
+
+fun listLen(ls) =
+  fun l(ls, a) = if ls is
+    Nil then a
+    Cons(h, t) then l(t, a + 1)
+  l(ls, 0)
+
+fun listEq(xs, ys) = if
+  xs is Nil and ys is Nil then true
+  xs is Cons(hx, tx) and ys is Cons(hy, ty) and (hx == hy) then listEq(tx, ty)
+  else false
+
+fun enumFromTo(a, b) = if a <= b then Cons(a, enumFromTo(a + 1, b)) else Nil
+
+fun enumFromThenTo(a, t, b) = if a <= b then Cons(a, enumFromThenTo(t, 2 * t - a, b)) else Nil
+
+fun drop(n, ls) = if ls is
+  Nil then Nil
+  Cons(h, t) and
+    n <= 0 then ls
+    else drop(n - 1, t)
+
+fun take(n, ls) = if ls is
+  Nil then Nil
+  Cons(h, t) and
+    n <= 0 then Nil
+    else Cons(h, take(n - 1, t))
+
+fun splitAt(n, ls) = Tup2(take(n, ls), drop(n, ls))
+
+fun zip(xs, ys) = if xs is
+  Cons(x, xs) and ys is Cons(y, ys) then Cons(Tup2(x, y), zip(xs, ys))
+  else Nil
+
+fun inList(x, ls) = if ls is
+  Cons(h, t) and
+    x == h then true
+    else inList(x, t)
+  Nil then false
+
+fun notElem(x, ls) = not(inList(x, ls))
+
+fun append(xs, ys) = if xs is
+  Nil then ys
+  Cons(x, xs) then Cons(x, append(xs, ys))
+
+fun concat(ls) = if ls is
+  Nil then Nil
+  Cons(x, xs) then append(x, concat(xs))
+
+fun filter(f, ls) = if ls is
+  Nil then Nil
+  Cons(h, t) and
+    f(h) then h :: filter(f, t)
+    else filter(f, t)
+
+fun all(p, ls) = if ls is
+  Nil then true
+  Cons(h, t) and
+    p(h) then all(p, t)
+    else false
+
+fun orList(ls) = if ls is
+  Nil then false
+  Cons(h, t) and
+    h then true
+    else orList(t)
+
+fun dropWhile(f, ls) = if ls is
+  Nil then Nil
+  Cons(h, t) and
+    f(h) then dropWhile(f, t)
+    else h :: t
+
+fun foldl(f, a, xs) = if xs is
+  Nil then a
+  Cons(h, t) then foldl(f, f(a, h), t)
+
+fun scanl(f, q, ls) = if ls is
+  Nil then Cons(q, Nil)
+  Cons(x, xs) then Cons(q, scanl(f, f(q, x), xs))
+
+fun scanr(f, q, ls) = if ls is
+  Nil then Cons(q, Nil)
+  Cons(x, xs) and scanr(f, q, xs) is Cons(q, t) then Cons(f(x, q), Cons(q, t))
+
+fun foldr(f, z, xs) = if xs is
+  Nil then z
+  Cons(h, t) then f(h, foldr(f, z, t))
+
+fun foldl1(f, ls) = if
+  ls is Cons(x, xs) then foldl(f, x, xs)
+
+fun foldr1(f, ls) = if ls is
+  Cons(x, Nil) then x
+  Cons(x, xs) then f(x, foldr1(f, xs))
+
+fun maximum(xs) = foldl1((x, y) => if x > y then x else y, xs)
+
+fun nubBy(eq, ls) = if ls is
+  Nil then Nil
+  Cons(h, t) then h :: nubBy(eq, filter(y => not(eq(h, y)), t))
+
+fun zipWith(f, xss, yss) = if
+  xss is Cons(x, xs) and yss is Cons(y, ys) then Cons(f(x, y), zipWith(f, xs, ys))
+  else Nil
+
+fun deleteBy(eq, x, ys) = if ys is
+  Nil then Nil
+  Cons(y, ys) and
+    eq(x, y) then ys
+    else Cons(y, deleteBy(eq, x, ys))
+
+fun unionBy(eq, xs, ys) = append(xs, foldl((acc, y) => deleteBy(eq, y, acc), nubBy(eq, ys), xs))
+
+fun union(xs, ys) = unionBy((x, y) => x == y, xs, ys)
+
+fun atIndex(i, ls) = if ls is
+  Cons(h, t) and
+    i == 0 then h
+    else atIndex(i - 1, t)
+
+fun sum(xs) =
+  fun go(xs, a) = if xs is
+    Nil then a
+    Cons(h, t) then go(t, a + h)
+  go(xs, 0)
+
+fun null_(ls) = if ls is
+  Nil then true
+  else false
+
+fun replicate(n, x) = if n == 0 then Nil else Cons(x, replicate(n - 1, x))
+
+fun unzip(l) =
+  fun f(l, a, b) = if l is
+    Nil then Tup2(reverse(a), reverse(b))
+    Cons(Tup2(x, y), t) then f(t, Cons(x, a), Cons(y, b))
+  f(l, Nil, Nil)
+
+fun zip3(xs, ys, zs) = if
+  xs is Cons(x, xs) and ys is Cons(y, ys) and zs is Cons(z, zs) then Cons(Tup3(x, y, z), zip3(xs, ys, zs))
+  else Nil
+
+fun transpose(xss) =
+  fun lscomp(ls) = if ls is
+    Nil then Nil
+    Cons(h, t) and h is
+      Cons(hd, tl) then Cons(Tup2(hd, tl), lscomp(t))
+      else lscomp(t)
+  fun combine(y, h, ys, t) = Cons(Cons(y, h), transpose(Cons(ys, t)))
+  if xss is
+    Nil then Nil
+    Cons(Nil, xss) then transpose(xss)
+    Cons(Cons(x, xs), xss) and unzip(lscomp(xss)) is Tup2(hds, tls) then combine(x, hds, xs, tls)
+
+
+// =====================
+
+fun map_lz(f, ls) = lazy of () =>
+  if force(ls) is
+    LzNil then LzNil
+    LzCons(h, t) then LzCons(f(h), map_lz(f, t))
+
+fun filter_lz(p, ls) = Lazy of () =>
+  if force(ls) is
+    LzNil then LzNil
+    LzCons(h, t) and
+      p(h) then LzCons(h, filter_lz(p, t))
+      else force(filter_lz(p, t))
+
+fun nubBy_lz(eq, ls) = Lazy of () =>
+  if force(ls) is
+    LzNil then LzNil
+    LzCons(h, t) then LzCons(h, nubBy_lz(eq, filter_lz(y => not(eq(h, y)), t)))
+
+fun nub_lz(ls) = nubBy_lz((x, y) => x == y, ls)
+
+fun take_lz(n, ls) = if
+  n > 0 and force(ls) is
+    LzNil then Nil
+    LzCons(h, t) then Cons(h, take_lz(n - 1, t))
+  else Nil
+
+fun take_lz_lz(n, ls) = lazy of () =>
+  if n > 0 and force(ls) is
+    LzNil then LzNil
+    LzCons(h, t) then LzCons(h, take_lz_lz(n - 1, t))
+  else LzNil
+
+fun drop_lz(n, ls) = if
+  n <= 0 then ls
+  force(ls) is
+    LzNil then lazy of () => LzNil
+    LzCons(h, t) then drop_lz(n - 1, t)
+
+fun splitAt_lz(n, ls) = Tup2(take_lz(n, ls), drop_lz(n, ls))
+
+fun zipWith_lz_lz(f, xss, yss) = lazy of () => if
+  force(xss) is LzCons(x, xs) and (force(yss)) is LzCons(y, ys) then LzCons(f(x, y), zipWith_lz_lz(f, xs, ys))
+  else LzNil
+
+fun zipWith_lz_nl(f, xss, yss) = if
+  force(xss) is LzCons(x, xs) and yss is Cons(y, ys) then Cons(f(x, y), zipWith_lz_nl(f, xs, ys))
+  else Nil
+
+fun iterate(f, x) = lazy of () => LzCons(x, iterate(f, f(x)))
+
+fun append_nl_lz(xs, ys) = if xs is
+  Nil then ys
+  Cons(h, t) then lazy of () => LzCons(h, append_nl_lz(t, ys))
+
+fun replicate_lz(n, x) = if n == 0 then lazy of () => LzNil else lazy of () => LzCons(x, replicate_lz(n - 1, x))
+
+fun enumFrom(a) = lazy of () => LzCons(a, enumFrom(a + 1))
+
+// =====================
+
+
+fun stringOfFloat(x) = x + ""
+fun stringOfInt(x) = x + ""
+fun stringConcat(x, y) = x + y
+fun stringListConcat(ls) = if ls is
+  Nil then ""
+  Cons(h, t) then stringConcat(h, stringListConcat(t))
+fun sqrt(x) = globalThis.Math.sqrt(x)
+fun tan(x) = globalThis.Math.tan(x)
+fun sin(x) = globalThis.Math.sin(x)
+fun cos(x) = globalThis.Math.cos(x)
+fun round(x) = globalThis.Math.round(x)
+fun int_of_char(x) = x.charCodeAt(0)
+fun nofibStringToList(s) =
+  fun go(i) = if i < s.length then Cons(s.charAt(i), go(i + 1)) else Nil
+  go(0)
+fun nofibListToString(ls) = if ls is
+  Nil then ""
+  Cons(h, t) then h + nofibListToString(t)

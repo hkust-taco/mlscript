@@ -129,7 +129,7 @@ sealed abstract class Result
 // type Local = LocalSymbol
 type Local = Symbol
 
-case class Call(fun: Path, args: Ls[Path]) extends Result
+case class Call(fun: Path, args: Ls[Arg]) extends Result
 
 case class Instantiate(cls: Path, args: Ls[Path]) extends Result
 
@@ -142,5 +142,7 @@ enum Value extends Path:
   case This(sym: InnerSymbol) // TODO rm – just use Ref
   case Lit(lit: Literal)
   case Lam(params: Ls[Param], body: Block)
-  case Arr(elems: Ls[Path])
+  case Arr(elems: Ls[Arg])
+
+case class Arg(spread: Bool, value: Path)
 

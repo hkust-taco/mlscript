@@ -20,6 +20,7 @@ extension (s: String)
     .mkString("\"", "", "\"")
 
 
+import hkmc2.semantics.TermDefFlags
 import hkmc2.semantics.FldFlags
 import scala.collection.mutable.Buffer
 import mlscript.utils.StringOps
@@ -36,12 +37,17 @@ extension (t: Product)
       case Nil => "Nil"
       case xs: List[_] => "Ls of \n" + xs.iterator.map(aux(_)).mkString("\n").indent("  ")
       case s: String => s.escaped
-      case FldFlags(mut, spec, genGetter) =>
+      case TermDefFlags(mod) =>
+        val flags = Buffer.empty[String]
+        if mod then flags += "module"
+        flags.mkString("(", ", ", ")")
+      case FldFlags(mut, spec, genGetter, mod) =>
         val flags = Buffer.empty[String]
         if mut then flags += "mut"
         if spec then flags += "spec"
         if genGetter then flags += "gen"
-        if flags.isEmpty then "()" else flags.mkString("(", ", ", ")")
+        if mod then flags += "module"
+        flags.mkString("(", ", ", ")")
       case Loc(start, end, origin) =>
         val (sl, _, sc) = origin.fph.getLineColAt(start)
         val (el, _, ec) = origin.fph.getLineColAt(end)

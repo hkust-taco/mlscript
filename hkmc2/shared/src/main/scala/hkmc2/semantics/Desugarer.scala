@@ -9,7 +9,6 @@ import hkmc2.syntax.Literal
 import Keyword.{as, and, `else`, is, let, `then`}
 import collection.mutable.HashMap
 import Elaborator.{ctx, Ctxl}
-import hkmc2.semantics.Elaborator.Ctx.globalThisSymbol
 
 object Desugarer:
   extension (op: Keyword.Infix)
@@ -35,7 +34,6 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
   import Desugarer.*
   import Elaborator.Ctx
   import elaborator.term
-  import state.nextUid
   import tl.*
 
   // We're working on composing continuations in the UCS translation.
@@ -71,14 +69,14 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
   extension (symbol: BlockLocalSymbol)
     def getSubScrutinees(cls: ClassSymbol): List[BlockLocalSymbol] =
       subScrutineeMap.getOrElseUpdate(symbol, new ScrutineeData).classes.getOrElseUpdate(cls, {
-        (0 until cls.arity).map(i => TempSymbol(nextUid, N, s"param$i")).toList
+        (0 until cls.arity).map(i => TempSymbol(N, s"param$i")).toList
       })
     def getTupleLeadSubScrutinee(index: Int): BlockLocalSymbol =
       val data = subScrutineeMap.getOrElseUpdate(symbol, new ScrutineeData)
-      data.tupleLead.getOrElseUpdate(index, TempSymbol(nextUid, N, s"first$index"))
+      data.tupleLead.getOrElseUpdate(index, TempSymbol(N, s"first$index"))
     def getTupleLastSubScrutinee(index: Int): BlockLocalSymbol =
       val data = subScrutineeMap.getOrElseUpdate(symbol, new ScrutineeData)
-      data.tupleLast.getOrElseUpdate(index, TempSymbol(nextUid, N, s"last$index"))
+      data.tupleLast.getOrElseUpdate(index, TempSymbol(N, s"last$index"))
       
 
   def default: Split => Sequel = split => _ => split
@@ -164,7 +162,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
           pre = s"termSplit: let ${ident.name} = $termTree",
           post = (res: Split) => s"termSplit: let >>> $res"
         ):
-          val sym = VarSymbol(ident, nextUid)
+          val sym = VarSymbol(ident)
           val fallbackCtx = ctx + (ident.name -> sym)
           Split.Let(sym, term(termTree)(using ctx), elabFallback(fallback)(fallbackCtx)).withLocOf(t)
         case Modified(Keyword.`else`, elsLoc, default) => fallback => ctx => trace(
@@ -222,7 +220,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
           val first = Fld(FldFlags.empty, lhsSymbol.ref(/* FIXME ident? */), N)
           val second = Fld(FldFlags.empty, rhsTerm, N)
           val arguments = Term.Tup(first :: second :: Nil)(rawTup)
-          val joint = FlowSymbol("‹applied-result›", nextUid)
+          val joint = FlowSymbol("‹applied-result›")
           Term.App(opRef, arguments)(tree, joint)
         termSplit(rhs, finishInner)(fallback)
     case tree @ App(lhs, blk @ OpBlock(opRhsApps)) => fallback => ctx =>
@@ -232,14 +230,14 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
           val second = Fld(FldFlags.empty, rhsTerm, N)
           val rawTup = Tup(lhs :: Nil): Tup // <-- loc might be wrong
           val arguments = Term.Tup(first :: second :: Nil)(rawTup)
-          val joint = FlowSymbol("‹applied-result›", nextUid)
+          val joint = FlowSymbol("‹applied-result›")
           Term.App(op, arguments)(tree, joint)
         opRhsApps.foldRight(Function.const(fallback): Sequel): (tt, elabFallback) =>
           tt match
           case (Tree.Empty(), LetLike(`let`, ident @ Ident(_), termTree, N)) => ctx =>
             termTree match
             case S(termTree) =>
-              val sym = VarSymbol(ident, nextUid)
+              val sym = VarSymbol(ident)
               val fallbackCtx = ctx + (ident.name -> sym)
               Split.Let(sym, term(termTree)(using ctx), elabFallback(fallbackCtx))
           case (Tree.Empty(), Modified(Keyword.`else`, elsLoc, default)) => ctx =>
@@ -268,7 +266,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
       cont(symbol)(innerCtx)
     case _ =>
       val name = "scrut"
-      val symbol = TempSymbol(nextUid, N, name)
+      val symbol = TempSymbol(N, name)
       val innerCtx = baseCtx + (name -> symbol)
       Split.Let(symbol, scrutinee, cont(symbol)(innerCtx))
 
@@ -320,7 +318,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
       case LetLike(`let`, ident @ Ident(_), termTree, N) => backup => ctx =>
         termTree match
         case S(termTree) =>
-          val sym = VarSymbol(ident, nextUid)
+          val sym = VarSymbol(ident)
           val fallbackCtx = ctx + (ident.name -> sym)
           Split.Let(sym, term(termTree)(using ctx), elabFallback(backup)(fallbackCtx))
       case Modified(Keyword.`else`, elsLoc, body) => backup => ctx => trace(
@@ -381,13 +379,13 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
       case Ident("_") => _ => ctx => sequel(ctx)
       // Alias pattern
       case pat as (alias @ Ident(_)) => fallback =>
-        val aliasSymbol = VarSymbol(alias, nextUid)
+        val aliasSymbol = VarSymbol(alias)
         val inner = (ctx: Ctx) =>
           val ctxWithAlias = ctx + (alias.name -> aliasSymbol)
           Split.Let(aliasSymbol, ref, sequel(ctxWithAlias))
         expandMatch(scrutSymbol, pat, inner)(fallback)
       case id @ Ident(nme) if nme.headOption.forall(_.isLower) => fallback => ctx =>
-        val aliasSymbol = VarSymbol(id, nextUid)
+        val aliasSymbol = VarSymbol(id)
         val ctxWithAlias = ctx + (nme -> aliasSymbol)
         Split.Let(aliasSymbol, ref, sequel(ctxWithAlias) ++ fallback)
       case ctor @ (_: Ident | _: Sel) => fallback => ctx =>
@@ -418,7 +416,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
         def fld(t: Term) = Fld(FldFlags.empty, t, N)
         def tup(xs: Fld*) = Term.Tup(xs.toList)(Tup(Nil))
         def app(lhs: Term, rhs: Term, sym: FlowSymbol) = Term.App(lhs, rhs)(Tree.App(Tree.Empty(), Tree.Empty()), sym)
-        def getLast(i: Int) = TempSymbol(nextUid, N, s"last$i")
+        def getLast(i: Int) = TempSymbol(N, s"last$i")
         // `wrap`: add let bindings for tuple elements
         // `matches`: pairs of patterns and symbols to be elaborated
         val (wrapRest, restMatches) = rest match
@@ -434,7 +432,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
             rest match
               case N => (wrapLast, lastMatches)
               case S(pat) =>
-                val sym = TempSymbol(nextUid, N, "rest")
+                val sym = TempSymbol(N, "rest")
                 val wrap = (split: Split) =>
                   Split.Let(sym, app(tupleSlice, tup(fld(ref), fld(int(lead.length)), fld(int(last.length))), sym), wrapLast(split))
                 (wrap, (sym, pat) :: lastMatches)

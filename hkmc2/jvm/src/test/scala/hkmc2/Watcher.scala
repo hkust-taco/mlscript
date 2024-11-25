@@ -87,7 +87,6 @@ class Watcher(dir: File):
       val relativeName = basePath.map(_ + "/").mkString + path.baseName
       val preludePath = os.pwd/os.up/"shared"/"src"/"test"/"mlscript"/"decls"/"Prelude.mls"
       val predefPath = os.pwd/os.up/"shared"/"src"/"test"/"mlscript-compile"/"Predef.mls"
-      semantics.suid.reset // FIXME hack
       val isModuleFile = path.segments.contains("mlscript-compile")
       if isModuleFile
       then

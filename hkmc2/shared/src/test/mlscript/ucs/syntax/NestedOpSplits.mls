@@ -20,44 +20,45 @@ fun f(x) =
 //│           params = Ls of 
 //│             Param:
 //│               flags = ()
-//│               sym = x@11
+//│               sym = x
 //│               sign = N
 //│       sign = N
 //│       body = S of IfLike:
 //│         kw = keyword 'if'
 //│         desugared = Let:
-//│           sym = $scrut@13
+//│           sym = $scrut
 //│           term = App:
 //│             lhs = Ref of builtin:==
 //│             rhs = Tup of Ls of 
 //│               Fld:
 //│                 flags = ()
-//│                 value = Ref of x@11
+//│                 term = Ref of x
 //│                 asc = N
 //│               Fld:
 //│                 flags = ()
-//│                 value = Lit of IntLit of 1
+//│                 term = Lit of IntLit of 1
 //│                 asc = N
 //│           tail = Let: \
-//│           sym = $scrut@15
+//│           sym = $scrut
 //│           term = App:
 //│             lhs = Ref of builtin:+
 //│             rhs = Tup of Ls of 
 //│               Fld:
 //│                 flags = ()
-//│                 value = Ref of $scrut@13
+//│                 term = Ref of $scrut
 //│                 asc = N
 //│               Fld:
 //│                 flags = ()
-//│                 value = Lit of IntLit of 2
+//│                 term = Lit of IntLit of 2
 //│                 asc = N
 //│           tail = Cons: \
 //│           head = Branch:
-//│             scrutinee = Ref of $scrut@15
+//│             scrutinee = Ref of $scrut
 //│             pattern = Lit of BoolLit of true
 //│             continuation = Else of Lit of IntLit of 0
 //│           tail = Else of Lit of IntLit of 1
-//│       resSym = ‹result of member:f›@16
+//│       resSym = ‹result of member:f›
+//│       flags = ()
 //│   res = Lit of UnitLit of true
 
 

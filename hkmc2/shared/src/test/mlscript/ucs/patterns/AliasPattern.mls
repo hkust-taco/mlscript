@@ -14,9 +14,9 @@ fun map(f) = case
 fun foo = case
   Some(Some(a as b) as c) as d then [a, b, c, d]
 //│ Desugared:
-//│ >  if caseScrut@32 is Some($param0@34) and $param0@34 is Some($param0@36) and
-//│ >    let a@38 = $param0@36#0
-//│ >    let b@37 = $param0@36#1
-//│ >    let c@35 = $param0@34#1
-//│ >    let d@33 = caseScrut@32#1
-//│ >    else [a@38#666, b@37#666, c@35#666, d@33#666]
+//│ >  if caseScrut is Some($param0) and $param0 is Some($param0) and
+//│ >    let a = $param0#0
+//│ >    let b = $param0#1
+//│ >    let c = $param0#1
+//│ >    let d = caseScrut#1
+//│ >    else [a#666, b#666, c#666, d#666]

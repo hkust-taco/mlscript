@@ -1,0 +1,137 @@
+:js
+:import NofibPrelude.mls
+//│ Imported 109 member(s)
+
+
+fun even(x) = intMod(x, 2) == 0
+
+fun int_val_of_char(x) = int_of_char(x) - 48
+
+fun int_val_of_string(s) =
+  fun f(l, a) = if l is
+    Nil then a
+    Cons(h, t) then f(t, 10 * a + int_val_of_char(h))
+  f(s, 0)
+
+fun break_(p, ls) = if ls is
+  Nil then Tup2(Nil, Nil)
+  Cons(x, xs) and
+    p(x) then Tup2(Nil, x :: xs)
+    break_(p, xs) is Tup2(ys, zs) then Tup2(x :: ys, zs)
+
+fun lines(s) = if break_(x => x == "|", s) is Tup2(l, s_) then
+  let tt = if s_ is
+    Nil then Nil
+    Cons(_, s__) then lines(s__)
+  
+  l :: tt
+
+
+fun makeNumber(b, ls) = foldl((a, x) => a * b + x, 0, ls)
+
+fun chop(b, n) =
+  fun chop_(a, n) = if divMod(n, b) is Tup2(q, r) and
+    n == 0 then a
+    else chop_(r :: a, q)
+  
+  chop_(Nil, n)
+
+
+fun powerMod(a, b, m) =
+  fun f(a, b, c) =
+    fun g(a, b) = if even(b) then g(intMod(a * a, m), intDiv(b, 2)) else f(a, b - 1, intMod(a * c, m))
+    if b == 0 then c else g(a, b)
+  
+  if
+    b == 0 then 1
+    let a_ = intMod(a, m)
+    else f(a_, b - 1, a_)
+
+
+fun log2(x) = listLen(chop(2, x))
+
+fun rands(s1, s2) =
+  let k    = intDiv(s1, 53668)
+  let s1_  = ((40014 * (s1 - (k * 53668))) - (k * 12211))
+  let s1__ = (if s1_ < 0 then s1_ + 2147483563 else s1_)
+  let k_   = intDiv(s2, 52774)
+  let s2_  = ((40692 * (s2 - (k_ * 52774))) - (k_ * 3791))
+  let s2__ = (if s2_ < 0 then s2_ + 2147483399 else s2_)
+  let z    = (s1__ - s2__)
+  
+  if z < 1 then lazy of () => LzCons(z + 2147483562, rands(s1__, s2__))
+  else lazy of () => LzCons(z, rands(s1__, s2__))
+
+
+fun randomInts(s1, s2) =
+  if (1 <= s1) and (s1 <= 2147483562) and (1 <= s2) and (s2 <= 2147483398) then rands(s1, s2)
+
+fun findKQ(n) =
+  fun f(k, q) = if divMod(q, 2) is Tup2(d, r) and
+    r == 0 then f(k + 1, d)
+    else Tup2(k, q)
+  
+  f(0, n - 1)
+
+
+fun uniform(nns, rrs) = if
+  nns is Cons(n, Nil) and rrs is Cons(r, rs) then Cons(intMod(r, n), Nil)
+  nns is Cons(n, ns) and rrs is Cons(r, rs) and
+    let t = intMod(r, n + 1)
+    t == n then Cons(t, uniform(ns, rs))
+    else Cons(t, map(x => intMod(x, 65536), rs))
+
+fun random(n, rs) =
+  let ns = chop(65536, n)
+  if splitAt_lz(listLen(ns), rs) is Tup2(rs1, rs2) then Tup2(makeNumber(65536, uniform(ns, rs1)), rs2)
+
+fun singleTestX(n, kq, x) =
+  fun square(x) = intMod(x * x, n)
+  
+  fun witness(ls) = if ls is
+    Nil then false
+    Cons(t, ts) and
+      t == (n - 1) then true
+      t == 1 then false
+      else witness(ts)
+  
+  if kq is Tup2(k, q) and take_lz(k, iterate(square, powerMod(x, q, n))) is Cons(t, ts) then
+    (t == 1) || (t == (n - 1)) || witness(ts)
+
+
+fun singleTest(n, kq, rs) = if random(n - 2, rs) is Tup2(x, rs_) then
+  Tup2(singleTestX(n, kq, 2 + x), rs_)
+
+fun multiTest(k, rs, n) =
+  fun mTest(k, rs) = if
+    k == 0 then Tup2(true, rs)
+    singleTest(n, findKQ(n), rs) is Tup2(t, rs_) and
+      t then mTest(k - 1, rs_)
+      else Tup2(false, rs_)
+  
+  if ((n <= 1) || even(n)) then Tup2(n==2, rs) else mTest(k, rs)
+
+
+fun doLine(cs, cont, rs) =
+  let n = int_val_of_string(cs)
+  if multiTest(100, rs, n) is Tup2(t, rs_) and
+    t then "Probably prime" :: (cont(rs_))
+    else "Composite" :: (cont(rs_))
+
+fun doInput(state, lls) = if lls is
+  Nil then Nil
+  Cons(l, ls) then doLine(l, state => doInput(state, ls), state)
+
+fun process(process_arg1) = doInput(randomInts(111, 47), process_arg1)
+
+fun testPrimetest_nofib(d) =
+  let cts = Cons("2", Cons("4", Cons("|", Cons("4", Cons("8", Cons("|", Cons("4", Cons("7", Cons("|", Cons("1", Cons("3", Cons("1", Cons("7", Cons("|", Cons("8", Cons("9", Cons("0", Cons("1", Nil))))))))))))))))))
+  process(lines(cts))
+
+
+
+testPrimetest_nofib(0).toString()
+//│ = '[Composite,Composite,Probably prime,Composite,Composite]'
+
+
+

@@ -1,0 +1,76 @@
+:NewDefs
+
+class Some[T](value: T)
+module None
+type Option[T] = Some[T] | None
+//│ class Some[T](value: T)
+//│ module None
+//│ type Option[T] = None | Some[T]
+
+class Cons[T](head: T, tail: List[T])
+module Nil
+type List[T] = Cons[T] | Nil
+//│ class Cons[T](head: T, tail: List[T])
+//│ module Nil
+//│ type List[T] = Cons[T] | Nil
+
+abstract class Either[out A, out B]
+class Left[out A, out B](value: A) extends Either[A, B]
+class Right[out A, out B](value: B) extends Either[A, B]
+//│ abstract class Either[A, B]
+//│ class Left[A, B](value: A) extends Either
+//│ class Right[A, B](value: B) extends Either
+
+class Pair[A, B](x: A, y: B) {
+  fun mapFirst[C](f: A -> C): Pair[C, B] = Pair(f(x), y)
+  fun mapSecond[C](f: B -> C): Pair[A, C] = Pair(x, f(y))
+}
+//│ class Pair[A, B](x: A, y: B) {
+//│   fun mapFirst: forall 'C. (f: A -> 'C) -> Pair['C, B]
+//│   fun mapSecond: forall 'C0. (f: B -> 'C0) -> Pair[A, 'C0]
+//│ }
+
+:ducs:transform.result
+fun zipWith(f, xs, ys) =
+  if xs is
+    Cons(x, xs) and ys is Cons(y, ys) and zipWith(f, xs, ys) is Some(tail) then Some(Cons(f(x, y), tail))
+    Nil and ys is Nil then Some(Nil)
+  else None
+//│ Transformed UCS term:
+//│ if
+//│   xs is
+//│     Cons(x, xs) and ys is Cons(y, ys) and zipWith(f, xs, ys,) is Some(tail) then Some(Cons(f(x, y,), tail,),)
+//│     Nil and ys is Nil then Some(Nil,)
+//│   else None
+//│ fun zipWith: forall 'T 'T0 'T1 'T2. (('T, 'T0) -> 'T1, Cons['T] | Object & ~#Cons, Cons['T0] | Object & ~#Cons) -> (None | Some[in List['T1] & 'T2 out Nil | 'T2 | Cons['T1]])
+
+:ducs:transform.result
+fun getOrElse[T](x: Option[T], default: T): T =
+  if x is
+    Some(value) then value
+    None then default
+//│ Transformed UCS term:
+//│ if x is
+//│   Some(value) then value
+//│   None then default
+//│ fun getOrElse: forall 'T. (x: Option['T], default: 'T) -> 'T
+
+fun m3(x: Int): Bool = x % 3 == 0
+fun m5(x: Int): Bool = x % 5 == 0
+//│ fun m3: (x: Int) -> Bool
+//│ fun m5: (x: Int) -> Bool
+
+:ducs:transform.result
+fun f(x) =
+  if x is
+    Some(v) and m3(v) and m5(v) then "FizzBuzz"
+    Some(v) and m3(v) then "Fizz"
+    Some(v) and m5(v) then "Buzz"
+    else "meh"
+//│ Transformed UCS term:
+//│ if x is
+//│   Some(v) and m3(v,) and m5(v,) then "FizzBuzz"
+//│   Some(v) and m3(v,) then "Fizz"
+//│   Some(v) and m5(v,) then "Buzz"
+//│   else "meh"
+//│ fun f: (Object & ~#Some | Some[Int]) -> ("Buzz" | "Fizz" | "FizzBuzz" | "meh")

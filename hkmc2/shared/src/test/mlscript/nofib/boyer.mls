@@ -1,0 +1,284 @@
+:js
+:import NofibPrelude.mls
+//│ Imported 109 member(s)
+
+
+abstract class Id: A | B | C | D | X | Y | Z | U | W | ADD1 | AND | APPEND | CONS | CONSP | DIFFERENCE | DIVIDES | EQUAL | EVEN | EXP | F | FALSE | FOUR | GCD | GREATEREQP | GREATERP | IF | IFF | IMPLIES | LENGTH | LESSEQP | LESSP | LISTP | MEMBER | NIL | NILP | NLISTP | NOT | ODD | ONE | OR | PLUS | QUOTIENT | REMAINDER | REVERSE | SUB1 | TIMES | TRUE | TWO | ZERO | ZEROP
+
+object
+  A extends Id
+  B extends Id
+  C extends Id
+  D extends Id
+  X extends Id
+  Y extends Id
+  Z extends Id
+  U extends Id
+  W extends Id
+  ADD1 extends Id
+  AND extends Id
+  APPEND extends Id
+  CONS extends Id
+  CONSP extends Id
+  DIFFERENCE extends Id
+  DIVIDES extends Id
+  EQUAL extends Id
+  EVEN extends Id
+  EXP extends Id
+  F extends Id
+  FALSE extends Id
+  FOUR extends Id
+  GCD extends Id
+  GREATEREQP extends Id
+  GREATERP extends Id
+  IF extends Id
+  IFF extends Id
+  IMPLIES extends Id
+  LENGTH extends Id
+  LESSEQP extends Id
+  LESSP extends Id
+  LISTP extends Id
+  MEMBER extends Id
+  NIL extends Id
+  NILP extends Id
+  NLISTP extends Id
+  NOT extends Id
+  ODD extends Id
+  ONE extends Id
+  OR extends Id
+  PLUS extends Id
+  QUOTIENT extends Id
+  REMAINDER extends Id
+  REVERSE extends Id
+  SUB1 extends Id
+  TIMES extends Id
+  TRUE extends Id
+  TWO extends Id
+  ZERO extends Id
+  ZEROP extends Id
+
+abstract class Term: Var | Fun | ERROR
+
+class
+  Var(i: Id) extends Term
+  Fun(i: Id, t: List[Term], l: [Tup2[Term, Term]]) extends Term
+object ERROR extends Term
+
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+fun termLsEq(h1t1, h2t2) = if
+  h1t1 is Cons(h1, t1) and h2t2 is Cons(h2, t2) and
+    termEq(h1, h2) then termLsEq(t1, t2)
+    else false
+  else true
+
+fun termEq(t1, t2) = if
+  t1 is Var(i1) and t2 is Var(i2) then i1 === i2
+  t1 is Fun(f1, ts1, _) and t2 is Fun(f2, ts2, _) then (f1 === f2) and termLsEq(ts1, ts2)
+  else false
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+fun termInList(term, ht) = if ht is
+  Cons(h, t) and
+    termEq(term, h) then true
+    else termInList(term, t)
+  Nil then false
+
+fun find(vid, ls) = if ls is
+  Nil then Tup2(false, ERROR)
+  Cons(Tup2(vid2, val2), bs) and
+    vid === vid2 then Tup2(true, val2)
+    else find(vid, bs)
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+fun one_way_unify1(term1, term2, subst) = if
+  term2 is Var(vid2) and find(vid2, subst) is Tup2(found, v2) and
+    found then Tup2(termEq(term1, v2), subst)
+    else Tup2(true, Tup2(vid2, term1) :: subst)
+  term1 is Fun(f1, as1, _) and term2 is Fun(f2, as2, _) and
+    f1 === f2 then one_way_unify1_lst(as1, as2, subst)
+    else Tup2(false, Nil)
+  else Tup2(false, Nil)
+
+fun one_way_unify1_lst(tts1, tts2, subst) = if
+  tts1 is Nil and tts2 is Nil then Tup2(true, subst)
+  tts1 is Cons(t1, ts1) and tts2 is Cons(t2, ts2) and one_way_unify1(t1, t2, subst) is Tup2(hd_ok, subst_) and one_way_unify1_lst(ts1, ts2, subst_) is Tup2(tl_ok, subst__) then Tup2(hd_ok and tl_ok, subst__)
+  else Tup2(false, Nil)
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+fun one_way_unify(term1, term2) = one_way_unify1(term1, term2, Nil)
+
+fun apply_subst(subst, t) = if t is
+  Var(vid) and find(vid, subst) is Tup2(found, value) and
+    found then value
+    else Var(vid)
+  Fun(f, args, ls) then Fun(f, map(x => apply_subst(subst, x), args), ls)
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+fun rewrite_with_lemmas_helper(term, lss) = if lss is
+  Nil then term
+  Cons(Tup2(lhs, rhs), ls) and one_way_unify(term, lhs) is Tup2(unified, subst) and
+    unified then rewrite(apply_subst(subst, rhs))
+    else rewrite_with_lemmas_helper(term, ls)
+
+fun rewrite_with_lemmas(term, lss) = rewrite_with_lemmas_helper(term, force(lss))
+
+fun rewrite(t) = if t is
+  Var(v) then Var(v)
+  Fun(f, args, lemmas) then rewrite_with_lemmas(Fun(f, map(rewrite, args), lemmas), lemmas)
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+fun truep(x, l) = if x is
+  Fun(TRUE, _, _) then true
+  else termInList(x, l)
+
+fun falsep(x, l) = if x is
+  Fun(FALSE, _, _) then true
+  else termInList(x, l)
+
+fun tautologyp(x, true_lst, false_lst) = if
+  truep(x, true_lst) then true
+  falsep(x, false_lst) then false
+  x is
+    Fun(IF, Cons(cond, Cons(t, Cons(e, Nil))), _) and
+      truep(cond, true_lst) then tautologyp(t, true_lst, false_lst)
+      falsep(cond, false_lst) then tautologyp(e, true_lst, false_lst)
+      else tautologyp(t, cond :: true_lst, false_lst) and tautologyp(e, true_lst, cond :: false_lst)
+    else false
+
+fun tautp(x) = tautologyp(rewrite(x), Nil, Nil)
+
+fun test0(xxxx) =
+  let a       =    Var(A)
+  let b       =    Var(B)
+  let c       =    Var(C)
+  let d       =    Var(D)
+  let u       =    Var(U)
+  let w       =    Var(W)
+  let x       =    Var(X)
+  let y       =    Var(Y)
+  let z       =    Var(Z)
+  let boyerFalse = Fun(FALSE, Nil, lazy of () => Nil)
+  let nil =        Fun(NIL  , Nil, lazy of () => Nil)
+  let boyerTrue =  Fun(TRUE , Nil, lazy of () => Nil)
+  let zero    =    Fun(ZERO , Nil, lazy of () => Nil)
+  
+  fun one()   =    Fun(ONE, Nil, lazy of () => Cons(Tup2(one(), add1(zero)), Nil))
+  
+  fun two()   =    Fun(TWO, Nil, lazy of () => Cons(Tup2(two(), add1(one())), Nil))
+  
+  fun four()  =   Fun(FOUR, Nil, lazy of () => Cons(Tup2(four(), add1(add1(two()))), Nil))
+  
+  fun add1(a) =   Fun(ADD1, a :: Nil, lazy of () => Nil)
+  
+  fun if_(a, b, c) = Fun(IF, Cons(a, Cons(b, Cons(c, Nil))), lazy of () => Cons(Tup2(if_(if_(x, y, z), u, w), if_(x, if_(y, u, w), if_(z, u, w))), Nil))
+  
+  fun not_(a) = Fun(NOT, a :: Nil, lazy of () => Tup2(not_(x), if_(x, boyerFalse, boyerTrue)) :: Nil)
+  
+  fun and_(a, b) =
+    Fun(AND, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(and_(x, y), if_(x, if_(y, boyerTrue, boyerFalse), boyerFalse)), Nil))
+  
+  fun append_(a, b) =
+    Fun(APPEND, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(append_(append_(x, y), z), append_(x, append_(y, z))), Nil))
+  
+  fun cons(a, b) =
+    Fun(CONS, Cons(a, Cons(b, Nil)), lazy of () => Nil)
+  
+  fun consp(a) =
+    Fun(CONSP, Cons(a, Nil), lazy of () => Cons(Tup2(consp(cons(x, y)), boyerTrue), Nil))
+  
+  fun difference(a, b) =
+    Fun(DIFFERENCE, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(difference(x, x), zero), Cons(Tup2(difference(plus(x, y), x), y), Cons(Tup2(difference(plus(y, x), x), y), Cons(Tup2(difference(plus(x, y), plus(x, z)), difference(y, z)), Cons(Tup2(difference(plus(y, plus(x, z)), x), plus(y, z)), Cons(Tup2(difference(add1(plus(y, z)), z), add1(y)), Cons(Tup2(difference(add1(add1(x)), two()), x), Nil))))))))
+  
+  fun divides(a, b) =
+    Fun(DIVIDES, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(divides(x, y), zerop(remainder(y, x))), Nil))
+  
+  fun equal(a, b) =
+    Fun(EQUAL, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(equal(plus(x, y), zero), and_(zerop(x), zerop(y))), Cons(Tup2(equal(plus(x, y), plus(x, z)), equal(y, z)), Cons(Tup2(equal(zero, difference(x, y)), not_(lessp(y, x))), Cons(Tup2(equal(x, difference(x, y)), or_(equal(x, zero), zerop(y))), Cons(Tup2(equal(times(x, y), zero), or_(zerop(x), zerop(y))), Cons(Tup2(equal(append_(x, y), append_(x, z)), equal(y, z)), Cons(Tup2(equal(y, times(x, y)), or_(equal(y, zero), equal(x, one()))), Cons(Tup2(equal(x, times(x, y)), or_(equal(x, zero), equal(y, one()))), Cons(Tup2(equal(times(x, y), one()), and_(equal(x, one()), equal(y, one()))), Cons(Tup2(equal(difference(x, y), difference(z, y)), if_(lessp(x, y), not_(lessp(y, z)), if_(lessp(z, y), not_(lessp(y, x)), equal(x, z)))), Cons(Tup2(equal(lessp(x, y), z), if_(lessp(x, y), equal(boyerTrue, z), equal(boyerFalse, z))), Nil))))))))))))
+  
+  fun even_(a) =
+    Fun(EVEN, Cons(a, Nil), lazy of () => Cons(Tup2(even_(x), if_(zerop(x), boyerTrue, odd_(sub1(x)))), Nil))
+  
+  fun exp_(a, b) =
+    Fun(EXP, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(exp_(x, plus(y, z)), times(exp_(x, y), exp_(x, z))), Cons(Tup2(exp_(x, times(y, z)), exp_(exp_(x, y), z)), Nil)))
+  
+  fun f(a) =
+    Fun(F, Cons(a, Nil), lazy of () => Nil)
+  
+  fun gcd_(a, b) =
+    Fun(GCD, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(gcd_(x, y), gcd_(y, x)), Cons(Tup2(gcd_(times(x, z), times(y, z)), times(z, gcd_(x, y))), Nil)))
+  
+  fun greatereqp(a, b) =
+    Fun(GREATEREQP, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(greatereqp(x, y), not_(lessp(x, y))), Nil))
+  
+  fun greaterp(a, b) =
+    Fun(GREATERP, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(greaterp(x, y), lessp(y, x)), Nil))
+  
+  fun implies(a, b) =
+    Fun(IMPLIES, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(implies(x, y), if_(x, if_(y, boyerTrue, boyerFalse), boyerTrue)), Nil))
+  
+  fun iff(a, b) =
+    Fun(IFF, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(iff(x, y), and_(implies(x, y), implies(y, x))), Nil))
+  
+  fun length_(a) =
+    Fun(LENGTH, Cons(a, Nil), lazy of () => Cons(Tup2(length_(reverse_(x)), length_(x)), Cons(Tup2(length_(cons(x, cons(y, cons(z, cons(u, w))))), plus(four(), length_(w))), Nil)))
+  
+  fun lesseqp(a, b) =
+    Fun(LESSEQP, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(lesseqp(x, y), not_(lessp(y, x))), Nil))
+  
+  fun lessp(a, b) =
+    Fun(LESSP, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(lessp(remainder(x, y), y), not_(zerop(y))), Cons(Tup2(lessp(quotient(x, y), x), and_(not_(zerop(x)), lessp(one(), y))), Cons(Tup2(lessp(plus(x, y), plus(x, z)), lessp(y, z)), Cons(Tup2(lessp(times(x, z), times(y, z)), and_(not_(zerop(z)), lessp(x, y))), Cons(Tup2(lessp(y, plus(x, y)), not_(zerop(x))), Nil))))))
+  
+  fun nilp(a) =
+    Fun(NILP, Cons(a, Nil), lazy of () => Cons(Tup2(nilp(x), equal(x, nil)), Nil))
+  
+  fun listp(a) =
+    Fun(LISTP, Cons(a, Nil), lazy of () => Cons(Tup2(listp(x), or_(nilp(x), consp(x))), Nil))
+  
+  fun member(a, b) =
+    Fun(MEMBER, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(member(x, append_(y, z)), or_(member(x, y), member(x, z))), Cons(Tup2(member(x, reverse_(y)), member(x, y)), Nil)))
+  
+  fun nlistp(a) =
+    Fun(NLISTP, Cons(a, Nil), lazy of () => Cons(Tup2(nlistp(x), not_(listp(x))), Nil))
+  
+  fun odd_(a) =
+    Fun(ODD, Cons(a, Nil), lazy of () => Cons(Tup2(odd_(x), even_(sub1(x))), Nil))
+  
+  fun or_(a, b) =
+    Fun(OR, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(or_(x, y), if_(x, boyerTrue, if_(y, boyerTrue, boyerFalse))), Nil))
+  
+  fun plus(a, b) =
+    Fun(PLUS, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(plus(plus(x, y), z), plus(x, plus(y, z))), Cons(Tup2(plus(remainder(x, y), times(y, quotient(x, y))), x), Cons(Tup2(plus(x, add1(y)), add1(plus(x, y))), Nil))))
+  
+  fun quotient(a, b) =
+    Fun(QUOTIENT, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(quotient(plus(x, plus(x, y)), two()), plus(x, quotient(y, two()))), Cons(Tup2(quotient(times(y, x), y), if_(zerop(y), zero, x)), Nil)))
+  
+  fun remainder(a, b) =
+    Fun(REMAINDER, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(remainder(x, one()), zero), Cons(Tup2(remainder(x, x), zero), Cons(Tup2(remainder(times(x, y), x), zero), Cons(Tup2(remainder(times(x, y), y), zero), Nil)))))
+  
+  fun reverse_(a) =
+    Fun(REVERSE, Cons(a, Nil), lazy of () => Cons(Tup2(reverse_(append_(x, y)), append_(reverse_(y), reverse_(x))), Nil))
+  
+  fun sub1(a) =
+    Fun(SUB1, Cons(a, Nil), lazy of () => Cons(Tup2(sub1(add1(x)), x), Nil))
+  
+  fun times(a, b) =
+    Fun(TIMES, Cons(a, Cons(b, Nil)), lazy of () => Cons(Tup2(times(x, plus(y, z)), plus(times(x, y), times(x, z))), Cons(Tup2(times(times(x, y), z), times(x, times(y, z))), Cons(Tup2(times(x, difference(y, z)), difference(times(y, x), times(z, x))), Cons(Tup2(times(x, add1(y)), plus(x, times(x, y))), Nil)))))
+  
+  fun zerop(a) =
+    Fun(ZEROP, Cons(a, Nil), lazy of () => Cons(Tup2(zerop(x), equal(x, zero)), Nil))
+  
+  let subst0 = Cons(Tup2(X, f(plus(plus(a, b), plus(c, zero)))), Cons(Tup2(Y, f(times(times(a, b), plus(c, d)))), Cons(Tup2(Z, f(reverse_(append_(append_(a, b), nil)))), Cons(Tup2(U, equal(plus(a, b), difference(x, y))), Cons(Tup2(W, lessp(remainder(a, b), member(a, length_(b)))), Nil)))))
+  
+  let theorem = implies(and_(implies(xxxx, y), and_(implies(y, z), and_(implies(z, u), implies(u, w)))), implies(x, w))
+  
+  tautp(apply_subst(subst0, theorem))
+
+fun testBoyer_nofib(n) = all(test0, replicate(n, Var(X)))
+
+
+testBoyer_nofib(5)
+//│ = true

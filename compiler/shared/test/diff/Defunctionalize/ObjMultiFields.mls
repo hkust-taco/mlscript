@@ -1,0 +1,40 @@
+:NewDefs
+
+
+class X(val foo: Int, val bar: Bool) {}
+class Y(val foo: Str, val bar: Int) {}
+class A(val foo: X) {}
+class B(val foo: Y) {}
+fun foo(pred) = if pred then A(X(1, false)) else B(Y("abc", 5))
+val x = foo(true)
+x.foo.bar
+foo(false).foo.bar
+//│ class X(foo: Int, bar: Bool)
+//│ class Y(foo: Str, bar: Int)
+//│ class A(foo: X)
+//│ class B(foo: Y)
+//│ fun foo: Bool -> (A | B)
+//│ val x: A | B
+//│ Int | false | true
+//│ 
+//│ Simpledef:
+//│ {class X(val foo: Int, val bar: Bool,) {}
+//│  class Y(val foo: Str, val bar: Int,) {}
+//│  class A(val foo: X,) {}
+//│  class B(val foo: Y,) {}
+//│  fun foo = (pred::0,) => if (pred) then A(X(1, false,),) else B(Y("abc", 5,),)
+//│  let x = foo(true,)
+//│  let selRes$58 = let selRes$60 = x in case selRes$60 of { A => (selRes$60).foo
+//│  B => (selRes$60).foo } in case selRes$58 of { Y => (selRes$58).bar
+//│  X => (selRes$58).bar }
+//│  let selRes$64 = let selRes$66 = foo(false,) in case selRes$66 of { B => (selRes$66).foo
+//│  A => (selRes$66).foo } in case selRes$64 of { X => (selRes$64).bar
+//│  Y => (selRes$64).bar }}
+//│ End simpledef
+//│ 
+//│ x
+//│   = A {}
+//│ res
+//│     = false
+//│ res
+//│     = 5

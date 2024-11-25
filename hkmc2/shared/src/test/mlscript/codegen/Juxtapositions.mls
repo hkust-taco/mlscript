@@ -37,13 +37,14 @@ fun add(x, y) = x + y
 42 add(2) inc()
 //│ = 45
 
+:re
 :w
 42
 add(2)
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.41: 	42
+//│ ║  l.42: 	42
 //│ ╙──      	^^
-//│ = NaN
+//│ ═══[RUNTIME ERROR] Error: Function 'add' expected 2 arguments but got 1
 
 
 42 add(2) + 1
@@ -82,14 +83,14 @@ add(2)
 :e
 42 { add(2) inc() }
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
-//│ ║  l.83: 	42 { add(2) inc() }
+//│ ║  l.84: 	42 { add(2) inc() }
 //│ ╙──      	     ^^^^^^^^^^^^
 //│ = 42
 
 :e
 42 { add(2) { inc() } }
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
-//│ ║  l.90: 	42 { add(2) { inc() } }
+//│ ║  l.91: 	42 { add(2) { inc() } }
 //│ ╙──      	     ^^^^^^^^^^^^^^
 //│ = 42
 
@@ -129,9 +130,9 @@ inc(2) * 2
   inc()
     add(2)
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
-//│ ║  l.129: 	  inc()
+//│ ║  l.130: 	  inc()
 //│ ║         	  ^^^^^
-//│ ║  l.130: 	    add(2)
+//│ ║  l.131: 	    add(2)
 //│ ╙──       	^^^^^^^^^^
 //│ = 42
 
@@ -166,21 +167,22 @@ inc(2) * 2
 //│ = 7
 
 // FIXME
+:fixme
 (2 * 2
   inc())
   inc()
-//│ = NaN
+//│ ═══[RUNTIME ERROR] Error: Function 'inc' expected 1 arguments but got 0
 
 :fixme
 (2 * 2
   inc())
 inc()
 //│ ╔══[PARSE ERROR] Unexpected closing indentation
-//│ ║  l.176: 	  inc())
+//│ ║  l.178: 	  inc())
 //│ ║         	        ^
-//│ ║  l.177: 	inc()
+//│ ║  l.179: 	inc()
 //│ ╙──       	
-//│ = NaN
+//│ ═══[RUNTIME ERROR] Error: Function 'inc' expected 1 arguments but got 0
 
 
 42
@@ -195,7 +197,7 @@ inc()
 :e
 42 console.log
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
-//│ ║  l.196: 	42 console.log
+//│ ║  l.198: 	42 console.log
 //│ ╙──       	   ^^^^^^^
 //│ = 42
 

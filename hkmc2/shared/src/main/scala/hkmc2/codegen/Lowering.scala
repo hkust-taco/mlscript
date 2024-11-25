@@ -8,17 +8,20 @@ import hkmc2.Message.MessageContext
 
 import hkmc2.{semantics => sem}
 import hkmc2.semantics.{Term => st}
+import semantics.Elaborator.State
 
 import syntax.{Literal, Tree}
 import semantics.*
-import semantics.Term.*
+import semantics.Term.{Throw => _, *}
 
 
-abstract class Ret extends (Result => Block)
-object Ret extends Ret:
+abstract class TailOp extends (Result => Block)
+object Ret extends TailOp:
   def apply(r: Result): Block = Return(r, implct = false)
-object ImplctRet extends Ret:
+object ImplctRet extends TailOp:
   def apply(r: Result): Block = Return(r, implct = true)
+object Thrw extends TailOp:
+  def apply(r: Result): Block = Throw(r)
 
 
 class Subst(initMap: Map[Local, Value]):
@@ -51,28 +54,35 @@ class Lowering(using TL, Raise, Elaborator.State):
       k(Value.Lit(lit))
     case st.Ret(res) =>
       returnedTerm(res)
+    case st.Throw(res) =>
+      term(res)(Thrw)
     case st.Asc(lhs, rhs) =>
       term(lhs)(k)
     case st.Tup(fs) =>
-      fs.foldRight[Ls[Path] => Block](args => k(Value.Arr(args.reverse)))((a, acc) =>
-        args => subTerm(a.value)(r => acc(r :: args))
-      )(Nil)
+      fs.foldRight[Ls[Arg] => Block](args => k(Value.Arr(args.reverse))){
+        case (a: Fld, acc) =>
+          args => subTerm(a.term)(r => acc(Arg(false, r) :: args))
+        case (s: Spd, acc) =>
+          args => subTerm(s.term)(r => acc(Arg(true, r) :: args))
+      }(Nil)
     case st.Ref(sym) =>
       k(subst(Value.Ref(sym)))
     case st.App(f, arg) =>
       arg match
       case Tup(fs) =>
         val as = fs.map:
-          case sem.Fld(sem.FldFlags.empty, value, N) => value
+          case sem.Fld(sem.FldFlags.empty, value, N) => false -> value
+          case sem.Fld(sem.FldFlags(false, false, false, true), value, N) => false -> value
           case sem.Fld(flags, value, asc) =>
             TODO("Other argument forms")
-        val l = new TempSymbol(summon[Elaborator.State].nextUid, S(t))
+          case spd: Spd => true -> spd.term
+        val l = new TempSymbol(S(t))
         subTerm(f): fr =>
-          def rec(as: Ls[st], asr: Ls[Path]): Block = as match
+          def rec(as: Ls[Bool -> st], asr: Ls[Arg]): Block = as match
             case Nil => k(Call(fr, asr.reverse))
-            case a :: as =>
+            case (spd, a) :: as =>
               subTerm(a): ar =>
-                rec(as, ar :: asr)
+                rec(as, Arg(spd, ar) :: asr)
           rec(as, Nil)
       case _ =>
         TODO("Other argument list forms")
@@ -177,7 +187,7 @@ class Lowering(using TL, Raise, Elaborator.State):
             term(els)(k)
           )
       case _ =>
-        val l = new TempSymbol(summon[Elaborator.State].nextUid, S(t))
+        val l = new TempSymbol(S(t))
         subTerm(scrut): sr =>
             Match(sr, Case.Lit(tru) -> subTerm(thn)(r => Assign(l, r, End())) :: Nil,
               elseBranch.map(els => subTerm(els)(r => Assign(l, r, End()))),
@@ -197,10 +207,10 @@ class Lowering(using TL, Raise, Elaborator.State):
       var usesResTmp = false
       lazy val l =
         usesResTmp = true
-        new TempSymbol(summon[Elaborator.State].nextUid, S(t))
+        new TempSymbol(S(t))
       
       lazy val lbl =
-        new TempSymbol(summon[Elaborator.State].nextUid, S(t))
+        new TempSymbol(S(t))
       
       def go(split: Split, topLevel: Bool)(using Subst): Block = split match
         case Split.Let(sym, trm, tl) =>
@@ -229,7 +239,7 @@ class Lowering(using TL, Raise, Elaborator.State):
                       // mkMatch(Case.Cls(cls, st) -> go(tail, topLevel = false))
                       Case.Cls(cls, st) -> go(tail, topLevel = false)
                     case (param, arg) :: args =>
-                      // summon[Subst].+(arg -> Value.Ref(new TempSymbol(summon[Elaborator.State].nextUid, N)))
+                      // summon[Subst].+(arg -> Value.Ref(new TempSymbol(N)))
                       // Assign(arg, Select(sr, Tree.Ident("head")), mkArgs(args))
                       
                       val (cse, blk) = mkArgs(args)
@@ -246,7 +256,7 @@ class Lowering(using TL, Raise, Elaborator.State):
             //   End()
             // )
         case Split.Else(els) =>
-          if k.isInstanceOf[Ret] && isIf then term(els)(k)
+          if k.isInstanceOf[TailOp] && isIf then term(els)(k)
           else
             term(els): r =>
               Assign(l, r,
@@ -255,10 +265,10 @@ class Lowering(using TL, Raise, Elaborator.State):
                 else End()
               )
         case Split.End =>
-          Throw(Instantiate(Select(Value.Ref(Elaborator.Ctx.globalThisSymbol), Tree.Ident("Error")),
+          Throw(Instantiate(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Error")),
             Value.Lit(syntax.Tree.StrLit("match error")) :: Nil)) // TODO add failed-match scrutinee info
       
-      if k.isInstanceOf[Ret] && isIf then go(iftrm.normalized, topLevel = true)
+      if k.isInstanceOf[TailOp] && isIf then go(iftrm.normalized, topLevel = true)
       else
         val body = if isWhile
           then Label(lbl, go(iftrm.normalized, topLevel = true), End())
@@ -283,7 +293,7 @@ class Lowering(using TL, Raise, Elaborator.State):
         rec(as, Nil)
     
     case Try(sub, finallyDo) =>
-      val l = new TempSymbol(summon[Elaborator.State].nextUid, S(sub))
+      val l = new TempSymbol(S(sub))
       TryBlock(
         term(sub)(p => Assign(l, p, End())),
         term(finallyDo)(_ => End()),
@@ -300,7 +310,7 @@ class Lowering(using TL, Raise, Elaborator.State):
       case v: Value => k(v)
       case p: Path => k(p)
       case r =>
-        val l = new TempSymbol(summon[Elaborator.State].nextUid, N)
+        val l = new TempSymbol(N)
         Assign(l, r, k(l |> Value.Ref.apply))
   
   

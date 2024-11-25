@@ -1,0 +1,67 @@
+:js
+:import NofibPrelude.mls
+//│ Imported 109 member(s)
+
+
+class State(position: List[Num], velocity: List[Num])
+
+fun dotPlus(fs, gs) = if
+  fs is Nil then gs
+  gs is Nil then fs
+  fs is Cons(f, fs) and gs is Cons(g, gs) then (f + g) :: dotPlus(fs, gs)
+
+fun dotMult(fs, gs) = if
+  fs is Cons(f, fs) and gs is Cons(g, gs) then (f * g) :: dotMult(fs, gs)
+  else Nil
+
+fun scalarMut(c, fs) = if fs is
+  Nil then Nil
+  Cons(f, fs) then (c * f) :: scalarMut(c, fs)
+
+fun testforce(k, ss) = lazy of () =>
+  if force(ss) is
+    LzCons(State(pos, vel), atoms) then LzCons(dotMult(scalarMut(-1.0, k), pos), testforce(k, atoms))
+
+fun show(s) =
+  fun lscomp(ls) = if ls is
+    Nil then Nil
+    Cons(component, t) then Cons(stringConcat(stringOfFloat(component), "\t"), lscomp(t))
+  if s is State(pos, vel) then
+    stringListConcat of lscomp(pos)
+
+fun propagate(dt, aforce, state) = if state is State(pos, vel) then
+  State(dotPlus(pos, scalarMut(dt, vel)), dotPlus(vel, scalarMut(dt, aforce)))
+
+fun runExperiment(law, dt, param, init) = lazy of () =>
+  let stream = runExperiment(law, dt, param, init)
+  LzCons(init, zipWith_lz_lz((x, y) => propagate(dt, x, y), law(param, stream), stream))
+
+fun testAtom_nofib(n) =
+  fun lscomp(ls) = if ls is
+    Nil then Nil
+    Cons(state, t) then Cons(stringConcat(show(state), "\n"), lscomp(t))
+  stringListConcat of lscomp(take_lz(n, runExperiment(testforce, 0.02, Cons(1.0, Nil), State(Cons(1.0, Nil), Cons(0.0, Nil)))))
+
+
+// NOTE: original input 1000
+testAtom_nofib(20)
+//│ > '1\t\n' +
+//│ >   '1\t\n' +
+//│ >   '0.9996\t\n' +
+//│ >   '0.9988\t\n' +
+//│ >   '0.9976001600000001\t\n' +
+//│ >   '0.9960008\t\n' +
+//│ >   '0.994002399936\t\n' +
+//│ >   '0.991605599552\t\n' +
+//│ >   '0.9888111982080257\t\n' +
+//│ >   '0.9856201546242305\t\n' +
+//│ >   '0.982033586561152\t\n' +
+//│ >   '0.978052770436224\t\n' +
+//│ >   '0.9736791408766714\t\n' +
+//│ >   '0.9689142902089444\t\n' +
+//│ >   '0.9637599678848666\t\n' +
+//│ >   '0.9582180798447053\t\n' +
+//│ >   '0.95229068781739\t\n' +
+//│ >   '0.9459800085581369\t\n' +
+//│ >   '0.9392884130237569\t\n' +
+//│ =   '0.9322184254859536\t\n'

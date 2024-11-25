@@ -1,0 +1,48 @@
+:js
+:import NofibPrelude.mls
+//│ Imported 109 member(s)
+
+
+fun g(u1u2u3, v1v2v3) = if u1u2u3 is Tup3(u1, u2, u3) and v1v2v3 is Tup3(v1, v2, v3) then
+  if
+    v3 == 0 then Tup3(u3, u1, u2)
+    else if
+      quotRem(u3, v3) is Tup2(q, r) then
+        g(Tup3(v1, v2, v3), Tup3(u1 - (q * v1), u2 - (q * v2), r))
+
+fun gcdE(x, y) = if 
+  x == 0 then Tup3(y, 0, 1)
+  else g(Tup3(1, 0, x), Tup3(0, 1, y))
+
+fun max_(ls) = if ls is
+  Cons(x, Nil) then x
+  Cons(x, Cons(y, xs)) then if x < y then max_(y :: xs) else max_(x::xs)
+
+fun test(d) =
+  let ns = enumFromTo(5000, 5000 + d)
+  
+  let ms = enumFromTo(10000, 10000 + d)
+  
+  fun lscomp1(p1) = if p1 is
+    Nil then Nil
+    Cons(h1, t1) then
+      fun lscomp2(p2) = if p2 is
+        Nil then lscomp1(t1)
+        Cons(h2, t2) then Cons(Tup2(h1, h2), lscomp2(t2))
+      lscomp2(ms)
+  
+  let tripls =
+    map(xy => if xy is Tup2(x, y) then Tup3(x, y, gcdE(x, y)), lscomp1(ns))
+  
+  let rs = map(guv => if guv is Tup3(d1, d2, Tup3(gg, u, v)) then abs(gg + u + v), tripls)
+  
+  max_(rs)
+
+
+fun testGcd_nofib(x) = test(x)
+
+
+
+// NOTE: original input 400
+testGcd_nofib(40)
+//│ = 5021

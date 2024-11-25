@@ -6,7 +6,7 @@ import syntax.Tree.*
 import hkmc2.syntax.TypeOrTermDef
 
 
-trait BlockImpl:
+trait BlockImpl(using Elaborator.State):
   self: Block =>
   
   val desugStmts = stmts.map(_.desugared)

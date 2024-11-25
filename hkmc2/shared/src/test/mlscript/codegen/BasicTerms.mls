@@ -41,13 +41,15 @@ log("Hi")
 //│ Program:
 //│   imports = Nil
 //│   main = Assign:
-//│     lhs = $tmp@18
+//│     lhs = $tmp
 //│     rhs = Call:
 //│       fun = Select:
 //│         qual = Ref of globalThis:import#Prelude
 //│         name = Ident of "log"
 //│       args = Ls of 
-//│         Lit of StrLit of "Hi"
+//│         Arg:
+//│           spread = false
+//│           value = Lit of StrLit of "Hi"
 //│     rest = Return: \
 //│     res = Lit of IntLit of 2
 //│     implct = true

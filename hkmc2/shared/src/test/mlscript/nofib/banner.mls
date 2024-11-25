@@ -1,0 +1,160 @@
+:js
+:import NofibPrelude.mls
+//│ Imported 109 member(s)
+
+
+let blank =
+  nofibStringToList("     ") ::
+  nofibStringToList("     ") ::
+  nofibStringToList("     ") ::
+  nofibStringToList("     ") ::
+  nofibStringToList("     ") :: Nil
+//│ > Cons {
+//│ >   head: Cons { head: ' ', tail: Cons { head: ' ', tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: ' ', tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   }
+//│ blank = }
+
+let alphas =
+  (nofibStringToList("  A  ") :: nofibStringToList(" A A ") :: nofibStringToList("AAAAA") :: nofibStringToList("A   A") :: nofibStringToList("A   A") :: Nil) ::
+  (nofibStringToList("BBBB ") :: nofibStringToList("B   B") :: nofibStringToList("BBBB ") :: nofibStringToList("B   B") :: nofibStringToList("BBBB ") :: Nil) ::
+  (nofibStringToList(" CCCC") :: nofibStringToList("C    ") :: nofibStringToList("C    ") :: nofibStringToList("C    ") :: nofibStringToList(" CCCC") :: Nil) ::
+  (nofibStringToList("DDDD ") :: nofibStringToList("D   D") :: nofibStringToList("D   D") :: nofibStringToList("D   D") :: nofibStringToList("DDDD ") :: Nil) ::
+  (nofibStringToList("EEEEE") :: nofibStringToList("E    ") :: nofibStringToList("EEEEE") :: nofibStringToList("E    ") :: nofibStringToList("EEEEE") :: Nil) ::
+  (nofibStringToList("FFFFF") :: nofibStringToList("F    ") :: nofibStringToList("FFFF ") :: nofibStringToList("F    ") :: nofibStringToList("F    ") :: Nil) ::
+  (nofibStringToList(" GGGG") :: nofibStringToList("G    ") :: nofibStringToList("G  GG") :: nofibStringToList("G   G") :: nofibStringToList(" GGG ") :: Nil) ::
+  (nofibStringToList("H   H") :: nofibStringToList("H   H") :: nofibStringToList("HHHHH") :: nofibStringToList("H   H") :: nofibStringToList("H   H") :: Nil) ::
+  (nofibStringToList("IIIII") :: nofibStringToList("  I  ") :: nofibStringToList("  I  ") :: nofibStringToList("  I  ") :: nofibStringToList("IIIII") :: Nil) ::
+  (nofibStringToList("JJJJJ") :: nofibStringToList("   J ") :: nofibStringToList("   J ") :: nofibStringToList("J  J ") :: nofibStringToList(" JJ  ") :: Nil) ::
+  (nofibStringToList("K   K") :: nofibStringToList("K  K ") :: nofibStringToList("KKK  ") :: nofibStringToList("K  K ") :: nofibStringToList("K   K") :: Nil) ::
+  (nofibStringToList("L    ") :: nofibStringToList("L    ") :: nofibStringToList("L    ") :: nofibStringToList("L    ") :: nofibStringToList("LLLLL") :: Nil) ::
+  (nofibStringToList("M   M") :: nofibStringToList("MM MM") :: nofibStringToList("M M M") :: nofibStringToList("M   M") :: nofibStringToList("M   M") :: Nil) ::
+  (nofibStringToList("N   N") :: nofibStringToList("NN  N") :: nofibStringToList("N N N") :: nofibStringToList("N  NN") :: nofibStringToList("N   N") :: Nil) ::
+  (nofibStringToList(" OOO ") :: nofibStringToList("O   O") :: nofibStringToList("O   O") :: nofibStringToList("O   O") :: nofibStringToList(" OOO ") :: Nil) ::
+  (nofibStringToList("PPPP ") :: nofibStringToList("P   P") :: nofibStringToList("PPPP ") :: nofibStringToList("P    ") :: nofibStringToList("P    ") :: Nil) ::
+  (nofibStringToList(" QQQ ") :: nofibStringToList("Q   Q") :: nofibStringToList("Q Q Q") :: nofibStringToList("Q  Q ") :: nofibStringToList(" QQ Q") :: Nil) ::
+  (nofibStringToList("RRRR ") :: nofibStringToList("R   R") :: nofibStringToList("RRRR ") :: nofibStringToList("R  R ") :: nofibStringToList("R   R") :: Nil) ::
+  (nofibStringToList(" SSSS") :: nofibStringToList("S    ") :: nofibStringToList(" SSS ") :: nofibStringToList("    S") :: nofibStringToList("SSSS ") :: Nil) ::
+  (nofibStringToList("TTTTT") :: nofibStringToList("  T  ") :: nofibStringToList("  T  ") :: nofibStringToList("  T  ") :: nofibStringToList("  T  ") :: Nil) ::
+  (nofibStringToList("U   U") :: nofibStringToList("U   U") :: nofibStringToList("U   U") :: nofibStringToList("U   U") :: nofibStringToList(" UUU ") :: Nil) ::
+  (nofibStringToList("V   V") :: nofibStringToList("V   V") :: nofibStringToList("V   V") :: nofibStringToList(" V V ") :: nofibStringToList("  V  ") :: Nil) ::
+  (nofibStringToList("W   W") :: nofibStringToList("W   W") :: nofibStringToList("W   W") :: nofibStringToList("W W W") :: nofibStringToList(" W W ") :: Nil) ::
+  (nofibStringToList("X   X") :: nofibStringToList(" X X ") :: nofibStringToList("  X  ") :: nofibStringToList(" X X ") :: nofibStringToList("X   X") :: Nil) ::
+  (nofibStringToList("Y   Y") :: nofibStringToList(" Y Y ") :: nofibStringToList("  Y  ") :: nofibStringToList("  Y  ") :: nofibStringToList("  Y  ") :: Nil) ::
+  (nofibStringToList("ZZZZZ") :: nofibStringToList("   Z ") :: nofibStringToList("  Z  ") :: nofibStringToList(" Z   ") :: nofibStringToList("ZZZZZ") :: Nil) :: Nil
+//│ > Cons {
+//│ >   head: Cons {
+//│ >     head: Cons { head: ' ', tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: [Cons], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   }
+//│ alphas = }
+
+let slant =
+  nofibStringToList("    ") ::
+  nofibStringToList("   ") ::
+  nofibStringToList("  ") ::
+  nofibStringToList(" ") ::
+  nofibStringToList("") :: Nil
+//│ > Cons {
+//│ >   head: Cons { head: ' ', tail: Cons { head: ' ', tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: ' ', tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   }
+//│ slant = }
+
+let punct =
+  Tup2(".", nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("  .. ") :: nofibStringToList("  .. ") :: Nil) ::
+  Tup2("?", nofibStringToList(" ??? ") :: nofibStringToList("?   ?") :: nofibStringToList("   ? ") :: nofibStringToList("  ?  ") :: nofibStringToList("  .  ") :: Nil) ::
+  Tup2("!", nofibStringToList("  !  ") :: nofibStringToList("  !  ") :: nofibStringToList("  !  ") :: nofibStringToList("  !  ") :: nofibStringToList("  .  ") :: Nil) ::
+  Tup2("-", nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("-----") :: nofibStringToList("     ") :: nofibStringToList("     ") :: Nil) ::
+  Tup2("+", nofibStringToList("  +  ") :: nofibStringToList("  +  ") :: nofibStringToList("+++++") :: nofibStringToList("  +  ") :: nofibStringToList("  +  ") :: Nil) ::
+  Tup2(":", nofibStringToList("     ") :: nofibStringToList("  :: ") :: nofibStringToList("     ") :: nofibStringToList("  :: ") :: nofibStringToList("     ") :: Nil) ::
+  Tup2(";", nofibStringToList("     ") :: nofibStringToList("  ;; ") :: nofibStringToList("     ") :: nofibStringToList("  ;; ") :: nofibStringToList(" ;;  ") :: Nil) :: Nil
+//│ > Cons {
+//│ >   head: Tup2 { fst: '.', snd: Cons { head: [Cons], tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Tup2 { fst: '?', snd: [Cons] },
+//│ >     tail: Cons { head: [Tup2], tail: [Cons] }
+//│ >   }
+//│ punct = }
+
+let digits =
+  (nofibStringToList(" OOO ") :: nofibStringToList("0  00") :: nofibStringToList("0 0 0") :: nofibStringToList("00  0") :: nofibStringToList(" 000 ") :: Nil) ::
+  (nofibStringToList("  1  ") :: nofibStringToList(" 11  ") :: nofibStringToList("  1  ") :: nofibStringToList("  1  ") :: nofibStringToList("11111") :: Nil) ::
+  (nofibStringToList(" 222 ") :: nofibStringToList("2   2") :: nofibStringToList("   2 ") :: nofibStringToList("  2  ") :: nofibStringToList("22222") :: Nil) ::
+  (nofibStringToList("3333 ") :: nofibStringToList("    3") :: nofibStringToList(" 333 ") :: nofibStringToList("    3") :: nofibStringToList("3333 ") :: Nil) ::
+  (nofibStringToList("   4 ") :: nofibStringToList("  44 ") :: nofibStringToList(" 4 4 ") :: nofibStringToList("44444") :: nofibStringToList("   4 ") :: Nil) ::
+  (nofibStringToList("55555") :: nofibStringToList("5    ") :: nofibStringToList("5555 ") :: nofibStringToList("    5") :: nofibStringToList("5555 ") :: Nil) ::
+  (nofibStringToList("   66") :: nofibStringToList("  6  ") :: nofibStringToList(" 666 ") :: nofibStringToList("6   6") :: nofibStringToList(" 666 ") :: Nil) ::
+  (nofibStringToList("77777") :: nofibStringToList("    7") :: nofibStringToList("   7 ") :: nofibStringToList("   7 ") :: nofibStringToList("  7  ") :: Nil) ::
+  (nofibStringToList(" 888 ") :: nofibStringToList("8   8") :: nofibStringToList(" 888 ") :: nofibStringToList("8   8") :: nofibStringToList(" 888 ") :: Nil) ::
+  (nofibStringToList(" 999 ") :: nofibStringToList("9   9") :: nofibStringToList(" 999 ") :: nofibStringToList("  9  ") :: nofibStringToList("99   ") :: Nil) :: Nil
+//│ > Cons {
+//│ >   head: Cons {
+//│ >     head: Cons { head: ' ', tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: [Cons], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   }
+//│ digits = }
+
+fun unlines(ls) = concat(map(x => append(x, ("\n" :: Nil)), ls))
+
+fun join(ls) = foldr1((xs, ys) => append(xs, append((" " :: " " :: Nil), ys)), ls)
+
+fun isUpper(c) =
+  let n = int_of_char(c)
+  (n >= 65) and (n <= 90)
+
+fun isLower(c) =
+  let n = int_of_char(c)
+  (n >= 97) and (n <= 122)
+
+fun isDigit(c) =
+  let n = int_of_char(c)
+  (n >= 48) and (n <= 57)
+
+fun isSpace(c) =
+  let n = int_of_char(c)
+  (n == 32)
+
+fun picChar(c) =
+  
+  fun lscomp(ls) = if ls is
+    Nil then Nil
+    Cons(h, t) and
+      h is Tup2(c_, letter) and c_ === c then Cons(letter, lscomp(t))
+      else lscomp(t)
+  
+  if
+    isUpper(c) then atIndex(int_of_char(c) - int_of_char("A"), alphas)
+    isLower(c) then atIndex(int_of_char(c) - int_of_char("a"), alphas)
+    isSpace(c) then blank
+    isDigit(c) then atIndex(int_of_char(c) - int_of_char("0"), digits)
+    c === "/" then slant
+    c === "=" then reverse(slant)
+    else head(append(lscomp(punct), Nil :: Nil :: Nil))
+
+fun say(s) = "\n" :: (unlines(map(join, transpose(map(picChar, s)))))
+
+fun testBanner_nofib(n) =
+  let x = Cons("I", Cons("s", Cons(" ", Cons("t", Cons("h", Cons("i", Cons("s", Cons(" ", Cons("n", Cons("o", Cons("t", Cons(" ", Cons("a", Cons(" ", Cons("g", Cons("r", Cons("e", Cons("a", Cons("t", Cons(" ", Cons("b", Cons("a", Cons("n", Cons("n", Cons("e", Cons("r", Cons("?", Nil)))))))))))))))))))))))))))
+  say(concat(replicate(n, x)))
+
+
+nofibListToString(testBanner_nofib(1))
+//│ > '\n' +
+//│ >   'IIIII   SSSS         TTTTT  H   H  IIIII   SSSS         N   N   OOO   TTTTT           A            GGGG  RRRR   EEEEE    A    TTTTT         BBBB     A    N   N  N   N  EEEEE  RRRR    ??? \n' +
+//│ >   '  I    S               T    H   H    I    S             NN  N  O   O    T            A A          G      R   R  E       A A     T           B   B   A A   NN  N  NN  N  E      R   R  ?   ?\n' +
+//│ >   '  I     SSS            T    HHHHH    I     SSS          N N N  O   O    T           AAAAA         G  GG  RRRR   EEEEE  AAAAA    T           BBBB   AAAAA  N N N  N N N  EEEEE  RRRR      ? \n' +
+//│ >   '  I        S           T    H   H    I        S         N  NN  O   O    T           A   A         G   G  R  R   E      A   A    T           B   B  A   A  N  NN  N  NN  E      R  R     ?  \n' +
+//│ =   'IIIII  SSSS            T    H   H  IIIII  SSSS          N   N   OOO     T           A   A          GGG   R   R  EEEEE  A   A    T           BBBB   A   A  N   N  N   N  EEEEE  R   R    .  \n'

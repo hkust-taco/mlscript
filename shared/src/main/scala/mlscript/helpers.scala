@@ -1,5 +1,4 @@
 package mlscript
-
 import scala.util.chaining._
 import scala.collection.mutable.{Map => MutMap, SortedMap => SortedMutMap, Set => MutSet, Buffer}
 import scala.collection.immutable.SortedMap
@@ -7,6 +6,7 @@ import scala.collection.immutable.SortedMap
 import math.Ordered.orderingToOrdered
 
 import mlscript.utils._, shorthands._
+import scala.annotation.tailrec
 
 
 // Auxiliary definitions for types
@@ -114,7 +114,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
           .mkString("forall ", " ", ".")} ${body.showIn(0)}",
         outerPrec > 1 // or 0?
       )
-    case Constrained(b, bs, ws) =>
+    case Constrained(b, bs, ws, tscs) =>
       val oldCtx = ctx
       val bStr = b.showIn(0).stripSuffix("\n")
       val multiline = bStr.contains('\n')
@@ -137,6 +137,13 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
         }.mkString
       }${ws.map{
           case Bounds(lo, hi) => s"\n${ctx.indStr}${lo.showIn(0)} <: ${hi.showIn(0)}" // TODO print differently from bs?
+        }.mkString
+      }${tscs.map{
+          case (tvs, constrs) =>
+            val s = tvs.map(u => (if (u._1) "+" else "-") ++ u._2.showIn(0))
+              .mkString("[", ", ", "]")
+            s"\n${ctx.indStr}" + s +
+            s" in ${constrs.map(_.map(_.showIn(0)).mkString("[", ", ", "]")).mkString("{", ", ", "}")}"
         }.mkString}"
       }, outerPrec > 0)
     case fd @ NuFunDef(isLetRec, nme, snme, targs, rhs) =>
@@ -206,7 +213,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case WithExtension(b, r) => b :: r :: Nil
     case PolyType(targs, body) => targs.map(_.fold(identity, identity)) :+ body
     case Splice(fs) => fs.flatMap{ case L(l) => l :: Nil case R(r) => r.in.toList ++ (r.out :: Nil) }
-    case Constrained(b, bs, ws) => b :: bs.flatMap(c => c._1 :: c._2 :: Nil) ::: ws.flatMap(c => c.lb :: c.ub :: Nil)
+    case Constrained(b, bs, ws, tscs) => b :: bs.flatMap(c => c._1 :: c._2 :: Nil) ::: ws.flatMap(c => c.lb :: c.ub :: Nil) ::: tscs.flatMap(tsc => tsc._1.map(_._2) ::: tsc._2.flatten)
     case Signature(xs, res) => xs ::: res.toList
     case NuFunDef(isLetRec, nme, snme, targs, rhs) => targs ::: rhs.toOption.toList
     case NuTypeDef(kind, nme, tparams, params, ctor, sig, parents, sup, ths, body) =>
@@ -494,6 +501,14 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
       case e => e
     }
   }
+  def describe: Str = entities.iterator.map {
+    case term: Term => term.describe
+    case NuFunDef(S(rec), nme, _, _, _) =>
+      s"let ${if (rec) "rec " else ""}$nme"
+    case NuFunDef(N, nme, _, _, _) => s"fun $nme"
+    case typ: NuTypeDef => typ.describe
+    case other => "?"
+  }.mkString("{", "; ", "}")
 }
 
 trait ConstructorImpl { self: Constructor =>
@@ -507,6 +522,7 @@ trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
   def targs: Ls[Type] = Nil
   def compare(that: TypeName): Int = this.name compare that.name
   lazy val toVar: Var = Var(name).withLocOf(this)
+  var symbol: Opt[pretyper.symbol.TypeSymbol] = N
 }
 
 trait FldFlagsImpl extends Located { self: FldFlags =>
@@ -601,7 +617,11 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Blk(stmts) => stmts.iterator.map(_.showDbg).mkString("{", "; ", "}")
     case IntLit(value) => value.toString
     case DecLit(value) => value.toString
-    case StrLit(value) => '"'.toString + value + '"'
+    case StrLit(value) => value.iterator.map {
+      case '\\' => "\\\\"; case '"' => "\\\""; case '\'' => "\\'"
+      case '\n' => "\\n"; case '\r' => "\\r"; case '\t' => "\\t"
+      case '\f' => "\\f"; case '\b' => "\\b"; case c => c.toString()
+    }.mkString("\"", "", "\"")
     case UnitLit(value) => if (value) "undefined" else "null"
     case v @ Var(name) => name + v.uid.fold("")("::"+_.toString)
     case Asc(trm, ty) => s"${trm.showDbg} : ${ty.showDbg2}"  |> bra
@@ -768,7 +788,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       Constrained(body.toType_!, Nil, where.map {
         case Asc(l, r) => Bounds(l.toType_!, r)
         case s => throw new NotAType(s)
-      })
+      }, Nil)
     case Forall(ps, bod) =>
       PolyType(ps.map(R(_)), bod.toType_!)
     // 
@@ -827,7 +847,7 @@ trait LitImpl { self: Lit =>
   }
 }
 
-trait VarImpl { self: Var =>
+trait VarImpl extends pretyper.symbol.Symbolic { self: Var =>
   /** Check if the variable name is an integer. */
   def isIndex: Bool = name.headOption match {
     case S('0') => name.length === 1
@@ -878,9 +898,57 @@ trait FieldImpl extends Located { self: Field =>
 trait Located {
   def children: List[Located]
   
-  lazy val freeVars: Set[Var] = this match {
-    case v: Var => Set.single(v)
-    case _ => children.iterator.flatMap(_.freeVars.iterator).toSet
+  lazy val freeVars: Set[Var] = {
+    def statements(stmts: Ls[Statement]): Set[Var] =
+      stmts.iterator.foldRight(Set.empty[Var]) {
+        case (NuFunDef(isLetRec, nme, _, _, L(rhs)), fvs) => fvs - nme ++ (isLetRec match {
+          case N | S(true) => rhs.freeVars - nme
+          case S(false) => rhs.freeVars
+        })
+        case (td: NuTypeDef, fvs) =>
+          if (td.kind === Mod || td.kind === Cls || td.kind === Trt)
+            fvs - td.nameVar
+          else
+            fvs
+        case (statement, fvs) => fvs ++ statement.freeVars
+      }
+    this match {
+      // TypingUnit
+      case TypingUnit(entities) => statements(entities)
+      // Terms
+      case v: Var => Set.single(v)
+      case Lam(tup: Tup, body) => body.freeVars -- tup.freeVars
+      case App(lhs, rhs) => lhs.freeVars ++ rhs.freeVars
+      case Tup(fields) => fields.iterator.flatMap(_._2.value.freeVars.iterator).toSet
+      case Rcd(fields) => fields.iterator.flatMap(_._2.value.freeVars.iterator).toSet
+      case Sel(receiver, _) => receiver.freeVars
+      case Let(true, nme, rhs, body) => body.freeVars ++ rhs.freeVars - nme
+      case Let(false, nme, rhs, body) => body.freeVars - nme ++ rhs.freeVars
+      case Blk(stmts) => statements(stmts)
+      case Bra(_, trm) => trm.freeVars
+      case Asc(trm, _) => trm.freeVars
+      case Bind(lhs, rhs) => lhs.freeVars ++ rhs.freeVars
+      case Test(trm, _) => trm.freeVars
+      case With(trm, fields) => trm.freeVars ++ fields.freeVars
+      case CaseOf(trm, cases) => cases.foldLeft(trm.freeVars)(_ ++ _._2.freeVars)(_ ++ _.fold(Set.empty[Var])(_.freeVars))
+      case Subs(arr, idx) => arr.freeVars ++ idx.freeVars
+      case Assign(lhs, rhs) => lhs.freeVars ++ rhs.freeVars
+      case Splc(fields) => fields.iterator.flatMap(_.fold(_.freeVars, _.value.freeVars)).toSet
+      case New(head, body) => head.fold(Set.empty[Var])(_._2.freeVars) ++ body.freeVars
+      case NuNew(cls) => cls.freeVars
+      // Because `IfBody` uses the term to represent the pattern, direct
+      // traversal is not correct.
+      case If(_, _) => Set.empty
+      case TyApp(lhs, _) => lhs.freeVars
+      case Where(body, where) => body.freeVars ++ statements(where)
+      case Forall(_, body) => body.freeVars
+      case Inst(body) => body.freeVars
+      case Super() => Set.empty
+      case Eqn(lhs, rhs) => lhs.freeVars ++ rhs.freeVars
+      case Rft(base, decls) => base.freeVars ++ decls.freeVars
+      // Fallback for unsupported terms which is incorrect most of the time.
+      case _ => children.iterator.flatMap(_.freeVars.iterator).toSet
+    }
   }
   
   private var spanStart: Int = -1
@@ -1150,6 +1218,13 @@ trait BlkImpl { self: Blk =>
   
 }
 
+trait CaseOfImpl extends Located { self: CaseOf =>
+  def isEmpty: Bool = {
+    val CaseOf(scrut, cases) = this
+    cases === NoCases
+  }
+}
+
 trait CaseBranchesImpl extends Located { self: CaseBranches =>
 
   def children: List[Located] = this match {
@@ -1165,15 +1240,34 @@ trait CaseBranchesImpl extends Located { self: CaseBranches =>
   }
   
   def print(isFirst: Bool): Str = this match {
-    case Case(pat, body, rest) =>
+    case c @ Case(pat, body, rest) =>
       (if (isFirst) { "" } else { "; " }) +
-      pat.print(false) + " => " + body.print(false) + rest.print(false)
+      (if (c.refined) "refined " else "") + pat.print(false) + " => " + body.print(false) + rest.print(false)
     case Wildcard(body) => 
       (if (isFirst) { "" } else { "; " }) +
       "_ => " + body.print(false)
     case NoCases => ""
   }
-  
+
+  def foldLeft[A, B](z: A)(f: (A, SimpleTerm -> Term) => A)(e: (A, Opt[Term]) => B): B = {
+    @tailrec
+    def rec(acc: A, current: CaseBranches): B = current match {
+      case Case(pat, body, rest) => rec(f(acc, pat -> body), rest)
+      case Wildcard(body) => e(acc, S(body))
+      case NoCases => e(acc, N)
+    }
+    rec(z, this)
+  }
+
+  def foreach(f: Opt[SimpleTerm] -> Term => Unit): Unit = {
+    @tailrec
+    def rec(current: CaseBranches): Unit = current match {
+      case Case(pat, body, rest) => f(S(pat) -> body); rec(rest)
+      case Wildcard(body) => f(N -> body)
+      case NoCases => ()
+    }
+    rec(this)
+  }
   def showIn(implicit ctx: ShowCtx): Str = this match {
     case Case(pat, body, rest) =>
       ctx.lnIndStr + pat.showIn(false) + " => " + body.showIn(false) + rest.showIn

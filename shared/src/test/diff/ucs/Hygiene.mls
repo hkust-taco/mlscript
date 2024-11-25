@@ -7,18 +7,31 @@ class Right[out T](value: T)
 //│ class Left[T](value: T)
 //│ class Right[T](value: T)
 
-// FIXME unhygienic, the `x` in the second branch shadows parameter `x`
+:ducs:postprocess.result
 fun foo(x) = if x is
   Some(Left(y)) then x
   Some(x) then x
-//│ fun foo: forall 'a. Some['a & (Left[anything] | Object & ~#Left)] -> 'a
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   Some*◊ ->
+//│     let ucs$args_x$Some*† = (Some).unapply(x,)
+//│     let x$Some_0*‡ = (ucs$args_x$Some).0
+//│     case x$Some_0*‡ of
+//│       Left*◊ ->
+//│         let ucs$args_x$Some_0$Left*† = (Left).unapply(x$Some_0,)
+//│         let y*‡ = (ucs$args_x$Some_0$Left).0
+//│         x
+//│       _ ->
+//│         let x*‡ = (ucs$args_x$Some).0
+//│         x
+//│ fun foo: forall 'T. Some[(Left[anything] | Object & ~#Left) & 'T] -> (Some['T] | 'T)
 
 foo(Some(Left(1)))
-//│ Left[1]
+//│ Left[1] | Some[Left[1]]
 //│ res
-//│     = Left {}
+//│     = Some {}
 
 foo(Some(2))
-//│ 2
+//│ 2 | Some[2]
 //│ res
 //│     = 2

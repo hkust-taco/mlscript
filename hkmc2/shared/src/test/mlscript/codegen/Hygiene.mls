@@ -10,7 +10,8 @@ module Test with
 //│   constructor() {
 //│     this.x = 12;
 //│   }
-//│   foo() {
+//│   foo(...args) {
+//│     globalThis.Predef.checkArgs("foo", 0, args.length);
 //│     return globalThis.Test.x;
 //│   }
 //│   toString() { return "Test"; }
@@ -43,7 +44,13 @@ let f = () => x
 let x = 2
 f()
 //│ JS:
-//│ this.x = 1; this.f = () => { return this.x; }; this.x = 2; this.f()
+//│ this.x = 1;
+//│ this.f = (...args) => {
+//│   globalThis.Predef.checkArgs("", 0, args.length);
+//│   return this.x;
+//│ };
+//│ this.x = 2;
+//│ this.f()
 //│ = 2
 //│ f = [Function (anonymous)]
 //│ x = 2

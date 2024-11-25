@@ -7,8 +7,8 @@ if 0 is
   x then 12
 //│ Desugared:
 //│ >  if
-//│ >    let $scrut@11 = 0
-//│ >    let x@12 = $scrut@11#0
+//│ >    let $scrut = 0
+//│ >    let x = $scrut#0
 //│ >    else 12
 //│ = 12
 

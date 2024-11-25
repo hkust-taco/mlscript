@@ -9,7 +9,9 @@ fun test(a) =
   class C with { val x = a }
   new C
 //│ JS:
-//│ function test(a) {
+//│ function test(...args) {
+//│   globalThis.Predef.checkArgs("test", 1, args.length);
+//│   let a = args[0];
 //│   class C {
 //│     constructor() {
 //│       this.x = a;
@@ -29,7 +31,9 @@ fun test(x) =
   class Foo(a, b)
   Foo(x, x + 1)
 //│ JS:
-//│ function test(x) {
+//│ function test(...args) {
+//│   globalThis.Predef.checkArgs("test", 1, args.length);
+//│   let x = args[0];
 //│   let tmp;
 //│   function Foo(a1, b1) { return new Foo.class(a1, b1); };
 //│   Foo.class = class Foo {
@@ -51,7 +55,8 @@ test(123)
 
 
 // * Forgot to pass the arg:
+:re
 test()
-//│ = Foo { a: undefined, b: NaN }
+//│ ═══[RUNTIME ERROR] Error: Function 'test' expected 1 arguments but got 0
 
 

@@ -1,0 +1,122 @@
+:js
+:import NofibPrelude.mls
+//│ Imported 109 member(s)
+
+
+abstract class MandTree: NS | EW | Leaf
+
+class
+  NS(l: MandTree, r: MandTree) extends MandTree
+  EW(l: MandTree, r: MandTree) extends MandTree
+  Leaf(colour: Int) extends MandTree
+
+let size = 200
+let pmn = -2.25
+let pmx = 0.75
+let qmn = -1.5
+let qmx = 1.5
+let m =  20
+let num_cols = 26
+let delta_p =  (pmx - pmn) / (size - 1)
+let delta_q =  (qmx - qmn) / (size - 1)
+let up    = Tup2( 0,-1)
+let down  = Tup2( 0, 1)
+let left  = Tup2(-1, 0)
+let right = Tup2( 1, 0)
+//│ delta_p = 0.01507537688442211
+//│ delta_q = 0.01507537688442211
+//│ down = Tup2 { fst: 0, snd: 1 }
+//│ left = Tup2 { fst: -1, snd: 0 }
+//│ m = 20
+//│ num_cols = 26
+//│ pmn = -2.25
+//│ pmx = 0.75
+//│ qmn = -1.5
+//│ qmx = 1.5
+//│ right = Tup2 { fst: 1, snd: 0 }
+//│ size = 200
+//│ up = Tup2 { fst: 0, snd: -1 }
+
+fun equalp(p1, p2) = if p1 is Tup2(x1, x2) and p2 is Tup2(y1, y2) then (x1 == y1) and (x2 == y2)
+
+fun np(x) = pmn + (x * delta_p)
+
+fun nq(y) = qmn + (y * delta_q)
+
+fun radius(x, y) = (x * x) + (y * y)
+
+fun new_x(x, y, p) = (x * x) - (y * y) + p
+
+fun new_y(x, y, q) = (2.0 * x * y) + q
+
+fun finite(t) = if t is
+  Leaf(c) then c == c
+  NS(t1, t2) then finite(t1) and finite(t2)
+  EW(t1, t2) then finite(t1) and finite(t2)
+
+fun check_radius(p, q, k, x, y) = 
+  let xn = new_x(x, y, p)
+  let yn = new_y(x, y, q)
+  let r = radius(xn, yn)
+  let kp = k + 1
+  if
+    kp == num_cols then 0
+    r > m then kp
+    else check_radius(p, q, kp, xn, yn)
+
+fun point_colour(xy) = if xy is Tup2(x, y) then check_radius(np(x), nq(y), 0, 0.0, 0.0)
+
+fun check_perim(x1y1, x2y2) =
+  let col1         = point_colour(x1y1)
+  if x1y1 is Tup2(x1, y1) and x2y2 is Tup2(x2, y2) then
+    
+    fun check_line(xcyc, xdyd) =
+      if xcyc is Tup2(xc, yc) and xdyd is Tup2(xd, yd) and
+        let finished = if
+          equalp(xdyd, right) then xc >= x2
+          equalp(xdyd, down) then yc <= y2
+          equalp(xdyd, left) then xc <= x1
+          else yc >= y1
+        finished then true
+        not(point_colour(xcyc) == col1) then false
+        else check_line(Tup2(xc + xd, yc + yd), Tup2(xd, yd))
+    
+    if
+      equalp(x1y1, x2y2) then col1
+      let col2         = point_colour(Tup2(x2, y1))
+      let col3         = point_colour(x2y2)
+      let col4         = point_colour(Tup2(x1, y2))
+      let corners_diff = if (col1 == col2) and (col1 == col3) and (col1 == col4) then false else true
+      corners_diff then -1
+      check_line(Tup2(x1+1,y1), right) and check_line(Tup2(x2,y1+1), down) and check_line(Tup2(x2-1,y2), left) and check_line(Tup2(x1,y2-1), up) then col1
+      else -1
+
+
+fun build_tree(x1y1, x2y2) =
+  if x1y1 is Tup2(x1, y1) and x2y2 is Tup2(x2, y2) then
+    let rec_col = check_perim(x1y1, x2y2)
+    if
+      not(rec_col == -1) then Leaf(rec_col)
+      let split   = if (x2-x1) >= (y2-y1) then "NS" else "EW"
+      let split_x = intDiv((x2+x1), 2)
+      let split_y = intDiv((y2+y1), 2)
+      let nsp1    = x1y1
+      let nsp2    = Tup2(split_x, y2)
+      let nsp3    = Tup2(split_x+1, y1)
+      let nsp4    = x2y2
+      let ewp1    = x1y1
+      let ewp2    = Tup2(x2, split_y)
+      let ewp3    = Tup2(x1, split_y+1)
+      let ewp4    = x2y2
+      split == "NS" then NS(build_tree(nsp1, nsp2), build_tree(nsp3, nsp4))
+      else EW(build_tree(ewp1, ewp2), build_tree(ewp3, ewp4))
+
+fun testMandel2_nofib(n) =
+  finite(build_tree(Tup2(0,0), Tup2(size, intDiv(size, 2))))
+
+
+
+testMandel2_nofib(0)
+//│ = true
+
+      

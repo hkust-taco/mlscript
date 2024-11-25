@@ -5,6 +5,7 @@ import mlscript.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import hkmc2.Message.MessageContext
+import semantics.Elaborator.State
 import Tree._
 
 
@@ -46,13 +47,13 @@ enum Tree extends AutoLocated:
   case StrLit(value: Str)             extends Tree with Literal
   case UnitLit(undefinedOrNull: Bool) extends Tree with Literal
   case BoolLit(value: Bool)           extends Tree with Literal
-  case Block(stmts: Ls[Tree])         extends Tree with semantics.BlockImpl
+  case Block(stmts: Ls[Tree])(using State) extends Tree with semantics.BlockImpl
   case OpBlock(items: Ls[Tree -> Tree])
   case LetLike(kw: Keyword.letLike, lhs: Tree, rhs: Opt[Tree], body: Opt[Tree])
   case Handle(lhs: Tree, cls: Tree, defs: Tree, body: Opt[Tree])
   case Def(lhs: Tree, rhs: Tree)
   case TermDef(k: TermDefKind, head: Tree, rhs: Opt[Tree]) extends Tree with TermDefImpl
-  case TypeDef(k: TypeDefKind, head: Tree, extension: Opt[Tree], body: Opt[Tree]) extends Tree with TypeDefImpl
+  case TypeDef(k: TypeDefKind, head: Tree, extension: Opt[Tree], body: Opt[Tree])(using State) extends Tree with TypeDefImpl
   case Open(body: Tree)
   case Modified(modifier: Keyword, modLoc: Opt[Loc], body: Tree)
   case Quoted(body: Tree)
@@ -160,10 +161,14 @@ enum Tree extends AutoLocated:
     case InfixApp(lhs: Ident, Keyword.`:`, rhs) => (lhs, S(rhs)) :: Nil
     case App(Ident(","), Tup(ps)) => ps.flatMap(_.param)
     case TermDef(ImmutVal, inner, _) => inner.param
+  
+  def isModuleModifier: Bool = this match
+    case Tree.TypeDef(Mod, _, N, N) => true
+    case _ => false
 
 object Tree:
   object Block:
-    def mk(stmts: Ls[Tree]): Tree = stmts match
+    def mk(stmts: Ls[Tree])(using State): Tree = stmts match
       case Nil => UnitLit(true)
       case e :: Nil => e
       case es => Block(es)
@@ -203,6 +208,7 @@ case object Trt extends TypeDefKind("trait") with ObjDefKind
 case object Mxn extends TypeDefKind("mixin")
 case object Als extends TypeDefKind("type alias")
 case object Mod extends TypeDefKind("module") with ClsLikeKind
+case object Obj extends TypeDefKind("object") with ClsLikeKind
 
 
 
@@ -215,7 +221,7 @@ trait TypeOrTermDef:
   
   def head: Tree
   
-  lazy val (symbName, name, paramLists, typeParams, signature)
+  lazy val (symbName, name, paramLists, typeParams, annotatedResultType)
       : (Opt[Tree], Diagnostic \/ Ident, Ls[Tup], Opt[TyTup], Opt[Tree]) =
     def rec(t: Tree, symbName: Opt[Tree]): 
       (Opt[Tree], Diagnostic \/ Ident, Ls[Tup], Opt[TyTup], Opt[Tree]) = 
@@ -231,7 +237,7 @@ trait TypeOrTermDef:
       // fun f[T](n1: Int): Int
       // fun f[T](n1: Int)(nn: Int): Int
       case InfixApp(Apps(App(id: Ident, typeParams: TyTup), paramLists), Keyword.`:`, ret) =>
-        (symbName, R(id), paramLists, S(typeParams), N)
+        (symbName, R(id), paramLists, S(typeParams), S(ret))
       
       case InfixApp(Jux(lhs, rhs), Keyword.`:`, ret) =>
         rec(InfixApp(rhs, Keyword.`:`, ret), S(lhs))
@@ -270,12 +276,12 @@ trait TypeOrTermDef:
 end TypeOrTermDef
 
 
-trait TypeDefImpl extends TypeOrTermDef:
+trait TypeDefImpl(using semantics.Elaborator.State) extends TypeOrTermDef:
   this: TypeDef =>
   
   lazy val symbol = k match
     case Cls => semantics.ClassSymbol(this, name.getOrElse(Ident("<error>")))
-    case Mod => semantics.ModuleSymbol(this, name.getOrElse(Ident("<error>")))
+    case Mod | Obj => semantics.ModuleSymbol(this, name.getOrElse(Ident("<error>")))
     case Als => semantics.TypeAliasSymbol(name.getOrElse(Ident("<error>")))
     case Trt | Mxn => ???
   

@@ -75,6 +75,8 @@ f(g)(foo)
 :fixme // ???
 f(g)(bar)
 //│ ╔══[ERROR] Type error in selection with expected type A57_1
+//│ ║  l.76: 	f(g)(bar)
+//│ ║        	     ^^^
 //│ ╟── because: cannot constrain  C[Int]  <:  A57_1
 //│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  A57_1
 //│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  ¬C[in D() out ¬⊥] ∨ C[in D( Int ) out ¬⊥ ∧ D60_1]

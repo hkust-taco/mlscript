@@ -1,0 +1,74 @@
+:NewDefs
+
+module None
+class Some[out A](val value: A)
+//│ module None
+//│ class Some[A](value: A)
+
+// OK
+:ducs:desugar.result,postprocess.result
+x => if x is
+  refined(None) then x
+//│ Desugared UCS term:
+//│ if x*‡ is refined None then x
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   refined None*† -> x
+//│ forall 'a. (None & 'a) -> (None & 'a)
+//│ res
+//│     = [Function: res]
+
+// OK
+:ducs:desugar.result,postprocess.result
+x => if x is
+  refined(Some) then x
+//│ Desugared UCS term:
+//│ if x*‡ is refined Some then x
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   refined Some*◊ -> x
+//│ forall 'a. (Some[anything] & 'a) -> (Some[anything] & 'a)
+//│ res
+//│     = [Function: res]
+
+:w
+:ducs:desugar.result,postprocess.result
+x => if x is
+  refined(None) then x
+  Some then x
+//│ Desugared UCS term:
+//│ if
+//│   x*‡ is refined None then x
+//│   x*‡ is Some then x
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   refined None*† -> x
+//│   Some*◊ -> x
+//│ ╔══[WARNING] inconsistent refined pattern
+//│ ║  l.37: 	  refined(None) then x
+//│ ║        	          ^^^^
+//│ ╟── pattern `Some` is not refined
+//│ ║  l.38: 	  Some then x
+//│ ║        	  ^^^^
+//│ ╟── but pattern `None` is refined
+//│ ║  l.37: 	  refined(None) then x
+//│ ╙──      	          ^^^^
+//│ (None | Some[anything]) -> Some[nothing]
+//│ res
+//│     = [Function: res]
+
+:ducs:desugar.result,postprocess.result
+x => if x is
+  refined(None) then x
+  refined(Some) then x
+//│ Desugared UCS term:
+//│ if
+//│   x*‡ is refined None then x
+//│   x*‡ is refined Some then x
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   refined None*† -> x
+//│   refined Some*◊ -> x
+//│ (None | Some[anything]) -> nothing
+//│ res
+//│     = [Function: res]

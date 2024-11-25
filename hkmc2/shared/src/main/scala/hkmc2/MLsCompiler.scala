@@ -8,6 +8,7 @@ import utils.*
 import hkmc2.semantics.MemberSymbol
 import hkmc2.semantics.Elaborator
 import hkmc2.syntax.Keyword.`override`
+import semantics.Elaborator.State
 
 
 class MLsCompiler(preludeFile: os.Path):
@@ -38,13 +39,14 @@ class MLsCompiler(preludeFile: os.Path):
     // if showParse.isSet || dbgParsing.isSet then
     //   output(syntax.Lexer.printTokens(tokens))
     
-    val p = new syntax.Parser(origin, tokens, raise, dbg = dbgParsing):
+    given Elaborator.State = new Elaborator.State
+    val rules = syntax.ParseRules()
+    val p = new syntax.Parser(origin, tokens, rules, raise, dbg = dbgParsing):
       def doPrintDbg(msg: => Str): Unit =
         // if dbg then output(msg)
         if dbg then println(msg)
     val res = p.parseAll(p.block(allowNewlines = true))
-    given Elaborator.State = new Elaborator.State
-    given Elaborator.Ctx = Elaborator.Ctx.init.nest(N)
+    given Elaborator.Ctx = State.init.nest(N)
     val wd = file / os.up
     val elab = Elaborator(etl, wd)
     val resBlk = new syntax.Tree.Block(res)

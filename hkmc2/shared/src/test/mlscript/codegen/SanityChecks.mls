@@ -1,0 +1,175 @@
+:js
+
+
+
+:sjs
+fun f(x, y) = x + y
+f(2, 3)
+//│ JS:
+//│ function f(...args) {
+//│   globalThis.Predef.checkArgs("f", 2, args.length);
+//│   let x = args[0];
+//│   let y = args[1];
+//│   return x + y;
+//│ }
+//│ this.f(2, 3)
+//│ = 5
+
+
+:expect NaN
+:sjs
+:noSanityCheck
+fun f2(x, y) = x + y
+f2(2)
+//│ JS:
+//│ function f2(x, y) { return x + y; } this.f2(2)
+//│ = NaN
+
+:sjs
+:re
+f(2)
+//│ JS:
+//│ this.f(2)
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
+
+
+:sjs
+:re
+fun f(x)(y, z) = x + y + z
+f(3)(4)
+//│ JS:
+//│ let tmp;
+//│ function f(...args) {
+//│   globalThis.Predef.checkArgs("f", 1, args.length);
+//│   let x = args[0];
+//│   return (...args1) => {
+//│     globalThis.Predef.checkArgs("", 2, args1.length);
+//│     let y = args1[0];
+//│     let z = args1[1];
+//│     let tmp1;
+//│     tmp1 = x + y;
+//│     return tmp1 + z;
+//│   };
+//│ }
+//│ tmp = this.f(3);
+//│ tmp(4)
+//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
+
+
+:expect NaN
+:sjs
+:noSanityCheck
+let f = (x, y) => x + y in f(2)
+//│ JS:
+//│ this.f = (x, y) => { return x + y; }; this.f(2)
+//│ = NaN
+
+:sjs
+:re
+let f = (x, y) => x + y
+f(2)
+//│ JS:
+//│ this.f = (...args) => {
+//│   globalThis.Predef.checkArgs("", 2, args.length);
+//│   let x = args[0];
+//│   let y = args[1];
+//│   return x + y;
+//│ };
+//│ this.f(2)
+//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
+//│ f = [Function (anonymous)]
+
+
+:expect NaN
+:sjs
+:noSanityCheck
+class Cls(x, y) with
+  fun f(z, p) = x + y + z + p
+Cls(1, 2).f(3)
+//│ JS:
+//│ let tmp;
+//│ this.Cls = function Cls(x1, y1) { return new Cls.class(x1, y1); };
+//│ this.Cls.class = class Cls {
+//│   constructor(x, y) {
+//│     this.x = x;
+//│     this.y = y;
+//│     
+//│   }
+//│   f(z, p) {
+//│     let tmp1, tmp2;
+//│     tmp1 = this.x + this.y;
+//│     tmp2 = tmp1 + z;
+//│     return tmp2 + p;
+//│   }
+//│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
+//│ };
+//│ tmp = this.Cls(1, 2);
+//│ tmp.f(3)
+//│ = NaN
+
+:sjs
+:re
+class Cls(x, y) with
+  fun f(z, p) = x + y + z + p
+Cls(1, 2).f(3)
+//│ JS:
+//│ let tmp;
+//│ this.Cls = function Cls(x1, y1) { return new Cls.class(x1, y1); };
+//│ this.Cls.class = class Cls {
+//│   constructor(x, y) {
+//│     this.x = x;
+//│     this.y = y;
+//│     
+//│   }
+//│   f(...args) {
+//│     globalThis.Predef.checkArgs("f", 2, args.length);
+//│     let z = args[0];
+//│     let p = args[1];
+//│     let tmp1, tmp2;
+//│     tmp1 = this.x + this.y;
+//│     tmp2 = tmp1 + z;
+//│     return tmp2 + p;
+//│   }
+//│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
+//│ };
+//│ tmp = this.Cls(1, 2);
+//│ tmp.f(3)
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
+
+
+:sjs
+:re
+class Cls(x, y) with
+  fun f(z, p)(q, s) = x + y + z + p + q + s
+Cls(1, 2).f(3, 4)(5)
+//│ JS:
+//│ let tmp, tmp1;
+//│ this.Cls = function Cls(x1, y1) { return new Cls.class(x1, y1); };
+//│ this.Cls.class = class Cls {
+//│   constructor(x, y) {
+//│     this.x = x;
+//│     this.y = y;
+//│     
+//│   }
+//│   f(...args) {
+//│     globalThis.Predef.checkArgs("f", 2, args.length);
+//│     let z = args[0];
+//│     let p = args[1];
+//│     return (...args1) => {
+//│       globalThis.Predef.checkArgs("", 2, args1.length);
+//│       let q = args1[0];
+//│       let s = args1[1];
+//│       let tmp2, tmp3, tmp4, tmp5;
+//│       tmp2 = this.x + this.y;
+//│       tmp3 = tmp2 + z;
+//│       tmp4 = tmp3 + p;
+//│       tmp5 = tmp4 + q;
+//│       return tmp5 + s;
+//│     };
+//│   }
+//│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
+//│ };
+//│ tmp = this.Cls(1, 2);
+//│ tmp1 = tmp.f(3, 4);
+//│ tmp1(5)
+//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1

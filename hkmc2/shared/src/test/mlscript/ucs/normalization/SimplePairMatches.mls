@@ -9,7 +9,9 @@ class B
 :sjs
 x => if x is Pair(A, B) then 1
 //│ JS:
-//│ (x) => {
+//│ (...args) => {
+//│   globalThis.Predef.checkArgs("", 1, args.length);
+//│   let x = args[0];
 //│   let param0, param1;
 //│   if (x instanceof this.Pair.class) {
 //│     param0 = x.a;
@@ -36,7 +38,9 @@ fun f(x) = if x is
   Pair(A, A) then 1
   Pair(B, B) then 2
 //│ JS:
-//│ function f(x) {
+//│ function f(...args) {
+//│   globalThis.Predef.checkArgs("f", 1, args.length);
+//│   let x = args[0];
 //│   let param0, param1;
 //│   if (x instanceof globalThis.Pair.class) {
 //│     param0 = x.a;

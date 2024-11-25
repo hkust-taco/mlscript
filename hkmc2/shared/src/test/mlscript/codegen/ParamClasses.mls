@@ -64,7 +64,12 @@ Foo(1).a
 fun foo(y) = Foo(y)
 foo(27)
 //│ JS:
-//│ function foo(y) { return globalThis.Foo(y); } this.foo(27)
+//│ function foo(...args) {
+//│   globalThis.Predef.checkArgs("foo", 1, args.length);
+//│   let y = args[0];
+//│   return globalThis.Foo(y);
+//│ }
+//│ this.foo(27)
 //│ = Foo { a: 27 }
 
 
@@ -139,7 +144,9 @@ class Inner(c) with
 //│     this.c = c;
 //│     globalThis.log(this.c)
 //│   }
-//│   i1(d) {
+//│   i1(...args) {
+//│     globalThis.Predef.checkArgs("i1", 1, args.length);
+//│     let d = args[0];
 //│     return this.c + d;
 //│   }
 //│   toString() { return "Inner(" + this.c + ")"; }

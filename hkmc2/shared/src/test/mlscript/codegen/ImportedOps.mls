@@ -11,7 +11,8 @@ fun foo() =
   "a" ~ "b" ~ "c"
 foo()
 //│ JS:
-//│ function foo() {
+//│ function foo(...args) {
+//│   globalThis.Predef.checkArgs("foo", 0, args.length);
 //│   let tmp;
 //│   tmp = globalThis.M.concat("a", "b");
 //│   return globalThis.M.concat(tmp, "c");

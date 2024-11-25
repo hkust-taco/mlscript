@@ -39,13 +39,17 @@ class UsefulnessAnalysis(verbose: Bool = false):
     case CtorApp(name, args) => args.foreach(f)
     case Select(name, cls, field) => addUse(name)
     case BasicOp(name, args) => args.foreach(f)
+    case AssignField(assignee, _, _, value) =>
+      addUse(assignee)
+      f(value)
   
   private def f(x: Node): Unit = x match
     case Result(res) => res.foreach(f)
     case Jump(defn, args) => args.foreach(f)
-    case Case(scrut, cases) => addUse(scrut); cases.foreach { case (cls, body) => f(body) }
+    case Case(scrut, cases, default) => addUse(scrut); cases.foreach { case (cls, body) => f(body) }; default.foreach(f)
+    case LetMethodCall(names, cls, method, args, body) => addUse(method); args.foreach(f); names.foreach(addDef); f(body)
     case LetExpr(name, expr, body) => f(expr); addDef(name); f(body)
-    case LetCall(names, defn, args, body) => args.foreach(f); names.foreach(addDef); f(body)
+    case LetCall(names, defn, args, _, body) => args.foreach(f); names.foreach(addDef); f(body)
   
   def run(x: Defn) =
     x.params.foreach(addDef)
@@ -66,29 +70,38 @@ class FreeVarAnalysis(extended_scope: Bool = true, verbose: Bool = false):
     case CtorApp(name, args) => args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
     case Select(name, cls, field) => if (defined.contains(name.str)) fv else fv + name.str
     case BasicOp(name, args) => args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
+    case AssignField(assignee, _, _, value) => f(using defined)(
+      value.toExpr, 
+      if defined.contains(assignee.str) then fv + assignee.str else fv
+    ) 
   private def f(using defined: Set[Str])(node: Node, fv: Set[Str]): Set[Str] = node match
     case Result(res) => res.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
     case Jump(defnref, args) =>
       var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
-      if (extended_scope && !visited.contains(defnref.getName))
+      if (extended_scope && !visited.contains(defnref.name))
         val defn = defnref.expectDefn
         visited.add(defn.name)
         val defined2 = defn.params.foldLeft(defined)((acc, param) => acc + param.str)
         fv2 = f(using defined2)(defn, fv2)
       fv2
-    case Case(scrut, cases) =>
+    case Case(scrut, cases, default) =>
       val fv2 = if (defined.contains(scrut.str)) fv else fv + scrut.str
-      cases.foldLeft(fv2) {
+      val fv3 = cases.foldLeft(fv2) {
         case (acc, (cls, body)) => f(using defined)(body, acc)
       }
+      fv3
+    case LetMethodCall(resultNames, cls, method, args, body) =>
+      var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
+      val defined2 = resultNames.foldLeft(defined)((acc, name) => acc + name.str)
+      f(using defined2)(body, fv2)
     case LetExpr(name, expr, body) =>
       val fv2 = f(using defined)(expr, fv)
       val defined2 = defined + name.str
       f(using defined2)(body, fv2)
-    case LetCall(resultNames, defnref, args, body) =>
+    case LetCall(resultNames, defnref, args, _, body) =>
       var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
       val defined2 = resultNames.foldLeft(defined)((acc, name) => acc + name.str)
-      if (extended_scope && !visited.contains(defnref.getName))
+      if (extended_scope && !visited.contains(defnref.name))
         val defn = defnref.expectDefn
         visited.add(defn.name)
         val defined2 = defn.params.foldLeft(defined)((acc, param) => acc + param.str)

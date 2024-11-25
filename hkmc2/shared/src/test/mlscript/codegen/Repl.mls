@@ -7,7 +7,7 @@ val res: Int
 
 :showRepl
 fun res() = 1
-//│ REPL> Sending: try { function res() { return 1; } undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { function res(...args) {   globalThis.Predef.checkArgs("res", 0, args.length);   return 1; } undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ REPL> Parsed:

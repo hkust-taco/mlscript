@@ -13,6 +13,7 @@ import hkmc2.semantics.InnerSymbol
 import hkmc2.semantics.VarSymbol
 import hkmc2.semantics.Elaborator
 import hkmc2.semantics.TopLevelSymbol
+import semantics.Elaborator.State
 
 
 /** When `curThis`, it means this scope does not rebind `this`.
@@ -20,13 +21,15 @@ import hkmc2.semantics.TopLevelSymbol
   * to something unknown, following JavaScript's inane `this` handling in `function`s.
   * When `curThis` is Some(Some(sym)), it means the scope rebinds `this`
   * to an inner symbol (e.g., class or module). */
-class Scope(val parent: Opt[Scope], val curThis: Opt[Opt[InnerSymbol]], val bindings: MutMap[Local, Str]):
+class Scope
+    (val parent: Opt[Scope], val curThis: Opt[Opt[InnerSymbol]], val bindings: MutMap[Local, Str])
+    (using State):
   
   private var thisProxyAccessed = false
   lazy val thisProxy =
     curThis match
     case N | S(N) => die
-    case S(S(Elaborator.Ctx.globalThisSymbol)) => "globalThis"
+    case S(S(State.globalThisSymbol)) => "globalThis"
     case S(S(thisSym)) => 
       thisProxyAccessed = true
       allocateName(thisSym, "this$")
@@ -112,8 +115,8 @@ object Scope:
   
   def scope(using scp: Scope): Scope = scp
   
-  def empty: Scope =
-    Scope(N, S(S(Elaborator.Ctx.globalThisSymbol)), MutMap.empty)
+  def empty(using State): Scope =
+    Scope(N, S(S(State.globalThisSymbol)), MutMap.empty)
   
   def replaceTicks(str: Str): Str = str.replace('\'', '$')
   

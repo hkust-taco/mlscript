@@ -5,6 +5,7 @@ import sourcecode.{Name, Line}
 import mlscript.utils.*, shorthands.*
 import hkmc2.Message._
 import BracketKind._
+import semantics.Elaborator.State
 
 
 // * TODO: add lookahead to Expr as a PartialFunction[Ls[Token], Bool]
@@ -49,7 +50,10 @@ class ParseRule[+A](val name: Str, val omitAltsStr: Bool = false)(val alts: Alt[
       case str1 :: str2 :: Nil => s"$str1 or $str2"
       case strs => strs.init.mkString(", ") + ", or " + strs.last
 
-object ParseRule:
+end ParseRule
+
+
+class ParseRules(using State):
   import Keyword.*
   import Alt.*
   import Tree.*
@@ -271,6 +275,7 @@ object ParseRule:
     Kw(`class`)(typeDeclBody(Cls)),
     Kw(`trait`)(typeDeclBody(Trt)),
     Kw(`module`)(typeDeclBody(Mod)),
+    Kw(`object`)(typeDeclBody(Obj)),
     Kw(`open`):
       ParseRule("'open' keyword")(
         exprOrBlk(ParseRule("'open' declaration")(End(()))){
@@ -285,6 +290,7 @@ object ParseRule:
     modified(`private`),
     modified(`out`),
     modified(`return`),
+    modified(`throw`),
     modified(`import`), // TODO improve – only allow strings
     // modified(`type`),
     singleKw(`true`)(BoolLit(true)),
@@ -350,4 +356,5 @@ object ParseRule:
     genInfixRule(`restricts`, (rhs, _: Unit) => lhs => InfixApp(lhs, `restricts`, rhs)),
   )
 
+end ParseRules
 

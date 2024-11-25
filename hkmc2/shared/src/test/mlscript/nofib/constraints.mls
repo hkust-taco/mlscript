@@ -1,0 +1,269 @@
+:js
+:import NofibPrelude.mls
+//│ Imported 109 member(s)
+
+
+// -- Figure 1. CSPs in Haskell.
+class Assign(varr: Int, value: Int)
+
+class CSP(vars: Int, vals: Int, rel: Int)
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+fun qsort(le, ls, r) = if ls is
+  Nil then r
+  Cons(x, Nil) then Cons(x, r)
+  Cons(x, xs) then qpart(le, x, xs, Nil, Nil, r)
+
+fun qpart(le, x, ls, rlt, rge, r) = if ls is
+  Nil then rqsort(le, rlt, Cons(x, rqsort(le, rge, r)))
+  Cons(y, ys) and
+    le(x, y) then qpart(le, x, ys, rlt, Cons(y, rge), r)
+    else qpart(le, x, ys, Cons(y, rlt), rge, r)
+
+fun rqsort(le, ls, r) = if ls is
+  Nil then r
+  Cons(x, Nil) then Cons(x, r)
+  Cons(x, xs) then rqpart(le, x, xs, Nil, Nil, r)
+
+fun rqpart(le, x, ls, rle, rgt, r) = if ls is
+  Nil then rqsort(le, rle, Cons(x, qsort(le, rgt, r)))
+  Cons(y, ys) and
+    le(y, x) then rqpart(le, x, ys, Cons(y, rle), rgt, r)
+    else rqpart(le, x, ys, rle, Cons(y, rgt), r)
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+fun level(a) = if a is Assign(v, _) then v
+
+fun value(a) = if a is Assign(_, v) then v
+
+fun maxLevel(ls) = if ls is
+  Nil then 0
+  Cons(Assign(v, _), t) then v
+
+fun complete(csp, s) = if csp is CSP(v, _, _) then maxLevel(s) == v
+
+fun generate(csp) =
+  fun g(vals, var_) =
+    fun lscomp1(ls) = if ls is
+      Nil then Nil
+      Cons(val_, t1) then
+        fun lscomp2(ls) = if ls is
+          Nil then lscomp1(t1)
+          Cons(st, t2) then Cons(Cons(Assign(var_, val_), st), lscomp2(t2))
+        lscomp2(g(vals, var_ - 1))
+    if var_ == 0 then
+      Cons(Nil, Nil)
+    else
+      lscomp1(enumFromTo(1, vals))
+  
+  if csp is CSP(vars, vals, rel) then g(vals, vars)
+
+
+fun inconsistencies(csp, as_) = if csp is CSP(vars, vals, rel) then
+  fun lscomp1(ls) = if ls is
+    Nil then Nil
+    Cons(a, t1) then
+      fun lscomp2(ls) = if ls is
+        Nil then lscomp1(t1)
+        Cons(b, t2) and
+          a > b and not(rel(a, b)) then Cons(Tup2(level(a), (b)), lscomp2(t2))
+          else lscomp2(t2)
+      lscomp2(reverse(as_))
+  
+  lscomp1(as_)
+
+
+fun consistent(csp, x) = null_(inconsistencies(csp, x))
+
+fun test(csp) = filter(consistent(csp))
+
+fun solver(csp) = test(csp, generate(csp))
+
+fun safe(as1, as2) = if as1 is Assign(i, m) and as2 is Assign(j, n) then not(m == n) and not(abs(i - j) == abs(m - n))
+
+fun queens(n) = CSP(n, n, safe)
+
+// -- Figure 2.  Trees in Haskell.
+class Node[out T](lab: T, children: List[Node[T]])
+
+fun label(n) = if n is Node(l, _) then l
+
+fun mapTree(f, n) = if n is Node(l, c) then Node(f(l), map((x => mapTree(f, x)), c))
+
+fun foldTree(f, n) = if n is Node(l, c) then f(l, map((x => foldTree(f, x)), c))
+
+fun filterTree(p, t) =
+  fun f1(a, cs) = Node(a, filter(x => p(label(x)), cs))
+  foldTree(f1, t)
+
+fun prune(p, t) = filterTree(x => not(p(x)), t)
+
+fun leaves(t) = if t is
+  Node(leaf, Nil) then Cons(leaf, Nil)
+  Node(_, cs) then concat(map(leaves, cs))
+
+fun initTree(f, x) = Node(x, map(y => initTree(f, y), f(x)))
+
+// -- Figure 3.  Simple backtracking solver for CSPs.
+fun mkTree(csp) = if csp is CSP(vars, vals, rel) then
+  fun next(ss) =
+    if maxLevel(ss) < vars then
+      fun lscomp1(ls) = if ls is
+        Nil then Nil
+        Cons(j, t1) then
+          Cons(Cons(Assign(maxLevel(ss) + 1, j), ss), lscomp1(t1))
+      lscomp1(enumFromTo(1, vals))
+    else
+      Nil
+  
+  initTree(next, Nil)
+
+
+fun earliestInconsistency(csp, aas) = if csp is CSP(vars, vals, rel) and aas is
+  Nil then None
+  Cons(a, as_) and filter(x => not(rel(a, x)), reverse(as_)) is
+    Nil then None
+    Cons(b, _) then Some(Tup2(level(a), level(b)))
+
+fun labelInconsistencies(csp, t) =
+  fun f2(s) = Tup2(s, earliestInconsistency(csp, s))
+  
+  mapTree(f2, t)
+
+
+fun btsolver0(csp) =
+  filter(x => complete(csp, x), leaves(mapTree(fst, prune(x => not(snd(x) === None), labelInconsistencies(csp, mkTree(csp))))))
+
+// -- Figure 6. Conflict-directed solving of CSPs.
+abstract class ConflictSet: Known | Unknown
+class Known(vs: List[Int]) extends ConflictSet
+object Unknown extends ConflictSet
+
+fun knownConflict(c) = if c is
+  Known(Cons(a, as_)) then true
+  else false
+
+fun knownSolution(c) = if c is
+  Known(Nil) then true
+  else false
+
+fun checkComplete(csp, s) = if complete(csp, s) then Known(Nil) else Unknown
+
+fun search(labeler, csp) =
+  map(fst, filter(x => knownSolution(snd(x)), leaves(prune(x => knownConflict(snd(x)), labeler(csp, mkTree(csp))))))
+
+fun bt(csp, t) =
+  fun f3(s) = Tup2(s, (if earliestInconsistency(csp, s) is Some(Tup2(a, b)) then Known(a :: b :: Nil) else checkComplete(csp, s)))
+  
+  mapTree(f3, t)
+
+// -- Figure 8. Backmarking.
+
+fun emptyTable(csp) = if csp is CSP(vars, vals, rel) then
+  fun lscomp1(ls) = if ls is
+    Nil then Nil
+    Cons(n, t1) then
+      fun lscomp2(ls) = if ls is
+        Nil then Nil
+        Cons(m, t2) then
+          Cons(Unknown, lscomp2(t2))
+      Cons(lscomp2(enumFromTo(1, vals)), lscomp1(t1))
+  
+  Nil :: lscomp1(enumFromTo(1, vars))
+
+
+fun fillTable(s, csp, tbl) = if s is
+  Nil then tbl
+  Cons(Assign(var_, val_), as_) and csp is CSP(vars, vals, rel) then
+    fun f4(cs, varval) = if varval is Tup2(varr, vall) and
+      cs === Unknown and not(rel(Assign(var_, val_), Assign(varr, vall))) then Known(Cons(var_, Cons(varr, Nil)))
+      else cs
+    
+    fun lscomp1(ls) = if ls is
+      Nil then Nil
+      Cons(varrr, t1) then
+        fun lscomp2(ls) = if ls is
+          Nil then Nil
+          Cons(valll, t2) then Cons(Tup2(varrr, valll), lscomp2(t2))
+        Cons(lscomp2(enumFromTo(1, vals)), lscomp1(t1))
+    
+    zipWith((x, y) => zipWith(f4, x, y), tbl, lscomp1(enumFromTo(var_ + 1, vars)))
+
+
+fun lookupCache(csp, t) =
+  fun f5(csp, tp) = if tp is
+    Tup2(Nil, tbl) then Tup2(Tup2(Nil, Unknown), tbl)
+    Tup2(Cons(a, as_), tbl) then
+      let tableEntry = atIndex(value(a) - 1, head(tbl))
+      let cs = if tableEntry === Unknown then checkComplete(csp, Cons(a, as_)) else tableEntry
+      Tup2(Tup2(Cons(a, as_), cs), tbl)
+  
+  mapTree(x => f5(csp, x), t)
+
+
+fun cacheChecks(csp, tbl, n) = if n is Node(s, cs) then
+  Node(Tup2(s, tbl), map(x => cacheChecks(csp, fillTable(s, csp, tail(tbl)), x), cs))
+
+fun bm(csp, t) = mapTree(fst, lookupCache(csp, cacheChecks(csp, emptyTable(csp), t)))
+
+// -- Figure 10. Conflict-directed backjumping.
+fun combine(ls, acc) = if ls is
+  Nil then acc
+  Cons(Tup2(s, Known(cs)), css) and
+    notElem(maxLevel(s), cs) then cs
+    else combine(css, union(cs, acc))
+
+fun bj_(csp, t) =
+  fun f7(tp2, chs) = if tp2 is
+    Tup2(a, Known(cs)) then Node(Tup2(a, Known(cs)), chs)
+    Tup2(a, Unknown) and
+      let cs_ = Known(combine(map(label, chs), Nil))
+      knownConflict(cs_) then Node(Tup2(a, cs_), Nil)
+      else Node(Tup2(a, cs_), chs)
+  
+  foldTree(f7, t)
+
+
+fun bj(csp, t) =
+  fun f6(tp2, chs) = if tp2 is
+    Tup2(a, Known(cs)) then Node(Tup2(a, Known(cs)), chs)
+    Tup2(a, Unknown) then Node(Tup2(a, Known(combine(map(label, chs), Nil))), chs)
+  
+  foldTree(f6, t)
+
+
+fun bjbt(csp, t) = bj(csp, bt(csp, t))
+
+fun bjbt_(csp, t) = bj_(csp, bt(csp, t))
+
+// -- Figure 11. Forward checking.
+fun collect(ls) = if ls is
+  Nil then Nil
+  Cons(Known(cs), css) then union(cs, collect(css))
+
+fun domainWipeout(csp, t) = if csp is CSP(vars, vals, rel) then
+  fun f8(tp2) = if tp2 is Tup2(Tup2(as_, cs), tbl) then
+    let wipedDomains = 
+      fun lscomp1(ls) = if ls is
+        Nil then Nil
+        Cons(vs, t1) and
+          all(knownConflict, vs) then Cons(vs, lscomp1(t1))
+          else lscomp1(t1)
+      lscomp1(tbl)
+    let cs_ = if null_(wipedDomains) then cs else Known(collect(head(wipedDomains)))
+    Tup2(as_, cs_)
+  
+  mapTree(f8, t)
+
+
+fun fc(csp, t) = domainWipeout(csp, lookupCache(csp, cacheChecks(csp, emptyTable(csp), t)))
+
+fun try_(n, algorithm) = listLen(search(algorithm, queens(n)))
+
+fun testConstraints_nofib(n) = map(x => try_(n, x), bt :: bm :: bjbt :: bjbt_ :: fc :: Nil)
+
+
+
+testConstraints_nofib(6).toString()
+//│ = '[4,4,4,4,4]'
