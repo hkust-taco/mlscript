@@ -93,7 +93,7 @@ run(`1)
 :e
 run(1)
 //│ ╔══[ERROR] Type error in integer literal with expected type CodeBase[out T158_1, ⊥, ?]
-//│ ║  l.95: 	run(1)
+//│ ║  l.94: 	run(1)
 //│ ║        	    ^
 //│ ╙── because: cannot constrain  Int  <:  CodeBase[out T158_1, ⊥, ?]
 //│ Type: ⊥
@@ -101,7 +101,7 @@ run(1)
 :e
 x `=> run(x)
 //│ ╔══[ERROR] Type error in reference with expected type CodeBase[out T161_3, ⊥, ?]
-//│ ║  l.103: 	x `=> run(x)
+//│ ║  l.102: 	x `=> run(x)
 //│ ║         	          ^
 //│ ╟── because: cannot constrain  CodeBase[x159_3, <x>160_3, ⊥]  <:  CodeBase[out T161_3, ⊥, ?]
 //│ ╙── because: cannot constrain  D( <x>160_3 )  <:  ⊥
@@ -110,12 +110,12 @@ x `=> run(x)
 :e
 `let x = `42 `in run(x)
 //│ ╔══[ERROR] Type error in reference with expected type CodeBase[out T168_3, ⊥, ?]
-//│ ║  l.112: 	`let x = `42 `in run(x)
+//│ ║  l.111: 	`let x = `42 `in run(x)
 //│ ║         	                     ^
 //│ ╟── because: cannot constrain  CodeBase[α165_2, <x>167_3, ⊥]  <:  CodeBase[out T168_3, ⊥, ?]
 //│ ╙── because: cannot constrain  D( <x>167_3 )  <:  ⊥
 //│ ╔══[ERROR] Type error in unquoted term
-//│ ║  l.112: 	`let x = `42 `in run(x)
+//│ ║  l.111: 	`let x = `42 `in run(x)
 //│ ║         	                 ^^^^^^
 //│ ╟── because: cannot constrain  T168_3  <:  CodeBase[out α169_3, out α170_3, ?]
 //│ ╟── because: cannot constrain  T168_3  <:  ¬(~{CodeBase[out α169_3, out α170_3, ?]})

@@ -273,17 +273,15 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
           (Bot, Bot, Bot)
       val (scrutineeTy, scrutineeEff) = typeCheck(scrutinee)
       constrain(tryMkMono(scrutineeTy, scrutinee), clsTy | (tv & Type.mkNegType(emptyTy)))
-      val nestCtx = ctx.nest
+      val nestCtx1 = ctx.nest
+      val nestCtx2 = ctx.nest
       scrutinee match // * refine
-        case Ref(sym: LocalSymbol) =>
-          nestCtx += sym -> clsTy
+        case Ref(sym: LocalSymbol) => // TODO: new pattern matching?
+          nestCtx1 += sym -> clsTy
+          nestCtx2 += sym -> tv
         case _ => () // TODO: refine all variables holding this value?
-      val (consTy, consEff) = typeSplit(cons, sign)(using nestCtx)
-      scrutinee match // TODO: new pattern matching?
-        case Ref(sym: LocalSymbol) =>
-          nestCtx += sym -> tv
-        case _ => () // TODO: refine all variables holding this value?
-      val (altsTy, altsEff) = typeSplit(alts, sign)(using nestCtx)
+      val (consTy, consEff) = typeSplit(cons, sign)(using nestCtx1)
+      val (altsTy, altsEff) = typeSplit(alts, sign)(using nestCtx2)
       val allEff = scrutineeEff | (consEff | altsEff)
       (sign.getOrElse(tryMkMono(consTy, cons) | tryMkMono(altsTy, alts)), allEff)
     // * Normal if
