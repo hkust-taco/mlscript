@@ -171,7 +171,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
   
   private def instantiate(ty: PolyType)(using ctx: BbCtx): GeneralType = ty.instantiate(infVarState.nextUid, ctx.lvl)(tl)
 
-  private def extrude(ty: GeneralType)(using ctx: BbCtx, pol: Bool): GeneralType = ty match
+  private def extrude(ty: GeneralType)(using ctx: BbCtx, pol: Bool, cctx: CCtx): GeneralType = ty match
     case ty: Type => solver.extrude(ty)(using ctx.lvl, pol, HashMap.empty)
     case PolyType(tvs, body) => PolyType(tvs, extrude(body))
     case PolyFunType(args, ret, eff) =>

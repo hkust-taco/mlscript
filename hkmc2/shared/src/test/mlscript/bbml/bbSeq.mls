@@ -48,7 +48,9 @@ fun mapi = s => f =>
 //│ ╟── because: cannot constrain  E39_2  <:  ¬(~<E>26_2)
 //│ ╟── because: cannot constrain  ¬⊥ ∧ α40_2  <:  ¬(~<E>26_2)
 //│ ╟── because: cannot constrain  α40_2  <:  ¬(~<E>26_2)
-//│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~<E>26_2)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ r41_2  <:  ¬(~<E>26_2)
+//│ ╟── because: cannot constrain  r41_2  <:  ¬(~<E>26_2)
+//│ ╙── because: cannot constrain    <:  ¬(~<E>26_2)
 //│ ╔══[ERROR] Type error in region expression with expected type Seq[out <A>25_2, out <E>26_2]
 //│ ║  l.33: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
@@ -63,7 +65,9 @@ fun mapi = s => f =>
 //│ ╟── because: cannot constrain  E39_2  <:  ¬(~<E>26_2)
 //│ ╟── because: cannot constrain  ¬⊥ ∧ α40_2  <:  ¬(~<E>26_2)
 //│ ╟── because: cannot constrain  α40_2  <:  ¬(~<E>26_2)
-//│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~<E>26_2)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ r41_2  <:  ¬(~<E>26_2)
+//│ ╟── because: cannot constrain  r41_2  <:  ¬(~<E>26_2)
+//│ ╙── because: cannot constrain    <:  ¬(~<E>26_2)
 //│ ╔══[ERROR] Type error in region expression with expected type Seq[out <A>25_2, out <E>26_2]
 //│ ║  l.33: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
@@ -78,7 +82,9 @@ fun mapi = s => f =>
 //│ ╟── because: cannot constrain  E39_2  <:  ¬(~<E>26_2)
 //│ ╟── because: cannot constrain  ¬⊥ ∧ α40_2  <:  ¬(~<E>26_2)
 //│ ╟── because: cannot constrain  α40_2  <:  ¬(~<E>26_2)
-//│ ╙── because: cannot constrain  ¬⊥  <:  ¬(~<E>26_2)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ r41_2  <:  ¬(~<E>26_2)
+//│ ╟── because: cannot constrain  r41_2  <:  ¬(~<E>26_2)
+//│ ╙── because: cannot constrain    <:  ¬(~<E>26_2)
 //│ Type: ⊤
 
 // * Notice the inferred type, which produces an unusable Sequence (of effect `?` ie `Any`)
@@ -89,7 +95,7 @@ fun mapi = s => f =>
       i := !i + 1
       f(!i, x)
 mapi
-//│ Type: forall A49_2, E50_2, α60_2, α61_2: Seq[out A49_2, out E50_2] -> (((Int, A49_2) ->{α61_2} α60_2) ->{Alloc} Seq[out α60_2, ?])
+//│ Type: forall A50_2, E51_2, α61_2, α62_2: Seq[out A50_2, out E51_2] -> (((Int, A50_2) ->{α62_2} α61_2) ->{Alloc} Seq[out α61_2, ?])
 
 // * This version is correct as it keeps the mutation encapsulated within the region
 fun mapi_force: [A, E] -> Seq[out A, out E] -> ((Int, A) ->{E} A) ->{Alloc | E} Seq[out A, Nothing]
