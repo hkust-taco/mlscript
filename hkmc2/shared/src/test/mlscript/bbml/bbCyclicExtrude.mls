@@ -4,57 +4,57 @@
 
 
 let f = (x => (x : [A] -> A -> A)) in f
-//│ Type: (⊤ -> ⊥) ->{⊥} forall A2_2: (A2_2) ->{⊥} A2_2
+//│ Type: (⊤ -> ⊥) ->{⊥} forall A3_2: (A3_2) ->{⊥} A3_2
 
 let f = ((x => x) : [A] -> A -> A) in f
-//│ Type: forall A4_2: (A4_2) ->{⊥} A4_2
+//│ Type: forall A5_2: (A5_2) ->{⊥} A5_2
 
 let foo = f => (x => f(x(x)) : [A] -> A -> A) in foo
-//│ Type: (α12_1 -> (⊤ -> ⊥)) ->{⊥} (x7_1 -> α12_1) ->{⊥} forall A8_2: (A8_2) ->{⊥} A8_2
+//│ Type: (α13_1 -> (⊤ -> ⊥)) ->{⊥} (x8_1 -> α13_1) ->{⊥} forall A9_2: (A9_2) ->{⊥} A9_2
 //│ Where:
-//│   x7_1 <: x7_1 -> α12_1
+//│   x8_1 <: x8_1 -> α13_1
 
 f => (let g = x => x(x) in f(g(g))) : [A] -> A -> A
-//│ Type: (⊥ -> (⊤ -> ⊥)) ->{⊥} forall A20_2: (A20_2) ->{⊥} A20_2
+//│ Type: (⊥ -> (⊤ -> ⊥)) ->{⊥} forall A21_2: (A21_2) ->{⊥} A21_2
 
 :e
 f => (let g = x => f(x(x)) in g) : [A] -> A -> A
-//│ ╔══[ERROR] Type error in block with expected type (<A>32_2) ->{⊥} <A>32_2
+//│ ╔══[ERROR] Type error in block with expected type (<A>33_2) ->{⊥} <A>33_2
 //│ ║  l.21: 	f => (let g = x => f(x(x)) in g) : [A] -> A -> A
 //│ ║        	              ^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  x33_2 ->{α36_2 ∨ α34_2} α37_2  <:  <A>32_2 -> <A>32_2
-//│ ╟── because: cannot constrain  <A>32_2  <:  D( x33_2 )
-//│ ╟── because: cannot constrain  <A>32_2  <:  x33_2
-//│ ╙── because: cannot constrain  <A>32_2  <:  ¬(~{x33_2 ->{α34_2} α35_2})
-//│ Type: (⊥ -> ⊥) ->{⊥} forall A31_2: (A31_2) ->{⊥} A31_2
+//│ ╟── because: cannot constrain  x34_2 ->{α37_2 ∨ α35_2} α38_2  <:  <A>33_2 -> <A>33_2
+//│ ╟── because: cannot constrain  <A>33_2  <:  D( x34_2 )
+//│ ╟── because: cannot constrain  <A>33_2  <:  x34_2
+//│ ╙── because: cannot constrain  <A>33_2  <:  ¬(~{x34_2 ->{α35_2} α36_2})
+//│ Type: (⊥ -> ⊥) ->{⊥} forall A32_2: (A32_2) ->{⊥} A32_2
 
 f => (x => f(x(x)) : [A] -> A -> A)
-//│ Type: (α47_1 -> (⊤ -> ⊥)) ->{⊥} (x42_1 -> α47_1) ->{⊥} forall A43_2: (A43_2) ->{⊥} A43_2
+//│ Type: (α48_1 -> (⊤ -> ⊥)) ->{⊥} (x43_1 -> α48_1) ->{⊥} forall A44_2: (A44_2) ->{⊥} A44_2
 //│ Where:
-//│   x42_1 <: x42_1 -> α47_1
+//│   x43_1 <: x43_1 -> α48_1
 
 let foo = f => (f(x => x(x)) : [A] -> A -> A) in foo
-//│ Type: (((x62_1 ->{α65_1} α64_1) ->{α65_1} α64_1) -> (⊤ -> ⊥)) ->{⊥} forall A55_2: (A55_2) ->{⊥} A55_2
+//│ Type: (((x63_1 ->{α66_1} α65_1) ->{α66_1} α65_1) -> (⊤ -> ⊥)) ->{⊥} forall A56_2: (A56_2) ->{⊥} A56_2
 //│ Where:
-//│   x62_1 <: x62_1 ->{α65_1} α64_1
+//│   x63_1 <: x63_1 ->{α66_1} α65_1
 
 :todo
 let foo(f) = (f(x => x(x)) : [A] -> A -> A) in foo
-//│ Type: (((x78_1 ->{α81_1} α80_1) ->{α81_1} α80_1) -> (⊤ -> ⊥)) ->{⊥} forall A71_2: (A71_2) ->{⊥} A71_2
+//│ Type: (((x79_1 ->{α82_1} α81_1) ->{α82_1} α81_1) -> (⊤ -> ⊥)) ->{⊥} forall A72_2: (A72_2) ->{⊥} A72_2
 //│ Where:
-//│   x78_1 <: x78_1 ->{α81_1} α80_1
+//│   x79_1 <: x79_1 ->{α82_1} α81_1
 
 :todo
 fun foo(f) = (f(x => x(x)) : [A] -> A -> A)
-//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but (f87_2) ->{⊥} forall A88_3: (A88_3) ->{⊥} A88_3 found
+//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but (f88_2) ->{⊥} forall A89_3: (A89_3) ->{⊥} A89_3 found
 //│ ║  l.48: 	fun foo(f) = (f(x => x(x)) : [A] -> A -> A)
 //│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
 
 f => (let g = x => x(x) in let tmp = g(g) in f(g)) : [A] -> A -> A
-//│ Type: ((((x111_1 ∨ (x111_1 ->{α114_1} α113_1)) -> α113_1) ->{α114_1} α113_1) -> (⊤ -> ⊥)) ->{⊥} forall A104_2: (A104_2) ->{⊥} A104_2
+//│ Type: ((((x112_1 ∨ (x112_1 ->{α115_1} α114_1)) -> α114_1) ->{α115_1} α114_1) -> (⊤ -> ⊥)) ->{⊥} forall A105_2: (A105_2) ->{⊥} A105_2
 //│ Where:
-//│   x111_1 <: (x111_1 ∨ (x111_1 ->{α114_1} α113_1)) -> α113_1
+//│   x112_1 <: (x112_1 ∨ (x112_1 ->{α115_1} α114_1)) -> α114_1
 
 

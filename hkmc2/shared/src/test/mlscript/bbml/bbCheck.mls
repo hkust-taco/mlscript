@@ -77,7 +77,7 @@ fun high(f) = f(42)
 //│ Type: ⊤
 
 high
-//│ Type: (forall A7_2: (A7_2) ->{⊥} A7_2) ->{⊥} Int
+//│ Type: (forall A8_2: (A8_2) ->{⊥} A8_2) ->{⊥} Int
 
 
 high((x => x): [A] -> A -> A)
@@ -91,19 +91,19 @@ high(x => x + 1)
 //│ ╔══[ERROR] Type error in reference with expected type Int
 //│ ║  l.90: 	high(x => x + 1)
 //│ ║        	          ^
-//│ ╙── because: cannot constrain  <A>11_2  <:  Int
-//│ ╔══[ERROR] Type error in application with expected type <A>11_2
+//│ ╙── because: cannot constrain  <A>12_2  <:  Int
+//│ ╔══[ERROR] Type error in application with expected type <A>12_2
 //│ ║  l.90: 	high(x => x + 1)
 //│ ║        	          ^^^^^
-//│ ╙── because: cannot constrain  Int  <:  <A>11_2
+//│ ╙── because: cannot constrain  Int  <:  <A>12_2
 //│ Type: Int
 
 (let a = 0 in x => x): [A] -> A -> A
-//│ Type: forall A12_2: (A12_2) ->{⊥} A12_2
+//│ Type: forall A13_2: (A13_2) ->{⊥} A13_2
 
 
 (if false then x => x else y => y): [A] -> A -> A
-//│ Type: forall A15_2: (A15_2) ->{⊥} A15_2
+//│ Type: forall A16_2: (A16_2) ->{⊥} A16_2
 
 
 fun baz: Int -> (([A] -> A -> A), Int) -> Int
@@ -118,22 +118,22 @@ fun baz(z) =
 
 :e
 baz: Int -> (([A] -> A -> A), Int) -> Int
-//│ ═══[ERROR] Cannot type non-function term Sel(Ref(globalThis:block#17),Ident(baz)) as (Int) ->{⊥} (forall A25_2: (A25_2) ->{⊥} A25_2, Int) ->{⊥} Int
+//│ ═══[ERROR] Cannot type non-function term Sel(Ref(globalThis:block#17),Ident(baz)) as (Int) ->{⊥} (forall A26_2: (A26_2) ->{⊥} A26_2, Int) ->{⊥} Int
 //│ Type: ⊥
 
 
 baz(42)
-//│ Type: (forall A21_2: (A21_2) ->{⊥} A21_2, Int) ->{⊥} Int
+//│ Type: (forall A22_2: (A22_2) ->{⊥} A22_2, Int) ->{⊥} Int
 
 :e
 baz(42): (([A] -> A -> A), Int) -> Int
-//│ ╔══[ERROR] Cannot type non-function term App(Sel(Ref(globalThis:block#17),Ident(baz)),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))) as (forall A26_2: (A26_2) ->{⊥} A26_2, Int) ->{⊥} Int
+//│ ╔══[ERROR] Cannot type non-function term App(Sel(Ref(globalThis:block#17),Ident(baz)),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))) as (forall A27_2: (A27_2) ->{⊥} A27_2, Int) ->{⊥} Int
 //│ ║  l.129: 	baz(42): (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^^^^^
 //│ Type: ⊥
 
 (z => (f, x) => baz(z)(f, x)): Int -> (([A] -> A -> A), Int) -> Int
-//│ Type: (Int) ->{⊥} (forall A27_2: (A27_2) ->{⊥} A27_2, Int) ->{⊥} Int
+//│ Type: (Int) ->{⊥} (forall A28_2: (A28_2) ->{⊥} A28_2, Int) ->{⊥} Int
 
 
 fun id: [A] -> A -> A
@@ -141,11 +141,11 @@ fun id(x) = x
 //│ Type: ⊤
 
 id: [A] -> A -> A
-//│ Type: forall A33_2: (A33_2) ->{⊥} A33_2
+//│ Type: forall A34_2: (A34_2) ->{⊥} A34_2
 
 
 (id: [A] -> A -> A): [A] -> A -> A
-//│ Type: forall A36_2: (A36_2) ->{⊥} A36_2
+//│ Type: forall A37_2: (A37_2) ->{⊥} A37_2
 
 42: Int | Num
 //│ Type: Int ∨ Num
