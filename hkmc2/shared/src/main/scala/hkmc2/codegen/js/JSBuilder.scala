@@ -314,10 +314,14 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
         val v = doc"this.${getVar(i._1)}"
         doc"""$v = await import("${i._2.toString
           }"); # if ($v.default !== undefined) $v = $v.default;"""
-    imps.mkDocument(doc" # ") :/: block(p.main) :: (
-      exprt match
-        case S(e) => doc"\nexport default ${e};\n"
-        case N => doc""
+    val traceLoggerSymbol = semantics.TempSymbol(N, "traceLogger")
+    val traceLoggerStr = Scope.scope.allocateName(traceLoggerSymbol)
+    imps.mkDocument(doc" # ") :: 
+      (if !compilingFile then doc"let $traceLoggerStr = new Predef.TraceLogger(); # " else "") :/: 
+      block(p.main) :: (
+        exprt match
+          case S(e) => doc"\nexport default ${e};\n"
+          case N => doc""
       )
   
   def block(t: Block)(using Raise, Scope): Document =
@@ -442,7 +446,8 @@ trait JSBuilderSanityChecks
       val checkArgsNum = doc"globalThis.Predef.checkArgs($functionName, ${params.length}, $paramsStr.length);\n"
       val paramsAssign = paramsList.zipWithIndex.map{(nme, i) =>
         doc"let ${nme} = ${paramsStr}[$i];\n"}.mkDocument("")
-      (doc"...$paramsStr", doc"$checkArgsNum$paramsAssign${this.body(body)}")
+      val preParams = if paramsList.isEmpty then doc"" else paramsList.map(p => doc"globalThis.JSON.stringify($p)").mkDocument("+ \" with \" + ", " + \", \" + ", Document.empty)
+      val pre = doc"${JSBuilder.makeStringLiteral(s"calling $functionName")}$preParams"
+      (doc"...$paramsStr", doc"$checkArgsNum$paramsAssign\nreturn traceLogger.trace($pre, () => { #  #{ ${this.body(body)} #}  # }, (p) => { return ${JSBuilder.makeStringLiteral("return ")} + p; }) ")
     else
       super.setupFunction(name, params, body)
-

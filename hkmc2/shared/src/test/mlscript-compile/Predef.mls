@@ -26,3 +26,15 @@ fun checkArgs(functionName, expected, got) =
     let name = if functionName.length > 0 then " '" + functionName + "'" else ""
     throw globalThis.Error("Function" + name + " expected " + expected + " arguments but got " + got)
   else ()
+  
+  
+class TraceLogger with
+  mut val indent = 0
+  fun log(msg) = console.log("| ".repeat(indent) + msg)
+  fun trace(pre, thunk, post) =
+    log(pre)
+    set indent = indent + 1
+    let result = thunk()
+    set indent = indent - 1
+    log(post(result))
+    result
