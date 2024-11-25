@@ -263,7 +263,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       : (GeneralType, Type) =
     split match
     case Split.Cons(Branch(scrutinee, Pattern.ClassLike(sym, _, _, _), cons), alts) =>
-      // * Pattern matching
+      // * Pattern matching for classes
       val (clsTy, tv, emptyTy) = ctx.getCls(sym.nme).flatMap(_.defn) match
         case S(cls) =>
           (ClassLikeType(sym, cls.tparams.map(_ => freshWildcard(N))), (freshVar(N)), ClassLikeType(sym, cls.tparams.map(_ => Wildcard.empty)))
@@ -275,7 +275,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val nestCtx1 = ctx.nest
       val nestCtx2 = ctx.nest
       scrutinee match // * refine
-        case Ref(sym: LocalSymbol) => // TODO: new pattern matching?
+        case Ref(sym: LocalSymbol) =>
           nestCtx1 += sym -> clsTy
           nestCtx2 += sym -> tv
         case _ => () // TODO: refine all variables holding this value?
@@ -283,7 +283,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val (altsTy, altsEff) = typeSplit(alts, sign)(using nestCtx2)
       val allEff = scrutineeEff | (consEff | altsEff)
       (sign.getOrElse(tryMkMono(consTy, cons) | tryMkMono(altsTy, alts)), allEff)
-    // * Normal if
+    // * Pattern matching for literals
     case Split.Cons(Branch(scrutinee, Pattern.Lit(lit), cons), alts) =>
       val (scrutineeTy, scrutineeEff) = typeCheck(scrutinee)
       val litTy = lit match
@@ -291,7 +291,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         case _: Tree.IntLit => BbCtx.intTy
         case _: Tree.DecLit => BbCtx.numTy
         case _: Tree.StrLit => BbCtx.strTy
-        case _: Tree.UnitLit => Top // TODO: null & undefined?
+        case _: Tree.UnitLit => Top
       
       constrain(tryMkMono(scrutineeTy, scrutinee), litTy)
       val nestCtx1 = ctx.nest
