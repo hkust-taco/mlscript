@@ -1,5 +1,6 @@
 :bbml
 //│ Type: ⊤
+//│ Type: ⊤
 
 
 class Foo[out A]

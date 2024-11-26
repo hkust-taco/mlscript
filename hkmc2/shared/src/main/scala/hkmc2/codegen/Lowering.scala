@@ -44,6 +44,10 @@ import Subst.subst
 
 
 class Lowering(using TL, Raise, Elaborator.State):
+
+  lazy val numOpsMap: Map[Str, Str] = Map(
+    "+." -> "+", "-." -> "-", "*." -> "*", "/." -> "/"
+  )
   
   def returnedTerm(t: st)(using Subst): Block = term(t)(Ret)
   
@@ -278,11 +282,14 @@ class Lowering(using TL, Raise, Elaborator.State):
           if usesResTmp then k(Value.Ref(l))
           else k(Value.Lit(syntax.Tree.UnitLit(true))) // * it seems this currently never happens
         )
-      
+    case Sel(_, id) if numOpsMap.contains(id.name) => k(subst(Value.Ref(BuiltinSymbol(numOpsMap(id.name), binary = true, unary = true, nullary = false))))
     case Sel(prefix, nme) =>
       subTerm(prefix): p =>
         k(Select(p, nme))
-        
+    case SelProj(prefix, _, proj) =>
+      subTerm(prefix): p =>
+        k(Select(p, proj))
+
     case New(cls, as) =>
       subTerm(cls): sr =>
         def rec(as: Ls[st], asr: Ls[Path]): Block = as match

@@ -6,6 +6,7 @@ class CodeBase[T, C, S]
 class Region[T]
 class Ref[T, S]
 
+class Str(concat: Str -> Str)
 
 fun run: [T] -> CodeBase[out T, out Nothing, out Any] -> T
 fun log: Str -> Any
@@ -25,6 +26,7 @@ fun (#>): (Int, Int) -> Bool
 fun (#<=): (Int, Int) -> Bool
 fun (#>=): (Int, Int) -> Bool
 fun (#==): [T] -> (T, T) -> Bool
+fun (#!=): [T] -> (T, T) -> Bool
 
 fun (#&&): (Bool, Bool) -> Bool
 fun (#||): (Bool, Bool) -> Bool

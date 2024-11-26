@@ -1,6 +1,7 @@
 :js
 :bbml
 //│ Type: ⊤
+//│ Type: ⊤
 
 :sjs
 42
@@ -15,6 +16,23 @@
 //│ 1 + 1
 //│ = 2
 //│ Type: Int
+
+
+:sjs
+1.0 +. 2.14
+//│ JS:
+//│ 1.0 + 2.14
+//│ = 3.14
+//│ Type: Num
+
+
+:sjs
+let x = 1 in x + 1
+//│ JS:
+//│ this.x = 1; this.x + 1
+//│ = 2
+//│ Type: Int
+
 
 :sjs
 "abc"
@@ -39,7 +57,38 @@ false
 //│   return x;
 //│ }
 //│ = [Function (anonymous)]
-//│ Type: forall T2_2: (T2_2) ->{⊥} T2_2
+//│ Type: forall T3_2: (T3_2) ->{⊥} T3_2
+
+
+:sjs
+class Foo(x: Int)
+//│ JS:
+//│ this.Foo = function Foo(x1) { return new Foo.class(x1); };
+//│ this.Foo.class = class Foo {
+//│   constructor(x) {
+//│     this.x = x;
+//│     
+//│   }
+//│   toString() { return "Foo(" + this.x + ")"; }
+//│ };
+//│ undefined
+//│ Type: ⊤
+
+
+:sjs
+new Foo(42)
+//│ JS:
+//│ new this.Foo.class(42)
+//│ = Foo { x: 42 }
+//│ Type: Foo
+
+
+:sjs
+let foo = new Foo(42) in foo.Foo#x
+//│ JS:
+//│ let tmp; tmp = new this.Foo.class(42); this.foo = tmp; this.foo.x
+//│ = 42
+//│ Type: Int
 
 
 :sjs

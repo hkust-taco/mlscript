@@ -1,5 +1,6 @@
 :bbml
 //│ Type: ⊤
+//│ Type: ⊤
 :parseOnly
 
 class Foo

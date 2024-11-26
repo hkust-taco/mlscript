@@ -9,14 +9,16 @@ import hkmc2.bbml.*
 abstract class BbmlDiffMaker extends JSBackendDiffMaker:
   
   val bbPreludeFile = file / os.up / os.RelPath("bbPrelude.mls")
+  val bbPredefFile = file / os.up / os.RelPath("bbPredef.mls")
   
   val bbmlOpt = new NullaryCommand("bbml"):
     override def onSet(): Unit =
       super.onSet()
       if isGlobal then typeCheck.disable.isGlobal = true
       typeCheck.disable.setCurrentValue(())
-      if file =/= bbPreludeFile then
+      if file =/= bbPreludeFile && file =/= bbPredefFile then
         importFile(bbPreludeFile, verbose = false)
+        importFile(bbPredefFile, verbose = false)
   
   
   lazy val bbCtx =
