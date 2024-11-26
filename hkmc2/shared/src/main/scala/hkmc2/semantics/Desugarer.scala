@@ -388,7 +388,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
         val aliasSymbol = VarSymbol(id)
         val ctxWithAlias = ctx + (nme -> aliasSymbol)
         Split.Let(aliasSymbol, ref, sequel(ctxWithAlias) ++ fallback)
-      case ctor @ (_: Ident | _: Sel) => fallback => ctx =>
+      case ctor @ (_: Ident | _: Sel | _: UserSel) => fallback => ctx =>
         val clsTrm = elaborator.cls(ctor)
         clsTrm.symbol.flatMap(_.asClsLike) match
         case S(cls: ClassSymbol) =>
@@ -448,7 +448,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
           wrap(subMatches(matches, sequel)(Split.End)(ctx))
         ) ~: fallback
       // A single constructor pattern.
-      case pat @ App(ctor @ (_: Ident | _: Sel), Tup(args)) => fallback => ctx => trace(
+      case pat @ App(ctor @ (_: Ident | _: Sel | _: UserSel), Tup(args)) => fallback => ctx => trace(
         pre = s"expandMatch <<< ${ctor}(${args.iterator.map(_.showDbg).mkString(", ")})",
         post = (r: Split) => s"expandMatch >>> ${r.showDbg}"
       ):

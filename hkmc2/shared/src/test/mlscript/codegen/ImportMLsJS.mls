@@ -52,7 +52,7 @@ new Option.Some(1) String()
 //│ Parsed tree:
 //│ New of Jux:
 //│   lhs = App:
-//│     lhs = Sel:
+//│     lhs = UserSel:
 //│       prefix = Ident of "Option"
 //│       name = Ident of "Some"
 //│     rhs = Tup of Ls of 

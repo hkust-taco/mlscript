@@ -112,6 +112,15 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
           case S(index) => s"[$index]"
           case N => s"[${JSBuilder.makeStringLiteral(name)}]"
       }"
+    case UserSelect(qual, id) =>
+      val name = id.name
+      doc"${result(qual)}${
+        if JSBuilder.isValidFieldName(name)
+        then doc".$name"
+        else name.toIntOption match
+          case S(index) => s"[$index]"
+          case N => s"[${JSBuilder.makeStringLiteral(name)}]"
+      }"
     case Instantiate(cls, as) =>
       doc"new ${result(cls)}(${as.map(result).mkDocument(", ")})"
     case Value.Arr(es) =>

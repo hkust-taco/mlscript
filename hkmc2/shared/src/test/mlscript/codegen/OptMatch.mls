@@ -102,7 +102,7 @@ fun keepIfGreaterThan(x, y) =
   . keepIfGreaterThan(0)
   . isDefined()
   . console.log()
-//│ /!!!\ Uncaught error: scala.MatchError: OpBlock(List((Ident(.),App(Ident(keepIfGreaterThan),Tup(List(IntLit(0))))), (Ident(.),App(Ident(isDefined),Tup(List()))), (Ident(.),App(Sel(Ident(console),Ident(log)),Tup(List()))))) (of class hkmc2.syntax.Tree$OpBlock)
+//│ /!!!\ Uncaught error: scala.MatchError: OpBlock(List((Ident(.),App(Ident(keepIfGreaterThan),Tup(List(IntLit(0))))), (Ident(.),App(Ident(isDefined),Tup(List()))), (Ident(.),App(UserSel(Ident(console),Ident(log)),Tup(List()))))) (of class hkmc2.syntax.Tree$OpBlock)
 
 
 :todo

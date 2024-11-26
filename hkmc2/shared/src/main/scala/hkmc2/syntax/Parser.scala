@@ -775,11 +775,11 @@ abstract class Parser(
       case (SPACE, l0) :: _ =>
         consume
         acc match // TODO: looks fishy. a better way?
-          case Sel(reg, Ident("ref")) => RegRef(reg, simpleExprImpl(0))
+          case UserSel(reg, Ident("ref")) => RegRef(reg, simpleExprImpl(0))
           case _ => exprCont(acc, prec, allowNewlines)
       case (SELECT(name), l0) :: _ => // TODO precedence?
         consume
-        exprCont(Sel(acc, new Ident(name).withLoc(S(l0))), prec, allowNewlines)
+        exprCont(UserSel(acc, new Ident(name).withLoc(S(l0))), prec, allowNewlines)
         /*
       // case (br @ BRACKETS(Indent, (SELECT(name), l0) :: toks), _) :: _ =>
       case (br @ BRACKETS(Indent, (SELECT(name), l0) :: toks), _) :: _ if prec <= 1 =>

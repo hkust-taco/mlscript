@@ -283,6 +283,10 @@ class Lowering(using TL, Raise, Elaborator.State):
       subTerm(prefix): p =>
         k(Select(p, nme))
         
+    case UserSel(prefix, nme) =>
+      subTerm(prefix): p =>
+        k(UserSelect(p, nme))
+        
     case New(cls, as) =>
       subTerm(cls): sr =>
         def rec(as: Ls[st], asr: Ls[Path]): Block = as match

@@ -251,6 +251,10 @@ extends Importer:
       Term.SelProj(term(pre), term(idn), idp)
     case App(Ident("#"), Tree.Tup(Sel(pre, Ident(name)) :: App(Ident(proj), args) :: Nil)) =>
       term(App(App(Ident("#"), Tree.Tup(Sel(pre, Ident(name)) :: Ident(proj) :: Nil)), args))
+    case App(Ident("#"), Tree.Tup(UserSel(pre, idn: Ident) :: (idp: Ident) :: Nil)) =>
+      Term.SelProj(term(pre), term(idn), idp)
+    case App(Ident("#"), Tree.Tup(UserSel(pre, Ident(name)) :: App(Ident(proj), args) :: Nil)) =>
+      term(App(App(Ident("#"), Tree.Tup(UserSel(pre, Ident(name)) :: Ident(proj) :: Nil)), args))
     case App(Ident("!"), Tree.Tup(rhs :: Nil)) =>
       Term.Deref(term(rhs))
     case App(Ident("~"), Tree.Tup(rhs :: Nil)) =>
@@ -296,6 +300,10 @@ extends Importer:
       val preTrm = term(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
       Term.Sel(preTrm, nme)(sym)
+    case UserSel(pre, nme) =>
+      val preTrm = term(pre)
+      val sym = resolveField(nme, preTrm.symbol, nme)
+      Term.UserSel(preTrm, nme)(sym)
     case tree @ Tup(fields) =>
       Term.Tup(fields.map(fld(_)))(tree)
     case New(body) =>

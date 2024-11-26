@@ -137,6 +137,8 @@ abstract class Path extends Result
 
 case class Select(qual: Path, name: Tree.Ident) extends Path
 
+case class UserSelect(qual: Path, name: Tree.Ident) extends Path
+
 enum Value extends Path:
   case Ref(l: Local)
   case This(sym: InnerSymbol) // TODO rm – just use Ref
