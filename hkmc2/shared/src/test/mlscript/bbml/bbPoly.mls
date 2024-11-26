@@ -1,7 +1,7 @@
 :bbml
 //│ Type: ⊤
-//│ Type: ⊤
 
+//│ Type: ⊤
 
 42: [A] -> Int
 //│ Type: Int

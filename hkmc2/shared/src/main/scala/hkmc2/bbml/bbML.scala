@@ -65,7 +65,7 @@ object BbCtx:
   def init(raise: Raise)(using Elaborator.State, Elaborator.Ctx): BbCtx =
     new BbCtx(raise, summon, None, 1, HashMap.empty)
 
-  val builtinOps = Set("+", "-", "*", "/", "<", ">", "<=", ">=", "==", "&&", "||")
+  val builtinOps = Set("+", "-", "*", "/", "<", ">", "<=", ">=", "==", "!=", "&&", "||")
 end BbCtx
 
 
@@ -443,6 +443,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             goStats(stats)
           case (clsDef: ClassDef) :: stats =>
             goStats(stats)
+          case Import(sym, pth) :: stats =>
+            goStats(stats) // TODO:
         goStats(stats)
         val (ty, eff) = typeCheck(res)
         (ty, effBuff.foldLeft(eff)((res, e) => res | e))

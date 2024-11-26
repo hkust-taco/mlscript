@@ -1,7 +1,7 @@
 :bbml
 //│ Type: ⊤
-//│ Type: ⊤
 
+//│ Type: ⊤
 
 fun power: [C] -> CodeBase[out Num, out C, out Any] -> Int -> CodeBase[out Num, out C, out Any]
 fun power(x) = case

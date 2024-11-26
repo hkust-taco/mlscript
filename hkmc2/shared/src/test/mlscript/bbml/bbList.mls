@@ -1,7 +1,7 @@
 :bbml
 //│ Type: ⊤
-//│ Type: ⊤
 
+//│ Type: ⊤
 
 
 class List[A](inspect: [E, Res] -> (() ->{E} Res, (A, List[A]) ->{E} Res) ->{E} Res)

@@ -1,7 +1,7 @@
 :bbml
 //│ Type: ⊤
-//│ Type: ⊤
 
+//│ Type: ⊤
 
 region x in 42
 //│ Type: Int

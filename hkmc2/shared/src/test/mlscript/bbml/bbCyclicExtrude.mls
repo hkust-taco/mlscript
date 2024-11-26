@@ -1,7 +1,7 @@
 :bbml
 //│ Type: ⊤
-//│ Type: ⊤
 
+//│ Type: ⊤
 
 
 let f = (x => (x : [A] -> A -> A)) in f

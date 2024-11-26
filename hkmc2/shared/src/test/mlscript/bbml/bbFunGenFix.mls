@@ -1,8 +1,8 @@
 :global
 :bbml
 //│ Type: ⊤
-//│ Type: ⊤
 
+//│ Type: ⊤
 
 class Reg[out Rg, out AccI]
 //│ Type: ⊤

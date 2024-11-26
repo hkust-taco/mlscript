@@ -1,7 +1,7 @@
 :bbml
 //│ Type: ⊤
-//│ Type: ⊤
 
+//│ Type: ⊤
 
 fun add: (Int, Int) -> Int
 fun add(x, y) = x + y
@@ -119,7 +119,7 @@ fun baz(z) =
 
 :e
 baz: Int -> (([A] -> A -> A), Int) -> Int
-//│ ╔══[ERROR] Cannot type non-function term Sel(Ref(globalThis:block#17),Ident(baz)) as (Int) ->{⊥} (forall A27_2: (A27_2) ->{⊥} A27_2, Int) ->{⊥} Int
+//│ ╔══[ERROR] Cannot type non-function term Sel(Ref(globalThis:block#18),Ident(baz)) as (Int) ->{⊥} (forall A27_2: (A27_2) ->{⊥} A27_2, Int) ->{⊥} Int
 //│ ║  l.121: 	baz: Int -> (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^
 //│ Type: ⊥
@@ -130,7 +130,7 @@ baz(42)
 
 :e
 baz(42): (([A] -> A -> A), Int) -> Int
-//│ ╔══[ERROR] Cannot type non-function term App(Sel(Ref(globalThis:block#17),Ident(baz)),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))) as (forall A28_2: (A28_2) ->{⊥} A28_2, Int) ->{⊥} Int
+//│ ╔══[ERROR] Cannot type non-function term App(Sel(Ref(globalThis:block#18),Ident(baz)),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))) as (forall A28_2: (A28_2) ->{⊥} A28_2, Int) ->{⊥} Int
 //│ ║  l.132: 	baz(42): (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^^^^^
 //│ Type: ⊥

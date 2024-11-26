@@ -1,7 +1,7 @@
 :bbml
 //│ Type: ⊤
-//│ Type: ⊤
 
+//│ Type: ⊤
 fun f(y) =
   let local = ((x => y(x) + 1): [A] -> A -> Int) in y
 //│ Type: ⊤

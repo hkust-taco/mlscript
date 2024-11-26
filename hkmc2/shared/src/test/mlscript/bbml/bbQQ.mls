@@ -1,7 +1,7 @@
 :bbml
 //│ Type: ⊤
-//│ Type: ⊤
 
+//│ Type: ⊤
 
 `42
 //│ Type: CodeBase[out Int, ⊥, ?]

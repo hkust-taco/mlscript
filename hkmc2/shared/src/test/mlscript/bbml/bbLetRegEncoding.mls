@@ -1,7 +1,7 @@
 :bbml
 //│ Type: ⊤
-//│ Type: ⊤
 
+//│ Type: ⊤
 
 
 fun letreg: [E,Res] -> ([R] -> Region[R] ->{E | R} Res) ->{E} Res

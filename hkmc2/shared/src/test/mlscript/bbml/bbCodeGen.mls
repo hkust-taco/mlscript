@@ -1,6 +1,7 @@
 :js
 :bbml
 //│ Type: ⊤
+
 //│ Type: ⊤
 
 :sjs
@@ -103,10 +104,9 @@ fun inc(x) = x + 1
 //│ Type: ⊤
 
 
-:fixme
 :sjs
 inc(41)
 //│ JS:
 //│ this.inc(41)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkArgs')
+//│ = 42
 //│ Type: Int

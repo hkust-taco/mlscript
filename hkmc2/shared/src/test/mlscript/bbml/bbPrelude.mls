@@ -6,7 +6,7 @@ class CodeBase[T, C, S]
 class Region[T]
 class Ref[T, S]
 
-class Str(concat: Str -> Str)
+class Str(length: Int, concat: Str -> Str)
 
 class Error(msg: Str)
 

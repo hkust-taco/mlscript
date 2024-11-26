@@ -1,7 +1,7 @@
 :bbml
 //│ Type: ⊤
-//│ Type: ⊤
 
+//│ Type: ⊤
 
 fun foo: Int ->{Int} Int
 //│ Type: ⊤
