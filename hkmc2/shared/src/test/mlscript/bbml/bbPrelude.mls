@@ -8,6 +8,8 @@ class Ref[T, S]
 
 class Str(concat: Str -> Str)
 
+class Error(msg: Str)
+
 fun run: [T] -> CodeBase[out T, out Nothing, out Any] -> T
 fun log: Str -> Any
 fun error: Nothing

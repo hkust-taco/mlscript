@@ -51,6 +51,7 @@ object BbCtx:
   def numTy(using ctx: BbCtx): Type = ClassLikeType(ctx.getCls("Num").get, Nil)
   def strTy(using ctx: BbCtx): Type = ClassLikeType(ctx.getCls("Str").get, Nil)
   def boolTy(using ctx: BbCtx): Type = ClassLikeType(ctx.getCls("Bool").get, Nil)
+  def errTy(using ctx: BbCtx): Type = ClassLikeType(ctx.getCls("Error").get, Nil)
   private def codeBaseTy(ct: TypeArg, cr: TypeArg, isVar: TypeArg)(using ctx: BbCtx): Type =
     ClassLikeType(ctx.getCls("CodeBase").get, ct :: cr :: isVar :: Nil)
   def codeTy(ct: Type, cr: Type)(using ctx: BbCtx): Type =
@@ -551,6 +552,10 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         (BbCtx.codeTy(ty, ctxTy), eff)
       case _: Term.Unquoted =>
         (error(msg"Unquote should nest in quasiquote" -> t.toLoc :: Nil), Bot)
+      case Throw(e) =>
+        val (ty, eff) = typeCheck(e)
+        constrain(tryMkMono(ty, e), BbCtx.errTy)
+        (Bot, eff)
       case Term.Error =>
         (Bot, Bot) // TODO: error type?
       case _ =>

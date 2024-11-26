@@ -271,3 +271,14 @@ g => (new Foo(g)).Foo#x
 //│ Type: (α87_1 -> α87_1) ->{⊥} (α87_1) ->{⊥} α87_1
 
 
+throw new Error("oops")
+//│ Type: ⊥
+
+
+:e
+throw 42
+//│ ╔══[ERROR] Type error in throw
+//│ ║  l.279: 	throw 42
+//│ ║         	      ^^
+//│ ╙── because: cannot constrain  Int  <:  Error
+//│ Type: ⊥

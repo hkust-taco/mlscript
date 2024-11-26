@@ -70,6 +70,7 @@ enum Term extends Statement:
     case RegRef(reg, value) => "reference creation"
     case Assgn(lhs, rhs) => "assignment"
     case Deref(ref) => "dereference"
+    case Throw(e) => "throw"
 end Term
 
 import Term.*
