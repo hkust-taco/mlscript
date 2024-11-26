@@ -26,7 +26,12 @@ final case class BbCtx(
   env: HashMap[Uid[Symbol], GeneralType]
 ):
   def +=(p: Symbol -> GeneralType): Unit = env += p._1.uid -> p._2
-  def get(sym: Symbol): Option[GeneralType] = env.get(sym.uid) orElse parent.dlof(_.get(sym))(None)
+  def get(sym: Symbol): Option[GeneralType] =
+    if BbCtx.builtinOps(sym.nme) then ctx.get(s"#${sym.nme}") match
+      case S(Ctx.SelElem(_, _, symOpt)) => symOpt.flatMap(getImpl(_))
+      case _ => N
+    else getImpl(sym)
+  private def getImpl(sym: Symbol): Option[GeneralType] = env.get(sym.uid) orElse parent.dlof(_.getImpl(sym))(None)
   def getCls(name: Str): Option[TypeSymbol] =
     for
       elem <- ctx.get(name)
@@ -58,6 +63,8 @@ object BbCtx:
     ClassLikeType(ctx.getCls("Ref").get, Wildcard(ct, ct) :: Wildcard.out(sk) :: Nil)
   def init(raise: Raise)(using Elaborator.State, Elaborator.Ctx): BbCtx =
     new BbCtx(raise, summon, None, 1, HashMap.empty)
+
+  val builtinOps = Set("+", "-", "*", "/", "<", ">", "<=", ">=", "==", "&&", "||")
 end BbCtx
 
 
@@ -190,6 +197,10 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       case _: UnitLit => Top
       case _: BoolLit => BbCtx.boolTy), Bot, Bot)
     case Ref(sym: Symbol) if sym.nme === "error" => (Bot, Bot, Bot)
+    case Ref(sym: Symbol) if BbCtx.builtinOps(sym.nme) => ctx.get(sym) match
+      case S(ty) => (tryMkMono(ty, code), Bot, Bot)
+      case N =>
+        (error(msg"Cannot quote operator ${sym.nme}" -> code.toLoc :: Nil), Bot, Bot)
     case Lam(params, body) =>
       val nestCtx = ctx.nextLevel
       given BbCtx = nestCtx

@@ -1,0 +1,63 @@
+:js
+:bbml
+//│ Type: ⊤
+
+:sjs
+42
+//│ JS:
+//│ 42
+//│ = 42
+//│ Type: Int
+
+:sjs
+1 + 1
+//│ JS:
+//│ 1 + 1
+//│ = 2
+//│ Type: Int
+
+:sjs
+"abc"
+//│ JS:
+//│ "abc"
+//│ = 'abc'
+//│ Type: Str
+
+:sjs
+false
+//│ JS:
+//│ false
+//│ = false
+//│ Type: Bool
+
+:sjs
+(x => x): [T] -> T -> T
+//│ JS:
+//│ (...args) => {
+//│   globalThis.Predef.checkArgs("", 1, args.length);
+//│   let x = args[0];
+//│   return x;
+//│ }
+//│ = [Function (anonymous)]
+//│ Type: forall T2_2: (T2_2) ->{⊥} T2_2
+
+
+:sjs
+fun inc(x) = x + 1
+//│ JS:
+//│ function inc(...args) {
+//│   globalThis.Predef.checkArgs("inc", 1, args.length);
+//│   let x = args[0];
+//│   return x + 1;
+//│ }
+//│ undefined
+//│ Type: ⊤
+
+
+:fixme
+:sjs
+inc(41)
+//│ JS:
+//│ this.inc(41)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkArgs')
+//│ Type: Int
