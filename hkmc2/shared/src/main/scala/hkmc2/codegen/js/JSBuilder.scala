@@ -94,10 +94,15 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
       err(msg"Illeal arity for builtin symbol '${l.nme}'")
     
     case Call(fun, args) =>
-      val base = fun match
-        case _: Value.Lam => doc"(${result(fun)})"
-        case _ => result(fun)
-      doc"${base}(${args.map(result).mkDocument(", ")})"
+      val argDoc = doc"(${args.map(result).mkDocument(", ")})"
+      fun match
+        case _: Value.Lam => doc"(${result(fun)})$argDoc"
+        case UserSelect(path, id) =>
+          val pathDoc = result(path)
+          val name = id.name
+          doc"(() => {if (${JSBuilder.makeStringLiteral(name)} in ${pathDoc}) { return $pathDoc.${id.name}$argDoc } else { throw new globalThis.Error(${JSBuilder.makeStringLiteral(s"Field not found: $name") })}})()"
+        case _ => doc"${result(fun)}$argDoc"
+      // doc"${base}(${args.map(result).mkDocument(", ")})"
     case Value.Lam(ps, bod) => scope.nest givenIn:
       val (params, bodyDoc) = setupFunction(none, ps, bod)
       doc"($params) => { #{  # ${
@@ -114,15 +119,20 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
       }"
     case UserSelect(qual, id) =>
       val name = id.name
-      doc"${result(qual)}${
-        if JSBuilder.isValidFieldName(name)
-        then doc".$name"
-        else name.toIntOption match
-          case S(index) => s"[$index]"
-          case N => s"[${JSBuilder.makeStringLiteral(name)}]"
-      }"
+      val nameStr = JSBuilder.makeStringLiteral(name)
+      val qualDoc = result(qual)
+      if JSBuilder.isValidFieldName(name)
+      then doc"(() => {if ($nameStr in $qualDoc) {return $qualDoc.$name} else {throw new globalThis.Error(${JSBuilder.makeStringLiteral(s"Field not found: $name")})}})()"
+      else name.toIntOption match
+        case S(index) => s"$qualDoc[$index]"
+        case N => s"$qualDoc[${JSBuilder.makeStringLiteral(name)}]"
     case Instantiate(cls, as) =>
-      doc"new ${result(cls)}(${as.map(result).mkDocument(", ")})"
+      val argDoc = doc"(${as.map(result).mkDocument(", ")})"
+      cls match
+        case UserSelect(path, id) => val pathDoc = result(path)
+          val name = id.name
+          doc"(() => {if (${JSBuilder.makeStringLiteral(name)} in ${pathDoc}) { return new $pathDoc.${id.name}$argDoc } else { throw new globalThis.Error(${JSBuilder.makeStringLiteral(s"Field not found: $name") })}})()"
+        case _ => doc"new ${result(cls)}$argDoc"
     case Value.Arr(es) =>
       doc"[ #{  # ${es.map(result).mkDocument(doc", # ")} #}  # ]"
   def returningTerm(t: Block)(using Raise, Scope): Document = t match
