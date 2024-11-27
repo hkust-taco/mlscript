@@ -314,10 +314,10 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
         val v = doc"this.${getVar(i._1)}"
         doc"""$v = await import("${i._2.toString
           }"); # if ($v.default !== undefined) $v = $v.default;"""
-    val traceLoggerSymbol = semantics.TempSymbol(N, "traceLogger")
-    val traceLoggerStr = Scope.scope.allocateName(traceLoggerSymbol)
+    // val traceLoggerSymbol = semantics.TempSymbol(N, "traceLogger")
+    // val traceLoggerStr = Scope.scope.allocateName(traceLoggerSymbol)
     imps.mkDocument(doc" # ") :: 
-      (if !compilingFile then doc"let $traceLoggerStr = new Predef.TraceLogger(); # " else "") :/: 
+      (if !compilingFile && false then doc"let = new Predef.TraceLogger(); # " else "") :/: 
       block(p.main) :: (
         exprt match
           case S(e) => doc"\nexport default ${e};\n"
@@ -447,7 +447,14 @@ trait JSBuilderSanityChecks
       val paramsAssign = paramsList.zipWithIndex.map{(nme, i) =>
         doc"let ${nme} = ${paramsStr}[$i];\n"}.mkDocument("")
       val preParams = if paramsList.isEmpty then doc"" else paramsList.map(p => doc"globalThis.JSON.stringify($p)").mkDocument("+ \" with \" + ", " + \", \" + ", Document.empty)
-      val pre = doc"${JSBuilder.makeStringLiteral(s"calling $functionName")}$preParams"
-      (doc"...$paramsStr", doc"$checkArgsNum$paramsAssign\nreturn traceLogger.trace($pre, () => { #  #{ ${this.body(body)} #}  # }, (p) => { return ${JSBuilder.makeStringLiteral("return ")} + p; }) ")
+      // val pre = doc"${JSBuilder.makeStringLiteral(s"calling $functionName")}$preParams"
+      (doc"...$paramsStr",
+        doc"$checkArgsNum$paramsAssign\n" ::
+        doc"let prevIndent = Predef.TraceLogger.indent;\n" ::
+        doc"Predef.TraceLogger.log(${JSBuilder.makeStringLiteral("calling ")} + $functionName $preParams);\n" ::
+        doc"Predef.TraceLogger.indent = Predef.TraceLogger.indent + 1;\n" ::
+        doc"let res = (() => {${this.body(body)}})();\n" ::
+        doc"Predef.TraceLogger.indent = prevIndent;\n" ::
+        doc"Predef.TraceLogger.log(${JSBuilder.makeStringLiteral("return ")} + res);\nreturn res\n")
     else
       super.setupFunction(name, params, body)
