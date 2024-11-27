@@ -224,8 +224,18 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
             doc" # const $proxy = this; # ${res.stripBreaks}${returningTerm(rst)}"
           case _ => doc"$res${returningTerm(rst)}"
       doc" # ${resJS}"
-    case Return(res, true) => doc" # ${result(res)}"
-    case Return(res, false) => doc" # return ${result(res)};"
+    case Return(res, true) =>
+      // val resSym = semantics.TempSymbol(N, "res")
+      // val resStr = scope.allocateName(resSym)
+      // doc" # const $resStr = ${result(res)}; # Predef.TraceLogger.indent = prevIndent; # Predef.TraceLogger.log(${JSBuilder.makeStringLiteral("return ")} + $resStr); # ${resStr}"
+      doc" # ${result(res)}"
+    case Return(res, false) =>
+      // val resSym = semantics.TempSymbol(N, "res")
+      // val resStr = scope.allocateName(resSym)
+      // // doc" # const $resStr = ${result(res)}; # return ${resStr}"
+      // doc" # const $resStr = ${result(res)}; # Predef.TraceLogger.indent = prevIndent; # Predef.TraceLogger.log(${JSBuilder.makeStringLiteral("return ")} + $resStr); # return ${resStr}"
+      // // doc" # return ${result(res)};"
+      setupReturn(res)
     
     // TODO factor out common logic
     case Match(scrut, Case.Lit(syntax.Tree.BoolLit(true)) -> trm :: Nil, els, rest) =>
@@ -339,6 +349,9 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
   def setupFunction(name: Option[Str], params: List[semantics.Param], body: Block)(using Raise, Scope): (Document, Document) =
     val paramsList = params.map(p => scope.allocateName(p.sym)).mkDocument(", ")
     (paramsList, this.body(body))
+    
+  def setupReturn(res: Result)(using Raise, Scope): Document =
+    doc" # return ${result(res)};"
 
 
 
@@ -453,8 +466,16 @@ trait JSBuilderSanityChecks
         doc"let prevIndent = Predef.TraceLogger.indent;\n" ::
         doc"Predef.TraceLogger.log(${JSBuilder.makeStringLiteral("calling ")} + $functionName $preParams);\n" ::
         doc"Predef.TraceLogger.indent = Predef.TraceLogger.indent + 1;\n" ::
-        doc"let res = (() => {${this.body(body)}})();\n" ::
-        doc"Predef.TraceLogger.indent = prevIndent;\n" ::
-        doc"Predef.TraceLogger.log(${JSBuilder.makeStringLiteral("return ")} + res);\nreturn res\n")
+        doc"${this.body(body)}")
     else
       super.setupFunction(name, params, body)
+    
+  override def setupReturn(res: Result)(using Raise, Scope): Document =
+    if instrument then
+      val resStr = scope.allocateName(semantics.TempSymbol(N, "res"))
+      doc" # let $resStr = ${result(res)};" ::
+      doc" # Predef.TraceLogger.indent = prevIndent;" ::
+      doc" # Predef.TraceLogger.log(${JSBuilder.makeStringLiteral("return ")} + $resStr);" ::
+      doc" # return $resStr;"
+    else
+      super.setupReturn(res)
