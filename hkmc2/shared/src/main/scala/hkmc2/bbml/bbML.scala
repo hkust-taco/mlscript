@@ -535,7 +535,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         val sk = freshVar(N)
         constrain(tryMkMono(regTy, reg), BbCtx.regionTy(sk))
         (BbCtx.refTy(tryMkMono(valTy, value), sk), sk | (regEff | valEff))
-      case Term.Assgn(lhs, rhs) =>
+      case Term.SetRef(lhs, rhs) =>
         val (lhsTy, lhsEff) = typeCheck(lhs)
         val (rhsTy, rhsEff) = typeCheck(rhs)
         val sk = freshVar(N)

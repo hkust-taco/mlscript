@@ -203,7 +203,41 @@ fact(3)
 //│ Type: Int
 
 
-:todo
 :sjs
 region x in 42
-//│ /!!!\ Uncaught error: scala.MatchError: Region(x,Lit(IntLit(42))) (of class hkmc2.semantics.Term$Region)
+//│ JS:
+//│ let x; x = new this.Region(); 42
+//│ = 42
+//│ Type: Int
+
+
+:sjs
+region x in x
+//│ JS:
+//│ let x; x = new this.Region(); x
+//│ = Region {}
+//│ Type: Region[?]
+
+
+:sjs
+region x in x.ref 42
+//│ JS:
+//│ let x; x = new this.Region(); new this.Ref(x, 42)
+//│ = Ref { reg: Region {}, value: 42 }
+//│ Type: Ref[Int, ?]
+
+
+:sjs
+region x in let y = x.ref 42 in !y
+//│ JS:
+//│ let x, tmp; x = new this.Region(); tmp = new this.Ref(x, 42); this.y = tmp; this.y.value
+//│ = 42
+//│ Type: Int
+
+
+:sjs
+region x in let y = x.ref 42 in y := 0
+//│ JS:
+//│ let x, tmp; x = new this.Region(); tmp = new this.Ref(x, 42); this.y = tmp; this.y.value = 0; 0
+//│ = 0
+//│ Type: Int

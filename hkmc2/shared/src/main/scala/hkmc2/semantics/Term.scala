@@ -34,6 +34,7 @@ enum Term extends Statement:
   case RegRef(reg: Term, value: Term)
   case Assgn(lhs: Term, rhs: Term)
   case Deref(ref: Term)
+  case SetRef(ref: Term, value: Term)
   case Ret(result: Term)
   case Throw(result: Term)
   case Try(body: Term, finallyDo: Term)
@@ -69,6 +70,7 @@ enum Term extends Statement:
     case Region(name, body) => "region expression"
     case RegRef(reg, value) => "reference creation"
     case Assgn(lhs, rhs) => "assignment"
+    case SetRef(ref, value) => "set"
     case Deref(ref) => "dereference"
     case Throw(e) => "throw"
 end Term
@@ -105,6 +107,7 @@ sealed trait Statement extends AutoLocated:
     case Region(_, body) => body :: Nil
     case RegRef(reg, value) => reg :: value :: Nil
     case Assgn(lhs, rhs) => lhs :: rhs :: Nil
+    case SetRef(lhs, rhs) => lhs :: rhs :: Nil
     case Deref(term) => term :: Nil
     case TermDefinition(_, k, _, ps, sign, body, res, _) =>
       ps.toList.flatMap(_.subTerms) ::: sign.toList ::: body.toList
@@ -170,6 +173,7 @@ sealed trait Statement extends AutoLocated:
     case Region(name, body) => s"region ${name.nme} in ${body.showDbg}"
     case RegRef(reg, value) => s"(${reg.showDbg}).ref ${value.showDbg}"
     case Assgn(lhs, rhs) => s"${lhs.showDbg} := ${rhs.showDbg}"
+    case SetRef(lhs, rhs) => s"${lhs.showDbg} := ${rhs.showDbg}"
     case Deref(term) => s"!$term"
     case CompType(lhs, rhs, pol) => s"${lhs.showDbg} ${if pol then "|" else "&"} ${rhs.showDbg}"
     case Error => "<error>"

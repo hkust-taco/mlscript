@@ -4,7 +4,7 @@ class Alloc
 
 class CodeBase[T, C, S]
 class Region[T]
-class Ref[T, S]
+class Ref[T, S](reg: Region[T], value: S)
 
 class Str(length: Int, concat: Str -> Str)
 

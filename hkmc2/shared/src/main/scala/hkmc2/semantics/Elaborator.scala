@@ -246,7 +246,7 @@ extends Importer:
     case App(Ident("&"), Tree.Tup(lhs :: rhs :: Nil)) =>
       Term.CompType(term(lhs), term(rhs), false)
     case App(Ident(":="), Tree.Tup(lhs :: rhs :: Nil)) =>
-      Term.Assgn(term(lhs), term(rhs))
+      Term.SetRef(term(lhs), term(rhs))
     case App(Ident("#"), Tree.Tup(Sel(pre, idn: Ident) :: (idp: Ident) :: Nil)) =>
       Term.SelProj(term(pre), term(idn), idp)
     case App(Ident("#"), Tree.Tup(Sel(pre, Ident(name)) :: App(Ident(proj), args) :: Nil)) =>
