@@ -323,7 +323,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
     case Split.Else(alts) => sign match
       case S(sign) => ascribe(alts, sign)
       case _ => typeCheck(alts)
-    case Split.End => ???
+    case Split.End => (Bot, Bot)
 
   // * Note: currently, the returned type is not used or useful, but it could be in the future
   private def ascribe(lhs: Term, rhs: GeneralType)(using ctx: BbCtx): (GeneralType, Type) =

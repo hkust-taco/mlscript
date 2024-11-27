@@ -110,3 +110,100 @@ inc(41)
 //│ this.inc(41)
 //│ = 42
 //│ Type: Int
+
+
+:sjs
+if 1 == 2 then 0 else 42
+//│ JS:
+//│ let scrut; scrut = 1 == 2; if (scrut) { 0 } else { 42 }
+//│ = 42
+//│ Type: Int
+
+
+:sjs
+fun pow(x) = case
+  0 then 1
+  n then x * pow(x)(n-1)
+//│ JS:
+//│ function pow(...args) {
+//│   globalThis.Predef.checkArgs("pow", 1, args.length);
+//│   let x = args[0];
+//│   return (...args1) => {
+//│     globalThis.Predef.checkArgs("", 1, args1.length);
+//│     let caseScrut = args1[0];
+//│     let n, tmp, tmp1, tmp2;
+//│     if (caseScrut === 0) {
+//│       return 1;
+//│     } else {
+//│       n = caseScrut;
+//│       tmp = globalThis.pow(x);
+//│       tmp1 = n - 1;
+//│       tmp2 = tmp(tmp1);
+//│       return x * tmp2;
+//│     }
+//│   };
+//│ }
+//│ undefined
+//│ Type: ⊤
+
+
+:sjs
+fun not = case
+  true then false
+  false then true
+//│ JS:
+//│ Object.defineProperty(this, 'not', { get: function() { 
+//│   return (...args) => {
+//│     globalThis.Predef.checkArgs("", 1, args.length);
+//│     let caseScrut = args[0];
+//│     if (caseScrut) {
+//│       return false;
+//│     } else {
+//│       if (caseScrut === false) {
+//│         return true;
+//│       } else {
+//│         throw new globalThis.Error("match error");
+//│       }
+//│     }
+//│   }; }});
+//│ undefined
+//│ Type: ⊤
+
+
+not of false
+//│ = true
+//│ Type: Bool
+
+
+:sjs
+fun fact = case
+  0 then 1
+  n then n * fact(n - 1)
+//│ JS:
+//│ Object.defineProperty(this, 'fact', { get: function() { 
+//│   return (...args) => {
+//│     globalThis.Predef.checkArgs("", 1, args.length);
+//│     let caseScrut = args[0];
+//│     let n, tmp, tmp1;
+//│     if (caseScrut === 0) {
+//│       return 1;
+//│     } else {
+//│       n = caseScrut;
+//│       tmp = n - 1;
+//│       tmp1 = globalThis.fact(tmp);
+//│       return n * tmp1;
+//│     }
+//│   }; }});
+//│ undefined
+//│ Type: ⊤
+
+
+fact(3)
+//│ = 6
+//│ Type: Int
+
+
+:todo
+:sjs
+region x in 42
+//│ /!!!\ Uncaught error: scala.MatchError: Region(x,Lit(IntLit(42))) (of class hkmc2.semantics.Term$Region)

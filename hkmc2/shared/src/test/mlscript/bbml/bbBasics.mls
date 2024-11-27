@@ -282,3 +282,10 @@ throw 42
 //│ ║         	      ^^
 //│ ╙── because: cannot constrain  Int  <:  Error
 //│ Type: ⊥
+
+
+fun not = case
+  true then false
+  false then true
+not
+//│ Type: Bool -> Bool

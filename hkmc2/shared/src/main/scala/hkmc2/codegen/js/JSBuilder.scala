@@ -146,7 +146,8 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
             S(defn.sym).collectFirst{ case s: InnerSymbol => s }):
           defn match
           case FunDefn(sym, Nil, body) =>
-            TODO("getters")
+            val result = returningTerm(body)
+            doc"Object.defineProperty(this, '${sym.nme}', { #{  get: function() { ${result} } #} });"
           case FunDefn(sym, ParamList(_, ps) :: pss, bod) =>
             val result = pss.foldRight(bod):
               case (ParamList(_, ps), block) => 
