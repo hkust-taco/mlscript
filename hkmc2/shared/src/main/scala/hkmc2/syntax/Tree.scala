@@ -23,8 +23,9 @@ sealed trait Literal extends AutoLocated:
         case c if c.isControl => f"\\u${c.toInt}%04x"
         case c => c.toString
       .mkString("\"", "", "\"")
-    case UnitLit(value) => if value then "undefined" else "null"
+    case UnitLit(value) => if value then "null" else "null"
     case BoolLit(value) => value.toString
+    case UndefLit() => "undefined"
   
   def describeLit: Str =
     this.match
@@ -46,6 +47,7 @@ enum Tree extends AutoLocated:
   case DecLit(value: BigDecimal)      extends Tree with Literal
   case StrLit(value: Str)             extends Tree with Literal
   case UnitLit(undefinedOrNull: Bool) extends Tree with Literal
+  case UndefLit()                     extends Tree with Literal
   case BoolLit(value: Bool)           extends Tree with Literal
   case Block(stmts: Ls[Tree])(using State) extends Tree with semantics.BlockImpl
   case OpBlock(items: Ls[Tree -> Tree])

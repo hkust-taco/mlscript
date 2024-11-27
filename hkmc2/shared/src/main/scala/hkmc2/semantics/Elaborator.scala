@@ -83,6 +83,7 @@ object Elaborator:
     val suid = new Uid.Symbol.State
     val globalThisSymbol = TopLevelSymbol("globalThis")
     val seqSymbol = TermSymbol(ImmutVal, N, Ident(";"))
+    val eqSymbol = BuiltinSymbol("===", binary = true, unary = false, nullary = false)
     def init(using State): Ctx = Ctx.empty.copy(env = Map(
       "globalThis" -> globalThisSymbol,
     ))

@@ -285,7 +285,21 @@ class Lowering(using TL, Raise, Elaborator.State):
         
     case UserSel(prefix, nme) =>
       subTerm(prefix): p =>
-        k(UserSelect(p, nme))
+        val scrutSelChkSym = TempSymbol(N, "scrutSelChk")
+        val throwErr =
+          Throw(Instantiate(
+            Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Error")),
+            Value.Lit(syntax.Tree.StrLit(s"${nme.name} not found")) :: Nil))
+        Assign(
+          scrutSelChkSym,
+          Call(Value.Ref(State.eqSymbol), Arg(false, UserSelect(p, nme)) :: Arg(false, Value.Lit(Tree.UndefLit())) :: Nil),
+          Match(
+            Value.Ref(scrutSelChkSym),
+            (Case.Lit(Tree.BoolLit(true)) -> throwErr) :: Nil,
+            Some(k(UserSelect(p, nme))),
+            End()
+          )
+        )
         
     case New(cls, as) =>
       subTerm(cls): sr =>

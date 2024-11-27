@@ -52,7 +52,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val jsb = new JSBuilder with JSBuilderSanityChecks(noSanityCheck.isUnset)
       import semantics.*
       import codegen.*
-      val le = low.program(blk)
+      val le
+       = low.program(blk)
       if showLoweredTree.isSet then
         output(s"Lowered:")
         output(le.showAsTree)
@@ -83,6 +84,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
                     output(s"> ${line}")
               content match
               case "undefined" =>
+              case "null" =>
               case _ =>
                 expect.get match
                   case S(expected) if content != expected => raise:
