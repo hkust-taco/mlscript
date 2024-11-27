@@ -7,14 +7,27 @@
 :silent
 declare val console
 //│ JS:
-//│ undefined
+//│ null
 
 
 console.log("a")
 console.log("b")
 123
 //│ JS:
-//│ let tmp, tmp1; tmp = this.console.log("a"); tmp1 = this.console.log("b"); 123
+//│ let scrutSelChk, tmp, scrutSelChk1, tmp1;
+//│ scrutSelChk = this.console.log === undefined;
+//│ if (scrutSelChk) {
+//│   throw new this.Error("log not found");
+//│ } else {
+//│   tmp = ((this.console.log("a")) ?? null);
+//│   scrutSelChk1 = this.console.log === undefined;
+//│   if (scrutSelChk1) {
+//│     throw new this.Error("log not found");
+//│   } else {
+//│     tmp1 = ((this.console.log("b")) ?? null);
+//│     123
+//│   }
+//│ }
 //│ > a
 //│ > b
 //│ = 123
@@ -22,7 +35,14 @@ console.log("b")
 let l = console.log
 l(123)
 //│ JS:
-//│ this.l = this.console.log; this.l(123)
+//│ let scrutSelChk;
+//│ scrutSelChk = this.console.log === undefined;
+//│ if (scrutSelChk) {
+//│   throw new this.Error("log not found");
+//│ } else {
+//│   this.l = this.console.log;
+//│   ((this.l(123)) ?? null)
+//│ }
 //│ > 123
 //│ l = [Function: log]
 
@@ -34,7 +54,13 @@ l(123)
 
 console.log("a")
 //│ JS:
-//│ this.console.log("a")
+//│ let scrutSelChk;
+//│ scrutSelChk = this.console.log === undefined;
+//│ if (scrutSelChk) {
+//│   throw new this.Error("log not found");
+//│ } else {
+//│   ((this.console.log("a")) ?? null)
+//│ }
 //│ > a
 
 
@@ -46,14 +72,29 @@ let y = x + 1
 console.log("c")
 y * 2
 //│ JS:
-//│ let tmp, tmp1, tmp2, tmp3;
-//│ tmp = this.console.log("a");
-//│ this.x = 123;
-//│ tmp1 = this.console.log("b");
-//│ tmp2 = this.x + 1;
-//│ this.y = tmp2;
-//│ tmp3 = this.console.log("c");
-//│ this.y * 2
+//│ let scrutSelChk, tmp, scrutSelChk1, tmp1, tmp2, scrutSelChk2, tmp3;
+//│ scrutSelChk = this.console.log === undefined;
+//│ if (scrutSelChk) {
+//│   throw new this.Error("log not found");
+//│ } else {
+//│   tmp = ((this.console.log("a")) ?? null);
+//│   this.x = 123;
+//│   scrutSelChk1 = this.console.log === undefined;
+//│   if (scrutSelChk1) {
+//│     throw new this.Error("log not found");
+//│   } else {
+//│     tmp1 = ((this.console.log("b")) ?? null);
+//│     tmp2 = this.x + 1;
+//│     this.y = tmp2;
+//│     scrutSelChk2 = this.console.log === undefined;
+//│     if (scrutSelChk2) {
+//│       throw new this.Error("log not found");
+//│     } else {
+//│       tmp3 = ((this.console.log("c")) ?? null);
+//│       this.y * 2
+//│     }
+//│   }
+//│ }
 //│ > a
 //│ > b
 //│ > c

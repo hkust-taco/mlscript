@@ -34,7 +34,7 @@ class Foo(x: Int) { log("Hello!") }
 //│ ║  l.32: 	class Foo(x: Int) { log("Hello!") }
 //│ ╙──      	                    ^^^^^^^^^^^^^
 //│ JS:
-//│ this.<error> = class <error> { constructor() {  } toString() { return "<error>"; } }; undefined
+//│ this.<error> = class <error> { constructor() {  } toString() { return "<error>"; } }; null
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '<'
 
 
@@ -45,5 +45,9 @@ class Foo(x: Int) { log("Hello!") }
 :e
 class Foo(42)
 //│ /!!!\ Uncaught error: scala.MatchError: IntLit(42) (of class hkmc2.syntax.Tree$IntLit)
+
+
+
+
 
 

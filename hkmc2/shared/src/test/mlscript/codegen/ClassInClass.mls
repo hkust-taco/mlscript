@@ -22,7 +22,7 @@ class Outer(a, b) with
 //│   constructor(a, b) {
 //│     this.a = a;
 //│     this.b = b;
-//│     let tmp, tmp1, tmp2;
+//│     let tmp, scrutSelChk, tmp1, scrutSelChk1, tmp2;
 //│     
 //│     const this$Outer = this;
 //│     this.Inner = function Inner(c1) { return new Inner.class(c1); };
@@ -30,10 +30,10 @@ class Outer(a, b) with
 //│       constructor(c) {
 //│         this.c = c;
 //│         let tmp3, tmp4, tmp5;
-//│         tmp3 = globalThis.log(this$Outer.a);
-//│         tmp4 = globalThis.log(this.c);
-//│         tmp5 = this.i1(this$Outer.a);
-//│         globalThis.log(tmp5)
+//│         tmp3 = ((globalThis.log(this$Outer.a)) ?? null);
+//│         tmp4 = ((globalThis.log(this.c)) ?? null);
+//│         tmp5 = ((this.i1(this$Outer.a)) ?? null);
+//│         ((globalThis.log(tmp5)) ?? null)
 //│       }
 //│       i1(...args) {
 //│         globalThis.Predef.checkArgs("i1", 1, args.length);
@@ -46,28 +46,43 @@ class Outer(a, b) with
 //│       }
 //│       toString() { return "Inner(" + this.c + ")"; }
 //│     };
-//│     tmp = this.Inner(this.a);
+//│     tmp = ((this.Inner(this.a)) ?? null);
 //│     this.i = tmp;
-//│     tmp1 = globalThis.log(this.i.c);
-//│     tmp2 = this.i.i1(1);
-//│     globalThis.log(tmp2)
+//│     scrutSelChk = this.i.c === undefined;
+//│     if (scrutSelChk) {
+//│       throw new globalThis.Error("c not found");
+//│     } else {
+//│       tmp1 = ((globalThis.log(this.i.c)) ?? null);
+//│       scrutSelChk1 = this.i.i1 === undefined;
+//│       if (scrutSelChk1) {
+//│         throw new globalThis.Error("i1 not found");
+//│       } else {
+//│         tmp2 = ((this.i.i1(1)) ?? null);
+//│         ((globalThis.log(tmp2)) ?? null)
+//│       }
+//│     }
 //│   }
 //│   o1(...args) {
 //│     globalThis.Predef.checkArgs("o1", 1, args.length);
 //│     let c = args[0];
-//│     return this.Inner(c);
+//│     return ((this.Inner(c)) ?? null);
 //│   } 
 //│   o2(...args1) {
 //│     globalThis.Predef.checkArgs("o2", 2, args1.length);
 //│     let c1 = args1[0];
 //│     let d = args1[1];
-//│     let tmp;
-//│     tmp = this.Inner(c1);
-//│     return tmp.i1(d);
+//│     let tmp, scrutSelChk;
+//│     tmp = ((this.Inner(c1)) ?? null);
+//│     scrutSelChk = tmp.i1 === undefined;
+//│     if (scrutSelChk) {
+//│       throw new globalThis.Error("i1 not found");
+//│     } else {
+//│       return ((tmp.i1(d)) ?? null);
+//│     }
 //│   }
 //│   toString() { return "Outer(" + this.a + ", " + this.b + ")"; }
 //│ };
-//│ undefined
+//│ null
 
 
 val o = Outer(100, 200)

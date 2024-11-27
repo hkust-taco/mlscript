@@ -30,7 +30,7 @@ fun test(a) =
 //│     constructor(b) {
 //│       this.b = b;
 //│       let tmp;
-//│       tmp = globalThis.log(a);
+//│       tmp = ((globalThis.log(a)) ?? null);
 //│     }
 //│     f(...args1) {
 //│       globalThis.Predef.checkArgs("f", 1, args1.length);
@@ -56,13 +56,13 @@ fun test(a) =
 //│           e
 //│         ];
 //│       }
-//│       return h(d);
+//│       return ((h(d)) ?? null);
 //│     }
 //│     toString() { return "Inner(" + this.b + ")"; }
 //│   };
-//│   return Inner(42);
+//│   return ((Inner(42)) ?? null);
 //│ }
-//│ undefined
+//│ null
 
 let i = test(100)
 //│ > 100
@@ -91,10 +91,10 @@ fun test(a) =
 //│   C1.class = class C1 {
 //│     constructor(b) {
 //│       this.b = b;
-//│       Predef.print([
+//│       ((Predef.print([
 //│         a,
 //│         this.b
-//│       ])
+//│       ])) ?? null)
 //│     }
 //│     toString() { return "C1(" + this.b + ")"; }
 //│   };
@@ -102,21 +102,21 @@ fun test(a) =
 //│   C2.class = class C2 {
 //│     constructor(b) {
 //│       this.b = b;
-//│       Predef.print([
+//│       ((Predef.print([
 //│         a,
 //│         this.b
-//│       ])
+//│       ])) ?? null)
 //│     }
 //│     toString() { return "C2(" + this.b + ")"; }
 //│   };
-//│   tmp = C1(1);
-//│   tmp1 = C2(2);
+//│   tmp = ((C1(1)) ?? null);
+//│   tmp1 = ((C2(2)) ?? null);
 //│   return [
 //│     tmp,
 //│     tmp1
 //│   ];
 //│ }
-//│ undefined
+//│ null
 
 test(123)
 //│ > 123,1
@@ -138,7 +138,7 @@ Foo(123)
 //│ this.Foo.class = class Foo {
 //│   constructor(a) {
 //│     this.a = a;
-//│     this.foo()
+//│     ((this.foo()) ?? null)
 //│   }
 //│   foo(...args) {
 //│     globalThis.Predef.checkArgs("foo", 0, args.length);
@@ -153,12 +153,12 @@ Foo(123)
 //│       globalThis.Predef.checkArgs("baz", 0, args1.length);
 //│       return this$Foo.a;
 //│     }
-//│     tmp = bar();
-//│     return baz();
+//│     tmp = ((bar()) ?? null);
+//│     return ((baz()) ?? null);
 //│   }
 //│   toString() { return "Foo(" + this.a + ")"; }
 //│ };
-//│ this.Foo(123)
+//│ ((this.Foo(123)) ?? null)
 //│ = Foo { a: 123 }
 
 

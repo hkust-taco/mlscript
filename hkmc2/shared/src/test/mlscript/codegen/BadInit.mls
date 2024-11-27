@@ -14,7 +14,13 @@ module Bar with
 //│     this.x = 1;
 //│     const Baz$class = class Baz {
 //│       constructor() {
-//│         this.a = globalThis.Bar.x;
+//│         let scrutSelChk;
+//│         scrutSelChk = globalThis.Bar.x === undefined;
+//│         if (scrutSelChk) {
+//│           throw new globalThis.Error("x not found");
+//│         } else {
+//│           this.a = globalThis.Bar.x;
+//│         }
 //│       }
 //│       toString() { return "Baz"; }
 //│     };
@@ -25,7 +31,7 @@ module Bar with
 //│ };
 //│ this.Bar = new Bar$class;
 //│ this.Bar.class = Bar$class;
-//│ undefined
+//│ null
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
 
 

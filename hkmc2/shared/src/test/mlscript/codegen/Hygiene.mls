@@ -12,29 +12,41 @@ module Test with
 //│   }
 //│   foo(...args) {
 //│     globalThis.Predef.checkArgs("foo", 0, args.length);
-//│     return globalThis.Test.x;
+//│     let scrutSelChk;
+//│     scrutSelChk = globalThis.Test.x === undefined;
+//│     if (scrutSelChk) {
+//│       throw new globalThis.Error("x not found");
+//│     } else {
+//│       return globalThis.Test.x;
+//│     }
 //│   }
 //│   toString() { return "Test"; }
 //│ };
 //│ this.Test = new Test$class;
 //│ this.Test.class = Test$class;
-//│ undefined
+//│ null
 
 :sjs
 Test.foo()
 //│ JS:
-//│ this.Test.foo()
+//│ let scrutSelChk;
+//│ scrutSelChk = this.Test.foo === undefined;
+//│ if (scrutSelChk) {
+//│   throw new this.Error("foo not found");
+//│ } else {
+//│   ((this.Test.foo()) ?? null)
+//│ }
 //│ = 12
 
 :sjs
 val Test = "oops"
 //│ JS:
-//│ this.Test = "oops"; undefined
+//│ this.Test = "oops"; null
 //│ Test = 'oops'
 
 :fixme
 Test.foo()
-//│ ═══[RUNTIME ERROR] TypeError: this.Test.foo is not a function
+//│ ═══[RUNTIME ERROR] Error: foo not found
 
 
 // FIXME
@@ -50,7 +62,7 @@ f()
 //│   return this.x;
 //│ };
 //│ this.x = 2;
-//│ this.f()
+//│ ((this.f()) ?? null)
 //│ = 2
 //│ f = [Function (anonymous)]
 //│ x = 2
@@ -71,7 +83,7 @@ module Test with
 //│ };
 //│ this.Test = new Test$class;
 //│ this.Test.class = Test$class;
-//│ undefined
+//│ null
 
 Test.x
 //│ = 1

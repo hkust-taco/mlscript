@@ -16,7 +16,7 @@ class Foo()
 //│   }
 //│   toString() { return "Foo(" +  + ")"; }
 //│ };
-//│ undefined
+//│ null
 
 Foo
 //│ JS:
@@ -25,12 +25,18 @@ Foo
 
 Foo()
 //│ JS:
-//│ this.Foo()
+//│ ((this.Foo()) ?? null)
 //│ = Foo {}
 
 Foo.class
 //│ JS:
-//│ this.Foo.class
+//│ let scrutSelChk;
+//│ scrutSelChk = this.Foo.class === undefined;
+//│ if (scrutSelChk) {
+//│   throw new this.Error("class not found");
+//│ } else {
+//│   this.Foo.class
+//│ }
 //│ = [class Foo]
 
 
@@ -44,7 +50,7 @@ class Foo(a)
 //│   }
 //│   toString() { return "Foo(" + this.a + ")"; }
 //│ };
-//│ undefined
+//│ null
 
 Foo
 //│ JS:
@@ -53,12 +59,19 @@ Foo
 
 Foo(1)
 //│ JS:
-//│ this.Foo(1)
+//│ ((this.Foo(1)) ?? null)
 //│ = Foo { a: 1 }
 
 Foo(1).a
 //│ JS:
-//│ let tmp; tmp = this.Foo(1); tmp.a
+//│ let tmp, scrutSelChk;
+//│ tmp = ((this.Foo(1)) ?? null);
+//│ scrutSelChk = tmp.a === undefined;
+//│ if (scrutSelChk) {
+//│   throw new this.Error("a not found");
+//│ } else {
+//│   tmp.a
+//│ }
 //│ = 1
 
 fun foo(y) = Foo(y)
@@ -67,9 +80,9 @@ foo(27)
 //│ function foo(...args) {
 //│   globalThis.Predef.checkArgs("foo", 1, args.length);
 //│   let y = args[0];
-//│   return globalThis.Foo(y);
+//│   return ((globalThis.Foo(y)) ?? null);
 //│ }
-//│ this.foo(27)
+//│ ((this.foo(27)) ?? null)
 //│ = Foo { a: 27 }
 
 
@@ -84,54 +97,81 @@ class Foo(a, b)
 //│   }
 //│   toString() { return "Foo(" + this.a + ", " + this.b + ")"; }
 //│ };
-//│ undefined
+//│ null
 
 let foo = Foo
 //│ JS:
-//│ this.foo = this.Foo; undefined
+//│ this.foo = this.Foo; null
 //│ foo = [Function: Foo] { class: [class Foo] }
 
 let f = foo(1, 2)
 //│ JS:
-//│ let tmp; tmp = this.foo(1, 2); this.f = tmp; undefined
+//│ let tmp; tmp = ((this.foo(1, 2)) ?? null); this.f = tmp; null
 //│ f = Foo { a: 1, b: 2 }
 
 let f = new foo(1, 2)
 //│ JS:
-//│ let tmp; tmp = new this.foo(1, 2); this.f = tmp; undefined
+//│ let tmp; tmp = new this.foo(1, 2); this.f = tmp; null
 //│ f = Foo { a: 1, b: 2 }
 
 f.a
 //│ JS:
-//│ this.f.a
+//│ let scrutSelChk;
+//│ scrutSelChk = this.f.a === undefined;
+//│ if (scrutSelChk) {
+//│   throw new this.Error("a not found");
+//│ } else {
+//│   this.f.a
+//│ }
 //│ = 1
 
 f.b
 //│ JS:
-//│ this.f.b
+//│ let scrutSelChk;
+//│ scrutSelChk = this.f.b === undefined;
+//│ if (scrutSelChk) {
+//│   throw new this.Error("b not found");
+//│ } else {
+//│   this.f.b
+//│ }
 //│ = 2
 
 let f = Foo(1, 2)
 //│ JS:
-//│ let tmp; tmp = this.Foo(1, 2); this.f = tmp; undefined
+//│ let tmp; tmp = ((this.Foo(1, 2)) ?? null); this.f = tmp; null
 //│ f = Foo { a: 1, b: 2 }
 
 f.a
 //│ JS:
-//│ this.f.a
+//│ let scrutSelChk;
+//│ scrutSelChk = this.f.a === undefined;
+//│ if (scrutSelChk) {
+//│   throw new this.Error("a not found");
+//│ } else {
+//│   this.f.a
+//│ }
 //│ = 1
 
 f.b
 //│ JS:
-//│ this.f.b
+//│ let scrutSelChk;
+//│ scrutSelChk = this.f.b === undefined;
+//│ if (scrutSelChk) {
+//│   throw new this.Error("b not found");
+//│ } else {
+//│   this.f.b
+//│ }
 //│ = 2
 
 Foo(log(1), log(2))
 //│ JS:
-//│ let tmp, tmp1; tmp = this.log(1); tmp1 = this.log(2); this.Foo(tmp, tmp1)
+//│ let tmp, tmp1;
+//│ tmp = ((this.log(1)) ?? null);
+//│ tmp1 = ((this.log(2)) ?? null);
+//│ ((this.Foo(tmp, tmp1)) ?? null)
 //│ > 1
 //│ > 2
-//│ = Foo { a: undefined, b: undefined }
+//│ = Foo { a: null, b: null }
 
 
 class Inner(c) with
@@ -142,7 +182,7 @@ class Inner(c) with
 //│ this.Inner.class = class Inner {
 //│   constructor(c) {
 //│     this.c = c;
-//│     globalThis.log(this.c)
+//│     ((globalThis.log(this.c)) ?? null)
 //│   }
 //│   i1(...args) {
 //│     globalThis.Predef.checkArgs("i1", 1, args.length);
@@ -151,17 +191,23 @@ class Inner(c) with
 //│   }
 //│   toString() { return "Inner(" + this.c + ")"; }
 //│ };
-//│ undefined
+//│ null
 
 let i = new Inner(100)
 //│ JS:
-//│ let tmp; tmp = new this.Inner.class(100); this.i = tmp; undefined
+//│ let tmp; tmp = new this.Inner.class(100); this.i = tmp; null
 //│ > 100
 //│ i = Inner { c: 100 }
 
 i.i1(20)
 //│ JS:
-//│ this.i.i1(20)
+//│ let scrutSelChk;
+//│ scrutSelChk = this.i.i1 === undefined;
+//│ if (scrutSelChk) {
+//│   throw new this.Error("i1 not found");
+//│ } else {
+//│   ((this.i.i1(20)) ?? null)
+//│ }
 //│ = 120
 
 

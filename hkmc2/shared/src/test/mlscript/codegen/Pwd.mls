@@ -7,17 +7,52 @@ let folderName1 = process.env.PWD.split("/").pop()
 in let folderName2 = process.cwd().split("/").pop()
 in folderName2 === folderName1 || folderName2 === "jvm"
 //│ JS:
-//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
-//│ tmp = this.process.env.PWD.split("/");
-//│ tmp1 = tmp.pop();
-//│ this.folderName1 = tmp1;
-//│ tmp2 = this.process.cwd();
-//│ tmp3 = tmp2.split("/");
-//│ tmp4 = tmp3.pop();
-//│ this.folderName2 = tmp4;
-//│ tmp5 = this.folderName2 === this.folderName1;
-//│ tmp6 = this.folderName2 === "jvm";
-//│ tmp5 || tmp6
+//│ let scrutSelChk, scrutSelChk1, scrutSelChk2, tmp, scrutSelChk3, tmp1, scrutSelChk4, tmp2, scrutSelChk5, tmp3, scrutSelChk6, tmp4, tmp5, tmp6;
+//│ scrutSelChk = this.process.env === undefined;
+//│ if (scrutSelChk) {
+//│   throw new this.Error("env not found");
+//│ } else {
+//│   scrutSelChk1 = this.process.env.PWD === undefined;
+//│   if (scrutSelChk1) {
+//│     throw new this.Error("PWD not found");
+//│   } else {
+//│     scrutSelChk2 = this.process.env.PWD.split === undefined;
+//│     if (scrutSelChk2) {
+//│       throw new this.Error("split not found");
+//│     } else {
+//│       tmp = ((this.process.env.PWD.split("/")) ?? null);
+//│       scrutSelChk3 = tmp.pop === undefined;
+//│       if (scrutSelChk3) {
+//│         throw new this.Error("pop not found");
+//│       } else {
+//│         tmp1 = ((tmp.pop()) ?? null);
+//│         this.folderName1 = tmp1;
+//│         scrutSelChk4 = this.process.cwd === undefined;
+//│         if (scrutSelChk4) {
+//│           throw new this.Error("cwd not found");
+//│         } else {
+//│           tmp2 = ((this.process.cwd()) ?? null);
+//│           scrutSelChk5 = tmp2.split === undefined;
+//│           if (scrutSelChk5) {
+//│             throw new this.Error("split not found");
+//│           } else {
+//│             tmp3 = ((tmp2.split("/")) ?? null);
+//│             scrutSelChk6 = tmp3.pop === undefined;
+//│             if (scrutSelChk6) {
+//│               throw new this.Error("pop not found");
+//│             } else {
+//│               tmp4 = ((tmp3.pop()) ?? null);
+//│               this.folderName2 = tmp4;
+//│               tmp5 = this.folderName2 === this.folderName1;
+//│               tmp6 = this.folderName2 === "jvm";
+//│               tmp5 || tmp6
+//│             }
+//│           }
+//│         }
+//│       }
+//│     }
+//│   }
+//│ }
 //│ = true
 
 

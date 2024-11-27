@@ -23,7 +23,7 @@ object Example with
 //│ };
 //│ this.Example = new Example$class;
 //│ this.Example.class = Example$class;
-//│ undefined
+//│ null
 
 let s = Example.f
 //│ s = [Function: f]

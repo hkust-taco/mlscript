@@ -20,7 +20,7 @@ fun test(a) =
 //│   }
 //│   return new C();
 //│ }
-//│ undefined
+//│ null
 
 test(12)
 //│ = C { x: 12 }
@@ -45,9 +45,9 @@ fun test(x) =
 //│     toString() { return "Foo(" + this.a + ", " + this.b + ")"; }
 //│   };
 //│   tmp = x + 1;
-//│   return Foo(x, tmp);
+//│   return ((Foo(x, tmp)) ?? null);
 //│ }
-//│ undefined
+//│ null
 
 
 test(123)

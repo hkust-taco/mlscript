@@ -9,27 +9,43 @@ fun f() =
 //│ JS:
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 0, args.length);
-//│   let tmp;
-//│   tmp = globalThis.console.log("ok");
-//│   return 42;
+//│   let scrutSelChk, tmp;
+//│   scrutSelChk = globalThis.console.log === undefined;
+//│   if (scrutSelChk) {
+//│     throw new globalThis.Error("log not found");
+//│   } else {
+//│     tmp = ((globalThis.console.log("ok")) ?? null);
+//│     return 42;
+//│   }
 //│ }
-//│ undefined
+//│ null
 
 fun f() = { console.log("ok"), 42 }
 //│ JS:
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 0, args.length);
-//│   let tmp;
-//│   tmp = globalThis.console.log("ok");
-//│   return 42;
+//│   let scrutSelChk, tmp;
+//│   scrutSelChk = globalThis.console.log === undefined;
+//│   if (scrutSelChk) {
+//│     throw new globalThis.Error("log not found");
+//│   } else {
+//│     tmp = ((globalThis.console.log("ok")) ?? null);
+//│     return 42;
+//│   }
 //│ }
-//│ undefined
+//│ null
 
 fun f() = console.log("ok"), 42
 //│ JS:
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 0, args.length);
-//│   return globalThis.console.log("ok");
+//│   let scrutSelChk;
+//│   scrutSelChk = globalThis.console.log === undefined;
+//│   if (scrutSelChk) {
+//│     throw new globalThis.Error("log not found");
+//│   } else {
+//│     return ((globalThis.console.log("ok")) ?? null);
+//│   }
 //│ }
 //│ 42
 //│ = 42

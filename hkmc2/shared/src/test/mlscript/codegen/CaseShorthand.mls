@@ -87,6 +87,6 @@ val isDefined = case
 //│     }
 //│   }
 //│ };
-//│ undefined
+//│ null
 //│ isDefined = [Function (anonymous)]
 

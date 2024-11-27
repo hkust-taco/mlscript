@@ -12,7 +12,7 @@ f(2, 3)
 //│   let y = args[1];
 //│   return x + y;
 //│ }
-//│ this.f(2, 3)
+//│ ((this.f(2, 3)) ?? null)
 //│ = 5
 
 
@@ -22,14 +22,14 @@ f(2, 3)
 fun f2(x, y) = x + y
 f2(2)
 //│ JS:
-//│ function f2(x, y) { return x + y; } this.f2(2)
+//│ function f2(x, y) { return x + y; } ((this.f2(2)) ?? null)
 //│ = NaN
 
 :sjs
 :re
 f(2)
 //│ JS:
-//│ this.f(2)
+//│ ((this.f(2)) ?? null)
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
@@ -51,8 +51,8 @@ f(3)(4)
 //│     return tmp1 + z;
 //│   };
 //│ }
-//│ tmp = this.f(3);
-//│ tmp(4)
+//│ tmp = ((this.f(3)) ?? null);
+//│ ((tmp(4)) ?? null)
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
 
@@ -61,7 +61,7 @@ f(3)(4)
 :noSanityCheck
 let f = (x, y) => x + y in f(2)
 //│ JS:
-//│ this.f = (x, y) => { return x + y; }; this.f(2)
+//│ this.f = (x, y) => { return x + y; }; ((this.f(2)) ?? null)
 //│ = NaN
 
 :sjs
@@ -75,7 +75,7 @@ f(2)
 //│   let y = args[1];
 //│   return x + y;
 //│ };
-//│ this.f(2)
+//│ ((this.f(2)) ?? null)
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 //│ f = [Function (anonymous)]
 
@@ -87,7 +87,7 @@ class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 Cls(1, 2).f(3)
 //│ JS:
-//│ let tmp;
+//│ let tmp, scrutSelChk;
 //│ this.Cls = function Cls(x1, y1) { return new Cls.class(x1, y1); };
 //│ this.Cls.class = class Cls {
 //│   constructor(x, y) {
@@ -103,8 +103,13 @@ Cls(1, 2).f(3)
 //│   }
 //│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
 //│ };
-//│ tmp = this.Cls(1, 2);
-//│ tmp.f(3)
+//│ tmp = ((this.Cls(1, 2)) ?? null);
+//│ scrutSelChk = tmp.f === undefined;
+//│ if (scrutSelChk) {
+//│   throw new this.Error("f not found");
+//│ } else {
+//│   ((tmp.f(3)) ?? null)
+//│ }
 //│ = NaN
 
 :sjs
@@ -113,7 +118,7 @@ class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 Cls(1, 2).f(3)
 //│ JS:
-//│ let tmp;
+//│ let tmp, scrutSelChk;
 //│ this.Cls = function Cls(x1, y1) { return new Cls.class(x1, y1); };
 //│ this.Cls.class = class Cls {
 //│   constructor(x, y) {
@@ -132,8 +137,13 @@ Cls(1, 2).f(3)
 //│   }
 //│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
 //│ };
-//│ tmp = this.Cls(1, 2);
-//│ tmp.f(3)
+//│ tmp = ((this.Cls(1, 2)) ?? null);
+//│ scrutSelChk = tmp.f === undefined;
+//│ if (scrutSelChk) {
+//│   throw new this.Error("f not found");
+//│ } else {
+//│   ((tmp.f(3)) ?? null)
+//│ }
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
@@ -143,7 +153,7 @@ class Cls(x, y) with
   fun f(z, p)(q, s) = x + y + z + p + q + s
 Cls(1, 2).f(3, 4)(5)
 //│ JS:
-//│ let tmp, tmp1;
+//│ let tmp, scrutSelChk, tmp1;
 //│ this.Cls = function Cls(x1, y1) { return new Cls.class(x1, y1); };
 //│ this.Cls.class = class Cls {
 //│   constructor(x, y) {
@@ -169,7 +179,12 @@ Cls(1, 2).f(3, 4)(5)
 //│   }
 //│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
 //│ };
-//│ tmp = this.Cls(1, 2);
-//│ tmp1 = tmp.f(3, 4);
-//│ tmp1(5)
+//│ tmp = ((this.Cls(1, 2)) ?? null);
+//│ scrutSelChk = tmp.f === undefined;
+//│ if (scrutSelChk) {
+//│   throw new this.Error("f not found");
+//│ } else {
+//│   tmp1 = ((tmp.f(3, 4)) ?? null);
+//│   ((tmp1(5)) ?? null)
+//│ }
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1

@@ -59,9 +59,9 @@ while x
 //│ tmp2: while (true) {
 //│   scrut = this.x;
 //│   if (scrut) {
-//│     tmp = this.log("Hello World");
+//│     tmp = ((this.log("Hello World")) ?? null);
 //│     this.x = false;
-//│     tmp1 = undefined;
+//│     tmp1 = null;
 //│     continue tmp2;
 //│   } else {
 //│     tmp1 = 42;
@@ -117,7 +117,7 @@ while
 //│     if (scrut) {
 //│       tmp = i + 1;
 //│       i = tmp;
-//│       tmp1 = undefined;
+//│       tmp1 = null;
 //│       continue tmp2;
 //│     } else {
 //│       throw new this.Error("match error");
@@ -209,16 +209,16 @@ fun f(ls) =
 //│       h = param0;
 //│       tl = param1;
 //│       ls = tl;
-//│       tmp = globalThis.log(h);
+//│       tmp = ((globalThis.log(h)) ?? null);
 //│       continue tmp1;
 //│     } else {
-//│       tmp = globalThis.log("Done!");
+//│       tmp = ((globalThis.log("Done!")) ?? null);
 //│     }
 //│     break;
 //│   }
 //│   return tmp;
 //│ }
-//│ undefined
+//│ null
 
 f(0)
 //│ > Done!
