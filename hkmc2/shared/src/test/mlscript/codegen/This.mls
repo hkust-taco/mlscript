@@ -20,7 +20,7 @@ fun test(x) =
 //│     x
 //│   ];
 //│ }
-//│ null
+//│ undefined
 
 :re
 test(123)
@@ -68,7 +68,7 @@ module Test with
 //│ };
 //│ this.Test = new Test$class;
 //│ this.Test.class = Test$class;
-//│ null
+//│ undefined
 
 
 Test.test1(123)

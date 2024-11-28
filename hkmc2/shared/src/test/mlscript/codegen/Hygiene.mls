@@ -24,7 +24,7 @@ module Test with
 //│ };
 //│ this.Test = new Test$class;
 //│ this.Test.class = Test$class;
-//│ null
+//│ undefined
 
 :sjs
 Test.foo()
@@ -35,7 +35,7 @@ Test.foo()
 :sjs
 val Test = "oops"
 //│ JS:
-//│ this.Test = "oops"; null
+//│ this.Test = "oops"; undefined
 //│ Test = 'oops'
 
 :fixme
@@ -77,7 +77,7 @@ module Test with
 //│ };
 //│ this.Test = new Test$class;
 //│ this.Test.class = Test$class;
-//│ null
+//│ undefined
 
 Test.x
 //│ = 1

@@ -23,7 +23,7 @@ fun isDefined(x) = if x is
 //│     }
 //│   }
 //│ }
-//│ null
+//│ undefined
 
 isDefined(Some(1))
 //│ = true
@@ -52,7 +52,7 @@ val isDefined = case
 //│     }
 //│   }
 //│ };
-//│ null
+//│ undefined
 //│ isDefined = [Function (anonymous)]
 
 isDefined(Some(1))

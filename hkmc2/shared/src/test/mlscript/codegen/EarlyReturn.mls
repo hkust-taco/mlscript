@@ -31,11 +31,11 @@ fun f(x) =
 //│     tmp = ((globalThis.log("whoops")) ?? null);
 //│     return 0;
 //│   } else {
-//│     tmp1 = null;
+//│     tmp1 = undefined;
 //│   }
 //│   return x + 1;
 //│ }
-//│ null
+//│ undefined
 
 f(1)
 //│ = 2

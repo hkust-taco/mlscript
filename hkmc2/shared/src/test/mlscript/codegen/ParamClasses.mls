@@ -16,7 +16,7 @@ class Foo()
 //│   }
 //│   toString() { return "Foo(" +  + ")"; }
 //│ };
-//│ null
+//│ undefined
 
 Foo
 //│ JS:
@@ -50,7 +50,7 @@ class Foo(a)
 //│   }
 //│   toString() { return "Foo(" + this.a + ")"; }
 //│ };
-//│ null
+//│ undefined
 
 Foo
 //│ JS:
@@ -97,21 +97,21 @@ class Foo(a, b)
 //│   }
 //│   toString() { return "Foo(" + this.a + ", " + this.b + ")"; }
 //│ };
-//│ null
+//│ undefined
 
 let foo = Foo
 //│ JS:
-//│ this.foo = this.Foo; null
+//│ this.foo = this.Foo; undefined
 //│ foo = [Function: Foo] { class: [class Foo] }
 
 let f = foo(1, 2)
 //│ JS:
-//│ let tmp; tmp = ((this.foo(1, 2)) ?? null); this.f = tmp; null
+//│ let tmp; tmp = ((this.foo(1, 2)) ?? null); this.f = tmp; undefined
 //│ f = Foo { a: 1, b: 2 }
 
 let f = new foo(1, 2)
 //│ JS:
-//│ let tmp; tmp = new this.foo(1, 2); this.f = tmp; null
+//│ let tmp; tmp = new this.foo(1, 2); this.f = tmp; undefined
 //│ f = Foo { a: 1, b: 2 }
 
 f.a
@@ -138,7 +138,7 @@ f.b
 
 let f = Foo(1, 2)
 //│ JS:
-//│ let tmp; tmp = ((this.Foo(1, 2)) ?? null); this.f = tmp; null
+//│ let tmp; tmp = ((this.Foo(1, 2)) ?? null); this.f = tmp; undefined
 //│ f = Foo { a: 1, b: 2 }
 
 f.a
@@ -191,11 +191,11 @@ class Inner(c) with
 //│   }
 //│   toString() { return "Inner(" + this.c + ")"; }
 //│ };
-//│ null
+//│ undefined
 
 let i = new Inner(100)
 //│ JS:
-//│ let tmp; tmp = new this.Inner.class(100); this.i = tmp; null
+//│ let tmp; tmp = new this.Inner.class(100); this.i = tmp; undefined
 //│ > 100
 //│ i = Inner { c: 100 }
 

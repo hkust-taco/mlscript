@@ -10,7 +10,7 @@ let x = 0
 :sjs
 let x += 1
 //│ JS:
-//│ let tmp; tmp = this.x + 1; this.x = tmp; null
+//│ let tmp; tmp = this.x + 1; this.x = tmp; undefined
 //│ x = 1
 
 x
@@ -19,12 +19,12 @@ x
 :sjs
 set x = 0
 //│ JS:
-//│ this.x = 0; null
+//│ this.x = 0; undefined
 
 :sjs
 set x += 1
 //│ JS:
-//│ let tmp; tmp = this.x + 1; this.x = tmp; null
+//│ let tmp; tmp = this.x + 1; this.x = tmp; undefined
 
 x
 //│ = 1

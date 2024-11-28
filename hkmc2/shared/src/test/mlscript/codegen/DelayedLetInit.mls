@@ -6,11 +6,11 @@
 
 let x
 //│ JS:
-//│ null
+//│ undefined
 
 x = 1
 //│ JS:
-//│ this.x = 1; null
+//│ this.x = 1; undefined
 
 x
 //│ JS:
@@ -20,7 +20,7 @@ x
 // TODO forbid redefining a let
 x = 2
 //│ JS:
-//│ this.x = 2; null
+//│ this.x = 2; undefined
 
 x
 //│ JS:
@@ -30,7 +30,7 @@ x
 
 let y = 1
 //│ JS:
-//│ this.y = 1; null
+//│ this.y = 1; undefined
 //│ y = 1
 
 :e
@@ -48,7 +48,7 @@ fun f() = 1
 //│   globalThis.Predef.checkArgs("f", 0, args.length);
 //│   return 1;
 //│ }
-//│ null
+//│ undefined
 
 f
 //│ JS:
@@ -64,7 +64,7 @@ f(x) = x + 1
 //│   let x = args[0];
 //│   return x + 1;
 //│ };
-//│ null
+//│ undefined
 //│ f = [Function (anonymous)]
 
 f(1)
@@ -76,7 +76,7 @@ f(1)
 let foo
 foo = 0
 //│ JS:
-//│ this.foo = 0; null
+//│ this.foo = 0; undefined
 //│ foo = 0
 
 :fixme
@@ -99,7 +99,7 @@ then
 else
   foo = 1
 //│ JS:
-//│ let scrut; scrut = true; if (scrut) { this.foo = 0; null } else { this.foo = 1; null }
+//│ let scrut; scrut = true; if (scrut) { this.foo = 0; undefined } else { this.foo = 1; undefined }
 //│ foo = 0
 
 
@@ -109,9 +109,9 @@ fun f() =
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 0, args.length);
 //│   globalThis.foo = 42;
-//│   return null;
+//│   return undefined;
 //│ }
-//│ null
+//│ undefined
 
 f()
 //│ JS:
@@ -133,6 +133,6 @@ fun f() = foo = 0
 //│   globalThis.Predef.checkArgs("f", 0, args.length);
 //│   return globalThis.foo;
 //│ }
-//│ null
+//│ undefined
 
 

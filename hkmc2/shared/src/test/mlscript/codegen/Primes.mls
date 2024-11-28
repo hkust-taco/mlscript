@@ -8,7 +8,7 @@ let x = 1
 :sjs
 let x' = 1
 //│ JS:
-//│ this.x' = 1; null
+//│ this.x' = 1; undefined
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string
 

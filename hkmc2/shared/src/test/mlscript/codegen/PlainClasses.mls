@@ -9,7 +9,7 @@
 
 class Foo
 //│ JS:
-//│ this.Foo = class Foo { constructor() {  } toString() { return "Foo"; } }; null
+//│ this.Foo = class Foo { constructor() {  } toString() { return "Foo"; } }; undefined
 
 Foo is Foo
 //│ JS:
@@ -72,11 +72,11 @@ fun test() =
 //│   tmp = ((globalThis.log("ok")) ?? null);
 //│   return Foo;
 //│ }
-//│ null
+//│ undefined
 
 let t = test()
 //│ JS:
-//│ let tmp; tmp = ((this.test()) ?? null); this.t = tmp; null
+//│ let tmp; tmp = ((this.test()) ?? null); this.t = tmp; undefined
 //│ > ok
 //│ t = [class Foo]
 
@@ -112,7 +112,7 @@ class Foo with
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
-//│ null
+//│ undefined
 
 
 class Foo with
@@ -144,7 +144,7 @@ class Foo with
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
-//│ null
+//│ undefined
 
 
 class Foo with
@@ -170,7 +170,7 @@ class Foo with
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
-//│ null
+//│ undefined
 
 let a = new Foo
 log(a.x)
@@ -216,7 +216,7 @@ class Foo with
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
-//│ null
+//│ undefined
 
 
 :fixme

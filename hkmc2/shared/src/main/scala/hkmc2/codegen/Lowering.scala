@@ -292,7 +292,7 @@ class Lowering(using TL, Raise, Elaborator.State):
         val selRes = TempSymbol(N, "selRes")
         val split = Split.Cons(
             Branch(selRes.ref(),
-              Pattern.Lit(syntax.Tree.UndefLit()),
+              Pattern.Lit(syntax.Tree.UnitLit(true)),
               Split.Else(
                 Term.Throw(Term.New(SynthSel(State.globalThisSymbol.ref(), Tree.Ident("Error"))(N),
                   Term.Lit(syntax.Tree.StrLit(s"Access to required field '${nme.name}' yielded 'undefined'")) :: Nil)

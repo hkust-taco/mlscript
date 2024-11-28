@@ -10,7 +10,7 @@ module OtherModule with
 :sjs
 open Option
 //│ JS:
-//│ null
+//│ undefined
 
 :sjs
 None isDefined()
@@ -52,7 +52,7 @@ none()
 :sjs
 val Option = "Oops"
 //│ JS:
-//│ this.Option = "Oops"; null
+//│ this.Option = "Oops"; undefined
 //│ Option = 'Oops'
 
 :fixme
@@ -68,7 +68,7 @@ module Option with
 :sjs
 open Option
 //│ JS:
-//│ null
+//│ undefined
 
 :sjs
 Some

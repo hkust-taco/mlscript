@@ -9,7 +9,7 @@ module Foo with
 :sjs
 open Foo { x }
 //│ JS:
-//│ null
+//│ undefined
 
 open Foo { x, y }
 
@@ -50,6 +50,6 @@ length
 //│ = 4
 
 oops === ()
-//│ = false
+//│ = true
 
 
