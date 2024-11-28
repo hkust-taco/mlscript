@@ -117,23 +117,6 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
           case S(index) => s"[$index]"
           case N => s"[${JSBuilder.makeStringLiteral(name)}]"
       }"
-    case UserSelect(qual, id) =>
-      // val name = id.name
-      // val nameStr = JSBuilder.makeStringLiteral(name)
-      // val qualDoc = result(qual)
-      // if JSBuilder.isValidFieldName(name)
-      // then doc"(() => {if ($nameStr in $qualDoc) {return $qualDoc.$name} else {throw new globalThis.Error(${JSBuilder.makeStringLiteral(s"Field not found: $name")})}})()"
-      // else name.toIntOption match
-      //   case S(index) => s"$qualDoc[$index]"
-      //   case N => s"$qualDoc[${JSBuilder.makeStringLiteral(name)}]"
-      val name = id.name
-      doc"${result(qual)}${
-        if JSBuilder.isValidFieldName(name)
-        then doc".$name"
-        else name.toIntOption match
-          case S(index) => s"[$index]"
-          case N => s"[${JSBuilder.makeStringLiteral(name)}]"
-      }"
     case Instantiate(cls, as) =>
       val argDoc = doc"(${as.map(result).mkDocument(", ")})"
       cls match

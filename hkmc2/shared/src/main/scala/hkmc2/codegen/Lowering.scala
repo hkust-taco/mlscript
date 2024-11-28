@@ -298,7 +298,7 @@ class Lowering(using TL, Raise, Elaborator.State):
           )
         Assign(
           selRes,
-          UserSelect(p, nme),
+          Select(p, nme),
           term(IfLike(syntax.Keyword.`if`, split)(split))(k)
         )
         
