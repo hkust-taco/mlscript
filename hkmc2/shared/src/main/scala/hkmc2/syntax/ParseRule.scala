@@ -191,6 +191,22 @@ class ParseRules(using State):
         ) { case (body, _) => IfLike(kw, body) }
       )
   
+  def typeAliasLike(kw: Keyword, kind: TypeDefKind): Kw[TypeDef] =
+    Kw(kw):
+      ParseRule(s"${kind.desc} declaration"):
+        Expr(
+          ParseRule(s"${kind.desc} head")(
+            Kw(`=`):
+              ParseRule(s"${kind.desc} declaration equals sign"):
+                Expr(
+                  ParseRule(s"${kind.desc} declaration right-hand side")(
+                    End(())
+                  )
+                ) { case (rhs, ()) => S(rhs) },
+            End(N),
+          )
+        ) { (lhs, rhs) => TypeDef(kind, lhs, rhs, N) }
+  
   val prefixRules: ParseRule[Tree] = ParseRule("start of statement", omitAltsStr = true)(
     letLike(`let`),
     letLike(`set`),
@@ -258,34 +274,8 @@ class ParseRules(using State):
     ,
     Kw(`fun`)(termDefBody(Fun)),
     Kw(`val`)(termDefBody(ImmutVal)),
-    Kw(`type`):
-      ParseRule("type alias declaration"):
-        Expr(
-          ParseRule("type alias head")(
-            Kw(`=`):
-              ParseRule("type alias declaration equals sign"):
-                Expr(
-                  ParseRule("type alias declaration right-hand side")(
-                    End(())
-                  )
-                ) { case (rhs, ()) => S(rhs) },
-            End(N),
-          )
-        ) { (lhs, rhs) => TypeDef(Als, lhs, rhs, N) },
-    Kw(`pattern`):
-      ParseRule("pattern declaration"):
-        Expr(
-          ParseRule("pattern head")(
-            Kw(`=`):
-              ParseRule("pattern declaration equals sign"):
-                Expr(
-                  ParseRule("pattern declaration right-hand side")(
-                    End(())
-                  )
-                ) { case (rhs, ()) => S(rhs) },
-            End(N),
-          )
-        ) { (lhs, rhs) => TypeDef(Pat, lhs, rhs, N) },
+    typeAliasLike(`type`, Als),
+    typeAliasLike(`pattern`, Pat),
     Kw(`class`)(typeDeclBody(Cls)),
     Kw(`trait`)(typeDeclBody(Trt)),
     Kw(`module`)(typeDeclBody(Mod)),
