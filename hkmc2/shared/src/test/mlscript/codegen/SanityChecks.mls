@@ -173,3 +173,115 @@ Cls(1, 2).f(3, 4)(5)
 //│ tmp1 = ((tmp.f(3, 4)) ?? null);
 //│ ((tmp1(5)) ?? null)
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
+
+
+:sjs
+console.log(1)
+//│ JS:
+//│ ((this.console.log(1)) ?? null)
+//│ > 1
+
+
+:re
+:sjs
+globalThis.x
+//│ JS:
+//│ let selRes;
+//│ selRes = this.x;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'x' yielded 'undefined'");
+//│ } else {
+//│   selRes
+//│ }
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+
+:re
+:sjs
+globalThis.x()
+//│ JS:
+//│ ((this.x()) ?? null)
+//│ ═══[RUNTIME ERROR] TypeError: this.x is not a function
+
+
+
+
+:re
+:sjs
+module M with
+  class A(x) with
+    fun f(y) = x + y
+if M.A(1).y is
+  x and x == 1 then x
+  else 0
+//│ JS:
+//│ let scrut, x, scrut1, tmp, selRes, tmp1;
+//│ const M$class = class M {
+//│   constructor() {
+//│     this.A = function A(x2) { return new A.class(x2); };
+//│     this.A.class = class A {
+//│       constructor(x1) {
+//│         this.x = x1;
+//│         
+//│       }
+//│       f(...args) {
+//│         globalThis.Predef.checkArgs("f", 1, args.length);
+//│         let y = args[0];
+//│         return this.x + y;
+//│       }
+//│       toString() { return "A(" + this.x1 + ")"; }
+//│     };
+//│   }
+//│   toString() { return "M"; }
+//│ };
+//│ this.M = new M$class;
+//│ this.M.class = M$class;
+//│ tmp = ((this.M.A(1)) ?? null);
+//│ selRes = tmp.y;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'y' yielded 'undefined'");
+//│ } else {
+//│   tmp1 = selRes;
+//│ }
+//│ scrut = tmp1;
+//│ x = scrut;
+//│ scrut1 = x == 1;
+//│ if (scrut1) {
+//│   x
+//│ } else {
+//│   0
+//│ }
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
+
+
+
+:sjs
+:re
+M.A(1).y
+  console.log()
+//│ JS:
+//│ let tmp, selRes, tmp1;
+//│ tmp = ((this.M.A(1)) ?? null);
+//│ selRes = tmp.y;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'y' yielded 'undefined'");
+//│ } else {
+//│   tmp1 = selRes;
+//│ }
+//│ ((this.console.log(tmp1)) ?? null)
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
+
+
+:re
+:sjs
+M.A(1).g(0)
+//│ JS:
+//│ let tmp; tmp = ((this.M.A(1)) ?? null); ((tmp.g(0)) ?? null)
+//│ ═══[RUNTIME ERROR] TypeError: tmp.g is not a function
+
+
+
+:sjs
+M.A(1).f(0)
+//│ JS:
+//│ let tmp; tmp = ((this.M.A(1)) ?? null); ((tmp.f(0)) ?? null)
+//│ = 1

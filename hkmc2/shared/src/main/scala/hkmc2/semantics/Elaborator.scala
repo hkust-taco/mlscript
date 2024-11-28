@@ -389,7 +389,7 @@ extends Importer:
           raise(ErrorReport(msg"Illegal juxtaposition right-hand side." -> tree.toLoc :: Nil))
           go(acc, trees)
       
-      go(term(lhs, inAppPrefix = true), rhs :: Nil)
+      go(term(lhs), rhs :: Nil)
     case Open(body) =>
       raise(ErrorReport(msg"Illegal position for 'open' statement." -> tree.toLoc :: Nil))
       Term.Error
