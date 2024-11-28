@@ -440,7 +440,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
         val (wrap, matches) = lead.zipWithIndex.foldRight((wrapRest, restMatches)):
           case ((pat, i), (wrapInner, matches)) =>
             val sym = scrutSymbol.getTupleLeadSubScrutinee(i)
-            val wrap = (split: Split) => Split.Let(sym, Term.Sel(ref, Ident(s"$i"))(N), wrapInner(split))
+            val wrap = (split: Split) => Split.Let(sym, Term.SynthSel(ref, Ident(s"$i"))(N), wrapInner(split))
             (wrap, (sym, pat) :: matches)
         Branch(
           ref,

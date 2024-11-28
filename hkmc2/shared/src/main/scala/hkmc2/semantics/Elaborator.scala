@@ -71,7 +71,7 @@ object Elaborator:
       def ref(id: Tree.Ident): Term =
         // * Note: due to symbolic ops, we may have `id.name =/= nme`;
         // * e.g., we can have `id.name = "|>"` and `nme = "pipe"`.
-        Term.Sel(base.ref(Ident(base.nme)),
+        Term.SynthSel(base.ref(Ident(base.nme)),
           new Tree.Ident(nme).withLocOf(id))(symOpt)
       def symbol = symOpt
     given Conversion[Symbol, Elem] = RefElem(_)
@@ -131,7 +131,7 @@ extends Importer:
       trm
     case S(mem: BlockMemberSymbol) =>
       if !mem.hasLiftedClass then trm
-      else Term.Sel(trm, Ident("class"))(mem.clsTree.orElse(mem.modTree).map(_.symbol))
+      else Term.SynthSel(trm, Ident("class"))(mem.clsTree.orElse(mem.modTree).map(_.symbol))
     case _ => trm
   
   def term(tree: Tree, inAppPrefix: Bool = false): Ctxl[Term] =
@@ -300,13 +300,13 @@ extends Importer:
     case SynthSel(pre, nme) =>
       val preTrm = term(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
-      Term.Sel(preTrm, nme)(sym)
+      Term.SynthSel(preTrm, nme)(sym)
     case Sel(pre, nme) =>
       val preTrm = term(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
       if inAppPrefix
-      then Term.Sel(preTrm, nme)(sym)
-      else Term.UserSel(preTrm, nme)(sym)
+      then Term.SynthSel(preTrm, nme)(sym)
+      else Term.Sel(preTrm, nme)(sym)
     case tree @ Tup(fields) =>
       Term.Tup(fields.map(fld(_)))(tree)
     case New(body) =>
@@ -899,7 +899,7 @@ extends Importer:
         in.foreach(t => traverseType(pol.!)(t))
         out.foreach(t => traverseType(pol)(t))
       case Term.CompType(lhs, rhs, _) => () // TODO:
-      case Term.Sel(bse, nme) =>
+      case Term.SynthSel(bse, nme) =>
         traverseType(pol)(bse) // FIXME: probably wrong for what we want to do
       case Term.Tup(fields) =>
         // fields.foreach(f => traverseType(pol)(f.value))

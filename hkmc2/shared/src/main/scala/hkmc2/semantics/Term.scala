@@ -15,8 +15,8 @@ enum Term extends Statement:
   case Ref(sym: Symbol)(val tree: Tree.Ident, val refNum: Int)
   case App(lhs: Term, rhs: Term)(val tree: Tree.App, val resSym: FlowSymbol)
   case TyApp(lhs: Term, targs: Ls[Term])
+  case SynthSel(prefix: Term, nme: Tree.Ident)(val sym: Opt[Symbol])
   case Sel(prefix: Term, nme: Tree.Ident)(val sym: Opt[Symbol])
-  case UserSel(prefix: Term, nme: Tree.Ident)(val sym: Opt[Symbol])
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
   case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split)(val normalized: Split)
   case Lam(params: Ls[Param], body: Term)
@@ -42,8 +42,8 @@ enum Term extends Statement:
   
   lazy val symbol: Opt[Symbol] = this match
     case Ref(sym) => S(sym)
+    case sel: SynthSel => sel.sym
     case sel: Sel => sel.sym
-    case sel: UserSel => sel.sym
     case _ => N
   
   def describe: Str = this match
@@ -52,7 +52,7 @@ enum Term extends Statement:
     case Ref(sym) => "reference"
     case App(lhs, rhs) => "application"
     case TyApp(lhs, targs) => "type application"
-    case Sel(pre, nme) => "selection"
+    case SynthSel(pre, nme) => "selection"
     case Tup(fields) => "tuple literal"
     case IfLike(Keyword.`if`, body) => "`if` expression"
     case IfLike(Keyword.`while`, body) => "`while` expression"
@@ -86,8 +86,8 @@ sealed trait Statement extends AutoLocated:
     case App(lhs, rhs) => lhs :: rhs :: Nil
     case FunTy(lhs, rhs, eff) => lhs :: rhs :: eff.toList
     case TyApp(pre, tarsg) => pre :: tarsg
+    case SynthSel(pre, _) => pre :: Nil
     case Sel(pre, _) => pre :: Nil
-    case UserSel(pre, _) => pre :: Nil
     case Tup(fields) => fields.flatMap(_.subTerms)
     case IfLike(_, body) => body.subTerms
     case Lam(params, body) => body :: Nil
@@ -127,8 +127,8 @@ sealed trait Statement extends AutoLocated:
     case t: Tup => t.tree :: Nil
     case l: Lam => l.params.map(_.sym.id) ::: l.body :: Nil
     case t: App => t.tree :: Nil
+    case SynthSel(pre, nme) => pre :: nme :: Nil
     case Sel(pre, nme) => pre :: nme :: Nil
-    case UserSel(pre, nme) => pre :: nme :: Nil
     case SelProj(prefix, cls, proj) => prefix :: cls :: proj :: Nil
     case _ =>
       subTerms // TODO more precise (include located things that aren't terms)
@@ -156,7 +156,7 @@ sealed trait Statement extends AutoLocated:
     case TyApp(lhs, targs) => s"${lhs.showDbg}[${targs.mkString(", ")}]"
     case Forall(tvs, body) => s"forall ${tvs.mkString(", ")}: ${body.toString}"
     case WildcardTy(in, out) => s"in ${in.map(_.toString).getOrElse("⊥")} out ${out.map(_.toString).getOrElse("⊤")}"
-    case Sel(pre, nme) => s"${pre.showDbg}.${nme.name}"
+    case SynthSel(pre, nme) => s"${pre.showDbg}.${nme.name}"
     case IfLike(kw, body) => s"${kw.name} { ${body.showDbg} }"
     case Lam(params, body) => s"λ${params.map(_.showDbg).mkString(", ")}. ${body.showDbg}"
     case Blk(stats, res) =>

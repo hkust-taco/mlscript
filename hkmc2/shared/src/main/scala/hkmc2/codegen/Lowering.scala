@@ -144,11 +144,11 @@ class Lowering(using TL, Raise, Elaborator.State):
       case Ref(sym: LocalSymbol) =>
         subTerm(rhs): r =>
           Assign(sym, r, k(Value.Lit(syntax.Tree.UnitLit(true))))
-      case Sel(prefix, nme) =>
+      case SynthSel(prefix, nme) =>
         subTerm(prefix): p =>
           subTerm(rhs): r =>
             AssignField(p, nme, r, k(Value.Lit(syntax.Tree.UnitLit(true))))
-      case UserSel(prefix, nme) =>
+      case Sel(prefix, nme) =>
         subTerm(prefix): p =>
           subTerm(rhs): r =>
             AssignField(p, nme, r, k(Value.Lit(syntax.Tree.UnitLit(true))))
@@ -283,18 +283,18 @@ class Lowering(using TL, Raise, Elaborator.State):
           else k(Value.Lit(syntax.Tree.UnitLit(true))) // * it seems this currently never happens
         )
       
-    case Sel(prefix, nme) =>
+    case SynthSel(prefix, nme) =>
       subTerm(prefix): p =>
         k(Select(p, nme))
         
-    case UserSel(prefix, nme) =>
+    case Sel(prefix, nme) =>
       subTerm(prefix): p =>
         val selRes = TempSymbol(N, "selRes")
         val split = Split.Cons(
             Branch(selRes.ref(),
               Pattern.Lit(syntax.Tree.UndefLit()),
               Split.Else(
-                Term.Throw(Term.New(Sel(State.globalThisSymbol.ref(), Tree.Ident("Error"))(N),
+                Term.Throw(Term.New(SynthSel(State.globalThisSymbol.ref(), Tree.Ident("Error"))(N),
                   Term.Lit(syntax.Tree.StrLit(s"Access to required field '${nme.name}' yielded 'undefined'")) :: Nil)
                 ))
             ),
