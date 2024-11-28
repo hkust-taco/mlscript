@@ -148,6 +148,10 @@ class Lowering(using TL, Raise, Elaborator.State):
         subTerm(prefix): p =>
           subTerm(rhs): r =>
             AssignField(p, nme, r, k(Value.Lit(syntax.Tree.UnitLit(true))))
+      case UserSel(prefix, nme) =>
+        subTerm(prefix): p =>
+          subTerm(rhs): r =>
+            AssignField(p, nme, r, k(Value.Lit(syntax.Tree.UnitLit(true))))
       
     case st.Blk((imp @ Import(sym, path)) :: stats, res) =>
       raise(ErrorReport(
