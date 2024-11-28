@@ -214,6 +214,7 @@ case object Mxn extends TypeDefKind("mixin")
 case object Als extends TypeDefKind("type alias")
 case object Mod extends TypeDefKind("module") with ClsLikeKind
 case object Obj extends TypeDefKind("object") with ClsLikeKind
+case object Pat extends TypeDefKind("pattern") with ClsLikeKind
 
 
 
@@ -288,6 +289,7 @@ trait TypeDefImpl(using semantics.Elaborator.State) extends TypeOrTermDef:
     case Cls => semantics.ClassSymbol(this, name.getOrElse(Ident("<error>")))
     case Mod | Obj => semantics.ModuleSymbol(this, name.getOrElse(Ident("<error>")))
     case Als => semantics.TypeAliasSymbol(name.getOrElse(Ident("<error>")))
+    case Pat => semantics.PatternSymbol(name.getOrElse(Ident("<error>")))
     case Trt | Mxn => ???
   
   lazy val definedSymbols: Map[Str, semantics.BlockMemberSymbol] =

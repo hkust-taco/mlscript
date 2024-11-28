@@ -272,6 +272,20 @@ class ParseRules(using State):
             End(N),
           )
         ) { (lhs, rhs) => TypeDef(Als, lhs, rhs, N) },
+    Kw(`pattern`):
+      ParseRule("pattern declaration"):
+        Expr(
+          ParseRule("pattern head")(
+            Kw(`=`):
+              ParseRule("pattern declaration equals sign"):
+                Expr(
+                  ParseRule("pattern declaration right-hand side")(
+                    End(())
+                  )
+                ) { case (rhs, ()) => S(rhs) },
+            End(N),
+          )
+        ) { (lhs, rhs) => TypeDef(Pat, lhs, rhs, N) },
     Kw(`class`)(typeDeclBody(Cls)),
     Kw(`trait`)(typeDeclBody(Trt)),
     Kw(`module`)(typeDeclBody(Mod)),

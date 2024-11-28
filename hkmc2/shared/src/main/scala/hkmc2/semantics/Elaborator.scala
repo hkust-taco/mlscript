@@ -651,7 +651,7 @@ extends Importer:
             raise(d)
             go(sts, acc)
       case (td @ TypeDef(k, head, extension, body)) :: sts =>
-        assert((k is Als) || (k is Cls) || (k is Mod) || (k is Obj), k)
+        assert((k is Als) || (k is Cls) || (k is Mod) || (k is Obj) || (k is Pat), k)
         val nme = td.name match
           case R(id) => id
           case L(d) =>
@@ -703,6 +703,17 @@ extends Importer:
               semantics.TypeDef(alsSym, tps, extension.map(term(_)), N)
             alsSym.defn = S(d)
             d
+        case Pat =>
+          val patSym = td.symbol.asInstanceOf[PatternSymbol] // TODO improve `asInstanceOf`
+          val owner = ctx.outer
+          newCtx.nest(S(patSym)).givenIn:
+            assert(body.isEmpty)
+            log(s"pattern body is ${td.extension}")
+            val translate = new ucs.Translator(tl, this)
+            val bod = translate(ps.map(_.params).getOrElse(Nil), td.extension.getOrElse(die))
+            val pd = PatternDef(owner, patSym, tps, ps, ObjBody(Term.Blk(bod, Term.Lit(UnitLit(true)))))
+            patSym.defn = S(pd)
+            pd
         case k: (Mod.type | Obj.type) =>
           val clsSym = td.symbol.asInstanceOf[ModuleSymbol] // TODO: improve `asInstanceOf`
           val owner = ctx.outer

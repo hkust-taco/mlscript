@@ -1,0 +1,174 @@
+:js
+
+pattern Digits = ("0"..="9") ~ (Digits | "")
+
+pattern Integer = "0" | ("1"..="9") ~ (Digits | "")
+
+pattern FractionalPart = "." ~ Digits
+
+".1" is FractionalPart
+//│ = true
+
+pattern ExponentPart = ("e" | "E") ~ ("+" | "-" | "") ~ Integer
+
+"e10" is ExponentPart
+//│ = true
+
+"e100" is ExponentPart
+//│ = true
+
+pattern Number = Integer ~ (FractionalPart | "") ~ (ExponentPart | "")
+
+// Test cases for Digits pattern
+// =============================
+:expect true
+"123" is Digits
+//│ = true
+
+:expect true
+"0" is Digits
+//│ = true
+
+:expect true
+"9" is Digits
+//│ = true
+
+:expect false
+"a" is Digits
+//│ = false
+
+
+// Test cases for Integer pattern
+// ==============================
+:expect true
+"0" is Integer
+//│ = true
+
+:expect true
+"123" is Integer
+//│ = true
+
+:expect false
+"001" is Integer
+//│ = false
+
+:expect false
+"a" is Integer
+//│ = false
+
+
+// Test cases for FractionalPart pattern
+// =====================================
+:expect true
+".123" is FractionalPart
+//│ = true
+
+:expect true
+".0" is FractionalPart
+//│ = true
+
+:expect false
+"." is FractionalPart
+//│ = false
+
+:expect false
+"0.1" is FractionalPart
+//│ = false
+
+
+// Test cases for ExponentPart pattern
+// ===================================
+:expect true
+"e10" is ExponentPart
+//│ = true
+
+:expect true
+"E-10" is ExponentPart
+//│ = true
+
+:expect true
+"e+10" is ExponentPart
+//│ = true
+
+:expect false
+"e" is ExponentPart
+//│ = false
+
+:expect false
+"e1a" is ExponentPart
+//│ = false
+
+
+// Test cases for Number pattern
+// =============================
+:expect true
+"3.14" is Number
+//│ = true
+
+:expect true
+"42" is Number
+//│ = true
+
+:expect true
+"3.14e10" is Number
+//│ = true
+
+:expect true
+"1e100" is Number
+//│ = true
+
+:expect true
+"1234e-789" is Number
+//│ = true
+
+:expect true
+"0.0314E+2" is Number
+//│ = true
+
+:expect true
+"0.0314E-2" is Number
+//│ = true
+
+:expect false
+"." is Number
+//│ = false
+
+:expect false
+"e10" is Number
+//│ = false
+
+:expect false
+"3.14e" is Number
+//│ = false
+
+:expect true
+"3.14" is Number
+//│ = true
+
+:expect true
+"42" is Number
+//│ = true
+
+:expect true
+"3.14e10" is Number
+//│ = true
+
+:expect true
+"1e100" is Number
+//│ = true
+
+:expect true
+"1234e-789" is Number
+//│ = true
+
+:expect true
+"0.0314E+2" is Number
+//│ = true
+
+:expect true
+"0.0314E-2" is Number
+//│ = true
+
+:expect true
+"1.7976931348623158e+308" is Number
+//│ = true

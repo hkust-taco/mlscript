@@ -114,6 +114,7 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
       }"
     case Instantiate(cls, as) =>
       doc"new ${result(cls)}(${as.map(result).mkDocument(", ")})"
+    case Value.Arr(es) if es.isEmpty => doc"[]"
     case Value.Arr(es) =>
       doc"[ #{  # ${es.map(result).mkDocument(doc", # ")} #}  # ]"
   def returningTerm(t: Block)(using Raise, Scope): Document = t match
@@ -191,7 +192,7 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
                     } + ")""""
                 }; }"""
               } #}  # }"
-            if (clsDefn.kind is syntax.Mod) || (clsDefn.kind is syntax.Obj) then
+            if ((clsDefn.kind is syntax.Mod) || (clsDefn.kind is syntax.Obj)) || (clsDefn.kind is syntax.Pat) then
               val clsTmp = summon[Scope].allocateName(new semantics.TempSymbol(N, sym.nme+"$"+"class"))
               clsDefn.owner match
               case S(owner) =>

@@ -1,0 +1,13 @@
+:js
+
+MatchResult(0)
+//│ = MatchResult { captures: 0 }
+
+if MatchResult(0) is MatchResult(x) then x
+//│ = 0
+
+MatchFailure("oops")
+//│ = MatchFailure { errors: 'oops' }
+
+if MatchFailure("oops") is MatchFailure(x) then x
+//│ = 'oops'

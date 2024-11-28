@@ -1,0 +1,56 @@
+:js
+
+:todo // Parameterized patterns.
+pattern Rep0[A] = "" | A ~ Rep0[A]
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.4: 	pattern Rep0[A] = "" | A ~ Rep0[A]
+//│ ╙──     	                       ^
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.4: 	pattern Rep0[A] = "" | A ~ Rep0[A]
+//│ ╙──     	                       ^
+
+:todo
+pattern Rep0(pattern A, B, C)(head) =
+  "" | (A as head) ~ Rep0[A]
+//│ ╔══[ERROR] Multiple parameter lists are not supported for this definition.
+//│ ║  l.13: 	pattern Rep0(pattern A, B, C)(head) =
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.14: 	  "" | (A as head) ~ Rep0[A]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ /!!!\ Uncaught error: scala.MatchError: TypeDef(Pat,Ident(A),None,None) (of class hkmc2.syntax.Tree$TypeDef)
+
+:todo // Pattern extractions via aliases.
+pattern Email(name, domain) =
+  (Identifier as name) ~ "@" ~ (Identifier as domain)
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+
+:todo // View patterns
+pattern GreaterThan(value) = case
+  n and n > value then n
+//│ ╔══[ERROR] Unrecognized pattern.
+//│ ║  l.29: 	  n and n > value then n
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+
+:todo
+// Normal view pattern
+fun view = case
+  n and n > 5 then n
+  else undefined
+fun foo(x) = if x is
+  view as
+    Unit then ....
+    Arrow(...) then ....
+//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ║  l.41: 	  view as
+//│ ║        	  ^^^^^^^
+//│ ║  l.42: 	    Unit then ....
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.43: 	    Arrow(...) then ....
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: getters (of class String)
+
+
+// In the future, any function can be a pattern
+//  (x => view(x)) as ...
+//  (case { ... }) as ...

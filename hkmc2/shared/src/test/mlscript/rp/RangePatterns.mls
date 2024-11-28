@@ -1,0 +1,88 @@
+:js
+
+pattern Lower = "a"..="z"
+
+"a" is Lower
+//│ = true
+
+"z" is Lower
+//│ = true
+
+"0" is Lower
+//│ = false
+
+pattern Upper = "A"..="Z"
+
+"A" is Upper
+//│ = true
+
+"Q" is Upper
+//│ = true
+
+"b" is Upper
+//│ = false
+
+pattern UnsignedShort = 0 ..< 65536
+
+0 is UnsignedShort
+//│ = true
+
+-1 is UnsignedShort
+//│ = false
+
+65535 is UnsignedShort
+//│ = true
+
+65536 is UnsignedShort
+//│ = false
+
+2147483647 is UnsignedShort
+//│ = false
+
+"b" is UnsignedShort
+//│ = false
+
+[] is UnsignedShort
+//│ = true
+
+:pe
+:e
+// Don't forget to add a space between numbers and the range operator.
+pattern UnsignedByte = 0..< 256
+//│ ╔══[LEXICAL ERROR] Expect at least one digit after the  decimal point
+//│ ║  l.51: 	pattern UnsignedByte = 0..< 256
+//│ ╙──      	                         ^
+//│ ╔══[ERROR] Unrecognized pattern.
+//│ ║  l.51: 	pattern UnsignedByte = 0..< 256
+//│ ╙──      	                       ^^^^^^^^
+
+:e
+pattern BadRange = "s"..=0
+//│ ╔══[ERROR] Incompatible range types: string literal to integer literal
+//│ ║  l.60: 	pattern BadRange = "s"..=0
+//│ ╙──      	                   ^^^^^^^
+
+// It becomes an absurd pattern.
+0 is BadRange
+//│ = false
+
+:e
+pattern BadRange = 0 ..= "s"
+//│ ╔══[ERROR] Incompatible range types: integer literal to string literal
+//│ ║  l.70: 	pattern BadRange = 0 ..= "s"
+//│ ╙──      	                   ^^^^^^^^^
+
+:e
+pattern BadRange = "yolo" ..= "swag"
+//│ ╔══[ERROR] String range bounds must have only one character.
+//│ ║  l.76: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║        	                   ^^^^^^
+//│ ╟── String range bounds must have only one character.
+//│ ║  l.76: 	pattern BadRange = "yolo" ..= "swag"
+//│ ╙──      	                              ^^^^^^
+//│ ╔══[ERROR] String range bounds must have only one character.
+//│ ║  l.76: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║        	                   ^^^^^^
+//│ ╟── String range bounds must have only one character.
+//│ ║  l.76: 	pattern BadRange = "yolo" ..= "swag"
+//│ ╙──      	                              ^^^^^^

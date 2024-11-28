@@ -120,6 +120,8 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
       mod.paramsOpt.toList.flatMap(_.subTerms) ::: mod.body.blk :: Nil
     case td: TypeDef =>
       td.rhs.toList
+    case pat: PatternDef =>
+      pat.paramsOpt.toList.flatMap(_.subTerms) ::: pat.body.blk :: Nil
     case Import(sym, pth) => Nil
     case Try(body, finallyDo) => body :: finallyDo :: Nil
     case Handle(lhs, rhs, defs) => rhs :: defs._1 :: Nil
@@ -255,6 +257,16 @@ case class ModuleDef(
   kind: ClsLikeKind,
   body: ObjBody,
 ) extends ClassLikeDef with Companion
+
+case class PatternDef(
+    owner: Opt[InnerSymbol],
+    sym: PatternSymbol,
+    tparams: Ls[TyParam],
+    paramsOpt: Opt[ParamList],
+    body: ObjBody
+) extends ClassLikeDef:
+  self =>
+  val kind: ClsLikeKind = Pat
 
 
 sealed abstract class ClassDef extends ClassLikeDef:

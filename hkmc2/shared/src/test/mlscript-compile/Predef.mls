@@ -20,6 +20,15 @@ fun tupleSlice(xs, i, j) =
 fun tupleGet(xs, i) =
   globalThis.Array.prototype.at.call(xs, i)
 
+fun stringStartsWith(string, prefix) = string.startsWith(prefix)
+
+fun stringGet(string, i) = string.at(i)
+
+fun stringDrop(string, n) = string.slice(n)
+
+class MatchResult(captures)
+class MatchFailure(errors)
+
 fun checkArgs(functionName, expected, isUB, got) =
   if got < expected || isUB && got > expected then
     let name = if functionName.length > 0 then " '" + functionName + "'" else ""

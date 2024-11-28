@@ -9,6 +9,7 @@ import hkmc2.syntax.Literal
 import Keyword.{as, and, `else`, is, let, `then`}
 import collection.mutable.HashMap
 import Elaborator.{ctx, Ctxl}
+import ucs.DesugaringBase
 
 object Desugarer:
   extension (op: Keyword.Infix)
@@ -29,8 +30,8 @@ object Desugarer:
     val tupleLast: HashMap[Int, BlockLocalSymbol] = HashMap.empty
 end Desugarer
 
-class Desugarer(tl: TraceLogger, elaborator: Elaborator)
-    (using raise: Raise, state: Elaborator.State, c: Elaborator.Ctx):
+class Desugarer(tl: TraceLogger, val elaborator: Elaborator)
+    (using raise: Raise, state: Elaborator.State, c: Elaborator.Ctx) extends DesugaringBase:
   import Desugarer.*
   import Elaborator.Ctx
   import elaborator.term
@@ -359,12 +360,6 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
       raise(ErrorReport(msg"Unrecognized pattern split." -> tree.toLoc :: Nil))
       _ => _ => Split.default(Term.Error)
 
-  private lazy val tupleSlice =
-    term(SynthSel(SynthSel(Ident("globalThis"), Ident("Predef")), Ident("tupleSlice")))
-
-  private lazy val tupleGet =
-    term(SynthSel(SynthSel(Ident("globalThis"), Ident("Predef")), Ident("tupleGet")))
-
   /** Elaborate a single match (a scrutinee and a pattern) and forms a split
    *  with an innermost split as the sequel of the match.
    *  @param scrutSymbol the symbol representing the scrutinee
@@ -395,6 +390,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
             Branch(ref, Pattern.ClassLike(cls, clsTrm, N, false)(ctor), sequel(ctx)) ~: fallback
         case S(cls: ModuleSymbol) =>
           Branch(ref, Pattern.ClassLike(cls, clsTrm, N, false)(ctor), sequel(ctx)) ~: fallback
+        case S(psym: PatternSymbol) => makeUnapplyBranch(ref, psym, sequel(ctx))(fallback)
         case N =>
           // Raise an error and discard `sequel`. Use `fallback` instead.
           raise(ErrorReport(msg"Cannot use this ${ctor.describe} as a pattern" -> ctor.toLoc :: Nil))
@@ -412,10 +408,6 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
           case ((lead, N), pat) => (lead :+ pat, N)
           case ((lead, S((rest, last))), pat) => (lead, S((rest, last :+ pat)))
         // Some helper functions. TODO: deduplicate
-        def int(i: Int) = Term.Lit(IntLit(BigInt(i)))
-        def fld(t: Term) = Fld(FldFlags.empty, t, N)
-        def tup(xs: Fld*) = Term.Tup(xs.toList)(Tup(Nil))
-        def app(lhs: Term, rhs: Term, sym: FlowSymbol) = Term.App(lhs, rhs)(Tree.App(Tree.Empty(), Tree.Empty()), sym)
         def getLast(i: Int) = TempSymbol(N, s"last$i")
         // `wrap`: add let bindings for tuple elements
         // `matches`: pairs of patterns and symbols to be elaborated
@@ -426,7 +418,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
                 case ((wrapInner, matches), (pat, lastIndex)) =>
                   val sym = scrutSymbol.getTupleLastSubScrutinee(lastIndex)
                   val wrap = (split: Split) =>
-                    Split.Let(sym, app(tupleGet, tup(fld(ref), fld(int(-1 - lastIndex))), sym), wrapInner(split))
+                    Split.Let(sym, callTupleGet(ref, -1 - lastIndex, sym), wrapInner(split))
                   (wrap, (sym, pat) :: matches)
             val lastMatches = reversedLastMatches.reverse
             rest match
