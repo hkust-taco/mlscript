@@ -40,15 +40,15 @@ Baz[in Int out Int]
 
 t.Bar#x
 //│ Parsed:
-//│ 	App(Ident(#),Tup(List(UserSel(Ident(t),Ident(Bar)), Ident(x))))
+//│ 	App(Ident(#),Tup(List(Sel(Ident(t),Ident(Bar)), Ident(x))))
 
 foo.Bar#baz(42)
 //│ Parsed:
-//│ 	App(App(Ident(#),Tup(List(UserSel(Ident(foo),Ident(Bar)), Ident(baz)))),Tup(List(IntLit(42))))
+//│ 	App(App(Ident(#),Tup(List(Sel(Ident(foo),Ident(Bar)), Ident(baz)))),Tup(List(IntLit(42))))
 
 foo(42).Bar#baz(42)
 //│ Parsed:
-//│ 	App(App(Ident(#),Tup(List(UserSel(App(Ident(foo),Tup(List(IntLit(42)))),Ident(Bar)), Ident(baz)))),Tup(List(IntLit(42))))
+//│ 	App(App(Ident(#),Tup(List(Sel(App(Ident(foo),Tup(List(IntLit(42)))),Ident(Bar)), Ident(baz)))),Tup(List(IntLit(42))))
 
 let x = 42 in x + 0
 //│ Parsed:

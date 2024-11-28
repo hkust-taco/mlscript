@@ -360,10 +360,10 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
       _ => _ => Split.default(Term.Error)
 
   private lazy val tupleSlice =
-    term(Sel(Sel(Ident("globalThis"), Ident("Predef")), Ident("tupleSlice")))
+    term(SynthSel(SynthSel(Ident("globalThis"), Ident("Predef")), Ident("tupleSlice")))
 
   private lazy val tupleGet =
-    term(Sel(Sel(Ident("globalThis"), Ident("Predef")), Ident("tupleGet")))
+    term(SynthSel(SynthSel(Ident("globalThis"), Ident("Predef")), Ident("tupleGet")))
 
   /** Elaborate a single match (a scrutinee and a pattern) and forms a split
    *  with an innermost split as the sequel of the match.
@@ -388,7 +388,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
         val aliasSymbol = VarSymbol(id)
         val ctxWithAlias = ctx + (nme -> aliasSymbol)
         Split.Let(aliasSymbol, ref, sequel(ctxWithAlias) ++ fallback)
-      case ctor @ (_: Ident | _: Sel | _: UserSel) => fallback => ctx =>
+      case ctor @ (_: Ident | _: SynthSel | _: Sel) => fallback => ctx =>
         val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
         clsTrm.symbol.flatMap(_.asClsLike) match
         case S(cls: ClassSymbol) =>
@@ -448,7 +448,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
           wrap(subMatches(matches, sequel)(Split.End)(ctx))
         ) ~: fallback
       // A single constructor pattern.
-      case pat @ App(ctor @ (_: Ident | _: Sel | _: UserSel), Tup(args)) => fallback => ctx => trace(
+      case pat @ App(ctor @ (_: Ident | _: SynthSel | _: Sel), Tup(args)) => fallback => ctx => trace(
         pre = s"expandMatch <<< ${ctor}(${args.iterator.map(_.showDbg).mkString(", ")})",
         post = (r: Split) => s"expandMatch >>> ${r.showDbg}"
       ):
