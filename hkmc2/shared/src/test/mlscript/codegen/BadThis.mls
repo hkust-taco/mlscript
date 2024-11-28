@@ -18,7 +18,7 @@ val globalThis = "oops"
 
 :re
 globalThis.clearInterval
-//│ ═══[RUNTIME ERROR] Error: clearInterval not found
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'clearInterval' yielded 'undefined'
 
 :re
 if 0 is A then 1

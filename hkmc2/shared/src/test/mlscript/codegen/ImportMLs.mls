@@ -78,7 +78,7 @@ Option.oops
 //│ ╔══[ERROR] Module 'Option' does not contain member 'oops'
 //│ ║  l.77: 	Option.oops
 //│ ╙──      	      ^^^^^
-//│ ═══[RUNTIME ERROR] Error: oops not found
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 :e
 open Option { oops }
@@ -94,6 +94,6 @@ Option.None.oops
 //│ ╔══[ERROR] Module 'None' does not contain member 'oops'
 //│ ║  l.93: 	Option.None.oops
 //│ ╙──      	           ^^^^^
-//│ ═══[RUNTIME ERROR] Error: oops not found
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 

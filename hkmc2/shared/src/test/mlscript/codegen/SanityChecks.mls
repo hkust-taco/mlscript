@@ -87,7 +87,7 @@ class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 Cls(1, 2).f(3)
 //│ JS:
-//│ let tmp, scrutSelChk;
+//│ let tmp;
 //│ this.Cls = function Cls(x1, y1) { return new Cls.class(x1, y1); };
 //│ this.Cls.class = class Cls {
 //│   constructor(x, y) {
@@ -104,12 +104,7 @@ Cls(1, 2).f(3)
 //│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
 //│ };
 //│ tmp = ((this.Cls(1, 2)) ?? null);
-//│ scrutSelChk = tmp.f === undefined;
-//│ if (scrutSelChk) {
-//│   throw new this.Error("f not found");
-//│ } else {
-//│   ((tmp.f(3)) ?? null)
-//│ }
+//│ ((tmp.f(3)) ?? null)
 //│ = NaN
 
 :sjs
@@ -118,7 +113,7 @@ class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 Cls(1, 2).f(3)
 //│ JS:
-//│ let tmp, scrutSelChk;
+//│ let tmp;
 //│ this.Cls = function Cls(x1, y1) { return new Cls.class(x1, y1); };
 //│ this.Cls.class = class Cls {
 //│   constructor(x, y) {
@@ -138,12 +133,7 @@ Cls(1, 2).f(3)
 //│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
 //│ };
 //│ tmp = ((this.Cls(1, 2)) ?? null);
-//│ scrutSelChk = tmp.f === undefined;
-//│ if (scrutSelChk) {
-//│   throw new this.Error("f not found");
-//│ } else {
-//│   ((tmp.f(3)) ?? null)
-//│ }
+//│ ((tmp.f(3)) ?? null)
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
@@ -153,7 +143,7 @@ class Cls(x, y) with
   fun f(z, p)(q, s) = x + y + z + p + q + s
 Cls(1, 2).f(3, 4)(5)
 //│ JS:
-//│ let tmp, scrutSelChk, tmp1;
+//│ let tmp, tmp1;
 //│ this.Cls = function Cls(x1, y1) { return new Cls.class(x1, y1); };
 //│ this.Cls.class = class Cls {
 //│   constructor(x, y) {
@@ -180,11 +170,6 @@ Cls(1, 2).f(3, 4)(5)
 //│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
 //│ };
 //│ tmp = ((this.Cls(1, 2)) ?? null);
-//│ scrutSelChk = tmp.f === undefined;
-//│ if (scrutSelChk) {
-//│   throw new this.Error("f not found");
-//│ } else {
-//│   tmp1 = ((tmp.f(3, 4)) ?? null);
-//│   ((tmp1(5)) ?? null)
-//│ }
+//│ tmp1 = ((tmp.f(3, 4)) ?? null);
+//│ ((tmp1(5)) ?? null)
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1

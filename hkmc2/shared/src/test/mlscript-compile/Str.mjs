@@ -6,13 +6,7 @@ const Str$class = class Str {
     return a + b;
   } 
   string(value) {
-    let scrutSelChk;
-    scrutSelChk = globalThis.String === undefined;
-    if (scrutSelChk) {
-      throw new globalThis.Error("String not found");
-    } else {
-      return ((globalThis.String(value)) ?? null);
-    }
+    return ((globalThis.String(value)) ?? null);
   }
   toString() { return "Str"; }
 }; const Str = new Str$class;

@@ -30,12 +30,12 @@ Foo()
 
 Foo.class
 //│ JS:
-//│ let scrutSelChk;
-//│ scrutSelChk = this.Foo.class === undefined;
-//│ if (scrutSelChk) {
-//│   throw new this.Error("class not found");
+//│ let selRes;
+//│ selRes = this.Foo.class;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'class' yielded 'undefined'");
 //│ } else {
-//│   this.Foo.class
+//│   selRes
 //│ }
 //│ = [class Foo]
 
@@ -64,13 +64,13 @@ Foo(1)
 
 Foo(1).a
 //│ JS:
-//│ let tmp, scrutSelChk;
+//│ let tmp, selRes;
 //│ tmp = ((this.Foo(1)) ?? null);
-//│ scrutSelChk = tmp.a === undefined;
-//│ if (scrutSelChk) {
-//│   throw new this.Error("a not found");
+//│ selRes = tmp.a;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'a' yielded 'undefined'");
 //│ } else {
-//│   tmp.a
+//│   selRes
 //│ }
 //│ = 1
 
@@ -116,23 +116,23 @@ let f = new foo(1, 2)
 
 f.a
 //│ JS:
-//│ let scrutSelChk;
-//│ scrutSelChk = this.f.a === undefined;
-//│ if (scrutSelChk) {
-//│   throw new this.Error("a not found");
+//│ let selRes;
+//│ selRes = this.f.a;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'a' yielded 'undefined'");
 //│ } else {
-//│   this.f.a
+//│   selRes
 //│ }
 //│ = 1
 
 f.b
 //│ JS:
-//│ let scrutSelChk;
-//│ scrutSelChk = this.f.b === undefined;
-//│ if (scrutSelChk) {
-//│   throw new this.Error("b not found");
+//│ let selRes;
+//│ selRes = this.f.b;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'b' yielded 'undefined'");
 //│ } else {
-//│   this.f.b
+//│   selRes
 //│ }
 //│ = 2
 
@@ -143,23 +143,23 @@ let f = Foo(1, 2)
 
 f.a
 //│ JS:
-//│ let scrutSelChk;
-//│ scrutSelChk = this.f.a === undefined;
-//│ if (scrutSelChk) {
-//│   throw new this.Error("a not found");
+//│ let selRes;
+//│ selRes = this.f.a;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'a' yielded 'undefined'");
 //│ } else {
-//│   this.f.a
+//│   selRes
 //│ }
 //│ = 1
 
 f.b
 //│ JS:
-//│ let scrutSelChk;
-//│ scrutSelChk = this.f.b === undefined;
-//│ if (scrutSelChk) {
-//│   throw new this.Error("b not found");
+//│ let selRes;
+//│ selRes = this.f.b;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'b' yielded 'undefined'");
 //│ } else {
-//│   this.f.b
+//│   selRes
 //│ }
 //│ = 2
 
@@ -201,13 +201,7 @@ let i = new Inner(100)
 
 i.i1(20)
 //│ JS:
-//│ let scrutSelChk;
-//│ scrutSelChk = this.i.i1 === undefined;
-//│ if (scrutSelChk) {
-//│   throw new this.Error("i1 not found");
-//│ } else {
-//│   ((this.i.i1(20)) ?? null)
-//│ }
+//│ ((this.i.i1(20)) ?? null)
 //│ = 120
 
 

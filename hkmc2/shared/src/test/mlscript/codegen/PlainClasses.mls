@@ -177,29 +177,20 @@ log(a.x)
 log(a.foo(1))
 log(a.bar(1))
 //│ JS:
-//│ let tmp, scrutSelChk, tmp1, scrutSelChk1, tmp2, tmp3, scrutSelChk2, tmp4;
+//│ let tmp, selRes, tmp1, tmp2, tmp3, tmp4, tmp5;
 //│ tmp = new this.Foo();
 //│ this.a = tmp;
-//│ scrutSelChk = this.a.x === undefined;
-//│ if (scrutSelChk) {
-//│   throw new this.Error("x not found");
+//│ selRes = this.a.x;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'x' yielded 'undefined'");
 //│ } else {
-//│   tmp1 = ((this.log(this.a.x)) ?? null);
-//│   scrutSelChk1 = this.a.foo === undefined;
-//│   if (scrutSelChk1) {
-//│     throw new this.Error("foo not found");
-//│   } else {
-//│     tmp2 = ((this.a.foo(1)) ?? null);
-//│     tmp3 = ((this.log(tmp2)) ?? null);
-//│     scrutSelChk2 = this.a.bar === undefined;
-//│     if (scrutSelChk2) {
-//│       throw new this.Error("bar not found");
-//│     } else {
-//│       tmp4 = ((this.a.bar(1)) ?? null);
-//│       ((this.log(tmp4)) ?? null)
-//│     }
-//│   }
+//│   tmp1 = selRes;
 //│ }
+//│ tmp2 = ((this.log(tmp1)) ?? null);
+//│ tmp3 = ((this.a.foo(1)) ?? null);
+//│ tmp4 = ((this.log(tmp3)) ?? null);
+//│ tmp5 = ((this.a.bar(1)) ?? null);
+//│ ((this.log(tmp5)) ?? null)
 //│ > 1
 //│ > 2
 //│ > 3
@@ -231,13 +222,13 @@ class Foo with
 :fixme
 class Foo with val x = 1
 //│ ╔══[PARSE ERROR] Expected block after type declaration body; found 'val' keyword instead
-//│ ║  l.232: 	class Foo with val x = 1
+//│ ║  l.223: 	class Foo with val x = 1
 //│ ╙──       	               ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.232: 	class Foo with val x = 1
+//│ ║  l.223: 	class Foo with val x = 1
 //│ ╙──       	                     ^
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
-//│ ║  l.232: 	class Foo with val x = 1
+//│ ║  l.223: 	class Foo with val x = 1
 //│ ╙──       	                   ^
 //│ JS:
 //│ /* error */

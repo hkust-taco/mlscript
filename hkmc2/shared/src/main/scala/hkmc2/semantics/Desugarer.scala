@@ -389,7 +389,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
         val ctxWithAlias = ctx + (nme -> aliasSymbol)
         Split.Let(aliasSymbol, ref, sequel(ctxWithAlias) ++ fallback)
       case ctor @ (_: Ident | _: Sel | _: UserSel) => fallback => ctx =>
-        val clsTrm = elaborator.cls(ctor)
+        val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
         clsTrm.symbol.flatMap(_.asClsLike) match
         case S(cls: ClassSymbol) =>
             Branch(ref, Pattern.ClassLike(cls, clsTrm, N, false)(ctor), sequel(ctx)) ~: fallback
@@ -452,7 +452,7 @@ class Desugarer(tl: TraceLogger, elaborator: Elaborator)
         pre = s"expandMatch <<< ${ctor}(${args.iterator.map(_.showDbg).mkString(", ")})",
         post = (r: Split) => s"expandMatch >>> ${r.showDbg}"
       ):
-        val clsTrm = elaborator.cls(ctor)
+        val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
         clsTrm.symbol.flatMap(_.asClsLike) match
         case S(cls: ClassSymbol) =>
           val arity = cls.arity

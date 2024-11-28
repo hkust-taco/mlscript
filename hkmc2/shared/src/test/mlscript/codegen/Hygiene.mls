@@ -12,12 +12,12 @@ module Test with
 //│   }
 //│   foo(...args) {
 //│     globalThis.Predef.checkArgs("foo", 0, args.length);
-//│     let scrutSelChk;
-//│     scrutSelChk = globalThis.Test.x === undefined;
-//│     if (scrutSelChk) {
-//│       throw new globalThis.Error("x not found");
+//│     let selRes;
+//│     selRes = globalThis.Test.x;
+//│     if (selRes === undefined) {
+//│       throw new globalThis.Error("Access to required field 'x' yielded 'undefined'");
 //│     } else {
-//│       return globalThis.Test.x;
+//│       return selRes;
 //│     }
 //│   }
 //│   toString() { return "Test"; }
@@ -29,13 +29,7 @@ module Test with
 :sjs
 Test.foo()
 //│ JS:
-//│ let scrutSelChk;
-//│ scrutSelChk = this.Test.foo === undefined;
-//│ if (scrutSelChk) {
-//│   throw new this.Error("foo not found");
-//│ } else {
-//│   ((this.Test.foo()) ?? null)
-//│ }
+//│ ((this.Test.foo()) ?? null)
 //│ = 12
 
 :sjs
@@ -46,7 +40,7 @@ val Test = "oops"
 
 :fixme
 Test.foo()
-//│ ═══[RUNTIME ERROR] Error: foo not found
+//│ ═══[RUNTIME ERROR] TypeError: this.Test.foo is not a function
 
 
 // FIXME

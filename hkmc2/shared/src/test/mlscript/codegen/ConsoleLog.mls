@@ -14,20 +14,10 @@ console.log("a")
 console.log("b")
 123
 //│ JS:
-//│ let scrutSelChk, tmp, scrutSelChk1, tmp1;
-//│ scrutSelChk = this.console.log === undefined;
-//│ if (scrutSelChk) {
-//│   throw new this.Error("log not found");
-//│ } else {
-//│   tmp = ((this.console.log("a")) ?? null);
-//│   scrutSelChk1 = this.console.log === undefined;
-//│   if (scrutSelChk1) {
-//│     throw new this.Error("log not found");
-//│   } else {
-//│     tmp1 = ((this.console.log("b")) ?? null);
-//│     123
-//│   }
-//│ }
+//│ let tmp, tmp1;
+//│ tmp = ((this.console.log("a")) ?? null);
+//│ tmp1 = ((this.console.log("b")) ?? null);
+//│ 123
 //│ > a
 //│ > b
 //│ = 123
@@ -35,14 +25,15 @@ console.log("b")
 let l = console.log
 l(123)
 //│ JS:
-//│ let scrutSelChk;
-//│ scrutSelChk = this.console.log === undefined;
-//│ if (scrutSelChk) {
-//│   throw new this.Error("log not found");
+//│ let selRes, tmp;
+//│ selRes = this.console.log;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'log' yielded 'undefined'");
 //│ } else {
-//│   this.l = this.console.log;
-//│   ((this.l(123)) ?? null)
+//│   tmp = selRes;
 //│ }
+//│ this.l = tmp;
+//│ ((this.l(123)) ?? null)
 //│ > 123
 //│ l = [Function: log]
 
@@ -54,13 +45,7 @@ l(123)
 
 console.log("a")
 //│ JS:
-//│ let scrutSelChk;
-//│ scrutSelChk = this.console.log === undefined;
-//│ if (scrutSelChk) {
-//│   throw new this.Error("log not found");
-//│ } else {
-//│   ((this.console.log("a")) ?? null)
-//│ }
+//│ ((this.console.log("a")) ?? null)
 //│ > a
 
 
@@ -72,29 +57,14 @@ let y = x + 1
 console.log("c")
 y * 2
 //│ JS:
-//│ let scrutSelChk, tmp, scrutSelChk1, tmp1, tmp2, scrutSelChk2, tmp3;
-//│ scrutSelChk = this.console.log === undefined;
-//│ if (scrutSelChk) {
-//│   throw new this.Error("log not found");
-//│ } else {
-//│   tmp = ((this.console.log("a")) ?? null);
-//│   this.x = 123;
-//│   scrutSelChk1 = this.console.log === undefined;
-//│   if (scrutSelChk1) {
-//│     throw new this.Error("log not found");
-//│   } else {
-//│     tmp1 = ((this.console.log("b")) ?? null);
-//│     tmp2 = this.x + 1;
-//│     this.y = tmp2;
-//│     scrutSelChk2 = this.console.log === undefined;
-//│     if (scrutSelChk2) {
-//│       throw new this.Error("log not found");
-//│     } else {
-//│       tmp3 = ((this.console.log("c")) ?? null);
-//│       this.y * 2
-//│     }
-//│   }
-//│ }
+//│ let tmp, tmp1, tmp2, tmp3;
+//│ tmp = ((this.console.log("a")) ?? null);
+//│ this.x = 123;
+//│ tmp1 = ((this.console.log("b")) ?? null);
+//│ tmp2 = this.x + 1;
+//│ this.y = tmp2;
+//│ tmp3 = ((this.console.log("c")) ?? null);
+//│ this.y * 2
 //│ > a
 //│ > b
 //│ > c

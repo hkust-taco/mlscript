@@ -8,22 +8,23 @@ fun test(x) =
 //│ function test(...args) {
 //│   globalThis.Predef.checkArgs("test", 1, args.length);
 //│   let x = args[0];
-//│   let scrutSelChk;
-//│   scrutSelChk = globalThis.a === undefined;
-//│   if (scrutSelChk) {
-//│     throw new globalThis.Error("a not found");
+//│   let selRes, tmp;
+//│   selRes = globalThis.a;
+//│   if (selRes === undefined) {
+//│     throw new globalThis.Error("Access to required field 'a' yielded 'undefined'");
 //│   } else {
-//│     return [
-//│       globalThis.a,
-//│       x
-//│     ];
+//│     tmp = selRes;
 //│   }
+//│   return [
+//│     tmp,
+//│     x
+//│   ];
 //│ }
 //│ null
 
 :re
 test(123)
-//│ ═══[RUNTIME ERROR] Error: a not found
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'a' yielded 'undefined'
 
 val a = 1
 //│ a = 1
@@ -51,16 +52,17 @@ module Test with
 //│   test2(...args1) {
 //│     globalThis.Predef.checkArgs("test2", 1, args1.length);
 //│     let x1 = args1[0];
-//│     let scrutSelChk;
-//│     scrutSelChk = this.a === undefined;
-//│     if (scrutSelChk) {
-//│       throw new globalThis.Error("a not found");
+//│     let selRes, tmp;
+//│     selRes = this.a;
+//│     if (selRes === undefined) {
+//│       throw new globalThis.Error("Access to required field 'a' yielded 'undefined'");
 //│     } else {
-//│       return [
-//│         this.a,
-//│         x1
-//│       ];
+//│       tmp = selRes;
 //│     }
+//│     return [
+//│       tmp,
+//│       x1
+//│     ];
 //│   }
 //│   toString() { return "Test"; }
 //│ };

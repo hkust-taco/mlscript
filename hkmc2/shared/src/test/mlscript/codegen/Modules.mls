@@ -91,7 +91,7 @@ M.oops
 //│ ╔══[ERROR] Module 'M' does not contain member 'oops'
 //│ ║  l.90: 	M.oops
 //│ ╙──      	 ^^^^^
-//│ ═══[RUNTIME ERROR] Error: oops not found
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 
 :sjs

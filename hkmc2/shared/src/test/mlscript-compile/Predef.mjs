@@ -17,107 +17,89 @@ const Predef$class = class Predef {
   } 
   call(receiver, f1) {
     return (arg) => {
-      let scrutSelChk;
-      scrutSelChk = f1.call === undefined;
-      if (scrutSelChk) {
-        throw new globalThis.Error("call not found");
-      } else {
-        return ((f1.call(receiver, arg)) ?? null);
-      }
+      return ((f1.call(receiver, arg)) ?? null);
     };
   } 
   print(x3) {
-    let scrutSelChk, tmp;
-    scrutSelChk = console.log === undefined;
-    if (scrutSelChk) {
-      throw new globalThis.Error("log not found");
-    } else {
-      tmp = ((String(x3)) ?? null);
-      return ((console.log(tmp)) ?? null);
-    }
+    let tmp;
+    tmp = ((String(x3)) ?? null);
+    return ((console.log(tmp)) ?? null);
   } 
   tupleSlice(xs, i, j) {
-    let scrutSelChk, scrutSelChk1, scrutSelChk2, scrutSelChk3, scrutSelChk4, tmp;
-    scrutSelChk = globalThis.Array === undefined;
-    if (scrutSelChk) {
-      throw new globalThis.Error("Array not found");
+    let selRes, tmp, selRes1, tmp1, selRes2, tmp2, selRes3, tmp3, tmp4;
+    selRes = globalThis.Array;
+    if (selRes === undefined) {
+      throw new globalThis.Error("Access to required field 'Array' yielded 'undefined'");
     } else {
-      scrutSelChk1 = globalThis.Array.prototype === undefined;
-      if (scrutSelChk1) {
-        throw new globalThis.Error("prototype not found");
-      } else {
-        scrutSelChk2 = globalThis.Array.prototype.slice === undefined;
-        if (scrutSelChk2) {
-          throw new globalThis.Error("slice not found");
-        } else {
-          scrutSelChk3 = globalThis.Array.prototype.slice.call === undefined;
-          if (scrutSelChk3) {
-            throw new globalThis.Error("call not found");
-          } else {
-            scrutSelChk4 = xs.length === undefined;
-            if (scrutSelChk4) {
-              throw new globalThis.Error("length not found");
-            } else {
-              tmp = xs.length - j;
-              return ((globalThis.Array.prototype.slice.call(xs, i, tmp)) ?? null);
-            }
-          }
-        }
-      }
+      tmp = selRes;
     }
+    selRes1 = tmp.prototype;
+    if (selRes1 === undefined) {
+      throw new globalThis.Error("Access to required field 'prototype' yielded 'undefined'");
+    } else {
+      tmp1 = selRes1;
+    }
+    selRes2 = tmp1.slice;
+    if (selRes2 === undefined) {
+      throw new globalThis.Error("Access to required field 'slice' yielded 'undefined'");
+    } else {
+      tmp2 = selRes2;
+    }
+    selRes3 = xs.length;
+    if (selRes3 === undefined) {
+      throw new globalThis.Error("Access to required field 'length' yielded 'undefined'");
+    } else {
+      tmp3 = selRes3;
+    }
+    tmp4 = tmp3 - j;
+    return ((tmp2.call(xs, i, tmp4)) ?? null);
   } 
   tupleGet(xs1, i1) {
-    let scrutSelChk, scrutSelChk1, scrutSelChk2, scrutSelChk3;
-    scrutSelChk = globalThis.Array === undefined;
-    if (scrutSelChk) {
-      throw new globalThis.Error("Array not found");
+    let selRes, tmp, selRes1, tmp1, selRes2, tmp2;
+    selRes = globalThis.Array;
+    if (selRes === undefined) {
+      throw new globalThis.Error("Access to required field 'Array' yielded 'undefined'");
     } else {
-      scrutSelChk1 = globalThis.Array.prototype === undefined;
-      if (scrutSelChk1) {
-        throw new globalThis.Error("prototype not found");
-      } else {
-        scrutSelChk2 = globalThis.Array.prototype.at === undefined;
-        if (scrutSelChk2) {
-          throw new globalThis.Error("at not found");
-        } else {
-          scrutSelChk3 = globalThis.Array.prototype.at.call === undefined;
-          if (scrutSelChk3) {
-            throw new globalThis.Error("call not found");
-          } else {
-            return ((globalThis.Array.prototype.at.call(xs1, i1)) ?? null);
-          }
-        }
-      }
+      tmp = selRes;
     }
+    selRes1 = tmp.prototype;
+    if (selRes1 === undefined) {
+      throw new globalThis.Error("Access to required field 'prototype' yielded 'undefined'");
+    } else {
+      tmp1 = selRes1;
+    }
+    selRes2 = tmp1.at;
+    if (selRes2 === undefined) {
+      throw new globalThis.Error("Access to required field 'at' yielded 'undefined'");
+    } else {
+      tmp2 = selRes2;
+    }
+    return ((tmp2.call(xs1, i1)) ?? null);
   } 
   checkArgs(functionName, expected, got) {
-    let scrut, name, scrut1, scrutSelChk, tmp, tmp1, scrutSelChk1, tmp2, tmp3, tmp4, tmp5, tmp6;
+    let scrut, name, scrut1, selRes, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
     scrut = got != expected;
     if (scrut) {
-      scrutSelChk = functionName.length === undefined;
-      if (scrutSelChk) {
-        throw new globalThis.Error("length not found");
+      selRes = functionName.length;
+      if (selRes === undefined) {
+        throw new globalThis.Error("Access to required field 'length' yielded 'undefined'");
       } else {
-        scrut1 = functionName.length > 0;
-        if (scrut1) {
-          tmp = " '" + functionName;
-          tmp1 = tmp + "'";
-        } else {
-          tmp1 = "";
-        }
+        tmp = selRes;
       }
-      name = tmp1;
-      scrutSelChk1 = globalThis.Error === undefined;
-      if (scrutSelChk1) {
-        throw new globalThis.Error("Error not found");
+      scrut1 = tmp > 0;
+      if (scrut1) {
+        tmp1 = " '" + functionName;
+        tmp2 = tmp1 + "'";
       } else {
-        tmp2 = "Function" + name;
-        tmp3 = tmp2 + " expected ";
-        tmp4 = tmp3 + expected;
-        tmp5 = tmp4 + " arguments but got ";
-        tmp6 = tmp5 + got;
-        throw ((globalThis.Error(tmp6)) ?? null);
+        tmp2 = "";
       }
+      name = tmp2;
+      tmp3 = "Function" + name;
+      tmp4 = tmp3 + " expected ";
+      tmp5 = tmp4 + expected;
+      tmp6 = tmp5 + " arguments but got ";
+      tmp7 = tmp6 + got;
+      throw ((globalThis.Error(tmp7)) ?? null);
     } else {
       return null;
     }

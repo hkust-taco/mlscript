@@ -55,7 +55,7 @@ Example .oops(2)
 //│ ╔══[ERROR] Module 'Example' does not contain member 'oops'
 //│ ║  l.54: 	Example .oops(2)
 //│ ╙──      	        ^^^^^
-//│ ═══[RUNTIME ERROR] Error: oops not found
+//│ ═══[RUNTIME ERROR] TypeError: this.Example.oops is not a function
 
 
 id(Example) . oops(2)

@@ -285,21 +285,23 @@ class Lowering(using TL, Raise, Elaborator.State):
         
     case UserSel(prefix, nme) =>
       subTerm(prefix): p =>
-        val scrutSelChkSym = TempSymbol(N, "scrutSelChk")
-        val throwErr =
-          Throw(Instantiate(
-            Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Error")),
-            Value.Lit(syntax.Tree.StrLit(s"${nme.name} not found")) :: Nil))
-        Assign(
-          scrutSelChkSym,
-          Call(Value.Ref(State.eqSymbol), Arg(false, UserSelect(p, nme)) :: Arg(false, Value.Lit(Tree.UndefLit())) :: Nil),
-          Match(
-            Value.Ref(scrutSelChkSym),
-            (Case.Lit(Tree.BoolLit(true)) -> throwErr) :: Nil,
-            Some(k(UserSelect(p, nme))),
-            End()
+        val selRes = TempSymbol(N, "selRes")
+        val split = Split.Cons(
+            Branch(selRes.ref(),
+              Pattern.Lit(syntax.Tree.UndefLit()),
+              Split.Else(
+                Term.Throw(Term.New(Sel(State.globalThisSymbol.ref(), Tree.Ident("Error"))(N),
+                  Term.Lit(syntax.Tree.StrLit(s"Access to required field '${nme.name}' yielded 'undefined'")) :: Nil)
+                ))
+            ),
+            Split.Else(selRes.ref())
           )
+        Assign(
+          selRes,
+          UserSelect(p, nme),
+          term(IfLike(syntax.Keyword.`if`, split)(split))(k)
         )
+        
         
     case New(cls, as) =>
       subTerm(cls): sr =>
