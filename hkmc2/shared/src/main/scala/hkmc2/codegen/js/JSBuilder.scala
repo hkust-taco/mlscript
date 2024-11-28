@@ -462,7 +462,7 @@ trait JSBuilderSanityChecks
       val preParams = if paramsList.isEmpty then doc"" else paramsList.map(p => doc"globalThis.JSON.stringify($p)").mkDocument("+ \" with \" + ", " + \", \" + ", Document.empty)
       // val pre = doc"${JSBuilder.makeStringLiteral(s"calling $functionName")}$preParams"
       (doc"...$paramsStr",
-        doc"$checkArgsNum$paramsAssign\n" ::
+        doc"$checkArgsNum$paramsAssign" ::
         doc"let prevIndent = Predef.TraceLogger.indent;\n" ::
         doc"Predef.TraceLogger.log(${JSBuilder.makeStringLiteral("calling ")} + $functionName $preParams);\n" ::
         doc"Predef.TraceLogger.indent = Predef.TraceLogger.indent + 1;\n" ::
