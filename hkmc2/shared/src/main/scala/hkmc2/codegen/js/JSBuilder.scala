@@ -97,10 +97,6 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
       val argDoc = doc"(${args.map(result).mkDocument(", ")})"
       fun match
         case _: Value.Lam => doc"(((${result(fun)})$argDoc) ?? null)"
-        // case UserSelect(path, id) =>
-        //   val pathDoc = result(path)
-        //   val name = id.name
-        //   doc"(() => {if (${JSBuilder.makeStringLiteral(name)} in ${pathDoc}) { return $pathDoc.${id.name}$argDoc } else { throw new globalThis.Error(${JSBuilder.makeStringLiteral(s"Field not found: $name") })}})()"
         case _ => doc"((${result(fun)}$argDoc) ?? null)"
       // doc"${base}(${args.map(result).mkDocument(", ")})"
     case Value.Lam(ps, bod) => scope.nest givenIn:
@@ -120,9 +116,6 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
     case Instantiate(cls, as) =>
       val argDoc = doc"(${as.map(result).mkDocument(", ")})"
       cls match
-        // case UserSelect(path, id) => val pathDoc = result(path)
-        //   val name = id.name
-        //   doc"(() => {if (${JSBuilder.makeStringLiteral(name)} in ${pathDoc}) { return new $pathDoc.${id.name}$argDoc } else { throw new globalThis.Error(${JSBuilder.makeStringLiteral(s"Field not found: $name") })}})()"
         case _ => doc"new ${result(cls)}$argDoc"
     case Value.Arr(es) =>
       doc"[ #{  # ${es.map(result).mkDocument(doc", # ")} #}  # ]"

@@ -52,8 +52,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val jsb = new JSBuilder with JSBuilderSanityChecks(noSanityCheck.isUnset)
       import semantics.*
       import codegen.*
-      val le
-       = low.program(blk)
+      val le = low.program(blk)
       if showLoweredTree.isSet then
         output(s"Lowered:")
         output(le.showAsTree)
