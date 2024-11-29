@@ -23,17 +23,17 @@ fun test(a) =
   Inner(42)
 //│ JS:
 //│ function test(...args) {
-//│   globalThis.Predef.checkArgs("test", 1, args.length);
+//│   globalThis.Predef.checkArgs("test", 1, true, args.length);
 //│   let a = args[0];
-//│   function Inner(b1) { return new Inner.class(b1); };
+//│   function Inner(...args1) { return new Inner.class(...args1); };
 //│   Inner.class = class Inner {
 //│     constructor(b) {
 //│       this.b = b;
 //│       let tmp;
-//│       tmp = globalThis.log(a);
+//│       tmp = globalThis.log(a) ?? null;
 //│     }
 //│     f(...args1) {
-//│       globalThis.Predef.checkArgs("f", 1, args1.length);
+//│       globalThis.Predef.checkArgs("f", 1, true, args1.length);
 //│       let c = args1[0];
 //│       return [
 //│         a,
@@ -42,12 +42,12 @@ fun test(a) =
 //│       ];
 //│     } 
 //│     g(...args2) {
-//│       globalThis.Predef.checkArgs("g", 1, args2.length);
+//│       globalThis.Predef.checkArgs("g", 1, true, args2.length);
 //│       let d = args2[0];
 //│       
 //│       const this$Inner = this;
 //│       function h(...args1) {
-//│         globalThis.Predef.checkArgs("h", 1, args1.length);
+//│         globalThis.Predef.checkArgs("h", 1, true, args1.length);
 //│         let e = args1[0];
 //│         return [
 //│           a,
@@ -56,11 +56,11 @@ fun test(a) =
 //│           e
 //│         ];
 //│       }
-//│       return h(d);
+//│       return h(d) ?? null;
 //│     }
 //│     toString() { return "Inner(" + this.b + ")"; }
 //│   };
-//│   return Inner(42);
+//│   return Inner(42) ?? null;
 //│ }
 //│ undefined
 
@@ -84,33 +84,33 @@ fun test(a) =
   [C1(1), C2(2)]
 //│ JS:
 //│ function test(...args) {
-//│   globalThis.Predef.checkArgs("test", 1, args.length);
+//│   globalThis.Predef.checkArgs("test", 1, true, args.length);
 //│   let a = args[0];
 //│   let tmp, tmp1;
-//│   function C1(b1) { return new C1.class(b1); };
+//│   function C1(...args1) { return new C1.class(...args1); };
 //│   C1.class = class C1 {
 //│     constructor(b) {
 //│       this.b = b;
 //│       Predef.print([
 //│         a,
 //│         this.b
-//│       ])
+//│       ]) ?? null
 //│     }
 //│     toString() { return "C1(" + this.b + ")"; }
 //│   };
-//│   function C2(b1) { return new C2.class(b1); };
+//│   function C2(...args1) { return new C2.class(...args1); };
 //│   C2.class = class C2 {
 //│     constructor(b) {
 //│       this.b = b;
 //│       Predef.print([
 //│         a,
 //│         this.b
-//│       ])
+//│       ]) ?? null
 //│     }
 //│     toString() { return "C2(" + this.b + ")"; }
 //│   };
-//│   tmp = C1(1);
-//│   tmp1 = C2(2);
+//│   tmp = C1(1) ?? null;
+//│   tmp1 = C2(2) ?? null;
 //│   return [
 //│     tmp,
 //│     tmp1
@@ -134,31 +134,31 @@ class Foo(a) with
   foo()
 Foo(123)
 //│ JS:
-//│ this.Foo = function Foo(a1) { return new Foo.class(a1); };
+//│ this.Foo = function Foo(...args1) { return new Foo.class(...args1); };
 //│ this.Foo.class = class Foo {
 //│   constructor(a) {
 //│     this.a = a;
-//│     this.foo()
+//│     this.foo() ?? null
 //│   }
 //│   foo(...args) {
-//│     globalThis.Predef.checkArgs("foo", 0, args.length);
+//│     globalThis.Predef.checkArgs("foo", 0, true, args.length);
 //│     let tmp;
 //│     
 //│     const this$Foo = this;
 //│     function bar(...args1) {
-//│       globalThis.Predef.checkArgs("bar", 0, args1.length);
+//│       globalThis.Predef.checkArgs("bar", 0, true, args1.length);
 //│       return this$Foo.a;
 //│     }
 //│     function baz(...args1) {
-//│       globalThis.Predef.checkArgs("baz", 0, args1.length);
+//│       globalThis.Predef.checkArgs("baz", 0, true, args1.length);
 //│       return this$Foo.a;
 //│     }
-//│     tmp = bar();
-//│     return baz();
+//│     tmp = bar() ?? null;
+//│     return baz() ?? null;
 //│   }
 //│   toString() { return "Foo(" + this.a + ")"; }
 //│ };
-//│ this.Foo(123)
+//│ this.Foo(123) ?? null
 //│ = Foo { a: 123 }
 
 

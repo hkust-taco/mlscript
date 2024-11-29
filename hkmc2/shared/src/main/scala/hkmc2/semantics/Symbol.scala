@@ -61,8 +61,7 @@ class FlowSymbol(label: Str)(using State) extends Symbol:
   val outFlows2: mutable.Buffer[Consumer] = mutable.Buffer.empty
   val inFlows: mutable.Buffer[ConcreteProd] = mutable.Buffer.empty
   override def toString: Str =
-    label
-    // s"$label@$uid"
+    label + State.dbgUid(uid)
 
 
 sealed trait LocalSymbol extends Symbol
@@ -86,7 +85,7 @@ class BuiltinSymbol
     (val nme: Str, val binary: Bool, val unary: Bool, val nullary: Bool)(using State)
     extends Symbol:
   def toLoc: Option[Loc] = N
-  override def toString: Str = s"builtin:$nme"
+  override def toString: Str = s"builtin:$nme${State.dbgUid(uid)}"
 
 
 /** This is the outside-facing symbol associated to a possibly-overloaded
@@ -110,7 +109,8 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[Tree])(using State)
   lazy val hasLiftedClass: Bool =
     modTree.isDefined || trmTree.isDefined || clsTree.exists(_.paramLists.nonEmpty)
   
-  override def toString: Str = s"member:$nme"
+  override def toString: Str =
+    s"member:$nme${State.dbgUid(uid)}"
 
 end BlockMemberSymbol
 
@@ -157,7 +157,7 @@ class ClassSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
     extends MemberSymbol[ClassDef] with CtorSymbol with InnerSymbol:
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of classe here
-  override def toString: Str = s"class:$nme"
+  override def toString: Str = s"class:$nme${State.dbgUid(uid)}"
   /** Compute the arity. */
   def arity: Int = tree.paramLists.headOption.fold(0)(_.fields.length)
 
@@ -165,17 +165,17 @@ class ModuleSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
     extends MemberSymbol[ModuleDef] with CtorSymbol with InnerSymbol:
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of module here
-  override def toString: Str = s"module:${id.name}"
+  override def toString: Str = s"module:${id.name}${State.dbgUid(uid)}"
 
 class TypeAliasSymbol(val id: Tree.Ident)(using State) extends MemberSymbol[TypeDef]:
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of type alias here
-  override def toString: Str = s"module:${id.name}"
+  override def toString: Str = s"module:${id.name}${State.dbgUid(uid)}"
 
 class TopLevelSymbol(blockNme: Str)(using State)
     extends MemberSymbol[ModuleDef] with InnerSymbol:
   def nme = blockNme
   def toLoc: Option[Loc] = N
-  override def toString: Str = s"globalThis:$blockNme"
+  override def toString: Str = s"globalThis:$blockNme${State.dbgUid(uid)}"
 
 

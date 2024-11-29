@@ -10,4 +10,10 @@ fun (/) funnySlash(f, arg) = f(arg)
 
 fun inc(x) = x + 1
 
+fun test(x) = if x is
+  Int then "int"
+  Num then "num"
+  Str then "str"
+  else "other"
+
 

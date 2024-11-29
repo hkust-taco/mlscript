@@ -18,11 +18,11 @@ fun nonsense(xs) = if xs is
   [] then "empty"
 //│ JS:
 //│ function nonsense(...args) {
-//│   globalThis.Predef.checkArgs("nonsense", 1, args.length);
+//│   globalThis.Predef.checkArgs("nonsense", 1, true, args.length);
 //│   let xs = args[0];
 //│   let rest, ys;
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 0) {
-//│     rest = globalThis.Predef.tupleSlice(xs, 0, 0);
+//│     rest = globalThis.Predef.tupleSlice(xs, 0, 0) ?? null;
 //│     ys = rest;
 //│     return ys;
 //│   } else {
@@ -43,13 +43,13 @@ fun lead_and_last(xs) = if xs is
   [] then 0
 //│ JS:
 //│ function lead_and_last(...args) {
-//│   globalThis.Predef.checkArgs("lead_and_last", 1, args.length);
+//│   globalThis.Predef.checkArgs("lead_and_last", 1, true, args.length);
 //│   let xs = args[0];
 //│   let last0, rest, first0, x, ys, y;
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];
-//│     rest = globalThis.Predef.tupleSlice(xs, 1, 1);
-//│     last0 = globalThis.Predef.tupleGet(xs, -1);
+//│     rest = globalThis.Predef.tupleSlice(xs, 1, 1) ?? null;
+//│     last0 = globalThis.Predef.tupleGet(xs, -1) ?? null;
 //│     x = first0;
 //│     ys = rest;
 //│     y = last0;
@@ -83,13 +83,13 @@ fun nested_tuple_patterns(xs) = if xs is
   [] then 0
 //│ JS:
 //│ function nested_tuple_patterns(...args) {
-//│   globalThis.Predef.checkArgs("nested_tuple_patterns", 1, args.length);
+//│   globalThis.Predef.checkArgs("nested_tuple_patterns", 1, true, args.length);
 //│   let xs = args[0];
 //│   let last0, rest, first0, x, first1, first01, y, z, w, tmp, tmp1;
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];
-//│     rest = globalThis.Predef.tupleSlice(xs, 1, 1);
-//│     last0 = globalThis.Predef.tupleGet(xs, -1);
+//│     rest = globalThis.Predef.tupleSlice(xs, 1, 1) ?? null;
+//│     last0 = globalThis.Predef.tupleGet(xs, -1) ?? null;
 //│     x = first0;
 //│     if (globalThis.Array.isArray(rest) && rest.length === 2) {
 //│       first01 = rest[0];

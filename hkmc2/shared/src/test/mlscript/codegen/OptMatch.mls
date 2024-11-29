@@ -11,7 +11,7 @@ fun isDefined(x) = if x is
   None then false
 //│ JS:
 //│ function isDefined(...args) {
-//│   globalThis.Predef.checkArgs("isDefined", 1, args.length);
+//│   globalThis.Predef.checkArgs("isDefined", 1, true, args.length);
 //│   let x = args[0];
 //│   if (x instanceof globalThis.Some.class) {
 //│     return true;
@@ -38,7 +38,7 @@ val isDefined = case
   None    then false
 //│ JS:
 //│ this.isDefined = (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, args.length);
+//│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let caseScrut = args[0];
 //│   let param0;
 //│   if (caseScrut instanceof this.Some.class) {

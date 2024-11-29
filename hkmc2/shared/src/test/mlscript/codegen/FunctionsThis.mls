@@ -11,7 +11,7 @@ fun foo() =
 //│ JS:
 //│ this.x = 2;
 //│ function foo(...args) {
-//│   globalThis.Predef.checkArgs("foo", 0, args.length);
+//│   globalThis.Predef.checkArgs("foo", 0, true, args.length);
 //│   return globalThis.x + 1;
 //│ }
 //│ undefined
@@ -24,8 +24,8 @@ class Test with
 //│ this.Test = class Test {
 //│   constructor() {
 //│     let tmp;
-//│     tmp = globalThis.foo();
-//│     globalThis.log(tmp)
+//│     tmp = globalThis.foo() ?? null;
+//│     globalThis.log(tmp) ?? null
 //│   }
 //│   toString() { return "Test"; }
 //│ };
@@ -42,14 +42,16 @@ fun test() =
   whoops
 //│ JS:
 //│ function test(...args) {
-//│   globalThis.Predef.checkArgs("test", 0, args.length);
+//│   globalThis.Predef.checkArgs("test", 0, true, args.length);
 //│   Object.defineProperty(this, 'whoops', { get: function() { 
 //│     return 42; }});
 //│   return whoops;
 //│ }
 //│ undefined
 
+:fixme
 globalThis.whoops
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'whoops' yielded 'undefined'
 
 
 test()
@@ -66,9 +68,9 @@ fun bar() =
   baz
 //│ JS:
 //│ function bar(...args) {
-//│   globalThis.Predef.checkArgs("bar", 0, args.length);
+//│   globalThis.Predef.checkArgs("bar", 0, true, args.length);
 //│   function baz(...args1) {
-//│     globalThis.Predef.checkArgs("baz", 0, args1.length);
+//│     globalThis.Predef.checkArgs("baz", 0, true, args1.length);
 //│     return 42;
 //│   }
 //│   return baz;
@@ -83,13 +85,13 @@ fun baz() =
   (x, y) => x + y + w + z
 //│ JS:
 //│ function baz(...args) {
-//│   globalThis.Predef.checkArgs("baz", 0, args.length);
+//│   globalThis.Predef.checkArgs("baz", 0, true, args.length);
 //│   Object.defineProperty(this, 'w', { get: function() { 
 //│     return 1; }});
 //│   Object.defineProperty(this, 'z', { get: function() { 
 //│     return 2; }});
 //│   return (...args1) => {
-//│     globalThis.Predef.checkArgs("", 2, args1.length);
+//│     globalThis.Predef.checkArgs("", 2, true, args1.length);
 //│     let x = args1[0];
 //│     let y = args1[1];
 //│     let tmp, tmp1;
@@ -114,11 +116,11 @@ fun a() =
   c
 //│ JS:
 //│ function a(...args) {
-//│   globalThis.Predef.checkArgs("a", 0, args.length);
+//│   globalThis.Predef.checkArgs("a", 0, true, args.length);
 //│   Object.defineProperty(this, 'b', { get: function() { 
 //│     return 1; }});
 //│   function c(...args1) {
-//│     globalThis.Predef.checkArgs("c", 0, args1.length);
+//│     globalThis.Predef.checkArgs("c", 0, true, args1.length);
 //│     Object.defineProperty(this, 'd', { get: function() { 
 //│       return 2; }});
 //│     return b + d;
@@ -141,11 +143,11 @@ fun b() =
   d
 //│ JS:
 //│ function b(...args) {
-//│   globalThis.Predef.checkArgs("b", 0, args.length);
+//│   globalThis.Predef.checkArgs("b", 0, true, args.length);
 //│   Object.defineProperty(this, 'c', { get: function() { 
 //│     return 1; }});
 //│   function d(...args1) {
-//│     globalThis.Predef.checkArgs("d", 0, args1.length);
+//│     globalThis.Predef.checkArgs("d", 0, true, args1.length);
 //│     Object.defineProperty(this, 'c', { get: function() { 
 //│       return 2; }});
 //│     return c;
@@ -169,7 +171,7 @@ fun c() =
   d
 //│ JS:
 //│ function c(...args) {
-//│   globalThis.Predef.checkArgs("c", 0, args.length);
+//│   globalThis.Predef.checkArgs("c", 0, true, args.length);
 //│   Object.defineProperty(this, 'f', { get: function() { 
 //│     return 1; }});
 //│   Object.defineProperty(this, 'd', { get: function() { 

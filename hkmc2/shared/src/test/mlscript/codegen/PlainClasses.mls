@@ -39,7 +39,7 @@ Foo
 :re
 Foo()
 //│ JS:
-//│ this.Foo()
+//│ this.Foo() ?? null
 //│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
 
 
@@ -48,11 +48,11 @@ log("ok")
 //│ JS:
 //│ this.Foo = class Foo {
 //│   constructor() {
-//│     globalThis.log("hi")
+//│     globalThis.log("hi") ?? null
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
-//│ this.log("ok")
+//│ this.log("ok") ?? null
 //│ > ok
 
 fun test() =
@@ -61,22 +61,22 @@ fun test() =
   Foo
 //│ JS:
 //│ function test(...args) {
-//│   globalThis.Predef.checkArgs("test", 0, args.length);
+//│   globalThis.Predef.checkArgs("test", 0, true, args.length);
 //│   let tmp;
 //│   class Foo {
 //│     constructor() {
-//│       globalThis.log("hi")
+//│       globalThis.log("hi") ?? null
 //│     }
 //│     toString() { return "Foo"; }
 //│   }
-//│   tmp = globalThis.log("ok");
+//│   tmp = globalThis.log("ok") ?? null;
 //│   return Foo;
 //│ }
 //│ undefined
 
 let t = test()
 //│ JS:
-//│ let tmp; tmp = this.test(); this.t = tmp; undefined
+//│ let tmp; tmp = this.test() ?? null; this.t = tmp; undefined
 //│ > ok
 //│ t = [class Foo]
 
@@ -107,7 +107,7 @@ class Foo with
 //│     this.#y = tmp;
 //│   }
 //│   z(...args) {
-//│     globalThis.Predef.checkArgs("z", 0, args.length);
+//│     globalThis.Predef.checkArgs("z", 0, true, args.length);
 //│     return this.#y + this.x;
 //│   }
 //│   toString() { return "Foo"; }
@@ -132,14 +132,14 @@ class Foo with
 //│     this.x2 = 2;
 //│     this.#y1 = 3;
 //│     this.#y2 = 4;
-//│     globalThis.log("hello")
+//│     globalThis.log("hello") ?? null
 //│   }
 //│   z1(...args) {
-//│     globalThis.Predef.checkArgs("z1", 0, args.length);
+//│     globalThis.Predef.checkArgs("z1", 0, true, args.length);
 //│     return 5;
 //│   } 
 //│   z2(...args1) {
-//│     globalThis.Predef.checkArgs("z2", 0, args1.length);
+//│     globalThis.Predef.checkArgs("z2", 0, true, args1.length);
 //│     return 6;
 //│   }
 //│   toString() { return "Foo"; }
@@ -157,15 +157,15 @@ class Foo with
 //│     this.x = 1;
 //│   }
 //│   foo(...args) {
-//│     globalThis.Predef.checkArgs("foo", 1, args.length);
+//│     globalThis.Predef.checkArgs("foo", 1, true, args.length);
 //│     let y = args[0];
 //│     return this.x + y;
 //│   } 
 //│   bar(...args1) {
-//│     globalThis.Predef.checkArgs("bar", 1, args1.length);
+//│     globalThis.Predef.checkArgs("bar", 1, true, args1.length);
 //│     let z = args1[0];
 //│     let tmp;
-//│     tmp = this.foo(z);
+//│     tmp = this.foo(z) ?? null;
 //│     return tmp + 1;
 //│   }
 //│   toString() { return "Foo"; }
@@ -177,14 +177,20 @@ log(a.x)
 log(a.foo(1))
 log(a.bar(1))
 //│ JS:
-//│ let tmp, tmp1, tmp2, tmp3, tmp4;
+//│ let tmp, selRes, tmp1, tmp2, tmp3, tmp4, tmp5;
 //│ tmp = new this.Foo();
 //│ this.a = tmp;
-//│ tmp1 = this.log(this.a.x);
-//│ tmp2 = this.a.foo(1);
-//│ tmp3 = this.log(tmp2);
-//│ tmp4 = this.a.bar(1);
-//│ this.log(tmp4)
+//│ selRes = this.a.x;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'x' yielded 'undefined'");
+//│ } else {
+//│   tmp1 = selRes;
+//│ }
+//│ tmp2 = this.log(tmp1) ?? null;
+//│ tmp3 = this.a.foo(1) ?? null;
+//│ tmp4 = this.log(tmp3) ?? null;
+//│ tmp5 = this.a.bar(1) ?? null;
+//│ this.log(tmp5) ?? null
 //│ > 1
 //│ > 2
 //│ > 3
@@ -216,13 +222,13 @@ class Foo with
 :fixme
 class Foo with val x = 1
 //│ ╔══[PARSE ERROR] Expected block after type declaration body; found 'val' keyword instead
-//│ ║  l.217: 	class Foo with val x = 1
+//│ ║  l.223: 	class Foo with val x = 1
 //│ ╙──       	               ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.217: 	class Foo with val x = 1
+//│ ║  l.223: 	class Foo with val x = 1
 //│ ╙──       	                     ^
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
-//│ ║  l.217: 	class Foo with val x = 1
+//│ ║  l.223: 	class Foo with val x = 1
 //│ ╙──       	                   ^
 //│ JS:
 //│ /* error */

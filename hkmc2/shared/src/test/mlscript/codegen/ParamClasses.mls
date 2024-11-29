@@ -9,7 +9,7 @@
 
 class Foo()
 //│ JS:
-//│ this.Foo = function Foo() { return new Foo.class(); };
+//│ this.Foo = function Foo(...args) { return new Foo.class(...args); };
 //│ this.Foo.class = class Foo {
 //│   constructor() {
 //│     
@@ -25,18 +25,24 @@ Foo
 
 Foo()
 //│ JS:
-//│ this.Foo()
+//│ this.Foo() ?? null
 //│ = Foo {}
 
 Foo.class
 //│ JS:
-//│ this.Foo.class
+//│ let selRes;
+//│ selRes = this.Foo.class;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'class' yielded 'undefined'");
+//│ } else {
+//│   selRes
+//│ }
 //│ = [class Foo]
 
 
 class Foo(a)
 //│ JS:
-//│ this.Foo = function Foo(a1) { return new Foo.class(a1); };
+//│ this.Foo = function Foo(...args) { return new Foo.class(...args); };
 //│ this.Foo.class = class Foo {
 //│   constructor(a) {
 //│     this.a = a;
@@ -53,29 +59,36 @@ Foo
 
 Foo(1)
 //│ JS:
-//│ this.Foo(1)
+//│ this.Foo(1) ?? null
 //│ = Foo { a: 1 }
 
 Foo(1).a
 //│ JS:
-//│ let tmp; tmp = this.Foo(1); tmp.a
+//│ let tmp, selRes;
+//│ tmp = this.Foo(1) ?? null;
+//│ selRes = tmp.a;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'a' yielded 'undefined'");
+//│ } else {
+//│   selRes
+//│ }
 //│ = 1
 
 fun foo(y) = Foo(y)
 foo(27)
 //│ JS:
 //│ function foo(...args) {
-//│   globalThis.Predef.checkArgs("foo", 1, args.length);
+//│   globalThis.Predef.checkArgs("foo", 1, true, args.length);
 //│   let y = args[0];
-//│   return globalThis.Foo(y);
+//│   return globalThis.Foo(y) ?? null;
 //│ }
-//│ this.foo(27)
+//│ this.foo(27) ?? null
 //│ = Foo { a: 27 }
 
 
 class Foo(a, b)
 //│ JS:
-//│ this.Foo = function Foo(a1, b1) { return new Foo.class(a1, b1); };
+//│ this.Foo = function Foo(...args) { return new Foo.class(...args); };
 //│ this.Foo.class = class Foo {
 //│   constructor(a, b) {
 //│     this.a = a;
@@ -93,7 +106,7 @@ let foo = Foo
 
 let f = foo(1, 2)
 //│ JS:
-//│ let tmp; tmp = this.foo(1, 2); this.f = tmp; undefined
+//│ let tmp; tmp = this.foo(1, 2) ?? null; this.f = tmp; undefined
 //│ f = Foo { a: 1, b: 2 }
 
 let f = new foo(1, 2)
@@ -103,49 +116,73 @@ let f = new foo(1, 2)
 
 f.a
 //│ JS:
-//│ this.f.a
+//│ let selRes;
+//│ selRes = this.f.a;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'a' yielded 'undefined'");
+//│ } else {
+//│   selRes
+//│ }
 //│ = 1
 
 f.b
 //│ JS:
-//│ this.f.b
+//│ let selRes;
+//│ selRes = this.f.b;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'b' yielded 'undefined'");
+//│ } else {
+//│   selRes
+//│ }
 //│ = 2
 
 let f = Foo(1, 2)
 //│ JS:
-//│ let tmp; tmp = this.Foo(1, 2); this.f = tmp; undefined
+//│ let tmp; tmp = this.Foo(1, 2) ?? null; this.f = tmp; undefined
 //│ f = Foo { a: 1, b: 2 }
 
 f.a
 //│ JS:
-//│ this.f.a
+//│ let selRes;
+//│ selRes = this.f.a;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'a' yielded 'undefined'");
+//│ } else {
+//│   selRes
+//│ }
 //│ = 1
 
 f.b
 //│ JS:
-//│ this.f.b
+//│ let selRes;
+//│ selRes = this.f.b;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'b' yielded 'undefined'");
+//│ } else {
+//│   selRes
+//│ }
 //│ = 2
 
 Foo(log(1), log(2))
 //│ JS:
-//│ let tmp, tmp1; tmp = this.log(1); tmp1 = this.log(2); this.Foo(tmp, tmp1)
+//│ let tmp, tmp1; tmp = this.log(1) ?? null; tmp1 = this.log(2) ?? null; this.Foo(tmp, tmp1) ?? null
 //│ > 1
 //│ > 2
-//│ = Foo { a: undefined, b: undefined }
+//│ = Foo { a: null, b: null }
 
 
 class Inner(c) with
   fun i1(d) = c + d
   log(c)
 //│ JS:
-//│ this.Inner = function Inner(c1) { return new Inner.class(c1); };
+//│ this.Inner = function Inner(...args1) { return new Inner.class(...args1); };
 //│ this.Inner.class = class Inner {
 //│   constructor(c) {
 //│     this.c = c;
-//│     globalThis.log(this.c)
+//│     globalThis.log(this.c) ?? null
 //│   }
 //│   i1(...args) {
-//│     globalThis.Predef.checkArgs("i1", 1, args.length);
+//│     globalThis.Predef.checkArgs("i1", 1, true, args.length);
 //│     let d = args[0];
 //│     return this.c + d;
 //│   }
@@ -161,7 +198,7 @@ let i = new Inner(100)
 
 i.i1(20)
 //│ JS:
-//│ this.i.i1(20)
+//│ this.i.i1(20) ?? null
 //│ = 120
 
 

@@ -14,7 +14,7 @@ console.log("a")
 console.log("b")
 123
 //│ JS:
-//│ let tmp, tmp1; tmp = this.console.log("a"); tmp1 = this.console.log("b"); 123
+//│ let tmp, tmp1; tmp = this.console.log("a") ?? null; tmp1 = this.console.log("b") ?? null; 123
 //│ > a
 //│ > b
 //│ = 123
@@ -22,7 +22,15 @@ console.log("b")
 let l = console.log
 l(123)
 //│ JS:
-//│ this.l = this.console.log; this.l(123)
+//│ let selRes, tmp;
+//│ selRes = this.console.log;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'log' yielded 'undefined'");
+//│ } else {
+//│   tmp = selRes;
+//│ }
+//│ this.l = tmp;
+//│ this.l(123) ?? null
 //│ > 123
 //│ l = [Function: log]
 
@@ -34,7 +42,7 @@ l(123)
 
 console.log("a")
 //│ JS:
-//│ this.console.log("a")
+//│ this.console.log("a") ?? null
 //│ > a
 
 
@@ -47,12 +55,12 @@ console.log("c")
 y * 2
 //│ JS:
 //│ let tmp, tmp1, tmp2, tmp3;
-//│ tmp = this.console.log("a");
+//│ tmp = this.console.log("a") ?? null;
 //│ this.x = 123;
-//│ tmp1 = this.console.log("b");
+//│ tmp1 = this.console.log("b") ?? null;
 //│ tmp2 = this.x + 1;
 //│ this.y = tmp2;
-//│ tmp3 = this.console.log("c");
+//│ tmp3 = this.console.log("c") ?? null;
 //│ this.y * 2
 //│ > a
 //│ > b

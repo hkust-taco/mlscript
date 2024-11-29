@@ -11,8 +11,14 @@ module Test with
 //│     this.x = 12;
 //│   }
 //│   foo(...args) {
-//│     globalThis.Predef.checkArgs("foo", 0, args.length);
-//│     return globalThis.Test.x;
+//│     globalThis.Predef.checkArgs("foo", 0, true, args.length);
+//│     let selRes;
+//│     selRes = globalThis.Test.x;
+//│     if (selRes === undefined) {
+//│       throw new globalThis.Error("Access to required field 'x' yielded 'undefined'");
+//│     } else {
+//│       return selRes;
+//│     }
 //│   }
 //│   toString() { return "Test"; }
 //│ };
@@ -23,7 +29,7 @@ module Test with
 :sjs
 Test.foo()
 //│ JS:
-//│ this.Test.foo()
+//│ this.Test.foo() ?? null
 //│ = 12
 
 :sjs
@@ -46,11 +52,11 @@ f()
 //│ JS:
 //│ this.x = 1;
 //│ this.f = (...args) => {
-//│   globalThis.Predef.checkArgs("", 0, args.length);
+//│   globalThis.Predef.checkArgs("", 0, true, args.length);
 //│   return this.x;
 //│ };
 //│ this.x = 2;
-//│ this.f()
+//│ this.f() ?? null
 //│ = 2
 //│ f = [Function (anonymous)]
 //│ x = 2

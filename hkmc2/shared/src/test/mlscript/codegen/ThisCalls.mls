@@ -19,7 +19,7 @@ s(123)
 :sjs
 ex |>. s(123)
 //│ JS:
-//│ let tmp; tmp = Predef.call(this.ex, this.s); tmp(123)
+//│ let tmp; tmp = Predef.call(this.ex, this.s) ?? null; tmp(123) ?? null
 //│ = [ 123, 456 ]
 
 

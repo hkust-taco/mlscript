@@ -20,10 +20,11 @@
 
 
 :sjs
+:fixme
 1.0 +. 2.14
 //│ JS:
-//│ 1.0 + 2.14
-//│ = 3.14
+//│ this["+."](1.0, 2.14) ?? null
+//│ ═══[RUNTIME ERROR] TypeError: this.+. is not a function
 //│ Type: Num
 
 
@@ -53,7 +54,7 @@ false
 (x => x): [T] -> T -> T
 //│ JS:
 //│ (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, args.length);
+//│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let x = args[0];
 //│   return x;
 //│ }
@@ -64,7 +65,7 @@ false
 :sjs
 class Foo(x: Int)
 //│ JS:
-//│ this.Foo = function Foo(x1) { return new Foo.class(x1); };
+//│ this.Foo = function Foo(...args) { return new Foo.class(...args); };
 //│ this.Foo.class = class Foo {
 //│   constructor(x) {
 //│     this.x = x;
@@ -87,7 +88,15 @@ new Foo(42)
 :sjs
 let foo = new Foo(42) in foo.Foo#x
 //│ JS:
-//│ let tmp; tmp = new this.Foo.class(42); this.foo = tmp; this.foo.x
+//│ let tmp, selRes;
+//│ tmp = new this.Foo.class(42);
+//│ this.foo = tmp;
+//│ selRes = this.foo.x;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'x' yielded 'undefined'");
+//│ } else {
+//│   selRes
+//│ }
 //│ = 42
 //│ Type: Int
 
@@ -96,7 +105,7 @@ let foo = new Foo(42) in foo.Foo#x
 fun inc(x) = x + 1
 //│ JS:
 //│ function inc(...args) {
-//│   globalThis.Predef.checkArgs("inc", 1, args.length);
+//│   globalThis.Predef.checkArgs("inc", 1, true, args.length);
 //│   let x = args[0];
 //│   return x + 1;
 //│ }
@@ -107,7 +116,7 @@ fun inc(x) = x + 1
 :sjs
 inc(41)
 //│ JS:
-//│ this.inc(41)
+//│ this.inc(41) ?? null
 //│ = 42
 //│ Type: Int
 
@@ -120,12 +129,11 @@ if 1 == 2 then 0 else 42
 //│ Type: Int
 
 
-:fixme
 :sjs
 if 1 is Int then 1 else 0
 //│ JS:
-//│ let scrut; scrut = 1; if (scrut instanceof this.Int) { 1 } else { 0 }
-//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
+//│ let scrut; scrut = 1; if (globalThis.Number.isInteger(scrut)) { 1 } else { 0 }
+//│ = 1
 //│ Type: Int
 
 
@@ -151,10 +159,10 @@ if foo is Foo then 1 else 0
 //│ = 1
 //│ foo = Foo {}
 //│ ╔══[ERROR] Cannot match Ref($scrut) as class:Foo
-//│ ║  l.140: 	if foo is Foo then 1 else 0
+//│ ║  l.149: 	if foo is Foo then 1 else 0
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type error in `if` expression
-//│ ║  l.140: 	if foo is Foo then 1 else 0
+//│ ║  l.149: 	if foo is Foo then 1 else 0
 //│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── because: cannot constrain  Foo  <:  ⊥
 //│ Type: Int
@@ -166,19 +174,19 @@ fun pow(x) = case
   n then x * pow(x)(n-1)
 //│ JS:
 //│ function pow(...args) {
-//│   globalThis.Predef.checkArgs("pow", 1, args.length);
+//│   globalThis.Predef.checkArgs("pow", 1, true, args.length);
 //│   let x = args[0];
 //│   return (...args1) => {
-//│     globalThis.Predef.checkArgs("", 1, args1.length);
+//│     globalThis.Predef.checkArgs("", 1, true, args1.length);
 //│     let caseScrut = args1[0];
 //│     let n, tmp, tmp1, tmp2;
 //│     if (caseScrut === 0) {
 //│       return 1;
 //│     } else {
 //│       n = caseScrut;
-//│       tmp = globalThis.pow(x);
+//│       tmp = globalThis.pow(x) ?? null;
 //│       tmp1 = n - 1;
-//│       tmp2 = tmp(tmp1);
+//│       tmp2 = tmp(tmp1) ?? null;
 //│       return x * tmp2;
 //│     }
 //│   };
@@ -194,7 +202,7 @@ fun not = case
 //│ JS:
 //│ Object.defineProperty(this, 'not', { get: function() { 
 //│   return (...args) => {
-//│     globalThis.Predef.checkArgs("", 1, args.length);
+//│     globalThis.Predef.checkArgs("", 1, true, args.length);
 //│     let caseScrut = args[0];
 //│     if (caseScrut) {
 //│       return false;
@@ -222,7 +230,7 @@ fun fact = case
 //│ JS:
 //│ Object.defineProperty(this, 'fact', { get: function() { 
 //│   return (...args) => {
-//│     globalThis.Predef.checkArgs("", 1, args.length);
+//│     globalThis.Predef.checkArgs("", 1, true, args.length);
 //│     let caseScrut = args[0];
 //│     let n, tmp, tmp1;
 //│     if (caseScrut === 0) {
@@ -230,7 +238,7 @@ fun fact = case
 //│     } else {
 //│       n = caseScrut;
 //│       tmp = n - 1;
-//│       tmp1 = globalThis.fact(tmp);
+//│       tmp1 = globalThis.fact(tmp) ?? null;
 //│       return n * tmp1;
 //│     }
 //│   }; }});

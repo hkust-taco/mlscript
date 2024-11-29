@@ -13,12 +13,12 @@ if true then 1 else 0
 let f = x => if x then log("ok") else log("ko")
 //│ JS:
 //│ this.f = (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, args.length);
+//│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let x = args[0];
 //│   if (x) {
-//│     return this.log("ok");
+//│     return this.log("ok") ?? null;
 //│   } else {
-//│     return this.log("ko");
+//│     return this.log("ko") ?? null;
 //│   }
 //│ };
 //│ undefined
@@ -35,7 +35,7 @@ f(false)
 let f = x => log((if x then "ok" else "ko") + "!")
 //│ JS:
 //│ this.f = (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, args.length);
+//│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let x = args[0];
 //│   let tmp, tmp1;
 //│   if (x) {
@@ -44,7 +44,7 @@ let f = x => log((if x then "ok" else "ko") + "!")
 //│     tmp = "ko";
 //│   }
 //│   tmp1 = tmp + "!";
-//│   return this.log(tmp1);
+//│   return this.log(tmp1) ?? null;
 //│ };
 //│ undefined
 //│ f = [Function (anonymous)]
@@ -53,7 +53,7 @@ let f = x => log((if x then "ok" else "ko") + "!")
 let f = x => log((if x and x then "ok" else "ko") + "!")
 //│ JS:
 //│ this.f = (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, args.length);
+//│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let x = args[0];
 //│   let tmp, tmp1;
 //│   if (x) {
@@ -66,7 +66,7 @@ let f = x => log((if x and x then "ok" else "ko") + "!")
 //│     tmp = "ko";
 //│   }
 //│   tmp1 = tmp + "!";
-//│   return this.log(tmp1);
+//│   return this.log(tmp1) ?? null;
 //│ };
 //│ undefined
 //│ f = [Function (anonymous)]

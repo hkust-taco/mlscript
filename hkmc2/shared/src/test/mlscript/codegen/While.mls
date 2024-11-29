@@ -8,7 +8,7 @@
 () => (while true then 0)
 //│ JS:
 //│ (...args) => {
-//│   globalThis.Predef.checkArgs("", 0, args.length);
+//│   globalThis.Predef.checkArgs("", 0, true, args.length);
 //│   let scrut, tmp;
 //│   tmp1: while (true) {
 //│     scrut = true;
@@ -59,7 +59,7 @@ while x
 //│ tmp2: while (true) {
 //│   scrut = this.x;
 //│   if (scrut) {
-//│     tmp = this.log("Hello World");
+//│     tmp = this.log("Hello World") ?? null;
 //│     this.x = false;
 //│     tmp1 = undefined;
 //│     continue tmp2;
@@ -109,7 +109,7 @@ while
   i < 10 then set i += 1
 //│ JS:
 //│ (...args) => {
-//│   globalThis.Predef.checkArgs("", 0, args.length);
+//│   globalThis.Predef.checkArgs("", 0, true, args.length);
 //│   let i, scrut, tmp, tmp1;
 //│   tmp2: while (true) {
 //│     i = 0;
@@ -199,7 +199,7 @@ fun f(ls) =
   else log("Done!")
 //│ JS:
 //│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, args.length);
+//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│   let ls = args[0];
 //│   let param0, param1, h, tl, tmp;
 //│   tmp1: while (true) {
@@ -209,10 +209,10 @@ fun f(ls) =
 //│       h = param0;
 //│       tl = param1;
 //│       ls = tl;
-//│       tmp = globalThis.log(h);
+//│       tmp = globalThis.log(h) ?? null;
 //│       continue tmp1;
 //│     } else {
-//│       tmp = globalThis.log("Done!");
+//│       tmp = globalThis.log("Done!") ?? null;
 //│     }
 //│     break;
 //│   }

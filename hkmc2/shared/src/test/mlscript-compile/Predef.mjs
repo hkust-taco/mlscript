@@ -33,24 +33,27 @@ const Predef$class = class Predef {
   tupleGet(xs1, i1) {
     return globalThis.Array.prototype.at.call(xs1, i1);
   } 
-  checkArgs(functionName, expected, got) {
-    let scrut, name, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
-    scrut = got != expected;
+  checkArgs(functionName, expected, isUB, got) {
+    let scrut, name, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
+    tmp = got < expected;
+    tmp1 = got > expected;
+    tmp2 = isUB && tmp1;
+    scrut = tmp || tmp2;
     if (scrut) {
       scrut1 = functionName.length > 0;
       if (scrut1) {
-        tmp = " '" + functionName;
-        tmp1 = tmp + "'";
+        tmp3 = " '" + functionName;
+        tmp4 = tmp3 + "'";
       } else {
-        tmp1 = "";
+        tmp4 = "";
       }
-      name = tmp1;
-      tmp2 = "Function" + name;
-      tmp3 = tmp2 + " expected ";
-      tmp4 = tmp3 + expected;
-      tmp5 = tmp4 + " arguments but got ";
-      tmp6 = tmp5 + got;
-      throw globalThis.Error(tmp6);
+      name = tmp4;
+      tmp5 = "Function" + name;
+      tmp6 = tmp5 + " expected ";
+      tmp7 = tmp6 + expected;
+      tmp8 = tmp7 + " arguments but got ";
+      tmp9 = tmp8 + got;
+      throw globalThis.Error(tmp9);
     } else {
       return undefined;
     }

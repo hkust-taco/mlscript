@@ -12,12 +12,12 @@ fun foo() =
 foo()
 //│ JS:
 //│ function foo(...args) {
-//│   globalThis.Predef.checkArgs("foo", 0, args.length);
+//│   globalThis.Predef.checkArgs("foo", 0, true, args.length);
 //│   let tmp;
-//│   tmp = globalThis.M.concat("a", "b");
-//│   return globalThis.M.concat(tmp, "c");
+//│   tmp = globalThis.M.concat("a", "b") ?? null;
+//│   return globalThis.M.concat(tmp, "c") ?? null;
 //│ }
-//│ this.foo()
+//│ this.foo() ?? null
 //│ = 'abc'
 
 let name = "_"

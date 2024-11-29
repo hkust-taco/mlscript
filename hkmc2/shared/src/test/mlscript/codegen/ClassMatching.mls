@@ -13,7 +13,7 @@ object None
 if Some(0) is Some(x) then x
 //│ JS:
 //│ let scrut, param0, x;
-//│ scrut = this.Some(0);
+//│ scrut = this.Some(0) ?? null;
 //│ if (scrut instanceof this.Some.class) {
 //│   param0 = scrut.value;
 //│   x = param0;
@@ -62,7 +62,7 @@ if s is
 x => if x is Some(x) then x
 //│ JS:
 //│ (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, args.length);
+//│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let x = args[0];
 //│   let param0, x1;
 //│   if (x instanceof this.Some.class) {
@@ -123,7 +123,7 @@ fun f(x) = if x is
   else log("oops")
 //│ JS:
 //│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, args.length);
+//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
 //│   let param0, x1, scrut;
 //│   if (x instanceof globalThis.Some.class) {
@@ -133,13 +133,13 @@ fun f(x) = if x is
 //│     if (scrut) {
 //│       return 42;
 //│     } else {
-//│       return globalThis.log("oops");
+//│       return globalThis.log("oops") ?? null;
 //│     }
 //│   } else {
 //│     if (x instanceof globalThis.None.class) {
 //│       return "ok";
 //│     } else {
-//│       return globalThis.log("oops");
+//│       return globalThis.log("oops") ?? null;
 //│     }
 //│   }
 //│ }
@@ -167,7 +167,7 @@ fun f(x) = if x is
   Pair(a, b) then a + b
 //│ JS:
 //│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, args.length);
+//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
 //│   let param0, param1, a, b, param01, u;
 //│   if (x instanceof globalThis.Some.class) {
@@ -203,7 +203,7 @@ fun f(x) = log of if x is
   else "oops"
 //│ JS:
 //│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, args.length);
+//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
 //│   let param0, tmp;
 //│   if (x instanceof globalThis.Some.class) {
@@ -220,7 +220,7 @@ fun f(x) = log of if x is
 //│       tmp = "oops";
 //│     }
 //│   }
-//│   return globalThis.log(tmp);
+//│   return globalThis.log(tmp) ?? null;
 //│ }
 //│ undefined
 

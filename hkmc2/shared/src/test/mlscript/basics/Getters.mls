@@ -1,0 +1,18 @@
+:js
+:todo
+
+
+
+get foo = 123
+//│ ╔══[ERROR] Unrecognized definitional assignment left-hand side: juxtaposition
+//│ ║  l.6: 	get foo = 123
+//│ ╙──     	^^^^^^^
+
+
+// * These two should be equivalent and should *not* be getters: 
+
+fun f = x => x
+
+fun f(x) = x
+
+

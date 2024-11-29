@@ -62,6 +62,7 @@ enum Tree extends AutoLocated:
   case TyTup(tys: Ls[Tree])
   case App(lhs: Tree, rhs: Tree)
   case Jux(lhs: Tree, rhs: Tree)
+  case SynthSel(prefix: Tree, name: Ident)
   case Sel(prefix: Tree, name: Ident)
   case InfixApp(lhs: Tree, kw: Keyword.Infix, rhs: Tree)
   case New(body: Tree)
@@ -101,6 +102,7 @@ enum Tree extends AutoLocated:
     case RegRef(reg, value) => reg :: value :: Nil
     case Effectful(eff, body) => eff :: body :: Nil
     case TyTup(tys) => tys
+    case SynthSel(prefix, name) => prefix :: Nil
     case Sel(prefix, name) => prefix :: Nil
     case Open(bod) => bod :: Nil
     case Def(lhs, rhs) => lhs :: rhs :: Nil
@@ -127,8 +129,9 @@ enum Tree extends AutoLocated:
     case TyTup(tys) => "type tuple"
     case App(lhs, rhs) => "application"
     case Jux(lhs, rhs) => "juxtaposition"
+    case SynthSel(prefix, name) => "synthetic selection"
     case Sel(prefix, name) => "selection"
-    case InfixApp(lhs, kw, rhs) => "infix application"
+    case InfixApp(lhs, kw, rhs) => "infix operation"
     case New(body) => "new"
     case IfLike(Keyword.`if`, split) => "if expression"
     case IfLike(Keyword.`while`, split) => "while expression"
@@ -156,11 +159,13 @@ enum Tree extends AutoLocated:
       LetLike(letLike, id, S(App(Ident(nme.init), Tup(id :: r :: Nil))), bodo).desugared
     case _ => this
 
-  def param: Ls[(Ident, Opt[Tree])] = this match
-    case id: Ident => (id, N) :: Nil
-    case InfixApp(lhs: Ident, Keyword.`:`, rhs) => (lhs, S(rhs)) :: Nil
-    case App(Ident(","), Tup(ps)) => ps.flatMap(_.param)
-    case TermDef(ImmutVal, inner, _) => inner.param
+  /** S(true) means eager spread, S(false) means lazy spread, N means no spread. */
+  def asParam: Opt[(Opt[Bool], Ident, Opt[Tree])] = this match
+    case id: Ident => S(N, id, N)
+    case Spread(Keyword.`..`, _, S(id: Ident)) => S(S(false), id, N)
+    case Spread(Keyword.`...`, _, S(id: Ident)) => S(S(true), id, N)
+    case InfixApp(lhs: Ident, Keyword.`:`, rhs) => S(N, lhs, S(rhs))
+    case TermDef(ImmutVal, inner, _) => inner.asParam
   
   def isModuleModifier: Bool = this match
     case Tree.TypeDef(Mod, _, N, N) => true
@@ -294,9 +299,10 @@ trait TypeDefImpl(using semantics.Elaborator.State) extends TypeOrTermDef:
     case _ =>
       Map.empty
   
-  lazy val params: Ls[semantics.TermSymbol] =
+  lazy val clsParams: Ls[semantics.TermSymbol] =
     this.paramLists.headOption.fold(Nil): tup =>
-      tup.fields.iterator.flatMap(_.param).map:
-        case (id, _) => semantics.TermSymbol(ParamBind, symbol.asClsLike, id)
+      tup.fields.iterator.flatMap(_.asParam).map:
+        case (S(spd), id, _) => ??? // spreads are not allowed in class parameters
+        case (N, id, _) => semantics.TermSymbol(ParamBind, symbol.asClsLike, id)
       .toList
 

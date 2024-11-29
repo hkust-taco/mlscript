@@ -30,7 +30,7 @@
 :fixme // should be a "linking" error
 log("Hi")
 //│ JS:
-//│ this.log("Hi")
+//│ this.log("Hi") ?? null
 //│ ═══[RUNTIME ERROR] TypeError: this.log is not a function
 
 :fixme
@@ -54,14 +54,14 @@ log("Hi")
 //│     res = Lit of IntLit of 2
 //│     implct = true
 //│ JS:
-//│ let tmp; tmp = this.log("Hi"); 2
+//│ let tmp; tmp = this.log("Hi") ?? null; 2
 //│ ═══[RUNTIME ERROR] TypeError: this.log is not a function
 
 
 :re
 2(2)
 //│ JS:
-//│ 2(2)
+//│ 2(2) ?? null
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not a function
 
 
