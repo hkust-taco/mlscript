@@ -190,7 +190,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       case _: UnitLit => Top
       case _: BoolLit => BbCtx.boolTy), Bot, Bot)
     case Ref(sym: Symbol) if sym.nme === "error" => (Bot, Bot, Bot)
-    case Lam(params, body) =>
+    case Lam(PlainParamList(params), body) =>
       val nestCtx = ctx.nextLevel
       given BbCtx = nestCtx
       val bds = params.map:
@@ -318,7 +318,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
   trace[(GeneralType, Type)](s"${ctx.lvl}. Ascribing ${lhs.showDbg} : ${rhs}", res => s"! ${res._2}"):
     given CCtx = CCtx.init(lhs, S(rhs))
     (lhs, rhs) match
-    case (Term.Lam(params, body), ft @ PolyFunType(args, ret, eff)) => // * annoted functions
+    case (Term.Lam(PlainParamList(params), body), ft @ PolyFunType(args, ret, eff)) => // * annoted functions
       if params.length != args.length then
          (error(msg"Cannot type function ${lhs.toString} as ${rhs.toString}" -> lhs.toLoc :: Nil), Bot)
       else
@@ -420,7 +420,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             effBuff += eff
             ctx += sym -> rhsTy
             goStats(stats)
-          case TermDefinition(_, Fun, sym, ParamList(_, ps) :: Nil, sig, Some(body), _, _) :: stats =>
+          case TermDefinition(_, Fun, sym, ps :: Nil, sig, Some(body), _, _) :: stats =>
             typeFunDef(sym, Term.Lam(ps, body), sig, ctx)
             goStats(stats)
           case TermDefinition(_, Fun, sym, Nil, sig, Some(body), _, _) :: stats =>
@@ -440,7 +440,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         case _: StrLit => BbCtx.strTy
         case _: UnitLit => Top
         case _: BoolLit => BbCtx.boolTy), Bot)
-      case Lam(params, body) =>
+      case Lam(PlainParamList(params), body) =>
         val nestCtx = ctx.nest
         given BbCtx = nestCtx
         val tvs = params.map:
@@ -462,7 +462,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
                 ty
             }
             constrain(tryMkMono(ty, term), ClassLikeType(clsSym, targs))
-            (clsDfn.paramsOpt.getOrElse(Nil).map {
+            require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
+            (clsDfn.paramsOpt.fold(Nil)(_.params).map {
               case Param(_, sym, sign) =>
                 if sym.nme === field.name then sign else N
             }.filter(_.isDefined)) match
@@ -476,7 +477,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       case Term.New(cls, args) =>
         cls.symbol.flatMap(_.asCls.flatMap(_.defn)) match
         case S(clsDfn: ClassDef.Parameterized) =>
-          if args.length != clsDfn.params.length then
+          require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
+          if args.length != clsDfn.params.params.length then
             (error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil), Bot)
           else
             val map = HashMap[Uid[Symbol], TypeArg]()
@@ -492,7 +494,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
                 ty
             }
             val effBuff = ListBuffer.empty[Type]
-            args.iterator.zip(clsDfn.params).foreach {
+            require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
+            args.iterator.zip(clsDfn.params.params).foreach {
               case (arg, Param(_, _, S(sign))) =>
                 val (ty, eff) = ascribe(arg, typeAndSubstType(sign, pol = true)(using map.toMap))
                 effBuff += eff

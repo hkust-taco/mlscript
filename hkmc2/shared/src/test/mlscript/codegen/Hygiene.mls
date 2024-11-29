@@ -11,7 +11,7 @@ module Test with
 //│     this.x = 12;
 //│   }
 //│   foo(...args) {
-//│     globalThis.Predef.checkArgs("foo", 0, args.length);
+//│     globalThis.Predef.checkArgs("foo", 0, true, args.length);
 //│     let selRes;
 //│     selRes = globalThis.Test.x;
 //│     if (selRes === undefined) {
@@ -52,7 +52,7 @@ f()
 //│ JS:
 //│ this.x = 1;
 //│ this.f = (...args) => {
-//│   globalThis.Predef.checkArgs("", 0, args.length);
+//│   globalThis.Predef.checkArgs("", 0, true, args.length);
 //│   return this.x;
 //│ };
 //│ this.x = 2;

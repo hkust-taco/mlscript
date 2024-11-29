@@ -234,7 +234,7 @@ class Lowering(using TL, Raise, Elaborator.State):
                 subTerm(trm): st =>
                   val args = args0.getOrElse(Nil)
                   val clsParams = cls match
-                    case cls: ClassSymbol => cls.tree.params
+                    case cls: ClassSymbol => cls.tree.clsParams
                     case _: ModuleSymbol => Nil
                   assert(args0.isEmpty || clsParams.length === args.length)
                   def mkArgs(args: Ls[(LocalSymbol & NamedSymbol) -> BlockLocalSymbol])(using Subst): Case -> Block = args match

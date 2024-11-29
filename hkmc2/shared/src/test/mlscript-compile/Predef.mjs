@@ -76,36 +76,39 @@ const Predef$class = class Predef {
     }
     return ((tmp2.call(xs1, i1)) ?? null);
   } 
-  checkArgs(functionName, expected, got) {
-    let scrut, name, scrut1, selRes, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
-    scrut = got != expected;
+  checkArgs(functionName, expected, isUB, got) {
+    let scrut, name, scrut1, tmp, tmp1, tmp2, selRes, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10;
+    tmp = got < expected;
+    tmp1 = got > expected;
+    tmp2 = isUB && tmp1;
+    scrut = tmp || tmp2;
     if (scrut) {
       selRes = functionName.length;
       if (selRes === undefined) {
         throw new globalThis.Error("Access to required field 'length' yielded 'undefined'");
       } else {
-        tmp = selRes;
+        tmp3 = selRes;
       }
-      scrut1 = tmp > 0;
+      scrut1 = tmp3 > 0;
       if (scrut1) {
-        tmp1 = " '" + functionName;
-        tmp2 = tmp1 + "'";
+        tmp4 = " '" + functionName;
+        tmp5 = tmp4 + "'";
       } else {
-        tmp2 = "";
+        tmp5 = "";
       }
-      name = tmp2;
-      tmp3 = "Function" + name;
-      tmp4 = tmp3 + " expected ";
-      tmp5 = tmp4 + expected;
-      tmp6 = tmp5 + " arguments but got ";
-      tmp7 = tmp6 + got;
-      throw ((globalThis.Error(tmp7)) ?? null);
+      name = tmp5;
+      tmp6 = "Function" + name;
+      tmp7 = tmp6 + " expected ";
+      tmp8 = tmp7 + expected;
+      tmp9 = tmp8 + " arguments but got ";
+      tmp10 = tmp9 + got;
+      throw ((globalThis.Error(tmp10)) ?? null);
     } else {
-      return null;
+      return undefined;
     }
   }
   toString() { return "Predef"; }
 }; const Predef = new Predef$class;
 Predef.class = Predef$class;
-null
+undefined
 export default Predef;

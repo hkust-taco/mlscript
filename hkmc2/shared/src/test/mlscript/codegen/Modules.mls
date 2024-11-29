@@ -53,7 +53,7 @@ module M with
 //│       }
 //│       toString() { return "C"; }
 //│     };
-//│     this.D = function D() { return new D.class(); };
+//│     this.D = function D(...args) { return new D.class(...args); };
 //│     this.D.class = class D {
 //│       constructor() {
 //│         

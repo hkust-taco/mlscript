@@ -150,16 +150,16 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
           defn match
           case FunDefn(sym, Nil, body) =>
             TODO("getters")
-          case FunDefn(sym, ParamList(_, ps) :: pss, bod) =>
+          case FunDefn(sym, ps :: pss, bod) =>
             val result = pss.foldRight(bod):
-              case (ParamList(_, ps), block) => 
+              case (ps, block) => 
                 Return(Lam(ps, block), false)
             val (params, bodyDoc) = setupFunction(some(sym.nme), ps, result)
             doc"function ${sym.nme}($params) { #{  # ${bodyDoc} #}  # }"
           case ClsLikeDefn(sym, syntax.Cls, mtds, flds, ctor) =>
             val clsDefn = sym.defn.getOrElse(die)
-            val clsParams = clsDefn.paramsOpt.getOrElse(Nil)
-            val ctorParams = clsParams.map(p => p.sym -> scope.allocateName(p.sym))
+            val clsParams = clsDefn.paramsOpt.fold(Nil)(_.paramSyms)
+            val ctorParams = clsParams.map(p => p -> scope.allocateName(p))
             val ctorCode = ctorParams.foldRight(body(ctor)):
               case ((sym, nme), acc) =>
                 doc"this.${sym.name} = $nme; # ${acc}"
@@ -171,9 +171,9 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
                 ctorCode.stripBreaks
               } #}  # }${
                 mtds.map: 
-                  case td @ FunDefn(_, ParamList(_, ps) :: pss, bod) =>
+                  case td @ FunDefn(_, ps :: pss, bod) =>
                     val result = pss.foldRight(bod):
-                      case (ParamList(_, ps), block) => 
+                      case (ps, block) => 
                         Return(Lam(ps, block), false)
                     val (params, bodyDoc) = setupFunction(some(td.sym.nme), ps, result)
                     doc" # ${td.sym.nme}($params) { #{  # ${
@@ -206,8 +206,8 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
             else
               val fun = clsDefn.paramsOpt match
                 case S(params) =>
-                  val args = params.map(p => scope.allocateName(p.sym)).mkDocument(", ")
-                  S(doc"function ${sym.nme}($args) { return new ${sym.nme}.class($args); }")
+                  val (ps, bod) = setupFunction(some(sym.nme), params, End())
+                  S(doc"function ${sym.nme}($ps) { return new ${sym.nme}.class($ps); }")
                 case N => N
               clsDefn.owner match
               case S(owner) =>
@@ -335,8 +335,11 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
   def body(t: Block)(using Raise, Scope): Document = scope.nest givenIn:
     block(t)
   
-  def setupFunction(name: Option[Str], params: List[semantics.Param], body: Block)(using Raise, Scope): (Document, Document) =
-    val paramsList = params.map(p => scope.allocateName(p.sym)).mkDocument(", ")
+  def setupFunction(name: Option[Str], params: ParamList, body: Block)
+      (using Raise, Scope): (Document, Document) =
+    val paramsList = params.params.map(p => scope.allocateName(p.sym))
+      .++(params.restParam.map(p => "..." + scope.allocateName(p.sym)))
+      .mkDocument(", ")
     (paramsList, this.body(body))
 
 
@@ -437,15 +440,19 @@ trait JSBuilderSanityChecks
   
   val functionParamVarargSymbol = semantics.TempSymbol(N, "args")
   
-  override def setupFunction(name: Option[Str], params: List[semantics.Param], body: Block)(using Raise, Scope): (Document, Document) =
+  override def setupFunction(name: Option[Str], params: ParamList, body: Block)(using Raise, Scope): (Document, Document) =
     if instrument then
-      val paramsList = params.map(p => Scope.scope.allocateName(p.sym))
+      val paramsList = params.params.map(p => Scope.scope.allocateName(p.sym))
+      val paramRest = params.restParam.map(p => Scope.scope.allocateName(p.sym))
       val paramsStr = Scope.scope.allocateName(functionParamVarargSymbol)
       val functionName = JSBuilder.makeStringLiteral(name.fold("")(n => s"${JSBuilder.escapeStringCharacters(n)}"))
-      val checkArgsNum = doc"globalThis.Predef.checkArgs($functionName, ${params.length}, $paramsStr.length);\n"
+      val checkArgsNum = doc"globalThis.Predef.checkArgs($functionName, ${params.paramCountLB}, ${params.paramCountUB.toString}, $paramsStr.length);\n"
       val paramsAssign = paramsList.zipWithIndex.map{(nme, i) =>
         doc"let ${nme} = ${paramsStr}[$i];\n"}.mkDocument("")
-      (doc"...$paramsStr", doc"$checkArgsNum$paramsAssign${this.body(body)}")
+      val restAssign = paramRest match
+        case N => doc""
+        case S(p) => doc"let $p = globalThis.Predef.tupleSlice($paramsStr, ${params.paramCountLB}, 0);\n"
+      (doc"...$paramsStr", doc"$checkArgsNum$paramsAssign$restAssign${this.body(body)}")
     else
       super.setupFunction(name, params, body)
 

@@ -11,7 +11,7 @@ fun foo() =
 //│ JS:
 //│ this.x = 2;
 //│ function foo(...args) {
-//│   globalThis.Predef.checkArgs("foo", 0, args.length);
+//│   globalThis.Predef.checkArgs("foo", 0, true, args.length);
 //│   return globalThis.x + 1;
 //│ }
 //│ undefined

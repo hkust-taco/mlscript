@@ -30,7 +30,7 @@ fun foo() =
 foo()
 //│ JS:
 //│ function foo(...args) {
-//│   globalThis.Predef.checkArgs("foo", 0, args.length);
+//│   globalThis.Predef.checkArgs("foo", 0, true, args.length);
 //│   let scrut;
 //│   scrut = false;
 //│   if (scrut) {

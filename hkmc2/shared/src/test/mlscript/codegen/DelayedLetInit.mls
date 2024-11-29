@@ -45,7 +45,7 @@ z = 1
 fun f() = 1
 //│ JS:
 //│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 0, args.length);
+//│   globalThis.Predef.checkArgs("f", 0, true, args.length);
 //│   return 1;
 //│ }
 //│ undefined
@@ -60,7 +60,7 @@ let f
 f(x) = x + 1
 //│ JS:
 //│ this.f = (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, args.length);
+//│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let x = args[0];
 //│   return x + 1;
 //│ };
@@ -107,7 +107,7 @@ fun f() =
   foo = 42
 //│ JS:
 //│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 0, args.length);
+//│   globalThis.Predef.checkArgs("f", 0, true, args.length);
 //│   globalThis.foo = 42;
 //│   return undefined;
 //│ }
@@ -130,7 +130,7 @@ fun f() = foo = 0
 //│ ╙──       	              ^
 //│ JS:
 //│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 0, args.length);
+//│   globalThis.Predef.checkArgs("f", 0, true, args.length);
 //│   return globalThis.foo;
 //│ }
 //│ undefined

@@ -80,6 +80,7 @@ fun example(args) =
 //│               flags = ()
 //│               sym = args
 //│               sign = N
+//│           restParam = N
 //│       sign = N
 //│       body = S of IfLike:
 //│         kw = keyword 'if'

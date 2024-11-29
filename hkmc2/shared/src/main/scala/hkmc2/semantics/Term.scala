@@ -19,7 +19,7 @@ enum Term extends Statement:
   case Sel(prefix: Term, nme: Tree.Ident)(val sym: Opt[Symbol])
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
   case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split)(val normalized: Split)
-  case Lam(params: Ls[Param], body: Term)
+  case Lam(params: ParamList, body: Term)
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
   case Forall(tvs: Ls[QuantVar], body: Term)
   case WildcardTy(in: Opt[Term], out: Opt[Term])
@@ -111,9 +111,9 @@ sealed trait Statement extends AutoLocated:
     case TermDefinition(_, k, _, ps, sign, body, res, _) =>
       ps.toList.flatMap(_.subTerms) ::: sign.toList ::: body.toList
     case cls: ClassDef =>
-      cls.paramsOpt.toList.flatMap(_.flatMap(_.subTerms)) ::: cls.body.blk :: Nil
+      cls.paramsOpt.toList.flatMap(_.subTerms) ::: cls.body.blk :: Nil
     case mod: ModuleDef =>
-      mod.paramsOpt.toList.flatMap(_.flatMap(_.subTerms)) ::: mod.body.blk :: Nil
+      mod.paramsOpt.toList.flatMap(_.subTerms) ::: mod.body.blk :: Nil
     case td: TypeDef =>
       td.rhs.toList
     case Import(sym, pth) => Nil
@@ -125,7 +125,7 @@ sealed trait Statement extends AutoLocated:
     case t: Lit => t.lit.asTree :: Nil
     case t: Ref => t.tree :: Nil
     case t: Tup => t.tree :: Nil
-    case l: Lam => l.params.map(_.sym.id) ::: l.body :: Nil
+    case l: Lam => l.params.paramSyms.map(_.id) ::: l.body :: Nil
     case t: App => t.tree :: Nil
     case SynthSel(pre, nme) => pre :: nme :: Nil
     case Sel(pre, nme) => pre :: nme :: Nil
@@ -158,7 +158,7 @@ sealed trait Statement extends AutoLocated:
     case WildcardTy(in, out) => s"in ${in.map(_.toString).getOrElse("⊥")} out ${out.map(_.toString).getOrElse("⊤")}"
     case SynthSel(pre, nme) => s"${pre.showDbg}.${nme.name}"
     case IfLike(kw, body) => s"${kw.name} { ${body.showDbg} }"
-    case Lam(params, body) => s"λ${params.map(_.showDbg).mkString(", ")}. ${body.showDbg}"
+    case Lam(params, body) => s"λ${params.showDbg}. ${body.showDbg}"
     case Blk(stats, res) =>
       (stats.map(_.showDbg + "; ") :+ (res match { case Lit(Tree.UnitLit(true)) => "" case x => x.showDbg + " " }))
       .mkString("{ ", "", "}")
@@ -187,7 +187,7 @@ sealed trait Statement extends AutoLocated:
     case cls: ClassLikeDef =>
       s"${cls.kind} ${cls.sym.nme}${
         cls.tparams.map(_.showDbg).mkStringOr(", ", "[", "]")}${
-        cls.paramsOpt.fold("")(_.map(_.showDbg).mkString("(", ", ", ")"))} ${cls.body}"
+        cls.paramsOpt.fold("")(_.toString)} ${cls.body}"
     case Import(sym, file) => s"import ${sym} from ${file}"
 
 final case class LetDecl(sym: LocalSymbol) extends Statement
@@ -236,7 +236,7 @@ sealed abstract class TypeLikeDef extends Definition:
 sealed abstract class ClassLikeDef extends TypeLikeDef:
   val owner: Opt[InnerSymbol]
   val sym: MemberSymbol[? <: ClassLikeDef]
-  val paramsOpt: Opt[Ls[Param]]
+  val paramsOpt: Opt[ParamList]
   val tparams: Ls[TyParam]
   val kind: ClsLikeKind
   val body: ObjBody
@@ -246,7 +246,7 @@ case class ModuleDef(
   owner: Opt[InnerSymbol], 
   sym: ModuleSymbol, 
   tparams: Ls[TyParam], 
-  paramsOpt: Opt[Ls[Param]], 
+  paramsOpt: Opt[ParamList], 
   kind: ClsLikeKind,
   body: ObjBody,
 ) extends ClassLikeDef with Companion
@@ -256,28 +256,28 @@ sealed abstract class ClassDef extends ClassLikeDef:
   val kind: ClsLikeKind
   val sym: ClassSymbol
   val tparams: Ls[TyParam]
-  val paramsOpt: Opt[Ls[Param]]
+  val paramsOpt: Opt[ParamList]
   val body: ObjBody
   val companion: Opt[Companion]
 
 object ClassDef:
-  def apply(owner: Opt[InnerSymbol], kind: ClsLikeKind, sym: InnerSymbol, tparams: Ls[TyParam], paramsOpt: Opt[Ls[Param]], body: ObjBody): ClassDef =
+  def apply(owner: Opt[InnerSymbol], kind: ClsLikeKind, sym: InnerSymbol, tparams: Ls[TyParam], paramsOpt: Opt[ParamList], body: ObjBody): ClassDef =
     paramsOpt match
       case S(params) => Parameterized(owner, kind, sym.asInstanceOf// TODO: improve
         , tparams, params, body, N)
       case N => Plain(owner, kind, sym.asInstanceOf// TODO: improve
         , tparams, body, N)
   
-  def unapply(cls: ClassDef): Opt[(ClassSymbol, Ls[TyParam], Opt[Ls[Param]], ObjBody)] =
+  def unapply(cls: ClassDef): Opt[(ClassSymbol, Ls[TyParam], Opt[ParamList], ObjBody)] =
     S((cls.sym, cls.tparams, cls.paramsOpt, cls.body))
   
   case class Parameterized(
       owner: Opt[InnerSymbol],
       kind: ClsLikeKind, sym: ClassSymbol,
-      tparams: Ls[TyParam], params: Ls[Param],
+      tparams: Ls[TyParam], params: ParamList,
       body: ObjBody, companion: Opt[ModuleDef]
   ) extends ClassDef:
-    val paramsOpt: Opt[Ls[Param]] = S(params)
+    val paramsOpt: Opt[ParamList] = S(params)
   
   case class Plain(
       owner: Opt[InnerSymbol],
@@ -285,7 +285,7 @@ object ClassDef:
       tparams: Ls[TyParam],
       body: ObjBody, companion: Opt[Companion]
   ) extends ClassDef:
-    val paramsOpt: Opt[Ls[Param]] = N
+    val paramsOpt: Opt[ParamList] = N
   
 end ClassDef
 
@@ -309,6 +309,9 @@ final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool, mod: Bool):
     flags.mkString(" ")
   override def toString: String = "‹" + showDbg + "›"
 
+object FldFlags { val empty: FldFlags = FldFlags(false, false, false, false) }
+
+
 sealed abstract class Elem:
   def subTerms: Ls[Term] = this match
     case Fld(_, term, asc) => term :: asc.toList
@@ -317,6 +320,7 @@ sealed abstract class Elem:
 final case class Fld(flags: FldFlags, term: Term, asc: Opt[Term]) extends Elem with FldImpl
 final case class Spd(eager: Bool, term: Term) extends Elem:
   def showDbg: Str = (if eager then "..." else "..") + term.showDbg
+
 
 final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extends Declaration:
   
@@ -331,13 +335,28 @@ final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extend
       if isContravariant then "" else "out "
       else if isContravariant then "in " else "in out ") +
     flags.showDbg + sym
+
+
 final case class Param(flags: FldFlags, sym: LocalSymbol & NamedSymbol, sign: Opt[Term]):
   def subTerms: Ls[Term] = sign.toList
   // def children: Ls[Located] = self.value :: self.asc.toList ::: Nil
   // def showDbg: Str = flags.showDbg + sym.name + ": " + sign.showDbg
   def showDbg: Str = flags.showDbg + sym + sign.fold("")(": " + _.showDbg)
 
-object FldFlags { val empty: FldFlags = FldFlags(false, false, false, false) }
+final case class ParamList(flags: ParamListFlags, params: Ls[Param], restParam: Opt[Param]):
+  def foreach(f: Param => Unit): Unit =
+    (params ++ restParam).foreach(f)
+  def paramCountLB: Int = params.length
+  def paramCountUB: Bool = restParam.isEmpty
+  def paramSyms = params.map(_.sym) ++ restParam.map(_.sym)
+  def subTerms: Ls[Term] = params.flatMap(_.subTerms) ++ restParam.toList.flatMap(_.subTerms)
+  def showDbg: Str = flags.showDbg + (params :+ restParam.fold("")("..." + _)).mkString("(", ", ", ")")
+object PlainParamList:
+  def apply(params: Ls[Param]) =
+    ParamList(ParamListFlags.empty, params, N)
+  def unapply(pl: ParamList): Opt[Ls[Param]] = pl match
+    case ParamList(ParamListFlags.empty, params, N) => S(params)
+    case _ => N
 
 final case class ParamListFlags(ctx: Bool):
   def showDbg: Str = (if ctx then "ctx " else "")
@@ -346,9 +365,6 @@ final case class ParamListFlags(ctx: Bool):
 object ParamListFlags:
   val empty = ParamListFlags(false)
 
-final case class ParamList(flags: ParamListFlags, params: Ls[Param]):
-  def subTerms: Ls[Term] = params.flatMap(_.subTerms)
-  def showDbg: Str = flags.showDbg + params.mkString("(", ", ", ")")
 
 trait FldImpl extends AutoLocated:
   self: Fld =>

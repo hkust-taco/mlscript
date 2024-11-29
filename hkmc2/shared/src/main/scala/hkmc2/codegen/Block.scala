@@ -133,7 +133,7 @@ case class Call(fun: Path, args: Ls[Arg]) extends Result
 
 case class Instantiate(cls: Path, args: Ls[Path]) extends Result
 
-abstract class Path extends Result
+sealed abstract class Path extends Result
 
 case class Select(qual: Path, name: Tree.Ident) extends Path
 
@@ -141,7 +141,7 @@ enum Value extends Path:
   case Ref(l: Local)
   case This(sym: InnerSymbol) // TODO rm – just use Ref
   case Lit(lit: Literal)
-  case Lam(params: Ls[Param], body: Block)
+  case Lam(params: ParamList, body: Block)
   case Arr(elems: Ls[Arg])
 
 case class Arg(spread: Bool, value: Path)

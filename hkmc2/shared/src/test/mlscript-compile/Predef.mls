@@ -21,8 +21,14 @@ fun tupleSlice(xs, i, j) =
 fun tupleGet(xs, i) =
   globalThis.Array.prototype.at.call(xs, i)
 
-fun checkArgs(functionName, expected, got) =
-  if got != expected then
+fun checkArgs(functionName, expected, isUB, got) =
+  if got < expected || isUB && got > expected then
     let name = if functionName.length > 0 then " '" + functionName + "'" else ""
     throw globalThis.Error("Function" + name + " expected " + expected + " arguments but got " + got)
+    // TODO
+    // throw globalThis.Error("Function" + name + " expected "
+    //   + expected
+    //   + (if isUB then "" else " at least")
+    //   + " arguments but got " + got)
   else ()
+

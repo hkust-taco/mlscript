@@ -8,7 +8,7 @@
 () => (while true then 0)
 //│ JS:
 //│ (...args) => {
-//│   globalThis.Predef.checkArgs("", 0, args.length);
+//│   globalThis.Predef.checkArgs("", 0, true, args.length);
 //│   let scrut, tmp;
 //│   tmp1: while (true) {
 //│     scrut = true;
@@ -109,7 +109,7 @@ while
   i < 10 then set i += 1
 //│ JS:
 //│ (...args) => {
-//│   globalThis.Predef.checkArgs("", 0, args.length);
+//│   globalThis.Predef.checkArgs("", 0, true, args.length);
 //│   let i, scrut, tmp, tmp1;
 //│   tmp2: while (true) {
 //│     i = 0;
@@ -199,7 +199,7 @@ fun f(ls) =
   else log("Done!")
 //│ JS:
 //│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, args.length);
+//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│   let ls = args[0];
 //│   let param0, param1, h, tl, tmp;
 //│   tmp1: while (true) {

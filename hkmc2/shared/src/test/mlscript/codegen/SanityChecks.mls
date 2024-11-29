@@ -7,7 +7,7 @@ fun f(x, y) = x + y
 f(2, 3)
 //│ JS:
 //│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 2, args.length);
+//│   globalThis.Predef.checkArgs("f", 2, true, args.length);
 //│   let x = args[0];
 //│   let y = args[1];
 //│   return x + y;
@@ -40,10 +40,10 @@ f(3)(4)
 //│ JS:
 //│ let tmp;
 //│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, args.length);
+//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
 //│   return (...args1) => {
-//│     globalThis.Predef.checkArgs("", 2, args1.length);
+//│     globalThis.Predef.checkArgs("", 2, true, args1.length);
 //│     let y = args1[0];
 //│     let z = args1[1];
 //│     let tmp1;
@@ -70,7 +70,7 @@ let f = (x, y) => x + y
 f(2)
 //│ JS:
 //│ this.f = (...args) => {
-//│   globalThis.Predef.checkArgs("", 2, args.length);
+//│   globalThis.Predef.checkArgs("", 2, true, args.length);
 //│   let x = args[0];
 //│   let y = args[1];
 //│   return x + y;
@@ -114,7 +114,7 @@ class Cls(x, y) with
 Cls(1, 2).f(3)
 //│ JS:
 //│ let tmp;
-//│ this.Cls = function Cls(x1, y1) { return new Cls.class(x1, y1); };
+//│ this.Cls = function Cls(...args1) { return new Cls.class(...args1); };
 //│ this.Cls.class = class Cls {
 //│   constructor(x, y) {
 //│     this.x = x;
@@ -122,7 +122,7 @@ Cls(1, 2).f(3)
 //│     
 //│   }
 //│   f(...args) {
-//│     globalThis.Predef.checkArgs("f", 2, args.length);
+//│     globalThis.Predef.checkArgs("f", 2, true, args.length);
 //│     let z = args[0];
 //│     let p = args[1];
 //│     let tmp1, tmp2;
@@ -144,7 +144,7 @@ class Cls(x, y) with
 Cls(1, 2).f(3, 4)(5)
 //│ JS:
 //│ let tmp, tmp1;
-//│ this.Cls = function Cls(x1, y1) { return new Cls.class(x1, y1); };
+//│ this.Cls = function Cls(...args1) { return new Cls.class(...args1); };
 //│ this.Cls.class = class Cls {
 //│   constructor(x, y) {
 //│     this.x = x;
@@ -152,11 +152,11 @@ Cls(1, 2).f(3, 4)(5)
 //│     
 //│   }
 //│   f(...args) {
-//│     globalThis.Predef.checkArgs("f", 2, args.length);
+//│     globalThis.Predef.checkArgs("f", 2, true, args.length);
 //│     let z = args[0];
 //│     let p = args[1];
 //│     return (...args1) => {
-//│       globalThis.Predef.checkArgs("", 2, args1.length);
+//│       globalThis.Predef.checkArgs("", 2, true, args1.length);
 //│       let q = args1[0];
 //│       let s = args1[1];
 //│       let tmp2, tmp3, tmp4, tmp5;
@@ -217,14 +217,14 @@ if M.A(1).y is
 //│ let scrut, x, scrut1, tmp, selRes, tmp1;
 //│ const M$class = class M {
 //│   constructor() {
-//│     this.A = function A(x2) { return new A.class(x2); };
+//│     this.A = function A(...args1) { return new A.class(...args1); };
 //│     this.A.class = class A {
 //│       constructor(x1) {
 //│         this.x = x1;
 //│         
 //│       }
 //│       f(...args) {
-//│         globalThis.Predef.checkArgs("f", 1, args.length);
+//│         globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│         let y = args[0];
 //│         return this.x + y;
 //│       }

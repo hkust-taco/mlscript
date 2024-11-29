@@ -22,6 +22,7 @@ fun f(x) =
 //│               flags = ()
 //│               sym = x
 //│               sign = N
+//│           restParam = N
 //│       sign = N
 //│       body = S of IfLike:
 //│         kw = keyword 'if'

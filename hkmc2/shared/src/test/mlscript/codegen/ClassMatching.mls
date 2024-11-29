@@ -62,7 +62,7 @@ if s is
 x => if x is Some(x) then x
 //│ JS:
 //│ (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, args.length);
+//│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let x = args[0];
 //│   let param0, x1;
 //│   if (x instanceof this.Some.class) {
@@ -123,7 +123,7 @@ fun f(x) = if x is
   else log("oops")
 //│ JS:
 //│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, args.length);
+//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
 //│   let param0, x1, scrut;
 //│   if (x instanceof globalThis.Some.class) {
@@ -167,7 +167,7 @@ fun f(x) = if x is
   Pair(a, b) then a + b
 //│ JS:
 //│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, args.length);
+//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
 //│   let param0, param1, a, b, param01, u;
 //│   if (x instanceof globalThis.Some.class) {
@@ -203,7 +203,7 @@ fun f(x) = log of if x is
   else "oops"
 //│ JS:
 //│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, args.length);
+//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
 //│   let param0, tmp;
 //│   if (x instanceof globalThis.Some.class) {

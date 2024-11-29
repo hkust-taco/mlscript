@@ -61,7 +61,7 @@ fun test() =
   Foo
 //│ JS:
 //│ function test(...args) {
-//│   globalThis.Predef.checkArgs("test", 0, args.length);
+//│   globalThis.Predef.checkArgs("test", 0, true, args.length);
 //│   let tmp;
 //│   class Foo {
 //│     constructor() {
@@ -107,7 +107,7 @@ class Foo with
 //│     this.#y = tmp;
 //│   }
 //│   z(...args) {
-//│     globalThis.Predef.checkArgs("z", 0, args.length);
+//│     globalThis.Predef.checkArgs("z", 0, true, args.length);
 //│     return this.#y + this.x;
 //│   }
 //│   toString() { return "Foo"; }
@@ -135,11 +135,11 @@ class Foo with
 //│     ((globalThis.log("hello")) ?? null)
 //│   }
 //│   z1(...args) {
-//│     globalThis.Predef.checkArgs("z1", 0, args.length);
+//│     globalThis.Predef.checkArgs("z1", 0, true, args.length);
 //│     return 5;
 //│   } 
 //│   z2(...args1) {
-//│     globalThis.Predef.checkArgs("z2", 0, args1.length);
+//│     globalThis.Predef.checkArgs("z2", 0, true, args1.length);
 //│     return 6;
 //│   }
 //│   toString() { return "Foo"; }
@@ -157,12 +157,12 @@ class Foo with
 //│     this.x = 1;
 //│   }
 //│   foo(...args) {
-//│     globalThis.Predef.checkArgs("foo", 1, args.length);
+//│     globalThis.Predef.checkArgs("foo", 1, true, args.length);
 //│     let y = args[0];
 //│     return this.x + y;
 //│   } 
 //│   bar(...args1) {
-//│     globalThis.Predef.checkArgs("bar", 1, args1.length);
+//│     globalThis.Predef.checkArgs("bar", 1, true, args1.length);
 //│     let z = args1[0];
 //│     let tmp;
 //│     tmp = ((this.foo(z)) ?? null);

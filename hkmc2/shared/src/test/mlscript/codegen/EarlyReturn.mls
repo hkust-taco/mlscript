@@ -23,7 +23,7 @@ fun f(x) =
   x + 1
 //│ JS:
 //│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, args.length);
+//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
 //│   let scrut, tmp, tmp1;
 //│   scrut = x < 0;

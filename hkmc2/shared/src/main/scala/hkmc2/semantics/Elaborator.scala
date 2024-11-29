@@ -335,7 +335,9 @@ extends Importer:
       val nor = new ucs.Normalization(tl)(des)
       scoped("ucs:normalized"):
         log(s"Normalized:\n${Split.display(nor)}")
-      Term.Lam(Param(FldFlags.empty, scrut, N) :: Nil, Term.IfLike(Keyword.`if`, des)(nor))
+      Term.Lam(PlainParamList(
+          Param(FldFlags.empty, scrut, N) :: Nil
+        ), Term.IfLike(Keyword.`if`, des)(nor))
     case Modified(Keyword.`return`, kwLoc, body) =>
       Term.Ret(term(body))
     case Modified(Keyword.`throw`, kwLoc, body) =>
@@ -573,7 +575,7 @@ extends Importer:
                 td.paramLists.foldLeft(Ls[ParamList](), newCtx1):
                   case ((pss, ctx), ps) => 
                     val (qs, newCtx) = params(ps)(using ctx)
-                    (pss :+ ParamList(ParamListFlags.empty, qs), newCtx)
+                    (pss :+ qs, newCtx)
               // * Elaborate signature
               val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name))
               val s = st.map(term(_)(using newCtx))
@@ -721,23 +723,39 @@ extends Importer:
     if ctx.outer.isDefined then TermSymbol(k, ctx.outer, id)
     else VarSymbol(id)
   
-  def param(t: Tree): Ctxl[Ls[Param]] = t match
+  def param(t: Tree): Ctxl[Opt[Opt[Bool] -> Param]] = t match
     case TypeDef(Mod, inner, N, N) =>
-      val ps = param(inner).map(p => p.copy(flags = p.flags.copy(mod = true)))
-      for p <- ps if p.flags.mod do p.sign match
+      val ps = param(inner).map(_.mapSecond(p => p.copy(flags = p.flags.copy(mod = true))))
+      for p <- ps if p._2.flags.mod do p._2.sign match
         case N =>
           raise(ErrorReport(msg"Module parameters must have explicit types." -> t.toLoc :: Nil))
         case S(ret) if ModuleChecker.isTypeParam(ret) => 
           raise(ErrorReport(msg"Module parameters must have concrete types." -> t.toLoc :: Nil))
         case _ => ()
       ps
-    case _ => t.param.map: (p, t) =>
-      Param(FldFlags.empty, fieldOrVarSym(ParamBind, p), t.map(term(_)))
+    case _ =>
+      t.asParam.map: (isSpd, p, t) =>
+        isSpd -> Param(FldFlags.empty, fieldOrVarSym(ParamBind, p), t.map(term(_)))
   
-  def params(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
+  def params(t: Tree): Ctxl[(ParamList, Ctx)] = t match
     case Tup(ps) =>
-      val res = ps.flatMap(param)
-      (res, ctx ++ res.map(p => p.sym.name -> p.sym))
+      val plf = ParamListFlags.empty
+      def go(ps: Ls[Tree], acc: Ls[Param], ctx: Ctx): (ParamList, Ctx) =
+        ps match
+        case Nil => (ParamList(plf, acc.reverse, N), ctx)
+        case hd :: tl =>
+          param(hd)(using ctx) match
+          case S((isSpd, p)) =>
+            val newCtx = ctx + (p.sym.name -> p.sym)
+            isSpd match
+            case S(spdKnd) =>
+              if tl.nonEmpty then
+                raise(ErrorReport(msg"Spread parameters must be the last in the parameter list." -> hd.toLoc :: Nil))
+              (ParamList(plf, acc.reverse, S(p)), newCtx)
+            case N => go(tl, p :: acc, newCtx)
+          case N =>
+            ???
+      go(ps, Nil, ctx)
   
   def typeParams(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
     case TyTup(ps) =>
