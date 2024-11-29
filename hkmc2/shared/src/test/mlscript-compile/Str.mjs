@@ -6,10 +6,10 @@ const Str$class = class Str {
     return a + b;
   } 
   string(value) {
-    return ((globalThis.String(value)) ?? null);
+    return globalThis.String(value);
   }
   toString() { return "Str"; }
 }; const Str = new Str$class;
 Str.class = Str$class;
-null
+undefined
 export default Str;

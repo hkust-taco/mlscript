@@ -97,7 +97,7 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
       val base = fun match
         case _: Value.Lam => doc"(${result(fun)})"
         case _ => result(fun)
-      doc"(${base}(${args.map(result).mkDocument(", ")}) ?? null)"
+      setupCall(base, args.map(result).mkDocument(", "))
     case Value.Lam(ps, bod) => scope.nest givenIn:
       val (params, bodyDoc) = setupFunction(none, ps, bod)
       doc"($params) => { #{  # ${
@@ -340,6 +340,8 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
     (paramsList, this.body(body))
 
 
+  def setupCall(bases: Document, args: Document)(using Raise, Scope): Document =
+    doc"${bases}(${args})"
 
 object JSBuilder:
   import scala.util.matching.Regex
@@ -431,7 +433,7 @@ object JSBuilder:
 end JSBuilder
 
 
-trait JSBuilderSanityChecks
+trait JSBuilderArgNumSanityChecks
     (instrument: Bool)(using Elaborator.State)
     extends JSBuilder:
   
@@ -453,3 +455,12 @@ trait JSBuilderSanityChecks
     else
       super.setupFunction(name, params, body)
 
+trait JSBuilderSelSanityChecks
+    (instrument: Bool)(using Elaborator.State)
+    extends JSBuilder:
+  
+  override def setupCall(bases: Document, args: Document)(using Raise, Scope): Document =
+    val basic = super.setupCall(bases, args)
+    if instrument
+    then doc"($basic ?? null)"
+    else basic

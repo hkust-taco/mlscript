@@ -22,7 +22,7 @@ f(2, 3)
 fun f2(x, y) = x + y
 f2(2)
 //│ JS:
-//│ function f2(x, y) { return x + y; } (this.f2(2) ?? null)
+//│ function f2(x, y) { return x + y; } this.f2(2)
 //│ = NaN
 
 :sjs
@@ -61,7 +61,7 @@ f(3)(4)
 :noSanityCheck
 let f = (x, y) => x + y in f(2)
 //│ JS:
-//│ this.f = (x, y) => { return x + y; }; (this.f(2) ?? null)
+//│ this.f = (x, y) => { return x + y; }; this.f(2)
 //│ = NaN
 
 :sjs
@@ -103,8 +103,8 @@ Cls(1, 2).f(3)
 //│   }
 //│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
 //│ };
-//│ tmp = (this.Cls(1, 2) ?? null);
-//│ (tmp.f(3) ?? null)
+//│ tmp = this.Cls(1, 2);
+//│ tmp.f(3)
 //│ = NaN
 
 :sjs
@@ -270,6 +270,24 @@ M.A(1).y
 //│ (this.console.log(tmp1) ?? null)
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
+
+
+:sjs
+:noSanityCheck
+M.A(1).y
+  console.log()
+//│ JS:
+//│ let tmp; tmp = this.M.A(1); this.console.log(tmp.y)
+//│ > undefined
+
+:noSanityCheck
+:expect false
+M.A(2).y > 1
+//│ = false
+
+:re
+M.A(2).y > 1
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
 :re
 :sjs

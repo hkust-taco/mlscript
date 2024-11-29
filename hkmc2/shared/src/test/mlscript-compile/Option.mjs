@@ -39,10 +39,10 @@ const Option$class = class Option {
     }
   } 
   test() {
-    return ((Predef.pipe(2134, Predef.print)) ?? null);
+    return Predef.pipe(2134, Predef.print);
   }
   toString() { return "Option"; }
 }; const Option = new Option$class;
 Option.class = Option$class;
-null
+undefined
 export default Option;
