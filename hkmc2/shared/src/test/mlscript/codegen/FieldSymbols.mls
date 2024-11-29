@@ -1,0 +1,143 @@
+:js
+
+
+class Foo(val x) with
+  val y = x
+
+
+// TODO add symbol to this Sel
+:elt
+Foo(42).x
+//│ Elaborated tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Sel:
+//│     prefix = App:
+//│       lhs = SynthSel{member:Foo}:
+//│         prefix = Ref of globalThis:block#1
+//│         nme = Ident of "Foo"
+//│       rhs = Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Lit of IntLit of 42
+//│           asc = N
+//│     nme = Ident of "x"
+//│ = 42
+
+
+let foo = Foo(42)
+//│ foo = Foo { x: 42, y: 42 }
+
+// TODO add symbol to this Sel
+:elt
+foo.x
+//│ Elaborated tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Sel:
+//│     prefix = Ref of globalThis:block#3.foo
+//│     nme = Ident of "x"
+//│ = 42
+
+
+// TODO add symbol to this Sel
+:elt
+foo.y
+//│ Elaborated tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Sel:
+//│     prefix = Ref of globalThis:block#3.foo
+//│     nme = Ident of "y"
+//│ = 42
+
+
+// * Notice that the `.x` selection has symbol, propagated to the lowered tree, as expected
+:elt
+:lot
+case
+  Foo(a) then a
+//│ Elaborated tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Lam:
+//│     params = ParamList:
+//│       flags = ParamListFlags of false
+//│       params = Ls of 
+//│         Param:
+//│           flags = ()
+//│           sym = caseScrut
+//│           sign = N
+//│       restParam = N
+//│     body = IfLike:
+//│       kw = keyword 'if'
+//│       desugared = Cons:
+//│         head = Branch:
+//│           scrutinee = Ref of caseScrut
+//│           pattern = ClassLike:
+//│             sym = class:Foo
+//│             trm = SynthSel{class:Foo}:
+//│               prefix = SynthSel{member:Foo}:
+//│                 prefix = Ref of globalThis:block#1
+//│                 nme = Ident of "Foo"
+//│               nme = Ident of "class"
+//│             parameters = S of Ls of 
+//│               $param0
+//│             refined = false
+//│           continuation = Let:
+//│             sym = a
+//│             term = Ref of $param0
+//│             tail = Else of Ref of a
+//│         tail = End
+//│ Lowered:
+//│ Program:
+//│   imports = Nil
+//│   main = Return:
+//│     res = Lam:
+//│       params = ParamList:
+//│         flags = ParamListFlags of false
+//│         params = Ls of 
+//│           Param:
+//│             flags = ()
+//│             sym = caseScrut
+//│             sign = N
+//│         restParam = N
+//│       body = Match:
+//│         scrut = Ref of caseScrut
+//│         arms = Ls of 
+//│           Tuple2:
+//│             _1 = Cls:
+//│               cls = class:Foo
+//│               path = Select{class:Foo}:
+//│                 qual = Select{member:Foo}:
+//│                   qual = Ref of globalThis:block#1
+//│                   name = Ident of "Foo"
+//│                 name = Ident of "class"
+//│             _2 = Assign:
+//│               lhs = $param0
+//│               rhs = Select{class:Foo.x}:
+//│                 qual = Ref of caseScrut
+//│                 name = Ident of "x"
+//│               rest = Assign: \
+//│               lhs = a
+//│               rhs = Ref of $param0
+//│               rest = Return: \
+//│               res = Ref of a
+//│               implct = false
+//│         dflt = S of Throw of Instantiate:
+//│           cls = Select:
+//│             qual = Ref of globalThis:globalThis
+//│             name = Ident of "Error"
+//│           args = Ls of 
+//│             Lit of StrLit of "match error"
+//│         rest = End of ""
+//│     implct = true
+//│ = [Function (anonymous)]
+
+
+// TODO support:
+// data class Foo(x)
+
+// Foo(123).0
+
+

@@ -39,4 +39,22 @@ n / 2
 //│ Example.funnySlash(this.n, 2) ?? null
 //│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
+funnySlash(inc, 123)
+//│ = 124
+
+inc / 123
+//│ = 124
+
+test("hello")
+//│ = 'str'
+
+test / (inc / 123)
+//│ = 'int'
+
+test / inc / 123
+//│ = 'int'
+
+test / inc / 123 * 0.5
+//│ = 'num'
+
 

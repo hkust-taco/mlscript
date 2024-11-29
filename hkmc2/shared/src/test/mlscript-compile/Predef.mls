@@ -1,7 +1,4 @@
 
-declare val String
-declare val console
-
 module Predef with ...
 
 fun id(x) = x

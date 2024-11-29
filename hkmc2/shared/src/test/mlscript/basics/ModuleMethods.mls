@@ -1,5 +1,6 @@
 :js
 
+
 class C with
   // regular method foo
   fun foo(x) = x
@@ -13,34 +14,34 @@ module M with
 :e
 fun f1(module m)
 //│ ╔══[ERROR] Module parameters must have explicit types.
-//│ ║  l.14: 	fun f1(module m)
+//│ ║  l.15: 	fun f1(module m)
 //│ ╙──      	              ^
 
 :e
 fun f2[T](module m: T)
 //│ ╔══[ERROR] Module parameters must have concrete types.
-//│ ║  l.20: 	fun f2[T](module m: T)
+//│ ║  l.21: 	fun f2[T](module m: T)
 //│ ╙──      	                 ^^^^
 
 :e
 module N with
   fun f3() = M
 //│ ╔══[ERROR] Function returning module values must have explicit return types.
-//│ ║  l.27: 	  fun f3() = M
+//│ ║  l.28: 	  fun f3() = M
 //│ ╙──      	      ^^^^
 
 :e
 module N with
   fun f4[T](): module T = M
 //│ ╔══[ERROR] Function returning module values must have concrete return types.
-//│ ║  l.34: 	  fun f4[T](): module T = M
+//│ ║  l.35: 	  fun f4[T](): module T = M
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^
 
 :e
 module N with
   fun f5(): M = M
 //│ ╔══[ERROR] The return type of functions returning module values must be prefixed with module keyword.
-//│ ║  l.41: 	  fun f5(): M = M
+//│ ║  l.42: 	  fun f5(): M = M
 //│ ╙──      	      ^^^^^^^
 
 
@@ -49,21 +50,21 @@ fun f6(m: M) = m
 :e
 f6(M)
 //│ ╔══[ERROR] Only module parameters may receive module arguments (values).
-//│ ║  l.50: 	f6(M)
+//│ ║  l.51: 	f6(M)
 //│ ╙──      	   ^
 //│ = M { class: [class M] }
 
 :e
 f6(M.self())
 //│ ╔══[ERROR] Only module parameters may receive module arguments (values).
-//│ ║  l.57: 	f6(M.self())
+//│ ║  l.58: 	f6(M.self())
 //│ ╙──      	   ^^^^^^^^
 //│ = M { class: [class M] }
 
 :e
 fun f7(): module M
 //│ ╔══[ERROR] Only module methods may return module values.
-//│ ║  l.64: 	fun f7(): module M
+//│ ║  l.65: 	fun f7(): module M
 //│ ╙──      	    ^^^^^^^^^^^^^^
 
 
@@ -74,7 +75,7 @@ fun f8(module m: M) = m
 :e
 fun f9(module m: M): module M = m
 //│ ╔══[ERROR] Only module methods may return module values.
-//│ ║  l.75: 	fun f9(module m: M): module M = m
+//│ ║  l.76: 	fun f9(module m: M): module M = m
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 module Test with
@@ -91,4 +92,5 @@ ok1(M)
 
 ok1(M.self())
 //│ = M { class: [class M] }
+
 

@@ -15,8 +15,8 @@ enum Term extends Statement:
   case Ref(sym: Symbol)(val tree: Tree.Ident, val refNum: Int)
   case App(lhs: Term, rhs: Term)(val tree: Tree.App, val resSym: FlowSymbol)
   case TyApp(lhs: Term, targs: Ls[Term])
-  case SynthSel(prefix: Term, nme: Tree.Ident)(val sym: Opt[Symbol])
-  case Sel(prefix: Term, nme: Tree.Ident)(val sym: Opt[Symbol])
+  case Sel(prefix: Term, nme: Tree.Ident)(val sym: Opt[FieldSymbol])
+  case SynthSel(prefix: Term, nme: Tree.Ident)(val sym: Opt[FieldSymbol])
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
   case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split)(val normalized: Split)
   case Lam(params: ParamList, body: Term)
@@ -76,7 +76,11 @@ end Term
 
 import Term.*
 
-sealed trait Statement extends AutoLocated:
+sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
+  
+  def extraInfo: Str = this match
+    case trm @ (_: Sel | _: SynthSel) => trm.symbol.mkString
+    case _ => ""
   
   def subStatements: Ls[Statement] = this match
     case Blk(stats, res) => stats ::: res :: Nil
@@ -156,7 +160,8 @@ sealed trait Statement extends AutoLocated:
     case TyApp(lhs, targs) => s"${lhs.showDbg}[${targs.mkString(", ")}]"
     case Forall(tvs, body) => s"forall ${tvs.mkString(", ")}: ${body.toString}"
     case WildcardTy(in, out) => s"in ${in.map(_.toString).getOrElse("⊥")} out ${out.map(_.toString).getOrElse("⊤")}"
-    case SynthSel(pre, nme) => s"${pre.showDbg}.${nme.name}"
+    case Sel(pre, nme) => s"${pre.showDbg}.${nme.name}"
+    case SynthSel(pre, nme) => s"${pre.showDbg}(.)${nme.name}"
     case IfLike(kw, body) => s"${kw.name} { ${body.showDbg} }"
     case Lam(params, body) => s"λ${params.showDbg}. ${body.showDbg}"
     case Blk(stats, res) =>

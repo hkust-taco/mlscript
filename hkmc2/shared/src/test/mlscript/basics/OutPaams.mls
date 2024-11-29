@@ -1,0 +1,23 @@
+:js
+:todo
+
+
+// fun typeTerm(_, set ctx) = case
+//   IntLit then
+//     let ctx = ....
+//     Int
+//   App(f, a) then
+//     let f_t = typeTerm(f, let ctx)
+//     let a_t = typeTerm(a, let ctx)
+//     resTy....
+
+fun typeTerm(_, set ctx) =
+  print(ctx)
+  ctx = 123
+//│ /!!!\ Uncaught error: scala.MatchError: LetLike(keyword 'set',Ident(ctx),None,None) (of class hkmc2.syntax.Tree$LetLike)
+
+fun typeTerm(_, let ctx) =
+  ctx = 123
+//│ /!!!\ Uncaught error: scala.MatchError: LetLike(keyword 'let',Ident(ctx),None,None) (of class hkmc2.syntax.Tree$LetLike)
+
+

@@ -11,6 +11,30 @@ import hkmc2.syntax.Keyword.`override`
 import semantics.Elaborator.State
 
 
+class ParserSetup(file: os.Path, dbgParsing: Bool)(using Elaborator.State, Raise):
+  
+  val block = os.read(file)
+  val fph = new FastParseHelpers(block)
+  val origin = Origin(file.toString, 0, fph)
+  
+  val lexer = new syntax.Lexer(origin, dbg = dbgParsing)
+  val tokens = lexer.bracketedTokens
+  
+  // if showParse.isSet || dbgParsing.isSet then
+  //   output(syntax.Lexer.printTokens(tokens))
+  
+  val rules = syntax.ParseRules()
+  val parser = new syntax.Parser(origin, tokens, rules, raise, dbg = dbgParsing):
+    def doPrintDbg(msg: => Str): Unit =
+      // if dbg then output(msg)
+      if dbg then println(msg)
+  
+  val result = parser.parseAll(parser.block(allowNewlines = true))
+  
+  val resultBlk = new syntax.Tree.Block(result)
+  
+
+
 class MLsCompiler(preludeFile: os.Path):
   
   
@@ -29,40 +53,33 @@ class MLsCompiler(preludeFile: os.Path):
   
   def compileModule(file: os.Path): Unit =
     
-    val block = os.read(file)
-    val fph = new FastParseHelpers(block)
-    val origin = Origin(file.toString, 0, fph)
-    
-    val lexer = new syntax.Lexer(origin, dbg = dbgParsing)
-    val tokens = lexer.bracketedTokens
-    
-    // if showParse.isSet || dbgParsing.isSet then
-    //   output(syntax.Lexer.printTokens(tokens))
-    
     given Elaborator.State = new Elaborator.State
-    val rules = syntax.ParseRules()
-    val p = new syntax.Parser(origin, tokens, rules, raise, dbg = dbgParsing):
-      def doPrintDbg(msg: => Str): Unit =
-        // if dbg then output(msg)
-        if dbg then println(msg)
-    val res = p.parseAll(p.block(allowNewlines = true))
-    given Elaborator.Ctx = State.init.nest(N)
+    
+    val preludeParse = ParserSetup(preludeFile, dbgParsing)
+    val mainParse = ParserSetup(file, dbgParsing)
+    
     val wd = file / os.up
     val elab = Elaborator(etl, wd)
-    val resBlk = new syntax.Tree.Block(res)
-    val (blk, newCtx) = elab.importFrom(resBlk)
-    val low = ltl.givenIn:
-      codegen.Lowering()
-    val jsb = codegen.js.JSBuilder()
-    val le = low.program(blk)
-    val baseScp: codegen.js.Scope =
-      codegen.js.Scope.empty
-    val nestedScp = baseScp.nest
-    val je = nestedScp.givenIn:
-      jsb.program(le, S(file.baseName), wd)
-    val jsStr = je.stripBreaks.mkString(100)
-    val out = file / os.up / (file.baseName + ".mjs")
-    os.write.over(out, jsStr)
+    
+    val initState = State.init.nest(N)
+    
+    val (pblk, newCtx) = elab.importFrom(preludeParse.resultBlk)(using initState)
+    
+    newCtx.nest(N).givenIn:
+      
+      val (blk, newCtx) = elab.importFrom(mainParse.resultBlk)
+      val low = ltl.givenIn:
+        codegen.Lowering()
+      val jsb = codegen.js.JSBuilder()
+      val le = low.program(blk)
+      val baseScp: codegen.js.Scope =
+        codegen.js.Scope.empty
+      val nestedScp = baseScp.nest
+      val je = nestedScp.givenIn:
+        jsb.program(le, S(file.baseName), wd)
+      val jsStr = je.stripBreaks.mkString(100)
+      val out = file / os.up / (file.baseName + ".mjs")
+      os.write.over(out, jsStr)
   
   
 end MLsCompiler

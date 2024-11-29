@@ -34,11 +34,13 @@ object Elaborator:
   val reservedNames = binaryOps.toSet ++ aliasOps.keySet + "NaN" + "Infinity"
   
   case class Ctx(outer: Opt[InnerSymbol], parent: Opt[Ctx], env: Map[Str, Ctx.Elem]):
+    
     def +(local: Str -> Symbol): Ctx = copy(outer, env = env + local.mapSecond(Ctx.RefElem(_)))
     def ++(locals: IterableOnce[Str -> Symbol]): Ctx =
       copy(outer, env = env ++ locals.mapValues(Ctx.RefElem(_)))
     def elem_++(locals: IterableOnce[Str -> Ctx.Elem]): Ctx =
       copy(outer, env = env ++ locals)
+    
     def withMembers(members: Iterable[Str -> MemberSymbol[?]], out: Opt[Symbol] = N): Ctx =
       copy(env = env ++ members.map:
         case (nme, sym) => nme -> (
@@ -47,14 +49,29 @@ object Elaborator:
           case N => sym: Ctx.Elem
         )
       )
+    
     def nest(outer: Opt[InnerSymbol]): Ctx = Ctx(outer, Some(this), Map.empty)
+    
     def get(name: Str): Opt[Ctx.Elem] =
       env.get(name).orElse(parent.flatMap(_.get(name)))
     def getOuter: Opt[InnerSymbol] = outer.orElse(parent.flatMap(_.getOuter))
-    lazy val allMembers: Map[Str, Symbol] =
-      parent.fold(Map.empty)(_.allMembers) ++ env.flatMap:
-        case (n, re: Ctx.RefElem) => (n, re.sym) :: Nil
-        case _ => Nil // FIXME?
+    
+    // * Invariant: We expect that the top-level context only contain hard-coded symbols like `globalThis`
+    // * and that built-in symbols like Int and Str be imported into another nested context on top of it.
+    // * It should not be possible to shadow these built-in symbols, so user code should always be compiled
+    // * in further nested contexts.
+    // * Method `getBuiltin` is used to look up built-in symbols in the context of builtin symbols.
+    def getBuiltin(nme: Str): Opt[Ctx.Elem] =
+      parent.filter(_.parent.nonEmpty).fold(env.get(nme))(_.getBuiltin(nme))
+    object Builtins:
+      private def assumeBuiltinCls(nme: Str): ClassSymbol =
+        getBuiltin(nme)
+          .getOrElse(throw new NoSuchElementException(s"builtin $nme ${env.keySet} $parent"))
+          .symbol.getOrElse(throw new NoSuchElementException(s"builtin symbol $nme"))
+          .asCls.getOrElse(throw new NoSuchElementException(s"builtin class symbol $nme"))
+      val Int = assumeBuiltinCls("Int")
+      val Num = assumeBuiltinCls("Num")
+      val Str = assumeBuiltinCls("Str")
   
   object Ctx:
     abstract class Elem:
@@ -67,7 +84,7 @@ object Elaborator:
         require(id.name == nme)
         Term.Ref(sym)(id, 666) // TODO 666
       def symbol = S(sym)
-    final case class SelElem(val base: Elem, val nme: Str, val symOpt: Opt[Symbol]) extends Elem:
+    final case class SelElem(val base: Elem, val nme: Str, val symOpt: Opt[FieldSymbol]) extends Elem:
       def ref(id: Tree.Ident): Term =
         // * Note: due to symbolic ops, we may have `id.name =/= nme`;
         // * e.g., we can have `id.name = "|>"` and `nme = "pipe"`.
@@ -76,8 +93,11 @@ object Elaborator:
       def symbol = symOpt
     given Conversion[Symbol, Elem] = RefElem(_)
     val empty: Ctx = Ctx(N, N, Map.empty)
+  
   type Ctxl[A] = Ctx ?=> A
-  def ctx: Ctxl[Ctx] = summon
+  
+  transparent inline def ctx(using Ctx): Ctx = summon
+  
   class State:
     given State = this
     val suid = new Uid.Symbol.State
@@ -86,8 +106,15 @@ object Elaborator:
     def init(using State): Ctx = Ctx.empty.copy(env = Map(
       "globalThis" -> globalThisSymbol,
     ))
+    def dbg: Bool = false
+    def dbgUid(uid: Uid[Symbol]): Str = if dbg then s"‹$uid›" else ""
   transparent inline def State(using state: State): State = state
+
+end Elaborator
+
+
 import Elaborator.*
+
 
 class Elaborator(val tl: TraceLogger, val wd: os.Path)
 (using val raise: Raise, val state: State)
@@ -109,7 +136,7 @@ extends Importer:
   def mkLetBinding(sym: LocalSymbol, rhs: Term): Ls[Statement] =
     LetDecl(sym) :: DefineVar(sym, rhs) :: Nil
   
-  def resolveField(srcTree: Tree, base: Opt[Symbol], nme: Ident): Opt[Symbol] =
+  def resolveField(srcTree: Tree, base: Opt[Symbol], nme: Ident): Opt[FieldSymbol] =
     base match
     case S(psym: BlockMemberSymbol) =>
       psym.modTree match

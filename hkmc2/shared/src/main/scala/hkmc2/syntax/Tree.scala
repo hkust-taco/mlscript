@@ -131,7 +131,7 @@ enum Tree extends AutoLocated:
     case Jux(lhs, rhs) => "juxtaposition"
     case SynthSel(prefix, name) => "synthetic selection"
     case Sel(prefix, name) => "selection"
-    case InfixApp(lhs, kw, rhs) => "infix application"
+    case InfixApp(lhs, kw, rhs) => "infix operation"
     case New(body) => "new"
     case IfLike(Keyword.`if`, split) => "if expression"
     case IfLike(Keyword.`while`, split) => "while expression"

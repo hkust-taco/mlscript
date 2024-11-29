@@ -25,7 +25,7 @@ abstract class CodeBuilder:
   type Context
   
 
-class JSBuilder(using Elaborator.State) extends CodeBuilder:
+class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
   
   val builtinOpsBase: Ls[Str] = Ls(
     "+", "-", "*", "/", "%",
@@ -153,7 +153,8 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
                 Return(Lam(ps, block), false)
             val (params, bodyDoc) = setupFunction(some(sym.nme), ps, result)
             doc"function ${sym.nme}($params) { #{  # ${bodyDoc} #}  # }"
-          case ClsLikeDefn(sym, syntax.Cls, mtds, flds, ctor) =>
+          case ClsLikeDefn(sym, syntax.Cls, mtds, privFlds, _pubFlds, ctor) =>
+            // * Note: `_pubFlds` is not used because in JS, fields are not declared
             val clsDefn = sym.defn.getOrElse(die)
             val clsParams = clsDefn.paramsOpt.fold(Nil)(_.paramSyms)
             val ctorParams = clsParams.map(p => p -> scope.allocateName(p))
@@ -161,7 +162,7 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
               case ((sym, nme), acc) =>
                 doc"this.${sym.name} = $nme; # ${acc}"
             val clsJS = doc"class ${sym.nme} { #{ ${
-                flds.map(f => doc" # #${f.nme};").mkDocument(doc"")
+                privFlds.map(f => doc" # #${f.nme};").mkDocument(doc"")
               } # constructor(${
                 ctorParams.unzip._2.mkDocument(", ")
               }) { #{  # ${
@@ -238,10 +239,14 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
       case N  => doc""
       t :: e :: returningTerm(rest)
     case Match(scrut, Case.Cls(cls, pth) -> trm :: Nil, els, rest) =>
+      val sd = result(scrut)
       val test = cls match
         // case _: semantics.ModuleSymbol => doc"=== ${result(pth)}"
-        case _ => doc"instanceof ${result(pth)}"
-      val t = doc" # if (${ result(scrut) } $test) { #{ ${
+        case Elaborator.ctx.Builtins.Str => doc"typeof $sd === 'string'"
+        case Elaborator.ctx.Builtins.Num => doc"typeof $sd === 'number'"
+        case Elaborator.ctx.Builtins.Int => doc"globalThis.Number.isInteger($sd)"
+        case _ => doc"$sd instanceof ${result(pth)}"
+      val t = doc" # if ($test) { #{ ${
           returningTerm(trm)
         } #}  # }"
       val e = els match
@@ -279,10 +284,10 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
     case Throw(res) =>
       doc" # throw ${result(res)};"
     
-    case Break(lbl, false) =>
+    case Break(lbl) =>
       doc" # break ${getVar(lbl)};"
     
-    case Break(lbl, true) =>
+    case Continue(lbl) =>
       doc" # continue ${getVar(lbl)};"
     
     case Label(lbl, bod, rst) =>
