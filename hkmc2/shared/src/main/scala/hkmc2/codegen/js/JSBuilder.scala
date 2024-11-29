@@ -462,5 +462,5 @@ trait JSBuilderSelSanityChecks
   override def setupCall(bases: Document, args: Document)(using Raise, Scope): Document =
     val basic = super.setupCall(bases, args)
     if instrument
-    then doc"($basic ?? null)"
+    then doc"$basic ?? null"
     else basic

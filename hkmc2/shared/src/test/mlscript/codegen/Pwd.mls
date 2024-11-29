@@ -20,12 +20,12 @@ in folderName2 === folderName1 || folderName2 === "jvm"
 //│ } else {
 //│   tmp1 = selRes1;
 //│ }
-//│ tmp2 = (tmp1.split("/") ?? null);
-//│ tmp3 = (tmp2.pop() ?? null);
+//│ tmp2 = tmp1.split("/") ?? null;
+//│ tmp3 = tmp2.pop() ?? null;
 //│ this.folderName1 = tmp3;
-//│ tmp4 = (this.process.cwd() ?? null);
-//│ tmp5 = (tmp4.split("/") ?? null);
-//│ tmp6 = (tmp5.pop() ?? null);
+//│ tmp4 = this.process.cwd() ?? null;
+//│ tmp5 = tmp4.split("/") ?? null;
+//│ tmp6 = tmp5.pop() ?? null;
 //│ this.folderName2 = tmp6;
 //│ tmp7 = this.folderName2 === this.folderName1;
 //│ tmp8 = this.folderName2 === "jvm";

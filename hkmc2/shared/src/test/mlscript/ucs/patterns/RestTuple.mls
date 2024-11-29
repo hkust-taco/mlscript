@@ -22,7 +22,7 @@ fun nonsense(xs) = if xs is
 //│   let xs = args[0];
 //│   let rest, ys;
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 0) {
-//│     rest = (globalThis.Predef.tupleSlice(xs, 0, 0) ?? null);
+//│     rest = globalThis.Predef.tupleSlice(xs, 0, 0) ?? null;
 //│     ys = rest;
 //│     return ys;
 //│   } else {
@@ -48,8 +48,8 @@ fun lead_and_last(xs) = if xs is
 //│   let last0, rest, first0, x, ys, y;
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];
-//│     rest = (globalThis.Predef.tupleSlice(xs, 1, 1) ?? null);
-//│     last0 = (globalThis.Predef.tupleGet(xs, -1) ?? null);
+//│     rest = globalThis.Predef.tupleSlice(xs, 1, 1) ?? null;
+//│     last0 = globalThis.Predef.tupleGet(xs, -1) ?? null;
 //│     x = first0;
 //│     ys = rest;
 //│     y = last0;
@@ -88,8 +88,8 @@ fun nested_tuple_patterns(xs) = if xs is
 //│   let last0, rest, first0, x, first1, first01, y, z, w, tmp, tmp1;
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];
-//│     rest = (globalThis.Predef.tupleSlice(xs, 1, 1) ?? null);
-//│     last0 = (globalThis.Predef.tupleGet(xs, -1) ?? null);
+//│     rest = globalThis.Predef.tupleSlice(xs, 1, 1) ?? null;
+//│     last0 = globalThis.Predef.tupleGet(xs, -1) ?? null;
 //│     x = first0;
 //│     if (globalThis.Array.isArray(rest) && rest.length === 2) {
 //│       first01 = rest[0];

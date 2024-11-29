@@ -39,7 +39,7 @@ Foo
 :re
 Foo()
 //│ JS:
-//│ (this.Foo() ?? null)
+//│ this.Foo() ?? null
 //│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
 
 
@@ -48,11 +48,11 @@ log("ok")
 //│ JS:
 //│ this.Foo = class Foo {
 //│   constructor() {
-//│     (globalThis.log("hi") ?? null)
+//│     globalThis.log("hi") ?? null
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
-//│ (this.log("ok") ?? null)
+//│ this.log("ok") ?? null
 //│ > ok
 
 fun test() =
@@ -65,18 +65,18 @@ fun test() =
 //│   let tmp;
 //│   class Foo {
 //│     constructor() {
-//│       (globalThis.log("hi") ?? null)
+//│       globalThis.log("hi") ?? null
 //│     }
 //│     toString() { return "Foo"; }
 //│   }
-//│   tmp = (globalThis.log("ok") ?? null);
+//│   tmp = globalThis.log("ok") ?? null;
 //│   return Foo;
 //│ }
 //│ undefined
 
 let t = test()
 //│ JS:
-//│ let tmp; tmp = (this.test() ?? null); this.t = tmp; undefined
+//│ let tmp; tmp = this.test() ?? null; this.t = tmp; undefined
 //│ > ok
 //│ t = [class Foo]
 
@@ -132,7 +132,7 @@ class Foo with
 //│     this.x2 = 2;
 //│     this.#y1 = 3;
 //│     this.#y2 = 4;
-//│     (globalThis.log("hello") ?? null)
+//│     globalThis.log("hello") ?? null
 //│   }
 //│   z1(...args) {
 //│     globalThis.Predef.checkArgs("z1", 0, true, args.length);
@@ -165,7 +165,7 @@ class Foo with
 //│     globalThis.Predef.checkArgs("bar", 1, true, args1.length);
 //│     let z = args1[0];
 //│     let tmp;
-//│     tmp = (this.foo(z) ?? null);
+//│     tmp = this.foo(z) ?? null;
 //│     return tmp + 1;
 //│   }
 //│   toString() { return "Foo"; }
@@ -186,11 +186,11 @@ log(a.bar(1))
 //│ } else {
 //│   tmp1 = selRes;
 //│ }
-//│ tmp2 = (this.log(tmp1) ?? null);
-//│ tmp3 = (this.a.foo(1) ?? null);
-//│ tmp4 = (this.log(tmp3) ?? null);
-//│ tmp5 = (this.a.bar(1) ?? null);
-//│ (this.log(tmp5) ?? null)
+//│ tmp2 = this.log(tmp1) ?? null;
+//│ tmp3 = this.a.foo(1) ?? null;
+//│ tmp4 = this.log(tmp3) ?? null;
+//│ tmp5 = this.a.bar(1) ?? null;
+//│ this.log(tmp5) ?? null
 //│ > 1
 //│ > 2
 //│ > 3

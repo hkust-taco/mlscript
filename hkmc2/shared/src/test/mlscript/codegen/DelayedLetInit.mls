@@ -69,7 +69,7 @@ f(x) = x + 1
 
 f(1)
 //│ JS:
-//│ (this.f(1) ?? null)
+//│ this.f(1) ?? null
 //│ = 2
 
 
@@ -115,7 +115,7 @@ fun f() =
 
 f()
 //│ JS:
-//│ (this.f() ?? null)
+//│ this.f() ?? null
 
 foo
 //│ JS:

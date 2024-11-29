@@ -13,7 +13,7 @@ object None
 if Some(0) is Some(x) then x
 //│ JS:
 //│ let scrut, param0, x;
-//│ scrut = (this.Some(0) ?? null);
+//│ scrut = this.Some(0) ?? null;
 //│ if (scrut instanceof this.Some.class) {
 //│   param0 = scrut.value;
 //│   x = param0;
@@ -133,13 +133,13 @@ fun f(x) = if x is
 //│     if (scrut) {
 //│       return 42;
 //│     } else {
-//│       return (globalThis.log("oops") ?? null);
+//│       return globalThis.log("oops") ?? null;
 //│     }
 //│   } else {
 //│     if (x instanceof globalThis.None.class) {
 //│       return "ok";
 //│     } else {
-//│       return (globalThis.log("oops") ?? null);
+//│       return globalThis.log("oops") ?? null;
 //│     }
 //│   }
 //│ }
@@ -220,7 +220,7 @@ fun f(x) = log of if x is
 //│       tmp = "oops";
 //│     }
 //│   }
-//│   return (globalThis.log(tmp) ?? null);
+//│   return globalThis.log(tmp) ?? null;
 //│ }
 //│ undefined
 

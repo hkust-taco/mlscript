@@ -27,7 +27,7 @@ None
 :re
 None()
 //│ JS:
-//│ (this.None() ?? null)
+//│ this.None() ?? null
 //│ ═══[RUNTIME ERROR] TypeError: this.None is not a function
 
 :sjs

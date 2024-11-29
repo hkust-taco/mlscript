@@ -12,7 +12,7 @@ f(2, 3)
 //│   let y = args[1];
 //│   return x + y;
 //│ }
-//│ (this.f(2, 3) ?? null)
+//│ this.f(2, 3) ?? null
 //│ = 5
 
 
@@ -29,7 +29,7 @@ f2(2)
 :re
 f(2)
 //│ JS:
-//│ (this.f(2) ?? null)
+//│ this.f(2) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
@@ -51,8 +51,8 @@ f(3)(4)
 //│     return tmp1 + z;
 //│   };
 //│ }
-//│ tmp = (this.f(3) ?? null);
-//│ (tmp(4) ?? null)
+//│ tmp = this.f(3) ?? null;
+//│ tmp(4) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
 
@@ -75,7 +75,7 @@ f(2)
 //│   let y = args[1];
 //│   return x + y;
 //│ };
-//│ (this.f(2) ?? null)
+//│ this.f(2) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 //│ f = [Function (anonymous)]
 
@@ -132,8 +132,8 @@ Cls(1, 2).f(3)
 //│   }
 //│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
 //│ };
-//│ tmp = (this.Cls(1, 2) ?? null);
-//│ (tmp.f(3) ?? null)
+//│ tmp = this.Cls(1, 2) ?? null;
+//│ tmp.f(3) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
@@ -169,16 +169,16 @@ Cls(1, 2).f(3, 4)(5)
 //│   }
 //│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
 //│ };
-//│ tmp = (this.Cls(1, 2) ?? null);
-//│ tmp1 = (tmp.f(3, 4) ?? null);
-//│ (tmp1(5) ?? null)
+//│ tmp = this.Cls(1, 2) ?? null;
+//│ tmp1 = tmp.f(3, 4) ?? null;
+//│ tmp1(5) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
 
 :sjs
 console.log(1)
 //│ JS:
-//│ (this.console.log(1) ?? null)
+//│ this.console.log(1) ?? null
 //│ > 1
 
 
@@ -199,7 +199,7 @@ globalThis.x
 :sjs
 globalThis.x()
 //│ JS:
-//│ (this.x() ?? null)
+//│ this.x() ?? null
 //│ ═══[RUNTIME ERROR] TypeError: this.x is not a function
 
 
@@ -235,7 +235,7 @@ if M.A(1).y is
 //│ };
 //│ this.M = new M$class;
 //│ this.M.class = M$class;
-//│ tmp = (this.M.A(1) ?? null);
+//│ tmp = this.M.A(1) ?? null;
 //│ selRes = tmp.y;
 //│ if (selRes === undefined) {
 //│   throw new this.Error("Access to required field 'y' yielded 'undefined'");
@@ -260,14 +260,14 @@ M.A(1).y
   console.log()
 //│ JS:
 //│ let tmp, selRes, tmp1;
-//│ tmp = (this.M.A(1) ?? null);
+//│ tmp = this.M.A(1) ?? null;
 //│ selRes = tmp.y;
 //│ if (selRes === undefined) {
 //│   throw new this.Error("Access to required field 'y' yielded 'undefined'");
 //│ } else {
 //│   tmp1 = selRes;
 //│ }
-//│ (this.console.log(tmp1) ?? null)
+//│ this.console.log(tmp1) ?? null
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
 
@@ -293,7 +293,7 @@ M.A(2).y > 1
 :sjs
 M.A(1).g(0)
 //│ JS:
-//│ let tmp; tmp = (this.M.A(1) ?? null); (tmp.g(0) ?? null)
+//│ let tmp; tmp = this.M.A(1) ?? null; tmp.g(0) ?? null
 //│ ═══[RUNTIME ERROR] TypeError: tmp.g is not a function
 
 
@@ -301,5 +301,5 @@ M.A(1).g(0)
 :sjs
 M.A(1).f(0)
 //│ JS:
-//│ let tmp; tmp = (this.M.A(1) ?? null); (tmp.f(0) ?? null)
+//│ let tmp; tmp = this.M.A(1) ?? null; tmp.f(0) ?? null
 //│ = 1

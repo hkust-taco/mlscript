@@ -38,7 +38,7 @@ set x += 1 in log(x)
 //│ try {
 //│   tmp1 = this.x + 1;
 //│   this.x = tmp1;
-//│   tmp = (this.log(this.x) ?? null);
+//│   tmp = this.log(this.x) ?? null;
 //│ } finally {
 //│   this.x = old;
 //│ }
@@ -90,18 +90,18 @@ example()
 //│   try {
 //│     tmp1 = x + 1;
 //│     x = tmp1;
-//│     tmp2 = (globalThis.log(x) ?? null);
+//│     tmp2 = globalThis.log(x) ?? null;
 //│     tmp3 = (tmp2 , globalThis.log);
-//│     tmp4 = (get_x() ?? null);
-//│     tmp = (tmp3(tmp4) ?? null);
+//│     tmp4 = get_x() ?? null;
+//│     tmp = tmp3(tmp4) ?? null;
 //│   } finally {
 //│     x = old;
 //│   }
-//│   tmp5 = (globalThis.log(x) ?? null);
-//│   tmp6 = (get_x() ?? null);
-//│   return (globalThis.log(tmp6) ?? null);
+//│   tmp5 = globalThis.log(x) ?? null;
+//│   tmp6 = get_x() ?? null;
+//│   return globalThis.log(tmp6) ?? null;
 //│ }
-//│ (this.example() ?? null)
+//│ this.example() ?? null
 //│ > 1
 //│ > 1
 //│ > 0
@@ -130,18 +130,18 @@ example()
 //│   try {
 //│     tmp1 = x + 1;
 //│     x = tmp1;
-//│     tmp2 = (globalThis.log(x) ?? null);
+//│     tmp2 = globalThis.log(x) ?? null;
 //│     tmp = (tmp2 , x);
 //│   } finally {
 //│     x = old;
 //│   }
 //│   y = tmp;
-//│   tmp3 = (globalThis.log(x) ?? null);
-//│   tmp4 = (get_x() ?? null);
-//│   tmp5 = (globalThis.log(tmp4) ?? null);
+//│   tmp3 = globalThis.log(x) ?? null;
+//│   tmp4 = get_x() ?? null;
+//│   tmp5 = globalThis.log(tmp4) ?? null;
 //│   return y;
 //│ }
-//│ (this.example() ?? null)
+//│ this.example() ?? null
 //│ > 1
 //│ > 0
 //│ > 0

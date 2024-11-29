@@ -16,9 +16,9 @@ let f = x => if x then log("ok") else log("ko")
 //│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let x = args[0];
 //│   if (x) {
-//│     return (this.log("ok") ?? null);
+//│     return this.log("ok") ?? null;
 //│   } else {
-//│     return (this.log("ko") ?? null);
+//│     return this.log("ko") ?? null;
 //│   }
 //│ };
 //│ undefined
@@ -44,7 +44,7 @@ let f = x => log((if x then "ok" else "ko") + "!")
 //│     tmp = "ko";
 //│   }
 //│   tmp1 = tmp + "!";
-//│   return (this.log(tmp1) ?? null);
+//│   return this.log(tmp1) ?? null;
 //│ };
 //│ undefined
 //│ f = [Function (anonymous)]
@@ -66,7 +66,7 @@ let f = x => log((if x and x then "ok" else "ko") + "!")
 //│     tmp = "ko";
 //│   }
 //│   tmp1 = tmp + "!";
-//│   return (this.log(tmp1) ?? null);
+//│   return this.log(tmp1) ?? null;
 //│ };
 //│ undefined
 //│ f = [Function (anonymous)]
