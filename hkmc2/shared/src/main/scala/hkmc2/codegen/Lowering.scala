@@ -354,7 +354,7 @@ trait LoweringSelSanityChecks
         val split = Split.Cons(
             Branch(
               selRes.ref(),
-              Pattern.Lit(syntax.Tree.UnitLit(true)),
+              Pattern.Lit(syntax.Tree.UnitLit(false)),
               Split.Else(
                 Term.Throw(Term.New(SynthSel(State.globalThisSymbol.ref(), Tree.Ident("Error"))(N),
                   Term.Lit(syntax.Tree.StrLit(s"Access to required field '${nme.name}' yielded 'undefined'")) :: Nil)

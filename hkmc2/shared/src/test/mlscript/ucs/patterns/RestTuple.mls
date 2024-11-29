@@ -29,7 +29,7 @@ fun nonsense(xs) = if xs is
 //│     throw new globalThis.Error("match error");
 //│   }
 //│ }
-//│ undefined
+//│ null
 
 nonsense([])
 //│ = []
@@ -62,7 +62,7 @@ fun lead_and_last(xs) = if xs is
 //│     }
 //│   }
 //│ }
-//│ undefined
+//│ null
 
 lead_and_last(["foo", "bar"])
 //│ = 'foobar'
@@ -111,7 +111,7 @@ fun nested_tuple_patterns(xs) = if xs is
 //│     }
 //│   }
 //│ }
-//│ undefined
+//│ null
 
 fun hack(tupleSlice) = if tupleSlice is
   [..tupleGet, x] then x

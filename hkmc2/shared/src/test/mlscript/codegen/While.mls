@@ -61,7 +61,7 @@ while x
 //│   if (scrut) {
 //│     tmp = this.log("Hello World") ?? null;
 //│     this.x = false;
-//│     tmp1 = undefined;
+//│     tmp1 = null;
 //│     continue tmp2;
 //│   } else {
 //│     tmp1 = 42;
@@ -117,7 +117,7 @@ while
 //│     if (scrut) {
 //│       tmp = i + 1;
 //│       i = tmp;
-//│       tmp1 = undefined;
+//│       tmp1 = null;
 //│       continue tmp2;
 //│     } else {
 //│       throw new this.Error("match error");
@@ -218,7 +218,7 @@ fun f(ls) =
 //│   }
 //│   return tmp;
 //│ }
-//│ undefined
+//│ null
 
 f(0)
 //│ > Done!

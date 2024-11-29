@@ -11,7 +11,7 @@ fun f(n1: Int): Int = n1
 //│   let n1 = args[0];
 //│   return n1;
 //│ }
-//│ undefined
+//│ null
 
 f(42)
 //│ JS:
@@ -31,7 +31,7 @@ fun f(n1: Int)(n2: Int): Int =  (10 * n1 + n2)
 //│     return tmp + n2;
 //│   };
 //│ }
-//│ undefined
+//│ null
 
 f(4)(2)
 //│ JS:
@@ -57,7 +57,7 @@ fun f(n1: Int)(n2: Int)(n3: Int): Int = 10 * (10 * n1 + n2) + n3
 //│     };
 //│   };
 //│ }
-//│ undefined
+//│ null
 
 f(4)(2)(0)
 //│ JS:
@@ -89,7 +89,7 @@ fun f(n1: Int)(n2: Int)(n3: Int)(n4: Int): Int = 10 * (10 * (10 * n1 + n2) + n3)
 //│     };
 //│   };
 //│ }
-//│ undefined
+//│ null
 
 f(3)(0)(3)(1)
 //│ JS:

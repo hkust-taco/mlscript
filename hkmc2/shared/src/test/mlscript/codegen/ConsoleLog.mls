@@ -7,7 +7,7 @@
 :silent
 declare val console
 //│ JS:
-//│ undefined
+//│ null
 
 
 console.log("a")

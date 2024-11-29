@@ -295,8 +295,8 @@ class ParseRules(using State):
     // modified(`type`),
     singleKw(`true`)(BoolLit(true)),
     singleKw(`false`)(BoolLit(false)),
-    singleKw(`undefined`)(UnitLit(true)),
-    singleKw(`null`)(UnitLit(false)),
+    singleKw(`undefined`)(UnitLit(false)),
+    singleKw(`null`)(UnitLit(true)),
     singleKw(`this`)(Ident("this")),
     standaloneExpr,
   )

@@ -12,5 +12,5 @@ const Example$class = class Example {
   toString() { return "Example"; }
 }; const Example = new Example$class;
 Example.class = Example$class;
-undefined
+null
 export default Example;

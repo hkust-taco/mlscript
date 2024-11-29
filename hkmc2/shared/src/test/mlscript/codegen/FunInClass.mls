@@ -62,7 +62,7 @@ fun test(a) =
 //│   };
 //│   return Inner(42) ?? null;
 //│ }
-//│ undefined
+//│ null
 
 let i = test(100)
 //│ > 100
@@ -116,7 +116,7 @@ fun test(a) =
 //│     tmp1
 //│   ];
 //│ }
-//│ undefined
+//│ null
 
 test(123)
 //│ > 123,1

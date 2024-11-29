@@ -55,11 +55,11 @@ const Predef$class = class Predef {
       tmp9 = tmp8 + got;
       throw globalThis.Error(tmp9);
     } else {
-      return undefined;
+      return null;
     }
   }
   toString() { return "Predef"; }
 }; const Predef = new Predef$class;
 Predef.class = Predef$class;
-undefined
+null
 export default Predef;

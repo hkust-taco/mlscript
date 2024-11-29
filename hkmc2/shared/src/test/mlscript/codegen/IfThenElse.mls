@@ -21,7 +21,7 @@ let f = x => if x then log("ok") else log("ko")
 //│     return this.log("ko") ?? null;
 //│   }
 //│ };
-//│ undefined
+//│ null
 //│ f = [Function (anonymous)]
 
 f(true)
@@ -46,7 +46,7 @@ let f = x => log((if x then "ok" else "ko") + "!")
 //│   tmp1 = tmp + "!";
 //│   return this.log(tmp1) ?? null;
 //│ };
-//│ undefined
+//│ null
 //│ f = [Function (anonymous)]
 
 :sjs
@@ -68,7 +68,7 @@ let f = x => log((if x and x then "ok" else "ko") + "!")
 //│   tmp1 = tmp + "!";
 //│   return this.log(tmp1) ?? null;
 //│ };
-//│ undefined
+//│ null
 //│ f = [Function (anonymous)]
 // --- TODO: What we want ---
 // this.f = (x) => {

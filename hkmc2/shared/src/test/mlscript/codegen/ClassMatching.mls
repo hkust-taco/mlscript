@@ -143,7 +143,7 @@ fun f(x) = if x is
 //│     }
 //│   }
 //│ }
-//│ undefined
+//│ null
 
 f(Some(0))
 //│ > oops
@@ -186,7 +186,7 @@ fun f(x) = if x is
 //│     }
 //│   }
 //│ }
-//│ undefined
+//│ null
 
 f(Some(123))
 //│ = 123
@@ -222,7 +222,7 @@ fun f(x) = log of if x is
 //│   }
 //│   return globalThis.log(tmp) ?? null;
 //│ }
-//│ undefined
+//│ null
 
 f(Some(0))
 //│ > 0

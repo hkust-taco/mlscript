@@ -41,7 +41,7 @@ class Accounting {
         let tmp;
         tmp = this.balance - amt;
         this.balance = tmp;
-        return undefined;
+        return null;
       } 
       mustBeEmpty() {
         let scrut, tmp, tmp1, tmp2, tmp3, tmp4;
@@ -54,7 +54,7 @@ class Accounting {
           tmp4 = Str.concat(tmp3, "`");
           return this$Accounting.warnings.push(tmp4);
         } else {
-          return undefined;
+          return null;
         }
       }
       toString() { return "Line(" + this.name + ", " + this.proj + ", " + this.starting_balance + ", " + this.isMatchable + ")"; }
@@ -186,5 +186,5 @@ class Accounting {
   }
   toString() { return "Accounting"; }
 }
-undefined
+null
 export default Accounting;

@@ -73,7 +73,7 @@ class Outer(a, b) with
 //│   }
 //│   toString() { return "Outer(" + this.a + ", " + this.b + ")"; }
 //│ };
-//│ undefined
+//│ null
 
 
 val o = Outer(100, 200)

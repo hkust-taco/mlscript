@@ -32,7 +32,7 @@ module Bar with
 //│ };
 //│ this.Bar = new Bar$class;
 //│ this.Bar.class = Bar$class;
-//│ undefined
+//│ null
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
 
 
