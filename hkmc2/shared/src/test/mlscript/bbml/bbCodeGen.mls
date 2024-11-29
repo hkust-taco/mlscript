@@ -120,6 +120,46 @@ if 1 == 2 then 0 else 42
 //│ Type: Int
 
 
+:fixme
+:sjs
+if 1 is Int then 1 else 0
+//│ JS:
+//│ let scrut; scrut = 1; if (scrut instanceof this.Int) { 1 } else { 0 }
+//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
+//│ Type: Int
+
+
+class Foo()
+//│ Type: ⊤
+
+
+
+:sjs
+:fixme
+let foo = new Foo()
+if foo is Foo then 1 else 0
+//│ JS:
+//│ let scrut, tmp;
+//│ tmp = new this.Foo.class();
+//│ this.foo = tmp;
+//│ scrut = this.foo;
+//│ if (scrut instanceof this.Foo.class) {
+//│   1
+//│ } else {
+//│   0
+//│ }
+//│ = 1
+//│ foo = Foo {}
+//│ ╔══[ERROR] Cannot match Ref($scrut) as class:Foo
+//│ ║  l.140: 	if foo is Foo then 1 else 0
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type error in `if` expression
+//│ ║  l.140: 	if foo is Foo then 1 else 0
+//│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── because: cannot constrain  Foo  <:  ⊥
+//│ Type: Int
+
+
 :sjs
 fun pow(x) = case
   0 then 1
