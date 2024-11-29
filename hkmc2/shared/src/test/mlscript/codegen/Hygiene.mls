@@ -29,7 +29,7 @@ module Test with
 :sjs
 Test.foo()
 //│ JS:
-//│ ((this.Test.foo()) ?? null)
+//│ (this.Test.foo() ?? null)
 //│ = 12
 
 :sjs
@@ -56,7 +56,7 @@ f()
 //│   return this.x;
 //│ };
 //│ this.x = 2;
-//│ ((this.f()) ?? null)
+//│ (this.f() ?? null)
 //│ = 2
 //│ f = [Function (anonymous)]
 //│ x = 2

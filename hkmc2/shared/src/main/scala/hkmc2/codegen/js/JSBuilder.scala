@@ -94,11 +94,10 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
       err(msg"Illeal arity for builtin symbol '${l.nme}'")
     
     case Call(fun, args) =>
-      val argDoc = doc"(${args.map(result).mkDocument(", ")})"
-      fun match
-        case _: Value.Lam => doc"(((${result(fun)})$argDoc) ?? null)"
-        case _ => doc"((${result(fun)}$argDoc) ?? null)"
-      // doc"${base}(${args.map(result).mkDocument(", ")})"
+      val base = fun match
+        case _: Value.Lam => doc"(${result(fun)})"
+        case _ => result(fun)
+      doc"(${base}(${args.map(result).mkDocument(", ")}) ?? null)"
     case Value.Lam(ps, bod) => scope.nest givenIn:
       val (params, bodyDoc) = setupFunction(none, ps, bod)
       doc"($params) => { #{  # ${
@@ -114,9 +113,7 @@ class JSBuilder(using Elaborator.State) extends CodeBuilder:
           case N => s"[${JSBuilder.makeStringLiteral(name)}]"
       }"
     case Instantiate(cls, as) =>
-      val argDoc = doc"(${as.map(result).mkDocument(", ")})"
-      cls match
-        case _ => doc"new ${result(cls)}$argDoc"
+      doc"new ${result(cls)}(${as.map(result).mkDocument(", ")})"
     case Value.Arr(es) =>
       doc"[ #{  # ${es.map(result).mkDocument(doc", # ")} #}  # ]"
   def returningTerm(t: Block)(using Raise, Scope): Document = t match

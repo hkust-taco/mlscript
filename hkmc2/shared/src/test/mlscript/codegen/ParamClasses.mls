@@ -25,7 +25,7 @@ Foo
 
 Foo()
 //│ JS:
-//│ ((this.Foo()) ?? null)
+//│ (this.Foo() ?? null)
 //│ = Foo {}
 
 Foo.class
@@ -59,13 +59,13 @@ Foo
 
 Foo(1)
 //│ JS:
-//│ ((this.Foo(1)) ?? null)
+//│ (this.Foo(1) ?? null)
 //│ = Foo { a: 1 }
 
 Foo(1).a
 //│ JS:
 //│ let tmp, selRes;
-//│ tmp = ((this.Foo(1)) ?? null);
+//│ tmp = (this.Foo(1) ?? null);
 //│ selRes = tmp.a;
 //│ if (selRes === undefined) {
 //│   throw new this.Error("Access to required field 'a' yielded 'undefined'");
@@ -80,9 +80,9 @@ foo(27)
 //│ function foo(...args) {
 //│   globalThis.Predef.checkArgs("foo", 1, true, args.length);
 //│   let y = args[0];
-//│   return ((globalThis.Foo(y)) ?? null);
+//│   return (globalThis.Foo(y) ?? null);
 //│ }
-//│ ((this.foo(27)) ?? null)
+//│ (this.foo(27) ?? null)
 //│ = Foo { a: 27 }
 
 
@@ -106,7 +106,7 @@ let foo = Foo
 
 let f = foo(1, 2)
 //│ JS:
-//│ let tmp; tmp = ((this.foo(1, 2)) ?? null); this.f = tmp; undefined
+//│ let tmp; tmp = (this.foo(1, 2) ?? null); this.f = tmp; undefined
 //│ f = Foo { a: 1, b: 2 }
 
 let f = new foo(1, 2)
@@ -138,7 +138,7 @@ f.b
 
 let f = Foo(1, 2)
 //│ JS:
-//│ let tmp; tmp = ((this.Foo(1, 2)) ?? null); this.f = tmp; undefined
+//│ let tmp; tmp = (this.Foo(1, 2) ?? null); this.f = tmp; undefined
 //│ f = Foo { a: 1, b: 2 }
 
 f.a
@@ -166,9 +166,9 @@ f.b
 Foo(log(1), log(2))
 //│ JS:
 //│ let tmp, tmp1;
-//│ tmp = ((this.log(1)) ?? null);
-//│ tmp1 = ((this.log(2)) ?? null);
-//│ ((this.Foo(tmp, tmp1)) ?? null)
+//│ tmp = (this.log(1) ?? null);
+//│ tmp1 = (this.log(2) ?? null);
+//│ (this.Foo(tmp, tmp1) ?? null)
 //│ > 1
 //│ > 2
 //│ = Foo { a: null, b: null }
@@ -182,7 +182,7 @@ class Inner(c) with
 //│ this.Inner.class = class Inner {
 //│   constructor(c) {
 //│     this.c = c;
-//│     ((globalThis.log(this.c)) ?? null)
+//│     (globalThis.log(this.c) ?? null)
 //│   }
 //│   i1(...args) {
 //│     globalThis.Predef.checkArgs("i1", 1, true, args.length);
@@ -201,7 +201,7 @@ let i = new Inner(100)
 
 i.i1(20)
 //│ JS:
-//│ ((this.i.i1(20)) ?? null)
+//│ (this.i.i1(20) ?? null)
 //│ = 120
 
 

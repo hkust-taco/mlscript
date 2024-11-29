@@ -10,7 +10,7 @@ fun f() =
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 0, true, args.length);
 //│   let tmp;
-//│   tmp = ((globalThis.console.log("ok")) ?? null);
+//│   tmp = (globalThis.console.log("ok") ?? null);
 //│   return 42;
 //│ }
 //│ undefined
@@ -20,7 +20,7 @@ fun f() = { console.log("ok"), 42 }
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 0, true, args.length);
 //│   let tmp;
-//│   tmp = ((globalThis.console.log("ok")) ?? null);
+//│   tmp = (globalThis.console.log("ok") ?? null);
 //│   return 42;
 //│ }
 //│ undefined
@@ -29,7 +29,7 @@ fun f() = console.log("ok"), 42
 //│ JS:
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 0, true, args.length);
-//│   return ((globalThis.console.log("ok")) ?? null);
+//│   return (globalThis.console.log("ok") ?? null);
 //│ }
 //│ 42
 //│ = 42
