@@ -385,12 +385,9 @@ trait LoweringTraceLog
   private val inspectFn = selFromGlobalThis("util", "inspect")
   
   override def topLevel(t: st): Block =
-    if instrument then
-      assignStmts(
-        TempSymbol(N) -> Call(traceLogResetFn, Arg(false, Value.Lit(Tree.IntLit(0))) :: Nil),
-      )(term(t)(ImplctRet)(using Subst.empty))
-    else
-      super.topLevel(t)  
+    assignStmts(
+      TempSymbol(N) -> Call(traceLogResetFn, Arg(false, Value.Lit(Tree.IntLit(0))) :: Nil),
+    )(term(t)(ImplctRet)(using Subst.empty))
   
   override def setupFunctionDef(paramLists: List[ParamList], bodyTerm: st, name: Option[Str])(using Subst): (List[ParamList], Block) = 
     if instrument then

@@ -1,0 +1,99 @@
+:js
+
+:traceJS
+:sjs
+fun fib(a) = if
+  a <= 1 then a
+  else fib(a - 1) + fib(a - 2)
+//│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ function fib(...args) {
+//│   globalThis.Predef.checkArgs("fib", 1, true, args.length);
+//│   let a = args[0];
+//│   let scrut, traceLogEnterMsg, traceLogPrevIndent, traceLogRes, traceLogRetMsg, traceLogParam_a, traceLogResInspected, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
+//│   traceLogParam_a = globalThis.util.inspect(a) ?? null;
+//│   traceLogEnterMsg = globalThis.String.prototype.concat.call("calling: fib(", traceLogParam_a, ")") ?? null;
+//│   tmp1 = globalThis.Predef.TraceLogger.log(traceLogEnterMsg) ?? null;
+//│   traceLogPrevIndent = globalThis.Predef.TraceLogger.indent() ?? null;
+//│   scrut = a <= 1;
+//│   if (scrut) {
+//│     tmp2 = a;
+//│   } else {
+//│     tmp3 = a - 1;
+//│     tmp4 = globalThis.fib(tmp3) ?? null;
+//│     tmp5 = a - 2;
+//│     tmp6 = globalThis.fib(tmp5) ?? null;
+//│     tmp2 = tmp4 + tmp6;
+//│   }
+//│   traceLogRes = tmp2;
+//│   traceLogResInspected = globalThis.util.inspect(traceLogRes) ?? null;
+//│   traceLogRetMsg = globalThis.String.prototype.concat.call("return: ", traceLogResInspected) ?? null;
+//│   tmp7 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent) ?? null;
+//│   tmp8 = globalThis.Predef.TraceLogger.log(traceLogRetMsg) ?? null;
+//│   return traceLogRes;
+//│ }
+//│ undefined
+
+fun f(x) = g(x)
+fun g(x) = h(x)
+fun h(x) = fib(x)
+f(5)
+//│ > calling: fib(5)
+//│ > | calling: fib(4)
+//│ > | | calling: fib(3)
+//│ > | | | calling: fib(2)
+//│ > | | | | calling: fib(1)
+//│ > | | | | return: 1
+//│ > | | | | calling: fib(0)
+//│ > | | | | return: 0
+//│ > | | | return: 1
+//│ > | | | calling: fib(1)
+//│ > | | | return: 1
+//│ > | | return: 2
+//│ > | | calling: fib(2)
+//│ > | | | calling: fib(1)
+//│ > | | | return: 1
+//│ > | | | calling: fib(0)
+//│ > | | | return: 0
+//│ > | | return: 1
+//│ > | return: 3
+//│ > | calling: fib(3)
+//│ > | | calling: fib(2)
+//│ > | | | calling: fib(1)
+//│ > | | | return: 1
+//│ > | | | calling: fib(0)
+//│ > | | | return: 0
+//│ > | | return: 1
+//│ > | | calling: fib(1)
+//│ > | | return: 1
+//│ > | return: 2
+//│ > return: 5
+//│ = 5
+
+
+
+
+:traceJS
+fun g(z) =
+  if
+    z == 0 then throw Error("oops")
+    z == 1 then 0
+    z > 0 then g(z - 1)
+fun f(x, y)(z) =
+  x + y + g(z)
+
+:re
+f(1,2)(0)
+//│ ═══[RUNTIME ERROR] Error: oops
+
+
+f(1,1)(1)
+//│ > calling: f(1, 1)
+//│ > return: [Function: traceLogRes]
+//│ > calling: [arrow function](1)
+//│ > | calling: g(1)
+//│ > | return: 0
+//│ > return: 2
+//│ = 2
+
