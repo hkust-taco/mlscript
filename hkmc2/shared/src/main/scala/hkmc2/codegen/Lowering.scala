@@ -367,6 +367,27 @@ trait LoweringSelSanityChecks
 trait LoweringTraceLog
     (instrument: Bool)(using TL, Raise, Elaborator.State)
     extends Lowering:
+      
+  private def selFromGlobalThis(path: Str*): Path =
+      path.foldLeft[Path](Value.Ref(State.globalThisSymbol)):
+        (qual, name) => Select(qual, Tree.Ident(name))(N)
+    
+  private def assignStmts(stmts: (Local, Result)*)(rest: Block) =
+    stmts.foldRight(rest):
+      case ((sym, res), acc) => Assign(sym, res, acc)
+
+  private val traceLogFn = selFromGlobalThis("Predef", "TraceLogger", "log")
+  private val traceLogIndentFn = selFromGlobalThis("Predef", "TraceLogger", "indent")
+  private val traceLogResetFn = selFromGlobalThis("Predef", "TraceLogger", "resetIndent")
+  private val strConcatFn = selFromGlobalThis("String", "prototype", "concat", "call")
+  
+  override def topLevel(t: st): Block =
+    if instrument then
+      assignStmts(
+        TempSymbol(N) -> Call(traceLogResetFn, Arg(false, Value.Lit(Tree.IntLit(0))) :: Nil),
+      )(term(t)(ImplctRet)(using Subst.empty))
+    else
+      super.topLevel(t)  
   
   override def setupFunctionDef(paramLists: List[ParamList], bodyTerm: st, name: Option[Str])(using Subst): (List[ParamList], Block) = 
     if instrument then
@@ -385,20 +406,6 @@ trait LoweringTraceLog
     go(paramLists.reverse, bod)
   
   def setupFunctionBody(params: ParamList, bod: Term, name: Option[Str])(using Subst): Block =
-    
-    def selFromGlobalThis(path: Str*): Path =
-      path.foldLeft[Path](Value.Ref(State.globalThisSymbol)):
-        (qual, name) => Select(qual, Tree.Ident(name))(N)
-    
-    def assignStmts(stmts: (Local, Result)*)(rest: Block) =
-      stmts.foldRight(rest):
-        case ((sym, res), acc) => Assign(sym, res, acc)
-
-    val traceLogFn = selFromGlobalThis("Predef", "TraceLogger", "log")
-    val traceLogIndentFn = selFromGlobalThis("Predef", "TraceLogger", "indent")
-    val traceLogResetFn = selFromGlobalThis("Predef", "TraceLogger", "resetIndent")
-    val strConcatFn = selFromGlobalThis("String", "prototype", "concat", "call")
-    
     val enterMsgSym = TempSymbol(N, dbgNme = "traceLogEnterMsg")
     val prevIndentLvlSym = TempSymbol(N, dbgNme = "traceLogPrevIndent")
     val resSym = TempSymbol(N, dbgNme = "traceLogRes")
