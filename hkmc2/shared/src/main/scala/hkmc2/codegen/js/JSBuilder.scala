@@ -225,18 +225,8 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
             doc" # const $proxy = this; # ${res.stripBreaks}${returningTerm(rst)}"
           case _ => doc"$res${returningTerm(rst)}"
       doc" # ${resJS}"
-    case Return(res, true) =>
-      // val resSym = semantics.TempSymbol(N, "res")
-      // val resStr = scope.allocateName(resSym)
-      // doc" # const $resStr = ${result(res)}; # Predef.TraceLogger.indent = prevIndent; # Predef.TraceLogger.log(${JSBuilder.makeStringLiteral("return ")} + $resStr); # ${resStr}"
-      doc" # ${result(res)}"
-    case Return(res, false) =>
-      // val resSym = semantics.TempSymbol(N, "res")
-      // val resStr = scope.allocateName(resSym)
-      // // doc" # const $resStr = ${result(res)}; # return ${resStr}"
-      // doc" # const $resStr = ${result(res)}; # Predef.TraceLogger.indent = prevIndent; # Predef.TraceLogger.log(${JSBuilder.makeStringLiteral("return ")} + $resStr); # return ${resStr}"
-      // // doc" # return ${result(res)};"
-      setupReturn(res)
+    case Return(res, true) => doc" # ${result(res)}"
+    case Return(res, false) => doc" # return ${result(res)};"
     
     // TODO factor out common logic
     case Match(scrut, Case.Lit(syntax.Tree.BoolLit(true)) -> trm :: Nil, els, rest) =>
@@ -329,14 +319,10 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
         val v = doc"this.${getVar(i._1)}"
         doc"""$v = await import("${i._2.toString
           }"); # if ($v.default !== undefined) $v = $v.default;"""
-    // val traceLoggerSymbol = semantics.TempSymbol(N, "traceLogger")
-    // val traceLoggerStr = Scope.scope.allocateName(traceLoggerSymbol)
-    imps.mkDocument(doc" # ") :: 
-      (if !compilingFile && false then doc"let = new Predef.TraceLogger(); # " else "") :/: 
-      block(p.main) :: (
-        exprt match
-          case S(e) => doc"\nexport default ${e};\n"
-          case N => doc""
+    imps.mkDocument(doc" # ") :/: block(p.main) :: (
+      exprt match
+        case S(e) => doc"\nexport default ${e};\n"
+        case N => doc""
       )
   
   def block(t: Block)(using Raise, Scope): Document =
@@ -357,9 +343,6 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
       .++(params.restParam.map(p => "..." + scope.allocateName(p.sym)))
       .mkDocument(", ")
     (paramsList, this.body(body))
-    
-  def setupReturn(res: Result)(using Raise, Scope): Document =
-    doc" # return ${result(res)};"
 
 
   def setupCall(bases: Document, args: Document)(using Raise, Scope): Document =
