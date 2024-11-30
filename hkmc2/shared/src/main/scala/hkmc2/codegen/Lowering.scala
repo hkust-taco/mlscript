@@ -13,7 +13,6 @@ import semantics.Elaborator.State
 import syntax.{Literal, Tree}
 import semantics.*
 import semantics.Term.{Throw => _, *}
-import scala.annotation.meta.param
 
 
 abstract class TailOp extends (Result => Block)
@@ -336,7 +335,6 @@ class Lowering(using TL, Raise, Elaborator.State):
   
   def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])(using Subst): (List[ParamList], Block) =
     (paramLists, returnedTerm(bodyTerm))
-  
 
 
 trait LoweringSelSanityChecks
@@ -376,6 +374,9 @@ trait LoweringTraceLog
   private def assignStmts(stmts: (Local, Result)*)(rest: Block) =
     stmts.foldRight(rest):
       case ((sym, res), acc) => Assign(sym, res, acc)
+  
+  extension (k: Block => Block)
+    def |>: (b: Block): Block = k(b)
 
   private val traceLogFn = selFromGlobalThis("Predef", "TraceLogger", "log")
   private val traceLogIndentFn = selFromGlobalThis("Predef", "TraceLogger", "indent")
@@ -415,23 +416,25 @@ trait LoweringTraceLog
     val psInspectedSyms = params.params.map(p => TempSymbol(N, dbgNme = s"traceLogParam_${p.sym.nme}") -> p.sym)
     val resInspectedSym = TempSymbol(N, dbgNme = "traceLogResInspected")
     
-    
     val psSymArgs = psInspectedSyms.zipWithIndex.foldRight[Ls[Arg]](Arg(false, Value.Lit(Tree.StrLit(")"))) :: Nil):
       case (((s, p), i), acc) => if i == psInspectedSyms.length - 1
         then Arg(false, Value.Ref(s)) :: acc
         else Arg(false, Value.Ref(s)) :: Arg(false, Value.Lit(Tree.StrLit(", "))) :: acc
 
-    
     assignStmts(
-      psInspectedSyms.map{(tmpSym, pSym) => tmpSym -> Call(inspectFn, Arg(false, Value.Ref(pSym)) :: Nil)}*
-    )(
+      psInspectedSyms.map{
+        (tmpSym, pSym) => tmpSym -> Call(inspectFn, Arg(false, Value.Ref(pSym)) :: Nil)
+      }*
+    ) |>:
     assignStmts(
       enterMsgSym -> Call(
         strConcatFn,
         Arg(false, Value.Lit(Tree.StrLit(s"calling: ${name.getOrElse("[arrow function]")}("))) :: psSymArgs
       ),
       TempSymbol(N) -> Call(traceLogFn, Arg(false, Value.Ref(enterMsgSym)) :: Nil),
-      prevIndentLvlSym -> Call(traceLogIndentFn, Nil))(term(bod)(r =>
+      prevIndentLvlSym -> Call(traceLogIndentFn, Nil)
+    ) |>: 
+    term(bod)(r =>
     assignStmts(
       resSym -> r,
       resInspectedSym -> Call(inspectFn, Arg(false, Value.Ref(resSym)) :: Nil),
@@ -440,5 +443,6 @@ trait LoweringTraceLog
         Arg(false, Value.Lit(Tree.StrLit("return: "))) :: Arg(false, Value.Ref(resInspectedSym)) :: Nil
       ),
       TempSymbol(N) -> Call(traceLogResetFn, Arg(false, Value.Ref(prevIndentLvlSym)) :: Nil),
-      TempSymbol(N) -> Call(traceLogFn, Arg(false, Value.Ref(retMsgSym)) :: Nil))(
-        Ret(Value.Ref(resSym))))))
+      TempSymbol(N) -> Call(traceLogFn, Arg(false, Value.Ref(retMsgSym)) :: Nil)
+    ) |>:
+      Ret(Value.Ref(resSym)))

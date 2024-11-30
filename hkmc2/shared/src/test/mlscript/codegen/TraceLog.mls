@@ -142,7 +142,7 @@ f(1,1)(1)
 //│ = 2
 
 
-// FIXME: problem of infinite loop..?
+
 :sjs
 abstract class E: S | N
 class S(x) with
