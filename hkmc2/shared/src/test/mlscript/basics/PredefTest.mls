@@ -1,0 +1,17 @@
+:js
+
+
+Test === Predef.Test
+//│ = true
+
+Predef.Test === globalThis.Predef.Test
+//│ = true
+
+(new Predef.Test).y
+//│ = 1
+
+:re
+(new Predef.Test).x
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+
+
