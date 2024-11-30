@@ -218,6 +218,10 @@ if 1 is Int then 1 else 0
 //│ Type: Int
 
 
+if 1 is Foo then 0 else 1
+//│ Type: Int
+
+
 fun test(x) =
   if x is Int then x + 1 else 0
 test
@@ -258,17 +262,17 @@ class Foo[A](x: A -> A)
 //│ Type: ⊤
 
 new Foo(x => x)
-//│ Type: Foo[α77_1]
+//│ Type: Foo[α78_1]
 
 fun f(g) = new Foo(g)
 f
-//│ Type: forall α80_2: (α80_2 -> α80_2) -> Foo[α80_2]
+//│ Type: forall α81_2: (α81_2 -> α81_2) -> Foo[α81_2]
 
 f(x => x).Foo#x
-//│ Type: (α82_1) ->{⊥} α82_1
+//│ Type: (α83_1) ->{⊥} α83_1
 
 g => (new Foo(g)).Foo#x
-//│ Type: (α87_1 -> α87_1) ->{⊥} (α87_1) ->{⊥} α87_1
+//│ Type: (α88_1 -> α88_1) ->{⊥} (α88_1) ->{⊥} α88_1
 
 
 throw new Error("oops")
@@ -278,7 +282,7 @@ throw new Error("oops")
 :e
 throw 42
 //│ ╔══[ERROR] Type error in throw
-//│ ║  l.279: 	throw 42
+//│ ║  l.283: 	throw 42
 //│ ║         	      ^^
 //│ ╙── because: cannot constrain  Int  <:  Error
 //│ Type: ⊥

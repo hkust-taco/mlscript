@@ -143,7 +143,6 @@ class Foo()
 
 
 :sjs
-:fixme
 let foo = new Foo()
 if foo is Foo then 1 else 0
 //│ JS:
@@ -158,13 +157,6 @@ if foo is Foo then 1 else 0
 //│ }
 //│ = 1
 //│ foo = Foo {}
-//│ ╔══[ERROR] Cannot match Ref($scrut) as class:Foo
-//│ ║  l.149: 	if foo is Foo then 1 else 0
-//│ ╙──       	          ^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type error in `if` expression
-//│ ║  l.149: 	if foo is Foo then 1 else 0
-//│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── because: cannot constrain  Foo  <:  ⊥
 //│ Type: Int
 
 

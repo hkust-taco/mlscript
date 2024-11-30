@@ -276,7 +276,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
     split match
     case Split.Cons(Branch(scrutinee, Pattern.ClassLike(sym, _, _, _), cons), alts) =>
       // * Pattern matching for classes
-      val (clsTy, tv, emptyTy) = ctx.getCls(sym.nme).flatMap(_.defn) match
+      val (clsTy, tv, emptyTy) = sym.asCls.flatMap(_.defn) match
         case S(cls) =>
           (ClassLikeType(sym, cls.tparams.map(_ => freshWildcard(N))), (freshVar(N)), ClassLikeType(sym, cls.tparams.map(_ => Wildcard.empty)))
         case _ =>
