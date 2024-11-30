@@ -128,7 +128,8 @@ class Lowering(using TL, Raise, Elaborator.State):
         Define(ClsLikeDefn(cls.sym, syntax.Cls,
             mtds.flatMap: td =>
               td.body.map: bod =>
-                FunDefn(td.sym, td.params, term(bod)(Ret))
+                val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))
+                FunDefn(td.sym, paramLists, bodyBlock)
             ,
             privateFlds,
             publicFlds,
@@ -411,11 +412,11 @@ trait LoweringTraceLog
     val resSym = TempSymbol(N, dbgNme = "traceLogRes")
     val retMsgSym = TempSymbol(N, dbgNme = "traceLogRetMsg")
     
-    val psSyms = params.params.zipWithIndex.flatMap:
-      (p, i) => if i == params.params.length - 1
-        then Arg(false, Value.Ref((p.sym))) :: Arg(false, Value.Lit(Tree.StrLit(")"))) :: Nil
-        else Arg(false, Value.Ref((p.sym))) :: Arg(false, Value.Lit(Tree.StrLit(", "))) :: Nil
-    
+    val psSyms = params.params.zipWithIndex.foldRight[Ls[Arg]](Arg(false, Value.Lit(Tree.StrLit(")"))) :: Nil){
+      case ((p, i), acc) => if i == params.params.length - 1
+        then Arg(false, Value.Ref((p.sym))) :: acc
+        else Arg(false, Value.Ref((p.sym))) :: Arg(false, Value.Lit(Tree.StrLit(", "))) :: acc
+    }
     
     assignStmts(
       enterMsgSym -> Call(
