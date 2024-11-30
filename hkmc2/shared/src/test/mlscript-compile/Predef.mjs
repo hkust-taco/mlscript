@@ -25,6 +25,12 @@ const Predef$class = class Predef {
     };
     this.TraceLogger = new TraceLogger$class;
     this.TraceLogger.class = TraceLogger$class;
+    this.Test = class Test {
+      constructor() {
+        this.y = 1;
+      }
+      toString() { return "Test"; }
+    };
   }
   id(x) {
     return x;
@@ -39,9 +45,14 @@ const Predef$class = class Predef {
   pipe(x2, f) {
     return f(x2);
   } 
-  call(receiver, f1) {
-    return (arg) => {
-      return f1.call(receiver, arg);
+  apply(receiver, f1) {
+    return (...args) => {
+      return f1(receiver, ...args);
+    };
+  } 
+  call(receiver1, f2) {
+    return (...args) => {
+      return f2.call(receiver1, ...args);
     };
   } 
   print(x3) {

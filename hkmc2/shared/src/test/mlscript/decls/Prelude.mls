@@ -20,6 +20,11 @@ declare val process
 declare val fs
 
 
+declare module Predef with
+  class Test with
+    val x = 0
+
+
 // TODO: rm
 
 declare fun log: (Any) -> ()

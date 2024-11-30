@@ -7,7 +7,9 @@ fun not(x) = x is false
 
 fun (|>) pipe(x, f) = f(x)
 
-fun (|>.) call(receiver, f)(arg) = f.call(receiver, arg)
+fun (.) apply(receiver, f)(...args) = f(receiver, ...args)
+
+fun (|>.) call(receiver, f)(...args) = f.call(receiver, ...args)
 
 fun print(x) =
   console.log(String(x))
@@ -37,3 +39,7 @@ module TraceLogger with
     prev
   fun resetIndent(n) = set indentLvl = n
   fun log(msg) = console.log("| ".repeat(indentLvl) + msg)
+
+class Test with
+  val y = 1
+

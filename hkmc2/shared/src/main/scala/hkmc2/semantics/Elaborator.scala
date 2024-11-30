@@ -64,14 +64,20 @@ object Elaborator:
     def getBuiltin(nme: Str): Opt[Ctx.Elem] =
       parent.filter(_.parent.nonEmpty).fold(env.get(nme))(_.getBuiltin(nme))
     object Builtins:
-      private def assumeBuiltinCls(nme: Str): ClassSymbol =
+      private def assumeBuiltin(nme: Str): Symbol =
         getBuiltin(nme)
-          .getOrElse(throw new NoSuchElementException(s"builtin $nme ${env.keySet} $parent"))
+          .getOrElse(throw new NoSuchElementException(s"builtin $nme not in ${parent.map(_.env.keySet)}"))
           .symbol.getOrElse(throw new NoSuchElementException(s"builtin symbol $nme"))
-          .asCls.getOrElse(throw new NoSuchElementException(s"builtin class symbol $nme"))
+      private def assumeBuiltinCls(nme: Str): ClassSymbol =
+        assumeBuiltin(nme).asCls.getOrElse(throw new NoSuchElementException(
+          s"builtin class symbol $nme"))
+      private def assumeBuiltinMod(nme: Str): ModuleSymbol =
+        assumeBuiltin(nme).asMod.getOrElse(throw new NoSuchElementException(
+          s"builtin module symbol $nme"))
       val Int = assumeBuiltinCls("Int")
       val Num = assumeBuiltinCls("Num")
       val Str = assumeBuiltinCls("Str")
+      val Predef = assumeBuiltinMod("Predef")
   
   object Ctx:
     abstract class Elem:
