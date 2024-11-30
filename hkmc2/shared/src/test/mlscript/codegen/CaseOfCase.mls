@@ -19,14 +19,14 @@ fun test(x) =
     None then log("none")
 //│ JS:
 //│ function test(...args) {
-//│   globalThis.Predef.checkArgs("test", 1, args.length);
+//│   globalThis.Predef.checkArgs("test", 1, true, args.length);
 //│   let x = args[0];
 //│   let param0, v, scrut, param01, v1, tmp, tmp1;
 //│   if (x instanceof globalThis.Some.class) {
 //│     param0 = x.value;
 //│     v = param0;
 //│     tmp = v + 1;
-//│     tmp1 = globalThis.Some(tmp);
+//│     tmp1 = globalThis.Some(tmp) ?? null;
 //│   } else {
 //│     if (x instanceof globalThis.None.class) {
 //│       tmp1 = globalThis.None;
@@ -38,10 +38,10 @@ fun test(x) =
 //│   if (scrut instanceof globalThis.Some.class) {
 //│     param01 = scrut.value;
 //│     v1 = param01;
-//│     return globalThis.log(v1);
+//│     return globalThis.log(v1) ?? null;
 //│   } else {
 //│     if (scrut instanceof globalThis.None.class) {
-//│       return globalThis.log("none");
+//│       return globalThis.log("none") ?? null;
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }

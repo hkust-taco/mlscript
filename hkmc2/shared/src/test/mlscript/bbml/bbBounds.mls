@@ -110,7 +110,7 @@ fun h: [C] -> ([A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B
 
 :e
 bazbaz: [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
-//│ ╔══[ERROR] Cannot type non-function term Sel(Ref(globalThis:block#16),Ident(bazbaz)) as (<A>37_2) ->{⊥} (forall B36_3: B36_3) ->{⊥} <A>37_2
+//│ ╔══[ERROR] Cannot type non-function term SynthSel(Ref(globalThis:block#16),Ident(bazbaz)) as (<A>37_2) ->{⊥} (forall B36_3: B36_3) ->{⊥} <A>37_2
 //│ ║  l.112: 	bazbaz: [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
 //│ ╙──       	^^^^^^
 //│ Type: forall A35_2: (A35_2) ->{⊥} (forall B36_3: A35_2 -> A35_2) ->{⊥} A35_2

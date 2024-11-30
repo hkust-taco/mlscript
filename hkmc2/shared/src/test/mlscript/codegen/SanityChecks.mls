@@ -7,12 +7,12 @@ fun f(x, y) = x + y
 f(2, 3)
 //│ JS:
 //│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 2, args.length);
+//│   globalThis.Predef.checkArgs("f", 2, true, args.length);
 //│   let x = args[0];
 //│   let y = args[1];
 //│   return x + y;
 //│ }
-//│ this.f(2, 3)
+//│ this.f(2, 3) ?? null
 //│ = 5
 
 
@@ -29,7 +29,7 @@ f2(2)
 :re
 f(2)
 //│ JS:
-//│ this.f(2)
+//│ this.f(2) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
@@ -40,10 +40,10 @@ f(3)(4)
 //│ JS:
 //│ let tmp;
 //│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, args.length);
+//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
 //│   return (...args1) => {
-//│     globalThis.Predef.checkArgs("", 2, args1.length);
+//│     globalThis.Predef.checkArgs("", 2, true, args1.length);
 //│     let y = args1[0];
 //│     let z = args1[1];
 //│     let tmp1;
@@ -51,8 +51,8 @@ f(3)(4)
 //│     return tmp1 + z;
 //│   };
 //│ }
-//│ tmp = this.f(3);
-//│ tmp(4)
+//│ tmp = this.f(3) ?? null;
+//│ tmp(4) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
 
@@ -70,12 +70,12 @@ let f = (x, y) => x + y
 f(2)
 //│ JS:
 //│ this.f = (...args) => {
-//│   globalThis.Predef.checkArgs("", 2, args.length);
+//│   globalThis.Predef.checkArgs("", 2, true, args.length);
 //│   let x = args[0];
 //│   let y = args[1];
 //│   return x + y;
 //│ };
-//│ this.f(2)
+//│ this.f(2) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 //│ f = [Function (anonymous)]
 
@@ -114,7 +114,7 @@ class Cls(x, y) with
 Cls(1, 2).f(3)
 //│ JS:
 //│ let tmp;
-//│ this.Cls = function Cls(x1, y1) { return new Cls.class(x1, y1); };
+//│ this.Cls = function Cls(...args1) { return new Cls.class(...args1); };
 //│ this.Cls.class = class Cls {
 //│   constructor(x, y) {
 //│     this.x = x;
@@ -122,7 +122,7 @@ Cls(1, 2).f(3)
 //│     
 //│   }
 //│   f(...args) {
-//│     globalThis.Predef.checkArgs("f", 2, args.length);
+//│     globalThis.Predef.checkArgs("f", 2, true, args.length);
 //│     let z = args[0];
 //│     let p = args[1];
 //│     let tmp1, tmp2;
@@ -132,8 +132,8 @@ Cls(1, 2).f(3)
 //│   }
 //│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
 //│ };
-//│ tmp = this.Cls(1, 2);
-//│ tmp.f(3)
+//│ tmp = this.Cls(1, 2) ?? null;
+//│ tmp.f(3) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
@@ -144,7 +144,7 @@ class Cls(x, y) with
 Cls(1, 2).f(3, 4)(5)
 //│ JS:
 //│ let tmp, tmp1;
-//│ this.Cls = function Cls(x1, y1) { return new Cls.class(x1, y1); };
+//│ this.Cls = function Cls(...args1) { return new Cls.class(...args1); };
 //│ this.Cls.class = class Cls {
 //│   constructor(x, y) {
 //│     this.x = x;
@@ -152,11 +152,11 @@ Cls(1, 2).f(3, 4)(5)
 //│     
 //│   }
 //│   f(...args) {
-//│     globalThis.Predef.checkArgs("f", 2, args.length);
+//│     globalThis.Predef.checkArgs("f", 2, true, args.length);
 //│     let z = args[0];
 //│     let p = args[1];
 //│     return (...args1) => {
-//│       globalThis.Predef.checkArgs("", 2, args1.length);
+//│       globalThis.Predef.checkArgs("", 2, true, args1.length);
 //│       let q = args1[0];
 //│       let s = args1[1];
 //│       let tmp2, tmp3, tmp4, tmp5;
@@ -169,7 +169,137 @@ Cls(1, 2).f(3, 4)(5)
 //│   }
 //│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
 //│ };
-//│ tmp = this.Cls(1, 2);
-//│ tmp1 = tmp.f(3, 4);
-//│ tmp1(5)
+//│ tmp = this.Cls(1, 2) ?? null;
+//│ tmp1 = tmp.f(3, 4) ?? null;
+//│ tmp1(5) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
+
+
+:sjs
+console.log(1)
+//│ JS:
+//│ this.console.log(1) ?? null
+//│ > 1
+
+
+:re
+:sjs
+globalThis.x
+//│ JS:
+//│ let selRes;
+//│ selRes = this.x;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'x' yielded 'undefined'");
+//│ } else {
+//│   selRes
+//│ }
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+
+:re
+:sjs
+globalThis.x()
+//│ JS:
+//│ this.x() ?? null
+//│ ═══[RUNTIME ERROR] TypeError: this.x is not a function
+
+
+
+
+:re
+:sjs
+module M with
+  class A(x) with
+    fun f(y) = x + y
+if M.A(1).y is
+  x and x == 1 then x
+  else 0
+//│ JS:
+//│ let scrut, x, scrut1, tmp, selRes, tmp1;
+//│ const M$class = class M {
+//│   constructor() {
+//│     this.A = function A(...args1) { return new A.class(...args1); };
+//│     this.A.class = class A {
+//│       constructor(x1) {
+//│         this.x = x1;
+//│         
+//│       }
+//│       f(...args) {
+//│         globalThis.Predef.checkArgs("f", 1, true, args.length);
+//│         let y = args[0];
+//│         return this.x + y;
+//│       }
+//│       toString() { return "A(" + this.x1 + ")"; }
+//│     };
+//│   }
+//│   toString() { return "M"; }
+//│ };
+//│ this.M = new M$class;
+//│ this.M.class = M$class;
+//│ tmp = this.M.A(1) ?? null;
+//│ selRes = tmp.y;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'y' yielded 'undefined'");
+//│ } else {
+//│   tmp1 = selRes;
+//│ }
+//│ scrut = tmp1;
+//│ x = scrut;
+//│ scrut1 = x == 1;
+//│ if (scrut1) {
+//│   x
+//│ } else {
+//│   0
+//│ }
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
+
+
+
+:sjs
+:re
+M.A(1).y
+  console.log()
+//│ JS:
+//│ let tmp, selRes, tmp1;
+//│ tmp = this.M.A(1) ?? null;
+//│ selRes = tmp.y;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'y' yielded 'undefined'");
+//│ } else {
+//│   tmp1 = selRes;
+//│ }
+//│ this.console.log(tmp1) ?? null
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
+
+
+
+:sjs
+:noSanityCheck
+M.A(1).y
+  console.log()
+//│ JS:
+//│ let tmp; tmp = this.M.A(1); this.console.log(tmp.y)
+//│ > undefined
+
+:noSanityCheck
+:expect false
+M.A(2).y > 1
+//│ = false
+
+:re
+M.A(2).y > 1
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
+
+:re
+:sjs
+M.A(1).g(0)
+//│ JS:
+//│ let tmp; tmp = this.M.A(1) ?? null; tmp.g(0) ?? null
+//│ ═══[RUNTIME ERROR] TypeError: tmp.g is not a function
+
+
+
+:sjs
+M.A(1).f(0)
+//│ JS:
+//│ let tmp; tmp = this.M.A(1) ?? null; tmp.f(0) ?? null
+//│ = 1

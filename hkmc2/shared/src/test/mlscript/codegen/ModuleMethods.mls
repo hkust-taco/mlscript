@@ -12,7 +12,7 @@ object Example with
 //│     this.a = 456;
 //│   }
 //│   f(...args) {
-//│     globalThis.Predef.checkArgs("f", 1, args.length);
+//│     globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│     let x = args[0];
 //│     return [
 //│       x,

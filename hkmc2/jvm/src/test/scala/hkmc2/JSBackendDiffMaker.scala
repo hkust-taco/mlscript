@@ -5,7 +5,9 @@ import scala.collection.mutable
 import mlscript.utils.*, shorthands.*
 import utils.*
 
-import codegen.js.{JSBuilder, JSBuilderSanityChecks}
+import semantics.*
+import codegen.*
+import codegen.js.{JSBuilder, JSBuilderArgNumSanityChecks, JSBuilderSelSanityChecks}
 import document.*
 import codegen.Block
 import codegen.js.Scope
@@ -48,10 +50,11 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     super.processTerm(blk, inImport)
     if js.isSet then
       val low = ltl.givenIn:
-        codegen.Lowering()
-      val jsb = new JSBuilder with JSBuilderSanityChecks(noSanityCheck.isUnset)
-      import semantics.*
-      import codegen.*
+        new codegen.Lowering with codegen.LoweringSelSanityChecks(noSanityCheck.isUnset)
+      given Elaborator.Ctx = curCtx
+      val jsb = new JSBuilder
+        with JSBuilderArgNumSanityChecks(noSanityCheck.isUnset)
+        with JSBuilderSelSanityChecks(noSanityCheck.isUnset)
       val le = low.program(blk)
       if showLoweredTree.isSet then
         output(s"Lowered:")
@@ -83,6 +86,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
                     output(s"> ${line}")
               content match
               case "undefined" =>
+              case "null" =>
               case _ =>
                 expect.get match
                   case S(expected) if content != expected => raise:

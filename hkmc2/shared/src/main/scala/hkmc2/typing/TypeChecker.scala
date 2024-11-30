@@ -63,7 +63,7 @@ class TypeChecker(using Raise, Elaborator.State):
           case Nil =>
             val f = typeProd(r)
             constrain(P.exitIf(f, ts, r.refNum, rc), C.Fun(typeProd(tup), C.Flow(app.resSym)))
-          case ParamList(_, ps) :: Nil =>
+          case ParamList(_, _, ps) :: Nil =>
             // App applies to the leftmost parameter list
             // TODO: how to recursively check the subsequent Apps (if any)?
             if ps.size != args.size then

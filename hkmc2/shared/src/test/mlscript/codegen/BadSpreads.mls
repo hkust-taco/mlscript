@@ -1,0 +1,43 @@
+:js
+
+
+:re
+[0, ...1]
+//│ ═══[RUNTIME ERROR] TypeError: 1 is not iterable
+
+
+:e
+fun foo(a, ...b, c) = [a, ...b, c]
+//│ ╔══[ERROR] Spread parameters must be the last in the parameter list.
+//│ ║  l.10: 	fun foo(a, ...b, c) = [a, ...b, c]
+//│ ╙──      	              ^
+//│ ╔══[ERROR] Name not found: c
+//│ ║  l.10: 	fun foo(a, ...b, c) = [a, ...b, c]
+//│ ╙──      	                                ^
+
+:e
+fun foo(a, ...b, c) = [a, ...b]
+//│ ╔══[ERROR] Spread parameters must be the last in the parameter list.
+//│ ║  l.19: 	fun foo(a, ...b, c) = [a, ...b]
+//│ ╙──      	              ^
+
+foo(1, 2, 3)
+//│ = [ 1, 2, 3 ]
+
+
+fun foo(a, ...b) = [a, ...b]
+
+:re
+foo()
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 arguments but got 0
+
+
+:todo // proper error
+fun foo(1) = 2
+//│ /!!!\ Uncaught error: scala.MatchError: IntLit(1) (of class hkmc2.syntax.Tree$IntLit)
+
+:todo // proper error
+fun foo(...1) = 2
+//│ /!!!\ Uncaught error: scala.MatchError: Spread(keyword '...',Some(Loc(8,11,BadSpreads.mls:+40)),Some(IntLit(1))) (of class hkmc2.syntax.Tree$Spread)
+
+

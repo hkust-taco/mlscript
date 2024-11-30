@@ -27,6 +27,9 @@ import mlscript.utils.StringOps
 
 trait ProductWithTail extends Product
 
+trait ProductWithExtraInfo extends Product:
+  def extraInfo: Str
+
 extension (t: Product)
   def showAsTree(using post: Product => String = Function.const("")): String =
     showAsTree(false)
@@ -55,7 +58,12 @@ extension (t: Product)
       case t: Product => t.showAsTree(inTailPos)
       case v => v.toString
     val postfix = post(t)
-    val prefix = t.productPrefix + (if postfix.isEmpty then "" else s" ($postfix)")
+    val midfix = t match
+      case t: ProductWithExtraInfo => t.extraInfo match
+        case "" => ""
+        case str => "{" + str + "}"
+      case _ => ""
+    val prefix = t.productPrefix + midfix + (if postfix.isEmpty then "" else s" ($postfix)")
     t.productArity match
       case 0 => prefix
       case 1 => prefix + " of " + aux(t.productElement(0))

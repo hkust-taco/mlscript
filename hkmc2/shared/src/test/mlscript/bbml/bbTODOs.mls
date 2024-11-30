@@ -24,6 +24,6 @@ fun id: [A] -> A -> A => x = x
 //│ ╔══[ERROR] Name not found: x
 //│ ║  l.20: 	fun id: [A] -> A -> A => x = x
 //│ ╙──      	                             ^
-//│ /!!!\ Uncaught error: scala.MatchError: Lam(List(Param(‹›,A,None)),Error) (of class hkmc2.semantics.Term$Lam)
+//│ /!!!\ Uncaught error: scala.MatchError: Lam(ParamList(‹›,List(Param(‹›,A,None)),None),Error) (of class hkmc2.semantics.Term$Lam)
 
 

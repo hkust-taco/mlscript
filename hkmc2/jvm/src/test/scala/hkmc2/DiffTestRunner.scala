@@ -141,7 +141,7 @@ abstract class CompileTestRunner(state: DiffTestRunner.State)
       
       println(s"Compiling: $relativeName")
       
-      val preludePath = dir/"decls"/"Prelude.mls"
+      val preludePath = dir/"mlscript"/"decls"/"Prelude.mls"
       
       MLsCompiler(preludePath).compileModule(file)
   

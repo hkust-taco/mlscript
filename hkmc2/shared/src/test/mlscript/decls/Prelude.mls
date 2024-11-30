@@ -10,7 +10,7 @@ declare class Num
 declare class Str
 declare class Error(msg)
 
-declare module String
+declare class String
 
 // declare module Math // TODO: list members
 declare val Math // so we can, eg, `open { pow }` in the meantime

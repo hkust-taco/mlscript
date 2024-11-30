@@ -44,7 +44,7 @@ new Foo(123)
 
 :todo proper error
 fun f(x) = f(Foo.a(x))
-//│ ╔══[ERROR] Term shape not yet supported by BbML: Sel(Sel(Ref(globalThis:block#4),Ident(Foo)),Ident(a))
+//│ ╔══[ERROR] Term shape not yet supported by BbML: SynthSel(SynthSel(Ref(globalThis:block#4),Ident(Foo)),Ident(a))
 //│ ║  l.46: 	fun f(x) = f(Foo.a(x))
 //│ ╙──      	             ^^^^^
 //│ Type: ⊤

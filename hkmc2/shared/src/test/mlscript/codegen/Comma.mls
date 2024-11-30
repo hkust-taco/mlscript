@@ -8,9 +8,9 @@ fun f() =
   console.log("ok"), 42
 //│ JS:
 //│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 0, args.length);
+//│   globalThis.Predef.checkArgs("f", 0, true, args.length);
 //│   let tmp;
-//│   tmp = globalThis.console.log("ok");
+//│   tmp = globalThis.console.log("ok") ?? null;
 //│   return 42;
 //│ }
 //│ undefined
@@ -18,9 +18,9 @@ fun f() =
 fun f() = { console.log("ok"), 42 }
 //│ JS:
 //│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 0, args.length);
+//│   globalThis.Predef.checkArgs("f", 0, true, args.length);
 //│   let tmp;
-//│   tmp = globalThis.console.log("ok");
+//│   tmp = globalThis.console.log("ok") ?? null;
 //│   return 42;
 //│ }
 //│ undefined
@@ -28,8 +28,8 @@ fun f() = { console.log("ok"), 42 }
 fun f() = console.log("ok"), 42
 //│ JS:
 //│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 0, args.length);
-//│   return globalThis.console.log("ok");
+//│   globalThis.Predef.checkArgs("f", 0, true, args.length);
+//│   return globalThis.console.log("ok") ?? null;
 //│ }
 //│ 42
 //│ = 42

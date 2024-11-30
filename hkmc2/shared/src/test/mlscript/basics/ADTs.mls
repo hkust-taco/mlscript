@@ -1,0 +1,38 @@
+:js
+:todo
+
+
+// * Standard syntax of ADTs (TODO)
+
+class Expr
+  constructor Lit(n: Int)
+  constructor Add(lhs: Expr, rhs: Expr)
+//│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
+//│ ║  l.8: 	  constructor Lit(n: Int)
+//│ ╙──     	^^
+
+class Expr[A] with
+  constructor
+    Lit(n: Int) { A = Int }
+    Add(lhs: Expr[Int], rhs: Expr[Int]) { A = Int }
+//│ /!!!\ Uncaught error: scala.NotImplementedError: List() (of class Nil$)
+
+
+// * one can also go the TypeScript way
+
+class Lit(n: Int)
+class Add(lhs: Expr, rhs: Expr)
+
+type Expr = Lit | Add
+
+
+// * Which could get a "blessed" shorthand syntax as well
+
+enum Expr =
+  | Lit(n: Int)
+  | Add(lhs: Expr, rhs: Expr)
+//│ ╔══[ERROR] Unrecognized definitional assignment left-hand side: juxtaposition
+//│ ║  l.31: 	enum Expr =
+//│ ╙──      	^^^^^^^^^
+
+

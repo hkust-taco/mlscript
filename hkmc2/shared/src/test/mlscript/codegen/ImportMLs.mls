@@ -24,7 +24,7 @@ open Option
 :sjs
 None isDefined()
 //│ JS:
-//│ Option.isDefined(Option.None)
+//│ Option.isDefined(Option.None) ?? null
 //│ = false
 
 :fixme
@@ -47,7 +47,7 @@ Some(1)
 :sjs
 (new Some(1)) isDefined()
 //│ JS:
-//│ let tmp; tmp = new Option.Some.class(1); Option.isDefined(tmp)
+//│ let tmp; tmp = new Option.Some.class(1); Option.isDefined(tmp) ?? null
 //│ = true
 
 :re
@@ -73,23 +73,27 @@ None == Option.None
 
 
 :e
+:re
 Option.oops
 //│ ╔══[ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.76: 	Option.oops
+//│ ║  l.77: 	Option.oops
 //│ ╙──      	      ^^^^^
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 :e
 open Option { oops }
 //│ ╔══[ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.82: 	open Option { oops }
+//│ ║  l.84: 	open Option { oops }
 //│ ╙──      	              ^^^^
 
 oops
 
 :e
+:re
 Option.None.oops
 //│ ╔══[ERROR] Module 'None' does not contain member 'oops'
-//│ ║  l.90: 	Option.None.oops
+//│ ║  l.93: 	Option.None.oops
 //│ ╙──      	           ^^^^^
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 

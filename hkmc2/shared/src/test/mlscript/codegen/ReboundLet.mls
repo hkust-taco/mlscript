@@ -1,15 +1,13 @@
 :js
 
-:import PredefJS.mls
-//│ Imported 2 member(s)
-
-
 
 fun foo() =
   let x = 1
   let f = () => x
+  fun g() = x
   let x = 2
   f()
+  g()
 
 foo()
 //│ = 1
@@ -40,9 +38,12 @@ f()
 class Foo with
   let x = 1
   let f = () => x
-  log(f())
+  fun g() = x
+  print(f())
   let x = 2
-  log(f())
+  print(x)
+  print(f())
+  print(g())
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Identifier '#x' has already been declared
 
 

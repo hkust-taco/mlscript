@@ -9,7 +9,7 @@ x =>
   y
 //│ JS:
 //│ (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, args.length);
+//│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let x = args[0];
 //│   let y;
 //│   y = x;
