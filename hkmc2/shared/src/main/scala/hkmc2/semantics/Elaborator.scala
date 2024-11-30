@@ -72,6 +72,7 @@ object Elaborator:
       val Int = assumeBuiltinCls("Int")
       val Num = assumeBuiltinCls("Num")
       val Str = assumeBuiltinCls("Str")
+      def tryMapOp(op: Str): Opt[Str] = aliasOps.get(op)
   
   object Ctx:
     abstract class Elem:

@@ -20,11 +20,10 @@
 
 
 :sjs
-:fixme
 1.0 +. 2.14
 //│ JS:
-//│ this["+."](1.0, 2.14) ?? null
-//│ ═══[RUNTIME ERROR] TypeError: this.+. is not a function
+//│ 1.0 + 2.14
+//│ = 3.14
 //│ Type: Num
 
 
