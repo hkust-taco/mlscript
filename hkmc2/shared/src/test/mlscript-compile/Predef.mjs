@@ -1,6 +1,30 @@
 const Predef$class = class Predef {
   constructor() {
-    
+    const TraceLogger$class = class TraceLogger {
+      constructor() {
+        this.indentLvl = 0;
+      }
+      indent() {
+        let prev, tmp;
+        prev = this.indentLvl;
+        tmp = this.indentLvl + 1;
+        this.indentLvl = tmp;
+        return prev;
+      } 
+      resetIndent(n) {
+        this.indentLvl = n;
+        return undefined;
+      } 
+      log(msg) {
+        let tmp, tmp1;
+        tmp = "| ".repeat(this.indentLvl);
+        tmp1 = tmp + msg;
+        return console.log(tmp1);
+      }
+      toString() { return "TraceLogger"; }
+    };
+    this.TraceLogger = new TraceLogger$class;
+    this.TraceLogger.class = TraceLogger$class;
   }
   id(x) {
     return x;

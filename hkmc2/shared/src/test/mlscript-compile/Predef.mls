@@ -29,3 +29,11 @@ fun checkArgs(functionName, expected, isUB, got) =
     //   + " arguments but got " + got)
   else ()
 
+module TraceLogger with
+  mut val indentLvl = 0
+  fun indent() =
+    let prev = indentLvl
+    set indentLvl = indentLvl + 1
+    prev
+  fun resetIndent(n) = set indentLvl = n
+  fun log(msg) = console.log("| ".repeat(indentLvl) + msg)

@@ -110,7 +110,57 @@ class Lowering(using TL, Raise, Elaborator.State):
               Define(ValDefn(td.owner, knd, td.sym, r),
                 term(st.Blk(stats, res))(k)))
           case syntax.Fun =>
-            Define(FunDefn(td.sym, td.params, returnedTerm(bod)),
+            val traceLogFn = List("Predef", "TraceLogger", "log").foldLeft[Path](Value.Ref(State.globalThisSymbol)):
+              (qual, name) => Select(qual, Tree.Ident(name))(N)
+            val traceLogIndentFn = List("Predef", "TraceLogger", "indent").foldLeft[Path](Value.Ref(State.globalThisSymbol)):
+              (qual, name) => Select(qual, Tree.Ident(name))(N)
+            val traceLogResetFn = List("Predef", "TraceLogger", "resetIndent").foldLeft[Path](Value.Ref(State.globalThisSymbol)):
+              (qual, name) => Select(qual, Tree.Ident(name))(N)
+            val strConcatFn = List("String", "prototype", "concat", "call").foldLeft[Path](Value.Ref(State.globalThisSymbol)):
+              (qual, name) => Select(qual, Tree.Ident(name))(N)
+            val traceLogModule = List("Predef", "TraceLogger").foldLeft[Path](Value.Ref(State.globalThisSymbol)):
+              (qual, name) => Select(qual, Tree.Ident(name))(N)
+            val prevIndentLvlSym = TempSymbol(N, dbgNme = "traceLogPrevIndent")
+            val instrumentedRetBody = term(bod): r =>
+              val resSym = TempSymbol(N, dbgNme = "traceLogRes")
+              val msgSym = TempSymbol(N, dbgNme = "traceLogRetMsg")
+              Assign(
+                resSym,
+                r,
+                Assign(
+                  msgSym,
+                  Call(strConcatFn, Arg(false, Value.Lit(Tree.StrLit("return: "))) :: Arg(false, Value.Ref(resSym)) :: Nil),
+                  Assign(
+                    TempSymbol(N),
+                    Call(traceLogResetFn, Arg(false, Value.Ref(prevIndentLvlSym)) :: Nil),
+                    Assign(
+                      TempSymbol(N),
+                      Call(
+                        traceLogFn,
+                        Arg(false, Value.Ref(msgSym)) :: Nil
+                      ),
+                      Ret(Value.Ref(resSym))
+                    )
+                  )
+                )
+              )
+            val psSymbols = td.params.flatMap(ps => ps.params.map(p => Arg(false, Value.Ref((p.sym)))))
+            val instrumentedBody =
+              val msgSym = TempSymbol(N, dbgNme = "traceLogBegMsg")
+              Assign(
+                msgSym,
+                Call(strConcatFn, Arg(false, Value.Lit(Tree.StrLit(s"entering: ${td.sym.nme} with"))) :: psSymbols),
+                Assign(
+                  TempSymbol(N),
+                  Call(traceLogFn, Arg(false, Value.Ref(msgSym)) :: Nil),
+                  Assign(
+                    prevIndentLvlSym,
+                    Call(traceLogIndentFn, Nil),
+                    instrumentedRetBody
+                  )
+                )
+              )
+            Define(FunDefn(td.sym, td.params, instrumentedBody),
               term(st.Blk(stats, res))(k))
       // case cls: ClassDef =>
       case cls: ClassLikeDef =>
