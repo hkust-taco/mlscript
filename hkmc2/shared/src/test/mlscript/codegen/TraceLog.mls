@@ -6,28 +6,18 @@ fun fib(a) = if
   else fib(a - 1) + fib(a - 2)
 //│ JS:
 //│ function fib(...args) {
-//│   globalThis.Predef.checkArgs("fib", 1, args.length);
+//│   globalThis.Predef.checkArgs("fib", 1, true, args.length);
 //│   let a = args[0];
-//│   
-//│   let prevIndent = Predef.TraceLogger.indent;
-//│   Predef.TraceLogger.log("calling " + "fib" + " with " + globalThis.JSON.stringify(a));
-//│   Predef.TraceLogger.indent = Predef.TraceLogger.indent + 1;
 //│   let scrut, tmp, tmp1, tmp2, tmp3;
 //│   scrut = a <= 1;
 //│   if (scrut) {
-//│     let res = a;
-//│     Predef.TraceLogger.indent = prevIndent;
-//│     Predef.TraceLogger.log("return " + res);
-//│     return res;
+//│     return a;
 //│   } else {
 //│     tmp = a - 1;
-//│     tmp1 = globalThis.fib(tmp);
+//│     tmp1 = globalThis.fib(tmp) ?? null;
 //│     tmp2 = a - 2;
-//│     tmp3 = globalThis.fib(tmp2);
-//│     let res1 = tmp1 + tmp3;
-//│     Predef.TraceLogger.indent = prevIndent;
-//│     Predef.TraceLogger.log("return " + res1);
-//│     return res1;
+//│     tmp3 = globalThis.fib(tmp2) ?? null;
+//│     return tmp1 + tmp3;
 //│   }
 //│ }
 //│ undefined
@@ -36,40 +26,4 @@ fun f(x) = g(x)
 fun g(x) = h(x)
 fun h(x) = fib(x)
 f(5)
-//│ > calling f with 5
-//│ > | calling g with 5
-//│ > | | calling h with 5
-//│ > | | | calling fib with 5
-//│ > | | | | calling fib with 4
-//│ > | | | | | calling fib with 3
-//│ > | | | | | | calling fib with 2
-//│ > | | | | | | | calling fib with 1
-//│ > | | | | | | | return 1
-//│ > | | | | | | | calling fib with 0
-//│ > | | | | | | | return 0
-//│ > | | | | | | return 1
-//│ > | | | | | | calling fib with 1
-//│ > | | | | | | return 1
-//│ > | | | | | return 2
-//│ > | | | | | calling fib with 2
-//│ > | | | | | | calling fib with 1
-//│ > | | | | | | return 1
-//│ > | | | | | | calling fib with 0
-//│ > | | | | | | return 0
-//│ > | | | | | return 1
-//│ > | | | | return 3
-//│ > | | | | calling fib with 3
-//│ > | | | | | calling fib with 2
-//│ > | | | | | | calling fib with 1
-//│ > | | | | | | return 1
-//│ > | | | | | | calling fib with 0
-//│ > | | | | | | return 0
-//│ > | | | | | return 1
-//│ > | | | | | calling fib with 1
-//│ > | | | | | return 1
-//│ > | | | | return 2
-//│ > | | | return 5
-//│ > | | return 5
-//│ > | return 5
-//│ > return 5
 //│ = 5
