@@ -9,24 +9,24 @@ fun fib(a) = if
 //│ function fib(...args) {
 //│   globalThis.Predef.checkArgs("fib", 1, true, args.length);
 //│   let a = args[0];
-//│   let scrut, traceLogPrevIndent, tmp, tmp1, tmp2, tmp3, tmp4, traceLogRes, traceLogRetMsg, tmp5, tmp6, traceLogBegMsg, tmp7;
-//│   traceLogBegMsg = globalThis.String.prototype.concat.call("entering: Some(fib) with ", a) ?? null;
-//│   tmp7 = globalThis.Predef.TraceLogger.log(traceLogBegMsg) ?? null;
+//│   let scrut, traceLogEnterMsg, traceLogPrevIndent, traceLogRes, traceLogRetMsg, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+//│   traceLogEnterMsg = globalThis.String.prototype.concat.call("calling: fib(", a, ")") ?? null;
+//│   tmp = globalThis.Predef.TraceLogger.log(traceLogEnterMsg) ?? null;
 //│   traceLogPrevIndent = globalThis.Predef.TraceLogger.indent() ?? null;
 //│   scrut = a <= 1;
 //│   if (scrut) {
-//│     tmp = a;
+//│     tmp1 = a;
 //│   } else {
-//│     tmp1 = a - 1;
-//│     tmp2 = globalThis.fib(tmp1) ?? null;
-//│     tmp3 = a - 2;
-//│     tmp4 = globalThis.fib(tmp3) ?? null;
-//│     tmp = tmp2 + tmp4;
+//│     tmp2 = a - 1;
+//│     tmp3 = globalThis.fib(tmp2) ?? null;
+//│     tmp4 = a - 2;
+//│     tmp5 = globalThis.fib(tmp4) ?? null;
+//│     tmp1 = tmp3 + tmp5;
 //│   }
-//│   traceLogRes = tmp;
+//│   traceLogRes = tmp1;
 //│   traceLogRetMsg = globalThis.String.prototype.concat.call("return: ", traceLogRes) ?? null;
-//│   tmp5 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent) ?? null;
-//│   tmp6 = globalThis.Predef.TraceLogger.log(traceLogRetMsg) ?? null;
+//│   tmp6 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent) ?? null;
+//│   tmp7 = globalThis.Predef.TraceLogger.log(traceLogRetMsg) ?? null;
 //│   return traceLogRes;
 //│ }
 //│ undefined
@@ -35,36 +35,36 @@ fun f(x) = g(x)
 fun g(x) = h(x)
 fun h(x) = fib(x)
 f(5)
-//│ > entering: Some(f) with 5
-//│ > | entering: Some(g) with 5
-//│ > | | entering: Some(h) with 5
-//│ > | | | entering: Some(fib) with 5
-//│ > | | | | entering: Some(fib) with 4
-//│ > | | | | | entering: Some(fib) with 3
-//│ > | | | | | | entering: Some(fib) with 2
-//│ > | | | | | | | entering: Some(fib) with 1
+//│ > calling: f(5)
+//│ > | calling: g(5)
+//│ > | | calling: h(5)
+//│ > | | | calling: fib(5)
+//│ > | | | | calling: fib(4)
+//│ > | | | | | calling: fib(3)
+//│ > | | | | | | calling: fib(2)
+//│ > | | | | | | | calling: fib(1)
 //│ > | | | | | | | return: 1
-//│ > | | | | | | | entering: Some(fib) with 0
+//│ > | | | | | | | calling: fib(0)
 //│ > | | | | | | | return: 0
 //│ > | | | | | | return: 1
-//│ > | | | | | | entering: Some(fib) with 1
+//│ > | | | | | | calling: fib(1)
 //│ > | | | | | | return: 1
 //│ > | | | | | return: 2
-//│ > | | | | | entering: Some(fib) with 2
-//│ > | | | | | | entering: Some(fib) with 1
+//│ > | | | | | calling: fib(2)
+//│ > | | | | | | calling: fib(1)
 //│ > | | | | | | return: 1
-//│ > | | | | | | entering: Some(fib) with 0
+//│ > | | | | | | calling: fib(0)
 //│ > | | | | | | return: 0
 //│ > | | | | | return: 1
 //│ > | | | | return: 3
-//│ > | | | | entering: Some(fib) with 3
-//│ > | | | | | entering: Some(fib) with 2
-//│ > | | | | | | entering: Some(fib) with 1
+//│ > | | | | calling: fib(3)
+//│ > | | | | | calling: fib(2)
+//│ > | | | | | | calling: fib(1)
 //│ > | | | | | | return: 1
-//│ > | | | | | | entering: Some(fib) with 0
+//│ > | | | | | | calling: fib(0)
 //│ > | | | | | | return: 0
 //│ > | | | | | return: 1
-//│ > | | | | | entering: Some(fib) with 1
+//│ > | | | | | calling: fib(1)
 //│ > | | | | | return: 1
 //│ > | | | | return: 2
 //│ > | | | return: 5
@@ -90,28 +90,28 @@ fun f(x, y)(z) =
 //│   globalThis.Predef.checkArgs("f", 2, true, args.length);
 //│   let x = args[0];
 //│   let y = args[1];
-//│   let traceLogPrevIndent, traceLogRes, traceLogRetMsg, tmp, tmp1, traceLogBegMsg, tmp2;
-//│   traceLogBegMsg = globalThis.String.prototype.concat.call("entering: Some(f) with ", x, y) ?? null;
-//│   tmp2 = globalThis.Predef.TraceLogger.log(traceLogBegMsg) ?? null;
+//│   let traceLogEnterMsg, traceLogPrevIndent, traceLogRes, traceLogRetMsg, tmp, tmp1, tmp2;
+//│   traceLogEnterMsg = globalThis.String.prototype.concat.call("calling: f(", x, ", ", y, ")") ?? null;
+//│   tmp = globalThis.Predef.TraceLogger.log(traceLogEnterMsg) ?? null;
 //│   traceLogPrevIndent = globalThis.Predef.TraceLogger.indent() ?? null;
 //│   traceLogRes = (...args1) => {
 //│     globalThis.Predef.checkArgs("", 1, true, args1.length);
 //│     let z = args1[0];
-//│     let traceLogPrevIndent1, tmp3, tmp4, traceLogRes1, traceLogRetMsg1, tmp5, tmp6, traceLogBegMsg1, tmp7;
-//│     traceLogBegMsg1 = globalThis.String.prototype.concat.call("entering: None with ", z) ?? null;
-//│     tmp7 = globalThis.Predef.TraceLogger.log(traceLogBegMsg1) ?? null;
+//│     let traceLogEnterMsg1, traceLogPrevIndent1, traceLogRes1, traceLogRetMsg1, tmp3, tmp4, tmp5, tmp6, tmp7;
+//│     traceLogEnterMsg1 = globalThis.String.prototype.concat.call("calling: [arrow function](", z, ")") ?? null;
+//│     tmp3 = globalThis.Predef.TraceLogger.log(traceLogEnterMsg1) ?? null;
 //│     traceLogPrevIndent1 = globalThis.Predef.TraceLogger.indent() ?? null;
-//│     tmp3 = x + y;
-//│     tmp4 = globalThis.g(z) ?? null;
-//│     traceLogRes1 = tmp3 + tmp4;
+//│     tmp4 = x + y;
+//│     tmp5 = globalThis.g(z) ?? null;
+//│     traceLogRes1 = tmp4 + tmp5;
 //│     traceLogRetMsg1 = globalThis.String.prototype.concat.call("return: ", traceLogRes1) ?? null;
-//│     tmp5 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent1) ?? null;
-//│     tmp6 = globalThis.Predef.TraceLogger.log(traceLogRetMsg1) ?? null;
+//│     tmp6 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent1) ?? null;
+//│     tmp7 = globalThis.Predef.TraceLogger.log(traceLogRetMsg1) ?? null;
 //│     return traceLogRes1;
 //│   };
 //│   traceLogRetMsg = globalThis.String.prototype.concat.call("return: ", traceLogRes) ?? null;
-//│   tmp = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent) ?? null;
-//│   tmp1 = globalThis.Predef.TraceLogger.log(traceLogRetMsg) ?? null;
+//│   tmp1 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent) ?? null;
+//│   tmp2 = globalThis.Predef.TraceLogger.log(traceLogRetMsg) ?? null;
 //│   return traceLogRes;
 //│ }
 //│ undefined
@@ -122,10 +122,10 @@ f(1,2)(0)
 
 // FIXME: always restore indent level at the beginning of each worksheet block
 f(1,1)(1)
-//│ > | | entering: Some(f) with 11
-//│ > | | return: (...args1) => {     globalThis.Predef.checkArgs("", 1, true, args1.length);     let z = args1[0];     let traceLogPrevIndent1, tmp3, tmp4, traceLogRes1, traceLogRetMsg1, tmp5, tmp6, traceLogBegMsg1, tmp7;     traceLogBegMsg1 = globalThis.String.prototype.concat.call("entering: None with ", z) ?? null;     tmp7 = globalThis.Predef.TraceLogger.log(traceLogBegMsg1) ?? null;     traceLogPrevIndent1 = globalThis.Predef.TraceLogger.indent() ?? null;     tmp3 = x + y;     tmp4 = globalThis.g(z) ?? null;     traceLogRes1 = tmp3 + tmp4;     traceLogRetMsg1 = globalThis.String.prototype.concat.call("return: ", traceLogRes1) ?? null;     tmp5 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent1) ?? null;     tmp6 = globalThis.Predef.TraceLogger.log(traceLogRetMsg1) ?? null;     return traceLogRes1;   }
-//│ > | | entering: None with 1
-//│ > | | | entering: Some(g) with 1
+//│ > | | calling: f(1, 1)
+//│ > | | return: (...args1) => {     globalThis.Predef.checkArgs("", 1, true, args1.length);     let z = args1[0];     let traceLogEnterMsg1, traceLogPrevIndent1, traceLogRes1, traceLogRetMsg1, tmp3, tmp4, tmp5, tmp6, tmp7;     traceLogEnterMsg1 = globalThis.String.prototype.concat.call("calling: [arrow function](", z, ")") ?? null;     tmp3 = globalThis.Predef.TraceLogger.log(traceLogEnterMsg1) ?? null;     traceLogPrevIndent1 = globalThis.Predef.TraceLogger.indent() ?? null;     tmp4 = x + y;     tmp5 = globalThis.g(z) ?? null;     traceLogRes1 = tmp4 + tmp5;     traceLogRetMsg1 = globalThis.String.prototype.concat.call("return: ", traceLogRes1) ?? null;     tmp6 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent1) ?? null;     tmp7 = globalThis.Predef.TraceLogger.log(traceLogRetMsg1) ?? null;     return traceLogRes1;   }
+//│ > | | calling: [arrow function](1)
+//│ > | | | calling: g(1)
 //│ > | | | return: 0
 //│ > | | return: 2
 //│ = 2
