@@ -147,6 +147,8 @@ case class TupSymbol(arity: Opt[Int])(using State) extends CtorSymbol:
 
 type TypeSymbol = ClassSymbol | TypeAliasSymbol
 
+type FieldSymbol = TermSymbol | MemberSymbol[?]
+
 
 /** This is the symbol associated to specific definitions.
   * One overloaded `BlockMemberSymbol` may correspond to multiple `InnerSymbol`s

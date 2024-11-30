@@ -43,7 +43,7 @@ log("Hi")
 //│   main = Assign:
 //│     lhs = $tmp
 //│     rhs = Call:
-//│       fun = Select:
+//│       fun = Select{member:log}:
 //│         qual = Ref of globalThis:import#Prelude
 //│         name = Ident of "log"
 //│       args = Ls of 

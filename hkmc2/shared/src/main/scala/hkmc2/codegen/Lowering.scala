@@ -122,15 +122,19 @@ class Lowering(using TL, Raise, Elaborator.State):
         val (mtds, rest1) = bodBlk.stats.partitionMap:
           case td: TermDefinition if td.k is syntax.Fun => L(td)
           case s => R(s)
-        val (flds, rest2) = rest1.partitionMap:
+        val (privateFlds, rest2) = rest1.partitionMap:
           case LetDecl(sym: TermSymbol) => L(sym)
           case s => R(s)
+        val publicFlds = rest2.collect:
+          case td @ TermDefinition(k = (_: syntax.Val)) => td
         Define(ClsLikeDefn(cls.sym, syntax.Cls,
             mtds.flatMap: td =>
               td.body.map: bod =>
                 FunDefn(td.sym, td.params, term(bod)(Ret))
             ,
-            flds, term(Blk(rest2, bodBlk.res))(ImplctRet).mapTail:
+            privateFlds,
+            publicFlds,
+            term(Blk(rest2, bodBlk.res))(ImplctRet).mapTail:
               case Return(Value.Lit(syntax.Tree.UnitLit(true)), true) => End()
               case t => t
           ),
@@ -148,14 +152,14 @@ class Lowering(using TL, Raise, Elaborator.State):
       case Ref(sym: LocalSymbol) =>
         subTerm(rhs): r =>
           Assign(sym, r, k(Value.Lit(syntax.Tree.UnitLit(true))))
-      case SynthSel(prefix, nme) =>
+      case sel @ SynthSel(prefix, nme) =>
         subTerm(prefix): p =>
           subTerm(rhs): r =>
-            AssignField(p, nme, r, k(Value.Lit(syntax.Tree.UnitLit(true))))
-      case Sel(prefix, nme) =>
+            AssignField(p, nme, r, k(Value.Lit(syntax.Tree.UnitLit(true))))(sel.sym)
+      case sel @ Sel(prefix, nme) =>
         subTerm(prefix): p =>
           subTerm(rhs): r =>
-            AssignField(p, nme, r, k(Value.Lit(syntax.Tree.UnitLit(true))))
+            AssignField(p, nme, r, k(Value.Lit(syntax.Tree.UnitLit(true))))(sel.sym)
       
     case st.Blk((imp @ Import(sym, path)) :: stats, res) =>
       raise(ErrorReport(
@@ -241,39 +245,24 @@ class Lowering(using TL, Raise, Elaborator.State):
                     case cls: ClassSymbol => cls.tree.clsParams
                     case _: ModuleSymbol => Nil
                   assert(args0.isEmpty || clsParams.length === args.length)
-                  def mkArgs(args: Ls[(LocalSymbol & NamedSymbol) -> BlockLocalSymbol])(using Subst): Case -> Block = args match
-                  // def mkArgs(args: Ls[Param -> BlockLocalSymbol])(using Subst): Block = args match
+                  def mkArgs(args: Ls[TermSymbol -> BlockLocalSymbol])(using Subst): Case -> Block = args match
                     case Nil =>
-                      // mkMatch(Case.Cls(cls, st) -> go(tail, topLevel = false))
                       Case.Cls(cls, st) -> go(tail, topLevel = false)
                     case (param, arg) :: args =>
-                      // summon[Subst].+(arg -> Value.Ref(new TempSymbol(N)))
-                      // Assign(arg, Select(sr, Tree.Ident("head")), mkArgs(args))
-                      
                       val (cse, blk) = mkArgs(args)
-                      (cse, Assign(arg, Select(sr, param.id/*FIXME incorrect Ident?*/), blk))
-                      // mkMatch(cse -> Assign(arg, Select(sr, param.sym.id/*FIXME incorrect Ident?*/), blk))
-                      // Assign(arg, Select(sr, param.sym.id/*FIXME incorrect Ident?*/), mkArgs(args))
-                      
-                  // val (cse, blk) =
-                  // mkMatch(cse -> blk)
+                      (cse, Assign(arg, Select(sr, param.id/*FIXME incorrect Ident?*/)(S(param)), blk))
                   mkMatch(mkArgs(clsParams.zip(args)))
               case Pattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> go(tail, topLevel = false))
-            // Match(sr, cse :: Nil,
-            //   S(go(restSplit, topLevel = true)),
-            //   End()
-            // )
         case Split.Else(els) =>
           if k.isInstanceOf[TailOp] && isIf then term(els)(k)
           else
             term(els): r =>
               Assign(l, r,
-                if isWhile && !topLevel then Break(lbl, toBeginning = true)
-                // if isWhile then Break(lbl, toBeginning = !topLevel)
+                if isWhile && !topLevel then Continue(lbl)
                 else End()
               )
         case Split.End =>
-          Throw(Instantiate(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Error")),
+          Throw(Instantiate(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Error"))(N),
             Value.Lit(syntax.Tree.StrLit("match error")) :: Nil)) // TODO add failed-match scrutinee info
       
       if k.isInstanceOf[TailOp] && isIf then go(iftrm.normalized, topLevel = true)
@@ -287,13 +276,13 @@ class Lowering(using TL, Raise, Elaborator.State):
           else k(Value.Lit(syntax.Tree.UnitLit(true))) // * it seems this currently never happens
         )
     case Sel(_, id) if numOpsMap.contains(id.name) => k(subst(Value.Ref(BuiltinSymbol(numOpsMap(id.name), binary = true, unary = true, nullary = false))))
-    case Sel(prefix, nme) =>
-      setupSelection(prefix, nme)(k)
+    case sel @ Sel(prefix, nme) =>
+      setupSelection(prefix, nme, sel.sym)(k)
     case SelProj(prefix, _, proj) =>
-      setupSelection(prefix, proj)(k)
-    case SynthSel(prefix, nme) =>
+      setupSelection(prefix, proj, N)(k)
+    case sel @ SynthSel(prefix, nme) =>
       subTerm(prefix): p =>
-        k(Select(p, nme))
+        k(Select(p, nme)(sel.sym))
 
     case New(cls, as) =>
       subTerm(cls): sr =>
@@ -312,21 +301,21 @@ class Lowering(using TL, Raise, Elaborator.State):
         k(Value.Ref(l))
       )
     case Region(reg, body) =>
-      Assign(reg, Instantiate(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Region")), Nil), term(body)(k))
+      Assign(reg, Instantiate(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Region"))(N), Nil), term(body)(k))
     case RegRef(reg, value) =>
       def rec(as: Ls[st], asr: Ls[Path]): Block = as match
-        case Nil => k(Instantiate(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Ref")), asr.reverse))
+        case Nil => k(Instantiate(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Ref"))(N), asr.reverse))
         case a :: as =>
           subTerm(a): ar =>
             rec(as, ar :: asr)
       rec(reg :: value :: Nil, Nil)
     case Deref(ref) =>
       subTerm(ref): r =>
-        k(Select(r, Tree.Ident("value")))
+        k(Select(r, Tree.Ident("value"))(N))
     case SetRef(lhs, rhs) =>
       subTerm(lhs): ref =>
         subTerm(rhs): value =>
-          AssignField(ref, Tree.Ident("value"), value, k(value))
+          AssignField(ref, Tree.Ident("value"), value, k(value))(N)
     case Error => End("error")
     
     // case _ =>
@@ -355,18 +344,18 @@ class Lowering(using TL, Raise, Elaborator.State):
         go(sym -> path.toString :: acc, st.Blk(stats, res))
       case _ => Program(acc.reverse, topLevel(trm))
     go(Nil, main)
-
-
-
-  def setupSelection(prefix: Term, nme: Tree.Ident)(k: Result => Block)(using Subst): Block =
-    subTerm(prefix): p =>
-      k(Select(p, nme))
   
+  def setupSelection(prefix: Term, nme: Tree.Ident, sym: Opt[FieldSymbol])(k: Result => Block)(using Subst): Block =
+    subTerm(prefix): p =>
+      k(Select(p, nme)(sym))
+  
+
+
 trait LoweringSelSanityChecks
     (instrument: Bool)(using TL, Raise, Elaborator.State)
     extends Lowering:
   
-  override def setupSelection(prefix: st, nme: Tree.Ident)(k: Result => Block)(using Subst): Block =
+  override def setupSelection(prefix: st, nme: Tree.Ident, sym: Opt[FieldSymbol])(k: Result => Block)(using Subst): Block =
     if instrument then
       subTerm(prefix): p =>
         val selRes = TempSymbol(N, "selRes")
@@ -381,8 +370,9 @@ trait LoweringSelSanityChecks
             Split.Else(selRes.ref()))
         Assign(
           selRes,
-          Select(p, nme),
+          Select(p, nme)(sym),
           term(IfLike(syntax.Keyword.`if`, split)(split))(k))
     else
-      super.setupSelection(prefix, nme)(k)
+      super.setupSelection(prefix, nme, sym)(k)
+
 

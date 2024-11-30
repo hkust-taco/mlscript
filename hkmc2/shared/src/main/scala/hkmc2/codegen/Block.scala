@@ -33,7 +33,8 @@ sealed abstract class Block extends Product with AutoLocated:
     case Match(scrut, arms, dflt, rst) =>
       arms.flatMap(_._2.definedVars).toSet ++ dflt.toList.flatMap(_.definedVars) ++ rst.definedVars
     case End(_) => Set.empty
-    case Break(_, _) => Set.empty
+    case Break(_) => Set.empty
+    case Continue(_) => Set.empty
     case Define(defn, rst) => rst.definedVars
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
     case Label(lbl, bod, rst) => bod.definedVars ++ rst.definedVars
@@ -59,13 +60,15 @@ case class Match(
 ) extends Block with ProductWithTail
 
 // * `implct`: whether it's a JS implicit return, without the `return` keyword
+// * TODO could just remove this flag and add a flag in Scope instead
 case class Return(res: Result, implct: Bool) extends BlockTail
 
 case class Throw(exc: Result) extends BlockTail
 
 case class Label(label: Local, body: Block, rest: Block) extends BlockTail
 
-case class Break(label: Local, toBeginning: Bool) extends BlockTail
+case class Break(label: Local) extends BlockTail
+case class Continue(label: Local) extends BlockTail
 
 // TODO: remove this form?
 case class Begin(sub: Block, rest: Block) extends Block with ProductWithTail
@@ -75,7 +78,7 @@ case class TryBlock(sub: Block, finallyDo: Block, rest: Block) extends Block wit
 case class Assign(lhs: Local, rhs: Result, rest: Block) extends Block with ProductWithTail
 // case class Assign(lhs: Path, rhs: Result, rest: Block) extends Block with ProductWithTail
 
-case class AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block) extends Block with ProductWithTail
+case class AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(symbol: Opt[FieldSymbol]) extends Block with ProductWithTail
 
 case class Define(defn: Defn, rest: Block) extends Block with ProductWithTail
 
@@ -99,7 +102,8 @@ final case class ClsLikeDefn(
   sym: MemberSymbol[? <: ClassLikeDef],
   k: syntax.ClsLikeKind,
   methods: Ls[FunDefn],
-  fields: Ls[TermSymbol],
+  privateFields: Ls[TermSymbol],
+  publicFields: Ls[TermDefinition],
   ctor: Block,
 ) extends Defn
 
@@ -123,7 +127,8 @@ case class Instantiate(cls: Path, args: Ls[Path]) extends Result
 
 sealed abstract class Path extends Result
 
-case class Select(qual: Path, name: Tree.Ident) extends Path
+case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[FieldSymbol]) extends Path with ProductWithExtraInfo:
+  def extraInfo: Str = symbol.mkString
 
 enum Value extends Path:
   case Ref(l: Local)

@@ -84,7 +84,7 @@ object Elaborator:
         require(id.name == nme)
         Term.Ref(sym)(id, 666) // TODO 666
       def symbol = S(sym)
-    final case class SelElem(val base: Elem, val nme: Str, val symOpt: Opt[Symbol]) extends Elem:
+    final case class SelElem(val base: Elem, val nme: Str, val symOpt: Opt[FieldSymbol]) extends Elem:
       def ref(id: Tree.Ident): Term =
         // * Note: due to symbolic ops, we may have `id.name =/= nme`;
         // * e.g., we can have `id.name = "|>"` and `nme = "pipe"`.
@@ -136,7 +136,7 @@ extends Importer:
   def mkLetBinding(sym: LocalSymbol, rhs: Term): Ls[Statement] =
     LetDecl(sym) :: DefineVar(sym, rhs) :: Nil
   
-  def resolveField(srcTree: Tree, base: Opt[Symbol], nme: Ident): Opt[Symbol] =
+  def resolveField(srcTree: Tree, base: Opt[Symbol], nme: Ident): Opt[FieldSymbol] =
     base match
     case S(psym: BlockMemberSymbol) =>
       psym.modTree match
