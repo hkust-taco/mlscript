@@ -9,19 +9,21 @@ module Bar with
   module Baz with
     val a = Bar.x
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ const Bar$class = class Bar {
 //│   constructor() {
 //│     this.x = 1;
 //│     const Baz$class = class Baz {
 //│       constructor() {
-//│         let selRes, tmp;
+//│         let selRes, tmp1;
 //│         selRes = globalThis.Bar.x;
 //│         if (selRes === undefined) {
 //│           throw new globalThis.Error("Access to required field 'x' yielded 'undefined'");
 //│         } else {
-//│           tmp = selRes;
+//│           tmp1 = selRes;
 //│         }
-//│         this.a = tmp;
+//│         this.a = tmp1;
 //│       }
 //│       toString() { return "Baz"; }
 //│     };

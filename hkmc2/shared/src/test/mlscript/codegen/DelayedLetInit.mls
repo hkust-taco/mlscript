@@ -6,31 +6,31 @@
 
 let x
 //│ JS:
-//│ undefined
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; undefined
 
 x = 1
 //│ JS:
-//│ this.x = 1; undefined
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.x = 1; undefined
 
 x
 //│ JS:
-//│ this.x
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.x
 //│ = 1
 
 // TODO forbid redefining a let
 x = 2
 //│ JS:
-//│ this.x = 2; undefined
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.x = 2; undefined
 
 x
 //│ JS:
-//│ this.x
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.x
 //│ = 2
 
 
 let y = 1
 //│ JS:
-//│ this.y = 1; undefined
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.y = 1; undefined
 //│ y = 1
 
 :e
@@ -39,11 +39,13 @@ z = 1
 //│ ║  l.37: 	z = 1
 //│ ╙──      	^
 //│ JS:
-//│ /* error */
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; /* error */
 
 
 fun f() = 1
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 0, true, args.length);
 //│   return 1;
@@ -52,13 +54,15 @@ fun f() = 1
 
 f
 //│ JS:
-//│ this.f
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.f
 //│ = [Function: f]
 
 
 let f
 f(x) = x + 1
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ this.f = (...args) => {
 //│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let x = args[0];
@@ -69,14 +73,14 @@ f(x) = x + 1
 
 f(1)
 //│ JS:
-//│ this.f(1) ?? null
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.f(1) ?? null
 //│ = 2
 
 
 let foo
 foo = 0
 //│ JS:
-//│ this.foo = 0; undefined
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.foo = 0; undefined
 //│ foo = 0
 
 :fixme
@@ -85,10 +89,17 @@ if true
 then foo = 0
 else foo = 1
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.85: 	then foo = 0
+//│ ║  l.89: 	then foo = 0
 //│ ╙──      	         ^
 //│ JS:
-//│ let scrut; scrut = true; if (scrut) { this.foo } else { throw new this.Error("match error"); }
+//│ let scrut, tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ scrut = true;
+//│ if (scrut) {
+//│   this.foo
+//│ } else {
+//│   throw new this.Error("match error");
+//│ }
 //│ = 0
 //│ foo = 0
 
@@ -99,13 +110,24 @@ then
 else
   foo = 1
 //│ JS:
-//│ let scrut; scrut = true; if (scrut) { this.foo = 0; undefined } else { this.foo = 1; undefined }
+//│ let scrut, tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ scrut = true;
+//│ if (scrut) {
+//│   this.foo = 0;
+//│   undefined
+//│ } else {
+//│   this.foo = 1;
+//│   undefined
+//│ }
 //│ foo = 0
 
 
 fun f() =
   foo = 42
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 0, true, args.length);
 //│   globalThis.foo = 42;
@@ -115,20 +137,22 @@ fun f() =
 
 f()
 //│ JS:
-//│ this.f() ?? null
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.f() ?? null
 
 foo
 //│ JS:
-//│ this.foo
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.foo
 //│ = 42
 
 
 :fixme
 fun f() = foo = 0
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.127: 	fun f() = foo = 0
+//│ ║  l.149: 	fun f() = foo = 0
 //│ ╙──       	              ^
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 0, true, args.length);
 //│   return globalThis.foo;

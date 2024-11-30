@@ -22,16 +22,18 @@ fun f(x) =
   else ()
   x + 1
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
-//│   let scrut, tmp, tmp1;
+//│   let scrut, tmp1, tmp2;
 //│   scrut = x < 0;
 //│   if (scrut) {
-//│     tmp = globalThis.log("whoops") ?? null;
+//│     tmp1 = globalThis.log("whoops") ?? null;
 //│     return 0;
 //│   } else {
-//│     tmp1 = undefined;
+//│     tmp2 = undefined;
 //│   }
 //│   return x + 1;
 //│ }

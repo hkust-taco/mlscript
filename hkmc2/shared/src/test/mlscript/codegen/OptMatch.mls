@@ -10,6 +10,8 @@ fun isDefined(x) = if x is
   Some then true
   None then false
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function isDefined(...args) {
 //│   globalThis.Predef.checkArgs("isDefined", 1, true, args.length);
 //│   let x = args[0];
@@ -37,6 +39,8 @@ val isDefined = case
   Some(_) then true
   None    then false
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ this.isDefined = (...args) => {
 //│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let caseScrut = args[0];

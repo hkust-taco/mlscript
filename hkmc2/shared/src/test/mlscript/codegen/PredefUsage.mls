@@ -14,7 +14,7 @@ print(12)
 :sjs
 12 |> print
 //│ JS:
-//│ Predef.pipe(12, Predef.print) ?? null
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; Predef.pipe(12, Predef.print) ?? null
 //│ > 12
 
 12 |>

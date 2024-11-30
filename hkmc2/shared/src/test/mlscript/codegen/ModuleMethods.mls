@@ -7,6 +7,8 @@ object Example with
   val a = 456
   fun f(x) = [x, a]
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ const Example$class = class Example {
 //│   constructor() {
 //│     this.a = 456;

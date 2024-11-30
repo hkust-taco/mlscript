@@ -5,18 +5,20 @@
 fun test(x) =
   [this.a, x]
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function test(...args) {
 //│   globalThis.Predef.checkArgs("test", 1, true, args.length);
 //│   let x = args[0];
-//│   let selRes, tmp;
+//│   let selRes, tmp1;
 //│   selRes = globalThis.a;
 //│   if (selRes === undefined) {
 //│     throw new globalThis.Error("Access to required field 'a' yielded 'undefined'");
 //│   } else {
-//│     tmp = selRes;
+//│     tmp1 = selRes;
 //│   }
 //│   return [
-//│     tmp,
+//│     tmp1,
 //│     x
 //│   ];
 //│ }
@@ -40,6 +42,8 @@ module Test with
   fun test2(x) =
     [this.a, x]
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ const Test$class = class Test {
 //│   constructor() {
 //│     this.a = 2;
@@ -52,15 +56,15 @@ module Test with
 //│   test2(...args1) {
 //│     globalThis.Predef.checkArgs("test2", 1, true, args1.length);
 //│     let x1 = args1[0];
-//│     let selRes, tmp;
+//│     let selRes, tmp1;
 //│     selRes = this.a;
 //│     if (selRes === undefined) {
 //│       throw new globalThis.Error("Access to required field 'a' yielded 'undefined'");
 //│     } else {
-//│       tmp = selRes;
+//│       tmp1 = selRes;
 //│     }
 //│     return [
-//│       tmp,
+//│       tmp1,
 //│       x1
 //│     ];
 //│   }

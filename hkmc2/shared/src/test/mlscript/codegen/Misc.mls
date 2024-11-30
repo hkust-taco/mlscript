@@ -15,7 +15,7 @@
 1 +
 2
 //│ JS:
-//│ 1 + 2
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; 1 + 2
 //│ = 3
 
 

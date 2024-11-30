@@ -11,6 +11,8 @@ case x then x
 :sjs
 case { x then x }
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ (...args) => {
 //│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let caseScrut = args[0];
@@ -24,6 +26,8 @@ case { x then x }
 x => if x is
   0 then true
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ (...args) => {
 //│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let x = args[0];
@@ -39,6 +43,8 @@ x => if x is
 case
   0 then true
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ (...args) => {
 //│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let caseScrut = args[0];
@@ -55,6 +61,8 @@ case
   0 then true
   _ then false
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ (...args) => {
 //│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let caseScrut = args[0];
@@ -74,6 +82,8 @@ val isDefined = case
   Some then true
   None then false
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ this.isDefined = (...args) => {
 //│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let caseScrut = args[0];

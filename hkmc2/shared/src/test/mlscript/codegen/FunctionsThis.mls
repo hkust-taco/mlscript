@@ -9,6 +9,8 @@ val x = 2
 fun foo() =
   x + 1
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ this.x = 2;
 //│ function foo(...args) {
 //│   globalThis.Predef.checkArgs("foo", 0, true, args.length);
@@ -21,11 +23,13 @@ fun foo() =
 class Test with
   log(foo())
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ this.Test = class Test {
 //│   constructor() {
-//│     let tmp;
-//│     tmp = globalThis.foo() ?? null;
-//│     globalThis.log(tmp) ?? null
+//│     let tmp1;
+//│     tmp1 = globalThis.foo() ?? null;
+//│     globalThis.log(tmp1) ?? null
 //│   }
 //│   toString() { return "Test"; }
 //│ };

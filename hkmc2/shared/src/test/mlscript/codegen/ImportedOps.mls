@@ -11,11 +11,13 @@ fun foo() =
   "a" ~ "b" ~ "c"
 foo()
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function foo(...args) {
 //│   globalThis.Predef.checkArgs("foo", 0, true, args.length);
-//│   let tmp;
-//│   tmp = globalThis.M.concat("a", "b") ?? null;
-//│   return globalThis.M.concat(tmp, "c") ?? null;
+//│   let tmp1;
+//│   tmp1 = globalThis.M.concat("a", "b") ?? null;
+//│   return globalThis.M.concat(tmp1, "c") ?? null;
 //│ }
 //│ this.foo() ?? null
 //│ = 'abc'

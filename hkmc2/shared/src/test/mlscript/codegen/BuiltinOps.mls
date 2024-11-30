@@ -4,19 +4,19 @@
 :sjs
 2 + 2
 //│ JS:
-//│ 2 + 2
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; 2 + 2
 //│ = 4
 
 :sjs
 2 +. 2
 //│ JS:
-//│ 2 + 2
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; 2 + 2
 //│ = 4
 
 :sjs
 +2
 //│ JS:
-//│ + 2
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; + 2
 //│ = 2
 
 
@@ -25,7 +25,7 @@ fun (+) lol(a, b) = [a, b]
 :sjs
 1 + 2
 //│ JS:
-//│ this.lol(1, 2) ?? null
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.lol(1, 2) ?? null
 //│ = [ 1, 2 ]
 
 

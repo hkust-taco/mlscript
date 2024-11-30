@@ -42,7 +42,10 @@ Example . oops(2)
 //│   rhs = Tup of Ls of 
 //│     IntLit of 2
 //│ JS:
-//│ let tmp; tmp = this.call(this.Example, this.oops) ?? null; tmp(2) ?? null
+//│ let tmp, tmp1;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ tmp1 = this.call(this.Example, this.oops) ?? null;
+//│ tmp1(2) ?? null
 //│ = [ 2, 1 ]
 
 Example. oops(2)
@@ -53,7 +56,7 @@ Example. oops(2)
 :re
 Example .oops(2)
 //│ ╔══[ERROR] Module 'Example' does not contain member 'oops'
-//│ ║  l.54: 	Example .oops(2)
+//│ ║  l.57: 	Example .oops(2)
 //│ ╙──      	        ^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: this.Example.oops is not a function
 
@@ -100,7 +103,10 @@ Example .> oops(2)
 //│       rhs = Tup of Ls of 
 //│         IntLit of 2
 //│ JS:
-//│ let tmp; tmp = this.oops(2) ?? null; this.call(this.Example, tmp) ?? null
+//│ let tmp, tmp1;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ tmp1 = this.oops(2) ?? null;
+//│ this.call(this.Example, tmp1) ?? null
 //│ = [Function (anonymous)]
 
 

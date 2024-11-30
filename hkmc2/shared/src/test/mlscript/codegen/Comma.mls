@@ -7,26 +7,32 @@
 fun f() =
   console.log("ok"), 42
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 0, true, args.length);
-//│   let tmp;
-//│   tmp = globalThis.console.log("ok") ?? null;
+//│   let tmp1;
+//│   tmp1 = globalThis.console.log("ok") ?? null;
 //│   return 42;
 //│ }
 //│ undefined
 
 fun f() = { console.log("ok"), 42 }
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 0, true, args.length);
-//│   let tmp;
-//│   tmp = globalThis.console.log("ok") ?? null;
+//│   let tmp1;
+//│   tmp1 = globalThis.console.log("ok") ?? null;
 //│   return 42;
 //│ }
 //│ undefined
 
 fun f() = console.log("ok"), 42
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 0, true, args.length);
 //│   return globalThis.console.log("ok") ?? null;

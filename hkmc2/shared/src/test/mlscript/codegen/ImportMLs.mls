@@ -24,7 +24,7 @@ open Option
 :sjs
 None isDefined()
 //│ JS:
-//│ Option.isDefined(Option.None) ?? null
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; Option.isDefined(Option.None) ?? null
 //│ = false
 
 :fixme
@@ -47,17 +47,20 @@ Some(1)
 :sjs
 (new Some(1)) isDefined()
 //│ JS:
-//│ let tmp; tmp = new Option.Some.class(1); Option.isDefined(tmp) ?? null
+//│ let tmp, tmp1;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ tmp1 = new Option.Some.class(1);
+//│ Option.isDefined(tmp1) ?? null
 //│ = true
 
 :re
 new Some(1) isDefined()
-//│ ═══[RUNTIME ERROR] TypeError: tmp1 is not a constructor
+//│ ═══[RUNTIME ERROR] TypeError: tmp2 is not a constructor
 
 :re
 new Some(1)
   isDefined()
-//│ ═══[RUNTIME ERROR] TypeError: tmp1 is not a constructor
+//│ ═══[RUNTIME ERROR] TypeError: tmp2 is not a constructor
 
 
 open Option { Some, None, isDefined }
@@ -76,14 +79,14 @@ None == Option.None
 :re
 Option.oops
 //│ ╔══[ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.77: 	Option.oops
+//│ ║  l.80: 	Option.oops
 //│ ╙──      	      ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 :e
 open Option { oops }
 //│ ╔══[ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.84: 	open Option { oops }
+//│ ║  l.87: 	open Option { oops }
 //│ ╙──      	              ^^^^
 
 oops
@@ -92,7 +95,7 @@ oops
 :re
 Option.None.oops
 //│ ╔══[ERROR] Module 'None' does not contain member 'oops'
-//│ ║  l.93: 	Option.None.oops
+//│ ║  l.96: 	Option.None.oops
 //│ ╙──      	           ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 

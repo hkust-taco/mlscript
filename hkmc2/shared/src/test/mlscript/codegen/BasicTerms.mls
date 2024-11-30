@@ -6,7 +6,7 @@
 
 1
 //│ JS:
-//│ 1
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; 1
 //│ = 1
 
 :lot
@@ -19,18 +19,32 @@
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
-//│   main = Return:
+//│   main = Assign:
+//│     lhs = $tmp
+//│     rhs = Call:
+//│       fun = Select:
+//│         qual = Select:
+//│           qual = Select:
+//│             qual = Ref of globalThis:globalThis
+//│             name = Ident of "Predef"
+//│           name = Ident of "TraceLogger"
+//│         name = Ident of "resetIndent"
+//│       args = Ls of 
+//│         Arg:
+//│           spread = false
+//│           value = Lit of IntLit of 0
+//│     rest = Return: \
 //│     res = Lit of IntLit of 2
 //│     implct = true
 //│ JS:
-//│ 2
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; 2
 //│ = 2
 
 
 :fixme // should be a "linking" error
 log("Hi")
 //│ JS:
-//│ this.log("Hi") ?? null
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.log("Hi") ?? null
 //│ ═══[RUNTIME ERROR] TypeError: this.log is not a function
 
 :fixme
@@ -41,6 +55,20 @@ log("Hi")
 //│ Program:
 //│   imports = Nil
 //│   main = Assign:
+//│     lhs = $tmp
+//│     rhs = Call:
+//│       fun = Select:
+//│         qual = Select:
+//│           qual = Select:
+//│             qual = Ref of globalThis:globalThis
+//│             name = Ident of "Predef"
+//│           name = Ident of "TraceLogger"
+//│         name = Ident of "resetIndent"
+//│       args = Ls of 
+//│         Arg:
+//│           spread = false
+//│           value = Lit of IntLit of 0
+//│     rest = Assign: \
 //│     lhs = $tmp
 //│     rhs = Call:
 //│       fun = Select{member:log}:
@@ -54,14 +82,17 @@ log("Hi")
 //│     res = Lit of IntLit of 2
 //│     implct = true
 //│ JS:
-//│ let tmp; tmp = this.log("Hi") ?? null; 2
+//│ let tmp, tmp1;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ tmp1 = this.log("Hi") ?? null;
+//│ 2
 //│ ═══[RUNTIME ERROR] TypeError: this.log is not a function
 
 
 :re
 2(2)
 //│ JS:
-//│ 2(2) ?? null
+//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; 2(2) ?? null
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not a function
 
 

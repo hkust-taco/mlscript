@@ -17,23 +17,25 @@ class Outer(a, b) with
   log(i.c)
   log(i.i1(1))
 //│ JS:
+//│ let tmp;
+//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ this.Outer = function Outer(...args) { return new Outer.class(...args); };
 //│ this.Outer.class = class Outer {
 //│   constructor(a, b) {
 //│     this.a = a;
 //│     this.b = b;
-//│     let tmp, selRes, tmp1, tmp2, tmp3;
+//│     let tmp1, selRes, tmp2, tmp3, tmp4;
 //│     
 //│     const this$Outer = this;
 //│     this.Inner = function Inner(...args1) { return new Inner.class(...args1); };
 //│     this.Inner.class = class Inner {
 //│       constructor(c) {
 //│         this.c = c;
-//│         let tmp4, tmp5, tmp6;
-//│         tmp4 = globalThis.log(this$Outer.a) ?? null;
-//│         tmp5 = globalThis.log(this.c) ?? null;
-//│         tmp6 = this.i1(this$Outer.a) ?? null;
-//│         globalThis.log(tmp6) ?? null
+//│         let tmp5, tmp6, tmp7;
+//│         tmp5 = globalThis.log(this$Outer.a) ?? null;
+//│         tmp6 = globalThis.log(this.c) ?? null;
+//│         tmp7 = this.i1(this$Outer.a) ?? null;
+//│         globalThis.log(tmp7) ?? null
 //│       }
 //│       i1(...args) {
 //│         globalThis.Predef.checkArgs("i1", 1, true, args.length);
@@ -46,17 +48,17 @@ class Outer(a, b) with
 //│       }
 //│       toString() { return "Inner(" + this.c + ")"; }
 //│     };
-//│     tmp = this.Inner(this.a) ?? null;
-//│     this.i = tmp;
+//│     tmp1 = this.Inner(this.a) ?? null;
+//│     this.i = tmp1;
 //│     selRes = this.i.c;
 //│     if (selRes === undefined) {
 //│       throw new globalThis.Error("Access to required field 'c' yielded 'undefined'");
 //│     } else {
-//│       tmp1 = selRes;
+//│       tmp2 = selRes;
 //│     }
-//│     tmp2 = globalThis.log(tmp1) ?? null;
-//│     tmp3 = this.i.i1(1) ?? null;
-//│     globalThis.log(tmp3) ?? null
+//│     tmp3 = globalThis.log(tmp2) ?? null;
+//│     tmp4 = this.i.i1(1) ?? null;
+//│     globalThis.log(tmp4) ?? null
 //│   }
 //│   o1(...args) {
 //│     globalThis.Predef.checkArgs("o1", 1, true, args.length);
@@ -67,9 +69,9 @@ class Outer(a, b) with
 //│     globalThis.Predef.checkArgs("o2", 2, true, args1.length);
 //│     let c1 = args1[0];
 //│     let d = args1[1];
-//│     let tmp;
-//│     tmp = this.Inner(c1) ?? null;
-//│     return tmp.i1(d) ?? null;
+//│     let tmp1;
+//│     tmp1 = this.Inner(c1) ?? null;
+//│     return tmp1.i1(d) ?? null;
 //│   }
 //│   toString() { return "Outer(" + this.a + ", " + this.b + ")"; }
 //│ };
