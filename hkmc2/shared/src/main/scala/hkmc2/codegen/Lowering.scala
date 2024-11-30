@@ -381,6 +381,7 @@ trait LoweringTraceLog
   private val traceLogIndentFn = selFromGlobalThis("Predef", "TraceLogger", "indent")
   private val traceLogResetFn = selFromGlobalThis("Predef", "TraceLogger", "resetIndent")
   private val strConcatFn = selFromGlobalThis("String", "prototype", "concat", "call")
+  private val inspectFn = selFromGlobalThis("util", "inspect")
   
   override def topLevel(t: st): Block =
     if instrument then
@@ -411,27 +412,33 @@ trait LoweringTraceLog
     val prevIndentLvlSym = TempSymbol(N, dbgNme = "traceLogPrevIndent")
     val resSym = TempSymbol(N, dbgNme = "traceLogRes")
     val retMsgSym = TempSymbol(N, dbgNme = "traceLogRetMsg")
+    val psInspectedSyms = params.params.map(p => TempSymbol(N, dbgNme = s"traceLogParam_${p.sym.nme}") -> p.sym)
+    val resInspectedSym = TempSymbol(N, dbgNme = "traceLogResInspected")
     
-    val psSyms = params.params.zipWithIndex.foldRight[Ls[Arg]](Arg(false, Value.Lit(Tree.StrLit(")"))) :: Nil){
-      case ((p, i), acc) => if i == params.params.length - 1
-        then Arg(false, Value.Ref((p.sym))) :: acc
-        else Arg(false, Value.Ref((p.sym))) :: Arg(false, Value.Lit(Tree.StrLit(", "))) :: acc
-    }
     
+    val psSymArgs = psInspectedSyms.zipWithIndex.foldRight[Ls[Arg]](Arg(false, Value.Lit(Tree.StrLit(")"))) :: Nil):
+      case (((s, p), i), acc) => if i == psInspectedSyms.length - 1
+        then Arg(false, Value.Ref(s)) :: acc
+        else Arg(false, Value.Ref(s)) :: Arg(false, Value.Lit(Tree.StrLit(", "))) :: acc
+
+    
+    assignStmts(
+      psInspectedSyms.map{(tmpSym, pSym) => tmpSym -> Call(inspectFn, Arg(false, Value.Ref(pSym)) :: Nil)}*
+    )(
     assignStmts(
       enterMsgSym -> Call(
         strConcatFn,
-        Arg(false, Value.Lit(Tree.StrLit(s"calling: ${name.getOrElse("[arrow function]")}("))) :: psSyms
+        Arg(false, Value.Lit(Tree.StrLit(s"calling: ${name.getOrElse("[arrow function]")}("))) :: psSymArgs
       ),
       TempSymbol(N) -> Call(traceLogFn, Arg(false, Value.Ref(enterMsgSym)) :: Nil),
-      prevIndentLvlSym -> Call(traceLogIndentFn, Nil))(
-      term(bod): r =>
-        assignStmts(
-          resSym -> r,
-          retMsgSym -> Call(
-            strConcatFn,
-            Arg(false, Value.Lit(Tree.StrLit("return: "))) :: Arg(false, Value.Ref(resSym)) :: Nil
-          ),
-          TempSymbol(N) -> Call(traceLogResetFn, Arg(false, Value.Ref(prevIndentLvlSym)) :: Nil),
-          TempSymbol(N) -> Call(traceLogFn, Arg(false, Value.Ref(retMsgSym)) :: Nil))(
-          Ret(Value.Ref(resSym))))
+      prevIndentLvlSym -> Call(traceLogIndentFn, Nil))(term(bod)(r =>
+    assignStmts(
+      resSym -> r,
+      resInspectedSym -> Call(inspectFn, Arg(false, Value.Ref(resSym)) :: Nil),
+      retMsgSym -> Call(
+        strConcatFn,
+        Arg(false, Value.Lit(Tree.StrLit("return: "))) :: Arg(false, Value.Ref(resInspectedSym)) :: Nil
+      ),
+      TempSymbol(N) -> Call(traceLogResetFn, Arg(false, Value.Ref(prevIndentLvlSym)) :: Nil),
+      TempSymbol(N) -> Call(traceLogFn, Arg(false, Value.Ref(retMsgSym)) :: Nil))(
+        Ret(Value.Ref(resSym))))))

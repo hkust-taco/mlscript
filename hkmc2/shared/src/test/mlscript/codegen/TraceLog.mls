@@ -11,8 +11,9 @@ fun fib(a) = if
 //│ function fib(...args) {
 //│   globalThis.Predef.checkArgs("fib", 1, true, args.length);
 //│   let a = args[0];
-//│   let scrut, traceLogEnterMsg, traceLogPrevIndent, traceLogRes, traceLogRetMsg, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
-//│   traceLogEnterMsg = globalThis.String.prototype.concat.call("calling: fib(", a, ")") ?? null;
+//│   let scrut, traceLogEnterMsg, traceLogPrevIndent, traceLogRes, traceLogRetMsg, traceLogParam_a, traceLogResInspected, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
+//│   traceLogParam_a = globalThis.util.inspect(a) ?? null;
+//│   traceLogEnterMsg = globalThis.String.prototype.concat.call("calling: fib(", traceLogParam_a, ")") ?? null;
 //│   tmp1 = globalThis.Predef.TraceLogger.log(traceLogEnterMsg) ?? null;
 //│   traceLogPrevIndent = globalThis.Predef.TraceLogger.indent() ?? null;
 //│   scrut = a <= 1;
@@ -26,7 +27,8 @@ fun fib(a) = if
 //│     tmp2 = tmp4 + tmp6;
 //│   }
 //│   traceLogRes = tmp2;
-//│   traceLogRetMsg = globalThis.String.prototype.concat.call("return: ", traceLogRes) ?? null;
+//│   traceLogResInspected = globalThis.util.inspect(traceLogRes) ?? null;
+//│   traceLogRetMsg = globalThis.String.prototype.concat.call("return: ", traceLogResInspected) ?? null;
 //│   tmp7 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent) ?? null;
 //│   tmp8 = globalThis.Predef.TraceLogger.log(traceLogRetMsg) ?? null;
 //│   return traceLogRes;
@@ -94,26 +96,31 @@ fun f(x, y)(z) =
 //│   globalThis.Predef.checkArgs("f", 2, true, args.length);
 //│   let x = args[0];
 //│   let y = args[1];
-//│   let traceLogEnterMsg, traceLogPrevIndent, traceLogRes, traceLogRetMsg, tmp1, tmp2, tmp3;
-//│   traceLogEnterMsg = globalThis.String.prototype.concat.call("calling: f(", x, ", ", y, ")") ?? null;
+//│   let traceLogEnterMsg, traceLogPrevIndent, traceLogRes, traceLogRetMsg, traceLogParam_x, traceLogParam_y, traceLogResInspected, tmp1, tmp2, tmp3;
+//│   traceLogParam_x = globalThis.util.inspect(x) ?? null;
+//│   traceLogParam_y = globalThis.util.inspect(y) ?? null;
+//│   traceLogEnterMsg = globalThis.String.prototype.concat.call("calling: f(", traceLogParam_x, ", ", traceLogParam_y, ")") ?? null;
 //│   tmp1 = globalThis.Predef.TraceLogger.log(traceLogEnterMsg) ?? null;
 //│   traceLogPrevIndent = globalThis.Predef.TraceLogger.indent() ?? null;
 //│   traceLogRes = (...args1) => {
 //│     globalThis.Predef.checkArgs("", 1, true, args1.length);
 //│     let z = args1[0];
-//│     let traceLogEnterMsg1, traceLogPrevIndent1, traceLogRes1, traceLogRetMsg1, tmp4, tmp5, tmp6, tmp7, tmp8;
-//│     traceLogEnterMsg1 = globalThis.String.prototype.concat.call("calling: [arrow function](", z, ")") ?? null;
+//│     let traceLogEnterMsg1, traceLogPrevIndent1, traceLogRes1, traceLogRetMsg1, traceLogParam_z, traceLogResInspected1, tmp4, tmp5, tmp6, tmp7, tmp8;
+//│     traceLogParam_z = globalThis.util.inspect(z) ?? null;
+//│     traceLogEnterMsg1 = globalThis.String.prototype.concat.call("calling: [arrow function](", traceLogParam_z, ")") ?? null;
 //│     tmp4 = globalThis.Predef.TraceLogger.log(traceLogEnterMsg1) ?? null;
 //│     traceLogPrevIndent1 = globalThis.Predef.TraceLogger.indent() ?? null;
 //│     tmp5 = x + y;
 //│     tmp6 = globalThis.g(z) ?? null;
 //│     traceLogRes1 = tmp5 + tmp6;
-//│     traceLogRetMsg1 = globalThis.String.prototype.concat.call("return: ", traceLogRes1) ?? null;
+//│     traceLogResInspected1 = globalThis.util.inspect(traceLogRes1) ?? null;
+//│     traceLogRetMsg1 = globalThis.String.prototype.concat.call("return: ", traceLogResInspected1) ?? null;
 //│     tmp7 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent1) ?? null;
 //│     tmp8 = globalThis.Predef.TraceLogger.log(traceLogRetMsg1) ?? null;
 //│     return traceLogRes1;
 //│   };
-//│   traceLogRetMsg = globalThis.String.prototype.concat.call("return: ", traceLogRes) ?? null;
+//│   traceLogResInspected = globalThis.util.inspect(traceLogRes) ?? null;
+//│   traceLogRetMsg = globalThis.String.prototype.concat.call("return: ", traceLogResInspected) ?? null;
 //│   tmp2 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent) ?? null;
 //│   tmp3 = globalThis.Predef.TraceLogger.log(traceLogRetMsg) ?? null;
 //│   return traceLogRes;
@@ -127,7 +134,7 @@ f(1,2)(0)
 
 f(1,1)(1)
 //│ > calling: f(1, 1)
-//│ > return: (...args1) => {     globalThis.Predef.checkArgs("", 1, true, args1.length);     let z = args1[0];     let traceLogEnterMsg1, traceLogPrevIndent1, traceLogRes1, traceLogRetMsg1, tmp4, tmp5, tmp6, tmp7, tmp8;     traceLogEnterMsg1 = globalThis.String.prototype.concat.call("calling: [arrow function](", z, ")") ?? null;     tmp4 = globalThis.Predef.TraceLogger.log(traceLogEnterMsg1) ?? null;     traceLogPrevIndent1 = globalThis.Predef.TraceLogger.indent() ?? null;     tmp5 = x + y;     tmp6 = globalThis.g(z) ?? null;     traceLogRes1 = tmp5 + tmp6;     traceLogRetMsg1 = globalThis.String.prototype.concat.call("return: ", traceLogRes1) ?? null;     tmp7 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent1) ?? null;     tmp8 = globalThis.Predef.TraceLogger.log(traceLogRetMsg1) ?? null;     return traceLogRes1;   }
+//│ > return: [Function: traceLogRes]
 //│ > calling: [arrow function](1)
 //│ > | calling: g(1)
 //│ > | return: 0
@@ -139,9 +146,13 @@ f(1,1)(1)
 :sjs
 abstract class E: S | N
 class S(x) with
-  fun toString() = "S(" + x + ")"
+  fun toString() = "S(" + x + "): " + toInt(succ(x))
 class N() with
-  fun toString() = "N"
+  fun toString() = "N: 0" 
+fun succ(x) = S(x)
+fun toInt(x) = if x is
+  N then 0
+  S(n) then 1 + toInt(n)
 //│ JS:
 //│ let tmp;
 //│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
@@ -159,15 +170,19 @@ class N() with
 //│   }
 //│   toString(...args) {
 //│     globalThis.Predef.checkArgs("toString", 0, true, args.length);
-//│     let traceLogEnterMsg, traceLogPrevIndent, traceLogRes, traceLogRetMsg, tmp1, tmp2, tmp3, tmp4;
+//│     let traceLogEnterMsg, traceLogPrevIndent, traceLogRes, traceLogRetMsg, traceLogResInspected, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
 //│     traceLogEnterMsg = globalThis.String.prototype.concat.call("calling: toString(", ")") ?? null;
 //│     tmp1 = globalThis.Predef.TraceLogger.log(traceLogEnterMsg) ?? null;
 //│     traceLogPrevIndent = globalThis.Predef.TraceLogger.indent() ?? null;
 //│     tmp2 = "S(" + this.x;
-//│     traceLogRes = tmp2 + ")";
-//│     traceLogRetMsg = globalThis.String.prototype.concat.call("return: ", traceLogRes) ?? null;
-//│     tmp3 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent) ?? null;
-//│     tmp4 = globalThis.Predef.TraceLogger.log(traceLogRetMsg) ?? null;
+//│     tmp3 = tmp2 + "): ";
+//│     tmp4 = globalThis.succ(this.x) ?? null;
+//│     tmp5 = globalThis.toInt(tmp4) ?? null;
+//│     traceLogRes = tmp3 + tmp5;
+//│     traceLogResInspected = globalThis.util.inspect(traceLogRes) ?? null;
+//│     traceLogRetMsg = globalThis.String.prototype.concat.call("return: ", traceLogResInspected) ?? null;
+//│     tmp6 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent) ?? null;
+//│     tmp7 = globalThis.Predef.TraceLogger.log(traceLogRetMsg) ?? null;
 //│     return traceLogRes;
 //│   }
 //│ };
@@ -178,54 +193,89 @@ class N() with
 //│   }
 //│   toString(...args) {
 //│     globalThis.Predef.checkArgs("toString", 0, true, args.length);
-//│     let traceLogEnterMsg, traceLogPrevIndent, traceLogRes, traceLogRetMsg, tmp1, tmp2, tmp3;
+//│     let traceLogEnterMsg, traceLogPrevIndent, traceLogRes, traceLogRetMsg, traceLogResInspected, tmp1, tmp2, tmp3;
 //│     traceLogEnterMsg = globalThis.String.prototype.concat.call("calling: toString(", ")") ?? null;
 //│     tmp1 = globalThis.Predef.TraceLogger.log(traceLogEnterMsg) ?? null;
 //│     traceLogPrevIndent = globalThis.Predef.TraceLogger.indent() ?? null;
-//│     traceLogRes = "N";
-//│     traceLogRetMsg = globalThis.String.prototype.concat.call("return: ", traceLogRes) ?? null;
+//│     traceLogRes = "N: 0";
+//│     traceLogResInspected = globalThis.util.inspect(traceLogRes) ?? null;
+//│     traceLogRetMsg = globalThis.String.prototype.concat.call("return: ", traceLogResInspected) ?? null;
 //│     tmp2 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent) ?? null;
 //│     tmp3 = globalThis.Predef.TraceLogger.log(traceLogRetMsg) ?? null;
 //│     return traceLogRes;
 //│   }
 //│ };
+//│ function succ(...args) {
+//│   globalThis.Predef.checkArgs("succ", 1, true, args.length);
+//│   let x = args[0];
+//│   let traceLogEnterMsg, traceLogPrevIndent, traceLogRes, traceLogRetMsg, traceLogParam_x, traceLogResInspected, tmp1, tmp2, tmp3;
+//│   traceLogParam_x = globalThis.util.inspect(x) ?? null;
+//│   traceLogEnterMsg = globalThis.String.prototype.concat.call("calling: succ(", traceLogParam_x, ")") ?? null;
+//│   tmp1 = globalThis.Predef.TraceLogger.log(traceLogEnterMsg) ?? null;
+//│   traceLogPrevIndent = globalThis.Predef.TraceLogger.indent() ?? null;
+//│   traceLogRes = globalThis.S(x) ?? null;
+//│   traceLogResInspected = globalThis.util.inspect(traceLogRes) ?? null;
+//│   traceLogRetMsg = globalThis.String.prototype.concat.call("return: ", traceLogResInspected) ?? null;
+//│   tmp2 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent) ?? null;
+//│   tmp3 = globalThis.Predef.TraceLogger.log(traceLogRetMsg) ?? null;
+//│   return traceLogRes;
+//│ }
+//│ function toInt(...args) {
+//│   globalThis.Predef.checkArgs("toInt", 1, true, args.length);
+//│   let x = args[0];
+//│   let param0, n, traceLogEnterMsg, traceLogPrevIndent, traceLogRes, traceLogRetMsg, traceLogParam_x, traceLogResInspected, tmp1, tmp2, tmp3, tmp4, tmp5;
+//│   traceLogParam_x = globalThis.util.inspect(x) ?? null;
+//│   traceLogEnterMsg = globalThis.String.prototype.concat.call("calling: toInt(", traceLogParam_x, ")") ?? null;
+//│   tmp1 = globalThis.Predef.TraceLogger.log(traceLogEnterMsg) ?? null;
+//│   traceLogPrevIndent = globalThis.Predef.TraceLogger.indent() ?? null;
+//│   if (x instanceof globalThis.N.class) {
+//│     tmp2 = 0;
+//│   } else {
+//│     if (x instanceof globalThis.S.class) {
+//│       param0 = x.x;
+//│       n = param0;
+//│       tmp3 = globalThis.toInt(n) ?? null;
+//│       tmp2 = 1 + tmp3;
+//│     } else {
+//│       throw new globalThis.Error("match error");
+//│     }
+//│   }
+//│   traceLogRes = tmp2;
+//│   traceLogResInspected = globalThis.util.inspect(traceLogRes) ?? null;
+//│   traceLogRetMsg = globalThis.String.prototype.concat.call("return: ", traceLogResInspected) ?? null;
+//│   tmp4 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent) ?? null;
+//│   tmp5 = globalThis.Predef.TraceLogger.log(traceLogRetMsg) ?? null;
+//│   return traceLogRes;
+//│ }
 //│ undefined
 
 :sjs
-fun id(x) = x
-id(S(S(N())))
+(S(S(N()))).toString()
 //│ JS:
 //│ let tmp, tmp1, tmp2, tmp3;
 //│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
-//│ function id(...args) {
-//│   globalThis.Predef.checkArgs("id", 1, true, args.length);
-//│   let x = args[0];
-//│   let traceLogEnterMsg, traceLogPrevIndent, traceLogRes, traceLogRetMsg, tmp4, tmp5, tmp6;
-//│   traceLogEnterMsg = globalThis.String.prototype.concat.call("calling: id(", x, ")") ?? null;
-//│   tmp4 = globalThis.Predef.TraceLogger.log(traceLogEnterMsg) ?? null;
-//│   traceLogPrevIndent = globalThis.Predef.TraceLogger.indent() ?? null;
-//│   traceLogRes = x;
-//│   traceLogRetMsg = globalThis.String.prototype.concat.call("return: ", traceLogRes) ?? null;
-//│   tmp5 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent) ?? null;
-//│   tmp6 = globalThis.Predef.TraceLogger.log(traceLogRetMsg) ?? null;
-//│   return traceLogRes;
-//│ }
 //│ tmp1 = this.N() ?? null;
 //│ tmp2 = this.S(tmp1) ?? null;
 //│ tmp3 = this.S(tmp2) ?? null;
-//│ this.id(tmp3) ?? null
+//│ tmp3.toString() ?? null
 //│ > calling: toString()
 //│ > | calling: toString()
 //│ > | | calling: toString()
-//│ > | | return: N
-//│ > | return: S(N)
-//│ > return: S(S(N))
-//│ > calling: id(S(S(N)))
-//│ > | calling: toString()
-//│ > | | calling: toString()
-//│ > | | | calling: toString()
-//│ > | | | return: N
-//│ > | | return: S(N)
-//│ > | return: S(S(N))
-//│ > return: S(S(N))
-//│ = S { x: S { x: N {} } }
+//│ > | | return: 'N: 0'
+//│ > | | calling: succ(N {})
+//│ > | | return: S { x: N {} }
+//│ > | | calling: toInt(S { x: N {} })
+//│ > | | | calling: toInt(N {})
+//│ > | | | return: 0
+//│ > | | return: 1
+//│ > | return: 'S(N: 0): 1'
+//│ > | calling: succ(S { x: N {} })
+//│ > | return: S { x: S { x: N {} } }
+//│ > | calling: toInt(S { x: S { x: N {} } })
+//│ > | | calling: toInt(S { x: N {} })
+//│ > | | | calling: toInt(N {})
+//│ > | | | return: 0
+//│ > | | return: 1
+//│ > | return: 2
+//│ > return: 'S(S(N: 0): 1): 2'
+//│ = 'S(S(N: 0): 1): 2'
