@@ -11,3 +11,32 @@ MatchFailure("oops")
 
 if MatchFailure("oops") is MatchFailure(x) then x
 //│ = 'oops'
+
+class MatchResult(x, y, z)
+
+MatchResult(0)
+//│ = MatchResult { x: 0, y: undefined, z: undefined }
+
+pattern Cross = "X"
+
+Cross.unapply("X")
+//│ = MatchResult { captures: [] }
+
+Cross.unapply("0")
+//│ = MatchFailure { errors: undefined }
+
+:sjs
+fun foo(x) = x is Cross
+//│ JS:
+//│ function foo(...args) {
+//│   globalThis.Predef.checkArgs("foo", 1, true, args.length);
+//│   let x = args[0];
+//│   let matchResult;
+//│   matchResult = globalThis.Cross.unapply(x) ?? null;
+//│   if (matchResult instanceof globalThis.Predef.MatchResult.class) {
+//│     return true;
+//│   } else {
+//│     return false;
+//│   }
+//│ }
+//│ undefined
