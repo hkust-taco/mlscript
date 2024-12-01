@@ -43,17 +43,30 @@ object Elaborator:
     
     def withMembers(members: Iterable[Str -> MemberSymbol[?]], out: Opt[Symbol] = N): Ctx =
       copy(env = env ++ members.map:
-        case (nme, sym) => nme -> (
-          out orElse outer match
-          case S(outer) => Ctx.SelElem(outer, sym.nme, S(sym))
-          case N => sym: Ctx.Elem
-        )
+        case (nme, sym) =>
+          val elem = out orElse outer match
+            case S(outer) => Ctx.SelElem(outer, sym.nme, S(sym))
+            case N => sym: Ctx.Elem
+          sym match
+            case sym: BlockMemberSymbol =>
+              sym.trees.headOption match // TODO: Support module overloading
+                case S(td @ TermDef(Fun, _, _)) if td.rhs.isDefined && td.paramLists.isEmpty =>
+                  nme -> Ctx.GetElem(elem)
+                case _ => nme -> elem
+            case _ => sym.defn match
+              case S(TermDefinition(_, Fun, _, Nil, _, _, _, _)) => nme -> Ctx.GetElem(elem)
+              case _ => nme -> elem
       )
     
     def nest(outer: Opt[InnerSymbol]): Ctx = Ctx(outer, Some(this), Map.empty)
     
-    def get(name: Str): Opt[Ctx.Elem] =
-      env.get(name).orElse(parent.flatMap(_.get(name)))
+    private def getImpl(name: Str): Opt[Ctx.Elem] = env.get(name).orElse(parent.flatMap(_.getImpl(name)))
+    def isGetter(name: Str): Bool = getImpl(name) match
+      case S(_: Ctx.GetElem) => true
+      case _ => false
+    def get(name: Str): Opt[Ctx.Elem] = getImpl(name).map:
+      case Ctx.GetElem(base) => base
+      case elem => elem
     def getOuter: Opt[InnerSymbol] = outer.orElse(parent.flatMap(_.getOuter))
     
     // * Invariant: We expect that the top-level context only contain hard-coded symbols like `globalThis`
@@ -92,6 +105,10 @@ object Elaborator:
         Term.SynthSel(base.ref(Ident(base.nme)),
           new Tree.Ident(nme).withLocOf(id))(symOpt)
       def symbol = symOpt
+    final case class GetElem(val base: Elem) extends Elem:
+      def nme: Str = base.nme
+      def ref(id: Tree.Ident): Term = base.ref(id)
+      def symbol: Opt[Symbol] = base.symbol
     given Conversion[Symbol, Elem] = RefElem(_)
     val empty: Ctx = Ctx(N, N, Map.empty)
   

@@ -62,7 +62,9 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
       case N =>
         ts.id.name
     case ts: semantics.BlockMemberSymbol => // this means it's a locally-defined member
-      ts.nme
+      ts.defn match
+        case S(semantics.TermDefinition(_, syntax.Fun, _, Nil, _, _, _, _)) => doc"${ts.nme}()"
+        case _ => doc"${ts.nme}"
       // ts.trmTree
     case ts: semantics.InnerSymbol =>
       summon[Scope].findThis_!(ts)
@@ -112,7 +114,7 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
       val name = id.name
       doc"${result(qual)}${
         if JSBuilder.isValidFieldName(name)
-        then doc".$name"
+        then doc".$name${if Elaborator.ctx.isGetter(name) then "()" else ""}"
         else name.toIntOption match
           case S(index) => s"[$index]"
           case N => s"[${JSBuilder.makeStringLiteral(name)}]"
@@ -151,8 +153,7 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
             S(defn.sym).collectFirst{ case s: InnerSymbol => s }):
           defn match
           case FunDefn(sym, Nil, body) =>
-            val result = returningTerm(body)
-            doc"Object.defineProperty(this, '${sym.nme}', { #{  get: function() { ${result} } #} });"
+            doc"function ${sym.nme}() { #{  # ${this.body(body)} #}  # }"
           case FunDefn(sym, ps :: pss, bod) =>
             val result = pss.foldRight(bod):
               case (ps, block) => 
