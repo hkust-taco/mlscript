@@ -44,7 +44,7 @@ import Subst.subst
 
 
 class Lowering(using TL, Raise, Elaborator.State):
-
+  
   def returnedTerm(t: st)(using Subst): Block = term(t)(Ret)
   
   def term(t: st)(k: Result => Block)(using Subst): Block =
