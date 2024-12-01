@@ -1,7 +1,3 @@
-declare val Str
-declare val Error
-// ???
-
 module Predef with ...
 
 fun checkArgs(functionName, expected, got) =
