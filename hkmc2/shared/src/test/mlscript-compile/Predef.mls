@@ -7,7 +7,9 @@ fun not(x) = x is false
 
 fun (|>) pipe(x, f) = f(x)
 
-fun (|>.) call(receiver, f)(arg) = f.call(receiver, arg)
+fun (.) apply(receiver, f)(...args) = f(receiver, ...args)
+
+fun (|>.) call(receiver, f)(...args) = f.call(receiver, ...args)
 
 fun print(x) =
   console.log(String(x))
@@ -28,4 +30,7 @@ fun checkArgs(functionName, expected, isUB, got) =
     //   + (if isUB then "" else " at least")
     //   + " arguments but got " + got)
   else ()
+
+class Test with
+  val y = 1
 
