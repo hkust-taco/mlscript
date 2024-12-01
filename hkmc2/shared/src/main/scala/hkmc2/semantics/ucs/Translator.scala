@@ -28,7 +28,7 @@ object Translator:
 
 class Translator(tl: TraceLogger, val elaborator: Elaborator)
     (using raise: Raise, state: Elaborator.State, c: Elaborator.Ctx) extends DesugaringBase:
-  import tl.*, Translator.*, elaborator.term
+  import tl.*, Translator.*
 
   extension (split: Split)
     def ~~:(fallback: Split): Split =
@@ -72,17 +72,18 @@ class Translator(tl: TraceLogger, val elaborator: Elaborator)
   
   private def matchFailure() =
     app(matchFailureClass._1, tup(), FlowSymbol("result of `MatchFailure`"))
-
+  
+  private lazy val lteq = state.builtinOpsMap("<=")
+  private lazy val lt = state.builtinOpsMap("<")
+  private lazy val eq = state.builtinOpsMap("==")
+  
   private def makeRange(scrut: Scrut, lo: Literal, hi: Literal, rightInclusive: Bool, inner: Inner) =
     def scrutFld = fld(scrut())
-    val lhsOp = term(Ident("<="))
-    val test1 = app(lhsOp, tup(fld(Term.Lit(lo)), scrutFld), FlowSymbol("gtLo"))
-    val rhsOp = if rightInclusive then lhsOp else term(Ident("<"))
-    val test2 = app(rhsOp, tup(scrutFld, fld(Term.Lit(hi))), FlowSymbol("ltHi"))
-    plainTest(test1, "gtLo"):
-      plainTest(test2, "ltHi"):
-        inner(Map.empty)
-
+    val test1 = app(lteq.ref(), tup(fld(Term.Lit(lo)), scrutFld), "gtLo")
+    val upperOp = if rightInclusive then lteq else lt
+    val test2 = app(upperOp.ref(), tup(scrutFld, fld(Term.Lit(hi))), "ltHi")
+    plainTest(test1, "gtLo")(plainTest(test2, "ltHi")(inner(Map.empty)))
+  
   /** Generate a split that consumes the entire scrutinee. */
   private def full(scrut: Scrut, pat: Tree, inner: Inner): Sp = trace(
     pre = s"full <<< $pat", 
@@ -144,7 +145,7 @@ class Translator(tl: TraceLogger, val elaborator: Elaborator)
         error(ds.toSeq*)
         failure
       else
-        val emptyTest = app(term(Ident("==")), tup(fld(scrut()), fld(str(""))), FlowSymbol("test empty"))
+        val emptyTest = app(eq.ref(), tup(fld(scrut()), fld(str(""))), "test empty")
         val headTerm = callStringGet(scrut(), 0, "head")
         val tailTerm = callStringDrop(scrut(), 1, "tail")
         plainTest(emptyTest, "emptyTest")(failure) ~~:
