@@ -98,7 +98,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
                   case _ => output(s"$prefix= ${content}")
           case ReplHost.Empty =>
           case ReplHost.Unexecuted(message) => ???
-          case ReplHost.Error(isSyntaxError, message) =>
+          case ReplHost.Error(isSyntaxError, message, allOutputs) =>
             if (isSyntaxError) then
               // If there is a syntax error in the generated code,
               // it should be a code generation error.
@@ -108,6 +108,10 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
               // Otherwise, it is considered a simple runtime error.
               raise(ErrorReport(msg"${message}" -> N :: Nil,
                 source = Diagnostic.Source.Runtime))
+            if traceJS.isSet then
+              output("All outputs:")
+              allOutputs.splitSane('\n').foreach: line =>
+                output(s"> ${line}")
         if stderr.nonEmpty then output(s"// Standard Error:\n${stderr}")
       
       
