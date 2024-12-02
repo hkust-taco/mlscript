@@ -111,42 +111,16 @@ fun toInt(x) = if x is
 
 
 class Cls(a, b, c, d, e, f)
-fun id(x, y) =
+fun id(y) =
   if y ==
-    0 then x
-    else id(x, y - 1)
-id(Cls(
-  "aaaa",
-  "bbbb",
-  "cccc",
-  "dddd",
-  "eeee",
-  "ffff"
-), 2)
-//│ > CALL id(Cls {
-//│ >   a: 'aaaa',
-//│ >   b: 'bbbb',
-//│ >   c: 'cccc',
-//│ >   d: 'dddd',
-//│ >   e: 'eeee',
-//│ >   f: 'ffff'
-//│ > }, 2)
-//│ > | CALL id(Cls {
-//│ >     a: 'aaaa',
-//│ >     b: 'bbbb',
-//│ >     c: 'cccc',
-//│ >     d: 'dddd',
-//│ >     e: 'eeee',
-//│ >     f: 'ffff'
-//│ >   }, 1)
-//│ > | | CALL id(Cls {
-//│ >       a: 'aaaa',
-//│ >       b: 'bbbb',
-//│ >       c: 'cccc',
-//│ >       d: 'dddd',
-//│ >       e: 'eeee',
-//│ >       f: 'ffff'
-//│ >     }, 0)
+    0 then Cls("aaaa", "bbbb", "cccc", "dddd", "eeee", "ffff")
+    else
+      id(y - 1)
+      0
+id(2)
+//│ > CALL id(2)
+//│ > | CALL id(1)
+//│ > | | CALL id(0)
 //│ > | | => Cls {
 //│ >       a: 'aaaa',
 //│ >       b: 'bbbb',
@@ -155,27 +129,7 @@ id(Cls(
 //│ >       e: 'eeee',
 //│ >       f: 'ffff'
 //│ >     }
-//│ > | => Cls {
-//│ >     a: 'aaaa',
-//│ >     b: 'bbbb',
-//│ >     c: 'cccc',
-//│ >     d: 'dddd',
-//│ >     e: 'eeee',
-//│ >     f: 'ffff'
-//│ >   }
-//│ > => Cls {
-//│ >   a: 'aaaa',
-//│ >   b: 'bbbb',
-//│ >   c: 'cccc',
-//│ >   d: 'dddd',
-//│ >   e: 'eeee',
-//│ >   f: 'ffff'
-//│ > }
-//│ > Cls {
-//│ >   a: 'aaaa',
-//│ >   b: 'bbbb',
-//│ >   c: 'cccc',
-//│ >   d: 'dddd',
-//│ >   e: 'eeee',
-//│ >   f: 'ffff'
-//│ = }
+//│ > | => 0
+//│ > => 0
+//│ = 0
+
