@@ -10,7 +10,7 @@ fun fib(a) = if
 //│ function fib(a) {
 //│   let scrut, traceLogEnterMsg, traceLogPrevIndent, traceLogRes, traceLogRetMsg, traceLogParam_a, traceLogResInspected, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
 //│   traceLogParam_a = globalThis.util.inspect(a);
-//│   traceLogEnterMsg = globalThis.String.prototype.concat.call("calling: fib(", traceLogParam_a, ")");
+//│   traceLogEnterMsg = globalThis.String.prototype.concat.call("CALL fib(", traceLogParam_a, ")");
 //│   tmp = globalThis.Predef.TraceLogger.log(traceLogEnterMsg);
 //│   traceLogPrevIndent = globalThis.Predef.TraceLogger.indent();
 //│   scrut = a <= 1;
@@ -25,7 +25,7 @@ fun fib(a) = if
 //│   }
 //│   traceLogRes = tmp1;
 //│   traceLogResInspected = globalThis.util.inspect(traceLogRes);
-//│   traceLogRetMsg = globalThis.String.prototype.concat.call("return: ", traceLogResInspected);
+//│   traceLogRetMsg = globalThis.String.prototype.concat.call("=> ", traceLogResInspected);
 //│   tmp6 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent);
 //│   tmp7 = globalThis.Predef.TraceLogger.log(traceLogRetMsg);
 //│   return traceLogRes;
@@ -36,42 +36,42 @@ fun f(x) = g(x)
 fun g(x) = h(x)
 fun h(x) = fib(x)
 f(5)
-//│ > calling: f(5)
-//│ > | calling: g(5)
-//│ > | | calling: h(5)
-//│ > | | | calling: fib(5)
-//│ > | | | | calling: fib(4)
-//│ > | | | | | calling: fib(3)
-//│ > | | | | | | calling: fib(2)
-//│ > | | | | | | | calling: fib(1)
-//│ > | | | | | | | return: 1
-//│ > | | | | | | | calling: fib(0)
-//│ > | | | | | | | return: 0
-//│ > | | | | | | return: 1
-//│ > | | | | | | calling: fib(1)
-//│ > | | | | | | return: 1
-//│ > | | | | | return: 2
-//│ > | | | | | calling: fib(2)
-//│ > | | | | | | calling: fib(1)
-//│ > | | | | | | return: 1
-//│ > | | | | | | calling: fib(0)
-//│ > | | | | | | return: 0
-//│ > | | | | | return: 1
-//│ > | | | | return: 3
-//│ > | | | | calling: fib(3)
-//│ > | | | | | calling: fib(2)
-//│ > | | | | | | calling: fib(1)
-//│ > | | | | | | return: 1
-//│ > | | | | | | calling: fib(0)
-//│ > | | | | | | return: 0
-//│ > | | | | | return: 1
-//│ > | | | | | calling: fib(1)
-//│ > | | | | | return: 1
-//│ > | | | | return: 2
-//│ > | | | return: 5
-//│ > | | return: 5
-//│ > | return: 5
-//│ > return: 5
+//│ > CALL f(5)
+//│ > | CALL g(5)
+//│ > | | CALL h(5)
+//│ > | | | CALL fib(5)
+//│ > | | | | CALL fib(4)
+//│ > | | | | | CALL fib(3)
+//│ > | | | | | | CALL fib(2)
+//│ > | | | | | | | CALL fib(1)
+//│ > | | | | | | | => 1
+//│ > | | | | | | | CALL fib(0)
+//│ > | | | | | | | => 0
+//│ > | | | | | | => 1
+//│ > | | | | | | CALL fib(1)
+//│ > | | | | | | => 1
+//│ > | | | | | => 2
+//│ > | | | | | CALL fib(2)
+//│ > | | | | | | CALL fib(1)
+//│ > | | | | | | => 1
+//│ > | | | | | | CALL fib(0)
+//│ > | | | | | | => 0
+//│ > | | | | | => 1
+//│ > | | | | => 3
+//│ > | | | | CALL fib(3)
+//│ > | | | | | CALL fib(2)
+//│ > | | | | | | CALL fib(1)
+//│ > | | | | | | => 1
+//│ > | | | | | | CALL fib(0)
+//│ > | | | | | | => 0
+//│ > | | | | | => 1
+//│ > | | | | | CALL fib(1)
+//│ > | | | | | => 1
+//│ > | | | | => 2
+//│ > | | | => 5
+//│ > | | => 5
+//│ > | => 5
+//│ > => 5
 //│ = 5
 
 
@@ -87,26 +87,26 @@ fun toInt(x) = if x is
 
 
 (S(S(N()))).toString()
-//│ > calling: toString()
-//│ > | calling: toString()
-//│ > | | calling: toString()
-//│ > | | return: 'N: 0'
-//│ > | | calling: succ(N {})
-//│ > | | return: S { x: N {} }
-//│ > | | calling: toInt(S { x: N {} })
-//│ > | | | calling: toInt(N {})
-//│ > | | | return: 0
-//│ > | | return: 1
-//│ > | return: 'S(N: 0): 1'
-//│ > | calling: succ(S { x: N {} })
-//│ > | return: S { x: S { x: N {} } }
-//│ > | calling: toInt(S { x: S { x: N {} } })
-//│ > | | calling: toInt(S { x: N {} })
-//│ > | | | calling: toInt(N {})
-//│ > | | | return: 0
-//│ > | | return: 1
-//│ > | return: 2
-//│ > return: 'S(S(N: 0): 1): 2'
+//│ > CALL toString()
+//│ > | CALL toString()
+//│ > | | CALL toString()
+//│ > | | => 'N: 0'
+//│ > | | CALL succ(N {})
+//│ > | | => S { x: N {} }
+//│ > | | CALL toInt(S { x: N {} })
+//│ > | | | CALL toInt(N {})
+//│ > | | | => 0
+//│ > | | => 1
+//│ > | => 'S(N: 0): 1'
+//│ > | CALL succ(S { x: N {} })
+//│ > | => S { x: S { x: N {} } }
+//│ > | CALL toInt(S { x: S { x: N {} } })
+//│ > | | CALL toInt(S { x: N {} })
+//│ > | | | CALL toInt(N {})
+//│ > | | | => 0
+//│ > | | => 1
+//│ > | => 2
+//│ > => 'S(S(N: 0): 1): 2'
 //│ = 'S(S(N: 0): 1): 2'
 
 
@@ -123,7 +123,7 @@ id(Cls(
   "eeee",
   "ffff"
 ), 2)
-//│ > calling: id(Cls {
+//│ > CALL id(Cls {
 //│ >   a: 'aaaa',
 //│ >   b: 'bbbb',
 //│ >   c: 'cccc',
@@ -131,7 +131,7 @@ id(Cls(
 //│ >   e: 'eeee',
 //│ >   f: 'ffff'
 //│ > }, 2)
-//│ > | calling: id(Cls {
+//│ > | CALL id(Cls {
 //│ >     a: 'aaaa',
 //│ >     b: 'bbbb',
 //│ >     c: 'cccc',
@@ -139,7 +139,7 @@ id(Cls(
 //│ >     e: 'eeee',
 //│ >     f: 'ffff'
 //│ >   }, 1)
-//│ > | | calling: id(Cls {
+//│ > | | CALL id(Cls {
 //│ >       a: 'aaaa',
 //│ >       b: 'bbbb',
 //│ >       c: 'cccc',
@@ -147,7 +147,7 @@ id(Cls(
 //│ >       e: 'eeee',
 //│ >       f: 'ffff'
 //│ >     }, 0)
-//│ > | | return: Cls {
+//│ > | | => Cls {
 //│ >       a: 'aaaa',
 //│ >       b: 'bbbb',
 //│ >       c: 'cccc',
@@ -155,7 +155,7 @@ id(Cls(
 //│ >       e: 'eeee',
 //│ >       f: 'ffff'
 //│ >     }
-//│ > | return: Cls {
+//│ > | => Cls {
 //│ >     a: 'aaaa',
 //│ >     b: 'bbbb',
 //│ >     c: 'cccc',
@@ -163,7 +163,7 @@ id(Cls(
 //│ >     e: 'eeee',
 //│ >     f: 'ffff'
 //│ >   }
-//│ > return: Cls {
+//│ > => Cls {
 //│ >   a: 'aaaa',
 //│ >   b: 'bbbb',
 //│ >   c: 'cccc',

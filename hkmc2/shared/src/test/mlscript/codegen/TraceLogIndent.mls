@@ -24,20 +24,20 @@ h(3)
 
 :traceJS
 h(-2)
-//│ > calling: h(-2)
-//│ > | calling: g(-2)
-//│ > | | calling: g(-1)
-//│ > | | return: 42
-//│ > | return: 42
-//│ > return: 45
+//│ > CALL h(-2)
+//│ > | CALL g(-2)
+//│ > | | CALL g(-1)
+//│ > | | => 42
+//│ > | => 42
+//│ > => 45
 //│ = 45
 
 :traceJS
 f(1,1)(-2)
-//│ > calling: g(-2)
-//│ > | calling: g(-1)
-//│ > | return: 42
-//│ > return: 42
+//│ > CALL g(-2)
+//│ > | CALL g(-1)
+//│ > | => 42
+//│ > => 42
 //│ = 44
 
 :traceJS
@@ -56,27 +56,27 @@ f(1,2)(-3)
 //│ >  undefined
 //│ REPL> Sending: try { let tmp, tmp1; tmp = this.f(1, 2) ?? null; tmp1 = - 3; tmp(tmp1) ?? null } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
-//│ >  calling: g(-3)
-//│ >  | calling: g(-2)
-//│ >  | | calling: g(-1)
-//│ >  | | return: 42
-//│ >  | return: 42
-//│ >  return: 42
+//│ >  CALL g(-3)
+//│ >  | CALL g(-2)
+//│ >  | | CALL g(-1)
+//│ >  | | => 42
+//│ >  | => 42
+//│ >  => 42
 //│ >  45
 //│ REPL> Parsed:
-//│ >  calling: g(-3)
-//│ >  | calling: g(-2)
-//│ >  | | calling: g(-1)
-//│ >  | | return: 42
-//│ >  | return: 42
-//│ >  return: 42
+//│ >  CALL g(-3)
+//│ >  | CALL g(-2)
+//│ >  | | CALL g(-1)
+//│ >  | | => 42
+//│ >  | => 42
+//│ >  => 42
 //│ >  45
-//│ > calling: g(-3)
-//│ > | calling: g(-2)
-//│ > | | calling: g(-1)
-//│ > | | return: 42
-//│ > | return: 42
-//│ > return: 42
+//│ > CALL g(-3)
+//│ > | CALL g(-2)
+//│ > | | CALL g(-1)
+//│ > | | => 42
+//│ > | => 42
+//│ > => 42
 //│ = 45
 //│ REPL> Sending: globalThis.Predef.TraceLogger.enabled = false
 //│ REPL> Collected:

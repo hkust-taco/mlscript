@@ -420,7 +420,7 @@ trait LoweringTraceLog
     assignStmts(
       enterMsgSym -> Call(
         strConcatFn,
-        Arg(false, Value.Lit(Tree.StrLit(s"calling: ${name.getOrElse("[arrow function]")}("))) :: psSymArgs
+        Arg(false, Value.Lit(Tree.StrLit(s"CALL ${name.getOrElse("[arrow function]")}("))) :: psSymArgs
       ),
       TempSymbol(N) -> Call(traceLogFn, Arg(false, Value.Ref(enterMsgSym)) :: Nil),
       prevIndentLvlSym -> Call(traceLogIndentFn, Nil)
@@ -431,7 +431,7 @@ trait LoweringTraceLog
       resInspectedSym -> Call(inspectFn, Arg(false, Value.Ref(resSym)) :: Nil),
       retMsgSym -> Call(
         strConcatFn,
-        Arg(false, Value.Lit(Tree.StrLit("return: "))) :: Arg(false, Value.Ref(resInspectedSym)) :: Nil
+        Arg(false, Value.Lit(Tree.StrLit("=> "))) :: Arg(false, Value.Ref(resInspectedSym)) :: Nil
       ),
       TempSymbol(N) -> Call(traceLogResetFn, Arg(false, Value.Ref(prevIndentLvlSym)) :: Nil),
       TempSymbol(N) -> Call(traceLogFn, Arg(false, Value.Ref(retMsgSym)) :: Nil)
