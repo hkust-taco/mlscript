@@ -57,8 +57,6 @@ class Translator(val elaborator: Elaborator)
   
   private type PrefixInner = (CaptureMap, Scrut) => Split
   
-  import Branch as B, Pattern as P, Split as Sp
-  
   private def matchResult(captures: Term) =
     app(matchResultClass._1, tup(fld(captures)), FlowSymbol("result of `MatchResult`"))
   
@@ -87,9 +85,9 @@ class Translator(val elaborator: Elaborator)
     ds.nonEmpty
   
   /** Generate a split that consumes the entire scrutinee. */
-  private def full(scrut: Scrut, pat: Tree, inner: Inner)(using Raise): Sp = trace(
+  private def full(scrut: Scrut, pat: Tree, inner: Inner)(using Raise): Split = trace(
     pre = s"full <<< $pat", 
-    post = (split: Sp) => s"full >>> $split"
+    post = (split: Split) => s"full >>> $split"
   ):
     pat match
       case lhs or rhs => full(scrut, lhs, inner) ~~: full(scrut, rhs, inner)
@@ -100,7 +98,7 @@ class Translator(val elaborator: Elaborator)
       case (lo: Literal) to (_, hi: Literal) =>
         error(msg"Incompatible range types: ${lo.describe} to ${hi.describe}" -> pat.toLoc)
         failure
-      case lit: StrLit => B(scrut(), P.Lit(lit), inner(Map.empty)) ~: Sp.End
+      case lit: StrLit => Branch(scrut(), Pattern.Lit(lit), inner(Map.empty)) ~: Split.End
       case App(Ident("~"), Tup(prefix :: postfix :: Nil)) =>
         stringPrefix(scrut, prefix, (captures1, postfixScrut) =>
           full(postfixScrut, postfix, captures2 => inner(captures2 ++ captures1)))
@@ -108,9 +106,9 @@ class Translator(val elaborator: Elaborator)
         val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
         clsTrm.symbol.flatMap(_.asClsLike) match
         case S(cls: (ClassSymbol | ModuleSymbol)) =>
-          B(scrut(), P.ClassLike(cls, clsTrm, N, false)(ctor), inner(Map.empty)) ~: Sp.End
+          Branch(scrut(), Pattern.ClassLike(cls, clsTrm, N, false)(ctor), inner(Map.empty)) ~: Split.End
         case S(psym: PatternSymbol) =>
-          makeUnapplyBranch(scrut(), psym, inner(Map.empty))(Sp.End)
+          makeUnapplyBranch(scrut(), psym, inner(Map.empty))(Split.End)
         case _ =>
           error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
           errorSplit
@@ -119,9 +117,9 @@ class Translator(val elaborator: Elaborator)
         errorSplit
   
   /** Generate a split that consumes the prefix of the scrutinee. */
-  private def stringPrefix(scrut: Scrut, pat: Tree, inner: PrefixInner)(using Raise): Sp = trace(
+  private def stringPrefix(scrut: Scrut, pat: Tree, inner: PrefixInner)(using Raise): Split = trace(
     pre = s"stringPrefix <<< $pat", 
-    post = (split: Sp) => s"stringPrefix >>> $split"
+    post = (split: Split) => s"stringPrefix >>> $split"
   ):
     pat match
     case lhs or rhs => stringPrefix(scrut, lhs, inner) ~~: stringPrefix(scrut, rhs, inner)
@@ -134,8 +132,8 @@ class Translator(val elaborator: Elaborator)
           tempLet("tail", tailTerm): tailSym =>
             makeRange(() => headSym.ref(), lo, hi, incl, captures =>
               inner(Map.empty, () => tailSym.ref()))
-    case (lo: IntLit) to (incl, hi: IntLit) => Sp.End
-    case (lo: DecLit) to (incl, hi: DecLit) => Sp.End
+    case (lo: IntLit) to (incl, hi: IntLit) => Split.End
+    case (lo: DecLit) to (incl, hi: DecLit) => Split.End
     case (lo: Literal) to (_, hi: Literal) =>
       error(msg"Incompatible range types: ${lo.describe} to ${hi.describe}" -> pat.toLoc)
       errorSplit
@@ -156,7 +154,7 @@ class Translator(val elaborator: Elaborator)
       case S(psym: PatternSymbol) =>
         makeUnapplyStringPrefixBranch(scrut(), psym, postfixSym =>
           inner(Map.empty, () => postfixSym.ref())
-        )(Sp.End)
+        )(Split.End)
       case _ =>
         error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
         errorSplit
@@ -171,7 +169,7 @@ class Translator(val elaborator: Elaborator)
     val paramIndexMap = params.zipWithIndex.toMap
     captures => trace(
       pre = s"success <<< ${params.iterator.map(_.sym).mkString(", ")}", 
-      post = (split: Sp) => s"success >>> ${display(split)}"
+      post = (split: Split) => s"success >>> ${display(split)}"
     ):
       require(captures.forall(_._1 |> paramIndexMap.contains))
       if captures.size != params.size then
@@ -188,7 +186,7 @@ class Translator(val elaborator: Elaborator)
     val paramIndexMap = params.zipWithIndex.toMap
     (captures, postfixScrut) => trace(
       pre = s"prefixSuccess <<< ${params.iterator.map(_.sym).mkString(", ")}", 
-      post = (split: Sp) => s"prefixSuccess >>> ${display(split)}"
+      post = (split: Split) => s"prefixSuccess >>> ${display(split)}"
     ):
       require(captures.forall(_._1 |> paramIndexMap.contains))
       if captures.size != params.size then
@@ -240,7 +238,7 @@ class Translator(val elaborator: Elaborator)
       given Raise = Function.const(())
       val scrutSym = TermSymbol(ParamBind, N, Ident("topic"))
       stringPrefix(() => scrutSym.ref(), body, prefixSuccess(params)) match
-      case Sp.End => N
+      case Split.End => N
       case split =>
         val topmost = split ~~: failure
         log(s"Translated `unapplyStringPrefix`: ${display(topmost)}")
