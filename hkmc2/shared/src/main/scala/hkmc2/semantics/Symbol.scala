@@ -49,6 +49,9 @@ abstract class Symbol(using State) extends Located:
     case that: Symbol => uid === that.uid
     case _ => false
   override def hashCode: Int = uid.hashCode
+  
+  import scala.reflect.ClassTag
+  lazy val dbgStr = this.getClass().getSimpleName()
 
 end Symbol
 

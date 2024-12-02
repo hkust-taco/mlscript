@@ -14,6 +14,7 @@ enum Term extends Statement:
   case Builtin(id: Tree.Ident, nme: Str)
   case Ref(sym: Symbol)(val tree: Tree.Ident, val refNum: Int)
   case App(lhs: Term, rhs: Term)(val tree: Tree.App, val resSym: FlowSymbol)
+  case OrNull(t: Term)
   case TyApp(lhs: Term, targs: Ls[Term])
   case Sel(prefix: Term, nme: Tree.Ident)(val sym: Opt[FieldSymbol])
   case SynthSel(prefix: Term, nme: Tree.Ident)(val sym: Opt[FieldSymbol])

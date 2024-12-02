@@ -328,7 +328,13 @@ extends Importer:
                 msg"Only module parameters may receive module arguments (values)." -> 
                 arg.toLoc :: Nil
       
-      Term.App(lt, rt)(tree, sym)
+      val orNull = lt.symbol.fold(true):
+        case t: BlockMemberSymbol => t.trmImplTree.fold(true)(_.k != Fun)
+        case _ => true
+      
+      val appTerm = Term.App(lt, rt)(tree, sym)
+      if orNull then Term.OrNull(appTerm) else appTerm
+      
     case SynthSel(pre, nme) =>
       val preTrm = term(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
@@ -851,6 +857,47 @@ extends Importer:
       trav.changed = false
       go(s)
   
+  def isMLsFunction(sym: Symbol)(using c: Ctx): Bool = ???
+    // t match
+    //   case Ident(name) => c.get(name).isDefined
+    //   case Block(x) => isMLsFunction(x.last)
+    //   case SynthSel(prefix, name) => c.get(name.name).isDefined
+    //   case Sel(prefix, name) => c.get(name.name).isDefined
+    //   case _ => false
+      // case Empty() => ???
+      // case Error() => ???
+      // case IntLit(value) => ???
+      // case DecLit(value) => ???
+      // case StrLit(value) => ???
+      // case UnitLit(undefinedOrNull) => ???
+      // case BoolLit(value) => ???
+      // case OpBlock(items) => ???
+      // case LetLike(kw, lhs, rhs, body) => ???
+      // case Handle(lhs, cls, defs, body) => ???
+      // case Def(lhs, rhs) => ???
+      // case TermDef(k, head, rhs) => ???
+      // case TypeDef(_, _, _, _) => ???
+      // case Open(body) => ???
+      // case Modified(modifier, modLoc, body) => ???
+      // case Quoted(body) => ???
+      // case Unquoted(body) => ???
+      // case Tup(fields) => ???
+      // case TyTup(tys) => ???
+      // case App(lhs, rhs) => ???
+      // case Jux(lhs, rhs) => ???
+      // case Sel(prefix, name) => ???
+      // case InfixApp(lhs, kw, rhs) => ???
+      // case New(body) => ???
+      // case IfLike(kw, split) => ???
+      // case IfElse(cond, alt) => ???
+      // case Case(branches) => ???
+      // case Region(name, body) => ???
+      // case RegRef(reg, value) => ???
+      // case Effectful(eff, body) => ???
+      // case Spread(kw, kwLoc, body) => ???
+    
+    
+      
   object ModuleChecker:
     
     /** Checks if a term is a reference to a type parameter. */
