@@ -80,9 +80,3 @@ pattern BadRange = "yolo" ..= "swag"
 //│ ╟── String range bounds must have only one character.
 //│ ║  l.76: 	pattern BadRange = "yolo" ..= "swag"
 //│ ╙──      	                              ^^^^^^
-//│ ╔══[ERROR] String range bounds must have only one character.
-//│ ║  l.76: 	pattern BadRange = "yolo" ..= "swag"
-//│ ║        	                   ^^^^^^
-//│ ╟── String range bounds must have only one character.
-//│ ║  l.76: 	pattern BadRange = "yolo" ..= "swag"
-//│ ╙──      	                              ^^^^^^

@@ -5,23 +5,23 @@ pattern Rep0[A] = "" | A ~ Rep0[A]
 //│ ╔══[ERROR] Cannot use this identifier as an extractor
 //│ ║  l.4: 	pattern Rep0[A] = "" | A ~ Rep0[A]
 //│ ╙──     	                       ^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.4: 	pattern Rep0[A] = "" | A ~ Rep0[A]
-//│ ╙──     	                       ^
 
 :todo
 pattern Rep0(pattern A, B, C)(head) =
   "" | (A as head) ~ Rep0[A]
 //│ ╔══[ERROR] Multiple parameter lists are not supported for this definition.
-//│ ║  l.13: 	pattern Rep0(pattern A, B, C)(head) =
+//│ ║  l.10: 	pattern Rep0(pattern A, B, C)(head) =
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.14: 	  "" | (A as head) ~ Rep0[A]
+//│ ║  l.11: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ /!!!\ Uncaught error: scala.MatchError: TypeDef(Pat,Ident(A),None,None) (of class hkmc2.syntax.Tree$TypeDef)
 
 :todo // Pattern extractions via aliases.
 pattern Email(name, domain) =
   (Identifier as name) ~ "@" ~ (Identifier as domain)
+//│ ╔══[ERROR] Unrecognized pattern.
+//│ ║  l.21: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
+//│ ╙──      	   ^^^^^^^^^^^^^^^^^^
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
 
 :todo // View patterns

@@ -6,7 +6,7 @@ import mlscript.utils.*, shorthands.*
 import Message.MessageContext
 import Split.display, ucs.Normalization
 import syntax.{Fun, Keyword, Literal, ParamBind, Tree}, Tree.*, Keyword.`as`
-import scala.collection.mutable.Buffer
+import scala.collection.mutable.{Buffer, Set as MutSet}
 
 object Translator:
   /** A helper extractor for matching the tree of `x | y`. */
@@ -23,12 +23,18 @@ object Translator:
       case App(Ident("..="), Tup(lhs :: rhs :: Nil)) => S(lhs, (true, rhs))
       case App(Ident("..<"), Tup(lhs :: rhs :: Nil)) => S(lhs, (false, rhs))
       case _ => N
+      
+  private def error(msgs: (Message, Option[Loc])*)(using Raise): Unit =
+    raise(ErrorReport(msgs.toList))
+  
+  private def warn(msgs: (Message, Option[Loc])*)(using Raise): Unit =
+    raise(WarningReport(msgs.toList))
 
 /** This class translates a tree describing a pattern into functions that can
  *  perform pattern matching on terms described by the pattern.
  */
 class Translator(val elaborator: Elaborator)
-    (using raise: Raise, state: Elaborator.State, c: Elaborator.Ctx) extends DesugaringBase:
+    (using state: Elaborator.State, c: Elaborator.Ctx) extends DesugaringBase:
   import elaborator.tl.*, Translator.*
   
   extension (split: Split)
@@ -39,12 +45,6 @@ class Translator(val elaborator: Elaborator)
         case Split.Cons(head, tail) => Split.Cons(head, tail ~~: fallback)
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ~~: fallback)
         case Split.Else(_) /* impossible */ | Split.End => fallback)
-  
-  private def error(msgs: (Message, Option[Loc])*): Unit =
-    raise(ErrorReport(msgs.toList))
-  
-  private def warn(msgs: (Message, Option[Loc])*): Unit =
-    raise(WarningReport(msgs.toList))
   
   /** Each scrutinee is represented by a function that creates a reference to
    *  the scrutinee symbol. It is sufficient for current implementation.
@@ -76,26 +76,26 @@ class Translator(val elaborator: Elaborator)
     val test2 = app(upperOp.ref(), tup(scrutFld, fld(Term.Lit(hi))), "ltHi")
     plainTest(test1, "gtLo")(plainTest(test2, "ltHi")(inner(Map.empty)))
   
+  /** String range bounds must be single characters. */
+  private def isInvalidStringBounds(lo: StrLit, hi: StrLit)(using Raise): Bool =
+    val ds = Buffer.empty[(Message, Option[Loc])]
+    if lo.value.length != 1 then
+      ds += msg"String range bounds must have only one character." -> lo.toLoc
+    if hi.value.length != 1 then
+      ds += msg"String range bounds must have only one character." -> hi.toLoc
+    if ds.nonEmpty then error(ds.toSeq*)
+    ds.nonEmpty
+  
   /** Generate a split that consumes the entire scrutinee. */
-  private def full(scrut: Scrut, pat: Tree, inner: Inner): Sp = trace(
+  private def full(scrut: Scrut, pat: Tree, inner: Inner)(using Raise): Sp = trace(
     pre = s"full <<< $pat", 
     post = (split: Sp) => s"full >>> $split"
   ):
     pat match
       case lhs or rhs => full(scrut, lhs, inner) ~~: full(scrut, rhs, inner)
-      case (lo: StrLit) to (incl, hi: StrLit) =>
-        // String range bounds must be single characters.
-        val ds = Buffer.empty[(Message, Option[Loc])]
-        if lo.value.length != 1 then
-          ds += msg"String range bounds must have only one character." -> lo.toLoc
-        if hi.value.length != 1 then
-          ds += msg"String range bounds must have only one character." -> hi.toLoc
-        if ds.nonEmpty then
-          error(ds.toSeq*)
-          failure
-        else
-          makeRange(scrut, lo, hi, incl, inner)
-      case (lo: IntLit) to (incl, hi: IntLit) => makeRange(scrut, lo, hi, incl, inner)
+      case (lo: StrLit) to (incl, hi: StrLit) => if isInvalidStringBounds(lo, hi) then failure else
+        makeRange(scrut, lo, hi, incl, inner)
+      case (lo: IntLit) to (incl, hi: IntLit) => makeRange(scrut, lo, hi, incl, inner) 
       case (lo: DecLit) to (incl, hi: DecLit) => makeRange(scrut, lo, hi, incl, inner)
       case (lo: Literal) to (_, hi: Literal) =>
         error(msg"Incompatible range types: ${lo.describe} to ${hi.describe}" -> pat.toLoc)
@@ -113,37 +113,32 @@ class Translator(val elaborator: Elaborator)
           makeUnapplyBranch(scrut(), psym, inner(Map.empty))(Sp.End)
         case _ =>
           error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
-          failure
+          errorSplit
       case _ =>
         error(msg"Unrecognized pattern." -> pat.toLoc)
-        Sp.Else(Term.Error)
+        errorSplit
   
   /** Generate a split that consumes the prefix of the scrutinee. */
-  private def stringPrefix(scrut: Scrut, pat: Tree, inner: PrefixInner): Sp = trace(
+  private def stringPrefix(scrut: Scrut, pat: Tree, inner: PrefixInner)(using Raise): Sp = trace(
     pre = s"stringPrefix <<< $pat", 
     post = (split: Sp) => s"stringPrefix >>> $split"
   ):
     pat match
     case lhs or rhs => stringPrefix(scrut, lhs, inner) ~~: stringPrefix(scrut, rhs, inner)
-    case (lo: StrLit) to (incl, hi: StrLit) =>
-      // String range bounds must be single characters.
-      val ds = Buffer.empty[(Message, Option[Loc])]
-      if lo.value.length != 1 then
-        ds += msg"String range bounds must have only one character." -> lo.toLoc
-      if hi.value.length != 1 then
-        ds += msg"String range bounds must have only one character." -> hi.toLoc
-      if ds.nonEmpty then
-        error(ds.toSeq*)
-        failure
-      else
-        val emptyTest = app(eq.ref(), tup(fld(scrut()), fld(str(""))), "test empty")
-        val headTerm = callStringGet(scrut(), 0, "head")
-        val tailTerm = callStringDrop(scrut(), 1, "tail")
-        plainTest(emptyTest, "emptyTest")(failure) ~~:
-          tempLet("head", headTerm): headSym =>
-            tempLet("tail", tailTerm): tailSym =>
-              makeRange(() => headSym.ref(), lo, hi, incl, captures =>
-                inner(Map.empty, () => tailSym.ref()))
+    case (lo: StrLit) to (incl, hi: StrLit) => if isInvalidStringBounds(lo, hi) then failure else
+      val emptyTest = app(eq.ref(), tup(fld(scrut()), fld(str(""))), "test empty")
+      val headTerm = callStringGet(scrut(), 0, "head")
+      val tailTerm = callStringDrop(scrut(), 1, "tail")
+      plainTest(emptyTest, "emptyTest")(failure) ~~:
+        tempLet("head", headTerm): headSym =>
+          tempLet("tail", tailTerm): tailSym =>
+            makeRange(() => headSym.ref(), lo, hi, incl, captures =>
+              inner(Map.empty, () => tailSym.ref()))
+    case (lo: IntLit) to (incl, hi: IntLit) => Sp.End
+    case (lo: DecLit) to (incl, hi: DecLit) => Sp.End
+    case (lo: Literal) to (_, hi: Literal) =>
+      error(msg"Incompatible range types: ${lo.describe} to ${hi.describe}" -> pat.toLoc)
+      errorSplit
     case lit @ StrLit(value) =>
       plainTest(callStringStartsWith(scrut(), Term.Lit(lit), "startsWith")):
         tempLet("sliced", callStringDrop(scrut(), value.length, "sliced")): slicedSym =>
@@ -157,20 +152,22 @@ class Translator(val elaborator: Elaborator)
       case S(cls: (ClassSymbol | ModuleSymbol)) =>
         val kind = cls match { case _: ClassSymbol => "class" case _ => "module" }
         error(msg"Cannot treat this $kind as a string prefix" -> ctor.toLoc)
-        failure
+        errorSplit
       case S(psym: PatternSymbol) =>
         makeUnapplyStringPrefixBranch(scrut(), psym, postfixSym =>
           inner(Map.empty, () => postfixSym.ref())
         )(Sp.End)
       case _ =>
         error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
-        failure
-    case _ => Sp.End
+        errorSplit
+    case _ =>
+      error(msg"Unrecognized pattern." -> pat.toLoc)
+      errorSplit
   
   /** Create a function that compiles the resulting term of each case. It checks
    *  the captured references and sort them in the order of parameters.
    */
-  private def success(params: Ls[Param]): Inner =
+  private def success(params: Ls[Param])(using Raise): Inner =
     val paramIndexMap = params.zipWithIndex.toMap
     captures => trace(
       pre = s"success <<< ${params.iterator.map(_.sym).mkString(", ")}", 
@@ -187,7 +184,7 @@ class Translator(val elaborator: Elaborator)
         Split.Else(matchResult(Term.Tup(fields)(Tup(Nil))))
   
   /* The successful matching result used in prefix matching functions. */
-  private def prefixSuccess(params: Ls[Param]): PrefixInner =
+  private def prefixSuccess(params: Ls[Param])(using Raise): PrefixInner =
     val paramIndexMap = params.zipWithIndex.toMap
     (captures, postfixScrut) => trace(
       pre = s"prefixSuccess <<< ${params.iterator.map(_.sym).mkString(", ")}", 
@@ -207,8 +204,10 @@ class Translator(val elaborator: Elaborator)
   /** Failed matctching result. */
   private def failure: Split = Split.Else(matchFailure())
   
+  private def errorSplit: Split = Split.Else(Term.Error)
+  
   /** Create a function definition from the given UCS splits. */
-  private def makeMatcher(name: Str, scrut: TermSymbol, topmost: Split): TermDefinition =
+  private def makeMatcher(name: Str, scrut: TermSymbol, topmost: Split)(using Raise): TermDefinition =
     val normalize = new Normalization(elaborator.tl)
     val sym = BlockMemberSymbol(name, Nil)
     val ps = PlainParamList(Param(FldFlags.empty, scrut, N) :: Nil)
@@ -226,7 +225,7 @@ class Translator(val elaborator: Elaborator)
    *    values. If the given tree does not represent a string pattern, this
    *    function will not be generated.
    */
-  def apply(params: Ls[Param], body: Tree): Ls[TermDefinition] = trace(
+  def apply(params: Ls[Param], body: Tree)(using Raise): Ls[TermDefinition] = trace(
     pre = s"Translator <<< ${params.mkString(", ")} $body", 
     post = (blk: Ls[TermDefinition]) => s"Translator >>> $blk"
   ):
@@ -236,6 +235,9 @@ class Translator(val elaborator: Elaborator)
       log(s"Translated `unapply`: ${display(topmost)}")
       makeMatcher("unapply", scrutSym, topmost)
     val unapplyStringPrefix =
+      // We don't report errors here because they are already reported in the
+      // translation of `unapply` function.
+      given Raise = Function.const(())
       val scrutSym = TermSymbol(ParamBind, N, Ident("topic"))
       stringPrefix(() => scrutSym.ref(), body, prefixSuccess(params)) match
       case Sp.End => N
