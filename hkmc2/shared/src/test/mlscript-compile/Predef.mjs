@@ -7,7 +7,7 @@ const Predef$class = class Predef {
       indent() {
         let prev, tmp;
         prev = this.indentLvl;
-        tmp = this.indentLvl + 1;
+        tmp = prev + 1;
         this.indentLvl = tmp;
         return prev;
       } 
