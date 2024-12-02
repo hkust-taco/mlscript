@@ -407,8 +407,6 @@ class Desugarer(tl: TraceLogger, val elaborator: Elaborator)
           case ((lead, N), Spread(_, _, patOpt)) => (lead, S((patOpt, Nil)))
           case ((lead, N), pat) => (lead :+ pat, N)
           case ((lead, S((rest, last))), pat) => (lead, S((rest, last :+ pat)))
-        // Some helper functions. TODO: deduplicate
-        def getLast(i: Int) = TempSymbol(N, s"last$i")
         // `wrap`: add let bindings for tuple elements
         // `matches`: pairs of patterns and symbols to be elaborated
         val (wrapRest, restMatches) = rest match

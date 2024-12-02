@@ -48,14 +48,6 @@ class Translator(tl: TraceLogger, val elaborator: Elaborator)
     raise(WarningReport(msgs.toList))
 
 
-  private def decompose(tree: Tree): ::[Tree] = trace(
-    pre = s"decompose <<< $tree", 
-    post = (ms: ::[Tree]) => s"decompose >>> ${ms.mkString(", ")}"
-  ):
-    def go(tree: Tree, acc: Tree => ::[Tree]): () => ::[Tree] = tree match
-      case lhs or rhs => go(lhs, ::(_, go(rhs, acc)()))
-      case item       => () => acc(item)
-    go(tree, ::(_, Nil))()
 
   private type Scrut = () => Term.Ref
 
