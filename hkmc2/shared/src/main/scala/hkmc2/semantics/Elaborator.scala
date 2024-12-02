@@ -708,7 +708,7 @@ extends Importer:
           newCtx.nest(S(patSym)).givenIn:
             assert(body.isEmpty)
             log(s"pattern body is ${td.extension}")
-            val translate = new ucs.Translator(tl, this)
+            val translate = new ucs.Translator(this)
             val bod = translate(ps.map(_.params).getOrElse(Nil), td.extension.getOrElse(die))
             val pd = PatternDef(owner, patSym, tps, ps, ObjBody(Term.Blk(bod, Term.Lit(UnitLit(true)))))
             patSym.defn = S(pd)

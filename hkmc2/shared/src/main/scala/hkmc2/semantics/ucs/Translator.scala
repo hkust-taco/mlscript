@@ -2,63 +2,63 @@ package hkmc2
 package semantics
 package ucs
 
-import syntax.{Keyword, Tree}, Tree.*
 import mlscript.utils.*, shorthands.*
 import Message.MessageContext
-import utils.TraceLogger
-import syntax.Literal
-import Keyword.{as, and, `else`, is, let, `then`}
-import collection.mutable.HashMap
-import Elaborator.{ctx, Ctxl}
-import semantics.Split.display
-import semantics.ucs.Normalization
-import syntax.{Fun, Literal, ParamBind}
+import Split.display, ucs.Normalization
+import syntax.{Fun, Keyword, Literal, ParamBind, Tree}, Tree.*, Keyword.`as`
 import scala.collection.mutable.Buffer
 
 object Translator:
+  /** A helper extractor for matching the tree of `x | y`. */
   object or:
     infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match
       case App(Ident("|"), Tup(lhs :: rhs :: Nil)) => S(lhs, rhs)
       case _ => N
+  
+  /** A helper extractor for matching the tree of `x ..= y` and `x ..< y`.
+   *  The Boolean value indicates whether the range is inclusive.
+   */
   object to:
     infix def unapply(tree: Tree): Opt[(Tree, (Bool, Tree))] = tree match
       case App(Ident("..="), Tup(lhs :: rhs :: Nil)) => S(lhs, (true, rhs))
       case App(Ident("..<"), Tup(lhs :: rhs :: Nil)) => S(lhs, (false, rhs))
       case _ => N
 
-class Translator(tl: TraceLogger, val elaborator: Elaborator)
+/** This class translates a tree describing a pattern into functions that can
+ *  perform pattern matching on terms described by the pattern.
+ */
+class Translator(val elaborator: Elaborator)
     (using raise: Raise, state: Elaborator.State, c: Elaborator.Ctx) extends DesugaringBase:
-  import tl.*, Translator.*
-
+  import elaborator.tl.*, Translator.*
+  
   extension (split: Split)
-    def ~~:(fallback: Split): Split =
-      if fallback == Split.End then
-        split
-      else if split.isFull then
+    private def ~~:(fallback: Split): Split =
+      if fallback == Split.End || split.isFull then
         split
       else (split match
         case Split.Cons(head, tail) => Split.Cons(head, tail ~~: fallback)
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ~~: fallback)
         case Split.Else(_) /* impossible */ | Split.End => fallback)
-
+  
   private def error(msgs: (Message, Option[Loc])*): Unit =
     raise(ErrorReport(msgs.toList))
-
+  
   private def warn(msgs: (Message, Option[Loc])*): Unit =
     raise(WarningReport(msgs.toList))
-
-
-
+  
+  /** Each scrutinee is represented by a function that creates a reference to
+   *  the scrutinee symbol. It is sufficient for current implementation.
+   */
   private type Scrut = () => Term.Ref
-
+  
   private type CaptureMap = Map[Param, Term.Ref]
-
+  
   private type Inner = CaptureMap => Split
-
-  private type PostfixInner = (CaptureMap, Scrut) => Split
-
+  
+  private type PrefixInner = (CaptureMap, Scrut) => Split
+  
   import Branch as B, Pattern as P, Split as Sp
-
+  
   private def matchResult(captures: Term) =
     app(matchResultClass._1, tup(fld(captures)), FlowSymbol("result of `MatchResult`"))
   
@@ -98,7 +98,7 @@ class Translator(tl: TraceLogger, val elaborator: Elaborator)
       case (lo: IntLit) to (incl, hi: IntLit) => makeRange(scrut, lo, hi, incl, inner)
       case (lo: DecLit) to (incl, hi: DecLit) => makeRange(scrut, lo, hi, incl, inner)
       case (lo: Literal) to (_, hi: Literal) =>
-        raise(ErrorReport(msg"Incompatible range types: ${lo.describe} to ${hi.describe}" -> pat.toLoc :: Nil))
+        error(msg"Incompatible range types: ${lo.describe} to ${hi.describe}" -> pat.toLoc)
         failure
       case lit: StrLit => B(scrut(), P.Lit(lit), inner(Map.empty)) ~: Sp.End
       case App(Ident("~"), Tup(prefix :: postfix :: Nil)) =>
@@ -112,15 +112,14 @@ class Translator(tl: TraceLogger, val elaborator: Elaborator)
         case S(psym: PatternSymbol) =>
           makeUnapplyBranch(scrut(), psym, inner(Map.empty))(Sp.End)
         case _ =>
-          // Raise an error and discard `sequel`. Use `fallback` instead.
-          raise(ErrorReport(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc :: Nil))
+          error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
           failure
       case _ =>
-        raise(ErrorReport(msg"Unrecognized pattern." -> pat.toLoc :: Nil))
+        error(msg"Unrecognized pattern." -> pat.toLoc)
         Sp.Else(Term.Error)
-
+  
   /** Generate a split that consumes the prefix of the scrutinee. */
-  private def stringPrefix(scrut: Scrut, pat: Tree, inner: PostfixInner): Sp = trace(
+  private def stringPrefix(scrut: Scrut, pat: Tree, inner: PrefixInner): Sp = trace(
     pre = s"stringPrefix <<< $pat", 
     post = (split: Sp) => s"stringPrefix >>> $split"
   ):
@@ -145,31 +144,29 @@ class Translator(tl: TraceLogger, val elaborator: Elaborator)
             tempLet("tail", tailTerm): tailSym =>
               makeRange(() => headSym.ref(), lo, hi, incl, captures =>
                 inner(Map.empty, () => tailSym.ref()))
-    case lit: StrLit =>
-      val checkPrefix = callStringStartsWith(scrut(), Term.Lit(lit), "startsWith")
-      plainTest(checkPrefix):
-        val slicedTerm = callStringDrop(scrut(), lit.value.length, "sliced")
-        tempLet("sliced", slicedTerm): slicedSym =>
+    case lit @ StrLit(value) =>
+      plainTest(callStringStartsWith(scrut(), Term.Lit(lit), "startsWith")):
+        tempLet("sliced", callStringDrop(scrut(), value.length, "sliced")): slicedSym =>
           inner(Map.empty, () => slicedSym.ref())
     case App(Ident("~"), Tup(prefix :: postfix :: Nil)) =>
       stringPrefix(scrut, prefix, (captures1, postfixScrut1) =>
         stringPrefix(postfixScrut1, postfix, (captures2, postfixScrut2) =>
           inner(captures2 ++ captures1, postfixScrut2)))
     case ctor @ (_: Ident | _: Sel) =>
-      val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
-      clsTrm.symbol.flatMap(_.asClsLike) match
+      elaborator.cls(ctor, inAppPrefix = false).symbol.flatMap(_.asClsLike) match
       case S(cls: (ClassSymbol | ModuleSymbol)) =>
-        raise(ErrorReport(msg"Cannot match ${ctor.describe} as a string prefix" -> ctor.toLoc :: Nil))
+        val kind = cls match { case _: ClassSymbol => "class" case _ => "module" }
+        error(msg"Cannot treat this $kind as a string prefix" -> ctor.toLoc)
         failure
       case S(psym: PatternSymbol) =>
         makeUnapplyStringPrefixBranch(scrut(), psym, postfixSym =>
           inner(Map.empty, () => postfixSym.ref())
         )(Sp.End)
       case _ =>
-        raise(ErrorReport(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc :: Nil))
+        error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
         failure
     case _ => Sp.End
-
+  
   /** Create a function that compiles the resulting term of each case. It checks
    *  the captured references and sort them in the order of parameters.
    */
@@ -190,7 +187,7 @@ class Translator(tl: TraceLogger, val elaborator: Elaborator)
         Split.Else(matchResult(Term.Tup(fields)(Tup(Nil))))
   
   /* The successful matching result used in prefix matching functions. */
-  private def prefixSuccess(params: Ls[Param]): PostfixInner =
+  private def prefixSuccess(params: Ls[Param]): PrefixInner =
     val paramIndexMap = params.zipWithIndex.toMap
     (captures, postfixScrut) => trace(
       pre = s"prefixSuccess <<< ${params.iterator.map(_.sym).mkString(", ")}", 
@@ -206,37 +203,44 @@ class Translator(tl: TraceLogger, val elaborator: Elaborator)
           case (_, ref) => Fld(FldFlags.empty, ref, N)
         val head = Fld(FldFlags.empty, postfixScrut(), N)
         Split.Else(matchResult(Term.Tup(head :: fields)(Tup(Nil))))
-
+  
   /** Failed matctching result. */
   private def failure: Split = Split.Else(matchFailure())
-
-  /** Make a matcher function that takes a single scrutinee parameter. */
-  protected def makeMatcher(name: Str, scrut: TermSymbol, topmost: Split): TermDefinition =
-    val normalize = new Normalization(tl)
+  
+  /** Create a function definition from the given UCS splits. */
+  private def makeMatcher(name: Str, scrut: TermSymbol, topmost: Split): TermDefinition =
+    val normalize = new Normalization(elaborator.tl)
     val sym = BlockMemberSymbol(name, Nil)
     val ps = PlainParamList(Param(FldFlags.empty, scrut, N) :: Nil)
     val body = Term.IfLike(Keyword.`if`, topmost)(normalize(topmost))
     val res = FlowSymbol(s"result of $name")
     TermDefinition(N, Fun, sym, ps :: Nil, N, S(body), res, TermDefFlags.empty)
-
-  /** Compile a list of matching functions. */
-  def apply(params: Ls[Param], body: Tree): Ctxl[Ls[TermDefinition]] = trace(
+  
+  /** Translate a list of extractor/matching functions for the given pattern.
+   *  There are currently two functions: `unapply` and `unapplyStringPrefix`.
+   *  
+   *  - `unapply` is used for matching the entire scrutinee. It returns the
+   *    captured/extracted values.
+   *  - `unapplyStringPrefix` is used for matching the string prefix of the
+   *    scrutinee. It returns the remaining string and the captured/extracted
+   *    values. If the given tree does not represent a string pattern, this
+   *    function will not be generated.
+   */
+  def apply(params: Ls[Param], body: Tree): Ls[TermDefinition] = trace(
     pre = s"Translator <<< ${params.mkString(", ")} $body", 
     post = (blk: Ls[TermDefinition]) => s"Translator >>> $blk"
   ):
     val unapply =
-      val scrutId = Ident("scrut"): Ident
-      val scrutSym = TermSymbol(ParamBind, N, scrutId)
-      val topmost = full(() => scrutSym.ref(scrutId), body, success(params)) ~~: failure
-      log(s"Compiled `unapply`: ${display(topmost)}")
+      val scrutSym = TermSymbol(ParamBind, N, Ident("scrut"))
+      val topmost = full(() => scrutSym.ref(), body, success(params)) ~~: failure
+      log(s"Translated `unapply`: ${display(topmost)}")
       makeMatcher("unapply", scrutSym, topmost)
     val unapplyStringPrefix =
-      val scrutId = Ident("topic"): Ident
-      val scrutSym = TermSymbol(ParamBind, N, scrutId)
-      val topmost = stringPrefix(() => scrutSym.ref(), body, prefixSuccess(params)) ~~: failure
-      if topmost is Sp.End then
-        N
-      else
-        log(s"Compiled `unapplyStringPrefix`: ${display(topmost)}")
-        S(makeMatcher("unapplyStringPrefix", scrutSym, topmost))
+      val scrutSym = TermSymbol(ParamBind, N, Ident("topic"))
+      stringPrefix(() => scrutSym.ref(), body, prefixSuccess(params)) match
+      case Sp.End => N
+      case split =>
+        val topmost = split ~~: failure
+        log(s"Translated `unapplyStringPrefix`: ${display(topmost)}")
+        S(makeMatcher("unapplyStringPrefix", scrutSym, topmost ~~: failure))
     unapply :: unapplyStringPrefix.toList
