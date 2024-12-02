@@ -89,24 +89,22 @@ trait DesugaringBase(using state: Elaborator.State):
   /** Make a `Branch` that calls `Pattern` symbols' `unapply` functions. */
   def makeUnapplyBranch(
       scrut: => Term.Ref,
-      psym: PatternSymbol,
+      clsTerm: Term,
       inner: => Split,
       method: Str = "unapply"
   )(fallback: Split): Ctxl[Split] =
-    val func = sel(sel(globalThisSymbol.ref(), psym.nme, psym), method)
-    val call = app(func, tup(fld(scrut)), FlowSymbol(s"result of $method"))
+    val call = app(sel(clsTerm, method), tup(fld(scrut)), FlowSymbol(s"result of $method"))
     tempLet("matchResult", call): resultSymbol =>
       Branch(resultSymbol.ref(), matchResultPattern(N), inner) ~: fallback
 
   /** Make a `Branch` that calls `Pattern` symbols' `unapplyStringPrefix` functions. */
   def makeUnapplyStringPrefixBranch(
       scrut: => Term.Ref,
-      psym: PatternSymbol,
+      clsTerm: Term,
       inner: TempSymbol => Split,
       method: Str = "unapplyStringPrefix"
   )(fallback: Split): Ctxl[Split] =
-    val func = sel(sel(globalThisSymbol.ref(), psym.nme, psym), method)
-    val call = app(func, tup(fld(scrut)), FlowSymbol(s"result of $method"))
+    val call = app(sel(clsTerm, method), tup(fld(scrut)), FlowSymbol(s"result of $method"))
     tempLet("matchResult", call): resultSymbol =>
       val argSym = TempSymbol(N, "arg")
       Branch(

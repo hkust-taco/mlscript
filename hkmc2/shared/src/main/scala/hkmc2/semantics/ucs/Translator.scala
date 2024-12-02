@@ -108,7 +108,7 @@ class Translator(val elaborator: Elaborator)
         case S(cls: (ClassSymbol | ModuleSymbol)) =>
           Branch(scrut(), Pattern.ClassLike(cls, clsTrm, N, false)(ctor), inner(Map.empty)) ~: Split.End
         case S(psym: PatternSymbol) =>
-          makeUnapplyBranch(scrut(), psym, inner(Map.empty))(Split.End)
+          makeUnapplyBranch(scrut(), clsTrm, inner(Map.empty))(Split.End)
         case _ =>
           error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
           errorSplit
@@ -146,13 +146,14 @@ class Translator(val elaborator: Elaborator)
         stringPrefix(postfixScrut1, postfix, (captures2, postfixScrut2) =>
           inner(captures2 ++ captures1, postfixScrut2)))
     case ctor @ (_: Ident | _: Sel) =>
-      elaborator.cls(ctor, inAppPrefix = false).symbol.flatMap(_.asClsLike) match
+      val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
+      clsTrm.symbol.flatMap(_.asClsLike) match
       case S(cls: (ClassSymbol | ModuleSymbol)) =>
         val kind = cls match { case _: ClassSymbol => "class" case _ => "module" }
         error(msg"Cannot treat this $kind as a string prefix" -> ctor.toLoc)
         errorSplit
       case S(psym: PatternSymbol) =>
-        makeUnapplyStringPrefixBranch(scrut(), psym, postfixSym =>
+        makeUnapplyStringPrefixBranch(scrut(), clsTrm, postfixSym =>
           inner(Map.empty, () => postfixSym.ref())
         )(Split.End)
       case _ =>

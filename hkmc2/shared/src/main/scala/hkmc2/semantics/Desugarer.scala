@@ -390,7 +390,7 @@ class Desugarer(tl: TraceLogger, val elaborator: Elaborator)
             Branch(ref, Pattern.ClassLike(cls, clsTrm, N, false)(ctor), sequel(ctx)) ~: fallback
         case S(cls: ModuleSymbol) =>
           Branch(ref, Pattern.ClassLike(cls, clsTrm, N, false)(ctor), sequel(ctx)) ~: fallback
-        case S(psym: PatternSymbol) => makeUnapplyBranch(ref, psym, sequel(ctx))(fallback)
+        case S(psym: PatternSymbol) => makeUnapplyBranch(ref, clsTrm, sequel(ctx))(fallback)
         case N =>
           // Raise an error and discard `sequel`. Use `fallback` instead.
           raise(ErrorReport(msg"Cannot use this ${ctor.describe} as a pattern" -> ctor.toLoc :: Nil))
