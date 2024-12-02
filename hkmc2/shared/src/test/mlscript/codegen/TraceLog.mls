@@ -112,3 +112,74 @@ fun toInt(x) = if x is
 //│ > | return: 2
 //│ > return: 'S(S(N: 0): 1): 2'
 //│ = 'S(S(N: 0): 1): 2'
+
+
+class Cls(a, b, c, d, e, f)
+fun id(x, y) =
+  if y ==
+    0 then x
+    else id(x, y - 1)
+id(Cls(
+  "aaaa",
+  "bbbb",
+  "cccc",
+  "dddd",
+  "eeee",
+  "ffff"
+), 2)
+//│ > calling: id(Cls {
+//│ >   a: 'aaaa',
+//│ >   b: 'bbbb',
+//│ >   c: 'cccc',
+//│ >   d: 'dddd',
+//│ >   e: 'eeee',
+//│ >   f: 'ffff'
+//│ > }, 2)
+//│ > | calling: id(Cls {
+//│ >     a: 'aaaa',
+//│ >     b: 'bbbb',
+//│ >     c: 'cccc',
+//│ >     d: 'dddd',
+//│ >     e: 'eeee',
+//│ >     f: 'ffff'
+//│ >   }, 1)
+//│ > | | calling: id(Cls {
+//│ >       a: 'aaaa',
+//│ >       b: 'bbbb',
+//│ >       c: 'cccc',
+//│ >       d: 'dddd',
+//│ >       e: 'eeee',
+//│ >       f: 'ffff'
+//│ >     }, 0)
+//│ > | | return: Cls {
+//│ >       a: 'aaaa',
+//│ >       b: 'bbbb',
+//│ >       c: 'cccc',
+//│ >       d: 'dddd',
+//│ >       e: 'eeee',
+//│ >       f: 'ffff'
+//│ >     }
+//│ > | return: Cls {
+//│ >     a: 'aaaa',
+//│ >     b: 'bbbb',
+//│ >     c: 'cccc',
+//│ >     d: 'dddd',
+//│ >     e: 'eeee',
+//│ >     f: 'ffff'
+//│ >   }
+//│ > return: Cls {
+//│ >   a: 'aaaa',
+//│ >   b: 'bbbb',
+//│ >   c: 'cccc',
+//│ >   d: 'dddd',
+//│ >   e: 'eeee',
+//│ >   f: 'ffff'
+//│ > }
+//│ > Cls {
+//│ >   a: 'aaaa',
+//│ >   b: 'bbbb',
+//│ >   c: 'cccc',
+//│ >   d: 'dddd',
+//│ >   e: 'eeee',
+//│ >   f: 'ffff'
+//│ = }

@@ -38,7 +38,7 @@ module TraceLogger with
     set indentLvl = prev + 1
     prev
   fun resetIndent(n) = set indentLvl = n
-  fun log(msg) = console.log("| ".repeat(indentLvl) + msg)
+  fun log(msg) = console.log("| ".repeat(indentLvl) + msg.replaceAll("\n", "\n" + "  ".repeat(indentLvl)))
 
 class Test with
   val y = 1

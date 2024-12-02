@@ -16,10 +16,13 @@ const Predef$class = class Predef {
         return undefined;
       } 
       log(msg) {
-        let tmp, tmp1;
+        let tmp, tmp1, tmp2, tmp3, tmp4;
         tmp = "| ".repeat(this.indentLvl);
-        tmp1 = tmp + msg;
-        return console.log(tmp1);
+        tmp1 = "  ".repeat(this.indentLvl);
+        tmp2 = "\n" + tmp1;
+        tmp3 = msg.replaceAll("\n", tmp2);
+        tmp4 = tmp + tmp3;
+        return console.log(tmp4);
       }
       toString() { return "TraceLogger"; }
     };
