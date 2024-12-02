@@ -11,16 +11,16 @@ trait DesugaringBase(using state: Elaborator.State):
 
   import elaborator.tl.*, state.globalThisSymbol
 
-  protected transparent inline def sel(p: Term, k: Ident): Term.SynthSel = Term.SynthSel(p, k)(N)
-  protected transparent inline def sel(p: Term, k: Ident, s: FieldSymbol): Term.SynthSel = Term.SynthSel(p, k)(S(s))
-  protected transparent inline def sel(p: Term, k: Str): Term.SynthSel = sel(p, Ident(k): Ident)
-  protected transparent inline def sel(p: Term, k: Str, s: FieldSymbol): Term.SynthSel = sel(p, Ident(k): Ident, s)
-  protected transparent inline def int(i: Int) = Term.Lit(IntLit(BigInt(i)))
-  protected transparent inline def str(s: Str) = Term.Lit(StrLit(s))
-  protected transparent inline def fld(t: Term) = Fld(FldFlags.empty, t, N)
-  protected transparent inline def tup(xs: Fld*): Term.Tup = Term.Tup(xs.toList)(Tup(Nil))
-  protected transparent inline def app(l: Term, r: Term, label: Str): Term.App = app(l, r, FlowSymbol(label))
-  protected transparent inline def app(l: Term, r: Term, s: FlowSymbol): Term.App = Term.App(l, r)(App(Empty(), Empty()), s)
+  protected final def sel(p: Term, k: Ident): Term.SynthSel = Term.SynthSel(p, k)(N)
+  protected final def sel(p: Term, k: Ident, s: FieldSymbol): Term.SynthSel = Term.SynthSel(p, k)(S(s))
+  protected final def sel(p: Term, k: Str): Term.SynthSel = sel(p, Ident(k): Ident)
+  protected final def sel(p: Term, k: Str, s: FieldSymbol): Term.SynthSel = sel(p, Ident(k): Ident, s)
+  protected final def int(i: Int) = Term.Lit(IntLit(BigInt(i)))
+  protected final def str(s: Str) = Term.Lit(StrLit(s))
+  protected final def fld(t: Term) = Fld(FldFlags.empty, t, N)
+  protected final def tup(xs: Fld*): Term.Tup = Term.Tup(xs.toList)(Tup(Nil))
+  protected final def app(l: Term, r: Term, label: Str): Term.App = app(l, r, FlowSymbol(label))
+  protected final def app(l: Term, r: Term, s: FlowSymbol): Term.App = Term.App(l, r)(App(Empty(), Empty()), s)
 
   /** Get the class symbol defined in the `Predef` module. */
   protected def resolvePredefMember(name: Str): Ctxl[(Term.SynthSel, ClassSymbol)] =
@@ -49,7 +49,7 @@ trait DesugaringBase(using state: Elaborator.State):
     Pattern.ClassLike(classSym, classSel, parameters, false)(Empty())
 
   /** Create a term that selects a method in the `Predef` module. */
-  protected transparent inline def selectPredefMethod =
+  protected final def selectPredefMethod =
     sel(sel(globalThisSymbol.ref(), "Predef"), _: Str)
 
   protected lazy val tupleSlice = selectPredefMethod("tupleSlice")
@@ -59,30 +59,30 @@ trait DesugaringBase(using state: Elaborator.State):
   protected lazy val stringDrop = selectPredefMethod("stringDrop")
 
   /** Make a term that looks like `tupleGet(t, i)`. */
-  protected transparent inline def callTupleGet(t: Term, i: Int, label: Str): Ctxl[Term] =
+  protected final def callTupleGet(t: Term, i: Int, label: Str): Ctxl[Term] =
     callTupleGet(t, i, FlowSymbol(label))
 
   /** Make a term that looks like `tupleGet(t, i)`. */
-  protected transparent inline def callTupleGet(t: Term, i: Int, s: FlowSymbol): Ctxl[Term] =
+  protected final def callTupleGet(t: Term, i: Int, s: FlowSymbol): Ctxl[Term] =
     app(tupleGet, tup(fld(t), fld(int(i))), s)
 
   /** Make a term that looks like `stringStartsWith(t, p)`. */
-  protected transparent inline def callStringStartsWith(t: Term, p: Term, label: Str): Ctxl[Term] =
+  protected final def callStringStartsWith(t: Term, p: Term, label: Str): Ctxl[Term] =
     app(stringStartsWith, tup(fld(t), fld(p)), FlowSymbol(label))
 
   /** Make a term that looks like `stringStartsWith(t, i)`. */
-  protected transparent inline def callStringGet(t: Term, i: Int, label: Str): Ctxl[Term] =
+  protected final def callStringGet(t: Term, i: Int, label: Str): Ctxl[Term] =
     app(stringGet, tup(fld(t), fld(int(i))), FlowSymbol(label))
 
   /** Make a term that looks like `stringStartsWith(t, n)`. */
-  protected transparent inline def callStringDrop(t: Term, n: Int, label: Str): Ctxl[Term] =
+  protected final def callStringDrop(t: Term, n: Int, label: Str): Ctxl[Term] =
     app(stringDrop, tup(fld(t), fld(int(n))), FlowSymbol(label))
 
-  protected transparent inline def tempLet(dbgName: Str, term: Term)(inner: TempSymbol => Split): Split =
+  protected final def tempLet(dbgName: Str, term: Term)(inner: TempSymbol => Split): Split =
     val s = TempSymbol(N, dbgName)
     Split.Let(s, term, inner(s))
 
-  protected transparent inline def plainTest(cond: Term, dbgName: Str = "cond")(inner: => Split): Split =
+  protected final def plainTest(cond: Term, dbgName: Str = "cond")(inner: => Split): Split =
     val s = TempSymbol(N, dbgName)
     Split.Let(s, cond, Branch(s.ref(), inner) ~: Split.End)
 
