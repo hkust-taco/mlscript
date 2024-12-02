@@ -110,7 +110,15 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
                 source = Diagnostic.Source.Runtime))
         if stderr.nonEmpty then output(s"// Standard Error:\n${stderr}")
       
+      
+      if traceJS.isSet then
+        host.execute("globalThis.Predef.TraceLogger.enabled = true")
+        host.execute("globalThis.Predef.TraceLogger.resetIndent(0)")
+      
       mkQuery("", jsStr)
+      
+      if traceJS.isSet then
+        host.execute("globalThis.Predef.TraceLogger.enabled = false")
       
       import Elaborator.Ctx.*
       def definedValues = curCtx.env.iterator.flatMap:

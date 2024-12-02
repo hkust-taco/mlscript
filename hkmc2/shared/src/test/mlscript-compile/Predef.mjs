@@ -2,27 +2,44 @@ const Predef$class = class Predef {
   constructor() {
     const TraceLogger$class = class TraceLogger {
       constructor() {
+        this.enabled = false;
         this.indentLvl = 0;
       }
       indent() {
-        let prev, tmp;
-        prev = this.indentLvl;
-        tmp = prev + 1;
-        this.indentLvl = tmp;
-        return prev;
+        let scrut, prev, tmp;
+        scrut = this.enabled;
+        if (scrut) {
+          prev = this.indentLvl;
+          tmp = prev + 1;
+          this.indentLvl = tmp;
+          return prev;
+        } else {
+          return undefined;
+        }
       } 
       resetIndent(n) {
-        this.indentLvl = n;
-        return undefined;
+        let scrut;
+        scrut = this.enabled;
+        if (scrut) {
+          this.indentLvl = n;
+          return undefined;
+        } else {
+          return undefined;
+        }
       } 
       log(msg) {
-        let tmp, tmp1, tmp2, tmp3, tmp4;
-        tmp = "| ".repeat(this.indentLvl);
-        tmp1 = "  ".repeat(this.indentLvl);
-        tmp2 = "\n" + tmp1;
-        tmp3 = msg.replaceAll("\n", tmp2);
-        tmp4 = tmp + tmp3;
-        return console.log(tmp4);
+        let scrut, tmp, tmp1, tmp2, tmp3, tmp4;
+        scrut = this.enabled;
+        if (scrut) {
+          tmp = "| ".repeat(this.indentLvl);
+          tmp1 = "  ".repeat(this.indentLvl);
+          tmp2 = "\n" + tmp1;
+          tmp3 = msg.replaceAll("\n", tmp2);
+          tmp4 = tmp + tmp3;
+          return console.log(tmp4);
+        } else {
+          return undefined;
+        }
       }
       toString() { return "TraceLogger"; }
     };

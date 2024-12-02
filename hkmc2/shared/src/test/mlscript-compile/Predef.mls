@@ -32,13 +32,22 @@ fun checkArgs(functionName, expected, isUB, got) =
   else ()
 
 module TraceLogger with
+  mut val enabled = false
   mut val indentLvl = 0
   fun indent() =
-    let prev = indentLvl
-    set indentLvl = prev + 1
-    prev
-  fun resetIndent(n) = set indentLvl = n
-  fun log(msg) = console.log("| ".repeat(indentLvl) + msg.replaceAll("\n", "\n" + "  ".repeat(indentLvl)))
+    if enabled then
+      let prev = indentLvl
+      set indentLvl = prev + 1
+      prev
+    else ()
+  fun resetIndent(n) =
+    if enabled then
+      set indentLvl = n
+    else ()
+  fun log(msg) =
+    if enabled then
+      console.log("| ".repeat(indentLvl) + msg.replaceAll("\n", "\n" + "  ".repeat(indentLvl)))
+    else ()
 
 class Test with
   val y = 1
