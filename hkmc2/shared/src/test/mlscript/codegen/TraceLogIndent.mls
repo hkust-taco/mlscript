@@ -23,19 +23,19 @@ h(3)
 //│ ═══[RUNTIME ERROR] Error: Function 'plus' expected 2 arguments but got 1
 
 h(-2)
-//│ > calling: h(-2)
-//│ > | calling: g(-2)
-//│ > | | calling: g(-1)
-//│ > | | return: 42
-//│ > | return: 42
-//│ > return: 45
+//│ > | | | | | calling: h(-2)
+//│ > | | | | | | calling: g(-2)
+//│ > | | | | | | | calling: g(-1)
+//│ > | | | | | | | return: 42
+//│ > | | | | | | return: 42
+//│ > | | | | | return: 45
 //│ = 45
 
 f(1,1)(-2)
-//│ > calling: g(-2)
-//│ > | calling: g(-1)
-//│ > | return: 42
-//│ > return: 42
+//│ > | | | | | calling: g(-2)
+//│ > | | | | | | calling: g(-1)
+//│ > | | | | | | return: 42
+//│ > | | | | | return: 42
 //│ = 44
 
 :re
@@ -43,11 +43,11 @@ f(1,2)(3)
 //│ ═══[RUNTIME ERROR] Error: Function 'plus' expected 2 arguments but got 1
 
 f(1,2)(-3)
-//│ > calling: g(-3)
-//│ > | calling: g(-2)
-//│ > | | calling: g(-1)
-//│ > | | return: 42
-//│ > | return: 42
-//│ > return: 42
+//│ > | | | | | | | | | calling: g(-3)
+//│ > | | | | | | | | | | calling: g(-2)
+//│ > | | | | | | | | | | | calling: g(-1)
+//│ > | | | | | | | | | | | return: 42
+//│ > | | | | | | | | | | return: 42
+//│ > | | | | | | | | | return: 42
 //│ = 45
 
