@@ -6,8 +6,6 @@
 fun f(x, y) = x + y
 f(2, 3)
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 2, true, args.length);
 //│   let x = args[0];
@@ -24,19 +22,14 @@ f(2, 3)
 fun f2(x, y) = x + y
 f2(2)
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0);
-//│ function f2(x, y) {
-//│   return x + y;
-//│ }
-//│ this.f2(2)
+//│ function f2(x, y) { return x + y; } this.f2(2)
 //│ = NaN
 
 :sjs
 :re
 f(2)
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.f(2) ?? null
+//│ this.f(2) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
@@ -45,8 +38,7 @@ f(2)
 fun f(x)(y, z) = x + y + z
 f(3)(4)
 //│ JS:
-//│ let tmp, tmp1;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ let tmp;
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
@@ -54,13 +46,13 @@ f(3)(4)
 //│     globalThis.Predef.checkArgs("", 2, true, args1.length);
 //│     let y = args1[0];
 //│     let z = args1[1];
-//│     let tmp2;
-//│     tmp2 = x + y;
-//│     return tmp2 + z;
+//│     let tmp1;
+//│     tmp1 = x + y;
+//│     return tmp1 + z;
 //│   };
 //│ }
-//│ tmp1 = this.f(3) ?? null;
-//│ tmp1(4) ?? null
+//│ tmp = this.f(3) ?? null;
+//│ tmp(4) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
 
@@ -69,12 +61,7 @@ f(3)(4)
 :noSanityCheck
 let f = (x, y) => x + y in f(2)
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0);
-//│ this.f = (x, y) => {
-//│   return x + y;
-//│ };
-//│ this.f(2)
+//│ this.f = (x, y) => { return x + y; }; this.f(2)
 //│ = NaN
 
 :sjs
@@ -82,8 +69,6 @@ let f = (x, y) => x + y in f(2)
 let f = (x, y) => x + y
 f(2)
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ this.f = (...args) => {
 //│   globalThis.Predef.checkArgs("", 2, true, args.length);
 //│   let x = args[0];
@@ -102,8 +87,7 @@ class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 Cls(1, 2).f(3)
 //│ JS:
-//│ let tmp, tmp1;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0);
+//│ let tmp;
 //│ this.Cls = function Cls(x1, y1) { return new Cls.class(x1, y1); };
 //│ this.Cls.class = class Cls {
 //│   constructor(x, y) {
@@ -112,15 +96,15 @@ Cls(1, 2).f(3)
 //│     
 //│   }
 //│   f(z, p) {
-//│     let tmp2, tmp3;
-//│     tmp2 = this.x + this.y;
-//│     tmp3 = tmp2 + z;
-//│     return tmp3 + p;
+//│     let tmp1, tmp2;
+//│     tmp1 = this.x + this.y;
+//│     tmp2 = tmp1 + z;
+//│     return tmp2 + p;
 //│   }
 //│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
 //│ };
-//│ tmp1 = this.Cls(1, 2);
-//│ tmp1.f(3)
+//│ tmp = this.Cls(1, 2);
+//│ tmp.f(3)
 //│ = NaN
 
 :sjs
@@ -129,8 +113,7 @@ class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 Cls(1, 2).f(3)
 //│ JS:
-//│ let tmp, tmp1;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ let tmp;
 //│ this.Cls = function Cls(...args1) { return new Cls.class(...args1); };
 //│ this.Cls.class = class Cls {
 //│   constructor(x, y) {
@@ -142,15 +125,15 @@ Cls(1, 2).f(3)
 //│     globalThis.Predef.checkArgs("f", 2, true, args.length);
 //│     let z = args[0];
 //│     let p = args[1];
-//│     let tmp2, tmp3;
-//│     tmp2 = this.x + this.y;
-//│     tmp3 = tmp2 + z;
-//│     return tmp3 + p;
+//│     let tmp1, tmp2;
+//│     tmp1 = this.x + this.y;
+//│     tmp2 = tmp1 + z;
+//│     return tmp2 + p;
 //│   }
 //│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
 //│ };
-//│ tmp1 = this.Cls(1, 2) ?? null;
-//│ tmp1.f(3) ?? null
+//│ tmp = this.Cls(1, 2) ?? null;
+//│ tmp.f(3) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
@@ -160,8 +143,7 @@ class Cls(x, y) with
   fun f(z, p)(q, s) = x + y + z + p + q + s
 Cls(1, 2).f(3, 4)(5)
 //│ JS:
-//│ let tmp, tmp1, tmp2;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ let tmp, tmp1;
 //│ this.Cls = function Cls(...args1) { return new Cls.class(...args1); };
 //│ this.Cls.class = class Cls {
 //│   constructor(x, y) {
@@ -177,26 +159,26 @@ Cls(1, 2).f(3, 4)(5)
 //│       globalThis.Predef.checkArgs("", 2, true, args1.length);
 //│       let q = args1[0];
 //│       let s = args1[1];
-//│       let tmp3, tmp4, tmp5, tmp6;
-//│       tmp3 = this.x + this.y;
-//│       tmp4 = tmp3 + z;
-//│       tmp5 = tmp4 + p;
-//│       tmp6 = tmp5 + q;
-//│       return tmp6 + s;
+//│       let tmp2, tmp3, tmp4, tmp5;
+//│       tmp2 = this.x + this.y;
+//│       tmp3 = tmp2 + z;
+//│       tmp4 = tmp3 + p;
+//│       tmp5 = tmp4 + q;
+//│       return tmp5 + s;
 //│     };
 //│   }
 //│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
 //│ };
-//│ tmp1 = this.Cls(1, 2) ?? null;
-//│ tmp2 = tmp1.f(3, 4) ?? null;
-//│ tmp2(5) ?? null
+//│ tmp = this.Cls(1, 2) ?? null;
+//│ tmp1 = tmp.f(3, 4) ?? null;
+//│ tmp1(5) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
 
 :sjs
 console.log(1)
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.console.log(1) ?? null
+//│ this.console.log(1) ?? null
 //│ > 1
 
 
@@ -204,8 +186,7 @@ console.log(1)
 :sjs
 globalThis.x
 //│ JS:
-//│ let tmp, selRes;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ let selRes;
 //│ selRes = this.x;
 //│ if (selRes === undefined) {
 //│   throw new this.Error("Access to required field 'x' yielded 'undefined'");
@@ -218,7 +199,7 @@ globalThis.x
 :sjs
 globalThis.x()
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.x() ?? null
+//│ this.x() ?? null
 //│ ═══[RUNTIME ERROR] TypeError: this.x is not a function
 
 
@@ -233,8 +214,7 @@ if M.A(1).y is
   x and x == 1 then x
   else 0
 //│ JS:
-//│ let scrut, x, scrut1, tmp, tmp1, selRes, tmp2;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ let scrut, x, scrut1, tmp, selRes, tmp1;
 //│ const M$class = class M {
 //│   constructor() {
 //│     this.A = function A(...args1) { return new A.class(...args1); };
@@ -255,14 +235,14 @@ if M.A(1).y is
 //│ };
 //│ this.M = new M$class;
 //│ this.M.class = M$class;
-//│ tmp1 = this.M.A(1) ?? null;
-//│ selRes = tmp1.y;
+//│ tmp = this.M.A(1) ?? null;
+//│ selRes = tmp.y;
 //│ if (selRes === undefined) {
 //│   throw new this.Error("Access to required field 'y' yielded 'undefined'");
 //│ } else {
-//│   tmp2 = selRes;
+//│   tmp1 = selRes;
 //│ }
-//│ scrut = tmp2;
+//│ scrut = tmp1;
 //│ x = scrut;
 //│ scrut1 = x == 1;
 //│ if (scrut1) {
@@ -279,16 +259,15 @@ if M.A(1).y is
 M.A(1).y
   console.log()
 //│ JS:
-//│ let tmp, tmp1, selRes, tmp2;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
-//│ tmp1 = this.M.A(1) ?? null;
-//│ selRes = tmp1.y;
+//│ let tmp, selRes, tmp1;
+//│ tmp = this.M.A(1) ?? null;
+//│ selRes = tmp.y;
 //│ if (selRes === undefined) {
 //│   throw new this.Error("Access to required field 'y' yielded 'undefined'");
 //│ } else {
-//│   tmp2 = selRes;
+//│   tmp1 = selRes;
 //│ }
-//│ this.console.log(tmp2) ?? null
+//│ this.console.log(tmp1) ?? null
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
 
@@ -298,10 +277,7 @@ M.A(1).y
 M.A(1).y
   console.log()
 //│ JS:
-//│ let tmp, tmp1;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0);
-//│ tmp1 = this.M.A(1);
-//│ this.console.log(tmp1.y)
+//│ let tmp; tmp = this.M.A(1); this.console.log(tmp.y)
 //│ > undefined
 
 :noSanityCheck
@@ -317,19 +293,13 @@ M.A(2).y > 1
 :sjs
 M.A(1).g(0)
 //│ JS:
-//│ let tmp, tmp1;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
-//│ tmp1 = this.M.A(1) ?? null;
-//│ tmp1.g(0) ?? null
-//│ ═══[RUNTIME ERROR] TypeError: tmp1.g is not a function
+//│ let tmp; tmp = this.M.A(1) ?? null; tmp.g(0) ?? null
+//│ ═══[RUNTIME ERROR] TypeError: tmp.g is not a function
 
 
 
 :sjs
 M.A(1).f(0)
 //│ JS:
-//│ let tmp, tmp1;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
-//│ tmp1 = this.M.A(1) ?? null;
-//│ tmp1.f(0) ?? null
+//│ let tmp; tmp = this.M.A(1) ?? null; tmp.f(0) ?? null
 //│ = 1

@@ -19,7 +19,7 @@ foo(0, ...a)
 :sjs
 foo(1, ...[2, 3], 4)
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.foo(1, ...[ 2, 3 ], 4) ?? null
+//│ this.foo(1, ...[ 2, 3 ], 4) ?? null
 //│ = [ 1, 2, 3, 4 ]
 
 :re

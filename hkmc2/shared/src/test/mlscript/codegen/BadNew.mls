@@ -16,8 +16,6 @@ new 2
 new 2 + 2
 //│ ═══[COMPILATION ERROR] Illegal reference to builtin symbol '+'
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ new (()=>{throw globalThis.Error("Illegal reference to builtin symbol '+'")})()(2, 2)
 //│ ═══[RUNTIME ERROR] TypeError: (intermediate value) is not a constructor
 
@@ -42,7 +40,7 @@ new { x = 1 }
 //│     lhs = Ident of "x"
 //│     rhs = IntLit of 1
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.38: 	new { x = 1 }
+//│ ║  l.36: 	new { x = 1 }
 //│ ╙──      	      ^
 
 

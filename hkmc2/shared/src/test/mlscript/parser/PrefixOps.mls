@@ -19,11 +19,7 @@
 //│ ║  l.15: 	1
 //│ ╙──      	^
 //│ JS:
-//│ let tmp, tmp1, tmp2;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
-//│ tmp1 = + 2;
-//│ tmp2 = + 3;
-//│ tmp2
+//│ let tmp, tmp1; tmp = + 2; tmp1 = + 3; tmp1
 //│ = 3
 
 :w
@@ -33,10 +29,10 @@
 * 2
 * 3
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.33: 	* 2
+//│ ║  l.29: 	* 2
 //│ ╙──      	  ^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.32: 	1
+//│ ║  l.28: 	1
 //│ ╙──      	^
 //│ ═══[COMPILATION ERROR] Illegal reference to builtin symbol '*'
 //│ ═══[RUNTIME ERROR] Error: Illegal reference to builtin symbol '*'
@@ -47,8 +43,6 @@
 +
 //│ ═══[COMPILATION ERROR] Illegal reference to builtin symbol '+'
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ (()=>{throw globalThis.Error("Illegal reference to builtin symbol '+'")})()
 //│ ═══[RUNTIME ERROR] Error: Illegal reference to builtin symbol '+'
 
@@ -66,7 +60,7 @@
 //│ IntLit of 1
 //│ Ident of "*"
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.63: 	1
+//│ ║  l.57: 	1
 //│ ╙──      	^
 //│ ═══[COMPILATION ERROR] Illegal reference to builtin symbol '*'
 //│ ═══[RUNTIME ERROR] Error: Illegal reference to builtin symbol '*'
@@ -96,7 +90,7 @@ fun (??) foo(x, y) = x + y
 :pe
 ?? 1
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.97: 	?? 1
+//│ ║  l.91: 	?? 1
 //│ ╙──      	   ^
 //│ = [Function: foo]
 
@@ -105,11 +99,11 @@ fun (??) foo(x, y) = x + y
 1
 ?? 2
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.106: 	?? 2
+//│ ║  l.100: 	?? 2
 //│ ╙──       	   ^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.105: 	1
-//│ ╙──       	^
+//│ ║  l.99: 	1
+//│ ╙──      	^
 //│ = [Function: foo]
 
 :fixme

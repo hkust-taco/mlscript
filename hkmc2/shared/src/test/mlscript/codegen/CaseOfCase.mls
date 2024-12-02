@@ -18,25 +18,23 @@ fun test(x) =
     Some(v) then log(v)
     None then log("none")
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function test(...args) {
 //│   globalThis.Predef.checkArgs("test", 1, true, args.length);
 //│   let x = args[0];
-//│   let param0, v, scrut, param01, v1, tmp1, tmp2;
+//│   let param0, v, scrut, param01, v1, tmp, tmp1;
 //│   if (x instanceof globalThis.Some.class) {
 //│     param0 = x.value;
 //│     v = param0;
-//│     tmp1 = v + 1;
-//│     tmp2 = globalThis.Some(tmp1) ?? null;
+//│     tmp = v + 1;
+//│     tmp1 = globalThis.Some(tmp) ?? null;
 //│   } else {
 //│     if (x instanceof globalThis.None.class) {
-//│       tmp2 = globalThis.None;
+//│       tmp1 = globalThis.None;
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }
 //│   }
-//│   scrut = tmp2;
+//│   scrut = tmp1;
 //│   if (scrut instanceof globalThis.Some.class) {
 //│     param01 = scrut.value;
 //│     v1 = param01;

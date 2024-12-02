@@ -6,8 +6,6 @@ module Test with
   val x = 12
   fun foo() = Test.x
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ const Test$class = class Test {
 //│   constructor() {
 //│     this.x = 12;
@@ -31,13 +29,13 @@ module Test with
 :sjs
 Test.foo()
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.Test.foo() ?? null
+//│ this.Test.foo() ?? null
 //│ = 12
 
 :sjs
 val Test = "oops"
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.Test = "oops"; undefined
+//│ this.Test = "oops"; undefined
 //│ Test = 'oops'
 
 :fixme
@@ -52,8 +50,6 @@ let f = () => x
 let x = 2
 f()
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ this.x = 1;
 //│ this.f = (...args) => {
 //│   globalThis.Predef.checkArgs("", 0, true, args.length);
@@ -71,8 +67,6 @@ module Test with
   val x = 1
   let x = 2
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ const Test$class = class Test {
 //│   #x;
 //│   constructor() {

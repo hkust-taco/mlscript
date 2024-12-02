@@ -9,7 +9,7 @@ module Foo with
 :sjs
 open Foo { x }
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; undefined
+//│ undefined
 
 open Foo { x, y }
 

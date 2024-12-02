@@ -8,8 +8,6 @@ x =>
   let y = x
   y
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ (...args) => {
 //│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let x = args[0];

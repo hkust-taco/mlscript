@@ -12,8 +12,7 @@ object None
 :sjs
 if Some(0) is Some(x) then x
 //│ JS:
-//│ let scrut, param0, x, tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ let scrut, param0, x;
 //│ scrut = this.Some(0) ?? null;
 //│ if (scrut instanceof this.Some.class) {
 //│   param0 = scrut.value;
@@ -32,8 +31,7 @@ let s = Some(0)
 if s is
   Some(x) then x
 //│ JS:
-//│ let scrut, param0, x, tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ let scrut, param0, x;
 //│ scrut = this.s;
 //│ if (scrut instanceof this.Some.class) {
 //│   param0 = scrut.value;
@@ -63,8 +61,6 @@ if s is
 :sjs
 x => if x is Some(x) then x
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ (...args) => {
 //│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let x = args[0];
@@ -126,8 +122,6 @@ fun f(x) = if x is
   None then "ok"
   else log("oops")
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
@@ -172,8 +166,6 @@ fun f(x) = if x is
   Some(u) then u
   Pair(a, b) then a + b
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
@@ -210,27 +202,25 @@ fun f(x) = log of if x is
   None then "ok"
   else "oops"
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
-//│   let param0, tmp1;
+//│   let param0, tmp;
 //│   if (x instanceof globalThis.Some.class) {
 //│     param0 = x.value;
 //│     if (param0 === 0) {
-//│       tmp1 = "0";
+//│       tmp = "0";
 //│     } else {
-//│       tmp1 = "oops";
+//│       tmp = "oops";
 //│     }
 //│   } else {
 //│     if (x instanceof globalThis.None.class) {
-//│       tmp1 = "ok";
+//│       tmp = "ok";
 //│     } else {
-//│       tmp1 = "oops";
+//│       tmp = "oops";
 //│     }
 //│   }
-//│   return globalThis.log(tmp1) ?? null;
+//│   return globalThis.log(tmp) ?? null;
 //│ }
 //│ undefined
 

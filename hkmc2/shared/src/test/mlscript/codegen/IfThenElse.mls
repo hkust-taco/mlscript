@@ -12,8 +12,6 @@ if true then 1 else 0
 :sjs
 let f = x => if x then log("ok") else log("ko")
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ this.f = (...args) => {
 //│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let x = args[0];
@@ -36,19 +34,17 @@ f(false)
 :sjs
 let f = x => log((if x then "ok" else "ko") + "!")
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ this.f = (...args) => {
 //│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let x = args[0];
-//│   let tmp1, tmp2;
+//│   let tmp, tmp1;
 //│   if (x) {
-//│     tmp1 = "ok";
+//│     tmp = "ok";
 //│   } else {
-//│     tmp1 = "ko";
+//│     tmp = "ko";
 //│   }
-//│   tmp2 = tmp1 + "!";
-//│   return this.log(tmp2) ?? null;
+//│   tmp1 = tmp + "!";
+//│   return this.log(tmp1) ?? null;
 //│ };
 //│ undefined
 //│ f = [Function (anonymous)]
@@ -56,23 +52,21 @@ let f = x => log((if x then "ok" else "ko") + "!")
 :sjs
 let f = x => log((if x and x then "ok" else "ko") + "!")
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ this.f = (...args) => {
 //│   globalThis.Predef.checkArgs("", 1, true, args.length);
 //│   let x = args[0];
-//│   let tmp1, tmp2;
+//│   let tmp, tmp1;
 //│   if (x) {
 //│     if (x) {
-//│       tmp1 = "ok";
+//│       tmp = "ok";
 //│     } else {
-//│       tmp1 = "ko";
+//│       tmp = "ko";
 //│     }
 //│   } else {
-//│     tmp1 = "ko";
+//│     tmp = "ko";
 //│   }
-//│   tmp2 = tmp1 + "!";
-//│   return this.log(tmp2) ?? null;
+//│   tmp1 = tmp + "!";
+//│   return this.log(tmp1) ?? null;
 //│ };
 //│ undefined
 //│ f = [Function (anonymous)]

@@ -24,7 +24,7 @@ open Foo { y }
 :sjs
 y
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.Foo.y
+//│ this.Foo.y
 
 
 val Oops = "oops"

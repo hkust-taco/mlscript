@@ -9,8 +9,6 @@
 
 class Foo()
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ this.Foo = function Foo(...args) { return new Foo.class(...args); };
 //│ this.Foo.class = class Foo {
 //│   constructor() {
@@ -22,18 +20,17 @@ class Foo()
 
 Foo
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.Foo
+//│ this.Foo
 //│ = [Function: Foo] { class: [class Foo] }
 
 Foo()
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.Foo() ?? null
+//│ this.Foo() ?? null
 //│ = Foo {}
 
 Foo.class
 //│ JS:
-//│ let tmp, selRes;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ let selRes;
 //│ selRes = this.Foo.class;
 //│ if (selRes === undefined) {
 //│   throw new this.Error("Access to required field 'class' yielded 'undefined'");
@@ -45,8 +42,6 @@ Foo.class
 
 class Foo(a)
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ this.Foo = function Foo(...args) { return new Foo.class(...args); };
 //│ this.Foo.class = class Foo {
 //│   constructor(a) {
@@ -59,20 +54,19 @@ class Foo(a)
 
 Foo
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.Foo
+//│ this.Foo
 //│ = [Function: Foo] { class: [class Foo] }
 
 Foo(1)
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.Foo(1) ?? null
+//│ this.Foo(1) ?? null
 //│ = Foo { a: 1 }
 
 Foo(1).a
 //│ JS:
-//│ let tmp, tmp1, selRes;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
-//│ tmp1 = this.Foo(1) ?? null;
-//│ selRes = tmp1.a;
+//│ let tmp, selRes;
+//│ tmp = this.Foo(1) ?? null;
+//│ selRes = tmp.a;
 //│ if (selRes === undefined) {
 //│   throw new this.Error("Access to required field 'a' yielded 'undefined'");
 //│ } else {
@@ -83,8 +77,6 @@ Foo(1).a
 fun foo(y) = Foo(y)
 foo(27)
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function foo(...args) {
 //│   globalThis.Predef.checkArgs("foo", 1, true, args.length);
 //│   let y = args[0];
@@ -96,8 +88,6 @@ foo(27)
 
 class Foo(a, b)
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ this.Foo = function Foo(...args) { return new Foo.class(...args); };
 //│ this.Foo.class = class Foo {
 //│   constructor(a, b) {
@@ -111,31 +101,22 @@ class Foo(a, b)
 
 let foo = Foo
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.foo = this.Foo; undefined
+//│ this.foo = this.Foo; undefined
 //│ foo = [Function: Foo] { class: [class Foo] }
 
 let f = foo(1, 2)
 //│ JS:
-//│ let tmp, tmp1;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
-//│ tmp1 = this.foo(1, 2) ?? null;
-//│ this.f = tmp1;
-//│ undefined
+//│ let tmp; tmp = this.foo(1, 2) ?? null; this.f = tmp; undefined
 //│ f = Foo { a: 1, b: 2 }
 
 let f = new foo(1, 2)
 //│ JS:
-//│ let tmp, tmp1;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
-//│ tmp1 = new this.foo(1, 2);
-//│ this.f = tmp1;
-//│ undefined
+//│ let tmp; tmp = new this.foo(1, 2); this.f = tmp; undefined
 //│ f = Foo { a: 1, b: 2 }
 
 f.a
 //│ JS:
-//│ let tmp, selRes;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ let selRes;
 //│ selRes = this.f.a;
 //│ if (selRes === undefined) {
 //│   throw new this.Error("Access to required field 'a' yielded 'undefined'");
@@ -146,8 +127,7 @@ f.a
 
 f.b
 //│ JS:
-//│ let tmp, selRes;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ let selRes;
 //│ selRes = this.f.b;
 //│ if (selRes === undefined) {
 //│   throw new this.Error("Access to required field 'b' yielded 'undefined'");
@@ -158,17 +138,12 @@ f.b
 
 let f = Foo(1, 2)
 //│ JS:
-//│ let tmp, tmp1;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
-//│ tmp1 = this.Foo(1, 2) ?? null;
-//│ this.f = tmp1;
-//│ undefined
+//│ let tmp; tmp = this.Foo(1, 2) ?? null; this.f = tmp; undefined
 //│ f = Foo { a: 1, b: 2 }
 
 f.a
 //│ JS:
-//│ let tmp, selRes;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ let selRes;
 //│ selRes = this.f.a;
 //│ if (selRes === undefined) {
 //│   throw new this.Error("Access to required field 'a' yielded 'undefined'");
@@ -179,8 +154,7 @@ f.a
 
 f.b
 //│ JS:
-//│ let tmp, selRes;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ let selRes;
 //│ selRes = this.f.b;
 //│ if (selRes === undefined) {
 //│   throw new this.Error("Access to required field 'b' yielded 'undefined'");
@@ -191,11 +165,7 @@ f.b
 
 Foo(log(1), log(2))
 //│ JS:
-//│ let tmp, tmp1, tmp2;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
-//│ tmp1 = this.log(1) ?? null;
-//│ tmp2 = this.log(2) ?? null;
-//│ this.Foo(tmp1, tmp2) ?? null
+//│ let tmp, tmp1; tmp = this.log(1) ?? null; tmp1 = this.log(2) ?? null; this.Foo(tmp, tmp1) ?? null
 //│ > 1
 //│ > 2
 //│ = Foo { a: null, b: null }
@@ -205,8 +175,6 @@ class Inner(c) with
   fun i1(d) = c + d
   log(c)
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ this.Inner = function Inner(...args1) { return new Inner.class(...args1); };
 //│ this.Inner.class = class Inner {
 //│   constructor(c) {
@@ -224,17 +192,13 @@ class Inner(c) with
 
 let i = new Inner(100)
 //│ JS:
-//│ let tmp, tmp1;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
-//│ tmp1 = new this.Inner.class(100);
-//│ this.i = tmp1;
-//│ undefined
+//│ let tmp; tmp = new this.Inner.class(100); this.i = tmp; undefined
 //│ > 100
 //│ i = Inner { c: 100 }
 
 i.i1(20)
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.i.i1(20) ?? null
+//│ this.i.i1(20) ?? null
 //│ = 120
 
 

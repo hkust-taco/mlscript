@@ -18,7 +18,7 @@ let n = 42
 :sjs
 n / 2
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.n / 2
+//│ this.n / 2
 //│ = 21
 
 
@@ -29,8 +29,6 @@ open Example
 :sjs
 inc / 2
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ Example.funnySlash(Example.inc, 2) ?? null
 //│ = 3
 
@@ -38,7 +36,7 @@ inc / 2
 :re
 n / 2
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; Example.funnySlash(this.n, 2) ?? null
+//│ Example.funnySlash(this.n, 2) ?? null
 //│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
 funnySlash(inc, 123)

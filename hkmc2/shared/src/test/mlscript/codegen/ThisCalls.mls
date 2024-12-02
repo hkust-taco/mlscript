@@ -19,10 +19,7 @@ s(123)
 :sjs
 ex |>. s(123)
 //│ JS:
-//│ let tmp, tmp1;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
-//│ tmp1 = Predef.call(this.ex, this.s) ?? null;
-//│ tmp1(123) ?? null
+//│ let tmp; tmp = Predef.call(this.ex, this.s) ?? null; tmp(123) ?? null
 //│ = [ 123, 456 ]
 
 

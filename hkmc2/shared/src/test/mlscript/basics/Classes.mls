@@ -34,15 +34,7 @@ class Foo(x: Int) { log("Hello!") }
 //│ ║  l.32: 	class Foo(x: Int) { log("Hello!") }
 //│ ╙──      	                    ^^^^^^^^^^^^^
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
-//│ this.<error> = class <error> {
-//│   constructor() {
-//│     
-//│   }
-//│   toString() { return "<error>"; }
-//│ };
-//│ undefined
+//│ this.<error> = class <error> { constructor() {  } toString() { return "<error>"; } }; undefined
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '<'
 
 

@@ -7,8 +7,6 @@
 :sjs
 module None
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ const None$class = class None {
 //│   constructor() {
 //│     
@@ -22,20 +20,20 @@ module None
 :sjs
 None
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.None
+//│ this.None
 //│ = None { class: [class None] }
 
 :sjs
 :re
 None()
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.None() ?? null
+//│ this.None() ?? null
 //│ ═══[RUNTIME ERROR] TypeError: this.None is not a function
 
 :sjs
 new None
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; new this.None.class()
+//│ new this.None.class()
 //│ = None {}
 
 
@@ -46,11 +44,9 @@ module M with
   val x = 1
   val y = x + 1
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ const M$class = class M {
 //│   constructor() {
-//│     let tmp1;
+//│     let tmp;
 //│     this.C = class C {
 //│       constructor() {
 //│         
@@ -65,8 +61,8 @@ module M with
 //│       toString() { return "D(" +  + ")"; }
 //│     };
 //│     this.x = 1;
-//│     tmp1 = this.x + 1;
-//│     this.y = tmp1;
+//│     tmp = this.x + 1;
+//│     this.y = tmp;
 //│   }
 //│   toString() { return "M"; }
 //│ };
@@ -93,7 +89,7 @@ M.y
 :re
 M.oops
 //│ ╔══[ERROR] Module 'M' does not contain member 'oops'
-//│ ║  l.94: 	M.oops
+//│ ║  l.90: 	M.oops
 //│ ╙──      	 ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
@@ -102,8 +98,6 @@ M.oops
 module M with
   val m: module M = M
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ const M$class = class M {
 //│   constructor() {
 //│     this.m = globalThis.M;

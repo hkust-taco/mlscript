@@ -22,8 +22,6 @@ fun test(a) =
       h(d)
   Inner(42)
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function test(...args) {
 //│   globalThis.Predef.checkArgs("test", 1, true, args.length);
 //│   let a = args[0];
@@ -31,8 +29,8 @@ fun test(a) =
 //│   Inner.class = class Inner {
 //│     constructor(b) {
 //│       this.b = b;
-//│       let tmp1;
-//│       tmp1 = globalThis.log(a) ?? null;
+//│       let tmp;
+//│       tmp = globalThis.log(a) ?? null;
 //│     }
 //│     f(...args1) {
 //│       globalThis.Predef.checkArgs("f", 1, true, args1.length);
@@ -85,12 +83,10 @@ fun test(a) =
     print of [a, b]
   [C1(1), C2(2)]
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function test(...args) {
 //│   globalThis.Predef.checkArgs("test", 1, true, args.length);
 //│   let a = args[0];
-//│   let tmp1, tmp2;
+//│   let tmp, tmp1;
 //│   function C1(...args1) { return new C1.class(...args1); };
 //│   C1.class = class C1 {
 //│     constructor(b) {
@@ -113,11 +109,11 @@ fun test(a) =
 //│     }
 //│     toString() { return "C2(" + this.b + ")"; }
 //│   };
-//│   tmp1 = C1(1) ?? null;
-//│   tmp2 = C2(2) ?? null;
+//│   tmp = C1(1) ?? null;
+//│   tmp1 = C2(2) ?? null;
 //│   return [
-//│     tmp1,
-//│     tmp2
+//│     tmp,
+//│     tmp1
 //│   ];
 //│ }
 //│ undefined
@@ -138,8 +134,6 @@ class Foo(a) with
   foo()
 Foo(123)
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ this.Foo = function Foo(...args1) { return new Foo.class(...args1); };
 //│ this.Foo.class = class Foo {
 //│   constructor(a) {
@@ -148,7 +142,7 @@ Foo(123)
 //│   }
 //│   foo(...args) {
 //│     globalThis.Predef.checkArgs("foo", 0, true, args.length);
-//│     let tmp1;
+//│     let tmp;
 //│     
 //│     const this$Foo = this;
 //│     function bar(...args1) {
@@ -159,7 +153,7 @@ Foo(123)
 //│       globalThis.Predef.checkArgs("baz", 0, true, args1.length);
 //│       return this$Foo.a;
 //│     }
-//│     tmp1 = bar() ?? null;
+//│     tmp = bar() ?? null;
 //│     return baz() ?? null;
 //│   }
 //│   toString() { return "Foo(" + this.a + ")"; }

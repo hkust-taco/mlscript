@@ -10,11 +10,7 @@ let x = 0
 :sjs
 let x += 1
 //│ JS:
-//│ let tmp, tmp1;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
-//│ tmp1 = this.x + 1;
-//│ this.x = tmp1;
-//│ undefined
+//│ let tmp; tmp = this.x + 1; this.x = tmp; undefined
 //│ x = 1
 
 x
@@ -23,16 +19,12 @@ x
 :sjs
 set x = 0
 //│ JS:
-//│ let tmp; tmp = this.Predef.TraceLogger.resetIndent(0) ?? null; this.x = 0; undefined
+//│ this.x = 0; undefined
 
 :sjs
 set x += 1
 //│ JS:
-//│ let tmp, tmp1;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
-//│ tmp1 = this.x + 1;
-//│ this.x = tmp1;
-//│ undefined
+//│ let tmp; tmp = this.x + 1; this.x = tmp; undefined
 
 x
 //│ = 1
@@ -41,17 +33,16 @@ x
 :sjs
 set x += 1 in log(x)
 //│ JS:
-//│ let old, tmp, tmp1, tmp2;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
+//│ let old, tmp, tmp1;
 //│ old = this.x;
 //│ try {
-//│   tmp2 = this.x + 1;
-//│   this.x = tmp2;
-//│   tmp1 = this.log(this.x) ?? null;
+//│   tmp1 = this.x + 1;
+//│   this.x = tmp1;
+//│   tmp = this.log(this.x) ?? null;
 //│ } finally {
 //│   this.x = old;
 //│ }
-//│ tmp1
+//│ tmp
 //│ > 2
 
 x
@@ -87,11 +78,9 @@ fun example() =
   log(get_x())
 example()
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function example(...args) {
 //│   globalThis.Predef.checkArgs("example", 0, true, args.length);
-//│   let x, get_x, old, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+//│   let x, get_x, old, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
 //│   x = 0;
 //│   get_x = (...args1) => {
 //│     globalThis.Predef.checkArgs("", 0, true, args1.length);
@@ -99,18 +88,18 @@ example()
 //│   };
 //│   old = x;
 //│   try {
-//│     tmp2 = x + 1;
-//│     x = tmp2;
-//│     tmp3 = globalThis.log(x) ?? null;
-//│     tmp4 = (tmp3 , globalThis.log);
-//│     tmp5 = get_x() ?? null;
-//│     tmp1 = tmp4(tmp5) ?? null;
+//│     tmp1 = x + 1;
+//│     x = tmp1;
+//│     tmp2 = globalThis.log(x) ?? null;
+//│     tmp3 = (tmp2 , globalThis.log);
+//│     tmp4 = get_x() ?? null;
+//│     tmp = tmp3(tmp4) ?? null;
 //│   } finally {
 //│     x = old;
 //│   }
-//│   tmp6 = globalThis.log(x) ?? null;
-//│   tmp7 = get_x() ?? null;
-//│   return globalThis.log(tmp7) ?? null;
+//│   tmp5 = globalThis.log(x) ?? null;
+//│   tmp6 = get_x() ?? null;
+//│   return globalThis.log(tmp6) ?? null;
 //│ }
 //│ this.example() ?? null
 //│ > 1
@@ -129,11 +118,9 @@ fun example() =
   y
 example()
 //│ JS:
-//│ let tmp;
-//│ tmp = this.Predef.TraceLogger.resetIndent(0) ?? null;
 //│ function example(...args) {
 //│   globalThis.Predef.checkArgs("example", 0, true, args.length);
-//│   let x, get_x, y, old, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
+//│   let x, get_x, y, old, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
 //│   x = 0;
 //│   get_x = (...args1) => {
 //│     globalThis.Predef.checkArgs("", 0, true, args1.length);
@@ -141,17 +128,17 @@ example()
 //│   };
 //│   old = x;
 //│   try {
-//│     tmp2 = x + 1;
-//│     x = tmp2;
-//│     tmp3 = globalThis.log(x) ?? null;
-//│     tmp1 = (tmp3 , x);
+//│     tmp1 = x + 1;
+//│     x = tmp1;
+//│     tmp2 = globalThis.log(x) ?? null;
+//│     tmp = (tmp2 , x);
 //│   } finally {
 //│     x = old;
 //│   }
-//│   y = tmp1;
-//│   tmp4 = globalThis.log(x) ?? null;
-//│   tmp5 = get_x() ?? null;
-//│   tmp6 = globalThis.log(tmp5) ?? null;
+//│   y = tmp;
+//│   tmp3 = globalThis.log(x) ?? null;
+//│   tmp4 = get_x() ?? null;
+//│   tmp5 = globalThis.log(tmp4) ?? null;
 //│   return y;
 //│ }
 //│ this.example() ?? null
