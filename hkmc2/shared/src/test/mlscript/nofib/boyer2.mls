@@ -1,0 +1,356 @@
+:js
+:import NofibPrelude.mls
+//│ Imported 109 member(s)
+
+
+
+abstract class Lisplist: Nill | Atom | Conss
+
+type Char = String
+
+object Nill extends Lisplist
+class
+  Atom(a: List[Char]) extends Lisplist
+  Conss(a: Tup2[Lisplist, Lisplist]) extends Lisplist
+
+fun lispListEq(x, y) = if x is
+  Nill and y is Nill then true
+  Atom(a) and y is Atom(b) then listEq(a, b)
+  Conss(Tup2(a, b)) and y is Conss(Tup2(c, d)) and (lispListEq(a, c)) then lispListEq(b, d)
+  else false
+
+fun lispmember(e_x) = if e_x is 
+  Tup2(e, Conss(Tup2(x, xs))) and
+    lispListEq(e, x) then true
+    else lispmember(Tup2(e, xs))
+  Tup2(_, _) then false
+  
+fun truep(term_l) = if term_l is
+  Tup2(Nill, _) then false
+  Tup2(Conss(Tup2(Atom(Cons("t", Nil)), Nill), _)) then true
+  Tup2(term, l) then lispmember(Tup2(term, l))
+
+fun falsep(term_l) = if term_l is
+  Tup2(Nill, _) then false
+  Tup2(Conss(Tup2(Atom(Cons("f", Nil)), Nill), _)) then true
+  Tup2(term, l) then lispmember(Tup2(term, l))
+
+fun tv(x) = if x is Atom(a) then a
+
+fun atom(x) = if x is Atom(_) then true else false
+
+fun car(x) = if x is Conss(Tup2(a, _)) then a else Nill
+
+fun cdr(x) = if x is Conss(Tup2(_, b)) then b else Nill
+
+fun cadr(x) = car(cdr(x))
+
+fun caddr(x) = car(cdr(cdr(x)))
+
+fun cadddr(x) = car(cdr(cdr(cdr(x))))
+
+fun tautologyp(f_truelst_falselst) = if f_truelst_falselst is Tup3(f, truelst, falselst) and f is
+  Nill then false
+  Atom(x) then truep(Tup2(Atom(x), truelst))
+  Conss(Tup2(x, y)) and
+    truep(Tup2(Conss(Tup2(x, y)), truelst)) then true
+    falsep(Tup2(Conss(Tup2(x, y)), falselst)) then false
+    x is
+      Atom(Cons("i", Cons("f", Nil))) and
+        truep(Tup2(car(y), truelst)) then
+          tautologyp(Tup3(cadr(y), truelst, falselst))
+        falsep(Tup2(car(y), falselst)) then
+          tautologyp(Tup3(caddr(y), truelst, falselst))
+        else
+          tautologyp(Tup3(cadr(y), Conss(Tup2(car(y), truelst)), falselst)) and tautologyp(Tup3(caddr(y), truelst, Conss(Tup2(car(y), falselst))))
+      else false
+
+fun sublist(t) = if t is
+  Nil then Tup2(Nil, Nill)
+  Cons(Cons("(", Nil), t) and sublist(t) is Tup2(r1, l1) and sublist(r1) is Tup2(r2, l2) then Tup2(r2, Conss(Tup2(l1, l2)))
+  Cons(Cons(")", Nil), t) then Tup2(t, Nill)
+  Cons(h, t) and sublist(t) is Tup2(r, l) then Tup2(r, Conss(Tup2(Atom(h), l)))
+
+fun mkLispList(ls) = if ls is
+  Cons(Cons("(", Nil), t) and sublist(t) is Tup2(r, l) and r is
+    Nil then l
+    else Nill
+  _ then Nill
+
+fun restOfToken(s) = if s is
+  Nil then Tup2(Nil, Nil)
+  Cons(h, t) and
+    (h === "(") || (h === ")") || (h === " ") then Tup2(Nil, Cons(h, t))
+    restOfToken(t) is Tup2(a, b) then Tup2(Cons(h, a), b)
+
+fun getToken(s) = if s is
+  Nil then Tup2(Nil, Nil)
+  Cons(h, t) and
+    (h === " ") then getToken(t)
+    (h === "(") || (h === ")") then Tup2(Cons(h, Nil), t)
+    restOfToken(t) is Tup2(a, b) then Tup2(Cons(h, a), b)
+
+fun strToToken(s) = if
+  s is Nil then Nil
+  getToken(s) is Tup2(a, b) then Cons(a, strToToken(b))
+
+fun assoc(term_x_y) = if term_x_y is
+  Tup2(term, Conss(Tup2(x, y))) and x is
+    Conss(Tup2(Atom(key), rest)) and
+      lispListEq(term, Atom(key)) then x
+      else assoc(Tup2(term, y))
+    _ then Nill
+  Tup2(_, _) then Nill
+
+type LUTentry = Tup2[String, List[Lisplist]]
+
+abstract class LUT: Empty | Node
+
+object Empty extends LUT
+
+class Node(x: Tup3[LUT, LUTentry, LUT]) extends LUT
+
+fun addtoLUT(k_l_lut) = if k_l_lut is
+  Tup3(k, l, Empty) then Node(Tup3(Empty, Tup2(k, Cons(l, Nil)), Empty))
+  Tup3(k, l, Node(Tup3(left, Tup2(k1, kl), right))) and
+    listEq(k, k1) then Node(Tup3(left, Tup2(k1, Cons(l, kl)), right))
+    ltList(k, k1, (x, y) => x < y, (x, y) => x > y) then Node(Tup3(addtoLUT(Tup3(k, l, left)), Tup2(k1, kl), right))
+    else Node(Tup3(left, Tup2(k1, kl), addtoLUT(Tup3(k, l, right))))
+
+fun getLUT(t_lut) = if t_lut is
+  Tup2(t, Empty) then Nil
+  Tup2(t, Node(Tup3(left, Tup2(k, kl), right))) and
+    listEq(t, k) then kl
+    ltList(t, k, (x, y) => x < y, (x, y) => x > y) then getLUT(Tup2(t, left))
+    else getLUT(Tup2(t, right))
+
+fun makelemmas(rules) = if rules is
+  Nil then Nil
+  Cons(h, t) then Cons(mkLispList(strToToken(h)), makelemmas(t))
+
+fun addlemma(lspls, term) = if lspls is
+  Nill then term
+  Atom(x) then throw new Error("error")
+  Conss(Tup2(x, y)) then
+    let z = car(y)
+    if listEq(tv(x), nofibStringToList("equal")) and (not(atom(z)))
+    then addtoLUT(Tup3(tv(car(z)), Conss(Tup2(x, y)), term))
+    else throw new Error("error")
+
+fun addlemmalst(lspls, term) = if lspls is
+  Nil then term
+  Cons(h, t) then addlemmalst(t, addlemma(h, term))
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+fun applysubstlst(alist, y) = if y is
+  Nill then Nill
+  Atom(x) then throw new Error("error")
+  Conss(Tup2(x, y)) then Conss(Tup2(applysubst(alist, x), applysubstlst(alist, y)))
+
+fun applysubst(alist, x) = if x is
+  Nill then Nill
+  Atom(x) and assoc(Tup2(Atom(x), alist)) is
+    Conss(Tup2(_, y)) then y
+    else Atom(x)
+  Conss(Tup2(x, y)) then Conss(Tup2(x, applysubstlst(alist, y)))
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+fun onewayunify1lst(l1, l2, u) = if
+  l1 is Nill then Tup2(true, u)
+  onewayunify1(car(l1), car(l2), u) is Tup2(b, u1) and
+    b then onewayunify1lst(cdr(l1), cdr(l2), u1)
+    else Tup2(false, u1)
+
+fun onewayunify1(t1, t2, u) = if
+  atom(t2) and assoc(Tup2(t2, u)) is
+    Conss(Tup2(_, y)) then Tup2(lispListEq(t1, y), u)
+    else Tup2(true, Conss(Tup2(Conss(Tup2(t2, t1)), u)))
+  atom(t1) then Tup2(false, u)
+  lispListEq(car(t1), car(t2)) then onewayunify1lst(cdr(t1), cdr(t2), u)
+  else Tup2(false, u)
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+fun onewayunify(t1, t2) = onewayunify1(t1, t2, Nill)
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+fun rewritewithlemmas(t, l, term) = if l is
+  Nil then t
+  Cons(lh, lt) and onewayunify(t, cadr(lh)) is Tup2(b, u) and
+    b then rewrite(applysubst(u, caddr(lh)), term)
+    else rewritewithlemmas(t, lt, term)
+
+fun rewriteargs(x, term) = if x is
+  Nill then Nill
+  Atom(_) then throw new Error("error")
+  Conss(Tup2(x, y)) then Conss(Tup2(rewrite(x, term), rewriteargs(y, term)))
+
+fun rewrite(x, term) = if x is
+  Nill then Nill
+  Atom(x) then Atom(x)
+  Conss(Tup2(l1, l2)) then rewritewithlemmas(Conss(Tup2(l1, rewriteargs(l2, term))), getLUT(Tup2(tv(l1), term)), term)
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+let statement = mkLispList(strToToken(
+  nofibStringToList("( implies ( and ( implies x y )( and ( implies y z )( and ( implies z u )( implies u w ) ) ) )( implies x w ) )")
+))
+//│ statement = Conss { a: Tup2 { fst: Atom { a: [Cons] }, snd: Conss { a: [Tup2] } } }
+
+fun subterm(i) =
+  let c = stringConcat("c", stringOfInt(i))
+  let str = stringConcat(
+    nofibStringToList("( ( x f ( plus ( plus a b )( plus "),
+    stringConcat(
+      c,
+      stringConcat(
+        nofibStringToList(" ( zero ) ) ) )( y f ( times ( times a b )( plus "), 
+        stringConcat(c, nofibStringToList(" d ) ) )( z f ( reverse ( append ( append a b ) ( [] ) ) ) )(u equal ( plus a b ) ( difference x y ) )(w lessp ( remainder a b )( member a ( length b ) ) ) )"))
+      )
+    )
+  )
+  mkLispList(strToToken(nofibStringToList(str)))
+
+fun report(b) = if b then "The term is a tautology" else "The term is not a tautology"
+
+let rules = 
+  nofibStringToList("(equal (compile form)(reverse (codegen (optimize form) (Nill) ) ) )") ::
+  nofibStringToList("(equal (eqp x y)(equal (fix x)(fix y) ) )") ::
+  nofibStringToList("(equal (greaterp x y)(lessp y x) )") ::
+  nofibStringToList("(equal (lesseqp x y)(not (lessp y x) ) )") ::
+  nofibStringToList("(equal (greatereqp x y)(not (lessp y x) ) )") ::
+  nofibStringToList("(equal (boolean x)(or (equal x (t) )(equal x (f) ) )") ::
+  nofibStringToList("(equal (iff x y)(and (implies x y)(implies y x) ) )") ::
+  nofibStringToList("(equal (even1 x)(if (zerop x)(t)(odd (1- x) ) ) )") ::
+  nofibStringToList("(equal (countps- l pred)(countps-loop l pred (zero) ) )") ::
+  nofibStringToList("(equal (fact- i)(fact-loop i 1) )") ::
+  nofibStringToList("(equal (reverse- x)(reverse-loop x (Nill) ) )") ::
+  nofibStringToList("(equal (divides x y)(zerop (remainder y x) ) )") ::
+  nofibStringToList("(equal (assume-true var alist)(Conss (Conss var (t) )alist) )") ::
+  nofibStringToList("(equal (assume-false var alist)(Conss (Conss var (f) )alist) )") ::
+  nofibStringToList("(equal (tautology-checker x)(tautologyp (normalize x)(Nill) ) )") ::
+  nofibStringToList("(equal (falsify x)(falsify1 (normalize x)(Nill) ) )") ::
+  nofibStringToList("(equal (prime x)(and (not (zerop x))(not (equal x (add1 (zero) ) ) )(prime1 x (1- x) ) ) )") ::
+  nofibStringToList("(equal (and p q)(if p (if q (t) (f) ) (f) ) )") ::
+  nofibStringToList("(equal (or p q)(if p (t) (if q (t) (f) ) ) )") ::
+  nofibStringToList("(equal (not p)(if p (f) (t) ) )") ::
+  nofibStringToList("(equal (implies p q)(if p (if q (t) (f) ) (t) ) )") ::
+  nofibStringToList("(equal (fix x)(if (numberp x) x (zero) ) )") ::
+  nofibStringToList("(equal (if (if a b c) d e)(if a (if b d e) (if c d e) ) )") ::
+  nofibStringToList("(equal (zerop x)(or (equal x (zero) )(not (numberp x) ) ) )") ::
+  nofibStringToList("(equal (plus (plus x y) z )(plus x (plus y z) ) )") ::
+  nofibStringToList("(equal (equal (plus a b) (zero ) )(and (zerop a) (zerop b) ) )") ::
+  nofibStringToList("(equal (difference x x)(zero) )") ::
+  nofibStringToList("(equal (equal (plus a b) (plus a c) )(equal (fix b) (fix c) ) )") ::
+  nofibStringToList("(equal (equal (zero) (difference x y) )(not (lessp y x) ) )") ::
+  nofibStringToList("(equal (equal x (difference x y) )(and (numberp x)(or (equal x (zero) )(zerop y) ) ) )") ::
+  nofibStringToList("(equal (meaning (plus-tree (append x y) ) a)(plus (meaning (plus-tree x) a)(meaning (plus-tree y) a) ) )") ::
+  nofibStringToList("(equal (meaning (plus-tree (plus-fringe x) ) a)(fix (meaning x a) ) )") ::
+  nofibStringToList("(equal (append (append x y) z)(append x (append y z) ) )") ::
+  nofibStringToList("(equal (reverse (append a b) )(append (reverse b) (reverse a) ) )") ::
+  nofibStringToList("(equal (times x (plus y z) )(plus (times x y)(times x z) ) )") ::
+  nofibStringToList("(equal (times (times x y) z)(times x (times y z) ) )") ::
+  nofibStringToList("(equal (equal (times x y) (zero) )(or (zerop x)(zerop y) ) )") ::
+  nofibStringToList("(equal (exec (append x y)pds envrn)(exec y (exec x pds envrn)envrn) )") ::
+  nofibStringToList("(equal (mc-flatten x y)(append (flatten x)y) )") ::
+  nofibStringToList("(equal (member x (append a b) )(or (member x a)(member x b) ) )") ::
+  nofibStringToList("(equal (member x (reverse y) )(member x y) )") ::
+  nofibStringToList("(equal (length (reverse x) )(length x) )") ::
+  nofibStringToList("(equal (member a (intersect b c) )(and (member a b)(member a c) ) )") ::
+  nofibStringToList("(equal (nth (zero)i)(zero) )") ::
+  nofibStringToList("(equal (exp i (plus j k) )(times (exp i j)(exp i k) ) )") ::
+  nofibStringToList("(equal (exp i (times j k) )(exp (exp i j)k) )") ::
+  nofibStringToList("(equal (reverse-loop x y)(append (reverse x)y) )") ::
+  nofibStringToList("(equal (reverse-loop x (Nill) )(reverse x) )") ::
+  nofibStringToList("(equal (count-list z (sort-lp x y) )(plus (count-list z x)(count-list z y) ) )") ::
+  nofibStringToList("(equal (equal (append a b)(append a c) )(equal b c) )") ::
+  nofibStringToList("(equal (plus (remainder x y)(times y (quotient x y) ) )(fix x) )") ::
+  nofibStringToList("(equal (power-eval (big-plus1 l i base)base)(plus (power-eval l base)i) )") ::
+  nofibStringToList("(equal (power-eval (big-plus x y i base)base)(plus i (plus (power-eval x base)(power-eval y base) ) ) )") ::
+  nofibStringToList("(equal (remainder y 1)(zero) )") ::
+  nofibStringToList("(equal (lessp (remainder x y)y)(not (zerop y) ) )") ::
+  nofibStringToList("(equal (remainder x x)(zero) )") ::
+  nofibStringToList("(equal (lessp (quotient i j)i)(and (not (zerop i) )(or (zerop j)(not (equal j 1) ) ) ) )") ::
+  nofibStringToList("(equal (lessp (remainder x y)x)(and (not (zerop y) )(not (zerop x) )(not (lessp x y) ) ) )") ::
+  nofibStringToList("(equal (power-eval (power-rep i base)base)(fix i) )") ::
+  nofibStringToList("(equal (power-eval (big-plus (power-rep i base)(power-rep j base)(zero)base)base)(plus i j) )") ::
+  nofibStringToList("(equal (gcd x y)(gcd y x) )") ::
+  nofibStringToList("(equal (nth (append a b)i)(append (nth a i)(nth b (difference i (length a) ) ) ) )") ::
+  nofibStringToList("(equal (difference (plus x y)x)(fix y) )") ::
+  nofibStringToList("(equal (difference (plus y x)x)(fix y) )") ::
+  nofibStringToList("(equal (difference (plus x y)(plus x z) )(difference y z) )") ::
+  nofibStringToList("(equal (times x (difference c w) )(difference (times c x)(times w x) ) )") ::
+  nofibStringToList("(equal (remainder (times x z)z)(zero) )") ::
+  nofibStringToList("(equal (difference (plus b (plus a c) )a)(plus b c) )") ::
+  nofibStringToList("(equal (difference (add1 (plus y z)z)(add1 y) )") ::
+  nofibStringToList("(equal (lessp (plus x y)(plus x z ) )(lessp y z) )") ::
+  nofibStringToList("(equal (lessp (times x z)(times y z) )(and (not (zerop z) )(lessp x y) ) )") ::
+  nofibStringToList("(equal (lessp y (plus x y) )(not (zerop x) ) )") ::
+  nofibStringToList("(equal (gcd (times x z)(times y z) )(times z (gcd x y) ) )") ::
+  nofibStringToList("(equal (value (normalize x)a)(value x a) )") ::
+  nofibStringToList("(equal (equal (flatten x)(Conss y (Nill) ) )(and (nlistp x)(equal x y) ) )") ::
+  nofibStringToList("(equal (listp (gopher x) )(listp x) )") ::
+  nofibStringToList("(equal (samefringe x y)(equal (flatten x)(flatten y) ) )") ::
+  nofibStringToList("(equal (equal (greatest-factor x y)(zero) )(and (or (zerop y)(equal y 1) )(equal x (zero) ) ) )") ::
+  nofibStringToList("(equal (equal (greatest-factor x y)1)(equal x 1) )") ::
+  nofibStringToList("(equal (numberp (greatest-factor x y) )(not (and (or (zerop y)(equal y 1) )(not (numberp x) ) ) ) )") ::
+  nofibStringToList("(equal (times-list (append x y) )(times (times-list x)(times-list y) ) )") ::
+  nofibStringToList("(equal (prime-list (append x y) )(and (prime-list x)(prime-list y) ) )") ::
+  nofibStringToList("(equal (equal z (times w z) )(and (numberp z)(or (equal z (zero) )(equal w 1) ) ) )") ::
+  nofibStringToList("(equal (greatereqpr x y)(not (lessp x y) ) )") ::
+  nofibStringToList("(equal (equal x (times x y) )(or (equal x (zero) )(and (numberp x)(equal y 1) ) ) )") ::
+  nofibStringToList("(equal (remainder (times y x)y)(zero) )") ::
+  nofibStringToList("(equal (equal (times a b)1)(and (not (equal a (zero) ) )(not (equal b (zero) ) )(numberp a)(numberp b)(equal (1- a)(zero) )(equal (1- b)(zero) ) ) )") ::
+  nofibStringToList("(equal (lessp (length (delete x l) )(length l) )(member x l) )") ::
+  nofibStringToList("(equal (sort2 (delete x l) )(delete x (sort2 l) ) )") ::
+  nofibStringToList("(equal (dsort x)(sort2 x) )") ::
+  nofibStringToList("(equal (length(Conss x1(Conss x2(Conss x3(Conss x4(Conss x5(Conss x6 x7) ) ) ) ) ) )(plus 6 (length x7) ) )") ::
+  nofibStringToList("(equal (difference (add1 (add1 x) )2)(fix x) )") ::
+  nofibStringToList("(equal (quotient (plus x (plus x y) )2)(plus x (quotient y 2) ) )") ::
+  nofibStringToList("(equal (sigma (zero)i)(quotient (times i (add1 i) )2) )") ::
+  nofibStringToList("(equal (plus x (add1 y) )(if (numberp y)(add1 (plus x y) )(add1 x) ) )") ::
+  nofibStringToList("(equal (equal (difference x y)(difference z y) )(if (lessp x y)(not (lessp y z) )(if (lessp z y)(not (lessp y x) )(equal (fix x)(fix z) ) ) ) )") ::
+  nofibStringToList("(equal (meaning (plus-tree (delete x y) )a)(if (member x y)(difference (meaning (plus-tree y)a)(meaning x a) )(meaning (plus-tree y)a) ) )") ::
+  nofibStringToList("(equal (times x (add1 y) )(if (numberp y)(plus x (times x y) )(fix x) ) )") ::
+  nofibStringToList("(equal (nth (Nill)i)(if (zerop i)(Nill)(zero) ) )") ::
+  nofibStringToList("(equal (last (append a b) )(if (listp b)(last b)(if (listp a)(Conss (car (last a) )b)b) ) )") ::
+  nofibStringToList("(equal (equal (lessp x y)z)(if (lessp x y)(equal t z)(equal f z) ) )") ::
+  nofibStringToList("(equal (assignment x (append a b) )(if (assignedp x a)(assignment x a)(assignment x b) ) )") ::
+  nofibStringToList("(equal (car (gopher x) )(if (listp x)(car (flatten x) )(zero) ) )") ::
+  nofibStringToList("(equal (flatten (cdr (gopher x) ) )(if (listp x)(cdr (flatten x) )(Conss (zero)(Nill) ) ) )") ::
+  nofibStringToList("(equal (quotient (times y x)y)(if (zerop y)(zero)(fix x) ) )") ::
+  nofibStringToList("(equal (get j (set i val mem) )(if (eqp j i)val(get j mem) ) )") :: Nil
+//│ > Cons {
+//│ >   head: Cons { head: '(', tail: Cons { head: 'e', tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: '(', tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   }
+//│ rules = }
+
+let lemmas = addlemmalst(makelemmas(rules), Empty)
+//│ > Node {
+//│ >   x: Tup3 {
+//│ >     fst: Node { x: [Tup3] },
+//│ >     snd: Tup2 { fst: [Cons], snd: [Cons] },
+//│ >     thd: Node { x: [Tup3] }
+//│ >   }
+//│ lemmas = }
+
+fun tautp(term) = tautologyp(Tup3(rewrite(term, lemmas), Nill, Nill))
+
+fun teststatement(i) = applysubst(subterm(i), statement)
+
+fun testresult(i) = tautp(teststatement(i))
+
+fun testBoyer2_nofib(n) = report(testresult(n))
+
+testBoyer2_nofib(3)
+//│ = 'The term is a tautology'
+
+
+
+
+
