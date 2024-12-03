@@ -174,7 +174,7 @@ class Translator(val elaborator: Elaborator)
     ):
       require(captures.forall(_._1 |> paramIndexMap.contains))
       if captures.size != params.size then
-        // TODO: report uncaptured parameters
+        // TODO: report uncaptured parameters and add tests after captures/extraction is done
         error(msg"Unmatched number of captures and parameters." -> N)
         Split.Else(Term.Error)
       else
