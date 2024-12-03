@@ -20,12 +20,12 @@ fun h(x) =
 :traceJS
 :re
 h(3)
+//│ > CALL h(3)
+//│ > | CALL g(3)
+//│ > | | CALL g(2)
+//│ > | | | CALL g(1)
+//│ > | | | | CALL g(0)
 //│ ═══[RUNTIME ERROR] Error: Function 'plus' expected 2 arguments but got 1
-//│ CALL h(3)
-//│ | CALL g(3)
-//│ | | CALL g(2)
-//│ | | | CALL g(1)
-//│ | | | | CALL g(0)
 
 :traceJS
 h(-2)
@@ -48,11 +48,11 @@ f(1,1)(-2)
 :traceJS
 :re
 f(1,2)(3)
+//│ > CALL g(3)
+//│ > | CALL g(2)
+//│ > | | CALL g(1)
+//│ > | | | CALL g(0)
 //│ ═══[RUNTIME ERROR] Error: Function 'plus' expected 2 arguments but got 1
-//│ CALL g(3)
-//│ | CALL g(2)
-//│ | | CALL g(1)
-//│ | | | CALL g(0)
 
 :showRepl
 :traceJS
