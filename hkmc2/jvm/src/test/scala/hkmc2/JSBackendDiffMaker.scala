@@ -112,8 +112,9 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
       
       if traceJS.isSet then
-        host.execute("globalThis.Predef.TraceLogger.enabled = true")
-        host.execute("globalThis.Predef.TraceLogger.resetIndent(0)")
+        host.execute(
+          "globalThis.Predef.TraceLogger.enabled = true; " +
+          "globalThis.Predef.TraceLogger.resetIndent(0)")
       
       mkQuery("", jsStr)
       
