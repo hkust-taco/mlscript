@@ -108,6 +108,12 @@ object Elaborator:
     given State = this
     val suid = new Uid.Symbol.State
     val globalThisSymbol = TopLevelSymbol("globalThis")
+    val builtinOpsMap =
+      val baseBuiltins = binaryOps.map: op =>
+          op -> BuiltinSymbol(op, binary = true, unary = unaryOps(op), nullary = false)
+        .toMap
+      baseBuiltins ++ aliasOps.map:
+        case (alias, base) => alias -> baseBuiltins(base)
     val seqSymbol = TermSymbol(ImmutVal, N, Ident(";"))
     def init(using State): Ctx = Ctx.empty.copy(env = Map(
       "globalThis" -> globalThisSymbol,
@@ -131,13 +137,6 @@ extends Importer:
   private val allocSkolemSym = VarSymbol(Ident("Alloc"))
   private val allocSkolemDef = TyParam(FldFlags.empty, N, allocSkolemSym)
   allocSkolemSym.decl = S(allocSkolemDef)
-
-  private val builtinOpsMap =
-    val baseBuiltins = binaryOps.map: op =>
-        op -> BuiltinSymbol(op, binary = true, unary = unaryOps(op), nullary = false)
-      .toMap
-    baseBuiltins ++ aliasOps.map:
-      case (alias, base) => alias -> baseBuiltins(base)
   
   def mkLetBinding(sym: LocalSymbol, rhs: Term): Ls[Statement] =
     LetDecl(sym) :: DefineVar(sym, rhs) :: Nil
@@ -226,7 +225,7 @@ extends Importer:
       ctx.get(name) match
       case S(sym) => sym.ref(id)
       case N =>
-        builtinOpsMap.get(name) match
+        state.builtinOpsMap.get(name) match
         case S(bi) => bi.ref(id)
         case N =>
           raise(ErrorReport(msg"Name not found: $name" -> tree.toLoc :: Nil))
@@ -651,7 +650,7 @@ extends Importer:
             raise(d)
             go(sts, acc)
       case (td @ TypeDef(k, head, extension, body)) :: sts =>
-        assert((k is Als) || (k is Cls) || (k is Mod) || (k is Obj), k)
+        assert((k is Als) || (k is Cls) || (k is Mod) || (k is Obj) || (k is Pat), k)
         val nme = td.name match
           case R(id) => id
           case L(d) =>
@@ -703,6 +702,17 @@ extends Importer:
               semantics.TypeDef(alsSym, tps, extension.map(term(_)), N)
             alsSym.defn = S(d)
             d
+        case Pat =>
+          val patSym = td.symbol.asInstanceOf[PatternSymbol] // TODO improve `asInstanceOf`
+          val owner = ctx.outer
+          newCtx.nest(S(patSym)).givenIn:
+            assert(body.isEmpty)
+            log(s"pattern body is ${td.extension}")
+            val translate = new ucs.Translator(this)
+            val bod = translate(ps.map(_.params).getOrElse(Nil), td.extension.getOrElse(die))
+            val pd = PatternDef(owner, patSym, tps, ps, ObjBody(Term.Blk(bod, Term.Lit(UnitLit(true)))))
+            patSym.defn = S(pd)
+            pd
         case k: (Mod.type | Obj.type) =>
           val clsSym = td.symbol.asInstanceOf[ModuleSymbol] // TODO: improve `asInstanceOf`
           val owner = ctx.outer

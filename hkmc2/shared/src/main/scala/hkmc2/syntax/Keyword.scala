@@ -113,6 +113,7 @@ object Keyword:
   val `throw` = Keyword("throw", N, curPrec)
   val `import` = Keyword("import", N, curPrec)
   val `this` = Keyword("this", N, N)
+  val `pattern` = Keyword("pattern", N, N)
   
   // * The lambda operator is special:
   // *  it should associate very strongly on the left and very loosely on the right
