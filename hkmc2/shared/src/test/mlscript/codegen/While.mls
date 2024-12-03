@@ -251,6 +251,7 @@ while log("Hello World"); false
 //│ ╙──       	  ^^^^
 //│ ═══[ERROR] Unrecognized term split (false literal).
 //│ ═══[RUNTIME ERROR] Error: match error
+//│ Hello World
 
 :fixme
 while { log("Hello World"), false }

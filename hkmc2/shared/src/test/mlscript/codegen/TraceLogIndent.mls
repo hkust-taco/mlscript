@@ -21,14 +21,11 @@ fun h(x) =
 :re
 h(3)
 //│ ═══[RUNTIME ERROR] Error: Function 'plus' expected 2 arguments but got 1
-//│ All outputs:
-//│ > CALL h(3)
-//│ > | CALL g(3)
-//│ > | | CALL g(2)
-//│ > | | | CALL g(1)
-//│ > | | | | CALL g(0)
-//│ > ​Error: Function 'plus' expected 2 arguments but got 1​
-//│ > undefined
+//│ CALL h(3)
+//│ | CALL g(3)
+//│ | | CALL g(2)
+//│ | | | CALL g(1)
+//│ | | | | CALL g(0)
 
 :traceJS
 h(-2)
@@ -52,13 +49,10 @@ f(1,1)(-2)
 :re
 f(1,2)(3)
 //│ ═══[RUNTIME ERROR] Error: Function 'plus' expected 2 arguments but got 1
-//│ All outputs:
-//│ > CALL g(3)
-//│ > | CALL g(2)
-//│ > | | CALL g(1)
-//│ > | | | CALL g(0)
-//│ > ​Error: Function 'plus' expected 2 arguments but got 1​
-//│ > undefined
+//│ CALL g(3)
+//│ | CALL g(2)
+//│ | | CALL g(1)
+//│ | | | CALL g(0)
 
 :showRepl
 :traceJS

@@ -53,5 +53,7 @@ module \$ extends Foo
 //│ ║  l.46: 	module \$ extends Foo
 //│ ╙──      	        ^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
+//│ try { const \$class = class \ {   constructor() {        }   toString() { return "\"; } }; this.\ = new \$class; this.\.class = \$class; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│             ^
 
 

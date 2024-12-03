@@ -36,6 +36,8 @@ class Foo(x: Int) { log("Hello!") }
 //│ JS:
 //│ this.<error> = class <error> { constructor() {  } toString() { return "<error>"; } }; undefined
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '<'
+//│ try { this.<error> = class <error> { constructor() {  } toString() { return "<error>"; } }; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│            ^
 
 
 
