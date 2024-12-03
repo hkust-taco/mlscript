@@ -183,12 +183,12 @@ class ParseRules(using State):
             val items = split match
               case Block(stmts) => stmts.appended(clause)
               case _ => split :: clause :: Nil
-            IfLike(kw, Block(items))
-          case (split, N) => IfLike(kw, split)
+            IfLike(kw, N/* TODO */, Block(items))
+          case (split, N) => IfLike(kw, N/* TODO */, split)
         ,
         Blk(
           ParseRule(s"'${kw.name}' block")(End(()))
-        ) { case (body, _) => IfLike(kw, body) }
+        ) { case (body, _) => IfLike(kw, N/* TODO */, body) }
       )
   
   def typeAliasLike(kw: Keyword, kind: TypeDefKind): Kw[TypeDef] =
@@ -258,7 +258,7 @@ class ParseRules(using State):
     ,
     Kw(`case`):
       ParseRule("`case` keyword")(
-        Blk(ParseRule("`case` branches")(End(())))((body, _: Unit) => Case(body))
+        Blk(ParseRule("`case` branches")(End(())))((body, _: Unit) => Case(N/* TODO */, body))
       )
     ,
     Kw(`region`):
@@ -358,6 +358,7 @@ class ParseRules(using State):
     genInfixRule(`:`, (rhs, _: Unit) => lhs => InfixApp(lhs, `:`, rhs)),
     genInfixRule(`extends`, (rhs, _: Unit) => lhs => InfixApp(lhs, `extends`, rhs)),
     genInfixRule(`restricts`, (rhs, _: Unit) => lhs => InfixApp(lhs, `restricts`, rhs)),
+    genInfixRule(`do`, (rhs, _: Unit) => lhs => InfixApp(lhs, `do`, rhs)),
   )
 
 end ParseRules

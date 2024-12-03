@@ -6,8 +6,8 @@ import mlscript.utils.*, shorthands.*
 import Message.MessageContext
 import utils.TraceLogger
 import hkmc2.syntax.Literal
-import Keyword.{as, and, `else`, is, let, `then`}
-import collection.mutable.HashMap
+import Keyword.{as, and, `do`, `else`, is, let, `then`}
+import collection.mutable.{HashMap, SortedSet}
 import Elaborator.{ctx, Ctxl}
 import ucs.DesugaringBase
 
@@ -16,30 +16,52 @@ object Desugarer:
     infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match
       case InfixApp(lhs, `op`, rhs) => S((lhs, rhs))
       case _ => N
-
-  /** An extractor that accepts either `A and B` or `A then B`. */
-  object `~>`:
-    infix def unapply(tree: Tree): Opt[(Tree, Tree \/ Tree)] = tree match
-      case lhs and rhs => S((lhs, L(rhs)))
-      case lhs `then` rhs => S((lhs, R(rhs)))
-      case _ => N
-
+  
   class ScrutineeData:
     val classes: HashMap[ClassSymbol, List[BlockLocalSymbol]] = HashMap.empty
     val tupleLead: HashMap[Int, BlockLocalSymbol] = HashMap.empty
     val tupleLast: HashMap[Int, BlockLocalSymbol] = HashMap.empty
 end Desugarer
 
-class Desugarer(tl: TraceLogger, val elaborator: Elaborator)
+class Desugarer(val elaborator: Elaborator)
     (using raise: Raise, state: Elaborator.State, c: Elaborator.Ctx) extends DesugaringBase:
   import Desugarer.*
   import Elaborator.Ctx
-  import elaborator.term
-  import tl.*
+  import elaborator.term, elaborator.tl.*
+  
+  given Ordering[Loc] = Ordering.by: loc =>
+    (loc.spanStart, loc.spanEnd)
+  
+  /** Keep track of the locations where `do` and `then` are used as connectives. */
+  private val kwLocSets = (SortedSet.empty[Loc], SortedSet.empty[Loc])
+  
+  private def reportInconsistentConnectives(kw: Keyword, kwLoc: Opt[Loc]): Unit =
+    log(kwLocSets)
+    (kwLocSets._1.headOption, kwLocSets._2.headOption) match
+      case (Some(doLoc), Some(thenLoc)) =>
+        raise(ErrorReport(
+          msg"Mixed use of `do` and `then` in the `${kw.name}` expression." -> kwLoc
+            :: msg"Keyword `then` is used here." -> S(thenLoc)
+            :: msg"Keyword `do` is used here." -> S(doLoc) :: Nil
+        ))
+      case _ => ()
+  
+  private def topmostDefault: Split =
+    if kwLocSets._1.nonEmpty then Split.Else(Term.Lit(UnitLit(true))) else Split.End
+  
+  /** An extractor that accepts either `A and B`, `A then B`, and `A do B`. It
+   *  also keeps track of the usage of `then` and `do`.
+   */
+  object `~>`:
+    infix def unapply(tree: Tree): Opt[(Tree, Tree \/ Tree)] = tree match
+      case lhs and rhs => S((lhs, L(rhs)))
+      case lhs `then` rhs => kwLocSets._2 ++= tree.toLoc; S((lhs, R(rhs)))
+      case lhs `do` rhs => kwLocSets._1 ++= tree.toLoc; S((lhs, R(rhs)))
+      case _ => N
 
   // We're working on composing continuations in the UCS translation.
   // The type of continuation is `Split => Ctx => Split`.
-  // The first parameter represents the fallback split, which does not have
+  // The first parameter represents the "backup" split, which does not have
   // access to the bindings in the current match. The second parameter
   // represents the context with bindings in the current match.
 
@@ -81,10 +103,6 @@ class Desugarer(tl: TraceLogger, val elaborator: Elaborator)
       
 
   def default: Split => Sequel = split => _ => split
-
-  /** Desugar UCS shorthands. */
-  def shorthands(tree: Tree): Sequel = termSplitShorthands(tree, identity):
-    Split.default(Term.Lit(Tree.BoolLit(false)))
 
   private def termSplitShorthands(tree: Tree, finish: Term => Term): Split => Sequel = tree match
     case Block(branches) => branches match
@@ -499,4 +517,20 @@ class Desugarer(tl: TraceLogger, val elaborator: Elaborator)
     ):
       val innermostSplit = subMatches(rest, sequel)(fallback)
       expandMatch(scrutinee, pattern, innermostSplit)(fallback)
+  
+  /** Desugar `case` expressions. */
+  def apply(tree: Case, scrut: VarSymbol)(using Ctx): Split =
+    val topmost = patternSplit(tree.branches, scrut)(Split.End)(ctx)
+    reportInconsistentConnectives(Keyword.`case`, tree.kwLoc)
+    topmost ++ topmostDefault
+  
+  /** Desugar `if` and `while` expressions. */
+  def apply(tree: IfLike)(using Ctx): Split =
+    val topmost = termSplit(tree.split, identity)(Split.End)(ctx)
+    reportInconsistentConnectives(tree.kw, tree.kwLoc)
+    topmost ++ topmostDefault
+  
+  /** Desugar `is` and `and` shorthands. */
+  def apply(tree: InfixApp)(using Ctx): Split =
+    termSplitShorthands(tree, identity)(Split.default(Term.Lit(Tree.BoolLit(false))))(ctx)
 end Desugarer

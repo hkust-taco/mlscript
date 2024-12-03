@@ -63,7 +63,11 @@ object Keyword:
   
   val `if` = Keyword("if", N, nextPrec)
   val `while` = Keyword("while", N, curPrec)
-  val `then` = Keyword("then", nextPrec, curPrec)
+  
+  val thenPrec = nextPrec
+  val `then` = Keyword("then", thenPrec, curPrec)
+  val `do` = Keyword("do", thenPrec, curPrec)
+  
   val `else` = Keyword("else", nextPrec, curPrec)
   val `case` = Keyword("case", N, N)
   val `fun` = Keyword("fun", N, N)
@@ -81,7 +85,6 @@ object Keyword:
   val `in` = Keyword("in", curPrec, curPrec)
   val `out` = Keyword("out", N, curPrec)
   val `set` = Keyword("set", N, curPrec)
-  val `do` = Keyword("do", N, N)
   val `declare` = Keyword("declare", N, N)
   val `trait` = Keyword("trait", N, N)
   val `mixin` = Keyword("mixin", N, N)
@@ -125,7 +128,7 @@ object Keyword:
     `abstract`, mut, virtual, `override`, declare, public, `private`)
   
   type Infix = `and`.type | `or`.type | `then`.type | `else`.type | `is`.type | `:`.type | `->`.type |
-    `=>`.type | `extends`.type | `restricts`.type | `as`.type
+    `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type
 
   type Ellipsis = `...`.type | `..`.type
   

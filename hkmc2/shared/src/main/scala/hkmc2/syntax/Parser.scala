@@ -547,7 +547,7 @@ abstract class Parser(
               val ele = simpleExprImpl(prec)
               term match
                 case InfixApp(lhs, Keyword.`then`, rhs) =>
-                  Quoted(IfLike(Keyword.`if`, Block(
+                  Quoted(IfLike(Keyword.`if`, S(l0), Block(
                     InfixApp(Unquoted(lhs), Keyword.`then`, Unquoted(rhs)) :: Modified(Keyword.`else`, N, Unquoted(ele)) :: Nil
                   )))
                 case tk =>
