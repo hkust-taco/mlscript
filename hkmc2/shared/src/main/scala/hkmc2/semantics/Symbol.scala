@@ -28,23 +28,19 @@ abstract class Symbol(using State) extends Located:
   
   def asCls: Opt[ClassSymbol] = this match
     case cls: ClassSymbol => S(cls)
-    case mem: BlockMemberSymbol =>
-      mem.clsTree.map(_.symbol.asInstanceOf[ClassSymbol])
+    case mem: BlockMemberSymbol => mem.clsTree.flatMap(_.symbol.asCls)
     case _ => N
   def asMod: Opt[ModuleSymbol] = this match
     case cls: ModuleSymbol => S(cls)
-    case mem: BlockMemberSymbol =>
-      mem.modTree.map(_.symbol.asInstanceOf[ModuleSymbol])
+    case mem: BlockMemberSymbol => mem.modTree.flatMap(_.symbol.asMod)
     case _ => N
   def asPat: Opt[PatternSymbol] = this match
     case pat: PatternSymbol => S(pat)
-    case mem: BlockMemberSymbol =>
-      mem.patTree.map(_.symbol.asInstanceOf[PatternSymbol])
+    case mem: BlockMemberSymbol => mem.patTree.flatMap(_.symbol.asPat)
     case _ => N
   def asAls: Opt[TypeAliasSymbol] = this match
     case cls: TypeAliasSymbol => S(cls)
-    case mem: BlockMemberSymbol =>
-      mem.alsTree.map(_.symbol.asInstanceOf[TypeAliasSymbol])
+    case mem: BlockMemberSymbol => mem.alsTree.flatMap(_.symbol.asAls)
     case _ => N
   
   def asClsLike: Opt[ClassSymbol | ModuleSymbol | PatternSymbol] =
