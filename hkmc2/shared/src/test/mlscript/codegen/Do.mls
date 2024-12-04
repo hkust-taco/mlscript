@@ -26,15 +26,32 @@ val f = case
   do console.log("non-null")
   1 then "unit"
   _ then "other"
-//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ╔══[ERROR] Unrecognized pattern.
+//│ ║  l.25: 	  0 then "null"
+//│ ╙──      	  ^^^^^^^^^^^^^
+//│ ╔══[ERROR] Mixed use of `do` and `then` in the `case` expression.
+//│ ╟── Keyword `then` is used here.
+//│ ║  l.27: 	  1 then "unit"
+//│ ║        	  ^^^^^^^^^^^^^
+//│ ╟── Keyword `do` is used here.
+//│ ║  l.25: 	  0 then "null"
+//│ ║        	  ^^^^^^^^^^^^^
 //│ ║  l.26: 	  do console.log("non-null")
-//│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] The following branches are unreachable.
+//│ ╟── Because the previous split is full.
+//│ ║  l.27: 	  1 then "unit"
+//│ ║        	  ^^^^^^^^^^^^^
+//│ ║  l.28: 	  _ then "other"
+//│ ╙──      	^^^^^^^^^^^^^^^^
 //│ f = [Function (anonymous)]
 
 f(0)
-//│ = 'null'
+//│ = 'other'
 
 f(1)
+//│ = 'unit'
 
 f(2)
+//│ = 'other'
 

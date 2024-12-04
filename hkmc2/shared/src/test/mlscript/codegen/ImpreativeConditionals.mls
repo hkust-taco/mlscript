@@ -6,23 +6,16 @@ let x = -1
 //│ x = -1
 
 if x < 0 do set x = 0
-//│ ╔══[PARSE ERROR] Expected end of input; found 'do' keyword instead
-//│ ║  l.8: 	if x < 0 do set x = 0
-//│ ╙──     	         ^^
-//│ ╔══[ERROR] Unrecognized term split (integer literal).
-//│ ║  l.8: 	if x < 0 do set x = 0
-//│ ╙──     	       ^
-//│ ═══[RUNTIME ERROR] Error: match error
 
 
 fun f(x) =
   if x < 0 return 0
   Math.sqrt(x)
 //│ ╔══[PARSE ERROR] Unexpected 'return' keyword here
-//│ ║  l.19: 	  if x < 0 return 0
+//│ ║  l.12: 	  if x < 0 return 0
 //│ ╙──      	           ^^^^^^
 //│ ╔══[ERROR] Unrecognized term split (integer literal).
-//│ ║  l.19: 	  if x < 0 return 0
+//│ ║  l.12: 	  if x < 0 return 0
 //│ ╙──      	         ^
 
 
@@ -32,10 +25,10 @@ fun hasZeroElement(xs) =
     Cons(hd, tl) do set xs = tl
     Nil return false
 //│ ╔══[PARSE ERROR] Unexpected 'return' keyword here
-//│ ║  l.31: 	    Cons(0, tl) return true
+//│ ║  l.24: 	    Cons(0, tl) return true
 //│ ╙──      	                ^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.31: 	    Cons(0, tl) return true
+//│ ║  l.24: 	    Cons(0, tl) return true
 //│ ╙──      	    ^^^^^^^^^^^
 
 
