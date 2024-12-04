@@ -296,6 +296,10 @@ class Lowering(using TL, Raise, Elaborator.State):
         term(finallyDo)(_ => End()),
         k(Value.Ref(l))
       )
+      
+    case Annotated(prefix, receiver) => 
+      // TODO: handle annotations
+      term(receiver)(k)
     
     case Error => End("error")
     

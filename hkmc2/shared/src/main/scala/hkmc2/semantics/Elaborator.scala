@@ -429,6 +429,13 @@ extends Importer:
     case Spread(kw, kwLoc, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' spread operator." -> tree.toLoc :: Nil))
       Term.Error
+    case Annotated(prefix, receiver) => 
+      val ann = prefix match
+      case App(_: Ident | _: SynthSel | _: Sel, _) | _: Ident | _: SynthSel | _: Sel => term(prefix)
+      case _ =>
+        raise(ErrorReport(msg"Unsupported annotation prefix." -> prefix.toLoc :: Nil))
+        Term.Error
+      Term.Annotated(ann, term(receiver))
     // case _ =>
     //   ???
   
@@ -750,6 +757,9 @@ extends Importer:
       case Modified(Keyword.`declare`, absLoc, body) :: sts =>
         // TODO: pass declare to `go`
         go(body :: sts, acc)
+      case Annotated(prefix, receiver) :: sts =>
+        // TODO: pass annotations to `go`
+        go(receiver :: sts, acc)
       case (result: Tree) :: Nil =>
         val res = term(result)
         (Term.Blk(acc.reverse, res), ctx)

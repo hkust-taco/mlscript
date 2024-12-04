@@ -1,0 +1,71 @@
+:js
+
+module tailrec
+
+tailrec
+//│ = tailrec { class: [class tailrec] }
+
+@tailrec fun fact_n(n, acc) =
+  if n == 0 then acc else fact(n - 1, n * acc)
+  
+fun fact(n) =
+  @tailrec fun go(n, acc) =
+    if n == 0 then acc else go(n - 1, n * acc)
+  go(n, 1)
+
+module compile
+
+class SomePattern
+
+:e // TODO: pattern compilation
+fun foo(x) = if x is @compile SomePattern then "yes" else "no"
+//│ ╔══[ERROR] Unrecognized pattern.
+//│ ║  l.21: 	fun foo(x) = if x is @compile SomePattern then "yes" else "no"
+//│ ╙──      	                      ^^^^^^^^^^^^^^^^^^^
+
+module debug
+
+@debug 0
+//│ = 0
+
+@debug 1 + 2
+//│ = 3
+
+(@debug 1 + 2)
+//│ = 3
+
+(@debug 1) + 2
+//│ = 3
+
+(1 + @debug 2)
+//│ = 3
+
+class Log(msg: Str)
+
+fact(@Log 5)
+//│ = 120
+
+class Freezed(degree: Num)
+
+@Freezed(-273.15) class AbsoluteZero
+
+@Freezed(-18) class Beverage(name: Str)
+
+@Freezed(-4) let drink = Beverage("Coke")
+//│ drink = Beverage { name: 'Coke' }
+
+module Foo with
+  class Bar(qax: Str)
+
+@Foo.Bar("baz") class Qux
+
+@42 class Qux
+
+:pe
+@1 + 2 class Qux
+//│ ╔══[PARSE ERROR] Expected end of input; found 'class' keyword instead
+//│ ║  l.65: 	@1 + 2 class Qux
+//│ ╙──      	       ^^^^^
+//│ = 2
+
+@(1 + 2) class Qux

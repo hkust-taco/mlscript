@@ -74,6 +74,7 @@ enum Tree extends AutoLocated:
   case RegRef(reg: Tree, value: Tree)
   case Effectful(eff: Tree, body: Tree)
   case Spread(kw: Keyword.Ellipsis, kwLoc: Opt[Loc], body: Opt[Tree])
+  case Annotated(prefix: Tree, receiver: Tree)
 
   def children: Ls[Tree] = this match
     case _: Empty | _: Error | _: Ident | _: Literal => Nil
@@ -107,6 +108,7 @@ enum Tree extends AutoLocated:
     case Open(bod) => bod :: Nil
     case Def(lhs, rhs) => lhs :: rhs :: Nil
     case Spread(_, _, body) => body.toList
+    case Annotated(prefix, receiver) => prefix :: receiver :: Nil
   
   def describe: Str = this match
     case Empty() => "empty"
@@ -142,6 +144,7 @@ enum Tree extends AutoLocated:
     case Handle(_, _, _, _) => "handle"
     case Def(lhs, rhs) => "defining assignment"
     case Spread(_, _, _) => "spread"
+    case Annotated(prefix, receiver) => "annotated"
   
   def showDbg: Str = toString // TODO
   
@@ -191,6 +194,11 @@ object Apps:
   def unapply(t: Tree): S[(Tree, Ls[Tup])] = t match
     case App(Apps(id, args), arg: Tup) => S(id, args :+ arg)
     case t => S(t, Nil)
+    
+object Annotations:
+  def unapply(t: Tree): Opt[(Ls[Tree], Tree)] = t match
+    case Annotated(p, Annotations(ps, recv)) => S(p :: ps, recv)
+    case other => S((Nil, other))
 
 
 sealed abstract class OuterKind(val desc: Str)

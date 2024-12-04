@@ -101,6 +101,11 @@ object Parser:
       loc.origin.fph.getLineColAt(loc.spanStart) match
         case (ln, _, col) => s"Ln $ln Col $col"
   
+  extension (trees: Ls[Tree])
+    /** Note that the innermost annotation is the leftmost. */
+    def annotate(tree: Tree): Tree = trees.foldLeft(tree):
+      case (acc, ann) => Annotated(ann, acc)
+  
 end Parser
 import Parser._
 
@@ -232,21 +237,24 @@ abstract class Parser(
     maybeIndented((p, i) => p.block(allowNewlines = i))
   
   
-  def block(allowNewlines: Bool)(using Line): Ls[Tree] = blockOf(prefixRules, allowNewlines)
+  def block(allowNewlines: Bool)(using Line): Ls[Tree] = blockOf(prefixRules, Nil, allowNewlines)
   
-  def blockOf(rule: ParseRule[Tree], allowNewlines: Bool)(using Line): Ls[Tree] =
-    wrap(rule.name)(blockOfImpl(rule, allowNewlines))
-  def blockOfImpl(rule: ParseRule[Tree], allowNewlines: Bool): Ls[Tree] =
-    def blockContOf(rule: ParseRule[Tree]): Ls[Tree] =
+  def blockOf(rule: ParseRule[Tree], headAnnotations: Ls[Tree], allowNewlines: Bool)(using Line): Ls[Tree] =
+    wrap(rule.name)(blockOfImpl(rule, headAnnotations, allowNewlines))
+  def blockOfImpl(rule: ParseRule[Tree], headAnnotations: Ls[Tree], allowNewlines: Bool): Ls[Tree] =
+    def blockContOf(rule: ParseRule[Tree], headAnnotations: Ls[Tree] = Nil): Ls[Tree] =
       yeetSpaces match
-        case (COMMA, _) :: _ => consume; blockOf(rule, allowNewlines)
-        case (SEMI, _) :: _ => consume; blockOf(rule, allowNewlines)
-        case (NEWLINE, _) :: _ if allowNewlines => consume; blockOf(rule, allowNewlines)
+        case (COMMA, _) :: _ => consume; blockOf(rule, headAnnotations, allowNewlines)
+        case (SEMI, _) :: _ => consume; blockOf(rule, headAnnotations, allowNewlines)
+        case (NEWLINE, _) :: _ if allowNewlines => consume; blockOf(rule, headAnnotations, allowNewlines)
         case _ => Nil
     cur match
     case Nil => Nil
-    case (NEWLINE, _) :: _ if allowNewlines => consume; blockOf(rule, allowNewlines)
-    case (SPACE, _) :: _ => consume; blockOf(rule, allowNewlines)
+    case (NEWLINE, _) :: _ if allowNewlines => consume; blockOf(rule, headAnnotations, allowNewlines)
+    case (SPACE, _) :: _ => consume; blockOf(rule, headAnnotations, allowNewlines)
+    case (IDENT("@", _), l0) :: _ =>
+      consume
+      blockOf(rule, simpleExpr(AppPrec) :: headAnnotations, allowNewlines)
     case (tok @ (id: IDENT), loc) :: _ =>
       Keyword.all.get(id.name) match
       case S(kw) =>
@@ -256,14 +264,14 @@ abstract class Parser(
           yeetSpaces match
           case (tok @ BRACKETS(Indent | Curly, toks), loc) :: _ if subRule.blkAlt.isEmpty =>
             consume
-            val blk = rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.blockOf(subRule, allowNewlines)) // FIXME allowNewlines?
+            val blk = rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.blockOf(subRule, Nil, allowNewlines)) // FIXME allowNewlines?
             if blk.isEmpty then
               err((msg"Expected ${subRule.whatComesAfter} ${subRule.mkAfterStr}; found end of block instead" -> S(loc) :: Nil))
               errExpr
-            blk ::: blockContOf(rule)
+            blk ::: blockContOf(rule) // TODO: apply headAnnotations
           case _ =>
             val res = parseRule(CommaPrecNext, subRule).getOrElse(errExpr)
-            exprCont(res, CommaPrecNext, false) :: blockContOf(rule)
+            headAnnotations.annotate(exprCont(res, CommaPrecNext, false)) :: blockContOf(rule)
         case N =>
           
           // TODO dedup this common-looking logic:
@@ -273,10 +281,14 @@ abstract class Parser(
             yeetSpaces match
             case (tok @ BRACKETS(Indent | Curly, toks), loc) :: _ /* if subRule.blkAlt.isEmpty */ =>
               consume
+              headAnnotations match
+              case Nil => ()
+              case head :: _ =>
+                err((msg"Blocks are not allowed after annotations" -> head.toLoc :: Nil))
               prefixRules.kwAlts.get(kw.name) match
               case S(subRule) if subRule.blkAlt.isEmpty =>
                 rec(toks, S(tok.innerLoc), tok.describe).concludeWith { p =>
-                  p.blockOf(subRule.map(e => parseRule(CommaPrecNext, exprAlt.rest).map(res => exprAlt.k(e, res)).getOrElse(errExpr)), allowNewlines)
+                  p.blockOf(subRule.map(e => parseRule(CommaPrecNext, exprAlt.rest).map(res => exprAlt.k(e, res)).getOrElse(errExpr)), Nil, allowNewlines)
                 } ++ blockContOf(rule)
               case _ =>
                 TODO(cur)
@@ -284,15 +296,14 @@ abstract class Parser(
               prefixRules.kwAlts.get(kw.name) match
               case S(subRule) =>
                 val e = parseRule(CommaPrecNext, subRule).getOrElse(errExpr)
-                parseRule(CommaPrecNext, exprAlt.rest).map(res => exprAlt.k(e, res)).getOrElse(errExpr) :: blockContOf(rule)
+                headAnnotations.annotate(parseRule(CommaPrecNext, exprAlt.rest).map(res => exprAlt.k(e, res)).getOrElse(errExpr)) :: blockContOf(rule)
               case N =>
                 // TODO dedup?
                 err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> S(loc) :: Nil))
-                errExpr :: blockContOf(rule)
+                headAnnotations.annotate(errExpr) :: blockContOf(rule)
           case N =>
             err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> S(loc) :: Nil))
-            errExpr :: blockContOf(rule)
-            
+            headAnnotations.annotate(errExpr) :: blockContOf(rule)
       case N =>
         val lhs = tryParseExp(CommaPrecNext, tok, loc, rule).getOrElse(errExpr)
         cur match
@@ -301,9 +312,9 @@ abstract class Parser(
           val rhs = expr(CommaPrecNext)
           Def(lhs, rhs) :: blockContOf(rule)
         case _ =>
-          lhs :: blockContOf(rule)
+          headAnnotations.annotate(lhs) :: blockContOf(rule)
     case (tok, loc) :: _ =>
-      tryParseExp(CommaPrecNext, tok, loc, rule).getOrElse(errExpr) :: blockContOf(rule)
+      headAnnotations.annotate(tryParseExp(CommaPrecNext, tok, loc, rule).getOrElse(errExpr)) :: blockContOf(rule)
   
   
   private def tryParseExp[A](prec: Int, tok: Token, loc: Loc, rule: ParseRule[A]): Opt[A] =
@@ -467,6 +478,10 @@ abstract class Parser(
   def simpleExpr(prec: Int)(using Line): Tree = wrap(prec)(simpleExprImpl(prec))
   def simpleExprImpl(prec: Int): Tree =
     yeetSpaces match
+    case (IDENT("@", _), l0) :: _ =>
+      consume
+      val ann = simpleExpr(AppPrec)
+      Annotated(ann, simpleExpr(prec))
     case (IDENT(nme, sym), loc) :: _ =>
       Keyword.all.get(nme) match
         case S(kw) => // * Expressions starting with keywords should be handled in parseRule

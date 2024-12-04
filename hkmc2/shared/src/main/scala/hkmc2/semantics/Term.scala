@@ -39,6 +39,7 @@ enum Term extends Statement:
   case Throw(result: Term)
   case Try(body: Term, finallyDo: Term)
   case Handle(lhs: LocalSymbol, rhs: Term, defs: ObjBody)
+  case Annotated(prefix: Term, receiver: Term)
   
   lazy val symbol: Opt[Symbol] = this match
     case Ref(sym) => S(sym)
@@ -72,6 +73,7 @@ enum Term extends Statement:
     case RegRef(reg, value) => "reference creation"
     case Assgn(lhs, rhs) => "assignment"
     case Deref(ref) => "dereference"
+    case Annotated(prefix, receiver) => "annotation"
 end Term
 
 import Term.*
@@ -126,6 +128,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Try(body, finallyDo) => body :: finallyDo :: Nil
     case Handle(lhs, rhs, defs) => rhs :: defs._1 :: Nil
     case Neg(e) => e :: Nil
+    case Annotated(prefix, receiver) => prefix :: receiver :: Nil
   
   protected def children: Ls[Located] = this match
     case t: Lit => t.lit.asTree :: Nil
@@ -196,6 +199,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
         cls.tparams.map(_.showDbg).mkStringOr(", ", "[", "]")}${
         cls.paramsOpt.fold("")(_.toString)} ${cls.body}"
     case Import(sym, file) => s"import ${sym} from ${file}"
+    case Annotated(prefix, receiver) => s"@${prefix.showDbg} ${receiver.showDbg}"
 
 final case class LetDecl(sym: LocalSymbol) extends Statement
 
