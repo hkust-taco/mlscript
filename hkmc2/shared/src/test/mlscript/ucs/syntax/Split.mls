@@ -20,6 +20,7 @@ if f(x) ==
 //│ Parsed tree:
 //│ IfLike:
 //│   kw = keyword 'if'
+//│   kwLoc = N
 //│   split = App:
 //│     lhs = Ident of "=="
 //│     rhs = Tup of Ls of 
@@ -54,6 +55,7 @@ if x +
 //│ Parsed tree:
 //│ IfLike:
 //│   kw = keyword 'if'
+//│   kwLoc = N
 //│   split = App:
 //│     lhs = Ident of "+"
 //│     rhs = Tup of Ls of 

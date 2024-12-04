@@ -88,6 +88,8 @@ module Test with
   let f = () => x
   let x = 2
   log(f())
+//│ > try { const Test$class = class Test {   #x;   #f;   #x;   constructor() {     let tmp;     this.#x = 1;     this.#f = (...args) => {       globalThis.Predef.checkArgs("", 0, true, args.length);       return this.#x;     };     this.#x = 2;     tmp = this.#f() ?? null;     globalThis.log(tmp) ?? null   }   toString() { return "Test"; } }; this.Test = new Test$class; this.Test.class = Test$class; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                       ^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Identifier '#x' has already been declared
 
 

@@ -24,6 +24,7 @@ fun example(args) =
 //│   rhs = S of Block of Ls of 
 //│     IfLike:
 //│       kw = keyword 'if'
+//│       kwLoc = N
 //│       split = App:
 //│         lhs = App:
 //│           lhs = Ident of "foo"

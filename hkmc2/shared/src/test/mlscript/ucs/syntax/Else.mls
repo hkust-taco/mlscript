@@ -18,6 +18,7 @@ fun f(x, y, z) = if x then y else z
 //│       Ident of "z"
 //│   rhs = S of IfLike:
 //│     kw = keyword 'if'
+//│     kwLoc = N
 //│     split = Block of Ls of 
 //│       InfixApp:
 //│         lhs = Ident of "x"
@@ -74,7 +75,7 @@ fun f(x, y, z) =
   if
     x then y else z
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.75: 	    x then y else z
+//│ ║  l.76: 	    x then y else z
 //│ ╙──      	             ^^^^
 
 

@@ -1,0 +1,145 @@
+:js
+
+pattern Zero = "0"
+
+:expect true
+"0" is Zero
+//│ = true
+
+pattern Binary = "0" | "1"
+
+:expect false
+"2" is Binary
+//│ = false
+
+pattern Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+
+:expect true
+"0" is Digit
+//│ = true
+
+:expect true
+"9" is Digit
+//│ = true
+
+:expect false
+"a" is Digit
+//│ = false
+
+pattern Lower = "a"..="z"
+
+:expect true
+"a" is Lower
+//│ = true
+
+:expect true
+"z" is Lower
+//│ = true
+
+:expect false
+"0" is Lower
+//│ = false
+
+pattern Upper = "A"..="Z"
+
+:expect true
+"A" is Upper
+//│ = true
+
+:expect true
+"Q" is Upper
+//│ = true
+
+:expect false
+"b" is Upper
+//│ = false
+
+pattern Letter = Lower | Upper
+
+:expect true
+"b" is Letter
+//│ = true
+
+:expect true
+"V" is Letter
+//│ = true
+
+:expect false
+"0" is Letter
+//│ = false
+
+:expect false
+"9" is Letter
+//│ = false
+
+pattern Word = Letter ~ (Word | "")
+
+:expect false
+"" is Word
+//│ = false
+
+:expect true
+"b" is Word
+//│ = true
+
+:expect true
+"pattern" is Word
+//│ = true
+
+:expect false
+"b0rked" is Word
+//│ = false
+
+pattern ManyDigits = ("0" ..= "9") ~ (ManyDigits | "")
+
+:expect true
+"0" is ManyDigits
+//│ = true
+
+:expect true
+"42" is ManyDigits
+//│ = true
+
+:expect true
+"1234" is ManyDigits
+//│ = true
+
+pattern Integer = "0" | ("1" ..= "9") ~ (ManyDigits | "")
+
+:expect true
+"0" is Integer
+//│ = true
+
+:expect false
+"012" is Integer
+//│ = false
+
+:expect true
+"42" is Integer
+//│ = true
+
+pattern IdentifierStart = Letter | "_"
+
+pattern IdentifierBody = (Letter | Digit | "_") ~ (IdentifierBody | "")
+
+pattern Identifier = IdentifierStart ~ (IdentifierBody | "")
+
+:expect true
+"abc" is Identifier
+//│ = true
+
+:expect true
+"abc123" is Identifier
+//│ = true
+
+:expect true
+"abc_123" is Identifier
+//│ = true
+
+:expect true
+"_abc_123" is Identifier
+//│ = true
+
+:expect false
+"123abc" is Identifier
+//│ = false

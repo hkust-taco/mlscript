@@ -1,0 +1,98 @@
+:js
+
+fun plus(x, y) = x + y
+
+:traceJS
+fun g(z) =
+  if
+    z < -1 then g(z + 1)
+    z == -1 then 42
+    z == 0 then plus(0)
+    z > 0 then g(z - 1)
+
+fun f(x, y)(z) =
+  x + y + g(z)
+
+:traceJS
+fun h(x) =
+  f(1,2)(x)
+
+:traceJS
+:re
+h(3)
+//│ > CALL h(3)
+//│ > | CALL g(3)
+//│ > | | CALL g(2)
+//│ > | | | CALL g(1)
+//│ > | | | | CALL g(0)
+//│ ═══[RUNTIME ERROR] Error: Function 'plus' expected 2 arguments but got 1
+
+:traceJS
+h(-2)
+//│ > CALL h(-2)
+//│ > | CALL g(-2)
+//│ > | | CALL g(-1)
+//│ > | | => 42
+//│ > | => 42
+//│ > => 45
+//│ = 45
+
+:traceJS
+f(1,1)(-2)
+//│ > CALL g(-2)
+//│ > | CALL g(-1)
+//│ > | => 42
+//│ > => 42
+//│ = 44
+
+:traceJS
+:re
+f(1,2)(3)
+//│ > CALL g(3)
+//│ > | CALL g(2)
+//│ > | | CALL g(1)
+//│ > | | | CALL g(0)
+//│ ═══[RUNTIME ERROR] Error: Function 'plus' expected 2 arguments but got 1
+
+:showRepl
+:traceJS
+f(1,2)(-3)
+//│ REPL> Sending: globalThis.Predef.TraceLogger.enabled = true; globalThis.Predef.TraceLogger.resetIndent(0)
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: try { let tmp, tmp1; tmp = this.f(1, 2) ?? null; tmp1 = - 3; tmp(tmp1) ?? null } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Collected:
+//│ >  CALL g(-3)
+//│ >  | CALL g(-2)
+//│ >  | | CALL g(-1)
+//│ >  | | => 42
+//│ >  | => 42
+//│ >  => 42
+//│ >  45
+//│ REPL> Parsed:
+//│ >  CALL g(-3)
+//│ >  | CALL g(-2)
+//│ >  | | CALL g(-1)
+//│ >  | | => 42
+//│ >  | => 42
+//│ >  => 42
+//│ >  45
+//│ > CALL g(-3)
+//│ > | CALL g(-2)
+//│ > | | CALL g(-1)
+//│ > | | => 42
+//│ > | => 42
+//│ > => 42
+//│ = 45
+//│ REPL> Sending: globalThis.Predef.TraceLogger.enabled = false
+//│ REPL> Collected:
+//│ >  false
+
+:showRepl
+f(1,2)(-4)
+//│ REPL> Sending: try { let tmp, tmp1; tmp = this.f(1, 2) ?? null; tmp1 = - 4; tmp(tmp1) ?? null } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Collected:
+//│ >  45
+//│ REPL> Parsed:
+//│ >  45
+//│ = 45

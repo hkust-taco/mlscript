@@ -23,6 +23,8 @@ declare val fs
 declare module Predef with
   class Test with
     val x = 0
+  class MatchResult(captures)
+  class MatchFailure(errors)
 
 
 // TODO: rm

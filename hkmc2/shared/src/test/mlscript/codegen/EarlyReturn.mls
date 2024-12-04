@@ -16,10 +16,9 @@ f()
 
 :sjs
 fun f(x) =
-  if x < 0 then
+  if x < 0 do
     log("whoops")
     return 0
-  else ()
   x + 1
 //│ JS:
 //│ function f(...args) {

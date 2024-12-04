@@ -15,9 +15,7 @@ class Bool {
 }
 class Accounting {
   constructor() {
-    this.warnings = [
-      
-    ];
+    this.warnings = [];
     this.Project = function Project(num1) { return new Project.class(num1); };
     this.Project.class = class Project {
       constructor(num) {
@@ -59,9 +57,7 @@ class Accounting {
       }
       toString() { return "Line(" + this.name + ", " + this.proj + ", " + this.starting_balance + ", " + this.isMatchable + ")"; }
     };
-    this.lines = [
-      
-    ];
+    this.lines = [];
     this.Report = function Report(fileName1) { return new Report.class(fileName1); };
     this.Report.class = class Report {
       constructor(fileName) {

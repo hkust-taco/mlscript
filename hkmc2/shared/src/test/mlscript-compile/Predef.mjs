@@ -1,5 +1,66 @@
 const Predef$class = class Predef {
   constructor() {
+    this.MatchResult = function MatchResult(captures1) { return new MatchResult.class(captures1); };
+    this.MatchResult.class = class MatchResult {
+      constructor(captures) {
+        this.captures = captures;
+        
+      }
+      toString() { return "MatchResult(" + this.captures + ")"; }
+    };
+    this.MatchFailure = function MatchFailure(errors1) { return new MatchFailure.class(errors1); };
+    this.MatchFailure.class = class MatchFailure {
+      constructor(errors) {
+        this.errors = errors;
+        
+      }
+      toString() { return "MatchFailure(" + this.errors + ")"; }
+    };
+    const TraceLogger$class = class TraceLogger {
+      constructor() {
+        this.enabled = false;
+        this.indentLvl = 0;
+      }
+      indent() {
+        let scrut, prev, tmp;
+        scrut = this.enabled;
+        if (scrut) {
+          prev = this.indentLvl;
+          tmp = prev + 1;
+          this.indentLvl = tmp;
+          return prev;
+        } else {
+          return undefined;
+        }
+      } 
+      resetIndent(n) {
+        let scrut;
+        scrut = this.enabled;
+        if (scrut) {
+          this.indentLvl = n;
+          return undefined;
+        } else {
+          return undefined;
+        }
+      } 
+      log(msg) {
+        let scrut, tmp, tmp1, tmp2, tmp3, tmp4;
+        scrut = this.enabled;
+        if (scrut) {
+          tmp = "| ".repeat(this.indentLvl);
+          tmp1 = "  ".repeat(this.indentLvl);
+          tmp2 = "\n" + tmp1;
+          tmp3 = msg.replaceAll("\n", tmp2);
+          tmp4 = tmp + tmp3;
+          return console.log(tmp4);
+        } else {
+          return undefined;
+        }
+      }
+      toString() { return "TraceLogger"; }
+    };
+    this.TraceLogger = new TraceLogger$class;
+    this.TraceLogger.class = TraceLogger$class;
     this.Test = class Test {
       constructor() {
         this.y = 1;
@@ -42,6 +103,15 @@ const Predef$class = class Predef {
   } 
   tupleGet(xs1, i1) {
     return globalThis.Array.prototype.at.call(xs1, i1);
+  } 
+  stringStartsWith(string, prefix) {
+    return string.startsWith(prefix);
+  } 
+  stringGet(string1, i2) {
+    return string1.at(i2);
+  } 
+  stringDrop(string2, n) {
+    return string2.slice(n);
   } 
   checkArgs(functionName, expected, isUB, got) {
     let scrut, name, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;

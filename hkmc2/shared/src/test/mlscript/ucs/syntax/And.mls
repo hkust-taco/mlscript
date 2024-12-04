@@ -22,6 +22,7 @@ if x
 //│ Parsed tree:
 //│ IfLike:
 //│   kw = keyword 'if'
+//│   kwLoc = N
 //│   split = InfixApp:
 //│     lhs = InfixApp:
 //│       lhs = Ident of "x"
@@ -36,6 +37,7 @@ if x
 //│ Parsed tree:
 //│ IfLike:
 //│   kw = keyword 'if'
+//│   kwLoc = N
 //│   split = Block of Ls of 
 //│     InfixApp:
 //│       lhs = InfixApp:
@@ -54,6 +56,7 @@ if x is
 //│ Parsed tree:
 //│ IfLike:
 //│   kw = keyword 'if'
+//│   kwLoc = N
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
 //│     kw = keyword 'is'
@@ -73,6 +76,7 @@ if x is
 //│ Parsed tree:
 //│ IfLike:
 //│   kw = keyword 'if'
+//│   kwLoc = N
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
 //│     kw = keyword 'is'
@@ -102,6 +106,7 @@ if x is
 //│ Parsed tree:
 //│ IfLike:
 //│   kw = keyword 'if'
+//│   kwLoc = N
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
 //│     kw = keyword 'is'
@@ -143,6 +148,7 @@ if x is
 //│ Parsed tree:
 //│ IfLike:
 //│   kw = keyword 'if'
+//│   kwLoc = N
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
 //│     kw = keyword 'is'
@@ -181,6 +187,7 @@ if x is
 //│ Parsed tree:
 //│ IfLike:
 //│   kw = keyword 'if'
+//│   kwLoc = N
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
 //│     kw = keyword 'is'
