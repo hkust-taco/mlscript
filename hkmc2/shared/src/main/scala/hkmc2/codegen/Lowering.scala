@@ -68,6 +68,12 @@ class Lowering(using TL, Raise, Elaborator.State):
     case st.Ref(sym) =>
       k(subst(Value.Ref(sym)))
     case st.App(f, arg) =>
+      val isMlsFun = f.symbol.fold(f.isInstanceOf[st.Lam]):
+        case _: sem.BuiltinSymbol => true
+        case sym: sem.BlockMemberSymbol =>
+          sym.trmImplTree.fold(false)(_.k == syntax.Fun) ||
+          sym.clsTree.isDefined
+        case _ => false
       arg match
       case Tup(fs) =>
         val as = fs.map:
@@ -79,7 +85,7 @@ class Lowering(using TL, Raise, Elaborator.State):
         val l = new TempSymbol(S(t))
         subTerm(f): fr =>
           def rec(as: Ls[Bool -> st], asr: Ls[Arg]): Block = as match
-            case Nil => k(Call(fr, asr.reverse))
+            case Nil => k(Call(fr, asr.reverse)(isMlsFun))
             case (spd, a) :: as =>
               subTerm(a): ar =>
                 rec(as, Arg(spd, ar) :: asr)

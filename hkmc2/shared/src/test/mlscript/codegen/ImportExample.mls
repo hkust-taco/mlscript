@@ -29,14 +29,14 @@ open Example
 :sjs
 inc / 2
 //│ JS:
-//│ Example.funnySlash(Example.inc, 2) ?? null
+//│ Example.funnySlash(Example.inc, 2)
 //│ = 3
 
 :sjs
 :re
 n / 2
 //│ JS:
-//│ Example.funnySlash(this.n, 2) ?? null
+//│ Example.funnySlash(this.n, 2)
 //│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
 funnySlash(inc, 123)

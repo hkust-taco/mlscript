@@ -42,7 +42,7 @@ Example . oops(2)
 //│   rhs = Tup of Ls of 
 //│     IntLit of 2
 //│ JS:
-//│ let tmp; tmp = this.call(this.Example, this.oops) ?? null; tmp(2) ?? null
+//│ let tmp; tmp = this.call(this.Example, this.oops); tmp(2) ?? null
 //│ = [ 2, 1 ]
 
 Example. oops(2)
@@ -100,7 +100,7 @@ Example .> oops(2)
 //│       rhs = Tup of Ls of 
 //│         IntLit of 2
 //│ JS:
-//│ let tmp; tmp = this.oops(2) ?? null; this.call(this.Example, tmp) ?? null
+//│ let tmp; tmp = this.oops(2) ?? null; this.call(this.Example, tmp)
 //│ = [Function (anonymous)]
 
 

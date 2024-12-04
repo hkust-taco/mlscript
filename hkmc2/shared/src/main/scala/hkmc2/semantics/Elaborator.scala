@@ -332,8 +332,7 @@ extends Importer:
         case t: BlockMemberSymbol => t.trmImplTree.fold(true)(_.k != Fun)
         case _ => true
       
-      val appTerm = Term.App(lt, rt)(tree, sym)
-      if orNull then Term.OrNull(appTerm) else appTerm
+      Term.App(lt, rt)(tree, sym)
       
     case SynthSel(pre, nme) =>
       val preTrm = term(pre)

@@ -34,9 +34,9 @@ f(1)
 //│ function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
-//│   throw globalThis.Error("e") ?? null;
+//│   throw globalThis.Error("e");
 //│ }
-//│ this.f(1) ?? null
+//│ this.f(1)
 //│ ═══[RUNTIME ERROR] Error: e
 
 
@@ -50,10 +50,10 @@ f(false)
 //│   globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
 //│   if (x) {
-//│     throw globalThis.Error("x") ?? null;
+//│     throw globalThis.Error("x");
 //│   } else {
-//│     throw globalThis.Error("y") ?? null;
+//│     throw globalThis.Error("y");
 //│   }
 //│ }
-//│ this.f(false) ?? null
+//│ this.f(false)
 //│ ═══[RUNTIME ERROR] Error: y

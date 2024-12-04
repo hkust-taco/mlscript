@@ -14,7 +14,7 @@ print(12)
 :sjs
 12 |> print
 //│ JS:
-//│ Predef.pipe(12, Predef.print) ?? null
+//│ Predef.pipe(12, Predef.print)
 //│ > 12
 
 12 |>

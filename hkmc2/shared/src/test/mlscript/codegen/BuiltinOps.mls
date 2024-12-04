@@ -25,7 +25,7 @@ fun (+) lol(a, b) = [a, b]
 :sjs
 1 + 2
 //│ JS:
-//│ this.lol(1, 2) ?? null
+//│ this.lol(1, 2)
 //│ = [ 1, 2 ]
 
 

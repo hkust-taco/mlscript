@@ -93,11 +93,11 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
     case Call(Value.Ref(l: BuiltinSymbol), args) =>
       err(msg"Illeal arity for builtin symbol '${l.nme}'")
     
-    case Call(fun, args) =>
+    case c @ Call(fun, args) =>
       val base = fun match
         case _: Value.Lam => doc"(${result(fun)})"
         case _ => result(fun)
-      setupCall(base, args.map(result).mkDocument(", "))
+      setupCall(base, args.map(result).mkDocument(", "), c.isMlsFun)
     case Value.Lam(ps, bod) => scope.nest givenIn:
       val (params, bodyDoc) = setupFunction(none, ps, bod)
       doc"($params) => { #{  # ${
@@ -345,7 +345,7 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
     (paramsList, this.body(body))
 
 
-  def setupCall(bases: Document, args: Document)(using Raise, Scope): Document =
+  def setupCall(bases: Document, args: Document, isMlsFun: Bool)(using Raise, Scope): Document =
     doc"${bases}(${args})"
 
 object JSBuilder:
@@ -464,8 +464,8 @@ trait JSBuilderSelSanityChecks
     (instrument: Bool)(using Elaborator.State)
     extends JSBuilder:
   
-  override def setupCall(bases: Document, args: Document)(using Raise, Scope): Document =
-    val basic = super.setupCall(bases, args)
-    if instrument
+  override def setupCall(bases: Document, args: Document, isMlsFun: Bool)(using Raise, Scope): Document =
+    val basic = super.setupCall(bases, args, isMlsFun)
+    if instrument && (!isMlsFun)
     then doc"$basic ?? null"
     else basic

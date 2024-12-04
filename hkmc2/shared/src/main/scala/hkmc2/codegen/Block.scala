@@ -121,7 +121,7 @@ sealed abstract class Result
 // type Local = LocalSymbol
 type Local = Symbol
 
-case class Call(fun: Path, args: Ls[Arg]) extends Result
+case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool) extends Result
 
 case class Instantiate(cls: Path, args: Ls[Path]) extends Result
 

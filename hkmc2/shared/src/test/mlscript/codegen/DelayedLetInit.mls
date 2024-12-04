@@ -115,7 +115,7 @@ fun f() =
 
 f()
 //│ JS:
-//│ this.f() ?? null
+//│ this.f()
 
 foo
 //│ JS:

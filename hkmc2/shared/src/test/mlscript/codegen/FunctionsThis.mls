@@ -24,8 +24,8 @@ class Test with
 //│ this.Test = class Test {
 //│   constructor() {
 //│     let tmp;
-//│     tmp = globalThis.foo() ?? null;
-//│     globalThis.log(tmp) ?? null
+//│     tmp = globalThis.foo();
+//│     globalThis.log(tmp)
 //│   }
 //│   toString() { return "Test"; }
 //│ };

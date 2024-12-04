@@ -24,7 +24,7 @@ open Option
 :sjs
 None isDefined()
 //│ JS:
-//│ Option.isDefined(Option.None) ?? null
+//│ Option.isDefined(Option.None)
 //│ = false
 
 :fixme
@@ -47,7 +47,7 @@ Some(1)
 :sjs
 (new Some(1)) isDefined()
 //│ JS:
-//│ let tmp; tmp = new Option.Some.class(1); Option.isDefined(tmp) ?? null
+//│ let tmp; tmp = new Option.Some.class(1); Option.isDefined(tmp)
 //│ = true
 
 :re

@@ -29,7 +29,7 @@ module Test with
 :sjs
 Test.foo()
 //│ JS:
-//│ this.Test.foo() ?? null
+//│ this.Test.foo()
 //│ = 12
 
 :sjs
