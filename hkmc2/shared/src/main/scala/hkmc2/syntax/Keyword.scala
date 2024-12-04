@@ -65,8 +65,8 @@ object Keyword:
   val `while` = Keyword("while", N, curPrec)
   
   val thenPrec = nextPrec
-  val `then` = Keyword("then", thenPrec, curPrec)
-  val `do` = Keyword("do", thenPrec, curPrec)
+  val `then` = Keyword("then", thenPrec, thenPrec)
+  val `do` = Keyword("do", thenPrec, thenPrec)
   
   val `else` = Keyword("else", nextPrec, curPrec)
   val `case` = Keyword("case", N, N)
