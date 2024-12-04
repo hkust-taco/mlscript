@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 113 member(s)
 
 let cls = nofibStringToList("L")
 //│ cls = Cons { head: 'L', tail: Nil { class: [class Nil] } }

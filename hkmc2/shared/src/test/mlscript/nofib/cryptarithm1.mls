@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 113 member(s)
 
 
 fun expand(a, b, c, d, e, f) = f + (e*10) + (d*100) + (c*1000) + (b*10000) + (a*100000)

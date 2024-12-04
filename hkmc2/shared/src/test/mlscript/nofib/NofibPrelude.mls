@@ -92,6 +92,8 @@ fun abs(x) = globalThis.Math.abs(x)
 fun head(l) = if l is Cons(h, t) then h
 fun tail(l) = if l is Cons(h, t) then t
 
+fun while_(p, f, x) = if p(x) then while_(p, f, f(x)) else x
+
 fun reverse(l) =
   fun r(l', l) = if l is Cons(x, xs) then r(Cons(x, l'), xs) else l'
   r(Nil, l)
@@ -110,6 +112,11 @@ fun listEq(xs, ys) = if
   xs is Nil and ys is Nil then true
   xs is Cons(hx, tx) and ys is Cons(hy, ty) and (hx == hy) then listEq(tx, ty)
   else false
+
+fun listNeq(xs, ys) = if
+  xs is Nil and ys is Nil then false
+  xs is Cons(hx, tx) and ys is Cons(hy, ty) and (hx == hy) then listNeq(tx, ty)
+  else true
 
 fun enumFromTo(a, b) = if a <= b then Cons(a, enumFromTo(a + 1, b)) else Nil
 
