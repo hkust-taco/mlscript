@@ -57,19 +57,13 @@ object Elaborator:
                   nme -> Ctx.GetElem(elem)
                 case _ => nme -> elem
             case _ => sym.defn match
-              case S(TermDefinition(_, Fun, _, Nil, _, _, _, _)) => nme -> Ctx.GetElem(elem)
+              case S(TermDefinition(_, Fun, _, Nil, _, S(_), _, _)) => nme -> Ctx.GetElem(elem)
               case _ => nme -> elem
       )
     
     def nest(outer: Opt[InnerSymbol]): Ctx = Ctx(outer, Some(this), Map.empty)
-    
-    private def getImpl(name: Str): Opt[Ctx.Elem] = env.get(name).orElse(parent.flatMap(_.getImpl(name)))
-    def isGetter(name: Str): Bool = getImpl(name) match
-      case S(_: Ctx.GetElem) => true
-      case _ => false
-    def get(name: Str): Opt[Ctx.Elem] = getImpl(name).map:
-      case Ctx.GetElem(base) => base
-      case elem => elem
+
+    def get(name: Str): Opt[Ctx.Elem] = env.get(name).orElse(parent.flatMap(_.get(name)))
     def getOuter: Opt[InnerSymbol] = outer.orElse(parent.flatMap(_.getOuter))
     
     // * Invariant: We expect that the top-level context only contain hard-coded symbols like `globalThis`
@@ -99,16 +93,16 @@ object Elaborator:
   object Ctx:
     abstract class Elem:
       def nme: Str
-      def ref(id: Tree.Ident): Term
+      def ref(id: Tree.Ident)(using Elaborator.State): Term
       def symbol: Opt[Symbol]
     final case class RefElem(val sym: Symbol) extends Elem:
       val nme = sym.nme
-      def ref(id: Tree.Ident): Term =
+      def ref(id: Tree.Ident)(using Elaborator.State): Term =
         require(id.name == nme)
         Term.Ref(sym)(id, 666) // TODO 666
       def symbol = S(sym)
     final case class SelElem(val base: Elem, val nme: Str, val symOpt: Opt[FieldSymbol]) extends Elem:
-      def ref(id: Tree.Ident): Term =
+      def ref(id: Tree.Ident)(using Elaborator.State): Term =
         // * Note: due to symbolic ops, we may have `id.name =/= nme`;
         // * e.g., we can have `id.name = "|>"` and `nme = "pipe"`.
         Term.SynthSel(base.ref(Ident(base.nme)),
@@ -116,7 +110,9 @@ object Elaborator:
       def symbol = symOpt
     final case class GetElem(val base: Elem) extends Elem:
       def nme: Str = base.nme
-      def ref(id: Tree.Ident): Term = base.ref(id)
+      def ref(id: Tree.Ident)(using Elaborator.State): Term =
+        val emptyTup: Tree.Tup = Tree.Tup(Nil)
+        Term.App(base.ref(id), Term.Tup(Nil)(emptyTup))(Tree.App(id, emptyTup), FlowSymbol("‹get-res›"))
       def symbol: Opt[Symbol] = base.symbol
     given Conversion[Symbol, Elem] = RefElem(_)
     val empty: Ctx = Ctx(N, N, Map.empty)
@@ -354,12 +350,21 @@ extends Importer:
       val preTrm = term(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
       Term.SynthSel(preTrm, nme)(sym)
-    case Sel(pre, nme) =>
+    case t @ Sel(pre, nme) =>
       val preTrm = term(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
-      if inAppPrefix
+      val res = if inAppPrefix
       then Term.SynthSel(preTrm, nme)(sym)
       else Term.Sel(preTrm, nme)(sym)
+      val isGetter = ctx.get(nme.name) match // TODO: create a function for this logic
+        case S(_: Ctx.GetElem) => true
+        case _ => sym.flatMap(_.defn) match
+          case S(TermDefinition(_, Fun, _, Nil, _, S(_), _, _)) => true
+          case _ => false
+      if isGetter then
+        val emptyTup: Tree.Tup = Tree.Tup(Nil)
+        Term.App(res, Term.Tup(Nil)(emptyTup))(Tree.App(t, emptyTup), FlowSymbol("‹get-res›"))
+      else res
     case tree @ Tup(fields) =>
       Term.Tup(fields.map(fld(_)))(tree)
     case New(body) =>

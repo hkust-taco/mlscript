@@ -13,7 +13,7 @@ fun t = 42
 :sjs
 t
 //│ JS:
-//│ this.t()
+//│ this.t() ?? null
 //│ = 42
 
 
@@ -31,7 +31,7 @@ fun test() =
 //│   function whoops() {
 //│     return 42;
 //│   }
-//│   return whoops();
+//│   return whoops() ?? null;
 //│ }
 //│ undefined
 
@@ -84,10 +84,12 @@ fun baz() =
 //│     globalThis.Predef.checkArgs("", 2, true, args1.length);
 //│     let x = args1[0];
 //│     let y = args1[1];
-//│     let tmp, tmp1;
+//│     let tmp, tmp1, tmp2, tmp3;
 //│     tmp = x + y;
-//│     tmp1 = tmp + w();
-//│     return tmp1 + z();
+//│     tmp1 = w() ?? null;
+//│     tmp2 = tmp + tmp1;
+//│     tmp3 = z() ?? null;
+//│     return tmp2 + tmp3;
 //│   };
 //│ }
 //│ undefined
@@ -112,10 +114,13 @@ fun a() =
 //│   }
 //│   function c(...args1) {
 //│     globalThis.Predef.checkArgs("c", 0, true, args1.length);
+//│     let tmp, tmp1;
 //│     function d() {
 //│       return 2;
 //│     }
-//│     return b() + d();
+//│     tmp = b() ?? null;
+//│     tmp1 = d() ?? null;
+//│     return tmp + tmp1;
 //│   }
 //│   return c;
 //│ }
@@ -144,7 +149,7 @@ fun b() =
 //│     function c() {
 //│       return 2;
 //│     }
-//│     return c();
+//│     return c() ?? null;
 //│   }
 //│   return d;
 //│ }
@@ -169,12 +174,15 @@ fun c() =
 //│     return 1;
 //│   }
 //│   function d() {
+//│     let tmp, tmp1;
 //│     function e() {
 //│       return 1;
 //│     }
-//│     return e() + f();
+//│     tmp = e() ?? null;
+//│     tmp1 = f() ?? null;
+//│     return tmp + tmp1;
 //│   }
-//│   return d();
+//│   return d() ?? null;
 //│ }
 //│ undefined
 

@@ -224,14 +224,15 @@ fun fact = case
 //│   return (...args) => {
 //│     globalThis.Predef.checkArgs("", 1, true, args.length);
 //│     let caseScrut = args[0];
-//│     let n, tmp, tmp1;
+//│     let n, tmp, tmp1, tmp2;
 //│     if (caseScrut === 0) {
 //│       return 1;
 //│     } else {
 //│       n = caseScrut;
-//│       tmp = n - 1;
-//│       tmp1 = globalThis.fact()(tmp) ?? null;
-//│       return n * tmp1;
+//│       tmp = globalThis.fact() ?? null;
+//│       tmp1 = n - 1;
+//│       tmp2 = tmp(tmp1) ?? null;
+//│       return n * tmp2;
 //│     }
 //│   };
 //│ }

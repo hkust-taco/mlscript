@@ -482,7 +482,14 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
               case _ => (error(msg"${field.name} is not a valid member in class ${clsSym.nme}" -> t.toLoc :: Nil), Bot)
           case N => 
             (error(msg"Not a valid class: ${cls.describe}" -> cls.toLoc :: Nil), Bot)
-      case Term.App(lhs, Term.Tup(rhs)) =>
+      case Term.App(lhs @ Term.SynthSel(_, Ident(nme)), Term.Tup(Nil)) if ctx.ctx.get(nme).map(e => e match {
+        case _: Elaborator.Ctx.GetElem => true
+        case _ => false
+      }).getOrElse(lhs.sym.map(_.defn match {
+        case S(TermDefinition(_, Fun, _, Nil, _, S(_), _, _)) => true
+        case _ => false
+      }).getOrElse(false)) => typeCheck(lhs) // * Gettters
+      case t @ Term.App(lhs, Term.Tup(rhs)) =>
         val (funTy, lhsEff) = typeCheck(lhs)
         app((funTy, lhsEff), rhs, t)
       case Term.New(cls, args) =>
