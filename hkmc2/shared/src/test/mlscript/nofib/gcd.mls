@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 109 member(s)
+//│ Imported 111 member(s)
 
 
 fun g(u1u2u3, v1v2v3) = if u1u2u3 is Tup3(u1, u2, u3) and v1v2v3 is Tup3(v1, v2, v3) then

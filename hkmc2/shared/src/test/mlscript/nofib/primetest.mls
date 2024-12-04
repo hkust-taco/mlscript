@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 109 member(s)
+//│ Imported 111 member(s)
 
 
 fun even(x) = intMod(x, 2) == 0

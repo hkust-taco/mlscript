@@ -3,6 +3,8 @@ fun nofibPrint(x) = globalThis.process.stdout.write(globalThis.JSON.stringify(x)
 fun nofibError(e) = globalThis.eval("throw new Error('" + e + "')")
 fun nofibBigInt(i) = globalThis.BigInt(i)
 
+type Char = String
+
 abstract class Option[out T]: Some[T] | None
 class Some[out T](x: T) extends Option[T]
 object None extends Option
@@ -83,6 +85,7 @@ fun quotRem(a, b) = Tup2(intQuot(a, b), intRem(a, b))
 fun divMod(a, b) = Tup2(intDiv(a, b), intMod(a, b))
 
 fun max(a, b) = globalThis.Math.max(a, b)
+fun min(a, b) = globalThis.Math.min(a, b)
 
 fun abs(x) = globalThis.Math.abs(x)
 
@@ -132,7 +135,7 @@ fun zip(xs, ys) = if xs is
 
 fun inList(x, ls) = if ls is
   Cons(h, t) and
-    x == h then true
+    x === h then true
     else inList(x, t)
   Nil then false
 

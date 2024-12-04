@@ -1,12 +1,10 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 109 member(s)
+//│ Imported 111 member(s)
 
 
 
 abstract class Lisplist: Nill | Atom | Conss
-
-type Char = String
 
 object Nill extends Lisplist
 class

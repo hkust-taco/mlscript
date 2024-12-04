@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 109 member(s)
+//│ Imported 111 member(s)
 
 
 class Pixmap(a: Int, b: Int, c: Int, d:List[Tup3[Int, Int, Int]])
