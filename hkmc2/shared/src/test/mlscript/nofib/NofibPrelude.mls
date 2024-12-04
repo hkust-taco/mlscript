@@ -9,6 +9,8 @@ abstract class Option[out T]: Some[T] | None
 class Some[out T](x: T) extends Option[T]
 object None extends Option
 
+fun fromSome(s) = if s is Some(x) then x
+
 class Lazy[out A](init: () -> A) with
   mut val cached: Option[A] = None
   fun get() =

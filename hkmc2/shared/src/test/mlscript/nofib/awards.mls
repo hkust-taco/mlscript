@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 113 member(s)
+//│ Imported 114 member(s)
 
 
 fun delete_(xs, e) = deleteBy((x, y) => x == y, e, xs)
