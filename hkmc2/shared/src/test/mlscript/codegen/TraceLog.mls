@@ -1,0 +1,135 @@
+:js
+:traceJS
+:noSanityCheck
+
+:sjs
+fun fib(a) = if
+  a <= 1 then a
+  else fib(a - 1) + fib(a - 2)
+//│ JS:
+//│ function fib(a) {
+//│   let scrut, traceLogEnterMsg, traceLogPrevIndent, traceLogRes, traceLogRetMsg, traceLogParam_a, traceLogResInspected, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+//│   traceLogParam_a = globalThis.util.inspect(a);
+//│   traceLogEnterMsg = globalThis.String.prototype.concat.call("CALL fib(", traceLogParam_a, ")");
+//│   tmp = globalThis.Predef.TraceLogger.log(traceLogEnterMsg);
+//│   traceLogPrevIndent = globalThis.Predef.TraceLogger.indent();
+//│   scrut = a <= 1;
+//│   if (scrut) {
+//│     tmp1 = a;
+//│   } else {
+//│     tmp2 = a - 1;
+//│     tmp3 = globalThis.fib(tmp2);
+//│     tmp4 = a - 2;
+//│     tmp5 = globalThis.fib(tmp4);
+//│     tmp1 = tmp3 + tmp5;
+//│   }
+//│   traceLogRes = tmp1;
+//│   traceLogResInspected = globalThis.util.inspect(traceLogRes);
+//│   traceLogRetMsg = globalThis.String.prototype.concat.call("=> ", traceLogResInspected);
+//│   tmp6 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent);
+//│   tmp7 = globalThis.Predef.TraceLogger.log(traceLogRetMsg);
+//│   return traceLogRes;
+//│ }
+//│ undefined
+
+fun f(x) = g(x)
+fun g(x) = h(x)
+fun h(x) = fib(x)
+f(5)
+//│ > CALL f(5)
+//│ > | CALL g(5)
+//│ > | | CALL h(5)
+//│ > | | | CALL fib(5)
+//│ > | | | | CALL fib(4)
+//│ > | | | | | CALL fib(3)
+//│ > | | | | | | CALL fib(2)
+//│ > | | | | | | | CALL fib(1)
+//│ > | | | | | | | => 1
+//│ > | | | | | | | CALL fib(0)
+//│ > | | | | | | | => 0
+//│ > | | | | | | => 1
+//│ > | | | | | | CALL fib(1)
+//│ > | | | | | | => 1
+//│ > | | | | | => 2
+//│ > | | | | | CALL fib(2)
+//│ > | | | | | | CALL fib(1)
+//│ > | | | | | | => 1
+//│ > | | | | | | CALL fib(0)
+//│ > | | | | | | => 0
+//│ > | | | | | => 1
+//│ > | | | | => 3
+//│ > | | | | CALL fib(3)
+//│ > | | | | | CALL fib(2)
+//│ > | | | | | | CALL fib(1)
+//│ > | | | | | | => 1
+//│ > | | | | | | CALL fib(0)
+//│ > | | | | | | => 0
+//│ > | | | | | => 1
+//│ > | | | | | CALL fib(1)
+//│ > | | | | | => 1
+//│ > | | | | => 2
+//│ > | | | => 5
+//│ > | | => 5
+//│ > | => 5
+//│ > => 5
+//│ = 5
+
+
+abstract class E: S | N
+class S(x) with
+  fun toString() = "S(" + x + "): " + toInt(succ(x))
+class N() with
+  fun toString() = "N: 0" 
+fun succ(x) = S(x)
+fun toInt(x) = if x is
+  N then 0
+  S(n) then 1 + toInt(n)
+
+
+(S(S(N()))).toString()
+//│ > CALL toString()
+//│ > | CALL toString()
+//│ > | | CALL toString()
+//│ > | | => 'N: 0'
+//│ > | | CALL succ(N {})
+//│ > | | => S { x: N {} }
+//│ > | | CALL toInt(S { x: N {} })
+//│ > | | | CALL toInt(N {})
+//│ > | | | => 0
+//│ > | | => 1
+//│ > | => 'S(N: 0): 1'
+//│ > | CALL succ(S { x: N {} })
+//│ > | => S { x: S { x: N {} } }
+//│ > | CALL toInt(S { x: S { x: N {} } })
+//│ > | | CALL toInt(S { x: N {} })
+//│ > | | | CALL toInt(N {})
+//│ > | | | => 0
+//│ > | | => 1
+//│ > | => 2
+//│ > => 'S(S(N: 0): 1): 2'
+//│ = 'S(S(N: 0): 1): 2'
+
+
+class Cls(a, b, c, d, e, f)
+fun id(y) =
+  if y ==
+    0 then Cls("aaaa", "bbbb", "cccc", "dddd", "eeee", "ffff")
+    else
+      id(y - 1)
+      0
+id(2)
+//│ > CALL id(2)
+//│ > | CALL id(1)
+//│ > | | CALL id(0)
+//│ > | | => Cls {
+//│ >       a: 'aaaa',
+//│ >       b: 'bbbb',
+//│ >       c: 'cccc',
+//│ >       d: 'dddd',
+//│ >       e: 'eeee',
+//│ >       f: 'ffff'
+//│ >     }
+//│ > | => 0
+//│ > => 0
+//│ = 0
+

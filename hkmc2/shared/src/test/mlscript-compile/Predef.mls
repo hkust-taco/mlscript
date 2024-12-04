@@ -39,6 +39,24 @@ fun checkArgs(functionName, expected, isUB, got) =
     //   + (if isUB then "" else " at least")
     //   + " arguments but got " + got)
 
+module TraceLogger with
+  mut val enabled = false
+  mut val indentLvl = 0
+  fun indent() =
+    if enabled then
+      let prev = indentLvl
+      set indentLvl = prev + 1
+      prev
+    else ()
+  fun resetIndent(n) =
+    if enabled then
+      set indentLvl = n
+    else ()
+  fun log(msg) =
+    if enabled then
+      console.log("| ".repeat(indentLvl) + msg.replaceAll("\n", "\n" + "  ".repeat(indentLvl)))
+    else ()
+
 class Test with
   val y = 1
 

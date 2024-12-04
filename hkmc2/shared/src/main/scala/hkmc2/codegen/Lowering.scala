@@ -110,7 +110,8 @@ class Lowering(using TL, Raise, Elaborator.State):
               Define(ValDefn(td.owner, knd, td.sym, r),
                 term(st.Blk(stats, res))(k)))
           case syntax.Fun =>
-            Define(FunDefn(td.sym, td.params, returnedTerm(bod)),
+            val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))
+            Define(FunDefn(td.sym, paramLists, bodyBlock),
               term(st.Blk(stats, res))(k))
       // case cls: ClassDef =>
       case cls: ClassLikeDef =>
@@ -126,7 +127,8 @@ class Lowering(using TL, Raise, Elaborator.State):
         Define(ClsLikeDefn(cls.sym, syntax.Cls,
             mtds.flatMap: td =>
               td.body.map: bod =>
-                FunDefn(td.sym, td.params, term(bod)(Ret))
+                val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))
+                FunDefn(td.sym, paramLists, bodyBlock)
             ,
             privateFlds,
             publicFlds,
@@ -165,7 +167,8 @@ class Lowering(using TL, Raise, Elaborator.State):
       term(st.Blk(stats, res))(k)
       
     case st.Lam(params, body) =>
-      k(Value.Lam(params, returnedTerm(body)))
+      val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N)
+      k(Value.Lam(paramLists.head, bodyBlock))
     
     /* 
     case t @ st.If(Split.Let(sym, trm, tail)) =>
@@ -330,6 +333,8 @@ class Lowering(using TL, Raise, Elaborator.State):
     subTerm(prefix): p =>
       k(Select(p, nme)(sym))
   
+  def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])(using Subst): (List[ParamList], Block) =
+    (paramLists, returnedTerm(bodyTerm))
 
 
 trait LoweringSelSanityChecks
@@ -357,3 +362,79 @@ trait LoweringSelSanityChecks
       super.setupSelection(prefix, nme, sym)(k)
 
 
+
+trait LoweringTraceLog
+    (instrument: Bool)(using TL, Raise, Elaborator.State)
+    extends Lowering:
+      
+  private def selFromGlobalThis(path: Str*): Path =
+      path.foldLeft[Path](Value.Ref(State.globalThisSymbol)):
+        (qual, name) => Select(qual, Tree.Ident(name))(N)
+    
+  private def assignStmts(stmts: (Local, Result)*)(rest: Block) =
+    stmts.foldRight(rest):
+      case ((sym, res), acc) => Assign(sym, res, acc)
+  
+  extension (k: Block => Block)
+    def |>: (b: Block): Block = k(b)
+
+  private val traceLogFn = selFromGlobalThis("Predef", "TraceLogger", "log")
+  private val traceLogIndentFn = selFromGlobalThis("Predef", "TraceLogger", "indent")
+  private val traceLogResetFn = selFromGlobalThis("Predef", "TraceLogger", "resetIndent")
+  private val strConcatFn = selFromGlobalThis("String", "prototype", "concat", "call")
+  private val inspectFn = selFromGlobalThis("util", "inspect")
+  
+
+  override def setupFunctionDef(paramLists: List[ParamList], bodyTerm: st, name: Option[Str])(using Subst): (List[ParamList], Block) = 
+    if instrument then
+      val (ps, bod) = handleMultipleParamLists(paramLists, bodyTerm)
+      val instrumentedBody = setupFunctionBody(ps, bod, name)
+      (ps :: Nil, instrumentedBody)
+    else
+      super.setupFunctionDef(paramLists, bodyTerm, name)
+
+  def handleMultipleParamLists(paramLists: List[ParamList], bod: Term) =
+    def go(paramLists: List[ParamList], bod: Term): (ParamList, Term) =
+      paramLists match
+        case Nil => ???
+        case h :: Nil => (h, bod)
+        case h :: t => go(t, Term.Lam(h, bod))
+    go(paramLists.reverse, bod)
+  
+  def setupFunctionBody(params: ParamList, bod: Term, name: Option[Str])(using Subst): Block =
+    val enterMsgSym = TempSymbol(N, dbgNme = "traceLogEnterMsg")
+    val prevIndentLvlSym = TempSymbol(N, dbgNme = "traceLogPrevIndent")
+    val resSym = TempSymbol(N, dbgNme = "traceLogRes")
+    val retMsgSym = TempSymbol(N, dbgNme = "traceLogRetMsg")
+    val psInspectedSyms = params.params.map(p => TempSymbol(N, dbgNme = s"traceLogParam_${p.sym.nme}") -> p.sym)
+    val resInspectedSym = TempSymbol(N, dbgNme = "traceLogResInspected")
+    
+    val psSymArgs = psInspectedSyms.zipWithIndex.foldRight[Ls[Arg]](Arg(false, Value.Lit(Tree.StrLit(")"))) :: Nil):
+      case (((s, p), i), acc) => if i == psInspectedSyms.length - 1
+        then Arg(false, Value.Ref(s)) :: acc
+        else Arg(false, Value.Ref(s)) :: Arg(false, Value.Lit(Tree.StrLit(", "))) :: acc
+    
+    assignStmts(psInspectedSyms.map: (pInspectedSym, pSym) =>
+      pInspectedSym -> Call(inspectFn, Arg(false, Value.Ref(pSym)) :: Nil)
+    *) |>:
+    assignStmts(
+      enterMsgSym -> Call(
+        strConcatFn,
+        Arg(false, Value.Lit(Tree.StrLit(s"CALL ${name.getOrElse("[arrow function]")}("))) :: psSymArgs
+      ),
+      TempSymbol(N) -> Call(traceLogFn, Arg(false, Value.Ref(enterMsgSym)) :: Nil),
+      prevIndentLvlSym -> Call(traceLogIndentFn, Nil)
+    ) |>: 
+    term(bod)(r =>
+    assignStmts(
+      resSym -> r,
+      resInspectedSym -> Call(inspectFn, Arg(false, Value.Ref(resSym)) :: Nil),
+      retMsgSym -> Call(
+        strConcatFn,
+        Arg(false, Value.Lit(Tree.StrLit("=> "))) :: Arg(false, Value.Ref(resInspectedSym)) :: Nil
+      ),
+      TempSymbol(N) -> Call(traceLogResetFn, Arg(false, Value.Ref(prevIndentLvlSym)) :: Nil),
+      TempSymbol(N) -> Call(traceLogFn, Arg(false, Value.Ref(retMsgSym)) :: Nil)
+    ) |>:
+      Ret(Value.Ref(resSym))
+    )

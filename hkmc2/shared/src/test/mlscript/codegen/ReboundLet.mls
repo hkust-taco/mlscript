@@ -44,6 +44,8 @@ class Foo with
   print(x)
   print(f())
   print(g())
+//│ > try { this.Foo = class Foo {   #x;   #f;   #x;   constructor() {     let tmp, tmp1, tmp2, tmp3, tmp4, tmp5;     this.#x = 1;     this.#f = (...args) => {       globalThis.Predef.checkArgs("", 0, true, args.length);       return this.#x;     };     tmp = this.#f() ?? null;     tmp1 = Predef.print(tmp) ?? null;     this.#x = 2;     tmp2 = Predef.print(this.#x) ?? null;     tmp3 = this.#f() ?? null;     tmp4 = Predef.print(tmp3) ?? null;     tmp5 = this.g() ?? null;     Predef.print(tmp5) ?? null   }   g(...args) {     globalThis.Predef.checkArgs("g", 0, true, args.length);     return this.#x;   }   toString() { return "Foo"; } }; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                              ^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Identifier '#x' has already been declared
 
 
