@@ -30,7 +30,7 @@ class MatchResult(captures)
 class MatchFailure(errors)
 
 fun checkArgs(functionName, expected, isUB, got) =
-  if got < expected || isUB && got > expected then
+  if got < expected || isUB && got > expected do
     let name = if functionName.length > 0 then " '" + functionName + "'" else ""
     throw globalThis.Error("Function" + name + " expected " + expected + " arguments but got " + got)
     // TODO
@@ -38,7 +38,6 @@ fun checkArgs(functionName, expected, isUB, got) =
     //   + expected
     //   + (if isUB then "" else " at least")
     //   + " arguments but got " + got)
-  else ()
 
 class Test with
   val y = 1

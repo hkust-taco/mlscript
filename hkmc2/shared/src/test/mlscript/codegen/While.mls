@@ -40,7 +40,7 @@ while x then set x = false
 let x = true
 //│ x = true
 
-while x then set x = false else ()
+while x do set x = false
 
 
 let x = true
@@ -106,7 +106,7 @@ while log("checking"); i < 3
 () =>
 while
   let i = 0
-  i < 10 then set i += 1
+  i < 10 do set i += 1
 //│ JS:
 //│ (...args) => {
 //│   globalThis.Predef.checkArgs("", 0, true, args.length);
@@ -120,7 +120,7 @@ while
 //│       tmp1 = undefined;
 //│       continue tmp2;
 //│     } else {
-//│       throw new this.Error("match error");
+//│       tmp1 = undefined;
 //│     }
 //│     break;
 //│   }
@@ -137,8 +137,7 @@ let i = 0 in
 
 let i = 0 in while
   let _ = log(i)
-  i < 3 then set i += 1
-  else ()
+  i < 3 do set i += 1
 //│ > 0
 //│ > 1
 //│ > 2
@@ -247,7 +246,7 @@ while log("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.247: 	  then 0(0)
+//│ ║  l.246: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ═══[ERROR] Unrecognized term split (false literal).
 //│ ═══[RUNTIME ERROR] Error: match error
