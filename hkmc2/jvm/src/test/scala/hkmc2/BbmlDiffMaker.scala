@@ -17,8 +17,10 @@ abstract class BbmlDiffMaker extends JSBackendDiffMaker:
       if isGlobal then typeCheck.disable.isGlobal = true
       typeCheck.disable.setCurrentValue(())
       if file =/= bbPreludeFile then
+        curCtx = Elaborator.State.init
         importFile(bbPreludeFile, verbose = false)
-  
+        curCtx = curCtx.nest(N)
+
   override def init(): Unit =
     if bbmlOpt.isSet then
       import syntax.*

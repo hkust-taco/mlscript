@@ -26,12 +26,7 @@ final case class BbCtx(
   env: HashMap[Uid[Symbol], GeneralType]
 ):
   def +=(p: Symbol -> GeneralType): Unit = env += p._1.uid -> p._2
-  def get(sym: Symbol): Option[GeneralType] =
-    if BbCtx.builtinOps(sym.nme) then ctx.get(s"#${sym.nme}") match
-      case S(Ctx.SelElem(_, _, symOpt)) => symOpt.flatMap(getImpl(_))
-      case _ => N
-    else getImpl(sym)
-  private def getImpl(sym: Symbol): Option[GeneralType] = env.get(sym.uid) orElse parent.dlof(_.getImpl(sym))(None)
+  def get(sym: Symbol): Option[GeneralType] = env.get(sym.uid) orElse parent.dlof(_.get(sym))(None)
   def getCls(name: Str): Option[TypeSymbol] =
     for
       elem <- ctx.get(name)
@@ -442,6 +437,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             ctx += sym -> typeType(sig)
             goStats(stats)
           case (clsDef: ClassDef) :: stats =>
+            goStats(stats)
+          case (modDef: ModuleDef) :: stats =>
             goStats(stats)
           case Import(sym, pth) :: stats =>
             goStats(stats) // TODO:

@@ -29,7 +29,10 @@ object Elaborator:
     ";" -> ",",
     "+." -> "+",
     "-." -> "-",
-    "*." -> "*")
+    "*." -> "*",
+    "/." -> "/")
+  private val builtinBinOps = aliasOps ++ (binaryOps.map: op =>
+    op -> op).toMap
 
   val reservedNames = binaryOps.toSet ++ aliasOps.keySet + "NaN" + "Infinity"
   
@@ -91,7 +94,7 @@ object Elaborator:
       val Num = assumeBuiltinCls("Num")
       val Str = assumeBuiltinCls("Str")
       val Predef = assumeBuiltinMod("Predef")
-      def tryMapOp(op: Str): Opt[Str] = aliasOps.get(op)
+      def getBuiltinOp(op: Str): Opt[Str] = if getBuiltin(op).isDefined then builtinBinOps.get(op) else N
   
   object Ctx:
     abstract class Elem:

@@ -95,7 +95,7 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
     case Call(Value.Ref(l: BuiltinSymbol), args) =>
       err(msg"Illeal arity for builtin symbol '${l.nme}'")
     case Call(s @ Select(_, id), lhs :: rhs :: Nil) =>
-      Elaborator.ctx.Builtins.tryMapOp(id.name) match
+      Elaborator.ctx.Builtins.getBuiltinOp(id.name) match
         case S(jsOp) =>
           val res = doc"${result(lhs)} ${jsOp} ${result(rhs)}"
           if needsParens(jsOp) then doc"(${res})" else res
