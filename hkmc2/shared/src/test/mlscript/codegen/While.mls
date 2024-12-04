@@ -143,6 +143,14 @@ let i = 0 in while
 //│ > 2
 //│ > 3
 
+let i = 0 in while
+  do log(i)
+  i < 3 do set i += 1
+//│ > 0
+//│ > 1
+//│ > 2
+//│ > 3
+
 
 // * Note that the semantics of UCS-while is quite subtle.
 // * Currently, we only treat the *top-level* `else` as terminating the loop;
@@ -232,6 +240,16 @@ f(Cons(1, Cons(2, Cons(3, 0))))
 //│ > 3
 //│ > Done!
 
+fun f(ls) =
+  while
+    do print(ls)
+    ls is Cons(h, tl) do set ls = tl
+
+f(Cons(1, Cons(2, Cons(3, 0))))
+//│ > Cons(1, Cons(2, Cons(3, 0)))
+//│ > Cons(2, Cons(3, 0))
+//│ > Cons(3, 0)
+//│ > 0
 
 
 // ——— FIXME: ———
@@ -246,7 +264,7 @@ while log("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.246: 	  then 0(0)
+//│ ║  l.264: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ═══[ERROR] Unrecognized term split (false literal).
 //│ ═══[RUNTIME ERROR] Error: match error

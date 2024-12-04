@@ -900,7 +900,7 @@ abstract class Parser(
       case (NEWLINE, _) :: (KEYWORD(kw), _) :: _
       if kw.canStartInfixOnNewLine && kw.leftPrecOrMin > prec
       && infixRules.kwAlts.contains(kw.name)
-      && kw != Keyword.`do` // This is to avoid the following case:
+      && (kw isnt Keyword.`do`) // This is to avoid the following case:
         //  ```
         //  0 then "null"
         //  do console.log("non-null")
