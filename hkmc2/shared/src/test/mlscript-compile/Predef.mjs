@@ -30,7 +30,7 @@ const Predef$class = class Predef {
           this.indentLvl = tmp;
           return prev;
         } else {
-          return undefined;
+          return null;
         }
       } 
       resetIndent(n) {
@@ -38,9 +38,9 @@ const Predef$class = class Predef {
         scrut = this.enabled;
         if (scrut) {
           this.indentLvl = n;
-          return undefined;
+          return null;
         } else {
-          return undefined;
+          return null;
         }
       } 
       log(msg) {
@@ -54,7 +54,7 @@ const Predef$class = class Predef {
           tmp4 = tmp + tmp3;
           return console.log(tmp4);
         } else {
-          return undefined;
+          return null;
         }
       }
       toString() { return "TraceLogger"; }

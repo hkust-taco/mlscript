@@ -30,7 +30,7 @@ fun fib(a) = if
 //│   tmp7 = globalThis.Predef.TraceLogger.log(traceLogRetMsg);
 //│   return traceLogRes;
 //│ }
-//│ undefined
+//│ null
 
 fun f(x) = g(x)
 fun g(x) = h(x)

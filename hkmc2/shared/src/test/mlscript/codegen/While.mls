@@ -120,7 +120,7 @@ while
 //│       tmp1 = null;
 //│       continue tmp2;
 //│     } else {
-//│       tmp1 = undefined;
+//│       tmp1 = null;
 //│     }
 //│     break;
 //│   }

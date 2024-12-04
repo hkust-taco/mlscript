@@ -381,6 +381,9 @@ trait LoweringTraceLog
     stmts.foldRight(rest):
       case ((sym, res), acc) => Assign(sym, res, acc)
   
+  private def call(fn: Path, args: Ls[Arg]): Call =
+    Call(fn, args)(true)
+  
   extension (k: Block => Block)
     def |>: (b: Block): Block = k(b)
 
@@ -421,26 +424,26 @@ trait LoweringTraceLog
         else Arg(false, Value.Ref(s)) :: Arg(false, Value.Lit(Tree.StrLit(", "))) :: acc
     
     assignStmts(psInspectedSyms.map: (pInspectedSym, pSym) =>
-      pInspectedSym -> Call(inspectFn, Arg(false, Value.Ref(pSym)) :: Nil)
+      pInspectedSym -> call(inspectFn, Arg(false, Value.Ref(pSym)) :: Nil)
     *) |>:
     assignStmts(
-      enterMsgSym -> Call(
+      enterMsgSym -> call(
         strConcatFn,
         Arg(false, Value.Lit(Tree.StrLit(s"CALL ${name.getOrElse("[arrow function]")}("))) :: psSymArgs
       ),
-      TempSymbol(N) -> Call(traceLogFn, Arg(false, Value.Ref(enterMsgSym)) :: Nil),
-      prevIndentLvlSym -> Call(traceLogIndentFn, Nil)
+      TempSymbol(N) -> call(traceLogFn, Arg(false, Value.Ref(enterMsgSym)) :: Nil),
+      prevIndentLvlSym -> call(traceLogIndentFn, Nil)
     ) |>: 
     term(bod)(r =>
     assignStmts(
       resSym -> r,
-      resInspectedSym -> Call(inspectFn, Arg(false, Value.Ref(resSym)) :: Nil),
-      retMsgSym -> Call(
+      resInspectedSym -> call(inspectFn, Arg(false, Value.Ref(resSym)) :: Nil),
+      retMsgSym -> call(
         strConcatFn,
         Arg(false, Value.Lit(Tree.StrLit("=> "))) :: Arg(false, Value.Ref(resInspectedSym)) :: Nil
       ),
-      TempSymbol(N) -> Call(traceLogResetFn, Arg(false, Value.Ref(prevIndentLvlSym)) :: Nil),
-      TempSymbol(N) -> Call(traceLogFn, Arg(false, Value.Ref(retMsgSym)) :: Nil)
+      TempSymbol(N) -> call(traceLogResetFn, Arg(false, Value.Ref(prevIndentLvlSym)) :: Nil),
+      TempSymbol(N) -> call(traceLogFn, Arg(false, Value.Ref(retMsgSym)) :: Nil)
     ) |>:
       Ret(Value.Ref(resSym))
     )
