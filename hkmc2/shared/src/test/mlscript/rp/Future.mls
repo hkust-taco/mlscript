@@ -48,7 +48,6 @@ fun foo(x) = if x is
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ║  l.43: 	    Arrow(...) then ....
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: getters (of class String)
 
 
 // In the future, any function can be a pattern
