@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 114 member(s)
+//│ Imported 117 member(s)
 
 
 fun algb2(x, k0j1, k1j1, yss) = if yss is

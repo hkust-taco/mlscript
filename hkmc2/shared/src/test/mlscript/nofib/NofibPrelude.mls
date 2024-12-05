@@ -115,6 +115,11 @@ fun listEq(xs, ys) = if
   xs is Cons(hx, tx) and ys is Cons(hy, ty) and (hx == hy) then listEq(tx, ty)
   else false
 
+fun listEqBy(f, a, b) = if a is
+  Nil and b is Nil then true
+  Cons(x, xs) and b is Cons(y, ys) then f(x, y) && listEqBy(f, xs, ys)
+  else false
+
 fun listNeq(xs, ys) = if
   xs is Nil and ys is Nil then false
   xs is Cons(hx, tx) and ys is Cons(hy, ty) and (hx == hy) then listNeq(tx, ty)
@@ -264,6 +269,11 @@ fun transpose(xss) =
     Cons(Nil, xss) then transpose(xss)
     Cons(Cons(x, xs), xss) and unzip(lscomp(xss)) is Tup2(hds, tls) then combine(x, hds, xs, tls)
 
+fun break_(p, ls) = if ls is
+  Nil then Tup2(Nil, Nil)
+  Cons(x, xs) and
+    p(x) then Tup2(Nil, Cons(x, xs))
+    break_(p, xs) is Tup2(ys, zs) then Tup2(Cons(x, ys), zs)
 
 // =====================
 
@@ -324,6 +334,7 @@ fun replicate_lz(n, x) = if n == 0 then lazy of () => LzNil else lazy of () => L
 
 fun enumFrom(a) = lazy of () => LzCons(a, enumFrom(a + 1))
 
+fun head_lz(ls) = if force(ls) is LzCons(h, t) then h
 // =====================
 
 
