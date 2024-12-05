@@ -547,7 +547,7 @@ abstract class Parser(
               val ele = simpleExprImpl(prec)
               term match
                 case InfixApp(lhs, Keyword.`then`, rhs) =>
-                  Quoted(IfLike(Keyword.`if`, Block(
+                  Quoted(IfLike(Keyword.`if`, S(l0), Block(
                     InfixApp(Unquoted(lhs), Keyword.`then`, Unquoted(rhs)) :: Modified(Keyword.`else`, N, Unquoted(ele)) :: Nil
                   )))
                 case tk =>
@@ -900,6 +900,12 @@ abstract class Parser(
       case (NEWLINE, _) :: (KEYWORD(kw), _) :: _
       if kw.canStartInfixOnNewLine && kw.leftPrecOrMin > prec
       && infixRules.kwAlts.contains(kw.name)
+      && (kw isnt Keyword.`do`) // This is to avoid the following case:
+        //  ```
+        //  0 then "null"
+        //  do console.log("non-null")
+        //  ```
+        // Otherwise, `do` will be parsed as an infix operator
       =>
         consume
         exprCont(acc, prec, allowNewlines = false)

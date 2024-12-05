@@ -66,10 +66,10 @@ enum Tree extends AutoLocated:
   case Sel(prefix: Tree, name: Ident)
   case InfixApp(lhs: Tree, kw: Keyword.Infix, rhs: Tree)
   case New(body: Tree)
-  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, split: Tree)
+  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, kwLoc: Opt[Loc], split: Tree)
   @deprecated("Use If instead", "hkmc2-ucs")
   case IfElse(cond: Tree, alt: Tree)
-  case Case(branches: Tree)
+  case Case(kwLoc: Opt[Loc], branches: Tree)
   case Region(name: Tree, body: Tree)
   case RegRef(reg: Tree, value: Tree)
   case Effectful(eff: Tree, body: Tree)
@@ -95,9 +95,9 @@ enum Tree extends AutoLocated:
     case InfixApp(lhs, _, rhs) => Ls(lhs, rhs)
     case TermDef(k, head, rhs) => head :: rhs.toList
     case New(body) => body :: Nil
-    case IfLike(_, split) => split :: Nil
+    case IfLike(_, _, split) => split :: Nil
     case IfElse(cond, alt) => cond :: alt :: Nil
-    case Case(bs) => Ls(bs)
+    case Case(_, bs) => Ls(bs)
     case Region(name, body) => name :: body :: Nil
     case RegRef(reg, value) => reg :: value :: Nil
     case Effectful(eff, body) => eff :: body :: Nil
@@ -133,9 +133,9 @@ enum Tree extends AutoLocated:
     case Sel(prefix, name) => "selection"
     case InfixApp(lhs, kw, rhs) => "infix operation"
     case New(body) => "new"
-    case IfLike(Keyword.`if`, split) => "if expression"
-    case IfLike(Keyword.`while`, split) => "while expression"
-    case Case(branches) => "case"
+    case IfLike(Keyword.`if`, _, split) => "if expression"
+    case IfLike(Keyword.`while`, _, split) => "while expression"
+    case Case(_, branches) => "case"
     case Region(name, body) => "region"
     case RegRef(reg, value) => "region reference"
     case Effectful(eff, body) => "effectful"
@@ -214,6 +214,7 @@ case object Mxn extends TypeDefKind("mixin")
 case object Als extends TypeDefKind("type alias")
 case object Mod extends TypeDefKind("module") with ClsLikeKind
 case object Obj extends TypeDefKind("object") with ClsLikeKind
+case object Pat extends TypeDefKind("pattern") with ClsLikeKind
 
 
 
@@ -288,6 +289,7 @@ trait TypeDefImpl(using semantics.Elaborator.State) extends TypeOrTermDef:
     case Cls => semantics.ClassSymbol(this, name.getOrElse(Ident("<error>")))
     case Mod | Obj => semantics.ModuleSymbol(this, name.getOrElse(Ident("<error>")))
     case Als => semantics.TypeAliasSymbol(name.getOrElse(Ident("<error>")))
+    case Pat => semantics.PatternSymbol(name.getOrElse(Ident("<error>")))
     case Trt | Mxn => ???
   
   lazy val definedSymbols: Map[Str, semantics.BlockMemberSymbol] =

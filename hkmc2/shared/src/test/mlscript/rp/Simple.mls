@@ -1,0 +1,37 @@
+:js
+
+pattern Zero = "0"
+
+:expect true
+Zero.unapply("0") is MatchResult
+//│ = true
+
+:expect true
+"0" is Zero
+//│ = true
+
+pattern ManyZeros = "0" ~ (ManyZeros | "")
+
+:expect false
+"" is ManyZeros
+//│ = false
+
+:expect true
+"0" is ManyZeros
+//│ = true
+
+:expect true
+"000" is ManyZeros
+//│ = true
+
+:expect false
+"0001" is ManyZeros
+//│ = false
+
+:expect false
+"1" is ManyZeros
+//│ = false
+
+:expect false
+"1000" is ManyZeros
+//│ = false

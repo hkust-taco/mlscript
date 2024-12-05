@@ -40,7 +40,7 @@ while x then set x = false
 let x = true
 //│ x = true
 
-while x then set x = false else ()
+while x do set x = false
 
 
 let x = true
@@ -106,7 +106,7 @@ while log("checking"); i < 3
 () =>
 while
   let i = 0
-  i < 10 then set i += 1
+  i < 10 do set i += 1
 //│ JS:
 //│ (...args) => {
 //│   globalThis.Predef.checkArgs("", 0, true, args.length);
@@ -120,7 +120,7 @@ while
 //│       tmp1 = undefined;
 //│       continue tmp2;
 //│     } else {
-//│       throw new this.Error("match error");
+//│       tmp1 = undefined;
 //│     }
 //│     break;
 //│   }
@@ -137,8 +137,15 @@ let i = 0 in
 
 let i = 0 in while
   let _ = log(i)
-  i < 3 then set i += 1
-  else ()
+  i < 3 do set i += 1
+//│ > 0
+//│ > 1
+//│ > 2
+//│ > 3
+
+let i = 0 in while
+  do log(i)
+  i < 3 do set i += 1
 //│ > 0
 //│ > 1
 //│ > 2
@@ -233,6 +240,16 @@ f(Cons(1, Cons(2, Cons(3, 0))))
 //│ > 3
 //│ > Done!
 
+fun f(ls) =
+  while
+    do print(ls)
+    ls is Cons(h, tl) do set ls = tl
+
+f(Cons(1, Cons(2, Cons(3, 0))))
+//│ > Cons(1, Cons(2, Cons(3, 0)))
+//│ > Cons(2, Cons(3, 0))
+//│ > Cons(3, 0)
+//│ > 0
 
 
 // ——— FIXME: ———
@@ -240,23 +257,24 @@ f(Cons(1, Cons(2, Cons(3, 0))))
 
 :fixme
 () => while true then 0
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(InfixApp(Tup(List()),keyword '=>',IfLike(keyword 'while',BoolLit(true))),keyword 'then',IntLit(0)) (of class hkmc2.syntax.Tree$InfixApp)
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(InfixApp(Tup(List()),keyword '=>',IfLike(keyword 'while',None,BoolLit(true))),keyword 'then',IntLit(0)) (of class hkmc2.syntax.Tree$InfixApp)
 
 :fixme
 while log("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.247: 	  then 0(0)
+//│ ║  l.264: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ═══[ERROR] Unrecognized term split (false literal).
+//│ > Hello World
 //│ ═══[RUNTIME ERROR] Error: match error
 
 :fixme
 while { log("Hello World"), false }
   then 0(0)
   else 1
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',Block(List(App(Ident(log),Tup(List(StrLit(Hello World)))), BoolLit(false)))),keyword 'then',App(IntLit(0),Tup(List(IntLit(0))))) (of class hkmc2.syntax.Tree$InfixApp)
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',None,Block(List(App(Ident(log),Tup(List(StrLit(Hello World)))), BoolLit(false)))),keyword 'then',App(IntLit(0),Tup(List(IntLit(0))))) (of class hkmc2.syntax.Tree$InfixApp)
 
 :fixme
 while
@@ -264,6 +282,6 @@ while
     false
   then 0(0)
   else 1
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',Block(List(App(Ident(log),Tup(List(StrLit(Hello World)))), BoolLit(false)))),keyword 'then',App(IntLit(0),Tup(List(IntLit(0))))) (of class hkmc2.syntax.Tree$InfixApp)
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',None,Block(List(App(Ident(log),Tup(List(StrLit(Hello World)))), BoolLit(false)))),keyword 'then',App(IntLit(0),Tup(List(IntLit(0))))) (of class hkmc2.syntax.Tree$InfixApp)
 
 

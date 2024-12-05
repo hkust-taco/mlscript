@@ -18,6 +18,7 @@ if
 //│ Parsed tree:
 //│ IfLike:
 //│   kw = keyword 'if'
+//│   kwLoc = N
 //│   split = Block of Ls of 
 //│     InfixApp:
 //│       lhs = InfixApp:
@@ -46,6 +47,7 @@ if
 //│ Parsed tree:
 //│ IfLike:
 //│   kw = keyword 'if'
+//│   kwLoc = N
 //│   split = Block of Ls of 
 //│     InfixApp:
 //│       lhs = InfixApp:

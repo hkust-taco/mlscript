@@ -183,13 +183,29 @@ class ParseRules(using State):
             val items = split match
               case Block(stmts) => stmts.appended(clause)
               case _ => split :: clause :: Nil
-            IfLike(kw, Block(items))
-          case (split, N) => IfLike(kw, split)
+            IfLike(kw, N/* TODO */, Block(items))
+          case (split, N) => IfLike(kw, N/* TODO */, split)
         ,
         Blk(
           ParseRule(s"'${kw.name}' block")(End(()))
-        ) { case (body, _) => IfLike(kw, body) }
+        ) { case (body, _) => IfLike(kw, N/* TODO */, body) }
       )
+  
+  def typeAliasLike(kw: Keyword, kind: TypeDefKind): Kw[TypeDef] =
+    Kw(kw):
+      ParseRule(s"${kind.desc} declaration"):
+        Expr(
+          ParseRule(s"${kind.desc} head")(
+            Kw(`=`):
+              ParseRule(s"${kind.desc} declaration equals sign"):
+                Expr(
+                  ParseRule(s"${kind.desc} declaration right-hand side")(
+                    End(())
+                  )
+                ) { case (rhs, ()) => S(rhs) },
+            End(N),
+          )
+        ) { (lhs, rhs) => TypeDef(kind, lhs, rhs, N) }
   
   val prefixRules: ParseRule[Tree] = ParseRule("start of statement", omitAltsStr = true)(
     letLike(`let`),
@@ -242,7 +258,7 @@ class ParseRules(using State):
     ,
     Kw(`case`):
       ParseRule("`case` keyword")(
-        Blk(ParseRule("`case` branches")(End(())))((body, _: Unit) => Case(body))
+        Blk(ParseRule("`case` branches")(End(())))((body, _: Unit) => Case(N/* TODO */, body))
       )
     ,
     Kw(`region`):
@@ -258,20 +274,8 @@ class ParseRules(using State):
     ,
     Kw(`fun`)(termDefBody(Fun)),
     Kw(`val`)(termDefBody(ImmutVal)),
-    Kw(`type`):
-      ParseRule("type alias declaration"):
-        Expr(
-          ParseRule("type alias head")(
-            Kw(`=`):
-              ParseRule("type alias declaration equals sign"):
-                Expr(
-                  ParseRule("type alias declaration right-hand side")(
-                    End(())
-                  )
-                ) { case (rhs, ()) => S(rhs) },
-            End(N),
-          )
-        ) { (lhs, rhs) => TypeDef(Als, lhs, rhs, N) },
+    typeAliasLike(`type`, Als),
+    typeAliasLike(`pattern`, Pat),
     Kw(`class`)(typeDeclBody(Cls)),
     Kw(`trait`)(typeDeclBody(Trt)),
     Kw(`module`)(typeDeclBody(Mod)),
@@ -354,6 +358,7 @@ class ParseRules(using State):
     genInfixRule(`:`, (rhs, _: Unit) => lhs => InfixApp(lhs, `:`, rhs)),
     genInfixRule(`extends`, (rhs, _: Unit) => lhs => InfixApp(lhs, `extends`, rhs)),
     genInfixRule(`restricts`, (rhs, _: Unit) => lhs => InfixApp(lhs, `restricts`, rhs)),
+    genInfixRule(`do`, (rhs, _: Unit) => lhs => InfixApp(lhs, `do`, rhs)),
   )
 
 end ParseRules

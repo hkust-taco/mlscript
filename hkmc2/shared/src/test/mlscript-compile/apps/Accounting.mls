@@ -30,9 +30,8 @@ class Line(val name: Str, val proj: Project, val starting_balance: Num, val isMa
   fun expense(amt) =
     set balance = balance -. amt
   fun mustBeEmpty() =
-    if balance > 10_000 then
+    if balance > 10_000 do
       warnings.push of "> **❗️** Unspent balance of " ~ name ~ ": `" ~ display(balance) ~ "`"
-    else () // TODO allow omitting else branch
 
 val lines = []
 
