@@ -61,7 +61,7 @@ f(3)(4)
 :noSanityCheck
 let f = (x, y) => x + y in f(2)
 //│ JS:
-//│ this.f = (x, y) => { return x + y; }; this.f(2)
+//│ this.f = (x, y) => { return x + y; }; this.f(2) ?? null
 //│ = NaN
 
 :sjs
@@ -104,7 +104,7 @@ Cls(1, 2).f(3)
 //│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
 //│ };
 //│ tmp = this.Cls(1, 2);
-//│ tmp.f(3)
+//│ tmp.f(3) ?? null
 //│ = NaN
 
 :sjs
@@ -277,7 +277,7 @@ M.A(1).y
 M.A(1).y
   console.log()
 //│ JS:
-//│ let tmp; tmp = this.M.A(1); this.console.log(tmp.y)
+//│ let tmp; tmp = this.M.A(1); this.console.log(tmp.y) ?? null
 //│ > undefined
 
 :noSanityCheck

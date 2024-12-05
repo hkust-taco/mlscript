@@ -50,7 +50,7 @@ class Accounting {
           tmp2 = this$Accounting.display(this.balance);
           tmp3 = Str.concat(tmp1, tmp2);
           tmp4 = Str.concat(tmp3, "`");
-          return this$Accounting.warnings.push(tmp4);
+          return this$Accounting.warnings.push(tmp4) ?? null;
         } else {
           return null;
         }
@@ -63,15 +63,15 @@ class Accounting {
       constructor(fileName) {
         this.fileName = fileName;
         let tmp;
-        tmp = fs.writeFileSync(this.fileName, "# Accounting\n");
+        tmp = fs.writeFileSync(this.fileName, "# Accounting\n") ?? null;
       }
       w(txt) {
-        return fs.appendFileSync(this.fileName, txt);
+        return fs.appendFileSync(this.fileName, txt) ?? null;
       } 
       wln(txt1) {
         let tmp;
         tmp = Str.concat(txt1, "\n");
-        return fs.appendFileSync(this.fileName, tmp);
+        return fs.appendFileSync(this.fileName, tmp) ?? null;
       } 
       init() {
         let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13;
@@ -80,8 +80,8 @@ class Accounting {
         tmp2 = Str.concat(tmp1, "|");
         tmp3 = this$Accounting.lines.map((x) => {
           return x.name;
-        });
-        tmp4 = tmp3.join("|");
+        }) ?? null;
+        tmp4 = tmp3.join("|") ?? null;
         tmp5 = Str.concat(tmp2, tmp4);
         tmp6 = Str.concat(tmp5, "|");
         tmp7 = this.wln(tmp6);
@@ -89,21 +89,21 @@ class Accounting {
         tmp9 = Str.concat(tmp8, "|");
         tmp10 = this$Accounting.lines.map((x) => {
           return "--:";
-        });
-        tmp11 = tmp10.join("|");
+        }) ?? null;
+        tmp11 = tmp10.join("|") ?? null;
         tmp12 = Str.concat(tmp9, tmp11);
         tmp13 = Str.concat(tmp12, "|");
         return this.wln(tmp13);
       } 
       snapShot(label) {
         let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
-        tmp = String(label);
+        tmp = String(label) ?? null;
         tmp1 = Str.concat("|", tmp);
         tmp2 = Str.concat(tmp1, "|");
         tmp3 = this$Accounting.lines.map((x) => {
           return this$Accounting.display(x.balance);
-        });
-        tmp4 = tmp3.join("|");
+        }) ?? null;
+        tmp4 = tmp3.join("|") ?? null;
         tmp5 = Str.concat(tmp2, tmp4);
         tmp6 = Str.concat(tmp5, "|");
         return this.wln(tmp6);
@@ -115,7 +115,7 @@ class Accounting {
           let tmp27;
           tmp27 = this.wln(x);
           return this.wln("");
-        });
+        }) ?? null;
         tmp2 = this.wln("### Remaining Available Funds");
         tmp3 = this.wln("");
         tmp4 = Str.concat("|", "Summary");
@@ -128,13 +128,13 @@ class Accounting {
         tmp11 = Str.concat(tmp10, "|");
         tmp12 = this$Accounting.lines.filter((x) => {
           return x.isMatchable;
-        });
+        }) ?? null;
         tmp13 = tmp12.map((x) => {
           return x.balance;
-        });
+        }) ?? null;
         tmp14 = tmp13.reduce((a, b) => {
           return a + b;
-        }, 0);
+        }, 0) ?? null;
         tmp15 = this$Accounting.display(tmp14);
         tmp16 = Str.concat(tmp11, tmp15);
         tmp17 = Str.concat(tmp16, "|");
@@ -143,13 +143,13 @@ class Accounting {
         tmp20 = Str.concat(tmp19, "|");
         tmp21 = this$Accounting.lines.filter((x) => {
           return Predef.not(x.isMatchable);
-        });
+        }) ?? null;
         tmp22 = tmp21.map((x) => {
           return x.balance;
-        });
+        }) ?? null;
         tmp23 = tmp22.reduce((a, b) => {
           return a + b;
-        }, 0);
+        }, 0) ?? null;
         tmp24 = this$Accounting.display(tmp23);
         tmp25 = Str.concat(tmp20, tmp24);
         tmp26 = Str.concat(tmp25, "|");
@@ -161,22 +161,22 @@ class Accounting {
   display(amt) {
     let tmp;
     tmp = amt / 1000;
-    return tmp.toFixed(1);
+    return tmp.toFixed(1) ?? null;
   } 
   mkLine(nme, proj, starting_balance, matchable) {
     let line, tmp, tmp1;
     tmp = this.Line(nme, proj, starting_balance, matchable);
     line = tmp;
-    tmp1 = this.lines.push(line);
+    tmp1 = this.lines.push(line) ?? null;
     return line;
   } 
   process(filename, k) {
     let report, tmp, tmp1, tmp2, tmp3, tmp4;
     tmp = this.Report(filename);
     report = tmp;
-    tmp1 = report.init();
-    tmp2 = k(report);
-    tmp3 = report.wrapUp();
+    tmp1 = report.init() ?? null;
+    tmp2 = k(report) ?? null;
+    tmp3 = report.wrapUp() ?? null;
     tmp4 = Str.concat("Report written to ", filename);
     return Predef.print(tmp4);
   }

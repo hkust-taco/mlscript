@@ -71,8 +71,7 @@ class Lowering(using TL, Raise, Elaborator.State):
       val isMlsFun = f.symbol.fold(f.isInstanceOf[st.Lam]):
         case _: sem.BuiltinSymbol => true
         case sym: sem.BlockMemberSymbol =>
-          sym.trmImplTree.fold(false)(_.k is syntax.Fun) ||
-          sym.clsTree.isDefined
+          sym.trmImplTree.fold(sym.clsTree.isDefined)(_.k is syntax.Fun)
         case _ => false
       arg match
       case Tup(fs) =>

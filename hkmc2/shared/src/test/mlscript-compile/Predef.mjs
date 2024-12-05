@@ -47,12 +47,12 @@ const Predef$class = class Predef {
         let scrut, tmp, tmp1, tmp2, tmp3, tmp4;
         scrut = this.enabled;
         if (scrut) {
-          tmp = "| ".repeat(this.indentLvl);
-          tmp1 = "  ".repeat(this.indentLvl);
+          tmp = "| ".repeat(this.indentLvl) ?? null;
+          tmp1 = "  ".repeat(this.indentLvl) ?? null;
           tmp2 = "\n" + tmp1;
-          tmp3 = msg.replaceAll("\n", tmp2);
+          tmp3 = msg.replaceAll("\n", tmp2) ?? null;
           tmp4 = tmp + tmp3;
-          return console.log(tmp4);
+          return console.log(tmp4) ?? null;
         } else {
           return null;
         }
@@ -79,39 +79,39 @@ const Predef$class = class Predef {
     }
   } 
   pipe(x2, f) {
-    return f(x2);
+    return f(x2) ?? null;
   } 
   apply(receiver, f1) {
     return (...args) => {
-      return f1(receiver, ...args);
+      return f1(receiver, ...args) ?? null;
     };
   } 
   call(receiver1, f2) {
     return (...args) => {
-      return f2.call(receiver1, ...args);
+      return f2.call(receiver1, ...args) ?? null;
     };
   } 
   print(x3) {
     let tmp;
     tmp = String(x3);
-    return console.log(tmp);
+    return console.log(tmp) ?? null;
   } 
   tupleSlice(xs, i, j) {
     let tmp;
     tmp = xs.length - j;
-    return globalThis.Array.prototype.slice.call(xs, i, tmp);
+    return globalThis.Array.prototype.slice.call(xs, i, tmp) ?? null;
   } 
   tupleGet(xs1, i1) {
-    return globalThis.Array.prototype.at.call(xs1, i1);
+    return globalThis.Array.prototype.at.call(xs1, i1) ?? null;
   } 
   stringStartsWith(string, prefix) {
-    return string.startsWith(prefix);
+    return string.startsWith(prefix) ?? null;
   } 
   stringGet(string1, i2) {
-    return string1.at(i2);
+    return string1.at(i2) ?? null;
   } 
   stringDrop(string2, n) {
-    return string2.slice(n);
+    return string2.slice(n) ?? null;
   } 
   checkArgs(functionName, expected, isUB, got) {
     let scrut, name, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
@@ -133,7 +133,7 @@ const Predef$class = class Predef {
       tmp7 = tmp6 + expected;
       tmp8 = tmp7 + " arguments but got ";
       tmp9 = tmp8 + got;
-      throw globalThis.Error(tmp9);
+      throw globalThis.Error(tmp9) ?? null;
     } else {
       return null;
     }

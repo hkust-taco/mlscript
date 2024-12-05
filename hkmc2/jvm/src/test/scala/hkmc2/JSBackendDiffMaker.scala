@@ -7,7 +7,7 @@ import utils.*
 
 import semantics.*
 import codegen.*
-import codegen.js.{JSBuilder, JSBuilderArgNumSanityChecks, JSBuilderSelSanityChecks}
+import codegen.js.{JSBuilder, JSBuilderArgNumSanityChecks}
 import document.*
 import codegen.Block
 import codegen.js.Scope
@@ -57,7 +57,6 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       given Elaborator.Ctx = curCtx
       val jsb = new JSBuilder
         with JSBuilderArgNumSanityChecks(noSanityCheck.isUnset)
-        with JSBuilderSelSanityChecks(noSanityCheck.isUnset)
       val le = low.program(blk)
       if showLoweredTree.isSet then
         output(s"Lowered:")

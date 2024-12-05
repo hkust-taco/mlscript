@@ -4,7 +4,7 @@ const Example$class = class Example {
     
   }
   funnySlash(f, arg) {
-    return f(arg);
+    return f(arg) ?? null;
   } 
   inc(x) {
     return x + 1;
