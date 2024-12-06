@@ -158,7 +158,7 @@ extends Importer:
   def mkLetBinding(sym: LocalSymbol, rhs: Term): Ls[Statement] =
     LetDecl(sym) :: DefineVar(sym, rhs) :: Nil
   
-  def resolveField(srcTree: Tree, base: Opt[Symbol], nme: Ident): Opt[FieldSymbol] =
+  def resolveField(srcTree: Tree, base: Opt[Symbol], nme: Ident)(using Ctx): Opt[FieldSymbol] =
     base match
     case S(psym: BlockMemberSymbol) =>
       psym.modTree match
@@ -170,6 +170,9 @@ extends Importer:
           N
       case N =>
         N
+    case S(_: TopLevelSymbol) => ctx.get(nme.name).flatMap(_.symbol) match
+      case S(sym: FieldSymbol) => S(sym)
+      case _ => N
     case _ => N
   
   def cls(tree: Tree, inAppPrefix: Bool): Ctxl[Term] = trace[Term](s"Elab class ${tree.showDbg}", r => s"~> $r"):
@@ -355,10 +358,7 @@ extends Importer:
       val res = if inAppPrefix
       then Term.SynthSel(preTrm, nme)(sym)
       else Term.Sel(preTrm, nme)(sym)
-      val isGetter = ctx.get(nme.name) match // TODO: create a function for this logic
-        case S(_: Ctx.GetElem) => true
-        case _ => sym.map(_.isGetter).getOrElse(false)
-      if isGetter then
+      if sym.map(_.isGetter).getOrElse(false) then
         val emptyTup: Tree.Tup = Tree.Tup(Nil)
         Term.App(res, Term.Tup(Nil)(emptyTup))(Tree.App(t, emptyTup), FlowSymbol("‹get-res›"))
       else res

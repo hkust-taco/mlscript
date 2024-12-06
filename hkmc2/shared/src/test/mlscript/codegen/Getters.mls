@@ -21,6 +21,42 @@ globalThis.t
 //│ = 42
 
 
+this.t
+//│ = 42
+
+
+:sjs
+module M with
+  fun t = 0
+//│ JS:
+//│ const M$class = class M {
+//│   constructor() {
+//│     
+//│   }
+//│   t() {
+//│     return 0;
+//│   }
+//│   toString() { return "M"; }
+//│ };
+//│ this.M = new M$class;
+//│ this.M.class = M$class;
+//│ undefined
+
+
+:sjs
+M.t
+//│ JS:
+//│ let selRes, tmp;
+//│ selRes = this.M.t;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 't' yielded 'undefined'");
+//│ } else {
+//│   tmp = selRes;
+//│ }
+//│ tmp() ?? null
+//│ = 0
+
+
 :sjs
 fun test() =
   fun whoops = 42

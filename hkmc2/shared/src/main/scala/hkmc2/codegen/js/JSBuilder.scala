@@ -183,6 +183,10 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
                     doc" # ${td.sym.nme}($params) { #{  # ${
                       bodyDoc
                     } #}  # }"
+                  case td @ FunDefn(_, Nil, bod) =>
+                    doc" # ${td.sym.nme}() { #{  # ${
+                      this.body(bod)
+                    } #}  # }"
                 .mkDocument(" ")
               }${
                 if mtds.exists(_.sym.nme == "toString")
