@@ -357,9 +357,7 @@ extends Importer:
       else Term.Sel(preTrm, nme)(sym)
       val isGetter = ctx.get(nme.name) match // TODO: create a function for this logic
         case S(_: Ctx.GetElem) => true
-        case _ => sym.flatMap(_.defn) match
-          case S(TermDefinition(_, Fun, _, Nil, _, S(_), _, _)) => true
-          case _ => false
+        case _ => sym.map(_.isGetter).getOrElse(false)
       if isGetter then
         val emptyTup: Tree.Tup = Tree.Tup(Nil)
         Term.App(res, Term.Tup(Nil)(emptyTup))(Tree.App(t, emptyTup), FlowSymbol("‹get-res›"))

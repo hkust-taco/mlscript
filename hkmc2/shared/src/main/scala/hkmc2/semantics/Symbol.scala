@@ -122,6 +122,9 @@ end BlockMemberSymbol
 sealed abstract class MemberSymbol[Defn <: Definition](using State) extends Symbol:
   def nme: Str
   var defn: Opt[Defn] = N
+  lazy val isGetter: Bool = defn match
+    case S(TermDefinition(_, Fun, _, Nil, _, S(_), _, _)) => true
+    case _ => false
 
 
 class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.Ident)(using State)

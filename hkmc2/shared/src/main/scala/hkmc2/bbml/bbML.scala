@@ -485,10 +485,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       case Term.App(lhs @ Term.SynthSel(_, Ident(nme)), Term.Tup(Nil)) if ctx.ctx.get(nme).map(e => e match {
         case _: Elaborator.Ctx.GetElem => true
         case _ => false
-      }).getOrElse(lhs.sym.map(_.defn match {
-        case S(TermDefinition(_, Fun, _, Nil, _, S(_), _, _)) => true
-        case _ => false
-      }).getOrElse(false)) => typeCheck(lhs) // * Gettters
+      }).getOrElse(lhs.sym.map(_.isGetter).getOrElse(false)) => typeCheck(lhs) // * Gettters
       case t @ Term.App(lhs, Term.Tup(rhs)) =>
         val (funTy, lhsEff) = typeCheck(lhs)
         app((funTy, lhsEff), rhs, t)
