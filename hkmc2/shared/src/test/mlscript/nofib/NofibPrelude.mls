@@ -316,6 +316,10 @@ fun drop_lz(n, ls) = if
 
 fun splitAt_lz(n, ls) = Tup2(take_lz(n, ls), drop_lz(n, ls))
 
+fun zip_lz_nl(xs, ys) = if
+  force(xs) is LzCons(x, xs) and ys is Cons(y, ys) then Cons(Tup2(x, y), zip_lz_nl(xs, ys))
+  else Nil
+
 fun zipWith_lz_lz(f, xss, yss) = lazy of () => if
   force(xss) is LzCons(x, xs) and (force(yss)) is LzCons(y, ys) then LzCons(f(x, y), zipWith_lz_lz(f, xs, ys))
   else LzNil
@@ -335,6 +339,8 @@ fun replicate_lz(n, x) = if n == 0 then lazy of () => LzNil else lazy of () => L
 fun enumFrom(a) = lazy of () => LzCons(a, enumFrom(a + 1))
 
 fun head_lz(ls) = if force(ls) is LzCons(h, t) then h
+
+fun repeat(x) = lazy of () => LzCons(x, repeat(x))
 // =====================
 
 
