@@ -97,12 +97,13 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
         case S(jsOp) =>
           val res = doc"${result(lhs)} ${jsOp} ${result(rhs)}"
           if needsParens(jsOp) then doc"(${res})" else res
-        case N => setupCall(result(s), (result(lhs) :: result(rhs) :: Nil).mkDocument(", "))
-    case Call(fun, args) =>
+        case N => doc"${result(s)}(${(result(lhs) :: result(rhs) :: Nil).mkDocument(", ")})"
+    case c @ Call(fun, args) =>
       val base = fun match
         case _: Value.Lam => doc"(${result(fun)})"
         case _ => result(fun)
-      setupCall(base, args.map(result).mkDocument(", "))
+      val argsDoc = args.map(result).mkDocument(", ")
+      if c.isMlsFun then doc"${base}(${argsDoc})" else doc"${base}(${argsDoc}) ?? null"
     case Value.Lam(ps, bod) => scope.nest givenIn:
       val (params, bodyDoc) = setupFunction(none, ps, bod)
       doc"($params) => { #{  # ${
@@ -355,8 +356,6 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
     (paramsList, this.body(body))
 
 
-  def setupCall(bases: Document, args: Document)(using Raise, Scope): Document =
-    doc"${bases}(${args})"
 
 object JSBuilder:
   import scala.util.matching.Regex
@@ -470,12 +469,3 @@ trait JSBuilderArgNumSanityChecks
     else
       super.setupFunction(name, params, body)
 
-trait JSBuilderSelSanityChecks
-    (instrument: Bool)(using Elaborator.State)
-    extends JSBuilder:
-  
-  override def setupCall(bases: Document, args: Document)(using Raise, Scope): Document =
-    val basic = super.setupCall(bases, args)
-    if instrument
-    then doc"$basic ?? null"
-    else basic

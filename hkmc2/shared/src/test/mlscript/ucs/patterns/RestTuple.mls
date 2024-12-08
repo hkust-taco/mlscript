@@ -29,7 +29,7 @@ fun nonsense(xs) = if xs is
 //│     throw new globalThis.Error("match error");
 //│   }
 //│ }
-//│ undefined
+//│ null
 
 nonsense([])
 //│ = []
@@ -49,7 +49,7 @@ fun lead_and_last(xs) = if xs is
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];
 //│     rest = globalThis.Predef.tupleSlice(xs, 1, 1) ?? null;
-//│     last0 = globalThis.Predef.tupleGet(xs, -1) ?? null;
+//│     last0 = globalThis.Predef.tupleGet(xs, -1);
 //│     x = first0;
 //│     ys = rest;
 //│     y = last0;
@@ -62,7 +62,7 @@ fun lead_and_last(xs) = if xs is
 //│     }
 //│   }
 //│ }
-//│ undefined
+//│ null
 
 lead_and_last(["foo", "bar"])
 //│ = 'foobar'
@@ -89,7 +89,7 @@ fun nested_tuple_patterns(xs) = if xs is
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];
 //│     rest = globalThis.Predef.tupleSlice(xs, 1, 1) ?? null;
-//│     last0 = globalThis.Predef.tupleGet(xs, -1) ?? null;
+//│     last0 = globalThis.Predef.tupleGet(xs, -1);
 //│     x = first0;
 //│     if (globalThis.Array.isArray(rest) && rest.length === 2) {
 //│       first01 = rest[0];
@@ -111,7 +111,7 @@ fun nested_tuple_patterns(xs) = if xs is
 //│     }
 //│   }
 //│ }
-//│ undefined
+//│ null
 
 fun hack(tupleSlice) = if tupleSlice is
   [..tupleGet, x] then x

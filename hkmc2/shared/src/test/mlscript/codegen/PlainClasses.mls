@@ -9,7 +9,7 @@
 
 class Foo
 //│ JS:
-//│ this.Foo = class Foo { constructor() {  } toString() { return "Foo"; } }; undefined
+//│ this.Foo = class Foo { constructor() {  } toString() { return "Foo"; } }; null
 
 Foo is Foo
 //│ JS:
@@ -39,7 +39,7 @@ Foo
 :re
 Foo()
 //│ JS:
-//│ this.Foo() ?? null
+//│ this.Foo()
 //│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
 
 
@@ -48,11 +48,11 @@ log("ok")
 //│ JS:
 //│ this.Foo = class Foo {
 //│   constructor() {
-//│     globalThis.log("hi") ?? null
+//│     globalThis.log("hi")
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
-//│ this.log("ok") ?? null
+//│ this.log("ok")
 //│ > ok
 
 fun test() =
@@ -65,18 +65,18 @@ fun test() =
 //│   let tmp;
 //│   class Foo {
 //│     constructor() {
-//│       globalThis.log("hi") ?? null
+//│       globalThis.log("hi")
 //│     }
 //│     toString() { return "Foo"; }
 //│   }
-//│   tmp = globalThis.log("ok") ?? null;
+//│   tmp = globalThis.log("ok");
 //│   return Foo;
 //│ }
-//│ undefined
+//│ null
 
 let t = test()
 //│ JS:
-//│ let tmp; tmp = this.test() ?? null; this.t = tmp; undefined
+//│ let tmp; tmp = this.test(); this.t = tmp; null
 //│ > ok
 //│ t = [class Foo]
 
@@ -112,7 +112,7 @@ class Foo with
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
-//│ undefined
+//│ null
 
 
 class Foo with
@@ -132,7 +132,7 @@ class Foo with
 //│     this.x2 = 2;
 //│     this.#y1 = 3;
 //│     this.#y2 = 4;
-//│     globalThis.log("hello") ?? null
+//│     globalThis.log("hello")
 //│   }
 //│   z1(...args) {
 //│     globalThis.Predef.checkArgs("z1", 0, true, args.length);
@@ -144,7 +144,7 @@ class Foo with
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
-//│ undefined
+//│ null
 
 
 class Foo with
@@ -165,12 +165,12 @@ class Foo with
 //│     globalThis.Predef.checkArgs("bar", 1, true, args1.length);
 //│     let z = args1[0];
 //│     let tmp;
-//│     tmp = this.foo(z) ?? null;
+//│     tmp = this.foo(z);
 //│     return tmp + 1;
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
-//│ undefined
+//│ null
 
 let a = new Foo
 log(a.x)
@@ -186,11 +186,11 @@ log(a.bar(1))
 //│ } else {
 //│   tmp1 = selRes;
 //│ }
-//│ tmp2 = this.log(tmp1) ?? null;
+//│ tmp2 = this.log(tmp1);
 //│ tmp3 = this.a.foo(1) ?? null;
-//│ tmp4 = this.log(tmp3) ?? null;
+//│ tmp4 = this.log(tmp3);
 //│ tmp5 = this.a.bar(1) ?? null;
-//│ this.log(tmp5) ?? null
+//│ this.log(tmp5)
 //│ > 1
 //│ > 2
 //│ > 3
@@ -216,7 +216,7 @@ class Foo with
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
-//│ undefined
+//│ null
 
 
 :fixme

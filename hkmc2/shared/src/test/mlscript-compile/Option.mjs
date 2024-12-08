@@ -44,5 +44,5 @@ const Option$class = class Option {
   toString() { return "Option"; }
 }; const Option = new Option$class;
 Option.class = Option$class;
-undefined
+null
 export default Option;

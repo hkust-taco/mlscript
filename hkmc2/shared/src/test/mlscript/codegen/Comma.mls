@@ -13,7 +13,7 @@ fun f() =
 //│   tmp = globalThis.console.log("ok") ?? null;
 //│   return 42;
 //│ }
-//│ undefined
+//│ null
 
 fun f() = { console.log("ok"), 42 }
 //│ JS:
@@ -23,7 +23,7 @@ fun f() = { console.log("ok"), 42 }
 //│   tmp = globalThis.console.log("ok") ?? null;
 //│   return 42;
 //│ }
-//│ undefined
+//│ null
 
 fun f() = console.log("ok"), 42
 //│ JS:

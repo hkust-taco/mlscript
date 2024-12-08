@@ -30,10 +30,10 @@ class Outer(a, b) with
 //│       constructor(c) {
 //│         this.c = c;
 //│         let tmp4, tmp5, tmp6;
-//│         tmp4 = globalThis.log(this$Outer.a) ?? null;
-//│         tmp5 = globalThis.log(this.c) ?? null;
-//│         tmp6 = this.i1(this$Outer.a) ?? null;
-//│         globalThis.log(tmp6) ?? null
+//│         tmp4 = globalThis.log(this$Outer.a);
+//│         tmp5 = globalThis.log(this.c);
+//│         tmp6 = this.i1(this$Outer.a);
+//│         globalThis.log(tmp6)
 //│       }
 //│       i1(...args) {
 //│         globalThis.Predef.checkArgs("i1", 1, true, args.length);
@@ -46,7 +46,7 @@ class Outer(a, b) with
 //│       }
 //│       toString() { return "Inner(" + this.c + ")"; }
 //│     };
-//│     tmp = this.Inner(this.a) ?? null;
+//│     tmp = this.Inner(this.a);
 //│     this.i = tmp;
 //│     selRes = this.i.c;
 //│     if (selRes === undefined) {
@@ -54,26 +54,26 @@ class Outer(a, b) with
 //│     } else {
 //│       tmp1 = selRes;
 //│     }
-//│     tmp2 = globalThis.log(tmp1) ?? null;
+//│     tmp2 = globalThis.log(tmp1);
 //│     tmp3 = this.i.i1(1) ?? null;
-//│     globalThis.log(tmp3) ?? null
+//│     globalThis.log(tmp3)
 //│   }
 //│   o1(...args) {
 //│     globalThis.Predef.checkArgs("o1", 1, true, args.length);
 //│     let c = args[0];
-//│     return this.Inner(c) ?? null;
+//│     return this.Inner(c);
 //│   } 
 //│   o2(...args1) {
 //│     globalThis.Predef.checkArgs("o2", 2, true, args1.length);
 //│     let c1 = args1[0];
 //│     let d = args1[1];
 //│     let tmp;
-//│     tmp = this.Inner(c1) ?? null;
+//│     tmp = this.Inner(c1);
 //│     return tmp.i1(d) ?? null;
 //│   }
 //│   toString() { return "Outer(" + this.a + ", " + this.b + ")"; }
 //│ };
-//│ undefined
+//│ null
 
 
 val o = Outer(100, 200)

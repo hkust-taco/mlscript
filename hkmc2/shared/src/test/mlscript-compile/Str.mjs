@@ -11,5 +11,5 @@ const Str$class = class Str {
   toString() { return "Str"; }
 }; const Str = new Str$class;
 Str.class = Str$class;
-undefined
+null
 export default Str;

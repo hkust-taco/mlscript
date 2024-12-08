@@ -26,7 +26,7 @@ fun test(x) =
 //│     param0 = x.value;
 //│     v = param0;
 //│     tmp = v + 1;
-//│     tmp1 = globalThis.Some(tmp) ?? null;
+//│     tmp1 = globalThis.Some(tmp);
 //│   } else {
 //│     if (x instanceof globalThis.None.class) {
 //│       tmp1 = globalThis.None;
@@ -38,16 +38,16 @@ fun test(x) =
 //│   if (scrut instanceof globalThis.Some.class) {
 //│     param01 = scrut.value;
 //│     v1 = param01;
-//│     return globalThis.log(v1) ?? null;
+//│     return globalThis.log(v1);
 //│   } else {
 //│     if (scrut instanceof globalThis.None.class) {
-//│       return globalThis.log("none") ?? null;
+//│       return globalThis.log("none");
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }
 //│   }
 //│ }
-//│ undefined
+//│ null
 
 
 

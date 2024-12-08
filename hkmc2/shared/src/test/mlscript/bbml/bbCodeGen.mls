@@ -72,7 +72,7 @@ class Foo(x: Int)
 //│   }
 //│   toString() { return "Foo(" + this.x + ")"; }
 //│ };
-//│ undefined
+//│ null
 //│ Type: ⊤
 
 
@@ -108,14 +108,14 @@ fun inc(x) = x + 1
 //│   let x = args[0];
 //│   return x + 1;
 //│ }
-//│ undefined
+//│ null
 //│ Type: ⊤
 
 
 :sjs
 inc(41)
 //│ JS:
-//│ this.inc(41) ?? null
+//│ this.inc(41)
 //│ = 42
 //│ Type: Int
 
@@ -175,14 +175,14 @@ fun pow(x) = case
 //│       return 1;
 //│     } else {
 //│       n = caseScrut;
-//│       tmp = globalThis.pow(x) ?? null;
+//│       tmp = globalThis.pow(x);
 //│       tmp1 = n - 1;
 //│       tmp2 = tmp(tmp1) ?? null;
 //│       return x * tmp2;
 //│     }
 //│   };
 //│ }
-//│ undefined
+//│ null
 //│ Type: ⊤
 
 
@@ -206,7 +206,7 @@ fun not = case
 //│     }
 //│   };
 //│ }
-//│ undefined
+//│ null
 //│ Type: ⊤
 
 
@@ -229,14 +229,14 @@ fun fact = case
 //│       return 1;
 //│     } else {
 //│       n = caseScrut;
-//│       tmp = globalThis.fact() ?? null;
+//│       tmp = globalThis.fact();
 //│       tmp1 = n - 1;
 //│       tmp2 = tmp(tmp1) ?? null;
 //│       return n * tmp2;
 //│     }
 //│   };
 //│ }
-//│ undefined
+//│ null
 //│ Type: ⊤
 
 

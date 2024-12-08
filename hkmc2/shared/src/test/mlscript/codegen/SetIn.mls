@@ -10,7 +10,7 @@ let x = 0
 :sjs
 let x += 1
 //│ JS:
-//│ let tmp; tmp = this.x + 1; this.x = tmp; undefined
+//│ let tmp; tmp = this.x + 1; this.x = tmp; null
 //│ x = 1
 
 x
@@ -19,12 +19,12 @@ x
 :sjs
 set x = 0
 //│ JS:
-//│ this.x = 0; undefined
+//│ this.x = 0; null
 
 :sjs
 set x += 1
 //│ JS:
-//│ let tmp; tmp = this.x + 1; this.x = tmp; undefined
+//│ let tmp; tmp = this.x + 1; this.x = tmp; null
 
 x
 //│ = 1
@@ -38,7 +38,7 @@ set x += 1 in log(x)
 //│ try {
 //│   tmp1 = this.x + 1;
 //│   this.x = tmp1;
-//│   tmp = this.log(this.x) ?? null;
+//│   tmp = this.log(this.x);
 //│ } finally {
 //│   this.x = old;
 //│ }
@@ -90,18 +90,18 @@ example()
 //│   try {
 //│     tmp1 = x + 1;
 //│     x = tmp1;
-//│     tmp2 = globalThis.log(x) ?? null;
+//│     tmp2 = globalThis.log(x);
 //│     tmp3 = (tmp2 , globalThis.log);
 //│     tmp4 = get_x() ?? null;
 //│     tmp = tmp3(tmp4) ?? null;
 //│   } finally {
 //│     x = old;
 //│   }
-//│   tmp5 = globalThis.log(x) ?? null;
+//│   tmp5 = globalThis.log(x);
 //│   tmp6 = get_x() ?? null;
-//│   return globalThis.log(tmp6) ?? null;
+//│   return globalThis.log(tmp6);
 //│ }
-//│ this.example() ?? null
+//│ this.example()
 //│ > 1
 //│ > 1
 //│ > 0
@@ -130,18 +130,18 @@ example()
 //│   try {
 //│     tmp1 = x + 1;
 //│     x = tmp1;
-//│     tmp2 = globalThis.log(x) ?? null;
+//│     tmp2 = globalThis.log(x);
 //│     tmp = (tmp2 , x);
 //│   } finally {
 //│     x = old;
 //│   }
 //│   y = tmp;
-//│   tmp3 = globalThis.log(x) ?? null;
+//│   tmp3 = globalThis.log(x);
 //│   tmp4 = get_x() ?? null;
-//│   tmp5 = globalThis.log(tmp4) ?? null;
+//│   tmp5 = globalThis.log(tmp4);
 //│   return y;
 //│ }
-//│ this.example() ?? null
+//│ this.example()
 //│ > 1
 //│ > 0
 //│ > 0

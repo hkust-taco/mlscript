@@ -20,7 +20,7 @@ fun test(x) =
 //│     x
 //│   ];
 //│ }
-//│ undefined
+//│ null
 
 :re
 test(123)
@@ -47,7 +47,7 @@ module Test with
 //│   test1(...args) {
 //│     globalThis.Predef.checkArgs("test1", 1, true, args.length);
 //│     let x = args[0];
-//│     return globalThis.test(x) ?? null;
+//│     return globalThis.test(x);
 //│   } 
 //│   test2(...args1) {
 //│     globalThis.Predef.checkArgs("test2", 1, true, args1.length);
@@ -68,7 +68,7 @@ module Test with
 //│ };
 //│ this.Test = new Test$class;
 //│ this.Test.class = Test$class;
-//│ undefined
+//│ null
 
 
 Test.test1(123)

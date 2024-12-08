@@ -11,11 +11,11 @@ fun f(n1: Int): Int = n1
 //│   let n1 = args[0];
 //│   return n1;
 //│ }
-//│ undefined
+//│ null
 
 f(42)
 //│ JS:
-//│ this.f(42) ?? null
+//│ this.f(42)
 //│ = 42
 
 fun f(n1: Int)(n2: Int): Int =  (10 * n1 + n2)
@@ -31,11 +31,11 @@ fun f(n1: Int)(n2: Int): Int =  (10 * n1 + n2)
 //│     return tmp + n2;
 //│   };
 //│ }
-//│ undefined
+//│ null
 
 f(4)(2)
 //│ JS:
-//│ let tmp; tmp = this.f(4) ?? null; tmp(2) ?? null
+//│ let tmp; tmp = this.f(4); tmp(2) ?? null
 //│ = 42
 
 fun f(n1: Int)(n2: Int)(n3: Int): Int = 10 * (10 * n1 + n2) + n3
@@ -57,11 +57,11 @@ fun f(n1: Int)(n2: Int)(n3: Int): Int = 10 * (10 * n1 + n2) + n3
 //│     };
 //│   };
 //│ }
-//│ undefined
+//│ null
 
 f(4)(2)(0)
 //│ JS:
-//│ let tmp, tmp1; tmp = this.f(4) ?? null; tmp1 = tmp(2) ?? null; tmp1(0) ?? null
+//│ let tmp, tmp1; tmp = this.f(4); tmp1 = tmp(2) ?? null; tmp1(0) ?? null
 //│ = 420
 
 fun f(n1: Int)(n2: Int)(n3: Int)(n4: Int): Int = 10 * (10 * (10 * n1 + n2) + n3) + n4
@@ -89,15 +89,11 @@ fun f(n1: Int)(n2: Int)(n3: Int)(n4: Int): Int = 10 * (10 * (10 * n1 + n2) + n3)
 //│     };
 //│   };
 //│ }
-//│ undefined
+//│ null
 
 f(3)(0)(3)(1)
 //│ JS:
-//│ let tmp, tmp1, tmp2;
-//│ tmp = this.f(3) ?? null;
-//│ tmp1 = tmp(0) ?? null;
-//│ tmp2 = tmp1(3) ?? null;
-//│ tmp2(1) ?? null
+//│ let tmp, tmp1, tmp2; tmp = this.f(3); tmp1 = tmp(0) ?? null; tmp2 = tmp1(3) ?? null; tmp2(1) ?? null
 //│ = 3031
 
 

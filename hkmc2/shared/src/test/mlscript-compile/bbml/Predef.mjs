@@ -8,24 +8,24 @@ const Predef$class = class Predef {
     if (scrut) {
       scrut1 = functionName.length > 0;
       if (scrut1) {
-        tmp = " '".concat(functionName);
-        tmp1 = tmp.concat("'");
+        tmp = " '".concat(functionName) ?? null;
+        tmp1 = tmp.concat("'") ?? null;
       } else {
         tmp1 = "";
       }
       name = tmp1;
-      tmp2 = "Function".concat(name);
-      tmp3 = tmp2.concat(" expected ");
-      tmp4 = tmp3.concat(expected);
-      tmp5 = tmp4.concat(" arguments but got ");
-      tmp6 = tmp5.concat(got);
+      tmp2 = "Function".concat(name) ?? null;
+      tmp3 = tmp2.concat(" expected ") ?? null;
+      tmp4 = tmp3.concat(expected) ?? null;
+      tmp5 = tmp4.concat(" arguments but got ") ?? null;
+      tmp6 = tmp5.concat(got) ?? null;
       throw new Error.class(tmp6);
     } else {
-      return undefined;
+      return null;
     }
   }
   toString() { return "Predef"; }
 }; const Predef = new Predef$class;
 Predef.class = Predef$class;
-undefined
+null
 export default Predef;

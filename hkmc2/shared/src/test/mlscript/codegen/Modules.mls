@@ -15,7 +15,7 @@ module None
 //│ };
 //│ this.None = new None$class;
 //│ this.None.class = None$class;
-//│ undefined
+//│ null
 
 :sjs
 None
@@ -68,7 +68,7 @@ module M with
 //│ };
 //│ this.M = new M$class;
 //│ this.M.class = M$class;
-//│ undefined
+//│ null
 
 M.C
 //│ = [class C]
@@ -106,7 +106,7 @@ module M with
 //│ };
 //│ this.M = new M$class;
 //│ this.M.class = M$class;
-//│ undefined
+//│ null
 
 M.m
 //│ > M {

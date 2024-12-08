@@ -30,7 +30,7 @@ fun test(a) =
 //│     constructor(b) {
 //│       this.b = b;
 //│       let tmp;
-//│       tmp = globalThis.log(a) ?? null;
+//│       tmp = globalThis.log(a);
 //│     }
 //│     f(...args1) {
 //│       globalThis.Predef.checkArgs("f", 1, true, args1.length);
@@ -56,13 +56,13 @@ fun test(a) =
 //│           e
 //│         ];
 //│       }
-//│       return h(d) ?? null;
+//│       return h(d);
 //│     }
 //│     toString() { return "Inner(" + this.b + ")"; }
 //│   };
-//│   return Inner(42) ?? null;
+//│   return Inner(42);
 //│ }
-//│ undefined
+//│ null
 
 let i = test(100)
 //│ > 100
@@ -94,7 +94,7 @@ fun test(a) =
 //│       Predef.print([
 //│         a,
 //│         this.b
-//│       ]) ?? null
+//│       ])
 //│     }
 //│     toString() { return "C1(" + this.b + ")"; }
 //│   };
@@ -105,18 +105,18 @@ fun test(a) =
 //│       Predef.print([
 //│         a,
 //│         this.b
-//│       ]) ?? null
+//│       ])
 //│     }
 //│     toString() { return "C2(" + this.b + ")"; }
 //│   };
-//│   tmp = C1(1) ?? null;
-//│   tmp1 = C2(2) ?? null;
+//│   tmp = C1(1);
+//│   tmp1 = C2(2);
 //│   return [
 //│     tmp,
 //│     tmp1
 //│   ];
 //│ }
-//│ undefined
+//│ null
 
 test(123)
 //│ > 123,1
@@ -138,7 +138,7 @@ Foo(123)
 //│ this.Foo.class = class Foo {
 //│   constructor(a) {
 //│     this.a = a;
-//│     this.foo() ?? null
+//│     this.foo()
 //│   }
 //│   foo(...args) {
 //│     globalThis.Predef.checkArgs("foo", 0, true, args.length);
@@ -153,12 +153,12 @@ Foo(123)
 //│       globalThis.Predef.checkArgs("baz", 0, true, args1.length);
 //│       return this$Foo.a;
 //│     }
-//│     tmp = bar() ?? null;
-//│     return baz() ?? null;
+//│     tmp = bar();
+//│     return baz();
 //│   }
 //│   toString() { return "Foo(" + this.a + ")"; }
 //│ };
-//│ this.Foo(123) ?? null
+//│ this.Foo(123)
 //│ = Foo { a: 123 }
 
 

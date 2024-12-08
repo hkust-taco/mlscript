@@ -14,7 +14,7 @@ fun foo() =
 //│   globalThis.Predef.checkArgs("foo", 0, true, args.length);
 //│   return globalThis.x + 1;
 //│ }
-//│ undefined
+//│ null
 //│ x = 2
 
 :sjs
@@ -24,12 +24,12 @@ class Test with
 //│ this.Test = class Test {
 //│   constructor() {
 //│     let tmp;
-//│     tmp = globalThis.foo() ?? null;
-//│     globalThis.log(tmp) ?? null
+//│     tmp = globalThis.foo();
+//│     globalThis.log(tmp)
 //│   }
 //│   toString() { return "Test"; }
 //│ };
-//│ undefined
+//│ null
 
 new Test
 //│ > 3

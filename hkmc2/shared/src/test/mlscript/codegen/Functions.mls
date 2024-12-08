@@ -78,11 +78,11 @@ outer(100)(200)
 :showRepl
 fun test1(x) = test2(x)
 fun test2(y) = y + 1
-//│ REPL> Sending: try { function test1(...args) {   globalThis.Predef.checkArgs("test1", 1, true, args.length);   let x = args[0];   return globalThis.test2(x) ?? null; } function test2(...args) {   globalThis.Predef.checkArgs("test2", 1, true, args.length);   let y = args[0];   return y + 1; } undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { function test1(...args) {   globalThis.Predef.checkArgs("test1", 1, true, args.length);   let x = args[0];   return globalThis.test2(x); } function test2(...args) {   globalThis.Predef.checkArgs("test2", 1, true, args.length);   let y = args[0];   return y + 1; } null } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
-//│ >  undefined
+//│ >  null
 //│ REPL> Parsed:
-//│ >  undefined
+//│ >  null
 
 test1(1)
 //│ = 2

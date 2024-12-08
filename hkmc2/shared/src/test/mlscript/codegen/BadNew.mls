@@ -21,11 +21,11 @@ new 2 + 2
 
 :re
 new()
-//│ ═══[RUNTIME ERROR] TypeError: undefined is not a constructor
+//│ ═══[RUNTIME ERROR] TypeError: null is not a constructor
 
 :re
 new {}
-//│ ═══[RUNTIME ERROR] TypeError: undefined is not a constructor
+//│ ═══[RUNTIME ERROR] TypeError: null is not a constructor
 
 
 // * Note that thanks to the parser "feature" for keyword-block stutter

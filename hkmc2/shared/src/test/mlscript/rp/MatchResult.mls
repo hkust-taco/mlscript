@@ -39,4 +39,4 @@ fun foo(x) = x is Cross
 //│     return false;
 //│   }
 //│ }
-//│ undefined
+//│ null

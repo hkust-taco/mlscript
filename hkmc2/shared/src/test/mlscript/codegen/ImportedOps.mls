@@ -14,10 +14,10 @@ foo()
 //│ function foo(...args) {
 //│   globalThis.Predef.checkArgs("foo", 0, true, args.length);
 //│   let tmp;
-//│   tmp = globalThis.M.concat("a", "b") ?? null;
-//│   return globalThis.M.concat(tmp, "c") ?? null;
+//│   tmp = globalThis.M.concat("a", "b");
+//│   return globalThis.M.concat(tmp, "c");
 //│ }
-//│ this.foo() ?? null
+//│ this.foo()
 //│ = 'abc'
 
 let name = "_"

@@ -27,14 +27,14 @@ fun f(x) =
 //│   let scrut, tmp, tmp1;
 //│   scrut = x < 0;
 //│   if (scrut) {
-//│     tmp = globalThis.log("whoops") ?? null;
+//│     tmp = globalThis.log("whoops");
 //│     return 0;
 //│   } else {
-//│     tmp1 = undefined;
+//│     tmp1 = null;
 //│   }
 //│   return x + 1;
 //│ }
-//│ undefined
+//│ null
 
 f(1)
 //│ = 2

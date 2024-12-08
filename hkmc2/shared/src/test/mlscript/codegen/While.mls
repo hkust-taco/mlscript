@@ -59,9 +59,9 @@ while x
 //│ tmp2: while (true) {
 //│   scrut = this.x;
 //│   if (scrut) {
-//│     tmp = this.log("Hello World") ?? null;
+//│     tmp = this.log("Hello World");
 //│     this.x = false;
-//│     tmp1 = undefined;
+//│     tmp1 = null;
 //│     continue tmp2;
 //│   } else {
 //│     tmp1 = 42;
@@ -117,10 +117,10 @@ while
 //│     if (scrut) {
 //│       tmp = i + 1;
 //│       i = tmp;
-//│       tmp1 = undefined;
+//│       tmp1 = null;
 //│       continue tmp2;
 //│     } else {
-//│       tmp1 = undefined;
+//│       tmp1 = null;
 //│     }
 //│     break;
 //│   }
@@ -216,16 +216,16 @@ fun f(ls) =
 //│       h = param0;
 //│       tl = param1;
 //│       ls = tl;
-//│       tmp = globalThis.log(h) ?? null;
+//│       tmp = globalThis.log(h);
 //│       continue tmp1;
 //│     } else {
-//│       tmp = globalThis.log("Done!") ?? null;
+//│       tmp = globalThis.log("Done!");
 //│     }
 //│     break;
 //│   }
 //│   return tmp;
 //│ }
-//│ undefined
+//│ null
 
 f(0)
 //│ > Done!
