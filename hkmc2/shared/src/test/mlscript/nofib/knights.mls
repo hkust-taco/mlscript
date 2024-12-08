@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 119 member(s)
+//│ Imported 120 member(s)
 
 fun myIsDigit(c) =
   c.codePointAt(0) >= 48 && c.codePointAt(0) <= 57

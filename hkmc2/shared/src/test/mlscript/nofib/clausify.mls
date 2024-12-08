@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 117 member(s)
+//│ Imported 120 member(s)
 
 abstract class Formula: Sym | Not | Dis | Con | Imp | Eqv
 
