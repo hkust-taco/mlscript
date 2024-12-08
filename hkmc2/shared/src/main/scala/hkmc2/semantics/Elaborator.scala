@@ -358,7 +358,7 @@ extends Importer:
       val res = if inAppPrefix
       then Term.SynthSel(preTrm, nme)(sym)
       else Term.Sel(preTrm, nme)(sym)
-      if sym.map(_.isGetter).getOrElse(false) then
+      if sym.exists(_.isGetter) then
         val emptyTup: Tree.Tup = Tree.Tup(Nil)
         Term.App(res, Term.Tup(Nil)(emptyTup))(Tree.App(t, emptyTup), FlowSymbol("‹get-res›"))
       else res
