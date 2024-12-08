@@ -275,6 +275,10 @@ fun break_(p, ls) = if ls is
     p(x) then Tup2(Nil, Cons(x, xs))
     break_(p, xs) is Tup2(ys, zs) then Tup2(Cons(x, ys), zs)
 
+fun flatMap(f, ls) = if ls is
+  Nil then Nil
+  Cons(h, t) then append(f(h), flatMap(f, t))
+
 // =====================
 
 fun map_lz(f, ls) = lazy of () =>
