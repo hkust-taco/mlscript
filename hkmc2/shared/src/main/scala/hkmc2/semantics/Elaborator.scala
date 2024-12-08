@@ -170,9 +170,15 @@ extends Importer:
           N
       case N =>
         N
-    case S(_: TopLevelSymbol) => ctx.get(nme.name).flatMap(_.symbol) match
-      case S(sym: FieldSymbol) => S(sym)
-      case _ => N
+    case S(_: TopLevelSymbol) =>
+      def rec(ctx: Ctx): Opt[Ctx] = // * To avoid shadowing if users write `globalThis.somefield`
+        if ctx.getOuter.filter(_.isInstanceOf[TopLevelSymbol]).nonEmpty then S(ctx)
+        else ctx.parent match
+          case S(p) => rec(p)
+          case N => N
+      rec(ctx).flatMap(_.get(nme.name)).flatMap(_.symbol) match
+        case S(sym: FieldSymbol) => S(sym)
+        case _ => N
     case _ => N
   
   def cls(tree: Tree, inAppPrefix: Bool): Ctxl[Term] = trace[Term](s"Elab class ${tree.showDbg}", r => s"~> $r"):

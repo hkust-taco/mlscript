@@ -26,6 +26,49 @@ this.t
 
 
 :sjs
+module T with
+  fun t() = 1
+  val a = globalThis.t
+  val b = this.t
+//│ JS:
+//│ const T$class = class T {
+//│   constructor() {
+//│     let selRes, tmp, tmp1, selRes1, tmp2;
+//│     selRes = globalThis.t;
+//│     if (selRes === undefined) {
+//│       throw new globalThis.Error("Access to required field 't' yielded 'undefined'");
+//│     } else {
+//│       tmp = selRes;
+//│     }
+//│     tmp1 = tmp();
+//│     this.a = tmp1;
+//│     selRes1 = this.t;
+//│     if (selRes1 === undefined) {
+//│       throw new globalThis.Error("Access to required field 't' yielded 'undefined'");
+//│     } else {
+//│       tmp2 = selRes1;
+//│     }
+//│     this.b = tmp2;
+//│   }
+//│   t(...args) {
+//│     globalThis.Predef.checkArgs("t", 0, true, args.length);
+//│     return 1;
+//│   }
+//│   toString() { return "T"; }
+//│ };
+//│ this.T = new T$class;
+//│ this.T.class = T$class;
+//│ null
+
+
+T.a
+//│ = 42
+
+T.b
+//│ = [Function: t]
+
+
+:sjs
 module M with
   fun t = 0
 //│ JS:

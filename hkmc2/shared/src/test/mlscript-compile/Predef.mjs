@@ -133,7 +133,7 @@ const Predef$class = class Predef {
       tmp7 = tmp6 + expected;
       tmp8 = tmp7 + " arguments but got ";
       tmp9 = tmp8 + got;
-      throw globalThis.Error(tmp9);
+      throw globalThis.Error(tmp9) ?? null;
     } else {
       return null;
     }
