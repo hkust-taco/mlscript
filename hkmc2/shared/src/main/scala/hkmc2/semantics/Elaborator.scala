@@ -642,9 +642,16 @@ extends Importer:
               val s = st.map(term(_)(using newCtx))
               val b = rhs.map(term(_)(using newCtx))
               val r = FlowSymbol(s"‹result of ${sym}›")
+              val isGetter = k === syntax.Fun && td.paramLists.isEmpty && b.nonEmpty
               val tdf = TermDefinition(owner, k, sym, pss, s, b, r, 
                 TermDefFlags.empty.copy(isModMember = isModMember))
               sym.defn = S(tdf)
+
+              if isGetter &&
+                owner.exists(w => !(w.isInstanceOf[TopLevelSymbol] || w.isInstanceOf[ModuleSymbol])) then raise:
+                  ErrorReport:
+                      msg"Getters must be defined in module or function scopes." ->
+                      td.head.toLoc :: Nil
               
               // indicates if the function really returns a module
               val em = b.exists(ModuleChecker.evalsToModule)

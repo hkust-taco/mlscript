@@ -268,3 +268,11 @@ fun c() =
 
 c()
 //│ = 2
+
+
+:e
+class Foo(x) with
+  fun oops = x
+//│ ╔══[ERROR] Getters must be defined in module or function scopes.
+//│ ║  l.275: 	  fun oops = x
+//│ ╙──       	      ^^^^
