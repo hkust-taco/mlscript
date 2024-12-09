@@ -51,11 +51,14 @@ abstract class MLsDiffMaker extends DiffMaker:
   val showUCS = Command("ucs"): ln =>
     ln.split(" ").iterator.map(x => "ucs:" + x.trim).toSet
   
+  val compilePatterns = NullaryCommand("cp")
+  
   given Elaborator.State = new Elaborator.State:
     override def dbg: Bool =
       dbgParsing.isSet
       || dbgElab.isSet
       || debug.isSet
+    override def shouldCompilePatterns: Bool = compilePatterns.isSet
   
   val etl = new TraceLogger:
     override def doTrace = dbgElab.isSet || scope.exists:

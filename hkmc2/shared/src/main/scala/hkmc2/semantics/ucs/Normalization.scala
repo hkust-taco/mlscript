@@ -5,11 +5,11 @@ package ucs
 import mlscript.utils.*, shorthands.*
 import syntax.{Literal, Tree}, utils.TraceLogger
 import Message.MessageContext
+import Elaborator.Ctx
 
-class Normalization(tl: TraceLogger)(using raise: Raise):
+class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
   import Normalization.*, Mode.*
-  import Elaborator.Ctx
-  import tl.*
+  import elaborator.tl.*
 
   def raiseDesugaringError(msgs: (Message -> Opt[Loc])*): Unit =
     raise(ErrorReport(msgs.toList, source = Diagnostic.Source.Typing))
@@ -91,6 +91,12 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
           val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
           val whenFalse = rec(specialize(alternative, -, scrutinee, pattern).clearFallback)
           Branch(scrutinee, pattern, whenTrue) ~: whenFalse
+        case Pattern.Synonym(symbol, _) =>
+          log("huh?")
+          log(s"SimpleSplit:\n${symbol.simpleSplit.map(_.display).getOrElse("nothing")}")
+          Split.End
+          // val mk = new Compiler(elaborator)(symbol)(using ctx, elaborator.state)
+          // rec(mk(() => scrutinee, rec(consequent)) ++ alternative)
         case _ =>
           raiseDesugaringError(msg"unsupported pattern matching: ${scrutinee.toString} is ${pattern.toString}" -> pattern.toLoc)
           Split.default(Term.Error)

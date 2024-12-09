@@ -137,6 +137,7 @@ object Elaborator:
     ))
     def dbg: Bool = false
     def dbgUid(uid: Uid[Symbol]): Str = if dbg then s"‹$uid›" else ""
+    def shouldCompilePatterns: Bool = false // TODO: remove after annotations introduced
   transparent inline def State(using state: State): State = state
 
 end Elaborator
@@ -280,7 +281,7 @@ extends Importer:
       Term.Asc(term(lhs), term(rhs))
     case tree @ InfixApp(lhs, Keyword.`is` | Keyword.`and`, rhs) =>
       val des = new Desugarer(this)(tree)
-      val nor = new ucs.Normalization(tl)(des)
+      val nor = new ucs.Normalization(this)(des)
       Term.IfLike(Keyword.`if`, des)(nor)
     case app @ PartialApp(lhs, args) =>
       var params: Ls[Param] = Nil
@@ -391,7 +392,7 @@ extends Importer:
       val desugared = new Desugarer(this)(tree)
       scoped("ucs:desugared"):
         log(s"Desugared:\n${Split.display(desugared)}")
-      val normalized = new ucs.Normalization(tl)(desugared)
+      val normalized = new ucs.Normalization(this)(desugared)
       scoped("ucs:normalized"):
         log(s"Normalized:\n${Split.display(normalized)}")
       Term.IfLike(kw, desugared)(normalized)
@@ -402,7 +403,7 @@ extends Importer:
       val des = new Desugarer(this)(tree, scrut)
       scoped("ucs:desugared"):
         log(s"Desugared:\n${Split.display(des)}")
-      val nor = new ucs.Normalization(tl)(des)
+      val nor = new ucs.Normalization(this)(des)
       scoped("ucs:normalized"):
         log(s"Normalized:\n${Split.display(nor)}")
       Term.Lam(PlainParamList(
@@ -796,6 +797,7 @@ extends Importer:
           val patSym = td.symbol.asInstanceOf[PatternSymbol] // TODO improve `asInstanceOf`
           val owner = ctx.outer
           newCtx.nest(S(patSym)).givenIn:
+            patSym.simpleSplit = S(PatternElaborator(td.extension.get, this))
             assert(body.isEmpty)
             log(s"pattern body is ${td.extension}")
             val translate = new ucs.Translator(this)
@@ -1070,3 +1072,29 @@ end Elaborator
 type Pol = Opt[Bool]
 extension (p: Pol) def ! : Pol = p.map(!_)
 
+private object PatternElaborator:
+  def apply(tree: Tree, elaborator: Elaborator)(using Elaborator.Ctx): ucs.SimpleSplit =
+    new PatternElaborator(elaborator)(tree)
+
+private class PatternElaborator(elaborator: Elaborator)(using Elaborator.Ctx):
+  import ucs.*, syntax.Tree, Tree.*, SimpleSplit.*, PatternStub.*, HelperExtractors.*, elaborator.tl.*
+
+  type F = (=> SimpleSplit, => SimpleSplit) => SimpleSplit
+
+  def nest(ctor: Ident | Sel, params: Ls[Tree]): F =
+    val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
+    clsTrm.symbol.flatMap(_.asClsLike).map(ClassLike.apply) match
+      case S(pattern) => (con, alt) =>
+        val consequence = params.foldRight(con):
+          case (param, acc) => next(param)(acc, Reject)
+        Branch(pattern, consequence, alt)
+      case N => (_, alt) => alt
+
+  def next(tree: Tree): F = tree match
+    case lhs or rhs => (con, alt) => next(lhs)(con, next(rhs)(con, alt))
+    case value: syntax.Literal => (con, alt) => Branch(Literal(value), con, alt)
+    case App(ctor: (Ident | Sel), Tup(params)) => nest(ctor, params)
+    case Ident("_") => (con, alt) => Branch(Wildcard, con, alt)
+    case ctor: (Ident | Sel) => nest(ctor, Nil)
+  
+  def apply(tree: Tree): SimpleSplit = next(tree)(Accept, Reject)

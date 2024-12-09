@@ -1,0 +1,51 @@
+:js
+
+class Pair[A, B](a: A, b: B)
+
+pattern List = null | Pair(_, List)
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.NoClassDefFoundError: Could not initialize class hkmc2.semantics.ucs.PatternStub$
+//│ 	at: hkmc2.semantics.PatternElaborator.next$$anonfun$3(Elaborator.scala:1002)
+//│ 	at: hkmc2.semantics.PatternElaborator.$anonfun$29(Elaborator.scala:994)
+//│ 	at: scala.collection.immutable.List.foldRight(List.scala:353)
+//│ 	at: hkmc2.semantics.PatternElaborator.nest$$anonfun$3(Elaborator.scala:994)
+//│ 	at: hkmc2.semantics.PatternElaborator.next$$anonfun$1$$anonfun$1(Elaborator.scala:999)
+//│ 	at: hkmc2.semantics.PatternElaborator.next$$anonfun$2(Elaborator.scala:1000)
+//│ 	at: hkmc2.semantics.PatternElaborator.next$$anonfun$1(Elaborator.scala:999)
+//│ 	at: hkmc2.semantics.PatternElaborator.apply(Elaborator.scala:1005)
+//│ 	at: hkmc2.semantics.PatternElaborator$.apply(Elaborator.scala:982)
+//│ 	at: hkmc2.semantics.Elaborator.go$2(Elaborator.scala:709)
+
+:cp
+:de
+null is List
+//│ Elab block List(InfixApp(UnitLit(true),keyword 'is',Ident(List))) Some(globalThis:block#3‹104›)
+//│ | Elab term InfixApp(UnitLit(true),keyword 'is',Ident(List))
+//│ | | Elab term UnitLit(true)
+//│ | | ~> Lit(UnitLit(true))
+//│ | | disaggregate <<< Ident(List)
+//│ | | disaggregate >>> (Ident(List),BoolLit(true))
+//│ | | conjunct matches <<< List()
+//│ | | Elab class Ident(List)
+//│ | | | Elab term Ident(List)
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] Name not found: List
+//│ ║  l.21: 	null is List
+//│ ╙──      	        ^^^^
+//│ | | | ~> Error
+//│ | | ~> Error
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.21: 	null is List
+//│ ╙──      	        ^^^^
+//│ | | normalize <<< if
+//│ | | >    let $scrut‹105› = null
+//│ | | >    else false
+//│ | | | LET: $scrut‹105›
+//│ | | | DFLT: false
+//│ | | normalize >>> if
+//│ | | >    let $scrut‹105› = null
+//│ | | >    else false
+//│ | ~> IfLike(keyword 'if',Let($scrut‹105›,Lit(UnitLit(true)),Else(Lit(BoolLit(false)))))
+//│ ~> Blk(List(),IfLike(keyword 'if',Let($scrut‹105›,Lit(UnitLit(true)),Else(Lit(BoolLit(false))))))
+//│ = false

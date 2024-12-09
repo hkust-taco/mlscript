@@ -53,3 +53,110 @@ fun foo(x) = if x is
 // In the future, any function can be a pattern
 //  (x => view(x)) as ...
 //  (case { ... }) as ...
+
+
+:todo
+// in-type: "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+// out-type: "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+pattern Many(pattern T) = T ~ (Many(T) | "")
+pattern Star(pattern T) = "" | Many(T)
+pattern Email(name, domains) =
+  Rep(Char | ".") as name ~ "@" ~ Rep(Rep(Char) ~ ) as domain
+//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
+//│ ║  l.62: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+//│ ╙──      	                      ^^^
+//│ ╔══[ERROR] Unrecognized pattern.
+//│ ║  l.62: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+//│ ╙──      	               ^^^^^^
+
+:todo
+pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
+//│ ╔══[ERROR] Unrecognized pattern.
+//│ ║  l.75: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
+//│ ╙──      	                          ^^^^^^^^^^^^
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+
+:todo
+pattern LineSep(pattern P) = case
+  "" then Nil
+  L(...nd) ~
+    ""                   then nd :: Nil
+    "\n" ~ LineSep(P, t) then nd :: t
+//│ /!!!\ Uncaught error: scala.MatchError: TypeDef(Pat,Ident(P),None,None) (of class hkmc2.syntax.Tree$TypeDef)
+
+:todo
+pattern Lines(pattern L) = case
+  "" then []
+  pattern Tail = case
+    "" then []
+    "\n" ~ (Lines of L) as t then t
+  L as h ~ Tail as t then [h, ...t]
+  
+:todo
+if input is Lines of Email then
+//│ ╔══[PARSE ERROR] Expected start of statement in this position; found end of input instead
+//│ ║  l.98: 	if input is Lines of Email then
+//│ ╙──      	                               ^
+//│ /!!!\ Uncaught error: scala.MatchError: TypeDef(Pat,Ident(L),None,None) (of class hkmc2.syntax.Tree$TypeDef)
+
+:todo
+pattern Opt(pattern P) = case
+  P(value) then (Some(value))
+  ""       then (None)
+  
+:todo
+pattern Email(name, domain) = ...
+//│ /!!!\ Uncaught error: scala.MatchError: TypeDef(Pat,Ident(P),None,None) (of class hkmc2.syntax.Tree$TypeDef)
+
+if input is Opt(Email, Some((n, d))) then ...
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] Name not found: input
+//│ ║  l.113: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ╙──       	   ^^^^^
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] Name not found: Opt
+//│ ║  l.113: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ╙──       	            ^^^
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.113: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ╙──       	            ^^^
+
+pattern Opt(pattern P) = case
+  P(...values) then (Some(values))
+  ""           then (None)
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: TypeDef(Pat,Ident(P),None,None) (of class hkmc2.syntax.Tree$TypeDef)
+//│ 	at: hkmc2.syntax.Tree.asParam(Tree.scala:168)
+//│ 	at: hkmc2.semantics.Elaborator.param(Elaborator.scala:779)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:789)
+//│ 	at: hkmc2.semantics.Elaborator.params(Elaborator.scala:105)
+//│ 	at: hkmc2.semantics.Elaborator.$anonfun$14(Elaborator.scala:689)
+//│ 	at: scala.Option.map(Option.scala:242)
+//│ 	at: hkmc2.semantics.Elaborator.go$2(Elaborator.scala:686)
+//│ 	at: hkmc2.semantics.Elaborator.block$$anonfun$3(Elaborator.scala:761)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:68)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:761)
+
+pattern Opt(pattern P) = case
+  P(...values) then Some(values)
+  ""           then None
+  
+pattern Digits = "0" to "9" ~ (Digits | "")
+//│ FAILURE: Unexpected parse error
+//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
+//│ ║  l.147: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ╙──       	                        ^^^
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: TypeDef(Pat,Ident(P),None,None) (of class hkmc2.syntax.Tree$TypeDef)
+//│ 	at: hkmc2.syntax.Tree.asParam(Tree.scala:168)
+//│ 	at: hkmc2.semantics.Elaborator.param(Elaborator.scala:779)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:789)
+//│ 	at: hkmc2.semantics.Elaborator.params(Elaborator.scala:105)
+//│ 	at: hkmc2.semantics.Elaborator.$anonfun$14(Elaborator.scala:689)
+//│ 	at: scala.Option.map(Option.scala:242)
+//│ 	at: hkmc2.semantics.Elaborator.go$2(Elaborator.scala:686)
+//│ 	at: hkmc2.semantics.Elaborator.block$$anonfun$3(Elaborator.scala:761)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:68)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:761)

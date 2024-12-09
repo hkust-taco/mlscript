@@ -39,6 +39,7 @@ extension (t: Product)
       case None => "N"
       case Nil => "Nil"
       case xs: List[_] => "Ls of \n" + xs.iterator.map(aux(_)).mkString("\n").indent("  ")
+      case xs: Vector[_] => "Vector of \n" + xs.iterator.map(aux(_)).mkString("\n").indent("  ")
       case s: String => s.escaped
       case TermDefFlags(mod) =>
         val flags = Buffer.empty[String]

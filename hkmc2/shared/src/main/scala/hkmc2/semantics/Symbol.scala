@@ -192,11 +192,14 @@ class TypeAliasSymbol(val id: Tree.Ident)(using State) extends MemberSymbol[Type
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of type alias here
   override def toString: Str = s"module:${id.name}${State.dbgUid(uid)}"
 
-class PatternSymbol(val id: Tree.Ident)(using State)
+class PatternSymbol(val id: Tree.Ident, val params: Opt[Tree.Tup], val body: Tree)(using State)
     extends MemberSymbol[PatternDef] with CtorSymbol with InnerSymbol:
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of pattern here
   override def toString: Str = s"pattern:${id.name}"
+  /** Compute the arity. */
+  def arity: Int = params.fold(0)(_.fields.length)
+  var simpleSplit: Opt[ucs.SimpleSplit] = N
 
 class TopLevelSymbol(blockNme: Str)(using State)
     extends MemberSymbol[ModuleDef] with InnerSymbol:

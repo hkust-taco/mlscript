@@ -8,34 +8,12 @@ import Split.display, ucs.Normalization
 import syntax.{Fun, Keyword, Literal, ParamBind, Tree}, Tree.*, Keyword.`as`
 import scala.collection.mutable.{Buffer, Set as MutSet}
 
-object Translator:
-  /** A helper extractor for matching the tree of `x | y`. */
-  object or:
-    infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match
-      case App(Ident("|"), Tup(lhs :: rhs :: Nil)) => S(lhs, rhs)
-      case _ => N
-  
-  /** A helper extractor for matching the tree of `x ..= y` and `x ..< y`.
-   *  The Boolean value indicates whether the range is inclusive.
-   */
-  object to:
-    infix def unapply(tree: Tree): Opt[(Tree, (Bool, Tree))] = tree match
-      case App(Ident("..="), Tup(lhs :: rhs :: Nil)) => S(lhs, (true, rhs))
-      case App(Ident("..<"), Tup(lhs :: rhs :: Nil)) => S(lhs, (false, rhs))
-      case _ => N
-      
-  private def error(msgs: (Message, Option[Loc])*)(using Raise): Unit =
-    raise(ErrorReport(msgs.toList))
-  
-  private def warn(msgs: (Message, Option[Loc])*)(using Raise): Unit =
-    raise(WarningReport(msgs.toList))
-
 /** This class translates a tree describing a pattern into functions that can
  *  perform pattern matching on terms described by the pattern.
  */
 class Translator(val elaborator: Elaborator)
     (using state: Elaborator.State, c: Elaborator.Ctx) extends DesugaringBase:
-  import elaborator.tl.*, Translator.*
+  import elaborator.tl.*, HelperExtractors.*
   
   extension (split: Split)
     private def ~~:(fallback: Split): Split =
@@ -62,10 +40,6 @@ class Translator(val elaborator: Elaborator)
   
   private def matchFailure() =
     app(matchFailureClass._1, tup(), FlowSymbol("result of `MatchFailure`"))
-  
-  private lazy val lteq = state.builtinOpsMap("<=")
-  private lazy val lt = state.builtinOpsMap("<")
-  private lazy val eq = state.builtinOpsMap("==")
   
   private def makeRange(scrut: Scrut, lo: Literal, hi: Literal, rightInclusive: Bool, inner: Inner) =
     def scrutFld = fld(scrut())
@@ -207,7 +181,7 @@ class Translator(val elaborator: Elaborator)
   
   /** Create a function definition from the given UCS splits. */
   private def makeMatcher(name: Str, scrut: TermSymbol, topmost: Split)(using Raise): TermDefinition =
-    val normalize = new Normalization(elaborator.tl)
+    val normalize = new Normalization(elaborator)
     val sym = BlockMemberSymbol(name, Nil)
     val ps = PlainParamList(Param(FldFlags.empty, scrut, N) :: Nil)
     val body = Term.IfLike(Keyword.`if`, topmost)(normalize(topmost))

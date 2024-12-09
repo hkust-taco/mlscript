@@ -85,6 +85,10 @@ trait DesugaringBase(using state: Elaborator.State):
   protected final def plainTest(cond: Term, dbgName: Str = "cond")(inner: => Split): Split =
     val s = TempSymbol(N, dbgName)
     Split.Let(s, cond, Branch(s.ref(), inner) ~: Split.End)
+    
+  protected lazy val lteq = state.builtinOpsMap("<=")
+  protected lazy val lt = state.builtinOpsMap("<")
+  protected lazy val eq = state.builtinOpsMap("==")
 
   /** Make a `Branch` that calls `Pattern` symbols' `unapply` functions. */
   def makeUnapplyBranch(
