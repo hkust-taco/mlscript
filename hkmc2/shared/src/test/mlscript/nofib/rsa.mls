@@ -1,0 +1,83 @@
+:js
+:import NofibPrelude.mls
+//│ Imported 120 member(s)
+
+fun z_of_int(x) = globalThis.BigInt(x)
+fun string_of_z(x) = nofibStringToList(x + "")
+fun z_add(x, y) = x + y
+fun z_mul(x, y) = x * y
+fun z_sub(x, y) = x - y
+fun z_div(x, y) = x / y
+fun z_mod(x, y) = x % y
+fun z_equal(x, y) = x === y
+fun z_sqr(x) = x * x
+fun int_if_char(c) = c.codePointAt(0)
+
+let const0 = z_of_int(0)
+//│ const0 = 0n
+
+let const31 = z_of_int(31)
+//│ const31 = 31n
+
+let const1 = z_of_int(1)
+//│ const1 = 1n
+
+let const2 = z_of_int(2)
+//│ const2 = 2n
+
+let const128 = z_of_int(128)
+//│ const128 = 128n
+
+fun hash(str) = foldl(
+  (acc, c) => z_add(z_of_int(int_if_char(c)), z_mul(acc, const31)),
+  const0,
+  str
+)
+
+fun and_(ls) = if ls is
+  Nil then true
+  Cons(h, t) and
+    h then and_(t)
+    else false
+
+fun unlines(ls) = concat(map(l => append(l, Cons("\n", Nil)), ls))
+
+fun even(a) = z_mod(a, const2) === const0
+
+fun code(ls) = foldl(
+  (x, y) => z_add(z_mul(const128, x), z_of_int(int_if_char(y))),
+  const0,
+  ls
+)
+
+fun collect(n, xs) = if
+  n === 0 then Nil
+  xs is Nil then Nil
+  else take(n, xs) :: collect(n, drop(n, xs))
+
+fun size(n) = intDiv(listLen(string_of_z(n)) * 47, 100)
+
+fun encrypt(n, e, s) = unlines(map(
+  c => string_of_z(power(e, n, code(c))),
+  collect(size(n), s)
+))
+
+fun power(n, m, x) = if
+  z_equal(n, const0) then const1
+  even(n) then z_mod(z_sqr(power(z_div(n, const2), m, x)), m)
+  else z_mod(z_mul(x, power(z_sub(n, const1), m, x)), m)
+
+let intput = nofibStringToList("module Rsa (encrypt, decrypt, makeKeys)whereencrypt, decrypt :: Integer -> Integer -> String -> Stringencrypt n e = unlines . map (show . power e n . code) . collect (size n)decrypt n d = concat . map (decode . power d n . read) . lines-------- Converting between Strings and Integers -----------code :: String -> Integercode = foldl accum 0")
+//│ > Cons {
+//│ >   head: 'm',
+//│ >   tail: Cons { head: 'o', tail: Cons { head: 'd', tail: [Cons] } }
+//│ intput = }
+
+fun testRsa_nofib(_) = hash(encrypt(
+  z_of_int("2036450659413645137870851576872812267542175329986469156678671505255564383842535488743101632280716717779536712424613501441720195827856504007305662157107"),
+  z_of_int("387784473137902876992546516170169092918207676456888779623592396031349415024943784869634893342729620092877891356118467738167515879252473323905128540213"),
+  intput
+))
+
+testRsa_nofib(0)
+//│ = 482637465432607010917257222032620530721723618501737706026743882783313327066202673013365256814726576439009055091827580082212820759664706545572240286413218664751845734185701374777266310558457553355373807362434166349003201941887602860496710056507075353376345048669233835180598408298727128322741360142996971431829227444094918866178927711144027681082321122062835414193740627625029809199575726253452099186268470980039782425949452065701740482396133513961988686468761144516743488554315736735961777051185320418286115422649720027767884910724451241957350944189986507205707270495510398907671624343838719521821672896076211349543667832301743665525686580633374807706866844729041029415808189280976688048312491540225687029398008578924291567459851209428276205195242327188889088723879790017399528773080444852204540883878980516323171258221296464662599267900197181776467324183225697556682135463106992190311864355038259005172577614576867872782871119246565217241711389884308240188855812927990176296196223113804593440334254193205874898521715702511278252396433642189469091390812593564724827177366589041580443051028420826353514514028539226620646718712687n
