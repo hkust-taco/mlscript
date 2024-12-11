@@ -11,13 +11,13 @@ fun map: [A, B, E] -> List[out A] -> (A ->{E} B) ->{E} List[out B]
 
 
 // * Dummy implementation
-fun mapi: [A, E] -> List[out A] -> ((Int, A) ->{E} A) ->{Alloc | E} List[out A]
+fun mapi: [A, E] -> List[out A] -> ((Int, A) ->{E} A) ->{E} List[out A]
 fun mapi = s => f =>
   region r in
     map(s) of x => f(0, x)
 //│ Type: ⊤
 
-fun mapi: [A, E] -> List[out A] -> ((Int, A) ->{E} A) ->{Alloc | E} List[out A]
+fun mapi: [A, E] -> List[out A] -> ((Int, A) ->{E} A) ->{E} List[out A]
 fun mapi = s => f =>
   region r in
     let i = r.ref 0
@@ -43,14 +43,14 @@ region r in
 // * Should be an error. This definition would not be referentially transparent.
 // * The error message needs improvement, though.
 :e
-fun mapi: [A, E] -> List[out A] -> ((Int, A) ->{E} A) ->{Alloc | E} List[out A]
+fun mapi: [A, E] -> List[out A] -> ((Int, A) ->{E} A) ->{E} List[out A]
 fun mapi = s =>
   region r in
     let i = r.ref 0
     f => map(s) of x =>
       i := !i + 1
       f(!i, x)
-//│ ╔══[ERROR] Type error in region expression with expected type ((Int, <A>55_2) ->{<E>56_2} <A>55_2) ->{Alloc ∨ <E>56_2} List[out <A>55_2]
+//│ ╔══[ERROR] Type error in region expression with expected type ((Int, <A>54_2) ->{<E>55_2} <A>54_2) ->{<E>55_2} List[out <A>54_2]
 //│ ║  l.49: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
 //│ ║  l.50: 	    f => map(s) of x =>
@@ -59,15 +59,15 @@ fun mapi = s =>
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ║  l.52: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  f71_2 ->{E79_2} List[out B78_2]  <:  ((Int, <A>55_2) ->{<E>56_2} <A>55_2) ->{Alloc ∨ <E>56_2} List[out <A>55_2]
-//│ ╟── because: cannot constrain  D( E79_2 )  <:  Alloc ∨ <E>56_2
-//│ ╟── because: cannot constrain  E79_2  <:  ¬(~{Alloc} && ~<E>56_2)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ α80_2  <:  ¬(~{Alloc} && ~<E>56_2)
-//│ ╟── because: cannot constrain  α80_2  <:  ¬(~{Alloc} && ~<E>56_2)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ r81_2  <:  ¬(~{Alloc} && ~<E>56_2)
-//│ ╟── because: cannot constrain  r81_2  <:  ¬(~{Alloc} && ~<E>56_2)
-//│ ╙── because: cannot constrain    <:  ¬(~{Alloc} && ~<E>56_2)
-//│ ╔══[ERROR] Type error in region expression with expected type ((Int, <A>55_2) ->{<E>56_2} <A>55_2) ->{Alloc ∨ <E>56_2} List[out <A>55_2]
+//│ ╟── because: cannot constrain  f70_2 ->{E78_2} List[out B77_2]  <:  ((Int, <A>54_2) ->{<E>55_2} <A>54_2) ->{<E>55_2} List[out <A>54_2]
+//│ ╟── because: cannot constrain  D( E78_2 )  <:  <E>55_2
+//│ ╟── because: cannot constrain  E78_2  <:  ¬(~<E>55_2)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ α79_2  <:  ¬(~<E>55_2)
+//│ ╟── because: cannot constrain  α79_2  <:  ¬(~<E>55_2)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ r80_2  <:  ¬(~<E>55_2)
+//│ ╟── because: cannot constrain  r80_2  <:  ¬(~<E>55_2)
+//│ ╙── because: cannot constrain    <:  ¬(~<E>55_2)
+//│ ╔══[ERROR] Type error in region expression with expected type ((Int, <A>54_2) ->{<E>55_2} <A>54_2) ->{<E>55_2} List[out <A>54_2]
 //│ ║  l.49: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
 //│ ║  l.50: 	    f => map(s) of x =>
@@ -76,15 +76,15 @@ fun mapi = s =>
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ║  l.52: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  f71_2 ->{E79_2} List[out B78_2]  <:  ((Int, <A>55_2) ->{<E>56_2} <A>55_2) ->{Alloc ∨ <E>56_2} List[out <A>55_2]
-//│ ╟── because: cannot constrain  D( E79_2 )  <:  Alloc ∨ <E>56_2
-//│ ╟── because: cannot constrain  E79_2  <:  ¬(~{Alloc} && ~<E>56_2)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ α80_2  <:  ¬(~{Alloc} && ~<E>56_2)
-//│ ╟── because: cannot constrain  α80_2  <:  ¬(~{Alloc} && ~<E>56_2)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ r81_2  <:  ¬(~{Alloc} && ~<E>56_2)
-//│ ╟── because: cannot constrain  r81_2  <:  ¬(~{Alloc} && ~<E>56_2)
-//│ ╙── because: cannot constrain    <:  ¬(~{Alloc} && ~<E>56_2)
-//│ ╔══[ERROR] Type error in region expression with expected type ((Int, <A>55_2) ->{<E>56_2} <A>55_2) ->{Alloc ∨ <E>56_2} List[out <A>55_2]
+//│ ╟── because: cannot constrain  f70_2 ->{E78_2} List[out B77_2]  <:  ((Int, <A>54_2) ->{<E>55_2} <A>54_2) ->{<E>55_2} List[out <A>54_2]
+//│ ╟── because: cannot constrain  D( E78_2 )  <:  <E>55_2
+//│ ╟── because: cannot constrain  E78_2  <:  ¬(~<E>55_2)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ α79_2  <:  ¬(~<E>55_2)
+//│ ╟── because: cannot constrain  α79_2  <:  ¬(~<E>55_2)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ r80_2  <:  ¬(~<E>55_2)
+//│ ╟── because: cannot constrain  r80_2  <:  ¬(~<E>55_2)
+//│ ╙── because: cannot constrain    <:  ¬(~<E>55_2)
+//│ ╔══[ERROR] Type error in region expression with expected type ((Int, <A>54_2) ->{<E>55_2} <A>54_2) ->{<E>55_2} List[out <A>54_2]
 //│ ║  l.49: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
 //│ ║  l.50: 	    f => map(s) of x =>
@@ -93,28 +93,14 @@ fun mapi = s =>
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ║  l.52: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  f71_2 ->{E79_2} List[out B78_2]  <:  ((Int, <A>55_2) ->{<E>56_2} <A>55_2) ->{Alloc ∨ <E>56_2} List[out <A>55_2]
-//│ ╟── because: cannot constrain  D( E79_2 )  <:  Alloc ∨ <E>56_2
-//│ ╟── because: cannot constrain  E79_2  <:  ¬(~{Alloc} && ~<E>56_2)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ α80_2  <:  ¬(~{Alloc} && ~<E>56_2)
-//│ ╟── because: cannot constrain  α80_2  <:  ¬(~{Alloc} && ~<E>56_2)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ r81_2  <:  ¬(~{Alloc} && ~<E>56_2)
-//│ ╟── because: cannot constrain  r81_2  <:  ¬(~{Alloc} && ~<E>56_2)
-//│ ╙── because: cannot constrain    <:  ¬(~{Alloc} && ~<E>56_2)
-//│ ╔══[ERROR] Type error in function literal with expected type (List[out <A>55_2]) ->{⊥} ((Int, <A>55_2) ->{<E>56_2} <A>55_2) ->{Alloc ∨ <E>56_2} List[out <A>55_2]
-//│ ║  l.47: 	fun mapi = s =>
-//│ ║        	           ^^^^
-//│ ║  l.48: 	  region r in
-//│ ║        	^^^^^^^^^^^^^
-//│ ║  l.49: 	    let i = r.ref 0
-//│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.50: 	    f => map(s) of x =>
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.51: 	      i := !i + 1
-//│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.52: 	      f(!i, x)
-//│ ║        	^^^^^^^^^^^^^^
-//│ ╙── because: cannot constrain  α70_2 ∨ Alloc  <:  ⊥
+//│ ╟── because: cannot constrain  f70_2 ->{E78_2} List[out B77_2]  <:  ((Int, <A>54_2) ->{<E>55_2} <A>54_2) ->{<E>55_2} List[out <A>54_2]
+//│ ╟── because: cannot constrain  D( E78_2 )  <:  <E>55_2
+//│ ╟── because: cannot constrain  E78_2  <:  ¬(~<E>55_2)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ α79_2  <:  ¬(~<E>55_2)
+//│ ╟── because: cannot constrain  α79_2  <:  ¬(~<E>55_2)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ r80_2  <:  ¬(~<E>55_2)
+//│ ╟── because: cannot constrain  r80_2  <:  ¬(~<E>55_2)
+//│ ╙── because: cannot constrain    <:  ¬(~<E>55_2)
 //│ Type: ⊤
 
 

@@ -1,7 +1,5 @@
 // :bbml
 
-class Alloc
-
 class CodeBase[T, C, S]
 class Region[T]
 class Ref[T, S]

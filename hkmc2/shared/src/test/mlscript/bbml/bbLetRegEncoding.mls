@@ -30,11 +30,11 @@ letreg(r => r).ref 1
 //│ ╔══[ERROR] Type error in block
 //│ ║  l.16: 	letreg(r => r).ref 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  α15_1 ∨ E10_1  <:  Alloc
-//│ ╟── because: cannot constrain  α15_1  <:  ¬(~{Alloc})
-//│ ╟── because: cannot constrain  R14_1  <:  ¬(~{Alloc})
-//│ ╟── because: cannot constrain  R14_1  <:  ¬(~{Alloc})
-//│ ╙── because: cannot constrain    <:  ¬(~{Alloc})
+//│ ╟── because: cannot constrain  α15_1 ∨ E10_1  <:  ⊥
+//│ ╟── because: cannot constrain  α15_1  <:  ¬()
+//│ ╟── because: cannot constrain  R14_1  <:  ¬()
+//│ ╟── because: cannot constrain  R14_1  <:  ¬()
+//│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Ref[Int, ?]
 
 letreg(r => r.ref 1)
@@ -48,13 +48,13 @@ letreg(r => !(r.ref 1))
 //│ ╔══[ERROR] Type error in block
 //│ ║  l.47: 	!letreg(r => r.ref 1)
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  α34_1 ∨ E28_1  <:  Alloc
-//│ ╟── because: cannot constrain  α34_1  <:  ¬(~{Alloc})
-//│ ╟── because: cannot constrain  α32_1  <:  ¬(~{Alloc})
-//│ ╟── because: cannot constrain  α32_1  <:  ¬(~{Alloc})
-//│ ╟── because: cannot constrain  ¬⊥ ∧ R33_1  <:  ¬(~{Alloc})
-//│ ╟── because: cannot constrain  R33_1  <:  ¬(~{Alloc})
-//│ ╙── because: cannot constrain    <:  ¬(~{Alloc})
+//│ ╟── because: cannot constrain  α34_1 ∨ E28_1  <:  ⊥
+//│ ╟── because: cannot constrain  α34_1  <:  ¬()
+//│ ╟── because: cannot constrain  α32_1  <:  ¬()
+//│ ╟── because: cannot constrain  α32_1  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ R33_1  <:  ¬()
+//│ ╟── because: cannot constrain  R33_1  <:  ¬()
+//│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Int
 
 letreg of r =>
@@ -74,13 +74,13 @@ letreg(r => arg => r.ref arg)(0)
 //│ ╔══[ERROR] Type error in block
 //│ ║  l.73: 	letreg(r => arg => r.ref arg)(0)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  α63_1 ∨ E54_1  <:  Alloc
-//│ ╟── because: cannot constrain  α63_1  <:  ¬(~{Alloc})
-//│ ╟── because: cannot constrain  α61_1  <:  ¬(~{Alloc})
-//│ ╟── because: cannot constrain  α61_1  <:  ¬(~{Alloc})
-//│ ╟── because: cannot constrain  ¬⊥ ∧ R62_1  <:  ¬(~{Alloc})
-//│ ╟── because: cannot constrain  R62_1  <:  ¬(~{Alloc})
-//│ ╙── because: cannot constrain    <:  ¬(~{Alloc})
+//│ ╟── because: cannot constrain  α63_1 ∨ E54_1  <:  ⊥
+//│ ╟── because: cannot constrain  α63_1  <:  ¬()
+//│ ╟── because: cannot constrain  α61_1  <:  ¬()
+//│ ╟── because: cannot constrain  α61_1  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ R62_1  <:  ¬()
+//│ ╟── because: cannot constrain  R62_1  <:  ¬()
+//│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Ref[arg59_1, ?]
 //│ Where:
 //│   Int <: arg59_1

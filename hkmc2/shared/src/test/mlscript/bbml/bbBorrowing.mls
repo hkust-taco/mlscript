@@ -37,7 +37,7 @@ fun next: [A, Br] -> Iter[A, Br] ->{Br} A
 letreg(r => r)
 //│ Type: Reg[?, E23_1]
 //│ Where:
-//│   E23_1 <: Alloc
+//│   E23_1 <: ⊥
 
 letreg of r =>
   let b = mkVec(r)
@@ -49,7 +49,7 @@ letreg of r =>
   r
 //│ Type: Reg[?, E28_1]
 //│ Where:
-//│   E28_1 <: Alloc
+//│   E28_1 <: ⊥
 
 
 // * Non-lexical borrowing pattern encoded with a thunk
@@ -89,11 +89,11 @@ letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ║  l.74: 	  k()
 //│ ║        	^^^^^
-//│ ╟── because: cannot constrain  E73_1  <:  Alloc
-//│ ╟── because: cannot constrain  E73_1  <:  ¬(~{Alloc})
-//│ ╟── because: cannot constrain  ¬⊥ ∧ ¬Rg96_1  <:  ¬(~{Alloc})
-//│ ╟── because: cannot constrain  ~{Alloc}  <:  Rg96_1
-//│ ╙── because: cannot constrain  ~{Alloc}  <:  ¬()
+//│ ╟── because: cannot constrain  E73_1  <:  ⊥
+//│ ╟── because: cannot constrain  E73_1  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ ¬Rg96_1  <:  ¬()
+//│ ╟── because: cannot constrain    <:  Rg96_1
+//│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: ⊥
 
 :e
@@ -125,15 +125,15 @@ letreg of r =>
 //│ ║         	^^^^^^^^^^
 //│ ║  l.108: 	  r
 //│ ║         	^^^
-//│ ╟── because: cannot constrain  E97_1  <:  Alloc
-//│ ╟── because: cannot constrain  E97_1  <:  ¬(~{Alloc})
-//│ ╟── because: cannot constrain  ¬⊥ ∧ Rg117_1  <:  ¬(~{Alloc})
-//│ ╟── because: cannot constrain  Rg117_1  <:  ¬(~{Alloc})
-//│ ╙── because: cannot constrain    <:  ¬(~{Alloc})
+//│ ╟── because: cannot constrain  E97_1  <:  ⊥
+//│ ╟── because: cannot constrain  E97_1  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ Rg117_1  <:  ¬()
+//│ ╟── because: cannot constrain  Rg117_1  <:  ¬()
+//│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Reg[?, E97_1]
 //│ Where:
 //│   ⊤ <: E97_1
-//│   E97_1 <: Alloc
+//│   E97_1 <: ⊥
 
 
 letreg of r =>
@@ -144,7 +144,7 @@ letreg of r =>
   r
 //│ Type: Reg[?, E123_1]
 //│ Where:
-//│   E123_1 <: Alloc
+//│   E123_1 <: ⊥
 
 :e
 letreg of r =>
@@ -169,15 +169,15 @@ letreg of r =>
 //│ ║         	^^^^^^^^
 //│ ║  l.156: 	  r
 //│ ║         	^^^
-//│ ╟── because: cannot constrain  E137_1  <:  Alloc
-//│ ╟── because: cannot constrain  E137_1  <:  ¬(~{Alloc})
-//│ ╟── because: cannot constrain  ¬⊥ ∧ Rg149_1  <:  ¬(~{Alloc})
-//│ ╟── because: cannot constrain  Rg149_1  <:  ¬(~{Alloc})
-//│ ╙── because: cannot constrain    <:  ¬(~{Alloc})
+//│ ╟── because: cannot constrain  E137_1  <:  ⊥
+//│ ╟── because: cannot constrain  E137_1  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ Rg149_1  <:  ¬()
+//│ ╟── because: cannot constrain  Rg149_1  <:  ¬()
+//│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Reg[?, E137_1]
 //│ Where:
 //│   ⊤ <: E137_1
-//│   E137_1 <: Alloc
+//│   E137_1 <: ⊥
 
 letreg of r0 =>
   letreg of r1 =>
@@ -188,7 +188,7 @@ letreg of r0 =>
     r1
 //│ Type: Reg[?, in E174_1]
 //│ Where:
-//│   E174_1 <: Alloc
+//│   E174_1 <: ⊥
 
 
 // * Can leak the iterator

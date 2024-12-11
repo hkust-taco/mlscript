@@ -133,11 +133,6 @@ class Elaborator(val tl: TraceLogger, val wd: os.Path)
 extends Importer:
   import tl.*
   
-  // * Ref allocation skolem UID, preserved
-  private val allocSkolemSym = VarSymbol(Ident("Alloc"))
-  private val allocSkolemDef = TyParam(FldFlags.empty, N, allocSkolemSym)
-  allocSkolemSym.decl = S(allocSkolemDef)
-  
   def mkLetBinding(sym: LocalSymbol, rhs: Term): Ls[Statement] =
     LetDecl(sym) :: DefineVar(sym, rhs) :: Nil
   
@@ -220,7 +215,6 @@ extends Importer:
       case N =>
         raise(ErrorReport(msg"Cannot use 'this' outside of an object scope." -> tree.toLoc :: Nil))
         Term.Error
-    case id @ Ident("Alloc") => Term.Ref(allocSkolemSym)(id, 1)
     case id @ Ident(name) =>
       ctx.get(name) match
       case S(sym) => sym.ref(id)

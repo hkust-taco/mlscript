@@ -41,7 +41,6 @@ final case class BbCtx(
 given (using ctx: BbCtx): Raise = ctx.raise
 
 object BbCtx:
-  def allocTy(using ctx: BbCtx): Type = ClassLikeType(ctx.getCls("Alloc").get, Nil)
   def intTy(using ctx: BbCtx): Type = ClassLikeType(ctx.getCls("Int").get, Nil)
   def numTy(using ctx: BbCtx): Type = ClassLikeType(ctx.getCls("Num").get, Nil)
   def strTy(using ctx: BbCtx): Type = ClassLikeType(ctx.getCls("Str").get, Nil)
@@ -77,9 +76,6 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
     // in.state.upperBounds ::= out // * Not needed for soundness; complicates inferred types
     Wildcard(in, out)
 
-  private def allocType(using BbCtx): Type =
-    BbCtx.allocTy
-
   private def error(msg: Ls[Message -> Opt[Loc]])(using BbCtx) =
     raise(ErrorReport(msg))
     Bot // TODO: error type?
@@ -100,10 +96,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         case N => ctx.get(sym) match
           case Some(ty) => ty
           case _ =>
-            if sym.nme === "Alloc" then
-              allocType
-            else
-              error(msg"Variable not found: ${sym.nme}" -> ty.toLoc :: Nil)
+            error(msg"Variable not found: ${sym.nme}" -> ty.toLoc :: Nil)
     case FunTy(Term.Tup(params), ret, eff) =>
       PolyFunType(params.map {
         case Fld(_, p, _) => typeAndSubstType(p, !pol)
@@ -517,7 +510,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         val (res, eff) = typeCheck(body)
         val tv = freshVar(N)(using ctx)
         constrain(eff, tv | sk)
-        (extrude(res)(using ctx, true), tv | allocType)
+        (extrude(res)(using ctx, true), tv)
       case Term.RegRef(reg, value) =>
         val (regTy, regEff) = typeCheck(reg)
         val (valTy, valEff) = typeCheck(value)
@@ -551,5 +544,5 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
   def typePurely(t: Term)(using BbCtx): GeneralType =
     val (ty, eff) = typeCheck(t)
     given CCtx = CCtx.init(t, N)
-    constrain(eff, allocType)
+    constrain(eff, Bot)
     ty

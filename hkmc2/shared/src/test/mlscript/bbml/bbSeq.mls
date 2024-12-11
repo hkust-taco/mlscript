@@ -18,7 +18,7 @@ fun force_cache: [A, B, E] -> Seq[out A, out E] ->{E} Seq[out B, Nothing]
 
 
 // * Dummy implementation
-fun mapi: [A, E] -> Seq[out A, out E] -> ((Int, A) ->{E} A) ->{Alloc} Seq[out A, out E]
+fun mapi: [A, E] -> Seq[out A, out E] -> ((Int, A) ->{E} A) ->{Nothing} Seq[out A, out E]
 fun mapi = s => f =>
   region r in
     map(s) of x => f(0, x)
@@ -27,7 +27,7 @@ fun mapi = s => f =>
 // * Should be an error. This definition would not be referentially transparent.
 // * The error message needs improvement, though.
 :e
-fun mapi: [A, E] -> Seq[out A, out E] -> ((Int, A) ->{E} A) ->{Alloc} Seq[out A, out E]
+fun mapi: [A, E] -> Seq[out A, out E] -> ((Int, A) ->{E} A) ->{Nothing} Seq[out A, out E]
 fun mapi = s => f =>
   region r in
     let i = r.ref 0
@@ -95,10 +95,10 @@ fun mapi = s => f =>
       i := !i + 1
       f(!i, x)
 mapi
-//│ Type: forall A50_2, E51_2, α61_2, α62_2: Seq[out A50_2, out E51_2] -> (((Int, A50_2) ->{α62_2} α61_2) ->{Alloc} Seq[out α61_2, ?])
+//│ Type: forall A50_2, E51_2, α61_2, α62_2: Seq[out A50_2, out E51_2] -> (((Int, A50_2) ->{α62_2} α61_2) -> Seq[out α61_2, ?])
 
 // * This version is correct as it keeps the mutation encapsulated within the region
-fun mapi_force: [A, E] -> Seq[out A, out E] -> ((Int, A) ->{E} A) ->{Alloc | E} Seq[out A, Nothing]
+fun mapi_force: [A, E] -> Seq[out A, out E] -> ((Int, A) ->{E} A) ->{E} Seq[out A, Nothing]
 fun mapi_force = s => f =>
   region r in
     let i = r.ref 0
@@ -108,7 +108,7 @@ fun mapi_force = s => f =>
 //│ Type: ⊤
 
 // * An alternative version that takes an existing region in parameter
-fun mapi: [A, R, E] -> (Seq[out A, out E], Region[R]) -> ((Int, A) ->{E} A) ->{R | Alloc} Seq[out A, out E | R]
+fun mapi: [A, R, E] -> (Seq[out A, out E], Region[R]) -> ((Int, A) ->{E} A) ->{R} Seq[out A, out E | R]
 fun mapi = (s, r) => f =>
   let i = r.ref 0
   map(s) of x =>
@@ -117,7 +117,7 @@ fun mapi = (s, r) => f =>
 //│ Type: ⊤
 
 // * Simpler; should be equivalent when Region is covariant
-fun mapi: [A, E] -> (Seq[out A, out E], Region[E]) -> ((Int, A) ->{E} A) ->{E | Alloc} Seq[out A, out E]
+fun mapi: [A, E] -> (Seq[out A, out E], Region[E]) -> ((Int, A) ->{E} A) ->{E} Seq[out A, out E]
 fun mapi = (s, r) => f =>
   let i = r.ref 0
   map(s) of x =>
