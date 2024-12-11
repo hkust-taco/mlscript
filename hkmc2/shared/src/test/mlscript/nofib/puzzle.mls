@@ -202,7 +202,7 @@ fun testPuzzle_nofib(x) =
   let mins = minSolutions(solutions)
   writeSolutions(mins, 1, Nil)
 
-:re // nodejs 8192 can handle this
+:re // nodejs stack size 8192 can handle this
 print(nofibListToString(testPuzzle_nofib(2 :: Nil)))
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
