@@ -1,0 +1,212 @@
+:js
+:import NofibPrelude.mls
+//│ Imported 120 member(s)
+
+fun int_of_char(c) = c.codePointAt(0)
+
+object
+  EQ
+  GT
+  LT
+
+fun compareList(xs, ys) = if xs is
+  Nil and ys is
+    Nil then EQ
+    Cons(_, _) then LT
+  Cons(_, _) and ys is Nil then GT
+  Cons(x, xs_) and ys is Cons(y, ys_) and
+    int_of_char(x) === int_of_char(y) then compareList(xs_, ys_)
+    int_of_char(x) < int_of_char(y) then LT
+    else GT
+
+fun gtList(a, b) = compareList(a, b) is GT
+
+fun leList(a, b) = not(gtList(a, b))
+
+fun ltList(a, b) = compareList(a, b) is LT
+
+fun geList(a, b) = not(ltList(a, b))
+
+fun eqList(a, b) = compareList(a, b) is EQ
+
+fun prependToAll(sep, xs) = if xs is
+  Nil then Nil
+  Cons(x, xs_) then Cons(sep, Cons(x, prependToAll(sep, xs_)))
+
+fun intersperse(sep, xs) = if xs is
+  Nil then Nil
+  Cons(x, xs_) then Cons(x, prependToAll(sep, xs_))
+
+fun lines(s) = if break_(x => x == "|", s) is Tup2(l, s_) then
+  let tt = if s_ is
+    Nil then Nil
+    Cons(_, s__) then lines(s__)
+  l :: tt
+
+fun unlines(ls) = concat(map(l => append(l, Cons("|", Nil)), ls))
+
+fun odd(x) = intMod(x, 2) === 0
+
+fun z_of_int(x) = globalThis.BigInt(x)
+
+fun hash(str) = foldl(
+  (acc, c) => z_of_int(int_of_char(c)) + (acc * z_of_int(31)),
+  z_of_int(0),
+  str
+)
+
+fun quickSort(xs) = if xs is
+  Nil then Nil
+  Cons(x, xs_) then
+    fun lscomp1(ls) = if ls is
+      Nil then Nil
+      Cons(h, t) and
+        leList(h, x) then Cons(h, lscomp1(t))
+        else lscomp1(t)
+    fun lscomp2(ls) = if ls is
+      Nil then Nil
+      Cons(h, t) and
+        gtList(h, x) then Cons(h, lscomp2(t))
+        else lscomp2(t)
+    append(quickSort(lscomp1(xs_)), Cons(x, quickSort(lscomp2(xs_))))
+
+fun select(p, x, ts_fs) = if ts_fs is Tup2(ts, fs) and
+  p(x) then Tup2(Cons(x, ts), fs)
+  else Tup2(ts, Cons(x, fs))
+
+fun partition(p, xs) = foldr((x, y) => select(p, x, y), Tup2(Nil, Nil), xs)
+
+fun quickSort2(xs) = if xs is
+  Nil then Nil
+  Cons(x, xs_) then
+    if partition(y => geList(x, y), xs_) is Tup2(lo, hi) then
+      append(quickSort2(lo), Cons(x, quickSort2(hi)))
+
+fun quickerSort(xss) = if xss is
+  Nil then Nil
+  Cons(x, Nil) then Cons(x, Nil)
+  Cons(x, xs) then
+    fun split(x, lo, hi, ys) = if ys is
+      Nil then append(quickerSort(lo), Cons(x, quickerSort(hi)))
+      Cons(y, ys_) and
+        leList(y, x) then split(x, Cons(y, lo), hi, ys_)
+        else split(x, lo, Cons(y, hi), ys_)
+    split(x, Nil, Nil, xs)
+
+fun insertSort(xss) = if xss is
+  Nil then Nil
+  Cons(x, xs) then
+    fun trins(rev, xs, ys) = if xs is
+      Nil and ys is Cons(y, ys_) then trins(Nil, append(reverse(rev), Cons(y, Nil)), ys_)
+      xs and ys is Nil then append(reverse(rev), xs)
+      Cons(x, xs_) and ys is Cons(y, ys_) and
+        ltList(x, y) then trins(Cons(x, rev), xs_, Cons(y, ys_))
+        else trins(Nil, append(reverse(rev), Cons(y, Cons(x, xs_))), ys_)
+    trins(Nil, Cons(x, Nil), xs)
+
+abstract class Tree[T]: Tip | Branch[T]
+
+object Tip extends Tree[Nothing]
+
+class Branch[T](a: T, l: Tree[T], r: Tree[T]) extends Tree[T]
+
+fun treeSort(param) =
+  fun mkTree(innerparam) =
+    fun to_tree(x, t) = if t is
+      Tip then Branch(x, Tip, Tip)
+      Branch(y, l, r) and
+        leList(x, y) then Branch(y, to_tree(x, l), r)
+        else Branch(y, l, to_tree(x, r))
+    foldr(to_tree, Tip, innerparam)
+  fun readTree(t) = if t is
+    Tip then Nil
+    Branch(x, l, r) then append(readTree(l), Cons(x, readTree(r)))
+  readTree(mkTree(param))
+
+abstract class Tree2[T]: Tip2 | Twig2[T] | Branch2[T]
+
+object Tip2 extends Tree2[Nothing]
+
+class
+  Twig2[T](a: T) extends Tree2[T]
+  Branch2[T](a: T, l: Tree2[T], r: Tree2[T]) extends Tree2[T]
+
+fun treeSort2(param) =
+  fun mkTree(innerparam) =
+    fun to_tree(x, t) = if t is
+      Tip2 then Twig2(x)
+      Twig2(y) and
+        leList(x, y) then Branch2(y, Twig2(x), Tip2)
+        else Branch2(y, Tip2, Twig2(x))
+      Branch2(y, l, r) and
+        leList(x, y) then Branch2(y, to_tree(x, l), r)
+        else Branch2(y, l, to_tree(x, r))
+    foldr(to_tree, Tip2, innerparam)
+  fun readTree(t) = if t is
+    Tip2 then Nil
+    Twig2(x) then Cons(x, Nil)
+    Branch2(x, l, r) then append(readTree(l), Cons(x, readTree(r)))
+  readTree(mkTree(param))
+
+fun heapSort(xs) =
+  fun heap(k, xs) = if xs is
+    Nil then Tip
+    Cons(x, xs_) then to_heap(k, x, heap(k + 1, xs_))
+  fun to_heap(k, x, t) = if t is
+    Tip then Branch(x, Tip, Tip)
+    Branch(y, l, r) and
+      leList(x, y) and odd(k) then Branch(x, to_heap(intDiv(k, 2), y, l), r)
+      leList(x, y) then Branch(x, l, to_heap(intDiv(k, 2), y, r))
+      odd(k) then Branch(y, to_heap(intDiv(k, 2), x, l), r)
+      else Branch(y, l, to_heap(intDiv(k, 2), x, r))
+  fun clear(t) = if t is
+    Tip then Nil
+    Branch(x, l, r) then x :: clear(mix(l, r))
+  fun mix(l, r) = if
+    l is Tip then r
+    r is Tip then l
+    l is Branch(x, l1, r1) and r is Branch(y, l2, r2) and
+      leList(x, y) then Branch(x, mix(l1, r1), Branch(y, l2, r2))
+      else Branch(y, Branch(x, l1, r1), mix(l2, r2))
+  clear(heap(0, xs))
+
+fun mergeSort(param) =
+  fun runsplit(run, xs) = if
+    run is Nil and xs is Nil then Nil
+    xs is Nil then Cons(run, Nil)
+    run is Nil and xs is Cons(x, xs_) then runsplit(Cons(x, Nil), xs_)
+    run is Cons(r, rs) and xs is Cons(x, xs_) and rs is
+      Nil and
+        gtList(x, r) then runsplit(Cons(r, Cons(x, Nil)), xs_)
+        leList(x, r) then runsplit(Cons(x, Cons(r, rs)), xs_)
+        else Cons(Cons(r, rs), runsplit(Cons(x, Nil), xs_))
+      rs and
+        leList(x, r) then runsplit(Cons(x, Cons(r, rs)), xs_)
+        else Cons(Cons(r, rs), runsplit(Cons(x, Nil), xs_))
+  fun merge_lists(xs) = if xs is
+    Nil then Nil
+    Cons(x, xs_) then merge(x, merge_lists(xs_))
+  fun merge(xs, ys) = if
+    xs is Nil then ys
+    ys is Nil then xs
+    xs is Cons(x, xs_) and ys is Cons(y, ys_) and
+      eqList(x, y) then Cons(x, Cons(y, merge(xs_, ys_)))
+      ltList(x, y) then Cons(x, merge(xs_, Cons(y, ys_)))
+      else Cons(y, merge(Cons(x, xs_), ys_))
+  merge_lists(runsplit(Nil, param))
+
+fun mangle(inpt) =
+  fun sort(param) =
+    foldr(
+      (f, g) => x => f(g(x)),
+      x => x,
+      intersperse(reverse, (heapSort :: insertSort :: mergeSort :: quickSort :: quickSort2 :: quickerSort :: treeSort :: treeSort2 :: Nil)),
+    )(param)
+  unlines(sort(lines(inpt)))
+
+fun testSorting_nofib(d) =
+  let f = nofibStringToList("module Main where||import Sort||import Control.Monad (replicateM_)|import Data.List (intersperse)|import System.Environment (getArgs)|import NofibUtils (hash)||main = do|  (n:_) <- getArgs|  replicateM_ (read n) $ do|    (_:s:_) <- getArgs|    f <- readFile s|    print (hash (mangle f))||mangle :: String{-input to sort-} -> String{-output-}|mangle inpt|  = (unlines . sort . lines) inpt|  where|    sort = foldr (.) id (intersperse reverse sorts)|    sorts =|      [ heapSort|      , insertSort|      , mergeSort|      , quickSort|      , quickSort2|      , quickerSort|      , treeSort|      , treeSort2|      ]|")
+  hash(mangle(f))
+
+testSorting_nofib(0).toString()
+//│ = '19728943137766050144875104961338499901409246953951516319586215306051190060291047331585356402842931663323125854381145381440925112453720528087092588106528056722896470750629027353129898303439556483521439503362843624521694872778046179853795108417451579315808264946237010277302365092682615908337422694760117502204171322236544331302954823186725035912866484781439702038470419605137286549342395601300819957193556940501564963467190825828512158058663609694906935935191615595414307420320853883129968803822153220231421279908807283874678679752110556011867017850020189943527563066813737011610362575155019367843551076686809959779958919072587296427637540643538605432163107631803835526143043376381796500916867579252141247964564291220393338547240075789119011998335849342106542397967717707990941486328606557413674141397539117919354191896957362853066325449227061454250871467610862662244501656022797566090603044296457172997657821012693695707'
