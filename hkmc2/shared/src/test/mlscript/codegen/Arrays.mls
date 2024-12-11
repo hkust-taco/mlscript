@@ -7,7 +7,9 @@
 let empty = []
 //│ empty = []
 
+:re
 empty.0
+//│ ═══[RUNTIME ERROR] Error: Access to required field '0' yielded 'undefined'
 
 let single = [1]
 //│ single = [ 1 ]
@@ -37,8 +39,12 @@ val triple = [1, 2, 3]
 triple.2
 //│ = 3
 
+:re
 triple.3
+//│ ═══[RUNTIME ERROR] Error: Access to required field '3' yielded 'undefined'
 
+:re
 triple.4
+//│ ═══[RUNTIME ERROR] Error: Access to required field '4' yielded 'undefined'
 
 

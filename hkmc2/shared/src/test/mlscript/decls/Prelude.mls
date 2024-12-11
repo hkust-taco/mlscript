@@ -10,7 +10,7 @@ declare class Num
 declare class Str
 declare class Error(msg)
 
-declare module String
+declare class String
 
 // declare module Math // TODO: list members
 declare val Math // so we can, eg, `open { pow }` in the meantime
@@ -18,6 +18,13 @@ declare val Math // so we can, eg, `open { pow }` in the meantime
 declare val console
 declare val process
 declare val fs
+
+
+declare module Predef with
+  class Test with
+    val x = 0
+  class MatchResult(captures)
+  class MatchFailure(errors)
 
 
 // TODO: rm

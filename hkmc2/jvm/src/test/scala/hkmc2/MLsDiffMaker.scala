@@ -50,7 +50,11 @@ abstract class MLsDiffMaker extends DiffMaker:
   val showUCS = Command("ucs"): ln =>
     ln.split(" ").iterator.map(x => "ucs:" + x.trim).toSet
   
-  given Elaborator.State = new Elaborator.State
+  given Elaborator.State = new Elaborator.State:
+    override def dbg: Bool =
+      dbgParsing.isSet
+      || dbgElab.isSet
+      || debug.isSet
   
   val etl = new TraceLogger:
     override def doTrace = dbgElab.isSet || scope.exists:
@@ -63,11 +67,12 @@ abstract class MLsDiffMaker extends DiffMaker:
       if doTrace then super.trace(pre, post)(thunk)
       else thunk
   
-  var curCtx = Elaborator.Ctx.init.nest(N)
+  var curCtx = Elaborator.State.init
   
   
   override def run(): Unit =
     if file =/= preludeFile then importFile(preludeFile, verbose = false)
+    curCtx = curCtx.nest(N)
     super.run()
   
   
@@ -103,7 +108,8 @@ abstract class MLsDiffMaker extends DiffMaker:
     if showParse.isSet || dbgParsing.isSet then
       output(syntax.Lexer.printTokens(tokens))
     
-    val p = new syntax.Parser(origin, tokens, raise, dbg = dbgParsing.isSet):
+    val rules = syntax.ParseRules()
+    val p = new syntax.Parser(origin, tokens, rules, raise, dbg = dbgParsing.isSet):
       def doPrintDbg(msg: => Str): Unit = if dbg then output(msg)
     val res = p.parseAll(p.block(allowNewlines = true))
     val imprtSymbol =
@@ -136,7 +142,8 @@ abstract class MLsDiffMaker extends DiffMaker:
     if showParse.isSet || dbgParsing.isSet then
       output(syntax.Lexer.printTokens(tokens))
     
-    val p = new syntax.Parser(origin, tokens, raise, dbg = dbgParsing.isSet):
+    val rules = syntax.ParseRules()
+    val p = new syntax.Parser(origin, tokens, rules, raise, dbg = dbgParsing.isSet):
       def doPrintDbg(msg: => Str): Unit = if dbg then output(msg)
     val res = p.parseAll(p.block(allowNewlines = true))
     

@@ -7,33 +7,33 @@
 
 
 (x => x): [A restricts Int] -> A -> A
-//│ Type: forall α2_2: (α2_2) ->{⊥} α2_2
+//│ Type: forall A4_2: (A4_2) ->{⊥} A4_2
 //│ Where:
-//│   Int <: α2_2
+//│   Int <: A4_2
 
 
 (x => x - 1): [A extends Int restricts Int] -> A -> A
-//│ Type: forall α4_2: (α4_2) ->{⊥} α4_2
+//│ Type: forall A6_2: (A6_2) ->{⊥} A6_2
 //│ Where:
-//│   Int <: α4_2
-//│   α4_2 <: Int
+//│   Int <: A6_2
+//│   A6_2 <: Int
 
 fun iid: [A extends Int] -> A -> A
 fun iid(x) = x
 //│ Type: ⊤
 
 iid
-//│ Type: forall α7_2: (α7_2) ->{⊥} α7_2
+//│ Type: forall A9_2: (A9_2) ->{⊥} A9_2
 //│ Where:
-//│   α7_2 <: Int
+//│   A9_2 <: Int
 
 :e
 iid("42")
-//│ ╔══[ERROR] Type error in string literal with expected type α9_1
+//│ ╔══[ERROR] Type error in string literal with expected type A11_1
 //│ ║  l.31: 	iid("42")
 //│ ║        	    ^^^^
-//│ ╟── because: cannot constrain  Str  <:  α9_1
-//│ ╟── because: cannot constrain  Str  <:  α9_1
+//│ ╟── because: cannot constrain  Str  <:  A11_1
+//│ ╟── because: cannot constrain  Str  <:  A11_1
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Str
 
@@ -46,10 +46,10 @@ class Foo[A]
 
 fun foo: [A extends Foo[in Nothing out Any] restricts Foo[in Num]] -> A -> A
 foo
-//│ Type: forall α11_2: (α11_2) ->{⊥} α11_2
+//│ Type: forall A13_2: (A13_2) ->{⊥} A13_2
 //│ Where:
-//│   Foo[in Num] <: α11_2
-//│   α11_2 <: Foo[?]
+//│   Foo[in Num] <: A13_2
+//│   A13_2 <: Foo[?]
 
 fun bar: Foo[in Num out Int]
 //│ Type: ⊤
@@ -72,7 +72,7 @@ baz
 
 fun bazbaz: [A extends Int] -> A -> [B extends A] -> B
 bazbaz
-//│ Type: (Int) ->{⊥} forall α17_3: ⊥
+//│ Type: (Int) ->{⊥} forall B19_3: ⊥
 
 fun foofun: [A extends Int -> Int restricts Any -> Int] -> A -> Int -> Int
 foofun
@@ -83,21 +83,21 @@ foofun(x => x + 1)(42)
 
 fun bazbaz: [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
 bazbaz
-//│ Type: forall α21_2: (α21_2) ->{⊥} (forall α22_3: α21_2 -> α21_2) ->{⊥} α21_2
+//│ Type: forall A23_2: (A23_2) ->{⊥} (forall B24_3: A23_2 -> A23_2) ->{⊥} A23_2
 //│ Where:
-//│   α21_2 <: Int
+//│   A23_2 <: Int
 
 bazbaz(42)(x => x + 1)
 //│ Type: Int
 
 fun cc: [A extends B -> B restricts B -> B, B extends A -> A restricts A -> A] -> A -> B -> Bool
 cc
-//│ Type: forall α26_2, α27_2: (α26_2) ->{⊥} (α27_2) ->{⊥} Bool
+//│ Type: forall A28_2, B29_2: (A28_2) ->{⊥} (B29_2) ->{⊥} Bool
 //│ Where:
-//│   α26_2 -> α26_2 <: α27_2
-//│   α27_2 <: α26_2 -> α26_2
-//│   α27_2 -> α27_2 <: α26_2
-//│   α26_2 <: α27_2 -> α27_2
+//│   A28_2 -> A28_2 <: B29_2
+//│   B29_2 <: A28_2 -> A28_2
+//│   B29_2 -> B29_2 <: A28_2
+//│   A28_2 <: B29_2 -> B29_2
 
 fun w: Any -> Nothing
 //│ Type: ⊤
@@ -110,18 +110,18 @@ fun h: [C] -> ([A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B
 
 :e
 bazbaz: [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
-//│ ╔══[ERROR] Cannot type non-function term Sel(Ref(globalThis:block#16),Ident(bazbaz)) as (<α>35_2) ->{⊥} (forall α34_3: α34_3) ->{⊥} <α>35_2
+//│ ╔══[ERROR] Cannot type non-function term SynthSel(Ref(globalThis:block#16),Ident(bazbaz)) as (<A>37_2) ->{⊥} (forall B36_3: B36_3) ->{⊥} <A>37_2
 //│ ║  l.112: 	bazbaz: [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
 //│ ╙──       	^^^^^^
-//│ Type: forall α33_2: (α33_2) ->{⊥} (forall α34_3: α33_2 -> α33_2) ->{⊥} α33_2
+//│ Type: forall A35_2: (A35_2) ->{⊥} (forall B36_3: A35_2 -> A35_2) ->{⊥} A35_2
 //│ Where:
-//│   α33_2 <: Int
+//│   A35_2 <: Int
 
 
 (x => f => bazbaz(x)(f)): [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
-//│ Type: forall α36_2: (α36_2) ->{⊥} (forall α37_3: α36_2 -> α36_2) ->{⊥} α36_2
+//│ Type: forall A38_2: (A38_2) ->{⊥} (forall B39_3: A38_2 -> A38_2) ->{⊥} A38_2
 //│ Where:
-//│   α36_2 <: Int
+//│   A38_2 <: Int
 
 
 h(x => f => bazbaz(x)(f))(42)

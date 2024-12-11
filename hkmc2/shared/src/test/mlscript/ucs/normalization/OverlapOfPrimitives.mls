@@ -6,10 +6,10 @@ fun test(x, p) = if x is
   else "qax"
 //│ Desugared:
 //│ >  if
-//│ >    x@11 is Int and
-//│ >      let $scrut@14 = p@12#666(x@11#666)
-//│ >      $scrut@14 is true then "foo"
-//│ >    x@11 is 0 then "bar"
+//│ >    x is Int and
+//│ >      let $scrut = p#666(x#666)
+//│ >      $scrut is true then "foo"
+//│ >    x is 0 then "bar"
 //│ >    else "qax"
 
 fun test(x, p) = if x is
@@ -18,10 +18,10 @@ fun test(x, p) = if x is
   else "qax"
 //│ Desugared:
 //│ >  if
-//│ >    x@17 is Str and
-//│ >      let $scrut@20 = p@18#666(x@17#666)
-//│ >      $scrut@20 is true then "foo"
-//│ >    x@17 is "lol" then "bar"
+//│ >    x is Str and
+//│ >      let $scrut = p#666(x#666)
+//│ >      $scrut is true then "foo"
+//│ >    x is "lol" then "bar"
 //│ >    else "qax"
 
 test(0, _ => true)
@@ -34,11 +34,11 @@ fun test(x, p) = if x is
   else "other"
 //│ Desugared:
 //│ >  if
-//│ >    x@26 is Num and
-//│ >      let $scrut@29 = p@27#666(x@26#666)
-//│ >      $scrut@29 is true then "great"
-//│ >    x@26 is 2.71828 then "E"
-//│ >    x@26 is 3.14159 then "PI"
+//│ >    x is Num and
+//│ >      let $scrut = p#666(x#666)
+//│ >      $scrut is true then "great"
+//│ >    x is 2.71828 then "E"
+//│ >    x is 3.14159 then "PI"
 //│ >    else "other"
 
 fun test(x, p) = if x is
@@ -47,11 +47,11 @@ fun test(x, p) = if x is
   false then "true"
 //│ Desugared:
 //│ >  if
-//│ >    x@32 is Bool and
-//│ >      let $scrut@35 = p@33#666(x@32#666)
-//│ >      $scrut@35 is true then "great"
-//│ >    x@32 is true then "false"
-//│ >    x@32 is false then "true"
+//│ >    x is Bool and
+//│ >      let $scrut = p#666(x#666)
+//│ >      $scrut is true then "great"
+//│ >    x is true then "false"
+//│ >    x is false then "true"
 
 fun test(x, p) = if x is
   Object and p(x) then "great"
@@ -60,11 +60,11 @@ fun test(x, p) = if x is
   false then "true"
 //│ Desugared:
 //│ >  if
-//│ >    x@38 is Object and
-//│ >      let $scrut@43 = p@39#666(x@38#666)
-//│ >      $scrut@43 is true then "great"
-//│ >    x@38 is Bool and
-//│ >      let $scrut@41 = p@39#666(x@38#666)
-//│ >      $scrut@41 is true then "great, again"
-//│ >    x@38 is true then "false"
-//│ >    x@38 is false then "true"
+//│ >    x is Object and
+//│ >      let $scrut = p#666(x#666)
+//│ >      $scrut is true then "great"
+//│ >    x is Bool and
+//│ >      let $scrut = p#666(x#666)
+//│ >      $scrut is true then "great, again"
+//│ >    x is true then "false"
+//│ >    x is false then "true"

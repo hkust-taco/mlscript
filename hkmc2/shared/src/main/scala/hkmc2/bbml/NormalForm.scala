@@ -34,8 +34,8 @@ extends NormalForm with CachedBasicType:
         }.foldLeft[Opt[Ls[(InfVar, Bool)]]](S(Nil))((res, p) => (res, p) match { // * None -> bot
           case (N, _) => N
           case (S(Nil), p) => S(p :: Nil)
-          case (S((InfVar(v, uid1, s, k), p1) :: tail), (InfVar(_, uid2, _, _), p2)) if uid1 === uid2 =>
-            if p1 === p2 then S((InfVar(v, uid1, s, k), p1) :: tail) else N
+          case (S((lhs @ InfVar(v, uid1, s, k), p1) :: tail), (InfVar(_, uid2, _, _), p2)) if uid1 === uid2 =>
+            if p1 === p2 then S((InfVar(v, uid1, s, k)(lhs.hint), p1) :: tail) else N
           case (S(head :: tail), p) => S(p :: head :: tail)
         })
         vars match

@@ -37,9 +37,9 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
 
   import hkmc2.bbml.NormalForm.*
 
-  private def freshXVar(lvl: Int): InfVar = InfVar(lvl, infVarState.nextUid, new VarState(), false)
+  private def freshXVar(lvl: Int, hint: Option[Str]): InfVar = InfVar(lvl, infVarState.nextUid, new VarState(), false)(hint)
 
-  def extrude(ty: Type)(using lvl: Int, pol: Bool, cache: ExtrudeCache): Type =
+  def extrude(ty: Type)(using lvl: Int, pol: Bool, cache: ExtrudeCache, bbctx: BbCtx, cctx: CCtx, tl: TL): Type =
   trace[Type](s"Extruding[${printPol(pol)}] $ty", r => s"~> $r"):
     if ty.lvl <= lvl then ty else ty.toBasic/*TODO improve extrude directly*/ match
     case ClassLikeType(sym, targs) =>
@@ -49,13 +49,18 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
         case t: Type => Wildcard(extrude(t)(using lvl, !pol), extrude(t))
       })
     case v @ InfVar(_, uid, state, true) => // * skolem
-      if pol then
-        state.upperBounds.foldLeft[Type](Top)(_ & _)
-      else
-        state.lowerBounds.foldLeft[Type](Bot)(_ | _)
+      cache.getOrElse(uid -> pol, {
+        val nv = freshXVar(lvl, v.hint)
+        cache += uid -> pol -> nv
+        if pol then
+          constrainImpl(state.upperBounds.foldLeft[Type](Top)(_ & _), nv)
+        else
+          constrainImpl(nv, state.lowerBounds.foldLeft[Type](Bot)(_ | _))
+        nv
+      })
     case v @ InfVar(_, uid, _, false) =>
       cache.getOrElse(uid -> pol, {
-        val nv = freshXVar(lvl)
+        val nv = freshXVar(lvl, v.hint)
         cache += uid -> pol -> nv
         if pol then
           v.state.upperBounds ::= nv

@@ -6,9 +6,8 @@
 
 :sjs
 () => (while true then 0)
-//│ JS:
-//│ (...args) => {
-//│   globalThis.Predef.checkArgs("", 0, args.length);
+//│ JS (unsanitized):
+//│ () => {
 //│   let scrut, tmp;
 //│   tmp1: while (true) {
 //│     scrut = true;
@@ -40,7 +39,7 @@ while x then set x = false
 let x = true
 //│ x = true
 
-while x then set x = false else ()
+while x do set x = false
 
 
 let x = true
@@ -54,14 +53,14 @@ while x
     log("Hello World")
     set x = false
   else 42
-//│ JS:
+//│ JS (unsanitized):
 //│ let scrut, tmp, tmp1;
 //│ tmp2: while (true) {
 //│   scrut = this.x;
 //│   if (scrut) {
 //│     tmp = this.log("Hello World");
 //│     this.x = false;
-//│     tmp1 = undefined;
+//│     tmp1 = null;
 //│     continue tmp2;
 //│   } else {
 //│     tmp1 = 42;
@@ -106,10 +105,9 @@ while log("checking"); i < 3
 () =>
 while
   let i = 0
-  i < 10 then set i += 1
-//│ JS:
-//│ (...args) => {
-//│   globalThis.Predef.checkArgs("", 0, args.length);
+  i < 10 do set i += 1
+//│ JS (unsanitized):
+//│ () => {
 //│   let i, scrut, tmp, tmp1;
 //│   tmp2: while (true) {
 //│     i = 0;
@@ -117,10 +115,10 @@ while
 //│     if (scrut) {
 //│       tmp = i + 1;
 //│       i = tmp;
-//│       tmp1 = undefined;
+//│       tmp1 = null;
 //│       continue tmp2;
 //│     } else {
-//│       throw new this.Error("match error");
+//│       tmp1 = null;
 //│     }
 //│     break;
 //│   }
@@ -137,8 +135,15 @@ let i = 0 in
 
 let i = 0 in while
   let _ = log(i)
-  i < 3 then set i += 1
-  else ()
+  i < 3 do set i += 1
+//│ > 0
+//│ > 1
+//│ > 2
+//│ > 3
+
+let i = 0 in while
+  do log(i)
+  i < 3 do set i += 1
 //│ > 0
 //│ > 1
 //│ > 2
@@ -160,10 +165,10 @@ if x
   else 42
 //│ Normalized:
 //│ >  if
-//│ >    let $scrut@116 = globalThis:block#7.x#666
-//│ >    $scrut@116 is true and
-//│ >      let $scrut@117 = globalThis:block#7.y#666
-//│ >      $scrut@117 is true then 0
+//│ >    let $scrut = globalThis:block#7.x#666
+//│ >    $scrut is true and
+//│ >      let $scrut = globalThis:block#7.y#666
+//│ >      $scrut is true then 0
 //│ >      else 1
 //│ >    else 42
 //│ = 42
@@ -176,10 +181,10 @@ if x
   else 42
 //│ Normalized:
 //│ >  if
-//│ >    let $scrut@119 = globalThis:block#7.x#666
-//│ >    $scrut@119 is true and
-//│ >      let $scrut@120 = globalThis:block#7.y#666
-//│ >      $scrut@120 is true then 0
+//│ >    let $scrut = globalThis:block#7.x#666
+//│ >    $scrut is true and
+//│ >      let $scrut = globalThis:block#7.y#666
+//│ >      $scrut is true then 0
 //│ >      else 1
 //│ >    else 42
 //│ = 42
@@ -197,10 +202,8 @@ fun f(ls) =
       set ls = tl
       log(h)
   else log("Done!")
-//│ JS:
-//│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, args.length);
-//│   let ls = args[0];
+//│ JS (unsanitized):
+//│ function f(ls) {
 //│   let param0, param1, h, tl, tmp;
 //│   tmp1: while (true) {
 //│     if (ls instanceof globalThis.Cons.class) {
@@ -218,7 +221,7 @@ fun f(ls) =
 //│   }
 //│   return tmp;
 //│ }
-//│ undefined
+//│ null
 
 f(0)
 //│ > Done!
@@ -233,6 +236,16 @@ f(Cons(1, Cons(2, Cons(3, 0))))
 //│ > 3
 //│ > Done!
 
+fun f(ls) =
+  while
+    do print(ls)
+    ls is Cons(h, tl) do set ls = tl
+
+f(Cons(1, Cons(2, Cons(3, 0))))
+//│ > Cons(1, Cons(2, Cons(3, 0)))
+//│ > Cons(2, Cons(3, 0))
+//│ > Cons(3, 0)
+//│ > 0
 
 
 // ——— FIXME: ———
@@ -240,23 +253,24 @@ f(Cons(1, Cons(2, Cons(3, 0))))
 
 :fixme
 () => while true then 0
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(InfixApp(Tup(List()),keyword '=>',IfLike(keyword 'while',BoolLit(true))),keyword 'then',IntLit(0)) (of class hkmc2.syntax.Tree$InfixApp)
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(InfixApp(Tup(List()),keyword '=>',IfLike(keyword 'while',None,BoolLit(true))),keyword 'then',IntLit(0)) (of class hkmc2.syntax.Tree$InfixApp)
 
 :fixme
 while log("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.247: 	  then 0(0)
+//│ ║  l.260: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ═══[ERROR] Unrecognized term split (false literal).
+//│ > Hello World
 //│ ═══[RUNTIME ERROR] Error: match error
 
 :fixme
 while { log("Hello World"), false }
   then 0(0)
   else 1
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',Block(List(App(Ident(log),Tup(List(StrLit(Hello World)))), BoolLit(false)))),keyword 'then',App(IntLit(0),Tup(List(IntLit(0))))) (of class hkmc2.syntax.Tree$InfixApp)
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',None,Block(List(App(Ident(log),Tup(List(StrLit(Hello World)))), BoolLit(false)))),keyword 'then',App(IntLit(0),Tup(List(IntLit(0))))) (of class hkmc2.syntax.Tree$InfixApp)
 
 :fixme
 while
@@ -264,6 +278,6 @@ while
     false
   then 0(0)
   else 1
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',Block(List(App(Ident(log),Tup(List(StrLit(Hello World)))), BoolLit(false)))),keyword 'then',App(IntLit(0),Tup(List(IntLit(0))))) (of class hkmc2.syntax.Tree$InfixApp)
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',None,Block(List(App(Ident(log),Tup(List(StrLit(Hello World)))), BoolLit(false)))),keyword 'then',App(IntLit(0),Tup(List(IntLit(0))))) (of class hkmc2.syntax.Tree$InfixApp)
 
 

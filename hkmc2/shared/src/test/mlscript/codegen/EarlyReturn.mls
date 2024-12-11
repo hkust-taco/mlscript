@@ -16,26 +16,23 @@ f()
 
 :sjs
 fun f(x) =
-  if x < 0 then
+  if x < 0 do
     log("whoops")
     return 0
-  else ()
   x + 1
-//│ JS:
-//│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, args.length);
-//│   let x = args[0];
+//│ JS (unsanitized):
+//│ function f(x) {
 //│   let scrut, tmp, tmp1;
 //│   scrut = x < 0;
 //│   if (scrut) {
 //│     tmp = globalThis.log("whoops");
 //│     return 0;
 //│   } else {
-//│     tmp1 = undefined;
+//│     tmp1 = null;
 //│   }
 //│   return x + 1;
 //│ }
-//│ undefined
+//│ null
 
 f(1)
 //│ = 2

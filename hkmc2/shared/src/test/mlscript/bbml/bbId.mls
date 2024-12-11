@@ -9,28 +9,28 @@ id(1)
 //│ Type: Int
 
 id
-//│ Type: forall α1_2: α1_2 -> α1_2
+//│ Type: forall x3_2: x3_2 -> x3_2
 
 id(true)
 //│ Type: Bool
 
 id
-//│ Type: forall α1_2: α1_2 -> α1_2
+//│ Type: forall x3_2: x3_2 -> x3_2
 
 
 fun id(x) = x
 //│ Type: ⊤
 
 id : [A] -> A -> A
-//│ Type: forall α6_2: (α6_2) ->{⊥} α6_2
+//│ Type: forall A8_2: (A8_2) ->{⊥} A8_2
 
 
 (y => y) : [A] -> A -> A
-//│ Type: forall α9_2: (α9_2) ->{⊥} α9_2
+//│ Type: forall A11_2: (A11_2) ->{⊥} A11_2
 
 fun id(x) = x
 (y => id(y)) : [A] -> A -> A
-//│ Type: forall α13_2: (α13_2) ->{⊥} α13_2
+//│ Type: forall A15_2: (A15_2) ->{⊥} A15_2
 
 
 

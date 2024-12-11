@@ -9,8 +9,8 @@ let x = 0
 
 :sjs
 let x += 1
-//│ JS:
-//│ let tmp; tmp = this.x + 1; this.x = tmp; undefined
+//│ JS (unsanitized):
+//│ let tmp; tmp = this.x + 1; this.x = tmp; null
 //│ x = 1
 
 x
@@ -18,13 +18,13 @@ x
 
 :sjs
 set x = 0
-//│ JS:
-//│ this.x = 0; undefined
+//│ JS (unsanitized):
+//│ this.x = 0; null
 
 :sjs
 set x += 1
-//│ JS:
-//│ let tmp; tmp = this.x + 1; this.x = tmp; undefined
+//│ JS (unsanitized):
+//│ let tmp; tmp = this.x + 1; this.x = tmp; null
 
 x
 //│ = 1
@@ -32,7 +32,7 @@ x
 
 :sjs
 set x += 1 in log(x)
-//│ JS:
+//│ JS (unsanitized):
 //│ let old, tmp, tmp1;
 //│ old = this.x;
 //│ try {
@@ -77,13 +77,11 @@ fun example() =
   log(x)
   log(get_x())
 example()
-//│ JS:
-//│ function example(...args) {
-//│   globalThis.Predef.checkArgs("example", 0, args.length);
+//│ JS (unsanitized):
+//│ function example() {
 //│   let x, get_x, old, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
 //│   x = 0;
-//│   get_x = (...args1) => {
-//│     globalThis.Predef.checkArgs("", 0, args1.length);
+//│   get_x = () => {
 //│     return x;
 //│   };
 //│   old = x;
@@ -92,13 +90,13 @@ example()
 //│     x = tmp1;
 //│     tmp2 = globalThis.log(x);
 //│     tmp3 = (tmp2 , globalThis.log);
-//│     tmp4 = get_x();
-//│     tmp = tmp3(tmp4);
+//│     tmp4 = get_x() ?? null;
+//│     tmp = tmp3(tmp4) ?? null;
 //│   } finally {
 //│     x = old;
 //│   }
 //│   tmp5 = globalThis.log(x);
-//│   tmp6 = get_x();
+//│   tmp6 = get_x() ?? null;
 //│   return globalThis.log(tmp6);
 //│ }
 //│ this.example()
@@ -117,13 +115,11 @@ fun example() =
   log(get_x())
   y
 example()
-//│ JS:
-//│ function example(...args) {
-//│   globalThis.Predef.checkArgs("example", 0, args.length);
+//│ JS (unsanitized):
+//│ function example() {
 //│   let x, get_x, y, old, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
 //│   x = 0;
-//│   get_x = (...args1) => {
-//│     globalThis.Predef.checkArgs("", 0, args1.length);
+//│   get_x = () => {
 //│     return x;
 //│   };
 //│   old = x;
@@ -137,7 +133,7 @@ example()
 //│   }
 //│   y = tmp;
 //│   tmp3 = globalThis.log(x);
-//│   tmp4 = get_x();
+//│   tmp4 = get_x() ?? null;
 //│   tmp5 = globalThis.log(tmp4);
 //│   return y;
 //│ }

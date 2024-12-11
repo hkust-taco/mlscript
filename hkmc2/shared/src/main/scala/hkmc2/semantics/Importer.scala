@@ -52,7 +52,8 @@ class Importer:
           
           val lexer = new syntax.Lexer(origin, dbg = tl.doTrace)
           val tokens = lexer.bracketedTokens
-          val p = new syntax.Parser(origin, tokens, raise, dbg = tl.doTrace):
+          val rules = syntax.ParseRules()
+          val p = new syntax.Parser(origin, tokens, rules, raise, dbg = tl.doTrace):
             def doPrintDbg(msg: => Str): Unit =
               // if dbg then output(msg)
               if dbg then tl.log(msg)

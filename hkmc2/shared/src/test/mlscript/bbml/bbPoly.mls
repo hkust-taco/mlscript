@@ -18,26 +18,26 @@ fun id(x) = x
 //│ Type: ⊤
 
 id
-//│ Type: forall α5_2: (α5_2) ->{⊥} α5_2
+//│ Type: forall A7_2: (A7_2) ->{⊥} A7_2
 
 :e
 (x => x + 1): [A] -> A -> A
 //│ ╔══[ERROR] Type error in reference with expected type Int
 //│ ║  l.24: 	(x => x + 1): [A] -> A -> A
 //│ ║        	      ^
-//│ ╙── because: cannot constrain  <α>8_2  <:  Int
-//│ ╔══[ERROR] Type error in application with expected type <α>8_2
+//│ ╙── because: cannot constrain  <A>10_2  <:  Int
+//│ ╔══[ERROR] Type error in application with expected type <A>10_2
 //│ ║  l.24: 	(x => x + 1): [A] -> A -> A
 //│ ║        	      ^^^^^
-//│ ╙── because: cannot constrain  Int  <:  <α>8_2
-//│ Type: forall α7_2: (α7_2) ->{⊥} α7_2
+//│ ╙── because: cannot constrain  Int  <:  <A>10_2
+//│ Type: forall A9_2: (A9_2) ->{⊥} A9_2
 
 
 (x => x): [A] -> A -> A
-//│ Type: forall α9_2: (α9_2) ->{⊥} α9_2
+//│ Type: forall A11_2: (A11_2) ->{⊥} A11_2
 
 id: [A] -> A -> A
-//│ Type: forall α11_2: (α11_2) ->{⊥} α11_2
+//│ Type: forall A13_2: (A13_2) ->{⊥} A13_2
 
 id: Int -> Int
 //│ Type: (Int) ->{⊥} Int
@@ -49,7 +49,7 @@ myInc(id, 0)
 //│ Type: Int
 
 let t = 42 in ((x => x): [A] -> A -> A)
-//│ Type: forall α17_2: (α17_2) ->{⊥} α17_2
+//│ Type: forall A19_2: (A19_2) ->{⊥} A19_2
 
 
 id(42)
@@ -63,10 +63,10 @@ class Pair[A, B](a: A, b: B)
 //│ Type: ⊤
 
 new Pair(42, true)
-//│ Type: Pair[α21_1, α22_1]
+//│ Type: Pair[α23_1, α24_1]
 //│ Where:
-//│   Int <: α21_1
-//│   Bool <: α22_1
+//│   Int <: α23_1
+//│   Bool <: α24_1
 
 fun swap: [A, B] -> Pair[out A, out B] -> Pair[out B, out A]
 fun swap(p) = new Pair(p.Pair#b, p.Pair#a)
@@ -74,7 +74,7 @@ fun swap(p) = new Pair(p.Pair#b, p.Pair#a)
 
 
 swap
-//│ Type: forall α25_2, α26_2: (Pair[out α25_2, out α26_2]) ->{⊥} Pair[out α26_2, out α25_2]
+//│ Type: forall A27_2, B28_2: (Pair[out A27_2, out B28_2]) ->{⊥} Pair[out B28_2, out A27_2]
 
 let t = new Pair(42, true) in swap(t)
 //│ Type: Pair[out Bool, out Int]
@@ -83,17 +83,17 @@ let t = new Pair("114", "514") in swap(t)
 //│ Type: Pair[out Str, out Str]
 
 let id = ((x => x): [A] -> A -> A) in new Pair(id(42), id("42"))
-//│ Type: Pair[α49_1, α50_1]
+//│ Type: Pair[α51_1, α52_1]
 //│ Where:
-//│   Int <: α49_1
-//│   Str <: α50_1
+//│   Int <: α51_1
+//│   Str <: α52_1
 
 fun foo: ([A] -> A -> A) -> Int
 fun foo(x) = 42
 //│ Type: ⊤
 
 foo
-//│ Type: (forall α54_2: (α54_2) ->{⊥} α54_2) ->{⊥} Int
+//│ Type: (forall A56_2: (A56_2) ->{⊥} A56_2) ->{⊥} Int
 
 foo(id)
 //│ Type: Int
@@ -119,9 +119,9 @@ class Bar[A](x: A, f: [B] -> B -> B)
 
 
 new Bar(0, id)
-//│ Type: Bar[α68_1]
+//│ Type: Bar[α70_1]
 //│ Where:
-//│   Int <: α68_1
+//│   Int <: α70_1
 
 let bar = new Bar(0, id) in bar.Bar#f(bar.Bar#x)
 //│ Type: Int
@@ -130,9 +130,9 @@ class Some[A](value: A)
 //│ Type: ⊤
 
 new Some((x => x): [A] -> A -> A)
-//│ Type: Some[α82_1]
+//│ Type: Some[α84_1]
 //│ Where:
-//│   α85_1 -> α85_1 <: α82_1
+//│   x87_1 -> x87_1 <: α84_1
 
 let s = new Some((x => x): [A] -> A -> A) in let t = s.Some#value(42) in s.Some#value(false)
 //│ Type: Bool ∨ Int
@@ -143,11 +143,11 @@ fun gen(x) =
 //│ Type: ⊤
 
 gen
-//│ Type: (Int) ->{⊥} forall α99_2: (α99_2) ->{⊥} α99_2
+//│ Type: (Int) ->{⊥} forall A101_2: (A101_2) ->{⊥} A101_2
 
 
 gen(42)
-//│ Type: forall α99_2: (α99_2) ->{⊥} α99_2
+//│ Type: forall A101_2: (A101_2) ->{⊥} A101_2
 
 // FIXME: toLoc
 :fixme
@@ -163,4 +163,4 @@ fun cnt(x) = 42
 //│ Type: ⊤
 
 (x => x): [A] -> A -> A
-//│ Type: forall α106_2: (α106_2) ->{⊥} α106_2
+//│ Type: forall A108_2: (A108_2) ->{⊥} A108_2

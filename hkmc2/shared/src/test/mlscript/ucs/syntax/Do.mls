@@ -1,0 +1,109 @@
+:js
+
+import "../../../mlscript-compile/Option.mls"
+
+open Option
+
+// Using `do` will not cause match errors.
+
+let x = false
+//│ x = false
+
+if x do
+  print("executed")
+  set x = false
+
+x
+//│ = false
+
+if not(x) do
+  print("executed")
+//│ > executed
+
+:e
+:re
+if not of x do
+  print("executed")
+//│ ╔══[ERROR] Unrecognized term split (application).
+//│ ║  l.25: 	if not of x do
+//│ ║        	   ^^^^^^^^^^^
+//│ ║  l.26: 	  print("executed")
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
+
+if (not of x) do
+  print("executed")
+  set x = false
+//│ > executed
+
+x
+//│ = false
+
+// Completely using `do`
+// =====================
+
+fun f(y) =
+  let x = Some(y)
+  if x is
+    Some(0) do set x = None
+    Some(v) and v % 2 == 0 do set x = Some(v / 2)
+  x
+  
+f(0)
+//│ = None { class: [class None] }
+
+f(42)
+//│ = Some { value: 21 }
+
+f(41)
+//│ = Some { value: 41 }
+
+
+// Mix using `then` and `do`
+// =========================
+
+:e
+fun g(y) =
+  let x = Some(y)
+  if x is
+    Some(0) do set x = None
+    Some(v) and v % 2 == 0 then set x = Some(v / 2)
+  x
+//│ ╔══[ERROR] Mixed use of `do` and `then` in the `if` expression.
+//│ ╟── Keyword `then` is used here.
+//│ ║  l.70: 	    Some(v) and v % 2 == 0 then set x = Some(v / 2)
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Keyword `do` is used here.
+//│ ║  l.69: 	    Some(0) do set x = None
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^
+
+g(0)
+//│ = None { class: [class None] }
+
+g(42)
+//│ = Some { value: 21 }
+
+g(41)
+//│ = Some { value: 41 }
+
+
+// Completely using `then`
+// =======================
+
+
+fun h(y) =
+  let x = Some(y)
+  if x is
+    Some(0) then set x = None
+    Some(v) and v % 2 == 0 then set x = Some(v / 2)
+  x
+  
+h(0)
+//│ = None { class: [class None] }
+
+h(42)
+//│ = Some { value: 21 }
+
+:re
+h(41)
+//│ ═══[RUNTIME ERROR] Error: match error

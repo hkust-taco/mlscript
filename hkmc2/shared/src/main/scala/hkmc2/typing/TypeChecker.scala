@@ -13,7 +13,7 @@ import Label as L
 import hkmc2.syntax.Tree
 
 
-class TypeChecker(using raise: Raise):
+class TypeChecker(using Raise, Elaborator.State):
   
   // val uid = Uid.FlowPoint.State()
   
@@ -63,7 +63,7 @@ class TypeChecker(using raise: Raise):
           case Nil =>
             val f = typeProd(r)
             constrain(P.exitIf(f, ts, r.refNum, rc), C.Fun(typeProd(tup), C.Flow(app.resSym)))
-          case ParamList(_, ps) :: Nil =>
+          case ParamList(_, _, ps) :: Nil =>
             // App applies to the leftmost parameter list
             // TODO: how to recursively check the subsequent Apps (if any)?
             if ps.size != args.size then
@@ -71,8 +71,9 @@ class TypeChecker(using raise: Raise):
                 msg"Expected ${ps.size.toString} arguments, but got ${
                   args.size.toString}" -> t.toLoc :: Nil))
             // val p1 = ps.zip(args).map: (p, a) =>
-            val p1 = ps.zip(args).foreach: (p, a) =>
-              constrain(P.enterIf(typeProd(a.value), ts, r.refNum, rc), C.Flow(p.sym.asInstanceOf/*FIXME*/))
+            val p1 = ps.zip(args).foreach:
+              case (p, a: Fld) =>
+                constrain(P.enterIf(typeProd(a.term), ts, r.refNum, rc), C.Flow(p.sym.asInstanceOf/*FIXME*/))
             constrain(P.Flow(td.resSym), C.Flow(app.resSym))
         // P.Flow(td.resSym)
         P.Flow(app.resSym)
@@ -84,10 +85,11 @@ class TypeChecker(using raise: Raise):
     // case Ref(ClassSymbol(Ident("true"))) =>
     //   P.Ctor(LitSymbol(Tree.UnitLit(true)), Nil)
     case Tup(fields) =>
-      P.Ctor(TupSymbol(S(fields.size)), fields.map(f => typeProd(f.value)))
+      P.Ctor(TupSymbol(S(fields.size)), fields.map:
+        case f: Fld => typeProd(f.term))
     case Error =>
       P.Ctor(Extr(false), Nil)
-    case _ => P.Flow(FlowSymbol("TODO", 666)) // TODO
+    case _ => P.Flow(FlowSymbol("TODO")) // TODO
   
   def typeParams(ps: Ls[Param]): Ls[(C, P)] =
     ps.map: p =>
@@ -98,7 +100,8 @@ class TypeChecker(using raise: Raise):
     case Ref(cls: ClassSymbol) => C.Ctor(cls, Nil)
     case Ref(ts: TermSymbol) => ???
     case Tup(fields) =>
-      C.Ctor(TupSymbol(S(fields.size)), fields.map(f => typeCons(f.value)))
+      C.Ctor(TupSymbol(S(fields.size)), fields.map:
+        case f: Fld => typeCons(f.term))
     // case _ => TODO(t)
   
   case class CCtx(path: Ls[L])

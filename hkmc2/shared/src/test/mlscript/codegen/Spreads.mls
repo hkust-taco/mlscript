@@ -1,0 +1,54 @@
+:js
+
+
+let a = [1, 2, 3]
+//│ a = [ 1, 2, 3 ]
+
+let b = [0, ...a]
+//│ b = [ 0, 1, 2, 3 ]
+
+
+fun foo(w, x, y, z) = [w, x, y, z]
+
+foo(...b)
+//│ = [ 0, 1, 2, 3 ]
+
+foo(0, ...a)
+//│ = [ 0, 1, 2, 3 ]
+
+:sjs
+foo(1, ...[2, 3], 4)
+//│ JS (unsanitized):
+//│ this.foo(1, ...[ 2, 3 ], 4)
+//│ = [ 1, 2, 3, 4 ]
+
+:re
+foo(...a)
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 4 arguments but got 3
+
+
+let f = (...xs) => xs
+//│ f = [Function (anonymous)]
+
+f(a)
+//│ = [ [ 1, 2, 3 ] ]
+
+f(1, 2, 3)
+//│ = [ 1, 2, 3 ]
+
+f(...a)
+//│ = [ 1, 2, 3 ]
+
+
+fun foo(...xs) = xs
+
+foo()
+//│ = []
+
+foo(1, 2, 3)
+//│ = [ 1, 2, 3 ]
+
+foo(0, ...a)
+//│ = [ 0, 1, 2, 3 ]
+
+

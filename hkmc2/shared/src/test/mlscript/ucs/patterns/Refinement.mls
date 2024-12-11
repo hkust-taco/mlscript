@@ -40,7 +40,7 @@ x => if x is
 //│ ║  l.34: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^
 //│ Normalized:
-//│ >  if x@17 is Some then x@17#666
+//│ >  if x is Some then x#666
 
 x => if x is
   refined(None) then x

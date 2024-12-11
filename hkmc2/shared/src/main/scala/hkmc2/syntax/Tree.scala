@@ -5,6 +5,7 @@ import mlscript.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import hkmc2.Message.MessageContext
+import semantics.Elaborator.State
 import Tree._
 
 
@@ -22,7 +23,7 @@ sealed trait Literal extends AutoLocated:
         case c if c.isControl => f"\\u${c.toInt}%04x"
         case c => c.toString
       .mkString("\"", "", "\"")
-    case UnitLit(value) => if value then "undefined" else "null"
+    case UnitLit(value) => if value then "null" else "undefined"
     case BoolLit(value) => value.toString
   
   def describeLit: Str =
@@ -46,13 +47,13 @@ enum Tree extends AutoLocated:
   case StrLit(value: Str)             extends Tree with Literal
   case UnitLit(undefinedOrNull: Bool) extends Tree with Literal
   case BoolLit(value: Bool)           extends Tree with Literal
-  case Block(stmts: Ls[Tree])         extends Tree with semantics.BlockImpl
+  case Block(stmts: Ls[Tree])(using State) extends Tree with semantics.BlockImpl
   case OpBlock(items: Ls[Tree -> Tree])
   case LetLike(kw: Keyword.letLike, lhs: Tree, rhs: Opt[Tree], body: Opt[Tree])
   case Handle(lhs: Tree, cls: Tree, defs: Tree, body: Opt[Tree])
   case Def(lhs: Tree, rhs: Tree)
   case TermDef(k: TermDefKind, head: Tree, rhs: Opt[Tree]) extends Tree with TermDefImpl
-  case TypeDef(k: TypeDefKind, head: Tree, extension: Opt[Tree], body: Opt[Tree]) extends Tree with TypeDefImpl
+  case TypeDef(k: TypeDefKind, head: Tree, extension: Opt[Tree], body: Opt[Tree])(using State) extends Tree with TypeDefImpl
   case Open(body: Tree)
   case Modified(modifier: Keyword, modLoc: Opt[Loc], body: Tree)
   case Quoted(body: Tree)
@@ -61,13 +62,14 @@ enum Tree extends AutoLocated:
   case TyTup(tys: Ls[Tree])
   case App(lhs: Tree, rhs: Tree)
   case Jux(lhs: Tree, rhs: Tree)
+  case SynthSel(prefix: Tree, name: Ident)
   case Sel(prefix: Tree, name: Ident)
   case InfixApp(lhs: Tree, kw: Keyword.Infix, rhs: Tree)
   case New(body: Tree)
-  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, split: Tree)
+  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, kwLoc: Opt[Loc], split: Tree)
   @deprecated("Use If instead", "hkmc2-ucs")
   case IfElse(cond: Tree, alt: Tree)
-  case Case(branches: Tree)
+  case Case(kwLoc: Opt[Loc], branches: Tree)
   case Region(name: Tree, body: Tree)
   case RegRef(reg: Tree, value: Tree)
   case Effectful(eff: Tree, body: Tree)
@@ -93,13 +95,14 @@ enum Tree extends AutoLocated:
     case InfixApp(lhs, _, rhs) => Ls(lhs, rhs)
     case TermDef(k, head, rhs) => head :: rhs.toList
     case New(body) => body :: Nil
-    case IfLike(_, split) => split :: Nil
+    case IfLike(_, _, split) => split :: Nil
     case IfElse(cond, alt) => cond :: alt :: Nil
-    case Case(bs) => Ls(bs)
+    case Case(_, bs) => Ls(bs)
     case Region(name, body) => name :: body :: Nil
     case RegRef(reg, value) => reg :: value :: Nil
     case Effectful(eff, body) => eff :: body :: Nil
     case TyTup(tys) => tys
+    case SynthSel(prefix, name) => prefix :: Nil
     case Sel(prefix, name) => prefix :: Nil
     case Open(bod) => bod :: Nil
     case Def(lhs, rhs) => lhs :: rhs :: Nil
@@ -112,7 +115,7 @@ enum Tree extends AutoLocated:
     case IntLit(value) => "integer literal"
     case DecLit(value) => "decimal literal"
     case StrLit(value) => "string literal"
-    case UnitLit(value) => if value then "undefined" else "null"
+    case UnitLit(value) => if value then "null" else "undefined"
     case BoolLit(value) => s"$value literal"
     case Block(stmts) => "block"
     case OpBlock(_) => "operator block"
@@ -126,12 +129,13 @@ enum Tree extends AutoLocated:
     case TyTup(tys) => "type tuple"
     case App(lhs, rhs) => "application"
     case Jux(lhs, rhs) => "juxtaposition"
+    case SynthSel(prefix, name) => "synthetic selection"
     case Sel(prefix, name) => "selection"
-    case InfixApp(lhs, kw, rhs) => "infix application"
+    case InfixApp(lhs, kw, rhs) => "infix operation"
     case New(body) => "new"
-    case IfLike(Keyword.`if`, split) => "if expression"
-    case IfLike(Keyword.`while`, split) => "while expression"
-    case Case(branches) => "case"
+    case IfLike(Keyword.`if`, _, split) => "if expression"
+    case IfLike(Keyword.`while`, _, split) => "while expression"
+    case Case(_, branches) => "case"
     case Region(name, body) => "region"
     case RegRef(reg, value) => "region reference"
     case Effectful(eff, body) => "effectful"
@@ -155,15 +159,21 @@ enum Tree extends AutoLocated:
       LetLike(letLike, id, S(App(Ident(nme.init), Tup(id :: r :: Nil))), bodo).desugared
     case _ => this
 
-  def param: Ls[(Ident, Opt[Tree])] = this match
-    case id: Ident => (id, N) :: Nil
-    case InfixApp(lhs: Ident, Keyword.`:`, rhs) => (lhs, S(rhs)) :: Nil
-    case App(Ident(","), Tup(ps)) => ps.flatMap(_.param)
-    case TermDef(ImmutVal, inner, _) => inner.param
+  /** S(true) means eager spread, S(false) means lazy spread, N means no spread. */
+  def asParam: Opt[(Opt[Bool], Ident, Opt[Tree])] = this match
+    case id: Ident => S(N, id, N)
+    case Spread(Keyword.`..`, _, S(id: Ident)) => S(S(false), id, N)
+    case Spread(Keyword.`...`, _, S(id: Ident)) => S(S(true), id, N)
+    case InfixApp(lhs: Ident, Keyword.`:`, rhs) => S(N, lhs, S(rhs))
+    case TermDef(ImmutVal, inner, _) => inner.asParam
+  
+  def isModuleModifier: Bool = this match
+    case Tree.TypeDef(Mod, _, N, N) => true
+    case _ => false
 
 object Tree:
   object Block:
-    def mk(stmts: Ls[Tree]): Tree = stmts match
+    def mk(stmts: Ls[Tree])(using State): Tree = stmts match
       case Nil => UnitLit(true)
       case e :: Nil => e
       case es => Block(es)
@@ -204,6 +214,7 @@ case object Mxn extends TypeDefKind("mixin")
 case object Als extends TypeDefKind("type alias")
 case object Mod extends TypeDefKind("module") with ClsLikeKind
 case object Obj extends TypeDefKind("object") with ClsLikeKind
+case object Pat extends TypeDefKind("pattern") with ClsLikeKind
 
 
 
@@ -271,13 +282,14 @@ trait TypeOrTermDef:
 end TypeOrTermDef
 
 
-trait TypeDefImpl extends TypeOrTermDef:
+trait TypeDefImpl(using semantics.Elaborator.State) extends TypeOrTermDef:
   this: TypeDef =>
   
   lazy val symbol = k match
     case Cls => semantics.ClassSymbol(this, name.getOrElse(Ident("<error>")))
     case Mod | Obj => semantics.ModuleSymbol(this, name.getOrElse(Ident("<error>")))
     case Als => semantics.TypeAliasSymbol(name.getOrElse(Ident("<error>")))
+    case Pat => semantics.PatternSymbol(name.getOrElse(Ident("<error>")))
     case Trt | Mxn => ???
   
   lazy val definedSymbols: Map[Str, semantics.BlockMemberSymbol] =
@@ -289,9 +301,10 @@ trait TypeDefImpl extends TypeOrTermDef:
     case _ =>
       Map.empty
   
-  lazy val params: Ls[semantics.TermSymbol] =
+  lazy val clsParams: Ls[semantics.TermSymbol] =
     this.paramLists.headOption.fold(Nil): tup =>
-      tup.fields.iterator.flatMap(_.param).map:
-        case (id, _) => semantics.TermSymbol(ParamBind, symbol.asClsLike, id)
+      tup.fields.iterator.flatMap(_.asParam).map:
+        case (S(spd), id, _) => ??? // spreads are not allowed in class parameters
+        case (N, id, _) => semantics.TermSymbol(ParamBind, symbol.asClsLike, id)
       .toList
 

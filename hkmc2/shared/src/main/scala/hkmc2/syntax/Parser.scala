@@ -12,9 +12,9 @@ import Parser.*
 import scala.annotation.tailrec
 
 import Keyword.`let`
-import hkmc2.syntax.ParseRule.prefixRules
-import hkmc2.syntax.ParseRule.infixRules
 import hkmc2.syntax.Keyword.Ellipsis
+
+import semantics.Elaborator.State
 
 
 object Parser:
@@ -107,11 +107,14 @@ import Parser._
 abstract class Parser(
   origin: Origin,
   tokens: Ls[TokLoc],
+  rules: ParseRules,
   raiseFun: Diagnostic => Unit,
   val dbg: Bool,
   // fallbackLoc: Opt[Loc], description: Str = "input",
-):
+)(using State):
   outer =>
+  
+  import rules.*
   
   protected def doPrintDbg(msg: => Str): Unit
   protected def printDbg(msg: => Any): Unit =
@@ -134,7 +137,7 @@ abstract class Parser(
     res
   
   final def rec(tokens: Ls[Stroken -> Loc], fallbackLoc: Opt[Loc], description: Str): Parser =
-    new Parser(origin, tokens, raiseFun, dbg
+    new Parser(origin, tokens, rules, raiseFun, dbg
         // , fallbackLoc, description
     ):
       def doPrintDbg(msg: => Str): Unit = outer.printDbg("> " + msg)
@@ -458,7 +461,7 @@ abstract class Parser(
   // TODO: rm `allowIndentedBlock`? Seems it can always be `true`
   def expr(prec: Int, allowIndentedBlock: Bool = true)(using Line): Tree =
     parseRule(prec,
-      if allowIndentedBlock then ParseRule.prefixRulesAllowIndentedBlock else prefixRules
+      if allowIndentedBlock then prefixRulesAllowIndentedBlock else prefixRules
     ).getOrElse(errExpr) // * a `None` result means an alread-reported error
   
   def simpleExpr(prec: Int)(using Line): Tree = wrap(prec)(simpleExprImpl(prec))
@@ -544,7 +547,9 @@ abstract class Parser(
               val ele = simpleExprImpl(prec)
               term match
                 case InfixApp(lhs, Keyword.`then`, rhs) =>
-                  Quoted(IfElse(InfixApp(Unquoted(lhs), Keyword.`then`, Unquoted(rhs)), Unquoted(ele)))
+                  Quoted(IfLike(Keyword.`if`, S(l0), Block(
+                    InfixApp(Unquoted(lhs), Keyword.`then`, Unquoted(rhs)) :: Modified(Keyword.`else`, N, Unquoted(ele)) :: Nil
+                  )))
                 case tk =>
                   err(msg"Expected '`in'; found ${tk.toString} instead" -> tk.toLoc :: Nil)
                   errExpr
@@ -556,7 +561,9 @@ abstract class Parser(
               errExpr
         case (IDENT(nme, sym), loc) :: _ =>
           consume
-          exprCont(Tree.Quoted(Tree.Ident(nme).withLoc(S(loc))), prec, allowNewlines = false)
+          val res =
+            if nme === "true" then Tree.BoolLit(true) else if nme === "false" then Tree.BoolLit(false) else Tree.Ident(nme)
+          exprCont(Tree.Quoted(res.withLoc(S(loc))), prec, allowNewlines = false)
         case (LITVAL(lit), l0) :: _ =>
           consume
           exprCont(Tree.Quoted(lit.asTree.withLoc(S(l0))), prec, allowNewlines = false)
@@ -893,6 +900,12 @@ abstract class Parser(
       case (NEWLINE, _) :: (KEYWORD(kw), _) :: _
       if kw.canStartInfixOnNewLine && kw.leftPrecOrMin > prec
       && infixRules.kwAlts.contains(kw.name)
+      && (kw isnt Keyword.`do`) // This is to avoid the following case:
+        //  ```
+        //  0 then "null"
+        //  do console.log("non-null")
+        //  ```
+        // Otherwise, `do` will be parsed as an infix operator
       =>
         consume
         exprCont(acc, prec, allowNewlines = false)

@@ -3,19 +3,19 @@
 
 :sjs
 2 + 2
-//│ JS:
+//│ JS (unsanitized):
 //│ 2 + 2
 //│ = 4
 
 :sjs
 2 +. 2
-//│ JS:
+//│ JS (unsanitized):
 //│ 2 + 2
 //│ = 4
 
 :sjs
 +2
-//│ JS:
+//│ JS (unsanitized):
 //│ + 2
 //│ = 2
 
@@ -24,7 +24,7 @@ fun (+) lol(a, b) = [a, b]
 
 :sjs
 1 + 2
-//│ JS:
+//│ JS (unsanitized):
 //│ this.lol(1, 2)
 //│ = [ 1, 2 ]
 

@@ -28,5 +28,5 @@ const Stack$class = class Stack {
   toString() { return "Stack"; }
 }; const Stack = new Stack$class;
 Stack.class = Stack$class;
-undefined
+null
 export default Stack;

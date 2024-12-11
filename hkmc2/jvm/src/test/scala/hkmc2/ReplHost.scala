@@ -48,12 +48,12 @@ class ReplHost(rootPath: Str)(using TL) {
         case None => reply
         case Some(uncaughtErrorLine) => {
           val message = uncaughtErrorLine.substring(ReplHost.uncaughtErrorHead.length)
-          ReplHost.Error(false, message)
+          ReplHost.Error(false, message, reply.take(reply.indexOf(uncaughtErrorLine)).trim())
         }
       }
       case Some(syntaxErrorLine) =>
         val message = syntaxErrorLine.substring(ReplHost.syntaxErrorHead.length)
-        ReplHost.Error(true, message)
+        ReplHost.Error(true, message, reply.take(reply.indexOf(syntaxErrorLine)).trim())
     }
     tl.log(s"REPL> Collected:\n${res}")
     res
@@ -85,7 +85,7 @@ class ReplHost(rootPath: Str)(using TL) {
         if begin >= 0 && end >= 0 then
           // `console.log` inserts a space between every two arguments,
           // so + 1 and - 1 is necessary to get correct length.
-          ReplHost.Error(false, reply.substring(begin + 1, end))
+          ReplHost.Error(false, reply.substring(begin + 1, end), reply.takeWhile(_ != 0x200b).trim())
         else reply
       case error: ReplHost.Error => error
     tl.log(s"REPL> Parsed:\n${parsed}")
@@ -194,7 +194,7 @@ object ReplHost {
     *               runtime error
     * @param message the error message
     */
-  final case class Error(syntax: Bool, message: Str) extends Reply {
+  final case class Error(syntax: Bool, message: Str, otherOutputs: Str) extends Reply {
     override def map(f: Str => Reply): Reply = this
     override def toString(): Str =
       if syntax then

@@ -23,7 +23,7 @@ open Foo { y }
 
 :sjs
 y
-//│ JS:
+//│ JS (unsanitized):
 //│ this.Foo.y
 
 

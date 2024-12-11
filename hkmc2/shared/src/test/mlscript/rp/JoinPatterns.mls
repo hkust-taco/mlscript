@@ -1,0 +1,30 @@
+:js
+
+pattern SimpleJoin = ("abc" | "xyz") ~ ("def" | "")
+
+:expect true
+"abc" is SimpleJoin
+//│ = true
+
+:expect true
+"abcdef" is SimpleJoin
+//│ = true
+
+:expect true
+"xyzdef" is SimpleJoin
+//│ = true
+
+:expect true
+"xyz" is SimpleJoin
+//│ = true
+
+:expect false
+"abcxyzdef" is SimpleJoin
+//│ = false
+
+:todo
+pattern Exponential = ("a" | "b") ~ ("c" | "d") ~ ("e" | "f") // ~ ("g" | "h") ~ ("i" | "j") ~ ("k" | "l") ~ ("m" | "n") ~ ("o" | "p") ~ ("q" | "r") ~ ("s" | "t") ~ ("u" | "v") ~ ("w" | "x") ~ ("y" | "z")
+
+:todo
+"abcdefghijklm" is Exponential
+//│ = false

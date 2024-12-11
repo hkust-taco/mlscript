@@ -20,21 +20,28 @@ do 1
 //│ ║  l.18: 	do 1
 //│ ╙──      	   ^
 
-:todo
+:ucs desugared
 val f = case
   0 then "null"
   do console.log("non-null")
   1 then "unit"
   _ then "other"
-//│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.26: 	  do console.log("non-null")
-//│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^
+//│ Desugared:
+//│ >  if
+//│ >    caseScrut is 0 then "null"
+//│ >    let $doTemp = globalThis:import#Prelude#666(.)console‹member:console›(.)log("non-null")
+//│ >    caseScrut is 1 then "unit"
+//│ >    else "other"
 //│ f = [Function (anonymous)]
 
 f(0)
 //│ = 'null'
 
 f(1)
+//│ > non-null
+//│ = 'unit'
 
 f(2)
+//│ > non-null
+//│ = 'other'
 
