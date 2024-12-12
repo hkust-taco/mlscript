@@ -280,8 +280,6 @@ class Lowering(using TL, Raise, Elaborator.State):
           else k(Value.Lit(syntax.Tree.UnitLit(true))) // * it seems this currently never happens
         )
       
-    case SelProj(prefix, _, proj) =>
-      setupSelection(prefix, proj, N)(k)
     case sel @ SynthSel(prefix, nme) =>
       subTerm(prefix): p =>
         k(Select(p, nme)(sel.sym))
@@ -307,7 +305,9 @@ class Lowering(using TL, Raise, Elaborator.State):
         k(Value.Ref(l))
       )
     
-    // * BbML mutable references
+    // * BbML-specific cases: t.Cls#field and mutable operations
+    case SelProj(prefix, _, proj) =>
+      setupSelection(prefix, proj, N)(k)
     case Region(reg, body) =>
       Assign(reg, Instantiate(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Region"))(N), Nil), term(body)(k))
     case RegRef(reg, value) =>

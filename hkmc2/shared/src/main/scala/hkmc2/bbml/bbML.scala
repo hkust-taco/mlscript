@@ -475,7 +475,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
               case _ => (error(msg"${field.name} is not a valid member in class ${clsSym.nme}" -> t.toLoc :: Nil), Bot)
           case N => 
             (error(msg"Not a valid class: ${cls.describe}" -> cls.toLoc :: Nil), Bot)
-      case Term.App(lhs: Term.SynthSel, Term.Tup(Nil)) if lhs.sym.map(_.isGetter).getOrElse(false) =>
+      case Term.App(lhs: Term.SynthSel, Term.Tup(Nil)) if lhs.sym.exists(_.isGetter) =>
         typeCheck(lhs) // * Getter access will be elaborated to applications. But they cannot be typed as normal applications.
       case t @ Term.App(lhs, Term.Tup(rhs)) =>
         val (funTy, lhsEff) = typeCheck(lhs)

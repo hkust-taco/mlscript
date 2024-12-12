@@ -58,8 +58,9 @@ object Elaborator:
       )
     
     def nest(outer: Opt[InnerSymbol]): Ctx = Ctx(outer, Some(this), Map.empty)
-
-    def get(name: Str): Opt[Ctx.Elem] = env.get(name).orElse(parent.flatMap(_.get(name)))
+    
+    def get(name: Str): Opt[Ctx.Elem] =
+      env.get(name).orElse(parent.flatMap(_.get(name)))
     def getOuter: Opt[InnerSymbol] = outer.orElse(parent.flatMap(_.getOuter))
     
     // * Invariant: We expect that the top-level context only contain hard-coded symbols like `globalThis`
@@ -149,7 +150,7 @@ extends Importer:
   def mkLetBinding(sym: LocalSymbol, rhs: Term): Ls[Statement] =
     LetDecl(sym) :: DefineVar(sym, rhs) :: Nil
   
-  def resolveField(srcTree: Tree, base: Opt[Symbol], nme: Ident)(using Ctx): Opt[FieldSymbol] =
+  def resolveField(srcTree: Tree, base: Opt[Symbol], nme: Ident): Opt[FieldSymbol] =
     base match
     case S(psym: BlockMemberSymbol) =>
       psym.modTree match
@@ -340,7 +341,7 @@ extends Importer:
       val preTrm = term(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
       Term.SynthSel(preTrm, nme)(sym)
-    case t @ Sel(pre, nme) =>
+    case Sel(pre, nme) =>
       val preTrm = term(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
       if inAppPrefix
