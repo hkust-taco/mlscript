@@ -16,8 +16,5 @@ module Test with
 //│ ║       	       ^^^^^^^^^
 //│ ║  l.7: 	  fun test = 1
 //│ ╙──     	^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Getters must be defined in module or function scopes.
-//│ ║  l.5: 	  fun hi = 0
-//│ ╙──     	      ^^
 
 

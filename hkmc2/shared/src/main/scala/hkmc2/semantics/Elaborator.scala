@@ -50,15 +50,11 @@ object Elaborator:
           val elem = out orElse outer match
             case S(outer) => Ctx.SelElem(outer, sym.nme, S(sym))
             case N => sym: Ctx.Elem
-          sym match
-            case sym: BlockMemberSymbol =>
-              sym.trees.headOption match // TODO: Support module overloading
-                case S(td @ TermDef(Fun, _, _)) if td.rhs.isDefined && td.paramLists.isEmpty =>
-                  nme -> Ctx.GetElem(elem)
-                case _ => nme -> elem
-            case _ => sym.defn match
-              case S(TermDefinition(_, Fun, _, Nil, _, S(_), _, _)) => nme -> Ctx.GetElem(elem)
-              case _ => nme -> elem
+          if sym.isGetter && !(out.exists:
+            case _: ClassSymbol | _: ModuleSymbol => true // * A getter inside class/module can be invoked directly
+            case _: BlockMemberSymbol | _: TermSymbol | _: TypeAliasSymbol | _: PatternSymbol | _: TopLevelSymbol => false)
+          then nme -> Ctx.GetElem(elem)
+          else nme -> elem
       )
     
     def nest(outer: Opt[InnerSymbol]): Ctx = Ctx(outer, Some(this), Map.empty)
@@ -159,18 +155,17 @@ extends Importer:
     LetDecl(sym) :: DefineVar(sym, rhs) :: Nil
   
   def resolveField(srcTree: Tree, base: Opt[Symbol], nme: Ident)(using Ctx): Opt[FieldSymbol] =
-    def getFromModule(tree: Tree.TypeDef): Opt[FieldSymbol] = tree.definedSymbols.get(nme.name) match
-      case s @ S(clsSym) => s
-      case N =>
-        raise(ErrorReport(msg"Module '${tree.symbol.nme}' does not contain member '${nme.name}'" -> srcTree.toLoc :: Nil))
-        N
     base match
     case S(psym: BlockMemberSymbol) =>
       psym.modTree match
-      case S(cls) => getFromModule(cls)
+      case S(cls) =>
+        cls.definedSymbols.get(nme.name) match
+        case s @ S(clsSym) => s
+        case N =>
+          raise(ErrorReport(msg"Module '${cls.symbol.nme}' does not contain member '${nme.name}'" -> srcTree.toLoc :: Nil))
+          N
       case N =>
         N
-    case S(msym: ModuleSymbol) => getFromModule(msym.tree)
     case _ => N
   
   def cls(tree: Tree, inAppPrefix: Bool): Ctxl[Term] = trace[Term](s"Elab class ${tree.showDbg}", r => s"~> $r"):
@@ -353,13 +348,9 @@ extends Importer:
     case t @ Sel(pre, nme) =>
       val preTrm = term(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
-      val res = if inAppPrefix
+      if inAppPrefix
       then Term.SynthSel(preTrm, nme)(sym)
       else Term.Sel(preTrm, nme)(sym)
-      if sym.exists(_.isGetter) then
-        val emptyTup: Tree.Tup = Tree.Tup(Nil)
-        Term.App(res, Term.Tup(Nil)(emptyTup))(Tree.App(t, emptyTup), FlowSymbol("‹get-res›"))
-      else res
     case tree @ Tup(fields) =>
       Term.Tup(fields.map(fld(_)))(tree)
     case New(body) =>
@@ -634,16 +625,9 @@ extends Importer:
               val s = st.map(term(_)(using newCtx))
               val b = rhs.map(term(_)(using newCtx))
               val r = FlowSymbol(s"‹result of ${sym}›")
-              val isGetter = k === syntax.Fun && td.paramLists.isEmpty && b.nonEmpty
               val tdf = TermDefinition(owner, k, sym, pss, s, b, r, 
                 TermDefFlags.empty.copy(isModMember = isModMember))
               sym.defn = S(tdf)
-
-              if isGetter &&
-                owner.exists(w => !(w.isInstanceOf[TopLevelSymbol] || w.isInstanceOf[ModuleSymbol])) then raise:
-                  ErrorReport:
-                      msg"Getters must be defined in module or function scopes." ->
-                      td.head.toLoc :: Nil
               
               // indicates if the function really returns a module
               val em = b.exists(ModuleChecker.evalsToModule)

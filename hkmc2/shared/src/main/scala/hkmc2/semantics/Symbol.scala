@@ -116,15 +116,16 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[Tree])(using State)
   override def toString: Str =
     s"member:$nme${State.dbgUid(uid)}"
 
+  override val isGetter: Bool = // TODO: should be based on another syntax & kind
+    trmImplTree.exists(t => t.k === Fun && t.paramLists.isEmpty)
+
 end BlockMemberSymbol
 
 
 sealed abstract class MemberSymbol[Defn <: Definition](using State) extends Symbol:
   def nme: Str
   var defn: Opt[Defn] = N
-  lazy val isGetter: Bool = defn match
-    case S(TermDefinition(_, Fun, _, Nil, _, S(_), _, _)) => true
-    case _ => false
+  val isGetter: Bool = false
 
 
 class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.Ident)(using State)

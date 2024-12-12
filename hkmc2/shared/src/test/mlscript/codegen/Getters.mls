@@ -28,7 +28,7 @@ module T with
 //│ JS:
 //│ const T$class = class T {
 //│   constructor() {
-//│     let selRes, tmp, tmp1, selRes1, tmp2, tmp3;
+//│     let selRes, tmp, selRes1, tmp1;
 //│     this.a = this.t;
 //│     selRes = this.t;
 //│     if (selRes === undefined) {
@@ -37,22 +37,20 @@ module T with
 //│       tmp = selRes;
 //│     }
 //│     this.b = tmp;
-//│     tmp1 = this.p();
-//│     this.c = tmp1;
+//│     this.c = this.p;
 //│     selRes1 = this.p;
 //│     if (selRes1 === undefined) {
 //│       throw new globalThis.Error("Access to required field 'p' yielded 'undefined'");
 //│     } else {
-//│       tmp2 = selRes1;
+//│       tmp1 = selRes1;
 //│     }
-//│     tmp3 = tmp2();
-//│     this.d = tmp3;
+//│     this.d = tmp1;
 //│   }
 //│   t(...args) {
 //│     globalThis.Predef.checkArgs("t", 0, true, args.length);
 //│     return 1;
 //│   } 
-//│   p() {
+//│   get p() {
 //│     return 2;
 //│   }
 //│   toString() { return "T"; }
@@ -83,7 +81,7 @@ module M with
 //│   constructor() {
 //│     
 //│   }
-//│   t() {
+//│   get t() {
 //│     return 0;
 //│   }
 //│   toString() { return "M"; }
@@ -96,14 +94,13 @@ module M with
 :sjs
 M.t
 //│ JS:
-//│ let selRes, tmp;
+//│ let selRes;
 //│ selRes = this.M.t;
 //│ if (selRes === undefined) {
 //│   throw new this.Error("Access to required field 't' yielded 'undefined'");
 //│ } else {
-//│   tmp = selRes;
+//│   selRes
 //│ }
-//│ tmp()
 //│ = 0
 
 
@@ -277,9 +274,27 @@ c()
 //│ = 2
 
 
-:e
+:sjs
 class Foo(x) with
   fun oops = x
-//│ ╔══[ERROR] Getters must be defined in module or function scopes.
-//│ ║  l.282: 	  fun oops = x
-//│ ╙──       	      ^^^^
+//│ JS:
+//│ this.Foo = function Foo(...args) { return new Foo.class(...args); };
+//│ this.Foo.class = class Foo {
+//│   constructor(x) {
+//│     this.x = x;
+//│     
+//│   }
+//│   get oops() {
+//│     return this.x;
+//│   }
+//│   toString() { return "Foo(" + this.x + ")"; }
+//│ };
+//│ null
+
+
+fun foo(f) =
+  f.oops
+
+
+foo(Foo(42))
+//│ = 42

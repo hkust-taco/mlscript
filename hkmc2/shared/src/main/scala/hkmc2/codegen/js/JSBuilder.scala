@@ -186,7 +186,7 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
                       bodyDoc
                     } #}  # }"
                   case td @ FunDefn(_, Nil, bod) =>
-                    doc" # ${td.sym.nme}() { #{  # ${
+                    doc" # get ${td.sym.nme}() { #{  # ${
                       this.body(bod)
                     } #}  # }"
                 .mkDocument(" ")
