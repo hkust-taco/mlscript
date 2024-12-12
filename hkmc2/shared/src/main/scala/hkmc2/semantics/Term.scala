@@ -72,7 +72,7 @@ enum Term extends Statement:
     case Region(name, body) => "region expression"
     case RegRef(reg, value) => "reference creation"
     case Assgn(lhs, rhs) => "assignment"
-    case SetRef(ref, value) => "set"
+    case SetRef(ref, value) => "mutable reference assignment"
     case Deref(ref) => "dereference"
     case Throw(e) => "throw"
 end Term
