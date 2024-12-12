@@ -285,11 +285,11 @@ class Lowering(using TL, Raise, Elaborator.State):
     case sel @ SynthSel(prefix, nme) =>
       subTerm(prefix): p =>
         k(Select(p, nme)(sel.sym))
-      
+        
     case sel @ Sel(prefix, nme) =>
       setupSelection(prefix, nme, sel.sym)(k)
-
-      
+        
+        
     case New(cls, as) =>
       subTerm(cls): sr =>
         def rec(as: Ls[st], asr: Ls[Path]): Block = as match
@@ -306,7 +306,7 @@ class Lowering(using TL, Raise, Elaborator.State):
         term(finallyDo)(_ => End()),
         k(Value.Ref(l))
       )
-
+    
     // * BbML mutable references
     case Region(reg, body) =>
       Assign(reg, Instantiate(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Region"))(N), Nil), term(body)(k))

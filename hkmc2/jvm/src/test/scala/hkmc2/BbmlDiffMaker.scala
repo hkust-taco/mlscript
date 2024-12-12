@@ -20,7 +20,8 @@ abstract class BbmlDiffMaker extends JSBackendDiffMaker:
         curCtx = Elaborator.State.init
         importFile(bbPreludeFile, verbose = false)
         curCtx = curCtx.nest(N)
-
+  
+  
   override def init(): Unit =
     if bbmlOpt.isSet then
       import syntax.*
