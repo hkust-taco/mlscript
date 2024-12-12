@@ -8,44 +8,44 @@
 
 
 class Foo
-//│ JS:
+//│ JS (unsanitized):
 //│ this.Foo = class Foo { constructor() {  } toString() { return "Foo"; } }; null
 
 Foo is Foo
-//│ JS:
+//│ JS (unsanitized):
 //│ let scrut; scrut = this.Foo; if (scrut instanceof this.Foo) { true } else { false }
 //│ = false
 
 (new Foo) is Foo
-//│ JS:
+//│ JS (unsanitized):
 //│ let scrut; scrut = new this.Foo(); if (scrut instanceof this.Foo) { true } else { false }
 //│ = true
 
 new Foo
-//│ JS:
+//│ JS (unsanitized):
 //│ new this.Foo()
 //│ = Foo {}
 
 new Foo()
-//│ JS:
+//│ JS (unsanitized):
 //│ new this.Foo()
 //│ = Foo {}
 
 Foo
-//│ JS:
+//│ JS (unsanitized):
 //│ this.Foo
 //│ = [class Foo]
 
 :re
 Foo()
-//│ JS:
+//│ JS (unsanitized):
 //│ this.Foo()
 //│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
 
 
 class Foo with { log("hi") }
 log("ok")
-//│ JS:
+//│ JS (unsanitized):
 //│ this.Foo = class Foo {
 //│   constructor() {
 //│     globalThis.log("hi")
@@ -59,9 +59,8 @@ fun test() =
   class Foo with { log("hi") }
   log("ok")
   Foo
-//│ JS:
-//│ function test(...args) {
-//│   globalThis.Predef.checkArgs("test", 0, true, args.length);
+//│ JS (unsanitized):
+//│ function test() {
 //│   let tmp;
 //│   class Foo {
 //│     constructor() {
@@ -75,19 +74,19 @@ fun test() =
 //│ null
 
 let t = test()
-//│ JS:
+//│ JS (unsanitized):
 //│ let tmp; tmp = this.test(); this.t = tmp; null
 //│ > ok
 //│ t = [class Foo]
 
 new t
-//│ JS:
+//│ JS (unsanitized):
 //│ new this.t()
 //│ > hi
 //│ = Foo {}
 
 new t()
-//│ JS:
+//│ JS (unsanitized):
 //│ new this.t()
 //│ > hi
 //│ = Foo {}
@@ -97,7 +96,7 @@ class Foo with
   val x = 1
   let y = x + 1
   fun z() = y + x
-//│ JS:
+//│ JS (unsanitized):
 //│ this.Foo = class Foo {
 //│   #y;
 //│   constructor() {
@@ -106,8 +105,7 @@ class Foo with
 //│     tmp = this.x + 1;
 //│     this.#y = tmp;
 //│   }
-//│   z(...args) {
-//│     globalThis.Predef.checkArgs("z", 0, true, args.length);
+//│   z() {
 //│     return this.#y + this.x;
 //│   }
 //│   toString() { return "Foo"; }
@@ -123,7 +121,7 @@ class Foo with
   fun z1() = 5
   fun z2() = 6
   log("hello")
-//│ JS:
+//│ JS (unsanitized):
 //│ this.Foo = class Foo {
 //│   #y1;
 //│   #y2;
@@ -134,12 +132,10 @@ class Foo with
 //│     this.#y2 = 4;
 //│     globalThis.log("hello")
 //│   }
-//│   z1(...args) {
-//│     globalThis.Predef.checkArgs("z1", 0, true, args.length);
+//│   z1() {
 //│     return 5;
 //│   } 
-//│   z2(...args1) {
-//│     globalThis.Predef.checkArgs("z2", 0, true, args1.length);
+//│   z2() {
 //│     return 6;
 //│   }
 //│   toString() { return "Foo"; }
@@ -151,19 +147,15 @@ class Foo with
   val x = 1
   fun foo(y) = x + y
   fun bar(z) = foo(z) + 1
-//│ JS:
+//│ JS (unsanitized):
 //│ this.Foo = class Foo {
 //│   constructor() {
 //│     this.x = 1;
 //│   }
-//│   foo(...args) {
-//│     globalThis.Predef.checkArgs("foo", 1, true, args.length);
-//│     let y = args[0];
+//│   foo(y) {
 //│     return this.x + y;
 //│   } 
-//│   bar(...args1) {
-//│     globalThis.Predef.checkArgs("bar", 1, true, args1.length);
-//│     let z = args1[0];
+//│   bar(z) {
 //│     let tmp;
 //│     tmp = this.foo(z);
 //│     return tmp + 1;
@@ -176,21 +168,15 @@ let a = new Foo
 log(a.x)
 log(a.foo(1))
 log(a.bar(1))
-//│ JS:
-//│ let tmp, selRes, tmp1, tmp2, tmp3, tmp4, tmp5;
+//│ JS (unsanitized):
+//│ let tmp, tmp1, tmp2, tmp3, tmp4;
 //│ tmp = new this.Foo();
 //│ this.a = tmp;
-//│ selRes = this.a.x;
-//│ if (selRes === undefined) {
-//│   throw new this.Error("Access to required field 'x' yielded 'undefined'");
-//│ } else {
-//│   tmp1 = selRes;
-//│ }
-//│ tmp2 = this.log(tmp1);
-//│ tmp3 = this.a.foo(1) ?? null;
-//│ tmp4 = this.log(tmp3);
-//│ tmp5 = this.a.bar(1) ?? null;
-//│ this.log(tmp5)
+//│ tmp1 = this.log(this.a.x);
+//│ tmp2 = this.a.foo(1) ?? null;
+//│ tmp3 = this.log(tmp2);
+//│ tmp4 = this.a.bar(1) ?? null;
+//│ this.log(tmp4)
 //│ > 1
 //│ > 2
 //│ > 3
@@ -207,7 +193,7 @@ log(a.bar(1))
 class Foo with
   val x = 1
   let x = 2
-//│ JS:
+//│ JS (unsanitized):
 //│ this.Foo = class Foo {
 //│   #x;
 //│   constructor() {
@@ -222,15 +208,15 @@ class Foo with
 :fixme
 class Foo with val x = 1
 //│ ╔══[PARSE ERROR] Expected block after type declaration body; found 'val' keyword instead
-//│ ║  l.223: 	class Foo with val x = 1
+//│ ║  l.209: 	class Foo with val x = 1
 //│ ╙──       	               ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.223: 	class Foo with val x = 1
+//│ ║  l.209: 	class Foo with val x = 1
 //│ ╙──       	                     ^
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
-//│ ║  l.223: 	class Foo with val x = 1
+//│ ║  l.209: 	class Foo with val x = 1
 //│ ╙──       	                   ^
-//│ JS:
+//│ JS (unsanitized):
 //│ /* error */
 
 

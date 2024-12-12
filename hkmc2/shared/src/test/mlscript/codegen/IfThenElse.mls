@@ -11,17 +11,8 @@ if true then 1 else 0
 
 :sjs
 let f = x => if x then log("ok") else log("ko")
-//│ JS:
-//│ this.f = (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, true, args.length);
-//│   let x = args[0];
-//│   if (x) {
-//│     return this.log("ok");
-//│   } else {
-//│     return this.log("ko");
-//│   }
-//│ };
-//│ null
+//│ JS (unsanitized):
+//│ this.f = (x) => { if (x) { return this.log("ok"); } else { return this.log("ko"); } }; null
 //│ f = [Function (anonymous)]
 
 f(true)
@@ -33,10 +24,8 @@ f(false)
 
 :sjs
 let f = x => log((if x then "ok" else "ko") + "!")
-//│ JS:
-//│ this.f = (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, true, args.length);
-//│   let x = args[0];
+//│ JS (unsanitized):
+//│ this.f = (x) => {
 //│   let tmp, tmp1;
 //│   if (x) {
 //│     tmp = "ok";
@@ -51,10 +40,8 @@ let f = x => log((if x then "ok" else "ko") + "!")
 
 :sjs
 let f = x => log((if x and x then "ok" else "ko") + "!")
-//│ JS:
-//│ this.f = (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, true, args.length);
-//│   let x = args[0];
+//│ JS (unsanitized):
+//│ this.f = (x) => {
 //│   let tmp, tmp1;
 //│   if (x) {
 //│     if (x) {

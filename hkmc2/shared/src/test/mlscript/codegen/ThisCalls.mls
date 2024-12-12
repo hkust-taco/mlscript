@@ -18,7 +18,7 @@ s(123)
 
 :sjs
 ex |>. s(123)
-//│ JS:
+//│ JS (unsanitized):
 //│ let tmp; tmp = Predef.call(this.ex, this.s); tmp(123) ?? null
 //│ = [ 123, 456 ]
 

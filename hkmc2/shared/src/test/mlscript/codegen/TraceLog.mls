@@ -6,29 +6,19 @@
 fun fib(a) = if
   a <= 1 then a
   else fib(a - 1) + fib(a - 2)
-//│ JS:
+//│ JS (unsanitized):
 //│ function fib(a) {
-//│   let scrut, traceLogEnterMsg, traceLogPrevIndent, traceLogRes, traceLogRetMsg, traceLogParam_a, traceLogResInspected, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
-//│   traceLogParam_a = globalThis.util.inspect(a);
-//│   traceLogEnterMsg = globalThis.String.prototype.concat.call("CALL fib(", traceLogParam_a, ")");
-//│   tmp = globalThis.Predef.TraceLogger.log(traceLogEnterMsg);
-//│   traceLogPrevIndent = globalThis.Predef.TraceLogger.indent();
+//│   let scrut, tmp, tmp1, tmp2, tmp3;
 //│   scrut = a <= 1;
 //│   if (scrut) {
-//│     tmp1 = a;
+//│     return a;
 //│   } else {
-//│     tmp2 = a - 1;
+//│     tmp = a - 1;
+//│     tmp1 = globalThis.fib(tmp);
+//│     tmp2 = a - 2;
 //│     tmp3 = globalThis.fib(tmp2);
-//│     tmp4 = a - 2;
-//│     tmp5 = globalThis.fib(tmp4);
-//│     tmp1 = tmp3 + tmp5;
+//│     return tmp1 + tmp3;
 //│   }
-//│   traceLogRes = tmp1;
-//│   traceLogResInspected = globalThis.util.inspect(traceLogRes);
-//│   traceLogRetMsg = globalThis.String.prototype.concat.call("=> ", traceLogResInspected);
-//│   tmp6 = globalThis.Predef.TraceLogger.resetIndent(traceLogPrevIndent);
-//│   tmp7 = globalThis.Predef.TraceLogger.log(traceLogRetMsg);
-//│   return traceLogRes;
 //│ }
 //│ null
 

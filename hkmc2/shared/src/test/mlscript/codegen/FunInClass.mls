@@ -21,34 +21,26 @@ fun test(a) =
       fun h(e) = [a, b, d, e]
       h(d)
   Inner(42)
-//│ JS:
-//│ function test(...args) {
-//│   globalThis.Predef.checkArgs("test", 1, true, args.length);
-//│   let a = args[0];
-//│   function Inner(...args1) { return new Inner.class(...args1); };
+//│ JS (unsanitized):
+//│ function test(a) {
+//│   function Inner(b1) { return new Inner.class(b1); };
 //│   Inner.class = class Inner {
 //│     constructor(b) {
 //│       this.b = b;
 //│       let tmp;
 //│       tmp = globalThis.log(a);
 //│     }
-//│     f(...args1) {
-//│       globalThis.Predef.checkArgs("f", 1, true, args1.length);
-//│       let c = args1[0];
+//│     f(c) {
 //│       return [
 //│         a,
 //│         this.b,
 //│         c
 //│       ];
 //│     } 
-//│     g(...args2) {
-//│       globalThis.Predef.checkArgs("g", 1, true, args2.length);
-//│       let d = args2[0];
+//│     g(d) {
 //│       
 //│       const this$Inner = this;
-//│       function h(...args1) {
-//│         globalThis.Predef.checkArgs("h", 1, true, args1.length);
-//│         let e = args1[0];
+//│       function h(e) {
 //│         return [
 //│           a,
 //│           this$Inner.b,
@@ -82,12 +74,10 @@ fun test(a) =
   class C2(b) with
     print of [a, b]
   [C1(1), C2(2)]
-//│ JS:
-//│ function test(...args) {
-//│   globalThis.Predef.checkArgs("test", 1, true, args.length);
-//│   let a = args[0];
+//│ JS (unsanitized):
+//│ function test(a) {
 //│   let tmp, tmp1;
-//│   function C1(...args1) { return new C1.class(...args1); };
+//│   function C1(b1) { return new C1.class(b1); };
 //│   C1.class = class C1 {
 //│     constructor(b) {
 //│       this.b = b;
@@ -98,7 +88,7 @@ fun test(a) =
 //│     }
 //│     toString() { return "C1(" + this.b + ")"; }
 //│   };
-//│   function C2(...args1) { return new C2.class(...args1); };
+//│   function C2(b1) { return new C2.class(b1); };
 //│   C2.class = class C2 {
 //│     constructor(b) {
 //│       this.b = b;
@@ -133,24 +123,21 @@ class Foo(a) with
     baz()
   foo()
 Foo(123)
-//│ JS:
-//│ this.Foo = function Foo(...args1) { return new Foo.class(...args1); };
+//│ JS (unsanitized):
+//│ this.Foo = function Foo(a1) { return new Foo.class(a1); };
 //│ this.Foo.class = class Foo {
 //│   constructor(a) {
 //│     this.a = a;
 //│     this.foo()
 //│   }
-//│   foo(...args) {
-//│     globalThis.Predef.checkArgs("foo", 0, true, args.length);
+//│   foo() {
 //│     let tmp;
 //│     
 //│     const this$Foo = this;
-//│     function bar(...args1) {
-//│       globalThis.Predef.checkArgs("bar", 0, true, args1.length);
+//│     function bar() {
 //│       return this$Foo.a;
 //│     }
-//│     function baz(...args1) {
-//│       globalThis.Predef.checkArgs("baz", 0, true, args1.length);
+//│     function baz() {
 //│       return this$Foo.a;
 //│     }
 //│     tmp = bar();

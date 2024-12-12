@@ -8,20 +8,13 @@ module Bar with
   val x = 1
   module Baz with
     val a = Bar.x
-//│ JS:
+//│ JS (unsanitized):
 //│ const Bar$class = class Bar {
 //│   constructor() {
 //│     this.x = 1;
 //│     const Baz$class = class Baz {
 //│       constructor() {
-//│         let selRes, tmp;
-//│         selRes = globalThis.Bar.x;
-//│         if (selRes === undefined) {
-//│           throw new globalThis.Error("Access to required field 'x' yielded 'undefined'");
-//│         } else {
-//│           tmp = selRes;
-//│         }
-//│         this.a = tmp;
+//│         this.a = globalThis.Bar.x;
 //│       }
 //│       toString() { return "Baz"; }
 //│     };

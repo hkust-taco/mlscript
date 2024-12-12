@@ -7,7 +7,7 @@ let x = 1
 :fixme
 :sjs
 let x' = 1
-//│ JS:
+//│ JS (unsanitized):
 //│ this.x' = 1; null
 //│ > try { this.x' = 1; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ >             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -6,7 +6,7 @@
 
 :sjs
 module None
-//│ JS:
+//│ JS (unsanitized):
 //│ const None$class = class None {
 //│   constructor() {
 //│     
@@ -19,20 +19,20 @@ module None
 
 :sjs
 None
-//│ JS:
+//│ JS (unsanitized):
 //│ this.None
 //│ = None { class: [class None] }
 
 :sjs
 :re
 None()
-//│ JS:
+//│ JS (unsanitized):
 //│ this.None() ?? null
 //│ ═══[RUNTIME ERROR] TypeError: this.None is not a function
 
 :sjs
 new None
-//│ JS:
+//│ JS (unsanitized):
 //│ new this.None.class()
 //│ = None {}
 
@@ -43,7 +43,7 @@ module M with
   class D()
   val x = 1
   val y = x + 1
-//│ JS:
+//│ JS (unsanitized):
 //│ const M$class = class M {
 //│   constructor() {
 //│     let tmp;
@@ -53,7 +53,7 @@ module M with
 //│       }
 //│       toString() { return "C"; }
 //│     };
-//│     this.D = function D(...args) { return new D.class(...args); };
+//│     this.D = function D() { return new D.class(); };
 //│     this.D.class = class D {
 //│       constructor() {
 //│         
@@ -97,7 +97,7 @@ M.oops
 :sjs
 module M with
   val m: module M = M
-//│ JS:
+//│ JS (unsanitized):
 //│ const M$class = class M {
 //│   constructor() {
 //│     this.m = globalThis.M;

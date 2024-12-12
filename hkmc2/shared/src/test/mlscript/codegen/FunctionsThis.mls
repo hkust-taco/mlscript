@@ -8,19 +8,14 @@
 val x = 2
 fun foo() =
   x + 1
-//│ JS:
-//│ this.x = 2;
-//│ function foo(...args) {
-//│   globalThis.Predef.checkArgs("foo", 0, true, args.length);
-//│   return globalThis.x + 1;
-//│ }
-//│ null
+//│ JS (unsanitized):
+//│ this.x = 2; function foo() { return globalThis.x + 1; } null
 //│ x = 2
 
 :sjs
 class Test with
   log(foo())
-//│ JS:
+//│ JS (unsanitized):
 //│ this.Test = class Test {
 //│   constructor() {
 //│     let tmp;

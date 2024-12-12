@@ -30,13 +30,8 @@ fun f(x) =
   let y = throw Error("e")
   return y
 f(1)
-//│ JS:
-//│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
-//│   let x = args[0];
-//│   throw globalThis.Error("e");
-//│ }
-//│ this.f(1)
+//│ JS (unsanitized):
+//│ function f(x) { throw globalThis.Error("e"); } this.f(1)
 //│ ═══[RUNTIME ERROR] Error: e
 
 
@@ -45,10 +40,8 @@ f(1)
 fun f(x) =
   throw (if x then Error("x") else Error("y"))
 f(false)
-//│ JS:
-//│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
-//│   let x = args[0];
+//│ JS (unsanitized):
+//│ function f(x) {
 //│   if (x) {
 //│     throw globalThis.Error("x");
 //│   } else {

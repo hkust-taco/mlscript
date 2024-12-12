@@ -8,10 +8,8 @@
 fun test(a) =
   class C with { val x = a }
   new C
-//│ JS:
-//│ function test(...args) {
-//│   globalThis.Predef.checkArgs("test", 1, true, args.length);
-//│   let a = args[0];
+//│ JS (unsanitized):
+//│ function test(a) {
 //│   class C {
 //│     constructor() {
 //│       this.x = a;
@@ -30,12 +28,10 @@ test(12)
 fun test(x) =
   class Foo(a, b)
   Foo(x, x + 1)
-//│ JS:
-//│ function test(...args) {
-//│   globalThis.Predef.checkArgs("test", 1, true, args.length);
-//│   let x = args[0];
+//│ JS (unsanitized):
+//│ function test(x) {
 //│   let tmp;
-//│   function Foo(...args1) { return new Foo.class(...args1); };
+//│   function Foo(a1, b1) { return new Foo.class(a1, b1); };
 //│   Foo.class = class Foo {
 //│     constructor(a, b) {
 //│       this.a = a;

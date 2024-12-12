@@ -5,20 +5,13 @@
 module Test with
   val x = 12
   fun foo() = Test.x
-//│ JS:
+//│ JS (unsanitized):
 //│ const Test$class = class Test {
 //│   constructor() {
 //│     this.x = 12;
 //│   }
-//│   foo(...args) {
-//│     globalThis.Predef.checkArgs("foo", 0, true, args.length);
-//│     let selRes;
-//│     selRes = globalThis.Test.x;
-//│     if (selRes === undefined) {
-//│       throw new globalThis.Error("Access to required field 'x' yielded 'undefined'");
-//│     } else {
-//│       return selRes;
-//│     }
+//│   foo() {
+//│     return globalThis.Test.x;
 //│   }
 //│   toString() { return "Test"; }
 //│ };
@@ -28,13 +21,13 @@ module Test with
 
 :sjs
 Test.foo()
-//│ JS:
+//│ JS (unsanitized):
 //│ this.Test.foo()
 //│ = 12
 
 :sjs
 val Test = "oops"
-//│ JS:
+//│ JS (unsanitized):
 //│ this.Test = "oops"; null
 //│ Test = 'oops'
 
@@ -49,14 +42,8 @@ let x = 1
 let f = () => x
 let x = 2
 f()
-//│ JS:
-//│ this.x = 1;
-//│ this.f = (...args) => {
-//│   globalThis.Predef.checkArgs("", 0, true, args.length);
-//│   return this.x;
-//│ };
-//│ this.x = 2;
-//│ this.f() ?? null
+//│ JS (unsanitized):
+//│ this.x = 1; this.f = () => { return this.x; }; this.x = 2; this.f() ?? null
 //│ = 2
 //│ f = [Function (anonymous)]
 //│ x = 2
@@ -66,7 +53,7 @@ f()
 module Test with
   val x = 1
   let x = 2
-//│ JS:
+//│ JS (unsanitized):
 //│ const Test$class = class Test {
 //│   #x;
 //│   constructor() {

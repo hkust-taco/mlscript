@@ -5,50 +5,28 @@
 
 
 fun f(n1: Int): Int = n1
-//│ JS:
-//│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
-//│   let n1 = args[0];
-//│   return n1;
-//│ }
-//│ null
+//│ JS (unsanitized):
+//│ function f(n1) { return n1; } null
 
 f(42)
-//│ JS:
+//│ JS (unsanitized):
 //│ this.f(42)
 //│ = 42
 
 fun f(n1: Int)(n2: Int): Int =  (10 * n1 + n2)
-//│ JS:
-//│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
-//│   let n1 = args[0];
-//│   return (...args1) => {
-//│     globalThis.Predef.checkArgs("", 1, true, args1.length);
-//│     let n2 = args1[0];
-//│     let tmp;
-//│     tmp = 10 * n1;
-//│     return tmp + n2;
-//│   };
-//│ }
-//│ null
+//│ JS (unsanitized):
+//│ function f(n1) { return (n2) => { let tmp; tmp = 10 * n1; return tmp + n2; }; } null
 
 f(4)(2)
-//│ JS:
+//│ JS (unsanitized):
 //│ let tmp; tmp = this.f(4); tmp(2) ?? null
 //│ = 42
 
 fun f(n1: Int)(n2: Int)(n3: Int): Int = 10 * (10 * n1 + n2) + n3
-//│ JS:
-//│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
-//│   let n1 = args[0];
-//│   return (...args1) => {
-//│     globalThis.Predef.checkArgs("", 1, true, args1.length);
-//│     let n2 = args1[0];
-//│     return (...args2) => {
-//│       globalThis.Predef.checkArgs("", 1, true, args2.length);
-//│       let n3 = args2[0];
+//│ JS (unsanitized):
+//│ function f(n1) {
+//│   return (n2) => {
+//│     return (n3) => {
 //│       let tmp, tmp1, tmp2;
 //│       tmp = 10 * n1;
 //│       tmp1 = tmp + n2;
@@ -60,24 +38,16 @@ fun f(n1: Int)(n2: Int)(n3: Int): Int = 10 * (10 * n1 + n2) + n3
 //│ null
 
 f(4)(2)(0)
-//│ JS:
+//│ JS (unsanitized):
 //│ let tmp, tmp1; tmp = this.f(4); tmp1 = tmp(2) ?? null; tmp1(0) ?? null
 //│ = 420
 
 fun f(n1: Int)(n2: Int)(n3: Int)(n4: Int): Int = 10 * (10 * (10 * n1 + n2) + n3) + n4
-//│ JS:
-//│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
-//│   let n1 = args[0];
-//│   return (...args1) => {
-//│     globalThis.Predef.checkArgs("", 1, true, args1.length);
-//│     let n2 = args1[0];
-//│     return (...args2) => {
-//│       globalThis.Predef.checkArgs("", 1, true, args2.length);
-//│       let n3 = args2[0];
-//│       return (...args3) => {
-//│         globalThis.Predef.checkArgs("", 1, true, args3.length);
-//│         let n4 = args3[0];
+//│ JS (unsanitized):
+//│ function f(n1) {
+//│   return (n2) => {
+//│     return (n3) => {
+//│       return (n4) => {
 //│         let tmp, tmp1, tmp2, tmp3, tmp4;
 //│         tmp = 10 * n1;
 //│         tmp1 = tmp + n2;
@@ -92,7 +62,7 @@ fun f(n1: Int)(n2: Int)(n3: Int)(n4: Int): Int = 10 * (10 * (10 * n1 + n2) + n3)
 //│ null
 
 f(3)(0)(3)(1)
-//│ JS:
+//│ JS (unsanitized):
 //│ let tmp, tmp1, tmp2; tmp = this.f(3); tmp1 = tmp(0) ?? null; tmp2 = tmp1(3) ?? null; tmp2(1) ?? null
 //│ = 3031
 

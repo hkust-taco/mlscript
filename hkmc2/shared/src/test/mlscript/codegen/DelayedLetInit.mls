@@ -5,31 +5,31 @@
 
 
 let x
-//│ JS:
+//│ JS (unsanitized):
 //│ null
 
 x = 1
-//│ JS:
+//│ JS (unsanitized):
 //│ this.x = 1; null
 
 x
-//│ JS:
+//│ JS (unsanitized):
 //│ this.x
 //│ = 1
 
 // TODO forbid redefining a let
 x = 2
-//│ JS:
+//│ JS (unsanitized):
 //│ this.x = 2; null
 
 x
-//│ JS:
+//│ JS (unsanitized):
 //│ this.x
 //│ = 2
 
 
 let y = 1
-//│ JS:
+//│ JS (unsanitized):
 //│ this.y = 1; null
 //│ y = 1
 
@@ -38,44 +38,35 @@ z = 1
 //│ ╔══[ERROR] Name not found: z
 //│ ║  l.37: 	z = 1
 //│ ╙──      	^
-//│ JS:
+//│ JS (unsanitized):
 //│ /* error */
 
 
 fun f() = 1
-//│ JS:
-//│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 0, true, args.length);
-//│   return 1;
-//│ }
-//│ null
+//│ JS (unsanitized):
+//│ function f() { return 1; } null
 
 f
-//│ JS:
+//│ JS (unsanitized):
 //│ this.f
 //│ = [Function: f]
 
 
 let f
 f(x) = x + 1
-//│ JS:
-//│ this.f = (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, true, args.length);
-//│   let x = args[0];
-//│   return x + 1;
-//│ };
-//│ null
+//│ JS (unsanitized):
+//│ this.f = (x) => { return x + 1; }; null
 //│ f = [Function (anonymous)]
 
 f(1)
-//│ JS:
+//│ JS (unsanitized):
 //│ this.f(1) ?? null
 //│ = 2
 
 
 let foo
 foo = 0
-//│ JS:
+//│ JS (unsanitized):
 //│ this.foo = 0; null
 //│ foo = 0
 
@@ -85,9 +76,9 @@ if true
 then foo = 0
 else foo = 1
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.85: 	then foo = 0
+//│ ║  l.76: 	then foo = 0
 //│ ╙──      	         ^
-//│ JS:
+//│ JS (unsanitized):
 //│ let scrut; scrut = true; if (scrut) { this.foo } else { throw new this.Error("match error"); }
 //│ = 0
 //│ foo = 0
@@ -98,27 +89,22 @@ then
   foo = 0
 else
   foo = 1
-//│ JS:
+//│ JS (unsanitized):
 //│ let scrut; scrut = true; if (scrut) { this.foo = 0; null } else { this.foo = 1; null }
 //│ foo = 0
 
 
 fun f() =
   foo = 42
-//│ JS:
-//│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 0, true, args.length);
-//│   globalThis.foo = 42;
-//│   return null;
-//│ }
-//│ null
+//│ JS (unsanitized):
+//│ function f() { globalThis.foo = 42; return null; } null
 
 f()
-//│ JS:
+//│ JS (unsanitized):
 //│ this.f()
 
 foo
-//│ JS:
+//│ JS (unsanitized):
 //│ this.foo
 //│ = 42
 
@@ -126,13 +112,9 @@ foo
 :fixme
 fun f() = foo = 0
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.127: 	fun f() = foo = 0
+//│ ║  l.113: 	fun f() = foo = 0
 //│ ╙──       	              ^
-//│ JS:
-//│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 0, true, args.length);
-//│   return globalThis.foo;
-//│ }
-//│ null
+//│ JS (unsanitized):
+//│ function f() { return globalThis.foo; } null
 
 

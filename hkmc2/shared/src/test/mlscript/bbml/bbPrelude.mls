@@ -4,8 +4,6 @@
 class Any
 class Nothing
 
-class Alloc
-
 class Bool
 class Int
 class Num

@@ -20,10 +20,8 @@ fun f(x) =
     log("whoops")
     return 0
   x + 1
-//│ JS:
-//│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
-//│   let x = args[0];
+//│ JS (unsanitized):
+//│ function f(x) {
 //│   let scrut, tmp, tmp1;
 //│   scrut = x < 0;
 //│   if (scrut) {

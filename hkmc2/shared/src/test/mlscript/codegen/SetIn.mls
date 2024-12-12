@@ -9,7 +9,7 @@ let x = 0
 
 :sjs
 let x += 1
-//│ JS:
+//│ JS (unsanitized):
 //│ let tmp; tmp = this.x + 1; this.x = tmp; null
 //│ x = 1
 
@@ -18,12 +18,12 @@ x
 
 :sjs
 set x = 0
-//│ JS:
+//│ JS (unsanitized):
 //│ this.x = 0; null
 
 :sjs
 set x += 1
-//│ JS:
+//│ JS (unsanitized):
 //│ let tmp; tmp = this.x + 1; this.x = tmp; null
 
 x
@@ -32,7 +32,7 @@ x
 
 :sjs
 set x += 1 in log(x)
-//│ JS:
+//│ JS (unsanitized):
 //│ let old, tmp, tmp1;
 //│ old = this.x;
 //│ try {
@@ -77,13 +77,11 @@ fun example() =
   log(x)
   log(get_x())
 example()
-//│ JS:
-//│ function example(...args) {
-//│   globalThis.Predef.checkArgs("example", 0, true, args.length);
+//│ JS (unsanitized):
+//│ function example() {
 //│   let x, get_x, old, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
 //│   x = 0;
-//│   get_x = (...args1) => {
-//│     globalThis.Predef.checkArgs("", 0, true, args1.length);
+//│   get_x = () => {
 //│     return x;
 //│   };
 //│   old = x;
@@ -117,13 +115,11 @@ fun example() =
   log(get_x())
   y
 example()
-//│ JS:
-//│ function example(...args) {
-//│   globalThis.Predef.checkArgs("example", 0, true, args.length);
+//│ JS (unsanitized):
+//│ function example() {
 //│   let x, get_x, y, old, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
 //│   x = 0;
-//│   get_x = (...args1) => {
-//│     globalThis.Predef.checkArgs("", 0, true, args1.length);
+//│   get_x = () => {
 //│     return x;
 //│   };
 //│   old = x;

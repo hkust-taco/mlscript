@@ -6,14 +6,14 @@
 
 :silent
 declare val console
-//│ JS:
+//│ JS (unsanitized):
 //│ null
 
 
 console.log("a")
 console.log("b")
 123
-//│ JS:
+//│ JS (unsanitized):
 //│ let tmp, tmp1; tmp = this.console.log("a") ?? null; tmp1 = this.console.log("b") ?? null; 123
 //│ > a
 //│ > b
@@ -21,27 +21,19 @@ console.log("b")
 
 let l = console.log
 l(123)
-//│ JS:
-//│ let selRes, tmp;
-//│ selRes = this.console.log;
-//│ if (selRes === undefined) {
-//│   throw new this.Error("Access to required field 'log' yielded 'undefined'");
-//│ } else {
-//│   tmp = selRes;
-//│ }
-//│ this.l = tmp;
-//│ this.l(123) ?? null
+//│ JS (unsanitized):
+//│ this.l = this.console.log; this.l(123) ?? null
 //│ > 123
 //│ l = [Function: log]
 
 42
-//│ JS:
+//│ JS (unsanitized):
 //│ 42
 //│ = 42
 
 
 console.log("a")
-//│ JS:
+//│ JS (unsanitized):
 //│ this.console.log("a") ?? null
 //│ > a
 
@@ -53,7 +45,7 @@ console.log("b")
 let y = x + 1
 console.log("c")
 y * 2
-//│ JS:
+//│ JS (unsanitized):
 //│ let tmp, tmp1, tmp2, tmp3;
 //│ tmp = this.console.log("a") ?? null;
 //│ this.x = 123;

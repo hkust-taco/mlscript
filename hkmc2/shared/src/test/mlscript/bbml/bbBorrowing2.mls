@@ -47,11 +47,11 @@ letreg of r =>
 //│ ║        	^^^^^^^^^^^
 //│ ║  l.36: 	  write(r)
 //│ ║        	^^^^^^^^^^
-//│ ╟── because: cannot constrain  E30_1  <:  Alloc
-//│ ╟── because: cannot constrain  E30_1  <:  ¬(~{Alloc})
-//│ ╟── because: cannot constrain  ¬⊥ ∧ Rg42_1  <:  ¬(~{Alloc})
-//│ ╟── because: cannot constrain  Rg42_1  <:  ¬(~{Alloc})
-//│ ╙── because: cannot constrain    <:  ¬(~{Alloc})
+//│ ╟── because: cannot constrain  E30_1  <:  ⊥
+//│ ╟── because: cannot constrain  E30_1  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ Rg42_1  <:  ¬()
+//│ ╟── because: cannot constrain  Rg42_1  <:  ¬()
+//│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Int
 
 

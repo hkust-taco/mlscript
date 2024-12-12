@@ -16,28 +16,26 @@ class Outer(a, b) with
   val i = Inner(a)
   log(i.c)
   log(i.i1(1))
-//│ JS:
-//│ this.Outer = function Outer(...args) { return new Outer.class(...args); };
+//│ JS (unsanitized):
+//│ this.Outer = function Outer(a1, b1) { return new Outer.class(a1, b1); };
 //│ this.Outer.class = class Outer {
 //│   constructor(a, b) {
 //│     this.a = a;
 //│     this.b = b;
-//│     let tmp, selRes, tmp1, tmp2, tmp3;
+//│     let tmp, tmp1, tmp2;
 //│     
 //│     const this$Outer = this;
-//│     this.Inner = function Inner(...args1) { return new Inner.class(...args1); };
+//│     this.Inner = function Inner(c1) { return new Inner.class(c1); };
 //│     this.Inner.class = class Inner {
 //│       constructor(c) {
 //│         this.c = c;
-//│         let tmp4, tmp5, tmp6;
-//│         tmp4 = globalThis.log(this$Outer.a);
-//│         tmp5 = globalThis.log(this.c);
-//│         tmp6 = this.i1(this$Outer.a);
-//│         globalThis.log(tmp6)
+//│         let tmp3, tmp4, tmp5;
+//│         tmp3 = globalThis.log(this$Outer.a);
+//│         tmp4 = globalThis.log(this.c);
+//│         tmp5 = this.i1(this$Outer.a);
+//│         globalThis.log(tmp5)
 //│       }
-//│       i1(...args) {
-//│         globalThis.Predef.checkArgs("i1", 1, true, args.length);
-//│         let d = args[0];
+//│       i1(d) {
 //│         return [
 //│           this$Outer.b,
 //│           this.c,
@@ -48,25 +46,14 @@ class Outer(a, b) with
 //│     };
 //│     tmp = this.Inner(this.a);
 //│     this.i = tmp;
-//│     selRes = this.i.c;
-//│     if (selRes === undefined) {
-//│       throw new globalThis.Error("Access to required field 'c' yielded 'undefined'");
-//│     } else {
-//│       tmp1 = selRes;
-//│     }
-//│     tmp2 = globalThis.log(tmp1);
-//│     tmp3 = this.i.i1(1) ?? null;
-//│     globalThis.log(tmp3)
+//│     tmp1 = globalThis.log(this.i.c);
+//│     tmp2 = this.i.i1(1) ?? null;
+//│     globalThis.log(tmp2)
 //│   }
-//│   o1(...args) {
-//│     globalThis.Predef.checkArgs("o1", 1, true, args.length);
-//│     let c = args[0];
+//│   o1(c) {
 //│     return this.Inner(c);
 //│   } 
-//│   o2(...args1) {
-//│     globalThis.Predef.checkArgs("o2", 2, true, args1.length);
-//│     let c1 = args1[0];
-//│     let d = args1[1];
+//│   o2(c1, d) {
 //│     let tmp;
 //│     tmp = this.Inner(c1);
 //│     return tmp.i1(d) ?? null;

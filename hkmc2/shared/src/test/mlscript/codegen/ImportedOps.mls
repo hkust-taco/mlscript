@@ -10,9 +10,8 @@ open M
 fun foo() =
   "a" ~ "b" ~ "c"
 foo()
-//│ JS:
-//│ function foo(...args) {
-//│   globalThis.Predef.checkArgs("foo", 0, true, args.length);
+//│ JS (unsanitized):
+//│ function foo() {
 //│   let tmp;
 //│   tmp = globalThis.M.concat("a", "b");
 //│   return globalThis.M.concat(tmp, "c");

@@ -11,7 +11,7 @@ object None
 
 :sjs
 if Some(0) is Some(x) then x
-//│ JS:
+//│ JS (unsanitized):
 //│ let scrut, param0, x;
 //│ scrut = this.Some(0);
 //│ if (scrut instanceof this.Some.class) {
@@ -30,7 +30,7 @@ let s = Some(0)
 :sjs
 if s is
   Some(x) then x
-//│ JS:
+//│ JS (unsanitized):
 //│ let scrut, param0, x;
 //│ scrut = this.s;
 //│ if (scrut instanceof this.Some.class) {
@@ -60,10 +60,8 @@ if s is
 
 :sjs
 x => if x is Some(x) then x
-//│ JS:
-//│ (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, true, args.length);
-//│   let x = args[0];
+//│ JS (unsanitized):
+//│ (x) => {
 //│   let param0, x1;
 //│   if (x instanceof this.Some.class) {
 //│     param0 = x.value;
@@ -121,10 +119,8 @@ fun f(x) = if x is
   Some(x) and x > 0 then 42
   None then "ok"
   else log("oops")
-//│ JS:
-//│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
-//│   let x = args[0];
+//│ JS (unsanitized):
+//│ function f(x) {
 //│   let param0, x1, scrut;
 //│   if (x instanceof globalThis.Some.class) {
 //│     param0 = x.value;
@@ -165,10 +161,8 @@ class Pair[out A, out B](fst: A, snd: B)
 fun f(x) = if x is
   Some(u) then u
   Pair(a, b) then a + b
-//│ JS:
-//│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
-//│   let x = args[0];
+//│ JS (unsanitized):
+//│ function f(x) {
 //│   let param0, param1, a, b, param01, u;
 //│   if (x instanceof globalThis.Some.class) {
 //│     param01 = x.value;
@@ -201,10 +195,8 @@ fun f(x) = log of if x is
   Some(0) then "0"
   None then "ok"
   else "oops"
-//│ JS:
-//│ function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
-//│   let x = args[0];
+//│ JS (unsanitized):
+//│ function f(x) {
 //│   let param0, tmp;
 //│   if (x instanceof globalThis.Some.class) {
 //│     param0 = x.value;

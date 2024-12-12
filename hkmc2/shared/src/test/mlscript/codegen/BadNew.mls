@@ -15,9 +15,8 @@ new 2
 :ge
 new 2 + 2
 //│ ═══[COMPILATION ERROR] Illegal reference to builtin symbol '+'
-//│ JS:
+//│ JS (unsanitized):
 //│ new (()=>{throw globalThis.Error("Illegal reference to builtin symbol '+'")})()(2, 2)
-//│ ═══[RUNTIME ERROR] TypeError: (intermediate value) is not a constructor
 
 :re
 new()
@@ -40,7 +39,7 @@ new { x = 1 }
 //│     lhs = Ident of "x"
 //│     rhs = IntLit of 1
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.36: 	new { x = 1 }
+//│ ║  l.35: 	new { x = 1 }
 //│ ╙──      	      ^
 
 

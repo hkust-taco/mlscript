@@ -4,23 +4,8 @@
 :sjs
 fun test(x) =
   [this.a, x]
-//│ JS:
-//│ function test(...args) {
-//│   globalThis.Predef.checkArgs("test", 1, true, args.length);
-//│   let x = args[0];
-//│   let selRes, tmp;
-//│   selRes = globalThis.a;
-//│   if (selRes === undefined) {
-//│     throw new globalThis.Error("Access to required field 'a' yielded 'undefined'");
-//│   } else {
-//│     tmp = selRes;
-//│   }
-//│   return [
-//│     tmp,
-//│     x
-//│   ];
-//│ }
-//│ null
+//│ JS (unsanitized):
+//│ function test(x) { return [ globalThis.a, x ]; } null
 
 :re
 test(123)
@@ -39,28 +24,17 @@ module Test with
     test(x)
   fun test2(x) =
     [this.a, x]
-//│ JS:
+//│ JS (unsanitized):
 //│ const Test$class = class Test {
 //│   constructor() {
 //│     this.a = 2;
 //│   }
-//│   test1(...args) {
-//│     globalThis.Predef.checkArgs("test1", 1, true, args.length);
-//│     let x = args[0];
+//│   test1(x) {
 //│     return globalThis.test(x);
 //│   } 
-//│   test2(...args1) {
-//│     globalThis.Predef.checkArgs("test2", 1, true, args1.length);
-//│     let x1 = args1[0];
-//│     let selRes, tmp;
-//│     selRes = this.a;
-//│     if (selRes === undefined) {
-//│       throw new globalThis.Error("Access to required field 'a' yielded 'undefined'");
-//│     } else {
-//│       tmp = selRes;
-//│     }
+//│   test2(x1) {
 //│     return [
-//│       tmp,
+//│       this.a,
 //│       x1
 //│     ];
 //│   }

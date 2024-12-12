@@ -9,10 +9,8 @@ object None
 fun isDefined(x) = if x is
   Some then true
   None then false
-//│ JS:
-//│ function isDefined(...args) {
-//│   globalThis.Predef.checkArgs("isDefined", 1, true, args.length);
-//│   let x = args[0];
+//│ JS (unsanitized):
+//│ function isDefined(x) {
 //│   if (x instanceof globalThis.Some.class) {
 //│     return true;
 //│   } else {
@@ -36,10 +34,8 @@ isDefined(None)
 val isDefined = case
   Some(_) then true
   None    then false
-//│ JS:
-//│ this.isDefined = (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, true, args.length);
-//│   let caseScrut = args[0];
+//│ JS (unsanitized):
+//│ this.isDefined = (caseScrut) => {
 //│   let param0;
 //│   if (caseScrut instanceof this.Some.class) {
 //│     param0 = caseScrut.value;

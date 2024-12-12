@@ -27,10 +27,8 @@ Cross.unapply("0")
 
 :sjs
 fun foo(x) = x is Cross
-//│ JS:
-//│ function foo(...args) {
-//│   globalThis.Predef.checkArgs("foo", 1, true, args.length);
-//│   let x = args[0];
+//│ JS (unsanitized):
+//│ function foo(x) {
 //│   let matchResult;
 //│   matchResult = globalThis.Cross.unapply(x) ?? null;
 //│   if (matchResult instanceof globalThis.Predef.MatchResult.class) {

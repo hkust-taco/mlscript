@@ -8,8 +8,8 @@
 
 
 class Foo()
-//│ JS:
-//│ this.Foo = function Foo(...args) { return new Foo.class(...args); };
+//│ JS (unsanitized):
+//│ this.Foo = function Foo() { return new Foo.class(); };
 //│ this.Foo.class = class Foo {
 //│   constructor() {
 //│     
@@ -19,30 +19,24 @@ class Foo()
 //│ null
 
 Foo
-//│ JS:
+//│ JS (unsanitized):
 //│ this.Foo
 //│ = [Function: Foo] { class: [class Foo] }
 
 Foo()
-//│ JS:
+//│ JS (unsanitized):
 //│ this.Foo()
 //│ = Foo {}
 
 Foo.class
-//│ JS:
-//│ let selRes;
-//│ selRes = this.Foo.class;
-//│ if (selRes === undefined) {
-//│   throw new this.Error("Access to required field 'class' yielded 'undefined'");
-//│ } else {
-//│   selRes
-//│ }
+//│ JS (unsanitized):
+//│ this.Foo.class
 //│ = [class Foo]
 
 
 class Foo(a)
-//│ JS:
-//│ this.Foo = function Foo(...args) { return new Foo.class(...args); };
+//│ JS (unsanitized):
+//│ this.Foo = function Foo(a1) { return new Foo.class(a1); };
 //│ this.Foo.class = class Foo {
 //│   constructor(a) {
 //│     this.a = a;
@@ -53,42 +47,30 @@ class Foo(a)
 //│ null
 
 Foo
-//│ JS:
+//│ JS (unsanitized):
 //│ this.Foo
 //│ = [Function: Foo] { class: [class Foo] }
 
 Foo(1)
-//│ JS:
+//│ JS (unsanitized):
 //│ this.Foo(1)
 //│ = Foo { a: 1 }
 
 Foo(1).a
-//│ JS:
-//│ let tmp, selRes;
-//│ tmp = this.Foo(1);
-//│ selRes = tmp.a;
-//│ if (selRes === undefined) {
-//│   throw new this.Error("Access to required field 'a' yielded 'undefined'");
-//│ } else {
-//│   selRes
-//│ }
+//│ JS (unsanitized):
+//│ let tmp; tmp = this.Foo(1); tmp.a
 //│ = 1
 
 fun foo(y) = Foo(y)
 foo(27)
-//│ JS:
-//│ function foo(...args) {
-//│   globalThis.Predef.checkArgs("foo", 1, true, args.length);
-//│   let y = args[0];
-//│   return globalThis.Foo(y);
-//│ }
-//│ this.foo(27)
+//│ JS (unsanitized):
+//│ function foo(y) { return globalThis.Foo(y); } this.foo(27)
 //│ = Foo { a: 27 }
 
 
 class Foo(a, b)
-//│ JS:
-//│ this.Foo = function Foo(...args) { return new Foo.class(...args); };
+//│ JS (unsanitized):
+//│ this.Foo = function Foo(a1, b1) { return new Foo.class(a1, b1); };
 //│ this.Foo.class = class Foo {
 //│   constructor(a, b) {
 //│     this.a = a;
@@ -100,71 +82,47 @@ class Foo(a, b)
 //│ null
 
 let foo = Foo
-//│ JS:
+//│ JS (unsanitized):
 //│ this.foo = this.Foo; null
 //│ foo = [Function: Foo] { class: [class Foo] }
 
 let f = foo(1, 2)
-//│ JS:
+//│ JS (unsanitized):
 //│ let tmp; tmp = this.foo(1, 2) ?? null; this.f = tmp; null
 //│ f = Foo { a: 1, b: 2 }
 
 let f = new foo(1, 2)
-//│ JS:
+//│ JS (unsanitized):
 //│ let tmp; tmp = new this.foo(1, 2); this.f = tmp; null
 //│ f = Foo { a: 1, b: 2 }
 
 f.a
-//│ JS:
-//│ let selRes;
-//│ selRes = this.f.a;
-//│ if (selRes === undefined) {
-//│   throw new this.Error("Access to required field 'a' yielded 'undefined'");
-//│ } else {
-//│   selRes
-//│ }
+//│ JS (unsanitized):
+//│ this.f.a
 //│ = 1
 
 f.b
-//│ JS:
-//│ let selRes;
-//│ selRes = this.f.b;
-//│ if (selRes === undefined) {
-//│   throw new this.Error("Access to required field 'b' yielded 'undefined'");
-//│ } else {
-//│   selRes
-//│ }
+//│ JS (unsanitized):
+//│ this.f.b
 //│ = 2
 
 let f = Foo(1, 2)
-//│ JS:
+//│ JS (unsanitized):
 //│ let tmp; tmp = this.Foo(1, 2); this.f = tmp; null
 //│ f = Foo { a: 1, b: 2 }
 
 f.a
-//│ JS:
-//│ let selRes;
-//│ selRes = this.f.a;
-//│ if (selRes === undefined) {
-//│   throw new this.Error("Access to required field 'a' yielded 'undefined'");
-//│ } else {
-//│   selRes
-//│ }
+//│ JS (unsanitized):
+//│ this.f.a
 //│ = 1
 
 f.b
-//│ JS:
-//│ let selRes;
-//│ selRes = this.f.b;
-//│ if (selRes === undefined) {
-//│   throw new this.Error("Access to required field 'b' yielded 'undefined'");
-//│ } else {
-//│   selRes
-//│ }
+//│ JS (unsanitized):
+//│ this.f.b
 //│ = 2
 
 Foo(log(1), log(2))
-//│ JS:
+//│ JS (unsanitized):
 //│ let tmp, tmp1; tmp = this.log(1); tmp1 = this.log(2); this.Foo(tmp, tmp1)
 //│ > 1
 //│ > 2
@@ -174,16 +132,14 @@ Foo(log(1), log(2))
 class Inner(c) with
   fun i1(d) = c + d
   log(c)
-//│ JS:
-//│ this.Inner = function Inner(...args1) { return new Inner.class(...args1); };
+//│ JS (unsanitized):
+//│ this.Inner = function Inner(c1) { return new Inner.class(c1); };
 //│ this.Inner.class = class Inner {
 //│   constructor(c) {
 //│     this.c = c;
 //│     globalThis.log(this.c)
 //│   }
-//│   i1(...args) {
-//│     globalThis.Predef.checkArgs("i1", 1, true, args.length);
-//│     let d = args[0];
+//│   i1(d) {
 //│     return this.c + d;
 //│   }
 //│   toString() { return "Inner(" + this.c + ")"; }
@@ -191,13 +147,13 @@ class Inner(c) with
 //│ null
 
 let i = new Inner(100)
-//│ JS:
+//│ JS (unsanitized):
 //│ let tmp; tmp = new this.Inner.class(100); this.i = tmp; null
 //│ > 100
 //│ i = Inner { c: 100 }
 
 i.i1(20)
-//│ JS:
+//│ JS (unsanitized):
 //│ this.i.i1(20) ?? null
 //│ = 120
 

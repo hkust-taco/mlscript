@@ -17,10 +17,8 @@ fun test(x) =
   ) is
     Some(v) then log(v)
     None then log("none")
-//│ JS:
-//│ function test(...args) {
-//│   globalThis.Predef.checkArgs("test", 1, true, args.length);
-//│   let x = args[0];
+//│ JS (unsanitized):
+//│ function test(x) {
 //│   let param0, v, scrut, param01, v1, tmp, tmp1;
 //│   if (x instanceof globalThis.Some.class) {
 //│     param0 = x.value;

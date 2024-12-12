@@ -6,13 +6,13 @@
 
 :sjs
 fun t = 42
-//│ JS:
+//│ JS (unsanitized):
 //│ function t() { return 42; } null
 
 
 :sjs
 t
-//│ JS:
+//│ JS (unsanitized):
 //│ this.t()
 //│ = 42
 
@@ -25,29 +25,15 @@ module T with
   val b = this.t
   val c = p
   val d = this.p
-//│ JS:
+//│ JS (unsanitized):
 //│ const T$class = class T {
 //│   constructor() {
-//│     let selRes, tmp, selRes1, tmp1;
 //│     this.a = this.t;
-//│     selRes = this.t;
-//│     if (selRes === undefined) {
-//│       throw new globalThis.Error("Access to required field 't' yielded 'undefined'");
-//│     } else {
-//│       tmp = selRes;
-//│     }
-//│     this.b = tmp;
+//│     this.b = this.t;
 //│     this.c = this.p;
-//│     selRes1 = this.p;
-//│     if (selRes1 === undefined) {
-//│       throw new globalThis.Error("Access to required field 'p' yielded 'undefined'");
-//│     } else {
-//│       tmp1 = selRes1;
-//│     }
-//│     this.d = tmp1;
+//│     this.d = this.p;
 //│   }
-//│   t(...args) {
-//│     globalThis.Predef.checkArgs("t", 0, true, args.length);
+//│   t() {
 //│     return 1;
 //│   } 
 //│   get p() {
@@ -76,7 +62,7 @@ T.d
 :sjs
 module M with
   fun t = 0
-//│ JS:
+//│ JS (unsanitized):
 //│ const M$class = class M {
 //│   constructor() {
 //│     
@@ -93,14 +79,8 @@ module M with
 
 :sjs
 M.t
-//│ JS:
-//│ let selRes;
-//│ selRes = this.M.t;
-//│ if (selRes === undefined) {
-//│   throw new this.Error("Access to required field 't' yielded 'undefined'");
-//│ } else {
-//│   selRes
-//│ }
+//│ JS (unsanitized):
+//│ this.M.t
 //│ = 0
 
 
@@ -108,15 +88,8 @@ M.t
 fun test() =
   fun whoops = 42
   whoops
-//│ JS:
-//│ function test(...args) {
-//│   globalThis.Predef.checkArgs("test", 0, true, args.length);
-//│   function whoops() {
-//│     return 42;
-//│   }
-//│   return whoops();
-//│ }
-//│ null
+//│ JS (unsanitized):
+//│ function test() { function whoops() { return 42; } return whoops(); } null
 
 
 :re
@@ -137,16 +110,8 @@ globalThis.whoops
 fun bar() =
   fun baz() = 42
   baz
-//│ JS:
-//│ function bar(...args) {
-//│   globalThis.Predef.checkArgs("bar", 0, true, args.length);
-//│   function baz(...args1) {
-//│     globalThis.Predef.checkArgs("baz", 0, true, args1.length);
-//│     return 42;
-//│   }
-//│   return baz;
-//│ }
-//│ null
+//│ JS (unsanitized):
+//│ function bar() { function baz() { return 42; } return baz; } null
 
 
 :sjs
@@ -154,19 +119,15 @@ fun baz() =
   fun w = 1
   fun z = 2
   (x, y) => x + y + w + z
-//│ JS:
-//│ function baz(...args) {
-//│   globalThis.Predef.checkArgs("baz", 0, true, args.length);
+//│ JS (unsanitized):
+//│ function baz() {
 //│   function w() {
 //│     return 1;
 //│   }
 //│   function z() {
 //│     return 2;
 //│   }
-//│   return (...args1) => {
-//│     globalThis.Predef.checkArgs("", 2, true, args1.length);
-//│     let x = args1[0];
-//│     let y = args1[1];
+//│   return (x, y) => {
 //│     let tmp, tmp1, tmp2, tmp3;
 //│     tmp = x + y;
 //│     tmp1 = w();
@@ -189,14 +150,12 @@ fun a() =
     fun d = 2
     b + d
   c
-//│ JS:
-//│ function a(...args) {
-//│   globalThis.Predef.checkArgs("a", 0, true, args.length);
+//│ JS (unsanitized):
+//│ function a() {
 //│   function b() {
 //│     return 1;
 //│   }
-//│   function c(...args1) {
-//│     globalThis.Predef.checkArgs("c", 0, true, args1.length);
+//│   function c() {
 //│     let tmp, tmp1;
 //│     function d() {
 //│       return 2;
@@ -221,14 +180,12 @@ fun b() =
     fun c = 2
     c
   d
-//│ JS:
-//│ function b(...args) {
-//│   globalThis.Predef.checkArgs("b", 0, true, args.length);
+//│ JS (unsanitized):
+//│ function b() {
 //│   function c() {
 //│     return 1;
 //│   }
-//│   function d(...args1) {
-//│     globalThis.Predef.checkArgs("d", 0, true, args1.length);
+//│   function d() {
 //│     function c() {
 //│       return 2;
 //│     }
@@ -250,9 +207,8 @@ fun c() =
     fun e = 1
     e + f
   d
-//│ JS:
-//│ function c(...args) {
-//│   globalThis.Predef.checkArgs("c", 0, true, args.length);
+//│ JS (unsanitized):
+//│ function c() {
 //│   function f() {
 //│     return 1;
 //│   }
@@ -277,8 +233,8 @@ c()
 :sjs
 class Foo(x) with
   fun oops = x
-//│ JS:
-//│ this.Foo = function Foo(...args) { return new Foo.class(...args); };
+//│ JS (unsanitized):
+//│ this.Foo = function Foo(x1) { return new Foo.class(x1); };
 //│ this.Foo.class = class Foo {
 //│   constructor(x) {
 //│     this.x = x;

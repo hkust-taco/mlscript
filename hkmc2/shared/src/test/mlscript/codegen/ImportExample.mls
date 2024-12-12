@@ -17,7 +17,7 @@ let n = 42
 
 :sjs
 n / 2
-//│ JS:
+//│ JS (unsanitized):
 //│ this.n / 2
 //│ = 21
 
@@ -28,14 +28,14 @@ open Example
 
 :sjs
 inc / 2
-//│ JS:
+//│ JS (unsanitized):
 //│ Example.funnySlash(Example.inc, 2)
 //│ = 3
 
 :sjs
 :re
 n / 2
-//│ JS:
+//│ JS (unsanitized):
 //│ Example.funnySlash(this.n, 2)
 //│ ═══[RUNTIME ERROR] TypeError: f is not a function
 

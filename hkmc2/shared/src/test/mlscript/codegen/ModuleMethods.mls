@@ -6,14 +6,12 @@
 object Example with
   val a = 456
   fun f(x) = [x, a]
-//│ JS:
+//│ JS (unsanitized):
 //│ const Example$class = class Example {
 //│   constructor() {
 //│     this.a = 456;
 //│   }
-//│   f(...args) {
-//│     globalThis.Predef.checkArgs("f", 1, true, args.length);
-//│     let x = args[0];
+//│   f(x) {
 //│     return [
 //│       x,
 //│       this.a

@@ -41,7 +41,7 @@ Example . oops(2)
 //│       Ident of "oops"
 //│   rhs = Tup of Ls of 
 //│     IntLit of 2
-//│ JS:
+//│ JS (unsanitized):
 //│ let tmp; tmp = this.call(this.Example, this.oops); tmp(2) ?? null
 //│ = [ 2, 1 ]
 
@@ -52,7 +52,7 @@ Example. oops(2)
 :e
 :re
 Example .oops(2)
-//│ ╔══[ERROR] Module 'Example' does not contain member 'oops'
+//│ ╔══[ERROR] Object 'Example' does not contain member 'oops'
 //│ ║  l.54: 	Example .oops(2)
 //│ ╙──      	        ^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: this.Example.oops is not a function
@@ -99,7 +99,7 @@ Example .> oops(2)
 //│       lhs = Ident of "oops"
 //│       rhs = Tup of Ls of 
 //│         IntLit of 2
-//│ JS:
+//│ JS (unsanitized):
 //│ let tmp; tmp = this.oops(2) ?? null; this.call(this.Example, tmp)
 //│ = [Function (anonymous)]
 

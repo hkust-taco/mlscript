@@ -8,7 +8,7 @@ module Foo with
 
 :sjs
 open Foo { x }
-//│ JS:
+//│ JS (unsanitized):
 //│ null
 
 open Foo { x, y }
