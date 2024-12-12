@@ -288,8 +288,3 @@ throw 42
 //│ Type: ⊥
 
 
-fun not = case
-  true then false
-  false then true
-not
-//│ Type: Bool -> Bool

@@ -279,14 +279,17 @@ class Lowering(using TL, Raise, Elaborator.State):
           if usesResTmp then k(Value.Ref(l))
           else k(Value.Lit(syntax.Tree.UnitLit(true))) // * it seems this currently never happens
         )
-
-    case sel @ Sel(prefix, nme) =>
-      setupSelection(prefix, nme, sel.sym)(k)
+      
     case SelProj(prefix, _, proj) =>
       setupSelection(prefix, proj, N)(k)
     case sel @ SynthSel(prefix, nme) =>
       subTerm(prefix): p =>
         k(Select(p, nme)(sel.sym))
+      
+    case sel @ Sel(prefix, nme) =>
+      setupSelection(prefix, nme, sel.sym)(k)
+
+      
     case New(cls, as) =>
       subTerm(cls): sr =>
         def rec(as: Ls[st], asr: Ls[Path]): Block = as match
