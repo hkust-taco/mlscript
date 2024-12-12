@@ -279,6 +279,7 @@ class Lowering(using TL, Raise, Elaborator.State):
           if usesResTmp then k(Value.Ref(l))
           else k(Value.Lit(syntax.Tree.UnitLit(true))) // * it seems this currently never happens
         )
+
     case sel @ Sel(prefix, nme) =>
       setupSelection(prefix, nme, sel.sym)(k)
     case SelProj(prefix, _, proj) =>
@@ -302,6 +303,8 @@ class Lowering(using TL, Raise, Elaborator.State):
         term(finallyDo)(_ => End()),
         k(Value.Ref(l))
       )
+
+    // * BbML mutable references
     case Region(reg, body) =>
       Assign(reg, Instantiate(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Region"))(N), Nil), term(body)(k))
     case RegRef(reg, value) =>
@@ -318,6 +321,7 @@ class Lowering(using TL, Raise, Elaborator.State):
       subTerm(lhs): ref =>
         subTerm(rhs): value =>
           AssignField(ref, Tree.Ident("value"), value, k(value))(N)
+
     case Error => End("error")
     
     // case _ =>
