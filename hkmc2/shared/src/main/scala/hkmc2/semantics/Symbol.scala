@@ -116,7 +116,7 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[Tree])(using State)
   override def toString: Str =
     s"member:$nme${State.dbgUid(uid)}"
 
-  override val isGetter: Bool = // TODO: should be based on another syntax & kind
+  override val isGetter: Bool = // TODO: this should be checked based on a special syntax for getter
     trmImplTree.exists(t => t.k === Fun && t.paramLists.isEmpty)
 
 end BlockMemberSymbol
