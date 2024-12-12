@@ -17,42 +17,43 @@ t
 //│ = 42
 
 
-globalThis.t
-//│ = 42
-
-
-this.t
-//│ = 42
-
-
 :sjs
 module T with
   fun t() = 1
-  val a = globalThis.t
+  fun p = 2
+  val a = t
   val b = this.t
+  val c = p
+  val d = this.p
 //│ JS:
 //│ const T$class = class T {
 //│   constructor() {
-//│     let selRes, tmp, tmp1, selRes1, tmp2;
-//│     selRes = globalThis.t;
+//│     let selRes, tmp, tmp1, selRes1, tmp2, tmp3;
+//│     this.a = this.t;
+//│     selRes = this.t;
 //│     if (selRes === undefined) {
 //│       throw new globalThis.Error("Access to required field 't' yielded 'undefined'");
 //│     } else {
 //│       tmp = selRes;
 //│     }
-//│     tmp1 = tmp();
-//│     this.a = tmp1;
-//│     selRes1 = this.t;
+//│     this.b = tmp;
+//│     tmp1 = this.p();
+//│     this.c = tmp1;
+//│     selRes1 = this.p;
 //│     if (selRes1 === undefined) {
-//│       throw new globalThis.Error("Access to required field 't' yielded 'undefined'");
+//│       throw new globalThis.Error("Access to required field 'p' yielded 'undefined'");
 //│     } else {
 //│       tmp2 = selRes1;
 //│     }
-//│     this.b = tmp2;
+//│     tmp3 = tmp2();
+//│     this.d = tmp3;
 //│   }
 //│   t(...args) {
 //│     globalThis.Predef.checkArgs("t", 0, true, args.length);
 //│     return 1;
+//│   } 
+//│   p() {
+//│     return 2;
 //│   }
 //│   toString() { return "T"; }
 //│ };
@@ -62,10 +63,16 @@ module T with
 
 
 T.a
-//│ = 42
+//│ = [Function: t]
 
 T.b
 //│ = [Function: t]
+
+T.c
+//│ = 2
+
+T.d
+//│ = 2
 
 
 :sjs
@@ -274,5 +281,5 @@ c()
 class Foo(x) with
   fun oops = x
 //│ ╔══[ERROR] Getters must be defined in module or function scopes.
-//│ ║  l.275: 	  fun oops = x
+//│ ║  l.282: 	  fun oops = x
 //│ ╙──       	      ^^^^
