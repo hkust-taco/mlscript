@@ -325,6 +325,10 @@ fun zip_lz_nl(xs, ys) = if
   force(xs) is LzCons(x, xs) and ys is Cons(y, ys) then Cons(Tup2(x, y), zip_lz_nl(xs, ys))
   else Nil
 
+fun zip_lz_lz(xs, ys) = if
+  force(xs) is LzCons(x, xs) and force(ys) is LzCons(y, ys) then lazy of () => LzCons(Tup2(x, y), zip_lz_lz(xs, ys))
+  else lazy of () => LzNil
+
 fun zipWith_lz_lz(f, xss, yss) = lazy of () => if
   force(xss) is LzCons(x, xs) and (force(yss)) is LzCons(y, ys) then LzCons(f(x, y), zipWith_lz_lz(f, xs, ys))
   else LzNil
@@ -338,6 +342,10 @@ fun iterate(f, x) = lazy of () => LzCons(x, iterate(f, f(x)))
 fun append_nl_lz(xs, ys) = if xs is
   Nil then ys
   Cons(h, t) then lazy of () => LzCons(h, append_nl_lz(t, ys))
+
+fun append_lz_lz(xs, ys) = lazy of () => if force(xs) is
+  LzNil then force(ys)
+  LzCons(h, t) then LzCons(h, append_lz_lz(t, ys))
 
 fun replicate_lz(n, x) = if n == 0 then lazy of () => LzNil else lazy of () => LzCons(x, replicate_lz(n - 1, x))
 

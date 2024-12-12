@@ -1,6 +1,6 @@
 :js
 :import NofibPrelude.mls
-//│ Imported 120 member(s)
+//│ Imported 122 member(s)
 
 fun z_of_int(x) = globalThis.BigInt(x)
 fun string_of_z(x) = nofibStringToList(x + "")
