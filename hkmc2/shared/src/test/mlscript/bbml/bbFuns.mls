@@ -5,7 +5,7 @@
 
 fun f(x, y) = x(y)
 f
-//│ Type: forall y5_2, α6_2, α7_2: (y5_2 ->{α6_2} α7_2, y5_2) ->{α6_2} α7_2
+//│ Type: forall y_2, φ_2, app_2: (y_2 ->{φ_2} app_2, y_2) ->{φ_2} app_2
 
 
 f((x => x), 42)
@@ -19,9 +19,9 @@ fun id: [A] -> A -> A
 //│ Type: ⊤
 
 id : [A] -> A -> A
-//│ Type: forall A19_2: (A19_2) ->{⊥} A19_2
+//│ Type: forall A1_2: (A1_2) ->{⊥} A1_2
 
 id(id) : [A] -> A -> A
-//│ Type: forall A22_2: (A22_2) ->{⊥} A22_2
+//│ Type: forall A2_2: (A2_2) ->{⊥} A2_2
 
 

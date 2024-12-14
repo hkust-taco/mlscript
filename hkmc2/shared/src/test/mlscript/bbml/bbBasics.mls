@@ -20,7 +20,7 @@ false
 
 fun id(x) = x
 id
-//│ Type: forall x4_2: x4_2 -> x4_2
+//│ Type: forall x_2: x_2 -> x_2
 
 fun inc(x) = x + 1
 //│ Type: ⊤
@@ -29,7 +29,7 @@ fun mul(x, y) = x * y
 //│ Type: ⊤
 
 x => x
-//│ Type: (x10_1) ->{⊥} x10_1
+//│ Type: (x3_1) ->{⊥} x3_1
 
 +
 //│ Type: (Int, Int) ->{⊥} Int
@@ -109,14 +109,14 @@ class Some[A](value: A)
 //│ Type: ⊤
 
 new Some(true)
-//│ Type: Some[α16_1]
+//│ Type: Some[A_1]
 //│ Where:
-//│   Bool <: α16_1
+//│   Bool <: A_1
 
 new Some(42)
-//│ Type: Some[α17_1]
+//│ Type: Some[A1_1]
 //│ Where:
-//│   Int <: α17_1
+//│   Int <: A1_1
 
 let p = new Point(1.0, 0.0, 0.0) in p.Point#x
 //│ Type: Num
@@ -150,22 +150,22 @@ fun foofoo(x) =
 //│ Type: ⊤
 
 new Printer(foofoo)
-//│ Type: Printer[α25_1]
+//│ Type: Printer[T3_1]
 //│ Where:
-//│   α25_1 <: Int
+//│   T3_1 <: Int
 
 let ip = new Printer(foofoo) in ip.Printer#f(42)
 //│ Type: Str
 
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
-//│ ╔══[ERROR] Type error in string literal with expected type α33_1
+//│ ╔══[ERROR] Type error in string literal with expected type T8_1
 //│ ║  l.161: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ║         	                                             ^^^^
-//│ ╟── because: cannot constrain  Str  <:  α33_1
-//│ ╟── because: cannot constrain  Str  <:  α33_1
-//│ ╟── because: cannot constrain  Str  <:  ¬(~α31_1)
-//│ ╟── because: cannot constrain  Str  <:  α31_1
+//│ ╟── because: cannot constrain  Str  <:  T8_1
+//│ ╟── because: cannot constrain  Str  <:  T8_1
+//│ ╟── because: cannot constrain  Str  <:  ¬(~T7_1)
+//│ ╟── because: cannot constrain  Str  <:  T7_1
 //│ ╙── because: cannot constrain  Str  <:  ¬(~{Int})
 //│ Type: Str
 
@@ -176,23 +176,23 @@ fun inc(x) = x + 1
 //│ Type: ⊤
 
 new TFun(inc)
-//│ Type: TFun[α37_1]
+//│ Type: TFun[T10_1]
 //│ Where:
-//│   Int <: α37_1
-//│   α37_1 <: Int
+//│   Int <: T10_1
+//│   T10_1 <: Int
 
 let tf = new TFun(inc) in tf.TFun#f(1)
 //│ Type: Int
 
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
-//│ ╔══[ERROR] Type error in string literal with expected type α45_1
+//│ ╔══[ERROR] Type error in string literal with expected type T15_1
 //│ ║  l.188: 	let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
-//│ ╟── because: cannot constrain  Str  <:  α45_1
-//│ ╟── because: cannot constrain  Str  <:  α45_1
-//│ ╟── because: cannot constrain  Str  <:  ¬(~α43_1)
-//│ ╟── because: cannot constrain  Str  <:  α43_1
+//│ ╟── because: cannot constrain  Str  <:  T15_1
+//│ ╟── because: cannot constrain  Str  <:  T15_1
+//│ ╟── because: cannot constrain  Str  <:  ¬(~T14_1)
+//│ ╟── because: cannot constrain  Str  <:  T14_1
 //│ ╙── because: cannot constrain  Str  <:  ¬(~{Int})
 //│ Type: Str ∨ Int
 
@@ -262,17 +262,17 @@ class Foo[A](x: A -> A)
 //│ Type: ⊤
 
 new Foo(x => x)
-//│ Type: Foo[α78_1]
+//│ Type: Foo[A11_1]
 
 fun f(g) = new Foo(g)
 f
-//│ Type: forall α81_2: (α81_2 -> α81_2) -> Foo[α81_2]
+//│ Type: forall A12_2: (A12_2 -> A12_2) -> Foo[A12_2]
 
 f(x => x).Foo#x
-//│ Type: (α83_1) ->{⊥} α83_1
+//│ Type: (A12_1) ->{⊥} A12_1
 
 g => (new Foo(g)).Foo#x
-//│ Type: (α88_1 -> α88_1) ->{⊥} (α88_1) ->{⊥} α88_1
+//│ Type: (A15_1 -> A15_1) ->{⊥} (A15_1) ->{⊥} A15_1
 
 
 throw new Error("oops")

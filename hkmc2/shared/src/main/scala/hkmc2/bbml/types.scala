@@ -157,8 +157,7 @@ sealed abstract class BasicType extends Type:
     case ClassLikeType(name, targs) =>
       if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.mkString(", ")}]"
     case v @ InfVar(lvl, uid, _, isSkolem) =>
-      val name = v.hint.getOrElse("α")
-      if isSkolem then s"<$name>${uid}_$lvl" else s"$name${uid}_$lvl"
+      if isSkolem then s"<${v.hint}>_$lvl" else s"${v.hint}_$lvl"
     case FunType(arg :: Nil, ret, eff) => s"${arg.paren} ->${printEff(eff)} ${ret.paren}"
     case FunType(args, ret, eff) => s"(${args.mkString(", ")}) ->${printEff(eff)} ${ret.paren}"
     case ComposedType(lhs, rhs, pol) => s"${lhs.paren} ${if pol then "∨" else "∧"} ${rhs.paren}"
@@ -224,7 +223,7 @@ case class ClassLikeType(name: TypeSymbol | ModuleSymbol, targs: Ls[TypeArg]) ex
         case ty: Type => ty.subst
       })
 
-final case class InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, isSkolem: Bool)(val hint: Option[Str]) extends BasicType:
+final case class InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, isSkolem: Bool)(val hint: Str) extends BasicType:
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = map.get(uid).getOrElse(this)
 
 given Ordering[InfVar] = Ordering.by(_.uid)

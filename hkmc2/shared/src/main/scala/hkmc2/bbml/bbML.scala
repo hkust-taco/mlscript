@@ -2,7 +2,7 @@ package hkmc2
 package bbml
 
 
-import scala.collection.mutable.{LinkedHashSet, HashMap, ListBuffer}
+import scala.collection.mutable.{HashSet, HashMap, ListBuffer}
 import scala.annotation.tailrec
 
 import mlscript.utils.*, shorthands.*
@@ -69,11 +69,22 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
   private val infVarState = new InfVarUid.State()
   private val solver = new ConstraintSolver(infVarState, tl)
 
-  private def freshSkolem(hint: Option[Str])(using ctx: BbCtx): InfVar =
-    InfVar(ctx.lvl, infVarState.nextUid, new VarState(), true)(hint)
-  private def freshVar(hint: Option[Str])(using ctx: BbCtx): InfVar =
-    InfVar(ctx.lvl, infVarState.nextUid, new VarState(), false)(hint)
-  private def freshWildcard(hint: Option[Str])(using ctx: BbCtx) =
+  private val tvnames = new HashSet[Str]
+  private def allocateTVName(prefix: Str) =
+    val name =
+      if !tvnames(prefix) then prefix
+      else
+        // Try prefix with an integer.
+        (1 to Int.MaxValue).iterator.map(i => s"$prefix$i").filterNot(tvnames).next
+    
+    tvnames += name
+    name
+
+  private def freshSkolem(hint: Str)(using ctx: BbCtx): InfVar =
+    InfVar(ctx.lvl, infVarState.nextUid, new VarState(), true)(allocateTVName(hint))
+  private def freshVar(hint: Str)(using ctx: BbCtx): InfVar =
+    InfVar(ctx.lvl, infVarState.nextUid, new VarState(), false)(allocateTVName(hint))
+  private def freshWildcard(hint: Str)(using ctx: BbCtx) =
     val in = freshVar(hint)
     val out = freshVar(hint)
     // in.state.upperBounds ::= out // * Not needed for soundness; complicates inferred types
@@ -148,7 +159,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
   private def genPolyType(tvs: Ls[QuantVar], body: => GeneralType)(using ctx: BbCtx, cctx: CCtx) =
     val bds = tvs.map:
       case qv @ QuantVar(sym, ub, lb) =>
-        val tv = freshVar(S(sym.name))
+        val tv = freshVar(sym.name)
         ctx += sym -> tv // TODO: a type var symbol may be better...
         tv -> qv
     bds.foreach:
@@ -195,12 +206,12 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       given BbCtx = nestCtx
       val bds = params.map:
         case Param(_, sym, _) =>
-          val tv = freshVar(S(sym.name))
-          val sk = freshSkolem(S(sym.name))
+          val tv = freshVar(sym.name)
+          val sk = freshSkolem(sym.name)
           nestCtx &= (sym, tv, sk)
           (tv, sk)
       val (bodyTy, ctxTy, eff) = typeCode(body)
-      val res = freshVar(N)(using ctx)
+      val res = freshVar("ctx")(using ctx)
       constrain(ctxTy, bds.foldLeft[Type](res)((res, bd) => res | bd._2))
       (FunType(bds.map(_._1), bodyTy, Bot), res, eff)
     case Term.App(lhs, Term.Tup(rhs)) =>
@@ -209,7 +220,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         case (res, p: Fld) =>
           val (ty, ctx, eff) = typeCode(p.term)
           (ty :: res._1, res._2 | ctx, res._3 | eff)
-      val resTy = freshVar(N)
+      val resTy = freshVar("app")
       constrain(lhsTy, FunType(rhsTy.reverse, resTy, Bot)) // TODO: right
       (resTy, lhsCtx | rhsCtx, lhsEff | rhsEff)
     case sel @ Term.SynthSel(Term.Ref(_: TopLevelSymbol), _) if sel.symbol.isDefined =>
@@ -217,18 +228,18 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       (tryMkMono(opTy, sel), Bot, eff)
     case Term.Unquoted(body) =>
       val (ty, eff) = typeCheck(body)
-      val tv = freshVar(N)
-      val cr = freshVar(N)
+      val tv = freshVar("cde")
+      val cr = freshVar("ctx")
       constrain(tryMkMono(ty, body), BbCtx.codeTy(tv, cr))
       (tv, cr, eff)
     case Term.Blk(LetDecl(sym) :: DefineVar(sym2, rhs) :: Nil, body) if sym2 is sym => // TODO: more than one!!
       val (rhsTy, rhsCtx, rhsEff) = typeCode(rhs)(using ctx)
       val nestCtx = ctx.nextLevel
       given BbCtx = nestCtx
-      val sk = freshSkolem(S(sym.nme))
+      val sk = freshSkolem(sym.nme)
       nestCtx &= (sym, rhsTy, sk)
       val (bodyTy, bodyCtx, bodyEff) = typeCode(body)
-      val res = freshVar(N)(using ctx)
+      val res = freshVar("ctx")(using ctx)
       constrain(bodyCtx, sk | res)
       (bodyTy, rhsCtx | res, rhsEff | bodyEff)
     case Term.IfLike(Keyword.`if`, Split.Let(_, cond, Split.Cons(Branch(_, Pattern.Lit(BoolLit(true)), Split.Else(cons)), Split.Else(alts)))) =>
@@ -249,7 +260,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         ()
       case N =>
         given BbCtx = ctx.nextLevel
-        val funTyV = freshVar(S(sym.nme))
+        val funTyV = freshVar(sym.nme)
         pctx += sym -> funTyV // for recursive functions
         val (res, _) = typeCheck(lam)
         val funTy = tryMkMono(res, lam)
@@ -266,7 +277,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       // * Pattern matching for classes
       val (clsTy, tv, emptyTy) = sym.asCls.flatMap(_.defn) match
         case S(cls) =>
-          (ClassLikeType(sym, cls.tparams.map(_ => freshWildcard(N))), (freshVar(N)), ClassLikeType(sym, cls.tparams.map(_ => Wildcard.empty)))
+          (ClassLikeType(sym, cls.tparams.map(_ => freshWildcard(s"${sym.nme}tp"))), (freshVar("scrut")), ClassLikeType(sym, cls.tparams.map(_ => Wildcard.empty)))
         case _ =>
           error(msg"Cannot match ${scrutinee.toString} as ${sym.toString}" -> split.toLoc :: Nil)
           (Bot, Bot, Bot)
@@ -304,7 +315,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val nestCtx = ctx.nest
       given BbCtx = nestCtx
       val (termTy, termEff) = typeCheck(term)
-      val sk = freshSkolem
+      val sk = freshSkolem(name.nme)
       nestCtx += name -> termTy
       val (tailTy, tailEff) = typeSplit(tail, sign)(using nestCtx)
       (tailTy, termEff | tailEff)
@@ -375,8 +386,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             val (ty, eff) = typeCheck(f.term)
             Left(ty) :: Right(eff) :: Nil
         .partitionMap(x => x)
-      val effVar = freshVar(N)
-      val retVar = freshVar(N)
+      val effVar = freshVar("φ")
+      val retVar = freshVar("app")
       constrain(tryMkMono(funTy, t), FunType(argTy.map((tryMkMono(_, t))), retVar, effVar))
       (retVar, argEff.foldLeft[Type](effVar | lhsEff)((res, e) => res | e))
 
@@ -449,7 +460,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         given BbCtx = nestCtx
         val tvs = params.map:
           case Param(_, sym, sign) =>
-            val ty = sign.map(s => typeType(s)(using nestCtx)).getOrElse(freshVar(S(sym.nme)))
+            val ty = sign.map(s => typeType(s)(using nestCtx)).getOrElse(freshVar(sym.nme))
             nestCtx += sym -> ty
             ty
         val (bodyTy, eff) = typeCheck(body)
@@ -461,7 +472,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             val map = HashMap[Uid[Symbol], TypeArg]()
             val targs = clsDfn.tparams.map {
               case TyParam(_, _, targ) =>
-                val ty = freshWildcard(N)
+                val ty = freshWildcard(targ.name)
                 map += targ.uid -> ty
                 ty
             }
@@ -490,12 +501,12 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             val map = HashMap[Uid[Symbol], TypeArg]()
             val targs = clsDfn.tparams.map {
               case TyParam(_, S(_), targ) =>
-                val ty = freshVar(N)
+                val ty = freshVar(targ.name)
                 map += targ.uid -> ty
                 ty
               case TyParam(_, N, targ) =>
                 // val ty = freshWildcard // FIXME probably not correct
-                val ty = freshVar(N)
+                val ty = freshVar(targ.name)
                 map += targ.uid -> ty
                 ty
             }
@@ -518,28 +529,28 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       case Term.Region(sym, body) =>
         val nestCtx = ctx.nextLevel
         given BbCtx = nestCtx
-        val sk = freshSkolem(S(sym.nme))
+        val sk = freshSkolem(sym.nme)
         nestCtx += sym -> BbCtx.regionTy(sk)
         val (res, eff) = typeCheck(body)
-        val tv = freshVar(N)(using ctx)
+        val tv = freshVar("φ")(using ctx)
         constrain(eff, tv | sk)
         (extrude(res)(using ctx, true), tv)
       case Term.RegRef(reg, value) =>
         val (regTy, regEff) = typeCheck(reg)
         val (valTy, valEff) = typeCheck(value)
-        val sk = freshVar(N)
+        val sk = freshVar("reg")
         constrain(tryMkMono(regTy, reg), BbCtx.regionTy(sk))
         (BbCtx.refTy(tryMkMono(valTy, value), sk), sk | (regEff | valEff))
       case Term.SetRef(lhs, rhs) =>
         val (lhsTy, lhsEff) = typeCheck(lhs)
         val (rhsTy, rhsEff) = typeCheck(rhs)
-        val sk = freshVar(N)
+        val sk = freshVar("reg")
         constrain(tryMkMono(lhsTy, lhs), BbCtx.refTy(tryMkMono(rhsTy, rhs), sk))
         (tryMkMono(rhsTy, rhs), sk | (lhsEff | rhsEff))
       case Term.Deref(ref) =>
         val (refTy, refEff) = typeCheck(ref)
-        val sk = freshVar(N)
-        val ctnt = freshVar(N)
+        val sk = freshVar("reg")
+        val ctnt = freshVar("ref")
         constrain(tryMkMono(refTy, ref), BbCtx.refTy(ctnt, sk))
         (ctnt, sk | refEff)
       case Term.Quoted(body) =>
