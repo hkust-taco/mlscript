@@ -35,7 +35,9 @@ fun _internal_cons_to_str(ls) = if ls is
   Cons(h, Nil) then h.toString()
   Cons(h, t) then h.toString() + "," + _internal_cons_to_str(t)
 fun ltList(xs, ys, lt, gt) = if xs is
-  Nil then true
+  Nil and
+    ys is Nil then false
+    else true
   Cons(x, xs) and ys is
     Nil then false
     Cons(y, ys) and
