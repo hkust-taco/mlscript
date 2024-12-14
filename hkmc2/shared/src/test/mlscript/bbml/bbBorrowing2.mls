@@ -49,8 +49,8 @@ letreg of r =>
 //│ ║        	^^^^^^^^^^
 //│ ╟── because: cannot constrain  E_1  <:  ⊥
 //│ ╟── because: cannot constrain  E_1  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ Rg'_1  <:  ¬()
-//│ ╟── because: cannot constrain  Rg'_1  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ Rg_1  <:  ¬()
+//│ ╟── because: cannot constrain  Rg_1  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Int
 

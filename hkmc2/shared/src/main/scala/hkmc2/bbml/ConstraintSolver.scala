@@ -37,7 +37,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
 
   import hkmc2.bbml.NormalForm.*
 
-  private def freshXVar(lvl: Int, hint: Str): InfVar = InfVar(lvl, infVarState.nextUid, new VarState(), false)(s"${hint}'")
+  private def freshXVar(lvl: Int, hint: Str): InfVar = InfVar(lvl, infVarState.nextUid, new VarState(), false)(hint)
 
   def extrude(ty: Type)(using lvl: Int, pol: Bool, cache: ExtrudeCache, bbctx: BbCtx, cctx: CCtx, tl: TL): Type =
   trace[Type](s"Extruding[${printPol(pol)}] $ty", r => s"~> $r"):

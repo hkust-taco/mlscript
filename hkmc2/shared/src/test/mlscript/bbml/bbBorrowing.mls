@@ -92,8 +92,8 @@ letreg of r =>
 //│ ║        	^^^^^
 //│ ╟── because: cannot constrain  E_1  <:  ⊥
 //│ ╟── because: cannot constrain  E_1  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ ¬Rg'_1  <:  ¬()
-//│ ╟── because: cannot constrain    <:  Rg'_1
+//│ ╟── because: cannot constrain  ¬⊥ ∧ ¬Rg_1  <:  ¬()
+//│ ╟── because: cannot constrain    <:  Rg_1
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: ⊥
 
@@ -128,8 +128,8 @@ letreg of r =>
 //│ ║         	^^^
 //│ ╟── because: cannot constrain  E_1  <:  ⊥
 //│ ╟── because: cannot constrain  E_1  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ Rg'_1  <:  ¬()
-//│ ╟── because: cannot constrain  Rg'_1  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ Rg_1  <:  ¬()
+//│ ╟── because: cannot constrain  Rg_1  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Reg[?, E_1]
 //│ Where:
@@ -172,8 +172,8 @@ letreg of r =>
 //│ ║         	^^^
 //│ ╟── because: cannot constrain  E_1  <:  ⊥
 //│ ╟── because: cannot constrain  E_1  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ Rg'_1  <:  ¬()
-//│ ╟── because: cannot constrain  Rg'_1  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ Rg_1  <:  ¬()
+//│ ╟── because: cannot constrain  Rg_1  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Reg[?, E_1]
 //│ Where:
@@ -187,9 +187,9 @@ letreg of r0 =>
       next(it)
     use(r1)
     r1
-//│ Type: Reg[?, in E'_1]
+//│ Type: Reg[?, in E_1]
 //│ Where:
-//│   E'_1 <: ⊥
+//│   E_1 <: ⊥
 
 
 // * Can leak the iterator

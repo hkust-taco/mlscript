@@ -41,8 +41,8 @@ y `=> (let t = run(x `=> x `+ y) in y)
 //│ ╟── because: cannot constrain  CodeBase[out x_5 -> cde2_5, out ctx3_4, ?]  <:  CodeBase[out T_3, ⊥, ?]
 //│ ╟── because: cannot constrain  D( ctx3_4 )  <:  ⊥
 //│ ╟── because: cannot constrain  ctx3_4  <:  ¬()
-//│ ╟── because: cannot constrain  (¬⊥ ∧ ¬x1'_4) ∧ <y2>_3  <:  ¬()
-//│ ╟── because: cannot constrain  <y2>_3  <:  x1'_4
+//│ ╟── because: cannot constrain  (¬⊥ ∧ ¬x1_4) ∧ <y2>_3  <:  ¬()
+//│ ╟── because: cannot constrain  <y2>_3  <:  x1_4
 //│ ╙── because: cannot constrain  <y2>_3  <:  ¬()
 //│ Type: CodeBase[out y1_3 -> y1_3, ⊥, ?]
 //│ Where:
@@ -82,12 +82,12 @@ f(g)(bar)
 //│ ║        	     ^^^
 //│ ╟── because: cannot constrain  C[Int]  <:  A8_1
 //│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  A8_1
-//│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  ¬C[in D() out ¬⊥ ∧ B'_1] ∨ C[in D( Int ) out ¬⊥ ∧ D'_1]
-//│ ╟── because: cannot constrain  (D( Int )) ∧ (D( B'_1 ))  <:  ¬⊥ ∧ D'_1
-//│ ╟── because: cannot constrain  Int && B'_1  <:  D'_1
-//│ ╟── because: cannot constrain  Int && B'_1  <:  B'_1
-//│ ╟── because: cannot constrain  Int && B'_1  <:  B'_1
-//│ ╟── because: cannot constrain  Int && B'_1  <:  ¬()
-//│ ╟── because: cannot constrain  B'_1  <:  ¬(Int)
+//│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  ¬C[in D() out ¬⊥ ∧ B_1] ∨ C[in D( Int ) out ¬⊥ ∧ D_1]
+//│ ╟── because: cannot constrain  (D( Int )) ∧ (D( B_1 ))  <:  ¬⊥ ∧ D_1
+//│ ╟── because: cannot constrain  Int && B_1  <:  D_1
+//│ ╟── because: cannot constrain  Int && B_1  <:  B_1
+//│ ╟── because: cannot constrain  Int && B_1  <:  B_1
+//│ ╟── because: cannot constrain  Int && B_1  <:  ¬()
+//│ ╟── because: cannot constrain  B_1  <:  ¬(Int)
 //│ ╙── because: cannot constrain    <:  ¬(Int)
 //│ Type: Int

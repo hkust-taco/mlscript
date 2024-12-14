@@ -36,7 +36,7 @@ x `=> 42
 
 
 f `=> x `=> f`(x)
-//│ Type: CodeBase[out (x6'_3 -> app'_3) -> (x6'_3 -> app'_3), ⊥, ?]
+//│ Type: CodeBase[out (x6_3 -> app_3) -> (x6_3 -> app_3), ⊥, ?]
 
 
 
@@ -53,7 +53,7 @@ x `=> y `=> x `+ y
 //│ Type: CodeBase[out (Int, Int, Int) -> Int, ⊥, ?]
 
 f `=> x `=> y `=> f`(x, y)
-//│ Type: CodeBase[out ((x14'_3, y6'_3) -> app5'_3) -> (x14'_3 -> (y6'_3 -> app5'_3)), ⊥, ?]
+//│ Type: CodeBase[out ((x14_3, y6_3) -> app5_3) -> (x14_3 -> (y6_3 -> app5_3)), ⊥, ?]
 
 `let x = `42 `in x
 //│ Type: CodeBase[out Int, ⊥, ?]
@@ -118,6 +118,6 @@ x `=> run(x)
 //│ ╟── because: cannot constrain  T_3  <:  CodeBase[out cde42_3, out ctx59_3, ?]
 //│ ╟── because: cannot constrain  T_3  <:  ¬(~{CodeBase[out cde42_3, out ctx59_3, ?]})
 //│ ╟── because: cannot constrain  cde41_2  <:  ¬(~{CodeBase[out cde42_3, out ctx59_3, ?]})
-//│ ╟── because: cannot constrain  cde41_2  <:  CodeBase[out cde42'_2, out ctx59'_2, ?]
-//│ ╙── because: cannot constrain  Int  <:  CodeBase[out cde42'_2, out ctx59'_2, ?]
+//│ ╟── because: cannot constrain  cde41_2  <:  CodeBase[out cde42_2, out ctx59_2, ?]
+//│ ╙── because: cannot constrain  Int  <:  CodeBase[out cde42_2, out ctx59_2, ?]
 //│ Type: CodeBase[⊥, ⊥, ?]
