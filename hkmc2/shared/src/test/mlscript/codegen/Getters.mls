@@ -1,0 +1,253 @@
+:js
+
+
+:sjs
+fun t = 42
+//│ JS (unsanitized):
+//│ function t() { return 42; } null
+
+
+:sjs
+t
+//│ JS (unsanitized):
+//│ this.t()
+//│ = 42
+
+
+:sjs
+module T with
+  fun t() = 1
+  fun p = 2
+  val a = t
+  val b = this.t
+  val c = p
+  val d = this.p
+//│ JS (unsanitized):
+//│ const T$class = class T {
+//│   constructor() {
+//│     this.a = this.t;
+//│     this.b = this.t;
+//│     this.c = this.p;
+//│     this.d = this.p;
+//│   }
+//│   t() {
+//│     return 1;
+//│   } 
+//│   get p() {
+//│     return 2;
+//│   }
+//│   toString() { return "T"; }
+//│ };
+//│ this.T = new T$class;
+//│ this.T.class = T$class;
+//│ null
+
+
+T.a
+//│ = [Function: t]
+
+T.b
+//│ = [Function: t]
+
+T.c
+//│ = 2
+
+T.d
+//│ = 2
+
+
+:sjs
+module M with
+  fun t = 0
+//│ JS (unsanitized):
+//│ const M$class = class M {
+//│   constructor() {
+//│     
+//│   }
+//│   get t() {
+//│     return 0;
+//│   }
+//│   toString() { return "M"; }
+//│ };
+//│ this.M = new M$class;
+//│ this.M.class = M$class;
+//│ null
+
+
+:sjs
+M.t
+//│ JS (unsanitized):
+//│ this.M.t
+//│ = 0
+
+
+:sjs
+fun test() =
+  fun whoops = 42
+  whoops
+//│ JS (unsanitized):
+//│ function test() { function whoops() { return 42; } return whoops(); } null
+
+
+:re
+globalThis.whoops
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'whoops' yielded 'undefined'
+
+
+test()
+//│ = 42
+
+
+:re
+globalThis.whoops
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'whoops' yielded 'undefined'
+
+
+:sjs
+fun bar() =
+  fun baz() = 42
+  baz
+//│ JS (unsanitized):
+//│ function bar() { function baz() { return 42; } return baz; } null
+
+
+:sjs
+fun baz() =
+  fun w = 1
+  fun z = 2
+  (x, y) => x + y + w + z
+//│ JS (unsanitized):
+//│ function baz() {
+//│   function w() {
+//│     return 1;
+//│   }
+//│   function z() {
+//│     return 2;
+//│   }
+//│   return (x, y) => {
+//│     let tmp, tmp1, tmp2, tmp3;
+//│     tmp = x + y;
+//│     tmp1 = w();
+//│     tmp2 = tmp + tmp1;
+//│     tmp3 = z();
+//│     return tmp2 + tmp3;
+//│   };
+//│ }
+//│ null
+
+
+baz()(3, 4)
+//│ = 10
+
+
+:sjs
+fun a() =
+  fun b = 1
+  fun c() =
+    fun d = 2
+    b + d
+  c
+//│ JS (unsanitized):
+//│ function a() {
+//│   function b() {
+//│     return 1;
+//│   }
+//│   function c() {
+//│     let tmp, tmp1;
+//│     function d() {
+//│       return 2;
+//│     }
+//│     tmp = b();
+//│     tmp1 = d();
+//│     return tmp + tmp1;
+//│   }
+//│   return c;
+//│ }
+//│ null
+
+
+a()()
+//│ = 3
+
+
+:sjs
+fun b() =
+  fun c = 1
+  fun d() =
+    fun c = 2
+    c
+  d
+//│ JS (unsanitized):
+//│ function b() {
+//│   function c() {
+//│     return 1;
+//│   }
+//│   function d() {
+//│     function c() {
+//│       return 2;
+//│     }
+//│     return c();
+//│   }
+//│   return d;
+//│ }
+//│ null
+
+
+b()()
+//│ = 2
+
+
+:sjs
+fun c() =
+  fun f = 1
+  fun d =
+    fun e = 1
+    e + f
+  d
+//│ JS (unsanitized):
+//│ function c() {
+//│   function f() {
+//│     return 1;
+//│   }
+//│   function d() {
+//│     let tmp, tmp1;
+//│     function e() {
+//│       return 1;
+//│     }
+//│     tmp = e();
+//│     tmp1 = f();
+//│     return tmp + tmp1;
+//│   }
+//│   return d();
+//│ }
+//│ null
+
+
+c()
+//│ = 2
+
+
+:sjs
+class Foo(x) with
+  fun oops = x
+//│ JS (unsanitized):
+//│ this.Foo = function Foo(x1) { return new Foo.class(x1); };
+//│ this.Foo.class = class Foo {
+//│   constructor(x) {
+//│     this.x = x;
+//│     
+//│   }
+//│   get oops() {
+//│     return this.x;
+//│   }
+//│   toString() { return "Foo(" + this.x + ")"; }
+//│ };
+//│ null
+
+
+fun foo(f) =
+  f.oops
+
+
+foo(Foo(42))
+//│ = 42

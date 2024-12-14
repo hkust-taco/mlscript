@@ -105,7 +105,7 @@ class Desugarer(val elaborator: Elaborator)
   def default: Split => Sequel = split => _ => split
 
   private def termSplitShorthands(tree: Tree, finish: Term => Term): Split => Sequel = tree match
-    case Block(branches) => branches match
+    case blk: Block => blk.desugStmts match
       case Nil => lastWords("encountered empty block")
       case branch :: rest => fallback => ctx =>
         if rest.nonEmpty then
@@ -133,7 +133,7 @@ class Desugarer(val elaborator: Elaborator)
       // We apply `finish` to the first coda and expand the first match.
       // Note that the scrutinee might be not an identifier.
       headCoda match
-        case Ident("_") => tailSplit
+        case Under() => tailSplit
         case _ => ctx => trace(
           pre = s"shorthands <<< $matches",
           post = (res: Split) => s"shorthands >>> $res"
@@ -142,7 +142,7 @@ class Desugarer(val elaborator: Elaborator)
             expandMatch(_, headPattern, tailSplit)(fallback)
 
   private def patternSplitShorthands(tree: Tree, scrutSymbol: BlockLocalSymbol): Split => Sequel = tree match
-    case Block(branches) => branches match
+    case blk: Block => blk.desugStmts match
       case Nil => lastWords("encountered empty block")
       case branch :: rest => fallback => ctx =>
         if rest.nonEmpty then
@@ -173,8 +173,8 @@ class Desugarer(val elaborator: Elaborator)
    */
   def termSplit(tree: Tree, finish: Term => Term): Split => Sequel =
     tree match
-    case Block(branches) =>
-      branches.foldRight(default): (t, elabFallback) =>
+    case blk: Block =>
+      blk.desugStmts.foldRight(default): (t, elabFallback) =>
         t match
         case LetLike(`let`, ident @ Ident(_), N, N) => ???
         case LetLike(`let`, ident @ Ident(_), S(termTree), N) => fallback => ctx => trace(
@@ -225,7 +225,7 @@ class Desugarer(val elaborator: Elaborator)
       // We apply `finish` to the first coda and expand the first match.
       // Note that the scrutinee might be not an identifier.
       headCoda match
-        case Ident("_") => tailSplit
+        case Under() => tailSplit
         case _ => ctx => trace(
           pre = s"termBranch <<< $matches then $consequent",
           post = (res: Split) => s"termBranch >>> $res"
@@ -259,7 +259,11 @@ class Desugarer(val elaborator: Elaborator)
           Term.App(op, arguments)(tree, joint)
         opRhsApps.foldRight(Function.const(fallback): Sequel): (tt, elabFallback) =>
           tt match
-          case (Tree.Empty(), LetLike(`let`, ident @ Ident(_), termTree, N)) => ctx =>
+          case (Tree.Empty(), LetLike(`let`, pat, termTree, N)) => ctx =>
+            val ident = pat match // TODO handle patterns and rm special cases
+              case ident: Ident => ident
+              case und: Under => new Ident("_").withLocOf(und)
+              case _ => ???
             termTree match
             case S(termTree) =>
               val sym = VarSymbol(ident)
@@ -342,7 +346,7 @@ class Desugarer(val elaborator: Elaborator)
    *  @param scrutSymbol the symbol representing the elaborated scrutinee
    */
   def patternSplit(tree: Tree, scrutSymbol: BlockLocalSymbol): Split => Sequel = tree match
-    case Block(branches) => branches.foldRight(default): (branch, elabFallback) =>
+    case blk: Block => blk.desugStmts.foldRight(default): (branch, elabFallback) =>
       // Terminology: _fallback_ refers to subsequent branches, _backup_ refers
       // to the backup plan passed from the parent split.
       branch match
@@ -407,7 +411,7 @@ class Desugarer(val elaborator: Elaborator)
     def ref = scrutSymbol.ref(/* FIXME ident? */)
     pattern match
       // A single wildcard pattern.
-      case Ident("_") => _ => ctx => sequel(ctx)
+      case Under() => _ => ctx => sequel(ctx)
       // Alias pattern
       case pat as (alias @ Ident(_)) => fallback =>
         val aliasSymbol = VarSymbol(alias)
@@ -528,7 +532,7 @@ class Desugarer(val elaborator: Elaborator)
       post = (r: Split) => s"subMatches >>> ${r.showDbg}"
     ):
       sequel(ctx)
-    case (_, Ident("_")) :: rest => subMatches(rest, sequel)
+    case (_, Under()) :: rest => subMatches(rest, sequel)
     case (scrutinee, pattern) :: rest => fallback => trace(
       pre = s"subMatches (nested) <<< $scrutinee is $pattern",
       post = (r: Sequel) => s"subMatches (nested) >>>"

@@ -1,0 +1,260 @@
+:js
+:bbml
+//│ Type: ⊤
+
+//│ Type: ⊤
+
+:sjs
+42
+//│ JS (unsanitized):
+//│ 42
+//│ = 42
+//│ Type: Int
+
+:sjs
+1 + 1
+//│ JS (unsanitized):
+//│ 1 + 1
+//│ = 2
+//│ Type: Int
+
+
+:sjs
+1.0 +. 2.14
+//│ JS (unsanitized):
+//│ 1.0 + 2.14
+//│ = 3.14
+//│ Type: Num
+
+
+:sjs
+let x = 1 in x + 1
+//│ JS (unsanitized):
+//│ this.x = 1; this.x + 1
+//│ = 2
+//│ Type: Int
+
+
+:sjs
+"abc"
+//│ JS (unsanitized):
+//│ "abc"
+//│ = 'abc'
+//│ Type: Str
+
+:sjs
+false
+//│ JS (unsanitized):
+//│ false
+//│ = false
+//│ Type: Bool
+
+:sjs
+(x => x): [T] -> T -> T
+//│ JS (unsanitized):
+//│ (x) => { return x; }
+//│ = [Function (anonymous)]
+//│ Type: forall T3_2: (T3_2) ->{⊥} T3_2
+
+
+:sjs
+class Foo(x: Int)
+//│ JS (unsanitized):
+//│ this.Foo = function Foo(x1) { return new Foo.class(x1); };
+//│ this.Foo.class = class Foo {
+//│   constructor(x) {
+//│     this.x = x;
+//│     
+//│   }
+//│   toString() { return "Foo(" + this.x + ")"; }
+//│ };
+//│ null
+//│ Type: ⊤
+
+
+:sjs
+new Foo(42)
+//│ JS (unsanitized):
+//│ new this.Foo.class(42)
+//│ = Foo { x: 42 }
+//│ Type: Foo
+
+
+:sjs
+let foo = new Foo(42) in foo.Foo#x
+//│ JS (unsanitized):
+//│ let tmp; tmp = new this.Foo.class(42); this.foo = tmp; this.foo.x
+//│ = 42
+//│ Type: Int
+
+
+:sjs
+fun inc(x) = x + 1
+//│ JS (unsanitized):
+//│ function inc(x) { return x + 1; } null
+//│ Type: ⊤
+
+
+:sjs
+inc(41)
+//│ JS (unsanitized):
+//│ this.inc(41)
+//│ = 42
+//│ Type: Int
+
+
+:sjs
+if 1 == 2 then 0 else 42
+//│ JS (unsanitized):
+//│ let scrut; scrut = 1 == 2; if (scrut) { 0 } else { 42 }
+//│ = 42
+//│ Type: Int
+
+
+:sjs
+if 1 is Int then 1 else 0
+//│ JS (unsanitized):
+//│ let scrut; scrut = 1; if (globalThis.Number.isInteger(scrut)) { 1 } else { 0 }
+//│ = 1
+//│ Type: Int
+
+
+class Foo()
+//│ Type: ⊤
+
+
+
+:sjs
+let foo = new Foo()
+if foo is Foo then 1 else 0
+//│ JS (unsanitized):
+//│ let scrut, tmp;
+//│ tmp = new this.Foo.class();
+//│ this.foo = tmp;
+//│ scrut = this.foo;
+//│ if (scrut instanceof this.Foo.class) {
+//│   1
+//│ } else {
+//│   0
+//│ }
+//│ = 1
+//│ foo = Foo {}
+//│ Type: Int
+
+
+:sjs
+fun pow(x) = case
+  0 then 1
+  n then x * pow(x)(n-1)
+//│ JS (unsanitized):
+//│ function pow(x) {
+//│   return (caseScrut) => {
+//│     let n, tmp, tmp1, tmp2;
+//│     if (caseScrut === 0) {
+//│       return 1;
+//│     } else {
+//│       n = caseScrut;
+//│       tmp = globalThis.pow(x);
+//│       tmp1 = n - 1;
+//│       tmp2 = tmp(tmp1) ?? null;
+//│       return x * tmp2;
+//│     }
+//│   };
+//│ }
+//│ null
+//│ Type: ⊤
+
+
+:sjs
+fun not = case
+  true then false
+  false then true
+//│ JS (unsanitized):
+//│ function not() {
+//│   return (caseScrut) => {
+//│     if (caseScrut) {
+//│       return false;
+//│     } else {
+//│       if (caseScrut === false) {
+//│         return true;
+//│       } else {
+//│         throw new globalThis.Error("match error");
+//│       }
+//│     }
+//│   };
+//│ }
+//│ null
+//│ Type: ⊤
+
+
+not of false
+//│ = true
+//│ Type: Bool
+
+
+:sjs
+fun fact = case
+  0 then 1
+  n then n * fact(n - 1)
+//│ JS (unsanitized):
+//│ function fact() {
+//│   return (caseScrut) => {
+//│     let n, tmp, tmp1, tmp2;
+//│     if (caseScrut === 0) {
+//│       return 1;
+//│     } else {
+//│       n = caseScrut;
+//│       tmp = globalThis.fact();
+//│       tmp1 = n - 1;
+//│       tmp2 = tmp(tmp1) ?? null;
+//│       return n * tmp2;
+//│     }
+//│   };
+//│ }
+//│ null
+//│ Type: ⊤
+
+
+fact(3)
+//│ = 6
+//│ Type: Int
+
+
+:sjs
+region x in 42
+//│ JS (unsanitized):
+//│ let x; x = new this.Region(); 42
+//│ = 42
+//│ Type: Int
+
+
+:sjs
+region x in x
+//│ JS (unsanitized):
+//│ let x; x = new this.Region(); x
+//│ = Region {}
+//│ Type: Region[?]
+
+
+:sjs
+region x in x.ref 42
+//│ JS (unsanitized):
+//│ let x; x = new this.Region(); new this.Ref(x, 42)
+//│ = Ref { reg: Region {}, value: 42 }
+//│ Type: Ref[Int, ?]
+
+
+:sjs
+region x in let y = x.ref 42 in !y
+//│ JS (unsanitized):
+//│ let x, tmp; x = new this.Region(); tmp = new this.Ref(x, 42); this.y = tmp; this.y.value
+//│ = 42
+//│ Type: Int
+
+
+:sjs
+region x in let y = x.ref 42 in y := 0
+//│ JS (unsanitized):
+//│ let x, tmp; x = new this.Region(); tmp = new this.Ref(x, 42); this.y = tmp; this.y.value = 0; 0
+//│ = 0
+//│ Type: Int

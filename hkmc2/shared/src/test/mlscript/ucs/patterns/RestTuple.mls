@@ -45,7 +45,7 @@ fun lead_and_last(xs) = if xs is
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];
 //│     rest = globalThis.Predef.tupleSlice(xs, 1, 1) ?? null;
-//│     last0 = globalThis.Predef.tupleGet(xs, -1) ?? null;
+//│     last0 = globalThis.Predef.tupleGet(xs, -1);
 //│     x = first0;
 //│     ys = rest;
 //│     y = last0;
@@ -83,7 +83,7 @@ fun nested_tuple_patterns(xs) = if xs is
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];
 //│     rest = globalThis.Predef.tupleSlice(xs, 1, 1) ?? null;
-//│     last0 = globalThis.Predef.tupleGet(xs, -1) ?? null;
+//│     last0 = globalThis.Predef.tupleGet(xs, -1);
 //│     x = first0;
 //│     if (globalThis.Array.isArray(rest) && rest.length === 2) {
 //│       first01 = rest[0];

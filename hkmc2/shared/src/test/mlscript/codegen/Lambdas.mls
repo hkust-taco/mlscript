@@ -12,3 +12,10 @@ x =>
 //│ = [Function (anonymous)]
 
 
+:todo
+(acc, _) => acc
+//│ JS (unsanitized):
+//│ (acc, _) => { return acc; }
+//│ = [Function (anonymous)]
+
+

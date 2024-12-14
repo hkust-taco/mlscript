@@ -2,6 +2,7 @@
 //│ Type: ⊤
 :parseOnly
 
+//│ Type: ⊤
 class Foo
 //│ Parsed:
 //│ 	TypeDef(Cls,Ident(Foo),None,None)
@@ -186,7 +187,7 @@ g`(`1, `2)
 
 `if x `== `0.0 then `1.0 else x
 //│ Parsed:
-//│ 	Quoted(IfLike(keyword 'if',Some(Loc(1,3,bbSyntax.mls:+187)),Block(List(InfixApp(Unquoted(Quoted(App(Ident(==),Tup(List(Unquoted(Ident(x)), Unquoted(Quoted(DecLit(0.0)))))))),keyword 'then',Unquoted(Quoted(DecLit(1.0)))), Modified(keyword 'else',None,Unquoted(Ident(x)))))))
+//│ 	Quoted(IfLike(keyword 'if',Some(Loc(1,3,bbSyntax.mls:+188)),Block(List(InfixApp(Unquoted(Quoted(App(Ident(==),Tup(List(Unquoted(Ident(x)), Unquoted(Quoted(DecLit(0.0)))))))),keyword 'then',Unquoted(Quoted(DecLit(1.0)))), Modified(keyword 'else',None,Unquoted(Ident(x)))))))
 
 
 x `=> if 0 == 0 then x else `0

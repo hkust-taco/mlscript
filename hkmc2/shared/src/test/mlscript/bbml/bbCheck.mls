@@ -1,6 +1,7 @@
 :bbml
 //│ Type: ⊤
 
+//│ Type: ⊤
 
 fun add: (Int, Int) -> Int
 fun add(x, y) = x + y
@@ -12,10 +13,10 @@ fun foo: Int -> Int
 fun foo: Int -> Int
 //│ ╔══[ERROR] Multiple declarations of symbol 'foo'
 //│ ╟── declared here
-//│ ║  l.11: 	fun foo: Int -> Int
+//│ ║  l.12: 	fun foo: Int -> Int
 //│ ║        	    ^^^^^^^^^^^^^^^
 //│ ╟── declared here
-//│ ║  l.12: 	fun foo: Int -> Int
+//│ ║  l.13: 	fun foo: Int -> Int
 //│ ╙──      	    ^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
@@ -24,10 +25,10 @@ fun id(x) = x
 fun id(y) = y
 //│ ╔══[ERROR] Multiple definitions of symbol 'id'
 //│ ╟── defined here
-//│ ║  l.23: 	fun id(x) = x
+//│ ║  l.24: 	fun id(x) = x
 //│ ║        	    ^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.24: 	fun id(y) = y
+//│ ║  l.25: 	fun id(y) = y
 //│ ╙──      	    ^^^^^^^^^
 //│ Type: ⊤
 
@@ -35,7 +36,7 @@ fun id(y) = y
 fun bar: Str -> Str
 fun bar(x) = let t = x + 1 in "aaa"
 //│ ╔══[ERROR] Type error in reference with expected type Int
-//│ ║  l.36: 	fun bar(x) = let t = x + 1 in "aaa"
+//│ ║  l.37: 	fun bar(x) = let t = x + 1 in "aaa"
 //│ ║        	                     ^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: ⊤
@@ -44,7 +45,7 @@ fun bar(x) = let t = x + 1 in "aaa"
 fun baz: Int -> Int
 fun baz(x) = "bbb"
 //│ ╔══[ERROR] Type error in string literal with expected type Int
-//│ ║  l.45: 	fun baz(x) = "bbb"
+//│ ║  l.46: 	fun baz(x) = "bbb"
 //│ ║        	             ^^^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: ⊤
@@ -59,7 +60,7 @@ add(1, 2): Int
 :e
 add(0, 0): Str
 //│ ╔══[ERROR] Type error in application with expected type Str
-//│ ║  l.60: 	add(0, 0): Str
+//│ ║  l.61: 	add(0, 0): Str
 //│ ║        	^^^^^^^^^
 //│ ╙── because: cannot constrain  Int  <:  Str
 //│ Type: Str
@@ -67,7 +68,7 @@ add(0, 0): Str
 :e
 fun errAdd(x: Int) = x + "1"
 //│ ╔══[ERROR] Type error in string literal with expected type Int
-//│ ║  l.68: 	fun errAdd(x: Int) = x + "1"
+//│ ║  l.69: 	fun errAdd(x: Int) = x + "1"
 //│ ║        	                         ^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: ⊤
@@ -77,7 +78,7 @@ fun high(f) = f(42)
 //│ Type: ⊤
 
 high
-//│ Type: (forall A8_2: (A8_2) ->{⊥} A8_2) ->{⊥} Int
+//│ Type: (forall A9_2: (A9_2) ->{⊥} A9_2) ->{⊥} Int
 
 
 high((x => x): [A] -> A -> A)
@@ -89,21 +90,21 @@ high(x => x)
 :e
 high(x => x + 1)
 //│ ╔══[ERROR] Type error in reference with expected type Int
-//│ ║  l.90: 	high(x => x + 1)
+//│ ║  l.91: 	high(x => x + 1)
 //│ ║        	          ^
-//│ ╙── because: cannot constrain  <A>12_2  <:  Int
-//│ ╔══[ERROR] Type error in application with expected type <A>12_2
-//│ ║  l.90: 	high(x => x + 1)
+//│ ╙── because: cannot constrain  <A>13_2  <:  Int
+//│ ╔══[ERROR] Type error in application with expected type <A>13_2
+//│ ║  l.91: 	high(x => x + 1)
 //│ ║        	          ^^^^^
-//│ ╙── because: cannot constrain  Int  <:  <A>12_2
+//│ ╙── because: cannot constrain  Int  <:  <A>13_2
 //│ Type: Int
 
 (let a = 0 in x => x): [A] -> A -> A
-//│ Type: forall A13_2: (A13_2) ->{⊥} A13_2
+//│ Type: forall A14_2: (A14_2) ->{⊥} A14_2
 
 
 (if false then x => x else y => y): [A] -> A -> A
-//│ Type: forall A16_2: (A16_2) ->{⊥} A16_2
+//│ Type: forall A17_2: (A17_2) ->{⊥} A17_2
 
 
 fun baz: Int -> (([A] -> A -> A), Int) -> Int
@@ -118,24 +119,24 @@ fun baz(z) =
 
 :e
 baz: Int -> (([A] -> A -> A), Int) -> Int
-//│ ╔══[ERROR] Cannot type non-function term SynthSel(Ref(globalThis:block#17),Ident(baz)) as (Int) ->{⊥} (forall A26_2: (A26_2) ->{⊥} A26_2, Int) ->{⊥} Int
-//│ ║  l.120: 	baz: Int -> (([A] -> A -> A), Int) -> Int
+//│ ╔══[ERROR] Cannot type non-function term SynthSel(Ref(globalThis:block#18),Ident(baz)) as (Int) ->{⊥} (forall A27_2: (A27_2) ->{⊥} A27_2, Int) ->{⊥} Int
+//│ ║  l.121: 	baz: Int -> (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^
 //│ Type: ⊥
 
 
 baz(42)
-//│ Type: (forall A22_2: (A22_2) ->{⊥} A22_2, Int) ->{⊥} Int
+//│ Type: (forall A23_2: (A23_2) ->{⊥} A23_2, Int) ->{⊥} Int
 
 :e
 baz(42): (([A] -> A -> A), Int) -> Int
-//│ ╔══[ERROR] Cannot type non-function term App(SynthSel(Ref(globalThis:block#17),Ident(baz)),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))) as (forall A27_2: (A27_2) ->{⊥} A27_2, Int) ->{⊥} Int
-//│ ║  l.131: 	baz(42): (([A] -> A -> A), Int) -> Int
+//│ ╔══[ERROR] Cannot type non-function term App(SynthSel(Ref(globalThis:block#18),Ident(baz)),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))) as (forall A28_2: (A28_2) ->{⊥} A28_2, Int) ->{⊥} Int
+//│ ║  l.132: 	baz(42): (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^^^^^
 //│ Type: ⊥
 
 (z => (f, x) => baz(z)(f, x)): Int -> (([A] -> A -> A), Int) -> Int
-//│ Type: (Int) ->{⊥} (forall A28_2: (A28_2) ->{⊥} A28_2, Int) ->{⊥} Int
+//│ Type: (Int) ->{⊥} (forall A29_2: (A29_2) ->{⊥} A29_2, Int) ->{⊥} Int
 
 
 fun id: [A] -> A -> A
@@ -143,11 +144,11 @@ fun id(x) = x
 //│ Type: ⊤
 
 id: [A] -> A -> A
-//│ Type: forall A34_2: (A34_2) ->{⊥} A34_2
+//│ Type: forall A35_2: (A35_2) ->{⊥} A35_2
 
 
 (id: [A] -> A -> A): [A] -> A -> A
-//│ Type: forall A37_2: (A37_2) ->{⊥} A37_2
+//│ Type: forall A38_2: (A38_2) ->{⊥} A38_2
 
 42: Int | Num
 //│ Type: Int ∨ Num

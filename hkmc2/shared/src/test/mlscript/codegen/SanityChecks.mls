@@ -170,7 +170,7 @@ Cls(1, 2).f(3, 4)(5)
 //│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
 //│ };
 //│ tmp = this.Cls(1, 2);
-//│ tmp1 = tmp.f(3, 4) ?? null;
+//│ tmp1 = tmp.f(3, 4);
 //│ tmp1(5) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 

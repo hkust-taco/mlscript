@@ -253,7 +253,7 @@ f(Cons(1, Cons(2, Cons(3, 0))))
 
 :fixme
 () => while true then 0
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(InfixApp(Tup(List()),keyword '=>',IfLike(keyword 'while',None,BoolLit(true))),keyword 'then',IntLit(0)) (of class hkmc2.syntax.Tree$InfixApp)
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',None,BoolLit(true)),keyword 'then',IntLit(0)) (of class hkmc2.syntax.Tree$InfixApp)
 
 :fixme
 while log("Hello World"); false

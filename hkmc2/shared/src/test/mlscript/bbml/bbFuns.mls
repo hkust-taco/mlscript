@@ -1,10 +1,11 @@
 :bbml
 //│ Type: ⊤
 
+//│ Type: ⊤
 
 fun f(x, y) = x(y)
 f
-//│ Type: forall y4_2, α5_2, α6_2: (y4_2 ->{α5_2} α6_2, y4_2) ->{α5_2} α6_2
+//│ Type: forall y5_2, α6_2, α7_2: (y5_2 ->{α6_2} α7_2, y5_2) ->{α6_2} α7_2
 
 
 f((x => x), 42)
@@ -18,9 +19,9 @@ fun id: [A] -> A -> A
 //│ Type: ⊤
 
 id : [A] -> A -> A
-//│ Type: forall A18_2: (A18_2) ->{⊥} A18_2
+//│ Type: forall A19_2: (A19_2) ->{⊥} A19_2
 
 id(id) : [A] -> A -> A
-//│ Type: forall A21_2: (A21_2) ->{⊥} A21_2
+//│ Type: forall A22_2: (A22_2) ->{⊥} A22_2
 
 

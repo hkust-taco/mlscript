@@ -1,6 +1,7 @@
 :bbml
 //│ Type: ⊤
 
+//│ Type: ⊤
 
 fun id(x) = x
 //│ Type: ⊤
@@ -9,28 +10,28 @@ id(1)
 //│ Type: Int
 
 id
-//│ Type: forall x3_2: x3_2 -> x3_2
+//│ Type: forall x4_2: x4_2 -> x4_2
 
 id(true)
 //│ Type: Bool
 
 id
-//│ Type: forall x3_2: x3_2 -> x3_2
+//│ Type: forall x4_2: x4_2 -> x4_2
 
 
 fun id(x) = x
 //│ Type: ⊤
 
 id : [A] -> A -> A
-//│ Type: forall A8_2: (A8_2) ->{⊥} A8_2
+//│ Type: forall A9_2: (A9_2) ->{⊥} A9_2
 
 
 (y => y) : [A] -> A -> A
-//│ Type: forall A11_2: (A11_2) ->{⊥} A11_2
+//│ Type: forall A12_2: (A12_2) ->{⊥} A12_2
 
 fun id(x) = x
 (y => id(y)) : [A] -> A -> A
-//│ Type: forall A15_2: (A15_2) ->{⊥} A15_2
+//│ Type: forall A16_2: (A16_2) ->{⊥} A16_2
 
 
 

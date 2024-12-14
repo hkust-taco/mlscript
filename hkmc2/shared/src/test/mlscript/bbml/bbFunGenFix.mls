@@ -2,6 +2,7 @@
 :bbml
 //│ Type: ⊤
 
+//│ Type: ⊤
 
 class Reg[out Rg, out AccI]
 //│ Type: ⊤
@@ -30,7 +31,7 @@ fun helper(a) = write(a)
 //│ Type: ⊤
 
 helper
-//│ Type: forall Rg23_2: Reg[out Rg23_2, ?] ->{Rg23_2} Int
+//│ Type: forall Rg24_2: Reg[out Rg24_2, ?] ->{Rg24_2} Int
 
 subreg(basereg) of r0 =>
   helper(r0)

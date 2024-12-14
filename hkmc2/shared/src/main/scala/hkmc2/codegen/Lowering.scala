@@ -173,7 +173,11 @@ class Lowering(using TL, Raise, Elaborator.State):
       
     case st.Lam(params, body) =>
       val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N)
-      k(Value.Lam(paramLists.head, bodyBlock))
+      if k.isInstanceOf[TailOp] || bodyBlock.size <= 5
+      then k(Value.Lam(paramLists.head, bodyBlock))
+      else
+        val l = new TempSymbol(N)
+        Assign(l, Value.Lam(paramLists.head, bodyBlock), k(l |> Value.Ref.apply))
     
     /* 
     case t @ st.If(Split.Let(sym, trm, tail)) =>
@@ -305,6 +309,26 @@ class Lowering(using TL, Raise, Elaborator.State):
         k(Value.Ref(l))
       )
     
+    // * BbML-specific cases: t.Cls#field and mutable operations
+    case SelProj(prefix, _, proj) =>
+      setupSelection(prefix, proj, N)(k)
+    case Region(reg, body) =>
+      Assign(reg, Instantiate(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Region"))(N), Nil), term(body)(k))
+    case RegRef(reg, value) =>
+      def rec(as: Ls[st], asr: Ls[Path]): Block = as match
+        case Nil => k(Instantiate(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Ref"))(N), asr.reverse))
+        case a :: as =>
+          subTerm(a): ar =>
+            rec(as, ar :: asr)
+      rec(reg :: value :: Nil, Nil)
+    case Deref(ref) =>
+      subTerm(ref): r =>
+        k(Select(r, Tree.Ident("value"))(N))
+    case SetRef(lhs, rhs) =>
+      subTerm(lhs): ref =>
+        subTerm(rhs): value =>
+          AssignField(ref, Tree.Ident("value"), value, k(value))(N)
+
     case Error => End("error")
     
     // case _ =>

@@ -50,7 +50,8 @@ val isDefined = case
   Some then true
   None then false
 //│ JS (unsanitized):
-//│ this.isDefined = (caseScrut) => {
+//│ let tmp;
+//│ tmp = (caseScrut) => {
 //│   if (caseScrut instanceof this.Some.class) {
 //│     return true;
 //│   } else {
@@ -61,6 +62,7 @@ val isDefined = case
 //│     }
 //│   }
 //│ };
+//│ this.isDefined = tmp;
 //│ null
-//│ isDefined = [Function (anonymous)]
+//│ isDefined = [Function: tmp]
 

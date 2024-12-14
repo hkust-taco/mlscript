@@ -25,38 +25,42 @@ f(false)
 :sjs
 let f = x => log((if x then "ok" else "ko") + "!")
 //│ JS (unsanitized):
-//│ this.f = (x) => {
-//│   let tmp, tmp1;
+//│ let tmp;
+//│ tmp = (x) => {
+//│   let tmp1, tmp2;
 //│   if (x) {
-//│     tmp = "ok";
+//│     tmp1 = "ok";
 //│   } else {
-//│     tmp = "ko";
+//│     tmp1 = "ko";
 //│   }
-//│   tmp1 = tmp + "!";
-//│   return this.log(tmp1);
+//│   tmp2 = tmp1 + "!";
+//│   return this.log(tmp2);
 //│ };
+//│ this.f = tmp;
 //│ null
-//│ f = [Function (anonymous)]
+//│ f = [Function: tmp]
 
 :sjs
 let f = x => log((if x and x then "ok" else "ko") + "!")
 //│ JS (unsanitized):
-//│ this.f = (x) => {
-//│   let tmp, tmp1;
+//│ let tmp;
+//│ tmp = (x) => {
+//│   let tmp1, tmp2;
 //│   if (x) {
 //│     if (x) {
-//│       tmp = "ok";
+//│       tmp1 = "ok";
 //│     } else {
-//│       tmp = "ko";
+//│       tmp1 = "ko";
 //│     }
 //│   } else {
-//│     tmp = "ko";
+//│     tmp1 = "ko";
 //│   }
-//│   tmp1 = tmp + "!";
-//│   return this.log(tmp1);
+//│   tmp2 = tmp1 + "!";
+//│   return this.log(tmp2);
 //│ };
+//│ this.f = tmp;
 //│ null
-//│ f = [Function (anonymous)]
+//│ f = [Function: tmp]
 // --- TODO: What we want ---
 // this.f = (x) => {
 //   let tmp, tmp1, flag;

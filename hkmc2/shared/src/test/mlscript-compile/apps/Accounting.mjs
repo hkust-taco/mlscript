@@ -63,15 +63,15 @@ class Accounting {
       constructor(fileName) {
         this.fileName = fileName;
         let tmp;
-        tmp = fs.writeFileSync(this.fileName, "# Accounting\n") ?? null;
+        tmp = fs.writeFileSync(this.fileName, "# Accounting\n");
       }
       w(txt) {
-        return fs.appendFileSync(this.fileName, txt) ?? null;
+        return fs.appendFileSync(this.fileName, txt);
       } 
       wln(txt1) {
         let tmp;
         tmp = Str.concat(txt1, "\n");
-        return fs.appendFileSync(this.fileName, tmp) ?? null;
+        return fs.appendFileSync(this.fileName, tmp);
       } 
       init() {
         let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13;
@@ -134,7 +134,7 @@ class Accounting {
         }) ?? null;
         tmp14 = tmp13.reduce((a, b) => {
           return a + b;
-        }, 0) ?? null;
+        }, 0);
         tmp15 = this$Accounting.display(tmp14);
         tmp16 = Str.concat(tmp11, tmp15);
         tmp17 = Str.concat(tmp16, "|");
@@ -149,7 +149,7 @@ class Accounting {
         }) ?? null;
         tmp23 = tmp22.reduce((a, b) => {
           return a + b;
-        }, 0) ?? null;
+        }, 0);
         tmp24 = this$Accounting.display(tmp23);
         tmp25 = Str.concat(tmp20, tmp24);
         tmp26 = Str.concat(tmp25, "|");

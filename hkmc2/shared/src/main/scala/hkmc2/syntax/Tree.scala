@@ -41,6 +41,7 @@ sealed trait Literal extends AutoLocated:
 enum Tree extends AutoLocated:
   case Empty()
   case Error()
+  case Under()
   case Ident(name: Str)
   case IntLit(value: BigInt)          extends Tree with Literal
   case DecLit(value: BigDecimal)      extends Tree with Literal
@@ -76,7 +77,7 @@ enum Tree extends AutoLocated:
   case Spread(kw: Keyword.Ellipsis, kwLoc: Opt[Loc], body: Opt[Tree])
 
   def children: Ls[Tree] = this match
-    case _: Empty | _: Error | _: Ident | _: Literal => Nil
+    case _: Empty | _: Error | _: Ident | _: Literal | _: Under => Nil
     case Block(stmts) => stmts
     case OpBlock(items) => items.flatMap:
       case (op, body) => op :: body :: Nil
@@ -111,6 +112,7 @@ enum Tree extends AutoLocated:
   def describe: Str = this match
     case Empty() => "empty"
     case Error() => "error"
+    case Under() => "underscore"
     case Ident(name) => "identifier"
     case IntLit(value) => "integer literal"
     case DecLit(value) => "decimal literal"
@@ -146,6 +148,11 @@ enum Tree extends AutoLocated:
   def showDbg: Str = toString // TODO
   
   lazy val desugared: Tree = this match
+    
+    // TODO generalize to pattern-let and rm this special case
+    case LetLike(kw, und @ Under(), r, b) =>
+      LetLike(kw, Ident("_").withLocOf(und), r, b)
+    
     case Modified(Keyword.`declare`, modLoc, s) =>
       // TODO handle `declare` modifier!
       s
@@ -161,6 +168,7 @@ enum Tree extends AutoLocated:
 
   /** S(true) means eager spread, S(false) means lazy spread, N means no spread. */
   def asParam: Opt[(Opt[Bool], Ident, Opt[Tree])] = this match
+    case und: Under => S(N, new Ident("_").withLocOf(und), N)
     case id: Ident => S(N, id, N)
     case Spread(Keyword.`..`, _, S(id: Ident)) => S(S(false), id, N)
     case Spread(Keyword.`...`, _, S(id: Ident)) => S(S(true), id, N)
@@ -189,8 +197,20 @@ object PlainTup:
 
 object Apps:
   def unapply(t: Tree): S[(Tree, Ls[Tup])] = t match
-    case App(Apps(id, args), arg: Tup) => S(id, args :+ arg)
+    case App(Apps(base, args), arg: Tup) => S(base, args :+ arg)
     case t => S(t, Nil)
+
+/** Matches applications with underscores in some argument and/or prefix positions. */
+object PartialApp:
+  def unapply(t: App): Opt[(Tree \/ Under, Ls[Tree \/ Under])] = t match
+    case Apps(base, Tup(args) :: Nil) =>
+      var hasUnderscores = false
+      def opt(t: Tree) = t match
+        case u: Under => hasUnderscores = true; R(u)
+        case _ => L(t)
+      val res = (base |> opt, args.map(opt))
+      Opt.when(hasUnderscores)(res)
+    case _ => N
 
 
 sealed abstract class OuterKind(val desc: Str)

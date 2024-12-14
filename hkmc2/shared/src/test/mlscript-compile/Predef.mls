@@ -5,14 +5,20 @@ fun id(x) = x
 
 fun not(x) = x is false
 
-fun (|>) pipe(x, f) = f(x)
+fun (|>) pipeInto(x, f) = f(x)
+fun (<|) pipeFrom(f, x) = f(x)
 
-fun (.) apply(receiver, f)(...args) = f(receiver, ...args)
+fun (>>) andThen(f, g)(x) = g(f(x))
+fun (<<) compose(f, g)(x) = f(g(x))
+
+fun (.) passTo(receiver, f)(...args) = f(receiver, ...args)
 
 fun (|>.) call(receiver, f)(...args) = f.call(receiver, ...args)
 
 fun print(x) =
   console.log(String(x))
+
+val assert = console.assert
 
 fun tupleSlice(xs, i, j) =
   globalThis.Array.prototype.slice.call(xs, i, xs.length - j)

@@ -1,6 +1,7 @@
 :bbml
 //│ Type: ⊤
 
+//│ Type: ⊤
 
 123
 //│ Type: Int
@@ -19,7 +20,7 @@ false
 
 fun id(x) = x
 id
-//│ Type: forall x3_2: x3_2 -> x3_2
+//│ Type: forall x4_2: x4_2 -> x4_2
 
 fun inc(x) = x + 1
 //│ Type: ⊤
@@ -28,7 +29,7 @@ fun mul(x, y) = x * y
 //│ Type: ⊤
 
 x => x
-//│ Type: (x9_1) ->{⊥} x9_1
+//│ Type: (x10_1) ->{⊥} x10_1
 
 +
 //│ Type: (Int, Int) ->{⊥} Int
@@ -42,7 +43,7 @@ x => x
 :e
 114 + "514"
 //│ ╔══[ERROR] Type error in string literal with expected type Int
-//│ ║  l.43: 	114 + "514"
+//│ ║  l.44: 	114 + "514"
 //│ ║        	      ^^^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Int
@@ -60,7 +61,7 @@ let x = 1 in let y = 2 in x + y
 :e
 let x = 0 in x + "1"
 //│ ╔══[ERROR] Type error in string literal with expected type Int
-//│ ║  l.61: 	let x = 0 in x + "1"
+//│ ║  l.62: 	let x = 0 in x + "1"
 //│ ║        	                 ^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Int
@@ -71,7 +72,7 @@ class Foo(x: Int)
 :e
 new Nothingness(0)
 //│ ╔══[ERROR] Name not found: Nothingness
-//│ ║  l.72: 	new Nothingness(0)
+//│ ║  l.73: 	new Nothingness(0)
 //│ ╙──      	    ^^^^^^^^^^^
 //│ ═══[ERROR] Not a valid class: <error>
 //│ Type: ⊥
@@ -79,7 +80,7 @@ new Nothingness(0)
 :e
 new 42
 //│ ╔══[ERROR] Not a valid class: integer literal
-//│ ║  l.80: 	new 42
+//│ ║  l.81: 	new 42
 //│ ╙──      	    ^^
 //│ Type: ⊥
 
@@ -98,8 +99,8 @@ new Point(0.0, 0.0, 0.0)
 :e
 new Foo("1!5!")
 //│ ╔══[ERROR] Type error in string literal with expected type Int
-//│ ║  l.99: 	new Foo("1!5!")
-//│ ║        	        ^^^^^^
+//│ ║  l.100: 	new Foo("1!5!")
+//│ ║         	        ^^^^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Foo
 
@@ -108,14 +109,14 @@ class Some[A](value: A)
 //│ Type: ⊤
 
 new Some(true)
-//│ Type: Some[α15_1]
-//│ Where:
-//│   Bool <: α15_1
-
-new Some(42)
 //│ Type: Some[α16_1]
 //│ Where:
-//│   Int <: α16_1
+//│   Bool <: α16_1
+
+new Some(42)
+//│ Type: Some[α17_1]
+//│ Where:
+//│   Int <: α17_1
 
 let p = new Point(1.0, 0.0, 0.0) in p.Point#x
 //│ Type: Num
@@ -127,16 +128,16 @@ let t = new Some(true) in t.Some#value
 :pe
 42.Some#value
 //│ ╔══[LEXICAL ERROR] Expect at least one digit after the  decimal point
-//│ ║  l.128: 	42.Some#value
+//│ ║  l.129: 	42.Some#value
 //│ ╙──       	   ^
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
-//│ ║  l.128: 	42.Some#value
+//│ ║  l.129: 	42.Some#value
 //│ ╙──       	   ^^^^
 //│ ╔══[ERROR] Name not found: #
-//│ ║  l.128: 	42.Some#value
+//│ ║  l.129: 	42.Some#value
 //│ ╙──       	       ^
 //│ ╔══[ERROR] Name not found: value
-//│ ║  l.128: 	42.Some#value
+//│ ║  l.129: 	42.Some#value
 //│ ╙──       	        ^^^^^
 //│ Type: ⊥
 
@@ -149,22 +150,22 @@ fun foofoo(x) =
 //│ Type: ⊤
 
 new Printer(foofoo)
-//│ Type: Printer[α24_1]
+//│ Type: Printer[α25_1]
 //│ Where:
-//│   α24_1 <: Int
+//│   α25_1 <: Int
 
 let ip = new Printer(foofoo) in ip.Printer#f(42)
 //│ Type: Str
 
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
-//│ ╔══[ERROR] Type error in string literal with expected type α32_1
-//│ ║  l.160: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
+//│ ╔══[ERROR] Type error in string literal with expected type α33_1
+//│ ║  l.161: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ║         	                                             ^^^^
-//│ ╟── because: cannot constrain  Str  <:  α32_1
-//│ ╟── because: cannot constrain  Str  <:  α32_1
-//│ ╟── because: cannot constrain  Str  <:  ¬(~α30_1)
-//│ ╟── because: cannot constrain  Str  <:  α30_1
+//│ ╟── because: cannot constrain  Str  <:  α33_1
+//│ ╟── because: cannot constrain  Str  <:  α33_1
+//│ ╟── because: cannot constrain  Str  <:  ¬(~α31_1)
+//│ ╟── because: cannot constrain  Str  <:  α31_1
 //│ ╙── because: cannot constrain  Str  <:  ¬(~{Int})
 //│ Type: Str
 
@@ -175,23 +176,23 @@ fun inc(x) = x + 1
 //│ Type: ⊤
 
 new TFun(inc)
-//│ Type: TFun[α36_1]
+//│ Type: TFun[α37_1]
 //│ Where:
-//│   Int <: α36_1
-//│   α36_1 <: Int
+//│   Int <: α37_1
+//│   α37_1 <: Int
 
 let tf = new TFun(inc) in tf.TFun#f(1)
 //│ Type: Int
 
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
-//│ ╔══[ERROR] Type error in string literal with expected type α44_1
-//│ ║  l.187: 	let tf = new TFun(inc) in tf.TFun#f("1")
+//│ ╔══[ERROR] Type error in string literal with expected type α45_1
+//│ ║  l.188: 	let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
-//│ ╟── because: cannot constrain  Str  <:  α44_1
-//│ ╟── because: cannot constrain  Str  <:  α44_1
-//│ ╟── because: cannot constrain  Str  <:  ¬(~α42_1)
-//│ ╟── because: cannot constrain  Str  <:  α42_1
+//│ ╟── because: cannot constrain  Str  <:  α45_1
+//│ ╟── because: cannot constrain  Str  <:  α45_1
+//│ ╟── because: cannot constrain  Str  <:  ¬(~α43_1)
+//│ ╟── because: cannot constrain  Str  <:  α43_1
 //│ ╙── because: cannot constrain  Str  <:  ¬(~{Int})
 //│ Type: Str ∨ Int
 
@@ -214,6 +215,10 @@ if false then 1 else "1"
 
 
 if 1 is Int then 1 else 0
+//│ Type: Int
+
+
+if 1 is Foo then 0 else 1
 //│ Type: Int
 
 
@@ -257,16 +262,29 @@ class Foo[A](x: A -> A)
 //│ Type: ⊤
 
 new Foo(x => x)
-//│ Type: Foo[α76_1]
+//│ Type: Foo[α78_1]
 
 fun f(g) = new Foo(g)
 f
-//│ Type: forall α79_2: (α79_2 -> α79_2) -> Foo[α79_2]
+//│ Type: forall α81_2: (α81_2 -> α81_2) -> Foo[α81_2]
 
 f(x => x).Foo#x
-//│ Type: (α81_1) ->{⊥} α81_1
+//│ Type: (α83_1) ->{⊥} α83_1
 
 g => (new Foo(g)).Foo#x
-//│ Type: (α86_1 -> α86_1) ->{⊥} (α86_1) ->{⊥} α86_1
+//│ Type: (α88_1 -> α88_1) ->{⊥} (α88_1) ->{⊥} α88_1
+
+
+throw new Error("oops")
+//│ Type: ⊥
+
+
+:e
+throw 42
+//│ ╔══[ERROR] Type error in throw
+//│ ║  l.283: 	throw 42
+//│ ║         	      ^^
+//│ ╙── because: cannot constrain  Int  <:  Error
+//│ Type: ⊥
 
 

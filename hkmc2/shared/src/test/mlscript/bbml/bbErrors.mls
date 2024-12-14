@@ -2,26 +2,27 @@
 //│ Type: ⊤
 :e
 
+//│ Type: ⊤
 
 2(2)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.6: 	2(2)
+//│ ║  l.7: 	2(2)
 //│ ║       	^^^^
-//│ ╙── because: cannot constrain  Int  <:  Int ->{α2_1} α3_1
+//│ ╙── because: cannot constrain  Int  <:  Int ->{α3_1} α4_1
 //│ Type: ⊥
 
 (x => x(0))(1)
-//│ ╔══[ERROR] Type error in integer literal with expected type x4_1
-//│ ║  l.13: 	(x => x(0))(1)
+//│ ╔══[ERROR] Type error in integer literal with expected type x5_1
+//│ ║  l.14: 	(x => x(0))(1)
 //│ ║        	            ^
-//│ ╟── because: cannot constrain  Int  <:  x4_1
-//│ ╟── because: cannot constrain  Int  <:  x4_1
-//│ ╙── because: cannot constrain  Int  <:  ¬(~{Int ->{α5_1} α6_1})
+//│ ╟── because: cannot constrain  Int  <:  x5_1
+//│ ╟── because: cannot constrain  Int  <:  x5_1
+//│ ╙── because: cannot constrain  Int  <:  ¬(~{Int ->{α6_1} α7_1})
 //│ Type: ⊥
 
 (1).Foo#a()
 //│ ╔══[ERROR] Name not found: Foo
-//│ ║  l.22: 	(1).Foo#a()
+//│ ║  l.23: 	(1).Foo#a()
 //│ ╙──      	   ^^^^
 //│ ═══[ERROR] Not a valid class: <error>
 //│ Type: ⊥
@@ -29,20 +30,20 @@
 
 fun inc(x) = x + 1
 inc("oops")
-//│ ╔══[ERROR] Type error in string literal with expected type x11_1
-//│ ║  l.31: 	inc("oops")
+//│ ╔══[ERROR] Type error in string literal with expected type x12_1
+//│ ║  l.32: 	inc("oops")
 //│ ║        	    ^^^^^^
-//│ ╟── because: cannot constrain  Str  <:  x11_1
-//│ ╟── because: cannot constrain  Str  <:  x11_1
+//│ ╟── because: cannot constrain  Str  <:  x12_1
+//│ ╟── because: cannot constrain  Str  <:  x12_1
 //│ ╙── because: cannot constrain  Str  <:  ¬¬Int
 //│ Type: Int
 
 fun inc(x) = x + 1
 inc : Int
 //│ ╔══[ERROR] Type error in selection with expected type Int
-//│ ║  l.41: 	inc : Int
+//│ ║  l.42: 	inc : Int
 //│ ║        	^^^
-//│ ╙── because: cannot constrain  x14_1 -> Int  <:  Int
+//│ ╙── because: cannot constrain  x15_1 -> Int  <:  Int
 //│ Type: Int
 
 

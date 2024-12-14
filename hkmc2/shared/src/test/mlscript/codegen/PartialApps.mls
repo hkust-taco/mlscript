@@ -1,0 +1,176 @@
+:js
+
+
+fun foo(x, y, z) = [x, y, z]
+
+let f = foo(1, _, 3)
+//│ f = [Function (anonymous)]
+
+f(2)
+//│ = [ 1, 2, 3 ]
+
+:sjs
+let f = foo(1, _, _)
+//│ JS (unsanitized):
+//│ this.f = (_, _1) => { return this.foo(1, _, _1); }; null
+//│ f = [Function (anonymous)]
+
+f(2, 3)
+//│ = [ 1, 2, 3 ]
+
+let g = f(_, 3)
+//│ g = [Function (anonymous)]
+
+g(2)
+//│ = [ 1, 2, 3 ]
+
+foo(_, _, 3) of 1, 2
+//│ = [ 1, 2, 3 ]
+
+foo(_, _, 3)(1, 2)
+//│ = [ 1, 2, 3 ]
+
+:fixme
+foo(_, _, 3)(1, _)(2)
+//│ ═══[ERROR] Illegal position for '_' placeholder.
+
+
+:todo
+foo(..._)
+//│ ╔══[PARSE ERROR] Unexpected keyword '_' in this position
+//│ ║  l.39: 	foo(..._)
+//│ ╙──      	       ^
+//│ ╔══[PARSE ERROR] Unexpected '_' keyword here
+//│ ║  l.39: 	foo(..._)
+//│ ╙──      	       ^
+
+:todo
+[..._]
+//│ ╔══[PARSE ERROR] Unexpected keyword '_' in this position
+//│ ║  l.48: 	[..._]
+//│ ╙──      	    ^
+//│ ╔══[PARSE ERROR] Unexpected '_' keyword here
+//│ ║  l.48: 	[..._]
+//│ ╙──      	    ^
+
+
+let h = _ - 2
+//│ h = [Function (anonymous)]
+
+h(1)
+//│ = -1
+
+
+let i = _(0, 1, _)
+//│ i = [Function (anonymous)]
+
+i((x, y, z) => x + y + z, 2)
+//│ = 3
+
+i((...args) => [...args], _)(2)
+//│ = [ 0, 1, 2 ]
+
+
+123 |> (_ + 1)
+//│ = 124
+
+123 |> _ + 1
+//│ = 124
+
+123 |> (_ + 1 >> _ * 2)
+//│ = 248
+
+// * Note: lack of parens
+123 |> _ + 1 >> _ * 2
+//│ = [Function (anonymous)]
+
+123 |> _ + 1 |> _ * 2
+//│ = 248
+
+_ * 2 <| _ + 1 <| 123
+//│ = 248
+
+_ + 1 >> _ * 2 <| 123
+//│ = 248
+
+
+:todo
+let j = _.x
+//│ ═══[ERROR] Illegal position for '_' placeholder.
+
+:todo
+let j = _.x(123)
+//│ ═══[ERROR] Illegal position for '_' placeholder.
+
+:todo
+let j = _.x(1, _)
+//│ ═══[ERROR] Illegal position for '_' placeholder.
+//│ j = [Function (anonymous)]
+
+:todo // really support this?
+let j = _.x.y(1, _)
+//│ ═══[ERROR] Illegal position for '_' placeholder.
+//│ j = [Function (anonymous)]
+
+
+class C(a, b, c)
+
+2 |> C(1, _, 3) |> print
+//│ > C(1, 2, 3)
+
+:todo
+(2 |> new C(1, _, 3)) |> print
+//│ ═══[ERROR] Illegal position for '_' placeholder.
+
+:fixme // parsing precedence
+2 |> new C(1, _, 3) |> print
+//│ ═══[RUNTIME ERROR] TypeError: Predef.pipeInto.class is not a constructor
+
+
+_ - _ of 1, 2
+//│ = [Function (anonymous)]
+
+(_ - _) of 1, 2
+//│ = -1
+
+
+_ - 2 <| 1
+//│ = -1
+
+1 |> _ - 2
+//│ = -1
+
+:pe
+:w
+1
+|> _ - 2
+//│ ╔══[PARSE ERROR] Expected end of input; found '_' keyword instead
+//│ ║  l.146: 	|> _ - 2
+//│ ╙──       	   ^
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.145: 	1
+//│ ╙──       	^
+//│ = [Function: pipeInto]
+
+:todo
+1
+  |> _ - 2
+//│ /!!!\ Uncaught error: scala.MatchError: OpBlock(List((Ident(|>),App(Ident(-),Tup(List(Under(), IntLit(2))))))) (of class hkmc2.syntax.Tree$OpBlock)
+
+:sjs
+1 . _ - 2
+//│ JS (unsanitized):
+//│ ((_) => { return Predef.passTo(1, _); }) - 2
+//│ = NaN
+
+:sjs
+1 . (_ - 2)()
+//│ JS (unsanitized):
+//│ let tmp; tmp = Predef.passTo(1, (_) => { return _ - 2; }); tmp() ?? null
+//│ = -1
+
+1 . (_ - _)(2)
+//│ = -1
+
+
+

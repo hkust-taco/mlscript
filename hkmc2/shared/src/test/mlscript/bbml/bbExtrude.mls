@@ -1,15 +1,16 @@
 :bbml
 //│ Type: ⊤
 
+//│ Type: ⊤
 fun f(y) =
   let local = ((x => y(x) + 1): [A] -> A -> Int) in y
 //│ Type: ⊤
 
 // * the parameter type of y is extruded.
 f
-//│ Type: forall y3_2: y3_2 -> y3_2
+//│ Type: forall y4_2: y4_2 -> y4_2
 //│ Where:
-//│   y3_2 <: ⊤ -> Int
+//│   y4_2 <: ⊤ -> Int
 
 fun foo: [A] -> A -> Int
 fun foo(x) = 0
@@ -27,25 +28,25 @@ fun g(y) =
 //│ Type: ⊤
 
 g
-//│ Type: (forall A21_2: (⊥) ->{⊥} Int) ->{⊥} forall A22_2: (⊤) ->{⊥} Int
+//│ Type: (forall A22_2: (⊥) ->{⊥} Int) ->{⊥} forall A23_2: (⊤) ->{⊥} Int
 
 g(foo)
 //│ Type: (⊤) ->{⊥} Int
 
 :e
 y `=> (let t = run(x `=> x `+ y) in y)
-//│ ╔══[ERROR] Type error in quoted term with expected type CodeBase[out T32_3, ⊥, ?]
-//│ ║  l.36: 	y `=> (let t = run(x `=> x `+ y) in y)
+//│ ╔══[ERROR] Type error in quoted term with expected type CodeBase[out T33_3, ⊥, ?]
+//│ ║  l.37: 	y `=> (let t = run(x `=> x `+ y) in y)
 //│ ║        	                   ^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  CodeBase[out x33_5 -> α40_5, out α42_4, ?]  <:  CodeBase[out T32_3, ⊥, ?]
-//│ ╟── because: cannot constrain  D( α42_4 )  <:  ⊥
-//│ ╟── because: cannot constrain  α42_4  <:  ¬()
-//│ ╟── because: cannot constrain  (¬⊥ ∧ ¬x43_4) ∧ <y>31_3  <:  ¬()
-//│ ╟── because: cannot constrain  <y>31_3  <:  x43_4
-//│ ╙── because: cannot constrain  <y>31_3  <:  ¬()
-//│ Type: CodeBase[out y30_3 -> y30_3, ⊥, ?]
+//│ ╟── because: cannot constrain  CodeBase[out x34_5 -> α41_5, out α43_4, ?]  <:  CodeBase[out T33_3, ⊥, ?]
+//│ ╟── because: cannot constrain  D( α43_4 )  <:  ⊥
+//│ ╟── because: cannot constrain  α43_4  <:  ¬()
+//│ ╟── because: cannot constrain  (¬⊥ ∧ ¬x44_4) ∧ <y>32_3  <:  ¬()
+//│ ╟── because: cannot constrain  <y>32_3  <:  x44_4
+//│ ╙── because: cannot constrain  <y>32_3  <:  ¬()
+//│ Type: CodeBase[out y31_3 -> y31_3, ⊥, ?]
 //│ Where:
-//│   y30_3 <: Int
+//│   y31_3 <: Int
 
 class C[A](m: A, n: A -> Int)
 //│ Type: ⊤
@@ -53,11 +54,11 @@ class C[A](m: A, n: A -> Int)
 
 fun f: [A] -> ([B] -> (C[out B] & A) -> B) -> A -> Int
 f
-//│ Type: forall A49_2: (forall B50_3: (C[out B50_3] ∧ A49_2) ->{⊥} B50_3) ->{⊥} (A49_2) ->{⊥} Int
+//│ Type: forall A50_2: (forall B51_3: (C[out B51_3] ∧ A50_2) ->{⊥} B51_3) ->{⊥} (A50_2) ->{⊥} Int
 
 fun g: [D] -> C[in Int out D] -> D
 g
-//│ Type: forall D51_2: (C[in Int out D51_2]) ->{⊥} D51_2
+//│ Type: forall D52_2: (C[in Int out D52_2]) ->{⊥} D52_2
 
 
 f(g)
@@ -76,17 +77,17 @@ f(g)(foo)
 
 :fixme // ???
 f(g)(bar)
-//│ ╔══[ERROR] Type error in selection with expected type A64_1
-//│ ║  l.78: 	f(g)(bar)
+//│ ╔══[ERROR] Type error in selection with expected type A65_1
+//│ ║  l.79: 	f(g)(bar)
 //│ ║        	     ^^^
-//│ ╟── because: cannot constrain  C[Int]  <:  A64_1
-//│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  A64_1
-//│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  ¬C[in D() out ¬⊥ ∧ B67_1] ∨ C[in D( Int ) out ¬⊥ ∧ D68_1]
-//│ ╟── because: cannot constrain  (D( Int )) ∧ (D( B67_1 ))  <:  ¬⊥ ∧ D68_1
-//│ ╟── because: cannot constrain  Int && B67_1  <:  D68_1
-//│ ╟── because: cannot constrain  Int && B67_1  <:  B69_1
-//│ ╟── because: cannot constrain  Int && B67_1  <:  B69_1
-//│ ╟── because: cannot constrain  Int && B67_1  <:  ¬()
-//│ ╟── because: cannot constrain  B67_1  <:  ¬(Int)
+//│ ╟── because: cannot constrain  C[Int]  <:  A65_1
+//│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  A65_1
+//│ ╟── because: cannot constrain  C[in D( Int ) out D( Int )]  <:  ¬C[in D() out ¬⊥ ∧ B68_1] ∨ C[in D( Int ) out ¬⊥ ∧ D69_1]
+//│ ╟── because: cannot constrain  (D( Int )) ∧ (D( B68_1 ))  <:  ¬⊥ ∧ D69_1
+//│ ╟── because: cannot constrain  Int && B68_1  <:  D69_1
+//│ ╟── because: cannot constrain  Int && B68_1  <:  B70_1
+//│ ╟── because: cannot constrain  Int && B68_1  <:  B70_1
+//│ ╟── because: cannot constrain  Int && B68_1  <:  ¬()
+//│ ╟── because: cannot constrain  B68_1  <:  ¬(Int)
 //│ ╙── because: cannot constrain    <:  ¬(Int)
 //│ Type: Int

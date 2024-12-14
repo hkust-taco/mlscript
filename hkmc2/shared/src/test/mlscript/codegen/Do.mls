@@ -32,7 +32,7 @@ val f = case
 //│ >    let $doTemp = globalThis:import#Prelude#666(.)console‹member:console›(.)log("non-null")
 //│ >    caseScrut is 1 then "unit"
 //│ >    else "other"
-//│ f = [Function (anonymous)]
+//│ f = [Function: tmp]
 
 f(0)
 //│ = 'null'

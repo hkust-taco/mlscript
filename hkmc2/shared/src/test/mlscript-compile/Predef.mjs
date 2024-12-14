@@ -1,5 +1,6 @@
 const Predef$class = class Predef {
   constructor() {
+    this.assert = console.assert;
     this.MatchResult = function MatchResult(captures1) { return new MatchResult.class(captures1); };
     this.MatchResult.class = class MatchResult {
       constructor(captures) {
@@ -50,7 +51,7 @@ const Predef$class = class Predef {
           tmp = "| ".repeat(this.indentLvl) ?? null;
           tmp1 = "  ".repeat(this.indentLvl) ?? null;
           tmp2 = "\n" + tmp1;
-          tmp3 = msg.replaceAll("\n", tmp2) ?? null;
+          tmp3 = msg.replaceAll("\n", tmp2);
           tmp4 = tmp + tmp3;
           return console.log(tmp4) ?? null;
         } else {
@@ -78,22 +79,39 @@ const Predef$class = class Predef {
       return false;
     }
   } 
-  pipe(x2, f) {
+  pipeInto(x2, f) {
     return f(x2) ?? null;
   } 
-  apply(receiver, f1) {
-    return (...args) => {
-      return f1(receiver, ...args) ?? null;
+  pipeFrom(f1, x3) {
+    return f1(x3) ?? null;
+  } 
+  andThen(f2, g) {
+    return (x4) => {
+      let tmp;
+      tmp = f2(x4) ?? null;
+      return g(tmp) ?? null;
     };
   } 
-  call(receiver1, f2) {
-    return (...args) => {
-      return f2.call(receiver1, ...args) ?? null;
+  compose(f3, g1) {
+    return (x4) => {
+      let tmp;
+      tmp = g1(x4) ?? null;
+      return f3(tmp) ?? null;
     };
   } 
-  print(x3) {
+  passTo(receiver, f4) {
+    return (...args) => {
+      return f4(receiver, ...args) ?? null;
+    };
+  } 
+  call(receiver1, f5) {
+    return (...args) => {
+      return f5.call(receiver1, ...args);
+    };
+  } 
+  print(x4) {
     let tmp;
-    tmp = String(x3);
+    tmp = String(x4);
     return console.log(tmp) ?? null;
   } 
   tupleSlice(xs, i, j) {
@@ -102,7 +120,7 @@ const Predef$class = class Predef {
     return globalThis.Array.prototype.slice.call(xs, i, tmp) ?? null;
   } 
   tupleGet(xs1, i1) {
-    return globalThis.Array.prototype.at.call(xs1, i1) ?? null;
+    return globalThis.Array.prototype.at.call(xs1, i1);
   } 
   stringStartsWith(string, prefix) {
     return string.startsWith(prefix) ?? null;

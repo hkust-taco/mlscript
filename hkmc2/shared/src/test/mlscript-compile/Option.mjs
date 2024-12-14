@@ -39,7 +39,7 @@ const Option$class = class Option {
     }
   } 
   test() {
-    return Predef.pipe(2134, Predef.print);
+    return Predef.pipeInto(2134, Predef.print);
   }
   toString() { return "Option"; }
 }; const Option = new Option$class;

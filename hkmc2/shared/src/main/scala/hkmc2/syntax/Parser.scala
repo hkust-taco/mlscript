@@ -351,9 +351,9 @@ abstract class Parser(
           yeetSpaces match
           case (tok @ BRACKETS(Indent | Curly, toks), loc) :: _ if subRule.blkAlt.isEmpty =>
             consume
-            rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.parseRule(kw.assumeRightPrec, subRule))
+            rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.parseRule(kw.rightPrecOrMax, subRule))
           case _ =>
-            parseRule(kw.assumeRightPrec, subRule)
+            parseRule(kw.rightPrecOrMax, subRule)
         case N =>
           if verbose then printDbg(s"$$ cannot find a rule starting with: ${id.name}")
           rule.exprAlt match
@@ -460,9 +460,10 @@ abstract class Parser(
   
   // TODO: rm `allowIndentedBlock`? Seems it can always be `true`
   def expr(prec: Int, allowIndentedBlock: Bool = true)(using Line): Tree =
-    parseRule(prec,
-      if allowIndentedBlock then prefixRulesAllowIndentedBlock else prefixRules
-    ).getOrElse(errExpr) // * a `None` result means an alread-reported error
+    val res = parseRule(prec,
+        if allowIndentedBlock then prefixRulesAllowIndentedBlock else prefixRules
+      ).getOrElse(errExpr) // * a `None` result means an alread-reported error
+    exprCont(res, prec, allowIndentedBlock)
   
   def simpleExpr(prec: Int)(using Line): Tree = wrap(prec)(simpleExprImpl(prec))
   def simpleExprImpl(prec: Int): Tree =
@@ -608,7 +609,7 @@ abstract class Parser(
       cur match // `true | false | Tree`
       case Nil => false
       case (NEWLINE | SPACE, _) :: _ => consume; true
-      case (KEYWORD(kw), loc) :: _ =>
+      case (KEYWORD(kw), loc) :: _ if kw isnt Keyword.__ =>
         consume
         prefixRules.kwAlts.get(kw.name) match
         case S(subRule) =>
@@ -620,7 +621,7 @@ abstract class Parser(
       case false => printDbg(s"! end of split"); acc // break
       case e: Tree => // needs further inspection
         yeetSpaces match
-        case (COMMA | SEMI | NEWLINE, _) :: _ =>
+        case (COMMA | NEWLINE, _) :: _ =>
           consume; splitItem(e :: acc)
         case _ => printDbg(s"! end of split"); e :: acc
   

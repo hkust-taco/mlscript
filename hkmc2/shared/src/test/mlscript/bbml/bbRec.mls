@@ -1,19 +1,20 @@
 :bbml
 //│ Type: ⊤
 
+//│ Type: ⊤
 
 :fixme // parsing
 fun f x = f
 //│ ╔══[ERROR] Function definition shape not yet supported for x
-//│ ║  l.6: 	fun f x = f
+//│ ║  l.7: 	fun f x = f
 //│ ╙──     	          ^
 //│ Type: ⊤
 
 fun f(x) = f
 f
-//│ Type: forall f2_2: ⊤ -> (⊤ -> f2_2)
+//│ Type: forall f3_2: ⊤ -> (⊤ -> f3_2)
 //│ Where:
-//│   ⊤ -> f2_2 <: f2_2
+//│   ⊤ -> f3_2 <: f3_2
 
 fun f(x) = f(x)
 f
@@ -22,7 +23,7 @@ f
 :todo
 fun f(x) = f(x.a)
 //│ ╔══[ERROR] Term shape not yet supported by BbML: Sel(Ref(x),Ident(a))
-//│ ║  l.23: 	fun f(x) = f(x.a)
+//│ ║  l.24: 	fun f(x) = f(x.a)
 //│ ╙──      	             ^^^
 //│ Type: ⊤
 
@@ -33,26 +34,26 @@ class Foo[A](a: A)
 :todo proper error
 Foo(123)
 //│ ╔══[ERROR] Variable not found: Foo
-//│ ║  l.34: 	Foo(123)
+//│ ║  l.35: 	Foo(123)
 //│ ╙──      	^^^
 //│ Type: ⊥
 
 new Foo(123)
-//│ Type: Foo[α14_1]
+//│ Type: Foo[α15_1]
 //│ Where:
-//│   Int <: α14_1
+//│   Int <: α15_1
 
 :todo proper error
 fun f(x) = f(Foo.a(x))
-//│ ╔══[ERROR] Term shape not yet supported by BbML: SynthSel(SynthSel(Ref(globalThis:block#4),Ident(Foo)),Ident(a))
-//│ ║  l.46: 	fun f(x) = f(Foo.a(x))
+//│ ╔══[ERROR] Term shape not yet supported by BbML: SynthSel(SynthSel(Ref(globalThis:block#5),Ident(Foo)),Ident(a))
+//│ ║  l.47: 	fun f(x) = f(Foo.a(x))
 //│ ╙──      	             ^^^^^
 //│ Type: ⊤
 
 fun f(x) = f(x.Foo#a)
 f
-//│ Type: forall x22_2: Foo[out x22_2] -> ⊥
+//│ Type: forall x23_2: Foo[out x23_2] -> ⊥
 //│ Where:
-//│   x22_2 <: Foo[out x22_2]
+//│   x23_2 <: Foo[out x23_2]
 
 

@@ -1,6 +1,7 @@
 :bbml
 //│ Type: ⊤
 
+//│ Type: ⊤
 
 class Reg[Rg, Br]
 //│ Type: ⊤
@@ -34,22 +35,22 @@ letreg of r =>
     read(r)
   write(r)
 //│ ╔══[ERROR] Type error in block
-//│ ║  l.30: 	letreg of r =>
+//│ ║  l.31: 	letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.31: 	  read(r)
+//│ ║  l.32: 	  read(r)
 //│ ║        	^^^^^^^^^
-//│ ║  l.32: 	  borrow(r) of () =>
+//│ ║  l.33: 	  borrow(r) of () =>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.33: 	    write(r)
+//│ ║  l.34: 	    write(r)
 //│ ║        	^^^^^^^^^^^^
-//│ ║  l.34: 	    read(r)
+//│ ║  l.35: 	    read(r)
 //│ ║        	^^^^^^^^^^^
-//│ ║  l.35: 	  write(r)
+//│ ║  l.36: 	  write(r)
 //│ ║        	^^^^^^^^^^
-//│ ╟── because: cannot constrain  E29_1  <:  ⊥
-//│ ╟── because: cannot constrain  E29_1  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ Rg41_1  <:  ¬()
-//│ ╟── because: cannot constrain  Rg41_1  <:  ¬()
+//│ ╟── because: cannot constrain  E30_1  <:  ⊥
+//│ ╟── because: cannot constrain  E30_1  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ Rg42_1  <:  ¬()
+//│ ╟── because: cannot constrain  Rg42_1  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Int
 
