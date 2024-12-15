@@ -64,7 +64,7 @@ fun inquireBack(xs) = if xs is
   Cons(x, Nil) then x
   Cons(x, xs) then inquireBack(xs)
 
-fun inquireFront(h_t) = if h_t is Cons(h, t) then h
+fun inquireFront(h_t) = head(h_t)
 
 fun addAllBack(list, q) = append(q, list)
 

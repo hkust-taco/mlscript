@@ -147,6 +147,7 @@ fun writeSolutions(solutions, count, s) = if solutions is
 fun minSolutions(history) = if history is
   Nil then Nil
   Cons(history, next) then
+    // @tailrec // TODO
     fun minAcc(minSoFar, mins, ls) = if ls is
       Nil then mins
       Cons(history, next) then
