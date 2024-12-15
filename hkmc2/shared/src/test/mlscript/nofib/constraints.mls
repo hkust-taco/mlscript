@@ -13,25 +13,25 @@ class CSP(vars: Int, vals: Int, rel: Int)
 //│ ————————————————————————————————————————————————————————————————————————————————
 fun qsort(le, ls, r) = if ls is
   Nil then r
-  Cons(x, Nil) then Cons(x, r)
-  Cons(x, xs) then qpart(le, x, xs, Nil, Nil, r)
+  x :: Nil then x :: r
+  x :: xs then qpart(le, x, xs, Nil, Nil, r)
 
 fun qpart(le, x, ls, rlt, rge, r) = if ls is
-  Nil then rqsort(le, rlt, Cons(x, rqsort(le, rge, r)))
-  Cons(y, ys) and
-    le(x, y) then qpart(le, x, ys, rlt, Cons(y, rge), r)
-    else qpart(le, x, ys, Cons(y, rlt), rge, r)
+  Nil then rqsort(le, rlt, x :: rqsort(le, rge, r))
+  y :: ys and
+    le(x, y) then qpart(le, x, ys, rlt, y :: rge, r)
+    else qpart(le, x, ys, y :: rlt, rge, r)
 
 fun rqsort(le, ls, r) = if ls is
   Nil then r
-  Cons(x, Nil) then Cons(x, r)
-  Cons(x, xs) then rqpart(le, x, xs, Nil, Nil, r)
+  x :: Nil then x :: r
+  x :: xs then rqpart(le, x, xs, Nil, Nil, r)
 
 fun rqpart(le, x, ls, rle, rgt, r) = if ls is
-  Nil then rqsort(le, rle, Cons(x, qsort(le, rgt, r)))
-  Cons(y, ys) and
-    le(y, x) then rqpart(le, x, ys, Cons(y, rle), rgt, r)
-    else rqpart(le, x, ys, rle, Cons(y, rgt), r)
+  Nil then rqsort(le, rle, x :: qsort(le, rgt, r))
+  y :: ys and
+    le(y, x) then rqpart(le, x, ys, y :: rle, rgt, r)
+    else rqpart(le, x, ys, rle, y :: rgt, r)
 //│ ————————————————————————————————————————————————————————————————————————————————
 
 fun level(a) = if a is Assign(v, _) then v
@@ -40,7 +40,7 @@ fun value(a) = if a is Assign(_, v) then v
 
 fun maxLevel(ls) = if ls is
   Nil then 0
-  Cons(Assign(v, _), t) then v
+  Assign(v, _) :: t then v
 
 fun complete(csp, s) = if csp is CSP(v, _, _) then maxLevel(s) == v
 
@@ -48,13 +48,13 @@ fun generate(csp) =
   fun g(vals, var_) =
     fun lscomp1(ls) = if ls is
       Nil then Nil
-      Cons(val_, t1) then
+      val_ :: t1 then
         fun lscomp2(ls) = if ls is
           Nil then lscomp1(t1)
-          Cons(st, t2) then Cons(Cons(Assign(var_, val_), st), lscomp2(t2))
+          st :: t2 then (Assign(var_, val_) :: st) :: lscomp2(t2)
         lscomp2(g(vals, var_ - 1))
     if var_ == 0 then
-      Cons(Nil, Nil)
+      Nil :: Nil
     else
       lscomp1(enumFromTo(1, vals))
   
@@ -64,11 +64,11 @@ fun generate(csp) =
 fun inconsistencies(csp, as_) = if csp is CSP(vars, vals, rel) then
   fun lscomp1(ls) = if ls is
     Nil then Nil
-    Cons(a, t1) then
+    a :: t1 then
       fun lscomp2(ls) = if ls is
         Nil then lscomp1(t1)
-        Cons(b, t2) and
-          a > b and not(rel(a, b)) then Cons(Tup2(level(a), (b)), lscomp2(t2))
+        b :: t2 and
+          a > b and not(rel(a, b)) then Tup2(level(a), (b)) :: lscomp2(t2)
           else lscomp2(t2)
       lscomp2(reverse(as_))
   
@@ -101,7 +101,7 @@ fun filterTree(p, t) =
 fun prune(p, t) = filterTree(x => not(p(x)), t)
 
 fun leaves(t) = if t is
-  Node(leaf, Nil) then Cons(leaf, Nil)
+  Node(leaf, Nil) then leaf :: Nil
   Node(_, cs) then concat(map(leaves, cs))
 
 fun initTree(f, x) = Node(x, map(y => initTree(f, y), f(x)))
@@ -112,8 +112,8 @@ fun mkTree(csp) = if csp is CSP(vars, vals, rel) then
     if maxLevel(ss) < vars then
       fun lscomp1(ls) = if ls is
         Nil then Nil
-        Cons(j, t1) then
-          Cons(Cons(Assign(maxLevel(ss) + 1, j), ss), lscomp1(t1))
+        j :: t1 then
+          (Assign(maxLevel(ss) + 1, j) :: ss) :: lscomp1(t1)
       lscomp1(enumFromTo(1, vals))
     else
       Nil
@@ -123,9 +123,9 @@ fun mkTree(csp) = if csp is CSP(vars, vals, rel) then
 
 fun earliestInconsistency(csp, aas) = if csp is CSP(vars, vals, rel) and aas is
   Nil then None
-  Cons(a, as_) and filter(x => not(rel(a, x)), reverse(as_)) is
+  a :: as_ and filter(x => not(rel(a, x)), reverse(as_)) is
     Nil then None
-    Cons(b, _) then Some(Tup2(level(a), level(b)))
+    b :: _ then Some(Tup2(level(a), level(b)))
 
 fun labelInconsistencies(csp, t) =
   fun f2(s) = Tup2(s, earliestInconsistency(csp, s))
@@ -142,7 +142,7 @@ class Known(vs: List[Int]) extends ConflictSet
 object Unknown extends ConflictSet
 
 fun knownConflict(c) = if c is
-  Known(Cons(a, as_)) then true
+  Known(a :: as_) then true
   else false
 
 fun knownSolution(c) = if c is
@@ -164,30 +164,30 @@ fun bt(csp, t) =
 fun emptyTable(csp) = if csp is CSP(vars, vals, rel) then
   fun lscomp1(ls) = if ls is
     Nil then Nil
-    Cons(n, t1) then
+    n :: t1 then
       fun lscomp2(ls) = if ls is
         Nil then Nil
-        Cons(m, t2) then
-          Cons(Unknown, lscomp2(t2))
-      Cons(lscomp2(enumFromTo(1, vals)), lscomp1(t1))
+        m :: t2 then
+          Unknown :: lscomp2(t2)
+      lscomp2(enumFromTo(1, vals)) :: lscomp1(t1)
   
   Nil :: lscomp1(enumFromTo(1, vars))
 
 
 fun fillTable(s, csp, tbl) = if s is
   Nil then tbl
-  Cons(Assign(var_, val_), as_) and csp is CSP(vars, vals, rel) then
+  Assign(var_, val_) :: as_ and csp is CSP(vars, vals, rel) then
     fun f4(cs, varval) = if varval is Tup2(varr, vall) and
-      cs === Unknown and not(rel(Assign(var_, val_), Assign(varr, vall))) then Known(Cons(var_, Cons(varr, Nil)))
+      cs === Unknown and not(rel(Assign(var_, val_), Assign(varr, vall))) then Known(var_ :: varr :: Nil)
       else cs
     
     fun lscomp1(ls) = if ls is
       Nil then Nil
-      Cons(varrr, t1) then
+      varrr :: t1 then
         fun lscomp2(ls) = if ls is
           Nil then Nil
-          Cons(valll, t2) then Cons(Tup2(varrr, valll), lscomp2(t2))
-        Cons(lscomp2(enumFromTo(1, vals)), lscomp1(t1))
+          valll :: t2 then Tup2(varrr, valll) :: lscomp2(t2)
+        lscomp2(enumFromTo(1, vals)) :: lscomp1(t1)
     
     zipWith((x, y) => zipWith(f4, x, y), tbl, lscomp1(enumFromTo(var_ + 1, vars)))
 
@@ -195,10 +195,10 @@ fun fillTable(s, csp, tbl) = if s is
 fun lookupCache(csp, t) =
   fun f5(csp, tp) = if tp is
     Tup2(Nil, tbl) then Tup2(Tup2(Nil, Unknown), tbl)
-    Tup2(Cons(a, as_), tbl) then
+    Tup2(a :: as_, tbl) then
       let tableEntry = atIndex(value(a) - 1, head(tbl))
-      let cs = if tableEntry === Unknown then checkComplete(csp, Cons(a, as_)) else tableEntry
-      Tup2(Tup2(Cons(a, as_), cs), tbl)
+      let cs = if tableEntry === Unknown then checkComplete(csp, a :: as_) else tableEntry
+      Tup2(Tup2(a :: as_, cs), tbl)
   
   mapTree(x => f5(csp, x), t)
 
@@ -211,7 +211,7 @@ fun bm(csp, t) = mapTree(fst, lookupCache(csp, cacheChecks(csp, emptyTable(csp),
 // -- Figure 10. Conflict-directed backjumping.
 fun combine(ls, acc) = if ls is
   Nil then acc
-  Cons(Tup2(s, Known(cs)), css) and
+  Tup2(s, Known(cs)) :: css and
     notElem(maxLevel(s), cs) then cs
     else combine(css, union(cs, acc))
 
@@ -241,15 +241,15 @@ fun bjbt_(csp, t) = bj_(csp, bt(csp, t))
 // -- Figure 11. Forward checking.
 fun collect(ls) = if ls is
   Nil then Nil
-  Cons(Known(cs), css) then union(cs, collect(css))
+  Known(cs) :: css then union(cs, collect(css))
 
 fun domainWipeout(csp, t) = if csp is CSP(vars, vals, rel) then
   fun f8(tp2) = if tp2 is Tup2(Tup2(as_, cs), tbl) then
     let wipedDomains = 
       fun lscomp1(ls) = if ls is
         Nil then Nil
-        Cons(vs, t1) and
-          all(knownConflict, vs) then Cons(vs, lscomp1(t1))
+        vs :: t1 and
+          all(knownConflict, vs) then vs :: lscomp1(t1)
           else lscomp1(t1)
       lscomp1(tbl)
     let cs_ = if null_(wipedDomains) then cs else Known(collect(head(wipedDomains)))
@@ -265,6 +265,6 @@ fun try_(n, algorithm) = listLen(search(algorithm, queens(n)))
 fun testConstraints_nofib(n) = map(x => try_(n, x), bt :: bm :: bjbt :: bjbt_ :: fc :: Nil)
 
 
-
+:expect '[4,4,4,4,4]'
 testConstraints_nofib(6).toString()
 //│ = '[4,4,4,4,4]'

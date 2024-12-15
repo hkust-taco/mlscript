@@ -47,11 +47,11 @@ object
   T extends Boolean
 
 fun put(xs) = if
-  xs is Cons(x, Nil) then Cell(x)
+  xs is x :: Nil then Cell(x)
   splitAt(intDiv(listLen(xs), 2), xs) is Tup2(fstHalf, sndHalf) then Node(Unit, put(fstHalf), put(sndHalf))
 
 fun get(t) = if t is
-  Cell(x) then Cons(x, Nil)
+  Cell(x) then x :: Nil
   Node(_, l, r) then append(get(l), get(r))
 
 fun upsweep(f, t) = if t is
@@ -136,8 +136,8 @@ fun send(xs) = scanlr(send_right, send_left, emptyPacket, emptyPacket, xs)
 fun update_outports(state, value) =
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(h, t) and
-      h is Tup6(p, m, ql, dl, qr, dr) then Cons(Tup6(p, value, ql, dl, qr, dr), lscomp(t))
+    h :: t and
+      h is Tup6(p, m, ql, dl, qr, dr) then Tup6(p, value, ql, dl, qr, dr) :: lscomp(t)
       else lscomp(t)
   
   updateOutports(state, lscomp(outports(state)))
@@ -151,8 +151,8 @@ fun collect_outputs(tp4) = if tp4 is Tup4(size, ins, outs, states) then
   fun get_output(states, label_p) = if label_p is Tup2(label, p) then
     fun lscomp(ls) = if ls is
       Nil then Nil
-      Cons(s, t) and
-        p == pid(s) then Cons(head(inports(s)), lscomp(t))
+      s :: t and
+        p == pid(s) then head(inports(s)) :: lscomp(t)
         else lscomp(t)
     thrid(head(lscomp(states)))
   
@@ -163,20 +163,20 @@ fun store_inputs(label_inputs, state) = if state is
   PS(pid_, Inp, _, _, _) then
     fun lscomp(ls) = if ls is
       Nil then Nil
-      Cons(h, t) and
-        h is Tup2(Tup2(label, input_pid), value) and pid_ == input_pid then Cons(update_outports(state, value), lscomp(t))
+      h :: t and
+        h is Tup2(Tup2(label, input_pid), value) and pid_ == input_pid then update_outports(state, value) :: lscomp(t)
         else lscomp(t)
     head(lscomp(label_inputs))
   else state
 
 fun apply_component(comp, signals) = if comp is
   Inp then None
-  Outp and signals is Cons(x, Nil) then Some(x)
-  Dff and signals is Cons(x, Nil) then Some(x)
-  Inv and signals is Cons(x, Nil) then Some(inv(x))
-  And2 and signals is Cons(x, Cons(y, Nil)) then Some(and2(x, y))
-  Or2 and signals is Cons(x, Cons(y, Nil)) then Some(or2(x, y))
-  Xor and signals is Cons(x, Cons(y, Nil)) then Some(xor(x, y))
+  Outp and signals is x :: Nil then Some(x)
+  Dff and signals is x :: Nil then Some(x)
+  Inv and signals is x :: Nil then Some(inv(x))
+  And2 and signals is x :: y :: Nil then Some(and2(x, y))
+  Or2 and signals is x :: y :: Nil then Some(or2(x, y))
+  Xor and signals is x :: y :: Nil then Some(xor(x, y))
   None_ then None
 
 fun init_dffs(state) = if compType(state) === Dff then update_outports(state, F) else state
@@ -192,8 +192,8 @@ fun restore_requests(old_states, new_states) =
 fun update_requests(b, state) =
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(h, t) and
-      h is Tup6(p, m, ql, dl, qr, dr) then Cons(Tup6(p, m, b, dl, b, dr), lscomp(t))
+    h :: t and
+      h is Tup6(p, m, ql, dl, qr, dr) then Tup6(p, m, b, dl, b, dr) :: lscomp(t)
       else lscomp(t)
   updateOutports(state, lscomp(outports(state)))
 
@@ -220,8 +220,8 @@ fun pad_packets(pss) =
 fun make_packet(state) =
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(h, t) and
-      h is Tup6(p, m, ql, dl, qr, dr) then Cons(Tup8(pid(state), p, m, ql, dl, qr, dr, 1), lscomp(t))
+    h :: t and
+      h is Tup6(p, m, ql, dl, qr, dr) then Tup8(pid(state), p, m, ql, dl, qr, dr, 1) :: lscomp(t)
       else lscomp(t)
   
   lscomp(outports(state))
@@ -267,8 +267,8 @@ fun do_sends(d, states) = until(s => acknowledge(d, s), x => do_send(d, x), stat
 fun simulate_component(d, state) =
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(h, t) and
-      h is Tup3(_, _, sig) then Cons(sig, lscomp(t))
+    h :: t and
+      h is Tup3(_, _, sig) then sig :: lscomp(t)
       else lscomp(t)
   
   let out_signals = lscomp(inports(state))
@@ -295,15 +295,22 @@ fun simulate(inputs_list, b) = if b is Tup4(size, ins, outs, states) then
   tail(scanl((x, y) => do_cycle(critical_path_depth(Tup4(size, ins, outs, states)), x, y), Tup4(size, ins, outs, map(init_dffs, states)), inputs_list))
 
 fun reg(sto, n) =
-  Cons(PS(n, Inp, 0, Nil, Cons(Tup6(0, F, false, 0, true, 4), Nil)), Cons(PS(n + 1, Dff, 1, Cons(Tup3(n + 5, 0, F), Nil), Cons(Tup6(0, F, false, 0, true, 5), Nil)), Cons(PS(n + 2, Inv, 1, Cons(Tup3(sto, 0, F), Nil), Cons(Tup6(0, F, false, 0, true, 1), Nil)), Cons(PS(n + 3, And2, 2, Cons(Tup3(n + 1, 0, F), Cons(Tup3(n + 2, 0, F), Nil)), Cons(Tup6(0, F, false, 0, true, 2), Nil)), Cons(PS(n + 4, And2, 1, Cons(Tup3(sto, 0, F), Cons(Tup3(n, 0, F), Nil)), Cons(Tup6(0, F, false, 0, true, 1), Nil)), Cons(PS(n + 5, Or2, 3, Cons(Tup3(n + 3, 0, F), Cons(Tup3(n + 4, 0, F), Nil)), Cons(Tup6(0, F, true, 4, false, 0), Nil)), Cons(PS(n + 6, Outp, 4, Cons(Tup3(n + 1, 0, F), Nil), Nil), Nil)))))))
+  PS(n, Inp, 0, Nil, Tup6(0, F, false, 0, true, 4) :: Nil) ::
+  PS(n + 1, Dff, 1, Tup3(n + 5, 0, F) :: Nil, Tup6(0, F, false, 0, true, 5) :: Nil) ::
+  PS(n + 2, Inv, 1, Tup3(sto, 0, F) :: Nil, Tup6(0, F, false, 0, true, 1) :: Nil) ::
+  PS(n + 3, And2, 2, Tup3(n + 1, 0, F) :: Tup3(n + 2, 0, F) :: Nil, Tup6(0, F, false, 0, true, 2) :: Nil) ::
+  PS(n + 4, And2, 1, Tup3(sto, 0, F) :: Tup3(n, 0, F) :: Nil, Tup6(0, F, false, 0, true, 1) :: Nil) ::
+  PS(n + 5, Or2, 3, Tup3(n + 3, 0, F) :: Tup3(n + 4, 0, F) :: Nil, Tup6(0, F, true, 4, false, 0) :: Nil) ::
+  PS(n + 6, Outp, 4, Tup3(n + 1, 0, F) :: Nil, Nil) ::
+  Nil
 
 fun regs(bits) =
   fun ilabel(n, pid_) = Tup2(stringConcat("x", stringOfInt(n)), pid_)
   fun olabel(n, pid_) = Tup2(stringConcat("y", stringOfInt(n)), pid_)
-  let is_ = Cons(Tup2("sto", 0), zipWith_lz_nl(ilabel, enumFrom(0), map(x => (7 * x) + 1, enumFromTo(0, bits - 1))))
+  let is_ = Tup2("sto", 0) :: zipWith_lz_nl(ilabel, enumFrom(0), map(x => (7 * x) + 1, enumFromTo(0, bits - 1)))
   let os = zipWith_lz_nl(olabel, enumFrom(0), map(x => (7 * x) + 7, enumFromTo(0, bits - 1)))
-  let sto = PS(0, Inp, 0, Nil, Cons(Tup6(0, F, false, 0, true, (8 * (bits - 1)) + 5), Nil))
-  let states = Cons(sto, concat(map(x => reg(0, x), map(x => (7 * x) + 1, enumFromTo(0, bits - 1)))))
+  let sto = PS(0, Inp, 0, Nil, Tup6(0, F, false, 0, true, (8 * (bits - 1)) + 5) :: Nil)
+  let states = sto :: concat(map(x => reg(0, x), map(x => (7 * x) + 1, enumFromTo(0, bits - 1))))
   
   Tup4(1 + (7 * bits), is_, os, states)
 

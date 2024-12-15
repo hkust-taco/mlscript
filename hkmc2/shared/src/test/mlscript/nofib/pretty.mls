@@ -40,26 +40,26 @@ fun cCh(c) = CCh(c)
 
 fun mkIndent(n, s) = if n
   === 0 then s
-  >= 8 then Cons("\t", mkIndent(n - 8, s))
-  else Cons(" ", mkIndent(n - 1, s))
+  >= 8 then "\t" :: mkIndent(n - 8, s)
+  else " " :: mkIndent(n - 1, s)
 
 :...
 //│ ————————————————————————————————————————————————————————————————————————————————
 fun flattenS(nlp, seqs) = if seqs is
   Nil then Nil
-  Cons(Tup2(col, seq), seqs) then flatten(col, nlp, seq, seqs)
+  Tup2(col, seq) :: seqs then flatten(col, nlp, seq, seqs)
 
 fun flatten(n, nlp, cseq, seqs) = if cseq is
   CNil then flattenS(nlp, seqs)
-  CAppend(seq1, seq2) then flatten(n, nlp, seq1, Cons(Tup2(n, seq2), seqs))
+  CAppend(seq1, seq2) then flatten(n, nlp, seq1, Tup2(n, seq2) :: seqs)
   CIndent(n_, seq) then flatten(n_ + n, nlp, seq, seqs)
-  CNewline then Cons("\n", flattenS(true, seqs))
+  CNewline then "\n" :: flattenS(true, seqs)
   CStr(s) and
     nlp then mkIndent(n, append(s, flattenS(false, seqs)))
     else append(s, flattenS(false, seqs))
   CCh(c) and
-    nlp then mkIndent(n, Cons(c, flattenS(false, seqs)))
-    else Cons(c, flattenS(false, seqs))
+    nlp then mkIndent(n, c :: flattenS(false, seqs))
+    else c :: flattenS(false, seqs)
 //│ ————————————————————————————————————————————————————————————————————————————————
 
 fun cShow(seq) = flatten(0, true, seq, Nil)
@@ -144,7 +144,7 @@ fun ppHang(p1, n, p2, width, is_vert) = if p1(width, false) is
 
 fun ppSep(ps, width, is_vert) = if
   ps is Nil then ppNil(width, is_vert)
-  ps is Cons(p, Nil) then p(width, is_vert)
+  ps is p :: Nil then p(width, is_vert)
   ppCat(ps, width, is_vert) is MkPrettyRep(seq, ll, emp, sl) and
     sl then MkPrettyRep(seq, ll, emp, sl)
     else ppAboves(ps, width, is_vert)

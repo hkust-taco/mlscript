@@ -6,8 +6,8 @@
 fun last(a_t) =
   fun go(h, t) = if t is
     Nil then h
-    Cons(head, t) then go(head, t)
-  if a_t is Cons(a, t) then go(a, t)
+    head :: t then go(head, t)
+  if a_t is a :: t then go(a, t)
 
 fun copy_lz(n, x) = lazy of () =>
   if n === 0 then LzNil else LzCons(x, copy_lz(n - 1, x))
@@ -18,21 +18,21 @@ fun append_lz_lz(xs, ys) = lazy of () =>
     LzCons(h, t) then LzCons(h, append_lz_lz(t, ys))
 
 fun init(ls) = if ls is
-  Cons(a, Nil) then Nil
-  Cons(a, t) then Cons(a, init(t))
+  a :: Nil then Nil
+  a :: t then a :: init(t)
   else throw Error(ls)
 
 fun zipWith3(f, xs, ys, zs) = if
-  xs is Cons(hx, tx) and ys is Cons(hy, ty) and zs is Cons(hz, tz) then Cons(f(hx, hy, hz), zipWith3(f, tx, ty, tz))
+  xs is hx :: tx and ys is hy :: ty and zs is hz :: tz then f(hx, hy, hz) :: zipWith3(f, tx, ty, tz)
   else Nil
 
 fun zip3(xs, ys, zs) = if
-  xs is Cons(hx, tx) and ys is Cons(hy, ty) and zs is Cons(hz, tz) then Cons(Tup3(hx, hy, hz), zip3(tx, ty, tz))
+  xs is hx :: tx and ys is hy :: ty and zs is hz :: tz then Tup3(hx, hy, hz) :: zip3(tx, ty, tz)
   else Nil
 
 fun lzfy(ls) = lazy of () =>
   if ls is
-    Cons(a, t) then LzCons(a, lzfy(t))
+    a :: t then LzCons(a, lzfy(t))
     else LzNil
 
 let start =
@@ -69,9 +69,9 @@ fun elt(a_b_c, d_e_f, g_h_i) = if a_b_c is Tup3(a, b, c) and d_e_f is Tup3(d, e,
     tot === 3 then 1
     else e
 
-fun shiftr(x, xs) = Cons(x, init(xs))
+fun shiftr(x, xs) = x :: init(xs)
 
-fun shiftl(x, xs) = append(init(xs), Cons(x, Nil))
+fun shiftl(x, xs) = append(init(xs), x :: Nil)
 
 fun shift(x, xs) = zip3(shiftr(x, xs), xs, shiftl(x, xs))
 
@@ -88,8 +88,8 @@ fun glue(s, xs, ys) = append(xs, append(s, ys))
 
 fun limit(ls) = if force(ls) is
   LzCons(x, ys) and force(ys) is LzCons(y, xs) and
-    listEqBy(listEq, x, y) then Cons(x, Nil)
-    else Cons(x, limit(lazy of () => LzCons(y, xs)))
+    listEqBy(listEq, x, y) then x :: Nil
+    else x :: limit(lazy of () => LzCons(y, xs))
 
 fun disp(gen_xss) = if gen_xss is Tup2(genn, xss) then lazy of () =>
   append(

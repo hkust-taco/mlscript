@@ -11,19 +11,19 @@ fun int_val_of_char(x) = int_of_char(x) - 48
 fun int_val_of_string(s) =
   fun f(l, a) = if l is
     Nil then a
-    Cons(h, t) then f(t, 10 * a + int_val_of_char(h))
+    h :: t then f(t, 10 * a + int_val_of_char(h))
   f(s, 0)
 
 fun break_(p, ls) = if ls is
   Nil then Tup2(Nil, Nil)
-  Cons(x, xs) and
+  x :: xs and
     p(x) then Tup2(Nil, x :: xs)
     break_(p, xs) is Tup2(ys, zs) then Tup2(x :: ys, zs)
 
 fun lines(s) = if break_(x => x == "|", s) is Tup2(l, s_) then
   let tt = if s_ is
     Nil then Nil
-    Cons(_, s__) then lines(s__)
+    _ :: s__ then lines(s__)
   
   l :: tt
 
@@ -76,11 +76,11 @@ fun findKQ(n) =
 
 
 fun uniform(nns, rrs) = if
-  nns is Cons(n, Nil) and rrs is Cons(r, rs) then Cons(intMod(r, n), Nil)
-  nns is Cons(n, ns) and rrs is Cons(r, rs) and
+  nns is n :: Nil and rrs is r :: rs then intMod(r, n) :: Nil
+  nns is n :: ns and rrs is r :: rs and
     let t = intMod(r, n + 1)
-    t == n then Cons(t, uniform(ns, rs))
-    else Cons(t, map(x => intMod(x, 65536), rs))
+    t == n then t :: uniform(ns, rs)
+    else t :: map(x => intMod(x, 65536), rs)
 
 fun random(n, rs) =
   let ns = chop(65536, n)
@@ -91,12 +91,12 @@ fun singleTestX(n, kq, x) =
   
   fun witness(ls) = if ls is
     Nil then false
-    Cons(t, ts) and
+    t :: ts and
       t == (n - 1) then true
       t == 1 then false
       else witness(ts)
   
-  if kq is Tup2(k, q) and take_lz(k, iterate(square, powerMod(x, q, n))) is Cons(t, ts) then
+  if kq is Tup2(k, q) and take_lz(k, iterate(square, powerMod(x, q, n))) is t :: ts then
     (t == 1) || (t == (n - 1)) || witness(ts)
 
 
@@ -121,16 +121,16 @@ fun doLine(cs, cont, rs) =
 
 fun doInput(state, lls) = if lls is
   Nil then Nil
-  Cons(l, ls) then doLine(l, state => doInput(state, ls), state)
+  l :: ls then doLine(l, state => doInput(state, ls), state)
 
 fun process(process_arg1) = doInput(randomInts(111, 47), process_arg1)
 
 fun testPrimetest_nofib(d) =
-  let cts = Cons("2", Cons("4", Cons("|", Cons("4", Cons("8", Cons("|", Cons("4", Cons("7", Cons("|", Cons("1", Cons("3", Cons("1", Cons("7", Cons("|", Cons("8", Cons("9", Cons("0", Cons("1", Nil))))))))))))))))))
+  let cts = nofibStringToList("24|48|47|1317|8901")
   process(lines(cts))
 
 
-
+:expect '[Composite,Composite,Probably prime,Composite,Composite]'
 testPrimetest_nofib(0).toString()
 //│ = '[Composite,Composite,Probably prime,Composite,Composite]'
 

@@ -47,10 +47,10 @@ fun mandelset(x, y, x_, y_, screenX, screenY, lIMIT) =
   
   fun lscomp1(ls1) = if ls1 is
     Nil then Nil
-    Cons(t, t1) then
+    t :: t1 then
       fun lscomp2(ls2) = if ls2 is
         Nil then lscomp1(t1)
-        Cons(s, t2) then Cons(windowToViewport(s, t), lscomp2(t2))
+        s :: t2 then windowToViewport(s, t) :: lscomp2(t2)
       lscomp2(enumFromTo(1, screenX))
   
   let result = parallelMandel(lscomp1(enumFromTo(1, screenY)), lIMIT, max(x_ - x, y_ - y) / 2)

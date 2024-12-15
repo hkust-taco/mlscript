@@ -5,7 +5,7 @@
 
 fun andd(ls) = if ls is
   Nil then true
-  Cons(b, bs) then b && andd(bs)
+  b :: bs then b && andd(bs)
 
 abstract class Piece: X | O | Empty
 
@@ -155,11 +155,11 @@ fun showPiece(p) = if p is
   Empty then nofibStringToList(" ")
 
 fun showRow(ps) = if ps is
-  Cons(p1, Cons(p2, Cons(p3, Nil))) then
+  p1 :: p2 :: p3 :: Nil then
     append(append(showPiece(p1), nofibStringToList("|")), append(showPiece(p2), append(nofibStringToList("|"), showPiece(p3))))
 
 fun showBoard(rs) = if rs is
-  Cons(r1, Cons(r2, Cons(r3, Nil))) then
+  r1 :: r2 :: r3 :: Nil then
     append(
       showRow(r1),
       append(
@@ -178,24 +178,24 @@ fun showBoard(rs) = if rs is
     )
 
 fun insert(p, ps, i) = if ps is Cons(p1, Cons(p2, Cons(p3, Nil))) and i ===
-  1 then Cons(p, Cons(p2, Cons(p3, Nil)))
-  2 then Cons(p1, Cons(p, Cons(p3, Nil)))
-  3 then Cons(p1, Cons(p2, Cons(p, Nil)))
+  1 then p :: p2 :: p3 :: Nil
+  2 then p1 :: p :: p3 :: Nil
+  3 then p1 :: p2 :: p :: Nil
 
 fun empty_(x, r) = if
-  x === 1 and r is Cons(Empty, Cons(_, Cons(_, Nil))) then true
-  x === 2 and r is Cons(_, Cons(Empty, Cons(_, Nil))) then true
-  x === 3 and r is Cons(_, Cons(_, Cons(Empty, Nil))) then true
+  x === 1 and r is Empty :: _ :: _ :: Nil then true
+  x === 2 and r is _ :: Empty :: _ :: Nil then true
+  x === 3 and r is _ :: _ :: Empty :: Nil then true
   else false
 
-fun empty(pos, board) = if board is Cons(r1, Cons(r2, Cons(r3, Nil))) and pos is
+fun empty(pos, board) = if board is r1 :: r2 :: r3 :: Nil and pos is
   Tup2(1, x) then empty_(x, r1)
   Tup2(2, x) then empty_(x, r2)
   Tup2(3, x) then empty_(x, r3)
 
 fun placePiece(p, board, pos) = if
   not(empty(pos, board)) then Nil
-  board is Cons(r1, Cons(r2, Cons(r3, Nil))) and pos is
+  board is r1 :: r2 :: r3 :: Nil and pos is
     Tup2(1, x) then (insert(p, r1, x) :: r2 :: r3 :: Nil) :: Nil
     Tup2(2, x) then (r1 :: insert(p, r2, x) :: r3 :: Nil) :: Nil
     Tup2(3, x) then (r1 :: r2 :: insert(p, r3, x) :: Nil) :: Nil
@@ -208,10 +208,10 @@ fun fullBoard(b) = andd(map(
 fun newPositions(piece, board) =
   fun lscomp1(ls) = if ls is
     Nil then Nil
-    Cons(x, xs) then
+    x :: xs then
       fun lscomp2(ls) = if ls is
         Nil then lscomp1(xs)
-        Cons(y, ys) then Cons(Tup2(x, y), lscomp2(ys))
+        y :: ys then Tup2(x, y) :: lscomp2(ys)
       lscomp2(1 :: 2 :: 3 :: Nil)
   concat(map(
     pos => placePiece(piece, board, pos),
@@ -237,9 +237,9 @@ fun eval(x) = if x ===
 
 fun interpret(x, l) = if l is
   Nil then Score(x)
-  Cons(Score(y), ls) then interpret(x + y, ls)
-  Cons(XWin, _) then XWin
-  Cons(OWin, _) then OWin
+  Score(y) :: ls then interpret(x + y, ls)
+  XWin :: _ then XWin
+  OWin :: _ then OWin
 
 fun scorePiece(p, score) = if p is
   X then score
@@ -248,8 +248,8 @@ fun scorePiece(p, score) = if p is
 
 fun map2(f, xs, ys) = if xs is
   Nil then Nil
-  Cons(x, xs) and
-    ys is Cons(y, ys) then Cons(f(x, y), map2(f, xs, ys))
+  x :: xs and
+    ys is y :: ys then f(x, y) :: map2(f, xs, ys)
     Nil then Nil
 
 fun score(board, win) = eval(sum(map(sum, map2((x, y) => map2(scorePiece, x, y), board, win))))
@@ -270,10 +270,10 @@ fun opposite(p) = if p is
   O then X
   else throw Error("opposite")
 
-fun best(f, bs, ss) = if bs is Cons(b, bs) and ss is Cons(s, ss) then
+fun best(f, bs, ss) = if bs is b :: bs and ss is s :: ss then
   fun best_(b, s, ls1, ls2) = if ls1 is
     Nil and ls2 is Nil then Tup2(b, s)
-    Cons(b_, bs) and ls2 is Cons(s_, ss) and
+    b_ :: bs and ls2 is s_ :: ss and
       evaluationEq(s, f(s, s_)) then best_(b, s, bs, ss)
       else best_(b_, s_, bs, ss)
   best_(b, s, bs, ss)
@@ -331,7 +331,7 @@ fun alternate(player, f, g, board) = if
   let scores = map(x => bestMove(opposition, g, f, x), possibles)
   let boardd_eval = best(f, possibles, scores)
   boardd_eval is Tup2(boardd, eval) then
-    Cons(Tup2(boardd, eval), alternate(opposition, g, f, boardd))
+    Tup2(boardd, eval) :: alternate(opposition, g, f, boardd)
 
 fun prog(input) =
   let testBoard =

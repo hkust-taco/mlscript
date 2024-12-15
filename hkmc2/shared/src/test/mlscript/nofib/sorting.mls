@@ -13,9 +13,9 @@ object
 fun compareList(xs, ys) = if xs is
   Nil and ys is
     Nil then EQ
-    Cons(_, _) then LT
-  Cons(_, _) and ys is Nil then GT
-  Cons(x, xs_) and ys is Cons(y, ys_) and
+    _ :: _ then LT
+  _ :: _ and ys is Nil then GT
+  x :: xs_ and ys is y :: ys_ and
     int_of_char(x) === int_of_char(y) then compareList(xs_, ys_)
     int_of_char(x) < int_of_char(y) then LT
     else GT
@@ -32,21 +32,21 @@ fun eqList(a, b) = compareList(a, b) is EQ
 
 fun prependToAll(sep, xs) = if xs is
   Nil then Nil
-  Cons(x, xs_) then Cons(sep, Cons(x, prependToAll(sep, xs_)))
+  x :: xs_ then sep :: x :: prependToAll(sep, xs_)
 
 fun intersperse(sep, xs) = if xs is
   Nil then Nil
-  Cons(x, xs_) then Cons(x, prependToAll(sep, xs_))
+  x :: xs_ then x :: prependToAll(sep, xs_)
 
 fun lines(s) = if
   s is Nil then Nil
   break_(x => x === "|", s) is Tup2(l, s_) then
     let tt = if s_ is
       Nil then Nil
-      Cons(_, s__) then lines(s__)
+      _ :: s__ then lines(s__)
     l :: tt
 
-fun unlines(ls) = concat(map(l => append(l, Cons("|", Nil)), ls))
+fun unlines(ls) = concat(map(l => append(l, "|" :: Nil), ls))
 
 fun odd(x) = intMod(x, 2) === 0
 
@@ -60,52 +60,52 @@ fun hash(str) = foldl(
 
 fun quickSort(xs) = if xs is
   Nil then Nil
-  Cons(x, xs_) then
+  x :: xs_ then
     fun lscomp1(ls) = if ls is
       Nil then Nil
-      Cons(h, t) and
-        leList(h, x) then Cons(h, lscomp1(t))
+      h :: t and
+        leList(h, x) then h :: lscomp1(t)
         else lscomp1(t)
     fun lscomp2(ls) = if ls is
       Nil then Nil
-      Cons(h, t) and
-        gtList(h, x) then Cons(h, lscomp2(t))
+      h :: t and
+        gtList(h, x) then h :: lscomp2(t)
         else lscomp2(t)
-    append(quickSort(lscomp1(xs_)), Cons(x, quickSort(lscomp2(xs_))))
+    append(quickSort(lscomp1(xs_)), x :: quickSort(lscomp2(xs_)))
 
 fun select(p, x, ts_fs) = if ts_fs is Tup2(ts, fs) and
-  p(x) then Tup2(Cons(x, ts), fs)
-  else Tup2(ts, Cons(x, fs))
+  p(x) then Tup2(x :: ts, fs)
+  else Tup2(ts, x :: fs)
 
 fun partition(p, xs) = foldr((x, y) => select(p, x, y), Tup2(Nil, Nil), xs)
 
 fun quickSort2(xs) = if xs is
   Nil then Nil
-  Cons(x, xs_) then
+  x :: xs_ then
     if partition(y => geList(x, y), xs_) is Tup2(lo, hi) then
-      append(quickSort2(lo), Cons(x, quickSort2(hi)))
+      append(quickSort2(lo), x :: quickSort2(hi))
 
 fun quickerSort(xss) = if xss is
   Nil then Nil
-  Cons(x, Nil) then Cons(x, Nil)
-  Cons(x, xs) then
+  x :: Nil then x :: Nil
+  x :: xs then
     fun split(x, lo, hi, ys) = if ys is
-      Nil then append(quickerSort(lo), Cons(x, quickerSort(hi)))
-      Cons(y, ys_) and
-        leList(y, x) then split(x, Cons(y, lo), hi, ys_)
-        else split(x, lo, Cons(y, hi), ys_)
+      Nil then append(quickerSort(lo), x :: quickerSort(hi))
+      y :: ys_ and
+        leList(y, x) then split(x, y :: lo, hi, ys_)
+        else split(x, lo, y :: hi, ys_)
     split(x, Nil, Nil, xs)
 
 fun insertSort(xss) = if xss is
   Nil then Nil
-  Cons(x, xs) then
+  x :: xs then
     fun trins(rev, xs, ys) = if xs is
-      Nil and ys is Cons(y, ys_) then trins(Nil, append(reverse(rev), Cons(y, Nil)), ys_)
+      Nil and ys is y :: ys_ then trins(Nil, append(reverse(rev), y :: Nil), ys_)
       xs and ys is Nil then append(reverse(rev), xs)
-      Cons(x, xs_) and ys is Cons(y, ys_) and
-        ltList(x, y) then trins(Cons(x, rev), xs_, Cons(y, ys_))
-        else trins(Nil, append(reverse(rev), Cons(y, Cons(x, xs_))), ys_)
-    trins(Nil, Cons(x, Nil), xs)
+      x :: xs_ and ys is y :: ys_ and
+        ltList(x, y) then trins(x :: rev, xs_, y :: ys_)
+        else trins(Nil, append(reverse(rev), y :: x :: xs_), ys_)
+    trins(Nil, x :: Nil, xs)
 
 abstract class Tree[T]: Tip | Branch[T]
 
@@ -123,7 +123,7 @@ fun treeSort(param) =
     foldr(to_tree, Tip, innerparam)
   fun readTree(t) = if t is
     Tip then Nil
-    Branch(x, l, r) then append(readTree(l), Cons(x, readTree(r)))
+    Branch(x, l, r) then append(readTree(l), x :: readTree(r))
   readTree(mkTree(param))
 
 abstract class Tree2[T]: Tip2 | Twig2[T] | Branch2[T]
@@ -147,14 +147,14 @@ fun treeSort2(param) =
     foldr(to_tree, Tip2, innerparam)
   fun readTree(t) = if t is
     Tip2 then Nil
-    Twig2(x) then Cons(x, Nil)
-    Branch2(x, l, r) then append(readTree(l), Cons(x, readTree(r)))
+    Twig2(x) then x :: Nil
+    Branch2(x, l, r) then append(readTree(l), x :: readTree(r))
   readTree(mkTree(param))
 
 fun heapSort(xs) =
   fun heap(k, xs) = if xs is
     Nil then Tip
-    Cons(x, xs_) then to_heap(k, x, heap(k + 1, xs_))
+    x :: xs_ then to_heap(k, x, heap(k + 1, xs_))
   fun to_heap(k, x, t) = if t is
     Tip then Branch(x, Tip, Tip)
     Branch(y, l, r) and
@@ -176,26 +176,26 @@ fun heapSort(xs) =
 fun mergeSort(param) =
   fun runsplit(run, xs) = if
     run is Nil and xs is Nil then Nil
-    xs is Nil then Cons(run, Nil)
-    run is Nil and xs is Cons(x, xs_) then runsplit(Cons(x, Nil), xs_)
-    run is Cons(r, rs) and xs is Cons(x, xs_) and rs is
+    xs is Nil then run :: Nil
+    run is Nil and xs is x :: xs_ then runsplit(x :: Nil, xs_)
+    run is r :: rs and xs is x :: xs_ and rs is
       Nil and
-        gtList(x, r) then runsplit(Cons(r, Cons(x, Nil)), xs_)
-        leList(x, r) then runsplit(Cons(x, Cons(r, rs)), xs_)
-        else Cons(Cons(r, rs), runsplit(Cons(x, Nil), xs_))
+        gtList(x, r) then runsplit(r :: x :: Nil, xs_)
+        leList(x, r) then runsplit(x :: r :: rs, xs_)
+        else (r :: rs) :: runsplit(x :: Nil, xs_)
       rs and
-        leList(x, r) then runsplit(Cons(x, Cons(r, rs)), xs_)
-        else Cons(Cons(r, rs), runsplit(Cons(x, Nil), xs_))
+        leList(x, r) then runsplit(x :: r :: rs, xs_)
+        else (r :: rs) :: runsplit(x :: Nil, xs_)
   fun merge_lists(xs) = if xs is
     Nil then Nil
-    Cons(x, xs_) then merge(x, merge_lists(xs_))
+    x :: xs_ then merge(x, merge_lists(xs_))
   fun merge(xs, ys) = if
     xs is Nil then ys
     ys is Nil then xs
-    xs is Cons(x, xs_) and ys is Cons(y, ys_) and
-      eqList(x, y) then Cons(x, Cons(y, merge(xs_, ys_)))
-      ltList(x, y) then Cons(x, merge(xs_, Cons(y, ys_)))
-      else Cons(y, merge(Cons(x, xs_), ys_))
+    xs is x :: xs_ and ys is y :: ys_ and
+      eqList(x, y) then x :: y :: merge(xs_, ys_)
+      ltList(x, y) then x :: merge(xs_, y :: ys_)
+      else y :: merge(x :: xs_, ys_)
   merge_lists(runsplit(Nil, param))
 
 fun mangle(inpt) =

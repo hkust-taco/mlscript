@@ -6,7 +6,7 @@
 
 fun lookup(k, t) = if t is
   Nil then None
-  Cons(Tup2(x, v), t) then if listEq(k, x) then Some(v) else lookup(k, t)
+  Tup2(x, v) :: t then if listEq(k, x) then Some(v) else lookup(k, t)
 
 class MyState[S, A](r: S -> Tup2[S, A])
 
@@ -41,7 +41,7 @@ object Unit
 //│ ————————————————————————————————————————————————————————————————————————————————
 fun eqEnv(a, b) = if a is
   Nil and b is Nil then true
-  Cons(Tup2(s1, t1), b) and b is Cons(Tup2(s2, t2), d) and
+  Tup2(s1, t1) :: b and b is Tup2(s2, t2) :: d and
     listEq(s1, s2) and eqTerm(t1, t2) then eqEnv(b, d)
     else false
   else false
@@ -69,7 +69,7 @@ fun lookupVar(v) =
 
 fun withEnv(tmp, m) = myReturn(myEvalState(m, tmp))
 
-fun pushVar(v, t, m) = myBind(myGet, env => withEnv(Cons(Tup2(v, t), env), m))
+fun pushVar(v, t, m) = myBind(myGet, env => withEnv(Tup2(v, t) :: env, m))
 
 :...
 //│ ————————————————————————————————————————————————————————————————————————————————
@@ -131,7 +131,7 @@ fun simpleEval(env, ter) = if ter is
   else throw Error(ter)
 
 fun simpleApply(env, t, a) = if t is
-  Thunk(Lam(x, b), e) then simpleEval(Cons(Tup2(x, Thunk(a, env)), e), b)
+  Thunk(Lam(x, b), e) then simpleEval(Tup2(x, Thunk(a, env)) :: e, b)
   else throw Error("bad application")
 
 fun simpleEvalCon(env, e) =
@@ -222,7 +222,7 @@ fun mainMonad(args) =
   then throw Error("Args: number-to-sum-up-to")
   else ev(App(sum0, Con(head(args))))
 
-fun testLambda_nofib(n) = Tup2(mainSimple(Cons(n, Nil)), mainMonad(Cons(n, Nil)))
+fun testLambda_nofib(n) = Tup2(mainSimple(n :: Nil), mainMonad(n :: Nil))
 
 testLambda_nofib(80).toString()
 //│ = '([C,o,n, ,3,2,4,0],[3,2,4,0, , ,[,]])'

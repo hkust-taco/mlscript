@@ -9,7 +9,7 @@ fun unlines(ls) = concat(map(x => append(x, ("\n" :: Nil)), ls))
 
 fun lookup(k, t) = if t is
   Nil then None
-  Cons(Tup2(x, v), t) then if k === x then Some(v) else lookup(k, t)
+  Tup2(x, v) :: t then if k === x then Some(v) else lookup(k, t)
   
 fun delete_(xs, e) = deleteBy((x, y) => x === y, e, xs)
 
@@ -22,19 +22,19 @@ fun runStateT(m, s) = if m is StateT(run) then run(s)
 fun bind(m, f) =
   StateT(s => concat(map(x => if x is Tup2(a, ss) then runStateT(f(a), ss), runStateT(m, s))))
 
-fun return_(a) = StateT(s => Cons(Tup2(a, s), Nil))
+fun return_(a) = StateT(s => Tup2(a, s) :: Nil)
 
-fun mapM(f, ls) = foldr((a, r) => bind(f(a), x => bind(r, xs => return_(Cons(x, xs)))), return_(Nil), ls)
+fun mapM(f, ls) = foldr((a, r) => bind(f(a), x => bind(r, xs => return_(x :: xs))), return_(Nil), ls)
 
-fun lift(ls) = StateT(s => concat(map(x => Cons(Tup2(x, s), Nil), ls)))
+fun lift(ls) = StateT(s => concat(map(x => Tup2(x, s) :: Nil, ls)))
 
-fun execStateT(m, s) = concat(map(x => if x is Tup2(a, s) then Cons(s, Nil), runStateT(m, s)))
+fun execStateT(m, s) = concat(map(x => if x is Tup2(a, s) then s :: Nil, runStateT(m, s)))
 
-fun guard(b) = if b then StateT(s => Cons(Tup2(Unit, s), Nil)) else StateT(s => Nil)
+fun guard(b) = if b then StateT(s => Tup2(Unit, s) :: Nil) else StateT(s => Nil)
 
-fun put(s) = StateT(x => Cons(Tup2(Unit, s), Nil))
+fun put(s) = StateT(x => Tup2(Unit, s) :: Nil)
 
-let get = StateT(s => Cons(Tup2(s, s), Nil))
+let get = StateT(s => Tup2(s, s) :: Nil)
 //│ get = StateT { run: [Function (anonymous)] }
 
 class Digits(i: List[Int], c: List[Tup2[Char, Int]])
@@ -48,11 +48,11 @@ fun permute(c) =
     get,
     st =>
       bind(
-        let xs = digits(st) in lift(map(x => Tup2(x, listDiff(xs, Cons(x, Nil))), xs)),
+        let xs = digits(st) in lift(map(x => Tup2(x, listDiff(xs, x :: Nil)), xs)),
         iis =>
           if iis is Tup2(i, iss) then
             bind(
-              put(Digits(iss, Cons(Tup2(c, i), digitEnv(st)))),
+              put(Digits(iss, Tup2(c, i) :: digitEnv(st))),
               _p => return_(i)
             )
       )
@@ -69,14 +69,14 @@ fun select(c) =
 
 fun rest(ls) = if ls is
   Nil then Nil
-  Cons(x, xs) then xs
+  x :: xs then xs
 
 fun solve(tops, bots, carry) = if bots is
-  Cons(bot, botss) then
+  bot :: botss then
     bind(
       if tops is
         Nil then return_(carry)
-        Cons(top, _) then bind(mapM(select, top), topNS => return_(sum(topNS) + carry)),
+        top :: _ then bind(mapM(select, top), topNS => return_(sum(topNS) + carry)),
       topN => bind(
         select(bot),
         botN => bind(
@@ -90,7 +90,7 @@ fun solve(tops, bots, carry) = if bots is
 
 fun puzzle(top, bot) =
   let solution = solve(transpose(map(reverse, top)), reverse(bot), 0)
-  let answer = if execStateT(solution, Digits(enumFromTo(0, 9), Nil)) is Cons(a, _) then a
+  let answer = if execStateT(solution, Digits(enumFromTo(0, 9), Nil)) is a :: _ then a
   let env = digitEnv(answer)
   let look = c => fromSome(lookup(c, env))
   let expand = ls => foldl((a, b) => a * 10 + look(b), 0, ls)

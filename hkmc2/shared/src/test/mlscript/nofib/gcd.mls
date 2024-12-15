@@ -16,8 +16,8 @@ fun gcdE(x, y) = if
   else g(Tup3(1, 0, x), Tup3(0, 1, y))
 
 fun max_(ls) = if ls is
-  Cons(x, Nil) then x
-  Cons(x, Cons(y, xs)) then if x < y then max_(y :: xs) else max_(x::xs)
+  x :: Nil then x
+  x :: y :: xs then if x < y then max_(y :: xs) else max_(x::xs)
 
 fun test(d) =
   let ns = enumFromTo(5000, 5000 + d)
@@ -26,10 +26,10 @@ fun test(d) =
   
   fun lscomp1(p1) = if p1 is
     Nil then Nil
-    Cons(h1, t1) then
+    h1 :: t1 then
       fun lscomp2(p2) = if p2 is
         Nil then lscomp1(t1)
-        Cons(h2, t2) then Cons(Tup2(h1, h2), lscomp2(t2))
+        h2 :: t2 then Tup2(h1, h2) :: lscomp2(t2)
       lscomp2(ms)
   
   let tripls =
@@ -45,5 +45,6 @@ fun testGcd_nofib(x) = test(x)
 
 
 // NOTE: original input 400
+:expect 5021
 testGcd_nofib(40)
 //│ = 5021

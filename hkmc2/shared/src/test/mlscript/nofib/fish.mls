@@ -77,13 +77,12 @@ fun tup2(a_b, c_d) = if a_b is Tup2(a, b) and c_d is Tup2(c, d) then Tup4(a, b, 
 fun grid(m, n, segments, a, b, c) =
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(Tup4(x0, y0, x1, y1), t) then Cons(
+    Tup4(x0, y0, x1, y1) :: t then
       tup2(
         vec_add(vec_add(a, scale_vec2(b, x0, m)), scale_vec2(c, y0, n)),
         vec_add(vec_add(a, scale_vec2(b, x1, m)), scale_vec2(c, y1, n))
-      ),
+      ) ::
       lscomp(t)
-    )
   lscomp(segments)
 
 fun rot(p, a, b, c) = p(vec_add(a, b), c, vec_sub(Tup2(0, 0), b))
@@ -201,10 +200,10 @@ fun showFourTupleofInt(a_b_c_d) = if a_b_c_d is Tup4(a, b, c, d) then
 
 fun fmt(ls) = if ls is
   Nil then nofibStringToList("[]")
-  Cons(x, xs) then
+  x :: xs then
     fun showl(ls, s) = if ls is
       Nil then "]" :: s
-      Cons(x, xs) then
+      x :: xs then
         append(
           nofibStringToList(",|"),
           append(

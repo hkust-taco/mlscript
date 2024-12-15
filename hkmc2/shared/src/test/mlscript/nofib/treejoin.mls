@@ -38,9 +38,9 @@ fun lookupT(k, t) = if t is
 
 fun readInt(s) =
   fun readInt_(n, cs) = if cs is
-    Cons(c, cs_) and
+    c :: cs_ and
       isDigit(c) then readInt_(n * 10 + c.codePointAt(0) - 48, cs_)
-      else let s_ = dropWhile(isSpace, Cons(c, cs)) in Tup2(n, s_)
+      else let s_ = dropWhile(isSpace, c :: cs) in Tup2(n, s_)
     else
       let s_ = dropWhile(isSpace, cs) in Tup2(n, s_)
   readInt_(0, s)

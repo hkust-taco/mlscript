@@ -6,61 +6,61 @@
 
 fun unwords(ws) = if ws is
   Nil then Nil
-  Cons(w, ws) then
+  w :: ws then
     fun go(vs) = if vs is
       Nil then Nil
-      Cons(v, vs) then Cons(" ", append(v, go(vs)))
+      v :: vs then " " :: append(v, go(vs))
     append(w, go(ws))
 
 fun break_(p, xs) = if xs is
   Nil then Tup2(Nil, Nil)
-  Cons(x, xs) and
-    p(x) then Tup2(Nil, Cons(x, xs))
-    break_(p, xs) is Tup2(ys, zs) then Tup2(Cons(x, ys), zs)
+  x :: xs and
+    p(x) then Tup2(Nil, x :: xs)
+    break_(p, xs) is Tup2(ys, zs) then Tup2(x :: ys, zs)
 
 fun isSpace(c) = c === " "
 
 fun words(s) = if dropWhile(isSpace, s) is
   Nil then Nil
-  Cons(h, t) and
-    break_(isSpace, Cons(h, t)) is Tup2(w, s_) then Cons(w, words(s_))
+  h :: t and
+    break_(isSpace, h :: t) is Tup2(w, s_) then w :: words(s_)
 
 fun lines(s) = if break_(x => x === "\n", s) is Tup2(l, s_) then
   Cons(
     l,
     if s_ is
       Nil then Nil
-      Cons(_, s__) then lines(s__)
+      _ :: s__ then lines(s__)
   )
 
 fun unlines(ls) = concat(map(l => append(l, nofibStringToList("\n")), ls))
 
 fun all(p, xs) = if xs is
   Nil then true
-  Cons(x, xs) then p(x) && all(p, xs)
+  x :: xs then p(x) && all(p, xs)
 
 fun fold1(f, g, xs) = if xs is
-  Cons(a, Nil) then g(a)
-  Cons(a, x) then f(a, fold1(f, g, x))
+  a :: Nil then g(a)
+  a :: x then f(a, fold1(f, g, x))
 
-fun scan1(f, g, xs) = fold1((a, s) => Cons(f(a, head(s)), s), a => Cons(g(a), Nil), xs)
+fun scan1(f, g, xs) = fold1((a, s) => f(a, head(s)) :: s, a => g(a) :: Nil, xs)
 
 fun tails(xs) = scan1((a, s) => a :: s, a => a :: Nil, xs)
 
 fun single(xs) = if xs is
-  Cons(a, Nil) then true
+  a :: Nil then true
   _ then false
 
 fun minWith(f, xs) = fold1((a, b) => if f(a) < f(b) then a else b, x => x, xs)
 
-fun new_(w, ls) = Cons(Cons(w, Nil), ls)
+fun new_(w, ls) = (w :: Nil) :: ls
 
 fun glue(w, ls) = if ls is
-  Cons(l, ls_) then Cons(Cons(w, l), ls_)
+  l :: ls_ then (w :: l) :: ls_
 
 fun formats(txt) = fold1(
   (w, ps) => append(map(p => new_(w, p), ps), map(p => glue(w, p), ps)),
-  x => Cons(Cons(Cons(x, Nil), Nil), Nil),
+  x => ((x :: Nil) :: Nil) :: Nil
   txt
 )
 
@@ -101,10 +101,10 @@ fun len_tl(a_b_c) = thd3(a_b_c)
 
 fun tile(ws, a_b) = if a_b is
   Tup2(Nil, n) then Nil
-  Tup2(Cons(m, ms), n) then
+  Tup2(m :: ms, n) then
     let l = n - m
     if splitAt(l, ws) is Tup2(ws1, ws2) then
-      Cons(ws1, tile(ws2, Tup2(drop(l, Cons(m, ms)), m)))
+      ws1 :: tile(ws2, Tup2(drop(l, m :: ms), m))
 
 fun null__(a_b) = if a_b is Tup2(Nil, Nil) then true else false
 
@@ -127,11 +127,11 @@ fun last_(a_b) = if a_b is Tup2(y, x) and
 
 fun cons_(a, a_b) = if a_b is Tup2(x, y) and
   not(null_(y)) then Tup2(a :: x, y)
-  else Tup2(Cons(a, Nil), x)
+  else Tup2(a :: Nil, x)
 
 fun snoc_(a, a_b) = if a_b is Tup2(y, x) and
   not(null_(y)) then Tup2(y, a :: x)
-  else Tup2(x, Cons(a, Nil))
+  else Tup2(x, a :: Nil)
 
 fun tail_(a_b) = if a_b is Tup2(x, y) and
   null_(x) then Tup2(Nil, Nil)
@@ -148,14 +148,14 @@ fun init_(a_b) = if a_b is Tup2(y, x) and
 fun unformat(a, l) = fold1((xs, ys) => append(xs, append(a :: Nil, ys)), x => x, l)
 
 fun format(a, x) = if
-  x is Nil then Cons(Nil, Nil)
+  x is Nil then Nil :: Nil
   else
     fun unknownEq(a, b) = a === b
     fun breakk(a, b, xs) =
       if unknownEq(a, b)
-      then Cons(Nil, xs)
-      else Cons(Cons(b, head(xs)), tail(xs))
-    fun start(a, b) = breakk(a, b, Cons(Nil, Nil))
+      then Nil :: xs
+      else (b :: head(xs)) :: tail(xs)
+    fun start(a, b) = breakk(a, b, Nil :: Nil)
     fold1((x, y) => breakk(a, x, y), y => start(a, y), x)
 
 fun unparas(ls) = unformat(Nil, ls)

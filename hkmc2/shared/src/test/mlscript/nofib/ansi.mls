@@ -16,17 +16,17 @@ fun end(xs) = nofibStringToList("")
 
 fun readChar(eof, use, cs) = if cs is
   Nil then eof(Nil)
-  Cons(c, cs) then use(c, cs)
+  c :: cs then use(c, cs)
 
 fun peekChar(eof, use, cs) = if cs is
   Nil then eof(Nil)
-  Cons(c, cs) then use(c, Cons(c, cs))
+  c :: cs then use(c, c :: cs)
 
 fun pressAnyKey(prog, x) = readChar(prog, (c, x) => prog(x), x)
 
-fun unreadChar(c, prog, cs) = prog(Cons(c, cs))
+fun unreadChar(c, prog, cs) = prog(c :: cs)
 
-fun writeChar(c, prog, cs) = Cons(c, prog(cs))
+fun writeChar(c, prog, cs) = c :: prog(cs)
 
 fun writeString(s, prog, cs) = append(s, prog(cs))
 

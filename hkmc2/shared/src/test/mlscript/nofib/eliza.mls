@@ -9,11 +9,11 @@ fun toUpper(c) = c.toUpperCase()
 fun lz_map(f, ls) = lazy of () =>
   if ls is
     Nil then LzNil
-    Cons(h, t) then LzCons(f(h), lz_map(f, t))
+    h :: t then LzCons(f(h), lz_map(f, t))
 
 fun append_lz(xs, ys) = if xs is
   Nil then force(ys)
-  Cons(h, t) then lazy of () => LzCons(h, append_lz(t, ys))
+  h :: t then lazy of () => LzCons(h, append_lz(t, ys))
 
 fun cycle(xs) = append_lz(xs, lazy of () => cycle(xs))
 
@@ -21,34 +21,34 @@ fun isSpace(c) = c === " "
 
 fun words(s) = if dropWhile(isSpace, s) is
   Nil then Nil
-  Cons(h, t) and
-    break_(isSpace, Cons(h, t)) is Tup2(w, s_) then Cons(w, words(s_))
+  h :: t and
+    break_(isSpace, h :: t) is Tup2(w, s_) then w :: words(s_)
 
 fun unwords(ws) =
   fun go(ws) = if ws is
     Nil then Nil
-    Cons(w, ws) then Cons(" ", append(w, go(ws)))
+    w :: ws then " " :: append(w, go(ws))
   if ws is
     Nil then Nil
-    Cons(w, ws) then append(w, go(ws))
+    w :: ws then append(w, go(ws))
 
 fun null_lz(ls) = if force(ls) is
   LzNil then true
   LzCons(h, t) then false
 
 fun trim(ls) =
-  fun cons(x, xs) = if inList(x, nofibStringToList(" .!?,")) and null_(xs) then Nil else Cons(x, xs)
+  fun cons(x, xs) = if inList(x, nofibStringToList(" .!?,")) and null_(xs) then Nil else x :: xs
   foldr(cons, Nil, dropWhile(x => inList(x, nofibStringToList(" .!?,")), ls))
 
-fun repeated(kt_rp) = if kt_rp is Tup2(kt, Cons(r, rp)) then Tup2(r, Tup2(kt, rp))
+fun repeated(kt_rp) = if kt_rp is Tup2(kt, r :: rp) then Tup2(r, Tup2(kt, rp))
 
 fun newKeyTab(kt_, kt_rp) = if kt_rp is Tup2(kt, rp) then Tup2(kt_, rp)
 
 fun keyTabOf(kt_rp) = if kt_rp is Tup2(kt, rp) then kt
 
 fun makeResponse(cs, us) = if cs is
-  Cons("?", cs_) then append(cs_, append(nofibStringToList(" "), append(us, nofibStringToList("?"))))
-  Cons(".", cs_) then append(cs_, append(nofibStringToList(" "), append(us, nofibStringToList("."))))
+  "?" :: cs_ then append(cs_, append(nofibStringToList(" "), append(us, nofibStringToList("?"))))
+  "." :: cs_ then append(cs_, append(nofibStringToList(" "), append(us, nofibStringToList("."))))
   else cs
 
 let repeatMsgs =
@@ -259,7 +259,7 @@ let respMsgs =
 let initial =
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(Tup2(k, rs), t) then Cons(Tup2(words(k), cycle(rs)), lscomp(t))
+    Tup2(k, rs) :: t then Tup2(words(k), cycle(rs)) :: lscomp(t)
   Tup2(lscomp(respMsgs), cycle(repeatMsgs))
 //│ > Tup2 {
 //│ >   fst: Cons {
@@ -274,7 +274,7 @@ let initial =
 
 fun prefix(xxs, yys) = if xxs is
   Nil then true
-  Cons(x, xs) and
+  x :: xs and
     force(yys) is
       LzNil then false
       LzCons(y, ys) then listEq(x, y) && prefix(xs, ys)
@@ -298,7 +298,7 @@ let conjugates =
   fun prepare(ls) = map(wr => if wr is Tup2(w, r) then Tup2(ucase(w), r), ls)
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(Tup2(x, y), t) then Cons(Tup2(x, y) :: Tup2(y, x) :: Nil, lscomp(t))
+    Tup2(x, y) :: t then (Tup2(x, y) :: Tup2(y, x) :: Nil) :: lscomp(t)
   prepare(append(oneways, concat(lscomp(bothways))))
 //│ > Cons {
 //│ >   head: Tup2 {
@@ -316,8 +316,8 @@ fun conjug(d, w) =
   fun conj(w) =
     fun lscomp(ls) = if ls is
       Nil then Nil
-      Cons(Tup2(w_, m), t) and
-        listEq(ucase(w), w_) then Cons(m, lscomp(t))
+      Tup2(w_, m) :: t and
+        listEq(ucase(w), w_) then m :: lscomp(t)
         else lscomp(t)
     head(append(lscomp(conjugates), w :: Nil))
   fun trailingI(ls) =
@@ -338,18 +338,18 @@ fun replies(key, l) =
   )
 
 fun answer(st, l) =
-  fun cons(e, r_es) = if r_es is Tup2(r, es) then Tup2(r, Cons(e, es))
+  fun cons(e, r_es) = if r_es is Tup2(r, es) then Tup2(r, e :: es)
   fun ans(e_es, l) = if e_es is
-    Cons(Tup2(key, a_as), es) and force(a_as) is LzCons(a, as_) then
+    Tup2(key, a_as) :: es and force(a_as) is LzCons(a, as_) then
       let rs = replies(key, l)
       if null_lz(rs)
       then cons(Tup2(key, a_as), ans(es, l))
-      else Tup2(makeResponse(a, head_lz(rs)), Cons(Tup2(key, as_), es))
+      else Tup2(makeResponse(a, head_lz(rs)), Tup2(key, as_) :: es)
   if ans(keyTabOf(st), l) is Tup2(response, kt) then Tup2(response, newKeyTab(kt, st))
 
 fun session(rs, prev, ls) = if ls is
   Nil then Nil
-  Cons(l, ls) and
+  l :: ls and
     (if listEqBy(listEq, prev, l) then repeated(rs) else answer(rs, l)) is Tup2(response, rs_) then
       append(response, append(nofibStringToList("\n\n"), session(rs_, l, ls)))
 

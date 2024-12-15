@@ -14,34 +14,34 @@ fun mmap(f, m) = s => if m(s) is Tup2(s_, a) then Tup2(s_, f(a))
 
 fun mmapl(f, aas) = if aas is
   Nil then retURN(Nil)
-  Cons(a, as_) then
+  a :: as_ then
     bind(
       f(a),
       b => bind(
         mmapl(f, as_),
-        bs => retURN(Cons(b, bs))
+        bs => retURN(b :: bs)
       )
     )
 
 fun mmapr(f, xs) = if xs is
   Nil then retURN(Nil)
-  Cons(x, xs) then
+  x :: xs then
     bind(
       mmapr(f, xs),
       ys => bind(
         f(x),
-        y => retURN(Cons(y, ys))
+        y => retURN(y :: ys)
       )
     )
     
 fun mfoldl(f, a, xs) = if xs is
   Nil then retURN(a)
-  Cons(x, xs) then
+  x :: xs then
     bind(f(a, x), fax => mfoldl(f, fax, xs))
     
 fun mfoldr(f, a, xs) = if xs is
   Nil then retURN(a)
-  Cons(x, xs) then
+  x :: xs then
     bind(mfoldr(f, a, xs), y => f(x, y))
 
 fun mif(c, t, f) = bind(c, cond => if cond then t else f)
@@ -75,11 +75,11 @@ fun labelTree(t) =
 fun ltGraph(t) =
   fun labelOf(t) = if t is Node(Tup2(n, x), xs) then n
   if t is Node(Tup2(n, x), xs) then
-    Cons(Tup3(n, x, map(labelOf, xs)), concat(map(ltGraph, xs)))
+    Tup3(n, x, map(labelOf, xs)) :: concat(map(ltGraph, xs))
 
 fun visited(n) = bind(
   fetch,
-  us => if inList(n, us) then retURN(true) else bind(set_(Cons(n, us)), _p => retURN(false))
+  us => if inList(n, us) then retURN(true) else bind(set_(n :: us), _p => retURN(false))
 )
 
 fun newlyDefined(x, fx, f, y) = if x === y then fx else f(y)
@@ -89,8 +89,8 @@ fun findCommon(ls) =
     let rcs = map(r, cs)
     fun lscomp(ls) = if ls is
       Nil then Nil
-      Cons(Tup3(m, s_, cs_), t) and
-        s === s_ and listEq(cs_, rcs) then Cons(m, lscomp(t))
+      Tup3(m, s_, cs_) :: t and
+        s === s_ and listEq(cs_, rcs) then m :: lscomp(t)
         else lscomp(t)
     let ms = lscomp(lg)
     if null_(ms)
@@ -100,9 +100,9 @@ fun findCommon(ls) =
 
 fun cse(t) = findCommon(ltGraph(labelTree(t)))
 
-fun plus_(x, y) = Node("+", Cons(x, Cons(y, Nil)))
+fun plus_(x, y) = Node("+", x :: y :: Nil)
 
-fun mult_(x, y) = Node("*", Cons(x, Cons(y, Nil)))
+fun mult_(x, y) = Node("*", x :: y :: Nil)
 
 fun prod(xs) = Node("X", xs)
 
@@ -151,7 +151,7 @@ let example3 = plus_(mult_(plus_(a, b), c), plus_(a, b))
 //│ >   }
 //│ example3 = }
 
-let example4 = prod(scanl(plus_, zerO, Cons(a, Cons(b, Cons(c, Cons(d, Nil))))))
+let example4 = prod(scanl(plus_, zerO, a :: b :: c :: d :: Nil))
 //│ > Node {
 //│ >   a: 'X',
 //│ >   b: Cons {
@@ -160,7 +160,7 @@ let example4 = prod(scanl(plus_, zerO, Cons(a, Cons(b, Cons(c, Cons(d, Nil))))))
 //│ >   }
 //│ example4 = }
 
-let example5 = prod(scanr(plus_, zerO, Cons(a, Cons(b, Cons(c, Cons(d, Nil))))))
+let example5 = prod(scanr(plus_, zerO, a :: b :: c :: d :: Nil))
 //│ > Node {
 //│ >   a: 'X',
 //│ >   b: Cons {
@@ -172,7 +172,7 @@ let example5 = prod(scanr(plus_, zerO, Cons(a, Cons(b, Cons(c, Cons(d, Nil))))))
 fun testCse_nofib(n) = map(
   i => map(
     cse,
-    take(intMod(i, 6), Cons(example0, Cons(example1, Cons(example2, Cons(example3, Cons(example4, Cons(example5, Nil)))))))
+    take(intMod(i, 6), example0 :: example1 :: example2 :: example3 :: example4 :: example5 :: Nil)
   ),
   enumFromTo(1, n)
 )

@@ -25,11 +25,11 @@ fun charGt(a, b) = a > b
 fun charGeq(a, b) = a >= b
 
 fun insert(x, ys) = if ys is
-  Nil then Cons(x, Nil)
-  Cons(y, ys) and
-    charLt(x, y) then Cons(x, Cons(y, ys))
-    charGt(x, y) then Cons(y, insert(x, ys))
-    else Cons(y, ys)
+  Nil then x :: Nil
+  y :: ys and
+    charLt(x, y) then x :: y :: ys
+    charGt(x, y) then y :: insert(x, ys)
+    else y :: ys
 
 fun clauseHelper(p, x) = if p is
   Dis(p, q) then clauseHelper(p, clauseHelper(q, x))
@@ -59,7 +59,7 @@ fun elim(p) = if p is
   Eqv(f, f_) then Con(elim(Imp(f, f_)), elim(Imp(f_, f)))
   
 fun interleave(xs, ys) = if xs is
-  Cons(x, xs) then Cons(x, interleave(ys, xs))
+  x :: xs then x :: interleave(ys, xs)
   Nil then Nil
 
 fun negin(p) = if p is
@@ -80,14 +80,14 @@ fun opri(c) = if c
   else throw Error(c)
   
 fun red(s) = if s is
-  Cons(Ast(p), Cons(Lex("="), Cons(Ast(q), s))) then Cons(Ast(Eqv(q, p)), s)
-  Cons(Ast(p), Cons(Lex(">"), Cons(Ast(q), s))) then Cons(Ast(Imp(q, p)), s)
-  Cons(Ast(p), Cons(Lex("|"), Cons(Ast(q), s))) then Cons(Ast(Dis(q, p)), s)
-  Cons(Ast(p), Cons(Lex("&"), Cons(Ast(q), s))) then Cons(Ast(Con(q, p)), s)
-  Cons(Ast(p), Cons(Lex("~"), s)) then Cons(Ast(Not(p)), s)
+  Ast(p) :: Lex("=") :: Ast(q) :: s then Ast(Eqv(q, p)) :: s
+  Ast(p) :: Lex(">") :: Ast(q) :: s then Ast(Imp(q, p)) :: s
+  Ast(p) :: Lex("|") :: Ast(q) :: s then Ast(Dis(q, p)) :: s
+  Ast(p) :: Lex("&") :: Ast(q) :: s then Ast(Con(q, p)) :: s
+  Ast(p) :: Lex("~") :: s           then Ast(Not(p)) :: s
 
 fun spri(s) = if s is
-  Cons(Ast(x), Cons(Lex(c), s)) then opri(c)
+  Ast(x) :: Lex(c) :: s then opri(c)
   else 0
 
 fun redstar(s) = while_(s => spri(s) != 0, red, s)
@@ -96,27 +96,27 @@ fun spaces(n) = replicate(n, " ")
 
 fun parseHelper(t, s) = if t is
   Nil then redstar(s)
-  Cons(" ", t) then parseHelper(t, s)
-  Cons("(", t) then parseHelper(t, Cons(Lex("("), s))
-  Cons(")", t) and redstar(s) is Cons(x, Cons(Lex("("), ss)) then parseHelper(t, Cons(x, ss))
-  Cons(c, t) and
-    charLeq("a", c) && charLeq(c, "z") then parseHelper(t, Cons(Ast(Sym(c)), s))
-    spri(s) > opri(c) then parseHelper(Cons(c, t), red(s))
-    else parseHelper(t, Cons(Lex(c), s))
+  " " :: t then parseHelper(t, s)
+  "(" :: t then parseHelper(t, Lex("(") :: s)
+  ")" :: t and redstar(s) is x :: Lex("(") :: ss then parseHelper(t, x :: ss)
+  c :: t and
+    charLeq("a", c) && charLeq(c, "z") then parseHelper(t, Ast(Sym(c)) :: s)
+    spri(s) > opri(c) then parseHelper(c :: t, red(s))
+    else parseHelper(t, Lex(c) :: s)
 
-fun parse(t) = if parseHelper(t, Nil) is Cons(Ast(f), Nil) then f
+fun parse(t) = if parseHelper(t, Nil) is Ast(f) :: Nil then f
 
 fun splitHelper(p, a) = if p is
   Con(p, q) then splitHelper(p, splitHelper(q, a))
-  else Cons(p, a)
+  else p :: a
 
 fun split(p) = splitHelper(p, Nil)
 
 fun tautclause(c_a) = if c_a is Tup2(c, a) then
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(h, t) and
-      inList(h, a) then Cons(h, lscomp(t))
+    h :: t and
+      inList(h, a) then h :: lscomp(t)
       else lscomp(t)
   listNeq(lscomp(c), Nil)
 

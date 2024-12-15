@@ -29,7 +29,7 @@ fun isEnd(i) = if i is
   Larry then false
   Adam then true
 
-fun itemFromTo(a, b) = if itemEq(a, b) then Cons(a, Nil) else Cons(a, itemFromTo(succItem(a), b))
+fun itemFromTo(a, b) = if itemEq(a, b) then a :: Nil else a :: itemFromTo(succItem(a), b)
 
 abstract class BankType: LeftBank | RightBank
 
@@ -122,7 +122,7 @@ fun writeState(state, s) =
     )
   )
 
-fun totalTime(history) = if history is Cons(Tup2(time, _), _) then time
+fun totalTime(history) = if history is Tup2(time, _) :: _ then time
 
 fun writeHistory(history, x) = if history is
   Nil then x
@@ -136,7 +136,7 @@ fun writeHistory(history, x) = if history is
 
 fun writeSolutions(solutions, count, s) = if solutions is
   Nil then s
-  Cons(item, next) then
+  item :: next then
     append(
       nofibStringToList("Solution "),
       append(
@@ -147,17 +147,17 @@ fun writeSolutions(solutions, count, s) = if solutions is
 
 fun minSolutions(history) = if history is
   Nil then Nil
-  Cons(history, next) then
+  history :: next then
     // @tailrec // TODO
     fun minAcc(minSoFar, mins, ls) = if ls is
       Nil then mins
-      Cons(history, next) then
+      history :: next then
         let total = totalTime(history)
         if
           minSoFar < total then minAcc(minSoFar, mins, next)
-          minSoFar === total then minAcc(minSoFar, Cons(history, mins), next)
-          else minAcc(total, Cons(history, Nil), next)
-    reverse(minAcc(totalTime(history), Cons(history, Nil), next))
+          minSoFar === total then minAcc(minSoFar, history :: mins, next)
+          else minAcc(total, history :: Nil, next)
+    reverse(minAcc(totalTime(history), history :: Nil, next))
 
 fun u2times(i) = if i is
   Bono then 10
@@ -166,32 +166,32 @@ fun u2times(i) = if i is
   Adam then 1
 
 fun transfer(source, dest, location, countdown, history) =
-  if stateEq(source, dest) then Cons(Tup2(countdown, dest), history) :: Nil
+  if stateEq(source, dest) then (Tup2(countdown, dest) :: history) :: Nil
   else
-    let newHistory = Cons(Tup2(countdown, dest), history)
+    let newHistory = Tup2(countdown, dest) :: history
     let newLocation = opposite(location)
     fun lscomp1(ls) = if ls is
       Nil then Nil
-      Cons(item, xs) then
+      item :: xs then
         if bankEq(position(item, dest), location) then
           let newDest = updateState(dest, item, newLocation)
           if notSeen(newDest, history) then
             let newTime = countdown + u2times(item)
-            Cons(transfer(source, newDest, newLocation, newTime, newHistory), lscomp1(xs))
+            transfer(source, newDest, newLocation, newTime, newHistory) :: lscomp1(xs)
           else lscomp1(xs)
         else lscomp1(xs)
     let moveOne = concat(lscomp1(itemFromTo(Bono, Adam)))
     fun lscomp2(ls) = if ls is
       Nil then Nil
-      Cons(i, xs) then
+      i :: xs then
         fun lscomp3(ls) = if ls is
           Nil then lscomp2(xs)
-          Cons(j, ys) then
+          j :: ys then
             if bankEq(position(i, dest), location) and bankEq(position(j, dest), location) then
               let newDest = updateState(updateState(dest, i, newLocation), j, newLocation)
               if notSeen(newDest, history) then
                 let newTime = countdown + u2times(i)
-                Cons(transfer(source, newDest, newLocation, newTime, newHistory), lscomp3(ys))
+                transfer(source, newDest, newLocation, newTime, newHistory) :: lscomp3(ys)
               else lscomp3(ys)
             else lscomp3(ys)
         lscomp3(itemFromTo(succItem(i), Adam))

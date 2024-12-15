@@ -23,28 +23,28 @@ fun enumFromTo_lz(a, b) = lazy of () =>
 fun last(ls) =
   fun go(h, t) = if t is
     Nil then h
-    Cons(head, t) then go(head, t)
+    head :: t then go(head, t)
   if ls is
-    Cons(h, t) then go(h, t)
+    h :: t then go(h, t)
     else throw Error("last: empty list")
 
 class K(s: String, c1: Char, c2: Char, i: Int)
 
 class H(f: Option[Int], s: Option[Int], ls: List[Int])
 
-fun ends(k) = if k is K(_, a, z, _) then Cons(a, Cons(z, Nil))
+fun ends(k) = if k is K(_, a, z, _) then a :: z :: Nil
 
 fun assoc(x, yz) = if yz is
-  Cons(Tup2(y, z), yzs) then if x === y then z else assoc(x, yzs)
+  Tup2(y, z) :: yzs then if x === y then z else assoc(x, yzs)
   else throw Error("assoc: not found")
 
 fun assocm(x, yz) = if yz is
-  Cons(Tup2(y, z), yzs) then if x === y then Some(z) else assocm(x, yzs)
+  Tup2(y, z) :: yzs then if x === y then Some(z) else assocm(x, yzs)
   else None
 
 fun histins(x, yns) = if yns is
-  Cons(Tup2(y, n), yns) then if x === y then Cons(Tup2(y, n + 1), yns) else Cons(Tup2(y, n), histins(x, yns))
-  else Cons(Tup2(x, 1), Nil)
+  Tup2(y, n) :: yns then if x === y then Tup2(y, n + 1) :: yns else Tup2(y, n) :: histins(x, yns)
+  else Tup2(x, 1) :: Nil
 
 fun histo(ls) = foldr(histins, Nil, ls)
 
@@ -53,8 +53,8 @@ fun subset(xs, ys) = all(x => inList(x, ys), xs)
 fun union(xs, ys) =
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(h, t) and
-      not(inList(h, xs)) then Cons(h, lscomp(t))
+    h :: t and
+      not(inList(h, xs)) then h :: lscomp(t)
       else lscomp(t)
   append(xs, lscomp(ys))
 
@@ -74,8 +74,8 @@ fun maxm(x, y) = if x is
 fun hash(cvs, k) = if k is K(_, a, z, n) then n + assoc(a, cvs) + assoc(z, cvs)
 
 fun select(p, x, ts_fs) = if ts_fs is Tup2(ts, fs) and
-  p(x) then Tup2(Cons(x, ts), fs)
-  else Tup2(ts, Cons(x, fs))
+  p(x) then Tup2(x :: ts, fs)
+  else Tup2(ts, x :: fs)
 
 fun partition_(p, ls) = foldr((x, y) => select(p, x, y), Tup2(Nil, Nil), ls)
 
@@ -83,10 +83,10 @@ fun freqsorted(x) = x
 
 fun blocked_(ds, ls) = if ls is
   Nil then Nil
-  Cons(k, ks) then
+  k :: ks then
     let ds_ = union(ds, ends(k))
     if partition_(x => subset(ends(x), ds_), ks) is Tup2(det, rest) then
-      Cons(k, append(det, blocked_(ds_, rest)))
+      k :: append(det, blocked_(ds_, rest))
 
 fun blocked(ls) = blocked_(Nil, ls)
 
@@ -113,7 +113,7 @@ fun hinsert(h, hh) = if hh is H(lo, hi, hs) then
   let hi_ = maxm(hi, h)
   if inList(h, hs) || (1 + hi_ - lo_) > numberofkeys
   then None
-  else Some(H(Some(lo_), Some(hi_), Cons(h, hs)))
+  else Some(H(Some(lo_), Some(hi_), h :: hs))
 
 fun first(k, ls) = if force(ls) is
   LzNil then NotEver(k)
@@ -125,7 +125,7 @@ fun firstSuccess(f, possibles) = first(0, map_lz(f, possibles))
 
 fun findhash_(keyHashSet, charAssocs, ks) = if ks is
   Nil then YesIts(1, charAssocs)
-  Cons(K(s, a, z, n), ks) then
+  K(s, a, z, n) :: ks then
     fun tryy(newAssocs) =
       let newCharAssocs = append(newAssocs, charAssocs)
       if hinsert(hash(newCharAssocs, K(s, a, z, n)), keyHashSet) is
@@ -133,7 +133,7 @@ fun findhash_(keyHashSet, charAssocs, ks) = if ks is
         Some(newKeyHashSet) then findhash_(newKeyHashSet, newCharAssocs, ks)
     if Tup2(assocm(a, charAssocs), assocm(z, charAssocs)) is
       Tup2(None, None) and
-        a === z then firstSuccess(m => tryy(Cons(Tup2(a, m), Nil)), enumFromTo_lz(0, maxval))
+        a === z then firstSuccess(m => tryy(Tup2(a, m) :: Nil), enumFromTo_lz(0, maxval))
         else
           fun lscomp1(ls1) = lazy of () =>
             if force(ls1) is
@@ -144,9 +144,9 @@ fun findhash_(keyHashSet, charAssocs, ks) = if ks is
                     LzNil then lscomp1(ms)
                     LzCons(n, ns) then lazy of () => LzCons(Tup2(m, n), lscomp2(ns))
                 force(lscomp2(enumFromTo_lz(0, maxval)))
-          firstSuccess(mn => if mn is Tup2(m, n) then tryy(Cons(Tup2(a, m), Cons(Tup2(z, n), Nil))), lscomp1(enumFromTo_lz(0, maxval)))
-      Tup2(None, Some(zc)) then firstSuccess(m => tryy(Cons(Tup2(a, m), Nil)), enumFromTo_lz(0, maxval))
-      Tup2(Some(ac), None) then firstSuccess(n => tryy(Cons(Tup2(z, n), Nil)), enumFromTo_lz(0, maxval))
+          firstSuccess(mn => if mn is Tup2(m, n) then tryy(Tup2(a, m) :: Tup2(z, n) :: Nil), lscomp1(enumFromTo_lz(0, maxval)))
+      Tup2(None, Some(zc)) then firstSuccess(m => tryy(Tup2(a, m) :: Nil), enumFromTo_lz(0, maxval))
+      Tup2(Some(ac), None) then firstSuccess(n => tryy(Tup2(z, n) :: Nil), enumFromTo_lz(0, maxval))
       Tup2(Some(ac), Some(zc)) then tryy(Nil)
 
 fun findhash(keys) = findhash_(H(None, None, Nil), Nil, keys)
@@ -163,6 +163,7 @@ fun cichelli(n) =
 
 fun prog(n) = cichelli(n)
 
+:expect 'YesIts(113994, [(w,16),(r,17),(o,11),(m,17),(l,11),(x,2),(n,11),(i,4),(f,10),(h,3),(g,0),(t,5),(d,0),(a,0),(s,2),(c,0),(e,1)])'
 prog(6).toString()
 //│ = 'YesIts(113994, [(w,16),(r,17),(o,11),(m,17),(l,11),(x,2),(n,11),(i,4),(f,10),(h,3),(g,0),(t,5),(d,0),(a,0),(s,2),(c,0),(e,1)])'
 

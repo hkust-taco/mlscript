@@ -8,9 +8,9 @@ fun isSome(x) = x is Some
 
 fun mapMaybe(f, ls) = if ls is
   Nil then Nil
-  Cons(h, t) and f(h) is
+  h :: t and f(h) is
     None then mapMaybe(f, t)
-    Some(a) then Cons(a, mapMaybe(f, t))
+    Some(a) then a :: mapMaybe(f, t)
 
 object
   GT
@@ -88,7 +88,7 @@ fun insert(kx, x, m) = if m is
     GT then balance(ky, y, l, insert(kx, x, r))
     EQ then Bin(sz, kx, x, l, r)
 
-fun indent(n) = if n <= 0 then Nil else Cons(" ", indent(n - 1))
+fun indent(n) = if n <= 0 then Nil else " " :: indent(n - 1)
 
 class P(i: Char, a: List[List[Tup2[Int, Int]]], b: List[List[Tup2[Int, Int]]])
 
@@ -138,12 +138,12 @@ fun extend_maybe(bd, sq, id) = if sq is Tup2(row, col) and
 fun pickOne(xs) =
   fun go(f, xs) = if xs is
     Nil then Nil
-    Cons(x, xs) then Cons(Tup2(x, f(xs)), go(p => Cons(x, f(p)), xs))
+    x :: xs then Tup2(x, f(xs)) :: go(p => x :: f(p), xs)
   go(x => x, xs)
 
 fun fit(bd, sq, id, os) = if os is
   Nil then Some(extend(bd, sq, id))
-  Cons(o, os) and extend_maybe(bd, addIntInt(sq, o), id) is
+  o :: os and extend_maybe(bd, addIntInt(sq, o), id) is
     Some(bd1) then fit(bd1, sq, id, os)
     None then None
 
@@ -160,10 +160,10 @@ fun search(row_col, sey, bd, ps) = if row_col is Tup2(row, col) and
   else
     fun lscomp1(ls) = if ls is
       Nil then Nil
-      Cons(Tup2(P(id, ms, fs), ps), ls) then
+      Tup2(P(id, ms, fs), ps) :: ls then
         fun lscomp2(ls2) = if ls2 is
           Nil then lscomp1(ls)
-          Cons(os, ls) then Cons(Tup3(id, os, ps), lscomp2(ls))
+          os :: ls then Tup3(id, os, ps) :: lscomp2(ls)
         lscomp2(if sey is Male then ms else fs)
     let choices = lscomp1(pickOne(ps))
     if mapMaybe(x => tryy(row_col, sey, bd, x), choices) is

@@ -67,8 +67,8 @@ class
 fun ambientsurf(ss) =
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(x, t) and
-      x is Ambient(s) then Cons(s, lscomp(t))
+    x :: t and
+      x is Ambient(s) then s :: lscomp(t)
       else lscomp(t)
   
   head(append(lscomp(ss), (Tup3(0.0, 0.0, 0.0) :: Nil)))
@@ -77,8 +77,8 @@ fun ambientsurf(ss) =
 fun diffusesurf(ss) =
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(x, t) and
-      x is Diffuse(s) then Cons(s, lscomp(t))
+    x :: t and
+      x is Diffuse(s) then s :: lscomp(t)
       else lscomp(t)
   
   head(append(lscomp(ss), (Tup3(0.0, 0.0, 0.0) :: Nil)))
@@ -87,8 +87,8 @@ fun diffusesurf(ss) =
 fun specularsurf(ss) =
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(x, t) and
-      x is Specular(s) then Cons(s, lscomp(t))
+    x :: t and
+      x is Specular(s) then s :: lscomp(t)
       else lscomp(t)
   
   head(append(lscomp(ss), (Tup3(0.0, 0.0, 0.0) :: Nil)))
@@ -97,8 +97,8 @@ fun specularsurf(ss) =
 fun specpowsurf(ss) =
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(x, t) and
-      x is Specpow(s) then Cons(s, lscomp(t))
+    x :: t and
+      x is Specpow(s) then s :: lscomp(t)
       else lscomp(t)
   
   head(append(lscomp(ss), (8.0 :: Nil)))
@@ -107,8 +107,8 @@ fun specpowsurf(ss) =
 fun reflectsurf(ss) =
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(x, t) and
-      x is Reflect(s) then Cons(s, lscomp(t))
+    x :: t and
+      x is Reflect(s) then s :: lscomp(t)
       else lscomp(t)
   
   head(append(lscomp(ss), (0.0 :: Nil)))
@@ -117,8 +117,8 @@ fun reflectsurf(ss) =
 fun transmitsurf(ss) =
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(x, t) and
-      x is Transmit(s) then Cons(s, lscomp(t))
+    x :: t and
+      x is Transmit(s) then s :: lscomp(t)
       else lscomp(t)
   
   head(append(lscomp(ss), (0.0 :: Nil)))
@@ -127,8 +127,8 @@ fun transmitsurf(ss) =
 fun refractsurf(ss) =
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(x, t) and
-      x is Refract(s) then Cons(s, lscomp(t))
+    x :: t and
+      x is Refract(s) then s :: lscomp(t)
       else lscomp(t)
   
   head(append(lscomp(ss), (1.0 :: Nil)))
@@ -137,8 +137,8 @@ fun refractsurf(ss) =
 fun bodysurf(ss) =
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(x, t) and
-      x is Body(s) then Cons(s, lscomp(t))
+    x :: t and
+      x is Body(s) then s :: lscomp(t)
       else lscomp(t)
   
   head(append(lscomp(ss), (Tup3(1.0, 1.0, 1.0) :: Nil)))
@@ -152,9 +152,29 @@ let lookat = Tup3(0.0, 0.0, 0.0)
 let vup = Tup3(0.0, 0.0, 1.0)
 let fov = 45.0
 let s2 =
-  Cons(Ambient(Tup3(0.035, 0.0325, 0.025)), Cons(Diffuse(Tup3(0.5, 0.45, 0.35)), Cons(Specular(Tup3(0.8, 0.8, 0.8)), Cons(Specpow(3.0), Cons(Reflect(0.5), Nil)))))
-let testspheres = Cons(Sphere(Tup3(0.0, 0.0, 0.0), 0.5, s2), Cons(Sphere(Tup3(0.272166, 0.272166, 0.544331), 0.166667, s2), Cons(Sphere(Tup3(0.643951, 0.172546, 0.0), 0.166667, s2), Cons(Sphere(Tup3(0.172546, 0.643951, 0.0), 0.166667, s2), Cons(Sphere(Tup3(-0.371785, 0.0996195, 0.544331), 0.166667, s2), Cons(Sphere(Tup3(-0.471405, 0.471405, 0.0), 0.166667, s2), Cons(Sphere(Tup3(-0.643951, -0.172546, 0.0), 0.166667, s2), Cons(Sphere(Tup3(0.0996195, -0.371785, 0.544331), 0.166667, s2), Cons(Sphere(Tup3(-0.172546, -0.643951, 0.0), 0.166667, s2), Cons(Sphere(Tup3(0.471405, -0.471405, 0.0), 0.166667, s2), Nil))))))))))
-let testlights = Cons(Point(Tup3(4.0, 3.0, 2.0), Tup3(0.288675, 0.288675, 0.288675)), Cons(Point(Tup3(1.0, -4.0, 4.0), Tup3(0.288675, 0.288675, 0.288675)), Cons(Point(Tup3(-3.0, 1.0, 5.0), Tup3(0.288675, 0.288675, 0.288675)), Nil)))
+  Ambient(Tup3(0.035, 0.0325, 0.025)) ::
+  Diffuse(Tup3(0.5, 0.45, 0.35)) ::
+  Specular(Tup3(0.8, 0.8, 0.8)) ::
+  Specpow(3.0) ::
+  Reflect(0.5) ::
+  Nil
+let testspheres =
+  Sphere(Tup3(0.0, 0.0, 0.0), 0.5, s2) ::
+  Sphere(Tup3(0.272166, 0.272166, 0.544331), 0.166667, s2) ::
+  Sphere(Tup3(0.643951, 0.172546, 0.0), 0.166667, s2) ::
+  Sphere(Tup3(0.172546, 0.643951, 0.0), 0.166667, s2) ::
+  Sphere(Tup3(-0.371785, 0.0996195, 0.544331), 0.166667, s2) ::
+  Sphere(Tup3(-0.471405, 0.471405, 0.0), 0.166667, s2) ::
+  Sphere(Tup3(-0.643951, -0.172546, 0.0), 0.166667, s2) ::
+  Sphere(Tup3(0.0996195, -0.371785, 0.544331), 0.166667, s2) ::
+  Sphere(Tup3(-0.172546, -0.643951, 0.0), 0.166667, s2) ::
+  Sphere(Tup3(0.471405, -0.471405, 0.0), 0.166667, s2) ::
+  Nil            
+let testlights =
+  Point(Tup3(4.0, 3.0, 2.0), Tup3(0.288675, 0.288675, 0.288675)) ::
+  Point(Tup3(1.0, -4.0, 4.0), Tup3(0.288675, 0.288675, 0.288675)) ::
+  Point(Tup3(-3.0, 1.0, 5.0), Tup3(0.288675, 0.288675, 0.288675)) ::
+  Nil      
 let lookfrom   = Tup3(2.1, 1.3, 1.7)
 let background = Tup3(0.078, 0.361, 0.753)
 //│ background = Tup3 { fst: 0.078, snd: 0.361, thd: 0.753 }
@@ -235,7 +255,7 @@ fun trace(spheres, pos, dir) =
   fun sphmap(xss) =
     if xss is
       Nil then Nil
-      Cons(x, xs) and sphereintersect(pos, dir, x) is Tup2(is_hit, where_hit) and
+      x :: xs and sphereintersect(pos, dir, x) is Tup2(is_hit, where_hit) and
         is_hit then Tup2(where_hit, x) :: sphmap(xs)
         else sphmap(xs)
   
@@ -371,10 +391,10 @@ fun ray(winsize) =
     fun f(i, j) = tracepixel(testspheres, lights, i, j, firstray, scrnx, scrny)
     fun lscomp1(ls1) = if ls1 is
       Nil then Nil
-      Cons(i, t1) then
+      i :: t1 then
         fun lscomp2(ls2) = if ls2 is
           Nil then lscomp1(t1)
-          Cons(j, t2) then Tup2(Tup2(i, j), f(i, j)) :: lscomp2(t2)
+          j :: t2 then Tup2(Tup2(i, j), f(i, j)) :: lscomp2(t2)
         lscomp2(enumFromTo(0, winsize - 1))
     lscomp1(enumFromTo(0, winsize - 1))
 

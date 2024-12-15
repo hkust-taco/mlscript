@@ -8,25 +8,25 @@
 //│ ————————————————————————————————————————————————————————————————————————————————
 fun rqpart(le, x, ys, rle, rgt, r) = if ys is
   Nil then qsort(le, rle, x :: qsort(le, rgt, r))
-  Cons(y, ys) and
+  y :: ys and
     le(y, x) then rqpart(le, x, ys, y :: rle, rgt, r)
     else rqpart(le, x, ys, rle, y :: rgt, r)
 
 fun rqsort(le, xs, r) = if xs is
   Nil then r
-  Cons(x, Nil) then x :: r
-  Cons(x, xs) then rqpart(le, x, xs, Nil, Nil, r)
+  x :: Nil then x :: r
+  x :: xs then rqpart(le, x, xs, Nil, Nil, r)
 
 fun qpart(le, x, ys, rlt, rge, r) = if ys is
   Nil then rqsort(le, rlt, x :: rqsort(le, rge, r))
-  Cons(y, ys) and
+  y :: ys and
     le(x, y) then qpart(le, x, ys, rlt, y :: rge, r)
     else qpart(le, x, ys, y :: rlt, rge, r)
 
 fun qsort(le, xs, r) = if xs is
   Nil then r
-  Cons(x, Nil) then x :: r
-  Cons(x, xs) then qpart(le, x, xs, Nil, Nil, r)
+  x :: Nil then x :: r
+  x :: xs then qpart(le, x, xs, Nil, Nil, r)
 //│ ————————————————————————————————————————————————————————————————————————————————
 
 fun sort(l) = qsort(
@@ -91,14 +91,14 @@ fun lines(s) = if break_(x => x === "|", s) is Tup2(l, s_) then
   
 fun any(p, ls) = if ls is
   Nil then false
-  Cons(x, xs) then p(x) || any(p, xs)
+  x :: xs then p(x) || any(p, xs)
 
 fun showColour(c) = nofibStringToList(if c is Black then "Black" else "White")
 
 fun pieceAt(bd, sq) = if bd is Board(wkss, bkss) then
   fun pieceAtWith(c, n, ls) = if ls is
     Nil then n
-    Cons(Tup2(k, s), xs) and
+    Tup2(k, s) :: xs and
       eqTup2(s, sq) then Some(Tup2(c, k))
       else pieceAtWith(c, n, xs)
   pieceAtWith(White, pieceAtWith(Black, None, bkss), wkss)
@@ -144,12 +144,12 @@ fun showSquare(c, x_y) = if x_y is Tup2(x, y) then
 fun emptyAtAll(bd, e) = if bd is Board(wkss, bkss) then
   fun emptyAtAllAnd(b, ls) = if ls is
     Nil then b
-    Cons(Tup2(_, s), xs) then (not(e(s)) and emptyAtAllAnd(b, xs))
+    Tup2(_, s) :: xs then (not(e(s)) and emptyAtAllAnd(b, xs))
   emptyAtAllAnd(emptyAtAllAnd(true, bkss), wkss)
 
 fun rPa(sq, kss) = if kss is
   Nil then throw Error("rPa")
-  Cons(Tup2(k, s), kss) then if eqTup2(s, sq) then kss else Cons(Tup2(k, s), rPa(sq, kss))
+  Tup2(k, s) :: kss then if eqTup2(s, sq) then kss else Tup2(k, s) :: rPa(sq, kss)
 
 fun rmPieceAt(c, sq, bd) = if bd is Board(wkss, bkss) and c is
   White then Board(rPa(sq, wkss), bkss)
@@ -157,12 +157,12 @@ fun rmPieceAt(c, sq, bd) = if bd is Board(wkss, bkss) and c is
 
 fun putPieceAt(sq, c_k, bd) =
   if c_k is Tup2(c, k) and bd is Board(wkss, bkss) and c is
-    White then Board(Cons(Tup2(k, sq), wkss), bkss)
-    Black then Board(wkss, Cons(Tup2(k, sq), bkss))
+    White then Board(Tup2(k, sq) :: wkss, bkss)
+    Black then Board(wkss, Tup2(k, sq) :: bkss)
 
 fun kSq(kss) = if kss is
-  Cons(Tup2(King, s), _) then s
-  Cons(_, kss) then kSq(kss)
+  Tup2(King, s) :: _ then s
+  _ :: kss then kSq(kss)
   Nil then throw Error("kSq")
 
 fun kingSquare(c, bd) = if bd is Board(wkss, bkss) and c is
@@ -209,7 +209,7 @@ fun showMoveInFull(a) = showMove(true, a)
 
 fun showMovesAfter(p_, mifs) = if mifs is
   Nil then Nil
-  Cons(MoveInFull(p, sq, d_), mifs) and p_ is MoveInFull(p_, sq_, _) then
+  MoveInFull(p, sq, d_) :: mifs and p_ is MoveInFull(p_, sq_, _) then
     append(
       nofibStringToList(", "),
       append(
@@ -220,28 +220,28 @@ fun showMovesAfter(p_, mifs) = if mifs is
 
 fun showMoves(mifs) = if mifs is
   Nil then throw Error("showMoves")
-  Cons(mif, mifs) then append(
+  mif :: mifs then append(
     showMoveInFull(mif),
     showMovesAfter(mif, mifs)
   )
 
 fun sift(c, bd, ms, sqs) = if sqs is
   Nil then ms
-  Cons(sq, sqs) and
+  sq :: sqs and
     onboard(sq) and pieceAt(bd, sq) is
-      None then sift(c, bd, Cons(Move(sq, None, None), ms), sqs)
+      None then sift(c, bd, Move(sq, None, None) :: ms, sqs)
       Some(p_) and
         colourOf(p_) === c then sift(c, bd, ms, sqs)
-        else sift(c, bd, Cons(Move(sq, Some(p_), None), ms), sqs)
+        else sift(c, bd, Move(sq, Some(p_), None) :: ms, sqs)
     else sift(c, bd, ms, sqs)
 
 fun moveLine(bd, c, sq, inc, cont) = 
   fun ml(sq, ms) = 
     let sq_ = inc(sq)
     if onboard(sq_) and pieceAt(bd, sq_) is
-      None then ml(sq_, Cons(Move(sq_, None, None), ms))
+      None then ml(sq_, Move(sq_, None, None) :: ms)
       Some(p_) and
-        not(colourOf(p_) === c) then cont(Cons(Move(sq_, Some(p_), None), ms))
+        not(colourOf(p_) === c) then cont(Move(sq_, Some(p_), None) :: ms)
         else cont(ms)
     else cont(ms)
   ms => ml(sq, ms)
@@ -361,11 +361,11 @@ fun pawnmoves(c, pq, bd) = if pq is Tup2(p, q) then
     else Nil
   fun lscomp1(ls) = if ls is
     Nil then Nil
-    Cons(sq, sqs) then
+    sq :: sqs then
       fun lscomp2(ls) = if ls is
         Nil then lscomp1(sqs)
-        Cons(h, ls) and
-          h is Some(p_) and not(colourOf(p_) === c) then Cons(promote(sq, Some(p_)), lscomp2(ls))
+        h :: ls and
+          h is Some(p_) and not(colourOf(p_) === c) then promote(sq, Some(p_)) :: lscomp2(ls)
           else lscomp2(ls)
       lscomp2(pieceAt(bd, sq) :: Nil)
   let caps = concat(lscomp1(Tup2(p + 1, q + fwd) :: Tup2(p - 1, q + fwd) :: Nil))
@@ -429,13 +429,13 @@ fun moveDetailsFor(c, bd) = foldr(
 fun comment(s) = (s is Nil) || listEq(take(2, s), nofibStringToList("--"))
 
 fun last(ls) = if ls is
-  Cons(x, Nil) then x
-  Cons(h, t) then last(t)
+  x :: Nil then x
+  h :: t then last(t)
 
 fun intOfString(s) = globalThis.parseInt(nofibListToString(s))
 
 fun parseGoal(ls) = if ls is
-  Cons(gltxt, Nil) then
+  gltxt :: Nil then
     let ws = words(gltxt)
     let c = if listEq(head(ws), nofibStringToList("Black")) then Black else White
     let n = intOfString(last(ws))
@@ -488,7 +488,7 @@ fun replies(bd, c, n) =
       Some(s) and
         rest is
           None then None
-          Some(ms) then Some(Cons(Tup2(mif, s), ms))
+          Some(ms) then Some(Tup2(mif, s) :: ms)
   if n
     === 0 and
       null_(mds) then Some(Nil)
@@ -527,7 +527,7 @@ fun tab(n) = if n <= 0 then Nil else " " :: tab(n - 1)
 //│ ————————————————————————————————————————————————————————————————————————————————
 fun showReplies(rs, n) = if rs is
   Nil then Nil
-  Cons(Tup2(mifs, s), rs) then
+  Tup2(mifs, s) :: rs then
     append(
       tab(n),
       append(
@@ -554,7 +554,7 @@ fun showSoln(s, n) = if s is Soln(mif, rs) then
         showMoveInFull(mif),
         if rs is
           Nil then nofibStringToList("++\n")
-          Cons(Tup2(mifs, s_), Nil) then
+          Tup2(mifs, s_) :: Nil then
             append(
               nofibStringToList(", "),
               append(
@@ -582,17 +582,17 @@ fun compact(s) = if s is Solution(mif, rs) then Soln(mif, foldr(insertCompact, N
 fun insertCompact(mif_s, ls) = if mif_s is Tup2(mif, s) then
   fun insert(x, ls) = if ls is
     Nil then x :: Nil
-    Cons(y, ys) then if polyGt(x, y) then y :: insert(x, ys) else x :: y :: ys
+    y :: ys then if polyGt(x, y) then y :: insert(x, ys) else x :: y :: ys
   let cs = compact(s)
   fun ic(ls) = if ls is
-    Nil then Cons(Tup2(mif :: Nil, cs), Nil)
-    Cons(Tup2(mifs, cs_), etc) then
+    Nil then Tup2(mif :: Nil, cs) :: Nil
+    Tup2(mifs, cs_) :: etc then
       let a = showSoln(cs, 1)
       let b = showSoln(cs_, 1)
       if
-        ltList(a, b, (x, y) => x < y, (x, y) => x > y) then Cons(Tup2(mif :: Nil, cs), Cons(Tup2(mifs, cs_), etc))
-        listEq(a, b) then Cons(Tup2(insert(mif, mifs), cs), etc)
-        not(ltList(a, b, (x, y) => x < y, (x, y) => x > y)) then Cons(Tup2(mifs, cs_), ic(etc))
+        ltList(a, b, (x, y) => x < y, (x, y) => x > y) then Tup2(mif :: Nil, cs) :: Tup2(mifs, cs_) :: etc
+        listEq(a, b) then Tup2(insert(mif, mifs), cs) :: etc
+        not(ltList(a, b, (x, y) => x < y, (x, y) => x > y)) then Tup2(mifs, cs_) :: ic(etc)
         else throw Error("compare error")
   ic(ls)
 //│ ————————————————————————————————————————————————————————————————————————————————

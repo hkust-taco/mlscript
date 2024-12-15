@@ -37,11 +37,11 @@ fun hash(str) = foldl(
 
 fun and_(ls) = if ls is
   Nil then true
-  Cons(h, t) and
+  h :: t and
     h then and_(t)
     else false
 
-fun unlines(ls) = concat(map(l => append(l, Cons("\n", Nil)), ls))
+fun unlines(ls) = concat(map(l => append(l, "\n" :: Nil), ls))
 
 fun even(a) = z_mod(a, const2) === const0
 
