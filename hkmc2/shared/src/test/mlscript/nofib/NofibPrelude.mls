@@ -21,12 +21,11 @@ fun lazy(x) = Lazy(x)
 fun force(x) = if x is Lazy then x.get()
 
 abstract class List[out T]: Cons[T] | Nil
-class Cons[out T](head: T, tail: List[T]) extends List[T] with
+class (::) Cons[out T](head: T, tail: List[T]) extends List[T] with
   fun toString() =
     "[" + _internal_cons_to_str(Cons(head, tail)) + "]"
 object Nil extends List with
   fun toString() = "[]"
-fun (::) cons(x, xs) = Cons(x, xs)
 fun _internal_cons_to_str(ls) = if ls is
   Nil then ""
   Cons(h, Nil) then h.toString()
