@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 122 member(s)
+//│ Imported 118 member(s)
 
 
 let pi = globalThis.Math.PI
@@ -359,9 +359,11 @@ fun tracepixel(spheres, lights, x, y, firstray, scrnx, scrny) =
     hit then shade(lights, sp, pos, dir, dist, Tup3(1.0, 1.0, 1.0))
     else background
 
+fun z_of_int(x) = globalThis.BigInt(x)
+
 fun hash(param) =
-  fun u8(x) = nofibBigInt(round(255 * x))
-  foldr(((rgb, acc) => if rgb is Tup3(r, g, b) then u8(r) + (u8(g) * nofibBigInt(7)) + (u8(b) * nofibBigInt(23)) + (acc * nofibBigInt(61))), nofibBigInt(0), param)
+  fun u8(x) = z_of_int(round(255 * x))
+  foldr(((rgb, acc) => if rgb is Tup3(r, g, b) then u8(r) + (u8(g) * z_of_int(7)) + (u8(b) * z_of_int(23)) + (acc * z_of_int(61))), z_of_int(0), param)
 
 fun ray(winsize) =
   let lights = testlights

@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 122 member(s)
+//│ Imported 118 member(s)
 
 
 abstract class BinTree[T, U]: Cell[T] | Node[T, U]
@@ -289,7 +289,7 @@ fun do_cycle(cpd, tp4, inputs) =
     let states3 = foldl(sim_then_send, states2, enumFromTo(1, cpd))
     let states4 = restore_requests(states, states3)
     Tup4(size, ins, outs, states4)
-  else nofibError(tp4)
+  else throw Error(tp4)
 
 fun simulate(inputs_list, b) = if b is Tup4(size, ins, outs, states) then
   tail(scanl((x, y) => do_cycle(critical_path_depth(Tup4(size, ins, outs, states)), x, y), Tup4(size, ins, outs, map(init_dffs, states)), inputs_list))

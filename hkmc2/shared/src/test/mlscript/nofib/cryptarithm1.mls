@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 122 member(s)
+//│ Imported 118 member(s)
 
 
 fun expand(a, b, c, d, e, f) = f + (e*10) + (d*100) + (c*1000) + (b*10000) + (a*100000)
@@ -37,5 +37,5 @@ fun testCryptarithm_nofib(n) =
 
 
 :re
-nofibPrint(testCryptarithm_nofib(1))
+print(testCryptarithm_nofib(1))
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded

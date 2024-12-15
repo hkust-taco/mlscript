@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 122 member(s)
+//│ Imported 118 member(s)
 
 fun int_of_char(c) = c.codePointAt(0)
 

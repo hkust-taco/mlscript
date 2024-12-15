@@ -1,7 +1,4 @@
 
-fun nofibPrint(x) = globalThis.process.stdout.write(globalThis.JSON.stringify(x) + "\n")
-fun nofibError(e) = globalThis.eval("throw new Error('" + e + "')")
-fun nofibBigInt(i) = globalThis.BigInt(i)
 
 type Char = String
 
@@ -75,8 +72,6 @@ fun fst(x) = if x is Tup2(f, s) then f
 fun until(p, f, i) = if p(i) then i else until(p, f, f(i))
 
 fun flip(f, x, y) = f(y)(x)
-
-fun not(x) = if x then false else true
 
 fun power(a, n) = globalThis.Math.pow(a, n)
 

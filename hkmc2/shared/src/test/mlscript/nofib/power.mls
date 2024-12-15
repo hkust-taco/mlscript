@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 122 member(s)
+//│ Imported 118 member(s)
 
 
 abstract class Pss[T]: Pz | Pc[T]
@@ -62,7 +62,7 @@ fun powerPs(a, n) = if n <= 0 then fromIntegerPs(1) else multPs(a, powerPs(a, n 
 
 fun divPs(fss, gss) = lazy of () => if force(fss) is
   Pz and force(gss) is
-    Pz then nofibError("power series 0/0")
+    Pz then throw Error("power series 0/0")
     Pc(0, gs) then force(divPs(lazy of () => Pz, gs))
     else Pz
   Pc(0, fs_) and force(gss) is
