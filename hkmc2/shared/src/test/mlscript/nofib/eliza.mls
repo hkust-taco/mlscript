@@ -295,7 +295,7 @@ let conjugates =
     [nofibStringToList("I've"), nofibStringToList("you've")] ::
     [nofibStringToList("I'm"), nofibStringToList("you're")] ::
     Nil
-  fun prepare(ls) = map(wr => if wr is [w, r] then [ucase(w), r], ls)
+  fun prepare(ls) = map(case { [w, r] then [ucase(w), r] }, ls)
   fun lscomp(ls) = if ls is
     Nil then Nil
     [x, y] :: t then ([x, y] :: [y, x] :: Nil) :: lscomp(t)

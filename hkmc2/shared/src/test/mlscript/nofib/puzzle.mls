@@ -88,7 +88,7 @@ fun opposite(b) = if b is
   RightBank then LeftBank
 
 fun notSeen(state, states) =
-  all(_s => if _s is [_, s] then not(stateEq(state, s)), states)
+  all(case { [_, s] then not(stateEq(state, s)) }, states)
 
 fun writeItem(i, b, rest) = if i is
   Bono and b is LeftBank then nofibStringToList("    Bono |                    |\n") +: rest

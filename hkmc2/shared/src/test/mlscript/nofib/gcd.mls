@@ -33,9 +33,9 @@ fun test(d) =
       lscomp2(ms)
   
   let tripls =
-    map(xy => if xy is [x, y] then [x, y, gcdE(x, y)], lscomp1(ns))
+    map(case { [x, y] then [x, y, gcdE(x, y)] }, lscomp1(ns))
   
-  let rs = map(guv => if guv is [d1, d2, [gg, u, v]] then abs(gg + u + v), tripls)
+  let rs = map(case { [d1, d2, [gg, u, v]] then abs(gg + u + v) }, tripls)
   
   max_(rs)
 

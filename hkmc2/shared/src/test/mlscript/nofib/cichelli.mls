@@ -141,7 +141,7 @@ fun findhash_(keyHashSet, charAssocs, ks) = if ks is
                     LzNil then lscomp1(ms)
                     LzCons(n, ns) then lazy of () => LzCons([m, n], lscomp2(ns))
                 force(lscomp2(enumFromTo_lz(0, maxval)))
-          firstSuccess(mn => if mn is [m, n] then tryy([a, m] :: [z, n] :: Nil), lscomp1(enumFromTo_lz(0, maxval)))
+          firstSuccess(case { [m, n] then tryy([a, m] :: [z, n] :: Nil) }, lscomp1(enumFromTo_lz(0, maxval)))
       [None, Some(zc)] then firstSuccess(m => tryy([a, m] :: Nil), enumFromTo_lz(0, maxval))
       [Some(ac), None] then firstSuccess(n => tryy([z, n] :: Nil), enumFromTo_lz(0, maxval))
       [Some(ac), Some(zc)] then tryy(Nil)

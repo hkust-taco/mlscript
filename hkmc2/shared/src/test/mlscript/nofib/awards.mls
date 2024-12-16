@@ -44,7 +44,7 @@ fun awards(scores) =
   let sumscores = map(p => [sum(p), p], perms(3, scores))
   
   fun atleast(threshold) =
-    filter(sum_p => if sum_p is [sum_, p] then sum_ >= threshold, sumscores)
+    filter(case { [sum_, p] then sum_ >= threshold }, sumscores)
   
   fun award(name_threshold) = if name_threshold is [name, threshold] then
     map(ps => [name, ps], sort(atleast(threshold)))
@@ -57,7 +57,7 @@ fun findawards(scores) = if awards(scores) is
     [award, [sum_, perm]] :: findawards(listDiff(scores, perm))
 
 fun findallawards(competitors) =
-  map(name_scores => if name_scores is [name, scores] then [name, findawards(scores)], competitors)
+  map(case { [name, scores] then [name, findawards(scores)] }, competitors)
 
 fun competitors(i) = 
   ["Simon", 35::27::40::i::34::21::Nil] ::

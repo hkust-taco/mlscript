@@ -234,22 +234,22 @@ fun bishopmoves(c, sq, bd) =
     bd
     c
     sq
-    xy => if xy is [x, y] then [x - 1, y + 1]
+    case { [x, y] then [x - 1, y + 1] }
     moveLine of
       bd
       c
       sq
-      xy => if xy is [x, y] then [x + 1, y + 1]
+      case { [x, y] then [x + 1, y + 1] }
       moveLine of
         bd
         c
         sq
-        xy => if xy is [x, y] then [x - 1, y - 1]
+        case { [x, y] then [x - 1, y - 1] }
         moveLine of
           bd
           c
           sq
-          xy => if xy is [x, y] then [x + 1, y - 1]
+          case { [x, y] then [x + 1, y - 1] }
           x => x
   ) of Nil
 
@@ -258,22 +258,22 @@ fun rookmoves(c, sq, bd) =
     bd
     c
     sq
-    xy => if xy is [x, y] then [x - 1, y]
+    case { [x, y] then [x - 1, y] }
     moveLine of
       bd
       c
       sq
-      xy => if xy is [x, y] then [x + 1, y]
+      case { [x, y] then [x + 1, y] }
       moveLine of
         bd
         c
         sq
-        xy => if xy is [x, y] then [x, y - 1]
+        case { [x, y] then [x, y - 1] }
         moveLine of
           bd
           c
           sq
-          xy => if xy is [x, y] then [x, y + 1]
+          case { [x, y] then [x, y + 1] }
           x => x
   ) of Nil
 
@@ -346,11 +346,11 @@ fun kingincheck(c, bd) =
       King then (abs(x - xk) <= 1) and (abs(y - yk) <= 1)
       Queen then kthreat(Rook) || kthreat(Bishop)
       Rook then
-        ((x === xk) && emptyAtAll(bd, xeye => if xeye is [xe, ye] then (xe === xk) && ((min(y, yk) < ye) && (ye < max(y, yk))))) ||
-        ((y === yk) && emptyAtAll(bd, xeye => if xeye is [xe, ye] then (ye === yk) && ((min(x, xk) < xe) && (xe < max(x, xk)))))
+        ((x === xk) && emptyAtAll(bd, case { [xe, ye] then (xe === xk) && ((min(y, yk) < ye) && (ye < max(y, yk))) } )) ||
+        ((y === yk) && emptyAtAll(bd, case { [xe, ye] then (ye === yk) && ((min(x, xk) < xe) && (xe < max(x, xk))) } ))
       Bishop then
-        (((x + y) === (xk + yk)) && emptyAtAll(bd, xeye => if xeye is [xe, ye] then ((xe + ye) === (xk + yk)) && ((min(x, xk) < xe) && (xe < max(x, xk))))) ||
-        (((x - y) === (xk - yk)) && emptyAtAll(bd, xeye => if xeye is [xe, ye] then ((xe - ye) === (xk - yk)) && ((min(x, xk) < xe) && (xe < max(x, xk)))))
+        (((x + y) === (xk + yk)) && emptyAtAll(bd, case { [xe, ye] then ((xe + ye) === (xk + yk)) && ((min(x, xk) < xe) && (xe < max(x, xk))) } )) ||
+        (((x - y) === (xk - yk)) && emptyAtAll(bd, case { [xe, ye] then ((xe - ye) === (xk - yk)) && ((min(x, xk) < xe) && (xe < max(x, xk))) } ))
       Knight then
         (((abs(x - xk)) === 2) && ((abs(y - yk)) === 1)) || (((abs(x - xk)) === 1) && ((abs(y - yk)) === 2))
       Pawn then

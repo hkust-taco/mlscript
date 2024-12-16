@@ -155,7 +155,7 @@ fun pp(t) = ppn(0, t)
 fun ppenv(env) =
   nofibStringToList("[") +:
   flatMap(
-    vt => if vt is [v, t] then v +: nofibStringToList("=") +: pp(t) +: nofibStringToList(", "),
+    case { [v, t] then v +: nofibStringToList("=") +: pp(t) +: nofibStringToList(", ") }
     env
   ) +:
   nofibStringToList("]")

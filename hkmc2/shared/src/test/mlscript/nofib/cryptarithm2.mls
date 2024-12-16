@@ -21,7 +21,7 @@ fun runStateT(m, s) = if m is StateT(run) then run(s)
 
 fun bind(m, f) =
   StateT of
-    s => concat of map(x => if x is [a, ss] then runStateT(f(a), ss), runStateT(m, s))
+    s => concat of map(case { [a, ss] then runStateT(f(a), ss) }, runStateT(m, s))
 
 fun return_(a) = StateT(s => [a, s] :: Nil)
 
@@ -29,7 +29,7 @@ fun mapM(f, ls) = foldr((a, r) => bind(f(a), x => bind(r, xs => return_(x :: xs)
 
 fun lift(ls) = StateT(s => concat(map(x => [x, s] :: Nil, ls)))
 
-fun execStateT(m, s) = concat(map(x => if x is [a, s] then s :: Nil, runStateT(m, s)))
+fun execStateT(m, s) = concat(map(case { [a, s] then s :: Nil }, runStateT(m, s)))
 
 fun guard(b) = if b then StateT(s => [Unit, s] :: Nil) else StateT(s => Nil)
 
@@ -94,7 +94,7 @@ fun puzzle(top, bot) =
     listLen(nubBy((x,y) => x === y, concat(top) +: bot)) > 10 then throw Error("error")
     topVal != botVal then throw Error("error")
     else unlines of map of
-      x => if x is [c, i] then c :: nofibStringToList(" => ") +: nofibStringToList(stringOfInt(i))
+      case { [c, i] then c :: nofibStringToList(" => ") +: nofibStringToList(stringOfInt(i)) }
       env
 
 fun testCryptarithm2_nofib(n) =
