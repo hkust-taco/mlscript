@@ -229,7 +229,7 @@ fun make_packet(state) =
 
 fun compare_and_update(ipm_, pid_port_m) =
   if ipm_ is Tup3(i, p, m_) and pid_port_m is Tup3(pid_, port, m) and
-    eqTup2(Tup2(i, p), Tup2(pid_, port)) then Tup3(pid_, port, m_)
+    eqTuup2(Tup2(i, p), Tup2(pid_, port)) then Tup3(pid_, port, m_)
     else Tup3(pid_, port, m)
 
 fun up_i(ipm_, ins) = if ipm_ is Tup8(i, p, m_, _, _, _, _, _) then map(x => compare_and_update(Tup3(i, p, m_), x), ins)

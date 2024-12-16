@@ -101,13 +101,13 @@ fun firstPiece(b) = if b is Board(_, _, f, _) then force(f)
 fun pieceAtTile(x, b) = if b is Board(_, _, _, ts) then
   fun find(x, xs) = if xs is
     Nil then throw Error("Tile not used")
-    y :: xs then if eqTup2(x, y) then 1 + listLen(xs) else find(x, xs)
+    y :: xs then if eqTuup2(x, y) then 1 + listLen(xs) else find(x, xs)
   find(x, ts)
 
 fun tup2InList(y, xs) = if xs is
   Nil then false
   x :: xs and
-    eqTup2(y, x) then true
+    eqTuup2(y, x) then true
     else tup2InList(y, xs)
 
 fun isSquareFree(x, b) = if b is Board(_, _, _, ts) then not(tup2InList(x, ts))

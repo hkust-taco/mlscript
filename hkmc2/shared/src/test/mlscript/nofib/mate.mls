@@ -99,7 +99,7 @@ fun pieceAt(bd, sq) = if bd is Board(wkss, bkss) then
   fun pieceAtWith(c, n, ls) = if ls is
     Nil then n
     Tup2(k, s) :: xs and
-      eqTup2(s, sq) then Some(Tup2(c, k))
+      eqTuup2(s, sq) then Some(Tup2(c, k))
       else pieceAtWith(c, n, xs)
   pieceAtWith(White, pieceAtWith(Black, None, bkss), wkss)
 
@@ -149,7 +149,7 @@ fun emptyAtAll(bd, e) = if bd is Board(wkss, bkss) then
 
 fun rPa(sq, kss) = if kss is
   Nil then throw Error("rPa")
-  Tup2(k, s) :: kss then if eqTup2(s, sq) then kss else Tup2(k, s) :: rPa(sq, kss)
+  Tup2(k, s) :: kss then if eqTuup2(s, sq) then kss else Tup2(k, s) :: rPa(sq, kss)
 
 fun rmPieceAt(c, sq, bd) = if bd is Board(wkss, bkss) and c is
   White then Board(rPa(sq, wkss), bkss)
@@ -213,7 +213,7 @@ fun showMovesAfter(p_, mifs) = if mifs is
     append(
       nofibStringToList(", "),
       append(
-        showMove(not(eqTup2(p, p_)) || not(eqTup2(sq, sq_)), MoveInFull(p, sq, d_)),
+        showMove(not(eqTuup2(p, p_)) || not(eqTuup2(sq, sq_)), MoveInFull(p, sq, d_)),
         showMovesAfter(MoveInFull(p, sq, d_), mifs)
       )
     )

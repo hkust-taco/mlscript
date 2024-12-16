@@ -49,16 +49,16 @@ object LzNil extends LzList
 
 class Tup2[out T1, T2](fst: T1, snd: T2) with
   fun toString() = "(" + fst.toString() + "," + snd.toString() + ")"
-fun ltTup2(t1, t2, lt1, gt1, lt2) = if t1 is Tup2(a, b) and t2 is Tup2(c, d) and
+fun ltTuup2(t1, t2, lt1, gt1, lt2) = if t1 is Tup2(a, b) and t2 is Tup2(c, d) and
   lt1(a, c) then true
   gt1(a, c) then false
   else lt2(b, d)
-fun eqTup2(t1, t2) = if t1 is Tup2(a, b) and t2 is Tup2(c, d) then a == c and b == d
+fun eqTuup2(t1, t2) = if t1 is Tup2(a, b) and t2 is Tup2(c, d) then a == c and b == d
 class Tup3[out T1, T2, T3](fst: T1, snd: T2, thd: T3) with
   fun toString() = "(" + fst.toString() + "," + snd.toString() + "," + thd.toString() + ")"
 class Tup4[out T1, T2, T3, T4](fst: T1, snd: T2, thd: T3, fth: T4)
 class Tup5[out T1, T2, T3, T4, T5](fst: T1, snd: T2, thd: T3, fth: T4, ffth: T5) with
-  fun toString() = "(" + fst.toString() + "," + snd.toString() + "," + thd.toString() + "," + fth.toString() + "," + ffth.toString()
+  fun toString() = "(" + fst.toString() + "," + snd.toString() + "," + thd.toString() + "," + fth.toString() + "," + ffth.toString() + ")"
 class Tup6[out T1, T2, T3, T4, T5, T6](fst: T1, snd: T2, thd: T3, fth: T4, ffth: T5, sxth: T6)
 class Tup7[out T1, T2, T3, T4, T5, T6, T7](fst: T1, snd: T2, thd: T3, fth: T4, ffth: T5, sxth: T6, svth: T7)
 class Tup8[out T1, T2, T3, T4, T5, T6, T7, T8](fst: T1, snd: T2, thd: T3, fth: T4, ffth: T5, sxth: T6, svth: T7, eghth: T8)
