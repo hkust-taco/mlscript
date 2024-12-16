@@ -246,9 +246,6 @@ fun moveLine(bd, c, sq, inc, cont) =
     else cont(ms)
   ms => ml(sq, ms)
 
-// bishopmoves :: Colour -> Square -> Board -> [Move]
-// bishopmoves c sq bd =
-//   ( moveLine bd c sq (\xy -> case xy of {(x,y) -> (x-1,y+1)}) $ (moveLine bd c sq (\xy -> case xy of {(x,y) -> (x+1,y+1)}) $ (moveLine bd c sq (\xy -> case xy of {(x,y) -> (x-1,y-1)}) $ (moveLine bd c sq (\xy -> case xy of {(x,y) -> (x+1,y-1)}) (\x -> x))))) []
 fun bishopmoves(c, sq, bd) =
   moveLine(
     bd,
@@ -276,9 +273,6 @@ fun bishopmoves(c, sq, bd) =
     )
   )(Nil)
 
-// rookmoves :: Colour -> Square -> Board -> [Move]
-// rookmoves c sq bd =
-//   ( moveLine bd c sq (\xy -> case xy of {(x,y) -> (x-1,y)}) $ (moveLine bd c sq (\xy -> case xy of {(x,y) -> (x+1,y)}) $ (moveLine bd c sq (\xy -> case xy of {(x,y) -> (x,y-1)}) $ (moveLine bd c sq (\xy -> case xy of {(x,y) -> (x,y+1)}) (\x -> x))))) []
 fun rookmoves(c, sq, bd) =
   moveLine(
     bd,
@@ -477,6 +471,10 @@ fun parseProblem(s) =
 
 fun readProblem(s) = parseProblem(lines(s))
 
+fun foldr_lz(f, a, x) = if x is
+  h :: t then f(h, lazy of () => foldr_lz(f, a, t))
+  Nil then a
+
 :...
 //│ ————————————————————————————————————————————————————————————————————————————————
 fun replies(bd, c, n) =
@@ -486,14 +484,14 @@ fun replies(bd, c, n) =
     if sm is
       None then None
       Some(s) and
-        rest is
+        force(rest) is
           None then None
           Some(ms) then Some([mif, s] :: ms)
   if n
     === 0 and
       null_(mds) then Some(Nil)
       else None
-    > 0 then foldr(solnAnd, Some(Nil), mds)
+    > 0 then foldr_lz(solnAnd, Some(Nil), mds)
     else throw Error("n < 0")
 
 fun solution(bd, c, n) =
@@ -501,25 +499,19 @@ fun solution(bd, c, n) =
     [mif, b] then
       let rsm = replies(b, opponent(c), n - 1)
       if rsm is
-        None then other
+        None then force(other)
         Some(Nil) and
           kingincheck(opponent(c), b) then
             Some(Solution(mif, Nil))
-          else other
+          else force(other)
         Some(rs) then Some(Solution(mif, rs))
   if n > 0 then
     let mds = moveDetailsFor(c, bd)
-    foldr(solnOr, None, mds)
+    foldr_lz(solnOr, None, mds)
   else throw Error("n <= 0")
 //│ ————————————————————————————————————————————————————————————————————————————————
 
 class Soln(a: MoveInFull, b: List[Tup2[List[MoveInFull],Soln]])
-
-fun polyGt(a, b) =
-  // print(a + " > " + b + " = " + (a > b))
-  a > b
-
-// fun polyLt(a, b) = a < b
 
 fun tab(n) = if n <= 0 then Nil else " " :: tab(n - 1)
 
@@ -582,7 +574,7 @@ fun compact(s) = if s is Solution(mif, rs) then Soln(mif, foldr(insertCompact, N
 fun insertCompact(mif_s, ls) = if mif_s is [mif, s] then
   fun insert(x, ls) = if ls is
     Nil then x :: Nil
-    y :: ys then if polyGt(x, y) then y :: insert(x, ys) else x :: y :: ys
+    y :: ys then if x > y then y :: insert(x, ys) else x :: y :: ys
   let cs = compact(s)
   fun ic(ls) = if ls is
     Nil then [mif :: Nil, cs] :: Nil
