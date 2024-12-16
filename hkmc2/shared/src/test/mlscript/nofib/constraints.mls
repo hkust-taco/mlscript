@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 
 // -- Figure 1. CSPs in Haskell.
@@ -134,7 +134,14 @@ fun labelInconsistencies(csp, t) =
 
 
 fun btsolver0(csp) =
-  filter(x => complete(csp, x), leaves(mapTree(fst, prune(x => not(snd(x) === None), labelInconsistencies(csp, mkTree(csp))))))
+  filter of
+    x => complete(csp, x)
+    leaves of
+      mapTree of
+        fst
+        prune of
+          x => not(snd(x) === None)
+          labelInconsistencies(csp, mkTree(csp))
 
 // -- Figure 6. Conflict-directed solving of CSPs.
 abstract class ConflictSet: Known | Unknown
@@ -152,7 +159,13 @@ fun knownSolution(c) = if c is
 fun checkComplete(csp, s) = if complete(csp, s) then Known(Nil) else Unknown
 
 fun search(labeler, csp) =
-  map(fst, filter(x => knownSolution(snd(x)), leaves(prune(x => knownConflict(snd(x)), labeler(csp, mkTree(csp))))))
+  map of
+    fst
+    filter of
+      x => knownSolution(snd(x))
+      leaves of prune of
+        x => knownConflict(snd(x))
+        labeler(csp, mkTree(csp))
 
 fun bt(csp, t) =
   fun f3(s) = [s, (if earliestInconsistency(csp, s) is Some([a, b]) then Known(a :: b :: Nil) else checkComplete(csp, s))]

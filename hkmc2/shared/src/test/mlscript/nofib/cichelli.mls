@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 
 let keys = 
@@ -86,7 +86,7 @@ fun blocked_(ds, ls) = if ls is
   k :: ks then
     let ds_ = union(ds, ends(k))
     if partition_(x => subset(ends(x), ds_), ks) is [det, rest] then
-      k :: append(det, blocked_(ds_, rest))
+      k :: (det +: blocked_(ds_, rest))
 
 fun blocked(ls) = blocked_(Nil, ls)
 
@@ -124,7 +124,7 @@ fun findhash_(keyHashSet, charAssocs, ks) = if ks is
   Nil then YesIts(1, charAssocs)
   K(s, a, z, n) :: ks then
     fun tryy(newAssocs) =
-      let newCharAssocs = append(newAssocs, charAssocs)
+      let newCharAssocs = newAssocs +: charAssocs
       if hinsert(hash(newCharAssocs, K(s, a, z, n)), keyHashSet) is
         None then NotEver(1)
         Some(newKeyHashSet) then findhash_(newKeyHashSet, newCharAssocs, ks)
@@ -154,7 +154,7 @@ fun morefreq(k1, k2) = if
   k1 is K(_, a, x, _) and k2 is K(_, b, y, _) then (freq(a) + freq(x)) > (freq(b) + freq(y))
 
 fun cichelli(n) =
-  let attribkeys_ = attribkeys(append(keys, take(intMod(n, 2), keys)))
+  let attribkeys_ = attribkeys(keys +: take(intMod(n, 2), keys))
   let hashkeys = blocked(freqsorted(attribkeys_))
   findhash(hashkeys)
 

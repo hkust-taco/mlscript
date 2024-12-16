@@ -144,7 +144,7 @@ fun inList(x, ls) = if ls is
 
 fun notElem(x, ls) = not(inList(x, ls))
 
-fun append(xs, ys) = if xs is
+fun (+:) append(xs, ys) = if xs is
   Nil then ys
   x :: xs then x :: append(xs, ys)
 

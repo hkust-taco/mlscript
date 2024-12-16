@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 fun andd(ls) = if ls is
   Nil then true
@@ -39,7 +39,7 @@ class Branch[A](a: A, cs: List[Branch[A]])
 fun showEvaluation(e) = if e is
   XWin then nofibStringToList("XWin")
   OWin then nofibStringToList("OWin")
-  Score(i) then append(nofibStringToList("Score "), nofibStringToList(stringOfInt(i)))
+  Score(i) then nofibStringToList("Score ") +: nofibStringToList(stringOfInt(i))
 
 let win1 =
   (1 :: 1 :: 1 :: Nil) ::
@@ -156,26 +156,16 @@ fun showPiece(p) = if p is
 
 fun showRow(ps) = if ps is
   p1 :: p2 :: p3 :: Nil then
-    append(append(showPiece(p1), nofibStringToList("|")), append(showPiece(p2), append(nofibStringToList("|"), showPiece(p3))))
+    showPiece(p1) +: nofibStringToList("|") +: showPiece(p2) +: nofibStringToList("|") +: showPiece(p3)
 
 fun showBoard(rs) = if rs is
   r1 :: r2 :: r3 :: Nil then
-    append(
-      showRow(r1),
-      append(
-        nofibStringToList("\n------\n"),
-        append(
-          showRow(r2),
-          append(
-            nofibStringToList("\n------\n"),
-            append(
-              showRow(r3),
-              nofibStringToList("\n\n")
-            )
-          )
-        )
-      )
-    )
+    showRow(r1) +:
+    nofibStringToList("\n------\n") +:
+    showRow(r2) +:
+    nofibStringToList("\n------\n") +:
+    showRow(r3) +:
+    nofibStringToList("\n\n")
 
 fun insert(p, ps, i) = if ps is Cons(p1, Cons(p2, Cons(p3, Nil))) and i ===
   1 then p :: p2 :: p3 :: Nil
@@ -200,10 +190,9 @@ fun placePiece(p, board, pos) = if
     [2, x] then (r1 :: insert(p, r2, x) :: r3 :: Nil) :: Nil
     [3, x] then (r1 :: r2 :: insert(p, r3, x) :: Nil) :: Nil
 
-fun fullBoard(b) = andd(map(
-  x => not(eqPiece(x, Empty)),
+fun fullBoard(b) = andd of map of
+  x => not(eqPiece(x, Empty))
   concat(b)
-))
 
 fun newPositions(piece, board) =
   fun lscomp1(ls) = if ls is
@@ -213,10 +202,9 @@ fun newPositions(piece, board) =
         Nil then lscomp1(xs)
         y :: ys then [x, y] :: lscomp2(ys)
       lscomp2(1 :: 2 :: 3 :: Nil)
-  concat(map(
-    pos => placePiece(piece, board, pos),
+  concat of map of
+    pos => placePiece(piece, board, pos)
     lscomp1(1 :: 2 :: 3 :: Nil)
-  ))
   
 let initialBoard = replicate(3, replicate(3, Empty))
 //│ > Cons {
@@ -252,7 +240,9 @@ fun map2(f, xs, ys) = if xs is
     ys is y :: ys then f(x, y) :: map2(f, xs, ys)
     Nil then Nil
 
-fun score(board, win) = eval(sum(map(sum, map2((x, y) => map2(scorePiece, x, y), board, win))))
+fun score(board, win) = eval of sum of map of
+  sum
+  map2((x, y) => map2(scorePiece, x, y), board, win)
 
 fun static(board) = interpret(0, map(x => score(board, x), wins))
 
@@ -279,7 +269,7 @@ fun best(f, bs, ss) = if bs is b :: bs and ss is s :: ss then
   best_(b, s, bs, ss)
 
 fun showMove(m) = if m is [b, e] then
-  append(showEvaluation(e), append(nofibStringToList("\n"), showBoard(b)))
+  showEvaluation(e) +: nofibStringToList("\n") +: showBoard(b)
 
 fun max_(e1, e2) = if
   e1 is XWin then XWin
@@ -304,14 +294,12 @@ fun mise(f, g, t) = if t is
   Branch(_, l) then foldr(f, g(OWin, XWin), map(x => mise(g, f, x), l))
 
 fun searchTree(p, board) =
-  prune(
-    5,
-    repTree(
+  prune of
+    5
+    repTree of
       x => newPositions(p, x),
       x => newPositions(opposite(p), x),
       board
-    )
-  )
 
 fun cropTree(t) = if t is
   Branch(a, Nil) then Branch(a, Nil)
@@ -339,13 +327,11 @@ fun prog(input) =
     (Empty :: X :: Empty :: Nil) ::
     (Empty :: Empty :: Empty :: Nil) :: Nil
   fun board(x) = if x ===
-    "doesn't happen" then append(testBoard, testBoard)
+    "doesn't happen" then testBoard +: testBoard
     else testBoard
   let game = alternate(X, max_, min_, board(input))
-  append(
-    nofibStringToList("OXO\n"),
-    concat(map(showMove, game))
-  )
+  nofibStringToList("OXO\n") +:
+  concat of map(showMove, game)
 
 print(nofibListToString(prog("180000")))
 //│ > OXO

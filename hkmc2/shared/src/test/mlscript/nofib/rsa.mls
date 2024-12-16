@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 fun z_of_int(x) = globalThis.BigInt(x)
 fun string_of_z(x) = nofibStringToList(x + "")
@@ -29,11 +29,10 @@ let const2 = z_of_int(2)
 let const128 = z_of_int(128)
 //│ const128 = 128n
 
-fun hash(str) = foldl(
-  (acc, c) => z_add(z_of_int(int_if_char(c)), z_mul(acc, const31)),
-  const0,
+fun hash(str) = foldl of
+  (acc, c) => z_add(z_of_int(int_if_char(c)), z_mul(acc, const31))
+  const0
   str
-)
 
 fun and_(ls) = if ls is
   Nil then true
@@ -41,15 +40,14 @@ fun and_(ls) = if ls is
     h then and_(t)
     else false
 
-fun unlines(ls) = concat(map(l => append(l, "\n" :: Nil), ls))
+fun unlines(ls) = concat of map(l => l +: ("\n" :: Nil), ls)
 
 fun even(a) = z_mod(a, const2) === const0
 
-fun code(ls) = foldl(
-  (x, y) => z_add(z_mul(const128, x), z_of_int(int_if_char(y))),
-  const0,
+fun code(ls) = foldl of
+  (x, y) => z_add(z_mul(const128, x), z_of_int(int_if_char(y)))
+  const0
   ls
-)
 
 fun collect(n, xs) = if
   n === 0 then Nil
@@ -58,10 +56,9 @@ fun collect(n, xs) = if
 
 fun size(n) = intDiv(listLen(string_of_z(n)) * 47, 100)
 
-fun encrypt(n, e, s) = unlines(map(
-  c => string_of_z(power(e, n, code(c))),
+fun encrypt(n, e, s) = unlines of map of
+  c => string_of_z(power(e, n, code(c)))
   collect(size(n), s)
-))
 
 fun power(n, m, x) = if
   z_equal(n, const0) then const1

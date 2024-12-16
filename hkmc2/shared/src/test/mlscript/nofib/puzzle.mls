@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 abstract class ItemType: Bono | Edge | Larry | Adam
 
@@ -91,36 +91,30 @@ fun notSeen(state, states) =
   all(_s => if _s is [_, s] then not(stateEq(state, s)), states)
 
 fun writeItem(i, b, rest) = if i is
-  Bono and b is LeftBank then append(nofibStringToList("    Bono |                    |\n"), rest)
-  Edge and b is LeftBank then append(nofibStringToList("The Edge |                    |\n"), rest)
-  Larry and b is LeftBank then append(nofibStringToList("   Larry |                    |\n"), rest)
-  Adam and b is LeftBank then append(nofibStringToList("    Adam |                    |\n"), rest)
-  Bono and b is RightBank then append(nofibStringToList("         |                    | Bono\n"), rest)
-  Edge and b is RightBank then append(nofibStringToList("         |                    | The Edge\n"), rest)
-  Larry and b is RightBank then append(nofibStringToList("         |                    | Larry\n"), rest)
-  Adam and b is RightBank then append(nofibStringToList("         |                    | Adam\n"), rest)
+  Bono and b is LeftBank then nofibStringToList("    Bono |                    |\n") +: rest
+  Edge and b is LeftBank then nofibStringToList("The Edge |                    |\n") +: rest
+  Larry and b is LeftBank then nofibStringToList("   Larry |                    |\n") +: rest
+  Adam and b is LeftBank then nofibStringToList("    Adam |                    |\n") +: rest
+  Bono and b is RightBank then nofibStringToList("         |                    | Bono\n") +: rest
+  Edge and b is RightBank then nofibStringToList("         |                    | The Edge\n") +: rest
+  Larry and b is RightBank then nofibStringToList("         |                    | Larry\n") +: rest
+  Adam and b is RightBank then nofibStringToList("         |                    | Adam\n") +: rest
 
 fun writeState(state, s) =
-  append(
-    nofibStringToList("----------------------------------------\n"),
-    writeItem(
-      Bono,
-      bonoPos(state),
-      writeItem(
-        Edge,
-        edgePos(state),
-        writeItem(
-          Larry,
-          larryPos(state),
-          writeItem(
-            Adam,
-            adamPos(state),
-            append(nofibStringToList("----------------------------------------\n"), s)
-          )
-        )
-      )
-    )
-  )
+  nofibStringToList("----------------------------------------\n") +:
+  writeItem of
+    Bono
+    bonoPos(state)
+    writeItem of
+      Edge
+      edgePos(state)
+      writeItem of
+        Larry
+        larryPos(state)
+        writeItem of
+          Adam
+          adamPos(state)
+          nofibStringToList("----------------------------------------\n") +: s
 
 fun totalTime(history) = if history is [time, _] :: _ then time
 
@@ -129,7 +123,7 @@ fun writeHistory(history, x) = if history is
   else
     foldr(
       (timestate, acc) => (s) => if timestate is [time, state] then
-        append(nofibStringToList("Time: "), append(nofibStringToList(stringOfInt(totalTime(history) - time)), "\n" :: writeState(state, acc(s)))),
+        nofibStringToList("Time: ") +: nofibStringToList(stringOfInt(totalTime(history) - time)) +: ("\n" :: writeState(state, acc(s))),
       x => x,
       history
     )(x)
@@ -137,13 +131,9 @@ fun writeHistory(history, x) = if history is
 fun writeSolutions(solutions, count, s) = if solutions is
   Nil then s
   item :: next then
-    append(
-      nofibStringToList("Solution "),
-      append(
-        nofibStringToList(stringOfInt(count)),
-        "\n" :: writeHistory(item, writeSolutions(next, count + 1, s))
-      )
-    )
+    nofibStringToList("Solution ") +:
+    nofibStringToList(stringOfInt(count)) +:
+    "\n" :: writeHistory(item, writeSolutions(next, count + 1, s))
 
 fun minSolutions(history) = if history is
   Nil then Nil
@@ -196,7 +186,7 @@ fun transfer(source, dest, location, countdown, history) =
             else lscomp3(ys)
         lscomp3(itemFromTo(succItem(i), Adam))
     let moveTwo = concat(lscomp2(itemFromTo(Bono, Larry)))
-    append(moveOne, moveTwo)
+    moveOne +: moveTwo
 
 fun testPuzzle_nofib(x) =
   let time = if listLen(x) === 1 then 0 else throw Error("puzzle expects exactly one argument")

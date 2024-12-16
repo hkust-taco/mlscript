@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 fun myIsDigit(c) =
   c.codePointAt(0) >= 48 && c.codePointAt(0) <= 57
@@ -33,7 +33,7 @@ fun quickSortIntInt(xs) = if xs is
       h :: t and
         not(intintComp(h, x)) then h :: lscomp2(t)
         else lscomp2(t)
-    append(quickSortIntInt(lscomp1(xs)), x :: quickSortIntInt(lscomp2(xs)))
+    quickSortIntInt(lscomp1(xs)) +: (x :: quickSortIntInt(lscomp2(xs)))
 
 fun quickSortIntChessSet(xs) = if force(xs) is
   LzNil then lazy of () => LzNil
@@ -67,11 +67,11 @@ fun inquireBack(xs) = if xs is
 
 fun inquireFront(h_t) = head(h_t)
 
-fun addAllBack(list, q) = append(q, list)
+fun addAllBack(list, q) = q +: list
 
-fun addAllFront(list, q) = append(list, q)
+fun addAllFront(list, q) = list +: q
 
-fun addBack(x, q) = append(q, x :: Nil)
+fun addBack(x, q) = q +: (x :: Nil)
 
 fun addFront(x, q) = x :: q
 
@@ -123,14 +123,14 @@ fun spaces(s, y) =
 fun printBoard(s, n, xs) = if xs is
   Nil and
     n > s * s then Nil
-    intMod(n, s) != 0 then append(nofibStringToList("*"), append(spaces(s * s, 1), printBoard(s, n + 1, Nil)))
-    intMod(n, s) === 0 then append(nofibStringToList("*\n"), printBoard(s, n + 1, Nil))
+    intMod(n, s) != 0 then "*" :: (spaces(s * s, 1) +: printBoard(s, n + 1, Nil))
+    intMod(n, s) === 0 then nofibStringToList("*\n") +: printBoard(s, n + 1, Nil)
     else throw Error("printBoard empty list error")
   [i, j] :: xs and
-    i === n and intMod(n, s) === 0 then append(append(nofibStringToList(stringOfInt(j)), nofibStringToList("\n")), printBoard(s, n + 1, xs))
-    i === n and intMod(n, s) != 0 then append(append(nofibStringToList(stringOfInt(j)), spaces(s * s, j)), printBoard(s, n + 1, xs))
-    intMod(n, s) != 0 then append(nofibStringToList("*"), append(spaces(s * s, 1), printBoard(s, n + 1, [i, j] :: xs)))
-    intMod(n, s) === 0 then append(nofibStringToList("*\n"), printBoard(s, n + 1, [i, j] :: xs))
+    i === n and intMod(n, s) === 0 then nofibStringToList(stringOfInt(j)) +: nofibStringToList("\n") +: printBoard(s, n + 1, xs)
+    i === n and intMod(n, s) != 0 then nofibStringToList(stringOfInt(j)) +: spaces(s * s, j) +: printBoard(s, n + 1, xs)
+    intMod(n, s) != 0 then "*" :: (spaces(s * s, 1) +: printBoard(s, n + 1, [i, j] :: xs))
+    intMod(n, s) === 0 then nofibStringToList("*\n") +: printBoard(s, n + 1, [i, j] :: xs)
     else throw Error("printBoard non-empty list error")
 
 abstract class Direction: UL | UR | DL | DR | LU | LD | RU | RD
@@ -257,13 +257,12 @@ fun printTour(ss) =
     x :: xs then strToInt((10 * y) + (x.codePointAt(0) - 48), xs)
   fun pp(xs) = if xs is
     Nil then Nil
-    [x, y] :: xs then append(
-      nofibStringToList("\nKnights tour with "),
-      append(
-        nofibStringToList(stringOfInt(x)),
-        append(nofibStringToList(" backtracking moves\n"), append(showChessSet(y), pp(xs)))
-      )
-    )
+    [x, y] :: xs then
+      nofibStringToList("\nKnights tour with ") +:
+      nofibStringToList(stringOfInt(x)) +:
+      nofibStringToList(" backtracking moves\n") +:
+      showChessSet(y) +:
+      pp(xs)
   if map(x => strToInt(0, x), ss) is
     size :: number :: Nil then pp(take_lz(number, depthSearch(root(size), grow, isFinished)))
     else throw Error("printTour error")

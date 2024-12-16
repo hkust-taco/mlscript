@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 
 abstract class CSeq: CNil | CAppend | CIndent | CNewline | CStr | CCh
@@ -55,8 +55,8 @@ fun flatten(n, nlp, cseq, seqs) = if cseq is
   CIndent(n_, seq) then flatten(n_ + n, nlp, seq, seqs)
   CNewline then "\n" :: flattenS(true, seqs)
   CStr(s) and
-    nlp then mkIndent(n, append(s, flattenS(false, seqs)))
-    else append(s, flattenS(false, seqs))
+    nlp then mkIndent(n, s +: flattenS(false, seqs))
+    else s +: flattenS(false, seqs)
   CCh(c) and
     nlp then mkIndent(n, c :: flattenS(false, seqs))
     else c :: flattenS(false, seqs)
@@ -166,7 +166,7 @@ fun testPretty_nofib() =
     a,
     b
   )
-  append(ppShow(80, pretty_stuff), nofibStringToList("\n"))
+  ppShow(80, pretty_stuff) +: nofibStringToList("\n")
 
 nofibListToString(testPretty_nofib())
 //│ > '-42@This is a string\n' +

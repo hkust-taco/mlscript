@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 
 let blank =
@@ -108,9 +108,9 @@ let digits =
 //│ >   }
 //│ digits = }
 
-fun unlines(ls) = concat(map(x => append(x, ("\n" :: Nil)), ls))
+fun unlines(ls) = concat(map(x => x +: ("\n" :: Nil), ls))
 
-fun join(ls) = foldr1((xs, ys) => append(xs, append((" " :: " " :: Nil), ys)), ls)
+fun join(ls) = foldr1((xs, ys) => xs +: (" " :: " " :: Nil) +: ys, ls)
 
 fun isUpper(c) =
   let n = int_of_char(c)
@@ -143,7 +143,7 @@ fun picChar(c) =
     isDigit(c) then atIndex(int_of_char(c) - int_of_char("0"), digits)
     c === "/" then slant
     c === "=" then reverse(slant)
-    else head(append(lscomp(punct), Nil :: Nil :: Nil))
+    else head(lscomp(punct) +: Nil :: Nil :: Nil)
 
 fun say(s) = "\n" :: (unlines(map(join, transpose(map(picChar, s)))))
 

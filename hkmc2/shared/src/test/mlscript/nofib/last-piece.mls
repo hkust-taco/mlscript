@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 
 fun isSome(x) = x is Some
@@ -513,7 +513,10 @@ fun reduceHoriz(doc) = if doc is
   Beside(p, g, q) then eliminateEmpty((a, b, c) => Beside(a, b, c), snd(reduceHoriz(p)), g, reduceHoriz(q))
   else [NotEmpty, doc]
 
-fun hcat(ls) = snd(reduceHoriz(foldr((p, q) => Beside(p, false, q), Empty, ls)))
+fun hcat(ls) = snd of reduceHoriz of foldr of
+  (p, q) => Beside(p, false, q)
+  Empty
+  ls
 
 fun above_(p, g, q) = if
   q is Empty then p
@@ -582,8 +585,8 @@ fun nilAboveNest(g, k, q) = if
 fun printDoc(d) =
   fun put(k, next) = if k is
     Chr(c) then c :: next
-    Str(s) then append(s, next)
-    PStr(s) then append(s, next)
+    Str(s) then s +: next
+    PStr(s) then s +: next
   let done = "\n" :: Nil
   fullRender(ZigZagMode, 200, 1.5, put, done, d)
 

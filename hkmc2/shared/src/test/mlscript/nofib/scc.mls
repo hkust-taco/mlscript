@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 
 fun dfs(r, vsns, xs) = if vsns is [vs, ns] and
@@ -9,7 +9,7 @@ fun dfs(r, vsns, xs) = if vsns is [vs, ns] and
     Nil then [vs, ns]
     x :: xs and
       inList(x, vs) then dfs(r, [vs, ns], xs)
-      dfs(r, [x :: vs, Nil], r(x)) is [vs', ns'] then dfs(r, [vs', append(x :: ns', ns)], xs)
+      dfs(r, [x :: vs, Nil], r(x)) is [vs', ns'] then dfs(r, [vs', (x :: ns') +: ns], xs)
 
 fun stronglyConnComp(es, vs) =
   fun swap(a) = if a is [f, s] then [s, f]
@@ -27,7 +27,13 @@ fun stronglyConnComp(es, vs) =
         inList(x, vs) then span_tree(r, [vs, ns], xs)
         dfs(r, [x :: vs, Nil], r(x)) is [vs', ns'] then span_tree(r, [vs', (x :: ns') :: ns], xs)
   
-  (snd(span_tree(x => new_range(map(swap, es), x), [Nil, Nil], snd(dfs(x => new_range(es, x), [Nil, Nil], vs)))))
+  snd of span_tree of
+    x => new_range(map(swap, es), x)
+    [Nil, Nil]
+    snd of dfs of
+      x => new_range(es, x)
+      [Nil, Nil]
+      vs
 
 
 fun testScc_nofib(d) =

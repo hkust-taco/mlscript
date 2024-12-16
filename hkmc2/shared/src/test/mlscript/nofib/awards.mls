@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 
 fun delete_(xs, e) = deleteBy((x, y) => x == y, e, xs)
@@ -38,7 +38,7 @@ fun sort(l) = qsort((a, b) => ltTup2(a, b, (a, b) => a < b, (a, b) => a > b, (a,
 fun perms(m, nns) = if
   nns is Nil then Nil
   m == 1 then map(x => x :: Nil, nns)
-  nns is n :: ns then append(map(x => n :: x, perms(m-1, ns)), perms(m, ns))
+  nns is n :: ns then map(x => n :: x, perms(m-1, ns)) +: perms(m, ns)
 
 fun awards(scores) =
   let sumscores = map(p => [sum(p), p], perms(3, scores))
@@ -49,7 +49,7 @@ fun awards(scores) =
   fun award(name_threshold) = if name_threshold is [name, threshold] then
     map(ps => [name, ps], sort(atleast(threshold)))
   
-  append(append(award(["Gold", 70]), award(["Silver", 60])), award(["Bronze", 50]))
+  award(["Gold", 70]) +: award(["Silver", 60]) +: award(["Bronze", 50])
 
 fun findawards(scores) = if awards(scores) is
   Nil then Nil

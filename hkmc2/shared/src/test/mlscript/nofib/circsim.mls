@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 
 abstract class BinTree[T, U]: Cell[T] | Node[T, U]
@@ -26,15 +26,15 @@ object Unit
 
 class PS[T](pid: Int, compType: Componenet, pathDepth: Int, inports: List[[Int, Int, T]], outports: List[[Int, T, Bool, Int, Bool, Int]])
 
-fun pid(p) = if p is PS(pid_, _, _, _, _) then pid_
+fun pid(p) = p.pid
 
-fun compType(p) = if p is PS(_, compType_, _, _, _) then compType_
+fun compType(p) = p.compType
 
-fun pathDepth(p) = if p is PS(_, _, pathDepth_, _, _) then pathDepth_
+fun pathDepth(p) = p.pathDepth
 
-fun inports(p) = if p is PS(_, _, _, inports_, _) then inports_
+fun inports(p) = p.inports
 
-fun outports(p) = if p is PS(_, _, _, _, outports_) then outports_
+fun outports(p) = p.outports
 
 fun updateOutports(p, noutports) = PS(pid(p), compType(p), pathDepth(p), inports(p), noutports)
 
@@ -52,7 +52,7 @@ fun put(xs) = if
 
 fun get(t) = if t is
   Cell(x) then x :: Nil
-  Node(_, l, r) then append(get(l), get(r))
+  Node(_, l, r) then get(l) +: get(r)
 
 fun upsweep(f, t) = if t is
   Cell(a) then [a, Cell(a)]

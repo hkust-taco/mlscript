@@ -1,18 +1,18 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 
-fun unlines(ls) = concat(map(x => append(x, ("\n" :: Nil)), ls))
+fun unlines(ls) = concat(map(x => x +: ("\n" :: Nil), ls))
 
 fun height(p) = listLen(p)
 
 fun width(p) = listLen(head(p))
 
-fun stack(ls) = foldr1((a, b) => append(a, b), ls)
+fun stack(ls) = foldr1((a, b) => a +: b, ls)
 
-fun spread(ls) = foldr1((a, b) => zipWith((a, b) => append(a, b), a, b), ls)
+fun spread(ls) = foldr1((a, b) => zipWith((a, b) => a +: b, a, b), ls)
 
 fun emptyPic(hw) = if hw is [h, w] then replicate(h, replicate(w, " "))
 
@@ -27,7 +27,7 @@ fun blockT(n, t) = stack(map(stack, groop(n, t)))
 fun lframe(mn, p) = if mn is [m,n] then
   let h = height(p)
   let w = width(p)
-  append(zipWith(append, p, emptyPic([h, n - w])), emptyPic([m - h, n]))
+  zipWith(append, p, emptyPic([h, n - w])) +: emptyPic([m - h, n])
 
 fun leap(year) = if
   intMod(year, 100) == 0 then intMod(year, 400) == 0
@@ -67,9 +67,9 @@ fun firstDays(year) =
 
 fun space(n) = replicate(n, " ")
 
-fun ljustify(n, s) = append(s, space(n - listLen(s)))
+fun ljustify(n, s) = s +: space(n - listLen(s))
 
-fun rjustify(n, s) = append(space(n - listLen(s)), s)
+fun rjustify(n, s) = space(n - listLen(s)) +: s
 
 fun date(ml, d) = if (d < 1) || (ml < d) then nofibStringToList("   ") :: Nil else rjustify(3, nofibStringToList(stringOfInt(d))) :: Nil
 
@@ -78,22 +78,22 @@ fun dates(fd, ml) = map(d => date(ml, d), enumFromTo(1 - fd, 42 - fd))
 fun cjustify(n, s) =
   let m = n - listLen(s)
   let halfm = intDiv(m, 2)
-  append(append(space(halfm), s), space(m - halfm))
+  space(halfm) +: s +: space(m - halfm)
 
 fun cal(year) =
   let side = emptyPic([8, 2])
   let end = emptyPic([1, 25])
   let daynames = nofibStringToList(" Su Mo Tu We Th Fr Sa") :: Nil
-  fun banner(yr) = append(cjustify(75, nofibStringToList(stringOfInt(yr))) :: Nil, emptyPic([1, 75]))
+  fun banner(yr) = cjustify(75, nofibStringToList(stringOfInt(yr))) :: emptyPic([1, 75])
   fun body(yr) = block(3, map(x => pad(pic(x)), months(yr)))
-  fun pic(mnfdml) = if mnfdml is [mn, fd, ml] then append(title(mn), table(fd, ml))
-  fun pad(p) = append(zipWith(append, zipWith(append, side, p), side), end)
+  fun pic(mnfdml) = if mnfdml is [mn, fd, ml] then title(mn) +: table(fd, ml)
+  fun pad(p) = zipWith(append, zipWith(append, side, p), side) +: end
   fun title(mn) = cjustify(21, mn) :: Nil
-  fun table(fd, ml) = append(daynames, entries(fd, ml))
+  fun table(fd, ml) = daynames +: entries(fd, ml)
   fun entries(fd, ml) = block(7, dates(fd, ml))
   fun months(yer) = zip3(monthNames, firstDays(yer), monthLengths(yer))
   
-  unlines(append(banner(year), body(year)))
+  unlines(banner(year) +: body(year))
 
 fun testCalendar_nofib(n) = map(x => cal(x), enumFromTo(1993, 1993 + n))
 

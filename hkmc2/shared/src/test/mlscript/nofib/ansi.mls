@@ -1,16 +1,16 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 let cls = nofibStringToList("L")
 //│ cls = Cons { head: 'L', tail: Nil { class: [class Nil] } }
 
-fun goto(x, y) = "E" :: "[" :: append(nofibStringToList(stringOfInt(y)), append(";" :: nofibStringToList(stringOfInt(x)), nofibStringToList("H"))) 
+fun goto(x, y) = "E" :: "[" :: (nofibStringToList(stringOfInt(y)) +: (";" :: nofibStringToList(stringOfInt(x)) +: nofibStringToList("H")))
 
-fun at(x_y, s) = if x_y is [x, y] then append(goto(x, y), s)
+fun at(x_y, s) = if x_y is [x, y] then goto(x, y) +: s
 
-fun highlight(s) = append(nofibStringToList("ESC[7m"), append(s, nofibStringToList("ESC[0m")))
+fun highlight(s) = nofibStringToList("ESC[7m") +: s +: nofibStringToList("ESC[0m")
 
 fun end(xs) = nofibStringToList("")
 
@@ -28,7 +28,7 @@ fun unreadChar(c, prog, cs) = prog(c :: cs)
 
 fun writeChar(c, prog, cs) = c :: prog(cs)
 
-fun writeString(s, prog, cs) = append(s, prog(cs))
+fun writeString(s, prog, cs) = s +: prog(cs)
 
 fun writes(ss, a, b) = writeString(concat(ss), a, b)
 
@@ -36,7 +36,7 @@ fun ringBell(prog, cs) = writeChar("B", prog, cs)
 
 fun clearScreen(a, b) = writeString(cls, a, b)
 
-fun writeAt(x_y, s, a) = if x_y is [x, y] then p => writeString(append(goto(x, y), s), a, p)
+fun writeAt(x_y, s, a) = if x_y is [x, y] then p => writeString(goto(x, y) +: s, a, p)
 
 fun moveTo(x_y, a) = if x_y is [x, y] then p => writeString(goto(x, y), a, p)
 
@@ -46,16 +46,15 @@ fun returnn(s, use) = use(reverse(s))
 //│ ————————————————————————————————————————————————————————————————————————————————
 fun deletee(n, s, l, use) = if n > 0 then writeString(nofibStringToList("BS_BS"), loop(n - 1, tail(s), l, use)) else ringBell(loop(0, nofibStringToList(""), l, use))
 
-fun loop(n, s, l, use) = x => readChar(
-  returnn(s, use),
+fun loop(n, s, l, use) = x => readChar of
+  returnn(s, use)
   (c, d) => if
             c == "B" then deletee(n, s, l, use) 
             c == "D" then deletee(n, s, l, use)
             c == "`" then returnn(s, use)
             n < l then writeChar(c, loop(n + 1, c :: s, l, use), d)
-            else ringBell(loop(n, s, l, use), d),
+            else ringBell(loop(n, s, l, use), d)
   x
-)
 //│ ————————————————————————————————————————————————————————————————————————————————
 
 fun readAt(x_y, l, use) = writeAt(x_y, replicate(l, "_"), moveTo(x_y, loop(0, "", l, use)))
@@ -77,7 +76,7 @@ fun program(input) = writes(
     18,
     nofibStringToList("Please enter your name: "),
     (name) =>
-      let reply = append(nofibStringToList("Hello "), append(name, nofibStringToList("!")))
+      let reply = nofibStringToList("Hello ") +: name +: nofibStringToList("!")
       writeAt(
         [40 - (listLen(reply) / 2), 18],
         reply,

@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 abstract class Formula: Sym | Not | Dis | Con | Imp | Eqv
 
@@ -127,15 +127,14 @@ fun uniclHelper(p, x) =
 fun unicl(a) = foldr(uniclHelper, Nil, a)
 
 fun disp(l_r) = if l_r is [l, r] then
-  append(
-    interleave(l, spaces(listLen(l))),
-    append(
-      nofibStringToList("<="),
-      append(
-        interleave(spaces(listLen(r)), r),
-        nofibStringToList("\n"))))
+  interleave(l, spaces(listLen(l))) +:
+  nofibStringToList("<=") +:
+  interleave(spaces(listLen(r)), r) +:
+  nofibStringToList("\n")
 
-fun clauses(t) = concat(map(disp, unicl(split(disin(negin(elim(parse(t))))))))
+fun clauses(t) = concat of map of
+  disp
+  unicl of split of disin of negin of elim of parse of t
 
 // NOTE: original input "(a = a = a) = (a = a = a) = (a = a = a)"
 fun testClausify_nofib(n) =

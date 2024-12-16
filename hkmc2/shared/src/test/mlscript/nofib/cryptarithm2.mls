@@ -1,11 +1,11 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 object Unit
 
-fun unlines(ls) = concat(map(x => append(x, ("\n" :: Nil)), ls))
+fun unlines(ls) = concat of map(x => x +: ("\n" :: Nil), ls)
 
 fun lookup(k, t) = if t is
   Nil then None
@@ -20,7 +20,8 @@ class StateT[S, M, A](run)
 fun runStateT(m, s) = if m is StateT(run) then run(s)
 
 fun bind(m, f) =
-  StateT(s => concat(map(x => if x is [a, ss] then runStateT(f(a), ss), runStateT(m, s))))
+  StateT of
+    s => concat of map(x => if x is [a, ss] then runStateT(f(a), ss), runStateT(m, s))
 
 fun return_(a) = StateT(s => [a, s] :: Nil)
 
@@ -44,28 +45,24 @@ fun digits(d) = if d is Digits(a, b) then a
 fun digitEnv(d) = if d is Digits(a, b) then b
 
 fun permute(c) =
-  bind(
-    get,
+  bind of
+    get
     st =>
-      bind(
-        let xs = digits(st) in lift(map(x => [x, listDiff(xs, x :: Nil)], xs)),
+      bind of
+        let xs = digits(st) in lift(map(x => [x, listDiff(xs, x :: Nil)], xs))
         iis =>
           if iis is [i, iss] then
-            bind(
-              put(Digits(iss, [c, i] :: digitEnv(st))),
+            bind of
+              put(Digits(iss, [c, i] :: digitEnv(st)))
               _p => return_(i)
-            )
-      )
-  )
 
 fun select(c) =
-  bind(
-    get,
+  bind of
+    get
     st =>
       if lookup(c, digitEnv(st)) is
         Some(r) then return_(r)
         None then permute(c)
-  )
 
 fun rest(ls) = if ls is
   Nil then Nil
@@ -73,18 +70,15 @@ fun rest(ls) = if ls is
 
 fun solve(tops, bots, carry) = if bots is
   bot :: botss then
-    bind(
+    bind of
       if tops is
         Nil then return_(carry)
-        top :: _ then bind(mapM(select, top), topNS => return_(sum(topNS) + carry)),
-      topN => bind(
-        select(bot),
-        botN => bind(
-          guard(intMod(topN, 10) === botN),
+        top :: _ then bind(mapM(select, top), topNS => return_(sum(topNS) + carry))
+      topN => bind of
+        select(bot)
+        botN => bind of
+          guard(intMod(topN, 10) === botN)
           _s => solve(rest(tops), botss, intDiv(topN, 10))
-        )
-      )
-    )
   Nil and tops is Nil and carry === 0 then return_(Unit)
   else StateT(_p => Nil)
 
@@ -97,9 +91,11 @@ fun puzzle(top, bot) =
   let topVal = sum(map(xs => expand(xs), top))
   let botVal = expand(bot)
   if
-    listLen(nubBy((x,y) => x === y, append(concat(top), bot))) > 10 then throw Error("error")
+    listLen(nubBy((x,y) => x === y, concat(top) +: bot)) > 10 then throw Error("error")
     topVal != botVal then throw Error("error")
-    else unlines(map(x => if x is [c, i] then append(append(c :: Nil, nofibStringToList(" => ")), nofibStringToList(stringOfInt(i))), env))
+    else unlines of map of
+      x => if x is [c, i] then c :: nofibStringToList(" => ") +: nofibStringToList(stringOfInt(i))
+      env
 
 fun testCryptarithm2_nofib(n) =
   let args =

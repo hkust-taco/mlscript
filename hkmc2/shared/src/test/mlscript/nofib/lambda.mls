@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 
 fun lookup(k, t) = if t is
@@ -89,23 +89,20 @@ fun apply(t, a) = if t is Thunk(Lam(x, b), e) then
 
 fun eval(ter) = if ter is
   Var(x) then
-    myBind(
-      myGet,
+    myBind of
+      myGet
       e => myBind(lookupVar(x), t => traverseTerm(t))
-    )
   Add(u, v) then
-    myBind(
-      traverseCon(u),
+    myBind of
+      traverseCon(u)
       u_ => myBind(traverseCon(v), v_ => myReturn(Con(u_ + v_)))
-    )
   Thunk(t, e) then withEnv(e, traverseTerm(t))
   Lam(x, b) then myBind(myGet, env => myReturn(Thunk(Lam(x, b), env)))
   App(u, v) then myBind(traverseTerm(u), u_ => apply(u_, v))
   IfZero(c, a, b) then
-    myBind(
-      traverseTerm(c),
+    myBind of
+      traverseTerm(c)
       vall => if eqTerm(vall, Con(0)) then traverseTerm(a) else traverseTerm(b)
-    )
   Con(i) then myReturn(Con(i))
   Incr then myBind(incr, _dummy => myReturn(Con(0)))
 //│ ————————————————————————————————————————————————————————————————————————————————
@@ -139,7 +136,7 @@ fun simpleEvalCon(env, e) =
   if e_ is Con(c) then c else throw Error("Not a Con")
 //│ ————————————————————————————————————————————————————————————————————————————————
 
-fun bracket(outer, this, t) = if this <= outer then "(" :: append(t, nofibStringToList(")")) else t
+fun bracket(outer, this, t) = if this <= outer then "(" :: (t +: nofibStringToList(")")) else t
 
 :...
 //│ ————————————————————————————————————————————————————————————————————————————————
@@ -147,24 +144,21 @@ fun ppn(n, ter) = if ter is
   Var(v) then v
   Con(i) then nofibStringToList(stringOfInt(i))
   Incr then nofibStringToList("INCR")
-  Lam(v, t) then bracket(n, 0, append(nofibStringToList("@"), append(v, append(nofibStringToList(". "), ppn(0-1, t)))))
-  Add(a, b) then bracket(n, 1, append(ppn(1, a), append(nofibStringToList(" + "), ppn(1, b))))
-  App(a, b) then bracket(n, 2, append(ppn(2, a), append(nofibStringToList(" "), ppn(2, b))))
-  IfZero(c, a, b) then bracket(n, 0, append("IF ", append(ppn(0, c), append(nofibStringToList(" THEN "), append(ppn(0, a), append(nofibStringToList(" ELSE "), ppn(0, b)))))))
-  Thunk(t, e) then bracket(n, 0, append(ppn(3, t), append(nofibStringToList("::"), ppenv(e))))
+  Lam(v, t) then bracket(n, 0, "@" :: (v +: nofibStringToList(". ") +: ppn(0-1, t)))
+  Add(a, b) then bracket(n, 1, ppn(1, a) +: nofibStringToList(" + ") +: ppn(1, b))
+  App(a, b) then bracket(n, 2, ppn(2, a) +: nofibStringToList(" ") +: ppn(2, b))
+  IfZero(c, a, b) then bracket(n, 0, nofibStringToList("IF ") +: ppn(0, c) +: nofibStringToList(" THEN ") +: ppn(0, a) +: nofibStringToList(" ELSE ") +: ppn(0, b))
+  Thunk(t, e) then bracket(n, 0, ppn(3, t) +: nofibStringToList("::") +: ppenv(e))
 
 fun pp(t) = ppn(0, t)
 
-fun ppenv(env) = append(
-  nofibStringToList("["),
-  append(
-    flatMap(
-      vt => if vt is [v, t] then append(append(v, nofibStringToList("=")), append(pp(t), nofibStringToList(", "))),
-      env
-    ),
-    nofibStringToList("]")
-  )
-)
+fun ppenv(env) =
+  nofibStringToList("[") +:
+  flatMap(
+    vt => if vt is [v, t] then v +: nofibStringToList("=") +: pp(t) +: nofibStringToList(", "),
+    env
+  ) +:
+  nofibStringToList("]")
 //│ ————————————————————————————————————————————————————————————————————————————————
 
 let lfxx = Lam(nofibStringToList("x"), App(Var(nofibStringToList("F")), App(Var(nofibStringToList("x")), Var(nofibStringToList("x")))))
@@ -206,11 +200,11 @@ let sum0 = App(fix, partialSum0)
 //│ >   }
 //│ sum0 = }
 
-fun showTerm(t) = if t is Con(a) then append(nofibStringToList("Con "), nofibStringToList(stringOfInt(a)))
+fun showTerm(t) = if t is Con(a) then nofibStringToList("Con ") +: nofibStringToList(stringOfInt(a))
 
 fun ev(t) =
   let envt2 = myRunState(traverseTerm(t), Nil)
-  if envt2 is [env, t2] then append(append(pp(t2), nofibStringToList("  ")), ppenv(env))
+  if envt2 is [env, t2] then pp(t2) +: nofibStringToList("  ") +: ppenv(env)
 
 fun mainSimple(args) =
   if null_(args)

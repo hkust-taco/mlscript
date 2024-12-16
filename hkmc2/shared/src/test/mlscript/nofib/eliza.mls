@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 
 fun toUpper(c) = c.toUpperCase()
@@ -27,10 +27,10 @@ fun words(s) = if dropWhile(isSpace, s) is
 fun unwords(ws) =
   fun go(ws) = if ws is
     Nil then Nil
-    w :: ws then " " :: append(w, go(ws))
+    w :: ws then " " :: w +: go(ws)
   if ws is
     Nil then Nil
-    w :: ws then append(w, go(ws))
+    w :: ws then w +: go(ws)
 
 fun null_lz(ls) = if force(ls) is
   LzNil then true
@@ -47,8 +47,8 @@ fun newKeyTab(kt_, kt_rp) = if kt_rp is [kt, rp] then [kt_, rp]
 fun keyTabOf(kt_rp) = if kt_rp is [kt, rp] then kt
 
 fun makeResponse(cs, us) = if cs is
-  "?" :: cs_ then append(cs_, append(nofibStringToList(" "), append(us, nofibStringToList("?"))))
-  "." :: cs_ then append(cs_, append(nofibStringToList(" "), append(us, nofibStringToList("."))))
+  "?" :: cs_ then cs_ +: nofibStringToList(" ") +: us +: nofibStringToList("?")
+  "." :: cs_ then cs_ +: nofibStringToList(" ") +: us +: nofibStringToList(".")
   else cs
 
 let repeatMsgs =
@@ -299,7 +299,7 @@ let conjugates =
   fun lscomp(ls) = if ls is
     Nil then Nil
     [x, y] :: t then ([x, y] :: [y, x] :: Nil) :: lscomp(t)
-  prepare(append(oneways, concat(lscomp(bothways))))
+  prepare(oneways +: concat(lscomp(bothways)))
 //│ > Cons {
 //│ >   head: [
 //│ >     Cons { head: 'M', tail: [Cons] },
@@ -319,7 +319,7 @@ fun conjug(d, w) =
       [w_, m] :: t and
         listEq(ucase(w), w_) then m :: lscomp(t)
         else lscomp(t)
-    head(append(lscomp(conjugates), w :: Nil))
+    head(lscomp(conjugates) +: w :: Nil)
   fun trailingI(ls) =
     fun cons(x, xs) =
       if listEq(x, nofibStringToList("I")) && null_(xs)
@@ -329,13 +329,11 @@ fun conjug(d, w) =
   unwords(trailingI(map(conj, maybe(d, w))))
 
 fun replies(key, l) =
-  map_lz(
-    x => conjug(l, drop(listLen(key), x)),
-    filter_lz(
-      ls => prefix(key, lz_map(ucase, ls)),
+  map_lz of
+    x => conjug(l, drop(listLen(key), x))
+    filter_lz of
+      ls => prefix(key, lz_map(ucase, ls))
       tails(l)
-    )
-  )
 
 fun answer(st, l) =
   fun cons(e, r_es) = if r_es is [r, es] then [r, e :: es]
@@ -351,7 +349,7 @@ fun session(rs, prev, ls) = if ls is
   Nil then Nil
   l :: ls and
     (if listEqBy(listEq, prev, l) then repeated(rs) else answer(rs, l)) is [response, rs_] then
-      append(response, append(nofibStringToList("\n\n"), session(rs_, l, ls)))
+      response +: nofibStringToList("\n\n") +: session(rs_, l, ls)
 
 fun testEliza_nofib(n) =
   let input = 
@@ -370,10 +368,14 @@ fun testEliza_nofib(n) =
     nofibStringToList("yes") ::
     nofibStringToList("but I'm not") ::
     Nil
-  map(
-    i => (session(initial, Nil, filter(x => not(null_(x)), map(x => words(trim(x)), take(intMod(i, 20), input))))),
+  map of
+    i => session of
+      initial
+      Nil
+      filter of
+        x => not(null_(x))
+        map(x => words(trim(x)), take(intMod(i, 20), input))
     enumFromTo(1, n)
-  )
 
 map(x => nofibListToString(x), testEliza_nofib(20)).toString()
 //│ > "[I'm not sure I understand you fully.\n" +

@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 
 :...
@@ -29,11 +29,10 @@ fun qsort(le, xs, r) = if xs is
   x :: xs then qpart(le, x, xs, Nil, Nil, r)
 //│ ————————————————————————————————————————————————————————————————————————————————
 
-fun sort(l) = qsort(
-  (a, b) => if a is [aa, _] and b is [bb, _] then listLen(aa) <= listLen(bb),
-  l,
+fun sort(l) = qsort of
+  (a, b) => if a is [aa, _] and b is [bb, _] then listLen(aa) <= listLen(bb)
+  l
   Nil
-)
 
 abstract class Kind: King | Queen | Rook | Bishop | Knight | Pawn
 
@@ -81,13 +80,11 @@ fun words(s) = if dropWhile(x => x === " ", s) is
 fun unlines(ls) = concat(map(l => append(l, "\n" :: Nil), ls))
 
 fun lines(s) = if break_(x => x === "|", s) is [l, s_] then
-  Cons(
-    l,
-    (if s_ is
+  Cons of
+    l
+    if s_ is
       Nil then Nil
       Cons(_, s__) then lines(s__)
-    )
-  )
   
 fun any(p, ls) = if ls is
   Nil then false
@@ -118,7 +115,7 @@ fun pieceToChar(p) = if p is
 fun showBoard(bd) =
   fun showRank(r) =
     fun consFile(f, s) = if pieceAt(bd, [f, r]) is
-      None then append(nofibStringToList(" -"), s)
+      None then nofibStringToList(" -") +: s
       Some(p) then " " :: pieceToChar(p) :: s
     foldr(consFile, Nil, enumFromTo(1, 8))
   unlines(map(showRank, reverse(enumFromTo(1, 8))))
@@ -126,20 +123,18 @@ fun showBoard(bd) =
 fun showPiece(p) = if p is [c, k] then kindToChar(k) :: Nil
 
 fun showSquare(c, x_y) = if x_y is [x, y] then
-  append(
-    atIndex(
-      x - 1,
-      nofibStringToList("QR") ::
-      nofibStringToList("QN") ::
-      nofibStringToList("QB") ::
-      nofibStringToList("Q") ::
-      nofibStringToList("K") ::
-      nofibStringToList("KB") ::
-      nofibStringToList("KN") ::
-      nofibStringToList("KR") :: Nil
-    ),
-    nofibStringToList(stringOfInt(if c is Black then 9 - y else y))
-  )
+  atIndex(
+    x - 1,
+    nofibStringToList("QR") ::
+    nofibStringToList("QN") ::
+    nofibStringToList("QB") ::
+    nofibStringToList("Q") ::
+    nofibStringToList("K") ::
+    nofibStringToList("KB") ::
+    nofibStringToList("KN") ::
+    nofibStringToList("KR") :: Nil
+  ) +:
+  nofibStringToList(stringOfInt(if c is Black then 9 - y else y))
 
 fun emptyAtAll(bd, e) = if bd is Board(wkss, bkss) then
   fun emptyAtAllAnd(b, ls) = if ls is
@@ -188,42 +183,30 @@ let emptyBoard = Board(Nil, Nil)
 fun showMove(withPiece, m) = if m is MoveInFull([c, k], sq, Move(sq_, mcp, mpp)) then
   let capt = mcp is Some(_)
   let prom = mpp is Some(_)
-  append(
-    (if withPiece
-      then append(
-        showPiece([c, k]),
-        if ((k === King) || (k is Pawn and not(capt || prom))) then Nil else "/" :: showSquare(c, sq)
-      )
-      else Nil
-    ),
-    append(
-      maybe("-" :: Nil, cp => "x" :: append(showPiece(cp), "/" :: Nil), mcp),
-      append(
-        showSquare(c, sq_),
-        maybe(Nil, pp => "(" :: append(showPiece(pp), ")" :: Nil), mpp)
-      )
-    ) 
-  )
+  (if withPiece
+    then
+      showPiece([c, k]) +:
+      if ((k === King) || (k is Pawn and not(capt || prom))) then Nil else "/" :: showSquare(c, sq)
+    else Nil
+  ) +:
+  maybe("-" :: Nil, cp => "x" :: append(showPiece(cp), "/" :: Nil), mcp) +:
+  showSquare(c, sq_) +:
+  maybe(Nil, pp => "(" :: append(showPiece(pp), ")" :: Nil), mpp)
 
 fun showMoveInFull(a) = showMove(true, a)
 
 fun showMovesAfter(p_, mifs) = if mifs is
   Nil then Nil
   MoveInFull(p, sq, d_) :: mifs and p_ is MoveInFull(p_, sq_, _) then
-    append(
-      nofibStringToList(", "),
-      append(
-        showMove(not(eqTup2(p, p_)) || not(eqTup2(sq, sq_)), MoveInFull(p, sq, d_)),
-        showMovesAfter(MoveInFull(p, sq, d_), mifs)
-      )
-    )
+    nofibStringToList(", ") +:
+    showMove(not(eqTup2(p, p_)) || not(eqTup2(sq, sq_)), MoveInFull(p, sq, d_)) +:
+    showMovesAfter(MoveInFull(p, sq, d_), mifs)
 
 fun showMoves(mifs) = if mifs is
   Nil then throw Error("showMoves")
-  mif :: mifs then append(
-    showMoveInFull(mif),
+  mif :: mifs then
+    showMoveInFull(mif) +:
     showMovesAfter(mif, mifs)
-  )
 
 fun sift(c, bd, ms, sqs) = if sqs is
   Nil then ms
@@ -247,64 +230,58 @@ fun moveLine(bd, c, sq, inc, cont) =
   ms => ml(sq, ms)
 
 fun bishopmoves(c, sq, bd) =
-  moveLine(
-    bd,
-    c,
-    sq,
-    xy => if xy is [x, y] then [x - 1, y + 1],
-    moveLine(
-      bd,
-      c,
-      sq,
-      xy => if xy is [x, y] then [x + 1, y + 1],
-      moveLine(
-        bd,
-        c,
-        sq,
-        xy => if xy is [x, y] then [x - 1, y - 1],
-        moveLine(
-          bd,
-          c,
-          sq,
-          xy => if xy is [x, y] then [x + 1, y - 1],
+  (moveLine of
+    bd
+    c
+    sq
+    xy => if xy is [x, y] then [x - 1, y + 1]
+    moveLine of
+      bd
+      c
+      sq
+      xy => if xy is [x, y] then [x + 1, y + 1]
+      moveLine of
+        bd
+        c
+        sq
+        xy => if xy is [x, y] then [x - 1, y - 1]
+        moveLine of
+          bd
+          c
+          sq
+          xy => if xy is [x, y] then [x + 1, y - 1]
           x => x
-        )
-      )
-    )
-  )(Nil)
+  ) of Nil
 
 fun rookmoves(c, sq, bd) =
-  moveLine(
-    bd,
-    c,
-    sq,
-    xy => if xy is [x, y] then [x - 1, y],
-    moveLine(
-      bd,
-      c,
-      sq,
-      xy => if xy is [x, y] then [x + 1, y],
-      moveLine(
-        bd,
-        c,
-        sq,
-        xy => if xy is [x, y] then [x, y - 1],
-        moveLine(
-          bd,
-          c,
-          sq,
-          xy => if xy is [x, y] then [x, y + 1],
+  (moveLine of
+    bd
+    c
+    sq
+    xy => if xy is [x, y] then [x - 1, y]
+    moveLine of
+      bd
+      c
+      sq
+      xy => if xy is [x, y] then [x + 1, y]
+      moveLine of
+        bd
+        c
+        sq
+        xy => if xy is [x, y] then [x, y - 1]
+        moveLine of
+          bd
+          c
+          sq
+          xy => if xy is [x, y] then [x, y + 1]
           x => x
-        )
-      )
-    )
-  )(Nil)
+  ) of Nil
 
 fun kingmoves(c, pq, bd) = if pq is [p, q] then
-  sift(
-    c,
-    bd,
-    Nil,
+  sift of
+    c
+    bd
+    Nil
     [p - 1, q + 1] ::
     [p, q + 1] ::
     [p + 1, q + 1] ::
@@ -313,13 +290,12 @@ fun kingmoves(c, pq, bd) = if pq is [p, q] then
     [p - 1, q - 1] ::
     [p, q - 1] ::
     [p + 1, q - 1] :: Nil
-  )
 
 fun knightmoves(c, pq, bd) = if pq is [p, q] then
-  sift(
-    c,
-    bd,
-    Nil,
+  sift of
+    c
+    bd
+    Nil
     [p - 1, q + 2] ::
     [p + 1, q + 2] ::
     [p - 2, q + 1] ::
@@ -328,7 +304,6 @@ fun knightmoves(c, pq, bd) = if pq is [p, q] then
     [p + 2, q - 1] ::
     [p - 1, q - 2] ::
     [p + 1, q - 2] :: Nil
-  )
 
 fun pawnmoves(c, pq, bd) = if pq is [p, q] then
   let fwd = if c is White then 1 else -1
@@ -346,12 +321,10 @@ fun pawnmoves(c, pq, bd) = if pq is [p, q] then
     let on1 = [p, q + fwd]
     let on2 = [p, q + 2 * fwd]
     if pieceAt(bd, on1) is None then
-      append(
-        promote(on1, None),
-        if (q === 2 and c is White) || (q === 7 and c is Black) and pieceAt(bd, on2) is None then
-          Move(on2, None, None) :: Nil
-        else Nil
-      )
+      promote(on1, None) +:
+      (if (q === 2 and c is White) || (q === 7 and c is Black) and pieceAt(bd, on2) is None then
+        Move(on2, None, None) :: Nil
+      else Nil)
     else Nil
   fun lscomp1(ls) = if ls is
     Nil then Nil
@@ -363,9 +336,9 @@ fun pawnmoves(c, pq, bd) = if pq is [p, q] then
           else lscomp2(ls)
       lscomp2(pieceAt(bd, sq) :: Nil)
   let caps = concat(lscomp1([p + 1, q + fwd] :: [p - 1, q + fwd] :: Nil))
-  append(movs, caps)
+  movs +: caps
 
-fun queenmoves(c, sq, bd) = append(bishopmoves(c, sq, bd), rookmoves(c, sq, bd))
+fun queenmoves(c, sq, bd) = bishopmoves(c, sq, bd) +: rookmoves(c, sq, bd)
 
 fun kingincheck(c, bd) =
   fun givesCheck(kxy) = if kxy is [k, [x, y]] then
@@ -410,15 +383,13 @@ fun rawmoves(c, ksq, bd) = if ksq is [k, sq] then
   let res = m(c, sq, bd)
   res
 
-fun moveDetailsFor(c, bd) = foldr(
-  (ksq, ms) => foldr(
-    (rm, ms_) => maybe(x => x, h => (t => h :: t), tryMove(c, ksq, rm, bd))(ms_),
-    ms,
+fun moveDetailsFor(c, bd) = foldr of
+  (ksq, ms) => foldr of
+    (rm, ms_) => maybe(x => x, h => (t => h :: t), tryMove(c, ksq, rm, bd))(ms_)
+    ms
     rawmoves(c, ksq, bd)
-  ),
-  Nil,
+  Nil
   forcesColoured(c, bd)
-)
 
 fun comment(s) = (s is Nil) || listEq(take(2, s), nofibStringToList("--"))
 
@@ -447,20 +418,18 @@ fun parseSquare(r, f, c) = if c === "-" then Nil else
     "p" then Pawn
   [[clr, kin], [f, r]] :: Nil
 
-fun parseRank(r, x) = concat(zipWith(
-  (a, b) => parseSquare(r, a, b),
-  enumFromTo(1, 8),
+fun parseRank(r, x) = concat of zipWith of
+  (a, b) => parseSquare(r, a, b)
+  enumFromTo(1, 8)
   filter(pp => not(pp === " "), x)
-))
 
 
 fun parseBoard(ls) =
   fun addPiece(p_sq, x) = if p_sq is [p, sq] then putPieceAt(sq, p, x)
-  foldr(
-    addPiece,
-    emptyBoard,
+  foldr of
+    addPiece
+    emptyBoard
     concat(zipWith(parseRank, reverse(enumFromTo(1, 8)), ls))
-  )
 
 fun parseProblem(s) =
   let bdtxt_gltxt = splitAt(8, filter(x => not(comment(x)), s))
@@ -520,50 +489,26 @@ fun tab(n) = if n <= 0 then Nil else " " :: tab(n - 1)
 fun showReplies(rs, n) = if rs is
   Nil then Nil
   [mifs, s] :: rs then
-    append(
-      tab(n),
-      append(
-        nofibStringToList("if "),
-        append(
-          if null_(rs) && (listLen(mifs) > 1) then nofibStringToList("others") else showMoves(mifs),
-          append(
-            nofibStringToList("; "),
-            append(
-              showSoln(s, n + 1),
-              showReplies(rs, n)
-            )
-          )
-        )
-      )
-    )
+    tab(n) +:
+    nofibStringToList("if ") +:
+    if null_(rs) && (listLen(mifs) > 1) then nofibStringToList("others") else showMoves(mifs) +:
+    nofibStringToList("; ") +:
+    showSoln(s, n + 1) +:
+    showReplies(rs, n)
 
 fun showSoln(s, n) = if s is Soln(mif, rs) then
-  append(
-    nofibStringToList(stringOfInt(n)),
-    append(
-      nofibStringToList(". "),
-      append(
-        showMoveInFull(mif),
-        if rs is
-          Nil then nofibStringToList("++\n")
-          [mifs, s_] :: Nil then
-            append(
-              nofibStringToList(", "),
-              append(
-                if listLen(mifs) > 1 then nofibStringToList("...") else showMoves(mifs),
-                append(
-                  nofibStringToList("; "),
-                  showSoln(s_, n + 1)
-                )
-              )
-            )
-          else append(
-            nofibStringToList(",\n"),
-            showReplies(sort(rs), n)
-          )
-      )
-    )
-  )
+  nofibStringToList(stringOfInt(n)) +:
+  nofibStringToList(". ") +:
+  showMoveInFull(mif) +:
+  if rs is
+    Nil then nofibStringToList("++\n")
+    [mifs, s_] :: Nil then
+      nofibStringToList(", ") +:
+      (if listLen(mifs) > 1 then nofibStringToList("...") else showMoves(mifs)) +:
+      nofibStringToList("; ") +:
+      showSoln(s_, n + 1)
+    else
+      nofibStringToList(",\n") +: showReplies(sort(rs), n)
 //│ ————————————————————————————————————————————————————————————————————————————————
 
 
@@ -599,28 +544,14 @@ fun testMate_nofib(dummy) =
   let input = nofibStringToList("-- G. Heathcote|-- Reading Observer, 1904|-- `A charming little three-mover constructed with|-- the art that conceals art.'  (Phillips)||- - - - - - - - |- - - - - - - - |- - - - - - - - |- - - - P - - - |- - - - p - k b |- P n - K - - - |- P - - - - - - |- q - - - - - - ||White to play and mate in 3")
   let bdcn = readProblem(input)
   if bdcn is [bd, [c, n]] then
-    append(
-      showBoard(bd), 
-      append(
-        nofibStringToList("\n"),
-        append(
-          showColour(c),
-          append(
-            nofibStringToList(" to move and mate in "),
-            append(
-              nofibStringToList(stringOfInt(n)),
-              append(
-                nofibStringToList("\n"),
-                append(
-                  nofibStringToList("\n"),
-                  solve(bd, c, n)
-                )
-              )
-            )
-          )
-        )
-      )
-    )
+    showBoard(bd) +:
+    nofibStringToList("\n") +:
+    showColour(c) +:
+    nofibStringToList(" to move and mate in ") +:
+    nofibStringToList(stringOfInt(n)) +:
+    nofibStringToList("\n") +:
+    nofibStringToList("\n") +:
+    solve(bd, c, n)
 
 print(nofibListToString(testMate_nofib(0)))
 //│ >  - - - - - - - -

@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 111 member(s)
+//│ Imported 112 member(s)
 
 
 fun unwords(ws) = if ws is
@@ -9,8 +9,8 @@ fun unwords(ws) = if ws is
   w :: ws then
     fun go(vs) = if vs is
       Nil then Nil
-      v :: vs then " " :: append(v, go(vs))
-    append(w, go(ws))
+      v :: vs then " " :: (v +: go(vs))
+    w +: go(ws)
 
 fun break_(p, xs) = if xs is
   Nil then [Nil, Nil]
@@ -33,7 +33,7 @@ fun lines(s) = if break_(x => x === "\n", s) is [l, s_] then
       _ :: s__ then lines(s__)
   )
 
-fun unlines(ls) = concat(map(l => append(l, nofibStringToList("\n")), ls))
+fun unlines(ls) = concat(map(l => l +: nofibStringToList("\n"), ls))
 
 fun all(p, xs) = if xs is
   Nil then true
@@ -58,11 +58,10 @@ fun new_(w, ls) = (w :: Nil) :: ls
 fun glue(w, ls) = if ls is
   l :: ls_ then (w :: l) :: ls_
 
-fun formats(txt) = fold1(
-  (w, ps) => append(map(p => new_(w, p), ps), map(p => glue(w, p), ps)),
+fun formats(txt) = fold1 of
+  (w, ps) => map(p => new_(w, p), ps) +: map(p => glue(w, p), ps)
   x => ((x :: Nil) :: Nil) :: Nil
   txt
-)
 
 let maxw = 70
 //│ maxw = 70
@@ -142,7 +141,7 @@ fun init_(a_b) = if a_b is [y, x] and
     [y0, reverse(y1)]
   else [y, tail(x)]
 
-fun unformat(a, l) = fold1((xs, ys) => append(xs, append(a :: Nil, ys)), x => x, l)
+fun unformat(a, l) = fold1((xs, ys) => xs +: (a :: Nil) +: ys, x => x, l)
 
 fun format(a, x) = if
   x is Nil then Nil :: Nil
@@ -214,16 +213,17 @@ fun par3(ws) =
 fun fmt(x) = unparse(map(par3, concat(parse(x))))
 
 let test = 
-  concat(nofibStringToList("In the constructive programming community it is commonplace to see ") ::
-  nofibStringToList("formal developments of textbook algorithms. In the algorithm design ") ::
-  nofibStringToList("community, on the other hand, it may be well known that the textbook ") ::
-  nofibStringToList("solution to a problem is not the most efficient possible. However, in ") ::
-  nofibStringToList("presenting the more efficient solution, the algorithm designer will ") ::
-  nofibStringToList("usually omit some of the implementation details, this creating an ") ::
-  nofibStringToList("algorithm gap between the abstract algorithm and its concrete ") ::
-  nofibStringToList("implementation. This is in contrast to the formal development, which ") ::
-  nofibStringToList("usually presents the complete concrete implementation of the less ") ::
-  nofibStringToList("efficient solution.\n\n") :: Nil)
+  concat of
+    nofibStringToList("In the constructive programming community it is commonplace to see ") ::
+    nofibStringToList("formal developments of textbook algorithms. In the algorithm design ") ::
+    nofibStringToList("community, on the other hand, it may be well known that the textbook ") ::
+    nofibStringToList("solution to a problem is not the most efficient possible. However, in ") ::
+    nofibStringToList("presenting the more efficient solution, the algorithm designer will ") ::
+    nofibStringToList("usually omit some of the implementation details, this creating an ") ::
+    nofibStringToList("algorithm gap between the abstract algorithm and its concrete ") ::
+    nofibStringToList("implementation. This is in contrast to the formal development, which ") ::
+    nofibStringToList("usually presents the complete concrete implementation of the less ") ::
+    nofibStringToList("efficient solution.\n\n") :: Nil
 //│ > Cons {
 //│ >   head: 'I',
 //│ >   tail: Cons { head: 'n', tail: Cons { head: ' ', tail: [Cons] } }
