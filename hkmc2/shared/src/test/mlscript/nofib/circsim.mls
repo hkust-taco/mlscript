@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 117 member(s)
+//│ Imported 118 member(s)
 
 
 abstract class BinTree[T, U]: Cell[T] | Node[T, U]

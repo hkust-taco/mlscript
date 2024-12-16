@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 117 member(s)
+//│ Imported 118 member(s)
 
 
 fun dfs(r, vsns, xs) = if vsns is [vs, ns] and

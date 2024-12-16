@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 117 member(s)
+//│ Imported 118 member(s)
 
 
 fun lookup(k, t) = if t is
@@ -225,4 +225,4 @@ fun mainMonad(args) =
 fun testLambda_nofib(n) = [mainSimple(n :: Nil), mainMonad(n :: Nil)]
 
 testLambda_nofib(80).toString()
-//│ = '[C,o,n, ,3,2,4,0],[3,2,4,0, , ,[,]]'
+//│ = '([C,o,n, ,3,2,4,0],[3,2,4,0, , ,[,]])'

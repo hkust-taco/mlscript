@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 117 member(s)
+//│ Imported 118 member(s)
 
 
 abstract class CSeq: CNil | CAppend | CIndent | CNewline | CStr | CCh
