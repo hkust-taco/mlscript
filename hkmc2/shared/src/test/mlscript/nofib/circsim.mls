@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 118 member(s)
+//│ Imported 111 member(s)
 
 
 abstract class BinTree[T, U]: Cell[T] | Node[T, U]
@@ -24,7 +24,7 @@ object
 
 object Unit
 
-class PS[T](pid: Int, compType: Componenet, pathDepth: Int, inports: List[Tup3[Int, Int, T]], outports: List[Tup6[Int, T, Bool, Int, Bool, Int]])
+class PS[T](pid: Int, compType: Componenet, pathDepth: Int, inports: List[[Int, Int, T]], outports: List[[Int, T, Bool, Int, Bool, Int]])
 
 fun pid(p) = if p is PS(pid_, _, _, _, _) then pid_
 
@@ -220,7 +220,7 @@ fun make_packet(state) =
 
 fun compare_and_update(ipm_, pid_port_m) =
   if ipm_ is [i, p, m_] and pid_port_m is [pid_, port, m] and
-    eqTuup2([i, p], [pid_, port]) then [pid_, port, m_]
+    eqTup2([i, p], [pid_, port]) then [pid_, port, m_]
     else [pid_, port, m]
 
 fun up_i(ipm_, ins) = if ipm_ is [i, p, m_, _, _, _, _, _] then map(x => compare_and_update([i, p, m_], x), ins)

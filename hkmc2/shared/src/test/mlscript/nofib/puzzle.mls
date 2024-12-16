@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 118 member(s)
+//│ Imported 111 member(s)
 
 abstract class ItemType: Bono | Edge | Larry | Adam
 

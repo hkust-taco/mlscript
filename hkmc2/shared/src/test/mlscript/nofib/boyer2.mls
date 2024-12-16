@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 118 member(s)
+//│ Imported 111 member(s)
 
 
 
@@ -10,7 +10,7 @@ abstract class Lisplist: Nill | Atom | Conss
 object Nill extends Lisplist
 class
   Atom(a: List[Char]) extends Lisplist
-  Conss(a: Tup2[Lisplist, Lisplist]) extends Lisplist
+  Conss(a: [Lisplist, Lisplist]) extends Lisplist
 
 fun lispListEq(x, y) = if x is
   Nill and y is Nill then true
@@ -101,13 +101,13 @@ fun assoc(term_x_y) = if term_x_y is
     _ then Nill
   [_, _] then Nill
 
-type LUTentry = Tup2[String, List[Lisplist]]
+type LUTentry = [String, List[Lisplist]]
 
 abstract class LUT: Empty | Node
 
 object Empty extends LUT
 
-class Node(x: Tup3[LUT, LUTentry, LUT]) extends LUT
+class Node(x: [LUT, LUTentry, LUT]) extends LUT
 
 fun addtoLUT(k_l_lut) = if k_l_lut is
   [k, l, Empty] then Node([Empty, [k, l :: Nil], Empty])

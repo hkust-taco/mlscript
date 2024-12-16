@@ -1,10 +1,10 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 118 member(s)
+//│ Imported 111 member(s)
 
 
-class Pixmap(a: Int, b: Int, c: Int, d:List[Tup3[Int, Int, Int]])
+class Pixmap(a: Int, b: Int, c: Int, d:List[[Int, Int, Int]])
 
 fun createPixmap(width, height, max, colours) = Pixmap(width, height, max, colours)
 

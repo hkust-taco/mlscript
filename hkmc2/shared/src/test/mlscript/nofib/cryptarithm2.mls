@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 118 member(s)
+//│ Imported 111 member(s)
 
 object Unit
 
@@ -37,7 +37,7 @@ fun put(s) = StateT(x => [Unit, s] :: Nil)
 let get = StateT(s => [s, s] :: Nil)
 //│ get = StateT { run: [Function (anonymous)] }
 
-class Digits(i: List[Int], c: List[Tup2[Char, Int]])
+class Digits(i: List[Int], c: List[[Char, Int]])
 
 fun digits(d) = if d is Digits(a, b) then a
 

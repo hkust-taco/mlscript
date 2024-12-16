@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 118 member(s)
+//│ Imported 111 member(s)
 
 
 fun isSome(x) = x is Some
@@ -90,7 +90,7 @@ fun insert(kx, x, m) = if m is
 
 fun indent(n) = if n <= 0 then Nil else " " :: indent(n - 1)
 
-class P(i: Char, a: List[List[Tup2[Int, Int]]], b: List[List[Tup2[Int, Int]]])
+class P(i: Char, a: List[List[[Int, Int]]], b: List[List[[Int, Int]]])
 
 abstract class S: Male | Female
 
@@ -104,12 +104,12 @@ fun flip(s) = if s is
 
 abstract class Solution: Soln | Choose | Fail
 
-type Board = Map[Tup2[Int, Int], Char]
+type Board = Map[[Int, Int], Char]
 
 class
   Soln(b: Board) extends Solution
   Choose(s: List[Solution]) extends Solution
-  Fail(b: Board, s: Tup2[Int, Int]) extends Solution
+  Fail(b: Board, s: [Int, Int]) extends Solution
 
 fun addIntInt(row_col, orow_ocol) = if row_col is [row, col] and orow_ocol is [orow, ocol] then
   [row + orow, col + ocol]

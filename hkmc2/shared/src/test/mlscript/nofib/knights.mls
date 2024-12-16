@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 118 member(s)
+//│ Imported 111 member(s)
 
 fun myIsDigit(c) =
   c.codePointAt(0) >= 48 && c.codePointAt(0) <= 57
@@ -78,7 +78,7 @@ fun addFront(x, q) = x :: q
 let createQueue = Nil
 //│ createQueue = Nil { class: [class Nil] }
 
-class Board(a: Int, b: Int, c: Lazy[Tup2[Int, Int]], d: List[Tup2[Int, Int]])
+class Board(a: Int, b: Int, c: Lazy[[Int, Int]], d: List[[Int, Int]])
 
 fun createBoard(x, t) = Board(x, 1, (lazy of (() => t)), t :: Nil)
 
@@ -101,13 +101,13 @@ fun firstPiece(b) = if b is Board(_, _, f, _) then force(f)
 fun pieceAtTile(x, b) = if b is Board(_, _, _, ts) then
   fun find(x, xs) = if xs is
     Nil then throw Error("Tile not used")
-    y :: xs then if eqTuup2(x, y) then 1 + listLen(xs) else find(x, xs)
+    y :: xs then if eqTup2(x, y) then 1 + listLen(xs) else find(x, xs)
   find(x, ts)
 
 fun tup2InList(y, xs) = if xs is
   Nil then false
   x :: xs and
-    eqTuup2(y, x) then true
+    eqTup2(y, x) then true
     else tup2InList(y, xs)
 
 fun isSquareFree(x, b) = if b is Board(_, _, _, ts) then not(tup2InList(x, ts))

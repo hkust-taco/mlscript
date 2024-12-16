@@ -1,14 +1,14 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 118 member(s)
+//│ Imported 111 member(s)
 
 
 fun lookup(k, t) = if t is
   Nil then None
   [x, v] :: t then if listEq(k, x) then Some(v) else lookup(k, t)
 
-class MyState[S, A](r: S -> Tup2[S, A])
+class MyState[S, A](r: S -> [S, A])
 
 fun myRunState(m, s) = if m is MyState(f) then f(s)
 
@@ -33,7 +33,7 @@ class
   Lam(s: String, t: Term) extends Term
   App(a: Term, b: Term) extends Term
   IfZero(a: Term, b: Term, c: Term) extends Term
-  Thunk(t: Term, e: List[Tup2[String, Term]]) extends Term
+  Thunk(t: Term, e: List[[String, Term]]) extends Term
 
 object Unit
 

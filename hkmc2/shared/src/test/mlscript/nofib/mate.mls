@@ -1,7 +1,7 @@
 :js
 
 :import NofibPrelude.mls
-//│ Imported 118 member(s)
+//│ Imported 111 member(s)
 
 
 :...
@@ -51,17 +51,17 @@ object
   Black extends Colour
   White extends Colour
 
-type Piece = Tup2[Colour,Kind]
+type Piece = [Colour,Kind]
 
-type Square = Tup2[Int,Int]
+type Square = [Int,Int]
 
-class Board(a: List[Tup2[Kind, Square]], b: List[Tup2[Kind, Square]])
+class Board(a: List[[Kind, Square]], b: List[[Kind, Square]])
 
 class Move(a: Square, b: Option[Piece], c: Option[Piece])
 
 class MoveInFull(a: Piece, b: Square, c: Move)
 
-class Solution(a: MoveInFull, b: List[Tup2[List[MoveInFull],Solution]])
+class Solution(a: MoveInFull, b: List[[List[MoveInFull],Solution]])
 
 fun maybe(d, f, x) = if x is
   None then d
@@ -99,7 +99,7 @@ fun pieceAt(bd, sq) = if bd is Board(wkss, bkss) then
   fun pieceAtWith(c, n, ls) = if ls is
     Nil then n
     [k, s] :: xs and
-      eqTuup2(s, sq) then Some([c, k])
+      eqTup2(s, sq) then Some([c, k])
       else pieceAtWith(c, n, xs)
   pieceAtWith(White, pieceAtWith(Black, None, bkss), wkss)
 
@@ -149,7 +149,7 @@ fun emptyAtAll(bd, e) = if bd is Board(wkss, bkss) then
 
 fun rPa(sq, kss) = if kss is
   Nil then throw Error("rPa")
-  [k, s] :: kss then if eqTuup2(s, sq) then kss else [k, s] :: rPa(sq, kss)
+  [k, s] :: kss then if eqTup2(s, sq) then kss else [k, s] :: rPa(sq, kss)
 
 fun rmPieceAt(c, sq, bd) = if bd is Board(wkss, bkss) and c is
   White then Board(rPa(sq, wkss), bkss)
@@ -213,7 +213,7 @@ fun showMovesAfter(p_, mifs) = if mifs is
     append(
       nofibStringToList(", "),
       append(
-        showMove(not(eqTuup2(p, p_)) || not(eqTuup2(sq, sq_)), MoveInFull(p, sq, d_)),
+        showMove(not(eqTup2(p, p_)) || not(eqTup2(sq, sq_)), MoveInFull(p, sq, d_)),
         showMovesAfter(MoveInFull(p, sq, d_), mifs)
       )
     )
@@ -511,7 +511,7 @@ fun solution(bd, c, n) =
   else throw Error("n <= 0")
 //│ ————————————————————————————————————————————————————————————————————————————————
 
-class Soln(a: MoveInFull, b: List[Tup2[List[MoveInFull],Soln]])
+class Soln(a: MoveInFull, b: List[[List[MoveInFull],Soln]])
 
 fun tab(n) = if n <= 0 then Nil else " " :: tab(n - 1)
 
