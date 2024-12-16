@@ -3,6 +3,8 @@
 :import NofibPrelude.mls
 //│ Imported 112 member(s)
 
+:silent
+import "fs"
 
 :...
 //│ ————————————————————————————————————————————————————————————————————————————————
@@ -79,7 +81,7 @@ fun words(s) = if dropWhile(x => x === " ", s) is
 
 fun unlines(ls) = concat(map(l => append(l, "\n" :: Nil), ls))
 
-fun lines(s) = if break_(x => x === "|", s) is [l, s_] then
+fun lines(s) = if break_(x => x === "\n", s) is [l, s_] then
   Cons of
     l
     if s_ is
@@ -541,7 +543,8 @@ fun showResult(s) = if s is
 fun solve(bd, c, n) = showResult(solution(bd, c, (2 * n) - 1))
 
 fun testMate_nofib(dummy) = 
-  let input = nofibStringToList("-- G. Heathcote|-- Reading Observer, 1904|-- `A charming little three-mover constructed with|-- the art that conceals art.'  (Phillips)||- - - - - - - - |- - - - - - - - |- - - - - - - - |- - - - P - - - |- - - - p - k b |- P n - K - - - |- P - - - - - - |- q - - - - - - ||White to play and mate in 3")
+  let input = nofibStringToList of
+    fs.readFileSync("hkmc2/shared/src/test/mlscript/nofib/input/heathcote3.prob").toString()
   let bdcn = readProblem(input)
   if bdcn is [bd, [c, n]] then
     showBoard(bd) +:
