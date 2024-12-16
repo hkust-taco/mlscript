@@ -8,7 +8,7 @@ let cls = nofibStringToList("L")
 
 fun goto(x, y) = "E" :: "[" :: append(nofibStringToList(stringOfInt(y)), append(";" :: nofibStringToList(stringOfInt(x)), nofibStringToList("H"))) 
 
-fun at(x_y, s) = if x_y is Tup2(x, y) then append(goto(x, y), s)
+fun at(x_y, s) = if x_y is [x, y] then append(goto(x, y), s)
 
 fun highlight(s) = append(nofibStringToList("ESC[7m"), append(s, nofibStringToList("ESC[0m")))
 
@@ -36,9 +36,9 @@ fun ringBell(prog, cs) = writeChar("B", prog, cs)
 
 fun clearScreen(a, b) = writeString(cls, a, b)
 
-fun writeAt(x_y, s, a) = if x_y is Tup2(x, y) then p => writeString(append(goto(x, y), s), a, p)
+fun writeAt(x_y, s, a) = if x_y is [x, y] then p => writeString(append(goto(x, y), s), a, p)
 
-fun moveTo(x_y, a) = if x_y is Tup2(x, y) then p => writeString(goto(x, y), a, p)
+fun moveTo(x_y, a) = if x_y is [x, y] then p => writeString(goto(x, y), a, p)
 
 fun returnn(s, use) = use(reverse(s))
 
@@ -60,29 +60,29 @@ fun loop(n, s, l, use) = x => readChar(
 
 fun readAt(x_y, l, use) = writeAt(x_y, replicate(l, "_"), moveTo(x_y, loop(0, "", l, use)))
 
-fun promptReadAt(x_y, l, prompt, use) = if x_y is Tup2(x, y) then
-  writeAt(Tup2(x, y), prompt, readAt(Tup2(x + listLen(prompt), y), l, use))
+fun promptReadAt(x_y, l, prompt, use) = if x_y is [x, y] then
+  writeAt([x, y], prompt, readAt([x + listLen(prompt), y], l, use))
   
 fun program(input) = writes(
   cls ::
-  at(Tup2(17, 5), highlight(nofibStringToList("Demonstration program"))) ::
-  at(Tup2(48, 5), nofibStringToList("Version 1.0")) ::
-  at(Tup2(17, 7), nofibStringToList("This program illustrates a simple approach")) ::
-  at(Tup2(17, 8), nofibStringToList("to screen-based interactive programs using")) ::
-  at(Tup2(17, 9), nofibStringToList("the Hugs functional programming system.")) ::
-  at(Tup2(17, 11), nofibStringToList("Please press any key to continue ...")) ::
+  at([17, 5], highlight(nofibStringToList("Demonstration program"))) ::
+  at([48, 5], nofibStringToList("Version 1.0")) ::
+  at([17, 7], nofibStringToList("This program illustrates a simple approach")) ::
+  at([17, 8], nofibStringToList("to screen-based interactive programs using")) ::
+  at([17, 9], nofibStringToList("the Hugs functional programming system.")) ::
+  at([17, 11], nofibStringToList("Please press any key to continue ...")) ::
   Nil,
   x => pressAnyKey(promptReadAt(
-    Tup2(17, 15),
+    [17, 15],
     18,
     nofibStringToList("Please enter your name: "),
     (name) =>
       let reply = append(nofibStringToList("Hello "), append(name, nofibStringToList("!")))
       writeAt(
-        Tup2(40 - (listLen(reply) / 2), 18),
+        [40 - (listLen(reply) / 2), 18],
         reply,
         moveTo(
-          Tup2(1, 23),
+          [1, 23],
           y => writeString(nofibStringToList("I'm waiting..."), x => pressAnyKey(end, x), y)
         )
       )

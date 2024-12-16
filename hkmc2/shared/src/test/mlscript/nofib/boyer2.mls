@@ -15,32 +15,32 @@ class
 fun lispListEq(x, y) = if x is
   Nill and y is Nill then true
   Atom(a) and y is Atom(b) then listEq(a, b)
-  Conss(Tup2(a, b)) and y is Conss(Tup2(c, d)) and (lispListEq(a, c)) then lispListEq(b, d)
+  Conss([a, b]) and y is Conss([c, d]) and (lispListEq(a, c)) then lispListEq(b, d)
   else false
 
 fun lispmember(e_x) = if e_x is 
-  Tup2(e, Conss(Tup2(x, xs))) and
+  [e, Conss([x, xs])] and
     lispListEq(e, x) then true
-    else lispmember(Tup2(e, xs))
-  Tup2(_, _) then false
+    else lispmember([e, xs])
+  [_, _] then false
   
 fun truep(term_l) = if term_l is
-  Tup2(Nill, _) then false
-  Tup2(Conss(Tup2(Atom("t" :: Nil), Nill), _)) then true
-  Tup2(term, l) then lispmember(Tup2(term, l))
+  [Nill, _] then false
+  [Conss([Atom("t" :: Nil), Nill]), _] then true
+  [term, l] then lispmember([term, l])
 
 fun falsep(term_l) = if term_l is
-  Tup2(Nill, _) then false
-  Tup2(Conss(Tup2(Atom("f" :: Nil), Nill), _)) then true
-  Tup2(term, l) then lispmember(Tup2(term, l))
+  [Nill, _] then false
+  [Conss([Atom("f" :: Nil), Nill]), _] then true
+  [term, l] then lispmember([term, l])
 
 fun tv(x) = if x is Atom(a) then a
 
 fun atom(x) = if x is Atom(_) then true else false
 
-fun car(x) = if x is Conss(Tup2(a, _)) then a else Nill
+fun car(x) = if x is Conss([a, _]) then a else Nill
 
-fun cdr(x) = if x is Conss(Tup2(_, b)) then b else Nill
+fun cdr(x) = if x is Conss([_, b]) then b else Nill
 
 fun cadr(x) = car(cdr(x))
 
@@ -48,58 +48,58 @@ fun caddr(x) = car(cdr(cdr(x)))
 
 fun cadddr(x) = car(cdr(cdr(cdr(x))))
 
-fun tautologyp(f_truelst_falselst) = if f_truelst_falselst is Tup3(f, truelst, falselst) and f is
+fun tautologyp(f_truelst_falselst) = if f_truelst_falselst is [f, truelst, falselst] and f is
   Nill then false
-  Atom(x) then truep(Tup2(Atom(x), truelst))
-  Conss(Tup2(x, y)) and
-    truep(Tup2(Conss(Tup2(x, y)), truelst)) then true
-    falsep(Tup2(Conss(Tup2(x, y)), falselst)) then false
+  Atom(x) then truep([Atom(x), truelst])
+  Conss([x, y]) and
+    truep([Conss([x, y]), truelst]) then true
+    falsep([Conss([x, y]), falselst]) then false
     x is
       Atom("i" :: "f" :: Nil) and
-        truep(Tup2(car(y), truelst)) then
-          tautologyp(Tup3(cadr(y), truelst, falselst))
-        falsep(Tup2(car(y), falselst)) then
-          tautologyp(Tup3(caddr(y), truelst, falselst))
+        truep([car(y), truelst]) then
+          tautologyp([cadr(y), truelst, falselst])
+        falsep([car(y), falselst]) then
+          tautologyp([caddr(y), truelst, falselst])
         else
-          tautologyp(Tup3(cadr(y), Conss(Tup2(car(y), truelst)), falselst)) and tautologyp(Tup3(caddr(y), truelst, Conss(Tup2(car(y), falselst))))
+          tautologyp([cadr(y), Conss([car(y), truelst]), falselst]) and tautologyp([caddr(y), truelst, Conss([car(y), falselst])])
       else false
 
 fun sublist(t) = if t is
-  Nil then Tup2(Nil, Nill)
-  ("(" :: Nil) :: t and sublist(t) is Tup2(r1, l1) and sublist(r1) is Tup2(r2, l2) then Tup2(r2, Conss(Tup2(l1, l2)))
-  (")" :: Nil) :: t then Tup2(t, Nill)
-  h :: t and sublist(t) is Tup2(r, l) then Tup2(r, Conss(Tup2(Atom(h), l)))
+  Nil then [Nil, Nill]
+  ("(" :: Nil) :: t and sublist(t) is [r1, l1] and sublist(r1) is [r2, l2] then [r2, Conss([l1, l2])]
+  (")" :: Nil) :: t then [t, Nill]
+  h :: t and sublist(t) is [r, l] then [r, Conss([Atom(h), l])]
 
 fun mkLispList(ls) = if ls is
-  ("(" :: Nil) :: t and sublist(t) is Tup2(r, l) and r is
+  ("(" :: Nil) :: t and sublist(t) is [r, l] and r is
     Nil then l
     else Nill
   _ then Nill
 
 fun restOfToken(s) = if s is
-  Nil then Tup2(Nil, Nil)
+  Nil then [Nil, Nil]
   h :: t and
-    (h === "(") || (h === ")") || (h === " ") then Tup2(Nil, h :: t)
-    restOfToken(t) is Tup2(a, b) then Tup2(h :: a, b)
+    (h === "(") || (h === ")") || (h === " ") then [Nil, h :: t]
+    restOfToken(t) is [a, b] then [h :: a, b]
 
 fun getToken(s) = if s is
-  Nil then Tup2(Nil, Nil)
+  Nil then [Nil, Nil]
   h :: t and
     (h === " ") then getToken(t)
-    (h === "(") || (h === ")") then Tup2(h :: Nil, t)
-    restOfToken(t) is Tup2(a, b) then Tup2(h :: a, b)
+    (h === "(") || (h === ")") then [h :: Nil, t]
+    restOfToken(t) is [a, b] then [h :: a, b]
 
 fun strToToken(s) = if
   s is Nil then Nil
-  getToken(s) is Tup2(a, b) then a :: strToToken(b)
+  getToken(s) is [a, b] then a :: strToToken(b)
 
 fun assoc(term_x_y) = if term_x_y is
-  Tup2(term, Conss(Tup2(x, y))) and x is
-    Conss(Tup2(Atom(key), rest)) and
+  [term, Conss([x, y])] and x is
+    Conss([Atom(key), rest]) and
       lispListEq(term, Atom(key)) then x
-      else assoc(Tup2(term, y))
+      else assoc([term, y])
     _ then Nill
-  Tup2(_, _) then Nill
+  [_, _] then Nill
 
 type LUTentry = Tup2[String, List[Lisplist]]
 
@@ -110,18 +110,18 @@ object Empty extends LUT
 class Node(x: Tup3[LUT, LUTentry, LUT]) extends LUT
 
 fun addtoLUT(k_l_lut) = if k_l_lut is
-  Tup3(k, l, Empty) then Node(Tup3(Empty, Tup2(k, l :: Nil), Empty))
-  Tup3(k, l, Node(Tup3(left, Tup2(k1, kl), right))) and
-    listEq(k, k1) then Node(Tup3(left, Tup2(k1, l :: kl), right))
-    ltList(k, k1, (x, y) => x < y, (x, y) => x > y) then Node(Tup3(addtoLUT(Tup3(k, l, left)), Tup2(k1, kl), right))
-    else Node(Tup3(left, Tup2(k1, kl), addtoLUT(Tup3(k, l, right))))
+  [k, l, Empty] then Node([Empty, [k, l :: Nil], Empty])
+  [k, l, Node([left, [k1, kl], right])] and
+    listEq(k, k1) then Node([left, [k1, l :: kl], right])
+    ltList(k, k1, (x, y) => x < y, (x, y) => x > y) then Node([addtoLUT([k, l, left]), [k1, kl], right])
+    else Node([left, [k1, kl], addtoLUT([k, l, right])])
 
 fun getLUT(t_lut) = if t_lut is
-  Tup2(t, Empty) then Nil
-  Tup2(t, Node(Tup3(left, Tup2(k, kl), right))) and
+  [t, Empty] then Nil
+  [t, Node([left, [k, kl], right])] and
     listEq(t, k) then kl
-    ltList(t, k, (x, y) => x < y, (x, y) => x > y) then getLUT(Tup2(t, left))
-    else getLUT(Tup2(t, right))
+    ltList(t, k, (x, y) => x < y, (x, y) => x > y) then getLUT([t, left])
+    else getLUT([t, right])
 
 fun makelemmas(rules) = if rules is
   Nil then Nil
@@ -130,10 +130,10 @@ fun makelemmas(rules) = if rules is
 fun addlemma(lspls, term) = if lspls is
   Nill then term
   Atom(x) then throw new Error("error")
-  Conss(Tup2(x, y)) then
+  Conss([x, y]) then
     let z = car(y)
     if listEq(tv(x), nofibStringToList("equal")) and (not(atom(z)))
-    then addtoLUT(Tup3(tv(car(z)), Conss(Tup2(x, y)), term))
+    then addtoLUT([tv(car(z)), Conss([x, y]), term])
     else throw new Error("error")
 
 fun addlemmalst(lspls, term) = if lspls is
@@ -145,31 +145,31 @@ fun addlemmalst(lspls, term) = if lspls is
 fun applysubstlst(alist, y) = if y is
   Nill then Nill
   Atom(x) then throw new Error("error")
-  Conss(Tup2(x, y)) then Conss(Tup2(applysubst(alist, x), applysubstlst(alist, y)))
+  Conss([x, y]) then Conss([applysubst(alist, x), applysubstlst(alist, y)])
 
 fun applysubst(alist, x) = if x is
   Nill then Nill
-  Atom(x) and assoc(Tup2(Atom(x), alist)) is
-    Conss(Tup2(_, y)) then y
+  Atom(x) and assoc([Atom(x), alist]) is
+    Conss([_, y]) then y
     else Atom(x)
-  Conss(Tup2(x, y)) then Conss(Tup2(x, applysubstlst(alist, y)))
+  Conss([x, y]) then Conss([x, applysubstlst(alist, y)])
 //│ ————————————————————————————————————————————————————————————————————————————————
 
 :...
 //│ ————————————————————————————————————————————————————————————————————————————————
 fun onewayunify1lst(l1, l2, u) = if
-  l1 is Nill then Tup2(true, u)
-  onewayunify1(car(l1), car(l2), u) is Tup2(b, u1) and
+  l1 is Nill then [true, u]
+  onewayunify1(car(l1), car(l2), u) is [b, u1] and
     b then onewayunify1lst(cdr(l1), cdr(l2), u1)
-    else Tup2(false, u1)
+    else [false, u1]
 
 fun onewayunify1(t1, t2, u) = if
-  atom(t2) and assoc(Tup2(t2, u)) is
-    Conss(Tup2(_, y)) then Tup2(lispListEq(t1, y), u)
-    else Tup2(true, Conss(Tup2(Conss(Tup2(t2, t1)), u)))
-  atom(t1) then Tup2(false, u)
+  atom(t2) and assoc([t2, u]) is
+    Conss([_, y]) then [lispListEq(t1, y), u]
+    else [true, Conss([Conss([t2, t1]), u])]
+  atom(t1) then [false, u]
   lispListEq(car(t1), car(t2)) then onewayunify1lst(cdr(t1), cdr(t2), u)
-  else Tup2(false, u)
+  else [false, u]
 //│ ————————————————————————————————————————————————————————————————————————————————
 
 fun onewayunify(t1, t2) = onewayunify1(t1, t2, Nill)
@@ -178,25 +178,25 @@ fun onewayunify(t1, t2) = onewayunify1(t1, t2, Nill)
 //│ ————————————————————————————————————————————————————————————————————————————————
 fun rewritewithlemmas(t, l, term) = if l is
   Nil then t
-  lh :: lt and onewayunify(t, cadr(lh)) is Tup2(b, u) and
+  lh :: lt and onewayunify(t, cadr(lh)) is [b, u] and
     b then rewrite(applysubst(u, caddr(lh)), term)
     else rewritewithlemmas(t, lt, term)
 
 fun rewriteargs(x, term) = if x is
   Nill then Nill
   Atom(_) then throw new Error("error")
-  Conss(Tup2(x, y)) then Conss(Tup2(rewrite(x, term), rewriteargs(y, term)))
+  Conss([x, y]) then Conss([rewrite(x, term), rewriteargs(y, term)])
 
 fun rewrite(x, term) = if x is
   Nill then Nill
   Atom(x) then Atom(x)
-  Conss(Tup2(l1, l2)) then rewritewithlemmas(Conss(Tup2(l1, rewriteargs(l2, term))), getLUT(Tup2(tv(l1), term)), term)
+  Conss([l1, l2]) then rewritewithlemmas(Conss([l1, rewriteargs(l2, term)]), getLUT([tv(l1), term]), term)
 //│ ————————————————————————————————————————————————————————————————————————————————
 
 let statement = mkLispList(strToToken(
   nofibStringToList("( implies ( and ( implies x y )( and ( implies y z )( and ( implies z u )( implies u w ) ) ) )( implies x w ) )")
 ))
-//│ statement = Conss { a: Tup2 { fst: Atom { a: [Cons] }, snd: Conss { a: [Tup2] } } }
+//│ statement = Conss { a: [ Atom { a: [Cons] }, Conss { a: [Array] } ] }
 
 fun subterm(i) =
   let c = stringConcat("c", stringOfInt(i))
@@ -331,14 +331,10 @@ let rules =
 
 let lemmas = addlemmalst(makelemmas(rules), Empty)
 //│ > Node {
-//│ >   x: Tup3 {
-//│ >     fst: Node { x: [Tup3] },
-//│ >     snd: Tup2 { fst: [Cons], snd: [Cons] },
-//│ >     thd: Node { x: [Tup3] }
-//│ >   }
+//│ >   x: [ Node { x: [Array] }, [ [Cons], [Cons] ], Node { x: [Array] } ]
 //│ lemmas = }
 
-fun tautp(term) = tautologyp(Tup3(rewrite(term, lemmas), Nill, Nill))
+fun tautp(term) = tautologyp([rewrite(term, lemmas), Nill, Nill])
 
 fun teststatement(i) = applysubst(subterm(i), statement)
 

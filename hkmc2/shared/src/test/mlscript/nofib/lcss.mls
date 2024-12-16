@@ -6,9 +6,9 @@
 
 fun algb2(x, k0j1, k1j1, yss) = if yss is
   Nil then Nil
-  Tup2(y, k0j) :: ys then
+  [y, k0j] :: ys then
     let kjcurr = if x == y then k0j1 + 1 else max(k1j1, k0j)
-    Tup2(y, kjcurr) :: algb2(x, k0j, kjcurr, ys)
+    [y, kjcurr] :: algb2(x, k0j, kjcurr, ys)
 
 fun algb1(xss, yss) = if xss is
   Nil then map(snd, yss)
@@ -16,7 +16,7 @@ fun algb1(xss, yss) = if xss is
 
 fun algb(xs, ys) =
   fun listcomp_fun(listcomp_fun_para) = if listcomp_fun_para is
-      listcomp_fun_ls_h :: listcomp_fun_ls_t then Tup2(listcomp_fun_ls_h, 0) :: listcomp_fun(listcomp_fun_ls_t)
+      listcomp_fun_ls_h :: listcomp_fun_ls_t then [listcomp_fun_ls_h, 0] :: listcomp_fun(listcomp_fun_ls_t)
       Nil then Nil
   
   0 :: algb1(xs, listcomp_fun(ys))
@@ -24,7 +24,7 @@ fun algb(xs, ys) =
 
 fun findk(k, km, m, ls) = if ls is
   Nil then km
-  Tup2(x,y) :: xys then if (x + y) >= m then findk(k+1, k, x+y, xys) else findk(k+1, km, m, xys)
+  [x,y] :: xys then if (x + y) >= m then findk(k+1, k, x+y, xys) else findk(k+1, km, m, xys)
 
 fun algc(m, n, xs, ys) = if
   ys is Nil then x => x

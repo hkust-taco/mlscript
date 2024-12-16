@@ -33,10 +33,10 @@ fun insert(x, ys) = if ys is
 
 fun clauseHelper(p, x) = if p is
   Dis(p, q) then clauseHelper(p, clauseHelper(q, x))
-  Sym(s) and x is Tup2(c, a) then Tup2(insert(s, c), a)
-  Not(Sym(s)) and x is Tup2(c, a) then Tup2(c, insert(s, a))
+  Sym(s) and x is [c, a] then [insert(s, c), a]
+  Not(Sym(s)) and x is [c, a] then [c, insert(s, a)]
 
-fun clause(p) = clauseHelper(p, Tup2(Nil, Nil))
+fun clause(p) = clauseHelper(p, [Nil, Nil])
 
 fun conjunct(p) = if p is Con(_, _) then true else false
 
@@ -112,7 +112,7 @@ fun splitHelper(p, a) = if p is
 
 fun split(p) = splitHelper(p, Nil)
 
-fun tautclause(c_a) = if c_a is Tup2(c, a) then
+fun tautclause(c_a) = if c_a is [c, a] then
   fun lscomp(ls) = if ls is
     Nil then Nil
     h :: t and
@@ -126,7 +126,7 @@ fun uniclHelper(p, x) =
 
 fun unicl(a) = foldr(uniclHelper, Nil, a)
 
-fun disp(l_r) = if l_r is Tup2(l, r) then
+fun disp(l_r) = if l_r is [l, r] then
   append(
     interleave(l, spaces(listLen(l))),
     append(

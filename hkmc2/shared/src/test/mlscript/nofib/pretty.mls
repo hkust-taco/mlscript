@@ -47,11 +47,11 @@ fun mkIndent(n, s) = if n
 //│ ————————————————————————————————————————————————————————————————————————————————
 fun flattenS(nlp, seqs) = if seqs is
   Nil then Nil
-  Tup2(col, seq) :: seqs then flatten(col, nlp, seq, seqs)
+  [col, seq] :: seqs then flatten(col, nlp, seq, seqs)
 
 fun flatten(n, nlp, cseq, seqs) = if cseq is
   CNil then flattenS(nlp, seqs)
-  CAppend(seq1, seq2) then flatten(n, nlp, seq1, Tup2(n, seq2) :: seqs)
+  CAppend(seq1, seq2) then flatten(n, nlp, seq1, [n, seq2] :: seqs)
   CIndent(n_, seq) then flatten(n_ + n, nlp, seq, seqs)
   CNewline then "\n" :: flattenS(true, seqs)
   CStr(s) and

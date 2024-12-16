@@ -14,7 +14,7 @@ fun stack(ls) = foldr1((a, b) => append(a, b), ls)
 
 fun spread(ls) = foldr1((a, b) => zipWith((a, b) => append(a, b), a, b), ls)
 
-fun emptyPic(hw) = if hw is Tup2(h, w) then replicate(h, replicate(w, " "))
+fun emptyPic(hw) = if hw is [h, w] then replicate(h, replicate(w, " "))
 
 fun groop(n, xs) = if xs is
   Nil then Nil
@@ -24,10 +24,10 @@ fun block(n, t)  = stack(map(spread, groop(n, t)))
 
 fun blockT(n, t) = stack(map(stack, groop(n, t)))
 
-fun lframe(mn, p) = if mn is Tup2(m,n) then
+fun lframe(mn, p) = if mn is [m,n] then
   let h = height(p)
   let w = width(p)
-  append(zipWith(append, p, emptyPic(Tup2(h, n - w))), emptyPic(Tup2(m - h, n)))
+  append(zipWith(append, p, emptyPic([h, n - w])), emptyPic([m - h, n]))
 
 fun leap(year) = if
   intMod(year, 100) == 0 then intMod(year, 400) == 0
@@ -81,12 +81,12 @@ fun cjustify(n, s) =
   append(append(space(halfm), s), space(m - halfm))
 
 fun cal(year) =
-  let side = emptyPic(Tup2(8, 2))
-  let end = emptyPic(Tup2(1, 25))
+  let side = emptyPic([8, 2])
+  let end = emptyPic([1, 25])
   let daynames = nofibStringToList(" Su Mo Tu We Th Fr Sa") :: Nil
-  fun banner(yr) = append(cjustify(75, nofibStringToList(stringOfInt(yr))) :: Nil, emptyPic(Tup2(1, 75)))
+  fun banner(yr) = append(cjustify(75, nofibStringToList(stringOfInt(yr))) :: Nil, emptyPic([1, 75]))
   fun body(yr) = block(3, map(x => pad(pic(x)), months(yr)))
-  fun pic(mnfdml) = if mnfdml is Tup3(mn, fd, ml) then append(title(mn), table(fd, ml))
+  fun pic(mnfdml) = if mnfdml is [mn, fd, ml] then append(title(mn), table(fd, ml))
   fun pad(p) = append(zipWith(append, zipWith(append, side, p), side), end)
   fun title(mn) = cjustify(21, mn) :: Nil
   fun table(fd, ml) = append(daynames, entries(fd, ml))

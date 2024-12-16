@@ -17,7 +17,7 @@ object
   LT
   EQ
 
-fun compareIntInt(ab, cd) = if ab is Tup2(a, b) and cd is Tup2(c, d) and
+fun compareIntInt(ab, cd) = if ab is [a, b] and cd is [c, d] and
   a > c then GT
   a < c then LT
   b > d then GT
@@ -111,10 +111,10 @@ class
   Choose(s: List[Solution]) extends Solution
   Fail(b: Board, s: Tup2[Int, Int]) extends Solution
 
-fun addIntInt(row_col, orow_ocol) = if row_col is Tup2(row, col) and orow_ocol is Tup2(orow, ocol) then
-  Tup2(row + orow, col + ocol)
+fun addIntInt(row_col, orow_ocol) = if row_col is [row, col] and orow_ocol is [orow, ocol] then
+  [row + orow, col + ocol]
 
-fun next(row_col) =  if row_col is Tup2(row, col) then Tup2(row, col + 1)
+fun next(row_col) =  if row_col is [row, col] then [row, col + 1]
 
 let maxRow = 8
 //│ maxRow = 8
@@ -129,7 +129,7 @@ fun check(bd, sq) = mapLookup(sq, bd)
 
 fun extend(bd, sq, id) = insert(sq, id, bd)
 
-fun extend_maybe(bd, sq, id) = if sq is Tup2(row, col) and
+fun extend_maybe(bd, sq, id) = if sq is [row, col] and
   (row > maxRow) || (col < 1) || (col > maxCol) then None
   check(bd, sq) is
     Some(_) then None
@@ -138,7 +138,7 @@ fun extend_maybe(bd, sq, id) = if sq is Tup2(row, col) and
 fun pickOne(xs) =
   fun go(f, xs) = if xs is
     Nil then Nil
-    x :: xs then Tup2(x, f(xs)) :: go(p => x :: f(p), xs)
+    x :: xs then [x, f(xs)] :: go(p => x :: f(p), xs)
   go(x => x, xs)
 
 fun fit(bd, sq, id, os) = if os is
@@ -149,21 +149,21 @@ fun fit(bd, sq, id, os) = if os is
 
 :...
 //│ ————————————————————————————————————————————————————————————————————————————————
-fun tryy(sq, se, bd, id_is_ps) = if id_is_ps is Tup3(id, os, ps) and fit(bd, sq, id, os) is
+fun tryy(sq, se, bd, id_is_ps) = if id_is_ps is [id, os, ps] and fit(bd, sq, id, os) is
   Some(bd1) then Some(search(next(sq), flip(se), bd1, ps))
   None then None
 
-fun search(row_col, sey, bd, ps) = if row_col is Tup2(row, col) and
+fun search(row_col, sey, bd, ps) = if row_col is [row, col] and
   ps is Nil then Soln(bd)
-  col === (maxCol + 1) then search(Tup2(row + 1, 1), flip(sey), bd, ps)
+  col === (maxCol + 1) then search([row + 1, 1], flip(sey), bd, ps)
   check(bd, row_col) is Some(_) then search(next(row_col), flip(sey), bd, ps)
   else
     fun lscomp1(ls) = if ls is
       Nil then Nil
-      Tup2(P(id, ms, fs), ps) :: ls then
+      [P(id, ms, fs), ps] :: ls then
         fun lscomp2(ls2) = if ls2 is
           Nil then lscomp1(ls)
-          os :: ls then Tup3(id, os, ps) :: lscomp2(ls)
+          os :: ls then [id, os, ps] :: lscomp2(ls)
         lscomp2(if sey is Male then ms else fs)
     let choices = lscomp1(pickOne(ps))
     if mapMaybe(x => tryy(row_col, sey, bd, x), choices) is
@@ -173,14 +173,14 @@ fun search(row_col, sey, bd, ps) = if row_col is Tup2(row, col) and
 
 let nPiece = P(
   "n",
-  (Tup2(0,1) :: Tup2(1,1) :: Tup2(2,1) :: Tup2(2,2) :: Nil) ::
-  (Tup2(1,0) :: Tup2(1,-1) :: Tup2(1,-2) :: Tup2(2,-2) :: Nil) :: Nil,
+  ([0,1] :: [1,1] :: [2,1] :: [2,2] :: Nil) ::
+  ([1,0] :: [1,-1] :: [1,-2] :: [2,-2] :: Nil) :: Nil,
   Nil
 )
 //│ > P {
 //│ >   i: 'n',
 //│ >   a: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Cons { head: [Cons], tail: [Nil] }
 //│ >   },
 //│ >   b: Nil { class: [class Nil] }
@@ -188,111 +188,111 @@ let nPiece = P(
 
 let mPiece = P(
   "m",
-  (Tup2(0,1) :: Tup2(1,0) :: Tup2(2,0) :: Tup2(3,0) :: Nil) :: Nil,
-  (Tup2(0,1) :: Tup2(0,2) :: Tup2(0,3) :: Tup2(1,3) :: Nil) ::
-  (Tup2(1,0) :: Tup2(2,0) :: Tup2(3,0) :: Tup2(3,-1) :: Nil) :: Nil
+  ([0,1] :: [1,0] :: [2,0] :: [3,0] :: Nil) :: Nil,
+  ([0,1] :: [0,2] :: [0,3] :: [1,3] :: Nil) ::
+  ([1,0] :: [2,0] :: [3,0] :: [3,-1] :: Nil) :: Nil
 )
 //│ > P {
 //│ >   i: 'm',
 //│ >   a: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Nil { class: [class Nil] }
 //│ >   },
 //│ >   b: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Cons { head: [Cons], tail: [Nil] }
 //│ >   }
 //│ mPiece = }
 
 let lPiece = P(
   "l",
-  (Tup2(0,1) :: Tup2(0,2) :: Tup2(0,3) :: Tup2(1,2) :: Nil) ::
-  (Tup2(1,0) :: Tup2(2,0) :: Tup2(3,0) :: Tup2(2,-1) :: Nil) :: Nil,
-  (Tup2(1,-1) :: Tup2(1,0) :: Tup2(1,1) :: Tup2(1,2) :: Nil) ::
-  (Tup2(1,0) :: Tup2(2,0) :: Tup2(3,0) :: Tup2(1,1) :: Nil) :: Nil
+  ([0,1] :: [0,2] :: [0,3] :: [1,2] :: Nil) ::
+  ([1,0] :: [2,0] :: [3,0] :: [2,-1] :: Nil) :: Nil,
+  ([1,-1] :: [1,0] :: [1,1] :: [1,2] :: Nil) ::
+  ([1,0] :: [2,0] :: [3,0] :: [1,1] :: Nil) :: Nil
 )
 //│ > P {
 //│ >   i: 'l',
 //│ >   a: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Cons { head: [Cons], tail: [Nil] }
 //│ >   },
 //│ >   b: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Cons { head: [Cons], tail: [Nil] }
 //│ >   }
 //│ lPiece = }
 
 let kPiece = P(
   "k",
-  (Tup2(0,1) :: Tup2(1,0) :: Tup2(2,0) :: Tup2(2,-1) :: Nil) :: Nil,
-  (Tup2(1,0) :: Tup2(1,1) :: Tup2(1,2) :: Tup2(2,2) :: Nil) :: Nil
+  ([0,1] :: [1,0] :: [2,0] :: [2,-1] :: Nil) :: Nil,
+  ([1,0] :: [1,1] :: [1,2] :: [2,2] :: Nil) :: Nil
 )
 //│ > P {
 //│ >   i: 'k',
 //│ >   a: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Nil { class: [class Nil] }
 //│ >   },
 //│ >   b: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Nil { class: [class Nil] }
 //│ >   }
 //│ kPiece = }
 
 let jPiece = P(
   "j",
-  (Tup2(0,1) :: Tup2(0,2) :: Tup2(0,3) :: Tup2(1,1) :: Nil) ::
-  (Tup2(1,0) :: Tup2(2,0) :: Tup2(3,0) :: Tup2(1,-1) :: Nil) ::
-  (Tup2(1,-2) :: Tup2(1,-1) :: Tup2(1,0) :: Tup2(1,1) :: Nil) :: Nil,
-  (Tup2(1,0) :: Tup2(2,0) :: Tup2(3,0) :: Tup2(2,2) :: Nil) :: Nil
+  ([0,1] :: [0,2] :: [0,3] :: [1,1] :: Nil) ::
+  ([1,0] :: [2,0] :: [3,0] :: [1,-1] :: Nil) ::
+  ([1,-2] :: [1,-1] :: [1,0] :: [1,1] :: Nil) :: Nil,
+  ([1,0] :: [2,0] :: [3,0] :: [2,2] :: Nil) :: Nil
 )
 //│ > P {
 //│ >   i: 'j',
 //│ >   a: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Cons { head: [Cons], tail: [Cons] }
 //│ >   },
 //│ >   b: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Nil { class: [class Nil] }
 //│ >   }
 //│ jPiece = }
 
 let iPiece = P(
   "i",
-  (Tup2(1,0) :: Tup2(2,0) :: Tup2(2,1) :: Tup2(3,1) :: Nil) ::
-  (Tup2(0,1) :: Tup2(0,2) :: Tup2(1,0) :: Tup2(1,-1) :: Nil) ::
-  (Tup2(1,0) :: Tup2(1,1) :: Tup2(2,1) :: Tup2(3,1) :: Nil) :: Nil,
-  (Tup2(0,1) :: Tup2(1,0) :: Tup2(1,-1) :: Tup2(1,-2) :: Nil) :: Nil
+  ([1,0] :: [2,0] :: [2,1] :: [3,1] :: Nil) ::
+  ([0,1] :: [0,2] :: [1,0] :: [1,-1] :: Nil) ::
+  ([1,0] :: [1,1] :: [2,1] :: [3,1] :: Nil) :: Nil,
+  ([0,1] :: [1,0] :: [1,-1] :: [1,-2] :: Nil) :: Nil
 )
 //│ > P {
 //│ >   i: 'i',
 //│ >   a: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Cons { head: [Cons], tail: [Cons] }
 //│ >   },
 //│ >   b: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Nil { class: [class Nil] }
 //│ >   }
 //│ iPiece = }
 
 let hPiece = P(
   "h",
-  (Tup2(0,1) :: Tup2(1,1) :: Tup2(1,2) :: Tup2(2,2) :: Nil) ::
-  (Tup2(1,0) :: Tup2(1,-1) :: Tup2(2,-1) :: Tup2(2,-2) :: Nil) ::
-  (Tup2(1,0) :: Tup2(1,1) :: Tup2(2,1) :: Tup2(2,2) :: Nil) :: Nil,
-  (Tup2(0,1) :: Tup2(1,0) :: Tup2(1,-1) :: Tup2(2,-1) :: Nil) :: Nil
+  ([0,1] :: [1,1] :: [1,2] :: [2,2] :: Nil) ::
+  ([1,0] :: [1,-1] :: [2,-1] :: [2,-2] :: Nil) ::
+  ([1,0] :: [1,1] :: [2,1] :: [2,2] :: Nil) :: Nil,
+  ([0,1] :: [1,0] :: [1,-1] :: [2,-1] :: Nil) :: Nil
 )
 //│ > P {
 //│ >   i: 'h',
 //│ >   a: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Cons { head: [Cons], tail: [Cons] }
 //│ >   },
 //│ >   b: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Nil { class: [class Nil] }
 //│ >   }
 //│ hPiece = }
@@ -300,72 +300,72 @@ let hPiece = P(
 let gPiece = P(
   "g",
   Nil,
-  (Tup2(0,1) :: Tup2(1,1) :: Tup2(1,2) :: Tup2(1,3) :: Nil) ::
-  (Tup2(1,0) :: Tup2(1,-1) :: Tup2(2,-1) :: Tup2(3,-1) :: Nil) ::
-  (Tup2(0,1) :: Tup2(0,2) :: Tup2(1,2) :: Tup2(1,3) :: Nil) ::
-  (Tup2(1,0) :: Tup2(2,0) :: Tup2(2,-1) :: Tup2(3,-1) :: Nil) :: Nil
+  ([0,1] :: [1,1] :: [1,2] :: [1,3] :: Nil) ::
+  ([1,0] :: [1,-1] :: [2,-1] :: [3,-1] :: Nil) ::
+  ([0,1] :: [0,2] :: [1,2] :: [1,3] :: Nil) ::
+  ([1,0] :: [2,0] :: [2,-1] :: [3,-1] :: Nil) :: Nil
 )
 //│ > P {
 //│ >   i: 'g',
 //│ >   a: Nil { class: [class Nil] },
 //│ >   b: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Cons { head: [Cons], tail: [Cons] }
 //│ >   }
 //│ gPiece = }
 
 let fPiece = P(
   "f",
-  (Tup2(0,1) :: Tup2(1,1) :: Tup2(2,1) :: Tup2(3,1) :: Nil) ::
-  (Tup2(1,0) :: Tup2(1,-1) :: Tup2(1,-2) :: Tup2(1,-3) :: Nil) ::
-  (Tup2(1,0) :: Tup2(2,0) :: Tup2(3,0) :: Tup2(3,1) :: Nil) :: Nil,
-  (Tup2(0,1) :: Tup2(0,2) :: Tup2(0,3) :: Tup2(1,0) :: Nil) :: Nil
+  ([0,1] :: [1,1] :: [2,1] :: [3,1] :: Nil) ::
+  ([1,0] :: [1,-1] :: [1,-2] :: [1,-3] :: Nil) ::
+  ([1,0] :: [2,0] :: [3,0] :: [3,1] :: Nil) :: Nil,
+  ([0,1] :: [0,2] :: [0,3] :: [1,0] :: Nil) :: Nil
 )
 //│ > P {
 //│ >   i: 'f',
 //│ >   a: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Cons { head: [Cons], tail: [Cons] }
 //│ >   },
 //│ >   b: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Nil { class: [class Nil] }
 //│ >   }
 //│ fPiece = }
 
 let ePiece = P(
   "e",
-  (Tup2(0,1) :: Tup2(1,1) :: Tup2(1,2) :: Nil) ::
-  (Tup2(1,0) :: Tup2(1,-1) :: Tup2(2,-1) :: Nil) :: Nil,
-  (Tup2(0,1) :: Tup2(1,1) :: Tup2(1,2) :: Nil) ::
-  (Tup2(1,0) :: Tup2(1,-1) :: Tup2(2,-1) :: Nil) :: Nil
+  ([0,1] :: [1,1] :: [1,2] :: Nil) ::
+  ([1,0] :: [1,-1] :: [2,-1] :: Nil) :: Nil,
+  ([0,1] :: [1,1] :: [1,2] :: Nil) ::
+  ([1,0] :: [1,-1] :: [2,-1] :: Nil) :: Nil
 )
 //│ > P {
 //│ >   i: 'e',
 //│ >   a: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Cons { head: [Cons], tail: [Nil] }
 //│ >   },
 //│ >   b: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Cons { head: [Cons], tail: [Nil] }
 //│ >   }
 //│ ePiece = }
 
 let dPiece = P(
   "d",
-  (Tup2(0,1) :: Tup2(1,1) :: Tup2(2,1) :: Nil) ::
-  (Tup2(1,0) :: Tup2(1,-1) :: Tup2(1,-2) :: Nil) :: Nil,
-  (Tup2(1,0) :: Tup2(2,0) :: Tup2(2,1) :: Nil) :: Nil
+  ([0,1] :: [1,1] :: [2,1] :: Nil) ::
+  ([1,0] :: [1,-1] :: [1,-2] :: Nil) :: Nil,
+  ([1,0] :: [2,0] :: [2,1] :: Nil) :: Nil
 )
 //│ > P {
 //│ >   i: 'd',
 //│ >   a: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Cons { head: [Cons], tail: [Nil] }
 //│ >   },
 //│ >   b: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Nil { class: [class Nil] }
 //│ >   }
 //│ dPiece = }
@@ -373,35 +373,35 @@ let dPiece = P(
 let cPiece = P(
   "c",
   Nil,
-  (Tup2(0,1) :: Tup2(0,2) :: Tup2(1,1) :: Nil) ::
-  (Tup2(1,0) :: Tup2(1,-1) :: Tup2(2,0) :: Nil) ::
-  (Tup2(1,-1) :: Tup2(1,0) :: Tup2(1,1) :: Nil) ::
-  (Tup2(1,0) :: Tup2(1,1) :: Tup2(2,0) :: Nil) :: Nil
+  ([0,1] :: [0,2] :: [1,1] :: Nil) ::
+  ([1,0] :: [1,-1] :: [2,0] :: Nil) ::
+  ([1,-1] :: [1,0] :: [1,1] :: Nil) ::
+  ([1,0] :: [1,1] :: [2,0] :: Nil) :: Nil
 )
 //│ > P {
 //│ >   i: 'c',
 //│ >   a: Nil { class: [class Nil] },
 //│ >   b: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Cons { head: [Cons], tail: [Cons] }
 //│ >   }
 //│ cPiece = }
 
 let bPiece = P(
   "b",
-  (Tup2(0,1) :: Tup2(0,2) :: Tup2(1,2) :: Nil) ::
-  (Tup2(1,0) :: Tup2(2,0) :: Tup2(2,-1) :: Nil) ::
-  (Tup2(0,1) :: Tup2(1,0) :: Tup2(2,0) :: Nil) :: Nil,
-  (Tup2(1,0) :: Tup2(1,1) :: Tup2(1,2) :: Nil) :: Nil
+  ([0,1] :: [0,2] :: [1,2] :: Nil) ::
+  ([1,0] :: [2,0] :: [2,-1] :: Nil) ::
+  ([0,1] :: [1,0] :: [2,0] :: Nil) :: Nil,
+  ([1,0] :: [1,1] :: [1,2] :: Nil) :: Nil
 )
 //│ > P {
 //│ >   i: 'b',
 //│ >   a: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Cons { head: [Cons], tail: [Cons] }
 //│ >   },
 //│ >   b: Cons {
-//│ >     head: Cons { head: [Tup2], tail: [Cons] },
+//│ >     head: Cons { head: [Array], tail: [Cons] },
 //│ >     tail: Nil { class: [class Nil] }
 //│ >   }
 //│ bPiece = }
@@ -479,10 +479,10 @@ fun annotSize(p) = if p is
 fun display(s) = if s is
   Soln(bd) then vcat(text(nofibStringToList("Success!")) :: nest(2, displayBoard(bd)) :: Nil)
   Choose(ss) then vcat(map(display, ss))
-  Fail(bd, Tup2(row, col)) then Empty
+  Fail(bd, [row, col]) then Empty
 
 fun displayBoard(bd) =
-  fun sq(n, col) = if check(bd, Tup2(n, col)) is
+  fun sq(n, col) = if check(bd, [n, col]) is
     Some(id) then char(id)
     None then char(".")
   fun row(n) = hcat(map(col => sq(n, col), enumFromTo(1, maxCol)))
@@ -490,16 +490,16 @@ fun displayBoard(bd) =
 
 fun eliminateEmpty(cons, p, g, q) = if p is
   Empty then q
-  else Tup2(
+  else [
     NotEmpty,
     if q is
-      Tup2(NotEmpty, q1) then cons(p, g, q1)
-      Tup2(IsEmpty, _) then p
-  )
+      [NotEmpty, q1] then cons(p, g, q1)
+      [IsEmpty, _] then p
+  ]
 
 fun reduceVert(doc) = if doc is
   Above(p, g, q) then eliminateEmpty((a, b, c) => Above(a, b, c), snd(reduceVert(p)), g, reduceVert(q))
-  else Tup2(NotEmpty, doc)
+  else [NotEmpty, doc]
 
 fun vcat(ls) = snd(reduceVert(foldr((p, q) => Above(p, false, q), Empty, ls)))
 
@@ -511,7 +511,7 @@ fun char(c) = TextBeside(NoAnnot(Chr(c), 1), Empty)
 
 fun reduceHoriz(doc) = if doc is
   Beside(p, g, q) then eliminateEmpty((a, b, c) => Beside(a, b, c), snd(reduceHoriz(p)), g, reduceHoriz(q))
-  else Tup2(NotEmpty, doc)
+  else [NotEmpty, doc]
 
 fun hcat(ls) = snd(reduceHoriz(foldr((p, q) => Beside(p, false, q), Empty, ls)))
 
@@ -692,8 +692,8 @@ fun nicest(w, r, p, q) = nicest1(w, r, 0, p, q)
 
 
 fun testLastPiece_nofib() =
-  let initialBoard = fromSome(fit(emptyBoard, Tup2(1, 1), "a", Tup2(1, 0) :: Tup2(1, 1) :: Nil))
-  let solutions = search(Tup2(1,2), Female, initialBoard, initialPieces)
+  let initialBoard = fromSome(fit(emptyBoard, [1, 1], "a", [1, 0] :: [1, 1] :: Nil))
+  let solutions = search([1,2], Female, initialBoard, initialPieces)
   printDoc(display(solutions))
 
 print(nofibListToString(testLastPiece_nofib()))

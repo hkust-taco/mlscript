@@ -9,7 +9,7 @@ fun unlines(ls) = concat(map(x => append(x, ("\n" :: Nil)), ls))
 
 fun lookup(k, t) = if t is
   Nil then None
-  Tup2(x, v) :: t then if k === x then Some(v) else lookup(k, t)
+  [x, v] :: t then if k === x then Some(v) else lookup(k, t)
   
 fun delete_(xs, e) = deleteBy((x, y) => x === y, e, xs)
 
@@ -20,21 +20,21 @@ class StateT[S, M, A](run)
 fun runStateT(m, s) = if m is StateT(run) then run(s)
 
 fun bind(m, f) =
-  StateT(s => concat(map(x => if x is Tup2(a, ss) then runStateT(f(a), ss), runStateT(m, s))))
+  StateT(s => concat(map(x => if x is [a, ss] then runStateT(f(a), ss), runStateT(m, s))))
 
-fun return_(a) = StateT(s => Tup2(a, s) :: Nil)
+fun return_(a) = StateT(s => [a, s] :: Nil)
 
 fun mapM(f, ls) = foldr((a, r) => bind(f(a), x => bind(r, xs => return_(x :: xs))), return_(Nil), ls)
 
-fun lift(ls) = StateT(s => concat(map(x => Tup2(x, s) :: Nil, ls)))
+fun lift(ls) = StateT(s => concat(map(x => [x, s] :: Nil, ls)))
 
-fun execStateT(m, s) = concat(map(x => if x is Tup2(a, s) then s :: Nil, runStateT(m, s)))
+fun execStateT(m, s) = concat(map(x => if x is [a, s] then s :: Nil, runStateT(m, s)))
 
-fun guard(b) = if b then StateT(s => Tup2(Unit, s) :: Nil) else StateT(s => Nil)
+fun guard(b) = if b then StateT(s => [Unit, s] :: Nil) else StateT(s => Nil)
 
-fun put(s) = StateT(x => Tup2(Unit, s) :: Nil)
+fun put(s) = StateT(x => [Unit, s] :: Nil)
 
-let get = StateT(s => Tup2(s, s) :: Nil)
+let get = StateT(s => [s, s] :: Nil)
 //│ get = StateT { run: [Function (anonymous)] }
 
 class Digits(i: List[Int], c: List[Tup2[Char, Int]])
@@ -48,11 +48,11 @@ fun permute(c) =
     get,
     st =>
       bind(
-        let xs = digits(st) in lift(map(x => Tup2(x, listDiff(xs, x :: Nil)), xs)),
+        let xs = digits(st) in lift(map(x => [x, listDiff(xs, x :: Nil)], xs)),
         iis =>
-          if iis is Tup2(i, iss) then
+          if iis is [i, iss] then
             bind(
-              put(Digits(iss, Tup2(c, i) :: digitEnv(st))),
+              put(Digits(iss, [c, i] :: digitEnv(st))),
               _p => return_(i)
             )
       )
@@ -99,7 +99,7 @@ fun puzzle(top, bot) =
   if
     listLen(nubBy((x,y) => x === y, append(concat(top), bot))) > 10 then throw Error("error")
     topVal != botVal then throw Error("error")
-    else unlines(map(x => if x is Tup2(c, i) then append(append(c :: Nil, nofibStringToList(" => ")), nofibStringToList(stringOfInt(i))), env))
+    else unlines(map(x => if x is [c, i] then append(append(c :: Nil, nofibStringToList(" => ")), nofibStringToList(stringOfInt(i))), env))
 
 fun testCryptarithm2_nofib(n) =
   let args =

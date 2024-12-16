@@ -27,7 +27,7 @@ fun zipWith3(f, xs, ys, zs) = if
   else Nil
 
 fun zip3(xs, ys, zs) = if
-  xs is hx :: tx and ys is hy :: ty and zs is hz :: tz then Tup3(hx, hy, hz) :: zip3(tx, ty, tz)
+  xs is hx :: tx and ys is hy :: ty and zs is hz :: tz then [hx, hy, hz] :: zip3(tx, ty, tz)
   else Nil
 
 fun lzfy(ls) = lazy of () =>
@@ -62,7 +62,7 @@ let start =
 //│ >   }
 //│ start = }
 
-fun elt(a_b_c, d_e_f, g_h_i) = if a_b_c is Tup3(a, b, c) and d_e_f is Tup3(d, e, f) and g_h_i is Tup3(g, h, i) then
+fun elt(a_b_c, d_e_f, g_h_i) = if a_b_c is [a, b, c] and d_e_f is [d, e, f] and g_h_i is [g, h, i] then
   let tot = a + b + c + d + f + g + h + i
   if
     tot < 2 || tot > 3 then 0
@@ -75,7 +75,7 @@ fun shiftl(x, xs) = append(init(xs), x :: Nil)
 
 fun shift(x, xs) = zip3(shiftr(x, xs), xs, shiftl(x, xs))
 
-fun row(last_this_next) = if last_this_next is Tup3(last, this_, next) then
+fun row(last_this_next) = if last_this_next is [last, this_, next] then
   zipWith3(elt, shift(0, last), shift(0, this_), shift(0, next))
 
 fun gen(n, board) = map(row, shift(replicate(n, 0), board))
@@ -91,7 +91,7 @@ fun limit(ls) = if force(ls) is
     listEqBy(listEq, x, y) then x :: Nil
     else x :: limit(lazy of () => LzCons(y, xs))
 
-fun disp(gen_xss) = if gen_xss is Tup2(genn, xss) then lazy of () =>
+fun disp(gen_xss) = if gen_xss is [genn, xss] then lazy of () =>
   append(
     genn,
     append(

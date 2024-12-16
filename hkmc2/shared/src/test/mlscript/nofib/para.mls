@@ -13,19 +13,19 @@ fun unwords(ws) = if ws is
     append(w, go(ws))
 
 fun break_(p, xs) = if xs is
-  Nil then Tup2(Nil, Nil)
+  Nil then [Nil, Nil]
   x :: xs and
-    p(x) then Tup2(Nil, x :: xs)
-    break_(p, xs) is Tup2(ys, zs) then Tup2(x :: ys, zs)
+    p(x) then [Nil, x :: xs]
+    break_(p, xs) is [ys, zs] then [x :: ys, zs]
 
 fun isSpace(c) = c === " "
 
 fun words(s) = if dropWhile(isSpace, s) is
   Nil then Nil
   h :: t and
-    break_(isSpace, h :: t) is Tup2(w, s_) then w :: words(s_)
+    break_(isSpace, h :: t) is [w, s_] then w :: words(s_)
 
-fun lines(s) = if break_(x => x === "\n", s) is Tup2(l, s_) then
+fun lines(s) = if break_(x => x === "\n", s) is [l, s_] then
   Cons(
     l,
     if s_ is
@@ -87,11 +87,11 @@ fun par0(x) = minWith(cost, filter(feasible, formats(x)))
 
 fun fitH(ls) = fits(head(ls))
 
-fun fst3(a_b_c) = if a_b_c is Tup3(a, b, c) then a
+fun fst3(a_b_c) = if a_b_c is [a, b, c] then a
 
-fun snd3(a_b_c) = if a_b_c is Tup3(a, b, c) then b
+fun snd3(a_b_c) = if a_b_c is [a, b, c] then b
 
-fun thd3(a_b_c) = if a_b_c is Tup3(a, b, c) then c
+fun thd3(a_b_c) = if a_b_c is [a, b, c] then c
 
 fun width_tl(a_b_c) = fst3(a_b_c)
 
@@ -100,50 +100,47 @@ fun cost_tl(a_b_c) = snd3(a_b_c)
 fun len_tl(a_b_c) = thd3(a_b_c)
 
 fun tile(ws, a_b) = if a_b is
-  Tup2(Nil, n) then Nil
-  Tup2(m :: ms, n) then
+  [Nil, n] then Nil
+  [m :: ms, n] then
     let l = n - m
-    if splitAt(l, ws) is Tup2(ws1, ws2) then
-      ws1 :: tile(ws2, Tup2(drop(l, m :: ms), m))
+    if splitAt(l, ws) is [ws1, ws2] then
+      ws1 :: tile(ws2, [drop(l, m :: ms), m])
 
-fun null__(a_b) = if a_b is Tup2(Nil, Nil) then true else false
+fun null__(a_b) = if a_b is [Nil, Nil] then true else false
 
-fun single_(a_b) = if a_b is Tup2(x, y) then (null_(x) && single(y)) || (single(x) && null_(y))
+fun single_(a_b) = if a_b is [x, y] then (null_(x) && single(y)) || (single(x) && null_(y))
 
 
-let nil_ = Tup2(Nil, Nil)
-//│ > Tup2 {
-//│ >   fst: Nil { class: [class Nil] },
-//│ >   snd: Nil { class: [class Nil] }
-//│ nil_ = }
+let nil_ = [Nil, Nil]
+//│ nil_ = [ Nil { class: [class Nil] }, Nil { class: [class Nil] } ]
 
-fun head_(a_b) = if a_b is Tup2(x, y) and
+fun head_(a_b) = if a_b is [x, y] and
   not(null_(x)) then head(x)
   else head(y)
 
-fun last_(a_b) = if a_b is Tup2(y, x) and
+fun last_(a_b) = if a_b is [y, x] and
   not(null_(x)) then head(x)
   else head(y)
 
-fun cons_(a, a_b) = if a_b is Tup2(x, y) and
-  not(null_(y)) then Tup2(a :: x, y)
-  else Tup2(a :: Nil, x)
+fun cons_(a, a_b) = if a_b is [x, y] and
+  not(null_(y)) then [a :: x, y]
+  else [a :: Nil, x]
 
-fun snoc_(a, a_b) = if a_b is Tup2(y, x) and
-  not(null_(y)) then Tup2(y, a :: x)
-  else Tup2(x, a :: Nil)
+fun snoc_(a, a_b) = if a_b is [y, x] and
+  not(null_(y)) then [y, a :: x]
+  else [x, a :: Nil]
 
-fun tail_(a_b) = if a_b is Tup2(x, y) and
-  null_(x) then Tup2(Nil, Nil)
-  single(x) and splitAt(intDiv(listLen(y), 2), y) is Tup2(y0, y1) then
-    Tup2(reverse(y1), y0)
-  else Tup2(tail(x), y)
+fun tail_(a_b) = if a_b is [x, y] and
+  null_(x) then [Nil, Nil]
+  single(x) and splitAt(intDiv(listLen(y), 2), y) is [y0, y1] then
+    [reverse(y1), y0]
+  else [tail(x), y]
 
-fun init_(a_b) = if a_b is Tup2(y, x) and
-  null_(x) then Tup2(Nil, Nil)
-  single(x) and splitAt(intDiv(listLen(y), 2), y) is Tup2(y0, y1) then
-    Tup2(y0, reverse(y1))
-  else Tup2(y, tail(x))
+fun init_(a_b) = if a_b is [y, x] and
+  null_(x) then [Nil, Nil]
+  single(x) and splitAt(intDiv(listLen(y), 2), y) is [y0, y1] then
+    [y0, reverse(y1)]
+  else [y, tail(x)]
 
 fun unformat(a, l) = fold1((xs, ys) => append(xs, append(a :: Nil, ys)), x => x, l)
 
@@ -167,21 +164,21 @@ fun parse(ls) = paras(map(words, lines(ls)))
 fun unparse(ls) = unlines(map(unwords, unparas(ls)))
 
 fun startr(a) = if
-  a <= maxw then Tup3(cons_(Tup3(0, 0, 0), nil_), a, 1)
+  a <= maxw then [cons_([0, 0, 0], nil_), a, 1]
   else throw Error("startr param error")
 
 fun ceildiv(n, m) = intDiv(n + m - 1, m)
 
 fun fmtWith(par) = unparse(map(x => par(concat(x)), parse(par)))
 
-fun stepr(w, ps_tw_tl) = if ps_tw_tl is Tup3(ps, tw, tl) then
+fun stepr(w, ps_tw_tl) = if ps_tw_tl is [ps, tw, tl] then
   let tot_width = w + 1 + tw
   let tot_len = 1 + tl
   fun single(p) = len_tl(p) === 0
   fun width_hd(p) = if single(p) then tot_width else tot_width - width_tl(p) - 1
   fun cost(p) = if single(p) then 0 else cost_tl(p) + (let a = optw - width_hd(p) in a * a)
   fun old_width_hd(p) = if single(p) then tw else tw - width_tl(p) - 1
-  fun new_(p) = if single(p) then Tup3(tw, 0, tl) else Tup3(tw, cost_tl(p) + (let x = optw - old_width_hd(p) in x * x), tl)
+  fun new_(p) = if single(p) then [tw, 0, tl] else [tw, cost_tl(p) + (let x = optw - old_width_hd(p) in x * x), tl]
   fun trim(ps_pq) = if
     null__(ps_pq) then ps_pq
     single_(ps_pq) then ps_pq
@@ -208,11 +205,11 @@ fun stepr(w, ps_tw_tl) = if ps_tw_tl is Tup3(ps, tw, tl) then
     let r = head_(r_rs)
     bf(p, q) <= bf(q, r) then myAdd(p, r_rs)
     else cons_(p, qr_rs)
-  Tup3(trim(drop_nofit(myAdd(new_(last_(ps)), ps))), tot_width, tot_len)
+  [trim(drop_nofit(myAdd(new_(last_(ps)), ps))), tot_width, tot_len]
 
 fun par3(ws) =
   let zs = scan1(stepr, startr, map(listLen, ws))
-  tile(ws, Tup2(map(x => len_tl(last_(fst3(x))), zs), thd3(head(zs))))
+  tile(ws, [map(x => len_tl(last_(fst3(x))), zs), thd3(head(zs))])
 
 fun fmt(x) = unparse(map(par3, concat(parse(x))))
 

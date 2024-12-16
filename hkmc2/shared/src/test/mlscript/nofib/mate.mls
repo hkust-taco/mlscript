@@ -30,7 +30,7 @@ fun qsort(le, xs, r) = if xs is
 //│ ————————————————————————————————————————————————————————————————————————————————
 
 fun sort(l) = qsort(
-  (a, b) => if a is Tup2(aa, _) and b is Tup2(bb, _) then listLen(aa) <= listLen(bb),
+  (a, b) => if a is [aa, _] and b is [bb, _] then listLen(aa) <= listLen(bb),
   l,
   Nil
 )
@@ -76,11 +76,11 @@ fun toLower(c) = if isUpper(c) then String.fromCharCode(c.charCodeAt(0) + 32) el
 fun words(s) = if dropWhile(x => x === " ", s) is
   Nil then Nil
   s_ and
-    break_(x => x === " ", s_) is Tup2(w, s__) then w :: words(s__)
+    break_(x => x === " ", s_) is [w, s__] then w :: words(s__)
 
 fun unlines(ls) = concat(map(l => append(l, "\n" :: Nil), ls))
 
-fun lines(s) = if break_(x => x === "|", s) is Tup2(l, s_) then
+fun lines(s) = if break_(x => x === "|", s) is [l, s_] then
   Cons(
     l,
     (if s_ is
@@ -98,8 +98,8 @@ fun showColour(c) = nofibStringToList(if c is Black then "Black" else "White")
 fun pieceAt(bd, sq) = if bd is Board(wkss, bkss) then
   fun pieceAtWith(c, n, ls) = if ls is
     Nil then n
-    Tup2(k, s) :: xs and
-      eqTuup2(s, sq) then Some(Tup2(c, k))
+    [k, s] :: xs and
+      eqTuup2(s, sq) then Some([c, k])
       else pieceAtWith(c, n, xs)
   pieceAtWith(White, pieceAtWith(Black, None, bkss), wkss)
 
@@ -112,20 +112,20 @@ fun kindToChar(k) = if k is
   Pawn then "P"
 
 fun pieceToChar(p) = if p is
-  Tup2(Black, k) then kindToChar(k)
-  Tup2(White, k) then toLower(kindToChar(k))
+  [Black, k] then kindToChar(k)
+  [White, k] then toLower(kindToChar(k))
 
 fun showBoard(bd) =
   fun showRank(r) =
-    fun consFile(f, s) = if pieceAt(bd, Tup2(f, r)) is
+    fun consFile(f, s) = if pieceAt(bd, [f, r]) is
       None then append(nofibStringToList(" -"), s)
       Some(p) then " " :: pieceToChar(p) :: s
     foldr(consFile, Nil, enumFromTo(1, 8))
   unlines(map(showRank, reverse(enumFromTo(1, 8))))
 
-fun showPiece(p) = if p is Tup2(c, k) then kindToChar(k) :: Nil
+fun showPiece(p) = if p is [c, k] then kindToChar(k) :: Nil
 
-fun showSquare(c, x_y) = if x_y is Tup2(x, y) then
+fun showSquare(c, x_y) = if x_y is [x, y] then
   append(
     atIndex(
       x - 1,
@@ -144,24 +144,24 @@ fun showSquare(c, x_y) = if x_y is Tup2(x, y) then
 fun emptyAtAll(bd, e) = if bd is Board(wkss, bkss) then
   fun emptyAtAllAnd(b, ls) = if ls is
     Nil then b
-    Tup2(_, s) :: xs then (not(e(s)) and emptyAtAllAnd(b, xs))
+    [_, s] :: xs then (not(e(s)) and emptyAtAllAnd(b, xs))
   emptyAtAllAnd(emptyAtAllAnd(true, bkss), wkss)
 
 fun rPa(sq, kss) = if kss is
   Nil then throw Error("rPa")
-  Tup2(k, s) :: kss then if eqTuup2(s, sq) then kss else Tup2(k, s) :: rPa(sq, kss)
+  [k, s] :: kss then if eqTuup2(s, sq) then kss else [k, s] :: rPa(sq, kss)
 
 fun rmPieceAt(c, sq, bd) = if bd is Board(wkss, bkss) and c is
   White then Board(rPa(sq, wkss), bkss)
   Black then Board(wkss, rPa(sq, bkss))
 
 fun putPieceAt(sq, c_k, bd) =
-  if c_k is Tup2(c, k) and bd is Board(wkss, bkss) and c is
-    White then Board(Tup2(k, sq) :: wkss, bkss)
-    Black then Board(wkss, Tup2(k, sq) :: bkss)
+  if c_k is [c, k] and bd is Board(wkss, bkss) and c is
+    White then Board([k, sq] :: wkss, bkss)
+    Black then Board(wkss, [k, sq] :: bkss)
 
 fun kSq(kss) = if kss is
-  Tup2(King, s) :: _ then s
+  [King, s] :: _ then s
   _ :: kss then kSq(kss)
   Nil then throw Error("kSq")
 
@@ -171,11 +171,11 @@ fun kingSquare(c, bd) = if bd is Board(wkss, bkss) and c is
 
 fun opponent(c) = if c is White then Black else White
 
-fun colourOf(c_k) = if c_k is Tup2(c, _) then c
+fun colourOf(c_k) = if c_k is [c, _] then c
 
-fun kindOf(c_k) = if c_k is Tup2(_, k) then k
+fun kindOf(c_k) = if c_k is [_, k] then k
 
-fun onboard(p_q) = if p_q is Tup2(p, q) then
+fun onboard(p_q) = if p_q is [p, q] then
   (p >= 1 and p <= 8) and (q >= 1 and q <= 8)
 
 fun forcesColoured(c, bd) = if bd is Board(wkss, bkss) and c is
@@ -185,13 +185,13 @@ fun forcesColoured(c, bd) = if bd is Board(wkss, bkss) and c is
 let emptyBoard = Board(Nil, Nil)
 //│ emptyBoard = Board { a: Nil { class: [class Nil] }, b: Nil { class: [class Nil] } }
 
-fun showMove(withPiece, m) = if m is MoveInFull(Tup2(c, k), sq, Move(sq_, mcp, mpp)) then
+fun showMove(withPiece, m) = if m is MoveInFull([c, k], sq, Move(sq_, mcp, mpp)) then
   let capt = mcp is Some(_)
   let prom = mpp is Some(_)
   append(
     (if withPiece
       then append(
-        showPiece(Tup2(c, k)),
+        showPiece([c, k]),
         if ((k === King) || (k is Pawn and not(capt || prom))) then Nil else "/" :: showSquare(c, sq)
       )
       else Nil
@@ -254,22 +254,22 @@ fun bishopmoves(c, sq, bd) =
     bd,
     c,
     sq,
-    xy => if xy is Tup2(x, y) then Tup2(x - 1, y + 1),
+    xy => if xy is [x, y] then [x - 1, y + 1],
     moveLine(
       bd,
       c,
       sq,
-      xy => if xy is Tup2(x, y) then Tup2(x + 1, y + 1),
+      xy => if xy is [x, y] then [x + 1, y + 1],
       moveLine(
         bd,
         c,
         sq,
-        xy => if xy is Tup2(x, y) then Tup2(x - 1, y - 1),
+        xy => if xy is [x, y] then [x - 1, y - 1],
         moveLine(
           bd,
           c,
           sq,
-          xy => if xy is Tup2(x, y) then Tup2(x + 1, y - 1),
+          xy => if xy is [x, y] then [x + 1, y - 1],
           x => x
         )
       )
@@ -284,73 +284,73 @@ fun rookmoves(c, sq, bd) =
     bd,
     c,
     sq,
-    xy => if xy is Tup2(x, y) then Tup2(x - 1, y),
+    xy => if xy is [x, y] then [x - 1, y],
     moveLine(
       bd,
       c,
       sq,
-      xy => if xy is Tup2(x, y) then Tup2(x + 1, y),
+      xy => if xy is [x, y] then [x + 1, y],
       moveLine(
         bd,
         c,
         sq,
-        xy => if xy is Tup2(x, y) then Tup2(x, y - 1),
+        xy => if xy is [x, y] then [x, y - 1],
         moveLine(
           bd,
           c,
           sq,
-          xy => if xy is Tup2(x, y) then Tup2(x, y + 1),
+          xy => if xy is [x, y] then [x, y + 1],
           x => x
         )
       )
     )
   )(Nil)
 
-fun kingmoves(c, pq, bd) = if pq is Tup2(p, q) then
+fun kingmoves(c, pq, bd) = if pq is [p, q] then
   sift(
     c,
     bd,
     Nil,
-    Tup2(p - 1, q + 1) ::
-    Tup2(p, q + 1) ::
-    Tup2(p + 1, q + 1) ::
-    Tup2(p - 1, q) ::
-    Tup2(p + 1, q) ::
-    Tup2(p - 1, q - 1) ::
-    Tup2(p, q - 1) ::
-    Tup2(p + 1, q - 1) :: Nil
+    [p - 1, q + 1] ::
+    [p, q + 1] ::
+    [p + 1, q + 1] ::
+    [p - 1, q] ::
+    [p + 1, q] ::
+    [p - 1, q - 1] ::
+    [p, q - 1] ::
+    [p + 1, q - 1] :: Nil
   )
 
-fun knightmoves(c, pq, bd) = if pq is Tup2(p, q) then
+fun knightmoves(c, pq, bd) = if pq is [p, q] then
   sift(
     c,
     bd,
     Nil,
-    Tup2(p - 1, q + 2) ::
-    Tup2(p + 1, q + 2) ::
-    Tup2(p - 2, q + 1) ::
-    Tup2(p + 2, q + 1) ::
-    Tup2(p - 2, q - 1) ::
-    Tup2(p + 2, q - 1) ::
-    Tup2(p - 1, q - 2) ::
-    Tup2(p + 1, q - 2) :: Nil
+    [p - 1, q + 2] ::
+    [p + 1, q + 2] ::
+    [p - 2, q + 1] ::
+    [p + 2, q + 1] ::
+    [p - 2, q - 1] ::
+    [p + 2, q - 1] ::
+    [p - 1, q - 2] ::
+    [p + 1, q - 2] :: Nil
   )
 
-fun pawnmoves(c, pq, bd) = if pq is Tup2(p, q) then
+fun pawnmoves(c, pq, bd) = if pq is [p, q] then
   let fwd = if c is White then 1 else -1
-  fun promote(xy, mcp) = if xy is Tup2(x, y) and
+  fun promote(xy, mcp) = if xy is [x, y] and
     ((c is Black) and y === 1) || ((c is White) and y === 8) then
       map(
-        param => Move(Tup2(x, y), mcp, Some(param)),
-        Tup2(c, Queen) ::
-        Tup2(c, Rook) ::
-        Tup2(c, Bishop) ::
-        Tup2(c, Knight) :: Nil
+        param => Move([x, y], mcp, Some(param)),
+        [c, Queen] ::
+        [c, Rook] ::
+        [c, Bishop] ::
+        [c, Knight] :: Nil
       )
-    else Move(Tup2(x, y), mcp, None) :: Nil
+    else Move([x, y], mcp, None) :: Nil
   let movs =
-    let on1 = Tup2(p, q + fwd)
-    let on2 = Tup2(p, q + 2 * fwd)
+    let on1 = [p, q + fwd]
+    let on2 = [p, q + 2 * fwd]
     if pieceAt(bd, on1) is None then
       append(
         promote(on1, None),
@@ -368,22 +368,22 @@ fun pawnmoves(c, pq, bd) = if pq is Tup2(p, q) then
           h is Some(p_) and not(colourOf(p_) === c) then promote(sq, Some(p_)) :: lscomp2(ls)
           else lscomp2(ls)
       lscomp2(pieceAt(bd, sq) :: Nil)
-  let caps = concat(lscomp1(Tup2(p + 1, q + fwd) :: Tup2(p - 1, q + fwd) :: Nil))
+  let caps = concat(lscomp1([p + 1, q + fwd] :: [p - 1, q + fwd] :: Nil))
   append(movs, caps)
 
 fun queenmoves(c, sq, bd) = append(bishopmoves(c, sq, bd), rookmoves(c, sq, bd))
 
 fun kingincheck(c, bd) =
-  fun givesCheck(kxy) = if kxy is Tup2(k, Tup2(x, y)) then
-    fun kthreat(param) = if kingSquare(c, bd) is Tup2(xk, yk) and param is
+  fun givesCheck(kxy) = if kxy is [k, [x, y]] then
+    fun kthreat(param) = if kingSquare(c, bd) is [xk, yk] and param is
       King then (abs(x - xk) <= 1) and (abs(y - yk) <= 1)
       Queen then kthreat(Rook) || kthreat(Bishop)
       Rook then
-        ((x === xk) && emptyAtAll(bd, xeye => if xeye is Tup2(xe, ye) then (xe === xk) && ((min(y, yk) < ye) && (ye < max(y, yk))))) ||
-        ((y === yk) && emptyAtAll(bd, xeye => if xeye is Tup2(xe, ye) then (ye === yk) && ((min(x, xk) < xe) && (xe < max(x, xk)))))
+        ((x === xk) && emptyAtAll(bd, xeye => if xeye is [xe, ye] then (xe === xk) && ((min(y, yk) < ye) && (ye < max(y, yk))))) ||
+        ((y === yk) && emptyAtAll(bd, xeye => if xeye is [xe, ye] then (ye === yk) && ((min(x, xk) < xe) && (xe < max(x, xk)))))
       Bishop then
-        (((x + y) === (xk + yk)) && emptyAtAll(bd, xeye => if xeye is Tup2(xe, ye) then ((xe + ye) === (xk + yk)) && ((min(x, xk) < xe) && (xe < max(x, xk))))) ||
-        (((x - y) === (xk - yk)) && emptyAtAll(bd, xeye => if xeye is Tup2(xe, ye) then ((xe - ye) === (xk - yk)) && ((min(x, xk) < xe) && (xe < max(x, xk)))))
+        (((x + y) === (xk + yk)) && emptyAtAll(bd, xeye => if xeye is [xe, ye] then ((xe + ye) === (xk + yk)) && ((min(x, xk) < xe) && (xe < max(x, xk))))) ||
+        (((x - y) === (xk - yk)) && emptyAtAll(bd, xeye => if xeye is [xe, ye] then ((xe - ye) === (xk - yk)) && ((min(x, xk) < xe) && (xe < max(x, xk)))))
       Knight then
         (((abs(x - xk)) === 2) && ((abs(y - yk)) === 1)) || (((abs(x - xk)) === 1) && ((abs(y - yk)) === 2))
       Pawn then
@@ -392,8 +392,8 @@ fun kingincheck(c, bd) =
   any(givesCheck, forcesColoured(opponent(c), bd))
 
 fun tryMove(c, ksq, m, bd) = if 
-  ksq is Tup2(k, sq) and m is Move(sq_, mcp, mpp) then
-    let p = Tup2(c, k)
+  ksq is [k, sq] and m is Move(sq_, mcp, mpp) then
+    let p = [c, k]
     let bd1 = rmPieceAt(c, sq, bd)
     let p_ = maybe(p, x => x, mpp)
     let bd2 = maybe(
@@ -401,11 +401,11 @@ fun tryMove(c, ksq, m, bd) = if
       dummy => putPieceAt(sq_, p_, rmPieceAt(opponent(c), sq_, bd1)),
       mcp
     )
-    if not(kingincheck(c, bd2)) then Some(Tup2(MoveInFull(p, sq, Move(sq_, mcp, mpp)), bd2)) else None
+    if not(kingincheck(c, bd2)) then Some([MoveInFull(p, sq, Move(sq_, mcp, mpp)), bd2]) else None
   else
     throw Error(m)
 
-fun rawmoves(c, ksq, bd) = if ksq is Tup2(k, sq) then
+fun rawmoves(c, ksq, bd) = if ksq is [k, sq] then
   let m = if k is
     King then kingmoves
     Queen then queenmoves
@@ -439,7 +439,7 @@ fun parseGoal(ls) = if ls is
     let ws = words(gltxt)
     let c = if listEq(head(ws), nofibStringToList("Black")) then Black else White
     let n = intOfString(last(ws))
-    Tup2(c, n)
+    [c, n]
   else throw Error("parseGoal")
 
 fun parseSquare(r, f, c) = if c === "-" then Nil else
@@ -451,7 +451,7 @@ fun parseSquare(r, f, c) = if c === "-" then Nil else
     "b" then Bishop
     "n" then Knight
     "p" then Pawn
-  Tup2(Tup2(clr, kin), Tup2(f, r)) :: Nil
+  [[clr, kin], [f, r]] :: Nil
 
 fun parseRank(r, x) = concat(zipWith(
   (a, b) => parseSquare(r, a, b),
@@ -461,7 +461,7 @@ fun parseRank(r, x) = concat(zipWith(
 
 
 fun parseBoard(ls) =
-  fun addPiece(p_sq, x) = if p_sq is Tup2(p, sq) then putPieceAt(sq, p, x)
+  fun addPiece(p_sq, x) = if p_sq is [p, sq] then putPieceAt(sq, p, x)
   foldr(
     addPiece,
     emptyBoard,
@@ -470,10 +470,10 @@ fun parseBoard(ls) =
 
 fun parseProblem(s) =
   let bdtxt_gltxt = splitAt(8, filter(x => not(comment(x)), s))
-  if bdtxt_gltxt is Tup2(bdtxt, gltxt) then
+  if bdtxt_gltxt is [bdtxt, gltxt] then
     let bd = parseBoard(bdtxt)
     let gl = parseGoal(gltxt)
-    Tup2(bd, gl)
+    [bd, gl]
 
 fun readProblem(s) = parseProblem(lines(s))
 
@@ -481,14 +481,14 @@ fun readProblem(s) = parseProblem(lines(s))
 //│ ————————————————————————————————————————————————————————————————————————————————
 fun replies(bd, c, n) =
   let mds = moveDetailsFor(c, bd)
-  fun solnAnd(mifb, rest) = if mifb is Tup2(mif, b) then
+  fun solnAnd(mifb, rest) = if mifb is [mif, b] then
     let sm = solution(b, opponent(c), n - 1)
     if sm is
       None then None
       Some(s) and
         rest is
           None then None
-          Some(ms) then Some(Tup2(mif, s) :: ms)
+          Some(ms) then Some([mif, s] :: ms)
   if n
     === 0 and
       null_(mds) then Some(Nil)
@@ -498,7 +498,7 @@ fun replies(bd, c, n) =
 
 fun solution(bd, c, n) =
   fun solnOr(mifb, other) = if mifb is
-    Tup2(mif, b) then
+    [mif, b] then
       let rsm = replies(b, opponent(c), n - 1)
       if rsm is
         None then other
@@ -527,7 +527,7 @@ fun tab(n) = if n <= 0 then Nil else " " :: tab(n - 1)
 //│ ————————————————————————————————————————————————————————————————————————————————
 fun showReplies(rs, n) = if rs is
   Nil then Nil
-  Tup2(mifs, s) :: rs then
+  [mifs, s] :: rs then
     append(
       tab(n),
       append(
@@ -554,7 +554,7 @@ fun showSoln(s, n) = if s is Soln(mif, rs) then
         showMoveInFull(mif),
         if rs is
           Nil then nofibStringToList("++\n")
-          Tup2(mifs, s_) :: Nil then
+          [mifs, s_] :: Nil then
             append(
               nofibStringToList(", "),
               append(
@@ -579,20 +579,20 @@ fun showSoln(s, n) = if s is Soln(mif, rs) then
 //│ ————————————————————————————————————————————————————————————————————————————————
 fun compact(s) = if s is Solution(mif, rs) then Soln(mif, foldr(insertCompact, Nil, rs))
 
-fun insertCompact(mif_s, ls) = if mif_s is Tup2(mif, s) then
+fun insertCompact(mif_s, ls) = if mif_s is [mif, s] then
   fun insert(x, ls) = if ls is
     Nil then x :: Nil
     y :: ys then if polyGt(x, y) then y :: insert(x, ys) else x :: y :: ys
   let cs = compact(s)
   fun ic(ls) = if ls is
-    Nil then Tup2(mif :: Nil, cs) :: Nil
-    Tup2(mifs, cs_) :: etc then
+    Nil then [mif :: Nil, cs] :: Nil
+    [mifs, cs_] :: etc then
       let a = showSoln(cs, 1)
       let b = showSoln(cs_, 1)
       if
-        ltList(a, b, (x, y) => x < y, (x, y) => x > y) then Tup2(mif :: Nil, cs) :: Tup2(mifs, cs_) :: etc
-        listEq(a, b) then Tup2(insert(mif, mifs), cs) :: etc
-        not(ltList(a, b, (x, y) => x < y, (x, y) => x > y)) then Tup2(mifs, cs_) :: ic(etc)
+        ltList(a, b, (x, y) => x < y, (x, y) => x > y) then [mif :: Nil, cs] :: [mifs, cs_] :: etc
+        listEq(a, b) then [insert(mif, mifs), cs] :: etc
+        not(ltList(a, b, (x, y) => x < y, (x, y) => x > y)) then [mifs, cs_] :: ic(etc)
         else throw Error("compare error")
   ic(ls)
 //│ ————————————————————————————————————————————————————————————————————————————————
@@ -606,7 +606,7 @@ fun solve(bd, c, n) = showResult(solution(bd, c, (2 * n) - 1))
 fun testMate_nofib(dummy) = 
   let input = nofibStringToList("-- G. Heathcote|-- Reading Observer, 1904|-- `A charming little three-mover constructed with|-- the art that conceals art.'  (Phillips)||- - - - - - - - |- - - - - - - - |- - - - - - - - |- - - - P - - - |- - - - p - k b |- P n - K - - - |- P - - - - - - |- q - - - - - - ||White to play and mate in 3")
   let bdcn = readProblem(input)
-  if bdcn is Tup2(bd, Tup2(c, n)) then
+  if bdcn is [bd, [c, n]] then
     append(
       showBoard(bd), 
       append(

@@ -6,20 +6,20 @@
 
 fun lookup(k, t) = if t is
   Nil then None
-  Tup2(x, v) :: t then if listEq(k, x) then Some(v) else lookup(k, t)
+  [x, v] :: t then if listEq(k, x) then Some(v) else lookup(k, t)
 
 class MyState[S, A](r: S -> Tup2[S, A])
 
 fun myRunState(m, s) = if m is MyState(f) then f(s)
 
-fun myBind(m, f) = MyState(s => if myRunState(m, s) is Tup2(s_, a) then myRunState(f(a), s_))
+fun myBind(m, f) = MyState(s => if myRunState(m, s) is [s_, a] then myRunState(f(a), s_))
 
-fun myReturn(a) = MyState(s => Tup2(s, a))
+fun myReturn(a) = MyState(s => [s, a])
 
-let myGet = MyState(s => Tup2(s, s))
+let myGet = MyState(s => [s, s])
 //│ myGet = MyState { r: [Function (anonymous)] }
 
-fun myEvalState(m, s) = if myRunState(m, s) is Tup2(s_, a) then a
+fun myEvalState(m, s) = if myRunState(m, s) is [s_, a] then a
 
 
 abstract class Term: Var | Con | Incr | Add | Lam | App | IfZero | Thunk
@@ -41,7 +41,7 @@ object Unit
 //│ ————————————————————————————————————————————————————————————————————————————————
 fun eqEnv(a, b) = if a is
   Nil and b is Nil then true
-  Tup2(s1, t1) :: b and b is Tup2(s2, t2) :: d and
+  [s1, t1] :: b and b is [s2, t2] :: d and
     listEq(s1, s2) and eqTerm(t1, t2) then eqEnv(b, d)
     else false
   else false
@@ -69,7 +69,7 @@ fun lookupVar(v) =
 
 fun withEnv(tmp, m) = myReturn(myEvalState(m, tmp))
 
-fun pushVar(v, t, m) = myBind(myGet, env => withEnv(Tup2(v, t) :: env, m))
+fun pushVar(v, t, m) = myBind(myGet, env => withEnv([v, t] :: env, m))
 
 :...
 //│ ————————————————————————————————————————————————————————————————————————————————
@@ -131,7 +131,7 @@ fun simpleEval(env, ter) = if ter is
   else throw Error(ter)
 
 fun simpleApply(env, t, a) = if t is
-  Thunk(Lam(x, b), e) then simpleEval(Tup2(x, Thunk(a, env)) :: e, b)
+  Thunk(Lam(x, b), e) then simpleEval([x, Thunk(a, env)] :: e, b)
   else throw Error("bad application")
 
 fun simpleEvalCon(env, e) =
@@ -159,7 +159,7 @@ fun ppenv(env) = append(
   nofibStringToList("["),
   append(
     flatMap(
-      vt => if vt is Tup2(v, t) then append(append(v, nofibStringToList("=")), append(pp(t), nofibStringToList(", "))),
+      vt => if vt is [v, t] then append(append(v, nofibStringToList("=")), append(pp(t), nofibStringToList(", "))),
       env
     ),
     nofibStringToList("]")
@@ -210,7 +210,7 @@ fun showTerm(t) = if t is Con(a) then append(nofibStringToList("Con "), nofibStr
 
 fun ev(t) =
   let envt2 = myRunState(traverseTerm(t), Nil)
-  if envt2 is Tup2(env, t2) then append(append(pp(t2), nofibStringToList("  ")), ppenv(env))
+  if envt2 is [env, t2] then append(append(pp(t2), nofibStringToList("  ")), ppenv(env))
 
 fun mainSimple(args) =
   if null_(args)
@@ -222,7 +222,7 @@ fun mainMonad(args) =
   then throw Error("Args: number-to-sum-up-to")
   else ev(App(sum0, Con(head(args))))
 
-fun testLambda_nofib(n) = Tup2(mainSimple(n :: Nil), mainMonad(n :: Nil))
+fun testLambda_nofib(n) = [mainSimple(n :: Nil), mainMonad(n :: Nil)]
 
 testLambda_nofib(80).toString()
-//│ = '([C,o,n, ,3,2,4,0],[3,2,4,0, , ,[,]])'
+//│ = '[C,o,n, ,3,2,4,0],[3,2,4,0, , ,[,]]'

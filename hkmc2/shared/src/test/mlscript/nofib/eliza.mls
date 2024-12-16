@@ -22,7 +22,7 @@ fun isSpace(c) = c === " "
 fun words(s) = if dropWhile(isSpace, s) is
   Nil then Nil
   h :: t and
-    break_(isSpace, h :: t) is Tup2(w, s_) then w :: words(s_)
+    break_(isSpace, h :: t) is [w, s_] then w :: words(s_)
 
 fun unwords(ws) =
   fun go(ws) = if ws is
@@ -40,11 +40,11 @@ fun trim(ls) =
   fun cons(x, xs) = if inList(x, nofibStringToList(" .!?,")) and null_(xs) then Nil else x :: xs
   foldr(cons, Nil, dropWhile(x => inList(x, nofibStringToList(" .!?,")), ls))
 
-fun repeated(kt_rp) = if kt_rp is Tup2(kt, r :: rp) then Tup2(r, Tup2(kt, rp))
+fun repeated(kt_rp) = if kt_rp is [kt, r :: rp] then [r, [kt, rp]]
 
-fun newKeyTab(kt_, kt_rp) = if kt_rp is Tup2(kt, rp) then Tup2(kt_, rp)
+fun newKeyTab(kt_, kt_rp) = if kt_rp is [kt, rp] then [kt_, rp]
 
-fun keyTabOf(kt_rp) = if kt_rp is Tup2(kt, rp) then kt
+fun keyTabOf(kt_rp) = if kt_rp is [kt, rp] then kt
 
 fun makeResponse(cs, us) = if cs is
   "?" :: cs_ then append(cs_, append(nofibStringToList(" "), append(us, nofibStringToList("?"))))
@@ -204,73 +204,73 @@ let respMsgs =
     nofibStringToList("Can you elaborate on that?") ::
     nofibStringToList("Say, do you have any psychological problems?") ::
     Nil
-  Tup2(nofibStringToList("CAN YOU"), canYou) ::
-  Tup2(nofibStringToList("CAN I"), canI) ::
-  Tup2(nofibStringToList("YOU ARE"), youAre) ::
-  Tup2(nofibStringToList("YOU'RE"), youAre) ::
-  Tup2(nofibStringToList("I DON'T"), iDont) ::
-  Tup2(nofibStringToList("I FEEL"), iFeel) ::
-  Tup2(nofibStringToList("WHY DON'T YOU"), whyDont) ::
-  Tup2(nofibStringToList("WHY CAN'T I"), whyCant) ::
-  Tup2(nofibStringToList("ARE YOU"), areYou) ::
-  Tup2(nofibStringToList("I CAN'T"), iCant) ::
-  Tup2(nofibStringToList("I AM"), iAm) ::
-  Tup2(nofibStringToList("I'M"), iAm) ::
-  Tup2(nofibStringToList("YOU"), you) ::
-  Tup2(nofibStringToList("YES"), yes) ::
-  Tup2(nofibStringToList("NO"), no) ::
-  Tup2(nofibStringToList("COMPUTER"), computer) ::
-  Tup2(nofibStringToList("COMPUTERS"), computer) ::
-  Tup2(nofibStringToList("I WANT"), iWant) ::
-  Tup2(nofibStringToList("WHAT"), question) ::
-  Tup2(nofibStringToList("HOW"), question) ::
-  Tup2(nofibStringToList("WHO"), question) ::
-  Tup2(nofibStringToList("WHERE"), question) ::
-  Tup2(nofibStringToList("WHEN"), question) ::
-  Tup2(nofibStringToList("NAME"), name) ::
-  Tup2(nofibStringToList("WHY"), question) ::
-  Tup2(nofibStringToList("CAUSE"), because) ::
-  Tup2(nofibStringToList("BECAUSE"), because) ::
-  Tup2(nofibStringToList("DREAM"), dream) ::
-  Tup2(nofibStringToList("SORRY"), sorry) ::
-  Tup2(nofibStringToList("HI"), hello) ::
-  Tup2(nofibStringToList("DREAMS"), dream) ::
-  Tup2(nofibStringToList("MAYBE"), maybe) ::
-  Tup2(nofibStringToList("HELLO"), hello) ::
-  Tup2(nofibStringToList("ALWAYS"), always) ::
-  Tup2(nofibStringToList("YOUR"), your) ::
-  Tup2(nofibStringToList("ALIKE"), alike) ::
-  Tup2(nofibStringToList("THINK"), think) ::
-  Tup2(nofibStringToList("FRIENDS"), friend) ::
-  Tup2(nofibStringToList("FRIEND"), friend) ::
-  Tup2(Nil, nokeyMsgs) ::
+  [nofibStringToList("CAN YOU"), canYou] ::
+  [nofibStringToList("CAN I"), canI] ::
+  [nofibStringToList("YOU ARE"), youAre] ::
+  [nofibStringToList("YOU'RE"), youAre] ::
+  [nofibStringToList("I DON'T"), iDont] ::
+  [nofibStringToList("I FEEL"), iFeel] ::
+  [nofibStringToList("WHY DON'T YOU"), whyDont] ::
+  [nofibStringToList("WHY CAN'T I"), whyCant] ::
+  [nofibStringToList("ARE YOU"), areYou] ::
+  [nofibStringToList("I CAN'T"), iCant] ::
+  [nofibStringToList("I AM"), iAm] ::
+  [nofibStringToList("I'M"), iAm] ::
+  [nofibStringToList("YOU"), you] ::
+  [nofibStringToList("YES"), yes] ::
+  [nofibStringToList("NO"), no] ::
+  [nofibStringToList("COMPUTER"), computer] ::
+  [nofibStringToList("COMPUTERS"), computer] ::
+  [nofibStringToList("I WANT"), iWant] ::
+  [nofibStringToList("WHAT"), question] ::
+  [nofibStringToList("HOW"), question] ::
+  [nofibStringToList("WHO"), question] ::
+  [nofibStringToList("WHERE"), question] ::
+  [nofibStringToList("WHEN"), question] ::
+  [nofibStringToList("NAME"), name] ::
+  [nofibStringToList("WHY"), question] ::
+  [nofibStringToList("CAUSE"), because] ::
+  [nofibStringToList("BECAUSE"), because] ::
+  [nofibStringToList("DREAM"), dream] ::
+  [nofibStringToList("SORRY"), sorry] ::
+  [nofibStringToList("HI"), hello] ::
+  [nofibStringToList("DREAMS"), dream] ::
+  [nofibStringToList("MAYBE"), maybe] ::
+  [nofibStringToList("HELLO"), hello] ::
+  [nofibStringToList("ALWAYS"), always] ::
+  [nofibStringToList("YOUR"), your] ::
+  [nofibStringToList("ALIKE"), alike] ::
+  [nofibStringToList("THINK"), think] ::
+  [nofibStringToList("FRIENDS"), friend] ::
+  [nofibStringToList("FRIEND"), friend] ::
+  [Nil, nokeyMsgs] ::
   Nil
 //│ > Cons {
-//│ >   head: Tup2 {
-//│ >     fst: Cons { head: 'C', tail: [Cons] },
-//│ >     snd: Cons { head: [Cons], tail: [Cons] }
-//│ >   },
+//│ >   head: [
+//│ >     Cons { head: 'C', tail: [Cons] },
+//│ >     Cons { head: [Cons], tail: [Cons] }
+//│ >   ],
 //│ >   tail: Cons {
-//│ >     head: Tup2 { fst: [Cons], snd: [Cons] },
-//│ >     tail: Cons { head: [Tup2], tail: [Cons] }
+//│ >     head: [ [Cons], [Cons] ],
+//│ >     tail: Cons { head: [Array], tail: [Cons] }
 //│ >   }
 //│ respMsgs = }
 
 let initial =
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Tup2(k, rs) :: t then Tup2(words(k), cycle(rs)) :: lscomp(t)
-  Tup2(lscomp(respMsgs), cycle(repeatMsgs))
-//│ > Tup2 {
-//│ >   fst: Cons {
-//│ >     head: Tup2 { fst: [Cons], snd: [Lazy] },
-//│ >     tail: Cons { head: [Tup2], tail: [Cons] }
+    [k, rs] :: t then [words(k), cycle(rs)] :: lscomp(t)
+  [lscomp(respMsgs), cycle(repeatMsgs)]
+//│ > [
+//│ >   Cons {
+//│ >     head: [ [Cons], [Lazy] ],
+//│ >     tail: Cons { head: [Array], tail: [Cons] }
 //│ >   },
-//│ >   snd: Lazy {
+//│ >   Lazy {
 //│ >     init: [Function (anonymous)],
 //│ >     cached: None { class: [class None] }
 //│ >   }
-//│ initial = }
+//│ initial = ]
 
 fun prefix(xxs, yys) = if xxs is
   Nil then true
@@ -287,27 +287,27 @@ fun tails(xs) = lazy of () =>
 fun ucase(ls) = map(toUpper, ls)
 
 let conjugates =
-  let oneways = Tup2(nofibStringToList("me"), nofibStringToList("you")) :: Nil
-  let bothways = Tup2(nofibStringToList("are"), nofibStringToList("am")) ::
-    Tup2(nofibStringToList("we're"), nofibStringToList("was")) ::
-    Tup2(nofibStringToList("you"), nofibStringToList("I")) ::
-    Tup2(nofibStringToList("your"), nofibStringToList("my")) ::
-    Tup2(nofibStringToList("I've"), nofibStringToList("you've")) ::
-    Tup2(nofibStringToList("I'm"), nofibStringToList("you're")) ::
+  let oneways = [nofibStringToList("me"), nofibStringToList("you")] :: Nil
+  let bothways = [nofibStringToList("are"), nofibStringToList("am")] ::
+    [nofibStringToList("we're"), nofibStringToList("was")] ::
+    [nofibStringToList("you"), nofibStringToList("I")] ::
+    [nofibStringToList("your"), nofibStringToList("my")] ::
+    [nofibStringToList("I've"), nofibStringToList("you've")] ::
+    [nofibStringToList("I'm"), nofibStringToList("you're")] ::
     Nil
-  fun prepare(ls) = map(wr => if wr is Tup2(w, r) then Tup2(ucase(w), r), ls)
+  fun prepare(ls) = map(wr => if wr is [w, r] then [ucase(w), r], ls)
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Tup2(x, y) :: t then (Tup2(x, y) :: Tup2(y, x) :: Nil) :: lscomp(t)
+    [x, y] :: t then ([x, y] :: [y, x] :: Nil) :: lscomp(t)
   prepare(append(oneways, concat(lscomp(bothways))))
 //│ > Cons {
-//│ >   head: Tup2 {
-//│ >     fst: Cons { head: 'M', tail: [Cons] },
-//│ >     snd: Cons { head: 'y', tail: [Cons] }
-//│ >   },
+//│ >   head: [
+//│ >     Cons { head: 'M', tail: [Cons] },
+//│ >     Cons { head: 'y', tail: [Cons] }
+//│ >   ],
 //│ >   tail: Cons {
-//│ >     head: Tup2 { fst: [Cons], snd: [Cons] },
-//│ >     tail: Cons { head: [Tup2], tail: [Cons] }
+//│ >     head: [ [Cons], [Cons] ],
+//│ >     tail: Cons { head: [Array], tail: [Cons] }
 //│ >   }
 //│ conjugates = }
 
@@ -316,7 +316,7 @@ fun conjug(d, w) =
   fun conj(w) =
     fun lscomp(ls) = if ls is
       Nil then Nil
-      Tup2(w_, m) :: t and
+      [w_, m] :: t and
         listEq(ucase(w), w_) then m :: lscomp(t)
         else lscomp(t)
     head(append(lscomp(conjugates), w :: Nil))
@@ -338,19 +338,19 @@ fun replies(key, l) =
   )
 
 fun answer(st, l) =
-  fun cons(e, r_es) = if r_es is Tup2(r, es) then Tup2(r, e :: es)
+  fun cons(e, r_es) = if r_es is [r, es] then [r, e :: es]
   fun ans(e_es, l) = if e_es is
-    Tup2(key, a_as) :: es and force(a_as) is LzCons(a, as_) then
+    [key, a_as] :: es and force(a_as) is LzCons(a, as_) then
       let rs = replies(key, l)
       if null_lz(rs)
-      then cons(Tup2(key, a_as), ans(es, l))
-      else Tup2(makeResponse(a, head_lz(rs)), Tup2(key, as_) :: es)
-  if ans(keyTabOf(st), l) is Tup2(response, kt) then Tup2(response, newKeyTab(kt, st))
+      then cons([key, a_as], ans(es, l))
+      else [makeResponse(a, head_lz(rs)), [key, as_] :: es]
+  if ans(keyTabOf(st), l) is [response, kt] then [response, newKeyTab(kt, st)]
 
 fun session(rs, prev, ls) = if ls is
   Nil then Nil
   l :: ls and
-    (if listEqBy(listEq, prev, l) then repeated(rs) else answer(rs, l)) is Tup2(response, rs_) then
+    (if listEqBy(listEq, prev, l) then repeated(rs) else answer(rs, l)) is [response, rs_] then
       append(response, append(nofibStringToList("\n\n"), session(rs_, l, ls)))
 
 fun testEliza_nofib(n) =

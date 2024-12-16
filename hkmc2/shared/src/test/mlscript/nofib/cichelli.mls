@@ -35,16 +35,16 @@ class H(f: Option[Int], s: Option[Int], ls: List[Int])
 fun ends(k) = if k is K(_, a, z, _) then a :: z :: Nil
 
 fun assoc(x, yz) = if yz is
-  Tup2(y, z) :: yzs then if x === y then z else assoc(x, yzs)
+  [y, z] :: yzs then if x === y then z else assoc(x, yzs)
   else throw Error("assoc: not found")
 
 fun assocm(x, yz) = if yz is
-  Tup2(y, z) :: yzs then if x === y then Some(z) else assocm(x, yzs)
+  [y, z] :: yzs then if x === y then Some(z) else assocm(x, yzs)
   else None
 
 fun histins(x, yns) = if yns is
-  Tup2(y, n) :: yns then if x === y then Tup2(y, n + 1) :: yns else Tup2(y, n) :: histins(x, yns)
-  else Tup2(x, 1) :: Nil
+  [y, n] :: yns then if x === y then [y, n + 1] :: yns else [y, n] :: histins(x, yns)
+  else [x, 1] :: Nil
 
 fun histo(ls) = foldr(histins, Nil, ls)
 
@@ -73,11 +73,11 @@ fun maxm(x, y) = if x is
 
 fun hash(cvs, k) = if k is K(_, a, z, n) then n + assoc(a, cvs) + assoc(z, cvs)
 
-fun select(p, x, ts_fs) = if ts_fs is Tup2(ts, fs) and
-  p(x) then Tup2(x :: ts, fs)
-  else Tup2(ts, x :: fs)
+fun select(p, x, ts_fs) = if ts_fs is [ts, fs] and
+  p(x) then [x :: ts, fs]
+  else [ts, x :: fs]
 
-fun partition_(p, ls) = foldr((x, y) => select(p, x, y), Tup2(Nil, Nil), ls)
+fun partition_(p, ls) = foldr((x, y) => select(p, x, y), [Nil, Nil], ls)
 
 fun freqsorted(x) = x
 
@@ -85,18 +85,15 @@ fun blocked_(ds, ls) = if ls is
   Nil then Nil
   k :: ks then
     let ds_ = union(ds, ends(k))
-    if partition_(x => subset(ends(x), ds_), ks) is Tup2(det, rest) then
+    if partition_(x => subset(ends(x), ds_), ks) is [det, rest] then
       k :: append(det, blocked_(ds_, rest))
 
 fun blocked(ls) = blocked_(Nil, ls)
 
 let freqtab = histo(concat(map(ends, attribkeys(keys))))
 //│ > Cons {
-//│ >   head: Tup2 { fst: 'e', snd: 8 },
-//│ >   tail: Cons {
-//│ >     head: Tup2 { fst: 'w', snd: 1 },
-//│ >     tail: Cons { head: [Tup2], tail: [Cons] }
-//│ >   }
+//│ >   head: [ 'e', 8 ],
+//│ >   tail: Cons { head: [ 'w', 1 ], tail: Cons { head: [Array], tail: [Cons] } }
 //│ freqtab = }
 
 let maxval = listLen(freqtab)
@@ -131,9 +128,9 @@ fun findhash_(keyHashSet, charAssocs, ks) = if ks is
       if hinsert(hash(newCharAssocs, K(s, a, z, n)), keyHashSet) is
         None then NotEver(1)
         Some(newKeyHashSet) then findhash_(newKeyHashSet, newCharAssocs, ks)
-    if Tup2(assocm(a, charAssocs), assocm(z, charAssocs)) is
-      Tup2(None, None) and
-        a === z then firstSuccess(m => tryy(Tup2(a, m) :: Nil), enumFromTo_lz(0, maxval))
+    if [assocm(a, charAssocs), assocm(z, charAssocs)] is
+      [None, None] and
+        a === z then firstSuccess(m => tryy([a, m] :: Nil), enumFromTo_lz(0, maxval))
         else
           fun lscomp1(ls1) = lazy of () =>
             if force(ls1) is
@@ -142,12 +139,12 @@ fun findhash_(keyHashSet, charAssocs, ks) = if ks is
                 fun lscomp2(ls2) =
                   if force(ls2) is
                     LzNil then lscomp1(ms)
-                    LzCons(n, ns) then lazy of () => LzCons(Tup2(m, n), lscomp2(ns))
+                    LzCons(n, ns) then lazy of () => LzCons([m, n], lscomp2(ns))
                 force(lscomp2(enumFromTo_lz(0, maxval)))
-          firstSuccess(mn => if mn is Tup2(m, n) then tryy(Tup2(a, m) :: Tup2(z, n) :: Nil), lscomp1(enumFromTo_lz(0, maxval)))
-      Tup2(None, Some(zc)) then firstSuccess(m => tryy(Tup2(a, m) :: Nil), enumFromTo_lz(0, maxval))
-      Tup2(Some(ac), None) then firstSuccess(n => tryy(Tup2(z, n) :: Nil), enumFromTo_lz(0, maxval))
-      Tup2(Some(ac), Some(zc)) then tryy(Nil)
+          firstSuccess(mn => if mn is [m, n] then tryy([a, m] :: [z, n] :: Nil), lscomp1(enumFromTo_lz(0, maxval)))
+      [None, Some(zc)] then firstSuccess(m => tryy([a, m] :: Nil), enumFromTo_lz(0, maxval))
+      [Some(ac), None] then firstSuccess(n => tryy([z, n] :: Nil), enumFromTo_lz(0, maxval))
+      [Some(ac), Some(zc)] then tryy(Nil)
 
 fun findhash(keys) = findhash_(H(None, None, Nil), Nil, keys)
 
@@ -163,7 +160,7 @@ fun cichelli(n) =
 
 fun prog(n) = cichelli(n)
 
-:expect 'YesIts(113994, [(w,16),(r,17),(o,11),(m,17),(l,11),(x,2),(n,11),(i,4),(f,10),(h,3),(g,0),(t,5),(d,0),(a,0),(s,2),(c,0),(e,1)])'
+:expect 'YesIts(113994, [w,16,r,17,o,11,m,17,l,11,x,2,n,11,i,4,f,10,h,3,g,0,t,5,d,0,a,0,s,2,c,0,e,1])'
 prog(6).toString()
-//│ = 'YesIts(113994, [(w,16),(r,17),(o,11),(m,17),(l,11),(x,2),(n,11),(i,4),(f,10),(h,3),(g,0),(t,5),(d,0),(a,0),(s,2),(c,0),(e,1)])'
+//│ = 'YesIts(113994, [w,16,r,17,o,11,m,17,l,11,x,2,n,11,i,4,f,10,h,3,g,0,t,5,d,0,a,0,s,2,c,0,e,1])'
 

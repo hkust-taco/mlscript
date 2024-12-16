@@ -40,7 +40,7 @@ fun intersperse(sep, xs) = if xs is
 
 fun lines(s) = if
   s is Nil then Nil
-  break_(x => x === "|", s) is Tup2(l, s_) then
+  break_(x => x === "|", s) is [l, s_] then
     let tt = if s_ is
       Nil then Nil
       _ :: s__ then lines(s__)
@@ -73,16 +73,16 @@ fun quickSort(xs) = if xs is
         else lscomp2(t)
     append(quickSort(lscomp1(xs_)), x :: quickSort(lscomp2(xs_)))
 
-fun select(p, x, ts_fs) = if ts_fs is Tup2(ts, fs) and
-  p(x) then Tup2(x :: ts, fs)
-  else Tup2(ts, x :: fs)
+fun select(p, x, ts_fs) = if ts_fs is [ts, fs] and
+  p(x) then [x :: ts, fs]
+  else [ts, x :: fs]
 
-fun partition(p, xs) = foldr((x, y) => select(p, x, y), Tup2(Nil, Nil), xs)
+fun partition(p, xs) = foldr((x, y) => select(p, x, y), [Nil, Nil], xs)
 
 fun quickSort2(xs) = if xs is
   Nil then Nil
   x :: xs_ then
-    if partition(y => geList(x, y), xs_) is Tup2(lo, hi) then
+    if partition(y => geList(x, y), xs_) is [lo, hi] then
       append(quickSort2(lo), x :: quickSort2(hi))
 
 fun quickerSort(xss) = if xss is

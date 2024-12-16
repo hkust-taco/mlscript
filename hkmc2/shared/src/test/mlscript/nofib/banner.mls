@@ -71,18 +71,18 @@ let slant =
 //│ slant = }
 
 let punct =
-  Tup2(".", nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("  .. ") :: nofibStringToList("  .. ") :: Nil) ::
-  Tup2("?", nofibStringToList(" ??? ") :: nofibStringToList("?   ?") :: nofibStringToList("   ? ") :: nofibStringToList("  ?  ") :: nofibStringToList("  .  ") :: Nil) ::
-  Tup2("!", nofibStringToList("  !  ") :: nofibStringToList("  !  ") :: nofibStringToList("  !  ") :: nofibStringToList("  !  ") :: nofibStringToList("  .  ") :: Nil) ::
-  Tup2("-", nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("-----") :: nofibStringToList("     ") :: nofibStringToList("     ") :: Nil) ::
-  Tup2("+", nofibStringToList("  +  ") :: nofibStringToList("  +  ") :: nofibStringToList("+++++") :: nofibStringToList("  +  ") :: nofibStringToList("  +  ") :: Nil) ::
-  Tup2(":", nofibStringToList("     ") :: nofibStringToList("  :: ") :: nofibStringToList("     ") :: nofibStringToList("  :: ") :: nofibStringToList("     ") :: Nil) ::
-  Tup2(";", nofibStringToList("     ") :: nofibStringToList("  ;; ") :: nofibStringToList("     ") :: nofibStringToList("  ;; ") :: nofibStringToList(" ;;  ") :: Nil) :: Nil
+  [".", nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("  .. ") :: nofibStringToList("  .. ") :: Nil] ::
+  ["?", nofibStringToList(" ??? ") :: nofibStringToList("?   ?") :: nofibStringToList("   ? ") :: nofibStringToList("  ?  ") :: nofibStringToList("  .  ") :: Nil] ::
+  ["!", nofibStringToList("  !  ") :: nofibStringToList("  !  ") :: nofibStringToList("  !  ") :: nofibStringToList("  !  ") :: nofibStringToList("  .  ") :: Nil] ::
+  ["-", nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("-----") :: nofibStringToList("     ") :: nofibStringToList("     ") :: Nil] ::
+  ["+", nofibStringToList("  +  ") :: nofibStringToList("  +  ") :: nofibStringToList("+++++") :: nofibStringToList("  +  ") :: nofibStringToList("  +  ") :: Nil] ::
+  [":", nofibStringToList("     ") :: nofibStringToList("  :: ") :: nofibStringToList("     ") :: nofibStringToList("  :: ") :: nofibStringToList("     ") :: Nil] ::
+  [";", nofibStringToList("     ") :: nofibStringToList("  ;; ") :: nofibStringToList("     ") :: nofibStringToList("  ;; ") :: nofibStringToList(" ;;  ") :: Nil] :: Nil
 //│ > Cons {
-//│ >   head: Tup2 { fst: '.', snd: Cons { head: [Cons], tail: [Cons] } },
+//│ >   head: [ '.', Cons { head: [Cons], tail: [Cons] } ],
 //│ >   tail: Cons {
-//│ >     head: Tup2 { fst: '?', snd: [Cons] },
-//│ >     tail: Cons { head: [Tup2], tail: [Cons] }
+//│ >     head: [ '?', [Cons] ],
+//│ >     tail: Cons { head: [Array], tail: [Cons] }
 //│ >   }
 //│ punct = }
 
@@ -133,7 +133,7 @@ fun picChar(c) =
   fun lscomp(ls) = if ls is
     Nil then Nil
     h :: t and
-      h is Tup2(c_, letter) and c_ === c then letter :: lscomp(t)
+      h is [c_, letter] and c_ === c then letter :: lscomp(t)
       else lscomp(t)
   
   if

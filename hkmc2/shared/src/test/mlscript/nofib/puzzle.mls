@@ -88,7 +88,7 @@ fun opposite(b) = if b is
   RightBank then LeftBank
 
 fun notSeen(state, states) =
-  all(_s => if _s is Tup2(_, s) then not(stateEq(state, s)), states)
+  all(_s => if _s is [_, s] then not(stateEq(state, s)), states)
 
 fun writeItem(i, b, rest) = if i is
   Bono and b is LeftBank then append(nofibStringToList("    Bono |                    |\n"), rest)
@@ -122,13 +122,13 @@ fun writeState(state, s) =
     )
   )
 
-fun totalTime(history) = if history is Tup2(time, _) :: _ then time
+fun totalTime(history) = if history is [time, _] :: _ then time
 
 fun writeHistory(history, x) = if history is
   Nil then x
   else
     foldr(
-      (timestate, acc) => (s) => if timestate is Tup2(time, state) then
+      (timestate, acc) => (s) => if timestate is [time, state] then
         append(nofibStringToList("Time: "), append(nofibStringToList(stringOfInt(totalTime(history) - time)), "\n" :: writeState(state, acc(s)))),
       x => x,
       history
@@ -166,9 +166,9 @@ fun u2times(i) = if i is
   Adam then 1
 
 fun transfer(source, dest, location, countdown, history) =
-  if stateEq(source, dest) then (Tup2(countdown, dest) :: history) :: Nil
+  if stateEq(source, dest) then ([countdown, dest] :: history) :: Nil
   else
-    let newHistory = Tup2(countdown, dest) :: history
+    let newHistory = [countdown, dest] :: history
     let newLocation = opposite(location)
     fun lscomp1(ls) = if ls is
       Nil then Nil

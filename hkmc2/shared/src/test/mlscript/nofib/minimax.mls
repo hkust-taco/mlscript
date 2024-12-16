@@ -189,16 +189,16 @@ fun empty_(x, r) = if
   else false
 
 fun empty(pos, board) = if board is r1 :: r2 :: r3 :: Nil and pos is
-  Tup2(1, x) then empty_(x, r1)
-  Tup2(2, x) then empty_(x, r2)
-  Tup2(3, x) then empty_(x, r3)
+  [1, x] then empty_(x, r1)
+  [2, x] then empty_(x, r2)
+  [3, x] then empty_(x, r3)
 
 fun placePiece(p, board, pos) = if
   not(empty(pos, board)) then Nil
   board is r1 :: r2 :: r3 :: Nil and pos is
-    Tup2(1, x) then (insert(p, r1, x) :: r2 :: r3 :: Nil) :: Nil
-    Tup2(2, x) then (r1 :: insert(p, r2, x) :: r3 :: Nil) :: Nil
-    Tup2(3, x) then (r1 :: r2 :: insert(p, r3, x) :: Nil) :: Nil
+    [1, x] then (insert(p, r1, x) :: r2 :: r3 :: Nil) :: Nil
+    [2, x] then (r1 :: insert(p, r2, x) :: r3 :: Nil) :: Nil
+    [3, x] then (r1 :: r2 :: insert(p, r3, x) :: Nil) :: Nil
 
 fun fullBoard(b) = andd(map(
   x => not(eqPiece(x, Empty)),
@@ -211,7 +211,7 @@ fun newPositions(piece, board) =
     x :: xs then
       fun lscomp2(ls) = if ls is
         Nil then lscomp1(xs)
-        y :: ys then Tup2(x, y) :: lscomp2(ys)
+        y :: ys then [x, y] :: lscomp2(ys)
       lscomp2(1 :: 2 :: 3 :: Nil)
   concat(map(
     pos => placePiece(piece, board, pos),
@@ -272,13 +272,13 @@ fun opposite(p) = if p is
 
 fun best(f, bs, ss) = if bs is b :: bs and ss is s :: ss then
   fun best_(b, s, ls1, ls2) = if ls1 is
-    Nil and ls2 is Nil then Tup2(b, s)
+    Nil and ls2 is Nil then [b, s]
     b_ :: bs and ls2 is s_ :: ss and
       evaluationEq(s, f(s, s_)) then best_(b, s, bs, ss)
       else best_(b_, s_, bs, ss)
   best_(b, s, bs, ss)
 
-fun showMove(m) = if m is Tup2(b, e) then
+fun showMove(m) = if m is [b, e] then
   append(showEvaluation(e), append(nofibStringToList("\n"), showBoard(b)))
 
 fun max_(e1, e2) = if
@@ -330,8 +330,8 @@ fun alternate(player, f, g, board) = if
   let possibles = newPositions(player, board)
   let scores = map(x => bestMove(opposition, g, f, x), possibles)
   let boardd_eval = best(f, possibles, scores)
-  boardd_eval is Tup2(boardd, eval) then
-    Tup2(boardd, eval) :: alternate(opposition, g, f, boardd)
+  boardd_eval is [boardd, eval] then
+    [boardd, eval] :: alternate(opposition, g, f, boardd)
 
 fun prog(input) =
   let testBoard =
