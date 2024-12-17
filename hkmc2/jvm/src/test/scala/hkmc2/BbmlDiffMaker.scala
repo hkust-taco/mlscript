@@ -49,7 +49,7 @@ abstract class BbmlDiffMaker extends JSBackendDiffMaker:
     if bbmlOpt.isSet then
       if bbmlTyper.isEmpty then
         bbmlTyper = S(BBTyper())
-      given hkmc2.bbml.BbCtx = bbCtx.copy(raise = summon)
+      given hkmc2.bbml.BbCtx = bbCtx.copy(raise = summon, scope = bbCtx.scope.nest)
       val typer = bbmlTyper.get
       val ty = typer.typePurely(trm)
       val printer = PrettyPrinter((msg: String) => output(msg))

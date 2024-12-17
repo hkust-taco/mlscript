@@ -7,7 +7,7 @@ class Option[out A](inspect: [E, Res] -> (() ->{E} Res, A ->{E} Res) ->{E} Res)
 //│ Type: ⊤
 
 opt => opt.Option#inspect
-//│ Type: (Option[out A1_1]) ->{⊥} forall E_2, Res_2: (() ->{E_2} Res_2, (A1_1) ->{E_2} Res_2) ->{E_2} Res_2
+//│ Type: (Option[out outA_1]) ->{⊥} forall E_2, Res_2: (() ->{E_2} Res_2, (outA_1) ->{E_2} Res_2) ->{E_2} Res_2
 
 opt => opt.Option#inspect(
   () => 42

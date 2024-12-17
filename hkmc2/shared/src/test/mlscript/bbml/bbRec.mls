@@ -52,8 +52,8 @@ fun f(x) = f(Foo.a(x))
 
 fun f(x) = f(x.Foo#a)
 f
-//│ Type: forall x4_2: Foo[out x4_2] -> ⊥
+//│ Type: forall x_2: Foo[out x_2] -> ⊥
 //│ Where:
-//│   x4_2 <: Foo[out x4_2]
+//│   x_2 <: Foo[out x_2]
 
 

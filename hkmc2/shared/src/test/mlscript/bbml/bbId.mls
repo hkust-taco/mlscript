@@ -27,11 +27,11 @@ id : [A] -> A -> A
 
 
 (y => y) : [A] -> A -> A
-//│ Type: forall A1_2: (A1_2) ->{⊥} A1_2
+//│ Type: forall A_2: (A_2) ->{⊥} A_2
 
 fun id(x) = x
 (y => id(y)) : [A] -> A -> A
-//│ Type: forall A2_2: (A2_2) ->{⊥} A2_2
+//│ Type: forall A_2: (A_2) ->{⊥} A_2
 
 
 

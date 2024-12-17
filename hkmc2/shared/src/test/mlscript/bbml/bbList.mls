@@ -51,7 +51,7 @@ fun mapi = s =>
     f => map(s) of x =>
       i := !i + 1
       f(!i, x)
-//│ ╔══[ERROR] Type error in region expression with expected type ((Int, <A8>_2) ->{<E6>_2} <A8>_2) ->{<E6>_2} List[out <A8>_2]
+//│ ╔══[ERROR] Type error in region expression with expected type ((Int, <A1>_2) ->{<E1>_2} <A1>_2) ->{<E1>_2} List[out <A1>_2]
 //│ ║  l.50: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
 //│ ║  l.51: 	    f => map(s) of x =>
@@ -60,15 +60,15 @@ fun mapi = s =>
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ║  l.53: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  f_2 ->{E_2} List[out B_2]  <:  ((Int, <A8>_2) ->{<E6>_2} <A8>_2) ->{<E6>_2} List[out <A8>_2]
-//│ ╟── because: cannot constrain  D( E_2 )  <:  <E6>_2
-//│ ╟── because: cannot constrain  E_2  <:  ¬(~<E6>_2)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ reg7_2  <:  ¬(~<E6>_2)
-//│ ╟── because: cannot constrain  reg7_2  <:  ¬(~<E6>_2)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ r3_2  <:  ¬(~<E6>_2)
-//│ ╟── because: cannot constrain  r3_2  <:  ¬(~<E6>_2)
-//│ ╙── because: cannot constrain    <:  ¬(~<E6>_2)
-//│ ╔══[ERROR] Type error in region expression with expected type ((Int, <A8>_2) ->{<E6>_2} <A8>_2) ->{<E6>_2} List[out <A8>_2]
+//│ ╟── because: cannot constrain  f_2 ->{E_2} List[out B_2]  <:  ((Int, <A1>_2) ->{<E1>_2} <A1>_2) ->{<E1>_2} List[out <A1>_2]
+//│ ╟── because: cannot constrain  D( E_2 )  <:  <E1>_2
+//│ ╟── because: cannot constrain  E_2  <:  ¬(~<E1>_2)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ reg_2  <:  ¬(~<E1>_2)
+//│ ╟── because: cannot constrain  reg_2  <:  ¬(~<E1>_2)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ r_2  <:  ¬(~<E1>_2)
+//│ ╟── because: cannot constrain  r_2  <:  ¬(~<E1>_2)
+//│ ╙── because: cannot constrain    <:  ¬(~<E1>_2)
+//│ ╔══[ERROR] Type error in region expression with expected type ((Int, <A1>_2) ->{<E1>_2} <A1>_2) ->{<E1>_2} List[out <A1>_2]
 //│ ║  l.50: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
 //│ ║  l.51: 	    f => map(s) of x =>
@@ -77,15 +77,15 @@ fun mapi = s =>
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ║  l.53: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  f_2 ->{E_2} List[out B_2]  <:  ((Int, <A8>_2) ->{<E6>_2} <A8>_2) ->{<E6>_2} List[out <A8>_2]
-//│ ╟── because: cannot constrain  D( E_2 )  <:  <E6>_2
-//│ ╟── because: cannot constrain  E_2  <:  ¬(~<E6>_2)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ reg7_2  <:  ¬(~<E6>_2)
-//│ ╟── because: cannot constrain  reg7_2  <:  ¬(~<E6>_2)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ r3_2  <:  ¬(~<E6>_2)
-//│ ╟── because: cannot constrain  r3_2  <:  ¬(~<E6>_2)
-//│ ╙── because: cannot constrain    <:  ¬(~<E6>_2)
-//│ ╔══[ERROR] Type error in region expression with expected type ((Int, <A8>_2) ->{<E6>_2} <A8>_2) ->{<E6>_2} List[out <A8>_2]
+//│ ╟── because: cannot constrain  f_2 ->{E_2} List[out B_2]  <:  ((Int, <A1>_2) ->{<E1>_2} <A1>_2) ->{<E1>_2} List[out <A1>_2]
+//│ ╟── because: cannot constrain  D( E_2 )  <:  <E1>_2
+//│ ╟── because: cannot constrain  E_2  <:  ¬(~<E1>_2)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ reg_2  <:  ¬(~<E1>_2)
+//│ ╟── because: cannot constrain  reg_2  <:  ¬(~<E1>_2)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ r_2  <:  ¬(~<E1>_2)
+//│ ╟── because: cannot constrain  r_2  <:  ¬(~<E1>_2)
+//│ ╙── because: cannot constrain    <:  ¬(~<E1>_2)
+//│ ╔══[ERROR] Type error in region expression with expected type ((Int, <A1>_2) ->{<E1>_2} <A1>_2) ->{<E1>_2} List[out <A1>_2]
 //│ ║  l.50: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
 //│ ║  l.51: 	    f => map(s) of x =>
@@ -94,14 +94,14 @@ fun mapi = s =>
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ║  l.53: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  f_2 ->{E_2} List[out B_2]  <:  ((Int, <A8>_2) ->{<E6>_2} <A8>_2) ->{<E6>_2} List[out <A8>_2]
-//│ ╟── because: cannot constrain  D( E_2 )  <:  <E6>_2
-//│ ╟── because: cannot constrain  E_2  <:  ¬(~<E6>_2)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ reg7_2  <:  ¬(~<E6>_2)
-//│ ╟── because: cannot constrain  reg7_2  <:  ¬(~<E6>_2)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ r3_2  <:  ¬(~<E6>_2)
-//│ ╟── because: cannot constrain  r3_2  <:  ¬(~<E6>_2)
-//│ ╙── because: cannot constrain    <:  ¬(~<E6>_2)
+//│ ╟── because: cannot constrain  f_2 ->{E_2} List[out B_2]  <:  ((Int, <A1>_2) ->{<E1>_2} <A1>_2) ->{<E1>_2} List[out <A1>_2]
+//│ ╟── because: cannot constrain  D( E_2 )  <:  <E1>_2
+//│ ╟── because: cannot constrain  E_2  <:  ¬(~<E1>_2)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ reg_2  <:  ¬(~<E1>_2)
+//│ ╟── because: cannot constrain  reg_2  <:  ¬(~<E1>_2)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ r_2  <:  ¬(~<E1>_2)
+//│ ╟── because: cannot constrain  r_2  <:  ¬(~<E1>_2)
+//│ ╙── because: cannot constrain    <:  ¬(~<E1>_2)
 //│ Type: ⊤
 
 
