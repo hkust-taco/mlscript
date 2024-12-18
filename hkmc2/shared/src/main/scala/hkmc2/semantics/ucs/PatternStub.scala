@@ -35,7 +35,7 @@ enum PatternStub:
   /** Match the current scrutinee unconditionally. */
   case Wildcard
   
-  val arity: Int = this match
+  lazy val arity: Int = this match
     case Literal(_) => 0
     case CharClass(_) => 0
     case ClassLike(symbol) => symbol match

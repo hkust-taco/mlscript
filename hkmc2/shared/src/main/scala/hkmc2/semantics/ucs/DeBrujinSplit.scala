@@ -9,6 +9,18 @@ object DeBrujinSplit:
   
   type Alternative = Branch | Reject.type
   
+  type Consequence = Branch | Alternative
+  
+  // def from(split: Split): DeBrujinSplit =
+  //   def go(split: Split, ctx: Map[Str, Int]): DeBrujinSplit =
+  //     split match
+  //       case Split.Cons(head, tail) => 
+  //       case Split.Let(sym, term, tail) =>
+  //       case Split.Else(default) => 
+  //       case Split.End => Accept(Nil)
+  //   go(split, Map())
+      
+  
   // def elaborate(tree: syntax.Tree, elaborator: Elaborator)(using Elaborator.Ctx) =
   //   import syntax.Tree, Tree.*, PatternStub.*, HelperExtractors.*, elaborator.tl.*
   //   type F = (=> DeBrujinSplit, => Alternative) => Alternative
@@ -31,15 +43,15 @@ object DeBrujinSplit:
   //   Binder(next(tree)(Accept(Nil), Reject))
 end DeBrujinSplit
 
-import DeBrujinSplit.{Alternative, Outermost}
+import DeBrujinSplit.{Alternative, Consequence, Outermost}
 
 enum DeBrujinSplit:
   case Binder(body: DeBrujinSplit)
   case Branch(scrutinee: Int,
               pattern: PatternStub,
-              consequence: DeBrujinSplit,
+              consequence: Consequence,
               alternative: Alternative)
-  case Accept(variables: List[Int])
+  case Accept(outcome: Int)
   case Reject
   
   def firstPatterns: Set[PatternStub] =
@@ -65,9 +77,16 @@ enum DeBrujinSplit:
         s"${ctx(scrutinee)} is ${pattern.showDbg} -> " +
           (if con.contains('\n') then "\n" + con.indent("  ") else con) +
           (if alt == "reject" then "" else s"\n$alt")
-      case Accept(indices) => indices.map(ctx).mkString("accept ", " ", "")
+      case Accept(outcome) => s"accept $outcome"
       case Reject => "reject"
     go(this, Map())
+
+
+import DeBrujinSplit.{Binder, Branch, Accept, Reject}
+    
+extension (split: DeBrujinSplit)
+  def unbind(level: Int): Consequence = split match
+    case Binder
     
 // extension (split: DeBrujinSplit.Binder)
 //   def zip(that: DeBrujinSplit.Binder): DeBrujinSplit.Binder =

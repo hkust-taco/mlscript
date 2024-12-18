@@ -92,8 +92,8 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
           val whenFalse = rec(specialize(alternative, -, scrutinee, pattern).clearFallback)
           Branch(scrutinee, pattern, whenTrue) ~: whenFalse
         case Pattern.Synonym(symbol, _) =>
-          log("huh?")
-          log(s"SimpleSplit:\n${symbol.simpleSplit.map(_.display).getOrElse("nothing")}")
+          scoped("ucs:rp"):
+            log(s"simple split of ${symbol.nme}:\n${symbol.simpleSplit.map(_.display).getOrElse("nothing")}")
           Split.End
           // val mk = new Compiler(elaborator)(symbol)(using ctx, elaborator.state)
           // rec(mk(() => scrutinee, rec(consequent)) ++ alternative)

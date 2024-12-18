@@ -14,9 +14,9 @@ object SimpleSplit:
         val pat = pattern.display
         val con = display(consequence)
         val alt = display(alternative)
-        s"$pat -> "
-          + (if con.contains('\n') then s"\n  $con" else con)
-          + (if alt.isEmpty then "" else s"\n  $alt")
+        s"$pat ->"
+          + "\n" + con.indent("  ")
+          + (if alt.isEmpty then "" else s"\n$alt")
     go(split)
 
 enum SimpleSplit extends ProductWithTail:
