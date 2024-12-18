@@ -13,8 +13,7 @@ import semantics.*, semantics.Term.*
 import Elaborator.Ctx
 import syntax.*
 import Tree.*
-import codegen.js.Scope
-
+import utils.Scope
 
 object InfVarUid extends Uid.Handler[InfVar]
 
