@@ -4,6 +4,7 @@ import mlscript.utils.*, shorthands.*
 
 import hkmc2.semantics.*
 import hkmc2.bbml.*
+import utils.Scope
 
 
 abstract class BbmlDiffMaker extends JSBackendDiffMaker:
@@ -41,15 +42,14 @@ abstract class BbmlDiffMaker extends JSBackendDiffMaker:
     bbml.BbCtx.init(_ => die)
   
   
-  var bbmlTyper: Opt[BBTyper] = None
   
   
   override def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Raise): Unit =
     super.processTerm(trm, inImport)
     if bbmlOpt.isSet then
-      if bbmlTyper.isEmpty then
-        bbmlTyper = S(BBTyper())
-      given hkmc2.bbml.BbCtx = bbCtx.copy(raise = summon, scope = bbCtx.scope.nest)
+      given Scope = Scope.empty
+      val bbmlTyper = S(BBTyper())
+      given hkmc2.bbml.BbCtx = bbCtx.copy(raise = summon)
       val typer = bbmlTyper.get
       val ty = typer.typePurely(trm)
       val printer = PrettyPrinter((msg: String) => output(msg))

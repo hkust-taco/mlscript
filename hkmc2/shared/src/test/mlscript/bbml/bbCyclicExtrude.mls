@@ -23,10 +23,10 @@ f => (let g = x => f(x(x)) in g) : [A] -> A -> A
 //│ ╔══[ERROR] Type error in block with expected type (<A>_2) ->{⊥} <A>_2
 //│ ║  l.22: 	f => (let g = x => f(x(x)) in g) : [A] -> A -> A
 //│ ║        	              ^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  x_2 ->{eff1_2 ∨ eff_2} app1_2  <:  <A>_2 -> <A>_2
+//│ ╟── because: cannot constrain  x_2 ->{eff_2 ∨ eff1_2} app_2  <:  <A>_2 -> <A>_2
 //│ ╟── because: cannot constrain  <A>_2  <:  D( x_2 )
 //│ ╟── because: cannot constrain  <A>_2  <:  x_2
-//│ ╙── because: cannot constrain  <A>_2  <:  ¬(~{x_2 ->{eff_2} app_2})
+//│ ╙── because: cannot constrain  <A>_2  <:  ¬(~{x_2 ->{eff1_2} app1_2})
 //│ Type: (⊥ -> ⊥) ->{⊥} forall A_2: (A_2) ->{⊥} A_2
 
 f => (x => f(x(x)) : [A] -> A -> A)

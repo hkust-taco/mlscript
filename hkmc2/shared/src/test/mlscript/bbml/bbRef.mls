@@ -25,10 +25,10 @@ let r = region x in x.ref 42
 //│ ║        	                    ^^^^^^^^
 //│ ║  l.22: 	!r
 //│ ║        	^^
-//│ ╟── because: cannot constrain  reg1_1 ∨ eff_1  <:  ⊥
+//│ ╟── because: cannot constrain  reg_1 ∨ eff_1  <:  ⊥
+//│ ╟── because: cannot constrain  reg_1  <:  ¬()
 //│ ╟── because: cannot constrain  reg1_1  <:  ¬()
-//│ ╟── because: cannot constrain  reg_1  <:  ¬()
-//│ ╟── because: cannot constrain  reg_1  <:  ¬()
+//│ ╟── because: cannot constrain  reg1_1  <:  ¬()
 //│ ╟── because: cannot constrain  ¬⊥ ∧ x_1  <:  ¬()
 //│ ╟── because: cannot constrain  x_1  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
@@ -75,10 +75,10 @@ in t := 0
 //│ ║        	  ^^^^^^^^
 //│ ║  l.72: 	in t := 0
 //│ ║        	^^^^^^^^^
-//│ ╟── because: cannot constrain  reg1_1 ∨ eff_1  <:  ⊥
+//│ ╟── because: cannot constrain  reg_1 ∨ eff_1  <:  ⊥
+//│ ╟── because: cannot constrain  reg_1  <:  ¬()
 //│ ╟── because: cannot constrain  reg1_1  <:  ¬()
-//│ ╟── because: cannot constrain  reg_1  <:  ¬()
-//│ ╟── because: cannot constrain  reg_1  <:  ¬()
+//│ ╟── because: cannot constrain  reg1_1  <:  ¬()
 //│ ╟── because: cannot constrain  ¬⊥ ∧ x_1  <:  ¬()
 //│ ╟── because: cannot constrain  x_1  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
@@ -98,10 +98,10 @@ in !t
 //│ ║        	  ^^^^^^^^
 //│ ║  l.95: 	in !t
 //│ ║        	^^^^^
-//│ ╟── because: cannot constrain  reg1_1 ∨ eff_1  <:  ⊥
+//│ ╟── because: cannot constrain  reg_1 ∨ eff_1  <:  ⊥
+//│ ╟── because: cannot constrain  reg_1  <:  ¬()
 //│ ╟── because: cannot constrain  reg1_1  <:  ¬()
-//│ ╟── because: cannot constrain  reg_1  <:  ¬()
-//│ ╟── because: cannot constrain  reg_1  <:  ¬()
+//│ ╟── because: cannot constrain  reg1_1  <:  ¬()
 //│ ╟── because: cannot constrain  ¬⊥ ∧ x_1  <:  ¬()
 //│ ╟── because: cannot constrain  x_1  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
@@ -167,23 +167,23 @@ fun foo(x) = x
 //│ Type: ⊤
 
 foo
-//│ Type: forall A1_2: (A1_2) ->{⊥} A1_2
+//│ Type: forall A_2: (A_2) ->{⊥} A_2
 //│ Where:
-//│   A1_2 <: Int
+//│   A_2 <: Int
 
 region x in x.ref foo
-//│ Type: Ref[in A1_1 -> (A1_1 ∧ Int) out (A1_1 ∧ Int) -> A1_1, ?]
+//│ Type: Ref[in A_1 -> (A_1 ∧ Int) out (A_1 ∧ Int) -> A_1, ?]
 
 fun bar: ([A] -> A -> A) -> Int
 fun bar(f) = f(42)
 //│ Type: ⊤
 
 bar
-//│ Type: (forall A1_2: (A1_2) ->{⊥} A1_2) ->{⊥} Int
+//│ Type: (forall A_2: (A_2) ->{⊥} A_2) ->{⊥} Int
 
 :e
 region x in x.ref bar
-//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but (forall A1_2: (A1_2) ->{⊥} A1_2) ->{⊥} Int found
+//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but (forall A_2: (A_2) ->{⊥} A_2) ->{⊥} Int found
 //│ ║  l.185: 	region x in x.ref bar
 //│ ╙──       	                  ^^^
 //│ Type: Ref[⊥, ?]

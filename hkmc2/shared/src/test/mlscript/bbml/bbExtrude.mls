@@ -28,7 +28,7 @@ fun g(y) =
 //│ Type: ⊤
 
 g
-//│ Type: (forall A2_2: (⊥) ->{⊥} Int) ->{⊥} forall A3_2: (⊤) ->{⊥} Int
+//│ Type: (forall A_2: (⊥) ->{⊥} Int) ->{⊥} forall A_2: (⊤) ->{⊥} Int
 
 g(foo)
 //│ Type: (⊤) ->{⊥} Int
@@ -38,12 +38,12 @@ y `=> (let t = run(x `=> x `+ y) in y)
 //│ ╔══[ERROR] Type error in quoted term with expected type CodeBase[out T_3, ⊥, ?]
 //│ ║  l.37: 	y `=> (let t = run(x `=> x `+ y) in y)
 //│ ║        	                   ^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  CodeBase[out x_5 -> cde2_5, out ctx3_4, ?]  <:  CodeBase[out T_3, ⊥, ?]
-//│ ╟── because: cannot constrain  D( ctx3_4 )  <:  ⊥
-//│ ╟── because: cannot constrain  ctx3_4  <:  ¬()
-//│ ╟── because: cannot constrain  (¬⊥ ∧ ¬x1_4) ∧ <y1>_3  <:  ¬()
-//│ ╟── because: cannot constrain  <y1>_3  <:  x1_4
-//│ ╙── because: cannot constrain  <y1>_3  <:  ¬()
+//│ ╟── because: cannot constrain  CodeBase[out x_5 -> cde_5, out ctx_4, ?]  <:  CodeBase[out T_3, ⊥, ?]
+//│ ╟── because: cannot constrain  D( ctx_4 )  <:  ⊥
+//│ ╟── because: cannot constrain  ctx_4  <:  ¬()
+//│ ╟── because: cannot constrain  (¬⊥ ∧ ¬x_4) ∧ <y>_3  <:  ¬()
+//│ ╟── because: cannot constrain  <y>_3  <:  x_4
+//│ ╙── because: cannot constrain  <y>_3  <:  ¬()
 //│ Type: CodeBase[out y_3 -> y_3, ⊥, ?]
 //│ Where:
 //│   y_3 <: Int

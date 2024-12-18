@@ -1,19 +1,20 @@
 package hkmc2
 package bbml
 import scala.collection.mutable.{Set => MutSet, ListBuffer}
+import utils.Scope
 
-class PrettyPrinter(output: String => Unit):
+class PrettyPrinter(output: String => Unit)(using Scope):
   def print(ty: GeneralType): Unit =
-    output(s"Type: ${ty}")
+    output(s"Type: ${ty.show}")
     val bounds = PrettyPrinter.collectBounds(ty).distinct
     if !bounds.isEmpty then
       output("Where:")
       bounds.foreach {
-        case (lhs, rhs) => output(s"  $lhs <: $rhs")
+        case (lhs, rhs) => output(s"  ${lhs.show} <: ${rhs.show}")
       }
 
 object PrettyPrinter:
-  def apply(output: String => Unit): PrettyPrinter = new PrettyPrinter(output)
+  def apply(output: String => Unit)(using Scope): PrettyPrinter = new PrettyPrinter(output)
 
   type Bound = (Type, Type) // * Type <: Type
 

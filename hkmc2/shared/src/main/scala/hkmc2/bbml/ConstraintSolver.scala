@@ -7,20 +7,21 @@ import semantics.*
 import Message.MessageContext
 import mlscript.utils.*, shorthands.*
 import utils.*
+import utils.Scope
 
 // * TODO use mutabnle cache instead for correct asymptotic complexity
 type Cache = Set[(Type, Type)]
 type ExtrudeCache = mutable.HashMap[(Uid[InfVar], Bool), InfVar]
 
 case class CCtx(cache: Cache, parents: Ls[(Type, Type)], origin: Term, exp: Opt[GeneralType]):
-  def err(using Raise) =
+  def err(using Raise, Scope) =
     raise(ErrorReport(
       msg"Type error in ${origin.describe}${exp match
-          case S(ty) => msg" with expected type ${ty.toString}"
+          case S(ty) => msg" with expected type ${ty.show}"
           case N => msg""
         }" -> origin.toLoc
       :: parents.reverse.map(p =>
-        msg"because: cannot constrain  ${p._1.toString}  <:  ${p._2.toString}" -> N
+        msg"because: cannot constrain  ${p._1.show}  <:  ${p._2.show}" -> N
       )
     ))
   def nest(sub: (Type, Type)): CCtx =
@@ -37,10 +38,10 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
 
   import hkmc2.bbml.NormalForm.*
 
-  private def freshXVar(lvl: Int, hint: Str): InfVar = InfVar(lvl, infVarState.nextUid, new VarState(), false)(hint)
+  private def freshXVar(lvl: Int, sym: Symbol, hint: Str): InfVar = InfVar(lvl, infVarState.nextUid, new VarState(), false)(sym, hint)
 
-  def extrude(ty: Type)(using lvl: Int, pol: Bool, cache: ExtrudeCache, bbctx: BbCtx, cctx: CCtx, tl: TL): Type =
-  trace[Type](s"Extruding[${printPol(pol)}] $ty", r => s"~> $r"):
+  def extrude(ty: Type)(using lvl: Int, pol: Bool, cache: ExtrudeCache, bbctx: BbCtx, cctx: CCtx, tl: TL, scope: Scope): Type =
+  trace[Type](s"Extruding[${printPol(pol)}] ${ty.show}", r => s"~> ${r.show}"):
     if ty.lvl <= lvl then ty else ty.toBasic/*TODO improve extrude directly*/ match
     case ClassLikeType(sym, targs) =>
       ClassLikeType(sym, targs.map {
@@ -50,7 +51,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
       })
     case v @ InfVar(_, uid, state, true) => // * skolem
       cache.getOrElse(uid -> pol, {
-        val nv = freshXVar(lvl, v.hint)
+        val nv = freshXVar(lvl, v.sym, v.hint)
         cache += uid -> pol -> nv
         if pol then
           constrainImpl(state.upperBounds.foldLeft[Type](Top)(_ & _), nv)
@@ -60,7 +61,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
       })
     case v @ InfVar(_, uid, _, false) =>
       cache.getOrElse(uid -> pol, {
-        val nv = freshXVar(lvl, v.hint)
+        val nv = freshXVar(lvl, v.sym, v.hint)
         cache += uid -> pol -> nv
         if pol then
           v.state.upperBounds ::= nv
@@ -77,7 +78,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
     case NegType(ty) => Type.mkNegType(extrude(ty)(using lvl, !pol))
     case Top | Bot => ty
 
-  private def constrainConj(conj: Conj)(using BbCtx, CCtx, TL): Unit = trace(s"Constraining $conj"):
+  private def constrainConj(conj: Conj)(using BbCtx, CCtx, TL, Scope): Unit = trace(s"Constraining ${conj.show}"):
     conj match
       case Conj(i, u, (v, pol) :: tail) =>
         var rest = Conj(i, u, tail)
@@ -86,12 +87,12 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
           val bd = if v.lvl >= rest.lvl then rest else extrude(rest)(using v.lvl, true, mutable.HashMap.empty)
           if pol then
             val nc = Type.mkNegType(bd)
-            log(s"New bound: $v <: $nc")
+            log(s"New bound: ${v.show} <: ${nc.show}")
             cctx.nest(v -> nc) givenIn:
               v.state.upperBounds ::= nc
               v.state.lowerBounds.foreach(lb => constrainImpl(lb, nc))
           else
-            log(s"New bound: $v :> $bd")
+            log(s"New bound: ${v.show} :> ${bd.show}")
             cctx.nest(bd -> v) givenIn:
               v.state.lowerBounds ::= bd
               v.state.upperBounds.foreach(ub => constrainImpl(bd, ub))
@@ -119,10 +120,10 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
           // raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
           cctx.err
 
-  private def constrainDNF(disj: Disj)(using BbCtx, CCtx, TL): Unit =
+  private def constrainDNF(disj: Disj)(using BbCtx, CCtx, TL, Scope): Unit =
     disj.conjs.foreach(constrainConj(_))
 
-  private def constrainArgs(lhs: TypeArg, rhs: TypeArg)(using BbCtx, CCtx, TL): Unit =
+  private def constrainArgs(lhs: TypeArg, rhs: TypeArg)(using BbCtx, CCtx, TL, Scope): Unit =
     constrainImpl(rhs.negPart, lhs.negPart)
     constrainImpl(lhs.posPart, rhs.posPart)
 
@@ -134,12 +135,12 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
     case NegType(ty) => NegType(inlineSkolemBounds(ty, !pol))
     case _: ClassLikeType | _: FunType | _: InfVar | Top | Bot => ty
 
-  private def constrainImpl(lhs: Type, rhs: Type)(using BbCtx, CCtx, TL): Unit =
+  private def constrainImpl(lhs: Type, rhs: Type)(using BbCtx, CCtx, TL, Scope): Unit =
     if cctx.cache((lhs, rhs)) then log(s"Cached!")
-    else trace(s"CONSTRAINT $lhs <: $rhs"):
+    else trace(s"CONSTRAINT ${lhs.show} <: ${rhs.show}"):
       cctx.nest(lhs -> rhs) givenIn:
         val ty = dnf(inlineSkolemBounds(lhs & rhs.!, true)(using Set.empty)) 
         constrainDNF(ty)
-  def constrain(lhs: Type, rhs: Type)(using BbCtx, CCtx, TL): Unit =
+  def constrain(lhs: Type, rhs: Type)(using BbCtx, CCtx, TL, Scope): Unit =
     constrainImpl(lhs, rhs)
 

@@ -78,7 +78,7 @@ fun high(f) = f(42)
 //│ Type: ⊤
 
 high
-//│ Type: (forall A1_2: (A1_2) ->{⊥} A1_2) ->{⊥} Int
+//│ Type: (forall A_2: (A_2) ->{⊥} A_2) ->{⊥} Int
 
 
 high((x => x): [A] -> A -> A)
@@ -92,11 +92,11 @@ high(x => x + 1)
 //│ ╔══[ERROR] Type error in reference with expected type Int
 //│ ║  l.91: 	high(x => x + 1)
 //│ ║        	          ^
-//│ ╙── because: cannot constrain  <A1>_2  <:  Int
-//│ ╔══[ERROR] Type error in application with expected type <A1>_2
+//│ ╙── because: cannot constrain  <A>_2  <:  Int
+//│ ╔══[ERROR] Type error in application with expected type <A>_2
 //│ ║  l.91: 	high(x => x + 1)
 //│ ║        	          ^^^^^
-//│ ╙── because: cannot constrain  Int  <:  <A1>_2
+//│ ╙── because: cannot constrain  Int  <:  <A>_2
 //│ Type: Int
 
 (let a = 0 in x => x): [A] -> A -> A
@@ -126,7 +126,7 @@ baz: Int -> (([A] -> A -> A), Int) -> Int
 
 
 baz(42)
-//│ Type: (forall A1_2: (A1_2) ->{⊥} A1_2, Int) ->{⊥} Int
+//│ Type: (forall A_2: (A_2) ->{⊥} A_2, Int) ->{⊥} Int
 
 :e
 baz(42): (([A] -> A -> A), Int) -> Int

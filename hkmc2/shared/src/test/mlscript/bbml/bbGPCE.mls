@@ -8,7 +8,7 @@ fun power(x) = case
   0 then `1.0
   n then x `*. power(x)(n - 1)
 power
-//│ Type: forall C1_2: (CodeBase[out Num, out C1_2, ?]) ->{⊥} (Int) ->{⊥} CodeBase[out Num, out C1_2, ?]
+//│ Type: forall C_2: (CodeBase[out Num, out C_2, ?]) ->{⊥} (Int) ->{⊥} CodeBase[out Num, out C_2, ?]
 
 
 fun id: [A] -> A -> A
@@ -64,21 +64,21 @@ fun body(x, y) = case
   0 then x
   1 then y
   n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
-//│ ╔══[ERROR] Type error in application with expected type CodeBase[out Int, out <G1>_2, ?]
+//│ ╔══[ERROR] Type error in application with expected type CodeBase[out Int, out <G>_2, ?]
 //│ ║  l.66: 	  n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  CodeBase[out cde1_2, out ctx_2 ∨ ctx2_2, ?]  <:  CodeBase[out Int, out <G1>_2, ?]
-//│ ╟── because: cannot constrain  D( ctx_2 || ctx2_2 )  <:  <G1>_2
-//│ ╟── because: cannot constrain  ctx2_2  <:  ¬(~<G1>_2)
-//│ ╟── because: cannot constrain  ctx1_2  <:  ¬(~<G1>_2)
-//│ ╟── because: cannot constrain  ctx1_2  <:  ¬(~<G1>_2)
-//│ ╙── because: cannot constrain    <:  ¬(~<G1>_2)
+//│ ╟── because: cannot constrain  CodeBase[out cde_2, out ctx_2 ∨ ctx1_2, ?]  <:  CodeBase[out Int, out <G>_2, ?]
+//│ ╟── because: cannot constrain  D( ctx_2 || ctx1_2 )  <:  <G>_2
+//│ ╟── because: cannot constrain  ctx1_2  <:  ¬(~<G>_2)
+//│ ╟── because: cannot constrain  ctx2_2  <:  ¬(~<G>_2)
+//│ ╟── because: cannot constrain  ctx2_2  <:  ¬(~<G>_2)
+//│ ╙── because: cannot constrain    <:  ¬(~<G>_2)
 //│ Type: ⊤
 
 fun bind: [G] -> (CodeBase[out Int, out G, out Any], [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out Int, out C | G, out Any]) -> CodeBase[out Int, out G, out Any]
 fun bind(rhs, k) = `let x = rhs `in k(x)
 bind
-//│ Type: forall G1_2: (CodeBase[out Int, out G1_2, ?], forall C1_3: (CodeBase[out Int, out C1_3, ?]) ->{⊥} CodeBase[out Int, out C1_3 ∨ G1_2, ?]) ->{⊥} CodeBase[out Int, out G1_2, ?]
+//│ Type: forall G_2: (CodeBase[out Int, out G_2, ?], forall C_3: (CodeBase[out Int, out C_3, ?]) ->{⊥} CodeBase[out Int, out C_3 ∨ G_2, ?]) ->{⊥} CodeBase[out Int, out G_2, ?]
 
 
 fun body: [G] -> (CodeBase[out Int, out G, out Any], CodeBase[out Int, out G, out Any]) -> Int -> CodeBase[out Int, out G, out Any]
@@ -87,7 +87,7 @@ fun body(x, y) = case
   1 then y
   n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out Int, out C, out Any]
 body
-//│ Type: forall G1_2: (CodeBase[out Int, out G1_2, ?], CodeBase[out Int, out G1_2, ?]) ->{⊥} (Int) ->{⊥} CodeBase[out Int, out G1_2, ?]
+//│ Type: forall G_2: (CodeBase[out Int, out G_2, ?], CodeBase[out Int, out G_2, ?]) ->{⊥} (Int) ->{⊥} CodeBase[out Int, out G_2, ?]
 
 fun gib(n) = (x, y) `=> body(x, y)(n)
 let g5 = run(gib(5))

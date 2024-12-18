@@ -49,10 +49,10 @@ letreg(r => !(r.ref 1))
 //│ ╔══[ERROR] Type error in block
 //│ ║  l.48: 	!letreg(r => r.ref 1)
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  reg1_1 ∨ E_1  <:  ⊥
+//│ ╟── because: cannot constrain  reg_1 ∨ E_1  <:  ⊥
+//│ ╟── because: cannot constrain  reg_1  <:  ¬()
 //│ ╟── because: cannot constrain  reg1_1  <:  ¬()
-//│ ╟── because: cannot constrain  reg_1  <:  ¬()
-//│ ╟── because: cannot constrain  reg_1  <:  ¬()
+//│ ╟── because: cannot constrain  reg1_1  <:  ¬()
 //│ ╟── because: cannot constrain  ¬⊥ ∧ R_1  <:  ¬()
 //│ ╟── because: cannot constrain  R_1  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
@@ -108,16 +108,16 @@ letreg(r => !(r.ref 1))
 //│ ╔══[ERROR] Type error in function literal with expected type (Region[<R>_2]) ->{⊥} Res_1
 //│ ║  l.107: 	letreg(r => !(r.ref 1))
 //│ ║         	       ^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  reg1_2 ∨ reg_2  <:  ⊥
+//│ ╟── because: cannot constrain  reg_2 ∨ reg1_2  <:  ⊥
+//│ ╟── because: cannot constrain  reg_2  <:  ¬()
 //│ ╟── because: cannot constrain  reg1_2  <:  ¬()
-//│ ╟── because: cannot constrain  reg_2  <:  ¬()
-//│ ╟── because: cannot constrain  reg_2  <:  ¬()
+//│ ╟── because: cannot constrain  reg1_2  <:  ¬()
 //│ ╙── because: cannot constrain  <R>_2  <:  ¬()
 //│ ╔══[ERROR] Type error in function literal with expected type (Region[<R>_2]) ->{⊥} Res_1
 //│ ║  l.107: 	letreg(r => !(r.ref 1))
 //│ ║         	       ^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  reg1_2 ∨ reg_2  <:  ⊥
-//│ ╟── because: cannot constrain  reg_2  <:  ¬()
+//│ ╟── because: cannot constrain  reg_2 ∨ reg1_2  <:  ⊥
+//│ ╟── because: cannot constrain  reg1_2  <:  ¬()
 //│ ╙── because: cannot constrain  <R>_2  <:  ¬()
 //│ Type: Int
 

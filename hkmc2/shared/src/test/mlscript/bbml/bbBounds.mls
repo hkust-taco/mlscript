@@ -24,17 +24,17 @@ fun iid(x) = x
 //│ Type: ⊤
 
 iid
-//│ Type: forall A1_2: (A1_2) ->{⊥} A1_2
+//│ Type: forall A_2: (A_2) ->{⊥} A_2
 //│ Where:
-//│   A1_2 <: Int
+//│   A_2 <: Int
 
 :e
 iid("42")
-//│ ╔══[ERROR] Type error in string literal with expected type A1_1
+//│ ╔══[ERROR] Type error in string literal with expected type A_1
 //│ ║  l.32: 	iid("42")
 //│ ║        	    ^^^^
-//│ ╟── because: cannot constrain  Str  <:  A1_1
-//│ ╟── because: cannot constrain  Str  <:  A1_1
+//│ ╟── because: cannot constrain  Str  <:  A_1
+//│ ╟── because: cannot constrain  Str  <:  A_1
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Str
 
