@@ -14,7 +14,6 @@ enum SimplePattern:
     case Literal(_) => 0
     case ClassLike(symbol) => symbol match
       case StringJoin => 2
-      case _: TermSymbol => 0
       case symbol: ClassSymbol => symbol.arity
       case _: ModuleSymbol => 0
   

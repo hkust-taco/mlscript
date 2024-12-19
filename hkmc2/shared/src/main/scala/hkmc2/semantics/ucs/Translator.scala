@@ -76,12 +76,25 @@ class Translator(val elaborator: Elaborator)
       case App(Ident("~"), Tup(prefix :: postfix :: Nil)) =>
         stringPrefix(scrut, prefix, (captures1, postfixScrut) =>
           full(postfixScrut, postfix, captures2 => inner(captures2 ++ captures1)))
+      case Ident("_") => inner(Map.empty)
       case ctor @ (_: Ident | _: Sel) =>
         val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
         clsTrm.symbol.flatMap(_.asClsLike) match
         case S(cls: (ClassSymbol | ModuleSymbol)) =>
           Branch(scrut(), Pattern.ClassLike(cls, clsTrm, N, false)(ctor), inner(Map.empty)) ~: Split.End
         case S(psym: PatternSymbol) =>
+          makeUnapplyBranch(scrut(), clsTrm, inner(Map.empty))(Split.End)
+        case _ =>
+          error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
+          errorSplit
+      case App(ctor @ (_: Ident | _: Sel), Tup(params)) =>
+        val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
+        clsTrm.symbol.flatMap(_.asClsLike) match
+        case S(cls: (ClassSymbol | ModuleSymbol)) =>
+          // TODO: handle parameters
+          Branch(scrut(), Pattern.ClassLike(cls, clsTrm, N, false)(ctor), inner(Map.empty)) ~: Split.End
+        case S(psym: PatternSymbol) =>
+          // TODO: handle parameters
           makeUnapplyBranch(scrut(), clsTrm, inner(Map.empty))(Split.End)
         case _ =>
           error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
@@ -119,6 +132,7 @@ class Translator(val elaborator: Elaborator)
       stringPrefix(scrut, prefix, (captures1, postfixScrut1) =>
         stringPrefix(postfixScrut1, postfix, (captures2, postfixScrut2) =>
           inner(captures2 ++ captures1, postfixScrut2)))
+    case Ident("_") => inner(Map.empty, scrut) // TODO: check if this is correct
     case ctor @ (_: Ident | _: Sel) =>
       val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
       clsTrm.symbol.flatMap(_.asClsLike) match
@@ -202,6 +216,13 @@ class Translator(val elaborator: Elaborator)
     pre = s"Translator <<< ${params.mkString(", ")} $body", 
     post = (blk: Ls[TermDefinition]) => s"Translator >>> $blk"
   ):
+    val split = DeBrujinSplit.elaborate(body, elaborator)
+    scoped("ucs:rp"):
+      log(s"elaborated nameless split:\n${split.display}")
+    val normalized = scoped("ucs:rpn"):
+      split.normalize(using elaborator.tl)
+    scoped("ucs:rp"):
+      log(s"normalized nameless split:\n${normalized.display}")
     val unapply =
       val scrutSym = TermSymbol(ParamBind, N, Ident("scrut"))
       val topmost = full(() => scrutSym.ref(), body, success(params)) ~~: failure

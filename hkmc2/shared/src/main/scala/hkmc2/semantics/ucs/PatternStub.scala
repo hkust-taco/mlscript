@@ -8,13 +8,15 @@ import mlscript.utils.*, shorthands.*
 /** "Virtual" constructor for string joining operator `~`. */
 case object StringJoin
 
+case class LocalPattern(id: Int, arity: Int)
+
 /** Describe the size of tuples. If `infinite` is `false`, it represents
  *  fixed-size tuples. Otherwise, it represents tuples with at least `size`.
  */
 type TupleCapacity = (size: Int, infinite: Bool)
 
 type MatchableSymbol = ClassSymbol | ModuleSymbol | PatternSymbol |
-  TupleCapacity | StringJoin.type | TermSymbol
+  TupleCapacity | StringJoin.type | LocalPattern
 
 /** `PatternStub` is a simplified representation of `semantics.Pattern`. It
  *  excludes terms and symbols which can break the uniqueness of the pattern.
@@ -43,6 +45,7 @@ enum PatternStub:
       case symbol: ClassSymbol => symbol.arity
       case symbol: ModuleSymbol => 0
       case symbol: PatternSymbol => symbol.arity
+      case LocalPattern(_, arity) => arity
     case Wildcard => 0
     
   def display: Str = s"$showDbg ($arity)"
@@ -59,6 +62,7 @@ enum PatternStub:
       case symbol: ClassSymbol => symbol.toString // TODO: display arity
       case symbol: ModuleSymbol => symbol.toString
       case symbol: PatternSymbol => symbol.toString
+      case LocalPattern(id, _) => s"local:$id"
     case Wildcard => "_"
 
 object PatternStub:
