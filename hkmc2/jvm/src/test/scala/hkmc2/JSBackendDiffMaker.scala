@@ -85,6 +85,9 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       if showLoweredTree.isSet then
         output(s"Lowered:")
         output(le.showAsTree)
+      if ppLoweredTree.isSet then
+        output(s"Pretty Lowered:")
+        output(Printer.mkDocument(le)(using summon[Raise], baseScp.nest).toString)
       
       // * Note that the codegen scope is not in sync with curCtx in terms of its `this` symbol.
       // * We do not nest TopLevelSymbol in codegen `Scope`s

@@ -1,0 +1,37 @@
+:js
+
+:slot
+let x = 1
+x + 1
+//│ Pretty Lowered:
+//│   set x = 1 in return +(x, 1)
+//│ = 2
+//│ x = 1
+
+:slot
+fun incr(n) = n + 1
+fun (|>) pipe(x, f) = f(x)
+//│ Pretty Lowered:
+//│   define fun incr(n) { return +(n, 1) } in define fun pipe(x, f) { return f(x) } in return null
+
+:slot
+let x = 1
+let x = if x == 0 then 1 else 0
+let x = x + 1
+//│ Pretty Lowered:
+//│  
+//│ set x = 1 in
+//│ begin
+//│   set scrut = ==(x, 0) in
+//│   match scrut
+//│     true =>
+//│       set tmp = 1 in
+//│       end
+//│     else
+//│       set tmp = 0 in
+//│       end;
+//│   set x1 = tmp in
+//│   set tmp1 = +(x, 1) in
+//│   set x2 = tmp1 in
+//│   return null
+//│ x = 1
