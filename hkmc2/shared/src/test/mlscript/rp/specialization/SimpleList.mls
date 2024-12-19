@@ -372,6 +372,7 @@ pattern G = Triplet(Triplet(Box, Bowl, Basket), Pair(0, 1), Basket)
 //│ >                      accept 0
 
 :ucs rp
+// pattern BinSeq(pattern D) = D | Pair(0 | 1, BinSeq)
 pattern BinSeq = null | Pair(0 | 1, BinSeq)
 //│ elaborated nameless split:
 //│ >  a => 
@@ -389,19 +390,33 @@ pattern BinSeq = null | Pair(0 | 1, BinSeq)
 //│ ═══[ERROR] Unrecognized pattern.
 
 :ucs rp
-pattern List = null | Pair(_, List)
+pattern List(a) = null | Pair(a, List)
 //│ elaborated nameless split:
 //│ >  a => 
 //│ >    a is null -> accept 0
 //│ >    a is class:Pair -> b => c => 
-//│ >      c is pattern:List -> accept 0
+//│ >      reject
 //│ normalized nameless split:
 //│ >  a => 
 //│ >    a is null -> accept 0
 //│ >    a is class:Pair -> b => c => 
-//│ >      c is pattern:List -> accept 0
+//│ >      reject
 //│ FAILURE: Unexpected type error
 //│ ═══[ERROR] Unrecognized pattern.
+//│ FAILURE: Unexpected type error
+//│ ═══[ERROR] Unmatched number of captures and parameters.
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+//│ 	at: scala.runtime.Scala3RunTime$.assertFailed(Scala3RunTime.scala:11)
+//│ 	at: hkmc2.codegen.js.JSBuilder.$anonfun$2(JSBuilder.scala:200)
+//│ 	at: hkmc2.codegen.js.Scope.nestRebindThis(Scope.scala:74)
+//│ 	at: hkmc2.codegen.js.JSBuilder.returningTerm(JSBuilder.scala:149)
+//│ 	at: hkmc2.codegen.js.JSBuilder.block(JSBuilder.scala:333)
+//│ 	at: hkmc2.codegen.js.JSBuilder.program(JSBuilder.scala:324)
+//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:72)
+//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:31)
+//│ 	at: hkmc2.MLsDiffMaker.processTrees(MLsDiffMaker.scala:191)
+//│ 	at: hkmc2.MLsDiffMaker.processOrigin(MLsDiffMaker.scala:165)
 
 :cp
 :ucs rp
@@ -410,12 +425,10 @@ null is List
 //│ >  null (0) ->
 //│ >    accept
 //│ >  class:Pair (2) ->
-//│ >    _ (0) ->
-//│ >      pattern:List (0) ->
-//│ >        accept
+//│ >    
 //│ FAILURE: Unexpected runtime error
 //│ ═══[RUNTIME ERROR] Error: match error
-//│     at REPL34:1:38
+//│     at REPL33:1:38
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:597:22)
 //│     at bound (node:domain:433:15)

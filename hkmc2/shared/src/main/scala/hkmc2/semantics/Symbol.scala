@@ -199,7 +199,6 @@ class PatternSymbol(val id: Tree.Ident, val params: Opt[Tree.Tup], val body: Tre
   override def toString: Str = s"pattern:${id.name}"
   /** Compute the arity. */
   def arity: Int = params.fold(0)(_.fields.length)
-  var simpleSplit: Opt[ucs.SimpleSplit] = N
 
 class TopLevelSymbol(blockNme: Str)(using State)
     extends MemberSymbol[ModuleDef] with InnerSymbol:

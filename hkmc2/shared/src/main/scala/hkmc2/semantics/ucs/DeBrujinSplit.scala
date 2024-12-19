@@ -58,7 +58,7 @@ enum DeBrujinSplit:
   case Binder(body: DeBrujinSplit)
   case Branch(scrutinee: Int,
               pattern: PatternStub,
-              consequence: DeBrujinSplit,
+              consequent: DeBrujinSplit,
               alternative: DeBrujinSplit)
   case Accept(outcome: Int)
   case Reject
@@ -158,7 +158,7 @@ extension (split: DeBrujinSplit)
       case Binder(body) => Binder(go(body, binderCount + 1))
       case split @ Branch(scrutinee, _, consequence, alternative) =>
         split.copy(scrutinee = if scrutinee > binderCount then scrutinee + level else scrutinee,
-                   consequence = go(consequence, binderCount),
+                   consequent = go(consequence, binderCount),
                    alternative = go(alternative, binderCount))
       case Accept(_) | Reject => split
     go(split, 0)
@@ -201,7 +201,7 @@ extension (split: DeBrujinSplit)
             tl.log(s"latter:\n${latter.showDbg}")
             go((former ++ latter)).bind(arity)
           val alternative2 = go(alternative.despecialize(scrutinee, pattern))
-          split.copy(consequence = consequence2, alternative = alternative2)
+          split.copy(consequent = consequence2, alternative = alternative2)
         case Accept(_) | Reject => split
       
     go(split)
@@ -228,7 +228,7 @@ extension (split: DeBrujinSplit)
           tl.log("skip the consequence")
           alternative
         case split @ Branch(_, _, consequence, alternative) =>
-          split.copy(consequence = go(consequence),
+          split.copy(consequent = go(consequence),
                      alternative = go(alternative))
         case Accept(_) | Reject => split
     tl.trace(
@@ -247,7 +247,7 @@ extension (split: DeBrujinSplit)
         case Branch(`target`, `pattern`, _, alternative) =>
           go(alternative)
         case split @ Branch(_, _, consequence, alternative) =>
-          split.copy(consequence = go(consequence),
+          split.copy(consequent = go(consequence),
                      alternative = go(alternative))
         case Accept(_) | Reject => split
     tl.trace(

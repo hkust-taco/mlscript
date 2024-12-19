@@ -92,8 +92,6 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
           val whenFalse = rec(specialize(alternative, -, scrutinee, pattern).clearFallback)
           Branch(scrutinee, pattern, whenTrue) ~: whenFalse
         case Pattern.Synonym(symbol, _) =>
-          scoped("ucs:rp"):
-            log(s"simple split of ${symbol.nme}:\n${symbol.simpleSplit.map(_.display).getOrElse("nothing")}")
           Split.End
         case _ =>
           raiseDesugaringError(msg"unsupported pattern matching: ${scrutinee.toString} is ${pattern.toString}" -> pattern.toLoc)

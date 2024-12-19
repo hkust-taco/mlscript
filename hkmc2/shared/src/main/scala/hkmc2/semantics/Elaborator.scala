@@ -797,7 +797,6 @@ extends Importer:
           val patSym = td.symbol.asInstanceOf[PatternSymbol] // TODO improve `asInstanceOf`
           val owner = ctx.outer
           newCtx.nest(S(patSym)).givenIn:
-            patSym.simpleSplit = S(PatternElaborator(td.extension.get, this))
             assert(body.isEmpty)
             log(s"pattern body is ${td.extension}")
             val translate = new ucs.Translator(this)
@@ -1071,30 +1070,3 @@ end Elaborator
 
 type Pol = Opt[Bool]
 extension (p: Pol) def ! : Pol = p.map(!_)
-
-private object PatternElaborator:
-  def apply(tree: Tree, elaborator: Elaborator)(using Elaborator.Ctx): ucs.SimpleSplit =
-    new PatternElaborator(elaborator)(tree)
-
-private class PatternElaborator(elaborator: Elaborator)(using Elaborator.Ctx):
-  import ucs.*, syntax.Tree, Tree.*, SimpleSplit.*, PatternStub.*, HelperExtractors.*, elaborator.tl.*
-
-  type F = (=> SimpleSplit, => SimpleSplit) => SimpleSplit
-
-  def nest(ctor: Ident | Sel, params: Ls[Tree]): F =
-    val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
-    clsTrm.symbol.flatMap(_.asClsLike).map(ClassLike.apply) match
-      case S(pattern) => (con, alt) =>
-        val consequence = params.foldRight(con):
-          case (param, acc) => next(param)(acc, Reject)
-        Branch(pattern, consequence, alt)
-      case N => (_, alt) => alt
-
-  def next(tree: Tree): F = tree match
-    case lhs or rhs => (con, alt) => next(lhs)(con, next(rhs)(con, alt))
-    case value: syntax.Literal => (con, alt) => Branch(Literal(value), con, alt)
-    case App(ctor: (Ident | Sel), Tup(params)) => nest(ctor, params)
-    case Ident("_") => (con, alt) => Branch(Wildcard, con, alt)
-    case ctor: (Ident | Sel) => nest(ctor, Nil)
-  
-  def apply(tree: Tree): SimpleSplit = next(tree)(Accept, Reject)
