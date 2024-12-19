@@ -250,7 +250,20 @@ pattern D_1 = Box(Box(Bowl) | Box)
 //│ >        accept 0
 
 :ucs rp
-:todo
+pattern D_2 = Box(Bowl | Bowl | Bowl)
+//│ elaborated nameless split:
+//│ >  a => 
+//│ >    a is class:Box -> b => 
+//│ >      b is class:Bowl -> accept 0
+//│ >      b is class:Bowl -> accept 0
+//│ >      b is class:Bowl -> accept 0
+//│ normalized nameless split:
+//│ >  a => 
+//│ >    a is class:Box -> b => 
+//│ >      b is class:Bowl -> c => 
+//│ >        accept 0
+
+:ucs rp
 pattern D_2 = Box(Box(Bowl) | Box(Basket) | Box(Box))
 //│ elaborated nameless split:
 //│ >  a => 
@@ -269,8 +282,7 @@ pattern D_2 = Box(Box(Bowl) | Box(Basket) | Box(Box))
 //│ >          accept 0
 //│ >        c is class:Basket -> e => 
 //│ >          accept 0
-//│ >      b is class:Box -> f => 
-//│ >        f is class:Box -> g => 
+//│ >        c is class:Box -> f => 
 //│ >          accept 0
 
 :ucs rp
@@ -403,7 +415,7 @@ null is List
 //│ >        accept
 //│ FAILURE: Unexpected runtime error
 //│ ═══[RUNTIME ERROR] Error: match error
-//│     at REPL33:1:38
+//│     at REPL34:1:38
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:597:22)
 //│     at bound (node:domain:433:15)

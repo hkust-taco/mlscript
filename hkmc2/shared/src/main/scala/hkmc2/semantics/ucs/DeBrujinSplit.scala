@@ -181,59 +181,45 @@ extension (split: DeBrujinSplit)
     def go(split: DeBrujinSplit): DeBrujinSplit =
       split match
         case Binder(body) => Binder(go(body))
-        case split @ Branch(scrutinee, pattern, consequence, alternative) =>
-          visited.get(split) match
-            case N =>
-              val result = tl.trace(
-                pre = s"normalize <<<\n${split.showDbg}",
-                post = (s: DeBrujinSplit) => s"normalize ${pattern.showDbg} >>>\n${s.showDbg}"
-              ):
-                val arity = pattern.arity
-                val consequence2 = 
-                  val former = consequence.unbind match
-                    case (level @ (`arity` | 0), body) =>
-                      // The scrutinee handling below is tricky.
-                      body.specialize(scrutinee + level, pattern, 1 to arity)
-                    case (_, _) =>
-                      // TODO: report mismatched arity
-                      tl.log("mismatched arity")
-                      Reject
-                  tl.log(s"former:\n${former.showDbg}")
-                  // We need to increment the level because it is going to be put into a binder.
-                  val latter = alternative.specialize(scrutinee, pattern, 1 to arity)
-                  tl.log(s"latter:\n${latter.showDbg}")
-                  go((former ++ latter)).bind(arity)
-                val alternative2 = go(alternative.despecialize(scrutinee, pattern))
-                split.copy(consequence = consequence2, alternative = alternative2)
-              // visited(split) = S(result.)
-              result
-            // case S((N, _)) =>
-            //   tl.log(s"reusing $name")
-            //   val id = visited.count(_._2.contains(name))
-            //   visited(split) = S(id)
-            //   Branch(scrutinee, ClassLike(LocalPattern(id, 0)), Accept(0), Reject)
-            // case S(S(id)) =>
-            //   Branch(scrutinee, ClassLike(LocalPattern(id, 0)), Accept(0), Reject)
+        case split @ Branch(scrutinee, pattern, consequence, alternative) => tl.trace(
+          pre = s"normalize <<<\n${split.showDbg}",
+          post = (s: DeBrujinSplit) => s"normalize >>>\n${s.showDbg}"
+        ):
+          val arity = pattern.arity
+          val consequence2 = 
+            val former = consequence.unbind match
+              case (level @ (`arity` | 0), body) =>
+                // The scrutinee handling below is tricky.
+                body.specialize(scrutinee + level, pattern, 1 to arity)
+              case (_, _) =>
+                // TODO: report mismatched arity
+                tl.log("mismatched arity")
+                Reject
+            tl.log(s"former:\n${former.showDbg}")
+            // We need to increment the level because it is going to be put into a binder.
+            val latter = alternative.specialize(scrutinee, pattern, 1 to arity)
+            tl.log(s"latter:\n${latter.showDbg}")
+            go((former ++ latter)).bind(arity)
+          val alternative2 = go(alternative.despecialize(scrutinee, pattern))
+          split.copy(consequence = consequence2, alternative = alternative2)
         case Accept(_) | Reject => split
       
     go(split)
   
   def specialize(scrutinee: Int, pattern: PatternStub, parameters: Range)(using TraceLogger): DeBrujinSplit =
     require(parameters.length == pattern.arity)
-    def go(split: DeBrujinSplit)(using target: Int, parameters: Range): DeBrujinSplit = tl.trace(
-      pre = s"S+ ($target is ${pattern.showDbg}) <<<\n${split.showDbg}",
-      post = (s: DeBrujinSplit) => s"S+ ($target is ${pattern.showDbg}) >>>\n${s.showDbg}"
-    ):
+    def go(split: DeBrujinSplit)(using target: Int, parameters: Range): DeBrujinSplit =
       split match
-        case Binder(body) => Binder(go(body)(using target + 1, parameters + 1))
+        case Binder(body) =>
+          tl.log("go into the binder")
+          Binder(go(body)(using target + 1, parameters + 1))
         case Branch(`target`, `pattern`, consequence, alternative) =>
           val (level, body) = consequence.unbind
           tl.log(s"consequence:\n${consequence.showDbg}")
           tl.log(s"unbound consequence:\n${body.showDbg}")
-          if level == 0 then
-            body
-          else if level == pattern.arity then
-            body.substitute(Subst((1 to level).zip(parameters + level)*))
+          if level == 0 || level == pattern.arity then
+            body.substitute(Subst((1 to level).zip(parameters + level)*)) ++
+              go(alternative)(using target, parameters)
                 // .decrement(level)
           else
             // TODO: report mismatched arity.
@@ -245,19 +231,30 @@ extension (split: DeBrujinSplit)
           split.copy(consequence = go(consequence),
                      alternative = go(alternative))
         case Accept(_) | Reject => split
-    go(split)(using scrutinee, parameters)
+    tl.trace(
+      pre = s"S+ ($scrutinee is ${pattern.showDbg}) <<<" + {
+        val dbg = split.showDbg
+        if dbg.contains('\n') then s"\n$dbg" else s" $dbg"},
+      post = (s: DeBrujinSplit) => s"S+ ($scrutinee is ${pattern.showDbg}) >>>" +
+        (if s == split then " (no change)" else s"\n${s.showDbg}")
+    ):
+      go(split)(using scrutinee, parameters)
 
   def despecialize(scrutinee: Int, pattern: PatternStub)(using TraceLogger): DeBrujinSplit =
-    def go(split: DeBrujinSplit)(using target: Int): DeBrujinSplit = tl.trace(
-      pre = s"S- <<<\n${split.showDbg}",
-      post = (s: DeBrujinSplit) => s"S- >>>\n${s.showDbg}"
-    ):
+    def go(split: DeBrujinSplit)(using target: Int): DeBrujinSplit =
       split match
         case Binder(body) => Binder(go(body)(using target + 1))
-        case Branch(`target`, `pattern`, consequence, alternative) =>
-          alternative
+        case Branch(`target`, `pattern`, _, alternative) =>
+          go(alternative)
         case split @ Branch(_, _, consequence, alternative) =>
           split.copy(consequence = go(consequence),
                      alternative = go(alternative))
         case Accept(_) | Reject => split
-    go(split)(using scrutinee)
+    tl.trace(
+      pre = s"S- ($scrutinee is ${pattern.showDbg}) <<<" + {
+        val dbg = split.showDbg
+        if dbg.contains('\n') then s"\n$dbg" else s" $dbg"},
+      post = (s: DeBrujinSplit) => s"S- ($scrutinee is ${pattern.showDbg}) >>>" +
+        (if s == split then " (no change)" else s"\n${s.showDbg}")
+    ):
+      go(split)(using scrutinee)
