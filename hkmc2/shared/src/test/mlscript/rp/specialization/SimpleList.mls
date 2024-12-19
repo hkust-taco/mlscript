@@ -307,7 +307,6 @@ pattern E = Box(Box(Box) | Bowl(Box(Basket)))
 //│ >            accept 0
 
 :ucs rp
-:todo
 pattern F = Pair(Pair(Box, Bowl), Pair(Box, Basket))
 //│ elaborated nameless split:
 //│ >  a => 
@@ -322,15 +321,28 @@ pattern F = Pair(Pair(Box, Bowl), Pair(Box, Basket))
 //│ >    a is class:Pair -> b => c => 
 //│ >      b is class:Pair -> d => e => 
 //│ >        d is class:Box -> f => 
-//│ >          f is class:Bowl -> g => 
-//│ >            e is class:Pair -> h => i => 
+//│ >          e is class:Bowl -> g => 
+//│ >            c is class:Pair -> h => i => 
 //│ >              h is class:Box -> j => 
-//│ >                j is class:Basket -> k => 
+//│ >                i is class:Basket -> k => 
 //│ >                  accept 0
 
 :ucs rp
+pattern F_0 = Pair(Box, Bowl)
+//│ elaborated nameless split:
+//│ >  a => 
+//│ >    a is class:Pair -> b => c => 
+//│ >      b is class:Box -> c is class:Bowl -> accept 0
+//│ normalized nameless split:
+//│ >  a => 
+//│ >    a is class:Pair -> b => c => 
+//│ >      b is class:Box -> d => 
+//│ >        c is class:Bowl -> e => 
+//│ >          accept 0
+
+:ucs rp
 :todo
-pattern F_0 = Pair(Box, Box) | Pair(Box, Bowl)
+pattern F_1 = Pair(Box, Box) | Pair(Box, Bowl)
 //│ elaborated nameless split:
 //│ >  a => 
 //│ >    a is class:Pair -> b => c => 
@@ -341,13 +353,12 @@ pattern F_0 = Pair(Box, Box) | Pair(Box, Bowl)
 //│ >  a => 
 //│ >    a is class:Pair -> b => c => 
 //│ >      b is class:Box -> d => 
-//│ >        d is class:Box -> e => 
+//│ >        c is class:Box -> e => 
 //│ >          accept 0
-//│ >        b is class:Bowl -> f => 
+//│ >        a is class:Bowl -> f => 
 //│ >          accept 0
 
 :ucs rp
-:todo
 pattern G = Triplet(Triplet(Box, Bowl, Basket), Pair(0, 1), Basket)
 //│ elaborated nameless split:
 //│ >  a => 
@@ -363,12 +374,12 @@ pattern G = Triplet(Triplet(Box, Bowl, Basket), Pair(0, 1), Basket)
 //│ >    a is class:Triplet -> b => c => d => 
 //│ >      b is class:Triplet -> e => f => g => 
 //│ >        e is class:Box -> h => 
-//│ >          g is class:Bowl -> i => 
-//│ >            i is class:Basket -> j => 
-//│ >              f is class:Pair -> k => l => 
+//│ >          f is class:Bowl -> i => 
+//│ >            g is class:Basket -> j => 
+//│ >              c is class:Pair -> k => l => 
 //│ >                k is 0 -> 
 //│ >                  l is 1 -> 
-//│ >                    g is class:Basket -> m => 
+//│ >                    d is class:Basket -> m => 
 //│ >                      accept 0
 
 :ucs rp
@@ -421,14 +432,9 @@ pattern List(a) = null | Pair(a, List)
 :cp
 :ucs rp
 null is List
-//│ simple split of List:
-//│ >  null (0) ->
-//│ >    accept
-//│ >  class:Pair (2) ->
-//│ >    
 //│ FAILURE: Unexpected runtime error
 //│ ═══[RUNTIME ERROR] Error: match error
-//│     at REPL33:1:38
+//│     at REPL34:1:38
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:597:22)
 //│     at bound (node:domain:433:15)

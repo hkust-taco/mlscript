@@ -187,19 +187,24 @@ extension (split: DeBrujinSplit)
         ):
           val arity = pattern.arity
           val consequence2 = 
-            val former = consequence.unbind match
+            consequence.unbind match
               case (level @ (`arity` | 0), body) =>
                 // The scrutinee handling below is tricky.
-                body.specialize(scrutinee + level, pattern, 1 to arity)
+                val former = body.specialize(scrutinee + level, pattern, 1 to arity)
+                tl.log(s"the former split:\n${former.showDbg}")
+                // We need to increment the level because it is going to be put into a binder.
+                val latter = alternative.specialize(scrutinee, pattern, 1 to arity)
+                tl.log(s"the latter split:\n${latter.showDbg}")
+                val res = go((former ++ latter))
+                tl.log(s"increment by $arity")
+                // If the original consequence doesn't have binders, we need to increment the level.
+                val res2 = if level == arity then res else res.increment(arity)
+                tl.log(s"bind with $arity")
+                res2.bind(arity)
               case (_, _) =>
                 // TODO: report mismatched arity
                 tl.log("mismatched arity")
                 Reject
-            tl.log(s"former:\n${former.showDbg}")
-            // We need to increment the level because it is going to be put into a binder.
-            val latter = alternative.specialize(scrutinee, pattern, 1 to arity)
-            tl.log(s"latter:\n${latter.showDbg}")
-            go((former ++ latter)).bind(arity)
           val alternative2 = go(alternative.despecialize(scrutinee, pattern))
           split.copy(consequent = consequence2, alternative = alternative2)
         case Accept(_) | Reject => split
