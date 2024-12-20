@@ -20,7 +20,7 @@ false
 
 fun id(x) = x
 id
-//│ Type: forall x: x -> x
+//│ Type: forall 'x: 'x -> 'x
 
 fun inc(x) = x + 1
 //│ Type: ⊤
@@ -29,7 +29,7 @@ fun mul(x, y) = x * y
 //│ Type: ⊤
 
 x => x
-//│ Type: (x) ->{⊥} x
+//│ Type: ('x) ->{⊥} 'x
 
 +
 //│ Type: (Int, Int) ->{⊥} Int
@@ -109,14 +109,14 @@ class Some[A](value: A)
 //│ Type: ⊤
 
 new Some(true)
-//│ Type: Some[A]
+//│ Type: Some['A]
 //│ Where:
-//│   Bool <: A
+//│   Bool <: 'A
 
 new Some(42)
-//│ Type: Some[A]
+//│ Type: Some['A]
 //│ Where:
-//│   Int <: A
+//│   Int <: 'A
 
 let p = new Point(1.0, 0.0, 0.0) in p.Point#x
 //│ Type: Num
@@ -150,22 +150,22 @@ fun foofoo(x) =
 //│ Type: ⊤
 
 new Printer(foofoo)
-//│ Type: Printer[T]
+//│ Type: Printer['T]
 //│ Where:
-//│   T <: Int
+//│   'T <: Int
 
 let ip = new Printer(foofoo) in ip.Printer#f(42)
 //│ Type: Str
 
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
-//│ ╔══[ERROR] Type error in string literal with expected type T
+//│ ╔══[ERROR] Type error in string literal with expected type 'T
 //│ ║  l.161: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ║         	                                             ^^^^
-//│ ╟── because: cannot constrain  Str  <:  T
-//│ ╟── because: cannot constrain  Str  <:  T
-//│ ╟── because: cannot constrain  Str  <:  ¬(¬T)
-//│ ╟── because: cannot constrain  Str  <:  T
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╟── because: cannot constrain  Str  <:  ¬(¬'T)
+//│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int})
 //│ Type: Str
 
@@ -176,23 +176,23 @@ fun inc(x) = x + 1
 //│ Type: ⊤
 
 new TFun(inc)
-//│ Type: TFun[T]
+//│ Type: TFun['T]
 //│ Where:
-//│   Int <: T
-//│   T <: Int
+//│   Int <: 'T
+//│   'T <: Int
 
 let tf = new TFun(inc) in tf.TFun#f(1)
 //│ Type: Int
 
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
-//│ ╔══[ERROR] Type error in string literal with expected type T
+//│ ╔══[ERROR] Type error in string literal with expected type 'T
 //│ ║  l.188: 	let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
-//│ ╟── because: cannot constrain  Str  <:  T
-//│ ╟── because: cannot constrain  Str  <:  T
-//│ ╟── because: cannot constrain  Str  <:  ¬(¬T)
-//│ ╟── because: cannot constrain  Str  <:  T
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╟── because: cannot constrain  Str  <:  ¬(¬'T)
+//│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int})
 //│ Type: Str ∨ Int
 
@@ -207,17 +207,17 @@ class Pair[A, B](fst: A, snd: B)
 
 
 new Pair(id, id)
-//│ Type: Pair[A, B]
+//│ Type: Pair['A, 'B]
 //│ Where:
-//│   x -> x <: A
-//│   x1 -> x1 <: B
+//│   'x -> 'x <: 'A
+//│   'x1 -> 'x1 <: 'B
 
 
 new Pair(x => x, x => x)
-//│ Type: Pair[A, B]
+//│ Type: Pair['A, 'B]
 //│ Where:
-//│   x -> x <: A
-//│   x1 -> x1 <: B
+//│   'x -> 'x <: 'A
+//│   'x1 -> 'x1 <: 'B
 
 
 if 1 < 2 then 1 else 0
@@ -276,17 +276,17 @@ class Foo[A](x: A -> A)
 //│ Type: ⊤
 
 new Foo(x => x)
-//│ Type: Foo[A]
+//│ Type: Foo['A]
 
 fun f(g) = new Foo(g)
 f
-//│ Type: forall A: (A -> A) -> Foo[A]
+//│ Type: forall 'A: ('A -> 'A) -> Foo['A]
 
 f(x => x).Foo#x
-//│ Type: (A) ->{⊥} A
+//│ Type: ('A) ->{⊥} 'A
 
 g => (new Foo(g)).Foo#x
-//│ Type: (A -> A) ->{⊥} (A) ->{⊥} A
+//│ Type: ('A -> 'A) ->{⊥} ('A) ->{⊥} 'A
 
 
 throw new Error("oops")

@@ -31,7 +31,7 @@ fun helper(a) = write(a)
 //│ Type: ⊤
 
 helper
-//│ Type: forall Rg: Reg[out Rg, ?] ->{Rg} Int
+//│ Type: forall 'Rg: Reg[out 'Rg, ?] ->{'Rg} Int
 
 subreg(basereg) of r0 =>
   helper(r0)
