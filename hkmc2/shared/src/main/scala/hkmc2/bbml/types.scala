@@ -183,7 +183,7 @@ sealed abstract class BasicType extends Type:
       if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.map(_.showDbg).mkString(", ")}]"
     case v @ InfVar(lvl, uid, _, isSkolem) =>
       val name = if v.hint.isEmpty then s"${v.sym.nme}" else s"${v.sym.nme}(${v.hint})"
-      if isSkolem then s"<${name}>_${lvl}" else s"${name}_${lvl}"
+      if isSkolem then s"<${name}${uid}>_${lvl}" else s"${name}${uid}_${lvl}"
     case FunType(arg :: Nil, ret, eff) => s"${arg.parenDbg} ->{${eff.showDbg}} ${ret.parenDbg}"
     case FunType(args, ret, eff) => s"(${args.map(_.showDbg).mkString(", ")}) ->{${eff.showDbg}} ${ret.parenDbg}"
     case ComposedType(lhs, rhs, pol) => s"${lhs.parenDbg} ${if pol then "∨" else "∧"} ${rhs.parenDbg}"
@@ -315,10 +315,10 @@ case class PolyType(tvs: Ls[InfVar], body: GeneralType) extends GeneralType:
         v.state.upperBounds = state.upperBounds.map(_.subst)
     body.subst
 
-  def skolemize(nextUid: => Uid[InfVar], lvl: Int)(tl: TL)(using State) =
+  def skolemize(nextUid: => Uid[InfVar], lvl: Int)(tl: TL) =
     // * Note that by this point, the state is supposed to be frozen/treated as immutable
     val map = tvs.map(v =>
-      val sk = InfVar(lvl, nextUid, new VarState(), true)(new RefSymbol(v.sym), v.hint)
+      val sk = InfVar(lvl, nextUid, new VarState(), true)(v.sym, v.hint)
       tl.log(s"skolemize ${v.showDbg} ~> ${sk.showDbg}")
       v.uid -> sk
     ).toMap
@@ -326,7 +326,7 @@ case class PolyType(tvs: Ls[InfVar], body: GeneralType) extends GeneralType:
   
   def instantiate(nextUid: => Uid[InfVar], lvl: Int)(tl: TL)(using State): GeneralType =
     val map = tvs.map(v =>
-      val nv = InfVar(lvl, nextUid, new VarState(), false)(new RefSymbol(v.sym), v.hint)
+      val nv = InfVar(lvl, nextUid, new VarState(), false)(new InstSymbol(v.sym), v.hint)
       tl.log(s"instantiate ${v.showDbg} ~> ${nv.showDbg}")
       v.uid -> nv
     ).toMap

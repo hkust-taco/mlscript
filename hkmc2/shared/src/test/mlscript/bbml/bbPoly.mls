@@ -31,7 +31,7 @@ id
 //│ ║  l.25: 	(x => x + 1): [A] -> A -> A
 //│ ║        	      ^^^^^
 //│ ╙── because: cannot constrain  Int  <:  <A>
-//│ Type: forall A1: (A1) ->{⊥} A1
+//│ Type: forall A: (A) ->{⊥} A
 
 
 (x => x): [A] -> A -> A

@@ -27,7 +27,7 @@ f => (let g = x => f(x(x)) in g) : [A] -> A -> A
 //│ ╟── because: cannot constrain  <A>  <:  x
 //│ ╟── because: cannot constrain  <A>  <:  x
 //│ ╙── because: cannot constrain  <A>  <:  ¬(¬{x ->{eff1} app1})
-//│ Type: (⊥ -> ⊥) ->{⊥} forall A1: (A1) ->{⊥} A1
+//│ Type: (⊥ -> ⊥) ->{⊥} forall A: (A) ->{⊥} A
 
 f => (x => f(x(x)) : [A] -> A -> A)
 //│ Type: (app -> (⊤ -> ⊥)) ->{⊥} (x -> app) ->{⊥} forall A: (A) ->{⊥} A

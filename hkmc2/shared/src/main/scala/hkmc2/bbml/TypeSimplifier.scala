@@ -28,7 +28,7 @@ class TypeSimplifier(tl: TraceLogger):
         tv.state.upperBounds = tv.state.upperBounds.map(goType)
       tv
     def goType(ty: Type): Type =
-    trace[Type](s"simplifyStructure($ty)", r => s"= $r"):
+    trace[Type](s"simplifyStructure(${ty.showDbg})", r => s"= ${r.showDbg}"):
       ty match
       case tv: InfVar => goTV(tv)
       case _ =>
@@ -72,7 +72,7 @@ class TypeSimplifier(tl: TraceLogger):
       }
       
       override def apply(pol: Bool)(ty: GeneralType): Unit =
-        trace(s"Analyse[${printPol(pol)}] $ty  [${curPath.reverseIterator.mkString(" ~> ")}]"):
+        trace(s"Analyse[${printPol(pol)}] ${ty.showDbg}  [${curPath.reverseIterator.mkString(" ~> ")}]"):
           ty match
             case ty if ty.lvl <= lvl =>
               log(s"Level is < $lvl")
@@ -84,7 +84,7 @@ class TypeSimplifier(tl: TraceLogger):
               if curPath.exists(_ is tv) then // TODO opt
                 traversedTVs += tv
                 val recPrefix = curPath.takeWhile(_ isnt tv)
-                log(s"UNIFYING $tv with ${recPrefix.mkString(", ")}")
+                log(s"UNIFYING ${tv.showDbg} with ${recPrefix.mkString(", ")}")
                 recPrefix.foreach: tv2 =>
                   if tv2 isnt tv then
                     traversedTVs += tv2
@@ -99,9 +99,9 @@ class TypeSimplifier(tl: TraceLogger):
                       else if tvRepr.lvl > lvl && !varSubst.contains(tvRepr) then varSubst += tvRepr -> tv
                 continue = false
               // TODO else??
-              if traversedTVs.contains(tv) then log(s"Now already traversed $tv")
+              if traversedTVs.contains(tv) then log(s"Now already traversed ${tv.showDbg}")
               else if pastPathsSet.contains(tv) then
-                log(s"REC $tv")
+                log(s"REC ${tv.showDbg}")
                 recVars += tv
                 continue = false
               if continue then
@@ -128,7 +128,7 @@ class TypeSimplifier(tl: TraceLogger):
               pastPathsSet --= oldPath
               ()
     
-    trace(s"Simplifying type $ty"):
+    trace(s"Simplifying type ${ty.showDbg}"):
       Analysis(pol)(ty)
     
     log("Unif-pre: " + Analysis.varSubst)
@@ -145,12 +145,12 @@ class TypeSimplifier(tl: TraceLogger):
     val traversed: MutSet[IV] = MutSet.empty
     val transformed: MutMap[IV, Type] = MutMap.empty
     
-    def subst(ty: GeneralType): GeneralType = trace[GeneralType](s"subst($ty)", r => s"= $r"):
+    def subst(ty: GeneralType): GeneralType = trace[GeneralType](s"subst(${ty.showDbg})", r => s"= ${r.showDbg}"):
       ty match
         case ty if ty.lvl <= lvl => ty // TODO NOPE
         case _tv: IV =>
           val tv = Analysis.getRepr(_tv)
-          log(s"Repr: $tv")
+          log(s"Repr: ${tv.showDbg}")
           transformed.getOrElseUpdate(tv, {
             if Analysis.recVars.contains(tv) then
               log(s"It's recursive!")

@@ -80,7 +80,10 @@ class TempSymbol(val trm: Opt[Term], dbgNme: Str = "tmp")(using State) extends B
   override def toString: Str = s"$$${super.toString}"
 
 
-class RefSymbol(val origin: Symbol)(using State) extends LocalSymbol:
+// * When instantiating forall-qualified TVs, we need to duplicate the information
+// * for pretty-printing, but each instantiation should be different from each other
+// * i.e., UID should be different
+class InstSymbol(val origin: Symbol)(using State) extends LocalSymbol:
   override def nme: Str = origin.nme
   override def toLoc: Option[Loc] = origin.toLoc
   override def toString: Str = origin.toString
