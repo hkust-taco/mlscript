@@ -8,7 +8,7 @@ import hkmc2._
 import hkmc2.Message.MessageContext
 import hkmc2.document._
 import hkmc2.semantics.Elaborator.State
-import hkmc2.codegen.js.Scope
+import hkmc2.utils.Scope
 
 object Printer:
   def getVar(l: Local)(using Raise, Scope): String = l match
