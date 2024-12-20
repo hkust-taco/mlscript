@@ -169,6 +169,14 @@ extends Importer:
         N
     case _ => N
   
+  /** To perform a reverse lookup for a term that references a symbol in the current context. */
+  def reference(target: ClassSymbol | ModuleSymbol): Ctxl[Opt[Term]] =
+    def go(ctx: Ctx): Opt[Term] =
+      ctx.env.values.collectFirst:
+        case elem if elem.symbol.flatMap(_.asClsLike).contains(target) => elem.ref(target.id)
+      .orElse(ctx.parent.flatMap(go))
+    go(ctx).map(Term.SynthSel(_, Ident("class"))(S(target)))
+  
   def cls(tree: Tree, inAppPrefix: Bool): Ctxl[Term] = trace[Term](s"Elab class ${tree.showDbg}", r => s"~> $r"):
     val trm = term(tree, inAppPrefix)
     trm.symbol match
@@ -281,7 +289,11 @@ extends Importer:
       Term.Asc(term(lhs), term(rhs))
     case tree @ InfixApp(lhs, Keyword.`is` | Keyword.`and`, rhs) =>
       val des = new Desugarer(this)(tree)
+      scoped("ucs:desugared"):
+        log(s"Desugared:\n${Split.display(des)}")
       val nor = new ucs.Normalization(this)(des)
+      scoped("ucs:normalized"):
+        log(s"Normalized:\n${Split.display(nor)}")
       Term.IfLike(Keyword.`if`, des)(nor)
     case app @ PartialApp(lhs, args) =>
       var params: Ls[Param] = Nil
@@ -798,6 +810,7 @@ extends Importer:
           val owner = ctx.outer
           newCtx.nest(S(patSym)).givenIn:
             assert(body.isEmpty)
+            patSym.split = td.extension.map(ucs.DeBrujinSplit.elaborate(_, this))
             log(s"pattern body is ${td.extension}")
             val translate = new ucs.Translator(this)
             val bod = translate(ps.map(_.params).getOrElse(Nil), td.extension.getOrElse(die))

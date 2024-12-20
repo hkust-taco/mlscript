@@ -10,519 +10,127 @@ class Basket[A](value: A)
 
 class Triplet[A, B, C](a: A, b: B, c: C)
 
-:ucs rp
 pattern Everything = _
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    accept 0
 
-:ucs rp
+:cp
+0 is Everything
+//│ = true
+
 pattern A = Box | Box
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> accept 0
-//│ >    a is class:Box -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      accept 0
 
-:ucs rp
+:cp
+Box(0) is Box
+//│ = true
+
+pattern BoxedAnswer = Box(42)
+
+:cp
+Box(42) is BoxedAnswer
+//│ = true
+
 pattern A_0 = Box(_) | Box(_)
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      accept 0
-//│ >    a is class:Box -> c => 
-//│ >      accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      accept 0
 
-:ucs rp
+:cp
+Box(0) is A_0
+//│ = true
+
 pattern A_1 = Box | Bowl
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> accept 0
-//│ >    a is class:Bowl -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      accept 0
-//│ >    a is class:Bowl -> c => 
-//│ >      accept 0
 
-:ucs rp
+:cp
+Box(0) is A_1
+//│ = true
+
+:cp
+Bowl(0) is A_1
+//│ = true
+
 pattern A_2 = _ | Box
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    accept 0
 
-:ucs rp
 pattern A_3 = Box | _
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> accept 0
-//│ >    accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      accept 0
-//│ >    accept 0
 
-:ucs rp
 pattern A_4 = Box(_) | Bowl(_)
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      accept 0
-//│ >    a is class:Bowl -> c => 
-//│ >      accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      accept 0
-//│ >    a is class:Bowl -> c => 
-//│ >      accept 0
 
-:ucs rp
 pattern A_3 = Box(Box) | Bowl
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> accept 0
-//│ >    a is class:Bowl -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> c => 
-//│ >        accept 0
-//│ >    a is class:Bowl -> d => 
-//│ >      accept 0
 
-:ucs rp
 pattern B = Box(Box) | Bowl(Box)
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> accept 0
-//│ >    a is class:Bowl -> c => 
-//│ >      c is class:Box -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> c => 
-//│ >        accept 0
-//│ >    a is class:Bowl -> d => 
-//│ >      d is class:Box -> e => 
-//│ >        accept 0
 
-:ucs rp
 pattern B_0 = Box(Box) | Box(Bowl)
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> accept 0
-//│ >    a is class:Box -> c => 
-//│ >      c is class:Bowl -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> c => 
-//│ >        accept 0
-//│ >      b is class:Bowl -> d => 
-//│ >        accept 0
 
-:ucs rp
 pattern C = Box(Box(Box))
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> c => 
-//│ >        c is class:Box -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> c => 
-//│ >        c is class:Box -> d => 
-//│ >          accept 0
 
-:ucs rp
 pattern C_1 = Box(Box | Bowl)
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> accept 0
-//│ >      b is class:Bowl -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> c => 
-//│ >        accept 0
-//│ >      b is class:Bowl -> d => 
-//│ >        accept 0
 
-:ucs rp
 pattern C_2 = Box(Box | Box)
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> accept 0
-//│ >      b is class:Box -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> c => 
-//│ >        accept 0
 
-:ucs rp
 pattern C_2 = Box(Box | Bowl | Box)
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> accept 0
-//│ >      b is class:Bowl -> accept 0
-//│ >      b is class:Box -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> c => 
-//│ >        accept 0
-//│ >      b is class:Bowl -> d => 
-//│ >        accept 0
 
-:ucs rp
 pattern D = Box(Box(Box) | Bowl)
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> c => 
-//│ >        c is class:Box -> accept 0
-//│ >      b is class:Bowl -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> c => 
-//│ >        c is class:Box -> d => 
-//│ >          accept 0
-//│ >      b is class:Bowl -> e => 
-//│ >        accept 0
 
-:ucs rp
 pattern D_0 = Box(Box(Box) | Box(Bowl))
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> c => 
-//│ >        c is class:Box -> accept 0
-//│ >      b is class:Box -> d => 
-//│ >        d is class:Bowl -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> c => 
-//│ >        c is class:Box -> d => 
-//│ >          accept 0
-//│ >        c is class:Bowl -> e => 
-//│ >          accept 0
 
-:ucs rp
 pattern D_1 = Box(Box(Bowl) | Box)
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> c => 
-//│ >        c is class:Bowl -> accept 0
-//│ >      b is class:Box -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> c => 
-//│ >        c is class:Bowl -> d => 
-//│ >          accept 0
-//│ >        accept 0
 
-:ucs rp
 pattern D_2 = Box(Bowl | Bowl | Bowl)
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Bowl -> accept 0
-//│ >      b is class:Bowl -> accept 0
-//│ >      b is class:Bowl -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Bowl -> c => 
-//│ >        accept 0
 
-:ucs rp
 pattern D_2 = Box(Box(Bowl) | Box(Basket) | Box(Box))
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> c => 
-//│ >        c is class:Bowl -> accept 0
-//│ >      b is class:Box -> d => 
-//│ >        d is class:Basket -> accept 0
-//│ >      b is class:Box -> e => 
-//│ >        e is class:Box -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> c => 
-//│ >        c is class:Bowl -> d => 
-//│ >          accept 0
-//│ >        c is class:Basket -> e => 
-//│ >          accept 0
-//│ >        c is class:Box -> f => 
-//│ >          accept 0
 
-:ucs rp
 pattern E = Box(Box(Box) | Bowl(Box(Basket)))
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> c => 
-//│ >        c is class:Box -> accept 0
-//│ >      b is class:Bowl -> d => 
-//│ >        d is class:Box -> e => 
-//│ >          e is class:Basket -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Box -> b => 
-//│ >      b is class:Box -> c => 
-//│ >        c is class:Box -> d => 
-//│ >          accept 0
-//│ >      b is class:Bowl -> e => 
-//│ >        e is class:Box -> f => 
-//│ >          f is class:Basket -> g => 
-//│ >            accept 0
 
-:ucs rp
 pattern F = Pair(Pair(Box, Bowl), Pair(Box, Basket))
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Pair -> b => c => 
-//│ >      b is class:Pair -> d => e => 
-//│ >        d is class:Box -> 
-//│ >          e is class:Bowl -> 
-//│ >            c is class:Pair -> f => g => 
-//│ >              f is class:Box -> g is class:Basket -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Pair -> b => c => 
-//│ >      b is class:Pair -> d => e => 
-//│ >        d is class:Box -> f => 
-//│ >          e is class:Bowl -> g => 
-//│ >            c is class:Pair -> h => i => 
-//│ >              h is class:Box -> j => 
-//│ >                i is class:Basket -> k => 
-//│ >                  accept 0
 
-:ucs rp
 pattern F_0 = Pair(Box, Bowl)
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Pair -> b => c => 
-//│ >      b is class:Box -> c is class:Bowl -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Pair -> b => c => 
-//│ >      b is class:Box -> d => 
-//│ >        c is class:Bowl -> e => 
-//│ >          accept 0
 
-:ucs rp
+:cp
+:expect true
+Pair(Box(42), Bowl(42)) is F_0
+//│ = true
+
 pattern F_1 = Pair(Box, Box) | Pair(Box, Bowl)
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Pair -> b => c => 
-//│ >      b is class:Box -> c is class:Box -> accept 0
-//│ >    a is class:Pair -> d => e => 
-//│ >      d is class:Box -> e is class:Bowl -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Pair -> b => c => 
-//│ >      b is class:Box -> d => 
-//│ >        c is class:Box -> e => 
-//│ >          accept 0
-//│ >        c is class:Bowl -> f => 
-//│ >          accept 0
 
-:ucs rp
+:cp
+:expect true
+Pair(Box(42), Box(42)) is F_1
+//│ = true
+
+:cp
+:expect true
+Pair(Box(42), Bowl(42)) is F_1
+//│ = true
+
+:cp
+:expect false
+Pair(Box(42), Basket(42)) is F_1
+//│ = false
+
+:cp
+:expect false
+Pair(Bowl(42), Bowl(42)) is F_1
+//│ = false
+
 pattern G = Triplet(Triplet(Box, Bowl, Basket), Pair(0, 1), Basket)
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Triplet -> b => c => d => 
-//│ >      b is class:Triplet -> e => f => g => 
-//│ >        e is class:Box -> 
-//│ >          f is class:Bowl -> 
-//│ >            g is class:Basket -> 
-//│ >              c is class:Pair -> h => i => 
-//│ >                h is 0 -> i is 1 -> d is class:Basket -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Triplet -> b => c => d => 
-//│ >      b is class:Triplet -> e => f => g => 
-//│ >        e is class:Box -> h => 
-//│ >          f is class:Bowl -> i => 
-//│ >            g is class:Basket -> j => 
-//│ >              c is class:Pair -> k => l => 
-//│ >                k is 0 -> 
-//│ >                  l is 1 -> 
-//│ >                    d is class:Basket -> m => 
-//│ >                      accept 0
 
-:ucs rp
 pattern G_0 = Triplet(Box, Bowl, Basket) | Triplet(Box, Bowl, Basket)
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Triplet -> b => c => d => 
-//│ >      b is class:Box -> c is class:Bowl -> d is class:Basket -> accept 0
-//│ >    a is class:Triplet -> e => f => g => 
-//│ >      e is class:Box -> f is class:Bowl -> g is class:Basket -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Triplet -> b => c => d => 
-//│ >      b is class:Box -> e => 
-//│ >        c is class:Bowl -> f => 
-//│ >          d is class:Basket -> g => 
-//│ >            accept 0
 
-:ucs rp
 pattern G_0 = Triplet(Triplet(Box, Box, Box), Bowl, Basket) | Triplet(Triplet(Box, Box, Box), Bowl, Basket)
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Triplet -> b => c => d => 
-//│ >      b is class:Triplet -> e => f => g => 
-//│ >        e is class:Box -> f is class:Box -> g is class:Box -> c is class:Bowl -> d is class:Basket -> accept 0
-//│ >    a is class:Triplet -> h => i => j => 
-//│ >      h is class:Triplet -> k => l => m => 
-//│ >        k is class:Box -> l is class:Box -> m is class:Box -> i is class:Bowl -> j is class:Basket -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Triplet -> b => c => d => 
-//│ >      b is class:Triplet -> e => f => g => 
-//│ >        e is class:Box -> h => 
-//│ >          f is class:Box -> i => 
-//│ >            g is class:Box -> j => 
-//│ >              c is class:Bowl -> k => 
-//│ >                d is class:Basket -> l => 
-//│ >                  accept 0
 
-:ucs rp
 :todo
 pattern G_1 =
   Triplet(Triplet(Box, Bowl, Box), Bowl, Basket) |
   Triplet(Triplet(Box, Box, Box), Bowl, Basket) |
   Triplet(Triplet(Box, Box, Bowl), Bowl, Basket)
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is class:Triplet -> b => c => d => 
-//│ >      b is class:Triplet -> e => f => g => 
-//│ >        e is class:Box -> f is class:Bowl -> g is class:Box -> c is class:Bowl -> d is class:Basket -> accept 0
-//│ >    a is class:Triplet -> h => i => j => 
-//│ >      h is class:Triplet -> k => l => m => 
-//│ >        k is class:Box -> l is class:Box -> m is class:Box -> i is class:Bowl -> j is class:Basket -> accept 0
-//│ >    a is class:Triplet -> n => o => p => 
-//│ >      n is class:Triplet -> q => r => s => 
-//│ >        q is class:Box -> r is class:Box -> s is class:Bowl -> o is class:Bowl -> p is class:Basket -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is class:Triplet -> b => c => d => 
-//│ >      b is class:Triplet -> e => f => g => 
-//│ >        e is class:Box -> h => 
-//│ >          f is class:Bowl -> i => 
-//│ >            g is class:Box -> j => 
-//│ >              c is class:Bowl -> k => 
-//│ >                d is class:Basket -> l => 
-//│ >                  accept 0
-//│ >                f is class:Box -> m => 
-//│ >                  reject
-//│ >              f is class:Box -> n => 
-//│ >                reject
-//│ >            f is class:Box -> o => 
-//│ >              g is class:Bowl -> p => 
-//│ >                c is class:Bowl -> q => 
-//│ >                  d is class:Basket -> r => 
-//│ >                    accept 0
-//│ >          f is class:Box -> s => 
-//│ >            g is class:Box -> t => 
-//│ >              c is class:Bowl -> u => 
-//│ >                d is class:Basket -> v => 
-//│ >                  accept 0
-//│ >            g is class:Bowl -> w => 
-//│ >              c is class:Bowl -> x => 
-//│ >                d is class:Basket -> y => 
-//│ >                  accept 0
 
-:ucs rp
+:todo
 // pattern BinSeq(pattern D) = D | Pair(0 | 1, BinSeq)
 pattern BinSeq = null | Pair(0 | 1, BinSeq)
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is null -> accept 0
-//│ >    a is class:Pair -> b => c => 
-//│ >      b is 0 -> c is pattern:BinSeq -> accept 0
-//│ >      b is 1 -> c is pattern:BinSeq -> accept 0
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is null -> accept 0
-//│ >    a is class:Pair -> b => c => 
-//│ >      b is 0 -> c is pattern:BinSeq -> accept 0
-//│ >      b is 1 -> c is pattern:BinSeq -> accept 0
-//│ FAILURE: Unexpected type error
 //│ ═══[ERROR] Unrecognized pattern.
 
-:ucs rp
+:todo
 pattern List(a) = null | Pair(a, List)
-//│ elaborated nameless split:
-//│ >  a => 
-//│ >    a is null -> accept 0
-//│ >    a is class:Pair -> b => c => 
-//│ >      reject
-//│ normalized nameless split:
-//│ >  a => 
-//│ >    a is null -> accept 0
-//│ >    a is class:Pair -> b => c => 
-//│ >      reject
-//│ FAILURE: Unexpected type error
 //│ ═══[ERROR] Unrecognized pattern.
-//│ FAILURE: Unexpected type error
 //│ ═══[ERROR] Unmatched number of captures and parameters.
-//│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
-//│ 	at: scala.runtime.Scala3RunTime$.assertFailed(Scala3RunTime.scala:11)
-//│ 	at: hkmc2.codegen.js.JSBuilder.$anonfun$2(JSBuilder.scala:200)
-//│ 	at: hkmc2.codegen.js.Scope.nestRebindThis(Scope.scala:74)
-//│ 	at: hkmc2.codegen.js.JSBuilder.returningTerm(JSBuilder.scala:149)
-//│ 	at: hkmc2.codegen.js.JSBuilder.block(JSBuilder.scala:333)
-//│ 	at: hkmc2.codegen.js.JSBuilder.program(JSBuilder.scala:324)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:72)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:31)
-//│ 	at: hkmc2.MLsDiffMaker.processTrees(MLsDiffMaker.scala:191)
-//│ 	at: hkmc2.MLsDiffMaker.processOrigin(MLsDiffMaker.scala:165)
 
-:cp
-:ucs rp
+// :cp
+:todo
 null is List
-//│ FAILURE: Unexpected runtime error
-//│ ═══[RUNTIME ERROR] Error: match error
-//│     at REPL37:1:38
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:597:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:926:10)
-//│     at REPLServer.emit (node:events:507:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:416:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:610:22)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'unapply')

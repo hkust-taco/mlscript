@@ -175,12 +175,55 @@ extension (split: DeBrujinSplit)
       case Reject => Reject
     go(split)(using subst)
     
+  def expand(scrutinees: List[Int], consequence: DeBrujinSplit): DeBrujinSplit =
+    def go(split: DeBrujinSplit, binderCount: Int, subst: Map[Int, Int]): DeBrujinSplit = split match
+      case Binder(body) => Binder(go(body, binderCount + 1, subst))
+      case Branch(scrutinee, pattern, consequent, alternative) =>
+        val newScrutinee = subst.getOrElse(scrutinee, scrutinee)
+        Branch(newScrutinee, pattern,
+               go(consequent, binderCount, subst),
+               go(alternative, binderCount, subst))
+      case Accept(outcome) => consequence.increment(binderCount)
+      case Reject => Reject
+    split.unbind match
+      case (arity, body) if arity == scrutinees.length =>
+        go(body, 0, (1 to arity).zip(scrutinees).toMap)
+      case _ => Reject // TODO: report mismatched arity
+  
+  def toSplit(scrutinees: Vector[() => Term.Ref],
+              outcomes: Map[Int, Split],
+              elaborator: Elaborator)(using Elaborator.Ctx, Elaborator.State): Split =
+    import DeBrujinSplit.*, PatternStub.*, syntax.Tree.Empty
+    def go(split: DeBrujinSplit, ctx: Vector[() => Term.Ref]): Split = split match
+      case Binder(body) => go(body, ctx)
+      case Branch(scrutinee, pattern, consequence, alternative) =>
+        val symbols = (1 to pattern.arity).map(i => TempSymbol(N, s"arg$i")).toList
+        val pattern2 = pattern match
+          case Literal(value) => Pattern.Lit(value)
+          case ClassLike(symbol: (ClassSymbol | ModuleSymbol)) =>
+            val select = elaborator.tl.scoped("ucs:sel"):
+              elaborator.reference(symbol).getOrElse(Term.Error)
+            Pattern.ClassLike(symbol, select, S(symbols), false)(Empty())
+        val consequent2 = consequence.unbind match
+          case (level, body) => // TODO: check level == arity
+            go(body, symbols.reverseIterator.map(s => () => s.ref()).toVector ++ ctx)
+        semantics.Branch(ctx(scrutinee - 1)(), pattern2, consequent2) ~: go(alternative, ctx)
+      case Accept(outcome) => outcomes(outcome)
+      case Reject => Split.End
+    split.unbind match
+      case (arity, body) if arity == scrutinees.length =>
+        go(split, scrutinees)
+      case _ => Split.End // TODO: report mismatched arity
+  
   def normalize(using TraceLogger): DeBrujinSplit =
     import DeBrujinSplit.*, PatternStub.*
-    val visited = collection.mutable.Map[DeBrujinSplit.Branch, (Opt[Int], Opt[DeBrujinSplit])]()
     def go(split: DeBrujinSplit): DeBrujinSplit =
       split match
         case Binder(body) => Binder(go(body))
+        case Branch(scrutinee, ClassLike(symbol: PatternSymbol), consequence, alternative) =>
+          val split = symbol.split.getOrElse:
+            lastWords(s"found unelaborated pattern: ${symbol.nme}")
+          go(split.expand(scrutinee :: Nil, consequence))
         case split @ Branch(scrutinee, pattern, consequence, alternative) => tl.trace(
           pre = s"normalize <<<\n${split.showDbg}",
           post = (s: DeBrujinSplit) => s"normalize >>>\n${s.showDbg}"
@@ -209,7 +252,6 @@ extension (split: DeBrujinSplit)
           val alternative2 = go(alternative.despecialize(scrutinee, pattern))
           split.copy(consequent = consequence2, alternative = alternative2)
         case Accept(_) | Reject => split
-      
     go(split)
   
   def specialize(scrutinee: Int, pattern: PatternStub, parameters: Range)(using TraceLogger): DeBrujinSplit =

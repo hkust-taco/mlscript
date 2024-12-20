@@ -91,8 +91,18 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
           val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
           val whenFalse = rec(specialize(alternative, -, scrutinee, pattern).clearFallback)
           Branch(scrutinee, pattern, whenTrue) ~: whenFalse
-        case Pattern.Synonym(symbol, _) =>
-          Split.End
+        case Pattern.Synonym(symbol, _) => scoped("ucs:rp"):
+          log(s"SYNONYM: $scrutinee is $pattern")
+          import DeBrujinSplit.*, PatternStub.*
+          val initialSplit = Binder(Branch(Outermost, ClassLike(symbol), Accept(42), Reject))
+          log(s"[cp] the initial nameless split:\n${initialSplit.display}")
+          val normalizedSplit = scoped("ucs:rpn"):
+            initialSplit.normalize(using elaborator.tl)
+          log(s"[cp] the normalized nameless split:\n${normalizedSplit.display}")
+          given Elaborator.State = elaborator.state
+          val compiled = normalizedSplit.toSplit(Vector(() => scrutinee), Map(42 -> consequent), elaborator)
+          log(s"[cp] the final compiled split:\n${Split.display(compiled)}")
+          rec(compiled ++ alternative)
         case _ =>
           raiseDesugaringError(msg"unsupported pattern matching: ${scrutinee.toString} is ${pattern.toString}" -> pattern.toLoc)
           Split.default(Term.Error)

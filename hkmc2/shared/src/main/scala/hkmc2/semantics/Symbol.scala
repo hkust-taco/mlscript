@@ -174,7 +174,8 @@ type FieldSymbol = TermSymbol | MemberSymbol[?]
 sealed trait InnerSymbol extends Symbol
 
 class ClassSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
-    extends MemberSymbol[ClassDef] with CtorSymbol with InnerSymbol:
+    extends MemberSymbol[ClassDef] with CtorSymbol with InnerSymbol with NamedSymbol:
+  def name: Str = nme
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of classe here
   override def toString: Str = s"class:$nme${State.dbgUid(uid)}"
@@ -182,7 +183,8 @@ class ClassSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
   def arity: Int = tree.paramLists.headOption.fold(0)(_.fields.length)
 
 class ModuleSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
-    extends MemberSymbol[ModuleDef] with CtorSymbol with InnerSymbol:
+    extends MemberSymbol[ModuleDef] with CtorSymbol with InnerSymbol with NamedSymbol:
+  def name: Str = nme
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of module here
   override def toString: Str = s"module:${id.name}${State.dbgUid(uid)}"
@@ -199,6 +201,8 @@ class PatternSymbol(val id: Tree.Ident, val params: Opt[Tree.Tup], val body: Tre
   override def toString: Str = s"pattern:${id.name}"
   /** Compute the arity. */
   def arity: Int = params.fold(0)(_.fields.length)
+  /** The expanded nameless split. */
+  var split: Opt[ucs.DeBrujinSplit] = N
 
 class TopLevelSymbol(blockNme: Str)(using State)
     extends MemberSymbol[ModuleDef] with InnerSymbol:
