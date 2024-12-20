@@ -355,7 +355,7 @@ pattern F_1 = Pair(Box, Box) | Pair(Box, Bowl)
 //│ >      b is class:Box -> d => 
 //│ >        c is class:Box -> e => 
 //│ >          accept 0
-//│ >        a is class:Bowl -> f => 
+//│ >        c is class:Bowl -> f => 
 //│ >          accept 0
 
 :ucs rp

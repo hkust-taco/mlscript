@@ -190,6 +190,7 @@ extension (split: DeBrujinSplit)
             consequence.unbind match
               case (level @ (`arity` | 0), body) =>
                 // The scrutinee handling below is tricky.
+                tl.log(s"[Step 1] specialize the consequence")
                 val former = body.specialize(scrutinee + level, pattern, 1 to arity)
                 tl.log(s"the former split:\n${former.showDbg}")
                 // We need to increment the level because it is going to be put into a binder.
@@ -223,9 +224,7 @@ extension (split: DeBrujinSplit)
           tl.log(s"consequence:\n${consequence.showDbg}")
           tl.log(s"unbound consequence:\n${body.showDbg}")
           if level == 0 || level == pattern.arity then
-            body.substitute(Subst((1 to level).zip(parameters + level)*)) ++
-              go(alternative)(using target, parameters)
-                // .decrement(level)
+            body ++ go(alternative)(using target, parameters)
           else
             // TODO: report mismatched arity.
             Reject
