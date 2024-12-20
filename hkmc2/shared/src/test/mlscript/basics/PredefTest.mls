@@ -1,17 +1,37 @@
 :js
 
 
+Predef.Test
+//│ = [class Test]
+
 Test === Predef.Test
 //│ = true
 
 Predef.Test === globalThis.Predef.Test
 //│ = true
 
+1 is Predef.Test
+//│ = false
+
+:fixme
+new Predef.Test is Predef.Test
+//│ ═══[RUNTIME ERROR] TypeError: tmp2 is not a constructor
+
+(new Predef.Test) is Predef.Test
+//│ > Test
+//│ = true
+
+new Predef.Test
+//│ > Test
+//│ = Test { y: 1 }
+
 (new Predef.Test).y
+//│ > Test
 //│ = 1
 
 :re
 (new Predef.Test).x
+//│ > Test
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
 

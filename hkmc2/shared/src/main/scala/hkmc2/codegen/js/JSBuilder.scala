@@ -68,8 +68,15 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
       summon[Scope].findThis_!(ts)
     case _ => summon[Scope].lookup_!(l)
   
-  def result(a: Arg)(using Raise, Scope): Document =
+  def argument(a: Arg)(using Raise, Scope): Document =
     if a.spread then doc"...${result(a.value)}" else result(a.value)
+  
+  def operand(a: Arg)(using Raise, Scope): Document =
+    if a.spread then die else subexpression(a.value)
+  
+  def subexpression(r: Result)(using Raise, Scope): Document = r match
+    case _: Value.Lam => doc"(${result(r)})"
+    case _ => result(r)
   
   def result(r: Result)(using Raise, Scope): Document = r match
     case Value.This(sym) => summon[Scope].findThis_!(sym)
@@ -82,12 +89,12 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
     
     case Call(Value.Ref(l: BuiltinSymbol), lhs :: rhs :: Nil) =>
       if l.binary then
-        val res = doc"${result(lhs)} ${l.nme} ${result(rhs)}"
+        val res = doc"${operand(lhs)} ${l.nme} ${operand(rhs)}"
         if needsParens(l.nme) then doc"(${res})" else res
       else err(msg"Cannot call non-binary builtin symbol '${l.nme}'")
     case Call(Value.Ref(l: BuiltinSymbol), rhs :: Nil) =>
       if l.unary then
-        val res = doc"${l.nme} ${result(rhs)}"
+        val res = doc"${l.nme} ${operand(rhs)}"
         if needsParens(l.nme) then doc"(${res})" else res
       else err(msg"Cannot call non-unary builtin symbol '${l.nme}'")
     case Call(Value.Ref(l: BuiltinSymbol), args) =>
@@ -96,14 +103,12 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
     case Call(s @ Select(_, id), lhs :: rhs :: Nil) =>
       Elaborator.ctx.Builtins.getBuiltinOp(id.name) match
         case S(jsOp) =>
-          val res = doc"${result(lhs)} ${jsOp} ${result(rhs)}"
+          val res = doc"${operand(lhs)} ${jsOp} ${operand(rhs)}"
           if needsParens(jsOp) then doc"(${res})" else res
-        case N => doc"${result(s)}(${(result(lhs) :: result(rhs) :: Nil).mkDocument(", ")})"
+        case N => doc"${result(s)}(${(argument(lhs) :: argument(rhs) :: Nil).mkDocument(", ")})"
     case c @ Call(fun, args) =>
-      val base = fun match
-        case _: Value.Lam => doc"(${result(fun)})"
-        case _ => result(fun)
-      val argsDoc = args.map(result).mkDocument(", ")
+      val base = subexpression(fun)
+      val argsDoc = args.map(argument).mkDocument(", ")
       if c.isMlsFun then doc"${base}(${argsDoc})" else doc"${base}(${argsDoc}) ?? null"
     case Value.Lam(ps, bod) => scope.nest givenIn:
       val (params, bodyDoc) = setupFunction(none, ps, bod)
@@ -123,7 +128,7 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
       doc"new ${result(cls)}(${as.map(result).mkDocument(", ")})"
     case Value.Arr(es) if es.isEmpty => doc"[]"
     case Value.Arr(es) =>
-      doc"[ #{  # ${es.map(result).mkDocument(doc", # ")} #}  # ]"
+      doc"[ #{  # ${es.map(argument).mkDocument(doc", # ")} #}  # ]"
   def returningTerm(t: Block)(using Raise, Scope): Document = t match
     case Assign(l, r, rst) =>
       doc" # ${getVar(l)} = ${result(r)};${returningTerm(rst)}"

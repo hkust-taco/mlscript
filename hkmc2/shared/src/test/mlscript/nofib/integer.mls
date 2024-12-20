@@ -1,15 +1,16 @@
 :js
+
 :import NofibPrelude.mls
-//│ Imported 109 member(s)
+//│ Imported 112 member(s)
 
 
 fun integerbench(op, astart, astep, alim, bstart, bstep, blim) =
   fun lscomp1(ls) = if ls is
     Nil then Nil
-    Cons(a, t1) then
+    a :: t1 then
       fun lscomp2(ls) = if ls is
         Nil then lscomp1(t1)
-        Cons(b, t2) then Cons(op(a, b), lscomp2(t2))
+        b :: t2 then op(a, b) :: lscomp2(t2)
       lscomp2(enumFromThenTo(bstart, bstart + bstep, blim))
   
   lscomp1(enumFromThenTo(astart, astart + astep, alim))
@@ -17,10 +18,10 @@ fun integerbench(op, astart, astep, alim, bstart, bstep, blim) =
 fun intbench(op, astart, astep, alim, bstart, bstep, blim) =
   fun lscomp1(ls) = if ls is
     Nil then Nil
-    Cons(a, t1) then
+    a :: t1 then
       fun lscomp2(ls) = if ls is
         Nil then lscomp1(t1)
-        Cons(b, t2) then Cons(op(a, b), lscomp2(t2))
+        b :: t2 then op(a, b) :: lscomp2(t2)
       lscomp2(enumFromThenTo(bstart, bstart + bstep, blim))
   
   lscomp1(enumFromThenTo(astart, astart + astep, alim))

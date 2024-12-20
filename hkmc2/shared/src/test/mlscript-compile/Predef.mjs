@@ -62,8 +62,12 @@ const Predef$class = class Predef {
     };
     this.TraceLogger = new TraceLogger$class;
     this.TraceLogger.class = TraceLogger$class;
+    
+    const this$Predef = this;
     this.Test = class Test {
       constructor() {
+        let tmp;
+        tmp = this$Predef.print("Test");
         this.y = 1;
       }
       toString() { return "Test"; }
@@ -79,22 +83,39 @@ const Predef$class = class Predef {
       return false;
     }
   } 
-  pipe(x2, f) {
+  pipeInto(x2, f) {
     return f(x2) ?? null;
   } 
-  apply(receiver, f1) {
-    return (...args) => {
-      return f1(receiver, ...args) ?? null;
+  pipeFrom(f1, x3) {
+    return f1(x3) ?? null;
+  } 
+  andThen(f2, g) {
+    return (x4) => {
+      let tmp;
+      tmp = f2(x4) ?? null;
+      return g(tmp) ?? null;
     };
   } 
-  call(receiver1, f2) {
-    return (...args) => {
-      return f2.call(receiver1, ...args);
+  compose(f3, g1) {
+    return (x4) => {
+      let tmp;
+      tmp = g1(x4) ?? null;
+      return f3(tmp) ?? null;
     };
   } 
-  print(x3) {
+  passTo(receiver, f4) {
+    return (...args) => {
+      return f4(receiver, ...args) ?? null;
+    };
+  } 
+  call(receiver1, f5) {
+    return (...args) => {
+      return f5.call(receiver1, ...args);
+    };
+  } 
+  print(x4) {
     let tmp;
-    tmp = String(x3);
+    tmp = String(x4);
     return console.log(tmp) ?? null;
   } 
   tupleSlice(xs, i, j) {

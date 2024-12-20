@@ -1,0 +1,218 @@
+:js
+
+:import NofibPrelude.mls
+//│ Imported 112 member(s)
+
+:silent
+import "fs"
+
+fun int_of_char(c) = c.codePointAt(0)
+
+object
+  EQ
+  GT
+  LT
+
+fun compareList(xs, ys) = if xs is
+  Nil and ys is
+    Nil then EQ
+    _ :: _ then LT
+  _ :: _ and ys is Nil then GT
+  x :: xs_ and ys is y :: ys_ and
+    int_of_char(x) === int_of_char(y) then compareList(xs_, ys_)
+    int_of_char(x) < int_of_char(y) then LT
+    else GT
+
+fun gtList(a, b) = compareList(a, b) is GT
+
+fun leList(a, b) = not(gtList(a, b))
+
+fun ltList(a, b) = compareList(a, b) is LT
+
+fun geList(a, b) = not(ltList(a, b))
+
+fun eqList(a, b) = compareList(a, b) is EQ
+
+fun prependToAll(sep, xs) = if xs is
+  Nil then Nil
+  x :: xs_ then sep :: x :: prependToAll(sep, xs_)
+
+fun intersperse(sep, xs) = if xs is
+  Nil then Nil
+  x :: xs_ then x :: prependToAll(sep, xs_)
+
+fun lines(s) = if
+  s is Nil then Nil
+  break_(x => x === "\n", s) is [l, s_] then
+    let tt = if s_ is
+      Nil then Nil
+      _ :: s__ then lines(s__)
+    l :: tt
+
+fun unlines(ls) = concat(map(l => l +: ("\n" :: Nil), ls))
+
+fun odd(x) = intMod(x, 2) === 0
+
+fun z_of_int(x) = globalThis.BigInt(x)
+
+fun hash(str) = foldl(
+  (acc, c) => z_of_int(int_of_char(c)) + (acc * z_of_int(31)),
+  z_of_int(0),
+  str
+)
+
+fun quickSort(xs) = if xs is
+  Nil then Nil
+  x :: xs_ then
+    fun lscomp1(ls) = if ls is
+      Nil then Nil
+      h :: t and
+        leList(h, x) then h :: lscomp1(t)
+        else lscomp1(t)
+    fun lscomp2(ls) = if ls is
+      Nil then Nil
+      h :: t and
+        gtList(h, x) then h :: lscomp2(t)
+        else lscomp2(t)
+    quickSort(lscomp1(xs_)) +: (x :: quickSort(lscomp2(xs_)))
+
+fun select(p, x, ts_fs) = if ts_fs is [ts, fs] and
+  p(x) then [x :: ts, fs]
+  else [ts, x :: fs]
+
+fun partition(p, xs) = foldr((x, y) => select(p, x, y), [Nil, Nil], xs)
+
+fun quickSort2(xs) = if xs is
+  Nil then Nil
+  x :: xs_ then
+    if partition(y => geList(x, y), xs_) is [lo, hi] then
+      quickSort2(lo) +: (x :: quickSort2(hi))
+
+fun quickerSort(xss) = if xss is
+  Nil then Nil
+  x :: Nil then x :: Nil
+  x :: xs then
+    fun split(x, lo, hi, ys) = if ys is
+      Nil then quickerSort(lo) +: (x :: quickerSort(hi))
+      y :: ys_ and
+        leList(y, x) then split(x, y :: lo, hi, ys_)
+        else split(x, lo, y :: hi, ys_)
+    split(x, Nil, Nil, xs)
+
+fun insertSort(xss) = if xss is
+  Nil then Nil
+  x :: xs then
+    fun trins(rev, xs, ys) = if xs is
+      Nil and ys is y :: ys_ then trins(Nil, reverse(rev) +: (y :: Nil), ys_)
+      xs and ys is Nil then reverse(rev) +: xs
+      x :: xs_ and ys is y :: ys_ and
+        ltList(x, y) then trins(x :: rev, xs_, y :: ys_)
+        else trins(Nil, reverse(rev) +: (y :: x :: xs_), ys_)
+    trins(Nil, x :: Nil, xs)
+
+abstract class Tree[T]: Tip | Branch[T]
+
+object Tip extends Tree[Nothing]
+
+class Branch[T](a: T, l: Tree[T], r: Tree[T]) extends Tree[T]
+
+fun treeSort(param) =
+  fun mkTree(innerparam) =
+    fun to_tree(x, t) = if t is
+      Tip then Branch(x, Tip, Tip)
+      Branch(y, l, r) and
+        leList(x, y) then Branch(y, to_tree(x, l), r)
+        else Branch(y, l, to_tree(x, r))
+    foldr(to_tree, Tip, innerparam)
+  fun readTree(t) = if t is
+    Tip then Nil
+    Branch(x, l, r) then readTree(l) +: (x :: readTree(r))
+  readTree(mkTree(param))
+
+abstract class Tree2[T]: Tip2 | Twig2[T] | Branch2[T]
+
+object Tip2 extends Tree2[Nothing]
+
+class
+  Twig2[T](a: T) extends Tree2[T]
+  Branch2[T](a: T, l: Tree2[T], r: Tree2[T]) extends Tree2[T]
+
+fun treeSort2(param) =
+  fun mkTree(innerparam) =
+    fun to_tree(x, t) = if t is
+      Tip2 then Twig2(x)
+      Twig2(y) and
+        leList(x, y) then Branch2(y, Twig2(x), Tip2)
+        else Branch2(y, Tip2, Twig2(x))
+      Branch2(y, l, r) and
+        leList(x, y) then Branch2(y, to_tree(x, l), r)
+        else Branch2(y, l, to_tree(x, r))
+    foldr(to_tree, Tip2, innerparam)
+  fun readTree(t) = if t is
+    Tip2 then Nil
+    Twig2(x) then x :: Nil
+    Branch2(x, l, r) then readTree(l) +: (x :: readTree(r))
+  readTree(mkTree(param))
+
+fun heapSort(xs) =
+  fun heap(k, xs) = if xs is
+    Nil then Tip
+    x :: xs_ then to_heap(k, x, heap(k + 1, xs_))
+  fun to_heap(k, x, t) = if t is
+    Tip then Branch(x, Tip, Tip)
+    Branch(y, l, r) and
+      leList(x, y) and odd(k) then Branch(x, to_heap(intDiv(k, 2), y, l), r)
+      leList(x, y) then Branch(x, l, to_heap(intDiv(k, 2), y, r))
+      odd(k) then Branch(y, to_heap(intDiv(k, 2), x, l), r)
+      else Branch(y, l, to_heap(intDiv(k, 2), x, r))
+  fun clear(t) = if t is
+    Tip then Nil
+    Branch(x, l, r) then x :: clear(mix(l, r))
+  fun mix(l, r) = if
+    l is Tip then r
+    r is Tip then l
+    l is Branch(x, l1, r1) and r is Branch(y, l2, r2) and
+      leList(x, y) then Branch(x, mix(l1, r1), Branch(y, l2, r2))
+      else Branch(y, Branch(x, l1, r1), mix(l2, r2))
+  clear(heap(0, xs))
+
+fun mergeSort(param) =
+  fun runsplit(run, xs) = if
+    run is Nil and xs is Nil then Nil
+    xs is Nil then run :: Nil
+    run is Nil and xs is x :: xs_ then runsplit(x :: Nil, xs_)
+    run is r :: rs and xs is x :: xs_ and rs is
+      Nil and
+        gtList(x, r) then runsplit(r :: x :: Nil, xs_)
+        leList(x, r) then runsplit(x :: r :: rs, xs_)
+        else (r :: rs) :: runsplit(x :: Nil, xs_)
+      rs and
+        leList(x, r) then runsplit(x :: r :: rs, xs_)
+        else (r :: rs) :: runsplit(x :: Nil, xs_)
+  fun merge_lists(xs) = if xs is
+    Nil then Nil
+    x :: xs_ then merge(x, merge_lists(xs_))
+  fun merge(xs, ys) = if
+    xs is Nil then ys
+    ys is Nil then xs
+    xs is x :: xs_ and ys is y :: ys_ and
+      eqList(x, y) then x :: y :: merge(xs_, ys_)
+      ltList(x, y) then x :: merge(xs_, y :: ys_)
+      else y :: merge(x :: xs_, ys_)
+  merge_lists(runsplit(Nil, param))
+
+fun mangle(inpt) =
+  fun sort(param) =
+    foldr(
+      (f, g) => x => f(g(x)),
+      x => x,
+      intersperse(reverse, (heapSort :: insertSort :: mergeSort :: quickSort :: quickSort2 :: quickerSort :: treeSort :: treeSort2 :: Nil)),
+    )(param)
+  unlines(sort(lines(inpt)))
+
+fun testSorting_nofib(d) =
+  let f = nofibStringToList of fs.readFileSync("hkmc2/shared/src/test/mlscript/nofib/input/Main.hs").toString()
+  hash(mangle(f))
+
+testSorting_nofib(0)
+//│ = 51324117188054929115411819706576305711291550658570113274291768822777898552447837804420193403034280334581113235670099168108057310001444698188883902000871912629747889286942274533143362191347715770581074120684028066661549409447053566864805982796651442411825424058139343253169753750307013113236996387277789074623630137288987589869641913268610508598505040964906263227437054452571059796961267985287441539342423613634888118731387934522320394294636575704912348025851038478882488022787377510287490741895262233989080994241592338442788051616303082788441666485156091668196999668892850523930511918729736856089560984406499736606084171798216360770991023233180481976810767432750226966921480421914178641779179040473344962763594357880599983085435482161632405644389584578524102239884780307588440751057343783694537559222924711205140877849398042544407611747227163056408231621727687968160470282720794027470616537695447289808133239223198869n

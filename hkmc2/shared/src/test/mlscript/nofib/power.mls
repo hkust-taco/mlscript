@@ -1,6 +1,7 @@
 :js
+
 :import NofibPrelude.mls
-//│ Imported 109 member(s)
+//│ Imported 112 member(s)
 
 
 abstract class Pss[T]: Pz | Pc[T]
@@ -23,7 +24,7 @@ fun extract(n, ps) = if
   n == 0 then Nil
   force(ps) is
     Pz then Nil
-    Pc(x, ps) then Cons(x, extract(n - 1, ps))
+    Pc(x, ps) then x :: extract(n - 1, ps)
 
 fun dotMult(c, ps) = lazy of () => if force(ps) is
   Pz then Pz
@@ -61,7 +62,7 @@ fun powerPs(a, n) = if n <= 0 then fromIntegerPs(1) else multPs(a, powerPs(a, n 
 
 fun divPs(fss, gss) = lazy of () => if force(fss) is
   Pz and force(gss) is
-    Pz then nofibError("power series 0/0")
+    Pz then throw Error("power series 0/0")
     Pc(0, gs) then force(divPs(lazy of () => Pz, gs))
     else Pz
   Pc(0, fs_) and force(gss) is
@@ -141,7 +142,7 @@ fun testPower_nofib(p) =
   extract(p, ts());
   extract(p, tree())
 
-
+:expect '[0,1,1,2,5,14,42,132,429,1430,4862,16796,58786,208012]'
 testPower_nofib(14).toString()
 //│ = '[0,1,1,2,5,14,42,132,429,1430,4862,16796,58786,208012]'
 

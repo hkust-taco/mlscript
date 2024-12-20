@@ -108,9 +108,8 @@ fun (??) foo(x, y) = x + y
 //│ ╙──       	^
 //│ = [Function: foo]
 
-:fixme
 1
   ?? 2
-//│ /!!!\ Uncaught error: scala.MatchError: OpBlock(List((Ident(??),IntLit(2)))) (of class hkmc2.syntax.Tree$OpBlock)
+//│ = 3
 
 

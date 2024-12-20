@@ -1,9 +1,10 @@
 :js
+
 :import NofibPrelude.mls
-//│ Imported 109 member(s)
+//│ Imported 112 member(s)
 
 
-class Pixmap(a: Int, b: Int, c: Int, d:List[Tup3[Int, Int, Int]])
+class Pixmap(a: Int, b: Int, c: Int, d:List[[Int, Int, Int]])
 
 fun createPixmap(width, height, max, colours) = Pixmap(width, height, max, colours)
 
@@ -39,17 +40,17 @@ fun parallelMandel(mat, limit, radius) = map(c => whenDiverge(limit, radius, c),
 fun mandelset(x, y, x_, y_, screenX, screenY, lIMIT) =
   fun prettyRGB(s) =
     let t = lIMIT - s
-    Tup3(s, t, t)
+    [s, t, t]
   
   fun windowToViewport(s, t) =
     Complex(x + ((s * (x_ - x)) / screenX), y + ((t * (y_ - y)) / screenY))
   
   fun lscomp1(ls1) = if ls1 is
     Nil then Nil
-    Cons(t, t1) then
+    t :: t1 then
       fun lscomp2(ls2) = if ls2 is
         Nil then lscomp1(t1)
-        Cons(s, t2) then Cons(windowToViewport(s, t), lscomp2(t2))
+        s :: t2 then windowToViewport(s, t) :: lscomp2(t2)
       lscomp2(enumFromTo(1, screenX))
   
   let result = parallelMandel(lscomp1(enumFromTo(1, screenY)), lIMIT, max(x_ - x, y_ - y) / 2)

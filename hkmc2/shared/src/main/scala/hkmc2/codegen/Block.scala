@@ -39,6 +39,17 @@ sealed abstract class Block extends Product with AutoLocated:
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
     case Label(lbl, bod, rst) => bod.definedVars ++ rst.definedVars
   
+  lazy val size: Int = this match
+    case _: Return | _: Throw | _: End | _: Break | _: Continue => 1
+    case Begin(sub, rst) => sub.size + rst.size
+    case Assign(_, _, rst) => 1 + rst.size
+    case AssignField(_, _, _, rst) => 1 + rst.size
+    case Match(_, arms, dflt, rst) =>
+      1 + arms.map(_._2.size).sum + dflt.map(_.size).getOrElse(0) + rst.size
+    case Define(_, rst) => 1 + rst.size
+    case TryBlock(sub, fin, rst) => 1 + sub.size + fin.size + rst.size
+    case Label(_, bod, rst) => 1 + bod.size + rst.size
+  
   // TODO conserve if no changes
   def mapTail(f: BlockTail => BlockTail): Block = this match
     case b: BlockTail => f(b)

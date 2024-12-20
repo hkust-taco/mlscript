@@ -302,6 +302,7 @@ class ParseRules(using State):
     singleKw(`undefined`)(UnitLit(false)),
     singleKw(`null`)(UnitLit(true)),
     singleKw(`this`)(Ident("this")),
+    singleKw(Keyword.__)(Under()),
     standaloneExpr,
   )
   

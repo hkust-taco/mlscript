@@ -124,6 +124,8 @@ object Keyword:
   val `=>` = Keyword("=>", nextPrec, eqPrec)
   val `->` = Keyword("->", curPrec, eqPrec)
   
+  val __ = Keyword("_", N, N)
+  
   val modifiers = Set(
     `abstract`, mut, virtual, `override`, declare, public, `private`)
   

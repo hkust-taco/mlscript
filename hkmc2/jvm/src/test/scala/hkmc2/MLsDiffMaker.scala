@@ -39,6 +39,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val showElab = NullaryCommand("el")
   val showElaboratedTree = DebugTreeCommand("elt")
   val showLoweredTree = NullaryCommand("lot")
+  val ppLoweredTree = NullaryCommand("slot")
   val showContext = NullaryCommand("ctx")
   val parseOnly = NullaryCommand("parseOnly")
   

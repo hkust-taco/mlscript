@@ -1,0 +1,288 @@
+:js
+
+:import NofibPrelude.mls
+//│ Imported 112 member(s)
+
+abstract class ItemType: Bono | Edge | Larry | Adam
+
+object
+  Bono extends ItemType
+  Edge extends ItemType
+  Larry extends ItemType
+  Adam extends ItemType
+  
+fun itemEq(a, b) = if a is
+  Bono and b is Bono then true
+  Edge and b is Edge then true
+  Larry and b is Larry then true
+  Adam and b is Adam then true
+  else false
+
+fun succItem(i) = if i is
+  Bono then Edge
+  Edge then Larry
+  Larry then Adam
+
+fun isEnd(i) = if i is
+  Bono then false
+  Edge then false
+  Larry then false
+  Adam then true
+
+fun itemFromTo(a, b) = if itemEq(a, b) then a :: Nil else a :: itemFromTo(succItem(a), b)
+
+abstract class BankType: LeftBank | RightBank
+
+object
+  LeftBank extends BankType
+  RightBank extends BankType
+
+fun bankEq(a, b) = if a is
+  LeftBank and b is LeftBank then true
+  RightBank and b is RightBank then true
+  else false
+
+class State(b: BankType, e: BankType, l: BankType, a: BankType)
+
+fun stateEq(s1, s2) = if s1 is State(a, b, c, d) and s2 is State(e, f, g, h) then
+  (bankEq(a, e) && bankEq(b, f) && bankEq(c, g) && bankEq(d, h))
+
+fun bonoPos(s) = if s is State(a, b, c, d) then a
+
+fun edgePos(s) = if s is State(a, b, c, d) then b
+
+fun larryPos(s) = if s is State(a, b, c, d) then c
+
+fun adamPos(s) = if s is State(a, b, c, d) then d
+
+let initialState = State(LeftBank, LeftBank, LeftBank, LeftBank)
+//│ > State {
+//│ >   b: LeftBank { class: [class LeftBank] },
+//│ >   e: LeftBank { class: [class LeftBank] },
+//│ >   l: LeftBank { class: [class LeftBank] },
+//│ >   a: LeftBank { class: [class LeftBank] }
+//│ initialState = }
+
+let finalState = State(RightBank, RightBank, RightBank, RightBank)
+//│ > State {
+//│ >   b: RightBank { class: [class RightBank] },
+//│ >   e: RightBank { class: [class RightBank] },
+//│ >   l: RightBank { class: [class RightBank] },
+//│ >   a: RightBank { class: [class RightBank] }
+//│ finalState = }
+
+fun position(i, s) = if i is
+  Bono then bonoPos(s)
+  Edge then edgePos(s)
+  Larry then larryPos(s)
+  Adam then adamPos(s)
+
+fun updateState(s, i, pos) = if s is State(a, b, c, d) and i is
+  Bono then State(pos, b, c, d)
+  Edge then State(a, pos, c, d)
+  Larry then State(a, b, pos, d)
+  Adam then State(a, b, c, pos)
+
+fun opposite(b) = if b is
+  LeftBank then RightBank
+  RightBank then LeftBank
+
+fun notSeen(state, states) =
+  all(case { [_, s] then not(stateEq(state, s)) }, states)
+
+fun writeItem(i, b, rest) = if i is
+  Bono and b is LeftBank then nofibStringToList("    Bono |                    |\n") +: rest
+  Edge and b is LeftBank then nofibStringToList("The Edge |                    |\n") +: rest
+  Larry and b is LeftBank then nofibStringToList("   Larry |                    |\n") +: rest
+  Adam and b is LeftBank then nofibStringToList("    Adam |                    |\n") +: rest
+  Bono and b is RightBank then nofibStringToList("         |                    | Bono\n") +: rest
+  Edge and b is RightBank then nofibStringToList("         |                    | The Edge\n") +: rest
+  Larry and b is RightBank then nofibStringToList("         |                    | Larry\n") +: rest
+  Adam and b is RightBank then nofibStringToList("         |                    | Adam\n") +: rest
+
+fun writeState(state, s) =
+  nofibStringToList("----------------------------------------\n") +:
+  writeItem of
+    Bono
+    bonoPos(state)
+    writeItem of
+      Edge
+      edgePos(state)
+      writeItem of
+        Larry
+        larryPos(state)
+        writeItem of
+          Adam
+          adamPos(state)
+          nofibStringToList("----------------------------------------\n") +: s
+
+fun totalTime(history) = if history is [time, _] :: _ then time
+
+fun writeHistory(history, x) = if history is
+  Nil then x
+  else
+    foldr(
+      (timestate, acc) => (s) => if timestate is [time, state] then
+        nofibStringToList("Time: ") +: nofibStringToList(stringOfInt(totalTime(history) - time)) +: ("\n" :: writeState(state, acc(s))),
+      x => x,
+      history
+    )(x)
+
+fun writeSolutions(solutions, count, s) = if solutions is
+  Nil then s
+  item :: next then
+    nofibStringToList("Solution ") +:
+    nofibStringToList(stringOfInt(count)) +:
+    "\n" :: writeHistory(item, writeSolutions(next, count + 1, s))
+
+fun minSolutions(history) = if history is
+  Nil then Nil
+  history :: next then
+    // @tailrec // TODO
+    fun minAcc(minSoFar, mins, ls) = if ls is
+      Nil then mins
+      history :: next then
+        let total = totalTime(history)
+        if
+          minSoFar < total then minAcc(minSoFar, mins, next)
+          minSoFar === total then minAcc(minSoFar, history :: mins, next)
+          else minAcc(total, history :: Nil, next)
+    reverse(minAcc(totalTime(history), history :: Nil, next))
+
+fun u2times(i) = if i is
+  Bono then 10
+  Edge then 5
+  Larry then 2
+  Adam then 1
+
+fun transfer(source, dest, location, countdown, history) =
+  if stateEq(source, dest) then ([countdown, dest] :: history) :: Nil
+  else
+    let newHistory = [countdown, dest] :: history
+    let newLocation = opposite(location)
+    fun lscomp1(ls) = if ls is
+      Nil then Nil
+      item :: xs then
+        if bankEq(position(item, dest), location) then
+          let newDest = updateState(dest, item, newLocation)
+          if notSeen(newDest, history) then
+            let newTime = countdown + u2times(item)
+            transfer(source, newDest, newLocation, newTime, newHistory) :: lscomp1(xs)
+          else lscomp1(xs)
+        else lscomp1(xs)
+    let moveOne = concat(lscomp1(itemFromTo(Bono, Adam)))
+    fun lscomp2(ls) = if ls is
+      Nil then Nil
+      i :: xs then
+        fun lscomp3(ls) = if ls is
+          Nil then lscomp2(xs)
+          j :: ys then
+            if bankEq(position(i, dest), location) and bankEq(position(j, dest), location) then
+              let newDest = updateState(updateState(dest, i, newLocation), j, newLocation)
+              if notSeen(newDest, history) then
+                let newTime = countdown + u2times(i)
+                transfer(source, newDest, newLocation, newTime, newHistory) :: lscomp3(ys)
+              else lscomp3(ys)
+            else lscomp3(ys)
+        lscomp3(itemFromTo(succItem(i), Adam))
+    let moveTwo = concat(lscomp2(itemFromTo(Bono, Larry)))
+    moveOne +: moveTwo
+
+fun testPuzzle_nofib(x) =
+  let time = if listLen(x) === 1 then 0 else throw Error("puzzle expects exactly one argument")
+  let solutions = transfer(initialState, finalState, RightBank, time, Nil)
+  let mins = minSolutions(solutions)
+  writeSolutions(mins, 1, Nil)
+
+:re // nodejs stack size 8192 can handle this
+print(nofibListToString(testPuzzle_nofib(2 :: Nil)))
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+
+
+// // │ > Solution 1
+// // │ > Time: 0
+// // │ > ----------------------------------------
+// // │ >     Bono |                    |
+// // │ > The Edge |                    |
+// // │ >    Larry |                    |
+// // │ >     Adam |                    |
+// // │ > ----------------------------------------
+// // │ > Time: 2
+// // │ > ----------------------------------------
+// // │ >     Bono |                    |
+// // │ > The Edge |                    |
+// // │ >          |                    | Larry
+// // │ >          |                    | Adam
+// // │ > ----------------------------------------
+// // │ > Time: 3
+// // │ > ----------------------------------------
+// // │ >     Bono |                    |
+// // │ > The Edge |                    |
+// // │ >          |                    | Larry
+// // │ >     Adam |                    |
+// // │ > ----------------------------------------
+// // │ > Time: 13
+// // │ > ----------------------------------------
+// // │ >          |                    | Bono
+// // │ >          |                    | The Edge
+// // │ >          |                    | Larry
+// // │ >     Adam |                    |
+// // │ > ----------------------------------------
+// // │ > Time: 15
+// // │ > ----------------------------------------
+// // │ >          |                    | Bono
+// // │ >          |                    | The Edge
+// // │ >    Larry |                    |
+// // │ >     Adam |                    |
+// // │ > ----------------------------------------
+// // │ > Time: 17
+// // │ > ----------------------------------------
+// // │ >          |                    | Bono
+// // │ >          |                    | The Edge
+// // │ >          |                    | Larry
+// // │ >          |                    | Adam
+// // │ > ----------------------------------------
+// // │ > Solution 2
+// // │ > Time: 0
+// // │ > ----------------------------------------
+// // │ >     Bono |                    |
+// // │ > The Edge |                    |
+// // │ >    Larry |                    |
+// // │ >     Adam |                    |
+// // │ > ----------------------------------------
+// // │ > Time: 2
+// // │ > ----------------------------------------
+// // │ >     Bono |                    |
+// // │ > The Edge |                    |
+// // │ >          |                    | Larry
+// // │ >          |                    | Adam
+// // │ > ----------------------------------------
+// // │ > Time: 4
+// // │ > ----------------------------------------
+// // │ >     Bono |                    |
+// // │ > The Edge |                    |
+// // │ >    Larry |                    |
+// // │ >          |                    | Adam
+// // │ > ----------------------------------------
+// // │ > Time: 14
+// // │ > ----------------------------------------
+// // │ >          |                    | Bono
+// // │ >          |                    | The Edge
+// // │ >    Larry |                    |
+// // │ >          |                    | Adam
+// // │ > ----------------------------------------
+// // │ > Time: 15
+// // │ > ----------------------------------------
+// // │ >          |                    | Bono
+// // │ >          |                    | The Edge
+// // │ >    Larry |                    |
+// // │ >     Adam |                    |
+// // │ > ----------------------------------------
+// // │ > Time: 17
+// // │ > ----------------------------------------
+// // │ >          |                    | Bono
+// // │ >          |                    | The Edge
+// // │ >          |                    | Larry
+// // │ >          |                    | Adam
+// // │ > ----------------------------------------
+// // │ > 

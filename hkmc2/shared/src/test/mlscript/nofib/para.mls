@@ -1,0 +1,245 @@
+:js
+
+:import NofibPrelude.mls
+//│ Imported 112 member(s)
+
+
+fun unwords(ws) = if ws is
+  Nil then Nil
+  w :: ws then
+    fun go(vs) = if vs is
+      Nil then Nil
+      v :: vs then " " :: (v +: go(vs))
+    w +: go(ws)
+
+fun break_(p, xs) = if xs is
+  Nil then [Nil, Nil]
+  x :: xs and
+    p(x) then [Nil, x :: xs]
+    break_(p, xs) is [ys, zs] then [x :: ys, zs]
+
+fun isSpace(c) = c === " "
+
+fun words(s) = if dropWhile(isSpace, s) is
+  Nil then Nil
+  h :: t and
+    break_(isSpace, h :: t) is [w, s_] then w :: words(s_)
+
+fun lines(s) = if break_(x => x === "\n", s) is [l, s_] then
+  Cons(
+    l,
+    if s_ is
+      Nil then Nil
+      _ :: s__ then lines(s__)
+  )
+
+fun unlines(ls) = concat(map(l => l +: nofibStringToList("\n"), ls))
+
+fun all(p, xs) = if xs is
+  Nil then true
+  x :: xs then p(x) && all(p, xs)
+
+fun fold1(f, g, xs) = if xs is
+  a :: Nil then g(a)
+  a :: x then f(a, fold1(f, g, x))
+
+fun scan1(f, g, xs) = fold1((a, s) => f(a, head(s)) :: s, a => g(a) :: Nil, xs)
+
+fun tails(xs) = scan1((a, s) => a :: s, a => a :: Nil, xs)
+
+fun single(xs) = if xs is
+  a :: Nil then true
+  _ then false
+
+fun minWith(f, xs) = fold1((a, b) => if f(a) < f(b) then a else b, x => x, xs)
+
+fun new_(w, ls) = (w :: Nil) :: ls
+
+fun glue(w, ls) = if ls is
+  l :: ls_ then (w :: l) :: ls_
+
+fun formats(txt) = fold1 of
+  (w, ps) => map(p => new_(w, p), ps) +: map(p => glue(w, p), ps)
+  x => ((x :: Nil) :: Nil) :: Nil
+  txt
+
+let maxw = 70
+//│ maxw = 70
+
+fun width(ls) =
+  fun plus(w, n) = listLen(w) + 1 + n
+  fold1(plus, listLen, ls)
+
+fun fits(xs) = width(xs) <= maxw
+
+fun feasible(a) = all(fits, a)
+
+let optw = 63
+//│ optw = 63
+
+fun cost(ls) =
+  fun linc(l) = let a = optw - width(l) in a * a
+  fun plus(l, n) = linc(l) + n
+  fold1(plus, x => 0, ls)
+
+fun par0(x) = minWith(cost, filter(feasible, formats(x)))
+
+fun fitH(ls) = fits(head(ls))
+
+fun fst3(a_b_c) = if a_b_c is [a, b, c] then a
+
+fun snd3(a_b_c) = if a_b_c is [a, b, c] then b
+
+fun thd3(a_b_c) = if a_b_c is [a, b, c] then c
+
+fun width_tl(a_b_c) = fst3(a_b_c)
+
+fun cost_tl(a_b_c) = snd3(a_b_c)
+
+fun len_tl(a_b_c) = thd3(a_b_c)
+
+fun tile(ws, a_b) = if a_b is
+  [Nil, n] then Nil
+  [m :: ms, n] then
+    let l = n - m
+    if splitAt(l, ws) is [ws1, ws2] then
+      ws1 :: tile(ws2, [drop(l, m :: ms), m])
+
+fun null__(a_b) = if a_b is [Nil, Nil] then true else false
+
+fun single_(a_b) = if a_b is [x, y] then (null_(x) && single(y)) || (single(x) && null_(y))
+
+
+let nil_ = [Nil, Nil]
+//│ nil_ = [ Nil { class: [class Nil] }, Nil { class: [class Nil] } ]
+
+fun head_(a_b) = if a_b is [x, y] and
+  not(null_(x)) then head(x)
+  else head(y)
+
+fun last_(a_b) = if a_b is [y, x] and
+  not(null_(x)) then head(x)
+  else head(y)
+
+fun cons_(a, a_b) = if a_b is [x, y] and
+  not(null_(y)) then [a :: x, y]
+  else [a :: Nil, x]
+
+fun snoc_(a, a_b) = if a_b is [y, x] and
+  not(null_(y)) then [y, a :: x]
+  else [x, a :: Nil]
+
+fun tail_(a_b) = if a_b is [x, y] and
+  null_(x) then [Nil, Nil]
+  single(x) and splitAt(intDiv(listLen(y), 2), y) is [y0, y1] then
+    [reverse(y1), y0]
+  else [tail(x), y]
+
+fun init_(a_b) = if a_b is [y, x] and
+  null_(x) then [Nil, Nil]
+  single(x) and splitAt(intDiv(listLen(y), 2), y) is [y0, y1] then
+    [y0, reverse(y1)]
+  else [y, tail(x)]
+
+fun unformat(a, l) = fold1((xs, ys) => xs +: (a :: Nil) +: ys, x => x, l)
+
+fun format(a, x) = if
+  x is Nil then Nil :: Nil
+  else
+    fun unknownEq(a, b) = a === b
+    fun breakk(a, b, xs) =
+      if unknownEq(a, b)
+      then Nil :: xs
+      else (b :: head(xs)) :: tail(xs)
+    fun start(a, b) = breakk(a, b, Nil :: Nil)
+    fold1((x, y) => breakk(a, x, y), y => start(a, y), x)
+
+fun unparas(ls) = unformat(Nil, ls)
+
+fun paras(ls) = filter(x => listNeq(Nil, x), format(Nil, ls))
+
+fun parse(ls) = paras(map(words, lines(ls)))
+
+fun unparse(ls) = unlines(map(unwords, unparas(ls)))
+
+fun startr(a) = if
+  a <= maxw then [cons_([0, 0, 0], nil_), a, 1]
+  else throw Error("startr param error")
+
+fun ceildiv(n, m) = intDiv(n + m - 1, m)
+
+fun fmtWith(par) = unparse(map(x => par(concat(x)), parse(par)))
+
+fun stepr(w, ps_tw_tl) = if ps_tw_tl is [ps, tw, tl] then
+  let tot_width = w + 1 + tw
+  let tot_len = 1 + tl
+  fun single(p) = len_tl(p) === 0
+  fun width_hd(p) = if single(p) then tot_width else tot_width - width_tl(p) - 1
+  fun cost(p) = if single(p) then 0 else cost_tl(p) + (let a = optw - width_hd(p) in a * a)
+  fun old_width_hd(p) = if single(p) then tw else tw - width_tl(p) - 1
+  fun new_(p) = if single(p) then [tw, 0, tl] else [tw, cost_tl(p) + (let x = optw - old_width_hd(p) in x * x), tl]
+  fun trim(ps_pq) = if
+    null__(ps_pq) then ps_pq
+    single_(ps_pq) then ps_pq
+    let ps_p = init_(ps_pq)
+    let q = last_(ps_pq)
+    let p = last_(ps_p)
+    cost(p) <= cost(q) then trim(ps_p)
+    else ps_pq
+  fun drop_nofit(ps_p) = if
+    null__(ps_p) then ps_p
+    width_hd(last_(ps_p)) > maxw then drop_nofit(init_(ps_p))
+    else ps_p
+  fun bf(p, q) =
+    let wqh = width_hd(q)
+    let rqh = maxw - wqh + 1
+    if
+      single(q) && cost_tl(p) === 0 then min(optw - width_hd(p), rqh)
+      single(q) then rqh
+      else min(ceildiv(cost(p) - cost(q), 2 * (wqh - width_hd(p))), rqh)
+  fun myAdd(p, qr_rs) = if
+    single_(qr_rs) || null__(qr_rs) then cons_(p, qr_rs)
+    let q = head_(qr_rs)
+    let r_rs = tail_(qr_rs)
+    let r = head_(r_rs)
+    bf(p, q) <= bf(q, r) then myAdd(p, r_rs)
+    else cons_(p, qr_rs)
+  [trim(drop_nofit(myAdd(new_(last_(ps)), ps))), tot_width, tot_len]
+
+fun par3(ws) =
+  let zs = scan1(stepr, startr, map(listLen, ws))
+  tile(ws, [map(x => len_tl(last_(fst3(x))), zs), thd3(head(zs))])
+
+fun fmt(x) = unparse(map(par3, concat(parse(x))))
+
+let test = 
+  concat of
+    nofibStringToList("In the constructive programming community it is commonplace to see ") ::
+    nofibStringToList("formal developments of textbook algorithms. In the algorithm design ") ::
+    nofibStringToList("community, on the other hand, it may be well known that the textbook ") ::
+    nofibStringToList("solution to a problem is not the most efficient possible. However, in ") ::
+    nofibStringToList("presenting the more efficient solution, the algorithm designer will ") ::
+    nofibStringToList("usually omit some of the implementation details, this creating an ") ::
+    nofibStringToList("algorithm gap between the abstract algorithm and its concrete ") ::
+    nofibStringToList("implementation. This is in contrast to the formal development, which ") ::
+    nofibStringToList("usually presents the complete concrete implementation of the less ") ::
+    nofibStringToList("efficient solution.\n\n") :: Nil
+//│ > Cons {
+//│ >   head: 'I',
+//│ >   tail: Cons { head: 'n', tail: Cons { head: ' ', tail: [Cons] } }
+//│ test = }
+
+fun testPara_nofib() =
+  if null_(test) then Nil else fmt(test)
+
+nofibListToString(testPara_nofib())
+//│ > 'In the constructive programming community it is commonplace to\n' +
+//│ >   'see formal developments of textbook algorithms. In the algorithm\n' +
+//│ >   'design community, on the other hand, it may be well known that\n' +
+//│ >   'the textbook solution to a problem is not the most efficient\n' +
+//│ >   'possible. However, in presenting the more efficient solution, the\n' +
+//│ >   'algorithm designer will usually omit some of the implementation\n' +
+//│ >   'details, this creating an algorithm gap between the abstract\n' +
+//│ >   'algorithm and its concrete implementation. This is in contrast\n' +
+//│ >   'to the formal development, which usually presents the complete\n' +
+//│ =   'concrete implementation of the less efficient solution.\n'

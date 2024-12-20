@@ -1,0 +1,210 @@
+:js
+
+:import NofibPrelude.mls
+//│ Imported 112 member(s)
+
+fun vec_add(v1, v2) = if v1 is [x1, y1] and v2 is [x2, y2] then [x1 + x2, y1 + y2]
+
+fun vec_sub(v1, v2) = if v1 is [x1, y1] and v2 is [x2, y2] then [x1 - x2, y1 - y2]
+
+fun scale_vec2(v, a, b) = if v is [x, y] then [intDiv(x * a, b), intDiv(y * a, b)]
+
+let p_tile = 
+  [0, 3, 3, 4] :: [3, 4, 0, 8] :: [0, 8, 0, 3] :: [6, 0, 4, 4] :: [4, 5, 4, 10] ::
+  [4, 10, 7, 6] :: [7, 6, 4, 5] :: [11, 0, 10, 4] :: [10, 4, 9, 6] :: [9, 6, 8, 8] :: [8, 8, 4, 13] ::
+  [4, 13, 0, 16] :: [0, 16, 6, 15] :: [6, 15, 8, 16] :: [8, 16, 12, 12] :: [12, 12, 16, 12] ::
+  [10, 16, 12, 14] :: [12, 14, 16, 13] :: [12, 16, 13, 15] :: [13, 15, 16, 14] :: [14, 16, 16, 15] ::
+  [8, 12, 16, 10] :: [8, 8, 12, 9] :: [12, 9, 16, 8] :: [9, 6, 12, 7] :: [12, 7, 16, 6] ::
+  [10, 4, 13, 5] :: [13, 5, 16, 4] :: [11, 0, 14, 2] :: [14, 2, 16, 2] :: Nil
+//│ > Cons {
+//│ >   head: [ 0, 3, 3, 4 ],
+//│ >   tail: Cons {
+//│ >     head: [ 3, 4, 0, 8 ],
+//│ >     tail: Cons { head: [Array], tail: [Cons] }
+//│ >   }
+//│ p_tile = }
+
+let q_tile = 
+  [0, 8, 4, 7] :: [4, 7, 6, 7] :: [6, 7, 8, 8] :: [8, 8, 12, 10] :: [12, 10, 16, 16] ::
+  [0, 12, 3, 13] :: [3, 13, 5, 14] :: [5, 14, 7, 15] :: [7, 15, 8, 16] :: [2, 16, 3, 13] ::
+  [4, 16, 5, 14] :: [6, 16, 7, 15] :: [0, 10, 7, 11] :: [9, 13, 8, 15] :: [8, 15, 11, 15] ::
+  [11, 15, 9, 13] :: [10, 10, 8, 12] :: [8, 12, 12, 12] :: [12, 12, 10, 10] :: [2, 0, 4, 5] ::
+  [4, 5, 4, 7] :: [4, 0, 6, 5] :: [6, 5, 6, 7] :: [6, 0, 8, 5] :: [8, 5, 8, 8] ::
+  [10, 0, 14, 11] :: [12, 0, 13, 4] :: [13, 4, 16, 8] :: [16, 8, 15, 10] :: [15, 10, 16, 16] ::
+  [13, 0, 16, 6] :: [14, 0, 16, 4] :: [15, 0, 16, 2] :: [0, 0, 8, 0] :: [12, 0, 16, 0] ::
+  [0, 0, 0, 8] :: [0, 12, 0, 16] :: Nil
+//│ > Cons {
+//│ >   head: [ 0, 8, 4, 7 ],
+//│ >   tail: Cons {
+//│ >     head: [ 4, 7, 6, 7 ],
+//│ >     tail: Cons { head: [Array], tail: [Cons] }
+//│ >   }
+//│ q_tile = }
+
+let r_tile = 
+  [0, 0, 8, 8] :: [12, 12, 16, 16] :: [0, 4, 5, 10] :: [0, 8, 2, 12] :: [0, 12, 1, 14] ::
+  [16, 6, 11, 10] :: [11, 10, 6, 16] :: [16, 4, 14, 6] :: [14, 6, 8, 8] :: [8, 8, 5, 10] ::
+  [5, 10, 2, 12] :: [2, 12, 0, 16] :: [16, 8, 12, 12] :: [12, 12, 11, 16] :: [1, 1, 4, 0] ::
+  [2, 2, 8, 0] :: [3, 3, 8, 2] :: [8, 2, 12, 0] :: [5, 5, 12, 3] :: [12, 3, 16, 0] ::
+  [11, 16, 12, 12] :: [12, 12, 16, 8] :: [13, 13, 16, 10] :: [14, 14, 16, 12] :: [15, 15, 16, 14] :: Nil
+//│ > Cons {
+//│ >   head: [ 0, 0, 8, 8 ],
+//│ >   tail: Cons {
+//│ >     head: [ 12, 12, 16, 16 ],
+//│ >     tail: Cons { head: [Array], tail: [Cons] }
+//│ >   }
+//│ r_tile = }
+
+let s_tile = 
+  [0, 0, 4, 2] :: [4, 2, 8, 2] :: [8, 2, 16, 0] :: [0, 4, 2, 1] :: [0, 6, 7, 4] ::
+  [0, 8, 8, 6] :: [0, 10, 7, 8] :: [0, 12, 7, 10] :: [0, 14, 7, 13] :: [13, 13, 16, 14] ::
+  [14, 11, 16, 12] :: [15, 9, 16, 10] :: [16, 0, 10, 4] :: [10, 4, 8, 6] :: [8, 6, 7, 8] ::
+  [7, 8, 7, 13] :: [7, 13, 8, 16] :: [12, 16, 13, 13] :: [13, 13, 14, 11] :: [14, 11, 15, 9] ::
+  [15, 9, 16, 8] :: [10, 16, 11, 10] :: [12, 4, 10, 6] :: [10, 6, 12, 7] :: [12, 7, 12, 4] ::
+  [15, 5, 13, 7] :: [13, 7, 15, 8] :: [15, 8, 15, 5] :: Nil
+//│ > Cons {
+//│ >   head: [ 0, 0, 4, 2 ],
+//│ >   tail: Cons {
+//│ >     head: [ 4, 2, 8, 2 ],
+//│ >     tail: Cons { head: [Array], tail: [Cons] }
+//│ >   }
+//│ s_tile = }
+
+fun nil(a, b, c) = Nil
+
+fun tup2(a_b, c_d) = if a_b is [a, b] and c_d is [c, d] then [a, b, c, d]
+
+fun grid(m, n, segments, a, b, c) =
+  fun lscomp(ls) = if ls is
+    Nil then Nil
+    [x0, y0, x1, y1] :: t then
+      tup2(
+        vec_add(vec_add(a, scale_vec2(b, x0, m)), scale_vec2(c, y0, n)),
+        vec_add(vec_add(a, scale_vec2(b, x1, m)), scale_vec2(c, y1, n))
+      ) ::
+      lscomp(t)
+  lscomp(segments)
+
+fun rot(p, a, b, c) = p(vec_add(a, b), c, vec_sub([0, 0], b))
+
+fun beside(m, n, p, q, a, b, c) =
+  p(a, scale_vec2(b, m, m + n), c) +:
+  q(vec_add(a, scale_vec2(b, m, m + n)), scale_vec2(b, n, n + m), c)
+
+fun above(m, n, p, q, a, b, c) =
+  p(vec_add(a, scale_vec2(c, n, m + n)), b, scale_vec2(c, m, n + m)) +:
+  q(a, b, scale_vec2(c, n, m + n))
+
+fun tile_to_grid(arg, arg2, arg3, arg4) = grid(16, 16, arg, arg2, arg3, arg4)
+
+fun p(arg, q6, q7) = tile_to_grid(p_tile, arg, q6, q7)
+
+fun q(arg, q6, q7) = tile_to_grid(q_tile, arg, q6, q7)
+
+fun r(arg, q6, q7) = tile_to_grid(r_tile, arg, q6, q7)
+
+fun s(arg, q6, q7) = tile_to_grid(s_tile, arg, q6, q7)
+
+fun quartet(a, b, c, d, arg, a6, a7) =
+  above of
+    1
+    1
+    (p5, p6, p7) => beside(1, 1, a, b, p5, p6, p7)
+    (p5, p6, p7) => beside(1, 1, c, d, p5, p6, p7)
+    arg
+    a6
+    a7
+
+fun t(arg, q6, q7) = quartet(p, q, r, s, arg, q6, q7)
+
+fun cycle_(p1, arg, p3, p4) =
+  quartet of
+    p1
+    (a, b, c) => rot of
+      (a, b, c) => rot of
+        (a, b, c) => rot(p1, a, b, c)
+        a
+        b
+        c
+      a
+      b
+      c
+    (a, b, c) => rot(p1, a, b, c)
+    (a, b, c) => rot of
+      (a, b, c) => rot(p1, a, b, c)
+      a
+      b
+      c
+    arg
+    p3
+    p4
+
+fun u(arg, p2, p3) = cycle_((a, b, c) => rot(q, a, b, c), arg, p2, p3)
+
+fun side1(arg, q6, q7) = quartet(nil, nil, (a, b, c) => rot(t, a, b, c), t, arg, q6, q7)
+
+fun side2(arg, q6, q7) = quartet(side1, side1, (a, b, c) => rot(t, a, b, c), t, arg, q6, q7)
+
+fun corner1(arg, q6, q7) = quartet(nil, nil, nil, u, arg, q6, q7)
+
+fun corner2(arg, q6, q7) = quartet(corner1, side1, (a, b, c) => rot(side1, a, b, c), u, arg, q6, q7)
+
+fun pseudocorner(arg, q6, q7) = quartet(corner2, side2, (a, b, c) => rot(side2, a, b, c), (a, b, c) => rot(t, a, b, c), arg, q6, q7)
+
+fun pseudolimit(arg, p2, p3) = cycle_(pseudocorner, arg, p2, p3)
+
+fun nonet(p1, p2, p3, p4, p5, p6, p7, p8, p9, arg1, arg2) =
+  above of
+    1
+    2
+    (b5, b6, b7) => beside(1, 2, p1, (b5, b6, b7) => beside(1, 1, p2, p3, b5, b6, b7), b5, b6, b7)
+    (a1, a2, a3) => above of
+      1
+      1
+      (b5, b6, b7) => beside(1, 2, p4, (b5, b6, b7) => beside(1, 1, p5, p6, b5, b6, b7), b5, b6, b7)
+      (b5, b6, b7) => beside(1, 2, p7, (b5, b6, b7) => beside(1, 1, p8, p9, b5, b6, b7), b5, b6, b7)
+      a1
+      a2
+      a3
+    arg1
+    arg2
+
+fun showFourTupleofInt(a_b_c_d) = if a_b_c_d is [a, b, c, d] then
+  nofibStringToList("(") +:
+  nofibStringToList(stringOfInt(a)) +:
+  nofibStringToList(",") +:
+  nofibStringToList(stringOfInt(b)) +:
+  nofibStringToList(",") +:
+  nofibStringToList(stringOfInt(c)) +:
+  nofibStringToList(",") +:
+  nofibStringToList(stringOfInt(d))
+
+fun fmt(ls) = if ls is
+  Nil then nofibStringToList("[]")
+  x :: xs then
+    fun showl(ls, s) = if ls is
+      Nil then "]" :: s
+      x :: xs then
+        nofibStringToList(",|") +:
+        showFourTupleofInt(x) +:
+        showl(xs, s)
+    nofibStringToList("[|") +:
+    showFourTupleofInt(x) +:
+    showl(xs, "")
+
+fun testFish_nofib(n) =
+  map of
+    i => let n = min(0, i) in (pseudolimit([0, 0], [640 + n, 0], [0, 640 + n])),
+    enumFromTo(0, n)
+
+testFish_nofib(1)
+//│ > Cons {
+//│ >   head: Cons {
+//│ >     head: [ 50, 580, 51, 585 ],
+//│ >     tail: Cons { head: [Array], tail: [Cons] }
+//│ >   },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Nil { class: [class Nil] }
+//│ >   }
+//│ = }

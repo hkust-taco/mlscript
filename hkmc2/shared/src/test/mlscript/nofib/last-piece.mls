@@ -1,0 +1,733 @@
+:js
+
+:import NofibPrelude.mls
+//│ Imported 112 member(s)
+
+
+fun isSome(x) = x is Some
+
+fun mapMaybe(f, ls) = if ls is
+  Nil then Nil
+  h :: t and f(h) is
+    None then mapMaybe(f, t)
+    Some(a) then a :: mapMaybe(f, t)
+
+object
+  GT
+  LT
+  EQ
+
+fun compareIntInt(ab, cd) = if ab is [a, b] and cd is [c, d] and
+  a > c then GT
+  a < c then LT
+  b > d then GT
+  b < d then LT
+  else EQ
+
+abstract class Map[K, A]: Tip | Bin[K, A]
+
+object Tip extends Map[Top, Nothing]
+
+class Bin[K, A](i: Int, k: K, v: A, l: Map[K, A], r: Map[K, A]) extends Map[K, A]
+
+fun mapLookup(k, m) = if m is
+  Tip then None
+  Bin(_, kx, x, l, r) and compareIntInt(k, kx) is
+    LT then mapLookup(k, l)
+    GT then mapLookup(k, r)
+    EQ then Some(x)
+
+fun size(p) = if p is
+  Tip then 0
+  Bin(sz, _, _, _, _) then sz
+
+fun bin(k, x, l, r) = Bin(size(l) + size(r) + 1, k, x, l, r)
+
+fun singleL(k1, x1, t1, r) = if r is
+  Bin(_, k2, x2, t2, t3) then bin(k2, x2, bin(k1, x1, t1, t2), t3)
+  else throw Error("singleL Tip")
+
+fun singleR(k1, x1, l, t3) = if l is
+  Bin(_, k2, x2, t1, t2) then bin(k2, x2, t1, bin(k1, x1, t2, t3))
+  else throw Error("singleR Tip")
+
+fun doubleL(k1, x1, t1, r) = if r is
+  Bin(_, k2, x2, Bin(_, k3, x3, t2, t3), t4) then bin(k3, x3, bin(k1, x1, t1, t2), bin(k2, x2, t3, t4))
+  else throw Error("doubleL Tip")
+
+fun doubleR(k1, x1, l, t4) = if l is
+  Bin(_, k2, x2, t1, Bin(_, k3, x3, t2, t3)) then bin(k3, x3, bin(k2, x2, t1, t2), bin(k1, x1, t3, t4))
+  else throw Error("doubleR Tip")
+
+fun rotateL(k, x, l, r) = if r is
+  Bin(_, _, _, ly, ry) and
+    size(ly) < 2 * size(ry) then singleL(k, x, l, r)
+    else doubleL(k, x, l, r)
+  else throw Error("rotateL Tip")
+
+fun rotateR(k, x, l, r) = if l is
+  Bin(_, _, _, ly, ry) and
+    size(ry) < 2 * size(ly) then singleR(k, x, l, r)
+    else doubleR(k, x, l, r)
+  else throw Error("rotateR Tip")
+
+fun balance(k, x, l, r) =
+  let sizeL = size(l)
+  let sizeR = size(r)
+  let sizeX = sizeL + sizeR + 1
+  if
+    (sizeL + sizeR) <= 1 then Bin(sizeX, k, x, l, r)
+    sizeR >= (4 * sizeL) then rotateL(k, x, l, r)
+    sizeL >= (4 * sizeR) then rotateR(k, x, l, r)
+    else Bin(sizeX, k, x, l, r)
+
+fun insert(kx, x, m) = if m is
+  Tip then Bin(1, kx, x, Tip, Tip)
+  Bin(sz, ky, y, l, r) and compareIntInt(kx, ky) is
+    LT then balance(ky, y, insert(kx, x, l), r)
+    GT then balance(ky, y, l, insert(kx, x, r))
+    EQ then Bin(sz, kx, x, l, r)
+
+fun indent(n) = if n <= 0 then Nil else " " :: indent(n - 1)
+
+class P(i: Char, a: List[List[[Int, Int]]], b: List[List[[Int, Int]]])
+
+abstract class S: Male | Female
+
+object
+  Male extends S
+  Female extends S
+
+fun flip(s) = if s is
+  Male then Female
+  Female then Male
+
+abstract class Solution: Soln | Choose | Fail
+
+type Board = Map[[Int, Int], Char]
+
+class
+  Soln(b: Board) extends Solution
+  Choose(s: List[Solution]) extends Solution
+  Fail(b: Board, s: [Int, Int]) extends Solution
+
+fun addIntInt(row_col, orow_ocol) = if row_col is [row, col] and orow_ocol is [orow, ocol] then
+  [row + orow, col + ocol]
+
+fun next(row_col) =  if row_col is [row, col] then [row, col + 1]
+
+let maxRow = 8
+//│ maxRow = 8
+
+let maxCol = 8
+//│ maxCol = 8
+
+let emptyBoard = Tip
+//│ emptyBoard = Tip { class: [class Tip] }
+
+fun check(bd, sq) = mapLookup(sq, bd)
+
+fun extend(bd, sq, id) = insert(sq, id, bd)
+
+fun extend_maybe(bd, sq, id) = if sq is [row, col] and
+  (row > maxRow) || (col < 1) || (col > maxCol) then None
+  check(bd, sq) is
+    Some(_) then None
+    None then Some(extend(bd, sq, id))
+
+fun pickOne(xs) =
+  fun go(f, xs) = if xs is
+    Nil then Nil
+    x :: xs then [x, f(xs)] :: go(p => x :: f(p), xs)
+  go(x => x, xs)
+
+fun fit(bd, sq, id, os) = if os is
+  Nil then Some(extend(bd, sq, id))
+  o :: os and extend_maybe(bd, addIntInt(sq, o), id) is
+    Some(bd1) then fit(bd1, sq, id, os)
+    None then None
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+fun tryy(sq, se, bd, id_is_ps) = if id_is_ps is [id, os, ps] and fit(bd, sq, id, os) is
+  Some(bd1) then Some(search(next(sq), flip(se), bd1, ps))
+  None then None
+
+fun search(row_col, sey, bd, ps) = if row_col is [row, col] and
+  ps is Nil then Soln(bd)
+  col === (maxCol + 1) then search([row + 1, 1], flip(sey), bd, ps)
+  check(bd, row_col) is Some(_) then search(next(row_col), flip(sey), bd, ps)
+  else
+    fun lscomp1(ls) = if ls is
+      Nil then Nil
+      [P(id, ms, fs), ps] :: ls then
+        fun lscomp2(ls2) = if ls2 is
+          Nil then lscomp1(ls)
+          os :: ls then [id, os, ps] :: lscomp2(ls)
+        lscomp2(if sey is Male then ms else fs)
+    let choices = lscomp1(pickOne(ps))
+    if mapMaybe(x => tryy(row_col, sey, bd, x), choices) is
+      Nil then Fail(bd, row_col)
+      ss then Choose(ss)
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+let nPiece = P(
+  "n",
+  ([0,1] :: [1,1] :: [2,1] :: [2,2] :: Nil) ::
+  ([1,0] :: [1,-1] :: [1,-2] :: [2,-2] :: Nil) :: Nil,
+  Nil
+)
+//│ > P {
+//│ >   i: 'n',
+//│ >   a: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Nil] }
+//│ >   },
+//│ >   b: Nil { class: [class Nil] }
+//│ nPiece = }
+
+let mPiece = P(
+  "m",
+  ([0,1] :: [1,0] :: [2,0] :: [3,0] :: Nil) :: Nil,
+  ([0,1] :: [0,2] :: [0,3] :: [1,3] :: Nil) ::
+  ([1,0] :: [2,0] :: [3,0] :: [3,-1] :: Nil) :: Nil
+)
+//│ > P {
+//│ >   i: 'm',
+//│ >   a: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Nil { class: [class Nil] }
+//│ >   },
+//│ >   b: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Nil] }
+//│ >   }
+//│ mPiece = }
+
+let lPiece = P(
+  "l",
+  ([0,1] :: [0,2] :: [0,3] :: [1,2] :: Nil) ::
+  ([1,0] :: [2,0] :: [3,0] :: [2,-1] :: Nil) :: Nil,
+  ([1,-1] :: [1,0] :: [1,1] :: [1,2] :: Nil) ::
+  ([1,0] :: [2,0] :: [3,0] :: [1,1] :: Nil) :: Nil
+)
+//│ > P {
+//│ >   i: 'l',
+//│ >   a: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Nil] }
+//│ >   },
+//│ >   b: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Nil] }
+//│ >   }
+//│ lPiece = }
+
+let kPiece = P(
+  "k",
+  ([0,1] :: [1,0] :: [2,0] :: [2,-1] :: Nil) :: Nil,
+  ([1,0] :: [1,1] :: [1,2] :: [2,2] :: Nil) :: Nil
+)
+//│ > P {
+//│ >   i: 'k',
+//│ >   a: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Nil { class: [class Nil] }
+//│ >   },
+//│ >   b: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Nil { class: [class Nil] }
+//│ >   }
+//│ kPiece = }
+
+let jPiece = P(
+  "j",
+  ([0,1] :: [0,2] :: [0,3] :: [1,1] :: Nil) ::
+  ([1,0] :: [2,0] :: [3,0] :: [1,-1] :: Nil) ::
+  ([1,-2] :: [1,-1] :: [1,0] :: [1,1] :: Nil) :: Nil,
+  ([1,0] :: [2,0] :: [3,0] :: [2,2] :: Nil) :: Nil
+)
+//│ > P {
+//│ >   i: 'j',
+//│ >   a: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   },
+//│ >   b: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Nil { class: [class Nil] }
+//│ >   }
+//│ jPiece = }
+
+let iPiece = P(
+  "i",
+  ([1,0] :: [2,0] :: [2,1] :: [3,1] :: Nil) ::
+  ([0,1] :: [0,2] :: [1,0] :: [1,-1] :: Nil) ::
+  ([1,0] :: [1,1] :: [2,1] :: [3,1] :: Nil) :: Nil,
+  ([0,1] :: [1,0] :: [1,-1] :: [1,-2] :: Nil) :: Nil
+)
+//│ > P {
+//│ >   i: 'i',
+//│ >   a: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   },
+//│ >   b: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Nil { class: [class Nil] }
+//│ >   }
+//│ iPiece = }
+
+let hPiece = P(
+  "h",
+  ([0,1] :: [1,1] :: [1,2] :: [2,2] :: Nil) ::
+  ([1,0] :: [1,-1] :: [2,-1] :: [2,-2] :: Nil) ::
+  ([1,0] :: [1,1] :: [2,1] :: [2,2] :: Nil) :: Nil,
+  ([0,1] :: [1,0] :: [1,-1] :: [2,-1] :: Nil) :: Nil
+)
+//│ > P {
+//│ >   i: 'h',
+//│ >   a: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   },
+//│ >   b: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Nil { class: [class Nil] }
+//│ >   }
+//│ hPiece = }
+
+let gPiece = P(
+  "g",
+  Nil,
+  ([0,1] :: [1,1] :: [1,2] :: [1,3] :: Nil) ::
+  ([1,0] :: [1,-1] :: [2,-1] :: [3,-1] :: Nil) ::
+  ([0,1] :: [0,2] :: [1,2] :: [1,3] :: Nil) ::
+  ([1,0] :: [2,0] :: [2,-1] :: [3,-1] :: Nil) :: Nil
+)
+//│ > P {
+//│ >   i: 'g',
+//│ >   a: Nil { class: [class Nil] },
+//│ >   b: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   }
+//│ gPiece = }
+
+let fPiece = P(
+  "f",
+  ([0,1] :: [1,1] :: [2,1] :: [3,1] :: Nil) ::
+  ([1,0] :: [1,-1] :: [1,-2] :: [1,-3] :: Nil) ::
+  ([1,0] :: [2,0] :: [3,0] :: [3,1] :: Nil) :: Nil,
+  ([0,1] :: [0,2] :: [0,3] :: [1,0] :: Nil) :: Nil
+)
+//│ > P {
+//│ >   i: 'f',
+//│ >   a: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   },
+//│ >   b: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Nil { class: [class Nil] }
+//│ >   }
+//│ fPiece = }
+
+let ePiece = P(
+  "e",
+  ([0,1] :: [1,1] :: [1,2] :: Nil) ::
+  ([1,0] :: [1,-1] :: [2,-1] :: Nil) :: Nil,
+  ([0,1] :: [1,1] :: [1,2] :: Nil) ::
+  ([1,0] :: [1,-1] :: [2,-1] :: Nil) :: Nil
+)
+//│ > P {
+//│ >   i: 'e',
+//│ >   a: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Nil] }
+//│ >   },
+//│ >   b: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Nil] }
+//│ >   }
+//│ ePiece = }
+
+let dPiece = P(
+  "d",
+  ([0,1] :: [1,1] :: [2,1] :: Nil) ::
+  ([1,0] :: [1,-1] :: [1,-2] :: Nil) :: Nil,
+  ([1,0] :: [2,0] :: [2,1] :: Nil) :: Nil
+)
+//│ > P {
+//│ >   i: 'd',
+//│ >   a: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Nil] }
+//│ >   },
+//│ >   b: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Nil { class: [class Nil] }
+//│ >   }
+//│ dPiece = }
+
+let cPiece = P(
+  "c",
+  Nil,
+  ([0,1] :: [0,2] :: [1,1] :: Nil) ::
+  ([1,0] :: [1,-1] :: [2,0] :: Nil) ::
+  ([1,-1] :: [1,0] :: [1,1] :: Nil) ::
+  ([1,0] :: [1,1] :: [2,0] :: Nil) :: Nil
+)
+//│ > P {
+//│ >   i: 'c',
+//│ >   a: Nil { class: [class Nil] },
+//│ >   b: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   }
+//│ cPiece = }
+
+let bPiece = P(
+  "b",
+  ([0,1] :: [0,2] :: [1,2] :: Nil) ::
+  ([1,0] :: [2,0] :: [2,-1] :: Nil) ::
+  ([0,1] :: [1,0] :: [2,0] :: Nil) :: Nil,
+  ([1,0] :: [1,1] :: [1,2] :: Nil) :: Nil
+)
+//│ > P {
+//│ >   i: 'b',
+//│ >   a: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   },
+//│ >   b: Cons {
+//│ >     head: Cons { head: [Array], tail: [Cons] },
+//│ >     tail: Nil { class: [class Nil] }
+//│ >   }
+//│ bPiece = }
+
+let initialPieces = bPiece :: cPiece :: dPiece :: ePiece :: fPiece ::
+  gPiece :: hPiece :: iPiece :: jPiece :: kPiece :: lPiece ::
+  mPiece :: nPiece :: Nil
+//│ > Cons {
+//│ >   head: P {
+//│ >     i: 'b',
+//│ >     a: Cons { head: [Cons], tail: [Cons] },
+//│ >     b: Cons { head: [Cons], tail: [Nil] }
+//│ >   },
+//│ >   tail: Cons {
+//│ >     head: P { i: 'c', a: [Nil], b: [Cons] },
+//│ >     tail: Cons { head: [P], tail: [Cons] }
+//│ >   }
+//│ initialPieces = }
+
+abstract class Mode: PageMode | ZigZagMode | LeftMode | OneLineMode
+
+object
+  PageMode extends Mode
+  ZigZagMode extends Mode
+  LeftMode extends Mode
+  OneLineMode extends Mode
+
+abstract class TextDetails: Chr | Str | PStr
+
+class
+  Chr(c: Char) extends TextDetails
+  Str(s: String) extends TextDetails
+  PStr(s: String) extends TextDetails
+
+abstract class AnnotDetails: AnnotStart | NoAnnot | AnnotEnd
+
+object
+  AnnotStart extends AnnotDetails
+  AnnotEnd extends AnnotDetails
+
+class NoAnnot(t: TextDetails, i: Int) extends AnnotDetails
+
+abstract class IsEmptyy: IsEmpty | NotEmpty
+
+object
+  IsEmpty extends IsEmptyy
+  NotEmpty extends IsEmptyy
+
+abstract class Doc: Empty | NilAbove | TextBeside | Nest | Union | NoDoc | Beside | Above
+
+object
+  Empty extends Doc
+  NoDoc extends Doc
+
+class
+  NilAbove(d: Doc) extends Doc
+  TextBeside(a: AnnotDetails, d: Doc) extends Doc
+  Nest(i: Int, d: Doc) extends Doc
+  Union(d1: Doc, d2: Doc) extends Doc
+  Beside(d1: Doc, b: Bool, d2: Doc) extends Doc
+  Above(d1: Doc, b: Bool, d2: Doc) extends Doc
+
+let spaceText = NoAnnot(Chr(" "), 1)
+//│ spaceText = NoAnnot { t: Chr { c: ' ' }, i: 1 }
+
+let nlText = NoAnnot(Chr("\n"), 1)
+//│ nlText = NoAnnot { t: Chr { c: '\n' }, i: 1 }
+
+fun annotSize(p) = if p is
+  NoAnnot(_, l) then l
+  _ then 0
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+fun display(s) = if s is
+  Soln(bd) then vcat(text(nofibStringToList("Success!")) :: nest(2, displayBoard(bd)) :: Nil)
+  Choose(ss) then vcat(map(display, ss))
+  Fail(bd, [row, col]) then Empty
+
+fun displayBoard(bd) =
+  fun sq(n, col) = if check(bd, [n, col]) is
+    Some(id) then char(id)
+    None then char(".")
+  fun row(n) = hcat(map(col => sq(n, col), enumFromTo(1, maxCol)))
+  above_(vcat(map(row, enumFromTo(1, maxCol))), false, text(Nil))
+
+fun eliminateEmpty(cons, p, g, q) = if p is
+  Empty then q
+  else [
+    NotEmpty,
+    if q is
+      [NotEmpty, q1] then cons(p, g, q1)
+      [IsEmpty, _] then p
+  ]
+
+fun reduceVert(doc) = if doc is
+  Above(p, g, q) then eliminateEmpty((a, b, c) => Above(a, b, c), snd(reduceVert(p)), g, reduceVert(q))
+  else [NotEmpty, doc]
+
+fun vcat(ls) = snd(reduceVert(foldr((p, q) => Above(p, false, q), Empty, ls)))
+
+fun text(s) =
+  let sl = listLen(s)
+  TextBeside(NoAnnot(Str(s), sl), Empty)
+
+fun char(c) = TextBeside(NoAnnot(Chr(c), 1), Empty)
+
+fun reduceHoriz(doc) = if doc is
+  Beside(p, g, q) then eliminateEmpty((a, b, c) => Beside(a, b, c), snd(reduceHoriz(p)), g, reduceHoriz(q))
+  else [NotEmpty, doc]
+
+fun hcat(ls) = snd of reduceHoriz of foldr of
+  (p, q) => Beside(p, false, q)
+  Empty
+  ls
+
+fun above_(p, g, q) = if
+  q is Empty then p
+  g is Empty then q
+  else Above(p, g, q)
+
+fun nest(k, p) = mkNest(k, reduceDoc(p))
+
+fun mkNest(k, p) = if
+  p is Nest(k1, p1) then mkNest(k + k1, p1)
+  p is NoDoc then NoDoc
+  p is Empty then Empty
+  k === 0 then p
+  else Nest(k, p)
+
+fun reduceDoc(p) = if p is
+  Beside(p1, g, q) then beside(p1, g, reduceDoc(q))
+  Above(p1, g, q) then above(p1, g, reduceDoc(q))
+  else p
+
+
+fun beside(p, g, q) = if p is
+  NoDoc then NoDoc
+  Union(p1, p2) then Union(beside(p1, g, q), beside(p2, g, q))
+  Empty then q
+  Nest(k, p1) then Nest(k, beside(p1, g, q))
+  Beside(p1, g1, q1) and
+    g1 === g then beside(p1, g1, beside(q1, g, q))
+    else beside(reduceDoc(Beside(p1, g1, q1)), g, q)
+  Above(_, _, _) then beside(reduceDoc(p), g, q)
+  NilAbove(p1) then NilAbove(beside(p1, g, q))
+  TextBeside(t, p1) then
+    let rest = if p1 is Empty then nilBeside(g, q) else beside(p1, g, q)
+    TextBeside(t, rest)
+
+fun above(p, g, q) = if p is
+  Above(p1, g1, q1) then above(p1, g1, above(q1, g, q))
+  Beside(_, _, _) then aboveNest(reduceDoc(p), g, 0, reduceDoc(q))
+  else aboveNest(p, g, 0, reduceDoc(q))
+
+fun nilBeside(g, p) = if
+  p is Empty then Empty
+  p is Nest(_, p1) then nilBeside(g, p1)
+  g then TextBeside(spaceText, p)
+  else p
+
+fun aboveNest(p, g, k, q) = if p is
+  NoDoc then NoDoc
+  Union(p1, p2) then Union(aboveNest(p1, g, k, q), aboveNest(p2, g, k, q))
+  Empty then mkNest(k, q)
+  Nest(k1, p1) then Nest(k1, aboveNest(p1, g, k - k1, q))
+  NilAbove(p1) then NilAbove(aboveNest(p1, g, k, q))
+  TextBeside(s, p1) then
+    let k1 = k - annotSize(s)
+    let rest = if p1 is Empty then nilAboveNest(g, k1, q) else aboveNest(p1, g, k1, q)
+    TextBeside(s, rest)
+  Above(_, _, _) then throw Error("aboveNest Above")
+  Beside(_, _, _) then throw Error("aboveNest Beside")
+
+fun nilAboveNest(g, k, q) = if
+  q is Empty then Empty
+  q is Nest(k1, q1) then nilAboveNest(g, k + k1, q1)
+  not(g) and (k > 0) then TextBeside(NoAnnot(Str(indent(k)), k), q)
+  else NilAbove(mkNest(k, q))
+  
+fun printDoc(d) =
+  fun put(k, next) = if k is
+    Chr(c) then c :: next
+    Str(s) then s +: next
+    PStr(s) then s +: next
+  let done = "\n" :: Nil
+  fullRender(ZigZagMode, 200, 1.5, put, done, d)
+
+fun fullRender(m, l, r, txt, a, b) =
+  fun annTxt(p, x) = if p is
+    NoAnnot(s, _) then txt(s, x)
+    _ then x
+  fullRenderAnn(m, l, r, annTxt, a, b)
+
+fun ceiling(x) = globalThis.Math.ceil(x)
+
+fun fullRenderAnn(m, lineLen, ribbons, txt, rest, doc) = if m is
+  OneLineMode then easyDisplay(spaceText, (a, b) => b, txt, rest, reduceDoc(doc))
+  LeftMode then easyDisplay(nlText, first, txt, rest, reduceDoc(doc))
+  else
+    let ribbonLen = ceiling(lineLen / ribbons)
+    let bestLineLen = if m is ZigZagMode then 2147483647 else lineLen
+    let doc1 = best(bestLineLen, ribbonLen, reduceDoc(doc))
+    displayDoc(m, lineLen, ribbonLen, txt, rest, doc1)
+
+fun easyDisplay(nlSpaceText, choose, txt, end, x) =
+  fun lay(x) = if x is
+    NoDoc then throw Error("easyDisplay: NoDoc")
+    Union(p, q) then lay(choose(p, q))
+    Nest(_, p) then lay(p)
+    Empty then end
+    NilAbove(p) then txt(nlSpaceText, lay(p))
+    TextBeside(s, p) then txt(s, lay(p))
+    Above(_, _, _) then throw Error("easyDisplay Above")
+    Beside(_, _, _) then throw Error("easyDisplay Beside")
+  lay(x)
+
+fun displayDoc(m, pageWidth, ribbonWidth, txt, end, doc) =
+  let gapWidth = pageWidth - ribbonWidth
+  let shift = intDiv(gapWidth, 2)
+  fun lay(k, docc) =
+    fun lay2(k, param) = if param is
+      NilAbove(p) then txt(nlText, lay(k, p))
+      TextBeside(s, p) then txt(s, lay2(k + annotSize(s), p))
+      Nest(_, p) then lay2(k, p)
+      Empty then end
+    fun lay1(k, s, p) =
+      let r = k + annotSize(s)
+      txt(NoAnnot(Str(indent(k)), k), txt(s, lay2(r, p)))
+    if docc is
+      Nest(k1, p) then lay(k + k1, p)
+      Empty then end
+      NilAbove(p) then txt(nlText, lay(k, p))
+      TextBeside(s, p) and m is
+        ZigZagMode and k
+          >= gapWidth then txt(nlText, txt(NoAnnot(Str(replicate(shift, "/")), shift), txt(nlText, lay1(k - shift, s, p))))
+          < 0 then txt(nlText, txt(NoAnnot(Str(replicate(shift, "|")), shift), txt(nlText, lay1(k + shift, s, p))))
+          else lay1(k, s, p)
+        else lay1(k, s, p)
+  lay(0, doc)
+
+fun best(w0, r, doc) =
+  fun get(r, w, docc) = if docc is
+    Empty then Empty
+    NoDoc then NoDoc
+    NilAbove(p) then NilAbove(get(r, w, p))
+    TextBeside(s, p) then TextBeside(s, get1(r, w, annotSize(s), p))
+    Nest(k, p) then Nest(k, get(r, w - k, p))
+    Union(p, q) then nicest(w, r, get(r, w, p), get(r, w, q))
+    Above(_, _, _) then throw Error("best get Above")
+    Beside(_, _, _) then throw Error("best get Beside")
+  fun get1(r, w, sl, p) = if p is
+    Empty then Empty
+    NoDoc then NoDoc
+    NilAbove(p) then NilAbove(get(r, w - sl, p))
+    TextBeside(s, p) then TextBeside(s, get1(r, w, sl + annotSize(s), p))
+    Nest(_, p) then get1(r, w, sl, p)
+    Union(p, q) then nicest1(w, r, sl, get1(r, w, sl, p), get1(r, w, sl, q))
+    Above(_, _, _) then throw Error("best get1 Above")
+    Beside(_, _, _) then throw Error("best get1 Beside")
+  get(r, w0, doc)
+
+fun nonEmptySet(doc) = if doc is
+  NoDoc then false
+  Union(_, _) then true
+  Empty then true
+  NilAbove(_) then true
+  TextBeside(_, p) then nonEmptySet(p)
+  Nest(_, p) then nonEmptySet(p)
+  Above(_, _, _) then throw Error("nonEmptySet Above")
+  Beside(_, _, _) then throw Error("nonEmptySet Beside")
+
+fun fits(n, param) = if
+  n < 0 then false
+  param is
+    NoDoc then false
+    Empty then true
+    NilAbove(_) then true
+    TextBeside(s, p) then fits(n - annotSize(s), p)
+    Above(_, _, _) then throw Error("fits Above")
+    Beside(_, _, _) then throw Error("fits Beside")
+    Union(_, _) then throw Error("fits Union")
+    Nest(_, _) then throw Error("fits Nest")
+
+fun first(p, q) = if nonEmptySet(p) then p else q
+
+fun nicest1(w, r, sl, p, q) = if fits(min(w, r) - sl, p) then p else q
+
+fun nicest(w, r, p, q) = nicest1(w, r, 0, p, q)
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+
+fun testLastPiece_nofib() =
+  let initialBoard = fromSome(fit(emptyBoard, [1, 1], "a", [1, 0] :: [1, 1] :: Nil))
+  let solutions = search([1,2], Female, initialBoard, initialPieces)
+  printDoc(display(solutions))
+
+print(nofibListToString(testLastPiece_nofib()))
+//│ > Success!
+//│ >   accchhff
+//│ >   aacnghhf
+//│ >   innnglhf
+//│ >   inmggllf
+//│ >   iimgelkk
+//│ >   dimeelkb
+//│ >   dmmejkkb
+//│ >   ddjjjjbb
+//│ >   
+//│ > Success!
+//│ >   acccjjjj
+//│ >   aacffjgb
+//│ >   hhddfggb
+//│ >   lhhdfgbb
+//│ >   llhdfgnm
+//│ >   lkkennnm
+//│ >   lkeeniim
+//│ >   kkeiiimm
+//│ >   
+//│ > Success!
+//│ >   ammmmccc
+//│ >   aaiimnch
+//│ >   iiinnnhh
+//│ >   gggnlhhj
+//│ >   fkgglljj
+//│ >   fkkklbdj
+//│ >   feeklbdj
+//│ >   ffeebbdd
+//│ >   
+//│ > 

@@ -577,7 +577,7 @@ abstract class Parser(
       consume
       val bod = yeetSpaces match
         case Nil | (COMMA, _) :: _ => N
-        case _ => S(simpleExprImpl(prec))
+        case _ => S(expr(prec))
       Spread(if dotDotDot then Keyword.`...` else Keyword.`..`, S(loc), bod)
     case (tok, loc) :: _ =>
       TODO(tok)
@@ -609,7 +609,7 @@ abstract class Parser(
       cur match // `true | false | Tree`
       case Nil => false
       case (NEWLINE | SPACE, _) :: _ => consume; true
-      case (KEYWORD(kw), loc) :: _ =>
+      case (KEYWORD(kw), loc) :: _ if kw isnt Keyword.__ =>
         consume
         prefixRules.kwAlts.get(kw.name) match
         case S(subRule) =>
@@ -621,7 +621,7 @@ abstract class Parser(
       case false => printDbg(s"! end of split"); acc // break
       case e: Tree => // needs further inspection
         yeetSpaces match
-        case (COMMA | SEMI | NEWLINE, _) :: _ =>
+        case (COMMA | NEWLINE, _) :: _ =>
           consume; splitItem(e :: acc)
         case _ => printDbg(s"! end of split"); e :: acc
   

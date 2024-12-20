@@ -8,7 +8,7 @@ open Predef
 
 module Stack with ...
 
-class (::) Cons[A](head: A, tail)
+class (::) Cons[A](head: A, tail: Stack[A])
 object Nil
 
 fun isEmpty(xs) = xs is Nil
@@ -46,7 +46,7 @@ fun zip(...xss) =
       Nil then go(heads, tails)(t)
     Nil and heads is
       Nil then assert(tails is Nil); Nil
-      else heads toReverseArray() :: go(Nil, Nil)(tails reverse())
+      else heads toReverseArray() :: go(Nil, Nil) of tails reverse()
   go(Nil, Nil) of fromArray(xss)
 
 

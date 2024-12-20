@@ -1,0 +1,174 @@
+:js
+
+:import NofibPrelude.mls
+//│ Imported 112 member(s)
+
+
+fun retURN(a) = s => [s, a]
+
+fun bind(m, f) = s => if m(s) is [s_, a] then f(a)(s_)
+
+fun join(m) = s => if m(s) is [s_, ma] then ma(s_)
+
+fun mmap(f, m) = s => if m(s) is [s_, a] then [s_, f(a)]
+
+fun mmapl(f, aas) = if aas is
+  Nil then retURN(Nil)
+  a :: as_ then
+    bind of
+      f(a)
+      b => bind of
+        mmapl(f, as_)
+        bs => retURN(b :: bs)
+
+fun mmapr(f, xs) = if xs is
+  Nil then retURN(Nil)
+  x :: xs then
+    bind of
+      mmapr(f, xs)
+      ys => bind of
+        f(x)
+        y => retURN(y :: ys)
+    
+fun mfoldl(f, a, xs) = if xs is
+  Nil then retURN(a)
+  x :: xs then
+    bind(f(a, x), fax => mfoldl(f, fax, xs))
+    
+fun mfoldr(f, a, xs) = if xs is
+  Nil then retURN(a)
+  x :: xs then
+    bind(mfoldr(f, a, xs), y => f(x, y))
+
+fun mif(c, t, f) = bind(c, cond => if cond then t else f)
+
+fun startingWith(m, v) = if m(v) is [final, answer] then answer
+
+fun fetch(s) = [s, s]
+
+fun fetchWith(f) = s => [s, f(s)]
+
+fun update(f) = s => [f(s), s]
+
+fun set_(s_) = s => [s_, s]
+
+let incr = update(x => x + 1)
+//│ incr = [Function (anonymous)]
+
+class Node[T](a: T, b: List[Node[T]])
+
+fun labelTree(t) =
+  fun label(t) = if t is Node(x, xs) then
+    bind of
+      incr
+      n => bind of
+        mmapl(label, xs)
+        ts => retURN(Node([n, x], ts))
+  startingWith(label(t), 0)
+
+fun ltGraph(t) =
+  fun labelOf(t) = if t is Node([n, x], xs) then n
+  if t is Node([n, x], xs) then
+    [n, x, map(labelOf, xs)] :: concat(map(ltGraph, xs))
+
+fun visited(n) = bind of
+  fetch
+  us => if inList(n, us) then retURN(true) else bind(set_(n :: us), _p => retURN(false))
+
+fun newlyDefined(x, fx, f, y) = if x === y then fx else f(y)
+
+fun findCommon(ls) =
+  fun sim(n_s_cs, r_lg) = if n_s_cs is [n, s, cs] and r_lg is [r, lg] then
+    let rcs = map(r, cs)
+    fun lscomp(ls) = if ls is
+      Nil then Nil
+      [m, s_, cs_] :: t and
+        s === s_ and listEq(cs_, rcs) then m :: lscomp(t)
+        else lscomp(t)
+    let ms = lscomp(lg)
+    if null_(ms)
+    then [r, [n, s, rcs] :: lg]
+    else [x => newlyDefined(n, head(ms), r, x), lg]
+  if foldr(sim, [x => x, Nil], ls) is [a, b] then b else throw Error(ls.toString())
+
+fun cse(t) = findCommon(ltGraph(labelTree(t)))
+
+fun plus_(x, y) = Node("+", x :: y :: Nil)
+
+fun mult_(x, y) = Node("*", x :: y :: Nil)
+
+fun prod(xs) = Node("X", xs)
+
+let zerO = Node("0", Nil)
+//│ zerO = Node { a: '0', b: Nil { class: [class Nil] } }
+
+let a = Node("a", Nil)
+//│ a = Node { a: 'a', b: Nil { class: [class Nil] } }
+
+let b = Node("b", Nil)
+//│ b = Node { a: 'b', b: Nil { class: [class Nil] } }
+
+let c = Node("c", Nil)
+//│ c = Node { a: 'c', b: Nil { class: [class Nil] } }
+
+let d = Node("d", Nil)
+//│ d = Node { a: 'd', b: Nil { class: [class Nil] } }
+
+let example0 = a
+//│ example0 = Node { a: 'a', b: Nil { class: [class Nil] } }
+
+let example1 = plus_(a, a)
+//│ > Node {
+//│ >   a: '+',
+//│ >   b: Cons {
+//│ >     head: Node { a: 'a', b: [Nil] },
+//│ >     tail: Cons { head: [Node], tail: [Nil] }
+//│ >   }
+//│ example1 = }
+
+let example2 = plus_(mult_(a, b), mult_(a, b))
+//│ > Node {
+//│ >   a: '+',
+//│ >   b: Cons {
+//│ >     head: Node { a: '*', b: [Cons] },
+//│ >     tail: Cons { head: [Node], tail: [Nil] }
+//│ >   }
+//│ example2 = }
+
+let example3 = plus_(mult_(plus_(a, b), c), plus_(a, b))
+//│ > Node {
+//│ >   a: '+',
+//│ >   b: Cons {
+//│ >     head: Node { a: '*', b: [Cons] },
+//│ >     tail: Cons { head: [Node], tail: [Nil] }
+//│ >   }
+//│ example3 = }
+
+let example4 = prod(scanl(plus_, zerO, a :: b :: c :: d :: Nil))
+//│ > Node {
+//│ >   a: 'X',
+//│ >   b: Cons {
+//│ >     head: Node { a: '0', b: [Nil] },
+//│ >     tail: Cons { head: [Node], tail: [Cons] }
+//│ >   }
+//│ example4 = }
+
+let example5 = prod(scanr(plus_, zerO, a :: b :: c :: d :: Nil))
+//│ > Node {
+//│ >   a: 'X',
+//│ >   b: Cons {
+//│ >     head: Node { a: '+', b: [Cons] },
+//│ >     tail: Cons { head: [Node], tail: [Cons] }
+//│ >   }
+//│ example5 = }
+
+fun testCse_nofib(n) = map(
+  i => map(
+    cse,
+    take(intMod(i, 6), example0 :: example1 :: example2 :: example3 :: example4 :: example5 :: Nil)
+  ),
+  enumFromTo(1, n)
+)
+
+testCse_nofib(6).toString()
+//│ = '[[[(0,a,[])]],[[(0,a,[])],[(0,+,[2,2]),(2,a,[])]],[[(0,a,[])],[(0,+,[2,2]),(2,a,[])],[(0,+,[4,4]),(4,*,[5,6]),(5,a,[]),(6,b,[])]],[[(0,a,[])],[(0,+,[2,2]),(2,a,[])],[(0,+,[4,4]),(4,*,[5,6]),(5,a,[]),(6,b,[])],[(0,+,[1,6]),(1,*,[6,5]),(5,c,[]),(6,+,[7,8]),(7,a,[]),(8,b,[])]],[[(0,a,[])],[(0,+,[2,2]),(2,a,[])],[(0,+,[4,4]),(4,*,[5,6]),(5,a,[]),(6,b,[])],[(0,+,[1,6]),(1,*,[6,5]),(5,c,[]),(6,+,[7,8]),(7,a,[]),(8,b,[])],[(0,X,[21,20,19,18,17]),(17,+,[18,25]),(18,+,[19,24]),(19,+,[20,23]),(20,+,[21,22]),(21,0,[]),(22,a,[]),(23,b,[]),(24,c,[]),(25,d,[])]],[]]'

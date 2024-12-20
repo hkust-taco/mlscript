@@ -173,7 +173,11 @@ class Lowering(using TL, Raise, Elaborator.State):
       
     case st.Lam(params, body) =>
       val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N)
-      k(Value.Lam(paramLists.head, bodyBlock))
+      if k.isInstanceOf[TailOp] || bodyBlock.size <= 5
+      then k(Value.Lam(paramLists.head, bodyBlock))
+      else
+        val l = new TempSymbol(N)
+        Assign(l, Value.Lam(paramLists.head, bodyBlock), k(l |> Value.Ref.apply))
     
     /* 
     case t @ st.If(Split.Let(sym, trm, tail)) =>

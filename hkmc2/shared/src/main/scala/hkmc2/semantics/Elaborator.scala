@@ -85,7 +85,8 @@ object Elaborator:
       val Num = assumeBuiltinCls("Num")
       val Str = assumeBuiltinCls("Str")
       val Predef = assumeBuiltinMod("Predef")
-      def getBuiltinOp(op: Str): Opt[Str] = if getBuiltin(op).isDefined then builtinBinOps.get(op) else N
+      def getBuiltinOp(op: Str): Opt[Str] =
+        if getBuiltin(op).isDefined then builtinBinOps.get(op) else N
   
   object Ctx:
     abstract class Elem:
@@ -282,6 +283,25 @@ extends Importer:
       val des = new Desugarer(this)(tree)
       val nor = new ucs.Normalization(tl)(des)
       Term.IfLike(Keyword.`if`, des)(nor)
+    case app @ PartialApp(lhs, args) =>
+      var params: Ls[Param] = Nil
+      def mkParam =
+        val p = Param(FldFlags.empty, VarSymbol(Ident("_")), N)
+        params ::= p
+        p
+      def go(args: Ls[Tree \/ Under], acc: Ls[Term]): Term =
+        args match
+        case Nil => Term.Tup(acc.reverseIterator.map(Fld(FldFlags.empty, _, N)).toList)(
+            Tup(Nil) // FIXME
+          )
+        case L(arg) :: rest => go(rest, term(arg) :: acc)
+        case R(und) :: rest => go(rest, mkParam.sym.ref() :: acc)
+      val base = lhs match
+        case L(t) => term(t)
+        case R(und) => mkParam.sym.ref()
+      val res = FlowSymbol("‹partial-app-res›")
+      val body = Term.App(base, go(args, Nil))(app, res)
+      Term.Lam(PlainParamList(params.reverse), body)
     case App(Ident("|"), Tree.Tup(lhs :: rhs :: Nil)) =>
       Term.CompType(term(lhs), term(rhs), true)
     case App(Ident("&"), Tree.Tup(lhs :: rhs :: Nil)) =>
@@ -300,11 +320,17 @@ extends Importer:
       Term.Deref(term(rhs))
     case App(Ident("~"), Tree.Tup(rhs :: Nil)) =>
       term(rhs)
+    case tree @ App(lhs, OpBlock(ops)) =>
+      ops.foldLeft(term(lhs)):
+        case (acc, (op, arg)) =>
+          val sym = FlowSymbol("‹app-res›")
+          val tup = new Tup(Nil) // TODO
+          Term.App(term(op), Term.Tup(PlainFld(acc) :: PlainFld(term(arg)) :: Nil)(tup))(tree, sym)
     case tree @ App(lhs, rhs) =>
       val sym = FlowSymbol("‹app-res›")
       val lt = term(lhs, inAppPrefix = true)
       val rt = term(rhs)
-
+      
       // Check if module arguments match module parameters
       val args = rt match
         case Term.Tup(fields) => S(fields)
@@ -349,7 +375,7 @@ extends Importer:
       else Term.Sel(preTrm, nme)(sym)
     case tree @ Tup(fields) =>
       Term.Tup(fields.map(fld(_)))(tree)
-    case New(body) =>
+    case New(body) => // TODO handle Under
       body match
       case App(c, Tup(params)) =>
         Term.New(cls(c, inAppPrefix = true), params.map(term(_))).withLocOf(tree)
@@ -436,6 +462,9 @@ extends Importer:
       Term.Error
     case Spread(kw, kwLoc, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' spread operator." -> tree.toLoc :: Nil))
+      Term.Error
+    case Under() =>
+      raise(ErrorReport(msg"Illegal position for '_' placeholder." -> tree.toLoc :: Nil))
       Term.Error
     // case _ =>
     //   ???
@@ -551,6 +580,7 @@ extends Importer:
             (ctx, acc)
         newCtx.givenIn:
           go(sts, newAcc)
+      
       case (hd @ LetLike(`let`, Apps(id: Ident, tups), rhso, N)) :: sts if id.name.headOption.exists(_.isLower) =>
         val sym =
           fieldOrVarSym(LetBind, id)

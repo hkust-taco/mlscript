@@ -5,9 +5,13 @@ fun id(x) = x
 
 fun not(x) = x is false
 
-fun (|>) pipe(x, f) = f(x)
+fun (|>) pipeInto(x, f) = f(x)
+fun (<|) pipeFrom(f, x) = f(x)
 
-fun (.) apply(receiver, f)(...args) = f(receiver, ...args)
+fun (>>) andThen(f, g)(x) = g(f(x))
+fun (<<) compose(f, g)(x) = f(g(x))
+
+fun (.) passTo(receiver, f)(...args) = f(receiver, ...args)
 
 fun (|>.) call(receiver, f)(...args) = f.call(receiver, ...args)
 
@@ -60,5 +64,6 @@ module TraceLogger with
     else ()
 
 class Test with
+  print("Test")
   val y = 1
 

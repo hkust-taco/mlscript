@@ -1,6 +1,7 @@
 :js
+
 :import NofibPrelude.mls
-//│ Imported 109 member(s)
+//│ Imported 112 member(s)
 
 
 class State(position: List[Num], velocity: List[Num])
@@ -8,15 +9,15 @@ class State(position: List[Num], velocity: List[Num])
 fun dotPlus(fs, gs) = if
   fs is Nil then gs
   gs is Nil then fs
-  fs is Cons(f, fs) and gs is Cons(g, gs) then (f + g) :: dotPlus(fs, gs)
+  fs is f :: fs and gs is g :: gs then (f + g) :: dotPlus(fs, gs)
 
 fun dotMult(fs, gs) = if
-  fs is Cons(f, fs) and gs is Cons(g, gs) then (f * g) :: dotMult(fs, gs)
+  fs is f :: fs and gs is g :: gs then (f * g) :: dotMult(fs, gs)
   else Nil
 
 fun scalarMut(c, fs) = if fs is
   Nil then Nil
-  Cons(f, fs) then (c * f) :: scalarMut(c, fs)
+  f :: fs then (c * f) :: scalarMut(c, fs)
 
 fun testforce(k, ss) = lazy of () =>
   if force(ss) is
@@ -25,7 +26,7 @@ fun testforce(k, ss) = lazy of () =>
 fun show(s) =
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(component, t) then Cons(stringConcat(stringOfFloat(component), "\t"), lscomp(t))
+    component :: t then Cons(stringConcat(stringOfFloat(component), "\t"), lscomp(t))
   if s is State(pos, vel) then
     stringListConcat of lscomp(pos)
 
@@ -39,8 +40,8 @@ fun runExperiment(law, dt, param, init) = lazy of () =>
 fun testAtom_nofib(n) =
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(state, t) then Cons(stringConcat(show(state), "\n"), lscomp(t))
-  stringListConcat of lscomp(take_lz(n, runExperiment(testforce, 0.02, Cons(1.0, Nil), State(Cons(1.0, Nil), Cons(0.0, Nil)))))
+    state :: t then stringConcat(show(state), "\n") :: lscomp(t)
+  stringListConcat of lscomp(take_lz(n, runExperiment(testforce, 0.02, 1.0 :: Nil, State(1.0 :: Nil, 0.0 :: Nil))))
 
 
 // NOTE: original input 1000

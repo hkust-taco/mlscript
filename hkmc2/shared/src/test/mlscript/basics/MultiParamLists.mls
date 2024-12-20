@@ -13,9 +13,16 @@ f(42)
 //│ this.f(42)
 //│ = 42
 
+// TODO compile this to
+// function f(n1) { return (n2) => f$(n1, n2); }
+// function f$(n1, n2) { let tmp; tmp = 10 * n1; return tmp + n2; }
+
 fun f(n1: Int)(n2: Int): Int =  (10 * n1 + n2)
 //│ JS (unsanitized):
 //│ function f(n1) { return (n2) => { let tmp; tmp = 10 * n1; return tmp + n2; }; } null
+
+// TODO compile this to
+// this.f$(4, 2)
 
 f(4)(2)
 //│ JS (unsanitized):

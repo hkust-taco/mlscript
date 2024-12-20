@@ -72,16 +72,19 @@ let oops2 = Example2(0).f
 Example2(1) . oops2(2) . oops2(2)
 //│ = Example2 { a: 1 }
 
+Example2(1). oops2(2). oops2(2)
+//│ = Example2 { a: 1 }
+
 :todo
 new Example2(1)
   . oops2(2)
-//│ /!!!\ Uncaught error: scala.MatchError: OpBlock(List((Ident(.),App(Ident(oops2),Tup(List(IntLit(2))))))) (of class hkmc2.syntax.Tree$OpBlock)
+//│ ═══[RUNTIME ERROR] TypeError: tmp2 is not a constructor
 
 :todo
 new Example2(1)
   . oops2(2)
   . oops2(2)
-//│ /!!!\ Uncaught error: scala.MatchError: OpBlock(List((Ident(.),App(Ident(oops2),Tup(List(IntLit(2))))), (Ident(.),App(Ident(oops2),Tup(List(IntLit(2))))))) (of class hkmc2.syntax.Tree$OpBlock)
+//│ ═══[RUNTIME ERROR] TypeError: tmp4 is not a constructor
 
 
 // * Alternative syntax – precedence is now inappropriate
@@ -112,5 +115,12 @@ Example |>. oops(2)
 
 Example2(1) |>. oops2(2) |>. oops2(2)
 //│ = Example2 { a: 1 }
+
+:fixme
+(Example2(1)
+  |>. oops2(2)
+  |>. oops2(2)
+).a
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'a' yielded 'undefined'
 
 

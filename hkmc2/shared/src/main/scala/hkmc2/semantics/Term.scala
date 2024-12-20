@@ -340,6 +340,9 @@ sealed abstract class Elem:
     case Spd(_, term) => term :: Nil
   def showDbg: Str
 final case class Fld(flags: FldFlags, term: Term, asc: Opt[Term]) extends Elem with FldImpl
+object PlainFld:
+  def apply(term: Term) = Fld(FldFlags.empty, term, N)
+  def unapply(fld: Fld): Opt[Term] = S(fld.term)
 final case class Spd(eager: Bool, term: Term) extends Elem:
   def showDbg: Str = (if eager then "..." else "..") + term.showDbg
 

@@ -15,6 +15,32 @@ t
 
 
 :sjs
+fun test() =
+  fun whoops =
+    print("ok")
+    42
+  whoops + whoops
+//│ JS (unsanitized):
+//│ function test() {
+//│   let tmp, tmp1;
+//│   function whoops() {
+//│     let tmp2;
+//│     tmp2 = Predef.print("ok");
+//│     return 42;
+//│   }
+//│   tmp = whoops();
+//│   tmp1 = whoops();
+//│   return tmp + tmp1;
+//│ }
+//│ null
+
+test()
+//│ > ok
+//│ > ok
+//│ = 84
+
+
+:sjs
 module T with
   fun t() = 1
   fun p = 2
@@ -251,3 +277,19 @@ fun foo(f) =
 
 foo(Foo(42))
 //│ = 42
+
+
+fun foo(f) =
+  f.oops
+
+class Foo(x) with
+  fun oops = x
+
+foo(Foo(42))
+//│ = 42
+
+:re
+foo(Foo(42))()
+//│ ═══[RUNTIME ERROR] TypeError: tmp1 is not a function
+
+

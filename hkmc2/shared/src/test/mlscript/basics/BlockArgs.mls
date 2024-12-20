@@ -1,0 +1,46 @@
+:todo
+
+
+fun foo(x){f} =
+  f(x)
+//│ ╔══[ERROR] Expected a valid definition head, found block instead
+//│ ║  l.4: 	fun foo(x){f} =
+//│ ╙──     	           ^
+
+foo(1){x => x}
+//│ ╔══[ERROR] Name not found: foo
+//│ ║  l.10: 	foo(1){x => x}
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side.
+//│ ║  l.10: 	foo(1){x => x}
+//│ ╙──      	       ^^^^^^
+
+foo(1)
+  x => x
+//│ ╔══[ERROR] Name not found: foo
+//│ ║  l.18: 	foo(1)
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side.
+//│ ║  l.19: 	  x => x
+//│ ╙──      	  ^^^^^^
+
+foo(1) { x => x }
+//│ ╔══[ERROR] Name not found: foo
+//│ ║  l.27: 	foo(1) { x => x }
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side.
+//│ ║  l.27: 	foo(1) { x => x }
+//│ ╙──      	         ^^^^^^
+
+foo(1) with x => x
+//│ ╔══[PARSE ERROR] Expected end of input; found 'with' keyword instead
+//│ ║  l.35: 	foo(1) with x => x
+//│ ╙──      	       ^^^^
+//│ ╔══[ERROR] Name not found: foo
+//│ ║  l.35: 	foo(1) with x => x
+//│ ╙──      	^^^
+
+
+
+
+
