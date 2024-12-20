@@ -341,7 +341,6 @@ pattern F_0 = Pair(Box, Bowl)
 //│ >          accept 0
 
 :ucs rp
-:todo
 pattern F_1 = Pair(Box, Box) | Pair(Box, Bowl)
 //│ elaborated nameless split:
 //│ >  a => 
@@ -381,6 +380,89 @@ pattern G = Triplet(Triplet(Box, Bowl, Basket), Pair(0, 1), Basket)
 //│ >                  l is 1 -> 
 //│ >                    d is class:Basket -> m => 
 //│ >                      accept 0
+
+:ucs rp
+pattern G_0 = Triplet(Box, Bowl, Basket) | Triplet(Box, Bowl, Basket)
+//│ elaborated nameless split:
+//│ >  a => 
+//│ >    a is class:Triplet -> b => c => d => 
+//│ >      b is class:Box -> c is class:Bowl -> d is class:Basket -> accept 0
+//│ >    a is class:Triplet -> e => f => g => 
+//│ >      e is class:Box -> f is class:Bowl -> g is class:Basket -> accept 0
+//│ normalized nameless split:
+//│ >  a => 
+//│ >    a is class:Triplet -> b => c => d => 
+//│ >      b is class:Box -> e => 
+//│ >        c is class:Bowl -> f => 
+//│ >          d is class:Basket -> g => 
+//│ >            accept 0
+
+:ucs rp
+pattern G_0 = Triplet(Triplet(Box, Box, Box), Bowl, Basket) | Triplet(Triplet(Box, Box, Box), Bowl, Basket)
+//│ elaborated nameless split:
+//│ >  a => 
+//│ >    a is class:Triplet -> b => c => d => 
+//│ >      b is class:Triplet -> e => f => g => 
+//│ >        e is class:Box -> f is class:Box -> g is class:Box -> c is class:Bowl -> d is class:Basket -> accept 0
+//│ >    a is class:Triplet -> h => i => j => 
+//│ >      h is class:Triplet -> k => l => m => 
+//│ >        k is class:Box -> l is class:Box -> m is class:Box -> i is class:Bowl -> j is class:Basket -> accept 0
+//│ normalized nameless split:
+//│ >  a => 
+//│ >    a is class:Triplet -> b => c => d => 
+//│ >      b is class:Triplet -> e => f => g => 
+//│ >        e is class:Box -> h => 
+//│ >          f is class:Box -> i => 
+//│ >            g is class:Box -> j => 
+//│ >              c is class:Bowl -> k => 
+//│ >                d is class:Basket -> l => 
+//│ >                  accept 0
+
+:ucs rp
+:todo
+pattern G_1 =
+  Triplet(Triplet(Box, Bowl, Box), Bowl, Basket) |
+  Triplet(Triplet(Box, Box, Box), Bowl, Basket) |
+  Triplet(Triplet(Box, Box, Bowl), Bowl, Basket)
+//│ elaborated nameless split:
+//│ >  a => 
+//│ >    a is class:Triplet -> b => c => d => 
+//│ >      b is class:Triplet -> e => f => g => 
+//│ >        e is class:Box -> f is class:Bowl -> g is class:Box -> c is class:Bowl -> d is class:Basket -> accept 0
+//│ >    a is class:Triplet -> h => i => j => 
+//│ >      h is class:Triplet -> k => l => m => 
+//│ >        k is class:Box -> l is class:Box -> m is class:Box -> i is class:Bowl -> j is class:Basket -> accept 0
+//│ >    a is class:Triplet -> n => o => p => 
+//│ >      n is class:Triplet -> q => r => s => 
+//│ >        q is class:Box -> r is class:Box -> s is class:Bowl -> o is class:Bowl -> p is class:Basket -> accept 0
+//│ normalized nameless split:
+//│ >  a => 
+//│ >    a is class:Triplet -> b => c => d => 
+//│ >      b is class:Triplet -> e => f => g => 
+//│ >        e is class:Box -> h => 
+//│ >          f is class:Bowl -> i => 
+//│ >            g is class:Box -> j => 
+//│ >              c is class:Bowl -> k => 
+//│ >                d is class:Basket -> l => 
+//│ >                  accept 0
+//│ >                f is class:Box -> m => 
+//│ >                  reject
+//│ >              f is class:Box -> n => 
+//│ >                reject
+//│ >            f is class:Box -> o => 
+//│ >              g is class:Bowl -> p => 
+//│ >                c is class:Bowl -> q => 
+//│ >                  d is class:Basket -> r => 
+//│ >                    accept 0
+//│ >          f is class:Box -> s => 
+//│ >            g is class:Box -> t => 
+//│ >              c is class:Bowl -> u => 
+//│ >                d is class:Basket -> v => 
+//│ >                  accept 0
+//│ >            g is class:Bowl -> w => 
+//│ >              c is class:Bowl -> x => 
+//│ >                d is class:Basket -> y => 
+//│ >                  accept 0
 
 :ucs rp
 // pattern BinSeq(pattern D) = D | Pair(0 | 1, BinSeq)
@@ -434,7 +516,7 @@ pattern List(a) = null | Pair(a, List)
 null is List
 //│ FAILURE: Unexpected runtime error
 //│ ═══[RUNTIME ERROR] Error: match error
-//│     at REPL34:1:38
+//│     at REPL37:1:38
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:597:22)
 //│     at bound (node:domain:433:15)
