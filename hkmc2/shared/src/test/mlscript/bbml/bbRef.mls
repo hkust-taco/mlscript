@@ -130,7 +130,7 @@ region x in
 //│ ║         	            ^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ¬()
-//│ ╙── because: cannot constrain  '<x>  <:  ¬()
+//│ ╙── because: cannot constrain  'x  <:  ¬()
 //│ Type: Int
 
 

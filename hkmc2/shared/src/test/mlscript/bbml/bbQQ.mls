@@ -101,8 +101,8 @@ x `=> run(x)
 //│ ╔══[ERROR] Type error in reference with expected type CodeBase[out 'T, ⊥, ?]
 //│ ║  l.100: 	x `=> run(x)
 //│ ║         	          ^
-//│ ╟── because: cannot constrain  CodeBase['x, '<x>, ⊥]  <:  CodeBase[out 'T, ⊥, ?]
-//│ ╙── because: cannot constrain  '<x>  <:  ⊥
+//│ ╟── because: cannot constrain  CodeBase['x, 'x, ⊥]  <:  CodeBase[out 'T, ⊥, ?]
+//│ ╙── because: cannot constrain  'x  <:  ⊥
 //│ Type: CodeBase[out CodeBase[out 'cde, ?, ?] -> 'cde, out 'ctx, ?]
 
 :e
@@ -110,8 +110,8 @@ x `=> run(x)
 //│ ╔══[ERROR] Type error in reference with expected type CodeBase[out 'T, ⊥, ?]
 //│ ║  l.109: 	`let x = `42 `in run(x)
 //│ ║         	                     ^
-//│ ╟── because: cannot constrain  CodeBase['cde, '<x>, ⊥]  <:  CodeBase[out 'T, ⊥, ?]
-//│ ╙── because: cannot constrain  '<x>  <:  ⊥
+//│ ╟── because: cannot constrain  CodeBase['cde, 'x, ⊥]  <:  CodeBase[out 'T, ⊥, ?]
+//│ ╙── because: cannot constrain  'x  <:  ⊥
 //│ ╔══[ERROR] Type error in unquoted term
 //│ ║  l.109: 	`let x = `42 `in run(x)
 //│ ║         	                 ^^^^^^

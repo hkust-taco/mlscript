@@ -92,11 +92,11 @@ high(x => x + 1)
 //│ ╔══[ERROR] Type error in reference with expected type Int
 //│ ║  l.91: 	high(x => x + 1)
 //│ ║        	          ^
-//│ ╙── because: cannot constrain  '<A>  <:  Int
-//│ ╔══[ERROR] Type error in application with expected type '<A>
+//│ ╙── because: cannot constrain  'A  <:  Int
+//│ ╔══[ERROR] Type error in application with expected type 'A
 //│ ║  l.91: 	high(x => x + 1)
 //│ ║        	          ^^^^^
-//│ ╙── because: cannot constrain  Int  <:  '<A>
+//│ ╙── because: cannot constrain  Int  <:  'A
 //│ Type: Int
 
 (let a = 0 in x => x): [A] -> A -> A

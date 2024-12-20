@@ -168,9 +168,8 @@ sealed abstract class BasicType extends Type:
     this match
     case ClassLikeType(name, targs) =>
       if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.map(_.show).mkString(", ")}]"
-    case v @ InfVar(lvl, uid, _, isSkolem) =>
-      val name = scope.lookup(v.sym).getOrElse(scope.allocateName(v.sym, v.hint))
-      if isSkolem then s"'<${name}>" else s"'${name}"
+    case v @ InfVar(lvl, uid, _, _) =>
+      "'" + scope.lookup(v.sym).getOrElse(scope.allocateName(v.sym, v.hint))
     case FunType(arg :: Nil, ret, eff) => s"${arg.paren} ->${printEff(eff)} ${ret.paren}"
     case FunType(args, ret, eff) => s"(${args.map(_.show).mkString(", ")}) ->${printEff(eff)} ${ret.paren}"
     case ComposedType(lhs, rhs, pol) => s"${lhs.paren} ${if pol then "∨" else "∧"} ${rhs.paren}"
@@ -183,7 +182,7 @@ sealed abstract class BasicType extends Type:
       if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.map(_.showDbg).mkString(", ")}]"
     case v @ InfVar(lvl, uid, _, isSkolem) =>
       val name = if v.hint.isEmpty then s"${v.sym.nme}" else s"${v.sym.nme}(${v.hint})"
-      if isSkolem then s"'<${name}${uid}>_${lvl}" else s"'${name}${uid}_${lvl}"
+      if isSkolem then s"<${name}${uid}>_${lvl}" else s"'${name}${uid}_${lvl}"
     case FunType(arg :: Nil, ret, eff) => s"${arg.parenDbg} ->{${eff.showDbg}} ${ret.parenDbg}"
     case FunType(args, ret, eff) => s"(${args.map(_.showDbg).mkString(", ")}) ->{${eff.showDbg}} ${ret.parenDbg}"
     case ComposedType(lhs, rhs, pol) => s"${lhs.parenDbg} ${if pol then "∨" else "∧"} ${rhs.parenDbg}"

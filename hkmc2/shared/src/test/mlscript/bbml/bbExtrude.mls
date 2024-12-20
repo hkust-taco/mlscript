@@ -41,9 +41,9 @@ y `=> (let t = run(x `=> x `+ y) in y)
 //│ ╟── because: cannot constrain  CodeBase[out 'x -> 'cde, out 'ctx, ?]  <:  CodeBase[out 'T, ⊥, ?]
 //│ ╟── because: cannot constrain  'ctx  <:  ⊥
 //│ ╟── because: cannot constrain  'ctx  <:  ¬()
-//│ ╟── because: cannot constrain  (¬⊥ ∧ ¬'x) ∧ '<y>  <:  ¬()
-//│ ╟── because: cannot constrain  '<y>  <:  'x
-//│ ╙── because: cannot constrain  '<y>  <:  ¬()
+//│ ╟── because: cannot constrain  (¬⊥ ∧ ¬'x) ∧ 'y  <:  ¬()
+//│ ╟── because: cannot constrain  'y  <:  'x
+//│ ╙── because: cannot constrain  'y  <:  ¬()
 //│ Type: CodeBase[out 'y -> 'y, ⊥, ?]
 //│ Where:
 //│   'y <: Int
