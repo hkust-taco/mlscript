@@ -74,8 +74,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL, scope: Scope):
   private def freshVar(sym: Symbol, hint: Str = "")(using ctx: BbCtx): InfVar =
     InfVar(ctx.lvl, infVarState.nextUid, new VarState(), false)(sym, hint)
   private def freshWildcard(sym: Symbol)(using ctx: BbCtx) =
-    val in = freshVar(sym, "in")
-    val out = freshVar(sym, "out")
+    val in = freshVar(sym)
+    val out = freshVar(sym)
     // in.state.upperBounds ::= out // * Not needed for soundness; complicates inferred types
     Wildcard(in, out)
 
@@ -87,7 +87,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL, scope: Scope):
   private def typeAndSubstType
       (ty: Term, pol: Bool)(using map: Map[Uid[Symbol], TypeArg])(using ctx: BbCtx, cctx: CCtx)
       : GeneralType =
-  trace[GeneralType](s"${ctx.lvl}. Typing type ${ty.show}", r => s"~> $r"):
+  trace[GeneralType](s"${ctx.lvl}. Typing type ${ty.showDbg}", r => s"~> ${r.showDbg}"):
     def mono(ty: Term, pol: Bool): Type =
       monoOrErr(typeAndSubstType(ty, pol), ty)
     ty match
@@ -315,7 +315,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL, scope: Scope):
 
   // * Note: currently, the returned type is not used or useful, but it could be in the future
   private def ascribe(lhs: Term, rhs: GeneralType)(using ctx: BbCtx): (GeneralType, Type) =
-  trace[(GeneralType, Type)](s"${ctx.lvl}. Ascribing ${lhs.showDbg} : ${rhs.show}", res => s"! ${res._2.show}"):
+  trace[(GeneralType, Type)](s"${ctx.lvl}. Ascribing ${lhs.showDbg} : ${rhs.showDbg}", res => s"! ${res._2.showDbg}"):
     given CCtx = CCtx.init(lhs, S(rhs))
     (lhs, rhs) match
     case (Term.Lam(PlainParamList(params), body), ft @ PolyFunType(args, ret, eff)) => // * annoted functions
@@ -394,7 +394,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL, scope: Scope):
     case ty: Type => ty
   
   private def typeCheck(t: Term)(using ctx: BbCtx): (GeneralType, Type) =
-  trace[(GeneralType, Type)](s"${ctx.lvl}. Typing ${t.showDbg}", res => s": (${res._1.show}, ${res._2.show})"):
+  trace[(GeneralType, Type)](s"${ctx.lvl}. Typing ${t.showDbg}", res => s": (${res._1.showDbg}, ${res._2.showDbg})"):
     given CCtx = CCtx.init(t, N)
     t match
       case sel @ Term.SynthSel(Ref(_: TopLevelSymbol), nme)

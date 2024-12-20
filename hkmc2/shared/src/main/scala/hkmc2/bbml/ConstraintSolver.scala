@@ -13,8 +13,8 @@ import utils.Scope
 type Cache = Set[(Type, Type)]
 type ExtrudeCache = mutable.HashMap[(Uid[InfVar], Bool), InfVar]
 
-case class CCtx(cache: Cache, parents: Ls[(Type, Type)], origin: Term, exp: Opt[GeneralType]):
-  def err(using Raise, Scope) =
+case class CCtx(cache: Cache, parents: Ls[(Type, Type)], origin: Term, exp: Opt[GeneralType])(using Scope):
+  def err(using Raise) =
     raise(ErrorReport(
       msg"Type error in ${origin.describe}${exp match
           case S(ty) => msg" with expected type ${ty.show}"
@@ -30,7 +30,7 @@ case class CCtx(cache: Cache, parents: Ls[(Type, Type)], origin: Term, exp: Opt[
       case _ =>  sub :: parents
     )
 object CCtx:
-  inline def init(origin: Term, exp: Opt[GeneralType]) = CCtx(Set.empty, Nil, origin, exp)
+  inline def init(origin: Term, exp: Opt[GeneralType])(using Scope) = CCtx(Set.empty, Nil, origin, exp)
 def cctx(using CCtx): CCtx = summon
 
 class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
@@ -40,8 +40,8 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
 
   private def freshXVar(lvl: Int, sym: Symbol, hint: Str): InfVar = InfVar(lvl, infVarState.nextUid, new VarState(), false)(sym, hint)
 
-  def extrude(ty: Type)(using lvl: Int, pol: Bool, cache: ExtrudeCache, bbctx: BbCtx, cctx: CCtx, tl: TL, scope: Scope): Type =
-  trace[Type](s"Extruding[${printPol(pol)}] ${ty.show}", r => s"~> ${r.show}"):
+  def extrude(ty: Type)(using lvl: Int, pol: Bool, cache: ExtrudeCache, bbctx: BbCtx, cctx: CCtx, tl: TL): Type =
+  trace[Type](s"Extruding[${printPol(pol)}] ${ty.showDbg}", r => s"~> ${r.showDbg}"):
     if ty.lvl <= lvl then ty else ty.toBasic/*TODO improve extrude directly*/ match
     case ClassLikeType(sym, targs) =>
       ClassLikeType(sym, targs.map {
@@ -78,7 +78,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
     case NegType(ty) => Type.mkNegType(extrude(ty)(using lvl, !pol))
     case Top | Bot => ty
 
-  private def constrainConj(conj: Conj)(using BbCtx, CCtx, TL, Scope): Unit = trace(s"Constraining ${conj.show}"):
+  private def constrainConj(conj: Conj)(using BbCtx, CCtx, TL): Unit = trace(s"Constraining ${conj.showDbg}"):
     conj match
       case Conj(i, u, (v, pol) :: tail) =>
         var rest = Conj(i, u, tail)
@@ -87,12 +87,12 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
           val bd = if v.lvl >= rest.lvl then rest else extrude(rest)(using v.lvl, true, mutable.HashMap.empty)
           if pol then
             val nc = Type.mkNegType(bd)
-            log(s"New bound: ${v.show} <: ${nc.show}")
+            log(s"New bound: ${v.showDbg} <: ${nc.showDbg}")
             cctx.nest(v -> nc) givenIn:
               v.state.upperBounds ::= nc
               v.state.lowerBounds.foreach(lb => constrainImpl(lb, nc))
           else
-            log(s"New bound: ${v.show} :> ${bd.show}")
+            log(s"New bound: ${v.showDbg} :> ${bd.showDbg}")
             cctx.nest(bd -> v) givenIn:
               v.state.lowerBounds ::= bd
               v.state.upperBounds.foreach(ub => constrainImpl(bd, ub))
@@ -120,10 +120,10 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
           // raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
           cctx.err
 
-  private def constrainDNF(disj: Disj)(using BbCtx, CCtx, TL, Scope): Unit =
+  private def constrainDNF(disj: Disj)(using BbCtx, CCtx, TL): Unit =
     disj.conjs.foreach(constrainConj(_))
 
-  private def constrainArgs(lhs: TypeArg, rhs: TypeArg)(using BbCtx, CCtx, TL, Scope): Unit =
+  private def constrainArgs(lhs: TypeArg, rhs: TypeArg)(using BbCtx, CCtx, TL): Unit =
     constrainImpl(rhs.negPart, lhs.negPart)
     constrainImpl(lhs.posPart, rhs.posPart)
 
@@ -135,12 +135,12 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
     case NegType(ty) => NegType(inlineSkolemBounds(ty, !pol))
     case _: ClassLikeType | _: FunType | _: InfVar | Top | Bot => ty
 
-  private def constrainImpl(lhs: Type, rhs: Type)(using BbCtx, CCtx, TL, Scope): Unit =
+  private def constrainImpl(lhs: Type, rhs: Type)(using BbCtx, CCtx, TL): Unit =
     if cctx.cache((lhs, rhs)) then log(s"Cached!")
-    else trace(s"CONSTRAINT ${lhs.show} <: ${rhs.show}"):
+    else trace(s"CONSTRAINT ${lhs.showDbg} <: ${rhs.showDbg}"):
       cctx.nest(lhs -> rhs) givenIn:
         val ty = dnf(inlineSkolemBounds(lhs & rhs.!, true)(using Set.empty)) 
         constrainDNF(ty)
-  def constrain(lhs: Type, rhs: Type)(using BbCtx, CCtx, TL, Scope): Unit =
+  def constrain(lhs: Type, rhs: Type)(using BbCtx, CCtx, TL): Unit =
     constrainImpl(lhs, rhs)
 

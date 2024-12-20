@@ -13,18 +13,22 @@ final case class Disj(conjs: Ls[Conj]) extends NormalForm with CachedBasicType:
   def isBot: Bool = conjs.isEmpty
   def mkBasic: BasicType =
     BasicType.union(conjs.map(_.toBasic))
-  def toDnf(using TL, Scope): Disj = this
+  def toDnf(using TL): Disj = this
   override def show(using Scope): Str =
+    if conjs.isEmpty then "⊥"
+    else conjs.map(_.show).mkString(" ∨ ")
+
+  override def showDbg: Str =
     if conjs.isEmpty then "D()"
-    else s"D( ${conjs.map(_.show).mkString(" || ")} )"
+    else s"D( ${conjs.map(_.showDbg).mkString(" || ")} )"
 object Disj:
   val bot: Disj = Disj(Nil)
   val top: Disj = Disj(Conj.empty :: Nil)
 
 sealed abstract case class Conj(i: Inter, u: Union, vars: Ls[(InfVar, Bool)])
 extends NormalForm with CachedBasicType:
-  def merge(that: Conj)(using TL, Scope): Option[Conj] =
-  tl.traceNot[Option[Conj]](s"merge ${this.show} and ${that.show}", r => s"= ${r.map(_.show)}"):
+  def merge(that: Conj)(using TL): Option[Conj] =
+  tl.traceNot[Option[Conj]](s"merge ${this.showDbg} and ${that.showDbg}", r => s"= ${r.map(_.showDbg)}"):
     val Conj(i1, u1, vars1) = this
     val Conj(i2, u2, vars2) = that
     i1.merge(i2) match
@@ -48,13 +52,21 @@ extends NormalForm with CachedBasicType:
       case (tv, true) => tv
       case (tv, false) => NegType(tv)
     })
-  def toDnf(using TL, Scope): Disj = Disj(this :: Nil)
+  def toDnf(using TL): Disj = Disj(this :: Nil)
   override def show(using Scope): Str =
     ((i :: Nil).filterNot(_.isTop).map(_.show) :::
-      (u :: Nil).filterNot(_.isBot).map("~{"+_.show+"}") :::
+      (u :: Nil).filterNot(_.isBot).map("¬{"+_.show+"}") :::
       vars.map:
         case (tv, true) => tv.show
-        case (tv, false) => "~" + tv.show
+        case (tv, false) => "¬" + tv.show
+    ).mkString(" ∧ ")
+
+  override def showDbg: Str =
+    ((i :: Nil).filterNot(_.isTop).map(_.showDbg) :::
+      (u :: Nil).filterNot(_.isBot).map("~{"+_.showDbg+"}") :::
+      vars.map:
+        case (tv, true) => tv.showDbg
+        case (tv, false) => "~" + tv.showDbg
     ).mkString(" && ")
 object Conj:
   // * Conj objects cannot be created with `new` except in this file.
@@ -85,9 +97,11 @@ final case class Inter(v: Opt[ClassLikeType | FunType]) extends NormalForm:
     case (N, v) => S(Inter(v))
     case _ => N
   def toBasic: BasicType = v.getOrElse(Top)
-  def toDnf(using TL, Scope): Disj = Disj(Conj(this, Union(N, Nil), Nil) :: Nil)
+  def toDnf(using TL): Disj = Disj(Conj(this, Union(N, Nil), Nil) :: Nil)
   override def show(using Scope): Str =
     toBasic.show
+
+  override def showDbg: Str = toBasic.showDbg
 object Inter:
   lazy val empty: Inter = Inter(N)
 
@@ -113,9 +127,11 @@ extends NormalForm with CachedBasicType:
   }))
   def mkBasic: BasicType =
     BasicType.union(fun.toList ::: cls)
-  def toDnf(using TL, Scope): Disj = NormalForm.neg(this)
+  def toDnf(using TL): Disj = NormalForm.neg(this)
   override def show(using Scope): Str =
     toType.show
+
+  override def showDbg: Str = toType.showDbg
 object Union:
   val empty: Union = Union(N, Nil)
 
@@ -128,10 +144,11 @@ sealed abstract class NormalForm extends TypeExt:
     toBasic.subst
 
   def show(using Scope): Str
+  def showDbg: Str
 
 object NormalForm:
-  def inter(lhs: Disj, rhs: Disj)(using TL, Scope): Disj =
-  tl.traceNot[Disj](s"inter ${lhs.show} and ${rhs.show}", r => s"= ${r.show}"):
+  def inter(lhs: Disj, rhs: Disj)(using TL): Disj =
+  tl.traceNot[Disj](s"inter ${lhs.showDbg} and ${rhs.showDbg}", r => s"= ${r.showDbg}"):
     if lhs.isBot || rhs.isBot then Disj.bot
     else Disj(lhs.conjs.flatMap(lhs => rhs.conjs.flatMap(rhs => lhs.merge(rhs) match {
       case S(conj) => conj :: Nil
@@ -140,8 +157,8 @@ object NormalForm:
 
   def union(lhs: Disj, rhs: Disj): Disj = Disj(lhs.conjs ++ rhs.conjs)
 
-  def neg(ty: Type)(using TL, Scope): Disj =
-  tl.traceNot[Disj](s"~DNF ${ty.show} ${ty.getClass} ${ty.toBasic.show}", r => s"= ${r.show}"):
+  def neg(ty: Type)(using TL): Disj =
+  tl.traceNot[Disj](s"~DNF ${ty.showDbg} ${ty.getClass} ${ty.toBasic.showDbg}", r => s"= ${r.showDbg}"):
     ty match
     case u: Union => Disj(Conj(Inter(N), u, Nil) :: Nil)
     case _ => ty.toBasic match
@@ -154,8 +171,8 @@ object NormalForm:
       if pol then inter(neg(lhs), neg(rhs)) else union(neg(lhs), neg(rhs))
     case NegType(ty) => dnf(ty)
 
-  def dnf(ty: Type)(using TL, Scope): Disj =
-  tl.traceNot[Disj](s"DNF ${ty.show} ${ty.getClass}", r => s"= ${r.show}"):
+  def dnf(ty: Type)(using TL): Disj =
+  tl.traceNot[Disj](s"DNF ${ty.showDbg} ${ty.getClass}", r => s"= ${r.showDbg}"):
     ty match
     case d: Disj => d
     case c: Conj => Disj(c :: Nil)

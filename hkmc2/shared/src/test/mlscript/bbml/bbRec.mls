@@ -12,9 +12,9 @@ fun f x = f
 
 fun f(x) = f
 f
-//│ Type: forall f_2: ⊤ -> (⊤ -> f_2)
+//│ Type: forall f: ⊤ -> (⊤ -> f)
 //│ Where:
-//│   ⊤ -> f_2 <: f_2
+//│   ⊤ -> f <: f
 
 fun f(x) = f(x)
 f
@@ -39,9 +39,9 @@ Foo(123)
 //│ Type: ⊥
 
 new Foo(123)
-//│ Type: Foo[A_1]
+//│ Type: Foo[A]
 //│ Where:
-//│   Int <: A_1
+//│   Int <: A
 
 :todo proper error
 fun f(x) = f(Foo.a(x))
@@ -52,8 +52,8 @@ fun f(x) = f(Foo.a(x))
 
 fun f(x) = f(x.Foo#a)
 f
-//│ Type: forall x_2: Foo[out x_2] -> ⊥
+//│ Type: forall x: Foo[out x] -> ⊥
 //│ Where:
-//│   x_2 <: Foo[out x_2]
+//│   x <: Foo[out x]
 
 

@@ -79,6 +79,13 @@ class TempSymbol(val trm: Opt[Term], dbgNme: Str = "tmp")(using State) extends B
   override def toLoc: Option[Loc] = trm.flatMap(_.toLoc)
   override def toString: Str = s"$$${super.toString}"
 
+
+class RefSymbol(val origin: Symbol)(using State) extends LocalSymbol:
+  override def nme: Str = origin.nme
+  override def toLoc: Option[Loc] = origin.toLoc
+  override def toString: Str = origin.toString
+
+
 class VarSymbol(val id: Ident)(using State) extends BlockLocalSymbol(id.name) with NamedSymbol:
   val name: Str = id.name
   // override def toString: Str = s"$name@$uid"
