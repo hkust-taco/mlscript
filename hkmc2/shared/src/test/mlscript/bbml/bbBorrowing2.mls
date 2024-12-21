@@ -47,10 +47,10 @@ letreg of r =>
 //│ ║        	^^^^^^^^^^^
 //│ ║  l.36: 	  write(r)
 //│ ║        	^^^^^^^^^^
-//│ ╟── because: cannot constrain  E  <:  ⊥
-//│ ╟── because: cannot constrain  E  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ Rg  <:  ¬()
-//│ ╟── because: cannot constrain  Rg  <:  ¬()
+//│ ╟── because: cannot constrain  'E  <:  ⊥
+//│ ╟── because: cannot constrain  'E  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'Rg  <:  ¬()
+//│ ╟── because: cannot constrain  'Rg  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Int
 

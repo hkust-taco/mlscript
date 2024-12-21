@@ -8,9 +8,9 @@ fun f(y) =
 
 // * the parameter type of y is extruded.
 f
-//│ Type: forall y: y -> y
+//│ Type: forall 'y: 'y -> 'y
 //│ Where:
-//│   y <: ⊤ -> Int
+//│   'y <: ⊤ -> Int
 
 fun foo: [A] -> A -> Int
 fun foo(x) = 0
@@ -28,25 +28,25 @@ fun g(y) =
 //│ Type: ⊤
 
 g
-//│ Type: (forall A: (⊥) ->{⊥} Int) ->{⊥} forall A: (⊤) ->{⊥} Int
+//│ Type: (forall 'A: (⊥) ->{⊥} Int) ->{⊥} forall 'A: (⊤) ->{⊥} Int
 
 g(foo)
 //│ Type: (⊤) ->{⊥} Int
 
 :e
 y `=> (let t = run(x `=> x `+ y) in y)
-//│ ╔══[ERROR] Type error in quoted term with expected type CodeBase[out T, ⊥, ?]
+//│ ╔══[ERROR] Type error in quoted term with expected type CodeBase[out 'T, ⊥, ?]
 //│ ║  l.37: 	y `=> (let t = run(x `=> x `+ y) in y)
 //│ ║        	                   ^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  CodeBase[out x -> cde, out ctx, ?]  <:  CodeBase[out T, ⊥, ?]
-//│ ╟── because: cannot constrain  ctx  <:  ⊥
-//│ ╟── because: cannot constrain  ctx  <:  ¬()
-//│ ╟── because: cannot constrain  (¬⊥ ∧ ¬x) ∧ <y>  <:  ¬()
-//│ ╟── because: cannot constrain  <y>  <:  x
-//│ ╙── because: cannot constrain  <y>  <:  ¬()
-//│ Type: CodeBase[out y -> y, ⊥, ?]
+//│ ╟── because: cannot constrain  CodeBase[out 'x -> 'cde, out 'ctx, ?]  <:  CodeBase[out 'T, ⊥, ?]
+//│ ╟── because: cannot constrain  'ctx  <:  ⊥
+//│ ╟── because: cannot constrain  'ctx  <:  ¬()
+//│ ╟── because: cannot constrain  (¬⊥ ∧ ¬'x) ∧ y  <:  ¬()
+//│ ╟── because: cannot constrain  y  <:  'x
+//│ ╙── because: cannot constrain  y  <:  ¬()
+//│ Type: CodeBase[out 'y -> 'y, ⊥, ?]
 //│ Where:
-//│   y <: Int
+//│   'y <: Int
 
 class C[A](m: A, n: A -> Int)
 //│ Type: ⊤
@@ -54,11 +54,11 @@ class C[A](m: A, n: A -> Int)
 
 fun f: [A] -> ([B] -> (C[out B] & A) -> B) -> A -> Int
 f
-//│ Type: forall A: (forall B: (C[out B] ∧ A) ->{⊥} B) ->{⊥} (A) ->{⊥} Int
+//│ Type: forall 'A: (forall 'B: (C[out 'B] ∧ 'A) ->{⊥} 'B) ->{⊥} ('A) ->{⊥} Int
 
 fun g: [D] -> C[in Int out D] -> D
 g
-//│ Type: forall D: (C[in Int out D]) ->{⊥} D
+//│ Type: forall 'D: (C[in Int out 'D]) ->{⊥} 'D
 
 
 f(g)
@@ -77,17 +77,17 @@ f(g)(foo)
 
 :fixme // ???
 f(g)(bar)
-//│ ╔══[ERROR] Type error in selection with expected type A
+//│ ╔══[ERROR] Type error in selection with expected type 'A
 //│ ║  l.79: 	f(g)(bar)
 //│ ║        	     ^^^
-//│ ╟── because: cannot constrain  C[Int]  <:  A
-//│ ╟── because: cannot constrain  C[in Int out Int]  <:  A
-//│ ╟── because: cannot constrain  C[in Int out Int]  <:  ¬C[in ⊥ out ¬⊥ ∧ B] ∨ C[in Int out ¬⊥ ∧ D]
-//│ ╟── because: cannot constrain  (Int) ∧ (B)  <:  ¬⊥ ∧ D
-//│ ╟── because: cannot constrain  Int ∧ B  <:  D
-//│ ╟── because: cannot constrain  Int ∧ B  <:  B
-//│ ╟── because: cannot constrain  Int ∧ B  <:  B
-//│ ╟── because: cannot constrain  Int ∧ B  <:  ¬()
-//│ ╟── because: cannot constrain  B  <:  ¬(Int)
+//│ ╟── because: cannot constrain  C[Int]  <:  'A
+//│ ╟── because: cannot constrain  C[in Int out Int]  <:  'A
+//│ ╟── because: cannot constrain  C[in Int out Int]  <:  ¬C[in ⊥ out ¬⊥ ∧ 'B] ∨ C[in Int out ¬⊥ ∧ 'D]
+//│ ╟── because: cannot constrain  (Int) ∧ ('B)  <:  ¬⊥ ∧ 'D
+//│ ╟── because: cannot constrain  Int ∧ 'B  <:  'D
+//│ ╟── because: cannot constrain  Int ∧ 'B  <:  'B
+//│ ╟── because: cannot constrain  Int ∧ 'B  <:  'B
+//│ ╟── because: cannot constrain  Int ∧ 'B  <:  ¬()
+//│ ╟── because: cannot constrain  'B  <:  ¬(Int)
 //│ ╙── because: cannot constrain    <:  ¬(Int)
 //│ Type: Int

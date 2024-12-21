@@ -51,7 +51,7 @@ fun mapi = s =>
     f => map(s) of x =>
       i := !i + 1
       f(!i, x)
-//│ ╔══[ERROR] Type error in region expression with expected type ((Int, <A>) ->{<E>} <A>) ->{<E>} List[out <A>]
+//│ ╔══[ERROR] Type error in region expression with expected type ((Int, A) ->{E} A) ->{E} List[out A]
 //│ ║  l.50: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
 //│ ║  l.51: 	    f => map(s) of x =>
@@ -60,15 +60,15 @@ fun mapi = s =>
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ║  l.53: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  f ->{E1} List[out B]  <:  ((Int, <A>) ->{<E>} <A>) ->{<E>} List[out <A>]
-//│ ╟── because: cannot constrain  E1  <:  <E>
-//│ ╟── because: cannot constrain  E1  <:  ¬(¬<E>)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ reg  <:  ¬(¬<E>)
-//│ ╟── because: cannot constrain  reg  <:  ¬(¬<E>)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ r  <:  ¬(¬<E>)
-//│ ╟── because: cannot constrain  r  <:  ¬(¬<E>)
-//│ ╙── because: cannot constrain    <:  ¬(¬<E>)
-//│ ╔══[ERROR] Type error in region expression with expected type ((Int, <A>) ->{<E>} <A>) ->{<E>} List[out <A>]
+//│ ╟── because: cannot constrain  'f ->{'E1} List[out 'B]  <:  ((Int, A) ->{E} A) ->{E} List[out A]
+//│ ╟── because: cannot constrain  'E1  <:  E
+//│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'r  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'r  <:  ¬(¬E)
+//│ ╙── because: cannot constrain    <:  ¬(¬E)
+//│ ╔══[ERROR] Type error in region expression with expected type ((Int, A) ->{E} A) ->{E} List[out A]
 //│ ║  l.50: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
 //│ ║  l.51: 	    f => map(s) of x =>
@@ -77,15 +77,15 @@ fun mapi = s =>
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ║  l.53: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  f ->{E1} List[out B]  <:  ((Int, <A>) ->{<E>} <A>) ->{<E>} List[out <A>]
-//│ ╟── because: cannot constrain  E1  <:  <E>
-//│ ╟── because: cannot constrain  E1  <:  ¬(¬<E>)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ reg  <:  ¬(¬<E>)
-//│ ╟── because: cannot constrain  reg  <:  ¬(¬<E>)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ r  <:  ¬(¬<E>)
-//│ ╟── because: cannot constrain  r  <:  ¬(¬<E>)
-//│ ╙── because: cannot constrain    <:  ¬(¬<E>)
-//│ ╔══[ERROR] Type error in region expression with expected type ((Int, <A>) ->{<E>} <A>) ->{<E>} List[out <A>]
+//│ ╟── because: cannot constrain  'f ->{'E1} List[out 'B]  <:  ((Int, A) ->{E} A) ->{E} List[out A]
+//│ ╟── because: cannot constrain  'E1  <:  E
+//│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'r  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'r  <:  ¬(¬E)
+//│ ╙── because: cannot constrain    <:  ¬(¬E)
+//│ ╔══[ERROR] Type error in region expression with expected type ((Int, A) ->{E} A) ->{E} List[out A]
 //│ ║  l.50: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
 //│ ║  l.51: 	    f => map(s) of x =>
@@ -94,14 +94,14 @@ fun mapi = s =>
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ║  l.53: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  f ->{E1} List[out B]  <:  ((Int, <A>) ->{<E>} <A>) ->{<E>} List[out <A>]
-//│ ╟── because: cannot constrain  E1  <:  <E>
-//│ ╟── because: cannot constrain  E1  <:  ¬(¬<E>)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ reg  <:  ¬(¬<E>)
-//│ ╟── because: cannot constrain  reg  <:  ¬(¬<E>)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ r  <:  ¬(¬<E>)
-//│ ╟── because: cannot constrain  r  <:  ¬(¬<E>)
-//│ ╙── because: cannot constrain    <:  ¬(¬<E>)
+//│ ╟── because: cannot constrain  'f ->{'E1} List[out 'B]  <:  ((Int, A) ->{E} A) ->{E} List[out A]
+//│ ╟── because: cannot constrain  'E1  <:  E
+//│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'r  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'r  <:  ¬(¬E)
+//│ ╙── because: cannot constrain    <:  ¬(¬E)
 //│ Type: ⊤
 
 

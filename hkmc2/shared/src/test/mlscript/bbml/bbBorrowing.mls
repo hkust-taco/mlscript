@@ -36,9 +36,9 @@ fun next: [A, Br] -> Iter[A, Br] ->{Br} A
 //│ Type: ⊤
 
 letreg(r => r)
-//│ Type: Reg[?, E]
+//│ Type: Reg[?, 'E]
 //│ Where:
-//│   E <: ⊥
+//│   'E <: ⊥
 
 letreg of r =>
   let b = mkVec(r)
@@ -48,9 +48,9 @@ letreg of r =>
     123
   clear(b)
   r
-//│ Type: Reg[?, E]
+//│ Type: Reg[?, 'E]
 //│ Where:
-//│   E <: ⊥
+//│   'E <: ⊥
 
 
 // * Non-lexical borrowing pattern encoded with a thunk
@@ -90,10 +90,10 @@ letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ║  l.75: 	  k()
 //│ ║        	^^^^^
-//│ ╟── because: cannot constrain  E  <:  ⊥
-//│ ╟── because: cannot constrain  E  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ ¬Rg  <:  ¬()
-//│ ╟── because: cannot constrain    <:  Rg
+//│ ╟── because: cannot constrain  'E  <:  ⊥
+//│ ╟── because: cannot constrain  'E  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ ¬'Rg  <:  ¬()
+//│ ╟── because: cannot constrain    <:  'Rg
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: ⊥
 
@@ -126,15 +126,15 @@ letreg of r =>
 //│ ║         	^^^^^^^^^^
 //│ ║  l.109: 	  r
 //│ ║         	^^^
-//│ ╟── because: cannot constrain  E  <:  ⊥
-//│ ╟── because: cannot constrain  E  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ Rg  <:  ¬()
-//│ ╟── because: cannot constrain  Rg  <:  ¬()
+//│ ╟── because: cannot constrain  'E  <:  ⊥
+//│ ╟── because: cannot constrain  'E  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'Rg  <:  ¬()
+//│ ╟── because: cannot constrain  'Rg  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
-//│ Type: Reg[?, E]
+//│ Type: Reg[?, 'E]
 //│ Where:
-//│   ⊤ <: E
-//│   E <: ⊥
+//│   ⊤ <: 'E
+//│   'E <: ⊥
 
 
 letreg of r =>
@@ -143,9 +143,9 @@ letreg of r =>
     next(it)
   use(r)
   r
-//│ Type: Reg[?, E]
+//│ Type: Reg[?, 'E]
 //│ Where:
-//│   E <: ⊥
+//│   'E <: ⊥
 
 :e
 letreg of r =>
@@ -170,15 +170,15 @@ letreg of r =>
 //│ ║         	^^^^^^^^
 //│ ║  l.157: 	  r
 //│ ║         	^^^
-//│ ╟── because: cannot constrain  E  <:  ⊥
-//│ ╟── because: cannot constrain  E  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ Rg  <:  ¬()
-//│ ╟── because: cannot constrain  Rg  <:  ¬()
+//│ ╟── because: cannot constrain  'E  <:  ⊥
+//│ ╟── because: cannot constrain  'E  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'Rg  <:  ¬()
+//│ ╟── because: cannot constrain  'Rg  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
-//│ Type: Reg[?, E]
+//│ Type: Reg[?, 'E]
 //│ Where:
-//│   ⊤ <: E
-//│   E <: ⊥
+//│   ⊤ <: 'E
+//│   'E <: ⊥
 
 letreg of r0 =>
   letreg of r1 =>
@@ -187,9 +187,9 @@ letreg of r0 =>
       next(it)
     use(r1)
     r1
-//│ Type: Reg[?, in E]
+//│ Type: Reg[?, in 'E]
 //│ Where:
-//│   E <: ⊥
+//│   'E <: ⊥
 
 
 // * Can leak the iterator

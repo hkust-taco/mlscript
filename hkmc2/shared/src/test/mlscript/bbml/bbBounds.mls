@@ -8,33 +8,33 @@
 
 
 (x => x): [A restricts Int] -> A -> A
-//│ Type: forall A: (A) ->{⊥} A
+//│ Type: forall 'A: ('A) ->{⊥} 'A
 //│ Where:
-//│   Int <: A
+//│   Int <: 'A
 
 
 (x => x - 1): [A extends Int restricts Int] -> A -> A
-//│ Type: forall A: (A) ->{⊥} A
+//│ Type: forall 'A: ('A) ->{⊥} 'A
 //│ Where:
-//│   Int <: A
-//│   A <: Int
+//│   Int <: 'A
+//│   'A <: Int
 
 fun iid: [A extends Int] -> A -> A
 fun iid(x) = x
 //│ Type: ⊤
 
 iid
-//│ Type: forall A: (A) ->{⊥} A
+//│ Type: forall 'A: ('A) ->{⊥} 'A
 //│ Where:
-//│   A <: Int
+//│   'A <: Int
 
 :e
 iid("42")
-//│ ╔══[ERROR] Type error in string literal with expected type A
+//│ ╔══[ERROR] Type error in string literal with expected type 'A
 //│ ║  l.32: 	iid("42")
 //│ ║        	    ^^^^
-//│ ╟── because: cannot constrain  Str  <:  A
-//│ ╟── because: cannot constrain  Str  <:  A
+//│ ╟── because: cannot constrain  Str  <:  'A
+//│ ╟── because: cannot constrain  Str  <:  'A
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Str
 
@@ -47,10 +47,10 @@ class Foo[A]
 
 fun foo: [A extends Foo[in Nothing out Any] restricts Foo[in Num]] -> A -> A
 foo
-//│ Type: forall A: (A) ->{⊥} A
+//│ Type: forall 'A: ('A) ->{⊥} 'A
 //│ Where:
-//│   Foo[in Num] <: A
-//│   A <: Foo[?]
+//│   Foo[in Num] <: 'A
+//│   'A <: Foo[?]
 
 fun bar: Foo[in Num out Int]
 //│ Type: ⊤
@@ -73,7 +73,7 @@ baz
 
 fun bazbaz: [A extends Int] -> A -> [B extends A] -> B
 bazbaz
-//│ Type: (Int) ->{⊥} forall B: ⊥
+//│ Type: (Int) ->{⊥} forall 'B: ⊥
 
 fun foofun: [A extends Int -> Int restricts Any -> Int] -> A -> Int -> Int
 foofun
@@ -84,21 +84,21 @@ foofun(x => x + 1)(42)
 
 fun bazbaz: [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
 bazbaz
-//│ Type: forall A: (A) ->{⊥} (forall B: A -> A) ->{⊥} A
+//│ Type: forall 'A: ('A) ->{⊥} (forall 'B: 'A -> 'A) ->{⊥} 'A
 //│ Where:
-//│   A <: Int
+//│   'A <: Int
 
 bazbaz(42)(x => x + 1)
 //│ Type: Int
 
 fun cc: [A extends B -> B restricts B -> B, B extends A -> A restricts A -> A] -> A -> B -> Bool
 cc
-//│ Type: forall A, B: (A) ->{⊥} (B) ->{⊥} Bool
+//│ Type: forall 'A, 'B: ('A) ->{⊥} ('B) ->{⊥} Bool
 //│ Where:
-//│   A -> A <: B
-//│   B <: A -> A
-//│   B -> B <: A
-//│   A <: B -> B
+//│   'A -> 'A <: 'B
+//│   'B <: 'A -> 'A
+//│   'B -> 'B <: 'A
+//│   'A <: 'B -> 'B
 
 fun w: Any -> Nothing
 //│ Type: ⊤
@@ -111,18 +111,18 @@ fun h: [C] -> ([A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B
 
 :e
 bazbaz: [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
-//│ ╔══[ERROR] Cannot type non-function term SynthSel(Ref(globalThis:block#17),Ident(bazbaz)) as (<A>) ->{⊥} (forall B: B) ->{⊥} <A>
+//│ ╔══[ERROR] Cannot type non-function term SynthSel(Ref(globalThis:block#17),Ident(bazbaz)) as (A) ->{⊥} (forall 'B: 'B) ->{⊥} A
 //│ ║  l.113: 	bazbaz: [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
 //│ ╙──       	^^^^^^
-//│ Type: forall A: (A) ->{⊥} (forall B: A -> A) ->{⊥} A
+//│ Type: forall 'A: ('A) ->{⊥} (forall 'B: 'A -> 'A) ->{⊥} 'A
 //│ Where:
-//│   A <: Int
+//│   'A <: Int
 
 
 (x => f => bazbaz(x)(f)): [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
-//│ Type: forall A: (A) ->{⊥} (forall B: A -> A) ->{⊥} A
+//│ Type: forall 'A: ('A) ->{⊥} (forall 'B: 'A -> 'A) ->{⊥} 'A
 //│ Where:
-//│   A <: Int
+//│   'A <: Int
 
 
 h(x => f => bazbaz(x)(f))(42)

@@ -25,12 +25,12 @@ let r = region x in x.ref 42
 //│ ║        	                    ^^^^^^^^
 //│ ║  l.22: 	!r
 //│ ║        	^^
-//│ ╟── because: cannot constrain  reg ∨ eff  <:  ⊥
-//│ ╟── because: cannot constrain  reg  <:  ¬()
-//│ ╟── because: cannot constrain  reg1  <:  ¬()
-//│ ╟── because: cannot constrain  reg1  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ x  <:  ¬()
-//│ ╟── because: cannot constrain  x  <:  ¬()
+//│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
+//│ ╟── because: cannot constrain  'reg  <:  ¬()
+//│ ╟── because: cannot constrain  'reg1  <:  ¬()
+//│ ╟── because: cannot constrain  'reg1  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'x  <:  ¬()
+//│ ╟── because: cannot constrain  'x  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Int
 
@@ -43,21 +43,21 @@ let t = region x in x in t.ref 42
 //│ ╔══[ERROR] Type error in reference creation
 //│ ║  l.42: 	let t = region x in x in t.ref 42
 //│ ║        	                         ^^^^^^^^
-//│ ╟── because: cannot constrain  Region[in x out x]  <:  Region[reg]
-//│ ╟── because: cannot constrain  x  <:  reg
-//│ ╟── because: cannot constrain  x  <:  reg
-//│ ╟── because: cannot constrain  x  <:  ¬(¬x)
-//│ ╟── because: cannot constrain  x  <:  ¬(¬x)
-//│ ╟── because: cannot constrain    <:  ¬(¬x)
-//│ ╟── because: cannot constrain    <:  x
+//│ ╟── because: cannot constrain  Region[in 'x out 'x]  <:  Region['reg]
+//│ ╟── because: cannot constrain  'x  <:  'reg
+//│ ╟── because: cannot constrain  'x  <:  'reg
+//│ ╟── because: cannot constrain  'x  <:  ¬(¬'x)
+//│ ╟── because: cannot constrain  'x  <:  ¬(¬'x)
+//│ ╟── because: cannot constrain    <:  ¬(¬'x)
+//│ ╟── because: cannot constrain    <:  'x
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ ╔══[ERROR] Type error in block
 //│ ║  l.42: 	let t = region x in x in t.ref 42
 //│ ║        	                    ^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  reg ∨ eff  <:  ⊥
-//│ ╟── because: cannot constrain  reg  <:  ¬()
-//│ ╟── because: cannot constrain  x  <:  ¬()
-//│ ╟── because: cannot constrain  x  <:  ¬()
+//│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
+//│ ╟── because: cannot constrain  'reg  <:  ¬()
+//│ ╟── because: cannot constrain  'x  <:  ¬()
+//│ ╟── because: cannot constrain  'x  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Ref[Int, ?]
 
@@ -75,12 +75,12 @@ in t := 0
 //│ ║        	  ^^^^^^^^
 //│ ║  l.72: 	in t := 0
 //│ ║        	^^^^^^^^^
-//│ ╟── because: cannot constrain  reg ∨ eff  <:  ⊥
-//│ ╟── because: cannot constrain  reg  <:  ¬()
-//│ ╟── because: cannot constrain  reg1  <:  ¬()
-//│ ╟── because: cannot constrain  reg1  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ x  <:  ¬()
-//│ ╟── because: cannot constrain  x  <:  ¬()
+//│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
+//│ ╟── because: cannot constrain  'reg  <:  ¬()
+//│ ╟── because: cannot constrain  'reg1  <:  ¬()
+//│ ╟── because: cannot constrain  'reg1  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'x  <:  ¬()
+//│ ╟── because: cannot constrain  'x  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Int
 
@@ -98,12 +98,12 @@ in !t
 //│ ║        	  ^^^^^^^^
 //│ ║  l.95: 	in !t
 //│ ║        	^^^^^
-//│ ╟── because: cannot constrain  reg ∨ eff  <:  ⊥
-//│ ╟── because: cannot constrain  reg  <:  ¬()
-//│ ╟── because: cannot constrain  reg1  <:  ¬()
-//│ ╟── because: cannot constrain  reg1  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ x  <:  ¬()
-//│ ╟── because: cannot constrain  x  <:  ¬()
+//│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
+//│ ╟── because: cannot constrain  'reg  <:  ¬()
+//│ ╟── because: cannot constrain  'reg1  <:  ¬()
+//│ ╟── because: cannot constrain  'reg1  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'x  <:  ¬()
+//│ ╟── because: cannot constrain  'x  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Int
 
@@ -125,12 +125,12 @@ fun rid(x) =
 :e
 region x in
   (let dz = x.ref 42 in 42): [A] -> Int
-//│ ╔══[ERROR] Type error in block with expected type forall A: Int
+//│ ╔══[ERROR] Type error in block with expected type forall 'A: Int
 //│ ║  l.127: 	  (let dz = x.ref 42 in 42): [A] -> Int
 //│ ║         	            ^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  reg  <:  ⊥
-//│ ╟── because: cannot constrain  reg  <:  ¬()
-//│ ╙── because: cannot constrain  <x>  <:  ¬()
+//│ ╟── because: cannot constrain  'reg  <:  ⊥
+//│ ╟── because: cannot constrain  'reg  <:  ¬()
+//│ ╙── because: cannot constrain  x  <:  ¬()
 //│ Type: Int
 
 
@@ -144,12 +144,12 @@ in t(42)
 //│ ║         	    ^^^^^^^^^^^^
 //│ ║  l.141: 	in t(42)
 //│ ║         	^^^^^^^^
-//│ ╟── because: cannot constrain  reg ∨ eff  <:  ⊥
-//│ ╟── because: cannot constrain  reg  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ x  <:  ¬()
-//│ ╟── because: cannot constrain  x  <:  ¬()
+//│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
+//│ ╟── because: cannot constrain  'reg  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'x  <:  ¬()
+//│ ╟── because: cannot constrain  'x  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
-//│ Type: Ref[in y out y ∨ Int, ?]
+//│ Type: Ref[in 'y out 'y ∨ Int, ?]
 
 fun foo: [A] -> Int ->{A} Int
 fun foo(x) =
@@ -159,7 +159,7 @@ fun foo(x) =
 
 region x in
   x.ref ((x => x): [A] -> A -> A)
-//│ Type: Ref[A -> A, ?]
+//│ Type: Ref['A -> 'A, ?]
 
 
 fun foo: [A extends Int] -> A -> A
@@ -167,23 +167,23 @@ fun foo(x) = x
 //│ Type: ⊤
 
 foo
-//│ Type: forall A: (A) ->{⊥} A
+//│ Type: forall 'A: ('A) ->{⊥} 'A
 //│ Where:
-//│   A <: Int
+//│   'A <: Int
 
 region x in x.ref foo
-//│ Type: Ref[in A -> (A ∧ Int) out (A ∧ Int) -> A, ?]
+//│ Type: Ref[in 'A -> ('A ∧ Int) out ('A ∧ Int) -> 'A, ?]
 
 fun bar: ([A] -> A -> A) -> Int
 fun bar(f) = f(42)
 //│ Type: ⊤
 
 bar
-//│ Type: (forall A: (A) ->{⊥} A) ->{⊥} Int
+//│ Type: (forall 'A: ('A) ->{⊥} 'A) ->{⊥} Int
 
 :e
 region x in x.ref bar
-//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but (forall A: (A) ->{⊥} A) ->{⊥} Int found
+//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but (forall 'A: ('A) ->{⊥} 'A) ->{⊥} Int found
 //│ ║  l.185: 	region x in x.ref bar
 //│ ╙──       	                  ^^^
 //│ Type: Ref[⊥, ?]
