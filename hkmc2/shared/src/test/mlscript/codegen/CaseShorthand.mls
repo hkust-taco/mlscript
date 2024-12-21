@@ -1,12 +1,8 @@
 :js
 
 
-:fixme
 case x then x
-//│ ╔══[PARSE ERROR] Expected block after `case` keyword; found identifier instead
-//│ ║  l.5: 	case x then x
-//│ ╙──     	     ^
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Jux(Error(),Ident(x)),keyword 'then',Ident(x)) (of class hkmc2.syntax.Tree$InfixApp)
+//│ = [Function (anonymous)]
 
 :sjs
 case { x then x }
@@ -22,8 +18,7 @@ x => if x is
 //│ = [Function (anonymous)]
 
 :sjs
-case
-  0 then true
+case 0 then true
 //│ JS (unsanitized):
 //│ (caseScrut) => {
 //│   if (caseScrut === 0) {
@@ -33,6 +28,25 @@ case
 //│   }
 //│ }
 //│ = [Function (anonymous)]
+
+(case x then x) of 1
+//│ = 1
+
+1 |> case x then x
+//│ = 1
+
+1 |> id of case x then x
+//│ = 1
+
+[1] |> case [x] then x
+//│ = 1
+
+1 |> (2 |> case x then case y then [x, y]) |> case [a, b] then [b, a]
+//│ = [ 1, 2 ]
+
+:todo
+case [x] then x, [] then 0
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Tup(List()),keyword 'then',IntLit(0)) (of class hkmc2.syntax.Tree$InfixApp)
 
 :sjs
 case

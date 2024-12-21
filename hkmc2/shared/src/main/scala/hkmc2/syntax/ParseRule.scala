@@ -258,7 +258,7 @@ class ParseRules(using State):
     ,
     Kw(`case`):
       ParseRule("`case` keyword")(
-        Blk(ParseRule("`case` branches")(End(())))((body, _: Unit) => Case(N/* TODO */, body))
+        exprOrBlk(ParseRule("`case` branches")(End(())))((body, _: Unit) => Case(N/* TODO */, body))*
       )
     ,
     Kw(`region`):

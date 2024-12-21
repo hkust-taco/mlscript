@@ -251,16 +251,15 @@ f(Cons(1, Cons(2, Cons(3, 0))))
 // ——— FIXME: ———
 
 
-:fixme
 () => while true then 0
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',None,BoolLit(true)),keyword 'then',IntLit(0)) (of class hkmc2.syntax.Tree$InfixApp)
+//│ = [Function (anonymous)]
 
 :fixme
 while log("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.260: 	  then 0(0)
+//│ ║  l.259: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ═══[ERROR] Unrecognized term split (false literal).
 //│ > Hello World

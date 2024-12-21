@@ -45,9 +45,8 @@ object Keyword:
   private var _curPrec = 2
   private def curPrec: S[Int] = S(_curPrec)
   private def nextPrec: S[Int] =
-    val res = _curPrec
     _curPrec += 1
-    S(res)
+    S(_curPrec)
   
   val `class` = Keyword("class", N, curPrec)
   val `val` = Keyword("val", N, curPrec)
@@ -64,12 +63,13 @@ object Keyword:
   val `if` = Keyword("if", N, nextPrec)
   val `while` = Keyword("while", N, curPrec)
   
+  val `case` = Keyword("case", N, curPrec)
+  
   val thenPrec = nextPrec
   val `then` = Keyword("then", thenPrec, thenPrec)
   val `do` = Keyword("do", thenPrec, thenPrec)
   
   val `else` = Keyword("else", nextPrec, curPrec)
-  val `case` = Keyword("case", N, N)
   val `fun` = Keyword("fun", N, N)
   // val `val` = Keyword("val", N, N)
   val `var` = Keyword("var", N, N)

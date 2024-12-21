@@ -927,7 +927,7 @@ abstract class Parser(
         
       
       case (KEYWORD(kw), l0) :: _ if kw.leftPrecOrMin > prec =>
-        if verbose then printDbg(s"$$ found keyword: ${kw.name}")
+        if verbose then printDbg(s"$$ found keyword: ${kw.name} (${kw.leftPrecOrMin})")
         infixRules.kwAlts.get(kw.name) match
           case S(rule) =>
             consume
