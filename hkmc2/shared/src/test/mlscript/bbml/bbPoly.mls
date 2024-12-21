@@ -26,11 +26,11 @@ id
 //│ ╔══[ERROR] Type error in reference with expected type Int
 //│ ║  l.25: 	(x => x + 1): [A] -> A -> A
 //│ ║        	      ^
-//│ ╙── because: cannot constrain  'A  <:  Int
-//│ ╔══[ERROR] Type error in application with expected type 'A
+//│ ╙── because: cannot constrain  A  <:  Int
+//│ ╔══[ERROR] Type error in application with expected type A
 //│ ║  l.25: 	(x => x + 1): [A] -> A -> A
 //│ ║        	      ^^^^^
-//│ ╙── because: cannot constrain  Int  <:  'A
+//│ ╙── because: cannot constrain  Int  <:  A
 //│ Type: forall 'A: ('A) ->{⊥} 'A
 
 

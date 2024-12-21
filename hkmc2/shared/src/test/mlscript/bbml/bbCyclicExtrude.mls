@@ -20,13 +20,13 @@ f => (let g = x => x(x) in f(g(g))) : [A] -> A -> A
 
 :e
 f => (let g = x => f(x(x)) in g) : [A] -> A -> A
-//│ ╔══[ERROR] Type error in block with expected type ('A) ->{⊥} 'A
+//│ ╔══[ERROR] Type error in block with expected type (A) ->{⊥} A
 //│ ║  l.22: 	f => (let g = x => f(x(x)) in g) : [A] -> A -> A
 //│ ║        	              ^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  'x ->{'eff ∨ 'eff1} 'app  <:  'A -> 'A
-//│ ╟── because: cannot constrain  'A  <:  'x
-//│ ╟── because: cannot constrain  'A  <:  'x
-//│ ╙── because: cannot constrain  'A  <:  ¬(¬{'x ->{'eff1} 'app1})
+//│ ╟── because: cannot constrain  'x ->{'eff ∨ 'eff1} 'app  <:  A -> A
+//│ ╟── because: cannot constrain  A  <:  'x
+//│ ╟── because: cannot constrain  A  <:  'x
+//│ ╙── because: cannot constrain  A  <:  ¬(¬{'x ->{'eff1} 'app1})
 //│ Type: (⊥ -> ⊥) ->{⊥} forall 'A: ('A) ->{⊥} 'A
 
 f => (x => f(x(x)) : [A] -> A -> A)

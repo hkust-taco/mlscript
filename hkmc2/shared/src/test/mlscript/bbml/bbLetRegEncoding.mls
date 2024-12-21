@@ -95,30 +95,30 @@ fun letreg: [E,Res] -> ([R] -> Region[R] -> Res) ->{E} Res
 
 :e
 letreg(r => r.ref 1)
-//│ ╔══[ERROR] Type error in function literal with expected type (Region['R]) ->{⊥} 'Res
+//│ ╔══[ERROR] Type error in function literal with expected type (Region[R]) ->{⊥} 'Res
 //│ ║  l.97: 	letreg(r => r.ref 1)
 //│ ║        	       ^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ¬()
-//│ ╙── because: cannot constrain  'R  <:  ¬()
+//│ ╙── because: cannot constrain  R  <:  ¬()
 //│ Type: Ref[Int, ?]
 
 :e
 letreg(r => !(r.ref 1))
-//│ ╔══[ERROR] Type error in function literal with expected type (Region['R]) ->{⊥} 'Res
+//│ ╔══[ERROR] Type error in function literal with expected type (Region[R]) ->{⊥} 'Res
 //│ ║  l.107: 	letreg(r => !(r.ref 1))
 //│ ║         	       ^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'reg1  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ¬()
 //│ ╟── because: cannot constrain  'reg1  <:  ¬()
 //│ ╟── because: cannot constrain  'reg1  <:  ¬()
-//│ ╙── because: cannot constrain  'R  <:  ¬()
-//│ ╔══[ERROR] Type error in function literal with expected type (Region['R]) ->{⊥} 'Res
+//│ ╙── because: cannot constrain  R  <:  ¬()
+//│ ╔══[ERROR] Type error in function literal with expected type (Region[R]) ->{⊥} 'Res
 //│ ║  l.107: 	letreg(r => !(r.ref 1))
 //│ ║         	       ^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'reg1  <:  ⊥
 //│ ╟── because: cannot constrain  'reg1  <:  ¬()
-//│ ╙── because: cannot constrain  'R  <:  ¬()
+//│ ╙── because: cannot constrain  R  <:  ¬()
 //│ Type: Int
 
 
