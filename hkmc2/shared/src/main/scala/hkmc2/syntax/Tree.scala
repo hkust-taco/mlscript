@@ -268,6 +268,7 @@ case object LetBind extends ValLike("let", "let binding")
 case object HandlerBind extends TermDefKind("handler", "handler binding")
 case object ParamBind extends ValLike("", "parameter")
 case object Fun extends TermDefKind("fun", "function")
+case object Ins extends TermDefKind("use", "implicit instance")
 sealed abstract class TypeDefKind(desc: Str) extends DeclKind(desc)
 sealed trait ObjDefKind
 sealed trait ClsLikeKind extends ObjDefKind:
@@ -299,9 +300,24 @@ trait TypeOrTermDef:
   
   lazy val (symbName, name, paramLists, typeParams, annotatedResultType)
       : (Opt[MaybeIdent], MaybeIdent, Ls[Tup], Opt[TyTup], Opt[Tree]) =
+    val k = this match
+      case td: TypeDef => td.k
+      case td: TermDef => td.k
     def rec(t: Tree, symbName: Opt[MaybeIdent], annot: Opt[Tree]): 
       (Opt[MaybeIdent], MaybeIdent, Ls[Tup], Opt[TyTup], Opt[Tree]) = 
       t match
+      
+      // use Foo as foo = ...
+      case InfixApp(typ, Keyword.`as`, id: Ident) if k == Ins =>
+        (S(R(id)), R(id), Nil, N, S(typ))
+      
+      // use Foo = ...
+      case typ if k == Ins =>
+        // TODO: Synthesize a better name.
+        val name = typ.showDbg
+        val id: Ident = Ident(s"instance$$$name")
+        (S(R(id)), R(id), Nil, N, S(typ))
+      
       
       case InfixApp(tree, Keyword.`:`, ann) =>
         rec(tree, symbName, S(ann))

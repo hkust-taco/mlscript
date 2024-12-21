@@ -14,13 +14,13 @@ fun highlight(s) = nofibStringToList("ESC[7m") +: s +: nofibStringToList("ESC[0m
 
 fun end(xs) = nofibStringToList("")
 
-fun readChar(eof, use, cs) = if cs is
+fun readChar(eof, consume, cs) = if cs is
   Nil then eof(Nil)
-  c :: cs then use(c, cs)
+  c :: cs then consume(c, cs)
 
-fun peekChar(eof, use, cs) = if cs is
+fun peekChar(eof, consume, cs) = if cs is
   Nil then eof(Nil)
-  c :: cs then use(c, c :: cs)
+  c :: cs then consume(c, c :: cs)
 
 fun pressAnyKey(prog, x) = readChar(prog, (c, x) => prog(x), x)
 
@@ -40,27 +40,27 @@ fun writeAt(x_y, s, a) = if x_y is [x, y] then p => writeString(goto(x, y) +: s,
 
 fun moveTo(x_y, a) = if x_y is [x, y] then p => writeString(goto(x, y), a, p)
 
-fun returnn(s, use) = use(reverse(s))
+fun returnn(s, consume) = consume(reverse(s))
 
 :...
 //│ ————————————————————————————————————————————————————————————————————————————————
-fun deletee(n, s, l, use) = if n > 0 then writeString(nofibStringToList("BS_BS"), loop(n - 1, tail(s), l, use)) else ringBell(loop(0, nofibStringToList(""), l, use))
+fun deletee(n, s, l, consume) = if n > 0 then writeString(nofibStringToList("BS_BS"), loop(n - 1, tail(s), l, consume)) else ringBell(loop(0, nofibStringToList(""), l, consume))
 
-fun loop(n, s, l, use) = x => readChar of
-  returnn(s, use)
+fun loop(n, s, l, consume) = x => readChar of
+  returnn(s, consume)
   (c, d) => if
-            c == "B" then deletee(n, s, l, use) 
-            c == "D" then deletee(n, s, l, use)
-            c == "`" then returnn(s, use)
-            n < l then writeChar(c, loop(n + 1, c :: s, l, use), d)
-            else ringBell(loop(n, s, l, use), d)
+            c == "B" then deletee(n, s, l, consume) 
+            c == "D" then deletee(n, s, l, consume)
+            c == "`" then returnn(s, consume)
+            n < l then writeChar(c, loop(n + 1, c :: s, l, consume), d)
+            else ringBell(loop(n, s, l, consume), d)
   x
 //│ ————————————————————————————————————————————————————————————————————————————————
 
-fun readAt(x_y, l, use) = writeAt(x_y, replicate(l, "_"), moveTo(x_y, loop(0, "", l, use)))
+fun readAt(x_y, l, consume) = writeAt(x_y, replicate(l, "_"), moveTo(x_y, loop(0, "", l, consume)))
 
-fun promptReadAt(x_y, l, prompt, use) = if x_y is [x, y] then
-  writeAt([x, y], prompt, readAt([x + listLen(prompt), y], l, use))
+fun promptReadAt(x_y, l, prompt, consume) = if x_y is [x, y] then
+  writeAt([x, y], prompt, readAt([x + listLen(prompt), y], l, consume))
   
 fun program(input) = writes(
   cls ::

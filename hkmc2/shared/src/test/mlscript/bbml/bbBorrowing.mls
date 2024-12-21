@@ -9,7 +9,7 @@ class Reg[Rg, Br]
 fun letreg: [E, Res] -> ([Rg] -> Reg[Rg, E] ->{E | Rg} Res) ->{E} Res
 //│ Type: ⊤
 
-fun use: [Rg, Br] -> Reg[Rg, Br] ->{Rg} Int
+fun use_: [Rg, Br] -> Reg[Rg, Br] ->{Rg} Int
 //│ Type: ⊤
 
 
@@ -138,10 +138,10 @@ letreg of r =>
 
 
 letreg of r =>
-  use(r)
+  use_(r)
   integers(r) of it =>
     next(it)
-  use(r)
+  use_(r)
   r
 //│ Type: Reg[?, 'E]
 //│ Where:
@@ -149,25 +149,25 @@ letreg of r =>
 
 :e
 letreg of r =>
-  use(r)
+  use_(r)
   integers(r) of it =>
-    use(r)
+    use_(r)
     next(it)
-  use(r)
+  use_(r)
   r
 //│ ╔══[ERROR] Type error in block
 //│ ║  l.151: 	letreg of r =>
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.152: 	  use(r)
-//│ ║         	^^^^^^^^
+//│ ║  l.152: 	  use_(r)
+//│ ║         	^^^^^^^^^
 //│ ║  l.153: 	  integers(r) of it =>
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.154: 	    use(r)
-//│ ║         	^^^^^^^^^^
+//│ ║  l.154: 	    use_(r)
+//│ ║         	^^^^^^^^^^^
 //│ ║  l.155: 	    next(it)
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.156: 	  use(r)
-//│ ║         	^^^^^^^^
+//│ ║  l.156: 	  use_(r)
+//│ ║         	^^^^^^^^^
 //│ ║  l.157: 	  r
 //│ ║         	^^^
 //│ ╟── because: cannot constrain  'E  <:  ⊥
@@ -183,9 +183,9 @@ letreg of r =>
 letreg of r0 =>
   letreg of r1 =>
     integers(r1) of it =>
-      use(r0)
+      use_(r0)
       next(it)
-    use(r1)
+    use_(r1)
     r1
 //│ Type: Reg[?, in 'E]
 //│ Where:

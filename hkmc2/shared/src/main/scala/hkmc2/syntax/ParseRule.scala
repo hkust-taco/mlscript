@@ -293,6 +293,7 @@ class ParseRules(using State):
       ),
     Kw(`fun`)(termDefBody(Fun)),
     Kw(`val`)(termDefBody(ImmutVal)),
+    Kw(`use`)(termDefBody(Ins)),
     typeAliasLike(`type`, Als),
     typeAliasLike(`pattern`, Pat),
     Kw(`class`)(typeDeclBody(Cls)),
