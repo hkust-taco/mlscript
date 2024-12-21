@@ -1047,23 +1047,28 @@ extends Importer:
   
   def params(t: Tree): Ctxl[(ParamList, Ctx)] = t match
     case Tup(ps) =>
-      val plf = ParamListFlags.empty
-      def go(ps: Ls[Tree], acc: Ls[Param], ctx: Ctx): (ParamList, Ctx) =
+      def go(ps: Ls[Tree], acc: Ls[Param], ctx: Ctx, flags: ParamListFlags): (ParamList, Ctx) =
         ps match
-        case Nil => (ParamList(plf, acc.reverse, N), ctx)
+        case Nil => (ParamList(flags, acc.reverse, N), ctx)
         case hd :: tl =>
           param(hd)(using ctx) match
           case S((isSpd, p)) =>
+            val isCtx = hd match
+              case Modified(Keyword.`using`, _, _) => true
+              case _ => false
             val newCtx = ctx + (p.sym.name -> p.sym)
+            val newFlags = if isCtx then flags.copy(ctx = true) else flags
+            if isCtx && acc.nonEmpty then
+              raise(ErrorReport(msg"Keyword `using` must occur before all parameters." -> hd.toLoc :: Nil))
             isSpd match
             case S(spdKnd) =>
               if tl.nonEmpty then
                 raise(ErrorReport(msg"Spread parameters must be the last in the parameter list." -> hd.toLoc :: Nil))
-              (ParamList(plf, acc.reverse, S(p)), newCtx)
-            case N => go(tl, p :: acc, newCtx)
+              (ParamList(flags, acc.reverse, S(p)), newCtx)
+            case N => go(tl, p :: acc, newCtx, newFlags)
           case N =>
             ???
-      go(ps, Nil, ctx)
+      go(ps, Nil, ctx, ParamListFlags.empty)
   
   def typeParams(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
     case TyTup(ps) =>

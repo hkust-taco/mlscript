@@ -5,7 +5,7 @@ use Int = 42
 //│ |use| |Int| |=| |42|
 //│ Parsed:
 //│ 	TermDef(Ins,Ident(Int),Some(IntLit(42)))
-//│ Elab: { ‹› use member:instance$Ident(Int): globalThis:import#Prelude#666(.)Int‹member:Int› = 42; }
+//│ Elab: { ‹› use member:instance$Ident(Int): member:Int#666 = 42; }
 
 :p
 :el
@@ -13,4 +13,71 @@ use Int as someInt = 42
 //│ |use| |Int| |as| |someInt| |=| |42|
 //│ Parsed:
 //│ 	TermDef(Ins,InfixApp(Ident(Int),keyword 'as',Ident(someInt)),Some(IntLit(42)))
-//│ Elab: { ‹› use member:someInt: globalThis:import#Prelude#666(.)Int‹member:Int› = 42; }
+//│ Elab: { ‹› use member:someInt: member:Int#666 = 42; }
+
+:p
+:el
+module M with
+  fun f(using Int) = 42
+//│ |module| |M| |with|→|fun| |f|(|using| |Int|)| |=| |42|←|
+//│ Parsed:
+//│ 	TypeDef(Mod,Ident(M),None,Some(Block(List(TermDef(Fun,App(Ident(f),Tup(List(Modified(keyword 'using',None,Ident(Int))))),Some(IntLit(42)))))))
+//│ Elab: { Mod M { ‹module› fun member:fctx (Param(‹›,,Some(Ref(member:Int))), ) = 42; }; }
+
+:p
+:el
+module M with
+  fun f(using foo: Int) = 42
+//│ |module| |M| |with|→|fun| |f|(|using| |foo|:| |Int|)| |=| |42|←|
+//│ Parsed:
+//│ 	TypeDef(Mod,Ident(M),None,Some(Block(List(TermDef(Fun,App(Ident(f),Tup(List(Modified(keyword 'using',None,InfixApp(Ident(foo),keyword ':',Ident(Int)))))),Some(IntLit(42)))))))
+//│ Elab: { Mod M { ‹module› fun member:fctx (Param(‹›,foo,Some(Ref(member:Int))), ) = 42; }; }
+
+:p
+:el
+module M with
+  fun f(using foo: Int, bar: Int) = 42
+//│ |module| |M| |with|→|fun| |f|(|using| |foo|:| |Int|,| |bar|:| |Int|)| |=| |42|←|
+//│ Parsed:
+//│ 	TypeDef(Mod,Ident(M),None,Some(Block(List(TermDef(Fun,App(Ident(f),Tup(List(Modified(keyword 'using',None,InfixApp(Ident(foo),keyword ':',Ident(Int))), InfixApp(Ident(bar),keyword ':',Ident(Int))))),Some(IntLit(42)))))))
+//│ Elab: { Mod M { ‹module› fun member:fctx (Param(‹›,foo,Some(Ref(member:Int))), Param(‹›,bar,Some(Ref(member:Int))), ) = 42; }; }
+
+:p
+:el
+module M with
+  fun f(using foo: Int)(bar: Int) = 42
+//│ |module| |M| |with|→|fun| |f|(|using| |foo|:| |Int|)|(|bar|:| |Int|)| |=| |42|←|
+//│ Parsed:
+//│ 	TypeDef(Mod,Ident(M),None,Some(Block(List(TermDef(Fun,App(App(Ident(f),Tup(List(Modified(keyword 'using',None,InfixApp(Ident(foo),keyword ':',Ident(Int)))))),Tup(List(InfixApp(Ident(bar),keyword ':',Ident(Int))))),Some(IntLit(42)))))))
+//│ Elab: { Mod M { ‹module› fun member:fctx (Param(‹›,foo,Some(Ref(member:Int))), )(Param(‹›,bar,Some(Ref(member:Int))), ) = 42; }; }
+
+:p
+:el
+module M with
+  fun f(foo: Int)(using bar: Int) = 42
+//│ |module| |M| |with|→|fun| |f|(|foo|:| |Int|)|(|using| |bar|:| |Int|)| |=| |42|←|
+//│ Parsed:
+//│ 	TypeDef(Mod,Ident(M),None,Some(Block(List(TermDef(Fun,App(App(Ident(f),Tup(List(InfixApp(Ident(foo),keyword ':',Ident(Int))))),Tup(List(Modified(keyword 'using',None,InfixApp(Ident(bar),keyword ':',Ident(Int)))))),Some(IntLit(42)))))))
+//│ Elab: { Mod M { ‹module› fun member:f(Param(‹›,foo,Some(Ref(member:Int))), )ctx (Param(‹›,bar,Some(Ref(member:Int))), ) = 42; }; }
+
+:p
+:el
+module M with
+  fun f(using foo: Int)(using bar: Int) = 42
+//│ |module| |M| |with|→|fun| |f|(|using| |foo|:| |Int|)|(|using| |bar|:| |Int|)| |=| |42|←|
+//│ Parsed:
+//│ 	TypeDef(Mod,Ident(M),None,Some(Block(List(TermDef(Fun,App(App(Ident(f),Tup(List(Modified(keyword 'using',None,InfixApp(Ident(foo),keyword ':',Ident(Int)))))),Tup(List(Modified(keyword 'using',None,InfixApp(Ident(bar),keyword ':',Ident(Int)))))),Some(IntLit(42)))))))
+//│ Elab: { Mod M { ‹module› fun member:fctx (Param(‹›,foo,Some(Ref(member:Int))), )ctx (Param(‹›,bar,Some(Ref(member:Int))), ) = 42; }; }
+
+:e
+:p
+:el
+module M with
+  fun f(foo: Int, using bar: Int)
+//│ |module| |M| |with|→|fun| |f|(|foo|:| |Int|,| |using| |bar|:| |Int|)|←|
+//│ Parsed:
+//│ 	TypeDef(Mod,Ident(M),None,Some(Block(List(TermDef(Fun,App(Ident(f),Tup(List(InfixApp(Ident(foo),keyword ':',Ident(Int)), Modified(keyword 'using',None,InfixApp(Ident(bar),keyword ':',Ident(Int)))))),None)))))
+//│ ╔══[ERROR] Keyword `using` must occur before all parameters.
+//│ ║  l.76: 	  fun f(foo: Int, using bar: Int)
+//│ ╙──      	                        ^^^^^^^^
+//│ Elab: { Mod M { ‹module› fun member:fctx (Param(‹›,foo,Some(Ref(member:Int))), Param(‹›,bar,Some(Ref(member:Int))), ); }; }
