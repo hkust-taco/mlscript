@@ -87,21 +87,21 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
       else err(msg"Illegal reference to builtin symbol '${l.nme}'")
     case Value.Ref(l) => getVar(l)
     
-    case Call(Value.Ref(l: BuiltinSymbol), lhs :: rhs :: Nil) if !l.anyarity =>
+    case Call(Value.Ref(l: BuiltinSymbol), lhs :: rhs :: Nil) if !l.functionLike =>
       if l.binary then
         val res = doc"${operand(lhs)} ${l.nme} ${operand(rhs)}"
         if needsParens(l.nme) then doc"(${res})" else res
       else err(msg"Cannot call non-binary builtin symbol '${l.nme}'")
-    case Call(Value.Ref(l: BuiltinSymbol), rhs :: Nil) if !l.anyarity =>
+    case Call(Value.Ref(l: BuiltinSymbol), rhs :: Nil) if !l.functionLike =>
       if l.unary then
         val res = doc"${l.nme} ${operand(rhs)}"
         if needsParens(l.nme) then doc"(${res})" else res
       else err(msg"Cannot call non-unary builtin symbol '${l.nme}'")
     case Call(Value.Ref(l: BuiltinSymbol), args) =>
-      if l.anyarity then
+      if l.functionLike then
         val argsDoc = args.map(argument).mkDocument(", ")
         doc"${l.nme}(${argsDoc})"
-      else err(msg"Illeal arity for builtin symbol '${l.nme}'")
+      else err(msg"Illegal arity for builtin symbol '${l.nme}'")
     
     case Call(s @ Select(_, id), lhs :: rhs :: Nil) =>
       Elaborator.ctx.Builtins.getBuiltinOp(id.name) match

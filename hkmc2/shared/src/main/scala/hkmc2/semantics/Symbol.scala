@@ -94,7 +94,7 @@ class VarSymbol(val id: Ident)(using State) extends BlockLocalSymbol(id.name) wi
   // override def toString: Str = s"$name@$uid"
 
 class BuiltinSymbol
-    (val nme: Str, val binary: Bool, val unary: Bool, val nullary: Bool, val anyarity: Bool)(using State)
+    (val nme: Str, val binary: Bool, val unary: Bool, val nullary: Bool, val functionLike: Bool)(using State)
     extends Symbol:
   def toLoc: Option[Loc] = N
   override def toString: Str = s"builtin:$nme${State.dbgUid(uid)}"

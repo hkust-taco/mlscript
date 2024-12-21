@@ -315,7 +315,7 @@ class Lowering(using TL, Raise, Elaborator.State):
         msg"Effect handlers are not enabled" ->
         t.toLoc :: Nil,
         source = Diagnostic.Source.Compilation))
-      Assign(lhs, Value.Lit(syntax.Tree.UnitLit(true)), k(Value.Lit(syntax.Tree.UnitLit(true))))
+      End("error")
     
     // * BbML-specific cases: t.Cls#field and mutable operations
     case SelProj(prefix, _, proj) =>
@@ -500,6 +500,3 @@ trait LoweringHandler
       subTerm(rhs): cls =>
         HandleBlock(lhs, resSym, cls, handlers, term(st.Blk(stmts, res))(HandleBlockReturn(_)), k(Value.Ref(resSym)))
     case _ => super.term(t)(k)
-  override def topLevel(t: st): Block =
-    if !instrument then return super.topLevel(t)
-    super.topLevel(t)
