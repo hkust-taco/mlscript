@@ -14,7 +14,6 @@ r
 //│ ║       	                   ^^^^^^^^^^^
 //│ ║  l.8: 	  fun perform(arg)(k) = k(arg)
 //│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of null (reading 'perform')
 
 :global
 :handler
