@@ -220,6 +220,9 @@ extends Importer:
   
   def term(tree: Tree, inAppPrefix: Bool = false): Ctxl[Term] =
   trace[Term](s"Elab term ${tree.showDbg}", r => s"~> $r"):
+    def maybeModuleMethodApp(t: Term): Ctxl[Term] =
+      if !inAppPrefix then moduleMethodApp(t)
+      else t
     tree.desugared match
     case unt @ Unt() => unit.withLocOf(unt)
     case Bra(k, e) =>
@@ -464,11 +467,11 @@ extends Importer:
                 msg"Only module parameters may receive module arguments (values)." -> 
                 arg.toLoc :: Nil
       
-      Term.App(lt, rt)(tree, sym)
+      maybeModuleMethodApp(Term.App(lt, rt)(tree, sym))
     case SynthSel(pre, nme) =>
       val preTrm = term(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
-      Term.SynthSel(preTrm, nme)(sym)
+      maybeModuleMethodApp(Term.SynthSel(preTrm, nme)(sym))
     case Sel(pre, nme) =>
       val preTrm = term(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
@@ -480,7 +483,7 @@ extends Importer:
           ErrorReport(
             msg"[debinding error] Method '${nme.name}' cannot be accessed without being called." -> nme.toLoc :: Nil)
       case S(_) | N => ()
-      Term.Sel(preTrm, nme)(sym)
+      maybeModuleMethodApp(Term.Sel(preTrm, nme)(sym))
     case MemberProj(ct, nme) =>
       val c = cls(ct, inAppPrefix = false)
       val f = c.symbol.flatMap(_.asCls) match
@@ -634,6 +637,51 @@ extends Importer:
       Term.Error
     // case _ =>
     //   ???
+  
+  /** Module method applications that require further elaboration with type information. */
+  def moduleMethodApp(t: Term): Ctxl[Term] =
+  trace[Term](s"Elab module method ${t.showDbg}", r => s"~> $r"):
+    /** Returns the module method definition of the innermost Sel wrapped by some App and TyApp. */
+    def defn(t: Term, argLists: Ls[Term]): (Opt[Definition], Term, Ls[Term]) = t match
+      case Term.App(f, r) => defn(f, r :: argLists)
+      case Term.TyApp(f, _) => defn(f, argLists)
+      case Term.SynthSel(pre, nme) if ModuleChecker.evalsToModule(pre) =>
+        (t.symbol.flatMap(_.asBlkMember).flatMap(_.defn), t, argLists)
+      case Term.Sel(pre, nme) if ModuleChecker.evalsToModule(pre) =>
+        (t.symbol.flatMap(_.asBlkMember).flatMap(_.defn), t, argLists)
+      case _ => (N, t, argLists)
+    defn(t, Nil) match
+      case (S(defn: TermDefinition), inner, argLists) =>
+        log(s"Elab module method definition w/ type information ${defn}.")
+        val emptyTreeApp = new Tree.App(Tree.Empty(), Tree.Empty())
+        /**
+         * Zips a module method application term along with its parameter lists,
+         * inserting any missing contextual argument lists.
+         * 
+         * M.foo -> M.foo(<using> ...)
+         * M.foo(a, b) -> M.foo(<using> ...)(a, b)(<using> ...)
+         * 
+         * Note: This *doesn't* handle explicit contextual arguments.
+         */
+        def zip(t: Term, paramLists: Ls[ParamList]): Term = (t, paramLists) match
+            case (_, params :: pRest) if params.flags.ctx =>
+              log(s"Insert a missing contextual argument list for ${params}")
+              val args = Term.Tup(params.params.map(CtxArgImpl(_)))(Tree.Tup(Nil))
+              Term.App(zip(t, pRest), args)(emptyTreeApp, FlowSymbol("‹app-res›"))
+            case (t @ Term.App(lhs, rhs), params :: pRest) =>
+              // Match the outermost App with the next non-contextual parameter list.
+              Term.App(zip(lhs, pRest), rhs)(t.tree, t.resSym)
+            case (t, params :: pRest) =>
+              // LHS is not a app but it still expects more param lists - a partial application.
+              // Just suppose it is legal and don't fail here. 
+              // TODO: Check in the implicit resolver.
+              t
+            case (_, Nil) => t
+        val newTerm = zip(t, defn.params.reverse)
+        log(s"Zip module method application: ${newTerm}")
+        newTerm
+      case _ => 
+        t
   
   def fld(tree: Tree): Ctxl[Elem] = tree match
     case InfixApp(lhs, Keyword.`:`, rhs) =>
