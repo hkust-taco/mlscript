@@ -159,8 +159,8 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Assgn(lhs, rhs) => lhs :: rhs :: Nil
     case SetRef(lhs, rhs) => lhs :: rhs :: Nil
     case Deref(term) => term :: Nil
-    case TermDefinition(_, k, _, ps, sign, body, res, _, annotations) =>
-      ps.toList.flatMap(_.subTerms) ::: sign.toList ::: body.toList ::: annotations.flatMap(_.subTerms)
+    case TermDefinition(_, k, _, pss, tps, sign, body, res, _, annotations) =>
+      pss.toList.flatMap(_.subTerms) ::: tps.getOrElse(Nil).flatMap(_.subTerms) ::: sign.toList ::: body.toList ::: annotations.flatMap(_.subTerms)
     case cls: ClassDef =>
       cls.paramsOpt.toList.flatMap(_.subTerms) ::: cls.body.blk :: Nil
     case mod: ModuleDef =>
@@ -236,8 +236,10 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case CompType(lhs, rhs, pol) => s"${lhs.showDbg} ${if pol then "|" else "&"} ${rhs.showDbg}"
     case Error => "<error>"
     case Tup(fields) => fields.map(_.showDbg).mkString("[", ", ", "]")
-    case TermDefinition(_, k, sym, ps, sign, body, res, flags, _) => s"${flags} ${k.str} ${sym}${
-      ps.map(_.showDbg).mkString("")
+    case TermDefinition(_, k, sym, pss, tps, sign, body, res, flags, _) => s"${flags} ${k.str} ${sym}${
+      tps.map(_.map(_.showDbg)).mkStringOr(", ", "[", "]")
+    }${
+      pss.map(_.showDbg).mkString("")
     }${sign.fold("")(": "+_.showDbg)}${
       body match
         case S(x) => " = " + x.showDbg
@@ -273,6 +275,7 @@ final case class TermDefinition(
     k: TermDefKind,
     sym: BlockMemberSymbol,
     params: Ls[ParamList],
+    tparams: Opt[Ls[Param]],
     sign: Opt[Term],
     body: Opt[Term],
     resSym: FlowSymbol,
@@ -452,6 +455,7 @@ sealed abstract class Elem:
   def subTerms: Ls[Term] = this match
     case Fld(_, term, asc) => term :: asc.toList
     case Spd(_, term) => term :: Nil
+    case _: CtxArg => Nil
   def showDbg: Str
 object Elem:
   given Conversion[Term, Elem] = PlainFld(_)
@@ -465,12 +469,12 @@ final case class Spd(eager: Bool, term: Term) extends Elem:
 /** 
  * Context arguments. 
  * 
- * Placeholders represents a nonexistent term that is *expected*
+ * Placeholders represent nonexistent terms that are *expected*
  * to be populated (resolved) by the implicit resolver later to represent some concrete term.
  */
 abstract class CtxArg extends Elem:
   def term: Opt[Term]
-  def showDbg: Str = s"‹using› ${term.fold("‹unpopulated›")(_.showDbg)}"
+  override def toString(): String = s"CtxArg(${term})"
 
 final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extends Declaration:
   
@@ -487,8 +491,10 @@ final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extend
     flags.showDbg + sym
 
 
-final case class Param(flags: FldFlags, sym: LocalSymbol & NamedSymbol, sign: Opt[Term]):
+final case class Param(flags: FldFlags, sym: LocalSymbol & NamedSymbol, sign: Opt[Term]) 
+extends AutoLocated:
   def subTerms: Ls[Term] = sign.toList
+  override protected def children: List[Located] = subTerms
   // def children: Ls[Located] = self.value :: self.asc.toList ::: Nil
   // def showDbg: Str = flags.showDbg + sym.name + ": " + sign.showDbg
   def showDbg: Str = flags.showDbg + sym + sign.fold("")(": " + _.showDbg)
@@ -525,4 +531,10 @@ trait FldImpl extends AutoLocated:
     (if self.flags.mut then "mutable " else "") +
     self.term.describe
 
-
+/**
+ * Unwrapper that unwraps a term until it is no longer an App.
+ */
+object Apps:
+  def unapply(t: Term): S[(Term, Ls[Term])] = t match
+    case Term.App(Apps(base, args), arg) => S(base, args :+ arg)
+    case t => S(t, Nil)

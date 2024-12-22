@@ -1,83 +1,149 @@
+:js
 
-:p
-:el
+// Syntaxes
+
 use Int = 42
-//│ |use| |Int| |=| |42|
-//│ Parsed:
-//│ 	TermDef(Ins,Ident(Int),Some(IntLit(42)))
-//│ Elab: { ‹› use member:instance$Ident(Int): member:Int#666 = 42; }
 
-:p
-:el
 use Int as someInt = 42
-//│ |use| |Int| |as| |someInt| |=| |42|
-//│ Parsed:
-//│ 	TermDef(Ins,InfixApp(Ident(Int),keyword 'as',Ident(someInt)),Some(IntLit(42)))
-//│ Elab: { ‹› use member:someInt: member:Int#666 = 42; }
 
-:p
-:el
 module M with
   fun f(using Int) = 42
-//│ |module| |M| |with|→|fun| |f|(|using| |Int|)| |=| |42|←|
-//│ Parsed:
-//│ 	TypeDef(Mod,Ident(M),None,Some(Block(List(TermDef(Fun,App(Ident(f),Tup(List(Modified(keyword 'using',None,Ident(Int))))),Some(IntLit(42)))))))
-//│ Elab: { Mod M { ‹module› fun member:fctx (Param(‹›,,Some(Ref(member:Int))), ) = 42; }; }
 
-:p
-:el
 module M with
   fun f(using foo: Int) = 42
-//│ |module| |M| |with|→|fun| |f|(|using| |foo|:| |Int|)| |=| |42|←|
-//│ Parsed:
-//│ 	TypeDef(Mod,Ident(M),None,Some(Block(List(TermDef(Fun,App(Ident(f),Tup(List(Modified(keyword 'using',None,InfixApp(Ident(foo),keyword ':',Ident(Int)))))),Some(IntLit(42)))))))
-//│ Elab: { Mod M { ‹module› fun member:fctx (Param(‹›,foo,Some(Ref(member:Int))), ) = 42; }; }
 
-:p
-:el
 module M with
   fun f(using foo: Int, bar: Int) = 42
-//│ |module| |M| |with|→|fun| |f|(|using| |foo|:| |Int|,| |bar|:| |Int|)| |=| |42|←|
-//│ Parsed:
-//│ 	TypeDef(Mod,Ident(M),None,Some(Block(List(TermDef(Fun,App(Ident(f),Tup(List(Modified(keyword 'using',None,InfixApp(Ident(foo),keyword ':',Ident(Int))), InfixApp(Ident(bar),keyword ':',Ident(Int))))),Some(IntLit(42)))))))
-//│ Elab: { Mod M { ‹module› fun member:fctx (Param(‹›,foo,Some(Ref(member:Int))), Param(‹›,bar,Some(Ref(member:Int))), ) = 42; }; }
 
-:p
-:el
 module M with
   fun f(using foo: Int)(bar: Int) = 42
-//│ |module| |M| |with|→|fun| |f|(|using| |foo|:| |Int|)|(|bar|:| |Int|)| |=| |42|←|
-//│ Parsed:
-//│ 	TypeDef(Mod,Ident(M),None,Some(Block(List(TermDef(Fun,App(App(Ident(f),Tup(List(Modified(keyword 'using',None,InfixApp(Ident(foo),keyword ':',Ident(Int)))))),Tup(List(InfixApp(Ident(bar),keyword ':',Ident(Int))))),Some(IntLit(42)))))))
-//│ Elab: { Mod M { ‹module› fun member:fctx (Param(‹›,foo,Some(Ref(member:Int))), )(Param(‹›,bar,Some(Ref(member:Int))), ) = 42; }; }
 
-:p
-:el
 module M with
   fun f(foo: Int)(using bar: Int) = 42
-//│ |module| |M| |with|→|fun| |f|(|foo|:| |Int|)|(|using| |bar|:| |Int|)| |=| |42|←|
-//│ Parsed:
-//│ 	TypeDef(Mod,Ident(M),None,Some(Block(List(TermDef(Fun,App(App(Ident(f),Tup(List(InfixApp(Ident(foo),keyword ':',Ident(Int))))),Tup(List(Modified(keyword 'using',None,InfixApp(Ident(bar),keyword ':',Ident(Int)))))),Some(IntLit(42)))))))
-//│ Elab: { Mod M { ‹module› fun member:f(Param(‹›,foo,Some(Ref(member:Int))), )ctx (Param(‹›,bar,Some(Ref(member:Int))), ) = 42; }; }
 
-:p
-:el
 module M with
   fun f(using foo: Int)(using bar: Int) = 42
-//│ |module| |M| |with|→|fun| |f|(|using| |foo|:| |Int|)|(|using| |bar|:| |Int|)| |=| |42|←|
-//│ Parsed:
-//│ 	TypeDef(Mod,Ident(M),None,Some(Block(List(TermDef(Fun,App(App(Ident(f),Tup(List(Modified(keyword 'using',None,InfixApp(Ident(foo),keyword ':',Ident(Int)))))),Tup(List(Modified(keyword 'using',None,InfixApp(Ident(bar),keyword ':',Ident(Int)))))),Some(IntLit(42)))))))
-//│ Elab: { Mod M { ‹module› fun member:fctx (Param(‹›,foo,Some(Ref(member:Int))), )ctx (Param(‹›,bar,Some(Ref(member:Int))), ) = 42; }; }
 
-:e
-:p
-:el
+
+// Basic Resolution
+
+abstract class Foo[T] with
+  fun foo(): T
+class IntFoo extends Foo[Int] with
+  fun foo(): Int = 42
+class StrFoo extends Foo[Str] with
+  fun foo(): Str = "42"
 module M with
-  fun f(foo: Int, using bar: Int)
-//│ |module| |M| |with|→|fun| |f|(|foo|:| |Int|,| |using| |bar|:| |Int|)|←|
-//│ Parsed:
-//│ 	TypeDef(Mod,Ident(M),None,Some(Block(List(TermDef(Fun,App(Ident(f),Tup(List(InfixApp(Ident(foo),keyword ':',Ident(Int)), Modified(keyword 'using',None,InfixApp(Ident(bar),keyword ':',Ident(Int)))))),None)))))
-//│ ╔══[ERROR] Keyword `using` must occur before all parameters.
-//│ ║  l.76: 	  fun f(foo: Int, using bar: Int)
-//│ ╙──      	                        ^^^^^^^^
-//│ Elab: { Mod M { ‹module› fun member:fctx (Param(‹›,foo,Some(Ref(member:Int))), Param(‹›,bar,Some(Ref(member:Int))), ); }; }
+  fun foo(using someInt: Int): Int = someInt
+  fun strFoo(using someFoo: Foo[Str]): Str = someFoo.foo()
+  fun intFoo(using someFoo: Foo[Int]): Int = someFoo.foo()
+  fun tFoo[T](using someFoo: Foo[T]): T = someFoo.foo()
+
+use Int as i = 24
+
+use Foo[Int] = new IntFoo()
+
+use Foo[Str] = new StrFoo()
+
+// should resolve to foo(i)
+M.foo
+//│ = 24
+
+// should resolve to intFoo(new IntFoo())
+M.intFoo
+//│ = 42
+
+// should resolve to strFoo(new StrFoo())
+M.strFoo
+//│ = "42"
+
+// should resolve to 100 + intFoo(new IntFoo())
+100 + M.intFoo
+//│ = 142
+
+// should be able to resolve in function body from outer scope
+fun f: Int = M.intFoo
+f
+//│ = 42
+
+// should be able to resolve in function body from parameters
+module N with
+  fun f(using someNum: Num): Num = someNum
+  fun g(using Num): Num = N.f
+use Num = 3.14
+N.g
+//│ = 3.14
+
+
+// Parameterized Type Resolution
+
+// should resolve to tFoo(new StrFoo())
+M.tFoo
+//│ = "42"
+
+// should resolve to tFoo(new IntFoo())
+M.tFoo[Int]
+//│ = 42
+
+abstract class Bar[A, B] with
+  fun bar(): Str
+class IntStrBar extends Bar[Int, Str] with
+  fun bar(): Str = "IntStr"
+class StrIntBar extends Bar[Str, Int] with
+  fun bar(): Str = "StrInt"
+module M with
+  fun tBar1[T](using someFoo: Bar[Int, T]): Str = someFoo.bar()
+  fun tBar2[T](using someFoo: Bar[Str, T]): Str = someFoo.bar()
+  fun tBar3[A, B](using someFoo: Bar[A, B]): Str = someFoo.bar()
+
+use Bar[Int, Str] = new IntStrBar()
+use Bar[Str, Int] = new StrIntBar()
+
+// should resolve to tFoo1(new IntStrBar())
+M.tBar1
+//│ = "IntStr"
+
+// should resolve to tFoo2(new StrIntBar())
+M.tBar2
+//│ = "StrInt"
+
+// should resolve to tFoo3(new StrIntBar())
+M.tBar3
+//│ = "StrInt"
+
+// should resolve to tFoo3(new IntStrBar())
+M.tBar3[Int, Str]
+//│ = "IntStr"
+
+
+// Monoid Example
+
+abstract class Monoid[T] with
+  fun combine(a: T, b: T): T
+  fun empty: T
+
+object IntAddMonoid extends Monoid[Int] with
+  fun combine(a: Int, b: Int): Int = a + b
+  fun empty: Int = 0
+
+object IntMulMonoid extends Monoid[Int] with
+  fun combine(a: Int, b: Int): Int = a * b
+  fun empty: Int = 1
+
+module M with
+  fun foldInt(x1: Int, x2: Int, x3: Int)(using m: Monoid[Int]): Int =
+    m.combine(x1, m.combine(x2, m.combine(x3, m.empty)))
+  fun fold[T](x1: T, x2: T, x3: T)(using m: Monoid[T]): T =
+    m.combine(x1, m.combine(x2, m.combine(x3, m.empty)))
+    
+use Monoid[Int] = IntAddMonoid
+M.foldInt(2, 3, 4)
+//│ = 9
+
+use Monoid[Int] = IntMulMonoid
+M.foldInt(2, 3, 4)
+//│ = 24
+
+use Monoid[Int] = IntAddMonoid
+M.fold(1, 2, 3)
+//│ = 6

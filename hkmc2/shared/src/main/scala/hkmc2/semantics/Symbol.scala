@@ -199,7 +199,10 @@ case class TupSymbol(arity: Opt[Int])(using State) extends CtorSymbol:
   override def toString: Str = s"tup:$arity"
 
 
-type TypeSymbol = ClassSymbol | TypeAliasSymbol
+/** A TypeSymbol that is not an alias. */
+type BaseTypeSymbol = ClassSymbol
+
+type TypeSymbol = BaseTypeSymbol | TypeAliasSymbol
 
 type FieldSymbol = MemberSymbol[?]
 

@@ -198,7 +198,7 @@ class BlockTransformer(subst: SymbolSubst):
     val resSym2 = td.resSym.subst
     if (owner2 is td.owner) && (sym2 is td.sym) &&
         (params2 is td.params) && (resSym2 is td.resSym)
-      then td else TermDefinition(owner2, td.k, sym2, params2, td.sign, td.body, resSym2, td.flags, td.annotations)
+      then td else TermDefinition(owner2, td.k, sym2, params2, td.tparams, td.sign, td.body, resSym2, td.flags, td.annotations)
 
 class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst):
   override def applyLam(lam: Value.Lam) = lam

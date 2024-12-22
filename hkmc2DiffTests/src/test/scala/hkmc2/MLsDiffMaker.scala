@@ -6,6 +6,7 @@ import mlscript.utils.*, shorthands.*
 import utils.*
 
 import hkmc2.semantics.Elaborator
+import hkmc2.semantics.ImplicitResolver
 
 
 abstract class MLsDiffMaker extends DiffMaker:
@@ -35,11 +36,14 @@ abstract class MLsDiffMaker extends DiffMaker:
   val silent = NullaryCommand("silent")
   val dbgElab = NullaryCommand("de")
   val dbgParsing = NullaryCommand("dp")
+  val dbgResolving = NullaryCommand("dr")
   
   val showParse = NullaryCommand("p")
   val showParsedTree = DebugTreeCommand("pt")
   val showElab = NullaryCommand("el")
   val showElaboratedTree = DebugTreeCommand("elt")
+  val showResolve = NullaryCommand("r")
+  val showResolvedTree = DebugTreeCommand("rt")
   val showLoweredTree = NullaryCommand("lot")
   val ppLoweredTree = NullaryCommand("slot")
   val showContext = NullaryCommand("ctx")
@@ -57,6 +61,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     override def dbg: Bool =
       dbgParsing.isSet
       || dbgElab.isSet
+      || dbgResolving.isSet
       || debug.isSet
   
   val etl = new TraceLogger:
@@ -69,9 +74,13 @@ abstract class MLsDiffMaker extends DiffMaker:
       // * Perhaps this should be the default behavior of TraceLogger.
       if doTrace then super.trace(pre, post)(thunk)
       else thunk
+      
+  val rtl = new TraceLogger:
+    override def doTrace = dbgResolving.isSet
+    override def emitDbg(str: String): Unit = output(str)
   
   var curCtx = Elaborator.State.init
-  
+  var curICtx = ImplicitResolver.ICtx.empty
   
   override def run(): Unit =
     if file =/= preludeFile then importFile(preludeFile, verbose = false)
@@ -188,6 +197,16 @@ abstract class MLsDiffMaker extends DiffMaker:
     showElaboratedTree.get.foreach: post =>
       output(s"Elaborated tree:")
       output(e.showAsTree(using post))
+      
+    val resolver = ImplicitResolver(rtl)
+    curICtx = resolver.resolveBlk(e)(using curICtx)
+    
+    if showResolve.isSet then
+      output(s"Resolved: ${e.showDbg}")
+    showResolvedTree.get.foreach: post =>
+      output(s"Resolved tree:")
+      output(e.showAsTree(using post))
+    
     processTerm(e, inImport = false)
       
   

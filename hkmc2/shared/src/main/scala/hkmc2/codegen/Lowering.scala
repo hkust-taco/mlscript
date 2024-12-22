@@ -186,6 +186,14 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
             case sem.Fld(flags, value, asc) =>
               TODO("Other argument forms")
             case spd: Spd => true -> spd.term
+            case ca: sem.CtxArg => ca.term match
+              case S(t) => 
+                false -> t
+              case N => 
+                // All contextual arguments should have been
+                // populated by implicit resolution before lowering.
+                // Fail silently.
+                false -> Term.Error
           val l = new TempSymbol(S(t))
             def rec(as: Ls[Bool -> st], asr: Ls[Arg]): Block = as match
               case Nil => k(Call(fr, asr.reverse)(isMlsFun, true))
@@ -231,6 +239,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
             term_nonTail(st.Blk(stmts, res))(HandleBlockReturn(_)),
             k(Value.Ref(resSym)))
       
+    case st.TyApp(lhs, _) => term(lhs)(k)
     case st.Blk(Nil, res) => term(res)(k)
     case st.Blk((t: sem.Term) :: stats, res) =>
       subTerm(t, inStmtPos = true)(r => term_nonTail(st.Blk(stats, res))(k))
@@ -254,6 +263,12 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
             val (paramLists, bodyBlock) = setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme))
             Define(FunDefn(td.owner, td.sym, paramLists, bodyBlock),
               term_nonTail(st.Blk(stats, res))(k))
+          case syntax.Ins =>
+            // Implicit instances are not parameterized for now.
+            assert(td.params.isEmpty)
+            subTerm(bod)(r =>
+              Define(ValDefn(td.owner, syntax.ImmutVal, td.sym, r),
+                term_nonTail(st.Blk(stats, res))(k)))
       case cls: ClassLikeDef if cls.sym.defn.exists(_.isDeclare.isDefined) =>
         // * Declarations have no lowering
         term(st.Blk(stats, res))(k)
