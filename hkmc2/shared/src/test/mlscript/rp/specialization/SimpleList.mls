@@ -122,19 +122,21 @@ pattern G_1 =
 :todo
 // pattern BinSeq(pattern D) = D | Pair(0 | 1, BinSeq)
 pattern BinSeq = null | Pair(0 | 1, BinSeq)
-//│ ═══[ERROR] Unrecognized pattern.
 
 fun (::) cons(head, tail) = Pair(head, tail)
+
+0 :: null
+//│ = Pair { a: 0, b: null }
 
 :cp
 [
   null is BinSeq,
-  0 :: (null) is BinSeq,
-  0 :: 1 :: (null) is BinSeq,
-  0 :: 1 :: 0 :: (null) is BinSeq,
+  0 :: null is BinSeq,
+  0 :: 1 :: null is BinSeq,
+  0 :: 1 :: 0 :: null is BinSeq,
   0 is BinSeq,
   1 is BinSeq,
-  0 :: 1 :: 2 :: (null) is BinSeq,
+  0 :: 1 :: 2 :: null is BinSeq,
 ]
 //│ > [
 //│ >   true,  true,
@@ -144,27 +146,30 @@ fun (::) cons(head, tail) = Pair(head, tail)
 //│ = ]
 
 :cp
-:ucs normalized
-0 :: 1 :: 0 :: (null) is BinSeq
-//│ Normalized:
-//│ >  if
-//│ >    let $scrut = globalThis:block#46#666(.)cons‹member:cons›(0, globalThis:block#46#666(.)cons‹member:cons›(1, globalThis:block#46#666(.)cons‹member:cons›(0, null)))
-//│ >    let $pattern0 = λ(Param(‹›,.param1,None), ). if { param1 is null -> { else globalThis:globalThis#198(.)Predef‹module:Predef›(.)MatchResult‹class:MatchResult›([]) }; param1 is Pair($arg1, $arg2) -> { arg1 is 0 -> { let $matchResult = $pattern0#1($arg2#0); matchResult is MatchResult -> { else globalThis:globalThis#198(.)Predef‹module:Predef›(.)MatchResult‹class:MatchResult›([]) }; else globalThis:globalThis#199(.)Predef‹module:Predef›(.)MatchFailure‹class:MatchFailure›() }; arg1 is 1 -> { let $matchResult = $pattern0#2($arg2#1); matchResult is MatchResult -> { else globalThis:globalThis#198(.)Predef‹module:Predef›(.)MatchResult‹class:MatchResult›([]) }; else globalThis:globalThis#199(.)Predef‹module:Predef›(.)MatchFailure‹class:MatchFailure›() }; else globalThis:globalThis#199(.)Predef‹module:Predef›(.)MatchFailure‹class:MatchFailure›() }; else globalThis:globalThis#199(.)Predef‹module:Predef›(.)MatchFailure‹class:MatchFailure›() }
-//│ >    let $matchResult = $pattern0#0($scrut#0)
-//│ >    $matchResult is MatchResult then true
-//│ >    else false
+0 :: 1 :: 0 :: null is BinSeq
+//│ = true
+
+pattern BinTree = null | Pair(BinTree | 0 | 1, BinTree | 0 | 1)
+
+null is BinTree
+//│ = true
+
+Pair(null, null) is BinTree
+//│ = true
+
+Pair(0, null) is BinTree
+//│ = true
+
+Pair(0, Pair(0, null)) is BinTree
 //│ = true
 
 :todo
-pattern BinTree = null | Pair(BinTree | 0 | 1, BinTree | 0 | 1)
-//│ ═══[ERROR] Unrecognized pattern.
-
-null is BinTree
-//│ = false
+Pair(2, Pair(0, Pair(1, null))) is BinTree
+//│ = true
 
 :todo
 pattern List(a) = null | Pair(a, List)
-//│ ═══[ERROR] Unrecognized pattern.
+//│ ═══[ERROR] Unmatched number of captures and parameters.
 //│ ═══[ERROR] Unmatched number of captures and parameters.
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
 

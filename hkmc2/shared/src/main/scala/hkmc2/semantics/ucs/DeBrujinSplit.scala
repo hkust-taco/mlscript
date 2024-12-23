@@ -44,7 +44,7 @@ object DeBrujinSplit:
         val buildRight = go(rhs)
         val latter = buildRight(scrutinee, consequence, alternative)
         buildLeft(scrutinee, consequence, latter)
-      case Ident("_") => (_, consequence, _) => consequence
+      case Under() => (_, consequence, _) => consequence
       case ctor: (Ident | Sel) => cls(ctor, Nil)
       case App(ctor: (Ident | Sel), Tup(params)) => cls(ctor, params)
       case literal: syntax.Literal => Branch(_, Literal(literal), _, _)

@@ -38,16 +38,12 @@ fun checkSomeZeroOneTwo(x) = if x is
 //│ >    else null
 
 pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
-//│ FAILURE: Unexpected type error
-//│ ╔══[ERROR] Name not found: ~
-//│ ║  l.40: 	pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
-//│ ╙──      	                        ^
 
 :cp
 :de
 let res = "1" is ManyZero
-//│ Elab block List(LetLike(keyword 'let',Ident(res),Some(InfixApp(StrLit(1),keyword 'is',Ident(ManyZero))),None)) Some(globalThis:block#6‹260›)
-//│ | Processing `let` statement Ident(res) (globalThis:block#6‹260›.res) Some(globalThis:block#6‹260›)
+//│ Elab block List(LetLike(keyword 'let',Ident(res),Some(InfixApp(StrLit(1),keyword 'is',Ident(ManyZero))),None)) Some(globalThis:block#6‹259›)
+//│ | Processing `let` statement Ident(res) (globalThis:block#6‹259›.res) Some(globalThis:block#6‹259›)
 //│ | Elab term InfixApp(StrLit(1),keyword 'is',Ident(ManyZero))
 //│ | | Elab term StrLit(1)
 //│ | | ~> Lit(StrLit(1))
@@ -60,62 +56,70 @@ let res = "1" is ManyZero
 //│ | | ~> SynthSel(Ref(globalThis:block#5‹190›),Ident(ManyZero))
 //│ | | Desugared:
 //│ | | >  if
-//│ | | >    let $scrut‹262› = "1"
-//│ | | >    $scrut‹262› is ManyZero then true
+//│ | | >    let $scrut‹261› = "1"
+//│ | | >    $scrut‹261› is ManyZero then true
 //│ | | >    else false
 //│ | | normalize <<< if
-//│ | | >    let $scrut‹262› = "1"
-//│ | | >    $scrut‹262› is ManyZero then true
+//│ | | >    let $scrut‹261› = "1"
+//│ | | >    $scrut‹261› is ManyZero then true
 //│ | | >    else false
-//│ | | | LET: $scrut‹262›
-//│ | | | SYNONYM: Ref($scrut‹262›) is Synonym(pattern:ManyZero,None)
+//│ | | | LET: $scrut‹261›
+//│ | | | SYNONYM: Ref($scrut‹261›) is Synonym(pattern:ManyZero,None)
 //│ | | | [cp] the initial nameless split:
 //│ | | | >  a => 
 //│ | | | >    a is pattern:ManyZero -> accept 42
+//│ | | | expanding pattern: ManyZero
 //│ | | | normalize <<<
 //│ | | | >  1 is "" -> accept 42
-//│ | | | | [Step 1] specialize the consequence
-//│ | | | | S+ (1 is "") <<< accept 42
-//│ | | | | S+ (1 is "") >>> (no change)
-//│ | | | | the former split:
-//│ | | | | >  accept 42
-//│ | | | | S+ (1 is "") <<< reject
-//│ | | | | S+ (1 is "") >>> (no change)
-//│ | | | | the latter split:
-//│ | | | | >  reject
-//│ | | | | increment by 0
-//│ | | | | bind with 0
-//│ | | | | S- (1 is "") <<< reject
-//│ | | | | S- (1 is "") >>> (no change)
+//│ | | | | normalize <<<
+//│ | | | | >  1 is "" -> accept 42
+//│ | | | | | [Step 1] specialize the consequence
+//│ | | | | | S+ (1 is "") <<< accept 42
+//│ | | | | | S+ (1 is "") >>> (no change)
+//│ | | | | | the former split:
+//│ | | | | | >  accept 42
+//│ | | | | | S+ (1 is "") <<< reject
+//│ | | | | | S+ (1 is "") >>> (no change)
+//│ | | | | | the latter split:
+//│ | | | | | >  reject
+//│ | | | | | increment by 0
+//│ | | | | | bind with 0
+//│ | | | | | S- (1 is "") <<< reject
+//│ | | | | | S- (1 is "") >>> (no change)
+//│ | | | | normalize >>>
+//│ | | | | >  1 is "" -> accept 42
 //│ | | | normalize >>>
 //│ | | | >  1 is "" -> accept 42
+//│ | | | memo:
+//│ | | | >  0 (0) =>
+//│ | | | >    1 is "" -> accept 42
 //│ | | | [cp] the normalized nameless split:
 //│ | | | >  a => 
 //│ | | | >    a is "" -> accept 42
 //│ | | | [cp] the final compiled split:
-//│ | | | >  if $scrut‹262› is "" then true
-//│ | | | MATCH: Ref($scrut‹262›) is Lit(StrLit())
+//│ | | | >  if $scrut‹261› is "" then true
+//│ | | | MATCH: Ref($scrut‹261›) is Lit(StrLit())
 //│ | | | tail is discarded
-//│ | | | S+ <<< Ref($scrut‹262›) is Lit(StrLit()) : if then true
+//│ | | | S+ <<< Ref($scrut‹261›) is Lit(StrLit()) : if then true
 //│ | | | | CASE Else
 //│ | | | S+ >>> if then true
 //│ | | | normalize <<< if then true
 //│ | | | | DFLT: true
 //│ | | | normalize >>> if then true
-//│ | | | S- <<< Ref($scrut‹262›) is Lit(StrLit()) : if then false
+//│ | | | S- <<< Ref($scrut‹261›) is Lit(StrLit()) : if then false
 //│ | | | | CASE Else
 //│ | | | S- >>> if then false
 //│ | | | DFLT: false
 //│ | | normalize >>> if
-//│ | | >    let $scrut‹262› = "1"
-//│ | | >    $scrut‹262› is "" then true
+//│ | | >    let $scrut‹261› = "1"
+//│ | | >    $scrut‹261› is "" then true
 //│ | | >    else false
 //│ | | Normalized:
 //│ | | >  if
-//│ | | >    let $scrut‹262› = "1"
-//│ | | >    $scrut‹262› is "" then true
+//│ | | >    let $scrut‹261› = "1"
+//│ | | >    $scrut‹261› is "" then true
 //│ | | >    else false
-//│ | ~> IfLike(keyword 'if',Let($scrut‹262›,Lit(StrLit(1)),Cons(Branch(Ref($scrut‹262›),Synonym(pattern:ManyZero,None),Else(Lit(BoolLit(true)))),Else(Lit(BoolLit(false))))))
-//│ ~> Blk(List(LetDecl(globalThis:block#6‹260›.res), DefineVar(globalThis:block#6‹260›.res,IfLike(keyword 'if',Let($scrut‹262›,Lit(StrLit(1)),Cons(Branch(Ref($scrut‹262›),Synonym(pattern:ManyZero,None),Else(Lit(BoolLit(true)))),Else(Lit(BoolLit(false)))))))),Lit(UnitLit(true)))
+//│ | ~> IfLike(keyword 'if',Let($scrut‹261›,Lit(StrLit(1)),Cons(Branch(Ref($scrut‹261›),Synonym(pattern:ManyZero,None),Else(Lit(BoolLit(true)))),Else(Lit(BoolLit(false))))))
+//│ ~> Blk(List(LetDecl(globalThis:block#6‹259›.res), DefineVar(globalThis:block#6‹259›.res,IfLike(keyword 'if',Let($scrut‹261›,Lit(StrLit(1)),Cons(Branch(Ref($scrut‹261›),Synonym(pattern:ManyZero,None),Else(Lit(BoolLit(true)))),Else(Lit(BoolLit(false)))))))),Lit(UnitLit(true)))
 //│ res = false
 

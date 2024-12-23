@@ -66,11 +66,11 @@ class Translator(val elaborator: Elaborator)
       case (lo: Literal) to (_, hi: Literal) =>
         error(msg"Incompatible range types: ${lo.describe} to ${hi.describe}" -> pat.toLoc)
         failure
-      case lit: StrLit => Branch(scrut(), Pattern.Lit(lit), inner(Map.empty)) ~: Split.End
+      case lit: Literal => Branch(scrut(), Pattern.Lit(lit), inner(Map.empty)) ~: Split.End
       case App(Ident("~"), Tup(prefix :: postfix :: Nil)) =>
         stringPrefix(scrut, prefix, (captures1, postfixScrut) =>
           full(postfixScrut, postfix, captures2 => inner(captures2 ++ captures1)))
-      case Ident("_") => inner(Map.empty)
+      case Under() => inner(Map.empty)
       case ctor @ (_: Ident | _: Sel) =>
         val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
         clsTrm.symbol.flatMap(_.asClsLike) match
@@ -126,7 +126,7 @@ class Translator(val elaborator: Elaborator)
       stringPrefix(scrut, prefix, (captures1, postfixScrut1) =>
         stringPrefix(postfixScrut1, postfix, (captures2, postfixScrut2) =>
           inner(captures2 ++ captures1, postfixScrut2)))
-    case Ident("_") => inner(Map.empty, scrut) // TODO: check if this is correct
+    case Under() => inner(Map.empty, scrut) // TODO: check if this is correct
     case ctor @ (_: Ident | _: Sel) =>
       val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
       clsTrm.symbol.flatMap(_.asClsLike) match

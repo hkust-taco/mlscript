@@ -81,10 +81,6 @@ pattern Letter = Lower | Upper
 //│ = false
 
 pattern Word = Letter ~ (Word | "")
-//│ FAILURE: Unexpected type error
-//│ ╔══[ERROR] Name not found: ~
-//│ ║  l.83: 	pattern Word = Letter ~ (Word | "")
-//│ ╙──      	                      ^
 
 :expect false
 "" is Word
@@ -103,10 +99,6 @@ pattern Word = Letter ~ (Word | "")
 //│ = false
 
 pattern ManyDigits = ("0" ..= "9") ~ (ManyDigits | "")
-//│ FAILURE: Unexpected type error
-//│ ╔══[ERROR] Name not found: ~
-//│ ║  l.105: 	pattern ManyDigits = ("0" ..= "9") ~ (ManyDigits | "")
-//│ ╙──       	                                   ^
 
 :expect true
 "0" is ManyDigits
@@ -121,10 +113,6 @@ pattern ManyDigits = ("0" ..= "9") ~ (ManyDigits | "")
 //│ = true
 
 pattern Integer = "0" | ("1" ..= "9") ~ (ManyDigits | "")
-//│ FAILURE: Unexpected type error
-//│ ╔══[ERROR] Name not found: ~
-//│ ║  l.123: 	pattern Integer = "0" | ("1" ..= "9") ~ (ManyDigits | "")
-//│ ╙──       	                                      ^
 
 :expect true
 "0" is Integer
@@ -141,16 +129,8 @@ pattern Integer = "0" | ("1" ..= "9") ~ (ManyDigits | "")
 pattern IdentifierStart = Letter | "_"
 
 pattern IdentifierBody = (Letter | Digit | "_") ~ (IdentifierBody | "")
-//│ FAILURE: Unexpected type error
-//│ ╔══[ERROR] Name not found: ~
-//│ ║  l.143: 	pattern IdentifierBody = (Letter | Digit | "_") ~ (IdentifierBody | "")
-//│ ╙──       	                                                ^
 
 pattern Identifier = IdentifierStart ~ (IdentifierBody | "")
-//│ FAILURE: Unexpected type error
-//│ ╔══[ERROR] Name not found: ~
-//│ ║  l.149: 	pattern Identifier = IdentifierStart ~ (IdentifierBody | "")
-//│ ╙──       	                                     ^
 
 :expect true
 "abc" is Identifier

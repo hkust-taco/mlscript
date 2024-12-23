@@ -1,10 +1,6 @@
 :js
 
 pattern SimpleJoin = ("abc" | "xyz") ~ ("def" | "")
-//│ FAILURE: Unexpected type error
-//│ ╔══[ERROR] Name not found: ~
-//│ ║  l.3: 	pattern SimpleJoin = ("abc" | "xyz") ~ ("def" | "")
-//│ ╙──     	                                     ^
 
 :expect true
 "abc" is SimpleJoin
@@ -28,9 +24,6 @@ pattern SimpleJoin = ("abc" | "xyz") ~ ("def" | "")
 
 :todo
 pattern Exponential = ("a" | "b") ~ ("c" | "d") ~ ("e" | "f") // ~ ("g" | "h") ~ ("i" | "j") ~ ("k" | "l") ~ ("m" | "n") ~ ("o" | "p") ~ ("q" | "r") ~ ("s" | "t") ~ ("u" | "v") ~ ("w" | "x") ~ ("y" | "z")
-//│ ╔══[ERROR] Name not found: ~
-//│ ║  l.30: 	pattern Exponential = ("a" | "b") ~ ("c" | "d") ~ ("e" | "f") // ~ ("g" | "h") ~ ("i" | "j") ~ ("k" | "l") ~ ("m" | "n") ~ ("o" | "p") ~ ("q" | "r") ~ ("s" | "t") ~ ("u" | "v") ~ ("w" | "x") ~ ("y" | "z")
-//│ ╙──      	                                                ^
 
 :todo
 "abcdefghijklm" is Exponential

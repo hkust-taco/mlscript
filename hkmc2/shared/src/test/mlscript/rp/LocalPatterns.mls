@@ -6,14 +6,6 @@ module Playground with
   pattern Zero = "0"
   pattern DoubleZero = Zero ~ Zero
   pattern ZeroOne = Zero ~ One
-//│ FAILURE: Unexpected type error
-//│ ╔══[ERROR] Name not found: ~
-//│ ║  l.7: 	  pattern DoubleZero = Zero ~ Zero
-//│ ╙──     	                            ^
-//│ FAILURE: Unexpected type error
-//│ ╔══[ERROR] Name not found: ~
-//│ ║  l.8: 	  pattern ZeroOne = Zero ~ One
-//│ ╙──     	                         ^
 
 Playground
 //│ > Playground {
@@ -66,10 +58,6 @@ Playground.ZeroOne.unapply("01")
 // =======================================================================
 
 pattern TripleZero = Playground.DoubleZero ~ Playground.Zero
-//│ FAILURE: Unexpected type error
-//│ ╔══[ERROR] Name not found: ~
-//│ ║  l.68: 	pattern TripleZero = Playground.DoubleZero ~ Playground.Zero
-//│ ╙──      	                                           ^
 
 TripleZero
 //│ = TripleZero { class: [class TripleZero] }
