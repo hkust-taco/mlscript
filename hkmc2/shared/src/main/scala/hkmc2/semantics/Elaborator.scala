@@ -318,7 +318,7 @@ extends Importer:
     case App(Ident("!"), Tree.Tup(rhs :: Nil)) =>
       Term.Deref(term(rhs))
     case App(Ident("~"), Tree.Tup(rhs :: Nil)) =>
-      term(rhs)
+      Term.Neg(term(rhs))
     case tree @ App(lhs, OpBlock(ops)) =>
       ops.foldLeft(term(lhs)):
         case (acc, (op, arg)) =>
@@ -1023,6 +1023,8 @@ extends Importer:
         // fields.foreach(f => traverseType(pol)(f.value))
         fields.foreach(traverseType(pol))
       // case _ => ???
+      case Term.Neg(ty) => 
+        traverseType(pol.!)(ty)
     def traverseType(pol: Pol)(f: Elem): Unit = f match
       case f: Fld =>
         traverseType(pol)(f.term)
