@@ -96,13 +96,49 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
           import DeBrujinSplit.*, PatternStub.*
           val initialSplit = Binder(Branch(Outermost, ClassLike(symbol), Accept(42), Reject))
           log(s"[cp] the initial nameless split:\n${initialSplit.display}")
-          val normalizedSplit = scoped("ucs:rpn"):
+          val (normalizedSplit, localPatterns) = scoped("ucs:rpn"):
             initialSplit.normalize(using elaborator.tl)
           log(s"[cp] the normalized nameless split:\n${normalizedSplit.display}")
           given Elaborator.State = elaborator.state
-          val compiled = normalizedSplit.toSplit(Vector(() => scrutinee), Map(42 -> consequent), elaborator)
+          // The entry in the local pattern map.
+          val desugaring = new DesugaringBase:
+            val elaborator: Elaborator = Normalization.this.elaborator
+          class Entry(val id: Int, val split: DeBrujinSplit):
+            lazy val symbol = TempSymbol(N, s"pattern$id")
+          val compiledLocalPatterns = localPatterns.map: (id, split) =>
+            (id, Entry(id, split))
+          val compiled = normalizedSplit.toSplit(
+            scrutinees = Vector(() => scrutinee),
+            localPatterns = compiledLocalPatterns.map((id, ent) => (id, ent.symbol)),
+            outcomes = Map(S(42) -> consequent),
+            elab = elaborator
+          )
           log(s"[cp] the final compiled split:\n${Split.display(compiled)}")
-          rec(compiled ++ alternative)
+          // Insert local pattern bindings before the split.
+          compiledLocalPatterns.foldRight(rec(compiled ++ alternative)):
+            case ((_, entry), inner) =>
+              val definition =
+                log(s"making definition for ${entry.split.display}")
+                import syntax.{Fun, Keyword, ParamBind, Tree}, Tree.Ident
+                val freeScruts = entry.split.freeScrutinees
+                log(s"free scrutinees: ${freeScruts.mkString(", ")}")
+                val arity = freeScruts.size
+                val fullSplit = entry.split.bind(arity)
+                val paramSymbols = (1 to arity).map: i =>
+                  TermSymbol(ParamBind, N, Ident(s"param$i"))
+                .toVector
+                val paramList = PlainParamList:
+                  paramSymbols.iterator.map(Param(FldFlags.empty, _, N)).toList
+                val success = Split.Else(desugaring.makeMatchResult(Term.Tup(Nil)(Tree.Tup(Nil))))
+                val failure = Split.Else(desugaring.makeMatchFailure)
+                val bodySplit = fullSplit.toSplit(
+                  scrutinees = paramSymbols.map(symbol => () => symbol.ref()),
+                  localPatterns = compiledLocalPatterns.map((id, ent) => (id, ent.symbol)),
+                  outcomes = Map(S(42) -> success, N -> failure),
+                  elab = elaborator) ++ Split.Else(desugaring.makeMatchFailure)
+                val funcBody: Term = Term.IfLike(Keyword.`if`, bodySplit)(bodySplit)
+                Term.Lam(paramList, funcBody)
+              Split.Let(entry.symbol, definition, inner)
         case _ =>
           raiseDesugaringError(msg"unsupported pattern matching: ${scrutinee.toString} is ${pattern.toString}" -> pattern.toLoc)
           Split.default(Term.Error)

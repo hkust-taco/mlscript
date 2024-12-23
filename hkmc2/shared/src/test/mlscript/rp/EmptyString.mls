@@ -1,6 +1,10 @@
 :js
 
 pattern Oops = "" ~ (Oops | "")
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] Name not found: ~
+//│ ║  l.3: 	pattern Oops = "" ~ (Oops | "")
+//│ ╙──     	                  ^
 
 :re
 "" is Oops
@@ -8,11 +12,19 @@ pattern Oops = "" ~ (Oops | "")
 
 
 pattern Funny = "" ~ "" ~ ""
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] Name not found: ~
+//│ ║  l.14: 	pattern Funny = "" ~ "" ~ ""
+//│ ╙──      	                        ^
 
 "" is Funny
 //│ = true
 
 pattern Funny = "" ~ "hello" ~ ""
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] Name not found: ~
+//│ ║  l.23: 	pattern Funny = "" ~ "hello" ~ ""
+//│ ╙──      	                             ^
 
 "hello" is Funny
 //│ = true

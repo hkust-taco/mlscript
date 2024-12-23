@@ -1,15 +1,31 @@
 :js
 
 pattern Digits = ("0"..="9") ~ (Digits | "")
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] Name not found: ~
+//│ ║  l.3: 	pattern Digits = ("0"..="9") ~ (Digits | "")
+//│ ╙──     	                             ^
 
 pattern Integer = "0" | ("1"..="9") ~ (Digits | "")
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] Name not found: ~
+//│ ║  l.9: 	pattern Integer = "0" | ("1"..="9") ~ (Digits | "")
+//│ ╙──     	                                    ^
 
 pattern FractionalPart = "." ~ Digits
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] Name not found: ~
+//│ ║  l.15: 	pattern FractionalPart = "." ~ Digits
+//│ ╙──      	                             ^
 
 ".1" is FractionalPart
 //│ = true
 
 pattern ExponentPart = ("e" | "E") ~ ("+" | "-" | "") ~ Integer
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] Name not found: ~
+//│ ║  l.24: 	pattern ExponentPart = ("e" | "E") ~ ("+" | "-" | "") ~ Integer
+//│ ╙──      	                                                      ^
 
 "e10" is ExponentPart
 //│ = true
@@ -18,6 +34,10 @@ pattern ExponentPart = ("e" | "E") ~ ("+" | "-" | "") ~ Integer
 //│ = true
 
 pattern Number = Integer ~ (FractionalPart | "") ~ (ExponentPart | "")
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] Name not found: ~
+//│ ║  l.36: 	pattern Number = Integer ~ (FractionalPart | "") ~ (ExponentPart | "")
+//│ ╙──      	                                                 ^
 
 // Test cases for Digits pattern
 // =============================

@@ -35,12 +35,6 @@ class Translator(val elaborator: Elaborator)
   
   private type PrefixInner = (CaptureMap, Scrut) => Split
   
-  private def matchResult(captures: Term) =
-    app(matchResultClass._1, tup(fld(captures)), FlowSymbol("result of `MatchResult`"))
-  
-  private def matchFailure() =
-    app(matchFailureClass._1, tup(), FlowSymbol("result of `MatchFailure`"))
-  
   private def makeRange(scrut: Scrut, lo: Literal, hi: Literal, rightInclusive: Bool, inner: Inner) =
     def scrutFld = fld(scrut())
     val test1 = app(lteq.ref(), tup(fld(Term.Lit(lo)), scrutFld), "gtLo")
@@ -168,7 +162,7 @@ class Translator(val elaborator: Elaborator)
       else
         val fields = captures.toList.sortBy(_._1 |> paramIndexMap).map:
           case (_, ref) => Fld(FldFlags.empty, ref, N)
-        Split.Else(matchResult(Term.Tup(fields)(Tup(Nil))))
+        Split.Else(makeMatchResult(Term.Tup(fields)(Tup(Nil))))
   
   /* The successful matching result used in prefix matching functions. */
   private def prefixSuccess(params: Ls[Param])(using Raise): PrefixInner =
@@ -186,10 +180,10 @@ class Translator(val elaborator: Elaborator)
         val fields = captures.toList.sortBy(_._1 |> paramIndexMap).map:
           case (_, ref) => Fld(FldFlags.empty, ref, N)
         val head = Fld(FldFlags.empty, postfixScrut(), N)
-        Split.Else(matchResult(Term.Tup(head :: fields)(Tup(Nil))))
+        Split.Else(makeMatchResult(Term.Tup(head :: fields)(Tup(Nil))))
   
   /** Failed matctching result. */
-  private def failure: Split = Split.Else(matchFailure())
+  private def failure: Split = Split.Else(makeMatchFailure)
   
   private def errorSplit: Split = Split.Else(Term.Error)
   

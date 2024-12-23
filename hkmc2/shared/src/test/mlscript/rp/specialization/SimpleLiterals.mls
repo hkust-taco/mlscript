@@ -11,18 +11,12 @@ fun checkZeroOneTwo(x) = if x is
   One then 1
   Two then 2
   else ()
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: StrLit(0) (of class hkmc2.syntax.Tree$StrLit)
-//│ 	at: hkmc2.semantics.ucs.SimpleSplit$.go$1(SimpleSplit.scala:11)
-//│ 	at: hkmc2.semantics.ucs.SimpleSplit$.elaborate(SimpleSplit.scala:12)
-//│ 	at: hkmc2.semantics.ucs.Normalization.rec$1(Normalization.scala:95)
-//│ 	at: hkmc2.semantics.ucs.Normalization.normalize$$anonfun$3(Normalization.scala:112)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:71)
-//│ 	at: hkmc2.semantics.ucs.Normalization.normalize(Normalization.scala:112)
-//│ 	at: hkmc2.semantics.ucs.Normalization.hkmc2$semantics$ucs$Normalization$$inline$normalize(Normalization.scala:80)
-//│ 	at: hkmc2.semantics.Elaborator.term$$anonfun$3(Elaborator.scala:356)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:71)
-//│ 	at: hkmc2.semantics.Elaborator.term(Elaborator.scala:431)
+//│ Normalized:
+//│ >  if
+//│ >    x is "0" then 0
+//│ >    x is "1" then 1
+//│ >    x is "2" then 2
+//│ >    else null
 
 import "../../../mlscript-compile/Option.mls"
 open Option
@@ -34,26 +28,26 @@ fun checkSomeZeroOneTwo(x) = if x is
   Some(One) then 1
   Some(Two) then 2
   else ()
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: StrLit(0) (of class hkmc2.syntax.Tree$StrLit)
-//│ 	at: hkmc2.semantics.ucs.SimpleSplit$.go$1(SimpleSplit.scala:11)
-//│ 	at: hkmc2.semantics.ucs.SimpleSplit$.elaborate(SimpleSplit.scala:12)
-//│ 	at: hkmc2.semantics.ucs.Normalization.rec$1(Normalization.scala:95)
-//│ 	at: hkmc2.semantics.ucs.Normalization.normalize$$anonfun$3(Normalization.scala:112)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:71)
-//│ 	at: hkmc2.semantics.ucs.Normalization.normalize(Normalization.scala:112)
-//│ 	at: hkmc2.semantics.ucs.Normalization.rec$1(Normalization.scala:91)
-//│ 	at: hkmc2.semantics.ucs.Normalization.normalize$$anonfun$3(Normalization.scala:112)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:71)
-//│ 	at: hkmc2.semantics.ucs.Normalization.normalize(Normalization.scala:112)
+//│ Normalized:
+//│ >  if
+//│ >    x is Some($param0) and
+//│ >      $param0 is "0" then 0
+//│ >      $param0 is "1" then 1
+//│ >      $param0 is "2" then 2
+//│ >      else null
+//│ >    else null
 
 pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] Name not found: ~
+//│ ║  l.40: 	pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
+//│ ╙──      	                        ^
 
 :cp
 :de
 let res = "1" is ManyZero
-//│ Elab block List(LetLike(keyword 'let',Ident(res),Some(InfixApp(StrLit(1),keyword 'is',Ident(ManyZero))),None)) Some(globalThis:block#6‹255›)
-//│ | Processing `let` statement Ident(res) (globalThis:block#6‹255›.res) Some(globalThis:block#6‹255›)
+//│ Elab block List(LetLike(keyword 'let',Ident(res),Some(InfixApp(StrLit(1),keyword 'is',Ident(ManyZero))),None)) Some(globalThis:block#6‹260›)
+//│ | Processing `let` statement Ident(res) (globalThis:block#6‹260›.res) Some(globalThis:block#6‹260›)
 //│ | Elab term InfixApp(StrLit(1),keyword 'is',Ident(ManyZero))
 //│ | | Elab term StrLit(1)
 //│ | | ~> Lit(StrLit(1))
@@ -62,23 +56,66 @@ let res = "1" is ManyZero
 //│ | | conjunct matches <<< List()
 //│ | | Elab class Ident(ManyZero)
 //│ | | | Elab term Ident(ManyZero)
-//│ | | | ~> SynthSel(Ref(globalThis:block#5‹185›),Ident(ManyZero))
-//│ | | ~> SynthSel(Ref(globalThis:block#5‹185›),Ident(ManyZero))
-//│ | | normalize <<< if
-//│ | | >    let $scrut‹257› = "1"
-//│ | | >    $scrut‹257› is ManyZero then true
+//│ | | | ~> SynthSel(Ref(globalThis:block#5‹190›),Ident(ManyZero))
+//│ | | ~> SynthSel(Ref(globalThis:block#5‹190›),Ident(ManyZero))
+//│ | | Desugared:
+//│ | | >  if
+//│ | | >    let $scrut‹262› = "1"
+//│ | | >    $scrut‹262› is ManyZero then true
 //│ | | >    else false
-//│ | | | LET: $scrut‹257›
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: App(Ident(~),Tup(List(StrLit(0), App(Ident(|),Tup(List(Ident(ManyZero), StrLit())))))) (of class hkmc2.syntax.Tree$App)
-//│ 	at: hkmc2.semantics.ucs.SimpleSplit$.go$1(SimpleSplit.scala:11)
-//│ 	at: hkmc2.semantics.ucs.SimpleSplit$.go$1$$anonfun$1(SimpleSplit.scala:11)
-//│ 	at: hkmc2.semantics.ucs.SimpleSplit$.elaborate(SimpleSplit.scala:12)
-//│ 	at: hkmc2.semantics.ucs.Normalization.rec$1(Normalization.scala:95)
-//│ 	at: hkmc2.semantics.ucs.Normalization.rec$1(Normalization.scala:107)
-//│ 	at: hkmc2.semantics.ucs.Normalization.normalize$$anonfun$3(Normalization.scala:112)
-//│ 	at: hkmc2.utils.TraceLogger.trace(TraceLogger.scala:17)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:70)
-//│ 	at: hkmc2.semantics.ucs.Normalization.normalize(Normalization.scala:112)
-//│ 	at: hkmc2.semantics.ucs.Normalization.hkmc2$semantics$ucs$Normalization$$inline$normalize(Normalization.scala:80)
+//│ | | normalize <<< if
+//│ | | >    let $scrut‹262› = "1"
+//│ | | >    $scrut‹262› is ManyZero then true
+//│ | | >    else false
+//│ | | | LET: $scrut‹262›
+//│ | | | SYNONYM: Ref($scrut‹262›) is Synonym(pattern:ManyZero,None)
+//│ | | | [cp] the initial nameless split:
+//│ | | | >  a => 
+//│ | | | >    a is pattern:ManyZero -> accept 42
+//│ | | | normalize <<<
+//│ | | | >  1 is "" -> accept 42
+//│ | | | | [Step 1] specialize the consequence
+//│ | | | | S+ (1 is "") <<< accept 42
+//│ | | | | S+ (1 is "") >>> (no change)
+//│ | | | | the former split:
+//│ | | | | >  accept 42
+//│ | | | | S+ (1 is "") <<< reject
+//│ | | | | S+ (1 is "") >>> (no change)
+//│ | | | | the latter split:
+//│ | | | | >  reject
+//│ | | | | increment by 0
+//│ | | | | bind with 0
+//│ | | | | S- (1 is "") <<< reject
+//│ | | | | S- (1 is "") >>> (no change)
+//│ | | | normalize >>>
+//│ | | | >  1 is "" -> accept 42
+//│ | | | [cp] the normalized nameless split:
+//│ | | | >  a => 
+//│ | | | >    a is "" -> accept 42
+//│ | | | [cp] the final compiled split:
+//│ | | | >  if $scrut‹262› is "" then true
+//│ | | | MATCH: Ref($scrut‹262›) is Lit(StrLit())
+//│ | | | tail is discarded
+//│ | | | S+ <<< Ref($scrut‹262›) is Lit(StrLit()) : if then true
+//│ | | | | CASE Else
+//│ | | | S+ >>> if then true
+//│ | | | normalize <<< if then true
+//│ | | | | DFLT: true
+//│ | | | normalize >>> if then true
+//│ | | | S- <<< Ref($scrut‹262›) is Lit(StrLit()) : if then false
+//│ | | | | CASE Else
+//│ | | | S- >>> if then false
+//│ | | | DFLT: false
+//│ | | normalize >>> if
+//│ | | >    let $scrut‹262› = "1"
+//│ | | >    $scrut‹262› is "" then true
+//│ | | >    else false
+//│ | | Normalized:
+//│ | | >  if
+//│ | | >    let $scrut‹262› = "1"
+//│ | | >    $scrut‹262› is "" then true
+//│ | | >    else false
+//│ | ~> IfLike(keyword 'if',Let($scrut‹262›,Lit(StrLit(1)),Cons(Branch(Ref($scrut‹262›),Synonym(pattern:ManyZero,None),Else(Lit(BoolLit(true)))),Else(Lit(BoolLit(false))))))
+//│ ~> Blk(List(LetDecl(globalThis:block#6‹260›.res), DefineVar(globalThis:block#6‹260›.res,IfLike(keyword 'if',Let($scrut‹262›,Lit(StrLit(1)),Cons(Branch(Ref($scrut‹262›),Synonym(pattern:ManyZero,None),Else(Lit(BoolLit(true)))),Else(Lit(BoolLit(false)))))))),Lit(UnitLit(true)))
+//│ res = false
 
