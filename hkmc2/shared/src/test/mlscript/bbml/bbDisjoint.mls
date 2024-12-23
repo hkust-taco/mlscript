@@ -13,3 +13,34 @@ fork
 //│ Where:
 //│   'B <: ¬'A
 
+
+fun foo: Any -> Int
+fun bar: Any -> Str
+//│ Type: ⊤
+
+
+fork(foo, bar)
+//│ Type: Pair[out Int, out Str]
+
+
+:e
+region x in
+  fork((_ => x.ref 1), (_ => x.ref 2))
+//│ ╔══[ERROR] Type error in function literal with expected type (⊤) ->{'B} 'T2
+//│ ║  l.28: 	  fork((_ => x.ref 1), (_ => x.ref 2))
+//│ ║        	                             ^^^^^^^
+//│ ╟── because: cannot constrain  'reg  <:  'B
+//│ ╟── because: cannot constrain  'reg  <:  ¬(¬'B)
+//│ ╟── because: cannot constrain  x  <:  ¬(¬'B)
+//│ ╟── because: cannot constrain  x  <:  'B
+//│ ╟── because: cannot constrain  x  <:  ¬'A
+//│ ╟── because: cannot constrain  'A  <:  ¬(x)
+//│ ╙── because: cannot constrain  x  <:  ¬(x)
+//│ Type: Pair[out Ref[Int, ?], out Ref[Int, ?]]
+
+
+
+region x in
+  region y in
+    fork((_ => x.ref 1), (_ => y.ref 2))
+//│ Type: Pair[out Ref[Int, ?], out Ref[Int, ?]]

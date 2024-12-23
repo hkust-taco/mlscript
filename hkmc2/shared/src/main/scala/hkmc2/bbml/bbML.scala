@@ -23,7 +23,8 @@ final case class BbCtx(
   ctx: Ctx,
   parent: Option[BbCtx],
   lvl: Int,
-  env: HashMap[Uid[Symbol], GeneralType]
+  env: HashMap[Uid[Symbol], GeneralType],
+  outRegAcc: Type
 ):
   def +=(p: Symbol -> GeneralType): Unit = env += p._1.uid -> p._2
   def get(sym: Symbol): Option[GeneralType] = env.get(sym.uid) orElse parent.dlof(_.get(sym))(None)
@@ -37,6 +38,8 @@ final case class BbCtx(
     env += p._1.uid -> BbCtx.varTy(p._2, p._3)(using this)
   def nest: BbCtx = copy(parent = Some(this), env = HashMap.empty)
   def nextLevel: BbCtx = copy(parent = Some(this), lvl = lvl + 1, env = HashMap.empty)
+  def nestReg(reg: InfVar): BbCtx =
+    copy(parent = Some(this), lvl = lvl + 1, env = HashMap.empty, outRegAcc = outRegAcc | reg)
 
 given (using ctx: BbCtx): Raise = ctx.raise
 
@@ -57,7 +60,7 @@ object BbCtx:
   def refTy(ct: Type, sk: Type)(using ctx: BbCtx): Type =
     ClassLikeType(ctx.getCls("Ref").get, Wildcard(ct, ct) :: Wildcard.out(sk) :: Nil)
   def init(raise: Raise)(using Elaborator.State, Elaborator.Ctx): BbCtx =
-    new BbCtx(raise, summon, None, 1, HashMap.empty)
+    new BbCtx(raise, summon, None, 1, HashMap.empty, Bot)
 
   val builtinOps = Set("+", "-", "*", "/", "<", ">", "<=", ">=", "==", "!=", "&&", "||")
 end BbCtx
@@ -78,6 +81,10 @@ class BBTyper(using elState: Elaborator.State, tl: TL, scope: Scope):
     val out = freshVar(sym)
     // in.state.upperBounds ::= out // * Not needed for soundness; complicates inferred types
     Wildcard(in, out)
+  private def freshReg(sym: Symbol, hint: Str = "")(using ctx: BbCtx) =
+    val state = new VarState()
+    state.upperBounds = ctx.outRegAcc.! :: Nil
+    InfVar(ctx.lvl + 1, infVarState.nextUid, state, true)(sym, hint)
 
   private def error(msg: Ls[Message -> Opt[Loc]])(using BbCtx) =
     raise(ErrorReport(msg))
@@ -516,9 +523,9 @@ class BBTyper(using elState: Elaborator.State, tl: TL, scope: Scope):
         ascribe(term, res)
       case Term.IfLike(Keyword.`if`, branches) => typeSplit(branches, N)
       case reg @ Term.Region(sym, body) =>
-        val nestCtx = ctx.nextLevel
+        val sk = freshReg(sym)(using ctx)
+        val nestCtx = ctx.nestReg(sk)
         given BbCtx = nestCtx
-        val sk = freshSkolem(sym)
         nestCtx += sym -> BbCtx.regionTy(sk)
         val (res, eff) = typeCheck(body)
         val tv = freshVar(new TempSymbol(S(reg), "eff"))(using ctx)
