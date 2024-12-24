@@ -250,16 +250,26 @@ extension (split: DeBrujinSplit)
         useCount += 1
         ClassLike(LocalPattern(id, 0))
     val normalized = MutMap.empty[DeBrujinSplit, Entry]
-    def go(split: DeBrujinSplit): DeBrujinSplit =
+    def go(split: DeBrujinSplit, expandLevel: Int): DeBrujinSplit =
       scoped("ucs:rpn"):
         split match
-        case Binder(body) => Binder(go(body))
-        case Branch(scrutinee, ClassLike(symbol: PatternSymbol), consequence, alternative) =>
-          val split = symbol.split.getOrElse:
-            lastWords(s"found unelaborated pattern: ${symbol.nme}")
-          scoped("ucs:rp:memo"):
-            log(s"expanding pattern: ${symbol.nme}")
-          go(split.expand(scrutinee :: Nil, consequence))
+        case Binder(body) => Binder(go(body, expandLevel))
+        case Branch(scrutinee, ClassLike(symbol: PatternSymbol), consequence, alternative) => trace(
+          pre = s"expand <<< pattern ${symbol.nme}\n${split.showDbg}",
+          post = (s: DeBrujinSplit) => s"expand >>> pattern ${symbol.nme}\n${s.showDbg}"
+        ):
+          if expandLevel > 10 then
+            log(s"expand level is too deep: ${symbol.nme}")
+            Reject
+          else
+            val patternSplit = symbol.split.getOrElse:
+              lastWords(s"found unelaborated pattern: ${symbol.nme}")
+            scoped("ucs:rpn"):
+              val expanded = patternSplit.expand(scrutinee :: Nil, consequence)
+              log(s"expanded:\n${expanded.showDbg}")
+              val concatenated = expanded ++ alternative
+              log(s"concatenated:\n${concatenated.showDbg}")
+              go(expanded, expandLevel + 1)
         case split @ Branch(scrutinee, pattern, consequence, alternative) => trace(
           pre = s"normalize <<<\n${split.showDbg}",
           post = (s: DeBrujinSplit) => s"normalize >>>\n${s.showDbg}"
@@ -269,20 +279,31 @@ extension (split: DeBrujinSplit)
             val whenTrue = consequence.unbind match
               case (level @ (`arity` | 0), body) =>
                 // The scrutinee handling below is tricky.
-                log(s"[Step 1] specialize the consequence")
                 val former = body.specialize(scrutinee + level, pattern, 1 to arity)
-                log(s"the former split:\n${former.showDbg}")
+                log(s"[Step 1] specialized consequence:\n${former.showDbg}")
                 // We need to increment the level because it is going to be put into a binder.
                 val latter = alternative.specialize(scrutinee, pattern, 1 to arity)
-                log(s"the latter split:\n${latter.showDbg}")
-                val res = go((former ++ latter))
+                log(s"[Step 2] specialized alternative:\n${latter.showDbg}")
+                val together = former ++ latter
+                log(s"[Step 3] concatenate them:\n${together.showDbg}")
+                val res = trace(
+                  pre = s"normalize consequent <<<",
+                  post = (s: DeBrujinSplit) => s"normalize consequent >>>"
+                ):
+                  go(together, expandLevel)
                 log(s"increment by $arity")
                 // If the original consequence doesn't have binders, we need to increment the level.
                 val res2 = if level == arity then res else res.increment(arity)
                 log(s"bind with $arity")
                 res2.bind(arity)
               case (_, _) => log("mismatched arity"); Reject // TODO: report mismatched arity
-            val whenFalse = go(alternative.despecialize(scrutinee, pattern))
+            val whenFalse =
+              val despecialized = alternative.despecialize(scrutinee, pattern)
+              trace(
+                pre = s"normalize alternative <<<",
+                post = (s: DeBrujinSplit) => s"normalize alternative >>>"
+              ):
+                go(despecialized, expandLevel)
             split.copy(consequent = whenTrue, alternative = whenFalse)
           scoped("ucs:rp:memo"):
             trace(
@@ -311,7 +332,7 @@ extension (split: DeBrujinSplit)
                     result
         case Accept(_) | Reject => split
     end go
-    val result = go(split)
+    val result = go(split, 0)
     scoped("ucs:rp:memo"):
       log("memo:\n" + normalized.values.map: entry =>
         s"${entry.id} (${entry.useCount}) =>\n" + entry.normalized.fold("<empty>")(_.showDbg.indent("  "))
