@@ -1,7 +1,6 @@
 :js
 
 class Box[A](val value: A)
-class Pair[A, B](val first: A, val second: B)
 
 pattern Sign = -1 | 0 | 1
 
@@ -16,6 +15,26 @@ pattern SignBox = Box(Sign | SignBox)
 //│ = [ true, true, true ]
 
 :cp
-:todo
-Box(Box(-1)) is SignBox
-//│ = false
+[
+  Box(Box(-1)) is SignBox,
+  Box(Box(0)) is SignBox,
+  Box(Box(1)) is SignBox
+]
+//│ = [ true, true, true ]
+
+:cp
+[
+  Box(Box(Box(-1))) is SignBox,
+  Box(Box(Box(0))) is SignBox,
+  Box(Box(Box(1))) is SignBox
+]
+//│ = [ true, true, true ]
+
+:cp
+:expect [ false, false, false ]
+[
+  Box(Box(Box(2))) is SignBox,
+  Box(Box(Box(null))) is SignBox,
+  -1 is SignBox
+]
+//│ = [ false, false, false ]

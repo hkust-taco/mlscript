@@ -269,7 +269,7 @@ extension (split: DeBrujinSplit)
               log(s"expanded:\n${expanded.showDbg}")
               val concatenated = expanded ++ alternative
               log(s"concatenated:\n${concatenated.showDbg}")
-              go(expanded, expandLevel + 1)
+              go(concatenated, expandLevel + 1)
         case split @ Branch(scrutinee, pattern, consequence, alternative) => trace(
           pre = s"normalize <<<\n${split.showDbg}",
           post = (s: DeBrujinSplit) => s"normalize >>>\n${s.showDbg}"
