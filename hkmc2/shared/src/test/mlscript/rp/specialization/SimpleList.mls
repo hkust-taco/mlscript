@@ -149,24 +149,6 @@ fun (::) cons(head, tail) = Pair(head, tail)
 0 :: 1 :: 0 :: null is BinSeq
 //│ = true
 
-pattern BinTree = null | Pair(BinTree | 0 | 1, BinTree | 0 | 1)
-
-null is BinTree
-//│ = true
-
-Pair(null, null) is BinTree
-//│ = true
-
-Pair(0, null) is BinTree
-//│ = true
-
-Pair(0, Pair(0, null)) is BinTree
-//│ = true
-
-:todo
-Pair(2, Pair(0, Pair(1, null))) is BinTree
-//│ = true
-
 :todo
 pattern List(a) = null | Pair(a, List)
 //│ ═══[ERROR] Unmatched number of captures and parameters.

@@ -1,0 +1,62 @@
+:js
+
+class Box[A](val value: A)
+
+pattern NatBox = null | Box(NatBox)
+
+:cp
+:expect true
+null is NatBox
+//│ = true
+
+:cp
+:expect true
+Box(null) is NatBox
+//│ = true
+
+:cp
+:expect false
+Box(0) is NatBox
+//│ = false
+
+:cp
+:expect true
+Box(Box(Box(Box(Box(Box(Box(null))))))) is NatBox
+//│ = true
+
+:cp
+:expect true
+Box(Box(Box(Box(Box(Box(Box(Box(null)))))))) is NatBox
+//│ = true
+
+:cp
+:expect false
+Box(Box(Box(Box(Box(Box(Box(0))))))) is NatBox
+//│ = false
+
+pattern PosNatBox = Box(null | NatBox)
+
+:cp
+:expect false
+null is PosNatBox
+//│ = false
+
+:cp
+:expect true
+Box(null) is PosNatBox
+//│ = true
+
+:cp
+:expect true
+Box(Box(null)) is PosNatBox
+//│ = true
+
+:cp
+:expect true
+Box(Box(Box(null))) is PosNatBox
+//│ = true
+
+:cp
+:expect false
+Box(Box(Box(Box(42)))) is PosNatBox
+//│ = false

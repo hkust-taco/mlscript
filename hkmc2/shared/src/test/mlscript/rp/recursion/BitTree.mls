@@ -1,0 +1,804 @@
+:js
+
+class Pair[A, B](val first: A, val second: B)
+
+pattern Bit = 0 | 1
+
+:cp
+:expect true
+0 is Bit
+//│ = true
+
+:cp
+:expect true
+1 is Bit
+//│ = true
+
+:cp
+:expect false
+42 is Bit
+//│ = false
+
+:ucs rp:elaborated
+pattern BitTree = null | Pair(Bit | BitTree, Bit | BitTree)
+//│ elaborated nameless split:
+//│ >  a => 
+//│ >    a is null -> accept 0
+//│ >    a is class:Pair -> b => c => 
+//│ >      b is pattern:Bit -> 
+//│ >        c is pattern:Bit -> accept 0
+//│ >        c is pattern:BitTree -> accept 0
+//│ >      b is pattern:BitTree -> 
+//│ >        c is pattern:Bit -> accept 0
+//│ >        c is pattern:BitTree -> accept 0
+
+:cp
+null is BitTree
+//│ = true
+
+:cp
+:ucs rp rpn rp:memo
+Pair(null, null) is BitTree
+//│ SYNONYM: $scrut#0 is pattern:BitTree
+//│ [cp] the initial nameless split:
+//│ >  a => 
+//│ >    a is pattern:BitTree -> accept 42
+//│ expand <<< pattern BitTree
+//│ >  1 is pattern:BitTree -> accept 42
+//│ | expanded:
+//│ | >  1 is null -> accept 42
+//│ | >  1 is class:Pair -> λ λ 
+//│ | >    2 is pattern:Bit -> 
+//│ | >      1 is pattern:Bit -> accept 42
+//│ | >      1 is pattern:BitTree -> accept 42
+//│ | >    2 is pattern:BitTree -> 
+//│ | >      1 is pattern:Bit -> accept 42
+//│ | >      1 is pattern:BitTree -> accept 42
+//│ | concatenated:
+//│ | >  1 is null -> accept 42
+//│ | >  1 is class:Pair -> λ λ 
+//│ | >    2 is pattern:Bit -> 
+//│ | >      1 is pattern:Bit -> accept 42
+//│ | >      1 is pattern:BitTree -> accept 42
+//│ | >    2 is pattern:BitTree -> 
+//│ | >      1 is pattern:Bit -> accept 42
+//│ | >      1 is pattern:BitTree -> accept 42
+//│ | normalize <<<
+//│ | >  1 is null -> accept 42
+//│ | >  1 is class:Pair -> λ λ 
+//│ | >    2 is pattern:Bit -> 
+//│ | >      1 is pattern:Bit -> accept 42
+//│ | >      1 is pattern:BitTree -> accept 42
+//│ | >    2 is pattern:BitTree -> 
+//│ | >      1 is pattern:Bit -> accept 42
+//│ | >      1 is pattern:BitTree -> accept 42
+//│ | | normalize <<<
+//│ | | >  1 is null -> accept 42
+//│ | | >  1 is class:Pair -> λ λ 
+//│ | | >    2 is pattern:Bit -> 
+//│ | | >      1 is pattern:Bit -> accept 42
+//│ | | >      1 is pattern:BitTree -> accept 42
+//│ | | >    2 is pattern:BitTree -> 
+//│ | | >      1 is pattern:Bit -> accept 42
+//│ | | >      1 is pattern:BitTree -> accept 42
+//│ | | | S+ (1 is null) <<< accept 42
+//│ | | | S+ (1 is null) >>> (no change)
+//│ | | | [Step 1] specialized consequence:
+//│ | | | >  accept 42
+//│ | | | S+ (1 is null) <<<
+//│ | | | >  1 is class:Pair -> λ λ 
+//│ | | | >    2 is pattern:Bit -> 
+//│ | | | >      1 is pattern:Bit -> accept 42
+//│ | | | >      1 is pattern:BitTree -> accept 42
+//│ | | | >    2 is pattern:BitTree -> 
+//│ | | | >      1 is pattern:Bit -> accept 42
+//│ | | | >      1 is pattern:BitTree -> accept 42
+//│ | | | | skip the consequence
+//│ | | | S+ (1 is null) >>>
+//│ | | | >  reject
+//│ | | | [Step 2] specialized alternative:
+//│ | | | >  reject
+//│ | | | [Step 3] concatenate them:
+//│ | | | >  accept 42
+//│ | | | normalize consequent <<<
+//│ | | | normalize consequent >>>
+//│ | | | increment by 0
+//│ | | | bind with 0
+//│ | | | S- (1 is null) <<<
+//│ | | | >  1 is class:Pair -> λ λ 
+//│ | | | >    2 is pattern:Bit -> 
+//│ | | | >      1 is pattern:Bit -> accept 42
+//│ | | | >      1 is pattern:BitTree -> accept 42
+//│ | | | >    2 is pattern:BitTree -> 
+//│ | | | >      1 is pattern:Bit -> accept 42
+//│ | | | >      1 is pattern:BitTree -> accept 42
+//│ | | | S- (1 is null) >>> (no change)
+//│ | | | normalize alternative <<<
+//│ | | | | normalize <<<
+//│ | | | | >  1 is class:Pair -> λ λ 
+//│ | | | | >    2 is pattern:Bit -> 
+//│ | | | | >      1 is pattern:Bit -> accept 42
+//│ | | | | >      1 is pattern:BitTree -> accept 42
+//│ | | | | >    2 is pattern:BitTree -> 
+//│ | | | | >      1 is pattern:Bit -> accept 42
+//│ | | | | >      1 is pattern:BitTree -> accept 42
+//│ | | | | | normalize <<<
+//│ | | | | | >  1 is class:Pair -> λ λ 
+//│ | | | | | >    2 is pattern:Bit -> 
+//│ | | | | | >      1 is pattern:Bit -> accept 42
+//│ | | | | | >      1 is pattern:BitTree -> accept 42
+//│ | | | | | >    2 is pattern:BitTree -> 
+//│ | | | | | >      1 is pattern:Bit -> accept 42
+//│ | | | | | >      1 is pattern:BitTree -> accept 42
+//│ | | | | | | S+ (3 is class:Pair) <<<
+//│ | | | | | | >  2 is pattern:Bit -> 
+//│ | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | >  2 is pattern:BitTree -> 
+//│ | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | S+ (3 is class:Pair) >>> (no change)
+//│ | | | | | | [Step 1] specialized consequence:
+//│ | | | | | | >  2 is pattern:Bit -> 
+//│ | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | >  2 is pattern:BitTree -> 
+//│ | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | S+ (1 is class:Pair) <<< reject
+//│ | | | | | | S+ (1 is class:Pair) >>> (no change)
+//│ | | | | | | [Step 2] specialized alternative:
+//│ | | | | | | >  reject
+//│ | | | | | | [Step 3] concatenate them:
+//│ | | | | | | >  2 is pattern:Bit -> 
+//│ | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | >  2 is pattern:BitTree -> 
+//│ | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | normalize consequent <<<
+//│ | | | | | | | expand <<< pattern Bit
+//│ | | | | | | | >  2 is pattern:Bit -> 
+//│ | | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | | >  2 is pattern:BitTree -> 
+//│ | | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | expanded:
+//│ | | | | | | | | >  2 is 0 -> 
+//│ | | | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | >  2 is 1 -> 
+//│ | | | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | concatenated:
+//│ | | | | | | | | >  2 is 0 -> 
+//│ | | | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | >  2 is 1 -> 
+//│ | | | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | >  2 is pattern:BitTree -> 
+//│ | | | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | normalize <<<
+//│ | | | | | | | | >  2 is 0 -> 
+//│ | | | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | >  2 is 1 -> 
+//│ | | | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | | normalize <<<
+//│ | | | | | | | | | >  2 is 0 -> 
+//│ | | | | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | | >  2 is 1 -> 
+//│ | | | | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | | | S+ (2 is 0) <<<
+//│ | | | | | | | | | | >  1 is pattern:Bit -> accept 42
+//│ | | | | | | | | | | >  1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | | | S+ (2 is 0) >>> (no change)
+//│ | | | | | | | | | | [Step 1] specialized consequence:
+//│ | | | | | | | | | | >  1 is pattern:Bit -> accept 42
+//│ | | | | | | | | | | >  1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | | | S+ (2 is 0) <<<
+//│ | | | | | | | | | | >  2 is 1 -> 
+//│ | | | | | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | | | | skip the consequence
+//│ | | | | | | | | | | S+ (2 is 0) >>>
+//│ | | | | | | | | | | >  reject
+//│ | | | | | | | | | | [Step 2] specialized alternative:
+//│ | | | | | | | | | | >  reject
+//│ | | | | | | | | | | [Step 3] concatenate them:
+//│ | | | | | | | | | | >  1 is pattern:Bit -> accept 42
+//│ | | | | | | | | | | >  1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | | | normalize consequent <<<
+//│ | | | | | | | | | | | expand <<< pattern Bit
+//│ | | | | | | | | | | | >  1 is pattern:Bit -> accept 42
+//│ | | | | | | | | | | | >  1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | | | | | expanded:
+//│ | | | | | | | | | | | | >  1 is 0 -> accept 42
+//│ | | | | | | | | | | | | >  1 is 1 -> accept 42
+//│ | | | | | | | | | | | | concatenated:
+//│ | | | | | | | | | | | | >  1 is 0 -> accept 42
+//│ | | | | | | | | | | | | >  1 is 1 -> accept 42
+//│ | | | | | | | | | | | | >  1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | | | | | normalize <<<
+//│ | | | | | | | | | | | | >  1 is 0 -> accept 42
+//│ | | | | | | | | | | | | >  1 is 1 -> accept 42
+//│ | | | | | | | | | | | | | normalize <<<
+//│ | | | | | | | | | | | | | >  1 is 0 -> accept 42
+//│ | | | | | | | | | | | | | >  1 is 1 -> accept 42
+//│ | | | | | | | | | | | | | | S+ (1 is 0) <<< accept 42
+//│ | | | | | | | | | | | | | | S+ (1 is 0) >>> (no change)
+//│ | | | | | | | | | | | | | | [Step 1] specialized consequence:
+//│ | | | | | | | | | | | | | | >  accept 42
+//│ | | | | | | | | | | | | | | S+ (1 is 0) <<< 1 is 1 -> accept 42
+//│ | | | | | | | | | | | | | | | skip the consequence
+//│ | | | | | | | | | | | | | | S+ (1 is 0) >>>
+//│ | | | | | | | | | | | | | | >  reject
+//│ | | | | | | | | | | | | | | [Step 2] specialized alternative:
+//│ | | | | | | | | | | | | | | >  reject
+//│ | | | | | | | | | | | | | | [Step 3] concatenate them:
+//│ | | | | | | | | | | | | | | >  accept 42
+//│ | | | | | | | | | | | | | | normalize consequent <<<
+//│ | | | | | | | | | | | | | | normalize consequent >>>
+//│ | | | | | | | | | | | | | | increment by 0
+//│ | | | | | | | | | | | | | | bind with 0
+//│ | | | | | | | | | | | | | | S- (1 is 0) <<< 1 is 1 -> accept 42
+//│ | | | | | | | | | | | | | | S- (1 is 0) >>> (no change)
+//│ | | | | | | | | | | | | | | normalize alternative <<<
+//│ | | | | | | | | | | | | | | | normalize <<<
+//│ | | | | | | | | | | | | | | | >  1 is 1 -> accept 42
+//│ | | | | | | | | | | | | | | | | normalize <<<
+//│ | | | | | | | | | | | | | | | | >  1 is 1 -> accept 42
+//│ | | | | | | | | | | | | | | | | | S+ (1 is 1) <<< accept 42
+//│ | | | | | | | | | | | | | | | | | S+ (1 is 1) >>> (no change)
+//│ | | | | | | | | | | | | | | | | | [Step 1] specialized consequence:
+//│ | | | | | | | | | | | | | | | | | >  accept 42
+//│ | | | | | | | | | | | | | | | | | S+ (1 is 1) <<< reject
+//│ | | | | | | | | | | | | | | | | | S+ (1 is 1) >>> (no change)
+//│ | | | | | | | | | | | | | | | | | [Step 2] specialized alternative:
+//│ | | | | | | | | | | | | | | | | | >  reject
+//│ | | | | | | | | | | | | | | | | | [Step 3] concatenate them:
+//│ | | | | | | | | | | | | | | | | | >  accept 42
+//│ | | | | | | | | | | | | | | | | | normalize consequent <<<
+//│ | | | | | | | | | | | | | | | | | normalize consequent >>>
+//│ | | | | | | | | | | | | | | | | | increment by 0
+//│ | | | | | | | | | | | | | | | | | bind with 0
+//│ | | | | | | | | | | | | | | | | | S- (1 is 1) <<< reject
+//│ | | | | | | | | | | | | | | | | | S- (1 is 1) >>> (no change)
+//│ | | | | | | | | | | | | | | | | | normalize alternative <<<
+//│ | | | | | | | | | | | | | | | | | normalize alternative >>>
+//│ | | | | | | | | | | | | | | | | normalize >>>
+//│ | | | | | | | | | | | | | | | | >  1 is 1 -> accept 42
+//│ | | | | | | | | | | | | | | | normalize >>>
+//│ | | | | | | | | | | | | | | | >  1 is 1 -> accept 42
+//│ | | | | | | | | | | | | | | normalize alternative >>>
+//│ | | | | | | | | | | | | | normalize >>>
+//│ | | | | | | | | | | | | | >  1 is 0 -> accept 42
+//│ | | | | | | | | | | | | | >  1 is 1 -> accept 42
+//│ | | | | | | | | | | | | normalize >>>
+//│ | | | | | | | | | | | | >  1 is 0 -> accept 42
+//│ | | | | | | | | | | | | >  1 is 1 -> accept 42
+//│ | | | | | | | | | | | expand >>> pattern Bit
+//│ | | | | | | | | | | | >  1 is 0 -> accept 42
+//│ | | | | | | | | | | | >  1 is 1 -> accept 42
+//│ | | | | | | | | | | normalize consequent >>>
+//│ | | | | | | | | | | increment by 0
+//│ | | | | | | | | | | bind with 0
+//│ | | | | | | | | | | S- (2 is 0) <<<
+//│ | | | | | | | | | | >  2 is 1 -> 
+//│ | | | | | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | | | S- (2 is 0) >>> (no change)
+//│ | | | | | | | | | | normalize alternative <<<
+//│ | | | | | | | | | | | normalize <<<
+//│ | | | | | | | | | | | >  2 is 1 -> 
+//│ | | | | | | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | | | | | normalize <<<
+//│ | | | | | | | | | | | | >  2 is 1 -> 
+//│ | | | | | | | | | | | | >    1 is pattern:Bit -> accept 42
+//│ | | | | | | | | | | | | >    1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | | | | | | S+ (2 is 1) <<<
+//│ | | | | | | | | | | | | | >  1 is pattern:Bit -> accept 42
+//│ | | | | | | | | | | | | | >  1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | | | | | | S+ (2 is 1) >>> (no change)
+//│ | | | | | | | | | | | | | [Step 1] specialized consequence:
+//│ | | | | | | | | | | | | | >  1 is pattern:Bit -> accept 42
+//│ | | | | | | | | | | | | | >  1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | | | | | | S+ (2 is 1) <<< reject
+//│ | | | | | | | | | | | | | S+ (2 is 1) >>> (no change)
+//│ | | | | | | | | | | | | | [Step 2] specialized alternative:
+//│ | | | | | | | | | | | | | >  reject
+//│ | | | | | | | | | | | | | [Step 3] concatenate them:
+//│ | | | | | | | | | | | | | >  1 is pattern:Bit -> accept 42
+//│ | | | | | | | | | | | | | >  1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | | | | | | normalize consequent <<<
+//│ | | | | | | | | | | | | | | expand <<< pattern Bit
+//│ | | | | | | | | | | | | | | >  1 is pattern:Bit -> accept 42
+//│ | | | | | | | | | | | | | | >  1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | | | | | | | | expanded:
+//│ | | | | | | | | | | | | | | | >  1 is 0 -> accept 42
+//│ | | | | | | | | | | | | | | | >  1 is 1 -> accept 42
+//│ | | | | | | | | | | | | | | | concatenated:
+//│ | | | | | | | | | | | | | | | >  1 is 0 -> accept 42
+//│ | | | | | | | | | | | | | | | >  1 is 1 -> accept 42
+//│ | | | | | | | | | | | | | | | >  1 is pattern:BitTree -> accept 42
+//│ | | | | | | | | | | | | | | | normalize <<<
+//│ | | | | | | | | | | | | | | | >  1 is 0 -> accept 42
+//│ | | | | | | | | | | | | | | | >  1 is 1 -> accept 42
+//│ | | | | | | | | | | | | | | | | normalize <<<
+//│ | | | | | | | | | | | | | | | | >  1 is 0 -> accept 42
+//│ | | | | | | | | | | | | | | | | >  1 is 1 -> accept 42
+//│ | | | | | | | | | | | | | | | | | reuse:
+//│ | | | | | | | | | | | | | | | | | >  ? is 0 -> accept 42
+//│ | | | | | | | | | | | | | | | | | >  ? is 1 -> accept 42
+//│ | | | | | | | | | | | | | | | | normalize >>>
+//│ | | | | | | | | | | | | | | | | >  1 is 0 -> accept 42
+//│ | | | | | | | | | | | | | | | | >  1 is 1 -> accept 42
+//│ | | | | | | | | | | | | | | | normalize >>>
+//│ | | | | | | | | | | | | | | | >  1 is 0 -> accept 42
+//│ | | | | | | | | | | | | | | | >  1 is 1 -> accept 42
+//│ | | | | | | | | | | | | | | expand >>> pattern Bit
+//│ | | | | | | | | | | | | | | >  1 is 0 -> accept 42
+//│ | | | | | | | | | | | | | | >  1 is 1 -> accept 42
+//│ | | | | | | | | | | | | | normalize consequent >>>
+//│ | | | | | | | | | | | | | increment by 0
+//│ | | | | | | | | | | | | | bind with 0
+//│ | | | | | | | | | | | | | S- (2 is 1) <<< reject
+//│ | | | | | | | | | | | | | S- (2 is 1) >>> (no change)
+//│ | | | | | | | | | | | | | normalize alternative <<<
+//│ | | | | | | | | | | | | | normalize alternative >>>
+//│ | | | | | | | | | | | | normalize >>>
+//│ | | | | | | | | | | | | >  2 is 1 -> 
+//│ | | | | | | | | | | | | >    1 is 0 -> accept 42
+//│ | | | | | | | | | | | | >    1 is 1 -> accept 42
+//│ | | | | | | | | | | | normalize >>>
+//│ | | | | | | | | | | | >  2 is 1 -> 
+//│ | | | | | | | | | | | >    1 is 0 -> accept 42
+//│ | | | | | | | | | | | >    1 is 1 -> accept 42
+//│ | | | | | | | | | | normalize alternative >>>
+//│ | | | | | | | | | normalize >>>
+//│ | | | | | | | | | >  2 is 0 -> 
+//│ | | | | | | | | | >    1 is 0 -> accept 42
+//│ | | | | | | | | | >    1 is 1 -> accept 42
+//│ | | | | | | | | | >  2 is 1 -> 
+//│ | | | | | | | | | >    1 is 0 -> accept 42
+//│ | | | | | | | | | >    1 is 1 -> accept 42
+//│ | | | | | | | | normalize >>>
+//│ | | | | | | | | >  2 is 0 -> 
+//│ | | | | | | | | >    1 is 0 -> accept 42
+//│ | | | | | | | | >    1 is 1 -> accept 42
+//│ | | | | | | | | >  2 is 1 -> 
+//│ | | | | | | | | >    1 is 0 -> accept 42
+//│ | | | | | | | | >    1 is 1 -> accept 42
+//│ | | | | | | | expand >>> pattern Bit
+//│ | | | | | | | >  2 is 0 -> 
+//│ | | | | | | | >    1 is 0 -> accept 42
+//│ | | | | | | | >    1 is 1 -> accept 42
+//│ | | | | | | | >  2 is 1 -> 
+//│ | | | | | | | >    1 is 0 -> accept 42
+//│ | | | | | | | >    1 is 1 -> accept 42
+//│ | | | | | | normalize consequent >>>
+//│ | | | | | | increment by 2
+//│ | | | | | | bind with 2
+//│ | | | | | | S- (1 is class:Pair) <<< reject
+//│ | | | | | | S- (1 is class:Pair) >>> (no change)
+//│ | | | | | | normalize alternative <<<
+//│ | | | | | | normalize alternative >>>
+//│ | | | | | normalize >>>
+//│ | | | | | >  1 is class:Pair -> λ λ 
+//│ | | | | | >    2 is 0 -> 
+//│ | | | | | >      1 is 0 -> accept 42
+//│ | | | | | >      1 is 1 -> accept 42
+//│ | | | | | >    2 is 1 -> 
+//│ | | | | | >      1 is 0 -> accept 42
+//│ | | | | | >      1 is 1 -> accept 42
+//│ | | | | normalize >>>
+//│ | | | | >  1 is class:Pair -> λ λ 
+//│ | | | | >    2 is 0 -> 
+//│ | | | | >      1 is 0 -> accept 42
+//│ | | | | >      1 is 1 -> accept 42
+//│ | | | | >    2 is 1 -> 
+//│ | | | | >      1 is 0 -> accept 42
+//│ | | | | >      1 is 1 -> accept 42
+//│ | | | normalize alternative >>>
+//│ | | normalize >>>
+//│ | | >  1 is null -> accept 42
+//│ | | >  1 is class:Pair -> λ λ 
+//│ | | >    2 is 0 -> 
+//│ | | >      1 is 0 -> accept 42
+//│ | | >      1 is 1 -> accept 42
+//│ | | >    2 is 1 -> 
+//│ | | >      1 is 0 -> accept 42
+//│ | | >      1 is 1 -> accept 42
+//│ | normalize >>>
+//│ | >  1 is null -> accept 42
+//│ | >  1 is class:Pair -> λ λ 
+//│ | >    2 is 0 -> 
+//│ | >      1 is 0 -> accept 42
+//│ | >      1 is 1 -> accept 42
+//│ | >    2 is 1 -> 
+//│ | >      1 is 0 -> accept 42
+//│ | >      1 is 1 -> accept 42
+//│ expand >>> pattern BitTree
+//│ >  1 is null -> accept 42
+//│ >  1 is class:Pair -> λ λ 
+//│ >    2 is 0 -> 
+//│ >      1 is 0 -> accept 42
+//│ >      1 is 1 -> accept 42
+//│ >    2 is 1 -> 
+//│ >      1 is 0 -> accept 42
+//│ >      1 is 1 -> accept 42
+//│ memo:
+//│ >  0 (0) =>
+//│ >    1 is null -> accept 42
+//│ >    1 is class:Pair -> λ λ 
+//│ >      2 is 0 -> 
+//│ >        1 is 0 -> accept 42
+//│ >        1 is 1 -> accept 42
+//│ >      2 is 1 -> 
+//│ >        1 is 0 -> accept 42
+//│ >        1 is 1 -> accept 42
+//│ >  1 (0) =>
+//│ >    1 is class:Pair -> λ λ 
+//│ >      2 is 0 -> 
+//│ >        1 is 0 -> accept 42
+//│ >        1 is 1 -> accept 42
+//│ >      2 is 1 -> 
+//│ >        1 is 0 -> accept 42
+//│ >        1 is 1 -> accept 42
+//│ >  3 (0) =>
+//│ >    1 is 0 -> accept 42
+//│ >    1 is 1 -> accept 42
+//│ >  4 (0) =>
+//│ >    1 is 1 -> accept 42
+//│ >  5 (0) =>
+//│ >    2 is 1 -> 
+//│ >      1 is 0 -> accept 42
+//│ >      1 is 1 -> accept 42
+//│ >  2 (0) =>
+//│ >    2 is 0 -> 
+//│ >      1 is 0 -> accept 42
+//│ >      1 is 1 -> accept 42
+//│ >    2 is 1 -> 
+//│ >      1 is 0 -> accept 42
+//│ >      1 is 1 -> accept 42
+//│ [cp] the normalized nameless split:
+//│ >  a => 
+//│ >    a is null -> accept 42
+//│ >    a is class:Pair -> b => c => 
+//│ >      b is 0 -> 
+//│ >        c is 0 -> accept 42
+//│ >        c is 1 -> accept 42
+//│ >      b is 1 -> 
+//│ >        c is 0 -> accept 42
+//│ >        c is 1 -> accept 42
+//│ [cp] the final compiled split:
+//│ >  if
+//│ >    $scrut is null then true
+//│ >    $scrut is Pair($arg1, $arg2) and
+//│ >      $arg1 is 0 and
+//│ >        $arg2 is 0 then true
+//│ >        $arg2 is 1 then true
+//│ >      $arg1 is 1 and
+//│ >        $arg2 is 0 then true
+//│ >        $arg2 is 1 then true
+//│ MATCH: Ref($scrut) is Lit(UnitLit(true))
+//│ tail is discarded
+//│ S+ <<< Ref($scrut) is Lit(UnitLit(true)) : if then true
+//│ | CASE Else
+//│ S+ >>> if then true
+//│ normalize <<< if then true
+//│ | DFLT: true
+//│ normalize >>> if then true
+//│ S- <<< Ref($scrut) is Lit(UnitLit(true)) : if
+//│ >    $scrut is Pair($arg1, $arg2) and
+//│ >      $arg1 is 0 and
+//│ >        $arg2 is 0 then true
+//│ >        $arg2 is 1 then true
+//│ >      $arg1 is 1 and
+//│ >        $arg2 is 0 then true
+//│ >        $arg2 is 1 then true
+//│ >    else false
+//│ | CASE Cons scrut is Pair($arg1, $arg2) -> { arg1 is 0 -> { arg2 is 0 -> { else true }; arg2 is 1 -> { else true };  }; arg1 is 1 -> { arg2 is 0 -> { else true }; arg2 is 1 -> { else true };  };  }
+//│ | Case 1.2: Ref($scrut) === Ref($scrut)
+//│ | Case 1.2.2: Lit(UnitLit(true)) are unrelated to ClassLike(class:Pair,SynthSel(SynthSel(Ref(globalThis:block#1),Ident(Pair)),Ident(class)),Some(List($arg1, $arg2)),false)
+//│ | CASE Else
+//│ S- >>> if
+//│ >    $scrut is Pair($arg1, $arg2) and
+//│ >      $arg1 is 0 and
+//│ >        $arg2 is 0 then true
+//│ >        $arg2 is 1 then true
+//│ >      $arg1 is 1 and
+//│ >        $arg2 is 0 then true
+//│ >        $arg2 is 1 then true
+//│ >    else false
+//│ MATCH: Ref($scrut) is ClassLike(class:Pair,SynthSel(SynthSel(Ref(globalThis:block#1),Ident(Pair)),Ident(class)),Some(List($arg1, $arg2)),false)
+//│ S+ <<< Ref($scrut) is ClassLike(class:Pair,SynthSel(SynthSel(Ref(globalThis:block#1),Ident(Pair)),Ident(class)),Some(List($arg1, $arg2)),false) : if
+//│ >    $arg1 is 0 and
+//│ >      $arg2 is 0 then true
+//│ >      $arg2 is 1 then true
+//│ >    $arg1 is 1 and
+//│ >      $arg2 is 0 then true
+//│ >      $arg2 is 1 then true
+//│ >    else false
+//│ | CASE Cons arg1 is 0 -> { arg2 is 0 -> { else true }; arg2 is 1 -> { else true };  }
+//│ | Case 2: Ref($scrut) =/= Ref($arg1)
+//│ | CASE Cons arg2 is 0 -> { else true }
+//│ | Case 2: Ref($scrut) =/= Ref($arg2)
+//│ | CASE Else
+//│ | CASE Cons arg2 is 1 -> { else true }
+//│ | Case 2: Ref($scrut) =/= Ref($arg2)
+//│ | CASE Else
+//│ | CASE Nil
+//│ | CASE Cons arg1 is 1 -> { arg2 is 0 -> { else true }; arg2 is 1 -> { else true };  }
+//│ | Case 2: Ref($scrut) =/= Ref($arg1)
+//│ | CASE Cons arg2 is 0 -> { else true }
+//│ | Case 2: Ref($scrut) =/= Ref($arg2)
+//│ | CASE Else
+//│ | CASE Cons arg2 is 1 -> { else true }
+//│ | Case 2: Ref($scrut) =/= Ref($arg2)
+//│ | CASE Else
+//│ | CASE Nil
+//│ | CASE Else
+//│ S+ >>> if
+//│ >    $arg1 is 0 and
+//│ >      $arg2 is 0 then true
+//│ >      $arg2 is 1 then true
+//│ >    $arg1 is 1 and
+//│ >      $arg2 is 0 then true
+//│ >      $arg2 is 1 then true
+//│ >    else false
+//│ normalize <<< if
+//│ >    $arg1 is 0 and
+//│ >      $arg2 is 0 then true
+//│ >      $arg2 is 1 then true
+//│ >    $arg1 is 1 and
+//│ >      $arg2 is 0 then true
+//│ >      $arg2 is 1 then true
+//│ >    else false
+//│ | MATCH: Ref($arg1) is Lit(IntLit(0))
+//│ | S+ <<< Ref($arg1) is Lit(IntLit(0)) : if
+//│ | >    $arg2 is 0 then true
+//│ | >    $arg2 is 1 then true
+//│ | >    $arg1 is 1 and
+//│ | >      $arg2 is 0 then true
+//│ | >      $arg2 is 1 then true
+//│ | >    else false
+//│ | | CASE Cons arg2 is 0 -> { else true }
+//│ | | Case 2: Ref($arg1) =/= Ref($arg2)
+//│ | | CASE Else
+//│ | | CASE Cons arg2 is 1 -> { else true }
+//│ | | Case 2: Ref($arg1) =/= Ref($arg2)
+//│ | | CASE Else
+//│ | | CASE Cons arg1 is 1 -> { arg2 is 0 -> { else true }; arg2 is 1 -> { else true };  }
+//│ | | Case 1.1: Ref($arg1) === Ref($arg1)
+//│ | | CASE Else
+//│ | S+ >>> if
+//│ | >    $arg2 is 0 then true
+//│ | >    $arg2 is 1 then true
+//│ | >    else false
+//│ | normalize <<< if
+//│ | >    $arg2 is 0 then true
+//│ | >    $arg2 is 1 then true
+//│ | >    else false
+//│ | | MATCH: Ref($arg2) is Lit(IntLit(0))
+//│ | | tail is discarded
+//│ | | S+ <<< Ref($arg2) is Lit(IntLit(0)) : if then true
+//│ | | | CASE Else
+//│ | | S+ >>> if then true
+//│ | | normalize <<< if then true
+//│ | | | DFLT: true
+//│ | | normalize >>> if then true
+//│ | | S- <<< Ref($arg2) is Lit(IntLit(0)) : if
+//│ | | >    $arg2 is 1 then true
+//│ | | >    else false
+//│ | | | CASE Cons arg2 is 1 -> { else true }
+//│ | | | Case 1.2: Ref($arg2) === Ref($arg2)
+//│ | | | Case 1.2.2: Lit(IntLit(0)) are unrelated to Lit(IntLit(1))
+//│ | | | CASE Else
+//│ | | S- >>> if
+//│ | | >    $arg2 is 1 then true
+//│ | | >    else false
+//│ | | MATCH: Ref($arg2) is Lit(IntLit(1))
+//│ | | tail is discarded
+//│ | | S+ <<< Ref($arg2) is Lit(IntLit(1)) : if then true
+//│ | | | CASE Else
+//│ | | S+ >>> if then true
+//│ | | normalize <<< if then true
+//│ | | | DFLT: true
+//│ | | normalize >>> if then true
+//│ | | S- <<< Ref($arg2) is Lit(IntLit(1)) : if then false
+//│ | | | CASE Else
+//│ | | S- >>> if then false
+//│ | | DFLT: false
+//│ | normalize >>> if
+//│ | >    $arg2 is 0 then true
+//│ | >    $arg2 is 1 then true
+//│ | >    else false
+//│ | S- <<< Ref($arg1) is Lit(IntLit(0)) : if
+//│ | >    $arg1 is 1 and
+//│ | >      $arg2 is 0 then true
+//│ | >      $arg2 is 1 then true
+//│ | >    else false
+//│ | | CASE Cons arg1 is 1 -> { arg2 is 0 -> { else true }; arg2 is 1 -> { else true };  }
+//│ | | Case 1.2: Ref($arg1) === Ref($arg1)
+//│ | | Case 1.2.2: Lit(IntLit(0)) are unrelated to Lit(IntLit(1))
+//│ | | CASE Else
+//│ | S- >>> if
+//│ | >    $arg1 is 1 and
+//│ | >      $arg2 is 0 then true
+//│ | >      $arg2 is 1 then true
+//│ | >    else false
+//│ | MATCH: Ref($arg1) is Lit(IntLit(1))
+//│ | S+ <<< Ref($arg1) is Lit(IntLit(1)) : if
+//│ | >    $arg2 is 0 then true
+//│ | >    $arg2 is 1 then true
+//│ | >    else false
+//│ | | CASE Cons arg2 is 0 -> { else true }
+//│ | | Case 2: Ref($arg1) =/= Ref($arg2)
+//│ | | CASE Else
+//│ | | CASE Cons arg2 is 1 -> { else true }
+//│ | | Case 2: Ref($arg1) =/= Ref($arg2)
+//│ | | CASE Else
+//│ | | CASE Else
+//│ | S+ >>> if
+//│ | >    $arg2 is 0 then true
+//│ | >    $arg2 is 1 then true
+//│ | >    else false
+//│ | normalize <<< if
+//│ | >    $arg2 is 0 then true
+//│ | >    $arg2 is 1 then true
+//│ | >    else false
+//│ | | MATCH: Ref($arg2) is Lit(IntLit(0))
+//│ | | tail is discarded
+//│ | | S+ <<< Ref($arg2) is Lit(IntLit(0)) : if then true
+//│ | | | CASE Else
+//│ | | S+ >>> if then true
+//│ | | normalize <<< if then true
+//│ | | | DFLT: true
+//│ | | normalize >>> if then true
+//│ | | S- <<< Ref($arg2) is Lit(IntLit(0)) : if
+//│ | | >    $arg2 is 1 then true
+//│ | | >    else false
+//│ | | | CASE Cons arg2 is 1 -> { else true }
+//│ | | | Case 1.2: Ref($arg2) === Ref($arg2)
+//│ | | | Case 1.2.2: Lit(IntLit(0)) are unrelated to Lit(IntLit(1))
+//│ | | | CASE Else
+//│ | | S- >>> if
+//│ | | >    $arg2 is 1 then true
+//│ | | >    else false
+//│ | | MATCH: Ref($arg2) is Lit(IntLit(1))
+//│ | | tail is discarded
+//│ | | S+ <<< Ref($arg2) is Lit(IntLit(1)) : if then true
+//│ | | | CASE Else
+//│ | | S+ >>> if then true
+//│ | | normalize <<< if then true
+//│ | | | DFLT: true
+//│ | | normalize >>> if then true
+//│ | | S- <<< Ref($arg2) is Lit(IntLit(1)) : if then false
+//│ | | | CASE Else
+//│ | | S- >>> if then false
+//│ | | DFLT: false
+//│ | normalize >>> if
+//│ | >    $arg2 is 0 then true
+//│ | >    $arg2 is 1 then true
+//│ | >    else false
+//│ | S- <<< Ref($arg1) is Lit(IntLit(1)) : if then false
+//│ | | CASE Else
+//│ | S- >>> if then false
+//│ | DFLT: false
+//│ normalize >>> if
+//│ >    $arg1 is 0 and
+//│ >      $arg2 is 0 then true
+//│ >      $arg2 is 1 then true
+//│ >      else false
+//│ >    $arg1 is 1 and
+//│ >      $arg2 is 0 then true
+//│ >      $arg2 is 1 then true
+//│ >      else false
+//│ >    else false
+//│ S- <<< Ref($scrut) is ClassLike(class:Pair,SynthSel(SynthSel(Ref(globalThis:block#1),Ident(Pair)),Ident(class)),Some(List($arg1, $arg2)),false) : if then false
+//│ | CASE Else
+//│ S- >>> if then false
+//│ DFLT: false
+//│ = false
+
+:ucs rp:elaborated
+pattern BinTree = null | Pair(BinTree | 0 | 1, BinTree | 0 | 1)
+//│ elaborated nameless split:
+//│ >  a => 
+//│ >    a is null -> accept 0
+//│ >    a is class:Pair -> b => c => 
+//│ >      b is pattern:BinTree -> 
+//│ >        c is pattern:BinTree -> accept 0
+//│ >        c is 0 -> accept 0
+//│ >        c is 1 -> accept 0
+//│ >      b is 0 -> 
+//│ >        c is pattern:BinTree -> accept 0
+//│ >        c is 0 -> accept 0
+//│ >        c is 1 -> accept 0
+//│ >      b is 1 -> 
+//│ >        c is pattern:BinTree -> accept 0
+//│ >        c is 0 -> accept 0
+//│ >        c is 1 -> accept 0
+
+:cp
+null is BinTree
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.IndexOutOfBoundsException: 4 is out of bounds (min 0, max 2)
+//│ 	at: scala.collection.immutable.Vector.ioob(Vector.scala:286)
+//│ 	at: scala.collection.immutable.Vector1.apply(Vector.scala:391)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$package$.go$11(DeBrujinSplit.scala:229)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$package$.toSplit(DeBrujinSplit.scala:241)
+//│ 	at: hkmc2.semantics.ucs.Normalization.rec$1$$anonfun$3$$anonfun$5(Normalization.scala:138)
+//│ 	at: scala.collection.IterableOnceOps.$anonfun$foldRight$1(IterableOnce.scala:755)
+//│ 	at: scala.collection.LinearSeqOps.foldLeft(LinearSeq.scala:183)
+//│ 	at: scala.collection.LinearSeqOps.foldLeft$(LinearSeq.scala:179)
+//│ 	at: scala.collection.immutable.List.foldLeft(List.scala:79)
+//│ 	at: scala.collection.IterableOnceOps.foldRight(IterableOnce.scala:755)
+
+:cp
+Pair(null, null) is BinTree
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.IndexOutOfBoundsException: 4 is out of bounds (min 0, max 2)
+//│ 	at: scala.collection.immutable.Vector.ioob(Vector.scala:286)
+//│ 	at: scala.collection.immutable.Vector1.apply(Vector.scala:391)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$package$.go$11(DeBrujinSplit.scala:229)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$package$.toSplit(DeBrujinSplit.scala:241)
+//│ 	at: hkmc2.semantics.ucs.Normalization.rec$1$$anonfun$3$$anonfun$5(Normalization.scala:138)
+//│ 	at: scala.collection.IterableOnceOps.$anonfun$foldRight$1(IterableOnce.scala:755)
+//│ 	at: scala.collection.LinearSeqOps.foldLeft(LinearSeq.scala:183)
+//│ 	at: scala.collection.LinearSeqOps.foldLeft$(LinearSeq.scala:179)
+//│ 	at: scala.collection.immutable.List.foldLeft(List.scala:79)
+//│ 	at: scala.collection.IterableOnceOps.foldRight(IterableOnce.scala:755)
+
+:cp
+Pair(0, null) is BinTree
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.IndexOutOfBoundsException: 4 is out of bounds (min 0, max 2)
+//│ 	at: scala.collection.immutable.Vector.ioob(Vector.scala:286)
+//│ 	at: scala.collection.immutable.Vector1.apply(Vector.scala:391)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$package$.go$11(DeBrujinSplit.scala:229)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$package$.toSplit(DeBrujinSplit.scala:241)
+//│ 	at: hkmc2.semantics.ucs.Normalization.rec$1$$anonfun$3$$anonfun$5(Normalization.scala:138)
+//│ 	at: scala.collection.IterableOnceOps.$anonfun$foldRight$1(IterableOnce.scala:755)
+//│ 	at: scala.collection.LinearSeqOps.foldLeft(LinearSeq.scala:183)
+//│ 	at: scala.collection.LinearSeqOps.foldLeft$(LinearSeq.scala:179)
+//│ 	at: scala.collection.immutable.List.foldLeft(List.scala:79)
+//│ 	at: scala.collection.IterableOnceOps.foldRight(IterableOnce.scala:755)
+
+:cp
+Pair(0, Pair(0, null)) is BinTree
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.IndexOutOfBoundsException: 4 is out of bounds (min 0, max 2)
+//│ 	at: scala.collection.immutable.Vector.ioob(Vector.scala:286)
+//│ 	at: scala.collection.immutable.Vector1.apply(Vector.scala:391)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$package$.go$11(DeBrujinSplit.scala:229)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$package$.toSplit(DeBrujinSplit.scala:241)
+//│ 	at: hkmc2.semantics.ucs.Normalization.rec$1$$anonfun$3$$anonfun$5(Normalization.scala:138)
+//│ 	at: scala.collection.IterableOnceOps.$anonfun$foldRight$1(IterableOnce.scala:755)
+//│ 	at: scala.collection.LinearSeqOps.foldLeft(LinearSeq.scala:183)
+//│ 	at: scala.collection.LinearSeqOps.foldLeft$(LinearSeq.scala:179)
+//│ 	at: scala.collection.immutable.List.foldLeft(List.scala:79)
+//│ 	at: scala.collection.IterableOnceOps.foldRight(IterableOnce.scala:755)
+
+:cp
+Pair(2, Pair(0, Pair(1, null))) is BinTree
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.IndexOutOfBoundsException: 4 is out of bounds (min 0, max 2)
+//│ 	at: scala.collection.immutable.Vector.ioob(Vector.scala:286)
+//│ 	at: scala.collection.immutable.Vector1.apply(Vector.scala:391)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$package$.go$11(DeBrujinSplit.scala:229)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$package$.toSplit(DeBrujinSplit.scala:241)
+//│ 	at: hkmc2.semantics.ucs.Normalization.rec$1$$anonfun$3$$anonfun$5(Normalization.scala:138)
+//│ 	at: scala.collection.IterableOnceOps.$anonfun$foldRight$1(IterableOnce.scala:755)
+//│ 	at: scala.collection.LinearSeqOps.foldLeft(LinearSeq.scala:183)
+//│ 	at: scala.collection.LinearSeqOps.foldLeft$(LinearSeq.scala:179)
+//│ 	at: scala.collection.immutable.List.foldLeft(List.scala:79)
+//│ 	at: scala.collection.IterableOnceOps.foldRight(IterableOnce.scala:755)
