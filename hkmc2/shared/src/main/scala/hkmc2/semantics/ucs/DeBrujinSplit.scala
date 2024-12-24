@@ -46,6 +46,10 @@ object DeBrujinSplit:
         buildLeft(scrutinee, consequence, latter)
       case Under() => (_, consequence, _) => consequence
       case ctor: (Ident | Sel) => cls(ctor, Nil)
+      case App(Ident("-"), Tup(IntLit(n) :: Nil)) =>
+        Branch(_, Literal(IntLit(-n)), _, _)
+      case App(Ident("-"), Tup(DecLit(n) :: Nil)) =>
+        Branch(_, Literal(DecLit(-n)), _, _)
       case App(ctor: (Ident | Sel), Tup(params)) => cls(ctor, params)
       case literal: syntax.Literal => Branch(_, Literal(literal), _, _)
     scoped("ucs:rp:elaborate"):

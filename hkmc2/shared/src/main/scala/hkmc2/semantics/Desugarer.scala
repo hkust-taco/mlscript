@@ -481,6 +481,11 @@ class Desugarer(val elaborator: Elaborator)
           Pattern.Tuple(lead.length + rest.fold(0)(_._2.length), rest.isDefined),
           wrap(subMatches(matches, sequel)(Split.End)(ctx))
         ) ~: fallback
+      // Negative numeric literals
+      case App(Ident("-"), Tup(IntLit(value) :: Nil)) => fallback => ctx =>
+        Branch(ref, Pattern.Lit(IntLit(-value)), sequel(ctx)) ~: fallback
+      case App(Ident("-"), Tup(DecLit(value) :: Nil)) => fallback => ctx =>
+        Branch(ref, Pattern.Lit(DecLit(-value)), sequel(ctx)) ~: fallback
       // A single constructor pattern.
       case pat @ App(ctor @ (_: Ident | _: SynthSel | _: Sel), Tup(args)) => fallback => ctx => trace(
         pre = s"expandMatch <<< ${ctor}(${args.iterator.map(_.showDbg).mkString(", ")})",

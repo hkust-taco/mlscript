@@ -67,6 +67,10 @@ class Translator(val elaborator: Elaborator)
         error(msg"Incompatible range types: ${lo.describe} to ${hi.describe}" -> pat.toLoc)
         failure
       case lit: Literal => Branch(scrut(), Pattern.Lit(lit), inner(Map.empty)) ~: Split.End
+      case App(Ident("-"), Tup(IntLit(value) :: Nil)) =>
+        Branch(scrut(), Pattern.Lit(IntLit(-value)), inner(Map.empty)) ~: Split.End
+      case App(Ident("-"), Tup(DecLit(value) :: Nil)) =>
+        Branch(scrut(), Pattern.Lit(DecLit(-value)), inner(Map.empty)) ~: Split.End
       case App(Ident("~"), Tup(prefix :: postfix :: Nil)) =>
         stringPrefix(scrut, prefix, (captures1, postfixScrut) =>
           full(postfixScrut, postfix, captures2 => inner(captures2 ++ captures1)))
