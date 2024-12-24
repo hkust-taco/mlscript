@@ -4,14 +4,24 @@ class Box[A](val value: A)
 
 pattern NatBox = null | Box(NatBox)
 
+fun nat(n) = if n is 0 then null else Box(nat(n - 1))
+
+[nat(0), nat(1), nat(2), nat(3)]
+//│ > [
+//│ >   null,
+//│ >   Box { value: null },
+//│ >   Box { value: Box { value: null } },
+//│ >   Box { value: Box { value: [Box] } }
+//│ = ]
+
 :cp
 :expect true
-null is NatBox
+nat(0) is NatBox
 //│ = true
 
 :cp
 :expect true
-Box(null) is NatBox
+nat(1) is NatBox
 //│ = true
 
 :cp
@@ -21,12 +31,12 @@ Box(0) is NatBox
 
 :cp
 :expect true
-Box(Box(Box(Box(Box(Box(Box(null))))))) is NatBox
+nat(7) is NatBox
 //│ = true
 
 :cp
 :expect true
-Box(Box(Box(Box(Box(Box(Box(Box(null)))))))) is NatBox
+nat(14) is NatBox
 //│ = true
 
 :cp
@@ -43,20 +53,87 @@ null is PosNatBox
 
 :cp
 :expect true
-Box(null) is PosNatBox
+nat(1) is PosNatBox
 //│ = true
 
 :cp
 :expect true
-Box(Box(null)) is PosNatBox
+nat(2) is PosNatBox
 //│ = true
 
 :cp
 :expect true
-Box(Box(Box(null))) is PosNatBox
+nat(3) is PosNatBox
 //│ = true
 
 :cp
 :expect false
 Box(Box(Box(Box(42)))) is PosNatBox
+//│ = false
+
+pattern EvenNatBox = Box(Box(null | EvenNatBox))
+
+:cp
+:expect false
+nat(0) is EvenNatBox
+//│ = false
+
+:cp
+:expect false
+nat(1) is EvenNatBox
+//│ = false
+
+:cp
+:expect true
+nat(2) is EvenNatBox
+//│ = true
+
+:cp
+:expect false
+nat(3) is EvenNatBox
+//│ = false
+
+:cp
+:expect true
+nat(4) is EvenNatBox
+//│ = true
+
+// Make the base case a new pattern.
+
+pattern Zero = null
+
+:cp
+null is Zero
+//│ = true
+
+pattern OddNatBox = Box(Zero | Box(OddNatBox))
+
+:cp
+:expect false
+nat(0) is OddNatBox
+//│ = false
+
+:cp
+:expect true
+nat(1) is OddNatBox
+//│ = true
+
+:cp
+:expect false
+nat(2) is OddNatBox
+//│ = false
+
+:cp
+:expect true
+nat(3) is OddNatBox
+//│ = true
+
+:cp
+:expect false
+nat(4) is OddNatBox
+//│ = false
+
+:cp
+:expect false
+Box(Box(78)) is OddNatBox
 //│ = false
