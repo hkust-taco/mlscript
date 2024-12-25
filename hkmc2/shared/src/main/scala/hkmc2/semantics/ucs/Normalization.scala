@@ -120,10 +120,16 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
               val definition =
                 log(s"making definition for ${entry.split.display}")
                 import syntax.{Fun, Keyword, ParamBind, Tree}, Tree.Ident
-                val freeScruts = entry.split.freeScrutinees
-                log(s"free scrutinees: ${freeScruts.mkString(", ")}")
-                val arity = freeScruts.size
-                val fullSplit = entry.split.bind(arity)
+                // The memorized splits may have free variables. We will count
+                // the number of free variables, bind them, and substitute them
+                // with the new indices.
+                val originalSplit = entry.split
+                val freeScrutinees = originalSplit.freeScrutinees
+                log(s"free scrutinees: ${freeScrutinees.mkString("{", ",", "}")}")
+                val arity = freeScrutinees.size
+                val boundSplit = originalSplit.substitute:
+                    Subst(freeScrutinees.iterator.zip(1 to arity).toSeq*)
+                  .bind(arity)
                 val paramSymbols = (1 to arity).map: i =>
                   TermSymbol(ParamBind, N, Ident(s"param$i"))
                 .toVector
@@ -131,7 +137,7 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
                   paramSymbols.iterator.map(Param(FldFlags.empty, _, N)).toList
                 val success = Split.Else(desugaring.makeMatchResult(Term.Tup(Nil)(Tree.Tup(Nil))))
                 val failure = Split.Else(desugaring.makeMatchFailure)
-                val bodySplit = fullSplit.toSplit(
+                val bodySplit = boundSplit.toSplit(
                   scrutinees = paramSymbols.map(symbol => () => symbol.ref()),
                   localPatterns = compiledLocalPatterns.map((id, ent) => (id, ent.symbol)),
                   outcomes = Map(S(42) -> success, N -> failure),

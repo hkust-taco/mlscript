@@ -132,7 +132,8 @@ case class Subst(entries: SortedMap[Int, Int], offset: Int):
   infix def +(level: Int) = copy(offset = offset + level)
 
 object Subst:
-  def apply(entries: (Int, Int)*): Subst = Subst(SortedMap(entries*), 0)
+  def from(entries: IterableOnce[(Int, Int)]): Subst = Subst(SortedMap.from(entries), 0)
+  def apply(entries: (Int, Int)*): Subst = from(entries)
   
 extension (range: Range)
   infix def +(shift: Int): Range =
