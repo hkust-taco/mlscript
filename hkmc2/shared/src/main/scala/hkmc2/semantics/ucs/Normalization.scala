@@ -87,12 +87,12 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
           log(s"ALIAS: $scrutinee is $vs")
           Split.Let(vs, scrutinee, rec(consequent ++ alternative))
         case pattern @ (Pattern.Lit(_) | _: Pattern.ClassLike | Pattern.Tuple(_, _)) =>
-          log(s"MATCH: $scrutinee is $pattern")
+          log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
           val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
           val whenFalse = rec(specialize(alternative, -, scrutinee, pattern).clearFallback)
           Branch(scrutinee, pattern, whenTrue) ~: whenFalse
         case Pattern.Synonym(symbol, _) => scoped("ucs:rp"):
-          log(s"SYNONYM: $scrutinee is $pattern")
+          log(s"SYNONYM: ${scrutinee.showDbg} is $symbol")
           import DeBrujinSplit.*, PatternStub.*
           val initialSplit = Binder(Branch(Outermost, ClassLike(symbol), Accept(42), Reject))
           log(s"[cp] the initial nameless split:\n${initialSplit.display}")
@@ -166,7 +166,7 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
       scrutinee: Term.Ref,
       pattern: Pattern
   )(using VarSet): Split = trace(
-    pre = s"S$mode <<< $scrutinee is $pattern : ${Split.display(split)}",
+    pre = s"S$mode <<< ${scrutinee.showDbg} is ${pattern.showDbg} : ${Split.display(split)}",
     post = (r: Split) => s"S$mode >>> ${Split.display(r)}"
   ):
     def rec(split: Split)(using mode: Mode, vs: VarSet): Split = split match
