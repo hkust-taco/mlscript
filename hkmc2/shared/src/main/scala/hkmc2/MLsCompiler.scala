@@ -7,6 +7,7 @@ import utils.*
 
 import hkmc2.semantics.MemberSymbol
 import hkmc2.semantics.Elaborator
+import semantics.Elaborator.Ctx
 import hkmc2.syntax.Keyword.`override`
 import semantics.Elaborator.State
 
@@ -69,16 +70,16 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
     val preludeParse = ParserSetup(preludeFile, dbgParsing)
     val mainParse = ParserSetup(file, dbgParsing)
     
-    val elab = Elaborator(etl, wd)
+    val elab = Elaborator(etl, wd, Ctx.empty)
     
     val initState = State.init.nest(N)
     
     val (pblk, newCtx) = elab.importFrom(preludeParse.resultBlk)(using initState)
     
     newCtx.nest(N).givenIn:
-      
+      val elab = Elaborator(etl, wd, newCtx)
       val parsed = mainParse.resultBlk
-      val (blk0, newCtx) = elab.importFrom(parsed)
+      val (blk0, _) = elab.importFrom(parsed)
       val blk = blk0.copy(stats = semantics.Import(State.runtimeSymbol, runtimeFile.toString) :: blk0.stats)
       val low = ltl.givenIn:
         codegen.Lowering(lowerHandlers = false, stackLimit = None) // TODO: properly hook up stack limit

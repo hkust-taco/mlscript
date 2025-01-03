@@ -38,7 +38,8 @@ object Elaborator:
 
   val reservedNames = binaryOps.toSet ++ aliasOps.keySet + "NaN" + "Infinity"
   
-  case class Ctx(outer: Opt[InnerSymbol], parent: Opt[Ctx], env: Map[Str, Ctx.Elem]):
+  case class Ctx(outer: Opt[InnerSymbol], parent: Opt[Ctx], env: Map[Str, Ctx.Elem], 
+    mode: Mode):
     
     def +(local: Str -> Symbol): Ctx = copy(outer, env = env + local.mapSecond(Ctx.RefElem(_)))
     def ++(locals: IterableOnce[Str -> Symbol]): Ctx =
@@ -55,7 +56,7 @@ object Elaborator:
           nme -> elem
       )
     
-    def nest(outer: Opt[InnerSymbol]): Ctx = Ctx(outer, Some(this), Map.empty)
+    def nest(outer: Opt[InnerSymbol]): Ctx = Ctx(outer, Some(this), Map.empty, mode)
     
     def get(name: Str): Opt[Ctx.Elem] =
       env.get(name).orElse(parent.flatMap(_.get(name)))
@@ -126,7 +127,11 @@ object Elaborator:
           new Tree.Ident(nme).withLocOf(id))(symOpt)
       def symbol = symOpt
     given Conversion[Symbol, Elem] = RefElem(_)
-    val empty: Ctx = Ctx(N, N, Map.empty)
+    val empty: Ctx = Ctx(N, N, Map.empty, Mode.Full)
+    
+  enum Mode:
+    case Full
+    case Light
   
   type Ctxl[A] = Ctx ?=> A
   
@@ -163,7 +168,7 @@ end Elaborator
 import Elaborator.*
 
 
-class Elaborator(val tl: TraceLogger, val wd: os.Path)
+class Elaborator(val tl: TraceLogger, val wd: os.Path, val prelude: Ctx)
 (using val raise: Raise, val state: State)
 extends Importer:
   import tl.*
@@ -894,7 +899,9 @@ extends Importer:
               // * Elaborate signature
               val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name))
               val s = st.map(term(_)(using newCtx))
-              val b = rhs.map(term(_)(using newCtx))
+              val b = if ctx.mode != Mode.Light
+                then rhs.map(term(_)(using newCtx))
+                else S(Term.Missing)
               val r = FlowSymbol(s"‹result of ${sym}›")
               val tdf = TermDefinition(owner, k, sym, pss, tps, s, b, r, 
                 TermDefFlags.empty.copy(isModMember = isModMember), annotations)
@@ -1142,7 +1149,6 @@ extends Importer:
     val (res, newCtx) = block(sts, hasResult = false)
     // TODO handle name clashes
     (res, newCtx)
-  
   
   def topLevel(sts: Tree.Block)(using c: Ctx): (Term.Blk, Ctx) =
     val (res, ctx) = block(sts, hasResult = false)

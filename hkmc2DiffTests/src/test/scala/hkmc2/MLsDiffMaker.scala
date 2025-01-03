@@ -8,6 +8,7 @@ import utils.*
 import hkmc2.semantics.Elaborator
 import hkmc2.semantics.ImplicitResolver
 
+import semantics.Elaborator.Ctx
 
 abstract class MLsDiffMaker extends DiffMaker:
   
@@ -82,8 +83,12 @@ abstract class MLsDiffMaker extends DiffMaker:
   var curCtx = Elaborator.State.init
   var curICtx = ImplicitResolver.ICtx.empty
   
+  var prelude = Elaborator.Ctx.empty
+  
   override def run(): Unit =
-    if file =/= preludeFile then importFile(preludeFile, verbose = false)
+    if file =/= preludeFile then 
+      importFile(preludeFile, verbose = false)
+      prelude = curCtx
     curCtx = curCtx.nest(N)
     super.run()
   
@@ -95,10 +100,11 @@ abstract class MLsDiffMaker extends DiffMaker:
     given raise: Raise = d =>
       output(s"Error: $d")
       ()
-    processTrees(
-      Modified(`import`, N, StrLit(predefFile.toString))
-      :: Open(Ident("Predef"))
-      :: Nil)
+    if file != preludeFile then
+      processTrees(
+        Modified(`import`, N, StrLit(predefFile.toString))
+        :: Open(Ident("Predef"))
+        :: Nil)
     super.init()
   
   
@@ -126,7 +132,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     val imprtSymbol =
       semantics.TopLevelSymbol("import#"+file.baseName)
     given Elaborator.Ctx = curCtx.nest(N)
-    val elab = Elaborator(etl, wd)
+    val elab = Elaborator(etl, wd, Ctx.empty)
     try
       val resBlk = new syntax.Tree.Block(res)
       val (e, newCtx) = elab.importFrom(resBlk)
@@ -182,7 +188,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   private var blockNum = 0
   
   def processTrees(trees: Ls[syntax.Tree])(using Raise): Unit =
-    val elab = Elaborator(etl, file / os.up)
+    val elab = Elaborator(etl, file / os.up, prelude)
     // val blockSymbol =
     //   semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1
