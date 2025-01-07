@@ -27,7 +27,10 @@ pattern Email(name, domain) =
 :todo // View patterns
 pattern GreaterThan(value) = case
   n and n > value then n
-//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(InfixApp(Ident(n),keyword 'and',App(Ident(>),Tup(List(Ident(n), Ident(value))))),keyword 'then',Ident(n))))) (of class hkmc2.syntax.Tree$Case)
+//│ ╔══[ERROR] Unrecognized pattern.
+//│ ║  l.29: 	  n and n > value then n
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
 
 :todo
 // Normal view pattern
@@ -39,11 +42,11 @@ fun foo(x) = if x is
     Unit then ....
     Arrow(...) then ....
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.38: 	  view as
+//│ ║  l.41: 	  view as
 //│ ║        	  ^^^^^^^
-//│ ║  l.39: 	    Unit then ....
+//│ ║  l.42: 	    Unit then ....
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.40: 	    Arrow(...) then ....
+//│ ║  l.43: 	    Arrow(...) then ....
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -61,14 +64,16 @@ pattern Star(pattern T) = "" | Many(T)
 pattern Email(name, domains) =
   Rep(Char | ".") as name ~ "@" ~ Rep(Rep(Char) ~ ) as domain
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.58: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+//│ ║  l.61: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 //│ ╙──      	                      ^^^
-//│ /!!!\ Uncaught error: scala.MatchError: Jux(StrLit(a),Ident(to)) (of class hkmc2.syntax.Tree$Jux)
+//│ ╔══[ERROR] Unrecognized pattern.
+//│ ║  l.61: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+//│ ╙──      	               ^^^^^^
 
 :todo
 pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 //│ ╔══[ERROR] Unrecognized pattern.
-//│ ║  l.69: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
+//│ ║  l.74: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 //│ ╙──      	                          ^^^^^^^^^^^^
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
 
@@ -91,7 +96,7 @@ pattern Lines(pattern L) = case
 :todo
 if input is Lines of Email then
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found end of input instead
-//│ ║  l.92: 	if input is Lines of Email then
+//│ ║  l.97: 	if input is Lines of Email then
 //│ ╙──      	                               ^
 //│ /!!!\ Uncaught error: scala.MatchError: TypeDef(Pat,Ident(L),None,None) (of class hkmc2.syntax.Tree$TypeDef)
 
@@ -104,54 +109,35 @@ pattern Opt(pattern P) = case
 pattern Email(name, domain) = ...
 //│ /!!!\ Uncaught error: scala.MatchError: TypeDef(Pat,Ident(P),None,None) (of class hkmc2.syntax.Tree$TypeDef)
 
+:todo
 if input is Opt(Email, Some((n, d))) then ...
-//│ FAILURE: Unexpected type error
 //│ ╔══[ERROR] Name not found: input
-//│ ║  l.107: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.113: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	   ^^^^^
-//│ FAILURE: Unexpected type error
 //│ ╔══[ERROR] Name not found: Opt
-//│ ║  l.107: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.113: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	            ^^^
-//│ FAILURE: Unexpected type error
 //│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.107: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.113: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	            ^^^
 
+:todo
 pattern Opt(pattern P) = case
   P(...values) then (Some(values))
   ""           then (None)
-//│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: scala.MatchError: TypeDef(Pat,Ident(P),None,None) (of class hkmc2.syntax.Tree$TypeDef)
-//│ 	at: hkmc2.syntax.Tree.asParam(Tree.scala:178)
-//│ 	at: hkmc2.semantics.Elaborator.param(Elaborator.scala:856)
-//│ 	at: hkmc2.semantics.Elaborator.go$5(Elaborator.scala:866)
-//│ 	at: hkmc2.semantics.Elaborator.params(Elaborator.scala:122)
-//│ 	at: hkmc2.semantics.Elaborator.$anonfun$15(Elaborator.scala:761)
-//│ 	at: scala.Option.map(Option.scala:242)
-//│ 	at: hkmc2.semantics.Elaborator.go$4(Elaborator.scala:758)
-//│ 	at: hkmc2.semantics.Elaborator.block$$anonfun$3(Elaborator.scala:838)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:72)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:838)
 
+:todo
 pattern Opt(pattern P) = case
   P(...values) then Some(values)
   ""           then None
-  
-pattern Digits = "0" to "9" ~ (Digits | "")
-//│ FAILURE: Unexpected parse error
-//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.141: 	pattern Digits = "0" to "9" ~ (Digits | "")
-//│ ╙──       	                        ^^^
-//│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: scala.MatchError: TypeDef(Pat,Ident(P),None,None) (of class hkmc2.syntax.Tree$TypeDef)
-//│ 	at: hkmc2.syntax.Tree.asParam(Tree.scala:178)
-//│ 	at: hkmc2.semantics.Elaborator.param(Elaborator.scala:856)
-//│ 	at: hkmc2.semantics.Elaborator.go$5(Elaborator.scala:866)
-//│ 	at: hkmc2.semantics.Elaborator.params(Elaborator.scala:122)
-//│ 	at: hkmc2.semantics.Elaborator.$anonfun$15(Elaborator.scala:761)
-//│ 	at: scala.Option.map(Option.scala:242)
-//│ 	at: hkmc2.semantics.Elaborator.go$4(Elaborator.scala:758)
-//│ 	at: hkmc2.semantics.Elaborator.block$$anonfun$3(Elaborator.scala:838)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:72)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:838)
+
+:todo  
+pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
+//│ ║  l.137: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ╙──       	                        ^^^
+//│ ╔══[ERROR] Unrecognized pattern.
+//│ ║  l.137: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ╙──       	                 ^^^^^^

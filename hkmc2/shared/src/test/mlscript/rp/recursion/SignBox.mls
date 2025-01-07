@@ -1,20 +1,18 @@
 :js
+:cp
 
 class Box[A](val value: A)
 
 pattern Sign = -1 | 0 | 1
 
-:cp
 [-1 is Sign, 0 is Sign, 1 is Sign]
 //│ = [ true, true, true ]
 
 pattern SignBox = Box(Sign | SignBox)
 
-:cp
 [Box(-1) is SignBox, Box(0) is SignBox, Box(1) is SignBox]
 //│ = [ true, true, true ]
 
-:cp
 [
   Box(Box(-1)) is SignBox,
   Box(Box(0)) is SignBox,
@@ -22,7 +20,6 @@ pattern SignBox = Box(Sign | SignBox)
 ]
 //│ = [ true, true, true ]
 
-:cp
 [
   Box(Box(Box(-1))) is SignBox,
   Box(Box(Box(0))) is SignBox,
@@ -30,7 +27,6 @@ pattern SignBox = Box(Sign | SignBox)
 ]
 //│ = [ true, true, true ]
 
-:cp
 :expect [ false, false, false ]
 [
   Box(Box(Box(2))) is SignBox,

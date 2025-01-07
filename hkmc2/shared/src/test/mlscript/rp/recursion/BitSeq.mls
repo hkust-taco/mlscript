@@ -1,38 +1,32 @@
 :js
+:cp
 
 class Pair[A, B](val first: A, val second: B)
 
 pattern Bit = 0 | 1
 
-:cp
 :expect true
 0 is Bit
 //│ = true
 
-:cp
 :expect true
 1 is Bit
 //│ = true
 
-:cp
 :expect false
 42 is Bit
 //│ = false
 
 pattern BitSeq = null | Pair(Bit, BitSeq)
 
-:cp
 null is BitSeq
 //│ = true
 
-:cp
 Pair(0, null) is BitSeq
 //│ = true
 
-:cp
 Pair(1, Pair(0, null)) is BitSeq
 //│ = true
 
-:cp
 Pair(2, null) is BitSeq
 //│ = false

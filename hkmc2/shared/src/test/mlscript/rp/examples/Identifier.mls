@@ -26,11 +26,8 @@ pattern Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
 "a" is Digit
 //│ = false
 
+:ucs rp:elaborated
 pattern Lower = "a"..="z"
-//│ FAILURE: Unexpected type error
-//│ ╔══[ERROR] Name not found: ..=
-//│ ║  l.29: 	pattern Lower = "a"..="z"
-//│ ╙──      	                   ^^^
 
 :expect true
 "a" is Lower
@@ -45,10 +42,6 @@ pattern Lower = "a"..="z"
 //│ = false
 
 pattern Upper = "A"..="Z"
-//│ FAILURE: Unexpected type error
-//│ ╔══[ERROR] Name not found: ..=
-//│ ║  l.47: 	pattern Upper = "A"..="Z"
-//│ ╙──      	                   ^^^
 
 :expect true
 "A" is Upper

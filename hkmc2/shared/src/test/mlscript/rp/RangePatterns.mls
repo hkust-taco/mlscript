@@ -1,10 +1,6 @@
 :js
 
 pattern Lower = "a"..="z"
-//│ FAILURE: Unexpected type error
-//│ ╔══[ERROR] Name not found: ..=
-//│ ║  l.3: 	pattern Lower = "a"..="z"
-//│ ╙──     	                   ^^^
 
 "a" is Lower
 //│ = true
@@ -16,10 +12,6 @@ pattern Lower = "a"..="z"
 //│ = false
 
 pattern Upper = "A"..="Z"
-//│ FAILURE: Unexpected type error
-//│ ╔══[ERROR] Name not found: ..=
-//│ ║  l.18: 	pattern Upper = "A"..="Z"
-//│ ╙──      	                   ^^^
 
 "A" is Upper
 //│ = true
@@ -31,10 +23,6 @@ pattern Upper = "A"..="Z"
 //│ = false
 
 pattern UnsignedShort = 0 ..< 65536
-//│ FAILURE: Unexpected type error
-//│ ╔══[ERROR] Name not found: ..<
-//│ ║  l.33: 	pattern UnsignedShort = 0 ..< 65536
-//│ ╙──      	                          ^^^
 
 0 is UnsignedShort
 //│ = true
@@ -62,25 +50,19 @@ pattern UnsignedShort = 0 ..< 65536
 // Don't forget to add a space between numbers and the range operator.
 pattern UnsignedByte = 0..< 256
 //│ ╔══[LEXICAL ERROR] Expect at least one digit after the  decimal point
-//│ ║  l.63: 	pattern UnsignedByte = 0..< 256
+//│ ║  l.51: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                         ^
 //│ ╔══[ERROR] Name not found: .<
-//│ ║  l.63: 	pattern UnsignedByte = 0..< 256
-//│ ╙──      	                         ^^
-//│ ╔══[ERROR] Name not found: .<
-//│ ║  l.63: 	pattern UnsignedByte = 0..< 256
+//│ ║  l.51: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                         ^^
 //│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.63: 	pattern UnsignedByte = 0..< 256
+//│ ║  l.51: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                         ^^
 
 :e
 pattern BadRange = "s"..=0
-//│ ╔══[ERROR] Name not found: ..=
-//│ ║  l.78: 	pattern BadRange = "s"..=0
-//│ ╙──      	                      ^^^
 //│ ╔══[ERROR] Incompatible range types: string literal to integer literal
-//│ ║  l.78: 	pattern BadRange = "s"..=0
+//│ ║  l.63: 	pattern BadRange = "s"..=0
 //│ ╙──      	                   ^^^^^^^
 
 // It becomes an absurd pattern.
@@ -89,21 +71,15 @@ pattern BadRange = "s"..=0
 
 :e
 pattern BadRange = 0 ..= "s"
-//│ ╔══[ERROR] Name not found: ..=
-//│ ║  l.91: 	pattern BadRange = 0 ..= "s"
-//│ ╙──      	                     ^^^
 //│ ╔══[ERROR] Incompatible range types: integer literal to string literal
-//│ ║  l.91: 	pattern BadRange = 0 ..= "s"
+//│ ║  l.73: 	pattern BadRange = 0 ..= "s"
 //│ ╙──      	                   ^^^^^^^^^
 
 :e
 pattern BadRange = "yolo" ..= "swag"
-//│ ╔══[ERROR] Name not found: ..=
-//│ ║  l.100: 	pattern BadRange = "yolo" ..= "swag"
-//│ ╙──       	                          ^^^
 //│ ╔══[ERROR] String range bounds must have only one character.
-//│ ║  l.100: 	pattern BadRange = "yolo" ..= "swag"
-//│ ║         	                   ^^^^^^
+//│ ║  l.79: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║        	                   ^^^^^^
 //│ ╟── String range bounds must have only one character.
-//│ ║  l.100: 	pattern BadRange = "yolo" ..= "swag"
-//│ ╙──       	                              ^^^^^^
+//│ ║  l.79: 	pattern BadRange = "yolo" ..= "swag"
+//│ ╙──      	                              ^^^^^^

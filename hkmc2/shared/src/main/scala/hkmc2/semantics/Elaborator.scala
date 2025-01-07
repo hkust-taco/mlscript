@@ -810,11 +810,13 @@ extends Importer:
           val owner = ctx.outer
           newCtx.nest(S(patSym)).givenIn:
             assert(body.isEmpty)
-            patSym.split = td.extension.map: tree =>
-              val split = ucs.DeBrujinSplit.elaborate(tree, this)
-              scoped("ucs:rp:elaborated"):
-                log(s"elaborated nameless split:\n${split.display}")
-              split
+            patSym.split = if state.shouldCompilePatterns then
+              td.extension.map: tree =>
+                val split = ucs.DeBrujinSplit.elaborate(tree, this)
+                scoped("ucs:rp:elaborated"):
+                  log(s"elaborated nameless split:\n${split.display}")
+                split
+              else None
             log(s"pattern body is ${td.extension}")
             val translate = new ucs.Translator(this)
             val bod = translate(ps.map(_.params).getOrElse(Nil), td.extension.getOrElse(die))
