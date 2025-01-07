@@ -212,7 +212,7 @@ class Translator(val elaborator: Elaborator)
     val ps = PlainParamList(Param(FldFlags.empty, scrut, N) :: Nil)
     val body = Term.IfLike(Keyword.`if`, topmost)(normalize(topmost))
     val res = FlowSymbol(s"result of $name")
-    TermDefinition(N, Fun, sym, ps :: Nil, N, S(body), res, TermDefFlags.empty)
+    TermDefinition(N, Fun, sym, ps :: Nil, N, S(body), res, TermDefFlags.empty, Nil)
   
   /** Translate a list of extractor/matching functions for the given pattern.
    *  There are currently two functions: `unapply` and `unapplyStringPrefix`.

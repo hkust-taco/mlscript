@@ -1,0 +1,9 @@
+module compile
+
+class SomePattern
+
+:e // TODO: pattern compilation
+fun foo(x) = if x is @compile SomePattern then "yes" else "no"
+//│ ╔══[ERROR] Unrecognized pattern.
+//│ ║  l.6: 	fun foo(x) = if x is @compile SomePattern then "yes" else "no"
+//│ ╙──     	                      ^^^^^^^^^^^^^^^^^^^

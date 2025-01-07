@@ -125,7 +125,7 @@ class Lowering(using TL, Raise, Elaborator.State):
           case td: TermDefinition if td.k is syntax.Fun => L(td)
           case s => R(s)
         val (privateFlds, rest2) = rest1.partitionMap:
-          case LetDecl(sym: TermSymbol) => L(sym)
+          case LetDecl(sym: TermSymbol, _) => L(sym)
           case s => R(s)
         val publicFlds = rest2.collect:
           case td @ TermDefinition(k = (_: syntax.Val)) => td
@@ -146,7 +146,7 @@ class Lowering(using TL, Raise, Elaborator.State):
       case _ =>
         // TODO handle
         term(st.Blk(stats, res))(k)
-    case st.Blk((LetDecl(sym)) :: stats, res) =>
+    case st.Blk((LetDecl(sym, _)) :: stats, res) =>
       term(st.Blk(stats, res))(k)
     case st.Blk((DefineVar(sym, rhs)) :: stats, res) =>
       subTerm(rhs): r =>

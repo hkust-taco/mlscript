@@ -221,7 +221,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL, scope: Scope):
       val cr = freshVar(new TempSymbol(S(unq), "ctx"))
       constrain(tryMkMono(ty, body), BbCtx.codeTy(tv, cr))
       (tv, cr, eff)
-    case blk @ Term.Blk(LetDecl(sym) :: DefineVar(sym2, rhs) :: Nil, body) if sym2 is sym => // TODO: more than one!!
+    case blk @ Term.Blk(LetDecl(sym, _) :: DefineVar(sym2, rhs) :: Nil, body) if sym2 is sym => // TODO: more than one!!
       val (rhsTy, rhsCtx, rhsEff) = typeCode(rhs)(using ctx)
       val nestCtx = ctx.nextLevel
       given BbCtx = nestCtx
@@ -414,19 +414,19 @@ class BBTyper(using elState: Elaborator.State, tl: TL, scope: Scope):
           case (term: Term) :: stats =>
             effBuff += typeCheck(term)._2
             goStats(stats)
-          case LetDecl(sym) :: DefineVar(sym2, rhs) :: stats =>
+          case LetDecl(sym, _) :: DefineVar(sym2, rhs) :: stats =>
             require(sym2 is sym)
             val (rhsTy, eff) = typeCheck(rhs)
             effBuff += eff
             ctx += sym -> rhsTy
             goStats(stats)
-          case TermDefinition(_, Fun, sym, ps :: Nil, sig, Some(body), _, _) :: stats =>
+          case TermDefinition(_, Fun, sym, ps :: Nil, sig, Some(body), _, _, _) :: stats =>
             typeFunDef(sym, Term.Lam(ps, body), sig, ctx)
             goStats(stats)
-          case TermDefinition(_, Fun, sym, Nil, sig, Some(body), _, _) :: stats =>
+          case TermDefinition(_, Fun, sym, Nil, sig, Some(body), _, _, _) :: stats =>
             typeFunDef(sym, body, sig, ctx)  // * may be a case expressions
             goStats(stats)
-          case TermDefinition(_, Fun, sym, _, S(sig), None, _, _) :: stats =>
+          case TermDefinition(_, Fun, sym, _, S(sig), None, _, _, _) :: stats =>
             ctx += sym -> typeType(sig)
             goStats(stats)
           case (clsDef: ClassDef) :: stats =>

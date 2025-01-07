@@ -1,0 +1,74 @@
+module debug
+
+:w
+@debug 0
+//│ ╔══[WARNING] The annotation is not used
+//│ ║  l.4: 	@debug 0
+//│ ║       	 ^^^^^
+//│ ╟── Because annotations cannot be applied to integer literal
+//│ ║  l.4: 	@debug 0
+//│ ╙──     	       ^
+
+:w
+@debug 1 + 2
+//│ ╔══[WARNING] The annotation is not used
+//│ ║  l.13: 	@debug 1 + 2
+//│ ║        	 ^^^^^
+//│ ╟── Because annotations cannot be applied to application
+//│ ║  l.13: 	@debug 1 + 2
+//│ ╙──      	       ^^^^^
+
+:w
+(@debug 1 + 2)
+//│ ╔══[WARNING] The annotation is not used
+//│ ║  l.22: 	(@debug 1 + 2)
+//│ ║        	  ^^^^^
+//│ ╟── Because annotations cannot be applied to application
+//│ ║  l.22: 	(@debug 1 + 2)
+//│ ╙──      	        ^^^^^
+
+:w
+(@debug 1) + 2
+//│ ╔══[WARNING] The annotation is not used
+//│ ║  l.31: 	(@debug 1) + 2
+//│ ║        	  ^^^^^
+//│ ╟── Because annotations cannot be applied to integer literal
+//│ ║  l.31: 	(@debug 1) + 2
+//│ ╙──      	        ^
+
+:w
+(1 + @debug 2)
+//│ ╔══[WARNING] The annotation is not used
+//│ ║  l.40: 	(1 + @debug 2)
+//│ ║        	      ^^^^^
+//│ ╟── Because annotations cannot be applied to integer literal
+//│ ║  l.40: 	(1 + @debug 2)
+//│ ╙──      	            ^
+
+class Log(msg: Str)
+
+:w
+fact(@Log 5)
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] Name not found: fact
+//│ ║  l.51: 	fact(@Log 5)
+//│ ╙──      	^^^^
+//│ ╔══[WARNING] The annotation is not used
+//│ ║  l.51: 	fact(@Log 5)
+//│ ║        	      ^^^
+//│ ╟── Because annotations cannot be applied to integer literal
+//│ ║  l.51: 	fact(@Log 5)
+//│ ╙──      	          ^
+
+:pe
+@1 + 2 class Qux
+//│ ╔══[PARSE ERROR] Expected end of input; found 'class' keyword instead
+//│ ║  l.64: 	@1 + 2 class Qux
+//│ ╙──      	       ^^^^^
+//│ FAILURE: Unexpected warning
+//│ ╔══[WARNING] The annotation is not used
+//│ ║  l.64: 	@1 + 2 class Qux
+//│ ║        	 ^
+//│ ╟── Because annotations cannot be applied to application
+//│ ║  l.64: 	@1 + 2 class Qux
+//│ ╙──      	   ^^^
