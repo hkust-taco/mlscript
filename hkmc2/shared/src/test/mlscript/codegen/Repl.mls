@@ -7,11 +7,11 @@ val res: Int
 
 :showRepl
 fun res() = 1
-//│ REPL> Sending: try { function res(...args) {   globalThis.Predef.checkArgs("res", 0, true, args.length);   return 1; } undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { function res(...args) {   globalThis.Predef.checkArgs("res", 0, true, args.length);   return 1; } null } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
-//│ >  undefined
+//│ >  null
 //│ REPL> Parsed:
-//│ >  undefined
+//│ >  null
 
 :showRepl
 2 + 2
@@ -54,7 +54,7 @@ let x = 1, log(x), x
 
 :showRepl
 let x = 1, log(x), x
-//│ REPL> Sending: try { let tmp; this.x = 1; tmp = this.log(this.x) ?? null; this.x } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { let tmp; this.x = 1; tmp = this.log(this.x); this.x } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
 //│ >  1

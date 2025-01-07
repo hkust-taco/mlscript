@@ -1,0 +1,116 @@
+:js
+
+:import NofibPrelude.mls
+//│ Imported 112 member(s)
+
+fun last(a_t) =
+  fun go(h, t) = if t is
+    Nil then h
+    head :: t then go(head, t)
+  if a_t is a :: t then go(a, t)
+
+fun copy_lz(n, x) = lazy of () =>
+  if n === 0 then LzNil else LzCons(x, copy_lz(n - 1, x))
+
+fun append_lz_lz(xs, ys) = lazy of () =>
+  if force(xs) is
+    LzNil then force(ys)
+    LzCons(h, t) then LzCons(h, append_lz_lz(t, ys))
+
+fun init(ls) = if ls is
+  a :: Nil then Nil
+  a :: t then a :: init(t)
+  else throw Error(ls)
+
+fun zipWith3(f, xs, ys, zs) = if
+  xs is hx :: tx and ys is hy :: ty and zs is hz :: tz then f(hx, hy, hz) :: zipWith3(f, tx, ty, tz)
+  else Nil
+
+fun zip3(xs, ys, zs) = if
+  xs is hx :: tx and ys is hy :: ty and zs is hz :: tz then [hx, hy, hz] :: zip3(tx, ty, tz)
+  else Nil
+
+fun lzfy(ls) = lazy of () =>
+  if ls is
+    a :: t then LzCons(a, lzfy(t))
+    else LzNil
+
+let start =
+  (lazy of () => LzNil) ::
+  (lazy of () => LzNil) ::
+  (lazy of () => LzNil) ::
+  (lazy of () => LzNil) ::
+  (lazy of () => LzNil) ::
+  (lazy of () => LzNil) ::
+  (lazy of () => LzNil) ::
+  (lazy of () => LzNil) ::
+  (lazy of () => LzNil) ::
+  (lazy of () => LzNil) ::
+  (lazy of () => LzNil) ::
+  (lazy of () => LzNil) ::
+  (lazy of () => LzNil) ::
+  (lazy of () => LzNil) ::
+  lzfy(0 :: 0 :: 0 :: 1 :: 1 :: 1 :: 1 :: 1 :: 0 :: 1 :: 1 :: 1 :: 1 :: 1 :: 0 :: 1 :: 1 :: 1 :: 1 :: 1 :: 0 :: 1 :: 1 :: 1 :: 1 :: 1 :: 0 :: Nil) :: Nil
+//│ > Cons {
+//│ >   head: Lazy {
+//│ >     init: [Function (anonymous)],
+//│ >     cached: None { class: [class None] }
+//│ >   },
+//│ >   tail: Cons {
+//│ >     head: Lazy { init: [Function (anonymous)], cached: [None] },
+//│ >     tail: Cons { head: [Lazy], tail: [Cons] }
+//│ >   }
+//│ start = }
+
+fun elt(a_b_c, d_e_f, g_h_i) = if a_b_c is [a, b, c] and d_e_f is [d, e, f] and g_h_i is [g, h, i] then
+  let tot = a + b + c + d + f + g + h + i
+  if
+    tot < 2 || tot > 3 then 0
+    tot === 3 then 1
+    else e
+
+fun shiftr(x, xs) = x :: init(xs)
+
+fun shiftl(x, xs) = init(xs) +: (x :: Nil)
+
+fun shift(x, xs) = zip3(shiftr(x, xs), xs, shiftl(x, xs))
+
+fun row(last_this_next) = if last_this_next is [last, this_, next] then
+  zipWith3(elt, shift(0, last), shift(0, this_), shift(0, next))
+
+fun gen(n, board) = map(row, shift(replicate(n, 0), board))
+
+fun star(x) = if x ===
+  0 then nofibStringToList("  ")
+  1 then nofibStringToList(" o")
+
+fun glue(s, xs, ys) = xs +: s +: ys
+
+fun limit(ls) = if force(ls) is
+  LzCons(x, ys) and force(ys) is LzCons(y, xs) and
+    listEqBy(listEq, x, y) then x :: Nil
+    else x :: limit(lazy of () => LzCons(y, xs))
+
+fun disp(gen_xss) = if gen_xss is [genn, xss] then lazy of () =>
+    genn +:
+    nofibStringToList("nn") +:
+    foldr((a, b) => glue("n" :: Nil, a, b), Nil, map(x => concat(map(star, x)), xss))
+
+fun generations(sz) =
+  map of
+    disp
+    zip_lz_nl of
+      map_lz(i => nofibStringToList(stringOfInt(i)), enumFrom(0)),
+      limit of iterate of
+        b => gen(sz, b)
+        take_lz of
+          sz
+          map_lz of
+            l => take_lz(sz, append_lz_lz(l, copy_lz(sz, 0))),
+            append_nl_lz(start, copy_lz(sz, copy_lz(sz, 0)))
+
+fun testLife_nofib(n) = listLen(force(last(generations(n))))
+
+:expect 468
+testLife_nofib(15)
+//│ = 468

@@ -23,10 +23,10 @@ fun join(sep) =
   fun aux(acc, xs) =
     if xs is
       Nil then acc
-      Cons(x, xs') then aux(acc ~ sep ~ string(x), xs')
+      Cons(x, xs') then aux(acc ~ sep ~ Str.from(x), xs')
   (xs) =>
     if xs is
-      Cons(x, xs') then aux(string(x), xs')
+      Cons(x, xs') then aux(Str.from(x), xs')
       Nil then ""
 fun showList(xs) = "[" ~ join(", ")(xs) ~ "]"
 fun foldLeft(f)(z) =

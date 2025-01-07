@@ -1,0 +1,121 @@
+:js
+
+:import NofibPrelude.mls
+//│ Imported 112 member(s)
+
+object Unit
+
+fun unlines(ls) = concat of map(x => x +: ("\n" :: Nil), ls)
+
+fun lookup(k, t) = if t is
+  Nil then None
+  [x, v] :: t then if k === x then Some(v) else lookup(k, t)
+  
+fun delete_(xs, e) = deleteBy((x, y) => x === y, e, xs)
+
+fun listDiff(a, ls) = foldl(delete_, a, ls)
+
+class StateT[S, M, A](run)
+
+fun runStateT(m, s) = if m is StateT(run) then run(s)
+
+fun bind(m, f) =
+  StateT of
+    s => concat of map(case { [a, ss] then runStateT(f(a), ss) }, runStateT(m, s))
+
+fun return_(a) = StateT(s => [a, s] :: Nil)
+
+fun mapM(f, ls) = foldr((a, r) => bind(f(a), x => bind(r, xs => return_(x :: xs))), return_(Nil), ls)
+
+fun lift(ls) = StateT(s => concat(map(x => [x, s] :: Nil, ls)))
+
+fun execStateT(m, s) = concat(map(case { [a, s] then s :: Nil }, runStateT(m, s)))
+
+fun guard(b) = if b then StateT(s => [Unit, s] :: Nil) else StateT(s => Nil)
+
+fun put(s) = StateT(x => [Unit, s] :: Nil)
+
+let get = StateT(s => [s, s] :: Nil)
+//│ get = StateT { run: [Function (anonymous)] }
+
+class Digits(i: List[Int], c: List[[Char, Int]])
+
+fun digits(d) = if d is Digits(a, b) then a
+
+fun digitEnv(d) = if d is Digits(a, b) then b
+
+fun permute(c) =
+  bind of
+    get
+    st =>
+      bind of
+        let xs = digits(st) in lift(map(x => [x, listDiff(xs, x :: Nil)], xs))
+        iis =>
+          if iis is [i, iss] then
+            bind of
+              put(Digits(iss, [c, i] :: digitEnv(st)))
+              _p => return_(i)
+
+fun select(c) =
+  bind of
+    get
+    st =>
+      if lookup(c, digitEnv(st)) is
+        Some(r) then return_(r)
+        None then permute(c)
+
+fun rest(ls) = if ls is
+  Nil then Nil
+  x :: xs then xs
+
+fun solve(tops, bots, carry) = if bots is
+  bot :: botss then
+    bind of
+      if tops is
+        Nil then return_(carry)
+        top :: _ then bind(mapM(select, top), topNS => return_(sum(topNS) + carry))
+      topN => bind of
+        select(bot)
+        botN => bind of
+          guard(intMod(topN, 10) === botN)
+          _s => solve(rest(tops), botss, intDiv(topN, 10))
+  Nil and tops is Nil and carry === 0 then return_(Unit)
+  else StateT(_p => Nil)
+
+fun puzzle(top, bot) =
+  let solution = solve(transpose(map(reverse, top)), reverse(bot), 0)
+  let answer = if execStateT(solution, Digits(enumFromTo(0, 9), Nil)) is a :: _ then a
+  let env = digitEnv(answer)
+  let look = c => fromSome(lookup(c, env))
+  let expand = ls => foldl((a, b) => a * 10 + look(b), 0, ls)
+  let topVal = sum(map(xs => expand(xs), top))
+  let botVal = expand(bot)
+  if
+    listLen(nubBy((x,y) => x === y, concat(top) +: bot)) > 10 then throw Error("error")
+    topVal != botVal then throw Error("error")
+    else unlines of map of
+      case { [c, i] then c :: nofibStringToList(" => ") +: nofibStringToList(stringOfInt(i)) }
+      env
+
+fun testCryptarithm2_nofib(n) =
+  let args =
+    nofibStringToList("THIRTY") ::
+    nofibStringToList("TWELVE") ::
+    nofibStringToList("TWELVE") ::
+    nofibStringToList("TWELVE") ::
+    nofibStringToList("TWELVE") ::
+    append(nofibStringToList("TWELVE"), (if n > 999999 then nofibStringToList("1") else Nil)) :: Nil
+  puzzle(args, nofibStringToList("NINETY"))
+
+testCryptarithm2_nofib(1).toString()
+//│ > '[W, ,=,>, ,3,\n' +
+//│ >   ',H, ,=,>, ,9,\n' +
+//│ >   ',N, ,=,>, ,8,\n' +
+//│ >   ',I, ,=,>, ,4,\n' +
+//│ >   ',L, ,=,>, ,7,\n' +
+//│ >   ',R, ,=,>, ,2,\n' +
+//│ >   ',V, ,=,>, ,6,\n' +
+//│ >   ',T, ,=,>, ,1,\n' +
+//│ >   ',E, ,=,>, ,0,\n' +
+//│ >   ',Y, ,=,>, ,5,\n' +
+//│ =   ']'

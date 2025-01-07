@@ -1,12 +1,52 @@
 
+import "./Predef.mls"
+open Predef
+
+
 // TODO
 // type Stack[A] = Stack.Cons[A] | Stack.Nil
 
 module Stack with ...
 
-class (::) Cons[A](head: A, tail)
+class (::) Cons[A](head: A, tail: Stack[A])
 object Nil
 
 fun isEmpty(xs) = xs is Nil
+
+fun reverseAndAppend(xs, tail) = if xs is
+  h :: t then reverseAndAppend(t, h :: tail)
+  Nil then tail
+
+fun reverse(xs) = reverseAndAppend(xs, Nil)
+
+fun fromArray(arr) =
+  let 
+    ls = Nil
+    i = 0
+    len = arr.length
+  while i < len do 
+    ls = arr.at(i) :: ls
+    set i += 1
+  ls
+
+fun toReverseArray(xs) =
+  let
+    arr = []
+    i = 0
+  while xs is
+    h :: t do
+      arr.push(h)
+      set xs = t
+  arr
+
+fun zip(...xss) =
+  fun go(heads, tails) = case
+    h :: t and h is
+      h2 :: t2 then go(h2 :: heads, t2 :: tails)(t)
+      Nil then go(heads, tails)(t)
+    Nil and heads is
+      Nil then assert(tails is Nil); Nil
+      else heads toReverseArray() :: go(Nil, Nil) of tails reverse()
+  go(Nil, Nil) of fromArray(xss)
 
 

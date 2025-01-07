@@ -31,7 +31,7 @@ class Keyword(
   def assumeRightPrec: Int = rightPrec.getOrElse(lastWords(s"$this does not have right precedence"))
   def leftPrecOrMin: Int = leftPrec.getOrElse(Int.MinValue)
   def rightPrecOrMin: Int = rightPrec.getOrElse(Int.MinValue)
-  // def rightPrecOrMax: Int = rightPrec.getOrElse(Int.MaxValue)
+  def rightPrecOrMax: Int = rightPrec.getOrElse(Int.MaxValue)
   override def toString: Str = s"keyword '$name'"
 
 object Keyword:
@@ -45,9 +45,8 @@ object Keyword:
   private var _curPrec = 2
   private def curPrec: S[Int] = S(_curPrec)
   private def nextPrec: S[Int] =
-    val res = _curPrec
     _curPrec += 1
-    S(res)
+    S(_curPrec)
   
   val `class` = Keyword("class", N, curPrec)
   val `val` = Keyword("val", N, curPrec)
@@ -63,9 +62,14 @@ object Keyword:
   
   val `if` = Keyword("if", N, nextPrec)
   val `while` = Keyword("while", N, curPrec)
-  val `then` = Keyword("then", nextPrec, curPrec)
+  
+  val `case` = Keyword("case", N, curPrec)
+  
+  val thenPrec = nextPrec
+  val `then` = Keyword("then", thenPrec, thenPrec)
+  val `do` = Keyword("do", thenPrec, thenPrec)
+  
   val `else` = Keyword("else", nextPrec, curPrec)
-  val `case` = Keyword("case", N, N)
   val `fun` = Keyword("fun", N, N)
   // val `val` = Keyword("val", N, N)
   val `var` = Keyword("var", N, N)
@@ -81,7 +85,6 @@ object Keyword:
   val `in` = Keyword("in", curPrec, curPrec)
   val `out` = Keyword("out", N, curPrec)
   val `set` = Keyword("set", N, curPrec)
-  val `do` = Keyword("do", N, N)
   val `declare` = Keyword("declare", N, N)
   val `trait` = Keyword("trait", N, N)
   val `mixin` = Keyword("mixin", N, N)
@@ -105,8 +108,8 @@ object Keyword:
   val `abstract` = Keyword("abstract", N, N)
   val `constructor` = Keyword("constructor", N, N)
   val `virtual` = Keyword("virtual", N, N)
-  val `true` = Keyword("true", N, curPrec)
-  val `false` = Keyword("false", N, curPrec)
+  val `true` = Keyword("true", N, N)
+  val `false` = Keyword("false", N, N)
   val `public` = Keyword("public", N, N)
   val `private` = Keyword("private", N, N)
   val `return` = Keyword("return", N, curPrec)
@@ -121,11 +124,13 @@ object Keyword:
   val `=>` = Keyword("=>", nextPrec, eqPrec)
   val `->` = Keyword("->", curPrec, eqPrec)
   
+  val __ = Keyword("_", N, N)
+  
   val modifiers = Set(
     `abstract`, mut, virtual, `override`, declare, public, `private`)
   
   type Infix = `and`.type | `or`.type | `then`.type | `else`.type | `is`.type | `:`.type | `->`.type |
-    `=>`.type | `extends`.type | `restricts`.type | `as`.type
+    `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type
 
   type Ellipsis = `...`.type | `..`.type
   

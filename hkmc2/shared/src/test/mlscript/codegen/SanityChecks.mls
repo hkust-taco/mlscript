@@ -2,7 +2,7 @@
 
 
 
-:sjs
+:ssjs
 fun f(x, y) = x + y
 f(2, 3)
 //│ JS:
@@ -12,12 +12,12 @@ f(2, 3)
 //│   let y = args[1];
 //│   return x + y;
 //│ }
-//│ this.f(2, 3) ?? null
+//│ this.f(2, 3)
 //│ = 5
 
 
 :expect NaN
-:sjs
+:ssjs
 :noSanityCheck
 fun f2(x, y) = x + y
 f2(2)
@@ -25,15 +25,15 @@ f2(2)
 //│ function f2(x, y) { return x + y; } this.f2(2)
 //│ = NaN
 
-:sjs
+:ssjs
 :re
 f(2)
 //│ JS:
-//│ this.f(2) ?? null
+//│ this.f(2)
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
-:sjs
+:ssjs
 :re
 fun f(x)(y, z) = x + y + z
 f(3)(4)
@@ -51,20 +51,20 @@ f(3)(4)
 //│     return tmp1 + z;
 //│   };
 //│ }
-//│ tmp = this.f(3) ?? null;
+//│ tmp = this.f(3);
 //│ tmp(4) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
 
 :expect NaN
-:sjs
+:ssjs
 :noSanityCheck
 let f = (x, y) => x + y in f(2)
 //│ JS:
-//│ this.f = (x, y) => { return x + y; }; this.f(2)
+//│ this.f = (x, y) => { return x + y; }; this.f(2) ?? null
 //│ = NaN
 
-:sjs
+:ssjs
 :re
 let f = (x, y) => x + y
 f(2)
@@ -81,7 +81,7 @@ f(2)
 
 
 :expect NaN
-:sjs
+:ssjs
 :noSanityCheck
 class Cls(x, y) with
   fun f(z, p) = x + y + z + p
@@ -93,7 +93,6 @@ Cls(1, 2).f(3)
 //│   constructor(x, y) {
 //│     this.x = x;
 //│     this.y = y;
-//│     
 //│   }
 //│   f(z, p) {
 //│     let tmp1, tmp2;
@@ -104,10 +103,10 @@ Cls(1, 2).f(3)
 //│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
 //│ };
 //│ tmp = this.Cls(1, 2);
-//│ tmp.f(3)
+//│ tmp.f(3) ?? null
 //│ = NaN
 
-:sjs
+:ssjs
 :re
 class Cls(x, y) with
   fun f(z, p) = x + y + z + p
@@ -119,7 +118,6 @@ Cls(1, 2).f(3)
 //│   constructor(x, y) {
 //│     this.x = x;
 //│     this.y = y;
-//│     
 //│   }
 //│   f(...args) {
 //│     globalThis.Predef.checkArgs("f", 2, true, args.length);
@@ -132,12 +130,12 @@ Cls(1, 2).f(3)
 //│   }
 //│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
 //│ };
-//│ tmp = this.Cls(1, 2) ?? null;
+//│ tmp = this.Cls(1, 2);
 //│ tmp.f(3) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
-:sjs
+:ssjs
 :re
 class Cls(x, y) with
   fun f(z, p)(q, s) = x + y + z + p + q + s
@@ -149,7 +147,6 @@ Cls(1, 2).f(3, 4)(5)
 //│   constructor(x, y) {
 //│     this.x = x;
 //│     this.y = y;
-//│     
 //│   }
 //│   f(...args) {
 //│     globalThis.Predef.checkArgs("f", 2, true, args.length);
@@ -169,13 +166,13 @@ Cls(1, 2).f(3, 4)(5)
 //│   }
 //│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
 //│ };
-//│ tmp = this.Cls(1, 2) ?? null;
-//│ tmp1 = tmp.f(3, 4) ?? null;
+//│ tmp = this.Cls(1, 2);
+//│ tmp1 = tmp.f(3, 4);
 //│ tmp1(5) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
 
-:sjs
+:ssjs
 console.log(1)
 //│ JS:
 //│ this.console.log(1) ?? null
@@ -183,7 +180,7 @@ console.log(1)
 
 
 :re
-:sjs
+:ssjs
 globalThis.x
 //│ JS:
 //│ let selRes;
@@ -196,7 +193,7 @@ globalThis.x
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
 :re
-:sjs
+:ssjs
 globalThis.x()
 //│ JS:
 //│ this.x() ?? null
@@ -206,7 +203,7 @@ globalThis.x()
 
 
 :re
-:sjs
+:ssjs
 module M with
   class A(x) with
     fun f(y) = x + y
@@ -221,7 +218,6 @@ if M.A(1).y is
 //│     this.A.class = class A {
 //│       constructor(x1) {
 //│         this.x = x1;
-//│         
 //│       }
 //│       f(...args) {
 //│         globalThis.Predef.checkArgs("f", 1, true, args.length);
@@ -235,7 +231,7 @@ if M.A(1).y is
 //│ };
 //│ this.M = new M$class;
 //│ this.M.class = M$class;
-//│ tmp = this.M.A(1) ?? null;
+//│ tmp = this.M.A(1);
 //│ selRes = tmp.y;
 //│ if (selRes === undefined) {
 //│   throw new this.Error("Access to required field 'y' yielded 'undefined'");
@@ -254,13 +250,13 @@ if M.A(1).y is
 
 
 
-:sjs
+:ssjs
 :re
 M.A(1).y
   console.log()
 //│ JS:
 //│ let tmp, selRes, tmp1;
-//│ tmp = this.M.A(1) ?? null;
+//│ tmp = this.M.A(1);
 //│ selRes = tmp.y;
 //│ if (selRes === undefined) {
 //│   throw new this.Error("Access to required field 'y' yielded 'undefined'");
@@ -272,12 +268,12 @@ M.A(1).y
 
 
 
-:sjs
+:ssjs
 :noSanityCheck
 M.A(1).y
   console.log()
 //│ JS:
-//│ let tmp; tmp = this.M.A(1); this.console.log(tmp.y)
+//│ let tmp; tmp = this.M.A(1); this.console.log(tmp.y) ?? null
 //│ > undefined
 
 :noSanityCheck
@@ -290,16 +286,19 @@ M.A(2).y > 1
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
 :re
-:sjs
+:ssjs
 M.A(1).g(0)
 //│ JS:
-//│ let tmp; tmp = this.M.A(1) ?? null; tmp.g(0) ?? null
+//│ let tmp; tmp = this.M.A(1); tmp.g(0) ?? null
 //│ ═══[RUNTIME ERROR] TypeError: tmp.g is not a function
 
 
 
-:sjs
+:ssjs
 M.A(1).f(0)
 //│ JS:
-//│ let tmp; tmp = this.M.A(1) ?? null; tmp.f(0) ?? null
+//│ let tmp; tmp = this.M.A(1); tmp.f(0) ?? null
 //│ = 1
+
+
+

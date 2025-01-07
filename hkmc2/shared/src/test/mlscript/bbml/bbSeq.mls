@@ -1,6 +1,7 @@
 :bbml
 //│ Type: ⊤
 
+//│ Type: ⊤
 
 
 class Seq[A, E](next: () ->{E} A)
@@ -18,7 +19,7 @@ fun force_cache: [A, B, E] -> Seq[out A, out E] ->{E} Seq[out B, Nothing]
 
 
 // * Dummy implementation
-fun mapi: [A, E] -> Seq[out A, out E] -> ((Int, A) ->{E} A) ->{Alloc} Seq[out A, out E]
+fun mapi: [A, E] -> Seq[out A, out E] -> ((Int, A) ->{E} A) ->{Nothing} Seq[out A, out E]
 fun mapi = s => f =>
   region r in
     map(s) of x => f(0, x)
@@ -27,64 +28,64 @@ fun mapi = s => f =>
 // * Should be an error. This definition would not be referentially transparent.
 // * The error message needs improvement, though.
 :e
-fun mapi: [A, E] -> Seq[out A, out E] -> ((Int, A) ->{E} A) ->{Alloc} Seq[out A, out E]
+fun mapi: [A, E] -> Seq[out A, out E] -> ((Int, A) ->{E} A) ->{Nothing} Seq[out A, out E]
 fun mapi = s => f =>
   region r in
     let i = r.ref 0
     map(s) of x =>
       i := !i + 1
       f(!i, x)
-//│ ╔══[ERROR] Type error in region expression with expected type Seq[out <A>25_2, out <E>26_2]
-//│ ║  l.33: 	    let i = r.ref 0
+//│ ╔══[ERROR] Type error in region expression with expected type Seq[out A, out E]
+//│ ║  l.34: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
-//│ ║  l.34: 	    map(s) of x =>
+//│ ║  l.35: 	    map(s) of x =>
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.35: 	      i := !i + 1
+//│ ║  l.36: 	      i := !i + 1
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.36: 	      f(!i, x)
+//│ ║  l.37: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  Seq[out B38_2, out E39_2]  <:  Seq[out <A>25_2, out <E>26_2]
-//│ ╟── because: cannot constrain  D( E39_2 )  <:  <E>26_2
-//│ ╟── because: cannot constrain  E39_2  <:  ¬(~<E>26_2)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ α40_2  <:  ¬(~<E>26_2)
-//│ ╟── because: cannot constrain  α40_2  <:  ¬(~<E>26_2)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ r41_2  <:  ¬(~<E>26_2)
-//│ ╟── because: cannot constrain  r41_2  <:  ¬(~<E>26_2)
-//│ ╙── because: cannot constrain    <:  ¬(~<E>26_2)
-//│ ╔══[ERROR] Type error in region expression with expected type Seq[out <A>25_2, out <E>26_2]
-//│ ║  l.33: 	    let i = r.ref 0
+//│ ╟── because: cannot constrain  Seq[out 'B, out 'E1]  <:  Seq[out A, out E]
+//│ ╟── because: cannot constrain  'E1  <:  E
+//│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'r  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'r  <:  ¬(¬E)
+//│ ╙── because: cannot constrain    <:  ¬(¬E)
+//│ ╔══[ERROR] Type error in region expression with expected type Seq[out A, out E]
+//│ ║  l.34: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
-//│ ║  l.34: 	    map(s) of x =>
+//│ ║  l.35: 	    map(s) of x =>
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.35: 	      i := !i + 1
+//│ ║  l.36: 	      i := !i + 1
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.36: 	      f(!i, x)
+//│ ║  l.37: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  Seq[out B38_2, out E39_2]  <:  Seq[out <A>25_2, out <E>26_2]
-//│ ╟── because: cannot constrain  D( E39_2 )  <:  <E>26_2
-//│ ╟── because: cannot constrain  E39_2  <:  ¬(~<E>26_2)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ α40_2  <:  ¬(~<E>26_2)
-//│ ╟── because: cannot constrain  α40_2  <:  ¬(~<E>26_2)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ r41_2  <:  ¬(~<E>26_2)
-//│ ╟── because: cannot constrain  r41_2  <:  ¬(~<E>26_2)
-//│ ╙── because: cannot constrain    <:  ¬(~<E>26_2)
-//│ ╔══[ERROR] Type error in region expression with expected type Seq[out <A>25_2, out <E>26_2]
-//│ ║  l.33: 	    let i = r.ref 0
+//│ ╟── because: cannot constrain  Seq[out 'B, out 'E1]  <:  Seq[out A, out E]
+//│ ╟── because: cannot constrain  'E1  <:  E
+//│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'r  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'r  <:  ¬(¬E)
+//│ ╙── because: cannot constrain    <:  ¬(¬E)
+//│ ╔══[ERROR] Type error in region expression with expected type Seq[out A, out E]
+//│ ║  l.34: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
-//│ ║  l.34: 	    map(s) of x =>
+//│ ║  l.35: 	    map(s) of x =>
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.35: 	      i := !i + 1
+//│ ║  l.36: 	      i := !i + 1
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.36: 	      f(!i, x)
+//│ ║  l.37: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  Seq[out B38_2, out E39_2]  <:  Seq[out <A>25_2, out <E>26_2]
-//│ ╟── because: cannot constrain  D( E39_2 )  <:  <E>26_2
-//│ ╟── because: cannot constrain  E39_2  <:  ¬(~<E>26_2)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ α40_2  <:  ¬(~<E>26_2)
-//│ ╟── because: cannot constrain  α40_2  <:  ¬(~<E>26_2)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ r41_2  <:  ¬(~<E>26_2)
-//│ ╟── because: cannot constrain  r41_2  <:  ¬(~<E>26_2)
-//│ ╙── because: cannot constrain    <:  ¬(~<E>26_2)
+//│ ╟── because: cannot constrain  Seq[out 'B, out 'E1]  <:  Seq[out A, out E]
+//│ ╟── because: cannot constrain  'E1  <:  E
+//│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'r  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'r  <:  ¬(¬E)
+//│ ╙── because: cannot constrain    <:  ¬(¬E)
 //│ Type: ⊤
 
 // * Notice the inferred type, which produces an unusable Sequence (of effect `?` ie `Any`)
@@ -95,10 +96,10 @@ fun mapi = s => f =>
       i := !i + 1
       f(!i, x)
 mapi
-//│ Type: forall A50_2, E51_2, α61_2, α62_2: Seq[out A50_2, out E51_2] -> (((Int, A50_2) ->{α62_2} α61_2) ->{Alloc} Seq[out α61_2, ?])
+//│ Type: forall 'A, 'E, 'app, 'eff: Seq[out 'A, out 'E] -> (((Int, 'A) ->{'eff} 'app) -> Seq[out 'app, ?])
 
 // * This version is correct as it keeps the mutation encapsulated within the region
-fun mapi_force: [A, E] -> Seq[out A, out E] -> ((Int, A) ->{E} A) ->{Alloc | E} Seq[out A, Nothing]
+fun mapi_force: [A, E] -> Seq[out A, out E] -> ((Int, A) ->{E} A) ->{E} Seq[out A, Nothing]
 fun mapi_force = s => f =>
   region r in
     let i = r.ref 0
@@ -108,7 +109,7 @@ fun mapi_force = s => f =>
 //│ Type: ⊤
 
 // * An alternative version that takes an existing region in parameter
-fun mapi: [A, R, E] -> (Seq[out A, out E], Region[R]) -> ((Int, A) ->{E} A) ->{R | Alloc} Seq[out A, out E | R]
+fun mapi: [A, R, E] -> (Seq[out A, out E], Region[R]) -> ((Int, A) ->{E} A) ->{R} Seq[out A, out E | R]
 fun mapi = (s, r) => f =>
   let i = r.ref 0
   map(s) of x =>
@@ -117,7 +118,7 @@ fun mapi = (s, r) => f =>
 //│ Type: ⊤
 
 // * Simpler; should be equivalent when Region is covariant
-fun mapi: [A, E] -> (Seq[out A, out E], Region[E]) -> ((Int, A) ->{E} A) ->{E | Alloc} Seq[out A, out E]
+fun mapi: [A, E] -> (Seq[out A, out E], Region[E]) -> ((Int, A) ->{E} A) ->{E} Seq[out A, out E]
 fun mapi = (s, r) => f =>
   let i = r.ref 0
   map(s) of x =>

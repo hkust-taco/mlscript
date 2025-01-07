@@ -1,32 +1,39 @@
 :js
+
 :import NofibPrelude.mls
-//│ Imported 109 member(s)
+//│ Imported 112 member(s)
 
 
-fun dfs(r, vsns, xs) = if vsns is Tup2(vs, ns) and
+fun dfs(r, vsns, xs) = if vsns is [vs, ns] and
   xs is
-    Nil then Tup2(vs, ns)
-    Cons(x, xs) and
-      inList(x, vs) then dfs(r, Tup2(vs, ns), xs)
-      dfs(r, Tup2(Cons(x, vs), Nil), r(x)) is Tup2(vs', ns') then dfs(r, Tup2(vs', append(Cons(x, ns'), ns)), xs)
+    Nil then [vs, ns]
+    x :: xs and
+      inList(x, vs) then dfs(r, [vs, ns], xs)
+      dfs(r, [x :: vs, Nil], r(x)) is [vs', ns'] then dfs(r, [vs', (x :: ns') +: ns], xs)
 
 fun stronglyConnComp(es, vs) =
-  fun swap(a) = if a is Tup2(f, s) then Tup2(s, f)
+  fun swap(a) = if a is [f, s] then [s, f]
   
   fun new_range(xys, w) = if xys is
     Nil then Nil
-    Cons(Tup2(x, y), xys) and
-      x == w then Cons(y, new_range(xys, w))
+    [x, y] :: xys and
+      x == w then y :: new_range(xys, w)
       else new_range(xys, w)
   
-  fun span_tree(r, vsns, xs) = if vsns is Tup2(vs, ns) and
+  fun span_tree(r, vsns, xs) = if vsns is [vs, ns] and
     xs is
-      Nil then Tup2(vs, ns)
-      Cons(x, xs) and
-        inList(x, vs) then span_tree(r, Tup2(vs, ns), xs)
-        dfs(r, Tup2(Cons(x, vs), Nil), r(x)) is Tup2(vs', ns') then span_tree(r, Tup2(vs', Cons(Cons(x, ns'), ns)), xs)
+      Nil then [vs, ns]
+      x :: xs and
+        inList(x, vs) then span_tree(r, [vs, ns], xs)
+        dfs(r, [x :: vs, Nil], r(x)) is [vs', ns'] then span_tree(r, [vs', (x :: ns') :: ns], xs)
   
-  (snd(span_tree(x => new_range(map(swap, es), x), Tup2(Nil, Nil), snd(dfs(x => new_range(es, x), Tup2(Nil, Nil), vs)))))
+  snd of span_tree of
+    x => new_range(map(swap, es), x)
+    [Nil, Nil]
+    snd of dfs of
+      x => new_range(es, x)
+      [Nil, Nil]
+      vs
 
 
 fun testScc_nofib(d) =
@@ -38,11 +45,11 @@ fun testScc_nofib(d) =
   let g = 6
   let h = 7
   let vertices = a :: b :: c :: d :: f :: g :: h :: Nil
-  let edges = Tup2(b, a) :: Tup2(c, b) :: Tup2(c, d) :: Tup2(c, h) :: Tup2(d, c) :: Tup2(f, a) :: Tup2(f, g) :: Tup2(f, h) :: Tup2(g, f) :: Tup2(h, g) :: Nil
+  let edges = [b, a] :: [c, b] :: [c, d] :: [c, h] :: [d, c] :: [f, a] :: [f, g] :: [f, h] :: [g, f] :: [h, g] :: Nil
   
   stronglyConnComp(edges, vertices)
 
 
-
+:expect '[[1],[2],[7,5,6],[3,4]]'
 testScc_nofib(0).toString()
 //│ = '[[1],[2],[7,5,6],[3,4]]'

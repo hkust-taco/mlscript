@@ -1,6 +1,7 @@
 :bbml
 //│ Type: ⊤
 
+//│ Type: ⊤
 
 
 (x => x(x)) (x => x(x))
@@ -11,9 +12,9 @@ fun f(x) = x(x)
 //│ Type: ⊤
 
 f
-//│ Type: forall x9_2, α10_2, α11_2: (x9_2 ->{α10_2} α11_2) ->{α10_2} α11_2
+//│ Type: forall 'x, 'eff, 'app: ('x ->{'eff} 'app) ->{'eff} 'app
 //│ Where:
-//│   x9_2 <: x9_2 ->{α10_2} α11_2
+//│   'x <: 'x ->{'eff} 'app
 
 f(f)
 //│ Type: ⊥

@@ -183,12 +183,12 @@ class ParseRules(using State):
             val items = split match
               case Block(stmts) => stmts.appended(clause)
               case _ => split :: clause :: Nil
-            IfLike(kw, Block(items))
-          case (split, N) => IfLike(kw, split)
+            IfLike(kw, N/* TODO */, Block(items))
+          case (split, N) => IfLike(kw, N/* TODO */, split)
         ,
         Blk(
           ParseRule(s"'${kw.name}' block")(End(()))
-        ) { case (body, _) => IfLike(kw, body) }
+        ) { case (body, _) => IfLike(kw, N/* TODO */, body) }
       )
   
   def typeAliasLike(kw: Keyword, kind: TypeDefKind): Kw[TypeDef] =
@@ -258,7 +258,7 @@ class ParseRules(using State):
     ,
     Kw(`case`):
       ParseRule("`case` keyword")(
-        Blk(ParseRule("`case` branches")(End(())))((body, _: Unit) => Case(body))
+        exprOrBlk(ParseRule("`case` branches")(End(())))((body, _: Unit) => Case(N/* TODO */, body))*
       )
     ,
     Kw(`region`):
@@ -286,7 +286,11 @@ class ParseRules(using State):
           case (body, _) => Open(body)}*),
     modified(`abstract`, Kw(`class`)(typeDeclBody(Cls))),
     modified(`mut`),
-    modified(`do`),
+    Kw(`do`):
+      ParseRule(s"`do` keyword")(
+        exprOrBlk(ParseRule(s"`do` body")(End(()))):
+          case (body, ()) => Tree.Modified(`do`, N, body)
+        *),
     modified(`virtual`),
     modified(`override`),
     modified(`declare`),
@@ -299,9 +303,10 @@ class ParseRules(using State):
     // modified(`type`),
     singleKw(`true`)(BoolLit(true)),
     singleKw(`false`)(BoolLit(false)),
-    singleKw(`undefined`)(UnitLit(true)),
-    singleKw(`null`)(UnitLit(false)),
+    singleKw(`undefined`)(UnitLit(false)),
+    singleKw(`null`)(UnitLit(true)),
     singleKw(`this`)(Ident("this")),
+    singleKw(Keyword.__)(Under()),
     standaloneExpr,
   )
   
@@ -358,6 +363,7 @@ class ParseRules(using State):
     genInfixRule(`:`, (rhs, _: Unit) => lhs => InfixApp(lhs, `:`, rhs)),
     genInfixRule(`extends`, (rhs, _: Unit) => lhs => InfixApp(lhs, `extends`, rhs)),
     genInfixRule(`restricts`, (rhs, _: Unit) => lhs => InfixApp(lhs, `restricts`, rhs)),
+    genInfixRule(`do`, (rhs, _: Unit) => lhs => InfixApp(lhs, `do`, rhs)),
   )
 
 end ParseRules

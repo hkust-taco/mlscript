@@ -5,7 +5,7 @@
 
 
 1
-//│ JS:
+//│ JS (unsanitized):
 //│ 1
 //│ = 1
 
@@ -16,20 +16,23 @@
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.14: 	1
 //│ ╙──      	^
+//│ JS (unsanitized):
+//│ 2
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.14: 	1
+//│ ╙──      	^
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
 //│   main = Return:
 //│     res = Lit of IntLit of 2
 //│     implct = true
-//│ JS:
-//│ 2
 //│ = 2
 
 
 :fixme // should be a "linking" error
 log("Hi")
-//│ JS:
+//│ JS (unsanitized):
 //│ this.log("Hi") ?? null
 //│ ═══[RUNTIME ERROR] TypeError: this.log is not a function
 
@@ -37,6 +40,8 @@ log("Hi")
 :lot
 log("Hi")
 2
+//│ JS (unsanitized):
+//│ let tmp; tmp = this.log("Hi") ?? null; 2
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
@@ -53,14 +58,12 @@ log("Hi")
 //│     rest = Return: \
 //│     res = Lit of IntLit of 2
 //│     implct = true
-//│ JS:
-//│ let tmp; tmp = this.log("Hi") ?? null; 2
 //│ ═══[RUNTIME ERROR] TypeError: this.log is not a function
 
 
 :re
 2(2)
-//│ JS:
+//│ JS (unsanitized):
 //│ 2(2) ?? null
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not a function
 

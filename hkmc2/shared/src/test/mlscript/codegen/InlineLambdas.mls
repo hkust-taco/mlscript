@@ -1,0 +1,44 @@
+:js
+
+:sjs
+(x => x + 1 + 1 + 1 + 1 + 1)(1)
+//│ JS (unsanitized):
+//│ ((x) => {
+//│   let tmp, tmp1, tmp2, tmp3;
+//│   tmp = x + 1;
+//│   tmp1 = tmp + 1;
+//│   tmp2 = tmp1 + 1;
+//│   tmp3 = tmp2 + 1;
+//│   return tmp3 + 1;
+//│ })(1)
+//│ = 6
+
+:sjs
+(x => x + 1 + 1 + 1 + 1 + 1 + 1)(1)
+//│ JS (unsanitized):
+//│ let tmp;
+//│ tmp = (x) => {
+//│   let tmp1, tmp2, tmp3, tmp4, tmp5;
+//│   tmp1 = x + 1;
+//│   tmp2 = tmp1 + 1;
+//│   tmp3 = tmp2 + 1;
+//│   tmp4 = tmp3 + 1;
+//│   tmp5 = tmp4 + 1;
+//│   return tmp5 + 1;
+//│ };
+//│ tmp(1)
+//│ = 7
+
+:sjs
+(x => x) + 1
+//│ JS (unsanitized):
+//│ ((x) => { return x; }) + 1
+//│ = '(...args) => {   globalThis.Predef.checkArgs("", 1, true, args.length);   let x = args[0];   return x; }1'
+
+:sjs
+1 + (x => x)
+//│ JS (unsanitized):
+//│ 1 + ((x) => { return x; })
+//│ = '1(...args) => {   globalThis.Predef.checkArgs("", 1, true, args.length);   let x = args[0];   return x; }'
+
+

@@ -9,13 +9,13 @@ module OtherModule with
 
 :sjs
 open Option
-//│ JS:
-//│ undefined
+//│ JS (unsanitized):
+//│ null
 
 :sjs
 None isDefined()
-//│ JS:
-//│ Option.isDefined(Option.None) ?? null
+//│ JS (unsanitized):
+//│ Option.isDefined(Option.None)
 //│ = false
 
 Some(1) isDefined()
@@ -51,15 +51,15 @@ none()
 
 :sjs
 val Option = "Oops"
-//│ JS:
-//│ this.Option = "Oops"; undefined
+//│ JS (unsanitized):
+//│ this.Option = "Oops"; null
 //│ Option = 'Oops'
 
 :fixme
 :sjs
 Some(123)
-//│ JS:
-//│ Option.Some(123) ?? null
+//│ JS (unsanitized):
+//│ Option.Some(123)
 //│ ═══[RUNTIME ERROR] TypeError: Option.Some is not a function
 
 module Option with
@@ -67,17 +67,17 @@ module Option with
 
 :sjs
 open Option
-//│ JS:
-//│ undefined
+//│ JS (unsanitized):
+//│ null
 
 :sjs
 Some
-//│ JS:
+//│ JS (unsanitized):
 //│ Option.Some
 
 :sjs
 None
-//│ JS:
+//│ JS (unsanitized):
 //│ this.Option.None
 //│ = 123
 

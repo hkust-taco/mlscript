@@ -1,0 +1,731 @@
+:js
+
+:import NofibPrelude.mls
+//│ Imported 112 member(s)
+
+
+fun toUpper(c) = c.toUpperCase()
+
+fun lz_map(f, ls) = lazy of () =>
+  if ls is
+    Nil then LzNil
+    h :: t then LzCons(f(h), lz_map(f, t))
+
+fun append_lz(xs, ys) = if xs is
+  Nil then force(ys)
+  h :: t then lazy of () => LzCons(h, append_lz(t, ys))
+
+fun cycle(xs) = append_lz(xs, lazy of () => cycle(xs))
+
+fun isSpace(c) = c === " "
+
+fun words(s) = if dropWhile(isSpace, s) is
+  Nil then Nil
+  h :: t and
+    break_(isSpace, h :: t) is [w, s_] then w :: words(s_)
+
+fun unwords(ws) =
+  fun go(ws) = if ws is
+    Nil then Nil
+    w :: ws then " " :: w +: go(ws)
+  if ws is
+    Nil then Nil
+    w :: ws then w +: go(ws)
+
+fun null_lz(ls) = if force(ls) is
+  LzNil then true
+  LzCons(h, t) then false
+
+fun trim(ls) =
+  fun cons(x, xs) = if inList(x, nofibStringToList(" .!?,")) and null_(xs) then Nil else x :: xs
+  foldr(cons, Nil, dropWhile(x => inList(x, nofibStringToList(" .!?,")), ls))
+
+fun repeated(kt_rp) = if kt_rp is [kt, r :: rp] then [r, [kt, rp]]
+
+fun newKeyTab(kt_, kt_rp) = if kt_rp is [kt, rp] then [kt_, rp]
+
+fun keyTabOf(kt_rp) = if kt_rp is [kt, rp] then kt
+
+fun makeResponse(cs, us) = if cs is
+  "?" :: cs_ then cs_ +: nofibStringToList(" ") +: us +: nofibStringToList("?")
+  "." :: cs_ then cs_ +: nofibStringToList(" ") +: us +: nofibStringToList(".")
+  else cs
+
+let repeatMsgs =
+  nofibStringToList("Why did you repeat yourself?") ::
+  nofibStringToList("Do you expect a different answer by repeating yourself?") ::
+  nofibStringToList("Come, come, elucidate your thoughts.") ::
+  nofibStringToList("Please don't repeat yourself!") ::
+  Nil
+//│ > Cons {
+//│ >   head: Cons { head: 'W', tail: Cons { head: 'h', tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: 'D', tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   }
+//│ repeatMsgs = }
+
+let respMsgs =
+  let canYou = nofibStringToList("?Don_t you believe that I can") ::
+    nofibStringToList("?Perhaps you would like to be able to") ::
+    nofibStringToList("?You want me to be able to") ::
+    Nil
+  let canI = nofibStringToList("?Perhaps you don_t want to") ::
+    nofibStringToList("?Do you want to be able to") ::
+    Nil
+  let youAre = nofibStringToList("?What makes you think I am") ::
+    nofibStringToList("?Does it please you to believe I am") ::
+    nofibStringToList("?Perhaps you would like to be") ::
+    nofibStringToList("?Do you sometimes wish you were") ::
+    Nil
+  let iDont = nofibStringToList("?Don_t you really") ::
+    nofibStringToList("?Why don_t you") ::
+    nofibStringToList("?Do you wish to be able to") ::
+    nofibStringToList("Does that trouble you?") ::
+    Nil
+  let iFeel = nofibStringToList("Tell me more about such feelings.") ::
+    nofibStringToList("?Do you often feel") ::
+    nofibStringToList("?Do you enjoy feeling") ::
+    Nil
+  let whyDont = nofibStringToList("?Do you really believe I don't") ::
+    nofibStringToList(".Perhaps in good time I will") ::
+    nofibStringToList("?Do you want me to") ::
+    Nil
+  let whyCant = nofibStringToList("?Do you think you should be able to") ::
+    nofibStringToList("?Why can't you") ::
+    Nil
+  let areYou = nofibStringToList("?Why are you interested in whether or not I am") ::
+    nofibStringToList("?Would you prefer if I were not") ::
+    nofibStringToList("?Perhaps in your fantasies I am") ::
+    Nil
+  let iCant = nofibStringToList("?How do you know you can't") ::
+    nofibStringToList("Have you tried?") ::
+    nofibStringToList("?Perhaps you can now") ::
+    Nil
+  let iAm = nofibStringToList("?Did you come to me because you are") ::
+    nofibStringToList("?How long have you been") ::
+    nofibStringToList("?Do you believe it is normal to be") ::
+    nofibStringToList("?Do you enjoy being") ::
+    Nil
+  let you = nofibStringToList("We were discussing you --not me.") ::
+    nofibStringToList("?Oh,") ::
+    nofibStringToList("You're not really talking about me, are you?") ::
+    Nil
+  let yes = nofibStringToList("You seem quite positive.") ::
+    nofibStringToList("Are you Sure?") ::
+    nofibStringToList("I see.") ::
+    nofibStringToList("I understand.") ::
+    Nil
+  let no = nofibStringToList("Are you saying no just to be negative?") ::
+    nofibStringToList("You are being a bit negative.") ::
+    nofibStringToList("Why not?") ::
+    nofibStringToList("Are you sure?") ::
+    nofibStringToList("Why no?") ::
+    Nil
+  let computer = nofibStringToList("Do computers worry you?") ::
+    nofibStringToList("Are you talking about me in particular?") ::
+    nofibStringToList("Are you frightened by machines?") ::
+    nofibStringToList("Why do you mention computers?") ::
+    nofibStringToList("What do you think machines have to do with your problems?") ::
+    nofibStringToList("Don't you think computers can help people?") ::
+    nofibStringToList("What is it about machines that worries you?") ::
+    Nil
+  let iWant = nofibStringToList("?Why do you want") ::
+    nofibStringToList("?What would it mean to you if you got") ::
+    nofibStringToList("?Suppose you got") ::
+    nofibStringToList("?What if you never got") ::
+    nofibStringToList(".I sometimes also want") ::
+    Nil
+  let question = nofibStringToList("Why do you ask?") ::
+    nofibStringToList("Does that question interest you?") ::
+    nofibStringToList("What answer would please you the most?") ::
+    nofibStringToList("What do you think?") ::
+    nofibStringToList("Are such questions on your mind often?") ::
+    nofibStringToList("What is it that you really want to know?") ::
+    nofibStringToList("Have you asked anyone else?") ::
+    nofibStringToList("Have you asked such questions before?") ::
+    nofibStringToList("What else comes to mind when you ask that?") ::
+    Nil
+  let name = nofibStringToList("Names don't interest me.") ::
+    nofibStringToList("I don't care about names --please go on.") ::
+    Nil
+  let because = nofibStringToList("Is that the real reason?") ::
+    nofibStringToList("Don't any other reasons come to mind?") ::
+    nofibStringToList("Does that reason explain anything else?") ::
+    nofibStringToList("What other reasons might there be?") ::
+    Nil
+  let sorry = nofibStringToList("Please don't apologise!") ::
+    nofibStringToList("Apologies are not necessary.") ::
+    nofibStringToList("What feelings do you have when you apologise?") ::
+    nofibStringToList("Don't be so defensive!") ::
+    Nil
+  let dream = nofibStringToList("What does that dream suggest to you?") ::
+    nofibStringToList("Do you dream often?") ::
+    nofibStringToList("What persons appear in your dreams?") ::
+    nofibStringToList("Are you disturbed by your dreams?") ::
+    Nil
+  let hello = nofibStringToList("How do you...please state your problem.") ::
+    Nil
+  let maybe = nofibStringToList("You don't seem quite certain.") ::
+    nofibStringToList("Why the uncertain tone?") ::
+    nofibStringToList("Can't you be more positive?") ::
+    nofibStringToList("You aren't sure?") ::
+    nofibStringToList("Don't you know?") ::
+    Nil
+  let your = nofibStringToList("?Why are you concerned about my") ::
+    nofibStringToList("?What about your own") ::
+    Nil
+  let always = nofibStringToList("Can you think of a specific example?") ::
+    nofibStringToList("When?") ::
+    nofibStringToList("What are you thinking of?") ::
+    nofibStringToList("Really, always?") ::
+    Nil
+  let think = nofibStringToList("Do you really think so?") ::
+    nofibStringToList("?But you are not sure you") ::
+    nofibStringToList("?Do you doubt you") ::
+    Nil
+  let alike = nofibStringToList("In what way?") ::
+    nofibStringToList("What resemblence do you see?") ::
+    nofibStringToList("What does the similarity suggest to you?") ::
+    nofibStringToList("What other connections do you see?") ::
+    nofibStringToList("Cound there really be some connection?") ::
+    nofibStringToList("How?") ::
+    Nil
+  let friend = nofibStringToList("Why do you bring up the topic of friends?") ::
+    nofibStringToList("Do your friends worry you?") ::
+    nofibStringToList("Do your friends pick on you?") ::
+    nofibStringToList("Are you sure you have any friends?") ::
+    nofibStringToList("Do you impose on your friends?") ::
+    nofibStringToList("Perhaps your love for friends worries you.") ::
+    Nil
+  let nokeyMsgs = nofibStringToList("I'm not sure I understand you fully.") ::
+    nofibStringToList("What does that suggest to you?") ::
+    nofibStringToList("I see.") ::
+    nofibStringToList("Can you elaborate on that?") ::
+    nofibStringToList("Say, do you have any psychological problems?") ::
+    Nil
+  [nofibStringToList("CAN YOU"), canYou] ::
+  [nofibStringToList("CAN I"), canI] ::
+  [nofibStringToList("YOU ARE"), youAre] ::
+  [nofibStringToList("YOU'RE"), youAre] ::
+  [nofibStringToList("I DON'T"), iDont] ::
+  [nofibStringToList("I FEEL"), iFeel] ::
+  [nofibStringToList("WHY DON'T YOU"), whyDont] ::
+  [nofibStringToList("WHY CAN'T I"), whyCant] ::
+  [nofibStringToList("ARE YOU"), areYou] ::
+  [nofibStringToList("I CAN'T"), iCant] ::
+  [nofibStringToList("I AM"), iAm] ::
+  [nofibStringToList("I'M"), iAm] ::
+  [nofibStringToList("YOU"), you] ::
+  [nofibStringToList("YES"), yes] ::
+  [nofibStringToList("NO"), no] ::
+  [nofibStringToList("COMPUTER"), computer] ::
+  [nofibStringToList("COMPUTERS"), computer] ::
+  [nofibStringToList("I WANT"), iWant] ::
+  [nofibStringToList("WHAT"), question] ::
+  [nofibStringToList("HOW"), question] ::
+  [nofibStringToList("WHO"), question] ::
+  [nofibStringToList("WHERE"), question] ::
+  [nofibStringToList("WHEN"), question] ::
+  [nofibStringToList("NAME"), name] ::
+  [nofibStringToList("WHY"), question] ::
+  [nofibStringToList("CAUSE"), because] ::
+  [nofibStringToList("BECAUSE"), because] ::
+  [nofibStringToList("DREAM"), dream] ::
+  [nofibStringToList("SORRY"), sorry] ::
+  [nofibStringToList("HI"), hello] ::
+  [nofibStringToList("DREAMS"), dream] ::
+  [nofibStringToList("MAYBE"), maybe] ::
+  [nofibStringToList("HELLO"), hello] ::
+  [nofibStringToList("ALWAYS"), always] ::
+  [nofibStringToList("YOUR"), your] ::
+  [nofibStringToList("ALIKE"), alike] ::
+  [nofibStringToList("THINK"), think] ::
+  [nofibStringToList("FRIENDS"), friend] ::
+  [nofibStringToList("FRIEND"), friend] ::
+  [Nil, nokeyMsgs] ::
+  Nil
+//│ > Cons {
+//│ >   head: [
+//│ >     Cons { head: 'C', tail: [Cons] },
+//│ >     Cons { head: [Cons], tail: [Cons] }
+//│ >   ],
+//│ >   tail: Cons {
+//│ >     head: [ [Cons], [Cons] ],
+//│ >     tail: Cons { head: [Array], tail: [Cons] }
+//│ >   }
+//│ respMsgs = }
+
+let initial =
+  fun lscomp(ls) = if ls is
+    Nil then Nil
+    [k, rs] :: t then [words(k), cycle(rs)] :: lscomp(t)
+  [lscomp(respMsgs), cycle(repeatMsgs)]
+//│ > [
+//│ >   Cons {
+//│ >     head: [ [Cons], [Lazy] ],
+//│ >     tail: Cons { head: [Array], tail: [Cons] }
+//│ >   },
+//│ >   Lazy {
+//│ >     init: [Function (anonymous)],
+//│ >     cached: None { class: [class None] }
+//│ >   }
+//│ initial = ]
+
+fun prefix(xxs, yys) = if xxs is
+  Nil then true
+  x :: xs and
+    force(yys) is
+      LzNil then false
+      LzCons(y, ys) then listEq(x, y) && prefix(xs, ys)
+
+fun tails(xs) = lazy of () =>
+  if xs is
+    Nil then LzNil
+    xss then LzCons(xss, tails(tail(xss)))
+
+fun ucase(ls) = map(toUpper, ls)
+
+let conjugates =
+  let oneways = [nofibStringToList("me"), nofibStringToList("you")] :: Nil
+  let bothways = [nofibStringToList("are"), nofibStringToList("am")] ::
+    [nofibStringToList("we're"), nofibStringToList("was")] ::
+    [nofibStringToList("you"), nofibStringToList("I")] ::
+    [nofibStringToList("your"), nofibStringToList("my")] ::
+    [nofibStringToList("I've"), nofibStringToList("you've")] ::
+    [nofibStringToList("I'm"), nofibStringToList("you're")] ::
+    Nil
+  fun prepare(ls) = map(case { [w, r] then [ucase(w), r] }, ls)
+  fun lscomp(ls) = if ls is
+    Nil then Nil
+    [x, y] :: t then ([x, y] :: [y, x] :: Nil) :: lscomp(t)
+  prepare(oneways +: concat(lscomp(bothways)))
+//│ > Cons {
+//│ >   head: [
+//│ >     Cons { head: 'M', tail: [Cons] },
+//│ >     Cons { head: 'y', tail: [Cons] }
+//│ >   ],
+//│ >   tail: Cons {
+//│ >     head: [ [Cons], [Cons] ],
+//│ >     tail: Cons { head: [Array], tail: [Cons] }
+//│ >   }
+//│ conjugates = }
+
+fun conjug(d, w) =
+  fun maybe(d, xs) = if null_(xs) then d else xs
+  fun conj(w) =
+    fun lscomp(ls) = if ls is
+      Nil then Nil
+      [w_, m] :: t and
+        listEq(ucase(w), w_) then m :: lscomp(t)
+        else lscomp(t)
+    head(lscomp(conjugates) +: w :: Nil)
+  fun trailingI(ls) =
+    fun cons(x, xs) =
+      if listEq(x, nofibStringToList("I")) && null_(xs)
+      then nofibStringToList("me") :: Nil
+      else x :: xs
+    foldr(cons, Nil, ls)
+  unwords(trailingI(map(conj, maybe(d, w))))
+
+fun replies(key, l) =
+  map_lz of
+    x => conjug(l, drop(listLen(key), x))
+    filter_lz of
+      ls => prefix(key, lz_map(ucase, ls))
+      tails(l)
+
+fun answer(st, l) =
+  fun cons(e, r_es) = if r_es is [r, es] then [r, e :: es]
+  fun ans(e_es, l) = if e_es is
+    [key, a_as] :: es and force(a_as) is LzCons(a, as_) then
+      let rs = replies(key, l)
+      if null_lz(rs)
+      then cons([key, a_as], ans(es, l))
+      else [makeResponse(a, head_lz(rs)), [key, as_] :: es]
+  if ans(keyTabOf(st), l) is [response, kt] then [response, newKeyTab(kt, st)]
+
+fun session(rs, prev, ls) = if ls is
+  Nil then Nil
+  l :: ls and
+    (if listEqBy(listEq, prev, l) then repeated(rs) else answer(rs, l)) is [response, rs_] then
+      response +: nofibStringToList("\n\n") +: session(rs_, l, ls)
+
+fun testEliza_nofib(n) =
+  let input = 
+    nofibStringToList("Are we alone?") ::
+    nofibStringToList("That the Roswell event was actually an alien encounter. Do you agreed?") ::
+    nofibStringToList("But why not talk about you, its more fun.") ::
+    nofibStringToList("I dont ask, you do") ::
+    nofibStringToList("do ray me") ::
+    nofibStringToList("Nop, thats because your a computer") ::
+    nofibStringToList("you dont") ::
+    nofibStringToList("Oh, a paranoid computer, ehh?") ::
+    nofibStringToList("Tell me about *your* mother") ::
+    nofibStringToList("No, what what was she like?") ::
+    nofibStringToList("I'm asking questions, not you") ::
+    nofibStringToList("no") ::
+    nofibStringToList("yes") ::
+    nofibStringToList("but I'm not") ::
+    Nil
+  map of
+    i => session of
+      initial
+      Nil
+      filter of
+        x => not(null_(x))
+        map(x => words(trim(x)), take(intMod(i, 20), input))
+    enumFromTo(1, n)
+
+map(x => nofibListToString(x), testEliza_nofib(20)).toString()
+//│ > "[I'm not sure I understand you fully.\n" +
+//│ >   '\n' +
+//│ >   ",I'm not sure I understand you fully.\n" +
+//│ >   '\n' +
+//│ >   'We were discussing you --not me.\n' +
+//│ >   '\n' +
+//│ >   ",I'm not sure I understand you fully.\n" +
+//│ >   '\n' +
+//│ >   'We were discussing you --not me.\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   ",I'm not sure I understand you fully.\n" +
+//│ >   '\n' +
+//│ >   'We were discussing you --not me.\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Oh, do?\n' +
+//│ >   '\n' +
+//│ >   ",I'm not sure I understand you fully.\n" +
+//│ >   '\n' +
+//│ >   'We were discussing you --not me.\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Oh, do?\n' +
+//│ >   '\n' +
+//│ >   'What does that suggest to you?\n' +
+//│ >   '\n' +
+//│ >   ",I'm not sure I understand you fully.\n" +
+//│ >   '\n' +
+//│ >   'We were discussing you --not me.\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Oh, do?\n' +
+//│ >   '\n' +
+//│ >   'What does that suggest to you?\n' +
+//│ >   '\n' +
+//│ >   'Do computers worry you?\n' +
+//│ >   '\n' +
+//│ >   ",I'm not sure I understand you fully.\n" +
+//│ >   '\n' +
+//│ >   'We were discussing you --not me.\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Oh, do?\n' +
+//│ >   '\n' +
+//│ >   'What does that suggest to you?\n' +
+//│ >   '\n' +
+//│ >   'Do computers worry you?\n' +
+//│ >   '\n' +
+//│ >   "You're not really talking about me, are you?\n" +
+//│ >   '\n' +
+//│ >   ",I'm not sure I understand you fully.\n" +
+//│ >   '\n' +
+//│ >   'We were discussing you --not me.\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Oh, do?\n' +
+//│ >   '\n' +
+//│ >   'What does that suggest to you?\n' +
+//│ >   '\n' +
+//│ >   'Do computers worry you?\n' +
+//│ >   '\n' +
+//│ >   "You're not really talking about me, are you?\n" +
+//│ >   '\n' +
+//│ >   'I see.\n' +
+//│ >   '\n' +
+//│ >   ",I'm not sure I understand you fully.\n" +
+//│ >   '\n' +
+//│ >   'We were discussing you --not me.\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Oh, do?\n' +
+//│ >   '\n' +
+//│ >   'What does that suggest to you?\n' +
+//│ >   '\n' +
+//│ >   'Do computers worry you?\n' +
+//│ >   '\n' +
+//│ >   "You're not really talking about me, are you?\n" +
+//│ >   '\n' +
+//│ >   'I see.\n' +
+//│ >   '\n' +
+//│ >   'Can you elaborate on that?\n' +
+//│ >   '\n' +
+//│ >   ",I'm not sure I understand you fully.\n" +
+//│ >   '\n' +
+//│ >   'We were discussing you --not me.\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Oh, do?\n' +
+//│ >   '\n' +
+//│ >   'What does that suggest to you?\n' +
+//│ >   '\n' +
+//│ >   'Do computers worry you?\n' +
+//│ >   '\n' +
+//│ >   "You're not really talking about me, are you?\n" +
+//│ >   '\n' +
+//│ >   'I see.\n' +
+//│ >   '\n' +
+//│ >   'Can you elaborate on that?\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   ",I'm not sure I understand you fully.\n" +
+//│ >   '\n' +
+//│ >   'We were discussing you --not me.\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Oh, do?\n' +
+//│ >   '\n' +
+//│ >   'What does that suggest to you?\n' +
+//│ >   '\n' +
+//│ >   'Do computers worry you?\n' +
+//│ >   '\n' +
+//│ >   "You're not really talking about me, are you?\n" +
+//│ >   '\n' +
+//│ >   'I see.\n' +
+//│ >   '\n' +
+//│ >   'Can you elaborate on that?\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Did you come to me because you are asking questions, not me?\n' +
+//│ >   '\n' +
+//│ >   ",I'm not sure I understand you fully.\n" +
+//│ >   '\n' +
+//│ >   'We were discussing you --not me.\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Oh, do?\n' +
+//│ >   '\n' +
+//│ >   'What does that suggest to you?\n' +
+//│ >   '\n' +
+//│ >   'Do computers worry you?\n' +
+//│ >   '\n' +
+//│ >   "You're not really talking about me, are you?\n" +
+//│ >   '\n' +
+//│ >   'I see.\n' +
+//│ >   '\n' +
+//│ >   'Can you elaborate on that?\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Did you come to me because you are asking questions, not me?\n' +
+//│ >   '\n' +
+//│ >   'Are you saying no just to be negative?\n' +
+//│ >   '\n' +
+//│ >   ",I'm not sure I understand you fully.\n" +
+//│ >   '\n' +
+//│ >   'We were discussing you --not me.\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Oh, do?\n' +
+//│ >   '\n' +
+//│ >   'What does that suggest to you?\n' +
+//│ >   '\n' +
+//│ >   'Do computers worry you?\n' +
+//│ >   '\n' +
+//│ >   "You're not really talking about me, are you?\n" +
+//│ >   '\n' +
+//│ >   'I see.\n' +
+//│ >   '\n' +
+//│ >   'Can you elaborate on that?\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Did you come to me because you are asking questions, not me?\n' +
+//│ >   '\n' +
+//│ >   'Are you saying no just to be negative?\n' +
+//│ >   '\n' +
+//│ >   'You seem quite positive.\n' +
+//│ >   '\n' +
+//│ >   ",I'm not sure I understand you fully.\n" +
+//│ >   '\n' +
+//│ >   'We were discussing you --not me.\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Oh, do?\n' +
+//│ >   '\n' +
+//│ >   'What does that suggest to you?\n' +
+//│ >   '\n' +
+//│ >   'Do computers worry you?\n' +
+//│ >   '\n' +
+//│ >   "You're not really talking about me, are you?\n" +
+//│ >   '\n' +
+//│ >   'I see.\n' +
+//│ >   '\n' +
+//│ >   'Can you elaborate on that?\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Did you come to me because you are asking questions, not me?\n' +
+//│ >   '\n' +
+//│ >   'Are you saying no just to be negative?\n' +
+//│ >   '\n' +
+//│ >   'You seem quite positive.\n' +
+//│ >   '\n' +
+//│ >   'How long have you been not?\n' +
+//│ >   '\n' +
+//│ >   ",I'm not sure I understand you fully.\n" +
+//│ >   '\n' +
+//│ >   'We were discussing you --not me.\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Oh, do?\n' +
+//│ >   '\n' +
+//│ >   'What does that suggest to you?\n' +
+//│ >   '\n' +
+//│ >   'Do computers worry you?\n' +
+//│ >   '\n' +
+//│ >   "You're not really talking about me, are you?\n" +
+//│ >   '\n' +
+//│ >   'I see.\n' +
+//│ >   '\n' +
+//│ >   'Can you elaborate on that?\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Did you come to me because you are asking questions, not me?\n' +
+//│ >   '\n' +
+//│ >   'Are you saying no just to be negative?\n' +
+//│ >   '\n' +
+//│ >   'You seem quite positive.\n' +
+//│ >   '\n' +
+//│ >   'How long have you been not?\n' +
+//│ >   '\n' +
+//│ >   ",I'm not sure I understand you fully.\n" +
+//│ >   '\n' +
+//│ >   'We were discussing you --not me.\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Oh, do?\n' +
+//│ >   '\n' +
+//│ >   'What does that suggest to you?\n' +
+//│ >   '\n' +
+//│ >   'Do computers worry you?\n' +
+//│ >   '\n' +
+//│ >   "You're not really talking about me, are you?\n" +
+//│ >   '\n' +
+//│ >   'I see.\n' +
+//│ >   '\n' +
+//│ >   'Can you elaborate on that?\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Did you come to me because you are asking questions, not me?\n' +
+//│ >   '\n' +
+//│ >   'Are you saying no just to be negative?\n' +
+//│ >   '\n' +
+//│ >   'You seem quite positive.\n' +
+//│ >   '\n' +
+//│ >   'How long have you been not?\n' +
+//│ >   '\n' +
+//│ >   ",I'm not sure I understand you fully.\n" +
+//│ >   '\n' +
+//│ >   'We were discussing you --not me.\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Oh, do?\n' +
+//│ >   '\n' +
+//│ >   'What does that suggest to you?\n' +
+//│ >   '\n' +
+//│ >   'Do computers worry you?\n' +
+//│ >   '\n' +
+//│ >   "You're not really talking about me, are you?\n" +
+//│ >   '\n' +
+//│ >   'I see.\n' +
+//│ >   '\n' +
+//│ >   'Can you elaborate on that?\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Did you come to me because you are asking questions, not me?\n' +
+//│ >   '\n' +
+//│ >   'Are you saying no just to be negative?\n' +
+//│ >   '\n' +
+//│ >   'You seem quite positive.\n' +
+//│ >   '\n' +
+//│ >   'How long have you been not?\n' +
+//│ >   '\n' +
+//│ >   ",I'm not sure I understand you fully.\n" +
+//│ >   '\n' +
+//│ >   'We were discussing you --not me.\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Oh, do?\n' +
+//│ >   '\n' +
+//│ >   'What does that suggest to you?\n' +
+//│ >   '\n' +
+//│ >   'Do computers worry you?\n' +
+//│ >   '\n' +
+//│ >   "You're not really talking about me, are you?\n" +
+//│ >   '\n' +
+//│ >   'I see.\n' +
+//│ >   '\n' +
+//│ >   'Can you elaborate on that?\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Did you come to me because you are asking questions, not me?\n' +
+//│ >   '\n' +
+//│ >   'Are you saying no just to be negative?\n' +
+//│ >   '\n' +
+//│ >   'You seem quite positive.\n' +
+//│ >   '\n' +
+//│ >   'How long have you been not?\n' +
+//│ >   '\n' +
+//│ >   ",I'm not sure I understand you fully.\n" +
+//│ >   '\n' +
+//│ >   'We were discussing you --not me.\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Oh, do?\n' +
+//│ >   '\n' +
+//│ >   'What does that suggest to you?\n' +
+//│ >   '\n' +
+//│ >   'Do computers worry you?\n' +
+//│ >   '\n' +
+//│ >   "You're not really talking about me, are you?\n" +
+//│ >   '\n' +
+//│ >   'I see.\n' +
+//│ >   '\n' +
+//│ >   'Can you elaborate on that?\n' +
+//│ >   '\n' +
+//│ >   'Why do you ask?\n' +
+//│ >   '\n' +
+//│ >   'Did you come to me because you are asking questions, not me?\n' +
+//│ >   '\n' +
+//│ >   'Are you saying no just to be negative?\n' +
+//│ >   '\n' +
+//│ >   'You seem quite positive.\n' +
+//│ >   '\n' +
+//│ >   'How long have you been not?\n' +
+//│ >   '\n' +
+//│ =   ',]'

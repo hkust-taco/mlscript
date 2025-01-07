@@ -1,0 +1,97 @@
+:js
+:todo
+
+
+// ——— ——— ———
+
+:fixme
+while
+    let arrMatches = true
+    arrMatches
+  do
+    print(arrMatches)
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',None,Block(List(LetLike(keyword 'let',Ident(arrMatches),Some(BoolLit(true)),None), Ident(arrMatches)))),keyword 'do',Block(List(App(Ident(print),Tup(List(Ident(arrMatches))))))) (of class hkmc2.syntax.Tree$InfixApp)
+
+// ——— ——— ———
+
+let arrMatches = ()
+
+// * Note: produces a match error
+:fixme
+if
+  arrMatches !== null
+  do
+    ()
+//│ ═══[ERROR] Unrecognized term split (null).
+//│ ═══[RUNTIME ERROR] Error: match error
+
+// * This one works:
+if
+  arrMatches !== null do
+    ()
+
+// ——— ——— ———
+
+:fixme
+if
+  true and
+  true do
+    print("ok")
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+if
+  true and
+    true do
+      print("ok")
+//│ > ok
+
+:fixme
+if
+  true
+  and
+  true do
+    print("ok")
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+if
+  true
+  and true do
+    print("ok")
+//│ > ok
+
+if
+  true
+  and true
+  and true do
+    print("ok")
+//│ > ok
+
+:fixme
+if
+  true
+  and true
+  let x = 1
+  and true do
+    print("ok")
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(InfixApp(IntLit(1),keyword 'and',BoolLit(true)),keyword 'do',Block(List(App(Ident(print),Tup(List(StrLit(ok))))))) (of class hkmc2.syntax.Tree$InfixApp)
+
+// ——— ——— ———
+
+let audits = new Set()
+//│ audits = Set(0) {}
+
+:fixme
+if audits.has(1) === true do
+  print("ok")
+else 
+  1
+//│ ╔══[ERROR] The following branches are unreachable.
+//│ ╟── Because the previous split is full.
+//│ ║  l.84: 	if audits.has(1) === true do
+//│ ║        	   ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.85: 	  print("ok")
+//│ ╙──      	^^^^^^^^^^^^^
+//│ = 1
+
+// ——— ——— ———
+

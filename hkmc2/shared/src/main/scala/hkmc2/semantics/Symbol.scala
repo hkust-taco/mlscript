@@ -79,12 +79,22 @@ class TempSymbol(val trm: Opt[Term], dbgNme: Str = "tmp")(using State) extends B
   override def toLoc: Option[Loc] = trm.flatMap(_.toLoc)
   override def toString: Str = s"$$${super.toString}"
 
+
+// * When instantiating forall-qualified TVs, we need to duplicate the information
+// * for pretty-printing, but each instantiation should be different from each other
+// * i.e., UID should be different
+class InstSymbol(val origin: Symbol)(using State) extends LocalSymbol:
+  override def nme: Str = origin.nme
+  override def toLoc: Option[Loc] = origin.toLoc
+  override def toString: Str = origin.toString
+
+
 class VarSymbol(val id: Ident)(using State) extends BlockLocalSymbol(id.name) with NamedSymbol:
   val name: Str = id.name
   // override def toString: Str = s"$name@$uid"
 
 class BuiltinSymbol
-    (val nme: Str, val binary: Bool, val unary: Bool, val nullary: Bool)(using State)
+    (val nme: Str, val binary: Bool, val unary: Bool, val nullary: Bool, val functionLike: Bool)(using State)
     extends Symbol:
   def toLoc: Option[Loc] = N
   override def toString: Str = s"builtin:$nme${State.dbgUid(uid)}"
@@ -116,12 +126,16 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[Tree])(using State)
   override def toString: Str =
     s"member:$nme${State.dbgUid(uid)}"
 
+  override val isGetter: Bool = // TODO: this should be checked based on a special syntax for getter
+    trmImplTree.exists(t => t.k === Fun && t.paramLists.isEmpty)
+
 end BlockMemberSymbol
 
 
 sealed abstract class MemberSymbol[Defn <: Definition](using State) extends Symbol:
   def nme: Str
   var defn: Opt[Defn] = N
+  val isGetter: Bool = false
 
 
 class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.Ident)(using State)

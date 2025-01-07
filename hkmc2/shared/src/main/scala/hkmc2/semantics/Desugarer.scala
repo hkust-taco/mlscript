@@ -6,8 +6,8 @@ import mlscript.utils.*, shorthands.*
 import Message.MessageContext
 import utils.TraceLogger
 import hkmc2.syntax.Literal
-import Keyword.{as, and, `else`, is, let, `then`}
-import collection.mutable.HashMap
+import Keyword.{as, and, `do`, `else`, is, let, `then`}
+import collection.mutable.{HashMap, SortedSet}
 import Elaborator.{ctx, Ctxl}
 import ucs.DesugaringBase
 
@@ -16,30 +16,52 @@ object Desugarer:
     infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match
       case InfixApp(lhs, `op`, rhs) => S((lhs, rhs))
       case _ => N
-
-  /** An extractor that accepts either `A and B` or `A then B`. */
-  object `~>`:
-    infix def unapply(tree: Tree): Opt[(Tree, Tree \/ Tree)] = tree match
-      case lhs and rhs => S((lhs, L(rhs)))
-      case lhs `then` rhs => S((lhs, R(rhs)))
-      case _ => N
-
+  
   class ScrutineeData:
     val classes: HashMap[ClassSymbol, List[BlockLocalSymbol]] = HashMap.empty
     val tupleLead: HashMap[Int, BlockLocalSymbol] = HashMap.empty
     val tupleLast: HashMap[Int, BlockLocalSymbol] = HashMap.empty
 end Desugarer
 
-class Desugarer(tl: TraceLogger, val elaborator: Elaborator)
+class Desugarer(val elaborator: Elaborator)
     (using raise: Raise, state: Elaborator.State, c: Elaborator.Ctx) extends DesugaringBase:
   import Desugarer.*
   import Elaborator.Ctx
-  import elaborator.term
-  import tl.*
+  import elaborator.term, elaborator.tl.*
+  
+  given Ordering[Loc] = Ordering.by: loc =>
+    (loc.spanStart, loc.spanEnd)
+  
+  /** Keep track of the locations where `do` and `then` are used as connectives. */
+  private val kwLocSets = (SortedSet.empty[Loc], SortedSet.empty[Loc])
+  
+  private def reportInconsistentConnectives(kw: Keyword, kwLoc: Opt[Loc]): Unit =
+    log(kwLocSets)
+    (kwLocSets._1.headOption, kwLocSets._2.headOption) match
+      case (Some(doLoc), Some(thenLoc)) =>
+        raise(ErrorReport(
+          msg"Mixed use of `do` and `then` in the `${kw.name}` expression." -> kwLoc
+            :: msg"Keyword `then` is used here." -> S(thenLoc)
+            :: msg"Keyword `do` is used here." -> S(doLoc) :: Nil
+        ))
+      case _ => ()
+  
+  private def topmostDefault: Split =
+    if kwLocSets._1.nonEmpty then Split.Else(Term.Lit(UnitLit(true))) else Split.End
+  
+  /** An extractor that accepts either `A and B`, `A then B`, and `A do B`. It
+   *  also keeps track of the usage of `then` and `do`.
+   */
+  object `~>`:
+    infix def unapply(tree: Tree): Opt[(Tree, Tree \/ Tree)] = tree match
+      case lhs and rhs => S((lhs, L(rhs)))
+      case lhs `then` rhs => kwLocSets._2 ++= tree.toLoc; S((lhs, R(rhs)))
+      case lhs `do` rhs => kwLocSets._1 ++= tree.toLoc; S((lhs, R(rhs)))
+      case _ => N
 
   // We're working on composing continuations in the UCS translation.
   // The type of continuation is `Split => Ctx => Split`.
-  // The first parameter represents the fallback split, which does not have
+  // The first parameter represents the "backup" split, which does not have
   // access to the bindings in the current match. The second parameter
   // represents the context with bindings in the current match.
 
@@ -82,12 +104,8 @@ class Desugarer(tl: TraceLogger, val elaborator: Elaborator)
 
   def default: Split => Sequel = split => _ => split
 
-  /** Desugar UCS shorthands. */
-  def shorthands(tree: Tree): Sequel = termSplitShorthands(tree, identity):
-    Split.default(Term.Lit(Tree.BoolLit(false)))
-
   private def termSplitShorthands(tree: Tree, finish: Term => Term): Split => Sequel = tree match
-    case Block(branches) => branches match
+    case blk: Block => blk.desugStmts match
       case Nil => lastWords("encountered empty block")
       case branch :: rest => fallback => ctx =>
         if rest.nonEmpty then
@@ -115,7 +133,7 @@ class Desugarer(tl: TraceLogger, val elaborator: Elaborator)
       // We apply `finish` to the first coda and expand the first match.
       // Note that the scrutinee might be not an identifier.
       headCoda match
-        case Ident("_") => tailSplit
+        case Under() => tailSplit
         case _ => ctx => trace(
           pre = s"shorthands <<< $matches",
           post = (res: Split) => s"shorthands >>> $res"
@@ -124,7 +142,7 @@ class Desugarer(tl: TraceLogger, val elaborator: Elaborator)
             expandMatch(_, headPattern, tailSplit)(fallback)
 
   private def patternSplitShorthands(tree: Tree, scrutSymbol: BlockLocalSymbol): Split => Sequel = tree match
-    case Block(branches) => branches match
+    case blk: Block => blk.desugStmts match
       case Nil => lastWords("encountered empty block")
       case branch :: rest => fallback => ctx =>
         if rest.nonEmpty then
@@ -155,8 +173,8 @@ class Desugarer(tl: TraceLogger, val elaborator: Elaborator)
    */
   def termSplit(tree: Tree, finish: Term => Term): Split => Sequel =
     tree match
-    case Block(branches) =>
-      branches.foldRight(default): (t, elabFallback) =>
+    case blk: Block =>
+      blk.desugStmts.foldRight(default): (t, elabFallback) =>
         t match
         case LetLike(`let`, ident @ Ident(_), N, N) => ???
         case LetLike(`let`, ident @ Ident(_), S(termTree), N) => fallback => ctx => trace(
@@ -166,6 +184,12 @@ class Desugarer(tl: TraceLogger, val elaborator: Elaborator)
           val sym = VarSymbol(ident)
           val fallbackCtx = ctx + (ident.name -> sym)
           Split.Let(sym, term(termTree)(using ctx), elabFallback(fallback)(fallbackCtx)).withLocOf(t)
+        case Modified(Keyword.`do`, doLoc, computation) => fallback => ctx => trace(
+          pre = s"termSplit: do $computation",
+          post = (res: Split) => s"termSplit: else >>> $res"
+        ):
+          val sym = TempSymbol(N, "doTemp")
+          Split.Let(sym, term(computation)(using ctx), elabFallback(fallback)(ctx)).withLocOf(t)
         case Modified(Keyword.`else`, elsLoc, default) => fallback => ctx => trace(
           pre = s"termSplit: else $default",
           post = (res: Split) => s"termSplit: else >>> $res"
@@ -201,7 +225,7 @@ class Desugarer(tl: TraceLogger, val elaborator: Elaborator)
       // We apply `finish` to the first coda and expand the first match.
       // Note that the scrutinee might be not an identifier.
       headCoda match
-        case Ident("_") => tailSplit
+        case Under() => tailSplit
         case _ => ctx => trace(
           pre = s"termBranch <<< $matches then $consequent",
           post = (res: Split) => s"termBranch >>> $res"
@@ -235,12 +259,22 @@ class Desugarer(tl: TraceLogger, val elaborator: Elaborator)
           Term.App(op, arguments)(tree, joint)
         opRhsApps.foldRight(Function.const(fallback): Sequel): (tt, elabFallback) =>
           tt match
-          case (Tree.Empty(), LetLike(`let`, ident @ Ident(_), termTree, N)) => ctx =>
+          case (Tree.Empty(), LetLike(`let`, pat, termTree, N)) => ctx =>
+            val ident = pat match // TODO handle patterns and rm special cases
+              case ident: Ident => ident
+              case und: Under => new Ident("_").withLocOf(und)
+              case _ => ???
             termTree match
             case S(termTree) =>
               val sym = VarSymbol(ident)
               val fallbackCtx = ctx + (ident.name -> sym)
               Split.Let(sym, term(termTree)(using ctx), elabFallback(fallbackCtx))
+          case (Tree.Empty(), Modified(Keyword.`do`, doLoc, computation)) => ctx => trace(
+            pre = s"termSplit: do $computation",
+            post = (res: Split) => s"termSplit: else >>> $res"
+          ):
+            val sym = TempSymbol(N, "doTemp")
+            Split.Let(sym, term(computation)(using ctx), elabFallback(ctx))
           case (Tree.Empty(), Modified(Keyword.`else`, elsLoc, default)) => ctx =>
             // TODO: report `rest` as unreachable
             Split.default(term(default)(using ctx))
@@ -312,7 +346,7 @@ class Desugarer(tl: TraceLogger, val elaborator: Elaborator)
    *  @param scrutSymbol the symbol representing the elaborated scrutinee
    */
   def patternSplit(tree: Tree, scrutSymbol: BlockLocalSymbol): Split => Sequel = tree match
-    case Block(branches) => branches.foldRight(default): (branch, elabFallback) =>
+    case blk: Block => blk.desugStmts.foldRight(default): (branch, elabFallback) =>
       // Terminology: _fallback_ refers to subsequent branches, _backup_ refers
       // to the backup plan passed from the parent split.
       branch match
@@ -322,6 +356,12 @@ class Desugarer(tl: TraceLogger, val elaborator: Elaborator)
           val sym = VarSymbol(ident)
           val fallbackCtx = ctx + (ident.name -> sym)
           Split.Let(sym, term(termTree)(using ctx), elabFallback(backup)(fallbackCtx))
+      case Modified(Keyword.`do`, doLoc, computation) => fallback => ctx => trace(
+        pre = s"patternSplit (do) <<< $computation",
+        post = (res: Split) => s"patternSplit: else >>> $res"
+      ):
+        val sym = TempSymbol(N, "doTemp")
+        Split.Let(sym, term(computation)(using ctx), elabFallback(fallback)(ctx))
       case Modified(Keyword.`else`, elsLoc, body) => backup => ctx => trace(
         pre = s"patternSplit (else) <<< $tree",
         post = (res: Split) => s"patternSplit (else) >>> ${res.showDbg}"
@@ -371,7 +411,7 @@ class Desugarer(tl: TraceLogger, val elaborator: Elaborator)
     def ref = scrutSymbol.ref(/* FIXME ident? */)
     pattern match
       // A single wildcard pattern.
-      case Ident("_") => _ => ctx => sequel(ctx)
+      case Under() => _ => ctx => sequel(ctx)
       // Alias pattern
       case pat as (alias @ Ident(_)) => fallback =>
         val aliasSymbol = VarSymbol(alias)
@@ -492,11 +532,27 @@ class Desugarer(tl: TraceLogger, val elaborator: Elaborator)
       post = (r: Split) => s"subMatches >>> ${r.showDbg}"
     ):
       sequel(ctx)
-    case (_, Ident("_")) :: rest => subMatches(rest, sequel)
+    case (_, Under()) :: rest => subMatches(rest, sequel)
     case (scrutinee, pattern) :: rest => fallback => trace(
       pre = s"subMatches (nested) <<< $scrutinee is $pattern",
       post = (r: Sequel) => s"subMatches (nested) >>>"
     ):
       val innermostSplit = subMatches(rest, sequel)(fallback)
       expandMatch(scrutinee, pattern, innermostSplit)(fallback)
+  
+  /** Desugar `case` expressions. */
+  def apply(tree: Case, scrut: VarSymbol)(using Ctx): Split =
+    val topmost = patternSplit(tree.branches, scrut)(Split.End)(ctx)
+    reportInconsistentConnectives(Keyword.`case`, tree.kwLoc)
+    topmost ++ topmostDefault
+  
+  /** Desugar `if` and `while` expressions. */
+  def apply(tree: IfLike)(using Ctx): Split =
+    val topmost = termSplit(tree.split, identity)(Split.End)(ctx)
+    reportInconsistentConnectives(tree.kw, tree.kwLoc)
+    topmost ++ topmostDefault
+  
+  /** Desugar `is` and `and` shorthands. */
+  def apply(tree: InfixApp)(using Ctx): Split =
+    termSplitShorthands(tree, identity)(Split.default(Term.Lit(Tree.BoolLit(false))))(ctx)
 end Desugarer

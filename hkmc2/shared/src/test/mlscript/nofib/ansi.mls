@@ -1,0 +1,95 @@
+:js
+
+:import NofibPrelude.mls
+//│ Imported 112 member(s)
+
+let cls = nofibStringToList("L")
+//│ cls = Cons { head: 'L', tail: Nil { class: [class Nil] } }
+
+fun goto(x, y) = "E" :: "[" :: (nofibStringToList(stringOfInt(y)) +: (";" :: nofibStringToList(stringOfInt(x)) +: nofibStringToList("H")))
+
+fun at(x_y, s) = if x_y is [x, y] then goto(x, y) +: s
+
+fun highlight(s) = nofibStringToList("ESC[7m") +: s +: nofibStringToList("ESC[0m")
+
+fun end(xs) = nofibStringToList("")
+
+fun readChar(eof, use, cs) = if cs is
+  Nil then eof(Nil)
+  c :: cs then use(c, cs)
+
+fun peekChar(eof, use, cs) = if cs is
+  Nil then eof(Nil)
+  c :: cs then use(c, c :: cs)
+
+fun pressAnyKey(prog, x) = readChar(prog, (c, x) => prog(x), x)
+
+fun unreadChar(c, prog, cs) = prog(c :: cs)
+
+fun writeChar(c, prog, cs) = c :: prog(cs)
+
+fun writeString(s, prog, cs) = s +: prog(cs)
+
+fun writes(ss, a, b) = writeString(concat(ss), a, b)
+
+fun ringBell(prog, cs) = writeChar("B", prog, cs)
+
+fun clearScreen(a, b) = writeString(cls, a, b)
+
+fun writeAt(x_y, s, a) = if x_y is [x, y] then p => writeString(goto(x, y) +: s, a, p)
+
+fun moveTo(x_y, a) = if x_y is [x, y] then p => writeString(goto(x, y), a, p)
+
+fun returnn(s, use) = use(reverse(s))
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+fun deletee(n, s, l, use) = if n > 0 then writeString(nofibStringToList("BS_BS"), loop(n - 1, tail(s), l, use)) else ringBell(loop(0, nofibStringToList(""), l, use))
+
+fun loop(n, s, l, use) = x => readChar of
+  returnn(s, use)
+  (c, d) => if
+            c == "B" then deletee(n, s, l, use) 
+            c == "D" then deletee(n, s, l, use)
+            c == "`" then returnn(s, use)
+            n < l then writeChar(c, loop(n + 1, c :: s, l, use), d)
+            else ringBell(loop(n, s, l, use), d)
+  x
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+fun readAt(x_y, l, use) = writeAt(x_y, replicate(l, "_"), moveTo(x_y, loop(0, "", l, use)))
+
+fun promptReadAt(x_y, l, prompt, use) = if x_y is [x, y] then
+  writeAt([x, y], prompt, readAt([x + listLen(prompt), y], l, use))
+  
+fun program(input) = writes(
+  cls ::
+  at([17, 5], highlight(nofibStringToList("Demonstration program"))) ::
+  at([48, 5], nofibStringToList("Version 1.0")) ::
+  at([17, 7], nofibStringToList("This program illustrates a simple approach")) ::
+  at([17, 8], nofibStringToList("to screen-based interactive programs using")) ::
+  at([17, 9], nofibStringToList("the Hugs functional programming system.")) ::
+  at([17, 11], nofibStringToList("Please press any key to continue ...")) ::
+  Nil,
+  x => pressAnyKey(promptReadAt(
+    [17, 15],
+    18,
+    nofibStringToList("Please enter your name: "),
+    (name) =>
+      let reply = nofibStringToList("Hello ") +: name +: nofibStringToList("!")
+      writeAt(
+        [40 - (listLen(reply) / 2), 18],
+        reply,
+        moveTo(
+          [1, 23],
+          y => writeString(nofibStringToList("I'm waiting..."), x => pressAnyKey(end, x), y)
+        )
+      )
+  ), x),
+  input
+)
+
+fun testAnsi_nofib(n) = foldr(compose, (x) => x, replicate(n, program))(nofibStringToList("testtesttest"))
+
+nofibListToString(testAnsi_nofib(1))
+//│ = "LE[5;17HESC[7mDemonstration programESC[0mE[5;48HVersion 1.0E[7;17HThis program illustrates a simple approachE[8;17Hto screen-based interactive programs usingE[9;17Hthe Hugs functional programming system.E[11;17HPlease press any key to continue ...E[15;17HPlease enter your name: E[15;41H__________________E[15;41HesttesttestE[18;31HHello esttesttest!E[23;1HI'm waiting..."

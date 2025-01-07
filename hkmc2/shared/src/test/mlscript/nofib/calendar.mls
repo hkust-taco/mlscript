@@ -1,19 +1,20 @@
 :js
+
 :import NofibPrelude.mls
-//│ Imported 109 member(s)
+//│ Imported 112 member(s)
 
 
-fun unlines(ls) = concat(map(x => append(x, ("\n" :: Nil)), ls))
+fun unlines(ls) = concat(map(x => x +: ("\n" :: Nil), ls))
 
 fun height(p) = listLen(p)
 
 fun width(p) = listLen(head(p))
 
-fun stack(ls) = foldr1((a, b) => append(a, b), ls)
+fun stack(ls) = foldr1((a, b) => a +: b, ls)
 
-fun spread(ls) = foldr1((a, b) => zipWith((a, b) => append(a, b), a, b), ls)
+fun spread(ls) = foldr1((a, b) => zipWith((a, b) => a +: b, a, b), ls)
 
-fun emptyPic(hw) = if hw is Tup2(h, w) then replicate(h, replicate(w, " "))
+fun emptyPic(hw) = if hw is [h, w] then replicate(h, replicate(w, " "))
 
 fun groop(n, xs) = if xs is
   Nil then Nil
@@ -23,10 +24,10 @@ fun block(n, t)  = stack(map(spread, groop(n, t)))
 
 fun blockT(n, t) = stack(map(stack, groop(n, t)))
 
-fun lframe(mn, p) = if mn is Tup2(m,n) then
+fun lframe(mn, p) = if mn is [m,n] then
   let h = height(p)
   let w = width(p)
-  append(zipWith(append, p, emptyPic(Tup2(h, n - w))), emptyPic(Tup2(m - h, n)))
+  zipWith(append, p, emptyPic([h, n - w])) +: emptyPic([m - h, n])
 
 fun leap(year) = if
   intMod(year, 100) == 0 then intMod(year, 400) == 0
@@ -36,7 +37,19 @@ fun monthLengths(year) =
   let feb = if leap(year) then 29 else 28
   31 :: feb :: 31 :: 30 :: 31 :: 30 :: 31 :: 31 :: 30 :: 31 :: 30 :: 31 :: Nil
 
-let monthNames = Cons(Cons("J", Cons("a", Cons("n", Cons("u", Cons("a", Cons("r", Cons("y", Nil))))))), Cons(Cons("F", Cons("e", Cons("b", Cons("r", Cons("u", Cons("a", Cons("r", Cons("y", Nil)))))))), Cons(Cons("M", Cons("a", Cons("r", Cons("c", Cons("h", Nil))))), Cons(Cons("A", Cons("p", Cons("r", Cons("i", Cons("l", Nil))))), Cons(Cons("M", Cons("a", Cons("y", Nil))), Cons(Cons("J", Cons("u", Cons("n", Cons("e", Nil)))), Cons(Cons("J", Cons("u", Cons("l", Cons("y", Nil)))), Cons(Cons("A", Cons("u", Cons("g", Cons("u", Cons("s", Cons("t", Nil)))))), Cons(Cons("S", Cons("e", Cons("p", Cons("t", Cons("e", Cons("m", Cons("b", Cons("e", Cons("r", Nil))))))))), Cons(Cons("O", Cons("c", Cons("t", Cons("o", Cons("b", Cons("e", Cons("r", Nil))))))), Cons(Cons("N", Cons("o", Cons("v", Cons("e", Cons("m", Cons("b", Cons("e", Cons("r", Nil)))))))), Cons(Cons("D", Cons("e", Cons("c", Cons("e", Cons("m", Cons("b", Cons("e", Cons("r", Nil)))))))), Nil))))))))))))
+let monthNames =
+  nofibStringToList("January") ::
+  nofibStringToList("February") ::
+  nofibStringToList("March") ::
+  nofibStringToList("April") ::
+  nofibStringToList("May") ::
+  nofibStringToList("June") ::
+  nofibStringToList("July") ::
+  nofibStringToList("August") ::
+  nofibStringToList("September") ::
+  nofibStringToList("October") ::
+  nofibStringToList("November") ::
+  nofibStringToList("December") :: Nil
 //│ > Cons {
 //│ >   head: Cons { head: 'J', tail: Cons { head: 'a', tail: [Cons] } },
 //│ >   tail: Cons {
@@ -54,33 +67,33 @@ fun firstDays(year) =
 
 fun space(n) = replicate(n, " ")
 
-fun ljustify(n, s) = append(s, space(n - listLen(s)))
+fun ljustify(n, s) = s +: space(n - listLen(s))
 
-fun rjustify(n, s) = append(space(n - listLen(s)), s)
+fun rjustify(n, s) = space(n - listLen(s)) +: s
 
-fun date(ml, d) = if (d < 1) || (ml < d) then Cons(Cons(" ", Cons(" ", Cons(" ", Nil))), Nil) else Cons(rjustify(3, nofibStringToList(stringOfInt(d))), Nil)
+fun date(ml, d) = if (d < 1) || (ml < d) then nofibStringToList("   ") :: Nil else rjustify(3, nofibStringToList(stringOfInt(d))) :: Nil
 
 fun dates(fd, ml) = map(d => date(ml, d), enumFromTo(1 - fd, 42 - fd))
 
 fun cjustify(n, s) =
   let m = n - listLen(s)
   let halfm = intDiv(m, 2)
-  append(append(space(halfm), s), space(m - halfm))
+  space(halfm) +: s +: space(m - halfm)
 
 fun cal(year) =
-  let side = emptyPic(Tup2(8, 2))
-  let end = emptyPic(Tup2(1, 25))
-  let daynames = Cons(Cons(" ", Cons("S", Cons("u", Cons(" ", Cons("M", Cons("o", Cons(" ", Cons("T", Cons("u", Cons(" ", Cons("W", Cons("e", Cons(" ", Cons("T", Cons("h", Cons(" ", Cons("F", Cons("r", Cons(" ", Cons("S", Cons("a", Nil))))))))))))))))))))), Nil)
-  fun banner(yr) = append(cjustify(75, nofibStringToList(stringOfInt(yr))) :: Nil, emptyPic(Tup2(1, 75)))
+  let side = emptyPic([8, 2])
+  let end = emptyPic([1, 25])
+  let daynames = nofibStringToList(" Su Mo Tu We Th Fr Sa") :: Nil
+  fun banner(yr) = cjustify(75, nofibStringToList(stringOfInt(yr))) :: emptyPic([1, 75])
   fun body(yr) = block(3, map(x => pad(pic(x)), months(yr)))
-  fun pic(mnfdml) = if mnfdml is Tup3(mn, fd, ml) then append(title(mn), table(fd, ml))
-  fun pad(p) = append(zipWith(append, zipWith(append, side, p), side), end)
+  fun pic(mnfdml) = if mnfdml is [mn, fd, ml] then title(mn) +: table(fd, ml)
+  fun pad(p) = zipWith(append, zipWith(append, side, p), side) +: end
   fun title(mn) = cjustify(21, mn) :: Nil
-  fun table(fd, ml) = append(daynames, entries(fd, ml))
+  fun table(fd, ml) = daynames +: entries(fd, ml)
   fun entries(fd, ml) = block(7, dates(fd, ml))
   fun months(yer) = zip3(monthNames, firstDays(yer), monthLengths(yer))
   
-  unlines(append(banner(year), body(year)))
+  unlines(banner(year) +: body(year))
 
 fun testCalendar_nofib(n) = map(x => cal(x), enumFromTo(1993, 1993 + n))
 

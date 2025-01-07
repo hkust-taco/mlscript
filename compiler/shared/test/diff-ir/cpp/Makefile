@@ -1,8 +1,9 @@
 CXX := g++
-CFLAGS := $(CFLAGS) -O3 -Wall -Wextra -std=c++20 -I. -Wno-inconsistent-missing-override -I/opt/homebrew/include
-LDFLAGS := $(LDFLAGS) -lmimalloc -lgmp -L/opt/homebrew/lib
+CFLAGS += -O3 -Wall -Wextra -std=c++20 -I. -Wno-inconsistent-missing-override -I/opt/homebrew/include
+LDFLAGS += -L/opt/homebrew/lib
+LDLIBS := -lmimalloc -lgmp
 SRC :=
-INCLUDES = mlsprelude.h
+INCLUDES := mlsprelude.h
 DST :=
 DEFAULT_TARGET := mls
 TARGET := $(or $(DST),$(DEFAULT_TARGET))
@@ -23,4 +24,4 @@ clean:
 auto: $(TARGET)
 
 $(TARGET): $(SRC) $(INCLUDES)
-	$(CXX) $(CFLAGS) $(LDFLAGS) $(SRC) -o $(TARGET)
+	$(CXX) $(CFLAGS) $(LDFLAGS) $(SRC) $(LDLIBS) -o $(TARGET)

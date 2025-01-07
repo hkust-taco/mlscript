@@ -32,6 +32,13 @@ abstract class Document {
       val res = h.stripBreaks
       if res is h then this else res :: t
     case _ => this
+  
+  def isEmpty: Bool = this match
+    case DocNil => true
+    case DocText("") => true
+    case DocGroup(doc) => doc.isEmpty
+    case DocCons(hd, tl) => hd.isEmpty && tl.isEmpty
+    case _ => false
 
   /**
    * Format this document on `writer` and try to set line

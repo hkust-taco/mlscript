@@ -6,30 +6,18 @@
 let folderName1 = process.env.PWD.split("/").pop()
 in let folderName2 = process.cwd().split("/").pop()
 in folderName2 === folderName1 || folderName2 === "jvm"
-//│ JS:
-//│ let selRes, tmp, selRes1, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
-//│ selRes = this.process.env;
-//│ if (selRes === undefined) {
-//│   throw new this.Error("Access to required field 'env' yielded 'undefined'");
-//│ } else {
-//│   tmp = selRes;
-//│ }
-//│ selRes1 = tmp.PWD;
-//│ if (selRes1 === undefined) {
-//│   throw new this.Error("Access to required field 'PWD' yielded 'undefined'");
-//│ } else {
-//│   tmp1 = selRes1;
-//│ }
-//│ tmp2 = tmp1.split("/") ?? null;
-//│ tmp3 = tmp2.pop() ?? null;
-//│ this.folderName1 = tmp3;
-//│ tmp4 = this.process.cwd() ?? null;
-//│ tmp5 = tmp4.split("/") ?? null;
-//│ tmp6 = tmp5.pop() ?? null;
-//│ this.folderName2 = tmp6;
-//│ tmp7 = this.folderName2 === this.folderName1;
-//│ tmp8 = this.folderName2 === "jvm";
-//│ tmp7 || tmp8
+//│ JS (unsanitized):
+//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
+//│ tmp = this.process.env.PWD.split("/") ?? null;
+//│ tmp1 = tmp.pop() ?? null;
+//│ this.folderName1 = tmp1;
+//│ tmp2 = this.process.cwd() ?? null;
+//│ tmp3 = tmp2.split("/") ?? null;
+//│ tmp4 = tmp3.pop() ?? null;
+//│ this.folderName2 = tmp4;
+//│ tmp5 = this.folderName2 === this.folderName1;
+//│ tmp6 = this.folderName2 === "jvm";
+//│ tmp5 || tmp6
 //│ = true
 
 

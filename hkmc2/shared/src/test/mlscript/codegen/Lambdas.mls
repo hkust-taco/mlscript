@@ -7,14 +7,15 @@
 x =>
   let y = x
   y
-//│ JS:
-//│ (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, true, args.length);
-//│   let x = args[0];
-//│   let y;
-//│   y = x;
-//│   return y;
-//│ }
+//│ JS (unsanitized):
+//│ (x) => { let y; y = x; return y; }
+//│ = [Function (anonymous)]
+
+
+:todo
+(acc, _) => acc
+//│ JS (unsanitized):
+//│ (acc, _) => { return acc; }
 //│ = [Function (anonymous)]
 
 

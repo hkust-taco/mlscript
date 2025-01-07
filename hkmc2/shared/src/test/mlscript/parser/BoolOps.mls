@@ -11,11 +11,11 @@ a and b and c
 
 a and b or x and d
 //│ Parsed:
-//│ 	InfixApp(InfixApp(InfixApp(Ident(a),keyword 'and',Ident(b)),keyword 'or',Ident(x)),keyword 'and',Ident(d))
+//│ 	InfixApp(InfixApp(Ident(a),keyword 'and',Ident(b)),keyword 'or',InfixApp(Ident(x),keyword 'and',Ident(d)))
 
 a or b and x or d
 //│ Parsed:
-//│ 	InfixApp(InfixApp(InfixApp(Ident(a),keyword 'or',Ident(b)),keyword 'and',Ident(x)),keyword 'or',Ident(d))
+//│ 	InfixApp(InfixApp(Ident(a),keyword 'or',InfixApp(Ident(b),keyword 'and',Ident(x))),keyword 'or',Ident(d))
 
 (a and b) or (x and d)
 //│ Parsed:

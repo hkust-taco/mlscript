@@ -1,10 +1,10 @@
 const Predef$class = class Predef {
   constructor() {
+    this.assert = console.assert;
     this.MatchResult = function MatchResult(captures1) { return new MatchResult.class(captures1); };
     this.MatchResult.class = class MatchResult {
       constructor(captures) {
         this.captures = captures;
-        
       }
       toString() { return "MatchResult(" + this.captures + ")"; }
     };
@@ -12,12 +12,59 @@ const Predef$class = class Predef {
     this.MatchFailure.class = class MatchFailure {
       constructor(errors) {
         this.errors = errors;
-        
       }
       toString() { return "MatchFailure(" + this.errors + ")"; }
     };
+    const TraceLogger$class = class TraceLogger {
+      constructor() {
+        this.enabled = false;
+        this.indentLvl = 0;
+      }
+      indent() {
+        let scrut, prev, tmp;
+        scrut = this.enabled;
+        if (scrut) {
+          prev = this.indentLvl;
+          tmp = prev + 1;
+          this.indentLvl = tmp;
+          return prev;
+        } else {
+          return null;
+        }
+      } 
+      resetIndent(n) {
+        let scrut;
+        scrut = this.enabled;
+        if (scrut) {
+          this.indentLvl = n;
+          return null;
+        } else {
+          return null;
+        }
+      } 
+      log(msg) {
+        let scrut, tmp, tmp1, tmp2, tmp3, tmp4;
+        scrut = this.enabled;
+        if (scrut) {
+          tmp = "| ".repeat(this.indentLvl) ?? null;
+          tmp1 = "  ".repeat(this.indentLvl) ?? null;
+          tmp2 = "\n" + tmp1;
+          tmp3 = msg.replaceAll("\n", tmp2);
+          tmp4 = tmp + tmp3;
+          return console.log(tmp4) ?? null;
+        } else {
+          return null;
+        }
+      }
+      toString() { return "TraceLogger"; }
+    };
+    this.TraceLogger = new TraceLogger$class;
+    this.TraceLogger.class = TraceLogger$class;
+    const this$Predef = this;
     this.Test = class Test {
       constructor() {
+        let tmp;
+        tmp = this$Predef.print("Test");
         this.y = 1;
       }
       toString() { return "Test"; }
@@ -33,40 +80,80 @@ const Predef$class = class Predef {
       return false;
     }
   } 
-  pipe(x2, f) {
-    return f(x2);
+  pipeInto(x2, f) {
+    return f(x2) ?? null;
   } 
-  apply(receiver, f1) {
-    return (...args) => {
-      return f1(receiver, ...args);
+  pipeFrom(f1, x3) {
+    return f1(x3) ?? null;
+  } 
+  andThen(f2, g) {
+    return (x4) => {
+      let tmp;
+      tmp = f2(x4) ?? null;
+      return g(tmp) ?? null;
     };
   } 
-  call(receiver1, f2) {
-    return (...args) => {
-      return f2.call(receiver1, ...args);
+  compose(f3, g1) {
+    return (x4) => {
+      let tmp;
+      tmp = g1(x4) ?? null;
+      return f3(tmp) ?? null;
     };
   } 
-  print(x3) {
-    let tmp;
-    tmp = String(x3);
-    return console.log(tmp);
+  passTo(receiver, f4) {
+    return (...args) => {
+      return f4(receiver, ...args) ?? null;
+    };
   } 
-  tupleSlice(xs, i, j) {
-    let tmp;
-    tmp = xs.length - j;
-    return globalThis.Array.prototype.slice.call(xs, i, tmp);
+  call(receiver1, f5) {
+    return (...args) => {
+      return f5.call(receiver1, ...args);
+    };
   } 
-  tupleGet(xs1, i1) {
-    return globalThis.Array.prototype.at.call(xs1, i1);
+  pass1(f6) {
+    return (...xs) => {
+      return f6(xs[0]) ?? null;
+    };
+  } 
+  pass2(f7) {
+    return (...xs) => {
+      return f7(xs[0], xs[1]) ?? null;
+    };
+  } 
+  pass3(f8) {
+    return (...xs) => {
+      return f8(xs[0], xs[1], xs[2]) ?? null;
+    };
+  } 
+  print(...xs) {
+    let tmp;
+    tmp = xs.map(String) ?? null;
+    return console.log(...tmp) ?? null;
+  } 
+  notImplemented(msg) {
+    let tmp;
+    tmp = "Not implemented: " + msg;
+    throw Error(tmp);
+  } 
+  get notImplementedError() {
+    throw Error("Not implemented");
+  } 
+  tupleSlice(xs1, i, j) {
+    let tmp;
+    tmp = xs1.length - j;
+    return globalThis.Array.prototype.slice.call(xs1, i, tmp) ?? null;
+  } 
+  tupleGet(xs2, i1) {
+    return globalThis.Array.prototype.at.call(xs2, i1);
   } 
   stringStartsWith(string, prefix) {
-    return string.startsWith(prefix);
+    return string.startsWith(prefix) ?? null;
   } 
   stringGet(string1, i2) {
-    return string1.at(i2);
+    return string1.at(i2) ?? null;
   } 
   stringDrop(string2, n) {
-    return string2.slice(n);
+    return string2.slice(n) ?? null;
   } 
   checkArgs(functionName, expected, isUB, got) {
     let scrut, name, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
@@ -88,13 +175,13 @@ const Predef$class = class Predef {
       tmp7 = tmp6 + expected;
       tmp8 = tmp7 + " arguments but got ";
       tmp9 = tmp8 + got;
-      throw globalThis.Error(tmp9);
+      throw globalThis.Error(tmp9) ?? null;
     } else {
-      return undefined;
+      return null;
     }
   }
   toString() { return "Predef"; }
 }; const Predef = new Predef$class;
 Predef.class = Predef$class;
-undefined
+null
 export default Predef;

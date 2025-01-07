@@ -1,0 +1,175 @@
+:js
+
+:import NofibPrelude.mls
+//│ Imported 112 member(s)
+
+
+abstract class CSeq: CNil | CAppend | CIndent | CNewline | CStr | CCh
+
+class
+  CAppend(a: CSeq, b: CSeq) extends CSeq
+  CIndent(a: Int, b: CSeq) extends CSeq
+  CStr(a: List[Char]) extends CSeq
+  CCh(a: Char) extends CSeq
+
+object
+  CNil extends CSeq
+  CNewline extends CSeq
+
+abstract class PprStyle: PprForUser | PprDebug | PprShowAll | PprInterface
+
+object
+  PprForUser extends PprStyle
+  PprDebug extends PprStyle
+  PprShowAll extends PprStyle
+  PprInterface extends PprStyle
+
+let cNil = CNil
+//│ cNil = CNil { class: [class CNil] }
+
+let cNL = CNewline
+//│ cNL = CNewline { class: [class CNewline] }
+
+fun cAppend(cs1, cs2) = CAppend(cs1, cs2)
+
+fun cIndent(n, cs) = CIndent(n, cs)
+
+fun cStr(s) = CStr(s)
+
+fun cCh(c) = CCh(c)
+
+fun mkIndent(n, s) = if n
+  === 0 then s
+  >= 8 then "\t" :: mkIndent(n - 8, s)
+  else " " :: mkIndent(n - 1, s)
+
+:...
+//│ ————————————————————————————————————————————————————————————————————————————————
+fun flattenS(nlp, seqs) = if seqs is
+  Nil then Nil
+  [col, seq] :: seqs then flatten(col, nlp, seq, seqs)
+
+fun flatten(n, nlp, cseq, seqs) = if cseq is
+  CNil then flattenS(nlp, seqs)
+  CAppend(seq1, seq2) then flatten(n, nlp, seq1, [n, seq2] :: seqs)
+  CIndent(n_, seq) then flatten(n_ + n, nlp, seq, seqs)
+  CNewline then "\n" :: flattenS(true, seqs)
+  CStr(s) and
+    nlp then mkIndent(n, s +: flattenS(false, seqs))
+    else s +: flattenS(false, seqs)
+  CCh(c) and
+    nlp then mkIndent(n, c :: flattenS(false, seqs))
+    else c :: flattenS(false, seqs)
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+fun cShow(seq) = flatten(0, true, seq, Nil)
+
+class MkPrettyRep(cseq: CSeq, n: Int, b1: Bool, b2: Bool)
+
+fun ppShow(width, p) = if p(width, false) is
+  MkPrettyRep(seq, ll, emp, sl) then cShow(seq)
+
+fun ppUnformatted(p) = if p(80, false) is
+  MkPrettyRep(seq, ll, emp, sl) then cShow(seq)
+
+fun ppNil(width, is_vert) = MkPrettyRep(cNil, 0, true, width >= 0)
+
+fun ppStr(s, width, is_vert) =
+  let ls = listLen(s)
+  MkPrettyRep(cStr(s), ls, false, width >= ls)
+
+fun ppChar(c, width, is_vert) = MkPrettyRep(cCh(c), 1, false, width >= 1)
+
+fun ppInt(n, width, is_vert) = ppStr(nofibStringToList(stringOfInt(n)), width, is_vert)
+
+fun pp_SP(a, b) = ppStr(nofibStringToList(", "), a, b)
+
+fun ppSP(a, b) = ppChar(" ", a, b)
+
+fun ppLbrack(a, b) = ppChar("[", a, b)
+
+fun ppRbrack(a, b) = ppChar("]", a, b)
+
+fun ppLparen(a, b) = ppChar("(", a, b)
+
+fun ppRparen(a, b) = ppChar(")", a, b)
+
+fun ppSemi(a, b) = ppChar(";", a, b)
+
+fun ppComma(a, b) = ppChar(",", a, b)
+
+fun andL(a, b) = if a then b else false
+
+fun orL(a, b) = if a then true else b
+
+fun ppBeside(p1, p2, width, is_vert) = if p1(width, false) is
+  MkPrettyRep(seq1, ll1, emp1, sl1) and p2(width - ll1, false) is
+    MkPrettyRep(seq2, ll2, emp2, sl2) then
+      MkPrettyRep(cAppend(seq1, cIndent(ll1, seq2)), ll1 + ll2, andL(emp1, emp2), andL(width >= 0, andL(sl1, sl2)))
+
+fun ppBesides(ps) = if ps is
+  Nil then ppNil
+  else foldr1((a, b) => (c, d) => ppBeside(a, b, c, d), ps)
+
+fun ppBesideSP(p1, p2, width, is_vert) = if p1(width, false) is MkPrettyRep(seq1, ll1, emp1, sl1) then
+  let li = if emp1 then 0 else ll1 + 1
+  if p2(width - li, false) is MkPrettyRep(seq2, ll2, emp2, sl2) then
+    let wi = if emp1 then 0 else 1
+    let sp = if orL(emp1, emp2) then cNil else cCh(" ")
+    MkPrettyRep(cAppend(seq1, cAppend(sp, cIndent(li, seq2))), li + ll2, andL(emp1, emp2), andL(width >= wi, andL(sl1, sl2)))
+
+fun ppCat(ps) = if ps is Nil then ppNil else foldr1((a, b) => (c, d) => ppBesideSP(a, b, c, d), ps)
+
+fun ppAbove(p1, p2, width, is_vert) = if p1(width, true) is
+  MkPrettyRep(seq1, ll1, emp1, sl1) and p2(width, true) is
+    MkPrettyRep(seq2, ll2, emp2, sl2) then
+      let nl = if orL(emp1, emp2) then cNil else cNL
+      MkPrettyRep(cAppend(seq1, cAppend(nl, seq2)), ll2, andL(emp1, emp2), false)
+
+fun ppAboves(ps, a, b) = if ps is Nil then ppNil(a, b) else foldr1((a, b) => (c, d) => ppAbove(a, b, c, d), ps)(a, b)
+
+fun ppNest(n, p, width, is_vert) = if
+  is_vert and p(width - n, true) is MkPrettyRep(seq, ll, emp, sl) then
+    MkPrettyRep(cIndent(n, seq), ll + n, emp, sl)
+  else p(width, false)
+
+fun ppHang(p1, n, p2, width, is_vert) = if p1(width, false) is
+  MkPrettyRep(seq1, ll1, emp1, sl1) and p2(width - (ll1 + 1), false) is
+    MkPrettyRep(seq2, ll2, emp2, sl2) and p2(width - n, false) is
+      MkPrettyRep(seq2_, ll2_, emp2_, sl2_) and
+        emp1 then p2(width, is_vert)
+        orL(ll1 <= n, sl2) then
+          MkPrettyRep(cAppend(seq1, cAppend(cCh(" "), cIndent(ll1 + 1, seq2))), ll1 + 1 + ll2, false, andL(sl1, sl2))
+        else MkPrettyRep(cAppend(seq1, cAppend(cNL, cIndent(n, seq2_))), ll2_, false, false)
+
+fun ppSep(ps, width, is_vert) = if
+  ps is Nil then ppNil(width, is_vert)
+  ps is p :: Nil then p(width, is_vert)
+  ppCat(ps, width, is_vert) is MkPrettyRep(seq, ll, emp, sl) and
+    sl then MkPrettyRep(seq, ll, emp, sl)
+    else ppAboves(ps, width, is_vert)
+
+fun testPretty_nofib() =
+  fun pp_word(a, b) = ppStr(nofibStringToList("xxxxx"), a, b)
+  let pp_words = replicate(50, pp_word)
+  fun pretty_stuff(a, b) = ppAboves(
+    ppBesides(((a, b) => ppInt(-42, a, b)) :: ((a, b) => ppChar("@", a, b)) :: ((a, b) => ppStr(nofibStringToList("This is a string"), a, b)) :: Nil) ::
+    ((a, b) => pp_SP(a, b)) ::
+    ((a, b) => ppHang(
+      (a, b) => ppStr(nofibStringToList("This is the label"), a, b),
+      8,
+      ppCat(pp_words),
+      a,
+      b
+    )) ::
+    Nil,
+    a,
+    b
+  )
+  ppShow(80, pretty_stuff) +: nofibStringToList("\n")
+
+nofibListToString(testPretty_nofib())
+//│ > '-42@This is a string\n' +
+//│ >   ', \n' +
+//│ >   'This is the label\n' +
+//│ =   '\txxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx\n'

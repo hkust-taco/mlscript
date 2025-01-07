@@ -1,0 +1,373 @@
+:js
+
+:import NofibPrelude.mls
+//│ Imported 112 member(s)
+
+fun andd(ls) = if ls is
+  Nil then true
+  b :: bs then b && andd(bs)
+
+abstract class Piece: X | O | Empty
+
+object
+  X extends Piece
+  O extends Piece
+  Empty extends Piece
+
+fun eqPiece(p1, p2) = if p1 is
+  X and p2 is X then true
+  O and p2 is O then true
+  Empty and p2 is Empty then true
+  else false
+
+abstract class Evaluation: XWin | OWin | Score
+
+object
+  XWin extends Evaluation
+  OWin extends Evaluation
+
+class Score(i: Int) extends Evaluation
+
+fun evaluationEq(x, y) = if x is
+  XWin and y is XWin then true
+  OWin and y is OWin then true
+  Score(i) and y is Score(j) and i === j then true
+  else false
+
+class Branch[A](a: A, cs: List[Branch[A]])
+
+fun showEvaluation(e) = if e is
+  XWin then nofibStringToList("XWin")
+  OWin then nofibStringToList("OWin")
+  Score(i) then nofibStringToList("Score ") +: nofibStringToList(stringOfInt(i))
+
+let win1 =
+  (1 :: 1 :: 1 :: Nil) ::
+  (0 :: 0 :: 0 :: Nil) ::
+  (0 :: 0 :: 0 :: Nil) :: Nil
+//│ > Cons {
+//│ >   head: Cons { head: 1, tail: Cons { head: 1, tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: 0, tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Nil] }
+//│ >   }
+//│ win1 = }
+
+let win2 =
+  (0 :: 0 :: 0 :: Nil) ::
+  (1 :: 1 :: 1 :: Nil) ::
+  (0 :: 0 :: 0 :: Nil) :: Nil
+//│ > Cons {
+//│ >   head: Cons { head: 0, tail: Cons { head: 0, tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: 1, tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Nil] }
+//│ >   }
+//│ win2 = }
+
+let win3 =
+  (0 :: 0 :: 0 :: Nil) ::
+  (0 :: 0 :: 0 :: Nil) ::
+  (1 :: 1 :: 1 :: Nil) :: Nil
+//│ > Cons {
+//│ >   head: Cons { head: 0, tail: Cons { head: 0, tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: 0, tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Nil] }
+//│ >   }
+//│ win3 = }
+
+let win4 =
+  (1 :: 0 :: 0 :: Nil) ::
+  (1 :: 0 :: 0 :: Nil) ::
+  (1 :: 0 :: 0 :: Nil) :: Nil
+//│ > Cons {
+//│ >   head: Cons { head: 1, tail: Cons { head: 0, tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: 1, tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Nil] }
+//│ >   }
+//│ win4 = }
+
+let win5 =
+  (0 :: 1 :: 0 :: Nil) ::
+  (0 :: 1 :: 0 :: Nil) ::
+  (0 :: 1 :: 0 :: Nil) :: Nil
+//│ > Cons {
+//│ >   head: Cons { head: 0, tail: Cons { head: 1, tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: 0, tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Nil] }
+//│ >   }
+//│ win5 = }
+
+let win6 =
+  (0 :: 0 :: 1 :: Nil) ::
+  (0 :: 0 :: 1 :: Nil) ::
+  (0 :: 0 :: 1 :: Nil) :: Nil
+//│ > Cons {
+//│ >   head: Cons { head: 0, tail: Cons { head: 0, tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: 0, tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Nil] }
+//│ >   }
+//│ win6 = }
+
+let win7 =
+  (1 :: 0 :: 0 :: Nil) ::
+  (0 :: 1 :: 0 :: Nil) ::
+  (0 :: 0 :: 1 :: Nil) :: Nil
+//│ > Cons {
+//│ >   head: Cons { head: 1, tail: Cons { head: 0, tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: 0, tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Nil] }
+//│ >   }
+//│ win7 = }
+
+let win8 =
+  (0 :: 0 :: 1 :: Nil) ::
+  (0 :: 1 :: 0 :: Nil) ::
+  (1 :: 0 :: 0 :: Nil) :: Nil
+//│ > Cons {
+//│ >   head: Cons { head: 0, tail: Cons { head: 0, tail: [Cons] } },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: 0, tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Nil] }
+//│ >   }
+//│ win8 = }
+
+let wins = win1 :: win2 :: win3 :: win4 :: win5 :: win6 :: win7 :: win8 :: Nil
+//│ > Cons {
+//│ >   head: Cons {
+//│ >     head: Cons { head: 1, tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: [Cons], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Cons] }
+//│ >   }
+//│ wins = }
+
+fun showPiece(p) = if p is
+  X then nofibStringToList("X")
+  O then nofibStringToList("O")
+  Empty then nofibStringToList(" ")
+
+fun showRow(ps) = if ps is
+  p1 :: p2 :: p3 :: Nil then
+    showPiece(p1) +: nofibStringToList("|") +: showPiece(p2) +: nofibStringToList("|") +: showPiece(p3)
+
+fun showBoard(rs) = if rs is
+  r1 :: r2 :: r3 :: Nil then
+    showRow(r1) +:
+    nofibStringToList("\n------\n") +:
+    showRow(r2) +:
+    nofibStringToList("\n------\n") +:
+    showRow(r3) +:
+    nofibStringToList("\n\n")
+
+fun insert(p, ps, i) = if ps is Cons(p1, Cons(p2, Cons(p3, Nil))) and i ===
+  1 then p :: p2 :: p3 :: Nil
+  2 then p1 :: p :: p3 :: Nil
+  3 then p1 :: p2 :: p :: Nil
+
+fun empty_(x, r) = if
+  x === 1 and r is Empty :: _ :: _ :: Nil then true
+  x === 2 and r is _ :: Empty :: _ :: Nil then true
+  x === 3 and r is _ :: _ :: Empty :: Nil then true
+  else false
+
+fun empty(pos, board) = if board is r1 :: r2 :: r3 :: Nil and pos is
+  [1, x] then empty_(x, r1)
+  [2, x] then empty_(x, r2)
+  [3, x] then empty_(x, r3)
+
+fun placePiece(p, board, pos) = if
+  not(empty(pos, board)) then Nil
+  board is r1 :: r2 :: r3 :: Nil and pos is
+    [1, x] then (insert(p, r1, x) :: r2 :: r3 :: Nil) :: Nil
+    [2, x] then (r1 :: insert(p, r2, x) :: r3 :: Nil) :: Nil
+    [3, x] then (r1 :: r2 :: insert(p, r3, x) :: Nil) :: Nil
+
+fun fullBoard(b) = andd of map of
+  x => not(eqPiece(x, Empty))
+  concat(b)
+
+fun newPositions(piece, board) =
+  fun lscomp1(ls) = if ls is
+    Nil then Nil
+    x :: xs then
+      fun lscomp2(ls) = if ls is
+        Nil then lscomp1(xs)
+        y :: ys then [x, y] :: lscomp2(ys)
+      lscomp2(1 :: 2 :: 3 :: Nil)
+  concat of map of
+    pos => placePiece(piece, board, pos)
+    lscomp1(1 :: 2 :: 3 :: Nil)
+  
+let initialBoard = replicate(3, replicate(3, Empty))
+//│ > Cons {
+//│ >   head: Cons {
+//│ >     head: Empty { class: [class Empty] },
+//│ >     tail: Cons { head: [Empty], tail: [Cons] }
+//│ >   },
+//│ >   tail: Cons {
+//│ >     head: Cons { head: [Empty], tail: [Cons] },
+//│ >     tail: Cons { head: [Cons], tail: [Nil] }
+//│ >   }
+//│ initialBoard = }
+
+fun eval(x) = if x ===
+  3 then XWin
+  -3 then OWin
+  else Score(x)
+
+fun interpret(x, l) = if l is
+  Nil then Score(x)
+  Score(y) :: ls then interpret(x + y, ls)
+  XWin :: _ then XWin
+  OWin :: _ then OWin
+
+fun scorePiece(p, score) = if p is
+  X then score
+  Empty then 0
+  O then -score
+
+fun map2(f, xs, ys) = if xs is
+  Nil then Nil
+  x :: xs and
+    ys is y :: ys then f(x, y) :: map2(f, xs, ys)
+    Nil then Nil
+
+fun score(board, win) = eval of sum of map of
+  sum
+  map2((x, y) => map2(scorePiece, x, y), board, win)
+
+fun static(board) = interpret(0, map(x => score(board, x), wins))
+
+fun repTree(f, g, a) = Branch(a, map(x => repTree(g, f, x), f(a)))
+
+fun mapTree(f, t) = if t is Branch(a, l) then Branch(f(a), map(x => mapTree(f, x), l))
+
+fun prune(n, t) = if t is Branch(a, l) and n
+  === 0 then Branch(a, Nil)
+  < 0 then throw Error("Tree.prune: < 0")
+  else Branch(a, map(x => prune(n - 1, x), l))
+
+fun opposite(p) = if p is
+  X then O
+  O then X
+  else throw Error("opposite")
+
+fun best(f, bs, ss) = if bs is b :: bs and ss is s :: ss then
+  fun best_(b, s, ls1, ls2) = if ls1 is
+    Nil and ls2 is Nil then [b, s]
+    b_ :: bs and ls2 is s_ :: ss and
+      evaluationEq(s, f(s, s_)) then best_(b, s, bs, ss)
+      else best_(b_, s_, bs, ss)
+  best_(b, s, bs, ss)
+
+fun showMove(m) = if m is [b, e] then
+  showEvaluation(e) +: nofibStringToList("\n") +: showBoard(b)
+
+fun max_(e1, e2) = if
+  e1 is XWin then XWin
+  e2 is XWin then XWin
+  e2 is OWin then e1
+  e1 is OWin then e2
+  e1 is Score(x) and e2 is Score(y) and
+    x > y then Score(x)
+    else Score(y)
+
+fun min_(e1, e2) = if
+  e1 is OWin then OWin
+  e2 is OWin then OWin
+  e2 is XWin then e1
+  e1 is XWin then e2
+  e1 is Score(x) and e2 is Score(y) and
+    x < y then Score(x)
+    else Score(y)
+
+fun mise(f, g, t) = if t is
+  Branch(a, Nil) then a
+  Branch(_, l) then foldr(f, g(OWin, XWin), map(x => mise(g, f, x), l))
+
+fun searchTree(p, board) =
+  prune of
+    5
+    repTree of
+      x => newPositions(p, x),
+      x => newPositions(opposite(p), x),
+      board
+
+fun cropTree(t) = if t is
+  Branch(a, Nil) then Branch(a, Nil)
+  Branch(Score(x), l) then Branch(Score(x), map(cropTree, l))
+  Branch(x, l) then Branch(x, Nil)
+
+fun bestMove(p, f, g, b) =
+  mise(f, g, cropTree(mapTree(static, searchTree(p, b))))
+
+
+fun alternate(player, f, g, board) = if
+  fullBoard(board) then Nil
+  evaluationEq(static(board), XWin) then Nil
+  evaluationEq(static(board), OWin) then Nil
+  let opposition = opposite(player)
+  let possibles = newPositions(player, board)
+  let scores = map(x => bestMove(opposition, g, f, x), possibles)
+  let boardd_eval = best(f, possibles, scores)
+  boardd_eval is [boardd, eval] then
+    [boardd, eval] :: alternate(opposition, g, f, boardd)
+
+fun prog(input) =
+  let testBoard =
+    (Empty :: O :: Empty :: Nil) ::
+    (Empty :: X :: Empty :: Nil) ::
+    (Empty :: Empty :: Empty :: Nil) :: Nil
+  fun board(x) = if x ===
+    "doesn't happen" then testBoard +: testBoard
+    else testBoard
+  let game = alternate(X, max_, min_, board(input))
+  nofibStringToList("OXO\n") +:
+  concat of map(showMove, game)
+
+print(nofibListToString(prog("180000")))
+//│ > OXO
+//│ > XWin
+//│ > X|O| 
+//│ > ------
+//│ >  |X| 
+//│ > ------
+//│ >  | | 
+//│ > 
+//│ > XWin
+//│ > X|O|O
+//│ > ------
+//│ >  |X| 
+//│ > ------
+//│ >  | | 
+//│ > 
+//│ > XWin
+//│ > X|O|O
+//│ > ------
+//│ > X|X| 
+//│ > ------
+//│ >  | | 
+//│ > 
+//│ > XWin
+//│ > X|O|O
+//│ > ------
+//│ > X|X|O
+//│ > ------
+//│ >  | | 
+//│ > 
+//│ > XWin
+//│ > X|O|O
+//│ > ------
+//│ > X|X|O
+//│ > ------
+//│ > X| | 
+//│ > 
+//│ > 

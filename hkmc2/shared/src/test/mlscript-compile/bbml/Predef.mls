@@ -1,0 +1,7 @@
+module Predef with ...
+
+fun checkArgs(functionName, expected, got) =
+  if got != expected then
+    let name = if functionName.Str#length > 0 then " '".Str#concat(functionName).Str#concat("'") else ""
+    throw new Error("Function".Str#concat(name).Str#concat(" expected ").Str#concat(expected).Str#concat(" arguments but got ").Str#concat(got))
+  else ()

@@ -272,6 +272,10 @@ abstract class DiffMaker:
       if diff.forall(l => l.startsWith(output.outputMarker) || l.startsWith(output.diffMidMarker) || l.startsWith(output.diff3MidMarker) || l.isEmpty) then {
         for _ <- 1 to blankLines do out.println()
       } else {
+        val blockLineNum = allLines.size - lines.size + 1
+        failures += blockLineNum
+        doFail(blockLineNum,
+          s"Unmerged non-output changes at $relativeName.${file.ext}:" + blockLineNum)
         unmergedChanges += allLines.size - lines.size + 1
         out.println(output.diffBegMarker)
         diff.foreach(out.println)

@@ -72,8 +72,8 @@ class MLsCompiler(preludeFile: os.Path):
         codegen.Lowering()
       val jsb = codegen.js.JSBuilder()
       val le = low.program(blk)
-      val baseScp: codegen.js.Scope =
-        codegen.js.Scope.empty
+      val baseScp: utils.Scope =
+        utils.Scope.empty
       val nestedScp = baseScp.nest
       val je = nestedScp.givenIn:
         jsb.program(le, S(file.baseName), wd)

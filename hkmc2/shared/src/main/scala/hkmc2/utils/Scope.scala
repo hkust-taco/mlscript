@@ -1,6 +1,5 @@
 package hkmc2
-package codegen
-package js
+package utils
 
 import scala.collection.mutable.{Map => MutMap}
 
@@ -14,6 +13,8 @@ import hkmc2.semantics.VarSymbol
 import hkmc2.semantics.Elaborator
 import hkmc2.semantics.TopLevelSymbol
 import semantics.Elaborator.State
+import hkmc2.codegen.Local
+import hkmc2.codegen.js.JSBuilder
 
 
 /** When `curThis`, it means this scope does not rebind `this`.

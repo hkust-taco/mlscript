@@ -5,14 +5,11 @@ const Option$class = class Option {
     this.Some.class = class Some {
       constructor(value) {
         this.value = value;
-        
       }
       toString() { return "Some(" + this.value + ")"; }
     };
     const None$class = class None {
-      constructor() {
-        
-      }
+      constructor() {}
       toString() { return "None"; }
     };
     this.None = new None$class;
@@ -22,7 +19,6 @@ const Option$class = class Option {
       constructor(fst, snd) {
         this.fst = fst;
         this.snd = snd;
-        
       }
       toString() { return "Both(" + this.fst + ", " + this.snd + ")"; }
     };
@@ -39,10 +35,10 @@ const Option$class = class Option {
     }
   } 
   test() {
-    return Predef.pipe(2134, Predef.print);
+    return Predef.pipeInto(2134, Predef.print);
   }
   toString() { return "Option"; }
 }; const Option = new Option$class;
 Option.class = Option$class;
-undefined
+null
 export default Option;

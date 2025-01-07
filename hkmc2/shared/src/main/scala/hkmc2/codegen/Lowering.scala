@@ -68,6 +68,11 @@ class Lowering(using TL, Raise, Elaborator.State):
     case st.Ref(sym) =>
       k(subst(Value.Ref(sym)))
     case st.App(f, arg) =>
+      val isMlsFun = f.symbol.fold(f.isInstanceOf[st.Lam]):
+        case _: sem.BuiltinSymbol => true
+        case sym: sem.BlockMemberSymbol =>
+          sym.trmImplTree.fold(sym.clsTree.isDefined)(_.k is syntax.Fun)
+        case _ => false
       arg match
       case Tup(fs) =>
         val as = fs.map:
@@ -79,7 +84,7 @@ class Lowering(using TL, Raise, Elaborator.State):
         val l = new TempSymbol(S(t))
         subTerm(f): fr =>
           def rec(as: Ls[Bool -> st], asr: Ls[Arg]): Block = as match
-            case Nil => k(Call(fr, asr.reverse))
+            case Nil => k(Call(fr, asr.reverse)(isMlsFun))
             case (spd, a) :: as =>
               subTerm(a): ar =>
                 rec(as, Arg(spd, ar) :: asr)
@@ -110,7 +115,8 @@ class Lowering(using TL, Raise, Elaborator.State):
               Define(ValDefn(td.owner, knd, td.sym, r),
                 term(st.Blk(stats, res))(k)))
           case syntax.Fun =>
-            Define(FunDefn(td.sym, td.params, returnedTerm(bod)),
+            val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))
+            Define(FunDefn(td.sym, paramLists, bodyBlock),
               term(st.Blk(stats, res))(k))
       // case cls: ClassDef =>
       case cls: ClassLikeDef =>
@@ -123,13 +129,15 @@ class Lowering(using TL, Raise, Elaborator.State):
           case s => R(s)
         val publicFlds = rest2.collect:
           case td @ TermDefinition(k = (_: syntax.Val)) => td
-        Define(ClsLikeDefn(cls.sym, syntax.Cls,
+        Define(ClsLikeDefn(cls.sym, syntax.Cls, N,
             mtds.flatMap: td =>
               td.body.map: bod =>
-                FunDefn(td.sym, td.params, term(bod)(Ret))
+                val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))
+                FunDefn(td.sym, paramLists, bodyBlock)
             ,
             privateFlds,
             publicFlds,
+            End(),
             term(Blk(rest2, bodBlk.res))(ImplctRet).mapTail:
               case Return(Value.Lit(syntax.Tree.UnitLit(true)), true) => End()
               case t => t
@@ -165,7 +173,12 @@ class Lowering(using TL, Raise, Elaborator.State):
       term(st.Blk(stats, res))(k)
       
     case st.Lam(params, body) =>
-      k(Value.Lam(params, returnedTerm(body)))
+      val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N)
+      if k.isInstanceOf[TailOp] || bodyBlock.size <= 5
+      then k(Value.Lam(paramLists.head, bodyBlock))
+      else
+        val l = new TempSymbol(N)
+        Assign(l, Value.Lam(paramLists.head, bodyBlock), k(l |> Value.Ref.apply))
     
     /* 
     case t @ st.If(Split.Let(sym, trm, tail)) =>
@@ -296,7 +309,34 @@ class Lowering(using TL, Raise, Elaborator.State):
         term(finallyDo)(_ => End()),
         k(Value.Ref(l))
       )
-      
+  
+    case Handle(lhs, rhs, defs) =>
+      raise(ErrorReport(
+        msg"Effect handlers are not enabled" ->
+        t.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation))
+      End("error")
+    
+    // * BbML-specific cases: t.Cls#field and mutable operations
+    case SelProj(prefix, _, proj) =>
+      setupSelection(prefix, proj, N)(k)
+    case Region(reg, body) =>
+      Assign(reg, Instantiate(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Region"))(N), Nil), term(body)(k))
+    case RegRef(reg, value) =>
+      def rec(as: Ls[st], asr: Ls[Path]): Block = as match
+        case Nil => k(Instantiate(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Ref"))(N), asr.reverse))
+        case a :: as =>
+          subTerm(a): ar =>
+            rec(as, ar :: asr)
+      rec(reg :: value :: Nil, Nil)
+    case Deref(ref) =>
+      subTerm(ref): r =>
+        k(Select(r, Tree.Ident("value"))(N))
+    case SetRef(lhs, rhs) =>
+      subTerm(lhs): ref =>
+        subTerm(rhs): value =>
+          AssignField(ref, Tree.Ident("value"), value, k(value))(N)
+
     case Annotated(prefix, receiver) => 
       // TODO: handle annotations
       term(receiver)(k)
@@ -334,6 +374,8 @@ class Lowering(using TL, Raise, Elaborator.State):
     subTerm(prefix): p =>
       k(Select(p, nme)(sym))
   
+  def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])(using Subst): (List[ParamList], Block) =
+    (paramLists, returnedTerm(bodyTerm))
 
 
 trait LoweringSelSanityChecks
@@ -347,7 +389,7 @@ trait LoweringSelSanityChecks
         val split = Split.Cons(
             Branch(
               selRes.ref(),
-              Pattern.Lit(syntax.Tree.UnitLit(true)),
+              Pattern.Lit(syntax.Tree.UnitLit(false)),
               Split.Else(
                 Term.Throw(Term.New(SynthSel(State.globalThisSymbol.ref(), Tree.Ident("Error"))(N),
                   Term.Lit(syntax.Tree.StrLit(s"Access to required field '${nme.name}' yielded 'undefined'")) :: Nil)
@@ -361,3 +403,104 @@ trait LoweringSelSanityChecks
       super.setupSelection(prefix, nme, sym)(k)
 
 
+
+trait LoweringTraceLog
+    (instrument: Bool)(using TL, Raise, Elaborator.State)
+    extends Lowering:
+      
+  private def selFromGlobalThis(path: Str*): Path =
+      path.foldLeft[Path](Value.Ref(State.globalThisSymbol)):
+        (qual, name) => Select(qual, Tree.Ident(name))(N)
+    
+  private def assignStmts(stmts: (Local, Result)*)(rest: Block) =
+    stmts.foldRight(rest):
+      case ((sym, res), acc) => Assign(sym, res, acc)
+  
+  private def call(fn: Path, args: Ls[Arg]): Call =
+    Call(fn, args)(true)
+  
+  extension (k: Block => Block)
+    def |>: (b: Block): Block = k(b)
+
+  private val traceLogFn = selFromGlobalThis("Predef", "TraceLogger", "log")
+  private val traceLogIndentFn = selFromGlobalThis("Predef", "TraceLogger", "indent")
+  private val traceLogResetFn = selFromGlobalThis("Predef", "TraceLogger", "resetIndent")
+  private val strConcatFn = selFromGlobalThis("String", "prototype", "concat", "call")
+  private val inspectFn = selFromGlobalThis("util", "inspect")
+  
+
+  override def setupFunctionDef(paramLists: List[ParamList], bodyTerm: st, name: Option[Str])(using Subst): (List[ParamList], Block) = 
+    if instrument then
+      val (ps, bod) = handleMultipleParamLists(paramLists, bodyTerm)
+      val instrumentedBody = setupFunctionBody(ps, bod, name)
+      (ps :: Nil, instrumentedBody)
+    else
+      super.setupFunctionDef(paramLists, bodyTerm, name)
+
+  def handleMultipleParamLists(paramLists: List[ParamList], bod: Term) =
+    def go(paramLists: List[ParamList], bod: Term): (ParamList, Term) =
+      paramLists match
+        case Nil => ???
+        case h :: Nil => (h, bod)
+        case h :: t => go(t, Term.Lam(h, bod))
+    go(paramLists.reverse, bod)
+  
+  def setupFunctionBody(params: ParamList, bod: Term, name: Option[Str])(using Subst): Block =
+    val enterMsgSym = TempSymbol(N, dbgNme = "traceLogEnterMsg")
+    val prevIndentLvlSym = TempSymbol(N, dbgNme = "traceLogPrevIndent")
+    val resSym = TempSymbol(N, dbgNme = "traceLogRes")
+    val retMsgSym = TempSymbol(N, dbgNme = "traceLogRetMsg")
+    val psInspectedSyms = params.params.map(p => TempSymbol(N, dbgNme = s"traceLogParam_${p.sym.nme}") -> p.sym)
+    val resInspectedSym = TempSymbol(N, dbgNme = "traceLogResInspected")
+    
+    val psSymArgs = psInspectedSyms.zipWithIndex.foldRight[Ls[Arg]](Arg(false, Value.Lit(Tree.StrLit(")"))) :: Nil):
+      case (((s, p), i), acc) => if i == psInspectedSyms.length - 1
+        then Arg(false, Value.Ref(s)) :: acc
+        else Arg(false, Value.Ref(s)) :: Arg(false, Value.Lit(Tree.StrLit(", "))) :: acc
+    
+    assignStmts(psInspectedSyms.map: (pInspectedSym, pSym) =>
+      pInspectedSym -> call(inspectFn, Arg(false, Value.Ref(pSym)) :: Nil)
+    *) |>:
+    assignStmts(
+      enterMsgSym -> call(
+        strConcatFn,
+        Arg(false, Value.Lit(Tree.StrLit(s"CALL ${name.getOrElse("[arrow function]")}("))) :: psSymArgs
+      ),
+      TempSymbol(N) -> call(traceLogFn, Arg(false, Value.Ref(enterMsgSym)) :: Nil),
+      prevIndentLvlSym -> call(traceLogIndentFn, Nil)
+    ) |>: 
+    term(bod)(r =>
+    assignStmts(
+      resSym -> r,
+      resInspectedSym -> call(inspectFn, Arg(false, Value.Ref(resSym)) :: Nil),
+      retMsgSym -> call(
+        strConcatFn,
+        Arg(false, Value.Lit(Tree.StrLit("=> "))) :: Arg(false, Value.Ref(resInspectedSym)) :: Nil
+      ),
+      TempSymbol(N) -> call(traceLogResetFn, Arg(false, Value.Ref(prevIndentLvlSym)) :: Nil),
+      TempSymbol(N) -> call(traceLogFn, Arg(false, Value.Ref(retMsgSym)) :: Nil)
+    ) |>:
+      Ret(Value.Ref(resSym))
+    )
+
+
+trait LoweringHandler
+    (instrument: Bool)(using TL, Raise, Elaborator.State)
+    extends Lowering:
+  override def term(t: st)(k: Result => Block)(using Subst): Block =
+    if !instrument then return super.term(t)(k)
+    t match
+    case st.Blk(Handle(lhs, rhs, defs) :: stmts, res) =>
+      val handlers = defs.map {
+        case HandlerTermDefinition(resumeSym, td) => td.body match
+          case None => 
+            raise(ErrorReport(msg"Handler function definitions cannot be empty" -> td.toLoc :: Nil))
+            N
+          case Some(bod) =>
+            val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))      
+            S(Handler(td.sym, resumeSym, paramLists, bodyBlock))
+      }.collect{ case Some(v) => v }
+      val resSym = TempSymbol(S(t))
+      subTerm(rhs): cls =>
+        HandleBlock(lhs, resSym, cls, handlers, term(st.Blk(stmts, res))(HandleBlockReturn(_)), k(Value.Ref(resSym)))
+    case _ => super.term(t)(k)

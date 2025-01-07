@@ -1,0 +1,85 @@
+:js
+
+
+let xs = [0, 1, 2]
+//│ xs = [ 0, 1, 2 ]
+
+xs. print()
+//│ > 0,1,2
+
+let f = xs. print
+//│ f = [Function (anonymous)]
+
+f()
+//│ > 0,1,2
+
+xs.reverse()
+//│ = [ 2, 1, 0 ]
+
+xs
+//│ = [ 2, 1, 0 ]
+
+:re
+xs.map(x => x * 2)
+//│ ═══[RUNTIME ERROR] Error: Function expected 1 arguments but got 3
+
+xs.map((x, i, a) => x * 2)
+//│ = [ 4, 2, 0 ]
+
+:fixme
+xs.map((x, ...) => x * 2)
+//│ /!!!\ Uncaught error: scala.MatchError: Spread(keyword '...',Some(Loc(11,14,MiscArrayTests.mls:+30)),None) (of class hkmc2.syntax.Tree$Spread)
+
+xs.map((x, ..._) => x * 2)
+//│ = [ 4, 2, 0 ]
+
+fun map(xs, f) = xs.map((x, ...bs) => f(x))
+
+xs. map(x => x * 2). print()
+//│ > 4,2,0
+
+:fixme
+:p
+xs.
+  map(x => x * 2)
+//│ |xs|.|→|map|(|x| |=>| |x| |*| |2|)|←|
+//│ Parsed:
+//│ 	App(Ident(.),Tup(List(Ident(xs), Block(List(App(Ident(map),Tup(List(InfixApp(Tup(List(Ident(x))),keyword '=>',App(Ident(*),Tup(List(Ident(x), IntLit(2)))))))))))))
+//│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
+
+:fixme
+:pt
+xs
+  . map(f)
+//│ Parsed tree:
+//│ App:
+//│   lhs = Ident of "xs"
+//│   rhs = OpBlock of Ls of 
+//│     Tuple2:
+//│       _1 = Ident of "."
+//│       _2 = App:
+//│         lhs = Ident of "map"
+//│         rhs = Tup of Ls of 
+//│           Ident of "f"
+//│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
+
+:fixme
+xs
+  . map(x => x * 2)
+//│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
+
+:fixme
+xs
+  . map(x => x * 2)
+  . print()
+//│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
+
+fun f = print(0)
+
+f
+//│ > 0
+
+f
+//│ > 0
+
+

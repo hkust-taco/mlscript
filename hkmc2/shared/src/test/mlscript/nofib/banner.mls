@@ -1,6 +1,7 @@
 :js
+
 :import NofibPrelude.mls
-//│ Imported 109 member(s)
+//│ Imported 112 member(s)
 
 
 let blank =
@@ -70,18 +71,18 @@ let slant =
 //│ slant = }
 
 let punct =
-  Tup2(".", nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("  .. ") :: nofibStringToList("  .. ") :: Nil) ::
-  Tup2("?", nofibStringToList(" ??? ") :: nofibStringToList("?   ?") :: nofibStringToList("   ? ") :: nofibStringToList("  ?  ") :: nofibStringToList("  .  ") :: Nil) ::
-  Tup2("!", nofibStringToList("  !  ") :: nofibStringToList("  !  ") :: nofibStringToList("  !  ") :: nofibStringToList("  !  ") :: nofibStringToList("  .  ") :: Nil) ::
-  Tup2("-", nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("-----") :: nofibStringToList("     ") :: nofibStringToList("     ") :: Nil) ::
-  Tup2("+", nofibStringToList("  +  ") :: nofibStringToList("  +  ") :: nofibStringToList("+++++") :: nofibStringToList("  +  ") :: nofibStringToList("  +  ") :: Nil) ::
-  Tup2(":", nofibStringToList("     ") :: nofibStringToList("  :: ") :: nofibStringToList("     ") :: nofibStringToList("  :: ") :: nofibStringToList("     ") :: Nil) ::
-  Tup2(";", nofibStringToList("     ") :: nofibStringToList("  ;; ") :: nofibStringToList("     ") :: nofibStringToList("  ;; ") :: nofibStringToList(" ;;  ") :: Nil) :: Nil
+  [".", nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("  .. ") :: nofibStringToList("  .. ") :: Nil] ::
+  ["?", nofibStringToList(" ??? ") :: nofibStringToList("?   ?") :: nofibStringToList("   ? ") :: nofibStringToList("  ?  ") :: nofibStringToList("  .  ") :: Nil] ::
+  ["!", nofibStringToList("  !  ") :: nofibStringToList("  !  ") :: nofibStringToList("  !  ") :: nofibStringToList("  !  ") :: nofibStringToList("  .  ") :: Nil] ::
+  ["-", nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("-----") :: nofibStringToList("     ") :: nofibStringToList("     ") :: Nil] ::
+  ["+", nofibStringToList("  +  ") :: nofibStringToList("  +  ") :: nofibStringToList("+++++") :: nofibStringToList("  +  ") :: nofibStringToList("  +  ") :: Nil] ::
+  [":", nofibStringToList("     ") :: nofibStringToList("  :: ") :: nofibStringToList("     ") :: nofibStringToList("  :: ") :: nofibStringToList("     ") :: Nil] ::
+  [";", nofibStringToList("     ") :: nofibStringToList("  ;; ") :: nofibStringToList("     ") :: nofibStringToList("  ;; ") :: nofibStringToList(" ;;  ") :: Nil] :: Nil
 //│ > Cons {
-//│ >   head: Tup2 { fst: '.', snd: Cons { head: [Cons], tail: [Cons] } },
+//│ >   head: [ '.', Cons { head: [Cons], tail: [Cons] } ],
 //│ >   tail: Cons {
-//│ >     head: Tup2 { fst: '?', snd: [Cons] },
-//│ >     tail: Cons { head: [Tup2], tail: [Cons] }
+//│ >     head: [ '?', [Cons] ],
+//│ >     tail: Cons { head: [Array], tail: [Cons] }
 //│ >   }
 //│ punct = }
 
@@ -107,9 +108,9 @@ let digits =
 //│ >   }
 //│ digits = }
 
-fun unlines(ls) = concat(map(x => append(x, ("\n" :: Nil)), ls))
+fun unlines(ls) = concat(map(x => x +: ("\n" :: Nil), ls))
 
-fun join(ls) = foldr1((xs, ys) => append(xs, append((" " :: " " :: Nil), ys)), ls)
+fun join(ls) = foldr1((xs, ys) => xs +: (" " :: " " :: Nil) +: ys, ls)
 
 fun isUpper(c) =
   let n = int_of_char(c)
@@ -131,8 +132,8 @@ fun picChar(c) =
   
   fun lscomp(ls) = if ls is
     Nil then Nil
-    Cons(h, t) and
-      h is Tup2(c_, letter) and c_ === c then Cons(letter, lscomp(t))
+    h :: t and
+      h is [c_, letter] and c_ === c then letter :: lscomp(t)
       else lscomp(t)
   
   if
@@ -142,12 +143,12 @@ fun picChar(c) =
     isDigit(c) then atIndex(int_of_char(c) - int_of_char("0"), digits)
     c === "/" then slant
     c === "=" then reverse(slant)
-    else head(append(lscomp(punct), Nil :: Nil :: Nil))
+    else head(lscomp(punct) +: Nil :: Nil :: Nil)
 
 fun say(s) = "\n" :: (unlines(map(join, transpose(map(picChar, s)))))
 
 fun testBanner_nofib(n) =
-  let x = Cons("I", Cons("s", Cons(" ", Cons("t", Cons("h", Cons("i", Cons("s", Cons(" ", Cons("n", Cons("o", Cons("t", Cons(" ", Cons("a", Cons(" ", Cons("g", Cons("r", Cons("e", Cons("a", Cons("t", Cons(" ", Cons("b", Cons("a", Cons("n", Cons("n", Cons("e", Cons("r", Cons("?", Nil)))))))))))))))))))))))))))
+  let x = nofibStringToList("Is this not a great banner?")
   say(concat(replicate(n, x)))
 
 

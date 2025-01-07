@@ -1,0 +1,289 @@
+:js
+
+:import NofibPrelude.mls
+//│ Imported 112 member(s)
+
+fun myIsDigit(c) =
+  c.codePointAt(0) >= 48 && c.codePointAt(0) <= 57
+
+fun intintComp(a_b, c_d) = if a_b is [a, b] and c_d is [c, d] then (a < c) || ((a === c) && (b < d))
+
+fun intChessSetComp(a_b, c_d) = if a_b is [a, b] and c_d is [c, d] then a < c
+
+fun myInit(a_t) = if a_t is
+  a :: Nil then Nil
+  a :: t then a :: myInit(t)
+
+fun myLast(a_t) =
+  fun go(h, t) = if t is
+    Nil then h
+    head :: t then go(head, t)
+  if a_t is a :: t then go(a, t)
+
+fun quickSortIntInt(xs) = if xs is
+  Nil then Nil
+  x :: xs then
+    fun lscomp1(ls) = if ls is
+      Nil then Nil
+      h :: t and
+        intintComp(h, x) then h :: lscomp1(t)
+        else lscomp1(t)
+    fun lscomp2(ls) = if ls is
+      Nil then Nil
+      h :: t and
+        not(intintComp(h, x)) then h :: lscomp2(t)
+        else lscomp2(t)
+    quickSortIntInt(lscomp1(xs)) +: (x :: quickSortIntInt(lscomp2(xs)))
+
+fun quickSortIntChessSet(xs) = if force(xs) is
+  LzNil then lazy of () => LzNil
+  LzCons(x, xs) then
+    fun lscomp1(ls) = if force(ls) is
+      LzNil then lazy of () => LzNil
+      LzCons(h, t) and
+        intChessSetComp(h, x) then lazy of () => LzCons(h, lscomp1(t))
+        else lscomp1(t)
+    fun lscomp2(ls) = if force(ls) is
+      LzNil then lazy of () => LzNil
+      LzCons(h, t) and
+        not(intChessSetComp(h, x)) then lazy of () => LzCons(h, lscomp2(t))
+        else lscomp2(t)
+    append_lz_lz(quickSortIntChessSet(lscomp1(xs)), lazy of () => LzCons(x, quickSortIntChessSet(lscomp2(xs))))
+
+fun sizeQueue(xs) = listLen(xs)
+
+fun emptyQueue(x) = listEq(x, Nil)
+
+fun removeBack(xs) = if xs is
+  x :: Nil then Nil
+  x :: xs then x :: removeBack(xs)
+
+fun removeFront(xs) = if xs is
+  h :: t then t
+
+fun inquireBack(xs) = if xs is
+  x :: Nil then x
+  x :: xs then inquireBack(xs)
+
+fun inquireFront(h_t) = head(h_t)
+
+fun addAllBack(list, q) = q +: list
+
+fun addAllFront(list, q) = list +: q
+
+fun addBack(x, q) = q +: (x :: Nil)
+
+fun addFront(x, q) = x :: q
+
+let createQueue = Nil
+//│ createQueue = Nil { class: [class Nil] }
+
+class Board(a: Int, b: Int, c: Lazy[[Int, Int]], d: List[[Int, Int]])
+
+fun createBoard(x, t) = Board(x, 1, (lazy of (() => t)), t :: Nil)
+
+fun sizeBoard(b) = if b is Board(a, _, _, _) then a
+
+fun noPieces(b) = if b is Board(_, n, _, _) then n
+
+fun addPiece(t, b) = if b is Board(s, n, f, ts) then Board(s, n + 1, f, t :: ts)
+
+fun deleteFirst(b) = if b is Board(s, n, f, ts) then
+  let ts_ = myInit(ts)
+  Board(s, n - 1, (lazy of () => myLast(ts_)), ts_)
+
+fun positionPiece(x, b) = if b is Board(_, n, _, ts) then atIndex(n - x, ts)
+
+fun lastPiece(b) = if b is Board(_, _, _, t :: ts) then t
+
+fun firstPiece(b) = if b is Board(_, _, f, _) then force(f)
+
+fun pieceAtTile(x, b) = if b is Board(_, _, _, ts) then
+  fun find(x, xs) = if xs is
+    Nil then throw Error("Tile not used")
+    y :: xs then if eqTup2(x, y) then 1 + listLen(xs) else find(x, xs)
+  find(x, ts)
+
+fun tup2InList(y, xs) = if xs is
+  Nil then false
+  x :: xs and
+    eqTup2(y, x) then true
+    else tup2InList(y, xs)
+
+fun isSquareFree(x, b) = if b is Board(_, _, _, ts) then not(tup2InList(x, ts))
+
+fun assignMoveNo(t, size, z) = if t is
+  Nil then Nil
+  [x, y] :: t then [(y - 1) * size + x, z] :: assignMoveNo(t, size, z - 1)
+
+fun spaces(s, y) =
+  fun logTen(x) = if x === 0 then 0 else 1 + logTen(intDiv(x, 10))
+  replicate((logTen(s) - logTen(y)) + 1, " ")
+
+fun printBoard(s, n, xs) = if xs is
+  Nil and
+    n > s * s then Nil
+    intMod(n, s) != 0 then "*" :: (spaces(s * s, 1) +: printBoard(s, n + 1, Nil))
+    intMod(n, s) === 0 then nofibStringToList("*\n") +: printBoard(s, n + 1, Nil)
+    else throw Error("printBoard empty list error")
+  [i, j] :: xs and
+    i === n and intMod(n, s) === 0 then nofibStringToList(stringOfInt(j)) +: nofibStringToList("\n") +: printBoard(s, n + 1, xs)
+    i === n and intMod(n, s) != 0 then nofibStringToList(stringOfInt(j)) +: spaces(s * s, j) +: printBoard(s, n + 1, xs)
+    intMod(n, s) != 0 then "*" :: (spaces(s * s, 1) +: printBoard(s, n + 1, [i, j] :: xs))
+    intMod(n, s) === 0 then nofibStringToList("*\n") +: printBoard(s, n + 1, [i, j] :: xs)
+    else throw Error("printBoard non-empty list error")
+
+abstract class Direction: UL | UR | DL | DR | LU | LD | RU | RD
+
+object
+  UL extends Direction
+  UR extends Direction
+  DL extends Direction
+  DR extends Direction
+  LU extends Direction
+  LD extends Direction
+  RU extends Direction
+  RD extends Direction
+
+fun move(d, x_y) = if x_y is [x, y] and d is
+  UL then [x - 1, y - 2]
+  UR then [x + 1, y - 2]
+  DL then [x - 1, y + 2]
+  DR then [x + 1, y + 2]
+  LU then [x - 2, y - 1]
+  LD then [x - 2, y + 1]
+  RU then [x + 2, y - 1]
+  RD then [x + 2, y + 1]
+
+fun startTour(st, size) =
+  if intMod(size, 2) === 0 then createBoard(size, st)
+  else throw Error("Tour doesnt exist for odd size board")
+
+fun moveKnight(board, dir) = addPiece(move(dir, lastPiece(board)), board)
+
+fun canMoveTo(x_y, board) = if x_y is [x, y] then
+  let sze = sizeBoard(board)
+  let res = (x >= 1) and (x <= sze) and (y >= 1) and (y <= sze) and (isSquareFree(x_y, board))
+  res
+
+fun canMove(board, dir) = canMoveTo(move(dir, lastPiece(board)), board)
+
+fun canJumpFirst(board) = canMoveTo(firstPiece(board), deleteFirst(board))
+
+fun tourFinished(board) =
+  let sze = sizeBoard(board)
+  (noPieces(board) === (sze * sze)) && canJumpFirst(board)
+
+fun possibleMoves(board) =
+  fun lscomp(ls) = if ls is
+    Nil then Nil
+    x :: t and
+      canMove(board, x) then x :: lscomp(t)
+      else lscomp(t)
+  let res = lscomp(UL :: UR :: DL :: DR :: LU :: LD :: RU :: RD :: Nil)
+  res
+
+fun deadEnd(board) = listLen(possibleMoves(board)) === 0
+
+fun allDescend(board) = map(b => moveKnight(board, b), possibleMoves(board))
+
+fun descAndNo(board) =
+  fun lscomp(ls) = if ls is
+    Nil then lazy of () => LzNil
+    x :: t then lazy of () => LzCons([listLen(possibleMoves(deleteFirst(x))), x], lscomp(t))
+  lscomp(allDescend(board))
+
+fun singleDescend(board) =
+  fun lscomp(ls) = if force(ls) is
+    LzNil then Nil
+    LzCons([y, x], t) and
+      y === 1 then x :: lscomp(t)
+      else lscomp(t)
+  lscomp(descAndNo(board))
+
+fun descendents(board) =
+  if canJumpFirst(board) && deadEnd(addPiece(firstPiece(board), board)) then lazy of () => LzNil
+  else
+    let singles = singleDescend(board)
+    let scrut = listLen(singles)
+    let res = if scrut ===
+      0 then map_lz(snd, quickSortIntChessSet(descAndNo(board)))
+      1 then if singles is h :: Nil then lazy of () => LzCons(h, lazy of () => LzNil) else throw Error("unreachable")
+      else lazy of () => LzNil
+    res
+
+
+fun showChessSet(b) = if b is Board(sze, n, f, ts) then
+  let sortedTrail = quickSortIntInt(assignMoveNo(ts, sze, n))
+  printBoard(sze, 1, sortedTrail)
+
+fun root(sze) =
+  fun lscomp1(ls) = if ls is
+    Nil then lazy of () => LzNil
+    h1 :: t1 then
+      fun lscomp2(ls) = if ls is
+        Nil then lscomp1(t1)
+        h2 :: t2 then lazy of () => LzCons([h1, h2], lscomp2(t2))
+      lscomp2(enumFromTo(1, sze))
+  append_lz_lz(
+    zip_lz_lz(
+      repeat(1 - (sze * sze)),
+      zipWith_lz_lz(startTour, lscomp1(enumFromTo(1, sze)), replicate_lz(sze * sze, sze))
+    ),
+    lazy of () => LzNil
+  )
+
+fun grow(x_y) = if x_y is [x, y] then zip_lz_lz(repeat(x + 1), descendents(y))
+
+fun isFinished(x_y) = if x_y is [x, y] then tourFinished(y)
+
+fun emptyQueue_lz(x) = force(x) is LzNil
+
+fun removeFront_lz(xs) = if force(xs) is LzCons(h, t) then t
+
+fun inquireFront_lz(h_t) = if force(h_t) is LzCons(h, t) then h
+
+fun addAllFront_lz(list, q) = append_lz_lz(list, q)
+
+fun depthSearch(q, growFn, finFn) =
+  if
+    emptyQueue_lz(q) then lazy of () => LzNil
+    finFn(inquireFront_lz(q)) then lazy of () => LzCons(inquireFront_lz(q), depthSearch(removeFront_lz(q), growFn, finFn))
+    else depthSearch(addAllFront_lz(growFn(inquireFront_lz(q)), removeFront_lz(q)), growFn, finFn)
+
+fun printTour(ss) =
+  fun strToInt(y, xs) = if xs is
+    Nil then y
+    x :: xs then strToInt((10 * y) + (x.codePointAt(0) - 48), xs)
+  fun pp(xs) = if xs is
+    Nil then Nil
+    [x, y] :: xs then
+      nofibStringToList("\nKnights tour with ") +:
+      nofibStringToList(stringOfInt(x)) +:
+      nofibStringToList(" backtracking moves\n") +:
+      showChessSet(y) +:
+      pp(xs)
+  if map(x => strToInt(0, x), ss) is
+    size :: number :: Nil then pp(take_lz(number, depthSearch(root(size), grow, isFinished)))
+    else throw Error("printTour error")
+
+fun testKnights_nofib(ss) =
+  let usageString = "\nUsage: knights <board size> <no solutions> \n"
+  fun all_digits(s) = foldr((a, b) => (myIsDigit(a)) && b, true, s)
+  fun argsOk(ss) = (listLen(ss) === 2) && (foldr((a, b) => (all_digits(a)) && b, true, ss))
+  if argsOk(ss) then (printTour(ss)) else throw Error(usageString)
+
+
+print(nofibListToString(testKnights_nofib(nofibStringToList("8") :: nofibStringToList("1") :: Nil)))
+//│ > 
+//│ > Knights tour with 0 backtracking moves
+//│ > 1  34 3  18 41 32 13 16
+//│ > 4  19 64 33 14 17 44 31
+//│ > 35 2  37 40 63 42 15 12
+//│ > 20 5  56 47 38 45 30 43
+//│ > 55 36 39 62 57 48 11 26
+//│ > 6  21 52 49 46 27 60 29
+//│ > 51 54 23 8  61 58 25 10
+//│ > 22 7  50 53 24 9  28 59
+//│ > 
+

@@ -35,10 +35,11 @@ enum Term extends Statement:
   case RegRef(reg: Term, value: Term)
   case Assgn(lhs: Term, rhs: Term)
   case Deref(ref: Term)
+  case SetRef(ref: Term, value: Term)
   case Ret(result: Term)
   case Throw(result: Term)
   case Try(body: Term, finallyDo: Term)
-  case Handle(lhs: LocalSymbol, rhs: Term, defs: ObjBody)
+  case Handle(lhs: LocalSymbol, rhs: Term, defs: Ls[HandlerTermDefinition])
   case Annotated(prefix: Term, receiver: Term)
   
   lazy val symbol: Opt[Symbol] = this match
@@ -72,7 +73,9 @@ enum Term extends Statement:
     case Region(name, body) => "region expression"
     case RegRef(reg, value) => "reference creation"
     case Assgn(lhs, rhs) => "assignment"
+    case SetRef(ref, value) => "mutable reference assignment"
     case Deref(ref) => "dereference"
+    case Throw(e) => "throw"
     case Annotated(prefix, receiver) => "annotation"
 end Term
 
@@ -113,6 +116,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Region(_, body) => body :: Nil
     case RegRef(reg, value) => reg :: value :: Nil
     case Assgn(lhs, rhs) => lhs :: rhs :: Nil
+    case SetRef(lhs, rhs) => lhs :: rhs :: Nil
     case Deref(term) => term :: Nil
     case TermDefinition(_, k, _, ps, sign, body, res, _) =>
       ps.toList.flatMap(_.subTerms) ::: sign.toList ::: body.toList
@@ -126,7 +130,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
       pat.paramsOpt.toList.flatMap(_.subTerms) ::: pat.body.blk :: Nil
     case Import(sym, pth) => Nil
     case Try(body, finallyDo) => body :: finallyDo :: Nil
-    case Handle(lhs, rhs, defs) => rhs :: defs._1 :: Nil
+    case Handle(lhs, rhs, defs) => rhs :: defs.flatMap(_.td.subTerms)
     case Neg(e) => e :: Nil
     case Annotated(prefix, receiver) => prefix :: receiver :: Nil
   
@@ -183,6 +187,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Region(name, body) => s"region ${name.nme} in ${body.showDbg}"
     case RegRef(reg, value) => s"(${reg.showDbg}).ref ${value.showDbg}"
     case Assgn(lhs, rhs) => s"${lhs.showDbg} := ${rhs.showDbg}"
+    case SetRef(lhs, rhs) => s"${lhs.showDbg} := ${rhs.showDbg}"
     case Deref(term) => s"!$term"
     case CompType(lhs, rhs, pol) => s"${lhs.showDbg} ${if pol then "|" else "&"} ${rhs.showDbg}"
     case Error => "<error>"
@@ -224,6 +229,11 @@ final case class TermDefinition(
     resSym: FlowSymbol,
     flags: TermDefFlags,
 ) extends Companion
+
+final case class HandlerTermDefinition(
+  resumeSym: LocalSymbol & NamedSymbol,
+  td: TermDefinition
+)
 
 case class ObjBody(blk: Term.Blk):
   // override def toString: String = statmts.mkString("{ ", "; ", " }")
@@ -339,6 +349,9 @@ sealed abstract class Elem:
     case Spd(_, term) => term :: Nil
   def showDbg: Str
 final case class Fld(flags: FldFlags, term: Term, asc: Opt[Term]) extends Elem with FldImpl
+object PlainFld:
+  def apply(term: Term) = Fld(FldFlags.empty, term, N)
+  def unapply(fld: Fld): Opt[Term] = S(fld.term)
 final case class Spd(eager: Bool, term: Term) extends Elem:
   def showDbg: Str = (if eager then "..." else "..") + term.showDbg
 

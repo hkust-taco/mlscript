@@ -9,10 +9,8 @@ object None
 fun isDefined(x) = if x is
   Some then true
   None then false
-//│ JS:
-//│ function isDefined(...args) {
-//│   globalThis.Predef.checkArgs("isDefined", 1, true, args.length);
-//│   let x = args[0];
+//│ JS (unsanitized):
+//│ function isDefined(x) {
 //│   if (x instanceof globalThis.Some.class) {
 //│     return true;
 //│   } else {
@@ -23,7 +21,7 @@ fun isDefined(x) = if x is
 //│     }
 //│   }
 //│ }
-//│ undefined
+//│ null
 
 isDefined(Some(1))
 //│ = true
@@ -36,10 +34,9 @@ isDefined(None)
 val isDefined = case
   Some(_) then true
   None    then false
-//│ JS:
-//│ this.isDefined = (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, true, args.length);
-//│   let caseScrut = args[0];
+//│ JS (unsanitized):
+//│ let tmp;
+//│ tmp = (caseScrut) => {
 //│   let param0;
 //│   if (caseScrut instanceof this.Some.class) {
 //│     param0 = caseScrut.value;
@@ -52,8 +49,9 @@ val isDefined = case
 //│     }
 //│   }
 //│ };
-//│ undefined
-//│ isDefined = [Function (anonymous)]
+//│ this.isDefined = tmp;
+//│ null
+//│ isDefined = [Function: tmp]
 
 isDefined(Some(1))
 //│ = true
@@ -65,7 +63,7 @@ isDefined(None)
 val isDefined = x => if x is
   Some(_) then true
   None    then false
-//│ isDefined = [Function (anonymous)]
+//│ isDefined = [Function: tmp]
 
 isDefined(Some(1))
 //│ = true
@@ -80,7 +78,7 @@ module Foo with
 val isOther = x => if x is
   Foo.Other(_) then true
   None    then false
-//│ isOther = [Function (anonymous)]
+//│ isOther = [Function: tmp]
 
 
 fun keepIfGreaterThan(x, y) =
@@ -96,19 +94,23 @@ fun keepIfGreaterThan(x, y) =
   console.log()
 //│ > true
 
+:fixme
+1
+  . keepIfGreaterThan(0)
+//│ ═══[RUNTIME ERROR] Error: Function 'keepIfGreaterThan' expected 2 arguments but got 1
 
-:todo // alternative syntax?
+
+:fixme // or use an alternative syntax?
 1
   . keepIfGreaterThan(0)
   . isDefined()
   . console.log()
-//│ /!!!\ Uncaught error: scala.MatchError: OpBlock(List((Ident(.),App(Ident(keepIfGreaterThan),Tup(List(IntLit(0))))), (Ident(.),App(Ident(isDefined),Tup(List()))), (Ident(.),App(Sel(Ident(console),Ident(log)),Tup(List()))))) (of class hkmc2.syntax.Tree$OpBlock)
+//│ ═══[RUNTIME ERROR] Error: Function 'keepIfGreaterThan' expected 2 arguments but got 1
 
 
-:todo
 1
   |> keepIfGreaterThan(_, 0)
   |> isDefined(_)
-//│ /!!!\ Uncaught error: scala.MatchError: OpBlock(List((Ident(|>),App(Ident(keepIfGreaterThan),Tup(List(Ident(_), IntLit(0))))), (Ident(|>),App(Ident(isDefined),Tup(List(Ident(_))))))) (of class hkmc2.syntax.Tree$OpBlock)
+//│ = true
 
 

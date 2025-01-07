@@ -73,6 +73,6 @@ fun isBoth[A, B](eob: EitherOrBoth[A, B]): Bool =
 
 fun eobToString[A, B](eob: EitherOrBoth[A, B]): Str =
   if eob is
-    Left(left) then "Left(" ~ string(left) ~ ")"
-    Right(right) then "Right(" ~ string(right) ~ ")"
-    Both(left, right) then "Both(" ~ string(left) ~ ", " ~ string(right) ~ ")"
+    Left(left) then "Left(" ~ Str.from(left) ~ ")"
+    Right(right) then "Right(" ~ Str.from(right) ~ ")"
+    Both(left, right) then "Both(" ~ Str.from(left) ~ ", " ~ Str.from(right) ~ ")"

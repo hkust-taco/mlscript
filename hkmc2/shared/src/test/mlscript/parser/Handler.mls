@@ -18,52 +18,110 @@ handle h = Eff
 //│ ╙──      	              ^
 
 :parseOnly
+fun foo(x) = 1
 handle h = Eff with
-  fun f(r) = r(0)
-  fun g(a, r) = r(1)
+  fun f()(r) = r(0)
+  fun g(a)(r) = r(1)
 //│ Parsed:
-//│ 	Handle(Ident(h),Ident(Eff),Block(List(TermDef(Fun,App(Ident(f),Tup(List(Ident(r)))),Some(App(Ident(r),Tup(List(IntLit(0)))))), TermDef(Fun,App(Ident(g),Tup(List(Ident(a), Ident(r)))),Some(App(Ident(r),Tup(List(IntLit(1)))))))),None)
+//│ 	TermDef(Fun,App(Ident(foo),Tup(List(Ident(x)))),Some(IntLit(1)))
+//│ 	Handle(Ident(h),Ident(Eff),Block(List(TermDef(Fun,App(App(Ident(f),Tup(List())),Tup(List(Ident(r)))),Some(App(Ident(r),Tup(List(IntLit(0)))))), TermDef(Fun,App(App(Ident(g),Tup(List(Ident(a)))),Tup(List(Ident(r)))),Some(App(Ident(r),Tup(List(IntLit(1)))))))),None)
 
 
 :e
-fun foo(x) = 1
 handle 1 = 1 with
-  fun f(r) = r(0)
+  fun f()(r) = r(0)
 in
   foo(h)
 //│ ╔══[ERROR] Unsupported handle binding shape
-//│ ║  l.30: 	handle 1 = 1 with
+//│ ║  l.31: 	handle 1 = 1 with
 //│ ║        	       ^^^^^^^^^^
-//│ ║  l.31: 	  fun f(r) = r(0)
-//│ ╙──      	^^^^^^^^^^^^^^^^^
+//│ ║  l.32: 	  fun f()(r) = r(0)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: foo
+//│ ║  l.34: 	  foo(h)
+//│ ╙──      	  ^^^
 //│ ╔══[ERROR] Name not found: h
-//│ ║  l.33: 	  foo(h)
+//│ ║  l.34: 	  foo(h)
 //│ ╙──      	      ^
 
-class Eff
+abstract class Eff
 fun foo(h) = 0
+
+:el
 handle h = Eff with
-  fun f(r) = r(0)
+  fun f()(r) = r(0)
 in
   foo(h)
-
-class Eff
-fun foo(h) = 0
-handle h = Eff with
-  fun f(r) = r(0)
-  fun g(a, r) = r(1)
-foo(h)
+//│ Elab: { { handle globalThis:block#6.h = SynthSel(Ref(globalThis:block#5),Ident(Eff)) List(HandlerTermDefinition(r,TermDefinition(Some(globalThis:block#6),Fun,member:f,List(ParamList(‹›,List(),None)),None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(0)),None))))),‹result of member:f›,‹›))); globalThis:block#5#666(.)foo‹member:foo›(globalThis:block#6.h#666) } }
 
 :e
 (
   handle h = Eff with
-    fun f(r) = r(0)
-    fun g(a, r) = r(1)
+    fun f()(r) = r(0)
+    fun g(a)()(r) = r(1)
 ) + 1
 //│ ╔══[ERROR] Expected a body for handle bindings in expression position
 //│ ║  l.59: 	  handle h = Eff with
 //│ ║        	         ^^^^^^^^^^^^
-//│ ║  l.60: 	    fun f(r) = r(0)
-//│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.61: 	    fun g(a, r) = r(1)
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.60: 	    fun f()(r) = r(0)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.61: 	    fun g(a)()(r) = r(1)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
+
+:el
+handle h = Eff with
+  fun f()(r) = r(0)
+  fun g(a)()()(r) = r(1)
+foo(h)
+//│ Elab: { handle globalThis:block#8.h = SynthSel(Ref(globalThis:block#5),Ident(Eff)) List(HandlerTermDefinition(r,TermDefinition(Some(globalThis:block#8),Fun,member:f,List(ParamList(‹›,List(),None)),None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(0)),None))))),‹result of member:f›,‹›)), HandlerTermDefinition(r,TermDefinition(Some(globalThis:block#8),Fun,member:g,List(ParamList(‹›,List(Param(‹›,a,None)),None), ParamList(‹›,List(),None), ParamList(‹›,List(),None)),None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(1)),None))))),‹result of member:g›,‹›))); globalThis:block#5#666(.)foo‹member:foo›(globalThis:block#8.h#666) }
+
+:e
+handle h = Eff with
+  fun f()(r) = r(0)
+  fun g(a)(r) = r(1)
+  val x = 24
+  class Test with
+    fun x() = x
+foo(h)
+//│ ╔══[ERROR] Only function definitions are allowed in handler blocks
+//│ ║  l.82: 	  val x = 24
+//│ ╙──      	          ^^
+//│ ╔══[ERROR] Only function definitions are allowed in handler blocks
+//│ ║  l.84: 	    fun x() = x
+//│ ╙──      	              ^
+
+:e
+handle h = Eff with
+  fun f()(r) = r(0)
+  fun g(a)(r) = 
+    handle e = Eff with
+      fun f = r(0)
+      fun g() = r(0)
+      fun h()() = r(1)
+      fun h2()(a, b) = r(1)
+    foo(h)
+foo(h)
+//│ ╔══[ERROR] Handler function is missing resumption parameter
+//│ ║  l.98: 	      fun f = r(0)
+//│ ╙──      	              ^^^^
+//│ ╔══[ERROR] Handler function is missing resumption parameter
+//│ ║  l.99: 	      fun g() = r(0)
+//│ ╙──      	                ^^^^
+//│ ╔══[ERROR] Handler function is missing resumption parameter
+//│ ║  l.100: 	      fun h()() = r(1)
+//│ ╙──       	                  ^^^^
+//│ ╔══[ERROR] Handler function is missing resumption parameter
+//│ ║  l.101: 	      fun h2()(a, b) = r(1)
+//│ ╙──       	                       ^^^^
+
+:w
+:el
+handle h = Eff with
+  fun f()(r) = r(0)
+  fun g(a)(r) = r(1)
+  12345
+foo(h)
+//│ ╔══[WARNING] Terms in handler block do nothing
+//│ ║  l.122: 	  12345
+//│ ╙──       	  ^^^^^
+//│ Elab: { handle globalThis:block#11.h = SynthSel(Ref(globalThis:block#5),Ident(Eff)) List(HandlerTermDefinition(r,TermDefinition(Some(globalThis:block#11),Fun,member:f,List(ParamList(‹›,List(),None)),None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(0)),None))))),‹result of member:f›,‹›)), HandlerTermDefinition(r,TermDefinition(Some(globalThis:block#11),Fun,member:g,List(ParamList(‹›,List(Param(‹›,a,None)),None)),None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(1)),None))))),‹result of member:g›,‹›))); globalThis:block#5#666(.)foo‹member:foo›(globalThis:block#11.h#666) }

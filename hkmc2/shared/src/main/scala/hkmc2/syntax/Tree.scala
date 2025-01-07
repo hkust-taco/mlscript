@@ -23,7 +23,7 @@ sealed trait Literal extends AutoLocated:
         case c if c.isControl => f"\\u${c.toInt}%04x"
         case c => c.toString
       .mkString("\"", "", "\"")
-    case UnitLit(value) => if value then "undefined" else "null"
+    case UnitLit(value) => if value then "null" else "undefined"
     case BoolLit(value) => value.toString
   
   def describeLit: Str =
@@ -41,6 +41,7 @@ sealed trait Literal extends AutoLocated:
 enum Tree extends AutoLocated:
   case Empty()
   case Error()
+  case Under()
   case Ident(name: Str)
   case IntLit(value: BigInt)          extends Tree with Literal
   case DecLit(value: BigDecimal)      extends Tree with Literal
@@ -54,7 +55,8 @@ enum Tree extends AutoLocated:
   case Def(lhs: Tree, rhs: Tree)
   case TermDef(k: TermDefKind, head: Tree, rhs: Opt[Tree]) extends Tree with TermDefImpl
   case TypeDef(k: TypeDefKind, head: Tree, extension: Opt[Tree], body: Opt[Tree])(using State) extends Tree with TypeDefImpl
-  case Open(body: Tree)
+  case Open(opened: Tree)
+  case OpenIn(opened: Tree, body: Tree)
   case Modified(modifier: Keyword, modLoc: Opt[Loc], body: Tree)
   case Quoted(body: Tree)
   case Unquoted(body: Tree)
@@ -66,10 +68,10 @@ enum Tree extends AutoLocated:
   case Sel(prefix: Tree, name: Ident)
   case InfixApp(lhs: Tree, kw: Keyword.Infix, rhs: Tree)
   case New(body: Tree)
-  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, split: Tree)
+  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, kwLoc: Opt[Loc], split: Tree)
   @deprecated("Use If instead", "hkmc2-ucs")
   case IfElse(cond: Tree, alt: Tree)
-  case Case(branches: Tree)
+  case Case(kwLoc: Opt[Loc], branches: Tree)
   case Region(name: Tree, body: Tree)
   case RegRef(reg: Tree, value: Tree)
   case Effectful(eff: Tree, body: Tree)
@@ -77,7 +79,7 @@ enum Tree extends AutoLocated:
   case Annotated(prefix: Tree, receiver: Tree)
 
   def children: Ls[Tree] = this match
-    case _: Empty | _: Error | _: Ident | _: Literal => Nil
+    case _: Empty | _: Error | _: Ident | _: Literal | _: Under => Nil
     case Block(stmts) => stmts
     case OpBlock(items) => items.flatMap:
       case (op, body) => op :: body :: Nil
@@ -96,9 +98,9 @@ enum Tree extends AutoLocated:
     case InfixApp(lhs, _, rhs) => Ls(lhs, rhs)
     case TermDef(k, head, rhs) => head :: rhs.toList
     case New(body) => body :: Nil
-    case IfLike(_, split) => split :: Nil
+    case IfLike(_, _, split) => split :: Nil
     case IfElse(cond, alt) => cond :: alt :: Nil
-    case Case(bs) => Ls(bs)
+    case Case(_, bs) => Ls(bs)
     case Region(name, body) => name :: body :: Nil
     case RegRef(reg, value) => reg :: value :: Nil
     case Effectful(eff, body) => eff :: body :: Nil
@@ -113,11 +115,12 @@ enum Tree extends AutoLocated:
   def describe: Str = this match
     case Empty() => "empty"
     case Error() => "error"
+    case Under() => "underscore"
     case Ident(name) => "identifier"
     case IntLit(value) => "integer literal"
     case DecLit(value) => "decimal literal"
     case StrLit(value) => "string literal"
-    case UnitLit(value) => if value then "undefined" else "null"
+    case UnitLit(value) => if value then "null" else "undefined"
     case BoolLit(value) => s"$value literal"
     case Block(stmts) => "block"
     case OpBlock(_) => "operator block"
@@ -135,9 +138,9 @@ enum Tree extends AutoLocated:
     case Sel(prefix, name) => "selection"
     case InfixApp(lhs, kw, rhs) => "infix operation"
     case New(body) => "new"
-    case IfLike(Keyword.`if`, split) => "if expression"
-    case IfLike(Keyword.`while`, split) => "while expression"
-    case Case(branches) => "case"
+    case IfLike(Keyword.`if`, _, split) => "if expression"
+    case IfLike(Keyword.`while`, _, split) => "while expression"
+    case Case(_, branches) => "case"
     case Region(name, body) => "region"
     case RegRef(reg, value) => "region reference"
     case Effectful(eff, body) => "effectful"
@@ -149,6 +152,11 @@ enum Tree extends AutoLocated:
   def showDbg: Str = toString // TODO
   
   lazy val desugared: Tree = this match
+    
+    // TODO generalize to pattern-let and rm this special case
+    case LetLike(kw, und @ Under(), r, b) =>
+      LetLike(kw, Ident("_").withLocOf(und), r, b)
+    
     case Modified(Keyword.`declare`, modLoc, s) =>
       // TODO handle `declare` modifier!
       s
@@ -164,9 +172,12 @@ enum Tree extends AutoLocated:
 
   /** S(true) means eager spread, S(false) means lazy spread, N means no spread. */
   def asParam: Opt[(Opt[Bool], Ident, Opt[Tree])] = this match
+    case und: Under => S(N, new Ident("_").withLocOf(und), N)
     case id: Ident => S(N, id, N)
     case Spread(Keyword.`..`, _, S(id: Ident)) => S(S(false), id, N)
     case Spread(Keyword.`...`, _, S(id: Ident)) => S(S(true), id, N)
+    case Spread(Keyword.`..`, _, S(und: Under)) => S(S(false), new Ident("_").withLocOf(und), N)
+    case Spread(Keyword.`...`, _, S(und: Under)) => S(S(true), new Ident("_").withLocOf(und), N)
     case InfixApp(lhs: Ident, Keyword.`:`, rhs) => S(N, lhs, S(rhs))
     case TermDef(ImmutVal, inner, _) => inner.asParam
   
@@ -192,13 +203,25 @@ object PlainTup:
 
 object Apps:
   def unapply(t: Tree): S[(Tree, Ls[Tup])] = t match
-    case App(Apps(id, args), arg: Tup) => S(id, args :+ arg)
+    case App(Apps(base, args), arg: Tup) => S(base, args :+ arg)
     case t => S(t, Nil)
     
 object Annotations:
   def unapply(t: Tree): Opt[(Ls[Tree], Tree)] = t match
     case Annotated(p, Annotations(ps, recv)) => S(p :: ps, recv)
     case other => S((Nil, other))
+
+/** Matches applications with underscores in some argument and/or prefix positions. */
+object PartialApp:
+  def unapply(t: App): Opt[(Tree \/ Under, Ls[Tree \/ Under])] = t match
+    case Apps(base, Tup(args) :: Nil) =>
+      var hasUnderscores = false
+      def opt(t: Tree) = t match
+        case u: Under => hasUnderscores = true; R(u)
+        case _ => L(t)
+      val res = (base |> opt, args.map(opt))
+      Opt.when(hasUnderscores)(res)
+    case _ => N
 
 
 sealed abstract class OuterKind(val desc: Str)
@@ -210,7 +233,7 @@ sealed abstract class Val(str: Str, desc: Str) extends ValLike(str, desc)
 case object ImmutVal extends Val("val", "value")
 case object MutVal extends Val("mut val", "mutable value")
 case object LetBind extends ValLike("let", "let binding")
-case object Handler extends TermDefKind("handler", "handler binding")
+case object HandlerBind extends TermDefKind("handler", "handler binding")
 case object ParamBind extends ValLike("", "parameter")
 case object Fun extends TermDefKind("fun", "function")
 sealed abstract class TypeDefKind(desc: Str) extends DeclKind(desc)

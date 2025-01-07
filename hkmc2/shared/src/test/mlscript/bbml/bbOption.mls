@@ -1,12 +1,13 @@
 :bbml
 //│ Type: ⊤
 
+//│ Type: ⊤
 
 class Option[out A](inspect: [E, Res] -> (() ->{E} Res, A ->{E} Res) ->{E} Res)
 //│ Type: ⊤
 
 opt => opt.Option#inspect
-//│ Type: (Option[out α4_1]) ->{⊥} forall E5_2, Res6_2: (() ->{E5_2} Res6_2, (α4_1) ->{E5_2} Res6_2) ->{E5_2} Res6_2
+//│ Type: (Option[out 'A]) ->{⊥} forall 'E, 'Res: (() ->{'E} 'Res, ('A) ->{'E} 'Res) ->{'E} 'Res
 
 opt => opt.Option#inspect(
   () => 42

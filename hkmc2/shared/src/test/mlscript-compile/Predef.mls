@@ -5,14 +5,27 @@ fun id(x) = x
 
 fun not(x) = x is false
 
-fun (|>) pipe(x, f) = f(x)
+fun (|>) pipeInto(x, f) = f(x)
+fun (<|) pipeFrom(f, x) = f(x)
 
-fun (.) apply(receiver, f)(...args) = f(receiver, ...args)
+fun (>>) andThen(f, g)(x) = g(f(x))
+fun (<<) compose(f, g)(x) = f(g(x))
+
+fun (.) passTo(receiver, f)(...args) = f(receiver, ...args)
 
 fun (|>.) call(receiver, f)(...args) = f.call(receiver, ...args)
 
-fun print(x) =
-  console.log(String(x))
+fun pass1(f)(...xs) = f(xs.0)
+fun pass2(f)(...xs) = f(xs.0, xs.1)
+fun pass3(f)(...xs) = f(xs.0, xs.1, xs.2)
+
+fun print(...xs) =
+  console.log(...xs.map(String))
+
+val assert = console.assert
+
+fun (??) notImplemented(msg) = throw Error("Not implemented: " + msg)
+fun (???) notImplementedError = throw Error("Not implemented")
 
 fun tupleSlice(xs, i, j) =
   globalThis.Array.prototype.slice.call(xs, i, xs.length - j)
@@ -30,7 +43,7 @@ class MatchResult(captures)
 class MatchFailure(errors)
 
 fun checkArgs(functionName, expected, isUB, got) =
-  if got < expected || isUB && got > expected then
+  if got < expected || isUB && got > expected do
     let name = if functionName.length > 0 then " '" + functionName + "'" else ""
     throw globalThis.Error("Function" + name + " expected " + expected + " arguments but got " + got)
     // TODO
@@ -38,8 +51,26 @@ fun checkArgs(functionName, expected, isUB, got) =
     //   + expected
     //   + (if isUB then "" else " at least")
     //   + " arguments but got " + got)
-  else ()
+
+module TraceLogger with
+  mut val enabled = false
+  mut val indentLvl = 0
+  fun indent() =
+    if enabled then
+      let prev = indentLvl
+      set indentLvl = prev + 1
+      prev
+    else ()
+  fun resetIndent(n) =
+    if enabled then
+      set indentLvl = n
+    else ()
+  fun log(msg) =
+    if enabled then
+      console.log("| ".repeat(indentLvl) + msg.replaceAll("\n", "\n" + "  ".repeat(indentLvl)))
+    else ()
 
 class Test with
+  print("Test")
   val y = 1
 

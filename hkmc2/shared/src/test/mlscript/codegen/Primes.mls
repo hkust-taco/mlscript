@@ -7,9 +7,13 @@ let x = 1
 :fixme
 :sjs
 let x' = 1
-//│ JS:
-//│ this.x' = 1; undefined
+//│ JS (unsanitized):
+//│ this.x' = 1; null
+//│ > try { this.x' = 1; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string
+//│ > try { this.x' } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string
 
 

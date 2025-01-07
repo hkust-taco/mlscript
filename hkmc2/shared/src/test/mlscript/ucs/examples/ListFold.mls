@@ -24,10 +24,10 @@ fun join(sep) =
   fun aux(acc, xs) =
     if xs is
       Nil then acc
-      Cons(x, xs') then aux(acc ~ sep ~ string(x), xs')
+      Cons(x, xs') then aux(acc ~ sep ~ Str.from(x), xs')
   (xs) =>
     if xs is
-      Cons(x, xs') then aux(string(x), xs')
+      Cons(x, xs') then aux(Str.from(x), xs')
       Nil then ""
 
 join(", ")(1 :: 2 :: 3 :: Nil)

@@ -1,35 +1,36 @@
 :js
+
 :import NofibPrelude.mls
-//│ Imported 109 member(s)
+//│ Imported 112 member(s)
 
 
 fun algb2(x, k0j1, k1j1, yss) = if yss is
   Nil then Nil
-  Cons(Tup2(y, k0j), ys) then
+  [y, k0j] :: ys then
     let kjcurr = if x == y then k0j1 + 1 else max(k1j1, k0j)
-    Cons(Tup2(y, kjcurr), algb2(x, k0j, kjcurr, ys))
+    [y, kjcurr] :: algb2(x, k0j, kjcurr, ys)
 
 fun algb1(xss, yss) = if xss is
   Nil then map(snd, yss)
-  Cons(x, xs) then algb1(xs, algb2(x, 0, 0, yss))
+  x :: xs then algb1(xs, algb2(x, 0, 0, yss))
 
 fun algb(xs, ys) =
   fun listcomp_fun(listcomp_fun_para) = if listcomp_fun_para is
-      Cons(listcomp_fun_ls_h, listcomp_fun_ls_t) then Cons(Tup2(listcomp_fun_ls_h, 0), listcomp_fun(listcomp_fun_ls_t))
+      listcomp_fun_ls_h :: listcomp_fun_ls_t then [listcomp_fun_ls_h, 0] :: listcomp_fun(listcomp_fun_ls_t)
       Nil then Nil
   
-  Cons(0, algb1(xs, listcomp_fun(ys)))
+  0 :: algb1(xs, listcomp_fun(ys))
 
 
 fun findk(k, km, m, ls) = if ls is
   Nil then km
-  Cons(Tup2(x,y), xys) then if (x + y) >= m then findk(k+1, k, x+y, xys) else findk(k+1, km, m, xys)
+  [x,y] :: xys then if (x + y) >= m then findk(k+1, k, x+y, xys) else findk(k+1, km, m, xys)
 
 fun algc(m, n, xs, ys) = if
   ys is Nil then x => x
   xs is
-    Cons(x, Nil) and
-      inList(x, ys) then t => Cons(x, t)
+    x :: Nil and
+      inList(x, ys) then t => x :: t
       else x => x
   else
     let m2 = intDiv(m, 2)

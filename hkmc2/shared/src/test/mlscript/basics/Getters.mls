@@ -12,7 +12,6 @@ get foo = 123
 // * These two should be equivalent and should *not* be getters: 
 
 fun f = x => x
-//│ /!!!\ Uncaught error: scala.NotImplementedError: getters (of class String)
 
 fun f(x) = x
 

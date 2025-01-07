@@ -23,16 +23,12 @@ open Option
 
 :sjs
 None isDefined()
-//│ JS:
-//│ Option.isDefined(Option.None) ?? null
+//│ JS (unsanitized):
+//│ Option.isDefined(Option.None)
 //│ = false
 
-:fixme
 case Some(x) then x
-//│ ╔══[PARSE ERROR] Expected block after `case` keyword; found identifier instead
-//│ ║  l.31: 	case Some(x) then x
-//│ ╙──      	     ^^^^
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Jux(Error(),App(Ident(Some),Tup(List(Ident(x))))),keyword 'then',Ident(x)) (of class hkmc2.syntax.Tree$InfixApp)
+//│ = [Function (anonymous)]
 
 case { Some(x) then x }
 //│ = [Function (anonymous)]
@@ -46,8 +42,8 @@ Some(1)
 
 :sjs
 (new Some(1)) isDefined()
-//│ JS:
-//│ let tmp; tmp = new Option.Some.class(1); Option.isDefined(tmp) ?? null
+//│ JS (unsanitized):
+//│ let tmp; tmp = new Option.Some.class(1); Option.isDefined(tmp)
 //│ = true
 
 :re
@@ -76,14 +72,14 @@ None == Option.None
 :re
 Option.oops
 //│ ╔══[ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.77: 	Option.oops
+//│ ║  l.73: 	Option.oops
 //│ ╙──      	      ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 :e
 open Option { oops }
 //│ ╔══[ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.84: 	open Option { oops }
+//│ ║  l.80: 	open Option { oops }
 //│ ╙──      	              ^^^^
 
 oops
@@ -91,8 +87,8 @@ oops
 :e
 :re
 Option.None.oops
-//│ ╔══[ERROR] Module 'None' does not contain member 'oops'
-//│ ║  l.93: 	Option.None.oops
+//│ ╔══[ERROR] Object 'None' does not contain member 'oops'
+//│ ║  l.89: 	Option.None.oops
 //│ ╙──      	           ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 

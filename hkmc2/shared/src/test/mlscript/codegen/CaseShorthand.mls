@@ -1,47 +1,26 @@
 :js
 
 
-:fixme
 case x then x
-//│ ╔══[PARSE ERROR] Expected block after `case` keyword; found identifier instead
-//│ ║  l.5: 	case x then x
-//│ ╙──     	     ^
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Jux(Error(),Ident(x)),keyword 'then',Ident(x)) (of class hkmc2.syntax.Tree$InfixApp)
+//│ = [Function (anonymous)]
 
 :sjs
 case { x then x }
-//│ JS:
-//│ (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, true, args.length);
-//│   let caseScrut = args[0];
-//│   let x;
-//│   x = caseScrut;
-//│   return x;
-//│ }
+//│ JS (unsanitized):
+//│ (caseScrut) => { let x; x = caseScrut; return x; }
 //│ = [Function (anonymous)]
 
 :sjs
 x => if x is
   0 then true
-//│ JS:
-//│ (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, true, args.length);
-//│   let x = args[0];
-//│   if (x === 0) {
-//│     return true;
-//│   } else {
-//│     throw new this.Error("match error");
-//│   }
-//│ }
+//│ JS (unsanitized):
+//│ (x) => { if (x === 0) { return true; } else { throw new this.Error("match error"); } }
 //│ = [Function (anonymous)]
 
 :sjs
-case
-  0 then true
-//│ JS:
-//│ (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, true, args.length);
-//│   let caseScrut = args[0];
+case 0 then true
+//│ JS (unsanitized):
+//│ (caseScrut) => {
 //│   if (caseScrut === 0) {
 //│     return true;
 //│   } else {
@@ -49,21 +28,32 @@ case
 //│   }
 //│ }
 //│ = [Function (anonymous)]
+
+(case x then x) of 1
+//│ = 1
+
+1 |> case x then x
+//│ = 1
+
+1 |> id of case x then x
+//│ = 1
+
+[1] |> case [x] then x
+//│ = 1
+
+1 |> (2 |> case x then case y then [x, y]) |> case [a, b] then [b, a]
+//│ = [ 1, 2 ]
+
+:todo
+case [x] then x, [] then 0
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Tup(List()),keyword 'then',IntLit(0)) (of class hkmc2.syntax.Tree$InfixApp)
 
 :sjs
 case
   0 then true
   _ then false
-//│ JS:
-//│ (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, true, args.length);
-//│   let caseScrut = args[0];
-//│   if (caseScrut === 0) {
-//│     return true;
-//│   } else {
-//│     return false;
-//│   }
-//│ }
+//│ JS (unsanitized):
+//│ (caseScrut) => { if (caseScrut === 0) { return true; } else { return false; } }
 //│ = [Function (anonymous)]
 
 class Some(value)
@@ -73,10 +63,9 @@ module None
 val isDefined = case
   Some then true
   None then false
-//│ JS:
-//│ this.isDefined = (...args) => {
-//│   globalThis.Predef.checkArgs("", 1, true, args.length);
-//│   let caseScrut = args[0];
+//│ JS (unsanitized):
+//│ let tmp;
+//│ tmp = (caseScrut) => {
 //│   if (caseScrut instanceof this.Some.class) {
 //│     return true;
 //│   } else {
@@ -87,6 +76,7 @@ val isDefined = case
 //│     }
 //│   }
 //│ };
-//│ undefined
-//│ isDefined = [Function (anonymous)]
+//│ this.isDefined = tmp;
+//│ null
+//│ isDefined = [Function: tmp]
 
