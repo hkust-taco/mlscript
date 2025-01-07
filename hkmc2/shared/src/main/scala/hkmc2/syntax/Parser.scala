@@ -268,7 +268,7 @@ abstract class Parser(
             if blk.isEmpty then
               err((msg"Expected ${subRule.whatComesAfter} ${subRule.mkAfterStr}; found end of block instead" -> S(loc) :: Nil))
               errExpr
-            blk ::: blockContOf(rule) // TODO: apply headAnnotations
+            blk.map(headAnnotations.annotate) ::: blockContOf(rule) // TODO: apply headAnnotations
           case _ =>
             val res = parseRule(CommaPrecNext, subRule).getOrElse(errExpr)
             headAnnotations.annotate(exprCont(res, CommaPrecNext, false)) :: blockContOf(rule)
@@ -281,10 +281,8 @@ abstract class Parser(
             yeetSpaces match
             case (tok @ BRACKETS(Indent | Curly, toks), loc) :: _ /* if subRule.blkAlt.isEmpty */ =>
               consume
-              headAnnotations match
-              case Nil => ()
-              case head :: _ =>
-                err((msg"Blocks are not allowed after annotations" -> head.toLoc :: Nil))
+              if headAnnotations.nonEmpty then
+                err((msg"Blocks cannot be annotated" -> S(loc) :: Nil))
               prefixRules.kwAlts.get(kw.name) match
               case S(subRule) if subRule.blkAlt.isEmpty =>
                 rec(toks, S(tok.innerLoc), tok.describe).concludeWith { p =>
