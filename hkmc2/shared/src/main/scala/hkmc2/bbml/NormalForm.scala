@@ -72,7 +72,7 @@ object Conj:
   // * Conj objects cannot be created with `new` except in this file.
   // * This is because we want to sort the vars in the apply function.
   def apply(i: Inter, u: Union, vars: Ls[(InfVar, Bool)]) = new Conj(i, u, vars.sortWith {
-    case ((InfVar(lv1, _, _, sk1), _), (InfVar(lv2, _, _, sk2), _)) => !(sk1 || !sk2 && lv1 <= lv2)
+    case ((v1 @ InfVar(lv1, _, _, _), _), (v2 @ InfVar(lv2, _, _, _), _)) => !(v1.isSkolem || !v2.isSkolem && lv1 <= lv2)
   }){}
   lazy val empty: Conj = Conj(Inter.empty, Union.empty, Nil)
   def mkVar(v: InfVar, pol: Bool) = Conj(Inter.empty, Union.empty, (v, pol) :: Nil)
@@ -92,7 +92,7 @@ final case class Inter(v: Opt[ClassLikeType | FunType]) extends NormalForm:
       S(Inter(S(ClassLikeType(cls1, targs1.lazyZip(targs2).map(_ & _)))))
     case (S(_: ClassLikeType), S(_: ClassLikeType)) => N
     case (S(FunType(a1, r1, e1)), S(FunType(a2, r2, e2))) =>
-      S(Inter(S(FunType(a1.lazyZip(a2).map(_ | _), r1 & r2, e1 & e2))))
+      S(Inter(S(FunType(a1.lazyZip(a2).map(_ | _), r1 & r2, e1 & e2)(N)))) // TODO
     case (S(v), N) => S(Inter(S(v)))
     case (N, v) => S(Inter(v))
     case _ => N
@@ -113,7 +113,7 @@ extends NormalForm with CachedBasicType:
     cls.foldLeft[Type](Bot)(_ | _)
   def merge(other: Union): Union = Union((fun, other.fun) match {
     case (S(FunType(a1, r1, e1)), S(FunType(a2, r2, e2))) =>
-      S(FunType(a1.lazyZip(a2).map(_ & _), r1 | r2, e1 | e2))
+      S(FunType(a1.lazyZip(a2).map(_ & _), r1 | r2, e1 | e2)(N)) // TODO
     case (S(f), N) => S(f)
     case (N, S(f)) => S(f)
     case (N, N) => N

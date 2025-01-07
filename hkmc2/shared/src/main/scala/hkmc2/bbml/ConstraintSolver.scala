@@ -33,12 +33,13 @@ object CCtx:
   inline def init(origin: Term, exp: Opt[GeneralType])(using Scope) = CCtx(Set.empty, Nil, origin, exp)
 def cctx(using CCtx): CCtx = summon
 
-class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
+class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, tl: TraceLogger):
   import tl.{trace, log}
 
   import hkmc2.bbml.NormalForm.*
 
-  private def freshXVar(lvl: Int, sym: Symbol, hint: Str): InfVar = InfVar(lvl, infVarState.nextUid, new VarState(), false)(sym, hint)
+  private def freshXVar(lvl: Int, sym: Symbol, hint: Str): InfVar =
+    InfVar(lvl, infVarState.nextUid, new VarState(), S(false))(InstSymbol(sym)(using elState), hint)
 
   def extrude(ty: Type)(using lvl: Int, pol: Bool, cache: ExtrudeCache, bbctx: BbCtx, cctx: CCtx, tl: TL): Type =
   trace[Type](s"Extruding[${printPol(pol)}] ${ty.showDbg}", r => s"~> ${r.showDbg}"):
@@ -49,7 +50,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
           Wildcard(extrude(in)(using lvl, !pol), extrude(out))
         case t: Type => Wildcard(extrude(t)(using lvl, !pol), extrude(t))
       })
-    case v @ InfVar(_, uid, state, true) => // * skolem
+    case v @ InfVar(_, uid, state, _) if v.isSkolem => // * skolem
       cache.getOrElse(uid -> pol, {
         val nv = freshXVar(lvl, v.sym, v.hint)
         cache += uid -> pol -> nv
@@ -59,7 +60,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
           constrainImpl(nv, state.lowerBounds.foldLeft[Type](Bot)(_ | _))
         nv
       })
-    case v @ InfVar(_, uid, _, false) =>
+    case v @ InfVar(_, uid, _, _) =>
       cache.getOrElse(uid -> pol, {
         val nv = freshXVar(lvl, v.sym, v.hint)
         cache += uid -> pol -> nv
@@ -71,8 +72,8 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
           nv.state.upperBounds = v.state.upperBounds.map(extrude) // * propagate
         nv
       })
-    case FunType(args, ret, eff) =>
-      FunType(args.map(arg => extrude(arg)(using lvl, !pol)), extrude(ret), extrude(eff))
+    case ft @ FunType(args, ret, eff) =>
+      FunType(args.map(arg => extrude(arg)(using lvl, !pol)), extrude(ret), extrude(eff))(ft.outer)
     case ComposedType(lhs, rhs, p) =>
       Type.mkComposedType(extrude(lhs), extrude(rhs), p)
     case NegType(ty) => Type.mkNegType(extrude(ty)(using lvl, !pol))
@@ -128,7 +129,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
     constrainImpl(lhs.posPart, rhs.posPart)
 
   private def inlineSkolemBounds(ty: Type, pol: Bool)(using cache: Set[Uid[InfVar]]): Type = ty.toBasic match
-    case v @ InfVar(_, uid, state, skolem) if skolem && !cache(uid) =>
+    case v @ InfVar(_, uid, state, _) if v.isSkolem && !cache(uid) =>
       given Set[Uid[InfVar]] = cache + uid
       inlineSkolemBounds(if pol then state.upperBounds.foldLeft[Type](v)(_ & _) else state.lowerBounds.foldLeft[Type](v)(_ | _), pol)
     case ComposedType(lhs, rhs, p) => ComposedType(inlineSkolemBounds(lhs, pol), inlineSkolemBounds(rhs, pol), p)

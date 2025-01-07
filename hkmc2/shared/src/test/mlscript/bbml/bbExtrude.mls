@@ -41,8 +41,8 @@ y `=> (let t = run(x `=> x `+ y) in y)
 //│ ╟── because: cannot constrain  CodeBase[out 'x -> 'cde, out 'ctx, ?]  <:  CodeBase[out 'T, ⊥, ?]
 //│ ╟── because: cannot constrain  'ctx  <:  ⊥
 //│ ╟── because: cannot constrain  'ctx  <:  ¬()
-//│ ╟── because: cannot constrain  (¬⊥ ∧ ¬'x) ∧ y  <:  ¬()
-//│ ╟── because: cannot constrain  y  <:  'x
+//│ ╟── because: cannot constrain  (¬⊥ ∧ ¬'x1) ∧ y  <:  ¬()
+//│ ╟── because: cannot constrain  y  <:  'x1
 //│ ╙── because: cannot constrain  y  <:  ¬()
 //│ Type: CodeBase[out 'y -> 'y, ⊥, ?]
 //│ Where:
@@ -85,8 +85,8 @@ f(g)(bar)
 //│ ╟── because: cannot constrain  C[in Int out Int]  <:  ¬C[in ⊥ out ¬⊥ ∧ 'B] ∨ C[in Int out ¬⊥ ∧ 'D]
 //│ ╟── because: cannot constrain  (Int) ∧ ('B)  <:  ¬⊥ ∧ 'D
 //│ ╟── because: cannot constrain  Int ∧ 'B  <:  'D
-//│ ╟── because: cannot constrain  Int ∧ 'B  <:  'B
-//│ ╟── because: cannot constrain  Int ∧ 'B  <:  'B
+//│ ╟── because: cannot constrain  Int ∧ 'B  <:  'B1
+//│ ╟── because: cannot constrain  Int ∧ 'B  <:  'B1
 //│ ╟── because: cannot constrain  Int ∧ 'B  <:  ¬()
 //│ ╟── because: cannot constrain  'B  <:  ¬(Int)
 //│ ╙── because: cannot constrain    <:  ¬(Int)

@@ -36,18 +36,18 @@ let r = region x in x.ref 42
 
 fun mkRef() = region x in x.ref 42
 mkRef
-//│ Type: () -> Ref[Int, ?]
+//│ Type: () -> Ref[Int, out ¬outermkRef]
 
 :e
 let t = region x in x in t.ref 42
 //│ ╔══[ERROR] Type error in reference creation
 //│ ║  l.42: 	let t = region x in x in t.ref 42
 //│ ║        	                         ^^^^^^^^
-//│ ╟── because: cannot constrain  Region[in 'x out 'x]  <:  Region['reg]
-//│ ╟── because: cannot constrain  'x  <:  'reg
-//│ ╟── because: cannot constrain  'x  <:  'reg
-//│ ╟── because: cannot constrain  'x  <:  ¬(¬'x)
-//│ ╟── because: cannot constrain  'x  <:  ¬(¬'x)
+//│ ╟── because: cannot constrain  Region[in 'x out 'x1]  <:  Region['reg]
+//│ ╟── because: cannot constrain  'x1  <:  'reg
+//│ ╟── because: cannot constrain  'x1  <:  'reg
+//│ ╟── because: cannot constrain  'x1  <:  ¬(¬'x)
+//│ ╟── because: cannot constrain  'x1  <:  ¬(¬'x)
 //│ ╟── because: cannot constrain    <:  ¬(¬'x)
 //│ ╟── because: cannot constrain    <:  'x
 //│ ╙── because: cannot constrain    <:  ¬()
@@ -56,8 +56,8 @@ let t = region x in x in t.ref 42
 //│ ║        	                    ^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ¬()
-//│ ╟── because: cannot constrain  'x  <:  ¬()
-//│ ╟── because: cannot constrain  'x  <:  ¬()
+//│ ╟── because: cannot constrain  'x1  <:  ¬()
+//│ ╟── because: cannot constrain  'x1  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Ref[Int, ?]
 

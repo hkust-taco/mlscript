@@ -44,3 +44,69 @@ region x in
   region y in
     fork((_ => x.ref 1), (_ => y.ref 2))
 //│ Type: Pair[out Ref[Int, ?], out Ref[Int, ?]]
+
+
+let naive_helper = r1 => // cannot infer the outer variable!
+  region r2 in
+    fork((_ => r1.ref 1), (_ => r2.ref 2))
+naive_helper
+//│ Type: (Region[in 'reg out 'reg1]) ->{'reg1} Pair[out Ref[Int, out 'reg1], out Ref[Int, ?]]
+//│ Where:
+//│   'reg1 <: ⊥
+//│   'reg1 <: 'reg
+
+
+:e
+region x in
+  naive_helper(x)
+//│ ╔══[ERROR] Type error in reference with expected type 'r1
+//│ ║  l.61: 	  naive_helper(x)
+//│ ║        	               ^
+//│ ╟── because: cannot constrain  Region[x]  <:  'r1
+//│ ╟── because: cannot constrain  Region[in ¬⊥ ∧ 'x1 out ¬⊥ ∧ 'x2] ∧ ¬⊥  <:  'r1
+//│ ╟── because: cannot constrain  Region[in ¬⊥ ∧ 'x1 out ¬⊥ ∧ 'x2] ∧ ¬⊥  <:  Region[in 'reg out 'reg1]
+//│ ╟── because: cannot constrain  'x2  <:  'reg1
+//│ ╟── because: cannot constrain  'x2  <:  'reg1
+//│ ╟── because: cannot constrain  'x2  <:  ⊥
+//│ ╟── because: cannot constrain  'x2  <:  ¬()
+//│ ╙── because: cannot constrain    <:  ¬()
+//│ ╔══[ERROR] Type error in reference with expected type 'r1
+//│ ║  l.61: 	  naive_helper(x)
+//│ ║        	               ^
+//│ ╟── because: cannot constrain  Region[x]  <:  'r1
+//│ ╟── because: cannot constrain  Region[in ¬⊥ ∧ 'x1 out ¬⊥ ∧ 'x2] ∧ ¬⊥  <:  'r1
+//│ ╟── because: cannot constrain  Region[in ¬⊥ ∧ 'x1 out ¬⊥ ∧ 'x2] ∧ ¬⊥  <:  Region[in 'reg out 'reg1]
+//│ ╟── because: cannot constrain  'x2  <:  'reg1
+//│ ╟── because: cannot constrain  'x2  <:  'reg1
+//│ ╟── because: cannot constrain  'x2  <:  'reg
+//│ ╟── because: cannot constrain  'x2  <:  'reg
+//│ ╟── because: cannot constrain  'x2  <:  ¬(¬'x1)
+//│ ╟── because: cannot constrain  'x2  <:  ¬(¬'x1)
+//│ ╟── because: cannot constrain    <:  ¬(¬'x1)
+//│ ╟── because: cannot constrain    <:  'x1
+//│ ╙── because: cannot constrain    <:  ¬()
+//│ ╔══[ERROR] Type error in block
+//│ ║  l.61: 	  naive_helper(x)
+//│ ║        	  ^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'eff  <:  ⊥
+//│ ╟── because: cannot constrain  'eff  <:  ¬()
+//│ ╟── because: cannot constrain  'x2  <:  ¬()
+//│ ╟── because: cannot constrain  'x2  <:  ¬()
+//│ ╙── because: cannot constrain    <:  ¬()
+//│ Type: Pair[out Ref[Int, ?], out Ref[Int, ?]]
+
+
+fun helper(r1) =
+  region r2 in
+    fork((_ => r1.ref 1), (_ => r2.ref 2))
+helper
+//│ Type: forall 'reg, 'reg1: Region[in 'reg out 'reg1] ->{'reg1} Pair[out Ref[Int, out 'reg1], out Ref[Int, out ¬outerhelper]]
+//│ Where:
+//│   'reg <: outerhelper
+//│   'reg <: 'reg1
+
+
+region x in
+  helper(x)
+//│ Type: Pair[out Ref[Int, ?], out Ref[Int, ?]]
+

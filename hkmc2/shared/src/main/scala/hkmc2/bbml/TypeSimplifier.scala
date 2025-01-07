@@ -148,6 +148,7 @@ class TypeSimplifier(tl: TraceLogger):
     def subst(ty: GeneralType): GeneralType = trace[GeneralType](s"subst(${ty.showDbg})", r => s"= ${r.showDbg}"):
       ty match
         case ty if ty.lvl <= lvl => ty // TODO NOPE
+        case InfVar(_, _, _, N) => ty // Ignore outer variables
         case _tv: IV =>
           val tv = Analysis.getRepr(_tv)
           log(s"Repr: ${tv.showDbg}")
