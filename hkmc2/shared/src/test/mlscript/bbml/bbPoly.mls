@@ -148,18 +148,14 @@ gen
 
 
 gen(42)
-//│ Type: forall 'A: ('A) ->{⊥} 'A
+//│ Type: ('A) ->{⊥} 'A
 
-// FIXME: toLoc
-:fixme
+
 :e
 fun cnt: Some[out [A] -> A -> A] -> Int
 fun cnt(x) = 42
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ║  l.156: 	fun cnt: Some[out [A] -> A -> A] -> Int
-//│ ╙──       	                         ^^^^^^
-//│ ╔══[ERROR] General type is not allowed here.
-//│ ║  l.156: 	fun cnt: Some[out [A] -> A -> A] -> Int
+//│ ║  l.155: 	fun cnt: Some[out [A] -> A -> A] -> Int
 //│ ╙──       	                         ^^^^^^
 //│ Type: ⊤
 

@@ -596,7 +596,7 @@ abstract class Parser(
     yeetSpaces match
       case (br @ BRACKETS(Curly, toks), loc) :: _ =>
         consume
-        val eff = rec(toks, S(loc), "effect type").concludeWith(_.simpleExpr(0))
+        val eff = rec(toks, S(loc), "effect type").concludeWith(_.expr(0))
         Effectful(eff, simpleExpr(prec))
       case _ => expr(prec)
       // case _ => Block.mk(blockMaybeIndented)

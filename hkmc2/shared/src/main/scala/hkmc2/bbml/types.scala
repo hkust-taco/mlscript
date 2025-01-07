@@ -249,12 +249,6 @@ case class ClassLikeType(name: TypeSymbol | ModuleSymbol, targs: Ls[TypeArg]) ex
         case ty: Type => ty.subst
       })
 
-
-/**
-  * TODO:
-    - `outer` as a keyword?
-  */
-
 // * skolemFlag: S(true) -> skolem, S(false) -> normal tv, N -> outer, always skolem
 final case class InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, skolemFlag: Opt[Bool])(val sym: Symbol, val hint: Str) extends BasicType:
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = map.get(uid).getOrElse(this)

@@ -112,3 +112,23 @@ region x in
   helper(x)
 //│ Type: Pair[out Ref[Int, ?], out Ref[Int, ?]]
 
+:e
+1: outer
+//│ ═══[ERROR] Unexpected `outer` type.
+//│ ╔══[ERROR] Type error in integer literal with expected type ⊥
+//│ ║  l.116: 	1: outer
+//│ ║         	^
+//│ ╙── because: cannot constrain  Int  <:  ⊥
+//│ Type: ⊥
+
+
+fun annohelper: Region[outer] ->{outer} Pair[out Ref[Int, out outer], out Ref[Int, out Any]]
+fun annohelper(r1) =
+  region r2 in
+    fork((_ => r1.ref 1), (_ => r2.ref 2))
+annohelper
+//│ Type: (Region[outerannohelper]) ->{outerannohelper} Pair[out Ref[Int, out outerannohelper], out Ref[Int, ?]]
+
+region x in
+  annohelper(x)
+//│ Type: Pair[out Ref[Int, ?], out Ref[Int, ?]]

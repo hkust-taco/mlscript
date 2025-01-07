@@ -119,6 +119,10 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         case Some(ty: Type) => ty
         case N => ctx.get(sym) match
           case Some(ty) => ty
+          case N if sym.nme === "outer" => ctx.outVar match
+            case S(ov) => ov
+            case _ =>
+              error(msg"Unexpected `outer` type." -> ty.toLoc :: Nil)
           case _ =>
             error(msg"Variable not found: ${sym.nme}" -> ty.toLoc :: Nil)
     case FunTy(Term.Tup(params), ret, eff) =>
@@ -266,7 +270,12 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       case S(sig) =>
         val outer = freshOuter(sym)(using ctx)
         given BbCtx = ctx.nestFunWithOuter(outer)
-        val sigTy = typeType(sig)
+        val sigTy = typeType(sig) match
+          case FunType(args, ret, eff) => 
+            FunType(args, ret, eff)(S(outer))
+          case PolyFunType(args, ret, eff) =>
+            PolyFunType(args, ret, eff)(S(outer)) 
+          case ty => ty
         pctx += sym -> sigTy
         ascribe(lam, sigTy)
         ()
@@ -456,6 +465,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
           case TermDefinition(_, Fun, sym, Nil, sig, Some(body), _, _) :: stats =>
             typeFunDef(sym, body, sig, ctx)  // * may be a case expressions
             goStats(stats)
+          case TermDefinition(_, Fun, sym1, _, S(sig), None, _, _) :: (td @ TermDefinition(_, Fun, sym2, _, _, S(body), _, _)) :: stats
+            if sym1 === sym2 => goStats(td :: stats) // * avoid type check signatures twice
           case TermDefinition(_, Fun, sym, _, S(sig), None, _, _) :: stats =>
             ctx += sym -> typeType(sig)
             goStats(stats)
