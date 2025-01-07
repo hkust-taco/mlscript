@@ -252,9 +252,6 @@ case class ClassLikeType(name: TypeSymbol | ModuleSymbol, targs: Ls[TypeArg]) ex
 
 /**
   * TODO:
-    - for merging functions, it doesn't really matter which outer to be picked
-    - before constrain two functions, map the outer to the same.
-    - extrude as usual
     - `outer` as a keyword?
   */
 
@@ -262,6 +259,7 @@ case class ClassLikeType(name: TypeSymbol | ModuleSymbol, targs: Ls[TypeArg]) ex
 final case class InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, skolemFlag: Opt[Bool])(val sym: Symbol, val hint: Str) extends BasicType:
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = map.get(uid).getOrElse(this)
   val isSkolem = skolemFlag.getOrElse(true)
+  val isOuter = skolemFlag.isEmpty
 
 given Ordering[InfVar] = Ordering.by(_.uid)
 
@@ -269,7 +267,25 @@ case class FunType(args: Ls[Type], ret: Type, eff: Type)(val outer: Option[InfVa
   def mkNorm(using TL): FunType =
     FunType(args.map(_.toDnf), ret.toDnf, eff.toDnf)(outer)
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
-    FunType(args.map(_.subst), ret.subst, eff.subst)(outer)
+    FunType(args.map(_.subst), ret.subst, eff.subst)(outer.flatMap(v => if map.contains(v.uid) then N else outer))
+
+object FunType:
+  // * Used for merging/constraining two function types t1 ->_o1 s1 and t2 ->_o2 s2
+  // * Equivalent to merging/constraining forall o1. t1 -> s1 and forall o2. t2 -> s2
+  def mixOuter(f1: FunType, f2: FunType): (FunType, FunType) = (f1.outer, f2.outer) match
+    case (S(outer1), S(outer2)) =>
+      val nf1 = if outer1.lvl > outer2.lvl then f1
+        else PolyFunType.applyWith(PolyFunType(f1.args, f1.ret, f1.eff)(f1.outer), outer2).monoOr(???) match
+          case FunType(args, ret, eff) => FunType(args, ret, eff)(S(outer2))
+          case _ => ??? // * Impossible
+      val nf2 = if outer1.lvl <= outer2.lvl then f2
+        else PolyFunType.applyWith(PolyFunType(f2.args, f2.ret, f2.eff)(f2.outer), outer1).monoOr(???) match
+          case FunType(args, ret, eff) => FunType(args, ret, eff)(S(outer1))
+          case _ => ??? // * Impossible
+      (nf1, nf2)
+    case (S(outer), N) => (f1, FunType(f2.args, f2.ret, f2.eff)(S(outer)))
+    case (N, S(outer)) => (FunType(f1.args, f1.ret, f1.eff)(S(outer)), f2)
+    case _ => (f1, f2)
 
 case class ComposedType(lhs: Type, rhs: Type, pol: Bool) extends BasicType: // * Positive -> union
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
@@ -385,7 +401,27 @@ case class PolyFunType(args: Ls[GeneralType], ret: GeneralType, eff: Type)(val o
     PolyFunType(args.map(f), f(ret), f(eff).monoOr(???))(outer) // * Must be mono
 
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
-    PolyFunType(args.map(_.subst), ret.subst, eff.subst)(outer)
+    PolyFunType(args.map(_.subst), ret.subst, eff.subst)(outer.flatMap(v => if map.contains(v.uid) then N else outer))
+
+object PolyFunType:
+  def applyWith(f: PolyFunType, env: InfVar): GeneralType = f.outer match
+    case S(outer) =>
+      val tvs = MutSet[InfVar]()
+      object CollectTVs extends TypeTraverser:
+        override def apply(pol: Boolean)(ty: GeneralType): Unit = ty match
+          case v @ InfVar(_, _, state, _) =>
+            if tvs.add(v) then
+              state.lowerBounds.foreach(bd => apply(true)(bd))
+              state.upperBounds.foreach(bd => apply(false)(bd))
+              super.apply(pol)(ty)
+          case _ => super.apply(pol)(ty)
+      CollectTVs(true)(f)
+      val map = Map(outer.uid -> env)
+      tvs.foreach: v =>
+        v.state.lowerBounds = v.state.lowerBounds.map(_.subst(using map))
+        v.state.upperBounds = v.state.upperBounds.map(_.subst(using map))
+      f.subst(using map)
+    case N => f
 
 class VarState:
   var lowerBounds: Ls[Type] = Nil

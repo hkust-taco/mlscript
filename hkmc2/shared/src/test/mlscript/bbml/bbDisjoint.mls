@@ -66,10 +66,10 @@ region x in
 //│ ╟── because: cannot constrain  Region[in ¬⊥ ∧ 'x1 out ¬⊥ ∧ 'x2] ∧ ¬⊥  <:  'r1
 //│ ╟── because: cannot constrain  Region[in ¬⊥ ∧ 'x1 out ¬⊥ ∧ 'x2] ∧ ¬⊥  <:  Region[in 'reg out 'reg1]
 //│ ╟── because: cannot constrain  'x2  <:  'reg1
-//│ ╟── because: cannot constrain  'x2  <:  'reg1
-//│ ╟── because: cannot constrain  'x2  <:  ⊥
-//│ ╟── because: cannot constrain  'x2  <:  ¬()
-//│ ╙── because: cannot constrain    <:  ¬()
+//│ ╟── because: cannot constrain  'x2  <:  ¬(¬'reg1)
+//│ ╟── because: cannot constrain    <:  ¬(¬'reg1)
+//│ ╟── because: cannot constrain    <:  'reg1
+//│ ╙── because: cannot constrain    <:  ⊥
 //│ ╔══[ERROR] Type error in reference with expected type 'r1
 //│ ║  l.61: 	  naive_helper(x)
 //│ ║        	               ^
@@ -77,21 +77,23 @@ region x in
 //│ ╟── because: cannot constrain  Region[in ¬⊥ ∧ 'x1 out ¬⊥ ∧ 'x2] ∧ ¬⊥  <:  'r1
 //│ ╟── because: cannot constrain  Region[in ¬⊥ ∧ 'x1 out ¬⊥ ∧ 'x2] ∧ ¬⊥  <:  Region[in 'reg out 'reg1]
 //│ ╟── because: cannot constrain  'x2  <:  'reg1
-//│ ╟── because: cannot constrain  'x2  <:  'reg1
-//│ ╟── because: cannot constrain  'x2  <:  'reg
-//│ ╟── because: cannot constrain  'x2  <:  'reg
-//│ ╟── because: cannot constrain  'x2  <:  ¬(¬'x1)
-//│ ╟── because: cannot constrain  'x2  <:  ¬(¬'x1)
-//│ ╟── because: cannot constrain    <:  ¬(¬'x1)
-//│ ╟── because: cannot constrain    <:  'x1
+//│ ╟── because: cannot constrain  'x2  <:  ¬(¬'reg1)
+//│ ╟── because: cannot constrain    <:  ¬(¬'reg1)
+//│ ╟── because: cannot constrain    <:  'reg1
+//│ ╟── because: cannot constrain    <:  'reg
+//│ ╟── because: cannot constrain    <:  'reg
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ ╔══[ERROR] Type error in block
 //│ ║  l.61: 	  naive_helper(x)
 //│ ║        	  ^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'eff  <:  ⊥
 //│ ╟── because: cannot constrain  'eff  <:  ¬()
-//│ ╟── because: cannot constrain  'x2  <:  ¬()
-//│ ╟── because: cannot constrain  'x2  <:  ¬()
+//│ ╟── because: cannot constrain  (¬⊥ ∧ 'eff1) ∧ ¬'x3  <:  ¬()
+//│ ╟── because: cannot constrain  'eff1  <:  'x3
+//│ ╟── because: cannot constrain  'eff1  <:  ¬()
+//│ ╟── because: cannot constrain  'eff1  <:  ¬()
+//│ ╟── because: cannot constrain  'reg1  <:  ¬()
+//│ ╟── because: cannot constrain  'reg1  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Pair[out Ref[Int, ?], out Ref[Int, ?]]
 
