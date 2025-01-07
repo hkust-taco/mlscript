@@ -1,0 +1,59 @@
+:js
+
+class Pair[A, B](val first: A, val second: B)
+
+pattern Bit = 0 | 1
+
+:cp
+:expect true
+0 is Bit
+//│ = true
+
+:cp
+:expect true
+1 is Bit
+//│ = true
+
+:cp
+:expect false
+42 is Bit
+//│ = false
+
+// :ucs rp:elaborated
+pattern BitTree = null | Pair(Bit | BitTree, Bit | BitTree)
+
+:todo
+null is BitTree
+//│ = true
+
+:todo
+Pair(null, null) is BitTree
+//│ = true
+
+// :ucs rp:elaborated
+pattern BinTree = null | Pair(BinTree | 0 | 1, BinTree | 0 | 1)
+
+:todo
+// :cp
+null is BinTree
+//│ = true
+
+:todo
+// :cp
+Pair(null, null) is BinTree
+//│ = true
+
+:todo
+// :cp
+Pair(0, null) is BinTree
+//│ = true
+
+:todo
+// :cp
+Pair(0, Pair(0, null)) is BinTree
+//│ = true
+
+:todo
+// :cp
+Pair(2, Pair(0, Pair(1, null))) is BinTree
+//│ = true

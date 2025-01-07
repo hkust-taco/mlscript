@@ -139,6 +139,37 @@ extension (range: Range)
   infix def +(shift: Int): Range =
     Range(range.start + shift, range.end + shift, range.step)
     
+
+extension (tl: TraceLogger)
+  def traceSplit(name: Str, input: DeBrujinSplit)(thunk: => DeBrujinSplit): DeBrujinSplit =
+    tl.trace(
+      pre = s"$name <<<\n${input.showDbg}",
+      post = (output: DeBrujinSplit) =>
+        val out = if output == input then "(no change)" else output.showDbg
+        s"$name >>>\n${out}"
+    )(thunk)
+
+extension (branch: DeBrujinSplit.Branch)
+  /** Expand all branches that match the same scrutinee against synonyms. */
+  def expandAll(using tl: TraceLogger): DeBrujinSplit =
+    import DeBrujinSplit.*, PatternStub.*
+    def go(split: DeBrujinSplit, scrutinee: Int): DeBrujinSplit =
+      split match
+      case Binder(body) => Binder(go(body, scrutinee + 1))
+      case Branch(`scrutinee`, ClassLike(symbol: PatternSymbol), consequence, alternative) =>
+        val patternSplit = symbol.split.getOrElse:
+          lastWords(s"found unelaborated pattern: ${symbol.nme}")
+        // val consequence2 = consequence // TODO: why can't we expand the consequence?
+        val consequence2 = go(consequence, scrutinee)
+        val alternative2 = go(alternative, scrutinee)
+        patternSplit.expand(scrutinee :: Nil, consequence2) ++ alternative2
+      case split @ Branch(_, _, consequence, alternative) =>
+        split.copy(consequent = go(consequence, scrutinee),
+                   alternative = go(alternative, scrutinee))
+      case Accept(_) | Reject => split
+    tl.traceSplit(s"expandAll (${branch.scrutinee})", branch):
+      go(branch, branch.scrutinee)
+
 extension (split: DeBrujinSplit)
   def ++(right: DeBrujinSplit): DeBrujinSplit =
     split match
@@ -195,19 +226,26 @@ extension (split: DeBrujinSplit)
       case Accept(outcome) => Accept(outcome)
       case Reject => Reject
     go(split)(using subst)
-    
-  def expand(scrutinees: List[Int], consequence: DeBrujinSplit): DeBrujinSplit =
+  
+  /** Apply a split to variables and replace all accepts with another split. */
+  def expand(scrutinees: List[Int], consequence: DeBrujinSplit)(using tl: TraceLogger): DeBrujinSplit =
+    import tl.*
     def go(split: DeBrujinSplit, binderCount: Int, subst: Map[Int, Int]): DeBrujinSplit = split match
       case Binder(body) => Binder(go(body, binderCount + 1, subst))
       case Branch(scrutinee, pattern, consequent, alternative) =>
-        val newScrutinee = subst.getOrElse(scrutinee, scrutinee)
+        val newScrutinee = subst.get(scrutinee + binderCount) match
+          case S(outermostIndex) => outermostIndex + binderCount
+          case N => scrutinee
         Branch(newScrutinee, pattern,
                go(consequent, binderCount, subst),
                go(alternative, binderCount, subst))
-      case Accept(outcome) => consequence.increment(binderCount)
+      case Accept(_) =>
+        // We assume there's only one outcome because it's in pattern synonyms.
+        consequence.increment(binderCount)
       case Reject => Reject
+    val arity = scrutinees.length
     split.unbind match
-      case (arity, body) if arity == scrutinees.length =>
+      case (`arity`, body) =>
         go(body, 0, (1 to arity).zip(scrutinees).toMap)
       case _ => Reject // TODO: report mismatched arity
   
@@ -252,46 +290,37 @@ extension (split: DeBrujinSplit)
         ClassLike(LocalPattern(id, 0))
     val normalized = MutMap.empty[DeBrujinSplit, Entry]
     def go(split: DeBrujinSplit, expandLevel: Int): DeBrujinSplit =
-      scoped("ucs:rpn"):
+      scoped("ucs:rp:normalize"):
         split match
         case Binder(body) => Binder(go(body, expandLevel))
-        case Branch(scrutinee, ClassLike(symbol: PatternSymbol), consequence, alternative) => trace(
-          pre = s"expand <<< pattern ${symbol.nme}\n${split.showDbg}",
-          post = (s: DeBrujinSplit) => s"expand >>> pattern ${symbol.nme}\n${s.showDbg}"
-        ):
+        case split @ Branch(scrutinee, ClassLike(symbol: PatternSymbol), consequence, alternative) =>
           if expandLevel > 10 then
             log(s"expand level is too deep: ${symbol.nme}")
-            Reject
+            split
           else
             val patternSplit = symbol.split.getOrElse:
               lastWords(s"found unelaborated pattern: ${symbol.nme}")
-            scoped("ucs:rpn"):
-              val expanded = patternSplit.expand(scrutinee :: Nil, consequence)
-              log(s"expanded:\n${expanded.showDbg}")
-              val concatenated = expanded ++ alternative
-              log(s"concatenated:\n${concatenated.showDbg}")
-              go(concatenated, expandLevel + 1)
+            val expanded = scoped("ucs:rp:expand"):
+              split.expandAll(using tl)
+            go(expanded, expandLevel + 1)
         case split @ Branch(scrutinee, pattern, consequence, alternative) => trace(
           pre = s"normalize <<<\n${split.showDbg}",
           post = (s: DeBrujinSplit) => s"normalize >>>\n${s.showDbg}"
         ):
-          lazy val result = scoped("ucs:rpn"):
+          lazy val result = scoped("ucs:rp:normalize"):
             val arity = pattern.arity
             val whenTrue = consequence.unbind match
               case (level @ (`arity` | 0), body) =>
                 // The scrutinee handling below is tricky.
+                log(s"[Step 1] specialize consequence")
                 val former = body.specialize(scrutinee + level, pattern, 1 to arity)
-                log(s"[Step 1] specialized consequence:\n${former.showDbg}")
                 // We need to increment the level because it is going to be put into a binder.
+                log(s"[Step 2] specialize alternative")
                 val latter = alternative.specialize(scrutinee, pattern, 1 to arity)
-                log(s"[Step 2] specialized alternative:\n${latter.showDbg}")
+                log(s"[Step 3] concatenate them")
                 val together = former ++ latter
-                log(s"[Step 3] concatenate them:\n${together.showDbg}")
-                val res = trace(
-                  pre = s"normalize consequent <<<",
-                  post = (s: DeBrujinSplit) => s"normalize consequent >>>"
-                ):
-                  go(together, expandLevel)
+                log(s"[Step 4] normalize them")
+                val res = go(together, expandLevel)
                 log(s"increment by $arity")
                 // If the original consequence doesn't have binders, we need to increment the level.
                 val res2 = if level == arity then res else res.increment(arity)
@@ -299,12 +328,9 @@ extension (split: DeBrujinSplit)
                 res2.bind(arity)
               case (_, _) => log("mismatched arity"); Reject // TODO: report mismatched arity
             val whenFalse =
+              log(s"[Step 5] despecialize alternative")
               val despecialized = alternative.despecialize(scrutinee, pattern)
-              trace(
-                pre = s"normalize alternative <<<",
-                post = (s: DeBrujinSplit) => s"normalize alternative >>>"
-              ):
-                go(despecialized, expandLevel)
+              go(despecialized, expandLevel)
             split.copy(consequent = whenTrue, alternative = whenFalse)
           scoped("ucs:rp:memo"):
             trace(
@@ -360,6 +386,10 @@ extension (split: DeBrujinSplit)
           else
             // TODO: report mismatched arity.
             Reject
+        case split @ Branch(`target`, PatternStub.ClassLike(_: PatternSymbol), consequence, alternative) =>
+          tl.log("cannot skip pattern synonyms")
+          split.copy(consequent = go(consequence),
+                     alternative = go(alternative))
         case Branch(`target`, _, consequence, alternative) =>
           tl.log("skip the consequence")
           alternative

@@ -1,0 +1,17 @@
+:js
+
+object A
+object B
+class Pair[A, B](first: A, second: B)
+
+[A, B]
+//│ = [ A { class: [class A] }, B { class: [class B] } ]
+
+pattern OddTree = A | Pair(EvenTree, OddTree) | Pair(OddTree, EvenTree)
+pattern EvenTree = B | Pair(EvenTree, EvenTree) | Pair(OddTree, OddTree)
+
+// This does not work for now.
+
+// :cp
+A is OddTree
+//│ = true

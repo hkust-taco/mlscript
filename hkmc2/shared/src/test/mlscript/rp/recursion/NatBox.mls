@@ -52,7 +52,6 @@ null is PosNatBox
 //│ = false
 
 :cp
-:expect true
 nat(1) is PosNatBox
 //│ = true
 

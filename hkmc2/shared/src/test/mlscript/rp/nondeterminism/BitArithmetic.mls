@@ -1,0 +1,22 @@
+:js
+
+class (&&) And(lhs: Bool, rhs: Bool)
+class (||) Or(lhs: Bool, rhs: Bool)
+class Not(arg: Bool)
+
+pattern Truthy =
+  true | And(Truthy, Truthy) | Or(Truthy, Truthy) |
+  Or(Truthy, Falsy) | Or(Falsy, Truthy) | Not(Falsy)
+pattern Falsy =
+  false | And(Falsy, Falsy) | And(Falsy, Truthy) |
+  And(Truthy, Falsy) | Or(Falsy, Falsy) | Not(Truthy)
+
+:expect [ true, false, false, true ]
+[true is Truthy, false is Truthy, true is Falsy, false is Falsy]
+//│ = [ true, false, false, true ]
+
+:expect true
+true && false is Truthy
+//│ = true
+
+// TODO: Add more tests.
