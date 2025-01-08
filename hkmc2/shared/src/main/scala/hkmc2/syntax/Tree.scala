@@ -76,7 +76,7 @@ enum Tree extends AutoLocated:
   case RegRef(reg: Tree, value: Tree)
   case Effectful(eff: Tree, body: Tree)
   case Spread(kw: Keyword.Ellipsis, kwLoc: Opt[Loc], body: Opt[Tree])
-  case Annotated(prefix: Tree, receiver: Tree)
+  case Annotated(qualifier: Tree, target: Tree)
 
   def children: Ls[Tree] = this match
     case _: Empty | _: Error | _: Ident | _: Literal | _: Under => Nil
@@ -110,7 +110,7 @@ enum Tree extends AutoLocated:
     case Open(bod) => bod :: Nil
     case Def(lhs, rhs) => lhs :: rhs :: Nil
     case Spread(_, _, body) => body.toList
-    case Annotated(prefix, receiver) => prefix :: receiver :: Nil
+    case Annotated(qualifier, target) => qualifier :: target :: Nil
   
   def describe: Str = this match
     case Empty() => "empty"
@@ -147,7 +147,7 @@ enum Tree extends AutoLocated:
     case Handle(_, _, _, _) => "handle"
     case Def(lhs, rhs) => "defining assignment"
     case Spread(_, _, _) => "spread"
-    case Annotated(prefix, receiver) => "annotated"
+    case Annotated(_, _) => "annotated"
   
   def showDbg: Str = toString // TODO
   
@@ -208,7 +208,7 @@ object Apps:
     
 object Annotations:
   def unapply(t: Tree): Opt[(Ls[Tree], Tree)] = t match
-    case Annotated(p, Annotations(ps, recv)) => S(p :: ps, recv)
+    case Annotated(q, Annotations(qs, target)) => S(q :: qs, target)
     case other => S((Nil, other))
 
 /** Matches applications with underscores in some argument and/or prefix positions. */

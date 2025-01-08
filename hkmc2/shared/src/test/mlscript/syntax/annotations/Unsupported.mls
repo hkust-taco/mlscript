@@ -1,0 +1,72 @@
+// The annotations for the following expressions are not supported for now.
+
+module debug
+
+:w
+@debug 0
+//│ ╔══[WARNING] The annotation qualifier is not applied
+//│ ║  l.6: 	@debug 0
+//│ ║       	 ^^^^^
+//│ ╟── Because annotations are not supported for integer literal
+//│ ║  l.6: 	@debug 0
+//│ ╙──     	       ^
+
+:w
+@debug 1 + 2
+//│ ╔══[WARNING] The annotation qualifier is not applied
+//│ ║  l.15: 	@debug 1 + 2
+//│ ║        	 ^^^^^
+//│ ╟── Because annotations are not supported for application
+//│ ║  l.15: 	@debug 1 + 2
+//│ ╙──      	       ^^^^^
+
+:w
+(@debug 1 + 2)
+//│ ╔══[WARNING] The annotation qualifier is not applied
+//│ ║  l.24: 	(@debug 1 + 2)
+//│ ║        	  ^^^^^
+//│ ╟── Because annotations are not supported for application
+//│ ║  l.24: 	(@debug 1 + 2)
+//│ ╙──      	        ^^^^^
+
+:w
+(@debug 1) + 2
+//│ ╔══[WARNING] This annotation qualifier is not applied
+//│ ║  l.33: 	(@debug 1) + 2
+//│ ║        	  ^^^^^
+//│ ╟── Because annotations are not supported for integer literal
+//│ ║  l.33: 	(@debug 1) + 2
+//│ ╙──      	        ^
+
+:w
+(1 + @debug 2)
+//│ ╔══[WARNING] This annotation qualifier is not applied
+//│ ║  l.42: 	(1 + @debug 2)
+//│ ║        	      ^^^^^
+//│ ╟── Because annotations are not supported for integer literal
+//│ ║  l.42: 	(1 + @debug 2)
+//│ ╙──      	            ^
+
+class Log(msg: Str)
+
+:w
+id(@Log 5)
+//│ ╔══[WARNING] This annotation qualifier is not applied
+//│ ║  l.53: 	id(@Log 5)
+//│ ║        	    ^^^
+//│ ╟── Because annotations are not supported for integer literal
+//│ ║  l.53: 	id(@Log 5)
+//│ ╙──      	        ^
+
+:pe
+:w
+@1 + 2 class Qux
+//│ ╔══[PARSE ERROR] Expected end of input; found 'class' keyword instead
+//│ ║  l.63: 	@1 + 2 class Qux
+//│ ╙──      	       ^^^^^
+//│ ╔══[WARNING] The annotation qualifier is not applied
+//│ ║  l.63: 	@1 + 2 class Qux
+//│ ║        	 ^
+//│ ╟── Because annotations are not supported for application
+//│ ║  l.63: 	@1 + 2 class Qux
+//│ ╙──      	   ^^^

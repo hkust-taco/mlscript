@@ -467,16 +467,16 @@ extends Importer:
     case Under() =>
       raise(ErrorReport(msg"Illegal position for '_' placeholder." -> tree.toLoc :: Nil))
       Term.Error
-    case Annotated(prefix, receiver) => 
+    case Annotated(lhs, rhs) => 
       raise(WarningReport(
-        msg"The annotation is not used" -> prefix.toLoc ::
-        msg"Because annotations cannot be applied to ${receiver.describe}" -> receiver.toLoc :: Nil))
-      val ann = prefix match
-      case App(_: Ident | _: SynthSel | _: Sel, _) | _: Ident | _: SynthSel | _: Sel => term(prefix)
-      case _ =>
-        raise(ErrorReport(msg"Unsupported annotation expression." -> prefix.toLoc :: Nil))
-        Term.Error
-      Term.Annotated(ann, term(receiver))
+        msg"This annotation qualifier is not applied" -> lhs.toLoc ::
+        msg"Because annotations are not supported for ${rhs.describe}" -> rhs.toLoc :: Nil))
+      val qualifier = lhs match
+        case App(_: (Ident | SynthSel | Sel), _) | _: (Ident | SynthSel | Sel) => term(lhs)
+        case _ =>
+          raise(ErrorReport(msg"Illegal annotation qualifier shape." -> lhs.toLoc :: Nil))
+          Term.Error
+      Term.Annotated(qualifier, term(rhs))
     // case _ =>
     //   ???
   
@@ -532,25 +532,25 @@ extends Importer:
     
     // TODO extract this into a separate method
     @tailrec
-    def go(sts: Ls[Tree], annotations: Ls[Term], acc: Ls[Statement]): Ctxl[(Term.Blk, Ctx)] =
-      def reportUnusedAnnotations: Unit =
-        if annotations.nonEmpty then
-          raise(WarningReport(
-            msg"The annotation is not used" -> (annotations.foldLeft[Opt[Loc]](N):
-              case (acc, ann) => acc match
-                case N => ann.toLoc
-                case S(loc) => S(loc ++ ann.toLoc)) ::
-            (sts.headOption match
-              case N => msg"Because nothing follows" -> blk.toLoc.map(_.right)
-              case S(head) => msg"Because annotations cannot be applied to ${head.describe}" -> head.toLoc
-            ) :: Nil))
+    def go(sts: Ls[Tree], qualifiers: Ls[Term], acc: Ls[Statement]): Ctxl[(Term.Blk, Ctx)] =
+      /** Call this function when the following term cannot be annotated. */
+      def reportUnusedQualifiers: Unit = if qualifiers.nonEmpty then raise:
+        WarningReport:
+          msg"The annotation qualifier is not applied" -> (qualifiers.foldLeft[Opt[Loc]](N):
+            case (acc, ann) => acc match
+              case N => ann.toLoc
+              case S(loc) => S(loc ++ ann.toLoc)
+          ) :: (sts.headOption match
+            case N => msg"Because the target term is missing" -> blk.toLoc.map(_.right)
+            case S(head) => msg"Because annotations are not supported for ${head.describe}" -> head.toLoc
+          ) :: Nil
       sts match
       case Nil =>
-        reportUnusedAnnotations
+        reportUnusedQualifiers
         val res = unit
         (Term.Blk(acc.reverse, res), ctx)
       case Open(bod) :: sts =>
-        reportUnusedAnnotations
+        reportUnusedQualifiers
         bod match
           case Jux(bse, Block(sts)) =>
             some(bse -> some(sts))
@@ -561,7 +561,7 @@ extends Importer:
             raise(ErrorReport(msg"Illegal 'open' statement shape." -> bod.toLoc :: Nil))
             N
         match
-        case N => go(sts, annotations, acc)
+        case N => go(sts, qualifiers, acc)
         case S((base, importedTrees)) =>
           base match
           case baseId: Ident =>
@@ -593,7 +593,7 @@ extends Importer:
             raise(ErrorReport(msg"Illegal 'open' statement base." -> base.toLoc :: Nil))
             go(sts, Nil, acc)
       case (m @ Modified(Keyword.`import`, absLoc, arg)) :: sts =>
-        reportUnusedAnnotations
+        reportUnusedQualifiers
         val (newCtx, newAcc) = arg match
           case Tree.StrLit(path) =>
             val stmt = importPath(path)
@@ -615,18 +615,18 @@ extends Importer:
           case S(rhs) =>
             val rrhs = tups.foldRight(rhs):
               Tree.InfixApp(_, Keyword.`=>`, _)
-            mkLetBinding(sym, term(rrhs), annotations) reverse_::: acc
+            mkLetBinding(sym, term(rrhs), qualifiers) reverse_::: acc
           case N =>
             if tups.nonEmpty then
               raise(ErrorReport(msg"Expected a right-hand side for let bindings with parameters" -> hd.toLoc :: Nil))
-            LetDecl(sym, annotations) :: acc
+            LetDecl(sym, qualifiers) :: acc
         (ctx + (id.name -> sym)) givenIn:
           go(sts, Nil, newAcc)
       case (tree @ LetLike(`let`, lhs, S(rhs), N)) :: sts =>
         raise(ErrorReport(msg"Unsupported let binding shape" -> tree.toLoc :: Nil))
         go(sts, Nil, Term.Error :: acc)
       case (hd @ Handle(id: Ident, cls: Ident, Block(sts_), N)) :: sts =>
-        reportUnusedAnnotations
+        reportUnusedQualifiers
         val sym = fieldOrVarSym(HandlerBind, id)
         log(s"Processing `handle` statement $id (${sym}) ${ctx.outer}")
 
@@ -659,7 +659,7 @@ extends Importer:
         go(sts, Nil, Term.Error :: acc)
 
       case Def(lhs, rhs) :: sts =>
-        reportUnusedAnnotations
+        reportUnusedQualifiers
         lhs match
         case id: Ident =>
           val r = term(rhs)
@@ -701,7 +701,7 @@ extends Importer:
               val b = rhs.map(term(_)(using newCtx))
               val r = FlowSymbol(s"‹result of ${sym}›")
               val tdf = TermDefinition(owner, k, sym, pss, s, b, r, 
-                TermDefFlags.empty.copy(isModMember = isModMember), annotations)
+                TermDefFlags.empty.copy(isModMember = isModMember), qualifiers)
               sym.defn = S(tdf)
               
               // indicates if the function really returns a module
@@ -734,7 +734,7 @@ extends Importer:
               tdf
             go(sts, Nil, tdf :: acc)
           case L(d) =>
-            reportUnusedAnnotations
+            reportUnusedQualifiers
             raise(d)
             go(sts, Nil, acc)
       case (td @ TypeDef(k, head, extension, body)) :: sts =>
@@ -787,7 +787,7 @@ extends Importer:
             assert(body.isEmpty)
             val d =
               given Ctx = newCtx
-              semantics.TypeDef(alsSym, tps, extension.map(term(_)), N, annotations)
+              semantics.TypeDef(alsSym, tps, extension.map(term(_)), N, qualifiers)
             alsSym.defn = S(d)
             d
         case Pat =>
@@ -798,7 +798,7 @@ extends Importer:
             log(s"pattern body is ${td.extension}")
             val translate = new ucs.Translator(this)
             val bod = translate(ps.map(_.params).getOrElse(Nil), td.extension.getOrElse(die))
-            val pd = PatternDef(owner, patSym, tps, ps, ObjBody(Term.Blk(bod, Term.Lit(UnitLit(true)))), annotations)
+            val pd = PatternDef(owner, patSym, tps, ps, ObjBody(Term.Blk(bod, Term.Lit(UnitLit(true)))), qualifiers)
             patSym.defn = S(pd)
             pd
         case k: (Mod.type | Obj.type) =>
@@ -812,7 +812,7 @@ extends Importer:
                 // case S(t) => block(t :: Nil)
                 case S(t) => ???
                 case N => (new Term.Blk(Nil, Term.Lit(UnitLit(true))), ctx)
-              ModuleDef(owner, clsSym, tps, ps, k, ObjBody(bod), annotations)
+              ModuleDef(owner, clsSym, tps, ps, k, ObjBody(bod), qualifiers)
             clsSym.defn = S(cd)
             cd
         case Cls =>
@@ -826,7 +826,7 @@ extends Importer:
                 // case S(t) => block(t :: Nil)
                 case S(t) => ???
                 case N => (new Term.Blk(Nil, Term.Lit(UnitLit(true))), ctx)
-              ClassDef(owner, Cls, clsSym, tps, ps, ObjBody(bod), annotations)
+              ClassDef(owner, Cls, clsSym, tps, ps, ObjBody(bod), qualifiers)
             clsSym.defn = S(cd)
             cd
         go(sts, Nil, defn :: acc)
@@ -834,20 +834,18 @@ extends Importer:
       case Modified(Keyword.`abstract`, absLoc, body) :: sts =>
         ???
         // TODO: pass abstract to `go`
-        go(body :: sts, annotations, acc)
+        go(body :: sts, qualifiers, acc)
       case Modified(Keyword.`declare`, absLoc, body) :: sts =>
         // TODO: pass declare to `go`
-        go(body :: sts, annotations, acc)
-      case Annotated(prefix, receiver) :: sts =>
-        // TODO: pass annotations to `go`
-        val newAnnotations = annotations :+ term(prefix)
-        go(receiver :: sts, newAnnotations, acc)
+        go(body :: sts, qualifiers, acc)
+      case Annotated(qualifier, target) :: sts =>
+        go(target :: sts, qualifiers :+ term(qualifier), acc)
       case (result: Tree) :: Nil =>
-        reportUnusedAnnotations
+        reportUnusedQualifiers
         val res = term(result)
         (Term.Blk(acc.reverse, res), ctx)
       case (st: Tree) :: sts =>
-        reportUnusedAnnotations
+        reportUnusedQualifiers
         val res = term(st) // TODO reject plain term statements? Currently, `(1, 2)` is allowed to elaborate (tho it should be rejected in type checking later)
         go(sts, Nil, res :: acc)
     end go
