@@ -254,6 +254,7 @@ sealed trait Companion extends Definition
 
 sealed abstract class TypeLikeDef extends Definition:
   val tparams: Ls[TyParam]
+  val annotations: Ls[Term]
 
 sealed abstract class ClassLikeDef extends TypeLikeDef:
   val owner: Opt[InnerSymbol]
