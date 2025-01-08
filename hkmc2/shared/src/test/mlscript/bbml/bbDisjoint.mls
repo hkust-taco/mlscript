@@ -102,9 +102,9 @@ fun helper(r1) =
   region r2 in
     fork((_ => r1.ref 1), (_ => r2.ref 2))
 helper
-//│ Type: forall 'reg, 'reg1: Region[in 'reg out 'reg1] ->{'reg1} Pair[out Ref[Int, out 'reg1], out Ref[Int, out ¬outerhelper]]
+//│ Type: forall 'reg, 'reg1: Region[in 'reg out 'reg1] ->{'reg1} Pair[out Ref[Int, out 'reg1], out Ref[Int, out ¬helper]]
 //│ Where:
-//│   'reg <: outerhelper
+//│   'reg <: helper
 //│   'reg <: 'reg1
 
 
@@ -112,23 +112,123 @@ region x in
   helper(x)
 //│ Type: Pair[out Ref[Int, ?], out Ref[Int, ?]]
 
+
+fun anno: Int -> @outer Int
+//│ Type: ⊤
+
+
 :e
-1: outer
-//│ ═══[ERROR] Unexpected `outer` type.
+42: @outer Int
+//│ ╔══[ERROR] Illegal outer binding.
+//│ ║  l.121: 	42: @outer Int
+//│ ╙──       	     ^^^^^^^^^
+//│ ═══[ERROR] Invalid type
 //│ ╔══[ERROR] Type error in integer literal with expected type ⊥
-//│ ║  l.116: 	1: outer
-//│ ║         	^
+//│ ║  l.121: 	42: @outer Int
+//│ ║         	^^
 //│ ╙── because: cannot constrain  Int  <:  ⊥
 //│ Type: ⊥
 
 
-fun annohelper: Region[outer] ->{outer} Pair[out Ref[Int, out outer], out Ref[Int, out Any]]
+fun annohelper: Region[outer] ->{outer} @outer Pair[out Ref[Int, out outer], out Ref[Int, out Any]]
 fun annohelper(r1) =
   region r2 in
     fork((_ => r1.ref 1), (_ => r2.ref 2))
 annohelper
-//│ Type: (Region[outerannohelper]) ->{outerannohelper} Pair[out Ref[Int, out outerannohelper], out Ref[Int, ?]]
+//│ Type: (Region[outer]) ->{outer} Pair[out Ref[Int, out outer], out Ref[Int, ?]]
+
 
 region x in
   annohelper(x)
 //│ Type: Pair[out Ref[Int, ?], out Ref[Int, ?]]
+
+
+// Cannot type check since foo: 'foo <: Region[T] ->{'eff} 'app 
+// Annotation is required for recursive calls
+:e
+fun foo(r1) =
+  region r2 in
+    fork((_ => r1.ref 1), (_ => r2.ref 2))
+    foo(r2)
+//│ ╔══[ERROR] Type error in function literal
+//│ ║  l.149: 	fun foo(r1) =
+//│ ║         	        ^^^^^
+//│ ║  l.150: 	  region r2 in
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.151: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.152: 	    foo(r2)
+//│ ║         	^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'r1 ->{'eff} 'app  <:  'foo
+//│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo
+//│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  Region[in 'r2 out 'r21] ->{'eff1} 'app1
+//│ ╟── because: cannot constrain  Region[in 'r2 out 'r21]  <:  'r1
+//│ ╟── because: cannot constrain  Region[in 'r2 out 'r21]  <:  'r1
+//│ ╟── because: cannot constrain  Region[in 'r2 out 'r21]  <:  Region[in 'reg out 'reg1]
+//│ ╟── because: cannot constrain  'r21  <:  'reg1
+//│ ╟── because: cannot constrain  'r21  <:  ¬(¬'reg1)
+//│ ╟── because: cannot constrain  ¬foo  <:  ¬(¬'reg1)
+//│ ╟── because: cannot constrain  ¬foo  <:  'reg1
+//│ ╟── because: cannot constrain  ¬foo  <:  ¬'r22 ∨ foo
+//│ ╟── because: cannot constrain  'r22  <:  ¬(¬foo)
+//│ ╙── because: cannot constrain  ¬foo  <:  ¬(¬foo)
+//│ ╔══[ERROR] Type error in function literal
+//│ ║  l.149: 	fun foo(r1) =
+//│ ║         	        ^^^^^
+//│ ║  l.150: 	  region r2 in
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.151: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.152: 	    foo(r2)
+//│ ║         	^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'r1 ->{'eff} 'app  <:  'foo
+//│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo
+//│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  Region[in 'r2 out 'r21] ->{'eff1} 'app1
+//│ ╟── because: cannot constrain  Region[in 'r2 out 'r21]  <:  'r1
+//│ ╟── because: cannot constrain  Region[in 'r2 out 'r21]  <:  'r1
+//│ ╟── because: cannot constrain  Region[in 'r2 out 'r21]  <:  Region[in 'reg out 'reg1]
+//│ ╟── because: cannot constrain  'r21  <:  'reg1
+//│ ╟── because: cannot constrain  'r21  <:  ¬(¬'reg1)
+//│ ╟── because: cannot constrain  ¬foo  <:  ¬(¬'reg1)
+//│ ╟── because: cannot constrain  ¬foo  <:  'reg1
+//│ ╟── because: cannot constrain  ¬foo  <:  'reg
+//│ ╟── because: cannot constrain  ¬foo  <:  'reg
+//│ ╙── because: cannot constrain  ¬foo  <:  ¬()
+//│ Type: ⊤
+
+
+fun foo: [T extends S] -> Region[T] ->{T} @S Nothing
+fun foo(r1) =
+  region r2 in
+    foo(r2)
+foo
+//│ Type: forall 'T: (Region['T]) ->{'T} ⊥
+//│ Where:
+//│   'T <: S
+
+
+fun foo: [T extends To] -> Region[T] ->{T} @To ([S extends So] -> Region[S]->{S} @So Pair[out Ref[Int, out S], out Ref[Int, out Any]])
+fun foo(r1) =
+  r3 =>
+    region r4 in
+      fork((_ => r3.ref 3), (_ => r4.ref 4))
+//│ Type: ⊤
+
+
+fun bar: [T extends S] -> Region[T] ->{T} @S Int
+//│ Type: ⊤
+
+bar: [P extends Q] -> Region[P] ->{P} @Q Int
+//│ Type: forall 'P: (Region['P]) ->{'P} Int
+//│ Where:
+//│   'P <: Q
+
+
+fun foo: [T extends To] -> Region[T] ->{T} @To ([S extends So] -> Region[S]->{S} @So Int)
+fun foo(r1) = bar
+foo
+//│ Type: forall 'T: (Region['T]) ->{'T} forall 'S: (Region['S]) ->{'S} Int
+//│ Where:
+//│   'T <: To
+//│   'S <: So
+

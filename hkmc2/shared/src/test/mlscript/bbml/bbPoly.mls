@@ -148,7 +148,7 @@ gen
 
 
 gen(42)
-//│ Type: ('A) ->{⊥} 'A
+//│ Type: forall 'A: ('A) ->{⊥} 'A
 
 
 :e

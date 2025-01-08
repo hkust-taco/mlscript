@@ -36,7 +36,7 @@ let r = region x in x.ref 42
 
 fun mkRef() = region x in x.ref 42
 mkRef
-//│ Type: () -> Ref[Int, out ¬outermkRef]
+//│ Type: () -> Ref[Int, out ¬mkRef]
 
 :e
 let t = region x in x in t.ref 42

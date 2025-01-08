@@ -74,6 +74,7 @@ enum Tree extends AutoLocated:
   case Region(name: Tree, body: Tree)
   case RegRef(reg: Tree, value: Tree)
   case Effectful(eff: Tree, body: Tree)
+  case WithOuter(outer: Tree, body: Tree)
   case Spread(kw: Keyword.Ellipsis, kwLoc: Opt[Loc], body: Opt[Tree])
 
   def children: Ls[Tree] = this match
@@ -102,6 +103,7 @@ enum Tree extends AutoLocated:
     case Region(name, body) => name :: body :: Nil
     case RegRef(reg, value) => reg :: value :: Nil
     case Effectful(eff, body) => eff :: body :: Nil
+    case WithOuter(outer, body) => outer :: body :: Nil
     case TyTup(tys) => tys
     case SynthSel(prefix, name) => prefix :: Nil
     case Sel(prefix, name) => prefix :: Nil
@@ -141,6 +143,7 @@ enum Tree extends AutoLocated:
     case Region(name, body) => "region"
     case RegRef(reg, value) => "region reference"
     case Effectful(eff, body) => "effectful"
+    case WithOuter(_, _) => "outer binding"
     case Handle(_, _, _, _) => "handle"
     case Def(lhs, rhs) => "defining assignment"
     case Spread(_, _, _) => "spread"

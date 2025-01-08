@@ -272,6 +272,11 @@ class ParseRules(using State):
               )
         ) { case (name, body) => Region(name, body) }
     ,
+    Kw(`@`):
+      ParseRule("`@` binding operator"):
+        Expr(
+          ParseRule("`@` binding name")(Expr(ParseRule("RHS of function type")(End(())))((body, _: Unit) => body))
+        ){ (lhs, rhs) => WithOuter(lhs, rhs) },
     Kw(`fun`)(termDefBody(Fun)),
     Kw(`val`)(termDefBody(ImmutVal)),
     typeAliasLike(`type`, Als),
@@ -302,7 +307,6 @@ class ParseRules(using State):
     singleKw(`undefined`)(UnitLit(false)),
     singleKw(`null`)(UnitLit(true)),
     singleKw(`this`)(Ident("this")),
-    singleKw(`outer`)(Ident("outer")),
     singleKw(Keyword.__)(Under()),
     standaloneExpr,
   )

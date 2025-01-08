@@ -80,7 +80,7 @@ class TypeChecker(using Raise, Elaborator.State):
     case App(lhs, rhs) =>
       val c = C.Fun(typeProd(lhs), typeCons(rhs))
       ???
-    case FunTy(lhs, rhs, _) =>
+    case FunTy(lhs, rhs, _, _) =>
       P.Fun(typeCons(lhs), typeProd(rhs), Nil)
     // case Ref(ClassSymbol(Ident("true"))) =>
     //   P.Ctor(LitSymbol(Tree.UnitLit(true)), Nil)

@@ -20,7 +20,7 @@ enum Term extends Statement:
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
   case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split)(val normalized: Split)
   case Lam(params: ParamList, body: Term)
-  case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
+  case FunTy(lhs: Term, rhs: Term, eff: Opt[Term], outer: Opt[Symbol])
   case Forall(tvs: Ls[QuantVar], body: Term)
   case WildcardTy(in: Opt[Term], out: Opt[Term])
   case Blk(stats: Ls[Statement], res: Term)
@@ -58,7 +58,7 @@ enum Term extends Statement:
     case IfLike(Keyword.`if`, body) => "`if` expression"
     case IfLike(Keyword.`while`, body) => "`while` expression"
     case Lam(params, body) => "function literal"
-    case FunTy(lhs, rhs, eff) => "function type"
+    case FunTy(lhs, rhs, eff, outer) => "function type"
     case Forall(tvs, body) => "universal quantification"
     case WildcardTy(in, out) => "wildcard type"
     case Blk(stats, res) => "block"
@@ -91,7 +91,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
   def subTerms: Ls[Term] = this match
     case Error | _: Lit | _: Ref | _: Builtin => Nil
     case App(lhs, rhs) => lhs :: rhs :: Nil
-    case FunTy(lhs, rhs, eff) => lhs :: rhs :: eff.toList
+    case FunTy(lhs, rhs, eff, outer) => lhs :: rhs :: eff.toList
     case TyApp(pre, tarsg) => pre :: tarsg
     case SynthSel(pre, _) => pre :: Nil
     case Sel(pre, _) => pre :: Nil
@@ -158,11 +158,11 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case r @ Ref(symbol) => symbol.toString+"#"+r.refNum
     case App(lhs, tup: Tup) => s"${lhs.showDbg}(${tup.fields.map(_.showDbg).mkString(", ")})"
     case App(lhs, rhs) => s"${lhs.showDbg}(...${rhs.showDbg})"
-    case FunTy(lhs: Tup, rhs, eff) =>
+    case FunTy(lhs: Tup, rhs, eff, outer) =>
       s"${lhs.fields.map(_.showDbg).mkString(", ")} ->${
-        eff.map(e => s"{${e.showDbg}}").getOrElse("")} ${rhs.showDbg}"
-    case FunTy(lhs, rhs, eff) =>
-      s"(...${lhs.showDbg}) ->${eff.map(e => s"{${e.showDbg}}").getOrElse("")} ${rhs.showDbg}"
+        eff.map(e => s"{${e.showDbg}}").getOrElse("")}${outer.map(t => s"_${t}").getOrElse("")} ${rhs.showDbg}"
+    case FunTy(lhs, rhs, eff, outer) =>
+      s"(...${lhs.showDbg}) ->${eff.map(e => s"{${e.showDbg}}").getOrElse("")}${outer.map(t => s"_${t}").getOrElse("")} ${rhs.showDbg}"
     case TyApp(lhs, targs) => s"${lhs.showDbg}[${targs.mkString(", ")}]"
     case Forall(tvs, body) => s"forall ${tvs.mkString(", ")}: ${body.toString}"
     case WildcardTy(in, out) => s"in ${in.map(_.toString).getOrElse("⊥")} out ${out.map(_.toString).getOrElse("⊤")}"
