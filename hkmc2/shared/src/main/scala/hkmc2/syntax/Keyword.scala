@@ -118,7 +118,7 @@ object Keyword:
   val `import` = Keyword("import", N, curPrec)
   val `this` = Keyword("this", N, N)
   val `pattern` = Keyword("pattern", N, N)
-
+  
   // * The lambda operator is special:
   // *  it should associate very strongly on the left and very loosely on the right
   // *  so that we can write things like `f() |> x => x is 0` ie `(f()) |> (x => (x is 0))`

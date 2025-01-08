@@ -96,7 +96,7 @@ fun mapi = s => f =>
       i := !i + 1
       f(!i, x)
 mapi
-//│ Type: forall 'A, 'E, 'app, 'eff: Seq[out 'A, out 'E] -> (((Int, 'A) ->{'eff} 'app) -> Seq[out 'app, out (¬mapi ∨ 'eff) ∨ 'E])
+//│ Type: forall 'A, 'E, 'app, 'eff: Seq[out 'A, out 'E] -> (((Int, 'A) ->{'eff} 'app) -> Seq[out 'app, out (¬envmapi ∨ 'eff) ∨ 'E])
 
 // * This version is correct as it keeps the mutation encapsulated within the region
 fun mapi_force: [A, E] -> Seq[out A, out E] -> ((Int, A) ->{E} A) ->{E} Seq[out A, Nothing]

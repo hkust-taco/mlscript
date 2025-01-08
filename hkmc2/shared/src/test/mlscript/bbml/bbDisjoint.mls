@@ -102,9 +102,9 @@ fun helper(r1) =
   region r2 in
     fork((_ => r1.ref 1), (_ => r2.ref 2))
 helper
-//│ Type: forall 'reg, 'reg1: Region[in 'reg out 'reg1] ->{'reg1} Pair[out Ref[Int, out 'reg1], out Ref[Int, out ¬helper]]
+//│ Type: forall 'reg, 'reg1: Region[in 'reg out 'reg1] ->{'reg1} Pair[out Ref[Int, out 'reg1], out Ref[Int, out ¬envhelper]]
 //│ Where:
-//│   'reg <: helper
+//│   'reg <: envhelper
 //│   'reg <: 'reg1
 
 
@@ -135,7 +135,7 @@ fun annohelper(r1) =
   region r2 in
     fork((_ => r1.ref 1), (_ => r2.ref 2))
 annohelper
-//│ Type: (Region[outer]) ->{outer} Pair[out Ref[Int, out outer], out Ref[Int, ?]]
+//│ Type: (Region[envouter]) ->{envouter} Pair[out Ref[Int, out envouter], out Ref[Int, ?]]
 
 
 region x in
@@ -204,7 +204,7 @@ fun foo(r1) =
 foo
 //│ Type: forall 'T: (Region['T]) ->{'T} ⊥
 //│ Where:
-//│   'T <: S
+//│   'T <: envS
 
 
 fun foo: [T extends To] -> Region[T] ->{T} @To ([S extends So] -> Region[S]->{S} @So Pair[out Ref[Int, out S], out Ref[Int, out Any]])
@@ -221,7 +221,7 @@ fun bar: [T extends S] -> Region[T] ->{T} @S Int
 bar: [P extends Q] -> Region[P] ->{P} @Q Int
 //│ Type: forall 'P: (Region['P]) ->{'P} Int
 //│ Where:
-//│   'P <: Q
+//│   'P <: envQ
 
 
 fun foo: [T extends To] -> Region[T] ->{T} @To ([S extends So] -> Region[S]->{S} @So Int)
@@ -229,6 +229,6 @@ fun foo(r1) = bar
 foo
 //│ Type: forall 'T: (Region['T]) ->{'T} forall 'S: (Region['S]) ->{'S} Int
 //│ Where:
-//│   'T <: To
-//│   'S <: So
+//│   'T <: envTo
+//│   'S <: envSo
 
