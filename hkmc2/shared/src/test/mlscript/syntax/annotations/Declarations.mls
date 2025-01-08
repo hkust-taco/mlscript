@@ -6,8 +6,8 @@ tailrec
 //│ = tailrec { class: [class tailrec] }
 
 @tailrec fun fact_n(n, acc) =
-  if n == 0 then acc else fact(n - 1, n * acc)
-  
+  if n == 0 then acc else fact_n(n - 1, n * acc)
+
 fun fact(n) =
   @tailrec fun go(n, acc) =
     if n == 0 then acc else go(n - 1, n * acc)
@@ -33,13 +33,21 @@ module Foo with
 
 module inline
 
+// All functions are annotated with @inline.
 @inline
 fun
   min(x, y) = if x < y then x else y
   max(x, y) = if x > y then x else y
-  
+
 @inline let
   abs(x) = if x < 0 then -x else x
   clamp(x, lo, hi) = min(max(x, lo), hi)
 //│ abs = [Function (anonymous)]
 //│ clamp = [Function (anonymous)]
+
+// Only the first variable is annotated with @inline.
+let
+  @inline success = 0
+  failure = 1
+//│ failure = 1
+//│ success = 0
