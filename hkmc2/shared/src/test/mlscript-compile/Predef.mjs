@@ -110,18 +110,41 @@ const Predef$class = class Predef {
       return f5.call(receiver1, ...args);
     };
   } 
-  print(x4) {
-    let tmp;
-    tmp = String(x4);
-    return console.log(tmp) ?? null;
+  pass1(f6) {
+    return (...xs) => {
+      return f6(xs[0]) ?? null;
+    };
   } 
-  tupleSlice(xs, i, j) {
-    let tmp;
-    tmp = xs.length - j;
-    return globalThis.Array.prototype.slice.call(xs, i, tmp) ?? null;
+  pass2(f7) {
+    return (...xs) => {
+      return f7(xs[0], xs[1]) ?? null;
+    };
   } 
-  tupleGet(xs1, i1) {
-    return globalThis.Array.prototype.at.call(xs1, i1);
+  pass3(f8) {
+    return (...xs) => {
+      return f8(xs[0], xs[1], xs[2]) ?? null;
+    };
+  } 
+  print(...xs) {
+    let tmp;
+    tmp = xs.map(String) ?? null;
+    return console.log(...tmp) ?? null;
+  } 
+  notImplemented(msg) {
+    let tmp;
+    tmp = "Not implemented: " + msg;
+    throw Error(tmp);
+  } 
+  get notImplementedError() {
+    throw Error("Not implemented");
+  } 
+  tupleSlice(xs1, i, j) {
+    let tmp;
+    tmp = xs1.length - j;
+    return globalThis.Array.prototype.slice.call(xs1, i, tmp) ?? null;
+  } 
+  tupleGet(xs2, i1) {
+    return globalThis.Array.prototype.at.call(xs2, i1);
   } 
   stringStartsWith(string, prefix) {
     return string.startsWith(prefix) ?? null;

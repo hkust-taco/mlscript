@@ -39,11 +39,11 @@ class Accounting {
         let scrut, tmp, tmp1, tmp2, tmp3, tmp4;
         scrut = this.balance > 10000;
         if (scrut) {
-          tmp = Str.concat("> **\u2757\uFE0F** Unspent balance of ", this.name);
-          tmp1 = Str.concat(tmp, ": `");
+          tmp = Str.concat2("> **\u2757\uFE0F** Unspent balance of ", this.name);
+          tmp1 = Str.concat2(tmp, ": `");
           tmp2 = this$Accounting.display(this.balance);
-          tmp3 = Str.concat(tmp1, tmp2);
-          tmp4 = Str.concat(tmp3, "`");
+          tmp3 = Str.concat2(tmp1, tmp2);
+          tmp4 = Str.concat2(tmp3, "`");
           return this$Accounting.warnings.push(tmp4) ?? null;
         } else {
           return null;
@@ -64,42 +64,42 @@ class Accounting {
       } 
       wln(txt1) {
         let tmp;
-        tmp = Str.concat(txt1, "\n");
+        tmp = Str.concat2(txt1, "\n");
         return fs.appendFileSync(this.fileName, tmp);
       } 
       init() {
         let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13;
         tmp = this.wln("");
-        tmp1 = Str.concat("|", "Year");
-        tmp2 = Str.concat(tmp1, "|");
+        tmp1 = Str.concat2("|", "Year");
+        tmp2 = Str.concat2(tmp1, "|");
         tmp3 = this$Accounting.lines.map((x) => {
           return x.name;
         }) ?? null;
         tmp4 = tmp3.join("|") ?? null;
-        tmp5 = Str.concat(tmp2, tmp4);
-        tmp6 = Str.concat(tmp5, "|");
+        tmp5 = Str.concat2(tmp2, tmp4);
+        tmp6 = Str.concat2(tmp5, "|");
         tmp7 = this.wln(tmp6);
-        tmp8 = Str.concat("|", "---");
-        tmp9 = Str.concat(tmp8, "|");
+        tmp8 = Str.concat2("|", "---");
+        tmp9 = Str.concat2(tmp8, "|");
         tmp10 = this$Accounting.lines.map((x) => {
           return "--:";
         }) ?? null;
         tmp11 = tmp10.join("|") ?? null;
-        tmp12 = Str.concat(tmp9, tmp11);
-        tmp13 = Str.concat(tmp12, "|");
+        tmp12 = Str.concat2(tmp9, tmp11);
+        tmp13 = Str.concat2(tmp12, "|");
         return this.wln(tmp13);
       } 
       snapShot(label) {
         let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
         tmp = String(label) ?? null;
-        tmp1 = Str.concat("|", tmp);
-        tmp2 = Str.concat(tmp1, "|");
+        tmp1 = Str.concat2("|", tmp);
+        tmp2 = Str.concat2(tmp1, "|");
         tmp3 = this$Accounting.lines.map((x) => {
           return this$Accounting.display(x.balance);
         }) ?? null;
         tmp4 = tmp3.join("|") ?? null;
-        tmp5 = Str.concat(tmp2, tmp4);
-        tmp6 = Str.concat(tmp5, "|");
+        tmp5 = Str.concat2(tmp2, tmp4);
+        tmp6 = Str.concat2(tmp5, "|");
         return this.wln(tmp6);
       } 
       wrapUp() {
@@ -112,14 +112,14 @@ class Accounting {
         }) ?? null;
         tmp2 = this.wln("### Remaining Available Funds");
         tmp3 = this.wln("");
-        tmp4 = Str.concat("|", "Summary");
-        tmp5 = Str.concat(tmp4, "|   |");
+        tmp4 = Str.concat2("|", "Summary");
+        tmp5 = Str.concat2(tmp4, "|   |");
         tmp6 = this.wln(tmp5);
-        tmp7 = Str.concat("|", "---");
-        tmp8 = Str.concat(tmp7, "|--:|");
+        tmp7 = Str.concat2("|", "---");
+        tmp8 = Str.concat2(tmp7, "|--:|");
         tmp9 = this.wln(tmp8);
-        tmp10 = Str.concat("|", "Matchable");
-        tmp11 = Str.concat(tmp10, "|");
+        tmp10 = Str.concat2("|", "Matchable");
+        tmp11 = Str.concat2(tmp10, "|");
         tmp12 = this$Accounting.lines.filter((x) => {
           return x.isMatchable;
         }) ?? null;
@@ -130,11 +130,11 @@ class Accounting {
           return a + b;
         }, 0);
         tmp15 = this$Accounting.display(tmp14);
-        tmp16 = Str.concat(tmp11, tmp15);
-        tmp17 = Str.concat(tmp16, "|");
+        tmp16 = Str.concat2(tmp11, tmp15);
+        tmp17 = Str.concat2(tmp16, "|");
         tmp18 = this.wln(tmp17);
-        tmp19 = Str.concat("|", "Non-matchable");
-        tmp20 = Str.concat(tmp19, "|");
+        tmp19 = Str.concat2("|", "Non-matchable");
+        tmp20 = Str.concat2(tmp19, "|");
         tmp21 = this$Accounting.lines.filter((x) => {
           return Predef.not(x.isMatchable);
         }) ?? null;
@@ -145,8 +145,8 @@ class Accounting {
           return a + b;
         }, 0);
         tmp24 = this$Accounting.display(tmp23);
-        tmp25 = Str.concat(tmp20, tmp24);
-        tmp26 = Str.concat(tmp25, "|");
+        tmp25 = Str.concat2(tmp20, tmp24);
+        tmp26 = Str.concat2(tmp25, "|");
         return this.wln(tmp26);
       }
       toString() { return "Report(" + this.fileName + ")"; }
@@ -171,7 +171,7 @@ class Accounting {
     tmp1 = report.init() ?? null;
     tmp2 = k(report) ?? null;
     tmp3 = report.wrapUp() ?? null;
-    tmp4 = Str.concat("Report written to ", filename);
+    tmp4 = Str.concat2("Report written to ", filename);
     return Predef.print(tmp4);
   }
   toString() { return "Accounting"; }

@@ -63,6 +63,26 @@ sealed abstract class Block extends Product with AutoLocated:
     case Match(scrut, arms, dflt, rst) =>
       Match(scrut, arms.map(_ -> _.mapTail(f)), dflt.map(_.mapTail(f)), rst.mapTail(f))
   
+  lazy val freeVars: Set[Local] = this match
+    case Match(scrut, arms, dflt, rest) =>
+      scrut.freeVars ++ dflt.toList.flatMap(_.freeVars) ++ rest.freeVars
+      ++ arms.flatMap:
+        (pat, arm) => arm.freeVars -- pat.freeVars
+    case Return(res, implct) => res.freeVars
+    case Throw(exc) => exc.freeVars
+    case Label(label, body, rest) => (body.freeVars - label) ++ rest.freeVars 
+    case Break(label) => Set(label)
+    case Continue(label) => Set(label)
+    case Begin(sub, rest) => sub.freeVars ++ rest.freeVars
+    case TryBlock(sub, finallyDo, rest) => sub.freeVars ++ finallyDo.freeVars ++ rest.freeVars
+    case Assign(lhs, rhs, rest) => Set(lhs) ++ rhs.freeVars ++ rest.freeVars
+    case AssignField(lhs, nme, rhs, rest) => lhs.freeVars ++ rhs.freeVars ++ rest.freeVars
+    case Define(defn, rest) => defn.freeVars ++ rest.freeVars
+    case HandleBlock(lhs, res, cls, handlers, body, rest) =>
+      (body.freeVars - lhs) ++ rest.freeVars ++ handlers.flatMap(_.freeVars)
+    case HandleBlockReturn(res) => res.freeVars
+    case End(msg) => Set.empty
+
 end Block
 
 sealed abstract class BlockTail extends Block
@@ -103,6 +123,14 @@ case class HandleBlockReturn(res: Result) extends BlockTail
 sealed abstract class Defn:
   val sym: MemberSymbol[?]
 
+  lazy val freeVars: Set[Local] = this match
+    case FunDefn(sym, params, body) => body.freeVars -- params.flatMap(_.paramSyms) - sym
+    case ValDefn(owner, k, sym, rhs) => rhs.freeVars
+    case ClsLikeDefn(sym, k, parentSym, methods, privateFields, publicFields, preCtor, ctor) =>
+      preCtor.freeVars
+        ++ ctor.freeVars ++ methods.flatMap(_.freeVars)
+        -- privateFields -- publicFields.map(_.sym)
+  
 final case class FunDefn(
     sym: BlockMemberSymbol,
     params: Ls[ParamList],
@@ -132,7 +160,8 @@ final case class Handler(
     resumeSym: LocalSymbol & NamedSymbol,
     params: Ls[ParamList],
     body: Block,
-)
+):
+  lazy val freeVars: Set[Local] = body.freeVars -- params.flatMap(_.paramSyms) - sym - resumeSym
 
 /* Represents either unreachable code (for functions that must return a result)
  * or the end of a non-returning function or a REPL block */
@@ -143,8 +172,23 @@ enum Case:
   case Cls(cls: ClassSymbol | ModuleSymbol, path: Path)
   case Tup(len: Int, inf: Bool)
 
-sealed abstract class Result
+  lazy val freeVars: Set[Local] = this match
+    case Lit(_) => Set.empty
+    case Cls(_, path) => path.freeVars
+    case Tup(_, _) => Set.empty
 
+sealed abstract class Result:
+
+  lazy val freeVars: Set[Local] = this match
+    case Call(fun, args) => args.flatMap(_.value.freeVars).toSet
+    case Instantiate(cls, args) => args.flatMap(_.freeVars).toSet
+    case Select(qual, name) => qual.freeVars 
+    case Value.Ref(l) => Set(l)
+    case Value.This(sym) => Set.empty
+    case Value.Lit(lit) => Set.empty
+    case Value.Lam(params, body) => body.freeVars -- params.paramSyms
+    case Value.Arr(elems) => elems.flatMap(_.value.freeVars).toSet
+  
 // type Local = LocalSymbol
 type Local = Symbol
 

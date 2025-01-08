@@ -1,0 +1,30 @@
+:js
+
+import "../../mlscript-compile/Str.mls"
+
+
+Str.(~)
+//│ = [Function: concat2]
+
+Str.(~)("a", "b", "c")
+//│ = 'ab'
+
+Str.("a" ~ "b")
+//│ = 'ab'
+
+Str.("a" ~ from(123))
+//│ = 'a123'
+
+
+// Lexed as Str .~
+:pe
+:e
+Str.~
+//│ ╔══[PARSE ERROR] Expected start of statement in this position; found end of input instead
+//│ ║  l.22: 	Str.~
+//│ ╙──      	     ^
+//│ ╔══[ERROR] Name not found: .~
+//│ ║  l.22: 	Str.~
+//│ ╙──      	   ^^
+
+

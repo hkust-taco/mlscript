@@ -8,9 +8,11 @@ declare class Bool
 declare class Int
 declare class Num
 declare class Str
+declare class Set
 declare class Error(msg)
 
 declare class String
+declare class RegExp
 
 // declare module Math // TODO: list members
 declare val Math // so we can, eg, `open { pow }` in the meantime
@@ -18,6 +20,7 @@ declare val Math // so we can, eg, `open { pow }` in the meantime
 declare val console
 declare val process
 declare val fs
+declare val Infinity
 
 
 declare module Predef with

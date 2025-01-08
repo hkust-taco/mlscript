@@ -1,9 +1,12 @@
 const Str$class = class Str {
   constructor() {}
-  concat(a, b) {
+  concat2(a, b) {
     return a + b;
   } 
-  string(value) {
+  concat(...xs) {
+    return xs.join("") ?? null;
+  } 
+  from(value) {
     return globalThis.String(value) ?? null;
   }
   toString() { return "Str"; }

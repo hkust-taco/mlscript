@@ -2,7 +2,7 @@
 
 
 :silent
-globalThis
+let g = globalThis
 
 
 // FIXME prevent rebinding of this name

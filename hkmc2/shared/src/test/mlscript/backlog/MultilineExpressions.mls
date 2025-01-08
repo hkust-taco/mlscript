@@ -1,0 +1,214 @@
+:js
+
+
+2 * 2 + 1
+//│ = 5
+
+2 *
+  2 + 1
+//│ = 6
+
+2 *
+  2 +
+  1
+//│ = 6
+
+
+fun (**) f1(a, b) = "[" + a + " * " + b + "]"
+fun (++) f2(a, b) = "(" + a + " + " + b + ")"
+
+
+1 ** 2 ++ 3
+//│ = '([1 * 2] + 3)'
+
+1 ** 2
+  ++ 3
+//│ = '([1 * 2] + 3)'
+
+1 ** 2
+  ++ 3
+  ++ 4
+//│ = '(([1 * 2] + 3) + 4)'
+
+1 ++ 2
+  ** 3
+  ** 4
+//│ = '(1 + [[2 * 3] * 4])'
+
+1 ++ 2
+  ** 3
+    ** 4
+//│ = '(1 + [2 * [3 * 4]])'
+
+// TODO warn or error on such operator blocks
+1 ++ 2
+  ** 3
+  ++ 4
+//│ = '(1 + ([2 * 3] + 4))'
+
+1 ++ 2
+    ** 3
+  ++ 4
+//│ = '((1 + [2 * 3]) + 4)'
+
+1 ++ 2
+    ** 3
+  ** 4
+//│ = '(1 + [[2 * 3] * 4])'
+
+
+// FIXME problematic elaboration? or not?
+:pt
+// :elt
+:sjs
+if 1 + 2
+  * 3 then 0
+//│ Parsed tree:
+//│ IfLike:
+//│   kw = keyword 'if'
+//│   kwLoc = N
+//│   split = App:
+//│     lhs = Ident of "+"
+//│     rhs = Tup of Ls of 
+//│       IntLit of 1
+//│       App:
+//│         lhs = IntLit of 2
+//│         rhs = OpBlock of Ls of 
+//│           Tuple2:
+//│             _1 = Ident of "*"
+//│             _2 = InfixApp:
+//│               lhs = IntLit of 3
+//│               kw = keyword 'then'
+//│               rhs = IntLit of 0
+//│ JS (unsanitized):
+//│ let scrut, scrut1, scrut2;
+//│ scrut = 1;
+//│ scrut1 = scrut + 2;
+//│ scrut2 = scrut1 * 3;
+//│ if (scrut2) {
+//│   0
+//│ } else {
+//│   throw new this.Error("match error");
+//│ }
+//│ = 0
+
+:pt
+// :elt
+:sjs
+if 1 * 2
+  + 3 then 0
+//│ Parsed tree:
+//│ IfLike:
+//│   kw = keyword 'if'
+//│   kwLoc = N
+//│   split = App:
+//│     lhs = App:
+//│       lhs = Ident of "*"
+//│       rhs = Tup of Ls of 
+//│         IntLit of 1
+//│         IntLit of 2
+//│     rhs = OpBlock of Ls of 
+//│       Tuple2:
+//│         _1 = Ident of "+"
+//│         _2 = InfixApp:
+//│           lhs = IntLit of 3
+//│           kw = keyword 'then'
+//│           rhs = IntLit of 0
+//│ JS (unsanitized):
+//│ let scrut, scrut1;
+//│ scrut = 1 * 2;
+//│ scrut1 = scrut + 3;
+//│ if (scrut1) {
+//│   0
+//│ } else {
+//│   throw new this.Error("match error");
+//│ }
+//│ = 0
+
+// TODO perhaps we should just require parenthesizing (1 + 2) here
+:pt
+// :elt
+:sjs
+if 1 + 2
+  * 3 then 0
+  + 4 then 0
+//│ Parsed tree:
+//│ IfLike:
+//│   kw = keyword 'if'
+//│   kwLoc = N
+//│   split = App:
+//│     lhs = Ident of "+"
+//│     rhs = Tup of Ls of 
+//│       IntLit of 1
+//│       App:
+//│         lhs = IntLit of 2
+//│         rhs = OpBlock of Ls of 
+//│           Tuple2:
+//│             _1 = Ident of "*"
+//│             _2 = InfixApp:
+//│               lhs = IntLit of 3
+//│               kw = keyword 'then'
+//│               rhs = IntLit of 0
+//│           Tuple2:
+//│             _1 = Ident of "+"
+//│             _2 = InfixApp:
+//│               lhs = IntLit of 4
+//│               kw = keyword 'then'
+//│               rhs = IntLit of 0
+//│ JS (unsanitized):
+//│ let scrut, scrut1, scrut2, scrut3;
+//│ scrut = 1;
+//│ scrut1 = scrut + 2;
+//│ scrut3 = scrut1 * 3;
+//│ if (scrut3) {
+//│   0
+//│ } else {
+//│   scrut2 = scrut1 + 4;
+//│   if (scrut2) {
+//│     0
+//│   } else {
+//│     throw new this.Error("match error");
+//│   }
+//│ }
+//│ = 0
+
+
+1 ++
+  2
+//│ = '(1 + 2)'
+
+// TODO reject – hard to read; should be a postfix op
+// But then what about versions with many indented lines? -> require putting the op at line starts
+1 ++
+2
+//│ = '(1 + 2)'
+
+// FIXME should respect the usual assoc+prec
+1 ++
+  2 ++
+  3
+//│ = '(1 + (2 + 3))'
+
+1 ++
+2 ++
+3
+//│ = '((1 + 2) + 3)'
+
+1 ++
+  2 **
+  3
+//│ = '(1 + [2 * 3])'
+
+// FIXME should respect the usual assoc+prec
+1 **
+  2 ++
+  3
+//│ = '[1 * (2 + 3)]'
+
+1 ++
+  2 ++
+  3 ++
+  4
+//│ = '(1 + ((2 + 3) + 4))'
+
+

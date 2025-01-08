@@ -291,7 +291,11 @@ class ParseRules(using State):
           case (body, _) => Open(body)}*),
     modified(`abstract`, Kw(`class`)(typeDeclBody(Cls))),
     modified(`mut`),
-    modified(`do`),
+    Kw(`do`):
+      ParseRule(s"`do` keyword")(
+        exprOrBlk(ParseRule(s"`do` body")(End(()))):
+          case (body, ()) => Tree.Modified(`do`, N, body)
+        *),
     modified(`virtual`),
     modified(`override`),
     modified(`declare`),

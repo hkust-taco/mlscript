@@ -35,3 +35,47 @@ new Predef.Test
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
 
+print(1, 2, 3)
+//│ > 1 2 3
+
+1 print()
+//│ > 1
+
+1 . print()
+//│ > 1
+
+// FIXME: should have the same semantics...
+1
+  . print()
+//│ = [Function (anonymous)]
+
+
+:re
+??("oops")
+//│ ═══[RUNTIME ERROR] Error: Not implemented: oops
+
+:re
+???
+//│ ═══[RUNTIME ERROR] Error: Not implemented
+
+:re
+??? + 1
+//│ ═══[RUNTIME ERROR] Error: Not implemented
+
+:re
+1 + ???
+//│ ═══[RUNTIME ERROR] Error: Not implemented
+
+
+// * Function composition is associative
+
+let
+  f = ((_ + 1) >> (_ * 2)) >> (_ - 1)
+  g = (_ + 1) >> ((_ * 2) >> (_ - 1))
+//│ f = [Function (anonymous)]
+//│ g = [Function (anonymous)]
+
+[f(123), g(123)]
+//│ = [ 247, 247 ]
+
+

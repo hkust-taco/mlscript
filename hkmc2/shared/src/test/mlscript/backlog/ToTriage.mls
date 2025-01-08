@@ -1,0 +1,171 @@
+:js
+:todo
+
+
+// ——— ——— ———
+
+"a" +
+  "b"
+//│ = 'ab'
+
+// FIXME
+"a" +
+  // a
+"b"
+//│ = 'b'
+
+// FIXME
+// :dp
+"a" +
+// a
+"b"
+//│ ╔══[PARSE ERROR] Expected start of statement in this position; found newline instead
+//│ ║  l.20: 	// a
+//│ ║        	    ^
+//│ ║  l.21: 	"b"
+//│ ╙──      	
+
+// ——— ——— ———
+
+true or true
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(BoolLit(true),keyword 'or',BoolLit(true)) (of class hkmc2.syntax.Tree$InfixApp)
+
+:fixme
+while false or false do print("ok")
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(BoolLit(false),keyword 'or',BoolLit(false)) (of class hkmc2.syntax.Tree$InfixApp)
+
+// ——— ——— ———
+
+:e
+fun (**) f1(a, b) = "[" + a + " * " + b + "]"
+fun (**) f2(a, b) = "(" + a + " + " + b + ")"
+
+1 ** 2
+//│ = '(1 + 2)'
+
+// FIXME error is duplicated & refers to wrong name
+:e
+fun (**) t() = 0
+fun (++) t() = 1
+//│ ╔══[ERROR] Multiple definitions of symbol '**'
+//│ ╟── defined here
+//│ ║  l.48: 	fun (**) t() = 0
+//│ ║        	     ^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.49: 	fun (++) t() = 1
+//│ ╙──      	     ^^^^^^^^^^^
+//│ ╔══[ERROR] Multiple definitions of symbol '++'
+//│ ╟── defined here
+//│ ║  l.48: 	fun (**) t() = 0
+//│ ║        	     ^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.49: 	fun (++) t() = 1
+//│ ╙──      	     ^^^^^^^^^^^
+//│ ╔══[ERROR] Multiple definitions of symbol 't'
+//│ ╟── defined here
+//│ ║  l.48: 	fun (**) t() = 0
+//│ ║        	     ^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.49: 	fun (++) t() = 1
+//│ ╙──      	     ^^^^^^^^^^^
+
+// ——— ——— ———
+
+let g = [0]
+//│ g = [ 0 ]
+
+:fixme
+set g.0 += 1 // FIXME
+//│ /!!!\ Uncaught error: scala.MatchError: LetLike(keyword 'set',App(Ident(+=),Tup(List(Sel(Ident(g),Ident(0)), IntLit(1)))),None,None) (of class hkmc2.syntax.Tree$LetLike)
+
+:fixme
+set g.0 = g.0 + 1
+//│ > try { let selRes, tmp, tmp1; selRes = this.g[0]; if (selRes === undefined) {   throw new this.Error("Access to required field '0' yielded 'undefined'"); } else {   tmp = selRes; } tmp1 = tmp + 1; this.g.0 = tmp1; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                                                                                                                                                                           ^^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected number
+
+// ——— ——— ———
+
+:todo // TODO instrument Predef
+:re
+id(1, 2)
+//│ = 1
+
+// ——— ——— ———
+
+:todo // TODO confusing formatting should not be allowed
+:e
+let x = if true
+then 1
+else 0
+//│ x = 1
+
+// ——— ——— ———
+
+// TODO we should give reasonable meaning to `==`
+//  notably taking into account arrays and data classes;
+//  and deprecated `===` (notably does not work for arrays)
+
+undefined == null
+//│ = true
+
+undefined === null
+//│ = false
+
+// ——— ——— ———
+
+// FIXME not sanitized?
+:ssjs
+Num
+//│ JS:
+//│ this.Num
+
+// ——— ——— ———
+
+Infinity
+//│ = Infinity
+
+:sjs
+val Infinity = 1
+//│ JS (unsanitized):
+//│ this.Infinity = 1; null
+//│ Infinity = Infinity
+
+:sjs
+Infinity
+//│ JS (unsanitized):
+//│ this.Infinity
+//│ = Infinity
+
+module Test with
+  val Infinity = 1
+
+Test.Infinity
+//│ = 1
+
+// ——— ——— ———
+
+fun f(a)(b) = [a, b]
+fun g(a, b) = [a, b]
+
+// TODO support?
+:pe
+f of
+    g of
+      1
+      2
+  of 3
+//│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
+//│ ║  l.157: 	  of 3
+//│ ╙──       	^^
+//│ = [Function (anonymous)]
+
+(f of
+  g of
+    1
+    2
+) of 3
+//│ = [ [ 1, 2 ], 3 ]
+
+// ——— ——— ———
+

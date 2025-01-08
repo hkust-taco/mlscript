@@ -22,7 +22,7 @@ object Elaborator:
     ",",
     "+", "-", "*", "/", "%",
     "==", "!=", "<", "<=", ">", ">=",
-    "===",
+    "===", "!==",
     "&&", "||")
   private val unaryOps = Set("-", "+", "!", "~")
   private val anyOps = Set("super")
@@ -484,9 +484,11 @@ extends Importer:
           go(acc, trees)
       
       go(term(lhs), rhs :: Nil)
-    case Open(body) =>
+    case Open(op) =>
       raise(ErrorReport(msg"Illegal position for 'open' statement." -> tree.toLoc :: Nil))
       Term.Error
+    case OpenIn(op, body) =>
+      term(Block(Open(op) :: body :: Nil), inAppPrefix)
     case Spread(kw, kwLoc, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' spread operator." -> tree.toLoc :: Nil))
       Term.Error

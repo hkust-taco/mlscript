@@ -20,18 +20,32 @@ do 1
 //│ ║  l.18: 	do 1
 //│ ╙──      	   ^
 
+do
+  let hello = 1
+  ()
+
+// FIXME shouldn't be accessible
+:todo
+:re
+print(globalThis.hello)
+//│ > 1
+
 :ucs desugared
 val f = case
   0 then "null"
   do console.log("non-null")
   1 then "unit"
-  _ then "other"
+  let res = "other"
+  do print(res)
+  _ then res
 //│ Desugared:
 //│ >  if
 //│ >    caseScrut is 0 then "null"
 //│ >    let $doTemp = globalThis:import#Prelude#666(.)console‹member:console›(.)log("non-null")
 //│ >    caseScrut is 1 then "unit"
-//│ >    else "other"
+//│ >    let res = "other"
+//│ >    let $doTemp = member:Predef#666(.)print‹member:print›(res#666)
+//│ >    else res#666
 //│ f = [Function: tmp]
 
 f(0)
@@ -43,5 +57,7 @@ f(1)
 
 f(2)
 //│ > non-null
+//│ > other
 //│ = 'other'
+
 

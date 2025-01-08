@@ -77,6 +77,13 @@ of 1
 :fixme
 print of 
 123
-//│ /!!!\ Uncaught error: scala.NotImplementedError: NEWLINE (of class NEWLINE$)
+//│ ╔══[PARSE ERROR] Expected an expression; found new line instead
+//│ ║  l.78: 	print of 
+//│ ║        	         ^
+//│ ║  l.79: 	123
+//│ ╙──      	
+//│ Parsed:
+//│ 	App(Ident(print),Tup(List(Error())))
+//│ 	IntLit(123)
 
 

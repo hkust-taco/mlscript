@@ -1,6 +1,10 @@
 
 module Str with ...
 
-fun (~) concat(a, b) = a + b
 
-fun string(value) = globalThis.String(value)
+fun (~) concat2(a, b) = a + b
+
+fun concat(...xs) = xs.join("")
+
+fun from(value) = globalThis.String(value)
+

@@ -109,21 +109,21 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         val (reply, stderr) = host.query(queryStr, !expectRuntimeOrCodeGenErrors && fixme.isUnset && todo.isUnset)
         reply match
           case ReplHost.Result(content, stdout) =>
-            if silent.isUnset then
-              stdout match
-                case None | Some("") =>
-                case Some(str) =>
-                  str.splitSane('\n').foreach: line =>
-                    output(s"> ${line}")
-              content match
-              case "undefined" =>
-              case "null" =>
+            stdout match
+            case None | Some("") =>
+            case Some(str) =>
+              str.splitSane('\n').foreach: line =>
+                output(s"> ${line}")
+            content match
+            case "undefined" =>
+            case "null" =>
+            case _ =>
+              expect.get match
+              case S(expected) if content != expected => raise:
+                ErrorReport(msg"Expected: ${expected}, got: ${content}" -> N :: Nil,
+                  source = Diagnostic.Source.Runtime)
               case _ =>
-                expect.get match
-                  case S(expected) if content != expected => raise:
-                    ErrorReport(msg"Expected: ${expected}, got: ${content}" -> N :: Nil,
-                      source = Diagnostic.Source.Runtime)
-                  case _ => output(s"$prefix= ${content}")
+                if silent.isUnset then output(s"$prefix= ${content}")
           case ReplHost.Empty =>
           case ReplHost.Unexecuted(message) => ???
           case ReplHost.Error(isSyntaxError, message, otherOutputs) =>
@@ -162,7 +162,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             if ts.trmImplTree.exists(_.k.isInstanceOf[syntax.ValLike]) => S((nme, ts))
           case _ => N
         case _ => N
-      definedValues.toSeq.sortBy(_._1).foreach: (nme, sym) =>
+      if silent.isUnset then definedValues.toSeq.sortBy(_._1).foreach: (nme, sym) =>
         val le = codegen.Return(codegen.Value.Ref(sym), implct = true)
         val je = nestedScp.givenIn:
           jsb.block(le)

@@ -1,0 +1,40 @@
+:js
+
+import "../../mlscript-compile/apps/CSV.mls"
+
+
+let csv = CSV()
+//│ > CSV {
+//│ >   strDelimiter: ',',
+//│ >   objPattern: /(\,|\r?\n|\r|^)(?:"([^"]*(?:""[^"]*)*)"|([^"\,\r\n]*))/gi
+//│ csv = }
+
+csv.strDelimiter
+//│ = ','
+
+csv.objPattern
+//│ = /(\,|\r?\n|\r|^)(?:"([^"]*(?:""[^"]*)*)"|([^"\,\r\n]*))/gi
+
+csv.toArrays("a,b,c")
+//│ = [ [ 'a', 'b', 'c' ] ]
+
+csv.toArrays("a,b,c\n1,2,3\n4,5,6")
+//│ = [ [ 'a', 'b', 'c' ], [ '1', '2', '3' ], [ '4', '5', '6' ] ]
+
+csv.toArrays("a,b,c\n\n1,2,3\n4,5,6\n")
+//│ > [
+//│ >   [ 'a', 'b', 'c' ],
+//│ >   [ '' ],
+//│ >   [ '1', '2', '3' ],
+//│ >   [ '4', '5', '6' ],
+//│ >   [ '' ]
+//│ = ]
+
+csv.toArrays(",")
+//│ = [ [ '' ] ]
+
+csv.toArrays(",,")
+//│ = [ [ '', '' ] ]
+
+
+

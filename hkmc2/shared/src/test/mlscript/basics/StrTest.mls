@@ -1,0 +1,62 @@
+:js
+
+import "../../mlscript-compile/Str.mls"
+
+open Str
+
+
+concat of "a", "b", "c"
+//│ = 'abc'
+
+concat of
+  "a"
+  "b"
+  "c"
+//│ = 'abc'
+
+
+// TODO (~) should be sanitized
+
+(~)("a", "b", "c")
+//│ = 'ab'
+
+(~)("a")
+//│ = 'a'
+
+~"a"
+//│ = 'a'
+
+:w
+~("a", "b")
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.30: 	~("a", "b")
+//│ ╙──      	  ^^^
+//│ = 'b'
+
+:pe
+~ of "a", "b"
+//│ ╔══[PARSE ERROR] Expected start of statement in this position; found 'of' keyword instead
+//│ ║  l.37: 	~ of "a", "b"
+//│ ╙──      	  ^^
+//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
+//│ ║  l.37: 	~ of "a", "b"
+//│ ╙──      	     ^^^
+
+(~) of "a", "b"
+//│ = 'ab'
+
+
+fun test(...xs) =
+  concat of ...xs, "!"
+
+test("a", "b", "c")
+//│ = 'abc!'
+
+
+"a" Str.concat2("b")
+//│ = 'ab'
+
+"a" Str.concat2 of "b"
+//│ = 'ab'
+
+

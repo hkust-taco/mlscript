@@ -1,0 +1,11 @@
+:js
+:todo
+
+
+[a, b] => [b, a]
+//│ /!!!\ Uncaught error: scala.MatchError: TyTup(List(Ident(a), Ident(b))) (of class hkmc2.syntax.Tree$TyTup)
+
+fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ /!!!\ Uncaught error: scala.MatchError: Tup(List(Ident(a), Ident(b))) (of class hkmc2.syntax.Tree$Tup)
+
+
