@@ -90,3 +90,13 @@ id(@Log 5)
 //│ ║  l.82: 	@1 + 2 class Qux
 //│ ╙──      	   ^^^
 //│ = 2
+
+:todo
+class Foo with
+  @debug
+  constructor
+    Bar(qax: Str)
+//│ ╔══[PARSE ERROR] Blocks cannot be annotated
+//│ ║  l.98: 	    Bar(qax: Str)
+//│ ╙──      	^^^^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: List() (of class Nil$)
