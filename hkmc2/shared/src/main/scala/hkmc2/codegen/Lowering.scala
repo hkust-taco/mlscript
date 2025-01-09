@@ -392,10 +392,7 @@ class Lowering(using TL, Raise, Elaborator.State):
         case (acc, term) => acc match
           case N => term.toLoc
           case S(loc) => S(loc ++ term.toLoc)) ::
-      msg"Annotations are not supported on this ${target match
-            case _: LetDecl => "let declaration"
-            case td: TermDefinition => td.k.desc
-            case cls: ClassLikeDef => cls.kind.desc }." -> target.toLoc :: Nil))
+      Nil))
 
 
 trait LoweringSelSanityChecks
