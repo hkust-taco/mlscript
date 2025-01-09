@@ -539,7 +539,7 @@ extends Importer:
               case S(loc) => S(loc ++ ann.toLoc)
           ) :: (sts.headOption match
             case N => msg"A target term is expected at the end of block" -> blk.toLoc.map(_.right)
-            case S(head) => msg"Annotations are not supported on ${head.describe}" -> head.toLoc
+            case S(head) => msg"Annotations are not supported on ${head.describe} terms." -> head.toLoc
           ) :: Nil
       sts match
       case Nil =>
