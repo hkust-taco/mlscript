@@ -142,9 +142,11 @@ class Lowering(using TL, Raise, Elaborator.State):
             privateFlds,
             publicFlds,
             End(),
-            term(Blk(rest2, bodBlk.res))(ImplctRet).mapTail:
-              case Return(Value.Lit(syntax.Tree.UnitLit(true)), true) => End()
-              case t => t
+            term(Blk(rest2, bodBlk.res))(ImplctRet)
+              // * This is just a minor improvement to get `constructor() {}` instead of `constructor() { null }`
+              .mapTail:
+                case Return(Value.Lit(syntax.Tree.UnitLit(true)), true) => End()
+                case t => t
           ),
         term(st.Blk(stats, res))(k))
       case _ =>

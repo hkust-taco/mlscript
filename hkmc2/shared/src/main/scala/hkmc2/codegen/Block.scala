@@ -60,8 +60,10 @@ sealed abstract class Block extends Product with AutoLocated:
     case Define(defn, rst) => Define(defn, rst.mapTail(f))
     case HandleBlock(lhs, res, cls, handlers, body, rest) =>
       HandleBlock(lhs, res, cls, handlers.map(h => Handler(h.sym, h.resumeSym, h.params, h.body.mapTail(f))), body.mapTail(f), rest.mapTail(f))
+    case Match(scrut, arms, dflt, rst: End) =>
+      Match(scrut, arms.map(_ -> _.mapTail(f)), dflt.map(_.mapTail(f)), rst)
     case Match(scrut, arms, dflt, rst) =>
-      Match(scrut, arms.map(_ -> _.mapTail(f)), dflt.map(_.mapTail(f)), rst.mapTail(f))
+      Match(scrut, arms, dflt, rst.mapTail(f))
   
   lazy val freeVars: Set[Local] = this match
     case Match(scrut, arms, dflt, rest) =>
