@@ -469,8 +469,8 @@ extends Importer:
       Term.Error
     case Annotated(lhs, rhs) => 
       raise(WarningReport(
-        msg"This annotation qualifier is not applied" -> lhs.toLoc ::
-        msg"Because annotations are not supported for ${rhs.describe}" -> rhs.toLoc :: Nil))
+        msg"This annotation has no effect." -> lhs.toLoc ::
+        msg"Annotations are not supported on ${rhs.describe} terms." -> rhs.toLoc :: Nil))
       val qualifier = lhs match
         case App(_: (Ident | SynthSel | Sel), _) | _: (Ident | SynthSel | Sel) => term(lhs)
         case _ =>
