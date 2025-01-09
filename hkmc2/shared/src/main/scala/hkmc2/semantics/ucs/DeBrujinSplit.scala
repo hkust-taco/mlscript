@@ -67,16 +67,6 @@ enum DeBrujinSplit:
   case Accept(outcome: Int)
   case Reject
   
-  def firstPatterns: Set[PatternStub] =
-    def go(split: DeBrujinSplit, target: Int): Set[PatternStub] =
-      split match
-        case Binder(body) => go(body, target + 1)
-        case Branch(scrutinee, pattern, consequence, alternative) =>
-          go(consequence, target) ++ go(alternative, target) ++ 
-            (if scrutinee == target then Set(pattern) else Set())
-        case Accept(_) | Reject => Set()
-    go(this, Outermost)
-    
   def showDbg: Str =
     def go(split: DeBrujinSplit): Str = split match
       case Binder(body) =>
