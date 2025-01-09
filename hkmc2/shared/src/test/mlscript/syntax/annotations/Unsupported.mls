@@ -31,42 +31,27 @@ module debug
 
 :w
 (@debug 1) + 2
-//│ ╔══[WARNING] This annotation qualifier is not applied
-//│ ║  l.33: 	(@debug 1) + 2
-//│ ║        	  ^^^^^
-//│ ╟── Because annotations are not supported for integer literal
-//│ ║  l.33: 	(@debug 1) + 2
-//│ ╙──      	        ^
+//│ FAILURE: Unexpected lack of warnings
 
 :w
 (1 + @debug 2)
-//│ ╔══[WARNING] This annotation qualifier is not applied
-//│ ║  l.42: 	(1 + @debug 2)
-//│ ║        	      ^^^^^
-//│ ╟── Because annotations are not supported for integer literal
-//│ ║  l.42: 	(1 + @debug 2)
-//│ ╙──      	            ^
+//│ FAILURE: Unexpected lack of warnings
 
 class Log(msg: Str)
 
 :w
 id(@Log 5)
-//│ ╔══[WARNING] This annotation qualifier is not applied
-//│ ║  l.53: 	id(@Log 5)
-//│ ║        	    ^^^
-//│ ╟── Because annotations are not supported for integer literal
-//│ ║  l.53: 	id(@Log 5)
-//│ ╙──      	        ^
+//│ FAILURE: Unexpected lack of warnings
 
 :pe
 :w
 @1 + 2 class Qux
 //│ ╔══[PARSE ERROR] Expected end of input; found 'class' keyword instead
-//│ ║  l.63: 	@1 + 2 class Qux
+//│ ║  l.48: 	@1 + 2 class Qux
 //│ ╙──      	       ^^^^^
 //│ ╔══[WARNING] The annotation qualifier is not applied
-//│ ║  l.63: 	@1 + 2 class Qux
+//│ ║  l.48: 	@1 + 2 class Qux
 //│ ║        	 ^
 //│ ╟── Because annotations are not supported for application
-//│ ║  l.63: 	@1 + 2 class Qux
+//│ ║  l.48: 	@1 + 2 class Qux
 //│ ╙──      	   ^^^

@@ -309,7 +309,7 @@ class Lowering(using TL, Raise, Elaborator.State):
         term(finallyDo)(_ => End()),
         k(Value.Ref(l))
       )
-  
+
     case Handle(lhs, rhs, defs) =>
       raise(ErrorReport(
         msg"Effect handlers are not enabled" ->
@@ -338,7 +338,9 @@ class Lowering(using TL, Raise, Elaborator.State):
           AssignField(ref, Tree.Ident("value"), value, k(value))(N)
 
     case Annotated(prefix, receiver) => 
-      // TODO: handle annotations
+      raise(WarningReport(
+        msg"This annotation has no effect." -> prefix.toLoc ::
+        msg"Annotations are not supported on ${receiver.describe} terms." -> receiver.toLoc :: Nil))
       term(receiver)(k)
     
     case Error => End("error")

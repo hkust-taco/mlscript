@@ -468,9 +468,9 @@ extends Importer:
       raise(ErrorReport(msg"Illegal position for '_' placeholder." -> tree.toLoc :: Nil))
       Term.Error
     case Annotated(lhs, rhs) => 
-      raise(WarningReport(
-        msg"This annotation has no effect." -> lhs.toLoc ::
-        msg"Annotations are not supported on ${rhs.describe} terms." -> rhs.toLoc :: Nil))
+      // raise(WarningReport(
+      //   msg"This annotation has no effect." -> lhs.toLoc ::
+      //   msg"Annotations are not supported on ${rhs.describe} terms." -> rhs.toLoc :: Nil))
       val qualifier = lhs match
         case App(_: (Ident | SynthSel | Sel), _) | _: (Ident | SynthSel | Sel) => term(lhs)
         case _ =>

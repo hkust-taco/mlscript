@@ -268,7 +268,7 @@ abstract class Parser(
             if blk.isEmpty then
               err((msg"Expected ${subRule.whatComesAfter} ${subRule.mkAfterStr}; found end of block instead" -> S(loc) :: Nil))
               errExpr
-            blk.map(qualifiers.annotate) ::: blockContOf(rule) // TODO: apply qualifiers
+            blk.map(qualifiers.annotate) ::: blockContOf(rule)
           case _ =>
             val res = parseRule(CommaPrecNext, subRule).getOrElse(errExpr)
             qualifiers.annotate(exprCont(res, CommaPrecNext, false)) :: blockContOf(rule)

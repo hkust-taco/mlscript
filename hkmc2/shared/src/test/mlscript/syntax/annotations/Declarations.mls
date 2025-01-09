@@ -55,20 +55,17 @@ let
 // Multiple annotations
 // ====================
 
-// :pt
 @inline @tailrec fun fib(n) =
   if n < 2 then n else fib(n - 1) + fib(n - 2)
 
 module internal
 
-// :pt
 @internal object
   shared
   thread_local
   transient
   volatile
 
-// :pt
 @volatile let
   @shared counter = 0
   @transient @thread_local cache = ()
