@@ -76,7 +76,7 @@ enum Tree extends AutoLocated:
   case RegRef(reg: Tree, value: Tree)
   case Effectful(eff: Tree, body: Tree)
   case Spread(kw: Keyword.Ellipsis, kwLoc: Opt[Loc], body: Opt[Tree])
-  case Annotated(qualifier: Tree, target: Tree)
+  case Annotated(annotation: Tree, target: Tree)
 
   def children: Ls[Tree] = this match
     case _: Empty | _: Error | _: Ident | _: Literal | _: Under => Nil
@@ -110,7 +110,7 @@ enum Tree extends AutoLocated:
     case Open(bod) => bod :: Nil
     case Def(lhs, rhs) => lhs :: rhs :: Nil
     case Spread(_, _, body) => body.toList
-    case Annotated(qualifier, target) => qualifier :: target :: Nil
+    case Annotated(annotation, target) => annotation :: target :: Nil
   
   def describe: Str = this match
     case Empty() => "empty"

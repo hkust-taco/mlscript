@@ -40,7 +40,7 @@ enum Term extends Statement:
   case Throw(result: Term)
   case Try(body: Term, finallyDo: Term)
   case Handle(lhs: LocalSymbol, rhs: Term, defs: Ls[HandlerTermDefinition])
-  case Annotated(qualifier: Term, target: Term)
+  case Annotated(annotation: Term, target: Term)
   
   lazy val symbol: Opt[Symbol] = this match
     case Ref(sym) => S(sym)
@@ -76,7 +76,7 @@ enum Term extends Statement:
     case SetRef(ref, value) => "mutable reference assignment"
     case Deref(ref) => "dereference"
     case Throw(e) => "throw"
-    case Annotated(qualifier, target) => "annotation"
+    case Annotated(annotation, target) => "annotation"
 end Term
 
 import Term.*
@@ -132,7 +132,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Try(body, finallyDo) => body :: finallyDo :: Nil
     case Handle(lhs, rhs, defs) => rhs :: defs.flatMap(_.td.subTerms)
     case Neg(e) => e :: Nil
-    case Annotated(qualifier, target) => qualifier :: target :: Nil
+    case Annotated(annotation, target) => annotation :: target :: Nil
   
   protected def children: Ls[Located] = this match
     case t: Lit => t.lit.asTree :: Nil
@@ -204,7 +204,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
         cls.tparams.map(_.showDbg).mkStringOr(", ", "[", "]")}${
         cls.paramsOpt.fold("")(_.toString)} ${cls.body}"
     case Import(sym, file) => s"import ${sym} from ${file}"
-    case Annotated(qualifier, target) => s"@${qualifier.showDbg} ${target.showDbg}"
+    case Annotated(annotation, target) => s"@${annotation.showDbg} ${target.showDbg}"
 
 final case class LetDecl(sym: LocalSymbol, annotations: Ls[Term]) extends Statement
 

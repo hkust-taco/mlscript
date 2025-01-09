@@ -165,41 +165,38 @@ module internal
 //│ ║         	 ^^^^^^^^
 //│ ╙── Annotations are not supported on this object.
 
+:w
 @volatile let
   @shared counter = 0
   @transient @thread_local cache = ()
   @volatile @transient empty = ""
   normal = ()
-//│ FAILURE: Unexpected warning
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.168: 	@volatile let
+//│ ║  l.169: 	@volatile let
 //│ ║         	 ^^^^^^^^^^^^
-//│ ║  l.169: 	  @shared counter = 0
+//│ ║  l.170: 	  @shared counter = 0
 //│ ║         	^^^^^^^^^
 //│ ╙── Annotations are not supported on this let declaration.
-//│ FAILURE: Unexpected warning
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.168: 	@volatile let
+//│ ║  l.169: 	@volatile let
 //│ ║         	 ^^^^^^^^^^^^
-//│ ║  l.169: 	  @shared counter = 0
+//│ ║  l.170: 	  @shared counter = 0
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.170: 	  @transient @thread_local cache = ()
+//│ ║  l.171: 	  @transient @thread_local cache = ()
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Annotations are not supported on this let declaration.
-//│ FAILURE: Unexpected warning
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.168: 	@volatile let
+//│ ║  l.169: 	@volatile let
 //│ ║         	 ^^^^^^^^^^^^
-//│ ║  l.169: 	  @shared counter = 0
+//│ ║  l.170: 	  @shared counter = 0
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.170: 	  @transient @thread_local cache = ()
+//│ ║  l.171: 	  @transient @thread_local cache = ()
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.171: 	  @volatile @transient empty = ""
+//│ ║  l.172: 	  @volatile @transient empty = ""
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Annotations are not supported on this let declaration.
-//│ FAILURE: Unexpected warning
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.168: 	@volatile let
+//│ ║  l.169: 	@volatile let
 //│ ║         	 ^^^^^^^^
 //│ ╙── Annotations are not supported on this let declaration.
 //│ counter = 0
