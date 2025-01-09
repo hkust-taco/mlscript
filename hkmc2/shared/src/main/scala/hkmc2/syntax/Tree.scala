@@ -148,6 +148,7 @@ enum Tree extends AutoLocated:
     case Def(lhs, rhs) => "defining assignment"
     case Spread(_, _, _) => "spread"
     case Annotated(_, _) => "annotated"
+    case Open(_) => "open"
   
   def showDbg: Str = toString // TODO
   
