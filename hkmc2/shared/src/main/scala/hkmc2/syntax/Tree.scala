@@ -238,7 +238,8 @@ case object ParamBind extends ValLike("", "parameter")
 case object Fun extends TermDefKind("fun", "function")
 sealed abstract class TypeDefKind(desc: Str) extends DeclKind(desc)
 sealed trait ObjDefKind
-sealed trait ClsLikeKind extends ObjDefKind
+sealed trait ClsLikeKind extends ObjDefKind:
+  val desc: Str
 case object Cls extends TypeDefKind("class") with ClsLikeKind
 case object Trt extends TypeDefKind("trait") with ObjDefKind
 case object Mxn extends TypeDefKind("mixin")

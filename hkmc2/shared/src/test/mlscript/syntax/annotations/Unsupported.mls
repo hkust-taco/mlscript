@@ -1,57 +1,80 @@
+:js
 // The annotations for the following expressions are not supported for now.
 
 module debug
 
 :w
 @debug 0
-//│ ╔══[WARNING] The annotation qualifier is not applied
-//│ ║  l.6: 	@debug 0
+//│ ╔══[WARNING] This annotation has no effect
+//│ ║  l.7: 	@debug 0
 //│ ║       	 ^^^^^
-//│ ╟── Because annotations are not supported for integer literal
-//│ ║  l.6: 	@debug 0
+//│ ╟── Annotations are not supported on integer literal
+//│ ║  l.7: 	@debug 0
 //│ ╙──     	       ^
+//│ = 0
 
 :w
 @debug 1 + 2
-//│ ╔══[WARNING] The annotation qualifier is not applied
-//│ ║  l.15: 	@debug 1 + 2
+//│ ╔══[WARNING] This annotation has no effect
+//│ ║  l.17: 	@debug 1 + 2
 //│ ║        	 ^^^^^
-//│ ╟── Because annotations are not supported for application
-//│ ║  l.15: 	@debug 1 + 2
+//│ ╟── Annotations are not supported on application
+//│ ║  l.17: 	@debug 1 + 2
 //│ ╙──      	       ^^^^^
+//│ = 3
 
 :w
 (@debug 1 + 2)
-//│ ╔══[WARNING] The annotation qualifier is not applied
-//│ ║  l.24: 	(@debug 1 + 2)
+//│ ╔══[WARNING] This annotation has no effect
+//│ ║  l.27: 	(@debug 1 + 2)
 //│ ║        	  ^^^^^
-//│ ╟── Because annotations are not supported for application
-//│ ║  l.24: 	(@debug 1 + 2)
+//│ ╟── Annotations are not supported on application
+//│ ║  l.27: 	(@debug 1 + 2)
 //│ ╙──      	        ^^^^^
+//│ = 3
 
 :w
 (@debug 1) + 2
-//│ FAILURE: Unexpected lack of warnings
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.37: 	(@debug 1) + 2
+//│ ║        	  ^^^^^
+//│ ╟── Annotations are not supported on integer literal terms.
+//│ ║  l.37: 	(@debug 1) + 2
+//│ ╙──      	        ^
+//│ = 3
 
 :w
 (1 + @debug 2)
-//│ FAILURE: Unexpected lack of warnings
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.47: 	(1 + @debug 2)
+//│ ║        	      ^^^^^
+//│ ╟── Annotations are not supported on integer literal terms.
+//│ ║  l.47: 	(1 + @debug 2)
+//│ ╙──      	            ^
+//│ = 3
 
 class Log(msg: Str)
 
 :w
 id(@Log 5)
-//│ FAILURE: Unexpected lack of warnings
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.59: 	id(@Log 5)
+//│ ║        	    ^^^
+//│ ╟── Annotations are not supported on integer literal terms.
+//│ ║  l.59: 	id(@Log 5)
+//│ ╙──      	        ^
+//│ = 5
 
 :pe
 :w
 @1 + 2 class Qux
 //│ ╔══[PARSE ERROR] Expected end of input; found 'class' keyword instead
-//│ ║  l.48: 	@1 + 2 class Qux
+//│ ║  l.70: 	@1 + 2 class Qux
 //│ ╙──      	       ^^^^^
-//│ ╔══[WARNING] The annotation qualifier is not applied
-//│ ║  l.48: 	@1 + 2 class Qux
+//│ ╔══[WARNING] This annotation has no effect
+//│ ║  l.70: 	@1 + 2 class Qux
 //│ ║        	 ^
-//│ ╟── Because annotations are not supported for application
-//│ ║  l.48: 	@1 + 2 class Qux
+//│ ╟── Annotations are not supported on application
+//│ ║  l.70: 	@1 + 2 class Qux
 //│ ╙──      	   ^^^
+//│ = 2

@@ -5,71 +5,202 @@ module tailrec
 tailrec
 //│ = tailrec { class: [class tailrec] }
 
+:w
 @tailrec fun fact_n(n, acc) =
   if n == 0 then acc else fact_n(n - 1, n * acc)
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.9: 	@tailrec fun fact_n(n, acc) =
+//│ ║       	 ^^^^^^^
+//│ ╟── Annotations are not supported on this function.
+//│ ║  l.10: 	  if n == 0 then acc else fact_n(n - 1, n * acc)
+//│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+:w
 fun fact(n) =
   @tailrec fun go(n, acc) =
     if n == 0 then acc else go(n - 1, n * acc)
   go(n, 1)
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.20: 	  @tailrec fun go(n, acc) =
+//│ ║        	   ^^^^^^^
+//│ ╟── Annotations are not supported on this function.
+//│ ║  l.21: 	    if n == 0 then acc else go(n - 1, n * acc)
+//│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 class Freezed(degree: Num)
 
+:w
 @Freezed(-273.15) class AbsoluteZero
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.33: 	@Freezed(-273.15) class AbsoluteZero
+//│ ║        	 ^^^^^^^^^^^^^^^^
+//│ ╙── Annotations are not supported on this class.
 
+:w
 @Freezed(-18) class Beverage(name: Str)
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.40: 	@Freezed(-18) class Beverage(name: Str)
+//│ ║        	 ^^^^^^^^^^^^
+//│ ╟── Annotations are not supported on this class.
+//│ ║  l.40: 	@Freezed(-18) class Beverage(name: Str)
+//│ ╙──      	                                   ^^^
 
+:w
 @Freezed(-4) let drink = Beverage("Coke")
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.49: 	@Freezed(-4) let drink = Beverage("Coke")
+//│ ║        	 ^^^^^^^^^^^
+//│ ╟── Annotations are not supported on this let declaration.
+//│ ║  l.49: 	@Freezed(-4) let drink = Beverage("Coke")
+//│ ╙──      	 ^^^^^^^^^^^
 //│ drink = Beverage { name: 'Coke' }
 
 module Foo with
   class Bar(qax: Str)
 
+:w
 @Foo.Bar("baz") class Qux
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.62: 	@Foo.Bar("baz") class Qux
+//│ ║        	 ^^^^^^^^^^^^^^
+//│ ╙── Annotations are not supported on this class.
 
+:w
 @42 class Qux
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.69: 	@42 class Qux
+//│ ║        	 ^^
+//│ ╙── Annotations are not supported on this class.
 
+:w
 @(1 + 2) class Qux
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.76: 	@(1 + 2) class Qux
+//│ ║        	  ^^^^^
+//│ ╙── Annotations are not supported on this class.
 
 module inline
 
+:w
 // All functions are annotated with @inline.
 @inline
 fun
   min(x, y) = if x < y then x else y
   max(x, y) = if x > y then x else y
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.86: 	@inline
+//│ ║        	 ^^^^^^
+//│ ╟── Annotations are not supported on this function.
+//│ ║  l.88: 	  min(x, y) = if x < y then x else y
+//│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.86: 	@inline
+//│ ║        	 ^^^^^^
+//│ ╟── Annotations are not supported on this function.
+//│ ║  l.89: 	  max(x, y) = if x > y then x else y
+//│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^
 
+:w
 @inline let
   abs(x) = if x < 0 then -x else x
   clamp(x, lo, hi) = min(max(x, lo), hi)
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.104: 	@inline let
+//│ ║         	 ^^^^^^
+//│ ╙── Annotations are not supported on this let declaration.
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.104: 	@inline let
+//│ ║         	 ^^^^^^
+//│ ╙── Annotations are not supported on this let declaration.
 //│ abs = [Function (anonymous)]
 //│ clamp = [Function (anonymous)]
 
+:w
 // Only the first variable is annotated with @inline.
 let
   @inline success = 0
   failure = 1
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.121: 	  @inline success = 0
+//│ ║         	   ^^^^^^
+//│ ╙── Annotations are not supported on this let declaration.
 //│ failure = 1
 //│ success = 0
 
 // Multiple annotations
 // ====================
 
+:w
 @inline @tailrec fun fib(n) =
   if n < 2 then n else fib(n - 1) + fib(n - 2)
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.134: 	@inline @tailrec fun fib(n) =
+//│ ║         	 ^^^^^^^^^^^^^^^
+//│ ╟── Annotations are not supported on this function.
+//│ ║  l.135: 	  if n < 2 then n else fib(n - 1) + fib(n - 2)
+//│ ╙──       	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 module internal
 
+:w
 @internal object
   shared
   thread_local
   transient
   volatile
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.146: 	@internal object
+//│ ║         	 ^^^^^^^^
+//│ ╙── Annotations are not supported on this object.
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.146: 	@internal object
+//│ ║         	 ^^^^^^^^
+//│ ╙── Annotations are not supported on this object.
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.146: 	@internal object
+//│ ║         	 ^^^^^^^^
+//│ ╙── Annotations are not supported on this object.
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.146: 	@internal object
+//│ ║         	 ^^^^^^^^
+//│ ╙── Annotations are not supported on this object.
 
 @volatile let
   @shared counter = 0
   @transient @thread_local cache = ()
   @volatile @transient empty = ""
   normal = ()
+//│ FAILURE: Unexpected warning
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.168: 	@volatile let
+//│ ║         	 ^^^^^^^^^^^^
+//│ ║  l.169: 	  @shared counter = 0
+//│ ║         	^^^^^^^^^
+//│ ╙── Annotations are not supported on this let declaration.
+//│ FAILURE: Unexpected warning
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.168: 	@volatile let
+//│ ║         	 ^^^^^^^^^^^^
+//│ ║  l.169: 	  @shared counter = 0
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.170: 	  @transient @thread_local cache = ()
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Annotations are not supported on this let declaration.
+//│ FAILURE: Unexpected warning
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.168: 	@volatile let
+//│ ║         	 ^^^^^^^^^^^^
+//│ ║  l.169: 	  @shared counter = 0
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.170: 	  @transient @thread_local cache = ()
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.171: 	  @volatile @transient empty = ""
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Annotations are not supported on this let declaration.
+//│ FAILURE: Unexpected warning
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.168: 	@volatile let
+//│ ║         	 ^^^^^^^^
+//│ ╙── Annotations are not supported on this let declaration.
 //│ counter = 0
 //│ empty = ''

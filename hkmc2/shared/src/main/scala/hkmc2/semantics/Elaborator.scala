@@ -468,9 +468,6 @@ extends Importer:
       raise(ErrorReport(msg"Illegal position for '_' placeholder." -> tree.toLoc :: Nil))
       Term.Error
     case Annotated(lhs, rhs) => 
-      // raise(WarningReport(
-      //   msg"This annotation has no effect." -> lhs.toLoc ::
-      //   msg"Annotations are not supported on ${rhs.describe} terms." -> rhs.toLoc :: Nil))
       val qualifier = lhs match
         case App(_: (Ident | SynthSel | Sel), _) | _: (Ident | SynthSel | Sel) => term(lhs)
         case _ =>
@@ -536,13 +533,13 @@ extends Importer:
       /** Call this function when the following term cannot be annotated. */
       def reportUnusedQualifiers: Unit = if qualifiers.nonEmpty then raise:
         WarningReport:
-          msg"The annotation qualifier is not applied" -> (qualifiers.foldLeft[Opt[Loc]](N):
+          msg"This annotation has no effect" -> (qualifiers.foldLeft[Opt[Loc]](N):
             case (acc, ann) => acc match
               case N => ann.toLoc
               case S(loc) => S(loc ++ ann.toLoc)
           ) :: (sts.headOption match
-            case N => msg"Because the target term is missing" -> blk.toLoc.map(_.right)
-            case S(head) => msg"Because annotations are not supported for ${head.describe}" -> head.toLoc
+            case N => msg"A target term is expected at the end of block" -> blk.toLoc.map(_.right)
+            case S(head) => msg"Annotations are not supported on ${head.describe}" -> head.toLoc
           ) :: Nil
       sts match
       case Nil =>
