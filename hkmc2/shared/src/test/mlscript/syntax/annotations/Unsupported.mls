@@ -11,7 +11,7 @@ open Str
 //│ ╔══[WARNING] This annotation has no effect
 //│ ║  l.9: 	@debug
 //│ ║       	 ^^^^^
-//│ ╟── Annotations are not supported on open
+//│ ╟── Annotations are not supported on open terms.
 //│ ║  l.10: 	open Str
 //│ ╙──      	     ^^^
 
@@ -20,7 +20,7 @@ open Str
 //│ ╔══[WARNING] This annotation has no effect
 //│ ║  l.19: 	@debug 0
 //│ ║        	 ^^^^^
-//│ ╟── Annotations are not supported on integer literal
+//│ ╟── Annotations are not supported on integer literal terms.
 //│ ║  l.19: 	@debug 0
 //│ ╙──      	       ^
 //│ = 0
@@ -30,7 +30,7 @@ open Str
 //│ ╔══[WARNING] This annotation has no effect
 //│ ║  l.29: 	@debug 1 + 2
 //│ ║        	 ^^^^^
-//│ ╟── Annotations are not supported on application
+//│ ╟── Annotations are not supported on application terms.
 //│ ║  l.29: 	@debug 1 + 2
 //│ ╙──      	       ^^^^^
 //│ = 3
@@ -40,7 +40,7 @@ open Str
 //│ ╔══[WARNING] This annotation has no effect
 //│ ║  l.39: 	(@debug 1 + 2)
 //│ ║        	  ^^^^^
-//│ ╟── Annotations are not supported on application
+//│ ╟── Annotations are not supported on application terms.
 //│ ║  l.39: 	(@debug 1 + 2)
 //│ ╙──      	        ^^^^^
 //│ = 3
@@ -86,7 +86,7 @@ id(@Log 5)
 //│ ╔══[WARNING] This annotation has no effect
 //│ ║  l.82: 	@1 + 2 class Qux
 //│ ║        	 ^
-//│ ╟── Annotations are not supported on application
+//│ ╟── Annotations are not supported on application terms.
 //│ ║  l.82: 	@1 + 2 class Qux
 //│ ╙──      	   ^^^
 //│ = 2
