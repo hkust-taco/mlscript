@@ -7,29 +7,11 @@ class Pair[A, B](first: A, second: B)
 [A, B]
 //│ = [ A { class: [class A] }, B { class: [class B] } ]
 
-:cp
 pattern OddTree = A | Pair(EvenTree, OddTree) | Pair(OddTree, EvenTree)
 pattern EvenTree = B | Pair(EvenTree, EvenTree) | Pair(OddTree, OddTree)
 
 // This does not work for now.
 
-:cp
-:ucs desugared rp:normalize rp:expand rp:memo
+:todo
 A is EvenTree
-//│ Desugared:
-//│ >  if
-//│ >    let $scrut = globalThis:block#1#666(.)A‹member:A›
-//│ >    $scrut is EvenTree then true
-//│ >    else false
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: found unelaborated pattern: EvenTree
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$package$.$anonfun$10(DeBrujinSplit.scala:292)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$package$.go$12$$anonfun$1(DeBrujinSplit.scala:292)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:37)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$package$.go$12(DeBrujinSplit.scala:350)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$package$.go$12$$anonfun$1(DeBrujinSplit.scala:285)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:37)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$package$.go$12(DeBrujinSplit.scala:350)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$package$.normalize(DeBrujinSplit.scala:352)
+//│ = false

@@ -55,6 +55,9 @@ pattern UnsignedByte = 0..< 256
 //│ ╔══[ERROR] Name not found: .<
 //│ ║  l.51: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                         ^^
+//│ ╔══[ERROR] Name not found: .<
+//│ ║  l.51: 	pattern UnsignedByte = 0..< 256
+//│ ╙──      	                         ^^
 //│ ╔══[ERROR] Cannot use this identifier as an extractor
 //│ ║  l.51: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                         ^^
@@ -62,7 +65,7 @@ pattern UnsignedByte = 0..< 256
 :e
 pattern BadRange = "s"..=0
 //│ ╔══[ERROR] Incompatible range types: string literal to integer literal
-//│ ║  l.63: 	pattern BadRange = "s"..=0
+//│ ║  l.66: 	pattern BadRange = "s"..=0
 //│ ╙──      	                   ^^^^^^^
 
 // It becomes an absurd pattern.
@@ -72,14 +75,14 @@ pattern BadRange = "s"..=0
 :e
 pattern BadRange = 0 ..= "s"
 //│ ╔══[ERROR] Incompatible range types: integer literal to string literal
-//│ ║  l.73: 	pattern BadRange = 0 ..= "s"
+//│ ║  l.76: 	pattern BadRange = 0 ..= "s"
 //│ ╙──      	                   ^^^^^^^^^
 
 :e
 pattern BadRange = "yolo" ..= "swag"
 //│ ╔══[ERROR] String range bounds must have only one character.
-//│ ║  l.79: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║  l.82: 	pattern BadRange = "yolo" ..= "swag"
 //│ ║        	                   ^^^^^^
 //│ ╟── String range bounds must have only one character.
-//│ ║  l.79: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║  l.82: 	pattern BadRange = "yolo" ..= "swag"
 //│ ╙──      	                              ^^^^^^

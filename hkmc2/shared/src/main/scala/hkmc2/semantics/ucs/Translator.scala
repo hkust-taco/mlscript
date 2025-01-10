@@ -8,6 +8,19 @@ import Split.display, ucs.Normalization
 import syntax.{Fun, Keyword, Literal, ParamBind, Tree}, Tree.*, Keyword.`as`
 import scala.collection.mutable.{Buffer, Set as MutSet}
 
+object Translator:
+  /** String range bounds must be single characters. */
+  def isInvalidStringBounds(lo: StrLit, hi: StrLit)(using Raise): Bool =
+    val ds = Buffer.empty[(Message, Option[Loc])]
+    if lo.value.length != 1 then
+      ds += msg"String range bounds must have only one character." -> lo.toLoc
+    if hi.value.length != 1 then
+      ds += msg"String range bounds must have only one character." -> hi.toLoc
+    if ds.nonEmpty then error(ds.toSeq*)
+    ds.nonEmpty
+
+import Translator.*
+
 /** This class translates a tree describing a pattern into functions that can
  *  perform pattern matching on terms described by the pattern.
  */
@@ -41,16 +54,6 @@ class Translator(val elaborator: Elaborator)
     val upperOp = if rightInclusive then lteq else lt
     val test2 = app(upperOp.ref(), tup(scrutFld, fld(Term.Lit(hi))), "ltHi")
     plainTest(test1, "gtLo")(plainTest(test2, "ltHi")(inner(Map.empty)))
-  
-  /** String range bounds must be single characters. */
-  private def isInvalidStringBounds(lo: StrLit, hi: StrLit)(using Raise): Bool =
-    val ds = Buffer.empty[(Message, Option[Loc])]
-    if lo.value.length != 1 then
-      ds += msg"String range bounds must have only one character." -> lo.toLoc
-    if hi.value.length != 1 then
-      ds += msg"String range bounds must have only one character." -> hi.toLoc
-    if ds.nonEmpty then error(ds.toSeq*)
-    ds.nonEmpty
   
   /** Generate a split that consumes the entire scrutinee. */
   private def full(scrut: Scrut, pat: Tree, inner: Inner)(using Raise): Split = trace(

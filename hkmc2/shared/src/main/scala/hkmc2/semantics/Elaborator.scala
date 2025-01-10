@@ -137,7 +137,6 @@ object Elaborator:
     ))
     def dbg: Bool = false
     def dbgUid(uid: Uid[Symbol]): Str = if dbg then s"‹$uid›" else ""
-    def shouldCompilePatterns: Bool = false // TODO: remove after annotations introduced
   transparent inline def State(using state: State): State = state
 
 end Elaborator
@@ -810,13 +809,11 @@ extends Importer:
           val owner = ctx.outer
           newCtx.nest(S(patSym)).givenIn:
             assert(body.isEmpty)
-            patSym.split = if state.shouldCompilePatterns then
-              td.extension.map: tree =>
-                val split = ucs.DeBrujinSplit.elaborate(tree, this)
-                scoped("ucs:rp:elaborated"):
-                  log(s"elaborated nameless split:\n${split.display}")
-                split
-              else None
+            patSym.split = td.extension.map: tree =>
+              val split = ucs.DeBrujinSplit.elaborate(tree, this)
+              scoped("ucs:rp:elaborated"):
+                log(s"elaborated nameless split:\n${split.display}")
+              split
             log(s"pattern body is ${td.extension}")
             val translate = new ucs.Translator(this)
             val bod = translate(ps.map(_.params).getOrElse(Nil), td.extension.getOrElse(die))

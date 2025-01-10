@@ -1,31 +1,36 @@
 :js
-:cp
 
 pattern Zero = "0"
 pattern One = "1"
 pattern Two = "2"
 
 :ucs normalized
+:fixme
 fun checkZeroOneTwo(x) = if x is
-  Zero then 0
-  One then 1
-  Two then 2
+  @compile Zero then 0
+  @compile One then 1
+  @compile Two then 2
   else ()
+//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ║  l.10: 	  @compile Zero then 0
+//│ ╙──      	   ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ║  l.11: 	  @compile One then 1
+//│ ╙──      	   ^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ║  l.12: 	  @compile Two then 2
+//│ ╙──      	   ^^^^^^^^^^^^^^^^^^
 //│ Normalized:
-//│ >  if
-//│ >    x is "0" then 0
-//│ >    x is "1" then 1
-//│ >    x is "2" then 2
-//│ >    else null
+//│ >  if then <error>
 
 import "../../../mlscript-compile/Option.mls"
 open Option
 
 :ucs normalized
 fun checkSomeZeroOneTwo(x) = if x is
-  Some(Zero) then 0
-  Some(One) then 1
-  Some(Two) then 2
+  Some(@compile Zero) then 0
+  Some(@compile One) then 1
+  Some(@compile Two) then 2
   else ()
 //│ Normalized:
 //│ >  if
@@ -38,6 +43,6 @@ fun checkSomeZeroOneTwo(x) = if x is
 
 pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
 
-let res = "1" is ManyZero
+let res = "1" is @compile ManyZero
 //│ res = false
 

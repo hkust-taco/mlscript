@@ -28,6 +28,9 @@ pattern Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
 
 :ucs rp:elaborated
 pattern Lower = "a"..="z"
+//│ elaborated nameless split:
+//│ >  a => 
+//│ >    reject
 
 :expect true
 "a" is Lower

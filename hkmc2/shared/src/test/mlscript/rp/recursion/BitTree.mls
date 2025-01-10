@@ -2,34 +2,29 @@
 
 class Pair[A, B](val first: A, val second: B)
 
-:cp
 pattern Bit = 0 | 1
 
 :expect true
-0 is Bit
+0 is @compile Bit
 //│ = true
 
 :expect true
-1 is Bit
+1 is @compile Bit
 //│ = true
 
 :expect false
-42 is Bit
+42 is @compile Bit
 //│ = false
 
 // :ucs rp:elaborated
-:cp
 pattern BitTree = null | Pair(Bit | BitTree, Bit | BitTree)
 
-:cp
 null is BitTree
 //│ = true
 
-:cp
 Pair(null, null) is BitTree
-//│ = false
+//│ = true
 
-// :ucs rp:elaborated
 pattern BinTree = null | Pair(BinTree | 0 | 1, BinTree | 0 | 1)
 
 :todo

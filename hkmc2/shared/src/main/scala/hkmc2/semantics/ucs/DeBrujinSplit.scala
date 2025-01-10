@@ -50,6 +50,16 @@ object DeBrujinSplit:
         Branch(_, Literal(IntLit(-n)), _, _)
       case App(Ident("-"), Tup(DecLit(n) :: Nil)) =>
         Branch(_, Literal(DecLit(-n)), _, _)
+      // BEGIN TODO: Support range patterns. This is just to suppress the errors.
+      case (lo: StrLit) to (incl, hi: StrLit) =>
+        (_, _, alternative) => alternative
+      case (lo: IntLit) to (incl, hi: IntLit) =>
+        (_, _, alternative) => alternative
+      case (lo: DecLit) to (incl, hi: DecLit) =>
+        (_, _, alternative) => alternative
+      case (lo: syntax.Literal) to (_, hi: syntax.Literal) =>
+        (_, _, alternative) => alternative
+      // END TODO: Support range patterns
       case App(ctor: (Ident | Sel), Tup(params)) => cls(ctor, params)
       case literal: syntax.Literal => Branch(_, Literal(literal), _, _)
     scoped("ucs:rp:elaborate"):
@@ -149,7 +159,6 @@ extension (branch: DeBrujinSplit.Branch)
       case Branch(`scrutinee`, ClassLike(symbol: PatternSymbol), consequence, alternative) =>
         val patternSplit = symbol.split.getOrElse:
           lastWords(s"found unelaborated pattern: ${symbol.nme}")
-        // val consequence2 = consequence // TODO: why can't we expand the consequence?
         val consequence2 = go(consequence, scrutinee)
         val alternative2 = go(alternative, scrutinee)
         patternSplit.expand(scrutinee :: Nil, consequence2) ++ alternative2

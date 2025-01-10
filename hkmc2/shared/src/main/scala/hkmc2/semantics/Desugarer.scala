@@ -9,7 +9,7 @@ import hkmc2.syntax.Literal
 import Keyword.{as, and, `do`, `else`, is, let, `then`}
 import collection.mutable.{HashMap, SortedSet}
 import Elaborator.{ctx, Ctxl}
-import ucs.DesugaringBase
+import ucs.{DesugaringBase, warn, error}
 
 object Desugarer:
   extension (op: Keyword.Infix)
@@ -66,6 +66,8 @@ class Desugarer(val elaborator: Elaborator)
   // represents the context with bindings in the current match.
 
   type Sequel = Ctx => Split
+  
+  type Ctor = SynthSel | Sel | Ident
 
   extension (sequel: Sequel)
     def traced(pre: Str, post: Split => Str): Sequel =
@@ -409,6 +411,22 @@ class Desugarer(val elaborator: Elaborator)
    */
   def expandMatch(scrutSymbol: BlockLocalSymbol, pattern: Tree, sequel: Sequel): Split => Sequel =
     def ref = scrutSymbol.ref(/* FIXME ident? */)
+    def dealWithCtorCase(ctor: Ctor, compile: Bool)(fallback: Split): Sequel = ctx =>
+      val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
+      clsTrm.symbol.flatMap(_.asClsLike) match
+      case S(cls: ClassSymbol) =>
+        if compile then warn(msg"Cannot compile the class `${cls.name}`" -> ctor.toLoc)
+        Branch(ref, Pattern.ClassLike(cls, clsTrm, N, false)(ctor), sequel(ctx)) ~: fallback
+      case S(mod: ModuleSymbol) =>
+        if compile then warn(msg"Cannot compile the module `${mod.name}`" -> ctor.toLoc)
+        Branch(ref, Pattern.ClassLike(mod, clsTrm, N, false)(ctor), sequel(ctx)) ~: fallback
+      case S(pat: PatternSymbol) =>
+        if compile then Branch(ref, Pattern.Synonym(pat, N), sequel(ctx)) ~: fallback
+        else makeUnapplyBranch(ref, clsTrm, sequel(ctx))(fallback)
+      case N =>
+        // Raise an error and discard `sequel`. Use `fallback` instead.
+        raise(ErrorReport(msg"Cannot use this ${ctor.describe} as a pattern" -> ctor.toLoc :: Nil))
+        fallback
     pattern match
       // A single wildcard pattern.
       case Under() => _ => ctx => sequel(ctx)
@@ -423,22 +441,11 @@ class Desugarer(val elaborator: Elaborator)
         val aliasSymbol = VarSymbol(id)
         val ctxWithAlias = ctx + (nme -> aliasSymbol)
         Split.Let(aliasSymbol, ref, sequel(ctxWithAlias) ++ fallback)
-      case ctor @ (_: Ident | _: SynthSel | _: Sel) => fallback => ctx =>
-        val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
-        clsTrm.symbol.flatMap(_.asClsLike) match
-        case S(cls: ClassSymbol) =>
-            Branch(ref, Pattern.ClassLike(cls, clsTrm, N, false)(ctor), sequel(ctx)) ~: fallback
-        case S(cls: ModuleSymbol) =>
-          Branch(ref, Pattern.ClassLike(cls, clsTrm, N, false)(ctor), sequel(ctx)) ~: fallback
-        case S(psym: PatternSymbol) =>
-          if state.shouldCompilePatterns then
-            Branch(ref, Pattern.Synonym(psym, N), sequel(ctx)) ~: fallback
-          else
-            makeUnapplyBranch(ref, clsTrm, sequel(ctx))(fallback)
-        case N =>
-          // Raise an error and discard `sequel`. Use `fallback` instead.
-          raise(ErrorReport(msg"Cannot use this ${ctor.describe} as a pattern" -> ctor.toLoc :: Nil))
-          fallback
+      case ctor: Ctor => dealWithCtorCase(ctor, false)
+      case Annotated(Ident("compile"), ctor: Ctor) => dealWithCtorCase(ctor, true)
+      case Annotated(annotation, ctor: Ctor) =>
+        error(msg"Unrecognized annotation on patterns" -> annotation.toLoc)
+        dealWithCtorCase(ctor, false)
       case Tree.Tup(args) => fallback => ctx => trace(
         pre = s"expandMatch <<< ${args.mkString(", ")}",
         post = (r: Split) => s"expandMatch >>> ${r.showDbg}"
