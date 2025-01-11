@@ -20,25 +20,20 @@ fun (##) concat(a, b) = Pair(a, b)
 :global
 :expect true
 
-:fixme
 null is @compile Tree
-//│ /!!!\ Uncaught error: scala.MatchError: ClassLike(pattern:Tree) (of class hkmc2.semantics.ucs.PatternStub$ClassLike)
+//│ = true
 
-:fixme
 null ## null is @compile Tree
-//│ /!!!\ Uncaught error: scala.MatchError: ClassLike(pattern:Tree) (of class hkmc2.semantics.ucs.PatternStub$ClassLike)
+//│ = true
 
-:fixme
 ((null ## null) ## null) is @compile Tree
-//│ /!!!\ Uncaught error: scala.MatchError: ClassLike(pattern:Tree) (of class hkmc2.semantics.ucs.PatternStub$ClassLike)
+//│ = true
 
-:fixme
 null ## (null ## null) is @compile Tree
-//│ /!!!\ Uncaught error: scala.MatchError: ClassLike(pattern:Tree) (of class hkmc2.semantics.ucs.PatternStub$ClassLike)
+//│ = true
 
-:fixme
 ((null ## null) ## (null ## null)) is @compile Tree
-//│ /!!!\ Uncaught error: scala.MatchError: ClassLike(pattern:Tree) (of class hkmc2.semantics.ucs.PatternStub$ClassLike)
+//│ = true
 
 // Negative Test Cases
 // ===================
@@ -46,18 +41,14 @@ null ## (null ## null) is @compile Tree
 :global
 :expect false
 
-:fixme
 0 is @compile Tree
-//│ /!!!\ Uncaught error: scala.MatchError: ClassLike(pattern:Tree) (of class hkmc2.semantics.ucs.PatternStub$ClassLike)
+//│ = false
 
-:fixme
 0 ## 0 is @compile Tree
-//│ /!!!\ Uncaught error: scala.MatchError: ClassLike(pattern:Tree) (of class hkmc2.semantics.ucs.PatternStub$ClassLike)
+//│ = false
 
-:fixme
 0 ## null is @compile Tree
-//│ /!!!\ Uncaught error: scala.MatchError: ClassLike(pattern:Tree) (of class hkmc2.semantics.ucs.PatternStub$ClassLike)
+//│ = false
 
-:fixme
 null ## 0 is @compile Tree
-//│ /!!!\ Uncaught error: scala.MatchError: ClassLike(pattern:Tree) (of class hkmc2.semantics.ucs.PatternStub$ClassLike)
+//│ = false

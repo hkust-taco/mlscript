@@ -123,13 +123,7 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
                 // The memorized splits may have free variables. We will count
                 // the number of free variables, bind them, and substitute them
                 // with the new indices.
-                val originalSplit = entry.split
-                val freeScrutinees = originalSplit.freeScrutinees
-                log(s"free scrutinees: ${freeScrutinees.mkString("{", ",", "}")}")
-                val arity = freeScrutinees.size
-                val boundSplit = originalSplit.substitute:
-                    Subst(freeScrutinees.iterator.zip(1 to arity).toSeq*)
-                  .bind(arity)
+                val arity = entry.split.arity
                 val paramSymbols = (1 to arity).map: i =>
                   TermSymbol(ParamBind, N, Ident(s"param$i"))
                 .toVector
@@ -137,11 +131,16 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
                   paramSymbols.iterator.map(Param(FldFlags.empty, _, N)).toList
                 val success = Split.Else(desugaring.makeMatchResult(Term.Tup(Nil)(Tree.Tup(Nil))))
                 val failure = Split.Else(desugaring.makeMatchFailure)
-                val bodySplit = boundSplit.toSplit(
-                  scrutinees = paramSymbols.map(symbol => () => symbol.ref()),
-                  localPatterns = compiledLocalPatterns.map((id, ent) => (id, ent.symbol)),
-                  outcomes = Map(S(42) -> success, N -> failure),
-                  elab = elaborator) ++ Split.Else(desugaring.makeMatchFailure)
+                val bodySplit = scoped("ucs:rp:split"):
+                  log(s"compiling local pattern ${entry.id}:\n${entry.split.display}")
+                  log(s"with param symbols: ${paramSymbols.mkString("{", ",", "}")}")
+                  val bodySplit = entry.split.toSplit(
+                    scrutinees = paramSymbols.map(symbol => () => symbol.ref()),
+                    localPatterns = compiledLocalPatterns.map((id, ent) => (id, ent.symbol)),
+                    outcomes = Map(S(0) -> success, N -> failure),
+                    elab = elaborator) ++ Split.Else(desugaring.makeMatchFailure)
+                  log(s"compiled local pattern ${entry.id}:\n${Split.display(bodySplit)}")
+                  bodySplit
                 val funcBody: Term = Term.IfLike(Keyword.`if`, bodySplit)(bodySplit)
                 Term.Lam(paramList, funcBody)
               Split.Let(entry.symbol, definition, inner)

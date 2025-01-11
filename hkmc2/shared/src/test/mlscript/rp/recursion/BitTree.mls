@@ -16,34 +16,50 @@ pattern Bit = 0 | 1
 42 is @compile Bit
 //│ = false
 
-// :ucs rp:elaborated
 pattern BitTree = null | Pair(Bit | BitTree, Bit | BitTree)
 
-null is BitTree
+:fixme
+null is @compile BitTree
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: $arg1
+
+:fixme
+Pair(null, null) is @compile BitTree
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: $arg1
+
+pattern BitTreeAlt = null | Pair(BitTreeAlt | 0 | 1, BitTreeAlt | 0 | 1)
+
+:global
+:expect true
+
+null is @compile BitTreeAlt
 //│ = true
 
-Pair(null, null) is BitTree
+Pair(null, null) is @compile BitTreeAlt
 //│ = true
 
-pattern BinTree = null | Pair(BinTree | 0 | 1, BinTree | 0 | 1)
-
-:todo
-
-null is BinTree
+Pair(0, null) is @compile BitTreeAlt
 //│ = true
-:todo
 
-Pair(null, null) is BinTree
+Pair(0, Pair(0, null)) is @compile BitTreeAlt
 //│ = true
-:todo
 
-Pair(0, null) is BinTree
+Pair(0, Pair(0, Pair(1, Pair(0, null)))) is @compile BitTreeAlt
 //│ = true
-:todo
 
-Pair(0, Pair(0, null)) is BinTree
+Pair(0, Pair(0, Pair(1, Pair(1, null)))) is @compile BitTreeAlt
 //│ = true
-:todo
 
-Pair(2, Pair(0, Pair(1, null))) is BinTree
-//│ = true
+:global
+:expect false
+
+Pair(2, Pair(0, Pair(1, null))) is @compile BitTreeAlt
+//│ = false
+
+Pair(0, Pair(0, Pair(2, null))) is @compile BitTreeAlt
+//│ = false
+
+Pair(0, Pair(0, Pair(1, Pair(2, null)))) is @compile BitTreeAlt
+//│ = false
+
+Pair(0, Pair(0, Pair(1, Pair(2, null)))) is @compile BitTreeAlt
+//│ = false

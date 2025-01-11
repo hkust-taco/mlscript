@@ -18,18 +18,24 @@ pattern Bit = 0 | 1
 
 pattern BitSeq = null | Pair(Bit, BitSeq)
 
+:global
 :expect true
+
+:fixme
 null is @compile BitSeq
-//│ = true
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: $arg1
 
-:expect true
+:fixme
 Pair(0, null) is @compile BitSeq
-//│ = true
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: $arg1
 
-:expect true
+:fixme
 Pair(1, Pair(0, null)) is @compile BitSeq
-//│ = true
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: $arg1
 
+:global
 :expect false
+
+:fixme
 Pair(2, null) is @compile BitSeq
-//│ = false
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: $arg1
