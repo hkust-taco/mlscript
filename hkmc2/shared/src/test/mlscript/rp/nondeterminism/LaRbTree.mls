@@ -1,0 +1,53 @@
+:js
+
+class Pair[S, T](val first: S, val second: T)
+
+object A
+object B
+
+// The patterns generate exactly those trees whose leftmost leaf is labeled `A`
+// and whose rightmost leaf is labeled `B`.
+
+pattern LaRbTree = Pair(LaTree | RbTree)
+pattern LaTree = A | Pair(A | AnyTree)
+pattern RbTree = B | Pair(AnyTree | B)
+pattern AnyTree = A | B | Pair(AnyTree | AnyTree)
+
+:global
+:expect true
+
+A is LaTree
+//│ = true
+
+B is RbTree
+//│ = true
+
+A is AnyTree
+//│ = true
+
+B is AnyTree
+//│ = true
+
+Pair(A, B) is LaRbTree
+//│ = true
+
+:global
+:expect false
+
+A is LaRbTree
+//│ = false
+
+B is LaRbTree
+//│ = false
+
+:fixme
+Pair(B, A) is LaRbTree
+//│ ═══[RUNTIME ERROR] Expected: false, got: true
+
+:fixme
+Pair(A, A) is LaRbTree
+//│ ═══[RUNTIME ERROR] Expected: false, got: true
+
+:fixme
+Pair(B, B) is LaRbTree
+//│ ═══[RUNTIME ERROR] Expected: false, got: true

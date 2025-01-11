@@ -10,7 +10,7 @@ class Pair[A, B](first: A, second: B)
 pattern OddTree = A | Pair(EvenTree, OddTree) | Pair(OddTree, EvenTree)
 pattern EvenTree = B | Pair(EvenTree, EvenTree) | Pair(OddTree, OddTree)
 
-// This does not work for now.
+// This does not compile for now.
 
 :todo
 A is EvenTree
