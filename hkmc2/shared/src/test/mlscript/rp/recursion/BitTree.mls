@@ -18,13 +18,11 @@ pattern Bit = 0 | 1
 
 pattern BitTree = null | Pair(Bit | BitTree, Bit | BitTree)
 
-:fixme
 null is @compile BitTree
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: $arg1
+//│ = true
 
-:fixme
 Pair(null, null) is @compile BitTree
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: $arg1
+//│ = true
 
 pattern BitTreeAlt = null | Pair(BitTreeAlt | 0 | 1, BitTreeAlt | 0 | 1)
 
