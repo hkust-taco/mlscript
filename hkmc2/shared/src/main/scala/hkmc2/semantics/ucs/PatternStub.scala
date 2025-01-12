@@ -8,9 +8,7 @@ import mlscript.utils.*, shorthands.*
 /** "Virtual" constructor for string joining operator `~`. */
 case object StringJoin
 
-case class LocalPattern(id: Int, arity: Int)
-
-case class Expansion(symbol: PatternSymbol)
+case class LocalPattern(symbol: PatternSymbol)
 
 /** Describe the size of tuples. If `infinite` is `false`, it represents
  *  fixed-size tuples. Otherwise, it represents tuples with at least `size`.
@@ -18,7 +16,7 @@ case class Expansion(symbol: PatternSymbol)
 type TupleCapacity = (size: Int, infinite: Bool)
 
 type MatchableSymbol = ClassSymbol | ModuleSymbol | PatternSymbol |
-  TupleCapacity | StringJoin.type | LocalPattern | Expansion | DeBrujinSplit
+  TupleCapacity | StringJoin.type | LocalPattern | DeBrujinSplit
 
 /** `PatternStub` is a simplified representation of `semantics.Pattern`. It
  *  excludes terms and symbols which can break the uniqueness of the pattern.
@@ -47,7 +45,7 @@ enum PatternStub:
       case symbol: ClassSymbol => symbol.arity
       case symbol: ModuleSymbol => 0
       case symbol: PatternSymbol => symbol.arity
-      case LocalPattern(_, arity) => arity
+      case LocalPattern(symbol) => symbol.arity
       case _: DeBrujinSplit => 1 // The arity of embedded splits is always 1.
     case Wildcard => 0
     
@@ -65,7 +63,7 @@ enum PatternStub:
       case symbol: ClassSymbol => symbol.toString // TODO: display arity
       case symbol: ModuleSymbol => symbol.toString
       case symbol: PatternSymbol => symbol.toString
-      case LocalPattern(id, _) => s"local:$id"
+      case LocalPattern(symbol) => s"local:${symbol.nme}"
       case split: DeBrujinSplit => "<split>"
     case Wildcard => "_"
 

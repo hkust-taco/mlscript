@@ -12,11 +12,36 @@ pattern Falsy =
   And(Truthy, Falsy) | Or(Falsy, Falsy) | Not(Truthy)
 
 :expect [ true, false, false, true ]
-[true is Truthy, false is Truthy, true is Falsy, false is Falsy]
+[
+  true is @compile Truthy,
+  false is @compile Truthy,
+  true is @compile Falsy,
+  false is @compile Falsy
+]
 //│ = [ true, false, false, true ]
 
+:global
 :expect true
-true && false is Truthy
+
+true && false is @compile Truthy
 //│ = true
 
-// TODO: Add more tests.
+true && true is @compile Truthy
+//│ = true
+
+:todo
+// The compilation scheme does not handle non-determinism at all at the moment.
+false && true is @compile Falsy
+//│ ═══[RUNTIME ERROR] Expected: true, got: false
+
+false && false is @compile Falsy
+//│ = true
+
+true || true is @compile Truthy
+//│ = true
+
+true || false is @compile Truthy
+//│ = true
+
+false || true is @compile Truthy
+//│ = true

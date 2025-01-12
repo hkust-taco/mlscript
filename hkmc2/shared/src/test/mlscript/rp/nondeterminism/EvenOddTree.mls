@@ -7,11 +7,59 @@ class Pair[A, B](first: A, second: B)
 [A, B]
 //│ = [ A { class: [class A] }, B { class: [class B] } ]
 
+// The patterns generate trees that have odd or even numbers of node `A`.
+
 pattern OddTree = A | Pair(EvenTree, OddTree) | Pair(OddTree, EvenTree)
 pattern EvenTree = B | Pair(EvenTree, EvenTree) | Pair(OddTree, OddTree)
 
-// This does not compile for now.
+fun (#) pair(a, b) = Pair(a, b)
 
-:todo
-A is EvenTree
+:global
+:expect true
+
+:ucs rp:memo
+B is @compile EvenTree
+//│ memo:
+//│ OddTree =>
+//│ >  λ 
+//│ >    1 is module:A -> accept 0
+//│ >    1 is class:Pair -> λ λ 
+//│ >      2 is local:EvenTree -> 1 is local:OddTree -> accept 0
+//│ >      2 is local:OddTree -> 1 is local:EvenTree -> accept 0
+//│ EvenTree =>
+//│ >  λ 
+//│ >    1 is module:B -> accept 0
+//│ >    1 is class:Pair -> λ λ 
+//│ >      2 is local:EvenTree -> 1 is local:EvenTree -> accept 0
+//│ >      2 is local:OddTree -> 1 is local:OddTree -> accept 0
+//│ = true
+
+not of A is @compile EvenTree
+//│ = true
+
+B # B is @compile EvenTree
+//│ = true
+
+A # A is @compile EvenTree
+//│ = true
+
+(A # A) # (A # A) is @compile EvenTree
+//│ = true
+
+(A # A) # (A # A) # (A # A) is @compile EvenTree
+//│ = true
+
+((A # A) # (A # A)) # ((A # A) # (A # A)) is @compile EvenTree
+//│ = true
+
+((A # A) # (A # A)) # ((A # A) # (B # B)) is @compile EvenTree
+//│ = true
+
+:global
+:expect false
+
+((A # A) # (A # B)) # ((A # A) # (A # B)) is @compile OddTree
+//│ = false
+
+((A # A) # (A # A)) # ((A # A) # (A # B)) is @compile EvenTree
 //│ = false

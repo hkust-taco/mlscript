@@ -8,6 +8,7 @@ object B
 // The patterns generate exactly those trees whose leftmost leaf is labeled `A`
 // and whose rightmost leaf is labeled `B`.
 
+// :ucs rp:elaborate rp:elaborated
 pattern LaRbTree = Pair(LaTree | RbTree)
 pattern LaTree = A | Pair(A | AnyTree)
 pattern RbTree = B | Pair(AnyTree | B)
@@ -16,38 +17,37 @@ pattern AnyTree = A | B | Pair(AnyTree | AnyTree)
 :global
 :expect true
 
-A is LaTree
+A is @compile LaTree
 //│ = true
 
-B is RbTree
+B is @compile RbTree
 //│ = true
 
-A is AnyTree
+A is @compile AnyTree
 //│ = true
 
-B is AnyTree
+B is @compile AnyTree
 //│ = true
 
-Pair(A, B) is LaRbTree
-//│ = true
+// :ucs rp rp:normalize rp:memo rp:split
+:todo
+Pair(A, B) is @compile LaRbTree
+//│ ═══[RUNTIME ERROR] Expected: true, got: false
 
 :global
 :expect false
 
-A is LaRbTree
+A is @compile LaRbTree
 //│ = false
 
-B is LaRbTree
+B is @compile LaRbTree
 //│ = false
 
-:fixme
-Pair(B, A) is LaRbTree
-//│ ═══[RUNTIME ERROR] Expected: false, got: true
+Pair(B, A) is @compile LaRbTree
+//│ = false
 
-:fixme
-Pair(A, A) is LaRbTree
-//│ ═══[RUNTIME ERROR] Expected: false, got: true
+Pair(A, A) is @compile LaRbTree
+//│ = false
 
-:fixme
-Pair(B, B) is LaRbTree
-//│ ═══[RUNTIME ERROR] Expected: false, got: true
+Pair(B, B) is @compile LaRbTree
+//│ = false

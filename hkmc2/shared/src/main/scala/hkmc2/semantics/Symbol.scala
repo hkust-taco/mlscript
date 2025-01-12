@@ -201,8 +201,12 @@ class PatternSymbol(val id: Tree.Ident, val params: Opt[Tree.Tup], val body: Tre
   override def toString: Str = s"pattern:${id.name}"
   /** Compute the arity. */
   def arity: Int = params.fold(0)(_.fields.length)
-  /** The expanded nameless split. */
-  var split: Opt[ucs.DeBrujinSplit] = N
+  /** The desugared nameless split. */
+  private var _split: Opt[ucs.DeBrujinSplit] = N
+  def split_=(split: ucs.DeBrujinSplit): Unit = _split = S(split)
+  def split: ucs.DeBrujinSplit = _split.getOrElse:
+    lastWords(s"found unelaborated pattern: $nme")
+  
 
 class TopLevelSymbol(blockNme: Str)(using State)
     extends MemberSymbol[ModuleDef] with InnerSymbol:
