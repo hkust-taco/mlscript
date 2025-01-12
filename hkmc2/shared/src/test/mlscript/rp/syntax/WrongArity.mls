@@ -1,0 +1,19 @@
+class Pair[A, B](val first: A, val second: B)
+
+pattern LessArity = Pair("meow")
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] The class `Pair` expected 2 arguments.
+//│ ║  l.1: 	class Pair[A, B](val first: A, val second: B)
+//│ ║       	      ^^^^
+//│ ╟── But only 1 sub-pattern is given.
+//│ ║  l.3: 	pattern LessArity = Pair("meow")
+//│ ╙──     	                         ^^^^^^
+
+pattern GreaterArity = Pair("meow", "woof", "moo")
+//│ FAILURE: Unexpected type error
+//│ ╔══[ERROR] The class `Pair` expected 2 arguments.
+//│ ║  l.1: 	class Pair[A, B](val first: A, val second: B)
+//│ ║       	      ^^^^
+//│ ╟── But only 3 sub-patterns are given.
+//│ ║  l.12: 	pattern GreaterArity = Pair("meow", "woof", "moo")
+//│ ╙──      	                            ^^^^^^^^^^^^^^^^^^^^^

@@ -32,9 +32,16 @@ object DeBrujinSplit:
                 ):
                   go(tree)(paramCount - index, inner, Reject)
               Branch(scrutinee, pattern, consequence.bind(paramCount), alternative)
-          else
-            (_, _, alternative) => alternative // TODO: report the error
-        case N => (_, _, alternative) => alternative // TODO: report the error
+          else (_, _, alternative) =>
+            error(
+              msg"The class `${symbol.nme}` expected ${pattern.arity.toString} arguments." -> symbol.toLoc,
+              msg"But only ${paramCount.toString} sub-pattern${if paramCount == 1 then " is" else "s are"} given." ->
+                params.foldLeft[Opt[Loc]](N):
+                  (acc, tree) => acc.fold(tree.toLoc)(_ ++ tree.toLoc |> S.apply))
+            alternative // TODO: report the error
+        case N => (_, _, alternative) =>
+          error(msg"Name not found: ${term.showDbg}" -> ctor.toLoc)
+          alternative // TODO: report the error
     def go(tree: Tree): F = tree match
       case lhs or rhs => (scrutinee, consequence, alternative) => trace(
         pre = s"or <<<",
@@ -63,6 +70,7 @@ object DeBrujinSplit:
       case App(ctor: (Ident | Sel), Tup(params)) => cls(ctor, params)
       case literal: syntax.Literal => Branch(_, Literal(literal), _, _)
     scoped("ucs:rp:elaborate"):
+      log(s"tree: ${tree.showDbg}")
       Binder(go(tree)(Outermost, Accept(0), Reject))
 end DeBrujinSplit
 
