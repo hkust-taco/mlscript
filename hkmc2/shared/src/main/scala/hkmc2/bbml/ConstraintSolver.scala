@@ -39,7 +39,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
   import hkmc2.bbml.NormalForm.*
 
   private def freshXVar(lvl: Int, sym: Symbol, hint: Str): InfVar =
-    InfVar(lvl, infVarState.nextUid, new VarState(), S(false))(InstSymbol(sym)(using elState), hint)
+    InfVar(lvl, infVarState.nextUid, new VarState(), false)(InstSymbol(sym)(using elState), hint)
 
   def extrude(ty: Type)(using lvl: Int, pol: Bool, cache: ExtrudeCache, bbctx: BbCtx, cctx: CCtx, tl: TL): Type =
   trace[Type](s"Extruding[${printPol(pol)}] ${ty.showDbg}", r => s"~> ${r.showDbg}"):
@@ -50,7 +50,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
           Wildcard(extrude(in)(using lvl, !pol), extrude(out))
         case t: Type => Wildcard(extrude(t)(using lvl, !pol), extrude(t))
       })
-    case v @ InfVar(_, uid, state, _) if v.isSkolem => // * skolem
+    case v @ InfVar(_, uid, state, true) => // * skolem
       cache.getOrElse(uid -> pol, {
         val nv = freshXVar(lvl, v.sym, v.hint)
         cache += uid -> pol -> nv
@@ -60,7 +60,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
           constrainImpl(nv, state.lowerBounds.foldLeft[Type](Bot)(_ | _))
         nv
       })
-    case v @ InfVar(_, uid, _, _) =>
+    case v @ InfVar(_, uid, _, false) =>
       cache.getOrElse(uid -> pol, {
         val nv = freshXVar(lvl, v.sym, v.hint)
         cache += uid -> pol -> nv
@@ -129,7 +129,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
     constrainImpl(lhs.posPart, rhs.posPart)
 
   private def inlineSkolemBounds(ty: Type, pol: Bool)(using cache: Set[Uid[InfVar]]): Type = ty.toBasic match
-    case v @ InfVar(_, uid, state, _) if v.isSkolem && !cache(uid) =>
+    case v @ InfVar(_, uid, state, skolem) if skolem && !cache(uid) =>
       given Set[Uid[InfVar]] = cache + uid
       inlineSkolemBounds(if pol then state.upperBounds.foldLeft[Type](v)(_ & _) else state.lowerBounds.foldLeft[Type](v)(_ | _), pol)
     case ComposedType(lhs, rhs, p) => ComposedType(inlineSkolemBounds(lhs, pol), inlineSkolemBounds(rhs, pol), p)

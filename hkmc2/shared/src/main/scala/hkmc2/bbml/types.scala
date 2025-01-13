@@ -155,7 +155,7 @@ sealed abstract class BasicType extends Type:
   
   def mapBasic(f: Type => Type): Type = this match
     case ClassLikeType(name, targs) => ClassLikeType(name, targs.map(_.mapArg(f)))
-    case ft @ FunType(args, ret, eff) => FunType(args.map(f), f(ret), f(eff))
+    case FunType(args, ret, eff) => FunType(args.map(f), f(ret), f(eff))
     case ComposedType(lhs, rhs, pol) => Type.mkComposedType(f(lhs), f(rhs), pol)
     case NegType(ty) => Type.mkNegType(f(ty))
     case Top | Bot | _: InfVar => this
@@ -168,9 +168,9 @@ sealed abstract class BasicType extends Type:
     this match
     case ClassLikeType(name, targs) =>
       if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.map(_.show).mkString(", ")}]"
-    case v @ InfVar(lvl, uid, _, _) =>
+    case v @ InfVar(lvl, uid, _, isSkolem) =>
       val name = scope.lookup(v.sym).getOrElse(scope.allocateName(v.sym, v.hint))
-      if v.isSkolem then name else s"'${name}"
+      if isSkolem then name else s"'${name}"
     case FunType(arg :: Nil, ret, eff) => s"${arg.paren} ->${printEff(eff)} ${ret.paren}"
     case FunType(args, ret, eff) => s"(${args.map(_.show).mkString(", ")}) ->${printEff(eff)} ${ret.paren}"
     case ComposedType(lhs, rhs, pol) => s"${lhs.paren} ${if pol then "∨" else "∧"} ${rhs.paren}"
@@ -181,9 +181,9 @@ sealed abstract class BasicType extends Type:
   override def showDbg: Str = this match
     case ClassLikeType(name, targs) =>
       if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.map(_.showDbg).mkString(", ")}]"
-    case v @ InfVar(lvl, uid, _, _) =>
+    case v @ InfVar(lvl, uid, _, isSkolem) =>
       val name = if v.hint.isEmpty then s"${v.sym.nme}" else s"${v.sym.nme}(${v.hint})"
-      if v.isSkolem then s"${name}${uid}_${lvl}" else s"'${name}${uid}_${lvl}"
+      if isSkolem then s"${name}${uid}_${lvl}" else s"'${name}${uid}_${lvl}"
     case FunType(arg :: Nil, ret, eff) => s"${arg.parenDbg} ->{${eff.showDbg}} ${ret.parenDbg}"
     case FunType(args, ret, eff) => s"(${args.map(_.showDbg).mkString(", ")}) ->{${eff.showDbg}} ${ret.parenDbg}"
     case ComposedType(lhs, rhs, pol) => s"${lhs.parenDbg} ${if pol then "∨" else "∧"} ${rhs.parenDbg}"
@@ -249,11 +249,8 @@ case class ClassLikeType(name: TypeSymbol | ModuleSymbol, targs: Ls[TypeArg]) ex
         case ty: Type => ty.subst
       })
 
-// * skolemFlag: S(true) -> skolem, S(false) -> normal tv, N -> outer, always skolem
-final case class InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, skolemFlag: Opt[Bool])(val sym: Symbol, val hint: Str) extends BasicType:
+final case class InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, isSkolem: Bool)(val sym: Symbol, val hint: Str) extends BasicType:
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = map.get(uid).getOrElse(this)
-  val isSkolem = skolemFlag.getOrElse(true)
-  val isOuter = skolemFlag.isEmpty
 
 given Ordering[InfVar] = Ordering.by(_.uid)
 
@@ -322,7 +319,7 @@ case class PolyType(tvs: Ls[InfVar], outer: InfVar, body: GeneralType) extends G
     // * Note that by this point, the state is supposed to be frozen/treated as immutable
     // * `outer` is already skolemized when it is declared
     val map = tvs.map(v =>
-      val sk = InfVar(lvl, nextUid, new VarState(), S(true))(v.sym, v.hint)
+      val sk = InfVar(lvl, nextUid, new VarState(), true)(v.sym, v.hint)
       tl.log(s"skolemize ${v.showDbg} ~> ${sk.showDbg}")
       v.uid -> sk
     ).toMap
@@ -330,7 +327,7 @@ case class PolyType(tvs: Ls[InfVar], outer: InfVar, body: GeneralType) extends G
   
   def instantiate(nextUid: => Uid[InfVar], env: InfVar, lvl: Int)(tl: TL)(using State): GeneralType =
     val map = ((outer.uid -> env) :: tvs.map(v =>
-      val nv = InfVar(lvl, nextUid, new VarState(), S(false))(new InstSymbol(v.sym), v.hint)
+      val nv = InfVar(lvl, nextUid, new VarState(), false)(new InstSymbol(v.sym), v.hint)
       tl.log(s"instantiate ${v.showDbg} ~> ${nv.showDbg}")
       v.uid -> nv
     )).toMap
@@ -341,7 +338,6 @@ object PolyType:
     val tvs = MutSet[InfVar]()
     object CollectTVs extends TypeTraverser:
       override def apply(pol: Boolean)(ty: GeneralType): Unit = ty match
-        case InfVar(_, _, _, N) => () // Ignore outer variables here
         case v @ InfVar(vlvl, _, state, _) if vlvl > lvl =>
           if tvs.add(v) then
             state.lowerBounds.foreach: bd =>

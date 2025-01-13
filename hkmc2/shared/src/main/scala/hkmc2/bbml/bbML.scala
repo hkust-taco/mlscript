@@ -80,9 +80,9 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
   private val solver = new ConstraintSolver(infVarState, elState, tl)
 
   private def freshSkolem(sym: Symbol, hint: Str = "")(using ctx: BbCtx): InfVar =
-    InfVar(ctx.lvl, infVarState.nextUid, new VarState(), S(true))(sym, hint)
+    InfVar(ctx.lvl, infVarState.nextUid, new VarState(), true)(sym, hint)
   private def freshVar(sym: Symbol, hint: Str = "")(using ctx: BbCtx): InfVar =
-    InfVar(ctx.lvl, infVarState.nextUid, new VarState(), S(false))(sym, hint)
+    InfVar(ctx.lvl, infVarState.nextUid, new VarState(), false)(sym, hint)
   private def freshWildcard(sym: Symbol)(using ctx: BbCtx) =
     val in = freshVar(sym, "-")
     val out = freshVar(sym, "+")
@@ -91,14 +91,14 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
   private def freshReg(sym: Symbol)(using ctx: BbCtx) =
     val state = new VarState()
     state.upperBounds = ctx.getRegEnv.! :: Nil
-    InfVar(ctx.lvl + 1, infVarState.nextUid, state, S(true))(sym, "")
+    InfVar(ctx.lvl + 1, infVarState.nextUid, state, true)(sym, "")
   private def freshOuter(sym: Symbol)(using ctx: BbCtx): InfVar =
-    InfVar(ctx.lvl + 1, infVarState.nextUid, new VarState(), N)(sym, "env@")
+    InfVar(ctx.lvl + 1, infVarState.nextUid, new VarState(), true)(sym, "env@")
   private def freshEnv(sym: Symbol)(using ctx: BbCtx): InfVar =
     val state = new VarState()
     state.upperBounds = ctx.getRegEnv :: Nil
     state.lowerBounds = ctx.getRegEnv :: Nil
-    InfVar(ctx.lvl, infVarState.nextUid, state, S(false))(sym, "")
+    InfVar(ctx.lvl, infVarState.nextUid, state, false)(sym, "")
 
   private def error(msg: Ls[Message -> Opt[Loc]])(using BbCtx) =
     raise(ErrorReport(msg))
@@ -393,7 +393,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             val (ty, ef) = ascribe(f.term, t)
             resEff |= ef
         (ret, resEff)
-    case (ft @ FunType(params, ret, eff), lhsEff) => app((PolyFunType(params, ret, eff), lhsEff), rhs, t)
+    case (FunType(params, ret, eff), lhsEff) => app((PolyFunType(params, ret, eff), lhsEff), rhs, t)
     case (ty: PolyType, eff) => app((instantiate(ty), eff), rhs, t)
     case (funTy, lhsEff) =>
       val (argTy, argEff) = rhs.flatMap:

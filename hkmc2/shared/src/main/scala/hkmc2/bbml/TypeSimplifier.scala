@@ -119,6 +119,10 @@ class TypeSimplifier(tl: TraceLogger):
                 super.apply(pol)(ty)
                 // traversingTVs -= tv
                 curPath = oldPath
+            case pt @ PolyType(_, outer, _) => // Avoid simplify outer variables to Top unexpectedly
+              posVars += outer
+              negVars += outer
+              super.apply(pol)(pt)
             case _ =>
               val oldPath = curPath
               pastPathsSet ++= oldPath
@@ -148,7 +152,6 @@ class TypeSimplifier(tl: TraceLogger):
     def subst(ty: GeneralType): GeneralType = trace[GeneralType](s"subst(${ty.showDbg})", r => s"= ${r.showDbg}"):
       ty match
         case ty if ty.lvl <= lvl => ty // TODO NOPE
-        case InfVar(_, _, _, N) => ty // Ignore outer variables
         case _tv: IV =>
           val tv = Analysis.getRepr(_tv)
           log(s"Repr: ${tv.showDbg}")

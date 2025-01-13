@@ -102,7 +102,7 @@ fun helper(r1) =
   region r2 in
     fork((_ => r1.ref 1), (_ => r2.ref 2))
 helper
-//│ Type: forall 'reg, 'reg1: Region[in 'reg out 'reg1] ->{'reg1} Pair[out Ref[Int, out 'reg1], out Ref[Int, out ¬env@helper]]
+//│ Type: forall env@helper, 'reg, 'reg1: Region[in 'reg out 'reg1] ->{'reg1} Pair[out Ref[Int, out 'reg1], out Ref[Int, out ¬env@helper]]
 //│ Where:
 //│   'reg <: env@helper
 //│   'reg <: 'reg1
@@ -110,7 +110,7 @@ helper
 
 region x in
   helper(x)
-//│ Type: Pair[out Ref[Int, ?], out Ref[Int, ?]]
+//│ Type: Pair[out Ref[Int, ?], out Ref[Int, ⊥]]
 
 
 region x in
@@ -127,24 +127,13 @@ region x in
 :e
 region x in
   (region y in let t = helper(x) in 42): [A] -> Int
-//│ ╔══[ERROR] Type error in reference with expected type 'r1
-//│ ║  l.129: 	  (region y in let t = helper(x) in 42): [A] -> Int
-//│ ║         	                              ^
-//│ ╟── because: cannot constrain  Region[x]  <:  'r1
-//│ ╟── because: cannot constrain  Region[in x out x]  <:  'r1
-//│ ╟── because: cannot constrain  Region[in x out x]  <:  Region[in 'reg out 'reg1]
-//│ ╟── because: cannot constrain  x  <:  'reg1
-//│ ╟── because: cannot constrain  x  <:  'reg1
-//│ ╟── because: cannot constrain  x  <:  'env
-//│ ╟── because: cannot constrain  x  <:  'env
-//│ ╙── because: cannot constrain  x  <:  env@outer ∨ y
 //│ ╔══[ERROR] Type error in region expression with expected type forall 'A: Int
 //│ ║  l.129: 	  (region y in let t = helper(x) in 42): [A] -> Int
 //│ ║         	                       ^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'eff  <:  ⊥
 //│ ╟── because: cannot constrain  'eff  <:  ¬()
-//│ ╟── because: cannot constrain  (¬⊥ ∧ ¬'y1) ∧ x  <:  ¬()
-//│ ╟── because: cannot constrain  x  <:  'y1
+//│ ╟── because: cannot constrain  (¬⊥ ∧ ¬'y) ∧ x  <:  ¬()
+//│ ╟── because: cannot constrain  x  <:  'y
 //│ ╙── because: cannot constrain  x  <:  ¬()
 //│ Type: Int
 
@@ -166,10 +155,10 @@ fun badanno: outer
 :e
 fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
 //│ ╔══[ERROR] Only one outer variable can be bound.
-//│ ║  l.167: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
+//│ ║  l.156: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
 //│ ╙──       	              ^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal forall annotation.
-//│ ║  l.167: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
+//│ ║  l.156: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
 //│ ╙──       	              ^^^^^^^^^^^^^^^^^^
 //│ ═══[ERROR] Invalid type
 //│ Type: ⊤
@@ -198,13 +187,13 @@ fun foo(r1) =
     fork((_ => r1.ref 1), (_ => r2.ref 2))
     foo(r2)
 //│ ╔══[ERROR] Type error in function literal
-//│ ║  l.196: 	fun foo(r1) =
+//│ ║  l.185: 	fun foo(r1) =
 //│ ║         	        ^^^^^
-//│ ║  l.197: 	  region r2 in
+//│ ║  l.186: 	  region r2 in
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.198: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
+//│ ║  l.187: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.199: 	    foo(r2)
+//│ ║  l.188: 	    foo(r2)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'r1 ->{'eff} 'app  <:  'foo
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo
@@ -220,13 +209,13 @@ fun foo(r1) =
 //│ ╟── because: cannot constrain  'r22  <:  ¬(¬foo)
 //│ ╙── because: cannot constrain  ¬foo  <:  ¬(¬foo)
 //│ ╔══[ERROR] Type error in function literal
-//│ ║  l.196: 	fun foo(r1) =
+//│ ║  l.185: 	fun foo(r1) =
 //│ ║         	        ^^^^^
-//│ ║  l.197: 	  region r2 in
+//│ ║  l.186: 	  region r2 in
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.198: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
+//│ ║  l.187: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.199: 	    foo(r2)
+//│ ║  l.188: 	    foo(r2)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'r1 ->{'eff} 'app  <:  'foo
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo

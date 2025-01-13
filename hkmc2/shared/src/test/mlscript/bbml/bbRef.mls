@@ -36,7 +36,7 @@ let r = region x in x.ref 42
 
 fun mkRef() = region x in x.ref 42
 mkRef
-//│ Type: forall : () -> Ref[Int, out ¬env@mkRef]
+//│ Type: forall env@mkRef: () -> Ref[Int, out ¬env@mkRef]
 
 :e
 let t = region x in x in t.ref 42
