@@ -73,24 +73,36 @@ class Lowering(using TL, Raise, Elaborator.State):
         case sym: sem.BlockMemberSymbol =>
           sym.trmImplTree.fold(sym.clsTree.isDefined)(_.k is syntax.Fun)
         case _ => false
-      arg match
-      case Tup(fs) =>
-        val as = fs.map:
-          case sem.Fld(sem.FldFlags.empty, value, N) => false -> value
-          case sem.Fld(sem.FldFlags(false, false, false, true), value, N) => false -> value
-          case sem.Fld(flags, value, asc) =>
-            TODO("Other argument forms")
-          case spd: Spd => true -> spd.term
-        val l = new TempSymbol(S(t))
-        subTerm(f): fr =>
-          def rec(as: Ls[Bool -> st], asr: Ls[Arg]): Block = as match
-            case Nil => k(Call(fr, asr.reverse)(isMlsFun))
-            case (spd, a) :: as =>
-              subTerm(a): ar =>
-                rec(as, Arg(spd, ar) :: asr)
-          rec(as, Nil)
-      case _ =>
-        TODO("Other argument list forms")
+      def conclude(fr: Path) =
+        arg match
+        case Tup(fs) =>
+          val as = fs.map:
+            case sem.Fld(sem.FldFlags.empty, value, N) => false -> value
+            case sem.Fld(sem.FldFlags(false, false, false, true), value, N) => false -> value
+            case sem.Fld(flags, value, asc) =>
+              TODO("Other argument forms")
+            case spd: Spd => true -> spd.term
+          val l = new TempSymbol(S(t))
+            def rec(as: Ls[Bool -> st], asr: Ls[Arg]): Block = as match
+              case Nil => k(Call(fr, asr.reverse)(isMlsFun))
+              case (spd, a) :: as =>
+                subTerm(a): ar =>
+                  rec(as, Arg(spd, ar) :: asr)
+            rec(as, Nil)
+        case _ =>
+          // Application arguments that are not tuples represent spreads, as in `f(...arg)`
+          subTerm(arg): ar =>
+            k(Call(fr, Arg(spread = true, ar) :: Nil)(isMlsFun))
+      f match
+      // * Due to whacky JS semantics, we need to make sure that selections leading to a call
+      // * are preserved in the call and not moved to a temporary variable.
+      case sel @ Sel(prefix, nme) =>
+        subTerm(prefix): p =>
+          conclude(Select(p, nme)(sel.sym))
+      case sel @ SelProj(prefix, _, nme) =>
+        subTerm(prefix): p =>
+          conclude(Select(p, nme)(sel.sym))
+      case _ => subTerm(f)(conclude)
     case st.Blk(Nil, res) => term(res)(k)
     case st.Blk(Lit(Tree.UnitLit(true)) :: stats, res) =>
       subTerm(st.Blk(stats, res))(k)
@@ -102,6 +114,7 @@ class Lowering(using TL, Raise, Elaborator.State):
     case st.Blk((d: Declaration) :: stats, res) =>
       d match
       case td: TermDefinition =>
+        reportAnnotations(td, td.annotations)
         td.body match
         case N => // abstract declarations have no lowering
           term(st.Blk(stats, res))(k)
@@ -120,12 +133,15 @@ class Lowering(using TL, Raise, Elaborator.State):
               term(st.Blk(stats, res))(k))
       // case cls: ClassDef =>
       case cls: ClassLikeDef =>
+        reportAnnotations(cls, cls.annotations)
         val bodBlk = cls.body.blk
         val (mtds, rest1) = bodBlk.stats.partitionMap:
           case td: TermDefinition if td.k is syntax.Fun => L(td)
           case s => R(s)
         val (privateFlds, rest2) = rest1.partitionMap:
-          case LetDecl(sym: TermSymbol) => L(sym)
+          case decl @ LetDecl(sym: TermSymbol, annotations) =>
+            reportAnnotations(decl, annotations)
+            L(sym)
           case s => R(s)
         val publicFlds = rest2.collect:
           case td @ TermDefinition(k = (_: syntax.Val)) => td
@@ -138,15 +154,18 @@ class Lowering(using TL, Raise, Elaborator.State):
             privateFlds,
             publicFlds,
             End(),
-            term(Blk(rest2, bodBlk.res))(ImplctRet).mapTail:
-              case Return(Value.Lit(syntax.Tree.UnitLit(true)), true) => End()
-              case t => t
+            term(Blk(rest2, bodBlk.res))(ImplctRet)
+              // * This is just a minor improvement to get `constructor() {}` instead of `constructor() { null }`
+              .mapTail:
+                case Return(Value.Lit(syntax.Tree.UnitLit(true)), true) => End()
+                case t => t
           ),
         term(st.Blk(stats, res))(k))
       case _ =>
         // TODO handle
         term(st.Blk(stats, res))(k)
-    case st.Blk((LetDecl(sym)) :: stats, res) =>
+    case st.Blk((decl @ LetDecl(sym, annotations)) :: stats, res) =>
+      reportAnnotations(decl, annotations)
       term(st.Blk(stats, res))(k)
     case st.Blk((DefineVar(sym, rhs)) :: stats, res) =>
       subTerm(rhs): r =>
@@ -318,8 +337,8 @@ class Lowering(using TL, Raise, Elaborator.State):
       End("error")
     
     // * BbML-specific cases: t.Cls#field and mutable operations
-    case SelProj(prefix, _, proj) =>
-      setupSelection(prefix, proj, N)(k)
+    case sp @ SelProj(prefix, _, proj) =>
+      setupSelection(prefix, proj, sp.sym)(k)
     case Region(reg, body) =>
       Assign(reg, Instantiate(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Region"))(N), Nil), term(body)(k))
     case RegRef(reg, value) =>
@@ -342,6 +361,11 @@ class Lowering(using TL, Raise, Elaborator.State):
         t.toLoc :: Nil,
         source = Diagnostic.Source.Compilation))
       End("error")
+    case Annotated(prefix, receiver) => 
+      raise(WarningReport(
+        msg"This annotation has no effect." -> prefix.toLoc ::
+        msg"Annotations are not supported on ${receiver.describe} terms." -> receiver.toLoc :: Nil))
+      term(receiver)(k)
     case Error => End("error")
     
     // case _ =>
@@ -377,6 +401,14 @@ class Lowering(using TL, Raise, Elaborator.State):
   
   def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])(using Subst): (List[ParamList], Block) =
     (paramLists, returnedTerm(bodyTerm))
+  
+  def reportAnnotations(target: Statement, annotations: Ls[Term]): Unit = if annotations.nonEmpty then
+    raise(WarningReport(
+      (msg"This annotation has no effect." -> annotations.foldLeft[Opt[Loc]](N):
+        case (acc, term) => acc match
+          case N => term.toLoc
+          case S(loc) => S(loc ++ term.toLoc)) ::
+      Nil))
 
 
 trait LoweringSelSanityChecks

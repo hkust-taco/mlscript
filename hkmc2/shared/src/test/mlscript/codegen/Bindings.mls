@@ -68,20 +68,23 @@ let x += 1 = 0 in x
 //│ ╙──      	    ^^^^^^^^^^
 
 
+:e
 (let x = 1)
-//│ x = 1
+//│ ╔══[ERROR] Expected a body for let bindings in expression position
+//│ ║  l.72: 	(let x = 1)
+//│ ╙──      	     ^^^^^
 
 :e
 (let x = 1) + 1
 //│ ╔══[ERROR] Expected a body for let bindings in expression position
-//│ ║  l.75: 	(let x = 1) + 1
+//│ ║  l.78: 	(let x = 1) + 1
 //│ ╙──      	     ^^^^^
 //│ = 1
 
 :e
 (let f(x) = x) + 1
 //│ ╔══[ERROR] Expected a body for let bindings in expression position
-//│ ║  l.82: 	(let f(x) = x) + 1
+//│ ║  l.85: 	(let f(x) = x) + 1
 //│ ╙──      	     ^^^^^^^^
 //│ = 1
 

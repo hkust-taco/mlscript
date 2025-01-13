@@ -52,7 +52,7 @@ pattern UnsignedByte = 0..< 256
 //│ ╔══[LEXICAL ERROR] Expect at least one digit after the  decimal point
 //│ ║  l.51: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                         ^
-//│ ╔══[ERROR] Unrecognized pattern.
+//│ ╔══[ERROR] Unrecognized pattern (application)
 //│ ║  l.51: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                       ^^^^^^^^
 

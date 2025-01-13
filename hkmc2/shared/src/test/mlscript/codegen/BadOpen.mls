@@ -5,20 +5,28 @@ module Foo with
   val x = 1
 
 
+:e
 (open Foo { x })
+//│ ╔══[ERROR] Illegal position for 'open' statement.
+//│ ║  l.9: 	(open Foo { x })
+//│ ╙──     	      ^^^^^^^^^
 
+:e
 (((open Foo { x })))
+//│ ╔══[ERROR] Illegal position for 'open' statement.
+//│ ║  l.15: 	(((open Foo { x })))
+//│ ╙──      	        ^^^^^^^^^
 
 :e
 (open Foo { x }) + 1
 //│ ╔══[ERROR] Illegal position for 'open' statement.
-//│ ║  l.13: 	(open Foo { x }) + 1
-//│ ╙──      	      ^^^^^^^
+//│ ║  l.21: 	(open Foo { x }) + 1
+//│ ╙──      	      ^^^^^^^^^
 
 :e
 open Foo { y }
 //│ ╔══[ERROR] Module 'Foo' does not contain member 'y'
-//│ ║  l.19: 	open Foo { y }
+//│ ║  l.27: 	open Foo { y }
 //│ ╙──      	           ^
 
 :sjs
@@ -33,7 +41,7 @@ val Oops = "oops"
 :e
 open Oops
 //│ ╔══[ERROR] Wildcard 'open' not supported for this kind of symbol.
-//│ ║  l.34: 	open Oops
+//│ ║  l.42: 	open Oops
 //│ ╙──      	     ^^^^
 
 

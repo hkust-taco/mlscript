@@ -50,24 +50,24 @@ fun (++) t() = 1
 //│ ╔══[ERROR] Multiple definitions of symbol '**'
 //│ ╟── defined here
 //│ ║  l.48: 	fun (**) t() = 0
-//│ ║        	     ^^^^^^^^^^^
+//│ ║        	    ^^^^^^^^^^^^
 //│ ╟── defined here
 //│ ║  l.49: 	fun (++) t() = 1
-//│ ╙──      	     ^^^^^^^^^^^
+//│ ╙──      	    ^^^^^^^^^^^^
 //│ ╔══[ERROR] Multiple definitions of symbol '++'
 //│ ╟── defined here
 //│ ║  l.48: 	fun (**) t() = 0
-//│ ║        	     ^^^^^^^^^^^
+//│ ║        	    ^^^^^^^^^^^^
 //│ ╟── defined here
 //│ ║  l.49: 	fun (++) t() = 1
-//│ ╙──      	     ^^^^^^^^^^^
+//│ ╙──      	    ^^^^^^^^^^^^
 //│ ╔══[ERROR] Multiple definitions of symbol 't'
 //│ ╟── defined here
 //│ ║  l.48: 	fun (**) t() = 0
-//│ ║        	     ^^^^^^^^^^^
+//│ ║        	    ^^^^^^^^^^^^
 //│ ╟── defined here
 //│ ║  l.49: 	fun (++) t() = 1
-//│ ╙──      	     ^^^^^^^^^^^
+//│ ╙──      	    ^^^^^^^^^^^^
 
 // ——— ——— ———
 

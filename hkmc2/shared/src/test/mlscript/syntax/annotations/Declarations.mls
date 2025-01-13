@@ -1,0 +1,167 @@
+:js
+
+module tailrec
+
+tailrec
+//│ = tailrec { class: [class tailrec] }
+
+:w
+@tailrec fun fact_n(n, acc) =
+  if n == 0 then acc else fact_n(n - 1, n * acc)
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.9: 	@tailrec fun fact_n(n, acc) =
+//│ ╙──     	 ^^^^^^^
+
+:w
+fun fact(n) =
+  @tailrec fun go(n, acc) =
+    if n == 0 then acc else go(n - 1, n * acc)
+  go(n, 1)
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.17: 	  @tailrec fun go(n, acc) =
+//│ ╙──      	   ^^^^^^^
+
+class Freezed(degree: Num)
+
+:w
+@Freezed(-273.15) class AbsoluteZero
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.27: 	@Freezed(-273.15) class AbsoluteZero
+//│ ╙──      	 ^^^^^^^^^^^^^^^^
+
+:w
+@Freezed(-18) class Beverage(name: Str)
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.33: 	@Freezed(-18) class Beverage(name: Str)
+//│ ╙──      	 ^^^^^^^^^^^^
+
+:w
+@Freezed(-4) let drink = Beverage("Coke")
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.39: 	@Freezed(-4) let drink = Beverage("Coke")
+//│ ╙──      	 ^^^^^^^^^^^
+//│ drink = Beverage { name: 'Coke' }
+
+module Foo with
+  class Bar(qax: Str)
+
+:w
+@Foo.Bar("baz") class Qux
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.49: 	@Foo.Bar("baz") class Qux
+//│ ╙──      	 ^^^^^^^^^^^^^^
+
+:w
+@42 class Qux
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.55: 	@42 class Qux
+//│ ╙──      	 ^^
+
+:w
+@(1 + 2) class Qux
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.61: 	@(1 + 2) class Qux
+//│ ╙──      	  ^^^^^
+
+module inline
+
+:w
+// All functions are annotated with @inline.
+@inline
+fun
+  min(x, y) = if x < y then x else y
+  max(x, y) = if x > y then x else y
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.70: 	@inline
+//│ ╙──      	 ^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.70: 	@inline
+//│ ╙──      	 ^^^^^^
+
+:w
+@inline let
+  abs(x) = if x < 0 then -x else x
+  clamp(x, lo, hi) = min(max(x, lo), hi)
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.82: 	@inline let
+//│ ╙──      	 ^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.82: 	@inline let
+//│ ╙──      	 ^^^^^^
+//│ abs = [Function (anonymous)]
+//│ clamp = [Function (anonymous)]
+
+:w
+// Only the first variable is annotated with @inline.
+let
+  @inline success = 0
+  failure = 1
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.97: 	  @inline success = 0
+//│ ╙──      	   ^^^^^^
+//│ failure = 1
+//│ success = 0
+
+// Multiple annotations
+// ====================
+
+:w
+@inline @tailrec fun fib(n) =
+  if n < 2 then n else fib(n - 1) + fib(n - 2)
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.109: 	@inline @tailrec fun fib(n) =
+//│ ╙──       	 ^^^^^^^^^^^^^^^
+
+module internal
+
+:w
+@internal object
+  shared
+  thread_local
+  transient
+  volatile
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.118: 	@internal object
+//│ ╙──       	 ^^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.118: 	@internal object
+//│ ╙──       	 ^^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.118: 	@internal object
+//│ ╙──       	 ^^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.118: 	@internal object
+//│ ╙──       	 ^^^^^^^^
+
+:w
+@volatile let
+  @shared counter = 0
+  @transient @thread_local cache = ()
+  @volatile @transient empty = ""
+  normal = ()
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.137: 	@volatile let
+//│ ║         	 ^^^^^^^^^^^^
+//│ ║  l.138: 	  @shared counter = 0
+//│ ╙──       	^^^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.137: 	@volatile let
+//│ ║         	 ^^^^^^^^^^^^
+//│ ║  l.138: 	  @shared counter = 0
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.139: 	  @transient @thread_local cache = ()
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.137: 	@volatile let
+//│ ║         	 ^^^^^^^^^^^^
+//│ ║  l.138: 	  @shared counter = 0
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.139: 	  @transient @thread_local cache = ()
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.140: 	  @volatile @transient empty = ""
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.137: 	@volatile let
+//│ ╙──       	 ^^^^^^^^
+//│ counter = 0
+//│ empty = ''

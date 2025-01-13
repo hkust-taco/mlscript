@@ -1,7 +1,7 @@
 :js
 
+:silent
 :import NofibPrelude.mls
-//│ Imported 112 member(s)
 
 
 fun g(u1u2u3, v1v2v3) = if u1u2u3 is [u1, u2, u3] and v1v2v3 is [v1, v2, v3] then
@@ -17,7 +17,7 @@ fun gcdE(x, y) = if
 
 fun max_(ls) = if ls is
   x :: Nil then x
-  x :: y :: xs then if x < y then max_(y :: xs) else max_(x::xs)
+  x :: y :: xs then if x < y then max_(y :: xs) else max_(x :: xs)
 
 fun test(d) =
   let ns = enumFromTo(5000, 5000 + d)

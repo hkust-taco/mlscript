@@ -37,21 +37,25 @@ Mod.|>
 //│ /!!!\ Uncaught error: scala.MatchError: App(Ident(|>),Tup(List(IntLit(1), Ident(x)))) (of class hkmc2.syntax.Tree$App)
 
 
-:fixme
+:pe
+:e
 open Mod { |> }
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found end of input instead
-//│ ║  l.41: 	open Mod { |> }
+//│ ║  l.42: 	open Mod { |> }
 //│ ╙──      	              ^
 //│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.41: 	open Mod { |> }
+//│ ║  l.42: 	open Mod { |> }
 //│ ╙──      	     ^^^^^^^^^
 
 
+:e
 open Mod { (|>) }
+//│ ╔══[ERROR] Illegal 'open' statement element.
+//│ ║  l.52: 	open Mod { (|>) }
+//│ ╙──      	           ^^^^
 
-:fixme
 12 |> print
-//│ ═══[RUNTIME ERROR] TypeError: this.Mod.|> is not a function
+//│ > 12
 
 
 open Mod { print, |> }

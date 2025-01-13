@@ -19,10 +19,10 @@ a or b and x or d
 
 (a and b) or (x and d)
 //│ Parsed:
-//│ 	InfixApp(InfixApp(Ident(a),keyword 'and',Ident(b)),keyword 'or',InfixApp(Ident(x),keyword 'and',Ident(d)))
+//│ 	InfixApp(Bra(Round,InfixApp(Ident(a),keyword 'and',Ident(b))),keyword 'or',Bra(Round,InfixApp(Ident(x),keyword 'and',Ident(d))))
 
 a and (b or x) and d
 //│ Parsed:
-//│ 	InfixApp(InfixApp(Ident(a),keyword 'and',InfixApp(Ident(b),keyword 'or',Ident(x))),keyword 'and',Ident(d))
+//│ 	InfixApp(InfixApp(Ident(a),keyword 'and',Bra(Round,InfixApp(Ident(b),keyword 'or',Ident(x)))),keyword 'and',Ident(d))
 
 

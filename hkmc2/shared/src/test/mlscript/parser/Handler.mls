@@ -52,7 +52,7 @@ handle h = Eff with
   fun f()(r) = r(0)
 in
   foo(h)
-//│ Elab: { { handle globalThis:block#6.h = SynthSel(Ref(globalThis:block#5),Ident(Eff)) List(HandlerTermDefinition(r,TermDefinition(Some(globalThis:block#6),Fun,member:f,List(ParamList(‹›,List(),None)),None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(0)),None))))),‹result of member:f›,‹›))); globalThis:block#5#666(.)foo‹member:foo›(globalThis:block#6.h#666) } }
+//│ Elab: { { handle globalThis:block#6.h = SynthSel(Ref(globalThis:block#5),Ident(Eff)) List(HandlerTermDefinition(r,TermDefinition(Some(globalThis:block#6),Fun,member:f,List(ParamList(‹›,List(),None)),None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(0)),None))))),‹result of member:f›,‹›,List()))); globalThis:block#5#666(.)foo‹member:foo›(globalThis:block#6.h#666) } }
 
 :e
 (
@@ -73,7 +73,7 @@ handle h = Eff with
   fun f()(r) = r(0)
   fun g(a)()()(r) = r(1)
 foo(h)
-//│ Elab: { handle globalThis:block#8.h = SynthSel(Ref(globalThis:block#5),Ident(Eff)) List(HandlerTermDefinition(r,TermDefinition(Some(globalThis:block#8),Fun,member:f,List(ParamList(‹›,List(),None)),None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(0)),None))))),‹result of member:f›,‹›)), HandlerTermDefinition(r,TermDefinition(Some(globalThis:block#8),Fun,member:g,List(ParamList(‹›,List(Param(‹›,a,None)),None), ParamList(‹›,List(),None), ParamList(‹›,List(),None)),None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(1)),None))))),‹result of member:g›,‹›))); globalThis:block#5#666(.)foo‹member:foo›(globalThis:block#8.h#666) }
+//│ Elab: { handle globalThis:block#8.h = SynthSel(Ref(globalThis:block#5),Ident(Eff)) List(HandlerTermDefinition(r,TermDefinition(Some(globalThis:block#8),Fun,member:f,List(ParamList(‹›,List(),None)),None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(0)),None))))),‹result of member:f›,‹›,List())), HandlerTermDefinition(r,TermDefinition(Some(globalThis:block#8),Fun,member:g,List(ParamList(‹›,List(Param(‹›,a,None)),None), ParamList(‹›,List(),None), ParamList(‹›,List(),None)),None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(1)),None))))),‹result of member:g›,‹›,List()))); globalThis:block#5#666(.)foo‹member:foo›(globalThis:block#8.h#666) }
 
 :e
 handle h = Eff with
@@ -124,4 +124,4 @@ foo(h)
 //│ ╔══[WARNING] Terms in handler block do nothing
 //│ ║  l.122: 	  12345
 //│ ╙──       	  ^^^^^
-//│ Elab: { handle globalThis:block#11.h = SynthSel(Ref(globalThis:block#5),Ident(Eff)) List(HandlerTermDefinition(r,TermDefinition(Some(globalThis:block#11),Fun,member:f,List(ParamList(‹›,List(),None)),None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(0)),None))))),‹result of member:f›,‹›)), HandlerTermDefinition(r,TermDefinition(Some(globalThis:block#11),Fun,member:g,List(ParamList(‹›,List(Param(‹›,a,None)),None)),None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(1)),None))))),‹result of member:g›,‹›))); globalThis:block#5#666(.)foo‹member:foo›(globalThis:block#11.h#666) }
+//│ Elab: { handle globalThis:block#11.h = SynthSel(Ref(globalThis:block#5),Ident(Eff)) List(HandlerTermDefinition(r,TermDefinition(Some(globalThis:block#11),Fun,member:f,List(ParamList(‹›,List(),None)),None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(0)),None))))),‹result of member:f›,‹›,List())), HandlerTermDefinition(r,TermDefinition(Some(globalThis:block#11),Fun,member:g,List(ParamList(‹›,List(Param(‹›,a,None)),None)),None,Some(App(Ref(r),Tup(List(Fld(‹›,Lit(IntLit(1)),None))))),‹result of member:g›,‹›,List()))); globalThis:block#5#666(.)foo‹member:foo›(globalThis:block#11.h#666) }

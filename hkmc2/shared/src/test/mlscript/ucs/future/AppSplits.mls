@@ -25,9 +25,7 @@ if foo of 1,
 //│ ║  l.18: 	if foo of 1,
 //│ ║        	   ^^^^^^^^^
 //│ ║  l.19: 	  0 then "a"
-//│ ║        	^^^^^^^^^^^^
-//│ ║  l.20: 	  1 then "b"
-//│ ╙──      	^^^^^^^^^^^^
+//│ ╙──      	^^
 
 :todo
 :pe
@@ -36,11 +34,9 @@ if foo
   (0) then "a"
   (1) then "b"
 //│ ╔══[ERROR] Unrecognized term split (juxtaposition).
-//│ ║  l.35: 	if foo
+//│ ║  l.33: 	if foo
 //│ ║        	   ^^^
-//│ ║  l.36: 	  (0) then "a"
-//│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.37: 	  (1) then "b"
-//│ ╙──      	^^^^^^^^^^^^^^
+//│ ║  l.34: 	  (0) then "a"
+//│ ╙──      	^^
 
 

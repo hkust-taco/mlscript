@@ -24,14 +24,39 @@
 //│ ╔══[ERROR] Name not found: Foo
 //│ ║  l.23: 	(1).Foo#a()
 //│ ╙──      	   ^^^^
+//│ ╔══[ERROR] Identifier `Foo` does not name a known class symbol.
+//│ ║  l.23: 	(1).Foo#a()
+//│ ╙──      	   ^^^^
 //│ ═══[ERROR] Not a valid class: <error>
 //│ Type: ⊥
+
+
+fun Oops() = 1
+Oops().Oops#a()
+//│ ╔══[ERROR] Identifier `Oops` does not name a known class symbol.
+//│ ║  l.35: 	Oops().Oops#a()
+//│ ╙──      	      ^^^^^
+//│ ╔══[ERROR] Not a valid class: selection
+//│ ║  l.35: 	Oops().Oops#a()
+//│ ╙──      	      ^^^^^
+//│ Type: ⊥
+
+class Oops2()
+(new Oops2()).Oops2#a()
+//│ ╔══[ERROR] Class 'Oops2' does not contain member 'a'.
+//│ ║  l.45: 	(new Oops2()).Oops2#a()
+//│ ╙──      	                    ^
+//│ ╔══[ERROR] a is not a valid member in class Oops2
+//│ ║  l.45: 	(new Oops2()).Oops2#a()
+//│ ╙──      	     ^^^^^^^^^^^^^^^^
+//│ Type: ⊥
+
 
 
 fun inc(x) = x + 1
 inc("oops")
 //│ ╔══[ERROR] Type error in string literal with expected type 'x
-//│ ║  l.32: 	inc("oops")
+//│ ║  l.57: 	inc("oops")
 //│ ║        	    ^^^^^^
 //│ ╟── because: cannot constrain  Str  <:  'x
 //│ ╟── because: cannot constrain  Str  <:  'x
@@ -41,7 +66,7 @@ inc("oops")
 fun inc(x) = x + 1
 inc : Int
 //│ ╔══[ERROR] Type error in selection with expected type Int
-//│ ║  l.42: 	inc : Int
+//│ ║  l.67: 	inc : Int
 //│ ║        	^^^
 //│ ╙── because: cannot constrain  'x -> Int  <:  Int
 //│ Type: Int

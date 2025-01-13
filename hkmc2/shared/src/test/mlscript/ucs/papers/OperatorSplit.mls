@@ -188,6 +188,7 @@ fun example(args) =
 //│           tail = Else of Lit of StrLit of "medium"
 //│       resSym = ‹result of member:example›
 //│       flags = ()
+//│       annotations = Nil
 //│   res = Lit of UnitLit of true
 
 

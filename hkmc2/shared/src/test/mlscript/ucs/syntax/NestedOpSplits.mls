@@ -60,6 +60,7 @@ fun f(x) =
 //│           tail = Else of Lit of IntLit of 1
 //│       resSym = ‹result of member:f›
 //│       flags = ()
+//│       annotations = Nil
 //│   res = Lit of UnitLit of true
 
 

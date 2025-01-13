@@ -1,0 +1,30 @@
+:js
+:todo
+
+
+print of
+  let x = 1
+  x + 1
+//│ ╔══[ERROR] Expected a body for let bindings in expression position
+//│ ║  l.6: 	  let x = 1
+//│ ╙──     	      ^^^^^
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.7: 	  x + 1
+//│ ╙──     	  ^
+//│ = 1
+
+print of 
+  open Predef
+  let x = 1
+  x + 1
+//│ ╔══[ERROR] Illegal position for 'open' statement.
+//│ ║  l.17: 	  open Predef
+//│ ╙──      	       ^^^^^^
+//│ ╔══[ERROR] Expected a body for let bindings in expression position
+//│ ║  l.18: 	  let x = 1
+//│ ╙──      	      ^^^^^
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.19: 	  x + 1
+//│ ╙──      	  ^
+
+

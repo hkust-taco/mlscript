@@ -3,9 +3,9 @@
 
 fun foo(x){f} =
   f(x)
-//│ ╔══[ERROR] Expected a valid definition head, found block instead
+//│ ╔══[ERROR] Expected a valid function definition head; found block instead
 //│ ║  l.4: 	fun foo(x){f} =
-//│ ╙──     	           ^
+//│ ╙──     	          ^^^
 
 foo(1){x => x}
 //│ ╔══[ERROR] Name not found: foo

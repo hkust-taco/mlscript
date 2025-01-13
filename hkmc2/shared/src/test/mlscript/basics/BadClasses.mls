@@ -4,15 +4,15 @@
 
 :e
 class Foo { log("hi") }
-//│ ╔══[ERROR] Expected a valid definition head, found block instead
+//│ ╔══[ERROR] Invalid class definition head: unexpected block in this position
 //│ ║  l.6: 	class Foo { log("hi") }
-//│ ╙──     	            ^^^^^^^^^
+//│ ╙──     	          ^^^^^^^^^^^^^
 
 :e
 class Foo { 1 }
-//│ ╔══[ERROR] Expected a valid definition head, found block instead
+//│ ╔══[ERROR] Invalid class definition head: unexpected block in this position
 //│ ║  l.12: 	class Foo { 1 }
-//│ ╙──      	            ^
+//│ ╙──      	          ^^^^^
 
 // Note that these work:
 

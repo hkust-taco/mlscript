@@ -41,7 +41,7 @@ val f = case
 //│ Desugared:
 //│ >  if
 //│ >    caseScrut is 0 then "null"
-//│ >    let $doTemp = globalThis:import#Prelude#666(.)console‹member:console›(.)log("non-null")
+//│ >    let $doTemp = globalThis:import#Prelude#666(.)console‹member:console›.log("non-null")
 //│ >    caseScrut is 1 then "unit"
 //│ >    let res = "other"
 //│ >    let $doTemp = member:Predef#666(.)print‹member:print›(res#666)

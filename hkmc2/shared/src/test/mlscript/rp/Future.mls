@@ -19,15 +19,15 @@ pattern Rep0(pattern A, B, C)(head) =
 :todo // Pattern extractions via aliases.
 pattern Email(name, domain) =
   (Identifier as name) ~ "@" ~ (Identifier as domain)
-//│ ╔══[ERROR] Unrecognized pattern.
+//│ ╔══[ERROR] Unrecognized pattern (parenthesis section)
 //│ ║  l.21: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
-//│ ╙──      	   ^^^^^^^^^^^^^^^^^^
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
 
 :todo // View patterns
 pattern GreaterThan(value) = case
   n and n > value then n
-//│ ╔══[ERROR] Unrecognized pattern.
+//│ ╔══[ERROR] Unrecognized pattern (case)
 //│ ║  l.29: 	  n and n > value then n
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed

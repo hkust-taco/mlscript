@@ -1,7 +1,7 @@
 :js
 
+:silent
 :import NofibPrelude.mls
-//│ Imported 112 member(s)
 
 
 fun isSome(x) = x is Some

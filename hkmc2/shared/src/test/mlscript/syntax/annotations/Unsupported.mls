@@ -1,0 +1,92 @@
+:js
+// The annotations for the following expressions are not supported for now.
+
+module debug
+
+import "../../../mlscript-compile/Str.mls"
+
+:w
+@debug
+open Str
+//│ ╔══[WARNING] This annotation has no effect
+//│ ║  l.9: 	@debug
+//│ ║       	 ^^^^^
+//│ ╟── Annotations are not supported on open terms.
+//│ ║  l.10: 	open Str
+//│ ╙──      	     ^^^
+
+:w
+@debug 0
+//│ ╔══[WARNING] This annotation has no effect
+//│ ║  l.19: 	@debug 0
+//│ ║        	 ^^^^^
+//│ ╟── Annotations are not supported on integer literal terms.
+//│ ║  l.19: 	@debug 0
+//│ ╙──      	       ^
+//│ = 0
+
+:w
+@debug 1 + 2
+//│ ╔══[WARNING] This annotation has no effect
+//│ ║  l.29: 	@debug 1 + 2
+//│ ║        	 ^^^^^
+//│ ╟── Annotations are not supported on application terms.
+//│ ║  l.29: 	@debug 1 + 2
+//│ ╙──      	       ^^^^^
+//│ = 3
+
+:w
+(@debug 1 + 2)
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.39: 	(@debug 1 + 2)
+//│ ║        	  ^^^^^
+//│ ╟── Annotations are not supported on application terms.
+//│ ║  l.39: 	(@debug 1 + 2)
+//│ ╙──      	        ^^^^^
+//│ = 3
+
+:w
+(@debug 1) + 2
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.49: 	(@debug 1) + 2
+//│ ║        	  ^^^^^
+//│ ╟── Annotations are not supported on integer literal terms.
+//│ ║  l.49: 	(@debug 1) + 2
+//│ ╙──      	        ^
+//│ = 3
+
+:w
+(1 + @debug 2)
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.59: 	(1 + @debug 2)
+//│ ║        	      ^^^^^
+//│ ╟── Annotations are not supported on integer literal terms.
+//│ ║  l.59: 	(1 + @debug 2)
+//│ ╙──      	            ^
+//│ = 3
+
+class Log(msg: Str)
+
+:w
+id(@Log 5)
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.71: 	id(@Log 5)
+//│ ║        	    ^^^
+//│ ╟── Annotations are not supported on integer literal terms.
+//│ ║  l.71: 	id(@Log 5)
+//│ ╙──      	        ^
+//│ = 5
+
+:pe
+:w
+@1 + 2 class Qux
+//│ ╔══[PARSE ERROR] Expected end of input; found 'class' keyword instead
+//│ ║  l.82: 	@1 + 2 class Qux
+//│ ╙──      	       ^^^^^
+//│ ╔══[WARNING] This annotation has no effect
+//│ ║  l.82: 	@1 + 2 class Qux
+//│ ║        	 ^
+//│ ╟── Annotations are not supported on application terms.
+//│ ║  l.82: 	@1 + 2 class Qux
+//│ ╙──      	   ^^^
+//│ = 2

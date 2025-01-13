@@ -1,0 +1,102 @@
+:js
+:noSanityCheck // * For some reason, these cause problems
+
+// * For the `log` function
+:import ../codegen/PredefJS.mls
+//│ Imported 2 member(s)
+
+:global
+:bbml
+//│ Type: ⊤
+
+
+:sjs
+fun test1() =
+  fun sayHi = log("Hi")
+  sayHi, sayHi, sayHi
+//│ JS (unsanitized):
+//│ function test1() {
+//│   let tmp, tmp1;
+//│   function sayHi() {
+//│     return globalThis.log("Hi") ?? null;
+//│   }
+//│   tmp = sayHi();
+//│   tmp1 = sayHi();
+//│   return sayHi();
+//│ }
+//│ null
+//│ Type: ⊤
+
+test1()
+//│ > Hi
+//│ > Hi
+//│ > Hi
+//│ Type: ⊤
+
+
+:sjs
+fun test2() =
+  fun funny = case
+    0 then 0
+    n then funny(n - 1) + 1
+  funny
+//│ JS (unsanitized):
+//│ function test2() {
+//│   function funny() {
+//│     return (caseScrut) => {
+//│       let n, tmp, tmp1, tmp2;
+//│       if (caseScrut === 0) {
+//│         return 0;
+//│       } else {
+//│         n = caseScrut;
+//│         tmp = funny();
+//│         tmp1 = n - 1;
+//│         tmp2 = tmp(tmp1) ?? null;
+//│         return tmp2 + 1;
+//│       }
+//│     };
+//│   }
+//│   return funny();
+//│ }
+//│ null
+//│ Type: ⊤
+
+test2()(5)
+//│ = 5
+//│ Type: Int
+
+
+// * Notice the mistake here; we should warn that the first case in statement position is useless!
+:sjs
+fun test2() =
+  fun funny = 
+    case 0 then 0
+    case n then funny(n - 1) + 1
+  funny
+//│ JS (unsanitized):
+//│ function test2() {
+//│   function funny() {
+//│     return (caseScrut) => {
+//│       let n, tmp, tmp1, tmp2;
+//│       n = caseScrut;
+//│       tmp = funny();
+//│       tmp1 = n - 1;
+//│       tmp2 = tmp(tmp1) ?? null;
+//│       return tmp2 + 1;
+//│     };
+//│   }
+//│   return funny();
+//│ }
+//│ null
+//│ Type: ⊤
+
+
+:todo
+fun test3 =
+  log("Hi")
+//│ ╔══[ERROR] Function definition shape not yet supported for test3
+//│ ║  l.96: 	  log("Hi")
+//│ ╙──      	  ^^^^^^^^^
+//│ Type: ⊤
+
+

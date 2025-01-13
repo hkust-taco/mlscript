@@ -31,6 +31,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   ):
     def post: Product => Str = get.getOrElse(Function.const(""))
   
+  val silent = NullaryCommand("silent")
   val dbgElab = NullaryCommand("de")
   val dbgParsing = NullaryCommand("dp")
   
@@ -46,7 +47,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val typeCheck = FlagCommand(false, "typeCheck")
   
   val importCmd = Command("import"): ln =>
-    importFile(file / os.up / os.RelPath(ln.trim), verbose = true)
+    importFile(file / os.up / os.RelPath(ln.trim), verbose = silent.isUnset)
   
   val showUCS = Command("ucs"): ln =>
     ln.split(" ").iterator.map(x => "ucs:" + x.trim).toSet

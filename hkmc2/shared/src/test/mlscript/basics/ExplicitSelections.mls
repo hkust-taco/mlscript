@@ -1,0 +1,22 @@
+:js
+
+
+class Foo() with
+  val x = 1
+  fun f() = x + 1
+
+
+Foo().x
+//│ = 1
+
+Foo().Foo#x
+//│ = 1
+
+
+Foo().f()
+//│ = 2
+
+Foo().Foo#f()
+//│ = 2
+
+
