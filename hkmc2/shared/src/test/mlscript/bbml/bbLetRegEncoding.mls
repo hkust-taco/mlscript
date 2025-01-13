@@ -8,7 +8,7 @@ fun letreg: [E,Res] -> ([R] -> Region[R] ->{E | R} Res) ->{E} Res
 //│ Type: ⊤
 
 letreg
-//│ Type: forall 'E, 'Res: (forall 'R: (Region['R]) ->{'E ∨ 'R} 'Res) ->{'E} 'Res
+//│ Type: forall(outer) 'E, 'Res: (forall(outer1) 'R: (Region['R]) ->{'E ∨ 'R} 'Res) ->{'E} 'Res
 
 letreg(r => r)
 //│ Type: Region[?]

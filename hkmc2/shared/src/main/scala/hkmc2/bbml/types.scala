@@ -290,8 +290,8 @@ case class PolyType(tvs: Ls[InfVar], outer: InfVar, body: GeneralType) extends G
   override lazy val lvl: Int = (body :: tvs).map(_.lvl).max
   override def show(using scope: Scope): Str =
     given Scope = scope.nest
-    s"forall ${tvs.map(_.show).mkString(", ")}: ${body.show}"
-  override def showDbg: Str = s"forall ${tvs.map(_.showDbg).mkString(", ")}, outer ${outer.showDbg}: ${body.showDbg}"
+    s"forall(${outer.show}) ${tvs.map(_.show).mkString(", ")}: ${body.show}"
+  override def showDbg: Str = s"forall(outer ${outer.showDbg}) ${tvs.map(_.showDbg).mkString(", ")}: ${body.showDbg}"
   override def monoOr(fallback: => Type): Type = fallback
   override def map(f: GeneralType => GeneralType): PolyType = PolyType(tvs, outer, f(body))
 
@@ -334,12 +334,12 @@ case class PolyType(tvs: Ls[InfVar], outer: InfVar, body: GeneralType) extends G
     substAndGetBody(using map)
 
 object PolyType:
-  def generalize(ty: GeneralType, outer: InfVar, lvl: Int): PolyType =
-    val tvs = MutSet[InfVar]()
+  def collectTVs(ty: GeneralType): Set[InfVar] =
+    val visited = MutSet.empty[InfVar]
     object CollectTVs extends TypeTraverser:
       override def apply(pol: Boolean)(ty: GeneralType): Unit = ty match
-        case v @ InfVar(vlvl, _, state, _) if vlvl > lvl =>
-          if tvs.add(v) then
+        case v @ InfVar(_, _, state, _) =>
+          if visited.add(v) then
             state.lowerBounds.foreach: bd =>
               apply(true)(bd)
             state.upperBounds.foreach: bd =>
@@ -347,7 +347,10 @@ object PolyType:
             super.apply(pol)(ty)
         case _ => super.apply(pol)(ty)
     CollectTVs(true)(ty)
-    PolyType(tvs.toList.sorted, outer, ty)
+    visited.toSet
+
+  def generalize(ty: GeneralType, outer: InfVar, lvl: Int): PolyType =
+    PolyType(collectTVs(ty).filter(v => v.uid != outer.uid).toList.sorted, outer, ty)
 
 // * Functions that accept/return a polymorphic type.
 // * Note that effects are always monomorphic

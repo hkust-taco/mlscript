@@ -93,7 +93,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
     state.upperBounds = ctx.getRegEnv.! :: Nil
     InfVar(ctx.lvl + 1, infVarState.nextUid, state, true)(sym, "")
   private def freshOuter(sym: Symbol)(using ctx: BbCtx): InfVar =
-    InfVar(ctx.lvl + 1, infVarState.nextUid, new VarState(), true)(sym, "env@")
+    InfVar(ctx.lvl + 1, infVarState.nextUid, new VarState(), true)(sym, "")
   private def freshEnv(sym: Symbol)(using ctx: BbCtx): InfVar =
     val state = new VarState()
     state.upperBounds = ctx.getRegEnv :: Nil
@@ -273,7 +273,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         ascribe(lam, sigTy)
         ()
       case N =>
-        val outer = freshOuter(sym)(using ctx)
+        val outer = freshOuter(new TempSymbol(S(lam), "outer"))(using ctx)
         given BbCtx = ctx.nestWithOuter(outer)
         val funTyV = freshVar(sym)
         pctx += sym -> funTyV // for recursive functions
