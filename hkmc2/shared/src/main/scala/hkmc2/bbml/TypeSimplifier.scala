@@ -187,7 +187,7 @@ class TypeSimplifier(tl: TraceLogger):
     subst(ty)
 
   def simplifyForall(ty: GeneralType): GeneralType = ty match
-    case PolyType(tvs, body) =>
+    case PolyType(tvs, outer, body) =>
       val visited = MutSet.empty[InfVar]
       object CollectTVs extends TypeTraverser:
         override def apply(pol: Boolean)(ty: GeneralType): Unit = ty match
@@ -201,6 +201,6 @@ class TypeSimplifier(tl: TraceLogger):
           case _ => super.apply(pol)(ty)
       CollectTVs(true)(ty)
       val newTvs = tvs.filter(visited)
-      if newTvs.isEmpty then body
-      else PolyType(newTvs, body)
+      if newTvs.isEmpty && !visited(outer) then body
+      else PolyType(newTvs, outer, body)
     case _ => ty

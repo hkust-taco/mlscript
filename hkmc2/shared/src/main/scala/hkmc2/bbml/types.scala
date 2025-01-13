@@ -155,7 +155,7 @@ sealed abstract class BasicType extends Type:
   
   def mapBasic(f: Type => Type): Type = this match
     case ClassLikeType(name, targs) => ClassLikeType(name, targs.map(_.mapArg(f)))
-    case ft @ FunType(args, ret, eff) => FunType(args.map(f), f(ret), f(eff))(ft.outer)
+    case ft @ FunType(args, ret, eff) => FunType(args.map(f), f(ret), f(eff))
     case ComposedType(lhs, rhs, pol) => Type.mkComposedType(f(lhs), f(rhs), pol)
     case NegType(ty) => Type.mkNegType(f(ty))
     case Top | Bot | _: InfVar => this
@@ -184,8 +184,8 @@ sealed abstract class BasicType extends Type:
     case v @ InfVar(lvl, uid, _, _) =>
       val name = if v.hint.isEmpty then s"${v.sym.nme}" else s"${v.sym.nme}(${v.hint})"
       if v.isSkolem then s"${name}${uid}_${lvl}" else s"'${name}${uid}_${lvl}"
-    case ft @ FunType(arg :: Nil, ret, eff) => s"${arg.parenDbg} ->{${eff.showDbg}}_${ft.outer.map(_.showDbg)} ${ret.parenDbg}"
-    case ft @ FunType(args, ret, eff) => s"(${args.map(_.showDbg).mkString(", ")}) ->{${eff.showDbg}}_${ft.outer.map(_.showDbg)} ${ret.parenDbg}"
+    case FunType(arg :: Nil, ret, eff) => s"${arg.parenDbg} ->{${eff.showDbg}} ${ret.parenDbg}"
+    case FunType(args, ret, eff) => s"(${args.map(_.showDbg).mkString(", ")}) ->{${eff.showDbg}} ${ret.parenDbg}"
     case ComposedType(lhs, rhs, pol) => s"${lhs.parenDbg} ${if pol then "∨" else "∧"} ${rhs.parenDbg}"
     case NegType(ty) => s"¬${ty.parenDbg}"
     case Top => "⊤"
@@ -257,29 +257,11 @@ final case class InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, skolemFlag
 
 given Ordering[InfVar] = Ordering.by(_.uid)
 
-case class FunType(args: Ls[Type], ret: Type, eff: Type)(val outer: Option[InfVar]) extends BasicType with CachedNorm[FunType]:
+case class FunType(args: Ls[Type], ret: Type, eff: Type) extends BasicType with CachedNorm[FunType]:
   def mkNorm(using TL): FunType =
-    FunType(args.map(_.toDnf), ret.toDnf, eff.toDnf)(outer)
+    FunType(args.map(_.toDnf), ret.toDnf, eff.toDnf)
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
-    FunType(args.map(_.subst), ret.subst, eff.subst)(outer.flatMap(v => if map.contains(v.uid) then N else outer))
-
-object FunType:
-  // * Used for merging/constraining two function types t1 ->_o1 s1 and t2 ->_o2 s2
-  // * Equivalent to merging/constraining forall o1. t1 -> s1 and forall o2. t2 -> s2
-  def mixOuter(f1: FunType, f2: FunType): (FunType, FunType) = (f1.outer, f2.outer) match
-    case (S(outer1), S(outer2)) =>
-      val nf1 = if outer1.lvl > outer2.lvl then f1
-        else PolyFunType.applyWith(PolyFunType(f1.args, f1.ret, f1.eff)(f1.outer), outer2).monoOr(???) match
-          case FunType(args, ret, eff) => FunType(args, ret, eff)(S(outer2))
-          case _ => ??? // * Impossible
-      val nf2 = if outer1.lvl <= outer2.lvl then f2
-        else PolyFunType.applyWith(PolyFunType(f2.args, f2.ret, f2.eff)(f2.outer), outer1).monoOr(???) match
-          case FunType(args, ret, eff) => FunType(args, ret, eff)(S(outer1))
-          case _ => ??? // * Impossible
-      (nf1, nf2)
-    case (S(outer), N) => (f1, FunType(f2.args, f2.ret, f2.eff)(S(outer)))
-    case (N, S(outer)) => (FunType(f1.args, f1.ret, f1.eff)(S(outer)), f2)
-    case _ => (f1, f2)
+    FunType(args.map(_.subst), ret.subst, eff.subst)
 
 case class ComposedType(lhs: Type, rhs: Type, pol: Bool) extends BasicType: // * Positive -> union
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
@@ -304,7 +286,7 @@ object Type:
   def mkNegType(ty: Type): Type = ty.!
 
 // * Poly types can not be used as type arguments
-case class PolyType(tvs: Ls[InfVar], body: GeneralType) extends GeneralType:
+case class PolyType(tvs: Ls[InfVar], outer: InfVar, body: GeneralType) extends GeneralType:
   override protected type ThisType = GeneralType
 
   override lazy val isPoly: Bool = true
@@ -312,9 +294,9 @@ case class PolyType(tvs: Ls[InfVar], body: GeneralType) extends GeneralType:
   override def show(using scope: Scope): Str =
     given Scope = scope.nest
     s"forall ${tvs.map(_.show).mkString(", ")}: ${body.show}"
-  override def showDbg: Str = s"forall ${tvs.map(_.showDbg).mkString(", ")}: ${body.showDbg}"
+  override def showDbg: Str = s"forall ${tvs.map(_.showDbg).mkString(", ")}, outer ${outer.showDbg}: ${body.showDbg}"
   override def monoOr(fallback: => Type): Type = fallback
-  override def map(f: GeneralType => GeneralType): PolyType = PolyType(tvs, f(body))
+  override def map(f: GeneralType => GeneralType): PolyType = PolyType(tvs, outer, f(body))
 
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
     PolyType(tvs.map {
@@ -323,7 +305,7 @@ case class PolyType(tvs: Ls[InfVar], body: GeneralType) extends GeneralType:
         newSt.lowerBounds = state.lowerBounds.map(_.subst)
         newSt.upperBounds = state.upperBounds.map(_.subst)
         InfVar(lvl, uid, newSt, skolem)(v.sym, v.hint)
-    }, body.subst)
+    }, outer, body.subst) // * outer should have no bound!
 
   // * This function will only return the body after substitution
   // * and \dom(map) should cover all tvs.
@@ -338,6 +320,7 @@ case class PolyType(tvs: Ls[InfVar], body: GeneralType) extends GeneralType:
 
   def skolemize(nextUid: => Uid[InfVar], lvl: Int)(tl: TL) =
     // * Note that by this point, the state is supposed to be frozen/treated as immutable
+    // * `outer` is already skolemized when it is declared
     val map = tvs.map(v =>
       val sk = InfVar(lvl, nextUid, new VarState(), S(true))(v.sym, v.hint)
       tl.log(s"skolemize ${v.showDbg} ~> ${sk.showDbg}")
@@ -345,16 +328,16 @@ case class PolyType(tvs: Ls[InfVar], body: GeneralType) extends GeneralType:
     ).toMap
     substAndGetBody(using map)
   
-  def instantiate(nextUid: => Uid[InfVar], lvl: Int)(tl: TL)(using State): GeneralType =
-    val map = tvs.map(v =>
+  def instantiate(nextUid: => Uid[InfVar], env: InfVar, lvl: Int)(tl: TL)(using State): GeneralType =
+    val map = ((outer.uid -> env) :: tvs.map(v =>
       val nv = InfVar(lvl, nextUid, new VarState(), S(false))(new InstSymbol(v.sym), v.hint)
       tl.log(s"instantiate ${v.showDbg} ~> ${nv.showDbg}")
       v.uid -> nv
-    ).toMap
+    )).toMap
     substAndGetBody(using map)
 
 object PolyType:
-  def generalize(ty: GeneralType, lvl: Int): PolyType =
+  def generalize(ty: GeneralType, outer: InfVar, lvl: Int): PolyType =
     val tvs = MutSet[InfVar]()
     object CollectTVs extends TypeTraverser:
       override def apply(pol: Boolean)(ty: GeneralType): Unit = ty match
@@ -368,18 +351,18 @@ object PolyType:
             super.apply(pol)(ty)
         case _ => super.apply(pol)(ty)
     CollectTVs(true)(ty)
-    PolyType(tvs.toList.sorted, ty)
+    PolyType(tvs.toList.sorted, outer, ty)
 
 // * Functions that accept/return a polymorphic type.
 // * Note that effects are always monomorphic
 // * Poly types can not be used as type arguments
-case class PolyFunType(args: Ls[GeneralType], ret: GeneralType, eff: Type)(val outer: Option[InfVar]) extends GeneralType:
+case class PolyFunType(args: Ls[GeneralType], ret: GeneralType, eff: Type) extends GeneralType:
   override protected type ThisType = GeneralType
 
   lazy val isPoly: Bool = (ret :: args).exists(_.isPoly)
   lazy val lvl: Int = (ret :: eff :: args).map(_.lvl).max
   override def show(using Scope): Str = s"(${args.map(_.show).mkString(", ")}) ->{${eff.show}} ${ret.show}"
-  override def showDbg: Str = s"(${args.map(_.showDbg).mkString(", ")}) ->{${eff.showDbg}}_${outer.map(_.showDbg)} ${ret.showDbg}"
+  override def showDbg: Str = s"(${args.map(_.showDbg).mkString(", ")}) ->{${eff.showDbg}} ${ret.showDbg}"
   private lazy val mono: Opt[FunType] = if isPoly then N else
     Some(FunType(args.map {
       case t: Type => t
@@ -389,33 +372,13 @@ case class PolyFunType(args: Ls[GeneralType], ret: GeneralType, eff: Type)(val o
       case t: Type => t
       case pf: PolyFunType => pf.mono.get
       case _ => ??? // * Impossible
-    }, eff)(outer))
+    }, eff))
   override def monoOr(fallback: => Type): Type = mono.getOrElse(fallback)
   override def map(f: GeneralType => GeneralType): PolyFunType =
-    PolyFunType(args.map(f), f(ret), f(eff).monoOr(???))(outer) // * Must be mono
+    PolyFunType(args.map(f), f(ret), f(eff).monoOr(???)) // * Must be mono
 
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
-    PolyFunType(args.map(_.subst), ret.subst, eff.subst)(outer.flatMap(v => if map.contains(v.uid) then N else outer))
-
-object PolyFunType:
-  def applyWith(f: PolyFunType, env: InfVar): GeneralType = f.outer match
-    case S(outer) =>
-      val tvs = MutSet[InfVar]()
-      object CollectTVs extends TypeTraverser:
-        override def apply(pol: Boolean)(ty: GeneralType): Unit = ty match
-          case v @ InfVar(_, _, state, _) =>
-            if tvs.add(v) then
-              state.lowerBounds.foreach(bd => apply(true)(bd))
-              state.upperBounds.foreach(bd => apply(false)(bd))
-              super.apply(pol)(ty)
-          case _ => super.apply(pol)(ty)
-      CollectTVs(true)(f)
-      val map = Map(outer.uid -> env)
-      tvs.foreach: v =>
-        v.state.lowerBounds = v.state.lowerBounds.map(_.subst(using map))
-        v.state.upperBounds = v.state.upperBounds.map(_.subst(using map))
-      f.subst(using map)
-    case N => f
+    PolyFunType(args.map(_.subst), ret.subst, eff.subst)
 
 class VarState:
   var lowerBounds: Ls[Type] = Nil

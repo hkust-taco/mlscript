@@ -73,7 +73,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
         nv
       })
     case ft @ FunType(args, ret, eff) =>
-      FunType(args.map(arg => extrude(arg)(using lvl, !pol)), extrude(ret), extrude(eff))(ft.outer)
+      FunType(args.map(arg => extrude(arg)(using lvl, !pol)), extrude(ret), extrude(eff))
     case ComposedType(lhs, rhs, p) =>
       Type.mkComposedType(extrude(lhs), extrude(rhs), p)
     case NegType(ty) => Type.mkNegType(extrude(ty)(using lvl, !pol))
@@ -107,17 +107,16 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
               constrainArgs(ta1, ta2)
           else constrainConj(Conj(conj.i, Union(f, rest), Nil))
         case (int: Inter, Union(f, _ :: rest)) => constrainConj(Conj(int, Union(f, rest), Nil))
-        case (Inter(S(f1: FunType)), Union(S(f2: FunType), Nil)) => FunType.mixOuter(f1, f2) match
-          case (FunType(args1, ret1, eff1), FunType(args2, ret2, eff2)) =>
-            if args1.length =/= args2.length then
-              // raise(ErrorReport(msg"Cannot constrain ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
-              cctx.err
-            else
-              args1.zip(args2).foreach {
-                case (a1, a2) => constrainImpl(a2, a1)
-              }
-              constrainImpl(ret1, ret2)
-              constrainImpl(eff1, eff2)
+        case (Inter(S(FunType(args1, ret1, eff1))), Union(S(FunType(args2, ret2, eff2)), Nil)) =>
+          if args1.length =/= args2.length then
+            // raise(ErrorReport(msg"Cannot constrain ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
+            cctx.err
+          else
+            args1.zip(args2).foreach {
+              case (a1, a2) => constrainImpl(a2, a1)
+            }
+            constrainImpl(ret1, ret2)
+            constrainImpl(eff1, eff2)
         case _ =>
           // raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
           cctx.err

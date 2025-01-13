@@ -91,9 +91,8 @@ final case class Inter(v: Opt[ClassLikeType | FunType]) extends NormalForm:
     case (S(ClassLikeType(cls1, targs1)), S(ClassLikeType(cls2, targs2))) if cls1.uid === cls2.uid =>
       S(Inter(S(ClassLikeType(cls1, targs1.lazyZip(targs2).map(_ & _)))))
     case (S(_: ClassLikeType), S(_: ClassLikeType)) => N
-    case (S(f1: FunType), S(f2: FunType)) => FunType.mixOuter(f1, f2) match
-      case (f @ FunType(a1, r1, e1), FunType(a2, r2, e2)) =>
-        S(Inter(S(FunType(a1.lazyZip(a2).map(_ | _), r1 & r2, e1 & e2)(f.outer)))) // Same `outer` after mixing
+    case (S(FunType(a1, r1, e1)), S(FunType(a2, r2, e2))) =>
+      S(Inter(S(FunType(a1.lazyZip(a2).map(_ | _), r1 & r2, e1 & e2))))
     case (S(v), N) => S(Inter(S(v)))
     case (N, v) => S(Inter(v))
     case _ => N
@@ -113,9 +112,8 @@ extends NormalForm with CachedBasicType:
   def toType = fun.getOrElse(Bot) |
     cls.foldLeft[Type](Bot)(_ | _)
   def merge(other: Union): Union = Union((fun, other.fun) match {
-    case (S(f1: FunType), S(f2: FunType)) => FunType.mixOuter(f1, f2) match
-      case (f @ FunType(a1, r1, e1), FunType(a2, r2, e2)) =>
-        S(FunType(a1.lazyZip(a2).map(_ & _), r1 | r2, e1 | e2)(f.outer)) // Same `outer` after mixing
+    case (S(FunType(a1, r1, e1)), S(FunType(a2, r2, e2))) =>
+      S(FunType(a1.lazyZip(a2).map(_ & _), r1 | r2, e1 | e2))
     case (S(f), N) => S(f)
     case (N, S(f)) => S(f)
     case (N, N) => N

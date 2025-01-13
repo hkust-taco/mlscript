@@ -58,7 +58,6 @@ object Keyword:
   val `:` = Keyword(":", ascPrec, eqPrec)
   val `..` = Keyword("..", N, N)
   val `...` = Keyword("...", N, N)
-  val `@` = Keyword("@", N, N)
   // val `;` = Keyword(";", ascPrec, eqPrec)
   
   val `if` = Keyword("if", N, nextPrec)
@@ -117,6 +116,7 @@ object Keyword:
   val `throw` = Keyword("throw", N, curPrec)
   val `import` = Keyword("import", N, curPrec)
   val `this` = Keyword("this", N, N)
+  val `outer` = Keyword("outer", N, N)
   val `pattern` = Keyword("pattern", N, N)
   
   // * The lambda operator is special:
