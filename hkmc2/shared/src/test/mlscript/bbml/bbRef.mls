@@ -36,7 +36,7 @@ let r = region x in x.ref 42
 
 fun mkRef() = region x in x.ref 42
 mkRef
-//│ Type: forall(outer) : () -> Ref[Int, out ¬outer]
+//│ Type: forall outer: () -> Ref[Int, out ¬outer]
 
 :e
 let t = region x in x in t.ref 42
@@ -125,7 +125,7 @@ fun rid(x) =
 :e
 region x in
   (let dz = x.ref 42 in 42): [A] -> Int
-//│ ╔══[ERROR] Type error in block with expected type forall(outer) 'A: Int
+//│ ╔══[ERROR] Type error in block with expected type forall outer, 'A: Int
 //│ ║  l.127: 	  (let dz = x.ref 42 in 42): [A] -> Int
 //│ ║         	            ^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg  <:  ⊥
@@ -167,7 +167,7 @@ fun foo(x) = x
 //│ Type: ⊤
 
 foo
-//│ Type: forall(outer) 'A: ('A) ->{⊥} 'A
+//│ Type: forall outer, 'A: ('A) ->{⊥} 'A
 //│ Where:
 //│   'A <: Int
 
@@ -179,11 +179,11 @@ fun bar(f) = f(42)
 //│ Type: ⊤
 
 bar
-//│ Type: (forall(outer) 'A: ('A) ->{⊥} 'A) ->{⊥} Int
+//│ Type: (forall outer, 'A: ('A) ->{⊥} 'A) ->{⊥} Int
 
 :e
 region x in x.ref bar
-//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but (forall(outer) 'A: ('A) ->{⊥} 'A) ->{⊥} Int found
+//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but (forall outer, 'A: ('A) ->{⊥} 'A) ->{⊥} Int found
 //│ ║  l.185: 	region x in x.ref bar
 //│ ╙──       	                  ^^^
 //│ Type: Ref[⊥, ?]

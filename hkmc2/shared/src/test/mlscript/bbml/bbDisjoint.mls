@@ -9,7 +9,7 @@ class Pair[P, Q](fst: P, snd: Q)
 
 fun fork: [A, B extends ~A, T1, T2] -> (Any ->{A} T1, Any ->{B} T2) ->{A | B} Pair[out T1, out T2]
 fork
-//│ Type: forall(outer) 'A, 'B, 'T1, 'T2: ((⊤) ->{'A} 'T1, (⊤) ->{'B} 'T2) ->{'A ∨ 'B} Pair[out 'T1, out 'T2]
+//│ Type: forall outer, 'A, 'B, 'T1, 'T2: ((⊤) ->{'A} 'T1, (⊤) ->{'B} 'T2) ->{'A ∨ 'B} Pair[out 'T1, out 'T2]
 //│ Where:
 //│   'B <: ¬'A
 
@@ -102,7 +102,7 @@ fun helper(r1) =
   region r2 in
     fork((_ => r1.ref 1), (_ => r2.ref 2))
 helper
-//│ Type: forall(outer) 'reg, 'reg1: Region[in 'reg out 'reg1] ->{'reg1} Pair[out Ref[Int, out 'reg1], out Ref[Int, out ¬outer]]
+//│ Type: forall outer, 'reg, 'reg1: Region[in 'reg out 'reg1] ->{'reg1} Pair[out Ref[Int, out 'reg1], out Ref[Int, out ¬outer]]
 //│ Where:
 //│   'reg <: outer
 //│   'reg <: 'reg1
@@ -138,7 +138,7 @@ region x in
 //│ ╟── because: cannot constrain  x  <:  'env
 //│ ╟── because: cannot constrain  x  <:  'env
 //│ ╙── because: cannot constrain  x  <:  outer ∨ y
-//│ ╔══[ERROR] Type error in region expression with expected type forall(outer) 'A: Int
+//│ ╔══[ERROR] Type error in region expression with expected type forall outer, 'A: Int
 //│ ║  l.129: 	  (region y in let t = helper(x) in 42): [A] -> Int
 //│ ║         	                       ^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'eff  <:  ⊥
@@ -180,7 +180,7 @@ fun annohelper(r1) =
   region r2 in
     fork((_ => r1.ref 1), (_ => r2.ref 2))
 annohelper
-//│ Type: forall(outer) 'T: (Region['T]) ->{'T} Pair[out Ref[Int, out 'T], out Ref[Int, out ¬outer]]
+//│ Type: forall outer, 'T: (Region['T]) ->{'T} Pair[out Ref[Int, out 'T], out Ref[Int, out ¬outer]]
 //│ Where:
 //│   'T <: outer
 
@@ -249,7 +249,7 @@ fun foo(r1) =
   region r2 in
     foo(r2)
 foo
-//│ Type: forall(S) 'T: (Region['T]) ->{'T} ⊥
+//│ Type: forall outer S, 'T: (Region['T]) ->{'T} ⊥
 //│ Where:
 //│   'T <: S
 
@@ -267,7 +267,7 @@ fun bar: [outer S, T extends S] -> Region[T] ->{T} Int
 
 
 bar: [outer Q, P extends Q] -> Region[P] ->{P} Int
-//│ Type: forall(Q) 'P: (Region['P]) ->{'P} Int
+//│ Type: forall outer Q, 'P: (Region['P]) ->{'P} Int
 //│ Where:
 //│   'P <: Q
 
@@ -275,7 +275,7 @@ bar: [outer Q, P extends Q] -> Region[P] ->{P} Int
 fun foo: [outer To, T extends To] -> Region[T] ->{T} ([outer So, S extends So] -> Region[S]->{S} Int)
 fun foo(r1) = bar
 foo
-//│ Type: forall(To) 'T: (Region['T]) ->{'T} forall(So) 'S: (Region['S]) ->{'S} Int
+//│ Type: forall outer To, 'T: (Region['T]) ->{'T} forall outer So, 'S: (Region['S]) ->{'S} Int
 //│ Where:
 //│   'T <: To
 //│   'S <: So

@@ -78,7 +78,7 @@ fun high(f) = f(42)
 //│ Type: ⊤
 
 high
-//│ Type: (forall(outer) 'A: ('A) ->{⊥} 'A) ->{⊥} Int
+//│ Type: (forall outer, 'A: ('A) ->{⊥} 'A) ->{⊥} Int
 
 
 high((x => x): [A] -> A -> A)
@@ -100,11 +100,11 @@ high(x => x + 1)
 //│ Type: Int
 
 (let a = 0 in x => x): [A] -> A -> A
-//│ Type: forall(outer) 'A: ('A) ->{⊥} 'A
+//│ Type: forall outer, 'A: ('A) ->{⊥} 'A
 
 
 (if false then x => x else y => y): [A] -> A -> A
-//│ Type: forall(outer) 'A: ('A) ->{⊥} 'A
+//│ Type: forall outer, 'A: ('A) ->{⊥} 'A
 
 
 fun baz: Int -> (([A] -> A -> A), Int) -> Int
@@ -119,24 +119,24 @@ fun baz(z) =
 
 :e
 baz: Int -> (([A] -> A -> A), Int) -> Int
-//│ ╔══[ERROR] Cannot type non-function term SynthSel(Ref(globalThis:block#18),Ident(baz)) as (Int) ->{⊥} (forall(outer) 'A: ('A) ->{⊥} 'A, Int) ->{⊥} Int
+//│ ╔══[ERROR] Cannot type non-function term SynthSel(Ref(globalThis:block#18),Ident(baz)) as (Int) ->{⊥} (forall outer, 'A: ('A) ->{⊥} 'A, Int) ->{⊥} Int
 //│ ║  l.121: 	baz: Int -> (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^
 //│ Type: ⊥
 
 
 baz(42)
-//│ Type: (forall(outer) 'A: ('A) ->{⊥} 'A, Int) ->{⊥} Int
+//│ Type: (forall outer, 'A: ('A) ->{⊥} 'A, Int) ->{⊥} Int
 
 :e
 baz(42): (([A] -> A -> A), Int) -> Int
-//│ ╔══[ERROR] Cannot type non-function term App(SynthSel(Ref(globalThis:block#18),Ident(baz)),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))) as (forall(outer) 'A: ('A) ->{⊥} 'A, Int) ->{⊥} Int
+//│ ╔══[ERROR] Cannot type non-function term App(SynthSel(Ref(globalThis:block#18),Ident(baz)),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))) as (forall outer, 'A: ('A) ->{⊥} 'A, Int) ->{⊥} Int
 //│ ║  l.132: 	baz(42): (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^^^^^
 //│ Type: ⊥
 
 (z => (f, x) => baz(z)(f, x)): Int -> (([A] -> A -> A), Int) -> Int
-//│ Type: (Int) ->{⊥} (forall(outer) 'A: ('A) ->{⊥} 'A, Int) ->{⊥} Int
+//│ Type: (Int) ->{⊥} (forall outer, 'A: ('A) ->{⊥} 'A, Int) ->{⊥} Int
 
 
 fun id: [A] -> A -> A
@@ -144,11 +144,11 @@ fun id(x) = x
 //│ Type: ⊤
 
 id: [A] -> A -> A
-//│ Type: forall(outer) 'A: ('A) ->{⊥} 'A
+//│ Type: forall outer, 'A: ('A) ->{⊥} 'A
 
 
 (id: [A] -> A -> A): [A] -> A -> A
-//│ Type: forall(outer) 'A: ('A) ->{⊥} 'A
+//│ Type: forall outer, 'A: ('A) ->{⊥} 'A
 
 42: Int | Num
 //│ Type: Int ∨ Num
@@ -171,7 +171,7 @@ foo
 
 fun foo: [A] -> (A, ~A) -> A
 foo
-//│ Type: forall(outer) 'A: ('A, ¬'A) ->{⊥} 'A
+//│ Type: forall outer, 'A: ('A, ¬'A) ->{⊥} 'A
 
 
 :e

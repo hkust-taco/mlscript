@@ -10,28 +10,28 @@ id(1)
 //│ Type: Int
 
 id
-//│ Type: forall(outer) 'x: 'x -> 'x
+//│ Type: forall outer, 'x: 'x -> 'x
 
 id(true)
 //│ Type: Bool
 
 id
-//│ Type: forall(outer) 'x: 'x -> 'x
+//│ Type: forall outer, 'x: 'x -> 'x
 
 
 fun id(x) = x
 //│ Type: ⊤
 
 id : [A] -> A -> A
-//│ Type: forall(outer) 'A: ('A) ->{⊥} 'A
+//│ Type: forall outer, 'A: ('A) ->{⊥} 'A
 
 
 (y => y) : [A] -> A -> A
-//│ Type: forall(outer) 'A: ('A) ->{⊥} 'A
+//│ Type: forall outer, 'A: ('A) ->{⊥} 'A
 
 fun id(x) = x
 (y => id(y)) : [A] -> A -> A
-//│ Type: forall(outer) 'A: ('A) ->{⊥} 'A
+//│ Type: forall outer, 'A: ('A) ->{⊥} 'A
 
 
 
