@@ -175,12 +175,12 @@ fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
 //│ Type: ⊤
 
 
-fun annohelper: [outer, T extends outer] -> Region[T] ->{T} Pair[out Ref[Int, out T], out Ref[Int, out Any]]
+fun annohelper: [outer, T extends outer] -> Region[T] ->{T} Pair[out Ref[Int, out T], out Ref[Int, out ~outer]]
 fun annohelper(r1) =
   region r2 in
     fork((_ => r1.ref 1), (_ => r2.ref 2))
 annohelper
-//│ Type: forall(outer) 'T: (Region['T]) ->{'T} Pair[out Ref[Int, out 'T], out Ref[Int, ?]]
+//│ Type: forall(outer) 'T: (Region['T]) ->{'T} Pair[out Ref[Int, out 'T], out Ref[Int, out ¬outer]]
 //│ Where:
 //│   'T <: outer
 
