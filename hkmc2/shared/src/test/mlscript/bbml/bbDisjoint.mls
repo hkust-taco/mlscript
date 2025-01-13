@@ -190,6 +190,21 @@ region x in
 //│ Type: Pair[out Ref[Int, ?], out Ref[Int, ?]]
 
 
+fun annohelper: [outer, T] -> Region[T & outer] ->{T & outer} Pair[out Ref[Int, out T & outer], out Ref[Int, out ~outer]]
+fun annohelper(r1) =
+  region r2 in
+    fork((_ => r1.ref 1), (_ => r2.ref 2))
+annohelper
+//│ Type: forall outer, 'T: (Region['T ∧ outer]) ->{'T ∧ outer} Pair[out Ref[Int, out 'T ∧ outer], out Ref[Int, out ¬outer]]
+
+
+region x in
+  annohelper(x)
+//│ Type: Pair[out Ref[Int, out 'env], out Ref[Int, ?]]
+//│ Where:
+//│   ⊤ <: 'env
+
+
 // Cannot type check since foo: 'foo <: Region[T] ->{'eff} 'app 
 // Annotation is required for recursive calls
 :e
@@ -198,13 +213,13 @@ fun foo(r1) =
     fork((_ => r1.ref 1), (_ => r2.ref 2))
     foo(r2)
 //│ ╔══[ERROR] Type error in function literal
-//│ ║  l.196: 	fun foo(r1) =
+//│ ║  l.211: 	fun foo(r1) =
 //│ ║         	        ^^^^^
-//│ ║  l.197: 	  region r2 in
+//│ ║  l.212: 	  region r2 in
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.198: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
+//│ ║  l.213: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.199: 	    foo(r2)
+//│ ║  l.214: 	    foo(r2)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'r1 ->{'eff} 'app  <:  'foo
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo
@@ -220,13 +235,13 @@ fun foo(r1) =
 //│ ╟── because: cannot constrain  'r22  <:  ¬(¬outer)
 //│ ╙── because: cannot constrain  ¬outer  <:  ¬(¬outer)
 //│ ╔══[ERROR] Type error in function literal
-//│ ║  l.196: 	fun foo(r1) =
+//│ ║  l.211: 	fun foo(r1) =
 //│ ║         	        ^^^^^
-//│ ║  l.197: 	  region r2 in
+//│ ║  l.212: 	  region r2 in
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.198: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
+//│ ║  l.213: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.199: 	    foo(r2)
+//│ ║  l.214: 	    foo(r2)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'r1 ->{'eff} 'app  <:  'foo
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo
