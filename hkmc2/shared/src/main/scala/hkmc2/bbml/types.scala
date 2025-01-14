@@ -292,8 +292,8 @@ case class PolyType(tvs: Ls[InfVar], outer: InfVar, body: GeneralType) extends G
     given Scope = scope.nest
     val op = outer.show
     val lst = (if op === "outer" then op else s"outer $op") :: tvs.map(_.show)
-    s"forall ${lst.mkString(", ")}: ${body.show}"
-  override def showDbg: Str = s"forall(outer ${outer.showDbg}) ${tvs.map(_.showDbg).mkString(", ")}: ${body.showDbg}"
+    s"[${lst.mkString(", ")}] -> ${body.show}"
+  override def showDbg: Str = s"[${(outer :: tvs).map(_.showDbg).mkString(", ")}] -> ${body.showDbg}"
   override def monoOr(fallback: => Type): Type = fallback
   override def map(f: GeneralType => GeneralType): PolyType = PolyType(tvs, outer, f(body))
 
