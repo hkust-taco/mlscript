@@ -28,7 +28,7 @@ fun g(y) =
 //│ Type: ⊤
 
 g
-//│ Type: ((⊥) ->{⊥} Int) ->{⊥} (⊤) ->{⊥} Int
+//│ Type: ((⊤) ->{⊥} Int) ->{⊥} (⊤) ->{⊥} Int
 
 g(foo)
 //│ Type: (⊤) ->{⊥} Int

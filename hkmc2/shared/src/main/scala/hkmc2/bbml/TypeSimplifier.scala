@@ -54,6 +54,8 @@ class TypeSimplifier(tl: TraceLogger):
       
       var curPath: Ls[IV] = Nil
       var pastPathsSet: MutSet[IV] = MutSet.empty
+      var outerPol: Opt[Bool] = N // outer polarity before entering next level
+      var localSet: Set[IV] = Set.empty // local forall-qualified tvs
       
       val varSubst: MutMap[IV, IV] = MutMap.empty
       
@@ -109,9 +111,15 @@ class TypeSimplifier(tl: TraceLogger):
                 val oldPath = curPath
                 curPath ::= tv
                 
-                if pol
-                then posVars += tv
-                else negVars += tv
+                // if tv is local and the forall type is in negative pos
+                if localSet(tv) && !outerPol.getOrElse(true) then
+                  if !pol // flip
+                  then posVars += tv
+                  else negVars += tv
+                else
+                  if pol
+                  then posVars += tv
+                  else negVars += tv
                 
                 // log(s">>>> $curPath")
                 // traversingTVs += tv
@@ -119,12 +127,24 @@ class TypeSimplifier(tl: TraceLogger):
                 super.apply(pol)(ty)
                 // traversingTVs -= tv
                 curPath = oldPath
-            case pt @ PolyType(_, outer, _) => // Avoid simplify outer variables to Top unexpectedly
+            case pt @ PolyType(tvs, outer, _) => // Avoid simplify outer variables to Top unexpectedly
               outer.foreach(outer => {
                 posVars += outer
                 negVars += outer
               })
+              val oldPath = curPath
+              pastPathsSet ++= oldPath
+              curPath = Nil
+              val oldPol = outerPol
+              outerPol = S(pol)
+              val oldTVSet = localSet
+              localSet = (outer.toList ++ tvs).toSet
               super.apply(pol)(pt)
+              localSet = oldTVSet
+              outerPol = oldPol
+              curPath = oldPath
+              pastPathsSet --= oldPath
+              ()
             case _ =>
               val oldPath = curPath
               pastPathsSet ++= oldPath
