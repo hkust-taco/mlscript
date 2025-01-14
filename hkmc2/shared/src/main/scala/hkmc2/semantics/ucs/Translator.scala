@@ -56,7 +56,7 @@ class Translator(val elaborator: Elaborator)
     plainTest(test1, "gtLo")(plainTest(test2, "ltHi")(inner(Map.empty)))
   
   /** Generate a split that consumes the entire scrutinee. */
-  private def full(scrut: Scrut, pat: Tree, inner: Inner)(using Raise): Split = trace(
+  private def full(scrut: Scrut, pat: Tree, inner: Inner)(using patternParams: Ls[Param], raise: Raise): Split = trace(
     pre = s"full <<< $pat", 
     post = (split: Split) => s"full >>> $split"
   ):
@@ -79,27 +79,39 @@ class Translator(val elaborator: Elaborator)
           full(postfixScrut, postfix, captures2 => inner(captures2 ++ captures1)))
       case Under() => inner(Map.empty)
       case ctor @ (_: Ident | _: Sel) =>
-        val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
-        clsTrm.symbol.flatMap(_.asClsLike) match
-        case S(cls: (ClassSymbol | ModuleSymbol)) =>
-          Branch(scrut(), Pattern.ClassLike(cls, clsTrm, N, false)(ctor), inner(Map.empty)) ~: Split.End
-        case S(psym: PatternSymbol) =>
-          makeUnapplyBranch(scrut(), clsTrm, inner(Map.empty))(Split.End)
-        case _ =>
-          error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
-          errorSplit
+        lazy val resolved =
+          val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
+          clsTrm.symbol.flatMap(_.asClsLike) match
+          case S(cls: (ClassSymbol | ModuleSymbol)) =>
+            Branch(scrut(), Pattern.ClassLike(cls, clsTrm, N, false)(ctor), inner(Map.empty)) ~: Split.End
+          case S(psym: PatternSymbol) =>
+            makeUnapplyBranch(scrut(), clsTrm, inner(Map.empty))(Split.End)
+          case _ =>
+            error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
+            errorSplit
+        ctor match
+        case Ident(ctorName) => patternParams.find(_.sym.nme == ctorName) match
+          case S(Param(_, symbol, _)) => failure // TODO: handle input patterns
+          case N => resolved
+        case ctor: Sel => resolved
       case App(ctor @ (_: Ident | _: Sel), Tup(params)) =>
-        val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
-        clsTrm.symbol.flatMap(_.asClsLike) match
-        case S(cls: (ClassSymbol | ModuleSymbol)) =>
-          // TODO: handle parameters
-          Branch(scrut(), Pattern.ClassLike(cls, clsTrm, N, false)(ctor), inner(Map.empty)) ~: Split.End
-        case S(psym: PatternSymbol) =>
-          // TODO: handle parameters
-          makeUnapplyBranch(scrut(), clsTrm, inner(Map.empty))(Split.End)
-        case _ =>
-          error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
-          errorSplit
+        lazy val resolved =
+          val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
+          clsTrm.symbol.flatMap(_.asClsLike) match
+          case S(cls: (ClassSymbol | ModuleSymbol)) =>
+            // TODO: handle parameters
+            Branch(scrut(), Pattern.ClassLike(cls, clsTrm, N, false)(ctor), inner(Map.empty)) ~: Split.End
+          case S(psym: PatternSymbol) =>
+            // TODO: handle parameters
+            makeUnapplyBranch(scrut(), clsTrm, inner(Map.empty))(Split.End)
+          case _ =>
+            error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
+            errorSplit
+        ctor match
+        case Ident(ctorName) => patternParams.find(_.sym.nme == ctorName) match
+          case S(Param(_, symbol, _)) => failure // TODO: handle input patterns
+          case N => resolved
+        case ctor: Sel => resolved
       case _ =>
         error(msg"Unrecognized pattern." -> pat.toLoc)
         errorSplit
@@ -213,7 +225,7 @@ class Translator(val elaborator: Elaborator)
    *    values. If the given tree does not represent a string pattern, this
    *    function will not be generated.
    */
-  def apply(params: Ls[Param], body: Tree)(using Raise): Ls[TermDefinition] = trace(
+  def apply(patternParams: Ls[Param], params: Ls[Param], body: Tree)(using Raise): Ls[TermDefinition] = trace(
     pre = s"Translator <<< ${params.mkString(", ")} $body", 
     post = (blk: Ls[TermDefinition]) => s"Translator >>> $blk"
   ):
@@ -224,12 +236,12 @@ class Translator(val elaborator: Elaborator)
     //   split.normalize(using elaborator.tl)
     // scoped("ucs:rp"):
     //   log(s"normalized nameless split:\n${normalized.display}")
-    val unapply =
+    val unapply = scoped("ucs:cp"):
       val scrutSym = TermSymbol(ParamBind, N, Ident("scrut"))
-      val topmost = full(() => scrutSym.ref(), body, success(params)) ~~: failure
+      val topmost = full(() => scrutSym.ref(), body, success(params))(using patternParams, raise) ~~: failure
       log(s"Translated `unapply`: ${display(topmost)}")
       makeMatcher("unapply", scrutSym, topmost)
-    val unapplyStringPrefix =
+    val unapplyStringPrefix = scoped("ucs:cp"):
       // We don't report errors here because they are already reported in the
       // translation of `unapply` function.
       given Raise = Function.const(())

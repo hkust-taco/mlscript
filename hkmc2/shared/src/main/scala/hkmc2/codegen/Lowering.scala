@@ -77,7 +77,7 @@ class Lowering(using TL, Raise, Elaborator.State):
       case Tup(fs) =>
         val as = fs.map:
           case sem.Fld(sem.FldFlags.empty, value, N) => false -> value
-          case sem.Fld(sem.FldFlags(false, false, false, true), value, N) => false -> value
+          case sem.Fld(sem.FldFlags(false, false, false, true, false), value, N) => false -> value
           case sem.Fld(flags, value, asc) =>
             TODO("Other argument forms")
           case spd: Spd => true -> spd.term

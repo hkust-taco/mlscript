@@ -3,13 +3,14 @@ package semantics
 
 import mlscript.utils.*, shorthands.*
 import syntax.*, Tree.Ident
+import hkmc2.semantics.ucs.DeBrujinSplit
 
 /** Flat patterns for pattern matching */
 enum Pattern extends AutoLocated:
   case Lit(literal: Literal)
   case Var(sym: BlockLocalSymbol)
   case ClassLike(sym: ClassSymbol | ModuleSymbol, trm: Term, parameters: Opt[List[BlockLocalSymbol]], var refined: Bool)(val tree: Tree)
-  case Synonym(symbol: PatternSymbol, parameters: Opt[List[BlockLocalSymbol]])
+  case Synonym(symbol: PatternSymbol, patternArgs: Ls[DeBrujinSplit])(val treeArgs: Ls[Tree])
   case Tuple(size: Int, inf: Bool)
   case Record(entries: List[(Ident -> BlockLocalSymbol)])
   
@@ -25,7 +26,7 @@ enum Pattern extends AutoLocated:
     case Lit(literal) => literal :: Nil
     case Var(nme) => Nil
     case ClassLike(_, t, parameters, _) => t :: parameters.toList.flatten
-    case Synonym(_, parameters) => parameters.toList.flatten
+    case s @ Synonym(_, _) => s.treeArgs
     case Tuple(fields, _) => Nil
     case Record(entries) => entries.flatMap { case (nme, als) => nme :: als :: Nil }
   
@@ -34,7 +35,8 @@ enum Pattern extends AutoLocated:
     case Var(sym) => sym.nme
     case ClassLike(sym, t, ps, rfd) => (if rfd then "refined " else "") +
       sym.nme + ps.fold("")(_.mkString("(", ", ", ")"))
-    case Synonym(sym, ps) => sym.nme + ps.fold("")(_.mkString("(", ", ", ")"))
+    case s @ Synonym(sym, args) =>
+      sym.nme + s.treeArgs.iterator.map(_.showDbg).mkString("(", ", ", ")")
     case Tuple(size, inf) => "[]" + (if inf then ">=" else "=") + size
     case Record(Nil) => "{}"
     case Record(entries) =>

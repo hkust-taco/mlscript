@@ -10,13 +10,25 @@ case object StringJoin
 
 case class LocalPattern(symbol: PatternSymbol)
 
+case class InputPattern(symbol: LocalSymbol & NamedSymbol)
+
+case class AppliedPattern(symbol: PatternSymbol, arguments: List[DeBrujinSplit])
+
 /** Describe the size of tuples. If `infinite` is `false`, it represents
  *  fixed-size tuples. Otherwise, it represents tuples with at least `size`.
  */
 type TupleCapacity = (size: Int, infinite: Bool)
 
-type MatchableSymbol = ClassSymbol | ModuleSymbol | PatternSymbol |
-  TupleCapacity | StringJoin.type | LocalPattern | DeBrujinSplit
+type MatchableSymbol =
+    ClassSymbol
+  | ModuleSymbol
+  | PatternSymbol
+  | AppliedPattern
+  | TupleCapacity // not supported yet
+  | StringJoin.type // not supported yet
+  | LocalPattern // A reference to a local recursive pattern.
+  | InputPattern // The argument of parameterized patterns.
+  | DeBrujinSplit // An embedded split in a pattern.
 
 /** `PatternStub` is a simplified representation of `semantics.Pattern`. It
  *  excludes terms and symbols which can break the uniqueness of the pattern.
@@ -45,8 +57,10 @@ enum PatternStub:
       case symbol: ClassSymbol => symbol.arity
       case symbol: ModuleSymbol => 0
       case symbol: PatternSymbol => symbol.arity
+      case AppliedPattern(symbol, arguments) => 0 // TODO: fill in the arity
       case LocalPattern(symbol) => symbol.arity
-      case _: DeBrujinSplit => 1 // The arity of embedded splits is always 1.
+      case InputPattern(symbol) => 0 // TODO: fill in the arity
+      case _: DeBrujinSplit => 0
     case Wildcard => 0
     
   def display: Str = s"$showDbg ($arity)"
@@ -63,7 +77,9 @@ enum PatternStub:
       case symbol: ClassSymbol => symbol.toString // TODO: display arity
       case symbol: ModuleSymbol => symbol.toString
       case symbol: PatternSymbol => symbol.toString
+      case AppliedPattern(symbol, arguments) => s"applied:${symbol.nme}(${arguments.size})"
       case LocalPattern(symbol) => s"local:${symbol.nme}"
+      case InputPattern(symbol) => s"input:${symbol.nme}"
       case split: DeBrujinSplit => "<split>"
     case Wildcard => "_"
 

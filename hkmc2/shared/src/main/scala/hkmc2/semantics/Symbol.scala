@@ -206,7 +206,10 @@ class PatternSymbol(val id: Tree.Ident, val params: Opt[Tree.Tup], val body: Tre
   def split_=(split: ucs.DeBrujinSplit): Unit = _split = S(split)
   def split: ucs.DeBrujinSplit = _split.getOrElse:
     lastWords(s"found unelaborated pattern: $nme")
-  
+  /** The list of pattern parameters, for example,
+    * `T` in `pattern Nullable(pattern T) = null | T`.
+    */
+  var patternParams: Ls[Param] = Nil
 
 class TopLevelSymbol(blockNme: Str)(using State)
     extends MemberSymbol[ModuleDef] with InnerSymbol:

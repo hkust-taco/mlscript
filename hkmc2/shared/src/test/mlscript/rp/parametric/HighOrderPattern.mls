@@ -1,0 +1,44 @@
+:js
+
+pattern Nullable(pattern T) = null | T
+
+object A
+
+:e
+null is @compile Nullable
+//│ ╔══[ERROR] Pattern `Nullable` expects 1 pattern argument
+//│ ║  l.3: 	pattern Nullable(pattern T) = null | T
+//│ ║       	                         ^
+//│ ╟── But no arguments were given
+//│ ║  l.8: 	null is @compile Nullable
+//│ ╙──     	                 ^^^^^^^^
+//│ = false
+
+:e
+null is @compile Nullable(A, A)
+//│ ╔══[ERROR] Pattern `Nullable` expects 1 pattern argument
+//│ ║  l.3: 	pattern Nullable(pattern T) = null | T
+//│ ║       	                         ^
+//│ ╟── But 2 pattern arguments were given
+//│ ║  l.18: 	null is @compile Nullable(A, A)
+//│ ╙──      	                          ^^^^
+//│ = false
+
+pattern Nullable(pattern T) = null | T
+
+null is @compile Nullable(A)
+//│ = true
+
+A is @compile Nullable(A)
+//│ = true
+
+2 is @compile Nullable(1 | 2)
+//│ = true
+
+class Pair[A, B](val first: A, val second: B)
+
+pattern Chain(pattern T) = null | Pair(T, Chain(T))
+
+:todo
+null is @compile Chain(A)
+//│ /!!!\ Uncaught error: scala.MatchError: (1,Branch(1,ClassLike(Binder(Branch(1,ClassLike(module:A),Accept(0),Reject))),Accept(0),Reject)) (of class scala.Tuple2)

@@ -10,6 +10,7 @@ import Keyword.{as, and, `do`, `else`, is, let, `then`}
 import collection.mutable.{HashMap, SortedSet}
 import Elaborator.{ctx, Ctxl}
 import ucs.{DesugaringBase, warn, error}
+import hkmc2.semantics.ucs.DeBrujinSplit
 
 object Desugarer:
   extension (op: Keyword.Infix)
@@ -420,12 +421,64 @@ class Desugarer(val elaborator: Elaborator)
       case S(mod: ModuleSymbol) =>
         if compile then warn(msg"Cannot compile the module `${mod.name}`" -> ctor.toLoc)
         Branch(ref, Pattern.ClassLike(mod, clsTrm, N, false)(ctor), sequel(ctx)) ~: fallback
-      case S(pat: PatternSymbol) =>
-        if compile then Branch(ref, Pattern.Synonym(pat, N), sequel(ctx)) ~: fallback
-        else makeUnapplyBranch(ref, clsTrm, sequel(ctx))(fallback)
+      case S(pat: PatternSymbol) if compile =>
+        if pat.patternParams.size > 0 then
+          error(
+            msg"Pattern `${pat.nme}` expects ${"pattern argument".pluralize(pat.patternParams.size, true)}" ->
+              pat.patternParams.foldLeft[Opt[Loc]](N):
+              case (N, param) => param.sym.toLoc
+              case (S(loc), param) => S(loc ++ param.sym.toLoc),
+            msg"But no arguments were given" -> ctor.toLoc)
+          fallback
+        else
+          Branch(ref, Pattern.Synonym(pat, Nil)(Nil), sequel(ctx)) ~: fallback
+      case S(_: PatternSymbol) =>
+        makeUnapplyBranch(ref, clsTrm, sequel(ctx))(fallback)
       case N =>
         // Raise an error and discard `sequel`. Use `fallback` instead.
         raise(ErrorReport(msg"Cannot use this ${ctor.describe} as a pattern" -> ctor.toLoc :: Nil))
+        fallback
+    def dealWithAppCtorCase(app: App, ctor: Ctor, args: Ls[Tree], compile: Bool)(fallback: Split): Sequel = ctx => trace(
+      pre = s"expandMatch <<< ${ctor}(${args.iterator.map(_.showDbg).mkString(", ")})",
+      post = (r: Split) => s"expandMatch >>> ${r.showDbg}"
+    ):
+      val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
+      clsTrm.symbol.flatMap(_.asClsLike) match
+      case S(cls: ClassSymbol) =>
+        val arity = cls.arity
+        if arity =/= args.length then
+          val m = args.length.toString
+          ErrorReport:
+            if arity == 0 then
+              msg"the constructor does not take any arguments but found $m" -> app.toLoc :: Nil
+            else
+              msg"mismatched arity: expect ${arity.toString}, found $m" -> app.toLoc :: Nil
+        val params = scrutSymbol.getSubScrutinees(cls)
+        Branch(
+          ref,
+          Pattern.ClassLike(cls, clsTrm, S(params), false)(ctor), // TODO: refined?
+          subMatches(params zip args, sequel)(Split.End)(ctx)
+        ) ~: fallback
+      case S(pat: PatternSymbol) if compile =>
+        val patArgs = args.map: arg =>
+          DeBrujinSplit.elaborate(N, arg, elaborator).split
+        if pat.patternParams.size != patArgs.size then
+          error(
+            msg"Pattern `${pat.nme}` expects ${"pattern argument".pluralize(pat.patternParams.size, true)}" ->
+              pat.patternParams.foldLeft[Opt[Loc]](N):
+              case (N, param) => param.sym.toLoc
+              case (S(loc), param) => S(loc ++ param.sym.toLoc),
+            msg"But ${"pattern argument".pluralize(patArgs.size, true)} were given" -> args.foldLeft[Opt[Loc]](N):
+              case (N, arg) => arg.toLoc
+              case (S(loc), arg) => S(loc ++ arg.toLoc))
+          fallback
+        else
+          Branch(ref, Pattern.Synonym(pat, patArgs)(args), sequel(ctx)) ~: fallback
+      case S(_: PatternSymbol) =>
+        makeUnapplyBranch(ref, clsTrm, sequel(ctx))(fallback)
+      case _ =>
+        // Raise an error and discard `sequel`. Use `fallback` instead.
+        raise(ErrorReport(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc :: Nil))
         fallback
     pattern match
       // A single wildcard pattern.
@@ -444,7 +497,7 @@ class Desugarer(val elaborator: Elaborator)
       case ctor: Ctor => dealWithCtorCase(ctor, false)
       case Annotated(Ident("compile"), ctor: Ctor) => dealWithCtorCase(ctor, true)
       case Annotated(annotation, ctor: Ctor) =>
-        error(msg"Unrecognized annotation on patterns" -> annotation.toLoc)
+        error(msg"Unrecognized annotation on patterns." -> annotation.toLoc)
         dealWithCtorCase(ctor, false)
       case Tree.Tup(args) => fallback => ctx => trace(
         pre = s"expandMatch <<< ${args.mkString(", ")}",
@@ -494,31 +547,13 @@ class Desugarer(val elaborator: Elaborator)
       case App(Ident("-"), Tup(DecLit(value) :: Nil)) => fallback => ctx =>
         Branch(ref, Pattern.Lit(DecLit(-value)), sequel(ctx)) ~: fallback
       // A single constructor pattern.
-      case pat @ App(ctor @ (_: Ident | _: SynthSel | _: Sel), Tup(args)) => fallback => ctx => trace(
-        pre = s"expandMatch <<< ${ctor}(${args.iterator.map(_.showDbg).mkString(", ")})",
-        post = (r: Split) => s"expandMatch >>> ${r.showDbg}"
-      ):
-        val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
-        clsTrm.symbol.flatMap(_.asClsLike) match
-        case S(cls: ClassSymbol) =>
-          val arity = cls.arity
-          if arity =/= args.length then
-            val m = args.length.toString
-            ErrorReport:
-              if arity == 0 then
-                msg"the constructor does not take any arguments but found $m" -> pat.toLoc :: Nil
-              else
-                msg"mismatched arity: expect ${arity.toString}, found $m" -> pat.toLoc :: Nil
-          val params = scrutSymbol.getSubScrutinees(cls)
-          Branch(
-            ref,
-            Pattern.ClassLike(cls, clsTrm, S(params), false)(ctor), // TODO: refined?
-            subMatches(params zip args, sequel)(Split.End)(ctx)
-          ) ~: fallback
-        case _ =>
-          // Raise an error and discard `sequel`. Use `fallback` instead.
-          raise(ErrorReport(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc :: Nil))
-          fallback
+      case Annotated(Ident("compile"), app @ App(ctor: Ctor, Tup(args))) =>
+        dealWithAppCtorCase(app, ctor, args, true)
+      case Annotated(annotation, app @ App(ctor: Ctor, Tup(args))) =>
+        error(msg"Unrecognized annotation on patterns." -> annotation.toLoc)
+        dealWithAppCtorCase(app, ctor, args, false)
+      case app @ App(ctor: Ctor, Tup(args)) =>
+        dealWithAppCtorCase(app, ctor, args, false)
       // A single literal pattern
       case literal: Literal => fallback => ctx => trace(
         pre = s"expandMatch: literal <<< $literal",

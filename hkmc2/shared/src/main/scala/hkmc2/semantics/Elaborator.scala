@@ -811,14 +811,17 @@ extends Importer:
             assert(body.isEmpty)
             td.extension match
               case N => raise(ErrorReport(msg"Pattern definitions must have a body." -> td.toLoc :: Nil))
-              case S(tree) => patSym.split = 
-                val split = ucs.DeBrujinSplit.elaborate(tree, this)
+              case S(tree) =>
+                val (split, patternParams) = ucs.DeBrujinSplit.elaborate(ps, tree, this)
                 scoped("ucs:rp:elaborated"):
                   log(s"elaborated ${patSym.nme}:\n${split.display}")
-                split
+                patSym.split = split
+                patSym.patternParams = patternParams
             log(s"pattern body is ${td.extension}")
             val translate = new ucs.Translator(this)
-            val bod = translate(ps.map(_.params).getOrElse(Nil), td.extension.getOrElse(die))
+            val bod = translate(patSym.patternParams,
+                                Nil, // ps.map(_.params).getOrElse(Nil), // TODO: remove pattern parameters
+                                td.extension.getOrElse(die))
             val pd = PatternDef(owner, patSym, tps, ps, ObjBody(Term.Blk(bod, Term.Lit(UnitLit(true)))), annotations)
             patSym.defn = S(pd)
             pd
@@ -889,6 +892,8 @@ extends Importer:
           raise(ErrorReport(msg"Module parameters must have concrete types." -> t.toLoc :: Nil))
         case _ => ()
       ps
+    case TypeDef(Pat, inner, N, N) =>
+      param(inner).map(_.mapSecond(p => p.copy(flags = p.flags.copy(pat = true))))
     case _ =>
       t.asParam.map: (isSpd, p, t) =>
         isSpd -> Param(FldFlags.empty, fieldOrVarSym(ParamBind, p), t.map(term(_)))

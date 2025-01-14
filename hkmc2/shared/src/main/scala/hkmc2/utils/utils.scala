@@ -45,12 +45,13 @@ extension (t: Product)
         val flags = Buffer.empty[String]
         if mod then flags += "module"
         flags.mkString("(", ", ", ")")
-      case FldFlags(mut, spec, genGetter, mod) =>
+      case FldFlags(mut, spec, genGetter, mod, pat) =>
         val flags = Buffer.empty[String]
         if mut then flags += "mut"
         if spec then flags += "spec"
         if genGetter then flags += "gen"
         if mod then flags += "module"
+        if pat then flags += "pat"
         flags.mkString("(", ", ", ")")
       case Loc(start, end, origin) =>
         val (sl, _, sc) = origin.fph.getLineColAt(start)

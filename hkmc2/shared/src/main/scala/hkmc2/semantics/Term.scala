@@ -341,17 +341,18 @@ case class TypeDef(
 
 
 // TODO Store optional source locations for the flags instead of booleans
-final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool, mod: Bool):
+final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool, mod: Bool, pat: Bool):
   def showDbg: Str = 
     val flags = Buffer.empty[String]
     if mut then flags += "mut"
     if spec then flags += "spec"
     if genGetter then flags += "gen"
     if mod then flags += "module"
+    if pat then flags += "pattern"
     flags.mkString(" ")
   override def toString: String = "‹" + showDbg + "›"
 
-object FldFlags { val empty: FldFlags = FldFlags(false, false, false, false) }
+object FldFlags { val empty: FldFlags = FldFlags(false, false, false, false, false) }
 
 
 sealed abstract class Elem:

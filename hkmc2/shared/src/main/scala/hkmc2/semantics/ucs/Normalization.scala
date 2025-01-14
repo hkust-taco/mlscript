@@ -91,10 +91,10 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
           val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
           val whenFalse = rec(specialize(alternative, -, scrutinee, pattern).clearFallback)
           Branch(scrutinee, pattern, whenTrue) ~: whenFalse
-        case Pattern.Synonym(symbol, _) => scoped("ucs:rp"):
+        case Pattern.Synonym(symbol, arguments) => scoped("ucs:rp"):
           log(s"SYNONYM: ${scrutinee.showDbg} is $symbol")
           import DeBrujinSplit.*, PatternStub.*
-          val mainSplit = Binder(Branch(Outermost, ClassLike(symbol), Accept(42), Reject))
+          val mainSplit = Binder(Branch(Outermost, ClassLike(AppliedPattern(symbol, arguments)), Accept(42), Reject))
           log(s"the initial split:\n${mainSplit.display}")
           val (normalizedMainSplit, patternSplitMap) = scoped("ucs:rpn"):
             mainSplit.normalize(using elaborator.tl)
