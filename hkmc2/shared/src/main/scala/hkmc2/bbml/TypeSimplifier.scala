@@ -120,8 +120,10 @@ class TypeSimplifier(tl: TraceLogger):
                 // traversingTVs -= tv
                 curPath = oldPath
             case pt @ PolyType(_, outer, _) => // Avoid simplify outer variables to Top unexpectedly
-              posVars += outer
-              negVars += outer
+              outer.foreach(outer => {
+                posVars += outer
+                negVars += outer
+              })
               super.apply(pol)(pt)
             case _ =>
               val oldPath = curPath
@@ -191,8 +193,12 @@ class TypeSimplifier(tl: TraceLogger):
 
   def simplifyForall(ty: GeneralType): GeneralType = ty match
     case PolyType(tvs, outer, body) =>
-      val visited = PolyType.collectTVs(body)
+      val newBody = simplifyForall(body)
+      val visited = PolyType.collectTVs(newBody)
       val newTvs = tvs.filter(visited)
-      if newTvs.isEmpty && !visited(outer) then body
-      else PolyType(newTvs, outer, body)
+      val newOuter = outer.filter(visited)
+      if newTvs.isEmpty && newOuter.isEmpty then newBody
+      else PolyType(newTvs, newOuter, newBody)
+    case PolyFunType(args, ret, eff) =>
+      PolyFunType(args.map(arg => simplifyForall(arg)), simplifyForall(ret), eff)
     case _ => ty

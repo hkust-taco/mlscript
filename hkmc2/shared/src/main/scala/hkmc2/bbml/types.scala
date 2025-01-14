@@ -283,17 +283,21 @@ object Type:
   def mkNegType(ty: Type): Type = ty.!
 
 // * Poly types can not be used as type arguments
-case class PolyType(tvs: Ls[InfVar], outer: InfVar, body: GeneralType) extends GeneralType:
+case class PolyType(tvs: Ls[InfVar], outer: Opt[InfVar], body: GeneralType) extends GeneralType:
   override protected type ThisType = GeneralType
 
   override lazy val isPoly: Bool = true
   override lazy val lvl: Int = (body :: tvs).map(_.lvl).max
   override def show(using scope: Scope): Str =
     given Scope = scope.nest
-    val op = outer.show
-    val lst = (if op === "outer" then op else s"outer $op") :: tvs.map(_.show)
+    val lst = (outer match {
+      case S(outer) =>
+        val op = outer.show
+        (if op === "outer" then op else s"outer $op") :: Nil
+      case N => Nil
+    }) ++ tvs.map(_.show)
     s"[${lst.mkString(", ")}] -> ${body.show}"
-  override def showDbg: Str = s"[${(outer :: tvs).map(_.showDbg).mkString(", ")}] -> ${body.showDbg}"
+  override def showDbg: Str = s"[${(outer.toList ++ tvs).map(_.showDbg).mkString(", ")}] -> ${body.showDbg}"
   override def monoOr(fallback: => Type): Type = fallback
   override def map(f: GeneralType => GeneralType): PolyType = PolyType(tvs, outer, f(body))
 
@@ -328,7 +332,7 @@ case class PolyType(tvs: Ls[InfVar], outer: InfVar, body: GeneralType) extends G
     substAndGetBody(using map)
   
   def instantiate(nextUid: => Uid[InfVar], env: InfVar, lvl: Int)(tl: TL)(using State): GeneralType =
-    val map = ((outer.uid -> env) :: tvs.map(v =>
+    val map = (outer.map(_.uid -> env).toList ++ tvs.map(v =>
       val nv = InfVar(lvl, nextUid, new VarState(), false)(new InstSymbol(v.sym), v.hint)
       tl.log(s"instantiate ${v.showDbg} ~> ${nv.showDbg}")
       v.uid -> nv
@@ -351,8 +355,8 @@ object PolyType:
     CollectTVs(true)(ty)
     visited.toSet
 
-  def generalize(ty: GeneralType, outer: InfVar, lvl: Int): PolyType =
-    PolyType(collectTVs(ty).filter(v => v.uid != outer.uid).toList.sorted, outer, ty)
+  def generalize(ty: GeneralType, outer: Opt[InfVar], lvl: Int): PolyType =
+    PolyType(collectTVs(ty).filter(v => outer.map(_.uid != v.uid).getOrElse(true)).toList.sorted, outer, ty)
 
 // * Functions that accept/return a polymorphic type.
 // * Note that effects are always monomorphic

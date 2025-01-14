@@ -182,7 +182,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         val lbty = tv.state.lowerBounds.foldLeft[Type](Bot)(_ | _)
         val ubty = tv.state.upperBounds.foldLeft[Type](Top)(_ & _)
         constrain(lbty, ubty)
-    PolyType(bds.map(_._1), outer, body)
+    PolyType(bds.map(_._1), S(outer), body)
 
   private def typeMonoType(ty: Term)(using ctx: BbCtx, cctx: CCtx): Type = monoOrErr(typeType(ty), ty)
 
@@ -281,7 +281,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         val funTy = tryMkMono(res, lam)
         given CCtx = CCtx.init(lam, N)
         constrain(funTy, funTyV)(using ctx)
-        pctx += sym -> PolyType.generalize(funTy, outer, 1)
+        pctx += sym -> PolyType.generalize(funTy, S(outer), 1)
     case _ => error(msg"Function definition shape not yet supported for ${sym.nme}" -> lam.toLoc :: Nil)
 
   private def typeSplit
@@ -359,7 +359,9 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         (ft, Bot)
     case (Term.Lam(params, body), ft @ FunType(args, ret, eff)) => ascribe(lhs, PolyFunType(args, ret, eff))
     case (term, pt @ PolyType(_, outer, _)) => // * generalize
-      val nextCtx = ctx.nestWithOuter(outer)
+      val nextCtx = outer match
+        case S(outer) => ctx.nestWithOuter(outer)
+        case N => ctx.nextLevel
       given BbCtx = nextCtx
       constrain(ascribe(term, skolemize(pt))._2, Bot) // * never generalize terms with effects
       (pt, Bot)

@@ -167,7 +167,7 @@ fun foo(x) = x
 //│ Type: ⊤
 
 foo
-//│ Type: [outer, 'A] -> ('A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
 //│ Where:
 //│   'A <: Int
 
@@ -179,7 +179,7 @@ fun bar(f) = f(42)
 //│ Type: ⊤
 
 bar
-//│ Type: ([outer, 'A] -> ('A) ->{⊥} 'A) ->{⊥} Int
+//│ Type: (['A] -> ('A) ->{⊥} 'A) ->{⊥} Int
 
 :e
 region x in x.ref bar
