@@ -96,26 +96,26 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
           import DeBrujinSplit.*, PatternStub.*
           val mainSplit = Binder(Branch(Outermost, ClassLike(AppliedPattern(symbol, arguments)), Accept(42), Reject))
           log(s"the initial split:\n${mainSplit.display}")
-          val (normalizedMainSplit, patternSplitMap) = scoped("ucs:rpn"):
+          val (normalizedMainSplit, idSplitMap) = scoped("ucs:rpn"):
             mainSplit.normalize(using elaborator.tl)
           log(s"the normalized main split:\n${normalizedMainSplit.display}")
           given Elaborator.State = elaborator.state
           // The entry in the local pattern map.
           val desugaring = new DesugaringBase:
             val elaborator: Elaborator = Normalization.this.elaborator
-          val patternSplitSymbolMap = patternSplitMap.map:
-            case (ps, split) => (ps, (split, TempSymbol(N, s"match${ps.nme}")))
-          val patternSymbolMap = patternSplitSymbolMap.map(_ -> _._2)
+          val idSplitSymbolMap = idSplitMap.map:
+            case (id, split) => (id, (split, TempSymbol(N, s"match$id")))
+          val idSymbolMap = idSplitSymbolMap.map(_ -> _._2)
           val compiledMainSplit = normalizedMainSplit.toSplit(
             scrutinees = Vector(() => scrutinee),
-            localPatterns = patternSymbolMap,
+            localPatterns = idSymbolMap,
             outcomes = Map(S(42) -> consequent),
             elab = elaborator
           )
           log(s"the compiled main split:\n${Split.display(compiledMainSplit)}")
           // Insert local pattern bindings before the split.
-          patternSplitSymbolMap.foldRight(rec(compiledMainSplit ++ alternative)):
-            case ((ps, (split, symbol)), inner) =>
+          idSplitSymbolMap.foldRight(rec(compiledMainSplit ++ alternative)):
+            case ((id, (split, symbol)), inner) =>
               val definition =
                 log(s"making definition for ${split.display}")
                 import syntax.{Fun, Keyword, ParamBind, Tree}, Tree.Ident
@@ -132,10 +132,10 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
                 val bodySplit = scoped("ucs:rp:split"):
                   val bodySplit = split.toSplit(
                     scrutinees = paramSymbols.map(symbol => () => symbol.ref()),
-                    localPatterns = patternSymbolMap,
+                    localPatterns = idSymbolMap,
                     outcomes = Map(S(0) -> success, N -> failure),
                     elab = elaborator) ++ Split.Else(desugaring.makeMatchFailure)
-                  log(s"the compiled local pattern ${ps.nme}:\n${Split.display(bodySplit)}")
+                  log(s"the compiled local pattern ${id}:\n${Split.display(bodySplit)}")
                   bodySplit
                 val funcBody: Term = Term.IfLike(Keyword.`if`, bodySplit)(bodySplit)
                 Term.Lam(paramList, funcBody)

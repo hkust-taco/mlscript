@@ -8,7 +8,7 @@ import mlscript.utils.*, shorthands.*
 /** "Virtual" constructor for string joining operator `~`. */
 case object StringJoin
 
-case class LocalPattern(symbol: PatternSymbol)
+case class LocalPattern(id: Int)
 
 case class InputPattern(symbol: LocalSymbol & NamedSymbol)
 
@@ -26,9 +26,16 @@ type MatchableSymbol =
   | AppliedPattern
   | TupleCapacity // not supported yet
   | StringJoin.type // not supported yet
-  | LocalPattern // A reference to a local recursive pattern.
+  // This case represents pattern that is determined to be recursive and has
+  // already been localized into a matching function.
+  | LocalPattern
+  // This case represents pattern parameters, which only make sense within the
+  // body of the pattern declaration.
   | InputPattern // The argument of parameterized patterns.
-  | DeBrujinSplit // An embedded split in a pattern.
+  // This case represents a nested split, where the arity of the split must be 1
+  // (there is exactly one `Binder` at the top level). The split must not have
+  // free variables.
+  | DeBrujinSplit
 
 /** `PatternStub` is a simplified representation of `semantics.Pattern`. It
  *  excludes terms and symbols which can break the uniqueness of the pattern.
@@ -58,7 +65,7 @@ enum PatternStub:
       case symbol: ModuleSymbol => 0
       case symbol: PatternSymbol => symbol.arity
       case AppliedPattern(symbol, arguments) => 0 // TODO: fill in the arity
-      case LocalPattern(symbol) => symbol.arity
+      case LocalPattern(id) => 0
       case InputPattern(symbol) => 0 // TODO: fill in the arity
       case _: DeBrujinSplit => 0
     case Wildcard => 0
@@ -77,8 +84,8 @@ enum PatternStub:
       case symbol: ClassSymbol => symbol.toString // TODO: display arity
       case symbol: ModuleSymbol => symbol.toString
       case symbol: PatternSymbol => symbol.toString
-      case AppliedPattern(symbol, arguments) => s"applied:${symbol.nme}(${arguments.size})"
-      case LocalPattern(symbol) => s"local:${symbol.nme}"
+      case AppliedPattern(symbol, arguments) => s"applied:${symbol.nme}(${arguments.iterator.map(_.showDbg.indent("  ")).mkString("\n", "\n", "\n")})"
+      case LocalPattern(id) => s"local:$id"
       case InputPattern(symbol) => s"input:${symbol.nme}"
       case split: DeBrujinSplit => "<split>"
     case Wildcard => "_"

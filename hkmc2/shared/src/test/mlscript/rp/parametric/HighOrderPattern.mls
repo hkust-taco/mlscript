@@ -37,8 +37,64 @@ A is @compile Nullable(A)
 
 class Pair[A, B](val first: A, val second: B)
 
-pattern Chain(pattern T) = null | Pair(T, Chain(T))
+pattern Stack(pattern T) = null | Pair(T, Stack(T))
 
-:todo
-null is @compile Chain(A)
-//│ /!!!\ Uncaught error: scala.MatchError: (1,Branch(1,ClassLike(Binder(Branch(1,ClassLike(module:A),Accept(0),Reject))),Accept(0),Reject)) (of class scala.Tuple2)
+null is @compile Stack(A)
+//│ = true
+
+fun (#:) pair(a, b) = Pair(a, b)
+
+A #: null is @compile Stack(A)
+//│ = true
+
+A #: A #: null is @compile Stack(A)
+//│ = true
+
+A #: A #: A #: null is @compile Stack(A)
+//│ = true
+
+object B
+
+A #: B #: A #: null is @compile Stack(A)
+//│ = false
+
+A #: B #: A #: null is @compile Stack(B)
+//│ = false
+
+let zeroOne = 0 #: 1 #: null
+let oneZero = 1 #: 0 #: null
+//│ oneZero = Pair { first: 1, second: Pair { first: 0, second: null } }
+//│ zeroOne = Pair { first: 0, second: Pair { first: 1, second: null } }
+
+:global
+:expect true
+
+A #: B #: A #: null is @compile Stack(A | B)
+//│ = true
+
+A #: B #: A #: null is @compile Stack(B | A)
+//│ = true
+
+zeroOne is @compile Stack(0 | 1)
+//│ = true
+
+oneZero is @compile Stack(0 | 1)
+//│ = true
+
+null #: null is @compile Stack(Stack(0 | 1))
+//│ = true
+
+zeroOne #: null is @compile Stack(Stack(0 | 1))
+//│ = true
+
+null #: (1 #: null) #: null is @compile Stack(Stack(0 | 1))
+//│ = true
+
+zeroOne #: oneZero #: null is @compile Stack(Stack(0 | 1))
+//│ = true
+
+zeroOne #: null #: oneZero #: null is @compile Stack(Stack(0 | 1))
+//│ = true
+
+null #: zeroOne #: zeroOne #: null is @compile Stack(Stack(0 | 1))
+//│ = true

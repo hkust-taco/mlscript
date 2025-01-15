@@ -812,11 +812,16 @@ extends Importer:
             td.extension match
               case N => raise(ErrorReport(msg"Pattern definitions must have a body." -> td.toLoc :: Nil))
               case S(tree) =>
-                val (split, patternParams) = ucs.DeBrujinSplit.elaborate(ps, tree, this)
+                val patternParams = ps match // Filter out pattern parameters.
+                  case S(ParamList(_, params, _)) => params.collect:
+                    case param @ Param(FldFlags(false, false, false, false, true), _, _) => param
+                  case N => Nil
+                log(s"pattern parameters: ${patternParams.mkString("{ ", ", ", " }")}")
+                patSym.patternParams = patternParams
+                val split = ucs.DeBrujinSplit.elaborate(patternParams, tree, this)
                 scoped("ucs:rp:elaborated"):
                   log(s"elaborated ${patSym.nme}:\n${split.display}")
                 patSym.split = split
-                patSym.patternParams = patternParams
             log(s"pattern body is ${td.extension}")
             val translate = new ucs.Translator(this)
             val bod = translate(patSym.patternParams,

@@ -460,8 +460,8 @@ class Desugarer(val elaborator: Elaborator)
           subMatches(params zip args, sequel)(Split.End)(ctx)
         ) ~: fallback
       case S(pat: PatternSymbol) if compile =>
-        val patArgs = args.map: arg =>
-          DeBrujinSplit.elaborate(N, arg, elaborator).split
+        val patArgs = args.map:
+          DeBrujinSplit.elaborate(Nil, _, elaborator)
         if pat.patternParams.size != patArgs.size then
           error(
             msg"Pattern `${pat.nme}` expects ${"pattern argument".pluralize(pat.patternParams.size, true)}" ->
