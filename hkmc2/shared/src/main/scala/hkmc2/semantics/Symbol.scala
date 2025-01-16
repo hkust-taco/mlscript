@@ -199,8 +199,6 @@ class PatternSymbol(val id: Tree.Ident, val params: Opt[Tree.Tup], val body: Tre
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of pattern here
   override def toString: Str = s"pattern:${id.name}"
-  /** Compute the arity. */
-  def arity: Int = params.fold(0)(_.fields.length)
   /** The desugared nameless split. */
   private var _split: Opt[ucs.DeBrujinSplit] = N
   def split_=(split: ucs.DeBrujinSplit): Unit = _split = S(split)
