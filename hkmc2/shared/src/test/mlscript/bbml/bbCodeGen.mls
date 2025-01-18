@@ -186,8 +186,13 @@ fun not = case
 //│ Type: ⊤
 
 
+:fixme // TODO fix discrepancy in codegen for such functions
+:expect true
+:sjs
 not of false
-//│ = true
+//│ JS (unsanitized):
+//│ this.not(false)
+//│ ═══[RUNTIME ERROR] Expected: true, got: [Function (anonymous)]
 //│ Type: Bool
 
 
@@ -198,15 +203,14 @@ fun fact = case
 //│ JS (unsanitized):
 //│ function fact() {
 //│   return (caseScrut) => {
-//│     let n, tmp, tmp1, tmp2;
+//│     let n, tmp, tmp1;
 //│     if (caseScrut === 0) {
 //│       return 1;
 //│     } else {
 //│       n = caseScrut;
-//│       tmp = globalThis.fact();
-//│       tmp1 = n - 1;
-//│       tmp2 = tmp(tmp1) ?? null;
-//│       return n * tmp2;
+//│       tmp = n - 1;
+//│       tmp1 = globalThis.fact(tmp);
+//│       return n * tmp1;
 //│     }
 //│   };
 //│ }
@@ -214,8 +218,10 @@ fun fact = case
 //│ Type: ⊤
 
 
+:fixme // TODO fix discrepancy in codegen for such functions
+:expect 6
 fact(3)
-//│ = 6
+//│ ═══[RUNTIME ERROR] Expected: 6, got: [Function (anonymous)]
 //│ Type: Int
 
 

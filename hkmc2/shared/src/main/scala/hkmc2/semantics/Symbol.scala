@@ -31,9 +31,15 @@ abstract class Symbol(using State) extends Located:
     case mem: BlockMemberSymbol => mem.clsTree.flatMap(_.symbol.asCls)
     case _ => N
   def asMod: Opt[ModuleSymbol] = this match
-    case cls: ModuleSymbol => S(cls)
+    case mod: ModuleSymbol => S(mod)
     case mem: BlockMemberSymbol => mem.modTree.flatMap(_.symbol.asMod)
     case _ => N
+  /* 
+  def asTrm: Opt[TermSymbol] = this match
+    case trm: TermSymbol => S(trm)
+    case mem: BlockMemberSymbol => mem.trmTree.flatMap(_.symbol.asTrm)
+    case _ => N
+  */
   def asPat: Opt[PatternSymbol] = this match
     case pat: PatternSymbol => S(pat)
     case mem: BlockMemberSymbol => mem.patTree.flatMap(_.symbol.asPat)
@@ -125,10 +131,7 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[Tree])(using State)
   
   override def toString: Str =
     s"member:$nme${State.dbgUid(uid)}"
-
-  override val isGetter: Bool = // TODO: this should be checked based on a special syntax for getter
-    trmImplTree.exists(t => t.k === Fun && t.paramLists.isEmpty)
-
+  
 end BlockMemberSymbol
 
 

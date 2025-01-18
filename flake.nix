@@ -11,7 +11,7 @@
       (system:
       let 
         sbtOverlay = self: super: {
-          sbt = super.sbt.override { jre = super.jdk8_headless; };
+          sbt = super.sbt.override { jre = super.jdk11_headless; };
         };
         pkgs = import nixpkgs { 
           inherit system;

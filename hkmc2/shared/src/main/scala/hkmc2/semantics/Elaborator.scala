@@ -51,12 +51,8 @@ object Elaborator:
         case (nme, sym) =>
           val elem = out orElse outer match
             case S(outer) => Ctx.SelElem(outer, sym.nme, S(sym))
-            case N => sym: Ctx.Elem
-          if sym.isGetter && !(out.exists:
-            case _: ClassSymbol | _: ModuleSymbol => true // * A getter inside class/module can be invoked directly
-            case _: BlockMemberSymbol | _: TermSymbol | _: TypeAliasSymbol | _: PatternSymbol | _: TopLevelSymbol => false)
-          then nme -> Ctx.GetElem(elem)
-          else nme -> elem
+            case N => Ctx.RefElem(sym)
+          nme -> elem
       )
     
     def nest(outer: Opt[InnerSymbol]): Ctx = Ctx(outer, Some(this), Map.empty)
@@ -108,14 +104,6 @@ object Elaborator:
         Term.SynthSel(base.ref(Ident(base.nme)),
           new Tree.Ident(nme).withLocOf(id))(symOpt)
       def symbol = symOpt
-    final case class GetElem(val base: Elem) extends Elem:
-      def nme: Str = base.nme
-      def ref(id: Tree.Ident)(using Elaborator.State): Term =
-        val emptyTup: Tree.Tup = Tree.Tup(Nil)
-        Term.App(base.ref(id), Term.Tup(Nil)(emptyTup))(
-          Tree.App(id, emptyTup) // FIXME
-          , FlowSymbol("‹get-res›"))
-      def symbol: Opt[Symbol] = base.symbol
     given Conversion[Symbol, Elem] = RefElem(_)
     val empty: Ctx = Ctx(N, N, Map.empty)
   
@@ -751,27 +739,17 @@ extends Importer:
                 case S(t) => typeParams(t)
                 case N => (N, ctx)
               // * Add parameters to context
-              val (pss, newCtx) =
-                td.paramLists.foldLeft(Ls[ParamList](), newCtx1):
-                  case ((pss, ctx), ps) => 
-                    val (qs, newCtx) = params(ps)(using ctx)
-                    (pss :+ qs, newCtx)
+              var newCtx = newCtx1
+              val pss = td.paramLists.map: ps =>
+                val (res, newCtx2) = params(ps)(using newCtx)
+                newCtx = newCtx2
+                res
               // * Elaborate signature
               val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name))
               val s = st.map(term(_)(using newCtx))
               val b = rhs.map(term(_)(using newCtx))
               val r = FlowSymbol(s"‹result of ${sym}›")
-              val real_pss =
-                // * Local functions (i.e. those without owner) with no parameter lists
-                // * are elaborated into functions with a single empty parameter list.
-                // * This is because JS does not support local "getter" functions.
-                owner match
-                case S(_) => pss
-                case N => pss match
-                  case Nil if k is Fun =>
-                    ParamList(ParamListFlags.empty, Nil, N) :: Nil
-                  case _ => pss
-              val tdf = TermDefinition(owner, k, sym, real_pss, s, b, r, 
+              val tdf = TermDefinition(owner, k, sym, pss, s, b, r, 
                 TermDefFlags.empty.copy(isModMember = isModMember), annotations)
               sym.defn = S(tdf)
               

@@ -79,17 +79,16 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   
   override def init(): Unit =
-    if bbmlOpt.isUnset then
-      import syntax.*
-      import Tree.*
-      import Keyword.*
-      given raise: Raise = d =>
-        output(s"Error: $d")
-        ()
-      processTrees(
-        Modified(`import`, N, StrLit(predefFile.toString))
-        :: Open(Ident("Predef"))
-        :: Nil)
+    import syntax.*
+    import Tree.*
+    import Keyword.*
+    given raise: Raise = d =>
+      output(s"Error: $d")
+      ()
+    processTrees(
+      Modified(`import`, N, StrLit(predefFile.toString))
+      :: Open(Ident("Predef"))
+      :: Nil)
     super.init()
   
   

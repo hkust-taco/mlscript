@@ -1,0 +1,442 @@
+:js
+:llir
+
+
+:sllir
+abstract class Option[out T]: Some[T] | None
+class Some[out T](x: T) extends Option[T]
+object None extends Option
+fun fromSome(s) = if s is Some(x) then x
+class Lazy[out A](init: () -> A) with
+  mut val cache: Option[A] = None
+fun lazy(x) = Lazy(x)
+//│ LLIR:
+//│   class Option()
+//│   class Some(x)
+//│   class None()
+//│   class Lazy(init,cache)
+//│   def fromSome(s) =
+//│     case s of
+//│       Some =>
+//│         let x$0 = s.<Some:x> in
+//│         x$0
+//│       _ =>
+//│         panic "match error"
+//│   def j$0() =
+//│     null
+//│   def lazy(x1) =
+//│     let x$1 = Lazy(x1) in
+//│     x$1
+//│   undefined
+
+:sllir
+fun testCtor1() = None
+fun testCtor2() = new None
+//│ LLIR:
+//│   
+//│   def testCtor1() =
+//│     let x$0 = None() in
+//│     x$0
+//│   def testCtor2() =
+//│     let x$1 = None() in
+//│     x$1
+//│   undefined
+
+:sllir
+:intl
+abstract class Option[out T]: Some[T] | None
+class Some[out T](x: T) extends Option[T]
+object None extends Option
+fun fromSome(s) = if s is Some(x) then x
+abstract class Nat: S[Nat] | O
+class S(s: Nat) extends Nat
+object O extends Nat
+fun aaa() =
+  let m = 1
+  let n = 2
+  let p = 3
+  let q = 4
+  m + n - p + q
+fun bbb() =
+  let x = aaa()
+  x * 100 + 4
+fun not(x) =
+  if x then false else true
+fun foo(x) =
+  if x then None
+       else Some(foo(not(x)))
+fun main() =
+  let x = foo(false)
+  if x is
+    None then aaa()
+    Some(b1) then bbb()
+main()
+//│ = 404
+//│ LLIR:
+//│   class Option()
+//│   class Some(x)
+//│   class None()
+//│   class Nat()
+//│   class S(s)
+//│   class O()
+//│   def fromSome(s) =
+//│     case s of
+//│       Some =>
+//│         let x$0 = s.<Some:x> in
+//│         x$0
+//│       _ =>
+//│         panic "match error"
+//│   def j$0() =
+//│     null
+//│   def aaa() =
+//│     let x$1 = 1 in
+//│     let x$2 = 2 in
+//│     let x$3 = 3 in
+//│     let x$4 = 4 in
+//│     let x$5 = +(x$1,x$2) in
+//│     let x$6 = -(x$5,x$3) in
+//│     let x$7 = +(x$6,x$4) in
+//│     x$7
+//│   def bbb() =
+//│     let* (x$8) = aaa() in
+//│     let x$9 = *(x$8,100) in
+//│     let x$10 = +(x$9,4) in
+//│     x$10
+//│   def not(x2) =
+//│     case x2 of
+//│       BoolLit(true) =>
+//│         false
+//│       _ =>
+//│         true
+//│   def j$1() =
+//│     null
+//│   def foo(x3) =
+//│     case x3 of
+//│       BoolLit(true) =>
+//│         let x$11 = None() in
+//│         x$11
+//│       _ =>
+//│         let* (x$12) = not(x3) in
+//│         let* (x$13) = foo(x$12) in
+//│         let x$14 = Some(x$13) in
+//│         x$14
+//│   def j$2() =
+//│     null
+//│   def main() =
+//│     let* (x$15) = foo(false) in
+//│     case x$15 of
+//│       None =>
+//│         let* (x$16) = aaa() in
+//│         x$16
+//│       _ =>
+//│         case x$15 of
+//│           Some =>
+//│             let x$17 = x$15.<Some:x> in
+//│             let* (x$18) = bbb() in
+//│             x$18
+//│           _ =>
+//│             panic "match error"
+//│   def j$4() =
+//│     jump j$3()
+//│   def j$3() =
+//│     null
+//│   let* (x$19) = main() in
+//│   x$19
+//│ 
+//│ Interpreted:
+//│ 404
+
+:sllir
+:intl
+fun f1() =
+  let x = 1
+  let x = 2
+  x
+f1()
+//│ = 2
+//│ LLIR:
+//│   
+//│   def f1() =
+//│     let x$0 = 1 in
+//│     let x$1 = 2 in
+//│     x$1
+//│   let* (x$2) = f1() in
+//│   x$2
+//│ 
+//│ Interpreted:
+//│ 2
+
+:sllir
+:intl
+fun f2() =
+  let x = 0
+  if x == 1 then 2 else 3
+f2()
+//│ = 3
+//│ LLIR:
+//│   
+//│   def f2() =
+//│     let x$0 = 0 in
+//│     let x$1 = ==(x$0,1) in
+//│     case x$1 of
+//│       BoolLit(true) =>
+//│         2
+//│       _ =>
+//│         3
+//│   def j$0() =
+//│     null
+//│   let* (x$2) = f2() in
+//│   x$2
+//│ 
+//│ Interpreted:
+//│ 3
+
+
+:sllir
+fun f3() =
+  let x1 = 0
+  let x2 = 1
+  if true then x1 else x2
+f3()
+//│ = 0
+//│ LLIR:
+//│   
+//│   def f3() =
+//│     let x$0 = 0 in
+//│     let x$1 = 1 in
+//│     let x$2 = true in
+//│     case x$2 of
+//│       BoolLit(true) =>
+//│         x$0
+//│       _ =>
+//│         x$1
+//│   def j$0() =
+//│     null
+//│   let* (x$3) = f3() in
+//│   x$3
+
+
+:sllir
+:intl
+fun f4() =
+  let x = 0
+  let x = if x == 1 then 2 else 3
+  x
+f4()
+//│ = 3
+//│ LLIR:
+//│   
+//│   def f4() =
+//│     let x$0 = 0 in
+//│     let x$1 = ==(x$0,1) in
+//│     case x$1 of
+//│       BoolLit(true) =>
+//│         let x$3 = 2 in
+//│         jump j$0(x$3)
+//│       _ =>
+//│         let x$4 = 3 in
+//│         jump j$0(x$4)
+//│   def j$0(x$2) =
+//│     x$2
+//│   let* (x$5) = f4() in
+//│   x$5
+//│ 
+//│ Interpreted:
+//│ 3
+
+:sllir
+:intl
+fun f5() =
+  let x = 0
+  let x = if x == 1 then 2 else 3
+  let x = if x == 2 then 4 else 5
+  x
+f5()
+//│ = 5
+//│ LLIR:
+//│   
+//│   def f5() =
+//│     let x$0 = 0 in
+//│     let x$1 = ==(x$0,1) in
+//│     case x$1 of
+//│       BoolLit(true) =>
+//│         let x$3 = 2 in
+//│         jump j$0(x$3)
+//│       _ =>
+//│         let x$4 = 3 in
+//│         jump j$0(x$4)
+//│   def j$0(x$2) =
+//│     let x$5 = ==(x$2,2) in
+//│     case x$5 of
+//│       BoolLit(true) =>
+//│         let x$7 = 4 in
+//│         jump j$1(x$7)
+//│       _ =>
+//│         let x$8 = 5 in
+//│         jump j$1(x$8)
+//│   def j$1(x$6) =
+//│     x$6
+//│   let* (x$9) = f5() in
+//│   x$9
+//│ 
+//│ Interpreted:
+//│ 5
+
+:sllir
+:scpp
+fun test() =
+  if true do test()
+//│ LLIR:
+//│   
+//│   def test() =
+//│     let x$0 = true in
+//│     case x$0 of
+//│       BoolLit(true) =>
+//│         let* (x$1) = test() in
+//│         x$1
+//│       _ =>
+//│         undefined
+//│   def j$0() =
+//│     null
+//│   undefined
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ _mlsValue _mls_j_0();
+//│ _mlsValue _mls_test();
+//│ _mlsValue _mlsMain();
+//│ _mlsValue _mls_j_0() {
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mlsValue::create<_mls_Unit>();
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_test() {
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_0 = _mlsValue::fromIntLit(1);
+//│   if (_mlsValue::isIntLit(_mls_x_0, 1)) {
+//│     auto _mls_x_1 = _mls_test();
+//│     _mls_retval = _mls_x_1;
+//│   } else {
+//│     _mls_retval = _mlsValue::create<_mls_Unit>();
+//│   }
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain() {
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mlsValue::create<_mls_Unit>();
+//│   return _mls_retval;
+//│ }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
+
+:sllir
+:scpp
+fun test() =
+  (if true then test()) + 1
+//│ LLIR:
+//│   
+//│   def test() =
+//│     let x$0 = true in
+//│     case x$0 of
+//│       BoolLit(true) =>
+//│         let* (x$2) = test() in
+//│         jump j$0(x$2)
+//│       _ =>
+//│         panic "match error"
+//│   def j$0(x$1) =
+//│     let x$3 = +(x$1,1) in
+//│     x$3
+//│   undefined
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ _mlsValue _mls_j_0(_mlsValue);
+//│ _mlsValue _mls_test();
+//│ _mlsValue _mlsMain();
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1) {
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_3 = (_mls_x_1 + _mlsValue::fromIntLit(1));
+//│   _mls_retval = _mls_x_3;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_test() {
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_0 = _mlsValue::fromIntLit(1);
+//│   if (_mlsValue::isIntLit(_mls_x_0, 1)) {
+//│     auto _mls_x_2 = _mls_test();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else {
+//│     throw std::runtime_error("match error");
+//│   }
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain() {
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mlsValue::create<_mls_Unit>();
+//│   return _mls_retval;
+//│ }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
+
+
+:sllir
+:intl
+:scpp
+fun f() =
+  let x = 10
+  if true do
+    set x += 1
+  x
+f()
+//│ = 11
+//│ LLIR:
+//│   
+//│   def f() =
+//│     let x$0 = 10 in
+//│     let x$1 = true in
+//│     case x$1 of
+//│       BoolLit(true) =>
+//│         let x$3 = +(x$0,1) in
+//│         let x$4 = undefined in
+//│         jump j$0(x$3)
+//│       _ =>
+//│         let x$5 = undefined in
+//│         jump j$0(x$0)
+//│   def j$0(x$2) =
+//│     x$2
+//│   let* (x$6) = f() in
+//│   x$6
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ _mlsValue _mls_j_0(_mlsValue);
+//│ _mlsValue _mls_f();
+//│ _mlsValue _mlsMain();
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_2) {
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_2;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_f() {
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_0 = _mlsValue::fromIntLit(10);
+//│   auto _mls_x_1 = _mlsValue::fromIntLit(1);
+//│   if (_mlsValue::isIntLit(_mls_x_1, 1)) {
+//│     auto _mls_x_3 = (_mls_x_0 + _mlsValue::fromIntLit(1));
+//│     auto _mls_x_4 = _mlsValue::create<_mls_Unit>();
+//│     _mls_retval = _mls_j_0(_mls_x_3);
+//│   } else {
+//│     auto _mls_x_5 = _mlsValue::create<_mls_Unit>();
+//│     _mls_retval = _mls_j_0(_mls_x_0);
+//│   }
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain() {
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_6 = _mls_f();
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
+//│ 
+//│ Interpreted:
+//│ 11
+

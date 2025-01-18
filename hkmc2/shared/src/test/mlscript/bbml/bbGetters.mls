@@ -10,84 +10,94 @@
 //│ Type: ⊤
 
 
-:sjs
+:todo
 fun test1() =
   fun sayHi = log("Hi")
   sayHi, sayHi, sayHi
-//│ JS (unsanitized):
-//│ function test1() {
-//│   let tmp, tmp1;
-//│   function sayHi() {
-//│     return globalThis.log("Hi") ?? null;
-//│   }
-//│   tmp = sayHi();
-//│   tmp1 = sayHi();
-//│   return sayHi();
-//│ }
-//│ null
+//│ ╔══[ERROR] Function definition shape not yet supported for sayHi
+//│ ║  l.15: 	  fun sayHi = log("Hi")
+//│ ╙──      	              ^^^^^^^^^
+//│ ╔══[ERROR] Variable not found: sayHi
+//│ ║  l.16: 	  sayHi, sayHi, sayHi
+//│ ╙──      	  ^^^^^
+//│ ╔══[ERROR] Variable not found: sayHi
+//│ ║  l.16: 	  sayHi, sayHi, sayHi
+//│ ╙──      	         ^^^^^
+//│ ╔══[ERROR] Variable not found: sayHi
+//│ ║  l.16: 	  sayHi, sayHi, sayHi
+//│ ╙──      	                ^^^^^
 //│ Type: ⊤
 
 test1()
 //│ > Hi
 //│ > Hi
 //│ > Hi
-//│ Type: ⊤
+//│ Type: ⊥
 
 
-:sjs
+:todo // it feels like this should work
 fun test2() =
   fun funny = case
     0 then 0
     n then funny(n - 1) + 1
   funny
-//│ JS (unsanitized):
-//│ function test2() {
-//│   function funny() {
-//│     return (caseScrut) => {
-//│       let n, tmp, tmp1, tmp2;
-//│       if (caseScrut === 0) {
-//│         return 0;
-//│       } else {
-//│         n = caseScrut;
-//│         tmp = funny();
-//│         tmp1 = n - 1;
-//│         tmp2 = tmp(tmp1) ?? null;
-//│         return tmp2 + 1;
-//│       }
-//│     };
-//│   }
-//│   return funny();
-//│ }
-//│ null
+//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but () ->{⊥} forall 'caseScrut, 'eff: 'caseScrut ->{'eff} Int found
+//│ ║  l.42: 	    n then funny(n - 1) + 1
+//│ ║        	           ^^^^^^^^^^^^^^^^
+//│ ║  l.43: 	  funny
+//│ ╙──      	^^^^^^^
 //│ Type: ⊤
+
+fun test2() =
+  fun funny = case
+    0 then 0
+    n then funny(n - 1) + 1
+  funny(_)
+//│ Type: ⊤
+
+test2
+//│ = [Function: test2]
+//│ Type: () -> (Int -> Int)
 
 test2()(5)
 //│ = 5
 //│ Type: Int
 
 
-// * Notice the mistake here; we should warn that the first case in statement position is useless!
+// * Notice the mistake here; we warn that the first case in statement position is useless!
+:w
+:e
 :sjs
 fun test2() =
   fun funny = 
     case 0 then 0
     case n then funny(n - 1) + 1
   funny
+//│ ═══[WARNING] Pure expression in statement position
 //│ JS (unsanitized):
 //│ function test2() {
+//│   let tmp;
 //│   function funny() {
 //│     return (caseScrut) => {
-//│       let n, tmp, tmp1, tmp2;
+//│       let n, tmp1, tmp2, tmp3;
 //│       n = caseScrut;
-//│       tmp = funny();
-//│       tmp1 = n - 1;
-//│       tmp2 = tmp(tmp1) ?? null;
-//│       return tmp2 + 1;
+//│       tmp1 = funny();
+//│       tmp2 = n - 1;
+//│       tmp3 = tmp1(tmp2);
+//│       return tmp3 + 1;
 //│     };
 //│   }
-//│   return funny();
+//│   tmp = funny();
+//│   return tmp;
 //│ }
 //│ null
+//│ ═══[WARNING] Pure expression in statement position
+//│ ╔══[ERROR] Function definition shape not yet supported for funny
+//│ ║  l.74: 	    case n then funny(n - 1) + 1
+//│ ╙──      	                ^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Variable not found: funny
+//│ ║  l.75: 	  funny
+//│ ╙──      	  ^^^^^
 //│ Type: ⊤
 
 
@@ -95,8 +105,8 @@ fun test2() =
 fun test3 =
   log("Hi")
 //│ ╔══[ERROR] Function definition shape not yet supported for test3
-//│ ║  l.96: 	  log("Hi")
-//│ ╙──      	  ^^^^^^^^^
+//│ ║  l.106: 	  log("Hi")
+//│ ╙──       	  ^^^^^^^^^
 //│ Type: ⊤
 
 

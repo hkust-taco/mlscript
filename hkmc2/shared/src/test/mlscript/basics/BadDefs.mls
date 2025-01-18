@@ -40,28 +40,29 @@ fun ++ z = 0
 //│ ╔══[ERROR] Invalid function definition head: unexpected identifier in this position
 //│ ║  l.39: 	fun ++ z = 0
 //│ ╙──      	       ^
-//│ > try { function ++() { return 0; } null } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ > try { function ++(...args) {   globalThis.Predef.checkArgs("++", 0, true, args.length);   return 0; } null } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ >                ^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '++'
 
-:re
+:sjs
 ++
-//│ ═══[RUNTIME ERROR] TypeError: this.++ is not a function
+//│ JS (unsanitized):
+//│ this["++"]
 
 
 :e
 fun (class Lol) foo = 0
 //│ ╔══[ERROR] This type definition is not a valid symbolic name
-//│ ║  l.53: 	fun (class Lol) foo = 0
+//│ ║  l.54: 	fun (class Lol) foo = 0
 //│ ╙──      	           ^^^
 
 foo
-//│ = 0
+//│ = [Function: foo]
 
 :e
 Lol
 //│ ╔══[ERROR] Name not found: Lol
-//│ ║  l.62: 	Lol
+//│ ║  l.63: 	Lol
 //│ ╙──      	^^^
 
 

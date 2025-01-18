@@ -7,11 +7,28 @@ fun t = 42
 //│ function t() { return 42; } null
 
 
+:fixme // TODO fix discrepancy in codegen for such functions
+:expect 42
 :sjs
 t
 //│ JS (unsanitized):
-//│ this.t()
-//│ = 42
+//│ this.t
+//│ ═══[RUNTIME ERROR] Expected: 42, got: [Function: t]
+
+
+fun main() =
+  let n = 0
+  fun foo =
+    print("ok")
+    set n += 1
+    n
+  foo + foo
+
+:expect 3
+main()
+//│ > ok
+//│ > ok
+//│ = 3
 
 
 :sjs
@@ -110,7 +127,7 @@ fun test() =
   fun whoops = 42
   whoops
 //│ JS (unsanitized):
-//│ function test() { function whoops() { return 42; } return whoops(); } null
+//│ function test() { let tmp; function whoops() { return 42; } tmp = whoops(); return tmp; } null
 
 
 :re
@@ -207,10 +224,12 @@ fun b() =
 //│     return 1;
 //│   }
 //│   function d() {
+//│     let tmp;
 //│     function c() {
 //│       return 2;
 //│     }
-//│     return c();
+//│     tmp = c();
+//│     return tmp;
 //│   }
 //│   return d;
 //│ }
@@ -230,19 +249,21 @@ fun c() =
   d
 //│ JS (unsanitized):
 //│ function c() {
+//│   let tmp;
 //│   function f() {
 //│     return 1;
 //│   }
 //│   function d() {
-//│     let tmp, tmp1;
+//│     let tmp1, tmp2;
 //│     function e() {
 //│       return 1;
 //│     }
-//│     tmp = e();
-//│     tmp1 = f();
-//│     return tmp + tmp1;
+//│     tmp1 = e();
+//│     tmp2 = f();
+//│     return tmp1 + tmp2;
 //│   }
-//│   return d();
+//│   tmp = d();
+//│   return tmp;
 //│ }
 //│ null
 
