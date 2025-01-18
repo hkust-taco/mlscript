@@ -1,0 +1,26 @@
+:js
+
+
+:w
+x => x, 0
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.5: 	x => x, 0
+//│ ╙──     	^^^^^^
+//│ = 0
+
+:w
+case x then x, 0
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.12: 	case x then x, 0
+//│ ╙──      	            ^
+//│ = 0
+
+:w
+case x then x
+case x then x
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.19: 	case x then x
+//│ ╙──      	            ^
+//│ = [Function (anonymous)]
+
+

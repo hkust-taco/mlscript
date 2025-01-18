@@ -1,0 +1,68 @@
+:js
+
+
+val (++) x = 0
+//│ ++ = 0
+//│ x = 0
+
+x
+//│ = 0
+
+++
+//│ = 0
+
+
+:e
+:ge
+val ++ y = 1
+//│ ╔══[ERROR] Invalid value definition head: unexpected identifier in this position
+//│ ║  l.17: 	val ++ y = 1
+//│ ╙──      	       ^
+//│ > try { this.++ = 1; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >            ^^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '++'
+//│ > try { ++ } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >          ^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '}'
+
+:e
+y
+//│ ╔══[ERROR] Name not found: y
+//│ ║  l.29: 	y
+//│ ╙──      	^
+
+++
+
+
+:e
+:ge
+fun ++ z = 0
+//│ ╔══[ERROR] Invalid function definition head: unexpected identifier in this position
+//│ ║  l.39: 	fun ++ z = 0
+//│ ╙──      	       ^
+//│ > try { function ++(...args) {   globalThis.Predef.checkArgs("++", 0, true, args.length);   return 0; } null } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                ^^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '++'
+
+:sjs
+++
+//│ JS (unsanitized):
+//│ this["++"]
+
+
+:e
+fun (class Lol) foo = 0
+//│ ╔══[ERROR] This type definition is not a valid symbolic name
+//│ ║  l.54: 	fun (class Lol) foo = 0
+//│ ╙──      	           ^^^
+
+foo
+//│ = [Function: foo]
+
+:e
+Lol
+//│ ╔══[ERROR] Name not found: Lol
+//│ ║  l.63: 	Lol
+//│ ╙──      	^^^
+
+

@@ -75,7 +75,8 @@ abstract class DiffMaker:
       val body = if commentIndex == -1 then line else line.take(commentIndex)
       assert(body.forall(_.isWhitespace))
       k()
-    )
+    ):
+    def set: Unit = setCurrentValue(k())
   
   class FlagCommand(init: Bool, name: Str) extends NullaryCommand(name):
     self =>

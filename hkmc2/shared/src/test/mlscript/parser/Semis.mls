@@ -16,7 +16,7 @@ let a = 1; 2
 
 let a = (1; 2)
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(a),Some(App(Ident(;),Tup(List(IntLit(1), IntLit(2))))),None)
+//│ 	LetLike(keyword 'let',Ident(a),Some(Bra(Round,App(Ident(;),Tup(List(IntLit(1), IntLit(2)))))),None)
 
 let a = { 1; 2 }
 //│ Parsed:
@@ -32,7 +32,7 @@ let a = 1 in 2; 3
 
 let a = 1 in (2; 3)
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(a),Some(IntLit(1)),Some(App(Ident(;),Tup(List(IntLit(2), IntLit(3))))))
+//│ 	LetLike(keyword 'let',Ident(a),Some(IntLit(1)),Some(Bra(Round,App(Ident(;),Tup(List(IntLit(2), IntLit(3)))))))
 
 let a = 1 in { 2; 3 }
 //│ Parsed:

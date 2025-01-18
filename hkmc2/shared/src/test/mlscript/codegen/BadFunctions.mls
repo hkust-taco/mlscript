@@ -6,5 +6,8 @@ fun (let) oops = 1
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of input instead
 //│ ║  l.5: 	fun (let) oops = 1
 //│ ╙──     	        ^
+//│ ╔══[ERROR] This <erroneous syntax> is not a valid symbolic name
+//│ ║  l.5: 	fun (let) oops = 1
+//│ ╙──     	        ^
 
 

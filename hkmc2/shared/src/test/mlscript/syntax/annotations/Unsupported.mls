@@ -37,7 +37,7 @@ open Str
 
 :w
 (@debug 1 + 2)
-//│ ╔══[WARNING] This annotation has no effect
+//│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.39: 	(@debug 1 + 2)
 //│ ║        	  ^^^^^
 //│ ╟── Annotations are not supported on application terms.

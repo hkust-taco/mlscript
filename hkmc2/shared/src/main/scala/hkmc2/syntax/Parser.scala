@@ -527,8 +527,8 @@ abstract class Parser(
             case Square => Tup(sts).withLoc(S(loc))
             case Round => sts match
               case Nil => UnitLit(true).withLoc(S(loc))
-              case e :: Nil => e
-              case es => Block(es).withLoc(S(loc))
+              case e :: Nil => Bra(Round, e).withLoc(S(loc))
+              case es => Bra(Round, Block(es).withLoc(S(loc)))
           exprCont(res, prec, allowNewlines = true)
     case (QUOTE, loc) :: _ =>
       consume
@@ -749,6 +749,11 @@ abstract class Parser(
       case (br @ BRACKETS(Indent | Curly, toks @ ((IDENT(opStr, true), _) :: _)), loc) :: _ if opPrec(opStr)._1 > prec =>
         consume
         App(acc, rec(toks, S(loc), "operator block").concludeWith(_.opBlock))
+      
+      case (OP("::"), l0) :: (IDENT(id, false), l1) :: _ =>
+        consume
+        consume
+        exprCont(MemberProj(acc, new Ident(id).withLoc(S(l1))).withLoc(S(l0 ++ l1)), prec, allowNewlines)
       case (OP(opStr), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
         consume
         val v = Ident(opStr).withLoc(S(l0))
@@ -762,7 +767,7 @@ abstract class Parser(
             consume
             // rec(toks, S(br.innerLoc), br.describe).concludeWith(f(_, true))
             val rhs = rec(toks, S(l0), "operator split").concludeWith(_.split)
-            App(v, PlainTup(acc, Block(rhs)))
+            App(v, PlainTup(acc, Block(rhs).withLoc(S(l0))))
           case _ => 
             // val rhs = simpleExpr(opPrec(opStr)._2)
             val rhs = expr(opPrec(opStr)._2)
@@ -780,6 +785,7 @@ abstract class Parser(
                 }
               case _ => App(v, PlainTup(acc, rhs))
             }, prec, allowNewlines)
+        
         /*
       case (KEYWORD(":"), l0) :: _ if prec <= NewParser.prec(':') =>
         consume
@@ -982,7 +988,7 @@ abstract class Parser(
     if prec < AppPrec && !Keyword.all.contains(id) =>
       val res = exprCont(Jux(acc, expr(AppPrec)), prec, allowNewlines)
       exprJux(res, prec, allowNewlines)
-    case (br @ BRACKETS(Curly | Indent, toks), _) :: _
+    case (br @ BRACKETS(Curly | Indent, toks), l0) :: _
     if prec < AppPrec && (toks.headOption match
       case S((IDENT(nme, sym), _)) => !sym && !Keyword.all.contains(nme)
       case _ => true
@@ -990,7 +996,7 @@ abstract class Parser(
       consume
       val res = rec(toks, S(br.innerLoc), br.describe).concludeWith:
         _.block(allowNewlines = true)
-      exprCont(Jux(acc, Block(res)), prec, allowNewlines = true)
+      exprCont(Jux(acc, Block(res).withLoc(S(l0))), prec, allowNewlines = true)
     
     case (tok, _) :: _ =>
       printDbg(s"stops at ${tok.toString}")

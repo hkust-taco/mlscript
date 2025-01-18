@@ -352,7 +352,7 @@ class Desugarer(val elaborator: Elaborator)
     case blk: Block => blk.desugStmts.foldRight(default): (branch, elabFallback) =>
       // Terminology: _fallback_ refers to subsequent branches, _backup_ refers
       // to the backup plan passed from the parent split.
-      branch match
+      branch.deparenthesized match
       case LetLike(`let`, ident @ Ident(_), termTree, N) => backup => ctx =>
         termTree match
         case S(termTree) =>
@@ -480,7 +480,7 @@ class Desugarer(val elaborator: Elaborator)
         // Raise an error and discard `sequel`. Use `fallback` instead.
         raise(ErrorReport(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc :: Nil))
         fallback
-    pattern match
+    pattern.deparenthesized match
       // A single wildcard pattern.
       case Under() => _ => ctx => sequel(ctx)
       // Alias pattern
@@ -561,17 +561,17 @@ class Desugarer(val elaborator: Elaborator)
       ):
         Branch(ref, Pattern.Lit(literal), sequel(ctx)) ~: fallback
       // A single pattern in conjunction with more conditions
-      case pattern and consequent => fallback => ctx => 
+      case pattern and consequent => fallback => ctx =>
         val innerSplit = termSplit(consequent, identity)(Split.End)
         expandMatch(scrutSymbol, pattern, innerSplit)(fallback)(ctx)
       case Jux(Ident(".."), Ident(_)) => fallback => _ =>
-        raise(ErrorReport(msg"Illgeal rest pattern." -> pattern.toLoc :: Nil))
+        raise(ErrorReport(msg"Illegal rest pattern." -> pattern.toLoc :: Nil))
         fallback
       case _ => fallback => _ =>
         // Raise an error and discard `sequel`. Use `fallback` instead.
-        raise(ErrorReport(msg"Unrecognized pattern." -> pattern.toLoc :: Nil))
+        raise(ErrorReport(msg"Unrecognized pattern (${pattern.describe})" -> pattern.toLoc :: Nil))
         fallback
-
+  
   /** Desugar a list of sub-patterns (with their corresponding scrutinees).
    *  This is called when handling nested patterns. The caller is responsible
    *  for providing the symbols of scrutinees.

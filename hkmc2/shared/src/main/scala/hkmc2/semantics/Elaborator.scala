@@ -51,12 +51,8 @@ object Elaborator:
         case (nme, sym) =>
           val elem = out orElse outer match
             case S(outer) => Ctx.SelElem(outer, sym.nme, S(sym))
-            case N => sym: Ctx.Elem
-          if sym.isGetter && !(out.exists:
-            case _: ClassSymbol | _: ModuleSymbol => true // * A getter inside class/module can be invoked directly
-            case _: BlockMemberSymbol | _: TermSymbol | _: TypeAliasSymbol | _: PatternSymbol | _: TopLevelSymbol => false)
-          then nme -> Ctx.GetElem(elem)
-          else nme -> elem
+            case N => Ctx.RefElem(sym)
+          nme -> elem
       )
     
     def nest(outer: Opt[InnerSymbol]): Ctx = Ctx(outer, Some(this), Map.empty)
@@ -108,12 +104,6 @@ object Elaborator:
         Term.SynthSel(base.ref(Ident(base.nme)),
           new Tree.Ident(nme).withLocOf(id))(symOpt)
       def symbol = symOpt
-    final case class GetElem(val base: Elem) extends Elem:
-      def nme: Str = base.nme
-      def ref(id: Tree.Ident)(using Elaborator.State): Term =
-        val emptyTup: Tree.Tup = Tree.Tup(Nil)
-        Term.App(base.ref(id), Term.Tup(Nil)(emptyTup))(Tree.App(id, emptyTup), FlowSymbol("‹get-res›"))
-      def symbol: Opt[Symbol] = base.symbol
     given Conversion[Symbol, Elem] = RefElem(_)
     val empty: Ctx = Ctx(N, N, Map.empty)
   
@@ -189,6 +179,12 @@ extends Importer:
   def term(tree: Tree, inAppPrefix: Bool = false): Ctxl[Term] =
   trace[Term](s"Elab term ${tree.showDbg}", r => s"~> $r"):
     tree.desugared match
+    case Bra(k, e) =>
+      k match
+      case BracketKind.Round =>
+      case _ =>
+        raise(ErrorReport(msg"Unsupported ${k.name} in this position" -> tree.toLoc :: Nil))
+      term(e)
     case Block(s :: Nil) =>
       term(s)
     case Block(sts) =>
@@ -331,7 +327,7 @@ extends Importer:
         case _ =>
           raise(ErrorReport(msg"Identifier `${idn.name}` does not name a known class symbol." -> idn.toLoc :: Nil))
           N
-      Term.SelProj(term(pre), c, idp)(N)
+      Term.SelProj(term(pre), c, idp)(f)
     case App(Ident("#"), Tree.Tup(Sel(pre, Ident(name)) :: App(Ident(proj), args) :: Nil)) =>
       term(App(App(Ident("#"), Tree.Tup(Sel(pre, Ident(name)) :: Ident(proj) :: Nil)), args))
     case App(Ident("!"), Tree.Tup(rhs :: Nil)) =>
@@ -389,6 +385,36 @@ extends Importer:
       val preTrm = term(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
       Term.Sel(preTrm, nme)(sym)
+    case MemberProj(ct, nme) =>
+      val c = cls(ct, inAppPrefix = false)
+      val f = c.symbol.flatMap(_.asCls) match
+        case S(cls: ClassSymbol) =>
+          cls.tree.allSymbols.get(nme.name) match
+          case S(fld: FieldSymbol) => S(fld)
+          case _ =>
+            raise(ErrorReport(msg"Class '${cls.nme}' does not contain member '${nme.name}'." -> nme.toLoc :: Nil))
+            N
+        case _ =>
+          raise:
+            ErrorReport:
+              msg"${ct.describe.capitalize} is not a known class." -> ct.toLoc ::
+              msg"Note: any expression of the form `‹expression›::‹identifier›` is a member projection;" -> N ::
+              msg"  add a space before ‹identifier› to make it an operator application." -> N ::
+              Nil
+          N
+      val self = VarSymbol(Ident("self"))
+      val args = VarSymbol(Ident("args"))
+      val ps = ParamList(ParamListFlags.empty,
+        Param(FldFlags.empty, self, N) :: Nil,
+        S:
+          Param(FldFlags.empty, args, N)
+      )
+      val rs = FlowSymbol("‹app-res›")
+      Term.Lam(ps,
+        Term.App(Term.SelProj(self.ref(), c, nme)(f), args.ref())(
+          Tree.App(nme, Tree.Tup(Nil)) // FIXME
+          , rs)
+      )
     case tree @ Tup(fields) =>
       Term.Tup(fields.map(fld(_)))(tree)
     case New(body) => // TODO handle Under
@@ -643,13 +669,13 @@ extends Importer:
         reportUnusedAnnotations
         val sym = fieldOrVarSym(HandlerBind, id)
         log(s"Processing `handle` statement $id (${sym}) ${ctx.outer}")
-
+        
         val elabed = block(sts_)._1
         
         elabed.res match
           case Term.Lit(UnitLit(true)) => 
           case trm => raise(WarningReport(msg"Terms in handler block do nothing" -> trm.toLoc :: Nil))
-
+        
         val tds = elabed.stats.map {
           case td @ TermDefinition(owner, Fun, sym, params, sign, body, resSym, flags, annotations) =>
             params.reverse match
@@ -693,6 +719,9 @@ extends Importer:
           go(sts, Nil, Term.Error :: acc)
       case (td @ TermDef(k, nme, rhs)) :: sts =>
         log(s"Processing term definition $nme")
+        td.symbName match
+        case S(L(d)) => raise(d)
+        case _ => ()
         td.name match
           case R(id) =>
             val sym = members.getOrElse(id.name, die)
@@ -704,11 +733,11 @@ extends Importer:
                 case S(t) => typeParams(t)
                 case N => (N, ctx)
               // * Add parameters to context
-              val (pss, newCtx) =
-                td.paramLists.foldLeft(Ls[ParamList](), newCtx1):
-                  case ((pss, ctx), ps) => 
-                    val (qs, newCtx) = params(ps)(using ctx)
-                    (pss :+ qs, newCtx)
+              var newCtx = newCtx1
+              val pss = td.paramLists.map: ps =>
+                val (res, newCtx2) = params(ps)(using newCtx)
+                newCtx = newCtx2
+                res
               // * Elaborate signature
               val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name))
               val s = st.map(term(_)(using newCtx))
@@ -729,11 +758,11 @@ extends Importer:
               s match
                 case N if em => raise:
                   ErrorReport:
-                    msg"Function returning module values must have explicit return types." ->
+                    msg"Functions returning module values must have explicit return types." ->
                     td.head.toLoc :: Nil
                 case S(t) if em && ModuleChecker.isTypeParam(t) => raise:
                   ErrorReport:
-                    msg"Function returning module values must have concrete return types." ->
+                    msg"Functions returning module values must have concrete return types." ->
                     td.head.toLoc :: Nil
                 case S(_) if em && !mm => raise:
                   ErrorReport:
@@ -753,6 +782,9 @@ extends Importer:
             go(sts, Nil, acc)
       case (td @ TypeDef(k, head, extension, body)) :: sts =>
         assert((k is Als) || (k is Cls) || (k is Mod) || (k is Obj) || (k is Pat), k)
+        td.symbName match
+        case S(L(d)) => raise(d)
+        case _ => ()
         val nme = td.name match
           case R(id) => id
           case L(d) =>

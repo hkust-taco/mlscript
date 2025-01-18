@@ -60,7 +60,7 @@ class Translator(val elaborator: Elaborator)
     pre = s"full <<< $pat", 
     post = (split: Split) => s"full >>> $split"
   ):
-    pat match
+    pat.deparenthesized match
       case lhs or rhs => full(scrut, lhs, inner) ~~: full(scrut, rhs, inner)
       case (lo: StrLit) to (incl, hi: StrLit) => if isInvalidStringBounds(lo, hi) then failure else
         makeRange(scrut, lo, hi, incl, inner)
@@ -113,7 +113,7 @@ class Translator(val elaborator: Elaborator)
           case N => resolved
         case ctor: Sel => resolved
       case _ =>
-        error(msg"Unrecognized pattern." -> pat.toLoc)
+        error(msg"Unrecognized pattern (${pat.describe})" -> pat.toLoc)
         errorSplit
   
   /** Generate a split that consumes the prefix of the scrutinee. */
@@ -121,7 +121,7 @@ class Translator(val elaborator: Elaborator)
     pre = s"stringPrefix <<< $pat", 
     post = (split: Split) => s"stringPrefix >>> $split"
   ):
-    pat match
+    pat.deparenthesized match
     case lhs or rhs => stringPrefix(scrut, lhs, inner) ~~: stringPrefix(scrut, rhs, inner)
     case (lo: StrLit) to (incl, hi: StrLit) => if isInvalidStringBounds(lo, hi) then failure else
       val emptyTest = app(eq.ref(), tup(fld(scrut()), fld(str(""))), "test empty")
@@ -161,7 +161,7 @@ class Translator(val elaborator: Elaborator)
         error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
         errorSplit
     case _ =>
-      error(msg"Unrecognized pattern." -> pat.toLoc)
+      error(msg"Unrecognized pattern (${pat.describe})" -> pat.toLoc)
       errorSplit
   
   /** Create a function that compiles the resulting term of each case. It checks

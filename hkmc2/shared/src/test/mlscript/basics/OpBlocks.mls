@@ -180,9 +180,7 @@ fun f(x) = if x
 //│ ║  l.176: 	fun f(x) = if x
 //│ ║         	              ^
 //│ ║  l.177: 	  foo(A) then a
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.178: 	  bar(B) then b
-//│ ╙──       	^^^^^^^^^^^^^^^
+//│ ╙──       	^^
 
 
 :pe
@@ -190,10 +188,10 @@ fun f(x) = if x
   is 0 then "a"
   is 1 then "b"
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found 'is' keyword instead
-//│ ║  l.191: 	  is 1 then "b"
+//│ ║  l.189: 	  is 1 then "b"
 //│ ╙──       	  ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.191: 	  is 1 then "b"
+//│ ║  l.189: 	  is 1 then "b"
 //│ ╙──       	     ^
 //│ = [Function: f]
 

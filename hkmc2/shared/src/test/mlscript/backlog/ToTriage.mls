@@ -50,24 +50,24 @@ fun (++) t() = 1
 //│ ╔══[ERROR] Multiple definitions of symbol '**'
 //│ ╟── defined here
 //│ ║  l.48: 	fun (**) t() = 0
-//│ ║        	     ^^^^^^^^^^^
+//│ ║        	    ^^^^^^^^^^^^
 //│ ╟── defined here
 //│ ║  l.49: 	fun (++) t() = 1
-//│ ╙──      	     ^^^^^^^^^^^
+//│ ╙──      	    ^^^^^^^^^^^^
 //│ ╔══[ERROR] Multiple definitions of symbol '++'
 //│ ╟── defined here
 //│ ║  l.48: 	fun (**) t() = 0
-//│ ║        	     ^^^^^^^^^^^
+//│ ║        	    ^^^^^^^^^^^^
 //│ ╟── defined here
 //│ ║  l.49: 	fun (++) t() = 1
-//│ ╙──      	     ^^^^^^^^^^^
+//│ ╙──      	    ^^^^^^^^^^^^
 //│ ╔══[ERROR] Multiple definitions of symbol 't'
 //│ ╟── defined here
 //│ ║  l.48: 	fun (**) t() = 0
-//│ ║        	     ^^^^^^^^^^^
+//│ ║        	    ^^^^^^^^^^^^
 //│ ╟── defined here
 //│ ║  l.49: 	fun (++) t() = 1
-//│ ╙──      	     ^^^^^^^^^^^
+//│ ╙──      	    ^^^^^^^^^^^^
 
 // ——— ——— ———
 
@@ -166,6 +166,23 @@ f of
     2
 ) of 3
 //│ = [ [ 1, 2 ], 3 ]
+
+// ——— ——— ———
+
+// Strange error – parse is probably wrong
+fun test2() =
+  fun funny = (case
+    0 then 0)
+  funny
+//│ ╔══[ERROR] Illegal definition in term position.
+//│ ║  l.174: 	  fun funny = (case
+//│ ║         	      ^^^^^^^^^^^^^
+//│ ║  l.175: 	    0 then 0)
+//│ ╙──       	^^^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: funny
+//│ ║  l.176: 	  funny
+//│ ╙──       	  ^^^^^
+//│ = [Function: test2]
 
 // ——— ——— ———
 

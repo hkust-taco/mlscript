@@ -19,7 +19,7 @@
 //│ ║  l.15: 	1
 //│ ╙──      	^
 //│ JS (unsanitized):
-//│ let tmp, tmp1; tmp = + 2; tmp1 = + 3; tmp1
+//│ let tmp; tmp = + 2; + 3
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.15: 	1
 //│ ╙──      	^

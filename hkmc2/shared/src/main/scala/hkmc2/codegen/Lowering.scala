@@ -24,14 +24,17 @@ object Thrw extends TailOp:
   def apply(r: Result): Block = Throw(r)
 
 
+// * No longer in meaningful use and could be removed if we don't find a use for it:
 class Subst(initMap: Map[Local, Value]):
   val map = initMap
+  /*
   def +(kv: (Local, Value)): Subst =
     kv match
     case (ns: NamedSymbol, Value.Ref(ts: TempSymbol)) =>
       ts.nameHints += ns.name
     case _ =>
     Subst(map + kv)
+  */
   def apply(v: Value): Value = v match
     case Value.Ref(l) => map.getOrElse(l, v)
     case _ => v
@@ -47,17 +50,23 @@ class Lowering(using TL, Raise, Elaborator.State):
   
   def returnedTerm(t: st)(using Subst): Block = term(t)(Ret)
   
-  def term(t: st)(k: Result => Block)(using Subst): Block =
-    tl.log(s"Lowering.term ${t.showDbg.truncate(100, "[...]")}")
+  def term(t: st, inStmtPos: Bool = false)(k: Result => Block)(using Subst): Block =
+    tl.log(s"Lowering.term ${t.showDbg.truncate(100, "[...]")}${
+      if inStmtPos then " (in stmt)" else ""}${
+      t.symbol.fold("")(" " + _)}")
+    def warnStmt = if inStmtPos then
+      raise(WarningReport:
+        msg"Pure expression in statement position" -> t.toLoc :: Nil)
     t match
     case st.Lit(lit) =>
+      if lit =/= Tree.UnitLit(true) then warnStmt
       k(Value.Lit(lit))
     case st.Ret(res) =>
       returnedTerm(res)
     case st.Throw(res) =>
       term(res)(Thrw)
     case st.Asc(lhs, rhs) =>
-      term(lhs)(k)
+      term(lhs, inStmtPos = inStmtPos)(k)
     case st.Tup(fs) =>
       fs.foldRight[Ls[Arg] => Block](args => k(Value.Arr(args.reverse))){
         case (a: Fld, acc) =>
@@ -66,6 +75,20 @@ class Lowering(using TL, Raise, Elaborator.State):
           args => subTerm(s.term)(r => acc(Arg(true, r) :: args))
       }(Nil)
     case st.Ref(sym) =>
+      sym match
+      case bs: BlockMemberSymbol =>
+        bs.defn match
+        case S(td: TermDefinition) if td.k is syntax.Fun =>
+          // * Local functions with no parameter lists are getters
+          // * and are lowered to functions with an empty parameter list
+          // * (non-local functions are compiled into getter methods selected on some prefix)
+          if td.params.isEmpty then
+            val l = new TempSymbol(S(t))
+            return Assign(l, Call(Value.Ref(bs), Nil)(true), k(Value.Ref(l)))
+        case S(_) => ()
+        case N => () // TODO panic here; can only lower refs to elab'd symbols
+      case _ => ()
+      warnStmt
       k(subst(Value.Ref(sym)))
     case st.App(f, arg) =>
       val isMlsFun = f.symbol.fold(f.isInstanceOf[st.Lam]):
@@ -73,42 +96,39 @@ class Lowering(using TL, Raise, Elaborator.State):
         case sym: sem.BlockMemberSymbol =>
           sym.trmImplTree.fold(sym.clsTree.isDefined)(_.k is syntax.Fun)
         case _ => false
-      arg match
-      case Tup(fs) =>
-        val as = fs.map:
-          case sem.Fld(sem.FldFlags.empty, value, N) => false -> value
-          case sem.Fld(sem.FldFlags(false, false, false, true, false), value, N) => false -> value
-          case sem.Fld(flags, value, asc) =>
-            TODO("Other argument forms")
-          case spd: Spd => true -> spd.term
-        val l = new TempSymbol(S(t))
-        def conclude(fr: Path) =
-          def rec(as: Ls[Bool -> st], asr: Ls[Arg]): Block = as match
-            case Nil => k(Call(fr, asr.reverse)(isMlsFun))
-            case (spd, a) :: as =>
-              subTerm(a): ar =>
-                rec(as, Arg(spd, ar) :: asr)
-          rec(as, Nil)
-        f match
-        // * Due to whacky JS semantics, we need to make sure that selections leading to a call
-        // * are preserved in the call and not moved to a temporary variable.
-        case sel @ Sel(prefix, nme) =>
-          subTerm(prefix): p =>
-            conclude(Select(p, nme)(sel.sym))
-        case sel @ SelProj(prefix, _, nme) =>
-          subTerm(prefix): p =>
-            conclude(Select(p, nme)(sel.sym))
-        case _ => subTerm(f)(conclude)
-      case _ =>
-        TODO("Other argument list forms")
+      def conclude(fr: Path) =
+        arg match
+        case Tup(fs) =>
+          val as = fs.map:
+            case sem.Fld(sem.FldFlags.empty, value, N) => false -> value
+            case sem.Fld(sem.FldFlags(false, false, false, true, false), value, N) => false -> value
+            case sem.Fld(flags, value, asc) =>
+              TODO("Other argument forms")
+            case spd: Spd => true -> spd.term
+          val l = new TempSymbol(S(t))
+            def rec(as: Ls[Bool -> st], asr: Ls[Arg]): Block = as match
+              case Nil => k(Call(fr, asr.reverse)(isMlsFun))
+              case (spd, a) :: as =>
+                subTerm(a): ar =>
+                  rec(as, Arg(spd, ar) :: asr)
+            rec(as, Nil)
+        case _ =>
+          // Application arguments that are not tuples represent spreads, as in `f(...arg)`
+          subTerm(arg): ar =>
+            k(Call(fr, Arg(spread = true, ar) :: Nil)(isMlsFun))
+      f match
+      // * Due to whacky JS semantics, we need to make sure that selections leading to a call
+      // * are preserved in the call and not moved to a temporary variable.
+      case sel @ Sel(prefix, nme) =>
+        subTerm(prefix): p =>
+          conclude(Select(p, nme)(sel.sym))
+      case sel @ SelProj(prefix, _, nme) =>
+        subTerm(prefix): p =>
+          conclude(Select(p, nme)(sel.sym))
+      case _ => subTerm(f)(conclude)
     case st.Blk(Nil, res) => term(res)(k)
-    case st.Blk(Lit(Tree.UnitLit(true)) :: stats, res) =>
-      subTerm(st.Blk(stats, res))(k)
-    case st.Blk((p @ (_: Ref | _: Lit)) :: stats, res) =>
-      raise(WarningReport(msg"Pure expression in statement position" -> p.toLoc :: Nil))
-      subTerm(st.Blk(stats, res))(k)
     case st.Blk((t: sem.Term) :: stats, res) =>
-      subTerm(t)(r => term(st.Blk(stats, res))(k))
+      subTerm(t, inStmtPos = true)(r => term(st.Blk(stats, res))(k))
     case st.Blk((d: Declaration) :: stats, res) =>
       d match
       case td: TermDefinition =>
@@ -126,10 +146,9 @@ class Lowering(using TL, Raise, Elaborator.State):
               Define(ValDefn(td.owner, knd, td.sym, r),
                 term(st.Blk(stats, res))(k)))
           case syntax.Fun =>
-            val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))
+            val (paramLists, bodyBlock) = setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme))
             Define(FunDefn(td.sym, paramLists, bodyBlock),
               term(st.Blk(stats, res))(k))
-      // case cls: ClassDef =>
       case cls: ClassLikeDef =>
         reportAnnotations(cls, cls.annotations)
         val bodBlk = cls.body.blk
@@ -190,6 +209,7 @@ class Lowering(using TL, Raise, Elaborator.State):
       term(st.Blk(stats, res))(k)
       
     case st.Lam(params, body) =>
+      warnStmt
       val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N)
       if k.isInstanceOf[TailOp] || bodyBlock.size <= 5
       then k(Value.Lam(paramLists.head, bodyBlock))
@@ -365,8 +385,8 @@ class Lowering(using TL, Raise, Elaborator.State):
     // case _ =>
     //   subTerm(t)(k)
   
-  def subTerm(t: st)(k: Path => Block)(using Subst): Block =
-    term(t):
+  def subTerm(t: st, inStmtPos: Bool = false)(k: Path => Block)(using Subst): Block =
+    term(t, inStmtPos = inStmtPos):
       case v: Value => k(v)
       case p: Path => k(p)
       case r =>
@@ -393,7 +413,15 @@ class Lowering(using TL, Raise, Elaborator.State):
     subTerm(prefix): p =>
       k(Select(p, nme)(sym))
   
-  def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])(using Subst): (List[ParamList], Block) =
+  final def setupFunctionOrByNameDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
+      (using Subst): (List[ParamList], Block) =
+    val physicalParams = paramLists match
+      case Nil => ParamList(ParamListFlags.empty, Nil, N) :: Nil
+      case ps => ps
+    setupFunctionDef(physicalParams, bodyTerm, name)
+  
+  def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
+      (using Subst): (List[ParamList], Block) =
     (paramLists, returnedTerm(bodyTerm))
   
   def reportAnnotations(target: Statement, annotations: Ls[Term]): Unit = if annotations.nonEmpty then
@@ -456,7 +484,8 @@ trait LoweringTraceLog
   private val inspectFn = selFromGlobalThis("util", "inspect")
   
 
-  override def setupFunctionDef(paramLists: List[ParamList], bodyTerm: st, name: Option[Str])(using Subst): (List[ParamList], Block) = 
+  override def setupFunctionDef(paramLists: List[ParamList], bodyTerm: st, name: Option[Str])
+      (using Subst): (List[ParamList], Block) =
     if instrument then
       val (ps, bod) = handleMultipleParamLists(paramLists, bodyTerm)
       val instrumentedBody = setupFunctionBody(ps, bod, name)
@@ -514,8 +543,8 @@ trait LoweringTraceLog
 trait LoweringHandler
     (instrument: Bool)(using TL, Raise, Elaborator.State)
     extends Lowering:
-  override def term(t: st)(k: Result => Block)(using Subst): Block =
-    if !instrument then return super.term(t)(k)
+  override def term(t: st, inStmtPos: Bool)(k: Result => Block)(using Subst): Block =
+    if !instrument then return super.term(t, inStmtPos = inStmtPos)(k)
     t match
     case st.Blk(Handle(lhs, rhs, defs) :: stmts, res) =>
       val handlers = defs.map {
@@ -530,4 +559,4 @@ trait LoweringHandler
       val resSym = TempSymbol(S(t))
       subTerm(rhs): cls =>
         HandleBlock(lhs, resSym, cls, handlers, term(st.Blk(stmts, res))(HandleBlockReturn(_)), k(Value.Ref(resSym)))
-    case _ => super.term(t)(k)
+    case _ => super.term(t, inStmtPos = inStmtPos)(k)

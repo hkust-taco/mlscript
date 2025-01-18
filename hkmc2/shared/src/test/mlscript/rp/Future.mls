@@ -14,16 +14,16 @@ pattern Rep0(pattern A, B, C)(head) =
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.11: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Unrecognized pattern.
+//│ ╔══[ERROR] Unrecognized pattern (parenthesis section)
 //│ ║  l.11: 	  "" | (A as head) ~ Rep0[A]
-//│ ╙──      	        ^^^^^^^^^
+//│ ╙──      	       ^^^^^^^^^^^
 
 :todo // Pattern extractions via aliases.
 pattern Email(name, domain) =
   (Identifier as name) ~ "@" ~ (Identifier as domain)
-//│ ╔══[ERROR] Unrecognized pattern.
+//│ ╔══[ERROR] Unrecognized pattern (parenthesis section)
 //│ ║  l.23: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
-//│ ╙──      	   ^^^^^^^^^^^^^^^^^^
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^
 
 :todo // View patterns
 pattern GreaterThan(value) = case
@@ -68,9 +68,9 @@ pattern Email(name, domains) =
 
 :todo
 pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
-//│ ╔══[ERROR] Unrecognized pattern.
+//│ ╔══[ERROR] Unrecognized pattern (parenthesis section)
 //│ ║  l.70: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
-//│ ╙──      	                          ^^^^^^^^^^^^
+//│ ╙──      	                         ^^^^^^^^^^^^^^
 
 :todo
 pattern LineSep(pattern P) = case
@@ -95,7 +95,7 @@ if input is Lines of Email then
 //│ ║  l.93: 	if input is Lines of Email then
 //│ ╙──      	                               ^
 //│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Tup(List())), TypeDef(Pat,Ident(Tail),Some(Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Tup(List())), InfixApp(InfixApp(App(Ident(~),Tup(List(StrLit(
-//│ ), App(Ident(Lines),Tup(List(Ident(L))))))),keyword 'as',Ident(t)),keyword 'then',Ident(t)))))),None), InfixApp(InfixApp(InfixApp(Ident(L),keyword 'as',App(Ident(~),Tup(List(Ident(h), Ident(Tail))))),keyword 'as',Ident(t)),keyword 'then',Tup(List(Ident(h), Spread(keyword '...',Some(Loc(148,151,Future.mls:+85)),Some(Ident(t))))))))),keyword ':',Ident(todo)) (of class hkmc2.syntax.Tree$InfixApp)
+//│ ), Bra(Round,App(Ident(Lines),Tup(List(Ident(L)))))))),keyword 'as',Ident(t)),keyword 'then',Ident(t)))))),None), InfixApp(InfixApp(InfixApp(Ident(L),keyword 'as',App(Ident(~),Tup(List(Ident(h), Ident(Tail))))),keyword 'as',Ident(t)),keyword 'then',Tup(List(Ident(h), Spread(keyword '...',Some(Loc(148,151,Future.mls:+85)),Some(Ident(t))))))))),keyword ':',Ident(todo)) (of class hkmc2.syntax.Tree$InfixApp)
 
 :todo
 pattern Opt(pattern P) = case
@@ -104,7 +104,7 @@ pattern Opt(pattern P) = case
   
 :todo
 pattern Email(name, domain) = ...
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Case(None,Block(List(InfixApp(App(Ident(P),Tup(List(Ident(value)))),keyword 'then',App(Ident(Some),Tup(List(Ident(value))))), InfixApp(StrLit(),keyword 'then',Ident(None))))),keyword ':',Ident(todo)) (of class hkmc2.syntax.Tree$InfixApp)
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Case(None,Block(List(InfixApp(App(Ident(P),Tup(List(Ident(value)))),keyword 'then',Bra(Round,App(Ident(Some),Tup(List(Ident(value)))))), InfixApp(StrLit(),keyword 'then',Bra(Round,Ident(None)))))),keyword ':',Ident(todo)) (of class hkmc2.syntax.Tree$InfixApp)
 
 :todo
 if input is Opt(Email, Some((n, d))) then ...
@@ -122,7 +122,7 @@ if input is Opt(Email, Some((n, d))) then ...
 pattern Opt(pattern P) = case
   P(...values) then (Some(values))
   ""           then (None)
-//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(App(Ident(P),Tup(List(Spread(keyword '...',Some(Loc(34,37,Future.mls:+122)),Some(Ident(values)))))),keyword 'then',App(Ident(Some),Tup(List(Ident(values))))), InfixApp(StrLit(),keyword 'then',Ident(None))))) (of class hkmc2.syntax.Tree$Case)
+//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(App(Ident(P),Tup(List(Spread(keyword '...',Some(Loc(34,37,Future.mls:+122)),Some(Ident(values)))))),keyword 'then',Bra(Round,App(Ident(Some),Tup(List(Ident(values)))))), InfixApp(StrLit(),keyword 'then',Bra(Round,Ident(None)))))) (of class hkmc2.syntax.Tree$Case)
 
 :todo
 pattern Opt(pattern P) = case

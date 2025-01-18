@@ -5,7 +5,10 @@
 
 :fixme // parsing
 fun f x = f
-//│ ╔══[ERROR] Function definition shape not yet supported for x
+//│ ╔══[ERROR] Invalid function definition head: unexpected identifier in this position
+//│ ║  l.7: 	fun f x = f
+//│ ╙──     	      ^
+//│ ╔══[ERROR] Function definition shape not yet supported for f
 //│ ║  l.7: 	fun f x = f
 //│ ╙──     	          ^
 //│ Type: ⊤
@@ -23,7 +26,7 @@ f
 :todo
 fun f(x) = f(x.a)
 //│ ╔══[ERROR] Term shape not yet supported by BbML: Sel(Ref(x),Ident(a))
-//│ ║  l.24: 	fun f(x) = f(x.a)
+//│ ║  l.27: 	fun f(x) = f(x.a)
 //│ ╙──      	             ^^^
 //│ Type: ⊤
 
@@ -34,7 +37,7 @@ class Foo[A](a: A)
 :todo proper error
 Foo(123)
 //│ ╔══[ERROR] Variable not found: Foo
-//│ ║  l.35: 	Foo(123)
+//│ ║  l.38: 	Foo(123)
 //│ ╙──      	^^^
 //│ Type: ⊥
 
@@ -46,7 +49,7 @@ new Foo(123)
 :todo proper error
 fun f(x) = f(Foo.a(x))
 //│ ╔══[ERROR] Term shape not yet supported by BbML: Sel(SynthSel(Ref(globalThis:block#5),Ident(Foo)),Ident(a))
-//│ ║  l.47: 	fun f(x) = f(Foo.a(x))
+//│ ║  l.50: 	fun f(x) = f(Foo.a(x))
 //│ ╙──      	             ^^^^^
 //│ Type: ⊤
 

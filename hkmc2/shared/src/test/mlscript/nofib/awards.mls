@@ -1,7 +1,7 @@
 :js
 
+:silent
 :import NofibPrelude.mls
-//│ Imported 112 member(s)
 
 
 fun delete_(xs, e) = deleteBy((x, y) => x == y, e, xs)
@@ -59,11 +59,11 @@ fun findawards(scores) = if awards(scores) is
 fun findallawards(competitors) =
   map(case { [name, scores] then [name, findawards(scores)] }, competitors)
 
-fun competitors(i) = 
-  ["Simon", 35::27::40::i::34::21::Nil] ::
-  ["Hans", 23::19::45::i::17::10::5::8::14::Nil] ::
-  ["Phil", 1::18::i::20::21::19::34::8::16::21::Nil] ::
-  ["Kevin", 9::23::17::54::i::41::9::18::14::Nil] :: Nil
+fun competitors(i) = list of
+  ["Simon", list of 35, 27, 40, i, 34, 21]
+  ["Hans", list of 23, 19, 45, i, 17, 10, 5, 8, 14]
+  ["Phil", list of 1, 18, i, 20, 21, 19, 34, 8, 16, 21]
+  ["Kevin", list of 9, 23, 17, 54, i, 41, 9, 18, 14]
 
 fun testAwards_nofib(n) =
   map(x => print(findallawards(competitors(intMod(x, 100)))), enumFromTo(1, n))

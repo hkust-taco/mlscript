@@ -1,7 +1,0 @@
-module Predef with ...
-
-fun checkArgs(functionName, expected, isUB, got) =
-  if got < expected || isUB && got > expected do
-    let name = if functionName.length > 0 then " '" + functionName + "'" else ""
-    throw globalThis.Error("Function" + name + " expected " + expected + " arguments but got " + got)
-

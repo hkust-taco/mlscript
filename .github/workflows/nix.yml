@@ -18,7 +18,7 @@ jobs:
       - name: Install TypeScript
         run: npm ci
       - name: Run test
-        run: sbt -J-Xmx4096M -J-Xss4M test
+        run: sbt -J-Xmx4096M -J-Xss8M test
       - name: Check no changes
         run: |
           git update-index -q --refresh

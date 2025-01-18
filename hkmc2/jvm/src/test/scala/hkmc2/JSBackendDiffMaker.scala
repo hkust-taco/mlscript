@@ -22,7 +22,6 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val showSanitizedJS = NullaryCommand("ssjs")
   val showJS = NullaryCommand("sjs")
   val showRepl = NullaryCommand("showRepl")
-  val silent = NullaryCommand("silent")
   val noSanityCheck = NullaryCommand("noSanityCheck")
   val traceJS = NullaryCommand("traceJS")
   val handler = NullaryCommand("handler")

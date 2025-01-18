@@ -420,10 +420,10 @@ class BBTyper(using elState: Elaborator.State, tl: TL, scope: Scope):
             effBuff += eff
             ctx += sym -> rhsTy
             goStats(stats)
-          case TermDefinition(_, Fun, sym, ps :: Nil, sig, Some(body), _, _, _) :: stats =>
+          case TermDefinition(_, Fun, sym, ps :: Nil, sig, S(body), _, _, _) :: stats =>
             typeFunDef(sym, Term.Lam(ps, body), sig, ctx)
             goStats(stats)
-          case TermDefinition(_, Fun, sym, Nil, sig, Some(body), _, _, _) :: stats =>
+          case TermDefinition(_, Fun, sym, Nil, sig, S(body), _, _, _) :: stats =>
             typeFunDef(sym, body, sig, ctx)  // * may be a case expressions
             goStats(stats)
           case TermDefinition(_, Fun, sym, _, S(sig), None, _, _, _) :: stats =>
@@ -435,6 +435,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL, scope: Scope):
             goStats(stats)
           case Import(sym, pth) :: stats =>
             goStats(stats) // TODO:
+          case stat :: _ =>
+            TODO(stat)
         goStats(stats)
         val (ty, eff) = typeCheck(res)
         (ty, effBuff.foldLeft(eff)((res, e) => res | e))

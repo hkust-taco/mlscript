@@ -160,7 +160,8 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
             S(defn.sym).collectFirst{ case s: InnerSymbol => s }):
           defn match
           case FunDefn(sym, Nil, body) =>
-            doc"function ${sym.nme}() ${ braced(this.body(body)) }"
+            // doc"function ${sym.nme}() ${ braced(this.body(body)) }"
+            lastWords("cannot generate function with no parameter list")
           case FunDefn(sym, ps :: pss, bod) =>
             val result = pss.foldRight(bod):
               case (ps, block) => 

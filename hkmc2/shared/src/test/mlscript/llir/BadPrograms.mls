@@ -1,0 +1,27 @@
+
+:global
+:llir
+:cpp
+
+:ge
+fun oops(a) =
+  class A with
+    fun m = a
+  let x = 1
+//│ ═══[COMPILATION ERROR] Non top-level definition A not supported
+//│ Stopped due to an error during the Llir generation
+
+:ge
+let x = "oops"
+x.m
+//│ ═══[COMPILATION ERROR] Unsupported selection by users
+//│ Stopped due to an error during the Llir generation
+
+:ge
+fun foo(a) =
+  let x
+  if a > 0 do
+    x = 1
+  x + 1
+//│ ═══[COMPILATION ERROR] Name not found: x
+//│ Stopped due to an error during the Llir generation

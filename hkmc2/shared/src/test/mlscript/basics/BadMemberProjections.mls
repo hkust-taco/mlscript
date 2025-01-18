@@ -1,0 +1,64 @@
+:js
+
+
+:sjs
+:e
+1::x
+//│ ╔══[ERROR] Integer literal is not a known class.
+//│ ║  l.6: 	1::x
+//│ ║       	^
+//│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
+//│ ╙──   add a space before ‹identifier› to make it an operator application.
+//│ JS (unsanitized):
+//│ (self, ...args) => { return self.x(...args) ?? null; }
+//│ = [Function (anonymous)]
+
+:ssjs
+:e
+:re
+1::x()
+//│ ╔══[ERROR] Integer literal is not a known class.
+//│ ║  l.19: 	1::x()
+//│ ║        	^
+//│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
+//│ ╙──   add a space before ‹identifier› to make it an operator application.
+//│ JS:
+//│ ((...args1) => {
+//│   globalThis.Predef.checkArgs("", 1, false, args1.length);
+//│   let self = args1[0];
+//│   let args = globalThis.Predef.tupleSlice(args1, 1, 0);
+//│   return self.x(...args) ?? null;
+//│ })()
+//│ ═══[RUNTIME ERROR] Error: Function expected 1 arguments but got 0
+
+
+fun (::) f(a, b) = [a, b]
+
+let x = 1
+//│ x = 1
+
+"A" :: x
+//│ = [ 'A', 1 ]
+
+"A":: x
+//│ = [ 'A', 1 ]
+
+:e
+"A"::x
+//│ ╔══[ERROR] String literal is not a known class.
+//│ ║  l.47: 	"A"::x
+//│ ║        	^^^
+//│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
+//│ ╙──   add a space before ‹identifier› to make it an operator application.
+//│ = [Function (anonymous)]
+
+:e
+"A" ::x
+//│ ╔══[ERROR] String literal is not a known class.
+//│ ║  l.56: 	"A" ::x
+//│ ║        	^^^
+//│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
+//│ ╙──   add a space before ‹identifier› to make it an operator application.
+//│ = [Function (anonymous)]
+
+

@@ -42,7 +42,9 @@ fun ltList(xs, ys, lt, gt) = if xs is
       lt(x, y) then true
       gt(x, y) then false
       else ltList(xs, ys, lt, gt)
-
+fun list(...args) = if args is
+  [] then Nil
+  [x, ...xs] then x :: list(...xs)
 
 type LazyList[out T] = Lazy[LzList[T]]
 abstract class LzList[out T]: LzCons[T] | LzNil

@@ -10,31 +10,18 @@ import utils.Scope
 abstract class BbmlDiffMaker extends JSBackendDiffMaker:
   
   val bbPreludeFile = file / os.up / os.RelPath("bbPrelude.mls")
-  val bbPredefFile = file / os.up / os.up / os.up /"mlscript-compile"/"bbml"/"Predef.mls"
   
   val bbmlOpt = new NullaryCommand("bbml"):
     override def onSet(): Unit =
       super.onSet()
-      if isGlobal then typeCheck.disable.isGlobal = true
-      typeCheck.disable.setCurrentValue(())
+      noSanityCheck.isGlobal = true
+      noSanityCheck.set
       if file =/= bbPreludeFile then
         curCtx = Elaborator.State.init
         importFile(bbPreludeFile, verbose = false)
-        curCtx = curCtx.nest(N)
   
   
   override def init(): Unit =
-    if bbmlOpt.isSet then
-      import syntax.*
-      import Tree.*
-      import Keyword.*
-      given raise: Raise = d =>
-        output(s"Error: $d")
-        ()
-      processTrees(
-        Modified(`import`, N, StrLit(bbPredefFile.toString))
-        :: Open(Ident("Predef"))
-        :: Nil)
     super.init()
 
   lazy val bbCtx =

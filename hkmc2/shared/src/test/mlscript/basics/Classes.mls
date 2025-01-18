@@ -30,9 +30,9 @@ class Foo(x: Int)
 :fixme
 :e
 class Foo(x: Int) { log("Hello!") }
-//│ ╔══[ERROR] Expected a valid definition head, found block instead
+//│ ╔══[ERROR] Expected a valid class definition head; found block instead
 //│ ║  l.32: 	class Foo(x: Int) { log("Hello!") }
-//│ ╙──      	                    ^^^^^^^^^^^^^
+//│ ╙──      	                  ^^^^^^^^^^^^^^^^^
 //│ JS (unsanitized):
 //│ this.<error> = class <error> { constructor() {} toString() { return "<error>"; } }; null
 //│ > try { this.<error> = class <error> { constructor() {} toString() { return "<error>"; } }; null } catch (e) { console.log('\u200B' + e + '\u200B'); }

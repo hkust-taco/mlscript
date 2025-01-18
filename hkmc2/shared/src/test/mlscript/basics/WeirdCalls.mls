@@ -14,8 +14,12 @@ print
     "A"
   )
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
+//│ ║  l.13: 	  (
+//│ ║        	  ^
 //│ ║  l.14: 	    "A"
-//│ ╙──      	    ^^^
+//│ ║        	^^^^^^^
+//│ ║  l.15: 	  )
+//│ ╙──      	^^^
 //│ = [Function: print]
 
 :pe
@@ -24,18 +28,18 @@ print of
   "A"
 )
 //│ ╔══[PARSE ERROR] Expected an expression; found new line instead
-//│ ║  l.22: 	print of
+//│ ║  l.26: 	print of
 //│ ║        	        ^
-//│ ║  l.23: 	(
+//│ ║  l.27: 	(
 //│ ╙──      	
 
 :pe
 print of
 ("A")
 //│ ╔══[PARSE ERROR] Expected an expression; found new line instead
-//│ ║  l.33: 	print of
+//│ ║  l.37: 	print of
 //│ ║        	        ^
-//│ ║  l.34: 	("A")
+//│ ║  l.38: 	("A")
 //│ ╙──      	
 
 print of
@@ -50,15 +54,15 @@ print of
     "A"
 )
 //│ ╔══[PARSE ERROR] Mistmatched closing indentation
-//│ ║  l.50: 	    "A"
+//│ ║  l.54: 	    "A"
 //│ ║        	       ^
-//│ ║  l.51: 	)
+//│ ║  l.55: 	)
 //│ ║        	
 //│ ╟── does not correspond to opening parenthesis
-//│ ║  l.49: 	  (
+//│ ║  l.53: 	  (
 //│ ╙──      	  ^
 //│ ╔══[PARSE ERROR] Unexpected closing parenthesis
-//│ ║  l.51: 	)
+//│ ║  l.55: 	)
 //│ ╙──      	^
 //│ > A
 

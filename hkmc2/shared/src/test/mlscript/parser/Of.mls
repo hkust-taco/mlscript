@@ -11,7 +11,7 @@ f of 1
 
 f of (1)
 //│ Parsed:
-//│ 	App(Ident(f),Tup(List(IntLit(1))))
+//│ 	App(Ident(f),Tup(List(Bra(Round,IntLit(1)))))
 
 f of 1, 2
 //│ Parsed:
@@ -23,7 +23,7 @@ f of 1, 2, 3
 
 f of (1, 2, 3)
 //│ Parsed:
-//│ 	App(Ident(f),Tup(List(Block(List(IntLit(1), IntLit(2), IntLit(3))))))
+//│ 	App(Ident(f),Tup(List(Bra(Round,Block(List(IntLit(1), IntLit(2), IntLit(3)))))))
 
 f of g(1)
 //│ Parsed:
@@ -35,15 +35,15 @@ f of g of 1
 
 (f of g) of 1
 //│ Parsed:
-//│ 	App(App(Ident(f),Tup(List(Ident(g)))),Tup(List(IntLit(1))))
+//│ 	App(Bra(Round,App(Ident(f),Tup(List(Ident(g))))),Tup(List(IntLit(1))))
 
 (f of g)(1)
 //│ Parsed:
-//│ 	App(App(Ident(f),Tup(List(Ident(g)))),Tup(List(IntLit(1))))
+//│ 	App(Bra(Round,App(Ident(f),Tup(List(Ident(g))))),Tup(List(IntLit(1))))
 
 f of (g)(1)
 //│ Parsed:
-//│ 	App(Ident(f),Tup(List(App(Ident(g),Tup(List(IntLit(1)))))))
+//│ 	App(Ident(f),Tup(List(App(Bra(Round,Ident(g)),Tup(List(IntLit(1)))))))
 
 
 f of

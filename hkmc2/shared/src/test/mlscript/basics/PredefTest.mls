@@ -55,7 +55,10 @@ print(1, 2, 3)
 //│ ═══[RUNTIME ERROR] Error: Not implemented: oops
 
 :re
+:sjs
 ???
+//│ JS (unsanitized):
+//│ Predef.notImplementedError
 //│ ═══[RUNTIME ERROR] Error: Not implemented
 
 :re

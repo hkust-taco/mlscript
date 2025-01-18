@@ -3,7 +3,7 @@ package semantics
 
 import mlscript.utils.*, shorthands.*
 import syntax.Tree.*
-import hkmc2.syntax.{Annotations, TypeOrTermDef}
+import hkmc2.syntax.{PossiblyAnnotated, TypeOrTermDef}
 
 
 trait BlockImpl(using Elaborator.State):
@@ -14,13 +14,13 @@ trait BlockImpl(using Elaborator.State):
   val definedSymbols: Array[Str -> BlockMemberSymbol] =
     desugStmts
       .flatMap:
-        case Annotations(_, td: syntax.TypeOrTermDef) =>
+        case PossiblyAnnotated(_, td: syntax.TypeOrTermDef) =>
           td.name match
             case L(_) => Nil
             case R(id) =>
               id.name -> R(td) :: (
                 td.symbName match
-                case S(sid: Ident) => id.name -> L(sid.name) :: Nil
+                case S(R(sid)) => id.name -> L(sid.name) :: Nil
                 case _ => Nil
               )
         case _ => Nil
