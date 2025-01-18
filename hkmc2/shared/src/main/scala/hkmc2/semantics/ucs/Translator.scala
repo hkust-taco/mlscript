@@ -229,13 +229,6 @@ class Translator(val elaborator: Elaborator)
     pre = s"Translator <<< ${params.mkString(", ")} $body", 
     post = (blk: Ls[TermDefinition]) => s"Translator >>> $blk"
   ):
-    // val split = DeBrujinSplit.elaborate(body, elaborator)
-    // scoped("ucs:rp"):
-    //   log(s"elaborated nameless split:\n${split.display}")
-    // val normalized = scoped("ucs:rpn"):
-    //   split.normalize(using elaborator.tl)
-    // scoped("ucs:rp"):
-    //   log(s"normalized nameless split:\n${normalized.display}")
     val unapply = scoped("ucs:cp"):
       val scrutSym = TermSymbol(ParamBind, N, Ident("scrut"))
       val topmost = full(() => scrutSym.ref(), body, success(params))(using patternParams, raise) ~~: failure
