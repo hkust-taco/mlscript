@@ -54,8 +54,8 @@ class TypeSimplifier(tl: TraceLogger):
       
       var curPath: Ls[IV] = Nil
       var pastPathsSet: MutSet[IV] = MutSet.empty
-      var outerPol: Opt[Bool] = N // outer polarity before entering next level
-      var localSet: Set[IV] = Set.empty // local forall-qualified tvs
+
+      val outerPol: MutMap[IV, Bool] = MutMap.empty[IV, Bool] // outer polarity before entering next level
       
       val varSubst: MutMap[IV, IV] = MutMap.empty
       
@@ -112,7 +112,7 @@ class TypeSimplifier(tl: TraceLogger):
                 curPath ::= tv
                 
                 // if tv is local and the forall type is in negative pos
-                if localSet(tv) && !outerPol.getOrElse(true) then
+                if !outerPol.get(tv).getOrElse(true) then
                   if !pol // flip
                   then posVars += tv
                   else negVars += tv
@@ -135,13 +135,9 @@ class TypeSimplifier(tl: TraceLogger):
               val oldPath = curPath
               pastPathsSet ++= oldPath
               curPath = Nil
-              val oldPol = outerPol
-              outerPol = S(pol)
-              val oldTVSet = localSet
-              localSet = (outer.toList ++ tvs).toSet
+              outerPol ++= (tvs.map(v => v -> pol))
               super.apply(pol)(pt)
-              localSet = oldTVSet
-              outerPol = oldPol
+              outerPol --= tvs
               curPath = oldPath
               pastPathsSet --= oldPath
               ()
