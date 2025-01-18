@@ -844,10 +844,15 @@ extends Importer:
             td.extension match
               case N => raise(ErrorReport(msg"Pattern definitions must have a body." -> td.toLoc :: Nil))
               case S(tree) =>
-                val patternParams = ps match // Filter out pattern parameters.
-                  case S(ParamList(_, params, _)) => params.collect:
-                    case param @ Param(FldFlags(false, false, false, false, true), _, _) => param
-                  case N => Nil
+                val (patternParams, extractionParams) = ps match // Filter out pattern parameters.
+                  case S(ParamList(_, params, _)) => params.partition:
+                    case param @ Param(FldFlags(false, false, false, false, true), _, _) => true
+                    case param @ Param(FldFlags(_, _, _, _, false), _, _) => false
+                  case N => (Nil, Nil)
+                // TODO: Implement extraction parameters.
+                if extractionParams.nonEmpty then
+                  raise(ErrorReport(msg"Pattern extraction parameters are not yet supported." ->
+                    Loc(extractionParams.iterator.map(_.sym)) :: Nil))
                 log(s"pattern parameters: ${patternParams.mkString("{ ", ", ", " }")}")
                 patSym.patternParams = patternParams
                 val split = ucs.DeBrujinSplit.elaborate(patternParams, tree, this)

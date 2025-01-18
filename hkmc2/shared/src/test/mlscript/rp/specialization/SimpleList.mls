@@ -138,6 +138,9 @@ fun (::) cons(head, tail) = Pair(head, tail)
 
 :todo
 pattern List(a) = null | Pair(a, List)
+//│ ╔══[ERROR] Pattern extraction parameters are not yet supported.
+//│ ║  l.140: 	pattern List(a) = null | Pair(a, List)
+//│ ╙──       	             ^
 //│ ╔══[ERROR] Name not found: a
 //│ ║  l.140: 	pattern List(a) = null | Pair(a, List)
 //│ ╙──       	                              ^
