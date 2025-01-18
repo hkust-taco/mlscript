@@ -111,9 +111,13 @@ class TypeSimplifier(tl: TraceLogger):
                 val oldPath = curPath
                 curPath ::= tv
                 
-                // if tv is local and the forall type is in negative pos
+                // * If tv is forall-qualified in a negative position, we need to **flip** the polarity
+                // * e.g., ([A] -> A -> Int) -> ([A] -> A -> Int)
+                // * Both `[A] -> A -> Int` should be simplified to the same type
+                // * The first `[A] -> A -> Int` is in a negative position
+                // * but the argument type `A` should be treated as negative instead of positive
                 if !outerPol.get(tv).getOrElse(true) then
-                  if !pol // flip
+                  if !pol
                   then posVars += tv
                   else negVars += tv
                 else
