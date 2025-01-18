@@ -112,7 +112,7 @@ class Translator(val elaborator: Elaborator)
           case S(Param(_, symbol, _)) => failure // TODO: handle input patterns
           case N => resolved
         case ctor: Sel => resolved
-      case _ =>
+      case pat =>
         error(msg"Unrecognized pattern (${pat.describe})" -> pat.toLoc)
         errorSplit
   
@@ -160,7 +160,7 @@ class Translator(val elaborator: Elaborator)
       case _ =>
         error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
         errorSplit
-    case _ =>
+    case pat =>
       error(msg"Unrecognized pattern (${pat.describe})" -> pat.toLoc)
       errorSplit
   

@@ -567,7 +567,7 @@ class Desugarer(val elaborator: Elaborator)
       case Jux(Ident(".."), Ident(_)) => fallback => _ =>
         raise(ErrorReport(msg"Illegal rest pattern." -> pattern.toLoc :: Nil))
         fallback
-      case _ => fallback => _ =>
+      case pattern => fallback => _ =>
         // Raise an error and discard `sequel`. Use `fallback` instead.
         raise(ErrorReport(msg"Unrecognized pattern (${pattern.describe})" -> pattern.toLoc :: Nil))
         fallback
