@@ -283,7 +283,7 @@ extends Importer:
     case InfixApp(lhs, Keyword.`:`, rhs) =>
       Term.Asc(term(lhs), term(rhs))
     case tree @ InfixApp(lhs, Keyword.`is` | Keyword.`and`, rhs) =>
-      val des = new Desugarer(this)(tree)
+      val des = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
         log(s"Desugared:\n${Split.display(des)}")
       val nor = new ucs.Normalization(this)(des)
@@ -426,7 +426,7 @@ extends Importer:
       // case _ =>
       //   raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
     case tree @ Tree.IfLike(kw, _, split) =>
-      val desugared = new Desugarer(this)(tree)
+      val desugared = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
         log(s"Desugared:\n${Split.display(desugared)}")
       val normalized = new ucs.Normalization(this)(desugared)
@@ -437,7 +437,7 @@ extends Importer:
     case Tree.Unquoted(body) => Term.Unquoted(term(body))
     case tree @ Tree.Case(_, branches) =>
       val scrut = VarSymbol(Ident("caseScrut"))
-      val des = new Desugarer(this)(tree, scrut)
+      val des = new ucs.Desugarer(this)(tree, scrut)
       scoped("ucs:desugared"):
         log(s"Desugared:\n${Split.display(des)}")
       val nor = new ucs.Normalization(this)(des)

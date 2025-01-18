@@ -1,16 +1,15 @@
 package hkmc2
 package semantics
+package ucs
 
 import syntax.{Keyword, Tree}, Tree.*
 import mlscript.utils.*, shorthands.*
 import Message.MessageContext
 import utils.TraceLogger
-import hkmc2.syntax.Literal
+import syntax.Literal
 import Keyword.{as, and, `do`, `else`, is, let, `then`}
 import collection.mutable.{HashMap, SortedSet}
 import Elaborator.{ctx, Ctxl}
-import ucs.{DesugaringBase, warn, error}
-import hkmc2.semantics.ucs.DeBrujinSplit
 
 object Desugarer:
   extension (op: Keyword.Infix)
