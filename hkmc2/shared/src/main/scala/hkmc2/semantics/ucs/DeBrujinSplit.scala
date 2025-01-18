@@ -81,7 +81,7 @@ object DeBrujinSplit:
       case ctor: Sel => resolve(ctor, params).getOrElse: (_, _, alternative) =>
         error(msg"Name not found: ${ctor.showDbg}" -> ctor.toLoc)
         alternative
-    def go(tree: Tree): F = tree match
+    def go(tree: Tree): F = tree.deparenthesized match
       case lhs or rhs => (scrutinee, consequence, alternative) => trace(
         pre = s"or <<<",
         post = (_: DeBrujinSplit) => s"or >>>"
