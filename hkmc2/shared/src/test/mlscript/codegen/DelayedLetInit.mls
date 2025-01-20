@@ -79,7 +79,13 @@ else foo = 1
 //│ ║  l.76: 	then foo = 0
 //│ ╙──      	         ^
 //│ JS (unsanitized):
-//│ let scrut; scrut = true; if (scrut) { this.foo } else { throw new this.Error("match error"); }
+//│ let scrut;
+//│ scrut = true;
+//│ if (scrut === true) {
+//│   this.foo
+//│ } else {
+//│   throw new this.Error("match error");
+//│ }
 //│ = 0
 //│ foo = 0
 
@@ -90,7 +96,7 @@ then
 else
   foo = 1
 //│ JS (unsanitized):
-//│ let scrut; scrut = true; if (scrut) { this.foo = 0; null } else { this.foo = 1; null }
+//│ let scrut; scrut = true; if (scrut === true) { this.foo = 0; null } else { this.foo = 1; null }
 //│ foo = 0
 
 
@@ -112,7 +118,7 @@ foo
 :fixme
 fun f() = foo = 0
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.113: 	fun f() = foo = 0
+//│ ║  l.119: 	fun f() = foo = 0
 //│ ╙──       	              ^
 //│ JS (unsanitized):
 //│ function f() { return globalThis.foo; } null

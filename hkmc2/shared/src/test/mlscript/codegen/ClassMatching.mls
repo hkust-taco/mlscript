@@ -126,7 +126,7 @@ fun f(x) = if x is
 //│     param0 = x.value;
 //│     x1 = param0;
 //│     scrut = x1 > 0;
-//│     if (scrut) {
+//│     if (scrut === true) {
 //│       return 42;
 //│     } else {
 //│       return globalThis.log("oops");

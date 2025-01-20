@@ -42,7 +42,7 @@ fun f(x) =
 f(false)
 //│ JS (unsanitized):
 //│ function f(x) {
-//│   if (x) {
+//│   if (x === true) {
 //│     throw globalThis.Error("x");
 //│   } else {
 //│     throw globalThis.Error("y");

@@ -10,7 +10,7 @@ fun fib(a) = if
 //│ function fib(a) {
 //│   let scrut, tmp, tmp1, tmp2, tmp3;
 //│   scrut = a <= 1;
-//│   if (scrut) {
+//│   if (scrut === true) {
 //│     return a;
 //│   } else {
 //│     tmp = a - 1;
