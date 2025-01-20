@@ -20,28 +20,51 @@ pattern Falsy =
 ]
 //│ = [ true, false, false, true ]
 
+fun isTruthy(value) = value is @compile Truthy
+
+fun isFalsy(value) = value is @compile Falsy
+
 :global
 :expect true
 
-true && false is @compile Truthy
+// Test each case of `Truthy`.
+
+isTruthy of true
 //│ = true
 
-true && true is @compile Truthy
+isTruthy of true && true
 //│ = true
 
-:todo
+isTruthy of true || true
+//│ = true
+
+isTruthy of true || false
+//│ = true
+
+isTruthy of false || true
+//│ = true
+
+isTruthy of Not of false
+//│ = true
+
+// Test each case of `Falsy`.
+
+isFalsy of false
+//│ = true
+
+isFalsy of false && false
+//│ = true
+
+:re
 // The compilation scheme does not handle non-determinism at all at the moment.
-false && true is @compile Falsy
+isFalsy of false && true
 //│ ═══[RUNTIME ERROR] Expected: true, got: false
 
-false && false is @compile Falsy
+isFalsy of true && false
 //│ = true
 
-true || true is @compile Truthy
+isFalsy of false || false
 //│ = true
 
-true || false is @compile Truthy
-//│ = true
-
-false || true is @compile Truthy
+isFalsy of Not of true
 //│ = true

@@ -2,20 +2,28 @@
 
 object A
 object B
-class Pair[A, B](first: A, second: B)
 
-[A, B]
-//│ = [ A { class: [class A] }, B { class: [class B] } ]
+class Node[T](left: Node[T], value: T, right: Node[T])
 
 // The patterns generate trees that have odd or even numbers of node `A`.
 
-pattern OddTree = A | Pair(EvenTree, OddTree) | Pair(OddTree, EvenTree)
-pattern EvenTree = B | Pair(EvenTree, EvenTree) | Pair(OddTree, OddTree)
+pattern OddTree =
+  A |
+  Node(EvenTree, A, EvenTree) | Node(OddTree, A, OddTree) |
+  Node(EvenTree, B, OddTree) | Node(OddTree, B, EvenTree)
+pattern EvenTree =
+  B |
+  Node(EvenTree, A, OddTree) | Node(OddTree, A, EvenTree) |
+  Node(EvenTree, B, EvenTree) | Node(OddTree, B, OddTree)
 
-fun (#) pair(a, b) = Pair(a, b)
+fun a(lc, rc) = Node(lc, A, rc)
+
+fun b(lc, rc) = Node(lc, B, rc)
 
 :global
 :expect true
+
+// Test each case of `EvenTree`.
 
 B is @compile EvenTree
 //│ = true
@@ -23,29 +31,38 @@ B is @compile EvenTree
 not of A is @compile EvenTree
 //│ = true
 
-B # B is @compile EvenTree
+not of a(B, B) is @compile EvenTree
 //│ = true
 
-A # A is @compile EvenTree
+a(B, A) is @compile EvenTree
 //│ = true
 
-(A # A) # (A # A) is @compile EvenTree
+a(A, B) is @compile EvenTree
 //│ = true
 
-(A # A) # (A # A) # (A # A) is @compile EvenTree
+:re
+b(A, A) is @compile EvenTree
+//│ ═══[RUNTIME ERROR] Expected: true, got: false
+
+:re
+b(B, B) is @compile EvenTree
+//│ ═══[RUNTIME ERROR] Expected: true, got: false
+
+// Test each case of `OddTree`.
+
+A is @compile OddTree
 //│ = true
 
-((A # A) # (A # A)) # ((A # A) # (A # A)) is @compile EvenTree
+a(B, B) is @compile OddTree
 //│ = true
 
-((A # A) # (A # A)) # ((A # A) # (B # B)) is @compile EvenTree
+a(A, A) is @compile OddTree
 //│ = true
 
-:global
-:expect false
+:re
+b(B, A) is @compile OddTree
+//│ ═══[RUNTIME ERROR] Expected: true, got: false
 
-((A # A) # (A # B)) # ((A # A) # (A # B)) is @compile OddTree
-//│ = false
-
-((A # A) # (A # A)) # ((A # A) # (A # B)) is @compile EvenTree
-//│ = false
+:re
+b(A, B) is @compile OddTree
+//│ ═══[RUNTIME ERROR] Expected: true, got: false
