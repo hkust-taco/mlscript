@@ -231,9 +231,10 @@ class Translator(val elaborator: Elaborator)
       given Raise = Function.const(())
       val scrutSym = TermSymbol(ParamBind, N, Ident("topic"))
       stringPrefix(() => scrutSym.ref(), body, prefixSuccess(params)) match
-      case Split.End => N
+      case Split.Else(Term.Error) =>
+        makeMatcher("unapplyStringPrefix", scrutSym, failure)
       case split =>
         val topmost = split ~~: failure
         log(s"Translated `unapplyStringPrefix`: ${display(topmost)}")
-        S(makeMatcher("unapplyStringPrefix", scrutSym, topmost ~~: failure))
-    unapply :: unapplyStringPrefix.toList
+        makeMatcher("unapplyStringPrefix", scrutSym, topmost)
+    unapply :: unapplyStringPrefix :: Nil
