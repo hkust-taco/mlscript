@@ -430,7 +430,7 @@ class Desugarer(val elaborator: Elaborator)
             msg"But no arguments were given" -> ctor.toLoc)
           fallback
         else
-          Branch(ref, Pattern.Synonym(pat, Nil)(Nil), sequel(ctx)) ~: fallback
+          Branch(ref, Pattern.Synonym(pat, Nil), sequel(ctx)) ~: fallback
       case S(_: PatternSymbol) =>
         makeUnapplyBranch(ref, clsTrm, sequel(ctx))(fallback)
       case N =>
@@ -459,6 +459,7 @@ class Desugarer(val elaborator: Elaborator)
           subMatches(params zip args, sequel)(Split.End)(ctx)
         ) ~: fallback
       case S(pat: PatternSymbol) if compile =>
+        // When we support extraction parameters, they need to be handled here.
         val patArgs = args.map:
           DeBrujinSplit.elaborate(Nil, _, elaborator)
         if pat.patternParams.size != patArgs.size then
@@ -472,7 +473,7 @@ class Desugarer(val elaborator: Elaborator)
               case (S(loc), arg) => S(loc ++ arg.toLoc))
           fallback
         else
-          Branch(ref, Pattern.Synonym(pat, patArgs)(args), sequel(ctx)) ~: fallback
+          Branch(ref, Pattern.Synonym(pat, patArgs.zip(args)), sequel(ctx)) ~: fallback
       case S(_: PatternSymbol) =>
         makeUnapplyBranch(ref, clsTrm, sequel(ctx))(fallback)
       case _ =>

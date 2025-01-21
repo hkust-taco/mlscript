@@ -4,6 +4,7 @@ package ucs
 
 import collection.immutable.NumericRange
 import mlscript.utils.*, shorthands.*
+import syntax.Tree
 
 enum ConstructorLike:
   case Symbol(symbol: ClassSymbol | ModuleSymbol)
@@ -13,7 +14,7 @@ enum ConstructorLike:
    *  fixed-size tuples. Otherwise, it represents tuples with at least `size`.
    */
   case TupleCapacity(size: Int, infinite: Bool)
-  case Instantiation(symbol: PatternSymbol, arguments: List[DeBrujinSplit])
+  case Instantiation(symbol: PatternSymbol, arguments: List[(split: DeBrujinSplit, tree: Tree)])
   case LocalPattern(id: Int)
   /** This case represents pattern parameters, which only make sense within the
     * body of the pattern declaration.
@@ -31,9 +32,14 @@ enum ConstructorLike:
     case Symbol(symbol: ModuleSymbol) => 0
     case StringJoin => 2
     case TupleCapacity(size, infinite) => ???
-    case Instantiation(symbol, arguments) => 0 // TODO: fill in the arity
+    // Note that `arguments` here are higher-order patterns. The `arity` method
+    // computes the number of extraction parameters, which we have not support
+    // yet. Therefore, it's temporarily set to 0.
+    case Instantiation(symbol, arguments) => 0
     case LocalPattern(id) => 0
-    case Parameter(symbol) => 0 // TODO: fill in the arity
+    // Specifying the arity of pattern parameters is not supported for now.
+    // Therefore, we temporarily assume the arity of a parameter is 0.
+    case Parameter(symbol) => 0
     case Nested(_) => 0
   
   def showDbg: Str = this match
@@ -42,7 +48,10 @@ enum ConstructorLike:
     case StringJoin => "~"
     case TupleCapacity(size, true) => s"tuple:$size+"
     case TupleCapacity(size, false) => s"tuple:$size"
-    case Instantiation(symbol, arguments) => s"applied:${symbol.nme}(${arguments.iterator.map(_.showDbg.indent("  ")).mkString("\n", "\n", "\n")})"
+    case Instantiation(symbol, arguments) =>
+      val content = if arguments.isEmpty then "" else
+        arguments.iterator.map(_.split.showDbg.indent("  ")).mkString("\n", "\n", "\n")
+      s"instantiated:${symbol.nme}($content)"
     case LocalPattern(id) => s"local:$id"
     case Parameter(symbol) => s"parameter:${symbol.nme}"
     case Nested(split) => "<split>"

@@ -46,7 +46,8 @@ object DeBrujinSplit:
                   (acc, tree) => acc.fold(tree.toLoc)(_ ++ tree.toLoc |> S.apply))
             alternative
         case symbol: PatternSymbol =>
-          val arguments = params.map(go(_)(Outermost, Accept(0), Reject) |> Binder.apply)
+          val arguments = params.map: param =>
+            (Binder(go(param)(Outermost, Accept(0), Reject)), param)
           val pattern = ClassLike(ConstructorLike.Instantiation(symbol, arguments))
           val expectedArity = symbol.patternParams.size
           val actualArity = arguments.length
@@ -65,11 +66,13 @@ object DeBrujinSplit:
                 params.foldLeft[Opt[Loc]](N):
                   (acc, tree) => acc.fold(tree.toLoc)(_ ++ tree.toLoc |> S.apply))
             alternative
-    /** Resolve the constructor name in the pattern parameter list. */
+    /** Resolve the constructor name in `patternParams` first. Call `resolve` if
+      * not found.
+      */
     def dealWithCtor(ctor: Ident | Sel, params: Ls[Tree]): F = ctor match
-      case Ident("~") => (_, _, alternative) =>
-          // TODO: support string joining
-          alternative
+      case Ident("~") => (scrutinee, innermost, alternative) =>
+        Branch(scrutinee, ClassLike(ConstructorLike.StringJoin), innermost.increment(2), alternative)
+        alternative
       case Ident(ctorName) => patternParams.find(_.sym.name == ctorName) match
         case S(Param(_, symbol, _)) => (scrutinee, innermost, alternative) =>
           log(s"found an input pattern: ${symbol.name}")
@@ -143,7 +146,7 @@ enum DeBrujinSplit:
         val bod = go(body)
         val shouldIndent = body match
           case Binder(_) => false
-          case _ => true
+          case _ => bod contains '\n'
         "λ " + (if shouldIndent then "\n" + bod.indent("  ") else bod)
       case Branch(scrutinee, pattern, consequence, alternative) =>
         val con = go(consequence)
@@ -202,16 +205,6 @@ object Subst:
 extension (range: Range)
   infix def +(shift: Int): Range =
     Range(range.start + shift, range.end + shift, range.step)
-    
-
-extension (tl: TraceLogger)
-  def traceSplit(name: Str, input: DeBrujinSplit)(thunk: => DeBrujinSplit): DeBrujinSplit =
-    tl.trace(
-      pre = s"$name <<<\n${input.showDbg}",
-      post = (output: DeBrujinSplit) =>
-        val out = if output == input then "(no change)" else output.showDbg
-        s"$name >>>\n${out}"
-    )(thunk)
 
   // extension (branch: DeBrujinSplit.Branch)
   /** Expand all branches that match the same scrutinee against synonyms. */
@@ -232,6 +225,15 @@ extension (tl: TraceLogger)
   //     go(branch, branch.scrutinee)
 
 extension (split: DeBrujinSplit)
+  def traceChange(prefix: => Str)(thunk: => DeBrujinSplit)(using TraceLogger) =
+    tl.trace(
+      pre = s"$prefix <<<" + {
+        val dbg = split.showDbg
+        if dbg.contains('\n') then s"\n$dbg" else s" $dbg"},
+      post = (output: DeBrujinSplit) => s"$prefix >>>" +
+        (if output == split then " (no change)" else s"\n${output.showDbg}")
+    )(thunk)
+
   def ++(right: DeBrujinSplit): DeBrujinSplit =
     split match
       case Binder(body) => ??? // TODO: concatenating binders is ridiculous
@@ -308,7 +310,9 @@ extension (split: DeBrujinSplit)
     split.unbind match
       case (`arity`, body) =>
         go(body, 0, (1 to arity).zip(scrutinees).toMap)
-      case _ => Reject // TODO: report mismatched arity
+      case _ =>
+        // lastWords(s"Arity mismatch in expand: ${split.unbind}")
+        Reject // TODO: report mismatched arity
   
   def toSplit(scrutinees: Vector[() => Term.Ref],
               localPatterns: Map[Int, TempSymbol],
@@ -335,9 +339,12 @@ extension (split: DeBrujinSplit)
             case ClassLike(ConstructorLike.Symbol(symbol: ClassSymbol)) =>
               log(s"make temporary symbols for $symbol")
               val subSymbols = (1 to symbol.arity).map(i => TempSymbol(N, s"arg_$i")).toList
+              log(s"class case ${symbol.name} with ${subSymbols.length} sub-scrutinees")
               val consequent2 = consequence.unbind match
                 case (level, body) => // TODO: check level == arity
-                  go(body, subSymbols.reverseIterator.map(s => () => s.ref()).toVector ++ ctx)
+                  val ctx2 = subSymbols.reverseIterator.map(s => () => s.ref()).toVector ++ ctx
+                  log(s"now there are ${ctx2.length} elements in the new context")
+                  go(body, ctx2)
               val select = scoped("ucs:sel"):
                 elab.reference(symbol).getOrElse(Term.Error)
               val pattern = Pattern.ClassLike(symbol, select, S(subSymbols), false)(Empty())
@@ -348,6 +355,7 @@ extension (split: DeBrujinSplit)
               val pattern = Pattern.ClassLike(symbol, select, N, false)(Empty())
               semantics.Branch(ctx(scrutinee - 1)(), pattern, nullaryConsequent) ~: go(alternative, ctx)
             case ClassLike(ConstructorLike.LocalPattern(id)) =>
+              log(s"apply scrutinee $scrutinee to local pattern $id")
               desugaring.makeLocalPatternBranch(ctx(scrutinee - 1)(), localPatterns(id), nullaryConsequent)(go(alternative, ctx))
             case ClassLike(ConstructorLike.Nested(split)) => // The arity of embedded splits is always 1.
               val innerConsequent = consequence.unbind match
@@ -366,18 +374,17 @@ extension (split: DeBrujinSplit)
   /** To instantiate the body of a pattern synonym. */
   def instantiate(context: Map[LocalSymbol & NamedSymbol, DeBrujinSplit])(using tl: TraceLogger): DeBrujinSplit =
     import DeBrujinSplit.*, PatternStub.*, ConstructorLike.*, tl.*
-    def go(split: DeBrujinSplit): DeBrujinSplit = trace(
-      pre = "instantiate <<<",
-      post = (s: DeBrujinSplit) => s"instantiate >>>\n${s.showDbg}"
-    ):
+    def go(split: DeBrujinSplit): DeBrujinSplit = split.traceChange("instantiate"):
       split match
       case Binder(body) => Binder(go(body))
       case Branch(scrutinee, pattern0 @ ClassLike(Instantiation(symbol, arguments)), consequence, alternative) =>
-        val pattern = ClassLike(Instantiation(symbol, arguments.map(go(_))))
+        val instantiatedArguments = arguments.map:
+          case (split, tree) => (go(split), tree)
+        val pattern = ClassLike(Instantiation(symbol, instantiatedArguments))
         Branch(scrutinee, pattern, go(consequence), go(alternative))
       case Branch(scrutinee, ClassLike(Parameter(symbol)), consequence, alternative) =>
         context.get(symbol) match
-          case S(split) => 
+          case S(split) =>
             split.expand(Ls(scrutinee), go(consequence)) ++ go(alternative)
           case N => lastWords(s"Pattern parameter not found: ${symbol.nme}")
       case Branch(scrutinee, pattern, consequence, alternative) =>
@@ -385,12 +392,14 @@ extension (split: DeBrujinSplit)
       case Accept(outcome) => Accept(outcome)
       case Reject => Reject
     scoped("ucs:rp:instantiation"):
-      log(s"context: ${context.keys.map(_.name).mkString(", ")}")
+      log(s"pattern parameter context:")
+      context.foreach:
+        case (symbol, split) => log(s"${symbol.nme} => ${split.showDbg}")
       go(split)
   
   def normalize(using tl: TraceLogger, raise: Raise): (DeBrujinSplit, Map[Int, DeBrujinSplit]) =
     import DeBrujinSplit.*, PatternStub.*, ConstructorLike.*, collection.mutable.{Buffer, Map as MutMap}, tl.*
-    type Expansion = (id: Int, recursive: Bool, normalized: Opt[DeBrujinSplit])
+    type Expansion = (id: Int, repr: Str, recursive: Bool, normalized: Opt[DeBrujinSplit])
     val expandedPatterns = MutMap.empty[Instantiation, Expansion]
     def go(split: DeBrujinSplit): DeBrujinSplit =
       scoped("ucs:rp:normalize"):
@@ -401,31 +410,31 @@ extension (split: DeBrujinSplit)
           post = (s: DeBrujinSplit) => s"pattern application >>>\n${s.showDbg}"
         ):
           if arguments.size == symbol.patternParams.size then
-            // TODO: dedup with the preceding case
             val pattern = expandedPatterns.get(key) match
-            case S((id, recursive, S(normalized))) =>
+            case S((id, repr, recursive, S(normalized))) =>
               ClassLike(if recursive then LocalPattern(id) else Nested(normalized))
-            case S((id, recursive, N)) =>
+            case S((id, repr, recursive, N)) =>
               if !recursive then
                 scoped("ucs:rp:memo"):
                   log(s"found a recursive pattern: ${symbol.nme}")
-                expandedPatterns += key -> (id, true, N)
+                expandedPatterns += key -> (id, repr, true, N)
               ClassLike(LocalPattern(id))
             case N =>
+              val repr = symbol.nme + arguments.iterator.map(_.tree.showDbg).mkString("(", ", ", ")")
               scoped("ucs:rp:memo"):
-                log(s"add to memo: ${symbol.nme} ${arguments.map(_.showDbg).mkString("(", ", ", ")")}")
-              expandedPatterns += key -> (expandedPatterns.size, false, N)
+                log(s"add to memo: ${repr}")
+              expandedPatterns += key -> (expandedPatterns.size, repr, false, N)
               val normalized =
-                val context = symbol.patternParams.iterator.map(_.sym).zip(arguments).toMap
+                val context = symbol.patternParams.iterator.map(_.sym).zip(arguments.iterator.map(_.split)).toMap
                 val instantiated = symbol.split.instantiate(context)
                 scoped("ucs:rp:memo"):
                   log(s"instantiated: ${instantiated.showDbg}")
                 go(instantiated)
               expandedPatterns.get(key) match
-                case S((id, recursive, N)) =>
-                  expandedPatterns += key -> (id, recursive, S(normalized))
+                case S((id, repr, recursive, N)) =>
+                  expandedPatterns += key -> (id, repr, recursive, S(normalized))
                   ClassLike(if recursive then LocalPattern(id) else Nested(normalized))
-                case S((id, _, S(_))) => lastWords(s"the pattern should not be normalized: ${symbol.nme}")
+                case S((id, _, _, S(_))) => lastWords(s"the pattern should not be normalized: ${symbol.nme}")
                 case N => lastWords(s"the pattern should be memoized: ${symbol.nme}")
             Branch(scrutinee, pattern, go(consequent), go(alternative))
           else
@@ -444,23 +453,22 @@ extension (split: DeBrujinSplit)
           scoped("ucs:rp:normalize"):
             val arity = pattern.arity
             val whenTrue = consequence.unbind match
-              case (level @ (`arity` | 0), body) =>
+              case (level @ (`arity` | 0), consequentBody) =>
                 // The scrutinee handling below is tricky.
-                log(s"[Step 1] specialize consequence")
-                val former = body.specialize(scrutinee + level, pattern, 1 to arity)
+                val former = trace(s"[Step 1] specialize consequence"):
+                  consequentBody.specialize(scrutinee + level, pattern, 1 to arity)
                 // We need to increment the level because it is going to be put into a binder.
-                log(s"[Step 2] specialize alternative")
-                val latter = alternative.specialize(scrutinee, pattern, 1 to arity)
-                log(s"[Step 3] concatenate them")
+                val latter = trace(s"[Step 2] specialize alternative"):
+                  alternative.specialize(scrutinee, pattern, 1 to arity)
                 val together = former ++ latter
-                log(s"[Step 4] normalize them")
-                val res = go(together)
-                log(s"increment by $arity")
+                log(s"[Step 3] concatenate specialized splits\n${together.showDbg}")
+                val res = trace(s"[Step 4] normalize concatenated splits"):
+                  go(together)
                 // If the original consequence doesn't have binders, we need to increment the level.
                 val res2 = if level == arity then res else res.increment(arity)
-                log(s"bind with $arity")
+                // log(s"bind with $arity")
                 res2.bind(arity)
-              case (_, _) => log("mismatched arity"); Reject // TODO: report mismatched arity
+              case (_, _) => lastWords("unexpected number of binders")
             val whenFalse =
               log(s"[Step 5] despecialize alternative")
               val despecialized = alternative.despecialize(scrutinee, pattern)
@@ -471,66 +479,50 @@ extension (split: DeBrujinSplit)
     val rootSplit = go(split)
     val recursivePatterns = expandedPatterns.iterator.collect:
       // Maybe we can store more information about the instantiation.
-      case (pattern, (id, true, S(normalized))) => (id, normalized)
+      case (pattern, (id, _, true, S(normalized))) => (id, normalized)
     .toMap
     scoped("ucs:rp:memo"):
       log("memo:")
-      recursivePatterns.foreach: (id, normalized) =>
-        log(s"$id =>\n${normalized.showDbg}")
+      expandedPatterns.values.foreach:
+        case (id, repr, true, S(normalized)) => log(s"$id $repr =>\n${normalized.display}")
+        case _ => ()
     (rootSplit, recursivePatterns)
   
-  def specialize(scrutinee: Int, pattern: PatternStub, parameters: Range)(using TraceLogger): DeBrujinSplit =
-    import PatternStub.*, ConstructorLike.*
+  def specialize(scrutinee: Int, pattern: PatternStub, parameters: Range)(using tl: TraceLogger): DeBrujinSplit =
+    import PatternStub.*, ConstructorLike.*, tl.*
     require(parameters.length == pattern.arity)
     def go(split: DeBrujinSplit)(using target: Int, parameters: Range): DeBrujinSplit =
       split match
         case Binder(body) =>
-          tl.log("go into the binder")
+          log("go into the binder")
           Binder(go(body)(using target + 1, parameters + 1))
         case Branch(`target`, `pattern`, consequence, alternative) =>
           val (level, body) = consequence.unbind
-          tl.log(s"consequence:\n${consequence.showDbg}")
-          tl.log(s"unbound consequence:\n${body.showDbg}")
+          log(s"consequence:\n${consequence.showDbg}")
+          log(s"unbound consequence:\n${body.showDbg}")
+          val substedConsequent = if level == 0 then body else body.substitute(Subst.from((1 to level).zip(parameters)))
           if level == 0 || level == pattern.arity then
             body ++ go(alternative)(using target, parameters)
           else
-            // TODO: report mismatched arity.
-            Reject
-        case split @ Branch(`target`, ClassLike(Instantiation(_, _)), consequence, alternative) =>
-          tl.log("cannot skip pattern synonyms")
-          split.copy(consequent = go(consequence),
-                     alternative = go(alternative))
-        case Branch(`target`, _, consequence, alternative) =>
-          tl.log("skip the consequence")
-          alternative
+            lastWords("unexpected number of binders")
+        case Branch(`target`, pattern, consequence, alternative) =>
+          log(s"found ${pattern.showDbg}: remove the consequent")
+          go(alternative)
         case split @ Branch(_, _, consequence, alternative) =>
           split.copy(consequent = go(consequence),
                      alternative = go(alternative))
         case Accept(_) | Reject => split
-    tl.trace(
-      pre = s"S+ ($scrutinee is ${pattern.showDbg}) <<<" + {
-        val dbg = split.showDbg
-        if dbg.contains('\n') then s"\n$dbg" else s" $dbg"},
-      post = (s: DeBrujinSplit) => s"S+ ($scrutinee is ${pattern.showDbg}) >>>" +
-        (if s == split then " (no change)" else s"\n${s.showDbg}")
-    ):
+    split.traceChange(s"S+ $scrutinee is ${pattern.showDbg}#${pattern.arity}${parameters.mkString("(", ", ", ")")}"):
       go(split)(using scrutinee, parameters)
 
   def despecialize(scrutinee: Int, pattern: PatternStub)(using TraceLogger): DeBrujinSplit =
     def go(split: DeBrujinSplit)(using target: Int): DeBrujinSplit =
       split match
         case Binder(body) => Binder(go(body)(using target + 1))
-        case Branch(`target`, `pattern`, _, alternative) =>
-          go(alternative)
-        case split @ Branch(_, _, consequence, alternative) =>
-          split.copy(consequent = go(consequence),
+        case Branch(`target`, `pattern`, _, alternative) => go(alternative)
+        case split @ Branch(_, _, consequent, alternative) =>
+          split.copy(consequent = go(consequent),
                      alternative = go(alternative))
         case Accept(_) | Reject => split
-    tl.trace(
-      pre = s"S- ($scrutinee is ${pattern.showDbg}) <<<" + {
-        val dbg = split.showDbg
-        if dbg.contains('\n') then s"\n$dbg" else s" $dbg"},
-      post = (s: DeBrujinSplit) => s"S- ($scrutinee is ${pattern.showDbg}) >>>" +
-        (if s == split then " (no change)" else s"\n${s.showDbg}")
-    ):
+    split.traceChange(s"S- $scrutinee is ${pattern.showDbg}#${pattern.arity}"):
       go(split)(using scrutinee)
