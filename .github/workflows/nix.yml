@@ -18,7 +18,8 @@ jobs:
       - name: Install TypeScript
         run: npm ci
       - name: Run test
-        run: sbt -J-Xmx4096M -J-Xss8M test
+        # Not running all tests because those outside of hkmc2 are obsolete (will be removed)
+        run: sbt -J-Xmx4096M -J-Xss8M hkmc2AllTests/test
       - name: Check no changes
         run: |
           git update-index -q --refresh

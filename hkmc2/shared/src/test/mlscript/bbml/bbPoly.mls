@@ -19,7 +19,7 @@ fun id(x) = x
 //│ Type: ⊤
 
 id
-//│ Type: forall 'A: ('A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
 
 :e
 (x => x + 1): [A] -> A -> A
@@ -31,14 +31,14 @@ id
 //│ ║  l.25: 	(x => x + 1): [A] -> A -> A
 //│ ║        	      ^^^^^
 //│ ╙── because: cannot constrain  Int  <:  A
-//│ Type: forall 'A: ('A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
 
 
 (x => x): [A] -> A -> A
-//│ Type: forall 'A: ('A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
 
 id: [A] -> A -> A
-//│ Type: forall 'A: ('A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
 
 id: Int -> Int
 //│ Type: (Int) ->{⊥} Int
@@ -50,7 +50,7 @@ myInc(id, 0)
 //│ Type: Int
 
 let t = 42 in ((x => x): [A] -> A -> A)
-//│ Type: forall 'A: ('A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
 
 
 id(42)
@@ -75,7 +75,7 @@ fun swap(p) = new Pair(p.Pair#b, p.Pair#a)
 
 
 swap
-//│ Type: forall 'A, 'B: (Pair[out 'A, out 'B]) ->{⊥} Pair[out 'B, out 'A]
+//│ Type: ['A, 'B] -> (Pair[out 'A, out 'B]) ->{⊥} Pair[out 'B, out 'A]
 
 let t = new Pair(42, true) in swap(t)
 //│ Type: Pair[out Bool, out Int]
@@ -94,7 +94,7 @@ fun foo(x) = 42
 //│ Type: ⊤
 
 foo
-//│ Type: (forall 'A: ('A) ->{⊥} 'A) ->{⊥} Int
+//│ Type: (['A] -> ('A) ->{⊥} 'A) ->{⊥} Int
 
 foo(id)
 //│ Type: Int
@@ -144,24 +144,20 @@ fun gen(x) =
 //│ Type: ⊤
 
 gen
-//│ Type: (Int) ->{⊥} forall 'A: ('A) ->{⊥} 'A
+//│ Type: (Int) ->{⊥} ['A] -> ('A) ->{⊥} 'A
 
 
 gen(42)
-//│ Type: forall 'A: ('A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
 
-// FIXME: toLoc
-:fixme
+
 :e
 fun cnt: Some[out [A] -> A -> A] -> Int
 fun cnt(x) = 42
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ║  l.156: 	fun cnt: Some[out [A] -> A -> A] -> Int
-//│ ╙──       	                         ^^^^^^
-//│ ╔══[ERROR] General type is not allowed here.
-//│ ║  l.156: 	fun cnt: Some[out [A] -> A -> A] -> Int
+//│ ║  l.155: 	fun cnt: Some[out [A] -> A -> A] -> Int
 //│ ╙──       	                         ^^^^^^
 //│ Type: ⊤
 
 (x => x): [A] -> A -> A
-//│ Type: forall 'A: ('A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} 'A

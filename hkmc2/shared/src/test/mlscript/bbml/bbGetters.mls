@@ -41,7 +41,7 @@ fun test2() =
     0 then 0
     n then funny(n - 1) + 1
   funny
-//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but () ->{⊥} forall 'caseScrut, 'eff: 'caseScrut ->{'eff} Int found
+//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but () ->{⊥} [outer, 'caseScrut, 'eff] -> 'caseScrut ->{'eff} Int found
 //│ ║  l.42: 	    n then funny(n - 1) + 1
 //│ ║        	           ^^^^^^^^^^^^^^^^
 //│ ║  l.43: 	  funny

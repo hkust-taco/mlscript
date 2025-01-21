@@ -48,14 +48,14 @@ fun bar() = r
 //│ r = 42
 
 
-fun outer(x) =
+fun outerfun(x) =
   let r = x + 1
   fun nested(y) =
     r + x + y
   log(nested(x))
   nested
 
-let f = outer(100)
+let f = outerfun(100)
 f(200)
 //│ > 301
 //│ = 401
@@ -63,11 +63,11 @@ f(200)
 
 // f(200)
 
-outer(100)
+outerfun(100)
 //│ > 301
 //│ = [Function: nested]
 
-outer(100)(200)
+outerfun(100)(200)
 //│ > 301
 //│ = 401
 

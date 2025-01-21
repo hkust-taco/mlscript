@@ -169,20 +169,3 @@ f of
 
 // ——— ——— ———
 
-// Strange error – parse is probably wrong
-fun test2() =
-  fun funny = (case
-    0 then 0)
-  funny
-//│ ╔══[ERROR] Illegal definition in term position.
-//│ ║  l.174: 	  fun funny = (case
-//│ ║         	      ^^^^^^^^^^^^^
-//│ ║  l.175: 	    0 then 0)
-//│ ╙──       	^^^^^^^^^^^^^
-//│ ╔══[ERROR] Name not found: funny
-//│ ║  l.176: 	  funny
-//│ ╙──       	  ^^^^^
-//│ = [Function: test2]
-
-// ——— ——— ———
-

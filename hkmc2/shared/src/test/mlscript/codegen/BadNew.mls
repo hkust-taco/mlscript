@@ -14,9 +14,11 @@ new 2
 :sjs
 :ge
 new 2 + 2
-//│ ═══[COMPILATION ERROR] Illegal reference to builtin symbol '+'
 //│ JS (unsanitized):
-//│ new (()=>{throw globalThis.Error("Illegal reference to builtin symbol '+'")})()(2, 2)
+//│ new (arg1, arg2) => { return arg1 + arg2; }(2, 2)
+//│ > try { new (...args) => {   globalThis.Predef.checkArgs("", 2, true, args.length);   let arg1 = args[0];   let arg2 = args[1];   return arg1 + arg2; }(2, 2) } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >       ^^^^^^^^^^^^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Malformed arrow function parameter list
 
 :re
 new()
@@ -39,7 +41,7 @@ new { x = 1 }
 //│     lhs = Ident of "x"
 //│     rhs = IntLit of 1
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.35: 	new { x = 1 }
+//│ ║  l.37: 	new { x = 1 }
 //│ ╙──      	      ^
 
 

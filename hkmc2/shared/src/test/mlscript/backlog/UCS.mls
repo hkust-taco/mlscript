@@ -95,3 +95,18 @@ else
 
 // ——— ——— ———
 
+// * Example confusing parses that should be fixed when we fix the parsing of operator splits
+
+if 1 + 0
+    == 0 then "X"
+    == 1 then "A"
+//│ = 'A'
+
+if 1 + 1
+    * 2 == 4 then "X"
+    * 2 == 1 then "A"
+    |> id is r then r
+//│ = 2
+
+// ——— ——— ———
+

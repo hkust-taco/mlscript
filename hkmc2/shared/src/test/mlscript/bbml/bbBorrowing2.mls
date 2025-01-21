@@ -65,14 +65,32 @@ letreg of r =>
   write(r)
 //│ Type: Int
 
-// FIXME why no error?
-// :e
+
+:e
 letreg of r =>
   read(r)
   borrow(r) of () =>
     write(r)
     read(r)
   write(r)
+//│ ╔══[ERROR] Type error in block
+//│ ║  l.70: 	letreg of r =>
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.71: 	  read(r)
+//│ ║        	^^^^^^^^^
+//│ ║  l.72: 	  borrow(r) of () =>
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.73: 	    write(r)
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.74: 	    read(r)
+//│ ║        	^^^^^^^^^^^
+//│ ║  l.75: 	  write(r)
+//│ ║        	^^^^^^^^^^
+//│ ╟── because: cannot constrain  'E  <:  ⊥
+//│ ╟── because: cannot constrain  'E  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'Rg  <:  ¬()
+//│ ╟── because: cannot constrain  'Rg  <:  ¬()
+//│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Int
 
 

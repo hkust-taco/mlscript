@@ -9,6 +9,7 @@ sealed abstract class Diagnostic(val theMsg: String) extends Exception(theMsg):
   val allMsgs: Ls[Message -> Opt[Loc]]
   val kind: Kind
   val source: Source
+  val mkExtraInfo: () => Opt[Any]
 object Diagnostic:
   
   enum Kind:
@@ -24,20 +25,31 @@ object Diagnostic:
     case Runtime
   
 
-final case class ErrorReport(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]], source: Source) extends Diagnostic(mainMsg):
+final case class ErrorReport(
+    mainMsg: Str,
+    allMsgs: Ls[Message -> Opt[Loc]],
+    mkExtraInfo: () => Opt[Any],
+    source: Source,
+) extends Diagnostic(mainMsg):
   val kind: Kind = Kind.Error
 object ErrorReport:
-  def apply(msgs: Ls[Message -> Opt[Loc]], source: Source = Source.Typing): ErrorReport =
-    ErrorReport(msgs.head._1.show, msgs, source)
+  def apply(msgs: Ls[Message -> Opt[Loc]], extraInfo: => Opt[Any] = N, source: Source = Source.Typing): ErrorReport =
+    ErrorReport(msgs.head._1.show, msgs, () => extraInfo, source)
 
-final case class WarningReport(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]], source: Source) extends Diagnostic(mainMsg):
+final case class WarningReport(
+    mainMsg: Str,
+    allMsgs: Ls[Message -> Opt[Loc]],
+    mkExtraInfo: () => Opt[Any],
+    source: Source,
+) extends Diagnostic(mainMsg):
   val kind: Kind = Kind.Warning
 object WarningReport:
-  def apply(msgs: Ls[Message -> Opt[Loc]], source: Source = Source.Typing): WarningReport =
-    WarningReport(msgs.head._1.show, msgs, source)
+  def apply(msgs: Ls[Message -> Opt[Loc]], extraInfo: => Opt[Any] = N, source: Source = Source.Typing): WarningReport =
+    WarningReport(msgs.head._1.show, msgs, () => extraInfo, source)
 
 final case class InternalError(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]], source: Source) extends Diagnostic(mainMsg):
   val kind: Kind = Kind.Internal
+  val mkExtraInfo: () => Opt[Any] = () => N
 object InternalError:
   def apply(msgs: Ls[Message -> Opt[Loc]], source: Source = Source.Typing): InternalError =
     InternalError(msgs.head._1.show, msgs, source)

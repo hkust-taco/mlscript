@@ -1,0 +1,43 @@
+:js
+
+
+// * Should we use this syntax?
+
+:todo
+let rcd =
+  fieldA: 1
+  fieldB:
+    "..."
+//│ ╔══[ERROR] Name not found: fieldA
+//│ ║  l.8: 	  fieldA: 1
+//│ ╙──     	  ^^^^^^
+//│ ╔══[ERROR] Name not found: fieldB
+//│ ║  l.9: 	  fieldB:
+//│ ╙──     	  ^^^^^^
+
+// * Or this syntax?
+
+:todo
+let rcd =
+  fieldA = 1
+  fieldB =
+    "..."
+//│ ╔══[ERROR] Name not found: fieldA
+//│ ║  l.22: 	  fieldA = 1
+//│ ╙──      	  ^^^^^^
+//│ ╔══[ERROR] Name not found: fieldB
+//│ ║  l.23: 	  fieldB =
+//│ ╙──      	  ^^^^^^
+
+// * Or this syntax?
+
+:todo
+let rcd = new with
+  fieldA = 1
+  fieldB =
+    "..."
+//│ ╔══[PARSE ERROR] Expected expression or block after `new` keyword; found 'with' keyword instead
+//│ ║  l.35: 	let rcd = new with
+//│ ╙──      	              ^^^^
+
+

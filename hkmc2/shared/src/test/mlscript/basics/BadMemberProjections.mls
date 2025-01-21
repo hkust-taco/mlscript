@@ -29,7 +29,7 @@
 //│   let args = globalThis.Predef.tupleSlice(args1, 1, 0);
 //│   return self.x(...args) ?? null;
 //│ })()
-//│ ═══[RUNTIME ERROR] Error: Function expected 1 arguments but got 0
+//│ ═══[RUNTIME ERROR] Error: Function expected at least 1 argument but got 0
 
 
 fun (::) f(a, b) = [a, b]

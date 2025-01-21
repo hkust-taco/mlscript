@@ -8,7 +8,7 @@ fun letreg: [E,Res] -> ([R] -> Region[R] ->{E | R} Res) ->{E} Res
 //│ Type: ⊤
 
 letreg
-//│ Type: forall 'E, 'Res: (forall 'R: (Region['R]) ->{'E ∨ 'R} 'Res) ->{'E} 'Res
+//│ Type: ['E, 'Res] -> (['R] -> (Region['R]) ->{'E ∨ 'R} 'Res) ->{'E} 'Res
 
 letreg(r => r)
 //│ Type: Region[?]
@@ -20,11 +20,11 @@ letreg(r => r).ref 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'Res  <:  Region['reg]
 //│ ╟── because: cannot constrain  'Res  <:  ¬(¬{Region['reg]})
-//│ ╟── because: cannot constrain  Region[in ¬⊥ ∧ 'R out ¬⊥ ∧ 'R] ∧ ¬⊥  <:  ¬(¬{Region['reg]})
-//│ ╟── because: cannot constrain  'R  <:  'reg
-//│ ╟── because: cannot constrain  'R  <:  'reg
-//│ ╟── because: cannot constrain  'R  <:  ¬(¬'R)
-//│ ╟── because: cannot constrain  'R  <:  ¬(¬'R)
+//│ ╟── because: cannot constrain  Region[in ¬⊥ ∧ 'R out ¬⊥ ∧ 'R1] ∧ ¬⊥  <:  ¬(¬{Region['reg]})
+//│ ╟── because: cannot constrain  'R1  <:  'reg
+//│ ╟── because: cannot constrain  'R1  <:  'reg
+//│ ╟── because: cannot constrain  'R1  <:  ¬(¬'R)
+//│ ╟── because: cannot constrain  'R1  <:  ¬(¬'R)
 //│ ╟── because: cannot constrain    <:  ¬(¬'R)
 //│ ╟── because: cannot constrain    <:  'R
 //│ ╙── because: cannot constrain    <:  ¬()
@@ -33,8 +33,8 @@ letreg(r => r).ref 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'E  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ¬()
-//│ ╟── because: cannot constrain  'R  <:  ¬()
-//│ ╟── because: cannot constrain  'R  <:  ¬()
+//│ ╟── because: cannot constrain  'R1  <:  ¬()
+//│ ╟── because: cannot constrain  'R1  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Ref[Int, ?]
 

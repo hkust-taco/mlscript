@@ -19,7 +19,7 @@ ThisBuild / scalacOptions ++= Seq(
 )
 
 lazy val root = project.in(file("."))
-  .aggregate(mlscriptJS, mlscriptJVM, ts2mlsTest, compilerJVM, hkmc2JS, hkmc2JVM, coreJS, coreJVM)
+  .aggregate(mlscriptJS, mlscriptJVM, ts2mlsTest, compilerJVM, hkmc2AllTests, coreJS, coreJVM)
   .settings(
     publish := {},
     publishLocal := {},
@@ -49,8 +49,6 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
       baseDirectory.value.getParentFile()/"shared"/"src"/"test"/"mlscript", "*.mls", NothingFilter),
     watchSources += WatchSource(
       baseDirectory.value.getParentFile()/"shared"/"src"/"test"/"mlscript", "*.cmd", NothingFilter),
-    
-    Test/run/fork := true, // so that CTRL+C actually terminates the watcher
   )
   .jvmSettings(
   )
@@ -58,6 +56,22 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
 
 lazy val hkmc2JVM = hkmc2.jvm
 lazy val hkmc2JS = hkmc2.js
+
+lazy val hkmc2DiffTests = project.in(file("hkmc2DiffTests"))
+  .dependsOn(hkmc2JVM)
+  .settings(
+    scalaVersion := scala3Version,
+    
+    libraryDependencies += "org.scalactic" %%% "scalactic" % "3.2.18",
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.18" % "test",
+    
+    Test/run/fork := true, // so that CTRL+C actually terminates the watcher
+  )
+
+lazy val hkmc2AllTests = project.in(file("hkmc2AllTests"))
+  .settings(
+    Test / test := ((hkmc2DiffTests / Test / test) dependsOn (hkmc2JVM / Test / test)).value
+  )
 
 lazy val core = crossProject(JSPlatform, JVMPlatform).in(file("core"))
   .settings(

@@ -8,7 +8,7 @@ fun f(y) =
 
 // * the parameter type of y is extruded.
 f
-//│ Type: forall 'y: 'y -> 'y
+//│ Type: ['y] -> 'y -> 'y
 //│ Where:
 //│   'y <: ⊤ -> Int
 
@@ -28,7 +28,7 @@ fun g(y) =
 //│ Type: ⊤
 
 g
-//│ Type: (forall 'A: (⊥) ->{⊥} Int) ->{⊥} forall 'A: (⊤) ->{⊥} Int
+//│ Type: ((⊤) ->{⊥} Int) ->{⊥} (⊤) ->{⊥} Int
 
 g(foo)
 //│ Type: (⊤) ->{⊥} Int
@@ -41,8 +41,8 @@ y `=> (let t = run(x `=> x `+ y) in y)
 //│ ╟── because: cannot constrain  CodeBase[out 'x -> 'cde, out 'ctx, ?]  <:  CodeBase[out 'T, ⊥, ?]
 //│ ╟── because: cannot constrain  'ctx  <:  ⊥
 //│ ╟── because: cannot constrain  'ctx  <:  ¬()
-//│ ╟── because: cannot constrain  (¬⊥ ∧ ¬'x) ∧ y  <:  ¬()
-//│ ╟── because: cannot constrain  y  <:  'x
+//│ ╟── because: cannot constrain  (¬⊥ ∧ ¬'x1) ∧ y  <:  ¬()
+//│ ╟── because: cannot constrain  y  <:  'x1
 //│ ╙── because: cannot constrain  y  <:  ¬()
 //│ Type: CodeBase[out 'y -> 'y, ⊥, ?]
 //│ Where:
@@ -54,11 +54,11 @@ class C[A](m: A, n: A -> Int)
 
 fun f: [A] -> ([B] -> (C[out B] & A) -> B) -> A -> Int
 f
-//│ Type: forall 'A: (forall 'B: (C[out 'B] ∧ 'A) ->{⊥} 'B) ->{⊥} ('A) ->{⊥} Int
+//│ Type: ['A] -> (['B] -> (C[out 'B] ∧ 'A) ->{⊥} 'B) ->{⊥} ('A) ->{⊥} Int
 
 fun g: [D] -> C[in Int out D] -> D
 g
-//│ Type: forall 'D: (C[in Int out 'D]) ->{⊥} 'D
+//│ Type: ['D] -> (C[in Int out 'D]) ->{⊥} 'D
 
 
 f(g)
@@ -85,8 +85,8 @@ f(g)(bar)
 //│ ╟── because: cannot constrain  C[in Int out Int]  <:  ¬C[in ⊥ out ¬⊥ ∧ 'B] ∨ C[in Int out ¬⊥ ∧ 'D]
 //│ ╟── because: cannot constrain  (Int) ∧ ('B)  <:  ¬⊥ ∧ 'D
 //│ ╟── because: cannot constrain  Int ∧ 'B  <:  'D
-//│ ╟── because: cannot constrain  Int ∧ 'B  <:  'B
-//│ ╟── because: cannot constrain  Int ∧ 'B  <:  'B
+//│ ╟── because: cannot constrain  Int ∧ 'B  <:  'B1
+//│ ╟── because: cannot constrain  Int ∧ 'B  <:  'B1
 //│ ╟── because: cannot constrain  Int ∧ 'B  <:  ¬()
 //│ ╟── because: cannot constrain  'B  <:  ¬(Int)
 //│ ╙── because: cannot constrain    <:  ¬(Int)

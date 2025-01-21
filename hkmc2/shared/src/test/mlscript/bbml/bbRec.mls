@@ -15,7 +15,7 @@ fun f x = f
 
 fun f(x) = f
 f
-//│ Type: forall 'f: ⊤ -> (⊤ -> 'f)
+//│ Type: ['f] -> ⊤ -> (⊤ -> 'f)
 //│ Where:
 //│   ⊤ -> 'f <: 'f
 
@@ -55,7 +55,7 @@ fun f(x) = f(Foo.a(x))
 
 fun f(x) = f(x.Foo#a)
 f
-//│ Type: forall 'x: Foo[out 'x] -> ⊥
+//│ Type: ['x] -> Foo[out 'x] -> ⊥
 //│ Where:
 //│   'x <: Foo[out 'x]
 
