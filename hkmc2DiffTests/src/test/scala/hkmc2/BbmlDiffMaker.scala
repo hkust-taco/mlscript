@@ -28,14 +28,15 @@ abstract class BbmlDiffMaker extends JSBackendDiffMaker:
     given Elaborator.Ctx = curCtx
     bbml.BbCtx.init(_ => die)
   
-  
+  var bbmlTyper: Opt[BBTyper] = None
   
   
   override def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Raise): Unit =
     super.processTerm(trm, inImport)
     if bbmlOpt.isSet then
       given Scope = Scope.empty
-      val bbmlTyper = S(BBTyper())
+      if bbmlTyper.isEmpty then
+        bbmlTyper = S(BBTyper())
       given hkmc2.bbml.BbCtx = bbCtx.copy(raise = summon)
       val typer = bbmlTyper.get
       val ty = typer.typePurely(trm)

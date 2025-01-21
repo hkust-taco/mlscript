@@ -8,13 +8,13 @@
 
 
 (x => x): [A restricts Int] -> A -> A
-//│ Type: forall 'A: ('A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
 //│ Where:
 //│   Int <: 'A
 
 
 (x => x - 1): [A extends Int restricts Int] -> A -> A
-//│ Type: forall 'A: ('A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
 //│ Where:
 //│   Int <: 'A
 //│   'A <: Int
@@ -24,7 +24,7 @@ fun iid(x) = x
 //│ Type: ⊤
 
 iid
-//│ Type: forall 'A: ('A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
 //│ Where:
 //│   'A <: Int
 
@@ -47,7 +47,7 @@ class Foo[A]
 
 fun foo: [A extends Foo[in Nothing out Any] restricts Foo[in Num]] -> A -> A
 foo
-//│ Type: forall 'A: ('A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
 //│ Where:
 //│   Foo[in Num] <: 'A
 //│   'A <: Foo[?]
@@ -73,7 +73,7 @@ baz
 
 fun bazbaz: [A extends Int] -> A -> [B extends A] -> B
 bazbaz
-//│ Type: (Int) ->{⊥} forall 'B: ⊥
+//│ Type: (Int) ->{⊥} ⊥
 
 fun foofun: [A extends Int -> Int restricts Any -> Int] -> A -> Int -> Int
 foofun
@@ -84,7 +84,7 @@ foofun(x => x + 1)(42)
 
 fun bazbaz: [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
 bazbaz
-//│ Type: forall 'A: ('A) ->{⊥} (forall 'B: 'A -> 'A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} ('A -> 'A) ->{⊥} 'A
 //│ Where:
 //│   'A <: Int
 
@@ -93,7 +93,7 @@ bazbaz(42)(x => x + 1)
 
 fun cc: [A extends B -> B restricts B -> B, B extends A -> A restricts A -> A] -> A -> B -> Bool
 cc
-//│ Type: forall 'A, 'B: ('A) ->{⊥} ('B) ->{⊥} Bool
+//│ Type: ['A, 'B] -> ('A) ->{⊥} ('B) ->{⊥} Bool
 //│ Where:
 //│   'A -> 'A <: 'B
 //│   'B <: 'A -> 'A
@@ -111,16 +111,16 @@ fun h: [C] -> ([A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B
 
 :e
 bazbaz: [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
-//│ ╔══[ERROR] Cannot type non-function term SynthSel(Ref(globalThis:block#17),Ident(bazbaz)) as (A) ->{⊥} (forall 'B: 'B) ->{⊥} A
+//│ ╔══[ERROR] Cannot type non-function term SynthSel(Ref(globalThis:block#17),Ident(bazbaz)) as (A) ->{⊥} ([outer, 'B] -> 'B) ->{⊥} A
 //│ ║  l.113: 	bazbaz: [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
 //│ ╙──       	^^^^^^
-//│ Type: forall 'A: ('A) ->{⊥} (forall 'B: 'A -> 'A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} ('A -> 'A) ->{⊥} 'A
 //│ Where:
 //│   'A <: Int
 
 
 (x => f => bazbaz(x)(f)): [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
-//│ Type: forall 'A: ('A) ->{⊥} (forall 'B: 'A -> 'A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} ('A -> 'A) ->{⊥} 'A
 //│ Where:
 //│   'A <: Int
 

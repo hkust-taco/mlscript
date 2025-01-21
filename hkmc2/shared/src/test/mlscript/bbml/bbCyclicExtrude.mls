@@ -5,18 +5,18 @@
 
 
 let f = (x => (x : [A] -> A -> A)) in f
-//│ Type: (⊤ -> ⊥) ->{⊥} forall 'A: ('A) ->{⊥} 'A
+//│ Type: (⊤ -> ⊥) ->{⊥} ['A] -> ('A) ->{⊥} 'A
 
 let f = ((x => x) : [A] -> A -> A) in f
-//│ Type: forall 'A: ('A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
 
 let foo = f => (x => f(x(x)) : [A] -> A -> A) in foo
-//│ Type: ('app -> (⊤ -> ⊥)) ->{⊥} ('x -> 'app) ->{⊥} forall 'A: ('A) ->{⊥} 'A
+//│ Type: ('app -> (⊤ -> ⊥)) ->{⊥} ('x -> 'app) ->{⊥} ['A] -> ('A) ->{⊥} 'A
 //│ Where:
 //│   'x <: 'x -> 'app
 
 f => (let g = x => x(x) in f(g(g))) : [A] -> A -> A
-//│ Type: (⊥ -> (⊤ -> ⊥)) ->{⊥} forall 'A: ('A) ->{⊥} 'A
+//│ Type: (⊥ -> (⊤ -> ⊥)) ->{⊥} ['A] -> ('A) ->{⊥} 'A
 
 :e
 f => (let g = x => f(x(x)) in g) : [A] -> A -> A
@@ -27,34 +27,34 @@ f => (let g = x => f(x(x)) in g) : [A] -> A -> A
 //│ ╟── because: cannot constrain  A  <:  'x
 //│ ╟── because: cannot constrain  A  <:  'x
 //│ ╙── because: cannot constrain  A  <:  ¬(¬{'x ->{'eff1} 'app1})
-//│ Type: (⊥ -> ⊥) ->{⊥} forall 'A: ('A) ->{⊥} 'A
+//│ Type: (⊥ -> ⊥) ->{⊥} ['A] -> ('A) ->{⊥} 'A
 
 f => (x => f(x(x)) : [A] -> A -> A)
-//│ Type: ('app -> (⊤ -> ⊥)) ->{⊥} ('x -> 'app) ->{⊥} forall 'A: ('A) ->{⊥} 'A
+//│ Type: ('app -> (⊤ -> ⊥)) ->{⊥} ('x -> 'app) ->{⊥} ['A] -> ('A) ->{⊥} 'A
 //│ Where:
 //│   'x <: 'x -> 'app
 
 let foo = f => (f(x => x(x)) : [A] -> A -> A) in foo
-//│ Type: ((('x ->{'eff} 'app) ->{'eff} 'app) -> (⊤ -> ⊥)) ->{⊥} forall 'A: ('A) ->{⊥} 'A
+//│ Type: ((('x ->{'eff} 'app) ->{'eff} 'app) -> (⊤ -> ⊥)) ->{⊥} ['A] -> ('A) ->{⊥} 'A
 //│ Where:
 //│   'x <: 'x ->{'eff} 'app
 
 :todo
 let foo(f) = (f(x => x(x)) : [A] -> A -> A) in foo
-//│ Type: ((('x ->{'eff} 'app) ->{'eff} 'app) -> (⊤ -> ⊥)) ->{⊥} forall 'A: ('A) ->{⊥} 'A
+//│ Type: ((('x ->{'eff} 'app) ->{'eff} 'app) -> (⊤ -> ⊥)) ->{⊥} ['A] -> ('A) ->{⊥} 'A
 //│ Where:
 //│   'x <: 'x ->{'eff} 'app
 
 :todo
 fun foo(f) = (f(x => x(x)) : [A] -> A -> A)
-//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but ('f) ->{⊥} forall 'A: ('A) ->{⊥} 'A found
+//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but ('f) ->{⊥} [outer, 'A] -> ('A) ->{⊥} 'A found
 //│ ║  l.49: 	fun foo(f) = (f(x => x(x)) : [A] -> A -> A)
 //│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
 
 f => (let g = x => x(x) in let tmp = g(g) in f(g)) : [A] -> A -> A
-//│ Type: (((('x ∨ ('x ->{'eff} 'app)) -> 'app) ->{'eff} 'app) -> (⊤ -> ⊥)) ->{⊥} forall 'A: ('A) ->{⊥} 'A
+//│ Type: (((('x ∨ ('x ->{'eff} 'app)) -> 'app) ->{'eff} 'app) -> (⊤ -> ⊥)) ->{⊥} ['A] -> ('A) ->{⊥} 'A
 //│ Where:
 //│   'x <: ('x ∨ ('x ->{'eff} 'app)) -> 'app
 

@@ -21,7 +21,7 @@ enum Term extends Statement:
   case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split)(val normalized: Split)
   case Lam(params: ParamList, body: Term)
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
-  case Forall(tvs: Ls[QuantVar], body: Term)
+  case Forall(tvs: Ls[QuantVar], outer: Opt[VarSymbol], body: Term)
   case WildcardTy(in: Opt[Term], out: Opt[Term])
   case Blk(stats: Ls[Statement], res: Term)
   case Quoted(body: Term)
@@ -60,7 +60,7 @@ enum Term extends Statement:
     case IfLike(Keyword.`while`, body) => "`while` expression"
     case Lam(params, body) => "function literal"
     case FunTy(lhs, rhs, eff) => "function type"
-    case Forall(tvs, body) => "universal quantification"
+    case Forall(tvs, outer, body) => "universal quantification"
     case WildcardTy(in, out) => "wildcard type"
     case Blk(stats, res) => "block"
     case Quoted(term) => "quoted term"
@@ -108,7 +108,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Asc(term, ty) => term :: ty :: Nil
     case Ret(res) => res :: Nil
     case Throw(res) => res :: Nil
-    case Forall(_, body) => body :: Nil
+    case Forall(_, _, body) => body :: Nil
     case WildcardTy(in, out) => in.toList ++ out.toList
     case CompType(lhs, rhs, _) => lhs :: rhs :: Nil
     case LetDecl(sym, annotations) => annotations.flatMap(_.subTerms)
@@ -167,7 +167,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case FunTy(lhs, rhs, eff) =>
       s"(...${lhs.showDbg}) ->${eff.map(e => s"{${e.showDbg}}").getOrElse("")} ${rhs.showDbg}"
     case TyApp(lhs, targs) => s"${lhs.showDbg}[${targs.mkString(", ")}]"
-    case Forall(tvs, body) => s"forall ${tvs.mkString(", ")}: ${body.toString}"
+    case Forall(tvs, outer, body) => s"forall ${tvs.mkString(", ")}${outer.map(v => s", outer $v").mkString}: ${body.toString}"
     case WildcardTy(in, out) => s"in ${in.map(_.toString).getOrElse("⊥")} out ${out.map(_.toString).getOrElse("⊤")}"
     case Sel(pre, nme) => s"${pre.showDbg}.${nme.name}"
     case SynthSel(pre, nme) => s"${pre.showDbg}(.)${nme.name}"
@@ -189,6 +189,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Assgn(lhs, rhs) => s"${lhs.showDbg} := ${rhs.showDbg}"
     case SetRef(lhs, rhs) => s"${lhs.showDbg} := ${rhs.showDbg}"
     case Deref(term) => s"!$term"
+    case Neg(ty) => s"~${ty.showDbg}"
     case CompType(lhs, rhs, pol) => s"${lhs.showDbg} ${if pol then "|" else "&"} ${rhs.showDbg}"
     case Error => "<error>"
     case Tup(fields) => fields.map(_.showDbg).mkString("[", ", ", "]")
@@ -353,7 +354,12 @@ final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool, mod: Bool):
     flags.mkString(" ")
   override def toString: String = "‹" + showDbg + "›"
 
-object FldFlags { val empty: FldFlags = FldFlags(false, false, false, false) }
+object FldFlags:
+  val empty: FldFlags = FldFlags(false, false, false, false)
+  object benign:
+    // * Some flags like `mut` and `module` are "benign" in the sense that they don't affect code-gen
+    def unapply(flags: FldFlags): Bool =
+      !flags.spec && !flags.genGetter
 
 
 sealed abstract class Elem:
@@ -361,6 +367,8 @@ sealed abstract class Elem:
     case Fld(_, term, asc) => term :: asc.toList
     case Spd(_, term) => term :: Nil
   def showDbg: Str
+object Elem:
+  given Conversion[Term, Elem] = PlainFld(_)
 final case class Fld(flags: FldFlags, term: Term, asc: Opt[Term]) extends Elem with FldImpl
 object PlainFld:
   def apply(term: Term) = Fld(FldFlags.empty, term, N)

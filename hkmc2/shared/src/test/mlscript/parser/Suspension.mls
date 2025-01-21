@@ -1,37 +1,35 @@
-:parseOnly
+:js
 
 
-log of ...
+print of ...
 123
-//│ Parsed:
-//│ 	App(Ident(log),Tup(List(IntLit(123))))
+//│ > 123
 
-log of...
+print of...
 123
-//│ Parsed:
-//│ 	App(Ident(log),Tup(List(IntLit(123))))
+//│ > 123
 
-log of
+print of
   123
-//│ Parsed:
-//│ 	App(Ident(log),Tup(List(IntLit(123))))
+//│ > 123
+
+
+if true do...
+
+if true do...
+1
+//│ = 1
 
 
 module Option with ...
-//│ Parsed:
-//│ 	TypeDef(Mod,Ident(Option),None,Some(Block(List(UnitLit(true)))))
 
 module Option with ...
 val a = 1
-//│ Parsed:
-//│ 	TypeDef(Mod,Ident(Option),None,Some(Block(List(TermDef(ImmutVal,Ident(a),Some(IntLit(1)))))))
 
 module Option with ...
 // 
 val a = 1
 // 
-//│ Parsed:
-//│ 	TypeDef(Mod,Ident(Option),None,Some(Block(List(TermDef(ImmutVal,Ident(a),Some(IntLit(1)))))))
 
 :pt
 module A with
@@ -41,6 +39,7 @@ module A with
   val a = 1
   
   val b = 2
+  
 //│ Parsed tree:
 //│ TypeDef:
 //│   k = Mod
@@ -61,5 +60,43 @@ module A with
 //│           head = Ident of "b"
 //│           rhs = S of IntLit of 2
 
+
+fun test(x) =
+  if x then print("ok") else...
+  print("ko")
+let foo = 1
+//│ foo = 1
+
+
+:w
+x =>
+  if false then 0 else...
+  1
+let bar = 1
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.72: 	x =>
+//│ ║        	^^^^
+//│ ║  l.73: 	  if false then 0 else...
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.74: 	  1
+//│ ╙──      	^^^
+//│ bar = 1
+
+bar
+//│ = 1
+
+
+:w
+:e
+x => if false then 0 else...
+  1
+let foo = 1
+//│ ╔══[ERROR] Illegal position for '...' spread operator.
+//│ ║  l.92: 	  1
+//│ ╙──      	  ^
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.91: 	x => if false then 0 else...
+//│ ╙──      	^
+//│ foo = 1
 
 

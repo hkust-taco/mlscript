@@ -29,7 +29,7 @@ fun foo(a, ...b) = [a, ...b]
 
 :re
 foo()
-//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 arguments but got 0
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected at least 1 argument but got 0
 
 
 :todo // proper error
