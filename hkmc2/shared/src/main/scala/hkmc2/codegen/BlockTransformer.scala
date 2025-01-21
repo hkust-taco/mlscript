@@ -199,6 +199,8 @@ class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst
     case _: FunDefn | _: ClsLikeDefn => defn
     case _: ValDefn => super.applyDefn(defn)
   
+  override def applyHandler(hdr: Handler): Handler = hdr
+  
   override def applyBlock(b: Block): Block = b match
     case HandleBlock(l, res, par, cls, hdr, bod, rst) =>
       val l2 = applyLocal(l)
