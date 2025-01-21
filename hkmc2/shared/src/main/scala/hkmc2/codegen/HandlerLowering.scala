@@ -98,18 +98,20 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
         Some(res, uid)
       case _ => None
   
-  object CallPlaceholder:
-    private val callSymbol = freshTmp("callPlaceholder")
-    def apply(res: Local, uid: StateId, canRet: Bool, c: Call, rest: Block) =
+  // placeholder for effectful Results, such as Call, Instantiate and anything else that could
+  // return a continuation
+  object ResultPlaceholder:
+    private val callSymbol = freshTmp("resultPlaceholder")
+    def apply(res: Local, uid: StateId, canRet: Bool, r: Result, rest: Block) =
       Assign(
         res,
         SimpleCall(Value.Ref(callSymbol), List(Value.Lit(Tree.IntLit(uid)), Value.Lit(Tree.BoolLit(canRet)))),
-        Assign(res, c, rest))
+        Assign(res, r, rest))
     def unapply(blk: Block) = blk match
       case Assign(
           res,
           SimpleCall(Value.Ref(`callSymbol`), List(Value.Lit(Tree.IntLit(uid)), Value.Lit(Tree.BoolLit(canRet)))),
-          Assign(_, c: Call, rest)) =>
+          Assign(_, c: Result, rest)) =>
         Some(res, uid, canRet, c, rest)
       case _ => None
   
@@ -294,12 +296,18 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
         case _ => super.applyBlock(b)
       override def applyResult2(r: Result)(k: Result => Block): Block = r match
         case r @ Call(Value.Ref(_: BuiltinSymbol), _) => super.applyResult2(r)(k)
-        case c: Call =>
+        case c @ Call(fun, args) =>
           val res = freshTmp("res")
-          val fun2 = applyPath(c.fun)
+          val fun2 = applyPath(fun)
           val args2 = c.args.map(applyArg)
-          val c2 = if (fun2 is c.fun) && (args2 zip c.args).forall(_ is _) then c else Call(fun2, args2)(c.isMlsFun)
-          CallPlaceholder(res, freshId(), false, c2, k(Value.Ref(res)))
+          val c2 = if (fun2 is fun) && (args2 zip args).forall(_ is _) then c else Call(fun2, args2)(c.isMlsFun)
+          ResultPlaceholder(res, freshId(), false, c2, k(Value.Ref(res)))
+        case c @ Instantiate(cls, args) =>
+          val res = freshTmp("res")
+          val cls2 = applyPath(cls)
+          val args2 = c.args.map(applyPath)
+          val c2 = if (cls2 is cls) && (args2 zip args).forall(_ is _) then c else Instantiate(cls2, args2)
+          ResultPlaceholder(res, freshId(), false, c2, k(Value.Ref(res)))
         case r => super.applyResult2(r)(k)
       override def applyLam(lam: Value.Lam): Value.Lam = Value.Lam(lam.params, translateBlock(lam.body, functionHandlerCtx))
       override def applyDefn(defn: Defn): Defn = defn match
@@ -448,7 +456,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       .rest(handlerBody)
     
     val defn = FunDefn(sym, PlainParamList(Nil) :: Nil, body)
-    val result = Define(defn, CallPlaceholder(h.res, freshId(), true, Call(sym.asPath, Nil)(true), h.rest))
+    val result = Define(defn, ResultPlaceholder(h.res, freshId(), true, Call(sym.asPath, Nil)(true), h.rest))
     result
   
   private def genContClass(b: Block)(using HandlerCtx): Opt[ClsLikeDefn] =
@@ -471,7 +479,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       val transform = new BlockTransformerShallow(SymbolSubst()):
         override def applyBlock(b: Block): Block = b match
           case Define(_: (ClsLikeDefn | FunDefn), rst) => applyBlock(rst)
-          case CallPlaceholder(res, uid, canRet, c, rest) =>
+          case ResultPlaceholder(res, uid, canRet, c, rest) =>
             trivial = false
             blockBuilder
               .assign(res, c)
@@ -569,7 +577,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   private def genNormalBody(b: Block, clsSym: BlockMemberSymbol)(using HandlerCtx): Block =
     val transform = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
-        case CallPlaceholder(res, uid, canRet, c, rest) =>
+        case ResultPlaceholder(res, uid, canRet, c, rest) =>
           blockBuilder
             .assign(res, c)
             .ifthen(

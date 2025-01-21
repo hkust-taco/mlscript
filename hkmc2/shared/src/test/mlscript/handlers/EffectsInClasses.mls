@@ -23,6 +23,19 @@ let oops =
 oops
 //│ = 'b'
 
+let oops = 
+  handle h = Effect with
+    fun perform(arg)(k) =
+      print(arg)
+      "b"
+  new Lol(h)
+//│ > k
+//│ oops = 'b'
+
+:expect 'b'
+oops
+//│ = 'b'
+
 
 let oops = 
   handle h = Effect with
@@ -31,9 +44,9 @@ let oops =
       k("b")
   Lol(h)
 //│ > k
-//│ oops = Lol { h: Effect$h$246 {} }
+//│ oops = Lol { h: Effect$h$303 {} }
 
 oops
-//│ = Lol { h: Effect$h$246 {} }
+//│ = Lol { h: Effect$h$303 {} }
 
 
