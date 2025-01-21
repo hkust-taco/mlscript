@@ -177,8 +177,7 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
               case (acc, (sym, nme)) =>
                 doc"$acc # this.${sym.name} = $nme;"
             val ctorCode = doc"$preCtorCode${body(ctor)}"
-            val clsJS = if clsDefn.kind isnt syntax.Pat then
-              doc"class ${sym.nme}${parentSym.map(p => s" extends ${result(p)}").getOrElse("")} { #{ ${
+            val clsJS = doc"class ${sym.nme}${parentSym.map(p => s" extends ${result(p)}").getOrElse("")} { #{ ${
                 privFlds.map(f => doc" # #${f.nme};").mkDocument(doc"")
               } # constructor(${
                 ctorParams.unzip._2.mkDocument(", ")
@@ -206,32 +205,16 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
                     } + ")""""
                 }; }"""
               } #}  # }"
-              else
-              doc"{ #{ ${
-                mtds.map: 
-                  case td @ FunDefn(_, ps :: pss, bod) =>
-                    val result = pss.foldRight(bod):
-                      case (ps, block) => 
-                        Return(Lam(ps, block), false)
-                    val (params, bodyDoc) = setupFunction(some(td.sym.nme), ps, result)
-                    val mod = if clsDefn.kind is syntax.Pat then "static" else ""
-                    doc" # ${td.sym.nme}($params) ${ braced(bodyDoc) }"
-                .mkDocument(", ")
-              } #}  # }"
-            if (clsDefn.kind is syntax.Mod) || (clsDefn.kind is syntax.Obj) then
+            if (clsDefn.kind is syntax.Mod) || (clsDefn.kind is syntax.Obj) || (clsDefn.kind is syntax.Pat) then
               val clsTmp = summon[Scope].allocateName(new semantics.TempSymbol(N, sym.nme+"$"+"class"))
               clsDefn.owner match
               case S(owner) =>
-                assert(clsDefn.paramsOpt.isEmpty)
+                assert((clsDefn.kind is syntax.Pat) || clsDefn.paramsOpt.isEmpty)
                 // doc"${mkThis(owner)}.${sym.nme} = new ${clsJS}"
                 doc"const $clsTmp = ${clsJS}; # ${mkThis(owner)}.${sym.nme} = new ${clsTmp
                   }; # ${mkThis(owner)}.${sym.nme}.class = $clsTmp;"
               case N => doc"const $clsTmp = ${clsJS}; const ${sym.nme} = new ${clsTmp
                   }; # ${sym.nme}.class = $clsTmp;"
-            else if clsDefn.kind is syntax.Pat then
-              clsDefn.owner match
-              case S(owner) => doc"${mkThis(owner)}.${sym.nme} = ${clsJS};"
-              case N => doc"const ${sym.nme} = ${clsJS};"
             else
               val fun = clsDefn.paramsOpt match
                 case S(params) =>
