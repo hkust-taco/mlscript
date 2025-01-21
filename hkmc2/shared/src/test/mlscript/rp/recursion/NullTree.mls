@@ -1,0 +1,54 @@
+:js
+
+class Pair[A, B](val first: A, val second: B)
+
+pattern Null = null
+
+[null is Null, 0 is Null, false is Null]
+//│ = [ true, false, false ]
+
+pattern Tree = Null | Pair(Tree, Tree)
+
+fun (##) concat(a, b) = Pair(a, b)
+
+0 ## 1
+//│ = Pair { first: 0, second: 1 }
+
+// Positive Test Cases
+// ===================
+
+:global
+:expect true
+
+null is @compile Tree
+//│ = true
+
+null ## null is @compile Tree
+//│ = true
+
+((null ## null) ## null) is @compile Tree
+//│ = true
+
+null ## (null ## null) is @compile Tree
+//│ = true
+
+((null ## null) ## (null ## null)) is @compile Tree
+//│ = true
+
+// Negative Test Cases
+// ===================
+
+:global
+:expect false
+
+0 is @compile Tree
+//│ = false
+
+0 ## 0 is @compile Tree
+//│ = false
+
+0 ## null is @compile Tree
+//│ = false
+
+null ## 0 is @compile Tree
+//│ = false

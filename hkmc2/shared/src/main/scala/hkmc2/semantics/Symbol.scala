@@ -205,7 +205,8 @@ sealed trait InnerSymbol extends Symbol:
   def subst(using SymbolSubst): InnerSymbol
 
 class ClassSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
-    extends MemberSymbol[ClassDef] with ClassLikeSymbol with CtorSymbol with InnerSymbol:
+    extends MemberSymbol[ClassDef] with ClassLikeSymbol with CtorSymbol with InnerSymbol with NamedSymbol:
+  def name: Str = nme
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of classe here
   override def toString: Str = s"class:$nme${State.dbgUid(uid)}"
@@ -215,7 +216,8 @@ class ClassSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
   override def subst(using sub: SymbolSubst): ClassSymbol = sub.mapClsSym(this)
 
 class ModuleSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
-    extends MemberSymbol[ModuleDef] with ClassLikeSymbol with CtorSymbol with InnerSymbol:
+    extends MemberSymbol[ModuleDef] with ClassLikeSymbol with CtorSymbol with InnerSymbol with NamedSymbol:
+  def name: Str = nme
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of module here
   override def toString: Str = s"module:${id.name}${State.dbgUid(uid)}"
@@ -229,11 +231,20 @@ class TypeAliasSymbol(val id: Tree.Ident)(using State) extends MemberSymbol[Type
 
   def subst(using sub: SymbolSubst): TypeAliasSymbol = sub.mapTypeAliasSym(this)
 
-class PatternSymbol(val id: Tree.Ident)(using State)
+class PatternSymbol(val id: Tree.Ident, val params: Opt[Tree.Tup], val body: Tree)(using State)
     extends MemberSymbol[PatternDef] with CtorSymbol with InnerSymbol:
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of pattern here
   override def toString: Str = s"pattern:${id.name}"
+  /** The desugared nameless split. */
+  private var _split: Opt[ucs.DeBrujinSplit] = N
+  def split_=(split: ucs.DeBrujinSplit): Unit = _split = S(split)
+  def split: ucs.DeBrujinSplit = _split.getOrElse:
+    lastWords(s"found unelaborated pattern: $nme")
+  /** The list of pattern parameters, for example,
+    * `T` in `pattern Nullable(pattern T) = null | T`.
+    */
+  var patternParams: Ls[Param] = Nil
 
   override def subst(using sub: SymbolSubst): PatternSymbol = sub.mapPatSym(this)
 

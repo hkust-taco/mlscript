@@ -38,7 +38,7 @@ class Accounting {
       mustBeEmpty() {
         let scrut, tmp, tmp1, tmp2, tmp3, tmp4;
         scrut = this.balance > 10000;
-        if (scrut) {
+        if (scrut === true) {
           tmp = Str.concat2("> **\u2757\uFE0F** Unspent balance of ", this.name);
           tmp1 = Str.concat2(tmp, ": `");
           tmp2 = this$Accounting.display(this.balance);

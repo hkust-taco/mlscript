@@ -1,0 +1,37 @@
+:js
+
+class Pair[A, B](val first: A, val second: B)
+
+pattern Bit = 0 | 1
+
+:expect true
+0 is @compile Bit
+//│ = true
+
+:expect true
+1 is @compile Bit
+//│ = true
+
+:expect false
+42 is @compile Bit
+//│ = false
+
+pattern BitSeq = null | Pair(Bit, BitSeq)
+
+:global
+:expect true
+
+null is @compile BitSeq
+//│ = true
+
+Pair(0, null) is @compile BitSeq
+//│ = true
+
+Pair(1, Pair(0, null)) is @compile BitSeq
+//│ = true
+
+:global
+:expect false
+
+Pair(2, null) is @compile BitSeq
+//│ = false

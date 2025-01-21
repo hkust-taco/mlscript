@@ -1,0 +1,56 @@
+:js
+
+object A
+object B
+class Pair[A, B](first: A, second: B)
+
+[A, B]
+//│ = [ A { class: [class A] }, B { class: [class B] } ]
+
+// The patterns generate trees that have odd or even numbers of node `A`.
+// In this example, only leaves carry the value `A` or `B`. For each internal
+// node, the combination of its children uniquely determines the pattern.
+// Therefore, the definition is deterministic. See `EvenOddTree.mls` for a
+// non-deterministic example.
+
+pattern OddTree = A | Pair(EvenTree, OddTree) | Pair(OddTree, EvenTree)
+pattern EvenTree = B | Pair(EvenTree, EvenTree) | Pair(OddTree, OddTree)
+
+fun (#) pair(a, b) = Pair(a, b)
+
+:global
+:expect true
+
+B is @compile EvenTree
+//│ = true
+
+not of A is @compile EvenTree
+//│ = true
+
+B # B is @compile EvenTree
+//│ = true
+
+A # A is @compile EvenTree
+//│ = true
+
+(A # A) # (A # A) is @compile EvenTree
+//│ = true
+
+(A # A) # (A # A) # (A # A) is @compile EvenTree
+//│ = true
+
+((A # A) # (A # A)) # ((A # A) # (A # A)) is @compile EvenTree
+//│ = true
+
+((A # A) # (A # A)) # ((A # A) # (B # B)) is @compile EvenTree
+//│ = true
+
+:global
+:expect false
+
+((A # A) # (A # B)) # ((A # A) # (A # B)) is @compile OddTree
+//│ = false
+
+((A # A) # (A # A)) # ((A # A) # (A # B)) is @compile EvenTree
+//│ = false
+

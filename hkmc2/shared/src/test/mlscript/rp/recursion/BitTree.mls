@@ -1,0 +1,63 @@
+:js
+
+class Pair[A, B](val first: A, val second: B)
+
+pattern Bit = 0 | 1
+
+:expect true
+0 is @compile Bit
+//│ = true
+
+:expect true
+1 is @compile Bit
+//│ = true
+
+:expect false
+42 is @compile Bit
+//│ = false
+
+pattern BitTree = null | Pair(Bit | BitTree, Bit | BitTree)
+
+null is @compile BitTree
+//│ = true
+
+Pair(null, null) is @compile BitTree
+//│ = true
+
+pattern BitTreeAlt = null | Pair(BitTreeAlt | 0 | 1, BitTreeAlt | 0 | 1)
+
+:global
+:expect true
+
+null is @compile BitTreeAlt
+//│ = true
+
+Pair(null, null) is @compile BitTreeAlt
+//│ = true
+
+Pair(0, null) is @compile BitTreeAlt
+//│ = true
+
+Pair(0, Pair(0, null)) is @compile BitTreeAlt
+//│ = true
+
+Pair(0, Pair(0, Pair(1, Pair(0, null)))) is @compile BitTreeAlt
+//│ = true
+
+Pair(0, Pair(0, Pair(1, Pair(1, null)))) is @compile BitTreeAlt
+//│ = true
+
+:global
+:expect false
+
+Pair(2, Pair(0, Pair(1, null))) is @compile BitTreeAlt
+//│ = false
+
+Pair(0, Pair(0, Pair(2, null))) is @compile BitTreeAlt
+//│ = false
+
+Pair(0, Pair(0, Pair(1, Pair(2, null)))) is @compile BitTreeAlt
+//│ = false
+
+Pair(0, Pair(0, Pair(1, Pair(2, null)))) is @compile BitTreeAlt
+//│ = false

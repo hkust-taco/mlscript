@@ -189,7 +189,7 @@ if true do
 //│     return 3;
 //│   }
 //│   scrut = true;
-//│   if (scrut) {
+//│   if (scrut === true) {
 //│     res = f$0();
 //│     if (res instanceof globalThis.Predef.__EffectSig.class) {
 //│       res.tail.next = new Cont$927(1);

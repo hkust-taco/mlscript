@@ -1,0 +1,65 @@
+:js
+
+class Pair[S, T](val first: S, val second: T)
+
+object A
+object B
+
+// The patterns generate exactly those trees whose leftmost leaf is labeled `A`
+// and whose rightmost leaf is labeled `B`.
+
+pattern LaRbTree = Pair(LaTree, RbTree)
+pattern LaTree = A | Pair(A, AnyTree)
+pattern RbTree = B | Pair(AnyTree, B)
+pattern AnyTree = A | B | Pair(AnyTree, AnyTree)
+
+:global
+:expect true
+
+A is @compile LaTree
+//│ = true
+
+B is @compile RbTree
+//│ = true
+
+A is @compile AnyTree
+//│ = true
+
+B is @compile AnyTree
+//│ = true
+
+Pair(A, B) is @compile LaRbTree
+//│ = true
+
+Pair(Pair(A, A), Pair(B, B)) is @compile LaRbTree
+//│ = true
+
+Pair(Pair(A, B), B) is @compile LaRbTree
+//│ = true
+
+Pair(A, Pair(A, B)) is @compile LaRbTree
+//│ = true
+
+Pair(Pair(A, A), B) is @compile LaRbTree
+//│ = true
+
+Pair(A, Pair(B, B)) is @compile LaRbTree
+//│ = true
+
+:global
+:expect false
+
+A is @compile LaRbTree
+//│ = false
+
+B is @compile LaRbTree
+//│ = false
+
+Pair(B, A) is @compile LaRbTree
+//│ = false
+
+Pair(A, A) is @compile LaRbTree
+//│ = false
+
+Pair(B, B) is @compile LaRbTree
+//│ = false

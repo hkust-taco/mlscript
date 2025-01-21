@@ -44,9 +44,9 @@ let oops =
       k("b")
   Lol(h)
 //│ > k
-//│ oops = Lol { h: Effect$h$303 {} }
+//│ oops = Lol { h: Effect$h$307 {} }
 
 oops
-//│ = Lol { h: Effect$h$303 {} }
+//│ = Lol { h: Effect$h$307 {} }
 
 

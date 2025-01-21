@@ -105,7 +105,7 @@ inc(41)
 :sjs
 if 1 == 2 then 0 else 42
 //│ JS (unsanitized):
-//│ let scrut; scrut = 1 == 2; if (scrut) { 0 } else { 42 }
+//│ let scrut; scrut = 1 == 2; if (scrut === true) { 0 } else { 42 }
 //│ = 42
 //│ Type: Int
 
@@ -171,7 +171,7 @@ fun not = case
 //│ JS (unsanitized):
 //│ function not() {
 //│   return (caseScrut) => {
-//│     if (caseScrut) {
+//│     if (caseScrut === true) {
 //│       return false;
 //│     } else {
 //│       if (caseScrut === false) {

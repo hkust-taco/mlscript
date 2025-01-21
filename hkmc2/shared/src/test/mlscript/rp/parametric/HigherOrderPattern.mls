@@ -1,0 +1,100 @@
+:js
+
+pattern Nullable(pattern T) = null | T
+
+object A
+
+:e
+null is @compile Nullable
+//│ ╔══[ERROR] Pattern `Nullable` expects 1 pattern argument
+//│ ║  l.3: 	pattern Nullable(pattern T) = null | T
+//│ ║       	                         ^
+//│ ╟── But no arguments were given
+//│ ║  l.8: 	null is @compile Nullable
+//│ ╙──     	                 ^^^^^^^^
+//│ = false
+
+:e
+null is @compile Nullable(A, A)
+//│ ╔══[ERROR] Pattern `Nullable` expects 1 pattern argument
+//│ ║  l.3: 	pattern Nullable(pattern T) = null | T
+//│ ║       	                         ^
+//│ ╟── But 2 pattern arguments were given
+//│ ║  l.18: 	null is @compile Nullable(A, A)
+//│ ╙──      	                          ^^^^
+//│ = false
+
+pattern Nullable(pattern T) = null | T
+
+null is @compile Nullable(A)
+//│ = true
+
+A is @compile Nullable(A)
+//│ = true
+
+2 is @compile Nullable(1 | 2)
+//│ = true
+
+class Pair[A, B](val first: A, val second: B)
+
+pattern Stack(pattern T) = null | Pair(T, Stack(T))
+
+null is @compile Stack(A)
+//│ = true
+
+fun (#:) pair(a, b) = Pair(a, b)
+
+A #: null is @compile Stack(A)
+//│ = true
+
+A #: A #: null is @compile Stack(A)
+//│ = true
+
+A #: A #: A #: null is @compile Stack(A)
+//│ = true
+
+object B
+
+A #: B #: A #: null is @compile Stack(A)
+//│ = false
+
+A #: B #: A #: null is @compile Stack(B)
+//│ = false
+
+let zeroOne = 0 #: 1 #: null
+let oneZero = 1 #: 0 #: null
+//│ oneZero = Pair { first: 1, second: Pair { first: 0, second: null } }
+//│ zeroOne = Pair { first: 0, second: Pair { first: 1, second: null } }
+
+:global
+:expect true
+
+A #: B #: A #: null is @compile Stack(A | B)
+//│ = true
+
+A #: B #: A #: null is @compile Stack(B | A)
+//│ = true
+
+zeroOne is @compile Stack(0 | 1)
+//│ = true
+
+oneZero is @compile Stack(0 | 1)
+//│ = true
+
+null #: null is @compile Stack(Stack(0 | 1))
+//│ = true
+
+zeroOne #: null is @compile Stack(Stack(0 | 1))
+//│ = true
+
+null #: (1 #: null) #: null is @compile Stack(Stack(0 | 1))
+//│ = true
+
+zeroOne #: oneZero #: null is @compile Stack(Stack(0 | 1))
+//│ = true
+
+zeroOne #: null #: oneZero #: null is @compile Stack(Stack(0 | 1))
+//│ = true
+
+null #: zeroOne #: zeroOne #: null is @compile Stack(Stack(0 | 1))
+//│ = true

@@ -1,0 +1,149 @@
+:js
+
+class Pair[A, B](a: A, b: B)
+
+class Box[A](value: A)
+
+class Bowl[A](value: A)
+
+class Basket[A](value: A)
+
+class Triplet[A, B, C](a: A, b: B, c: C)
+
+pattern Everything = _
+
+0 is @compile Everything
+//│ = true
+
+pattern A = Box | Box
+
+Box(0) is @compile A
+//│ = true
+
+pattern BoxedAnswer = Box(42)
+
+Box(42) is @compile BoxedAnswer
+//│ = true
+
+pattern A_0 = Box(_) | Box(_)
+
+Box(0) is @compile A_0
+//│ = true
+
+pattern A_1 = Box | Bowl
+
+Box(0) is @compile A_1
+//│ = true
+
+Bowl(0) is @compile A_1
+//│ = true
+
+pattern A_2 = _ | Box
+
+pattern A_3 = Box | _
+
+pattern A_4 = Box(_) | Bowl(_)
+
+pattern A_3 = Box(Box) | Bowl
+
+pattern B = Box(Box) | Bowl(Box)
+
+pattern B_0 = Box(Box) | Box(Bowl)
+
+pattern C = Box(Box(Box))
+
+pattern C_1 = Box(Box | Bowl)
+
+pattern C_2 = Box(Box | Box)
+
+pattern C_2 = Box(Box | Bowl | Box)
+
+pattern D = Box(Box(Box) | Bowl)
+
+pattern D_0 = Box(Box(Box) | Box(Bowl))
+
+pattern D_1 = Box(Box(Bowl) | Box)
+
+pattern D_2 = Box(Bowl | Bowl | Bowl)
+
+pattern D_2 = Box(Box(Bowl) | Box(Basket) | Box(Box))
+
+pattern E = Box(Box(Box) | Bowl(Box(Basket)))
+
+pattern F = Pair(Pair(Box, Bowl), Pair(Box, Basket))
+
+pattern F_0 = Pair(Box, Bowl)
+
+:expect true
+Pair(Box(42), Bowl(42)) is @compile F_0
+//│ = true
+
+pattern F_1 = Pair(Box, Box) | Pair(Box, Bowl)
+
+:expect true
+Pair(Box(42), Box(42)) is @compile F_1
+//│ = true
+
+:expect true
+Pair(Box(42), Bowl(42)) is @compile F_1
+//│ = true
+
+:expect false
+Pair(Box(42), Basket(42)) is @compile F_1
+//│ = false
+
+:expect false
+Pair(Bowl(42), Bowl(42)) is @compile F_1
+//│ = false
+
+pattern G = Triplet(Triplet(Box, Bowl, Basket), Pair(0, 1), Basket)
+
+pattern G_0 = Triplet(Box, Bowl, Basket) | Triplet(Box, Bowl, Basket)
+
+pattern G_0 = Triplet(Triplet(Box, Box, Box), Bowl, Basket) | Triplet(Triplet(Box, Box, Box), Bowl, Basket)
+
+:todo
+pattern G_1 =
+  Triplet(Triplet(Box, Bowl, Box), Bowl, Basket) |
+  Triplet(Triplet(Box, Box, Box), Bowl, Basket) |
+  Triplet(Triplet(Box, Box, Bowl), Bowl, Basket)
+
+:todo
+// pattern BinSeq(pattern D) = D | Pair(0 | 1, BinSeq)
+pattern BinSeq = null | Pair(0 | 1, BinSeq)
+
+fun (::) cons(head, tail) = Pair(head, tail)
+
+0 :: null
+//│ = Pair { a: 0, b: null }
+
+[
+  null is @compile BinSeq,
+  0 :: null is @compile BinSeq,
+  0 :: 1 :: null is @compile BinSeq,
+  0 :: 1 :: 0 :: null is @compile BinSeq,
+  0 is @compile BinSeq,
+  1 is @compile BinSeq,
+  0 :: 1 :: 2 :: null is @compile BinSeq,
+]
+//│ > [
+//│ >   true,  true,
+//│ >   true,  true,
+//│ >   false, false,
+//│ >   false
+//│ = ]
+
+0 :: 1 :: 0 :: null is @compile BinSeq
+//│ = true
+
+:todo
+pattern List(a) = null | Pair(a, List)
+//│ ╔══[ERROR] Pattern extraction parameters are not yet supported.
+//│ ║  l.140: 	pattern List(a) = null | Pair(a, List)
+//│ ╙──       	             ^
+//│ ╔══[ERROR] Name not found: a
+//│ ║  l.140: 	pattern List(a) = null | Pair(a, List)
+//│ ╙──       	                              ^
+
+null is @compile List
+//│ = true

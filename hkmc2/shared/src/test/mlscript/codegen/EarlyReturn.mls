@@ -24,7 +24,7 @@ fun f(x) =
 //│ function f(x) {
 //│   let scrut, tmp, tmp1;
 //│   scrut = x < 0;
-//│   if (scrut) {
+//│   if (scrut === true) {
 //│     tmp = globalThis.log("whoops");
 //│     return 0;
 //│   } else {

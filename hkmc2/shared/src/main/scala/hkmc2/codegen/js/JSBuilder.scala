@@ -209,7 +209,7 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
               val clsTmp = summon[Scope].allocateName(new semantics.TempSymbol(N, sym.nme+"$"+"class"))
               clsDefn.owner match
               case S(owner) =>
-                assert(clsDefn.paramsOpt.isEmpty)
+                assert((clsDefn.kind is syntax.Pat) || clsDefn.paramsOpt.isEmpty)
                 // doc"${mkThis(owner)}.${sym.nme} = new ${clsJS}"
                 doc"const $clsTmp = ${clsJS}; # ${mkThis(owner)}.${sym.nme} = new ${clsTmp
                   }; # ${mkThis(owner)}.${sym.nme}.class = $clsTmp;"
@@ -250,7 +250,6 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
     case Match(scrut, hd :: tl, els, rest) =>
       val sd = result(scrut)
       def cond(cse: Case) = cse match
-        case Case.Lit(syntax.Tree.BoolLit(true)) => sd
         case Case.Lit(lit) => doc"$sd === ${lit.idStr}"
         case Case.Cls(cls, pth) => cls match
           // case _: semantics.ModuleSymbol => doc"=== ${result(pth)}"

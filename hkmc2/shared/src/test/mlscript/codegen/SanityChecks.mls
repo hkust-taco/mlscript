@@ -241,7 +241,7 @@ if M.A(1).y is
 //│ scrut = tmp1;
 //│ x = scrut;
 //│ scrut1 = x == 1;
-//│ if (scrut1) {
+//│ if (scrut1 === true) {
 //│   x
 //│ } else {
 //│   0

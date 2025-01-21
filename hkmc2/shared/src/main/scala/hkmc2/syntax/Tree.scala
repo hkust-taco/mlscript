@@ -342,7 +342,10 @@ trait TypeDefImpl(using semantics.Elaborator.State) extends TypeOrTermDef:
     case Cls => semantics.ClassSymbol(this, name.getOrElse(Ident("<error>")))
     case Mod | Obj => semantics.ModuleSymbol(this, name.getOrElse(Ident("<error>")))
     case Als => semantics.TypeAliasSymbol(name.getOrElse(Ident("<error>")))
-    case Pat => semantics.PatternSymbol(name.getOrElse(Ident("<error>")))
+    case Pat => semantics.PatternSymbol(
+      name.getOrElse(Ident("<error>")),
+      paramLists.headOption,
+      extension.getOrElse(die))
     case Trt | Mxn => ???
   
   lazy val definedSymbols: Map[Str, semantics.BlockMemberSymbol] =

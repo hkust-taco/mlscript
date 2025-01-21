@@ -50,7 +50,7 @@ const Stack$class = class Stack {
     len = arr.length;
     tmp4: while (true) {
       scrut = i < len;
-      if (scrut) {
+      if (scrut === true) {
         tmp = arr.at(i) ?? null;
         tmp1 = this.Cons(tmp, ls);
         ls = tmp1;
