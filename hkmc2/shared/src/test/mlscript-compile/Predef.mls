@@ -5,6 +5,7 @@ fun id(x) = x
 
 fun not(x) = x is false
 
+
 fun (|>) pipeInto(x, f) = f(x)
 fun (<|) pipeFrom(f, x) = f(x)
 
@@ -19,6 +20,7 @@ fun pass1(f)(...xs) = f(xs.0)
 fun pass2(f)(...xs) = f(xs.0, xs.1)
 fun pass3(f)(...xs) = f(xs.0, xs.1, xs.2)
 
+
 fun print(...xs) =
   console.log(...xs.map(String))
 
@@ -27,11 +29,40 @@ val assert = console.assert
 fun (??) notImplemented(msg) = throw Error("Not implemented: " + msg)
 fun (???) notImplementedError = throw Error("Not implemented")
 
+
+fun tuple(...xs) = xs
+
 fun tupleSlice(xs, i, j) =
   globalThis.Array.prototype.slice.call(xs, i, xs.length - j)
 
 fun tupleGet(xs, i) =
   globalThis.Array.prototype.at.call(xs, i)
+
+fun fold(f)(init, ...rest) =
+  let
+    i = 0
+    len = rest.length
+  while i < len do
+    set
+      init = f(init, rest.at(i))
+      i += 1
+  init
+
+val foldl = fold
+
+// fun foldr(f)(...rest, init) = // TODO allow this syntax
+fun foldr(f)(first, ...rest) =
+  let len = rest.length
+  if len == 0 then first else...
+  let
+    i = len - 1
+    init = rest.at(i)
+  while i > 0 do
+    set
+      i -= 1
+      init = f(rest.at(i), init)
+  f(first, init)
+
 
 fun stringStartsWith(string, prefix) = string.startsWith(prefix)
 
@@ -39,18 +70,25 @@ fun stringGet(string, i) = string.at(i)
 
 fun stringDrop(string, n) = string.slice(n)
 
+
 class MatchResult(captures)
 class MatchFailure(errors)
+
 
 fun checkArgs(functionName, expected, isUB, got) =
   if got < expected || isUB && got > expected do
     let name = if functionName.length > 0 then " '" + functionName + "'" else ""
-    throw globalThis.Error("Function" + name + " expected " + expected + " arguments but got " + got)
-    // TODO
     // throw globalThis.Error("Function" + name + " expected "
+    //   + (if isUB then "" else "at least ")
     //   + expected
-    //   + (if isUB then "" else " at least")
-    //   + " arguments but got " + got)
+    //   + " argument(s) but got " + got)
+    throw Error of fold(+) of
+      "Function", name, " expected "
+      if isUB then "" else "at least "
+      expected, " argument"
+      if expected === 1 then "" else "s"
+      " but got ", got
+
 
 module TraceLogger with
   mut val enabled = false
@@ -70,7 +108,9 @@ module TraceLogger with
       console.log("| ".repeat(indentLvl) + msg.replaceAll("\n", "\n" + "  ".repeat(indentLvl)))
     else ()
 
+
 class Test with
   print("Test")
   val y = 1
+
 

@@ -54,7 +54,7 @@ false
 //│ JS (unsanitized):
 //│ (x) => { return x; }
 //│ = [Function (anonymous)]
-//│ Type: forall 'T: ('T) ->{⊥} 'T
+//│ Type: ['T] -> ('T) ->{⊥} 'T
 
 
 :sjs

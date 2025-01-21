@@ -166,23 +166,29 @@ inc(2) * 2
   inc()) inc()
 //│ = 7
 
-// FIXME
-:fixme
 (2 * 2
   inc())
   inc()
-//│ ═══[RUNTIME ERROR] Error: Function 'inc' expected 1 arguments but got 0
+//│ = 7
 
-:fixme
+(2 * 2
+  inc()
+)
+  inc()
+//│ = 7
+
+:re
 (2 * 2
   inc())
 inc()
-//│ ╔══[PARSE ERROR] Unexpected closing indentation
-//│ ║  l.178: 	  inc())
-//│ ║         	        ^
-//│ ║  l.179: 	inc()
-//│ ╙──       	
-//│ ═══[RUNTIME ERROR] Error: Function 'inc' expected 1 arguments but got 0
+//│ ═══[RUNTIME ERROR] Error: Function 'inc' expected 1 argument but got 0
+
+:re
+(2 * 2
+  inc()
+)
+inc()
+//│ ═══[RUNTIME ERROR] Error: Function 'inc' expected 1 argument but got 0
 
 
 42
@@ -197,7 +203,7 @@ inc()
 :e
 42 console.log
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
-//│ ║  l.198: 	42 console.log
+//│ ║  l.204: 	42 console.log
 //│ ╙──       	   ^^^^^^^
 //│ = 42
 

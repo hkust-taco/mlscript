@@ -20,27 +20,34 @@ concat of
 (~)("a", "b", "c")
 //│ = 'ab'
 
+
 (~)("a")
 //│ = 'aundefined'
 
+:ge
 ~"a"
-//│ = 'a'
+//│ ╔══[COMPILATION ERROR] Unexpected type annotations ~"a"
+//│ ║  l.28: 	~"a"
+//│ ╙──      	 ^^^
 
-:w
+
+:ge
 ~("a", "b")
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.30: 	~("a", "b")
-//│ ╙──      	  ^^^
-//│ = 'b'
+//│ ╔══[COMPILATION ERROR] Unexpected type annotations ~{ "a"; "b" }
+//│ ║  l.35: 	~("a", "b")
+//│ ╙──      	       ^^^
+
 
 :pe
+:ge
 ~ of "a", "b"
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found 'of' keyword instead
-//│ ║  l.37: 	~ of "a", "b"
+//│ ║  l.43: 	~ of "a", "b"
 //│ ╙──      	  ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.37: 	~ of "a", "b"
+//│ ║  l.43: 	~ of "a", "b"
 //│ ╙──      	     ^^^
+//│ ═══[COMPILATION ERROR] Unexpected type annotations ~<error>
 
 (~) of "a", "b"
 //│ = 'ab'

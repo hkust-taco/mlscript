@@ -272,6 +272,13 @@ class ParseRules(using State):
               )
         ) { case (name, body) => Region(name, body) }
     ,
+    Kw(`outer`):
+      ParseRule("outer binding operator")(
+        Expr(
+          ParseRule("`outer` binding name")(End(()))
+        ){ (body, _: Unit) => Outer(S(body)) },
+        End(Outer(N))
+      ),
     Kw(`fun`)(termDefBody(Fun)),
     Kw(`val`)(termDefBody(ImmutVal)),
     typeAliasLike(`type`, Als),

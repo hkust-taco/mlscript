@@ -12,7 +12,7 @@ fun f(x) = x(x)
 //│ Type: ⊤
 
 f
-//│ Type: forall 'x, 'eff, 'app: ('x ->{'eff} 'app) ->{'eff} 'app
+//│ Type: ['x, 'eff, 'app] -> ('x ->{'eff} 'app) ->{'eff} 'app
 //│ Where:
 //│   'x <: 'x ->{'eff} 'app
 

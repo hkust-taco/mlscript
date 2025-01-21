@@ -26,7 +26,7 @@ class TypeTraverser:
     case ComposedType(lhs, rhs, _) =>
       apply(pol)(lhs)
       apply(pol)(rhs)
-    case PolyType(tv, body) =>
+    case PolyType(tv, outer, body) =>
       apply(pol)(body)
     case PolyFunType(args, ret, eff) =>
       args.foreach(apply(!pol))

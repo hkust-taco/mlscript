@@ -368,12 +368,19 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
   /** Converts the lexed tokens into structured tokens. */
   lazy val bracketedTokens: Ls[Stroken -> Loc] =
     import BracketKind._
-    def go(toks: Ls[Token -> Loc], canStartAngles: Bool, stack: Ls[BracketKind -> Loc -> Ls[Stroken -> Loc]], acc: Ls[Stroken -> Loc]): Ls[Stroken -> Loc] =
+    def go(
+        toks: Ls[Token -> Loc],
+        canStartAngles: Bool,
+        stack: Ls[BracketKind -> Loc -> Ls[Stroken -> Loc]],
+        acc: Ls[Stroken -> Loc],
+    ): Ls[Stroken -> Loc] =
       toks match
         case (SUSPENSION(true), l0) :: Nil =>
+          // * This is an ugly special-case to handle things like `module M with ...`
+          // * where there is no actual body after the `...`.
+          // * It can't be handled in the parser because this is only valid at the top-level,
+          // * not within brackets, as in `(arg0, ...) => blah`.
           go(OPEN_BRACKET(Indent) -> l0 :: LITVAL(Tree.UnitLit(true)) -> l0 :: Nil, false, stack, acc)
-        case (SUSPENSION(true), l0) :: (NEWLINE, l1) :: rest =>
-          go(OPEN_BRACKET(Indent) -> (l0 ++ l1) :: rest, false, stack, acc)
         case (QUOTE, l0) :: (IDENT("<", true), l1) :: rest =>
           go(rest, false, stack, (IDENT("<", true), l1) :: (QUOTE, l0) :: acc)
         case (QUOTE, l0) :: (IDENT(">", true), l1) :: rest =>
@@ -383,7 +390,14 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
         case (CLOSE_BRACKET(k1), l1) :: rest =>
           stack match
             case ((Indent, loc), oldAcc) :: _ if k1 =/= Indent =>
-              go(CLOSE_BRACKET(Indent) -> l1.left :: toks, false, stack, acc)
+              // * Sometimes, open/close parentheses are interleaved with indent/deindent; eg in
+              // *   module P with
+              // *     (
+              // *       2)
+              // *     1
+              // * which results in token stream `|module| |P| |with|→|(|→|2|)|←|↵|1|`.
+              // * So this code commutes the indent/deindent with the open/close parentheses.
+              go(CLOSE_BRACKET(Indent) -> l1.left :: (CLOSE_BRACKET(k1), l1) :: OPEN_BRACKET(Indent) -> l1.right :: rest, false, stack, acc)
             case ((Indent, loc), oldAcc) :: stack
             if k1 === Indent && acc.forall { case (SPACE | NEWLINE, _) => true; case _ => false } =>
               // * Ignore empty indented blocks:

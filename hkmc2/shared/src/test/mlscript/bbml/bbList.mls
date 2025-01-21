@@ -65,9 +65,9 @@ fun mapi = s =>
 //│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'r  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  'r  <:  ¬(¬E)
-//│ ╙── because: cannot constrain    <:  ¬(¬E)
+//│ ╟── because: cannot constrain  (¬⊥ ∧ 'r) ∧ ¬outer  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'r  <:  ¬(¬E ∧ ¬outer)
+//│ ╙── because: cannot constrain  ¬outer  <:  ¬(¬E ∧ ¬outer)
 //│ ╔══[ERROR] Type error in region expression with expected type ((Int, A) ->{E} A) ->{E} List[out A]
 //│ ║  l.50: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
@@ -82,9 +82,9 @@ fun mapi = s =>
 //│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'r  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  'r  <:  ¬(¬E)
-//│ ╙── because: cannot constrain    <:  ¬(¬E)
+//│ ╟── because: cannot constrain  (¬⊥ ∧ 'r) ∧ ¬outer  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'r  <:  ¬(¬E ∧ ¬outer)
+//│ ╙── because: cannot constrain  ¬outer  <:  ¬(¬E ∧ ¬outer)
 //│ ╔══[ERROR] Type error in region expression with expected type ((Int, A) ->{E} A) ->{E} List[out A]
 //│ ║  l.50: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
@@ -99,9 +99,9 @@ fun mapi = s =>
 //│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'r  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  'r  <:  ¬(¬E)
-//│ ╙── because: cannot constrain    <:  ¬(¬E)
+//│ ╟── because: cannot constrain  (¬⊥ ∧ 'r) ∧ ¬outer  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'r  <:  ¬(¬E ∧ ¬outer)
+//│ ╙── because: cannot constrain  ¬outer  <:  ¬(¬E ∧ ¬outer)
 //│ Type: ⊤
 
 

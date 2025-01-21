@@ -1,6 +1,7 @@
 const Predef$class = class Predef {
   constructor() {
     this.assert = console.assert;
+    this.foldl = this.fold;
     this.MatchResult = function MatchResult(captures1) { return new MatchResult.class(captures1); };
     this.MatchResult.class = class MatchResult {
       constructor(captures) {
@@ -138,13 +139,70 @@ const Predef$class = class Predef {
   get notImplementedError() {
     throw Error("Not implemented");
   } 
-  tupleSlice(xs1, i, j) {
-    let tmp;
-    tmp = xs1.length - j;
-    return globalThis.Array.prototype.slice.call(xs1, i, tmp) ?? null;
+  tuple(...xs1) {
+    return xs1;
   } 
-  tupleGet(xs2, i1) {
-    return globalThis.Array.prototype.at.call(xs2, i1);
+  tupleSlice(xs2, i, j) {
+    let tmp;
+    tmp = xs2.length - j;
+    return globalThis.Array.prototype.slice.call(xs2, i, tmp) ?? null;
+  } 
+  tupleGet(xs3, i1) {
+    return globalThis.Array.prototype.at.call(xs3, i1);
+  } 
+  fold(f9) {
+    return (init, ...rest) => {
+      let i2, len, scrut, tmp, tmp1, tmp2, tmp3;
+      i2 = 0;
+      len = rest.length;
+      tmp4: while (true) {
+        scrut = i2 < len;
+        if (scrut) {
+          tmp = rest.at(i2) ?? null;
+          tmp1 = f9(init, tmp) ?? null;
+          init = tmp1;
+          tmp2 = i2 + 1;
+          i2 = tmp2;
+          tmp3 = null;
+          continue tmp4;
+        } else {
+          tmp3 = null;
+        }
+        break;
+      }
+      return init;
+    };
+  } 
+  foldr(f10) {
+    return (first, ...rest) => {
+      let len, i2, init, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+      len = rest.length;
+      scrut1 = len == 0;
+      if (scrut1) {
+        return first;
+      } else {
+        tmp = len - 1;
+        i2 = tmp;
+        tmp1 = rest.at(i2) ?? null;
+        init = tmp1;
+        tmp6: while (true) {
+          scrut = i2 > 0;
+          if (scrut) {
+            tmp2 = i2 - 1;
+            i2 = tmp2;
+            tmp3 = rest.at(i2) ?? null;
+            tmp4 = f10(tmp3, init) ?? null;
+            init = tmp4;
+            tmp5 = null;
+            continue tmp6;
+          } else {
+            tmp5 = null;
+          }
+          break;
+        }
+        return f10(first, init) ?? null;
+      }
+    };
   } 
   stringStartsWith(string, prefix) {
     return string.startsWith(prefix) ?? null;
@@ -156,7 +214,7 @@ const Predef$class = class Predef {
     return string2.slice(n) ?? null;
   } 
   checkArgs(functionName, expected, isUB, got) {
-    let scrut, name, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
+    let scrut, name, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
     tmp = got < expected;
     tmp1 = got > expected;
     tmp2 = isUB && tmp1;
@@ -170,12 +228,22 @@ const Predef$class = class Predef {
         tmp4 = "";
       }
       name = tmp4;
-      tmp5 = "Function" + name;
-      tmp6 = tmp5 + " expected ";
-      tmp7 = tmp6 + expected;
-      tmp8 = tmp7 + " arguments but got ";
-      tmp9 = tmp8 + got;
-      throw globalThis.Error(tmp9) ?? null;
+      tmp5 = this.fold((arg1, arg2) => {
+        return arg1 + arg2;
+      });
+      if (isUB) {
+        tmp6 = "";
+      } else {
+        tmp6 = "at least ";
+      }
+      scrut2 = expected === 1;
+      if (scrut2) {
+        tmp7 = "";
+      } else {
+        tmp7 = "s";
+      }
+      tmp8 = tmp5("Function", name, " expected ", tmp6, expected, " argument", tmp7, " but got ", got) ?? null;
+      throw Error(tmp8);
     } else {
       return null;
     }

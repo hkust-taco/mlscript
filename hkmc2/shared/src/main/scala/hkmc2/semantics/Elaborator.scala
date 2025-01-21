@@ -117,7 +117,11 @@ object Elaborator:
     val globalThisSymbol = TopLevelSymbol("globalThis")
     val builtinOpsMap =
       val baseBuiltins = builtins.map: op =>
-          op -> BuiltinSymbol(op, binary = binaryOps(op), unary = unaryOps(op), nullary = false, functionLike = anyOps(op))
+          op -> BuiltinSymbol(op,
+            binary = binaryOps(op),
+            unary = unaryOps(op),
+            nullary = false,
+            functionLike = anyOps(op))
         .toMap
       baseBuiltins ++ aliasOps.map:
         case (alias, base) => alias -> baseBuiltins(base)
@@ -264,14 +268,24 @@ extends Importer:
         case InfixApp(id: Tree.Ident, Keyword.`restricts`, lb) => (genSym(id), N, S(lb))
         case InfixApp(InfixApp(id: Tree.Ident, Keyword.`extends`, ub), Keyword.`restricts`, lb) => (genSym(id), S(ub), S(lb))
       )
-      if syms.length != tvs.length then
+      val outer = (tvs.collect:
+        case Outer(S(name: Tree.Ident)) => genSym(name)
+        case Outer(N) => genSym(Tree.Ident("outer"))
+      ) match
+        case ot :: Nil => S(ot)
+        case _ :: rest =>
+          raise(ErrorReport(msg"Only one outer variable can be bound." -> tree.toLoc :: Nil))
+          N
+        case Nil => N
+      
+      if syms.length + outer.count(_ => true) != tvs.length then
         raise(ErrorReport(msg"Illegal forall annotation." -> tree.toLoc :: Nil))
         Term.Error
       else
         val nestCtx = ctx ++ boundVars
         val bds = syms.map:
           case (sym, ub, lb) => QuantVar(sym, ub.map(ub => term(ub)(using nestCtx)), lb.map(lb => term(lb)(using nestCtx)))
-        Term.Forall(bds, term(body)(using nestCtx))
+        Term.Forall(bds, outer, term(body)(using nestCtx))
     case InfixApp(lhs, Keyword.`->`, Effectful(eff, rhs)) =>
       Term.FunTy(term(lhs), term(rhs), S(term(eff)))
     case InfixApp(lhs, Keyword.`->`, rhs) =>
@@ -333,7 +347,7 @@ extends Importer:
     case App(Ident("!"), Tree.Tup(rhs :: Nil)) =>
       Term.Deref(term(rhs))
     case App(Ident("~"), Tree.Tup(rhs :: Nil)) =>
-      term(rhs)
+      Term.Neg(term(rhs))
     case tree @ App(lhs, OpBlock(ops)) =>
       ops.foldLeft(term(lhs)):
         case (acc, (op, arg)) =>
@@ -459,6 +473,14 @@ extends Importer:
       val nestCtx = ctx + (id.name -> sym)
       Term.Region(sym, term(body)(using nestCtx))
     case Tree.RegRef(reg, value) => Term.RegRef(term(reg), term(value))
+    case Outer(S(_)) =>
+      raise(ErrorReport(msg"Illegal outer binding." -> tree.toLoc :: Nil))
+      Term.Error
+    case Outer(N) => ctx.get("outer") match
+      case S(sym) => sym.ref(Tree.Ident("outer"))
+      case N =>
+        raise(ErrorReport(msg"Illegal outer reference." -> tree.toLoc :: Nil))
+        Term.Error
     case Empty() =>
       raise(ErrorReport(msg"A term was expected in this position, but no term was found." -> tree.toLoc :: Nil))
       Term.Error
@@ -1113,7 +1135,7 @@ extends Importer:
         traverseType(pol.!)(l)
         traverseType(pol)(r)
         e.foreach(e => traverseType(pol)(e))
-      case Term.Forall(_, body) =>
+      case Term.Forall(_, _, body) =>
         traverseType(pol)(body)
       case Term.WildcardTy(in, out) =>
         in.foreach(t => traverseType(pol.!)(t))
@@ -1125,6 +1147,8 @@ extends Importer:
         // fields.foreach(f => traverseType(pol)(f.value))
         fields.foreach(traverseType(pol))
       // case _ => ???
+      case Term.Neg(ty) => 
+        traverseType(pol.!)(ty)
     def traverseType(pol: Pol)(f: Elem): Unit = f match
       case f: Fld =>
         traverseType(pol)(f.term)

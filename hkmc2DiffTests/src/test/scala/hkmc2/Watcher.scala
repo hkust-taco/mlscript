@@ -1,6 +1,8 @@
 package hkmc2
 
 import scala.collection.mutable
+import scala.jdk.CollectionConverters.*
+
 import mlscript.utils.*, shorthands.*
 
 import better.files.*
@@ -11,13 +13,15 @@ import java.time.LocalDateTime
 import java.time.temporal._
 
 // Note: when SBT's `fork` is set to `false`, the path should be `File("hkmc2/")` instead...
-object MainWatcher extends Watcher(File("../")):
+// * Only the first path can contain tests. The other paths are only watched for source changes.
+object MainWatcher extends Watcher(File("../hkmc2/shared/src") :: File("./src") :: Nil):
   def main(args: Array[String]): Unit = run
 
-class Watcher(dir: File):
-  val dirPath = os.Path(dir.pathAsString)
+class Watcher(dirs: Ls[File]):
+  val dirPaths = dirs.map(d => os.Path(d.pathAsString))
   
-  println((fansi.Color.Blue("Watching directory ") ++ fansi.Color.DarkGray(dir.toString)).toString)
+  dirs.foreach: dir =>
+    println((fansi.Color.Blue("Watching directory ") ++ fansi.Color.DarkGray(dir.toString)).toString)
   
   val fileHashes = mutable.Map.empty[File, FileHash]
   val completionTime = mutable.Map.empty[File, LocalDateTime]
@@ -25,7 +29,7 @@ class Watcher(dir: File):
   
   val watcher: DirectoryWatcher = DirectoryWatcher.builder()
     .logger(org.slf4j.helpers.NOPLogger.NOP_LOGGER)
-    .path(dir.toJava.toPath)
+    .paths(dirs.map(_.toJava.toPath).asJava)
     .fileHashing(false) // so that simple save events trigger processing eve if there's no file change
     .listener(new io.methvin.watcher.DirectoryChangeListener {
       def onEvent(event: io.methvin.watcher.DirectoryChangeEvent): Unit = try
@@ -83,16 +87,16 @@ class Watcher(dir: File):
     else if isMls || file.toString.endsWith(".cmd") then
       Thread.sleep(100)
       val path = os.Path(file.pathAsString)
-      val basePath = path.segments.drop(dirPath.segmentCount).toList.init
+      val basePath = path.segments.drop(dirPaths.head.segmentCount).toList.init
       val relativeName = basePath.map(_ + "/").mkString + path.baseName
-      val preludePath = os.pwd/os.up/"shared"/"src"/"test"/"mlscript"/"decls"/"Prelude.mls"
-      val predefPath = os.pwd/os.up/"shared"/"src"/"test"/"mlscript-compile"/"Predef.mls"
+      val preludePath = os.pwd/os.up/"hkmc2"/"shared"/"src"/"test"/"mlscript"/"decls"/"Prelude.mls"
+      val predefPath = os.pwd/os.up/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"Predef.mls"
       val isModuleFile = path.segments.contains("mlscript-compile")
       if isModuleFile
       then
         MLsCompiler(preludePath).compileModule(path)
       else
-        val dm = new MainDiffMaker((dirPath/os.up).toString, path, preludePath, predefPath, relativeName):
+        val dm = new MainDiffMaker((dirPaths.head/os.up).toString, path, preludePath, predefPath, relativeName):
           override def unhandled(blockLineNum: Int, exc: Throwable): Unit =
             exc.printStackTrace()
             super.unhandled(blockLineNum, exc)
@@ -101,7 +105,7 @@ class Watcher(dir: File):
       
   def show(file: File) =
     fansi.Color.Yellow:
-      file.toString.stripPrefix(dir.toString)
+      file.toString.stripPrefix(dirs.head.toString)
   
   def pre = fansi.Color.Blue(">> ").toString
   

@@ -33,12 +33,13 @@ object CCtx:
   inline def init(origin: Term, exp: Opt[GeneralType])(using Scope) = CCtx(Set.empty, Nil, origin, exp)
 def cctx(using CCtx): CCtx = summon
 
-class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
+class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, tl: TraceLogger):
   import tl.{trace, log}
 
   import hkmc2.bbml.NormalForm.*
 
-  private def freshXVar(lvl: Int, sym: Symbol, hint: Str): InfVar = InfVar(lvl, infVarState.nextUid, new VarState(), false)(sym, hint)
+  private def freshXVar(lvl: Int, sym: Symbol, hint: Str): InfVar =
+    InfVar(lvl, infVarState.nextUid, new VarState(), false)(InstSymbol(sym)(using elState), hint)
 
   def extrude(ty: Type)(using lvl: Int, pol: Bool, cache: ExtrudeCache, bbctx: BbCtx, cctx: CCtx, tl: TL): Type =
   trace[Type](s"Extruding[${printPol(pol)}] ${ty.showDbg}", r => s"~> ${r.showDbg}"):
@@ -71,7 +72,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
           nv.state.upperBounds = v.state.upperBounds.map(extrude) // * propagate
         nv
       })
-    case FunType(args, ret, eff) =>
+    case ft @ FunType(args, ret, eff) =>
       FunType(args.map(arg => extrude(arg)(using lvl, !pol)), extrude(ret), extrude(eff))
     case ComposedType(lhs, rhs, p) =>
       Type.mkComposedType(extrude(lhs), extrude(rhs), p)

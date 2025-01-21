@@ -52,6 +52,6 @@ test(123)
 // * Forgot to pass the arg:
 :re
 test()
-//│ ═══[RUNTIME ERROR] Error: Function 'test' expected 1 arguments but got 0
+//│ ═══[RUNTIME ERROR] Error: Function 'test' expected 1 argument but got 0
 
 

@@ -13,7 +13,7 @@ class ReportFormatter(output: Str => Unit):
       val headStr =
         val headChar = if onlyOneLine then '═' else '╔'
         diag match
-        case ErrorReport(msg, loco, src) =>
+        case ErrorReport(msg, loco, mkei, src) =>
           src match
             case Diagnostic.Source.Lexing =>
               s"$headChar══[LEXICAL ERROR] "
@@ -25,7 +25,7 @@ class ReportFormatter(output: Str => Unit):
               s"$headChar══[RUNTIME ERROR] "
             case _ => // TODO customize too
               s"$headChar══[ERROR] "
-        case WarningReport(msg, loco, src) =>
+        case WarningReport(msg, loco, mkei, src) =>
           s"$headChar══[WARNING] "
         case InternalError(msg, loco, src) =>
           s"$headChar══[INTERNAL ERROR] "
