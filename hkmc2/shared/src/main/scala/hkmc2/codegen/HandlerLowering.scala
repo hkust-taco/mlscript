@@ -280,23 +280,33 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     val stage2 = secondPass(stage1)
     if h.isTopLevel then stage2 else thirdPass(stage2)
   
-  private def firstPass(b: Block)(using HandlerCtx): Block = b.map(firstPass) match
-    case b: HandleBlock => translateHandleBlock(b)
-    case b => b.mapValue:
-        case Value.Lam(params, body) => Value.Lam(params, translateBlock(body, functionHandlerCtx))
-        case v => v
-      .match
-        case Return(c: Call, implct) if handlerCtx.isHandleFree => Return(c, implct)
-        case b => b.mapResult:
-          case r @ Call(Value.Ref(_: BuiltinSymbol), _) => N
-          case c: Call =>
-            val res = freshTmp("res")
-            S(k => CallPlaceholder(res, freshId(), false, c, k(Value.Ref(res))))
-          case r => N
-      .match
-        case Define(f: FunDefn, rst) => Define(translateFun(f), rst)
-        case Define(c: ClsLikeDefn, rst) => Define(translateCls(c), rst)
-        case b => b
+  private def firstPass(b: Block)(using HandlerCtx): Block =
+    val transformer = new BlockTransformerShallow(SymbolSubst()):
+      override def applyBlock(b: Block) = b match
+        case b: HandleBlock =>
+          val rest = applyBlock(b.rest)
+          translateHandleBlock(b.copy(rest = rest))
+        case Return(c: Call, implct) if handlerCtx.isHandleFree =>
+          val fun2 = applyPath(c.fun)
+          val args2 = c.args.map(applyArg)
+          val c2 = if (fun2 is c.fun) && (args2 zip c.args).forall(_ is _) then c else Call(fun2, args2)(c.isMlsFun)
+          if c2 is c then b else Return(c2, implct)
+        case _ => super.applyBlock(b)
+      override def applyResult2(r: Result)(k: Result => Block): Block = r match
+        case r @ Call(Value.Ref(_: BuiltinSymbol), _) => super.applyResult2(r)(k)
+        case c: Call =>
+          val res = freshTmp("res")
+          val fun2 = applyPath(c.fun)
+          val args2 = c.args.map(applyArg)
+          val c2 = if (fun2 is c.fun) && (args2 zip c.args).forall(_ is _) then c else Call(fun2, args2)(c.isMlsFun)
+          CallPlaceholder(res, freshId(), false, c2, k(Value.Ref(res)))
+        case r => super.applyResult2(r)(k)
+      override def applyLam(lam: Value.Lam): Value.Lam = Value.Lam(lam.params, translateBlock(lam.body, functionHandlerCtx))
+      override def applyDefn(defn: Defn): Defn = defn match
+        case f: FunDefn => translateFun(f)
+        case c: ClsLikeDefn => translateCls(c)
+        case _: ValDefn => super.applyDefn(defn)
+    transformer.applyBlock(b)
 
   private def secondPass(b: Block)(using HandlerCtx): Block =
     val cls = if handlerCtx.isTopLevel then N else genContClass(b)

@@ -262,42 +262,42 @@ str
 //│           this.pc = pc;
 //│         }
 //│         resume(value$) {
-//│           if (this.pc === 3) {
-//│             res1 = value$;
-//│           } else if (this.pc === 2) {
+//│           if (this.pc === 2) {
 //│             res = value$;
+//│           } else if (this.pc === 3) {
+//│             res1 = value$;
 //│           }
 //│           contLoop: while (true) {
-//│             if (this.pc === 3) {
-//│               tmp3 = res1;
-//│               res = h1.perform(null) ?? null;
-//│               if (res instanceof globalThis.Predef.__EffectSig.class) {
-//│                 res.tail.next = this;
-//│                 this.pc = 2;
-//│                 return res;
+//│             if (this.pc === 2) {
+//│               tmp3 = res;
+//│               res1 = h1.perform(null) ?? null;
+//│               if (res1 instanceof globalThis.Predef.__EffectSig.class) {
+//│                 res1.tail.next = this;
+//│                 this.pc = 3;
+//│                 return res1;
 //│               }
-//│               this.pc = 2;
+//│               this.pc = 3;
 //│               continue contLoop;
-//│             } else if (this.pc === 2) {
-//│               return res;
+//│             } else if (this.pc === 3) {
+//│               return res1;
 //│             }
 //│             break;
 //│           }
 //│         }
 //│         toString() { return "Cont$906(" + this.pc + ")"; }
 //│       };
-//│       res1 = h2.perform(null) ?? null;
-//│       if (res1 instanceof globalThis.Predef.__EffectSig.class) {
-//│         res1.tail.next = new Cont$906(3);
-//│         return globalThis.Predef.__handleBlockImpl(res1, h2);
-//│       }
-//│       tmp3 = res1;
-//│       res = h1.perform(null) ?? null;
+//│       res = h2.perform(null) ?? null;
 //│       if (res instanceof globalThis.Predef.__EffectSig.class) {
 //│         res.tail.next = new Cont$906(2);
 //│         return globalThis.Predef.__handleBlockImpl(res, h2);
 //│       }
-//│       return res;
+//│       tmp3 = res;
+//│       res1 = h1.perform(null) ?? null;
+//│       if (res1 instanceof globalThis.Predef.__EffectSig.class) {
+//│         res1.tail.next = new Cont$906(3);
+//│         return globalThis.Predef.__handleBlockImpl(res1, h2);
+//│       }
+//│       return res1;
 //│     }
 //│     tmp2 = handleBlock$1$0();
 //│     if (tmp2 instanceof globalThis.Predef.__EffectSig.class) {
