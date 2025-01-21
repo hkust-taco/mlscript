@@ -281,7 +281,6 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     if h.isTopLevel then stage2 else thirdPass(stage2)
   
   private def firstPass(b: Block)(using HandlerCtx): Block =
-    given SymbolSubst = SymbolSubst()
     val transformer = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block) = b match
         case b: HandleBlock =>
@@ -389,7 +388,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     
     val newBlk = defns.foldLeft(blk)((acc, defn) => Define(defn, acc))
 
-    given subst: SymbolSubst:
+    val subst = new SymbolSubst:
       override def mapBlockMemberSym(b: BlockMemberSymbol) = bmsMap.get(b) match
         case None => b.asCls match
           case None => b
@@ -401,7 +400,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
         case Some(value) => value
       override def mapClsSym(s: ClassSymbol): ClassSymbol = clsMap.get(s).getOrElse(s)
       override def mapModuleSym(s: ModuleSymbol): ModuleSymbol = modMap.get(s).getOrElse(s)
-      override def mapTermSym(s: TermSymbol): TermSymbol = TermSymbol(s.k, s.owner.map(_.subst), s.id)
+      override def mapTermSym(s: TermSymbol): TermSymbol = TermSymbol(s.k, s.owner.map(_.subst(using this)), s.id)
 
     BlockTransformer(subst).applyBlock(newBlk)
   
@@ -569,9 +568,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   
   private def genNormalBody(b: Block, clsSym: BlockMemberSymbol)(using HandlerCtx): Block =
     val transform = new BlockTransformerShallow(SymbolSubst()):
-      override def applyBlock(b: Block): Block = 
-        
-        b match
+      override def applyBlock(b: Block): Block = b match
         case CallPlaceholder(res, uid, canRet, c, rest) =>
           blockBuilder
             .assign(res, c)
