@@ -9,9 +9,18 @@ module Playground with
 
 Playground
 //│ > Playground {
-//│ >   Zero: Zero { class: [class Zero] },
-//│ >   DoubleZero: DoubleZero { class: [class DoubleZero] },
-//│ >   ZeroOne: ZeroOne { class: [class ZeroOne] },
+//│ >   Zero: {
+//│ >     unapply: [Function: unapply],
+//│ >     unapplyStringPrefix: [Function: unapplyStringPrefix]
+//│ >   },
+//│ >   DoubleZero: {
+//│ >     unapply: [Function: unapply],
+//│ >     unapplyStringPrefix: [Function: unapplyStringPrefix]
+//│ >   },
+//│ >   ZeroOne: {
+//│ >     unapply: [Function: unapply],
+//│ >     unapplyStringPrefix: [Function: unapplyStringPrefix]
+//│ >   },
 //│ >   class: [class Playground]
 //│ = }
 
@@ -19,7 +28,10 @@ Playground
 // ============================================================
 
 Playground.Zero
-//│ = Zero { class: [class Zero] }
+//│ > {
+//│ >   unapply: [Function: unapply],
+//│ >   unapplyStringPrefix: [Function: unapplyStringPrefix]
+//│ = }
 
 Playground.Zero.unapply("0")
 //│ = MatchResult { captures: [] }
@@ -32,7 +44,10 @@ Playground.Zero.unapply("0")
 // ============================================================================
 
 Playground.DoubleZero
-//│ = DoubleZero { class: [class DoubleZero] }
+//│ > {
+//│ >   unapply: [Function: unapply],
+//│ >   unapplyStringPrefix: [Function: unapplyStringPrefix]
+//│ = }
 
 Playground.DoubleZero.unapply("00")
 //│ = MatchResult { captures: [] }
@@ -45,7 +60,10 @@ Playground.DoubleZero.unapply("00")
 // =======================================================================
 
 Playground.ZeroOne
-//│ = ZeroOne { class: [class ZeroOne] }
+//│ > {
+//│ >   unapply: [Function: unapply],
+//│ >   unapplyStringPrefix: [Function: unapplyStringPrefix]
+//│ = }
 
 Playground.ZeroOne.unapply("01")
 //│ = MatchResult { captures: [] }
@@ -60,7 +78,10 @@ Playground.ZeroOne.unapply("01")
 pattern TripleZero = Playground.DoubleZero ~ Playground.Zero
 
 TripleZero
-//│ = TripleZero { class: [class TripleZero] }
+//│ > {
+//│ >   unapply: [Function: unapply],
+//│ >   unapplyStringPrefix: [Function: unapplyStringPrefix]
+//│ = }
 
 TripleZero.unapply("000")
 //│ = MatchResult { captures: [] }
