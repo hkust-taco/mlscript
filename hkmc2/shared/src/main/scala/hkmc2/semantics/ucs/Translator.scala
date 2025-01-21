@@ -28,15 +28,6 @@ class Translator(val elaborator: Elaborator)
     (using state: Elaborator.State, c: Elaborator.Ctx) extends DesugaringBase:
   import elaborator.tl.*, HelperExtractors.*
   
-  extension (split: Split)
-    private def ~~:(fallback: Split): Split =
-      if fallback == Split.End || split.isFull then
-        split
-      else (split match
-        case Split.Cons(head, tail) => Split.Cons(head, tail ~~: fallback)
-        case Split.Let(name, term, tail) => Split.Let(name, term, tail ~~: fallback)
-        case Split.Else(_) /* impossible */ | Split.End => fallback)
-  
   /** Each scrutinee is represented by a function that creates a reference to
    *  the scrutinee symbol. It is sufficient for current implementation.
    */

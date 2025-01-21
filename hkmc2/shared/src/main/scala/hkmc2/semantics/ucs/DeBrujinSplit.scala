@@ -361,7 +361,7 @@ extension (split: DeBrujinSplit)
               val innerConsequent = consequence.unbind match
                 case (0, body) => go(body, ctx)
               val nestedOutcomes = Map(N -> Split.End, S(0) -> innerConsequent)
-              split.toSplit(Vector(ctx(scrutinee - 1)), localPatterns, nestedOutcomes, elab) :~~ go(alternative, ctx)
+              split.toSplit(Vector(ctx(scrutinee - 1)), localPatterns, nestedOutcomes, elab) ~~: go(alternative, ctx)
         case Accept(outcome) => outcomes(S(outcome))
         case Reject => outcomes.getOrElse(N, Split.End)
       split.unbind match

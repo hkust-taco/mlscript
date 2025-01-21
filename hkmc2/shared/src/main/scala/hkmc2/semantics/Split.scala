@@ -61,14 +61,14 @@ enum Split extends AutoLocated with ProductWithTail:
   var isFallback: Bool = false
 end Split
 
-extension (these: Split)
-  def :~~(those: Split): Split =
-    if these.isFull then
-      these
-    else (these match
-      case Split.Cons(head, tail) => Split.Cons(head, tail :~~ those)
-      case Split.Let(name, term, tail) => Split.Let(name, term, tail :~~ those)
-      case Split.Else(_) /* impossible */ | Split.End => those)
+extension (split: Split)
+  def ~~:(fallback: Split): Split =
+    if fallback == Split.End || split.isFull then
+      split
+    else (split match
+      case Split.Cons(head, tail) => Split.Cons(head, tail ~~: fallback)
+      case Split.Let(name, term, tail) => Split.Let(name, term, tail ~~: fallback)
+      case Split.Else(_) /* impossible */ | Split.End => fallback)
 
 object Split:
   def default(term: Term): Split = Split.Else(term)
