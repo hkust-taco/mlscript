@@ -23,7 +23,7 @@ const Predef$class = class Predef {
       indent() {
         let scrut, prev, tmp;
         scrut = this.enabled;
-        if (scrut) {
+        if (scrut === true) {
           prev = this.indentLvl;
           tmp = prev + 1;
           this.indentLvl = tmp;
@@ -35,7 +35,7 @@ const Predef$class = class Predef {
       resetIndent(n) {
         let scrut;
         scrut = this.enabled;
-        if (scrut) {
+        if (scrut === true) {
           this.indentLvl = n;
           return null;
         } else {
@@ -45,7 +45,7 @@ const Predef$class = class Predef {
       log(msg) {
         let scrut, tmp, tmp1, tmp2, tmp3, tmp4;
         scrut = this.enabled;
-        if (scrut) {
+        if (scrut === true) {
           tmp = "| ".repeat(this.indentLvl) ?? null;
           tmp1 = "  ".repeat(this.indentLvl) ?? null;
           tmp2 = "\n" + tmp1;
@@ -161,9 +161,9 @@ const Predef$class = class Predef {
     tmp1 = got > expected;
     tmp2 = isUB && tmp1;
     scrut = tmp || tmp2;
-    if (scrut) {
+    if (scrut === true) {
       scrut1 = functionName.length > 0;
-      if (scrut1) {
+      if (scrut1 === true) {
         tmp3 = " '" + functionName;
         tmp4 = tmp3 + "'";
       } else {
