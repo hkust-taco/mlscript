@@ -111,7 +111,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       case Assign(
           res,
           SimpleCall(Value.Ref(`callSymbol`), List(Value.Lit(Tree.IntLit(uid)), Value.Lit(Tree.BoolLit(canRet)))),
-          Assign(_, c: Result, rest)) =>
+          Assign(_, c, rest)) =>
         Some(res, uid, canRet, c, rest)
       case _ => None
   

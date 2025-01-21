@@ -151,7 +151,7 @@ class Lowering(lowerHandlers: Bool)(using TL, Raise, State, Ctx):
             msg"Expected two arguments for ${sym.nme}" -> t.toLoc :: Nil, S(arg),
             source = Diagnostic.Source.Compilation)
         subTerm(arg1): ar1 =>
-          subTerm(arg2): ar2 =>
+          subTerm_nonTail(arg2): ar2 =>
             k(Call(Value.Ref(sym), Arg(false, ar1) :: Arg(false, ar2) :: Nil)(true))
       case _ =>
         raise:
@@ -478,7 +478,7 @@ class Lowering(lowerHandlers: Bool)(using TL, Raise, State, Ctx):
     subTerm(t: st, inStmtPos: Bool)(k)
   
   inline def subTerm(t: st, inStmtPos: Bool = false)(k: Path => Block)(using Subst): Block =
-    term_nonTail(t, inStmtPos = inStmtPos):
+    term(t, inStmtPos = inStmtPos):
       case v: Value => k(v)
       case p: Path => k(p)
       case r =>
