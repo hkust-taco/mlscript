@@ -190,7 +190,10 @@ class BlockTransformer(subst: SymbolSubst):
 class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst):
   override def applyLam(lam: Value.Lam) = lam
   override def applyFunDefn(fun: FunDefn): FunDefn = fun
-  override def applyDefn(defn: Defn): Defn = defn
+  override def applyDefn(defn: Defn): Defn = defn match
+    case _: FunDefn | _: ClsLikeDefn => defn
+    case _: ValDefn => super.applyDefn(defn)
+  
   override def applyBlock(b: Block): Block = b match
     case HandleBlock(l, res, par, cls, hdr, bod, rst) =>
       val l2 = applyLocal(l)
