@@ -158,8 +158,8 @@ if true do
 //│ JS (unsanitized):
 //│ let tmp11, handleBlock$023;
 //│ handleBlock$023 = function handleBlock$0() {
-//│   let h, scrut, tmp12, res, Cont$1069, f$0, Effect$h$1043;
-//│   Effect$h$1043 = class Effect$h$1043 extends Effect1 {
+//│   let h, scrut, tmp12, res, Cont$1074, f$0, Effect$h$1048;
+//│   Effect$h$1048 = class Effect$h$1048 extends Effect1 {
 //│     constructor() {
 //│       let tmp13;
 //│       tmp13 = super();
@@ -169,11 +169,11 @@ if true do
 //│         return arg;
 //│       });
 //│     }
-//│     toString() { return "Effect$h$1043"; }
+//│     toString() { return "Effect$h$1048"; }
 //│   };
-//│   h = new Effect$h$1043();
-//│   Cont$1069 = function Cont$1069(pc1) { return new Cont$1069.class(pc1); };
-//│   Cont$1069.class = class Cont$1069 extends globalThis.Predef.__Cont.class {
+//│   h = new Effect$h$1048();
+//│   Cont$1074 = function Cont$1074(pc1) { return new Cont$1074.class(pc1); };
+//│   Cont$1074.class = class Cont$1074 extends globalThis.Predef.__Cont.class {
 //│     constructor(pc) {
 //│       let tmp13;
 //│       tmp13 = super(null, null);
@@ -194,7 +194,7 @@ if true do
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$1069(" + this.pc + ")"; }
+//│     toString() { return "Cont$1074(" + this.pc + ")"; }
 //│   };
 //│   f$0 = function f$0() {
 //│     return 3;
@@ -203,7 +203,7 @@ if true do
 //│   if (scrut === true) {
 //│     res = f$0();
 //│     if (res instanceof globalThis.Predef.__EffectSig.class) {
-//│       res.tail.next = new Cont$1069(1);
+//│       res.tail.next = new Cont$1074(1);
 //│       return globalThis.Predef.__handleBlockImpl(res, h);
 //│     }
 //│     tmp12 = res;
