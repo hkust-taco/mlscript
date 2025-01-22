@@ -8,6 +8,7 @@ import hkmc2.semantics.Elaborator.State
 import hkmc2.semantics.*
 import hkmc2.syntax.Tree
 import hkmc2.syntax.Keyword.`with`
+import scala.compiletime.ops.boolean
 
 
 class StackSafeTransform(depthLimit: Int)(using State):
@@ -31,66 +32,100 @@ class StackSafeTransform(depthLimit: Int)(using State):
   // Increases the stack depth, assigns the call to a value, then decreases the stack depth
   // then binds that value to a desired block
   def extractRes(res: Result, isTailCall: Bool, f: Result => Block) =
-    res match
-      case Call(Value.Ref(s: BuiltinSymbol), args) => f(res)
-      case _: Call | _: Instantiate =>
-        if isTailCall then
-          blockBuilder
-            .assignFieldN(predefPath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(1)))
-            .ret(res)
-        else
-          val tmp = TempSymbol(None, "tmp")
-          val prevDepth = TempSymbol(None, "prevDepth")
-          blockBuilder
-            .assign(prevDepth, stackDepthPath)
-            .assignFieldN(predefPath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(1)))
-            .assign(tmp, res)
-            .assignFieldN(predefPath, STACK_DEPTH_IDENT, prevDepth.asPath)
-            .rest(f(tmp.asPath))
-      case _ => f(res)
+    if isTailCall then
+      blockBuilder
+        .assignFieldN(predefPath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(1)))
+        .ret(res)
+    else
+      val tmp = TempSymbol(None, "tmp")
+      val prevDepth = TempSymbol(None, "prevDepth")
+      blockBuilder
+        .assign(prevDepth, stackDepthPath)
+        .assignFieldN(predefPath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(1)))
+        .assign(tmp, res)
+        .assignFieldN(predefPath, STACK_DEPTH_IDENT, prevDepth.asPath)
+        .rest(f(tmp.asPath))
+
+  def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block) =
+    val resumeSym = VarSymbol(Tree.Ident("resume"))
+    val handlerSym = TempSymbol(None, "stackHandler")
+    val resSym = TempSymbol(None, "res")
+    val handlerRes = TempSymbol(None, "res")
+    val curOffsetSym = TempSymbol(None, "curOffset")
+    
+    val clsSym = ClassSymbol(
+      Tree.TypeDef(syntax.Cls, Tree.Error(), N, N),
+      Tree.Ident("StackDelay$")
+    )
+    clsSym.defn = S(ClassDef(N, syntax.Cls, clsSym, BlockMemberSymbol(clsSym.nme, Nil), Nil, N, ObjBody(Term.Blk(Nil, Term.Lit(Tree.UnitLit(true)))), Nil))
+
+    // the global stack handler is created here
+    HandleBlock(
+      handlerSym, resSym,
+      stackDelayClsPath, clsSym,
+      List(Handler(
+        BlockMemberSymbol("perform", Nil), resumeSym, List(ParamList(ParamListFlags.empty, Nil, N)),
+        /* 
+          fun perform() =
+            let curOffset = stackOffset
+            stackOffset = stackDepth
+            let ret = resume()
+            stackOffset = curOffset
+            ret
+        */
+        blockBuilder
+          .assign(curOffsetSym, stackOffsetPath)
+          .assignFieldN(predefPath, STACK_OFFSET_IDENT, stackDepthPath)
+          .assign(handlerRes, Call(Value.Ref(resumeSym), List())(true))
+          .assignFieldN(predefPath, STACK_OFFSET_IDENT, curOffsetSym.asPath)
+          .ret(handlerRes.asPath)
+      )),
+      blockBuilder
+        .assignFieldN(predefPath, STACK_DEPTH_IDENT, intLit(0)) // set stackDepth = 0
+        .assignFieldN(predefPath, STACK_HANDLER_IDENT, handlerSym.asPath) // assign stack handler
+        .rest(HandleBlockReturn(res)),
+      blockBuilder // reset the stack safety values
+        .assignFieldN(predefPath, STACK_DEPTH_IDENT, intLit(0)) // set stackDepth = 0
+        .assignFieldN(predefPath, STACK_HANDLER_IDENT, Value.Lit(Tree.UnitLit(false))) // set stackHandler = null
+        .rest(f(resSym.asPath))
+    )
 
   // Rewrites anything that can contain a Call to increase the stack depth
-  def transform(b: Block): Block = 
-    // 1. rewrite lambdas
-    def firstPass(b: Block): Block =
-      val transform = new BlockTransformerShallow(SymbolSubst()):
-        override def applyValue(v: Value): Value = v match
-          case Value.Lam(params, body) => Value.Lam(params, rewriteBlk(body))
-          case _ => super.applyValue(v)
-        
-        override def applyBlock(b: Block): Block = b match
-          case HandleBlock(lhs, res, par, cls, handlers, body, rest) =>
-            HandleBlock(
-              lhs, res, par, cls, handlers.map(h => Handler(h.sym, h.resumeSym, h.params, applyBlock(h.body))),
-              applyBlock(body), applyBlock(rest)
-            )
-          case _ => super.applyBlock(b)
-        
-      transform.applyBlock(b)
-    
-    // 2. rewrite calls and definitions
-    def secondPass(b: Block): Block = 
-      val transform = new BlockTransformerShallow(SymbolSubst()):
-        override def applyDefn(defn: Defn): Defn = rewriteDefn(defn)
+  def transform(b: Block, isTopLevel: Bool = false): Block = 
+    def usesStack(r: Result) = r match
+      case Call(Value.Ref(_: BuiltinSymbol), _) => false
+      case _: Call => true
+      case _: Instantiate => true
+      case _ => false
 
-        override def applyBlock(b: Block): Block = b match
-          case Return(c: Call, implct) => extractRes(c, true, Return(_, false))
-          case Return(res, implct) => extractRes(res, false, Return(_, false))
-          case Assign(lhs, rhs, rest) => 
-            extractRes(rhs, false, Assign(lhs, _, applyBlock(rest)))
-          case b @ AssignField(lhs, nme, rhs, rest) => extractRes(rhs, false, AssignField(lhs, nme, _, applyBlock(rest))(b.symbol))
-          case Define(defn, rest) => Define(rewriteDefn(defn), applyBlock(rest))
-          case HandleBlock(lhs, res, par, cls, handlers, body, rest) =>
-            HandleBlock(
-              lhs, res, par, cls, handlers.map(h => Handler(h.sym, h.resumeSym, h.params, applyBlock(h.body))),
-              applyBlock(body), applyBlock(rest)
-            )
-          case HandleBlockReturn(c: Call) => extractRes(c, true, HandleBlockReturn(_))
-          case HandleBlockReturn(res) => extractRes(res, false, HandleBlockReturn(_))
-          case _ => super.applyBlock(b)
-      transform.applyBlock(b)
+    val extract = if isTopLevel then extractResTopLevel else extractRes
     
-    secondPass(firstPass(b))
+    val transform = new BlockTransformerShallow(SymbolSubst()):
+      override def applyDefn(defn: Defn): Defn = rewriteDefn(defn)
+
+      override def applyBlock(b: Block): Block = b match
+        case Return(res, implct) if usesStack(res) => 
+          extract(res, true, Return(_, implct))
+        case Assign(lhs, rhs, rest) if usesStack(rhs) => 
+          extract(rhs, false, Assign(lhs, _, applyBlock(rest)))
+        case b @ AssignField(lhs, nme, rhs, rest) if usesStack(rhs) => 
+          extract(rhs, false, AssignField(lhs, nme, _, applyBlock(rest))(b.symbol))
+        case Define(defn, rest) => 
+          Define(rewriteDefn(defn), applyBlock(rest))
+        case HandleBlock(lhs, res, par, cls, handlers, body, rest) =>
+          HandleBlock(
+            lhs, res, par, cls, handlers.map(h => Handler(h.sym, h.resumeSym, h.params, applyBlock(h.body))),
+            applyBlock(body), applyBlock(rest)
+          )
+        case HandleBlockReturn(res) if usesStack(res) => 
+          extract(res, true, HandleBlockReturn(_))
+        case _ => super.applyBlock(b)
+
+      override def applyValue(v: Value): Value = v match
+        case Value.Lam(params, body) => Value.Lam(params, rewriteBlk(body))
+        case _ => super.applyValue(v)
+  
+    transform.applyBlock(b)
   
   def isTrivial(b: Block): Boolean = 
     def resTrivial(r: Result) = r match
@@ -155,63 +190,4 @@ class StackSafeTransform(depthLimit: Int)(using State):
      
   def rewriteFn(defn: FunDefn) = FunDefn(defn.owner, defn.sym, defn.params, rewriteBlk(defn.body))
 
-  def transformTopLevel(b: Block) =
-    def replaceReturns(b: Block): Block =
-      val transform = new BlockTransformerShallow(SymbolSubst()):
-        override def applyBlock(b: Block): Block = b match
-          case Return(res, _) => HandleBlockReturn(res)
-          case HandleBlock(lhs, res, par, cls, handlers, body, rest) =>
-            HandleBlock(
-              lhs, res, par, cls, handlers,
-              applyBlock(body), applyBlock(rest)
-            )
-          case _ => super.applyBlock(b)
-      transform.applyBlock(b)
-    
-    // symbols
-    val resumeSym = VarSymbol(Tree.Ident("resume"))
-    val handlerSym = TempSymbol(None, "stackHandler")
-    val resSym = TempSymbol(None, "res")
-    val handlerRes = TempSymbol(None, "res")
-    val curOffsetSym = TempSymbol(None, "curOffset")
-    
-    val clsSym = ClassSymbol(
-      Tree.TypeDef(syntax.Cls, Tree.Error(), N, N),
-      Tree.Ident("StackDelay$")
-    )
-    clsSym.defn = S(ClassDef(N, syntax.Cls, clsSym, BlockMemberSymbol(clsSym.nme, Nil), Nil, N, ObjBody(Term.Blk(Nil, Term.Lit(Tree.UnitLit(true)))), Nil))
-
-    val (blk, defns) = b.floatOutDefns(true)
-
-    // the global stack handler is created here
-    val handle = HandleBlock(
-      handlerSym, resSym,
-      stackDelayClsPath, clsSym,
-      List(Handler(
-        BlockMemberSymbol("perform", Nil), resumeSym, List(ParamList(ParamListFlags.empty, Nil, N)),
-        /* 
-          fun perform() =
-            let curOffset = stackOffset
-            stackOffset = stackDepth
-            let ret = resume()
-            stackOffset = curOffset
-            ret
-         */
-        blockBuilder
-          .assign(curOffsetSym, stackOffsetPath)
-          .assignFieldN(predefPath, STACK_OFFSET_IDENT, stackDepthPath)
-          .assign(handlerRes, Call(Value.Ref(resumeSym), List())(true))
-          .assignFieldN(predefPath, STACK_OFFSET_IDENT, curOffsetSym.asPath)
-          .ret(handlerRes.asPath)
-      )),
-      blockBuilder
-        .assignFieldN(predefPath, STACK_DEPTH_IDENT, intLit(0)) // set stackDepth = 0
-        .assignFieldN(predefPath, STACK_HANDLER_IDENT, handlerSym.asPath) // assign stack handler
-        .rest(replaceReturns(transform(blk))), // transform the rest of the body
-      blockBuilder // reset the stack safety values
-        .assignFieldN(predefPath, STACK_DEPTH_IDENT, intLit(0)) // set stackDepth = 0
-        .assignFieldN(predefPath, STACK_HANDLER_IDENT, Value.Lit(Tree.UnitLit(false))) // set stackHandler = null
-        .rest(Return(Value.Ref(resSym), true))
-    )
-
-    defns.foldLeft[Block](handle)((blk, defn) => Define(rewriteDefn(defn), blk))
+  def transformTopLevel(b: Block) = transform(b, true)
