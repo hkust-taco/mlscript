@@ -1,15 +1,11 @@
 package hkmc2
 
 import mlscript.utils.*, shorthands.*
-import utils.*
-
 import hkmc2.codegen.*
 import hkmc2.semantics.Elaborator.State
 import hkmc2.semantics.*
 import hkmc2.syntax.Tree
-import hkmc2.syntax.Keyword.`with`
-import scala.compiletime.ops.boolean
-
+import hkmc2.utils.*
 
 class StackSafeTransform(depthLimit: Int)(using State):
   private val STACK_DEPTH_IDENT: Tree.Ident = Tree.Ident("__stackDepth")
@@ -81,11 +77,11 @@ class StackSafeTransform(depthLimit: Int)(using State):
           .ret(handlerRes.asPath)
       )),
       blockBuilder
-        .assignFieldN(predefPath, STACK_DEPTH_IDENT, intLit(0)) // set stackDepth = 0
+        .assignFieldN(predefPath, STACK_DEPTH_IDENT, intLit(1)) // set stackDepth = 1 before call
         .assignFieldN(predefPath, STACK_HANDLER_IDENT, handlerSym.asPath) // assign stack handler
         .rest(HandleBlockReturn(res)),
       blockBuilder // reset the stack safety values
-        .assignFieldN(predefPath, STACK_DEPTH_IDENT, intLit(0)) // set stackDepth = 0
+        .assignFieldN(predefPath, STACK_DEPTH_IDENT, intLit(0)) // set stackDepth = 0 after call
         .assignFieldN(predefPath, STACK_HANDLER_IDENT, Value.Lit(Tree.UnitLit(false))) // set stackHandler = null
         .rest(f(resSym.asPath))
     )

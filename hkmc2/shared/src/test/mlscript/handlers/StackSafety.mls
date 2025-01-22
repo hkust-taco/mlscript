@@ -148,7 +148,7 @@ hi(0)
 //│     }
 //│     toString() { return "Cont$212(" + this.pc + ")"; }
 //│   };
-//│   globalThis.Predef.__stackDepth = 0;
+//│   globalThis.Predef.__stackDepth = 1;
 //│   globalThis.Predef.__stackHandler = stackHandler;
 //│   res1 = hi1(0);
 //│   if (res1 instanceof globalThis.Predef.__EffectSig.class) {
@@ -329,7 +329,7 @@ sum(10000)
 //│     }
 //│     toString() { return "Cont$378(" + this.pc + ")"; }
 //│   };
-//│   globalThis.Predef.__stackDepth = 0;
+//│   globalThis.Predef.__stackDepth = 1;
 //│   globalThis.Predef.__stackHandler = stackHandler;
 //│   res2 = sum3(10000);
 //│   if (res2 instanceof globalThis.Predef.__EffectSig.class) {
