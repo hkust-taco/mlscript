@@ -87,6 +87,13 @@ sealed abstract class Block extends Product with AutoLocated:
     case HandleBlockReturn(res) => res.freeVars
     case End(msg) => Set.empty
 
+  // Moves definitions in a block to the top. Only scans one definition deep, i.e. definitions inside other definitions
+  // are not moved out.
+  //
+  // outerOnly = true:  only top-level definitions (which could be exported) are moved to the top, which is essentially
+  //                    a re-ordering of statements.
+  //
+  // outerOnly = false: definitions inside `if` and `while` statements are also moved out.
   def floatOutDefns(outerOnly: Bool) =
     def rec(b: Block, acc: List[Defn]): (Block, List[Defn]) =
       b match
