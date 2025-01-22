@@ -61,6 +61,7 @@ fun (++) f2(a, b) = "(" + a + " + " + b + ")"
 :pt
 // :elt
 :sjs
+:re
 if 1 + 2
   * 3 then 0
 //│ Parsed tree:
@@ -85,16 +86,17 @@ if 1 + 2
 //│ scrut = 1;
 //│ scrut1 = scrut + 2;
 //│ scrut2 = scrut1 * 3;
-//│ if (scrut2) {
+//│ if (scrut2 === true) {
 //│   0
 //│ } else {
 //│   throw new this.Error("match error");
 //│ }
-//│ = 0
+//│ ═══[RUNTIME ERROR] Error: match error
 
 :pt
 // :elt
 :sjs
+:re
 if 1 * 2
   + 3 then 0
 //│ Parsed tree:
@@ -118,17 +120,18 @@ if 1 * 2
 //│ let scrut, scrut1;
 //│ scrut = 1 * 2;
 //│ scrut1 = scrut + 3;
-//│ if (scrut1) {
+//│ if (scrut1 === true) {
 //│   0
 //│ } else {
 //│   throw new this.Error("match error");
 //│ }
-//│ = 0
+//│ ═══[RUNTIME ERROR] Error: match error
 
 // TODO perhaps we should just require parenthesizing (1 + 2) here
 :pt
 // :elt
 :sjs
+:re
 if 1 + 2
   * 3 then 0
   + 4 then 0
@@ -160,17 +163,17 @@ if 1 + 2
 //│ scrut = 1;
 //│ scrut1 = scrut + 2;
 //│ scrut3 = scrut1 * 3;
-//│ if (scrut3) {
+//│ if (scrut3 === true) {
 //│   0
 //│ } else {
 //│   scrut2 = scrut1 + 4;
-//│   if (scrut2) {
+//│   if (scrut2 === true) {
 //│     0
 //│   } else {
 //│     throw new this.Error("match error");
 //│   }
 //│ }
-//│ = 0
+//│ ═══[RUNTIME ERROR] Error: match error
 
 
 1 ++

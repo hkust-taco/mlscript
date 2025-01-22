@@ -1,6 +1,7 @@
 package hkmc2
 package codegen
 
+import scala.language.implicitConversions
 import scala.annotation.tailrec
 
 import mlscript.utils.*, shorthands.*
@@ -83,6 +84,38 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
       }(Nil)
     case st.Ref(sym) =>
       sym match
+      case sym: BuiltinSymbol =>
+        warnStmt
+        if sym.binary then
+          val t1 = new Tree.Ident("arg1")
+          val t2 = new Tree.Ident("arg2")
+          val p1 = Param(FldFlags.empty, VarSymbol(t1), N)
+          val p2 = Param(FldFlags.empty, VarSymbol(t2), N)
+          val ps = PlainParamList(p1 :: p2 :: Nil)
+          val bod = st.App(t, st.Tup(List(st.Ref(p1.sym)(t1, 666), st.Ref(p2.sym)(t2, 666)))
+            (Tree.Tup(Nil // FIXME should not be required (using dummy value)
+              )))(
+              Tree.App(Tree.Empty(), Tree.Empty()), // FIXME should not be required (using dummy value)
+              FlowSymbol(sym.nme)
+            )
+          val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
+          tl.log(s"Ref builtin $sym")
+          assert(paramLists.length === 1)
+          return k(Value.Lam(paramLists.head, bodyBlock))
+        if sym.unary then
+          val t1 = new Tree.Ident("arg")
+          val p1 = Param(FldFlags.empty, VarSymbol(t1), N)
+          val ps = PlainParamList(p1 :: Nil)
+          val bod = st.App(t, st.Tup(List(st.Ref(p1.sym)(t1, 666)))
+            (Tree.Tup(Nil // FIXME should not be required (using dummy value)
+              )))(
+              Tree.App(Tree.Empty(), Tree.Empty()), // FIXME should not be required (using dummy value)
+              FlowSymbol(sym.nme)
+            )
+          val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
+          tl.log(s"Ref builtin $sym")
+          assert(paramLists.length === 1)
+          return k(Value.Lam(paramLists.head, bodyBlock))
       case bs: BlockMemberSymbol =>
         bs.defn match
         case S(td: TermDefinition) if td.k is syntax.Fun =>
@@ -97,6 +130,35 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
       case _ => ()
       warnStmt
       k(subst(Value.Ref(sym)))
+    case st.App(Ref(sym: BuiltinSymbol), arg) =>
+      arg match
+      case st.Tup(Nil) =>
+        if !sym.nullary then raise:
+          ErrorReport(
+            msg"Expected arguments for ${sym.nme}" -> t.toLoc :: Nil, S(arg),
+            source = Diagnostic.Source.Compilation)
+        k(Value.Ref(sym))
+      case st.Tup(Fld(FldFlags.benign(), arg, N) :: Nil) =>
+        if !sym.unary then raise:
+          ErrorReport(
+            msg"Expected a single argument for ${sym.nme}" -> t.toLoc :: Nil, S(arg),
+            source = Diagnostic.Source.Compilation)
+        subTerm(arg): ar =>
+          k(Call(Value.Ref(sym), Arg(false, ar) :: Nil)(true))
+      case st.Tup(Fld(FldFlags.benign(), arg1, N) :: Fld(FldFlags.benign(), arg2, N) :: Nil) =>
+        if !sym.binary then raise:
+          ErrorReport(
+            msg"Expected two arguments for ${sym.nme}" -> t.toLoc :: Nil, S(arg),
+            source = Diagnostic.Source.Compilation)
+        subTerm(arg1): ar1 =>
+          subTerm_nonTail(arg2): ar2 =>
+            k(Call(Value.Ref(sym), Arg(false, ar1) :: Arg(false, ar2) :: Nil)(true))
+      case _ =>
+        raise:
+          ErrorReport(
+            msg"Unexpected arguments for builtin symbol '${sym.nme}'" -> arg.toLoc :: Nil, S(arg),
+            source = Diagnostic.Source.Compilation)
+        End("error")
     case st.App(f, arg) =>
       val isMlsFun = f.symbol.fold(f.isInstanceOf[st.Lam]):
         case _: sem.BuiltinSymbol => true
@@ -107,8 +169,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
         arg match
         case Tup(fs) =>
           val as = fs.map:
-            case sem.Fld(sem.FldFlags.empty, value, N) => false -> value
-            case sem.Fld(sem.FldFlags(false, false, false, true), value, N) => false -> value
+            case sem.Fld(sem.FldFlags.benign(), value, N) => false -> value
             case sem.Fld(flags, value, asc) =>
               TODO("Other argument forms")
             case spd: Spd => true -> spd.term
@@ -397,13 +458,17 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
       subTerm(lhs): ref =>
         subTerm_nonTail(rhs): value =>
           AssignField(ref, Tree.Ident("value"), value, k(value))(N)
-
+    case Neg(_) =>
+      raise(ErrorReport(
+        msg"Unexpected type annotations ${t.show}" ->
+        t.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation))
+      End("error")
     case Annotated(prefix, receiver) => 
       raise(WarningReport(
         msg"This annotation has no effect." -> prefix.toLoc ::
         msg"Annotations are not supported on ${receiver.describe} terms." -> receiver.toLoc :: Nil))
       term(receiver)(k)
-    
     case Error => End("error")
     
     // case _ =>

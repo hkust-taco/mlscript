@@ -2,7 +2,7 @@ package hkmc2.utils
 
 import hkmc2.semantics.*
 
-trait SymbolSubst:
+class SymbolSubst:
   def mapBlockMemberSym(s: BlockMemberSymbol): BlockMemberSymbol = s
   def mapFlowSym(s: FlowSymbol): FlowSymbol = s
   def mapTempSym(s: TempSymbol): TempSymbol = s

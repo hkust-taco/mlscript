@@ -8,34 +8,28 @@ import os.up
 import mlscript.utils._, shorthands._
 
 
-
-class MainDiffMaker(val rootPath: Str, val file: os.Path, val preludeFile: os.Path, val predefFile: os.Path, val relativeName: Str)
-  extends LlirDiffMaker
-
-
-
-class AllTests extends org.scalatest.Suites(
-  new CompileTestRunner(DiffTestRunner.State){},
-  new DiffTestRunner(DiffTestRunner.State){},
-)
-
+// * Note: we used to use:
+// *    class AllTests extends org.scalatest.Suites(
+// *      new CompileTestRunner(DiffTestRunner.State){},
+// *      new DiffTestRunner(DiffTestRunner.State){},
+// *    )
+// * but this (very surprisinbgly) disables parallel execution each individual suite.
+// * So now we just split tests into separate SBT projects.
 
 
 object DiffTestRunner:
   
   class State:
     
-    println(s"INITIALIZING DiffTestRunner.State")
-    
-    val TimeLimit =
-      if sys.env.get("CI").isDefined then Span(60, Seconds)
-      else Span(30, Seconds)
-    
     val pwd = os.pwd
-    val workingDir = if pwd.last == "jvm"
-      then pwd/up/up // For some reason, when run from ~hkmc2JVM/Test/run in sbt, the pwd is ".../hkmc2/jvm"
+    
+    // println(s"INITIALIZING DiffTestRunner.State in ${pwd}")
+    
+    val workingDir = if pwd.last == "hkmc2DiffTests"
+      then pwd/up // For some reason, when run from ~hkmc2JVM/Test/run in sbt, the pwd is ".../hkmc2/jvm"
       else pwd
     // val dir = workingDir/"hkmc2"/"shared"/"src"/"test"/"mlscript"
+    
     val dir = workingDir/"hkmc2"/"shared"/"src"/"test"
     
     val validExt = Set("mls")
@@ -44,7 +38,19 @@ object DiffTestRunner:
       .filter(_.toIO.isFile)
       .filter(_.ext in validExt)
     
-    // Aggregate unstaged modified files to only run the tests on them, if there are any
+    def filter(file: os.RelPath): Bool = true
+    
+    val TimeLimit =
+      if sys.env.get("CI").isDefined then Span(60, Seconds)
+      else Span(30, Seconds)
+    
+  end State
+  
+  class StateWithGit extends State:
+    
+    println(s"Running git in ${dir}...")
+    
+    // * Aggregate unstaged modified files to only run the tests on them, if there are any
     val modified: Set[os.RelPath] =
       try os.proc("git", "status", "--porcelain", dir).call().out.lines().iterator.flatMap { gitStr =>
         println(" [git] " + gitStr)
@@ -59,16 +65,26 @@ object DiffTestRunner:
           System.err.println("/!\\ git command failed with: " + err)
           Set.empty
     
-  end State
+    if modified.isEmpty then
+      println("No test file with unstaged changes detected; no test will run.")
+    
+    override def filter(file: os.RelPath): Bool =
+      // println(s"Filtering: $file ${modified(file)}")
+      modified(file)
+    
+  end StateWithGit
   
   lazy val State = new State
   
 end DiffTestRunner
 
 
-abstract class DiffTestRunner(state: DiffTestRunner.State)
-  extends funsuite.AnyFunSuite
+class DiffTestRunner
+  extends DiffTestRunnerBase(DiffTestRunner.State)
   with ParallelTestExecution
+
+class DiffTestRunnerBase(state: DiffTestRunner.State)
+  extends funsuite.AnyFunSuite
   with TimeLimitedTests
 :
   import state.*
@@ -93,6 +109,7 @@ abstract class DiffTestRunner(state: DiffTestRunner.State)
     (
       !file.segments.contains("staging") // Exclude staging test files
       && !file.segments.contains("mlscript-compile")
+      && filter(file.relativeTo(state.workingDir))
     )
   
   diffTestFiles.foreach: file =>
@@ -105,7 +122,7 @@ abstract class DiffTestRunner(state: DiffTestRunner.State)
       val preludePath = dir/"mlscript"/"decls"/"Prelude.mls"
       val predefPath = dir/"mlscript-compile"/"Predef.mls"
       
-      val dm = new MainDiffMaker(state.workingDir.toString, file, preludePath, predefPath, relativeName)
+      val dm = new MainDiffMaker(workingDir.toString, file, preludePath, predefPath, relativeName)
       
       dm.run()
       
@@ -113,38 +130,6 @@ abstract class DiffTestRunner(state: DiffTestRunner.State)
         fail(s"Unexpected test outcome(s) at: " +
           dm.failures.distinct.map("\n\t"+relativeName+"."+file.ext+":"+_).mkString(", "))
   
-end DiffTestRunner
-
-
-abstract class CompileTestRunner(state: DiffTestRunner.State)
-  extends funsuite.AnyFunSuite
-  with ParallelTestExecution
-  with TimeLimitedTests
-:
-  import state.*
-  
-  private val inParallel = isInstanceOf[ParallelTestExecution]
-  
-  val timeLimit = TimeLimit
-  
-  protected lazy val compileTestFiles = allFiles.filter: file =>
-      file.segments.contains("mlscript-compile")
-  
-  compileTestFiles.foreach: file =>
-    
-    // TODO dedup with DiffTestRunner?
-    
-    val basePath = file.segments.drop(dir.segmentCount).toList.init
-    val relativeName = basePath.map(_ + "/").mkString + file.baseName
-    
-    test(relativeName):
-      
-      println(s"Compiling: $relativeName")
-      
-      val preludePath = dir/"mlscript"/"decls"/"Prelude.mls"
-      
-      MLsCompiler(preludePath).compileModule(file)
-  
-end CompileTestRunner
+end DiffTestRunnerBase
 
 

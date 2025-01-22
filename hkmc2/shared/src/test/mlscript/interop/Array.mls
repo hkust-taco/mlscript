@@ -8,7 +8,7 @@ let arr = [true, false]
 // * Array methods annoyingly supply extra arguments, such as the index and the array itself
 :re
 arr.map(_ === false)
-//│ ═══[RUNTIME ERROR] Error: Function expected 1 arguments but got 3
+//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 3
 
 :todo
 arr.map((e, ...) => e === false)

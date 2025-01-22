@@ -2,8 +2,8 @@ module compile
 
 class SomePattern
 
-:e // TODO: pattern compilation
+:w
 fun foo(x) = if x is @compile SomePattern then "yes" else "no"
-//│ ╔══[ERROR] Unrecognized pattern (annotated)
+//│ ╔══[WARNING] Cannot compile the class `SomePattern`
 //│ ║  l.6: 	fun foo(x) = if x is @compile SomePattern then "yes" else "no"
-//│ ╙──     	                      ^^^^^^^^^^^^^^^^^^^
+//│ ╙──     	                              ^^^^^^^^^^^

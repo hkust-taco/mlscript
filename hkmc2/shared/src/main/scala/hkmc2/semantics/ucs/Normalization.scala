@@ -5,11 +5,11 @@ package ucs
 import mlscript.utils.*, shorthands.*
 import syntax.{Literal, Tree}, utils.TraceLogger
 import Message.MessageContext
+import Elaborator.Ctx
 
-class Normalization(tl: TraceLogger)(using raise: Raise):
+class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
   import Normalization.*, Mode.*
-  import Elaborator.Ctx
-  import tl.*
+  import elaborator.tl.*
 
   def raiseDesugaringError(msgs: (Message -> Opt[Loc])*): Unit =
     raise(ErrorReport(msgs.toList, source = Diagnostic.Source.Typing))
@@ -87,10 +87,60 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
           log(s"ALIAS: $scrutinee is $vs")
           Split.Let(vs, scrutinee, rec(consequent ++ alternative))
         case pattern @ (Pattern.Lit(_) | _: Pattern.ClassLike | Pattern.Tuple(_, _)) =>
-          log(s"MATCH: $scrutinee is $pattern")
+          log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
           val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
           val whenFalse = rec(specialize(alternative, -, scrutinee, pattern).clearFallback)
           Branch(scrutinee, pattern, whenTrue) ~: whenFalse
+        case Pattern.Synonym(symbol, arguments) => scoped("ucs:rp"):
+          log(s"SYNONYM: ${scrutinee.showDbg} is $symbol")
+          import DeBrujinSplit.*, PatternStub.*
+          val pattern2 = ClassLike(ConstructorLike.Instantiation(symbol, arguments))
+          val mainSplit = Binder(Branch(Outermost, pattern2, Accept(42), Reject))
+          log(s"the initial split:\n${mainSplit.display}")
+          val (normalizedMainSplit, idSplitMap) = scoped("ucs:rpn"):
+            mainSplit.normalize(using elaborator.tl)
+          log(s"the normalized main split:\n${normalizedMainSplit.display}")
+          given Elaborator.State = elaborator.state
+          // The entry in the local pattern map.
+          val desugaring = new DesugaringBase:
+            val elaborator: Elaborator = Normalization.this.elaborator
+          val idSplitSymbolMap = idSplitMap.map:
+            case (id, split) => (id, (split, TempSymbol(N, s"match$id")))
+          val idSymbolMap = idSplitSymbolMap.map(_ -> _._2)
+          val compiledMainSplit = normalizedMainSplit.toSplit(
+            scrutinees = Vector(() => scrutinee),
+            localPatterns = idSymbolMap,
+            outcomes = Map(S(42) -> consequent),
+            elab = elaborator
+          )
+          log(s"the compiled main split:\n${Split.display(compiledMainSplit)}")
+          // Insert local pattern bindings before the split.
+          idSplitSymbolMap.foldRight(rec(compiledMainSplit ++ alternative)):
+            case ((id, (split, symbol)), inner) =>
+              val definition =
+                log(s"making definition for ${split.display}")
+                import syntax.{Fun, Keyword, ParamBind, Tree}, Tree.Ident
+                // The memorized splits may have free variables. We will count
+                // the number of free variables, bind them, and substitute them
+                // with the new indices.
+                val paramSymbols = (1 to split.arity).map: i =>
+                  TermSymbol(ParamBind, N, Ident(s"param$i"))
+                .toVector
+                val paramList = PlainParamList:
+                  paramSymbols.iterator.map(Param(FldFlags.empty, _, N)).toList
+                val success = Split.Else(desugaring.makeMatchResult(Term.Tup(Nil)(Tree.Tup(Nil))))
+                val failure = Split.Else(desugaring.makeMatchFailure)
+                val bodySplit = scoped("ucs:rp:split"):
+                  val bodySplit = split.toSplit(
+                    scrutinees = paramSymbols.map(symbol => () => symbol.ref()),
+                    localPatterns = idSymbolMap,
+                    outcomes = Map(S(0) -> success, N -> failure),
+                    elab = elaborator) ++ Split.Else(desugaring.makeMatchFailure)
+                  log(s"the compiled local pattern ${id}:\n${Split.display(bodySplit)}")
+                  bodySplit
+                val funcBody: Term = Term.IfLike(Keyword.`if`, bodySplit)(bodySplit)
+                Term.Lam(paramList, funcBody)
+              Split.Let(symbol, definition, inner)
         case _ =>
           raiseDesugaringError(msg"unsupported pattern matching: ${scrutinee.toString} is ${pattern.toString}" -> pattern.toLoc)
           Split.default(Term.Error)
@@ -118,7 +168,7 @@ class Normalization(tl: TraceLogger)(using raise: Raise):
       scrutinee: Term.Ref,
       pattern: Pattern
   )(using VarSet): Split = trace(
-    pre = s"S$mode <<< $scrutinee is $pattern : ${Split.display(split)}",
+    pre = s"S$mode <<< ${scrutinee.showDbg} is ${pattern.showDbg} : ${Split.display(split)}",
     post = (r: Split) => s"S$mode >>> ${Split.display(r)}"
   ):
     def rec(split: Split)(using mode: Mode, vs: VarSet): Split = split match

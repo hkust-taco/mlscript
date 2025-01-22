@@ -1,0 +1,39 @@
+:js
+
+class Box[A](val value: A)
+
+pattern Sign = -1 | 0 | 1
+
+[-1 is Sign, 0 is Sign, 1 is Sign]
+//│ = [ true, true, true ]
+
+pattern SignBox = Box(Sign | SignBox)
+
+[
+  Box(-1) is @compile SignBox,
+  Box(0) is @compile SignBox,
+  Box(1) is @compile SignBox
+]
+//│ = [ true, true, true ]
+
+[
+  Box(Box(-1)) is @compile SignBox,
+  Box(Box(0)) is @compile SignBox,
+  Box(Box(1)) is @compile SignBox
+]
+//│ = [ true, true, true ]
+
+[
+  Box(Box(Box(-1))) is @compile SignBox,
+  Box(Box(Box(0))) is @compile SignBox,
+  Box(Box(Box(1))) is @compile SignBox
+]
+//│ = [ true, true, true ]
+
+:expect [ false, false, false ]
+[
+  Box(Box(Box(2))) is @compile SignBox,
+  Box(Box(Box(null))) is @compile SignBox,
+  -1 is SignBox
+]
+//│ = [ false, false, false ]

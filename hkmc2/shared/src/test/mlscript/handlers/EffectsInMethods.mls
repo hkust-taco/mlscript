@@ -1,0 +1,26 @@
+:js
+:handler
+
+
+abstract class Effect with
+  fun perform(arg: Str): Str
+
+
+class Test with
+  fun p(h, x) =
+    h.perform("A", x) + h.perform("B", x + 1)
+let t = new Test
+//│ t = Test {}
+
+handle h = Effect with
+  fun perform(arg, x)(k) =
+    print(arg)
+    k(x * 2)
+[t.p(h, 2), t.p(h, 3)]
+//│ > A
+//│ > B
+//│ > A
+//│ > B
+//│ = [ 10, 14 ]
+
+

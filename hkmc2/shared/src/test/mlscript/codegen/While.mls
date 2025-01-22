@@ -11,7 +11,7 @@
 //│   let scrut, tmp;
 //│   tmp1: while (true) {
 //│     scrut = true;
-//│     if (scrut) {
+//│     if (scrut === true) {
 //│       tmp = 0;
 //│       continue tmp1;
 //│     } else {
@@ -57,7 +57,7 @@ while x
 //│ let scrut, tmp, tmp1;
 //│ tmp2: while (true) {
 //│   scrut = this.x;
-//│   if (scrut) {
+//│   if (scrut === true) {
 //│     tmp = this.log("Hello World");
 //│     this.x = false;
 //│     tmp1 = null;
@@ -112,7 +112,7 @@ while
 //│   tmp2: while (true) {
 //│     i = 0;
 //│     scrut = i < 10;
-//│     if (scrut) {
+//│     if (scrut === true) {
 //│       tmp = i + 1;
 //│       i = tmp;
 //│       tmp1 = null;

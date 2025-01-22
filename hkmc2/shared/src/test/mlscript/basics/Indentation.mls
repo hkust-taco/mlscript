@@ -1,0 +1,92 @@
+:js
+
+
+print(
+  2)
+1
+//│ > 2
+//│ = 1
+
+:p
+id(
+  2)
+  print()
+//│ |id|(|→|2|←|)|→|↵|print|(||)|←|
+//│ Parsed:
+//│ 	Jux(App(Ident(id),Tup(List(IntLit(2)))),Block(List(App(Ident(print),Tup(List())))))
+//│ > 2
+
+:p
+id(
+  2
+)
+  print()
+//│ |id|(|→|2|←|↵|)|→|print|(||)|←|
+//│ Parsed:
+//│ 	Jux(App(Ident(id),Tup(List(IntLit(2)))),Block(List(App(Ident(print),Tup(List())))))
+//│ > 2
+
+
+fun test2() =
+  fun funny = (case
+    0 then 1)
+  funny
+
+test2()(0)
+//│ = 1
+
+
+:pt
+module P with
+  print(
+    2)
+  val x = 1
+P.x
+//│ Parsed tree:
+//│ TypeDef:
+//│   k = Mod
+//│   head = Ident of "P"
+//│   extension = N
+//│   body = S of Block of Ls of 
+//│     App:
+//│       lhs = Ident of "print"
+//│       rhs = Tup of Ls of 
+//│         IntLit of 2
+//│     TermDef:
+//│       k = ImmutVal
+//│       head = Ident of "x"
+//│       rhs = S of IntLit of 1
+//│ Sel:
+//│   prefix = Ident of "P"
+//│   name = Ident of "x"
+//│ > 2
+//│ = 1
+
+
+module P with
+  (
+    )
+  module TraceLogger
+
+:pe
+module P with
+  (
+  )
+  module TraceLogger
+//│ ╔══[PARSE ERROR] Expected an expression; found new line instead
+//│ ║  l.73: 	  (
+//│ ║        	   ^
+//│ ║  l.74: 	  )
+//│ ╙──      	^^
+
+
+module P with ...
+fun checkArgs(expected) =
+  ("Function" +
+    expected)
+module TraceLogger
+
+P.TraceLogger
+//│ = TraceLogger { class: [class TraceLogger] }
+
+

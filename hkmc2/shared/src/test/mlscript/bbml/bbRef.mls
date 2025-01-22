@@ -36,18 +36,18 @@ let r = region x in x.ref 42
 
 fun mkRef() = region x in x.ref 42
 mkRef
-//│ Type: () -> Ref[Int, ?]
+//│ Type: [outer] -> () -> Ref[Int, out ¬outer]
 
 :e
 let t = region x in x in t.ref 42
 //│ ╔══[ERROR] Type error in reference creation
 //│ ║  l.42: 	let t = region x in x in t.ref 42
 //│ ║        	                         ^^^^^^^^
-//│ ╟── because: cannot constrain  Region[in 'x out 'x]  <:  Region['reg]
-//│ ╟── because: cannot constrain  'x  <:  'reg
-//│ ╟── because: cannot constrain  'x  <:  'reg
-//│ ╟── because: cannot constrain  'x  <:  ¬(¬'x)
-//│ ╟── because: cannot constrain  'x  <:  ¬(¬'x)
+//│ ╟── because: cannot constrain  Region[in 'x out 'x1]  <:  Region['reg]
+//│ ╟── because: cannot constrain  'x1  <:  'reg
+//│ ╟── because: cannot constrain  'x1  <:  'reg
+//│ ╟── because: cannot constrain  'x1  <:  ¬(¬'x)
+//│ ╟── because: cannot constrain  'x1  <:  ¬(¬'x)
 //│ ╟── because: cannot constrain    <:  ¬(¬'x)
 //│ ╟── because: cannot constrain    <:  'x
 //│ ╙── because: cannot constrain    <:  ¬()
@@ -56,8 +56,8 @@ let t = region x in x in t.ref 42
 //│ ║        	                    ^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ¬()
-//│ ╟── because: cannot constrain  'x  <:  ¬()
-//│ ╟── because: cannot constrain  'x  <:  ¬()
+//│ ╟── because: cannot constrain  'x1  <:  ¬()
+//│ ╟── because: cannot constrain  'x1  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Ref[Int, ?]
 
@@ -125,7 +125,7 @@ fun rid(x) =
 :e
 region x in
   (let dz = x.ref 42 in 42): [A] -> Int
-//│ ╔══[ERROR] Type error in block with expected type forall 'A: Int
+//│ ╔══[ERROR] Type error in block with expected type [outer, 'A] -> Int
 //│ ║  l.127: 	  (let dz = x.ref 42 in 42): [A] -> Int
 //│ ║         	            ^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg  <:  ⊥
@@ -167,7 +167,7 @@ fun foo(x) = x
 //│ Type: ⊤
 
 foo
-//│ Type: forall 'A: ('A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
 //│ Where:
 //│   'A <: Int
 
@@ -179,11 +179,11 @@ fun bar(f) = f(42)
 //│ Type: ⊤
 
 bar
-//│ Type: (forall 'A: ('A) ->{⊥} 'A) ->{⊥} Int
+//│ Type: (['A] -> ('A) ->{⊥} 'A) ->{⊥} Int
 
 :e
 region x in x.ref bar
-//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but (forall 'A: ('A) ->{⊥} 'A) ->{⊥} Int found
+//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but ([outer, 'A] -> ('A) ->{⊥} 'A) ->{⊥} Int found
 //│ ║  l.185: 	region x in x.ref bar
 //│ ╙──       	                  ^^^
 //│ Type: Ref[⊥, ?]

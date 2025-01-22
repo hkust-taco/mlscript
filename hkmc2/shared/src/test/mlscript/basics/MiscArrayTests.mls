@@ -21,7 +21,7 @@ xs
 
 :re
 xs.map(x => x * 2)
-//│ ═══[RUNTIME ERROR] Error: Function expected 1 arguments but got 3
+//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 3
 
 xs.map((x, i, a) => x * 2)
 //│ = [ 4, 2, 0 ]

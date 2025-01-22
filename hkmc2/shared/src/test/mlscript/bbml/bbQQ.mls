@@ -118,6 +118,6 @@ x `=> run(x)
 //│ ╟── because: cannot constrain  'T  <:  CodeBase[out 'cde1, out 'ctx, ?]
 //│ ╟── because: cannot constrain  'T  <:  ¬(¬{CodeBase[out 'cde1, out 'ctx, ?]})
 //│ ╟── because: cannot constrain  'cde  <:  ¬(¬{CodeBase[out 'cde1, out 'ctx, ?]})
-//│ ╟── because: cannot constrain  'cde  <:  CodeBase[out 'cde1, out 'ctx, ?]
-//│ ╙── because: cannot constrain  Int  <:  CodeBase[out 'cde1, out 'ctx, ?]
+//│ ╟── because: cannot constrain  'cde  <:  CodeBase[out 'cde2, out 'ctx1, ?]
+//│ ╙── because: cannot constrain  Int  <:  CodeBase[out 'cde2, out 'ctx1, ?]
 //│ Type: CodeBase[⊥, ⊥, ?]

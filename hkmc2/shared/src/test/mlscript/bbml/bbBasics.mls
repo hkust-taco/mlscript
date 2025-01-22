@@ -20,7 +20,7 @@ false
 
 fun id(x) = x
 id
-//│ Type: forall 'x: 'x -> 'x
+//│ Type: ['x] -> 'x -> 'x
 
 fun inc(x) = x + 1
 //│ Type: ⊤
@@ -159,13 +159,13 @@ let ip = new Printer(foofoo) in ip.Printer#f(42)
 
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
-//│ ╔══[ERROR] Type error in string literal with expected type 'T
+//│ ╔══[ERROR] Type error in string literal with expected type '-T
 //│ ║  l.161: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ║         	                                             ^^^^
-//│ ╟── because: cannot constrain  Str  <:  'T
-//│ ╟── because: cannot constrain  Str  <:  'T
-//│ ╟── because: cannot constrain  Str  <:  ¬(¬'T)
-//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╟── because: cannot constrain  Str  <:  '-T
+//│ ╟── because: cannot constrain  Str  <:  '-T
+//│ ╟── because: cannot constrain  Str  <:  ¬(¬'-T)
+//│ ╟── because: cannot constrain  Str  <:  '-T
 //│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int})
 //│ Type: Str
 
@@ -186,13 +186,13 @@ let tf = new TFun(inc) in tf.TFun#f(1)
 
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
-//│ ╔══[ERROR] Type error in string literal with expected type 'T
+//│ ╔══[ERROR] Type error in string literal with expected type '-T
 //│ ║  l.188: 	let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
-//│ ╟── because: cannot constrain  Str  <:  'T
-//│ ╟── because: cannot constrain  Str  <:  'T
-//│ ╟── because: cannot constrain  Str  <:  ¬(¬'T)
-//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╟── because: cannot constrain  Str  <:  '-T
+//│ ╟── because: cannot constrain  Str  <:  '-T
+//│ ╟── because: cannot constrain  Str  <:  ¬(¬'-T)
+//│ ╟── because: cannot constrain  Str  <:  '-T
 //│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int})
 //│ Type: Str ∨ Int
 
@@ -280,7 +280,7 @@ new Foo(x => x)
 
 fun f(g) = new Foo(g)
 f
-//│ Type: forall 'A: ('A -> 'A) -> Foo['A]
+//│ Type: ['A] -> ('A -> 'A) -> Foo['A]
 
 f(x => x).Foo#x
 //│ Type: ('A) ->{⊥} 'A

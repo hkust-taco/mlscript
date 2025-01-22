@@ -78,7 +78,7 @@ fun high(f) = f(42)
 //│ Type: ⊤
 
 high
-//│ Type: (forall 'A: ('A) ->{⊥} 'A) ->{⊥} Int
+//│ Type: (['A] -> ('A) ->{⊥} 'A) ->{⊥} Int
 
 
 high((x => x): [A] -> A -> A)
@@ -100,11 +100,11 @@ high(x => x + 1)
 //│ Type: Int
 
 (let a = 0 in x => x): [A] -> A -> A
-//│ Type: forall 'A: ('A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
 
 
 (if false then x => x else y => y): [A] -> A -> A
-//│ Type: forall 'A: ('A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
 
 
 fun baz: Int -> (([A] -> A -> A), Int) -> Int
@@ -119,24 +119,24 @@ fun baz(z) =
 
 :e
 baz: Int -> (([A] -> A -> A), Int) -> Int
-//│ ╔══[ERROR] Cannot type non-function term SynthSel(Ref(globalThis:block#18),Ident(baz)) as (Int) ->{⊥} (forall 'A: ('A) ->{⊥} 'A, Int) ->{⊥} Int
+//│ ╔══[ERROR] Cannot type non-function term SynthSel(Ref(globalThis:block#18),Ident(baz)) as (Int) ->{⊥} ([outer, 'A] -> ('A) ->{⊥} 'A, Int) ->{⊥} Int
 //│ ║  l.121: 	baz: Int -> (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^
 //│ Type: ⊥
 
 
 baz(42)
-//│ Type: (forall 'A: ('A) ->{⊥} 'A, Int) ->{⊥} Int
+//│ Type: (['A] -> ('A) ->{⊥} 'A, Int) ->{⊥} Int
 
 :e
 baz(42): (([A] -> A -> A), Int) -> Int
-//│ ╔══[ERROR] Cannot type non-function term App(SynthSel(Ref(globalThis:block#18),Ident(baz)),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))) as (forall 'A: ('A) ->{⊥} 'A, Int) ->{⊥} Int
+//│ ╔══[ERROR] Cannot type non-function term App(SynthSel(Ref(globalThis:block#18),Ident(baz)),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))) as ([outer, 'A] -> ('A) ->{⊥} 'A, Int) ->{⊥} Int
 //│ ║  l.132: 	baz(42): (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^^^^^
 //│ Type: ⊥
 
 (z => (f, x) => baz(z)(f, x)): Int -> (([A] -> A -> A), Int) -> Int
-//│ Type: (Int) ->{⊥} (forall 'A: ('A) ->{⊥} 'A, Int) ->{⊥} Int
+//│ Type: (Int) ->{⊥} (['A] -> ('A) ->{⊥} 'A, Int) ->{⊥} Int
 
 
 fun id: [A] -> A -> A
@@ -144,11 +144,11 @@ fun id(x) = x
 //│ Type: ⊤
 
 id: [A] -> A -> A
-//│ Type: forall 'A: ('A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
 
 
 (id: [A] -> A -> A): [A] -> A -> A
-//│ Type: forall 'A: ('A) ->{⊥} 'A
+//│ Type: ['A] -> ('A) ->{⊥} 'A
 
 42: Int | Num
 //│ Type: Int ∨ Num
@@ -166,3 +166,63 @@ foo
 
 foo
 //│ Type: (Int) ->{⊥} Int
+
+
+
+fun foo: [A] -> (A, ~A) -> A
+foo
+//│ Type: ['A] -> ('A, ¬'A) ->{⊥} 'A
+
+
+:e
+foo(42, 1)
+//│ ╔══[ERROR] Type error in integer literal with expected type ¬'A
+//│ ║  l.178: 	foo(42, 1)
+//│ ║         	        ^
+//│ ╟── because: cannot constrain  Int  <:  ¬'A
+//│ ╟── because: cannot constrain  'A  <:  ¬(Int)
+//│ ╙── because: cannot constrain  Int  <:  ¬(Int)
+//│ Type: Int
+
+foo(42, false)
+//│ Type: Int
+
+
+fun f: ([A] -> A -> Int) -> ([A] -> A -> Int)
+f
+//│ Type: ((⊤) ->{⊥} Int) ->{⊥} (⊤) ->{⊥} Int
+
+
+fun f: ([A] -> ([B] -> A | B -> B)) -> ([A] -> ([B] -> A | B -> B))
+f
+//│ Type: (['B] -> (⊤) ->{⊥} 'B) ->{⊥} ['B] -> (⊤) ->{⊥} 'B
+
+
+fun f: ([A] -> ([B] -> A & B -> B)) -> ([A] -> ([B] -> A & B -> B))
+f
+//│ Type: (['B] -> ('B) ->{⊥} 'B) ->{⊥} ['B] -> ('B) ->{⊥} 'B
+
+
+fun f: ([A] -> ([B] -> A -> B & A)) -> ([A] -> ([B] -> A -> B | A))
+f
+//│ Type: (['A] -> ('A) ->{⊥} ⊥) ->{⊥} ['A] -> ('A) ->{⊥} 'A
+
+
+fun f: ([A] -> ([B] -> A | B -> B) -> A) -> ([A] -> ([B] -> A | B -> B) -> A)
+f
+//│ Type: ((['B] -> ('B) ->{⊥} 'B) ->{⊥} ⊥) ->{⊥} (['B] -> ('B) ->{⊥} 'B) ->{⊥} ⊥
+
+
+fun f: ([A] -> ([B] -> A | B -> B | A) -> A) -> ([A] -> ([B] -> A | B -> B | A) -> A)
+f
+//│ Type: (['A] -> (['B] -> ('A ∨ 'B) ->{⊥} 'B ∨ 'A) ->{⊥} 'A) ->{⊥} ['A] -> (['B] -> ('A ∨ 'B) ->{⊥} 'B ∨ 'A) ->{⊥} 'A
+
+
+fun f: [A] -> [B] -> ([C] -> A | B -> B | C -> A | C) -> B
+f
+//│ Type: ['A] -> (['C] -> ('A) ->{⊥} ('C) ->{⊥} 'A ∨ 'C) ->{⊥} ⊥
+
+
+fun f: [A, B] -> ([C] -> A | B -> B | C -> A | B | C) -> B
+f
+//│ Type: ['A, 'B] -> (['C] -> ('A ∨ 'B) ->{⊥} ('B ∨ 'C) ->{⊥} ('A ∨ 'B) ∨ 'C) ->{⊥} 'B

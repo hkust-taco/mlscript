@@ -1,0 +1,122 @@
+:js
+
+class Box[A](val value: A)
+
+pattern NatBox = null | Box(NatBox)
+
+fun nat(n) = if n is 0 then null else Box(nat(n - 1))
+
+fun int(n) = if n is
+  null then 0
+  Box(x) then 1 + int(x)
+
+[nat(0), nat(1), nat(2), nat(3)]
+//│ > [
+//│ >   null,
+//│ >   Box { value: null },
+//│ >   Box { value: Box { value: null } },
+//│ >   Box { value: Box { value: [Box] } }
+//│ = ]
+
+int(nat(42))
+//│ = 42
+
+:expect true
+nat(0) is @compile NatBox
+//│ = true
+
+:expect true
+nat(1) is @compile NatBox
+//│ = true
+
+:expect false
+Box(0) is @compile NatBox
+//│ = false
+
+:expect true
+nat(7) is @compile NatBox
+//│ = true
+
+:expect true
+nat(14) is @compile NatBox
+//│ = true
+
+:expect false
+Box(Box(Box(Box(Box(Box(Box(0))))))) is @compile NatBox
+//│ = false
+
+pattern PosNatBox = Box(null | NatBox)
+
+:expect false
+null is @compile PosNatBox
+//│ = false
+
+nat(1) is @compile PosNatBox
+//│ = true
+
+:expect true
+nat(2) is @compile PosNatBox
+//│ = true
+
+:expect true
+nat(3) is @compile PosNatBox
+//│ = true
+
+:expect false
+Box(Box(Box(Box(42)))) is @compile PosNatBox
+//│ = false
+
+pattern EvenNatBox = Box(Box(null | EvenNatBox))
+
+:expect false
+nat(0) is @compile EvenNatBox
+//│ = false
+
+:expect false
+nat(1) is @compile EvenNatBox
+//│ = false
+
+:expect true
+nat(2) is @compile EvenNatBox
+//│ = true
+
+:expect false
+nat(3) is @compile EvenNatBox
+//│ = false
+
+:expect true
+nat(4) is @compile EvenNatBox
+//│ = true
+
+// Make the base case a new pattern.
+
+pattern Zero = null
+
+null is Zero
+//│ = true
+
+pattern OddNatBox = Box(Zero | Box(OddNatBox))
+
+:expect false
+nat(0) is @compile OddNatBox
+//│ = false
+
+:expect true
+nat(1) is @compile OddNatBox
+//│ = true
+
+:expect false
+nat(2) is @compile OddNatBox
+//│ = false
+
+:expect true
+nat(3) is @compile OddNatBox
+//│ = true
+
+:expect false
+nat(4) is @compile OddNatBox
+//│ = false
+
+:expect false
+Box(Box(78)) is @compile OddNatBox
+//│ = false

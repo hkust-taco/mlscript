@@ -50,7 +50,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   private var hostCreated = false
   override def run(): Unit =
     try super.run() finally if hostCreated then host.terminate()
-  
+
   private val DEFAULT_STACK_LIMT = 500
   
   override def processTerm(blk: semantics.Term.Blk, inImport: Bool)(using Raise): Unit =
@@ -127,16 +127,16 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             case Some(str) =>
               str.splitSane('\n').foreach: line =>
                 output(s"> ${line}")
+            expect.get match
+            case S(expected) if content != expected && prefix == "" => raise:
+              ErrorReport(msg"Expected: ${expected}, got: ${content}" -> N :: Nil,
+                source = Diagnostic.Source.Runtime)
+            case _ =>
             content match
             case "undefined" =>
             case "null" =>
             case _ =>
-              expect.get match
-              case S(expected) if content != expected => raise:
-                ErrorReport(msg"Expected: ${expected}, got: ${content}" -> N :: Nil,
-                  source = Diagnostic.Source.Runtime)
-              case _ =>
-                if silent.isUnset then output(s"$prefix= ${content}")
+              if silent.isUnset then output(s"$prefix= ${content}")
           case ReplHost.Empty =>
           case ReplHost.Unexecuted(message) => ???
           case ReplHost.Error(isSyntaxError, message, otherOutputs) =>

@@ -78,7 +78,7 @@ object Printer:
       val docBody = if publicFields.isEmpty && privateFields.isEmpty then doc"" else doc" { #{ ${docPrivFlds}${docPubFlds} #}  # }"
       val docCtorParams = if clsParams.isEmpty then doc"" else doc"(${ctorParams.mkString(", ")})"
       doc"class ${sym.nme}${docCtorParams}${docBody}"
-
+  
   def mkDocument(arg: Arg)(using Raise, Scope): Document =
     val doc = mkDocument(arg.value)
     if arg.spread

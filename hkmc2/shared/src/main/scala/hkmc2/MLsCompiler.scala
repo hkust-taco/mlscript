@@ -38,9 +38,8 @@ class ParserSetup(file: os.Path, dbgParsing: Bool)(using Elaborator.State, Raise
 class MLsCompiler(preludeFile: os.Path):
   
   
-  given raise: Raise = d =>
-    System.err.println(s"Error: $d")
-    ()
+  val report = ReportFormatter: str =>
+    System.out.println(fansi.Color.Red(str))
   
   
   // TODO adapt logic
@@ -53,12 +52,17 @@ class MLsCompiler(preludeFile: os.Path):
   
   def compileModule(file: os.Path): Unit =
     
+    val wd = file / os.up
+    
+    given raise: Raise = d =>
+      System.out.println(fansi.Color.LightRed(s"/!!!\\ Error in ${file.relativeTo(wd/os.up)} /!!!\\"))
+      report(0, d :: Nil, showRelativeLineNums = false)
+    
     given Elaborator.State = new Elaborator.State
     
     val preludeParse = ParserSetup(preludeFile, dbgParsing)
     val mainParse = ParserSetup(file, dbgParsing)
     
-    val wd = file / os.up
     val elab = Elaborator(etl, wd)
     
     val initState = State.init.nest(N)

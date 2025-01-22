@@ -85,6 +85,26 @@ trait DesugaringBase(using state: Elaborator.State):
   protected final def plainTest(cond: Term, dbgName: Str = "cond")(inner: => Split): Split =
     val s = TempSymbol(N, dbgName)
     Split.Let(s, cond, Branch(s.ref(), inner) ~: Split.End)
+    
+  protected lazy val lteq = state.builtinOpsMap("<=")
+  protected lazy val lt = state.builtinOpsMap("<")
+  protected lazy val eq = state.builtinOpsMap("==")
+  
+  def makeMatchResult(captures: Term)(using Elaborator.Ctx) =
+    app(matchResultClass._1, tup(fld(captures)), FlowSymbol("result of `MatchResult`"))
+    
+  def makeMatchFailure(using Elaborator.Ctx) =
+    app(matchFailureClass._1, tup(), FlowSymbol("result of `MatchFailure`"))
+  
+  /** Make a `Branch` that calls `Pattern` symbols' `unapply` functions. */
+  def makeLocalPatternBranch(
+      scrut: => Term.Ref,
+      localPatternSymbol: BlockLocalSymbol,
+      inner: => Split,
+  )(fallback: Split): Ctxl[Split] =
+    val call = app(localPatternSymbol.ref(), tup(fld(scrut)), FlowSymbol(s"result of ${localPatternSymbol.nme}"))
+    tempLet("matchResult", call): resultSymbol =>
+      Branch(resultSymbol.ref(), matchResultPattern(N), inner) ~: fallback
 
   /** Make a `Branch` that calls `Pattern` symbols' `unapply` functions. */
   def makeUnapplyBranch(

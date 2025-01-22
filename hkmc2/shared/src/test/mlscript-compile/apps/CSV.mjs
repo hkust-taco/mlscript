@@ -24,17 +24,17 @@ CSV.class = class CSV {
     tmp7: while (true) {
       arrMatches = this.objPattern.exec(strData) ?? null;
       scrut = arrMatches !== null;
-      if (scrut) {
+      if (scrut === true) {
         strMatchedDelimiter = arrMatches[1];
         tmp = strMatchedDelimiter != this.strDelimiter;
         scrut1 = strMatchedDelimiter.length && tmp;
-        if (scrut1) {
+        if (scrut1 === true) {
           tmp1 = arrData.push([]) ?? null;
         } else {
           tmp1 = null;
         }
         scrut2 = arrMatches[2];
-        if (scrut2) {
+        if (scrut2 === true) {
           tmp2 = new RegExp("\"\"", "g");
           tmp3 = arrMatches[2].replace(tmp2, "\"");
         } else {

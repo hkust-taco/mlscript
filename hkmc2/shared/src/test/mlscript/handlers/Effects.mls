@@ -148,7 +148,7 @@ if true do
 //│ let tmp;
 //│ function handleBlock$0() {
 //│   let h, scrut, tmp1, res;
-//│   class Effect$h$1161 extends globalThis.Effect {
+//│   class Effect$h$908 extends globalThis.Effect {
 //│     constructor() {
 //│       let tmp2;
 //│       tmp2 = super();
@@ -158,11 +158,11 @@ if true do
 //│         return arg;
 //│       });
 //│     }
-//│     toString() { return "Effect$h$1161"; }
+//│     toString() { return "Effect$h$908"; }
 //│   }
-//│   h = new Effect$h$1161();
-//│   function Cont$1186(pc1) { return new Cont$1186.class(pc1); }
-//│   Cont$1186.class = class Cont$1186 extends globalThis.Predef.__Cont.class {
+//│   h = new Effect$h$908();
+//│   function Cont$932(pc1) { return new Cont$932.class(pc1); }
+//│   Cont$932.class = class Cont$932 extends globalThis.Predef.__Cont.class {
 //│     constructor(pc) {
 //│       let tmp2;
 //│       tmp2 = super(null, null);
@@ -174,43 +174,25 @@ if true do
 //│       }
 //│       contLoop: while (true) {
 //│         if (this.pc === 2) {
-//│           scrut = true;
-//│           if (scrut) {
-//│             res = f$0();
-//│             if (res instanceof globalThis.Predef.__EffectSig.class) {
-//│               res.tail.next = this;
-//│               this.pc = 1;
-//│               return res;
-//│             }
-//│             this.pc = 1;
-//│             continue contLoop;
-//│           } else {
-//│             tmp1 = null;
-//│             this.pc = 3;
-//│             continue contLoop;
-//│           }
-//│           this.pc = 3;
-//│           continue contLoop;
-//│         } else if (this.pc === 3) {
 //│           return tmp1;
 //│         } else if (this.pc === 1) {
 //│           tmp1 = res;
-//│           this.pc = 3;
+//│           this.pc = 2;
 //│           continue contLoop;
 //│         }
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$1186(" + this.pc + ")"; }
+//│     toString() { return "Cont$932(" + this.pc + ")"; }
 //│   };
 //│   function f$0() {
 //│     return 3;
 //│   }
 //│   scrut = true;
-//│   if (scrut) {
+//│   if (scrut === true) {
 //│     res = f$0();
 //│     if (res instanceof globalThis.Predef.__EffectSig.class) {
-//│       res.tail.next = new Cont$1186(1);
+//│       res.tail.next = new Cont$932(1);
 //│       return globalThis.Predef.__handleBlockImpl(res, h);
 //│     }
 //│     tmp1 = res;

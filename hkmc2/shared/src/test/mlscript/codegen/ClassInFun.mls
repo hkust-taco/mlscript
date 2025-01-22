@@ -23,6 +23,12 @@ fun test(a) =
 test(12)
 //│ = C { x: 12 }
 
+fun test(x) =
+  class Foo(x)
+  Foo(x).toString()
+
+test(3)
+//│ = 'Foo(3)'
 
 :sjs
 fun test(x) =
@@ -52,6 +58,6 @@ test(123)
 // * Forgot to pass the arg:
 :re
 test()
-//│ ═══[RUNTIME ERROR] Error: Function 'test' expected 1 arguments but got 0
+//│ ═══[RUNTIME ERROR] Error: Function 'test' expected 1 argument but got 0
 
 

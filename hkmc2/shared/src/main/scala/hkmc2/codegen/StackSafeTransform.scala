@@ -7,6 +7,7 @@ import hkmc2.codegen.*
 import hkmc2.semantics.Elaborator.State
 import hkmc2.semantics.*
 import hkmc2.syntax.Tree
+import hkmc2.syntax.Keyword.`with`
 
 
 class StackSafeTransform(depthLimit: Int)(using State):
@@ -51,32 +52,43 @@ class StackSafeTransform(depthLimit: Int)(using State):
   // Rewrites anything that can contain a Call to increase the stack depth
   def transform(b: Block): Block = 
     // 1. rewrite lambdas
-    def firstPass(b: Block): Block = b.map(firstPass) match
-      case HandleBlock(lhs, res, par, cls, handlers, body, rest) =>
-        HandleBlock(
-          lhs, res, par, cls, handlers.map(h => Handler(h.sym, h.resumeSym, h.params, firstPass(h.body))),
-          firstPass(body), firstPass(rest)
-        )
-      case b => b.mapValue {
-        case Value.Lam(params, body) => Value.Lam(params, rewriteBlk(body))
-        case v => v
-      }
+    def firstPass(b: Block): Block =
+      val transform = new BlockTransformerShallow(SymbolSubst()):
+        override def applyValue(v: Value): Value = v match
+          case Value.Lam(params, body) => Value.Lam(params, rewriteBlk(body))
+          case _ => super.applyValue(v)
+        
+        override def applyBlock(b: Block): Block = b match
+          case HandleBlock(lhs, res, par, cls, handlers, body, rest) =>
+            HandleBlock(
+              lhs, res, par, cls, handlers.map(h => Handler(h.sym, h.resumeSym, h.params, applyBlock(h.body))),
+              applyBlock(body), applyBlock(rest)
+            )
+          case _ => super.applyBlock(b)
+        
+      transform.applyBlock(b)
     
     // 2. rewrite calls and definitions
-    def secondPass(b: Block): Block = b match
-      case Return(c: Call, implct) => extractRes(c, true, Return(_, false))
-      case Return(res, implct) => extractRes(res, false, Return(_, false))
-      case Assign(lhs, rhs, rest) => extractRes(rhs, false, Assign(lhs, _, secondPass(rest)))
-      case b @ AssignField(lhs, nme, rhs, rest) => extractRes(rhs, false, AssignField(lhs, nme, _, secondPass(rest))(b.symbol))
-      case Define(defn, rest) => Define(rewriteDefn(defn), secondPass(rest))
-      case HandleBlock(lhs, res, par, cls, handlers, body, rest) =>
-        HandleBlock(
-          lhs, res, par, cls, handlers.map(h => Handler(h.sym, h.resumeSym, h.params, secondPass(h.body))),
-          secondPass(body), secondPass(rest)
-        )
-      case HandleBlockReturn(c: Call) => extractRes(c, true, HandleBlockReturn(_))
-      case HandleBlockReturn(res) => extractRes(res, false, HandleBlockReturn(_))
-      case _ => b.map(secondPass)
+    def secondPass(b: Block): Block = 
+      val transform = new BlockTransformerShallow(SymbolSubst()):
+        override def applyDefn(defn: Defn): Defn = rewriteDefn(defn)
+
+        override def applyBlock(b: Block): Block = b match
+          case Return(c: Call, implct) => extractRes(c, true, Return(_, false))
+          case Return(res, implct) => extractRes(res, false, Return(_, false))
+          case Assign(lhs, rhs, rest) => 
+            extractRes(rhs, false, Assign(lhs, _, applyBlock(rest)))
+          case b @ AssignField(lhs, nme, rhs, rest) => extractRes(rhs, false, AssignField(lhs, nme, _, applyBlock(rest))(b.symbol))
+          case Define(defn, rest) => Define(rewriteDefn(defn), applyBlock(rest))
+          case HandleBlock(lhs, res, par, cls, handlers, body, rest) =>
+            HandleBlock(
+              lhs, res, par, cls, handlers.map(h => Handler(h.sym, h.resumeSym, h.params, applyBlock(h.body))),
+              applyBlock(body), applyBlock(rest)
+            )
+          case HandleBlockReturn(c: Call) => extractRes(c, true, HandleBlockReturn(_))
+          case HandleBlockReturn(res) => extractRes(res, false, HandleBlockReturn(_))
+          case _ => super.applyBlock(b)
+      transform.applyBlock(b)
     
     secondPass(firstPass(b))
   
@@ -104,7 +116,8 @@ class StackSafeTransform(depthLimit: Int)(using State):
       case HandleBlockReturn(res) => true
       case End(msg) => true
 
-  def rewriteDefn(defn: Defn) = defn match
+  def rewriteDefn(defn: Defn) = 
+    defn match
     case d: FunDefn => rewriteFn(d)
     case _: ValDefn => defn
     case ClsLikeDefn(sym, k, parentPath, methods, privateFields, publicFields, preCtor, ctor) =>
@@ -142,14 +155,17 @@ class StackSafeTransform(depthLimit: Int)(using State):
   def rewriteFn(defn: FunDefn) = FunDefn(defn.sym, defn.params, rewriteBlk(defn.body))
 
   def transformTopLevel(b: Block) =
-    def replaceReturns(b: Block): Block = b match
-      case Return(res, _) => HandleBlockReturn(res)
-      case HandleBlock(lhs, res, par, cls, handlers, body, rest) =>
-        HandleBlock(
-          lhs, res, par, cls, handlers,
-          replaceReturns(body), replaceReturns(rest)
-        )
-      case _ => b.map(replaceReturns)
+    def replaceReturns(b: Block): Block =
+      val transform = new BlockTransformerShallow(SymbolSubst()):
+        override def applyBlock(b: Block): Block = b match
+          case Return(res, _) => HandleBlockReturn(res)
+          case HandleBlock(lhs, res, par, cls, handlers, body, rest) =>
+            HandleBlock(
+              lhs, res, par, cls, handlers,
+              applyBlock(body), applyBlock(rest)
+            )
+          case _ => super.applyBlock(b)
+      transform.applyBlock(b)
     
     // symbols
     val resumeSym = VarSymbol(Tree.Ident("resume"))

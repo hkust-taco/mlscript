@@ -117,7 +117,11 @@ object Elaborator:
     val globalThisSymbol = TopLevelSymbol("globalThis")
     val builtinOpsMap =
       val baseBuiltins = builtins.map: op =>
-          op -> BuiltinSymbol(op, binary = binaryOps(op), unary = unaryOps(op), nullary = false, functionLike = anyOps(op))
+          op -> BuiltinSymbol(op,
+            binary = binaryOps(op),
+            unary = unaryOps(op),
+            nullary = false,
+            functionLike = anyOps(op))
         .toMap
       baseBuiltins ++ aliasOps.map:
         case (alias, base) => alias -> baseBuiltins(base)
@@ -157,6 +161,14 @@ extends Importer:
       case N =>
         N
     case _ => N
+  
+  /** To perform a reverse lookup for a term that references a symbol in the current context. */
+  def reference(target: ClassSymbol | ModuleSymbol): Ctxl[Opt[Term]] =
+    def go(ctx: Ctx): Opt[Term] =
+      ctx.env.values.collectFirst:
+        case elem if elem.symbol.flatMap(_.asClsLike).contains(target) => elem.ref(target.id)
+      .orElse(ctx.parent.flatMap(go))
+    go(ctx).map(Term.SynthSel(_, Ident("class"))(S(target)))
   
   def cls(tree: Tree, inAppPrefix: Bool): Ctxl[Term] = trace[Term](s"Elab class ${tree.showDbg}", r => s"~> $r"):
     val trm = term(tree, inAppPrefix)
@@ -256,14 +268,24 @@ extends Importer:
         case InfixApp(id: Tree.Ident, Keyword.`restricts`, lb) => (genSym(id), N, S(lb))
         case InfixApp(InfixApp(id: Tree.Ident, Keyword.`extends`, ub), Keyword.`restricts`, lb) => (genSym(id), S(ub), S(lb))
       )
-      if syms.length != tvs.length then
+      val outer = (tvs.collect:
+        case Outer(S(name: Tree.Ident)) => genSym(name)
+        case Outer(N) => genSym(Tree.Ident("outer"))
+      ) match
+        case ot :: Nil => S(ot)
+        case _ :: rest =>
+          raise(ErrorReport(msg"Only one outer variable can be bound." -> tree.toLoc :: Nil))
+          N
+        case Nil => N
+      
+      if syms.length + outer.count(_ => true) != tvs.length then
         raise(ErrorReport(msg"Illegal forall annotation." -> tree.toLoc :: Nil))
         Term.Error
       else
         val nestCtx = ctx ++ boundVars
         val bds = syms.map:
           case (sym, ub, lb) => QuantVar(sym, ub.map(ub => term(ub)(using nestCtx)), lb.map(lb => term(lb)(using nestCtx)))
-        Term.Forall(bds, term(body)(using nestCtx))
+        Term.Forall(bds, outer, term(body)(using nestCtx))
     case InfixApp(lhs, Keyword.`->`, Effectful(eff, rhs)) =>
       Term.FunTy(term(lhs), term(rhs), S(term(eff)))
     case InfixApp(lhs, Keyword.`->`, rhs) =>
@@ -275,8 +297,12 @@ extends Importer:
     case InfixApp(lhs, Keyword.`:`, rhs) =>
       Term.Asc(term(lhs), term(rhs))
     case tree @ InfixApp(lhs, Keyword.`is` | Keyword.`and`, rhs) =>
-      val des = new Desugarer(this)(tree)
-      val nor = new ucs.Normalization(tl)(des)
+      val des = new ucs.Desugarer(this)(tree)
+      scoped("ucs:desugared"):
+        log(s"Desugared:\n${Split.display(des)}")
+      val nor = new ucs.Normalization(this)(des)
+      scoped("ucs:normalized"):
+        log(s"Normalized:\n${Split.display(nor)}")
       Term.IfLike(Keyword.`if`, des)(nor)
     case app @ PartialApp(lhs, args) =>
       var params: Ls[Param] = Nil
@@ -321,7 +347,7 @@ extends Importer:
     case App(Ident("!"), Tree.Tup(rhs :: Nil)) =>
       Term.Deref(term(rhs))
     case App(Ident("~"), Tree.Tup(rhs :: Nil)) =>
-      term(rhs)
+      Term.Neg(term(rhs))
     case tree @ App(lhs, OpBlock(ops)) =>
       ops.foldLeft(term(lhs)):
         case (acc, (op, arg)) =>
@@ -414,10 +440,10 @@ extends Importer:
       // case _ =>
       //   raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
     case tree @ Tree.IfLike(kw, _, split) =>
-      val desugared = new Desugarer(this)(tree)
+      val desugared = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
         log(s"Desugared:\n${Split.display(desugared)}")
-      val normalized = new ucs.Normalization(tl)(desugared)
+      val normalized = new ucs.Normalization(this)(desugared)
       scoped("ucs:normalized"):
         log(s"Normalized:\n${Split.display(normalized)}")
       Term.IfLike(kw, desugared)(normalized)
@@ -425,10 +451,10 @@ extends Importer:
     case Tree.Unquoted(body) => Term.Unquoted(term(body))
     case tree @ Tree.Case(_, branches) =>
       val scrut = VarSymbol(Ident("caseScrut"))
-      val des = new Desugarer(this)(tree, scrut)
+      val des = new ucs.Desugarer(this)(tree, scrut)
       scoped("ucs:desugared"):
         log(s"Desugared:\n${Split.display(des)}")
-      val nor = new ucs.Normalization(tl)(des)
+      val nor = new ucs.Normalization(this)(des)
       scoped("ucs:normalized"):
         log(s"Normalized:\n${Split.display(nor)}")
       Term.Lam(PlainParamList(
@@ -447,6 +473,14 @@ extends Importer:
       val nestCtx = ctx + (id.name -> sym)
       Term.Region(sym, term(body)(using nestCtx))
     case Tree.RegRef(reg, value) => Term.RegRef(term(reg), term(value))
+    case Outer(S(_)) =>
+      raise(ErrorReport(msg"Illegal outer binding." -> tree.toLoc :: Nil))
+      Term.Error
+    case Outer(N) => ctx.get("outer") match
+      case S(sym) => sym.ref(Tree.Ident("outer"))
+      case N =>
+        raise(ErrorReport(msg"Illegal outer reference." -> tree.toLoc :: Nil))
+        Term.Error
     case Empty() =>
       raise(ErrorReport(msg"A term was expected in this position, but no term was found." -> tree.toLoc :: Nil))
       Term.Error
@@ -837,9 +871,29 @@ extends Importer:
           val owner = ctx.outer
           newCtx.nest(S(patSym)).givenIn:
             assert(body.isEmpty)
+            td.extension match
+              case N => raise(ErrorReport(msg"Pattern definitions must have a body." -> td.toLoc :: Nil))
+              case S(tree) =>
+                val (patternParams, extractionParams) = ps match // Filter out pattern parameters.
+                  case S(ParamList(_, params, _)) => params.partition:
+                    case param @ Param(FldFlags(false, false, false, false, true), _, _) => true
+                    case param @ Param(FldFlags(_, _, _, _, false), _, _) => false
+                  case N => (Nil, Nil)
+                // TODO: Implement extraction parameters.
+                if extractionParams.nonEmpty then
+                  raise(ErrorReport(msg"Pattern extraction parameters are not yet supported." ->
+                    Loc(extractionParams.iterator.map(_.sym)) :: Nil))
+                log(s"pattern parameters: ${patternParams.mkString("{ ", ", ", " }")}")
+                patSym.patternParams = patternParams
+                val split = ucs.DeBrujinSplit.elaborate(patternParams, tree, this)
+                scoped("ucs:rp:elaborated"):
+                  log(s"elaborated ${patSym.nme}:\n${split.display}")
+                patSym.split = split
             log(s"pattern body is ${td.extension}")
             val translate = new ucs.Translator(this)
-            val bod = translate(ps.map(_.params).getOrElse(Nil), td.extension.getOrElse(die))
+            val bod = translate(patSym.patternParams,
+                                Nil, // ps.map(_.params).getOrElse(Nil), // TODO: remove pattern parameters
+                                td.extension.getOrElse(die))
             val pd = PatternDef(owner, patSym, tps, ps, ObjBody(Term.Blk(bod, Term.Lit(UnitLit(true)))), annotations)
             patSym.defn = S(pd)
             pd
@@ -910,6 +964,8 @@ extends Importer:
           raise(ErrorReport(msg"Module parameters must have concrete types." -> t.toLoc :: Nil))
         case _ => ()
       ps
+    case TypeDef(Pat, inner, N, N) =>
+      param(inner).map(_.mapSecond(p => p.copy(flags = p.flags.copy(pat = true))))
     case _ =>
       t.asParam.map: (isSpd, p, t) =>
         isSpd -> Param(FldFlags.empty, fieldOrVarSym(ParamBind, p), t.map(term(_)))
@@ -1087,7 +1143,7 @@ extends Importer:
         traverseType(pol.!)(l)
         traverseType(pol)(r)
         e.foreach(e => traverseType(pol)(e))
-      case Term.Forall(_, body) =>
+      case Term.Forall(_, _, body) =>
         traverseType(pol)(body)
       case Term.WildcardTy(in, out) =>
         in.foreach(t => traverseType(pol.!)(t))
@@ -1099,6 +1155,8 @@ extends Importer:
         // fields.foreach(f => traverseType(pol)(f.value))
         fields.foreach(traverseType(pol))
       // case _ => ???
+      case Term.Neg(ty) => 
+        traverseType(pol.!)(ty)
     def traverseType(pol: Pol)(f: Elem): Unit = f match
       case f: Fld =>
         traverseType(pol)(f.term)

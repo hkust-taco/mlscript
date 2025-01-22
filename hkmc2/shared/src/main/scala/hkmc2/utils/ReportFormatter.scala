@@ -1,9 +1,13 @@
 package hkmc2
 
+import collection.mutable
+
 import mlscript.utils.*, shorthands.*
 
 
 class ReportFormatter(output: Str => Unit):
+  
+  val badLines = mutable.Buffer.empty[Int]
   
   // report errors and warnings
   def apply(blockLineNum: Int, diags: Ls[Diagnostic], showRelativeLineNums: Bool): Unit =
@@ -13,7 +17,7 @@ class ReportFormatter(output: Str => Unit):
       val headStr =
         val headChar = if onlyOneLine then '═' else '╔'
         diag match
-        case ErrorReport(msg, loco, src) =>
+        case ErrorReport(msg, loco, mkei, src) =>
           src match
             case Diagnostic.Source.Lexing =>
               s"$headChar══[LEXICAL ERROR] "
@@ -25,7 +29,7 @@ class ReportFormatter(output: Str => Unit):
               s"$headChar══[RUNTIME ERROR] "
             case _ => // TODO customize too
               s"$headChar══[ERROR] "
-        case WarningReport(msg, loco, src) =>
+        case WarningReport(msg, loco, mkei, src) =>
           s"$headChar══[WARNING] "
         case InternalError(msg, loco, src) =>
           s"$headChar══[INTERNAL ERROR] "
@@ -41,6 +45,7 @@ class ReportFormatter(output: Str => Unit):
         loco.foreach { loc =>
           val (startLineNum, startLineStr, startLineCol) =
             loc.origin.fph.getLineColAt(loc.spanStart)
+          badLines += startLineNum
           if globalLineNum =:= 0 then globalLineNum += startLineNum - 1
           val (endLineNum, endLineStr, endLineCol) =
             loc.origin.fph.getLineColAt(loc.spanEnd)

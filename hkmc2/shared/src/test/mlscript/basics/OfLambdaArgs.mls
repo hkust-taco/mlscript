@@ -13,6 +13,6 @@ foo of (id of x => 1), id of y => 2
 
 :re
 foo(id of x => 1, id of y => 2) 
-//│ ═══[RUNTIME ERROR] Error: Function 'id' expected 1 arguments but got 2
+//│ ═══[RUNTIME ERROR] Error: Function 'id' expected 1 argument but got 2
 
 

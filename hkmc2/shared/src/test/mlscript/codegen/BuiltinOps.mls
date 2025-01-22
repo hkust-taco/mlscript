@@ -19,6 +19,64 @@
 //│ + 2
 //│ = 2
 
++
+//│ = [Function (anonymous)]
+
+// * A bit confusing... but at least there's a warning!
+:w
++(2, 3)
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.27: 	+(2, 3)
+//│ ╙──      	  ^
+//│ = 3
+
+*(2, 3)
+//│ = 6
+
+:ge
+*(1)
+//│ ╔══[COMPILATION ERROR] Expected a single argument for *
+//│ ║  l.37: 	*(1)
+//│ ╙──      	^^^^
+//│ ═══[COMPILATION ERROR] Cannot call non-unary builtin symbol '*'
+//│ ═══[RUNTIME ERROR] Error: Cannot call non-unary builtin symbol '*'
+
+(+)
+//│ = [Function (anonymous)]
+
+(+)(2, 3)
+//│ = 5
+
+(*)(2, 3)
+//│ = 6
+
+:ge
+(*)(2)
+//│ ╔══[COMPILATION ERROR] Expected a single argument for *
+//│ ║  l.54: 	(*)(2)
+//│ ╙──      	^^^^^^
+//│ ═══[COMPILATION ERROR] Cannot call non-unary builtin symbol '*'
+//│ ═══[RUNTIME ERROR] Error: Cannot call non-unary builtin symbol '*'
+
+id(+)
+//│ = [Function (anonymous)]
+
+id(+)(1, 2)
+//│ = 3
+
+(+ 1)
+//│ = 1
+
+(+)(1)
+//│ = 1
+
+:sjs
+:re
+id(+)(1)
+//│ JS (unsanitized):
+//│ let tmp; tmp = Predef.id((arg1, arg2) => { return arg1 + arg2; }); tmp(1) ?? null
+//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
+
 
 fun (+) lol(a, b) = [a, b]
 
@@ -27,5 +85,15 @@ fun (+) lol(a, b) = [a, b]
 //│ JS (unsanitized):
 //│ this.lol(1, 2)
 //│ = [ 1, 2 ]
+
+
+:sjs
+id(~)(2)
+//│ JS (unsanitized):
+//│ let tmp; tmp = Predef.id((arg) => { return ~ arg; }); tmp(2) ?? null
+//│ = -3
+
+2 |> ~
+//│ = -3
 
 

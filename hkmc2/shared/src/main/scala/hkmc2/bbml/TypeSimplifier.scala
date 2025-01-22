@@ -54,6 +54,8 @@ class TypeSimplifier(tl: TraceLogger):
       
       var curPath: Ls[IV] = Nil
       var pastPathsSet: MutSet[IV] = MutSet.empty
+
+      val outerPol: MutMap[IV, Bool] = MutMap.empty[IV, Bool] // outer polarity before entering next level
       
       val varSubst: MutMap[IV, IV] = MutMap.empty
       
@@ -109,9 +111,19 @@ class TypeSimplifier(tl: TraceLogger):
                 val oldPath = curPath
                 curPath ::= tv
                 
-                if pol
-                then posVars += tv
-                else negVars += tv
+                // * If tv is forall-qualified in a negative position, we need to **flip** the polarity
+                // * e.g., ([A] -> A -> Int) -> ([A] -> A -> Int)
+                // * Both `[A] -> A -> Int` should be simplified to the same type
+                // * The first `[A] -> A -> Int` is in a negative position
+                // * but the argument type `A` should be treated as negative instead of positive
+                if !outerPol.get(tv).getOrElse(true) then
+                  if !pol
+                  then posVars += tv
+                  else negVars += tv
+                else
+                  if pol
+                  then posVars += tv
+                  else negVars += tv
                 
                 // log(s">>>> $curPath")
                 // traversingTVs += tv
@@ -119,6 +131,20 @@ class TypeSimplifier(tl: TraceLogger):
                 super.apply(pol)(ty)
                 // traversingTVs -= tv
                 curPath = oldPath
+            case pt @ PolyType(tvs, outer, _) => // Avoid simplify outer variables to Top unexpectedly
+              outer.foreach(outer => {
+                posVars += outer
+                negVars += outer
+              })
+              val oldPath = curPath
+              pastPathsSet ++= oldPath
+              curPath = Nil
+              outerPol ++= (tvs.map(v => v -> pol))
+              super.apply(pol)(pt)
+              outerPol --= tvs
+              curPath = oldPath
+              pastPathsSet --= oldPath
+              ()
             case _ =>
               val oldPath = curPath
               pastPathsSet ++= oldPath
@@ -186,20 +212,13 @@ class TypeSimplifier(tl: TraceLogger):
     subst(ty)
 
   def simplifyForall(ty: GeneralType): GeneralType = ty match
-    case PolyType(tvs, body) =>
-      val visited = MutSet.empty[InfVar]
-      object CollectTVs extends TypeTraverser:
-        override def apply(pol: Boolean)(ty: GeneralType): Unit = ty match
-          case v @ InfVar(_, _, state, _) =>
-            if visited.add(v) then
-              state.lowerBounds.foreach: bd =>
-                apply(true)(bd)
-              state.upperBounds.foreach: bd =>
-                apply(false)(bd)
-              super.apply(pol)(ty)
-          case _ => super.apply(pol)(ty)
-      CollectTVs(true)(ty)
+    case PolyType(tvs, outer, body) =>
+      val newBody = simplifyForall(body)
+      val visited = PolyType.collectTVs(newBody)
       val newTvs = tvs.filter(visited)
-      if newTvs.isEmpty then body
-      else PolyType(newTvs, body)
+      val newOuter = outer.filter(visited)
+      if newTvs.isEmpty && newOuter.isEmpty then newBody
+      else PolyType(newTvs, newOuter, newBody)
+    case PolyFunType(args, ret, eff) =>
+      PolyFunType(args.map(arg => simplifyForall(arg)), simplifyForall(ret), eff)
     case _ => ty

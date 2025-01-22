@@ -77,6 +77,7 @@ enum Tree extends AutoLocated:
   case Region(name: Tree, body: Tree)
   case RegRef(reg: Tree, value: Tree)
   case Effectful(eff: Tree, body: Tree)
+  case Outer(name: Opt[Tree])
   case Spread(kw: Keyword.Ellipsis, kwLoc: Opt[Loc], body: Opt[Tree])
   case Annotated(annotation: Tree, target: Tree)
 
@@ -107,6 +108,7 @@ enum Tree extends AutoLocated:
     case Region(name, body) => name :: body :: Nil
     case RegRef(reg, value) => reg :: value :: Nil
     case Effectful(eff, body) => eff :: body :: Nil
+    case Outer(name) => name.toList
     case TyTup(tys) => tys
     case SynthSel(prefix, name) => prefix :: Nil
     case Sel(prefix, name) => prefix :: Nil
@@ -148,6 +150,7 @@ enum Tree extends AutoLocated:
     case Region(name, body) => "region"
     case RegRef(reg, value) => "region reference"
     case Effectful(eff, body) => "effectful"
+    case Outer(_) => "outer binding"
     case Hndl(_, _, _, _) => "handle"
     case Def(lhs, rhs) => "defining assignment"
     case Spread(_, _, _) => "spread"
@@ -339,7 +342,10 @@ trait TypeDefImpl(using semantics.Elaborator.State) extends TypeOrTermDef:
     case Cls => semantics.ClassSymbol(this, name.getOrElse(Ident("<error>")))
     case Mod | Obj => semantics.ModuleSymbol(this, name.getOrElse(Ident("<error>")))
     case Als => semantics.TypeAliasSymbol(name.getOrElse(Ident("<error>")))
-    case Pat => semantics.PatternSymbol(name.getOrElse(Ident("<error>")))
+    case Pat => semantics.PatternSymbol(
+      name.getOrElse(Ident("<error>")),
+      paramLists.headOption,
+      extension.getOrElse(die))
     case Trt | Mxn => ???
   
   lazy val definedSymbols: Map[Str, semantics.BlockMemberSymbol] =

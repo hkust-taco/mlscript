@@ -1,0 +1,52 @@
+:js
+:handler
+
+
+abstract class Effect with
+  fun perform(arg: Str): Str
+
+
+class Lol(h) with
+  print(h.perform("k"))
+
+
+let oops = 
+  handle h = Effect with
+    fun perform(arg)(k) =
+      print(arg)
+      "b"
+  Lol(h)
+//│ > k
+//│ oops = 'b'
+
+:expect 'b'
+oops
+//│ = 'b'
+
+let oops = 
+  handle h = Effect with
+    fun perform(arg)(k) =
+      print(arg)
+      "b"
+  new Lol(h)
+//│ > k
+//│ oops = 'b'
+
+:expect 'b'
+oops
+//│ = 'b'
+
+
+let oops = 
+  handle h = Effect with
+    fun perform(arg)(k) =
+      print(arg)
+      k("b")
+  Lol(h)
+//│ > k
+//│ oops = Lol { h: Effect$h$312 {} }
+
+oops
+//│ = Lol { h: Effect$h$312 {} }
+
+
