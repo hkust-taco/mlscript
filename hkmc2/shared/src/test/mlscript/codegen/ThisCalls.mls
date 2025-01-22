@@ -14,12 +14,12 @@ let s = ex.f
 :todo
 :e
 s(123)
-//│ = [ 123, undefined ]
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
 
 :sjs
 ex |>. s(123)
 //│ JS (unsanitized):
-//│ let tmp; tmp = Predef.call(this.ex, this.s); tmp(123) ?? null
+//│ let tmp2; tmp2 = Predef.call(ex1, s); tmp2(123) ?? null
 //│ = [ 123, 456 ]
 
 

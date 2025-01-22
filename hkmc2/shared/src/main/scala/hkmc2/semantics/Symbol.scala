@@ -146,9 +146,6 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[Tree])(using State)
   override def toString: Str =
     s"member:$nme${State.dbgUid(uid)}"
   
-  override val isGetter: Bool = // TODO: this should be checked based on a special syntax for getter
-    trmImplTree.exists(t => t.k === Fun && t.paramLists.isEmpty)
-  
   def subst(using sub: SymbolSubst): BlockMemberSymbol = sub.mapBlockMemberSym(this)
   
 end BlockMemberSymbol
@@ -157,7 +154,6 @@ end BlockMemberSymbol
 sealed abstract class MemberSymbol[Defn <: Definition](using State) extends Symbol:
   def nme: Str
   var defn: Opt[Defn] = N
-  val isGetter: Bool = false
   def subst(using SymbolSubst): MemberSymbol[Defn]
 
 
@@ -201,6 +197,7 @@ sealed trait ClassLikeSymbol extends Symbol:
 /** This is the symbol associated to specific definitions.
   * One overloaded `BlockMemberSymbol` may correspond to multiple `InnerSymbol`s
   * A `Ref(_: InnerSymbol)` represents a `this`-like reference to the current object. */
+  // TODO prevent from appearing in Ref
 sealed trait InnerSymbol extends Symbol:
   def subst(using SymbolSubst): InnerSymbol
 
@@ -212,7 +209,7 @@ class ClassSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
   override def toString: Str = s"class:$nme${State.dbgUid(uid)}"
   /** Compute the arity. */
   def arity: Int = tree.paramLists.headOption.fold(0)(_.fields.length)
-
+  
   override def subst(using sub: SymbolSubst): ClassSymbol = sub.mapClsSym(this)
 
 class ModuleSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
@@ -221,14 +218,14 @@ class ModuleSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of module here
   override def toString: Str = s"module:${id.name}${State.dbgUid(uid)}"
-
+  
   override def subst(using sub: SymbolSubst): ModuleSymbol = sub.mapModuleSym(this)
 
 class TypeAliasSymbol(val id: Tree.Ident)(using State) extends MemberSymbol[TypeDef]:
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of type alias here
-  override def toString: Str = s"module:${id.name}${State.dbgUid(uid)}"
-
+  override def toString: Str = s"type:${id.name}${State.dbgUid(uid)}"
+  
   def subst(using sub: SymbolSubst): TypeAliasSymbol = sub.mapTypeAliasSym(this)
 
 class PatternSymbol(val id: Tree.Ident, val params: Opt[Tree.Tup], val body: Tree)(using State)
@@ -245,7 +242,7 @@ class PatternSymbol(val id: Tree.Ident, val params: Opt[Tree.Tup], val body: Tre
     * `T` in `pattern Nullable(pattern T) = null | T`.
     */
   var patternParams: Ls[Param] = Nil
-
+  
   override def subst(using sub: SymbolSubst): PatternSymbol = sub.mapPatSym(this)
 
 class TopLevelSymbol(blockNme: Str)(using State)
@@ -253,5 +250,6 @@ class TopLevelSymbol(blockNme: Str)(using State)
   def nme = blockNme
   def toLoc: Option[Loc] = N
   override def toString: Str = s"globalThis:$blockNme${State.dbgUid(uid)}"
-
+  
   def subst(using sub: SymbolSubst): TopLevelSymbol = sub.mapTopLevelSym(this)
+

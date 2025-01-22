@@ -100,26 +100,27 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       if showLoweredTree.isSet then
         output(s"Lowered:")
         output(le.showAsTree)
-      if ppLoweredTree.isSet then
-        output(s"Pretty Lowered:")
-        output(Printer.mkDocument(le)(using summon[Raise], baseScp.nest).toString)
       
-      // * Note that the codegen scope is not in sync with curCtx in terms of its `this` symbol.
-      // * We do not nest TopLevelSymbol in codegen `Scope`s
-      // * to avoid needlessly generating new variable names in separate blocks.
-      val nestedScp = baseScp.nest
+      // * We used to do this to avoid needlessly generating new variable names in separate blocks:
+      // val nestedScp = baseScp.nest
+      val nestedScp = baseScp
       // val nestedScp = codegen.js.Scope(S(baseScp), curCtx.outer, collection.mutable.Map.empty) // * not needed
       
-      val je = nestedScp.givenIn:
-        jsb.program(le, N, wd)
-      val jsStr = je.stripBreaks.mkString(100)
+      if ppLoweredTree.isSet then
+        output(s"Pretty Lowered:")
+        output(Printer.mkDocument(le)(using summon[Raise], nestedScp).toString)
+      
+      val (pre, js) = nestedScp.givenIn:
+        jsb.worksheet(le)
+      val preStr = pre.stripBreaks.mkString(100)
+      val jsStr = js.stripBreaks.mkString(100)
       if showSanitizedJS.isSet then
         output(s"JS:")
         output(jsStr)
-      def mkQuery(prefix: Str, jsStr: Str) =
+      def mkQuery(prefix: Str, preStr: Str, jsStr: Str) =
         import hkmc2.Message.MessageContext
         val queryStr = jsStr.replaceAll("\n", " ")
-        val (reply, stderr) = host.query(queryStr, !expectRuntimeOrCodeGenErrors && fixme.isUnset && todo.isUnset)
+        val (reply, stderr) = host.query(preStr, queryStr, !expectRuntimeOrCodeGenErrors && fixme.isUnset && todo.isUnset)
         reply match
           case ReplHost.Result(content, stdout) =>
             stdout match
@@ -161,7 +162,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
           "globalThis.Predef.TraceLogger.enabled = true; " +
           "globalThis.Predef.TraceLogger.resetIndent(0)")
       
-      mkQuery("", jsStr)
+      mkQuery("", preStr, jsStr)
       
       if traceJS.isSet then
         host.execute("globalThis.Predef.TraceLogger.enabled = false")
@@ -173,6 +174,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
           case S(ts: TermSymbol) if ts.k.isInstanceOf[syntax.ValLike] => S((nme, ts))
           case S(ts: BlockMemberSymbol)
             if ts.trmImplTree.exists(_.k.isInstanceOf[syntax.ValLike]) => S((nme, ts))
+          case S(vs: VarSymbol) => S((nme, vs))
           case _ => N
         case _ => N
       if silent.isUnset then definedValues.toSeq.sortBy(_._1).foreach: (nme, sym) =>
@@ -180,7 +182,6 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         val je = nestedScp.givenIn:
           jsb.block(le)
         val jsStr = je.stripBreaks.mkString(100)
-        mkQuery(s"$nme ", jsStr)
-      
+        mkQuery(s"$nme ", "", jsStr)
       
 

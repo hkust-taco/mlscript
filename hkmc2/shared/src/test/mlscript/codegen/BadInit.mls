@@ -9,12 +9,13 @@ module Bar with
   module Baz with
     val a = Bar.x
 //│ JS (unsanitized):
+//│ let Bar1;
 //│ const Bar$class = class Bar {
 //│   constructor() {
 //│     this.x = 1;
 //│     const Baz$class = class Baz {
 //│       constructor() {
-//│         this.a = globalThis.Bar.x;
+//│         this.a = Bar1.x;
 //│       }
 //│       toString() { return "Baz"; }
 //│     };
@@ -22,9 +23,8 @@ module Bar with
 //│     this.Baz.class = Baz$class;
 //│   }
 //│   toString() { return "Bar"; }
-//│ };
-//│ this.Bar = new Bar$class;
-//│ this.Bar.class = Bar$class;
+//│ }; Bar1 = new Bar$class;
+//│ Bar1.class = Bar$class;
 //│ null
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
 

@@ -47,20 +47,19 @@ none()
 //│ = None { class: [class None] }
 
 
-// * `open` statements are currently unhygienic and are affected by redefinitions
+// * `open` statements are hygienic and are not affected by redefinitions
 
 :sjs
 val Option = "Oops"
 //│ JS (unsanitized):
-//│ this.Option = "Oops"; null
+//│ let Option2; Option2 = "Oops"; null
 //│ Option = 'Oops'
 
-:fixme
 :sjs
 Some(123)
 //│ JS (unsanitized):
 //│ Option.Some(123)
-//│ ═══[RUNTIME ERROR] TypeError: Option.Some is not a function
+//│ = Some { value: 123 }
 
 module Option with
   val None = 123
@@ -74,11 +73,12 @@ open Option
 Some
 //│ JS (unsanitized):
 //│ Option.Some
+//│ = [Function: Some] { class: [class Some] }
 
 :sjs
 None
 //│ JS (unsanitized):
-//│ this.Option.None
+//│ Option4.None
 //│ = 123
 
 

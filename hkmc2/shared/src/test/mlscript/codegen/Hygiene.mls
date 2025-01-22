@@ -1,51 +1,63 @@
 :js
 
 
+// * Note how we avoid the name clash between the internal name `Test` of the class
+// * and the external name `Test1` of its singleton instance.
 :sjs
-module Test with
+object Test with
   val x = 12
-  fun foo() = Test.x
+  fun foo() =
+    print(Test)
+    Test.x
 //│ JS (unsanitized):
+//│ let Test1;
 //│ const Test$class = class Test {
 //│   constructor() {
 //│     this.x = 12;
 //│   }
 //│   foo() {
-//│     return globalThis.Test.x;
+//│     let tmp;
+//│     tmp = Predef.print(Test1);
+//│     return Test1.x;
 //│   }
 //│   toString() { return "Test"; }
-//│ };
-//│ this.Test = new Test$class;
-//│ this.Test.class = Test$class;
+//│ }; Test1 = new Test$class;
+//│ Test1.class = Test$class;
 //│ null
+
+Test
+//│ = Test { x: 12, class: [class Test] }
+
+print(Test)
+//│ > Test
 
 :sjs
 Test.foo()
 //│ JS (unsanitized):
-//│ this.Test.foo()
+//│ Test1.foo()
+//│ > Test
 //│ = 12
 
 :sjs
 val Test = "oops"
 //│ JS (unsanitized):
-//│ this.Test = "oops"; null
+//│ let Test3; Test3 = "oops"; null
 //│ Test = 'oops'
 
-:fixme
+:re
 Test.foo()
-//│ ═══[RUNTIME ERROR] TypeError: this.Test.foo is not a function
+//│ ═══[RUNTIME ERROR] TypeError: Test3.foo is not a function
 
 
-// FIXME
 :sjs
 let x = 1
 let f = () => x
 let x = 2
 f()
 //│ JS (unsanitized):
-//│ this.x = 1; this.f = () => { return this.x; }; this.x = 2; this.f() ?? null
-//│ = 2
-//│ f = [Function (anonymous)]
+//│ let x, f, x1; x = 1; f = () => { return x; }; x1 = 2; f() ?? null
+//│ = 1
+//│ f = [Function: f]
 //│ x = 2
 
 
@@ -54,20 +66,21 @@ module Test with
   val x = 1
   let x = 2
 //│ JS (unsanitized):
-//│ const Test$class = class Test {
+//│ let Test5;
+//│ const Test$class1 = class Test {
 //│   #x;
 //│   constructor() {
 //│     this.x = 1;
 //│     this.#x = 2;
 //│   }
 //│   toString() { return "Test"; }
-//│ };
-//│ this.Test = new Test$class;
-//│ this.Test.class = Test$class;
+//│ }; Test5 = new Test$class1;
+//│ Test5.class = Test$class1;
 //│ null
 
 Test.x
 //│ = 1
+
 
 :fixme
 module Test with
@@ -75,8 +88,20 @@ module Test with
   let f = () => x
   let x = 2
   log(f())
-//│ > try { const Test$class = class Test {   #x;   #f;   #x;   constructor() {     let tmp;     this.#x = 1;     this.#f = (...args) => {       globalThis.Predef.checkArgs("", 0, true, args.length);       return this.#x;     };     this.#x = 2;     tmp = this.#f() ?? null;     globalThis.log(tmp) ?? null   }   toString() { return "Test"; } }; this.Test = new Test$class; this.Test.class = Test$class; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                       ^
+//│ > let Test7;try { const Test$class2 = class Test {   #x;   #f;   #x;   constructor() {     let selRes1, tmp, tmp1;     this.#x = 1;     this.#f = (...args) => {       globalThis.Predef.checkArgs("", 0, true, args.length);       return this.#x;     };     this.#x = 2;     selRes1 = globalThis.log;     if (selRes1 === undefined) {       throw new globalThis.Error("Access to required field 'log' yielded 'undefined'");     } else {       tmp = selRes1;     }     tmp1 = this.#f() ?? null;     tmp(tmp1) ?? null   }   toString() { return "Test"; } }; Test7 = new Test$class2; Test7.class = Test$class2; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                                  ^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Identifier '#x' has already been declared
+
+
+fun foo() =
+  if false then
+    module A
+    A
+  else
+    module A
+    A
+
+foo()
+//│ = A { class: [class A] }
 
 

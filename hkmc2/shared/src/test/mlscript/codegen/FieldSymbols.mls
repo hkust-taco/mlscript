@@ -13,9 +13,7 @@ Foo(42).x
 //│   stats = Nil
 //│   res = Sel:
 //│     prefix = App:
-//│       lhs = SynthSel{member:Foo}:
-//│         prefix = Ref of globalThis:block#1
-//│         nme = Ident of "Foo"
+//│       lhs = Ref of member:Foo
 //│       rhs = Tup of Ls of 
 //│         Fld:
 //│           flags = ()
@@ -35,7 +33,7 @@ foo.x
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel:
-//│     prefix = Ref of globalThis:block#3.foo
+//│     prefix = Ref of foo
 //│     nme = Ident of "x"
 //│ = 42
 
@@ -47,7 +45,7 @@ foo.y
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel:
-//│     prefix = Ref of globalThis:block#3.foo
+//│     prefix = Ref of foo
 //│     nme = Ident of "y"
 //│ = 42
 
@@ -77,9 +75,7 @@ case
 //│           pattern = ClassLike:
 //│             sym = class:Foo
 //│             trm = SynthSel{class:Foo}:
-//│               prefix = SynthSel{member:Foo}:
-//│                 prefix = Ref of globalThis:block#1
-//│                 nme = Ident of "Foo"
+//│               prefix = Ref of member:Foo
 //│               nme = Ident of "class"
 //│             parameters = S of Ls of 
 //│               $param0
@@ -109,9 +105,7 @@ case
 //│             _1 = Cls:
 //│               cls = class:Foo
 //│               path = Select{class:Foo}:
-//│                 qual = Select{member:Foo}:
-//│                   qual = Ref of globalThis:block#1
-//│                   name = Ident of "Foo"
+//│                 qual = Ref of member:Foo
 //│                 name = Ident of "class"
 //│             _2 = Assign:
 //│               lhs = $param0

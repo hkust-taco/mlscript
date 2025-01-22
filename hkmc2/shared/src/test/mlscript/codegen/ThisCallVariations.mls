@@ -16,8 +16,9 @@ let oops = Example.f
 
 
 // * JavaScript nonsense
+:re
 oops(2)
-//│ = [ 2, undefined ]
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
 
 oops.call(Example, 2)
 //│ = [ 2, 1 ]
@@ -42,7 +43,7 @@ Example . oops(2)
 //│   rhs = Tup of Ls of 
 //│     IntLit of 2
 //│ JS (unsanitized):
-//│ let tmp; tmp = this.call(this.Example, this.oops); tmp(2) ?? null
+//│ let tmp1; tmp1 = call1(Example1, oops); tmp1(2) ?? null
 //│ = [ 2, 1 ]
 
 Example. oops(2)
@@ -53,9 +54,9 @@ Example. oops(2)
 :re
 Example .oops(2)
 //│ ╔══[ERROR] Object 'Example' does not contain member 'oops'
-//│ ║  l.54: 	Example .oops(2)
+//│ ║  l.55: 	Example .oops(2)
 //│ ╙──      	        ^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: this.Example.oops is not a function
+//│ ═══[RUNTIME ERROR] TypeError: Example1.oops is not a function
 
 
 id(Example) . oops(2)
@@ -75,16 +76,19 @@ Example2(1) . oops2(2) . oops2(2)
 Example2(1). oops2(2). oops2(2)
 //│ = Example2 { a: 1 }
 
+(new Example2(1)) . oops2(2)
+//│ = Example2 { a: 1 }
+
 :todo
 new Example2(1)
   . oops2(2)
-//│ ═══[RUNTIME ERROR] TypeError: tmp2 is not a constructor
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
 
 :todo
 new Example2(1)
   . oops2(2)
   . oops2(2)
-//│ ═══[RUNTIME ERROR] TypeError: tmp4 is not a constructor
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
 
 
 // * Alternative syntax – precedence is now inappropriate
@@ -92,6 +96,7 @@ fun (.>) call(receiver, f)(arg) = f.call(receiver, arg)
 
 :pt
 :sjs
+:re
 Example .> oops(2)
 //│ Parsed tree:
 //│ App:
@@ -103,8 +108,17 @@ Example .> oops(2)
 //│       rhs = Tup of Ls of 
 //│         IntLit of 2
 //│ JS (unsanitized):
-//│ let tmp; tmp = this.oops(2) ?? null; this.call(this.Example, tmp)
-//│ = [Function (anonymous)]
+//│ let tmp25; tmp25 = oops(2) ?? null; call3(Example1, tmp25)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
+
+// * Note:
+:re
+oops(2)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
+
+// * Note:
+(Example .> oops)(2)
+//│ = [ 2, 1 ]
 
 
 // * Another alternative syntax – currently adopted in Predef
@@ -121,6 +135,6 @@ Example2(1) |>. oops2(2) |>. oops2(2)
   |>. oops2(2)
   |>. oops2(2)
 ).a
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'a' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
 
 

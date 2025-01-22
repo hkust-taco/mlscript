@@ -8,9 +8,9 @@ module Mod with
 :ctx
 open Mod
 //│ Env:
-//│   pipe -> SelElem(SelElem(RefElem(globalThis:block#1),Mod,Some(member:Mod)),pipe,Some(member:pipe))
-//│   print -> SelElem(SelElem(RefElem(globalThis:block#1),Mod,Some(member:Mod)),print,Some(member:print))
-//│   |> -> SelElem(SelElem(RefElem(globalThis:block#1),Mod,Some(member:Mod)),pipe,Some(member:pipe))
+//│   pipe -> SelElem(RefElem(member:Mod),pipe,Some(member:pipe))
+//│   print -> SelElem(RefElem(member:Mod),print,Some(member:print))
+//│   |> -> SelElem(RefElem(member:Mod),pipe,Some(member:pipe))
 
 pipe
 //│ = [Function: pipe]
@@ -62,6 +62,6 @@ open Mod { print, |> }
 
 :fixme
 12 |> print
-//│ ═══[RUNTIME ERROR] TypeError: this.Mod.|> is not a function
+//│ ═══[RUNTIME ERROR] TypeError: Mod1.|> is not a function
 
 

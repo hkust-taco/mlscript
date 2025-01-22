@@ -77,9 +77,9 @@ xs
 fun f = print(0)
 
 f
-//│ = [Function: f]
+//│ > 0
 
 f
-//│ = [Function: f]
+//│ > 0
 
 

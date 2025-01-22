@@ -1,4 +1,5 @@
 import Predef from "./Predef.mjs";
+let Example1;
 const Example$class = class Example {
   constructor() {}
   funnySlash(f, arg) {
@@ -23,7 +24,7 @@ const Example$class = class Example {
     }
   }
   toString() { return "Example"; }
-}; const Example = new Example$class;
-Example.class = Example$class;
+}; Example1 = new Example$class;
+Example1.class = Example$class;
 null
-export default Example;
+let Example = Example1; export default Example;

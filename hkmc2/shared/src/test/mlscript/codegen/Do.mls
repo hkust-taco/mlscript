@@ -24,11 +24,9 @@ do
   let hello = 1
   ()
 
-// FIXME shouldn't be accessible
-:todo
 :re
 print(globalThis.hello)
-//│ > 1
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'hello' yielded 'undefined'
 
 :ucs desugared
 val f = case
@@ -41,12 +39,12 @@ val f = case
 //│ Desugared:
 //│ >  if
 //│ >    caseScrut is 0 then "null"
-//│ >    let $doTemp = globalThis:import#Prelude#666(.)console‹member:console›.log("non-null")
+//│ >    let $doTemp = member:console#666.log("non-null")
 //│ >    caseScrut is 1 then "unit"
 //│ >    let res = "other"
-//│ >    let $doTemp = member:Predef#666(.)print‹member:print›(res#666)
+//│ >    let $doTemp = (member:Predef#666.)print‹member:print›(res#666)
 //│ >    else res#666
-//│ f = [Function: tmp]
+//│ f = [Function: tmp3]
 
 f(0)
 //│ = 'null'

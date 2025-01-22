@@ -36,7 +36,9 @@ sealed abstract class Block extends Product with AutoLocated:
     case End(_) => Set.empty
     case Break(_) => Set.empty
     case Continue(_) => Set.empty
-    case Define(defn, rst) => rst.definedVars
+    case Define(defn, rst) =>
+      val rest = rst.definedVars
+      if defn.isOwned then rest else rest + defn.sym
     case HandleBlock(lhs, res, par, cls, hdr, bod, rst) => bod.definedVars ++ rst.definedVars + lhs
     case HandleBlockReturn(_) => Set.empty
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
@@ -86,7 +88,17 @@ sealed abstract class Block extends Product with AutoLocated:
       (bod.freeVars - lhs) ++ rst.freeVars ++ hdr.flatMap(_.freeVars)
     case HandleBlockReturn(res) => res.freeVars
     case End(msg) => Set.empty
-
+  
+  lazy val subBlocks: Ls[Block] = this match
+    case Match(_, arms, dflt, rest) => arms.map(_._2) ++ dflt.toList :+ rest
+    case Begin(sub, rest) => sub :: rest :: Nil
+    case TryBlock(sub, finallyDo, rest) => sub :: finallyDo :: rest :: Nil
+    case Assign(_, rhs, rest) => rest :: Nil
+    case AssignField(_, _, rhs, rest) => rest :: Nil
+    case Define(_, rest) => rest :: Nil
+    case HandleBlock(_, _, _, _, handlers, body, rest) => handlers.map(_.body) :+ body :+ rest
+    case _: Return | _: Throw | _: Label | _: Break | _: Continue | _: End | _: HandleBlockReturn => Nil
+  
   // Moves definitions in a block to the top. Only scans one definition deep, i.e. definitions inside other definitions
   // are not moved out.
   //
@@ -163,7 +175,7 @@ sealed abstract class Block extends Product with AutoLocated:
         case HandleBlockReturn(res) => (b, acc)
         case End(msg) => (b, acc)
     rec(this, Nil)
-
+  
 end Block
 
 sealed abstract class BlockTail extends Block
@@ -198,43 +210,62 @@ case class AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(val
 
 case class Define(defn: Defn, rest: Block) extends Block with ProductWithTail
 
-case class HandleBlock(lhs: Local, res: Local, par: Path, cls: ClassSymbol, handlers: Ls[Handler], body: Block, rest: Block) extends Block with ProductWithTail
+case class HandleBlock(
+    lhs: Local,
+    res: Local,
+    par: Path,
+    cls: ClassSymbol,
+    handlers: Ls[Handler],
+    body: Block,
+    rest: Block
+) extends Block with ProductWithTail
+
 case class HandleBlockReturn(res: Result) extends BlockTail
 
 sealed abstract class Defn:
-  val sym: MemberSymbol[?]
+  val innerSym: Opt[MemberSymbol[?]]
+  val sym: BlockMemberSymbol
+  def isOwned: Bool = owner.isDefined
+  def owner: Opt[InnerSymbol]
 
   lazy val freeVars: Set[Local] = this match
-    case FunDefn(sym, params, body) => body.freeVars -- params.flatMap(_.paramSyms) - sym
+    case FunDefn(own, sym, params, body) => body.freeVars -- params.flatMap(_.paramSyms) - sym
     case ValDefn(owner, k, sym, rhs) => rhs.freeVars
-    case ClsLikeDefn(sym, k, parentSym, methods, privateFields, publicFields, preCtor, ctor) =>
+    case ClsLikeDefn(own, isym, sym, k, paramsOpt, parentSym, methods, privateFields, publicFields, preCtor, ctor) =>
       preCtor.freeVars
         ++ ctor.freeVars ++ methods.flatMap(_.freeVars)
         -- privateFields -- publicFields.map(_.sym)
   
 final case class FunDefn(
+    owner: Opt[InnerSymbol],
     sym: BlockMemberSymbol,
     params: Ls[ParamList],
     body: Block,
-) extends Defn
+) extends Defn:
+  val innerSym = N
 
 final case class ValDefn(
     owner: Opt[InnerSymbol],
     k: syntax.Val,
     sym: BlockMemberSymbol,
     rhs: Path,
-) extends Defn
+) extends Defn:
+  val innerSym = N
 
 final case class ClsLikeDefn(
-  sym: MemberSymbol[? <: ClassLikeDef],
-  k: syntax.ClsLikeKind,
-  parentPath: Opt[Path],
-  methods: Ls[FunDefn],
-  privateFields: Ls[TermSymbol],
-  publicFields: Ls[TermDefinition],
-  preCtor: Block,
-  ctor: Block,
-) extends Defn
+    owner: Opt[InnerSymbol],
+    isym: MemberSymbol[? <: ClassLikeDef],
+    sym: BlockMemberSymbol,
+    k: syntax.ClsLikeKind,
+    paramsOpt: Opt[ParamList],
+    parentPath: Opt[Path],
+    methods: Ls[FunDefn],
+    privateFields: Ls[TermSymbol],
+    publicFields: Ls[TermDefinition],
+    preCtor: Block,
+    ctor: Block,
+) extends Defn:
+  val innerSym = S(isym)
 
 final case class Handler(
     sym: BlockMemberSymbol,

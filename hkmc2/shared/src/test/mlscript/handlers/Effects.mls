@@ -1,8 +1,19 @@
 :js
 :handler
 
+
 abstract class Effect with
   fun perform(arg: Str): Str
+
+
+handle h = Effect with
+  fun perform()(k) = "b"
+
+:expect 42
+handle h = Effect with
+  fun perform()(k) = k(42)
+h.perform()
+//│ = 42
 
 :expect 'b'
 handle h = Effect with
@@ -145,27 +156,27 @@ if true do
   fun f() = 3
   f()
 //│ JS (unsanitized):
-//│ let tmp;
-//│ function handleBlock$0() {
-//│   let h, scrut, tmp1, res;
-//│   class Effect$h$908 extends globalThis.Effect {
+//│ let tmp11, handleBlock$023;
+//│ handleBlock$023 = function handleBlock$0() {
+//│   let h, scrut, tmp12, res, Cont$1074, f$0, Effect$h$1048;
+//│   Effect$h$1048 = class Effect$h$1048 extends Effect1 {
 //│     constructor() {
-//│       let tmp2;
-//│       tmp2 = super();
+//│       let tmp13;
+//│       tmp13 = super();
 //│     }
 //│     perform(arg) {
 //│       return globalThis.Predef.__mkEffect(h, (k) => {
 //│         return arg;
 //│       });
 //│     }
-//│     toString() { return "Effect$h$908"; }
-//│   }
-//│   h = new Effect$h$908();
-//│   function Cont$932(pc1) { return new Cont$932.class(pc1); }
-//│   Cont$932.class = class Cont$932 extends globalThis.Predef.__Cont.class {
+//│     toString() { return "Effect$h$1048"; }
+//│   };
+//│   h = new Effect$h$1048();
+//│   Cont$1074 = function Cont$1074(pc1) { return new Cont$1074.class(pc1); };
+//│   Cont$1074.class = class Cont$1074 extends globalThis.Predef.__Cont.class {
 //│     constructor(pc) {
-//│       let tmp2;
-//│       tmp2 = super(null, null);
+//│       let tmp13;
+//│       tmp13 = super(null, null);
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
@@ -174,38 +185,38 @@ if true do
 //│       }
 //│       contLoop: while (true) {
 //│         if (this.pc === 2) {
-//│           return tmp1;
+//│           return tmp12;
 //│         } else if (this.pc === 1) {
-//│           tmp1 = res;
+//│           tmp12 = res;
 //│           this.pc = 2;
 //│           continue contLoop;
 //│         }
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$932(" + this.pc + ")"; }
+//│     toString() { return "Cont$1074(" + this.pc + ")"; }
 //│   };
-//│   function f$0() {
+//│   f$0 = function f$0() {
 //│     return 3;
-//│   }
+//│   };
 //│   scrut = true;
 //│   if (scrut === true) {
 //│     res = f$0();
 //│     if (res instanceof globalThis.Predef.__EffectSig.class) {
-//│       res.tail.next = new Cont$932(1);
+//│       res.tail.next = new Cont$1074(1);
 //│       return globalThis.Predef.__handleBlockImpl(res, h);
 //│     }
-//│     tmp1 = res;
+//│     tmp12 = res;
 //│   } else {
-//│     tmp1 = null;
+//│     tmp12 = null;
 //│   }
-//│   return tmp1;
-//│ }
-//│ tmp = handleBlock$0();
-//│ if (tmp instanceof this.Predef.__EffectSig.class) {
+//│   return tmp12;
+//│ };
+//│ tmp11 = handleBlock$023();
+//│ if (tmp11 instanceof this.Predef.__EffectSig.class) {
 //│   throw new this.Error("Unhandled effects");
 //│ }
-//│ tmp
+//│ tmp11
 //│ = 3
 
 fun f(perform) =
@@ -220,8 +231,6 @@ abstract class Cell with
   fun setVal(Int): ()
 
 let x = 0
-let k
-let m
 handle h = Cell with
   fun getVal()(k) = k(x)
   fun setVal(value)(k) =
@@ -367,5 +376,5 @@ fun foo(h) =
   A() * 100 + a * 10 + b
 handle h = Eff with
   fun perform()(k) = k(())
-foo(h) 
+foo(h)
 //│ = 123

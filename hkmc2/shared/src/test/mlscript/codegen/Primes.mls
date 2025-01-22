@@ -4,16 +4,12 @@
 let x = 1
 //│ x = 1
 
-:fixme
 :sjs
-let x' = 1
+let x' = 2
 //│ JS (unsanitized):
-//│ this.x' = 1; null
-//│ > try { this.x' = 1; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string
-//│ > try { this.x' } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string
+//│ let x$_; x$_ = 2; null
+//│ x' = 2
 
+x'
+//│ = 2
 

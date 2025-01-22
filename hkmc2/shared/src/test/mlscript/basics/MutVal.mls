@@ -4,7 +4,10 @@
 mut val cached: Int = 1
 //│ cached = 1
 
+:sjs
 set cached = 2
+//│ JS (unsanitized):
+//│ cached1 = 2; null
 
 cached
 //│ = 2

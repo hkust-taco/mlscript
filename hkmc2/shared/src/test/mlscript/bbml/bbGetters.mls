@@ -75,21 +75,22 @@ fun test2() =
   funny
 //│ ═══[WARNING] Pure expression in statement position
 //│ JS (unsanitized):
-//│ function test2() {
-//│   let tmp;
-//│   function funny() {
+//│ let test25;
+//│ test25 = function test2() {
+//│   let funny, tmp1;
+//│   funny = function funny() {
 //│     return (caseScrut) => {
-//│       let n, tmp1, tmp2, tmp3;
+//│       let n, tmp2, tmp3, tmp4;
 //│       n = caseScrut;
-//│       tmp1 = funny();
-//│       tmp2 = n - 1;
-//│       tmp3 = tmp1(tmp2);
-//│       return tmp3 + 1;
+//│       tmp2 = funny();
+//│       tmp3 = n - 1;
+//│       tmp4 = tmp2(tmp3);
+//│       return tmp4 + 1;
 //│     };
-//│   }
-//│   tmp = funny();
-//│   return tmp;
-//│ }
+//│   };
+//│   tmp1 = funny();
+//│   return tmp1;
+//│ };
 //│ null
 //│ ═══[WARNING] Pure expression in statement position
 //│ ╔══[ERROR] Function definition shape not yet supported for funny
@@ -105,7 +106,7 @@ fun test2() =
 fun test3 =
   log("Hi")
 //│ ╔══[ERROR] Function definition shape not yet supported for test3
-//│ ║  l.106: 	  log("Hi")
+//│ ║  l.107: 	  log("Hi")
 //│ ╙──       	  ^^^^^^^^^
 //│ Type: ⊤
 

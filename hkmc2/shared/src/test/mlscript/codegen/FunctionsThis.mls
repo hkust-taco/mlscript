@@ -9,18 +9,19 @@ val x = 2
 fun foo() =
   x + 1
 //│ JS (unsanitized):
-//│ this.x = 2; function foo() { return globalThis.x + 1; } null
+//│ let foo1, x1; foo1 = function foo() { return x1 + 1; }; x1 = 2; null
 //│ x = 2
 
 :sjs
 class Test with
   log(foo())
 //│ JS (unsanitized):
-//│ this.Test = class Test {
+//│ let Test1;
+//│ Test1 = class Test {
 //│   constructor() {
 //│     let tmp;
-//│     tmp = globalThis.foo();
-//│     globalThis.log(tmp)
+//│     tmp = foo1();
+//│     log1(tmp)
 //│   }
 //│   toString() { return "Test"; }
 //│ };

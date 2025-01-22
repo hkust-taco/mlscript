@@ -120,10 +120,11 @@ class StackSafeTransform(depthLimit: Int)(using State):
     defn match
     case d: FunDefn => rewriteFn(d)
     case _: ValDefn => defn
-    case ClsLikeDefn(sym, k, parentPath, methods, privateFields, publicFields, preCtor, ctor) =>
+    case ClsLikeDefn(owner, isym, sym, k, paramsOpt, 
+      parentPath, methods, privateFields, publicFields, preCtor, ctor) =>
       ClsLikeDefn(
-        sym, k, parentPath, methods.map(rewriteFn), privateFields, publicFields,
-        rewriteBlk(preCtor), rewriteBlk(ctor) // TODO: do we need to rewrite the preCtor?
+        owner, isym, sym, k, paramsOpt, parentPath, methods.map(rewriteFn), privateFields,
+        publicFields, rewriteBlk(preCtor), rewriteBlk(ctor)
       )
 
   def rewriteBlk(blk: Block) =
@@ -152,7 +153,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
             Call(Select(stackHandlerPath, Tree.Ident("perform"))(N), Nil)(true)).end)
         .rest(newBody)
      
-  def rewriteFn(defn: FunDefn) = FunDefn(defn.sym, defn.params, rewriteBlk(defn.body))
+  def rewriteFn(defn: FunDefn) = FunDefn(defn.owner, defn.sym, defn.params, rewriteBlk(defn.body))
 
   def transformTopLevel(b: Block) =
     def replaceReturns(b: Block): Block =
@@ -178,7 +179,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
       Tree.TypeDef(syntax.Cls, Tree.Error(), N, N),
       Tree.Ident("StackDelay$")
     )
-    clsSym.defn = S(ClassDef(N, syntax.Cls, clsSym, Nil, N, ObjBody(Term.Blk(Nil, Term.Lit(Tree.UnitLit(true)))), Nil))
+    clsSym.defn = S(ClassDef(N, syntax.Cls, clsSym, BlockMemberSymbol(clsSym.nme, Nil), Nil, N, ObjBody(Term.Blk(Nil, Term.Lit(Tree.UnitLit(true)))), Nil))
 
     val (blk, defns) = b.floatOutDefns(true)
 

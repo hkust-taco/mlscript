@@ -7,7 +7,7 @@ val res: Int
 
 :showRepl
 fun res() = 1
-//│ REPL> Sending: try { function res(...args) {   globalThis.Predef.checkArgs("res", 0, true, args.length);   return 1; } null } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: let res1;try { res1 = function res(...args) {   globalThis.Predef.checkArgs("res", 0, true, args.length);   return 1; }; null } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  null
 //│ REPL> Parsed:
@@ -24,7 +24,7 @@ fun res() = 1
 
 :showRepl
 res
-//│ REPL> Sending: try { this.res } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { res1 } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  [Function: res]
 //│ REPL> Parsed:
@@ -35,14 +35,14 @@ res
 :showRepl
 :re
 let x = 1, log(x), x
-//│ REPL> Sending: try { let tmp; this.x = 1; tmp = this.log(this.x) ?? null; this.x } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Sending: let x, selRes, tmp, tmp1;try { x = 1; selRes = this.log; if (selRes === undefined) {   throw new this.Error("Access to required field 'log' yielded 'undefined'"); } else {   tmp = selRes; } tmp1 = tmp(x) ?? null; x } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ REPL> Collected:
-//│ >  ​TypeError: this.log is not a function​
+//│ >  ​Error: Access to required field 'log' yielded 'undefined'​
 //│ >  undefined
 //│ REPL> Parsed:
-//│ >  [runtime error] TypeError: this.log is not a function
-//│ ═══[RUNTIME ERROR] TypeError: this.log is not a function
-//│ REPL> Sending: try { this.x } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >  [runtime error] Error: Access to required field 'log' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'log' yielded 'undefined'
+//│ REPL> Sending: try { x } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
 //│ REPL> Parsed:
@@ -54,7 +54,7 @@ let x = 1, log(x), x
 
 :showRepl
 let x = 1, log(x), x
-//│ REPL> Sending: try { let tmp; this.x = 1; tmp = this.log(this.x); this.x } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: let x1, tmp2;try { x1 = 1; tmp2 = log1(x1); x1 } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
 //│ >  1
@@ -63,7 +63,7 @@ let x = 1, log(x), x
 //│ >  1
 //│ > 1
 //│ = 1
-//│ REPL> Sending: try { this.x } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { x1 } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
 //│ REPL> Parsed:

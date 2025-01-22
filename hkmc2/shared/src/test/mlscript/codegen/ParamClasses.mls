@@ -9,8 +9,9 @@
 
 class Foo()
 //│ JS (unsanitized):
-//│ this.Foo = function Foo() { return new Foo.class(); };
-//│ this.Foo.class = class Foo {
+//│ let Foo1;
+//│ Foo1 = function Foo() { return new Foo.class(); };
+//│ Foo1.class = class Foo {
 //│   constructor() {}
 //│   toString() { return "Foo(" +  + ")"; }
 //│ };
@@ -18,24 +19,25 @@ class Foo()
 
 Foo
 //│ JS (unsanitized):
-//│ this.Foo
+//│ Foo1
 //│ = [Function: Foo] { class: [class Foo] }
 
 Foo()
 //│ JS (unsanitized):
-//│ this.Foo()
+//│ Foo1()
 //│ = Foo {}
 
 Foo.class
 //│ JS (unsanitized):
-//│ this.Foo.class
+//│ Foo1.class
 //│ = [class Foo]
 
 
 class Foo(a)
 //│ JS (unsanitized):
-//│ this.Foo = function Foo(a1) { return new Foo.class(a1); };
-//│ this.Foo.class = class Foo {
+//│ let Foo3;
+//│ Foo3 = function Foo(a1) { return new Foo.class(a1); };
+//│ Foo3.class = class Foo {
 //│   constructor(a) {
 //│     this.a = a;
 //│   }
@@ -45,30 +47,31 @@ class Foo(a)
 
 Foo
 //│ JS (unsanitized):
-//│ this.Foo
+//│ Foo3
 //│ = [Function: Foo] { class: [class Foo] }
 
 Foo(1)
 //│ JS (unsanitized):
-//│ this.Foo(1)
+//│ Foo3(1)
 //│ = Foo { a: 1 }
 
 Foo(1).a
 //│ JS (unsanitized):
-//│ let tmp; tmp = this.Foo(1); tmp.a
+//│ let tmp; tmp = Foo3(1); tmp.a
 //│ = 1
 
 fun foo(y) = Foo(y)
 foo(27)
 //│ JS (unsanitized):
-//│ function foo(y) { return globalThis.Foo(y); } this.foo(27)
+//│ let foo1; foo1 = function foo(y) { return Foo3(y); }; foo1(27)
 //│ = Foo { a: 27 }
 
 
 class Foo(a, b)
 //│ JS (unsanitized):
-//│ this.Foo = function Foo(a1, b1) { return new Foo.class(a1, b1); };
-//│ this.Foo.class = class Foo {
+//│ let Foo5;
+//│ Foo5 = function Foo(a1, b1) { return new Foo.class(a1, b1); };
+//│ Foo5.class = class Foo {
 //│   constructor(a, b) {
 //│     this.a = a;
 //│     this.b = b;
@@ -79,47 +82,47 @@ class Foo(a, b)
 
 let foo = Foo
 //│ JS (unsanitized):
-//│ this.foo = this.Foo; null
+//│ let foo2; foo2 = Foo5; null
 //│ foo = [Function: Foo] { class: [class Foo] }
 
 let f = foo(1, 2)
 //│ JS (unsanitized):
-//│ let tmp; tmp = this.foo(1, 2) ?? null; this.f = tmp; null
+//│ let f, tmp1; tmp1 = foo2(1, 2) ?? null; f = tmp1; null
 //│ f = Foo { a: 1, b: 2 }
 
 let f = new foo(1, 2)
 //│ JS (unsanitized):
-//│ let tmp; tmp = new this.foo(1, 2); this.f = tmp; null
+//│ let f1, tmp2; tmp2 = new foo2(1, 2); f1 = tmp2; null
 //│ f = Foo { a: 1, b: 2 }
 
 f.a
 //│ JS (unsanitized):
-//│ this.f.a
+//│ f1.a
 //│ = 1
 
 f.b
 //│ JS (unsanitized):
-//│ this.f.b
+//│ f1.b
 //│ = 2
 
 let f = Foo(1, 2)
 //│ JS (unsanitized):
-//│ let tmp; tmp = this.Foo(1, 2); this.f = tmp; null
+//│ let f2, tmp3; tmp3 = Foo5(1, 2); f2 = tmp3; null
 //│ f = Foo { a: 1, b: 2 }
 
 f.a
 //│ JS (unsanitized):
-//│ this.f.a
+//│ f2.a
 //│ = 1
 
 f.b
 //│ JS (unsanitized):
-//│ this.f.b
+//│ f2.b
 //│ = 2
 
 Foo(log(1), log(2))
 //│ JS (unsanitized):
-//│ let tmp, tmp1; tmp = this.log(1); tmp1 = this.log(2); this.Foo(tmp, tmp1)
+//│ let tmp4, tmp5; tmp4 = log1(1); tmp5 = log1(2); Foo5(tmp4, tmp5)
 //│ > 1
 //│ > 2
 //│ = Foo { a: null, b: null }
@@ -129,11 +132,12 @@ class Inner(c) with
   fun i1(d) = c + d
   log(c)
 //│ JS (unsanitized):
-//│ this.Inner = function Inner(c1) { return new Inner.class(c1); };
-//│ this.Inner.class = class Inner {
+//│ let Inner1;
+//│ Inner1 = function Inner(c1) { return new Inner.class(c1); };
+//│ Inner1.class = class Inner {
 //│   constructor(c) {
 //│     this.c = c;
-//│     globalThis.log(this.c)
+//│     log1(this.c)
 //│   }
 //│   i1(d) {
 //│     return this.c + d;
@@ -144,13 +148,13 @@ class Inner(c) with
 
 let i = new Inner(100)
 //│ JS (unsanitized):
-//│ let tmp; tmp = new this.Inner.class(100); this.i = tmp; null
+//│ let i, tmp6; tmp6 = new Inner1.class(100); i = tmp6; null
 //│ > 100
 //│ i = Inner { c: 100 }
 
 i.i1(20)
 //│ JS (unsanitized):
-//│ this.i.i1(20) ?? null
+//│ i.i1(20) ?? null
 //│ = 120
 
 

@@ -6,31 +6,31 @@
 
 let x
 //│ JS (unsanitized):
-//│ null
+//│ let x; x = undefined; null
 
 x = 1
 //│ JS (unsanitized):
-//│ this.x = 1; null
+//│ x = 1; null
 
 x
 //│ JS (unsanitized):
-//│ this.x
+//│ x
 //│ = 1
 
 // TODO forbid redefining a let
 x = 2
 //│ JS (unsanitized):
-//│ this.x = 2; null
+//│ x = 2; null
 
 x
 //│ JS (unsanitized):
-//│ this.x
+//│ x
 //│ = 2
 
 
 let y = 1
 //│ JS (unsanitized):
-//│ this.y = 1; null
+//│ let y; y = 1; null
 //│ y = 1
 
 :e
@@ -44,30 +44,30 @@ z = 1
 
 fun f() = 1
 //│ JS (unsanitized):
-//│ function f() { return 1; } null
+//│ let f1; f1 = function f() { return 1; }; null
 
 f
 //│ JS (unsanitized):
-//│ this.f
+//│ f1
 //│ = [Function: f]
 
 
 let f
 f(x) = x + 1
 //│ JS (unsanitized):
-//│ this.f = (x) => { return x + 1; }; null
-//│ f = [Function (anonymous)]
+//│ let f2; f2 = (x1) => { return x1 + 1; }; null
+//│ f = [Function: f2]
 
 f(1)
 //│ JS (unsanitized):
-//│ this.f(1) ?? null
+//│ f2(1) ?? null
 //│ = 2
 
 
 let foo
 foo = 0
 //│ JS (unsanitized):
-//│ this.foo = 0; null
+//│ let foo; foo = 0; null
 //│ foo = 0
 
 :fixme
@@ -79,15 +79,14 @@ else foo = 1
 //│ ║  l.76: 	then foo = 0
 //│ ╙──      	         ^
 //│ JS (unsanitized):
-//│ let scrut;
+//│ let foo1, scrut;
+//│ foo1 = undefined;
 //│ scrut = true;
 //│ if (scrut === true) {
-//│   this.foo
+//│   foo1
 //│ } else {
 //│   throw new this.Error("match error");
 //│ }
-//│ = 0
-//│ foo = 0
 
 let foo
 if true
@@ -96,31 +95,40 @@ then
 else
   foo = 1
 //│ JS (unsanitized):
-//│ let scrut; scrut = true; if (scrut === true) { this.foo = 0; null } else { this.foo = 1; null }
+//│ let foo2, scrut1;
+//│ foo2 = undefined;
+//│ scrut1 = true;
+//│ if (scrut1 === true) {
+//│   foo2 = 0;
+//│   null
+//│ } else {
+//│   foo2 = 1;
+//│   null
+//│ }
 //│ foo = 0
 
 
 fun f() =
   foo = 42
 //│ JS (unsanitized):
-//│ function f() { globalThis.foo = 42; return null; } null
+//│ let f4; f4 = function f() { foo2 = 42; return null; }; null
 
 f()
 //│ JS (unsanitized):
-//│ this.f()
+//│ f4()
 
 foo
 //│ JS (unsanitized):
-//│ this.foo
+//│ foo2
 //│ = 42
 
 
 :fixme
 fun f() = foo = 0
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.119: 	fun f() = foo = 0
+//│ ║  l.127: 	fun f() = foo = 0
 //│ ╙──       	              ^
 //│ JS (unsanitized):
-//│ function f() { return globalThis.foo; } null
+//│ let f6; f6 = function f() { return foo2; }; null
 
 

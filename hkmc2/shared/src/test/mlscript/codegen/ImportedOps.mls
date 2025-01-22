@@ -11,19 +11,20 @@ fun foo() =
   "a" ~ "b" ~ "c"
 foo()
 //│ JS (unsanitized):
-//│ function foo() {
+//│ let foo1;
+//│ foo1 = function foo() {
 //│   let tmp;
-//│   tmp = globalThis.M.concat("a", "b");
-//│   return globalThis.M.concat(tmp, "c");
-//│ }
-//│ this.foo()
+//│   tmp = M1.concat("a", "b");
+//│   return M1.concat(tmp, "c");
+//│ };
+//│ foo1()
 //│ = 'abc'
 
 let name = "_"
 //│ name = '_'
 
 let display(balance) = balance
-//│ display = [Function (anonymous)]
+//│ display = [Function: display]
 
 "b" ~ display("-")
 //│ = 'b-'

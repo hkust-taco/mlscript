@@ -17,20 +17,20 @@ open Str
 
 :w
 @debug 0
-//│ ╔══[WARNING] This annotation has no effect
+//│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.19: 	@debug 0
 //│ ║        	 ^^^^^
-//│ ╟── Annotations are not supported on integer literal terms.
+//│ ╟── Such annotations are not supported on integer literal terms.
 //│ ║  l.19: 	@debug 0
 //│ ╙──      	       ^
 //│ = 0
 
 :w
 @debug 1 + 2
-//│ ╔══[WARNING] This annotation has no effect
+//│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.29: 	@debug 1 + 2
 //│ ║        	 ^^^^^
-//│ ╟── Annotations are not supported on application terms.
+//│ ╟── Such annotations are not supported on application terms.
 //│ ║  l.29: 	@debug 1 + 2
 //│ ╙──      	       ^^^^^
 //│ = 3
@@ -40,7 +40,7 @@ open Str
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.39: 	(@debug 1 + 2)
 //│ ║        	  ^^^^^
-//│ ╟── Annotations are not supported on application terms.
+//│ ╟── Such annotations are not supported on application terms.
 //│ ║  l.39: 	(@debug 1 + 2)
 //│ ╙──      	        ^^^^^
 //│ = 3
@@ -50,7 +50,7 @@ open Str
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.49: 	(@debug 1) + 2
 //│ ║        	  ^^^^^
-//│ ╟── Annotations are not supported on integer literal terms.
+//│ ╟── Such annotations are not supported on integer literal terms.
 //│ ║  l.49: 	(@debug 1) + 2
 //│ ╙──      	        ^
 //│ = 3
@@ -60,7 +60,7 @@ open Str
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.59: 	(1 + @debug 2)
 //│ ║        	      ^^^^^
-//│ ╟── Annotations are not supported on integer literal terms.
+//│ ╟── Such annotations are not supported on integer literal terms.
 //│ ║  l.59: 	(1 + @debug 2)
 //│ ╙──      	            ^
 //│ = 3
@@ -72,7 +72,7 @@ id(@Log 5)
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.71: 	id(@Log 5)
 //│ ║        	    ^^^
-//│ ╟── Annotations are not supported on integer literal terms.
+//│ ╟── Such annotations are not supported on integer literal terms.
 //│ ║  l.71: 	id(@Log 5)
 //│ ╙──      	        ^
 //│ = 5
@@ -83,10 +83,10 @@ id(@Log 5)
 //│ ╔══[PARSE ERROR] Expected end of input; found 'class' keyword instead
 //│ ║  l.82: 	@1 + 2 class Qux
 //│ ╙──      	       ^^^^^
-//│ ╔══[WARNING] This annotation has no effect
+//│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.82: 	@1 + 2 class Qux
 //│ ║        	 ^
-//│ ╟── Annotations are not supported on application terms.
+//│ ╟── Such annotations are not supported on application terms.
 //│ ║  l.82: 	@1 + 2 class Qux
 //│ ╙──      	   ^^^
 //│ = 2

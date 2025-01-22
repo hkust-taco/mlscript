@@ -17,8 +17,9 @@ class Outer(a, b) with
   log(i.c)
   log(i.i1(1))
 //│ JS (unsanitized):
-//│ this.Outer = function Outer(a1, b1) { return new Outer.class(a1, b1); };
-//│ this.Outer.class = class Outer {
+//│ let Outer1;
+//│ Outer1 = function Outer(a1, b1) { return new Outer.class(a1, b1); };
+//│ Outer1.class = class Outer {
 //│   constructor(a, b) {
 //│     this.a = a;
 //│     this.b = b;
@@ -29,10 +30,10 @@ class Outer(a, b) with
 //│       constructor(c) {
 //│         this.c = c;
 //│         let tmp3, tmp4, tmp5;
-//│         tmp3 = globalThis.log(this$Outer.a);
-//│         tmp4 = globalThis.log(this.c);
+//│         tmp3 = log1(this$Outer.a);
+//│         tmp4 = log1(this.c);
 //│         tmp5 = this.i1(this$Outer.a);
-//│         globalThis.log(tmp5)
+//│         log1(tmp5)
 //│       }
 //│       i1(d) {
 //│         return [
@@ -45,9 +46,9 @@ class Outer(a, b) with
 //│     };
 //│     tmp = this.Inner(this.a);
 //│     this.i = tmp;
-//│     tmp1 = globalThis.log(this.i.c);
+//│     tmp1 = log1(this.i.c);
 //│     tmp2 = this.i.i1(1) ?? null;
-//│     globalThis.log(tmp2)
+//│     log1(tmp2)
 //│   }
 //│   o1(c) {
 //│     return this.Inner(c);

@@ -12,8 +12,8 @@ if true then 1 else 0
 :sjs
 let f = x => if x then log("ok") else log("ko")
 //│ JS (unsanitized):
-//│ this.f = (x) => { if (x === true) { return this.log("ok"); } else { return this.log("ko"); } }; null
-//│ f = [Function (anonymous)]
+//│ let f; f = (x) => { if (x === true) { return log1("ok"); } else { return log1("ko"); } }; null
+//│ f = [Function: f]
 
 f(true)
 //│ > ok
@@ -25,7 +25,7 @@ f(false)
 :sjs
 let f = x => log((if x then "ok" else "ko") + "!")
 //│ JS (unsanitized):
-//│ let tmp;
+//│ let f1, tmp;
 //│ tmp = (x) => {
 //│   let tmp1, tmp2;
 //│   if (x === true) {
@@ -34,14 +34,33 @@ let f = x => log((if x then "ok" else "ko") + "!")
 //│     tmp1 = "ko";
 //│   }
 //│   tmp2 = tmp1 + "!";
-//│   return this.log(tmp2);
+//│   return log1(tmp2);
 //│ };
-//│ this.f = tmp;
+//│ f1 = tmp;
 //│ null
 //│ f = [Function: tmp]
 
 :sjs
 let f = x => log((if x and x then "ok" else "ko") + "!")
+//│ JS (unsanitized):
+//│ let f2, tmp1;
+//│ tmp1 = (x) => {
+//│   let tmp2, tmp3;
+//│   if (x === true) {
+//│     if (x === true) {
+//│       tmp2 = "ok";
+//│     } else {
+//│       tmp2 = "ko";
+//│     }
+//│   } else {
+//│     tmp2 = "ko";
+//│   }
+//│   tmp3 = tmp2 + "!";
+//│   return log1(tmp3);
+//│ };
+//│ f2 = tmp1;
+//│ null
+//│ f = [Function: tmp1]
 // --- TODO: What we want ---
 // this.f = (x) => {
 //   let tmp, tmp1, flag;
@@ -62,25 +81,6 @@ let f = x => log((if x and x then "ok" else "ko") + "!")
 // };
 // undefined
 // f = [Function (anonymous)]
-//│ JS (unsanitized):
-//│ let tmp;
-//│ tmp = (x) => {
-//│   let tmp1, tmp2;
-//│   if (x === true) {
-//│     if (x === true) {
-//│       tmp1 = "ok";
-//│     } else {
-//│       tmp1 = "ko";
-//│     }
-//│   } else {
-//│     tmp1 = "ko";
-//│   }
-//│   tmp2 = tmp1 + "!";
-//│   return this.log(tmp2);
-//│ };
-//│ this.f = tmp;
-//│ null
-//│ f = [Function: tmp]
 
 f(true)
 //│ > ok!

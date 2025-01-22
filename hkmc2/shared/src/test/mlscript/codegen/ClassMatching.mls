@@ -13,8 +13,8 @@ object None
 if Some(0) is Some(x) then x
 //│ JS (unsanitized):
 //│ let scrut, param0, x;
-//│ scrut = this.Some(0);
-//│ if (scrut instanceof this.Some.class) {
+//│ scrut = Some1(0);
+//│ if (scrut instanceof Some1.class) {
 //│   param0 = scrut.value;
 //│   x = param0;
 //│   x
@@ -31,12 +31,11 @@ let s = Some(0)
 if s is
   Some(x) then x
 //│ JS (unsanitized):
-//│ let scrut, param0, x;
-//│ scrut = this.s;
-//│ if (scrut instanceof this.Some.class) {
-//│   param0 = scrut.value;
-//│   x = param0;
-//│   x
+//│ let param01, x1;
+//│ if (s instanceof Some1.class) {
+//│   param01 = s.value;
+//│   x1 = param01;
+//│   x1
 //│ } else {
 //│   throw new this.Error("match error");
 //│ }
@@ -61,12 +60,12 @@ if s is
 :sjs
 x => if x is Some(x) then x
 //│ JS (unsanitized):
-//│ (x) => {
-//│   let param0, x1;
-//│   if (x instanceof this.Some.class) {
-//│     param0 = x.value;
-//│     x1 = param0;
-//│     return x1;
+//│ (x3) => {
+//│   let param04, x4;
+//│   if (x3 instanceof Some1.class) {
+//│     param04 = x3.value;
+//│     x4 = param04;
+//│     return x4;
 //│   } else {
 //│     throw new this.Error("match error");
 //│   }
@@ -120,25 +119,26 @@ fun f(x) = if x is
   None then "ok"
   else log("oops")
 //│ JS (unsanitized):
-//│ function f(x) {
-//│   let param0, x1, scrut;
-//│   if (x instanceof globalThis.Some.class) {
-//│     param0 = x.value;
-//│     x1 = param0;
-//│     scrut = x1 > 0;
-//│     if (scrut === true) {
+//│ let f9;
+//│ f9 = function f(x3) {
+//│   let param04, x4, scrut1;
+//│   if (x3 instanceof Some1.class) {
+//│     param04 = x3.value;
+//│     x4 = param04;
+//│     scrut1 = x4 > 0;
+//│     if (scrut1 === true) {
 //│       return 42;
 //│     } else {
-//│       return globalThis.log("oops");
+//│       return log1("oops");
 //│     }
 //│   } else {
-//│     if (x instanceof globalThis.None.class) {
+//│     if (x3 instanceof None1.class) {
 //│       return "ok";
 //│     } else {
-//│       return globalThis.log("oops");
+//│       return log1("oops");
 //│     }
 //│   }
-//│ }
+//│ };
 //│ null
 
 f(Some(0))
@@ -162,24 +162,25 @@ fun f(x) = if x is
   Some(u) then u
   Pair(a, b) then a + b
 //│ JS (unsanitized):
-//│ function f(x) {
-//│   let param0, param1, a, b, param01, u;
-//│   if (x instanceof globalThis.Some.class) {
-//│     param01 = x.value;
-//│     u = param01;
+//│ let f11;
+//│ f11 = function f(x3) {
+//│   let param04, param1, a, b, param05, u;
+//│   if (x3 instanceof Some1.class) {
+//│     param05 = x3.value;
+//│     u = param05;
 //│     return u;
 //│   } else {
-//│     if (x instanceof globalThis.Pair.class) {
-//│       param0 = x.fst;
-//│       param1 = x.snd;
-//│       a = param0;
+//│     if (x3 instanceof Pair1.class) {
+//│       param04 = x3.fst;
+//│       param1 = x3.snd;
+//│       a = param04;
 //│       b = param1;
 //│       return a + b;
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }
 //│   }
-//│ }
+//│ };
 //│ null
 
 f(Some(123))
@@ -196,24 +197,25 @@ fun f(x) = log of if x is
   None then "ok"
   else "oops"
 //│ JS (unsanitized):
-//│ function f(x) {
-//│   let param0, tmp;
-//│   if (x instanceof globalThis.Some.class) {
-//│     param0 = x.value;
-//│     if (param0 === 0) {
-//│       tmp = "0";
+//│ let f13;
+//│ f13 = function f(x3) {
+//│   let param04, tmp11;
+//│   if (x3 instanceof Some1.class) {
+//│     param04 = x3.value;
+//│     if (param04 === 0) {
+//│       tmp11 = "0";
 //│     } else {
-//│       tmp = "oops";
+//│       tmp11 = "oops";
 //│     }
 //│   } else {
-//│     if (x instanceof globalThis.None.class) {
-//│       tmp = "ok";
+//│     if (x3 instanceof None1.class) {
+//│       tmp11 = "ok";
 //│     } else {
-//│       tmp = "oops";
+//│       tmp11 = "oops";
 //│     }
 //│   }
-//│   return globalThis.log(tmp);
-//│ }
+//│   return log1(tmp11);
+//│ };
 //│ null
 
 f(Some(0))

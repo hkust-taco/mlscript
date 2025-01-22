@@ -1,4 +1,5 @@
 import Predef from "./Predef.mjs";
+let Option1;
 const Option$class = class Option {
   constructor() {
     this.Some = function Some(value1) { return new Some.class(value1); };
@@ -38,7 +39,7 @@ const Option$class = class Option {
     return Predef.pipeInto(2134, Predef.print);
   }
   toString() { return "Option"; }
-}; const Option = new Option$class;
-Option.class = Option$class;
+}; Option1 = new Option$class;
+Option1.class = Option$class;
 null
-export default Option;
+let Option = Option1; export default Option;

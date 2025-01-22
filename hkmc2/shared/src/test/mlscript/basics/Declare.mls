@@ -1,0 +1,36 @@
+:js
+
+
+:sjs
+declare fun foo: Int
+//│ JS (unsanitized):
+//│ null
+
+:re
+:sjs
+foo
+//│ JS (unsanitized):
+//│ this.foo
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
+
+
+declare fun p: Int
+
+:re
+p
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'p' yielded 'undefined'
+
+
+fun q: Int
+fun q = 1
+
+q
+//│ = 1
+
+declare module q with { val x }
+
+:re
+q.x
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'q' yielded 'undefined'
+
+

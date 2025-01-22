@@ -1,0 +1,25 @@
+:js
+
+:global
+// :d
+
+
+:todo
+fun Foo() = 1
+module Foo with { val x = 1 }
+//│ ╔══[ERROR] Multiple definitions of symbol 'Foo'
+//│ ╟── defined here
+//│ ║  l.8: 	fun Foo() = 1
+//│ ║       	    ^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.9: 	module Foo with { val x = 1 }
+//│ ╙──     	       ^^^^^^^^^^^^^^^^^^^^
+
+Foo
+//│ = Foo { x: 1, class: [class Foo] }
+
+:todo
+Foo()
+//│ ═══[RUNTIME ERROR] TypeError: Foo2 is not a function
+
+

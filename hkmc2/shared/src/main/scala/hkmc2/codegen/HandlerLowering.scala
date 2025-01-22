@@ -315,12 +315,12 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
         case c: ClsLikeDefn => translateCls(c)
         case _: ValDefn => super.applyDefn(defn)
     transformer.applyBlock(b)
-
+  
   private def secondPass(b: Block)(using HandlerCtx): Block =
     val cls = if handlerCtx.isTopLevel then N else genContClass(b)
     cls match
       case None => genNormalBody(b, BlockMemberSymbol("", Nil))
-      case Some(cls) => Define(cls, genNormalBody(b, BlockMemberSymbol(cls.sym.nme, Nil)))
+      case Some(cls) => Define(cls, genNormalBody(b, cls.sym))
   
   private val thirdPassFresh = FreshId()
   // moves definitions to the top level of the block
@@ -329,11 +329,11 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     // we move all function defns to the top level of the handler block
     val (blk, defns) = b.floatOutDefns(false)
     val clsDefns = defns.collect:
-      case ClsLikeDefn(sym, k, parentPath, methods, privateFields, publicFields, preCtor, ctor) => sym
+      case ClsLikeDefn(own, isym, sym, k, paramsOpt, parentPath, methods, privateFields, publicFields, preCtor, ctor) => sym
     
     val funDefns = defns.collect:
-      case FunDefn(sym, params, body) => sym
-
+      case FunDefn(own, sym, params, body) => sym
+    
     def getBms =
       var l: List[BlockMemberSymbol] = Nil
       val subst = new SymbolSubst:
@@ -342,7 +342,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
           b
       BlockTransformer(subst).applyBlock(b)
       l
-
+    
     val toConvert = getBms
       .map: b =>
         val clsDefn = b.asCls
@@ -357,19 +357,19 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
         else None
       .collect:
         case Some(b) => b
-
+    
     val fnBmsMap = funDefns
       .map: b =>
         b -> BlockMemberSymbol(b.nme + "$" + thirdPassFresh(), b.trees)
       .toMap
-
+    
     val clsBmsMap = toConvert
       .map: b =>
         b -> BlockMemberSymbol(b.nme + "$" + thirdPassFresh(), b.trees)  
       .toMap
-
+    
     val bmsMap = (fnBmsMap ++ clsBmsMap).toMap
-
+    
     val clsMap = clsBmsMap
       .map:
         case b1 -> b2 => b1.asCls match
@@ -395,7 +395,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       .toMap
     
     val newBlk = defns.foldLeft(blk)((acc, defn) => Define(defn, acc))
-
+    
     val subst = new SymbolSubst:
       override def mapBlockMemberSym(b: BlockMemberSymbol) = bmsMap.get(b) match
         case None => b.asCls match
@@ -409,11 +409,11 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       override def mapClsSym(s: ClassSymbol): ClassSymbol = clsMap.get(s).getOrElse(s)
       override def mapModuleSym(s: ModuleSymbol): ModuleSymbol = modMap.get(s).getOrElse(s)
       override def mapTermSym(s: TermSymbol): TermSymbol = TermSymbol(s.k, s.owner.map(_.subst(using this)), s.id)
-
+    
     BlockTransformer(subst).applyBlock(newBlk)
   
   private def translateFun(f: FunDefn): FunDefn =
-    FunDefn(f.sym, f.params, translateBlock(f.body, functionHandlerCtx))
+    FunDefn(f.owner, f.sym, f.params, translateBlock(f.body, functionHandlerCtx))
   
   private def translateCls(cls: ClsLikeDefn): ClsLikeDefn =
     cls.copy(methods = cls.methods.map(translateFun), ctor = translateBlock(cls.ctor, ctorCtx(cls.sym.asPath)))
@@ -425,6 +425,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     val lblLoop = freshTmp("handlerLoop")
     val tmp = freshTmp("retCont")
     def prepareBody(b: Block): Block =
+      
       val transform = new BlockTransformerShallow(SymbolSubst()):
         override def applyBlock(b: Block): Block = 
           b match
@@ -435,6 +436,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
             Return(res, false)
           case _ => super.applyBlock(b)
       transform.applyBlock(b)
+    
     val handlerBody = translateBlock(prepareBody(h.body), HandlerCtx(false, false, N, state => blockBuilder
       .assignFieldN(state.res.tail, nextIdent, Instantiate(state.cls, Value.Lit(Tree.IntLit(state.uid)) :: Nil))
       .ret(SimpleCall(handleBlockImplPath, state.res :: h.lhs.asPath :: Nil))))
@@ -444,31 +446,44 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
         PlainParamList(Param(FldFlags.empty, handler.resumeSym, N) :: Nil),
         translateBlock(handler.body, functionHandlerCtx))
       val tmp = freshTmp()
-      FunDefn(handler.sym, handler.params, Return(SimpleCall(mkEffectPath, h.lhs.asPath :: lam :: Nil), false))
+      FunDefn(
+        S(h.cls),
+        handler.sym, handler.params, Return(SimpleCall(mkEffectPath, h.lhs.asPath :: lam :: Nil), false))
     
     // TODO: it seems that our current syntax didn't know how to call super, calling it with empty param list now
-    val clsDefn = ClsLikeDefn(h.cls, syntax.Cls, S(h.par), handlers, Nil, Nil,
+    val clsDefn = ClsLikeDefn(
+      N, // no owner
+      h.cls,
+      BlockMemberSymbol(h.cls.id.name, Nil),
+      syntax.Cls,
+      h.cls.defn.get.paramsOpt,
+      S(h.par), handlers, Nil, Nil,
       Assign(freshTmp(), SimpleCall(Value.Ref(State.builtinOpsMap("super")), Nil), End()), End())
     
     val body = blockBuilder
       .define(clsDefn)
-      .assign(h.lhs, Instantiate(Value.Ref(BlockMemberSymbol(h.cls.id.name, Nil)), Nil))
+      .assign(h.lhs, Instantiate(Value.Ref(clsDefn.sym), Nil))
       .rest(handlerBody)
     
-    val defn = FunDefn(sym, PlainParamList(Nil) :: Nil, body)
+    val defn = FunDefn(
+      N, // no owner
+      sym, PlainParamList(Nil) :: Nil, body)
+    
     val result = Define(defn, ResultPlaceholder(h.res, freshId(), true, Call(sym.asPath, Nil)(true), h.rest))
     result
   
   private def genContClass(b: Block)(using HandlerCtx): Opt[ClsLikeDefn] =
-    val sym = ClassSymbol(
+    val clsSym = ClassSymbol(
       Tree.TypeDef(syntax.Cls, Tree.Error(), N, N),
       Tree.Ident("Cont$" + State.suid.nextUid)
     )
+    
     val pcVar = VarSymbol(Tree.Ident("pc"))
-    sym.defn = S(ClassDef(
+    clsSym.defn = S(ClassDef(
       N,
       syntax.Cls,
-      sym,
+      clsSym,
+      BlockMemberSymbol(clsSym.nme, Nil),
       Nil,
       S(PlainParamList(Param(FldFlags.empty, pcVar, N) :: Nil)),
       ObjBody(Term.Blk(Nil, Term.Lit(Tree.UnitLit(true)))),
@@ -504,14 +519,14 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     
     val parts = partitionBlock(actualBlock)
     val loopLbl = freshTmp("contLoop")
-    val pcSymbol = TermSymbol(ParamBind, S(sym), pcIdent)
+    val pcSymbol = TermSymbol(ParamBind, S(clsSym), pcIdent)
     
     def transformPart(blk: Block): Block = 
       val transform = new BlockTransformerShallow(SymbolSubst()):
         override def applyBlock(b: Block): Block = b match
           case ReturnCont(res, uid) =>
             blockBuilder
-              .assignFieldN(res.asPath.tail, nextIdent, sym.asPath)
+              .assignFieldN(res.asPath.tail, nextIdent, clsSym.asPath)
               .assign(pcSymbol, Value.Lit(Tree.IntLit(uid)))
               .ret(res.asPath)
           case StateTransition(uid) =>
@@ -557,14 +572,18 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     
     val resumeSym = BlockMemberSymbol("resume", List())
     val resumeFnDef = FunDefn(
+      S(clsSym), // owner
       resumeSym,
       List(PlainParamList(List(Param(FldFlags.empty, resumedVal, N)))),
       resumeBody
     )
     
     S(ClsLikeDefn(
-      sym,
+      N, // no owner
+      clsSym,
+      BlockMemberSymbol(clsSym.nme, Nil),
       syntax.Cls,
+      clsSym.defn.get.paramsOpt,
       S(contClsPath),
       resumeFnDef :: Nil,
       Nil,

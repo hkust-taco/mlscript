@@ -5,7 +5,18 @@
 //│ Imported 1 member(s)
 
 
+:sjs
 hello()
+//│ JS (unsanitized):
+//│ hello1()
 //│ = 'Hello!'
 
+
+fun hello() = "Hello?"
+
+:sjs
+hello()
+//│ JS (unsanitized):
+//│ hello3()
+//│ = 'Hello?'
 

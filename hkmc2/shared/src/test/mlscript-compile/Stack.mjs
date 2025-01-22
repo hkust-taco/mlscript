@@ -1,4 +1,5 @@
 import Predef from "./Predef.mjs";
+let Stack1;
 const Stack$class = class Stack {
   constructor() {
     this.Cons = function Cons(head1, tail1) { return new Cons.class(head1, tail1); };
@@ -87,9 +88,9 @@ const Stack$class = class Stack {
     return arr1;
   } 
   zip(...xss) {
-    let tmp, tmp1;
+    let go, tmp, tmp1;
     const this$Stack = this;
-    function go(heads, tails) {
+    go = function go(heads, tails) {
       return (caseScrut) => {
         let param0, param1, h, t, param01, param11, h2, t2, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
         if (caseScrut instanceof this$Stack.Cons.class) {
@@ -136,13 +137,13 @@ const Stack$class = class Stack {
           }
         }
       };
-    }
+    };
     tmp = go(this.Nil, this.Nil);
     tmp1 = this.fromArray(xss);
     return tmp(tmp1) ?? null;
   }
   toString() { return "Stack"; }
-}; const Stack = new Stack$class;
-Stack.class = Stack$class;
+}; Stack1 = new Stack$class;
+Stack1.class = Stack$class;
 null
-export default Stack;
+let Stack = Stack1; export default Stack;

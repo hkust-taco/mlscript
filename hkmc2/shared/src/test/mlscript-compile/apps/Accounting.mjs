@@ -1,15 +1,8 @@
 import fs from "fs";
 import Str from "./../Str.mjs";
 import Predef from "./../Predef.mjs";
-class Num {
-  constructor() {}
-  toString() { return "Num"; }
-}
-class Bool {
-  constructor() {}
-  toString() { return "Bool"; }
-}
-class Accounting {
+let Accounting1;
+Accounting1 = class Accounting {
   constructor() {
     this.warnings = [];
     this.Project = function Project(num1) { return new Project.class(num1); };
@@ -20,12 +13,12 @@ class Accounting {
       toString() { return "Project(" + this.num + ")"; }
     };
     const this$Accounting = this;
-    this.Line = function Line(name1, proj1, starting_balance1, isMatchable1) { return new Line.class(name1, proj1, starting_balance1, isMatchable1); };
+    this.Line = function Line(name1, proj1, starting$_balance1, isMatchable1) { return new Line.class(name1, proj1, starting$_balance1, isMatchable1); };
     this.Line.class = class Line {
-      constructor(name, proj, starting_balance, isMatchable) {
+      constructor(name, proj, starting$_balance, isMatchable) {
         this.name = name;
         this.proj = proj;
-        this.starting_balance = starting_balance;
+        this.starting_balance = starting$_balance;
         this.isMatchable = isMatchable;
         this.balance = this.starting_balance;
       }
@@ -91,7 +84,7 @@ class Accounting {
       } 
       snapShot(label) {
         let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
-        tmp = String(label) ?? null;
+        tmp = globalThis.String(label) ?? null;
         tmp1 = Str.concat2("|", tmp);
         tmp2 = Str.concat2(tmp1, "|");
         tmp3 = this$Accounting.lines.map((x) => {
@@ -157,9 +150,9 @@ class Accounting {
     tmp = amt / 1000;
     return tmp.toFixed(1) ?? null;
   } 
-  mkLine(nme, proj, starting_balance, matchable) {
+  mkLine(nme, proj, starting$_balance, matchable) {
     let line, tmp, tmp1;
-    tmp = this.Line(nme, proj, starting_balance, matchable);
+    tmp = this.Line(nme, proj, starting$_balance, matchable);
     line = tmp;
     tmp1 = this.lines.push(line) ?? null;
     return line;
@@ -175,6 +168,6 @@ class Accounting {
     return Predef.print(tmp4);
   }
   toString() { return "Accounting"; }
-}
+};
 null
-export default Accounting;
+let Accounting = Accounting1; export default Accounting;

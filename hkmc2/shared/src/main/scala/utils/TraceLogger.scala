@@ -25,7 +25,10 @@ abstract class TraceLogger:
   
   inline def log(msg: => Any): Unit = log(msg, noIndent = false)
 
-  def log(msg: => Any, noIndent: Bool = false) =
+  def logs(msgs: => Any*): Unit =
+    if doTrace then msgs.foreach(log(_))
+  
+  def log(msg: => Any, noIndent: Bool = false): Unit =
     if doTrace then emitDbg(if noIndent then msg.toString
       else "| " * indent + msg.toString.indentNewLines("| " * indent + ">  "))
 

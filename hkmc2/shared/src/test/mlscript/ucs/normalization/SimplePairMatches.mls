@@ -11,11 +11,11 @@ x => if x is Pair(A, B) then 1
 //│ JS (unsanitized):
 //│ (x) => {
 //│   let param0, param1;
-//│   if (x instanceof this.Pair.class) {
+//│   if (x instanceof Pair1.class) {
 //│     param0 = x.a;
 //│     param1 = x.b;
-//│     if (param0 instanceof this.A) {
-//│       if (param1 instanceof this.B) {
+//│     if (param0 instanceof A1) {
+//│       if (param1 instanceof B1) {
 //│         return 1;
 //│       } else {
 //│         throw new this.Error("match error");
@@ -36,20 +36,21 @@ fun f(x) = if x is
   Pair(A, A) then 1
   Pair(B, B) then 2
 //│ JS (unsanitized):
-//│ function f(x) {
+//│ let f1;
+//│ f1 = function f(x) {
 //│   let param0, param1;
-//│   if (x instanceof globalThis.Pair.class) {
+//│   if (x instanceof Pair1.class) {
 //│     param0 = x.a;
 //│     param1 = x.b;
-//│     if (param0 instanceof globalThis.A) {
-//│       if (param1 instanceof globalThis.A) {
+//│     if (param0 instanceof A1) {
+//│       if (param1 instanceof A1) {
 //│         return 1;
 //│       } else {
 //│         throw new globalThis.Error("match error");
 //│       }
 //│     } else {
-//│       if (param0 instanceof globalThis.B) {
-//│         if (param1 instanceof globalThis.B) {
+//│       if (param0 instanceof B1) {
+//│         if (param1 instanceof B1) {
 //│           return 2;
 //│         } else {
 //│           throw new globalThis.Error("match error");
@@ -61,7 +62,7 @@ fun f(x) = if x is
 //│   } else {
 //│     throw new globalThis.Error("match error");
 //│   }
-//│ }
+//│ };
 //│ null
 
 

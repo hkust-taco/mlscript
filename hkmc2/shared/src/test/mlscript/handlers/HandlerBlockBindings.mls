@@ -37,11 +37,11 @@ handle h = Effect with
   fun perform(arg)(k) =
     print(arg)
 val y = 123
-//│ ═══[RUNTIME ERROR] ReferenceError: y is not defined
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:y (class hkmc2.semantics.BlockMemberSymbol)
 
 :fixme
 :expect 123
 y
-//│ ═══[RUNTIME ERROR] Expected: 123, got: undefined
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:y (class hkmc2.semantics.BlockMemberSymbol)
 
 

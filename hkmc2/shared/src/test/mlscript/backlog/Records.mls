@@ -14,6 +14,7 @@ let rcd =
 //│ ╔══[ERROR] Name not found: fieldB
 //│ ║  l.9: 	  fieldB:
 //│ ╙──     	  ^^^^^^
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: rcd (class hkmc2.semantics.VarSymbol)
 
 // * Or this syntax?
 
@@ -23,11 +24,12 @@ let rcd =
   fieldB =
     "..."
 //│ ╔══[ERROR] Name not found: fieldA
-//│ ║  l.22: 	  fieldA = 1
+//│ ║  l.23: 	  fieldA = 1
 //│ ╙──      	  ^^^^^^
 //│ ╔══[ERROR] Name not found: fieldB
-//│ ║  l.23: 	  fieldB =
+//│ ║  l.24: 	  fieldB =
 //│ ╙──      	  ^^^^^^
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: rcd (class hkmc2.semantics.VarSymbol)
 
 // * Or this syntax?
 
@@ -37,7 +39,8 @@ let rcd = new with
   fieldB =
     "..."
 //│ ╔══[PARSE ERROR] Expected expression or block after `new` keyword; found 'with' keyword instead
-//│ ║  l.35: 	let rcd = new with
+//│ ║  l.37: 	let rcd = new with
 //│ ╙──      	              ^^^^
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: rcd (class hkmc2.semantics.VarSymbol)
 
 

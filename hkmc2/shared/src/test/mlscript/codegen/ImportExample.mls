@@ -18,7 +18,7 @@ let n = 42
 :sjs
 n / 2
 //│ JS (unsanitized):
-//│ this.n / 2
+//│ n / 2
 //│ = 21
 
 
@@ -36,7 +36,7 @@ inc / 2
 :re
 n / 2
 //│ JS (unsanitized):
-//│ Example.funnySlash(this.n, 2)
+//│ Example.funnySlash(n, 2)
 //│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
 funnySlash(inc, 123)

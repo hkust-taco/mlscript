@@ -29,16 +29,17 @@ fun foo() =
   if false then 0
 foo()
 //│ JS (unsanitized):
-//│ function foo() {
-//│   let scrut;
-//│   scrut = false;
-//│   if (scrut === true) {
+//│ let foo1;
+//│ foo1 = function foo() {
+//│   let scrut1;
+//│   scrut1 = false;
+//│   if (scrut1 === true) {
 //│     return 0;
 //│   } else {
 //│     throw new globalThis.Error("match error");
 //│   }
-//│ }
-//│ this.foo()
+//│ };
+//│ foo1()
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkArgs')
 
 

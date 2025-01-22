@@ -69,7 +69,7 @@ object BbCtx:
   def init(raise: Raise)(using Elaborator.State, Elaborator.Ctx): BbCtx =
     new BbCtx(raise, summon, None, 1, HashMap.empty, Bot, N)
 
-  val builtinOps = Set("+", "-", "*", "/", "<", ">", "<=", ">=", "==", "!=", "&&", "||")
+  val builtinOps = Elaborator.binaryOps ++ Elaborator.unaryOps ++ Elaborator.aliasOps.keySet
 end BbCtx
 
 
@@ -84,8 +84,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
   private def freshVar(sym: Symbol, hint: Str = "")(using ctx: BbCtx): InfVar =
     InfVar(ctx.lvl, infVarState.nextUid, new VarState(), false)(sym, hint)
   private def freshWildcard(sym: Symbol)(using ctx: BbCtx) =
-    val in = freshVar(sym, "-")
-    val out = freshVar(sym, "+")
+    val in = freshVar(sym, "")
+    val out = freshVar(sym, "")
     // in.state.upperBounds ::= out // * Not needed for soundness; complicates inferred types
     Wildcard(in, out)
   private def freshReg(sym: Symbol)(using ctx: BbCtx) =
@@ -138,8 +138,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       // log(s"Type application: ${cls.nme} with ${targs}")
       cls.symbol.flatMap(_.asTpe) match
       case S(tpeSym) =>
-        if tpeSym.nme === "Any" then Top
-        else if tpeSym.nme === "Nothing" then Bot
+        if tpeSym.nme === "Any" then Top // FIXME hygiene
+        else if tpeSym.nme === "Nothing" then Bot // FIXME hygiene
         else
           val defn = tpeSym.defn.get
           if targs.length != defn.tparams.length then
@@ -425,6 +425,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
   trace[(GeneralType, Type)](s"${ctx.lvl}. Typing ${t.showDbg}", res => s": (${res._1.showDbg}, ${res._2.showDbg})"):
     given CCtx = CCtx.init(t, N)
     t match
+      case Term.Annotated(Annot.Untyped, _) => (Bot, Bot)
       case sel @ Term.SynthSel(Ref(_: TopLevelSymbol), nme)
         if sel.symbol.isDefined =>
         typeCheck(Ref(sel.symbol.get)(sel.nme, 666)) // FIXME 666
@@ -507,8 +508,6 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
               case _ => (error(msg"${field.name} is not a valid member in class ${clsSym.nme}" -> t.toLoc :: Nil), Bot)
           case N => 
             (error(msg"Not a valid class: ${cls.describe}" -> cls.toLoc :: Nil), Bot)
-      case Term.App(lhs: Term.SynthSel, Term.Tup(Nil)) if lhs.sym.exists(_.isGetter) =>
-        typeCheck(lhs) // * Getter access will be elaborated to applications. But they cannot be typed as normal applications.
       case t @ Term.App(lhs, Term.Tup(rhs)) =>
         val (funTy, lhsEff) = typeCheck(lhs)
         app((funTy, lhsEff), rhs, t)

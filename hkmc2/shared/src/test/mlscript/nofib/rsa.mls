@@ -62,7 +62,6 @@ fun size(n) = intDiv(listLen(string_of_z(n)) * 47, 100)
 fun encrypt(n, e, s) = unlines of map of
   c => string_of_z(power(e, n, code(c)))
   collect(size(n), s)
-
 fun power(n, m, x) = if
   z_equal(n, const0) then const1
   even(n) then z_mod(z_sqr(power(z_div(n, const2), m, x)), m)

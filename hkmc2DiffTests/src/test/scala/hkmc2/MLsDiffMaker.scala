@@ -115,7 +115,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     val res = p.parseAll(p.block(allowNewlines = true))
     val imprtSymbol =
       semantics.TopLevelSymbol("import#"+file.baseName)
-    given Elaborator.Ctx = curCtx.nest(S(imprtSymbol))
+    given Elaborator.Ctx = curCtx.nest(N)
     val elab = Elaborator(etl, wd)
     try
       val resBlk = new syntax.Tree.Block(res)
@@ -173,10 +173,11 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   def processTrees(trees: Ls[syntax.Tree])(using Raise): Unit =
     val elab = Elaborator(etl, file / os.up)
-    val blockSymbol =
-      semantics.TopLevelSymbol("block#"+blockNum)
+    // val blockSymbol =
+    //   semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1
-    given Elaborator.Ctx = curCtx.nest(S(blockSymbol))
+    // given Elaborator.Ctx = curCtx.nest(S(blockSymbol))
+    given Elaborator.Ctx = curCtx.nest(N)
     val blk = new syntax.Tree.Block(trees)
     val (e, newCtx) = elab.topLevel(blk)
     curCtx = newCtx

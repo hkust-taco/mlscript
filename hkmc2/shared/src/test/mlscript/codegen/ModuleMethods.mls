@@ -7,6 +7,7 @@ object Example with
   val a = 456
   fun f(x) = [x, a]
 //│ JS (unsanitized):
+//│ let Example1;
 //│ const Example$class = class Example {
 //│   constructor() {
 //│     this.a = 456;
@@ -18,16 +19,16 @@ object Example with
 //│     ];
 //│   }
 //│   toString() { return "Example"; }
-//│ };
-//│ this.Example = new Example$class;
-//│ this.Example.class = Example$class;
+//│ }; Example1 = new Example$class;
+//│ Example1.class = Example$class;
 //│ null
 
 let s = Example.f
 //│ s = [Function: f]
 
+:re
 s(123)
-//│ = [ 123, undefined ]
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
 
 Example |>. s(123)
 //│ = [ 123, 456 ]

@@ -9,50 +9,44 @@
 
 class Foo
 //│ JS (unsanitized):
-//│ this.Foo = class Foo { constructor() {} toString() { return "Foo"; } }; null
+//│ let Foo1; Foo1 = class Foo { constructor() {} toString() { return "Foo"; } }; null
 
 Foo is Foo
 //│ JS (unsanitized):
-//│ let scrut; scrut = this.Foo; if (scrut instanceof this.Foo) { true } else { false }
+//│ let scrut; scrut = Foo1; if (scrut instanceof Foo1) { true } else { false }
 //│ = false
 
 (new Foo) is Foo
 //│ JS (unsanitized):
-//│ let scrut; scrut = new this.Foo(); if (scrut instanceof this.Foo) { true } else { false }
+//│ let scrut1; scrut1 = new Foo1(); if (scrut1 instanceof Foo1) { true } else { false }
 //│ = true
 
 new Foo
 //│ JS (unsanitized):
-//│ new this.Foo()
+//│ new Foo1()
 //│ = Foo {}
 
 new Foo()
 //│ JS (unsanitized):
-//│ new this.Foo()
+//│ new Foo1()
 //│ = Foo {}
 
 Foo
 //│ JS (unsanitized):
-//│ this.Foo
+//│ Foo1
 //│ = [class Foo]
 
 :re
 Foo()
 //│ JS (unsanitized):
-//│ this.Foo()
+//│ Foo1()
 //│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
 
 
 class Foo with { log("hi") }
 log("ok")
 //│ JS (unsanitized):
-//│ this.Foo = class Foo {
-//│   constructor() {
-//│     globalThis.log("hi")
-//│   }
-//│   toString() { return "Foo"; }
-//│ };
-//│ this.log("ok")
+//│ let Foo3; Foo3 = class Foo { constructor() { log1("hi") } toString() { return "Foo"; } }; log1("ok")
 //│ > ok
 
 fun test() =
@@ -60,34 +54,35 @@ fun test() =
   log("ok")
   Foo
 //│ JS (unsanitized):
-//│ function test() {
-//│   let tmp;
-//│   class Foo {
+//│ let test1;
+//│ test1 = function test() {
+//│   let Foo4, tmp;
+//│   Foo4 = class Foo {
 //│     constructor() {
-//│       globalThis.log("hi")
+//│       log1("hi")
 //│     }
 //│     toString() { return "Foo"; }
-//│   }
-//│   tmp = globalThis.log("ok");
-//│   return Foo;
-//│ }
+//│   };
+//│   tmp = log1("ok");
+//│   return Foo4;
+//│ };
 //│ null
 
 let t = test()
 //│ JS (unsanitized):
-//│ let tmp; tmp = this.test(); this.t = tmp; null
+//│ let t, tmp; tmp = test1(); t = tmp; null
 //│ > ok
 //│ t = [class Foo]
 
 new t
 //│ JS (unsanitized):
-//│ new this.t()
+//│ new t()
 //│ > hi
 //│ = Foo {}
 
 new t()
 //│ JS (unsanitized):
-//│ new this.t()
+//│ new t()
 //│ > hi
 //│ = Foo {}
 
@@ -97,13 +92,14 @@ class Foo with
   let y = x + 1
   fun z() = y + x
 //│ JS (unsanitized):
-//│ this.Foo = class Foo {
+//│ let Foo5;
+//│ Foo5 = class Foo {
 //│   #y;
 //│   constructor() {
-//│     let tmp;
+//│     let tmp1;
 //│     this.x = 1;
-//│     tmp = this.x + 1;
-//│     this.#y = tmp;
+//│     tmp1 = this.x + 1;
+//│     this.#y = tmp1;
 //│   }
 //│   z() {
 //│     return this.#y + this.x;
@@ -122,7 +118,8 @@ class Foo with
   fun z2() = 6
   log("hello")
 //│ JS (unsanitized):
-//│ this.Foo = class Foo {
+//│ let Foo7;
+//│ Foo7 = class Foo {
 //│   #y1;
 //│   #y2;
 //│   constructor() {
@@ -130,7 +127,7 @@ class Foo with
 //│     this.x2 = 2;
 //│     this.#y1 = 3;
 //│     this.#y2 = 4;
-//│     globalThis.log("hello")
+//│     log1("hello")
 //│   }
 //│   z1() {
 //│     return 5;
@@ -148,7 +145,8 @@ class Foo with
   fun foo(y) = x + y
   fun bar(z) = foo(z) + 1
 //│ JS (unsanitized):
-//│ this.Foo = class Foo {
+//│ let Foo9;
+//│ Foo9 = class Foo {
 //│   constructor() {
 //│     this.x = 1;
 //│   }
@@ -156,9 +154,9 @@ class Foo with
 //│     return this.x + y;
 //│   } 
 //│   bar(z) {
-//│     let tmp;
-//│     tmp = this.foo(z);
-//│     return tmp + 1;
+//│     let tmp1;
+//│     tmp1 = this.foo(z);
+//│     return tmp1 + 1;
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
@@ -169,14 +167,14 @@ log(a.x)
 log(a.foo(1))
 log(a.bar(1))
 //│ JS (unsanitized):
-//│ let tmp, tmp1, tmp2, tmp3, tmp4;
-//│ tmp = new this.Foo();
-//│ this.a = tmp;
-//│ tmp1 = this.log(this.a.x);
-//│ tmp2 = this.a.foo(1) ?? null;
-//│ tmp3 = this.log(tmp2);
-//│ tmp4 = this.a.bar(1) ?? null;
-//│ this.log(tmp4)
+//│ let a, tmp1, tmp2, tmp3, tmp4, tmp5;
+//│ tmp1 = new Foo9();
+//│ a = tmp1;
+//│ tmp2 = log1(a.x);
+//│ tmp3 = a.foo(1) ?? null;
+//│ tmp4 = log1(tmp3);
+//│ tmp5 = a.bar(1) ?? null;
+//│ log1(tmp5)
 //│ > 1
 //│ > 2
 //│ > 3
@@ -194,7 +192,8 @@ class Foo with
   val x = 1
   let x = 2
 //│ JS (unsanitized):
-//│ this.Foo = class Foo {
+//│ let Foo11;
+//│ Foo11 = class Foo {
 //│   #x;
 //│   constructor() {
 //│     this.x = 1;
@@ -208,13 +207,13 @@ class Foo with
 :fixme
 class Foo with val x = 1
 //│ ╔══[PARSE ERROR] Expected block after type declaration body; found 'val' keyword instead
-//│ ║  l.209: 	class Foo with val x = 1
+//│ ║  l.208: 	class Foo with val x = 1
 //│ ╙──       	               ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.209: 	class Foo with val x = 1
+//│ ║  l.208: 	class Foo with val x = 1
 //│ ╙──       	                     ^
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
-//│ ║  l.209: 	class Foo with val x = 1
+//│ ║  l.208: 	class Foo with val x = 1
 //│ ╙──       	                   ^
 //│ JS (unsanitized):
 //│ /* error */

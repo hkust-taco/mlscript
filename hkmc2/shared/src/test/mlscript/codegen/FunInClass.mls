@@ -22,13 +22,15 @@ fun test(a) =
       h(d)
   Inner(42)
 //│ JS (unsanitized):
-//│ function test(a) {
-//│   function Inner(b1) { return new Inner.class(b1); }
+//│ let test3;
+//│ test3 = function test(a) {
+//│   let Inner;
+//│   Inner = function Inner(b1) { return new Inner.class(b1); };
 //│   Inner.class = class Inner {
 //│     constructor(b) {
 //│       this.b = b;
 //│       let tmp;
-//│       tmp = globalThis.log(a);
+//│       tmp = log1(a);
 //│     }
 //│     f(c) {
 //│       return [
@@ -38,21 +40,22 @@ fun test(a) =
 //│       ];
 //│     } 
 //│     g(d) {
+//│       let h;
 //│       const this$Inner = this;
-//│       function h(e) {
+//│       h = function h(e) {
 //│         return [
 //│           a,
 //│           this$Inner.b,
 //│           d,
 //│           e
 //│         ];
-//│       }
+//│       };
 //│       return h(d);
 //│     }
 //│     toString() { return "Inner(" + this.b + ")"; }
 //│   };
 //│   return Inner(42);
-//│ }
+//│ };
 //│ null
 
 let i = test(100)
@@ -74,9 +77,10 @@ fun test(a) =
     print of [a, b]
   [C1(1), C2(2)]
 //│ JS (unsanitized):
-//│ function test(a) {
-//│   let tmp, tmp1;
-//│   function C1(b1) { return new C1.class(b1); }
+//│ let test5;
+//│ test5 = function test(a) {
+//│   let C1, C2, tmp1, tmp2;
+//│   C1 = function C1(b1) { return new C1.class(b1); };
 //│   C1.class = class C1 {
 //│     constructor(b) {
 //│       this.b = b;
@@ -87,7 +91,7 @@ fun test(a) =
 //│     }
 //│     toString() { return "C1(" + this.b + ")"; }
 //│   };
-//│   function C2(b1) { return new C2.class(b1); }
+//│   C2 = function C2(b1) { return new C2.class(b1); };
 //│   C2.class = class C2 {
 //│     constructor(b) {
 //│       this.b = b;
@@ -98,13 +102,13 @@ fun test(a) =
 //│     }
 //│     toString() { return "C2(" + this.b + ")"; }
 //│   };
-//│   tmp = C1(1);
-//│   tmp1 = C2(2);
+//│   tmp1 = C1(1);
+//│   tmp2 = C2(2);
 //│   return [
-//│     tmp,
-//│     tmp1
+//│     tmp1,
+//│     tmp2
 //│   ];
-//│ }
+//│ };
 //│ null
 
 test(123)
@@ -123,27 +127,28 @@ class Foo(a) with
   foo()
 Foo(123)
 //│ JS (unsanitized):
-//│ this.Foo = function Foo(a1) { return new Foo.class(a1); };
-//│ this.Foo.class = class Foo {
+//│ let Foo1;
+//│ Foo1 = function Foo(a1) { return new Foo.class(a1); };
+//│ Foo1.class = class Foo {
 //│   constructor(a) {
 //│     this.a = a;
 //│     this.foo()
 //│   }
 //│   foo() {
-//│     let tmp;
+//│     let bar, baz, tmp1;
 //│     const this$Foo = this;
-//│     function bar() {
+//│     bar = function bar() {
 //│       return this$Foo.a;
-//│     }
-//│     function baz() {
+//│     };
+//│     baz = function baz() {
 //│       return this$Foo.a;
-//│     }
-//│     tmp = bar();
+//│     };
+//│     tmp1 = bar();
 //│     return baz();
 //│   }
 //│   toString() { return "Foo(" + this.a + ")"; }
 //│ };
-//│ this.Foo(123)
+//│ Foo1(123)
 //│ = Foo { a: 123 }
 
 :sjs
@@ -155,24 +160,26 @@ class Bar(x) with
   foo()()
 Bar(1)
 //│ JS (unsanitized):
-//│ this.Bar = function Bar(x1) { return new Bar.class(x1); };
-//│ this.Bar.class = class Bar {
+//│ let Bar1;
+//│ Bar1 = function Bar(x1) { return new Bar.class(x1); };
+//│ Bar1.class = class Bar {
 //│   constructor(x) {
 //│     this.x = x;
-//│     let tmp;
-//│     tmp = this.foo();
-//│     tmp() ?? null
+//│     let tmp1;
+//│     tmp1 = this.foo();
+//│     tmp1() ?? null
 //│   }
 //│   foo() {
 //│     return () => {
+//│       let bar;
 //│       const this$Bar = this;
-//│       function bar() {
+//│       bar = function bar() {
 //│         return this$Bar.x;
-//│       }
+//│       };
 //│       return bar();
 //│     };
 //│   }
 //│   toString() { return "Bar(" + this.x + ")"; }
 //│ };
-//│ this.Bar(1)
+//│ Bar1(1)
 //│ = Bar { x: 1 }

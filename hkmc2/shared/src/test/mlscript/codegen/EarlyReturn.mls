@@ -21,17 +21,18 @@ fun f(x) =
     return 0
   x + 1
 //│ JS (unsanitized):
-//│ function f(x) {
+//│ let f3;
+//│ f3 = function f(x) {
 //│   let scrut, tmp, tmp1;
 //│   scrut = x < 0;
 //│   if (scrut === true) {
-//│     tmp = globalThis.log("whoops");
+//│     tmp = log1("whoops");
 //│     return 0;
 //│   } else {
 //│     tmp1 = null;
 //│   }
 //│   return x + 1;
-//│ }
+//│ };
 //│ null
 
 f(1)

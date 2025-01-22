@@ -65,7 +65,7 @@ inc("oops")
 
 fun inc(x) = x + 1
 inc : Int
-//│ ╔══[ERROR] Type error in selection with expected type Int
+//│ ╔══[ERROR] Type error in reference with expected type Int
 //│ ║  l.67: 	inc : Int
 //│ ║        	^^^
 //│ ╙── because: cannot constrain  'x -> Int  <:  Int

@@ -6,11 +6,11 @@
 
 fun f(n1: Int): Int = n1
 //│ JS (unsanitized):
-//│ function f(n1) { return n1; } null
+//│ let f1; f1 = function f(n1) { return n1; }; null
 
 f(42)
 //│ JS (unsanitized):
-//│ this.f(42)
+//│ f1(42)
 //│ = 42
 
 // TODO compile this to
@@ -19,58 +19,60 @@ f(42)
 
 fun f(n1: Int)(n2: Int): Int =  (10 * n1 + n2)
 //│ JS (unsanitized):
-//│ function f(n1) { return (n2) => { let tmp; tmp = 10 * n1; return tmp + n2; }; } null
+//│ let f3; f3 = function f(n1) { return (n2) => { let tmp; tmp = 10 * n1; return tmp + n2; }; }; null
 
 // TODO compile this to
 // this.f$(4, 2)
 
 f(4)(2)
 //│ JS (unsanitized):
-//│ let tmp; tmp = this.f(4); tmp(2) ?? null
+//│ let tmp; tmp = f3(4); tmp(2) ?? null
 //│ = 42
 
 fun f(n1: Int)(n2: Int)(n3: Int): Int = 10 * (10 * n1 + n2) + n3
 //│ JS (unsanitized):
-//│ function f(n1) {
+//│ let f5;
+//│ f5 = function f(n1) {
 //│   return (n2) => {
 //│     return (n3) => {
-//│       let tmp, tmp1, tmp2;
-//│       tmp = 10 * n1;
-//│       tmp1 = tmp + n2;
-//│       tmp2 = 10 * tmp1;
-//│       return tmp2 + n3;
+//│       let tmp1, tmp2, tmp3;
+//│       tmp1 = 10 * n1;
+//│       tmp2 = tmp1 + n2;
+//│       tmp3 = 10 * tmp2;
+//│       return tmp3 + n3;
 //│     };
 //│   };
-//│ }
+//│ };
 //│ null
 
 f(4)(2)(0)
 //│ JS (unsanitized):
-//│ let tmp, tmp1; tmp = this.f(4); tmp1 = tmp(2) ?? null; tmp1(0) ?? null
+//│ let tmp1, tmp2; tmp1 = f5(4); tmp2 = tmp1(2) ?? null; tmp2(0) ?? null
 //│ = 420
 
 fun f(n1: Int)(n2: Int)(n3: Int)(n4: Int): Int = 10 * (10 * (10 * n1 + n2) + n3) + n4
 //│ JS (unsanitized):
-//│ function f(n1) {
+//│ let f7;
+//│ f7 = function f(n1) {
 //│   return (n2) => {
 //│     return (n3) => {
 //│       return (n4) => {
-//│         let tmp, tmp1, tmp2, tmp3, tmp4;
-//│         tmp = 10 * n1;
-//│         tmp1 = tmp + n2;
-//│         tmp2 = 10 * tmp1;
-//│         tmp3 = tmp2 + n3;
-//│         tmp4 = 10 * tmp3;
-//│         return tmp4 + n4;
+//│         let tmp3, tmp4, tmp5, tmp6, tmp7;
+//│         tmp3 = 10 * n1;
+//│         tmp4 = tmp3 + n2;
+//│         tmp5 = 10 * tmp4;
+//│         tmp6 = tmp5 + n3;
+//│         tmp7 = 10 * tmp6;
+//│         return tmp7 + n4;
 //│       };
 //│     };
 //│   };
-//│ }
+//│ };
 //│ null
 
 f(3)(0)(3)(1)
 //│ JS (unsanitized):
-//│ let tmp, tmp1, tmp2; tmp = this.f(3); tmp1 = tmp(0) ?? null; tmp2 = tmp1(3) ?? null; tmp2(1) ?? null
+//│ let tmp3, tmp4, tmp5; tmp3 = f7(3); tmp4 = tmp3(0) ?? null; tmp5 = tmp4(3) ?? null; tmp5(1) ?? null
 //│ = 3031
 
 

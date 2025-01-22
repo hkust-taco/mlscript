@@ -60,7 +60,7 @@ f(1,2)(-3)
 //│ REPL> Sending: globalThis.Predef.TraceLogger.enabled = true; globalThis.Predef.TraceLogger.resetIndent(0)
 //│ REPL> Collected:
 //│ >  null
-//│ REPL> Sending: try { let tmp, tmp1; tmp = this.f(1, 2); tmp1 = - 3; tmp(tmp1) ?? null } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: let tmp4, tmp5;try { tmp4 = f1(1, 2); tmp5 = - 3; tmp4(tmp5) ?? null } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  CALL g(-3)
 //│ >  | CALL g(-2)
@@ -90,7 +90,7 @@ f(1,2)(-3)
 
 :showRepl
 f(1,2)(-4)
-//│ REPL> Sending: try { let tmp, tmp1; tmp = this.f(1, 2); tmp1 = - 4; tmp(tmp1) ?? null } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: let tmp6, tmp7;try { tmp6 = f1(1, 2); tmp7 = - 4; tmp6(tmp7) ?? null } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  45
 //│ REPL> Parsed:

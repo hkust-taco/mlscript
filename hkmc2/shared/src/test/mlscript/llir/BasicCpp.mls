@@ -1,0 +1,46 @@
+
+:global
+:llir
+:cpp
+
+
+:scpp
+fun foo(a) =
+  let x
+  if a > 0 do
+    x = 1
+  x + 1
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ _mlsValue _mls_j_0(_mlsValue);
+//│ _mlsValue _mls_foo(_mlsValue);
+//│ _mlsValue _mlsMain();
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_2) {
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_6 = (_mls_x_2 + _mlsValue::fromIntLit(1));
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_foo(_mlsValue _mls_a) {
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_0 = _mlsValue::create<_mls_Unit>();
+//│   auto _mls_x_1 = (_mls_a > _mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isIntLit(_mls_x_1, 1)) {
+//│     auto _mls_x_3 = _mlsValue::fromIntLit(1);
+//│     auto _mls_x_4 = _mlsValue::create<_mls_Unit>();
+//│     _mls_retval = _mls_j_0(_mls_x_3);
+//│   } else {
+//│     auto _mls_x_5 = _mlsValue::create<_mls_Unit>();
+//│     _mls_retval = _mls_j_0(_mls_x_0);
+//│   }
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain() {
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mlsValue::create<_mls_Unit>();
+//│   return _mls_retval;
+//│ }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
+
+

@@ -7,16 +7,16 @@ let folderName1 = process.env.PWD.split("/").pop()
 in let folderName2 = process.cwd().split("/").pop()
 in folderName2 === folderName1 || folderName2 === "shared"
 //│ JS (unsanitized):
-//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
+//│ let folderName1, folderName2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
 //│ tmp = this.process.env.PWD.split("/") ?? null;
 //│ tmp1 = tmp.pop() ?? null;
-//│ this.folderName1 = tmp1;
+//│ folderName1 = tmp1;
 //│ tmp2 = this.process.cwd() ?? null;
 //│ tmp3 = tmp2.split("/") ?? null;
 //│ tmp4 = tmp3.pop() ?? null;
-//│ this.folderName2 = tmp4;
-//│ tmp5 = this.folderName2 === this.folderName1;
-//│ tmp6 = this.folderName2 === "shared";
+//│ folderName2 = tmp4;
+//│ tmp5 = folderName2 === folderName1;
+//│ tmp6 = folderName2 === "shared";
 //│ tmp5 || tmp6
 //│ = true
 

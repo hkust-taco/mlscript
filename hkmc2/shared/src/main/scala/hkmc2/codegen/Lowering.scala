@@ -61,7 +61,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
   final def term(t: st, inStmtPos: Bool = false)(k: Result => Block)(using Subst): Block =
     tl.log(s"Lowering.term ${t.showDbg.truncate(100, "[...]")}${
       if inStmtPos then " (in stmt)" else ""}${
-      t.symbol.fold("")(" " + _)}")
+      t.symbol.fold("")(" – symbol " + _)}")
     def warnStmt = if inStmtPos then
       raise(WarningReport:
         msg"Pure expression in statement position" -> t.toLoc :: Nil)
@@ -82,7 +82,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
         case (s: Spd, acc) =>
           args => subTerm_nonTail(s.term)(r => acc(Arg(true, r) :: args))
       }(Nil)
-    case st.Ref(sym) =>
+    case ref @ st.Ref(sym) =>
       sym match
       case sym: BuiltinSymbol =>
         warnStmt
@@ -118,6 +118,8 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
           return k(Value.Lam(paramLists.head, bodyBlock))
       case bs: BlockMemberSymbol =>
         bs.defn match
+        case S(d) if d.isDeclare.isDefined =>
+          return term(Sel(State.globalThisSymbol.ref(), ref.tree)(S(bs)))(k)
         case S(td: TermDefinition) if td.k is syntax.Fun =>
           // * Local functions with no parameter lists are getters
           // * and are lowered to functions with an empty parameter list
@@ -223,7 +225,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
     case st.Blk((d: Declaration) :: stats, res) =>
       d match
       case td: TermDefinition =>
-        reportAnnotations(td, td.annotations)
+        reportAnnotations(td, td.extraAnnotations)
         td.body match
         case N => // abstract declarations have no lowering
           term(st.Blk(stats, res))(k)
@@ -238,10 +240,13 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
                 term_nonTail(st.Blk(stats, res))(k)))
           case syntax.Fun =>
             val (paramLists, bodyBlock) = setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme))
-            Define(FunDefn(td.sym, paramLists, bodyBlock),
+            Define(FunDefn(td.owner, td.sym, paramLists, bodyBlock),
               term_nonTail(st.Blk(stats, res))(k))
+      case cls: ClassLikeDef if cls.sym.defn.exists(_.isDeclare.isDefined) =>
+        // * Declarations have no lowering
+        term(st.Blk(stats, res))(k)
       case cls: ClassLikeDef =>
-        reportAnnotations(cls, cls.annotations)
+        reportAnnotations(cls, cls.extraAnnotations)
         val bodBlk = cls.body.blk
         val (mtds, rest1) = bodBlk.stats.partitionMap:
           case td: TermDefinition if td.k is syntax.Fun => L(td)
@@ -253,11 +258,11 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
           case s => R(s)
         val publicFlds = rest2.collect:
           case td @ TermDefinition(k = (_: syntax.Val)) => td
-        Define(ClsLikeDefn(cls.sym, syntax.Cls, N,
+        Define(ClsLikeDefn(cls.owner, cls.sym, cls.bsym, cls.kind, cls.paramsOpt, N,
             mtds.flatMap: td =>
               td.body.map: bod =>
                 val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))
-                FunDefn(td.sym, paramLists, bodyBlock)
+                FunDefn(td.owner, td.sym, paramLists, bodyBlock)
             ,
             privateFlds,
             publicFlds,
@@ -272,15 +277,18 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
       case _ =>
         // TODO handle
         term(st.Blk(stats, res))(k)
-    case st.Blk((decl @ LetDecl(sym, annotations)) :: stats, res) =>
+    case st.Blk((decl @ LetDecl(sym, annotations)) :: (stats @ ((_: DefineVar) :: _)), res) =>
       reportAnnotations(decl, annotations)
       term(st.Blk(stats, res))(k)
-    case st.Blk((DefineVar(sym, rhs)) :: stats, res) =>
+    case st.Blk((decl @ LetDecl(sym, annotations)) :: stats, res) =>
+      reportAnnotations(decl, annotations)
+      term(st.Blk(DefineVar(sym, Term.Lit(Tree.UnitLit(false))) :: stats, res))(k)
+    case st.Blk(DefineVar(sym, rhs) :: stats, res) =>
       subTerm(rhs): r =>
         Assign(sym, r, term_nonTail(st.Blk(stats, res))(k))
     case Assgn(lhs, rhs) =>
       lhs match
-      case Ref(sym: LocalSymbol) =>
+      case Ref(sym) =>
         subTerm(rhs): r =>
           Assign(sym, r, k(Value.Lit(syntax.Tree.UnitLit(true))))
       case sel @ SynthSel(prefix, nme) =>
@@ -458,16 +466,19 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
       subTerm(lhs): ref =>
         subTerm_nonTail(rhs): value =>
           AssignField(ref, Tree.Ident("value"), value, k(value))(N)
+    
     case Neg(_) =>
       raise(ErrorReport(
         msg"Unexpected type annotations ${t.show}" ->
         t.toLoc :: Nil,
         source = Diagnostic.Source.Compilation))
       End("error")
-    case Annotated(prefix, receiver) => 
+    case Annotated(Annot.Untyped, receiver) =>
+      term(receiver)(k)
+    case Annotated(ann, receiver) =>
       raise(WarningReport(
-        msg"This annotation has no effect." -> prefix.toLoc ::
-        msg"Annotations are not supported on ${receiver.describe} terms." -> receiver.toLoc :: Nil))
+        msg"This annotation has no effect." -> ann.toLoc ::
+        msg"Such annotations are not supported on ${receiver.describe} terms." -> receiver.toLoc :: Nil))
       term(receiver)(k)
     case Error => End("error")
     
@@ -522,7 +533,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
       (using Subst): (List[ParamList], Block) =
     (paramLists, returnedTerm(bodyTerm))
   
-  def reportAnnotations(target: Statement, annotations: Ls[Term]): Unit = if annotations.nonEmpty then
+  def reportAnnotations(target: Statement, annotations: Ls[Annot]): Unit = if annotations.nonEmpty then
     raise(WarningReport(
       (msg"This annotation has no effect." -> annotations.foldLeft[Opt[Loc]](N):
         case (acc, term) => acc match

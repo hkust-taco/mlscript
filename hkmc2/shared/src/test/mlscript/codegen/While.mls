@@ -54,20 +54,19 @@ while x
     set x = false
   else 42
 //│ JS (unsanitized):
-//│ let scrut, tmp, tmp1;
-//│ tmp2: while (true) {
-//│   scrut = this.x;
-//│   if (scrut === true) {
-//│     tmp = this.log("Hello World");
-//│     this.x = false;
-//│     tmp1 = null;
-//│     continue tmp2;
+//│ let tmp4, tmp5;
+//│ tmp6: while (true) {
+//│   if (x2 === true) {
+//│     tmp4 = log1("Hello World");
+//│     x2 = false;
+//│     tmp5 = null;
+//│     continue tmp6;
 //│   } else {
-//│     tmp1 = 42;
+//│     tmp5 = 42;
 //│   }
 //│   break;
 //│ }
-//│ tmp1
+//│ tmp5
 //│ > Hello World
 //│ = 42
 
@@ -108,21 +107,21 @@ while
   i < 10 do set i += 1
 //│ JS (unsanitized):
 //│ () => {
-//│   let i, scrut, tmp, tmp1;
-//│   tmp2: while (true) {
-//│     i = 0;
-//│     scrut = i < 10;
-//│     if (scrut === true) {
-//│       tmp = i + 1;
-//│       i = tmp;
-//│       tmp1 = null;
-//│       continue tmp2;
+//│   let i2, scrut3, tmp19, tmp20;
+//│   tmp21: while (true) {
+//│     i2 = 0;
+//│     scrut3 = i2 < 10;
+//│     if (scrut3 === true) {
+//│       tmp19 = i2 + 1;
+//│       i2 = tmp19;
+//│       tmp20 = null;
+//│       continue tmp21;
 //│     } else {
-//│       tmp1 = null;
+//│       tmp20 = null;
 //│     }
 //│     break;
 //│   }
-//│   return tmp1;
+//│   return tmp20;
 //│ }
 //│ = [Function (anonymous)]
 
@@ -165,10 +164,8 @@ if x
   else 42
 //│ Normalized:
 //│ >  if
-//│ >    let $scrut = globalThis:block#7.x#666
-//│ >    $scrut is true and
-//│ >      let $scrut = globalThis:block#7.y#666
-//│ >      $scrut is true then 0
+//│ >    x is true and
+//│ >      y is true then 0
 //│ >      else 1
 //│ >    else 42
 //│ = 42
@@ -181,10 +178,8 @@ if x
   else 42
 //│ Normalized:
 //│ >  if
-//│ >    let $scrut = globalThis:block#7.x#666
-//│ >    $scrut is true and
-//│ >      let $scrut = globalThis:block#7.y#666
-//│ >      $scrut is true then 0
+//│ >    x is true and
+//│ >      y is true then 0
 //│ >      else 1
 //│ >    else 42
 //│ = 42
@@ -203,24 +198,25 @@ fun f(ls) =
       log(h)
   else log("Done!")
 //│ JS (unsanitized):
-//│ function f(ls) {
-//│   let param0, param1, h, tl, tmp;
-//│   tmp1: while (true) {
-//│     if (ls instanceof globalThis.Cons.class) {
+//│ let f1;
+//│ f1 = function f(ls) {
+//│   let param0, param1, h, tl, tmp28;
+//│   tmp29: while (true) {
+//│     if (ls instanceof Cons1.class) {
 //│       param0 = ls.hd;
 //│       param1 = ls.tl;
 //│       h = param0;
 //│       tl = param1;
 //│       ls = tl;
-//│       tmp = globalThis.log(h);
-//│       continue tmp1;
+//│       tmp28 = log1(h);
+//│       continue tmp29;
 //│     } else {
-//│       tmp = globalThis.log("Done!");
+//│       tmp28 = log1("Done!");
 //│     }
 //│     break;
 //│   }
-//│   return tmp;
-//│ }
+//│   return tmp28;
+//│ };
 //│ null
 
 f(0)
@@ -259,7 +255,7 @@ while log("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.259: 	  then 0(0)
+//│ ║  l.255: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ═══[ERROR] Unrecognized term split (false literal).
 //│ > Hello World

@@ -20,7 +20,7 @@ foo()
 
 let x = 1
 let f = () => x
-//│ f = [Function (anonymous)]
+//│ f = [Function: f]
 //│ x = 1
 
 f()
@@ -30,7 +30,7 @@ let x = 2
 //│ x = 2
 
 f()
-//│ = 2
+//│ = 1
 
 
 
@@ -44,8 +44,8 @@ class Foo with
   print(x)
   print(f())
   print(g())
-//│ > try { this.Foo = class Foo {   #x;   #f;   #x;   constructor() {     let tmp, tmp1, tmp2, tmp3, tmp4, tmp5;     this.#x = 1;     this.#f = (...args) => {       globalThis.Predef.checkArgs("", 0, true, args.length);       return this.#x;     };     tmp = this.#f() ?? null;     tmp1 = Predef.print(tmp);     this.#x = 2;     tmp2 = Predef.print(this.#x);     tmp3 = this.#f() ?? null;     tmp4 = Predef.print(tmp3);     tmp5 = this.g();     Predef.print(tmp5)   }   g(...args) {     globalThis.Predef.checkArgs("g", 0, true, args.length);     return this.#x;   }   toString() { return "Foo"; } }; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                              ^
+//│ > let Foo1;try { Foo1 = class Foo {   #x;   #f;   #x;   constructor() {     let tmp, tmp1, tmp2, tmp3, tmp4, tmp5;     this.#x = 1;     this.#f = (...args) => {       globalThis.Predef.checkArgs("", 0, true, args.length);       return this.#x;     };     tmp = this.#f() ?? null;     tmp1 = Predef.print(tmp);     this.#x = 2;     tmp2 = Predef.print(this.#x);     tmp3 = this.#f() ?? null;     tmp4 = Predef.print(tmp3);     tmp5 = this.g();     Predef.print(tmp5)   }   g(...args) {     globalThis.Predef.checkArgs("g", 0, true, args.length);     return this.#x;   }   toString() { return "Foo"; } }; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                   ^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Identifier '#x' has already been declared
 
 

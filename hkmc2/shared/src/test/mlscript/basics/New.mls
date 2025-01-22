@@ -13,9 +13,13 @@ new
   Foo
 //│ = Foo {}
 
+:w
 new
   Foo
   Foo
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.18: 	  Foo
+//│ ╙──      	  ^^^
 //│ = Foo {}
 
 // * Interesting... it tries to call `Foo()` and instantiate the resulting class value...
@@ -29,7 +33,7 @@ new
   Foo
     ()
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
-//│ ║  l.30: 	    ()
+//│ ║  l.34: 	    ()
 //│ ╙──      	    ^^
 //│ = Foo {}
 

@@ -136,7 +136,7 @@ fun simpleEvalCon(env, e) =
   if e_ is Con(c) then c else throw Error("Not a Con")
 //│ ————————————————————————————————————————————————————————————————————————————————
 
-fun bracket(ot, this, t) = if this <= ot then "(" :: (t +: nofibStringToList(")")) else t
+fun bracket(ot, ths, t) = if ths <= ot then "(" :: (t +: nofibStringToList(")")) else t
 
 :...
 //│ ————————————————————————————————————————————————————————————————————————————————

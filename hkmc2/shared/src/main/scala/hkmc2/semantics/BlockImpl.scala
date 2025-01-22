@@ -27,7 +27,7 @@ trait BlockImpl(using Elaborator.State):
       .groupMap(_._1)(_._2).flatMap:
         case (nme, snmes_tds) =>
           val (symNmes, tds) = snmes_tds.partitionMap(identity)
-          val sym = BlockMemberSymbol(nme, tds)
+          val sym = new BlockMemberSymbol(nme, tds)
           nme -> sym :: symNmes.map(_ -> sym)
       .toArray.sortBy(_._1)
   

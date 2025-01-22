@@ -4,17 +4,15 @@
 :sjs
 fun t = 42
 //│ JS (unsanitized):
-//│ function t() { return 42; } null
+//│ let t1; t1 = function t() { return 42; }; null
 
 
-:fixme // TODO fix discrepancy in codegen for such functions
 :expect 42
 :sjs
 t
 //│ JS (unsanitized):
-//│ this.t
-//│ ═══[RUNTIME ERROR] Expected: 42, got: [Function: t]
-//│ = [Function: t]
+//│ let tmp; tmp = t1(); tmp
+//│ = 42
 
 
 fun main() =
@@ -39,17 +37,18 @@ fun test() =
     42
   whoops + whoops
 //│ JS (unsanitized):
-//│ function test() {
-//│   let tmp, tmp1;
-//│   function whoops() {
-//│     let tmp2;
-//│     tmp2 = Predef.print("ok");
+//│ let test1;
+//│ test1 = function test() {
+//│   let whoops, tmp1, tmp2;
+//│   whoops = function whoops() {
+//│     let tmp3;
+//│     tmp3 = Predef.print("ok");
 //│     return 42;
-//│   }
-//│   tmp = whoops();
+//│   };
 //│   tmp1 = whoops();
-//│   return tmp + tmp1;
-//│ }
+//│   tmp2 = whoops();
+//│   return tmp1 + tmp2;
+//│ };
 //│ null
 
 test()
@@ -67,6 +66,7 @@ module T with
   val c = p
   val d = this.p
 //│ JS (unsanitized):
+//│ let T1;
 //│ const T$class = class T {
 //│   constructor() {
 //│     this.a = this.t;
@@ -81,9 +81,8 @@ module T with
 //│     return 2;
 //│   }
 //│   toString() { return "T"; }
-//│ };
-//│ this.T = new T$class;
-//│ this.T.class = T$class;
+//│ }; T1 = new T$class;
+//│ T1.class = T$class;
 //│ null
 
 
@@ -104,22 +103,22 @@ T.d
 module M with
   fun t = 0
 //│ JS (unsanitized):
+//│ let M1;
 //│ const M$class = class M {
 //│   constructor() {}
 //│   get t() {
 //│     return 0;
 //│   }
 //│   toString() { return "M"; }
-//│ };
-//│ this.M = new M$class;
-//│ this.M.class = M$class;
+//│ }; M1 = new M$class;
+//│ M1.class = M$class;
 //│ null
 
 
 :sjs
 M.t
 //│ JS (unsanitized):
-//│ this.M.t
+//│ M1.t
 //│ = 0
 
 
@@ -128,7 +127,16 @@ fun test() =
   fun whoops = 42
   whoops
 //│ JS (unsanitized):
-//│ function test() { let tmp; function whoops() { return 42; } tmp = whoops(); return tmp; } null
+//│ let test3;
+//│ test3 = function test() {
+//│   let whoops, tmp1;
+//│   whoops = function whoops() {
+//│     return 42;
+//│   };
+//│   tmp1 = whoops();
+//│   return tmp1;
+//│ };
+//│ null
 
 
 :re
@@ -150,7 +158,7 @@ fun bar() =
   fun baz() = 42
   baz
 //│ JS (unsanitized):
-//│ function bar() { function baz() { return 42; } return baz; } null
+//│ let bar1; bar1 = function bar() { let baz; baz = function baz() { return 42; }; return baz; }; null
 
 
 :sjs
@@ -159,22 +167,24 @@ fun baz() =
   fun z = 2
   (x, y) => x + y + w + z
 //│ JS (unsanitized):
-//│ function baz() {
-//│   function w() {
+//│ let baz1;
+//│ baz1 = function baz() {
+//│   let w, z;
+//│   w = function w() {
 //│     return 1;
-//│   }
-//│   function z() {
-//│     return 2;
-//│   }
-//│   return (x, y) => {
-//│     let tmp, tmp1, tmp2, tmp3;
-//│     tmp = x + y;
-//│     tmp1 = w();
-//│     tmp2 = tmp + tmp1;
-//│     tmp3 = z();
-//│     return tmp2 + tmp3;
 //│   };
-//│ }
+//│   z = function z() {
+//│     return 2;
+//│   };
+//│   return (x, y) => {
+//│     let tmp1, tmp2, tmp3, tmp4;
+//│     tmp1 = x + y;
+//│     tmp2 = w();
+//│     tmp3 = tmp1 + tmp2;
+//│     tmp4 = z();
+//│     return tmp3 + tmp4;
+//│   };
+//│ };
 //│ null
 
 
@@ -190,21 +200,23 @@ fun a() =
     b + d
   c
 //│ JS (unsanitized):
-//│ function a() {
-//│   function b() {
+//│ let a1;
+//│ a1 = function a() {
+//│   let b, c;
+//│   b = function b() {
 //│     return 1;
-//│   }
-//│   function c() {
-//│     let tmp, tmp1;
-//│     function d() {
+//│   };
+//│   c = function c() {
+//│     let d, tmp2, tmp3;
+//│     d = function d() {
 //│       return 2;
-//│     }
-//│     tmp = b();
-//│     tmp1 = d();
-//│     return tmp + tmp1;
-//│   }
+//│     };
+//│     tmp2 = b();
+//│     tmp3 = d();
+//│     return tmp2 + tmp3;
+//│   };
 //│   return c;
-//│ }
+//│ };
 //│ null
 
 
@@ -220,20 +232,22 @@ fun b() =
     c
   d
 //│ JS (unsanitized):
-//│ function b() {
-//│   function c() {
+//│ let b1;
+//│ b1 = function b() {
+//│   let c, d;
+//│   c = function c() {
 //│     return 1;
-//│   }
-//│   function d() {
-//│     let tmp;
-//│     function c() {
+//│   };
+//│   d = function d() {
+//│     let c1, tmp3;
+//│     c1 = function c() {
 //│       return 2;
-//│     }
-//│     tmp = c();
-//│     return tmp;
-//│   }
+//│     };
+//│     tmp3 = c1();
+//│     return tmp3;
+//│   };
 //│   return d;
-//│ }
+//│ };
 //│ null
 
 
@@ -249,23 +263,24 @@ fun c() =
     e + f
   d
 //│ JS (unsanitized):
-//│ function c() {
-//│   let tmp;
-//│   function f() {
+//│ let c1;
+//│ c1 = function c() {
+//│   let d, f, tmp4;
+//│   f = function f() {
 //│     return 1;
-//│   }
-//│   function d() {
-//│     let tmp1, tmp2;
-//│     function e() {
+//│   };
+//│   d = function d() {
+//│     let e, tmp5, tmp6;
+//│     e = function e() {
 //│       return 1;
-//│     }
-//│     tmp1 = e();
-//│     tmp2 = f();
-//│     return tmp1 + tmp2;
-//│   }
-//│   tmp = d();
-//│   return tmp;
-//│ }
+//│     };
+//│     tmp5 = e();
+//│     tmp6 = f();
+//│     return tmp5 + tmp6;
+//│   };
+//│   tmp4 = d();
+//│   return tmp4;
+//│ };
 //│ null
 
 
@@ -277,8 +292,9 @@ c()
 class Foo(x) with
   fun oops = x
 //│ JS (unsanitized):
-//│ this.Foo = function Foo(x1) { return new Foo.class(x1); };
-//│ this.Foo.class = class Foo {
+//│ let Foo1;
+//│ Foo1 = function Foo(x1) { return new Foo.class(x1); };
+//│ Foo1.class = class Foo {
 //│   constructor(x) {
 //│     this.x = x;
 //│   }
@@ -309,6 +325,6 @@ foo(Foo(42))
 
 :re
 foo(Foo(42))()
-//│ ═══[RUNTIME ERROR] TypeError: tmp1 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: tmp7 is not a function
 
 

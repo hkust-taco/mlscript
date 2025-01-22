@@ -11,7 +11,7 @@ fun f(x) =
 //│ Blk:
 //│   stats = Ls of 
 //│     TermDefinition:
-//│       owner = S of globalThis:block#1
+//│       owner = N
 //│       k = Fun
 //│       sym = member:f
 //│       params = Ls of 

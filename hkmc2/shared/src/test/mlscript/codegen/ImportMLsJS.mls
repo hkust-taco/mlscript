@@ -60,6 +60,6 @@ new Option.Some(1) String()
 //│   rhs = App:
 //│     lhs = Ident of "String"
 //│     rhs = Tup of Nil
-//│ ═══[RUNTIME ERROR] TypeError: tmp1 is not a constructor
+//│ ═══[RUNTIME ERROR] TypeError: tmp18 is not a constructor
 
 

@@ -159,13 +159,13 @@ let ip = new Printer(foofoo) in ip.Printer#f(42)
 
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
-//│ ╔══[ERROR] Type error in string literal with expected type '-T
+//│ ╔══[ERROR] Type error in string literal with expected type 'T
 //│ ║  l.161: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ║         	                                             ^^^^
-//│ ╟── because: cannot constrain  Str  <:  '-T
-//│ ╟── because: cannot constrain  Str  <:  '-T
-//│ ╟── because: cannot constrain  Str  <:  ¬(¬'-T)
-//│ ╟── because: cannot constrain  Str  <:  '-T
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╟── because: cannot constrain  Str  <:  ¬(¬'T)
+//│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int})
 //│ Type: Str
 
@@ -186,13 +186,13 @@ let tf = new TFun(inc) in tf.TFun#f(1)
 
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
-//│ ╔══[ERROR] Type error in string literal with expected type '-T
+//│ ╔══[ERROR] Type error in string literal with expected type 'T
 //│ ║  l.188: 	let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
-//│ ╟── because: cannot constrain  Str  <:  '-T
-//│ ╟── because: cannot constrain  Str  <:  '-T
-//│ ╟── because: cannot constrain  Str  <:  ¬(¬'-T)
-//│ ╟── because: cannot constrain  Str  <:  '-T
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╟── because: cannot constrain  Str  <:  ¬(¬'T)
+//│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int})
 //│ Type: Str ∨ Int
 
@@ -260,6 +260,18 @@ fact(1)
 //│ Type: Int
 
 
+fun fact2 = x => fact2(1)
+//│ Type: ⊤
+
+fun fact2 = x => if x is
+  n then fact2(n - 1)
+//│ Type: ⊤
+
+fun fact2(x) = if x is
+  n then fact2(n - 1)
+//│ Type: ⊤
+
+
 fun fact2 = case
   0 then 1
   n then n * fact2(n - 1)
@@ -296,7 +308,7 @@ throw new Error("oops")
 :e
 throw 42
 //│ ╔══[ERROR] Type error in throw
-//│ ║  l.297: 	throw 42
+//│ ║  l.309: 	throw 42
 //│ ║         	      ^^
 //│ ╙── because: cannot constrain  Int  <:  Error
 //│ Type: ⊥

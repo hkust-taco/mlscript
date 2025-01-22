@@ -71,7 +71,8 @@ class MLsCompiler(preludeFile: os.Path):
     
     newCtx.nest(N).givenIn:
       
-      val (blk, newCtx) = elab.importFrom(mainParse.resultBlk)
+      val parsed = mainParse.resultBlk
+      val (blk, newCtx) = elab.importFrom(parsed)
       val low = ltl.givenIn:
         codegen.Lowering(lowerHandlers = false, None) // TODO: properly hook up stack limit
       val jsb = codegen.js.JSBuilder()
@@ -79,8 +80,10 @@ class MLsCompiler(preludeFile: os.Path):
       val baseScp: utils.Scope =
         utils.Scope.empty
       val nestedScp = baseScp.nest
+      val nme = file.baseName
+      val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)
       val je = nestedScp.givenIn:
-        jsb.program(le, S(file.baseName), wd)
+        jsb.program(le, exportedSymbol, wd)
       val jsStr = je.stripBreaks.mkString(100)
       val out = file / os.up / (file.baseName + ".mjs")
       os.write.over(out, jsStr)

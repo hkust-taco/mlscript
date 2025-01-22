@@ -7,31 +7,31 @@
 :sjs
 module None
 //│ JS (unsanitized):
+//│ let None1;
 //│ const None$class = class None {
 //│   constructor() {}
 //│   toString() { return "None"; }
-//│ };
-//│ this.None = new None$class;
-//│ this.None.class = None$class;
+//│ }; None1 = new None$class;
+//│ None1.class = None$class;
 //│ null
 
 :sjs
 None
 //│ JS (unsanitized):
-//│ this.None
+//│ None1
 //│ = None { class: [class None] }
 
 :sjs
 :re
 None()
 //│ JS (unsanitized):
-//│ this.None() ?? null
-//│ ═══[RUNTIME ERROR] TypeError: this.None is not a function
+//│ None1() ?? null
+//│ ═══[RUNTIME ERROR] TypeError: None1 is not a function
 
 :sjs
 new None
 //│ JS (unsanitized):
-//│ new this.None.class()
+//│ new None1.class()
 //│ = None {}
 
 
@@ -42,6 +42,7 @@ module M with
   val x = 1
   val y = x + 1
 //│ JS (unsanitized):
+//│ let M1;
 //│ const M$class = class M {
 //│   constructor() {
 //│     let tmp;
@@ -59,9 +60,8 @@ module M with
 //│     this.y = tmp;
 //│   }
 //│   toString() { return "M"; }
-//│ };
-//│ this.M = new M$class;
-//│ this.M.class = M$class;
+//│ }; M1 = new M$class;
+//│ M1.class = M$class;
 //│ null
 
 M.C
@@ -88,33 +88,32 @@ M.oops
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 
+// FIXME report initialization problem or make it work
+:todo
+:e
 :sjs
 module M with
   val m: module M = M
 //│ JS (unsanitized):
-//│ const M$class = class M {
+//│ let M3;
+//│ const M$class1 = class M {
 //│   constructor() {
-//│     this.m = globalThis.M;
+//│     this.m = M3;
 //│   }
 //│   toString() { return "M"; }
-//│ };
-//│ this.M = new M$class;
-//│ this.M.class = M$class;
+//│ }; M3 = new M$class1;
+//│ M3.class = M$class1;
 //│ null
 
+:re // FIXME
+:sjs
 M.m
-//│ > M {
-//│ >   C: [class C],
-//│ >   D: [Function: D] { class: [class D] },
-//│ >   x: 1,
-//│ >   y: 2,
-//│ >   class: [class M]
-//│ = }
+//│ JS (unsanitized):
+//│ M3.m
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'm' yielded 'undefined'
 
 
 
-:todo
 module M()
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
 
 

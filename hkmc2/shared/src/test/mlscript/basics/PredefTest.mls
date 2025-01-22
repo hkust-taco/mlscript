@@ -15,7 +15,7 @@ Predef.Test === globalThis.Predef.Test
 
 :fixme
 new Predef.Test is Predef.Test
-//│ ═══[RUNTIME ERROR] TypeError: tmp2 is not a constructor
+//│ ═══[RUNTIME ERROR] TypeError: tmp7 is not a constructor
 
 (new Predef.Test) is Predef.Test
 //│ > Test

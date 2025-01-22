@@ -12,57 +12,67 @@ x
 //│ = 0
 
 
+:sjs
+val ++ = 0
+//│ JS (unsanitized):
+//│ let $_$_1; $_$_1 = 0; null
+//│ ++ = 0
+
+:sjs
+++
+//│ JS (unsanitized):
+//│ $_$_1
+//│ = 0
+
+
 :e
-:ge
 val ++ y = 1
 //│ ╔══[ERROR] Invalid value definition head: unexpected identifier in this position
-//│ ║  l.17: 	val ++ y = 1
+//│ ║  l.29: 	val ++ y = 1
 //│ ╙──      	       ^
-//│ > try { this.++ = 1; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >            ^^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '++'
-//│ > try { ++ } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >          ^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '}'
+//│ ++ = 1
 
 :e
 y
 //│ ╔══[ERROR] Name not found: y
-//│ ║  l.29: 	y
+//│ ║  l.36: 	y
 //│ ╙──      	^
 
 ++
+//│ = 1
 
 
 :e
 :ge
 fun ++ z = 0
 //│ ╔══[ERROR] Invalid function definition head: unexpected identifier in this position
-//│ ║  l.39: 	fun ++ z = 0
+//│ ║  l.47: 	fun ++ z = 0
 //│ ╙──      	       ^
-//│ > try { function ++(...args) {   globalThis.Predef.checkArgs("++", 0, true, args.length);   return 0; } null } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                ^^
+//│ > let $_$_5;try { $_$_5 = function ++(...args) {   globalThis.Predef.checkArgs("++", 0, true, args.length);   return 0; }; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                  ^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '++'
 
 :sjs
+:re
 ++
 //│ JS (unsanitized):
-//│ this["++"]
+//│ let tmp; tmp = $_$_5(); tmp
+//│ ═══[RUNTIME ERROR] ReferenceError: $_$_5 is not defined
 
 
 :e
 fun (class Lol) foo = 0
 //│ ╔══[ERROR] This type definition is not a valid symbolic name
-//│ ║  l.54: 	fun (class Lol) foo = 0
+//│ ║  l.64: 	fun (class Lol) foo = 0
 //│ ╙──      	           ^^^
 
 foo
-//│ = [Function: foo]
+//│ = 0
 
 :e
 Lol
 //│ ╔══[ERROR] Name not found: Lol
-//│ ║  l.63: 	Lol
+//│ ║  l.73: 	Lol
 //│ ╙──      	^^^
 
 

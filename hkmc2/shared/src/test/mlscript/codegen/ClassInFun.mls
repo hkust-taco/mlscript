@@ -9,15 +9,17 @@ fun test(a) =
   class C with { val x = a }
   new C
 //│ JS (unsanitized):
-//│ function test(a) {
-//│   class C {
+//│ let test1;
+//│ test1 = function test(a) {
+//│   let C;
+//│   C = class C {
 //│     constructor() {
 //│       this.x = a;
 //│     }
 //│     toString() { return "C"; }
-//│   }
+//│   };
 //│   return new C();
-//│ }
+//│ };
 //│ null
 
 test(12)
@@ -35,9 +37,10 @@ fun test(x) =
   class Foo(a, b)
   Foo(x, x + 1)
 //│ JS (unsanitized):
-//│ function test(x) {
-//│   let tmp;
-//│   function Foo(a1, b1) { return new Foo.class(a1, b1); }
+//│ let test5;
+//│ test5 = function test(x) {
+//│   let Foo, tmp;
+//│   Foo = function Foo(a1, b1) { return new Foo.class(a1, b1); };
 //│   Foo.class = class Foo {
 //│     constructor(a, b) {
 //│       this.a = a;
@@ -47,7 +50,7 @@ fun test(x) =
 //│   };
 //│   tmp = x + 1;
 //│   return Foo(x, tmp);
-//│ }
+//│ };
 //│ null
 
 

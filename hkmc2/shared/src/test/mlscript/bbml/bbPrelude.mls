@@ -1,43 +1,53 @@
 // :bbml
 
 
-class Any
-class Nothing
+declare class Any
+declare class Nothing
 
-class Bool
-class Int
-class Num
+declare class untyped
 
-class CodeBase[T, C, S]
-class Region[T]
-class Ref[T, S](reg: Region[T], value: S)
+declare class Bool
+declare class Int
+declare class Num
 
-class Str(length: Int, concat: Str -> Str)
+class
+  CodeBase[T, C, S]
+  Region[T]
+  Ref[T, S](reg: Region[T], value: S)
 
-class Error(msg: Str)
+@untyped
+set
+  globalThis.CodeBase = CodeBase
+  globalThis.Region = Region
+  globalThis.Ref = Ref
+
+declare class Str(length: Int, concat: Str -> Str)
+
+declare class Error(msg: Str)
 
 declare module Predef
 
-fun run: [T] -> CodeBase[out T, out Nothing, out Any] -> T
-fun log: Str -> Any
-fun error: Nothing
+declare fun run: [T] -> CodeBase[out T, out Nothing, out Any] -> T
+declare fun log: Str -> Any
+declare fun error: Nothing
 
-fun (+): (Int, Int) -> Int
-fun (-): (Int, Int) -> Int
-fun (*): (Int, Int) -> Int
-fun (/): (Int, Int) -> Num
-fun (+.): (Num, Num) -> Num
-fun (-.): (Num, Num) -> Num
-fun (*.): (Num, Num) -> Num
-fun (/.): (Num, Num) -> Num
+declare fun (+): (Int, Int) -> Int
+declare fun (-): (Int, Int) -> Int
+declare fun (*): (Int, Int) -> Int
+declare fun (/): (Int, Int) -> Num
+declare fun (+.): (Num, Num) -> Num
+declare fun (-.): (Num, Num) -> Num
+declare fun (*.): (Num, Num) -> Num
+declare fun (/.): (Num, Num) -> Num
 
-fun (<): (Int, Int) -> Bool
-fun (>): (Int, Int) -> Bool
-fun (<=): (Int, Int) -> Bool
-fun (>=): (Int, Int) -> Bool
-fun (==): [T] -> (T, T) -> Bool
-fun (!=): [T] -> (T, T) -> Bool
+declare fun (<): (Int, Int) -> Bool
+declare fun (>): (Int, Int) -> Bool
+declare fun (<=): (Int, Int) -> Bool
+declare fun (>=): (Int, Int) -> Bool
+declare fun (==): [T] -> (T, T) -> Bool
+declare fun (!=): [T] -> (T, T) -> Bool
 
-fun (&&): (Bool, Bool) -> Bool
-fun (||): (Bool, Bool) -> Bool
+declare fun (&&): (Bool, Bool) -> Bool
+declare fun (||): (Bool, Bool) -> Bool
+
 

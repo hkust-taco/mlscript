@@ -6,8 +6,53 @@ abstract class Effect with
   fun perform(arg: Str): Str
 
 
+// FIXME: the `return Lol1` is wrong here
+:sjs
 class Lol(h) with
   print(h.perform("k"))
+//│ JS (unsanitized):
+//│ let Lol1;
+//│ Lol1 = function Lol(h1) { return new Lol.class(h1); };
+//│ Lol1.class = class Lol {
+//│   constructor(h) {
+//│     this.h = h;
+//│     let tmp, res, Cont$173;
+//│     Cont$173 = function Cont$173(pc1) { return new Cont$173.class(pc1); };
+//│     Cont$173.class = class Cont$173 extends globalThis.Predef.__Cont.class {
+//│       constructor(pc) {
+//│         let tmp1;
+//│         tmp1 = super(null, null);
+//│         this.pc = pc;
+//│       }
+//│       resume(value$) {
+//│         if (this.pc === 0) {
+//│           res = value$;
+//│         }
+//│         contLoop: while (true) {
+//│           if (this.pc === 1) {
+//│             return Lol1;
+//│           } else if (this.pc === 0) {
+//│             tmp = res;
+//│             this.pc = 1;
+//│             continue contLoop;
+//│           }
+//│           break;
+//│         }
+//│       }
+//│       toString() { return "Cont$173(" + this.pc + ")"; }
+//│     };
+//│     res = this.h.perform("k") ?? null;
+//│     if (res instanceof globalThis.Predef.__EffectSig.class) {
+//│       res.tail.next = new Cont$173.class(0);
+//│       res.tail = res.tail.next;
+//│       return res;
+//│     }
+//│     tmp = res;
+//│     Predef.print(tmp)
+//│   }
+//│   toString() { return "Lol(" + this.h + ")"; }
+//│ };
+//│ null
 
 
 let oops = 
@@ -44,9 +89,10 @@ let oops =
       k("b")
   Lol(h)
 //│ > k
-//│ oops = Lol { h: Effect$h$312 {} }
+//│ oops = [Function: Lol] { class: [class Lol] }
 
-oops
-//│ = Lol { h: Effect$h$312 {} }
+:fixme
+oops.h
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'h' yielded 'undefined'
 
 

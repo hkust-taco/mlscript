@@ -80,8 +80,8 @@ set g.0 += 1 // FIXME
 
 :fixme
 set g.0 = g.0 + 1
-//│ > try { let selRes, tmp, tmp1; selRes = this.g[0]; if (selRes === undefined) {   throw new this.Error("Access to required field '0' yielded 'undefined'"); } else {   tmp = selRes; } tmp1 = tmp + 1; this.g.0 = tmp1; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                                                                                                                                                                           ^^
+//│ > let selRes, tmp1, tmp2;try { selRes = g[0]; if (selRes === undefined) {   throw new this.Error("Access to required field '0' yielded 'undefined'"); } else {   tmp1 = selRes; } tmp2 = tmp1 + 1; g.0 = tmp2; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                                                                                                                                                                   ^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected number
 
 // ——— ——— ———
@@ -114,28 +114,20 @@ undefined === null
 
 // ——— ——— ———
 
-// FIXME not sanitized?
-:ssjs
-Num
-//│ JS:
-//│ this.Num
-
-// ——— ——— ———
-
 Infinity
 //│ = Infinity
 
 :sjs
 val Infinity = 1
 //│ JS (unsanitized):
-//│ this.Infinity = 1; null
-//│ Infinity = Infinity
+//│ let Infinity1; Infinity1 = 1; null
+//│ Infinity = 1
 
 :sjs
 Infinity
 //│ JS (unsanitized):
-//│ this.Infinity
-//│ = Infinity
+//│ Infinity1
+//│ = 1
 
 module Test with
   val Infinity = 1
@@ -156,7 +148,7 @@ f of
       2
   of 3
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.157: 	  of 3
+//│ ║  l.149: 	  of 3
 //│ ╙──       	^^
 //│ = [Function (anonymous)]
 
@@ -166,6 +158,68 @@ f of
     2
 ) of 3
 //│ = [ [ 1, 2 ], 3 ]
+
+// ——— ——— ———
+
+object Oops with
+  if true then
+    fun f = 1
+    ()
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:f (class hkmc2.semantics.BlockMemberSymbol)
+
+// We forget to reset the owner to None in sub-blocks like this one
+object Oops with
+  if true then
+    val fakeField = 1
+    print(fakeField)
+  print(this.fakeField) // shouldn't work!
+//│ > 1
+//│ > 1
+
+:e
+Oops.fakeField
+//│ ╔══[ERROR] Object 'Oops' does not contain member 'fakeField'
+//│ ║  l.180: 	Oops.fakeField
+//│ ╙──       	    ^^^^^^^^^^
+//│ = 1
+
+// ——— ——— ———
+
+fun p: Int
+
+:fixme // make this a proper error
+p
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:p (class hkmc2.semantics.BlockMemberSymbol)
+
+
+:ctx
+fun (++) test: (Int, Int) -> Int
+//│ Env:
+//│   ++ -> RefElem(member:test)
+//│   test -> RefElem(member:test)
+
+test(1, 2)
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:test (class hkmc2.semantics.BlockMemberSymbol)
+
+:sjs
+1 ++ 1
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:test (class hkmc2.semantics.BlockMemberSymbol)
+
+// ——— ——— ———
+
+// TODO forbid declarations inside local blocks
+:todo
+:e
+fun main() =
+  declare fun foo: Int
+  ()
+
+// TODO forbid unimplemented signatures inside local blocks
+:todo
+:e
+fun main() =
+  fun bar: Int
+  ()
 
 // ——— ——— ———
 

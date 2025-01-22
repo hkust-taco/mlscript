@@ -3,6 +3,8 @@
 declare type Any
 declare type Nothing
 
+declare type untyped
+
 declare class Object
 declare class Bool
 declare class Int

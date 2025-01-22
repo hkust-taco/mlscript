@@ -117,10 +117,10 @@ if 1 * 2
 //│           kw = keyword 'then'
 //│           rhs = IntLit of 0
 //│ JS (unsanitized):
-//│ let scrut, scrut1;
-//│ scrut = 1 * 2;
-//│ scrut1 = scrut + 3;
-//│ if (scrut1 === true) {
+//│ let scrut3, scrut4;
+//│ scrut3 = 1 * 2;
+//│ scrut4 = scrut3 + 3;
+//│ if (scrut4 === true) {
 //│   0
 //│ } else {
 //│   throw new this.Error("match error");
@@ -159,15 +159,15 @@ if 1 + 2
 //│               kw = keyword 'then'
 //│               rhs = IntLit of 0
 //│ JS (unsanitized):
-//│ let scrut, scrut1, scrut2, scrut3;
-//│ scrut = 1;
-//│ scrut1 = scrut + 2;
-//│ scrut3 = scrut1 * 3;
-//│ if (scrut3 === true) {
+//│ let scrut5, scrut6, scrut7, scrut8;
+//│ scrut5 = 1;
+//│ scrut6 = scrut5 + 2;
+//│ scrut8 = scrut6 * 3;
+//│ if (scrut8 === true) {
 //│   0
 //│ } else {
-//│   scrut2 = scrut1 + 4;
-//│   if (scrut2 === true) {
+//│   scrut7 = scrut6 + 4;
+//│   if (scrut7 === true) {
 //│     0
 //│   } else {
 //│     throw new this.Error("match error");

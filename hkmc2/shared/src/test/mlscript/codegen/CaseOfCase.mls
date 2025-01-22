@@ -18,33 +18,34 @@ fun test(x) =
     Some(v) then log(v)
     None then log("none")
 //│ JS (unsanitized):
-//│ function test(x) {
+//│ let test1;
+//│ test1 = function test(x) {
 //│   let param0, v, scrut, param01, v1, tmp, tmp1;
-//│   if (x instanceof globalThis.Some.class) {
+//│   if (x instanceof Some1.class) {
 //│     param0 = x.value;
 //│     v = param0;
 //│     tmp = v + 1;
-//│     tmp1 = globalThis.Some(tmp);
+//│     tmp1 = Some1(tmp);
 //│   } else {
-//│     if (x instanceof globalThis.None.class) {
-//│       tmp1 = globalThis.None;
+//│     if (x instanceof None1.class) {
+//│       tmp1 = None1;
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }
 //│   }
 //│   scrut = tmp1;
-//│   if (scrut instanceof globalThis.Some.class) {
+//│   if (scrut instanceof Some1.class) {
 //│     param01 = scrut.value;
 //│     v1 = param01;
-//│     return globalThis.log(v1);
+//│     return log1(v1);
 //│   } else {
-//│     if (scrut instanceof globalThis.None.class) {
-//│       return globalThis.log("none");
+//│     if (scrut instanceof None1.class) {
+//│       return log1("none");
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }
 //│   }
-//│ }
+//│ };
 //│ null
 
 

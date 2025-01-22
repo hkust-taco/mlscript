@@ -268,12 +268,12 @@ abstract class DiffMaker:
     case line :: ls if line.startsWith("//") =>
       out.println(line)
       rec(ls)
-    case line :: ls if line.startsWith(output.diffBegMarker) => // Check if there are unmerged git conflicts
+    case begLine :: ls if begLine.startsWith(output.diffBegMarker) => // Check if there are unmerged git conflicts
       val diff = ls.takeWhile(l => !l.startsWith(output.diffEndMarker))
       assert(diff.exists(_.startsWith(output.diffMidMarker)), diff)
       val rest = ls.drop(diff.length)
-      val hdo = rest.headOption
-      assert(hdo.exists(_.startsWith(output.diffEndMarker)), hdo)
+      val hdo = rest.head
+      assert(hdo.startsWith(output.diffEndMarker), hdo)
       val blankLines = diff.count(_.isEmpty)
       val hasBlankLines = diff.exists(_.isEmpty)
       if diff.forall(l => l.startsWith(output.outputMarker) || l.startsWith(output.diffMidMarker) || l.startsWith(output.diff3MidMarker) || l.isEmpty) then {
@@ -284,9 +284,9 @@ abstract class DiffMaker:
         doFail(blockLineNum,
           s"Unmerged non-output changes at $relativeName.${file.ext}:" + blockLineNum)
         unmergedChanges += allLines.size - lines.size + 1
-        out.println(output.diffBegMarker)
+        out.println(begLine)
         diff.foreach(out.println)
-        out.println(output.diffEndMarker)
+        out.println(hdo)
       }
       if hasBlankLines then resetCommands
       rec(rest.tail)

@@ -1,0 +1,7 @@
+:js
+:handler
+
+abstract class Effect
+
+
+

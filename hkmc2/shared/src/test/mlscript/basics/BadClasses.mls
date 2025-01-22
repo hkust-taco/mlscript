@@ -14,7 +14,8 @@ class Foo { 1 }
 //│ ║  l.12: 	class Foo { 1 }
 //│ ╙──      	          ^^^^^
 
-// Note that these work:
+
+// * Note that these work:
 
 class Foo with { 1 }
 

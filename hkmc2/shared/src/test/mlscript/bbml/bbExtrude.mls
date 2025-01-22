@@ -77,7 +77,7 @@ f(g)(foo)
 
 :fixme // ???
 f(g)(bar)
-//│ ╔══[ERROR] Type error in selection with expected type 'A
+//│ ╔══[ERROR] Type error in reference with expected type 'A
 //│ ║  l.79: 	f(g)(bar)
 //│ ║        	     ^^^
 //│ ╟── because: cannot constrain  C[Int]  <:  'A

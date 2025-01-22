@@ -46,8 +46,8 @@ M.Foo:: n(foo, 2)
 :sjs
 let m = M.Foo::m
 //│ JS (unsanitized):
-//│ this.m = (self, ...args) => { return self.m(...args); }; null
-//│ m = [Function (anonymous)]
+//│ let m; m = (self, ...args) => { return self.m(...args); }; null
+//│ m = [Function: m]
 
 m(foo)
 //│ = 124
@@ -128,7 +128,7 @@ Foo::n(foo, 2)
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ JS (unsanitized):
-//│ ((self, ...args) => { return self.n(...args) ?? null; })(this.foo, 2)
+//│ ((self, ...args) => { return self.n(...args) ?? null; })(foo, 2)
 //│ = 125
 
 

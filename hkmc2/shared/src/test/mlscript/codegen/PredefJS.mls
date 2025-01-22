@@ -5,4 +5,5 @@ fun id(x) = x
 
 fun log(msg) = globalThis.console.log(msg)
 
+set globalThis.log = log
 

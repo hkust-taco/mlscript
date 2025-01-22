@@ -34,23 +34,43 @@
 log("Hi")
 //│ JS (unsanitized):
 //│ this.log("Hi") ?? null
-//│ ═══[RUNTIME ERROR] TypeError: this.log is not a function
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'log' yielded 'undefined'
 
 :fixme
 :lot
 log("Hi")
 2
 //│ JS (unsanitized):
-//│ let tmp; tmp = this.log("Hi") ?? null; 2
+//│ let tmp1; tmp1 = this.log("Hi") ?? null; 2
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
 //│   main = Assign:
+//│     lhs = $selRes
+//│     rhs = Select{member:log}:
+//│       qual = Ref of globalThis:globalThis
+//│       name = Ident of "log"
+//│     rest = Begin: \
+//│     sub = Match:
+//│       scrut = Ref of $selRes
+//│       arms = Ls of 
+//│         Tuple2:
+//│           _1 = Lit of UnitLit of false
+//│           _2 = Throw of Instantiate:
+//│             cls = Select:
+//│               qual = Ref of globalThis:globalThis
+//│               name = Ident of "Error"
+//│             args = Ls of 
+//│               Lit of StrLit of "Access to required field 'log' yielded 'undefined'"
+//│       dflt = S of Assign:
+//│         lhs = $tmp
+//│         rhs = Ref of $selRes
+//│         rest = End of ""
+//│       rest = End of ""
+//│     rest = Assign: \
 //│     lhs = $tmp
 //│     rhs = Call:
-//│       fun = Select{member:log}:
-//│         qual = Ref of globalThis:import#Prelude
-//│         name = Ident of "log"
+//│       fun = Ref of $tmp
 //│       args = Ls of 
 //│         Arg:
 //│           spread = false
@@ -58,7 +78,7 @@ log("Hi")
 //│     rest = Return: \
 //│     res = Lit of IntLit of 2
 //│     implct = true
-//│ ═══[RUNTIME ERROR] TypeError: this.log is not a function
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'log' yielded 'undefined'
 
 
 :re

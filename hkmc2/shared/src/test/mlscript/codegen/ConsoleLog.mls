@@ -22,7 +22,7 @@ console.log("b")
 let l = console.log
 l(123)
 //│ JS (unsanitized):
-//│ this.l = this.console.log; this.l(123) ?? null
+//│ let l; l = this.console.log; l(123) ?? null
 //│ > 123
 //│ l = [Function: log]
 
@@ -46,14 +46,14 @@ let y = x + 1
 console.log("c")
 y * 2
 //│ JS (unsanitized):
-//│ let tmp, tmp1, tmp2, tmp3;
-//│ tmp = this.console.log("a") ?? null;
-//│ this.x = 123;
-//│ tmp1 = this.console.log("b") ?? null;
-//│ tmp2 = this.x + 1;
-//│ this.y = tmp2;
-//│ tmp3 = this.console.log("c") ?? null;
-//│ this.y * 2
+//│ let x, y, tmp7, tmp8, tmp9, tmp10;
+//│ tmp7 = this.console.log("a") ?? null;
+//│ x = 123;
+//│ tmp8 = this.console.log("b") ?? null;
+//│ tmp9 = x + 1;
+//│ y = tmp9;
+//│ tmp10 = this.console.log("c") ?? null;
+//│ y * 2
 //│ > a
 //│ > b
 //│ > c

@@ -11,14 +11,20 @@ let empty = []
 empty.0
 //│ ═══[RUNTIME ERROR] Error: Access to required field '0' yielded 'undefined'
 
+:sjs
 let single = [1]
+//│ JS (unsanitized):
+//│ let single; single = [ 1 ]; null
 //│ single = [ 1 ]
 
 single.0
 //│ = 1
 
 
+:sjs
 val single = [1]
+//│ JS (unsanitized):
+//│ let single2; single2 = [ 1 ]; null
 //│ single = [ 1 ]
 
 single.0

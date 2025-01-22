@@ -1,0 +1,13 @@
+:bbml
+//│ Type: ⊤
+
+//│ Type: ⊤
+
+
+@untyped 1
+//│ Type: ⊥
+
+(@untyped 1)(2)
+//│ Type: ⊥
+
+

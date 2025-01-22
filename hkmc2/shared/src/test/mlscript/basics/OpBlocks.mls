@@ -31,7 +31,7 @@
 
 
 let f = x => x * 2
-//│ f = [Function (anonymous)]
+//│ f = [Function: f]
 
 2
   + 1

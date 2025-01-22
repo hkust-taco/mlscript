@@ -1,11 +1,20 @@
 :js
 
 
+// TODO add syntax for this-taking detached methods
 :sjs
+:e
 fun test(x) =
   [this.a, x]
+//│ ═══[ERROR] Cannot use 'this' outside of an object scope.
 //│ JS (unsanitized):
-//│ function test(x) { return [ globalThis.a, x ]; } null
+//│ let test1; test1 = function test(x) { /* error */ }; null
+
+:sjs
+fun test(x) =
+  [globalThis.a, x]
+//│ JS (unsanitized):
+//│ let test3; test3 = function test(x) { return [ globalThis.a, x ]; }; null
 
 :re
 test(123)
@@ -14,23 +23,30 @@ test(123)
 val a = 1
 //│ a = 1
 
+:re
 test(123)
-//│ = [ 1, 123 ]
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'a' yielded 'undefined'
+
+set globalThis.a = 2
+
+test(123)
+//│ = [ 2, 123 ]
 
 :sjs
 module Test with
-  val a = 2
+  val a = 3
   fun test1(x) =
     test(x)
   fun test2(x) =
     [this.a, x]
 //│ JS (unsanitized):
+//│ let Test1;
 //│ const Test$class = class Test {
 //│   constructor() {
-//│     this.a = 2;
+//│     this.a = 3;
 //│   }
 //│   test1(x) {
-//│     return globalThis.test(x);
+//│     return test3(x);
 //│   } 
 //│   test2(x1) {
 //│     return [
@@ -39,19 +55,15 @@ module Test with
 //│     ];
 //│   }
 //│   toString() { return "Test"; }
-//│ };
-//│ this.Test = new Test$class;
-//│ this.Test.class = Test$class;
+//│ }; Test1 = new Test$class;
+//│ Test1.class = Test$class;
 //│ null
 
 
 Test.test1(123)
-//│ = [ 1, 123 ]
-
-Test.test2(123)
 //│ = [ 2, 123 ]
 
-
-
+Test.test2(123)
+//│ = [ 3, 123 ]
 
 

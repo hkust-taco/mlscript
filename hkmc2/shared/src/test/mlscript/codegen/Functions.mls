@@ -41,11 +41,19 @@ r
 //│ = 42
 //│ r = 42
 
-// Note that this initializes fine
+// * This fails to properly initialize, as expected
 fun foo() = bar()
 let r = foo()
 fun bar() = r
-//│ r = 42
+
+// * Similar
+:re
+object Outer with
+  fun foo() = bar()
+  val r = foo()
+  fun bar() = r
+Outer.r
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'r' yielded 'undefined'
 
 
 fun outerfun(x) =
@@ -78,7 +86,7 @@ outerfun(100)(200)
 :showRepl
 fun test1(x) = test2(x)
 fun test2(y) = y + 1
-//│ REPL> Sending: try { function test1(...args) {   globalThis.Predef.checkArgs("test1", 1, true, args.length);   let x = args[0];   return globalThis.test2(x); } function test2(...args) {   globalThis.Predef.checkArgs("test2", 1, true, args.length);   let y = args[0];   return y + 1; } null } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: let test21, test11;try { test11 = function test1(...args) {   globalThis.Predef.checkArgs("test1", 1, true, args.length);   let x = args[0];   return test21(x); }; test21 = function test2(...args) {   globalThis.Predef.checkArgs("test2", 1, true, args.length);   let y = args[0];   return y + 1; }; null } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  null
 //│ REPL> Parsed:

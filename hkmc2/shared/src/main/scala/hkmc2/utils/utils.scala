@@ -76,3 +76,12 @@ extension (t: Product)
           if inTailPos then ": \\\n" + args.mkString("\n")
           else ":\n" + args.mkString("\n").indent("  ")
 
+extension [A](self: Opt[A])
+  def mapConserve[B](f: A => A): Opt[A] =
+    self match
+      case S(v) =>
+        val v2 = f(v)
+        if v2 is v then self
+        else S(v2)
+      case N => N
+

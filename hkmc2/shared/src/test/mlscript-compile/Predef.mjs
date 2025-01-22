@@ -1,6 +1,7 @@
+let Predef1;
 const Predef$class = class Predef {
   constructor() {
-    this.assert = console.assert;
+    this.assert = globalThis.console.assert;
     this.foldl = this.fold;
     this.MatchResult = function MatchResult(captures1) { return new MatchResult.class(captures1); };
     this.MatchResult.class = class MatchResult {
@@ -52,7 +53,7 @@ const Predef$class = class Predef {
           tmp2 = "\n" + tmp1;
           tmp3 = msg.replaceAll("\n", tmp2);
           tmp4 = tmp + tmp3;
-          return console.log(tmp4) ?? null;
+          return globalThis.console.log(tmp4) ?? null;
         } else {
           return null;
         }
@@ -192,16 +193,16 @@ const Predef$class = class Predef {
   } 
   print(...xs) {
     let tmp;
-    tmp = xs.map(String) ?? null;
-    return console.log(...tmp) ?? null;
+    tmp = xs.map(globalThis.String) ?? null;
+    return globalThis.console.log(...tmp) ?? null;
   } 
   notImplemented(msg) {
     let tmp;
     tmp = "Not implemented: " + msg;
-    throw Error(tmp);
+    throw globalThis.Error(tmp);
   } 
   get notImplementedError() {
-    throw Error("Not implemented");
+    throw globalThis.Error("Not implemented");
   } 
   tuple(...xs1) {
     return xs1;
@@ -307,7 +308,7 @@ const Predef$class = class Predef {
         tmp7 = "s";
       }
       tmp8 = tmp5("Function", name, " expected ", tmp6, expected, " argument", tmp7, " but got ", got) ?? null;
-      throw Error(tmp8);
+      throw globalThis.Error(tmp8);
     } else {
       return null;
     }
@@ -421,7 +422,7 @@ const Predef$class = class Predef {
       let scrut, cont, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
       scrut = cur2.resumed;
       if (scrut === true) {
-        throw Error("Multiple resumption");
+        throw globalThis.Error("Multiple resumption");
       } else {
         tmp = null;
       }
@@ -509,7 +510,7 @@ const Predef$class = class Predef {
     return tmp3;
   }
   toString() { return "Predef"; }
-}; const Predef = new Predef$class;
-Predef.class = Predef$class;
+}; Predef1 = new Predef$class;
+Predef1.class = Predef$class;
 null
-export default Predef;
+let Predef = Predef1; export default Predef;
