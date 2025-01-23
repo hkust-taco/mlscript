@@ -72,7 +72,7 @@ let fact =
         x * prev
     b
   mkrec(a)
-//│ fact = [Function: b$0]
+//│ fact = [Function: b]
 
 :fixme
 :expect 3628800
