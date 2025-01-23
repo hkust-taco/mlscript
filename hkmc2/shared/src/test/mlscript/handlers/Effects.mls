@@ -158,7 +158,7 @@ if true do
 //│ JS (unsanitized):
 //│ let tmp11, handleBlock$23;
 //│ handleBlock$23 = function handleBlock$() {
-//│   let h, scrut, tmp12, res, Cont$, f, Effect$h$;
+//│   let h, scrut, f, tmp12, res, Cont$, Effect$h$;
 //│   Effect$h$ = class Effect$h$ extends Effect1 {
 //│     constructor() {
 //│       let tmp13;

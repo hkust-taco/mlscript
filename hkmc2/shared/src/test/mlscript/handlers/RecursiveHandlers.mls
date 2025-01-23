@@ -126,7 +126,7 @@ str
 //│ scrut = true;
 //│ if (scrut === true) {
 //│   handleBlock$9 = function handleBlock$() {
-//│     let h1, tmp8, Cont$, handleBlock$10, Effect$h1$;
+//│     let h1, tmp8, handleBlock$10, Cont$, Effect$h1$;
 //│     Effect$h1$ = class Effect$h1$ extends Effect1 {
 //│       constructor() {
 //│         let tmp9;
