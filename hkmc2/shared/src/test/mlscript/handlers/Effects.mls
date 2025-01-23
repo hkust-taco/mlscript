@@ -156,10 +156,10 @@ if true do
   fun f() = 3
   f()
 //│ JS (unsanitized):
-//│ let tmp11, handleBlock$023;
-//│ handleBlock$023 = function handleBlock$0() {
-//│   let h, scrut, tmp12, res, Cont$1069, f$0, Effect$h$1043;
-//│   Effect$h$1043 = class Effect$h$1043 extends Effect1 {
+//│ let tmp11, handleBlock$23;
+//│ handleBlock$23 = function handleBlock$() {
+//│   let h, scrut, tmp12, res, Cont$, f, Effect$h$;
+//│   Effect$h$ = class Effect$h$ extends Effect1 {
 //│     constructor() {
 //│       let tmp13;
 //│       tmp13 = super();
@@ -169,41 +169,41 @@ if true do
 //│         return arg;
 //│       });
 //│     }
-//│     toString() { return "Effect$h$1043"; }
+//│     toString() { return "Effect$h$"; }
 //│   };
-//│   h = new Effect$h$1043();
-//│   Cont$1069 = function Cont$1069(pc1) { return new Cont$1069.class(pc1); };
-//│   Cont$1069.class = class Cont$1069 extends globalThis.Predef.__Cont.class {
+//│   h = new Effect$h$();
+//│   Cont$ = function Cont$(pc1) { return new Cont$.class(pc1); };
+//│   Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│     constructor(pc) {
 //│       let tmp13;
 //│       tmp13 = super(null, null);
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
-//│       if (this.pc === 1) {
+//│       if (this.pc === 0) {
 //│         res = value$;
 //│       }
 //│       contLoop: while (true) {
-//│         if (this.pc === 2) {
+//│         if (this.pc === 1) {
 //│           return tmp12;
-//│         } else if (this.pc === 1) {
+//│         } else if (this.pc === 0) {
 //│           tmp12 = res;
-//│           this.pc = 2;
+//│           this.pc = 1;
 //│           continue contLoop;
 //│         }
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$1069(" + this.pc + ")"; }
+//│     toString() { return "Cont$(" + this.pc + ")"; }
 //│   };
-//│   f$0 = function f$0() {
+//│   f = function f() {
 //│     return 3;
 //│   };
 //│   scrut = true;
 //│   if (scrut === true) {
-//│     res = f$0();
+//│     res = f();
 //│     if (res instanceof globalThis.Predef.__EffectSig.class) {
-//│       res.tail.next = new Cont$1069(1);
+//│       res.tail.next = new Cont$(0);
 //│       return globalThis.Predef.__handleBlockImpl(res, h);
 //│     }
 //│     tmp12 = res;
@@ -212,7 +212,7 @@ if true do
 //│   }
 //│   return tmp12;
 //│ };
-//│ tmp11 = handleBlock$023();
+//│ tmp11 = handleBlock$23();
 //│ if (tmp11 instanceof this.Predef.__EffectSig.class) {
 //│   throw new this.Error("Unhandled effects");
 //│ }
