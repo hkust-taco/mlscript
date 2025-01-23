@@ -95,33 +95,26 @@ class StackSafeTransform(depthLimit: Int)(using State):
 
     val extract = if isTopLevel then extractResTopLevel else extractRes
     
-    val transform = new BlockTransformerShallow(SymbolSubst()):
-      override def applyDefn(defn: Defn): Defn = rewriteDefn(defn)
+    val transform = new BlockTransformer(SymbolSubst()):
+
+      override def applyFunDefn(fun: FunDefn): FunDefn = rewriteFn(fun)
+      override def applyDefn(defn: Defn): Defn = defn match
+        case defn: ClsLikeDefn => rewriteCls(defn)
+        case _: FunDefn | _: ValDefn => super.applyDefn(defn)
 
       override def applyBlock(b: Block): Block = b match
         case Return(res, implct) if usesStack(res) => 
           applyResult2(res): res =>
             extract(res, true, Return(_, implct))
-        case Assign(lhs, rhs, rest) if usesStack(rhs) => 
-          applyResult2(rhs): res =>
-            extract(res, false, Assign(lhs, _, applyBlock(rest)))
-        case b @ AssignField(lhs, nme, rhs, rest) if usesStack(rhs) => 
-          applyResult2(rhs): res =>
-            extract(res, false, AssignField(lhs, nme, _, applyBlock(rest))(b.symbol))
-        case Define(defn, rest) => 
-          Define(rewriteDefn(defn), applyBlock(rest))
-        case HandleBlock(lhs, res, par, cls, handlers, body, rest) =>
-          HandleBlock(
-            lhs, res, par, cls, handlers.map(h => Handler(h.sym, h.resumeSym, h.params, applyBlock(h.body))),
-            applyBlock(body), applyBlock(rest)
-          )
-        case HandleBlockReturn(res) if usesStack(res) => 
-          applyResult2(res): res =>
-            extract(res, true, HandleBlockReturn(_))
         case _ => super.applyBlock(b)
-
-      override def applyValue(v: Value): Value = 
-        v match
+      
+      override def applyResult2(r: Result)(k: Result => Block): Block =
+        if usesStack(r) then
+          extract(r, false, k)
+        else
+          super.applyResult2(r)(k)
+      
+      override def applyValue(v: Value): Value = v match
         case Value.Lam(params, body) => 
           Value.Lam(params, rewriteBlk(body))
         case _ => super.applyValue(v)
@@ -152,16 +145,13 @@ class StackSafeTransform(depthLimit: Int)(using State):
       case HandleBlockReturn(res) => true
       case End(msg) => true
 
-  def rewriteDefn(defn: Defn) = 
-    defn match
-    case d: FunDefn => rewriteFn(d)
-    case _: ValDefn => defn
-    case ClsLikeDefn(owner, isym, sym, k, paramsOpt, 
-      parentPath, methods, privateFields, publicFields, preCtor, ctor) =>
-      ClsLikeDefn(
-        owner, isym, sym, k, paramsOpt, parentPath, methods.map(rewriteFn), privateFields,
-        publicFields, rewriteBlk(preCtor), rewriteBlk(ctor)
-      )
+  def rewriteCls(defn: ClsLikeDefn): ClsLikeDefn = 
+    val ClsLikeDefn(owner, isym, sym, k, paramsOpt, 
+      parentPath, methods, privateFields, publicFields, preCtor, ctor) = defn
+    ClsLikeDefn(
+      owner, isym, sym, k, paramsOpt, parentPath, methods.map(rewriteFn), privateFields,
+      publicFields, rewriteBlk(preCtor), rewriteBlk(ctor)
+    )
 
   def rewriteBlk(blk: Block) =
     val newBody = transform(blk)
