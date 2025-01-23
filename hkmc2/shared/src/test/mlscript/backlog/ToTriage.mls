@@ -223,3 +223,42 @@ fun main() =
 
 // ——— ——— ———
 
+// * Objects should not be allowed to have parameters...
+// * Or these parameters should have default values.
+
+:sjs
+object Cls(x) with
+  fun huh = x
+//│ JS (unsanitized):
+//│ let Cls1;
+//│ const Cls$class = class Cls {
+//│   constructor(x1) {
+//│     this.x = x1;
+//│   }
+//│   get huh() {
+//│     return this.x;
+//│   }
+//│   toString() { return "Cls(" + this.x + ")"; }
+//│ }; Cls1 = new Cls$class;
+//│ Cls1.class = Cls$class;
+//│ null
+
+:e
+Cls.x
+//│ ╔══[ERROR] Object 'Cls' does not contain member 'x'
+//│ ║  l.247: 	Cls.x
+//│ ╙──       	   ^^
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+
+:fixme
+Cls.huh
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'huh' yielded 'undefined'
+
+let c = new Cls(123)
+//│ c = Cls { x: 123 }
+
+c.x
+//│ = 123
+
+// ——— ——— ———
+

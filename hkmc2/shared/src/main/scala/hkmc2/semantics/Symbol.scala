@@ -6,6 +6,7 @@ import scala.collection.mutable.{Set => MutSet}
 
 import mlscript.utils.*, shorthands.*
 import syntax.*
+import hkmc2.utils.*
 
 import Elaborator.State
 import Tree.Ident
@@ -198,7 +199,8 @@ sealed trait ClassLikeSymbol extends Symbol:
   * One overloaded `BlockMemberSymbol` may correspond to multiple `InnerSymbol`s
   * A `Ref(_: InnerSymbol)` represents a `this`-like reference to the current object. */
   // TODO prevent from appearing in Ref
-sealed trait InnerSymbol extends Symbol:
+sealed trait InnerSymbol(using State) extends Symbol:
+  val privatesScope: Scope = Scope.empty // * Scope for private members of this symbol
   def subst(using SymbolSubst): InnerSymbol
 
 class ClassSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)

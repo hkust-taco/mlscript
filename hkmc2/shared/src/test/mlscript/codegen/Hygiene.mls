@@ -82,15 +82,61 @@ Test.x
 //│ = 1
 
 
-:fixme
 module Test with
   let x = 1
   let f = () => x
   let x = 2
-  log(f())
-//│ > let Test7;try { const Test$class2 = class Test {   #x;   #f;   #x;   constructor() {     let selRes1, tmp, tmp1;     this.#x = 1;     this.#f = (...args) => {       globalThis.Predef.checkArgs("", 0, true, args.length);       return this.#x;     };     this.#x = 2;     selRes1 = globalThis.log;     if (selRes1 === undefined) {       throw new globalThis.Error("Access to required field 'log' yielded 'undefined'");     } else {       tmp = selRes1;     }     tmp1 = this.#f() ?? null;     tmp(tmp1) ?? null   }   toString() { return "Test"; } }; Test7 = new Test$class2; Test7.class = Test$class2; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                                  ^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Identifier '#x' has already been declared
+  print(f())
+//│ > 1
+
+
+:sjs
+class Cls(x) with
+  let x += 1
+  fun foo = x
+  let x *= 2
+  fun bar = x
+  print(this.x, x)
+//│ JS (unsanitized):
+//│ let Cls1;
+//│ Cls1 = function Cls(x3) { return new Cls.class(x3); };
+//│ Cls1.class = class Cls {
+//│   #x;
+//│   #x1;
+//│   constructor(x2) {
+//│     this.x = x2;
+//│     let tmp, tmp1;
+//│     tmp = this.x + 1;
+//│     this.#x = tmp;
+//│     tmp1 = this.#x * 2;
+//│     this.#x1 = tmp1;
+//│     Predef.print(this.x, this.#x1)
+//│   }
+//│   get foo() {
+//│     return this.#x;
+//│   } 
+//│   get bar() {
+//│     return this.#x1;
+//│   }
+//│   toString() { return "Cls(" + this.x + ")"; }
+//│ };
+//│ null
+
+let cls = Cls(10)
+//│ > 10 22
+//│ cls = Cls { x: 10 }
+
+:expect 10
+cls.x
+//│ = 10
+
+:expect 11
+cls.foo
+//│ = 11
+
+:expect 22
+cls.bar
+//│ = 22
 
 
 fun foo() =

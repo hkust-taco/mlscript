@@ -51,7 +51,7 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
       case S(owner) =>
         doc"${result(Value.This(owner))}.${
           if (ts.k is syntax.LetBind) && !owner.isInstanceOf[semantics.TopLevelSymbol]
-          then "#" + ts.id.name
+          then "#" + owner.privatesScope.lookup_!(ts)
           else ts.id.name
         }"
       case N => summon[Scope].lookup_!(ts)
@@ -157,12 +157,18 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
             // * Note: `_pubFlds` is not used because in JS, fields are not declared
             val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
             val ctorParams = clsParams.map(p => p -> scope.allocateName(p))
+            val privs =
+              val scp = isym.asInstanceOf[InnerSymbol].privatesScope
+              privFlds.map: fld =>
+                  val nme = scp.allocateName(fld)
+                  doc" # #$nme;"
+                .mkDocument(doc"")
             val preCtorCode = ctorParams.foldLeft(body(preCtor)):
               case (acc, (sym, nme)) =>
                 doc"$acc # this.${sym.name} = $nme;"
             val ctorCode = doc"$preCtorCode${body(ctor)}"
             val clsJS = doc"class ${sym.nme}${par.map(p => s" extends ${result(p)}").getOrElse("")} { #{ ${
-                privFlds.map(f => doc" # #${f.nme};").mkDocument(doc"")
+                privs
               } # constructor(${
                 ctorParams.unzip._2.mkDocument(", ")
               }) ${ braced(ctorCode) }${

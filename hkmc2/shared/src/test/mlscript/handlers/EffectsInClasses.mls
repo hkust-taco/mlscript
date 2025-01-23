@@ -6,7 +6,6 @@ abstract class Effect with
   fun perform(arg: Str): Str
 
 
-// FIXME: the `return Lol1` is wrong here
 :sjs
 class Lol(h) with
   print(h.perform("k"))
@@ -16,9 +15,10 @@ class Lol(h) with
 //│ Lol1.class = class Lol {
 //│   constructor(h) {
 //│     this.h = h;
-//│     let tmp, res, Cont$173;
-//│     Cont$173 = function Cont$173(pc1) { return new Cont$173.class(pc1); };
-//│     Cont$173.class = class Cont$173 extends globalThis.Predef.__Cont.class {
+//│     let tmp, res, Cont$;
+//│     const this$Lol = this;
+//│     Cont$ = function Cont$(pc1) { return new Cont$.class(pc1); };
+//│     Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│       constructor(pc) {
 //│         let tmp1;
 //│         tmp1 = super(null, null);
@@ -30,7 +30,7 @@ class Lol(h) with
 //│         }
 //│         contLoop: while (true) {
 //│           if (this.pc === 1) {
-//│             return Lol1;
+//│             return this$Lol;
 //│           } else if (this.pc === 0) {
 //│             tmp = res;
 //│             this.pc = 1;
@@ -39,11 +39,11 @@ class Lol(h) with
 //│           break;
 //│         }
 //│       }
-//│       toString() { return "Cont$173(" + this.pc + ")"; }
+//│       toString() { return "Cont$(" + this.pc + ")"; }
 //│     };
 //│     res = this.h.perform("k") ?? null;
 //│     if (res instanceof globalThis.Predef.__EffectSig.class) {
-//│       res.tail.next = new Cont$173.class(0);
+//│       res.tail.next = new Cont$.class(0);
 //│       res.tail = res.tail.next;
 //│       return res;
 //│     }
@@ -89,10 +89,9 @@ let oops =
       k("b")
   Lol(h)
 //│ > k
-//│ oops = [Function: Lol] { class: [class Lol] }
+//│ oops = Lol { h: Effect$h$ {} }
 
-:fixme
 oops.h
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'h' yielded 'undefined'
+//│ = Effect$h$ {}
 
 

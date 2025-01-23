@@ -322,7 +322,6 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       case None => genNormalBody(b, BlockMemberSymbol("", Nil))
       case Some(cls) => Define(cls, genNormalBody(b, cls.sym))
   
-  private val thirdPassFresh = FreshId()
   // moves definitions to the top level of the block
   private def thirdPass(b: Block): Block =
     // to ensure the fun and class references in the continuation class are properly scoped,
@@ -360,12 +359,12 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     
     val fnBmsMap = funDefns
       .map: b =>
-        b -> BlockMemberSymbol(b.nme + "$" + thirdPassFresh(), b.trees)
+        b -> BlockMemberSymbol(b.nme, b.trees)
       .toMap
     
     val clsBmsMap = toConvert
       .map: b =>
-        b -> BlockMemberSymbol(b.nme + "$" + thirdPassFresh(), b.trees)  
+        b -> BlockMemberSymbol(b.nme, b.trees)  
       .toMap
     
     val bmsMap = (fnBmsMap ++ clsBmsMap).toMap
@@ -416,11 +415,11 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     FunDefn(f.owner, f.sym, f.params, translateBlock(f.body, functionHandlerCtx))
   
   private def translateCls(cls: ClsLikeDefn): ClsLikeDefn =
-    cls.copy(methods = cls.methods.map(translateFun), ctor = translateBlock(cls.ctor, ctorCtx(cls.sym.asPath)))
+    cls.copy(methods = cls.methods.map(translateFun), ctor = translateBlock(cls.ctor, ctorCtx(cls.sym.asClsLike.get.asPath)))
   
   // Handle block becomes a FunDefn and CallPlaceholder
   private def translateHandleBlock(h: HandleBlock): Block =
-    val sym = BlockMemberSymbol(s"handleBlock$$${freshId()}", Nil)
+    val sym = BlockMemberSymbol(s"handleBlock$$", Nil)
     val lbl = freshTmp("handlerBody")
     val lblLoop = freshTmp("handlerLoop")
     val tmp = freshTmp("retCont")
@@ -475,7 +474,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   private def genContClass(b: Block)(using HandlerCtx): Opt[ClsLikeDefn] =
     val clsSym = ClassSymbol(
       Tree.TypeDef(syntax.Cls, Tree.Error(), N, N),
-      Tree.Ident("Cont$" + State.suid.nextUid)
+      Tree.Ident("Cont$")
     )
     
     val pcVar = VarSymbol(Tree.Ident("pc"))
