@@ -41,7 +41,8 @@ fact(5000)
 :re
 :stackSafe off
 fact(5000)
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+//│ = Infinity
+//│ FAILURE: Unexpected lack of runtime error
 
 :stackSafe 1000
 fact(5000)
