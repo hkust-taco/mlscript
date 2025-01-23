@@ -59,7 +59,7 @@ hi(0)
 //│     toString() { return "Cont$(" + this.pc + ")"; }
 //│   };
 //│   diff = globalThis.Predef.__stackDepth - globalThis.Predef.__stackOffset;
-//│   scrut1 = diff >= 5;
+//│   scrut1 = diff >= globalThis.Predef.__stackLimit;
 //│   scrut2 = globalThis.Predef.__stackHandler !== undefined;
 //│   scrut3 = scrut1 && scrut2;
 //│   if (scrut3 === true) {
@@ -148,6 +148,7 @@ hi(0)
 //│     }
 //│     toString() { return "Cont$(" + this.pc + ")"; }
 //│   };
+//│   globalThis.Predef.__stackLimit = 5;
 //│   globalThis.Predef.__stackDepth = 1;
 //│   globalThis.Predef.__stackHandler = stackHandler;
 //│   res1 = hi1(0);
@@ -230,7 +231,7 @@ sum(10000)
 //│     toString() { return "Cont$(" + this.pc + ")"; }
 //│   };
 //│   diff = globalThis.Predef.__stackDepth - globalThis.Predef.__stackOffset;
-//│   scrut1 = diff >= 1000;
+//│   scrut1 = diff >= globalThis.Predef.__stackLimit;
 //│   scrut2 = globalThis.Predef.__stackHandler !== undefined;
 //│   scrut3 = scrut1 && scrut2;
 //│   if (scrut3 === true) {
@@ -329,6 +330,7 @@ sum(10000)
 //│     }
 //│     toString() { return "Cont$(" + this.pc + ")"; }
 //│   };
+//│   globalThis.Predef.__stackLimit = 1000;
 //│   globalThis.Predef.__stackDepth = 1;
 //│   globalThis.Predef.__stackHandler = stackHandler;
 //│   res2 = sum3(10000);

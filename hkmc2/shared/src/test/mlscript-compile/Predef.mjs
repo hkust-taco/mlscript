@@ -127,6 +127,7 @@ const Predef$class = class Predef {
       }
       toString() { return "__Return(" + this.value + ")"; }
     };
+    this.__stackLimit = 0;
     this.__stackDepth = 0;
     this.__stackOffset = 0;
     this.__stackHandler = null;

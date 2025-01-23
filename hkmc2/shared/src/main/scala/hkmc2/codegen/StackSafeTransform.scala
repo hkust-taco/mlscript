@@ -9,12 +9,14 @@ import hkmc2.semantics.*
 import hkmc2.syntax.Tree
 
 class StackSafeTransform(depthLimit: Int)(using State):
+  private val STACK_LIMIT_IDENT: Tree.Ident = Tree.Ident("__stackLimit")
   private val STACK_DEPTH_IDENT: Tree.Ident = Tree.Ident("__stackDepth")
   private val STACK_OFFSET_IDENT: Tree.Ident = Tree.Ident("__stackOffset")
   private val STACK_HANDLER_IDENT: Tree.Ident = Tree.Ident("__stackHandler")
 
   private val predefPath: Path = State.globalThisSymbol.asPath.selN(Tree.Ident("Predef"))
   private val stackDelayClsPath: Path = predefPath.selN(Tree.Ident("__StackDelay")).selN(Tree.Ident("class"))
+  private val stackLimitPath: Path = predefPath.selN(STACK_LIMIT_IDENT)
   private val stackDepthPath: Path = predefPath.selN(STACK_DEPTH_IDENT)
   private val stackOffsetPath: Path = predefPath.selN(STACK_OFFSET_IDENT)
   private val stackHandlerPath: Path = predefPath.selN(STACK_HANDLER_IDENT)
@@ -75,6 +77,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
           .ret(handlerRes.asPath)
       )),
       blockBuilder
+        .assignFieldN(predefPath, STACK_LIMIT_IDENT, intLit(depthLimit)) // set stackLimit before call
         .assignFieldN(predefPath, STACK_DEPTH_IDENT, intLit(1)) // set stackDepth = 1 before call
         .assignFieldN(predefPath, STACK_HANDLER_IDENT, handlerSym.asPath) // assign stack handler
         .rest(HandleBlockReturn(res)),
@@ -146,7 +149,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
       val scrut2Sym = TempSymbol(None, "scrut2")
       val scrutSym = TempSymbol(None, "scrut")
       val diff = op("-", stackDepthPath, stackOffsetPath)
-      val scrut1 = op(">=", diffSym.asPath, intLit(depthLimit))
+      val scrut1 = op(">=", diffSym.asPath, stackLimitPath)
       val scrut2 = op("!==", stackHandlerPath, Value.Lit(Tree.UnitLit(false)))
       val scrutVal = op("&&", scrut1Sym.asPath, scrut2Sym.asPath)
       blockBuilder
