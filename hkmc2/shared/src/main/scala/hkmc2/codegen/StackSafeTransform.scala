@@ -1,11 +1,12 @@
 package hkmc2
 
 import mlscript.utils.*, shorthands.*
+import utils.*
+
 import hkmc2.codegen.*
 import hkmc2.semantics.Elaborator.State
 import hkmc2.semantics.*
 import hkmc2.syntax.Tree
-import hkmc2.utils.*
 
 class StackSafeTransform(depthLimit: Int)(using State):
   private val STACK_DEPTH_IDENT: Tree.Ident = Tree.Ident("__stackDepth")
@@ -97,6 +98,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
     val transform = new BlockTransformer(SymbolSubst()):
 
       override def applyFunDefn(fun: FunDefn): FunDefn = rewriteFn(fun)
+      
       override def applyDefn(defn: Defn): Defn = defn match
         case defn: ClsLikeDefn => rewriteCls(defn)
         case _: FunDefn | _: ValDefn => super.applyDefn(defn)
