@@ -6,7 +6,6 @@ abstract class Effect with
   fun perform(arg: Str): Str
 
 
-// FIXME: the `return Lol1` is wrong here
 :sjs
 class Lol(h) with
   print(h.perform("k"))
@@ -17,6 +16,7 @@ class Lol(h) with
 //│   constructor(h) {
 //│     this.h = h;
 //│     let tmp, res, Cont$;
+//│     const this$Lol = this;
 //│     Cont$ = function Cont$(pc1) { return new Cont$.class(pc1); };
 //│     Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│       constructor(pc) {
@@ -30,7 +30,7 @@ class Lol(h) with
 //│         }
 //│         contLoop: while (true) {
 //│           if (this.pc === 1) {
-//│             return Lol1;
+//│             return this$Lol;
 //│           } else if (this.pc === 0) {
 //│             tmp = res;
 //│             this.pc = 1;
@@ -89,10 +89,9 @@ let oops =
       k("b")
   Lol(h)
 //│ > k
-//│ oops = [Function: Lol] { class: [class Lol] }
+//│ oops = Lol { h: Effect$h$ {} }
 
-:fixme
 oops.h
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'h' yielded 'undefined'
+//│ = Effect$h$ {}
 
 
