@@ -1,0 +1,21 @@
+:js
+:handler
+
+abstract class StackDelay with
+  fun perform(): ()
+
+handle h = StackDelay with
+  fun perform()(resume) = resume()
+fun foo(x) =
+  h.perform()
+  x + 4
+fun bar(y) =
+  h.perform()
+  // tail call
+  foo(y + 2)
+fun foobar(z) =
+  bar(z + 1)
+  // stuff after tail call is linked differently
+  3
+foobar(0)
+//│ = 7

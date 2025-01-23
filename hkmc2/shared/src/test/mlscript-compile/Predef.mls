@@ -234,6 +234,7 @@ fun __resumeHandleBlocks(handleBlock, tailHandleBlock, value) =
       set value = handleBlock.contHead.next.resume(value)
       if value is __EffectSig then
         // this checks when continuation resume results in tail call to effectful func
+        // when a tail call happens, the continuation will not be appended so this will be different
         if handleBlock.contHead.next !== value.tail.next do
           // if this is a tail call that results in effect, the continuation is already completed
           // and should be removed
