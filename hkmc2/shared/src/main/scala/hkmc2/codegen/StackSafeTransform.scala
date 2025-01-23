@@ -86,11 +86,10 @@ class StackSafeTransform(depthLimit: Int)(using State):
     )
 
   // Rewrites anything that can contain a Call to increase the stack depth
-  def transform(b: Block, isTopLevel: Bool = false): Block = 
+  def transform(b: Block, isTopLevel: Bool = false): Block =
     def usesStack(r: Result) = r match
       case Call(Value.Ref(_: BuiltinSymbol), _) => false
-      case _: Call => true
-      case _: Instantiate => true
+      case _: Call | _: Instantiate => true
       case _ => false
 
     val extract = if isTopLevel then extractResTopLevel else extractRes
@@ -113,36 +112,20 @@ class StackSafeTransform(depthLimit: Int)(using State):
         else
           super.applyResult2(r)(k)
       
-      override def applyValue(v: Value): Value = v match
-        case Value.Lam(params, body) => 
-          Value.Lam(params, rewriteBlk(body))
-        case _ => super.applyValue(v)
+      override def applyLam(lam: Value.Lam): Value.Lam =
+        Value.Lam(lam.params, rewriteBlk(lam.body))
   
     transform.applyBlock(b)
   
-  def isTrivial(b: Block): Boolean = 
-    def resTrivial(r: Result) = r match
-      case Call(Value.Ref(_: BuiltinSymbol), _) => true
-      case _: Call => false
-      case _: Instantiate => false
-      case _ => true
-
-    b match
-      case Match(scrut, arms, dflt, rest) => 
-        arms.foldLeft(dflt.map(isTrivial).getOrElse(true))((acc, bl) => acc && isTrivial(bl._2)) && isTrivial(rest)
-      case Return(res, implct) => resTrivial(res)
-      case Throw(exc) => resTrivial(exc)
-      case Label(label, body, rest) => isTrivial(body) && isTrivial(rest)
-      case Break(label) => true
-      case Continue(label) => true
-      case Begin(sub, rest) => isTrivial(sub) && isTrivial(rest)
-      case TryBlock(sub, finallyDo, rest) => isTrivial(sub) && isTrivial(finallyDo) && isTrivial(rest)
-      case Assign(lhs, rhs, rest) => resTrivial(rhs) && isTrivial(rest)
-      case AssignField(lhs, nme, rhs, rest) => resTrivial(rhs) && isTrivial(rest)
-      case Define(defn, rest) => isTrivial(rest)
-      case HandleBlock(lhs, res, par, cls, handlers, body, rest) => isTrivial(body) && isTrivial(rest) 
-      case HandleBlockReturn(res) => true
-      case End(msg) => true
+  def isTrivial(b: Block): Boolean =
+    var trivial = true
+    val walker = new BlockTransformerShallow(SymbolSubst()):
+      override def applyResult(r: Result): Result = r match
+        case Call(Value.Ref(_: BuiltinSymbol), _) => r
+        case _: Call | _: Instantiate => trivial = false; r
+        case _ => r
+    walker.applyBlock(b)
+    trivial
 
   def rewriteCls(defn: ClsLikeDefn): ClsLikeDefn = 
     val ClsLikeDefn(owner, isym, sym, k, paramsOpt, 
