@@ -374,7 +374,6 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
         case b1 -> b2 => b1.asCls match
           case Some(value) => 
             val newSym = ClassSymbol(value.tree, Tree.Ident(b2.nme))
-            newSym.defn = value.defn
             S(value -> newSym)
           case None => None
       .collect:
@@ -386,7 +385,6 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
         case b1 -> b2 => b1.asMod match
           case Some(value) => 
             val newSym = ModuleSymbol(value.tree, Tree.Ident(b2.nme))
-            newSym.defn = value.defn
             S(value -> newSym)
           case None => None
       .collect:
@@ -455,7 +453,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       h.cls,
       BlockMemberSymbol(h.cls.id.name, Nil),
       syntax.Cls,
-      h.cls.defn.get.paramsOpt,
+      N,
       S(h.par), handlers, Nil, Nil,
       Assign(freshTmp(), SimpleCall(Value.Ref(State.builtinOpsMap("super")), Nil), End()), End())
     
@@ -478,15 +476,6 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     )
     
     val pcVar = VarSymbol(Tree.Ident("pc"))
-    clsSym.defn = S(ClassDef(
-      N,
-      syntax.Cls,
-      clsSym,
-      BlockMemberSymbol(clsSym.nme, Nil),
-      Nil,
-      S(PlainParamList(Param(FldFlags.empty, pcVar, N) :: Nil)),
-      ObjBody(Term.Blk(Nil, Term.Lit(Tree.UnitLit(true)))),
-      List()))
     
     var trivial = true
     def prepareBlock(b: Block): Block =
@@ -582,7 +571,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       clsSym,
       BlockMemberSymbol(clsSym.nme, Nil),
       syntax.Cls,
-      clsSym.defn.get.paramsOpt,
+      S(PlainParamList(Param(FldFlags.empty, pcVar, N) :: Nil)),
       S(contClsPath),
       resumeFnDef :: Nil,
       Nil,

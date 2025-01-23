@@ -12,11 +12,11 @@ class StackSafeTransform(depthLimit: Int)(using State):
   private val STACK_OFFSET_IDENT: Tree.Ident = Tree.Ident("__stackOffset")
   private val STACK_HANDLER_IDENT: Tree.Ident = Tree.Ident("__stackHandler")
 
-  private val stackDelayClsPath: Path = State.globalThisSymbol.asPath.selN(Tree.Ident("Predef")).selN(Tree.Ident("__StackDelay")).selN(Tree.Ident("class"))
-  private val stackDepthPath: Path = State.globalThisSymbol.asPath.selN(Tree.Ident("Predef")).selN(STACK_DEPTH_IDENT)
-  private val stackOffsetPath: Path = State.globalThisSymbol.asPath.selN(Tree.Ident("Predef")).selN(STACK_OFFSET_IDENT)
-  private val stackHandlerPath: Path = State.globalThisSymbol.asPath.selN(Tree.Ident("Predef")).selN(STACK_HANDLER_IDENT)
   private val predefPath: Path = State.globalThisSymbol.asPath.selN(Tree.Ident("Predef"))
+  private val stackDelayClsPath: Path = predefPath.selN(Tree.Ident("__StackDelay")).selN(Tree.Ident("class"))
+  private val stackDepthPath: Path = predefPath.selN(STACK_DEPTH_IDENT)
+  private val stackOffsetPath: Path = predefPath.selN(STACK_OFFSET_IDENT)
+  private val stackHandlerPath: Path = predefPath.selN(STACK_HANDLER_IDENT)
 
   private def intLit(n: BigInt) = Value.Lit(Tree.IntLit(n))
   
@@ -53,7 +53,6 @@ class StackSafeTransform(depthLimit: Int)(using State):
       Tree.TypeDef(syntax.Cls, Tree.Error(), N, N),
       Tree.Ident("StackDelay$")
     )
-    clsSym.defn = S(ClassDef(N, syntax.Cls, clsSym, BlockMemberSymbol(clsSym.nme, Nil), Nil, N, ObjBody(Term.Blk(Nil, Term.Lit(Tree.UnitLit(true)))), Nil))
 
     // the global stack handler is created here
     HandleBlock(
