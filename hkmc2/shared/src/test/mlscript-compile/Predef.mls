@@ -207,6 +207,10 @@ fun __resume(cur, tail)(value) =
     cont is __Cont do
       set value = cont.resume(value)
       if value is __EffectSig then
+        // in tail call optimization, the continuation is not appended, we append it here
+        if value.tail.next === null do
+          // since it is a tail call, it is already completed so we append the continuation after it
+          set value.tail.next = cont.next
         // we are returning to handler, which performs unwinding so tail is needed
         set value.tail = tail
         if cur.handleBlockList.next !== null do
@@ -235,7 +239,7 @@ fun __resumeHandleBlocks(handleBlock, tailHandleBlock, value) =
       if value is __EffectSig then
         // this checks when continuation resume results in tail call to effectful func
         // when a tail call happens, the continuation will not be appended so this will be different
-        if handleBlock.contHead.next !== value.tail.next do
+        if value.tail.next === null do
           // if this is a tail call that results in effect, the continuation is already completed
           // and should be removed
           set handleBlock.contHead.next = handleBlock.contHead.next.next

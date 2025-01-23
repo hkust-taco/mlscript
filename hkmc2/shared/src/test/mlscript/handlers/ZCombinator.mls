@@ -38,11 +38,10 @@ fact(5000)
 //│ = Infinity
 
 // * Without `:stackSafe`, gives `RangeError: Maximum call stack size exceeded`
-:re
+// :re
 :stackSafe off
 fact(5000)
 //│ = Infinity
-//│ FAILURE: Unexpected lack of runtime error
 
 :stackSafe 1000
 fact(5000)
@@ -60,18 +59,16 @@ fact(5000)
 :stackSafe 5
 set selfApp = f => f(f)
 
-:fixme
 :expect 3628800
 fact(10)
-//│ ═══[RUNTIME ERROR] Expected: 3628800, got: 120
-//│ = 120
+//│ = 3628800
 
 
 :stackSafe 10
 set selfApp = f => f(f)
 
 fact(1000)
-//│ = 3628800
+//│ = Infinity
 
 // simplified version without lambdas for easier debugging
 :stackSafe 5

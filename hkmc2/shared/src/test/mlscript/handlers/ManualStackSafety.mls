@@ -79,7 +79,6 @@ test(10, 100)
 //│ > resumed: 10
 //│ = 3628800
 
-:fixme
 :expect 3628800
 test(10, 5)
 //│ > 1 0
@@ -100,9 +99,14 @@ test(10, 5)
 //│ > resumed: 2
 //│ > resumed: 3
 //│ > resumed: 4
+//│ > resumed: 5
+//│ > resumed: 6
+//│ > resumed: 7
+//│ > resumed: 8
+//│ > resumed: 9
+//│ > resumed: 10
 //│ > finished at offset: 15
 //│ > finished at offset: 10
 //│ > finished at offset: 5
 //│ > finished at offset: 0
-//│ ═══[RUNTIME ERROR] Expected: 3628800, got: 24
-//│ = 24
+//│ = 3628800

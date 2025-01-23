@@ -4,6 +4,7 @@
 abstract class StackDelay with
   fun perform(): ()
 
+:expect 3
 handle h = StackDelay with
   fun perform()(resume) = resume()
 fun foo(x) =
@@ -18,4 +19,4 @@ fun foobar(z) =
   // stuff after tail call is linked differently
   3
 foobar(0)
-//│ = 7
+//│ = 3
