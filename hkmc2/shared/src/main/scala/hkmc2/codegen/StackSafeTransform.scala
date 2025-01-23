@@ -103,9 +103,8 @@ class StackSafeTransform(depthLimit: Int)(using State):
         case _: FunDefn | _: ValDefn => super.applyDefn(defn)
 
       override def applyBlock(b: Block): Block = b match
-        case Return(res, implct) if usesStack(res) => 
-          applyResult2(res): res =>
-            extract(res, true, Return(_, implct))
+        case Return(res, implct) if usesStack(res) =>
+          extract(applyResult(res), true, Return(_, implct))
         case _ => super.applyBlock(b)
       
       override def applyResult2(r: Result)(k: Result => Block): Block =
