@@ -53,8 +53,6 @@ fact(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
 
-// * FIXME: changing the instrumentation's stack depth shouldn't change the result!
-
 :stackSafe 5
 set selfApp = f => f(f)
 
