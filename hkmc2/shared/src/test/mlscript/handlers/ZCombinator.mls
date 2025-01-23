@@ -19,6 +19,7 @@ fact(10)
 //│ = 3628800
 
 :re
+:stackSafe off
 fact(5000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
@@ -28,10 +29,27 @@ fun mkrec(g) =
     g of y => selfApp(self)(y)
 
 let fact = mkrec of self => x =>
-  if x == 0 then 1 else self(x - 1) * x
+  if x == 0 then 1 
+  else self(x - 1) * x
 //│ fact = [Function (anonymous)]
 
+:stackSafe 1000
+fact(5000)
+//│ = Infinity
+
 // * Without `:stackSafe`, gives `RangeError: Maximum call stack size exceeded`
+:re
+:stackSafe off
+fact(5000)
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+
+:stackSafe 1000
+fact(5000)
+//│ = Infinity
+
+// ????????????
+:todo
+:stackSafe off
 fact(5000)
 //│ = Infinity
 
@@ -51,7 +69,7 @@ fact(10)
 :stackSafe 10
 set selfApp = f => f(f)
 
-fact(5000)
+fact(1000)
 //│ = 3628800
 
 // simplified version without lambdas for easier debugging

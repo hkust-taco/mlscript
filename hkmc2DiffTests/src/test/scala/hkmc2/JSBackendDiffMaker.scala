@@ -57,9 +57,10 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     super.processTerm(blk, inImport)
     val outerRaise: Raise = summon
     var showingJSYieldedCompileError = false
-    val stackLimit = stackSafe.get.map(_.toIntOption) match
+    val stackLimit = stackSafe.get match
       case None => None
-      case Some(value) => value match
+      case Some("off") => None
+      case Some(value) => value.toIntOption match
         case None => Some(DEFAULT_STACK_LIMT)
         case Some(value) =>
           if value < 0 then
