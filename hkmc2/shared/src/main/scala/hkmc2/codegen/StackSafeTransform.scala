@@ -24,8 +24,6 @@ class StackSafeTransform(depthLimit: Int)(using State):
   private def op(op: String, a: Path, b: Path) =
     Call(State.builtinOpsMap(op).asPath, List(a.asArg, b.asArg))(true)
 
-  // TODO: this code is copied from HandlerLowering and is quite useful. Maybe refactor it into a utils file
-
   // Increases the stack depth, assigns the call to a value, then decreases the stack depth
   // then binds that value to a desired block
   def extractRes(res: Result, isTailCall: Bool, f: Result => Block) =
