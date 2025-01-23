@@ -1,0 +1,57 @@
+:js
+:handler
+:stackSafe 1000
+
+
+fun selfApp(f) = f(f)
+
+fun mkrec(g) =
+  selfApp of self =>
+    g of y => self(self)(y)
+
+let fact = mkrec of self => x =>
+  if x == 0 then 1 else self(x - 1) * x
+//│ fact = [Function (anonymous)]
+
+fact(3)
+//│ = 6
+
+fact(10)
+//│ = 3628800
+
+:fixme
+fact(5000)
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+
+
+// * Interestingly, this variation works:
+
+fun mkrec(g) =
+  selfApp of self =>
+    g of y => selfApp(self)(y)
+
+let fact = mkrec of self => x =>
+  if x == 0 then 1 else self(x - 1) * x
+//│ fact = [Function (anonymous)]
+
+// * Without `:stackSafe`, gives `RangeError: Maximum call stack size exceeded`
+fact(5000)
+//│ = Infinity
+
+
+// * FIXME: changing the instrumentation's stack depth shouldn't change the result!
+
+:stackSafe 100
+set selfApp = f => f(f)
+
+fact(5000)
+//│ = 9.33262154439441e+157
+
+
+:stackSafe 10
+set selfApp = f => f(f)
+
+fact(5000)
+//│ = 3628800
+
+
