@@ -260,4 +260,4 @@ val __stackDepth = 0 // Tracks the virtual + real stack depth
 val __stackOffset = 0 // How much to offset __stackDepth by to get the true stack depth (i.e. the virtual depth)
 val __stackHandler = null
 abstract class __StackDelay() with
-  fun perform()// Private definitions for algebraic effects
+  fun perform()
