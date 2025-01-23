@@ -10,7 +10,7 @@ sum(100)
 //│ = 5050
 
 // preserve tail calls
-// MUST see "return globalThis.hi(tmp)" in the output
+// MUST see "return hi1(tmp)" in the output
 :stackSafe 5
 :handler
 :expect 0
