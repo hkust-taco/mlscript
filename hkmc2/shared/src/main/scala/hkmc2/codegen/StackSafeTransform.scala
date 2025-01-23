@@ -101,11 +101,14 @@ class StackSafeTransform(depthLimit: Int)(using State):
 
       override def applyBlock(b: Block): Block = b match
         case Return(res, implct) if usesStack(res) => 
-          extract(res, true, Return(_, implct))
+          applyResult2(res): res =>
+            extract(res, true, Return(_, implct))
         case Assign(lhs, rhs, rest) if usesStack(rhs) => 
-          extract(rhs, false, Assign(lhs, _, applyBlock(rest)))
+          applyResult2(rhs): res =>
+            extract(res, false, Assign(lhs, _, applyBlock(rest)))
         case b @ AssignField(lhs, nme, rhs, rest) if usesStack(rhs) => 
-          extract(rhs, false, AssignField(lhs, nme, _, applyBlock(rest))(b.symbol))
+          applyResult2(rhs): res =>
+            extract(res, false, AssignField(lhs, nme, _, applyBlock(rest))(b.symbol))
         case Define(defn, rest) => 
           Define(rewriteDefn(defn), applyBlock(rest))
         case HandleBlock(lhs, res, par, cls, handlers, body, rest) =>
@@ -114,11 +117,14 @@ class StackSafeTransform(depthLimit: Int)(using State):
             applyBlock(body), applyBlock(rest)
           )
         case HandleBlockReturn(res) if usesStack(res) => 
-          extract(res, true, HandleBlockReturn(_))
+          applyResult2(res): res =>
+            extract(res, true, HandleBlockReturn(_))
         case _ => super.applyBlock(b)
 
-      override def applyValue(v: Value): Value = v match
-        case Value.Lam(params, body) => Value.Lam(params, rewriteBlk(body))
+      override def applyValue(v: Value): Value = 
+        v match
+        case Value.Lam(params, body) => 
+          Value.Lam(params, rewriteBlk(body))
         case _ => super.applyValue(v)
   
     transform.applyBlock(b)
