@@ -20,7 +20,7 @@ fact(10)
 
 :re
 :stackSafe off
-fact(5000)
+fact(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
 
@@ -34,24 +34,23 @@ let fact = mkrec of self => x =>
 //│ fact = [Function (anonymous)]
 
 :stackSafe 1000
-fact(5000)
+fact(10000)
 //│ = Infinity
 
 // * Without `:stackSafe`, gives `RangeError: Maximum call stack size exceeded`
-// :re
+:re
 :stackSafe off
-fact(5000)
-//│ = Infinity
+fact(10000)
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
 :stackSafe 1000
-fact(5000)
+fact(10000)
 //│ = Infinity
 
-// ????????????
-:todo
+:re
 :stackSafe off
-fact(5000)
-//│ = Infinity
+fact(10000)
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
 
 // * FIXME: changing the instrumentation's stack depth shouldn't change the result!
