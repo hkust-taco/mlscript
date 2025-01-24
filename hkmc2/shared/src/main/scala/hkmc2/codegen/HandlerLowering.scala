@@ -27,6 +27,15 @@ object HandlerLowering:
   
   private case class LinkState(res: Path, cls: Path, uid: StateId)
   
+  // isHandleFree: whether the current block is inside a function or top level directly free of any handler in scope
+  // isTopLevel:
+  // whether the current block is the top level block, as we do not emit code for continuation class on the top level
+  // since we cannot return an effect signature on the top level (we are not in a function so return statement are invalid)
+  // and we do not have any `return` statement in the top level block so we do not need the `ReturnCont` workarounds.
+  // ctorThis: the path to `this` in the constructor, this is used to insert `return this;` at the end of constructor.
+  // linkAndHandle:
+  // a function that takes a LinkState and returns a block that links the continuation class and handles the effect
+  // this is a convenience function which initializes the continuation class in function context or throw an error in top level
   private case class HandlerCtx(
     isHandleFree: Bool,
     isTopLevel: Bool,
