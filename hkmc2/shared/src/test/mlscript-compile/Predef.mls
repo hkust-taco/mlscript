@@ -207,6 +207,9 @@ fun __resume(cur, tail)(value) =
     cont is __Cont do
       set value = cont.resume(value)
       if value is __EffectSig then
+        if value.tail.next !== cont do
+          if cont.next !== null and value.tail.next !== null do
+            throw Error("Internal Error: unexpected continuation")
         // in tail call optimization, the continuation is not appended, we append it here
         if value.tail.next === null do
           // since it is a tail call, it is already completed so we append the continuation after it
@@ -237,9 +240,11 @@ fun __resumeHandleBlocks(handleBlock, tailHandleBlock, value) =
       // resuming tailHandlerList or post handler continuations
       set value = handleBlock.contHead.next.resume(value)
       if value is __EffectSig then
+        if value.tail.next !== handleBlock.contHead.next and value.tail.next !== null do
+            throw Error("Internal Error: unexpected continuation during handle block resumption")
         // this checks when continuation resume results in tail call to effectful func
         // when a tail call happens, the continuation will not be appended so this will be null
-        if value.tail.next === null do
+        if value.tail.next !== handleBlock.contHead.next do
           // if this is a tail call that results in effect, the continuation is already completed
           // and should be removed
           set handleBlock.contHead.next = handleBlock.contHead.next.next

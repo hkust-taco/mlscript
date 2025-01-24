@@ -277,7 +277,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
    */
   
   private def translateBlock(b: Block, h: HandlerCtx): Block =
-    given HandlerCtx = h  
+    given HandlerCtx = h
     val stage1 = firstPass(b)
     val stage2 = secondPass(stage1)
     if h.isTopLevel then stage2 else thirdPass(stage2)
@@ -288,14 +288,15 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
         case b: HandleBlock =>
           val rest = applyBlock(b.rest)
           translateHandleBlock(b.copy(rest = rest))
-        // This block optimizes tail-calls in the handler transformation. We do not optimize tail-calls
-        // on the top-level since it does not make sense. This optimization also prevents the
-        // "throw 'Unhandled effects'" code from being added at the top level.
-        case Return(c @ Call(fun, args), implct) if handlerCtx.isHandleFree && !handlerCtx.isTopLevel =>
+        // This block optimizes tail-calls in the handler transformation. We do not optimize implicit returns.
+        // Implicit returns are used in top level and constructor:
+        // For top level, this correspond to the last statement which should also be checked for effect.
+        // For constructor, we will append `return this;` after the implicit return so it is not a tail call.
+        case Return(c @ Call(fun, args), false) if handlerCtx.isHandleFree =>
           val fun2 = applyPath(fun)
           val args2 = args.mapConserve(applyArg)
           val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun)
-          if c2 is c then b else Return(c2, implct)
+          if c2 is c then b else Return(c2, false)
         case _ => super.applyBlock(b)
       override def applyResult2(r: Result)(k: Result => Block): Block = r match
         case r @ Call(Value.Ref(_: BuiltinSymbol), _) => super.applyResult2(r)(k)

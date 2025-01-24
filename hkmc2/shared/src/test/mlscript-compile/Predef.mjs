@@ -420,7 +420,7 @@ const Predef$class = class Predef {
   } 
   __resume(cur2, tail) {
     return (value) => {
-      let scrut, cont, scrut1, scrut2, scrut3, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+      let scrut, cont, scrut1, scrut2, scrut3, scrut4, scrut5, scrut6, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
       scrut = cur2.resumed;
       if (scrut === true) {
         throw globalThis.Error("Multiple resumption");
@@ -429,69 +429,97 @@ const Predef$class = class Predef {
       }
       cur2.resumed = true;
       cont = cur2.next;
-      tmp8: while (true) {
+      tmp10: while (true) {
         if (cont instanceof this.__Cont.class) {
           tmp1 = cont.resume(value) ?? null;
           value = tmp1;
           if (value instanceof this.__EffectSig.class) {
-            scrut1 = value.tail.next === null;
+            scrut1 = value.tail.next !== cont;
             if (scrut1 === true) {
-              value.tail.next = cont.next;
-              tmp2 = null;
+              scrut2 = cont.next !== null;
+              if (scrut2 === true) {
+                scrut3 = value.tail.next !== null;
+                if (scrut3 === true) {
+                  throw globalThis.Error("Internal Error: unexpected continuation");
+                } else {
+                  tmp2 = null;
+                }
+              } else {
+                tmp2 = null;
+              }
+              tmp3 = tmp2;
             } else {
-              tmp2 = null;
+              tmp3 = null;
+            }
+            scrut4 = value.tail.next === null;
+            if (scrut4 === true) {
+              value.tail.next = cont.next;
+              tmp4 = null;
+            } else {
+              tmp4 = null;
             }
             value.tail = tail;
-            scrut2 = cur2.handleBlockList.next !== null;
-            if (scrut2 === true) {
+            scrut5 = cur2.handleBlockList.next !== null;
+            if (scrut5 === true) {
               value.handleBlockList.tail.next = cur2.handleBlockList.next;
               value.handleBlockList.tail = cur2.handleBlockList.tail;
-              tmp3 = null;
+              tmp5 = null;
             } else {
-              tmp3 = null;
+              tmp5 = null;
             }
             return value;
           } else {
             cont = cont.next;
-            tmp4 = null;
+            tmp6 = null;
           }
-          tmp5 = tmp4;
-          continue tmp8;
+          tmp7 = tmp6;
+          continue tmp10;
         } else {
-          tmp5 = null;
+          tmp7 = null;
         }
         break;
       }
-      scrut3 = cur2.handleBlockList.next === null;
-      if (scrut3 === true) {
+      scrut6 = cur2.handleBlockList.next === null;
+      if (scrut6 === true) {
         return value;
       } else {
-        tmp6 = this.__resumeHandleBlocks(cur2.handleBlockList.next, cur2.handleBlockList.tail, value);
-        cur2 = tmp6;
+        tmp8 = this.__resumeHandleBlocks(cur2.handleBlockList.next, cur2.handleBlockList.tail, value);
+        cur2 = tmp8;
         if (cur2 instanceof this.__EffectSig.class) {
           cur2.tail = tail;
-          tmp7 = null;
+          tmp9 = null;
         } else {
-          tmp7 = null;
+          tmp9 = null;
         }
         return cur2;
       }
     };
   } 
   __resumeHandleBlocks(handleBlock, tailHandleBlock, value) {
-    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3;
-    tmp4: while (true) {
+    let scrut, scrut1, scrut2, scrut3, scrut4, tmp, tmp1, tmp2, tmp3, tmp4;
+    tmp5: while (true) {
       scrut1 = handleBlock.contHead.next;
       if (scrut1 instanceof this.__Cont.class) {
         tmp = handleBlock.contHead.next.resume(value) ?? null;
         value = tmp;
         if (value instanceof this.__EffectSig.class) {
-          scrut2 = value.tail.next === null;
+          scrut2 = value.tail.next !== handleBlock.contHead.next;
           if (scrut2 === true) {
-            handleBlock.contHead.next = handleBlock.contHead.next.next;
-            tmp1 = null;
+            scrut3 = value.tail.next !== null;
+            if (scrut3 === true) {
+              throw globalThis.Error("Internal Error: unexpected continuation during handle block resumption");
+            } else {
+              tmp1 = null;
+            }
           } else {
             tmp1 = null;
+          }
+          scrut4 = value.tail.next !== handleBlock.contHead.next;
+          if (scrut4 === true) {
+            handleBlock.contHead.next = handleBlock.contHead.next.next;
+            tmp2 = null;
+          } else {
+            tmp2 = null;
           }
           value.tail.next = null;
           value.handleBlockList.tail.next = handleBlock;
@@ -499,23 +527,23 @@ const Predef$class = class Predef {
           return value;
         } else {
           handleBlock.contHead.next = handleBlock.contHead.next.next;
-          tmp2 = null;
+          tmp3 = null;
         }
-        tmp3 = tmp2;
-        continue tmp4;
+        tmp4 = tmp3;
+        continue tmp5;
       } else {
         scrut = handleBlock.next;
         if (scrut instanceof this.__HandleBlock.class) {
           handleBlock = handleBlock.next;
-          tmp3 = null;
-          continue tmp4;
+          tmp4 = null;
+          continue tmp5;
         } else {
           return value;
         }
       }
       break;
     }
-    return tmp3;
+    return tmp4;
   }
   toString() { return "Predef"; }
 }; Predef1 = new Predef$class;

@@ -15,7 +15,7 @@ class Lol(h) with
 //│ Lol1.class = class Lol {
 //│   constructor(h) {
 //│     this.h = h;
-//│     let tmp, res, Cont$;
+//│     let tmp, res, res1, Cont$;
 //│     const this$Lol = this;
 //│     Cont$ = function Cont$(pc1) { return new Cont$.class(pc1); };
 //│     Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
@@ -27,13 +27,24 @@ class Lol(h) with
 //│       resume(value$) {
 //│         if (this.pc === 0) {
 //│           res = value$;
+//│         } else if (this.pc === 1) {
+//│           res1 = value$;
 //│         }
 //│         contLoop: while (true) {
-//│           if (this.pc === 1) {
+//│           if (this.pc === 2) {
 //│             return this$Lol;
 //│           } else if (this.pc === 0) {
 //│             tmp = res;
+//│             res1 = Predef.print(tmp);
+//│             if (res1 instanceof globalThis.Predef.__EffectSig.class) {
+//│               res1.tail.next = this;
+//│               this.pc = 1;
+//│               return res1;
+//│             }
 //│             this.pc = 1;
+//│             continue contLoop;
+//│           } else if (this.pc === 1) {
+//│             this.pc = 2;
 //│             continue contLoop;
 //│           }
 //│           break;
@@ -48,7 +59,13 @@ class Lol(h) with
 //│       return res;
 //│     }
 //│     tmp = res;
-//│     Predef.print(tmp)
+//│     res1 = Predef.print(tmp);
+//│     if (res1 instanceof globalThis.Predef.__EffectSig.class) {
+//│       res1.tail.next = new Cont$.class(1);
+//│       res1.tail = res1.tail.next;
+//│       return res1;
+//│     }
+//│     res1
 //│   }
 //│   toString() { return "Lol(" + this.h + ")"; }
 //│ };
@@ -89,6 +106,7 @@ let oops =
       k("b")
   Lol(h)
 //│ > k
+//│ > b
 //│ oops = Lol { h: Effect$h$ {} }
 
 oops.h
