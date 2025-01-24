@@ -1,6 +1,13 @@
 :js
 :handler
 
+// * This file demonstrates the handler-based mechanism of our stack safety implementation
+// * by manually applying the transformation of a recursive factorial function
+// * defined through the Z combinator.
+// * It is notably interesting in that it demonstrates the ability to preserve tail calls.
+// * The original function can be found in `hkmc2/shared/src/test/mlscript/handlers/ZCombinator.mls`
+
+
 fun test(n, stackLimit) =
   let stackDepth = 0
   let stackOffset = 0
@@ -110,3 +117,5 @@ test(10, 5)
 //│ > finished at offset: 5
 //│ > finished at offset: 0
 //│ = 3628800
+
+

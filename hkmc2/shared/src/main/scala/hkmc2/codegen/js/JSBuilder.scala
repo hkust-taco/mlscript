@@ -40,10 +40,18 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
     case Argument
     case Operand(prec: Int)
   
-  def err(errMsg: Message)(using Raise, Scope): Document =
+  def mkErr(errMsg: Message)(using Raise, Scope): Document =
+    doc"throw globalThis.Error(${result(Value.Lit(syntax.Tree.StrLit(errMsg.show)))})"
+  
+  def errExpr(errMsg: Message)(using Raise, Scope): Document =
     raise(ErrorReport(errMsg -> N :: Nil,
       source = Diagnostic.Source.Compilation))
-    doc"(()=>{throw globalThis.Error(${result(Value.Lit(syntax.Tree.StrLit(errMsg.show)))})})()"
+    doc"(()=>{${mkErr(errMsg)}})()"
+  
+  def errStmt(errMsg: Message)(using Raise, Scope): Document =
+    raise(ErrorReport(errMsg -> N :: Nil,
+      source = Diagnostic.Source.Compilation))
+    doc" # ${mkErr(errMsg)};"
   
   def getVar(l: Local)(using Raise, Scope): Document = l match
     case ts: semantics.TermSymbol =>
@@ -75,24 +83,24 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
     case Value.Lit(lit) => lit.idStr
     case Value.Ref(l: BuiltinSymbol) =>
       if l.nullary then l.nme
-      else err(msg"Illegal reference to builtin symbol '${l.nme}'")
+      else errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
     case Value.Ref(l) => getVar(l)
     
     case Call(Value.Ref(l: BuiltinSymbol), lhs :: rhs :: Nil) if !l.functionLike =>
       if l.binary then
         val res = doc"${operand(lhs)} ${l.nme} ${operand(rhs)}"
         if needsParens(l.nme) then doc"(${res})" else res
-      else err(msg"Cannot call non-binary builtin symbol '${l.nme}'")
+      else errExpr(msg"Cannot call non-binary builtin symbol '${l.nme}'")
     case Call(Value.Ref(l: BuiltinSymbol), rhs :: Nil) if !l.functionLike =>
       if l.unary then
         val res = doc"${l.nme} ${operand(rhs)}"
         if needsParens(l.nme) then doc"(${res})" else res
-      else err(msg"Cannot call non-unary builtin symbol '${l.nme}'")
+      else errExpr(msg"Cannot call non-unary builtin symbol '${l.nme}'")
     case Call(Value.Ref(l: BuiltinSymbol), args) =>
       if l.functionLike then
         val argsDoc = args.map(argument).mkDocument(", ")
         doc"${l.nme}(${argsDoc})"
-      else err(msg"Illegal arity for builtin symbol '${l.nme}'")
+      else errExpr(msg"Illegal arity for builtin symbol '${l.nme}'")
     
     case Call(s @ Select(_, id), lhs :: rhs :: Nil) =>
       Elaborator.ctx.Builtins.getBuiltinOp(id.name) match
@@ -122,7 +130,8 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
     case Value.Arr(es) =>
       doc"[ #{  # ${es.map(argument).mkDocument(doc", # ")} #}  # ]"
   def returningTerm(t: Block)(using Raise, Scope): Document = t match
-    case _: (HandleBlockReturn | HandleBlock) => die
+    case _: (HandleBlockReturn | HandleBlock) =>
+      errStmt(msg"This code requires effect handler instrumentation but was compiled without it.")
     case Assign(l, r, rst) =>
       doc" # ${getVar(l)} = ${result(r)};${returningTerm(rst)}"
     case AssignField(p, n, r, rst) =>

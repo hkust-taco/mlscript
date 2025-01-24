@@ -115,7 +115,7 @@ sealed abstract class Block extends Product with AutoLocated:
         case _ => super.applyBlock(b)
     
     (transformer.applyBlock(this), defns.reverse.toList)
-      
+  
 end Block
 
 sealed abstract class BlockTail extends Block
@@ -285,3 +285,5 @@ def blockBuilder: Block => Block = identity
 
 extension (l: Local)
   def asPath: Path = Value.Ref(l)
+
+
