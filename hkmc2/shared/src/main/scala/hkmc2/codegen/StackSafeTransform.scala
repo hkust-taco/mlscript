@@ -24,7 +24,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
   private def intLit(n: BigInt) = Value.Lit(Tree.IntLit(n))
   
   private def op(op: String, a: Path, b: Path) =
-    Call(State.builtinOpsMap(op).asPath, List(a.asArg, b.asArg))(true)
+    Call(State.builtinOpsMap(op).asPath, a.asArg :: b.asArg :: Nil)(true)
 
   // Increases the stack depth, assigns the call to a value, then decreases the stack depth
   // then binds that value to a desired block
@@ -59,8 +59,8 @@ class StackSafeTransform(depthLimit: Int)(using State):
     HandleBlock(
       handlerSym, resSym,
       stackDelayClsPath, clsSym,
-      List(Handler(
-        BlockMemberSymbol("perform", Nil), resumeSym, List(ParamList(ParamListFlags.empty, Nil, N)),
+      Handler(
+        BlockMemberSymbol("perform", Nil), resumeSym, ParamList(ParamListFlags.empty, Nil, N) :: Nil,
         /* 
           fun perform() =
             let curOffset = stackOffset
@@ -72,10 +72,10 @@ class StackSafeTransform(depthLimit: Int)(using State):
         blockBuilder
           .assign(curOffsetSym, stackOffsetPath)
           .assignFieldN(predefPath, STACK_OFFSET_IDENT, stackDepthPath)
-          .assign(handlerRes, Call(Value.Ref(resumeSym), List())(true))
+          .assign(handlerRes, Call(Value.Ref(resumeSym), Nil)(true))
           .assignFieldN(predefPath, STACK_OFFSET_IDENT, curOffsetSym.asPath)
           .ret(handlerRes.asPath)
-      )),
+      ) :: Nil,
       blockBuilder
         .assignFieldN(predefPath, STACK_LIMIT_IDENT, intLit(depthLimit)) // set stackLimit before call
         .assignFieldN(predefPath, STACK_DEPTH_IDENT, intLit(1)) // set stackDepth = 1 before call
@@ -145,22 +145,22 @@ class StackSafeTransform(depthLimit: Int)(using State):
       newBody
     else
       val diffSym = TempSymbol(None, "diff")
-      val scrut1Sym = TempSymbol(None, "scrut1")
-      val scrut2Sym = TempSymbol(None, "scrut2")
+      val diffGeqLimitSym = TempSymbol(None, "diffGeqLimit")
+      val handlerExistsSym = TempSymbol(None, "handlerExists")
       val scrutSym = TempSymbol(None, "scrut")
       val diff = op("-", stackDepthPath, stackOffsetPath)
-      val scrut1 = op(">=", diffSym.asPath, stackLimitPath)
-      val scrut2 = op("!==", stackHandlerPath, Value.Lit(Tree.UnitLit(false)))
-      val scrutVal = op("&&", scrut1Sym.asPath, scrut2Sym.asPath)
+      val diffGeqLimit = op(">=", diffSym.asPath, stackLimitPath)
+      val handlerExists = op("!==", stackHandlerPath, Value.Lit(Tree.UnitLit(false)))
+      val scrutVal = op("&&", diffGeqLimitSym.asPath, handlerExistsSym.asPath)
       blockBuilder
-        .assign(diffSym, diff)        // diff = stackDepth - stackOffset
-        .assign(scrut1Sym, scrut1)    // diff >= depthLimit
-        .assign(scrut2Sym, scrut2)    // stackHandler !== null
-        .assign(scrutSym, scrutVal)   // diff >= depthLimit && stackHandler !== null
+        .assign(diffSym, diff)                    // diff = stackDepth - stackOffset
+        .assign(diffGeqLimitSym, diffGeqLimit)    // diff >= depthLimit
+        .assign(handlerExistsSym, handlerExists)  // stackHandler !== null
+        .assign(scrutSym, scrutVal)               // diff >= depthLimit && stackHandler !== null
         .ifthen(
           scrutSym.asPath, Case.Lit(Tree.BoolLit(true)), 
-          blockBuilder.assign( // tmp = perform(undefined)
-            TempSymbol(None, "tmp"), 
+          blockBuilder.assign( // dummy = perform(undefined) (is called `dummy` as the value is not used)
+            TempSymbol(None, "dummy"), 
             Call(Select(stackHandlerPath, Tree.Ident("perform"))(N), Nil)(true)).end)
         .rest(newBody)
      

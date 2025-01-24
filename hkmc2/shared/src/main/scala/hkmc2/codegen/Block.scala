@@ -14,8 +14,6 @@ import semantics.*
 import semantics.Term.*
 import sem.Elaborator.State
 
-import scala.collection.mutable.ListBuffer
-
 case class Program(
   imports: Ls[Local -> Str],
   main: Block,
@@ -101,20 +99,24 @@ sealed abstract class Block extends Product with AutoLocated:
     case _: Return | _: Throw | _: Label | _: Break | _: Continue | _: End | _: HandleBlockReturn => Nil
   
   // Moves definitions in a block to the top. Only scans the top-level definitions of the block;
-  // i.e, definitions inside other definitions are not moved out. Definitions inside `if` and 
-  // `while` statements are moved out.
+  // i.e, definitions inside other definitions are not moved out. Definitions inside `match`/`if`
+  // and `while` statements are moved out.
+  //
+  // Note that this returns the definitions in reverse order, with the bottommost definiton appearing
+  // last. This is so that using defns.foldLeft later to add the definitions to the front of a block, 
+  // we don't need to reverse the list again to preserve the order of the definitions.
   def floatOutDefns =
-    val defns = ListBuffer[Defn]()
+    var defns: List[Defn] = Nil
     val transformer = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
         case Define(defn, rest) => defn match
           case v: ValDefn => super.applyBlock(b)
           case _ =>
-            defns.addOne(defn)
+            defns ::= defn
             applyBlock(rest)
         case _ => super.applyBlock(b)
     
-    (transformer.applyBlock(this), defns.reverse.toList)
+    (transformer.applyBlock(this), defns)
   
 end Block
 

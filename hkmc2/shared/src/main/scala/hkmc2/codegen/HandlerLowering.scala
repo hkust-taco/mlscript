@@ -288,10 +288,13 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
         case b: HandleBlock =>
           val rest = applyBlock(b.rest)
           translateHandleBlock(b.copy(rest = rest))
+        // This block optimizes tail-calls in the handler transformation. We do not optimize tail-calls
+        // on the top-level since it does not make sense. This optimization also prevents the
+        // "throw 'Unhandled effects'" code from being added at the top level.
         case Return(c @ Call(fun, args), implct) if handlerCtx.isHandleFree && !handlerCtx.isTopLevel =>
           val fun2 = applyPath(fun)
-          val args2 = args.map(applyArg)
-          val c2 = if (fun2 is fun) && (args2 zip args).forall(_ is _) then c else Call(fun2, args2)(c.isMlsFun)
+          val args2 = args.mapConserve(applyArg)
+          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun)
           if c2 is c then b else Return(c2, implct)
         case _ => super.applyBlock(b)
       override def applyResult2(r: Result)(k: Result => Block): Block = r match
@@ -299,14 +302,14 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
         case c @ Call(fun, args) =>
           val res = freshTmp("res")
           val fun2 = applyPath(fun)
-          val args2 = args.map(applyArg)
-          val c2 = if (fun2 is fun) && (args2 zip args).forall(_ is _) then c else Call(fun2, args2)(c.isMlsFun)
+          val args2 = args.mapConserve(applyArg)
+          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun)
           ResultPlaceholder(res, freshId(), false, c2, k(Value.Ref(res)))
         case c @ Instantiate(cls, args) =>
           val res = freshTmp("res")
           val cls2 = applyPath(cls)
-          val args2 = args.map(applyPath)
-          val c2 = if (cls2 is cls) && (args2 zip args).forall(_ is _) then c else Instantiate(cls2, args2)
+          val args2 = args.mapConserve(applyPath)
+          val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(cls2, args2)
           ResultPlaceholder(res, freshId(), false, c2, k(Value.Ref(res)))
         case r => super.applyResult2(r)(k)
       override def applyLam(lam: Value.Lam): Value.Lam = Value.Lam(lam.params, translateBlock(lam.body, functionHandlerCtx))

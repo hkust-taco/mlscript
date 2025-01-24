@@ -22,12 +22,12 @@ hi(0)
 //│ JS (unsanitized):
 //│ let hi1, res, handleBlock$1;
 //│ hi1 = function hi(n) {
-//│   let scrut, tmp, diff, scrut1, scrut2, scrut3, tmp1, res1, Cont$;
+//│   let scrut, tmp, diff, diffGeqLimit, handlerExists, scrut1, dummy, res1, Cont$;
 //│   Cont$ = function Cont$(pc1) { return new Cont$.class(pc1); };
 //│   Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│     constructor(pc) {
-//│       let tmp2;
-//│       tmp2 = super(null, null);
+//│       let tmp1;
+//│       tmp1 = super(null, null);
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
@@ -49,7 +49,7 @@ hi(0)
 //│         } else if (this.pc === 1) {
 //│           break contLoop;
 //│         } else if (this.pc === 0) {
-//│           tmp1 = res1;
+//│           dummy = res1;
 //│           this.pc = 2;
 //│           continue contLoop;
 //│         }
@@ -59,17 +59,17 @@ hi(0)
 //│     toString() { return "Cont$(" + this.pc + ")"; }
 //│   };
 //│   diff = globalThis.Predef.__stackDepth - globalThis.Predef.__stackOffset;
-//│   scrut1 = diff >= globalThis.Predef.__stackLimit;
-//│   scrut2 = globalThis.Predef.__stackHandler !== undefined;
-//│   scrut3 = scrut1 && scrut2;
-//│   if (scrut3 === true) {
+//│   diffGeqLimit = diff >= globalThis.Predef.__stackLimit;
+//│   handlerExists = globalThis.Predef.__stackHandler !== undefined;
+//│   scrut1 = diffGeqLimit && handlerExists;
+//│   if (scrut1 === true) {
 //│     res1 = globalThis.Predef.__stackHandler.perform();
 //│     if (res1 instanceof globalThis.Predef.__EffectSig.class) {
 //│       res1.tail.next = new Cont$.class(0);
 //│       res1.tail = res1.tail.next;
 //│       return res1;
 //│     }
-//│     tmp1 = res1;
+//│     dummy = res1;
 //│   }
 //│   scrut = n == 0;
 //│   if (scrut === true) {
@@ -179,12 +179,12 @@ sum(10000)
 //│ JS (unsanitized):
 //│ let sum3, res1, handleBlock$3;
 //│ sum3 = function sum(n) {
-//│   let scrut, tmp, tmp1, tmp2, prevDepth, diff, scrut1, scrut2, scrut3, tmp3, res2, res3, Cont$;
+//│   let scrut, tmp, tmp1, tmp2, prevDepth, diff, diffGeqLimit, handlerExists, scrut1, dummy, res2, res3, Cont$;
 //│   Cont$ = function Cont$(pc1) { return new Cont$.class(pc1); };
 //│   Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│     constructor(pc) {
-//│       let tmp4;
-//│       tmp4 = super(null, null);
+//│       let tmp3;
+//│       tmp3 = super(null, null);
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
@@ -221,7 +221,7 @@ sum(10000)
 //│           tmp1 = tmp2;
 //│           return n + tmp1;
 //│         } else if (this.pc === 0) {
-//│           tmp3 = res2;
+//│           dummy = res2;
 //│           this.pc = 3;
 //│           continue contLoop;
 //│         }
@@ -231,17 +231,17 @@ sum(10000)
 //│     toString() { return "Cont$(" + this.pc + ")"; }
 //│   };
 //│   diff = globalThis.Predef.__stackDepth - globalThis.Predef.__stackOffset;
-//│   scrut1 = diff >= globalThis.Predef.__stackLimit;
-//│   scrut2 = globalThis.Predef.__stackHandler !== undefined;
-//│   scrut3 = scrut1 && scrut2;
-//│   if (scrut3 === true) {
+//│   diffGeqLimit = diff >= globalThis.Predef.__stackLimit;
+//│   handlerExists = globalThis.Predef.__stackHandler !== undefined;
+//│   scrut1 = diffGeqLimit && handlerExists;
+//│   if (scrut1 === true) {
 //│     res2 = globalThis.Predef.__stackHandler.perform();
 //│     if (res2 instanceof globalThis.Predef.__EffectSig.class) {
 //│       res2.tail.next = new Cont$.class(0);
 //│       res2.tail = res2.tail.next;
 //│       return res2;
 //│     }
-//│     tmp3 = res2;
+//│     dummy = res2;
 //│   }
 //│   scrut = n == 0;
 //│   if (scrut === true) {
