@@ -37,9 +37,8 @@ class Lol(h) with
 //│             tmp = res;
 //│             res1 = Predef.print(tmp);
 //│             if (res1 instanceof globalThis.Predef.__EffectSig.class) {
-//│               res1.tail.next = this;
 //│               this.pc = 1;
-//│               return res1;
+//│               return globalThis.Predef.__appendInCont(res1, this);
 //│             }
 //│             this.pc = 1;
 //│             continue contLoop;

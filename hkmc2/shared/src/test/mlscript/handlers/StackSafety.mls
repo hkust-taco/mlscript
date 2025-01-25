@@ -204,9 +204,8 @@ sum(10000)
 //│             globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
 //│             res3 = sum3(tmp);
 //│             if (res3 instanceof globalThis.Predef.__EffectSig.class) {
-//│               res3.tail.next = this;
 //│               this.pc = 1;
-//│               return res3;
+//│               return globalThis.Predef.__appendInCont(res3, this);
 //│             }
 //│             this.pc = 1;
 //│             continue contLoop;

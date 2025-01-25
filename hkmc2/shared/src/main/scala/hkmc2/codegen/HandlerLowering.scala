@@ -68,6 +68,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   private val contClsPath: Path = predefPath.selN(Tree.Ident("__Cont")).selN(Tree.Ident("class"))
   private val retClsPath: Path = predefPath.selN(Tree.Ident("__Return")).selN(Tree.Ident("class"))
   private val retClsSym: ClassSymbol = predefSym.tree.definedSymbols.get("__Return").get.asCls.get
+  private val appendInContPath: Path = predefPath.selN(Tree.Ident("__appendInCont"))
   private val mkEffectPath: Path = predefPath.selN(Tree.Ident("__mkEffect"))
   private val handleBlockImplPath: Path = predefPath.selN(Tree.Ident("__handleBlockImpl"))
   
@@ -447,9 +448,8 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
         override def applyBlock(b: Block): Block = b match
           case ReturnCont(res, uid) =>
             blockBuilder
-              .assignFieldN(res.asPath.tail, nextIdent, clsSym.asPath)
               .assign(pcSymbol, Value.Lit(Tree.IntLit(uid)))
-              .ret(res.asPath)
+              .ret(SimpleCall(appendInContPath, res.asPath :: clsSym.asPath :: Nil))
           case StateTransition(uid) =>
             blockBuilder
               .assign(pcSymbol, Value.Lit(Tree.IntLit(uid)))

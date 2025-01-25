@@ -61,8 +61,7 @@ fun permutations_impl(gen, l1, l2) =
     [f, ...t] do
       handle genWithPrefix = Generator with
         fun produce(result)(resume) =
-          result.unshift(f)
-          gen.produce(result)
+          gen.produce([f, ...result])
           let x = resume(())
           x
       permutations_impl(genWithPrefix, [], l1.concat(t))
@@ -73,7 +72,6 @@ fun permutations_impl(gen, l1, l2) =
 fun permutations(gen, l) =
   permutations_impl(gen, [], l)
 
-// FIXME: wrong code
 let res = []
 handle gen = Generator with
   fun produce(result)(resume) =
@@ -81,4 +79,11 @@ handle gen = Generator with
     let x = resume(())
     x
 in permutations(gen, [1, 2, 3])
-//│ res = [ [ 1, 2, 3 ], [ 1, 3, 2 ] ]
+//│ > [
+//│ >   [ 1, 2, 3 ],
+//│ >   [ 1, 3, 2 ],
+//│ >   [ 2, 1, 3 ],
+//│ >   [ 2, 3, 1 ],
+//│ >   [ 3, 1, 2 ],
+//│ >   [ 3, 2, 1 ]
+//│ res = ]
