@@ -96,7 +96,7 @@ let box = Box(0)
 
 :expect 5120
 fun f(h, box, n) =
-  if n <= 1 then 
+  if n <= 1 then
     h.perform()
   else
     handle h2 = Eff with
@@ -114,18 +114,46 @@ f(h, box, 10)
 box.n
 //│ = 5120
 
+handle h1 = Eff with
+  fun perform()(k) =
+    print("h1")
+    let x = k()
+    print("h1 end")
+    x
+handle h2 = Eff with
+  fun perform()(k) =
+    print("h2")
+    h1.perform()
+    let x = k()
+    print("h2 end")
+    x
+h2.perform()
+h2.perform()
+h2.perform()
+//│ > h2
+//│ > h1
+//│ > h2
+//│ > h1
+//│ > h2
+//│ > h1
+//│ > h2 end
+//│ > h2 end
+//│ > h1 end
+//│ > h1 end
+//│ > h1 end
+
 
 handle h1 = Eff with
-  fun perform()(k) = 
+  fun perform()(k) =
     print("h1")
     k()
 handle h2 = Eff with
-  fun perform()(k) = 
+  fun perform()(k) =
     print("h2")
     h1.perform()
     k()
 handle h3 = Eff with
-  fun perform()(k) = 
+  fun perform()(k) =
     print("h3")
     h2.perform()
     k()
@@ -151,7 +179,7 @@ h1.perform()
 while i < 10 do 
   handle h2 = Eff with
     fun perform()(k) =
-      set d = d + 1 
+      set d = d + 1
       k()
   h2.perform()
   set i = i + 1
