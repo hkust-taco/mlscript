@@ -475,3 +475,14 @@ hi(0)
 //│ ═══[RUNTIME ERROR] Error: This code requires effect handler instrumentation but was compiled without it.
 
 
+:fixme
+:stackSafe 1000
+:handler
+:expect 100010000
+fun sum(n) =
+  if n == 0 then 0
+  else
+    n + sum(n - 1)
+fun bad() = sum(10000) + sum(10000)
+bad()
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
