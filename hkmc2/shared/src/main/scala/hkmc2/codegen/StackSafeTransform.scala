@@ -73,14 +73,12 @@ class StackSafeTransform(depthLimit: Int)(using State):
             let curOffset = stackOffset
             stackOffset = stackDepth
             let ret = resume()
-            // stackOffset = curOffset // this line is wrong
             ret
         */
         blockBuilder
           .assign(curOffsetSym, stackOffsetPath)
           .assignFieldN(predefPath, STACK_OFFSET_IDENT, stackDepthPath)
           .assign(handlerRes, Call(Value.Ref(resumeSym), Nil)(true))
-          // .assignFieldN(predefPath, STACK_OFFSET_IDENT, curOffsetSym.asPath) // this line is wrong
           .ret(handlerRes.asPath)
       ) :: Nil,
       blockBuilder
