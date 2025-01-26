@@ -83,6 +83,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
       ) :: Nil,
       blockBuilder
         .assignFieldN(predefPath, STACK_LIMIT_IDENT, intLit(depthLimit)) // set stackLimit before call
+        .assignFieldN(predefPath, STACK_OFFSET_IDENT, intLit(0)) // set stackOffset = 0 before call
         .assignFieldN(predefPath, STACK_DEPTH_IDENT, intLit(1)) // set stackDepth = 1 before call
         .assignFieldN(predefPath, STACK_HANDLER_IDENT, handlerSym.asPath) // assign stack handler
         .rest(HandleBlockReturn(res)),
