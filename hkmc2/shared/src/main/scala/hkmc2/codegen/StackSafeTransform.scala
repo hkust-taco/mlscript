@@ -35,12 +35,19 @@ class StackSafeTransform(depthLimit: Int)(using State):
         .ret(res)
     else
       val tmp = TempSymbol(None, "tmp")
+      val offsetGtDepth = TempSymbol(None, "offsetGtDepth")
       val prevDepth = TempSymbol(None, "prevDepth")
       blockBuilder
         .assign(prevDepth, stackDepthPath)
         .assignFieldN(predefPath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(1)))
         .assign(tmp, res)
         .assignFieldN(predefPath, STACK_DEPTH_IDENT, prevDepth.asPath)
+        .assign(offsetGtDepth, op("<", prevDepth.asPath, stackOffsetPath))
+        .ifthen(
+          offsetGtDepth.asPath, 
+          Case.Lit(Tree.BoolLit(true)), 
+          blockBuilder.assignFieldN(predefPath, STACK_OFFSET_IDENT, prevDepth.asPath).end
+          )
         .rest(f(tmp.asPath))
 
   def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block) =
@@ -66,14 +73,14 @@ class StackSafeTransform(depthLimit: Int)(using State):
             let curOffset = stackOffset
             stackOffset = stackDepth
             let ret = resume()
-            stackOffset = curOffset
+            // stackOffset = curOffset // this line is wrong
             ret
         */
         blockBuilder
           .assign(curOffsetSym, stackOffsetPath)
           .assignFieldN(predefPath, STACK_OFFSET_IDENT, stackDepthPath)
           .assign(handlerRes, Call(Value.Ref(resumeSym), Nil)(true))
-          .assignFieldN(predefPath, STACK_OFFSET_IDENT, curOffsetSym.asPath)
+          // .assignFieldN(predefPath, STACK_OFFSET_IDENT, curOffsetSym.asPath) // this line is wrong
           .ret(handlerRes.asPath)
       ) :: Nil,
       blockBuilder

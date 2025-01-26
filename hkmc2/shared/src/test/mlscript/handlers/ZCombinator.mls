@@ -23,7 +23,7 @@ fact(10)
 fact(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
-
+:stackSafe 1000
 fun mkrec(g) =
   selfApp of self =>
     g of y => selfApp(self)(y)
@@ -91,16 +91,16 @@ let fact =
 :expect 3628800
 :stackSafe 5
 fact(10)
-//│ > 2 0
-//│ > 4 0
-//│ > 6 5
-//│ > 8 5
-//│ > 10 10
-//│ > 12 10
-//│ > 14 10
-//│ > 16 15
-//│ > 18 15
-//│ > 20 20
+//│ > 2 993
+//│ > 4 1
+//│ > 6 4
+//│ > 8 4
+//│ > 10 8
+//│ > 12 8
+//│ > 14 12
+//│ > 16 12
+//│ > 18 16
+//│ > 20 16
 //│ > resumed: 1
 //│ > resumed: 2
 //│ > resumed: 3
