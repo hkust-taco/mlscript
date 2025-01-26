@@ -55,7 +55,6 @@ class StackSafeTransform(depthLimit: Int)(using State):
     val handlerSym = TempSymbol(None, "stackHandler")
     val resSym = TempSymbol(None, "res")
     val handlerRes = TempSymbol(None, "res")
-    val curOffsetSym = TempSymbol(None, "curOffset")
     
     val clsSym = ClassSymbol(
       Tree.TypeDef(syntax.Cls, Tree.Error(), N, N),
@@ -70,13 +69,11 @@ class StackSafeTransform(depthLimit: Int)(using State):
         BlockMemberSymbol("perform", Nil), resumeSym, ParamList(ParamListFlags.empty, Nil, N) :: Nil,
         /* 
           fun perform() =
-            let curOffset = stackOffset
             stackOffset = stackDepth
             let ret = resume()
             ret
         */
         blockBuilder
-          .assign(curOffsetSym, stackOffsetPath)
           .assignFieldN(predefPath, STACK_OFFSET_IDENT, stackDepthPath)
           .assign(handlerRes, Call(Value.Ref(resumeSym), Nil)(true))
           .ret(handlerRes.asPath)
