@@ -49,7 +49,7 @@ end Subst
 import Subst.subst
 
 
-class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, State, Ctx):
+class Lowering(lowerHandlers: Bool, stackLimit: Option[Int], lift: Bool)(using TL, Raise, State, Ctx):
   
   def returnedTerm(t: st)(using Subst): Block = term(t)(Ret)
   
@@ -507,8 +507,13 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
       case None => res
       case Some(lim) => StackSafeTransform(lim).transformTopLevel(res)
     
-    if lowerHandlers then HandlerLowering().translateTopLevel(stackSafe)
-    else stackSafe
+    val hdlr = 
+      if lowerHandlers then HandlerLowering().translateTopLevel(stackSafe) 
+      else stackSafe
+    
+    if lift then Lifter().transform(hdlr)
+    else hdlr
+
   
   def program(main: st): Program =
     def go(acc: Ls[Local -> Str], trm: st): Program =

@@ -37,7 +37,7 @@ abstract class LlirDiffMaker extends BbmlDiffMaker:
     super.processTerm(trm, inImport)
     if llir.isSet then
       val low = ltl.givenIn:
-        codegen.Lowering(lowerHandlers = false, stackLimit = None)
+        codegen.Lowering(lowerHandlers = false, stackLimit = None, lift = false)
       val le = low.program(trm)
       given Scope = Scope.empty
       val fresh = Fresh()

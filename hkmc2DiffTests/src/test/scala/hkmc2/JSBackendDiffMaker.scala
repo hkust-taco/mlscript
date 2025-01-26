@@ -25,6 +25,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val noSanityCheck = NullaryCommand("noSanityCheck")
   val traceJS = NullaryCommand("traceJS")
   val handler = NullaryCommand("handler")
+  val lift = NullaryCommand("lift")
   val expect = Command("expect"): ln =>
     ln.trim
   val stackSafe = Command("stackSafe"): ln =>
@@ -77,7 +78,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         case d => outerRaise(d)
       given Elaborator.Ctx = curCtx
       val low = ltl.givenIn:
-        new codegen.Lowering(lowerHandlers = handler.isSet, stackLimit = stackLimit)
+        new codegen.Lowering(lowerHandlers = handler.isSet, stackLimit = stackLimit, lift = lift.isSet)
           with codegen.LoweringSelSanityChecks(instrument = false)
           with codegen.LoweringTraceLog(instrument = false)
       val jsb = new JSBuilder
@@ -92,7 +93,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     if js.isSet && !showingJSYieldedCompileError then
       given Elaborator.Ctx = curCtx
       val low = ltl.givenIn:
-        new codegen.Lowering(lowerHandlers = handler.isSet, stackLimit = stackLimit)
+        new codegen.Lowering(lowerHandlers = handler.isSet, stackLimit = stackLimit, lift = lift.isSet)
           with codegen.LoweringSelSanityChecks(noSanityCheck.isUnset)
           with codegen.LoweringTraceLog(traceJS.isSet)
       val jsb = new JSBuilder
