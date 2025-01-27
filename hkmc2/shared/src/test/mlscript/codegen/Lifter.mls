@@ -39,6 +39,29 @@ f(1, 2)
 //│ f1(1, 2)
 //│ = 5
 
+// don't touch g if not needed
+:sjs
+fun f(used1, unused1) =
+  let used2 = unused1
+  fun g(g_arg) = g_arg + 1
+  let unused2 = 2
+  g(used2) + unused2
+f(1, 2)
+//│ JS (unsanitized):
+//│ let f3, g3;
+//│ g3 = function g(g$_arg) {
+//│   return g$_arg + 1;
+//│ };
+//│ f3 = function f(used1, unused1) {
+//│   let used2, unused2, tmp;
+//│   used2 = unused1;
+//│   unused2 = 2;
+//│   tmp = g3(used2);
+//│   return tmp + unused2;
+//│ };
+//│ f3(1, 2)
+//│ = 5
+
 :todo
 :sjs
 fun f(used1, unused1) =
@@ -58,15 +81,14 @@ f(1, 2).get()
 //│ null
 
 // preserve order
-:todo
 :sjs
 fun f(a1, a2, a3, a4, a5, a6) =
   fun g = a1 + a2 + a3 + a4 + a5 + a6  
   g
 f(1,2,3,4,5,6)
 //│ JS (unsanitized):
-//│ let f3, g3, f$capture3;
-//│ g3 = function g(f$capture4) {
+//│ let f5, g5, f$capture3;
+//│ g5 = function g(f$capture4) {
 //│   return () => {
 //│     let tmp, tmp1, tmp2, tmp3;
 //│     tmp = f$capture4.a10$ + f$capture4.a21$;
@@ -88,14 +110,14 @@ f(1,2,3,4,5,6)
 //│   }
 //│   toString() { return "f$capture(" + this.a10$ + ", " + this.a21$ + ", " + this.a32$ + ", " + this.a43$ + ", " + this.a54$ + ", " + this.a65$ + ")"; }
 //│ };
-//│ f3 = function f(a1, a2, a3, a4, a5, a6) {
+//│ f5 = function f(a1, a2, a3, a4, a5, a6) {
 //│   let tmp, capture, g$this;
 //│   capture = new f$capture3(a1, a2, a3, a4, a5, a6);
-//│   g$this = g3(capture) ?? null;
+//│   g$this = g5(capture) ?? null;
 //│   tmp = g$this();
 //│   return tmp;
 //│ };
-//│ f3(1, 2, 3, 4, 5, 6)
+//│ f5(1, 2, 3, 4, 5, 6)
 //│ = 21
 
 :expect '01'

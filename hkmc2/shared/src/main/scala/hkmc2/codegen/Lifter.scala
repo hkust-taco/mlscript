@@ -200,8 +200,6 @@ class Lifter(using State):
     val captureCtx = ctx
       .addLocalPaths(varsMap)
       .addCapturePath(f.sym, captureSym.asPath)
-    
-    println(captureCtx.capturePaths)
 
     val thisUsed = ctx.usedLocals(f.sym)
 
@@ -210,27 +208,29 @@ class Lifter(using State):
     val newDefns = defns.flatMap: d =>
       // add parameters for previous defns
       val includedCaptures = (f :: captureCtx.prevDefns).collect:
-        case d if needsCapture(f, d) => (d, VarSymbol(Tree.Ident(d.sym.nme + "$capture")))
-      
-      val extraParams = includedCaptures.map:
-        case (d, sym) => Param(FldFlags.empty, sym, None)
+        case prev if needsCapture(prev, d) => (prev, VarSymbol(Tree.Ident(prev.sym.nme + "$capture")))
 
-      bmsCaptures.addOne(d.sym -> includedCaptures.map(_._1.sym))
-      
-      val newCapturePaths = includedCaptures.map:
-        case (d, sym) => d.sym -> sym.asPath
-      .toMap
+      if includedCaptures.isEmpty then d :: Nil
+      else
+        val extraParams = includedCaptures.map:
+          case (d, sym) => Param(FldFlags.empty, sym, None)
 
-      d match
-      case d: FunDefn => 
-        val newDef = FunDefn(
-          f.owner, d.sym, PlainParamList(extraParams) :: d.params, d.body
-        )
-        liftDefnsFn(newDef, captureCtx.addDefn(f).replCapturePaths(newCapturePaths))
-      case d: ClsLikeDefn => d :: Nil
-        // TODO
-        // liftDefnsCls(d)
-      case _ => d :: Nil
+        bmsCaptures.addOne(d.sym -> includedCaptures.map(_._1.sym))
+        
+        val newCapturePaths = includedCaptures.map:
+          case (d, sym) => d.sym -> sym.asPath
+        .toMap
+
+        d match
+        case d: FunDefn => 
+          val newDef = FunDefn(
+            f.owner, d.sym, PlainParamList(extraParams) :: d.params, d.body
+          )
+          liftDefnsFn(newDef, captureCtx.addDefn(f).replCapturePaths(newCapturePaths))
+        case d: ClsLikeDefn => d :: Nil
+          // TODO
+          // liftDefnsCls(d)
+        case _ => d :: Nil
 
     val withSymbols = bmsCaptures.map: (bms, captures) =>
       (bms, captures, VarSymbol(Tree.Ident(bms.nme + "$this")))
@@ -247,9 +247,6 @@ class Lifter(using State):
 
     val start = withSymbols.foldRight(blockBuilder):
       case ((bms, captures, sym), acc) => 
-        println("CAPTURES:")
-        println(captures)
-        println(newCtx.capturePaths)
         acc.assign(sym, Call(bms.asPath, captures.map(newCtx.getCapturePath(_).get.asArg))(false))
 
     val transformer = new BlockTransformerShallow(SymbolSubst()):
