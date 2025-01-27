@@ -1,0 +1,51 @@
+:lift
+:js
+
+:sjs
+fun f(used1, unused1) =
+  let used2 = unused1
+  fun g(g_arg) =
+    let used3 = 2
+    fun h = used3
+    used1 + h
+  let unused2 = 2
+  class Test() with 
+    fun get() = used2 + used1
+  Test()
+f(1, 2).get()
+//│ JS (unsanitized):
+//│ let f1, tmp, f$closure1;
+//│ f$closure1 = function f$closure(used10$1, used21$1) { return new f$closure.class(used10$1, used21$1); };
+//│ f$closure1.class = class f$closure {
+//│   constructor(used10$, used21$) {
+//│     this.used10$ = used10$;
+//│     this.used21$ = used21$;
+//│   }
+//│   toString() { return "f$closure(" + this.used10$ + ", " + this.used21$ + ")"; }
+//│ };
+//│ f1 = function f(used1, unused1) {
+//│   let Test, g, used2, unused2;
+//│   g = function g(g$_arg) {
+//│     let h, used3, tmp1;
+//│     h = function h() {
+//│       return used3;
+//│     };
+//│     used3 = 2;
+//│     tmp1 = h();
+//│     return used1 + tmp1;
+//│   };
+//│   used2 = unused1;
+//│   unused2 = 2;
+//│   Test = function Test() { return new Test.class(); };
+//│   Test.class = class Test {
+//│     constructor() {}
+//│     get() {
+//│       return used2 + used1;
+//│     }
+//│     toString() { return "Test(" +  + ")"; }
+//│   };
+//│   return Test();
+//│ };
+//│ tmp = f1(1, 2);
+//│ tmp.get() ?? null
+//│ = 3
