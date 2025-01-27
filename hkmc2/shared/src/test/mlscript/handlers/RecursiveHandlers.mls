@@ -272,9 +272,8 @@ str
 //│               tmp9 = res5;
 //│               res6 = h1.perform(null) ?? null;
 //│               if (res6 instanceof globalThis.Predef.__EffectSig.class) {
-//│                 res6.tail.next = this;
 //│                 this.pc = 1;
-//│                 return res6;
+//│                 return globalThis.Predef.__appendInCont(res6, this);
 //│               }
 //│               this.pc = 1;
 //│               continue contLoop;

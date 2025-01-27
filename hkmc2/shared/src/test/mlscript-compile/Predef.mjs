@@ -78,12 +78,12 @@ const Predef$class = class Predef {
       }
       toString() { return "__Cont(" + this.next + ")"; }
     };
-    this.__List = function __List(next1) { return new __List.class(next1); };
-    this.__List.class = class __List {
+    this.__TailList = function __TailList(next1) { return new __TailList.class(next1); };
+    this.__TailList.class = class __TailList {
       constructor(next) {
         this.next = next;
       }
-      toString() { return "__List(" + this.next + ")"; }
+      toString() { return "__TailList(" + this.next + ")"; }
     };
     this.__ListWithTail = function __ListWithTail(next1, tail1) { return new __ListWithTail.class(next1, tail1); };
     this.__ListWithTail.class = class __ListWithTail {
@@ -321,6 +321,25 @@ const Predef$class = class Predef {
     res.tail = res;
     return res;
   } 
+  __appendInCont(eff, cont) {
+    let scrut, scrut1, tmp, tmp1;
+    scrut = eff.tail;
+    if (scrut instanceof this.__TailList.class) {
+      scrut1 = cont.next !== null;
+      if (scrut1 === true) {
+        throw globalThis.Error("unexpected handler continuation");
+      } else {
+        tmp = null;
+      }
+      cont.next = eff.tail.next;
+      eff.tail.next = cont;
+      tmp1 = null;
+    } else {
+      eff.tail.next = cont;
+      tmp1 = null;
+    }
+    return eff;
+  } 
   __mkEffect(handler, handlerFun) {
     let res, tmp, tmp1;
     tmp = this.__mkListWithTail();
@@ -331,7 +350,7 @@ const Predef$class = class Predef {
   } 
   __handleBlockImpl(cur, handler1) {
     let handleBlock, nxt, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
-    tmp = this.__List(null);
+    tmp = this.__TailList(null);
     tmp1 = new this.__HandleBlock.class(tmp, null, null, handler1);
     handleBlock = tmp1;
     tmp2 = cur.handleBlockList.append(handleBlock) ?? null;
@@ -420,7 +439,7 @@ const Predef$class = class Predef {
   } 
   __resume(cur2, tail) {
     return (value) => {
-      let scrut, cont, scrut1, scrut2, scrut3, scrut4, scrut5, scrut6, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
+      let scrut, cont1, scrut1, scrut2, scrut3, scrut4, scrut5, scrut6, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
       scrut = cur2.resumed;
       if (scrut === true) {
         throw globalThis.Error("Multiple resumption");
@@ -428,15 +447,15 @@ const Predef$class = class Predef {
         tmp = null;
       }
       cur2.resumed = true;
-      cont = cur2.next;
+      cont1 = cur2.next;
       tmp10: while (true) {
-        if (cont instanceof this.__Cont.class) {
-          tmp1 = cont.resume(value) ?? null;
+        if (cont1 instanceof this.__Cont.class) {
+          tmp1 = cont1.resume(value) ?? null;
           value = tmp1;
           if (value instanceof this.__EffectSig.class) {
-            scrut1 = value.tail.next !== cont;
+            scrut1 = value.tail.next !== cont1;
             if (scrut1 === true) {
-              scrut2 = cont.next !== null;
+              scrut2 = cont1.next !== null;
               if (scrut2 === true) {
                 scrut3 = value.tail.next !== null;
                 if (scrut3 === true) {
@@ -453,7 +472,7 @@ const Predef$class = class Predef {
             }
             scrut4 = value.tail.next === null;
             if (scrut4 === true) {
-              value.tail.next = cont.next;
+              value.tail.next = cont1.next;
               tmp4 = null;
             } else {
               tmp4 = null;
@@ -469,7 +488,7 @@ const Predef$class = class Predef {
             }
             return value;
           } else {
-            cont = cont.next;
+            cont1 = cont1.next;
             tmp6 = null;
           }
           tmp7 = tmp6;

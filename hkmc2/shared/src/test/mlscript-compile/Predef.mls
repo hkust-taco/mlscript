@@ -118,7 +118,7 @@ class Test with
 abstract class __Cont(next) with
   fun resume(value)
 
-class __List(next)
+class __TailList(next)
 
 class __ListWithTail(next, tail) with
   fun append(elem) =
@@ -134,13 +134,25 @@ class __HandleBlock(contHead, lastHandlerCont, next, handler)
 class __EffectSig(next, tail, handleBlockList, resumed, handler, handlerFun)
 class __Return(value)
 
+fun __appendInCont(eff, cont) =
+  if eff.tail is __TailList then
+    // do prepend instead
+    if cont.next !== null do
+      throw Error("unexpected handler continuation")
+    set
+      cont.next = eff.tail.next
+      eff.tail.next = cont
+  else
+    set eff.tail.next = cont
+  eff
+
 fun __mkEffect(handler, handlerFun) =
   let res = new __EffectSig(null, null, __mkListWithTail(), false, handler, handlerFun)
   set res.tail = res
   res
 
 fun __handleBlockImpl(cur, handler) =
-  let handleBlock = new __HandleBlock(__List(null), null, null, handler)
+  let handleBlock = new __HandleBlock(__TailList(null), null, null, handler)
   cur.handleBlockList.append(handleBlock)
   while cur is
     __EffectSig then
