@@ -76,9 +76,6 @@ fun f(used1, unused1) =
   Test()
 f(1, 2).get()
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: used2 (class hkmc2.semantics.VarSymbol)
- //│ f$closure1 = function f$closure(used20$1) { return new f$closure.class(used20$1); };
-//│ JS (unsanitized):
-//│ null
 
 // preserve order
 :sjs
