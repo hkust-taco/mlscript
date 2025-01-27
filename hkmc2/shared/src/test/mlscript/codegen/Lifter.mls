@@ -49,3 +49,6 @@ f(1, 2).get()
 //│ tmp = f1(1, 2);
 //│ tmp.get() ?? null
 //│ = 3
+ //│ f$closure1 = function f$closure(used20$1) { return new f$closure.class(used20$1); };
+//│ JS (unsanitized):
+//│ null

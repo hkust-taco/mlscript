@@ -17,12 +17,13 @@ import scala.collection.mutable.Map as MutMap
 // rewritten as functions (lambdas will be removed from the IR soon).
 class Lifter(using State):
   
-  // Describes the free variables of a function
-  case class FreeVars(params: Set[Local], bodyVars: Set[Local])
-  case class ParamOwner(f: FunDefn, isParam: Bool)
+  // Describes the free variables of a function.
+  // vars: The free variables that are accessed or mutated by nested classes/functions.
+  // mutated: The free variables that are mutated, but not accessed, by nested classes/functions.
+  case class FreeVars(vars: Set[Local], mutated: Set[Local])
 
   // use mutable sets locally to avoid reconstructing everything
-  private case class FreeVarsMut(params: MutSet[Local], bodyVars: MutSet[Local])
+  private case class FreeVarsMut(vars: MutSet[Local], mutated: MutSet[Local])
 
   type UsedLocalsMap = Map[FunDefn, FreeVars]
   
@@ -35,39 +36,34 @@ class Lifter(using State):
   // We do this once for every top-level function definition instead
   // of once for every function definition so that we only traverse
   // the tree once.
-  private def findUsedLocalsImpl(f: FunDefn, lookup: Map[Local, ParamOwner]): Map[FunDefn, FreeVarsMut] =
-    val params = f.params.flatMap(_.paramSyms).toSet
-    val bodyVars = (f.body.definedVars -- params).collect:
+  private def findUsedLocalsImpl(f: FunDefn, lookup: Map[Local, FunDefn]): Map[FunDefn, FreeVarsMut] =
+    val definedVars = (f.body.definedVars ++ f.params.flatMap(_.paramSyms)).collect:
       case s: FlowSymbol => s
 
-    println(f.sym)
-    println(params)
-    println(bodyVars)
+    println(definedVars)
 
     // add this function's locals to the lookup map
-    val lookupNext = lookup 
-      ++ params.map(s => (s -> ParamOwner(f, true))) 
-      ++ bodyVars.map(s => (s -> ParamOwner(f, false)))
+    val lookupNext = lookup ++ definedVars.map(_ -> f)
 
     // collect all function definitions
-    val vars: MutMap[FunDefn, FreeVarsMut] = MutMap.from(lookupNext.map:
-      case _ -> ParamOwner(f, _) => f -> FreeVarsMut(MutSet(), MutSet())
+    val retMap: MutMap[FunDefn, FreeVarsMut] = MutMap.from(lookupNext.map:
+      case _ -> f => f -> FreeVarsMut(MutSet(), MutSet())
     )
 
     // add this function in case this function has no locals
-    if !vars.contains(f) then vars.addOne(f -> FreeVarsMut(MutSet(), MutSet()))
+    if !retMap.contains(f) then retMap.addOne(f -> FreeVarsMut(MutSet(), MutSet()))
 
     def merge(next: Map[FunDefn, FreeVarsMut]) =
-      for f -> (v @ FreeVarsMut(params, bodyVars)) <- next do vars.get(f) match
-        case None => vars.addOne(f -> v)
+      for f -> (v @ FreeVarsMut(vars, mutated)) <- next do retMap.get(f) match
+        case None => retMap.addOne(f -> v)
         case Some(value) =>
-          for l <- params do vars(f).params.add(l)
-          for l <- bodyVars do vars(f).bodyVars.add(l)
+          for l <- vars do retMap(f).vars.add(l)
+          for l <- mutated do retMap(f).mutated.add(l)
     
-    def addLocal(l: Local) = lookup.get(l) match
-      case Some(ParamOwner(f, isParam)) =>
-        if isParam then vars(f).params.add(l)
-        else vars(f).bodyVars.add(l)
+    def addLocal(l: Local, mut: Bool) = lookup.get(l) match
+      case Some(f) =>
+        if mut then retMap(f).mutated.add(l)
+        retMap(f).vars.add(l)
       case None => ()
 
     val walker = new BlockTransformerShallow(SymbolSubst()):
@@ -79,20 +75,20 @@ class Lifter(using State):
           for f <- c.methods do merge(findUsedLocalsImpl(f, lookupNext))
           super.applyBlock(b)
         case Assign(lhs, _, rest) =>
-          addLocal(lhs)
+          addLocal(lhs, true) // TODO: for now, we just assume if a symbol is assigned to, then it's mutable
           super.applyBlock(b) 
         case _ => super.applyBlock(b)
 
       override def applyValue(v: Value): Value = v match
         case Value.Ref(l) => 
-          addLocal(l)
+          addLocal(l, false)
           super.applyValue(v)
         
         case _ => super.applyValue(v)
     
     walker.applyBlock(f.body)
 
-    vars.toMap
+    retMap.toMap
 
   def findUsedLocals(b: Block): UsedLocalsMap = 
     var usedMap: UsedLocalsMap = Map()
@@ -100,7 +96,8 @@ class Lifter(using State):
       override def applyBlock(b: Block): Block = b match
         case Define(f: FunDefn, rest) =>
           val m = findUsedLocalsImpl(f, Map()).map:
-            case f -> FreeVarsMut(params, bodyVars) => f -> FreeVars(params.toSet, bodyVars.toSet)
+            case f -> FreeVarsMut(vars, mutated) => 
+              f -> FreeVars(vars.toSet, mutated.toSet)
           usedMap ++= m
           super.applyBlock(b)
         case _ => super.applyBlock(b)
@@ -115,8 +112,7 @@ class Lifter(using State):
       Tree.Ident(nme)
     )
 
-    val FreeVars(paramVars, bodyVars) = usedMap(f)
-    val vars = paramVars ++ bodyVars
+    val FreeVars(vars, mutated) = usedMap(f)
 
     val fresh = FreshInt()
 
@@ -135,16 +131,12 @@ class Lifter(using State):
     (defn, varsMap)
 
 
-  private def lift(f: FunDefn) =
+  private def liftFn(f: FunDefn) =
     val (blk, defns) = f.body.floatOutDefns
 
   // top-level
   def transform(b: Block) =
     given usedMap: UsedLocalsMap = findUsedLocals(b)
-    // for debugging
-    println(usedMap.map:
-      case a -> b => a.sym -> b
-    )
 
     val walker = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
@@ -152,6 +144,3 @@ class Lifter(using State):
           Define(createClosureCls(f)._1, Define(f, applyBlock(rest)))
         case _ => super.applyBlock(b)
     walker.applyBlock(b)
-
-    
-      
