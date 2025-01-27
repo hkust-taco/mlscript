@@ -6,6 +6,45 @@ fun f(used1, unused1) =
   let used2 = unused1
   fun g(g_arg) =
     let used3 = 2
+    used1 + used2
+  let unused2 = 2
+  g(used2) + unused2
+f(1, 2)
+//│ JS (unsanitized):
+//│ let f1, g1, f$capture1;
+//│ g1 = function g(f$capture2) {
+//│   return (g$_arg) => {
+//│     let used3;
+//│     used3 = 2;
+//│     return f$capture2.used10$ + f$capture2.used21$;
+//│   };
+//│ };
+//│ f$capture1 = function f$capture(used10$1, used21$1) { return new f$capture.class(used10$1, used21$1); };
+//│ f$capture1.class = class f$capture {
+//│   constructor(used10$, used21$) {
+//│     this.used10$ = used10$;
+//│     this.used21$ = used21$;
+//│   }
+//│   toString() { return "f$capture(" + this.used10$ + ", " + this.used21$ + ")"; }
+//│ };
+//│ f1 = function f(used1, unused1) {
+//│   let unused2, tmp, capture, g$this;
+//│   capture = new f$capture1(used1);
+//│   g$this = g1(capture) ?? null;
+//│   capture.used21$ = unused1;
+//│   unused2 = 2;
+//│   tmp = g$this(capture.used21$);
+//│   return tmp + unused2;
+//│ };
+//│ f1(1, 2)
+//│ = 5
+
+:todo
+:sjs
+fun f(used1, unused1) =
+  let used2 = unused1
+  fun g(g_arg) =
+    let used3 = 2
     fun h = used3
     used1 + h
   let unused2 = 2
@@ -13,42 +52,70 @@ fun f(used1, unused1) =
     fun get() = used2 + used1
   Test()
 f(1, 2).get()
-//│ JS (unsanitized):
-//│ let f1, tmp, f$closure1;
-//│ f$closure1 = function f$closure(used10$1, used21$1) { return new f$closure.class(used10$1, used21$1); };
-//│ f$closure1.class = class f$closure {
-//│   constructor(used10$, used21$) {
-//│     this.used10$ = used10$;
-//│     this.used21$ = used21$;
-//│   }
-//│   toString() { return "f$closure(" + this.used10$ + ", " + this.used21$ + ")"; }
-//│ };
-//│ f1 = function f(used1, unused1) {
-//│   let Test, g, used2, unused2;
-//│   g = function g(g$_arg) {
-//│     let h, used3, tmp1;
-//│     h = function h() {
-//│       return used3;
-//│     };
-//│     used3 = 2;
-//│     tmp1 = h();
-//│     return used1 + tmp1;
-//│   };
-//│   used2 = unused1;
-//│   unused2 = 2;
-//│   Test = function Test() { return new Test.class(); };
-//│   Test.class = class Test {
-//│     constructor() {}
-//│     get() {
-//│       return used2 + used1;
-//│     }
-//│     toString() { return "Test(" +  + ")"; }
-//│   };
-//│   return Test();
-//│ };
-//│ tmp = f1(1, 2);
-//│ tmp.get() ?? null
-//│ = 3
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: used2 (class hkmc2.semantics.VarSymbol)
  //│ f$closure1 = function f$closure(used20$1) { return new f$closure.class(used20$1); };
 //│ JS (unsanitized):
 //│ null
+
+// preserve order
+:todo
+:sjs
+fun f(a1, a2, a3, a4, a5, a6) =
+  fun g = a1 + a2 + a3 + a4 + a5 + a6  
+  g
+f(1,2,3,4,5,6)
+//│ JS (unsanitized):
+//│ let f3, g3, f$capture3;
+//│ g3 = function g(f$capture4) {
+//│   return () => {
+//│     let tmp, tmp1, tmp2, tmp3;
+//│     tmp = f$capture4.a10$ + f$capture4.a21$;
+//│     tmp1 = tmp + f$capture4.a32$;
+//│     tmp2 = tmp1 + f$capture4.a43$;
+//│     tmp3 = tmp2 + f$capture4.a54$;
+//│     return tmp3 + f$capture4.a65$;
+//│   };
+//│ };
+//│ f$capture3 = function f$capture(a10$1, a21$1, a32$1, a43$1, a54$1, a65$1) { return new f$capture.class(a10$1, a21$1, a32$1, a43$1, a54$1, a65$1); };
+//│ f$capture3.class = class f$capture {
+//│   constructor(a10$, a21$, a32$, a43$, a54$, a65$) {
+//│     this.a10$ = a10$;
+//│     this.a21$ = a21$;
+//│     this.a32$ = a32$;
+//│     this.a43$ = a43$;
+//│     this.a54$ = a54$;
+//│     this.a65$ = a65$;
+//│   }
+//│   toString() { return "f$capture(" + this.a10$ + ", " + this.a21$ + ", " + this.a32$ + ", " + this.a43$ + ", " + this.a54$ + ", " + this.a65$ + ")"; }
+//│ };
+//│ f3 = function f(a1, a2, a3, a4, a5, a6) {
+//│   let tmp, capture, g$this;
+//│   capture = new f$capture3(a1, a2, a3, a4, a5, a6);
+//│   g$this = g3(capture) ?? null;
+//│   tmp = g$this();
+//│   return tmp;
+//│ };
+//│ f3(1, 2, 3, 4, 5, 6)
+//│ = 21
+
+:expect '01'
+class Tuple(a, b)
+fun f() =
+  let a = 0
+  fun g() = set a = 1
+  fun h() = a
+  Tuple(g, h)
+let ret = f()
+let f1 = ret.a
+let f2 = ret.b
+let x = f2().toString()
+f1()
+let y = f2().toString()
+x + y
+//│ = '01'
+//│ f1 = [Function (anonymous)]
+//│ f2 = [Function (anonymous)]
+//│ ret = Tuple { a: [Function (anonymous)], b: [Function (anonymous)] }
+//│ x = '0'
+//│ y = '1'
+
