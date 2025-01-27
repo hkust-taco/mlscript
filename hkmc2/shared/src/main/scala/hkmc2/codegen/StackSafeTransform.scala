@@ -47,7 +47,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
           offsetGtDepth.asPath, 
           Case.Lit(Tree.BoolLit(true)), 
           blockBuilder.assignFieldN(predefPath, STACK_OFFSET_IDENT, prevDepth.asPath).end
-          )
+        )
         .rest(f(tmp.asPath))
 
   def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block) =
