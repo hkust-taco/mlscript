@@ -11,7 +11,7 @@ import hkmc2.codegen.llir.FreshInt
 
 import scala.collection.mutable.ListBuffer as ListBuffer
 import scala.collection.mutable.Map as MutMap
-import scala.collection.mutable.Set as MutSet
+import scala.collection.mutable.LinkedHashSet
 
 // Lifts classes and functions to the top-level.
 // Assumes the input block does not have any `HandleBlock`s and lamdbas are
@@ -24,9 +24,8 @@ class Lifter(using State):
   case class FreeVars(vars: List[Local], mutated: List[Local])
 
   // use mutable sets locally to avoid reconstructing everything
-  // use the list to maintain the order (for a more readable output when debugging)
-  // and a list to make sure it's unique
-  private case class FreeVarsMut(varsSet: MutSet[Local], vars: ListBuffer[Local], mutated: MutSet[Local])
+  // linked hash sets preserve order
+  private case class FreeVarsMut(vars: LinkedHashSet[Local], mutated: LinkedHashSet[Local])
 
   class UsedLocalsMap(mp: Map[BlockMemberSymbol, FreeVars]):
     def apply(f: BlockMemberSymbol) = mp(f)
@@ -100,31 +99,24 @@ class Lifter(using State):
 
     // collect all function definitions
     val retMap: MutMap[FunDefn, FreeVarsMut] = MutMap.from(lookupNext.map:
-      case _ -> f => f -> FreeVarsMut(MutSet.empty, ListBuffer.empty, MutSet.empty)
+      case _ -> f => f -> FreeVarsMut(LinkedHashSet.empty, LinkedHashSet.empty)
     )
 
     // add this function in case this function has no locals
-    if !retMap.contains(f) then retMap.addOne(f -> FreeVarsMut(MutSet.empty, ListBuffer.empty, MutSet.empty))
+    if !retMap.contains(f) then retMap.addOne(f -> FreeVarsMut(LinkedHashSet.empty, LinkedHashSet.empty))
 
     // merge recursive call results
     def merge(next: Map[FunDefn, FreeVarsMut]) =
-      for f -> (v @ FreeVarsMut(varsSet, vars, mutated)) <- next do 
-        retMap.get(f) match
+      for f -> (v @ FreeVarsMut(vars, mutated)) <- next do retMap.get(f) match
         case None => retMap.addOne(f -> v)
         case Some(value) =>
-          val freeVars = retMap(f)
-          for l <- vars if !freeVars.varsSet.contains(l) do 
-            freeVars.varsSet.addOne(l)
-            freeVars.vars.addOne(l)
-          for l <- mutated do freeVars.mutated.addOne(l)
+          for l <- vars do retMap(f).vars.addOne(l)
+          for l <- mutated do retMap(f).mutated.addOne(l)
     
     def addLocal(l: Local, mut: Bool) = lookup.get(l) match
       case Some(f) =>
-        val freeVars = retMap(f)
-        if mut then freeVars.mutated.addOne(l)
-        if !freeVars.varsSet.contains(l) then
-          freeVars.varsSet.addOne(l)
-          freeVars.vars.addOne(l)
+        if mut then retMap(f).mutated.addOne(l)
+        retMap(f).vars.addOne(l)
       case None => ()
 
     val walker = new BlockTransformerShallow(SymbolSubst()):
@@ -157,7 +149,7 @@ class Lifter(using State):
       override def applyBlock(b: Block): Block = b match
         case Define(f: FunDefn, rest) =>
           val m = findUsedLocalsImpl(f, Map.empty).map:
-            case f -> FreeVarsMut(varsSet, vars, mutated) => 
+            case f -> FreeVarsMut(vars, mutated) => 
               f -> FreeVars(vars.toList, mutated.toList)
           usedMap ++= m
           super.applyBlock(b)
