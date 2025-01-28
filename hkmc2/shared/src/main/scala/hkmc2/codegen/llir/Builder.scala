@@ -139,9 +139,11 @@ final class LlirBuilder(tl: TraceLogger)(fresh: Fresh, fnUid: FreshInt, clsUid: 
   private def bClsLikeDef(e: ClsLikeDefn)(using ctx: Ctx)(using Raise, Scope): ClassInfo =
     trace[ClassInfo](s"bClsLikeDef begin", x => s"bClsLikeDef end: ${x.show}"):
       val ClsLikeDefn(
-        _own, _isym, sym, kind, paramsOpt, parentSym, methods, privateFields, publicFields, preCtor, ctor) = e
+        _own, _isym, sym, kind, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor) = e
       if !ctx.is_top_level then
         errStop(msg"Non top-level definition ${sym.nme} not supported")
+      else if !auxParams.isEmpty then
+        errStop(msg"The class ${sym.nme} has auxiliary parameters, which are not yet supported")
       else
         val clsDefn = sym.defn.getOrElse(die)
         val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
@@ -300,7 +302,10 @@ final class LlirBuilder(tl: TraceLogger)(fresh: Fresh, fnUid: FreshInt, clsUid: 
   
   def registerClasses(b: Block)(using ctx: Ctx)(using Raise, Scope): Ctx =
     b match
-    case Define(cd @ ClsLikeDefn(_own, isym, sym, kind, _paramsOpt, parentSym, methods, privateFields, publicFields, preCtor, ctor), rest) =>
+    case Define(cd @ ClsLikeDefn(_own, isym, sym, kind, _paramsOpt, auxParams,
+      parentSym, methods, privateFields, publicFields, preCtor, ctor), rest) =>
+      if !auxParams.isEmpty then
+        errStop(msg"The class ${sym.nme} has auxiliary parameters, which are not yet supported")
       val c = bClsLikeDef(cd)
       ctx.class_acc += c
       val new_ctx = ctx.addClassName(sym, Name(c.name)).addClassName(isym, Name(c.name))

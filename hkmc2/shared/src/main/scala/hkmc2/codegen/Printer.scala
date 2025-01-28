@@ -63,13 +63,14 @@ object Printer:
       doc"fun ${sym.nme}${docParams} { #{  # ${docBody} #}  # }"
     case ValDefn(owner, k, sym, rhs) =>
       doc"val ${sym.nme} = ${mkDocument(rhs)}"
-    case ClsLikeDefn(own, _, sym, k, paramsOpt, parentSym, methods, privateFields, publicFields, preCtor, ctor) =>
+    case ClsLikeDefn(own, _, sym, k, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor) =>
       def optFldBody(t: semantics.TermDefinition) =
         t.body match
           case Some(x) => doc" = ..."
           case None => doc""
       val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
-      val ctorParams = clsParams.map(p => summon[Scope].allocateName(p))
+      val auxClsParams = auxParams.flatMap(_.paramSyms)
+      val ctorParams = (clsParams ++ auxClsParams).map(p => summon[Scope].allocateName(p))
       val privFields = privateFields.map(x => doc"let ${x.id.name} = ...").mkDocument(sep = doc" # ")
       val pubFields = publicFields.map(x => doc"${x.k.str} ${x.sym.nme}${optFldBody(x)}").mkDocument(sep = doc" # ")
       val docPrivFlds = if privateFields.isEmpty then doc"" else doc" # ${privFields}"

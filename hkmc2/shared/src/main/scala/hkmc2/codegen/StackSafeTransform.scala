@@ -134,10 +134,10 @@ class StackSafeTransform(depthLimit: Int)(using State):
     trivial
 
   def rewriteCls(defn: ClsLikeDefn): ClsLikeDefn = 
-    val ClsLikeDefn(owner, isym, sym, k, paramsOpt, 
+    val ClsLikeDefn(owner, isym, sym, k, paramsOpt, auxParams,
       parentPath, methods, privateFields, publicFields, preCtor, ctor) = defn
     ClsLikeDefn(
-      owner, isym, sym, k, paramsOpt, parentPath, methods.map(rewriteFn), privateFields,
+      owner, isym, sym, k, paramsOpt, auxParams, parentPath, methods.map(rewriteFn), privateFields,
       publicFields, rewriteBlk(preCtor), rewriteBlk(ctor)
     )
 

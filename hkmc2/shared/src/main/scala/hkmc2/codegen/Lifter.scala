@@ -181,7 +181,7 @@ class Lifter(using State):
       None, clsSym, BlockMemberSymbol(nme, Nil), 
       syntax.Cls,
       S(PlainParamList(varsList.map(s => Param(FldFlags.empty, varsMap(s), None)))),
-      None, Nil, Nil, Nil, End(), End()
+      Nil, None, Nil, Nil, Nil, End(), End()
     )
 
     (defn, varsMap, varsList)
@@ -264,7 +264,7 @@ class Lifter(using State):
         case Value.Ref(b: BlockMemberSymbol) => newCtx.getBmsPath(b) match
           case None => super.applyPath(p)
           case Some(value) => value
-        
+
         case Value.Ref(l) => 
           newCtx.getLocalClosPath(l) match
           case None => super.applyPath(p)

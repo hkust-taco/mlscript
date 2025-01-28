@@ -162,9 +162,9 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
                 Return(Lam(ps, block), false)
             val (params, bodyDoc) = setupFunction(some(sym.nme), ps, result)
             doc"${getVar(sym)} = function ${sym.nme}($params) ${ braced(bodyDoc) };"
-          case ClsLikeDefn(ownr, isym, sym, kind, paramsOpt, par, mtds, privFlds, _pubFlds, preCtor, ctor) =>
+          case ClsLikeDefn(ownr, isym, sym, kind, paramsOpt, auxParams, par, mtds, privFlds, _pubFlds, preCtor, ctor) =>
             // * Note: `_pubFlds` is not used because in JS, fields are not declared
-            val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
+            val clsParams = paramsOpt.fold(Nil)(_.paramSyms) ++ auxParams.flatMap(_.paramSyms)
             val ctorParams = clsParams.map(p => p -> scope.allocateName(p))
             val privs =
               val scp = isym.asInstanceOf[InnerSymbol].privatesScope
@@ -217,11 +217,29 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
                 doc"const $clsTmp = ${clsJS}; ${v} = new ${clsTmp
                   }; # ${v}.class = $clsTmp;"
             else
+              val paramsAll = paramsOpt match
+                case None => auxParams
+                case Some(value) => value :: auxParams
+              
+              val fun = paramsAll match
+                case ps_ :: pss_ =>
+                  val (ps, _) = setupFunction(some(sym.nme), ps_, End())
+                  val pss = pss_.map(setupFunction(N, _, End())._1)
+                  val paramsDoc = pss.foldLeft(ps):
+                    case (doc, ps) => doc"${doc}, ${ps}"
+                  val bod = doc"return new ${sym.nme}.class($paramsDoc);"
+                  val funBod = pss.foldRight(bod):
+                    case (psDoc, doc) => doc"($psDoc) => ${braced(doc)}"
+                  S(doc"function ${sym.nme}($ps) { $funBod }")
+                case Nil => N
+              
+              /*
               val fun = paramsOpt match
                 case S(params) =>
                   val (ps, bod) = setupFunction(some(sym.nme), params, End())
                   S(doc"function ${sym.nme}($ps) { return new ${sym.nme}.class($ps); }")
                 case N => N
+              */
               ownr match
               case S(owner) =>
                 val ths = mkThis(owner)

@@ -258,7 +258,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int], lift: Bool)(using T
           case s => R(s)
         val publicFlds = rest2.collect:
           case td @ TermDefinition(k = (_: syntax.Val)) => td
-        Define(ClsLikeDefn(cls.owner, cls.sym, cls.bsym, cls.kind, cls.paramsOpt, N,
+        Define(ClsLikeDefn(cls.owner, cls.sym, cls.bsym, cls.kind, cls.paramsOpt, Nil, N,
             mtds.flatMap: td =>
               td.body.map: bod =>
                 val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))

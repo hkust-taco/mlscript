@@ -387,7 +387,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       h.cls,
       BlockMemberSymbol(h.cls.id.name, Nil),
       syntax.Cls,
-      N,
+      N, Nil,
       S(h.par), handlers, Nil, Nil,
       Assign(freshTmp(), SimpleCall(Value.Ref(State.builtinOpsMap("super")), Nil), End()), End())
     
@@ -505,6 +505,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       BlockMemberSymbol(clsSym.nme, Nil),
       syntax.Cls,
       S(PlainParamList(Param(FldFlags.empty, pcVar, N) :: Nil)),
+      Nil,
       S(contClsPath),
       resumeFnDef :: Nil,
       Nil,
