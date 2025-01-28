@@ -44,7 +44,7 @@ class Lifter(using State):
       )
     
 
-  class LifterCtx(
+  case class LifterCtx(
     val usedLocals: UsedLocalsMap, 
     val localSyms: Map[Local, VarSymbol],
     val prevDefns: List[FunDefn],
@@ -62,20 +62,17 @@ class Lifter(using State):
     def getLocalSym(l: Local) = localSyms(l)
     // the path to a local value containing this function with the captures already applied
     def getBmsPath(b: BlockMemberSymbol) = bmsPaths.get(b)
-
-    def addDefn(f: FunDefn) = 
-      LifterCtx(usedLocals, localSyms, f :: prevDefns, capturePaths, bmsReqdCaptures, bmsPaths)
-    def addLocalPaths(m: Map[Local, VarSymbol]) =
-      LifterCtx(usedLocals, localSyms ++ m, prevDefns, capturePaths, bmsReqdCaptures, bmsPaths)
-    def replCapturePaths(paths: Map[BlockMemberSymbol, Path]) = 
-      LifterCtx(usedLocals, localSyms, prevDefns, paths, bmsReqdCaptures, bmsPaths)
-    def addCapturePath(src: BlockMemberSymbol, path: Path) = 
-      LifterCtx(usedLocals, localSyms, prevDefns, capturePaths + (src -> path), bmsReqdCaptures, bmsPaths)
-    def addReqdCaptures(mp: Map[BlockMemberSymbol, List[BlockMemberSymbol]]) =
-      LifterCtx(usedLocals, localSyms, prevDefns, capturePaths, bmsReqdCaptures ++ mp, bmsPaths)
-    def addBmsPaths(paths: Map[BlockMemberSymbol, Path]) = 
-      LifterCtx(usedLocals, localSyms, prevDefns, capturePaths, bmsReqdCaptures, bmsPaths ++ paths)
-  
+    
+    def addDefn(f: FunDefn) = copy(prevDefns = f :: prevDefns)
+    def addLocalPaths(m: Map[Local, VarSymbol]) = copy(localSyms = localSyms ++ m)
+    def replCapturePaths(paths: Map[BlockMemberSymbol, Path]) = copy(capturePaths = paths)
+    def addCapturePath(src: BlockMemberSymbol, path: Path) = copy(capturePaths = capturePaths + (src -> path))
+    def addReqdCaptures(mp: Map[BlockMemberSymbol, List[BlockMemberSymbol]]) = copy(bmsReqdCaptures = bmsReqdCaptures ++ mp)
+    def addBmsPaths(paths: Map[BlockMemberSymbol, Path]) = copy(bmsPaths = bmsPaths ++ paths)
+    
+  object LifterCtx:
+    def empty = LifterCtx(UsedLocalsMap(Map.empty), Map.empty, Nil, Map.empty, Map.empty, Map.empty)
+    def withLocals(u: UsedLocalsMap) = empty.copy(usedLocals = u)
   def getVars(f: FunDefn): Set[Local] = 
     (f.body.definedVars ++ f.params.flatMap(_.paramSyms)).collect:
       case s: FlowSymbol => s
@@ -204,10 +201,7 @@ class Lifter(using State):
       .addLocalPaths(varsMap)
       .addCapturePath(f.sym, captureSym.asPath)
 
-    val thisUsed = ctx.usedLocals(f.sym)
-
     val bmsCaptures: ListBuffer[(BlockMemberSymbol, List[BlockMemberSymbol])] = ListBuffer.empty
-
     val newDefns = defns.flatMap: d =>
       // add parameters for previous defns
       val includedCaptures = (f :: captureCtx.prevDefns).collect:
@@ -235,8 +229,10 @@ class Lifter(using State):
           // liftDefnsCls(d)
         case _ => d :: Nil
 
+    // creates the triple:
+    // (bms, that bms's required captures, the symbol to that bms)
     val withSymbols = bmsCaptures.map: (bms, captures) =>
-      (bms, captures, VarSymbol(Tree.Ident(bms.nme + "$this")))
+      (bms, captures, FlowSymbol(bms.nme + "$this"))
     
     val bmsPathsMap = withSymbols.map:
       case (bms, captures, sym) => bms -> sym.asPath
@@ -264,15 +260,13 @@ class Lifter(using State):
         case Value.Ref(b: BlockMemberSymbol) => newCtx.getBmsPath(b) match
           case None => super.applyPath(p)
           case Some(value) => value
-
         case Value.Ref(l) => 
           newCtx.getLocalClosPath(l) match
           case None => super.applyPath(p)
           case Some(closPath) => Select(closPath, newCtx.getLocalSym(l).id)(N)
-        
         case _ => super.applyPath(p)
 
-    if thisUsed.vars.size == 0 then
+    if ctx.usedLocals(f.sym).vars.size == 0 then
       FunDefn(f.owner, f.sym, f.params, start.rest(transformer.applyBlock(blk))) :: newDefns
     else
       val paramsSet = f.params.flatMap(_.paramSyms)
@@ -286,7 +280,7 @@ class Lifter(using State):
 
   // top-level
   def transform(b: Block) =
-    val ctx = LifterCtx(findUsedLocals(b), Map.empty, Nil, Map.empty, Map.empty, Map.empty)
+    val ctx = LifterCtx.withLocals(findUsedLocals(b))
 
     val walker = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
