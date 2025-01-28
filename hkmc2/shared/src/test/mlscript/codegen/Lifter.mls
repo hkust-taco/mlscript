@@ -30,9 +30,9 @@ f(1, 2)
 //│ f1 = function f(used1, unused1) {
 //│   let unused2, tmp, capture, g$this;
 //│   capture = new f$capture1(used1);
-//│   g$this = g1(capture) ?? null;
 //│   capture.used21$ = unused1;
 //│   unused2 = 2;
+//│   g$this = g1(capture) ?? null;
 //│   tmp = g$this(capture.used21$);
 //│   return tmp + unused2;
 //│ };
@@ -124,7 +124,7 @@ fun f() =
   let a = 0
   fun g() = set a = 1
   fun h() = a
-  Tuple(g, h)
+  Tuple(g, h) 
 let ret = f()
 let f1 = ret.a
 let f2 = ret.b
@@ -153,11 +153,11 @@ x + y
 //│   toString() { return "f$capture(" + this.a0$ + ")"; }
 //│ };
 //│ f7 = function f() {
-//│   let capture, h$this, g$this;
+//│   let capture, g$this, h$this;
 //│   capture = new f$capture5();
+//│   capture.a0$ = 0;
 //│   g$this = g7(capture) ?? null;
 //│   h$this = h1(capture) ?? null;
-//│   capture.a0$ = 0;
 //│   return Tuple1(g$this, h$this);
 //│ };
 //│ Tuple1 = function Tuple(a1, b1) { return new Tuple.class(a1, b1); };

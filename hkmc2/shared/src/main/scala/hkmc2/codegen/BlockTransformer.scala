@@ -225,3 +225,19 @@ class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst
         then b else HandleBlock(l2, res2, par2, cls2, hdr2, bod, rst2)
     case _ => super.applyBlock(b)
 
+// does not traverse into any other block
+class BlockTransformerNoRec(subst: SymbolSubst) extends BlockTransformerShallow(subst):
+  override def applyBlock(b: Block): Block = b match
+    case Match(scrut, arms, dflt, rest) => 
+      val scrut2 = applyPath(scrut)
+      if (scrut is scrut2) then b else Match(scrut2, arms, dflt, rest)
+    case Assign(lhs, rhs, rest) => 
+      val lhs2 = lhs.subst
+      val rhs2 = applyResult(rhs)
+      if (lhs is lhs2) && (rhs is rhs2) then b else Assign(lhs2, rhs2, rest)
+    case AssignField(lhs, ident, rhs, rest) => 
+      val lhs2 = applyPath(lhs)
+      val rhs2 = applyResult(rhs)
+      if rhs is rhs2 then b else AssignField(lhs2, ident, rhs2, rest)(N)
+    case _: Label | _: Begin | _: TryBlock | _: Define | _: HandleBlock | _: End => b
+    case _: Return | _: Break | _: Continue | _: HandleBlockReturn | _: Throw => super.applyBlock(b)
