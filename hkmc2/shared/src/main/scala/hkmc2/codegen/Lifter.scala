@@ -150,8 +150,9 @@ class Lifter(using State):
         case Define(c: ClsLikeDefn, rest) =>
           for f <- c.methods do merge(findUsedLocalsImpl(f, lookupNext))
           super.applyBlock(b)
-        case Assign(lhs, _, rest) =>
-          addLocal(lhs, true) // TODO: for now, we just assume if a symbol is assigned to, then it's mutable
+        case Assign(lhs, rhs, rest) =>
+          addLocal(lhs, true) // TODO: when proper immutable variables have been added, refactor this
+          applyResult(rhs)
           super.applyBlock(b) 
         case _ => super.applyBlock(b)
 
@@ -213,6 +214,19 @@ class Lifter(using State):
 
   def liftDefnsCls(c: ClsLikeDefn, ctx: LifterCtx): List[Defn] = ???
 
+  private val clsLikeCache: MutMap[Local, Set[Local]] = MutMap.empty
+  def getInnerSymbols(c: ClsLikeDefn) = clsLikeCache.get(c.isym) match
+    case Some(value) => value
+    case None =>
+      val ret: Set[Local] = c.freeVars.collect:
+        case s: InnerSymbol => s
+        case t: TermSymbol if t.owner.isDefined => t.owner.get
+      clsLikeCache.addOne(c.isym -> ret)
+      ret
+
+  private def needsClsCapture(captureCls: ClsLikeDefn, candidate: ClsLikeDefn) =
+    getInnerSymbols(candidate).contains(captureCls.isym)
+
   private def needsCapture(captureFn: FunDefn, candidate: Defn, ctx: LifterCtx) =
     val candVars = candidate.freeVars
     val captureFnVars = ctx.usedLocals(captureFn.sym).mutated.toSet
@@ -240,7 +254,7 @@ class Lifter(using State):
   object Lifted:
     def of(d: Defn, ed: List[Defn]) = Lifted(d, ed, N)
 
-  inline def liftOutDefn(base: FunDefn, d: Defn, ctx: LifterCtx): Lifted =
+  inline def liftOutDefn(base: Defn, d: Defn, ctx: LifterCtx): Lifted =
     @nowarn("msg=New anonymous class definition will be duplicated at each inline site") // inlined only at one place
     val includedCaptures = ctx.prevFnDefns.collect:
       case prev if needsCapture(prev, d, ctx) => (prev, VarSymbol(Tree.Ident(prev.sym.nme + "$capture")))
@@ -274,8 +288,9 @@ class Lifter(using State):
         val (lifted, extra) = liftDefnsInFn(newDef, newCtx)
         Lifted.of(lifted, extra).withInfo(includedCaptures.map(_._1.sym), includedLocals.map(_._1))
       case d: ClsLikeDefn => Lifted.of(d, Nil)
-        // TODO
-        // liftDefnsCls(d)
+        // val newDef = ClsLikeDefn(
+        //   base.owner, d.isym, d.sym, d.k, 
+        // )
       case _ => Lifted.of(d, Nil)
 
   def createCall(sym: BlockMemberSymbol, ctx: LifterCtx) : Call =
