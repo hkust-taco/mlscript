@@ -302,7 +302,6 @@ f()
 
 :sjs
 :expect 2
-:fixme
 fun f(arg) =
   fun g(n) = if n <= 0 then arg else h(n-1)
   fun h(n) = if n <= 0 then arg else g(n-1)
@@ -312,25 +311,27 @@ f(2)
 //│ let f20, g19, h7;
 //│ g19 = function g(arg) {
 //│   return (n) => {
-//│     let scrut, tmp21;
+//│     let scrut, tmp21, h$this;
 //│     scrut = n <= 0;
 //│     if (scrut === true) {
 //│       return arg;
 //│     } else {
 //│       tmp21 = n - 1;
-//│       return h7(tmp21);
+//│       h$this = h7(arg) ?? null;
+//│       return h$this(tmp21);
 //│     }
 //│   };
 //│ };
 //│ h7 = function h(arg) {
 //│   return (n) => {
-//│     let scrut, tmp21;
+//│     let scrut, tmp21, g$this;
 //│     scrut = n <= 0;
 //│     if (scrut === true) {
 //│       return arg;
 //│     } else {
 //│       tmp21 = n - 1;
-//│       return g19(tmp21);
+//│       g$this = g19(arg) ?? null;
+//│       return g$this(tmp21);
 //│     }
 //│   };
 //│ };
@@ -340,5 +341,4 @@ f(2)
 //│   return h$this(5);
 //│ };
 //│ f20(2)
-//│ ═══[RUNTIME ERROR] Expected: 2, got: [Function (anonymous)]
-//│ = [Function (anonymous)]
+//│ = 2
