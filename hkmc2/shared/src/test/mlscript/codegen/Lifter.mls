@@ -290,7 +290,6 @@ fun f() =
 f()
 //│ ═══[RUNTIME ERROR] Expected: 2, got: null
 
-:fixme
 :expect 2
 fun f() =
   let y = 1
@@ -299,5 +298,4 @@ fun f() =
   set y = 2
   x()
 f()
-//│ ═══[RUNTIME ERROR] Expected: 2, got: 1
-//│ = 1
+//│ = 2

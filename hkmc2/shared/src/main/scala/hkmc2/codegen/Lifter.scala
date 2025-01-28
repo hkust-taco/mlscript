@@ -13,6 +13,7 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.LinkedHashSet
 import scala.collection.mutable.LinkedHashMap
 import scala.collection.mutable.Map as MutMap
+import scala.collection.mutable.Set as MutSet
 import scala.annotation.nowarn
 
 // Lifts classes and functions to the top-level.
@@ -126,12 +127,20 @@ class Lifter(using State):
         case Some(value) =>
           for l <- vars do retMap(f).vars.addOne(l)
           for l <- mutated do retMap(f).mutated.addOne(l)
-    
+
+    // tracks if the locals here have been mutated more than once in this function
+    val assignedOnce: MutSet[Local] = MutSet.empty
+    val assignedTwice: MutSet[Local] = MutSet.empty
+
     def addLocal(l: Local, mut: Bool) = lookup.get(l) match
       case Some(f) =>
         if mut then retMap(f).mutated.addOne(l)
         retMap(f).vars.addOne(l)
-      case None => ()
+      case None => if mut then
+        if assignedOnce.contains(l) then
+          assignedTwice.add(l)
+        else
+          assignedOnce.add(l)
 
     val walker = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
@@ -154,6 +163,9 @@ class Lifter(using State):
         case _ => super.applyValue(v)
     
     walker.applyBlock(f.body)
+
+    // add mutable locals
+    retMap(f).mutated ++= retMap(f).vars.intersect(assignedTwice)
 
     retMap.toMap
 
