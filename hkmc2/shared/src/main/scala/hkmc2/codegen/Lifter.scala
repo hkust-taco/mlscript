@@ -43,9 +43,8 @@ class Lifter(using State):
     def from(mp: Map[FunDefn, FreeVars]) =
       UsedLocalsMap(mp.map:
         case a -> b => a.sym -> b  
-      )
-    
-
+      ) 
+  
   case class LifterCtx(
     val usedLocals: UsedLocalsMap, 
     val localSyms: Map[Local, VarSymbol],
@@ -273,12 +272,20 @@ class Lifter(using State):
         acc.assign(sym, Call(bms.asPath, captures.map(newCtx.getCapturePath(_).get.asArg))(false))
     
     // replaces references to BlockMemberSymbols as needed with fresh variables, and
-    // returns the mapping from the symbol to the required variable
+    // returns the mapping from the symbol to the required variable. When possible,
+    // it also directly rewrites Results.
     def rewriteBms(b: Block, ctx: LifterCtx) =
       val syms: LinkedHashMap[BlockMemberSymbol, Local] = LinkedHashMap.empty
 
       val walker = new BlockTransformerNoRec(SymbolSubst()):
         // only scan within the block. don't traverse
+
+        // if possible, directly create the call and replace the result with it
+        override def applyResult(r: Result): Result = r match
+          case Value.Ref(l: BlockMemberSymbol) if ctx.bmsReqdCaptures.contains(l) => createCall(l, ctx) 
+          case _ => super.applyResult(r)
+        
+        // otherwise, there's no choice but to create the call earlier
         override def applyValue(v: Value): Value = v match
           case Value.Ref(l: BlockMemberSymbol) if ctx.bmsReqdCaptures.contains(l) => 
             val newSym = syms.get(l) match

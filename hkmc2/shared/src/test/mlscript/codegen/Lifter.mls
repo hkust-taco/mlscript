@@ -39,6 +39,45 @@ f(1, 2)
 //│ f1(1, 2)
 //│ = 5
 
+:sjs
+fun f(used1, unused1) =
+  let used2 = unused1
+  fun g(g_arg) =
+    let used3 = 2
+    used1 + used2
+  let unused2 = 2
+  let foo = g
+  foo(used2) + unused2
+f(1, 2)
+//│ JS (unsanitized):
+//│ let f3, g3, f$capture3;
+//│ g3 = function g(f$capture4) {
+//│   return (g$_arg) => {
+//│     let used3;
+//│     used3 = 2;
+//│     return f$capture4.used10$ + f$capture4.used21$;
+//│   };
+//│ };
+//│ f$capture3 = function f$capture(used10$1, used21$1) { return new f$capture.class(used10$1, used21$1); };
+//│ f$capture3.class = class f$capture {
+//│   constructor(used10$, used21$) {
+//│     this.used10$ = used10$;
+//│     this.used21$ = used21$;
+//│   }
+//│   toString() { return "f$capture(" + this.used10$ + ", " + this.used21$ + ")"; }
+//│ };
+//│ f3 = function f(used1, unused1) {
+//│   let unused2, foo, tmp, capture;
+//│   capture = new f$capture3(used1);
+//│   capture.used21$ = unused1;
+//│   unused2 = 2;
+//│   foo = g3(capture) ?? null;
+//│   tmp = foo(capture.used21$) ?? null;
+//│   return tmp + unused2;
+//│ };
+//│ f3(1, 2)
+//│ = 5
+
 // don't touch g if not needed
 :sjs
 fun f(used1, unused1) =
@@ -48,18 +87,18 @@ fun f(used1, unused1) =
   g(used2) + unused2
 f(1, 2)
 //│ JS (unsanitized):
-//│ let f3, g3;
-//│ g3 = function g(g$_arg) {
+//│ let f5, g5;
+//│ g5 = function g(g$_arg) {
 //│   return g$_arg + 1;
 //│ };
-//│ f3 = function f(used1, unused1) {
+//│ f5 = function f(used1, unused1) {
 //│   let used2, unused2, tmp;
 //│   used2 = unused1;
 //│   unused2 = 2;
-//│   tmp = g3(used2);
+//│   tmp = g5(used2);
 //│   return tmp + unused2;
 //│ };
-//│ f3(1, 2)
+//│ f5(1, 2)
 //│ = 5
 
 :todo
@@ -84,19 +123,19 @@ fun f(a1, a2, a3, a4, a5, a6) =
   g
 f(1,2,3,4,5,6)
 //│ JS (unsanitized):
-//│ let f5, g5, f$capture3;
-//│ g5 = function g(f$capture4) {
+//│ let f7, g7, f$capture5;
+//│ g7 = function g(f$capture6) {
 //│   return () => {
 //│     let tmp, tmp1, tmp2, tmp3;
-//│     tmp = f$capture4.a10$ + f$capture4.a21$;
-//│     tmp1 = tmp + f$capture4.a32$;
-//│     tmp2 = tmp1 + f$capture4.a43$;
-//│     tmp3 = tmp2 + f$capture4.a54$;
-//│     return tmp3 + f$capture4.a65$;
+//│     tmp = f$capture6.a10$ + f$capture6.a21$;
+//│     tmp1 = tmp + f$capture6.a32$;
+//│     tmp2 = tmp1 + f$capture6.a43$;
+//│     tmp3 = tmp2 + f$capture6.a54$;
+//│     return tmp3 + f$capture6.a65$;
 //│   };
 //│ };
-//│ f$capture3 = function f$capture(a10$1, a21$1, a32$1, a43$1, a54$1, a65$1) { return new f$capture.class(a10$1, a21$1, a32$1, a43$1, a54$1, a65$1); };
-//│ f$capture3.class = class f$capture {
+//│ f$capture5 = function f$capture(a10$1, a21$1, a32$1, a43$1, a54$1, a65$1) { return new f$capture.class(a10$1, a21$1, a32$1, a43$1, a54$1, a65$1); };
+//│ f$capture5.class = class f$capture {
 //│   constructor(a10$, a21$, a32$, a43$, a54$, a65$) {
 //│     this.a10$ = a10$;
 //│     this.a21$ = a21$;
@@ -107,14 +146,14 @@ f(1,2,3,4,5,6)
 //│   }
 //│   toString() { return "f$capture(" + this.a10$ + ", " + this.a21$ + ", " + this.a32$ + ", " + this.a43$ + ", " + this.a54$ + ", " + this.a65$ + ")"; }
 //│ };
-//│ f5 = function f(a1, a2, a3, a4, a5, a6) {
+//│ f7 = function f(a1, a2, a3, a4, a5, a6) {
 //│   let tmp, capture, g$this;
-//│   capture = new f$capture3(a1, a2, a3, a4, a5, a6);
-//│   g$this = g5(capture) ?? null;
+//│   capture = new f$capture5(a1, a2, a3, a4, a5, a6);
+//│   g$this = g7(capture) ?? null;
 //│   tmp = g$this();
 //│   return tmp;
 //│ };
-//│ f5(1, 2, 3, 4, 5, 6)
+//│ f7(1, 2, 3, 4, 5, 6)
 //│ = 21
 
 :expect '01'
@@ -133,30 +172,30 @@ f1()
 let y = f2().toString()
 x + y
 //│ JS (unsanitized):
-//│ let f7, Tuple1, g7, h1, ret, f11, f21, x, y, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, f$capture5;
-//│ g7 = function g(f$capture6) {
+//│ let f9, Tuple1, g9, h1, ret, f11, f21, x, y, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, f$capture7;
+//│ g9 = function g(f$capture8) {
 //│   return () => {
-//│     f$capture6.a0$ = 1;
+//│     f$capture8.a0$ = 1;
 //│     return null;
 //│   };
 //│ };
-//│ h1 = function h(f$capture6) {
+//│ h1 = function h(f$capture8) {
 //│   return () => {
-//│     return f$capture6.a0$;
+//│     return f$capture8.a0$;
 //│   };
 //│ };
-//│ f$capture5 = function f$capture(a0$1) { return new f$capture.class(a0$1); };
-//│ f$capture5.class = class f$capture {
+//│ f$capture7 = function f$capture(a0$1) { return new f$capture.class(a0$1); };
+//│ f$capture7.class = class f$capture {
 //│   constructor(a0$) {
 //│     this.a0$ = a0$;
 //│   }
 //│   toString() { return "f$capture(" + this.a0$ + ")"; }
 //│ };
-//│ f7 = function f() {
+//│ f9 = function f() {
 //│   let capture, g$this, h$this;
-//│   capture = new f$capture5();
+//│   capture = new f$capture7();
 //│   capture.a0$ = 0;
-//│   g$this = g7(capture) ?? null;
+//│   g$this = g9(capture) ?? null;
 //│   h$this = h1(capture) ?? null;
 //│   return Tuple1(g$this, h$this);
 //│ };
@@ -168,7 +207,7 @@ x + y
 //│   }
 //│   toString() { return "Tuple(" + this.a + ", " + this.b + ")"; }
 //│ };
-//│ tmp = f7();
+//│ tmp = f9();
 //│ ret = tmp;
 //│ f11 = ret.a;
 //│ f21 = ret.b;
