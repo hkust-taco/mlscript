@@ -155,7 +155,7 @@ x + y
 //│ };
 //│ f9 = function f() {
 //│   let capture, g$this, h$this;
-//│   capture = new f$capture1();
+//│   capture = new f$capture1(null);
 //│   capture.a0$ = 0;
 //│   g$this = g9(capture) ?? null;
 //│   h$this = h1(capture) ?? null;
@@ -512,7 +512,7 @@ f()
 //│ };
 //│ f34 = function f() {
 //│   let tmp25, capture, f$this;
-//│   capture = new f$capture13();
+//│   capture = new f$capture13(null);
 //│   capture.x0$ = 1;
 //│   f$this = f35(capture) ?? null;
 //│   tmp25 = f$this();
@@ -578,3 +578,65 @@ class B()
 //│     rest = Return: \
 //│     res = Lit of UnitLit of true
 //│     implct = true
+
+:sjs
+fun g() =
+  let y = 0
+  fun f(x) =
+    let k = 4
+    set y = 2
+    // set x = 3
+    // just a dummy function to force class generation
+    fun h() =
+      set k = 5
+      set x = 4
+      x + y
+    x
+  f
+g()(1)
+//│ JS (unsanitized):
+//│ let g35, f37, h13, tmp27, g$capture1, f$capture15;
+//│ h13 = function h(f$capture16, g$capture2) {
+//│   return () => {
+//│     f$capture16.k0$ = 5;
+//│     f$capture16.x1$ = 4;
+//│     return f$capture16.x1$ + g$capture2.y0$;
+//│   };
+//│ };
+//│ f$capture15 = function f$capture(k0$1, x1$1) {
+//│   return new f$capture.class(k0$1, x1$1);
+//│ };
+//│ f$capture15.class = class f$capture {
+//│   constructor(k0$, x1$) {
+//│     this.k0$ = k0$;
+//│     this.x1$ = x1$;
+//│   }
+//│   toString() { return "f$capture(" + this.k0$ + ", " + this.x1$ + ")"; }
+//│ };
+//│ f37 = function f(g$capture2) {
+//│   return (x1) => {
+//│     let capture;
+//│     capture = new f$capture15(null, x1);
+//│     capture.k0$ = 4;
+//│     g$capture2.y0$ = 2;
+//│     return capture.x1$;
+//│   };
+//│ };
+//│ g$capture1 = function g$capture(y0$1) {
+//│   return new g$capture.class(y0$1);
+//│ };
+//│ g$capture1.class = class g$capture {
+//│   constructor(y0$) {
+//│     this.y0$ = y0$;
+//│   }
+//│   toString() { return "g$capture(" + this.y0$ + ")"; }
+//│ };
+//│ g35 = function g() {
+//│   let capture;
+//│   capture = new g$capture1(null);
+//│   capture.y0$ = 0;
+//│   return f37(capture) ?? null;
+//│ };
+//│ tmp27 = g35();
+//│ tmp27(1) ?? null
+//│ = 1

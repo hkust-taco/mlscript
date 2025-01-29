@@ -647,10 +647,11 @@ class Lifter(using State):
     else
       // move the function's parameters to the capture
       val paramsSet = f.params.flatMap(_.paramSyms)
-      val paramsList = varsList.filter(paramsSet.contains(_))
+      val paramsList = varsList.map: s =>
+        if paramsSet.contains(s) then s.asPath else Value.Lit(Tree.UnitLit(true))
       // moved when the capture is instantiated
       val bod = blockBuilder
-        .assign(captureSym, Instantiate(captureCls.sym.asPath, paramsList.map(_.asPath)))
+        .assign(captureSym, Instantiate(captureCls.sym.asPath, paramsList))
         .rest(transformed)
       Lifted(FunDefn(f.owner, f.sym, f.params, bod), captureCls :: newDefns)
 
