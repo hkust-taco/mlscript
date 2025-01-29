@@ -164,7 +164,7 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
             doc"${getVar(sym)} = function ${sym.nme}($params) ${ braced(bodyDoc) };"
           case ClsLikeDefn(ownr, isym, sym, kind, paramsOpt, auxParams, par, mtds, privFlds, _pubFlds, preCtor, ctor) =>
             // * Note: `_pubFlds` is not used because in JS, fields are not declared
-            val clsParams = paramsOpt.fold(Nil)(_.paramSyms) ++ auxParams.flatMap(_.paramSyms)
+            val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
             val ctorParams = clsParams.map(p => p -> scope.allocateName(p))
             val privs =
               val scp = isym.asInstanceOf[InnerSymbol].privatesScope
@@ -176,11 +176,19 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
               case (acc, (sym, nme)) =>
                 doc"$acc # this.${sym.name} = $nme;"
             val ctorCode = doc"$preCtorCode${body(ctor)}"
+            val ctorBraced = doc"${ braced(ctorCode)}"
+
+            val pss = auxParams.map(setupFunction(N, _, End())._1)
+            val funBod = pss.foldRight(ctorBraced):
+              case (psDoc, doc) => doc"($psDoc) => \n$doc"
+
+            val funBodBraced = if pss.isEmpty then funBod else doc"${braced(funBod)}" 
+            
             val clsJS = doc"class ${sym.nme}${par.map(p => s" extends ${result(p)}").getOrElse("")} { #{ ${
                 privs
               } # constructor(${
                 ctorParams.unzip._2.mkDocument(", ")
-              }) ${ braced(ctorCode) }${
+              }) $funBodBraced${
                 mtds.map: 
                   case td @ FunDefn(_, _, ps :: pss, bod) =>
                     val result = pss.foldRight(bod):
@@ -225,9 +233,9 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
                 case ps_ :: pss_ =>
                   val (ps, _) = setupFunction(some(sym.nme), ps_, End())
                   val pss = pss_.map(setupFunction(N, _, End())._1)
-                  val paramsDoc = pss.foldLeft(ps):
-                    case (doc, ps) => doc"${doc}, ${ps}"
-                  val bod = doc"return new ${sym.nme}.class($paramsDoc);"
+                  val paramsDoc = pss.foldLeft(doc"($ps)"):
+                    case (doc, ps) => doc"${doc}(${ps})"
+                  val bod = doc"return new ${sym.nme}.class$paramsDoc;"
                   val funBod = pss.foldRight(bod):
                     case (psDoc, doc) => doc"($psDoc) => ${braced(doc)}"
                   S(doc"function ${sym.nme}($ps) { $funBod }")
