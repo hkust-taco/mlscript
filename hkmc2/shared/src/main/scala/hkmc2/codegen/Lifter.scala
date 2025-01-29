@@ -181,18 +181,15 @@ class Lifter(using State):
         case _ => super.applyBlock(b)
     walker.applyBlock(b)
     UsedLocalsMap.from(usedMap)
-
-  def generateLiftInfo(b: Block, ctx: LifterCtx) =
-    var ret: Map[BlockMemberSymbol, LiftedInfo] = Map.empty
-    val walker = new BlockTransformerShallow(SymbolSubst()):
-      override def applyBlock(b: Block): Block = b match
-        case Define(f: FunDefn, rest) => 
-          ret = ret ++ createLiftInfoFn(f, ctx)
-          super.applyBlock(b)
-        case _ => super.applyBlock(b)
-    walker.applyBlock(b)
-    ret
-     
+  
+  /**
+    * Creates a capture class for a function consisting of its mutable (and possibly immutable) local variables.
+    * @param f The function to create the capture class for.
+    * @param ctx The lifter context. Determines which variables will be captured.
+    * @return The triple (defn, varsMap, varsList), where `defn` is the capture class's definition,
+    * `varsMap` maps the function's locals to the correpsonding `VarSymbol` in the class, and
+    * `varsList` specifies the order of these variables in the class's constructor. 
+    */
   def createCaptureCls(f: FunDefn, ctx: LifterCtx) =
     val nme = f.sym.nme + "$capture"
 
@@ -224,6 +221,12 @@ class Lifter(using State):
   def liftDefnsCls(c: ClsLikeDefn, ctx: LifterCtx): List[Defn] = ???
 
   private val clsLikeCache: MutMap[Local, Set[Local]] = MutMap.empty
+  
+  /**
+    * Gets the inner symbols referenced within a class (including those within a member symbol).
+    * @param c The class from which to get the inner symbols. 
+    * @return The inner symbols reference within a class.
+    */
   def getInnerSymbols(c: ClsLikeDefn) = clsLikeCache.get(c.isym) match
     case Some(value) => value
     case None =>
@@ -233,16 +236,34 @@ class Lifter(using State):
       clsLikeCache.addOne(c.isym -> ret)
       ret
 
-  private def needsClsCapture(captureCls: ClsLikeDefn, candidate: ClsLikeDefn) =
-    getInnerSymbols(candidate).contains(captureCls.isym)
+  /**
+    * Determines whether a certain class's `this` needs to be captured by a class being lifted.
+    * @param captureCls The class in question that is considered for capture.
+    * @param liftDefn The class being lifted.
+    * @return Whether the class needs to be captured.
+    */
+  private def needsClsCapture(captureCls: ClsLikeDefn, liftDefn: ClsLikeDefn) =
+    getInnerSymbols(liftDefn).contains(captureCls.isym)
 
-  private def needsCapture(captureFn: FunDefn, candidate: Defn, ctx: LifterCtx) =
-    val candVars = candidate.freeVars
+  /**
+    * Determines whether a certain function's mutable closure needs to be captured by a definition being lifted.
+    * @param captureFn The function in question that is considered for capture.
+    * @param liftDefn The definition being lifted.
+    * @return Whether the function needs to be captured.
+    */
+  private def needsCapture(captureFn: FunDefn, liftDefn: Defn, ctx: LifterCtx) =
+    val candVars = liftDefn.freeVars
     val captureFnVars = ctx.usedLocals(captureFn.sym).mutated.toSet
     !candVars.intersect(captureFnVars).isEmpty
   
-  private def neededImutLocals(captureFn: FunDefn, candidate: Defn, ctx: LifterCtx) =
-    val candVars = candidate.freeVars
+  /**
+    * Gets the immutable local variables of a function that need to captured by a definition being lifted. 
+    * @param captureFn The function in question whose local variables need to be captured.
+    * @param liftDefn The definition being lifted.
+    * @return The local variables that need to be captured.
+    */
+  private def neededImutLocals(captureFn: FunDefn, liftDefn: Defn, ctx: LifterCtx) =
+    val candVars = liftDefn.freeVars
     val captureFnVars = ctx.usedLocals(captureFn.sym)
     val mutVars = captureFnVars.mutated.toSet
     val imutVars = captureFnVars.vars
@@ -259,7 +280,6 @@ class Lifter(using State):
     val extraDefns: List[Defn],
   )
 
-
   def createLiftInfoCont(d: Defn, ctx: LifterCtx): Map[BlockMemberSymbol, LiftedInfo] =
     val includedCaptures = ctx.prevFnDefns.filter(needsCapture(_, d, ctx))
 
@@ -269,17 +289,31 @@ class Lifter(using State):
     if includedCaptures.isEmpty && includedLocals.isEmpty then Map.empty
     else d match
       case f: FunDefn => createLiftInfoFn(f, ctx) + (d.sym -> LiftedInfo(includedCaptures.map(_.sym), includedLocals))
-      case c: ClsLikeDefn => Map.empty + (d.sym -> LiftedInfo(includedCaptures.map(_.sym), includedLocals))
+      case c: ClsLikeDefn => 
+        val clsCaptures = ctx.prevClsDefns.filter(needsClsCapture(_, c)).map(_.isym)
+        createLiftInfoCls(c, ctx) + (d.sym -> LiftedInfo(includedCaptures.map(_.sym), clsCaptures ++ includedLocals))
       case _ => Map.empty
 
   def createLiftInfoFn(f: FunDefn, ctx: LifterCtx): Map[BlockMemberSymbol, LiftedInfo] =
     val (_, defns) = f.body.floatOutDefns
     defns.flatMap(createLiftInfoCont(_, ctx.addFnDefn(f))).toMap
-  
-  def createdLiftInfoCls(c: ClsLikeDefn, ctx: LifterCtx): Map[BlockMemberSymbol, LiftedInfo] =
+
+  def createLiftInfoCls(c: ClsLikeDefn, ctx: LifterCtx): Map[BlockMemberSymbol, LiftedInfo] =
     val defns = c.preCtor.floatOutDefns._2 ++ c.ctor.floatOutDefns._2
-    defns.flatMap(f => createLiftInfoCont(f, ctx.addClsDefn(c))).toMap 
-      ++ c.methods.flatMap(f => createLiftInfoFn(f, ctx.addClsDefn(c)))
+    val newCtx = ctx.addClsDefn(c)
+    defns.flatMap(f => createLiftInfoCont(f, newCtx)).toMap 
+      ++ c.methods.flatMap(f => createLiftInfoFn(f, newCtx))
+  
+  def createLiftInfo(b: Block, ctx: LifterCtx) =
+    var ret: Map[BlockMemberSymbol, LiftedInfo] = Map.empty
+    val walker = new BlockTransformerShallow(SymbolSubst()):
+      override def applyBlock(b: Block): Block = b match
+        case Define(f: FunDefn, rest) => 
+          ret = ret ++ createLiftInfoFn(f, ctx)
+          super.applyBlock(b)
+        case _ => super.applyBlock(b)
+    walker.applyBlock(b)
+    ret
   
   def createCall(sym: BlockMemberSymbol, ctx: LifterCtx) : Call =
     val info = ctx.getBmsReqdInfo(sym).get
@@ -338,12 +372,13 @@ class Lifter(using State):
       .addCapturePath(f.sym, captureSym.asPath) // the path to this function's capture
     val nestedCtx = captureCtx.addFnDefn(f)
 
+    // lift out the nested defns
     val nestedLifted = nested.map(liftOutDefn(f, _, nestedCtx))
     val newDefns = nestedLifted.flatMap:
       case Lifted(liftedDefn, extraDefns) => liftedDefn :: extraDefns
 
+    // some book-keeping
     val thisVars = ctx.usedLocals(f.sym)
-
     val newCtx = captureCtx
       .addLocalPaths((thisVars.vars.toSet -- thisVars.mutated).map(s => s -> s).toMap)
     
@@ -414,8 +449,10 @@ class Lifter(using State):
     if thisVars.mutated.size == 0 then
       (FunDefn(f.owner, f.sym, f.params, transformed), newDefns)
     else
+      // move the function's parameters to the capture
       val paramsSet = f.params.flatMap(_.paramSyms)
       val paramsList = varsList.filter(paramsSet.contains(_))
+      // moved when the capture is instantiated
       val bod = blockBuilder
         .assign(captureSym, Instantiate(captureCls.sym.asPath, paramsList.map(_.asPath)))
         .rest(transformed)
@@ -426,7 +463,7 @@ class Lifter(using State):
   // top-level
   def transform(b: Block) =
     val ctx = LifterCtx.withLocals(findUsedLocals(b))
-    val ctxx = ctx.addBmsReqdInfo(generateLiftInfo(b, ctx))
+    val ctxx = ctx.addBmsReqdInfo(createLiftInfo(b, ctx))
 
     val walker = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
