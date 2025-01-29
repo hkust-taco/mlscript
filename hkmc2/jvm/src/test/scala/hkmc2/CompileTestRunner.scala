@@ -53,3 +53,4 @@ class CompileTestRunner
             .map("\n\t"+relativeName+"."+file.ext+":"+_).mkString(", "))
       
 end CompileTestRunner
+
