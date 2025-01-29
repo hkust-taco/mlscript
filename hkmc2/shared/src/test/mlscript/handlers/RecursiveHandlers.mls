@@ -135,7 +135,9 @@ str
 //│       perform(arg) {
 //│         return globalThis.Predef.__mkEffect(h1, (k) => {
 //│           let tmp9, tmp10, tmp11, res5, Cont$1;
-//│           Cont$1 = function Cont$(pc1) { return new Cont$.class(pc1); };
+//│           Cont$1 = function Cont$(pc1) {
+//│             return new Cont$.class(pc1);
+//│           };
 //│           Cont$1.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│             constructor(pc) {
 //│               let tmp12;
@@ -175,7 +177,9 @@ str
 //│       toString() { return "Effect$h1$"; }
 //│     };
 //│     h1 = new Effect$h1$();
-//│     Cont$ = function Cont$(pc1) { return new Cont$.class(pc1); };
+//│     Cont$ = function Cont$(pc1) {
+//│       return new Cont$.class(pc1);
+//│     };
 //│     Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│       constructor(pc) {
 //│         let tmp9;
@@ -211,7 +215,9 @@ str
 //│         perform(arg) {
 //│           return globalThis.Predef.__mkEffect(h2, (k) => {
 //│             let tmp10, tmp11, tmp12, tmp13, tmp14, res7, Cont$2;
-//│             Cont$2 = function Cont$(pc1) { return new Cont$.class(pc1); };
+//│             Cont$2 = function Cont$(pc1) {
+//│               return new Cont$.class(pc1);
+//│             };
 //│             Cont$2.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│               constructor(pc) {
 //│                 let tmp15;
@@ -254,7 +260,9 @@ str
 //│         toString() { return "Effect$h2$"; }
 //│       };
 //│       h2 = new Effect$h2$();
-//│       Cont$1 = function Cont$(pc1) { return new Cont$.class(pc1); };
+//│       Cont$1 = function Cont$(pc1) {
+//│         return new Cont$.class(pc1);
+//│       };
 //│       Cont$1.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│         constructor(pc) {
 //│           let tmp10;

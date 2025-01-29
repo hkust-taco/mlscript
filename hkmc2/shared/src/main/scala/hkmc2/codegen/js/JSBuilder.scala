@@ -176,13 +176,13 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
               case (acc, (sym, nme)) =>
                 doc"$acc # this.${sym.name} = $nme;"
             val ctorCode = doc"$preCtorCode${body(ctor)}"
-            val ctorBraced = doc"${ braced(ctorCode)}"
+            val ctorBraced = doc"${ braced(ctorCode) }"
 
             val pss = auxParams.map(setupFunction(N, _, End())._1)
             val funBod = pss.foldRight(ctorBraced):
-              case (psDoc, doc) => doc"($psDoc) => \n$doc"
+              case (psDoc, doc) => doc"($psDoc) => $doc"
 
-            val funBodBraced = if pss.isEmpty then funBod else doc"${braced(funBod)}" 
+            val funBodBraced = if pss.isEmpty then funBod else doc"${ braced(doc" # return $funBod") }" 
             
             val clsJS = doc"class ${sym.nme}${par.map(p => s" extends ${result(p)}").getOrElse("")} { #{ ${
                 privs
@@ -235,10 +235,11 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
                   val pss = pss_.map(setupFunction(N, _, End())._1)
                   val paramsDoc = pss.foldLeft(doc"($ps)"):
                     case (doc, ps) => doc"${doc}(${ps})"
-                  val bod = doc"return new ${sym.nme}.class$paramsDoc;"
+                  val bod = braced(doc" # return new ${sym.nme}.class$paramsDoc;")
                   val funBod = pss.foldRight(bod):
-                    case (psDoc, doc) => doc"($psDoc) => ${braced(doc)}"
-                  S(doc"function ${sym.nme}($ps) { $funBod }")
+                    case (psDoc, doc_) => doc"($psDoc) => $doc_"
+                  val funBodRet = if pss.isEmpty then funBod else braced(doc" # return $funBod")
+                  S(doc"function ${sym.nme}($ps) ${ funBodRet }")
                 case Nil => N
               
               /*

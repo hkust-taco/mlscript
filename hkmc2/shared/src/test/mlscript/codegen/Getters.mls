@@ -293,7 +293,9 @@ class Foo(x) with
   fun oops = x
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ Foo1 = function Foo(x1) { return new Foo.class(x1); };
+//│ Foo1 = function Foo(x1) {
+//│   return new Foo.class(x1);
+//│ };
 //│ Foo1.class = class Foo {
 //│   constructor(x) {
 //│     this.x = x;

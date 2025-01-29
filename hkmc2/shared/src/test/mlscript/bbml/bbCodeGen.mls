@@ -61,7 +61,9 @@ false
 class Foo(x: Int)
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ Foo1 = function Foo(x2) { return new Foo.class(x2); };
+//│ Foo1 = function Foo(x2) {
+//│   return new Foo.class(x2);
+//│ };
 //│ Foo1.class = class Foo {
 //│   constructor(x1) {
 //│     this.x = x1;

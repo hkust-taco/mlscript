@@ -98,55 +98,59 @@ A(2).f()()
 :todo
 :sjs
 fun f(used1, unused1) =
-  let used2 = unused1
   fun g(g_arg) =
     let used3 = 2
     fun h = used3
     used1 + h
   let unused2 = 2
   class Test(a) with
-    fun get() = used2 + used1
-  Test()
+    fun get() = used1
+  Test(unused1)
 f(1, 2).get()
 //│ JS (unsanitized):
 //│ let f7, Test1, g7, h1, tmp;
-//│ h1 = function h(used3, used1, used2) {
+//│ h1 = function h(used3, used1) {
 //│   return () => {
 //│     return used3;
 //│   };
 //│ };
-//│ g7 = function g(used1, used2) {
+//│ g7 = function g(used1) {
 //│   return (g$_arg) => {
 //│     let used3, tmp1, h$this;
 //│     used3 = 2;
-//│     h$this = h1(used3, used1, used2) ?? null;
+//│     h$this = h1(used3, used1) ?? null;
 //│     tmp1 = h$this();
 //│     return used1 + tmp1;
 //│   };
 //│ };
-//│ Test1 = function Test(a1) { (used11, used21) => {return new Test.class(a1)(used11, used21);
-//│ } };
+//│ Test1 = function Test(a1) {
+//│   return (used11) => {
+//│     return new Test.class(a1)(used11);
+//│   }
+//│ };
 //│ Test1.class = class Test {
-//│   constructor(a) {(used1, used2) => 
-//│     {
+//│   constructor(a) {
+//│     return (used1) => {
 //│       this.a = a;
 //│     }
 //│   }
 //│   get() {
-//│     return this.used2 + this.used1;
+//│     return this.used1;
 //│   }
 //│   toString() { return "Test(" + this.a + ")"; }
 //│ };
 //│ f7 = function f(used1, unused1) {
-//│   let used2, unused2, Test$this;
-//│   used2 = unused1;
+//│   let unused2, Test$this;
 //│   unused2 = 2;
-//│   Test$this = Test1(used1, used2) ?? null;
-//│   return Test$this();
+//│   Test$this = Test1(used1) ?? null;
+//│   return Test$this(unused1);
 //│ };
 //│ tmp = f7(1, 2);
 //│ tmp.get() ?? null
-//│ ═══[RUNTIME ERROR] TypeError: Test$this is not a function
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'get')
+ //│   (used11) =>
+//│ JS (unsanitized):
+//│ null
 
 // preserve order
 :sjs
@@ -203,7 +207,9 @@ x + y
 //│     return f$capture2.a0$;
 //│   };
 //│ };
-//│ f$capture1 = function f$capture(a0$1) { return new f$capture.class(a0$1); };
+//│ f$capture1 = function f$capture(a0$1) {
+//│   return new f$capture.class(a0$1);
+//│ };
 //│ f$capture1.class = class f$capture {
 //│   constructor(a0$) {
 //│     this.a0$ = a0$;
@@ -218,7 +224,9 @@ x + y
 //│   h$this = h3(capture) ?? null;
 //│   return Tuple1(g$this, h$this);
 //│ };
-//│ Tuple1 = function Tuple(a1, b1) { return new Tuple.class(a1, b1); };
+//│ Tuple1 = function Tuple(a1, b1) {
+//│   return new Tuple.class(a1, b1);
+//│ };
 //│ Tuple1.class = class Tuple {
 //│   constructor(a, b) {
 //│     this.a = a;
@@ -306,7 +314,9 @@ f(1, 2, 1000)
 //│     return f$capture6.mutated0$;
 //│   };
 //│ };
-//│ f$capture5 = function f$capture(mutated0$1) { return new f$capture.class(mutated0$1); };
+//│ f$capture5 = function f$capture(mutated0$1) {
+//│   return new f$capture.class(mutated0$1);
+//│ };
 //│ f$capture5.class = class f$capture {
 //│   constructor(mutated0$) {
 //│     this.mutated0$ = mutated0$;
@@ -424,7 +434,9 @@ f()
 //│     return null;
 //│   };
 //│ };
-//│ f$capture9 = function f$capture(x0$1) { return new f$capture.class(x0$1); };
+//│ f$capture9 = function f$capture(x0$1) {
+//│   return new f$capture.class(x0$1);
+//│ };
 //│ f$capture9.class = class f$capture {
 //│   constructor(x0$) {
 //│     this.x0$ = x0$;

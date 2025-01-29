@@ -172,7 +172,9 @@ if true do
 //│     toString() { return "Effect$h$"; }
 //│   };
 //│   h = new Effect$h$();
-//│   Cont$ = function Cont$(pc1) { return new Cont$.class(pc1); };
+//│   Cont$ = function Cont$(pc1) {
+//│     return new Cont$.class(pc1);
+//│   };
 //│   Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│     constructor(pc) {
 //│       let tmp13;
