@@ -63,6 +63,8 @@ f(1, 2)
 //│ = 5
 
 // don't touch g if not needed
+// CURRENTLY NOT WORKING
+:todo
 :sjs
 fun f(used1, unused1) =
   let used2 = unused1
@@ -98,7 +100,44 @@ fun f(used1, unused1) =
     fun get() = used2 + used1
   Test()
 f(1, 2).get()
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: used2 (class hkmc2.semantics.VarSymbol)
+//│ JS (unsanitized):
+//│ let f7, Test1, g7, h1, tmp;
+//│ h1 = function h(used3, used1, used2) {
+//│   return () => {
+//│     return used3;
+//│   };
+//│ };
+//│ g7 = function g(used1, used2) {
+//│   return (g$_arg) => {
+//│     let used3, tmp1, h$this;
+//│     used3 = 2;
+//│     h$this = h1(used3, used1, used2) ?? null;
+//│     tmp1 = h$this();
+//│     return used1 + tmp1;
+//│   };
+//│ };
+//│ Test1 = function Test() { (used11, used21) => {return new Test.class(, used11, used21);
+//│ } };
+//│ Test1.class = class Test {
+//│   constructor(used1, used2) {
+//│     this.used1 = used1;
+//│     this.used2 = used2;
+//│   }
+//│   get() {
+//│     return this.used2 + this.used1;
+//│   }
+//│   toString() { return "Test(" + this.used1 + ", " + this.used2 + ")"; }
+//│ };
+//│ f7 = function f(used1, unused1) {
+//│   let used2, unused2, Test$this;
+//│   used2 = unused1;
+//│   unused2 = 2;
+//│   Test$this = Test1(used1, used2) ?? null;
+//│   return Test$this();
+//│ };
+//│ tmp = f7(1, 2);
+//│ tmp.get() ?? null
+//│ ═══[RUNTIME ERROR] TypeError: Test$this is not a function
 
 // preserve order
 :sjs
@@ -107,24 +146,24 @@ fun f(a1, a2, a3, a4, a5, a6) =
   g
 f(1,2,3,4,5,6)
 //│ JS (unsanitized):
-//│ let f7, g7;
-//│ g7 = function g(a1, a2, a3, a4, a5, a6) {
+//│ let f9, g9;
+//│ g9 = function g(a1, a2, a3, a4, a5, a6) {
 //│   return () => {
-//│     let tmp, tmp1, tmp2, tmp3;
-//│     tmp = a1 + a2;
-//│     tmp1 = tmp + a3;
-//│     tmp2 = tmp1 + a4;
-//│     tmp3 = tmp2 + a5;
-//│     return tmp3 + a6;
+//│     let tmp1, tmp2, tmp3, tmp4;
+//│     tmp1 = a1 + a2;
+//│     tmp2 = tmp1 + a3;
+//│     tmp3 = tmp2 + a4;
+//│     tmp4 = tmp3 + a5;
+//│     return tmp4 + a6;
 //│   };
 //│ };
-//│ f7 = function f(a1, a2, a3, a4, a5, a6) {
-//│   let tmp, g$this;
-//│   g$this = g7(a1, a2, a3, a4, a5, a6) ?? null;
-//│   tmp = g$this();
-//│   return tmp;
+//│ f9 = function f(a1, a2, a3, a4, a5, a6) {
+//│   let tmp1, g$this;
+//│   g$this = g9(a1, a2, a3, a4, a5, a6) ?? null;
+//│   tmp1 = g$this();
+//│   return tmp1;
 //│ };
-//│ f7(1, 2, 3, 4, 5, 6)
+//│ f9(1, 2, 3, 4, 5, 6)
 //│ = 21
 
 :expect '01'
@@ -143,14 +182,14 @@ f1()
 let y = f2().toString()
 x + y
 //│ JS (unsanitized):
-//│ let f9, Tuple1, g9, h1, ret, f11, f21, x, y, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, f$capture1;
-//│ g9 = function g(f$capture2) {
+//│ let f11, Tuple1, g11, h3, ret, f12, f21, x, y, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, f$capture1;
+//│ g11 = function g(f$capture2) {
 //│   return () => {
 //│     f$capture2.a0$ = 1;
 //│     return null;
 //│   };
 //│ };
-//│ h1 = function h(f$capture2) {
+//│ h3 = function h(f$capture2) {
 //│   return () => {
 //│     return f$capture2.a0$;
 //│   };
@@ -162,12 +201,12 @@ x + y
 //│   }
 //│   toString() { return "f$capture(" + this.a0$ + ")"; }
 //│ };
-//│ f9 = function f() {
+//│ f11 = function f() {
 //│   let capture, g$this, h$this;
 //│   capture = new f$capture1();
 //│   capture.a0$ = 0;
-//│   g$this = g9(capture) ?? null;
-//│   h$this = h1(capture) ?? null;
+//│   g$this = g11(capture) ?? null;
+//│   h$this = h3(capture) ?? null;
 //│   return Tuple1(g$this, h$this);
 //│ };
 //│ Tuple1 = function Tuple(a1, b1) { return new Tuple.class(a1, b1); };
@@ -178,17 +217,17 @@ x + y
 //│   }
 //│   toString() { return "Tuple(" + this.a + ", " + this.b + ")"; }
 //│ };
-//│ tmp = f9();
-//│ ret = tmp;
-//│ f11 = ret.a;
+//│ tmp1 = f11();
+//│ ret = tmp1;
+//│ f12 = ret.a;
 //│ f21 = ret.b;
-//│ tmp1 = f21() ?? null;
-//│ tmp2 = tmp1.toString() ?? null;
-//│ x = tmp2;
-//│ tmp3 = f11() ?? null;
-//│ tmp4 = f21() ?? null;
-//│ tmp5 = tmp4.toString() ?? null;
-//│ y = tmp5;
+//│ tmp2 = f21() ?? null;
+//│ tmp3 = tmp2.toString() ?? null;
+//│ x = tmp3;
+//│ tmp4 = f12() ?? null;
+//│ tmp5 = f21() ?? null;
+//│ tmp6 = tmp5.toString() ?? null;
+//│ y = tmp6;
 //│ x + y
 //│ = '01'
 //│ f1 = [Function (anonymous)]
@@ -246,14 +285,14 @@ fun f(unused, immutable, mutated) =
   a + h() + unused
 f(1, 2, 1000)
 //│ JS (unsanitized):
-//│ let f14, g13, h5, f$capture5;
-//│ g13 = function g(immutable, f$capture6) {
+//│ let f16, g15, h7, f$capture5;
+//│ g15 = function g(immutable, f$capture6) {
 //│   return () => {
 //│     f$capture6.mutated0$ = 2;
 //│     return immutable + f$capture6.mutated0$;
 //│   };
 //│ };
-//│ h5 = function h(f$capture6) {
+//│ h7 = function h(immutable, f$capture6) {
 //│   return () => {
 //│     return f$capture6.mutated0$;
 //│   };
@@ -265,18 +304,18 @@ f(1, 2, 1000)
 //│   }
 //│   toString() { return "f$capture(" + this.mutated0$ + ")"; }
 //│ };
-//│ f14 = function f(unused, immutable, mutated) {
-//│   let a1, tmp21, tmp22, tmp23, capture, g$this, h$this;
+//│ f16 = function f(unused, immutable, mutated) {
+//│   let a1, tmp22, tmp23, tmp24, capture, g$this, h$this;
 //│   capture = new f$capture5(mutated);
-//│   g$this = g13(immutable, capture) ?? null;
-//│   tmp21 = g$this();
-//│   a1 = tmp21;
-//│   h$this = h5(capture) ?? null;
-//│   tmp22 = h$this();
-//│   tmp23 = a1 + tmp22;
-//│   return tmp23 + unused;
+//│   g$this = g15(immutable, capture) ?? null;
+//│   tmp22 = g$this();
+//│   a1 = tmp22;
+//│   h$this = h7(immutable, capture) ?? null;
+//│   tmp23 = h$this();
+//│   tmp24 = a1 + tmp23;
+//│   return tmp24 + unused;
 //│ };
-//│ f14(1, 2, 1000)
+//│ f16(1, 2, 1000)
 //│ = 7
 
 // if used as a higher order function, pass closures
@@ -308,37 +347,88 @@ fun f(arg) =
   h(5)
 f(2)
 //│ JS (unsanitized):
-//│ let f20, g19, h7;
-//│ g19 = function g(arg) {
+//│ let f23, g23, h9;
+//│ g23 = function g(arg) {
 //│   return (n) => {
-//│     let scrut, tmp21, h$this;
+//│     let scrut, tmp22, h$this;
 //│     scrut = n <= 0;
 //│     if (scrut === true) {
 //│       return arg;
 //│     } else {
-//│       tmp21 = n - 1;
-//│       h$this = h7(arg) ?? null;
-//│       return h$this(tmp21);
+//│       tmp22 = n - 1;
+//│       h$this = h9(arg) ?? null;
+//│       return h$this(tmp22);
 //│     }
 //│   };
 //│ };
-//│ h7 = function h(arg) {
+//│ h9 = function h(arg) {
 //│   return (n) => {
-//│     let scrut, tmp21, g$this;
+//│     let scrut, tmp22, g$this;
 //│     scrut = n <= 0;
 //│     if (scrut === true) {
 //│       return arg;
 //│     } else {
-//│       tmp21 = n - 1;
-//│       g$this = g19(arg) ?? null;
-//│       return g$this(tmp21);
+//│       tmp22 = n - 1;
+//│       g$this = g23(arg) ?? null;
+//│       return g$this(tmp22);
 //│     }
 //│   };
 //│ };
-//│ f20 = function f(arg) {
+//│ f23 = function f(arg) {
 //│   let h$this;
-//│   h$this = h7(arg) ?? null;
+//│   h$this = h9(arg) ?? null;
 //│   return h$this(5);
 //│ };
-//│ f20(2)
+//│ f23(2)
 //│ = 2
+
+:expect 1
+fun f() =
+  let x = 1
+  fun g() = x
+  fun f() = g()
+  f()
+f()
+//│ = 1
+
+// here, g does not need the capture 
+:todo
+:sjs
+:expect 1
+fun f() =
+  let x = 1
+  fun g() = 1
+  fun f() = set x = 1
+  f()
+  x
+f()
+//│ JS (unsanitized):
+//│ let f30, f31, g27, f$capture9;
+//│ g27 = function g(f$capture10) {
+//│   return () => {
+//│     return 1;
+//│   };
+//│ };
+//│ f31 = function f(f$capture10) {
+//│   return () => {
+//│     f$capture10.x0$ = 1;
+//│     return null;
+//│   };
+//│ };
+//│ f$capture9 = function f$capture(x0$1) { return new f$capture.class(x0$1); };
+//│ f$capture9.class = class f$capture {
+//│   constructor(x0$) {
+//│     this.x0$ = x0$;
+//│   }
+//│   toString() { return "f$capture(" + this.x0$ + ")"; }
+//│ };
+//│ f30 = function f() {
+//│   let tmp22, capture, f$this;
+//│   capture = new f$capture9();
+//│   capture.x0$ = 1;
+//│   f$this = f31(capture) ?? null;
+//│   tmp22 = f$this();
+//│   return capture.x0$;
+//│ };
+//│ f30()
+//│ = 1

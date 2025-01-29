@@ -197,7 +197,7 @@ final case class ValDefn(
 
 final case class ClsLikeDefn(
     owner: Opt[InnerSymbol],
-    isym: MemberSymbol[? <: ClassLikeDef],
+    isym: MemberSymbol[? <: ClassLikeDef] & InnerSymbol,
     sym: BlockMemberSymbol,
     k: syntax.ClsLikeKind,
     paramsOpt: Opt[ParamList],
