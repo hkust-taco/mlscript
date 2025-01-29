@@ -53,9 +53,8 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     HandlerCtx(true, false, ctorThis, state =>
       val tmp = freshTmp()
       blockBuilder
-        .assignFieldN(state.res.tail, nextIdent, Instantiate(
-          state.cls.selN(Tree.Ident("class")),
-          Value.Lit(Tree.IntLit(state.uid)) :: Nil))
+        .assignFieldN(state.res.tail, nextIdent, Call(
+          state.cls, Value.Lit(Tree.IntLit(state.uid)).asArg :: Nil)(true))
         .assignFieldN(state.res, tailIdent, state.res.tail.next)
         .ret(state.res))
   private val functionHandlerCtx = funcLikeHandlerCtx(N)
@@ -362,14 +361,14 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
           b match
           case Return(res, implct) =>
             // In case res is effectful, it will be handled in translateBlock
-            Assign(tmp, res, Return(Instantiate(retClsPath, tmp.asPath :: Nil), implct))
+            Assign(tmp, res, Return(Call(retClsPath, tmp.asPath.asArg :: Nil)(true), implct))
           case HandleBlockReturn(res) =>
             Return(res, false)
           case _ => super.applyBlock(b)
       transform.applyBlock(b)
     
     val handlerBody = translateBlock(prepareBody(h.body), HandlerCtx(false, false, N, state => blockBuilder
-      .assignFieldN(state.res.tail, nextIdent, Instantiate(state.cls, Value.Lit(Tree.IntLit(state.uid)) :: Nil))
+      .assignFieldN(state.res.tail, nextIdent, Call(state.cls, Value.Lit(Tree.IntLit(state.uid)).asArg :: Nil)(true))
       .ret(SimpleCall(handleBlockImplPath, state.res :: h.lhs.asPath :: Nil))))
     
     val handlers = h.handlers.map: handler =>
@@ -379,7 +378,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       val tmp = freshTmp()
       FunDefn(
         S(h.cls),
-        handler.sym, handler.params, Return(SimpleCall(mkEffectPath, h.lhs.asPath :: lam :: Nil), false))
+        handler.sym, handler.params, Return(SimpleCall(mkEffectPath, h.cls.asPath :: lam :: Nil), false))
     
     // TODO: it seems that our current syntax didn't know how to call super, calling it with empty param list now
     val clsDefn = ClsLikeDefn(
@@ -387,13 +386,13 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       h.cls,
       BlockMemberSymbol(h.cls.id.name, Nil),
       syntax.Cls,
-      N, Nil,
+      S(PlainParamList(Nil)), Nil,
       S(h.par), handlers, Nil, Nil,
       Assign(freshTmp(), SimpleCall(Value.Ref(State.builtinOpsMap("super")), Nil), End()), End())
     
     val body = blockBuilder
       .define(clsDefn)
-      .assign(h.lhs, Instantiate(Value.Ref(clsDefn.sym), Nil))
+      .assign(h.lhs, Call(clsDefn.sym.asPath, Nil)(true))
       .rest(handlerBody)
     
     val defn = FunDefn(

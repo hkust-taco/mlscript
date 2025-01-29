@@ -185,7 +185,7 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
               val newCtorCode = doc"$ctorCode; # return this;"
               val ctorBraced = doc"${ braced(newCtorCode) }"
               val funBod = pss.foldRight(ctorBraced):
-                case (psDoc, doc) => doc"(${psDoc.mkDocument(",")}) => $doc"
+                case (psDoc, doc) => doc"(${psDoc.mkDocument(", ")}) => $doc"
 
               doc"${ braced(doc" # return $funBod") }" 
             

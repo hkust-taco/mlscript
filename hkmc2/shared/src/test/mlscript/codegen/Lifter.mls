@@ -541,3 +541,40 @@ class A(a) with
     g()
 A(2).f()
 //│ ═══[RUNTIME ERROR] Expected: 2, got: null
+
+:lot
+:sjs
+class B()
+//│ JS (unsanitized):
+//│ let B1;
+//│ B1 = function B() {
+//│   return new B.class();
+//│ };
+//│ B1.class = class B {
+//│   constructor() {}
+//│   toString() { return "B(" +  + ")"; }
+//│ };
+//│ null
+//│ Lowered:
+//│ Program:
+//│   imports = Nil
+//│   main = Define:
+//│     defn = ClsLikeDefn:
+//│       owner = N
+//│       isym = class:B
+//│       sym = member:B
+//│       k = Cls
+//│       paramsOpt = S of ParamList:
+//│         flags = ParamListFlags of false
+//│         params = Nil
+//│         restParam = N
+//│       auxParams = Nil
+//│       parentPath = N
+//│       methods = Nil
+//│       privateFields = Nil
+//│       publicFields = Nil
+//│       preCtor = End of ""
+//│       ctor = End of ""
+//│     rest = Return: \
+//│     res = Lit of UnitLit of true
+//│     implct = true

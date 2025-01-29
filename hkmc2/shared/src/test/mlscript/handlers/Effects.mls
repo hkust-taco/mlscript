@@ -159,19 +159,22 @@ if true do
 //│ let tmp11, handleBlock$23;
 //│ handleBlock$23 = function handleBlock$() {
 //│   let h, scrut, f, tmp12, res, Cont$, Effect$h$;
-//│   Effect$h$ = class Effect$h$ extends Effect1 {
+//│   Effect$h$ = function Effect$h$() {
+//│     return new Effect$h$.class();
+//│   };
+//│   Effect$h$.class = class Effect$h$ extends Effect1 {
 //│     constructor() {
 //│       let tmp13;
 //│       tmp13 = super();
 //│     }
 //│     perform(arg) {
-//│       return globalThis.Predef.__mkEffect(h, (k) => {
+//│       return globalThis.Predef.__mkEffect(this, (k) => {
 //│         return arg;
 //│       });
 //│     }
-//│     toString() { return "Effect$h$"; }
+//│     toString() { return "Effect$h$(" +  + ")"; }
 //│   };
-//│   h = new Effect$h$();
+//│   h = Effect$h$();
 //│   Cont$ = function Cont$(pc1) {
 //│     return new Cont$.class(pc1);
 //│   };
@@ -205,7 +208,7 @@ if true do
 //│   if (scrut === true) {
 //│     res = f();
 //│     if (res instanceof globalThis.Predef.__EffectSig.class) {
-//│       res.tail.next = new Cont$(0);
+//│       res.tail.next = Cont$(0);
 //│       return globalThis.Predef.__handleBlockImpl(res, h);
 //│     }
 //│     tmp12 = res;
