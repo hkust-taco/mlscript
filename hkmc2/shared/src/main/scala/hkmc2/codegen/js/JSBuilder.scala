@@ -182,12 +182,12 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
               doc"${braced(ctorCode)}"
             else
               val pss = ctorAuxParams.map(_.map(_._2))
-              val newCtorCode = doc"$ctorCode; # return this;"
+              val newCtorCode = doc"$ctorCode # return this;"
               val ctorBraced = doc"${ braced(newCtorCode) }"
               val funBod = pss.foldRight(ctorBraced):
                 case (psDoc, doc) => doc"(${psDoc.mkDocument(", ")}) => $doc"
 
-              doc"${ braced(doc" # return $funBod") }" 
+              doc"${ braced(doc" # return $funBod") }"
             
             val clsJS = doc"class ${sym.nme}${par.map(p => s" extends ${result(p)}").getOrElse("")} { #{ ${
                 privs

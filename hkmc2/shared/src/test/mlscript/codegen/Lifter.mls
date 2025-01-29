@@ -401,7 +401,7 @@ f(1)
 //│ A1.class = class A {
 //│   constructor() {
 //│     return (f$capture10) => {
-//│       this.f$capture = f$capture10;;
+//│       this.f$capture = f$capture10;
 //│       return this;
 //│     }
 //│   }
