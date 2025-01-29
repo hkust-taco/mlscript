@@ -86,14 +86,7 @@ f(1, 2)
 //│ f5(1, 2)
 //│ = 5
 
-:fixme
-:sjs
-class A(a) with
-  fun f() =
-    fun g() = a
-    g
-A(2).f()()
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:g (class hkmc2.semantics.BlockMemberSymbol)
+
 
 :todo
 :sjs
@@ -131,7 +124,8 @@ f(1, 2).get()
 //│ Test1.class = class Test {
 //│   constructor(a) {
 //│     return (used1) => {
-//│       this.a = a;
+//│       this.a = a;;
+//│       return this;
 //│     }
 //│   }
 //│   get() {
@@ -147,7 +141,6 @@ f(1, 2).get()
 //│ };
 //│ tmp = f7(1, 2);
 //│ tmp.get() ?? null
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'get')
  //│   (used11) =>
 //│ JS (unsanitized):
 //│ null
@@ -410,6 +403,54 @@ fun f() =
 f()
 //│ = 1
 
+/// CLASSES ///
+
+:sjs
+class A(a) with
+  fun f(b) =
+    fun g(c) = 
+      set b = 2
+      a + b + c
+    g
+A(1).f(1)(3)
+//│ JS (unsanitized):
+//│ let A1, g27, tmp22, tmp23, f$capture9;
+//│ g27 = function g(A$instance, f$capture10) {
+//│   return (c1) => {
+//│     let tmp24;
+//│     f$capture10.b0$ = 2;
+//│     tmp24 = A$instance.a + f$capture10.b0$;
+//│     return tmp24 + c1;
+//│   };
+//│ };
+//│ f$capture9 = function f$capture(b0$1) {
+//│   return new f$capture.class(b0$1);
+//│ };
+//│ f$capture9.class = class f$capture {
+//│   constructor(b0$) {
+//│     this.b0$ = b0$;
+//│   }
+//│   toString() { return "f$capture(" + this.b0$ + ")"; }
+//│ };
+//│ A1 = function A(a2) {
+//│   return new A.class(a2);
+//│ };
+//│ A1.class = class A {
+//│   constructor(a1) {
+//│     this.a = a1;
+//│   }
+//│   f(b1) {
+//│     let capture;
+//│     capture = new f$capture9(b1);
+//│     return g27(this, capture) ?? null;
+//│   }
+//│   toString() { return "A(" + this.a + ")"; }
+//│ };
+//│ tmp22 = A1(1);
+//│ tmp23 = tmp22.f(1) ?? null;
+//│ tmp23(3) ?? null
+//│ = 6
+
 // Here, g does not need the capture. This should be optimized
 :todo
 :sjs
@@ -422,34 +463,55 @@ fun f() =
   x
 f()
 //│ JS (unsanitized):
-//│ let f30, f31, g27, f$capture9;
-//│ g27 = function g(f$capture10) {
+//│ let f30, f31, g29, f$capture11;
+//│ g29 = function g(f$capture12) {
 //│   return () => {
 //│     return 1;
 //│   };
 //│ };
-//│ f31 = function f(f$capture10) {
+//│ f31 = function f(f$capture12) {
 //│   return () => {
-//│     f$capture10.x0$ = 1;
+//│     f$capture12.x0$ = 1;
 //│     return null;
 //│   };
 //│ };
-//│ f$capture9 = function f$capture(x0$1) {
+//│ f$capture11 = function f$capture(x0$1) {
 //│   return new f$capture.class(x0$1);
 //│ };
-//│ f$capture9.class = class f$capture {
+//│ f$capture11.class = class f$capture {
 //│   constructor(x0$) {
 //│     this.x0$ = x0$;
 //│   }
 //│   toString() { return "f$capture(" + this.x0$ + ")"; }
 //│ };
 //│ f30 = function f() {
-//│   let tmp22, capture, f$this;
-//│   capture = new f$capture9();
+//│   let tmp24, capture, f$this;
+//│   capture = new f$capture11();
 //│   capture.x0$ = 1;
 //│   f$this = f31(capture) ?? null;
-//│   tmp22 = f$this();
+//│   tmp24 = f$this();
 //│   return capture.x0$;
 //│ };
 //│ f30()
 //│ = 1
+
+// don't break private variables
+:lift
+:re
+fun foo = ()
+class A(a) with
+  foo
+  let x = 2
+  foo
+A(2).x
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+
+:fixme
+:expect 2
+class A(a) with
+  let x = 2
+  fun f() =
+    fun g() = x
+    g()
+A(2).f()
+//│ ═══[RUNTIME ERROR] Expected: 2, got: null

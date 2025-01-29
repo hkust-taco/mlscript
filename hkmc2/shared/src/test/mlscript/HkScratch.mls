@@ -9,35 +9,3 @@
 
 
 
-:lift
-:sjs
-class A(a) with
-  fun f(b) =
-    fun g() = a
-    2
-A(2).f(2)
-//│ Elab: { Cls AParamList(‹›,List(Param(‹›,class:A‹151›.a,None)),None) { ‹› fun member:f‹149›(Param(‹›,b‹153›,None), ) = { ‹› fun member:g‹154›() = class:A‹151›.a#666; 2 }; }; member:A‹150›#666(2).f(2) }
-//│ JS (unsanitized):
-//│ let A1, tmp;
-//│ A1 = function A(a1) {
-//│   return new A.class(a1);
-//│ };
-//│ A1.class = class A {
-//│   constructor(a) {
-//│     this.a = a;
-//│   }
-//│   f(b) {
-//│     return 2;
-//│   } 
-//│   g() {
-//│     return this.a;
-//│   }
-//│   toString() { return "A(" + this.a + ")"; }
-//│ };
-//│ tmp = A1(2);
-//│ tmp.f(2) ?? null
-//│ = 2
- 
-//│ Elab: { }
-//│ JS (unsanitized):
-//│ null

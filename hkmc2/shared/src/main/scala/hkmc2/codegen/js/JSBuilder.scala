@@ -176,19 +176,24 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
               case (acc, (sym, nme)) =>
                 doc"$acc # this.${sym.name} = $nme;"
             val ctorCode = doc"$preCtorCode${body(ctor)}"
-            val ctorBraced = doc"${ braced(ctorCode) }"
 
-            val pss = auxParams.map(setupFunction(N, _, End())._1)
-            val funBod = pss.foldRight(ctorBraced):
-              case (psDoc, doc) => doc"($psDoc) => $doc"
+            val ctorBod = if auxParams.isEmpty then
+              doc"${braced(ctorCode)}"
+            else
+              
+              val pss = auxParams.map(setupFunction(N, _, End())._1)
+              val newCtorCode = doc"$ctorCode; # return this;"
+              val ctorBraced = doc"${ braced(newCtorCode) }"
+              val funBod = pss.foldRight(ctorBraced):
+                case (psDoc, doc) => doc"($psDoc) => $doc"
 
-            val funBodBraced = if pss.isEmpty then funBod else doc"${ braced(doc" # return $funBod") }" 
+              doc"${ braced(doc" # return $funBod") }" 
             
             val clsJS = doc"class ${sym.nme}${par.map(p => s" extends ${result(p)}").getOrElse("")} { #{ ${
                 privs
               } # constructor(${
                 ctorParams.unzip._2.mkDocument(", ")
-              }) $funBodBraced${
+              }) $ctorBod${
                 mtds.map: 
                   case td @ FunDefn(_, _, ps :: pss, bod) =>
                     val result = pss.foldRight(bod):
