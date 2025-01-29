@@ -166,13 +166,14 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
             // * Note: `_pubFlds` is not used because in JS, fields are not declared
             val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
             val ctorParams = clsParams.map(p => p -> scope.allocateName(p))
+            val ctorAuxParams = auxParams.map(ps => ps.params.map(p => p.sym -> scope.allocateName(p.sym)))
             val privs =
               val scp = isym.asInstanceOf[InnerSymbol].privatesScope
               privFlds.map: fld =>
                   val nme = scp.allocateName(fld)
                   doc" # #$nme;"
                 .mkDocument(doc"")
-            val preCtorCode = ctorParams.foldLeft(body(preCtor)):
+            val preCtorCode = (ctorParams ++ ctorAuxParams.flatMap(ps => ps)).foldLeft(body(preCtor)):
               case (acc, (sym, nme)) =>
                 doc"$acc # this.${sym.name} = $nme;"
             val ctorCode = doc"$preCtorCode${body(ctor)}"
@@ -180,12 +181,11 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
             val ctorBod = if auxParams.isEmpty then
               doc"${braced(ctorCode)}"
             else
-              
-              val pss = auxParams.map(setupFunction(N, _, End())._1)
+              val pss = ctorAuxParams.map(_.map(_._2))
               val newCtorCode = doc"$ctorCode; # return this;"
               val ctorBraced = doc"${ braced(newCtorCode) }"
               val funBod = pss.foldRight(ctorBraced):
-                case (psDoc, doc) => doc"($psDoc) => $doc"
+                case (psDoc, doc) => doc"(${psDoc.mkDocument(",")}) => $doc"
 
               doc"${ braced(doc" # return $funBod") }" 
             

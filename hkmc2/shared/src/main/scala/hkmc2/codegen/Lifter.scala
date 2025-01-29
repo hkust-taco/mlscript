@@ -14,7 +14,6 @@ import scala.collection.mutable.LinkedHashSet
 import scala.collection.mutable.LinkedHashMap
 import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
-import scala.annotation.nowarn
 
 /**
   * Lifts classes and functions to the top-level.
@@ -107,8 +106,6 @@ class Lifter(using State):
   def getVars(f: FunDefn): Set[Local] = 
     (f.body.definedVars ++ f.params.flatMap(_.paramSyms)).collect:
       case s: FlowSymbol => s
-  
-  // 
 
   /**
     * Given a function definition `f` and previously bound locals `lookup`,
@@ -316,7 +313,8 @@ class Lifter(using State):
   case class LiftedInfo(
     val reqdCaptures: List[BlockMemberSymbol],
     val reqdVars: List[Local],
-    val reqdInnerSyms: List[InnerSymbol]
+    val reqdInnerSyms: List[InnerSymbol],
+    val fakeCtorBms: Option[BlockMemberSymbol] // only for classes
   )
 
   case class Lifted(
@@ -352,7 +350,11 @@ class Lifter(using State):
 
     val clsCaptures: List[InnerSymbol] = ctx.prevClsDefns.map(_.isym)
 
-    val info = LiftedInfo(includedCaptures.map(_.sym), includedLocals, clsCaptures)
+    val fakeCtorBms = d match
+      case c: ClsLikeDefn => S(BlockMemberSymbol(d.sym.nme + "$ctor", Nil))
+      case _ => N
+
+    val info = LiftedInfo(includedCaptures.map(_.sym), includedLocals, clsCaptures, fakeCtorBms)
 
     if includedCaptures.isEmpty && includedLocals.isEmpty && clsCaptures.isEmpty then Map.empty
     else d match
@@ -480,12 +482,17 @@ class Lifter(using State):
     val localsArgs = info.reqdVars.map(ctx.getLocalPath(_).get.asPath.asArg)
     val capturesArgs = info.reqdCaptures.map(ctx.getCapturePath(_).get.asArg)
     val iSymArgs = info.reqdInnerSyms.map(ctx.getIsymPath(_).get.asPath.asArg)
-    Call(sym.asPath, iSymArgs ++ localsArgs ++ capturesArgs)(false)
+    
+    val callSym = info.fakeCtorBms match
+      case Some(v) => v
+      case None => sym  
+
+    Call(callSym.asPath, iSymArgs ++ localsArgs ++ capturesArgs)(false)
 
   // deals with creating parameter lists
   def liftOutDefnCont(base: Defn, d: Defn, ctx: LifterCtx): Lifted = ctx.getBmsReqdInfo(d.sym) match
     case N => Lifted(d, Nil)
-    case S(LiftedInfo(includedCaptures, includedLocals, clsCaptures)) =>
+    case S(LiftedInfo(includedCaptures, includedLocals, clsCaptures, fakeCtorBms)) =>
       val createSym = d match
         case d: ClsLikeDefn => ((nme: String) => TermSymbol(syntax.ParamBind, S(d.isym), Tree.Ident(nme)))
         case _ => ((nme: String) => VarSymbol(Tree.Ident(nme)))
@@ -525,17 +532,57 @@ class Lifter(using State):
         .replIsymPaths(newIsymPaths)
 
       d match
-      case f: FunDefn => 
-        val newDef = FunDefn(
-          base.owner, f.sym, PlainParamList(extraParams) :: f.params, f.body
-        )
-        liftDefnsInFn(newDef, newCtx)
-      case c: ClsLikeDefn =>
-        val newDef = c.copy(
-          owner = base.owner, auxParams = c.auxParams.appended(PlainParamList(extraParams))
-        )
-        liftDefnsInCls(newDef, newCtx)
-      case _ => Lifted(d, Nil)
+        case f: FunDefn => 
+          val newDef = FunDefn(
+            base.owner, f.sym, PlainParamList(extraParams) :: f.params, f.body
+          )
+          liftDefnsInFn(newDef, newCtx)
+        case c: ClsLikeDefn =>
+          val newDef = c.copy(
+            owner = base.owner, auxParams = c.auxParams.appended(PlainParamList(extraParams))
+          )
+          val Lifted(lifted, extras) = liftDefnsInCls(newDef, newCtx)
+
+          fakeCtorBms match
+          case None => Lifted(lifted, extras) // unreachable
+          case Some(bms) =>
+            // create the fake ctor here
+
+            inline def mapParams(ps: ParamList) = ps.params.map(p => VarSymbol(p.sym.id))
+
+            val paramSyms = c.paramsOpt.map(mapParams)
+            val auxSyms = c.auxParams.map(mapParams)
+            val extraSyms = extraParams.map(p => VarSymbol(p.sym.id))
+
+            val paramArgs = paramSyms.getOrElse(Nil).map(_.asPath)
+
+            inline def toPaths(l: List[Local]) = l.map(_.asPath)
+            
+            var curSym = TempSymbol(None, "tmp")
+            val inst = Instantiate(c.sym.asPath, paramArgs)
+            var acc = blk => Assign(curSym, inst, blk)
+            for ps <- auxSyms do
+              val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true)
+              curSym = TempSymbol(None, "tmp")
+              acc = blk => acc(Assign(curSym, call, blk))
+            val bod = acc(Return(Call(curSym.asPath, extraSyms.map(_.asPath.asArg))(true), false))
+
+            inline def toPlist(ls: List[VarSymbol]) = PlainParamList(ls.map(s => Param(FldFlags.empty, s, N)))
+
+            val paramPlist = paramSyms.map(toPlist)
+            val auxPlist = auxSyms.map(toPlist)
+            val extraPlist = toPlist(extraSyms)
+
+            val plist = paramPlist match
+              case None => extraPlist :: PlainParamList(Nil) :: auxPlist
+              case Some(value) => extraPlist :: value :: auxPlist
+
+            val fakeCtorDefn = FunDefn(
+              None, bms, plist, bod 
+            )
+            
+            Lifted(lifted, extras.appended(fakeCtorDefn))
+        case _ => Lifted(d, Nil)      
   
   def liftDefnsInCls(c: ClsLikeDefn, ctx: LifterCtx): Lifted = 
     val (preCtor, preCtorDefns) = c.preCtor.floatOutDefns
