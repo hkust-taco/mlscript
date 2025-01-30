@@ -563,6 +563,18 @@ const Predef$class = class Predef {
       break;
     }
     return tmp4;
+  } 
+  checkDepth() {
+    let scrut, tmp, tmp1, tmp2;
+    tmp = this.__stackDepth - this.__stackOffset;
+    tmp1 = tmp >= this.__stackLimit;
+    tmp2 = this.__stackHandler !== null;
+    scrut = tmp1 && tmp2;
+    if (scrut === true) {
+      return this.__stackHandler.perform() ?? null;
+    } else {
+      return null;
+    }
   }
   toString() { return "Predef"; }
 }; Predef1 = new Predef$class;

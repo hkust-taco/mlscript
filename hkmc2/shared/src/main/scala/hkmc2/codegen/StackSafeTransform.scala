@@ -15,6 +15,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
   private val STACK_HANDLER_IDENT: Tree.Ident = Tree.Ident("__stackHandler")
 
   private val predefPath: Path = State.globalThisSymbol.asPath.selN(Tree.Ident("Predef"))
+  private val checkDepthPath: Path = predefPath.selN(Tree.Ident("checkDepth"))
   private val stackDelayClsPath: Path = predefPath.selN(Tree.Ident("__StackDelay")).selN(Tree.Ident("class"))
   private val stackLimitPath: Path = predefPath.selN(STACK_LIMIT_IDENT)
   private val stackDepthPath: Path = predefPath.selN(STACK_DEPTH_IDENT)
@@ -86,7 +87,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
         .rest(HandleBlockReturn(res)),
       blockBuilder // reset the stack safety values
         .assignFieldN(predefPath, STACK_DEPTH_IDENT, intLit(0)) // set stackDepth = 0 after call
-        .assignFieldN(predefPath, STACK_HANDLER_IDENT, Value.Lit(Tree.UnitLit(false))) // set stackHandler = null
+        .assignFieldN(predefPath, STACK_HANDLER_IDENT, Value.Lit(Tree.UnitLit(true))) // set stackHandler = null
         .rest(f(resSym.asPath))
     )
 
@@ -147,24 +148,9 @@ class StackSafeTransform(depthLimit: Int)(using State):
     if isTrivial(blk) then 
       newBody
     else
-      val diffSym = TempSymbol(None, "diff")
-      val diffGeqLimitSym = TempSymbol(None, "diffGeqLimit")
-      val handlerExistsSym = TempSymbol(None, "handlerExists")
-      val scrutSym = TempSymbol(None, "scrut")
-      val diff = op("-", stackDepthPath, stackOffsetPath)
-      val diffGeqLimit = op(">=", diffSym.asPath, stackLimitPath)
-      val handlerExists = op("!==", stackHandlerPath, Value.Lit(Tree.UnitLit(false)))
-      val scrutVal = op("&&", diffGeqLimitSym.asPath, handlerExistsSym.asPath)
+      val resSym = TempSymbol(None, "stackDelayRes")
       blockBuilder
-        .assign(diffSym, diff)                    // diff = stackDepth - stackOffset
-        .assign(diffGeqLimitSym, diffGeqLimit)    // diff >= depthLimit
-        .assign(handlerExistsSym, handlerExists)  // stackHandler !== null
-        .assign(scrutSym, scrutVal)               // diff >= depthLimit && stackHandler !== null
-        .ifthen(
-          scrutSym.asPath, Case.Lit(Tree.BoolLit(true)), 
-          blockBuilder.assign( // dummy = perform(undefined) (is called `dummy` as the value is not used)
-            TempSymbol(None, "dummy"), 
-            Call(Select(stackHandlerPath, Tree.Ident("perform"))(N), Nil)(true)).end)
+        .assign(resSym, Call(checkDepthPath, Nil)(true))
         .rest(newBody)
      
   def rewriteFn(defn: FunDefn) = FunDefn(defn.owner, defn.sym, defn.params, rewriteBlk(defn.body))

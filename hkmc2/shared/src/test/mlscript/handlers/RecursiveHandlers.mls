@@ -126,8 +126,8 @@ str
 //│ scrut = true;
 //│ if (scrut === true) {
 //│   handleBlock$9 = function handleBlock$() {
-//│     let h1, tmp8, handleBlock$10, Cont$, Effect$h1$;
-//│     Effect$h1$ = class Effect$h1$ extends Effect1 {
+//│     let h1, tmp8, handleBlock$10, Cont$, Handler$h1$;
+//│     Handler$h1$ = class Handler$h1$ extends Effect1 {
 //│       constructor() {
 //│         let tmp9;
 //│         tmp9 = super();
@@ -172,9 +172,9 @@ str
 //│           return null;
 //│         });
 //│       }
-//│       toString() { return "Effect$h1$"; }
+//│       toString() { return "Handler$h1$"; }
 //│     };
-//│     h1 = new Effect$h1$();
+//│     h1 = new Handler$h1$();
 //│     Cont$ = function Cont$(pc1) { return new Cont$.class(pc1); };
 //│     Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│       constructor(pc) {
@@ -202,8 +202,8 @@ str
 //│       toString() { return "Cont$(" + this.pc + ")"; }
 //│     };
 //│     handleBlock$10 = function handleBlock$() {
-//│       let h2, tmp9, res5, res6, Cont$1, Effect$h2$;
-//│       Effect$h2$ = class Effect$h2$ extends Effect1 {
+//│       let h2, tmp9, res5, res6, Cont$1, Handler$h2$;
+//│       Handler$h2$ = class Handler$h2$ extends Effect1 {
 //│         constructor() {
 //│           let tmp10;
 //│           tmp10 = super();
@@ -251,9 +251,9 @@ str
 //│             return null;
 //│           });
 //│         }
-//│         toString() { return "Effect$h2$"; }
+//│         toString() { return "Handler$h2$"; }
 //│       };
-//│       h2 = new Effect$h2$();
+//│       h2 = new Handler$h2$();
 //│       Cont$1 = function Cont$(pc1) { return new Cont$.class(pc1); };
 //│       Cont$1.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│         constructor(pc) {

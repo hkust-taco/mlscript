@@ -279,3 +279,10 @@ val __stackOffset = 0 // How much to offset __stackDepth by to get the true stac
 val __stackHandler = null
 abstract class __StackDelay() with
   fun perform()
+
+fun checkDepth() =
+  if __stackDepth - __stackOffset >= __stackLimit && __stackHandler !== null then
+    // this is a tail call to effectful function
+    __stackHandler.perform()
+  else
+    ()
