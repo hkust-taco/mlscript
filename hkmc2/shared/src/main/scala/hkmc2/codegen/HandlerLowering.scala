@@ -307,6 +307,18 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
           val args2 = args.mapConserve(applyArg)
           val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun)
           if c2 is c then b else Return(c2, false)
+        // Optimization to avoid generation of unnecessary variables
+        case Assign(lhs, Call(Value.Ref(_: BuiltinSymbol), _), rest) => super.applyBlock(b)
+        case Assign(lhs, c @ Call(fun, args), rest) =>
+          val fun2 = applyPath(fun)
+          val args2 = args.mapConserve(applyArg)
+          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun)
+          ResultPlaceholder(lhs, freshId(), false, c2, applyBlock(rest))
+        case Assign(lhs, c @ Instantiate(cls, args), rest) =>
+          val cls2 = applyPath(cls)
+          val args2 = args.mapConserve(applyPath)
+          val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(cls2, args2)
+          ResultPlaceholder(lhs, freshId(), false, c2, applyBlock(rest))
         case _ => super.applyBlock(b)
       override def applyResult2(r: Result)(k: Result => Block): Block = r match
         case r @ Call(Value.Ref(_: BuiltinSymbol), _) => super.applyResult2(r)(k)
@@ -529,7 +541,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
               Case.Cls(retClsSym, retClsPath),
               blockBuilder.ret(if handlerCtx.isHandleFree then res.asPath.value else res.asPath)
             ))
-            .rest(super.applyBlock(rest))
+            .rest(applyBlock(rest))
         case _ => super.applyBlock(b)
     
     transform.applyBlock(b)

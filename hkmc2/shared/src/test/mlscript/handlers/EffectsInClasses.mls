@@ -15,7 +15,7 @@ class Lol(h) with
 //│ Lol1.class = class Lol {
 //│   constructor(h) {
 //│     this.h = h;
-//│     let tmp, res, res1, Cont$;
+//│     let tmp, res, Cont$;
 //│     const this$Lol = this;
 //│     Cont$ = function Cont$(pc1) { return new Cont$.class(pc1); };
 //│     Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
@@ -26,19 +26,18 @@ class Lol(h) with
 //│       }
 //│       resume(value$) {
 //│         if (this.pc === 0) {
-//│           res = value$;
+//│           tmp = value$;
 //│         } else if (this.pc === 1) {
-//│           res1 = value$;
+//│           res = value$;
 //│         }
 //│         contLoop: while (true) {
 //│           if (this.pc === 2) {
 //│             return this$Lol;
 //│           } else if (this.pc === 0) {
-//│             tmp = res;
-//│             res1 = Predef.print(tmp);
-//│             if (res1 instanceof globalThis.Predef.__EffectSig.class) {
+//│             res = Predef.print(tmp);
+//│             if (res instanceof globalThis.Predef.__EffectSig.class) {
 //│               this.pc = 1;
-//│               return globalThis.Predef.__appendInCont(res1, this);
+//│               return globalThis.Predef.__appendInCont(res, this);
 //│             }
 //│             this.pc = 1;
 //│             continue contLoop;
@@ -51,20 +50,19 @@ class Lol(h) with
 //│       }
 //│       toString() { return "Cont$(" + this.pc + ")"; }
 //│     };
-//│     res = this.h.perform("k") ?? null;
+//│     tmp = this.h.perform("k") ?? null;
+//│     if (tmp instanceof globalThis.Predef.__EffectSig.class) {
+//│       tmp.tail.next = new Cont$.class(0);
+//│       tmp.tail = tmp.tail.next;
+//│       return tmp;
+//│     }
+//│     res = Predef.print(tmp);
 //│     if (res instanceof globalThis.Predef.__EffectSig.class) {
-//│       res.tail.next = new Cont$.class(0);
+//│       res.tail.next = new Cont$.class(1);
 //│       res.tail = res.tail.next;
 //│       return res;
 //│     }
-//│     tmp = res;
-//│     res1 = Predef.print(tmp);
-//│     if (res1 instanceof globalThis.Predef.__EffectSig.class) {
-//│       res1.tail.next = new Cont$.class(1);
-//│       res1.tail = res1.tail.next;
-//│       return res1;
-//│     }
-//│     res1
+//│     res
 //│   }
 //│   toString() { return "Lol(" + this.h + ")"; }
 //│ };

@@ -134,7 +134,7 @@ str
 //│       }
 //│       perform(arg) {
 //│         return globalThis.Predef.__mkEffect(h1, (k) => {
-//│           let tmp9, tmp10, tmp11, res5, Cont$1;
+//│           let tmp9, tmp10, tmp11, Cont$1;
 //│           Cont$1 = function Cont$(pc1) { return new Cont$.class(pc1); };
 //│           Cont$1.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│             constructor(pc) {
@@ -144,11 +144,10 @@ str
 //│             }
 //│             resume(value$) {
 //│               if (this.pc === 5) {
-//│                 res5 = value$;
+//│                 tmp10 = value$;
 //│               }
 //│               contLoop: while (true) {
 //│                 if (this.pc === 5) {
-//│                   tmp10 = res5;
 //│                   tmp11 = str + "A";
 //│                   str = tmp11;
 //│                   return null;
@@ -160,13 +159,12 @@ str
 //│           };
 //│           tmp9 = str + "A";
 //│           str = tmp9;
-//│           res5 = k(arg) ?? null;
-//│           if (res5 instanceof globalThis.Predef.__EffectSig.class) {
-//│             res5.tail.next = new Cont$1.class(5);
-//│             res5.tail = res5.tail.next;
-//│             return res5;
+//│           tmp10 = k(arg) ?? null;
+//│           if (tmp10 instanceof globalThis.Predef.__EffectSig.class) {
+//│             tmp10.tail.next = new Cont$1.class(5);
+//│             tmp10.tail = tmp10.tail.next;
+//│             return tmp10;
 //│           }
-//│           tmp10 = res5;
 //│           tmp11 = str + "A";
 //│           str = tmp11;
 //│           return null;
@@ -202,7 +200,7 @@ str
 //│       toString() { return "Cont$(" + this.pc + ")"; }
 //│     };
 //│     handleBlock$10 = function handleBlock$() {
-//│       let h2, tmp9, res5, res6, Cont$1, Handler$h2$;
+//│       let h2, tmp9, res4, Cont$1, Handler$h2$;
 //│       Handler$h2$ = class Handler$h2$ extends Effect1 {
 //│         constructor() {
 //│           let tmp10;
@@ -210,7 +208,7 @@ str
 //│         }
 //│         perform(arg) {
 //│           return globalThis.Predef.__mkEffect(h2, (k) => {
-//│             let tmp10, tmp11, tmp12, tmp13, tmp14, res7, Cont$2;
+//│             let tmp10, tmp11, tmp12, tmp13, tmp14, Cont$2;
 //│             Cont$2 = function Cont$(pc1) { return new Cont$.class(pc1); };
 //│             Cont$2.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│               constructor(pc) {
@@ -220,11 +218,10 @@ str
 //│               }
 //│               resume(value$) {
 //│                 if (this.pc === 2) {
-//│                   res7 = value$;
+//│                   tmp12 = value$;
 //│                 }
 //│                 contLoop: while (true) {
 //│                   if (this.pc === 2) {
-//│                     tmp12 = res7;
 //│                     tmp13 = str + "B";
 //│                     tmp14 = str + tmp13;
 //│                     str = tmp14;
@@ -238,13 +235,12 @@ str
 //│             tmp10 = str + "B";
 //│             tmp11 = str + tmp10;
 //│             str = tmp11;
-//│             res7 = k(arg) ?? null;
-//│             if (res7 instanceof globalThis.Predef.__EffectSig.class) {
-//│               res7.tail.next = new Cont$2.class(2);
-//│               res7.tail = res7.tail.next;
-//│               return res7;
+//│             tmp12 = k(arg) ?? null;
+//│             if (tmp12 instanceof globalThis.Predef.__EffectSig.class) {
+//│               tmp12.tail.next = new Cont$2.class(2);
+//│               tmp12.tail = tmp12.tail.next;
+//│               return tmp12;
 //│             }
-//│             tmp12 = res7;
 //│             tmp13 = str + "B";
 //│             tmp14 = str + tmp13;
 //│             str = tmp14;
@@ -263,40 +259,38 @@ str
 //│         }
 //│         resume(value$) {
 //│           if (this.pc === 0) {
-//│             res5 = value$;
+//│             tmp9 = value$;
 //│           } else if (this.pc === 1) {
-//│             res6 = value$;
+//│             res4 = value$;
 //│           }
 //│           contLoop: while (true) {
 //│             if (this.pc === 0) {
-//│               tmp9 = res5;
-//│               res6 = h1.perform(null) ?? null;
-//│               if (res6 instanceof globalThis.Predef.__EffectSig.class) {
+//│               res4 = h1.perform(null) ?? null;
+//│               if (res4 instanceof globalThis.Predef.__EffectSig.class) {
 //│                 this.pc = 1;
-//│                 return globalThis.Predef.__appendInCont(res6, this);
+//│                 return globalThis.Predef.__appendInCont(res4, this);
 //│               }
 //│               this.pc = 1;
 //│               continue contLoop;
 //│             } else if (this.pc === 1) {
-//│               return res6;
+//│               return res4;
 //│             }
 //│             break;
 //│           }
 //│         }
 //│         toString() { return "Cont$(" + this.pc + ")"; }
 //│       };
-//│       res5 = h2.perform(null) ?? null;
-//│       if (res5 instanceof globalThis.Predef.__EffectSig.class) {
-//│         res5.tail.next = new Cont$1(0);
-//│         return globalThis.Predef.__handleBlockImpl(res5, h2);
+//│       tmp9 = h2.perform(null) ?? null;
+//│       if (tmp9 instanceof globalThis.Predef.__EffectSig.class) {
+//│         tmp9.tail.next = new Cont$1(0);
+//│         return globalThis.Predef.__handleBlockImpl(tmp9, h2);
 //│       }
-//│       tmp9 = res5;
-//│       res6 = h1.perform(null) ?? null;
-//│       if (res6 instanceof globalThis.Predef.__EffectSig.class) {
-//│         res6.tail.next = new Cont$1(1);
-//│         return globalThis.Predef.__handleBlockImpl(res6, h2);
+//│       res4 = h1.perform(null) ?? null;
+//│       if (res4 instanceof globalThis.Predef.__EffectSig.class) {
+//│         res4.tail.next = new Cont$1(1);
+//│         return globalThis.Predef.__handleBlockImpl(res4, h2);
 //│       }
-//│       return res6;
+//│       return res4;
 //│     };
 //│     tmp8 = handleBlock$10();
 //│     if (tmp8 instanceof globalThis.Predef.__EffectSig.class) {
