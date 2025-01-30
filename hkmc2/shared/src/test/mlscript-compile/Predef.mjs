@@ -575,8 +575,9 @@ const Predef$class = class Predef {
       return null;
     }
   } 
-  maybeResetDepth(tmp, curDepth) {
+  resetDepth(tmp, curDepth) {
     let scrut, tmp1;
+    this.__stackDepth = curDepth;
     scrut = curDepth < this.__stackOffset;
     if (scrut === true) {
       this.__stackOffset = curDepth;

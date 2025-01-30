@@ -201,8 +201,7 @@ sum(10000)
 //│         } else if (this.pc === 3) {
 //│           break contLoop;
 //│         } else if (this.pc === 1) {
-//│           globalThis.Predef.__stackDepth = curDepth;
-//│           tmp1 = globalThis.Predef.maybeResetDepth(tmp1, curDepth);
+//│           tmp1 = globalThis.Predef.resetDepth(tmp1, curDepth);
 //│           if (tmp1 instanceof globalThis.Predef.__EffectSig.class) {
 //│             this.pc = 2;
 //│             return globalThis.Predef.__appendInCont(tmp1, this);
@@ -236,8 +235,7 @@ sum(10000)
 //│       tmp1.tail = tmp1.tail.next;
 //│       return tmp1;
 //│     }
-//│     globalThis.Predef.__stackDepth = curDepth;
-//│     tmp1 = globalThis.Predef.maybeResetDepth(tmp1, curDepth);
+//│     tmp1 = globalThis.Predef.resetDepth(tmp1, curDepth);
 //│     if (tmp1 instanceof globalThis.Predef.__EffectSig.class) {
 //│       tmp1.tail.next = new Cont$.class(2);
 //│       tmp1.tail = tmp1.tail.next;

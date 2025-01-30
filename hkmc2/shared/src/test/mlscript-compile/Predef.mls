@@ -287,7 +287,8 @@ fun checkDepth() =
   else
     ()
 
-fun maybeResetDepth(tmp, curDepth) =
+fun resetDepth(tmp, curDepth) =
+  set __stackDepth = curDepth
   if curDepth < __stackOffset do
     set __stackOffset = curDepth
   tmp

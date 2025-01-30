@@ -16,7 +16,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
 
   private val predefPath: Path = State.globalThisSymbol.asPath.selN(Tree.Ident("Predef"))
   private val checkDepthPath: Path = predefPath.selN(Tree.Ident("checkDepth"))
-  private val maybeResetDepthPath: Path = predefPath.selN(Tree.Ident("maybeResetDepth"))
+  private val resetDepthPath: Path = predefPath.selN(Tree.Ident("resetDepth"))
   private val stackDelayClsPath: Path = predefPath.selN(Tree.Ident("__StackDelay"))
   private val stackLimitPath: Path = predefPath.selN(STACK_LIMIT_IDENT)
   private val stackDepthPath: Path = predefPath.selN(STACK_DEPTH_IDENT)
@@ -41,8 +41,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
       blockBuilder
         .assignFieldN(predefPath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(1)))
         .assign(tmp, res)
-        .assignFieldN(predefPath, STACK_DEPTH_IDENT, curDepth.asPath)
-        .assign(tmp, Call(maybeResetDepthPath, tmp.asPath.asArg :: curDepth.asPath.asArg :: Nil)(true))
+        .assign(tmp, Call(resetDepthPath, tmp.asPath.asArg :: curDepth.asPath.asArg :: Nil)(true))
         .rest(f(tmp.asPath))
 
   def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol], curDepth: => Symbol) =
