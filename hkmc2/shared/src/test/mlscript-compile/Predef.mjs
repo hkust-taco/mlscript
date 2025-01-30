@@ -574,6 +574,17 @@ const Predef$class = class Predef {
     } else {
       return null;
     }
+  } 
+  maybeResetDepth(tmp, curDepth) {
+    let scrut, tmp1;
+    scrut = curDepth < this.__stackOffset;
+    if (scrut === true) {
+      this.__stackOffset = curDepth;
+      tmp1 = null;
+    } else {
+      tmp1 = null;
+    }
+    return tmp;
   }
   toString() { return "Predef"; }
 }; Predef1 = new Predef$class;

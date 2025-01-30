@@ -164,7 +164,7 @@ sum(10000)
 //│ JS (unsanitized):
 //│ let sum3, res1, handleBlock$3;
 //│ sum3 = function sum(n) {
-//│   let scrut, tmp, tmp1, offsetGtDepth, prevDepth, stackDelayRes, Cont$;
+//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, Cont$;
 //│   Cont$ = function Cont$(pc1) { return new Cont$.class(pc1); };
 //│   Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│     constructor(pc) {
@@ -177,6 +177,8 @@ sum(10000)
 //│         stackDelayRes = value$;
 //│       } else if (this.pc === 1) {
 //│         tmp1 = value$;
+//│       } else if (this.pc === 2) {
+//│         tmp1 = value$;
 //│       }
 //│       contLoop: while (true) {
 //│         if (this.pc === 0) {
@@ -185,7 +187,6 @@ sum(10000)
 //│             return 0;
 //│           } else {
 //│             tmp = n - 1;
-//│             prevDepth = globalThis.Predef.__stackDepth;
 //│             globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
 //│             tmp1 = sum3(tmp);
 //│             if (tmp1 instanceof globalThis.Predef.__EffectSig.class) {
@@ -195,21 +196,20 @@ sum(10000)
 //│             this.pc = 1;
 //│             continue contLoop;
 //│           }
-//│           this.pc = 2;
-//│           continue contLoop;
-//│         } else if (this.pc === 2) {
-//│           break contLoop;
-//│         } else if (this.pc === 1) {
-//│           globalThis.Predef.__stackDepth = prevDepth;
-//│           offsetGtDepth = prevDepth < globalThis.Predef.__stackOffset;
-//│           if (offsetGtDepth === true) {
-//│             globalThis.Predef.__stackOffset = prevDepth;
-//│             this.pc = 3;
-//│             continue contLoop;
-//│           }
 //│           this.pc = 3;
 //│           continue contLoop;
 //│         } else if (this.pc === 3) {
+//│           break contLoop;
+//│         } else if (this.pc === 1) {
+//│           globalThis.Predef.__stackDepth = curDepth;
+//│           tmp1 = globalThis.Predef.maybeResetDepth(tmp1, curDepth);
+//│           if (tmp1 instanceof globalThis.Predef.__EffectSig.class) {
+//│             this.pc = 2;
+//│             return globalThis.Predef.__appendInCont(tmp1, this);
+//│           }
+//│           this.pc = 2;
+//│           continue contLoop;
+//│         } else if (this.pc === 2) {
 //│           return n + tmp1;
 //│         }
 //│         break;
@@ -217,6 +217,7 @@ sum(10000)
 //│     }
 //│     toString() { return "Cont$(" + this.pc + ")"; }
 //│   };
+//│   curDepth = globalThis.Predef.__stackDepth;
 //│   stackDelayRes = globalThis.Predef.checkDepth();
 //│   if (stackDelayRes instanceof globalThis.Predef.__EffectSig.class) {
 //│     stackDelayRes.tail.next = new Cont$.class(0);
@@ -228,7 +229,6 @@ sum(10000)
 //│     return 0;
 //│   } else {
 //│     tmp = n - 1;
-//│     prevDepth = globalThis.Predef.__stackDepth;
 //│     globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
 //│     tmp1 = sum3(tmp);
 //│     if (tmp1 instanceof globalThis.Predef.__EffectSig.class) {
@@ -236,10 +236,12 @@ sum(10000)
 //│       tmp1.tail = tmp1.tail.next;
 //│       return tmp1;
 //│     }
-//│     globalThis.Predef.__stackDepth = prevDepth;
-//│     offsetGtDepth = prevDepth < globalThis.Predef.__stackOffset;
-//│     if (offsetGtDepth === true) {
-//│       globalThis.Predef.__stackOffset = prevDepth;
+//│     globalThis.Predef.__stackDepth = curDepth;
+//│     tmp1 = globalThis.Predef.maybeResetDepth(tmp1, curDepth);
+//│     if (tmp1 instanceof globalThis.Predef.__EffectSig.class) {
+//│       tmp1.tail.next = new Cont$.class(2);
+//│       tmp1.tail = tmp1.tail.next;
+//│       return tmp1;
 //│     }
 //│     return n + tmp1;
 //│   }

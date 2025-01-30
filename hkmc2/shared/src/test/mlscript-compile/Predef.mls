@@ -286,3 +286,8 @@ fun checkDepth() =
     __stackHandler.perform()
   else
     ()
+
+fun maybeResetDepth(tmp, curDepth) =
+  if curDepth < __stackOffset do
+    set __stackOffset = curDepth
+  tmp
