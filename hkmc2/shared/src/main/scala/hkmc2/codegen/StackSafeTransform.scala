@@ -29,13 +29,13 @@ class StackSafeTransform(depthLimit: Int)(using State):
 
   // Increases the stack depth, assigns the call to a value, then decreases the stack depth
   // then binds that value to a desired block
-  def extractRes(res: Result, isTailCall: Bool, f: Result => Block) =
+  def extractRes(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol]) =
     if isTailCall then
       blockBuilder
         .assignFieldN(predefPath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(1)))
         .ret(res)
     else
-      val tmp = TempSymbol(None, "tmp")
+      val tmp = sym getOrElse TempSymbol(None, "tmp")
       val offsetGtDepth = TempSymbol(None, "offsetGtDepth")
       val prevDepth = TempSymbol(None, "prevDepth")
       blockBuilder
@@ -51,10 +51,10 @@ class StackSafeTransform(depthLimit: Int)(using State):
         )
         .rest(f(tmp.asPath))
 
-  def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block) =
+  def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol]) =
     val resumeSym = VarSymbol(Tree.Ident("resume"))
     val handlerSym = TempSymbol(None, "stackHandler")
-    val resSym = TempSymbol(None, "res")
+    val resSym = sym getOrElse TempSymbol(None, "res")
     val handlerRes = TempSymbol(None, "res")
     
     val clsSym = ClassSymbol(
@@ -110,12 +110,18 @@ class StackSafeTransform(depthLimit: Int)(using State):
 
       override def applyBlock(b: Block): Block = b match
         case Return(res, implct) if usesStack(res) =>
-          extract(applyResult(res), true, Return(_, implct))
+          extract(applyResult(res), true, Return(_, implct), N)
+        // Optimization to avoid generation of unnecessary variables
+        case Assign(lhs, r, rest) =>
+          if usesStack(r) then
+            extract(applyResult(r), false, _ => applyBlock(rest), S(lhs))
+          else
+            super.applyBlock(b)
         case _ => super.applyBlock(b)
       
       override def applyResult2(r: Result)(k: Result => Block): Block =
         if usesStack(r) then
-          extract(r, false, k)
+          extract(r, false, k, N)
         else
           super.applyResult2(r)(k)
       
