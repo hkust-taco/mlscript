@@ -361,7 +361,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
           b match
           case Return(res, implct) =>
             // In case res is effectful, it will be handled in translateBlock
-            Assign(tmp, res, Return(Call(retClsPath, tmp.asPath.asArg :: Nil)(true), implct))
+            Assign(tmp, res, Return(Instantiate(retClsPath, tmp.asPath :: Nil), implct))
           case HandleBlockReturn(res) =>
             Return(res, false)
           case _ => super.applyBlock(b)

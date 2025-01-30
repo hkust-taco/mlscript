@@ -314,11 +314,12 @@ class Lifter(using State):
     val reqdCaptures: List[BlockMemberSymbol],
     val reqdVars: List[Local],
     val reqdInnerSyms: List[InnerSymbol],
-    val fakeCtorBms: Option[BlockMemberSymbol] // only for classes
+    val fakeCtorBms: Option[BlockMemberSymbol], // only for classes
+    val singleCallBms: BlockMemberSymbol // optimization
   )
 
-  case class Lifted(
-    val liftedDefn: Defn,
+  case class Lifted[+T <: Defn](
+    val liftedDefn: T,
     val extraDefns: List[Defn],
   )
 
@@ -354,7 +355,9 @@ class Lifter(using State):
       case c: ClsLikeDefn => S(BlockMemberSymbol(d.sym.nme + "$ctor", Nil))
       case _ => N
 
-    val info = LiftedInfo(includedCaptures.map(_.sym), includedLocals, clsCaptures, fakeCtorBms)
+    val singleCallBms = BlockMemberSymbol(d.sym.nme + "$", Nil)
+
+    val info = LiftedInfo(includedCaptures.map(_.sym), includedLocals, clsCaptures, fakeCtorBms, singleCallBms)
 
     if includedCaptures.isEmpty && includedLocals.isEmpty && clsCaptures.isEmpty then Map.empty
     else d match
@@ -398,8 +401,16 @@ class Lifter(using State):
       val walker = new BlockTransformerNoRec(SymbolSubst()):
         // only scan within the block. don't traverse
 
-        // if possible, directly create the call and replace the result with it
+        
         override def applyResult(r: Result): Result = r match
+          // if possible, directly rewrite the call using the efficient version
+          case c @ Call(Value.Ref(l: BlockMemberSymbol), args) => ctx.bmsReqdInfo.get(l) match
+            case Some(info) =>
+              val extraArgs = getCallArgs(l, ctx)
+              val newArgs = args.map(applyArg(_))
+              Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun)
+            case None => super.applyResult(r)
+          // if possible, directly create the bms and replace the result with it
           case Value.Ref(l: BlockMemberSymbol) if ctx.bmsReqdInfo.contains(l) => createCall(l, ctx)
           case _ => super.applyResult(r)
         
@@ -475,24 +486,24 @@ class Lifter(using State):
 
     b |> transformer1.applyBlock |> transformer2.applyBlock
 
-
-  
-  def createCall(sym: BlockMemberSymbol, ctx: LifterCtx) : Call =
+  def getCallArgs(sym: BlockMemberSymbol, ctx: LifterCtx) =
     val info = ctx.getBmsReqdInfo(sym).get
     val localsArgs = info.reqdVars.map(ctx.getLocalPath(_).get.asPath.asArg)
     val capturesArgs = info.reqdCaptures.map(ctx.getCapturePath(_).get.asArg)
     val iSymArgs = info.reqdInnerSyms.map(ctx.getIsymPath(_).get.asPath.asArg)
-    
+    iSymArgs ++ localsArgs ++ capturesArgs
+  
+  def createCall(sym: BlockMemberSymbol, ctx: LifterCtx): Call =
+    val info = ctx.getBmsReqdInfo(sym).get
     val callSym = info.fakeCtorBms match
       case Some(v) => v
       case None => sym  
-
-    Call(callSym.asPath, iSymArgs ++ localsArgs ++ capturesArgs)(false)
+    Call(callSym.asPath, getCallArgs(sym, ctx))(false)
 
   // deals with creating parameter lists
-  def liftOutDefnCont(base: Defn, d: Defn, ctx: LifterCtx): Lifted = ctx.getBmsReqdInfo(d.sym) match
+  def liftOutDefnCont(base: Defn, d: Defn, ctx: LifterCtx): Lifted[Defn] = ctx.getBmsReqdInfo(d.sym) match
     case N => Lifted(d, Nil)
-    case S(LiftedInfo(includedCaptures, includedLocals, clsCaptures, fakeCtorBms)) =>
+    case S(LiftedInfo(includedCaptures, includedLocals, clsCaptures, fakeCtorBms, singleCallBms)) =>
       val createSym = d match
         case d: ClsLikeDefn => ((nme: String) => TermSymbol(syntax.ParamBind, S(d.isym), Tree.Ident(nme)))
         case _ => ((nme: String) => VarSymbol(Tree.Ident(nme)))
@@ -533,10 +544,33 @@ class Lifter(using State):
 
       d match
         case f: FunDefn => 
+          // create second param list with different symbols
+          val extraParamsCpy = extraParams.map(p => p.copy(sym = VarSymbol(p.sym.id)))
+
+          val headPlistCopy = f.params.headOption match
+            case None => PlainParamList(Nil)
+            case Some(value) => ParamList(value.flags, value.params.map(p => p.copy(sym = VarSymbol(p.sym.id))), value.restParam)
+          
+          val flatPlist = f.params match
+            case head :: next => ParamList(head.flags, extraParams ++ head.params, head.restParam) :: next
+            case Nil => PlainParamList(extraParams) :: Nil
+
           val newDef = FunDefn(
             base.owner, f.sym, PlainParamList(extraParams) :: f.params, f.body
           )
-          liftDefnsInFn(newDef, newCtx)
+          val Lifted(lifted, extras) = liftDefnsInFn(newDef, newCtx)          
+
+          val args1 = extraParamsCpy.map(p => p.sym.asPath.asArg)
+          val args2 = headPlistCopy.params.map(p => p.sym.asPath.asArg)
+
+          val bdy = blockBuilder
+            .ret(Call(singleCallBms.asPath, args1 ++ args2)(true)) // TODO: restParams not considered
+
+          val mainDefn = FunDefn(f.owner, f.sym, PlainParamList(extraParamsCpy) :: headPlistCopy :: Nil, bdy)
+          val auxDefn = FunDefn(N, singleCallBms, flatPlist, lifted.body)
+          
+
+          Lifted(mainDefn, auxDefn :: extras)
         case c: ClsLikeDefn =>
           val newDef = c.copy(
             owner = N, auxParams = c.auxParams.appended(PlainParamList(extraParams))
@@ -580,11 +614,26 @@ class Lifter(using State):
             val fakeCtorDefn = FunDefn(
               None, bms, plist, bod 
             )
+
+            val paramSym2 = paramSyms.getOrElse(Nil)
+            val auxSym2 = auxSyms.flatMap(l => l)
+            val allSymsMp = (paramSym2 ++ auxSym2 ++ extraSyms).map(s => s -> VarSymbol(s.id)).toMap
+            val subst = new SymbolSubst():
+              override def mapVarSym(s: VarSymbol): VarSymbol = allSymsMp.get(s) match
+                case None => s
+                case Some(value) => value
+
+            val headParams = paramPlist match
+              case None => extraPlist
+              case Some(value) => ParamList(value.flags, extraPlist.params ++ value.params, value.restParam)
+
+            val auxCtorDefn_ = FunDefn(None, singleCallBms, headParams :: auxPlist, bod)
+            val auxCtorDefn = BlockTransformer(subst).applyFunDefn(auxCtorDefn_)
             
-            Lifted(lifted, extras.appended(fakeCtorDefn))
+            Lifted(lifted, extras ::: (fakeCtorDefn :: auxCtorDefn :: Nil))
         case _ => Lifted(d, Nil)      
   
-  def liftDefnsInCls(c: ClsLikeDefn, ctx: LifterCtx): Lifted = 
+  def liftDefnsInCls(c: ClsLikeDefn, ctx: LifterCtx): Lifted[ClsLikeDefn] = 
     val (preCtor, preCtorDefns) = c.preCtor.floatOutDefns
     val (ctor, ctorDefns) = c.ctor.floatOutDefns
     
@@ -600,8 +649,7 @@ class Lifter(using State):
     
     val fLifted = c.methods.map(liftDefnsInFn(_, newCtx)) 
     val methods = fLifted.collect:
-      // the type check FunDefn here does nothing, this is just to satisfy the tye system
-      case Lifted(liftedDefn: FunDefn, extraDefns) => liftedDefn 
+      case Lifted(liftedDefn, extraDefns) => liftedDefn 
     val fExtra = fLifted.flatMap:
       case Lifted(liftedDefn, extraDefns) => extraDefns
 
@@ -618,7 +666,7 @@ class Lifter(using State):
     
     Lifted(newDef, extras)
 
-  def liftDefnsInFn(f: FunDefn, ctx: LifterCtx): Lifted =
+  def liftDefnsInFn(f: FunDefn, ctx: LifterCtx): Lifted[FunDefn] =
     val (captureCls, varsMap, varsList) = createCaptureCls(f, ctx)
     
     val (blk, nested) = f.body.floatOutDefns
