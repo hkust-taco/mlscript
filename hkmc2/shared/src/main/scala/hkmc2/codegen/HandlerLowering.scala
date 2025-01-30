@@ -381,7 +381,6 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
         S(h.cls),
         handler.sym, handler.params, Return(SimpleCall(mkEffectPath, h.lhs.asPath :: lam :: Nil), false))
     
-    // TODO: it seems that our current syntax didn't know how to call super, calling it with empty param list now
     val clsDefn = ClsLikeDefn(
       N, // no owner
       h.cls,
@@ -389,7 +388,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       syntax.Cls,
       N,
       S(h.par), handlers, Nil, Nil,
-      Assign(freshTmp(), SimpleCall(Value.Ref(State.builtinOpsMap("super")), Nil), End()), End())
+      Assign(freshTmp(), SimpleCall(Value.Ref(State.builtinOpsMap("super")), h.args), End()), End())
     
     val body = blockBuilder
       .define(clsDefn)

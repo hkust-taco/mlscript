@@ -16,7 +16,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
 
   private val predefPath: Path = State.globalThisSymbol.asPath.selN(Tree.Ident("Predef"))
   private val checkDepthPath: Path = predefPath.selN(Tree.Ident("checkDepth"))
-  private val stackDelayClsPath: Path = predefPath.selN(Tree.Ident("__StackDelay")).selN(Tree.Ident("class"))
+  private val stackDelayClsPath: Path = predefPath.selN(Tree.Ident("__StackDelay"))
   private val stackLimitPath: Path = predefPath.selN(STACK_LIMIT_IDENT)
   private val stackDepthPath: Path = predefPath.selN(STACK_DEPTH_IDENT)
   private val stackOffsetPath: Path = predefPath.selN(STACK_OFFSET_IDENT)
@@ -65,7 +65,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
     // the global stack handler is created here
     HandleBlock(
       handlerSym, resSym,
-      stackDelayClsPath, clsSym,
+      stackDelayClsPath, Nil, clsSym,
       Handler(
         BlockMemberSymbol("perform", Nil), resumeSym, ParamList(ParamListFlags.empty, Nil, N) :: Nil,
         /* 

@@ -197,7 +197,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
           conclude(Select(p, nme)(sel.sym))
       case _ => subTerm(f)(conclude)
       
-    case st.Blk((h @ Handle(lhs, rhs, cls, defs)) :: stmts, res) =>
+    case st.Blk((h @ Handle(lhs, rhs, args, cls, defs)) :: stmts, res) =>
       if !lowerHandlers then
         raise(ErrorReport(
           msg"Effect handlers are not enabled" ->
@@ -215,9 +215,14 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
       }.collect{ case Some(v) => v }
       val resSym = TempSymbol(S(t))
       subTerm(rhs): par =>
-        HandleBlock(lhs, resSym, par, cls, handlers,
-          term_nonTail(st.Blk(stmts, res))(HandleBlockReturn(_)),
-          k(Value.Ref(resSym)))
+        def rec(as: Ls[st], asr: Ls[Path]): Block = as match
+          case Nil => HandleBlock(lhs, resSym, par, asr.reverse, cls, handlers,
+            term_nonTail(st.Blk(stmts, res))(HandleBlockReturn(_)),
+            k(Value.Ref(resSym)))
+          case a :: as =>
+            subTerm_nonTail(a): ar =>
+              rec(as, ar :: asr)
+        rec(args, Nil)
       
     case st.Blk(Nil, res) => term(res)(k)
     case st.Blk((t: sem.Term) :: stats, res) =>

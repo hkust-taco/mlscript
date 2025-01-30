@@ -147,7 +147,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
       pat.paramsOpt.toList.flatMap(_.subTerms) ::: pat.body.blk :: Nil
     case Import(sym, pth) => Nil
     case Try(body, finallyDo) => body :: finallyDo :: Nil
-    case Handle(lhs, rhs, derivedClsSym, defs) => rhs :: defs.flatMap(_.td.subTerms)
+    case Handle(lhs, rhs, args, derivedClsSym, defs) => rhs :: args ::: defs.flatMap(_.td.subTerms)
     case Neg(e) => e :: Nil
     case Annotated(ann, target) => ann.subTerms ::: target :: Nil
   
@@ -200,7 +200,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Asc(term, ty) => s"${term.toString}: ${ty.toString}"
     case LetDecl(sym, _) => s"let ${sym}"
     case DefineVar(sym, rhs) => s"${sym} = ${rhs.showDbg}"
-    case Handle(lhs, rhs, derivedClsSym, defs) => s"handle ${lhs} = ${rhs} ${defs}"
+    case Handle(lhs, rhs, args, derivedClsSym, defs) => s"handle ${lhs} = ${rhs}(${args.mkString(", ")}) ${defs}"
     case Region(name, body) => s"region ${name.nme} in ${body.showDbg}"
     case RegRef(reg, value) => s"(${reg.showDbg}).ref ${value.showDbg}"
     case Assgn(lhs, rhs) => s"${lhs.showDbg} := ${rhs.showDbg}"
@@ -265,7 +265,7 @@ case class ObjBody(blk: Term.Blk):
 
 case class Import(sym: MemberSymbol[?], file: Str) extends Statement
 
-case class Handle(lhs: LocalSymbol, rhs: Term, derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition])
+case class Handle(lhs: LocalSymbol, rhs: Term, args: List[Term], derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition])
   extends Statement
 
 

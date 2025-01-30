@@ -73,7 +73,7 @@ hi(0)
 //│ };
 //│ handleBlock$1 = function handleBlock$() {
 //│   let stackHandler, res1, Cont$, StackDelay$;
-//│   StackDelay$ = class StackDelay$ extends globalThis.Predef.__StackDelay.class {
+//│   StackDelay$ = class StackDelay$ extends globalThis.Predef.__StackDelay {
 //│     constructor() {
 //│       let tmp;
 //│       tmp = super();
@@ -256,7 +256,7 @@ sum(10000)
 //│ };
 //│ handleBlock$3 = function handleBlock$() {
 //│   let stackHandler, res2, Cont$, StackDelay$;
-//│   StackDelay$ = class StackDelay$ extends globalThis.Predef.__StackDelay.class {
+//│   StackDelay$ = class StackDelay$ extends globalThis.Predef.__StackDelay {
 //│     constructor() {
 //│       let tmp;
 //│       tmp = super();

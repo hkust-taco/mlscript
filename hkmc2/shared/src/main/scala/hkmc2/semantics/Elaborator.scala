@@ -744,8 +744,12 @@ extends Importer:
               raise(ErrorReport(msg"Only function definitions are allowed in handler blocks" -> st.toLoc :: Nil))
               None
           }.collect { case Some(x) => x }
-          
-          val newAcc = funs ::: Handle(sym, cls(c, inAppPrefix = false), derivedClsSym, tds) :: acc
+          val (cp, p) = c match
+            case App(c, Tup(params)) =>
+              (cls(c, inAppPrefix = true), params.map(term(_)))
+            case c =>
+              (cls(c, inAppPrefix = false), Nil)
+          val newAcc = funs ::: Handle(sym, cp, p, derivedClsSym, tds) :: acc
           val newCtx = ctx + (id.name -> sym)
           val body = block(sts)(using newCtx)._1
           Term.Blk(newAcc.reverse, body) // <<<<<<<<<<<<<<<<<<<<<<<<<<< FIXME scope problem (not calling `go`)

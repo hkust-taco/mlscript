@@ -38,7 +38,7 @@ sealed abstract class Block extends Product with AutoLocated:
     case Define(defn, rst) =>
       val rest = rst.definedVars
       if defn.isOwned then rest else rest + defn.sym
-    case HandleBlock(lhs, res, par, cls, hdr, bod, rst) => bod.definedVars ++ rst.definedVars + lhs
+    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => bod.definedVars ++ rst.definedVars + lhs
     case HandleBlockReturn(_) => Set.empty
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
     case Label(lbl, bod, rst) => bod.definedVars ++ rst.definedVars
@@ -53,7 +53,7 @@ sealed abstract class Block extends Product with AutoLocated:
     case Define(_, rst) => 1 + rst.size
     case TryBlock(sub, fin, rst) => 1 + sub.size + fin.size + rst.size
     case Label(_, bod, rst) => 1 + bod.size + rst.size
-    case HandleBlock(lhs, res, par, cls, handlers, bdy, rst) => 1 + handlers.map(_.body.size).sum + bdy.size + rst.size
+    case HandleBlock(lhs, res, par, args, cls, handlers, bdy, rst) => 1 + handlers.map(_.body.size).sum + bdy.size + rst.size
   
   // TODO conserve if no changes
   def mapTail(f: BlockTail => BlockTail): Block = this match
@@ -61,8 +61,8 @@ sealed abstract class Block extends Product with AutoLocated:
     case Begin(sub, rst) => Begin(sub, rst.mapTail(f))
     case Assign(lhs, rhs, rst) => Assign(lhs, rhs, rst.mapTail(f))
     case Define(defn, rst) => Define(defn, rst.mapTail(f))
-    case HandleBlock(lhs, res, par, cls, handlers, body, rest) =>
-      HandleBlock(lhs, res, par, cls, handlers.map(h => Handler(h.sym, h.resumeSym, h.params, h.body)), body, rest.mapTail(f))
+    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
+      HandleBlock(lhs, res, par, args, cls, handlers.map(h => Handler(h.sym, h.resumeSym, h.params, h.body)), body, rest.mapTail(f))
     case Match(scrut, arms, dflt, rst: End) =>
       Match(scrut, arms.map(_ -> _.mapTail(f)), dflt.map(_.mapTail(f)), rst)
     case Match(scrut, arms, dflt, rst) =>
@@ -83,7 +83,7 @@ sealed abstract class Block extends Product with AutoLocated:
     case Assign(lhs, rhs, rest) => Set(lhs) ++ rhs.freeVars ++ rest.freeVars
     case AssignField(lhs, nme, rhs, rest) => lhs.freeVars ++ rhs.freeVars ++ rest.freeVars
     case Define(defn, rest) => defn.freeVars ++ rest.freeVars
-    case HandleBlock(lhs, res, par, cls, hdr, bod, rst) =>
+    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
       (bod.freeVars - lhs) ++ rst.freeVars ++ hdr.flatMap(_.freeVars)
     case HandleBlockReturn(res) => res.freeVars
     case End(msg) => Set.empty
@@ -95,7 +95,7 @@ sealed abstract class Block extends Product with AutoLocated:
     case Assign(_, rhs, rest) => rest :: Nil
     case AssignField(_, _, rhs, rest) => rest :: Nil
     case Define(_, rest) => rest :: Nil
-    case HandleBlock(_, _, _, _, handlers, body, rest) => handlers.map(_.body) :+ body :+ rest
+    case HandleBlock(_, _, _, _, _, handlers, body, rest) => handlers.map(_.body) :+ body :+ rest
     case _: Return | _: Throw | _: Label | _: Break | _: Continue | _: End | _: HandleBlockReturn => Nil
   
   // Moves definitions in a block to the top. Only scans the top-level definitions of the block;
@@ -156,6 +156,7 @@ case class HandleBlock(
     lhs: Local,
     res: Local,
     par: Path,
+    args: Ls[Path],
     cls: ClassSymbol,
     handlers: Ls[Handler],
     body: Block,

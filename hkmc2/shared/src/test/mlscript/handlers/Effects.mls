@@ -220,11 +220,13 @@ if true do
 //│ = 3
 
 module A with
-  class Effect with
+  class Effect(x) with
+    fun test() = x
     fun perform(arg)
-handle h = A.Effect with
-  fun perform(arg)(k) = arg
-h.perform(3)
+handle h = A.Effect(3) with
+  fun perform()(k) =
+    this.test()
+h.perform()
 //│ = 3
 
 fun f(perform) =

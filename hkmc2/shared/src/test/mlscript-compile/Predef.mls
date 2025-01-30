@@ -277,7 +277,7 @@ val __stackLimit = 0 // How deep the stack can go before heapifying the stack
 val __stackDepth = 0 // Tracks the virtual + real stack depth
 val __stackOffset = 0 // How much to offset __stackDepth by to get the true stack depth (i.e. the virtual depth)
 val __stackHandler = null
-abstract class __StackDelay() with
+abstract class __StackDelay with
   fun perform()
 
 fun checkDepth() =
