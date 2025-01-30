@@ -80,7 +80,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   )
   
   object SimpleCall:
-    def apply(fun: Path, args: List[Path]) = Call(fun, args.map(Arg(false, _)))(true)
+    def apply(fun: Path, args: List[Path]) = Call(fun, args.map(Arg(false, _)))(true, false)
     def unapply(res: Result) = res match
       case Call(fun, args) => args.foldRight[Opt[List[Path]]](S(Nil)): (arg, acc) =>
           acc.flatMap: acc =>
@@ -305,14 +305,13 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
         case Return(c @ Call(fun, args), false) if handlerCtx.isHandleFree =>
           val fun2 = applyPath(fun)
           val args2 = args.mapConserve(applyArg)
-          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun)
+          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.isEffectful)
           if c2 is c then b else Return(c2, false)
         // Optimization to avoid generation of unnecessary variables
-        case Assign(lhs, Call(Value.Ref(_: BuiltinSymbol), _), rest) => super.applyBlock(b)
-        case Assign(lhs, c @ Call(fun, args), rest) =>
+        case Assign(lhs, c @ Call(fun, args), rest) if c.isEffectful =>
           val fun2 = applyPath(fun)
           val args2 = args.mapConserve(applyArg)
-          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun)
+          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.isEffectful)
           ResultPlaceholder(lhs, freshId(), false, c2, applyBlock(rest))
         case Assign(lhs, c @ Instantiate(cls, args), rest) =>
           val cls2 = applyPath(cls)
@@ -321,12 +320,11 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
           ResultPlaceholder(lhs, freshId(), false, c2, applyBlock(rest))
         case _ => super.applyBlock(b)
       override def applyResult2(r: Result)(k: Result => Block): Block = r match
-        case r @ Call(Value.Ref(_: BuiltinSymbol), _) => super.applyResult2(r)(k)
-        case c @ Call(fun, args) =>
+        case c @ Call(fun, args) if c.isEffectful =>
           val res = freshTmp("res")
           val fun2 = applyPath(fun)
           val args2 = args.mapConserve(applyArg)
-          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun)
+          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.isEffectful)
           ResultPlaceholder(res, freshId(), false, c2, k(Value.Ref(res)))
         case c @ Instantiate(cls, args) =>
           val res = freshTmp("res")
@@ -411,7 +409,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       N, // no owner
       sym, PlainParamList(Nil) :: Nil, body)
     
-    val result = Define(defn, ResultPlaceholder(h.res, freshId(), true, Call(sym.asPath, Nil)(true), h.rest))
+    val result = Define(defn, ResultPlaceholder(h.res, freshId(), true, Call(sym.asPath, Nil)(true, true), h.rest))
     result
   
   private def genContClass(b: Block)(using HandlerCtx): Opt[ClsLikeDefn] =

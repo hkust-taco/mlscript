@@ -126,7 +126,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
           // * (non-local functions are compiled into getter methods selected on some prefix)
           if td.params.isEmpty then
             val l = new TempSymbol(S(t))
-            return Assign(l, Call(Value.Ref(bs), Nil)(true), k(Value.Ref(l)))
+            return Assign(l, Call(Value.Ref(bs), Nil)(true, true), k(Value.Ref(l)))
         case S(_) => ()
         case N => () // TODO panic here; can only lower refs to elab'd symbols
       case _ => ()
@@ -146,7 +146,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
             msg"Expected a single argument for ${sym.nme}" -> t.toLoc :: Nil, S(arg),
             source = Diagnostic.Source.Compilation)
         subTerm(arg): ar =>
-          k(Call(Value.Ref(sym), Arg(false, ar) :: Nil)(true))
+          k(Call(Value.Ref(sym), Arg(false, ar) :: Nil)(true, false))
       case st.Tup(Fld(FldFlags.benign(), arg1, N) :: Fld(FldFlags.benign(), arg2, N) :: Nil) =>
         if !sym.binary then raise:
           ErrorReport(
@@ -154,7 +154,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
             source = Diagnostic.Source.Compilation)
         subTerm(arg1): ar1 =>
           subTerm_nonTail(arg2): ar2 =>
-            k(Call(Value.Ref(sym), Arg(false, ar1) :: Arg(false, ar2) :: Nil)(true))
+            k(Call(Value.Ref(sym), Arg(false, ar1) :: Arg(false, ar2) :: Nil)(true, false))
       case _ =>
         raise:
           ErrorReport(
@@ -177,7 +177,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
             case spd: Spd => true -> spd.term
           val l = new TempSymbol(S(t))
             def rec(as: Ls[Bool -> st], asr: Ls[Arg]): Block = as match
-              case Nil => k(Call(fr, asr.reverse)(isMlsFun))
+              case Nil => k(Call(fr, asr.reverse)(isMlsFun, true))
               case (spd, a) :: as =>
                 subTerm_nonTail(a): ar =>
                   rec(as, Arg(spd, ar) :: asr)
@@ -185,7 +185,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
         case _ =>
           // Application arguments that are not tuples represent spreads, as in `f(...arg)`
           subTerm(arg): ar =>
-            k(Call(fr, Arg(spread = true, ar) :: Nil)(isMlsFun))
+            k(Call(fr, Arg(spread = true, ar) :: Nil)(isMlsFun, true))
       f match
       // * Due to whacky JS semantics, we need to make sure that selections leading to a call
       // * are preserved in the call and not moved to a temporary variable.
@@ -586,7 +586,7 @@ trait LoweringTraceLog
       case ((sym, res), acc) => Assign(sym, res, acc)
   
   private def call(fn: Path, args: Ls[Arg]): Call =
-    Call(fn, args)(true)
+    Call(fn, args)(true, false)
   
   extension (k: Block => Block)
     def |>: (b: Block): Block = k(b)

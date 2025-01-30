@@ -177,8 +177,6 @@ sum(10000)
 //│         stackDelayRes = value$;
 //│       } else if (this.pc === 1) {
 //│         tmp1 = value$;
-//│       } else if (this.pc === 2) {
-//│         tmp1 = value$;
 //│       }
 //│       contLoop: while (true) {
 //│         if (this.pc === 0) {
@@ -196,19 +194,12 @@ sum(10000)
 //│             this.pc = 1;
 //│             continue contLoop;
 //│           }
-//│           this.pc = 3;
-//│           continue contLoop;
-//│         } else if (this.pc === 3) {
-//│           break contLoop;
-//│         } else if (this.pc === 1) {
-//│           tmp1 = globalThis.Predef.resetDepth(tmp1, curDepth);
-//│           if (tmp1 instanceof globalThis.Predef.__EffectSig.class) {
-//│             this.pc = 2;
-//│             return globalThis.Predef.__appendInCont(tmp1, this);
-//│           }
 //│           this.pc = 2;
 //│           continue contLoop;
 //│         } else if (this.pc === 2) {
+//│           break contLoop;
+//│         } else if (this.pc === 1) {
+//│           tmp1 = globalThis.Predef.resetDepth(tmp1, curDepth);
 //│           return n + tmp1;
 //│         }
 //│         break;
@@ -236,11 +227,6 @@ sum(10000)
 //│       return tmp1;
 //│     }
 //│     tmp1 = globalThis.Predef.resetDepth(tmp1, curDepth);
-//│     if (tmp1 instanceof globalThis.Predef.__EffectSig.class) {
-//│       tmp1.tail.next = new Cont$.class(2);
-//│       tmp1.tail = tmp1.tail.next;
-//│       return tmp1;
-//│     }
 //│     return n + tmp1;
 //│   }
 //│ };
@@ -262,11 +248,11 @@ sum(10000)
 //│             this.pc = pc;
 //│           }
 //│           resume(value$) {
-//│             if (this.pc === 5) {
+//│             if (this.pc === 4) {
 //│               res3 = value$;
 //│             }
 //│             contLoop: while (true) {
-//│               if (this.pc === 5) {
+//│               if (this.pc === 4) {
 //│                 return res3;
 //│               }
 //│               break;
@@ -277,7 +263,7 @@ sum(10000)
 //│         globalThis.Predef.__stackOffset = globalThis.Predef.__stackDepth;
 //│         res3 = resume();
 //│         if (res3 instanceof globalThis.Predef.__EffectSig.class) {
-//│           res3.tail.next = new Cont$1.class(5);
+//│           res3.tail.next = new Cont$1.class(4);
 //│           res3.tail = res3.tail.next;
 //│           return res3;
 //│         }
@@ -295,11 +281,11 @@ sum(10000)
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
-//│       if (this.pc === 4) {
+//│       if (this.pc === 3) {
 //│         res2 = value$;
 //│       }
 //│       contLoop: while (true) {
-//│         if (this.pc === 4) {
+//│         if (this.pc === 3) {
 //│           return res2;
 //│         }
 //│         break;
@@ -313,7 +299,7 @@ sum(10000)
 //│   globalThis.Predef.__stackHandler = stackHandler;
 //│   res2 = sum3(10000);
 //│   if (res2 instanceof globalThis.Predef.__EffectSig.class) {
-//│     res2.tail.next = new Cont$(4);
+//│     res2.tail.next = new Cont$(3);
 //│     return globalThis.Predef.__handleBlockImpl(res2, stackHandler);
 //│   }
 //│   return res2;

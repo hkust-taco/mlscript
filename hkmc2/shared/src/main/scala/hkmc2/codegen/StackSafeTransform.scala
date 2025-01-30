@@ -26,7 +26,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
   private def intLit(n: BigInt) = Value.Lit(Tree.IntLit(n))
   
   private def op(op: String, a: Path, b: Path) =
-    Call(State.builtinOpsMap(op).asPath, a.asArg :: b.asArg :: Nil)(true)
+    Call(State.builtinOpsMap(op).asPath, a.asArg :: b.asArg :: Nil)(true, false)
 
   // Increases the stack depth, assigns the call to a value, then decreases the stack depth
   // then binds that value to a desired block
@@ -41,7 +41,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
       blockBuilder
         .assignFieldN(predefPath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(1)))
         .assign(tmp, res)
-        .assign(tmp, Call(resetDepthPath, tmp.asPath.asArg :: curDepth.asPath.asArg :: Nil)(true))
+        .assign(tmp, Call(resetDepthPath, tmp.asPath.asArg :: curDepth.asPath.asArg :: Nil)(true, false))
         .rest(f(tmp.asPath))
 
   def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol], curDepth: => Symbol) =
@@ -69,7 +69,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
         */
         blockBuilder
           .assignFieldN(predefPath, STACK_OFFSET_IDENT, stackDepthPath)
-          .assign(handlerRes, Call(Value.Ref(resumeSym), Nil)(true))
+          .assign(handlerRes, Call(Value.Ref(resumeSym), Nil)(true, true))
           .ret(handlerRes.asPath)
       ) :: Nil,
       blockBuilder
@@ -87,7 +87,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
   // Rewrites anything that can contain a Call to increase the stack depth
   def transform(b: Block, curDepth: => Symbol, isTopLevel: Bool = false): Block =
     def usesStack(r: Result) = r match
-      case Call(Value.Ref(_: BuiltinSymbol), _) => false
+      case c: Call if !c.isEffectful => false
       case _: Call | _: Instantiate => true
       case _ => false
 
@@ -137,7 +137,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
     var trivial = true
     val walker = new BlockTransformerShallow(SymbolSubst()):
       override def applyResult(r: Result): Result = r match
-        case Call(Value.Ref(_: BuiltinSymbol), _) => r
+        case c: Call if !c.isEffectful => r
         case _: Call | _: Instantiate => trivial = false; r
         case _ => r
     walker.applyBlock(b)
@@ -164,7 +164,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
       val resSym = TempSymbol(None, "stackDelayRes")
       blockBuilder
         .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
-        .assign(resSym, Call(checkDepthPath, Nil)(true))
+        .assign(resSym, Call(checkDepthPath, Nil)(true, true))
         .rest(newBody)
      
   def rewriteFn(defn: FunDefn) = FunDefn(defn.owner, defn.sym, defn.params, rewriteBlk(defn.body))
