@@ -30,7 +30,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
 
   // Increases the stack depth, assigns the call to a value, then decreases the stack depth
   // then binds that value to a desired block
-  def extractRes(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol], curDepth: Symbol) =
+  def extractRes(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol], curDepth: => Symbol) =
     if isTailCall then
       blockBuilder
         .assignFieldN(predefPath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(1)))
@@ -45,7 +45,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
         .assign(tmp, Call(maybeResetDepthPath, tmp.asPath.asArg :: curDepth.asPath.asArg :: Nil)(true))
         .rest(f(tmp.asPath))
 
-  def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol], curDepth: Symbol) =
+  def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol], curDepth: => Symbol) =
     val resumeSym = VarSymbol(Tree.Ident("resume"))
     val handlerSym = TempSymbol(None, "stackHandler")
     val resSym = sym getOrElse TempSymbol(None, "res")
@@ -86,7 +86,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
     )
 
   // Rewrites anything that can contain a Call to increase the stack depth
-  def transform(b: Block, curDepth: Symbol, isTopLevel: Bool = false): Block =
+  def transform(b: Block, curDepth: => Symbol, isTopLevel: Bool = false): Block =
     def usesStack(r: Result) = r match
       case Call(Value.Ref(_: BuiltinSymbol), _) => false
       case _: Call | _: Instantiate => true
@@ -111,6 +111,16 @@ class StackSafeTransform(depthLimit: Int)(using State):
             extract(applyResult(r), false, _ => applyBlock(rest), S(lhs), curDepth)
           else
             super.applyBlock(b)
+        case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
+          val l2 = applyLocal(l)
+          val res2 = applyLocal(res)
+          val par2 = applyPath(par)
+          val args2 = args.mapConserve(applyPath)
+          val cls2 = cls.subst
+          val hdr2 = hdr.mapConserve(applyHandler)
+          val bod2 = rewriteBlk(bod)
+          val rst2 = applyBlock(rst)
+          HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod2, rst2)
         case _ => super.applyBlock(b)
       
       override def applyResult2(r: Result)(k: Result => Block): Block =
@@ -133,19 +143,6 @@ class StackSafeTransform(depthLimit: Int)(using State):
         case _ => r
     walker.applyBlock(b)
     trivial
-  
-  def isTrivialModTc(b: Block): Boolean =
-    var trivial = true
-    val walker = new BlockTransformerShallow(SymbolSubst()):
-      override def applyBlock(b: Block): Block = b match
-        case Return(res, implct) => b
-        case _ => super.applyBlock(b)
-      override def applyResult(r: Result): Result = r match
-        case Call(Value.Ref(_: BuiltinSymbol), _) => r
-        case _: Call | _: Instantiate => trivial = false; r
-        case _ => r
-    walker.applyBlock(b)
-    trivial
 
   def rewriteCls(defn: ClsLikeDefn): ClsLikeDefn = 
     val ClsLikeDefn(owner, isym, sym, k, paramsOpt, 
@@ -156,7 +153,10 @@ class StackSafeTransform(depthLimit: Int)(using State):
     )
 
   def rewriteBlk(blk: Block) =
-    val curDepth = TempSymbol(None, "curDepth")
+    var usedDepth = false
+    lazy val curDepth =
+      usedDepth = true
+      TempSymbol(None, "curDepth")
     val newBody = transform(blk, curDepth)
 
     if isTrivial(blk) then
@@ -164,7 +164,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
     else
       val resSym = TempSymbol(None, "stackDelayRes")
       blockBuilder
-        .staticif(!isTrivialModTc(blk), _.assign(curDepth, stackDepthPath))
+        .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
         .assign(resSym, Call(checkDepthPath, Nil)(true))
         .rest(newBody)
      
