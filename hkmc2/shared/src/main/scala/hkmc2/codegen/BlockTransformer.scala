@@ -83,6 +83,13 @@ class BlockTransformer(subst: SymbolSubst):
       if (l2 is l) && (res2 is res) && (par2 is par) && (cls2 is cls) &&
           (hdr2 is hdr) && (bod2 is bod) && (rst2 is rst)
         then b else HandleBlock(l2, res2, par2, cls2, hdr2, bod2, rst2)
+    case AssignDynField(l, fld, arrayIdx, r, rst) =>
+      applyResult2(r): r2 =>
+        val l2 = applyPath(l)
+        val fld2 = applyPath(fld)
+        val rst2 = applyBlock(rst)
+        if (l2 is l) && (fld2 is fld) && (r2 is r) && (rst2 is rst)
+          then b else AssignDynField(l2, fld2, arrayIdx, r2, rst2)
   
   def applyResult2(r: Result)(k: Result => Block): Block = k(applyResult(r))
 
@@ -98,6 +105,10 @@ class BlockTransformer(subst: SymbolSubst):
     case p: Path => applyPath(p)
   
   def applyPath(p: Path): Path = p match
+    case DynSelect(qual, fld, arrayIdx) =>
+      val qual2 = applyPath(qual)
+      val fld2 = applyPath(fld)
+      if (qual2 is qual) && (fld2 is fld) then p else DynSelect(qual2, fld2, arrayIdx) 
     case p @ Select(qual, name) =>
       val qual2 = applyPath(qual)
       val sym2 = p.symbol.mapConserve(_.subst)
@@ -232,12 +243,18 @@ class BlockTransformerNoRec(subst: SymbolSubst) extends BlockTransformerShallow(
       val scrut2 = applyPath(scrut)
       if (scrut is scrut2) then b else Match(scrut2, arms, dflt, rest)
     case Assign(lhs, rhs, rest) => 
-      val lhs2 = lhs.subst
-      val rhs2 = applyResult(rhs)
-      if (lhs is lhs2) && (rhs is rhs2) then b else Assign(lhs2, rhs2, rest)
+      applyResult2(rhs): rhs2 =>
+        val lhs2 = lhs.subst
+        if (lhs is lhs2) && (rhs is rhs2) then b else Assign(lhs2, rhs2, rest)
     case AssignField(lhs, ident, rhs, rest) => 
-      val lhs2 = applyPath(lhs)
-      val rhs2 = applyResult(rhs)
-      if rhs is rhs2 then b else AssignField(lhs2, ident, rhs2, rest)(N)
+      applyResult2(rhs): rhs2 =>
+        val lhs2 = applyPath(lhs)
+        if rhs is rhs2 then b else AssignField(lhs2, ident, rhs2, rest)(N)
+    case AssignDynField(l, fld, arrayIdx, r, rst) =>
+      applyResult2(r): r2 =>
+        val l2 = applyPath(l)
+        val fld2 = applyPath(fld)
+        if (l2 is l) && (fld2 is fld) && (r2 is r)
+          then b else AssignDynField(l2, fld2, arrayIdx, r2, rst)
     case _: Label | _: Begin | _: TryBlock | _: Define | _: HandleBlock | _: End => b
     case _: Return | _: Break | _: Continue | _: HandleBlockReturn | _: Throw => super.applyBlock(b)

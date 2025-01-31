@@ -266,6 +266,9 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       case blk @ AssignField(lhs, nme, rhs, rest) =>
         val PartRet(head, parts) = go(rest)
         PartRet(AssignField(lhs, nme, rhs, head)(blk.symbol), parts)
+      case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
+        val PartRet(head, parts) = go(rest)
+        PartRet(AssignDynField(lhs, fld, arrayIdx, rhs, rest), parts)
       case Return(_, _) => PartRet(blk, Nil)
       // ignored cases
       case TryBlock(sub, finallyDo, rest) => ??? // ignore
