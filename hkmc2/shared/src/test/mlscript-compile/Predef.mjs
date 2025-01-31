@@ -3,14 +3,18 @@ Predef1 = class Predef {
   static {
     this.assert = globalThis.console.assert;
     this.foldl = Predef.fold;
-    this.MatchResult = function MatchResult(captures1) { return new MatchResult.class(captures1); };
+    this.MatchResult = function MatchResult(captures1) {
+      return new MatchResult.class(captures1);
+    };
     this.MatchResult.class = class MatchResult {
       constructor(captures) {
         this.captures = captures;
       }
       toString() { return "MatchResult(" + globalThis.Predef.render(this.captures) + ")"; }
     };
-    this.MatchFailure = function MatchFailure(errors1) { return new MatchFailure.class(errors1); };
+    this.MatchFailure = function MatchFailure(errors1) {
+      return new MatchFailure.class(errors1);
+    };
     this.MatchFailure.class = class MatchFailure {
       constructor(errors) {
         this.errors = errors;
@@ -68,21 +72,27 @@ Predef1 = class Predef {
       }
       toString() { return "Test"; }
     };
-    this.__Cont = function __Cont(next1) { return new __Cont.class(next1); };
+    this.__Cont = function __Cont(next1) {
+      return new __Cont.class(next1);
+    };
     this.__Cont.class = class __Cont {
       constructor(next) {
         this.next = next;
       }
       toString() { return "__Cont(" + globalThis.Predef.render(this.next) + ")"; }
     };
-    this.__TailList = function __TailList(next1) { return new __TailList.class(next1); };
+    this.__TailList = function __TailList(next1) {
+      return new __TailList.class(next1);
+    };
     this.__TailList.class = class __TailList {
       constructor(next) {
         this.next = next;
       }
       toString() { return "__TailList(" + globalThis.Predef.render(this.next) + ")"; }
     };
-    this.__ListWithTail = function __ListWithTail(next1, tail1) { return new __ListWithTail.class(next1, tail1); };
+    this.__ListWithTail = function __ListWithTail(next1, tail1) {
+      return new __ListWithTail.class(next1, tail1);
+    };
     this.__ListWithTail.class = class __ListWithTail {
       constructor(next, tail) {
         this.next = next;
@@ -95,7 +105,9 @@ Predef1 = class Predef {
       }
       toString() { return "__ListWithTail(" + globalThis.Predef.render(this.next) + ", " + globalThis.Predef.render(this.tail) + ")"; }
     };
-    this.__HandleBlock = function __HandleBlock(contHead1, lastHandlerCont1, next1, handler1) { return new __HandleBlock.class(contHead1, lastHandlerCont1, next1, handler1); };
+    this.__HandleBlock = function __HandleBlock(contHead1, lastHandlerCont1, next1, handler1) {
+      return new __HandleBlock.class(contHead1, lastHandlerCont1, next1, handler1);
+    };
     this.__HandleBlock.class = class __HandleBlock {
       constructor(contHead, lastHandlerCont, next, handler) {
         this.contHead = contHead;
@@ -105,7 +117,9 @@ Predef1 = class Predef {
       }
       toString() { return "__HandleBlock(" + globalThis.Predef.render(this.contHead) + ", " + globalThis.Predef.render(this.lastHandlerCont) + ", " + globalThis.Predef.render(this.next) + ", " + globalThis.Predef.render(this.handler) + ")"; }
     };
-    this.__EffectSig = function __EffectSig(next1, tail1, handleBlockList1, resumed1, handler1, handlerFun1) { return new __EffectSig.class(next1, tail1, handleBlockList1, resumed1, handler1, handlerFun1); };
+    this.__EffectSig = function __EffectSig(next1, tail1, handleBlockList1, resumed1, handler1, handlerFun1) {
+      return new __EffectSig.class(next1, tail1, handleBlockList1, resumed1, handler1, handlerFun1);
+    };
     this.__EffectSig.class = class __EffectSig {
       constructor(next, tail, handleBlockList, resumed, handler, handlerFun) {
         this.next = next;
@@ -117,7 +131,9 @@ Predef1 = class Predef {
       }
       toString() { return "__EffectSig(" + globalThis.Predef.render(this.next) + ", " + globalThis.Predef.render(this.tail) + ", " + globalThis.Predef.render(this.handleBlockList) + ", " + globalThis.Predef.render(this.resumed) + ", " + globalThis.Predef.render(this.handler) + ", " + globalThis.Predef.render(this.handlerFun) + ")"; }
     };
-    this.__Return = function __Return(value1) { return new __Return.class(value1); };
+    this.__Return = function __Return(value1) {
+      return new __Return.class(value1);
+    };
     this.__Return.class = class __Return {
       constructor(value) {
         this.value = value;
@@ -128,7 +144,9 @@ Predef1 = class Predef {
     this.__stackDepth = 0;
     this.__stackOffset = 0;
     this.__stackHandler = null;
-    this.__StackDelay = function __StackDelay() { return new __StackDelay.class(); };
+    this.__StackDelay = function __StackDelay() {
+      return new __StackDelay.class();
+    };
     this.__StackDelay.class = class __StackDelay {
       constructor() {}
       toString() { return "__StackDelay(" + "" + ")"; }

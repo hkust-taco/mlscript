@@ -5,7 +5,9 @@ let Accounting1;
 Accounting1 = class Accounting {
   constructor() {
     this.warnings = [];
-    this.Project = function Project(num1) { return new Project.class(num1); };
+    this.Project = function Project(num1) {
+      return new Project.class(num1);
+    };
     this.Project.class = class Project {
       constructor(num) {
         this.num = num;
@@ -13,7 +15,9 @@ Accounting1 = class Accounting {
       toString() { return "Project(" + globalThis.Predef.render(this.num) + ")"; }
     };
     const this$Accounting = this;
-    this.Line = function Line(name1, proj1, starting_balance1, isMatchable1) { return new Line.class(name1, proj1, starting_balance1, isMatchable1); };
+    this.Line = function Line(name1, proj1, starting_balance1, isMatchable1) {
+      return new Line.class(name1, proj1, starting_balance1, isMatchable1);
+    };
     this.Line.class = class Line {
       constructor(name, proj, starting_balance, isMatchable) {
         this.name = name;
@@ -45,7 +49,9 @@ Accounting1 = class Accounting {
       toString() { return "Line(" + globalThis.Predef.render(this.name) + ", " + globalThis.Predef.render(this.proj) + ", " + globalThis.Predef.render(this.starting_balance) + ", " + globalThis.Predef.render(this.isMatchable) + ")"; }
     };
     this.lines = [];
-    this.Report = function Report(fileName1) { return new Report.class(fileName1); };
+    this.Report = function Report(fileName1) {
+      return new Report.class(fileName1);
+    };
     this.Report.class = class Report {
       constructor(fileName) {
         this.fileName = fileName;

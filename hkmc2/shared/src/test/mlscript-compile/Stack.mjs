@@ -2,7 +2,9 @@ import Predef from "./Predef.mjs";
 let Stack1;
 Stack1 = class Stack {
   static {
-    this.Cons = function Cons(head1, tail1) { return new Cons.class(head1, tail1); };
+    this.Cons = function Cons(head1, tail1) {
+      return new Cons.class(head1, tail1);
+    };
     this.Cons.class = class Cons {
       constructor(head, tail) {
         this.head = head;
