@@ -87,7 +87,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
   // Rewrites anything that can contain a Call to increase the stack depth
   def transform(b: Block, curDepth: => Symbol, isTopLevel: Bool = false): Block =
     def usesStack(r: Result) = r match
-      case c: Call if !c.isEffectful => false
+      case Call(Value.Ref(_: BuiltinSymbol), _) => false
       case _: Call | _: Instantiate => true
       case _ => false
 
@@ -137,7 +137,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
     var trivial = true
     val walker = new BlockTransformerShallow(SymbolSubst()):
       override def applyResult(r: Result): Result = r match
-        case c: Call if !c.isEffectful => r
+        case Call(Value.Ref(_: BuiltinSymbol), _) => r
         case _: Call | _: Instantiate => trivial = false; r
         case _ => r
     walker.applyBlock(b)
