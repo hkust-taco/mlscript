@@ -11,7 +11,7 @@ module Example with
   fun foo(): module M = M
 
 let m = Example.foo()
-//│ m = M { class: [class M] }
+//│ m = [class M]
 
 :todo // FIXME: should be an error
 :e
@@ -20,14 +20,14 @@ id(m).mtd()
 
 
 Example.foo()
-//│ = M { class: [class M] }
+//│ = [class M]
 
 :e
 id(Example.foo())
 //│ ╔══[ERROR] Only module parameters may receive module arguments (values).
 //│ ║  l.26: 	id(Example.foo())
 //│ ╙──      	   ^^^^^^^^^^^^^
-//│ = M { class: [class M] }
+//│ = [class M]
 
 Example.foo().mtd()
 //│ = 42
@@ -45,14 +45,14 @@ M |> id
 //│ ╔══[ERROR] Only module parameters may receive module arguments (values).
 //│ ║  l.44: 	M |> id
 //│ ╙──      	^
-//│ = M { class: [class M] }
+//│ = [class M]
 
 :e
 id <| M
 //│ ╔══[ERROR] Only module parameters may receive module arguments (values).
 //│ ║  l.51: 	id <| M
 //│ ╙──      	      ^
-//│ = M { class: [class M] }
+//│ = [class M]
 
 fun (+) lol(a, b) = [a, b]
 
@@ -61,14 +61,14 @@ M + 1
 //│ ╔══[ERROR] Only module parameters may receive module arguments (values).
 //│ ║  l.60: 	M + 1
 //│ ╙──      	^
-//│ = [ M { class: [class M] }, 1 ]
+//│ = [ [class M], 1 ]
 
 
 
 :todo // FIXME: should be an error
 :e
 let m = M
-//│ m = M { class: [class M] }
+//│ m = [class M]
 
 
 

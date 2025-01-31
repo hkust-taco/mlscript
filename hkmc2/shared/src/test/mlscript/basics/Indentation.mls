@@ -87,6 +87,6 @@ fun checkArgs(expected) =
 module TraceLogger
 
 P.TraceLogger
-//│ = TraceLogger { class: [class TraceLogger] }
+//│ = [class TraceLogger1]
 
 

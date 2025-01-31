@@ -30,6 +30,7 @@ sealed abstract class Block extends Product with AutoLocated:
     case Assign(l: TermSymbol, r, rst) => rst.definedVars
     case Assign(l, r, rst) => rst.definedVars + l
     case AssignField(l, n, r, rst) => rst.definedVars
+    case AssignDynField(l, n, ai, r, rst) => rst.definedVars
     case Match(scrut, arms, dflt, rst) =>
       arms.flatMap(_._2.definedVars).toSet ++ dflt.toList.flatMap(_.definedVars) ++ rst.definedVars
     case End(_) => Set.empty
@@ -89,13 +90,20 @@ sealed abstract class Block extends Product with AutoLocated:
     case End(msg) => Set.empty
   
   lazy val subBlocks: Ls[Block] = this match
-    case Match(_, arms, dflt, rest) => arms.map(_._2) ++ dflt.toList :+ rest
+    case Match(p, arms, dflt, rest) => p.subBlocks ++ arms.map(_._2) ++ dflt.toList :+ rest
     case Begin(sub, rest) => sub :: rest :: Nil
     case TryBlock(sub, finallyDo, rest) => sub :: finallyDo :: rest :: Nil
-    case Assign(_, rhs, rest) => rest :: Nil
-    case AssignField(_, _, rhs, rest) => rest :: Nil
-    case Define(_, rest) => rest :: Nil
-    case HandleBlock(_, _, _, _, handlers, body, rest) => handlers.map(_.body) :+ body :+ rest
+    case Assign(_, rhs, rest) => rhs.subBlocks ::: rest :: Nil
+    case AssignField(_, _, rhs, rest) => rhs.subBlocks ::: rest :: Nil
+    case AssignDynField(_, _, _, rhs, rest) => rhs.subBlocks ::: rest :: Nil
+    case Define(d, rest) => d.subBlocks ::: rest :: Nil
+    case HandleBlock(_, _, par, _, handlers, body, rest) => par.subBlocks ++ handlers.map(_.body) :+ body :+ rest
+    
+    // TODO rm Lam from values and thus the need for these cases
+    case Return(r, _) => r.subBlocks
+    case HandleBlockReturn(r) => r.subBlocks
+    case Throw(r) => r.subBlocks
+    
     case _: Return | _: Throw | _: Label | _: Break | _: Continue | _: End | _: HandleBlockReturn => Nil
   
   // Moves definitions in a block to the top. Only scans the top-level definitions of the block;
@@ -150,6 +158,8 @@ case class Assign(lhs: Local, rhs: Result, rest: Block) extends Block with Produ
 
 case class AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(val symbol: Opt[FieldSymbol]) extends Block with ProductWithTail
 
+case class AssignDynField(lhs: Path, fld: Path, arrayIdx: Bool, rhs: Result, rest: Block) extends Block with ProductWithTail
+
 case class Define(defn: Defn, rest: Block) extends Block with ProductWithTail
 
 case class HandleBlock(
@@ -169,7 +179,13 @@ sealed abstract class Defn:
   val sym: BlockMemberSymbol
   def isOwned: Bool = owner.isDefined
   def owner: Opt[InnerSymbol]
-
+  
+  def subBlocks: Ls[Block] = this match
+    case FunDefn(body = body) => body :: Nil
+    case _: ValDefn => Nil
+    case ClsLikeDefn(preCtor = preCtor, ctor = ctor, methods = mtds) =>
+      preCtor :: ctor :: mtds.flatMap(_.subBlocks)
+  
   lazy val freeVars: Set[Local] = this match
     case FunDefn(own, sym, params, body) => body.freeVars -- params.flatMap(_.paramSyms) - sym
     case ValDefn(owner, k, sym, rhs) => rhs.freeVars
@@ -234,7 +250,16 @@ enum Case:
     case Tup(_, _) => Set.empty
 
 sealed abstract class Result:
-
+  
+  // TODO rm Lam from values and thus the need for this method
+  def subBlocks: Ls[Block] = this match
+    case Call(fun, args) => fun.subBlocks ::: args.flatMap(_.value.subBlocks)
+    case Instantiate(cls, args) => args.flatMap(_.subBlocks)
+    case Select(qual, name) => qual.subBlocks
+    case Value.Lam(params, body) => body :: Nil
+    case Value.Arr(elems) => elems.flatMap(_.value.subBlocks)
+    case _ => Nil
+  
   lazy val freeVars: Set[Local] = this match
     case Call(fun, args) => args.flatMap(_.value.freeVars).toSet
     case Instantiate(cls, args) => args.flatMap(_.freeVars).toSet
@@ -258,6 +283,8 @@ sealed abstract class Path extends Result:
 
 case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[FieldSymbol]) extends Path with ProductWithExtraInfo:
   def extraInfo: Str = symbol.mkString
+
+case class DynSelect(qual: Path, fld: Path, arrayIdx: Bool) extends Path
 
 enum Value extends Path:
   case Ref(l: Local)

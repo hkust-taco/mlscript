@@ -75,8 +75,8 @@ fun test2() =
   funny
 //│ ═══[WARNING] Pure expression in statement position
 //│ JS (unsanitized):
-//│ let test25;
-//│ test25 = function test2() {
+//│ let test22;
+//│ test22 = function test2() {
 //│   let funny, tmp1;
 //│   funny = function funny() {
 //│     return (caseScrut) => {

@@ -48,12 +48,12 @@ fun permutations_foreach(l, f) =
       resume(())
   permutations(gen, l)
 permutations_foreach([1, 2, 3], print)
-//│ > 1,2,3
-//│ > 1,3,2
-//│ > 2,1,3
-//│ > 2,3,1
-//│ > 3,1,2
-//│ > 3,2,1
+//│ > [1, 2, 3]
+//│ > [1, 3, 2]
+//│ > [2, 1, 3]
+//│ > [2, 3, 1]
+//│ > [3, 1, 2]
+//│ > [3, 2, 1]
 
 
 fun permutations_impl(gen, l1, l2) =

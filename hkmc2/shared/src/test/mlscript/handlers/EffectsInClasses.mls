@@ -17,12 +17,12 @@ class Lol(h) with
 //│ Lol1.class = class Lol {
 //│   constructor(h) {
 //│     this.h = h;
-//│     let tmp, res, res1, Cont$;
+//│     let tmp, res, res1, Cont$1;
 //│     const this$Lol = this;
-//│     Cont$ = function Cont$(pc1) {
+//│     Cont$1 = function Cont$(pc1) {
 //│       return new Cont$.class(pc1);
 //│     };
-//│     Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
+//│     Cont$1.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│       constructor(pc) {
 //│         let tmp1;
 //│         tmp1 = super(null, null);
@@ -53,24 +53,24 @@ class Lol(h) with
 //│           break;
 //│         }
 //│       }
-//│       toString() { return "Cont$(" + this.pc + ")"; }
+//│       toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│     };
 //│     res = this.h.perform("k") ?? null;
 //│     if (res instanceof globalThis.Predef.__EffectSig.class) {
-//│       res.tail.next = Cont$(0);
+//│       res.tail.next = Cont$1(0);
 //│       res.tail = res.tail.next;
 //│       return res;
 //│     }
 //│     tmp = res;
 //│     res1 = Predef.print(tmp);
 //│     if (res1 instanceof globalThis.Predef.__EffectSig.class) {
-//│       res1.tail.next = Cont$(1);
+//│       res1.tail.next = Cont$1(1);
 //│       res1.tail = res1.tail.next;
 //│       return res1;
 //│     }
 //│     res1
 //│   }
-//│   toString() { return "Lol(" + this.h + ")"; }
+//│   toString() { return "Lol(" + globalThis.Predef.render(this.h) + ")"; }
 //│ };
 //│ null
 
@@ -110,9 +110,9 @@ let oops =
   Lol(h)
 //│ > k
 //│ > b
-//│ oops = Lol { h: Handler$h$ {} }
+//│ oops = Lol { h: Handler$h$2 {} }
 
 oops.h
-//│ = Handler$h$ {}
+//│ = Handler$h$2 {}
 
 

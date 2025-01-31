@@ -346,7 +346,8 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     FunDefn(f.owner, f.sym, f.params, translateBlock(f.body, functionHandlerCtx))
   
   private def translateCls(cls: ClsLikeDefn): ClsLikeDefn =
-    cls.copy(methods = cls.methods.map(translateFun), ctor = translateBlock(cls.ctor, ctorCtx(cls.sym.asClsLike.get.asPath)))
+    cls.copy(methods = cls.methods.map(translateFun),
+      ctor = translateBlock(cls.ctor, ctorCtx(cls.sym.asClsLike.getOrElse(wat("asClsLike", cls.sym)).asPath)))
   
   // Handle block becomes a FunDefn and CallPlaceholder
   private def translateHandleBlock(h: HandleBlock): Block =

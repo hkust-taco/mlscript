@@ -8,7 +8,7 @@
 :sjs
 hello()
 //│ JS (unsanitized):
-//│ hello1()
+//│ hello()
 //│ = 'Hello!'
 
 
@@ -17,6 +17,6 @@ fun hello() = "Hello?"
 :sjs
 hello()
 //│ JS (unsanitized):
-//│ hello3()
+//│ hello1()
 //│ = 'Hello?'
 

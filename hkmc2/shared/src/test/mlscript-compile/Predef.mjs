@@ -1,55 +1,55 @@
 let Predef1;
-const Predef$class = class Predef {
-  constructor() {
+Predef1 = class Predef {
+  static {
     this.assert = globalThis.console.assert;
-    this.foldl = this.fold;
+    this.foldl = Predef.fold;
     this.MatchResult = function MatchResult(captures1) { return new MatchResult.class(captures1); };
     this.MatchResult.class = class MatchResult {
       constructor(captures) {
         this.captures = captures;
       }
-      toString() { return "MatchResult(" + this.captures + ")"; }
+      toString() { return "MatchResult(" + globalThis.Predef.render(this.captures) + ")"; }
     };
     this.MatchFailure = function MatchFailure(errors1) { return new MatchFailure.class(errors1); };
     this.MatchFailure.class = class MatchFailure {
       constructor(errors) {
         this.errors = errors;
       }
-      toString() { return "MatchFailure(" + this.errors + ")"; }
+      toString() { return "MatchFailure(" + globalThis.Predef.render(this.errors) + ")"; }
     };
-    const TraceLogger$class = class TraceLogger {
-      constructor() {
+    this.TraceLogger = class TraceLogger {
+      static {
         this.enabled = false;
         this.indentLvl = 0;
       }
-      indent() {
+      static indent() {
         let scrut, prev, tmp;
-        scrut = this.enabled;
+        scrut = TraceLogger.enabled;
         if (scrut === true) {
-          prev = this.indentLvl;
+          prev = TraceLogger.indentLvl;
           tmp = prev + 1;
-          this.indentLvl = tmp;
+          TraceLogger.indentLvl = tmp;
           return prev;
         } else {
           return null;
         }
       } 
-      resetIndent(n) {
+      static resetIndent(n) {
         let scrut;
-        scrut = this.enabled;
+        scrut = TraceLogger.enabled;
         if (scrut === true) {
-          this.indentLvl = n;
+          TraceLogger.indentLvl = n;
           return null;
         } else {
           return null;
         }
       } 
-      log(msg) {
+      static log(msg) {
         let scrut, tmp, tmp1, tmp2, tmp3, tmp4;
-        scrut = this.enabled;
+        scrut = TraceLogger.enabled;
         if (scrut === true) {
-          tmp = "| ".repeat(this.indentLvl) ?? null;
-          tmp1 = "  ".repeat(this.indentLvl) ?? null;
+          tmp = "| ".repeat(TraceLogger.indentLvl) ?? null;
+          tmp1 = "  ".repeat(TraceLogger.indentLvl) ?? null;
           tmp2 = "\n" + tmp1;
           tmp3 = msg.replaceAll("\n", tmp2);
           tmp4 = tmp + tmp3;
@@ -58,15 +58,12 @@ const Predef$class = class Predef {
           return null;
         }
       }
-      toString() { return "TraceLogger"; }
+      static toString() { return "TraceLogger"; }
     };
-    this.TraceLogger = new TraceLogger$class;
-    this.TraceLogger.class = TraceLogger$class;
-    const this$Predef = this;
     this.Test = class Test {
       constructor() {
         let tmp;
-        tmp = this$Predef.print("Test");
+        tmp = Predef.print("Test");
         this.y = 1;
       }
       toString() { return "Test"; }
@@ -76,14 +73,14 @@ const Predef$class = class Predef {
       constructor(next) {
         this.next = next;
       }
-      toString() { return "__Cont(" + this.next + ")"; }
+      toString() { return "__Cont(" + globalThis.Predef.render(this.next) + ")"; }
     };
     this.__TailList = function __TailList(next1) { return new __TailList.class(next1); };
     this.__TailList.class = class __TailList {
       constructor(next) {
         this.next = next;
       }
-      toString() { return "__TailList(" + this.next + ")"; }
+      toString() { return "__TailList(" + globalThis.Predef.render(this.next) + ")"; }
     };
     this.__ListWithTail = function __ListWithTail(next1, tail1) { return new __ListWithTail.class(next1, tail1); };
     this.__ListWithTail.class = class __ListWithTail {
@@ -96,7 +93,7 @@ const Predef$class = class Predef {
         this.tail = elem;
         return null;
       }
-      toString() { return "__ListWithTail(" + this.next + ", " + this.tail + ")"; }
+      toString() { return "__ListWithTail(" + globalThis.Predef.render(this.next) + ", " + globalThis.Predef.render(this.tail) + ")"; }
     };
     this.__HandleBlock = function __HandleBlock(contHead1, lastHandlerCont1, next1, handler1) { return new __HandleBlock.class(contHead1, lastHandlerCont1, next1, handler1); };
     this.__HandleBlock.class = class __HandleBlock {
@@ -106,7 +103,7 @@ const Predef$class = class Predef {
         this.next = next;
         this.handler = handler;
       }
-      toString() { return "__HandleBlock(" + this.contHead + ", " + this.lastHandlerCont + ", " + this.next + ", " + this.handler + ")"; }
+      toString() { return "__HandleBlock(" + globalThis.Predef.render(this.contHead) + ", " + globalThis.Predef.render(this.lastHandlerCont) + ", " + globalThis.Predef.render(this.next) + ", " + globalThis.Predef.render(this.handler) + ")"; }
     };
     this.__EffectSig = function __EffectSig(next1, tail1, handleBlockList1, resumed1, handler1, handlerFun1) { return new __EffectSig.class(next1, tail1, handleBlockList1, resumed1, handler1, handlerFun1); };
     this.__EffectSig.class = class __EffectSig {
@@ -118,14 +115,14 @@ const Predef$class = class Predef {
         this.handler = handler;
         this.handlerFun = handlerFun;
       }
-      toString() { return "__EffectSig(" + this.next + ", " + this.tail + ", " + this.handleBlockList + ", " + this.resumed + ", " + this.handler + ", " + this.handlerFun + ")"; }
+      toString() { return "__EffectSig(" + globalThis.Predef.render(this.next) + ", " + globalThis.Predef.render(this.tail) + ", " + globalThis.Predef.render(this.handleBlockList) + ", " + globalThis.Predef.render(this.resumed) + ", " + globalThis.Predef.render(this.handler) + ", " + globalThis.Predef.render(this.handlerFun) + ")"; }
     };
     this.__Return = function __Return(value1) { return new __Return.class(value1); };
     this.__Return.class = class __Return {
       constructor(value) {
         this.value = value;
       }
-      toString() { return "__Return(" + this.value + ")"; }
+      toString() { return "__Return(" + globalThis.Predef.render(this.value) + ")"; }
     };
     this.__stackLimit = 0;
     this.__stackDepth = 0;
@@ -134,89 +131,163 @@ const Predef$class = class Predef {
     this.__StackDelay = function __StackDelay() { return new __StackDelay.class(); };
     this.__StackDelay.class = class __StackDelay {
       constructor() {}
-      toString() { return "__StackDelay(" +  + ")"; }
+      toString() { return "__StackDelay(" + "" + ")"; }
     };
   }
-  id(x) {
+  static id(x) {
     return x;
   } 
-  not(x1) {
+  static not(x1) {
     if (x1 === false) {
       return true;
     } else {
       return false;
     }
   } 
-  pipeInto(x2, f) {
+  static pipeInto(x2, f) {
     return f(x2) ?? null;
   } 
-  pipeFrom(f1, x3) {
+  static pipeFrom(f1, x3) {
     return f1(x3) ?? null;
   } 
-  andThen(f2, g) {
+  static andThen(f2, g) {
     return (x4) => {
       let tmp;
       tmp = f2(x4) ?? null;
       return g(tmp) ?? null;
     };
   } 
-  compose(f3, g1) {
+  static compose(f3, g1) {
     return (x4) => {
       let tmp;
       tmp = g1(x4) ?? null;
       return f3(tmp) ?? null;
     };
   } 
-  passTo(receiver, f4) {
+  static passTo(receiver, f4) {
     return (...args) => {
       return f4(receiver, ...args) ?? null;
     };
   } 
-  call(receiver1, f5) {
+  static call(receiver1, f5) {
     return (...args) => {
       return f5.call(receiver1, ...args);
     };
   } 
-  pass1(f6) {
+  static pass1(f6) {
     return (...xs) => {
       return f6(xs[0]) ?? null;
     };
   } 
-  pass2(f7) {
+  static pass2(f7) {
     return (...xs) => {
       return f7(xs[0], xs[1]) ?? null;
     };
   } 
-  pass3(f8) {
+  static pass3(f8) {
     return (...xs) => {
       return f8(xs[0], xs[1], xs[2]) ?? null;
     };
   } 
-  print(...xs) {
-    let tmp;
-    tmp = xs.map(globalThis.String) ?? null;
-    return globalThis.console.log(...tmp) ?? null;
+  static print(...xs) {
+    let tmp, tmp1;
+    tmp = Predef.map(Predef.renderAsStr);
+    tmp1 = tmp(...xs) ?? null;
+    return globalThis.console.log(...tmp1) ?? null;
   } 
-  notImplemented(msg) {
+  static interleave(sep) {
+    return (...args) => {
+      let res, len, i, scrut, idx, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+      scrut2 = args.length === 0;
+      if (scrut2 === true) {
+        return [];
+      } else {
+        tmp = args.length * 2;
+        tmp1 = tmp - 1;
+        tmp2 = globalThis.Array(tmp1);
+        res = tmp2;
+        len = args.length;
+        i = 0;
+        tmp8: while (true) {
+          scrut = i < len;
+          if (scrut === true) {
+            tmp3 = i * 2;
+            idx = tmp3;
+            res[idx] = args[i];
+            tmp4 = i + 1;
+            i = tmp4;
+            scrut1 = i < len;
+            if (scrut1 === true) {
+              tmp5 = idx + 1;
+              res[tmp5] = sep;
+              tmp6 = null;
+            } else {
+              tmp6 = null;
+            }
+            tmp7 = tmp6;
+            continue tmp8;
+          } else {
+            tmp7 = null;
+          }
+          break;
+        }
+        return res;
+      }
+    };
+  } 
+  static renderAsStr(arg) {
+    if (typeof arg === 'string') {
+      return arg;
+    } else {
+      return Predef.render(arg);
+    }
+  } 
+  static render(arg1) {
+    let tmp, tmp1, tmp2, tmp3, tmp4;
+    if (arg1 instanceof globalThis.Array) {
+      tmp = Predef.fold((arg11, arg2) => {
+        return arg11 + arg2;
+      });
+      tmp1 = Predef.interleave(", ");
+      tmp2 = Predef.map(Predef.render);
+      tmp3 = tmp2(...arg1) ?? null;
+      tmp4 = tmp1(...tmp3) ?? null;
+      return tmp("[", ...tmp4, "]") ?? null;
+    } else {
+      if (typeof arg1 === 'string') {
+        return globalThis.JSON.stringify(arg1) ?? null;
+      } else {
+        return globalThis.String(arg1);
+      }
+    }
+  } 
+  static notImplemented(msg) {
     let tmp;
     tmp = "Not implemented: " + msg;
     throw globalThis.Error(tmp);
   } 
-  get notImplementedError() {
+  static get notImplementedError() {
     throw globalThis.Error("Not implemented");
   } 
-  tuple(...xs1) {
+  static tuple(...xs1) {
     return xs1;
   } 
-  tupleSlice(xs2, i, j) {
+  static tupleSlice(xs2, i, j) {
     let tmp;
     tmp = xs2.length - j;
     return globalThis.Array.prototype.slice.call(xs2, i, tmp) ?? null;
   } 
-  tupleGet(xs3, i1) {
+  static tupleGet(xs3, i1) {
     return globalThis.Array.prototype.at.call(xs3, i1);
   } 
-  fold(f9) {
+  static map(f9) {
+    return (...xs4) => {
+      let tmp;
+      tmp = Predef.pass1(f9);
+      return xs4.map(tmp) ?? null;
+    };
+  } 
+  static fold(f10) {
     return (init, ...rest) => {
       let i2, len, scrut, tmp, tmp1, tmp2, tmp3;
       i2 = 0;
@@ -225,7 +296,7 @@ const Predef$class = class Predef {
         scrut = i2 < len;
         if (scrut === true) {
           tmp = rest.at(i2) ?? null;
-          tmp1 = f9(init, tmp) ?? null;
+          tmp1 = f10(init, tmp) ?? null;
           init = tmp1;
           tmp2 = i2 + 1;
           i2 = tmp2;
@@ -239,7 +310,7 @@ const Predef$class = class Predef {
       return init;
     };
   } 
-  foldr(f10) {
+  static foldr(f11) {
     return (first, ...rest) => {
       let len, i2, init, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
       len = rest.length;
@@ -257,7 +328,7 @@ const Predef$class = class Predef {
             tmp2 = i2 - 1;
             i2 = tmp2;
             tmp3 = rest.at(i2) ?? null;
-            tmp4 = f10(tmp3, init) ?? null;
+            tmp4 = f11(tmp3, init) ?? null;
             init = tmp4;
             tmp5 = null;
             continue tmp6;
@@ -266,20 +337,20 @@ const Predef$class = class Predef {
           }
           break;
         }
-        return f10(first, init) ?? null;
+        return f11(first, init) ?? null;
       }
     };
   } 
-  stringStartsWith(string, prefix) {
+  static stringStartsWith(string, prefix) {
     return string.startsWith(prefix) ?? null;
   } 
-  stringGet(string1, i2) {
+  static stringGet(string1, i2) {
     return string1.at(i2) ?? null;
   } 
-  stringDrop(string2, n) {
+  static stringDrop(string2, n) {
     return string2.slice(n) ?? null;
   } 
-  checkArgs(functionName, expected, isUB, got) {
+  static checkArgs(functionName, expected, isUB, got) {
     let scrut, name, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
     tmp = got < expected;
     tmp1 = got > expected;
@@ -294,8 +365,8 @@ const Predef$class = class Predef {
         tmp4 = "";
       }
       name = tmp4;
-      tmp5 = this.fold((arg1, arg2) => {
-        return arg1 + arg2;
+      tmp5 = Predef.fold((arg11, arg2) => {
+        return arg11 + arg2;
       });
       if (isUB === true) {
         tmp6 = "";
@@ -314,17 +385,17 @@ const Predef$class = class Predef {
       return null;
     }
   } 
-  __mkListWithTail() {
+  static __mkListWithTail() {
     let res, tmp;
-    tmp = new this.__ListWithTail.class(null, null);
+    tmp = new Predef.__ListWithTail.class(null, null);
     res = tmp;
     res.tail = res;
     return res;
   } 
-  __appendInCont(eff, cont) {
+  static __appendInCont(eff, cont) {
     let scrut, scrut1, tmp, tmp1;
     scrut = eff.tail;
-    if (scrut instanceof this.__TailList.class) {
+    if (scrut instanceof Predef.__TailList.class) {
       scrut1 = cont.next !== null;
       if (scrut1 === true) {
         throw globalThis.Error("unexpected handler continuation");
@@ -340,23 +411,23 @@ const Predef$class = class Predef {
     }
     return eff;
   } 
-  __mkEffect(handler, handlerFun) {
+  static __mkEffect(handler, handlerFun) {
     let res, tmp, tmp1;
-    tmp = this.__mkListWithTail();
-    tmp1 = new this.__EffectSig.class(null, null, tmp, false, handler, handlerFun);
+    tmp = Predef.__mkListWithTail();
+    tmp1 = new Predef.__EffectSig.class(null, null, tmp, false, handler, handlerFun);
     res = tmp1;
     res.tail = res;
     return res;
   } 
-  __handleBlockImpl(cur, handler1) {
+  static __handleBlockImpl(cur, handler1) {
     let handleBlock, nxt, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
-    tmp = this.__TailList(null);
-    tmp1 = new this.__HandleBlock.class(tmp, null, null, handler1);
+    tmp = Predef.__TailList(null);
+    tmp1 = new Predef.__HandleBlock.class(tmp, null, null, handler1);
     handleBlock = tmp1;
     tmp2 = cur.handleBlockList.append(handleBlock) ?? null;
     tmp7: while (true) {
-      if (cur instanceof this.__EffectSig.class) {
-        tmp3 = this.__handleEffect(cur);
+      if (cur instanceof Predef.__EffectSig.class) {
+        tmp3 = Predef.__handleEffect(cur);
         nxt = tmp3;
         scrut = cur === nxt;
         if (scrut === true) {
@@ -382,12 +453,12 @@ const Predef$class = class Predef {
     }
     return tmp6;
   } 
-  __handleEffect(cur1) {
+  static __handleEffect(cur1) {
     let prevBlock, scrut, scrut1, scrut2, handleBlock, origTailBlock, savedNext, scrut3, scrut4, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
     prevBlock = cur1.handleBlockList;
     tmp6: while (true) {
       scrut = prevBlock.next;
-      if (scrut instanceof this.__HandleBlock.class) {
+      if (scrut instanceof Predef.__HandleBlock.class) {
         scrut1 = prevBlock.next.handler !== cur1.handler;
         if (scrut1 === true) {
           prevBlock = prevBlock.next;
@@ -412,7 +483,7 @@ const Predef$class = class Predef {
     prevBlock.next = null;
     cur1.handleBlockList.tail = prevBlock;
     savedNext = handleBlock.contHead.next;
-    tmp2 = this.__resume(cur1, handleBlock.contHead);
+    tmp2 = Predef.__resume(cur1, handleBlock.contHead);
     tmp3 = cur1.handlerFun(tmp2) ?? null;
     cur1 = tmp3;
     scrut3 = savedNext !== handleBlock.contHead.next;
@@ -429,15 +500,15 @@ const Predef$class = class Predef {
     } else {
       tmp5 = null;
     }
-    if (cur1 instanceof this.__EffectSig.class) {
+    if (cur1 instanceof Predef.__EffectSig.class) {
       cur1.handleBlockList.tail.next = handleBlock;
       cur1.handleBlockList.tail = origTailBlock;
       return cur1;
     } else {
-      return this.__resumeHandleBlocks(handleBlock, origTailBlock, cur1);
+      return Predef.__resumeHandleBlocks(handleBlock, origTailBlock, cur1);
     }
   } 
-  __resume(cur2, tail) {
+  static __resume(cur2, tail) {
     return (value) => {
       let scrut, cont1, scrut1, scrut2, scrut3, scrut4, scrut5, scrut6, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
       scrut = cur2.resumed;
@@ -449,10 +520,10 @@ const Predef$class = class Predef {
       cur2.resumed = true;
       cont1 = cur2.next;
       tmp10: while (true) {
-        if (cont1 instanceof this.__Cont.class) {
+        if (cont1 instanceof Predef.__Cont.class) {
           tmp1 = cont1.resume(value) ?? null;
           value = tmp1;
-          if (value instanceof this.__EffectSig.class) {
+          if (value instanceof Predef.__EffectSig.class) {
             scrut1 = value.tail.next !== cont1;
             if (scrut1 === true) {
               scrut2 = cont1.next !== null;
@@ -502,9 +573,9 @@ const Predef$class = class Predef {
       if (scrut6 === true) {
         return value;
       } else {
-        tmp8 = this.__resumeHandleBlocks(cur2.handleBlockList.next, cur2.handleBlockList.tail, value);
+        tmp8 = Predef.__resumeHandleBlocks(cur2.handleBlockList.next, cur2.handleBlockList.tail, value);
         cur2 = tmp8;
-        if (cur2 instanceof this.__EffectSig.class) {
+        if (cur2 instanceof Predef.__EffectSig.class) {
           cur2.tail = tail;
           tmp9 = null;
         } else {
@@ -514,14 +585,14 @@ const Predef$class = class Predef {
       }
     };
   } 
-  __resumeHandleBlocks(handleBlock, tailHandleBlock, value) {
+  static __resumeHandleBlocks(handleBlock, tailHandleBlock, value) {
     let scrut, scrut1, scrut2, scrut3, scrut4, tmp, tmp1, tmp2, tmp3, tmp4;
     tmp5: while (true) {
       scrut1 = handleBlock.contHead.next;
-      if (scrut1 instanceof this.__Cont.class) {
+      if (scrut1 instanceof Predef.__Cont.class) {
         tmp = handleBlock.contHead.next.resume(value) ?? null;
         value = tmp;
-        if (value instanceof this.__EffectSig.class) {
+        if (value instanceof Predef.__EffectSig.class) {
           scrut2 = value.tail.next !== handleBlock.contHead.next;
           if (scrut2 === true) {
             scrut3 = value.tail.next !== null;
@@ -552,7 +623,7 @@ const Predef$class = class Predef {
         continue tmp5;
       } else {
         scrut = handleBlock.next;
-        if (scrut instanceof this.__HandleBlock.class) {
+        if (scrut instanceof Predef.__HandleBlock.class) {
           handleBlock = handleBlock.next;
           tmp4 = null;
           continue tmp5;
@@ -564,8 +635,7 @@ const Predef$class = class Predef {
     }
     return tmp4;
   }
-  toString() { return "Predef"; }
-}; Predef1 = new Predef$class;
-Predef1.class = Predef$class;
+  static toString() { return "Predef"; }
+};
 null
 let Predef = Predef1; export default Predef;

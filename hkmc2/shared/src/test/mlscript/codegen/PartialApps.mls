@@ -12,7 +12,7 @@ f(2)
 :sjs
 let f = foo(1, _, _)
 //│ JS (unsanitized):
-//│ let f1; f1 = ($_, $_1) => { return foo1(1, $_, $_1); }; null
+//│ let f1; f1 = (_, _1) => { return foo(1, _, _1); }; null
 //│ f = [Function: f1]
 
 f(2, 3)
@@ -151,13 +151,13 @@ _ - 2 <| 1
 :sjs
 1 . _ - 2
 //│ JS (unsanitized):
-//│ (($_) => { return Predef.passTo(1, $_); }) - 2
+//│ ((_) => { return Predef.passTo(1, _); }) - 2
 //│ = NaN
 
 :sjs
 1 . (_ - 2)()
 //│ JS (unsanitized):
-//│ let tmp7; tmp7 = Predef.passTo(1, ($_) => { return $_ - 2; }); tmp7() ?? null
+//│ let tmp7; tmp7 = Predef.passTo(1, (_) => { return _ - 2; }); tmp7() ?? null
 //│ = -1
 
 1 . (_ - _)(2)

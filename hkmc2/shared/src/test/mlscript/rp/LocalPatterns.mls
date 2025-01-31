@@ -8,11 +8,10 @@ module Playground with
   pattern ZeroOne = Zero ~ One
 
 Playground
-//│ > Playground {
+//│ > [class Playground] {
 //│ >   Zero: Zero { class: [class Zero] },
 //│ >   DoubleZero: DoubleZero { class: [class DoubleZero] },
-//│ >   ZeroOne: ZeroOne { class: [class ZeroOne] },
-//│ >   class: [class Playground]
+//│ >   ZeroOne: ZeroOne { class: [class ZeroOne] }
 //│ = }
 
 // Pattern defined in a module can be used with qualified name.

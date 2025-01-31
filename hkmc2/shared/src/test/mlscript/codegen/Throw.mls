@@ -31,7 +31,7 @@ fun f(x) =
   return y
 f(1)
 //│ JS (unsanitized):
-//│ let f5; f5 = function f(x) { throw globalThis.Error("e"); }; f5(1)
+//│ let f2; f2 = function f(x) { throw globalThis.Error("e"); }; f2(1)
 //│ ═══[RUNTIME ERROR] Error: e
 
 
@@ -41,13 +41,13 @@ fun f(x) =
   throw (if x then Error("x") else Error("y"))
 f(false)
 //│ JS (unsanitized):
-//│ let f7;
-//│ f7 = function f(x) {
+//│ let f3;
+//│ f3 = function f(x) {
 //│   if (x === true) {
 //│     throw globalThis.Error("x");
 //│   } else {
 //│     throw globalThis.Error("y");
 //│   }
 //│ };
-//│ f7(false)
+//│ f3(false)
 //│ ═══[RUNTIME ERROR] Error: y

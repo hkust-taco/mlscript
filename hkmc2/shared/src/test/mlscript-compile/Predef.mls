@@ -22,7 +22,29 @@ fun pass3(f)(...xs) = f(xs.0, xs.1, xs.2)
 
 
 fun print(...xs) =
-  console.log(...xs.map(String))
+  console.log(...map(renderAsStr)(...xs))
+
+fun interleave(sep)(...args) =
+  if args.length === 0 then [] else...
+  let
+    res = Array of args.length * 2 - 1
+    len = args.length
+    i = 0
+  while i < len do
+    let idx = i * 2
+    set
+      res.[idx] = args.[i]
+      i += 1
+    if i < len do set res.[idx + 1] = sep
+  res
+
+fun renderAsStr(arg) =
+  if arg is Str then arg else render(arg)
+
+fun render(arg) = if arg is
+  Array then fold(+)("[", ...interleave(", ")(...map(render)(...arg)), "]")
+  Str then JSON.stringify(arg)
+  else String(arg)
 
 val assert = console.assert
 
@@ -37,6 +59,8 @@ fun tupleSlice(xs, i, j) =
 
 fun tupleGet(xs, i) =
   globalThis.Array.prototype.at.call(xs, i)
+
+fun map(f)(...xs) = xs.map(pass1(f))
 
 fun fold(f)(init, ...rest) =
   let

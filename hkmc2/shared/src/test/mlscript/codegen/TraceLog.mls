@@ -7,17 +7,17 @@ fun fib(a) = if
   a <= 1 then a
   else fib(a - 1) + fib(a - 2)
 //│ JS (unsanitized):
-//│ let fib1;
-//│ fib1 = function fib(a) {
+//│ let fib;
+//│ fib = function fib(a) {
 //│   let scrut, tmp, tmp1, tmp2, tmp3;
 //│   scrut = a <= 1;
 //│   if (scrut === true) {
 //│     return a;
 //│   } else {
 //│     tmp = a - 1;
-//│     tmp1 = fib1(tmp);
+//│     tmp1 = fib(tmp);
 //│     tmp2 = a - 2;
-//│     tmp3 = fib1(tmp2);
+//│     tmp3 = fib(tmp2);
 //│     return tmp1 + tmp3;
 //│   }
 //│ };

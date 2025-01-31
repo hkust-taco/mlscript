@@ -15,13 +15,13 @@ x
 :sjs
 val ++ = 0
 //│ JS (unsanitized):
-//│ let $_$_1; $_$_1 = 0; null
+//│ let $_$_; $_$_ = 0; null
 //│ ++ = 0
 
 :sjs
 ++
 //│ JS (unsanitized):
-//│ $_$_1
+//│ $_$_
 //│ = 0
 
 
@@ -48,7 +48,7 @@ fun ++ z = 0
 //│ ╔══[ERROR] Invalid function definition head: unexpected identifier in this position
 //│ ║  l.47: 	fun ++ z = 0
 //│ ╙──      	       ^
-//│ > let $_$_5;try { $_$_5 = function ++(...args) {   globalThis.Predef.checkArgs("++", 0, true, args.length);   return 0; }; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ > let $_$_2;try { $_$_2 = function ++(...args) {   globalThis.Predef.checkArgs("++", 0, true, args.length);   return 0; }; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ >                                  ^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '++'
 
@@ -56,8 +56,8 @@ fun ++ z = 0
 :re
 ++
 //│ JS (unsanitized):
-//│ let tmp; tmp = $_$_5(); tmp
-//│ ═══[RUNTIME ERROR] ReferenceError: $_$_5 is not defined
+//│ let tmp; tmp = $_$_2(); tmp
+//│ ═══[RUNTIME ERROR] ReferenceError: $_$_2 is not defined
 
 
 :e

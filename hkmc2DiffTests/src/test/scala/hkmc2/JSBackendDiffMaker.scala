@@ -57,7 +57,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   override def processTerm(blk: semantics.Term.Blk, inImport: Bool)(using Raise): Unit =
     super.processTerm(blk, inImport)
     val outerRaise: Raise = summon
-    var showingJSYieldedCompileError = false
+    val reportedMessages = mutable.Set.empty[Str]
     val stackLimit = stackSafe.get match
       case None => None
       case Some("off") => None
@@ -73,7 +73,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     if showJS.isSet then
       given Raise =
         case d @ ErrorReport(source = Source.Compilation) =>
-          showingJSYieldedCompileError = true
+          reportedMessages += d.mainMsg
           outerRaise(d)
         case d => outerRaise(d)
       given Elaborator.Ctx = curCtx
@@ -81,8 +81,9 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         new codegen.Lowering(lowerHandlers = handler.isSet, stackLimit = stackLimit, lift = lift.isSet)
           with codegen.LoweringSelSanityChecks(instrument = false)
           with codegen.LoweringTraceLog(instrument = false)
-      val jsb = new JSBuilder
-        with JSBuilderArgNumSanityChecks(instrument = false)
+      val jsb = ltl.givenIn:
+        new JSBuilder
+          with JSBuilderArgNumSanityChecks(instrument = false)
       val le = low.program(blk)
       val nestedScp = baseScp.nest
       val je = nestedScp.givenIn:
@@ -90,14 +91,20 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val jsStr = je.stripBreaks.mkString(100)
       output(s"JS (unsanitized):")
       output(jsStr)
-    if js.isSet && !showingJSYieldedCompileError then
+    if js.isSet then
       given Elaborator.Ctx = curCtx
+      given Raise =
+        case e: ErrorReport if reportedMessages.contains(e.mainMsg) =>
+          if verbose.isSet then
+            output(s"Skipping already reported diagnostic: ${e.mainMsg}")
+        case d => outerRaise(d)
       val low = ltl.givenIn:
         new codegen.Lowering(lowerHandlers = handler.isSet, stackLimit = stackLimit, lift = lift.isSet)
           with codegen.LoweringSelSanityChecks(noSanityCheck.isUnset)
           with codegen.LoweringTraceLog(traceJS.isSet)
-      val jsb = new JSBuilder
-        with JSBuilderArgNumSanityChecks(noSanityCheck.isUnset)
+      val jsb = ltl.givenIn:
+          new JSBuilder
+            with JSBuilderArgNumSanityChecks(noSanityCheck.isUnset)
       val le = low.program(blk)
       if showLoweredTree.isSet then
         output(s"Lowered:")

@@ -10,15 +10,15 @@ Accounting1 = class Accounting {
       constructor(num) {
         this.num = num;
       }
-      toString() { return "Project(" + this.num + ")"; }
+      toString() { return "Project(" + globalThis.Predef.render(this.num) + ")"; }
     };
     const this$Accounting = this;
-    this.Line = function Line(name1, proj1, starting$_balance1, isMatchable1) { return new Line.class(name1, proj1, starting$_balance1, isMatchable1); };
+    this.Line = function Line(name1, proj1, starting_balance1, isMatchable1) { return new Line.class(name1, proj1, starting_balance1, isMatchable1); };
     this.Line.class = class Line {
-      constructor(name, proj, starting$_balance, isMatchable) {
+      constructor(name, proj, starting_balance, isMatchable) {
         this.name = name;
         this.proj = proj;
-        this.starting_balance = starting$_balance;
+        this.starting_balance = starting_balance;
         this.isMatchable = isMatchable;
         this.balance = this.starting_balance;
       }
@@ -42,7 +42,7 @@ Accounting1 = class Accounting {
           return null;
         }
       }
-      toString() { return "Line(" + this.name + ", " + this.proj + ", " + this.starting_balance + ", " + this.isMatchable + ")"; }
+      toString() { return "Line(" + globalThis.Predef.render(this.name) + ", " + globalThis.Predef.render(this.proj) + ", " + globalThis.Predef.render(this.starting_balance) + ", " + globalThis.Predef.render(this.isMatchable) + ")"; }
     };
     this.lines = [];
     this.Report = function Report(fileName1) { return new Report.class(fileName1); };
@@ -142,7 +142,7 @@ Accounting1 = class Accounting {
         tmp26 = Str.concat2(tmp25, "|");
         return this.wln(tmp26);
       }
-      toString() { return "Report(" + this.fileName + ")"; }
+      toString() { return "Report(" + globalThis.Predef.render(this.fileName) + ")"; }
     };
   }
   display(amt) {
@@ -150,9 +150,9 @@ Accounting1 = class Accounting {
     tmp = amt / 1000;
     return tmp.toFixed(1) ?? null;
   } 
-  mkLine(nme, proj, starting$_balance, matchable) {
+  mkLine(nme, proj, starting_balance, matchable) {
     let line, tmp, tmp1;
-    tmp = this.Line(nme, proj, starting$_balance, matchable);
+    tmp = this.Line(nme, proj, starting_balance, matchable);
     line = tmp;
     tmp1 = this.lines.push(line) ?? null;
     return line;

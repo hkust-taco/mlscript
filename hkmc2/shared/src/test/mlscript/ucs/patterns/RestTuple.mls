@@ -17,8 +17,8 @@ fun nonsense(xs) = if xs is
   [..ys] then ys
   [] then "empty"
 //│ JS (unsanitized):
-//│ let nonsense1;
-//│ nonsense1 = function nonsense(xs) {
+//│ let nonsense;
+//│ nonsense = function nonsense(xs) {
 //│   let rest, ys;
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 0) {
 //│     rest = globalThis.Predef.tupleSlice(xs, 0, 0) ?? null;
@@ -41,8 +41,8 @@ fun lead_and_last(xs) = if xs is
   [x, ..ys, y] then x + y
   [] then 0
 //│ JS (unsanitized):
-//│ let lead$_and$_last1;
-//│ lead$_and$_last1 = function lead_and_last(xs) {
+//│ let lead_and_last;
+//│ lead_and_last = function lead_and_last(xs) {
 //│   let last0, rest, first0, x, ys, y;
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];
@@ -80,8 +80,8 @@ fun nested_tuple_patterns(xs) = if xs is
   [x, ..[y, z], w] then x + y + z + w
   [] then 0
 //│ JS (unsanitized):
-//│ let nested$_tuple$_patterns1;
-//│ nested$_tuple$_patterns1 = function nested_tuple_patterns(xs) {
+//│ let nested_tuple_patterns;
+//│ nested_tuple_patterns = function nested_tuple_patterns(xs) {
 //│   let last0, rest, first0, x, first1, first01, y, z, w, tmp2, tmp3;
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];

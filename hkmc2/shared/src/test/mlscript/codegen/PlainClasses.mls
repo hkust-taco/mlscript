@@ -46,7 +46,7 @@ Foo()
 class Foo with { log("hi") }
 log("ok")
 //│ JS (unsanitized):
-//│ let Foo3; Foo3 = class Foo { constructor() { log1("hi") } toString() { return "Foo"; } }; log1("ok")
+//│ let Foo3; Foo3 = class Foo2 { constructor() { log("hi") } toString() { return "Foo"; } }; log("ok")
 //│ > ok
 
 fun test() =
@@ -54,37 +54,37 @@ fun test() =
   log("ok")
   Foo
 //│ JS (unsanitized):
-//│ let test1;
-//│ test1 = function test() {
-//│   let Foo4, tmp;
-//│   Foo4 = class Foo {
+//│ let test;
+//│ test = function test() {
+//│   let Foo5, tmp;
+//│   Foo5 = class Foo4 {
 //│     constructor() {
-//│       log1("hi")
+//│       log("hi")
 //│     }
 //│     toString() { return "Foo"; }
 //│   };
-//│   tmp = log1("ok");
-//│   return Foo4;
+//│   tmp = log("ok");
+//│   return Foo5;
 //│ };
 //│ null
 
 let t = test()
 //│ JS (unsanitized):
-//│ let t, tmp; tmp = test1(); t = tmp; null
+//│ let t, tmp; tmp = test(); t = tmp; null
 //│ > ok
-//│ t = [class Foo]
+//│ t = [class Foo4]
 
 new t
 //│ JS (unsanitized):
 //│ new t()
 //│ > hi
-//│ = Foo {}
+//│ = Foo4 {}
 
 new t()
 //│ JS (unsanitized):
 //│ new t()
 //│ > hi
-//│ = Foo {}
+//│ = Foo4 {}
 
 
 class Foo with
@@ -92,8 +92,8 @@ class Foo with
   let y = x + 1
   fun z() = y + x
 //│ JS (unsanitized):
-//│ let Foo5;
-//│ Foo5 = class Foo {
+//│ let Foo6;
+//│ Foo6 = class Foo5 {
 //│   #y;
 //│   constructor() {
 //│     let tmp1;
@@ -118,8 +118,8 @@ class Foo with
   fun z2() = 6
   log("hello")
 //│ JS (unsanitized):
-//│ let Foo7;
-//│ Foo7 = class Foo {
+//│ let Foo8;
+//│ Foo8 = class Foo7 {
 //│   #y1;
 //│   #y2;
 //│   constructor() {
@@ -127,7 +127,7 @@ class Foo with
 //│     this.x2 = 2;
 //│     this.#y1 = 3;
 //│     this.#y2 = 4;
-//│     log1("hello")
+//│     log("hello")
 //│   }
 //│   z1() {
 //│     return 5;
@@ -145,8 +145,8 @@ class Foo with
   fun foo(y) = x + y
   fun bar(z) = foo(z) + 1
 //│ JS (unsanitized):
-//│ let Foo9;
-//│ Foo9 = class Foo {
+//│ let Foo10;
+//│ Foo10 = class Foo9 {
 //│   constructor() {
 //│     this.x = 1;
 //│   }
@@ -168,32 +168,55 @@ log(a.foo(1))
 log(a.bar(1))
 //│ JS (unsanitized):
 //│ let a, tmp1, tmp2, tmp3, tmp4, tmp5;
-//│ tmp1 = new Foo9();
+//│ tmp1 = new Foo10();
 //│ a = tmp1;
-//│ tmp2 = log1(a.x);
+//│ tmp2 = log(a.x);
 //│ tmp3 = a.foo(1) ?? null;
-//│ tmp4 = log1(tmp3);
+//│ tmp4 = log(tmp3);
 //│ tmp5 = a.bar(1) ?? null;
-//│ log1(tmp5)
+//│ log(tmp5)
 //│ > 1
 //│ > 2
 //│ > 3
-//│ a = Foo { x: 1 }
+//│ a = Foo9 { x: 1 }
 
 
 
+:e
+class Foo with
+  val x = 1
+  val x = 2
+//│ ╔══[ERROR] Multiple definitions of symbol 'x'
+//│ ╟── defined here
+//│ ║  l.187: 	  val x = 1
+//│ ║         	      ^^^^^
+//│ ╟── defined here
+//│ ║  l.188: 	  val x = 2
+//│ ╙──       	      ^^^^^
+//│ JS (unsanitized):
+//│ let Foo12;
+//│ Foo12 = class Foo11 {
+//│   constructor() {
+//│     this.x = 1;
+//│     this.x = 2;
+//│   }
+//│   toString() { return "Foo"; }
+//│ };
+//│ null
 
-
-// ——— TODO ———
-
-
-// FIXME reject duplicated member names
+:e
 class Foo with
   val x = 1
   let x = 2
+//│ ╔══[ERROR] Name 'x' is already used
+//│ ║  l.210: 	  let x = 2
+//│ ║         	      ^^^^^
+//│ ╟── by a member declared in the same block
+//│ ║  l.209: 	  val x = 1
+//│ ╙──       	      ^^^^^
 //│ JS (unsanitized):
-//│ let Foo11;
-//│ Foo11 = class Foo {
+//│ let Foo14;
+//│ Foo14 = class Foo13 {
 //│   #x;
 //│   constructor() {
 //│     this.x = 1;
@@ -204,16 +227,22 @@ class Foo with
 //│ null
 
 
+
+
+
+// ——— TODO ———
+
+
 :fixme
 class Foo with val x = 1
 //│ ╔══[PARSE ERROR] Expected block after type declaration body; found 'val' keyword instead
-//│ ║  l.208: 	class Foo with val x = 1
+//│ ║  l.237: 	class Foo with val x = 1
 //│ ╙──       	               ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.208: 	class Foo with val x = 1
+//│ ║  l.237: 	class Foo with val x = 1
 //│ ╙──       	                     ^
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
-//│ ║  l.208: 	class Foo with val x = 1
+//│ ║  l.237: 	class Foo with val x = 1
 //│ ╙──       	                   ^
 //│ JS (unsanitized):
 //│ /* error */

@@ -156,13 +156,13 @@ if true do
   fun f() = 3
   f()
 //│ JS (unsanitized):
-//│ let tmp11, handleBlock$23;
-//│ handleBlock$23 = function handleBlock$() {
-//│   let h, scrut, f, tmp12, res, Cont$, Handler$h$;
-//│   Handler$h$ = function Handler$h$() {
+//│ let tmp11, handleBlock$11;
+//│ handleBlock$11 = function handleBlock$() {
+//│   let h, scrut, f, tmp12, res, Cont$22, Handler$h$12;
+//│   Handler$h$12 = function Handler$h$() {
 //│     return new Handler$h$.class();
 //│   };
-//│   Handler$h$.class = class Handler$h$ extends Effect1 {
+//│   Handler$h$12.class = class Handler$h$11 extends Effect1 {
 //│     constructor() {
 //│       let tmp13;
 //│       tmp13 = super();
@@ -172,13 +172,13 @@ if true do
 //│         return arg;
 //│       });
 //│     }
-//│     toString() { return "Handler$h$(" +  + ")"; }
+//│     toString() { return "Handler$h$(" + "" + ")"; }
 //│   };
-//│   h = Handler$h$();
-//│   Cont$ = function Cont$(pc1) {
+//│   h = Handler$h$12();
+//│   Cont$22 = function Cont$(pc1) {
 //│     return new Cont$.class(pc1);
 //│   };
-//│   Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
+//│   Cont$22.class = class Cont$21 extends globalThis.Predef.__Cont.class {
 //│     constructor(pc) {
 //│       let tmp13;
 //│       tmp13 = super(null, null);
@@ -199,7 +199,7 @@ if true do
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$(" + this.pc + ")"; }
+//│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   f = function f() {
 //│     return 3;
@@ -208,7 +208,7 @@ if true do
 //│   if (scrut === true) {
 //│     res = f();
 //│     if (res instanceof globalThis.Predef.__EffectSig.class) {
-//│       res.tail.next = Cont$(0);
+//│       res.tail.next = Cont$22(0);
 //│       return globalThis.Predef.__handleBlockImpl(res, h);
 //│     }
 //│     tmp12 = res;
@@ -217,7 +217,7 @@ if true do
 //│   }
 //│   return tmp12;
 //│ };
-//│ tmp11 = handleBlock$23();
+//│ tmp11 = handleBlock$11();
 //│ if (tmp11 instanceof this.Predef.__EffectSig.class) {
 //│   throw new this.Error("Unhandled effects");
 //│ }

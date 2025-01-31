@@ -1,0 +1,66 @@
+:js
+
+
+let xs = [1, 2, 3]
+//│ xs = [ 1, 2, 3 ]
+
+:sjs
+xs.(0)
+//│ JS (unsanitized):
+//│ xs[0]
+//│ = 1
+
+:sjs
+set xs.(0) = 4
+//│ JS (unsanitized):
+//│ xs[0] = 4; null
+
+xs.(0)
+//│ = 4
+
+:todo
+set xs.[0] += 1
+//│ /!!!\ Uncaught error: scala.MatchError: LetLike(keyword 'set',App(Ident(+=),Tup(List(DynAccess(Ident(xs),IntLit(0),true), IntLit(1)))),None,None) (of class hkmc2.syntax.Tree$LetLike)
+
+set xs.[0] = xs.[0] + 1
+
+xs.[0]
+//│ = 5
+
+set xs.("lol") = "wat"
+
+xs
+//│ = [ 5, 2, 3, lol: 'wat' ]
+
+
+class Foo(val x)
+
+let foo = Foo(123)
+//│ foo = Foo { x: 123 }
+
+foo.("x")
+//│ = 123
+
+// TODO sanitize
+:todo
+:re
+foo.("y")
+
+// TODO sanitize
+:todo
+:re
+foo.(0)
+
+// TODO sanitize
+:todo
+:re
+foo.[0]
+
+// TODO sanitize
+:todo
+// * Array indexing syntax is only for numeric indices – this should throw
+:re
+foo.["x"]
+//│ = 123
+
+

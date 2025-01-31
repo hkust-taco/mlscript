@@ -64,19 +64,19 @@ val isDefined = case
   Some then true
   None then false
 //│ JS (unsanitized):
-//│ let isDefined1, tmp5;
+//│ let isDefined, tmp5;
 //│ tmp5 = (caseScrut) => {
 //│   if (caseScrut instanceof Some1.class) {
 //│     return true;
 //│   } else {
-//│     if (caseScrut instanceof None1.class) {
+//│     if (caseScrut instanceof None1) {
 //│       return false;
 //│     } else {
 //│       throw new this.Error("match error");
 //│     }
 //│   }
 //│ };
-//│ isDefined1 = tmp5;
+//│ isDefined = tmp5;
 //│ null
 //│ isDefined = [Function: tmp5]
 

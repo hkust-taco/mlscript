@@ -43,7 +43,7 @@ Example . oops(2)
 //│   rhs = Tup of Ls of 
 //│     IntLit of 2
 //│ JS (unsanitized):
-//│ let tmp1; tmp1 = call1(Example1, oops); tmp1(2) ?? null
+//│ let tmp1; tmp1 = call(Example1, oops); tmp1(2) ?? null
 //│ = [ 2, 1 ]
 
 Example. oops(2)
@@ -108,7 +108,7 @@ Example .> oops(2)
 //│       rhs = Tup of Ls of 
 //│         IntLit of 2
 //│ JS (unsanitized):
-//│ let tmp25; tmp25 = oops(2) ?? null; call3(Example1, tmp25)
+//│ let tmp25; tmp25 = oops(2) ?? null; call1(Example1, tmp25)
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
 
 // * Note:

@@ -57,7 +57,7 @@ while x
 //│ let tmp4, tmp5;
 //│ tmp6: while (true) {
 //│   if (x2 === true) {
-//│     tmp4 = log1("Hello World");
+//│     tmp4 = log("Hello World");
 //│     x2 = false;
 //│     tmp5 = null;
 //│     continue tmp6;
@@ -198,8 +198,8 @@ fun f(ls) =
       log(h)
   else log("Done!")
 //│ JS (unsanitized):
-//│ let f1;
-//│ f1 = function f(ls) {
+//│ let f;
+//│ f = function f(ls) {
 //│   let param0, param1, h, tl, tmp28;
 //│   tmp29: while (true) {
 //│     if (ls instanceof Cons1.class) {
@@ -208,10 +208,10 @@ fun f(ls) =
 //│       h = param0;
 //│       tl = param1;
 //│       ls = tl;
-//│       tmp28 = log1(h);
+//│       tmp28 = log(h);
 //│       continue tmp29;
 //│     } else {
-//│       tmp28 = log1("Done!");
+//│       tmp28 = log("Done!");
 //│     }
 //│     break;
 //│   }

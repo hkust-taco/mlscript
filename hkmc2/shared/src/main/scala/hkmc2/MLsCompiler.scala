@@ -75,7 +75,8 @@ class MLsCompiler(preludeFile: os.Path):
       val (blk, newCtx) = elab.importFrom(parsed)
       val low = ltl.givenIn:
         codegen.Lowering(lowerHandlers = false, stackLimit = None, lift = false) // TODO: properly hook up stack limit
-      val jsb = codegen.js.JSBuilder()
+      val jsb = ltl.givenIn:
+        codegen.js.JSBuilder()
       val le = low.program(blk)
       val baseScp: utils.Scope =
         utils.Scope.empty

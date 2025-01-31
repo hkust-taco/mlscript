@@ -1,14 +1,14 @@
 import Predef from "./Predef.mjs";
 let Example1;
-const Example$class = class Example {
-  constructor() {}
-  funnySlash(f, arg) {
+Example1 = class Example {
+  static {}
+  static funnySlash(f, arg) {
     return f(arg) ?? null;
   } 
-  inc(x) {
+  static inc(x) {
     return x + 1;
   } 
-  test(x1) {
+  static test(x1) {
     if (globalThis.Number.isInteger(x1)) {
       return "int";
     } else {
@@ -23,8 +23,7 @@ const Example$class = class Example {
       }
     }
   }
-  toString() { return "Example"; }
-}; Example1 = new Example$class;
-Example1.class = Example$class;
+  static toString() { return "Example"; }
+};
 null
 let Example = Example1; export default Example;
