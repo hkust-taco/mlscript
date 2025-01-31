@@ -505,7 +505,12 @@ class Lifter(using State):
     case N => Lifted(d, Nil)
     case S(LiftedInfo(includedCaptures, includedLocals, clsCaptures, fakeCtorBms, singleCallBms)) =>
       val createSym = d match
-        case d: ClsLikeDefn => ((nme: String) => TermSymbol(syntax.ParamBind, S(d.isym), Tree.Ident(nme)))
+        case d: ClsLikeDefn =>
+          // due to the possibility of capturing a TempSymbol in HandlerLowering, it is necessary to generate a discriminator
+          val fresh = FreshInt()
+          (nme: String) =>
+            val id = fresh.make
+            TermSymbol(syntax.ParamBind, S(d.isym), Tree.Ident(nme + "$" + id))
         case _ => ((nme: String) => VarSymbol(Tree.Ident(nme)))
       
       val capturesSymbols = includedCaptures.map: sym =>
@@ -742,6 +747,6 @@ class Lifter(using State):
             case f: FunDefn => liftDefnsInFn(f, ctxx)
             case c: ClsLikeDefn => liftDefnsInCls(c, ctxx)
             case _ => return super.applyBlock(b)
-          (lifted :: extra).foldLeft(rest)((acc, defn) => Define(defn, acc))
+          (lifted :: extra).foldLeft(applyBlock(rest))((acc, defn) => Define(defn, acc))
         case _ => super.applyBlock(b)
     walker.applyBlock(blk)
