@@ -17,7 +17,7 @@ import hkmc2.codegen.Local
 import hkmc2.codegen.js.JSBuilder
 
 
-/** When `curThis`, it means this scope does not rebind `this`.
+/** When `curThis` is N, it means this scope does not rebind `this`.
   * When `curThis` is Some(None), it means the scope rebinds `this`
   * to something unknown, following JavaScript's inane `this` handling in `function`s.
   * When `curThis` is Some(Some(sym)), it means the scope rebinds `this`
@@ -33,7 +33,7 @@ class Scope
     case S(S(State.globalThisSymbol)) => "globalThis"
     case S(S(thisSym)) => 
       thisProxyAccessed = true
-      allocateName(thisSym, "this$")
+      allocateName(thisSym.thisProxy)
   
   /** Whether the code generator has produced a binding for `thisProxy` yet. */
   var thisProxyDefined: Bool = false
@@ -126,6 +126,7 @@ object Scope:
         case c if c.isLetter || c.isDigit => c
         // case '\'' => "$tick"
         case '$' => "$"
+        case '_' => "_"
         case _ => "$_"
       .mkString
   

@@ -83,7 +83,7 @@ let audits = new Set()
 :fixme
 if audits.has(1) === true do
   print("ok")
-else 
+else
   1
 //│ ╔══[ERROR] The following branches are unreachable.
 //│ ╟── Because the previous split is full.

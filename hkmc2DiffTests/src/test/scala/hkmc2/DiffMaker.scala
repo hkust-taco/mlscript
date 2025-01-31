@@ -106,6 +106,7 @@ abstract class DiffMaker:
   
   val fullExceptionStack = NullaryCommand("s")
   
+  val verbose = NullaryCommand("v")
   val debug = NullaryCommand("d")
   
   val expectParseErrors = NullaryCommand("pe")

@@ -20,11 +20,11 @@ fun hi(n) =
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
-//│ let hi1, res, handleBlock$1;
-//│ hi1 = function hi(n) {
-//│   let scrut, tmp, stackDelayRes, Cont$;
-//│   Cont$ = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│   Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
+//│ let hi, res, handleBlock$;
+//│ hi = function hi(n) {
+//│   let scrut, tmp, stackDelayRes, Cont$3;
+//│   Cont$3 = function Cont$(pc1) { return new Cont$.class(pc1); };
+//│   Cont$3.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│     constructor(pc) {
 //│       let tmp1;
 //│       tmp1 = super(null, null);
@@ -42,7 +42,7 @@ hi(0)
 //│           } else {
 //│             tmp = n - 1;
 //│             globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
-//│             return hi1(tmp);
+//│             return hi(tmp);
 //│           }
 //│           this.pc = 1;
 //│           continue contLoop;
@@ -52,11 +52,11 @@ hi(0)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$(" + this.pc + ")"; }
+//│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   stackDelayRes = globalThis.Predef.checkDepth();
 //│   if (stackDelayRes instanceof globalThis.Predef.__EffectSig.class) {
-//│     stackDelayRes.tail.next = new Cont$.class(0);
+//│     stackDelayRes.tail.next = new Cont$3.class(0);
 //│     stackDelayRes.tail = stackDelayRes.tail.next;
 //│     return stackDelayRes;
 //│   }
@@ -66,21 +66,21 @@ hi(0)
 //│   } else {
 //│     tmp = n - 1;
 //│     globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
-//│     return hi1(tmp);
+//│     return hi(tmp);
 //│   }
 //│ };
-//│ handleBlock$1 = function handleBlock$() {
-//│   let stackHandler, res1, Cont$, StackDelay$;
-//│   StackDelay$ = class StackDelay$ extends globalThis.Predef.__StackDelay {
+//│ handleBlock$ = function handleBlock$() {
+//│   let stackHandler, res1, Cont$3, StackDelay$1;
+//│   StackDelay$1 = class StackDelay$ extends globalThis.Predef.__StackDelay {
 //│     constructor() {
 //│       let tmp;
 //│       tmp = super();
 //│     }
 //│     perform() {
 //│       return globalThis.Predef.__mkEffect(stackHandler, (resume) => {
-//│         let res2, Cont$1;
-//│         Cont$1 = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│         Cont$1.class = class Cont$ extends globalThis.Predef.__Cont.class {
+//│         let res2, Cont$4;
+//│         Cont$4 = function Cont$(pc1) { return new Cont$.class(pc1); };
+//│         Cont$4.class = class Cont$1 extends globalThis.Predef.__Cont.class {
 //│           constructor(pc) {
 //│             let tmp;
 //│             tmp = super(null, null);
@@ -97,12 +97,12 @@ hi(0)
 //│               break;
 //│             }
 //│           }
-//│           toString() { return "Cont$(" + this.pc + ")"; }
+//│           toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│         };
 //│         globalThis.Predef.__stackOffset = globalThis.Predef.__stackDepth;
 //│         res2 = resume();
 //│         if (res2 instanceof globalThis.Predef.__EffectSig.class) {
-//│           res2.tail.next = new Cont$1.class(3);
+//│           res2.tail.next = new Cont$4.class(3);
 //│           res2.tail = res2.tail.next;
 //│           return res2;
 //│         }
@@ -111,9 +111,9 @@ hi(0)
 //│     }
 //│     toString() { return "StackDelay$"; }
 //│   };
-//│   stackHandler = new StackDelay$();
-//│   Cont$ = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│   Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
+//│   stackHandler = new StackDelay$1();
+//│   Cont$3 = function Cont$(pc1) { return new Cont$.class(pc1); };
+//│   Cont$3.class = class Cont$2 extends globalThis.Predef.__Cont.class {
 //│     constructor(pc) {
 //│       let tmp;
 //│       tmp = super(null, null);
@@ -130,20 +130,20 @@ hi(0)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$(" + this.pc + ")"; }
+//│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   globalThis.Predef.__stackLimit = 5;
 //│   globalThis.Predef.__stackOffset = 0;
 //│   globalThis.Predef.__stackDepth = 1;
 //│   globalThis.Predef.__stackHandler = stackHandler;
-//│   res1 = hi1(0);
+//│   res1 = hi(0);
 //│   if (res1 instanceof globalThis.Predef.__EffectSig.class) {
-//│     res1.tail.next = new Cont$(2);
+//│     res1.tail.next = new Cont$3(2);
 //│     return globalThis.Predef.__handleBlockImpl(res1, stackHandler);
 //│   }
 //│   return res1;
 //│ };
-//│ res = handleBlock$1();
+//│ res = handleBlock$();
 //│ if (res instanceof this.Predef.__EffectSig.class) {
 //│   throw new this.Error("Unhandled effects");
 //│ }
@@ -162,11 +162,11 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ JS (unsanitized):
-//│ let sum3, res1, handleBlock$3;
-//│ sum3 = function sum(n) {
-//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, Cont$;
-//│   Cont$ = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│   Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
+//│ let sum1, res1, handleBlock$1;
+//│ sum1 = function sum(n) {
+//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, Cont$6;
+//│   Cont$6 = function Cont$(pc1) { return new Cont$.class(pc1); };
+//│   Cont$6.class = class Cont$3 extends globalThis.Predef.__Cont.class {
 //│     constructor(pc) {
 //│       let tmp2;
 //│       tmp2 = super(null, null);
@@ -186,7 +186,7 @@ sum(10000)
 //│           } else {
 //│             tmp = n - 1;
 //│             globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
-//│             tmp1 = sum3(tmp);
+//│             tmp1 = sum1(tmp);
 //│             if (tmp1 instanceof globalThis.Predef.__EffectSig.class) {
 //│               this.pc = 1;
 //│               return globalThis.Predef.__appendInCont(tmp1, this);
@@ -205,12 +205,12 @@ sum(10000)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$(" + this.pc + ")"; }
+//│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   curDepth = globalThis.Predef.__stackDepth;
 //│   stackDelayRes = globalThis.Predef.checkDepth();
 //│   if (stackDelayRes instanceof globalThis.Predef.__EffectSig.class) {
-//│     stackDelayRes.tail.next = new Cont$.class(0);
+//│     stackDelayRes.tail.next = new Cont$6.class(0);
 //│     stackDelayRes.tail = stackDelayRes.tail.next;
 //│     return stackDelayRes;
 //│   }
@@ -220,9 +220,9 @@ sum(10000)
 //│   } else {
 //│     tmp = n - 1;
 //│     globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
-//│     tmp1 = sum3(tmp);
+//│     tmp1 = sum1(tmp);
 //│     if (tmp1 instanceof globalThis.Predef.__EffectSig.class) {
-//│       tmp1.tail.next = new Cont$.class(1);
+//│       tmp1.tail.next = new Cont$6.class(1);
 //│       tmp1.tail = tmp1.tail.next;
 //│       return tmp1;
 //│     }
@@ -230,18 +230,18 @@ sum(10000)
 //│     return n + tmp1;
 //│   }
 //│ };
-//│ handleBlock$3 = function handleBlock$() {
-//│   let stackHandler, res2, Cont$, StackDelay$;
-//│   StackDelay$ = class StackDelay$ extends globalThis.Predef.__StackDelay {
+//│ handleBlock$1 = function handleBlock$() {
+//│   let stackHandler, res2, Cont$6, StackDelay$2;
+//│   StackDelay$2 = class StackDelay$1 extends globalThis.Predef.__StackDelay {
 //│     constructor() {
 //│       let tmp;
 //│       tmp = super();
 //│     }
 //│     perform() {
 //│       return globalThis.Predef.__mkEffect(stackHandler, (resume) => {
-//│         let res3, Cont$1;
-//│         Cont$1 = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│         Cont$1.class = class Cont$ extends globalThis.Predef.__Cont.class {
+//│         let res3, Cont$7;
+//│         Cont$7 = function Cont$(pc1) { return new Cont$.class(pc1); };
+//│         Cont$7.class = class Cont$4 extends globalThis.Predef.__Cont.class {
 //│           constructor(pc) {
 //│             let tmp;
 //│             tmp = super(null, null);
@@ -258,12 +258,12 @@ sum(10000)
 //│               break;
 //│             }
 //│           }
-//│           toString() { return "Cont$(" + this.pc + ")"; }
+//│           toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│         };
 //│         globalThis.Predef.__stackOffset = globalThis.Predef.__stackDepth;
 //│         res3 = resume();
 //│         if (res3 instanceof globalThis.Predef.__EffectSig.class) {
-//│           res3.tail.next = new Cont$1.class(4);
+//│           res3.tail.next = new Cont$7.class(4);
 //│           res3.tail = res3.tail.next;
 //│           return res3;
 //│         }
@@ -272,9 +272,9 @@ sum(10000)
 //│     }
 //│     toString() { return "StackDelay$"; }
 //│   };
-//│   stackHandler = new StackDelay$();
-//│   Cont$ = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│   Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
+//│   stackHandler = new StackDelay$2();
+//│   Cont$6 = function Cont$(pc1) { return new Cont$.class(pc1); };
+//│   Cont$6.class = class Cont$5 extends globalThis.Predef.__Cont.class {
 //│     constructor(pc) {
 //│       let tmp;
 //│       tmp = super(null, null);
@@ -291,20 +291,20 @@ sum(10000)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$(" + this.pc + ")"; }
+//│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   globalThis.Predef.__stackLimit = 1000;
 //│   globalThis.Predef.__stackOffset = 0;
 //│   globalThis.Predef.__stackDepth = 1;
 //│   globalThis.Predef.__stackHandler = stackHandler;
-//│   res2 = sum3(10000);
+//│   res2 = sum1(10000);
 //│   if (res2 instanceof globalThis.Predef.__EffectSig.class) {
-//│     res2.tail.next = new Cont$(3);
+//│     res2.tail.next = new Cont$6(3);
 //│     return globalThis.Predef.__handleBlockImpl(res2, stackHandler);
 //│   }
 //│   return res2;
 //│ };
-//│ res1 = handleBlock$3();
+//│ res1 = handleBlock$1();
 //│ if (res1 instanceof this.Predef.__EffectSig.class) {
 //│   throw new this.Error("Unhandled effects");
 //│ }
@@ -405,8 +405,8 @@ foo(h)
 :sjs
 fun max(a, b) = if a < b then b else a
 //│ JS (unsanitized):
-//│ let max1;
-//│ max1 = function max(a, b) {
+//│ let max;
+//│ max = function max(a, b) {
 //│   let scrut;
 //│   scrut = a < b;
 //│   if (scrut === true) {
@@ -426,11 +426,12 @@ fun hi(n) = n
 hi(0)
 //│ ═══[COMPILATION ERROR] This code requires effect handler instrumentation but was compiled without it.
 //│ JS (unsanitized):
-//│ let hi3, stackHandler;
-//│ hi3 = function hi(n) {
+//│ let hi1, stackHandler;
+//│ hi1 = function hi(n) {
 //│   return n;
 //│ };
 //│ throw globalThis.Error("This code requires effect handler instrumentation but was compiled without it.");
+//│ ═══[RUNTIME ERROR] Error: This code requires effect handler instrumentation but was compiled without it.
 
 :stackSafe 42
 :ge

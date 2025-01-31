@@ -24,7 +24,7 @@ single.0
 :sjs
 val single = [1]
 //│ JS (unsanitized):
-//│ let single2; single2 = [ 1 ]; null
+//│ let single1; single1 = [ 1 ]; null
 //│ single = [ 1 ]
 
 single.0

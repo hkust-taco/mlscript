@@ -44,6 +44,14 @@ print(1, 2, 3)
 1 . print()
 //│ > 1
 
+1 . (print(_))()
+//│ > 1
+
+:e
+1 . print(_)()
+//│ ═══[ERROR] Illegal position for '_' placeholder.
+//│ = [Function (anonymous)]
+
 // FIXME: should have the same semantics...
 1
   . print()

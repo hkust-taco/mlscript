@@ -1,17 +1,16 @@
 let Str1;
-const Str$class = class Str {
-  constructor() {}
-  concat2(a, b) {
+Str1 = class Str {
+  static {}
+  static concat2(a, b) {
     return a + b;
   } 
-  concat(...xs) {
+  static concat(...xs) {
     return xs.join("") ?? null;
   } 
-  from(value) {
+  static from(value) {
     return globalThis.String(value) ?? null;
   }
-  toString() { return "Str"; }
-}; Str1 = new Str$class;
-Str1.class = Str$class;
+  static toString() { return "Str"; }
+};
 null
 let Str = Str1; export default Str;

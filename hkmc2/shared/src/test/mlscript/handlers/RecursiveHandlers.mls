@@ -121,22 +121,22 @@ if true do
   h1.perform(())
 str
 //│ JS (unsanitized):
-//│ let str, scrut, tmp6, tmp7, handleBlock$9;
+//│ let str, scrut, tmp6, tmp7, handleBlock$4;
 //│ str = "";
 //│ scrut = true;
 //│ if (scrut === true) {
-//│   handleBlock$9 = function handleBlock$() {
-//│     let h1, tmp8, handleBlock$10, Cont$, Handler$h1$;
-//│     Handler$h1$ = class Handler$h1$ extends Effect1 {
+//│   handleBlock$4 = function handleBlock$() {
+//│     let h1, tmp8, handleBlock$5, Cont$16, Handler$h1$2;
+//│     Handler$h1$2 = class Handler$h1$1 extends Effect1 {
 //│       constructor() {
 //│         let tmp9;
 //│         tmp9 = super();
 //│       }
 //│       perform(arg) {
 //│         return globalThis.Predef.__mkEffect(h1, (k) => {
-//│           let tmp9, tmp10, tmp11, Cont$1;
-//│           Cont$1 = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│           Cont$1.class = class Cont$ extends globalThis.Predef.__Cont.class {
+//│           let tmp9, tmp10, tmp11, Cont$17;
+//│           Cont$17 = function Cont$(pc1) { return new Cont$.class(pc1); };
+//│           Cont$17.class = class Cont$12 extends globalThis.Predef.__Cont.class {
 //│             constructor(pc) {
 //│               let tmp12;
 //│               tmp12 = super(null, null);
@@ -155,13 +155,13 @@ str
 //│                 break;
 //│               }
 //│             }
-//│             toString() { return "Cont$(" + this.pc + ")"; }
+//│             toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│           };
 //│           tmp9 = str + "A";
 //│           str = tmp9;
 //│           tmp10 = k(arg) ?? null;
 //│           if (tmp10 instanceof globalThis.Predef.__EffectSig.class) {
-//│             tmp10.tail.next = new Cont$1.class(5);
+//│             tmp10.tail.next = new Cont$17.class(5);
 //│             tmp10.tail = tmp10.tail.next;
 //│             return tmp10;
 //│           }
@@ -172,9 +172,9 @@ str
 //│       }
 //│       toString() { return "Handler$h1$"; }
 //│     };
-//│     h1 = new Handler$h1$();
-//│     Cont$ = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│     Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
+//│     h1 = new Handler$h1$2();
+//│     Cont$16 = function Cont$(pc1) { return new Cont$.class(pc1); };
+//│     Cont$16.class = class Cont$13 extends globalThis.Predef.__Cont.class {
 //│       constructor(pc) {
 //│         let tmp9;
 //│         tmp9 = super(null, null);
@@ -197,20 +197,20 @@ str
 //│           break;
 //│         }
 //│       }
-//│       toString() { return "Cont$(" + this.pc + ")"; }
+//│       toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│     };
-//│     handleBlock$10 = function handleBlock$() {
-//│       let h2, tmp9, res4, Cont$1, Handler$h2$;
-//│       Handler$h2$ = class Handler$h2$ extends Effect1 {
+//│     handleBlock$5 = function handleBlock$() {
+//│       let h2, tmp9, res4, Cont$17, Handler$h2$2;
+//│       Handler$h2$2 = class Handler$h2$1 extends Effect1 {
 //│         constructor() {
 //│           let tmp10;
 //│           tmp10 = super();
 //│         }
 //│         perform(arg) {
 //│           return globalThis.Predef.__mkEffect(h2, (k) => {
-//│             let tmp10, tmp11, tmp12, tmp13, tmp14, Cont$2;
-//│             Cont$2 = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│             Cont$2.class = class Cont$ extends globalThis.Predef.__Cont.class {
+//│             let tmp10, tmp11, tmp12, tmp13, tmp14, Cont$18;
+//│             Cont$18 = function Cont$(pc1) { return new Cont$.class(pc1); };
+//│             Cont$18.class = class Cont$14 extends globalThis.Predef.__Cont.class {
 //│               constructor(pc) {
 //│                 let tmp15;
 //│                 tmp15 = super(null, null);
@@ -230,14 +230,14 @@ str
 //│                   break;
 //│                 }
 //│               }
-//│               toString() { return "Cont$(" + this.pc + ")"; }
+//│               toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│             };
 //│             tmp10 = str + "B";
 //│             tmp11 = str + tmp10;
 //│             str = tmp11;
 //│             tmp12 = k(arg) ?? null;
 //│             if (tmp12 instanceof globalThis.Predef.__EffectSig.class) {
-//│               tmp12.tail.next = new Cont$2.class(2);
+//│               tmp12.tail.next = new Cont$18.class(2);
 //│               tmp12.tail = tmp12.tail.next;
 //│               return tmp12;
 //│             }
@@ -249,9 +249,9 @@ str
 //│         }
 //│         toString() { return "Handler$h2$"; }
 //│       };
-//│       h2 = new Handler$h2$();
-//│       Cont$1 = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│       Cont$1.class = class Cont$ extends globalThis.Predef.__Cont.class {
+//│       h2 = new Handler$h2$2();
+//│       Cont$17 = function Cont$(pc1) { return new Cont$.class(pc1); };
+//│       Cont$17.class = class Cont$15 extends globalThis.Predef.__Cont.class {
 //│         constructor(pc) {
 //│           let tmp10;
 //│           tmp10 = super(null, null);
@@ -278,23 +278,23 @@ str
 //│             break;
 //│           }
 //│         }
-//│         toString() { return "Cont$(" + this.pc + ")"; }
+//│         toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│       };
 //│       tmp9 = h2.perform(null) ?? null;
 //│       if (tmp9 instanceof globalThis.Predef.__EffectSig.class) {
-//│         tmp9.tail.next = new Cont$1(0);
+//│         tmp9.tail.next = new Cont$17(0);
 //│         return globalThis.Predef.__handleBlockImpl(tmp9, h2);
 //│       }
 //│       res4 = h1.perform(null) ?? null;
 //│       if (res4 instanceof globalThis.Predef.__EffectSig.class) {
-//│         res4.tail.next = new Cont$1(1);
+//│         res4.tail.next = new Cont$17(1);
 //│         return globalThis.Predef.__handleBlockImpl(res4, h2);
 //│       }
 //│       return res4;
 //│     };
-//│     tmp8 = handleBlock$10();
+//│     tmp8 = handleBlock$5();
 //│     if (tmp8 instanceof globalThis.Predef.__EffectSig.class) {
-//│       tmp8.tail.next = new Cont$(3);
+//│       tmp8.tail.next = new Cont$16(3);
 //│       return globalThis.Predef.__handleBlockImpl(tmp8, h1);
 //│     }
 //│     if (tmp8 instanceof globalThis.Predef.__Return.class) {
@@ -302,7 +302,7 @@ str
 //│     }
 //│     return tmp8;
 //│   };
-//│   tmp6 = handleBlock$9();
+//│   tmp6 = handleBlock$4();
 //│   if (tmp6 instanceof this.Predef.__EffectSig.class) {
 //│     throw new this.Error("Unhandled effects");
 //│   }

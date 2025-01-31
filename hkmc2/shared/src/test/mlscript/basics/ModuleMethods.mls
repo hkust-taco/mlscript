@@ -52,14 +52,14 @@ f6(M)
 //│ ╔══[ERROR] Only module parameters may receive module arguments (values).
 //│ ║  l.51: 	f6(M)
 //│ ╙──      	   ^
-//│ = M { class: [class M] }
+//│ = [class M]
 
 :e
 f6(M.self())
 //│ ╔══[ERROR] Only module parameters may receive module arguments (values).
 //│ ║  l.58: 	f6(M.self())
 //│ ╙──      	   ^^^^^^^^
-//│ = M { class: [class M] }
+//│ = [class M]
 
 :e
 fun f7(): module M
@@ -88,9 +88,9 @@ module N with
   fun ok2(): module M = M
 
 ok1(M)
-//│ = M { class: [class M] }
+//│ = [class M]
 
 ok1(M.self())
-//│ = M { class: [class M] }
+//│ = [class M]
 
 

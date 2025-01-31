@@ -12,7 +12,7 @@ if true then 1 else 0
 :sjs
 let f = x => if x then log("ok") else log("ko")
 //│ JS (unsanitized):
-//│ let f; f = (x) => { if (x === true) { return log1("ok"); } else { return log1("ko"); } }; null
+//│ let f; f = (x) => { if (x === true) { return log("ok"); } else { return log("ko"); } }; null
 //│ f = [Function: f]
 
 f(true)
@@ -34,7 +34,7 @@ let f = x => log((if x then "ok" else "ko") + "!")
 //│     tmp1 = "ko";
 //│   }
 //│   tmp2 = tmp1 + "!";
-//│   return log1(tmp2);
+//│   return log(tmp2);
 //│ };
 //│ f1 = tmp;
 //│ null
@@ -56,7 +56,7 @@ let f = x => log((if x and x then "ok" else "ko") + "!")
 //│     tmp2 = "ko";
 //│   }
 //│   tmp3 = tmp2 + "!";
-//│   return log1(tmp3);
+//│   return log(tmp3);
 //│ };
 //│ f2 = tmp1;
 //│ null

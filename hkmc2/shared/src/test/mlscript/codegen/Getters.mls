@@ -4,14 +4,14 @@
 :sjs
 fun t = 42
 //│ JS (unsanitized):
-//│ let t1; t1 = function t() { return 42; }; null
+//│ let t; t = function t() { return 42; }; null
 
 
 :expect 42
 :sjs
 t
 //│ JS (unsanitized):
-//│ let tmp; tmp = t1(); tmp
+//│ let tmp; tmp = t(); tmp
 //│ = 42
 
 
@@ -37,8 +37,8 @@ fun test() =
     42
   whoops + whoops
 //│ JS (unsanitized):
-//│ let test1;
-//│ test1 = function test() {
+//│ let test;
+//│ test = function test() {
 //│   let whoops, tmp1, tmp2;
 //│   whoops = function whoops() {
 //│     let tmp3;
@@ -67,22 +67,21 @@ module T with
   val d = this.p
 //│ JS (unsanitized):
 //│ let T1;
-//│ const T$class = class T {
-//│   constructor() {
-//│     this.a = this.t;
-//│     this.b = this.t;
-//│     this.c = this.p;
-//│     this.d = this.p;
+//│ T1 = class T {
+//│   static {
+//│     this.a = T.t;
+//│     this.b = T.t;
+//│     this.c = T.p;
+//│     this.d = T.p;
 //│   }
-//│   t() {
+//│   static t() {
 //│     return 1;
 //│   } 
-//│   get p() {
+//│   static get p() {
 //│     return 2;
 //│   }
-//│   toString() { return "T"; }
-//│ }; T1 = new T$class;
-//│ T1.class = T$class;
+//│   static toString() { return "T"; }
+//│ };
 //│ null
 
 
@@ -104,14 +103,13 @@ module M with
   fun t = 0
 //│ JS (unsanitized):
 //│ let M1;
-//│ const M$class = class M {
-//│   constructor() {}
-//│   get t() {
+//│ M1 = class M {
+//│   static {}
+//│   static get t() {
 //│     return 0;
 //│   }
-//│   toString() { return "M"; }
-//│ }; M1 = new M$class;
-//│ M1.class = M$class;
+//│   static toString() { return "M"; }
+//│ };
 //│ null
 
 
@@ -127,8 +125,8 @@ fun test() =
   fun whoops = 42
   whoops
 //│ JS (unsanitized):
-//│ let test3;
-//│ test3 = function test() {
+//│ let test1;
+//│ test1 = function test() {
 //│   let whoops, tmp1;
 //│   whoops = function whoops() {
 //│     return 42;
@@ -158,7 +156,7 @@ fun bar() =
   fun baz() = 42
   baz
 //│ JS (unsanitized):
-//│ let bar1; bar1 = function bar() { let baz; baz = function baz() { return 42; }; return baz; }; null
+//│ let bar; bar = function bar() { let baz; baz = function baz() { return 42; }; return baz; }; null
 
 
 :sjs
@@ -167,8 +165,8 @@ fun baz() =
   fun z = 2
   (x, y) => x + y + w + z
 //│ JS (unsanitized):
-//│ let baz1;
-//│ baz1 = function baz() {
+//│ let baz;
+//│ baz = function baz() {
 //│   let w, z;
 //│   w = function w() {
 //│     return 1;
@@ -200,8 +198,8 @@ fun a() =
     b + d
   c
 //│ JS (unsanitized):
-//│ let a1;
-//│ a1 = function a() {
+//│ let a;
+//│ a = function a() {
 //│   let b, c;
 //│   b = function b() {
 //│     return 1;
@@ -232,8 +230,8 @@ fun b() =
     c
   d
 //│ JS (unsanitized):
-//│ let b1;
-//│ b1 = function b() {
+//│ let b;
+//│ b = function b() {
 //│   let c, d;
 //│   c = function c() {
 //│     return 1;
@@ -263,8 +261,8 @@ fun c() =
     e + f
   d
 //│ JS (unsanitized):
-//│ let c1;
-//│ c1 = function c() {
+//│ let c;
+//│ c = function c() {
 //│   let d, f, tmp4;
 //│   f = function f() {
 //│     return 1;
@@ -301,7 +299,7 @@ class Foo(x) with
 //│   get oops() {
 //│     return this.x;
 //│   }
-//│   toString() { return "Foo(" + this.x + ")"; }
+//│   toString() { return "Foo(" + globalThis.Predef.render(this.x) + ")"; }
 //│ };
 //│ null
 

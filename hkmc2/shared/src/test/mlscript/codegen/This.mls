@@ -8,13 +8,13 @@ fun test(x) =
   [this.a, x]
 //│ ═══[ERROR] Cannot use 'this' outside of an object scope.
 //│ JS (unsanitized):
-//│ let test1; test1 = function test(x) { /* error */ }; null
+//│ let test; test = function test(x) { /* error */ }; null
 
 :sjs
 fun test(x) =
   [globalThis.a, x]
 //│ JS (unsanitized):
-//│ let test3; test3 = function test(x) { return [ globalThis.a, x ]; }; null
+//│ let test1; test1 = function test(x) { return [ globalThis.a, x ]; }; null
 
 :re
 test(123)
@@ -41,22 +41,21 @@ module Test with
     [this.a, x]
 //│ JS (unsanitized):
 //│ let Test1;
-//│ const Test$class = class Test {
-//│   constructor() {
+//│ Test1 = class Test {
+//│   static {
 //│     this.a = 3;
 //│   }
-//│   test1(x) {
-//│     return test3(x);
+//│   static test1(x) {
+//│     return test1(x);
 //│   } 
-//│   test2(x1) {
+//│   static test2(x1) {
 //│     return [
-//│       this.a,
+//│       Test.a,
 //│       x1
 //│     ];
 //│   }
-//│   toString() { return "Test"; }
-//│ }; Test1 = new Test$class;
-//│ Test1.class = Test$class;
+//│   static toString() { return "Test"; }
+//│ };
 //│ null
 
 

@@ -1,9 +1,12 @@
 package hkmc2
 package semantics
 
+import scala.collection.mutable.Buffer
+
 import mlscript.utils.*, shorthands.*
 import syntax.*
-import scala.collection.mutable.Buffer
+
+import Elaborator.State
 
 
 final case class QuantVar(sym: VarSymbol, ub: Opt[Term], lb: Opt[Term])
@@ -34,6 +37,7 @@ enum Term extends Statement:
   case TyApp(lhs: Term, targs: Ls[Term])
   case Sel(prefix: Term, nme: Tree.Ident)(val sym: Opt[FieldSymbol])
   case SynthSel(prefix: Term, nme: Tree.Ident)(val sym: Opt[FieldSymbol])
+  case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
   case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split)(val normalized: Split)
   case Lam(params: ParamList, body: Term)
@@ -64,6 +68,15 @@ enum Term extends Statement:
     case sel: Sel => sel.sym
     case sel: SelProj => sel.sym
     case _ => N
+  
+  def sel(id: Tree.Ident, sym: Opt[FieldSymbol]) =
+    Sel(this, id)(sym)
+  def selNoSym(nme: Str) =
+    sel(Tree.Ident(nme), N)
+  
+  def app(args: Term*)(using State) =
+    App(this, Tup(args.toList.map(PlainFld(_)))(Tree.DummyTup))(Tree.App(Tree.Dummy, Tree.Dummy),
+      FlowSymbol(""))
   
   def describe: Str = this match
     case Error => "<error>"
@@ -98,6 +111,10 @@ end Term
 
 import Term.*
 
+extension (self: Blk)
+  def mapRes(f: Term => Term) =
+    Blk(self.stats, f(self.res))
+
 sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
   
   def extraInfo: Str = this match
@@ -112,8 +129,9 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case App(lhs, rhs) => lhs :: rhs :: Nil
     case FunTy(lhs, rhs, eff) => lhs :: rhs :: eff.toList
     case TyApp(pre, tarsg) => pre :: tarsg
-    case SynthSel(pre, _) => pre :: Nil
     case Sel(pre, _) => pre :: Nil
+    case SynthSel(pre, _) => pre :: Nil
+    case DynSel(o, f, _) => o :: f :: Nil
     case Tup(fields) => fields.flatMap(_.subTerms)
     case IfLike(_, body) => body.subTerms
     case Lam(params, body) => body :: Nil
@@ -224,6 +242,8 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Import(sym, file) => s"import ${sym} from ${file}"
     case Annotated(ann, target) => s"@${ann} ${target.showDbg}"
     case Throw(res) => s"throw ${res.showDbg}"
+    case Try(body, finallyDo) => s"try ${body.showDbg} finally ${finallyDo.showDbg}"
+    case Ret(res) => s"return ${res.showDbg}"
 
 final case class LetDecl(sym: LocalSymbol, annotations: Ls[Annot]) extends Statement
 

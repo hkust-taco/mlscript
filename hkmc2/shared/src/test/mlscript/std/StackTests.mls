@@ -57,6 +57,6 @@ s1 zip(s2)
 
 print of ...
 s1 zip of s2, s3
-//│ > Cons(1,a,true, Cons(2,b,false, Cons(3,c, Nil)))
+//│ > Cons([1, "a", true], Cons([2, "b", false], Cons([3, "c"], Nil)))
 
 

@@ -66,7 +66,7 @@ class Foo(x: Int)
 //│   constructor(x1) {
 //│     this.x = x1;
 //│   }
-//│   toString() { return "Foo(" + this.x + ")"; }
+//│   toString() { return "Foo(" + globalThis.Predef.render(this.x) + ")"; }
 //│ };
 //│ null
 //│ Type: ⊤
@@ -91,14 +91,14 @@ let foo = new Foo(42) in foo.Foo#x
 :sjs
 fun inc(x) = x + 1
 //│ JS (unsanitized):
-//│ let inc1; inc1 = function inc(x1) { return x1 + 1; }; null
+//│ let inc; inc = function inc(x1) { return x1 + 1; }; null
 //│ Type: ⊤
 
 
 :sjs
 inc(41)
 //│ JS (unsanitized):
-//│ inc1(41)
+//│ inc(41)
 //│ = 42
 //│ Type: Int
 
@@ -137,7 +137,7 @@ if foo is Foo then 1 else 0
 //│   0
 //│ }
 //│ = 1
-//│ foo = Foo {}
+//│ foo = Foo2 {}
 //│ Type: Int
 
 
@@ -146,15 +146,15 @@ fun pow(x) = case
   0 then 1
   n then x * pow(x)(n-1)
 //│ JS (unsanitized):
-//│ let pow1;
-//│ pow1 = function pow(x1) {
+//│ let pow;
+//│ pow = function pow(x1) {
 //│   return (caseScrut) => {
 //│     let n, tmp2, tmp3, tmp4;
 //│     if (caseScrut === 0) {
 //│       return 1;
 //│     } else {
 //│       n = caseScrut;
-//│       tmp2 = pow1(x1);
+//│       tmp2 = pow(x1);
 //│       tmp3 = n - 1;
 //│       tmp4 = tmp2(tmp3) ?? null;
 //│       return x1 * tmp4;
@@ -170,8 +170,8 @@ fun not = case
   true then false
   false then true
 //│ JS (unsanitized):
-//│ let not1;
-//│ not1 = function not() {
+//│ let not;
+//│ not = function not() {
 //│   return (caseScrut) => {
 //│     if (caseScrut === true) {
 //│       return false;
@@ -192,7 +192,7 @@ fun not = case
 :sjs
 not of false
 //│ JS (unsanitized):
-//│ let tmp2; tmp2 = not1(); tmp2(false)
+//│ let tmp2; tmp2 = not(); tmp2(false)
 //│ = true
 //│ Type: Bool
 
@@ -202,15 +202,15 @@ fun fact = case
   0 then 1
   n then n * fact(n - 1)
 //│ JS (unsanitized):
-//│ let fact1;
-//│ fact1 = function fact() {
+//│ let fact;
+//│ fact = function fact() {
 //│   return (caseScrut) => {
 //│     let n, tmp3, tmp4, tmp5;
 //│     if (caseScrut === 0) {
 //│       return 1;
 //│     } else {
 //│       n = caseScrut;
-//│       tmp3 = fact1();
+//│       tmp3 = fact();
 //│       tmp4 = n - 1;
 //│       tmp5 = tmp3(tmp4);
 //│       return n * tmp5;

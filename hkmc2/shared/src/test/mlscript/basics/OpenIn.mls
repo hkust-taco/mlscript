@@ -3,16 +3,16 @@
 import "../../mlscript-compile/Str.mls"
 
 
-Str.(~)
+Str.{~}
 //│ = [Function: concat2]
 
-Str.(~)("a", "b", "c")
+Str.{~}("a", "b", "c")
 //│ = 'ab'
 
-Str.("a" ~ "b")
+Str.{"a" ~ "b"}
 //│ = 'ab'
 
-Str.("a" ~ from(123))
+Str.{"a" ~ from(123)}
 //│ = 'a123'
 
 

@@ -159,7 +159,7 @@ extends Importer:
   def resolveField(srcTree: Tree, base: Opt[Symbol], nme: Ident): Opt[FieldSymbol] =
     base match
     case S(psym: BlockMemberSymbol) =>
-      psym.modTree match
+      psym.modOrObjTree match
       case S(cls) =>
         cls.definedSymbols.get(nme.name) match
         case s @ S(clsSym) => s
@@ -186,7 +186,7 @@ extends Importer:
       trm
     case S(mem: BlockMemberSymbol) =>
       if !mem.hasLiftedClass then trm
-      else Term.SynthSel(trm, Ident("class"))(mem.clsTree.orElse(mem.modTree).map(_.symbol))
+      else Term.SynthSel(trm, Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol))
     case _ => trm
   
   def annot(tree: Tree): Ctxl[Opt[Annot]] = tree match
@@ -549,6 +549,8 @@ extends Importer:
       Term.Error
     case OpenIn(op, body) =>
       term(Block(Open(op) :: body :: Nil), inAppPrefix)
+    case DynAccess(obj, fld, ai) =>
+      Term.DynSel(term(obj), term(fld), ai)
     case Spread(kw, kwLoc, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' spread operator." -> tree.toLoc :: Nil))
       Term.Error
@@ -656,8 +658,8 @@ extends Importer:
               val importedNames = importedTrees match
                 case N => // "wilcard" open
                   baseElem.symbol match
-                  case S(sym: BlockMemberSymbol) if sym.modTree.isDefined =>
-                    sym.modTree.get.definedSymbols.map:
+                  case S(sym: BlockMemberSymbol) if sym.modOrObjTree.isDefined =>
+                    sym.modOrObjTree.get.definedSymbols.map:
                       case (nme, sym) => nme -> Ctx.SelElem(baseElem, sym.nme, S(sym))
                   case _ =>
                     raise(ErrorReport(msg"Wildcard 'open' not supported for this kind of symbol." -> baseId.toLoc :: Nil))
@@ -697,6 +699,9 @@ extends Importer:
         val sym =
           fieldOrVarSym(LetBind, id)
         log(s"Processing `let` statement $id (${sym}) ${ctx.outer}")
+        members.get(id.name).foreach: s =>
+          raise(ErrorReport(msg"Name '${id.name}' is already used"
+            -> hd.toLoc :: msg"by a member declared in the same block" -> s.toLoc :: Nil))
         val newAcc = rhso match
           case S(rhs) =>
             val rrhs = tups.foldRight(rhs):

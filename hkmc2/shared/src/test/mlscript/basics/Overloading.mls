@@ -16,10 +16,10 @@ module Foo with { val x = 1 }
 //│ ╙──     	       ^^^^^^^^^^^^^^^^^^^^
 
 Foo
-//│ = Foo { x: 1, class: [class Foo] }
+//│ = [class Foo] { x: 1 }
 
 :todo
 Foo()
-//│ ═══[RUNTIME ERROR] TypeError: Foo2 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
 
 

@@ -36,8 +36,8 @@ fun f(x) = if x is
   Pair(A, A) then 1
   Pair(B, B) then 2
 //│ JS (unsanitized):
-//│ let f1;
-//│ f1 = function f(x) {
+//│ let f;
+//│ f = function f(x) {
 //│   let param0, param1;
 //│   if (x instanceof Pair1.class) {
 //│     param0 = x.a;
