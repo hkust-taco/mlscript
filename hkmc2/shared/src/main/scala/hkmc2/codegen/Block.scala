@@ -269,6 +269,7 @@ sealed abstract class Result:
     case Value.Lit(lit) => Set.empty
     case Value.Lam(params, body) => body.freeVars -- params.paramSyms
     case Value.Arr(elems) => elems.flatMap(_.value.freeVars).toSet
+    case DynSelect(qual, fld, arrayIdx) => qual.freeVars ++ fld.freeVars
   
 // type Local = LocalSymbol
 type Local = Symbol

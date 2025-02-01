@@ -151,7 +151,7 @@ fun f(a1, a2, a3, a4, a5, a6) =
 f(1,2,3,4,5,6)
 //│ JS (unsanitized):
 //│ let f5, g5, g$4;
-//│ g$4 = function g$(a1, a2, a3, a4, a5, a6) {
+//│ g$4 = function g$(a4, a3, a6, a2, a1, a5) {
 //│   let tmp, tmp1, tmp2, tmp3;
 //│   tmp = a1 + a2;
 //│   tmp1 = tmp + a3;
@@ -159,14 +159,14 @@ f(1,2,3,4,5,6)
 //│   tmp3 = tmp2 + a5;
 //│   return tmp3 + a6;
 //│ };
-//│ g5 = function g(a1, a2, a3, a4, a5, a6) {
+//│ g5 = function g(a4, a3, a6, a2, a1, a5) {
 //│   return () => {
-//│     return g$4(a1, a2, a3, a4, a5, a6);
+//│     return g$4(a4, a3, a6, a2, a1, a5);
 //│   };
 //│ };
 //│ f5 = function f(a1, a2, a3, a4, a5, a6) {
 //│   let tmp;
-//│   tmp = g$4(a1, a2, a3, a4, a5, a6);
+//│   tmp = g$4(a4, a3, a6, a2, a1, a5);
 //│   return tmp;
 //│ };
 //│ f5(1, 2, 3, 4, 5, 6)
@@ -621,55 +621,141 @@ fun g() =
     x
   f
 g()(1)
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: None.get
+//│ 	at: scala.None$.get(Option.scala:627)
+//│ 	at: scala.None$.get(Option.scala:626)
+//│ 	at: hkmc2.Lifter$$anon$5.applyPath(Lifter.scala:366)
+//│ 	at: hkmc2.codegen.BlockTransformer.applyArg(BlockTransformer.scala:174)
+//│ 	at: hkmc2.codegen.BlockTransformer.$anonfun$5(BlockTransformer.scala:99)
+//│ 	at: scala.collection.immutable.List.mapConserve(List.scala:473)
+//│ 	at: hkmc2.codegen.BlockTransformer.applyResult(BlockTransformer.scala:99)
+//│ 	at: hkmc2.codegen.BlockTransformer.applyResult2(BlockTransformer.scala:94)
+//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:25)
+//│ 	at: hkmc2.codegen.BlockTransformerShallow.applyBlock(BlockTransformer.scala:237)
+
+// only w should be in a capture
+:expect 10111
+:sjs
+fun f() =
+  let x = 1
+  let y = 10
+  let z = 10
+  let w = 1000
+  class Good() with
+    fun foo() =
+      set z = 100
+      x + y + z + w
+  class Bad() with
+    fun foo() =
+      set w = 10000
+  Bad().foo()
+  Good()
+f().foo()
 //│ JS (unsanitized):
-//│ let g19, f22, h7, tmp28, f$2, h$7, g$capture1, f$capture15;
-//│ h$7 = function h$(f$capture16, g$capture2) {
-//│   f$capture16.k0$ = 5;
-//│   f$capture16.x1$ = 4;
-//│   return f$capture16.x1$ + g$capture2.y0$;
+//│ let f22, Bad1, Good1, tmp28, Bad$ctor, Bad$, Good$ctor, Good$, f$capture15;
+//│ Good$ = function Good$(x1, z, y1, f$capture16) {
+//│   let tmp29;
+//│   tmp29 = new Good1();
+//│   return tmp29(x1, z, y1, f$capture16);
 //│ };
-//│ h7 = function h(f$capture16, g$capture2) {
+//│ Good$ctor = function Good$ctor(x1, z, y1, f$capture16) {
 //│   return () => {
-//│     return h$7(f$capture16, g$capture2);
+//│     let tmp29;
+//│     tmp29 = new Good1();
+//│     return tmp29(x1, z, y1, f$capture16);
 //│   };
 //│ };
-//│ f$capture15 = function f$capture(k0$1, x1$1) {
-//│   return new f$capture.class(k0$1, x1$1);
+//│ Good1 = function Good() {
+//│   return (x2, z1, y2, f$capture17) => {
+//│     return new Good.class()(x2, z1, y2, f$capture17);
+//│   }
+//│ };
+//│ Good1.class = class Good {
+//│   constructor() {
+//│     return (x1, z, y1, f$capture16) => {
+//│       this.x = x1;
+//│       this.z = z;
+//│       this.y = y1;
+//│       this.f$capture = f$capture16;
+//│       return this;
+//│     }
+//│   }
+//│   foo() {
+//│     let tmp29, tmp30;
+//│     this.z = 100;
+//│     tmp29 = this.x + this.y;
+//│     tmp30 = tmp29 + this.z;
+//│     return tmp30 + this.f$capture.w0$;
+//│   }
+//│   toString() { return "Good(" + "" + ")"; }
+//│ };
+//│ Bad$ = function Bad$(x1, z, y1, f$capture16) {
+//│   let tmp29;
+//│   tmp29 = new Bad1();
+//│   return tmp29(x1, z, y1, f$capture16);
+//│ };
+//│ Bad$ctor = function Bad$ctor(x1, z, y1, f$capture16) {
+//│   return () => {
+//│     let tmp29;
+//│     tmp29 = new Bad1();
+//│     return tmp29(x1, z, y1, f$capture16);
+//│   };
+//│ };
+//│ Bad1 = function Bad() {
+//│   return (x2, z1, y2, f$capture17) => {
+//│     return new Bad.class()(x2, z1, y2, f$capture17);
+//│   }
+//│ };
+//│ Bad1.class = class Bad {
+//│   constructor() {
+//│     return (x1, z, y1, f$capture16) => {
+//│       this.x = x1;
+//│       this.z = z;
+//│       this.y = y1;
+//│       this.f$capture = f$capture16;
+//│       return this;
+//│     }
+//│   }
+//│   foo() {
+//│     this.f$capture.w0$ = 10000;
+//│     return null;
+//│   }
+//│   toString() { return "Bad(" + "" + ")"; }
+//│ };
+//│ f$capture15 = function f$capture(w0$1) {
+//│   return new f$capture.class(w0$1);
 //│ };
 //│ f$capture15.class = class f$capture14 {
-//│   constructor(k0$, x1$) {
-//│     this.k0$ = k0$;
-//│     this.x1$ = x1$;
+//│   constructor(w0$) {
+//│     this.w0$ = w0$;
 //│   }
-//│   toString() { return "f$capture(" + globalThis.Predef.render(this.k0$) + ", " + globalThis.Predef.render(this.x1$) + ")"; }
+//│   toString() { return "f$capture(" + globalThis.Predef.render(this.w0$) + ")"; }
 //│ };
-//│ f$2 = function f$(g$capture2, x1) {
-//│   let capture;
-//│   capture = new f$capture15(null, x1);
-//│   capture.k0$ = 4;
-//│   g$capture2.y0$ = 2;
-//│   return capture.x1$;
+//│ f22 = function f() {
+//│   let x1, y1, z, tmp29, tmp30, capture;
+//│   capture = new f$capture15(null);
+//│   x1 = 1;
+//│   y1 = 10;
+//│   z = 10;
+//│   capture.w0$ = 1000;
+//│   tmp29 = Bad$(x1, z, y1, capture);
+//│   tmp30 = tmp29.foo() ?? null;
+//│   return Good$(x1, z, y1, capture);
 //│ };
-//│ f22 = function f(g$capture2) {
-//│   return (x1) => {
-//│     return f$2(g$capture2, x1);
-//│   };
-//│ };
-//│ g$capture1 = function g$capture(y0$1) {
-//│   return new g$capture.class(y0$1);
-//│ };
-//│ g$capture1.class = class g$capture {
-//│   constructor(y0$) {
-//│     this.y0$ = y0$;
-//│   }
-//│   toString() { return "g$capture(" + globalThis.Predef.render(this.y0$) + ")"; }
-//│ };
-//│ g19 = function g() {
-//│   let capture;
-//│   capture = new g$capture1(null);
-//│   capture.y0$ = 0;
-//│   return f22(capture) ?? null;
-//│ };
-//│ tmp28 = g19();
-//│ tmp28(1) ?? null
-//│ = 1
+//│ tmp28 = f22();
+//│ tmp28.foo() ?? null
+//│ = 10111
+
+:expect 2
+fun f() =
+  let b = 0
+  fun g() =
+    set b += 1
+    b
+  g
+let ret = f()
+ret()
+ret()
+//│ = 2
+//│ ret = [Function (anonymous)]
