@@ -95,7 +95,7 @@ object Elaborator:
       def getBuiltinOp(op: Str): Opt[Str] =
         if getBuiltin(op).isDefined then builtinBinOps.get(op) else N
       /** Classes that do not use `instanceof` in pattern matching. */
-      val virtualClasses = Set(Int, Num, Str, Bool, Object)
+      val virtualClasses = Set(Int, Num, Str, Bool)
   
   object Ctx:
     abstract class Elem:
