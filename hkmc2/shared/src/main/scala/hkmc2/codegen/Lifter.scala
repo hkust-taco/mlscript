@@ -757,23 +757,25 @@ class UsedVarAnalyzer:
         hasReader ++= c.hasReader
         hasMutator ++= c.hasMutator
 
-      inline def rec(b: Block) = go(b, reqCapture, hasReader, hasMutator)
+      def rec(blk: Block) = 
+        go(blk, reqCapture, hasReader, hasMutator)
       
       val walker = new BlockTransformerShallow(SymbolSubst()):
         override def applyBlock(b: Block): Block = b match
           case Assign(lhs, rhs, rest) => 
             applyResult(rhs)
             if hasReader.contains(lhs) || hasMutator.contains(lhs) then reqCapture += lhs
-            super.applyBlock(rest)
+            applyBlock(rest)
 
           case Match(scrut, arms, dflt, rest) =>
             applyPath(scrut)
             val infos = arms.map:
               case (_, arm) => rec(arm)
             val dfltInfo = dflt.map:
-              case arm => rec(arm) |> merge
+              case arm => rec(arm)
             
             infos.map(merge) // IMPORTANT: rec all first, then merge, since each branch is mutually exclusive
+            dfltInfo.map(merge)
             applyBlock(rest)
             b
           case Label(label, body, rest) => 
@@ -821,7 +823,7 @@ class UsedVarAnalyzer:
             v
           case _ => super.applyValue(v)
       
-      walker.applyBlock(f.body)
+      walker.applyBlock(b)
 
       CaptureInfo(reqCapture, hasReader, hasMutator)
 
