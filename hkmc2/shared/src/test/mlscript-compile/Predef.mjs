@@ -1,3 +1,4 @@
+import Term from "./Term.mjs";
 let Predef1;
 const Predef$class = class Predef {
   constructor() {
@@ -136,6 +137,7 @@ const Predef$class = class Predef {
       constructor() {}
       toString() { return "__StackDelay(" +  + ")"; }
     };
+    this.term = Term;
   }
   id(x) {
     return x;

@@ -1,0 +1,83 @@
+module Term with...
+
+class Symbol(name: Str)
+class Literal(value: null | undefined | Str | Int | Num | Bool)
+
+
+abstract class ConstructorLike : (SymbolCons | StringJoin | TupleCapacity | Instantiation | LocalPattern | Parameter | Nested)
+class SymbolCons(symbol: Symbol) extends ConstructorLike
+class StringJoin extends ConstructorLike
+class TupleCapacity(size: Int, inf: Bool) extends ConstructorLike
+class Instantiation(symbol: Symbol, args: globalThis.Array[DebrujinSplit]) extends ConstructorLike
+class LocalPattern(id: Int) extends ConstructorLike
+class Parameter(symbol: Symbol) extends ConstructorLike
+class Nested(split: DebrujinSplit) extends ConstructorLike
+
+abstract class PatternStub : (LiteralStub | CharClass | ClassLikeStub | Wildcard)
+class LiteralStub(value: Literal) extends PatternStub
+class CharClass(start: Str, end: Str, inclusive: Bool) extends PatternStub
+class ClassLikeStub(cons: ConstructorLike) extends PatternStub
+class Wildcard extends PatternStub
+
+abstract class DebrujinSplit : (Binder | DebrujinBranch | Accept | Reject)
+class Binder(body: DebrujinSplit) extends DebrujinSplit
+class DebrujinBranch(scrutinee: Int, ptrn, consequent: DebrujinSplit, alternative: DebrujinSplit) extends DebrujinSplit
+class Accept(outcome: Int) extends DebrujinSplit
+class Reject extends DebrujinSplit
+
+abstract class Pattern : (LitPattern | Var | ClassLike | Synonym | Tuple | Record)
+class LitPattern(lit: Literal) extends Pattern
+class Var(sym: Symbol) extends Pattern
+class ClassLike(sym: Symbol, trm: Term, parameters: globalThis.Array[Symbol] | null) extends Pattern
+class Synonym(symbol: Symbol, patternArguments: globalThis.Array[DebrujinSplit]) extends Pattern
+class Tuple(size: Int, inf: Bool) extends Pattern
+class Record(entities: globalThis.Array[(Str, Symbol)]) extends Pattern
+
+class Branch(scrutinee: Ref, ptrn: Pattern, continuation: Split)
+
+abstract class Split : (Cons | Let | Else | End)
+class Cons(head: Branch, tail: Split) extends Split
+class Let(sym: Symbol, term: Term, tail: Split) extends Split
+class Else(default: Term) extends Split
+class End extends Split
+
+
+object KeywordIf
+object KeywordWhile
+
+
+abstract class Term : (Error | Lit | Builtin | Ref | App | Sel | DynSel | Tup | IfLike | Lam | Blk | New |
+  Region | RegRef | Assgn | Deref | SetRef | Ret | Throw | Try)
+class Error extends Term
+class Lit(lit: Literal) extends Term
+class Builtin(name: Str) extends Term
+class Ref(sym: Symbol) extends Term
+class App(lhs: Term, rhs: Term) extends Term
+class Sel(prefix: Term, nme: Str) extends Term
+class DynSel(prefix: Term, fld: Term, arrayIdx: Bool) extends Term
+class Tup(fields: globalThis.Array[Term]) extends Term
+class IfLike(kw: KeywordIf | KeywordWhile, desugared: Split) extends Term
+class Lam(params: globalThis.Array[Symbol], body: Term) extends Term
+class Blk(stats: globalThis.Array[Term], res: Term) extends Term
+class New(cls: Term, args: globalThis.Array[Term]) extends Term
+class Region(name: Symbol, body: Term) extends Term
+class RegRef(reg: Term, value: Term) extends Term
+class Assgn(lhs: Term, rhs: Term) extends Term
+class Deref(ref: Term) extends Term
+class SetRef(ref: Term, value: Term) extends Term
+class Ret(result: Term) extends Term
+class Throw(result: Term) extends Term
+class Try(body: Term, finallyDo: Term) extends Term
+
+// fun codegen(t, ctx) =
+//   if t is
+//     Ref(sym)
+
+// lowering pass:
+// Quote(App(...)) ~> Sel(Sel(Ref(globalThis), Predef), Term) ...
+
+// each module has a cache of symbols
+
+// no CSP for now
+// include some imports --> can "import" be in eval
+

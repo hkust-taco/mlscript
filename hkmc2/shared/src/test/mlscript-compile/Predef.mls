@@ -1,3 +1,4 @@
+import "./Term.mls"
 
 module Predef with ...
 
@@ -267,3 +268,6 @@ val __stackOffset = 0 // How much to offset __stackDepth by to get the true stac
 val __stackHandler = null
 abstract class __StackDelay() with
   fun perform()
+
+
+val term: module Term = Term
