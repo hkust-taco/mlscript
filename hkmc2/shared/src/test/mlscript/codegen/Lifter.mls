@@ -45,7 +45,7 @@ fun f(used1, unused1) =
 f(1, 2)
 //│ JS (unsanitized):
 //│ let f1, g1, g$1;
-//│ g$1 = function g$(used1, used2, g_arg) {
+//│ g$1 = function g$(used2, used1, g_arg) {
 //│   return (g_arg2) => {
 //│     let used3, tmp, tmp1;
 //│     used3 = 2;
@@ -54,16 +54,16 @@ f(1, 2)
 //│     return tmp1 + g_arg2;
 //│   };
 //│ };
-//│ g1 = function g(used1, used2) {
+//│ g1 = function g(used2, used1) {
 //│   return (g_arg) => {
-//│     return g$1(used1, used2, g_arg);
+//│     return g$1(used2, used1, g_arg);
 //│   };
 //│ };
 //│ f1 = function f(used1, unused1) {
 //│   let used2, unused2, tmp, tmp1;
 //│   used2 = unused1;
 //│   unused2 = 2;
-//│   tmp = g$1(used1, used2, used2);
+//│   tmp = g$1(used2, used1, used2);
 //│   tmp1 = tmp(used2) ?? null;
 //│   return tmp1 + unused2;
 //│ };
@@ -151,7 +151,7 @@ fun f(a1, a2, a3, a4, a5, a6) =
 f(1,2,3,4,5,6)
 //│ JS (unsanitized):
 //│ let f5, g5, g$4;
-//│ g$4 = function g$(a4, a3, a6, a2, a1, a5) {
+//│ g$4 = function g$(a5, a1, a4, a3, a6, a2) {
 //│   let tmp, tmp1, tmp2, tmp3;
 //│   tmp = a1 + a2;
 //│   tmp1 = tmp + a3;
@@ -159,20 +159,20 @@ f(1,2,3,4,5,6)
 //│   tmp3 = tmp2 + a5;
 //│   return tmp3 + a6;
 //│ };
-//│ g5 = function g(a4, a3, a6, a2, a1, a5) {
+//│ g5 = function g(a5, a1, a4, a3, a6, a2) {
 //│   return () => {
-//│     return g$4(a4, a3, a6, a2, a1, a5);
+//│     return g$4(a5, a1, a4, a3, a6, a2);
 //│   };
 //│ };
 //│ f5 = function f(a1, a2, a3, a4, a5, a6) {
 //│   let tmp;
-//│   tmp = g$4(a4, a3, a6, a2, a1, a5);
+//│   tmp = g$4(a5, a1, a4, a3, a6, a2);
 //│   return tmp;
 //│ };
 //│ f5(1, 2, 3, 4, 5, 6)
 //│ = 21
 
-:expect '01'
+:expect "01"
 :sjs
 class Tuple(a, b)
 fun f() =
@@ -245,12 +245,12 @@ x + y
 //│ tmp5 = tmp4.toString() ?? null;
 //│ y = tmp5;
 //│ x + y
-//│ = '01'
-//│ f1 = [Function (anonymous)]
-//│ f2 = [Function (anonymous)]
-//│ ret = Tuple { a: [Function (anonymous)], b: [Function (anonymous)] }
-//│ x = '0'
-//│ y = '1'
+//│ = "01"
+//│ f1 = [function]
+//│ f2 = [function]
+//│ ret = Tuple([function], [function])
+//│ x = "0"
+//│ y = "1"
 
 class Tuple(a, b)
 fun f(used1) =
@@ -263,7 +263,7 @@ fun f(used1) =
   fun g22() = used1
   Tuple(g1(10), g22)
 
-:expect '11110110'
+:expect "11110110"
 let ret = f(1)
 let gRet = ret.a
 let g2 = ret.b
@@ -275,19 +275,16 @@ hFun()
 let c = g2()
 let d = iFun()
 a.toString() + b + c + d
-//│ = '11110110'
+//│ = "11110110"
 //│ a = 11
 //│ b = 1
 //│ c = 10
 //│ d = 110
-//│ g2 = [Function (anonymous)]
-//│ gRet = Tuple2 { a: [Function (anonymous)], b: [Function (anonymous)] }
-//│ hFun = [Function (anonymous)]
-//│ iFun = [Function (anonymous)]
-//│ > Tuple2 {
-//│ >   a: Tuple2 { a: [Function (anonymous)], b: [Function (anonymous)] },
-//│ >   b: [Function (anonymous)]
-//│ ret = }
+//│ g2 = [function]
+//│ gRet = Tuple([function], [function])
+//│ hFun = [function]
+//│ iFun = [function]
+//│ ret = Tuple(Tuple([function], [function]), [function])
 
 // some variables mutated, some not
 :sjs
@@ -547,6 +544,7 @@ fun f(used1, unused1) =
   new Test(unused1)
 f(1, 2).get()
 //│ ═══[RUNTIME ERROR] TypeError: Test$this.class is not a constructor
+//│ ═══[RUNTIME ERROR] Expected: '1', got: 'undefined'
 
 :expect 2
 fun f(x) =
@@ -635,7 +633,7 @@ class A(a) with
     fun g() = x
     g()
 A(2).f()
-//│ ═══[RUNTIME ERROR] Expected: 2, got: null
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'null'
 
 :sjs
 fun g() =
@@ -714,65 +712,65 @@ fun f() =
 f().foo()
 //│ JS (unsanitized):
 //│ let f25, Bad1, Good1, tmp30, Bad$ctor, Bad$, Good$ctor, Good$, f$capture19;
-//│ Good$ = function Good$(x$1, y$2, z$3, f$capture$0) {
+//│ Good$ = function Good$(z$1, x$2, y$3, f$capture$0) {
 //│   let tmp31;
 //│   tmp31 = new Good1();
-//│   return tmp31(x$1, y$2, z$3, f$capture$0);
+//│   return tmp31(z$1, x$2, y$3, f$capture$0);
 //│ };
-//│ Good$ctor = function Good$ctor(x$1, y$2, z$3, f$capture$0) {
+//│ Good$ctor = function Good$ctor(z$1, x$2, y$3, f$capture$0) {
 //│   return () => {
 //│     let tmp31;
 //│     tmp31 = new Good1();
-//│     return tmp31(x$1, y$2, z$3, f$capture$0);
+//│     return tmp31(z$1, x$2, y$3, f$capture$0);
 //│   };
 //│ };
 //│ Good1 = function Good() {
-//│   return (x$11, y$21, z$31, f$capture$01) => {
-//│     return new Good.class()(x$11, y$21, z$31, f$capture$01);
+//│   return (z$11, x$21, y$31, f$capture$01) => {
+//│     return new Good.class()(z$11, x$21, y$31, f$capture$01);
 //│   }
 //│ };
 //│ Good1.class = class Good {
 //│   constructor() {
-//│     return (x$1, y$2, z$3, f$capture$0) => {
-//│       this.x$1 = x$1;
-//│       this.y$2 = y$2;
-//│       this.z$3 = z$3;
+//│     return (z$1, x$2, y$3, f$capture$0) => {
+//│       this.z$1 = z$1;
+//│       this.x$2 = x$2;
+//│       this.y$3 = y$3;
 //│       this.f$capture$0 = f$capture$0;
 //│       return this;
 //│     }
 //│   }
 //│   foo() {
 //│     let tmp31, tmp32;
-//│     this.z$3 = 100;
-//│     tmp31 = this.x$1 + this.y$2;
-//│     tmp32 = tmp31 + this.z$3;
+//│     this.z$1 = 100;
+//│     tmp31 = this.x$2 + this.y$3;
+//│     tmp32 = tmp31 + this.z$1;
 //│     return tmp32 + this.f$capture$0.w0$;
 //│   }
 //│   toString() { return "Good(" + "" + ")"; }
 //│ };
-//│ Bad$ = function Bad$(x$1, y$2, z$3, f$capture$0) {
+//│ Bad$ = function Bad$(z$1, x$2, y$3, f$capture$0) {
 //│   let tmp31;
 //│   tmp31 = new Bad1();
-//│   return tmp31(x$1, y$2, z$3, f$capture$0);
+//│   return tmp31(z$1, x$2, y$3, f$capture$0);
 //│ };
-//│ Bad$ctor = function Bad$ctor(x$1, y$2, z$3, f$capture$0) {
+//│ Bad$ctor = function Bad$ctor(z$1, x$2, y$3, f$capture$0) {
 //│   return () => {
 //│     let tmp31;
 //│     tmp31 = new Bad1();
-//│     return tmp31(x$1, y$2, z$3, f$capture$0);
+//│     return tmp31(z$1, x$2, y$3, f$capture$0);
 //│   };
 //│ };
 //│ Bad1 = function Bad() {
-//│   return (x$11, y$21, z$31, f$capture$01) => {
-//│     return new Bad.class()(x$11, y$21, z$31, f$capture$01);
+//│   return (z$11, x$21, y$31, f$capture$01) => {
+//│     return new Bad.class()(z$11, x$21, y$31, f$capture$01);
 //│   }
 //│ };
 //│ Bad1.class = class Bad {
 //│   constructor() {
-//│     return (x$1, y$2, z$3, f$capture$0) => {
-//│       this.x$1 = x$1;
-//│       this.y$2 = y$2;
-//│       this.z$3 = z$3;
+//│     return (z$1, x$2, y$3, f$capture$0) => {
+//│       this.z$1 = z$1;
+//│       this.x$2 = x$2;
+//│       this.y$3 = y$3;
 //│       this.f$capture$0 = f$capture$0;
 //│       return this;
 //│     }
@@ -799,9 +797,9 @@ f().foo()
 //│   y1 = 10;
 //│   z = 10;
 //│   capture.w0$ = 1000;
-//│   tmp31 = Bad$(x1, y1, z, capture);
+//│   tmp31 = Bad$(z, x1, y1, capture);
 //│   tmp32 = tmp31.foo() ?? null;
-//│   return Good$(x1, y1, z, capture);
+//│   return Good$(z, x1, y1, capture);
 //│ };
 //│ tmp30 = f25();
 //│ tmp30.foo() ?? null
@@ -818,7 +816,7 @@ let ret = f()
 ret()
 ret()
 //│ = 2
-//│ ret = [Function (anonymous)]
+//│ ret = [function]
 
 :expect 6
 :fixme
@@ -835,7 +833,7 @@ fun f(x, y, z) =
     set z = 3
   g
 f(0, 0, 0)()
-//│ ═══[RUNTIME ERROR] Expected: 6, got: 1
+//│ ═══[RUNTIME ERROR] Expected: '6', got: '1'
 //│ = 1
 
 :sjs

@@ -110,9 +110,9 @@ let oops =
   Lol(h)
 //│ > k
 //│ > b
-//│ oops = Lol(Effect$h$)
+//│ oops = Lol(Handler$h$())
 
 oops.h
-//│ = Effect$h$
+//│ = Handler$h$()
 
 

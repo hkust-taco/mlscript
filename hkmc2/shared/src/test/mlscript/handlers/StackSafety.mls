@@ -22,33 +22,33 @@ fun hi(n) =
 hi(0)
 //│ JS (unsanitized):
 //│ let hi, res, Cont$3, handleBlock$, Cont$4, Cont$5, StackDelay$1, lambda, Cont$$ctor, Cont$$, Cont$$ctor1, Cont$$1, StackDelay$$ctor, StackDelay$$, lambda$, Cont$$ctor2, Cont$$2, hi$capture1, handleBlock$$capture1, lambda$capture1;
-//│ Cont$$ = function Cont$$(scrut$1, tmp$2, dummy$3, n$4, hi$capture$0, pc) {
+//│ Cont$$ = function Cont$$(n$1, dummy$2, tmp$3, scrut$4, hi$capture$0, pc) {
 //│   let tmp;
 //│   tmp = new Cont$3(pc);
-//│   return tmp(scrut$1, tmp$2, dummy$3, n$4, hi$capture$0);
+//│   return tmp(n$1, dummy$2, tmp$3, scrut$4, hi$capture$0);
 //│ };
-//│ Cont$$ctor = function Cont$$ctor(scrut$1, tmp$2, dummy$3, n$4, hi$capture$0) {
+//│ Cont$$ctor = function Cont$$ctor(n$1, dummy$2, tmp$3, scrut$4, hi$capture$0) {
 //│   return (pc) => {
 //│     let tmp;
 //│     tmp = new Cont$3(pc);
-//│     return tmp(scrut$1, tmp$2, dummy$3, n$4, hi$capture$0);
+//│     return tmp(n$1, dummy$2, tmp$3, scrut$4, hi$capture$0);
 //│   };
 //│ };
 //│ Cont$3 = function Cont$(pc1) {
-//│   return (scrut$11, tmp$21, dummy$31, n$41, hi$capture$01) => {
-//│     return new Cont$.class(pc1)(scrut$11, tmp$21, dummy$31, n$41, hi$capture$01);
+//│   return (n$11, dummy$21, tmp$31, scrut$41, hi$capture$01) => {
+//│     return new Cont$.class(pc1)(n$11, dummy$21, tmp$31, scrut$41, hi$capture$01);
 //│   }
 //│ };
 //│ Cont$3.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│   constructor(pc) {
-//│     return (scrut$1, tmp$2, dummy$3, n$4, hi$capture$0) => {
+//│     return (n$1, dummy$2, tmp$3, scrut$4, hi$capture$0) => {
 //│       let tmp;
 //│       tmp = super(null, null);
 //│       this.pc = pc;
-//│       this.scrut$1 = scrut$1;
-//│       this.tmp$2 = tmp$2;
-//│       this.dummy$3 = dummy$3;
-//│       this.n$4 = n$4;
+//│       this.n$1 = n$1;
+//│       this.dummy$2 = dummy$2;
+//│       this.tmp$3 = tmp$3;
+//│       this.scrut$4 = scrut$4;
 //│       this.hi$capture$0 = hi$capture$0;
 //│       return this;
 //│     }
@@ -59,20 +59,20 @@ hi(0)
 //│     }
 //│     contLoop: while (true) {
 //│       if (this.pc === 2) {
-//│         this.scrut$1 = this.n$4 == 0;
-//│         if (this.scrut$1 === true) {
+//│         this.scrut$4 = this.n$1 == 0;
+//│         if (this.scrut$4 === true) {
 //│           return 0;
 //│         } else {
-//│           this.tmp$2 = this.n$4 - 1;
+//│           this.tmp$3 = this.n$1 - 1;
 //│           globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
-//│           return hi(this.tmp$2);
+//│           return hi(this.tmp$3);
 //│         }
 //│         this.pc = 1;
 //│         continue contLoop;
 //│       } else if (this.pc === 1) {
 //│         break contLoop;
 //│       } else if (this.pc === 0) {
-//│         this.dummy$3 = this.hi$capture$0.res0$;
+//│         this.dummy$2 = this.hi$capture$0.res0$;
 //│         this.pc = 2;
 //│         continue contLoop;
 //│       }
@@ -100,7 +100,7 @@ hi(0)
 //│   if (scrut1 === true) {
 //│     capture.res0$ = globalThis.Predef.__stackHandler.perform();
 //│     if (capture.res0$ instanceof globalThis.Predef.__EffectSig.class) {
-//│       capture.res0$.tail.next = Cont$$(scrut, tmp, dummy, n, capture, 0);
+//│       capture.res0$.tail.next = Cont$$(n, dummy, tmp, scrut, capture, 0);
 //│       capture.res0$.tail = capture.res0$.tail.next;
 //│       return capture.res0$;
 //│     }
@@ -303,37 +303,37 @@ fun sum(n) =
 sum(10000)
 //│ JS (unsanitized):
 //│ let sum1, res1, Cont$9, handleBlock$1, Cont$10, Cont$11, StackDelay$3, lambda1, Cont$$ctor3, Cont$$3, Cont$$ctor4, Cont$$4, StackDelay$$ctor1, StackDelay$$1, lambda$1, Cont$$ctor5, Cont$$5, sum$capture1, handleBlock$$capture3, lambda$capture3;
-//│ Cont$$3 = function Cont$$(offsetGtDepth$1, n$2, tmp$3, prevDepth$4, tmp$5, scrut$6, dummy$7, tmp$8, sum$capture$0, pc) {
+//│ Cont$$3 = function Cont$$(n$1, scrut$2, tmp$3, tmp$4, offsetGtDepth$5, tmp$6, prevDepth$7, dummy$8, sum$capture$0, pc) {
 //│   let tmp;
 //│   tmp = new Cont$9(pc);
-//│   return tmp(offsetGtDepth$1, n$2, tmp$3, prevDepth$4, tmp$5, scrut$6, dummy$7, tmp$8, sum$capture$0);
+//│   return tmp(n$1, scrut$2, tmp$3, tmp$4, offsetGtDepth$5, tmp$6, prevDepth$7, dummy$8, sum$capture$0);
 //│ };
-//│ Cont$$ctor3 = function Cont$$ctor(offsetGtDepth$1, n$2, tmp$3, prevDepth$4, tmp$5, scrut$6, dummy$7, tmp$8, sum$capture$0) {
+//│ Cont$$ctor3 = function Cont$$ctor(n$1, scrut$2, tmp$3, tmp$4, offsetGtDepth$5, tmp$6, prevDepth$7, dummy$8, sum$capture$0) {
 //│   return (pc) => {
 //│     let tmp;
 //│     tmp = new Cont$9(pc);
-//│     return tmp(offsetGtDepth$1, n$2, tmp$3, prevDepth$4, tmp$5, scrut$6, dummy$7, tmp$8, sum$capture$0);
+//│     return tmp(n$1, scrut$2, tmp$3, tmp$4, offsetGtDepth$5, tmp$6, prevDepth$7, dummy$8, sum$capture$0);
 //│   };
 //│ };
 //│ Cont$9 = function Cont$(pc1) {
-//│   return (offsetGtDepth$11, n$21, tmp$31, prevDepth$41, tmp$51, scrut$61, dummy$71, tmp$81, sum$capture$01) => {
-//│     return new Cont$.class(pc1)(offsetGtDepth$11, n$21, tmp$31, prevDepth$41, tmp$51, scrut$61, dummy$71, tmp$81, sum$capture$01);
+//│   return (n$11, scrut$21, tmp$31, tmp$41, offsetGtDepth$51, tmp$61, prevDepth$71, dummy$81, sum$capture$01) => {
+//│     return new Cont$.class(pc1)(n$11, scrut$21, tmp$31, tmp$41, offsetGtDepth$51, tmp$61, prevDepth$71, dummy$81, sum$capture$01);
 //│   }
 //│ };
 //│ Cont$9.class = class Cont$6 extends globalThis.Predef.__Cont.class {
 //│   constructor(pc) {
-//│     return (offsetGtDepth$1, n$2, tmp$3, prevDepth$4, tmp$5, scrut$6, dummy$7, tmp$8, sum$capture$0) => {
+//│     return (n$1, scrut$2, tmp$3, tmp$4, offsetGtDepth$5, tmp$6, prevDepth$7, dummy$8, sum$capture$0) => {
 //│       let tmp;
 //│       tmp = super(null, null);
 //│       this.pc = pc;
-//│       this.offsetGtDepth$1 = offsetGtDepth$1;
-//│       this.n$2 = n$2;
+//│       this.n$1 = n$1;
+//│       this.scrut$2 = scrut$2;
 //│       this.tmp$3 = tmp$3;
-//│       this.prevDepth$4 = prevDepth$4;
-//│       this.tmp$5 = tmp$5;
-//│       this.scrut$6 = scrut$6;
-//│       this.dummy$7 = dummy$7;
-//│       this.tmp$8 = tmp$8;
+//│       this.tmp$4 = tmp$4;
+//│       this.offsetGtDepth$5 = offsetGtDepth$5;
+//│       this.tmp$6 = tmp$6;
+//│       this.prevDepth$7 = prevDepth$7;
+//│       this.dummy$8 = dummy$8;
 //│       this.sum$capture$0 = sum$capture$0;
 //│       return this;
 //│     }
@@ -346,14 +346,14 @@ sum(10000)
 //│     }
 //│     contLoop: while (true) {
 //│       if (this.pc === 4) {
-//│         this.scrut$6 = this.n$2 == 0;
-//│         if (this.scrut$6 === true) {
+//│         this.scrut$2 = this.n$1 == 0;
+//│         if (this.scrut$2 === true) {
 //│           return 0;
 //│         } else {
-//│           this.tmp$3 = this.n$2 - 1;
-//│           this.prevDepth$4 = globalThis.Predef.__stackDepth;
+//│           this.tmp$6 = this.n$1 - 1;
+//│           this.prevDepth$7 = globalThis.Predef.__stackDepth;
 //│           globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
-//│           this.sum$capture$0.res1$ = sum1(this.tmp$3);
+//│           this.sum$capture$0.res1$ = sum1(this.tmp$6);
 //│           if (this.sum$capture$0.res1$ instanceof globalThis.Predef.__EffectSig.class) {
 //│             this.pc = 1;
 //│             return globalThis.Predef.__appendInCont(this.sum$capture$0.res1$, this);
@@ -366,21 +366,21 @@ sum(10000)
 //│       } else if (this.pc === 2) {
 //│         break contLoop;
 //│       } else if (this.pc === 1) {
-//│         this.tmp$8 = this.sum$capture$0.res1$;
-//│         globalThis.Predef.__stackDepth = this.prevDepth$4;
-//│         this.offsetGtDepth$1 = this.prevDepth$4 < globalThis.Predef.__stackOffset;
-//│         if (this.offsetGtDepth$1 === true) {
-//│           globalThis.Predef.__stackOffset = this.prevDepth$4;
+//│         this.tmp$4 = this.sum$capture$0.res1$;
+//│         globalThis.Predef.__stackDepth = this.prevDepth$7;
+//│         this.offsetGtDepth$5 = this.prevDepth$7 < globalThis.Predef.__stackOffset;
+//│         if (this.offsetGtDepth$5 === true) {
+//│           globalThis.Predef.__stackOffset = this.prevDepth$7;
 //│           this.pc = 3;
 //│           continue contLoop;
 //│         }
 //│         this.pc = 3;
 //│         continue contLoop;
 //│       } else if (this.pc === 3) {
-//│         this.tmp$5 = this.tmp$8;
-//│         return this.n$2 + this.tmp$5;
+//│         this.tmp$3 = this.tmp$4;
+//│         return this.n$1 + this.tmp$3;
 //│       } else if (this.pc === 0) {
-//│         this.dummy$7 = this.sum$capture$0.res0$;
+//│         this.dummy$8 = this.sum$capture$0.res0$;
 //│         this.pc = 4;
 //│         continue contLoop;
 //│       }
@@ -409,7 +409,7 @@ sum(10000)
 //│   if (scrut1 === true) {
 //│     capture.res0$ = globalThis.Predef.__stackHandler.perform();
 //│     if (capture.res0$ instanceof globalThis.Predef.__EffectSig.class) {
-//│       capture.res0$.tail.next = Cont$$3(offsetGtDepth, n, tmp, prevDepth, tmp1, scrut, dummy, tmp2, capture, 0);
+//│       capture.res0$.tail.next = Cont$$3(n, scrut, tmp1, tmp2, offsetGtDepth, tmp, prevDepth, dummy, capture, 0);
 //│       capture.res0$.tail = capture.res0$.tail.next;
 //│       return capture.res0$;
 //│     }
@@ -424,7 +424,7 @@ sum(10000)
 //│     globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
 //│     capture.res1$ = sum1(tmp);
 //│     if (capture.res1$ instanceof globalThis.Predef.__EffectSig.class) {
-//│       capture.res1$.tail.next = Cont$$3(offsetGtDepth, n, tmp, prevDepth, tmp1, scrut, dummy, tmp2, capture, 1);
+//│       capture.res1$.tail.next = Cont$$3(n, scrut, tmp1, tmp2, offsetGtDepth, tmp, prevDepth, dummy, capture, 1);
 //│       capture.res1$.tail = capture.res1$.tail.next;
 //│       return capture.res1$;
 //│     }
