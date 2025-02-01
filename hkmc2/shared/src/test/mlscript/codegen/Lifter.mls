@@ -819,3 +819,60 @@ ret()
 ret()
 //│ = 2
 //│ ret = [Function (anonymous)]
+
+:expect 6
+:fixme
+:lift
+fun f(x, y, z) =
+  fun g() =
+    set x = 1
+    h()
+    x + y + z
+  fun h() =
+    set y = 2
+    i()
+  fun i() =
+    set z = 3
+  g
+f(0, 0, 0)()
+//│ ═══[RUNTIME ERROR] Expected: 6, got: 1
+//│ = 1
+
+:sjs
+fun f(x, cond) =
+  set x = 1
+  set x = 2
+  if cond then
+    () => x
+  else
+    set x = 3
+    () => x
+//│ JS (unsanitized):
+//│ let f28, lambda1, lambda2, lambda$1, lambda$2;
+//│ lambda$2 = function lambda$(x1) {
+//│   return x1;
+//│ };
+//│ lambda1 = function lambda(x1) {
+//│   return () => {
+//│     return lambda$2(x1);
+//│   };
+//│ };
+//│ lambda$1 = function lambda$(x1) {
+//│   return x1;
+//│ };
+//│ lambda2 = function lambda(x1) {
+//│   return () => {
+//│     return lambda$1(x1);
+//│   };
+//│ };
+//│ f28 = function f(x1, cond) {
+//│   x1 = 1;
+//│   x1 = 2;
+//│   if (cond === true) {
+//│     return lambda1(x1) ?? null;
+//│   } else {
+//│     x1 = 3;
+//│     return lambda2(x1) ?? null;
+//│   }
+//│ };
+//│ null
