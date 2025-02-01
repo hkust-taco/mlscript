@@ -235,7 +235,7 @@ final class LlirBuilder(tl: TraceLogger)(fresh: Fresh, fnUid: FreshInt, clsUid: 
         bPath(scrut):
           case e: TrivialExpr =>
             val jp = fresh.make("j")
-            val fvset = (rest.freeVars -- rest.definedVars).map(allocIfNew)
+            val fvset = (rest.freeVarsLLIR -- rest.definedVars).map(allocIfNew)
             val fvs1 = fvset.toList
             val new_ctx = fvs1.foldLeft(ctx)((acc, x) => acc.addName(x, fresh.make))
             val fvs = fvs1.map(new_ctx.findName(_))

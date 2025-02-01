@@ -15,31 +15,15 @@ import scala.collection.mutable.LinkedHashMap
 import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
 
+// TODO: modules not working
+
 object Lifter:
   /**
     * Describes the free variables of a function that have been accessed by nested definitions.
     * @param vars The free variables that are accessed by nested classes/functions.
     * @param reqCapture The free variables that must be captured using a heap-allocated object.
     */
-  case class FreeVars(vars: List[Local], reqCapture: List[Local])
-
-  def getVars(f: FunDefn): Set[Local] = 
-    (f.body.definedVars ++ f.params.flatMap(_.paramSyms)).collect:
-      case s: FlowSymbol => s
-
-/**
-  * Lifts classes and functions to the top-level. Also automatically rewrites lambdas.
-  * Assumes the input block does not have any `HandleBlock`s.
-  */
-class Lifter(using State):
-  import Lifter.FreeVars
-
-  val varAnalyzer = new UsedVarAnalyzer
-
-  // use mutable sets locally to avoid reconstructing everything
-  // linked hash sets preserve order
-  private case class FreeVarsMut(vars: LinkedHashSet[Local], mutated: LinkedHashSet[Local]):
-    def toImmut = FreeVars(vars.toList, mutated.toList)
+  case class FreeVars(vars: Set[Local], reqCapture: Set[Local])
 
   /**
     * Describes the free variables of a function that have been accessed by nested definitions.
@@ -51,12 +35,19 @@ class Lifter(using State):
       case fn -> vars => vars.vars.map(v => v -> fn)
     // gets the function to which a local belongs
     def lookup(l: Local) = inverse.get(l)
-  
-  object UsedLocalsMap:
-    def from(mp: Map[BlockMemberSymbol, FreeVars]) =
-      UsedLocalsMap(mp.map:
-        case a -> b => a -> b  
-      ) 
+
+  def getVars(f: FunDefn): Set[Local] = 
+    (f.body.definedVars ++ f.params.flatMap(_.paramSyms)).collect:
+      case s: FlowSymbol => s
+
+/**
+  * Lifts classes and functions to the top-level. Also automatically rewrites lambdas.
+  * Assumes the input block does not have any `HandleBlock`s.
+  */
+class Lifter(using State):
+  import Lifter.*
+
+  val varAnalyzer = new UsedVarAnalyzer
 
   /**
     * The context of the class lifter.
@@ -109,21 +100,6 @@ class Lifter(using State):
     def empty = LifterCtx(UsedLocalsMap(Map.empty), Map.empty, Nil, Nil, 
       Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
     def withLocals(u: UsedLocalsMap) = empty.copy(usedLocals = u)
-
-  /**
-    * Finds the used locals of functions which have been used by their nested definitions.
-    *
-    * @param b
-    * @return
-    */
-  def findUsedLocals(b: Block): UsedLocalsMap = 
-    var usedMap: Map[BlockMemberSymbol, FreeVars] = Map.empty
-    val walker = new BlockTransformer(SymbolSubst()):
-      override def applyFunDefn(fun: FunDefn): FunDefn = 
-        usedMap += (fun.sym -> varAnalyzer.reqdCaptureLocals(fun))
-        super.applyFunDefn(fun)
-    walker.applyBlock(b)
-    UsedLocalsMap.from(usedMap)
   
   /**
     * Creates a capture class for a function consisting of its mutable (and possibly immutable) local variables.
@@ -382,7 +358,8 @@ class Lifter(using State):
             case Some(value) if !belongsToCtor(value) => Select(value.asPath, t.id)(N)
             case _ => super.applyPath(p)
         case Value.Ref(l) => ctx.getLocalCaptureSym(l) match
-          case Some(captureSym) => Select(ctx.getLocalClosPath(l).get, captureSym.id)(N)
+          case Some(captureSym) => 
+            Select(ctx.getLocalClosPath(l).get, captureSym.id)(N)
           case None => ctx.getLocalPath(l) match
             case Some(value) => Value.Ref(value)
             case None => super.applyPath(p) 
@@ -650,7 +627,7 @@ class Lifter(using State):
   // top-level
   def transform(b: Block) =
     val blk = desugarLambdas(b)
-    val ctx = LifterCtx.withLocals(findUsedLocals(blk))
+    val ctx = LifterCtx.withLocals(varAnalyzer.findUsedLocals(blk))
     val ctxx = ctx.addBmsReqdInfo(createLiftInfo(blk, ctx))
     
     val walker = new BlockTransformerShallow(SymbolSubst()):
@@ -678,7 +655,7 @@ class UsedVarAnalyzer:
   // which reduces the number of passes over the tree by one
 
   private val usedVarsCache: MutMap[BlockMemberSymbol, Set[Local]] = MutMap.empty
-  def getUsedVars(f: FunDefn): Set[Local] = usedVarsCache.get(f.sym) match
+  private def getUsedVars(f: FunDefn): Set[Local] = usedVarsCache.get(f.sym) match
     case Some(value) => value
     case None => 
       val fVars = Lifter.getVars(f)
@@ -730,18 +707,22 @@ class UsedVarAnalyzer:
     * @param defn The definition to search through
     * @return The variables which this definition could possibly mutate.
     */
-  def findMutations(defn: Defn): Set[Local] = mutatedCache.get(defn.sym) match
+  private def findMutations(defn: Defn): Set[Local] = mutatedCache.get(defn.sym) match
     case Some(value) => value
-    case None => defn match
-      case f: FunDefn => findBlkMutations(f.body)
-      case c: ClsLikeDefn => 
-        findBlkMutations(c.preCtor) ++ findBlkMutations(c.ctor) ++ c.methods.flatMap(findMutations)
-      case _: ValDefn => Set.empty
+    case None => 
+      val ret = defn match
+        case f: FunDefn => 
+          findBlkMutations(f.body)
+        case c: ClsLikeDefn => 
+          findBlkMutations(c.preCtor) ++ findBlkMutations(c.ctor) ++ c.methods.flatMap(findMutations)
+        case _: ValDefn => Set.empty
+      mutatedCache.addOne(defn.sym -> ret)
+      ret
 
   // TODO: let declarations inside loops (also broken without class lifting)
   // I'll fix it once it's fixed in the IR since we will have more tools to determine
   // what locals belong to what block.
-  def reqdCaptureLocals(f: FunDefn) =
+  private def reqdCaptureLocals(f: FunDefn) =
     var (_, defns) = f.body.floatOutDefns
     val defnSyms = defns.collect:
       case f: FunDefn => f.sym -> f
@@ -804,6 +785,11 @@ class UsedVarAnalyzer:
             rec(finallyDo) |> merge
             applyBlock(rest)
             b
+          case Return(res, false) =>
+            applyResult(res)
+            hasReader = Set.empty
+            hasMutator = Set.empty
+            b
           case _ => super.applyBlock(b)
         
         override def applyValue(v: Value): Value = v match
@@ -834,4 +820,50 @@ class UsedVarAnalyzer:
 
     val reqCapture = go(f.body, Set.empty, Set.empty, Set.empty).reqCapture
     val usedVars = defns.flatMap(_.freeVars.intersect(thisVars)).toSet
-    Lifter.FreeVars(usedVars.toList, reqCapture.toList)
+    (usedVars, reqCapture)
+
+  // the current problem is that we need extra code to find which variables were really defined by a function
+  // this may be resolved in the future when the IR gets explicit variable declarations
+  def findUsedLocalsImpl(f: FunDefn, existing: Set[Local]): Map[BlockMemberSymbol, FreeVars] =
+    val thisVars = Lifter.getVars(f) -- existing
+    val newExisting = existing ++ thisVars
+
+    val (vars, cap) = reqdCaptureLocals(f)
+
+    var usedMap: Map[BlockMemberSymbol, FreeVars] = Map.empty
+    usedMap += (f.sym -> Lifter.FreeVars(vars.intersect(thisVars), cap.intersect(thisVars)))
+    val walker = new BlockTransformerShallow(SymbolSubst()):
+      override def applyDefn(defn: Defn): Defn = defn match
+        case f: FunDefn => 
+          usedMap ++= findUsedLocalsImpl(f, newExisting)
+          f
+        case c: ClsLikeDefn =>
+          val newNewExisting = newExisting ++ c.preCtor.definedVars ++ c.ctor.definedVars
+          for f <- c.methods do
+            usedMap ++= findUsedLocalsImpl(f, newNewExisting)
+          c
+        case d => super.applyDefn(d)
+    walker.applyBlock(f.body)
+    usedMap
+  
+  /**
+    * Finds the used locals of functions which have been used by their nested definitions.
+    *
+    * @param b
+    * @return
+    */
+  def findUsedLocals(b: Block): Lifter.UsedLocalsMap = 
+    var usedMap: Map[BlockMemberSymbol, FreeVars] = Map.empty
+    val walker = new BlockTransformerShallow(SymbolSubst()):
+      override def applyDefn(defn: Defn): Defn = defn match
+        case f: FunDefn => 
+          usedMap ++= findUsedLocalsImpl(f, b.definedVars)
+          f
+        case c: ClsLikeDefn =>
+          val newNewExisting = b.definedVars ++ c.preCtor.definedVars ++ c.ctor.definedVars
+          for f <- c.methods do
+            usedMap ++= findUsedLocalsImpl(f, newNewExisting)
+          c
+        case d => super.applyDefn(d)
+    walker.applyBlock(b)
+    Lifter.UsedLocalsMap(usedMap)

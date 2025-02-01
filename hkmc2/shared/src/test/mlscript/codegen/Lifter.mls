@@ -436,7 +436,6 @@ g()
 
 // make sure class fields are discriminated properly for immutable captures when supported
 :handler
-:fixme
 abstract class Effect with
   fun perform()
 handle h = Effect with
@@ -445,7 +444,7 @@ fun f() =
   h.perform()
   1
 f() + f() + f()
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: h (class hkmc2.semantics.VarSymbol)
+//│ = 3
 
 /// CLASSES ///
 
@@ -639,7 +638,6 @@ A(2).f()
 //│ ═══[RUNTIME ERROR] Expected: 2, got: null
 
 :sjs
-:fixme
 fun g() =
   let y = 0
   fun f(x) =
@@ -654,7 +652,47 @@ fun g() =
     x
   f
 g()(1)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: None.get
+//│ JS (unsanitized):
+//│ let g20, f24, h8, tmp29, f$3, h$7, g$capture1;
+//│ h$7 = function h$(k, x1, g$capture2) {
+//│   k = 5;
+//│   x1 = 4;
+//│   return x1 + g$capture2.y0$;
+//│ };
+//│ h8 = function h(k, x1, g$capture2) {
+//│   return () => {
+//│     return h$7(k, x1, g$capture2);
+//│   };
+//│ };
+//│ f$3 = function f$(g$capture2, x1) {
+//│   let k;
+//│   k = 4;
+//│   g$capture2.y0$ = 2;
+//│   return x1;
+//│ };
+//│ f24 = function f(g$capture2) {
+//│   return (x1) => {
+//│     return f$3(g$capture2, x1);
+//│   };
+//│ };
+//│ g$capture1 = function g$capture(y0$1) {
+//│   return new g$capture.class(y0$1);
+//│ };
+//│ g$capture1.class = class g$capture {
+//│   constructor(y0$) {
+//│     this.y0$ = y0$;
+//│   }
+//│   toString() { return "g$capture(" + globalThis.Predef.render(this.y0$) + ")"; }
+//│ };
+//│ g20 = function g() {
+//│   let capture;
+//│   capture = new g$capture1(null);
+//│   capture.y0$ = 0;
+//│   return f24(capture) ?? null;
+//│ };
+//│ tmp29 = g20();
+//│ tmp29(1) ?? null
+//│ = 1
 
 // only w should be in a capture
 :expect 10111
@@ -675,17 +713,17 @@ fun f() =
   Good()
 f().foo()
 //│ JS (unsanitized):
-//│ let f24, Bad1, Good1, tmp29, Bad$ctor, Bad$, Good$ctor, Good$, f$capture19;
+//│ let f25, Bad1, Good1, tmp30, Bad$ctor, Bad$, Good$ctor, Good$, f$capture19;
 //│ Good$ = function Good$(x$1, y$2, z$3, f$capture$0) {
-//│   let tmp30;
-//│   tmp30 = new Good1();
-//│   return tmp30(x$1, y$2, z$3, f$capture$0);
+//│   let tmp31;
+//│   tmp31 = new Good1();
+//│   return tmp31(x$1, y$2, z$3, f$capture$0);
 //│ };
 //│ Good$ctor = function Good$ctor(x$1, y$2, z$3, f$capture$0) {
 //│   return () => {
-//│     let tmp30;
-//│     tmp30 = new Good1();
-//│     return tmp30(x$1, y$2, z$3, f$capture$0);
+//│     let tmp31;
+//│     tmp31 = new Good1();
+//│     return tmp31(x$1, y$2, z$3, f$capture$0);
 //│   };
 //│ };
 //│ Good1 = function Good() {
@@ -704,24 +742,24 @@ f().foo()
 //│     }
 //│   }
 //│   foo() {
-//│     let tmp30, tmp31;
+//│     let tmp31, tmp32;
 //│     this.z$3 = 100;
-//│     tmp30 = this.x$1 + this.y$2;
-//│     tmp31 = tmp30 + this.z$3;
-//│     return tmp31 + this.f$capture$0.w0$;
+//│     tmp31 = this.x$1 + this.y$2;
+//│     tmp32 = tmp31 + this.z$3;
+//│     return tmp32 + this.f$capture$0.w0$;
 //│   }
 //│   toString() { return "Good(" + "" + ")"; }
 //│ };
 //│ Bad$ = function Bad$(x$1, y$2, z$3, f$capture$0) {
-//│   let tmp30;
-//│   tmp30 = new Bad1();
-//│   return tmp30(x$1, y$2, z$3, f$capture$0);
+//│   let tmp31;
+//│   tmp31 = new Bad1();
+//│   return tmp31(x$1, y$2, z$3, f$capture$0);
 //│ };
 //│ Bad$ctor = function Bad$ctor(x$1, y$2, z$3, f$capture$0) {
 //│   return () => {
-//│     let tmp30;
-//│     tmp30 = new Bad1();
-//│     return tmp30(x$1, y$2, z$3, f$capture$0);
+//│     let tmp31;
+//│     tmp31 = new Bad1();
+//│     return tmp31(x$1, y$2, z$3, f$capture$0);
 //│   };
 //│ };
 //│ Bad1 = function Bad() {
@@ -754,19 +792,19 @@ f().foo()
 //│   }
 //│   toString() { return "f$capture(" + globalThis.Predef.render(this.w0$) + ")"; }
 //│ };
-//│ f24 = function f() {
-//│   let x1, y1, z, tmp30, tmp31, capture;
+//│ f25 = function f() {
+//│   let x1, y1, z, tmp31, tmp32, capture;
 //│   capture = new f$capture19(null);
 //│   x1 = 1;
 //│   y1 = 10;
 //│   z = 10;
 //│   capture.w0$ = 1000;
-//│   tmp30 = Bad$(x1, y1, z, capture);
-//│   tmp31 = tmp30.foo() ?? null;
+//│   tmp31 = Bad$(x1, y1, z, capture);
+//│   tmp32 = tmp31.foo() ?? null;
 //│   return Good$(x1, y1, z, capture);
 //│ };
-//│ tmp29 = f24();
-//│ tmp29.foo() ?? null
+//│ tmp30 = f25();
+//│ tmp30.foo() ?? null
 //│ = 10111
 
 :expect 2
