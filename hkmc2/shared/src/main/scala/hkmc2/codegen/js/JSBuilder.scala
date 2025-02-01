@@ -457,12 +457,10 @@ object JSBuilder:
     "enum",
     // The following are only reserved when they are found in strict mode code:
     "abstract",
-    "arguments",
     "boolean",
     "byte",
     "char",
     "double",
-    "eval",
     "final",
     "float",
     "goto",
@@ -478,6 +476,9 @@ object JSBuilder:
     "throws",
     "transient",
     "volatile",
+    // not a keyword, but cannot be declared as identifier in strict mode
+    "arguments",
+    "eval",
   )
   
   def makeStringLiteral(s: Str): Str =
