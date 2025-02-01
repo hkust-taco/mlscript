@@ -8,20 +8,16 @@ module Playground with
   pattern ZeroOne = Zero ~ One
 
 Playground
-//│ > [class Playground] {
-//│ >   Zero: Zero { class: [class Zero] },
-//│ >   DoubleZero: DoubleZero { class: [class DoubleZero] },
-//│ >   ZeroOne: ZeroOne { class: [class ZeroOne] }
-//│ = }
+//│ = Playground
 
 // Pattern defined in a module can be used with qualified name.
 // ============================================================
 
 Playground.Zero
-//│ = Zero { class: [class Zero] }
+//│ = Zero
 
 Playground.Zero.unapply("0")
-//│ = MatchResult { captures: [] }
+//│ = MatchResult([])
 
 :expect true
 "0" is Playground.Zero
@@ -31,10 +27,10 @@ Playground.Zero.unapply("0")
 // ============================================================================
 
 Playground.DoubleZero
-//│ = DoubleZero { class: [class DoubleZero] }
+//│ = DoubleZero
 
 Playground.DoubleZero.unapply("00")
-//│ = MatchResult { captures: [] }
+//│ = MatchResult([])
 
 :expect true
 "00" is Playground.DoubleZero
@@ -44,10 +40,10 @@ Playground.DoubleZero.unapply("00")
 // =======================================================================
 
 Playground.ZeroOne
-//│ = ZeroOne { class: [class ZeroOne] }
+//│ = ZeroOne
 
 Playground.ZeroOne.unapply("01")
-//│ = MatchResult { captures: [] }
+//│ = MatchResult([])
 
 :expect true
 "01" is Playground.ZeroOne
@@ -59,10 +55,10 @@ Playground.ZeroOne.unapply("01")
 pattern TripleZero = Playground.DoubleZero ~ Playground.Zero
 
 TripleZero
-//│ = TripleZero { class: [class TripleZero] }
+//│ = TripleZero
 
 TripleZero.unapply("000")
-//│ = MatchResult { captures: [] }
+//│ = MatchResult([])
 
 :expect true
 "000" is TripleZero

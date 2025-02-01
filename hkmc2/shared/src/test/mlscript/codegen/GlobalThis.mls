@@ -6,11 +6,14 @@ let g = globalThis
 
 
 // FIXME prevent rebinding of this name
+:re
 let globalThis = "oops"
-//│ globalThis = 'oops'
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'log')
+//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
 
+:re
 globalThis
-//│ = 'oops'
+//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
 
 
 // * This one uses `this.Error` so it's fine
@@ -20,6 +23,7 @@ if false then 0
 //│ JS (unsanitized):
 //│ let scrut; scrut = false; if (scrut === true) { 0 } else { throw new this.Error("match error"); }
 //│ ═══[RUNTIME ERROR] Error: match error
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'log')
 
 // * This one uses `globalThis.Predef` and `globalThis.Error`
 // * Notice the failed exception throw
@@ -41,5 +45,6 @@ foo()
 //│ };
 //│ foo()
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkArgs')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'log')
 
 

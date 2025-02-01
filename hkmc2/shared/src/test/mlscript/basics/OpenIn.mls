@@ -4,16 +4,16 @@ import "../../mlscript-compile/Str.mls"
 
 
 Str.{~}
-//│ = [Function: concat2]
+//│ = [function concat2]
 
 Str.{~}("a", "b", "c")
-//│ = 'ab'
+//│ = "ab"
 
 Str.{"a" ~ "b"}
-//│ = 'ab'
+//│ = "ab"
 
 Str.{"a" ~ from(123)}
-//│ = 'a123'
+//│ = "a123"
 
 
 // Lexed as Str .~

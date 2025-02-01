@@ -2,20 +2,20 @@
 
 
 case x then x
-//│ = [Function (anonymous)]
+//│ = [function block$res1]
 
 :sjs
 case { x then x }
 //│ JS (unsanitized):
 //│ (caseScrut) => { let x; x = caseScrut; return x; }
-//│ = [Function (anonymous)]
+//│ = [function block$res2]
 
 :sjs
 x => if x is
   0 then true
 //│ JS (unsanitized):
 //│ (x) => { if (x === 0) { return true; } else { throw new this.Error("match error"); } }
-//│ = [Function (anonymous)]
+//│ = [function block$res3]
 
 :sjs
 case 0 then true
@@ -27,7 +27,7 @@ case 0 then true
 //│     throw new this.Error("match error");
 //│   }
 //│ }
-//│ = [Function (anonymous)]
+//│ = [function block$res4]
 
 (case x then x) of 1
 //│ = 1
@@ -42,7 +42,7 @@ case 0 then true
 //│ = 1
 
 1 |> (2 |> case x then case y then [x, y]) |> case [a, b] then [b, a]
-//│ = [ 1, 2 ]
+//│ = [1, 2]
 
 :todo
 case [x] then x, [] then 0
@@ -54,7 +54,7 @@ case
   _ then false
 //│ JS (unsanitized):
 //│ (caseScrut) => { if (caseScrut === 0) { return true; } else { return false; } }
-//│ = [Function (anonymous)]
+//│ = [function block$res10]
 
 class Some(value)
 module None
@@ -78,5 +78,5 @@ val isDefined = case
 //│ };
 //│ isDefined = tmp5;
 //│ null
-//│ isDefined = [Function: tmp5]
+//│ isDefined = [function tmp5]
 

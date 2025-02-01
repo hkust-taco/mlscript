@@ -26,17 +26,17 @@ let left  = [-1, 0]
 let right = [ 1, 0]
 //│ delta_p = 0.01507537688442211
 //│ delta_q = 0.01507537688442211
-//│ down = [ 0, 1 ]
-//│ left = [ -1, 0 ]
+//│ down = [0, 1]
+//│ left = [-1, 0]
 //│ m = 20
 //│ num_cols = 26
 //│ pmn = -2.25
 //│ pmx = 0.75
 //│ qmn = -1.5
 //│ qmx = 1.5
-//│ right = [ 1, 0 ]
+//│ right = [1, 0]
 //│ size = 200
-//│ up = [ 0, -1 ]
+//│ up = [0, -1]
 
 fun equalp(p1, p2) = if p1 is [x1, x2] and p2 is [y1, y2] then (x1 == y1) and (x2 == y2)
 

@@ -9,13 +9,7 @@ let keys =
   nofibStringToList("hiding") ::  nofibStringToList("if") :: nofibStringToList("import") :: nofibStringToList("in") :: nofibStringToList("infix") :: nofibStringToList("infixl") :: nofibStringToList("instance") ::
   nofibStringToList("interface") :: nofibStringToList("let") :: nofibStringToList("module") :: nofibStringToList("of") :: nofibStringToList("renaming") :: nofibStringToList("then") :: nofibStringToList("to") ::
   nofibStringToList("type") :: nofibStringToList("where") :: Nil
-//│ > Cons {
-//│ >   head: Cons { head: 'c', tail: Cons { head: 'a', tail: [Cons] } },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: 'c', tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   }
-//│ keys = }
+//│ keys = [["c","a","s","e"],["c","l","a","s","s"],["d","a","t","a"],["d","e","f","a","u","l","t"],["d","e","r","i","v","i","n","g"],["e","l","s","e"],["h","i","d","i","n","g"],["i","f"],["i","m","p","o","r","t"],["i","n"],["i","n","f","i","x"],["i","n","f","i","x","l"],["i","n","s","t","a","n","c","e"],["i","n","t","e","r","f","a","c","e"],["l","e","t"],["m","o","d","u","l","e"],["o","f"],["r","e","n","a","m","i","n","g"],["t","h","e","n"],["t","o"],["t","y","p","e"],["w","h","e","r","e"]]
 
 fun enumFromTo_lz(a, b) = lazy of () =>
   if a <= b then LzCons(a, enumFromTo_lz(a + 1, b)) else LzNil
@@ -91,10 +85,7 @@ fun blocked_(ds, ls) = if ls is
 fun blocked(ls) = blocked_(Nil, ls)
 
 let freqtab = histo(concat(map(ends, attribkeys(keys))))
-//│ > Cons {
-//│ >   head: [ 'e', 8 ],
-//│ >   tail: Cons { head: [ 'w', 1 ], tail: Cons { head: [Array], tail: [Cons] } }
-//│ freqtab = }
+//│ freqtab = [["e", 8],["w", 1],["t", 6],["o", 2],["n", 2],["g", 3],["r", 1],["f", 2],["m", 1],["l", 2],["i", 7],["x", 1],["h", 1],["d", 3],["a", 1],["s", 1],["c", 2]]
 
 let maxval = listLen(freqtab)
 //│ maxval = 17
@@ -160,7 +151,7 @@ fun cichelli(n) =
 
 fun prog(n) = cichelli(n)
 
-:expect 'YesIts(113994, [(w,16),(r,17),(o,11),(m,17),(l,11),(x,2),(n,11),(i,4),(f,10),(h,3),(g,0),(t,5),(d,0),(a,0),(s,2),(c,0),(e,1)])'
+:expect "YesIts(113994, [[\"w\", 16],[\"r\", 17],[\"o\", 11],[\"m\", 17],[\"l\", 11],[\"x\", 2],[\"n\", 11],[\"i\", 4],[\"f\", 10],[\"h\", 3],[\"g\", 0],[\"t\", 5],[\"d\", 0],[\"a\", 0],[\"s\", 2],[\"c\", 0],[\"e\", 1]])"
 prog(6).toString()
-//│ = 'YesIts(113994, [(w,16),(r,17),(o,11),(m,17),(l,11),(x,2),(n,11),(i,4),(f,10),(h,3),(g,0),(t,5),(d,0),(a,0),(s,2),(c,0),(e,1)])'
+//│ = "YesIts(113994, [[\"w\", 16],[\"r\", 17],[\"o\", 11],[\"m\", 17],[\"l\", 11],[\"x\", 2],[\"n\", 11],[\"i\", 4],[\"f\", 10],[\"h\", 3],[\"g\", 0],[\"t\", 5],[\"d\", 0],[\"a\", 0],[\"s\", 2],[\"c\", 0],[\"e\", 1]])"
 

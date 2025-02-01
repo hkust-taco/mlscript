@@ -1,0 +1,85 @@
+:js
+
+:import PredefJS.mls
+//│ Imported 2 member(s)
+
+:global
+:sjs
+
+
+class Foo(arguments)
+//│ JS (unsanitized):
+//│ let Foo1;
+//│ Foo1 = function Foo(arguments2) { return new Foo.class(arguments2); };
+//│ Foo1.class = class Foo {
+//│   constructor(arguments1) {
+//│     this.arguments = arguments1;
+//│   }
+//│   toString() { return "Foo(" + globalThis.Predef.render(this.arguments) + ")"; }
+//│ };
+//│ null
+
+
+class Foo(eval)
+//│ JS (unsanitized):
+//│ let Foo3;
+//│ Foo3 = function Foo(eval2) { return new Foo.class(eval2); };
+//│ Foo3.class = class Foo2 {
+//│   constructor(eval1) {
+//│     this.eval = eval1;
+//│   }
+//│   toString() { return "Foo(" + globalThis.Predef.render(this.eval) + ")"; }
+//│ };
+//│ null
+
+
+class Foo(implements)
+//│ JS (unsanitized):
+//│ let Foo5;
+//│ Foo5 = function Foo(implements2) { return new Foo.class(implements2); };
+//│ Foo5.class = class Foo4 {
+//│   constructor(implements1) {
+//│     this.implements = implements1;
+//│   }
+//│   toString() { return "Foo(" + globalThis.Predef.render(this.implements) + ")"; }
+//│ };
+//│ null
+
+
+class Foo(package)
+//│ JS (unsanitized):
+//│ let Foo7;
+//│ Foo7 = function Foo(package2) { return new Foo.class(package2); };
+//│ Foo7.class = class Foo6 {
+//│   constructor(package1) {
+//│     this.package = package1;
+//│   }
+//│   toString() { return "Foo(" + globalThis.Predef.render(this.package) + ")"; }
+//│ };
+//│ null
+
+
+class Foo(protected)
+//│ JS (unsanitized):
+//│ let Foo9;
+//│ Foo9 = function Foo(protected2) { return new Foo.class(protected2); };
+//│ Foo9.class = class Foo8 {
+//│   constructor(protected1) {
+//│     this.protected = protected1;
+//│   }
+//│   toString() { return "Foo(" + globalThis.Predef.render(this.protected) + ")"; }
+//│ };
+//│ null
+
+
+class Foo(static)
+//│ JS (unsanitized):
+//│ let Foo11;
+//│ Foo11 = function Foo(static2) { return new Foo.class(static2); };
+//│ Foo11.class = class Foo10 {
+//│   constructor(static1) {
+//│     this.static = static1;
+//│   }
+//│   toString() { return "Foo(" + globalThis.Predef.render(this.static) + ")"; }
+//│ };
+//│ null

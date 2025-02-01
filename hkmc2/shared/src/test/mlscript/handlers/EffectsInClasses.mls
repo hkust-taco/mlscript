@@ -82,11 +82,11 @@ let oops =
       "b"
   Lol(h)
 //│ > k
-//│ oops = 'b'
+//│ oops = "b"
 
-:expect 'b'
+:expect "b"
 oops
-//│ = 'b'
+//│ = "b"
 
 let oops = 
   handle h = Effect with
@@ -95,11 +95,11 @@ let oops =
       "b"
   new Lol(h)
 //│ > k
-//│ oops = 'b'
+//│ oops = "b"
 
-:expect 'b'
+:expect "b"
 oops
-//│ = 'b'
+//│ = "b"
 
 
 let oops = 
@@ -110,9 +110,9 @@ let oops =
   Lol(h)
 //│ > k
 //│ > b
-//│ oops = Lol { h: Handler$h$2 {} }
+//│ oops = Lol(Effect$h$)
 
 oops.h
-//│ = Handler$h$2 {}
+//│ = Effect$h$
 
 

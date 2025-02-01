@@ -2,7 +2,7 @@
 
 
 let xs = [1, 2, 3]
-//│ xs = [ 1, 2, 3 ]
+//│ xs = [1, 2, 3]
 
 :sjs
 xs.(0)
@@ -30,13 +30,13 @@ xs.[0]
 set xs.("lol") = "wat"
 
 xs
-//│ = [ 5, 2, 3, lol: 'wat' ]
+//│ = [5, 2, 3]
 
 
 class Foo(val x)
 
 let foo = Foo(123)
-//│ foo = Foo { x: 123 }
+//│ foo = Foo(123)
 
 foo.("x")
 //│ = 123

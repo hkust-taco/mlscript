@@ -10,7 +10,7 @@ class Test with
   fun p(h, x) =
     h.perform("A", x) + h.perform("B", x + 1)
 let t = new Test
-//│ t = Test {}
+//│ t = Test
 
 handle h = Effect with
   fun perform(arg, x)(k) =
@@ -21,6 +21,6 @@ handle h = Effect with
 //│ > B
 //│ > A
 //│ > B
-//│ = [ 10, 14 ]
+//│ = [10, 14]
 
 

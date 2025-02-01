@@ -24,7 +24,7 @@ l(123)
 //│ JS (unsanitized):
 //│ let l; l = this.console.log; l(123) ?? null
 //│ > 123
-//│ l = [Function: log]
+//│ l = [function log]
 
 42
 //│ JS (unsanitized):

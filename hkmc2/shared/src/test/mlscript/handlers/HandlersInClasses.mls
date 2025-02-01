@@ -32,7 +32,7 @@ class Lol() with
 // FIXME: should NOT return a partially initialized object
 let oops = Lol()
 //│ > k
-//│ oops = Lol2 {}
+//│ oops = Lol()
 
 :re
 oops.x

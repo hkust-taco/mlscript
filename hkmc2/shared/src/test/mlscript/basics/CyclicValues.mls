@@ -1,0 +1,15 @@
+:js
+
+
+class Foo(x)
+
+let foo = Foo(null)
+//│ foo = Foo(null)
+
+set foo.x = foo
+
+:fixme // Support showing cyclic values
+foo
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+
+

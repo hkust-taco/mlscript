@@ -24,7 +24,7 @@ Foo(42).x
 
 
 let foo = Foo(42)
-//│ foo = Foo { x: 42, y: 42 }
+//│ foo = Foo(42)
 
 // TODO add symbol to this Sel
 :elt
@@ -88,8 +88,9 @@ case
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
-//│   main = Return:
-//│     res = Lam:
+//│   main = Assign:
+//│     lhs = $block$res
+//│     rhs = Lam:
 //│       params = ParamList:
 //│         flags = ParamListFlags of false
 //│         params = Ls of 
@@ -125,8 +126,10 @@ case
 //│           args = Ls of 
 //│             Lit of StrLit of "match error"
 //│         rest = End of ""
+//│     rest = Return: \
+//│     res = Lit of UnitLit of false
 //│     implct = true
-//│ = [Function (anonymous)]
+//│ = [function block$res6]
 
 
 // TODO support:

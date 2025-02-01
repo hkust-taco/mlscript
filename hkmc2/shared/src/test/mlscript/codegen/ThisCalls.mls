@@ -6,10 +6,10 @@ class Example with
   fun f(x) = [x, a]
 
 val ex = new Example
-//│ ex = Example { a: 456 }
+//│ ex = Example
 
 let s = ex.f
-//│ s = [Function: f]
+//│ s = [function f]
 
 :todo
 :e
@@ -20,7 +20,7 @@ s(123)
 ex |>. s(123)
 //│ JS (unsanitized):
 //│ let tmp2; tmp2 = Predef.call(ex, s); tmp2(123) ?? null
-//│ = [ 123, 456 ]
+//│ = [123, 456]
 
 
 // * Modules on the other hand, do not suffer from method debinding,
@@ -34,24 +34,24 @@ module Example with
 let
   f = Example.f
   g = Example.g
-//│ f = [Function: f]
-//│ g = [Function: g]
+//│ f = [function f]
+//│ g = [function g]
 
 f(123)
-//│ = [ 123, 456 ]
+//│ = [123, 456]
 
 g(123)
-//│ = [ 123, 456, [ 123, 456 ] ]
+//│ = [123, 456, [123, 456]]
 
 :e
 Example |>. g(123)
 //│ ╔══[ERROR] Only module parameters may receive module arguments (values).
 //│ ║  l.47: 	Example |>. g(123)
 //│ ╙──      	^^^^^^^
-//│ = [ 123, 456, [ 123, 456 ] ]
+//│ = [123, 456, [123, 456]]
 
 // * Passing `ex` as `this` has no effect
 ex |>. g(123)
-//│ = [ 123, 456, [ 123, 456 ] ]
+//│ = [123, 456, [123, 456]]
 
 

@@ -2,11 +2,7 @@
 
 
 import "../../mlscript-compile/Option.mjs"
-//│ > [class Option] {
-//│ >   Some: [Function: Some] { class: [class Some] },
-//│ >   None: None { class: [class None] },
-//│ >   Both: [Function: Both] { class: [class Both] }
-//│ Option = }
+//│ Option = Option
 
 
 Option.isDefined(new Option.Some(1))
@@ -31,17 +27,17 @@ Option.test()
 
 
 String(Option.None)
-//│ = 'None'
+//│ = "None"
 
 String(new Option.Some(1))
-//│ = 'Some(1)'
+//│ = "Some(1)"
 
 String(new Option.Both(1, 2))
-//│ = 'Both(1, 2)'
+//│ = "Both(1, 2)"
 
 
 Option.None String()
-//│ = 'None'
+//│ = "None"
 
 // * Not sure this should be fixed.
 // * The weird precedence of `new` is always a pain

@@ -278,6 +278,6 @@ fun try_(n, algorithm) = listLen(search(algorithm, queens(n)))
 fun testConstraints_nofib(n) = map(x => try_(n, x), bt :: bm :: bjbt :: bjbt_ :: fc :: Nil)
 
 
-:expect '[4,4,4,4,4]'
+:expect "[4,4,4,4,4]"
 testConstraints_nofib(6).toString()
-//│ = '[4,4,4,4,4]'
+//│ = "[4,4,4,4,4]"

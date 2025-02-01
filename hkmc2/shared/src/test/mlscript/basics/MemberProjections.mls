@@ -8,7 +8,7 @@ module M with
 
 
 let foo = M.Foo(123)
-//│ foo = Foo { x: 123 }
+//│ foo = Foo(123)
 
 
 foo.m()
@@ -47,7 +47,7 @@ M.Foo:: n(foo, 2)
 let m = M.Foo::m
 //│ JS (unsanitized):
 //│ let m; m = (self, ...args) => { return self.m(...args); }; null
-//│ m = [Function: m]
+//│ m = [function m]
 
 m(foo)
 //│ = 124
@@ -114,7 +114,7 @@ Foo::m
 //│ ║         	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
-//│ = [Function (anonymous)]
+//│ = [function block$res21]
 
 :e
 :sjs

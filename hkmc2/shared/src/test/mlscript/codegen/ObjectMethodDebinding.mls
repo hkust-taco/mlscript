@@ -6,7 +6,7 @@ object Test with
   fun foo() = bar + 1
 
 let f = Test.foo
-//│ f = [Function: foo]
+//│ f = [function foo]
 
 :re
 f()
@@ -20,7 +20,7 @@ object Test with
   fun foo() = Test.bar + 1
 
 let f = Test.foo
-//│ f = [Function: foo]
+//│ f = [function foo]
 
 f()
 //│ = 2
@@ -35,7 +35,7 @@ fun test() =
   [Test]
 
 let f = test().0.foo
-//│ f = [Function: foo]
+//│ f = [function foo]
 
 f()
 //│ = 2

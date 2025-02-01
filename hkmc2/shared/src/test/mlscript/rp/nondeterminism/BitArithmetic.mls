@@ -12,14 +12,14 @@ pattern Falsy =
   false | And(Falsy, Falsy) | And(Falsy, Truthy) |
   And(Truthy, Falsy) | Or(Falsy, Falsy) | Not(Truthy)
 
-:expect [ true, false, false, true ]
+:expect [true, false, false, true]
 [
   true is @compile Truthy,
   false is @compile Truthy,
   true is @compile Falsy,
   false is @compile Falsy
 ]
-//│ = [ true, false, false, true ]
+//│ = [true, false, false, true]
 
 fun isTruthy(value) = value is @compile Truthy
 
@@ -41,7 +41,7 @@ isTruthy of true || true
 
 :re
 isTruthy of true || false
-//│ ═══[RUNTIME ERROR] Expected: true, got: false
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
 //│ = false
 
 isTruthy of false || true
@@ -61,7 +61,7 @@ isFalsy of false && false
 :re
 // The compilation scheme does not handle non-determinism at all at the moment.
 isFalsy of false && true
-//│ ═══[RUNTIME ERROR] Expected: true, got: false
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
 //│ = false
 
 isFalsy of true && false

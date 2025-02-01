@@ -24,8 +24,11 @@
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
-//│   main = Return:
-//│     res = Lit of IntLit of 2
+//│   main = Assign:
+//│     lhs = $block$res
+//│     rhs = Lit of IntLit of 2
+//│     rest = Return: \
+//│     res = Lit of UnitLit of false
 //│     implct = true
 //│ = 2
 
@@ -75,8 +78,11 @@ log("Hi")
 //│         Arg:
 //│           spread = false
 //│           value = Lit of StrLit of "Hi"
+//│     rest = Assign: \
+//│     lhs = $block$res
+//│     rhs = Lit of IntLit of 2
 //│     rest = Return: \
-//│     res = Lit of IntLit of 2
+//│     res = Lit of UnitLit of false
 //│     implct = true
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'log' yielded 'undefined'
 

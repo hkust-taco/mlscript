@@ -60,7 +60,10 @@ f(1,2)(-3)
 //│ REPL> Sending: globalThis.Predef.TraceLogger.enabled = true; globalThis.Predef.TraceLogger.resetIndent(0)
 //│ REPL> Collected:
 //│ >  null
-//│ REPL> Sending: let tmp4, tmp5;try { tmp4 = f(1, 2); tmp5 = - 3; tmp4(tmp5) ?? null } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: block$res9 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let tmp4, tmp5;try { tmp4 = f(1, 2); tmp5 = - 3; block$res9 = tmp4(tmp5) ?? null; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  CALL g(-3)
 //│ >  | CALL g(-2)
@@ -68,7 +71,7 @@ f(1,2)(-3)
 //│ >  | | => 42
 //│ >  | => 42
 //│ >  => 42
-//│ >  45
+//│ >  undefined
 //│ REPL> Parsed:
 //│ >  CALL g(-3)
 //│ >  | CALL g(-2)
@@ -76,23 +79,40 @@ f(1,2)(-3)
 //│ >  | | => 42
 //│ >  | => 42
 //│ >  => 42
-//│ >  45
+//│ >  undefined
 //│ > CALL g(-3)
 //│ > | CALL g(-2)
 //│ > | | CALL g(-1)
 //│ > | | => 42
 //│ > | => 42
 //│ > => 42
-//│ = 45
 //│ REPL> Sending: globalThis.Predef.TraceLogger.enabled = false
 //│ REPL> Collected:
 //│ >  false
+//│ REPL> Sending: try { this.Predef.printRaw(block$res9) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Collected:
+//│ >  45
+//│ >  null
+//│ REPL> Parsed:
+//│ >  45
+//│ >  null
+//│ = 45
 
 :showRepl
 f(1,2)(-4)
-//│ REPL> Sending: let tmp6, tmp7;try { tmp6 = f(1, 2); tmp7 = - 4; tmp6(tmp7) ?? null } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: block$res10 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let tmp6, tmp7;try { tmp6 = f(1, 2); tmp7 = - 4; block$res10 = tmp6(tmp7) ?? null; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { this.Predef.printRaw(block$res10) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  45
+//│ >  null
 //│ REPL> Parsed:
 //│ >  45
+//│ >  null
 //│ = 45

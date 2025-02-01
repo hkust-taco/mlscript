@@ -16,8 +16,8 @@ new 2
 new 2 + 2
 //│ JS (unsanitized):
 //│ new (arg1, arg2) => { return arg1 + arg2; }(2, 2)
-//│ > try { new (...args) => {   globalThis.Predef.checkArgs("", 2, true, args.length);   let arg1 = args[0];   let arg2 = args[1];   return arg1 + arg2; }(2, 2) } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >       ^^^^^^^^^^^^
+//│ > try { block$res3 = new (...args) => {   globalThis.Predef.checkArgs("", 2, true, args.length);   let arg1 = args[0];   let arg2 = args[1];   return arg1 + arg2; }(2, 2); undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                    ^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Malformed arrow function parameter list
 
 :re

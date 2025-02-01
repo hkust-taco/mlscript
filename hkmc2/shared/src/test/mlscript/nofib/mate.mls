@@ -180,7 +180,7 @@ fun forcesColoured(c, bd) = if bd is Board(wkss, bkss) and c is
   Black then bkss
 
 let emptyBoard = Board(Nil, Nil)
-//│ emptyBoard = Board { a: Nil { class: [class Nil] }, b: Nil { class: [class Nil] } }
+//│ emptyBoard = Board([], [])
 
 fun showMove(withPiece, m) = if m is MoveInFull([c, k], sq, Move(sq_, mcp, mpp)) then
   let capt = mcp is Some(_)

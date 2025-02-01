@@ -25,7 +25,7 @@ if Some(0) is Some(x) then x
 
 
 let s = Some(0)
-//│ s = Some { value: 0 }
+//│ s = Some(0)
 
 :sjs
 if s is
@@ -70,7 +70,7 @@ x => if x is Some(x) then x
 //│     throw new this.Error("match error");
 //│   }
 //│ }
-//│ = [Function (anonymous)]
+//│ = [function block$res10]
 
 
 class C(a)
@@ -92,7 +92,7 @@ module M with
   val d = D(27)
 
 M.d
-//│ = D { a: 27 }
+//│ = D(27)
 
 fun f(x) = if x is M.D then 1 else 0
 
@@ -148,7 +148,7 @@ f(Some(1))
 //│ = 42
 
 f(None)
-//│ = 'ok'
+//│ = "ok"
 
 f(0)
 //│ > oops

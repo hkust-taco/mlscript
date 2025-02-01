@@ -6,7 +6,7 @@ print
 (
   "A"
 )
-//│ = 'A'
+//│ = "A"
 
 :fixme
 print
@@ -20,7 +20,7 @@ print
 //│ ║        	^^^^^^^
 //│ ║  l.15: 	  )
 //│ ╙──      	^^^
-//│ = [Function: print]
+//│ = [function print]
 
 :pe
 print of

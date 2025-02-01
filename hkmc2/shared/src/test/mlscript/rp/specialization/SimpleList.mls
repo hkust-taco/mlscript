@@ -115,7 +115,7 @@ pattern BinSeq = null | Pair(0 | 1, BinSeq)
 fun (::) cons(head, tail) = Pair(head, tail)
 
 0 :: null
-//│ = Pair { a: 0, b: null }
+//│ = Pair(0, null)
 
 [
   null is @compile BinSeq,
@@ -126,12 +126,7 @@ fun (::) cons(head, tail) = Pair(head, tail)
   1 is @compile BinSeq,
   0 :: 1 :: 2 :: null is @compile BinSeq,
 ]
-//│ > [
-//│ >   true,  true,
-//│ >   true,  true,
-//│ >   false, false,
-//│ >   false
-//│ = ]
+//│ = [true, true, true, true, false, false, false]
 
 0 :: 1 :: 0 :: null is @compile BinSeq
 //│ = true
@@ -139,10 +134,10 @@ fun (::) cons(head, tail) = Pair(head, tail)
 :todo
 pattern List(a) = null | Pair(a, List)
 //│ ╔══[ERROR] Pattern extraction parameters are not yet supported.
-//│ ║  l.140: 	pattern List(a) = null | Pair(a, List)
+//│ ║  l.135: 	pattern List(a) = null | Pair(a, List)
 //│ ╙──       	             ^
 //│ ╔══[ERROR] Name not found: a
-//│ ║  l.140: 	pattern List(a) = null | Pair(a, List)
+//│ ║  l.135: 	pattern List(a) = null | Pair(a, List)
 //│ ╙──       	                              ^
 
 null is @compile List

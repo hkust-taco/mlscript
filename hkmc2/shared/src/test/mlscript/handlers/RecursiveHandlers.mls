@@ -14,7 +14,7 @@ h1.perform("hi")
 h1.perform("hello")
 //│ > performing hi
 //│ > performing hello
-//│ = [ [ 'ok' ] ]
+//│ = [["ok"]]
 
 :e
 h1
@@ -47,18 +47,10 @@ handle h2 = Effect with
 //│ ║  l.38: 	      then h2.perform(arg - 1) + " " + arg
 //│ ╙──      	           ^^
 //│ > –––
-//│ ═══[RUNTIME ERROR] Error: Unhandled effects
-
-// the above is due to a javascript quirk that should be addressed more generally:
-:fixme
-class A(hi) with
-  fun get(b) = hi + b
-let x = new A(1)
-let f = x.get // this strips the class of `this` for some reason
-f(2)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'hi')
-//│ f = [Function: get]
-//│ x = A { hi: 1 }
+//│ > performing 2
+//│ > –––
+//│ > performing 3
+//│ = [undefined, undefined]
 
 
 // The current implementation insert new handlers surrounding the entire handle block, and hence "later" handle block become the outer one
@@ -84,7 +76,7 @@ in res.toString()
 //│ > A hola
 //│ > B hola adios
 //│ > B hola amigos
-//│ = '‹,‹,‹,‹,hola,friend,›,bye,›,amigos,›,adios,›'
+//│ = "‹,‹,‹,‹,hola,friend,›,bye,›,amigos,›,adios,›"
 
 
 // Output for the "later" handle block as the inner one
@@ -110,7 +102,7 @@ in res.toString()
 //│ > A hola
 //│ > B hola adios
 //│ > B hola amigos
-//│ = '‹,‹,‹,‹,hola,amigos,›,adios,›,friend,›,bye,›'
+//│ = "‹,‹,‹,‹,hola,amigos,›,adios,›,friend,›,bye,›"
 
 :sjs
 let str = ""
@@ -339,5 +331,5 @@ str
 //│   tmp9 = null;
 //│ }
 //│ str
-//│ = 'BABABA'
-//│ str = 'BABABA'
+//│ = "BABABA"
+//│ str = "BABABA"

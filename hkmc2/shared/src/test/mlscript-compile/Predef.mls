@@ -24,6 +24,9 @@ fun pass3(f)(...xs) = f(xs.0, xs.1, xs.2)
 fun print(...xs) =
   console.log(...map(renderAsStr)(...xs))
 
+fun printRaw(x) =
+  console.log(render(x))
+
 fun interleave(sep)(...args) =
   if args.length === 0 then [] else...
   let
@@ -41,10 +44,25 @@ fun interleave(sep)(...args) =
 fun renderAsStr(arg) =
   if arg is Str then arg else render(arg)
 
-fun render(arg) = if arg is
-  Array then fold(+)("[", ...interleave(", ")(...map(render)(...arg)), "]")
-  Str then JSON.stringify(arg)
-  else String(arg)
+fun render(arg) = if
+  arg is
+    undefined then "undefined"
+    null      then "null"
+    Array     then fold(+)("[", ...interleave(", ")(...map(render)(...arg)), "]")
+    Str       then JSON.stringify(arg)
+    Set       then fold(+)("Set{", ...interleave(", ")(...map(render)(...arg)), "}")
+    Map       then fold(+)("Map{", ...interleave(", ")(...map(render)(...arg)), "}")
+    Function  and
+      let p = Object.getOwnPropertyDescriptor(arg, "prototype")
+      (p is Object and p.("writable")) || (p is undefined) then
+        "[function" + (if arg.name is
+          "" then ""
+          nme then " " + nme
+        ) + "]"
+    Object    then String(arg)
+  let ts = arg.("toString") // not accessing as `arg.toString` to avoid the sanity check
+  ts is undefined then "[" + typeof(arg) + "]"
+  else ts.call(arg)
 
 val assert = console.assert
 

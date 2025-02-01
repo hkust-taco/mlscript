@@ -5,7 +5,7 @@ object B
 class Pair[A, B](first: A, second: B)
 
 [A, B]
-//│ = [ A { class: [class A] }, B { class: [class B] } ]
+//│ = [A, B]
 
 // The patterns generate trees that have odd or even numbers of node `A`.
 // In this example, only leaves carry the value `A` or `B`. For each internal

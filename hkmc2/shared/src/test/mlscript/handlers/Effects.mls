@@ -15,25 +15,25 @@ handle h = Effect with
 h.perform()
 //│ = 42
 
-:expect 'b'
+:expect "b"
 handle h = Effect with
   fun perform(arg)(k) = "b"
 h.perform("k")
-//│ = 'b'
+//│ = "b"
 
-:expect 'k'
+:expect "k"
 handle h = Effect with
   fun perform(arg)(k) = arg
 h.perform("k")
-//│ = 'k'
+//│ = "k"
 
-:expect 'k'
+:expect "k"
 handle h = Effect with
   fun perform(arg)(k) = k(arg)
 h.perform("k")
-//│ = 'k'
+//│ = "k"
 
-:expect 'hi'
+:expect "hi"
 fun foo(e) = e.perform("hi")
 handle h = Effect with
   fun perform(arg)(k) =
@@ -41,20 +41,20 @@ handle h = Effect with
     k(arg)
 foo(h)
 //│ > hi
-//│ = 'hi'
+//│ = "hi"
 
 fun foo(e) = e.perform("hi")
 
-:expect 'Hello World!'
+:expect "Hello World!"
 handle h = Effect with
   fun perform(arg)(k) =
     print(arg)
     k(arg)
 (() => h.perform("Hello") + " World!")()
 //│ > Hello
-//│ = 'Hello World!'
+//│ = "Hello World!"
 
-:expect '54321'
+:expect "54321"
 let result = ""
 handle h = Effect with
   fun perform(arg)(k) =
@@ -68,19 +68,19 @@ in
   h.perform("4")
   h.perform("5")
 result
-//│ = '54321'
-//│ result = '54321'
+//│ = "54321"
+//│ result = "54321"
 
-:expect 'b'
+:expect "b"
 handle h = Effect with
   fun perform(arg)(k) =
     print(arg)
     "b"
 h.perform("t")
 //│ > t
-//│ = 'b'
+//│ = "b"
 
-:expect 'Hello World!'
+:expect "Hello World!"
 fun foo(h) =
   print("Entering foo")
   let result = h.perform("Hello")
@@ -105,9 +105,9 @@ result
 //│ > mainbody end
 //│ > handler finished
 //│ > handler finished
-//│ = 'Hello World!'
+//│ = "Hello World!"
 
-:expect 'Hello World!'
+:expect "Hello World!"
 fun foo(h) =
   print("Entering foo")
   let result = h.perform("Hello")
@@ -146,7 +146,7 @@ result
 //│ > mainbody end
 //│ > handler finished
 //│ > handler finished
-//│ = 'Hello World!'
+//│ = "Hello World!"
 
 // Float out definitions
 :sjs

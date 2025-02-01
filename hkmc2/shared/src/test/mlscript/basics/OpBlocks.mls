@@ -31,7 +31,7 @@
 
 
 let f = x => x * 2
-//│ f = [Function: f]
+//│ f = [function f]
 
 2
   + 1
@@ -145,14 +145,14 @@ fun f(x) = if x
 //│             rhs = StrLit of "b"
 
 f(0)
-//│ = 'a'
+//│ = "a"
 
 :re
 f(1)
 //│ ═══[RUNTIME ERROR] Error: match error
 
 f(2)
-//│ = 'b'
+//│ = "b"
 
 
 // :pt
@@ -193,6 +193,5 @@ fun f(x) = if x
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
 //│ ║  l.189: 	  is 1 then "b"
 //│ ╙──       	     ^
-//│ = [Function: f]
 
 

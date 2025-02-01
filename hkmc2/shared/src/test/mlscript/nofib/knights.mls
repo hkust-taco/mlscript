@@ -76,7 +76,7 @@ fun addBack(x, q) = q +: (x :: Nil)
 fun addFront(x, q) = x :: q
 
 let createQueue = Nil
-//│ createQueue = Nil { class: [class Nil] }
+//│ createQueue = []
 
 class Board(a: Int, b: Int, c: Lazy[[Int, Int]], d: List[[Int, Int]])
 

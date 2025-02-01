@@ -24,17 +24,17 @@ Foo is Foo
 new Foo
 //│ JS (unsanitized):
 //│ new Foo1()
-//│ = Foo {}
+//│ = Foo
 
 new Foo()
 //│ JS (unsanitized):
 //│ new Foo1()
-//│ = Foo {}
+//│ = Foo
 
 Foo
 //│ JS (unsanitized):
 //│ Foo1
-//│ = [class Foo]
+//│ = class Foo { constructor() {} toString() { return "Foo"; } }
 
 :re
 Foo()
@@ -72,19 +72,19 @@ let t = test()
 //│ JS (unsanitized):
 //│ let t, tmp; tmp = test(); t = tmp; null
 //│ > ok
-//│ t = [class Foo4]
+//│ t = class Foo4 {     constructor() {       log("hi")     }     toString() { return "Foo"; }   }
 
 new t
 //│ JS (unsanitized):
 //│ new t()
 //│ > hi
-//│ = Foo4 {}
+//│ = Foo
 
 new t()
 //│ JS (unsanitized):
 //│ new t()
 //│ > hi
-//│ = Foo4 {}
+//│ = Foo
 
 
 class Foo with
@@ -178,7 +178,7 @@ log(a.bar(1))
 //│ > 1
 //│ > 2
 //│ > 3
-//│ a = Foo9 { x: 1 }
+//│ a = Foo
 
 
 

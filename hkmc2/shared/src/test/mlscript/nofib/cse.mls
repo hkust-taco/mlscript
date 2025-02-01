@@ -53,7 +53,7 @@ fun update(f) = s => [f(s), s]
 fun set_(s_) = s => [s_, s]
 
 let incr = update(x => x + 1)
-//│ incr = [Function (anonymous)]
+//│ incr = [function]
 
 class Node[T](a: T, b: List[Node[T]])
 
@@ -100,67 +100,37 @@ fun mult_(x, y) = Node("*", x :: y :: Nil)
 fun prod(xs) = Node("X", xs)
 
 let zerO = Node("0", Nil)
-//│ zerO = Node { a: '0', b: Nil { class: [class Nil] } }
+//│ zerO = Node("0", [])
 
 let a = Node("a", Nil)
-//│ a = Node { a: 'a', b: Nil { class: [class Nil] } }
+//│ a = Node("a", [])
 
 let b = Node("b", Nil)
-//│ b = Node { a: 'b', b: Nil { class: [class Nil] } }
+//│ b = Node("b", [])
 
 let c = Node("c", Nil)
-//│ c = Node { a: 'c', b: Nil { class: [class Nil] } }
+//│ c = Node("c", [])
 
 let d = Node("d", Nil)
-//│ d = Node { a: 'd', b: Nil { class: [class Nil] } }
+//│ d = Node("d", [])
 
 let example0 = a
-//│ example0 = Node { a: 'a', b: Nil { class: [class Nil] } }
+//│ example0 = Node("a", [])
 
 let example1 = plus_(a, a)
-//│ > Node {
-//│ >   a: '+',
-//│ >   b: Cons {
-//│ >     head: Node { a: 'a', b: [Nil] },
-//│ >     tail: Cons { head: [Node], tail: [Nil] }
-//│ >   }
-//│ example1 = }
+//│ example1 = Node("+", [Node("a", []),Node("a", [])])
 
 let example2 = plus_(mult_(a, b), mult_(a, b))
-//│ > Node {
-//│ >   a: '+',
-//│ >   b: Cons {
-//│ >     head: Node { a: '*', b: [Cons] },
-//│ >     tail: Cons { head: [Node], tail: [Nil] }
-//│ >   }
-//│ example2 = }
+//│ example2 = Node("+", [Node("*", [Node("a", []),Node("b", [])]),Node("*", [Node("a", []),Node("b", [])])])
 
 let example3 = plus_(mult_(plus_(a, b), c), plus_(a, b))
-//│ > Node {
-//│ >   a: '+',
-//│ >   b: Cons {
-//│ >     head: Node { a: '*', b: [Cons] },
-//│ >     tail: Cons { head: [Node], tail: [Nil] }
-//│ >   }
-//│ example3 = }
+//│ example3 = Node("+", [Node("*", [Node("+", [Node("a", []),Node("b", [])]),Node("c", [])]),Node("+", [Node("a", []),Node("b", [])])])
 
 let example4 = prod(scanl(plus_, zerO, a :: b :: c :: d :: Nil))
-//│ > Node {
-//│ >   a: 'X',
-//│ >   b: Cons {
-//│ >     head: Node { a: '0', b: [Nil] },
-//│ >     tail: Cons { head: [Node], tail: [Cons] }
-//│ >   }
-//│ example4 = }
+//│ example4 = Node("X", [Node("0", []),Node("+", [Node("0", []),Node("a", [])]),Node("+", [Node("+", [Node("0", []),Node("a", [])]),Node("b", [])]),Node("+", [Node("+", [Node("+", [Node("0", []),Node("a", [])]),Node("b", [])]),Node("c", [])]),Node("+", [Node("+", [Node("+", [Node("+", [Node("0", []),Node("a", [])]),Node("b", [])]),Node("c", [])]),Node("d", [])])])
 
 let example5 = prod(scanr(plus_, zerO, a :: b :: c :: d :: Nil))
-//│ > Node {
-//│ >   a: 'X',
-//│ >   b: Cons {
-//│ >     head: Node { a: '+', b: [Cons] },
-//│ >     tail: Cons { head: [Node], tail: [Cons] }
-//│ >   }
-//│ example5 = }
+//│ example5 = Node("X", [Node("+", [Node("a", []),Node("+", [Node("b", []),Node("+", [Node("c", []),Node("+", [Node("d", []),Node("0", [])])])])]),Node("+", [Node("b", []),Node("+", [Node("c", []),Node("+", [Node("d", []),Node("0", [])])])]),Node("+", [Node("c", []),Node("+", [Node("d", []),Node("0", [])])]),Node("+", [Node("d", []),Node("0", [])]),Node("0", [])])
 
 fun testCse_nofib(n) = map(
   i => map(
@@ -171,4 +141,4 @@ fun testCse_nofib(n) = map(
 )
 
 testCse_nofib(6).toString()
-//│ = '[[[(0,a,[])]],[[(0,a,[])],[(0,+,[2,2]),(2,a,[])]],[[(0,a,[])],[(0,+,[2,2]),(2,a,[])],[(0,+,[4,4]),(4,*,[5,6]),(5,a,[]),(6,b,[])]],[[(0,a,[])],[(0,+,[2,2]),(2,a,[])],[(0,+,[4,4]),(4,*,[5,6]),(5,a,[]),(6,b,[])],[(0,+,[1,6]),(1,*,[6,5]),(5,c,[]),(6,+,[7,8]),(7,a,[]),(8,b,[])]],[[(0,a,[])],[(0,+,[2,2]),(2,a,[])],[(0,+,[4,4]),(4,*,[5,6]),(5,a,[]),(6,b,[])],[(0,+,[1,6]),(1,*,[6,5]),(5,c,[]),(6,+,[7,8]),(7,a,[]),(8,b,[])],[(0,X,[21,20,19,18,17]),(17,+,[18,25]),(18,+,[19,24]),(19,+,[20,23]),(20,+,[21,22]),(21,0,[]),(22,a,[]),(23,b,[]),(24,c,[]),(25,d,[])]],[]]'
+//│ = "[[[[0, \"a\", []]]],[[[0, \"a\", []]],[[0, \"+\", [2,2]],[2, \"a\", []]]],[[[0, \"a\", []]],[[0, \"+\", [2,2]],[2, \"a\", []]],[[0, \"+\", [4,4]],[4, \"*\", [5,6]],[5, \"a\", []],[6, \"b\", []]]],[[[0, \"a\", []]],[[0, \"+\", [2,2]],[2, \"a\", []]],[[0, \"+\", [4,4]],[4, \"*\", [5,6]],[5, \"a\", []],[6, \"b\", []]],[[0, \"+\", [1,6]],[1, \"*\", [6,5]],[5, \"c\", []],[6, \"+\", [7,8]],[7, \"a\", []],[8, \"b\", []]]],[[[0, \"a\", []]],[[0, \"+\", [2,2]],[2, \"a\", []]],[[0, \"+\", [4,4]],[4, \"*\", [5,6]],[5, \"a\", []],[6, \"b\", []]],[[0, \"+\", [1,6]],[1, \"*\", [6,5]],[5, \"c\", []],[6, \"+\", [7,8]],[7, \"a\", []],[8, \"b\", []]],[[0, \"X\", [21,20,19,18,17]],[17, \"+\", [18,25]],[18, \"+\", [19,24]],[19, \"+\", [20,23]],[20, \"+\", [21,22]],[21, \"0\", []],[22, \"a\", []],[23, \"b\", []],[24, \"c\", []],[25, \"d\", []]]],[]]"

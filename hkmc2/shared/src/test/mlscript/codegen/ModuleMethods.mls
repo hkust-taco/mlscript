@@ -24,13 +24,13 @@ object Example with
 //│ null
 
 let s = Example.f
-//│ s = [Function: f]
+//│ s = [function f]
 
 :re
 s(123)
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
 
 Example |>. s(123)
-//│ = [ 123, 456 ]
+//│ = [123, 456]
 
 

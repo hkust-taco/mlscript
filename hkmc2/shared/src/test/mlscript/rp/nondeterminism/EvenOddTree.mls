@@ -42,12 +42,12 @@ a(A, B) is @compile EvenTree
 
 :re
 b(A, A) is @compile EvenTree
-//│ ═══[RUNTIME ERROR] Expected: true, got: false
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
 //│ = false
 
 :re
 b(B, B) is @compile EvenTree
-//│ ═══[RUNTIME ERROR] Expected: true, got: false
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
 //│ = false
 
 // Test each case of `OddTree`.
@@ -63,10 +63,10 @@ a(A, A) is @compile OddTree
 
 :re
 b(B, A) is @compile OddTree
-//│ ═══[RUNTIME ERROR] Expected: true, got: false
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
 //│ = false
 
 :re
 b(A, B) is @compile OddTree
-//│ ═══[RUNTIME ERROR] Expected: true, got: false
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
 //│ = false

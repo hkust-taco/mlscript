@@ -123,7 +123,7 @@ let maxCol = 8
 //│ maxCol = 8
 
 let emptyBoard = Tip
-//│ emptyBoard = Tip { class: [class Tip] }
+//│ emptyBoard = Tip
 
 fun check(bd, sq) = mapLookup(sq, bd)
 
@@ -177,14 +177,7 @@ let nPiece = P(
   ([1,0] :: [1,-1] :: [1,-2] :: [2,-2] :: Nil) :: Nil,
   Nil
 )
-//│ > P {
-//│ >   i: 'n',
-//│ >   a: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Nil] }
-//│ >   },
-//│ >   b: Nil { class: [class Nil] }
-//│ nPiece = }
+//│ nPiece = P("n", [[[0, 1],[1, 1],[2, 1],[2, 2]],[[1, 0],[1, -1],[1, -2],[2, -2]]], [])
 
 let mPiece = P(
   "m",
@@ -192,17 +185,7 @@ let mPiece = P(
   ([0,1] :: [0,2] :: [0,3] :: [1,3] :: Nil) ::
   ([1,0] :: [2,0] :: [3,0] :: [3,-1] :: Nil) :: Nil
 )
-//│ > P {
-//│ >   i: 'm',
-//│ >   a: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Nil { class: [class Nil] }
-//│ >   },
-//│ >   b: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Nil] }
-//│ >   }
-//│ mPiece = }
+//│ mPiece = P("m", [[[0, 1],[1, 0],[2, 0],[3, 0]]], [[[0, 1],[0, 2],[0, 3],[1, 3]],[[1, 0],[2, 0],[3, 0],[3, -1]]])
 
 let lPiece = P(
   "l",
@@ -211,34 +194,14 @@ let lPiece = P(
   ([1,-1] :: [1,0] :: [1,1] :: [1,2] :: Nil) ::
   ([1,0] :: [2,0] :: [3,0] :: [1,1] :: Nil) :: Nil
 )
-//│ > P {
-//│ >   i: 'l',
-//│ >   a: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Nil] }
-//│ >   },
-//│ >   b: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Nil] }
-//│ >   }
-//│ lPiece = }
+//│ lPiece = P("l", [[[0, 1],[0, 2],[0, 3],[1, 2]],[[1, 0],[2, 0],[3, 0],[2, -1]]], [[[1, -1],[1, 0],[1, 1],[1, 2]],[[1, 0],[2, 0],[3, 0],[1, 1]]])
 
 let kPiece = P(
   "k",
   ([0,1] :: [1,0] :: [2,0] :: [2,-1] :: Nil) :: Nil,
   ([1,0] :: [1,1] :: [1,2] :: [2,2] :: Nil) :: Nil
 )
-//│ > P {
-//│ >   i: 'k',
-//│ >   a: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Nil { class: [class Nil] }
-//│ >   },
-//│ >   b: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Nil { class: [class Nil] }
-//│ >   }
-//│ kPiece = }
+//│ kPiece = P("k", [[[0, 1],[1, 0],[2, 0],[2, -1]]], [[[1, 0],[1, 1],[1, 2],[2, 2]]])
 
 let jPiece = P(
   "j",
@@ -247,17 +210,7 @@ let jPiece = P(
   ([1,-2] :: [1,-1] :: [1,0] :: [1,1] :: Nil) :: Nil,
   ([1,0] :: [2,0] :: [3,0] :: [2,2] :: Nil) :: Nil
 )
-//│ > P {
-//│ >   i: 'j',
-//│ >   a: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   },
-//│ >   b: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Nil { class: [class Nil] }
-//│ >   }
-//│ jPiece = }
+//│ jPiece = P("j", [[[0, 1],[0, 2],[0, 3],[1, 1]],[[1, 0],[2, 0],[3, 0],[1, -1]],[[1, -2],[1, -1],[1, 0],[1, 1]]], [[[1, 0],[2, 0],[3, 0],[2, 2]]])
 
 let iPiece = P(
   "i",
@@ -266,17 +219,7 @@ let iPiece = P(
   ([1,0] :: [1,1] :: [2,1] :: [3,1] :: Nil) :: Nil,
   ([0,1] :: [1,0] :: [1,-1] :: [1,-2] :: Nil) :: Nil
 )
-//│ > P {
-//│ >   i: 'i',
-//│ >   a: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   },
-//│ >   b: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Nil { class: [class Nil] }
-//│ >   }
-//│ iPiece = }
+//│ iPiece = P("i", [[[1, 0],[2, 0],[2, 1],[3, 1]],[[0, 1],[0, 2],[1, 0],[1, -1]],[[1, 0],[1, 1],[2, 1],[3, 1]]], [[[0, 1],[1, 0],[1, -1],[1, -2]]])
 
 let hPiece = P(
   "h",
@@ -285,17 +228,7 @@ let hPiece = P(
   ([1,0] :: [1,1] :: [2,1] :: [2,2] :: Nil) :: Nil,
   ([0,1] :: [1,0] :: [1,-1] :: [2,-1] :: Nil) :: Nil
 )
-//│ > P {
-//│ >   i: 'h',
-//│ >   a: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   },
-//│ >   b: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Nil { class: [class Nil] }
-//│ >   }
-//│ hPiece = }
+//│ hPiece = P("h", [[[0, 1],[1, 1],[1, 2],[2, 2]],[[1, 0],[1, -1],[2, -1],[2, -2]],[[1, 0],[1, 1],[2, 1],[2, 2]]], [[[0, 1],[1, 0],[1, -1],[2, -1]]])
 
 let gPiece = P(
   "g",
@@ -305,14 +238,7 @@ let gPiece = P(
   ([0,1] :: [0,2] :: [1,2] :: [1,3] :: Nil) ::
   ([1,0] :: [2,0] :: [2,-1] :: [3,-1] :: Nil) :: Nil
 )
-//│ > P {
-//│ >   i: 'g',
-//│ >   a: Nil { class: [class Nil] },
-//│ >   b: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   }
-//│ gPiece = }
+//│ gPiece = P("g", [], [[[0, 1],[1, 1],[1, 2],[1, 3]],[[1, 0],[1, -1],[2, -1],[3, -1]],[[0, 1],[0, 2],[1, 2],[1, 3]],[[1, 0],[2, 0],[2, -1],[3, -1]]])
 
 let fPiece = P(
   "f",
@@ -321,17 +247,7 @@ let fPiece = P(
   ([1,0] :: [2,0] :: [3,0] :: [3,1] :: Nil) :: Nil,
   ([0,1] :: [0,2] :: [0,3] :: [1,0] :: Nil) :: Nil
 )
-//│ > P {
-//│ >   i: 'f',
-//│ >   a: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   },
-//│ >   b: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Nil { class: [class Nil] }
-//│ >   }
-//│ fPiece = }
+//│ fPiece = P("f", [[[0, 1],[1, 1],[2, 1],[3, 1]],[[1, 0],[1, -1],[1, -2],[1, -3]],[[1, 0],[2, 0],[3, 0],[3, 1]]], [[[0, 1],[0, 2],[0, 3],[1, 0]]])
 
 let ePiece = P(
   "e",
@@ -340,17 +256,7 @@ let ePiece = P(
   ([0,1] :: [1,1] :: [1,2] :: Nil) ::
   ([1,0] :: [1,-1] :: [2,-1] :: Nil) :: Nil
 )
-//│ > P {
-//│ >   i: 'e',
-//│ >   a: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Nil] }
-//│ >   },
-//│ >   b: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Nil] }
-//│ >   }
-//│ ePiece = }
+//│ ePiece = P("e", [[[0, 1],[1, 1],[1, 2]],[[1, 0],[1, -1],[2, -1]]], [[[0, 1],[1, 1],[1, 2]],[[1, 0],[1, -1],[2, -1]]])
 
 let dPiece = P(
   "d",
@@ -358,17 +264,7 @@ let dPiece = P(
   ([1,0] :: [1,-1] :: [1,-2] :: Nil) :: Nil,
   ([1,0] :: [2,0] :: [2,1] :: Nil) :: Nil
 )
-//│ > P {
-//│ >   i: 'd',
-//│ >   a: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Nil] }
-//│ >   },
-//│ >   b: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Nil { class: [class Nil] }
-//│ >   }
-//│ dPiece = }
+//│ dPiece = P("d", [[[0, 1],[1, 1],[2, 1]],[[1, 0],[1, -1],[1, -2]]], [[[1, 0],[2, 0],[2, 1]]])
 
 let cPiece = P(
   "c",
@@ -378,14 +274,7 @@ let cPiece = P(
   ([1,-1] :: [1,0] :: [1,1] :: Nil) ::
   ([1,0] :: [1,1] :: [2,0] :: Nil) :: Nil
 )
-//│ > P {
-//│ >   i: 'c',
-//│ >   a: Nil { class: [class Nil] },
-//│ >   b: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   }
-//│ cPiece = }
+//│ cPiece = P("c", [], [[[0, 1],[0, 2],[1, 1]],[[1, 0],[1, -1],[2, 0]],[[1, -1],[1, 0],[1, 1]],[[1, 0],[1, 1],[2, 0]]])
 
 let bPiece = P(
   "b",
@@ -394,32 +283,12 @@ let bPiece = P(
   ([0,1] :: [1,0] :: [2,0] :: Nil) :: Nil,
   ([1,0] :: [1,1] :: [1,2] :: Nil) :: Nil
 )
-//│ > P {
-//│ >   i: 'b',
-//│ >   a: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   },
-//│ >   b: Cons {
-//│ >     head: Cons { head: [Array], tail: [Cons] },
-//│ >     tail: Nil { class: [class Nil] }
-//│ >   }
-//│ bPiece = }
+//│ bPiece = P("b", [[[0, 1],[0, 2],[1, 2]],[[1, 0],[2, 0],[2, -1]],[[0, 1],[1, 0],[2, 0]]], [[[1, 0],[1, 1],[1, 2]]])
 
 let initialPieces = bPiece :: cPiece :: dPiece :: ePiece :: fPiece ::
   gPiece :: hPiece :: iPiece :: jPiece :: kPiece :: lPiece ::
   mPiece :: nPiece :: Nil
-//│ > Cons {
-//│ >   head: P {
-//│ >     i: 'b',
-//│ >     a: Cons { head: [Cons], tail: [Cons] },
-//│ >     b: Cons { head: [Cons], tail: [Nil] }
-//│ >   },
-//│ >   tail: Cons {
-//│ >     head: P { i: 'c', a: [Nil], b: [Cons] },
-//│ >     tail: Cons { head: [P], tail: [Cons] }
-//│ >   }
-//│ initialPieces = }
+//│ initialPieces = [P("b", [[[0, 1],[0, 2],[1, 2]],[[1, 0],[2, 0],[2, -1]],[[0, 1],[1, 0],[2, 0]]], [[[1, 0],[1, 1],[1, 2]]]),P("c", [], [[[0, 1],[0, 2],[1, 1]],[[1, 0],[1, -1],[2, 0]],[[1, -1],[1, 0],[1, 1]],[[1, 0],[1, 1],[2, 0]]]),P("d", [[[0, 1],[1, 1],[2, 1]],[[1, 0],[1, -1],[1, -2]]], [[[1, 0],[2, 0],[2, 1]]]),P("e", [[[0, 1],[1, 1],[1, 2]],[[1, 0],[1, -1],[2, -1]]], [[[0, 1],[1, 1],[1, 2]],[[1, 0],[1, -1],[2, -1]]]),P("f", [[[0, 1],[1, 1],[2, 1],[3, 1]],[[1, 0],[1, -1],[1, -2],[1, -3]],[[1, 0],[2, 0],[3, 0],[3, 1]]], [[[0, 1],[0, 2],[0, 3],[1, 0]]]),P("g", [], [[[0, 1],[1, 1],[1, 2],[1, 3]],[[1, 0],[1, -1],[2, -1],[3, -1]],[[0, 1],[0, 2],[1, 2],[1, 3]],[[1, 0],[2, 0],[2, -1],[3, -1]]]),P("h", [[[0, 1],[1, 1],[1, 2],[2, 2]],[[1, 0],[1, -1],[2, -1],[2, -2]],[[1, 0],[1, 1],[2, 1],[2, 2]]], [[[0, 1],[1, 0],[1, -1],[2, -1]]]),P("i", [[[1, 0],[2, 0],[2, 1],[3, 1]],[[0, 1],[0, 2],[1, 0],[1, -1]],[[1, 0],[1, 1],[2, 1],[3, 1]]], [[[0, 1],[1, 0],[1, -1],[1, -2]]]),P("j", [[[0, 1],[0, 2],[0, 3],[1, 1]],[[1, 0],[2, 0],[3, 0],[1, -1]],[[1, -2],[1, -1],[1, 0],[1, 1]]], [[[1, 0],[2, 0],[3, 0],[2, 2]]]),P("k", [[[0, 1],[1, 0],[2, 0],[2, -1]]], [[[1, 0],[1, 1],[1, 2],[2, 2]]]),P("l", [[[0, 1],[0, 2],[0, 3],[1, 2]],[[1, 0],[2, 0],[3, 0],[2, -1]]], [[[1, -1],[1, 0],[1, 1],[1, 2]],[[1, 0],[2, 0],[3, 0],[1, 1]]]),P("m", [[[0, 1],[1, 0],[2, 0],[3, 0]]], [[[0, 1],[0, 2],[0, 3],[1, 3]],[[1, 0],[2, 0],[3, 0],[3, -1]]]),P("n", [[[0, 1],[1, 1],[2, 1],[2, 2]],[[1, 0],[1, -1],[1, -2],[2, -2]]], [])]
 
 abstract class Mode: PageMode | ZigZagMode | LeftMode | OneLineMode
 
@@ -465,10 +334,10 @@ class
   Above(d1: Doc, b: Bool, d2: Doc) extends Doc
 
 let spaceText = NoAnnot(Chr(" "), 1)
-//│ spaceText = NoAnnot { t: Chr { c: ' ' }, i: 1 }
+//│ spaceText = NoAnnot(Chr(" "), 1)
 
 let nlText = NoAnnot(Chr("\n"), 1)
-//│ nlText = NoAnnot { t: Chr { c: '\n' }, i: 1 }
+//│ nlText = NoAnnot(Chr("\n"), 1)
 
 fun annotSize(p) = if p is
   NoAnnot(_, l) then l

@@ -5,14 +5,14 @@ class Pair[A, B](val first: A, val second: B)
 pattern Null = null
 
 [null is Null, 0 is Null, false is Null]
-//│ = [ true, false, false ]
+//│ = [true, false, false]
 
 pattern Tree = Null | Pair(Tree, Tree)
 
 fun (##) concat(a, b) = Pair(a, b)
 
 0 ## 1
-//│ = Pair { first: 0, second: 1 }
+//│ = Pair(0, 1)
 
 // Positive Test Cases
 // ===================

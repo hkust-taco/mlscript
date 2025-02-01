@@ -111,7 +111,7 @@ fun single_(a_b) = if a_b is [x, y] then (null_(x) && single(y)) || (single(x) &
 
 
 let nil_ = [Nil, Nil]
-//│ nil_ = [ Nil { class: [class Nil] }, Nil { class: [class Nil] } ]
+//│ nil_ = [[], []]
 
 fun head_(a_b) = if a_b is [x, y] and
   not(null_(x)) then head(x)
@@ -224,22 +224,10 @@ let test =
     nofibStringToList("implementation. This is in contrast to the formal development, which ") ::
     nofibStringToList("usually presents the complete concrete implementation of the less ") ::
     nofibStringToList("efficient solution.\n\n") :: Nil
-//│ > Cons {
-//│ >   head: 'I',
-//│ >   tail: Cons { head: 'n', tail: Cons { head: ' ', tail: [Cons] } }
-//│ test = }
+//│ test = ["I","n"," ","t","h","e"," ","c","o","n","s","t","r","u","c","t","i","v","e"," ","p","r","o","g","r","a","m","m","i","n","g"," ","c","o","m","m","u","n","i","t","y"," ","i","t"," ","i","s"," ","c","o","m","m","o","n","p","l","a","c","e"," ","t","o"," ","s","e","e"," ","f","o","r","m","a","l"," ","d","e","v","e","l","o","p","m","e","n","t","s"," ","o","f"," ","t","e","x","t","b","o","o","k"," ","a","l","g","o","r","i","t","h","m","s","."," ","I","n"," ","t","h","e"," ","a","l","g","o","r","i","t","h","m"," ","d","e","s","i","g","n"," ","c","o","m","m","u","n","i","t","y",","," ","o","n"," ","t","h","e"," ","o","t","h","e","r"," ","h","a","n","d",","," ","i","t"," ","m","a","y"," ","b","e"," ","w","e","l","l"," ","k","n","o","w","n"," ","t","h","a","t"," ","t","h","e"," ","t","e","x","t","b","o","o","k"," ","s","o","l","u","t","i","o","n"," ","t","o"," ","a"," ","p","r","o","b","l","e","m"," ","i","s"," ","n","o","t"," ","t","h","e"," ","m","o","s","t"," ","e","f","f","i","c","i","e","n","t"," ","p","o","s","s","i","b","l","e","."," ","H","o","w","e","v","e","r",","," ","i","n"," ","p","r","e","s","e","n","t","i","n","g"," ","t","h","e"," ","m","o","r","e"," ","e","f","f","i","c","i","e","n","t"," ","s","o","l","u","t","i","o","n",","," ","t","h","e"," ","a","l","g","o","r","i","t","h","m"," ","d","e","s","i","g","n","e","r"," ","w","i","l","l"," ","u","s","u","a","l","l","y"," ","o","m","i","t"," ","s","o","m","e"," ","o","f"," ","t","h","e"," ","i","m","p","l","e","m","e","n","t","a","t","i","o","n"," ","d","e","t","a","i","l","s",","," ","t","h","i","s"," ","c","r","e","a","t","i","n","g"," ","a","n"," ","a","l","g","o","r","i","t","h","m"," ","g","a","p"," ","b","e","t","w","e","e","n"," ","t","h","e"," ","a","b","s","t","r","a","c","t"," ","a","l","g","o","r","i","t","h","m"," ","a","n","d"," ","i","t","s"," ","c","o","n","c","r","e","t","e"," ","i","m","p","l","e","m","e","n","t","a","t","i","o","n","."," ","T","h","i","s"," ","i","s"," ","i","n"," ","c","o","n","t","r","a","s","t"," ","t","o"," ","t","h","e"," ","f","o","r","m","a","l"," ","d","e","v","e","l","o","p","m","e","n","t",","," ","w","h","i","c","h"," ","u","s","u","a","l","l","y"," ","p","r","e","s","e","n","t","s"," ","t","h","e"," ","c","o","m","p","l","e","t","e"," ","c","o","n","c","r","e","t","e"," ","i","m","p","l","e","m","e","n","t","a","t","i","o","n"," ","o","f"," ","t","h","e"," ","l","e","s","s"," ","e","f","f","i","c","i","e","n","t"," ","s","o","l","u","t","i","o","n",".","\n","\n"]
 
 fun testPara_nofib() =
   if null_(test) then Nil else fmt(test)
 
 nofibListToString(testPara_nofib())
-//│ > 'In the constructive programming community it is commonplace to\n' +
-//│ >   'see formal developments of textbook algorithms. In the algorithm\n' +
-//│ >   'design community, on the other hand, it may be well known that\n' +
-//│ >   'the textbook solution to a problem is not the most efficient\n' +
-//│ >   'possible. However, in presenting the more efficient solution, the\n' +
-//│ >   'algorithm designer will usually omit some of the implementation\n' +
-//│ >   'details, this creating an algorithm gap between the abstract\n' +
-//│ >   'algorithm and its concrete implementation. This is in contrast\n' +
-//│ >   'to the formal development, which usually presents the complete\n' +
-//│ =   'concrete implementation of the less efficient solution.\n'
+//│ = "In the constructive programming community it is commonplace to\nsee formal developments of textbook algorithms. In the algorithm\ndesign community, on the other hand, it may be well known that\nthe textbook solution to a problem is not the most efficient\npossible. However, in presenting the more efficient solution, the\nalgorithm designer will usually omit some of the implementation\ndetails, this creating an algorithm gap between the abstract\nalgorithm and its concrete implementation. This is in contrast\nto the formal development, which usually presents the complete\nconcrete implementation of the less efficient solution.\n"
