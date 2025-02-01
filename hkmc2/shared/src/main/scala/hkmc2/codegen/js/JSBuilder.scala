@@ -9,6 +9,7 @@ import document.*
 import hkmc2.Message.MessageContext
 import hkmc2.syntax.{Tree, ImmutVal}
 import hkmc2.semantics.*
+import Elaborator.{State, Ctx}
 import hkmc2.codegen.Value.Lam
 
 import Scope.scope
@@ -20,7 +21,7 @@ abstract class CodeBuilder:
   type Context
   
 
-class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
+class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   
   val builtinOpsBase: Ls[Str] = Ls(
     "+", "-", "*", "/", "%",
@@ -64,7 +65,11 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
         }"
       case N => summon[Scope].lookup_!(ts)
     case ts: semantics.InnerSymbol =>
-      summon[Scope].findThis_!(ts)
+      if ts.asMod.isDefined
+      then
+        // * Module self-references use the module name itself instead of `this`
+        summon[Scope].lookup_!(ts)
+      else summon[Scope].findThis_!(ts)
     case _ => summon[Scope].lookup_!(l)
   
   def argument(a: Arg)(using Raise, Scope): Document =
@@ -124,6 +129,8 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
           case S(index) => s"[$index]"
           case N => s"[${JSBuilder.makeStringLiteral(name)}]"
       }"
+    case DynSelect(qual, fld, ai) =>
+      doc"${result(qual)}[${result(fld)}]"
     case Instantiate(cls, as) =>
       doc"new ${result(cls)}(${as.map(result).mkDocument(", ")})"
     case Value.Arr(es) if es.isEmpty => doc"[]"
@@ -136,6 +143,8 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
       doc" # ${getVar(l)} = ${result(r)};${returningTerm(rst)}"
     case AssignField(p, n, r, rst) =>
       doc" # ${result(p)}.${n.name} = ${result(r)};${returningTerm(rst)}"
+    case AssignDynField(p, f, ai, r, rst) =>
+      doc" # ${result(p)}[${result(f)}] = ${result(r)};${returningTerm(rst)}"
     case Define(defn, rst) =>
       def mkThis(sym: InnerSymbol): Document =
         result(Value.This(sym))
@@ -166,55 +175,64 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
             // * Note: `_pubFlds` is not used because in JS, fields are not declared
             val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
             val ctorParams = clsParams.map(p => p -> scope.allocateName(p))
+            val isModule = kind is syntax.Mod
+            val mtdPrefix = if isModule then "static " else ""
             val privs =
               val scp = isym.asInstanceOf[InnerSymbol].privatesScope
               privFlds.map: fld =>
                   val nme = scp.allocateName(fld)
-                  doc" # #$nme;"
+                  doc" # $mtdPrefix#$nme;"
                 .mkDocument(doc"")
             val preCtorCode = ctorParams.foldLeft(body(preCtor)):
               case (acc, (sym, nme)) =>
                 doc"$acc # this.${sym.name} = $nme;"
             val ctorCode = doc"$preCtorCode${body(ctor)}"
-            val clsJS = doc"class ${sym.nme}${par.map(p => s" extends ${result(p)}").getOrElse("")} { #{ ${
+            val ctorOrStatic = if isModule
+              then doc"static"
+              else doc"constructor(${
+                  ctorParams.unzip._2.mkDocument(", ")
+                })"
+            val clsJS = doc"class ${scope.lookup_!(isym)}${par.map(p => s" extends ${result(p)}").getOrElse("")} { #{ ${
                 privs
-              } # constructor(${
-                ctorParams.unzip._2.mkDocument(", ")
-              }) ${ braced(ctorCode) }${
+              } # $ctorOrStatic ${ braced(ctorCode) }${
                 mtds.map: 
                   case td @ FunDefn(_, _, ps :: pss, bod) =>
                     val result = pss.foldRight(bod):
                       case (ps, block) => 
                         Return(Lam(ps, block), false)
                     val (params, bodyDoc) = setupFunction(some(td.sym.nme), ps, result)
-                    doc" # ${td.sym.nme}($params) ${ braced(bodyDoc) }"
+                    doc" # $mtdPrefix${td.sym.nme}($params) ${ braced(bodyDoc) }"
                   case td @ FunDefn(_, _, Nil, bod) =>
-                    doc" # get ${td.sym.nme}() ${ braced(body(bod)) }"
+                    doc" # ${mtdPrefix}get ${td.sym.nme}() ${ braced(body(bod)) }"
                 .mkDocument(" ")
               }${
                 if mtds.exists(_.sym.nme == "toString")
                 then doc""
-                else doc""" # toString() { return "${sym.nme}${
+                else doc""" # ${mtdPrefix}toString() { return "${sym.nme}${
                   if paramsOpt.isEmpty then doc"""""""
                   else doc"""(" + ${
-                      ctorParams.headOption.fold("")("this." + _._1.name)
+                      ctorParams.headOption.fold("\"\"")("globalThis.Predef.render(this." + _._1.name + ")")
                     }${
                       ctorParams.tailOption.fold("")(_.map(
-                        """ + ", " + this.""" + _._1.name).mkString)
+                        """ + ", " + globalThis.Predef.render(this.""" + _._1.name + ")").mkString)
                     } + ")""""
                 }; }"""
               } #}  # }"
             if (kind is syntax.Mod) || (kind is syntax.Obj) || (kind is syntax.Pat) then
-              val clsTmp = outerScope.allocateName(new semantics.TempSymbol(N, sym.nme+"$class"))
+              lazy val clsTmp = outerScope.allocateName(new semantics.TempSymbol(N, sym.nme+"$class"))
               ownr match
               case S(owner) =>
                 assert((kind is syntax.Pat) || paramsOpt.isEmpty)
                 // doc"${mkThis(owner)}.${sym.nme} = new ${clsJS}"
-                doc"const $clsTmp = ${clsJS}; # ${mkThis(owner)}.${sym.nme} = new ${clsTmp
+                if isModule
+                then doc"${mkThis(owner)}.${sym.nme} = ${clsJS};"
+                else doc"const $clsTmp = ${clsJS}; # ${mkThis(owner)}.${sym.nme} = new ${clsTmp
                   }; # ${mkThis(owner)}.${sym.nme}.class = $clsTmp;"
               case N =>
                 val v = getVar(sym)
-                doc"const $clsTmp = ${clsJS}; ${v} = new ${clsTmp
+                if isModule
+                then doc"${v} = ${clsJS};"
+                else doc"const $clsTmp = ${clsJS}; ${v} = new ${clsTmp
                   }; # ${v}.class = $clsTmp;"
             else
               val fun = paramsOpt match
@@ -295,16 +313,43 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
     
     // case _ => ???
   
-  def avoidNames(p: Program)(using Scope): Unit =
-    def go(blk: Block): Unit = blk match
+  /** We want to first reserve the names of all defined classes, object, and modules,
+    * as these will be used as the internal names for these things, which may differ from the external name.
+    * For instance, `class Foo() { ... Foo ... }` will essentially translate to
+    *     `Foo1 = function Foo() { return new Foo1.class }; Foo1.class = class Foo { ... Foo1 ... }`.
+    *   Here, we prefer the `class Foo` part to bear the original `Foo` name (and not, say, `Foo1` or `Foo2`),
+    *   as it will be visible at JS runtime.
+    *   Also note it is crucial here that the inner reference can access the outer definition `Foo1` and not `Foo`
+    *   – Foo refers to the inner class in generated code and not to the parameterized Foo class of the source.
+    * For modules, we do turn any `this` reference into a reference to the corresponding generated class,
+    * since modules represent static members and since we want them to avoid the problem of JS method debinding.
+    *   That means we must generate unique inner names, at least in the case of modules;
+    *   for instance, consider that `module M with { val x = 1; module M with { val y = x } }`
+    *   should generate something like `M2 = class M { static x = 1; static M1 = class M1 { static y = M.x } }`,
+    *   where it is crucial that the inner module's inner name M1 not clash with the outer module's inner name M.
+    * We do not reserve the names of functions, as we currently just use the source name as the inner name,
+    * since any unintentional capture will have no consequence.
+    *   For example, consider that `fun foo() = foo()` may generate something like
+    *     `foo = function foo() { return foo(); }`
+    *   or, if there was already a `foo` defined in some outer scope,
+    *     `foo1 = function foo() { return foo1(); }`
+    *   but the result has the same semantics.
+    *  */
+  def reserveNames(p: Program)(using Scope): Unit =
+    def go(blk: Block): Unit = tl.trace(s"avoidNames ${blk.toString.take(100)}..."):
+      blk match
       case Define(defn, rest) =>
-        if !defn.isOwned then scope.allocateName(semantics.TempSymbol(N, defn.sym.nme))
+        defn match
+          case d: ClsLikeDefn =>
+            scope.allocateName(d.isym)
+          case _ => //scope.allocateName(defn.sym)
+        defn.subBlocks.foreach(go)
         go(rest)
       case _ => blk.subBlocks.foreach(go)
     go(p.main)
   
   def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: os.Path)(using Raise, Scope): Document =
-    avoidNames(p)
+    reserveNames(p)
     p.imports.foreach: i =>
       i._1 -> scope.allocateName(i._1)
     val imps = p.imports.map: i =>
@@ -320,7 +365,7 @@ class JSBuilder(using Elaborator.State, Elaborator.Ctx) extends CodeBuilder:
       )
   
   def worksheet(p: Program)(using Raise, Scope): (Document, Document) =
-    avoidNames(p)
+    reserveNames(p)
     p.imports.foreach: i =>
       i._1 -> scope.allocateName(i._1)
     val imps = p.imports.map: i =>

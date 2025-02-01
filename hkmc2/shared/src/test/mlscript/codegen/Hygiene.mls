@@ -41,12 +41,12 @@ Test.foo()
 :sjs
 val Test = "oops"
 //│ JS (unsanitized):
-//│ let Test3; Test3 = "oops"; null
+//│ let Test2; Test2 = "oops"; null
 //│ Test = 'oops'
 
 :re
 Test.foo()
-//│ ═══[RUNTIME ERROR] TypeError: Test3.foo is not a function
+//│ ═══[RUNTIME ERROR] TypeError: Test2.foo is not a function
 
 
 :sjs
@@ -61,21 +61,26 @@ f()
 //│ x = 2
 
 
-:sjs
+:ssjs
+:e
 module Test with
   val x = 1
   let x = 2
-//│ JS (unsanitized):
-//│ let Test5;
-//│ const Test$class1 = class Test {
-//│   #x;
-//│   constructor() {
+//│ ╔══[ERROR] Name 'x' is already used
+//│ ║  l.68: 	  let x = 2
+//│ ║        	      ^^^^^
+//│ ╟── by a member declared in the same block
+//│ ║  l.67: 	  val x = 1
+//│ ╙──      	      ^^^^^
+//│ JS:
+//│ Test4 = class Test3 {
+//│   static #x;
+//│   static {
 //│     this.x = 1;
 //│     this.#x = 2;
 //│   }
-//│   toString() { return "Test"; }
-//│ }; Test5 = new Test$class1;
-//│ Test5.class = Test$class1;
+//│   static toString() { return "Test"; }
+//│ };
 //│ null
 
 Test.x
@@ -118,7 +123,7 @@ class Cls(x) with
 //│   get bar() {
 //│     return this.#x1;
 //│   }
-//│   toString() { return "Cls(" + this.x + ")"; }
+//│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ")"; }
 //│ };
 //│ null
 
@@ -148,6 +153,45 @@ fun foo() =
     A
 
 foo()
-//│ = A { class: [class A] }
+//│ = [class A1]
+
+
+:sjs
+module Whoops with
+  val v = this
+  fun f() = "Hello"
+  module Whoops with
+    val w = this
+    fun g() = f()
+//│ JS (unsanitized):
+//│ let Whoops2;
+//│ Whoops2 = class Whoops {
+//│   static {
+//│     this.v = Whoops;
+//│     this.Whoops = class Whoops1 {
+//│       static {
+//│         this.w = Whoops1;
+//│       }
+//│       static g() {
+//│         return Whoops.f();
+//│       }
+//│       static toString() { return "Whoops"; }
+//│     };
+//│   }
+//│   static f() {
+//│     return "Hello";
+//│   }
+//│   static toString() { return "Whoops"; }
+//│ };
+//│ null
+
+Whoops.f()
+//│ = 'Hello'
+
+Whoops.Whoops
+//│ = <ref *1> [class Whoops1] { w: [Circular *1] }
+
+Whoops.Whoops.g()
+//│ = 'Hello'
 
 

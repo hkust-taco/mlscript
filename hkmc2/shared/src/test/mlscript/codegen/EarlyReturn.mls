@@ -21,12 +21,12 @@ fun f(x) =
     return 0
   x + 1
 //│ JS (unsanitized):
-//│ let f3;
-//│ f3 = function f(x) {
+//│ let f1;
+//│ f1 = function f(x) {
 //│   let scrut, tmp, tmp1;
 //│   scrut = x < 0;
 //│   if (scrut === true) {
-//│     tmp = log1("whoops");
+//│     tmp = log("whoops");
 //│     return 0;
 //│   } else {
 //│     tmp1 = null;

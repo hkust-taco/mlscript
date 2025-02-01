@@ -52,8 +52,8 @@ module \$ extends Foo
 //│ ╔══[PARSE ERROR] Expected end of input; found error instead
 //│ ║  l.46: 	module \$ extends Foo
 //│ ╙──      	        ^
-//│ > let $_1;try { const $_$class = class \ {   constructor() {}   toString() { return "\"; } }; $_1 = new $_$class; $_1.class = $_$class; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                      ^
+//│ > let $_1;try { $_1 = class $_ { static {} static toString() { return "\"; } }; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
 
 

@@ -7,15 +7,15 @@
 fun f() =
   console.log("ok"), 42
 //│ JS (unsanitized):
-//│ let f1; f1 = function f() { let tmp; tmp = globalThis.console.log("ok") ?? null; return 42; }; null
+//│ let f; f = function f() { let tmp; tmp = globalThis.console.log("ok") ?? null; return 42; }; null
 
 fun f() = { console.log("ok"), 42 }
 //│ JS (unsanitized):
-//│ let f3; f3 = function f() { let tmp; tmp = globalThis.console.log("ok") ?? null; return 42; }; null
+//│ let f1; f1 = function f() { let tmp; tmp = globalThis.console.log("ok") ?? null; return 42; }; null
 
 fun f() = console.log("ok"), 42
 //│ JS (unsanitized):
-//│ let f5; f5 = function f() { return globalThis.console.log("ok") ?? null; }; 42
+//│ let f2; f2 = function f() { return globalThis.console.log("ok") ?? null; }; 42
 //│ = 42
 
 

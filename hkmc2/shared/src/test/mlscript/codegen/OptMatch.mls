@@ -10,8 +10,8 @@ fun isDefined(x) = if x is
   Some then true
   None then false
 //│ JS (unsanitized):
-//│ let isDefined1;
-//│ isDefined1 = function isDefined(x) {
+//│ let isDefined;
+//│ isDefined = function isDefined(x) {
 //│   if (x instanceof Some1.class) {
 //│     return true;
 //│   } else {
@@ -36,7 +36,7 @@ val isDefined = case
   Some(_) then true
   None    then false
 //│ JS (unsanitized):
-//│ let isDefined3, tmp1;
+//│ let isDefined1, tmp1;
 //│ tmp1 = (caseScrut) => {
 //│   let param0;
 //│   if (caseScrut instanceof Some1.class) {
@@ -50,7 +50,7 @@ val isDefined = case
 //│     }
 //│   }
 //│ };
-//│ isDefined3 = tmp1;
+//│ isDefined1 = tmp1;
 //│ null
 //│ isDefined = [Function: tmp1]
 

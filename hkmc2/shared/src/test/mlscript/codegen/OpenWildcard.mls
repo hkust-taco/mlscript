@@ -52,7 +52,7 @@ none()
 :sjs
 val Option = "Oops"
 //│ JS (unsanitized):
-//│ let Option2; Option2 = "Oops"; null
+//│ let Option1; Option1 = "Oops"; null
 //│ Option = 'Oops'
 
 :sjs
@@ -78,7 +78,7 @@ Some
 :sjs
 None
 //│ JS (unsanitized):
-//│ Option4.None
+//│ Option3.None
 //│ = 123
 
 

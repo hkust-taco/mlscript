@@ -41,6 +41,7 @@ sealed trait Literal extends AutoLocated:
 enum Tree extends AutoLocated:
   case Empty()
   case Error()
+  case Dummy // TODO change the places where this is used
   case Under()
   case Ident(name: Str)
   case Keywrd(kw: Keyword)
@@ -59,6 +60,7 @@ enum Tree extends AutoLocated:
   case TypeDef(k: TypeDefKind, head: Tree, extension: Opt[Tree], body: Opt[Tree])(using State) extends Tree with TypeDefImpl
   case Open(opened: Tree)
   case OpenIn(opened: Tree, body: Tree)
+  case DynAccess(obj: Tree, fld: Tree, arrayIdx: Bool)
   case Modified(modifier: Keyword, modLoc: Opt[Loc], body: Tree)
   case Quoted(body: Tree)
   case Unquoted(body: Tree)
@@ -111,8 +113,9 @@ enum Tree extends AutoLocated:
     case Effectful(eff, body) => eff :: body :: Nil
     case Outer(name) => name.toList
     case TyTup(tys) => tys
-    case SynthSel(prefix, name) => prefix :: Nil
     case Sel(prefix, name) => prefix :: Nil
+    case SynthSel(prefix, name) => prefix :: Nil
+    case DynAccess(prefix, fld, ai) => prefix :: fld :: Nil
     case Open(bod) => bod :: Nil
     case Def(lhs, rhs) => lhs :: rhs :: Nil
     case Spread(_, _, body) => body.toList
@@ -143,8 +146,10 @@ enum Tree extends AutoLocated:
     case TyTup(tys) => "type tuple"
     case App(lhs, rhs) => "application"
     case Jux(lhs, rhs) => "juxtaposition"
-    case SynthSel(prefix, name) => "synthetic selection"
     case Sel(prefix, name) => "selection"
+    case SynthSel(prefix, name) => "synthetic selection"
+    case DynAccess(prefix, name, true) => "dynamic index access"
+    case DynAccess(prefix, name, false) => "dynamic field access"
     case InfixApp(lhs, kw, rhs) => "infix operation"
     case New(body) => "new"
     case IfLike(Keyword.`if`, _, split) => "if expression"
@@ -201,6 +206,8 @@ enum Tree extends AutoLocated:
     case _ => false
 
 object Tree:
+  val DummyApp: App = App(Dummy, Dummy)
+  val DummyTup: Tup = Tup(Dummy :: Nil)
   object Block:
     def mk(stmts: Ls[Tree])(using State): Tree = stmts match
       case Nil => UnitLit(true)

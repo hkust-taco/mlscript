@@ -15,7 +15,7 @@ x =>
 :todo
 (acc, _) => acc
 //│ JS (unsanitized):
-//│ (acc, $_) => { return acc; }
+//│ (acc, _) => { return acc; }
 //│ = [Function (anonymous)]
 
 

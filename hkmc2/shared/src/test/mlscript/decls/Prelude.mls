@@ -6,6 +6,8 @@ declare type Nothing
 declare type untyped
 
 declare class Object
+declare class Array
+declare class JSON
 declare class Bool
 declare class Int
 declare class Num

@@ -7,31 +7,25 @@
 :sjs
 module None
 //│ JS (unsanitized):
-//│ let None1;
-//│ const None$class = class None {
-//│   constructor() {}
-//│   toString() { return "None"; }
-//│ }; None1 = new None$class;
-//│ None1.class = None$class;
-//│ null
+//│ let None1; None1 = class None { static {} static toString() { return "None"; } }; null
 
 :sjs
 None
 //│ JS (unsanitized):
 //│ None1
-//│ = None { class: [class None] }
+//│ = [class None]
 
 :sjs
 :re
 None()
 //│ JS (unsanitized):
 //│ None1() ?? null
-//│ ═══[RUNTIME ERROR] TypeError: None1 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor None cannot be invoked without 'new'
 
 :sjs
 new None
 //│ JS (unsanitized):
-//│ new None1.class()
+//│ new None1()
 //│ = None {}
 
 
@@ -43,8 +37,8 @@ module M with
   val y = x + 1
 //│ JS (unsanitized):
 //│ let M1;
-//│ const M$class = class M {
-//│   constructor() {
+//│ M1 = class M {
+//│   static {
 //│     let tmp;
 //│     this.C = class C {
 //│       constructor() {}
@@ -53,15 +47,14 @@ module M with
 //│     this.D = function D() { return new D.class(); };
 //│     this.D.class = class D {
 //│       constructor() {}
-//│       toString() { return "D(" +  + ")"; }
+//│       toString() { return "D(" + "" + ")"; }
 //│     };
 //│     this.x = 1;
-//│     tmp = this.x + 1;
+//│     tmp = M.x + 1;
 //│     this.y = tmp;
 //│   }
-//│   toString() { return "M"; }
-//│ }; M1 = new M$class;
-//│ M1.class = M$class;
+//│   static toString() { return "M"; }
+//│ };
 //│ null
 
 M.C
@@ -83,7 +76,7 @@ M.y
 :re
 M.oops
 //│ ╔══[ERROR] Module 'M' does not contain member 'oops'
-//│ ║  l.84: 	M.oops
+//│ ║  l.77: 	M.oops
 //│ ╙──      	 ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
@@ -95,15 +88,7 @@ M.oops
 module M with
   val m: module M = M
 //│ JS (unsanitized):
-//│ let M3;
-//│ const M$class1 = class M {
-//│   constructor() {
-//│     this.m = M3;
-//│   }
-//│   toString() { return "M"; }
-//│ }; M3 = new M$class1;
-//│ M3.class = M$class1;
-//│ null
+//│ let M3; M3 = class M2 { static { this.m = M3; } static toString() { return "M"; } }; null
 
 :re // FIXME
 :sjs

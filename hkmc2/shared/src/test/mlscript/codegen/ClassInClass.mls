@@ -30,10 +30,10 @@ class Outer(a, b) with
 //│       constructor(c) {
 //│         this.c = c;
 //│         let tmp3, tmp4, tmp5;
-//│         tmp3 = log1(this$Outer.a);
-//│         tmp4 = log1(this.c);
+//│         tmp3 = log(this$Outer.a);
+//│         tmp4 = log(this.c);
 //│         tmp5 = this.i1(this$Outer.a);
-//│         log1(tmp5)
+//│         log(tmp5)
 //│       }
 //│       i1(d) {
 //│         return [
@@ -42,13 +42,13 @@ class Outer(a, b) with
 //│           d
 //│         ];
 //│       }
-//│       toString() { return "Inner(" + this.c + ")"; }
+//│       toString() { return "Inner(" + globalThis.Predef.render(this.c) + ")"; }
 //│     };
 //│     tmp = this.Inner(this.a);
 //│     this.i = tmp;
-//│     tmp1 = log1(this.i.c);
+//│     tmp1 = log(this.i.c);
 //│     tmp2 = this.i.i1(1) ?? null;
-//│     log1(tmp2)
+//│     log(tmp2)
 //│   }
 //│   o1(c) {
 //│     return this.Inner(c);
@@ -58,7 +58,7 @@ class Outer(a, b) with
 //│     tmp = this.Inner(c1);
 //│     return tmp.i1(d) ?? null;
 //│   }
-//│   toString() { return "Outer(" + this.a + ", " + this.b + ")"; }
+//│   toString() { return "Outer(" + globalThis.Predef.render(this.a) + ", " + globalThis.Predef.render(this.b) + ")"; }
 //│ };
 //│ null
 

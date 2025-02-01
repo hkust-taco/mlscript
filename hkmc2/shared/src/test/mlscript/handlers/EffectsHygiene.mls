@@ -12,24 +12,22 @@ fun foo(h) =
     module A
     A
 //│ JS (unsanitized):
-//│ let foo1;
-//│ foo1 = function foo(h) {
-//│   let A, scrut, A1;
-//│   const A$class = class A {
-//│     constructor() {}
-//│     toString() { return "A"; }
-//│   }; A1 = new A$class;
-//│   A1.class = A$class;
-//│   const A$class1 = class A {
-//│     constructor() {}
-//│     toString() { return "A"; }
-//│   }; A = new A$class1;
-//│   A.class = A$class1;
+//│ let foo;
+//│ foo = function foo(h) {
+//│   let A2, scrut, A3;
+//│   A3 = class A {
+//│     static {}
+//│     static toString() { return "A"; }
+//│   };
+//│   A2 = class A1 {
+//│     static {}
+//│     static toString() { return "A"; }
+//│   };
 //│   scrut = false;
 //│   if (scrut === true) {
-//│     return A1;
+//│     return A3;
 //│   } else {
-//│     return A;
+//│     return A2;
 //│   }
 //│ };
 //│ null

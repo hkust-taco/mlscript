@@ -56,10 +56,10 @@ foo m()
 //│ = 124
 
 
-M.(foo Foo::m())
+M.{foo Foo::m()}
 //│ = 124
 
-M.(foo.Foo#m())
+M.{foo.Foo#m()}
 //│ = 124
 
 do

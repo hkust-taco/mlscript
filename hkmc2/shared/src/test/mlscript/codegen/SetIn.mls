@@ -38,7 +38,7 @@ set x += 1 in log(x)
 //│ try {
 //│   tmp3 = x1 + 1;
 //│   x1 = tmp3;
-//│   tmp4 = log1(x1);
+//│   tmp4 = log(x1);
 //│   tmp2 = tmp4;
 //│ } finally {
 //│   x1 = old;
@@ -79,30 +79,30 @@ fun example() =
   log(get_x())
 example()
 //│ JS (unsanitized):
-//│ let example5;
-//│ example5 = function example() {
-//│   let x2, get$_x, old1, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12;
+//│ let example2;
+//│ example2 = function example() {
+//│   let x2, get_x, old1, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12;
 //│   x2 = 0;
-//│   get$_x = () => {
+//│   get_x = () => {
 //│     return x2;
 //│   };
 //│   old1 = x2;
 //│   try {
 //│     tmp6 = x2 + 1;
 //│     x2 = tmp6;
-//│     tmp7 = log1(x2);
-//│     tmp8 = (tmp7 , log1);
-//│     tmp9 = get$_x() ?? null;
+//│     tmp7 = log(x2);
+//│     tmp8 = (tmp7 , log);
+//│     tmp9 = get_x() ?? null;
 //│     tmp10 = tmp8(tmp9) ?? null;
 //│     tmp5 = tmp10;
 //│   } finally {
 //│     x2 = old1;
 //│   }
-//│   tmp11 = log1(x2);
-//│   tmp12 = get$_x() ?? null;
-//│   return log1(tmp12);
+//│   tmp11 = log(x2);
+//│   tmp12 = get_x() ?? null;
+//│   return log(tmp12);
 //│ };
-//│ example5()
+//│ example2()
 //│ > 1
 //│ > 1
 //│ > 0
@@ -119,30 +119,30 @@ fun example() =
   y
 example()
 //│ JS (unsanitized):
-//│ let example7;
-//│ example7 = function example() {
-//│   let x2, get$_x, y, old1, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
+//│ let example3;
+//│ example3 = function example() {
+//│   let x2, get_x, y, old1, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
 //│   x2 = 0;
-//│   get$_x = () => {
+//│   get_x = () => {
 //│     return x2;
 //│   };
 //│   old1 = x2;
 //│   try {
 //│     tmp6 = x2 + 1;
 //│     x2 = tmp6;
-//│     tmp7 = log1(x2);
+//│     tmp7 = log(x2);
 //│     tmp8 = (tmp7 , x2);
 //│     tmp5 = tmp8;
 //│   } finally {
 //│     x2 = old1;
 //│   }
 //│   y = tmp5;
-//│   tmp9 = log1(x2);
-//│   tmp10 = get$_x() ?? null;
-//│   tmp11 = log1(tmp10);
+//│   tmp9 = log(x2);
+//│   tmp10 = get_x() ?? null;
+//│   tmp11 = log(tmp10);
 //│   return y;
 //│ };
-//│ example7()
+//│ example3()
 //│ > 1
 //│ > 0
 //│ > 0

@@ -35,12 +35,19 @@ class StackSafeTransform(depthLimit: Int)(using State):
         .ret(res)
     else
       val tmp = TempSymbol(None, "tmp")
+      val offsetGtDepth = TempSymbol(None, "offsetGtDepth")
       val prevDepth = TempSymbol(None, "prevDepth")
       blockBuilder
         .assign(prevDepth, stackDepthPath)
         .assignFieldN(predefPath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(1)))
         .assign(tmp, res)
         .assignFieldN(predefPath, STACK_DEPTH_IDENT, prevDepth.asPath)
+        .assign(offsetGtDepth, op("<", prevDepth.asPath, stackOffsetPath))
+        .ifthen(
+          offsetGtDepth.asPath, 
+          Case.Lit(Tree.BoolLit(true)), 
+          blockBuilder.assignFieldN(predefPath, STACK_OFFSET_IDENT, prevDepth.asPath).end
+        )
         .rest(f(tmp.asPath))
 
   def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block) =
@@ -48,7 +55,6 @@ class StackSafeTransform(depthLimit: Int)(using State):
     val handlerSym = TempSymbol(None, "stackHandler")
     val resSym = TempSymbol(None, "res")
     val handlerRes = TempSymbol(None, "res")
-    val curOffsetSym = TempSymbol(None, "curOffset")
     
     val clsSym = ClassSymbol(
       Tree.TypeDef(syntax.Cls, Tree.Error(), N, N),
@@ -63,21 +69,18 @@ class StackSafeTransform(depthLimit: Int)(using State):
         BlockMemberSymbol("perform", Nil), resumeSym, ParamList(ParamListFlags.empty, Nil, N) :: Nil,
         /* 
           fun perform() =
-            let curOffset = stackOffset
             stackOffset = stackDepth
             let ret = resume()
-            stackOffset = curOffset
             ret
         */
         blockBuilder
-          .assign(curOffsetSym, stackOffsetPath)
           .assignFieldN(predefPath, STACK_OFFSET_IDENT, stackDepthPath)
           .assign(handlerRes, Call(Value.Ref(resumeSym), Nil)(true))
-          .assignFieldN(predefPath, STACK_OFFSET_IDENT, curOffsetSym.asPath)
           .ret(handlerRes.asPath)
       ) :: Nil,
       blockBuilder
         .assignFieldN(predefPath, STACK_LIMIT_IDENT, intLit(depthLimit)) // set stackLimit before call
+        .assignFieldN(predefPath, STACK_OFFSET_IDENT, intLit(0)) // set stackOffset = 0 before call
         .assignFieldN(predefPath, STACK_DEPTH_IDENT, intLit(1)) // set stackDepth = 1 before call
         .assignFieldN(predefPath, STACK_HANDLER_IDENT, handlerSym.asPath) // assign stack handler
         .rest(HandleBlockReturn(res)),

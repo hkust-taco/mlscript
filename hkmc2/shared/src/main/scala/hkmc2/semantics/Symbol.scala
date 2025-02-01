@@ -32,10 +32,12 @@ abstract class Symbol(using State) extends Located:
     case cls: ClassSymbol => S(cls)
     case mem: BlockMemberSymbol => mem.clsTree.flatMap(_.symbol.asCls)
     case _ => N
-  def asMod: Opt[ModuleSymbol] = this match
+  def asModOrObj: Opt[ModuleSymbol] = this match
     case mod: ModuleSymbol => S(mod)
-    case mem: BlockMemberSymbol => mem.modTree.flatMap(_.symbol.asMod)
+    case mem: BlockMemberSymbol => mem.modOrObjTree.flatMap(_.symbol.asModOrObj)
     case _ => N
+  def asMod: Opt[ModuleSymbol] = asModOrObj.filter(_.tree.k is Mod)
+  def asObj: Opt[ModuleSymbol] = asModOrObj.filter(_.tree.k is Obj)
   /* 
   def asTrm: Opt[TermSymbol] = this match
     case trm: TermSymbol => S(trm)
@@ -52,7 +54,7 @@ abstract class Symbol(using State) extends Located:
     case _ => N
   
   def asClsLike: Opt[ClassSymbol | ModuleSymbol | PatternSymbol] =
-    (asCls: Opt[ClassSymbol | ModuleSymbol | PatternSymbol]) orElse asMod orElse asPat
+    (asCls: Opt[ClassSymbol | ModuleSymbol | PatternSymbol]) orElse asModOrObj orElse asPat
   def asTpe: Opt[TypeSymbol] = asCls orElse asAls
   
   override def equals(x: Any): Bool = x match
@@ -130,8 +132,11 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[Tree])(using State)
   
   def clsTree: Opt[Tree.TypeDef] = trees.collectFirst:
     case t: Tree.TypeDef if t.k is Cls => t
+  def modOrObjTree: Opt[Tree.TypeDef] = modTree orElse objTree
+  def objTree: Opt[Tree.TypeDef] = trees.collectFirst:
+    case t: Tree.TypeDef if (t.k is Obj) => t
   def modTree: Opt[Tree.TypeDef] = trees.collectFirst:
-    case t: Tree.TypeDef if (t.k is Mod) || (t.k is Obj) => t
+    case t: Tree.TypeDef if (t.k is Mod) => t
   def alsTree: Opt[Tree.TypeDef] = trees.collectFirst:
     case t: Tree.TypeDef if t.k is Als => t
   def patTree: Opt[Tree.TypeDef] = trees.collectFirst:
@@ -142,7 +147,7 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[Tree])(using State)
     case t: Tree.TermDef if t.rhs.isDefined => t
   
   lazy val hasLiftedClass: Bool =
-    modTree.isDefined || trmTree.isDefined || clsTree.exists(_.paramLists.nonEmpty)
+    objTree.isDefined || trmTree.isDefined || clsTree.exists(_.paramLists.nonEmpty)
   
   override def toString: Str =
     s"member:$nme${State.dbgUid(uid)}"
@@ -201,6 +206,7 @@ sealed trait ClassLikeSymbol extends Symbol:
   // TODO prevent from appearing in Ref
 sealed trait InnerSymbol(using State) extends Symbol:
   val privatesScope: Scope = Scope.empty // * Scope for private members of this symbol
+  val thisProxy: TempSymbol = TempSymbol(N, s"this$$$nme")
   def subst(using SymbolSubst): InnerSymbol
 
 class ClassSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
@@ -219,7 +225,9 @@ class ModuleSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
   def name: Str = nme
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of module here
-  override def toString: Str = s"module:${id.name}${State.dbgUid(uid)}"
+  override def toString: Str =
+    if tree.k is Obj then s"object:$nme${State.dbgUid(uid)}"
+    else s"module:${id.name}${State.dbgUid(uid)}"
   
   override def subst(using sub: SymbolSubst): ModuleSymbol = sub.mapModuleSym(this)
 

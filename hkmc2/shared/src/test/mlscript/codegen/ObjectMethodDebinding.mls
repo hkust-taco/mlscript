@@ -1,0 +1,47 @@
+:js
+
+
+object Test with
+  fun bar = 1
+  fun foo() = bar + 1
+
+let f = Test.foo
+//│ f = [Function: foo]
+
+:re
+f()
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'bar')
+
+
+// * TODO we should probably compile the above as:
+
+object Test with
+  fun bar = 1
+  fun foo() = Test.bar + 1
+
+let f = Test.foo
+//│ f = [Function: foo]
+
+f()
+//│ = 2
+
+
+// * Which also works well no matter where the object is defined:
+
+fun test() =
+  object Test with
+    fun bar = 1
+    fun foo() = Test.bar + 1
+  [Test]
+
+let f = test().0.foo
+//│ f = [Function: foo]
+
+f()
+//│ = 2
+
+
+// * However, it would disable open recursion upon object inheritance (eg `class C extends Test with ...`).
+// * But it would be better to require open recursion to be explicitly indicated by `virtual` anyway.
+
+

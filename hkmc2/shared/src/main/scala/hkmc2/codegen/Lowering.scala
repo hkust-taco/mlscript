@@ -299,6 +299,11 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
             AssignField(p, nme, r, k(Value.Lit(syntax.Tree.UnitLit(true))))(sel.sym)
+      case sel @ DynSel(prefix, fld, ai) =>
+        subTerm(prefix): p =>
+          subTerm_nonTail(fld): f =>
+            subTerm_nonTail(rhs): r =>
+              AssignDynField(p, f, ai, r, k(Value.Lit(syntax.Tree.UnitLit(true))))
       
     case st.Blk((imp @ Import(sym, path)) :: stats, res) =>
       raise(ErrorReport(
@@ -421,12 +426,17 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
           else k(Value.Lit(syntax.Tree.UnitLit(true))) // * it seems this currently never happens
         )
       
+    case sel @ Sel(prefix, nme) =>
+      setupSelection(prefix, nme, sel.sym)(k)
+        
     case sel @ SynthSel(prefix, nme) =>
       subTerm(prefix): p =>
         k(Select(p, nme)(sel.sym))
         
-    case sel @ Sel(prefix, nme) =>
-      setupSelection(prefix, nme, sel.sym)(k)
+    case DynSel(prefix, fld, ai) =>
+      subTerm(prefix): p =>
+        subTerm_nonTail(fld): f =>
+          k(DynSelect(p, f, ai))
         
         
     case New(cls, as) =>

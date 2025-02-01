@@ -15,10 +15,10 @@ class Lol(h) with
 //│ Lol1.class = class Lol {
 //│   constructor(h) {
 //│     this.h = h;
-//│     let tmp, res, res1, Cont$;
+//│     let tmp, res, res1, Cont$1;
 //│     const this$Lol = this;
-//│     Cont$ = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│     Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
+//│     Cont$1 = function Cont$(pc1) { return new Cont$.class(pc1); };
+//│     Cont$1.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│       constructor(pc) {
 //│         let tmp1;
 //│         tmp1 = super(null, null);
@@ -37,9 +37,8 @@ class Lol(h) with
 //│             tmp = res;
 //│             res1 = Predef.print(tmp);
 //│             if (res1 instanceof globalThis.Predef.__EffectSig.class) {
-//│               res1.tail.next = this;
 //│               this.pc = 1;
-//│               return res1;
+//│               return globalThis.Predef.__appendInCont(res1, this);
 //│             }
 //│             this.pc = 1;
 //│             continue contLoop;
@@ -50,24 +49,24 @@ class Lol(h) with
 //│           break;
 //│         }
 //│       }
-//│       toString() { return "Cont$(" + this.pc + ")"; }
+//│       toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│     };
 //│     res = this.h.perform("k") ?? null;
 //│     if (res instanceof globalThis.Predef.__EffectSig.class) {
-//│       res.tail.next = new Cont$.class(0);
+//│       res.tail.next = new Cont$1.class(0);
 //│       res.tail = res.tail.next;
 //│       return res;
 //│     }
 //│     tmp = res;
 //│     res1 = Predef.print(tmp);
 //│     if (res1 instanceof globalThis.Predef.__EffectSig.class) {
-//│       res1.tail.next = new Cont$.class(1);
+//│       res1.tail.next = new Cont$1.class(1);
 //│       res1.tail = res1.tail.next;
 //│       return res1;
 //│     }
 //│     res1
 //│   }
-//│   toString() { return "Lol(" + this.h + ")"; }
+//│   toString() { return "Lol(" + globalThis.Predef.render(this.h) + ")"; }
 //│ };
 //│ null
 
@@ -107,9 +106,9 @@ let oops =
   Lol(h)
 //│ > k
 //│ > b
-//│ oops = Lol { h: Effect$h$ {} }
+//│ oops = Lol { h: Effect$h$2 {} }
 
 oops.h
-//│ = Effect$h$ {}
+//│ = Effect$h$2 {}
 
 

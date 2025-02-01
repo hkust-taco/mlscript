@@ -156,10 +156,10 @@ if true do
   fun f() = 3
   f()
 //│ JS (unsanitized):
-//│ let tmp11, handleBlock$23;
-//│ handleBlock$23 = function handleBlock$() {
-//│   let h, scrut, f, tmp12, res, Cont$, Effect$h$;
-//│   Effect$h$ = class Effect$h$ extends Effect1 {
+//│ let tmp11, handleBlock$11;
+//│ handleBlock$11 = function handleBlock$() {
+//│   let h, scrut, f, tmp12, res, Cont$22, Effect$h$12;
+//│   Effect$h$12 = class Effect$h$11 extends Effect1 {
 //│     constructor() {
 //│       let tmp13;
 //│       tmp13 = super();
@@ -171,9 +171,9 @@ if true do
 //│     }
 //│     toString() { return "Effect$h$"; }
 //│   };
-//│   h = new Effect$h$();
-//│   Cont$ = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│   Cont$.class = class Cont$ extends globalThis.Predef.__Cont.class {
+//│   h = new Effect$h$12();
+//│   Cont$22 = function Cont$(pc1) { return new Cont$.class(pc1); };
+//│   Cont$22.class = class Cont$21 extends globalThis.Predef.__Cont.class {
 //│     constructor(pc) {
 //│       let tmp13;
 //│       tmp13 = super(null, null);
@@ -194,7 +194,7 @@ if true do
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$(" + this.pc + ")"; }
+//│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   f = function f() {
 //│     return 3;
@@ -203,7 +203,7 @@ if true do
 //│   if (scrut === true) {
 //│     res = f();
 //│     if (res instanceof globalThis.Predef.__EffectSig.class) {
-//│       res.tail.next = new Cont$(0);
+//│       res.tail.next = new Cont$22(0);
 //│       return globalThis.Predef.__handleBlockImpl(res, h);
 //│     }
 //│     tmp12 = res;
@@ -212,7 +212,7 @@ if true do
 //│   }
 //│   return tmp12;
 //│ };
-//│ tmp11 = handleBlock$23();
+//│ tmp11 = handleBlock$11();
 //│ if (tmp11 instanceof this.Predef.__EffectSig.class) {
 //│   throw new this.Error("Unhandled effects");
 //│ }

@@ -6,13 +6,13 @@
 fun f(x, y) = x + y
 f(2, 3)
 //│ JS:
-//│ f1 = function f(...args) {
+//│ f = function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 2, true, args.length);
 //│   let x = args[0];
 //│   let y = args[1];
 //│   return x + y;
 //│ };
-//│ f1(2, 3)
+//│ f(2, 3)
 //│ = 5
 
 
@@ -22,14 +22,14 @@ f(2, 3)
 fun f2(x, y) = x + y
 f2(2)
 //│ JS:
-//│ f21 = function f2(x, y) { return x + y; }; f21(2)
+//│ f2 = function f2(x, y) { return x + y; }; f2(2)
 //│ = NaN
 
 :ssjs
 :re
 f(2)
 //│ JS:
-//│ f1(2)
+//│ f(2)
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
@@ -38,7 +38,7 @@ f(2)
 fun f(x)(y, z) = x + y + z
 f(3)(4)
 //│ JS:
-//│ f4 = function f(...args) {
+//│ f1 = function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
 //│   return (...args1) => {
@@ -50,7 +50,7 @@ f(3)(4)
 //│     return tmp1 + z;
 //│   };
 //│ };
-//│ tmp = f4(3);
+//│ tmp = f1(3);
 //│ tmp(4) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
@@ -60,7 +60,7 @@ f(3)(4)
 :noSanityCheck
 let f = (x, y) => x + y in f(2)
 //│ JS:
-//│ f5 = (x, y) => { return x + y; }; f5(2) ?? null
+//│ f3 = (x, y) => { return x + y; }; f3(2) ?? null
 //│ = NaN
 
 :ssjs
@@ -68,15 +68,15 @@ let f = (x, y) => x + y in f(2)
 let f = (x, y) => x + y
 f(2)
 //│ JS:
-//│ f6 = (...args) => {
+//│ f4 = (...args) => {
 //│   globalThis.Predef.checkArgs("", 2, true, args.length);
 //│   let x = args[0];
 //│   let y = args[1];
 //│   return x + y;
 //│ };
-//│ f6(2) ?? null
+//│ f4(2) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
-//│ f = [Function: f6]
+//│ f = [Function: f4]
 
 
 :expect NaN
@@ -98,7 +98,7 @@ Cls(1, 2).f(3)
 //│     tmp3 = tmp2 + z;
 //│     return tmp3 + p;
 //│   }
-//│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
+//│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ", " + globalThis.Predef.render(this.y) + ")"; }
 //│ };
 //│ tmp1 = Cls1(1, 2);
 //│ tmp1.f(3) ?? null
@@ -111,7 +111,7 @@ class Cls(x, y) with
 Cls(1, 2).f(3)
 //│ JS:
 //│ Cls3 = function Cls(...args1) { return new Cls.class(...args1); };
-//│ Cls3.class = class Cls {
+//│ Cls3.class = class Cls2 {
 //│   constructor(x, y) {
 //│     this.x = x;
 //│     this.y = y;
@@ -125,7 +125,7 @@ Cls(1, 2).f(3)
 //│     tmp4 = tmp3 + z;
 //│     return tmp4 + p;
 //│   }
-//│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
+//│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ", " + globalThis.Predef.render(this.y) + ")"; }
 //│ };
 //│ tmp2 = Cls3(1, 2);
 //│ tmp2.f(3) ?? null
@@ -139,7 +139,7 @@ class Cls(x, y) with
 Cls(1, 2).f(3, 4)(5)
 //│ JS:
 //│ Cls5 = function Cls(...args1) { return new Cls.class(...args1); };
-//│ Cls5.class = class Cls {
+//│ Cls5.class = class Cls4 {
 //│   constructor(x, y) {
 //│     this.x = x;
 //│     this.y = y;
@@ -160,7 +160,7 @@ Cls(1, 2).f(3, 4)(5)
 //│       return tmp8 + s;
 //│     };
 //│   }
-//│   toString() { return "Cls(" + this.x + ", " + this.y + ")"; }
+//│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ", " + globalThis.Predef.render(this.y) + ")"; }
 //│ };
 //│ tmp3 = Cls5(1, 2);
 //│ tmp4 = tmp3.f(3, 4);
@@ -212,8 +212,8 @@ if M.A(1).y is
   x and x == 1 then x
   else 0
 //│ JS:
-//│ const M$class = class M {
-//│   constructor() {
+//│ M1 = class M {
+//│   static {
 //│     this.A = function A(...args1) { return new A.class(...args1); };
 //│     this.A.class = class A {
 //│       constructor(x1) {
@@ -224,12 +224,11 @@ if M.A(1).y is
 //│         let y = args[0];
 //│         return this.x + y;
 //│       }
-//│       toString() { return "A(" + this.x + ")"; }
+//│       toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; }
 //│     };
 //│   }
-//│   toString() { return "M"; }
-//│ }; M1 = new M$class;
-//│ M1.class = M$class;
+//│   static toString() { return "M"; }
+//│ };
 //│ tmp6 = M1.A(1);
 //│ selRes2 = tmp6.y;
 //│ if (selRes2 === undefined) {

@@ -1,0 +1,78 @@
+:js
+
+
+render(123)
+//│ = '123'
+
+render("123")
+//│ = '"123"'
+
+render("12\n3")
+//│ = '"12\\n3"'
+
+render("12\\n3")
+//│ = '"12\\\\n3"'
+
+render([])
+//│ = '[]'
+
+render([1])
+//│ = '[1]'
+
+render([1, 2])
+//│ = '[1, 2]'
+
+render([1,2,3])
+//│ = '[1, 2, 3]'
+
+render([1,2,3,4])
+//│ = '[1, 2, 3, 4]'
+
+render(1)
+//│ = '1'
+
+
+interleave(0) of 1, 2, 3
+//│ = [ 1, 0, 2, 0, 3 ]
+
+let arg = [1, 2]
+//│ arg = [ 1, 2 ]
+
+map(render)(...arg)
+//│ = [ '1', '2' ]
+
+fold(+)("[", ...interleave("|")(...map(render)(...arg)), "]")
+//│ = '[1|2]'
+
+interleave(", ") of 1, 2
+//│ = [ 1, ', ', 2 ]
+
+
+class Foo(val xs)
+
+render(Foo([1, 2, 3]))
+//│ = 'Foo([1, 2, 3])'
+
+render([Foo([1]), Foo([2])])
+//│ = '[Foo([1]), Foo([2])]'
+
+
+renderAsStr("1")
+//│ = '1'
+
+renderAsStr(1)
+//│ = '1'
+
+let xs = [1, 2]
+//│ xs = [ 1, 2 ]
+
+map(renderAsStr)(xs)
+//│ = [ '[1, 2]' ]
+
+map(renderAsStr(_))(xs)
+//│ = [ '[1, 2]' ]
+
+map(_ + 1)(...xs)
+//│ = [ 2, 3 ]
+
+

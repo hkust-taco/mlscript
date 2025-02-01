@@ -744,7 +744,12 @@ abstract class Parser(
         val res = acc match
           case _ => InfixApp(PlainTup(acc), kw, rhs)
         exprCont(res, prec, allowNewlines)
-      case (IDENT(".", _), l0) :: (br @ BRACKETS(Round, toks), l1) :: _ =>
+      case (IDENT(".", _), l0) :: (br @ BRACKETS(bk @ (Round | Square), toks), l1) :: _ =>
+        consume
+        consume
+        val inner = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0))
+        exprCont(DynAccess(acc, inner, bk is Square), prec, allowNewlines)
+      case (IDENT(".", _), l0) :: (br @ BRACKETS(Curly, toks), l1) :: _ =>
         consume
         consume
         val inner = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0))

@@ -2,11 +2,10 @@
 
 
 import "../../mlscript-compile/Option.mjs"
-//│ > Option {
+//│ > [class Option] {
 //│ >   Some: [Function: Some] { class: [class Some] },
 //│ >   None: None { class: [class None] },
-//│ >   Both: [Function: Both] { class: [class Both] },
-//│ >   class: [class Option]
+//│ >   Both: [Function: Both] { class: [class Both] }
 //│ Option = }
 
 

@@ -3,7 +3,7 @@
 module tailrec
 
 tailrec
-//│ = tailrec { class: [class tailrec] }
+//│ = [class tailrec]
 
 :w
 @tailrec fun fact_n(n, acc) =

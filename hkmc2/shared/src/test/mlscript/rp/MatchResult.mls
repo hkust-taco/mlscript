@@ -28,8 +28,8 @@ Cross.unapply("0")
 :sjs
 fun foo(x) = x is Cross
 //│ JS (unsanitized):
-//│ let foo1;
-//│ foo1 = function foo(x2) {
+//│ let foo;
+//│ foo = function foo(x2) {
 //│   let matchResult;
 //│   matchResult = Cross1.unapply(x2) ?? null;
 //│   if (matchResult instanceof globalThis.Predef.MatchResult.class) {
