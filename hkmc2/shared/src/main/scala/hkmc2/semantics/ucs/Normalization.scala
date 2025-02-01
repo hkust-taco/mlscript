@@ -244,17 +244,21 @@ object Normalization:
     * Hard-coded subtyping relations used in normalization and coverage checking.
     * TODO use base classes and also handle modules
     */
-  def compareCasePattern(lhs: Pattern, rhs: Pattern): Bool = (lhs, rhs) match
-    case (_, Pattern.ClassLike(s: ClassSymbol, _, _, _)) if s.nme === "Object" => true
-    case (Pattern.Tuple(n1, false), Pattern.Tuple(n2, false)) if n1 == n2 => true
-    case (Pattern.Tuple(n1, _), Pattern.Tuple(n2, true)) if n2 <= n1 => true
-    case (Pattern.ClassLike(s1: ClassSymbol, _, _, _), Pattern.ClassLike(s2: ClassSymbol, _, _, _)) if s1.nme === "Int" && s2.nme === "Num" => true
+  def compareCasePattern(lhs: Pattern, rhs: Pattern)(using ctx: Elaborator.Ctx): Bool =
+    import Pattern.*, ctx.Builtins.*
+    (lhs, rhs) match
+    // `Object` is the supertype of all (non-virtual) classes and modules.
+    case (ClassLike(cs: ClassSymbol, _, _, _), ClassLike(`Object`, _, _, _))
+        if !ctx.Builtins.virtualClasses.contains(cs) => true
+    case (ClassLike(cs: ModuleSymbol, _, _, _), ClassLike(`Object`, _, _, _)) => true
+    case (Tuple(n1, false), Tuple(n2, false)) if n1 == n2 => true
+    case (Tuple(n1, _), Tuple(n2, true)) if n2 <= n1 => true
+    case (ClassLike(`Int`, _, _, _), ClassLike(`Num`, _, _, _)) => true
     // case (s1: ClassSymbol, s2: ClassSymbol) => s1 <:< s2 // TODO: find a way to check inheritance
-    case (Pattern.Lit(Tree.IntLit(_)), Pattern.ClassLike(s: ClassSymbol, _, _, _)) if s.nme === "Int" || s.nme === "Num" => true
-    case (Pattern.Lit(Tree.StrLit(_)), Pattern.ClassLike(s: ClassSymbol, _, _, _)) if s.nme === "Str" => true
-    case (Pattern.Lit(Tree.DecLit(_)), Pattern.ClassLike(s: ClassSymbol, _, _, _)) if s.nme === "Num" => true
-    case (Pattern.Lit(Tree.BoolLit(_)), Pattern.ClassLike(s: ClassSymbol, _, _, _)) if s.nme === "Bool" => true
-    case (Pattern.Lit(Tree.UnitLit(true)), Pattern.ClassLike(s: ClassSymbol, _, _, _)) if s.nme === "Unit" => true // TODO: how about undefined?
+    case (Lit(Tree.IntLit(_)), ClassLike(`Int` | `Num`, _, _, _)) => true
+    case (Lit(Tree.StrLit(_)), ClassLike(`Str`, _, _, _)) => true
+    case (Lit(Tree.DecLit(_)), ClassLike(`Num`, _, _, _)) => true
+    case (Lit(Tree.BoolLit(_)), ClassLike(`Bool`, _, _, _)) => true
     case (_, _) => false
 
   final case class VarSet(declared: Set[BlockLocalSymbol]):

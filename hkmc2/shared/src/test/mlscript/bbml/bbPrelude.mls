@@ -9,6 +9,7 @@ declare class untyped
 declare class Bool
 declare class Int
 declare class Num
+declare class Object
 
 class
   CodeBase[T, C, S]

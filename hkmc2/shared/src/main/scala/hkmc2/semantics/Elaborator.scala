@@ -87,11 +87,15 @@ object Elaborator:
       val Int = assumeBuiltinCls("Int")
       val Num = assumeBuiltinCls("Num")
       val Str = assumeBuiltinCls("Str")
+      val Bool = assumeBuiltinCls("Bool")
+      val Object = assumeBuiltinCls("Object")
       val untyped = assumeBuiltinTpe("untyped")
       // println(s"Builtins: $Int, $Num, $Str, $untyped")
       val Predef = assumeBuiltinMod("Predef")
       def getBuiltinOp(op: Str): Opt[Str] =
         if getBuiltin(op).isDefined then builtinBinOps.get(op) else N
+      /** Classes that do not use `instanceof` in pattern matching. */
+      val virtualClasses = Set(Int, Num, Str, Bool, Object)
   
   object Ctx:
     abstract class Elem:

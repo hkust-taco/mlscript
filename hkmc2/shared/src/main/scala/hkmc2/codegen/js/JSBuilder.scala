@@ -274,6 +274,8 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           // case _: semantics.ModuleSymbol => doc"=== ${result(pth)}"
           case Elaborator.ctx.Builtins.Str => doc"typeof $sd === 'string'"
           case Elaborator.ctx.Builtins.Num => doc"typeof $sd === 'number'"
+          case Elaborator.ctx.Builtins.Bool => doc"typeof $sd === 'boolean'"
+          case Elaborator.ctx.Builtins.Object => doc"typeof $sd === 'object' && $sd !== null"
           case Elaborator.ctx.Builtins.Int => doc"globalThis.Number.isInteger($sd)"
           case _ => doc"$sd instanceof ${result(pth)}"
         case Case.Tup(len, inf) => doc"globalThis.Array.isArray($sd) && $sd.length ${if inf then ">=" else "==="} ${len}"

@@ -388,6 +388,11 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
               )
             pat match
               case Pattern.Lit(lit) => mkMatch(Case.Lit(lit) -> go(tail, topLevel = false))
+              case Pattern.ClassLike(cls: ClassSymbol, _trm, _args0, _refined)
+                  // Do not elaborate `_trm` when the `cls` is virtual.
+                  if Elaborator.ctx.Builtins.virtualClasses contains cls =>
+                // `Value.Arr(Nil)` is a dummy result and will not be used.
+                mkMatch(Case.Cls(cls, Value.Arr(Nil)) -> go(tail, topLevel = false))
               case Pattern.ClassLike(cls, trm, args0, _refined) =>
                 subTerm_nonTail(trm): st =>
                   val args = args0.getOrElse(Nil)
@@ -562,7 +567,7 @@ trait LoweringSelSanityChecks
         val selRes = TempSymbol(N, "selRes")
         val split = Split.Cons(
             Branch(
-              selRes.ref(),
+            selRes.ref(),
               Pattern.Lit(syntax.Tree.UnitLit(false)),
               Split.Else(
                 Term.Throw(Term.New(SynthSel(State.globalThisSymbol.ref(), Tree.Ident("Error"))(N),
