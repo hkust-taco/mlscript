@@ -302,16 +302,17 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
         // Implicit returns are used in top level and constructor:
         // For top level, this correspond to the last statement which should also be checked for effect.
         // For constructor, we will append `return this;` after the implicit return so it is not a tail call.
-        case Return(c @ Call(fun, args), false) if handlerCtx.isHandleFree && c.isEffectful =>
+        case Return(c @ Call(fun, args), false) if handlerCtx.isHandleFree =>
           val fun2 = applyPath(fun)
           val args2 = args.mapConserve(applyArg)
-          Return(Call(fun2, args2)(c.isMlsFun, false), false)
+          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.isEffectful)
+          if c2 is c then b else Return(c2, false)
         // Optimization to avoid generation of unnecessary variables
         case Assign(lhs, c @ Call(fun, args), rest) if c.isEffectful =>
           val fun2 = applyPath(fun)
           val args2 = args.mapConserve(applyArg)
-          val c2 = Call(fun2, args2)(c.isMlsFun, false)
-          ResultPlaceholder(lhs, freshId(), false, c2, applyBlock(rest))
+          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.isEffectful)
+          ResultPlaceholder(lhs, freshId(), c.isEffectful, c2, applyBlock(rest))
         case Assign(lhs, c @ Instantiate(cls, args), rest) =>
           val cls2 = applyPath(cls)
           val args2 = args.mapConserve(applyPath)
@@ -323,7 +324,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
           val res = freshTmp("res")
           val fun2 = applyPath(fun)
           val args2 = args.mapConserve(applyArg)
-          val c2 = Call(fun2, args2)(c.isMlsFun, false)
+          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.isEffectful)
           ResultPlaceholder(res, freshId(), false, c2, k(Value.Ref(res)))
         case c @ Instantiate(cls, args) =>
           val res = freshTmp("res")
@@ -398,7 +399,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       syntax.Cls,
       N,
       S(h.par), handlers, Nil, Nil,
-      Assign(freshTmp(), PureCall(Value.Ref(State.builtinOpsMap("super")), h.args), End()), End()) // TODO: handle effect in super call
+      Assign(freshTmp(), Call(Value.Ref(State.builtinOpsMap("super")), h.args.map(_.asArg))(true, true), End()), End()) // TODO: handle effect in super call
     // NOTE: the super call is inside the preCtor
     // during resumption we need to resume both the this.x = x bindings done in JSBuilder and the ctor
     
@@ -411,7 +412,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       N, // no owner
       sym, PlainParamList(Nil) :: Nil, body)
     
-    val result = Define(defn, ResultPlaceholder(h.res, freshId(), true, Call(sym.asPath, Nil)(true, false), h.rest))
+    val result = Define(defn, ResultPlaceholder(h.res, freshId(), true, Call(sym.asPath, Nil)(true, true), h.rest))
     result
   
   private def genContClass(b: Block)(using HandlerCtx): Opt[ClsLikeDefn] =
