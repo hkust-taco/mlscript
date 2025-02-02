@@ -79,7 +79,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     Value.Lit(Tree.StrLit(msg)) :: Nil)
   )
   
-  object SimpleCall:
+  object PureCall:
     def apply(fun: Path, args: List[Path]) = Call(fun, args.map(Arg(false, _)))(true, false)
     def unapply(res: Result) = res match
       case Call(fun, args) => args.foldRight[Opt[List[Path]]](S(Nil)): (arg, acc) =>
@@ -93,18 +93,18 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   object ResumptionPoint:
     private val resumptionSymbol = freshTmp("resumptionPoint")
     def apply(res: Local, uid: StateId, rest: Block) =
-      Assign(res, SimpleCall(Value.Ref(resumptionSymbol), List(Value.Lit(Tree.IntLit(uid)))), rest)
+      Assign(res, PureCall(Value.Ref(resumptionSymbol), List(Value.Lit(Tree.IntLit(uid)))), rest)
     def unapply(blk: Block) = blk match
-      case Assign(res, SimpleCall(Value.Ref(`resumptionSymbol`), List(Value.Lit(Tree.IntLit(uid)))), rest) =>
+      case Assign(res, PureCall(Value.Ref(`resumptionSymbol`), List(Value.Lit(Tree.IntLit(uid)))), rest) =>
         Some(res, uid, rest)
       case _ => None
   
   object ReturnCont:
     private val returnContSymbol = freshTmp("returnCont")
     def apply(res: Local, uid: StateId) =
-      Assign(res, SimpleCall(Value.Ref(returnContSymbol), List(Value.Lit(Tree.IntLit(uid)))), End(""))
+      Assign(res, PureCall(Value.Ref(returnContSymbol), List(Value.Lit(Tree.IntLit(uid)))), End(""))
     def unapply(blk: Block) = blk match
-      case Assign(res, SimpleCall(Value.Ref(`returnContSymbol`), List(Value.Lit(Tree.IntLit(uid)))), _) => 
+      case Assign(res, PureCall(Value.Ref(`returnContSymbol`), List(Value.Lit(Tree.IntLit(uid)))), _) => 
         Some(res, uid)
       case _ => None
   
@@ -115,12 +115,12 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     def apply(res: Local, uid: StateId, canRet: Bool, r: Result, rest: Block) =
       Assign(
         res,
-        SimpleCall(Value.Ref(callSymbol), List(Value.Lit(Tree.IntLit(uid)), Value.Lit(Tree.BoolLit(canRet)))),
+        PureCall(Value.Ref(callSymbol), List(Value.Lit(Tree.IntLit(uid)), Value.Lit(Tree.BoolLit(canRet)))),
         Assign(res, r, rest))
     def unapply(blk: Block) = blk match
       case Assign(
           res,
-          SimpleCall(Value.Ref(`callSymbol`), List(Value.Lit(Tree.IntLit(uid)), Value.Lit(Tree.BoolLit(canRet)))),
+          PureCall(Value.Ref(`callSymbol`), List(Value.Lit(Tree.IntLit(uid)), Value.Lit(Tree.BoolLit(canRet)))),
           Assign(_, c, rest)) =>
         Some(res, uid, canRet, c, rest)
       case _ => None
@@ -128,17 +128,17 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   object StateTransition:
     private val transitionSymbol = freshTmp("transition")
     def apply(uid: StateId) =
-      Return(SimpleCall(Value.Ref(transitionSymbol), List(Value.Lit(Tree.IntLit(uid)))), false)
+      Return(PureCall(Value.Ref(transitionSymbol), List(Value.Lit(Tree.IntLit(uid)))), false)
     def unapply(blk: Block) = blk match
-      case Return(SimpleCall(Value.Ref(`transitionSymbol`), List(Value.Lit(Tree.IntLit(uid)))), false) =>
+      case Return(PureCall(Value.Ref(`transitionSymbol`), List(Value.Lit(Tree.IntLit(uid)))), false) =>
         S(uid)
       case _ => N
   
   object FnEnd:
     private val fnEndSymbol = freshTmp("fnEnd")
-    def apply() = Return(SimpleCall(Value.Ref(fnEndSymbol), Nil), false)
+    def apply() = Return(PureCall(Value.Ref(fnEndSymbol), Nil), false)
     def unapply(blk: Block) = blk match
-      case Return(SimpleCall(Value.Ref(`fnEndSymbol`), Nil), false) => true
+      case Return(PureCall(Value.Ref(`fnEndSymbol`), Nil), false) => true
       case _ => false
   
   private class FreshId:
@@ -380,7 +380,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     
     val handlerBody = translateBlock(prepareBody(h.body), HandlerCtx(false, false, N, state => blockBuilder
       .assignFieldN(state.res.tail, nextIdent, Instantiate(state.cls, Value.Lit(Tree.IntLit(state.uid)) :: Nil))
-      .ret(SimpleCall(handleBlockImplPath, state.res :: h.lhs.asPath :: Nil))))
+      .ret(PureCall(handleBlockImplPath, state.res :: h.lhs.asPath :: Nil))))
     
     val handlers = h.handlers.map: handler =>
       val lam = Value.Lam(
@@ -389,7 +389,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       val tmp = freshTmp()
       FunDefn(
         S(h.cls),
-        handler.sym, handler.params, Return(SimpleCall(mkEffectPath, h.lhs.asPath :: lam :: Nil), false))
+        handler.sym, handler.params, Return(PureCall(mkEffectPath, h.lhs.asPath :: lam :: Nil), false))
     
     val clsDefn = ClsLikeDefn(
       N, // no owner
@@ -398,7 +398,9 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       syntax.Cls,
       N,
       S(h.par), handlers, Nil, Nil,
-      Assign(freshTmp(), SimpleCall(Value.Ref(State.builtinOpsMap("super")), h.args), End()), End())
+      Assign(freshTmp(), PureCall(Value.Ref(State.builtinOpsMap("super")), h.args), End()), End()) // TODO: handle effect in super call
+    // NOTE: the super call is inside the preCtor
+    // during resumption we need to resume both the this.x = x bindings done in JSBuilder and the ctor
     
     val body = blockBuilder
       .define(clsDefn)
@@ -458,7 +460,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
           case ReturnCont(res, uid) =>
             blockBuilder
               .assign(pcSymbol, Value.Lit(Tree.IntLit(uid)))
-              .ret(SimpleCall(appendInContPath, res.asPath :: clsSym.asPath :: Nil))
+              .ret(PureCall(appendInContPath, res.asPath :: clsSym.asPath :: Nil))
           case StateTransition(uid) =>
             blockBuilder
               .assign(pcSymbol, Value.Lit(Tree.IntLit(uid)))
@@ -518,8 +520,8 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       resumeFnDef :: Nil,
       Nil,
       Nil,
-      Assign(freshTmp(), SimpleCall(
-        Value.Ref(State.builtinOpsMap("super")),
+      Assign(freshTmp(), PureCall(
+        Value.Ref(State.builtinOpsMap("super")), // refers to Predef.__Cont which is pure
         Value.Lit(Tree.UnitLit(true)) :: Value.Lit(Tree.UnitLit(true)) :: Nil), End()),
       End()))
   
