@@ -43,6 +43,7 @@ declare module Predef with
   class MatchFailure(errors)
   class __EffectSig(next, tail, handleBlockList, resumed, handler, handlerFun)
   class __Return(value)
+  // This declaration is not used currently except for experimentation
   abstract class __StackDelay with
     fun perform()
 
