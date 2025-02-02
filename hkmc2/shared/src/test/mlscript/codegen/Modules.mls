@@ -13,7 +13,7 @@ module None
 None
 //│ JS (unsanitized):
 //│ None1
-//│ = [class None]
+//│ = None
 
 :sjs
 :re
@@ -26,7 +26,7 @@ None()
 new None
 //│ JS (unsanitized):
 //│ new None1()
-//│ = None {}
+//│ = [object Object]
 
 
 :sjs
@@ -58,13 +58,13 @@ module M with
 //│ null
 
 M.C
-//│ = [class C]
+//│ = class C {       constructor() {}       toString() { return "C"; }     }
 
 new M.C
-//│ = C {}
+//│ = C
 
 M.D()
-//│ = D {}
+//│ = D()
 
 M.x
 //│ = 1

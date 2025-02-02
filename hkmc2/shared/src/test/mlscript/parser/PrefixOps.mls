@@ -36,17 +36,17 @@
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.30: 	1
 //│ ╙──      	^
-//│ = [Function (anonymous)]
+//│ = [function block$res5]
 
 
 :sjs
 +
 //│ JS (unsanitized):
 //│ (arg1, arg2) => { return arg1 + arg2; }
-//│ = [Function (anonymous)]
+//│ = [function block$res6]
 
 *
-//│ = [Function (anonymous)]
+//│ = [function block$res7]
 
 :w
 :pt
@@ -58,16 +58,16 @@
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.53: 	1
 //│ ╙──      	^
-//│ = [Function (anonymous)]
+//│ = [function block$res8]
 
 
 fun (??) foo(x, y) = x + y
 
 ??
-//│ = [Function: foo]
+//│ = [function foo]
 
 (??)
-//│ = [Function: foo]
+//│ = [function foo]
 
 ??(1, 2)
 //│ = 3
@@ -87,7 +87,7 @@ fun (??) foo(x, y) = x + y
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
 //│ ║  l.86: 	?? 1
 //│ ╙──      	   ^
-//│ = [Function: foo]
+//│ = [function foo]
 
 :w
 :pe
@@ -99,7 +99,7 @@ fun (??) foo(x, y) = x + y
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.94: 	1
 //│ ╙──      	^
-//│ = [Function: foo]
+//│ = [function foo]
 
 1
   ?? 2

@@ -20,17 +20,17 @@ class Foo()
 Foo
 //│ JS (unsanitized):
 //│ Foo1
-//│ = [Function: Foo] { class: [class Foo] }
+//│ = [function Foo]
 
 Foo()
 //│ JS (unsanitized):
 //│ Foo1()
-//│ = Foo {}
+//│ = Foo()
 
 Foo.class
 //│ JS (unsanitized):
 //│ Foo1.class
-//│ = [class Foo]
+//│ = class Foo {   constructor() {}   toString() { return "Foo(" + "" + ")"; } }
 
 
 class Foo(a)
@@ -48,12 +48,12 @@ class Foo(a)
 Foo
 //│ JS (unsanitized):
 //│ Foo3
-//│ = [Function: Foo] { class: [class Foo2] }
+//│ = [function Foo]
 
 Foo(1)
 //│ JS (unsanitized):
 //│ Foo3(1)
-//│ = Foo2 { a: 1 }
+//│ = Foo(1)
 
 Foo(1).a
 //│ JS (unsanitized):
@@ -64,7 +64,7 @@ fun foo(y) = Foo(y)
 foo(27)
 //│ JS (unsanitized):
 //│ let foo; foo = function foo(y) { return Foo3(y); }; foo(27)
-//│ = Foo2 { a: 27 }
+//│ = Foo(27)
 
 
 class Foo(a, b)
@@ -83,17 +83,17 @@ class Foo(a, b)
 let foo = Foo
 //│ JS (unsanitized):
 //│ let foo1; foo1 = Foo5; null
-//│ foo = [Function: Foo] { class: [class Foo4] }
+//│ foo = [function Foo]
 
 let f = foo(1, 2)
 //│ JS (unsanitized):
 //│ let f, tmp1; tmp1 = foo1(1, 2) ?? null; f = tmp1; null
-//│ f = Foo4 { a: 1, b: 2 }
+//│ f = Foo(1, 2)
 
 let f = new foo(1, 2)
 //│ JS (unsanitized):
 //│ let f1, tmp2; tmp2 = new foo1(1, 2); f1 = tmp2; null
-//│ f = Foo4 { a: 1, b: 2 }
+//│ f = Foo(1, 2)
 
 f.a
 //│ JS (unsanitized):
@@ -108,7 +108,7 @@ f.b
 let f = Foo(1, 2)
 //│ JS (unsanitized):
 //│ let f2, tmp3; tmp3 = Foo5(1, 2); f2 = tmp3; null
-//│ f = Foo4 { a: 1, b: 2 }
+//│ f = Foo(1, 2)
 
 f.a
 //│ JS (unsanitized):
@@ -125,7 +125,7 @@ Foo(log(1), log(2))
 //│ let tmp4, tmp5; tmp4 = log(1); tmp5 = log(2); Foo5(tmp4, tmp5)
 //│ > 1
 //│ > 2
-//│ = Foo4 { a: null, b: null }
+//│ = Foo(null, null)
 
 
 class Inner(c) with
@@ -150,7 +150,7 @@ let i = new Inner(100)
 //│ JS (unsanitized):
 //│ let i, tmp6; tmp6 = new Inner1.class(100); i = tmp6; null
 //│ > 100
-//│ i = Inner { c: 100 }
+//│ i = Inner(100)
 
 i.i1(20)
 //│ JS (unsanitized):

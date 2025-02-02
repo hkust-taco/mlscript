@@ -1,8 +1,9 @@
 :js
+
+:global
 :bbml
 //│ Type: ⊤
 
-//│ Type: ⊤
 
 :sjs
 42
@@ -39,7 +40,7 @@ let x = 1 in x + 1
 "abc"
 //│ JS (unsanitized):
 //│ "abc"
-//│ = 'abc'
+//│ = "abc"
 //│ Type: Str
 
 :sjs
@@ -53,7 +54,7 @@ false
 (x => x): [T] -> T -> T
 //│ JS (unsanitized):
 //│ (x1) => { return x1; }
-//│ = [Function (anonymous)]
+//│ = [function block$res8]
 //│ Type: ['T] -> ('T) ->{⊥} 'T
 
 
@@ -76,7 +77,7 @@ class Foo(x: Int)
 new Foo(42)
 //│ JS (unsanitized):
 //│ new Foo1.class(42)
-//│ = Foo { x: 42 }
+//│ = Foo(42)
 //│ Type: Foo
 
 
@@ -137,7 +138,7 @@ if foo is Foo then 1 else 0
 //│   0
 //│ }
 //│ = 1
-//│ foo = Foo2 {}
+//│ foo = Foo()
 //│ Type: Int
 
 
@@ -239,7 +240,7 @@ region x in 42
 region x in x
 //│ JS (unsanitized):
 //│ let x2; x2 = new this.Region(); x2
-//│ = Region {}
+//│ = Region
 //│ Type: Region[?]
 
 
@@ -247,7 +248,7 @@ region x in x
 region x in x.ref 42
 //│ JS (unsanitized):
 //│ let x3; x3 = new this.Region(); new this.Ref(x3, 42)
-//│ = Ref { reg: Region {}, value: 42 }
+//│ = Ref(Region, 42)
 //│ Type: Ref[Int, ?]
 
 

@@ -464,14 +464,21 @@ object JSBuilder:
     "final",
     "float",
     "goto",
+    "implements",
     "int",
     "long",
     "native",
+    "package",
+    "protected",
     "short",
+    "static",
     "synchronized",
     "throws",
     "transient",
     "volatile",
+    // not a keyword, but cannot be declared as identifier in strict mode
+    "arguments",
+    "eval",
   )
   
   def makeStringLiteral(s: Str): Str =

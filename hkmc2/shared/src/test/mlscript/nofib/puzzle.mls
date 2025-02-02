@@ -56,20 +56,10 @@ fun larryPos(s) = if s is State(a, b, c, d) then c
 fun adamPos(s) = if s is State(a, b, c, d) then d
 
 let initialState = State(LeftBank, LeftBank, LeftBank, LeftBank)
-//│ > State {
-//│ >   b: LeftBank { class: [class LeftBank] },
-//│ >   e: LeftBank { class: [class LeftBank] },
-//│ >   l: LeftBank { class: [class LeftBank] },
-//│ >   a: LeftBank { class: [class LeftBank] }
-//│ initialState = }
+//│ initialState = State(LeftBank, LeftBank, LeftBank, LeftBank)
 
 let finalState = State(RightBank, RightBank, RightBank, RightBank)
-//│ > State {
-//│ >   b: RightBank { class: [class RightBank] },
-//│ >   e: RightBank { class: [class RightBank] },
-//│ >   l: RightBank { class: [class RightBank] },
-//│ >   a: RightBank { class: [class RightBank] }
-//│ finalState = }
+//│ finalState = State(RightBank, RightBank, RightBank, RightBank)
 
 fun position(i, s) = if i is
   Bono then bonoPos(s)

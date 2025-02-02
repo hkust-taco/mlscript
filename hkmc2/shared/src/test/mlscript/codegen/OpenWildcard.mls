@@ -44,7 +44,7 @@ console.log(None)
 none()
 //│ > None { class: [class None] }
 //│ > 123
-//│ = None { class: [class None] }
+//│ = None
 
 
 // * `open` statements are hygienic and are not affected by redefinitions
@@ -53,13 +53,13 @@ none()
 val Option = "Oops"
 //│ JS (unsanitized):
 //│ let Option1; Option1 = "Oops"; null
-//│ Option = 'Oops'
+//│ Option = "Oops"
 
 :sjs
 Some(123)
 //│ JS (unsanitized):
 //│ Option.Some(123)
-//│ = Some { value: 123 }
+//│ = Some(123)
 
 module Option with
   val None = 123
@@ -73,7 +73,7 @@ open Option
 Some
 //│ JS (unsanitized):
 //│ Option.Some
-//│ = [Function: Some] { class: [class Some] }
+//│ = [function Some]
 
 :sjs
 None

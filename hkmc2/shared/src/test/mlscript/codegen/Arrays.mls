@@ -15,7 +15,7 @@ empty.0
 let single = [1]
 //│ JS (unsanitized):
 //│ let single; single = [ 1 ]; null
-//│ single = [ 1 ]
+//│ single = [1]
 
 single.0
 //│ = 1
@@ -25,13 +25,13 @@ single.0
 val single = [1]
 //│ JS (unsanitized):
 //│ let single1; single1 = [ 1 ]; null
-//│ single = [ 1 ]
+//│ single = [1]
 
 single.0
 //│ = 1
 
 val pair = [1, 2]
-//│ pair = [ 1, 2 ]
+//│ pair = [1, 2]
 
 pair.0
 //│ = 1
@@ -40,7 +40,7 @@ pair.1
 //│ = 2
 
 val triple = [1, 2, 3]
-//│ triple = [ 1, 2, 3 ]
+//│ triple = [1, 2, 3]
 
 triple.2
 //│ = 3

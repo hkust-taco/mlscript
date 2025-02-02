@@ -8,7 +8,7 @@ fun foo() =
   1 + 2
 
 foo
-//│ = [Function: foo]
+//│ = [function foo]
 
 foo()
 //│ = 3
@@ -67,13 +67,13 @@ let f = outerfun(100)
 f(200)
 //│ > 301
 //│ = 401
-//│ f = [Function: nested]
+//│ f = [function nested]
 
 // f(200)
 
 outerfun(100)
 //│ > 301
-//│ = [Function: nested]
+//│ = [function nested]
 
 outerfun(100)(200)
 //│ > 301
@@ -86,10 +86,20 @@ outerfun(100)(200)
 :showRepl
 fun test1(x) = test2(x)
 fun test2(y) = y + 1
-//│ REPL> Sending: let test2, test1;try { test1 = function test1(...args) {   globalThis.Predef.checkArgs("test1", 1, true, args.length);   let x = args[0];   return test2(x); }; test2 = function test2(...args) {   globalThis.Predef.checkArgs("test2", 1, true, args.length);   let y = args[0];   return y + 1; }; null } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: block$res19 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let test2, test1;try { test1 = function test1(...args) {   globalThis.Predef.checkArgs("test1", 1, true, args.length);   let x = args[0];   return test2(x); }; test2 = function test2(...args) {   globalThis.Predef.checkArgs("test2", 1, true, args.length);   let y = args[0];   return y + 1; }; block$res19 = null; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { this.Predef.printRaw(block$res19) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  null
+//│ >  null
 //│ REPL> Parsed:
+//│ >  null
 //│ >  null
 
 test1(1)

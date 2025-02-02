@@ -86,10 +86,10 @@ module T with
 
 
 T.a
-//│ = [Function: t]
+//│ = [function t]
 
 T.b
-//│ = [Function: t]
+//│ = [function t]
 
 T.c
 //│ = 2

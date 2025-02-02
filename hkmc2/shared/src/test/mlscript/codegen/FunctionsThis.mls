@@ -29,6 +29,6 @@ class Test with
 
 new Test
 //│ > 3
-//│ = Test {}
+//│ = Test
 
 

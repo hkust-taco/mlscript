@@ -2,7 +2,7 @@
 
 
 globalThis.clearInterval
-//│ = [Function: clearInterval]
+//│ = [function clearInterval]
 
 class A
 
@@ -13,15 +13,19 @@ if 0 is A then 1
 
 // * Unhygienic binding...
 // * TODO: prevent rebinding of `globalThis`
+:re
 val globalThis = "oops"
-//│ globalThis = 'oops'
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'log')
+//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
 
 :re
 globalThis.clearInterval
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'clearInterval' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'log')
 
 :re
 if 0 is A then 1
 //│ ═══[RUNTIME ERROR] Error: match error
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'log')
 
 

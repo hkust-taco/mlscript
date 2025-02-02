@@ -9,7 +9,7 @@
 hello()
 //│ JS (unsanitized):
 //│ hello()
-//│ = 'Hello!'
+//│ = "Hello!"
 
 
 fun hello() = "Hello?"
@@ -18,5 +18,5 @@ fun hello() = "Hello?"
 hello()
 //│ JS (unsanitized):
 //│ hello1()
-//│ = 'Hello?'
+//│ = "Hello?"
 

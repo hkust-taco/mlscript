@@ -37,7 +37,7 @@ let l = () =>
     fun f()(r) = r(())
   return 3
   4
-//│ l = [Function: l]
+//│ l = [function l]
 
 l()
 //│ = 3

@@ -27,7 +27,7 @@ x => if x is Pair(A, B) then 1
 //│     throw new this.Error("match error");
 //│   }
 //│ }
-//│ = [Function (anonymous)]
+//│ = [function block$res2]
 
 
 // :e // FIXME: should be an exhaustiveness error

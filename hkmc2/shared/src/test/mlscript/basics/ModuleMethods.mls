@@ -52,14 +52,14 @@ f6(M)
 //│ ╔══[ERROR] Only module parameters may receive module arguments (values).
 //│ ║  l.51: 	f6(M)
 //│ ╙──      	   ^
-//│ = [class M]
+//│ = M
 
 :e
 f6(M.self())
 //│ ╔══[ERROR] Only module parameters may receive module arguments (values).
 //│ ║  l.58: 	f6(M.self())
 //│ ╙──      	   ^^^^^^^^
-//│ = [class M]
+//│ = M
 
 :e
 fun f7(): module M
@@ -82,15 +82,15 @@ module Test with
   fun ok1(module m: M): module M = m
 
 let ok1 = Test.ok1
-//│ ok1 = [Function: ok1]
+//│ ok1 = [function ok1]
 
 module N with
   fun ok2(): module M = M
 
 ok1(M)
-//│ = [class M]
+//│ = M
 
 ok1(M.self())
-//│ = [class M]
+//│ = M
 
 

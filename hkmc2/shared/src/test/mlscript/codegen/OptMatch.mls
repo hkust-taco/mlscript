@@ -52,7 +52,7 @@ val isDefined = case
 //│ };
 //│ isDefined1 = tmp1;
 //│ null
-//│ isDefined = [Function: tmp1]
+//│ isDefined = [function tmp1]
 
 isDefined(Some(1))
 //│ = true
@@ -64,7 +64,7 @@ isDefined(None)
 val isDefined = x => if x is
   Some(_) then true
   None    then false
-//│ isDefined = [Function: tmp3]
+//│ isDefined = [function tmp3]
 
 isDefined(Some(1))
 //│ = true
@@ -79,7 +79,7 @@ module Foo with
 val isOther = x => if x is
   Foo.Other(_) then true
   None    then false
-//│ isOther = [Function: tmp5]
+//│ isOther = [function tmp5]
 
 
 fun keepIfGreaterThan(x, y) =

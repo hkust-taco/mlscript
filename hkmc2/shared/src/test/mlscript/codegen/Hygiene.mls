@@ -26,7 +26,7 @@ object Test with
 //│ null
 
 Test
-//│ = Test { x: 12, class: [class Test] }
+//│ = Test
 
 print(Test)
 //│ > Test
@@ -42,7 +42,7 @@ Test.foo()
 val Test = "oops"
 //│ JS (unsanitized):
 //│ let Test2; Test2 = "oops"; null
-//│ Test = 'oops'
+//│ Test = "oops"
 
 :re
 Test.foo()
@@ -57,7 +57,7 @@ f()
 //│ JS (unsanitized):
 //│ let x, f, x1; x = 1; f = () => { return x; }; x1 = 2; f() ?? null
 //│ = 1
-//│ f = [Function: f]
+//│ f = [function f]
 //│ x = 2
 
 
@@ -81,7 +81,8 @@ module Test with
 //│   }
 //│   static toString() { return "Test"; }
 //│ };
-//│ null
+//│ block$res8 = null;
+//│ undefined
 
 Test.x
 //│ = 1
@@ -129,7 +130,7 @@ class Cls(x) with
 
 let cls = Cls(10)
 //│ > 10 22
-//│ cls = Cls { x: 10 }
+//│ cls = Cls(10)
 
 :expect 10
 cls.x
@@ -153,7 +154,7 @@ fun foo() =
     A
 
 foo()
-//│ = [class A1]
+//│ = A
 
 
 :sjs
@@ -186,12 +187,12 @@ module Whoops with
 //│ null
 
 Whoops.f()
-//│ = 'Hello'
+//│ = "Hello"
 
 Whoops.Whoops
-//│ = <ref *1> [class Whoops1] { w: [Circular *1] }
+//│ = Whoops
 
 Whoops.Whoops.g()
-//│ = 'Hello'
+//│ = "Hello"
 
 

@@ -2,7 +2,7 @@
 
 // Drop the first and last elements.
 tupleSlice([1, 2, 3, 4], 1, -1)
-//│ = [ 2, 3, 4 ]
+//│ = [2, 3, 4]
 
 // Get the first element.
 tupleGet([1, 2, 3, 4], 0)
@@ -34,7 +34,7 @@ nonsense([])
 //│ = []
 
 nonsense([1, 2, 3, 4])
-//│ = [ 1, 2, 3, 4 ]
+//│ = [1, 2, 3, 4]
 
 :sjs
 fun lead_and_last(xs) = if xs is
@@ -63,7 +63,7 @@ fun lead_and_last(xs) = if xs is
 //│ null
 
 lead_and_last(["foo", "bar"])
-//│ = 'foobar'
+//│ = "foobar"
 
 lead_and_last([1, 2, 3, 4])
 //│ = 5

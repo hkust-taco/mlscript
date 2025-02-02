@@ -130,9 +130,9 @@ fun testPrimetest_nofib(d) =
   process(lines(cts))
 
 
-:expect '[Composite,Composite,Probably prime,Composite,Composite]'
+:expect "[\"Composite\",\"Composite\",\"Probably prime\",\"Composite\",\"Composite\"]"
 testPrimetest_nofib(0).toString()
-//│ = '[Composite,Composite,Probably prime,Composite,Composite]'
+//│ = "[\"Composite\",\"Composite\",\"Probably prime\",\"Composite\",\"Composite\"]"
 
 
 

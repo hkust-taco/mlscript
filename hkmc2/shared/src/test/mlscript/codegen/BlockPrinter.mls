@@ -4,7 +4,7 @@
 let x = 1
 x + 1
 //│ Pretty Lowered:
-//│   set x = 1 in return +(x, 1)
+//│   set x = 1 in set block$res1 = +(x, 1) in return undefined
 //│ = 2
 //│ x = 1
 
@@ -12,7 +12,15 @@ x + 1
 fun incr(n) = n + 1
 fun (|>) pipe(x, f) = f(x)
 //│ Pretty Lowered:
-//│   define fun incr(n) { return +(n, 1) } in define fun pipe(x1, f) { return f(x1) } in return null
+//│  
+//│ define fun incr(n) {
+//│   return +(n, 1)
+//│ } in
+//│ define fun pipe(x1, f) {
+//│   return f(x1)
+//│ } in
+//│ set block$res2 = null in
+//│ return undefined
 
 :slot
 let x = 1
@@ -33,5 +41,6 @@ let x = x + 1
 //│   set x3 = tmp in
 //│   set tmp1 = +(x3, 1) in
 //│   set x4 = tmp1 in
-//│   return null
+//│   set block$res3 = null in
+//│   return undefined
 //│ x = 1

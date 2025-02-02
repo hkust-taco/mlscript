@@ -21,11 +21,11 @@
 //│   }
 //│   return tmp;
 //│ }
-//│ = [Function (anonymous)]
+//│ = [function block$res2]
 
 () =>
   while true then 0
-//│ = [Function (anonymous)]
+//│ = [function block$res3]
 
 
 let x = true
@@ -123,7 +123,7 @@ while
 //│   }
 //│   return tmp20;
 //│ }
-//│ = [Function (anonymous)]
+//│ = [function block$res14]
 
 
 let i = 0 in
@@ -248,7 +248,7 @@ f(Cons(1, Cons(2, Cons(3, 0))))
 
 
 () => while true then 0
-//│ = [Function (anonymous)]
+//│ = [function block$res27]
 
 :fixme
 while log("Hello World"); false

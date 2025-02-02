@@ -4,7 +4,7 @@
 :import NofibPrelude.mls
 
 let cls = nofibStringToList("L")
-//│ cls = Cons { head: 'L', tail: Nil { class: [class Nil] } }
+//│ cls = ["L"]
 
 fun goto(x, y) = "E" :: "[" :: (nofibStringToList(stringOfInt(y)) +: (";" :: nofibStringToList(stringOfInt(x)) +: nofibStringToList("H")))
 

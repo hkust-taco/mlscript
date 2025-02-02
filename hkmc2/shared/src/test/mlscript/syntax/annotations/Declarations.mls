@@ -3,7 +3,7 @@
 module tailrec
 
 tailrec
-//│ = [class tailrec]
+//│ = tailrec
 
 :w
 @tailrec fun fact_n(n, acc) =
@@ -40,7 +40,7 @@ class Freezed(degree: Num)
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.39: 	@Freezed(-4) let drink = Beverage("Coke")
 //│ ╙──      	 ^^^^^^^^^^^
-//│ drink = Beverage { name: 'Coke' }
+//│ drink = Beverage("Coke")
 
 module Foo with
   class Bar(qax: Str)
@@ -88,8 +88,8 @@ fun
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.82: 	@inline let
 //│ ╙──      	 ^^^^^^
-//│ abs = [Function: abs]
-//│ clamp = [Function: clamp]
+//│ abs = [function abs]
+//│ clamp = [function clamp]
 
 :w
 // Only the first variable is annotated with @inline.
@@ -164,4 +164,4 @@ module internal
 //│ ║  l.137: 	@volatile let
 //│ ╙──       	 ^^^^^^^^
 //│ counter = 0
-//│ empty = ''
+//│ empty = ""

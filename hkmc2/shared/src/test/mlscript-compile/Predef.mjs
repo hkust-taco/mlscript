@@ -194,6 +194,11 @@ Predef1 = class Predef {
     tmp1 = tmp(...xs) ?? null;
     return globalThis.console.log(...tmp1) ?? null;
   } 
+  static printRaw(x4) {
+    let tmp;
+    tmp = Predef.render(x4);
+    return globalThis.console.log(tmp) ?? null;
+  } 
   static interleave(sep) {
     return (...args) => {
       let res, len, i, scrut, idx, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
@@ -242,21 +247,95 @@ Predef1 = class Predef {
     }
   } 
   static render(arg1) {
-    let tmp, tmp1, tmp2, tmp3, tmp4;
-    if (arg1 instanceof globalThis.Array) {
-      tmp = Predef.fold((arg11, arg2) => {
-        return arg11 + arg2;
-      });
-      tmp1 = Predef.interleave(", ");
-      tmp2 = Predef.map(Predef.render);
-      tmp3 = tmp2(...arg1) ?? null;
-      tmp4 = tmp1(...tmp3) ?? null;
-      return tmp("[", ...tmp4, "]") ?? null;
+    let ts, p, scrut, scrut1, scrut2, nme, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20;
+    if (arg1 === undefined) {
+      return "undefined";
     } else {
-      if (typeof arg1 === 'string') {
-        return globalThis.JSON.stringify(arg1) ?? null;
+      if (arg1 === null) {
+        return "null";
       } else {
-        return globalThis.String(arg1);
+        if (arg1 instanceof globalThis.Array) {
+          tmp = Predef.fold((arg11, arg2) => {
+            return arg11 + arg2;
+          });
+          tmp1 = Predef.interleave(", ");
+          tmp2 = Predef.map(Predef.render);
+          tmp3 = tmp2(...arg1) ?? null;
+          tmp4 = tmp1(...tmp3) ?? null;
+          return tmp("[", ...tmp4, "]") ?? null;
+        } else {
+          if (typeof arg1 === 'string') {
+            return globalThis.JSON.stringify(arg1) ?? null;
+          } else {
+            if (arg1 instanceof globalThis.Set) {
+              tmp5 = Predef.fold((arg11, arg2) => {
+                return arg11 + arg2;
+              });
+              tmp6 = Predef.interleave(", ");
+              tmp7 = Predef.map(Predef.render);
+              tmp8 = tmp7(...arg1) ?? null;
+              tmp9 = tmp6(...tmp8) ?? null;
+              return tmp5("Set{", ...tmp9, "}") ?? null;
+            } else {
+              if (arg1 instanceof globalThis.Map) {
+                tmp10 = Predef.fold((arg11, arg2) => {
+                  return arg11 + arg2;
+                });
+                tmp11 = Predef.interleave(", ");
+                tmp12 = Predef.map(Predef.render);
+                tmp13 = tmp12(...arg1) ?? null;
+                tmp14 = tmp11(...tmp13) ?? null;
+                return tmp10("Map{", ...tmp14, "}") ?? null;
+              } else {
+                if (arg1 instanceof globalThis.Function) {
+                  p = globalThis.Object.getOwnPropertyDescriptor(arg1, "prototype");
+                  if (p instanceof globalThis.Object) {
+                    scrut = p["writable"];
+                    if (scrut === true) {
+                      tmp15 = true;
+                    } else {
+                      tmp15 = false;
+                    }
+                  } else {
+                    tmp15 = false;
+                  }
+                  if (p === undefined) {
+                    tmp16 = true;
+                  } else {
+                    tmp16 = false;
+                  }
+                  scrut1 = tmp15 || tmp16;
+                  if (scrut1 === true) {
+                    scrut2 = arg1.name;
+                    if (scrut2 === "") {
+                      tmp17 = "";
+                    } else {
+                      nme = scrut2;
+                      tmp17 = " " + nme;
+                    }
+                    tmp18 = "[function" + tmp17;
+                    return tmp18 + "]";
+                  } else {
+                    return globalThis.String(arg1);
+                  }
+                } else {
+                  if (arg1 instanceof globalThis.Object) {
+                    return globalThis.String(arg1);
+                  } else {
+                    ts = arg1["toString"];
+                    if (ts === undefined) {
+                      tmp19 = typeof arg1;
+                      tmp20 = "[" + tmp19;
+                      return tmp20 + "]";
+                    } else {
+                      return ts.call(arg1) ?? null;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   } 

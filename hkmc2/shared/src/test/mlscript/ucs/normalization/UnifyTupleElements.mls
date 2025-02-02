@@ -37,9 +37,9 @@ fun foo(zs) = if zs is
 foo([Some(1), Some(3)])
 //│ = 4
 
-:expect 'done'
+:expect "done"
 foo([None, Some(1), Some(2)])
-//│ = 'done'
+//│ = "done"
 
 :re
 foo([Some(0)])

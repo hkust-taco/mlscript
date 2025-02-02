@@ -24,7 +24,7 @@ object Elaborator:
     "==", "!=", "<", "<=", ">", ">=",
     "===", "!==",
     "&&", "||")
-  val unaryOps = Set("-", "+", "!", "~")
+  val unaryOps = Set("-", "+", "!", "~", "typeof")
   val anyOps = Set("super")
   val builtins = binaryOps ++ unaryOps ++ anyOps
   val aliasOps = Map(

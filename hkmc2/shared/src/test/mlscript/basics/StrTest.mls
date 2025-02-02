@@ -6,23 +6,23 @@ open Str
 
 
 concat of "a", "b", "c"
-//│ = 'abc'
+//│ = "abc"
 
 concat of
   "a"
   "b"
   "c"
-//│ = 'abc'
+//│ = "abc"
 
 
 // TODO (~) should be sanitized
 
 (~)("a", "b", "c")
-//│ = 'ab'
+//│ = "ab"
 
 
 (~)("a")
-//│ = 'aundefined'
+//│ = "aundefined"
 
 :ge
 ~"a"
@@ -50,20 +50,20 @@ concat of
 //│ ═══[COMPILATION ERROR] Unexpected type annotations ~<error>
 
 (~) of "a", "b"
-//│ = 'ab'
+//│ = "ab"
 
 
 fun test(...xs) =
   concat of ...xs, "!"
 
 test("a", "b", "c")
-//│ = 'abc!'
+//│ = "abc!"
 
 
 "a" Str.concat2("b")
-//│ = 'ab'
+//│ = "ab"
 
 "a" Str.concat2 of "b"
-//│ = 'ab'
+//│ = "ab"
 
 

@@ -60,13 +60,13 @@ fun test(a) =
 
 let i = test(100)
 //│ > 100
-//│ i = Inner { b: 42 }
+//│ i = Inner(42)
 
 i.f(200)
-//│ = [ 100, 42, 200 ]
+//│ = [100, 42, 200]
 
 i.g(200)
-//│ = [ 100, 42, 200, 200 ]
+//│ = [100, 42, 200, 200]
 
 
 :sjs
@@ -114,7 +114,7 @@ fun test(a) =
 test(123)
 //│ > [123, 1]
 //│ > [123, 2]
-//│ = [ C1 { b: 1 }, C2 { b: 2 } ]
+//│ = [C1(1), C2(2)]
 
 
 :sjs
@@ -149,7 +149,7 @@ Foo(123)
 //│   toString() { return "Foo(" + globalThis.Predef.render(this.a) + ")"; }
 //│ };
 //│ Foo1(123)
-//│ = Foo { a: 123 }
+//│ = Foo(123)
 
 :sjs
 class Bar(x) with
@@ -182,4 +182,4 @@ Bar(1)
 //│   toString() { return "Bar(" + globalThis.Predef.render(this.x) + ")"; }
 //│ };
 //│ Bar1(1)
-//│ = Bar { x: 1 }
+//│ = Bar(1)

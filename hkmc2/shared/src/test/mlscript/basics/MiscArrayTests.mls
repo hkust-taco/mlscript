@@ -2,36 +2,36 @@
 
 
 let xs = [0, 1, 2]
-//│ xs = [ 0, 1, 2 ]
+//│ xs = [0, 1, 2]
 
 xs. print()
 //│ > [0, 1, 2]
 
 let f = xs. print
-//│ f = [Function (anonymous)]
+//│ f = [function]
 
 f()
 //│ > [0, 1, 2]
 
 xs.reverse()
-//│ = [ 2, 1, 0 ]
+//│ = [2, 1, 0]
 
 xs
-//│ = [ 2, 1, 0 ]
+//│ = [2, 1, 0]
 
 :re
 xs.map(x => x * 2)
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 3
 
 xs.map((x, i, a) => x * 2)
-//│ = [ 4, 2, 0 ]
+//│ = [4, 2, 0]
 
 :fixme
 xs.map((x, ...) => x * 2)
 //│ /!!!\ Uncaught error: scala.MatchError: Spread(keyword '...',Some(Loc(11,14,MiscArrayTests.mls:+30)),None) (of class hkmc2.syntax.Tree$Spread)
 
 xs.map((x, ..._) => x * 2)
-//│ = [ 4, 2, 0 ]
+//│ = [4, 2, 0]
 
 fun map(xs, f) = xs.map((x, ...bs) => f(x))
 

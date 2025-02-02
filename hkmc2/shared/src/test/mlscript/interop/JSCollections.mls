@@ -1,0 +1,53 @@
+:js
+
+
+let xs = new Set of [0, 1, 2]
+//│ xs = Set{0, 1, 2}
+
+let xs = new Set of tuple of 0, 1, 2
+//│ xs = Set{0, 1, 2}
+
+xs.size
+//│ = 3
+
+xs.add(3)
+//│ = Set{0, 1, 2, 3}
+
+xs.has(1)
+//│ = true
+
+xs.has(3)
+//│ = true
+
+xs.size
+//│ = 4
+
+
+let xs = new Map([[1, "a"],[2, "b"]])
+//│ xs = Map{[1, "a"], [2, "b"]}
+
+xs.size
+//│ = 2
+
+xs.get(1)
+//│ = "a"
+
+xs.set(3, "c")
+//│ = Map{[1, "a"], [2, "b"], [3, "c"]}
+
+xs.size
+//│ = 3
+
+xs.get(3)
+//│ = "c"
+
+xs.set(1, "_")
+//│ = Map{[1, "_"], [2, "b"], [3, "c"]}
+
+xs.size
+//│ = 3
+
+xs.get(1)
+//│ = "_"
+
+

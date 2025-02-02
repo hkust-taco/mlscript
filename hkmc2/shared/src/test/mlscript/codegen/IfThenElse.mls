@@ -13,7 +13,7 @@ if true then 1 else 0
 let f = x => if x then log("ok") else log("ko")
 //│ JS (unsanitized):
 //│ let f; f = (x) => { if (x === true) { return log("ok"); } else { return log("ko"); } }; null
-//│ f = [Function: f]
+//│ f = [function f]
 
 f(true)
 //│ > ok
@@ -38,7 +38,7 @@ let f = x => log((if x then "ok" else "ko") + "!")
 //│ };
 //│ f1 = tmp;
 //│ null
-//│ f = [Function: tmp]
+//│ f = [function tmp]
 
 :sjs
 let f = x => log((if x and x then "ok" else "ko") + "!")
@@ -60,7 +60,7 @@ let f = x => log((if x and x then "ok" else "ko") + "!")
 //│ };
 //│ f2 = tmp1;
 //│ null
-//│ f = [Function: tmp1]
+//│ f = [function tmp1]
 // --- TODO: What we want ---
 // this.f = (x) => {
 //   let tmp, tmp1, flag;
@@ -90,18 +90,18 @@ f(false)
 
 
 x => if x > 0 then log("Hi") else log("Bye")
-//│ = [Function (anonymous)]
+//│ = [function block$res10]
 
 x => log(if true then "Hi" else "Bye")
-//│ = [Function (anonymous)]
+//│ = [function block$res11]
 
 x => log(if x + 1 > 0 then "Hi" else "Bye")
-//│ = [Function (anonymous)]
+//│ = [function block$res12]
 
 x =>
   let str = concat(if x + 1 > 0 then "Hello" else "Bye", "World")
   log(str)
-//│ = [Function (anonymous)]
+//│ = [function block$res13]
 
 
 fun f(x, y) =

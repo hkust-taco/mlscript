@@ -33,12 +33,12 @@
 (x => x) + 1
 //│ JS (unsanitized):
 //│ ((x) => { return x; }) + 1
-//│ = '(...args) => {   globalThis.Predef.checkArgs("", 1, true, args.length);   let x = args[0];   return x; }1'
+//│ = "(...args) => {   globalThis.Predef.checkArgs(\"\", 1, true, args.length);   let x = args[0];   return x; }1"
 
 :sjs
 1 + (x => x)
 //│ JS (unsanitized):
 //│ 1 + ((x) => { return x; })
-//│ = '1(...args) => {   globalThis.Predef.checkArgs("", 1, true, args.length);   let x = args[0];   return x; }'
+//│ = "1(...args) => {   globalThis.Predef.checkArgs(\"\", 1, true, args.length);   let x = args[0];   return x; }"
 
 

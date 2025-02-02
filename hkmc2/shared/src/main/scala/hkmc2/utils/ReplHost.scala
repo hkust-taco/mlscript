@@ -108,10 +108,8 @@ class ReplHost(rootPath: Str)(using TL) {
     // Send the code
     send(wrapped)
     (parseQueryResult() match
-      case intermediate: Str =>
-        val lines = intermediate.splitSane('\n')
-        val result = lines.lastOption.getOrElse("")
-        ReplHost.Result(result, if lines.size < 2 then N else S(lines.init.mkString("\n")))
+      case output: Str =>
+        ReplHost.Result(output)
       case error: ReplHost.Error => error
     , consumeStderr())
   
@@ -124,7 +122,7 @@ class ReplHost(rootPath: Str)(using TL) {
   def execute(code: Str): ReplHost.Reply = {
     send(code)
     collectUntilPrompt() match
-    case res: Str => ReplHost.Result(res, None)
+    case res: Str => ReplHost.Result(res)
     case error: ReplHost.Error => error
   }
 
@@ -160,15 +158,10 @@ object ReplHost {
     * Represents a successful reply from Node.js.
     *
     * @param content the reply content, i.e. the final result
-    * @param intermediate the intermediate evaluation results
     */
-  final case class Result(content: Str, intermediate: Opt[Str]) extends Reply {
+  final case class Result(content: Str) extends Reply {
     override def map(f: Str => Reply): Reply = f(content)
-    override def toString(): Str = s"[success] $content${
-      intermediate match
-        case None | Some("") => s""
-        case Some(str) => s" (with output)"
-    }"
+    override def toString(): Str = s"[success] $content"
   }
 
   /**

@@ -6,13 +6,13 @@
 
 "a" +
   "b"
-//│ = 'ab'
+//│ = "ab"
 
 // FIXME
 "a" +
   // a
 "b"
-//│ = 'b'
+//│ = "b"
 
 // FIXME
 // :dp
@@ -41,7 +41,7 @@ fun (**) f1(a, b) = "[" + a + " * " + b + "]"
 fun (**) f2(a, b) = "(" + a + " + " + b + ")"
 
 1 ** 2
-//│ = '(1 + 2)'
+//│ = "(1 + 2)"
 
 // FIXME error is duplicated & refers to wrong name
 :e
@@ -72,7 +72,7 @@ fun (++) t() = 1
 // ——— ——— ———
 
 let g = [0]
-//│ g = [ 0 ]
+//│ g = [0]
 
 :fixme
 set g.0 += 1 // FIXME
@@ -80,7 +80,7 @@ set g.0 += 1 // FIXME
 
 :fixme
 set g.0 = g.0 + 1
-//│ > let selRes, tmp1, tmp2;try { selRes = g[0]; if (selRes === undefined) {   throw new this.Error("Access to required field '0' yielded 'undefined'"); } else {   tmp1 = selRes; } tmp2 = tmp1 + 1; g.0 = tmp2; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ > let selRes, tmp1, tmp2;try { selRes = g[0]; if (selRes === undefined) {   throw new this.Error("Access to required field '0' yielded 'undefined'"); } else {   tmp1 = selRes; } tmp2 = tmp1 + 1; g.0 = tmp2; block$res8 = null; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ >                                                                                                                                                                                                   ^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected number
 
@@ -151,14 +151,14 @@ f of
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
 //│ ║  l.150: 	  of 3
 //│ ╙──       	^^
-//│ = [Function (anonymous)]
+//│ = [function]
 
 (f of
   g of
     1
     2
 ) of 3
-//│ = [ [ 1, 2 ], 3 ]
+//│ = [[1, 2], 3]
 
 // ——— ——— ———
 
@@ -256,7 +256,7 @@ Cls.huh
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'huh' yielded 'undefined'
 
 let c = new Cls(123)
-//│ c = Cls { x: 123 }
+//│ c = Cls(123)
 
 c.x
 //│ = 123
@@ -265,7 +265,7 @@ c.x
 
 class Foo' with
   class Bar'
-//│ > let Foo$_1;try { Foo$_1 = class Foo$_ {   constructor() {     this.Bar' = class Bar$_ {       constructor() {}       toString() { return "Bar'"; }     };   }   toString() { return "Foo'"; } }; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ > let Foo$_1;try { Foo$_1 = class Foo$_ {   constructor() {     this.Bar' = class Bar$_ {       constructor() {}       toString() { return "Bar'"; }     };   }   toString() { return "Foo'"; } }; block$res35 = null; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ >                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string
 
@@ -285,6 +285,15 @@ module Example with
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
 //│ ║  l.276: 	  val a = this
 //│ ╙──       	^^
+
+// ——— ——— ———
+
+:fixme // ("Not in scope" error)
+let xs = new Oopsie
+//│ ╔══[ERROR] Name not found: Oopsie
+//│ ║  l.292: 	let xs = new Oopsie
+//│ ╙──       	             ^^^^^^
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: xs (class hkmc2.semantics.VarSymbol)
 
 // ——— ——— ———
 

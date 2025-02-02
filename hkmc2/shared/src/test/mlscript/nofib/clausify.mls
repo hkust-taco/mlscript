@@ -142,4 +142,4 @@ fun testClausify_nofib(n) =
   concat(map(clauses, xs))
 
 nofibListToString(testClausify_nofib(10))
-//│ = 'a <=\na <=\na <=\na <=\na <=\na <=\na <=\na <=\na <=\na <=\n'
+//│ = "a <=\na <=\na <=\na <=\na <=\na <=\na <=\na <=\na <=\na <=\n"

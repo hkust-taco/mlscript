@@ -12,7 +12,7 @@ handle h = Effect with
     "x"
 h.perform("y")
 let x = 123
-//│ = 'x'
+//│ = "x"
 
 :fixme
 x
