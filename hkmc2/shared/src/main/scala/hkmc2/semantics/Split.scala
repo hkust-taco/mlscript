@@ -4,13 +4,15 @@ package semantics
 import mlscript.utils.*, shorthands.*
 import syntax.*
 
-final case class Branch(scrutinee: Term.Ref, pattern: Pattern, continuation: Split) extends AutoLocated:
-  override def children: List[Located] = scrutinee :: pattern :: continuation :: Nil
-  def showDbg: String = s"${scrutinee.sym.nme} is ${pattern.showDbg} -> { ${continuation.showDbg} }"
+final case class Branch(scrutinee: Term.Ref, pattern: Opt[Pattern], continuation: Split) extends AutoLocated:
+  override def children: List[Located] = scrutinee :: pattern.toList ::: continuation :: Nil
+  def showDbg: String = s"${scrutinee.sym.nme} is ${pattern.fold("true")(_.showDbg)} -> { ${continuation.showDbg} }"
 
 object Branch:
+  def apply(scrutinee: Term.Ref, pattern: Pattern, continuation: Split): Branch =
+    Branch(scrutinee, S(pattern), continuation)
   def apply(scrutinee: Term.Ref, continuation: Split): Branch =
-    Branch(scrutinee, Pattern.Lit(Tree.BoolLit(true)), continuation)
+    Branch(scrutinee, N, continuation)
 
 enum Split extends AutoLocated with ProductWithTail:
   case Cons(head: Branch, tail: Split)
@@ -38,7 +40,7 @@ enum Split extends AutoLocated with ProductWithTail:
     case Split.End => Nil
   
   def subTerms: Ls[Term] = this match
-    case Split.Cons(head, tail) => head.scrutinee :: head.pattern.subTerms ++ tail.subTerms
+    case Split.Cons(head, tail) => head.scrutinee :: head.pattern.fold(Nil)(_.subTerms) ++ tail.subTerms
     case Split.Let(_, term, tail) => term :: tail.subTerms
     case Split.Else(term) => term :: Nil
     case Split.End => Nil
@@ -115,7 +117,7 @@ object Split:
       def branch(b: Branch, isTopLevel: Bool): Lines =
         val Branch(scrutinee, pattern, continuation) = b
         val rest = split(continuation, true, isTopLevel)
-        (s"${scrutinee.sym} is ${pattern.showDbg}" + 
+        (s"${scrutinee.sym} is ${pattern.fold("true")(_.showDbg)}" + 
           (if rest.length > 1 then " and" else s"")) #: rest
       val lines = split(s, true, true)
       (if prefix.isEmpty then lines else prefix #: lines).toIndentedString

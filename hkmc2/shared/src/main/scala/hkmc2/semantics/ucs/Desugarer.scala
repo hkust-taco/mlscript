@@ -114,23 +114,23 @@ class Desugarer(val elaborator: Elaborator)
           raise(ErrorReport(msg"only one branch is supported in shorthands" -> tree.toLoc :: Nil))
         termSplitShorthands(branch, finish)(fallback)(ctx)
     case coda is rhs => fallback => ctx =>
-      nominate(ctx, finish(term(coda)(using ctx)), false):
+      nominate(ctx, finish(term(coda)(using ctx))):
         patternSplitShorthands(rhs, _)(fallback)
     case matches => fallback =>
       // There are N > 0 conjunct matches. We use `::[T]` instead of `List[T]`.
       // Each match is represented by a pair of a _coda_ and a _pattern_
       // that is yet to be elaborated.
-      val (headCoda, headPattern, _) :: tail = disaggregate(matches)
+      val (headCoda, headPattern) :: tail = disaggregate(matches)
       // The `consequent` serves as the innermost split, based on which we
       // expand from the N-th to the second match.
       lazy val tailSplit =
         val innermostSplit = Function.const(Split.default(Term.Lit(Tree.BoolLit(true)))): Sequel
         tail.foldRight(innermostSplit):
-          case ((coda, pat, isTest), sequel) => ctx => trace(
+          case ((coda, pat), sequel) => ctx => trace(
             pre = s"conjunct matches <<< $tail",
             post = (res: Split) => s"conjunct matches >>> $res"
           ):
-            nominate(ctx, term(coda)(using ctx), isTest):
+            nominate(ctx, term(coda)(using ctx)):
               expandMatch(_, pat, sequel)(fallback)
       // We apply `finish` to the first coda and expand the first match.
       // Note that the scrutinee might be not an identifier.
@@ -140,7 +140,7 @@ class Desugarer(val elaborator: Elaborator)
           pre = s"shorthands <<< $matches",
           post = (res: Split) => s"shorthands >>> $res"
         ):
-          nominate(ctx, finish(term(headCoda)(using ctx)), false):
+          nominate(ctx, finish(term(headCoda)(using ctx))):
             expandMatch(_, headPattern, tailSplit)(fallback)
 
   private def patternSplitShorthands(tree: Tree, scrutSymbol: BlockLocalSymbol): Split => Sequel = tree match
@@ -155,16 +155,16 @@ class Desugarer(val elaborator: Elaborator)
       // There are N > 0 conjunct matches. We use `::[T]` instead of `List[T]`.
       // Each match is represented by a pair of a _coda_ and a _pattern_
       // that is yet to be elaborated.
-      val (headPattern, _, _) :: tail = disaggregate(patternAndMatches)
+      val (headPattern, _) :: tail = disaggregate(patternAndMatches)
       // The `consequent` serves as the innermost split, based on which we
       // expand from the N-th to the second match.
       val tailSplit = trace(s"conjunct matches <<< $tail"):
         val innermostSplit = Function.const(Split.default(Term.Lit(Tree.BoolLit(true)))): Sequel
         tail.foldRight(innermostSplit):
-          case ((coda, pat, isTest), sequel) => ctx =>
-            nominate(ctx, term(coda)(using ctx), isTest):
+          case ((coda, pat), sequel) => ctx =>
+            nominate(ctx, term(coda)(using ctx)):
               expandMatch(_, pat, sequel)(fallback)
-      expandMatch(scrutSymbol, headPattern, tailSplit)(fallback)
+      expandMatch(scrutSymbol, S(headPattern), tailSplit)(fallback)
 
   /** Desugar a _term split_ (TS) into a _split_ of core abstract syntax.
    *  @param tree the tree representing the term split.
@@ -204,13 +204,13 @@ class Desugarer(val elaborator: Elaborator)
         ):
           termSplit(branch, finish)(elabFallback(fallback)(ctx))(ctx).withLocOf(t)
     case coda is rhs => fallback => ctx =>
-      nominate(ctx, finish(term(coda)(using ctx)), false):
+      nominate(ctx, finish(term(coda)(using ctx))):
         patternSplit(rhs, _)(fallback)
     case matches ~> consequent => fallback =>
       // There are N > 0 conjunct matches. We use `::[T]` instead of `List[T]`.
       // Each match is represented by a pair of a _coda_ and a _pattern_
       // that is yet to be elaborated.
-      val (headCoda, headPattern, _) :: tail = disaggregate(matches)
+      val (headCoda, headPattern) :: tail = disaggregate(matches)
       // The `consequent` serves as the innermost split, based on which we
       // expand from the N-th to the second match.
       lazy val tailSplit =
@@ -218,11 +218,11 @@ class Desugarer(val elaborator: Elaborator)
           case L(tree) => termSplit(tree, identity)(Split.End)
           case R(tree) => (ctx: Ctx) => Split.default(term(tree)(using ctx))
         tail.foldRight(innermostSplit):
-          case ((coda, pat, isTest), sequel) => ctx => trace(
+          case ((coda, pat), sequel) => ctx => trace(
             pre = s"conjunct matches <<< $tail",
             post = (res: Split) => s"conjunct matches >>> $res"
           ):
-            nominate(ctx, term(coda)(using ctx), isTest):
+            nominate(ctx, term(coda)(using ctx)):
               expandMatch(_, pat, sequel)(Split.End)
       // We apply `finish` to the first coda and expand the first match.
       // Note that the scrutinee might be not an identifier.
@@ -232,7 +232,7 @@ class Desugarer(val elaborator: Elaborator)
           pre = s"termBranch <<< $matches then $consequent",
           post = (res: Split) => s"termBranch >>> $res"
         ):
-          nominate(ctx, finish(term(headCoda)(using ctx)), false):
+          nominate(ctx, finish(term(headCoda)(using ctx))):
             expandMatch(_, headPattern, tailSplit)(fallback)
     case tree @ App(opIdent @ Ident(opName), rawTup @ Tup(lhs :: rhs :: Nil)) => fallback => ctx => trace(
       pre = s"termSplit: after op <<< $opName",
@@ -241,7 +241,7 @@ class Desugarer(val elaborator: Elaborator)
       // Resolve the operator.
       val opRef = term(opIdent)
       // Elaborate and finish the LHS. Nominate the LHS if necessary.
-      nominate(ctx, finish(term(lhs)(using ctx)), false): lhsSymbol =>
+      nominate(ctx, finish(term(lhs)(using ctx))): lhsSymbol =>
         // Compose a function that takes the RHS and finishes the application.
         val finishInner = (rhsTerm: Term) =>
           val first = Fld(FldFlags.empty, lhsSymbol.ref(/* FIXME ident? */), N)
@@ -251,7 +251,7 @@ class Desugarer(val elaborator: Elaborator)
           Term.App(opRef, arguments)(tree, joint)
         termSplit(rhs, finishInner)(fallback)
     case tree @ App(lhs, blk @ OpBlock(opRhsApps)) => fallback => ctx =>
-      nominate(ctx, finish(term(lhs)(using ctx)), false): vs =>
+      nominate(ctx, finish(term(lhs)(using ctx))): vs =>
         val mkInnerFinish = (op: Term) => (rhsTerm: Term) =>
           val first = Fld(FldFlags.empty, vs.ref(/* FIXME ident? */), N)
           val second = Fld(FldFlags.empty, rhsTerm, N)
@@ -294,17 +294,16 @@ class Desugarer(val elaborator: Elaborator)
   /** Given a elaborated scrutinee, give it a name and add it to the context.
    *  @param baseCtx the context to be extended with the new symbol
    *  @param scrutinee the elaborated scrutinee
-   *  @param isTest a flag indicating whether this is a test or not
    *  @param cont the continuation that needs the symbol and the context
    */
-  def nominate(baseCtx: Ctx, scrutinee: Term, isTest: Bool)
+  def nominate(baseCtx: Ctx, scrutinee: Term)
               (cont: BlockLocalSymbol => Sequel): Split = scrutinee match
     case ref @ Term.Ref(symbol: VarSymbol) =>
       val innerCtx = baseCtx + (ref.tree.name -> symbol)
       cont(symbol)(innerCtx)
     case _ =>
       val name = "scrut"
-      val symbol = if isTest then TestSymbol(name) else TempSymbol(N, name)
+      val symbol = TempSymbol(N, name)
       val innerCtx = baseCtx + (name -> symbol)
       Split.Let(symbol, scrutinee, cont(symbol)(innerCtx))
 
@@ -332,16 +331,16 @@ class Desugarer(val elaborator: Elaborator)
    *          `::[T]` (instead of `List[T]`) so that the head element can be
    *          retrieved in a type-safe manner
    */
-  def disaggregate(tree: Tree): ::[(Tree, Tree, Bool)] = trace(
+  def disaggregate(tree: Tree): ::[(Tree, Opt[Tree])] = trace(
     pre = s"disaggregate <<< $tree", 
-    post = (ms: ::[(Tree, Tree, Bool)]) =>
+    post = (ms: ::[(Tree, Opt[Tree])]) =>
       s"disaggregate >>> ${ms.mkString(", ")}"
   ):
-    type TT = (Tree, Tree, Bool)
+    type TT = (Tree, Opt[Tree])
     def go(tree: Tree, acc: TT => ::[TT]): () => ::[TT] = tree match
       case lhs and rhs  => go(lhs, ::(_, go(rhs, acc)()))
-      case scrut is pat => () => acc((scrut, pat, false))
-      case test         => () => acc((test, BoolLit(true), true))
+      case scrut is pat => () => acc((scrut, S(pat)))
+      case test         => () => acc((test, N))
     go(tree, ::(_, Nil))()
 
   /** Desugar a _pattern split_ (PS) into a _split_ of core abstract syntax.
@@ -383,7 +382,7 @@ class Desugarer(val elaborator: Elaborator)
       // There are N > 0 conjunct matches. We use `::[T]` instead of `List[T]`.
       // Each match is represented by a pair of a _coda_ and a _pattern_
       // that is yet to be elaborated.
-      val (headPattern, _, _) :: tail = disaggregate(patternAndMatches)
+      val (headPattern, _) :: tail = disaggregate(patternAndMatches)
       // The `consequent` serves as the innermost split, based on which we
       // expand from the N-th to the second match.
       val tailSplit =
@@ -391,13 +390,13 @@ class Desugarer(val elaborator: Elaborator)
           case L(tree) => termSplit(tree, identity)(Split.End)
           case R(tree) => (ctx: Ctx) => Split.default(term(tree)(using ctx))
         tail.foldRight(innermostSplit):
-          case ((coda, pat, isTest), sequel) => ctx =>
-            nominate(ctx, term(coda)(using ctx), isTest):
+          case ((coda, pat), sequel) => ctx =>
+            nominate(ctx, term(coda)(using ctx)):
               expandMatch(_, pat, sequel)(Split.End)
         .traced(
           pre = s"conjunct matches <<< $tail",
           post = (res: Split) => s"conjunct matches >>> $res")
-      expandMatch(scrutSymbol, headPattern, tailSplit)(fallback).traced(
+      expandMatch(scrutSymbol, S(headPattern), tailSplit)(fallback).traced(
         pre = s"patternBranch <<< $patternAndMatches -> ${consequent.fold(_.showDbg, _.showDbg)}",
         post = (res: Split) => s"patternBranch >>> ${res.showDbg}")
     case _ =>
@@ -407,11 +406,11 @@ class Desugarer(val elaborator: Elaborator)
   /** Elaborate a single match (a scrutinee and a pattern) and forms a split
    *  with an innermost split as the sequel of the match.
    *  @param scrutSymbol the symbol representing the scrutinee
-   *  @param pattern the un-elaborated pattern
+   *  @param patternOpt the un-elaborated pattern
    *  @param sequel the innermost split
    *  @return a function that takes the tail of the split and a context
    */
-  def expandMatch(scrutSymbol: BlockLocalSymbol, pattern: Tree, sequel: Sequel): Split => Sequel =
+  def expandMatch(scrutSymbol: BlockLocalSymbol, patternOpt: Opt[Tree], sequel: Sequel): Split => Sequel =
     def ref = scrutSymbol.ref(/* FIXME ident? */)
     def dealWithCtorCase(ctor: Ctor, compile: Bool)(fallback: Split): Sequel = ctx =>
       val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
@@ -482,7 +481,9 @@ class Desugarer(val elaborator: Elaborator)
         // Raise an error and discard `sequel`. Use `fallback` instead.
         raise(ErrorReport(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc :: Nil))
         fallback
-    pattern.deparenthesized match
+    patternOpt match
+    case N => fallback => ctx => Branch(ref, N, sequel(ctx)) ~: fallback
+    case S(pattern) => pattern.deparenthesized match
       // A single wildcard pattern.
       case Under() => _ => ctx => sequel(ctx)
       // Alias pattern
@@ -491,7 +492,7 @@ class Desugarer(val elaborator: Elaborator)
         val inner = (ctx: Ctx) =>
           val ctxWithAlias = ctx + (alias.name -> aliasSymbol)
           Split.Let(aliasSymbol, ref, sequel(ctxWithAlias))
-        expandMatch(scrutSymbol, pat, inner)(fallback)
+        expandMatch(scrutSymbol, S(pat), inner)(fallback)
       case id @ Ident(nme) if nme.headOption.forall(_.isLower) => fallback => ctx =>
         val aliasSymbol = VarSymbol(id)
         val ctxWithAlias = ctx + (nme -> aliasSymbol)
@@ -565,7 +566,7 @@ class Desugarer(val elaborator: Elaborator)
       // A single pattern in conjunction with more conditions
       case pattern and consequent => fallback => ctx =>
         val innerSplit = termSplit(consequent, identity)(Split.End)
-        expandMatch(scrutSymbol, pattern, innerSplit)(fallback)(ctx)
+        expandMatch(scrutSymbol, S(pattern), innerSplit)(fallback)(ctx)
       case Jux(Ident(".."), Ident(_)) => fallback => _ =>
         raise(ErrorReport(msg"Illegal rest pattern." -> pattern.toLoc :: Nil))
         fallback
@@ -591,7 +592,7 @@ class Desugarer(val elaborator: Elaborator)
       post = (r: Sequel) => s"subMatches (nested) >>>"
     ):
       val innermostSplit = subMatches(rest, sequel)(fallback)
-      expandMatch(scrutinee, pattern, innermostSplit)(fallback)
+      expandMatch(scrutinee, S(pattern), innermostSplit)(fallback)
   
   /** Desugar `case` expressions. */
   def apply(tree: Case, scrut: VarSymbol)(using Ctx): Split =

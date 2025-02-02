@@ -47,7 +47,11 @@ let f = x => log((if x and x then "ok" else "ko") + "!")
 //│ tmp1 = (x) => {
 //│   let tmp2, tmp3;
 //│   if (x === true) {
-//│     tmp2 = "ok";
+//│     if (x === true) {
+//│       tmp2 = "ok";
+//│     } else {
+//│       tmp2 = "ko";
+//│     }
 //│   } else {
 //│     tmp2 = "ko";
 //│   }

@@ -81,12 +81,12 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
   ):
     def rec(split: Split)(using vs: VarSet): Split = split match
       case Split.Cons(Branch(scrutinee, pattern, consequent), alternative) => pattern match
-        case pattern @ (Pattern.Lit(_) | _: Pattern.ClassLike | Pattern.Tuple(_, _)) =>
-          log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
+        case pattern @ (S(_: (Pattern.Lit | Pattern.ClassLike | Pattern.Tuple)) | N) =>
+          log(s"MATCH: ${scrutinee.showDbg} is ${pattern.fold("true")(_.showDbg)}")
           val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
           val whenFalse = rec(specialize(alternative, -, scrutinee, pattern).clearFallback)
           Branch(scrutinee, pattern, whenTrue) ~: whenFalse
-        case Pattern.Synonym(symbol, arguments) => scoped("ucs:rp"):
+        case S(Pattern.Synonym(symbol, arguments)) => scoped("ucs:rp"):
           log(s"SYNONYM: ${scrutinee.showDbg} is $symbol")
           import DeBrujinSplit.*, PatternStub.*
           val pattern2 = ClassLike(ConstructorLike.Instantiation(symbol, arguments))
@@ -136,7 +136,7 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
                 val funcBody: Term = Term.IfLike(Keyword.`if`, bodySplit)(bodySplit)
                 Term.Lam(paramList, funcBody)
               Split.Let(symbol, definition, inner)
-        case _ =>
+        case S(pattern) =>
           raiseDesugaringError(msg"unsupported pattern matching: ${scrutinee.toString} is ${pattern.toString}" -> pattern.toLoc)
           Split.default(Term.Error)
       case Split.Let(v, _, tail) if vs has v =>
@@ -161,9 +161,9 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
       split: Split,
       mode: Mode,
       scrutinee: Term.Ref,
-      pattern: Pattern
+      patternOpt: Opt[Pattern]
   )(using VarSet): Split = trace(
-    pre = s"S$mode <<< ${scrutinee.showDbg} is ${pattern.showDbg} : ${Split.display(split)}",
+    pre = s"S$mode <<< ${scrutinee.showDbg} is ${patternOpt.fold("true")(_.showDbg)} : ${Split.display(split)}",
     post = (r: Split) => s"S$mode >>> ${Split.display(r)}"
   ):
     def rec(split: Split)(using mode: Mode, vs: VarSet): Split = split match
@@ -172,12 +172,12 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
       case split @ Split.Let(sym, _, tail) =>
         log(s"CASE Let ${sym}")
         split.copy(tail = rec(tail))
-      case split @ Split.Cons(head, tail) =>
+      case split @ Split.Cons(head @ Branch(thatScrutinee, thatPatternOpt, continuation), tail) =>
         log(s"CASE Cons ${head.showDbg}")
-        head match
-          case Branch(Term.Ref(_: TestSymbol), Pattern.Lit(Tree.BoolLit(true)), continuation) =>
+        (patternOpt, thatPatternOpt) match
+          case (N, N) =>
             head.copy(continuation = rec(continuation)) ~: rec(tail)
-          case Branch(thatScrutinee, thatPattern, continuation) =>
+          case (S(pattern), S(thatPattern)) =>
             if scrutinee === thatScrutinee then mode match
               case + =>
                 log(s"Case 1.1: $scrutinee === $thatScrutinee")
@@ -220,6 +220,9 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
             else
               log(s"Case 2: $scrutinee =/= $thatScrutinee")
               head.copy(continuation = rec(continuation)) ~: rec(tail)
+          case (_, _) =>
+            log(s"Case 2: $scrutinee =/= $thatScrutinee")
+            head.copy(continuation = rec(continuation)) ~: rec(tail)
         end match
     end rec
     rec(split)(using mode, summon)
