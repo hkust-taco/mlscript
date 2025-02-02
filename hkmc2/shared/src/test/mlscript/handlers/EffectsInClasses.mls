@@ -69,6 +69,22 @@ class Lol(h) with
 //│ null
 
 
+
+:fixme
+handle h = Effect with
+  fun perform(arg)(k) =
+    print(arg)
+    k()
+abstract class Eff with
+  fun test()
+  h.perform("x")
+handle k = Eff with
+  fun test()(k) = k()
+k.test()
+print("test")
+//│ ═══[RUNTIME ERROR] TypeError: k.test is not a function
+
+
 let oops = 
   handle h = Effect with
     fun perform(arg)(k) =
@@ -104,9 +120,9 @@ let oops =
   Lol(h)
 //│ > k
 //│ > b
-//│ oops = Lol { h: Handler$h$2 {} }
+//│ oops = Lol { h: Handler$h$3 {} }
 
 oops.h
-//│ = Handler$h$2 {}
+//│ = Handler$h$3 {}
 
 
