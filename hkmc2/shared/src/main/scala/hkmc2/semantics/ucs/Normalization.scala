@@ -182,7 +182,7 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
         head match
           case Branch(thatScrutineeVar, Pattern.Var(alias), continuation) =>
             Split.Let(alias, thatScrutineeVar, rec(continuation))
-          case Branch(test, Pattern.Lit(Tree.BoolLit(true)), continuation) =>
+          case Branch(Term.Ref(_: TestSymbol), Pattern.Lit(Tree.BoolLit(true)), continuation) =>
             head.copy(continuation = rec(continuation)) ~: rec(tail)
           case Branch(thatScrutinee, thatPattern, continuation) =>
             if scrutinee === thatScrutinee then mode match

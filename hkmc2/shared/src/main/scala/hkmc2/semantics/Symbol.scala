@@ -97,6 +97,9 @@ class TempSymbol(val trm: Opt[Term], dbgNme: Str = "tmp")(using State) extends B
   override def toString: Str = s"$$${super.toString}"
   override def subst(using s: SymbolSubst): TempSymbol = s.mapTempSym(this)
 
+/** A special `TempSymbol` created to cache the result of Boolean condition
+ *  terms. We need to distinguish such symbols in normalization. */
+class TestSymbol(dbgNme: Str)(using State) extends TempSymbol(N, dbgNme)
 
 // * When instantiating forall-qualified TVs, we need to duplicate the information
 // * for pretty-printing, but each instantiation should be different from each other

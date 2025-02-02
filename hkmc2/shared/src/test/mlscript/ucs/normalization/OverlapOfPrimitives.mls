@@ -68,13 +68,11 @@ fun test(x, p) = if x is
   true then "false"
   false then "true"
 //│ Normalized:
-//│ >  if
-//│ >    x is refined Bool and
-//│ >      let $scrut = p#666(x#666)
-//│ >      $scrut is true then "great"
-//│ >      x is true then "false"
-//│ >      x is false then "true"
+//│ >  if x is refined Bool and
+//│ >    let $scrut = p#666(x#666)
+//│ >    $scrut is true then "great"
 //│ >    x is true then "false"
+//│ >    x is false then "true"
 
 fun test(x, p) = if x is
   Object and p(x) then "great"
@@ -86,13 +84,11 @@ fun test(x, p) = if x is
 //│ >    x is Object and
 //│ >      let $scrut = p#666(x#666)
 //│ >      $scrut is true then "great"
-//│ >      x is true then "false"
 //│ >    x is refined Bool and
 //│ >      let $scrut = p#666(x#666)
 //│ >      $scrut is true then "great, again"
 //│ >      x is true then "false"
 //│ >      x is false then "true"
-//│ >    x is true then "false"
 
 object Foo
 
