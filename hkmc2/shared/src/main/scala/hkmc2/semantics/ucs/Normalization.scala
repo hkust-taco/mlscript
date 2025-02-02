@@ -40,8 +40,6 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
         case Split.Cons(head, tail) => Split.Cons(head, tail ++ those)
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ++ those)
         case Split.Else(_) /* impossible */ | Split.End => those)
-
-  /** We don't care about `Pattern.Var` because they won't appear in `specialize`. */
   extension (lhs: Pattern)
     /** Checks if two patterns are the same. */
     def =:=(rhs: Pattern): Bool = (lhs, rhs) match
@@ -83,9 +81,6 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
   ):
     def rec(split: Split)(using vs: VarSet): Split = split match
       case Split.Cons(Branch(scrutinee, pattern, consequent), alternative) => pattern match
-        case Pattern.Var(vs) =>
-          log(s"ALIAS: $scrutinee is $vs")
-          Split.Let(vs, scrutinee, rec(consequent ++ alternative))
         case pattern @ (Pattern.Lit(_) | _: Pattern.ClassLike | Pattern.Tuple(_, _)) =>
           log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
           val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
@@ -180,8 +175,6 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
       case split @ Split.Cons(head, tail) =>
         log(s"CASE Cons ${head.showDbg}")
         head match
-          case Branch(thatScrutineeVar, Pattern.Var(alias), continuation) =>
-            Split.Let(alias, thatScrutineeVar, rec(continuation))
           case Branch(Term.Ref(_: TestSymbol), Pattern.Lit(Tree.BoolLit(true)), continuation) =>
             head.copy(continuation = rec(continuation)) ~: rec(tail)
           case Branch(thatScrutinee, thatPattern, continuation) =>
