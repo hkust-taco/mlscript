@@ -13,7 +13,6 @@ fun f() =
   h.f()
   return 3
 f()
-//│ > Bye!
 //│ = 3
 
 fun f() =
@@ -29,7 +28,6 @@ fun f() =
 
 :expect 3
 f()
-//│ > Bye!
 //│ = 3
 
 let l = () =>
