@@ -279,7 +279,11 @@ sealed abstract class Result:
 // type Local = LocalSymbol
 type Local = Symbol
 
-case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool, val isEffectful: Bool) extends Result
+/* mayRaiseEffects indicates whether this call may raise effect (algebraic effect),
+ * regardless of whether the check for effect is inserted or not.
+ * Note that the check for effect is inserted during HandlerLowering and setting this to true
+ * after handler is lowered does not have any effect on the code generation. */
+case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool, val mayRaiseEffects: Bool) extends Result
 
 case class Instantiate(cls: Path, args: Ls[Path]) extends Result
 

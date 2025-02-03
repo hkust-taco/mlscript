@@ -305,13 +305,13 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
         case Return(c @ Call(fun, args), false) if handlerCtx.isHandleFree =>
           val fun2 = applyPath(fun)
           val args2 = args.mapConserve(applyArg)
-          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.isEffectful)
+          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
           if c2 is c then b else Return(c2, false)
         // Optimization to avoid generation of unnecessary variables
-        case Assign(lhs, c @ Call(fun, args), rest) if c.isEffectful =>
+        case Assign(lhs, c @ Call(fun, args), rest) if c.mayRaiseEffects =>
           val fun2 = applyPath(fun)
           val args2 = args.mapConserve(applyArg)
-          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.isEffectful)
+          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
           ResultPlaceholder(lhs, freshId(), !handlerCtx.isHandleFree, c2, applyBlock(rest))
         case Assign(lhs, c @ Instantiate(cls, args), rest) =>
           val cls2 = applyPath(cls)
@@ -320,11 +320,11 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
           ResultPlaceholder(lhs, freshId(), !handlerCtx.isHandleFree, c2, applyBlock(rest))
         case _ => super.applyBlock(b)
       override def applyResult2(r: Result)(k: Result => Block): Block = r match
-        case c @ Call(fun, args) if c.isEffectful =>
+        case c @ Call(fun, args) if c.mayRaiseEffects =>
           val res = freshTmp("res")
           val fun2 = applyPath(fun)
           val args2 = args.mapConserve(applyArg)
-          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.isEffectful)
+          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
           ResultPlaceholder(res, freshId(), !handlerCtx.isHandleFree, c2, k(Value.Ref(res)))
         case c @ Instantiate(cls, args) =>
           val res = freshTmp("res")
