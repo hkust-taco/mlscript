@@ -326,8 +326,8 @@ class Desugarer(val elaborator: Elaborator)
    *  Representation of Lists and Its Application to the Function_ for details.
    * 
    *  @param tree the tree to desugar
-   *  @return a non-empty list of pairs of scrutinee and pattern represented
-   *          in type `::[T]` (instead of `List[T]`) so that the head element
+   *  @return a non-empty list of scrutinee and pattern pairs represented in
+   *          type `::[T]` (instead of `List[T]`) so that the head element
    *          can be retrieved in a type-safe manner
    */
   def disaggregate(tree: Tree): ::[(Tree, Tree)] = trace(
