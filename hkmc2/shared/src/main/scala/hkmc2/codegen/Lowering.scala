@@ -397,9 +397,8 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
                 // [invariant:0] Some classes (e.g., `Int`) from `Prelude` does
                 // not exist at runtime. If we do lowering on `trm`, backends
                 // (e.g., `JSBuilder`) will generate selection that crashes.
-                // The second parameter of `Case.Cls` is a dummy value that
-                // leads the program into an unreachable state and will be
-                // discarded in the backend.
+                // In this case the second parameter of `Case.Cls` will not be used.
+                // So we make it `Predef.unreachable` here.
                 mkMatch(Case.Cls(cls, unreachableFn) -> go(tail, topLevel = false))
               case Pattern.ClassLike(cls, trm, args0, _refined) =>
                 subTerm_nonTail(trm): st =>
