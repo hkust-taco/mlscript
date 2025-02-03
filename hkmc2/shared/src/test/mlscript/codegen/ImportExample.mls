@@ -46,15 +46,15 @@ inc / 123
 //│ = 124
 
 test("hello")
-//│ = 'str'
+//│ = "str"
 
 test / (inc / 123)
-//│ = 'int'
+//│ = "int"
 
 test / inc / 123
-//│ = 'int'
+//│ = "int"
 
 test / inc / 123 * 0.5
-//│ = 'num'
+//│ = "num"
 
 

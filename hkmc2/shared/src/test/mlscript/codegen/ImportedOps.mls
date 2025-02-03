@@ -18,15 +18,15 @@ foo()
 //│   return M1.concat(tmp, "c");
 //│ };
 //│ foo()
-//│ = 'abc'
+//│ = "abc"
 
 let name = "_"
-//│ name = '_'
+//│ name = "_"
 
 let display(balance) = balance
-//│ display = [Function: display]
+//│ display = [function display]
 
 "b" ~ display("-")
-//│ = 'b-'
+//│ = "b-"
 
 

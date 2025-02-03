@@ -63,8 +63,8 @@ A #: B #: A #: null is @compile Stack(B)
 
 let zeroOne = 0 #: 1 #: null
 let oneZero = 1 #: 0 #: null
-//│ oneZero = Pair { first: 1, second: Pair { first: 0, second: null } }
-//│ zeroOne = Pair { first: 0, second: Pair { first: 1, second: null } }
+//│ oneZero = Pair(1, Pair(0, null))
+//│ zeroOne = Pair(0, Pair(1, null))
 
 :global
 :expect true

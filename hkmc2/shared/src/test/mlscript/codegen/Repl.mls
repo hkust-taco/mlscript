@@ -7,46 +7,88 @@ val res: Int
 
 :showRepl
 fun res() = 1
-//│ REPL> Sending: let res;try { res = function res(...args) {   globalThis.Predef.checkArgs("res", 0, true, args.length);   return 1; }; null } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: block$res3 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let res;try { res = function res(...args) {   globalThis.Predef.checkArgs("res", 0, true, args.length);   return 1; }; block$res3 = null; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { this.Predef.printRaw(block$res3) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  null
+//│ >  null
 //│ REPL> Parsed:
+//│ >  null
 //│ >  null
 
 :showRepl
 2 + 2
-//│ REPL> Sending: try { 2 + 2 } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: block$res4 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: try { block$res4 = 2 + 2; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Parsed:
+//│ >  undefined
+//│ REPL> Sending: try { this.Predef.printRaw(block$res4) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  4
+//│ >  null
 //│ REPL> Parsed:
 //│ >  4
+//│ >  null
 //│ = 4
 
 :showRepl
 res
-//│ REPL> Sending: try { res } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: block$res5 = undefined
 //│ REPL> Collected:
-//│ >  [Function: res]
+//│ >  undefined
+//│ REPL> Sending: try { block$res5 = res; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
 //│ REPL> Parsed:
-//│ >  [Function: res]
-//│ = [Function: res]
+//│ >  undefined
+//│ REPL> Sending: try { this.Predef.printRaw(block$res5) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Collected:
+//│ >  [function res]
+//│ >  null
+//│ REPL> Parsed:
+//│ >  [function res]
+//│ >  null
+//│ = [function res]
 
 
 :showRepl
 :re
 let x = 1, log(x), x
-//│ REPL> Sending: let x, selRes, tmp, tmp1;try { x = 1; selRes = this.log; if (selRes === undefined) {   throw new this.Error("Access to required field 'log' yielded 'undefined'"); } else {   tmp = selRes; } tmp1 = tmp(x) ?? null; x } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Sending: block$res6 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let x, selRes, tmp, tmp1;try { x = 1; selRes = this.log; if (selRes === undefined) {   throw new this.Error("Access to required field 'log' yielded 'undefined'"); } else {   tmp = selRes; } tmp1 = tmp(x) ?? null; block$res6 = x; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ REPL> Collected:
 //│ >  ​Error: Access to required field 'log' yielded 'undefined'​
 //│ >  undefined
 //│ REPL> Parsed:
 //│ >  [runtime error] Error: Access to required field 'log' yielded 'undefined'
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'log' yielded 'undefined'
-//│ REPL> Sending: try { x } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Sending: try { this.Predef.printRaw(block$res6) } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Collected:
+//│ >  undefined
+//│ >  null
+//│ REPL> Parsed:
+//│ >  undefined
+//│ >  null
+//│ REPL> Sending: try { this.Predef.printRaw(x) } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
+//│ >  null
 //│ REPL> Parsed:
 //│ >  1
+//│ >  null
 //│ x = 1
 
 :import PredefJS.mls
@@ -54,31 +96,37 @@ let x = 1, log(x), x
 
 :showRepl
 let x = 1, log(x), x
-//│ REPL> Sending: let x1, tmp2;try { x1 = 1; tmp2 = log(x1); x1 } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: block$res8 = undefined
+//│ REPL> Collected:
+//│ >  undefined
+//│ REPL> Sending: let x1, tmp2;try { x1 = 1; tmp2 = log(x1); block$res8 = x1; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
-//│ >  1
+//│ >  undefined
 //│ REPL> Parsed:
 //│ >  1
-//│ >  1
+//│ >  undefined
 //│ > 1
-//│ = 1
-//│ REPL> Sending: try { x1 } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { this.Predef.printRaw(block$res8) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
+//│ >  null
 //│ REPL> Parsed:
 //│ >  1
+//│ >  null
+//│ = 1
+//│ REPL> Sending: try { this.Predef.printRaw(x1) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Collected:
+//│ >  1
+//│ >  null
+//│ REPL> Parsed:
+//│ >  1
+//│ >  null
 //│ x = 1
 
 
 // FIXME multiline result is treated as part stdout
 ["***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***"]
-//│ > [
-//│ >   '***', '***', '***',
-//│ >   '***', '***', '***',
-//│ >   '***', '***', '***',
-//│ >   '***', '***', '***',
-//│ >   '***', '***', '***'
-//│ = ]
+//│ = ["***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***"]
 
 

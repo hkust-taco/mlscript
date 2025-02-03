@@ -1,7 +1,4 @@
 
-declare type Array
-set Array.prototype.toString = globalThis.eval("(function() { return '(' + Array.prototype.join.call(this, ',') + ')'; })")
-
 type Char = String
 
 abstract class Option[out T]: Some[T] | None
@@ -30,8 +27,8 @@ object Nil extends List with
   fun toString() = "[]"
 fun _internal_cons_to_str(ls) = if ls is
   Nil then ""
-  h :: Nil then h.toString()
-  h :: t then h.toString() + "," + _internal_cons_to_str(t)
+  h :: Nil then render(h)
+  h :: t then render(h) + "," + _internal_cons_to_str(t)
 fun ltList(xs, ys, lt, gt) = if xs is
   Nil and
     ys is Nil then false

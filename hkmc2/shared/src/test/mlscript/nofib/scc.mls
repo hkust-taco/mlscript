@@ -50,6 +50,6 @@ fun testScc_nofib(d) =
   stronglyConnComp(edges, vertices)
 
 
-:expect '[[1],[2],[7,5,6],[3,4]]'
+:expect "[[1],[2],[7,5,6],[3,4]]"
 testScc_nofib(0).toString()
-//│ = '[[1],[2],[7,5,6],[3,4]]'
+//│ = "[[1],[2],[7,5,6],[3,4]]"

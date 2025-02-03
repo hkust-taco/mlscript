@@ -58,4 +58,4 @@ fun testInteger_nofib(n) = runalltests(-2100000000, n, 2100000000, -2100000000, 
 
 // NOTE: original input -2100000000 14000001 2100000000
 testInteger_nofib(700000001).toString()
-//│ = '[true,false,false,false,false,false,true,true,false,false,false,false,true,true,true,false,false,false,true,true,true,true,false,false,true,true,true,true,true,false,true,true,true,true,true,true]'
+//│ = "[true,false,false,false,false,false,true,true,false,false,false,false,true,true,true,false,false,false,true,true,true,true,false,false,true,true,true,true,true,false,true,true,true,true,true,true]"

@@ -57,7 +57,7 @@ sealed abstract class Block extends Product with AutoLocated:
     case HandleBlock(lhs, res, par, cls, handlers, bdy, rst) => 1 + handlers.map(_.body.size).sum + bdy.size + rst.size
   
   // TODO conserve if no changes
-  def mapTail(f: BlockTail => BlockTail): Block = this match
+  def mapTail(f: BlockTail => Block): Block = this match
     case b: BlockTail => f(b)
     case Begin(sub, rst) => Begin(sub, rst.mapTail(f))
     case Assign(lhs, rhs, rst) => Assign(lhs, rhs, rst.mapTail(f))
@@ -68,6 +68,13 @@ sealed abstract class Block extends Product with AutoLocated:
       Match(scrut, arms.map(_ -> _.mapTail(f)), dflt.map(_.mapTail(f)), rst)
     case Match(scrut, arms, dflt, rst) =>
       Match(scrut, arms, dflt, rst.mapTail(f))
+    case Label(label, body, rest) => Label(label, body, rest.mapTail(f))
+    case af @ AssignField(lhs, nme, rhs, rest) =>
+      AssignField(lhs, nme, rhs, rest.mapTail(f))(af.symbol)
+    case adf @ AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
+      AssignDynField(lhs, fld, arrayIdx, rhs, rest.mapTail(f))
+    case tb @ TryBlock(sub, fin, rest) =>
+      TryBlock(sub, fin, rest.mapTail(f))
   
   lazy val freeVars: Set[Local] = this match
     case Match(scrut, arms, dflt, rest) =>
@@ -143,7 +150,7 @@ case class Return(res: Result, implct: Bool) extends BlockTail
 
 case class Throw(exc: Result) extends BlockTail
 
-case class Label(label: Local, body: Block, rest: Block) extends BlockTail
+case class Label(label: Local, body: Block, rest: Block) extends Block
 
 case class Break(label: Local) extends BlockTail
 case class Continue(label: Local) extends BlockTail
@@ -276,7 +283,8 @@ case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool) extends Result
 case class Instantiate(cls: Path, args: Ls[Path]) extends Result
 
 sealed abstract class Path extends Result:
-  def selN(id: Tree.Ident) = Select(this, id)(N)
+  def selN(id: Tree.Ident): Path = Select(this, id)(N)
+  def selSN(id: Str): Path = selN(new Tree.Ident(id))
   def asArg = Arg(false, this)
 
 case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[FieldSymbol]) extends Path with ProductWithExtraInfo:

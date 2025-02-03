@@ -42,7 +42,7 @@ module Bar with
 
 
 val str = "oops"
-//│ str = 'oops'
+//│ str = "oops"
 
 open str { length, oops }
 

@@ -1,0 +1,37 @@
+:js
+
+
+Object.create(null) is Object
+//│ = false
+
+Object(0) is Object
+//│ = true
+
+(new Object(0)) is Object
+//│ = true
+
+Number(0) is Object
+//│ = false
+
+Number(0) is Number
+//│ = false
+
+(new Number(0)) is Object
+//│ = true
+
+(new Number(0)) is Number
+//│ = true
+
+
+let arr = [[1], [1, 1], [2, 1], [1, 2, 1, 1]]
+//│ arr = [[1], [1, 1], [2, 1], [1, 2, 1, 1]]
+
+arr.toString()
+//│ = "1,1,1,2,1,1,2,1,1"
+
+set Array.prototype.toString = globalThis.eval("(function() { return '(' + Array.prototype.join.call(this, ',') + ')'; })")
+
+arr.toString()
+//│ = "((1),(1,1),(2,1),(1,2,1,1))"
+
+

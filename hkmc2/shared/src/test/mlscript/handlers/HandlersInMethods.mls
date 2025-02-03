@@ -14,13 +14,13 @@ class Test with
         k(x * 2)
     h.perform("A", x) + h.perform("B", x + 1)
 let t = new Test
-//│ t = Test {}
+//│ t = Test
 
 [t.p(2), t.p(3)]
 //│ > A
 //│ > B
 //│ > A
 //│ > B
-//│ = [ 10, 14 ]
+//│ = [10, 14]
 
 

@@ -91,7 +91,7 @@ class Eff with
   fun perform(): ()
 class Box(n)
 let box = Box(0)
-//│ box = Box { n: 0 }
+//│ box = Box(0)
 
 
 :expect 5120

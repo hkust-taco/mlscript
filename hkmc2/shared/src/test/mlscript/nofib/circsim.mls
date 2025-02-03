@@ -90,13 +90,7 @@ fun scanlr(f, g, lu, ru, xs) =
 fun nearest_power_of_two(x) = until(a => a >= x, a => a * 2, 1)
 
 let emptyState = PS(-1, None_, -1, Nil, Nil)
-//│ > PS {
-//│ >   pid: -1,
-//│ >   compType: None_ { class: [class None_] },
-//│ >   pathDepth: -1,
-//│ >   inports: Nil { class: [class Nil] },
-//│ >   outports: Nil { class: [class Nil] }
-//│ emptyState = }
+//│ emptyState = PS(-1, None_, -1, [], [])
 
 fun pad_circuit(size_ins_outs_states) = if size_ins_outs_states is [size, ins, outs, states] then
   let p2 = nearest_power_of_two(size)
@@ -112,7 +106,7 @@ fun or2(x, y) = if x === T || y === T then T else F
 fun xor(x, y) = if x === y then T else F
 
 let emptyPacket = [-1, -1, F, false, 0, false, 0, 1]
-//│ emptyPacket = [ -1, -1, F { class: [class F] }, false, 0, false, 0, 1 ]
+//│ emptyPacket = [-1, -1, F, false, 0, false, 0, 1]
 
 fun send_right(a, b) = if a is [ia, sa, ma, qla, dla, qra, dra, ea] and b is [ib, sb, mb, qlb, dlb, qrb, drb, eb] and
   qra and (dra > eb) then [ia, sa, ma, qla, dla, qra, dra - eb, ea + eb]
@@ -321,4 +315,4 @@ fun testCircsim_nofib(n) = run(8, n)
 
 
 testCircsim_nofib(40).toString()
-//│ = '[[F,F,F,F,F,F,F,F],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T]]'
+//│ = "[[F,F,F,F,F,F,F,F],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T],[T,T,T,T,T,T,T,T]]"

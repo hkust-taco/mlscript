@@ -50,13 +50,13 @@ fun f(y) =
   x
   
 f(0)
-//│ = None { class: [class None] }
+//│ = None
 
 f(42)
-//│ = Some { value: 21 }
+//│ = Some(21)
 
 f(41)
-//│ = Some { value: 41 }
+//│ = Some(41)
 
 
 // Mix using `then` and `do`
@@ -78,13 +78,13 @@ fun g(y) =
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^
 
 g(0)
-//│ = None { class: [class None] }
+//│ = None
 
 g(42)
-//│ = Some { value: 21 }
+//│ = Some(21)
 
 g(41)
-//│ = Some { value: 41 }
+//│ = Some(41)
 
 
 // Completely using `then`
@@ -99,10 +99,10 @@ fun h(y) =
   x
   
 h(0)
-//│ = None { class: [class None] }
+//│ = None
 
 h(42)
-//│ = Some { value: 21 }
+//│ = Some(21)
 
 :re
 h(41)

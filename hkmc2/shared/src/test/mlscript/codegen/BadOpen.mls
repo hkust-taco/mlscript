@@ -36,7 +36,7 @@ y
 
 
 val Oops = "oops"
-//│ Oops = 'oops'
+//│ Oops = "oops"
 
 :e
 open Oops

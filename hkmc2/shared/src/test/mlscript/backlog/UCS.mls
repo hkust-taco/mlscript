@@ -78,7 +78,7 @@ if
 // ——— ——— ———
 
 let audits = new Set()
-//│ audits = Set(0) {}
+//│ audits = Set{}
 
 :fixme
 if audits.has(1) === true do
@@ -100,7 +100,7 @@ else
 if 1 + 0
     == 0 then "X"
     == 1 then "A"
-//│ = 'A'
+//│ = "A"
 
 if 1 + 1
     * 2 == 4 then "X"

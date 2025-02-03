@@ -4,33 +4,15 @@ import "../../mlscript-compile/apps/Accounting.mls"
 
 
 val acc = new Accounting
-//│ > Accounting {
-//│ >   warnings: [],
-//│ >   Project: [Function: Project] { class: [class Project] },
-//│ >   Line: [Function: Line] { class: [class Line] },
-//│ >   lines: [],
-//│ >   Report: [Function: Report] { class: [class Report] }
-//│ acc = }
+//│ acc = Accounting
 
 val proj = acc.Project("P1")
-//│ proj = Project { num: 'P1' }
+//│ proj = Project("P1")
 
 val l1 = acc.mkLine("L1", proj, 200_000, true)
 val l2 = acc.mkLine("L2", proj, 1_000_000, true)
-//│ > Line {
-//│ >   name: 'L1',
-//│ >   proj: Project { num: 'P1' },
-//│ >   starting_balance: 200000,
-//│ >   isMatchable: true,
-//│ >   balance: 200000
-//│ l1 = }
-//│ > Line {
-//│ >   name: 'L2',
-//│ >   proj: Project { num: 'P1' },
-//│ >   starting_balance: 1000000,
-//│ >   isMatchable: true,
-//│ >   balance: 1000000
-//│ l2 = }
+//│ l1 = Line("L1", Project("P1"), 200000, true)
+//│ l2 = Line("L2", Project("P1"), 1000000, true)
 
 
 :...

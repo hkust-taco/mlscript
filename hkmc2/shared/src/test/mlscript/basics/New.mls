@@ -4,14 +4,14 @@
 class Foo
 
 new Foo
-//│ = Foo {}
+//│ = Foo
 
 new Foo()
-//│ = Foo {}
+//│ = Foo
 
 new
   Foo
-//│ = Foo {}
+//│ = Foo
 
 :w
 new
@@ -20,7 +20,7 @@ new
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.18: 	  Foo
 //│ ╙──      	  ^^^
-//│ = Foo {}
+//│ = Foo
 
 // * Interesting... it tries to call `Foo()` and instantiate the resulting class value...
 :re
@@ -35,6 +35,6 @@ new
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
 //│ ║  l.34: 	    ()
 //│ ╙──      	    ^^
-//│ = Foo {}
+//│ = Foo
 
 

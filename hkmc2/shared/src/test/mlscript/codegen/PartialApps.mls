@@ -4,31 +4,31 @@
 fun foo(x, y, z) = [x, y, z]
 
 let f = foo(1, _, 3)
-//│ f = [Function: f]
+//│ f = [function f]
 
 f(2)
-//│ = [ 1, 2, 3 ]
+//│ = [1, 2, 3]
 
 :sjs
 let f = foo(1, _, _)
 //│ JS (unsanitized):
 //│ let f1; f1 = (_, _1) => { return foo(1, _, _1); }; null
-//│ f = [Function: f1]
+//│ f = [function f1]
 
 f(2, 3)
-//│ = [ 1, 2, 3 ]
+//│ = [1, 2, 3]
 
 let g = f(_, 3)
-//│ g = [Function: g]
+//│ g = [function g]
 
 g(2)
-//│ = [ 1, 2, 3 ]
+//│ = [1, 2, 3]
 
 foo(_, _, 3) of 1, 2
-//│ = [ 1, 2, 3 ]
+//│ = [1, 2, 3]
 
 foo(_, _, 3)(1, 2)
-//│ = [ 1, 2, 3 ]
+//│ = [1, 2, 3]
 
 :fixme
 foo(_, _, 3)(1, _)(2)
@@ -45,20 +45,20 @@ foo(..._)
 
 
 let h = _ - 2
-//│ h = [Function: h]
+//│ h = [function h]
 
 h(1)
 //│ = -1
 
 
 let i = _(0, 1, _)
-//│ i = [Function: i]
+//│ i = [function i]
 
 i((x, y, z) => x + y + z, 2)
 //│ = 3
 
 i((...args) => [...args], _)(2)
-//│ = [ 0, 1, 2 ]
+//│ = [0, 1, 2]
 
 
 123 |> (_ + 1)
@@ -72,7 +72,7 @@ i((...args) => [...args], _)(2)
 
 // * Note: lack of parens
 123 |> _ + 1 >> _ * 2
-//│ = [Function (anonymous)]
+//│ = [function]
 
 123 |> _ + 1 |> _ * 2
 //│ = 248
@@ -97,12 +97,12 @@ let j = _.x(123)
 :todo
 let j = _.x(1, _)
 //│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ j = [Function: j]
+//│ j = [function j]
 
 :todo // really support this?
 let j = _.x.y(1, _)
 //│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ j = [Function: j1]
+//│ j = [function j1]
 
 
 class C(a, b, c)
@@ -120,7 +120,7 @@ class C(a, b, c)
 
 
 _ - _ of 1, 2
-//│ = [Function (anonymous)]
+//│ = [function block$res33]
 
 (_ - _) of 1, 2
 //│ = -1
@@ -142,7 +142,7 @@ _ - 2 <| 1
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.137: 	1
 //│ ╙──       	^
-//│ = [Function: pipeInto]
+//│ = [function pipeInto]
 
 1
   |> _ - 2

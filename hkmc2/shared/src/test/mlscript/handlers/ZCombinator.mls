@@ -10,7 +10,7 @@ fun mkrec(g) =
 
 let fact = mkrec of self => x =>
   if x == 0 then 1 else self(x - 1) * x
-//│ fact = [Function (anonymous)]
+//│ fact = [function]
 
 fact(3)
 //│ = 6
@@ -31,7 +31,7 @@ fun mkrec(g) =
 let fact = mkrec of self => x =>
   if x == 0 then 1 
   else self(x - 1) * x
-//│ fact = [Function (anonymous)]
+//│ fact = [function]
 
 :stackSafe 1000
 fact(10000)
@@ -86,7 +86,7 @@ let fact =
         x * prev
     b
   mkrec(a)
-//│ fact = [Function: b]
+//│ fact = [function b]
 
 :expect 3628800
 :stackSafe 5

@@ -25,10 +25,10 @@ object
   PprInterface extends PprStyle
 
 let cNil = CNil
-//│ cNil = CNil { class: [class CNil] }
+//│ cNil = CNil
 
 let cNL = CNewline
-//│ cNL = CNewline { class: [class CNewline] }
+//│ cNL = CNewline
 
 fun cAppend(cs1, cs2) = CAppend(cs1, cs2)
 
@@ -169,7 +169,4 @@ fun testPretty_nofib() =
   ppShow(80, pretty_stuff) +: nofibStringToList("\n")
 
 nofibListToString(testPretty_nofib())
-//│ > '-42@This is a string\n' +
-//│ >   ', \n' +
-//│ >   'This is the label\n' +
-//│ =   '\txxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx\n'
+//│ = "-42@This is a string\n, \nThis is the label\n\txxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx xxxxx\n"

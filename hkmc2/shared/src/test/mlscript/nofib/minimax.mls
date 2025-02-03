@@ -45,109 +45,52 @@ let win1 =
   (1 :: 1 :: 1 :: Nil) ::
   (0 :: 0 :: 0 :: Nil) ::
   (0 :: 0 :: 0 :: Nil) :: Nil
-//│ > Cons {
-//│ >   head: Cons { head: 1, tail: Cons { head: 1, tail: [Cons] } },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: 0, tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Nil] }
-//│ >   }
-//│ win1 = }
+//│ win1 = [[1,1,1],[0,0,0],[0,0,0]]
 
 let win2 =
   (0 :: 0 :: 0 :: Nil) ::
   (1 :: 1 :: 1 :: Nil) ::
   (0 :: 0 :: 0 :: Nil) :: Nil
-//│ > Cons {
-//│ >   head: Cons { head: 0, tail: Cons { head: 0, tail: [Cons] } },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: 1, tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Nil] }
-//│ >   }
-//│ win2 = }
+//│ win2 = [[0,0,0],[1,1,1],[0,0,0]]
 
 let win3 =
   (0 :: 0 :: 0 :: Nil) ::
   (0 :: 0 :: 0 :: Nil) ::
   (1 :: 1 :: 1 :: Nil) :: Nil
-//│ > Cons {
-//│ >   head: Cons { head: 0, tail: Cons { head: 0, tail: [Cons] } },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: 0, tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Nil] }
-//│ >   }
-//│ win3 = }
+//│ win3 = [[0,0,0],[0,0,0],[1,1,1]]
 
 let win4 =
   (1 :: 0 :: 0 :: Nil) ::
   (1 :: 0 :: 0 :: Nil) ::
   (1 :: 0 :: 0 :: Nil) :: Nil
-//│ > Cons {
-//│ >   head: Cons { head: 1, tail: Cons { head: 0, tail: [Cons] } },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: 1, tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Nil] }
-//│ >   }
-//│ win4 = }
+//│ win4 = [[1,0,0],[1,0,0],[1,0,0]]
 
 let win5 =
   (0 :: 1 :: 0 :: Nil) ::
   (0 :: 1 :: 0 :: Nil) ::
   (0 :: 1 :: 0 :: Nil) :: Nil
-//│ > Cons {
-//│ >   head: Cons { head: 0, tail: Cons { head: 1, tail: [Cons] } },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: 0, tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Nil] }
-//│ >   }
-//│ win5 = }
+//│ win5 = [[0,1,0],[0,1,0],[0,1,0]]
 
 let win6 =
   (0 :: 0 :: 1 :: Nil) ::
   (0 :: 0 :: 1 :: Nil) ::
   (0 :: 0 :: 1 :: Nil) :: Nil
-//│ > Cons {
-//│ >   head: Cons { head: 0, tail: Cons { head: 0, tail: [Cons] } },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: 0, tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Nil] }
-//│ >   }
-//│ win6 = }
+//│ win6 = [[0,0,1],[0,0,1],[0,0,1]]
 
 let win7 =
   (1 :: 0 :: 0 :: Nil) ::
   (0 :: 1 :: 0 :: Nil) ::
   (0 :: 0 :: 1 :: Nil) :: Nil
-//│ > Cons {
-//│ >   head: Cons { head: 1, tail: Cons { head: 0, tail: [Cons] } },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: 0, tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Nil] }
-//│ >   }
-//│ win7 = }
+//│ win7 = [[1,0,0],[0,1,0],[0,0,1]]
 
 let win8 =
   (0 :: 0 :: 1 :: Nil) ::
   (0 :: 1 :: 0 :: Nil) ::
   (1 :: 0 :: 0 :: Nil) :: Nil
-//│ > Cons {
-//│ >   head: Cons { head: 0, tail: Cons { head: 0, tail: [Cons] } },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: 0, tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Nil] }
-//│ >   }
-//│ win8 = }
+//│ win8 = [[0,0,1],[0,1,0],[1,0,0]]
 
 let wins = win1 :: win2 :: win3 :: win4 :: win5 :: win6 :: win7 :: win8 :: Nil
-//│ > Cons {
-//│ >   head: Cons {
-//│ >     head: Cons { head: 1, tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: [Cons], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   }
-//│ wins = }
+//│ wins = [[[1,1,1],[0,0,0],[0,0,0]],[[0,0,0],[1,1,1],[0,0,0]],[[0,0,0],[0,0,0],[1,1,1]],[[1,0,0],[1,0,0],[1,0,0]],[[0,1,0],[0,1,0],[0,1,0]],[[0,0,1],[0,0,1],[0,0,1]],[[1,0,0],[0,1,0],[0,0,1]],[[0,0,1],[0,1,0],[1,0,0]]]
 
 fun showPiece(p) = if p is
   X then nofibStringToList("X")
@@ -207,16 +150,7 @@ fun newPositions(piece, board) =
     lscomp1(1 :: 2 :: 3 :: Nil)
   
 let initialBoard = replicate(3, replicate(3, Empty))
-//│ > Cons {
-//│ >   head: Cons {
-//│ >     head: Empty { class: [class Empty] },
-//│ >     tail: Cons { head: [Empty], tail: [Cons] }
-//│ >   },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: [Empty], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Nil] }
-//│ >   }
-//│ initialBoard = }
+//│ initialBoard = [[Empty,Empty,Empty],[Empty,Empty,Empty],[Empty,Empty,Empty]]
 
 fun eval(x) = if x ===
   3 then XWin

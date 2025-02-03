@@ -12,7 +12,8 @@ f(2, 3)
 //│   let y = args[1];
 //│   return x + y;
 //│ };
-//│ f(2, 3)
+//│ block$res1 = f(2, 3);
+//│ undefined
 //│ = 5
 
 
@@ -22,14 +23,14 @@ f(2, 3)
 fun f2(x, y) = x + y
 f2(2)
 //│ JS:
-//│ f2 = function f2(x, y) { return x + y; }; f2(2)
+//│ f2 = function f2(x, y) { return x + y; }; block$res2 = f2(2); undefined
 //│ = NaN
 
 :ssjs
 :re
 f(2)
 //│ JS:
-//│ f(2)
+//│ block$res3 = f(2); undefined
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
@@ -51,7 +52,8 @@ f(3)(4)
 //│   };
 //│ };
 //│ tmp = f1(3);
-//│ tmp(4) ?? null
+//│ block$res4 = tmp(4) ?? null;
+//│ undefined
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
 
@@ -60,7 +62,7 @@ f(3)(4)
 :noSanityCheck
 let f = (x, y) => x + y in f(2)
 //│ JS:
-//│ f3 = (x, y) => { return x + y; }; f3(2) ?? null
+//│ f3 = (x, y) => { return x + y; }; block$res5 = f3(2) ?? null; undefined
 //│ = NaN
 
 :ssjs
@@ -74,9 +76,10 @@ f(2)
 //│   let y = args[1];
 //│   return x + y;
 //│ };
-//│ f4(2) ?? null
+//│ block$res6 = f4(2) ?? null;
+//│ undefined
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
-//│ f = [Function: f4]
+//│ f = [function f4]
 
 
 :expect NaN
@@ -101,7 +104,8 @@ Cls(1, 2).f(3)
 //│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ", " + globalThis.Predef.render(this.y) + ")"; }
 //│ };
 //│ tmp1 = Cls1(1, 2);
-//│ tmp1.f(3) ?? null
+//│ block$res7 = tmp1.f(3) ?? null;
+//│ undefined
 //│ = NaN
 
 :ssjs
@@ -128,7 +132,8 @@ Cls(1, 2).f(3)
 //│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ", " + globalThis.Predef.render(this.y) + ")"; }
 //│ };
 //│ tmp2 = Cls3(1, 2);
-//│ tmp2.f(3) ?? null
+//│ block$res8 = tmp2.f(3) ?? null;
+//│ undefined
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
@@ -164,7 +169,8 @@ Cls(1, 2).f(3, 4)(5)
 //│ };
 //│ tmp3 = Cls5(1, 2);
 //│ tmp4 = tmp3.f(3, 4);
-//│ tmp4(5) ?? null
+//│ block$res9 = tmp4(5) ?? null;
+//│ undefined
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
 
@@ -177,7 +183,8 @@ console.log(1)
 //│ } else {
 //│   tmp5 = selRes;
 //│ }
-//│ tmp5.log(1) ?? null
+//│ block$res10 = tmp5.log(1) ?? null;
+//│ undefined
 //│ > 1
 
 
@@ -189,7 +196,8 @@ globalThis.x
 //│ if (selRes1 === undefined) {
 //│   throw new this.Error("Access to required field 'x' yielded 'undefined'");
 //│ } else {
-//│   selRes1
+//│   block$res11 = selRes1;
+//│   undefined
 //│ }
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
@@ -197,7 +205,7 @@ globalThis.x
 :ssjs
 globalThis.x()
 //│ JS:
-//│ this.x() ?? null
+//│ block$res12 = this.x() ?? null; undefined
 //│ ═══[RUNTIME ERROR] TypeError: this.x is not a function
 
 
@@ -240,9 +248,11 @@ if M.A(1).y is
 //│ x = scrut;
 //│ scrut1 = x == 1;
 //│ if (scrut1 === true) {
-//│   x
+//│   block$res13 = x;
+//│   undefined
 //│ } else {
-//│   0
+//│   block$res13 = 0;
+//│   undefined
 //│ }
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
@@ -266,7 +276,8 @@ M.A(1).y
 //│ } else {
 //│   tmp10 = selRes4;
 //│ }
-//│ tmp8.log(tmp10) ?? null
+//│ block$res14 = tmp8.log(tmp10) ?? null;
+//│ undefined
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
 
@@ -276,7 +287,7 @@ M.A(1).y
 M.A(1).y
   console.log()
 //│ JS:
-//│ tmp11 = M1.A(1); this.console.log(tmp11.y) ?? null
+//│ tmp11 = M1.A(1); block$res15 = this.console.log(tmp11.y) ?? null; undefined
 //│ > undefined
 
 :noSanityCheck
@@ -292,7 +303,7 @@ M.A(2).y > 1
 :ssjs
 M.A(1).g(0)
 //│ JS:
-//│ tmp15 = M1.A(1); tmp15.g(0) ?? null
+//│ tmp15 = M1.A(1); block$res18 = tmp15.g(0) ?? null; undefined
 //│ ═══[RUNTIME ERROR] TypeError: tmp15.g is not a function
 
 
@@ -300,7 +311,7 @@ M.A(1).g(0)
 :ssjs
 M.A(1).f(0)
 //│ JS:
-//│ tmp16 = M1.A(1); tmp16.f(0) ?? null
+//│ tmp16 = M1.A(1); block$res19 = tmp16.f(0) ?? null; undefined
 //│ = 1
 
 

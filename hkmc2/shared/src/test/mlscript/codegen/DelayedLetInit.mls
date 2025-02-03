@@ -49,14 +49,14 @@ fun f() = 1
 f
 //│ JS (unsanitized):
 //│ f
-//│ = [Function: f]
+//│ = [function f]
 
 
 let f
 f(x) = x + 1
 //│ JS (unsanitized):
 //│ let f1; f1 = (x1) => { return x1 + 1; }; null
-//│ f = [Function: f1]
+//│ f = [function f1]
 
 f(1)
 //│ JS (unsanitized):

@@ -9,51 +9,27 @@ let
   s1 = 1 :: 2 :: 3 :: Nil
   s2 = "a" :: "b" :: "c" :: Nil
   s3 = true :: false :: Nil
-//│ > Cons {
-//│ >   head: 1,
-//│ >   tail: Cons { head: 2, tail: Cons { head: 3, tail: [Nil] } }
-//│ s1 = }
-//│ > Cons {
-//│ >   head: 'a',
-//│ >   tail: Cons { head: 'b', tail: Cons { head: 'c', tail: [Nil] } }
-//│ s2 = }
-//│ > Cons {
-//│ >   head: true,
-//│ >   tail: Cons { head: false, tail: Nil { class: [class Nil] } }
-//│ s3 = }
+//│ s1 = Cons(1, Cons(2, Cons(3, Nil)))
+//│ s2 = Cons("a", Cons("b", Cons("c", Nil)))
+//│ s3 = Cons(true, Cons(false, Nil))
 
 
 // *** Zipping ***
 
 zip of Nil
-//│ = Nil { class: [class Nil] }
+//│ = Nil
 
 zip of s1
-//│ > Cons {
-//│ >   head: [ 1 ],
-//│ >   tail: Cons { head: [ 2 ], tail: Cons { head: [Array], tail: [Nil] } }
-//│ = }
+//│ = Cons([1], Cons([2], Cons([3], Nil)))
 
 zip of s1, s2
-//│ > Cons {
-//│ >   head: [ 1, 'a' ],
-//│ >   tail: Cons { head: [ 2, 'b' ], tail: Cons { head: [Array], tail: [Nil] } }
-//│ = }
+//│ = Cons([1, "a"], Cons([2, "b"], Cons([3, "c"], Nil)))
 
 zip of s1, s3
-//│ > Cons {
-//│ >   head: [ 1, true ],
-//│ >   tail: Cons {
-//│ >     head: [ 2, false ],
-//│ >     tail: Cons { head: [Array], tail: [Nil] }
-//│ >   }
-//│ = }
+//│ = Cons([1, true], Cons([2, false], Cons([3], Nil)))
 
 s1 zip(s2)
-//│ > Cons {
-//│ >   head: [ 1, 'a' ],
-//│ >   tail: Cons { head: [ 2, 'b' ], tail: Cons { head: [Array], tail: [Nil] } }
-//│ = }
+//│ = Cons([1, "a"], Cons([2, "b"], Cons([3, "c"], Nil)))
 
 print of ...
 s1 zip of s2, s3

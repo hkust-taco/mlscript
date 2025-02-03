@@ -23,14 +23,14 @@ fun test(a) =
 //│ null
 
 test(12)
-//│ = C { x: 12 }
+//│ = C
 
 fun test(x) =
   class Foo(x)
   Foo(x).toString()
 
 test(3)
-//│ = 'Foo(3)'
+//│ = "Foo(3)"
 
 :sjs
 fun test(x) =
@@ -55,7 +55,7 @@ fun test(x) =
 
 
 test(123)
-//│ = Foo1 { a: 123, b: 124 }
+//│ = Foo(123, 124)
 
 
 // * Forgot to pass the arg:

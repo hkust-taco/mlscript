@@ -14,7 +14,7 @@ h1.perform("hi")
 h1.perform("hello")
 //│ > performing hi
 //│ > performing hello
-//│ = [ [ 'ok' ] ]
+//│ = [["ok"]]
 
 :e
 h1
@@ -50,7 +50,7 @@ handle h2 = Effect with
 //│ > performing 2
 //│ > –––
 //│ > performing 3
-//│ = [ undefined, undefined ]
+//│ = [undefined, undefined]
 
 
 // The current implementation insert new handlers surrounding the entire handle block, and hence "later" handle block become the outer one
@@ -76,7 +76,7 @@ in res.toString()
 //│ > A hola
 //│ > B hola adios
 //│ > B hola amigos
-//│ = '‹,‹,‹,‹,hola,friend,›,bye,›,amigos,›,adios,›'
+//│ = "‹,‹,‹,‹,hola,friend,›,bye,›,amigos,›,adios,›"
 
 
 // Output for the "later" handle block as the inner one
@@ -102,7 +102,7 @@ in res.toString()
 //│ > A hola
 //│ > B hola adios
 //│ > B hola amigos
-//│ = '‹,‹,‹,‹,hola,amigos,›,adios,›,friend,›,bye,›'
+//│ = "‹,‹,‹,‹,hola,amigos,›,adios,›,friend,›,bye,›"
 
 :sjs
 let str = ""
@@ -317,5 +317,5 @@ str
 //│   tmp7 = null;
 //│ }
 //│ str
-//│ = 'BABABA'
-//│ str = 'BABABA'
+//│ = "BABABA"
+//│ str = "BABABA"

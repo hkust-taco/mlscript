@@ -17,7 +17,7 @@ fun myBind(m, f) = MyState(s => if myRunState(m, s) is [s_, a] then myRunState(f
 fun myReturn(a) = MyState(s => [s, a])
 
 let myGet = MyState(s => [s, s])
-//│ myGet = MyState { r: [Function (anonymous)] }
+//│ myGet = MyState([function])
 
 fun myEvalState(m, s) = if myRunState(m, s) is [s_, a] then a
 
@@ -61,7 +61,7 @@ fun eqTerm(a, b) = if a is
 fun myMaybe(d, f, x) = if x is Some(x) then f(x)
 
 let incr = myReturn(Unit)
-//│ incr = MyState { r: [Function (anonymous)] }
+//│ incr = MyState([function])
 
 fun lookupVar(v) =
   fun lookup2(env) = myMaybe(dummy => throw Error("undefined"), x => x, lookup(v, env))
@@ -162,43 +162,19 @@ fun ppenv(env) =
 //│ ————————————————————————————————————————————————————————————————————————————————
 
 let lfxx = Lam(nofibStringToList("x"), App(Var(nofibStringToList("F")), App(Var(nofibStringToList("x")), Var(nofibStringToList("x")))))
-//│ > Lam {
-//│ >   s: Cons { head: 'x', tail: Nil { class: [class Nil] } },
-//│ >   t: App { a: Var { s: [Cons] }, b: App { a: [Var], b: [Var] } }
-//│ lfxx = }
+//│ lfxx = Lam(["x"], App(Var(["F"]), App(Var(["x"]), Var(["x"]))))
 
 let fix = Lam(nofibStringToList("F"), App(lfxx, lfxx))
-//│ > Lam {
-//│ >   s: Cons { head: 'F', tail: Nil { class: [class Nil] } },
-//│ >   t: App {
-//│ >     a: Lam { s: [Cons], t: [App] },
-//│ >     b: Lam { s: [Cons], t: [App] }
-//│ >   }
-//│ fix = }
+//│ fix = Lam(["F"], App(Lam(["x"], App(Var(["F"]), App(Var(["x"]), Var(["x"])))), Lam(["x"], App(Var(["F"]), App(Var(["x"]), Var(["x"]))))))
 
 let nMinus1 = Add(Var(nofibStringToList("n")), Con(-1))
-//│ nMinus1 = Add { a: Var { s: Cons { head: 'n', tail: [Nil] } }, b: Con { i: -1 } }
+//│ nMinus1 = Add(Var(["n"]), Con(-1))
 
 let partialSum0 = Lam(nofibStringToList("sum"), Lam(nofibStringToList("n"), IfZero(Var(nofibStringToList("n")), Con(0), Add(Var(nofibStringToList("n")), App(Var(nofibStringToList("sum")), nMinus1)))))
-//│ > Lam {
-//│ >   s: Cons { head: 's', tail: Cons { head: 'u', tail: [Cons] } },
-//│ >   t: Lam {
-//│ >     s: Cons { head: 'n', tail: [Nil] },
-//│ >     t: IfZero { a: [Var], b: [Con], c: [Add] }
-//│ >   }
-//│ partialSum0 = }
+//│ partialSum0 = Lam(["s","u","m"], Lam(["n"], IfZero(Var(["n"]), Con(0), Add(Var(["n"]), App(Var(["s","u","m"]), Add(Var(["n"]), Con(-1)))))))
 
 let sum0 = App(fix, partialSum0)
-//│ > App {
-//│ >   a: Lam {
-//│ >     s: Cons { head: 'F', tail: [Nil] },
-//│ >     t: App { a: [Lam], b: [Lam] }
-//│ >   },
-//│ >   b: Lam {
-//│ >     s: Cons { head: 's', tail: [Cons] },
-//│ >     t: Lam { s: [Cons], t: [IfZero] }
-//│ >   }
-//│ sum0 = }
+//│ sum0 = App(Lam(["F"], App(Lam(["x"], App(Var(["F"]), App(Var(["x"]), Var(["x"])))), Lam(["x"], App(Var(["F"]), App(Var(["x"]), Var(["x"])))))), Lam(["s","u","m"], Lam(["n"], IfZero(Var(["n"]), Con(0), Add(Var(["n"]), App(Var(["s","u","m"]), Add(Var(["n"]), Con(-1))))))))
 
 fun showTerm(t) = if t is Con(a) then nofibStringToList("Con ") +: nofibStringToList(stringOfInt(a))
 
@@ -219,4 +195,4 @@ fun mainMonad(args) =
 fun testLambda_nofib(n) = [mainSimple(n :: Nil), mainMonad(n :: Nil)]
 
 testLambda_nofib(80).toString()
-//│ = '([C,o,n, ,3,2,4,0],[3,2,4,0, , ,[,]])'
+//│ = "[\"C\",\"o\",\"n\",\" \",\"3\",\"2\",\"4\",\"0\"],[\"3\",\"2\",\"4\",\"0\",\" \",\" \",\"[\",\"]\"]"

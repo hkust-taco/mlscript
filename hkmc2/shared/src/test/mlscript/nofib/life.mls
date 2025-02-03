@@ -51,16 +51,7 @@ let start =
   (lazy of () => LzNil) ::
   (lazy of () => LzNil) ::
   lzfy(0 :: 0 :: 0 :: 1 :: 1 :: 1 :: 1 :: 1 :: 0 :: 1 :: 1 :: 1 :: 1 :: 1 :: 0 :: 1 :: 1 :: 1 :: 1 :: 1 :: 0 :: 1 :: 1 :: 1 :: 1 :: 1 :: 0 :: Nil) :: Nil
-//│ > Cons {
-//│ >   head: Lazy {
-//│ >     init: [Function (anonymous)],
-//│ >     cached: None { class: [class None] }
-//│ >   },
-//│ >   tail: Cons {
-//│ >     head: Lazy { init: [Function (anonymous)], cached: [None] },
-//│ >     tail: Cons { head: [Lazy], tail: [Cons] }
-//│ >   }
-//│ start = }
+//│ start = [Lazy([function]),Lazy([function]),Lazy([function]),Lazy([function]),Lazy([function]),Lazy([function]),Lazy([function]),Lazy([function]),Lazy([function]),Lazy([function]),Lazy([function]),Lazy([function]),Lazy([function]),Lazy([function]),Lazy([function tmp])]
 
 fun elt(a_b_c, d_e_f, g_h_i) = if a_b_c is [a, b, c] and d_e_f is [d, e, f] and g_h_i is [g, h, i] then
   let tot = a + b + c + d + f + g + h + i

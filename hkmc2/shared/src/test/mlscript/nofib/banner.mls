@@ -10,13 +10,7 @@ let blank =
   nofibStringToList("     ") ::
   nofibStringToList("     ") ::
   nofibStringToList("     ") :: Nil
-//│ > Cons {
-//│ >   head: Cons { head: ' ', tail: Cons { head: ' ', tail: [Cons] } },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: ' ', tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   }
-//│ blank = }
+//│ blank = [[" "," "," "," "," "],[" "," "," "," "," "],[" "," "," "," "," "],[" "," "," "," "," "],[" "," "," "," "," "]]
 
 let alphas =
   (nofibStringToList("  A  ") :: nofibStringToList(" A A ") :: nofibStringToList("AAAAA") :: nofibStringToList("A   A") :: nofibStringToList("A   A") :: Nil) ::
@@ -45,16 +39,7 @@ let alphas =
   (nofibStringToList("X   X") :: nofibStringToList(" X X ") :: nofibStringToList("  X  ") :: nofibStringToList(" X X ") :: nofibStringToList("X   X") :: Nil) ::
   (nofibStringToList("Y   Y") :: nofibStringToList(" Y Y ") :: nofibStringToList("  Y  ") :: nofibStringToList("  Y  ") :: nofibStringToList("  Y  ") :: Nil) ::
   (nofibStringToList("ZZZZZ") :: nofibStringToList("   Z ") :: nofibStringToList("  Z  ") :: nofibStringToList(" Z   ") :: nofibStringToList("ZZZZZ") :: Nil) :: Nil
-//│ > Cons {
-//│ >   head: Cons {
-//│ >     head: Cons { head: ' ', tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: [Cons], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   }
-//│ alphas = }
+//│ alphas = [[[" "," ","A"," "," "],[" ","A"," ","A"," "],["A","A","A","A","A"],["A"," "," "," ","A"],["A"," "," "," ","A"]],[["B","B","B","B"," "],["B"," "," "," ","B"],["B","B","B","B"," "],["B"," "," "," ","B"],["B","B","B","B"," "]],[[" ","C","C","C","C"],["C"," "," "," "," "],["C"," "," "," "," "],["C"," "," "," "," "],[" ","C","C","C","C"]],[["D","D","D","D"," "],["D"," "," "," ","D"],["D"," "," "," ","D"],["D"," "," "," ","D"],["D","D","D","D"," "]],[["E","E","E","E","E"],["E"," "," "," "," "],["E","E","E","E","E"],["E"," "," "," "," "],["E","E","E","E","E"]],[["F","F","F","F","F"],["F"," "," "," "," "],["F","F","F","F"," "],["F"," "," "," "," "],["F"," "," "," "," "]],[[" ","G","G","G","G"],["G"," "," "," "," "],["G"," "," ","G","G"],["G"," "," "," ","G"],[" ","G","G","G"," "]],[["H"," "," "," ","H"],["H"," "," "," ","H"],["H","H","H","H","H"],["H"," "," "," ","H"],["H"," "," "," ","H"]],[["I","I","I","I","I"],[" "," ","I"," "," "],[" "," ","I"," "," "],[" "," ","I"," "," "],["I","I","I","I","I"]],[["J","J","J","J","J"],[" "," "," ","J"," "],[" "," "," ","J"," "],["J"," "," ","J"," "],[" ","J","J"," "," "]],[["K"," "," "," ","K"],["K"," "," ","K"," "],["K","K","K"," "," "],["K"," "," ","K"," "],["K"," "," "," ","K"]],[["L"," "," "," "," "],["L"," "," "," "," "],["L"," "," "," "," "],["L"," "," "," "," "],["L","L","L","L","L"]],[["M"," "," "," ","M"],["M","M"," ","M","M"],["M"," ","M"," ","M"],["M"," "," "," ","M"],["M"," "," "," ","M"]],[["N"," "," "," ","N"],["N","N"," "," ","N"],["N"," ","N"," ","N"],["N"," "," ","N","N"],["N"," "," "," ","N"]],[[" ","O","O","O"," "],["O"," "," "," ","O"],["O"," "," "," ","O"],["O"," "," "," ","O"],[" ","O","O","O"," "]],[["P","P","P","P"," "],["P"," "," "," ","P"],["P","P","P","P"," "],["P"," "," "," "," "],["P"," "," "," "," "]],[[" ","Q","Q","Q"," "],["Q"," "," "," ","Q"],["Q"," ","Q"," ","Q"],["Q"," "," ","Q"," "],[" ","Q","Q"," ","Q"]],[["R","R","R","R"," "],["R"," "," "," ","R"],["R","R","R","R"," "],["R"," "," ","R"," "],["R"," "," "," ","R"]],[[" ","S","S","S","S"],["S"," "," "," "," "],[" ","S","S","S"," "],[" "," "," "," ","S"],["S","S","S","S"," "]],[["T","T","T","T","T"],[" "," ","T"," "," "],[" "," ","T"," "," "],[" "," ","T"," "," "],[" "," ","T"," "," "]],[["U"," "," "," ","U"],["U"," "," "," ","U"],["U"," "," "," ","U"],["U"," "," "," ","U"],[" ","U","U","U"," "]],[["V"," "," "," ","V"],["V"," "," "," ","V"],["V"," "," "," ","V"],[" ","V"," ","V"," "],[" "," ","V"," "," "]],[["W"," "," "," ","W"],["W"," "," "," ","W"],["W"," "," "," ","W"],["W"," ","W"," ","W"],[" ","W"," ","W"," "]],[["X"," "," "," ","X"],[" ","X"," ","X"," "],[" "," ","X"," "," "],[" ","X"," ","X"," "],["X"," "," "," ","X"]],[["Y"," "," "," ","Y"],[" ","Y"," ","Y"," "],[" "," ","Y"," "," "],[" "," ","Y"," "," "],[" "," ","Y"," "," "]],[["Z","Z","Z","Z","Z"],[" "," "," ","Z"," "],[" "," ","Z"," "," "],[" ","Z"," "," "," "],["Z","Z","Z","Z","Z"]]]
 
 let slant =
   nofibStringToList("    ") ::
@@ -62,13 +47,7 @@ let slant =
   nofibStringToList("  ") ::
   nofibStringToList(" ") ::
   nofibStringToList("") :: Nil
-//│ > Cons {
-//│ >   head: Cons { head: ' ', tail: Cons { head: ' ', tail: [Cons] } },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: ' ', tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   }
-//│ slant = }
+//│ slant = [[" "," "," "," "],[" "," "," "],[" "," "],[" "],[]]
 
 let punct =
   [".", nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("     ") :: nofibStringToList("  .. ") :: nofibStringToList("  .. ") :: Nil] ::
@@ -78,13 +57,7 @@ let punct =
   ["+", nofibStringToList("  +  ") :: nofibStringToList("  +  ") :: nofibStringToList("+++++") :: nofibStringToList("  +  ") :: nofibStringToList("  +  ") :: Nil] ::
   [":", nofibStringToList("     ") :: nofibStringToList("  :: ") :: nofibStringToList("     ") :: nofibStringToList("  :: ") :: nofibStringToList("     ") :: Nil] ::
   [";", nofibStringToList("     ") :: nofibStringToList("  ;; ") :: nofibStringToList("     ") :: nofibStringToList("  ;; ") :: nofibStringToList(" ;;  ") :: Nil] :: Nil
-//│ > Cons {
-//│ >   head: [ '.', Cons { head: [Cons], tail: [Cons] } ],
-//│ >   tail: Cons {
-//│ >     head: [ '?', [Cons] ],
-//│ >     tail: Cons { head: [Array], tail: [Cons] }
-//│ >   }
-//│ punct = }
+//│ punct = [[".", [[" "," "," "," "," "],[" "," "," "," "," "],[" "," "," "," "," "],[" "," ",".","."," "],[" "," ",".","."," "]]],["?", [[" ","?","?","?"," "],["?"," "," "," ","?"],[" "," "," ","?"," "],[" "," ","?"," "," "],[" "," ","."," "," "]]],["!", [[" "," ","!"," "," "],[" "," ","!"," "," "],[" "," ","!"," "," "],[" "," ","!"," "," "],[" "," ","."," "," "]]],["-", [[" "," "," "," "," "],[" "," "," "," "," "],["-","-","-","-","-"],[" "," "," "," "," "],[" "," "," "," "," "]]],["+", [[" "," ","+"," "," "],[" "," ","+"," "," "],["+","+","+","+","+"],[" "," ","+"," "," "],[" "," ","+"," "," "]]],[":", [[" "," "," "," "," "],[" "," ",":",":"," "],[" "," "," "," "," "],[" "," ",":",":"," "],[" "," "," "," "," "]]],[";", [[" "," "," "," "," "],[" "," ",";",";"," "],[" "," "," "," "," "],[" "," ",";",";"," "],[" ",";",";"," "," "]]]]
 
 let digits =
   (nofibStringToList(" OOO ") :: nofibStringToList("0  00") :: nofibStringToList("0 0 0") :: nofibStringToList("00  0") :: nofibStringToList(" 000 ") :: Nil) ::
@@ -97,16 +70,7 @@ let digits =
   (nofibStringToList("77777") :: nofibStringToList("    7") :: nofibStringToList("   7 ") :: nofibStringToList("   7 ") :: nofibStringToList("  7  ") :: Nil) ::
   (nofibStringToList(" 888 ") :: nofibStringToList("8   8") :: nofibStringToList(" 888 ") :: nofibStringToList("8   8") :: nofibStringToList(" 888 ") :: Nil) ::
   (nofibStringToList(" 999 ") :: nofibStringToList("9   9") :: nofibStringToList(" 999 ") :: nofibStringToList("  9  ") :: nofibStringToList("99   ") :: Nil) :: Nil
-//│ > Cons {
-//│ >   head: Cons {
-//│ >     head: Cons { head: ' ', tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   },
-//│ >   tail: Cons {
-//│ >     head: Cons { head: [Cons], tail: [Cons] },
-//│ >     tail: Cons { head: [Cons], tail: [Cons] }
-//│ >   }
-//│ digits = }
+//│ digits = [[[" ","O","O","O"," "],["0"," "," ","0","0"],["0"," ","0"," ","0"],["0","0"," "," ","0"],[" ","0","0","0"," "]],[[" "," ","1"," "," "],[" ","1","1"," "," "],[" "," ","1"," "," "],[" "," ","1"," "," "],["1","1","1","1","1"]],[[" ","2","2","2"," "],["2"," "," "," ","2"],[" "," "," ","2"," "],[" "," ","2"," "," "],["2","2","2","2","2"]],[["3","3","3","3"," "],[" "," "," "," ","3"],[" ","3","3","3"," "],[" "," "," "," ","3"],["3","3","3","3"," "]],[[" "," "," ","4"," "],[" "," ","4","4"," "],[" ","4"," ","4"," "],["4","4","4","4","4"],[" "," "," ","4"," "]],[["5","5","5","5","5"],["5"," "," "," "," "],["5","5","5","5"," "],[" "," "," "," ","5"],["5","5","5","5"," "]],[[" "," "," ","6","6"],[" "," ","6"," "," "],[" ","6","6","6"," "],["6"," "," "," ","6"],[" ","6","6","6"," "]],[["7","7","7","7","7"],[" "," "," "," ","7"],[" "," "," ","7"," "],[" "," "," ","7"," "],[" "," ","7"," "," "]],[[" ","8","8","8"," "],["8"," "," "," ","8"],[" ","8","8","8"," "],["8"," "," "," ","8"],[" ","8","8","8"," "]],[[" ","9","9","9"," "],["9"," "," "," ","9"],[" ","9","9","9"," "],[" "," ","9"," "," "],["9","9"," "," "," "]]]
 
 fun unlines(ls) = concat(map(x => x +: ("\n" :: Nil), ls))
 
@@ -153,9 +117,4 @@ fun testBanner_nofib(n) =
 
 
 nofibListToString(testBanner_nofib(1))
-//│ > '\n' +
-//│ >   'IIIII   SSSS         TTTTT  H   H  IIIII   SSSS         N   N   OOO   TTTTT           A            GGGG  RRRR   EEEEE    A    TTTTT         BBBB     A    N   N  N   N  EEEEE  RRRR    ??? \n' +
-//│ >   '  I    S               T    H   H    I    S             NN  N  O   O    T            A A          G      R   R  E       A A     T           B   B   A A   NN  N  NN  N  E      R   R  ?   ?\n' +
-//│ >   '  I     SSS            T    HHHHH    I     SSS          N N N  O   O    T           AAAAA         G  GG  RRRR   EEEEE  AAAAA    T           BBBB   AAAAA  N N N  N N N  EEEEE  RRRR      ? \n' +
-//│ >   '  I        S           T    H   H    I        S         N  NN  O   O    T           A   A         G   G  R  R   E      A   A    T           B   B  A   A  N  NN  N  NN  E      R  R     ?  \n' +
-//│ =   'IIIII  SSSS            T    H   H  IIIII  SSSS          N   N   OOO     T           A   A          GGG   R   R  EEEEE  A   A    T           BBBB   A   A  N   N  N   N  EEEEE  R   R    .  \n'
+//│ = "\nIIIII   SSSS         TTTTT  H   H  IIIII   SSSS         N   N   OOO   TTTTT           A            GGGG  RRRR   EEEEE    A    TTTTT         BBBB     A    N   N  N   N  EEEEE  RRRR    ??? \n  I    S               T    H   H    I    S             NN  N  O   O    T            A A          G      R   R  E       A A     T           B   B   A A   NN  N  NN  N  E      R   R  ?   ?\n  I     SSS            T    HHHHH    I     SSS          N N N  O   O    T           AAAAA         G  GG  RRRR   EEEEE  AAAAA    T           BBBB   AAAAA  N N N  N N N  EEEEE  RRRR      ? \n  I        S           T    H   H    I        S         N  NN  O   O    T           A   A         G   G  R  R   E      A   A    T           B   B  A   A  N  NN  N  NN  E      R  R     ?  \nIIIII  SSSS            T    H   H  IIIII  SSSS          N   N   OOO     T           A   A          GGG   R   R  EEEEE  A   A    T           BBBB   A   A  N   N  N   N  EEEEE  R   R    .  \n"

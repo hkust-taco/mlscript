@@ -1,10 +1,10 @@
 :js
 
 import "../../js/Test.mjs"
-//│ Test = [Module: null prototype] { greet: [Function: greet] }
+//│ Test = [object]
 
 Test
-//│ = [Module: null prototype] { greet: [Function: greet] }
+//│ = [object]
 
 Test.greet()
 //│ > Hello from Test.mjs!

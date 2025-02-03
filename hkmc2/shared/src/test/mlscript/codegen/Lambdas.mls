@@ -9,13 +9,13 @@ x =>
   y
 //│ JS (unsanitized):
 //│ (x) => { let y; y = x; return y; }
-//│ = [Function (anonymous)]
+//│ = [function block$res1]
 
 
 :todo
 (acc, _) => acc
 //│ JS (unsanitized):
 //│ (acc, _) => { return acc; }
-//│ = [Function (anonymous)]
+//│ = [function block$res2]
 
 

@@ -1,29 +1,29 @@
 :js
 
 MatchResult(0)
-//│ = MatchResult { captures: 0 }
+//│ = MatchResult(0)
 
 if MatchResult(0) is MatchResult(x) then x
 //│ = 0
 
 MatchFailure("oops")
-//│ = MatchFailure { errors: 'oops' }
+//│ = MatchFailure("oops")
 
 if MatchFailure("oops") is MatchFailure(x) then x
-//│ = 'oops'
+//│ = "oops"
 
 class MatchResult(x, y, z)
 
 MatchResult(0)
-//│ = MatchResult { x: 0, y: undefined, z: undefined }
+//│ = MatchResult(0, undefined, undefined)
 
 pattern Cross = "X"
 
 Cross.unapply("X")
-//│ = MatchResult { captures: [] }
+//│ = MatchResult([])
 
 Cross.unapply("0")
-//│ = MatchFailure { errors: undefined }
+//│ = MatchFailure(undefined)
 
 :sjs
 fun foo(x) = x is Cross

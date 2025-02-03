@@ -14,6 +14,7 @@ import utils.Scope
 import hkmc2.syntax.Tree.Ident
 import hkmc2.codegen.Path
 import hkmc2.Diagnostic.Source
+import hkmc2.Message.MessageContext
 
 abstract class JSBackendDiffMaker extends MLsDiffMaker:
   
@@ -104,7 +105,17 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val jsb = ltl.givenIn:
           new JSBuilder
             with JSBuilderArgNumSanityChecks(noSanityCheck.isUnset)
-      val le = low.program(blk)
+      val resSym = new TempSymbol(S(blk), "block$res")
+      val lowered0 = low.program(blk)
+      val le = lowered0.copy(main = lowered0.main.mapTail:
+        case e: End =>
+          Assign(resSym, Value.Lit(syntax.Tree.UnitLit(false)), e)
+        case Return(res, implct) =>
+          assert(implct)
+          Assign(resSym, res, Return(Value.Lit(syntax.Tree.UnitLit(false)), true))
+        case _: HandleBlockReturn => ???
+        case tl: (Throw | Break | Continue) => tl
+      )
       if showLoweredTree.isSet then
         output(s"Lowered:")
         output(le.showAsTree)
@@ -113,6 +124,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       // val nestedScp = baseScp.nest
       val nestedScp = baseScp
       // val nestedScp = codegen.js.Scope(S(baseScp), curCtx.outer, collection.mutable.Map.empty) // * not needed
+      
+      val resNme = nestedScp.allocateName(resSym)
       
       if ppLoweredTree.isSet then
         output(s"Pretty Lowered:")
@@ -125,34 +138,17 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       if showSanitizedJS.isSet then
         output(s"JS:")
         output(jsStr)
-      def mkQuery(prefix: Str, preStr: Str, jsStr: Str) =
-        import hkmc2.Message.MessageContext
+      def mkQuery(preStr: Str, jsStr: Str)(k: Str => Unit) =
         val queryStr = jsStr.replaceAll("\n", " ")
         val (reply, stderr) = host.query(preStr, queryStr, !expectRuntimeOrCodeGenErrors && fixme.isUnset && todo.isUnset)
         reply match
-          case ReplHost.Result(content, stdout) =>
-            stdout match
-            case None | Some("") =>
-            case Some(str) =>
-              str.splitSane('\n').foreach: line =>
-                output(s"> ${line}")
-            expect.get match
-            case S(expected) if content != expected && prefix == "" => raise:
-              ErrorReport(msg"Expected: ${expected}, got: ${content}" -> N :: Nil,
-                source = Diagnostic.Source.Runtime)
-            case _ =>
-            content match
-            case "undefined" =>
-            case "null" =>
-            case _ =>
-              if silent.isUnset then output(s"$prefix= ${content}")
+          case ReplHost.Result(content) => k(content)
           case ReplHost.Empty =>
           case ReplHost.Unexecuted(message) => ???
           case ReplHost.Error(isSyntaxError, message, otherOutputs) =>
             if otherOutputs.nonEmpty then
               otherOutputs.splitSane('\n').foreach: line =>
                 output(s"> ${line}")
-            
             if (isSyntaxError) then
               // If there is a syntax error in the generated code,
               // it should be a code generation error.
@@ -164,32 +160,55 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
                 source = Diagnostic.Source.Runtime))
         if stderr.nonEmpty then output(s"// Standard Error:\n${stderr}")
       
-      
       if traceJS.isSet then
         host.execute(
           "globalThis.Predef.TraceLogger.enabled = true; " +
           "globalThis.Predef.TraceLogger.resetIndent(0)")
       
-      mkQuery("", preStr, jsStr)
+      // * Sometimes the JS block won't execute due to a syntax or runtime error so we always set this first
+      host.execute(s"$resNme = undefined")
       
+      mkQuery(preStr, jsStr): stdout =>
+        stdout.splitSane('\n').init // should always ends with "undefined" (TODO: check)
+          .foreach: line =>
+            output(s"> ${line}")
       if traceJS.isSet then
         host.execute("globalThis.Predef.TraceLogger.enabled = false")
       
-      import Elaborator.Ctx.*
-      def definedValues = curCtx.env.iterator.flatMap:
-        case (nme, e @ (_: RefElem | SelElem(RefElem(_: InnerSymbol), _, _))) =>
-          e.symbol match
-          case S(ts: TermSymbol) if ts.k.isInstanceOf[syntax.ValLike] => S((nme, ts))
-          case S(ts: BlockMemberSymbol)
-            if ts.trmImplTree.exists(_.k.isInstanceOf[syntax.ValLike]) => S((nme, ts))
-          case S(vs: VarSymbol) => S((nme, vs))
+      if silent.isUnset then 
+        import Elaborator.Ctx.*
+        def definedValues = curCtx.env.iterator.flatMap:
+          case (nme, e @ (_: RefElem | SelElem(RefElem(_: InnerSymbol), _, _))) =>
+            e.symbol match
+            case S(ts: TermSymbol) if ts.k.isInstanceOf[syntax.ValLike] => S((nme, ts, N))
+            case S(ts: BlockMemberSymbol)
+              if ts.trmImplTree.exists(_.k.isInstanceOf[syntax.ValLike]) => S((nme, ts, N))
+            case S(vs: VarSymbol) => S((nme, vs, N))
+            case _ => N
           case _ => N
-        case _ => N
-      if silent.isUnset then definedValues.toSeq.sortBy(_._1).foreach: (nme, sym) =>
-        val le = codegen.Return(codegen.Value.Ref(sym), implct = true)
-        val je = nestedScp.givenIn:
-          jsb.block(le)
-        val jsStr = je.stripBreaks.mkString(100)
-        mkQuery(s"$nme ", "", jsStr)
+        val valuesToPrint = ("", resSym, expect.get) +: definedValues.toSeq.sortBy(_._1)
+        valuesToPrint.foreach: (nme, sym, expect) =>
+          val le =
+            import codegen.*
+            Return(
+              Call(
+                Value.Ref(Elaborator.State.globalThisSymbol).selSN("Predef").selSN("printRaw"),
+                Arg(false, Value.Ref(sym)) :: Nil)(true),
+            implct = true)
+          val je = nestedScp.givenIn:
+            jsb.block(le)
+          val jsStr = je.stripBreaks.mkString(100)
+          mkQuery("", jsStr): out =>
+            val result = out.splitSane('\n').init.mkString // should always ends with "undefined" (TODO: check)
+            expect match
+            case S(expected) if result =/= expected => raise:
+              ErrorReport(msg"Expected: '${expected}', got: '${result}'" -> N :: Nil,
+                source = Diagnostic.Source.Runtime)
+            case _ => ()
+            result match
+            case "undefined" =>
+            case "null" =>
+            case _ =>
+              output(s"${if nme.isEmpty then "" else s"$nme "}= ${result.indentNewLines("| ")}")
       
 

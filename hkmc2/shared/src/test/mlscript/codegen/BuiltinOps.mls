@@ -20,7 +20,7 @@
 //│ = 2
 
 +
-//│ = [Function (anonymous)]
+//│ = [function block$res4]
 
 // * A bit confusing... but at least there's a warning!
 :w
@@ -42,7 +42,7 @@
 //│ ═══[RUNTIME ERROR] Error: Cannot call non-unary builtin symbol '*'
 
 (+)
-//│ = [Function (anonymous)]
+//│ = [function block$res8]
 
 (+)(2, 3)
 //│ = 5
@@ -59,7 +59,7 @@
 //│ ═══[RUNTIME ERROR] Error: Cannot call non-unary builtin symbol '*'
 
 id(+)
-//│ = [Function (anonymous)]
+//│ = [function]
 
 id(+)(1, 2)
 //│ = 3
@@ -84,7 +84,7 @@ fun (+) lol(a, b) = [a, b]
 1 + 2
 //│ JS (unsanitized):
 //│ lol(1, 2)
-//│ = [ 1, 2 ]
+//│ = [1, 2]
 
 
 :sjs
@@ -95,5 +95,15 @@ id(~)(2)
 
 2 |> ~
 //│ = -3
+
+
+typeof
+//│ = [function block$res21]
+
+typeof(1)
+//│ = "number"
+
+typeof("a")
+//│ = "string"
 
 

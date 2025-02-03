@@ -12,7 +12,7 @@ set
   y += 2
 
 [x, y]
-//│ = [ 1, 2 ]
+//│ = [1, 2]
 
 
 :p
@@ -52,8 +52,8 @@ module \$ extends Foo
 //│ ╔══[PARSE ERROR] Expected end of input; found error instead
 //│ ║  l.46: 	module \$ extends Foo
 //│ ╙──      	        ^
-//│ > let $_1;try { $_1 = class $_ { static {} static toString() { return "\"; } }; null } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ > let $_1;try { $_1 = class $_ { static {} static toString() { return "\"; } }; block$res7 = null; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
 
 
