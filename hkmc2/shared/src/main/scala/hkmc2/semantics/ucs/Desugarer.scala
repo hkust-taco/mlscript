@@ -164,7 +164,7 @@ class Desugarer(val elaborator: Elaborator)
           case ((coda, pat), sequel) => ctx =>
             nominate(ctx, term(coda)(using ctx)):
               expandMatch(_, pat, sequel)(fallback)
-      expandMatch(scrutSymbol, S(headPattern), tailSplit)(fallback)
+      expandMatch(scrutSymbol, headPattern, tailSplit)(fallback)
 
   /** Desugar a _term split_ (TS) into a _split_ of core abstract syntax.
    *  @param tree the tree representing the term split.
@@ -326,21 +326,20 @@ class Desugarer(val elaborator: Elaborator)
    *  Representation of Lists and Its Application to the Function_ for details.
    * 
    *  @param tree the tree to desugar
-   *  @return a non-empty list of triplets of scrutinee, pattern, and a Boolean
-   *          flag indicating whether this is a test or not represented in type
-   *          `::[T]` (instead of `List[T]`) so that the head element can be
-   *          retrieved in a type-safe manner
+   *  @return a non-empty list of pairs of scrutinee and pattern represented
+   *          in type `::[T]` (instead of `List[T]`) so that the head element
+   *          can be retrieved in a type-safe manner
    */
-  def disaggregate(tree: Tree): ::[(Tree, Opt[Tree])] = trace(
+  def disaggregate(tree: Tree): ::[(Tree, Tree)] = trace(
     pre = s"disaggregate <<< $tree", 
-    post = (ms: ::[(Tree, Opt[Tree])]) =>
+    post = (ms: ::[(Tree, Tree)]) =>
       s"disaggregate >>> ${ms.mkString(", ")}"
   ):
-    type TT = (Tree, Opt[Tree])
+    type TT = (Tree, Tree)
     def go(tree: Tree, acc: TT => ::[TT]): () => ::[TT] = tree match
       case lhs and rhs  => go(lhs, ::(_, go(rhs, acc)()))
-      case scrut is pat => () => acc((scrut, S(pat)))
-      case test         => () => acc((test, N))
+      case scrut is pat => () => acc((scrut, pat))
+      case test         => () => acc((test, Tree.BoolLit(true)))
     go(tree, ::(_, Nil))()
 
   /** Desugar a _pattern split_ (PS) into a _split_ of core abstract syntax.
@@ -396,7 +395,7 @@ class Desugarer(val elaborator: Elaborator)
         .traced(
           pre = s"conjunct matches <<< $tail",
           post = (res: Split) => s"conjunct matches >>> $res")
-      expandMatch(scrutSymbol, S(headPattern), tailSplit)(fallback).traced(
+      expandMatch(scrutSymbol, headPattern, tailSplit)(fallback).traced(
         pre = s"patternBranch <<< $patternAndMatches -> ${consequent.fold(_.showDbg, _.showDbg)}",
         post = (res: Split) => s"patternBranch >>> ${res.showDbg}")
     case _ =>
@@ -406,11 +405,11 @@ class Desugarer(val elaborator: Elaborator)
   /** Elaborate a single match (a scrutinee and a pattern) and forms a split
    *  with an innermost split as the sequel of the match.
    *  @param scrutSymbol the symbol representing the scrutinee
-   *  @param patternOpt the un-elaborated pattern
+   *  @param pattern the un-elaborated pattern
    *  @param sequel the innermost split
    *  @return a function that takes the tail of the split and a context
    */
-  def expandMatch(scrutSymbol: BlockLocalSymbol, patternOpt: Opt[Tree], sequel: Sequel): Split => Sequel =
+  def expandMatch(scrutSymbol: BlockLocalSymbol, pattern: Tree, sequel: Sequel): Split => Sequel =
     def ref = scrutSymbol.ref(/* FIXME ident? */)
     def dealWithCtorCase(ctor: Ctor, compile: Bool)(fallback: Split): Sequel = ctx =>
       val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
@@ -481,9 +480,7 @@ class Desugarer(val elaborator: Elaborator)
         // Raise an error and discard `sequel`. Use `fallback` instead.
         raise(ErrorReport(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc :: Nil))
         fallback
-    patternOpt match
-    case N => fallback => ctx => Branch(ref, N, sequel(ctx)) ~: fallback
-    case S(pattern) => pattern.deparenthesized match
+    pattern.deparenthesized match
       // A single wildcard pattern.
       case Under() => _ => ctx => sequel(ctx)
       // Alias pattern
@@ -492,7 +489,7 @@ class Desugarer(val elaborator: Elaborator)
         val inner = (ctx: Ctx) =>
           val ctxWithAlias = ctx + (alias.name -> aliasSymbol)
           Split.Let(aliasSymbol, ref, sequel(ctxWithAlias))
-        expandMatch(scrutSymbol, S(pat), inner)(fallback)
+        expandMatch(scrutSymbol, pat, inner)(fallback)
       case id @ Ident(nme) if nme.headOption.forall(_.isLower) => fallback => ctx =>
         val aliasSymbol = VarSymbol(id)
         val ctxWithAlias = ctx + (nme -> aliasSymbol)
@@ -566,7 +563,7 @@ class Desugarer(val elaborator: Elaborator)
       // A single pattern in conjunction with more conditions
       case pattern and consequent => fallback => ctx =>
         val innerSplit = termSplit(consequent, identity)(Split.End)
-        expandMatch(scrutSymbol, S(pattern), innerSplit)(fallback)(ctx)
+        expandMatch(scrutSymbol, pattern, innerSplit)(fallback)(ctx)
       case Jux(Ident(".."), Ident(_)) => fallback => _ =>
         raise(ErrorReport(msg"Illegal rest pattern." -> pattern.toLoc :: Nil))
         fallback
@@ -592,7 +589,7 @@ class Desugarer(val elaborator: Elaborator)
       post = (r: Sequel) => s"subMatches (nested) >>>"
     ):
       val innermostSplit = subMatches(rest, sequel)(fallback)
-      expandMatch(scrutinee, S(pattern), innermostSplit)(fallback)
+      expandMatch(scrutinee, pattern, innermostSplit)(fallback)
   
   /** Desugar `case` expressions. */
   def apply(tree: Case, scrut: VarSymbol)(using Ctx): Split =

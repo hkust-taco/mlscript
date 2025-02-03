@@ -387,14 +387,13 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
                 End()
               )
             pat match
-              case N => mkMatch(Case.Lit(Tree.BoolLit(true)) -> go(tail, topLevel = false))
-              case S(Pattern.Lit(lit)) => mkMatch(Case.Lit(lit) -> go(tail, topLevel = false))
-              case S(Pattern.ClassLike(cls: ClassSymbol, _trm, _args0, _refined))
+              case Pattern.Lit(lit) => mkMatch(Case.Lit(lit) -> go(tail, topLevel = false))
+              case Pattern.ClassLike(cls: ClassSymbol, _trm, _args0, _refined)
                   // Do not elaborate `_trm` when the `cls` is virtual.
                   if Elaborator.ctx.Builtins.virtualClasses contains cls =>
                 // `Value.Arr(Nil)` is a dummy result and will not be used.
                 mkMatch(Case.Cls(cls, Value.Arr(Nil)) -> go(tail, topLevel = false))
-              case S(Pattern.ClassLike(cls, trm, args0, _refined)) =>
+              case Pattern.ClassLike(cls, trm, args0, _refined) =>
                 subTerm_nonTail(trm): st =>
                   val args = args0.getOrElse(Nil)
                   val clsParams = cls match
@@ -408,7 +407,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
                       val (cse, blk) = mkArgs(args)
                       (cse, Assign(arg, Select(sr, param.id/*FIXME incorrect Ident?*/)(S(param)), blk))
                   mkMatch(mkArgs(clsParams.zip(args)))
-              case S(Pattern.Tuple(len, inf)) => mkMatch(Case.Tup(len, inf) -> go(tail, topLevel = false))
+              case Pattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> go(tail, topLevel = false))
         case Split.Else(els) =>
           if k.isInstanceOf[TailOp] && isIf then term_nonTail(els)(k)
           else

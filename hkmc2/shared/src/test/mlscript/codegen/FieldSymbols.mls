@@ -72,7 +72,7 @@ case
 //│       desugared = Cons:
 //│         head = Branch:
 //│           scrutinee = Ref of caseScrut
-//│           pattern = S of ClassLike:
+//│           pattern = ClassLike:
 //│             sym = class:Foo
 //│             trm = SynthSel{class:Foo}:
 //│               prefix = Ref of member:Foo

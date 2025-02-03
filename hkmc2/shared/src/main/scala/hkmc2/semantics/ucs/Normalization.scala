@@ -81,12 +81,12 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
   ):
     def rec(split: Split)(using vs: VarSet): Split = split match
       case Split.Cons(Branch(scrutinee, pattern, consequent), alternative) => pattern match
-        case pattern @ (S(_: (Pattern.Lit | Pattern.ClassLike | Pattern.Tuple)) | N) =>
-          log(s"MATCH: ${scrutinee.showDbg} is ${pattern.fold("true")(_.showDbg)}")
+        case pattern: (Pattern.Lit | Pattern.ClassLike | Pattern.Tuple) =>
+          log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
           val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
           val whenFalse = rec(specialize(alternative, -, scrutinee, pattern).clearFallback)
           Branch(scrutinee, pattern, whenTrue) ~: whenFalse
-        case S(Pattern.Synonym(symbol, arguments)) => scoped("ucs:rp"):
+        case Pattern.Synonym(symbol, arguments) => scoped("ucs:rp"):
           log(s"SYNONYM: ${scrutinee.showDbg} is $symbol")
           import DeBrujinSplit.*, PatternStub.*
           val pattern2 = ClassLike(ConstructorLike.Instantiation(symbol, arguments))
@@ -136,7 +136,7 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
                 val funcBody: Term = Term.IfLike(Keyword.`if`, bodySplit)(bodySplit)
                 Term.Lam(paramList, funcBody)
               Split.Let(symbol, definition, inner)
-        case S(pattern) =>
+        case _ =>
           raiseDesugaringError(msg"unsupported pattern matching: ${scrutinee.toString} is ${pattern.toString}" -> pattern.toLoc)
           Split.default(Term.Error)
       case Split.Let(v, _, tail) if vs has v =>
@@ -161,9 +161,9 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
       split: Split,
       mode: Mode,
       scrutinee: Term.Ref,
-      patternOpt: Opt[Pattern]
+      pattern: Pattern
   )(using VarSet): Split = trace(
-    pre = s"S$mode <<< ${scrutinee.showDbg} is ${patternOpt.fold("true")(_.showDbg)} : ${Split.display(split)}",
+    pre = s"S$mode <<< ${scrutinee.showDbg} is ${pattern.showDbg} : ${Split.display(split)}",
     post = (r: Split) => s"S$mode >>> ${Split.display(r)}"
   ):
     def rec(split: Split)(using mode: Mode, vs: VarSet): Split = split match
@@ -172,58 +172,50 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
       case split @ Split.Let(sym, _, tail) =>
         log(s"CASE Let ${sym}")
         split.copy(tail = rec(tail))
-      case split @ Split.Cons(head @ Branch(thatScrutinee, thatPatternOpt, continuation), tail) =>
+      case split @ Split.Cons(head @ Branch(thatScrutinee, thatPattern, continuation), tail) =>
         log(s"CASE Cons ${head.showDbg}")
-        (patternOpt, thatPatternOpt) match
-          case (N, N) =>
-            head.copy(continuation = rec(continuation)) ~: rec(tail)
-          case (S(pattern), S(thatPattern)) =>
-            if scrutinee === thatScrutinee then mode match
-              case + =>
-                log(s"Case 1.1: $scrutinee === $thatScrutinee")
-                if thatPattern =:= pattern then
-                  log(s"Case 1.1.1: $pattern =:= $thatPattern")
-                  thatPattern reportInconsistentRefinedWith pattern
-                  aliasBindings(pattern, thatPattern)(rec(continuation) ++ rec(tail))
-                else if thatPattern <:< pattern then
-                  log(s"Case 1.1.2: $pattern <:< $thatPattern")
-                  pattern.markAsRefined; split
-                else if split.isFallback then
-                  log(s"Case 1.1.3: $pattern is unrelated with $thatPattern")
-                  rec(tail)
-                else if pattern <:< thatPattern then
-                  // TODO: the warning will be useful when we have inheritance information
-                  // raiseDesugaringWarning(
-                  //   msg"the pattern always matches" -> thatPattern.toLoc,
-                  //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
-                  //   msg"which is a subtype of ${thatPattern.toString}" -> (pattern match {
-                  //     case Pattern.Class(cls, _, _) => cls.toLoc
-                  //     case _ => thatPattern.toLoc
-                  //   }))
-                  rec(continuation) ++ rec(tail)
-                else
-                  // TODO: the warning will be useful when we have inheritance information
-                  // raiseDesugaringWarning(
-                  //   msg"possibly conflicting patterns for this scrutinee" -> scrutinee.toLoc,
-                  //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
-                  //   msg"which is unrelated with ${thatPattern.toString}" -> thatPattern.toLoc)
-                  rec(tail)
-              case - =>
-                log(s"Case 1.2: $scrutinee === $thatScrutinee")
-                thatPattern reportInconsistentRefinedWith pattern
-                if thatPattern =:= pattern || thatPattern <:< pattern then
-                  log(s"Case 1.2.1: $pattern =:= (or <:<) $thatPattern")
-                  rec(tail)
-                else
-                  log(s"Case 1.2.2: $pattern are unrelated to $thatPattern")
-                  split.copy(tail = rec(tail))
+        if scrutinee === thatScrutinee then mode match
+          case + =>
+            log(s"Case 1.1: $scrutinee === $thatScrutinee")
+            if thatPattern =:= pattern then
+              log(s"Case 1.1.1: $pattern =:= $thatPattern")
+              thatPattern reportInconsistentRefinedWith pattern
+              aliasBindings(pattern, thatPattern)(rec(continuation) ++ rec(tail))
+            else if thatPattern <:< pattern then
+              log(s"Case 1.1.2: $pattern <:< $thatPattern")
+              pattern.markAsRefined; split
+            else if split.isFallback then
+              log(s"Case 1.1.3: $pattern is unrelated with $thatPattern")
+              rec(tail)
+            else if pattern <:< thatPattern then
+              // TODO: the warning will be useful when we have inheritance information
+              // raiseDesugaringWarning(
+              //   msg"the pattern always matches" -> thatPattern.toLoc,
+              //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
+              //   msg"which is a subtype of ${thatPattern.toString}" -> (pattern match {
+              //     case Pattern.Class(cls, _, _) => cls.toLoc
+              //     case _ => thatPattern.toLoc
+              //   }))
+              rec(continuation) ++ rec(tail)
             else
-              log(s"Case 2: $scrutinee =/= $thatScrutinee")
-              head.copy(continuation = rec(continuation)) ~: rec(tail)
-          case (_, _) =>
-            log(s"Case 2: $scrutinee =/= $thatScrutinee")
-            head.copy(continuation = rec(continuation)) ~: rec(tail)
-        end match
+              // TODO: the warning will be useful when we have inheritance information
+              // raiseDesugaringWarning(
+              //   msg"possibly conflicting patterns for this scrutinee" -> scrutinee.toLoc,
+              //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
+              //   msg"which is unrelated with ${thatPattern.toString}" -> thatPattern.toLoc)
+              rec(tail)
+          case - =>
+            log(s"Case 1.2: $scrutinee === $thatScrutinee")
+            thatPattern reportInconsistentRefinedWith pattern
+            if thatPattern =:= pattern || thatPattern <:< pattern then
+              log(s"Case 1.2.1: $pattern =:= (or <:<) $thatPattern")
+              rec(tail)
+            else
+              log(s"Case 1.2.2: $pattern are unrelated to $thatPattern")
+              split.copy(tail = rec(tail))
+        else
+          log(s"Case 2: $scrutinee =/= $thatScrutinee")
+          head.copy(continuation = rec(continuation)) ~: rec(tail)
     end rec
     rec(split)(using mode, summon)
   

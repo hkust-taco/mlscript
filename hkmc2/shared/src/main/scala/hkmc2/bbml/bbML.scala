@@ -256,7 +256,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val res = freshVar(new TempSymbol(S(blk), "ctx"))(using ctx)
       constrain(bodyCtx, sk | res)
       (bodyTy, rhsCtx | res, rhsEff | bodyEff)
-    case Term.IfLike(Keyword.`if`, Split.Let(_, cond, Split.Cons(Branch(_, N, Split.Else(cons)), Split.Else(alts)))) =>
+    case Term.IfLike(Keyword.`if`, Split.Let(_, cond, Split.Cons(Branch(_, Pattern.Lit(BoolLit(true)), Split.Else(cons)), Split.Else(alts)))) =>
       val (condTy, condCtx, condEff) = typeCode(cond)
       val (consTy, consCtx, consEff) = typeCode(cons)
       val (altsTy, altsCtx, altsEff) = typeCode(alts)
@@ -293,7 +293,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val nestCtx1 = ctx.nest
       val nestCtx2 = ctx.nest
       val patTy = pattern match
-      case S(Pattern.ClassLike(sym, _, _, _)) =>
+      case Pattern.ClassLike(sym, _, _, _) =>
         val (clsTy, tv, emptyTy) = sym.asCls.flatMap(_.defn) match
         case S(cls) =>
           (ClassLikeType(sym, cls.tparams.map(_ => freshWildcard(sym))), (freshVar(new TempSymbol(S(scrutinee), "scrut"))), ClassLikeType(sym, cls.tparams.map(_ => Wildcard.empty)))
@@ -306,13 +306,12 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             nestCtx2 += sym -> tv
           case _ => () // TODO: refine all variables holding this value?
         clsTy | (tv & Type.mkNegType(emptyTy))
-      case S(Pattern.Lit(lit)) => lit match
+      case Pattern.Lit(lit) => lit match
         case _: Tree.BoolLit => BbCtx.boolTy
         case _: Tree.IntLit => BbCtx.intTy
         case _: Tree.DecLit => BbCtx.numTy
         case _: Tree.StrLit => BbCtx.strTy
         case _: Tree.UnitLit => Top
-      case N => BbCtx.boolTy
       constrain(tryMkMono(scrutineeTy, scrutinee), patTy)
       val (consTy, consEff) = typeSplit(cons, sign)(using nestCtx1)
       val (altsTy, altsEff) = typeSplit(alts, sign)(using nestCtx2)
