@@ -27,17 +27,19 @@ object Thrw extends TailOp:
   def apply(r: Result): Block = Throw(r)
 
 
-// * No longer in meaningful use and could be removed if we don't find a use for it:
+// TODO: clean
 class Subst(initMap: Map[Local, Value]):
   val map = initMap
-  /*
+
   def +(kv: (Local, Value)): Subst =
     kv match
     case (ns: NamedSymbol, Value.Ref(ts: TempSymbol)) =>
       ts.nameHints += ns.name
     case _ =>
     Subst(map + kv)
-  */
+
+  def get(sym: Local): Opt[Value] = map.get(sym)
+
   def apply(v: Value): Value = v match
     case Value.Ref(l) => map.getOrElse(l, v)
     case _ => v
@@ -129,7 +131,11 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
             return Assign(l, Call(Value.Ref(bs), Nil)(true), k(Value.Ref(l)))
         case S(_) => ()
         case N => () // TODO panic here; can only lower refs to elab'd symbols
-      case _ => ()
+      case _ =>
+        val subst = summon[Subst]
+        subst.get(sym) match
+          case S(r: Value.Ref) => r
+          case _ => ()
       warnStmt
       k(subst(Value.Ref(sym)))
     case st.App(Ref(sym: BuiltinSymbol), arg) =>
@@ -455,6 +461,8 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
         subTerm_nonTail(finallyDo)(_ => End()),
         k(Value.Ref(l))
       )
+
+    case Quoted(body) => quote(body)(k)
     
     // * BbML-specific cases: t.Cls#field and mutable operations
     case sp @ SelProj(prefix, _, proj) =>
@@ -494,7 +502,53 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
     
     // case _ =>
     //   subTerm(t)(k)
+
+  def setupTerm(name: Str, args: Ls[Path])(k: Result => Block)(using Subst): Block =
+    k(Instantiate(Value.Ref(State.globalThisSymbol).selSN("Predef").selSN("term").selSN(name), args))
+
+  def setupSymbol(symbol: Local)(k: Result => Block)(using Subst): Block =
+    k(Instantiate(Value.Ref(State.globalThisSymbol).selSN("Predef").selSN("term").selSN("Symbol"), Value.Lit(Tree.StrLit(symbol.nme)) :: Nil))
+
+  def quote(t: st)(k: Result => Block)(using Subst): Block = t match
+    case Lit(lit) =>
+      setupTerm("Lit", Value.Lit(lit) :: Nil)(k)
+    case Ref(sym) => setupSymbol(sym): r1 =>
+      val l = new TempSymbol(N)
+      setupTerm("Ref", Value.Ref(l) :: Nil): r2 =>
+        Assign(l, r1, k(r2))
+    case Lam(params, body) =>
+      def rec(ps: Ls[LocalSymbol & NamedSymbol], ds: Ls[Path])(k: Result => Block)(using Subst): Block = ps match
+        case Nil => quote(body): r =>
+          val l = new TempSymbol(N)
+          Assign(l, r, setupTerm("Lam", Value.Arr(ds.reverse.map(_.asArg)) :: Value.Ref(l) :: Nil)(k))
+        case sym :: rest =>
+          setupSymbol(sym): r =>
+            val subst = summon[Subst]
+            val l = new TempSymbol(N)
+            val nest = subst + (sym -> Value.Ref(l))
+            Assign(l, r, rec(rest, Value.Ref(l) :: ds)(k)(using nest))
+      rec(params.params.map(_.sym), Nil)(k) // TODO: restParam?
+    case App(lhs, Tup(rhs)) => quote(lhs): r1 =>
+      def rec(es: Ls[Elem], xs: Ls[Path])(k: Result => Block): Block = es match
+        case Nil => setupTerm("Tup", Value.Arr(xs.reverse.map(_.asArg)) :: Nil): r2 =>
+          val l1 = new TempSymbol(N)
+          val l2 = new TempSymbol(N)
+          Assign(l1, r1, Assign(l2, r2, setupTerm("App", Value.Ref(l1) :: Value.Ref(l2) :: Nil)(k)))
+        case Fld(_, t, _) :: rest => quote(t): r2 =>
+          val l = new TempSymbol(N)
+          Assign(l, r2, rec(rest, Value.Ref(l) :: xs)(k))
+      rec(rhs, Nil)(k)
+    case Unquoted(body) => term(body)(k)
+    case _ =>
+      raise(ErrorReport(
+        msg"Unsupported quasiquote type ${t.describe}" ->
+        t.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation
+      ))
+      End("error")
+
   
+
   def subTerm_nonTail(t: st, inStmtPos: Bool = false)(k: Path => Block)(using Subst): Block =
     subTerm(t: st, inStmtPos: Bool)(k)
   

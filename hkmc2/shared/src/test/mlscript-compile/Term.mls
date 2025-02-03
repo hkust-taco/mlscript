@@ -46,9 +46,8 @@ object KeywordIf
 object KeywordWhile
 
 
-abstract class Term : (Error | Lit | Builtin | Ref | App | Sel | DynSel | Tup | IfLike | Lam | Blk | New |
+abstract class Term : (Lit | Builtin | Ref | App | Sel | DynSel | Tup | IfLike | Lam | Blk | New |
   Region | RegRef | Assgn | Deref | SetRef | Ret | Throw | Try)
-class Error extends Term
 class Lit(lit: Literal) extends Term
 class Builtin(name: Str) extends Term
 class Ref(sym: Symbol) extends Term

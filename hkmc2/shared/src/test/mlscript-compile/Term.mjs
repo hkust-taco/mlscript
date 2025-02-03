@@ -237,10 +237,6 @@ Term2 = class Term {
       constructor() {}
       toString() { return "Term"; }
     };
-    this.Error = class Error {
-      constructor() {}
-      toString() { return "Error"; }
-    };
     this.Lit = function Lit(lit1) { return new Lit.class(lit1); };
     this.Lit.class = class Lit {
       constructor(lit) {

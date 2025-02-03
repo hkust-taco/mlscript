@@ -1,0 +1,107 @@
+:js
+
+:import PredefJS.mls
+//│ Imported 2 member(s)
+
+:global
+:sjs
+
+
+`42
+//│ JS (unsanitized):
+//│ new this.Predef.term.Lit(42)
+//│ = Lit(42)
+
+
+`3.14
+//│ JS (unsanitized):
+//│ new this.Predef.term.Lit(3.14)
+//│ = Lit(3.14)
+
+
+`true
+//│ JS (unsanitized):
+//│ new this.Predef.term.Lit(true)
+//│ = Lit(true)
+
+
+`"abc"
+//│ JS (unsanitized):
+//│ new this.Predef.term.Lit("abc")
+//│ = Lit("abc")
+
+
+`+
+//│ JS (unsanitized):
+//│ let tmp; tmp = new this.Predef.term.Symbol("+"); new this.Predef.term.Ref(tmp)
+//│ = Ref(Symbol("+"))
+
+
+`1 `+ `2
+//│ JS (unsanitized):
+//│ let tmp1, tmp2, tmp3, tmp4, tmp5;
+//│ tmp1 = new this.Predef.term.Symbol("+");
+//│ tmp2 = new this.Predef.term.Lit(1);
+//│ tmp3 = new this.Predef.term.Lit(2);
+//│ tmp4 = new this.Predef.term.Ref(tmp1);
+//│ tmp5 = new this.Predef.term.Tup([
+//│   tmp2,
+//│   tmp3
+//│ ]);
+//│ new this.Predef.term.App(tmp4, tmp5)
+//│ = App(Ref(Symbol("+")), Tup([Lit(1), Lit(2)]))
+
+
+x `=> x
+//│ JS (unsanitized):
+//│ let x, tmp6; x = new this.Predef.term.Symbol("x"); tmp6 = x; new this.Predef.term.Lam([ x ], tmp6)
+//│ = Lam([Symbol("x")], Symbol("x"))
+
+
+
+x `=>
+  log(x)
+  x
+//│ JS (unsanitized):
+//│ let x1, tmp7, tmp8;
+//│ x1 = new this.Predef.term.Symbol("x");
+//│ tmp7 = log(x1);
+//│ tmp8 = x1;
+//│ new this.Predef.term.Lam([
+//│   x1
+//│ ], tmp8)
+//│ > Symbol { name: 'x' }
+//│ = Lam([Symbol("x")], Symbol("x"))
+
+
+let f = x `=> x `+ `1
+//│ JS (unsanitized):
+//│ let f, x2, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15;
+//│ x2 = new this.Predef.term.Symbol("x");
+//│ tmp9 = new this.Predef.term.Symbol("+");
+//│ tmp10 = x2;
+//│ tmp11 = new this.Predef.term.Lit(1);
+//│ tmp12 = new this.Predef.term.Ref(tmp9);
+//│ tmp13 = new this.Predef.term.Tup([
+//│   tmp10,
+//│   tmp11
+//│ ]);
+//│ tmp14 = new this.Predef.term.App(tmp12, tmp13);
+//│ tmp15 = new this.Predef.term.Lam([
+//│   x2
+//│ ], tmp14);
+//│ f = tmp15;
+//│ null
+//│ f = Lam([Symbol("x")], App(Ref(Symbol("+")), Tup([Symbol("x"), Lit(1)])))
+
+
+f`(`0)
+//│ JS (unsanitized):
+//│ let tmp16, tmp17, tmp18;
+//│ tmp16 = new this.Predef.term.Lit(0);
+//│ tmp17 = f;
+//│ tmp18 = new this.Predef.term.Tup([
+//│   tmp16
+//│ ]);
+//│ new this.Predef.term.App(tmp17, tmp18)
+//│ = App(Lam([Symbol("x")], App(Ref(Symbol("+")), Tup([Symbol("x"), Lit(1)]))), Tup([Lit(0)]))
