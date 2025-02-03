@@ -272,6 +272,8 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         case Case.Lit(lit) => doc"$sd === ${lit.idStr}"
         case Case.Cls(cls, pth) => cls match
           // case _: semantics.ModuleSymbol => doc"=== ${result(pth)}"
+          // [invariant:0] If the class represented by `cls` does not exist at
+          // runtime, then `pth` is a dummy value and should be discarded.
           case Elaborator.ctx.Builtins.Str => doc"typeof $sd === 'string'"
           case Elaborator.ctx.Builtins.Num => doc"typeof $sd === 'number'"
           case Elaborator.ctx.Builtins.Bool => doc"typeof $sd === 'boolean'"

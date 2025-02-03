@@ -429,6 +429,9 @@ Predef1 = class Predef {
   static stringDrop(string2, n) {
     return string2.slice(n) ?? null;
   } 
+  static get unreachable() {
+    throw globalThis.Error("unreachable");
+  } 
   static checkArgs(functionName, expected, isUB, got) {
     let scrut, name, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
     tmp = got < expected;

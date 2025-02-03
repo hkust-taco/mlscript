@@ -43,7 +43,8 @@ declare module Predef with
   class MatchFailure(errors)
   class __EffectSig(next, tail, handleBlockList, resumed, handler, handlerFun)
   class __Return(value)
-
+  
+  fun unreachable
 
 // TODO: rm
 

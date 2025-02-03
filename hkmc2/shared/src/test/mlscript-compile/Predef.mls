@@ -116,6 +116,7 @@ fun stringDrop(string, n) = string.slice(n)
 class MatchResult(captures)
 class MatchFailure(errors)
 
+fun unreachable = throw Error("unreachable")
 
 fun checkArgs(functionName, expected, isUB, got) =
   if got < expected || isUB && got > expected do
