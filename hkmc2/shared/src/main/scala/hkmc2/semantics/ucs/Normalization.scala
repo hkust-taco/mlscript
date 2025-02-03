@@ -40,6 +40,7 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
         case Split.Cons(head, tail) => Split.Cons(head, tail ++ those)
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ++ those)
         case Split.Else(_) /* impossible */ | Split.End => those)
+
   extension (lhs: Pattern)
     /** Checks if two patterns are the same. */
     def =:=(rhs: Pattern): Bool = (lhs, rhs) match
