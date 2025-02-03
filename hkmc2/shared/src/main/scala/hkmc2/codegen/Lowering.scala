@@ -394,7 +394,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
               case Pattern.ClassLike(cls: ClassSymbol, _trm, _args0, _refined)
                   // Do not elaborate `_trm` when the `cls` is virtual.
                   if Elaborator.ctx.Builtins.virtualClasses contains cls =>
-                // [invariant:0] Some classes (e.g., `Int`) from `Prelude` does
+                // [invariant:0] Some classes (e.g., `Int`) from `Prelude` do
                 // not exist at runtime. If we do lowering on `trm`, backends
                 // (e.g., `JSBuilder`) will generate selection that crashes.
                 // In this case the second parameter of `Case.Cls` will not be used.
