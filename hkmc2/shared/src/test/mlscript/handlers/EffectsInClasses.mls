@@ -69,7 +69,10 @@ class Lol(h) with
 //│ null
 
 
-
+// * This is a weird use of effect handlers where an effect is raised during the construction of a handler.
+// * The most natural semantics (following what normal constructors currently do)
+// *  is for the handler to not yet be constructed but to be constructed and executed normally after resumption.
+// * See full discussion at: https://github.com/hkust-taco/mlscript/pull/268#discussion_r1938523085
 :fixme
 handle h = Effect with
   fun perform(arg)(k) =
