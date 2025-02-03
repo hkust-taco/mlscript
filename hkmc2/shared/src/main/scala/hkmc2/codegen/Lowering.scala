@@ -567,7 +567,7 @@ trait LoweringSelSanityChecks
         val selRes = TempSymbol(N, "selRes")
         val split = Split.Cons(
             Branch(
-            selRes.ref(),
+              selRes.ref(),
               Pattern.Lit(syntax.Tree.UnitLit(false)),
               Split.Else(
                 Term.Throw(Term.New(SynthSel(State.globalThisSymbol.ref(), Tree.Ident("Error"))(N),
