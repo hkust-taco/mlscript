@@ -54,7 +54,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       val tmp = freshTmp()
       blockBuilder
         .assignFieldN(state.res.tail, nextIdent, Call(
-          state.cls, Value.Lit(Tree.IntLit(state.uid)).asArg :: Nil)(true))
+          state.cls, Value.Lit(Tree.IntLit(state.uid)).asArg :: Nil)(true, false))
         .assignFieldN(state.res, tailIdent, state.res.tail.next)
         .ret(state.res))
   private val functionHandlerCtx = funcLikeHandlerCtx(N)
@@ -382,7 +382,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       transform.applyBlock(b)
     
     val handlerBody = translateBlock(prepareBody(h.body), HandlerCtx(false, false, N, state => blockBuilder
-      .assignFieldN(state.res.tail, nextIdent, PureCall(state.cls, Value.Lit(Tree.IntLit(state.uid)).asArg :: Nil))
+      .assignFieldN(state.res.tail, nextIdent, PureCall(state.cls, Value.Lit(Tree.IntLit(state.uid)) :: Nil))
       .ret(PureCall(handleBlockImplPath, state.res :: h.lhs.asPath :: Nil))))
     
     val handlers = h.handlers.map: handler =>
@@ -407,7 +407,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     
     val body = blockBuilder
       .define(clsDefn)
-      .assign(h.lhs, Call(clsDefn.sym.asPath, Nil)(true))
+      .assign(h.lhs, Call(clsDefn.sym.asPath, Nil)(true, false))
       .rest(handlerBody)
     
     val defn = FunDefn(

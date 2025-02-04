@@ -115,7 +115,7 @@ sealed abstract class Block extends Product with AutoLocated:
     case AssignField(lhs, nme, rhs, rest) => lhs.freeVarsLLIR ++ rhs.freeVarsLLIR ++ rest.freeVarsLLIR
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs.freeVarsLLIR ++ fld.freeVarsLLIR ++ rhs.freeVarsLLIR ++ rest.freeVarsLLIR
     case Define(defn, rest) => defn.freeVarsLLIR ++ rest.freeVarsLLIR
-    case HandleBlock(lhs, res, par, cls, hdr, bod, rst) =>
+    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
       (bod.freeVarsLLIR - lhs) ++ rst.freeVarsLLIR ++ hdr.flatMap(_.freeVars)
     case HandleBlockReturn(res) => res.freeVarsLLIR
     case End(msg) => Set.empty

@@ -465,7 +465,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int], lift: Bool)(using T
         val pctor =
           args(as): args =>
             Return(Call(Value.Ref(State.builtinOpsMap("super")), args)(true, true), implct = true)
-        val clsDef = ClsLikeDefn(N, isym, sym, syntax.Cls, N, S(clsp),
+        val clsDef = ClsLikeDefn(N, isym, sym, syntax.Cls, N, Nil, S(clsp),
           mtds, privateFlds, publicFlds, pctor, ctor)
         Define(clsDef, term_nonTail(New(sym.ref(), Nil, N))(k))
     

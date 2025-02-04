@@ -56,13 +56,13 @@ class Lol(h) with
 //│     };
 //│     tmp = this.h.perform("k") ?? null;
 //│     if (tmp instanceof globalThis.Predef.__EffectSig.class) {
-//│       tmp.tail.next = new Cont$1.class(0);
+//│       tmp.tail.next = Cont$1(0);
 //│       tmp.tail = tmp.tail.next;
 //│       return tmp
 //│     }
 //│     res = Predef.print(tmp);
 //│     if (res instanceof globalThis.Predef.__EffectSig.class) {
-//│       res.tail.next = new Cont$1.class(1);
+//│       res.tail.next = Cont$1(1);
 //│       res.tail = res.tail.next;
 //│       return res
 //│     }
@@ -127,9 +127,9 @@ let oops =
   Lol(h)
 //│ > k
 //│ > b
-//│ oops = Lol(Handler$h$)
+//│ oops = Lol(Handler$h$())
 
 oops.h
-//│ = Handler$h$
+//│ = Handler$h$()
 
 

@@ -297,7 +297,7 @@ class Lifter(using State):
             case Some(info) =>
               val extraArgs = getCallArgs(l, ctx)
               val newArgs = args.map(applyArg(_))
-              Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun)
+              Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun, false)
             case None => super.applyResult(r)
           // if possible, directly create the bms and replace the result with it
           case Value.Ref(l: BlockMemberSymbol) if ctx.bmsReqdInfo.contains(l) => createCall(l, ctx)
@@ -388,7 +388,7 @@ class Lifter(using State):
     val callSym = info.fakeCtorBms match
       case Some(v) => v
       case None => sym  
-    Call(callSym.asPath, getCallArgs(sym, ctx))(false)
+    Call(callSym.asPath, getCallArgs(sym, ctx))(false, false)
 
   // deals with creating parameter lists
   def liftOutDefnCont(base: Defn, d: Defn, ctx: LifterCtx): Lifted[Defn] = ctx.getBmsReqdInfo(d.sym) match
@@ -459,7 +459,7 @@ class Lifter(using State):
           val args2 = headPlistCopy.params.map(p => p.sym.asPath.asArg)
 
           val bdy = blockBuilder
-            .ret(Call(singleCallBms.asPath, args1 ++ args2)(true)) // TODO: restParams not considered
+            .ret(Call(singleCallBms.asPath, args1 ++ args2)(true, false)) // TODO: restParams not considered
 
           val mainDefn = FunDefn(f.owner, f.sym, PlainParamList(extraParamsCpy) :: headPlistCopy :: Nil, bdy)
           val auxDefn = FunDefn(N, singleCallBms, flatPlist, lifted.body)
@@ -491,10 +491,10 @@ class Lifter(using State):
             val inst = Instantiate(c.sym.asPath, paramArgs)
             var acc = blk => Assign(curSym, inst, blk)
             for ps <- auxSyms do
-              val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true)
+              val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true, false)
               curSym = TempSymbol(None, "tmp")
               acc = blk => acc(Assign(curSym, call, blk))
-            val bod = acc(Return(Call(curSym.asPath, extraSyms.map(_.asPath.asArg))(true), false))
+            val bod = acc(Return(Call(curSym.asPath, extraSyms.map(_.asPath.asArg))(true, false), false))
 
             inline def toPlist(ls: List[VarSymbol]) = PlainParamList(ls.map(s => Param(FldFlags.empty, s, N)))
 

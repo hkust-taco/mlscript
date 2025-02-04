@@ -12,23 +12,23 @@ fun f(used1, unused1) =
   g(used2) + unused2
 f(1, 2)
 //│ JS (unsanitized):
-//│ let f, g, g$;
+//│ let g, f, g$;
 //│ g$ = function g$(used1, used2, g_arg) {
 //│   let used3;
 //│   used3 = 2;
-//│   return used1 + used2;
+//│   return used1 + used2
 //│ };
 //│ g = function g(used1, used2) {
 //│   return (g_arg) => {
-//│     return g$(used1, used2, g_arg);
-//│   };
+//│     return g$(used1, used2, g_arg)
+//│   }
 //│ };
 //│ f = function f(used1, unused1) {
 //│   let used2, unused2, tmp;
 //│   used2 = unused1;
 //│   unused2 = 2;
 //│   tmp = g$(used1, used2, used2);
-//│   return tmp + unused2;
+//│   return tmp + unused2
 //│ };
 //│ f(1, 2)
 //│ = 5
@@ -44,20 +44,20 @@ fun f(used1, unused1) =
   g(used2)(used2) + unused2
 f(1, 2)
 //│ JS (unsanitized):
-//│ let f1, g1, g$1;
+//│ let g1, f1, g$1;
 //│ g$1 = function g$(used2, used1, g_arg) {
 //│   return (g_arg2) => {
 //│     let used3, tmp, tmp1;
 //│     used3 = 2;
 //│     tmp = used1 + used2;
 //│     tmp1 = tmp + g_arg;
-//│     return tmp1 + g_arg2;
-//│   };
+//│     return tmp1 + g_arg2
+//│   }
 //│ };
 //│ g1 = function g(used2, used1) {
 //│   return (g_arg) => {
-//│     return g$1(used2, used1, g_arg);
-//│   };
+//│     return g$1(used2, used1, g_arg)
+//│   }
 //│ };
 //│ f1 = function f(used1, unused1) {
 //│   let used2, unused2, tmp, tmp1;
@@ -65,7 +65,7 @@ f(1, 2)
 //│   unused2 = 2;
 //│   tmp = g$1(used2, used1, used2);
 //│   tmp1 = tmp(used2) ?? null;
-//│   return tmp1 + unused2;
+//│   return tmp1 + unused2
 //│ };
 //│ f1(1, 2)
 //│ = 9
@@ -94,16 +94,16 @@ fun f(used1, unused1) =
   foo(used2) + unused2
 f(1, 2)
 //│ JS (unsanitized):
-//│ let f3, g3, g$3;
+//│ let g3, f3, g$3;
 //│ g$3 = function g$(used1, used2, g_arg) {
 //│   let used3;
 //│   used3 = 2;
-//│   return used1 + used2;
+//│   return used1 + used2
 //│ };
 //│ g3 = function g(used1, used2) {
 //│   return (g_arg) => {
-//│     return g$3(used1, used2, g_arg);
-//│   };
+//│     return g$3(used1, used2, g_arg)
+//│   }
 //│ };
 //│ f3 = function f(used1, unused1) {
 //│   let used2, unused2, foo, tmp;
@@ -111,7 +111,7 @@ f(1, 2)
 //│   unused2 = 2;
 //│   foo = g3(used1, used2) ?? null;
 //│   tmp = foo(used2) ?? null;
-//│   return tmp + unused2;
+//│   return tmp + unused2
 //│ };
 //│ f3(1, 2)
 //│ = 5
@@ -126,16 +126,16 @@ fun f(used1, unused1) =
   g(used2) + unused2
 f(1, 2)
 //│ JS (unsanitized):
-//│ let f4, g4;
+//│ let g4, f4;
 //│ g4 = function g(g_arg) {
-//│   return g_arg + 1;
+//│   return g_arg + 1
 //│ };
 //│ f4 = function f(used1, unused1) {
 //│   let used2, unused2, tmp;
 //│   used2 = unused1;
 //│   unused2 = 2;
 //│   tmp = g4(used2);
-//│   return tmp + unused2;
+//│   return tmp + unused2
 //│ };
 //│ f4(1, 2)
 //│ = 5
@@ -150,24 +150,24 @@ fun f(a1, a2, a3, a4, a5, a6) =
   g
 f(1,2,3,4,5,6)
 //│ JS (unsanitized):
-//│ let f5, g5, g$4;
-//│ g$4 = function g$(a5, a1, a4, a3, a6, a2) {
+//│ let g5, f5, g$4;
+//│ g$4 = function g$(a3, a4, a5, a1, a6, a2) {
 //│   let tmp, tmp1, tmp2, tmp3;
 //│   tmp = a1 + a2;
 //│   tmp1 = tmp + a3;
 //│   tmp2 = tmp1 + a4;
 //│   tmp3 = tmp2 + a5;
-//│   return tmp3 + a6;
+//│   return tmp3 + a6
 //│ };
-//│ g5 = function g(a5, a1, a4, a3, a6, a2) {
+//│ g5 = function g(a3, a4, a5, a1, a6, a2) {
 //│   return () => {
-//│     return g$4(a5, a1, a4, a3, a6, a2);
-//│   };
+//│     return g$4(a3, a4, a5, a1, a6, a2)
+//│   }
 //│ };
 //│ f5 = function f(a1, a2, a3, a4, a5, a6) {
 //│   let tmp;
-//│   tmp = g$4(a5, a1, a4, a3, a6, a2);
-//│   return tmp;
+//│   tmp = g$4(a3, a4, a5, a1, a6, a2);
+//│   return tmp
 //│ };
 //│ f5(1, 2, 3, 4, 5, 6)
 //│ = 21
@@ -188,23 +188,23 @@ f1()
 let y = f2().toString()
 x + y
 //│ JS (unsanitized):
-//│ let f6, Tuple1, g6, h, ret, f11, f21, x, y, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, h$, g$5, f$capture1;
+//│ let g6, h, f6, Tuple1, ret, f11, f21, x, y, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, h$, g$5, f$capture1;
 //│ g$5 = function g$(f$capture2) {
 //│   f$capture2.a0$ = 1;
-//│   return null;
+//│   return null
 //│ };
 //│ g6 = function g(f$capture2) {
 //│   return () => {
-//│     return g$5(f$capture2);
-//│   };
+//│     return g$5(f$capture2)
+//│   }
 //│ };
 //│ h$ = function h$(f$capture2) {
-//│   return f$capture2.a0$;
+//│   return f$capture2.a0$
 //│ };
 //│ h = function h(f$capture2) {
 //│   return () => {
-//│     return h$(f$capture2);
-//│   };
+//│     return h$(f$capture2)
+//│   }
 //│ };
 //│ f$capture1 = function f$capture(a0$1) {
 //│   return new f$capture.class(a0$1);
@@ -221,7 +221,7 @@ x + y
 //│   capture.a0$ = 0;
 //│   g$this = g6(capture) ?? null;
 //│   h$this = h(capture) ?? null;
-//│   return Tuple1(g$this, h$this);
+//│   return Tuple1(g$this, h$this)
 //│ };
 //│ Tuple1 = function Tuple(a1, b1) {
 //│   return new Tuple.class(a1, b1);
@@ -299,23 +299,23 @@ fun f(unused, immutable, mutated) =
   a + h() + unused
 f(1, 2, 1000)
 //│ JS (unsanitized):
-//│ let f8, g7, h2, h$2, g$6, f$capture5;
+//│ let g7, h2, f8, h$2, g$6, f$capture5;
 //│ g$6 = function g$(immutable, f$capture6) {
 //│   f$capture6.mutated0$ = 2;
-//│   return immutable + f$capture6.mutated0$;
+//│   return immutable + f$capture6.mutated0$
 //│ };
 //│ g7 = function g(immutable, f$capture6) {
 //│   return () => {
-//│     return g$6(immutable, f$capture6);
-//│   };
+//│     return g$6(immutable, f$capture6)
+//│   }
 //│ };
 //│ h$2 = function h$(immutable, f$capture6) {
-//│   return f$capture6.mutated0$;
+//│   return f$capture6.mutated0$
 //│ };
 //│ h2 = function h(immutable, f$capture6) {
 //│   return () => {
-//│     return h$2(immutable, f$capture6);
-//│   };
+//│     return h$2(immutable, f$capture6)
+//│   }
 //│ };
 //│ f$capture5 = function f$capture(mutated0$1) {
 //│   return new f$capture.class(mutated0$1);
@@ -333,7 +333,7 @@ f(1, 2, 1000)
 //│   a1 = tmp21;
 //│   tmp22 = h$2(immutable, capture);
 //│   tmp23 = a1 + tmp22;
-//│   return tmp23 + unused;
+//│   return tmp23 + unused
 //│ };
 //│ f8(1, 2, 1000)
 //│ = 7
@@ -366,39 +366,39 @@ fun f(arg) =
   h(5)
 f(2)
 //│ JS (unsanitized):
-//│ let f12, g10, h3, h$3, g$9;
+//│ let g10, h3, f12, h$3, g$9;
 //│ g$9 = function g$(arg, n) {
 //│   let scrut, tmp21;
 //│   scrut = n <= 0;
 //│   if (scrut === true) {
-//│     return arg;
+//│     return arg
 //│   } else {
 //│     tmp21 = n - 1;
-//│     return h$3(arg, tmp21);
+//│     return h$3(arg, tmp21)
 //│   }
 //│ };
 //│ g10 = function g(arg) {
 //│   return (n) => {
-//│     return g$9(arg, n);
-//│   };
+//│     return g$9(arg, n)
+//│   }
 //│ };
 //│ h$3 = function h$(arg, n) {
 //│   let scrut, tmp21;
 //│   scrut = n <= 0;
 //│   if (scrut === true) {
-//│     return arg;
+//│     return arg
 //│   } else {
 //│     tmp21 = n - 1;
-//│     return g$9(arg, tmp21);
+//│     return g$9(arg, tmp21)
 //│   }
 //│ };
 //│ h3 = function h(arg) {
 //│   return (n) => {
-//│     return h$3(arg, n);
-//│   };
+//│     return h$3(arg, n)
+//│   }
 //│ };
 //│ f12 = function f(arg) {
-//│   return h$3(arg, 5);
+//│   return h$3(arg, 5)
 //│ };
 //│ f12(2)
 //│ = 2
@@ -419,15 +419,15 @@ fun g() =
   h()
 g()
 //│ JS (unsanitized):
-//│ let f15, g13, h4;
+//│ let h4, f15, g13;
 //│ f15 = function f() {
-//│   return 3;
+//│   return 3
 //│ };
 //│ h4 = function h() {
-//│   return 3;
+//│   return 3
 //│ };
 //│ g13 = function g() {
-//│   return h4();
+//│   return h4()
 //│ };
 //│ g13()
 //│ = 3
@@ -448,27 +448,27 @@ fun g() =
   f
 g()(1)
 //│ JS (unsanitized):
-//│ let g14, f16, h5, tmp21, f$1, h$4, g$capture1;
+//│ let h5, f16, g14, tmp21, f$1, h$4, g$capture1;
 //│ h$4 = function h$(k, x1, g$capture2) {
 //│   k = 5;
 //│   x1 = 4;
-//│   return x1 + g$capture2.y0$;
+//│   return x1 + g$capture2.y0$
 //│ };
 //│ h5 = function h(k, x1, g$capture2) {
 //│   return () => {
-//│     return h$4(k, x1, g$capture2);
-//│   };
+//│     return h$4(k, x1, g$capture2)
+//│   }
 //│ };
 //│ f$1 = function f$(g$capture2, x1) {
 //│   let k;
 //│   k = 4;
 //│   g$capture2.y0$ = 2;
-//│   return x1;
+//│   return x1
 //│ };
 //│ f16 = function f(g$capture2) {
 //│   return (x1) => {
-//│     return f$1(g$capture2, x1);
-//│   };
+//│     return f$1(g$capture2, x1)
+//│   }
 //│ };
 //│ g$capture1 = function g$capture(y0$1) {
 //│   return new g$capture.class(y0$1);
@@ -483,7 +483,7 @@ g()(1)
 //│   let capture;
 //│   capture = new g$capture1(null);
 //│   capture.y0$ = 0;
-//│   return f16(capture) ?? null;
+//│   return f16(capture) ?? null
 //│ };
 //│ tmp21 = g14();
 //│ tmp21(1) ?? null
@@ -532,29 +532,29 @@ fun f(x, cond) =
 //│ JS (unsanitized):
 //│ let f19, lambda, lambda1, lambda$, lambda$1;
 //│ lambda$1 = function lambda$(x1) {
-//│   return x1;
+//│   return x1
 //│ };
 //│ lambda = function lambda(x1) {
 //│   return () => {
-//│     return lambda$1(x1);
-//│   };
+//│     return lambda$1(x1)
+//│   }
 //│ };
 //│ lambda$ = function lambda$(x1) {
-//│   return x1;
+//│   return x1
 //│ };
 //│ lambda1 = function lambda(x1) {
 //│   return () => {
-//│     return lambda$(x1);
-//│   };
+//│     return lambda$(x1)
+//│   }
 //│ };
 //│ f19 = function f(x1, cond) {
 //│   x1 = 1;
 //│   x1 = 2;
 //│   if (cond === true) {
-//│     return lambda(x1) ?? null;
+//│     return lambda(x1) ?? null
 //│   } else {
 //│     x1 = 3;
-//│     return lambda1(x1) ?? null;
+//│     return lambda1(x1) ?? null
 //│   }
 //│ };
 //│ null
@@ -569,23 +569,23 @@ fun f() =
   x
 f()
 //│ JS (unsanitized):
-//│ let f20, f22, g17, f$2, g$13, f$capture15;
+//│ let f20, g17, f22, f$2, g$13, f$capture15;
 //│ g$13 = function g$(f$capture16) {
-//│   return 1;
+//│   return 1
 //│ };
 //│ g17 = function g(f$capture16) {
 //│   return () => {
-//│     return g$13(f$capture16);
-//│   };
+//│     return g$13(f$capture16)
+//│   }
 //│ };
 //│ f$2 = function f$(f$capture16) {
 //│   f$capture16.x0$ = 1;
-//│   return null;
+//│   return null
 //│ };
-//│ f22 = function f(f$capture16) {
+//│ f20 = function f(f$capture16) {
 //│   return () => {
-//│     return f$2(f$capture16);
-//│   };
+//│     return f$2(f$capture16)
+//│   }
 //│ };
 //│ f$capture15 = function f$capture(x0$1) {
 //│   return new f$capture.class(x0$1);
@@ -596,12 +596,12 @@ f()
 //│   }
 //│   toString() { return "f$capture(" + globalThis.Predef.render(this.x0$) + ")"; }
 //│ };
-//│ f20 = function f() {
+//│ f22 = function f() {
 //│   let tmp25, capture;
 //│   capture = new f$capture15(null);
 //│   capture.x0$ = 1;
 //│   tmp25 = f$2(capture);
-//│   return capture.x0$;
+//│   return capture.x0$
 //│ };
-//│ f20()
+//│ f22()
 //│ = 1

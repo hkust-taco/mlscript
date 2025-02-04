@@ -53,7 +53,9 @@ class Baz(z) extends Bar(z * 1) with
   fun baz = this.bar * 2
 //│ JS (unsanitized):
 //│ let Baz1;
-//│ Baz1 = function Baz(z1) { return new Baz.class(z1); };
+//│ Baz1 = function Baz(z1) {
+//│   return new Baz.class(z1);
+//│ };
 //│ Baz1.class = class Baz extends Bar3.class {
 //│   constructor(z) {
 //│     let tmp10;
