@@ -138,7 +138,7 @@ sealed abstract class Block extends Product with AutoLocated:
     case Throw(r) => r.subBlocks
     
     case _: Return | _: Throw | _: Label | _: Break | _: Continue | _: End | _: HandleBlockReturn => Nil
-
+  
   // Moves definitions in a block to the top. Only scans the top-level definitions of the block;
   // i.e, definitions inside other definitions are not moved out. Definitions inside `match`/`if`
   // and `while` statements are moved out.
@@ -219,7 +219,7 @@ sealed abstract class Defn:
     case _: ValDefn => Nil
     case ClsLikeDefn(preCtor = preCtor, ctor = ctor, methods = mtds) =>
       preCtor :: ctor :: mtds.flatMap(_.subBlocks)
-
+  
   lazy val freeVars: Set[Local] = this match
     case FunDefn(own, sym, params, body) => body.freeVars -- params.flatMap(_.paramSyms) - sym
     case ValDefn(owner, k, sym, rhs) => rhs.freeVars
@@ -310,7 +310,7 @@ sealed abstract class Result:
     case Value.Lam(params, body) => body :: Nil
     case Value.Arr(elems) => elems.flatMap(_.value.subBlocks)
     case _ => Nil
-  
+
   lazy val freeVars: Set[Local] = this match
     case Call(fun, args) => fun.freeVars ++ args.flatMap(_.value.freeVars).toSet
     case Instantiate(cls, args) => cls.freeVars ++ args.flatMap(_.freeVars).toSet
