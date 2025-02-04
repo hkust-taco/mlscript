@@ -1,13 +1,93 @@
 :js
 
 
-class Foo
+class Foo with
+  val x = 10
+  fun foo = x + 1
 
-class Bar() extends Foo
 
+object Bar extends Foo
 
-// TODO
-Bar() is Foo
+:todo // recognize fields that are inherited from superclasses
+[Bar.x, Bar.foo]
+//│ ╔══[ERROR] Object 'Bar' does not contain member 'x'
+//│ ║  l.12: 	[Bar.x, Bar.foo]
+//│ ╙──      	    ^^
+//│ ╔══[ERROR] Object 'Bar' does not contain member 'foo'
+//│ ║  l.12: 	[Bar.x, Bar.foo]
+//│ ╙──      	           ^^^^
+//│ = [10, 11]
+
+let b = id(Bar) in [b.x, b.foo]
+//│ = [10, 11]
+
+Bar is Foo
+//│ = true
+
+Bar is String
 //│ = false
+
+
+// :pt
+// :elt
+// :de
+class Bar(y) extends Foo with
+  fun bar = y + 1
+
+let b = Bar(42)
+//│ b = Bar(42)
+
+b is Foo
+//│ = true
+
+b is String
+//│ = false
+
+[b.x, b.foo]
+//│ = [10, 11]
+
+
+// FIXME: in super calls, class params should actually be viewed as a `VarSymbol`, not a `TermSymbol` wit owner
+:sjs
+class Baz(z) extends Bar(z * 1) with
+  fun baz = this.bar * 2
+//│ JS (unsanitized):
+//│ let Baz1;
+//│ Baz1 = function Baz(z1) { return new Baz.class(z1); };
+//│ Baz1.class = class Baz extends Bar3.class {
+//│   constructor(z) {
+//│     let tmp10;
+//│     tmp10 = this.z * 1;
+//│     super(tmp10);
+//│     this.z = z;
+//│   }
+//│   get baz() {
+//│     return this.bar * 2;
+//│   }
+//│   toString() { return "Baz(" + globalThis.Predef.render(this.z) + ")"; }
+//│ };
+//│ null
+
+:fixme
+let b = Baz(42)
+//│ ═══[RUNTIME ERROR] ReferenceError: Must call super constructor in derived class before accessing 'this' or returning from derived constructor
+
+b is Foo
+//│ = false
+
+b is String
+//│ = false
+
+:fixme
+[b.x, b.foo]
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
+
+
+
+abstract class Option[out T]: Some[T] | None
+object None extends Option[Nothing]
+class Some[out T](x: T) extends Option[T]
+[Some(123) is Option, None is Option, Some(123) is String, None is String]
+//│ = [true, true, false, false]
 
 

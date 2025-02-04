@@ -116,6 +116,7 @@ fun stringDrop(string, n) = string.slice(n)
 class MatchResult(captures)
 class MatchFailure(errors)
 
+fun unreachable = throw Error("unreachable")
 
 fun checkArgs(functionName, expected, isUB, got) =
   if got < expected || isUB && got > expected do
@@ -319,5 +320,18 @@ val __stackLimit = 0 // How deep the stack can go before heapifying the stack
 val __stackDepth = 0 // Tracks the virtual + real stack depth
 val __stackOffset = 0 // How much to offset __stackDepth by to get the true stack depth (i.e. the virtual depth)
 val __stackHandler = null
-abstract class __StackDelay() with
+abstract class __StackDelay with
   fun perform()
+
+fun checkDepth() =
+  if __stackDepth - __stackOffset >= __stackLimit && __stackHandler !== null then
+    // this is a tail call to effectful function
+    __stackHandler.perform()
+  else
+    ()
+
+fun resetDepth(tmp, curDepth) =
+  set __stackDepth = curDepth
+  if curDepth < __stackOffset do
+    set __stackOffset = curDepth
+  tmp

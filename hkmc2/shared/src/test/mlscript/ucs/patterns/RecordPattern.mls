@@ -1,3 +1,4 @@
+
 :pe
 :e
 fun take_1(p) =
@@ -5,11 +6,12 @@ fun take_1(p) =
     { x, y } then x + y
     else 0
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.6: 	    else 0
+//│ ║  l.7: 	    else 0
 //│ ╙──     	          ^
 //│ ╔══[PARSE ERROR] Unexpected curly brace section here
-//│ ║  l.5: 	    { x, y } then x + y
+//│ ║  l.6: 	    { x, y } then x + y
 //│ ╙──     	    ^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.5: 	    { x, y } then x + y
+//│ ║  l.6: 	    { x, y } then x + y
 //│ ╙──     	    ^^^^^^^^
+

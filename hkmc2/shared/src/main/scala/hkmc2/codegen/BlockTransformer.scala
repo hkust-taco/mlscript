@@ -72,17 +72,18 @@ class BlockTransformer(subst: SymbolSubst):
       val defn2 = applyDefn(defn)
       val rst2 = applyBlock(rst)
       if (defn2 is defn) && (rst2 is rst) then b else Define(defn2, rst2)
-    case HandleBlock(l, res, par, cls, hdr, bod, rst) =>
+    case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
       val l2 = applyLocal(l)
       val res2 = applyLocal(res)
       val par2 = applyPath(par)
+      val args2 = args.mapConserve(applyPath)
       val cls2 = cls.subst
       val hdr2 = hdr.mapConserve(applyHandler)
       val bod2 = applyBlock(bod)
       val rst2 = applyBlock(rst)
-      if (l2 is l) && (res2 is res) && (par2 is par) && (cls2 is cls) &&
-          (hdr2 is hdr) && (bod2 is bod) && (rst2 is rst)
-        then b else HandleBlock(l2, res2, par2, cls2, hdr2, bod2, rst2)
+      if (l2 is l) && (res2 is res) && (par2 is par) && (args2 is args) &&
+          (cls2 is cls) && (hdr2 is hdr) && (bod2 is bod) && (rst2 is rst)
+        then b else HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod2, rst2)
     case AssignDynField(l, fld, arrayIdx, r, rst) =>
       applyResult2(r): r2 =>
         val l2 = applyPath(l)
@@ -97,7 +98,7 @@ class BlockTransformer(subst: SymbolSubst):
     case r @ Call(fun, args) =>
       val fun2 = applyPath(fun)
       val args2 = args.mapConserve(applyArg)
-      if (fun2 is fun) && (args2 is args) then r else Call(fun2, args2)(r.isMlsFun)
+      if (fun2 is fun) && (args2 is args) then r else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects)
     case Instantiate(cls, args) =>
       val cls2 = applyPath(cls)
       val args2 = args.mapConserve(applyPath)
@@ -224,16 +225,17 @@ class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst
   override def applyHandler(hdr: Handler): Handler = hdr
   
   override def applyBlock(b: Block): Block = b match
-    case HandleBlock(l, res, par, cls, hdr, bod, rst) =>
+    case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
       val l2 = applyLocal(l)
       val res2 = applyLocal(res)
       val par2 = applyPath(par)
+      val args2 = args.mapConserve(applyPath)
       val cls2 = cls.subst
       val hdr2 = hdr.mapConserve(applyHandler)
       val rst2 = applyBlock(rst)
-      if (l2 is l) && (res2 is res) && (par2 is par) && (cls2 is cls) &&
-          (hdr2 is hdr) && (rst2 is rst)
-        then b else HandleBlock(l2, res2, par2, cls2, hdr2, bod, rst2)
+      if (l2 is l) && (res2 is res) && (par2 is par) && (args2 is args) &&
+          (cls2 is cls) && (hdr2 is hdr) && (rst2 is rst)
+        then b else HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod, rst2)
     case _ => super.applyBlock(b)
 
 // does not traverse into any other block

@@ -84,23 +84,23 @@ example()
 //│   let x2, get_x, old1, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12;
 //│   x2 = 0;
 //│   get_x = () => {
-//│     return x2;
+//│     return x2
 //│   };
 //│   old1 = x2;
 //│   try {
 //│     tmp6 = x2 + 1;
 //│     x2 = tmp6;
 //│     tmp7 = log(x2);
-//│     tmp8 = (tmp7 , log);
-//│     tmp9 = get_x() ?? null;
-//│     tmp10 = tmp8(tmp9) ?? null;
+//│     tmp8 = get_x() ?? null;
+//│     tmp9 = log(tmp8);
+//│     tmp10 = (tmp7 , tmp9);
 //│     tmp5 = tmp10;
 //│   } finally {
 //│     x2 = old1;
 //│   }
 //│   tmp11 = log(x2);
 //│   tmp12 = get_x() ?? null;
-//│   return log(tmp12);
+//│   return log(tmp12)
 //│ };
 //│ example2()
 //│ > 1
@@ -124,7 +124,7 @@ example()
 //│   let x2, get_x, y, old1, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
 //│   x2 = 0;
 //│   get_x = () => {
-//│     return x2;
+//│     return x2
 //│   };
 //│   old1 = x2;
 //│   try {
@@ -140,7 +140,7 @@ example()
 //│   tmp9 = log(x2);
 //│   tmp10 = get_x() ?? null;
 //│   tmp11 = log(tmp10);
-//│   return y;
+//│   return y
 //│ };
 //│ example3()
 //│ > 1

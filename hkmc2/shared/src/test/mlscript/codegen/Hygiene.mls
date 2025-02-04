@@ -18,7 +18,7 @@ object Test with
 //│   foo() {
 //│     let tmp;
 //│     tmp = Predef.print(Test1);
-//│     return Test1.x;
+//│     return Test1.x
 //│   }
 //│   toString() { return "Test"; }
 //│ }; Test1 = new Test$class;
@@ -55,7 +55,7 @@ let f = () => x
 let x = 2
 f()
 //│ JS (unsanitized):
-//│ let x, f, x1; x = 1; f = () => { return x; }; x1 = 2; f() ?? null
+//│ let x, f, x1; x = 1; f = () => { return x }; x1 = 2; f() ?? null
 //│ = 1
 //│ f = [function f]
 //│ x = 2
@@ -176,13 +176,13 @@ module Whoops with
 //│         this.w = Whoops1;
 //│       }
 //│       static g() {
-//│         return Whoops.f();
+//│         return Whoops.f()
 //│       }
 //│       static toString() { return "Whoops"; }
 //│     };
 //│   }
 //│   static f() {
-//│     return "Hello";
+//│     return "Hello"
 //│   }
 //│   static toString() { return "Whoops"; }
 //│ };

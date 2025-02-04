@@ -65,7 +65,7 @@ x => if x is Some(x) then x
 //│   if (x3 instanceof Some1.class) {
 //│     param04 = x3.value;
 //│     x4 = param04;
-//│     return x4;
+//│     return x4
 //│   } else {
 //│     throw new this.Error("match error");
 //│   }
@@ -127,15 +127,15 @@ fun f(x) = if x is
 //│     x4 = param04;
 //│     scrut1 = x4 > 0;
 //│     if (scrut1 === true) {
-//│       return 42;
+//│       return 42
 //│     } else {
-//│       return log("oops");
+//│       return log("oops")
 //│     }
 //│   } else {
 //│     if (x3 instanceof None1.class) {
-//│       return "ok";
+//│       return "ok"
 //│     } else {
-//│       return log("oops");
+//│       return log("oops")
 //│     }
 //│   }
 //│ };
@@ -168,14 +168,14 @@ fun f(x) = if x is
 //│   if (x3 instanceof Some1.class) {
 //│     param05 = x3.value;
 //│     u = param05;
-//│     return u;
+//│     return u
 //│   } else {
 //│     if (x3 instanceof Pair1.class) {
 //│       param04 = x3.fst;
 //│       param1 = x3.snd;
 //│       a = param04;
 //│       b = param1;
-//│       return a + b;
+//│       return a + b
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }
@@ -214,7 +214,7 @@ fun f(x) = log of if x is
 //│       tmp11 = "oops";
 //│     }
 //│   }
-//│   return log(tmp11);
+//│   return log(tmp11)
 //│ };
 //│ null
 

@@ -12,13 +12,13 @@ fun fib(a) = if
 //│   let scrut, tmp, tmp1, tmp2, tmp3;
 //│   scrut = a <= 1;
 //│   if (scrut === true) {
-//│     return a;
+//│     return a
 //│   } else {
 //│     tmp = a - 1;
 //│     tmp1 = fib(tmp);
 //│     tmp2 = a - 2;
 //│     tmp3 = fib(tmp2);
-//│     return tmp1 + tmp3;
+//│     return tmp1 + tmp3
 //│   }
 //│ };
 //│ null

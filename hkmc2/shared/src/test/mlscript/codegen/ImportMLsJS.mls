@@ -45,16 +45,18 @@ Option.None String()
 :fixme
 new Option.Some(1) String()
 //│ Parsed tree:
-//│ New of Jux:
-//│   lhs = App:
-//│     lhs = Sel:
-//│       prefix = Ident of "Option"
-//│       name = Ident of "Some"
-//│     rhs = Tup of Ls of 
-//│       IntLit of 1
-//│   rhs = App:
-//│     lhs = Ident of "String"
-//│     rhs = Tup of Nil
+//│ New:
+//│   body = S of Jux:
+//│     lhs = App:
+//│       lhs = Sel:
+//│         prefix = Ident of "Option"
+//│         name = Ident of "Some"
+//│       rhs = Tup of Ls of 
+//│         IntLit of 1
+//│     rhs = App:
+//│       lhs = Ident of "String"
+//│       rhs = Tup of Nil
+//│   rft = N
 //│ ═══[RUNTIME ERROR] TypeError: tmp18 is not a constructor
 
 

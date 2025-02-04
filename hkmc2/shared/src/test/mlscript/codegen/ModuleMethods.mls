@@ -16,7 +16,7 @@ object Example with
 //│     return [
 //│       x,
 //│       this.a
-//│     ];
+//│     ]
 //│   }
 //│   toString() { return "Example"; }
 //│ }; Example1 = new Example$class;

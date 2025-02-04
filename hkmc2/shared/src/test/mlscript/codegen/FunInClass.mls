@@ -39,7 +39,7 @@ fun test(a) =
 //│         a,
 //│         this.b,
 //│         c
-//│       ];
+//│       ]
 //│     } 
 //│     g(d) {
 //│       let h;
@@ -50,13 +50,13 @@ fun test(a) =
 //│           this$Inner.b,
 //│           d,
 //│           e
-//│         ];
+//│         ]
 //│       };
-//│       return h(d);
+//│       return h(d)
 //│     }
 //│     toString() { return "Inner(" + globalThis.Predef.render(this.b) + ")"; }
 //│   };
-//│   return Inner1(42);
+//│   return Inner1(42)
 //│ };
 //│ null
 
@@ -113,7 +113,7 @@ fun test(a) =
 //│   return [
 //│     tmp1,
 //│     tmp2
-//│   ];
+//│   ]
 //│ };
 //│ null
 
@@ -146,13 +146,13 @@ Foo(123)
 //│     let bar, baz, tmp1;
 //│     const this$Foo = this;
 //│     bar = function bar() {
-//│       return this$Foo.a;
+//│       return this$Foo.a
 //│     };
 //│     baz = function baz() {
-//│       return this$Foo.a;
+//│       return this$Foo.a
 //│     };
 //│     tmp1 = bar();
-//│     return baz();
+//│     return baz()
 //│   }
 //│   toString() { return "Foo(" + globalThis.Predef.render(this.a) + ")"; }
 //│ };
@@ -184,10 +184,10 @@ Bar(1)
 //│       let bar;
 //│       const this$Bar = this;
 //│       bar = function bar() {
-//│         return this$Bar.x;
+//│         return this$Bar.x
 //│       };
-//│       return bar();
-//│     };
+//│       return bar()
+//│     }
 //│   }
 //│   toString() { return "Bar(" + globalThis.Predef.render(this.x) + ")"; }
 //│ };

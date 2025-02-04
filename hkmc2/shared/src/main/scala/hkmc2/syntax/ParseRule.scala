@@ -117,7 +117,7 @@ class ParseRules(using State):
       Expr(
         ParseRule("type declaration head")(
           End((N, N)),
-          Kw(`extends`):
+          Kw(`extends`): // TODO: rm? this no longer triggers after `extension` was made an infix kw
             ParseRule("extension clause")(
               Expr(
                 ParseRule("parent specification")(
@@ -224,14 +224,26 @@ class ParseRules(using State):
                         ParseRule(s"'handle' binding `in` clause")(
                           exprOrBlk(ParseRule(s"'handle' binding body")(End(())))((body, _: Unit) => S(body))*
                         ),
-                      End(None)
+                      End(N)
                     )
                 ) { case (rhs, (S(defs), body)) => (rhs, defs, body) }
-        ) { case (lhs, (rhs, defs, body))=> Hndl(lhs, rhs, defs, body) }
+        ) { case (lhs, (rhs, defs, body)) => Hndl(lhs, rhs, defs, body) }
     ,
     Kw(`new`):
+      val withRefinement = Kw(`with`)(
+          ParseRule("'new' body")(
+            Blk(ParseRule("'new' expression")(End(()))) { case (res: Block // FIXME: can it be something else?
+              , ()) => S(res) }
+          )
+        )
       ParseRule("`new` keyword")(
-        exprOrBlk(ParseRule("`new` expression")(End(())))((body, _: Unit) => New(body))*
+        (
+          withRefinement.map(rfto => New(N, rfto)) ::
+          exprOrBlk(ParseRule("`new` expression")(
+            withRefinement,
+            End(N),
+          ))((body, rfto) => New(S(body), rfto))
+        )*
       )
     ,
     Kw(`in`):

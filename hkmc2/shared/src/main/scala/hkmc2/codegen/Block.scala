@@ -39,7 +39,7 @@ sealed abstract class Block extends Product with AutoLocated:
     case Define(defn, rst) =>
       val rest = rst.definedVars
       if defn.isOwned then rest else rest + defn.sym
-    case HandleBlock(lhs, res, par, cls, hdr, bod, rst) => bod.definedVars ++ rst.definedVars + lhs
+    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => bod.definedVars ++ rst.definedVars + lhs
     case HandleBlockReturn(_) => Set.empty
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
     case Label(lbl, bod, rst) => bod.definedVars ++ rst.definedVars
@@ -54,8 +54,7 @@ sealed abstract class Block extends Product with AutoLocated:
     case Define(_, rst) => 1 + rst.size
     case TryBlock(sub, fin, rst) => 1 + sub.size + fin.size + rst.size
     case Label(_, bod, rst) => 1 + bod.size + rst.size
-    case HandleBlock(lhs, res, par, cls, handlers, bdy, rst) => 1 + handlers.map(_.body.size).sum + bdy.size + rst.size
-    case AssignDynField(l, n, ai, r, rst) => 1 + rst.size
+    case HandleBlock(lhs, res, par, args, cls, handlers, bdy, rst) => 1 + handlers.map(_.body.size).sum + bdy.size + rst.size
   
   // TODO conserve if no changes
   def mapTail(f: BlockTail => Block): Block = this match
@@ -63,8 +62,8 @@ sealed abstract class Block extends Product with AutoLocated:
     case Begin(sub, rst) => Begin(sub, rst.mapTail(f))
     case Assign(lhs, rhs, rst) => Assign(lhs, rhs, rst.mapTail(f))
     case Define(defn, rst) => Define(defn, rst.mapTail(f))
-    case HandleBlock(lhs, res, par, cls, handlers, body, rest) =>
-      HandleBlock(lhs, res, par, cls, handlers.map(h => Handler(h.sym, h.resumeSym, h.params, h.body)), body, rest.mapTail(f))
+    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
+      HandleBlock(lhs, res, par, args, cls, handlers.map(h => Handler(h.sym, h.resumeSym, h.params, h.body)), body, rest.mapTail(f))
     case Match(scrut, arms, dflt, rst: End) =>
       Match(scrut, arms.map(_ -> _.mapTail(f)), dflt.map(_.mapTail(f)), rst)
     case Match(scrut, arms, dflt, rst) =>
@@ -91,9 +90,8 @@ sealed abstract class Block extends Product with AutoLocated:
     case TryBlock(sub, finallyDo, rest) => sub.freeVars ++ finallyDo.freeVars ++ rest.freeVars
     case Assign(lhs, rhs, rest) => Set(lhs) ++ rhs.freeVars ++ rest.freeVars
     case AssignField(lhs, nme, rhs, rest) => lhs.freeVars ++ rhs.freeVars ++ rest.freeVars
-    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs.freeVars ++ fld.freeVars ++ rhs.freeVars ++ rest.freeVars
-    case Define(defn, rest) => defn.freeVarsLLIR ++ rest.freeVars
-    case HandleBlock(lhs, res, par, cls, hdr, bod, rst) =>
+    case Define(defn, rest) => defn.freeVars ++ rest.freeVars
+    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
       (bod.freeVars - lhs) ++ rst.freeVars ++ hdr.flatMap(_.freeVars)
     case HandleBlockReturn(res) => res.freeVars
     case End(msg) => Set.empty
@@ -130,7 +128,7 @@ sealed abstract class Block extends Product with AutoLocated:
     case AssignField(_, _, rhs, rest) => rhs.subBlocks ::: rest :: Nil
     case AssignDynField(_, _, _, rhs, rest) => rhs.subBlocks ::: rest :: Nil
     case Define(d, rest) => d.subBlocks ::: rest :: Nil
-    case HandleBlock(_, _, par, _, handlers, body, rest) => par.subBlocks ++ handlers.map(_.body) :+ body :+ rest
+    case HandleBlock(_, _, par, args, _, handlers, body, rest) => par.subBlocks ++ args.flatMap(_.subBlocks) ++ handlers.map(_.body) :+ body :+ rest
     
     // TODO rm Lam from values and thus the need for these cases
     case Return(r, _) => r.subBlocks
@@ -199,6 +197,7 @@ case class HandleBlock(
     lhs: Local,
     res: Local,
     par: Path,
+    args: Ls[Path],
     cls: ClassSymbol,
     handlers: Ls[Handler],
     body: Block,
@@ -267,6 +266,8 @@ final case class ClsLikeDefn(
     preCtor: Block,
     ctor: Block,
 ) extends Defn:
+  publicFields.foreach: f =>
+    require(f.owner.contains(isym))
   val innerSym = S(isym)
 
 final case class Handler(
@@ -333,7 +334,11 @@ sealed abstract class Result:
 // type Local = LocalSymbol
 type Local = Symbol
 
-case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool) extends Result
+/* mayRaiseEffects indicates whether this call may raise effect (algebraic effect),
+ * regardless of whether the check for effect is inserted or not.
+ * Note that the check for effect is inserted during HandlerLowering and setting this to true
+ * after handler is lowered does not have any effect on the code generation. */
+case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool, val mayRaiseEffects: Bool) extends Result
 
 case class Instantiate(cls: Path, args: Ls[Path]) extends Result
 

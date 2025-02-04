@@ -2,7 +2,7 @@
 
 abstract class List[out T]
 class Cons[out T](head: T, tail: List[T]) extends List[T]
-module Nil extends List[nothing]
+module Nil extends List[Nothing]
 
 
 fun map(f, xs) = if xs is
@@ -16,7 +16,7 @@ module Bot
 
 abstract class Option[T]
 class Some[T](value: T) extends Option[T]
-module None extends Option[nothing]
+module None extends Option[Nothing]
 
 
 fun normalize(tp) = ()

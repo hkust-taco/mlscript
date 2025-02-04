@@ -35,7 +35,7 @@ object Parser:
       "", // `of` rhs
       ",",
       // ^ for keywords
-      // ";",
+      ";",
       // "=", // higher than || means `a == 1 || b` parses surprisingly
       "@",
       ":",

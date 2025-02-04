@@ -10,7 +10,7 @@ fun res() = 1
 //│ REPL> Sending: block$res3 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: let res;try { res = function res(...args) {   globalThis.Predef.checkArgs("res", 0, true, args.length);   return 1; }; block$res3 = null; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: let res;try { res = function res(...args) {   globalThis.Predef.checkArgs("res", 0, true, args.length);   return 1 }; block$res3 = null; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ REPL> Parsed:

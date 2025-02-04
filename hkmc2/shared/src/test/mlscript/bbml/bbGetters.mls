@@ -85,11 +85,11 @@ fun test2() =
 //│       tmp2 = funny();
 //│       tmp3 = n - 1;
 //│       tmp4 = tmp2(tmp3);
-//│       return tmp4 + 1;
-//│     };
+//│       return tmp4 + 1
+//│     }
 //│   };
 //│   tmp1 = funny();
-//│   return tmp1;
+//│   return tmp1
 //│ };
 //│ null
 //│ ═══[WARNING] Pure expression in statement position

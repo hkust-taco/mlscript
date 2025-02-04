@@ -48,7 +48,7 @@ fun ++ z = 0
 //│ ╔══[ERROR] Invalid function definition head: unexpected identifier in this position
 //│ ║  l.47: 	fun ++ z = 0
 //│ ╙──      	       ^
-//│ > let $_$_2;try { $_$_2 = function ++(...args) {   globalThis.Predef.checkArgs("++", 0, true, args.length);   return 0; }; block$res9 = null; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ > let $_$_2;try { $_$_2 = function ++(...args) {   globalThis.Predef.checkArgs("++", 0, true, args.length);   return 0 }; block$res9 = null; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ >                                  ^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '++'
 

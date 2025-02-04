@@ -16,7 +16,7 @@ x => if x is Pair(A, B) then 1
 //│     param1 = x.b;
 //│     if (param0 instanceof A1) {
 //│       if (param1 instanceof B1) {
-//│         return 1;
+//│         return 1
 //│       } else {
 //│         throw new this.Error("match error");
 //│       }
@@ -44,14 +44,14 @@ fun f(x) = if x is
 //│     param1 = x.b;
 //│     if (param0 instanceof A1) {
 //│       if (param1 instanceof A1) {
-//│         return 1;
+//│         return 1
 //│       } else {
 //│         throw new globalThis.Error("match error");
 //│       }
 //│     } else {
 //│       if (param0 instanceof B1) {
 //│         if (param1 instanceof B1) {
-//│           return 2;
+//│           return 2
 //│         } else {
 //│           throw new globalThis.Error("match error");
 //│         }

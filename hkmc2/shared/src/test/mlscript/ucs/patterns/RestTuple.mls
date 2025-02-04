@@ -23,7 +23,7 @@ fun nonsense(xs) = if xs is
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 0) {
 //│     rest = globalThis.Predef.tupleSlice(xs, 0, 0) ?? null;
 //│     ys = rest;
-//│     return ys;
+//│     return ys
 //│   } else {
 //│     throw new globalThis.Error("match error");
 //│   }
@@ -51,10 +51,10 @@ fun lead_and_last(xs) = if xs is
 //│     x = first0;
 //│     ys = rest;
 //│     y = last0;
-//│     return x + y;
+//│     return x + y
 //│   } else {
 //│     if (globalThis.Array.isArray(xs) && xs.length === 0) {
-//│       return 0;
+//│       return 0
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }
@@ -96,13 +96,13 @@ fun nested_tuple_patterns(xs) = if xs is
 //│       w = last0;
 //│       tmp2 = x + y;
 //│       tmp3 = tmp2 + z;
-//│       return tmp3 + w;
+//│       return tmp3 + w
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }
 //│   } else {
 //│     if (globalThis.Array.isArray(xs) && xs.length === 0) {
-//│       return 0;
+//│       return 0
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }

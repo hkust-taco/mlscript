@@ -14,7 +14,7 @@ fun test(x) =
 fun test(x) =
   [globalThis.a, x]
 //│ JS (unsanitized):
-//│ let test1; test1 = function test(x) { return [ globalThis.a, x ]; }; null
+//│ let test1; test1 = function test(x) { return [ globalThis.a, x ] }; null
 
 :re
 test(123)
@@ -46,13 +46,13 @@ module Test with
 //│     this.a = 3;
 //│   }
 //│   static test1(x) {
-//│     return test1(x);
+//│     return test1(x)
 //│   } 
 //│   static test2(x1) {
 //│     return [
 //│       Test.a,
 //│       x1
-//│     ];
+//│     ]
 //│   }
 //│   static toString() { return "Test"; }
 //│ };

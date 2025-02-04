@@ -1,37 +1,63 @@
 :js
 :handler
 
-// TODO we should probably forbid handlers in constructors
-
 
 abstract class Effect with
   fun perform(arg: Str): Str
+
+
+// * Note that the `val x` binding is in the handler's own body and not a field of the object...
+// * It could not possibly be, because the handler might not resume the rest of the object's constructor,
+// * so `x` might never get initialized even though the object might be returned.
+
+object Lol with
+  handle h = Effect with
+    fun perform(arg)(k) =
+      print(arg)
+      "B"
+  print(h.perform("A"))
+  val x = 123
+//│ > A
+
+:e
+:re
+Lol.x
+//│ ╔══[ERROR] Object 'Lol' does not contain member 'x'
+//│ ║  l.24: 	Lol.x
+//│ ╙──      	   ^^
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
 
 object Lol with
   handle h = Effect with
     fun perform(arg)(k) =
       print(arg)
-      "b"
-  print(h.perform("k"))
-//│ > k
+      k("B")
+  print(h.perform("A"))
+  val x = 123
+//│ > A
+//│ > B
 
-// TODO: `handle` statements should be rejected when followed by further object initialization code
-//       like `val` bindings or `let` bindings that are captured by class members
-:todo
 :e
-// x may be uninitialized
+:re
+Lol.x
+//│ ╔══[ERROR] Object 'Lol' does not contain member 'x'
+//│ ║  l.43: 	Lol.x
+//│ ╙──      	   ^^
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+
+
 class Lol() with
   handle h = Effect with
     fun perform(arg)(k) =
       print(arg)
-      "b"
-  print(h.perform("k"))
+      "B"
+  print(h.perform("A"))
   val x = 123
 
-// FIXME: should NOT return a partially initialized object
+// * Note: does NOT return a partially initialized object
 let oops = Lol()
-//│ > k
+//│ > A
 //│ oops = Lol()
 
 :re

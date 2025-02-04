@@ -6,7 +6,7 @@
 
 fun f(n1: Int): Int = n1
 //│ JS (unsanitized):
-//│ let f; f = function f(n1) { return n1; }; null
+//│ let f; f = function f(n1) { return n1 }; null
 
 f(42)
 //│ JS (unsanitized):
@@ -19,7 +19,7 @@ f(42)
 
 fun f(n1: Int)(n2: Int): Int =  (10 * n1 + n2)
 //│ JS (unsanitized):
-//│ let f1; f1 = function f(n1) { return (n2) => { let tmp; tmp = 10 * n1; return tmp + n2; }; }; null
+//│ let f1; f1 = function f(n1) { return (n2) => { let tmp; tmp = 10 * n1; return tmp + n2 } }; null
 
 // TODO compile this to
 // this.f$(4, 2)
@@ -39,9 +39,9 @@ fun f(n1: Int)(n2: Int)(n3: Int): Int = 10 * (10 * n1 + n2) + n3
 //│       tmp1 = 10 * n1;
 //│       tmp2 = tmp1 + n2;
 //│       tmp3 = 10 * tmp2;
-//│       return tmp3 + n3;
-//│     };
-//│   };
+//│       return tmp3 + n3
+//│     }
+//│   }
 //│ };
 //│ null
 
@@ -63,10 +63,10 @@ fun f(n1: Int)(n2: Int)(n3: Int)(n4: Int): Int = 10 * (10 * (10 * n1 + n2) + n3)
 //│         tmp5 = 10 * tmp4;
 //│         tmp6 = tmp5 + n3;
 //│         tmp7 = 10 * tmp6;
-//│         return tmp7 + n4;
-//│       };
-//│     };
-//│   };
+//│         return tmp7 + n4
+//│       }
+//│     }
+//│   }
 //│ };
 //│ null
 

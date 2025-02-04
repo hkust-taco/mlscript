@@ -35,7 +35,7 @@ abstract class
 
 
 abstract class Foo
-module
+object
   A extends Foo
   B extends Foo
 
@@ -43,17 +43,17 @@ module
 // * Would be cool if something like this was supported:
 :pe
 :ge
-module \$ extends Foo
+object \$ extends Foo
   A
   B
 //│ ╔══[LEXICAL ERROR] unexpected character '$'
-//│ ║  l.46: 	module \$ extends Foo
+//│ ║  l.46: 	object \$ extends Foo
 //│ ╙──      	        ^
 //│ ╔══[PARSE ERROR] Expected end of input; found error instead
-//│ ║  l.46: 	module \$ extends Foo
+//│ ║  l.46: 	object \$ extends Foo
 //│ ╙──      	        ^
-//│ > let $_1;try { $_1 = class $_ { static {} static toString() { return "\"; } }; block$res7 = null; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ > let $_1;try { const $_$class = class $_ {   constructor() {}   toString() { return "\"; } }; $_1 = new $_$class; $_1.class = $_$class; block$res7 = null; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
 
 

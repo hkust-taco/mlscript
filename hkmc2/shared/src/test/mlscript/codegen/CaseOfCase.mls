@@ -37,10 +37,10 @@ fun test(x) =
 //│   if (scrut instanceof Some1.class) {
 //│     param01 = scrut.value;
 //│     v1 = param01;
-//│     return log(v1);
+//│     return log(v1)
 //│   } else {
 //│     if (scrut instanceof None1) {
-//│       return log("none");
+//│       return log("none")
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }

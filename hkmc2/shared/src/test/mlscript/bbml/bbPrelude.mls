@@ -3,6 +3,7 @@
 
 declare class Any
 declare class Nothing
+declare class Object
 
 declare class untyped
 

@@ -74,7 +74,7 @@ id(+)(1, 2)
 :re
 id(+)(1)
 //│ JS (unsanitized):
-//│ let tmp1; tmp1 = Predef.id((arg1, arg2) => { return arg1 + arg2; }); tmp1(1) ?? null
+//│ let tmp1; tmp1 = Predef.id((arg1, arg2) => { return arg1 + arg2 }); tmp1(1) ?? null
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
 
@@ -90,7 +90,7 @@ fun (+) lol(a, b) = [a, b]
 :sjs
 id(~)(2)
 //│ JS (unsanitized):
-//│ let tmp2; tmp2 = Predef.id((arg) => { return ~ arg; }); tmp2(2) ?? null
+//│ let tmp2; tmp2 = Predef.id((arg) => { return ~ arg }); tmp2(2) ?? null
 //│ = -3
 
 2 |> ~

@@ -194,10 +194,10 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             Return(
               Call(
                 Value.Ref(Elaborator.State.globalThisSymbol).selSN("Predef").selSN("printRaw"),
-                Arg(false, Value.Ref(sym)) :: Nil)(true),
+                Arg(false, Value.Ref(sym)) :: Nil)(true, false),
             implct = true)
           val je = nestedScp.givenIn:
-            jsb.block(le)
+            jsb.block(le, endSemi = false)
           val jsStr = je.stripBreaks.mkString(100)
           mkQuery("", jsStr): out =>
             val result = out.splitSane('\n').init.mkString // should always ends with "undefined" (TODO: check)

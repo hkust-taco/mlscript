@@ -1,0 +1,75 @@
+:js
+
+
+:pe
+new
+//│ ╔══[PARSE ERROR] Expected 'with' keyword, expression, or block after `new` keyword; found end of input instead
+//│ ║  l.5: 	new
+//│ ╙──     	   ^
+
+new Object
+//│ = [object Object]
+
+:pe
+new with
+//│ ╔══[PARSE ERROR] Expected block after 'new' body; found end of input instead
+//│ ║  l.14: 	new with
+//│ ╙──      	        ^
+
+:pe
+new Object with
+//│ ╔══[PARSE ERROR] Expected block after 'new' body; found end of input instead
+//│ ║  l.20: 	new Object with
+//│ ╙──      	               ^
+
+let obj =
+  new Object with
+   val x = 12
+//│ obj = $anon
+
+obj.x
+//│ = 12
+
+:s
+// :pt
+// :lot
+// :dl
+// :sjs
+// :lot
+let n =
+  new with
+    val x = 12
+//│ n = $anon
+
+n.x
+//│ = 12
+
+
+:sjs
+object Foo with
+  val x = 1
+//│ JS (unsanitized):
+//│ let Foo1;
+//│ const Foo$class = class Foo {
+//│   constructor() {
+//│     this.x = 1;
+//│   }
+//│   toString() { return "Foo"; }
+//│ }; Foo1 = new Foo$class;
+//│ Foo1.class = Foo$class;
+//│ null
+
+
+class Foo(x) with
+  fun foo = x + 1
+  print("Foo", x, foo)
+
+new Foo(123) with
+  // fun foo = super.foo + 1 // TODO
+  fun foo = 27
+  print("Bar", foo)
+//│ > Foo 123 27
+//│ > Bar 27
+//│ = $anon
+
+

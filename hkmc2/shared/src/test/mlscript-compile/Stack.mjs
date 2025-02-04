@@ -21,9 +21,9 @@ Stack1 = class Stack {
   }
   static isEmpty(xs) {
     if (xs instanceof Stack.Nil.class) {
-      return true;
+      return true
     } else {
-      return false;
+      return false
     }
   } 
   static reverseAndAppend(xs1, tail) {
@@ -34,17 +34,17 @@ Stack1 = class Stack {
       h = param0;
       t = param1;
       tmp = Stack.Cons(h, tail);
-      return Stack.reverseAndAppend(t, tmp);
+      return Stack.reverseAndAppend(t, tmp)
     } else {
       if (xs1 instanceof Stack.Nil.class) {
-        return tail;
+        return tail
       } else {
         throw new globalThis.Error("match error");
       }
     }
   } 
   static reverse(xs2) {
-    return Stack.reverseAndAppend(xs2, Stack.Nil);
+    return Stack.reverseAndAppend(xs2, Stack.Nil)
   } 
   static fromArray(arr) {
     let ls, i, len, scrut, tmp, tmp1, tmp2, tmp3;
@@ -66,7 +66,7 @@ Stack1 = class Stack {
       }
       break;
     }
-    return ls;
+    return ls
   } 
   static toReverseArray(xs3) {
     let arr1, i, param0, param1, h, t, tmp, tmp1;
@@ -87,7 +87,7 @@ Stack1 = class Stack {
       }
       break;
     }
-    return arr1;
+    return arr1
   } 
   static zip(...xss) {
     let go, tmp, tmp1;
@@ -107,11 +107,11 @@ Stack1 = class Stack {
             tmp2 = Stack.Cons(h2, heads);
             tmp3 = Stack.Cons(t2, tails);
             tmp4 = go(tmp2, tmp3);
-            return tmp4(t) ?? null;
+            return tmp4(t) ?? null
           } else {
             if (h instanceof Stack.Nil.class) {
               tmp5 = go(heads, tails);
-              return tmp5(t) ?? null;
+              return tmp5(t) ?? null
             } else {
               throw new globalThis.Error("match error");
             }
@@ -125,23 +125,23 @@ Stack1 = class Stack {
                 tmp6 = false;
               }
               tmp7 = Predef.assert(tmp6) ?? null;
-              return (tmp7 , Stack.Nil);
+              return (tmp7 , Stack.Nil)
             } else {
               tmp8 = Stack.toReverseArray(heads);
               tmp9 = go(Stack.Nil, Stack.Nil);
               tmp10 = Stack.reverse(tails);
               tmp11 = tmp9(tmp10) ?? null;
-              return Stack.Cons(tmp8, tmp11);
+              return Stack.Cons(tmp8, tmp11)
             }
           } else {
             throw new globalThis.Error("match error");
           }
         }
-      };
+      }
     };
     tmp = go(Stack.Nil, Stack.Nil);
     tmp1 = Stack.fromArray(xss);
-    return tmp(tmp1) ?? null;
+    return tmp(tmp1) ?? null
   }
   static toString() { return "Stack"; }
 };

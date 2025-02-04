@@ -297,3 +297,7 @@ let xs = new Oopsie
 
 // ——— ——— ———
 
+type A = Int
+
+// ——— ——— ———
+

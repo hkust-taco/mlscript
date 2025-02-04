@@ -6,35 +6,33 @@ abstract class Effect with
 
 fun f() =
   handle h = Effect with
-    fun f()(r) =
+    fun foo()(r) =
       let m = r(())
-      print("Bye!")
+      print("Bye!") // This never executes because `r` returns from `f`
       m
-  h.f()
-  return 3
+  h.foo()
+  return 3 // Note: changing this to just `3` leads to `print("Bye!")` executing
 f()
-//│ > Bye!
 //│ = 3
 
 fun f() =
   handle h = Effect with
-    fun f()(r) =
+    fun foo()(r) =
       let m = r()
       print("Bye!")
       m
   in
-    h.f()
+    h.foo()
     return 3
   10
 
 :expect 3
 f()
-//│ > Bye!
 //│ = 3
 
 let l = () =>
   handle h = Effect with
-    fun f()(r) = r(())
+    fun foo()(r) = r(())
   return 3
   4
 //│ l = [function l]
@@ -43,11 +41,11 @@ l()
 //│ = 3
 
 handle h1 = Effect with
-  fun f()(r) = r(())
+  fun foo()(r) = r(())
 let l = () =>
   handle h2 = Effect with
-    fun f()(r) = r(())
-  h1.f()
+    fun bar()(r) = r(())
+  h1.foo()
   return 3
   4
 l()

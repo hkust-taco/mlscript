@@ -5,8 +5,8 @@ class Some[A](value: A) extends Option[A]
 object None extends Option
 
 abstract class Either[out A, out B]: Left[A] | Right[B]
-class Left[A](leftValue: A) extends Either[A, nothing]
-class Right[B](rightValue: B) extends Either[nothing, B]
+class Left[A](leftValue: A) extends Either[A, Nothing]
+class Right[B](rightValue: B) extends Either[Nothing, B]
 
 fun f(x, y) =
   if x is

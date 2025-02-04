@@ -1,0 +1,13 @@
+:js
+
+
+class Foo
+
+// TODO Report elab' error
+:ge
+module M extends Foo
+//│ > let M1;try { M1 = class M extends Foo1 {   static {     super();   }   static toString() { return "M"; } }; block$res2 = null; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                         ^^^^^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] 'super' keyword unexpected here
+
+

@@ -2,11 +2,11 @@
 
 abstract class List[out T]
 class Cons[out T](head: T, tail: List[T]) extends List[T]
-module Nil extends List[nothing]
+module Nil extends List[Nothing]
 
 abstract class Option[out T]
 class Some[out T](value: T) extends Option[T]
-module None extends Option[nothing]
+module None extends Option[Nothing]
 
 
 fun length(xs) = if xs is

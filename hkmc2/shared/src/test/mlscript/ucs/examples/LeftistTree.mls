@@ -12,7 +12,7 @@ fun abs(x) = if x < 0 then -x else x
 
 abstract class Option[out T]: (Some[T] | None)
 class Some[out T](val value: T) extends Option[T]
-object None extends Option[nothing]
+object None extends Option[Nothing]
 
 fun (??) getOrElse(o, v) = if o is
   Some(v') then v'
@@ -20,13 +20,13 @@ fun (??) getOrElse(o, v) = if o is
 
 abstract class List[out T]: (Cons[T] | Nil)
 class Cons[out T](val head: T, val tail: List[T]) extends List[T]
-object Nil extends List[nothing]
+object Nil extends List[Nothing]
 
 fun (::) cons(head, tail) = Cons(head, tail)
 
 abstract class Tree[out A]: (Empty | Node[A])
 class Node[out A](value: A, left: Tree[A], right: Tree[A], rank: Int) extends Tree[A]
-object Empty extends Tree[nothing]
+object Empty extends Tree[Nothing]
 
 fun show(t: Tree[Any]): Str = if t is
   Node(v, l, r, _) then
@@ -72,22 +72,22 @@ let tree1 = fromList(Empty, 3 :: 4 :: 1 :: 2 :: Nil)
 tree1 |> show
 
 // Remove the smallest element. It should be 1.
-getMin(tree1) ?? "nothing"
+getMin(tree1) ?? "Nothing"
 let tree1' = deleteMin(tree1)
 tree1' |> show
 
 // Remove one more element. It should be 2.
-getMin(tree1') ?? "nothing"
+getMin(tree1') ?? "Nothing"
 let tree1'' = deleteMin(tree1')
 tree1'' |> show
 
 // Remove one more element. It should be 3.
-getMin(tree1'') ?? "nothing"
+getMin(tree1'') ?? "Nothing"
 let tree1''' = deleteMin(tree1'')
 tree1''' |> show
 
 // Remove the last element. It should be 4.
-getMin(tree1''') ?? "nothing"
+getMin(tree1''') ?? "Nothing"
 let tree1'''' = deleteMin(tree1''')
 tree1'''' |> show
 

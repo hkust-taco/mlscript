@@ -77,19 +77,19 @@ f of false
 
 let bar = new Bar(42)
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(bar),Some(New(App(Ident(Bar),Tup(List(IntLit(42)))))),None)
+//│ 	LetLike(keyword 'let',Ident(bar),Some(New(Some(App(Ident(Bar),Tup(List(IntLit(42))))),None)),None)
 
 let bar = new Bar2(1, 1)
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(bar),Some(New(App(Ident(Bar2),Tup(List(IntLit(1), IntLit(1)))))),None)
+//│ 	LetLike(keyword 'let',Ident(bar),Some(New(Some(App(Ident(Bar2),Tup(List(IntLit(1), IntLit(1))))),None)),None)
 
 new Bar(0)
 //│ Parsed:
-//│ 	New(App(Ident(Bar),Tup(List(IntLit(0)))))
+//│ 	New(Some(App(Ident(Bar),Tup(List(IntLit(0))))),None)
 
 new Bar2(114, 514)
 //│ Parsed:
-//│ 	New(App(Ident(Bar2),Tup(List(IntLit(114), IntLit(514)))))
+//│ 	New(Some(App(Ident(Bar2),Tup(List(IntLit(114), IntLit(514))))),None)
 
 fun inc: Int -> Int
 //│ Parsed:

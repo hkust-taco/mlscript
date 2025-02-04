@@ -44,7 +44,7 @@ z = 1
 
 fun f() = 1
 //│ JS (unsanitized):
-//│ let f; f = function f() { return 1; }; null
+//│ let f; f = function f() { return 1 }; null
 
 f
 //│ JS (unsanitized):
@@ -55,7 +55,7 @@ f
 let f
 f(x) = x + 1
 //│ JS (unsanitized):
-//│ let f1; f1 = (x1) => { return x1 + 1; }; null
+//│ let f1; f1 = (x1) => { return x1 + 1 }; null
 //│ f = [function f1]
 
 f(1)
@@ -111,7 +111,7 @@ else
 fun f() =
   foo = 42
 //│ JS (unsanitized):
-//│ let f2; f2 = function f() { foo2 = 42; return null; }; null
+//│ let f2; f2 = function f() { foo2 = 42; return null }; null
 
 f()
 //│ JS (unsanitized):
@@ -129,6 +129,6 @@ fun f() = foo = 0
 //│ ║  l.127: 	fun f() = foo = 0
 //│ ╙──       	              ^
 //│ JS (unsanitized):
-//│ let f3; f3 = function f() { return foo2; }; null
+//│ let f3; f3 = function f() { return foo2 }; null
 
 

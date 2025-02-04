@@ -2,6 +2,7 @@ package hkmc2
 package semantics
 
 import mlscript.utils.*, shorthands.*
+import syntax.Tree
 import syntax.Tree.*
 import hkmc2.syntax.{PossiblyAnnotated, TypeOrTermDef}
 
@@ -9,7 +10,16 @@ import hkmc2.syntax.{PossiblyAnnotated, TypeOrTermDef}
 trait BlockImpl(using Elaborator.State):
   self: Block =>
   
-  val desugStmts = stmts.map(_.desugared)
+  val desugStmts =
+    def desug(stmts: Ls[Tree]): Ls[Tree] =
+      stmts match
+      case stmt :: stmts =>
+        stmt.desugared match
+        case PossiblyAnnotated(anns, h @ Hndl(body = N)) =>
+          PossiblyAnnotated(anns, h.copy(body = S(Block(stmts)))) :: Nil
+        case stmt => stmt :: desug(stmts)
+      case Nil => Nil
+    desug(stmts)
   
   val definedSymbols: Array[Str -> BlockMemberSymbol] =
     desugStmts

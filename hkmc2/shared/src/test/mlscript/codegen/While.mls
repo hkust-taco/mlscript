@@ -19,7 +19,7 @@
 //│     }
 //│     break;
 //│   }
-//│   return tmp;
+//│   return tmp
 //│ }
 //│ = [function block$res2]
 
@@ -121,7 +121,7 @@ while
 //│     }
 //│     break;
 //│   }
-//│   return tmp20;
+//│   return tmp20
 //│ }
 //│ = [function block$res14]
 
@@ -215,7 +215,7 @@ fun f(ls) =
 //│     }
 //│     break;
 //│   }
-//│   return tmp28;
+//│   return tmp28
 //│ };
 //│ null
 

@@ -53,7 +53,7 @@ CSV1.class = class CSV {
       }
       break;
     }
-    return arrData;
+    return arrData
   }
   toString() { return "CSV(" + globalThis.Predef.render(this.strDelimiter) + ")"; }
 };

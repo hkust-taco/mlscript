@@ -10,7 +10,7 @@ f(2, 3)
 //│   globalThis.Predef.checkArgs("f", 2, true, args.length);
 //│   let x = args[0];
 //│   let y = args[1];
-//│   return x + y;
+//│   return x + y
 //│ };
 //│ block$res1 = f(2, 3);
 //│ undefined
@@ -23,7 +23,7 @@ f(2, 3)
 fun f2(x, y) = x + y
 f2(2)
 //│ JS:
-//│ f2 = function f2(x, y) { return x + y; }; block$res2 = f2(2); undefined
+//│ f2 = function f2(x, y) { return x + y }; block$res2 = f2(2); undefined
 //│ = NaN
 
 :ssjs
@@ -48,8 +48,8 @@ f(3)(4)
 //│     let z = args1[1];
 //│     let tmp1;
 //│     tmp1 = x + y;
-//│     return tmp1 + z;
-//│   };
+//│     return tmp1 + z
+//│   }
 //│ };
 //│ tmp = f1(3);
 //│ block$res4 = tmp(4) ?? null;
@@ -62,7 +62,7 @@ f(3)(4)
 :noSanityCheck
 let f = (x, y) => x + y in f(2)
 //│ JS:
-//│ f3 = (x, y) => { return x + y; }; block$res5 = f3(2) ?? null; undefined
+//│ f3 = (x, y) => { return x + y }; block$res5 = f3(2) ?? null; undefined
 //│ = NaN
 
 :ssjs
@@ -74,7 +74,7 @@ f(2)
 //│   globalThis.Predef.checkArgs("", 2, true, args.length);
 //│   let x = args[0];
 //│   let y = args[1];
-//│   return x + y;
+//│   return x + y
 //│ };
 //│ block$res6 = f4(2) ?? null;
 //│ undefined
@@ -101,7 +101,7 @@ Cls(1, 2).f(3)
 //│     let tmp2, tmp3;
 //│     tmp2 = this.x + this.y;
 //│     tmp3 = tmp2 + z;
-//│     return tmp3 + p;
+//│     return tmp3 + p
 //│   }
 //│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ", " + globalThis.Predef.render(this.y) + ")"; }
 //│ };
@@ -131,7 +131,7 @@ Cls(1, 2).f(3)
 //│     let tmp3, tmp4;
 //│     tmp3 = this.x + this.y;
 //│     tmp4 = tmp3 + z;
-//│     return tmp4 + p;
+//│     return tmp4 + p
 //│   }
 //│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ", " + globalThis.Predef.render(this.y) + ")"; }
 //│ };
@@ -168,8 +168,8 @@ Cls(1, 2).f(3, 4)(5)
 //│       tmp6 = tmp5 + z;
 //│       tmp7 = tmp6 + p;
 //│       tmp8 = tmp7 + q;
-//│       return tmp8 + s;
-//│     };
+//│       return tmp8 + s
+//│     }
 //│   }
 //│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ", " + globalThis.Predef.render(this.y) + ")"; }
 //│ };
@@ -238,7 +238,7 @@ if M.A(1).y is
 //│       f(...args) {
 //│         globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│         let y = args[0];
-//│         return this.x + y;
+//│         return this.x + y
 //│       }
 //│       toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; }
 //│     };

@@ -30,17 +30,17 @@ Option1 = class Option {
   }
   static isDefined(x) {
     if (x instanceof Option.Some.class) {
-      return true;
+      return true
     } else {
       if (x instanceof Option.None.class) {
-        return false;
+        return false
       } else {
         throw new globalThis.Error("match error");
       }
     }
   } 
   static test() {
-    return Predef.pipeInto(2134, Predef.print);
+    return Predef.pipeInto(2134, Predef.print)
   }
   static toString() { return "Option"; }
 };

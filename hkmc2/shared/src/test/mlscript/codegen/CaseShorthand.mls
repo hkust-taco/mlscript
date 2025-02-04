@@ -7,14 +7,14 @@ case x then x
 :sjs
 case { x then x }
 //│ JS (unsanitized):
-//│ (caseScrut) => { let x; x = caseScrut; return x; }
+//│ (caseScrut) => { let x; x = caseScrut; return x }
 //│ = [function block$res2]
 
 :sjs
 x => if x is
   0 then true
 //│ JS (unsanitized):
-//│ (x) => { if (x === 0) { return true; } else { throw new this.Error("match error"); } }
+//│ (x) => { if (x === 0) { return true } else { throw new this.Error("match error"); } }
 //│ = [function block$res3]
 
 :sjs
@@ -22,7 +22,7 @@ case 0 then true
 //│ JS (unsanitized):
 //│ (caseScrut) => {
 //│   if (caseScrut === 0) {
-//│     return true;
+//│     return true
 //│   } else {
 //│     throw new this.Error("match error");
 //│   }
@@ -53,7 +53,7 @@ case
   0 then true
   _ then false
 //│ JS (unsanitized):
-//│ (caseScrut) => { if (caseScrut === 0) { return true; } else { return false; } }
+//│ (caseScrut) => { if (caseScrut === 0) { return true } else { return false } }
 //│ = [function block$res10]
 
 class Some(value)
@@ -67,10 +67,10 @@ val isDefined = case
 //│ let isDefined, tmp5;
 //│ tmp5 = (caseScrut) => {
 //│   if (caseScrut instanceof Some1.class) {
-//│     return true;
+//│     return true
 //│   } else {
 //│     if (caseScrut instanceof None1) {
-//│       return false;
+//│       return false
 //│     } else {
 //│       throw new this.Error("match error");
 //│     }

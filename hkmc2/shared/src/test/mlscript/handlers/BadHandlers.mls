@@ -1,0 +1,53 @@
+:js
+:handler
+
+
+:re
+handle h = Object with {}
+h.oops
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
+
+:e
+handle h = Object with {}
+val x = 1
+//│ ╔══[ERROR] Illegal definition in term position.
+//│ ║  l.12: 	val x = 1
+//│ ╙──      	    ^^^^^
+
+handle h = Object with {}
+val x = 1
+x + 1
+//│ = 2
+
+:e
+x
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.23: 	x
+//│ ╙──      	^
+
+:fixme
+handle h = Object with
+  fun lol(k) = k(())
+h.lol
+//│ ═══[RUNTIME ERROR] Error: Unhandled effects
+
+handle h = Object with
+  fun lol()(k) = k(42)
+h.lol()
+val x = 1
+
+object Foo with
+  handle h = Object with
+    fun lol()(k) = k(42)
+  val x = h.lol()
+  x + 1
+
+:e
+:re
+Foo.x
+//│ ╔══[ERROR] Object 'Foo' does not contain member 'x'
+//│ ║  l.47: 	Foo.x
+//│ ╙──      	   ^^
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+
+

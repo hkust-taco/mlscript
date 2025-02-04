@@ -33,9 +33,9 @@ Predef1 = class Predef {
           prev = TraceLogger.indentLvl;
           tmp = prev + 1;
           TraceLogger.indentLvl = tmp;
-          return prev;
+          return prev
         } else {
-          return null;
+          return null
         }
       } 
       static resetIndent(n) {
@@ -43,9 +43,9 @@ Predef1 = class Predef {
         scrut = TraceLogger.enabled;
         if (scrut === true) {
           TraceLogger.indentLvl = n;
-          return null;
+          return null
         } else {
-          return null;
+          return null
         }
       } 
       static log(msg) {
@@ -57,9 +57,9 @@ Predef1 = class Predef {
           tmp2 = "\n" + tmp1;
           tmp3 = msg.replaceAll("\n", tmp2);
           tmp4 = tmp + tmp3;
-          return globalThis.console.log(tmp4) ?? null;
+          return globalThis.console.log(tmp4) ?? null
         } else {
-          return null;
+          return null
         }
       }
       static toString() { return "TraceLogger"; }
@@ -101,7 +101,7 @@ Predef1 = class Predef {
       append(elem) {
         this.tail.next = elem;
         this.tail = elem;
-        return null;
+        return null
       }
       toString() { return "__ListWithTail(" + globalThis.Predef.render(this.next) + ", " + globalThis.Predef.render(this.tail) + ")"; }
     };
@@ -144,86 +144,83 @@ Predef1 = class Predef {
     this.__stackDepth = 0;
     this.__stackOffset = 0;
     this.__stackHandler = null;
-    this.__StackDelay = function __StackDelay() {
-      return new __StackDelay.class();
-    };
-    this.__StackDelay.class = class __StackDelay {
+    this.__StackDelay = class __StackDelay {
       constructor() {}
-      toString() { return "__StackDelay(" + "" + ")"; }
+      toString() { return "__StackDelay"; }
     };
   }
   static id(x) {
-    return x;
+    return x
   } 
   static not(x1) {
     if (x1 === false) {
-      return true;
+      return true
     } else {
-      return false;
+      return false
     }
   } 
   static pipeInto(x2, f) {
-    return f(x2) ?? null;
+    return f(x2) ?? null
   } 
   static pipeFrom(f1, x3) {
-    return f1(x3) ?? null;
+    return f1(x3) ?? null
   } 
   static andThen(f2, g) {
     return (x4) => {
       let tmp;
       tmp = f2(x4) ?? null;
-      return g(tmp) ?? null;
-    };
+      return g(tmp) ?? null
+    }
   } 
   static compose(f3, g1) {
     return (x4) => {
       let tmp;
       tmp = g1(x4) ?? null;
-      return f3(tmp) ?? null;
-    };
+      return f3(tmp) ?? null
+    }
   } 
   static passTo(receiver, f4) {
     return (...args) => {
-      return f4(receiver, ...args) ?? null;
-    };
+      return f4(receiver, ...args) ?? null
+    }
   } 
   static call(receiver1, f5) {
     return (...args) => {
-      return f5.call(receiver1, ...args);
-    };
+      return f5.call(receiver1, ...args)
+    }
   } 
   static pass1(f6) {
     return (...xs) => {
-      return f6(xs[0]) ?? null;
-    };
+      return f6(xs[0]) ?? null
+    }
   } 
   static pass2(f7) {
     return (...xs) => {
-      return f7(xs[0], xs[1]) ?? null;
-    };
+      return f7(xs[0], xs[1]) ?? null
+    }
   } 
   static pass3(f8) {
     return (...xs) => {
-      return f8(xs[0], xs[1], xs[2]) ?? null;
-    };
+      return f8(xs[0], xs[1], xs[2]) ?? null
+    }
   } 
   static print(...xs) {
     let tmp, tmp1;
     tmp = Predef.map(Predef.renderAsStr);
     tmp1 = tmp(...xs) ?? null;
-    return globalThis.console.log(...tmp1) ?? null;
+    return globalThis.console.log(...tmp1) ?? null
   } 
   static printRaw(x4) {
     let tmp;
     tmp = Predef.render(x4);
-    return globalThis.console.log(tmp) ?? null;
+    return globalThis.console.log(tmp) ?? null
   } 
   static interleave(sep) {
     return (...args) => {
       let res, len, i, scrut, idx, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
       scrut2 = args.length === 0;
       if (scrut2 === true) {
-        return [];
+        return []
       } else {
         tmp = args.length * 2;
         tmp1 = tmp - 1;
@@ -254,57 +251,57 @@ Predef1 = class Predef {
           }
           break;
         }
-        return res;
+        return res
       }
-    };
+    }
   } 
   static renderAsStr(arg) {
     if (typeof arg === 'string') {
-      return arg;
+      return arg
     } else {
-      return Predef.render(arg);
+      return Predef.render(arg)
     }
   } 
   static render(arg1) {
     let ts, p, scrut, scrut1, scrut2, nme, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20;
     if (arg1 === undefined) {
-      return "undefined";
+      return "undefined"
     } else {
       if (arg1 === null) {
-        return "null";
+        return "null"
       } else {
         if (arg1 instanceof globalThis.Array) {
           tmp = Predef.fold((arg11, arg2) => {
-            return arg11 + arg2;
+            return arg11 + arg2
           });
           tmp1 = Predef.interleave(", ");
           tmp2 = Predef.map(Predef.render);
           tmp3 = tmp2(...arg1) ?? null;
           tmp4 = tmp1(...tmp3) ?? null;
-          return tmp("[", ...tmp4, "]") ?? null;
+          return tmp("[", ...tmp4, "]") ?? null
         } else {
           if (typeof arg1 === 'string') {
-            return globalThis.JSON.stringify(arg1) ?? null;
+            return globalThis.JSON.stringify(arg1) ?? null
           } else {
             if (arg1 instanceof globalThis.Set) {
               tmp5 = Predef.fold((arg11, arg2) => {
-                return arg11 + arg2;
+                return arg11 + arg2
               });
               tmp6 = Predef.interleave(", ");
               tmp7 = Predef.map(Predef.render);
               tmp8 = tmp7(...arg1) ?? null;
               tmp9 = tmp6(...tmp8) ?? null;
-              return tmp5("Set{", ...tmp9, "}") ?? null;
+              return tmp5("Set{", ...tmp9, "}") ?? null
             } else {
               if (arg1 instanceof globalThis.Map) {
                 tmp10 = Predef.fold((arg11, arg2) => {
-                  return arg11 + arg2;
+                  return arg11 + arg2
                 });
                 tmp11 = Predef.interleave(", ");
                 tmp12 = Predef.map(Predef.render);
                 tmp13 = tmp12(...arg1) ?? null;
                 tmp14 = tmp11(...tmp13) ?? null;
-                return tmp10("Map{", ...tmp14, "}") ?? null;
+                return tmp10("Map{", ...tmp14, "}") ?? null
               } else {
                 if (arg1 instanceof globalThis.Function) {
                   p = globalThis.Object.getOwnPropertyDescriptor(arg1, "prototype");
@@ -333,21 +330,21 @@ Predef1 = class Predef {
                       tmp17 = " " + nme;
                     }
                     tmp18 = "[function" + tmp17;
-                    return tmp18 + "]";
+                    return tmp18 + "]"
                   } else {
-                    return globalThis.String(arg1);
+                    return globalThis.String(arg1)
                   }
                 } else {
                   if (arg1 instanceof globalThis.Object) {
-                    return globalThis.String(arg1);
+                    return globalThis.String(arg1)
                   } else {
                     ts = arg1["toString"];
                     if (ts === undefined) {
                       tmp19 = typeof arg1;
                       tmp20 = "[" + tmp19;
-                      return tmp20 + "]";
+                      return tmp20 + "]"
                     } else {
-                      return ts.call(arg1) ?? null;
+                      return ts.call(arg1) ?? null
                     }
                   }
                 }
@@ -367,22 +364,22 @@ Predef1 = class Predef {
     throw globalThis.Error("Not implemented");
   } 
   static tuple(...xs1) {
-    return xs1;
+    return xs1
   } 
   static tupleSlice(xs2, i, j) {
     let tmp;
     tmp = xs2.length - j;
-    return globalThis.Array.prototype.slice.call(xs2, i, tmp) ?? null;
+    return globalThis.Array.prototype.slice.call(xs2, i, tmp) ?? null
   } 
   static tupleGet(xs3, i1) {
-    return globalThis.Array.prototype.at.call(xs3, i1);
+    return globalThis.Array.prototype.at.call(xs3, i1)
   } 
   static map(f9) {
     return (...xs4) => {
       let tmp;
       tmp = Predef.pass1(f9);
-      return xs4.map(tmp) ?? null;
-    };
+      return xs4.map(tmp) ?? null
+    }
   } 
   static fold(f10) {
     return (init, ...rest) => {
@@ -404,8 +401,8 @@ Predef1 = class Predef {
         }
         break;
       }
-      return init;
-    };
+      return init
+    }
   } 
   static foldr(f11) {
     return (first, ...rest) => {
@@ -413,7 +410,7 @@ Predef1 = class Predef {
       len = rest.length;
       scrut1 = len == 0;
       if (scrut1 === true) {
-        return first;
+        return first
       } else {
         tmp = len - 1;
         i2 = tmp;
@@ -434,18 +431,21 @@ Predef1 = class Predef {
           }
           break;
         }
-        return f11(first, init) ?? null;
+        return f11(first, init) ?? null
       }
-    };
+    }
   } 
   static stringStartsWith(string, prefix) {
-    return string.startsWith(prefix) ?? null;
+    return string.startsWith(prefix) ?? null
   } 
   static stringGet(string1, i2) {
-    return string1.at(i2) ?? null;
+    return string1.at(i2) ?? null
   } 
   static stringDrop(string2, n) {
-    return string2.slice(n) ?? null;
+    return string2.slice(n) ?? null
+  } 
+  static get unreachable() {
+    throw globalThis.Error("unreachable");
   } 
   static checkArgs(functionName, expected, isUB, got) {
     let scrut, name, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
@@ -463,7 +463,7 @@ Predef1 = class Predef {
       }
       name = tmp4;
       tmp5 = Predef.fold((arg11, arg2) => {
-        return arg11 + arg2;
+        return arg11 + arg2
       });
       if (isUB === true) {
         tmp6 = "";
@@ -479,7 +479,7 @@ Predef1 = class Predef {
       tmp8 = tmp5("Function", name, " expected ", tmp6, expected, " argument", tmp7, " but got ", got) ?? null;
       throw globalThis.Error(tmp8);
     } else {
-      return null;
+      return null
     }
   } 
   static __mkListWithTail() {
@@ -487,7 +487,7 @@ Predef1 = class Predef {
     tmp = new Predef.__ListWithTail.class(null, null);
     res = tmp;
     res.tail = res;
-    return res;
+    return res
   } 
   static __appendInCont(eff, cont) {
     let scrut, scrut1, tmp, tmp1;
@@ -506,7 +506,7 @@ Predef1 = class Predef {
       eff.tail.next = cont;
       tmp1 = null;
     }
-    return eff;
+    return eff
   } 
   static __mkEffect(handler, handlerFun) {
     let res, tmp, tmp1;
@@ -514,7 +514,7 @@ Predef1 = class Predef {
     tmp1 = new Predef.__EffectSig.class(null, null, tmp, false, handler, handlerFun);
     res = tmp1;
     res.tail = res;
-    return res;
+    return res
   } 
   static __handleBlockImpl(cur, handler1) {
     let handleBlock, nxt, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
@@ -536,7 +536,7 @@ Predef1 = class Predef {
             cur.tail = handleBlock.lastHandlerCont;
             tmp4 = null;
           }
-          return cur;
+          return cur
         } else {
           cur = nxt;
           tmp5 = null;
@@ -544,11 +544,11 @@ Predef1 = class Predef {
         tmp6 = tmp5;
         continue tmp7;
       } else {
-        return cur;
+        return cur
       }
       break;
     }
-    return tmp6;
+    return tmp6
   } 
   static __handleEffect(cur1) {
     let prevBlock, scrut, scrut1, scrut2, handleBlock, origTailBlock, savedNext, scrut3, scrut4, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
@@ -571,7 +571,7 @@ Predef1 = class Predef {
     }
     scrut2 = prevBlock.next === null;
     if (scrut2 === true) {
-      return cur1;
+      return cur1
     } else {
       tmp1 = null;
     }
@@ -600,9 +600,9 @@ Predef1 = class Predef {
     if (cur1 instanceof Predef.__EffectSig.class) {
       cur1.handleBlockList.tail.next = handleBlock;
       cur1.handleBlockList.tail = origTailBlock;
-      return cur1;
+      return cur1
     } else {
-      return Predef.__resumeHandleBlocks(handleBlock, origTailBlock, cur1);
+      return Predef.__resumeHandleBlocks(handleBlock, origTailBlock, cur1)
     }
   } 
   static __resume(cur2, tail) {
@@ -654,7 +654,7 @@ Predef1 = class Predef {
             } else {
               tmp5 = null;
             }
-            return value;
+            return value
           } else {
             cont1 = cont1.next;
             tmp6 = null;
@@ -668,7 +668,7 @@ Predef1 = class Predef {
       }
       scrut6 = cur2.handleBlockList.next === null;
       if (scrut6 === true) {
-        return value;
+        return value
       } else {
         tmp8 = Predef.__resumeHandleBlocks(cur2.handleBlockList.next, cur2.handleBlockList.tail, value);
         cur2 = tmp8;
@@ -678,9 +678,9 @@ Predef1 = class Predef {
         } else {
           tmp9 = null;
         }
-        return cur2;
+        return cur2
       }
-    };
+    }
   } 
   static __resumeHandleBlocks(handleBlock, tailHandleBlock, value) {
     let scrut, scrut1, scrut2, scrut3, scrut4, tmp, tmp1, tmp2, tmp3, tmp4;
@@ -711,7 +711,7 @@ Predef1 = class Predef {
           value.tail.next = null;
           value.handleBlockList.tail.next = handleBlock;
           value.handleBlockList.tail = tailHandleBlock;
-          return value;
+          return value
         } else {
           handleBlock.contHead.next = handleBlock.contHead.next.next;
           tmp3 = null;
@@ -725,12 +725,36 @@ Predef1 = class Predef {
           tmp4 = null;
           continue tmp5;
         } else {
-          return value;
+          return value
         }
       }
       break;
     }
-    return tmp4;
+    return tmp4
+  } 
+  static checkDepth() {
+    let scrut, tmp, tmp1, tmp2;
+    tmp = Predef.__stackDepth - Predef.__stackOffset;
+    tmp1 = tmp >= Predef.__stackLimit;
+    tmp2 = Predef.__stackHandler !== null;
+    scrut = tmp1 && tmp2;
+    if (scrut === true) {
+      return Predef.__stackHandler.perform() ?? null
+    } else {
+      return null
+    }
+  } 
+  static resetDepth(tmp, curDepth) {
+    let scrut, tmp1;
+    Predef.__stackDepth = curDepth;
+    scrut = curDepth < Predef.__stackOffset;
+    if (scrut === true) {
+      Predef.__stackOffset = curDepth;
+      tmp1 = null;
+    } else {
+      tmp1 = null;
+    }
+    return tmp
   }
   static toString() { return "Predef"; }
 };

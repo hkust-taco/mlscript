@@ -27,11 +27,11 @@ fun f(x) =
 //│   scrut = x < 0;
 //│   if (scrut === true) {
 //│     tmp = log("whoops");
-//│     return 0;
+//│     return 0
 //│   } else {
 //│     tmp1 = null;
 //│   }
-//│   return x + 1;
+//│   return x + 1
 //│ };
 //│ null
 

@@ -33,9 +33,9 @@ fun foo(x) = x is Cross
 //│   let matchResult;
 //│   matchResult = Cross1.unapply(x2) ?? null;
 //│   if (matchResult instanceof globalThis.Predef.MatchResult.class) {
-//│     return true;
+//│     return true
 //│   } else {
-//│     return false;
+//│     return false
 //│   }
 //│ };
 //│ null

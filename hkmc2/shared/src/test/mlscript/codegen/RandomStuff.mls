@@ -9,9 +9,9 @@ fun foo() = if false do foo()
 //│   let scrut;
 //│   scrut = false;
 //│   if (scrut === true) {
-//│     return foo();
+//│     return foo()
 //│   } else {
-//│     return null;
+//│     return null
 //│   }
 //│ };
 //│ null
@@ -19,7 +19,7 @@ fun foo() = if false do foo()
 :sjs
 fun foo() = foo()
 //│ JS (unsanitized):
-//│ let foo1; foo1 = function foo() { return foo1(); }; null
+//│ let foo1; foo1 = function foo() { return foo1() }; null
 
 
 :sjs
@@ -56,9 +56,9 @@ fun foo() =
 //│ foo2 = function foo() {
 //│   let bar;
 //│   bar = function bar() {
-//│     return bar();
+//│     return bar()
 //│   };
-//│   return bar();
+//│   return bar()
 //│ };
 //│ null
 
@@ -69,7 +69,7 @@ do
   fun f = f
   ()
 //│ JS (unsanitized):
-//│ let f, f1; f = 1; f1 = function f() { let tmp; tmp = f1(); return tmp; }; null
+//│ let f, f1; f1 = 1; f = function f() { let tmp; tmp = f(); return tmp }; null
 //│ f = 1
 
 :sjs
@@ -83,7 +83,7 @@ fun foo(x) = foo
 //│ ║  l.78: 	fun foo(x) = foo
 //│ ╙──      	    ^^^^^^^^^^^^
 //│ JS (unsanitized):
-//│ let foo3, foo4; foo3 = function foo(x) { return foo4; }; foo4 = 1; null
+//│ let foo3, foo4; foo3 = function foo(x) { return foo4 }; foo4 = 1; null
 //│ foo = 1
 
 :sjs

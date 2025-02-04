@@ -3,7 +3,7 @@
 
 :pe
 new
-//│ ╔══[PARSE ERROR] Expected expression or block after `new` keyword; found end of input instead
+//│ ╔══[PARSE ERROR] Expected 'with' keyword, expression, or block after `new` keyword; found end of input instead
 //│ ║  l.5: 	new
 //│ ╙──     	   ^
 
@@ -15,8 +15,8 @@ new 2
 :ge
 new 2 + 2
 //│ JS (unsanitized):
-//│ new (arg1, arg2) => { return arg1 + arg2; }(2, 2)
-//│ > try { block$res3 = new (...args) => {   globalThis.Predef.checkArgs("", 2, true, args.length);   let arg1 = args[0];   let arg2 = args[1];   return arg1 + arg2; }(2, 2); undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ new (arg1, arg2) => { return arg1 + arg2 }(2, 2)
+//│ > try { block$res3 = new (...args) => {   globalThis.Predef.checkArgs("", 2, true, args.length);   let arg1 = args[0];   let arg2 = args[1];   return arg1 + arg2 }(2, 2); undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ >                    ^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Malformed arrow function parameter list
 
@@ -36,10 +36,12 @@ new {}
 :todo
 new { x = 1 }
 //│ Parsed tree:
-//│ New of Block of Ls of 
-//│   Def:
-//│     lhs = Ident of "x"
-//│     rhs = IntLit of 1
+//│ New:
+//│   body = S of Block of Ls of 
+//│     Def:
+//│       lhs = Ident of "x"
+//│       rhs = IntLit of 1
+//│   rft = N
 //│ ╔══[ERROR] Name not found: x
 //│ ║  l.37: 	new { x = 1 }
 //│ ╙──      	      ^
