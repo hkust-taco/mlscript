@@ -198,7 +198,7 @@ class Lifter(using State):
     val reqdVars: List[Local],
     val reqdInnerSyms: List[InnerSymbol],
     val fakeCtorBms: Option[BlockMemberSymbol], // only for classes
-    val singleCallBms: BlockMemberSymbol // optimization
+    val singleCallBms: BlockMemberSymbol, // optimization
   )
 
   case class Lifted[+T <: Defn](
