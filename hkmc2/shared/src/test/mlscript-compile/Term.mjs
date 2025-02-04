@@ -233,6 +233,25 @@ Term2 = class Term {
     };
     this.KeywordWhile = new KeywordWhile$class;
     this.KeywordWhile.class = KeywordWhile$class;
+    this.Statement = class Statement {
+      constructor() {}
+      toString() { return "Statement"; }
+    };
+    this.LetDecl = function LetDecl(sym1) { return new LetDecl.class(sym1); };
+    this.LetDecl.class = class LetDecl {
+      constructor(sym) {
+        this.sym = sym;
+      }
+      toString() { return "LetDecl(" + globalThis.Predef.render(this.sym) + ")"; }
+    };
+    this.DefineVar = function DefineVar(sym1, rhs1) { return new DefineVar.class(sym1, rhs1); };
+    this.DefineVar.class = class DefineVar {
+      constructor(sym, rhs) {
+        this.sym = sym;
+        this.rhs = rhs;
+      }
+      toString() { return "DefineVar(" + globalThis.Predef.render(this.sym) + ", " + globalThis.Predef.render(this.rhs) + ")"; }
+    };
     this.Term = class Term1 {
       constructor() {}
       toString() { return "Term"; }

@@ -105,3 +105,85 @@ f`(`0)
 //│ ]);
 //│ new this.Predef.term.App(tmp17, tmp18)
 //│ = App(Lam([Symbol("x")], App(Ref(Symbol("+")), Tup([Symbol("x"), Lit(1)]))), Tup([Lit(0)]))
+
+
+`let x = `42 `in x
+//│ JS (unsanitized):
+//│ let x3, tmp19, tmp20, tmp21, tmp22;
+//│ x3 = new this.Predef.term.Symbol("x");
+//│ tmp19 = new this.Predef.term.Lit(42);
+//│ tmp20 = x3;
+//│ tmp21 = new this.Predef.term.LetDecl(x3);
+//│ tmp22 = new this.Predef.term.DefineVar(x3, tmp19);
+//│ new this.Predef.term.Blk([
+//│   tmp21,
+//│   tmp22
+//│ ], tmp20)
+//│ = Blk([LetDecl(Symbol("x")), DefineVar(Symbol("x"), Lit(42))], Symbol("x"))
+
+
+`let x = `42 `in log(x); x
+//│ JS (unsanitized):
+//│ let x4, tmp23, tmp24, tmp25, tmp26, tmp27;
+//│ x4 = new this.Predef.term.Symbol("x");
+//│ tmp23 = new this.Predef.term.Lit(42);
+//│ tmp24 = log(x4);
+//│ tmp25 = (tmp24 , x4);
+//│ tmp26 = new this.Predef.term.LetDecl(x4);
+//│ tmp27 = new this.Predef.term.DefineVar(x4, tmp23);
+//│ new this.Predef.term.Blk([
+//│   tmp26,
+//│   tmp27
+//│ ], tmp25)
+//│ > Symbol { name: 'x' }
+//│ = Blk([LetDecl(Symbol("x")), DefineVar(Symbol("x"), Lit(42))], Symbol("x"))
+
+
+`if `true then `true else `false
+//│ JS (unsanitized):
+//│ let tmp28, tmp29, tmp30, tmp31, tmp32, tmp33, tmp34, tmp35, tmp36, tmp37, tmp38, tmp39;
+//│ tmp28 = new this.Predef.term.Symbol("scrut");
+//│ tmp29 = new this.Predef.term.Lit(true);
+//│ tmp30 = new this.Predef.term.Symbol("scrut");
+//│ tmp31 = new this.Predef.term.Ref(tmp30);
+//│ tmp32 = new this.Predef.term.LitPattern(true);
+//│ tmp33 = new this.Predef.term.Lit(true);
+//│ tmp34 = new this.Predef.term.Else(tmp33);
+//│ tmp35 = new this.Predef.term.Branch(tmp31, tmp32, tmp34);
+//│ tmp36 = new this.Predef.term.Lit(false);
+//│ tmp37 = new this.Predef.term.Else(tmp36);
+//│ tmp38 = new this.Predef.term.Cons(tmp35, tmp37);
+//│ tmp39 = new this.Predef.term.Let(tmp28, tmp29, tmp38);
+//│ new this.Predef.term.IfLike(this.Predef.term.KeywordIf, tmp39)
+//│ = IfLike(KeywordIf, Let(Symbol("scrut"), Lit(true), Cons(Branch(Ref(Symbol("scrut")), LitPattern(true), Else(Lit(true))), Else(Lit(false)))))
+
+
+x `=> `if x `== `0.0 then `1.0 else x
+//│ JS (unsanitized):
+//│ let x5, tmp40, tmp41, tmp42, tmp43, tmp44, tmp45, tmp46, tmp47, tmp48, tmp49, tmp50, tmp51, tmp52, tmp53, tmp54, tmp55, tmp56, tmp57;
+//│ x5 = new this.Predef.term.Symbol("x");
+//│ tmp40 = new this.Predef.term.Symbol("scrut");
+//│ tmp41 = new this.Predef.term.Symbol("==");
+//│ tmp42 = x5;
+//│ tmp43 = new this.Predef.term.Lit(0.0);
+//│ tmp44 = new this.Predef.term.Ref(tmp41);
+//│ tmp45 = new this.Predef.term.Tup([
+//│   tmp42,
+//│   tmp43
+//│ ]);
+//│ tmp46 = new this.Predef.term.App(tmp44, tmp45);
+//│ tmp47 = new this.Predef.term.Symbol("scrut");
+//│ tmp48 = new this.Predef.term.Ref(tmp47);
+//│ tmp49 = new this.Predef.term.LitPattern(true);
+//│ tmp50 = new this.Predef.term.Lit(1.0);
+//│ tmp51 = new this.Predef.term.Else(tmp50);
+//│ tmp52 = new this.Predef.term.Branch(tmp48, tmp49, tmp51);
+//│ tmp53 = x5;
+//│ tmp54 = new this.Predef.term.Else(tmp53);
+//│ tmp55 = new this.Predef.term.Cons(tmp52, tmp54);
+//│ tmp56 = new this.Predef.term.Let(tmp40, tmp46, tmp55);
+//│ tmp57 = new this.Predef.term.IfLike(this.Predef.term.KeywordIf, tmp56);
+//│ new this.Predef.term.Lam([
+//│   x5
+//│ ], tmp57)
+//│ = Lam([Symbol("x")], IfLike(KeywordIf, Let(Symbol("scrut"), App(Ref(Symbol("==")), Tup([Symbol("x"), Lit(0)])), Cons(Branch(Ref(Symbol("scrut")), LitPattern(true), Else(Lit(1))), Else(Symbol("x"))))))

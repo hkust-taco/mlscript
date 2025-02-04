@@ -46,8 +46,14 @@ object KeywordIf
 object KeywordWhile
 
 
+abstract class Statement : (Term | LetDecl | DefineVar)
+class LetDecl(sym: Symbol) extends Statement
+class DefineVar(sym: Symbol, rhs: Term) extends Statement
+// TODO: other statements
+
+
 abstract class Term : (Lit | Builtin | Ref | App | Sel | DynSel | Tup | IfLike | Lam | Blk | New |
-  Region | RegRef | Assgn | Deref | SetRef | Ret | Throw | Try)
+  Region | RegRef | Assgn | Deref | SetRef | Ret | Throw | Try) extends Statement
 class Lit(lit: Literal) extends Term
 class Builtin(name: Str) extends Term
 class Ref(sym: Symbol) extends Term
@@ -57,7 +63,7 @@ class DynSel(prefix: Term, fld: Term, arrayIdx: Bool) extends Term
 class Tup(fields: globalThis.Array[Term]) extends Term
 class IfLike(kw: KeywordIf | KeywordWhile, desugared: Split) extends Term
 class Lam(params: globalThis.Array[Symbol], body: Term) extends Term
-class Blk(stats: globalThis.Array[Term], res: Term) extends Term
+class Blk(stats: globalThis.Array[Statement], res: Term) extends Term
 class New(cls: Term, args: globalThis.Array[Term]) extends Term
 class Region(name: Symbol, body: Term) extends Term
 class RegRef(reg: Term, value: Term) extends Term

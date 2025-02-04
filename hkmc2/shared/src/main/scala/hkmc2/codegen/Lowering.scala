@@ -506,8 +506,53 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
   def setupTerm(name: Str, args: Ls[Path])(k: Result => Block)(using Subst): Block =
     k(Instantiate(Value.Ref(State.globalThisSymbol).selSN("Predef").selSN("term").selSN(name), args))
 
+  def setupObj(name: Str): Path =
+    Value.Ref(State.globalThisSymbol).selSN("Predef").selSN("term").selSN(name)
+
   def setupSymbol(symbol: Local)(k: Result => Block)(using Subst): Block =
     k(Instantiate(Value.Ref(State.globalThisSymbol).selSN("Predef").selSN("term").selSN("Symbol"), Value.Lit(Tree.StrLit(symbol.nme)) :: Nil))
+
+
+  def quotePattern(p: Pattern)(k: Result => Block)(using Subst): Block = p match
+    case Pattern.Lit(lit) => setupTerm("LitPattern", Value.Lit(lit) :: Nil)(k)
+    case _ =>
+      raise(ErrorReport(
+        msg"Unsupported quasiquote pattern type ${p.showDbg}" ->
+        p.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation
+      ))
+      End("error")
+
+
+  def quoteSplit(split: Split)(k: Result => Block)(using Subst): Block = split match
+    case Split.Cons(Branch(scrutinee, pattern, continuation), tail) => quote(scrutinee): r1 =>
+      val l1 = new TempSymbol(N)
+      Assign(l1, r1, quotePattern(pattern): r2 =>
+        val l2 = new TempSymbol(N)
+        Assign(l2, r2, quoteSplit(continuation): r3 =>
+          val l3 = new TempSymbol(N)
+          Assign(l3, r3, setupTerm("Branch", (l1 :: l2 :: l3 :: Nil).map(s => Value.Ref(s))): r4 =>
+            val l4 = new TempSymbol(N)
+            Assign(l4, r4, quoteSplit(tail): r5 =>
+              val l5 = new TempSymbol(N)
+              Assign(l5, r5, setupTerm("Cons", (l4 :: l5 :: Nil).map(s => Value.Ref(s)))(k))
+            )
+          )
+        )
+      )
+    case Split.Let(sym, term, tail) => setupSymbol(sym): r1 =>
+      val l1 = new TempSymbol(N)
+      Assign(l1, r1, quote(term): r2 =>
+        val l2 = new TempSymbol(N)
+        Assign(l2, r2, quoteSplit(tail): r3 =>
+          val l3 = new TempSymbol(N)
+          Assign(l3, r3, setupTerm("Let", (l1 :: l2 :: l3 :: Nil).map(s => Value.Ref(s)))(k))
+        )
+      )
+    case Split.Else(default) => quote(default): r =>
+      val l = new TempSymbol(N)
+      Assign(l, r, setupTerm("Else", Value.Ref(l) :: Nil)(k))
+    case Split.End => setupTerm("End", Nil)(k)
 
   def quote(t: st)(k: Result => Block)(using Subst): Block = t match
     case Lit(lit) =>
@@ -538,6 +583,28 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
           val l = new TempSymbol(N)
           Assign(l, r2, rec(rest, Value.Ref(l) :: xs)(k))
       rec(rhs, Nil)(k)
+    case Blk(LetDecl(sym, _) :: DefineVar(sym2, rhs) :: Nil, res) => // Let bindings
+      require(sym2 is sym)
+      setupSymbol(sym): r1 =>
+        val subst = summon[Subst]
+        val l1 = new TempSymbol(N)
+        val nest = subst + (sym -> Value.Ref(l1))
+        Assign(l1, r1, quote(rhs)(r2 =>
+          val l2 = new TempSymbol(N)
+          Assign(l2, r2, quote(res)(r3 =>
+            val l3 = new TempSymbol(N)
+            Assign(l3, r3, setupTerm("LetDecl", Value.Ref(l1) :: Nil)(r4 =>
+              val l4 = new TempSymbol(N)
+              Assign(l4, r4, setupTerm("DefineVar", Value.Ref(l1) :: Value.Ref(l2) :: Nil)(r5 =>
+                val l5 = new TempSymbol(N)
+                Assign(l5, r5, setupTerm("Blk", Value.Arr((l4 :: l5 :: Nil).map(s => Value.Ref(s).asArg)) :: Value.Ref(l3) :: Nil)(k))
+              )(using nest))
+            )(using nest))
+          )(using nest))
+        )(using nest))
+    case IfLike(syntax.Keyword.`if`, split) => quoteSplit(split): r =>
+      val l = new TempSymbol(N)
+      Assign(l, r, setupTerm("IfLike", setupObj("KeywordIf") :: Value.Ref(l) :: Nil)(k))
     case Unquoted(body) => term(body)(k)
     case _ =>
       raise(ErrorReport(
