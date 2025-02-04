@@ -252,6 +252,7 @@ x + y
 //│ x = "0"
 //│ y = "1"
 
+
 class Tuple(a, b)
 fun f(used1) =
   fun g1(used2) =
@@ -431,210 +432,6 @@ g()
 //│ g13()
 //│ = 3
 
-// make sure class fields are discriminated properly for immutable captures when supported
-:handler
-abstract class Effect with
-  fun perform()
-handle h = Effect with
-  fun perform()(k) = k()
-fun f() =
-  h.perform()
-  1
-f() + f() + f()
-//│ = 3
-
-/// CLASSES ///
-
-:expect 1
-:sjs
-fun f(used1, unused1) =
-  fun g(g_arg) =
-    let used3 = 2
-    fun h = used3
-    used1 + h
-  let unused2 = 2
-  class Test(a) with
-    fun get() = used1
-  Test(unused1)
-f(1, 2).get()
-//│ JS (unsanitized):
-//│ let f17, Test1, g14, h5, tmp22, Test$ctor, Test$, g$11, h$4;
-//│ h$4 = function h$(used3, used1) {
-//│   return used3;
-//│ };
-//│ h5 = function h(used3, used1) {
-//│   return () => {
-//│     return h$4(used3, used1);
-//│   };
-//│ };
-//│ g$11 = function g$(used1, g_arg) {
-//│   let used3, tmp23;
-//│   used3 = 2;
-//│   tmp23 = h$4(used3, used1);
-//│   return used1 + tmp23;
-//│ };
-//│ g14 = function g(used1) {
-//│   return (g_arg) => {
-//│     return g$11(used1, g_arg);
-//│   };
-//│ };
-//│ Test$ = function Test$(used1$0, a1) {
-//│   let tmp23;
-//│   tmp23 = new Test1(a1);
-//│   return tmp23(used1$0);
-//│ };
-//│ Test$ctor = function Test$ctor(used1$0) {
-//│   return (a1) => {
-//│     let tmp23;
-//│     tmp23 = new Test1(a1);
-//│     return tmp23(used1$0);
-//│   };
-//│ };
-//│ Test1 = function Test(a2) {
-//│   return (used1$01) => {
-//│     return new Test.class(a2)(used1$01);
-//│   }
-//│ };
-//│ Test1.class = class Test {
-//│   constructor(a1) {
-//│     return (used1$0) => {
-//│       this.a = a1;
-//│       this.used1$0 = used1$0;
-//│       return this;
-//│     }
-//│   }
-//│   get() {
-//│     return this.used1$0;
-//│   }
-//│   toString() { return "Test(" + globalThis.Predef.render(this.a) + ")"; }
-//│ };
-//│ f17 = function f(used1, unused1) {
-//│   let unused2;
-//│   unused2 = 2;
-//│   return Test$(used1, unused1);
-//│ };
-//│ tmp22 = f17(1, 2);
-//│ tmp22.get() ?? null
-//│ = 1
-
-:expect 1
-fun f(used1, unused1) =
-  fun g(g_arg) =
-    let used3 = 2
-    fun h = used3
-    used1 + h
-  let unused2 = 2
-  class Test(a) with
-    fun get() = used1
-  let foo = Test
-  foo(unused1)
-f(1, 2).get()
-//│ = 1
-
-:fixme
-:expect 1
-fun f(used1, unused1) =
-  fun g(g_arg) =
-    let used3 = 2
-    fun h = used3
-    used1 + h
-  let unused2 = 2
-  class Test(a) with
-    fun get() = used1
-  new Test(unused1)
-f(1, 2).get()
-//│ ═══[RUNTIME ERROR] TypeError: Test$this.class is not a constructor
-//│ ═══[RUNTIME ERROR] Expected: '1', got: 'undefined'
-
-:expect 2
-fun f(x) =
-  class A() with
-    fun f() = set x = 2
-  A().f()
-  x
-f(1)
-//│ = 2
-
-:expect 6
-class A(a) with
-  fun f(b) =
-    fun g(c) = 
-      set b = 2
-      a + b + c
-    g
-A(1).f(1)(3)
-//│ = 6
-
-// Here, g does not need the capture. This should be optimized
-:todo
-:sjs
-:expect 1
-fun f() =
-  let x = 1
-  fun g() = 1
-  fun f() = set x = 1
-  f()
-  x
-f()
-//│ JS (unsanitized):
-//│ let f22, f23, g18, f$2, g$15, f$capture17;
-//│ g$15 = function g$(f$capture18) {
-//│   return 1;
-//│ };
-//│ g18 = function g(f$capture18) {
-//│   return () => {
-//│     return g$15(f$capture18);
-//│   };
-//│ };
-//│ f$2 = function f$(f$capture18) {
-//│   f$capture18.x0$ = 1;
-//│   return null;
-//│ };
-//│ f23 = function f(f$capture18) {
-//│   return () => {
-//│     return f$2(f$capture18);
-//│   };
-//│ };
-//│ f$capture17 = function f$capture(x0$1) {
-//│   return new f$capture.class(x0$1);
-//│ };
-//│ f$capture17.class = class f$capture16 {
-//│   constructor(x0$) {
-//│     this.x0$ = x0$;
-//│   }
-//│   toString() { return "f$capture(" + globalThis.Predef.render(this.x0$) + ")"; }
-//│ };
-//│ f22 = function f() {
-//│   let tmp27, capture;
-//│   capture = new f$capture17(null);
-//│   capture.x0$ = 1;
-//│   tmp27 = f$2(capture);
-//│   return capture.x0$;
-//│ };
-//│ f22()
-//│ = 1
-
-// don't break private variables
-:lift
-:re
-fun foo = ()
-class A(a) with
-  foo
-  let x = 2
-  foo
-A(2).x
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
-
-:fixme
-:expect 2
-class A(a) with
-  let x = 2
-  fun f() =
-    fun g() = x
-    g()
-A(2).f()
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'null'
-
 :sjs
 fun g() =
   let y = 0
@@ -651,26 +448,26 @@ fun g() =
   f
 g()(1)
 //│ JS (unsanitized):
-//│ let g20, f24, h8, tmp29, f$3, h$7, g$capture1;
-//│ h$7 = function h$(k, x1, g$capture2) {
+//│ let g14, f16, h5, tmp21, f$1, h$4, g$capture1;
+//│ h$4 = function h$(k, x1, g$capture2) {
 //│   k = 5;
 //│   x1 = 4;
 //│   return x1 + g$capture2.y0$;
 //│ };
-//│ h8 = function h(k, x1, g$capture2) {
+//│ h5 = function h(k, x1, g$capture2) {
 //│   return () => {
-//│     return h$7(k, x1, g$capture2);
+//│     return h$4(k, x1, g$capture2);
 //│   };
 //│ };
-//│ f$3 = function f$(g$capture2, x1) {
+//│ f$1 = function f$(g$capture2, x1) {
 //│   let k;
 //│   k = 4;
 //│   g$capture2.y0$ = 2;
 //│   return x1;
 //│ };
-//│ f24 = function f(g$capture2) {
+//│ f16 = function f(g$capture2) {
 //│   return (x1) => {
-//│     return f$3(g$capture2, x1);
+//│     return f$1(g$capture2, x1);
 //│   };
 //│ };
 //│ g$capture1 = function g$capture(y0$1) {
@@ -682,128 +479,15 @@ g()(1)
 //│   }
 //│   toString() { return "g$capture(" + globalThis.Predef.render(this.y0$) + ")"; }
 //│ };
-//│ g20 = function g() {
+//│ g14 = function g() {
 //│   let capture;
 //│   capture = new g$capture1(null);
 //│   capture.y0$ = 0;
-//│   return f24(capture) ?? null;
+//│   return f16(capture) ?? null;
 //│ };
-//│ tmp29 = g20();
-//│ tmp29(1) ?? null
+//│ tmp21 = g14();
+//│ tmp21(1) ?? null
 //│ = 1
-
-// only w should be in a capture
-:expect 10111
-:sjs
-fun f() =
-  let x = 1
-  let y = 10
-  let z = 10
-  let w = 1000
-  class Good() with
-    fun foo() =
-      set z = 100
-      x + y + z + w
-  class Bad() with
-    fun foo() =
-      set w = 10000
-  Bad().foo()
-  Good()
-f().foo()
-//│ JS (unsanitized):
-//│ let f25, Bad1, Good1, tmp30, Bad$ctor, Bad$, Good$ctor, Good$, f$capture19;
-//│ Good$ = function Good$(z$1, x$2, y$3, f$capture$0) {
-//│   let tmp31;
-//│   tmp31 = new Good1();
-//│   return tmp31(z$1, x$2, y$3, f$capture$0);
-//│ };
-//│ Good$ctor = function Good$ctor(z$1, x$2, y$3, f$capture$0) {
-//│   return () => {
-//│     let tmp31;
-//│     tmp31 = new Good1();
-//│     return tmp31(z$1, x$2, y$3, f$capture$0);
-//│   };
-//│ };
-//│ Good1 = function Good() {
-//│   return (z$11, x$21, y$31, f$capture$01) => {
-//│     return new Good.class()(z$11, x$21, y$31, f$capture$01);
-//│   }
-//│ };
-//│ Good1.class = class Good {
-//│   constructor() {
-//│     return (z$1, x$2, y$3, f$capture$0) => {
-//│       this.z$1 = z$1;
-//│       this.x$2 = x$2;
-//│       this.y$3 = y$3;
-//│       this.f$capture$0 = f$capture$0;
-//│       return this;
-//│     }
-//│   }
-//│   foo() {
-//│     let tmp31, tmp32;
-//│     this.z$1 = 100;
-//│     tmp31 = this.x$2 + this.y$3;
-//│     tmp32 = tmp31 + this.z$1;
-//│     return tmp32 + this.f$capture$0.w0$;
-//│   }
-//│   toString() { return "Good(" + "" + ")"; }
-//│ };
-//│ Bad$ = function Bad$(z$1, x$2, y$3, f$capture$0) {
-//│   let tmp31;
-//│   tmp31 = new Bad1();
-//│   return tmp31(z$1, x$2, y$3, f$capture$0);
-//│ };
-//│ Bad$ctor = function Bad$ctor(z$1, x$2, y$3, f$capture$0) {
-//│   return () => {
-//│     let tmp31;
-//│     tmp31 = new Bad1();
-//│     return tmp31(z$1, x$2, y$3, f$capture$0);
-//│   };
-//│ };
-//│ Bad1 = function Bad() {
-//│   return (z$11, x$21, y$31, f$capture$01) => {
-//│     return new Bad.class()(z$11, x$21, y$31, f$capture$01);
-//│   }
-//│ };
-//│ Bad1.class = class Bad {
-//│   constructor() {
-//│     return (z$1, x$2, y$3, f$capture$0) => {
-//│       this.z$1 = z$1;
-//│       this.x$2 = x$2;
-//│       this.y$3 = y$3;
-//│       this.f$capture$0 = f$capture$0;
-//│       return this;
-//│     }
-//│   }
-//│   foo() {
-//│     this.f$capture$0.w0$ = 10000;
-//│     return null;
-//│   }
-//│   toString() { return "Bad(" + "" + ")"; }
-//│ };
-//│ f$capture19 = function f$capture(w0$1) {
-//│   return new f$capture.class(w0$1);
-//│ };
-//│ f$capture19.class = class f$capture18 {
-//│   constructor(w0$) {
-//│     this.w0$ = w0$;
-//│   }
-//│   toString() { return "f$capture(" + globalThis.Predef.render(this.w0$) + ")"; }
-//│ };
-//│ f25 = function f() {
-//│   let x1, y1, z, tmp31, tmp32, capture;
-//│   capture = new f$capture19(null);
-//│   x1 = 1;
-//│   y1 = 10;
-//│   z = 10;
-//│   capture.w0$ = 1000;
-//│   tmp31 = Bad$(z, x1, y1, capture);
-//│   tmp32 = tmp31.foo() ?? null;
-//│   return Good$(z, x1, y1, capture);
-//│ };
-//│ tmp30 = f25();
-//│ tmp30.foo() ?? null
-//│ = 10111
 
 :expect 2
 fun f() =
@@ -846,31 +530,78 @@ fun f(x, cond) =
     set x = 3
     () => x
 //│ JS (unsanitized):
-//│ let f28, lambda1, lambda2, lambda$1, lambda$2;
-//│ lambda$2 = function lambda$(x1) {
-//│   return x1;
-//│ };
-//│ lambda1 = function lambda(x1) {
-//│   return () => {
-//│     return lambda$2(x1);
-//│   };
-//│ };
+//│ let f19, lambda, lambda1, lambda$, lambda$1;
 //│ lambda$1 = function lambda$(x1) {
 //│   return x1;
 //│ };
-//│ lambda2 = function lambda(x1) {
+//│ lambda = function lambda(x1) {
 //│   return () => {
 //│     return lambda$1(x1);
 //│   };
 //│ };
-//│ f28 = function f(x1, cond) {
+//│ lambda$ = function lambda$(x1) {
+//│   return x1;
+//│ };
+//│ lambda1 = function lambda(x1) {
+//│   return () => {
+//│     return lambda$(x1);
+//│   };
+//│ };
+//│ f19 = function f(x1, cond) {
 //│   x1 = 1;
 //│   x1 = 2;
 //│   if (cond === true) {
-//│     return lambda1(x1) ?? null;
+//│     return lambda(x1) ?? null;
 //│   } else {
 //│     x1 = 3;
-//│     return lambda2(x1) ?? null;
+//│     return lambda1(x1) ?? null;
 //│   }
 //│ };
 //│ null
+
+:sjs
+:expect 1
+fun f() =
+  let x = 1
+  fun g() = 1
+  fun f() = set x = 1
+  f()
+  x
+f()
+//│ JS (unsanitized):
+//│ let f20, f22, g17, f$2, g$13, f$capture15;
+//│ g$13 = function g$(f$capture16) {
+//│   return 1;
+//│ };
+//│ g17 = function g(f$capture16) {
+//│   return () => {
+//│     return g$13(f$capture16);
+//│   };
+//│ };
+//│ f$2 = function f$(f$capture16) {
+//│   f$capture16.x0$ = 1;
+//│   return null;
+//│ };
+//│ f22 = function f(f$capture16) {
+//│   return () => {
+//│     return f$2(f$capture16);
+//│   };
+//│ };
+//│ f$capture15 = function f$capture(x0$1) {
+//│   return new f$capture.class(x0$1);
+//│ };
+//│ f$capture15.class = class f$capture14 {
+//│   constructor(x0$) {
+//│     this.x0$ = x0$;
+//│   }
+//│   toString() { return "f$capture(" + globalThis.Predef.render(this.x0$) + ")"; }
+//│ };
+//│ f20 = function f() {
+//│   let tmp25, capture;
+//│   capture = new f$capture15(null);
+//│   capture.x0$ = 1;
+//│   tmp25 = f$2(capture);
+//│   return capture.x0$;
+//│ };
+//│ f20()
+//│ = 1

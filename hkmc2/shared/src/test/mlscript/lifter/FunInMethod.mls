@@ -1,0 +1,12 @@
+:lift
+:js
+
+:expect 6
+class A(a) with
+  fun f(b) =
+    fun g(c) = 
+      set b = 2
+      a + b + c
+    g
+A(1).f(1)(3)
+//│ = 6
