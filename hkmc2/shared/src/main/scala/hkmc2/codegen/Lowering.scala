@@ -134,7 +134,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
       case _ =>
         val subst = summon[Subst]
         subst.get(sym) match
-          case S(r: Value.Ref) => r
+          case S(r: Value.Ref) => return setupTerm("Ref", r :: Nil)(k)
           case _ => ()
       warnStmt
       k(subst(Value.Ref(sym)))

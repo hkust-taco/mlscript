@@ -1,7 +1,10 @@
+import "./Predef.mls"
+import "./Str.mls"
+
 module Term with...
 
 class Symbol(name: Str)
-class Literal(value: null | undefined | Str | Int | Num | Bool)
+type Literal = null | undefined | Str | Int | Num | Bool
 
 
 abstract class ConstructorLike : (SymbolCons | StringJoin | TupleCapacity | Instantiation | LocalPattern | Parameter | Nested)
@@ -74,15 +77,33 @@ class Ret(result: Term) extends Term
 class Throw(result: Term) extends Term
 class Try(body: Term, finallyDo: Term) extends Term
 
+
+fun showStmt(s) =
+  if s is
+    LetDecl(Symbol(name)) then Str.concat("let ", name)
+    DefineVar(Symbol(name), value) then Str.concat(name, " = ", show(value))
+
+
+fun show(t) =
+  if t is
+    Ref(Symbol(name)) then name
+    Lit(lit) then lit.toString()
+    App(lhs, rhs) then Str.concat("(", show(lhs), ")(", show(rhs), ")")
+    Tup(fields) then Predef.join(", ")(Predef.arraymap(t => show(t))(fields))
+    Lam(params, body) then
+      Str.concat("(", Predef.join(", ")(Predef.arraymap(s => s.name)(params)), ") => ", show(body))
+    Blk(stats, res) then
+      Str.concat(Predef.join("\n")(Predef.arraymap(s => showStmt(s))(stats)), "\n", show(res))
+    // TODO: IfLike
+
+fun print(t) = log(show(t))
+
+
+// TODO: how to store the generated code?
 // fun codegen(t, ctx) =
 //   if t is
 //     Ref(sym)
 
-// lowering pass:
-// Quote(App(...)) ~> Sel(Sel(Ref(globalThis), Predef), Term) ...
 
 // each module has a cache of symbols
-
-// no CSP for now
-// include some imports --> can "import" be in eval
 

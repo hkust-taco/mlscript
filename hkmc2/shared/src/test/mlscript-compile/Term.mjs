@@ -1,3 +1,5 @@
+import Predef from "./Predef.mjs";
+import Str from "./Str.mjs";
 let Term2;
 Term2 = class Term {
   static {
@@ -7,13 +9,6 @@ Term2 = class Term {
         this.name = name;
       }
       toString() { return "Symbol(" + globalThis.Predef.render(this.name) + ")"; }
-    };
-    this.Literal = function Literal(value1) { return new Literal.class(value1); };
-    this.Literal.class = class Literal {
-      constructor(value) {
-        this.value = value;
-      }
-      toString() { return "Literal(" + globalThis.Predef.render(this.value) + ")"; }
     };
     this.ConstructorLike = class ConstructorLike {
       constructor() {}
@@ -402,6 +397,112 @@ Term2 = class Term {
       }
       toString() { return "Try(" + globalThis.Predef.render(this.body) + ", " + globalThis.Predef.render(this.finallyDo) + ")"; }
     };
+  }
+  static showStmt(s) {
+    let param0, param1, param01, name, value, param02, param03, name1, tmp;
+    if (s instanceof Term.LetDecl.class) {
+      param02 = s.sym;
+      if (param02 instanceof Term.Symbol.class) {
+        param03 = param02.name;
+        name1 = param03;
+        return Str.concat("let ", name1);
+      } else {
+        throw new globalThis.Error("match error");
+      }
+    } else {
+      if (s instanceof Term.DefineVar.class) {
+        param0 = s.sym;
+        param1 = s.rhs;
+        if (param0 instanceof Term.Symbol.class) {
+          param01 = param0.name;
+          name = param01;
+          value = param1;
+          tmp = Term.show(value);
+          return Str.concat(name, " = ", tmp);
+        } else {
+          throw new globalThis.Error("match error");
+        }
+      } else {
+        throw new globalThis.Error("match error");
+      }
+    }
+  } 
+  static show(t) {
+    let param0, param1, stats, res, param01, param11, params, body, param02, fields, param03, param12, lhs, rhs, param04, lit, param05, param06, name, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14;
+    if (t instanceof Term.Ref.class) {
+      param05 = t.sym;
+      if (param05 instanceof Term.Symbol.class) {
+        param06 = param05.name;
+        name = param06;
+        return name;
+      } else {
+        throw new globalThis.Error("match error");
+      }
+    } else {
+      if (t instanceof Term.Lit.class) {
+        param04 = t.lit;
+        lit = param04;
+        return lit.toString() ?? null;
+      } else {
+        if (t instanceof Term.App.class) {
+          param03 = t.lhs;
+          param12 = t.rhs;
+          lhs = param03;
+          rhs = param12;
+          tmp = Term.show(lhs);
+          tmp1 = Term.show(rhs);
+          return Str.concat("(", tmp, ")(", tmp1, ")");
+        } else {
+          if (t instanceof Term.Tup.class) {
+            param02 = t.fields;
+            fields = param02;
+            tmp2 = Predef.join(", ");
+            tmp3 = Predef.arraymap((t1) => {
+              return Term.show(t1);
+            });
+            tmp4 = tmp3(fields) ?? null;
+            return tmp2(tmp4) ?? null;
+          } else {
+            if (t instanceof Term.Lam.class) {
+              param01 = t.params;
+              param11 = t.body;
+              params = param01;
+              body = param11;
+              tmp5 = Predef.join(", ");
+              tmp6 = Predef.arraymap((s1) => {
+                return s1.name;
+              });
+              tmp7 = tmp6(params) ?? null;
+              tmp8 = tmp5(tmp7) ?? null;
+              tmp9 = Term.show(body);
+              return Str.concat("(", tmp8, ") => ", tmp9);
+            } else {
+              if (t instanceof Term.Blk.class) {
+                param0 = t.stats;
+                param1 = t.res;
+                stats = param0;
+                res = param1;
+                tmp10 = Predef.join("\n");
+                tmp11 = Predef.arraymap((s1) => {
+                  return Term.showStmt(s1);
+                });
+                tmp12 = tmp11(stats) ?? null;
+                tmp13 = tmp10(tmp12) ?? null;
+                tmp14 = Term.show(res);
+                return Str.concat(tmp13, "\n", tmp14);
+              } else {
+                throw new globalThis.Error("match error");
+              }
+            }
+          }
+        }
+      }
+    }
+  } 
+  static print(t1) {
+    let tmp;
+    tmp = Term.show(t1);
+    return globalThis.log(tmp) ?? null;
   }
   static toString() { return "Term"; }
 };

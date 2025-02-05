@@ -368,7 +368,17 @@ Predef1 = class Predef {
       return xs4.map(tmp) ?? null;
     };
   } 
-  static fold(f10) {
+  static arraymap(f10) {
+    return (xs4) => {
+      return xs4.map(f10) ?? null;
+    };
+  } 
+  static join(ch) {
+    return (xs4) => {
+      return xs4.join(ch) ?? null;
+    };
+  } 
+  static fold(f11) {
     return (init, ...rest) => {
       let i2, len, scrut, tmp, tmp1, tmp2, tmp3;
       i2 = 0;
@@ -377,7 +387,7 @@ Predef1 = class Predef {
         scrut = i2 < len;
         if (scrut === true) {
           tmp = rest.at(i2) ?? null;
-          tmp1 = f10(init, tmp) ?? null;
+          tmp1 = f11(init, tmp) ?? null;
           init = tmp1;
           tmp2 = i2 + 1;
           i2 = tmp2;
@@ -391,7 +401,7 @@ Predef1 = class Predef {
       return init;
     };
   } 
-  static foldr(f11) {
+  static foldr(f12) {
     return (first, ...rest) => {
       let len, i2, init, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
       len = rest.length;
@@ -409,7 +419,7 @@ Predef1 = class Predef {
             tmp2 = i2 - 1;
             i2 = tmp2;
             tmp3 = rest.at(i2) ?? null;
-            tmp4 = f11(tmp3, init) ?? null;
+            tmp4 = f12(tmp3, init) ?? null;
             init = tmp4;
             tmp5 = null;
             continue tmp6;
@@ -418,7 +428,7 @@ Predef1 = class Predef {
           }
           break;
         }
-        return f11(first, init) ?? null;
+        return f12(first, init) ?? null;
       }
     };
   } 
