@@ -2,7 +2,9 @@ import Predef from "./Predef.mjs";
 import Str from "./Str.mjs";
 let Term2;
 Term2 = class Term {
+  static #builtinSymbols;
   static {
+    let tmp, tmp1, tmp2, tmp3, tmp4;
     this.Symbol = function Symbol(name1) { return new Symbol.class(name1); };
     this.Symbol.class = class Symbol {
       constructor(name) {
@@ -397,15 +399,46 @@ Term2 = class Term {
       }
       toString() { return "Try(" + globalThis.Predef.render(this.body) + ", " + globalThis.Predef.render(this.finallyDo) + ")"; }
     };
+    tmp = new globalThis.Set();
+    this.#builtinSymbols = tmp;
+    tmp1 = this.#builtinSymbols.add("+") ?? null;
+    tmp2 = this.#builtinSymbols.add("-") ?? null;
+    tmp3 = this.#builtinSymbols.add("*") ?? null;
+    tmp4 = this.#builtinSymbols.add("/") ?? null;
+    const this$Term = this;
+    this.Context = function Context(symbols1, printOnly1) { return new Context.class(symbols1, printOnly1); };
+    this.Context.class = class Context {
+      constructor(symbols, printOnly) {
+        this.symbols = symbols;
+        this.printOnly = printOnly;
+      }
+      isValid(name) {
+        let tmp5, tmp6, tmp7;
+        tmp5 = this.symbols.has(name) ?? null;
+        tmp6 = this$Term.#builtinSymbols.has(name) ?? null;
+        tmp7 = tmp5 || tmp6;
+        return tmp7 || this.printOnly;
+      } 
+      get nest() {
+        let tmp5;
+        tmp5 = new globalThis.Set(this.symbols);
+        return Term.Context(tmp5, this.printOnly);
+      } 
+      add(name1) {
+        return this.symbols.add(name1) ?? null;
+      }
+      toString() { return "Context(" + globalThis.Predef.render(this.symbols) + ", " + globalThis.Predef.render(this.printOnly) + ")"; }
+    };
   }
-  static showStmt(s, indent) {
-    let res, param0, param1, param01, name, value, param02, param03, name1, tmp, tmp1;
+  static showStmt(s, ctx, indent) {
+    let res, param0, param1, param01, name, value, param02, param03, name1, tmp, tmp1, tmp2;
     if (s instanceof Term.LetDecl.class) {
       param02 = s.sym;
       if (param02 instanceof Term.Symbol.class) {
         param03 = param02.name;
         name1 = param03;
-        tmp = Str.concat("let ", name1);
+        tmp = ctx.add(name1) ?? null;
+        tmp1 = Str.concat("let ", name1);
       } else {
         throw new globalThis.Error("match error");
       }
@@ -417,8 +450,8 @@ Term2 = class Term {
           param01 = param0.name;
           name = param01;
           value = param1;
-          tmp1 = Term.show(value, "");
-          tmp = Str.concat(name, " = ", tmp1);
+          tmp2 = Term.show(value, ctx, "");
+          tmp1 = Str.concat(name, " = ", tmp2);
         } else {
           throw new globalThis.Error("match error");
         }
@@ -426,10 +459,10 @@ Term2 = class Term {
         throw new globalThis.Error("match error");
       }
     }
-    res = tmp;
+    res = tmp1;
     return Str.concat(indent, res);
   } 
-  static showPattern(p, indent1) {
+  static showPattern(p, ctx1, indent1) {
     let res, param0, lit, tmp;
     if (p instanceof Term.LitPattern.class) {
       param0 = p.lit;
@@ -441,8 +474,8 @@ Term2 = class Term {
     res = tmp;
     return Str.concat(indent1, res);
   } 
-  static showSplit(s1, indent2, isCont) {
-    let res, param0, term, param01, param1, param2, sym, term1, split, param02, param11, param03, param12, param21, scrut, ptrn, cont, tail, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
+  static showSplit(s1, ctx2, indent2, isCont) {
+    let res, param0, term, param01, param1, param2, sym, term1, split, nest, param02, param11, param03, param12, param21, scrut, ptrn, cont, tail, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
     if (s1 instanceof Term.Cons.class) {
       param02 = s1.head;
       param11 = s1.tail;
@@ -454,10 +487,10 @@ Term2 = class Term {
         ptrn = param12;
         cont = param21;
         tail = param11;
-        tmp = Term.show(scrut, "");
-        tmp1 = Term.showPattern(ptrn, "");
-        tmp2 = Term.showSplit(cont, "", true);
-        tmp3 = Term.showSplit(tail, indent2, false);
+        tmp = Term.show(scrut, ctx2, "");
+        tmp1 = Term.showPattern(ptrn, ctx2, "");
+        tmp2 = Term.showSplit(cont, ctx2, "", true);
+        tmp3 = Term.showSplit(tail, ctx2, indent2, false);
         tmp4 = Str.concat(tmp, " is ", tmp1, " then ", tmp2, "\n", tmp3);
       } else {
         throw new globalThis.Error("match error");
@@ -470,20 +503,22 @@ Term2 = class Term {
         sym = param01;
         term1 = param1;
         split = param2;
-        tmp5 = Term.show(term1, "");
-        tmp6 = Term.showSplit(split, indent2, false);
-        tmp4 = Str.concat("let ", sym.name, " = ", tmp5, "\n", tmp6);
+        nest = ctx2.nest;
+        tmp5 = nest.add(sym.name) ?? null;
+        tmp6 = Term.show(term1, nest, "");
+        tmp7 = Term.showSplit(split, nest, indent2, false);
+        tmp4 = Str.concat("let ", sym.name, " = ", tmp6, "\n", tmp7);
       } else {
         if (s1 instanceof Term.Else.class) {
           param0 = s1.default;
           term = param0;
           if (isCont === true) {
-            tmp7 = Term.show(term, "");
+            tmp8 = Term.show(term, ctx2, "");
           } else {
-            tmp8 = Term.show(term, "");
-            tmp7 = Str.concat("else ", tmp8);
+            tmp9 = Term.show(term, ctx2, "");
+            tmp8 = Str.concat("else ", tmp9);
           }
-          tmp4 = tmp7;
+          tmp4 = tmp8;
         } else {
           if (s1 instanceof Term.End) {
             tmp4 = "";
@@ -496,14 +531,20 @@ Term2 = class Term {
     res = tmp4;
     return Str.concat(indent2, res);
   } 
-  static show(t, indent3) {
-    let res, param0, param1, split, param01, param11, stats, res1, param02, param12, params, body, param03, fields, param04, param13, lhs, rhs, param05, lit, param06, param07, name, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17;
+  static show(t, ctx3, indent3) {
+    let res, param0, param1, split, param01, param11, stats, res1, nest, param02, param12, params, body, nest1, param03, fields, param04, param13, lhs, rhs, param05, lit, param06, param07, name, scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19;
     if (t instanceof Term.Ref.class) {
       param06 = t.sym;
       if (param06 instanceof Term.Symbol.class) {
         param07 = param06.name;
         name = param07;
-        tmp = name;
+        scrut = ctx3.isValid(name) ?? null;
+        if (scrut === true) {
+          tmp = name;
+        } else {
+          throw Str.concat("Invalid binding name ", name);
+        }
+        tmp1 = tmp;
       } else {
         throw new globalThis.Error("match error");
       }
@@ -511,63 +552,70 @@ Term2 = class Term {
       if (t instanceof Term.Lit.class) {
         param05 = t.lit;
         lit = param05;
-        tmp = lit.toString() ?? null;
+        tmp1 = lit.toString() ?? null;
       } else {
         if (t instanceof Term.App.class) {
           param04 = t.lhs;
           param13 = t.rhs;
           lhs = param04;
           rhs = param13;
-          tmp1 = Term.show(lhs, "");
-          tmp2 = Term.show(rhs, "");
-          tmp = Str.concat("(", tmp1, ")(", tmp2, ")");
+          tmp2 = Term.show(lhs, ctx3, "");
+          tmp3 = Term.show(rhs, ctx3, "");
+          tmp1 = Str.concat("(", tmp2, ")(", tmp3, ")");
         } else {
           if (t instanceof Term.Tup.class) {
             param03 = t.fields;
             fields = param03;
-            tmp3 = Predef.join(", ");
-            tmp4 = Predef.arraymap((t1) => {
-              return Term.show(t1, "");
+            tmp4 = Predef.join(", ");
+            tmp5 = Predef.arraymap((t1) => {
+              return Term.show(t1, ctx3, "");
             });
-            tmp5 = tmp4(fields) ?? null;
-            tmp = tmp3(tmp5) ?? null;
+            tmp6 = tmp5(fields) ?? null;
+            tmp1 = tmp4(tmp6) ?? null;
           } else {
             if (t instanceof Term.Lam.class) {
               param02 = t.params;
               param12 = t.body;
               params = param02;
               body = param12;
-              tmp6 = Predef.join(", ");
-              tmp7 = Predef.arraymap((s2) => {
+              nest1 = ctx3.nest;
+              tmp7 = Predef.arrayforeach((s2) => {
+                let tmp20;
+                tmp20 = nest1.add(s2.name) ?? null;
+                return tmp20(params) ?? null;
+              });
+              tmp8 = Predef.join(", ");
+              tmp9 = Predef.arraymap((s2) => {
                 return s2.name;
               });
-              tmp8 = tmp7(params) ?? null;
-              tmp9 = tmp6(tmp8) ?? null;
-              tmp10 = Term.show(body, "");
-              tmp = Str.concat("(", tmp9, ") => ", tmp10);
+              tmp10 = tmp9(params) ?? null;
+              tmp11 = tmp8(tmp10) ?? null;
+              tmp12 = Term.show(body, nest1, "");
+              tmp1 = Str.concat("(", tmp11, ") => ", tmp12);
             } else {
               if (t instanceof Term.Blk.class) {
                 param01 = t.stats;
                 param11 = t.res;
                 stats = param01;
                 res1 = param11;
-                tmp11 = Predef.join("\n");
-                tmp12 = Predef.arraymap((s2) => {
-                  return Term.showStmt(s2, "");
+                nest = ctx3.nest;
+                tmp13 = Predef.join("\n");
+                tmp14 = Predef.arraymap((s2) => {
+                  return Term.showStmt(s2, nest, "");
                 });
-                tmp13 = tmp12(stats) ?? null;
-                tmp14 = tmp11(tmp13) ?? null;
-                tmp15 = Term.show(res1, "");
-                tmp = Str.concat(tmp14, "\n", tmp15);
+                tmp15 = tmp14(stats) ?? null;
+                tmp16 = tmp13(tmp15) ?? null;
+                tmp17 = Term.show(res1, nest, "");
+                tmp1 = Str.concat(tmp16, "\n", tmp17);
               } else {
                 if (t instanceof Term.IfLike.class) {
                   param0 = t.kw;
                   param1 = t.desugared;
                   if (param0 instanceof Term.KeywordIf.class) {
                     split = param1;
-                    tmp16 = Str.concat(indent3, "  ");
-                    tmp17 = Term.showSplit(split, tmp16, false);
-                    tmp = Str.concat("if \n", tmp17);
+                    tmp18 = Str.concat(indent3, "  ");
+                    tmp19 = Term.showSplit(split, ctx3, tmp18, false);
+                    tmp1 = Str.concat("if \n", tmp19);
                   } else {
                     throw new globalThis.Error("match error");
                   }
@@ -580,13 +628,23 @@ Term2 = class Term {
         }
       }
     }
-    res = tmp;
+    res = tmp1;
     return Str.concat(indent3, res);
   } 
   static print(t1) {
-    let tmp;
-    tmp = Term.show(t1, "");
-    return globalThis.log(tmp) ?? null;
+    let ctx4, tmp, tmp1, tmp2;
+    tmp = new globalThis.Set();
+    tmp1 = Term.Context(tmp, true);
+    ctx4 = tmp1;
+    tmp2 = Term.show(t1, ctx4, "");
+    return globalThis.log(tmp2) ?? null;
+  } 
+  static codegen(t2) {
+    let ctx4, tmp, tmp1;
+    tmp = new globalThis.Set();
+    tmp1 = Term.Context(tmp, false);
+    ctx4 = tmp1;
+    return Term.show(t2, ctx4, "");
   }
   static toString() { return "Term"; }
 };
