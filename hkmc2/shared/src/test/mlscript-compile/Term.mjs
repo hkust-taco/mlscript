@@ -398,14 +398,14 @@ Term2 = class Term {
       toString() { return "Try(" + globalThis.Predef.render(this.body) + ", " + globalThis.Predef.render(this.finallyDo) + ")"; }
     };
   }
-  static showStmt(s) {
-    let param0, param1, param01, name, value, param02, param03, name1, tmp;
+  static showStmt(s, indent) {
+    let res, param0, param1, param01, name, value, param02, param03, name1, tmp, tmp1;
     if (s instanceof Term.LetDecl.class) {
       param02 = s.sym;
       if (param02 instanceof Term.Symbol.class) {
         param03 = param02.name;
         name1 = param03;
-        return Str.concat("let ", name1);
+        tmp = Str.concat("let ", name1);
       } else {
         throw new globalThis.Error("match error");
       }
@@ -417,8 +417,8 @@ Term2 = class Term {
           param01 = param0.name;
           name = param01;
           value = param1;
-          tmp = Term.show(value);
-          return Str.concat(name, " = ", tmp);
+          tmp1 = Term.show(value, "");
+          tmp = Str.concat(name, " = ", tmp1);
         } else {
           throw new globalThis.Error("match error");
         }
@@ -426,82 +426,166 @@ Term2 = class Term {
         throw new globalThis.Error("match error");
       }
     }
+    res = tmp;
+    return Str.concat(indent, res);
   } 
-  static show(t) {
-    let param0, param1, stats, res, param01, param11, params, body, param02, fields, param03, param12, lhs, rhs, param04, lit, param05, param06, name, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14;
+  static showPattern(p, indent1) {
+    let res, param0, lit, tmp;
+    if (p instanceof Term.LitPattern.class) {
+      param0 = p.lit;
+      lit = param0;
+      tmp = lit.toString() ?? null;
+    } else {
+      throw new globalThis.Error("match error");
+    }
+    res = tmp;
+    return Str.concat(indent1, res);
+  } 
+  static showSplit(s1, indent2, isCont) {
+    let res, param0, term, param01, param1, param2, sym, term1, split, param02, param11, param03, param12, param21, scrut, ptrn, cont, tail, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
+    if (s1 instanceof Term.Cons.class) {
+      param02 = s1.head;
+      param11 = s1.tail;
+      if (param02 instanceof Term.Branch.class) {
+        param03 = param02.scrutinee;
+        param12 = param02.ptrn;
+        param21 = param02.continuation;
+        scrut = param03;
+        ptrn = param12;
+        cont = param21;
+        tail = param11;
+        tmp = Term.show(scrut, "");
+        tmp1 = Term.showPattern(ptrn, "");
+        tmp2 = Term.showSplit(cont, "", true);
+        tmp3 = Term.showSplit(tail, indent2, false);
+        tmp4 = Str.concat(tmp, " is ", tmp1, " then ", tmp2, "\n", tmp3);
+      } else {
+        throw new globalThis.Error("match error");
+      }
+    } else {
+      if (s1 instanceof Term.Let.class) {
+        param01 = s1.sym;
+        param1 = s1.term;
+        param2 = s1.tail;
+        sym = param01;
+        term1 = param1;
+        split = param2;
+        tmp5 = Term.show(term1, "");
+        tmp6 = Term.showSplit(split, indent2, false);
+        tmp4 = Str.concat("let ", sym.name, " = ", tmp5, "\n", tmp6);
+      } else {
+        if (s1 instanceof Term.Else.class) {
+          param0 = s1.default;
+          term = param0;
+          if (isCont === true) {
+            tmp7 = Term.show(term, "");
+          } else {
+            tmp8 = Term.show(term, "");
+            tmp7 = Str.concat("else ", tmp8);
+          }
+          tmp4 = tmp7;
+        } else {
+          if (s1 instanceof Term.End) {
+            tmp4 = "";
+          } else {
+            throw new globalThis.Error("match error");
+          }
+        }
+      }
+    }
+    res = tmp4;
+    return Str.concat(indent2, res);
+  } 
+  static show(t, indent3) {
+    let res, param0, param1, split, param01, param11, stats, res1, param02, param12, params, body, param03, fields, param04, param13, lhs, rhs, param05, lit, param06, param07, name, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17;
     if (t instanceof Term.Ref.class) {
-      param05 = t.sym;
-      if (param05 instanceof Term.Symbol.class) {
-        param06 = param05.name;
-        name = param06;
-        return name;
+      param06 = t.sym;
+      if (param06 instanceof Term.Symbol.class) {
+        param07 = param06.name;
+        name = param07;
+        tmp = name;
       } else {
         throw new globalThis.Error("match error");
       }
     } else {
       if (t instanceof Term.Lit.class) {
-        param04 = t.lit;
-        lit = param04;
-        return lit.toString() ?? null;
+        param05 = t.lit;
+        lit = param05;
+        tmp = lit.toString() ?? null;
       } else {
         if (t instanceof Term.App.class) {
-          param03 = t.lhs;
-          param12 = t.rhs;
-          lhs = param03;
-          rhs = param12;
-          tmp = Term.show(lhs);
-          tmp1 = Term.show(rhs);
-          return Str.concat("(", tmp, ")(", tmp1, ")");
+          param04 = t.lhs;
+          param13 = t.rhs;
+          lhs = param04;
+          rhs = param13;
+          tmp1 = Term.show(lhs, "");
+          tmp2 = Term.show(rhs, "");
+          tmp = Str.concat("(", tmp1, ")(", tmp2, ")");
         } else {
           if (t instanceof Term.Tup.class) {
-            param02 = t.fields;
-            fields = param02;
-            tmp2 = Predef.join(", ");
-            tmp3 = Predef.arraymap((t1) => {
-              return Term.show(t1);
+            param03 = t.fields;
+            fields = param03;
+            tmp3 = Predef.join(", ");
+            tmp4 = Predef.arraymap((t1) => {
+              return Term.show(t1, "");
             });
-            tmp4 = tmp3(fields) ?? null;
-            return tmp2(tmp4) ?? null;
+            tmp5 = tmp4(fields) ?? null;
+            tmp = tmp3(tmp5) ?? null;
           } else {
             if (t instanceof Term.Lam.class) {
-              param01 = t.params;
-              param11 = t.body;
-              params = param01;
-              body = param11;
-              tmp5 = Predef.join(", ");
-              tmp6 = Predef.arraymap((s1) => {
-                return s1.name;
+              param02 = t.params;
+              param12 = t.body;
+              params = param02;
+              body = param12;
+              tmp6 = Predef.join(", ");
+              tmp7 = Predef.arraymap((s2) => {
+                return s2.name;
               });
-              tmp7 = tmp6(params) ?? null;
-              tmp8 = tmp5(tmp7) ?? null;
-              tmp9 = Term.show(body);
-              return Str.concat("(", tmp8, ") => ", tmp9);
+              tmp8 = tmp7(params) ?? null;
+              tmp9 = tmp6(tmp8) ?? null;
+              tmp10 = Term.show(body, "");
+              tmp = Str.concat("(", tmp9, ") => ", tmp10);
             } else {
               if (t instanceof Term.Blk.class) {
-                param0 = t.stats;
-                param1 = t.res;
-                stats = param0;
-                res = param1;
-                tmp10 = Predef.join("\n");
-                tmp11 = Predef.arraymap((s1) => {
-                  return Term.showStmt(s1);
+                param01 = t.stats;
+                param11 = t.res;
+                stats = param01;
+                res1 = param11;
+                tmp11 = Predef.join("\n");
+                tmp12 = Predef.arraymap((s2) => {
+                  return Term.showStmt(s2, "");
                 });
-                tmp12 = tmp11(stats) ?? null;
-                tmp13 = tmp10(tmp12) ?? null;
-                tmp14 = Term.show(res);
-                return Str.concat(tmp13, "\n", tmp14);
+                tmp13 = tmp12(stats) ?? null;
+                tmp14 = tmp11(tmp13) ?? null;
+                tmp15 = Term.show(res1, "");
+                tmp = Str.concat(tmp14, "\n", tmp15);
               } else {
-                throw new globalThis.Error("match error");
+                if (t instanceof Term.IfLike.class) {
+                  param0 = t.kw;
+                  param1 = t.desugared;
+                  if (param0 instanceof Term.KeywordIf.class) {
+                    split = param1;
+                    tmp16 = Str.concat(indent3, "  ");
+                    tmp17 = Term.showSplit(split, tmp16, false);
+                    tmp = Str.concat("if \n", tmp17);
+                  } else {
+                    throw new globalThis.Error("match error");
+                  }
+                } else {
+                  throw new globalThis.Error("match error");
+                }
               }
             }
           }
         }
       }
     }
+    res = tmp;
+    return Str.concat(indent3, res);
   } 
   static print(t1) {
     let tmp;
-    tmp = Term.show(t1);
+    tmp = Term.show(t1, "");
     return globalThis.log(tmp) ?? null;
   }
   static toString() { return "Term"; }

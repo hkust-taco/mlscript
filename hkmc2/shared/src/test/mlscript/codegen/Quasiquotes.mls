@@ -286,3 +286,60 @@ term.print(`let x = `42 `in x)
 //│ > x = 42
 //│ > x
 
+
+term.print(`if `true then `true else `false)
+//│ JS (unsanitized):
+//│ let tmp84, tmp85, tmp86, tmp87, tmp88, tmp89, tmp90, tmp91, tmp92, tmp93, tmp94, tmp95, tmp96;
+//│ tmp84 = new this.Predef.term.Symbol("scrut");
+//│ tmp85 = new this.Predef.term.Lit(true);
+//│ tmp86 = new this.Predef.term.Symbol("scrut");
+//│ tmp87 = new this.Predef.term.Ref(tmp86);
+//│ tmp88 = new this.Predef.term.LitPattern(true);
+//│ tmp89 = new this.Predef.term.Lit(true);
+//│ tmp90 = new this.Predef.term.Else(tmp89);
+//│ tmp91 = new this.Predef.term.Branch(tmp87, tmp88, tmp90);
+//│ tmp92 = new this.Predef.term.Lit(false);
+//│ tmp93 = new this.Predef.term.Else(tmp92);
+//│ tmp94 = new this.Predef.term.Cons(tmp91, tmp93);
+//│ tmp95 = new this.Predef.term.Let(tmp84, tmp85, tmp94);
+//│ tmp96 = new this.Predef.term.IfLike(this.Predef.term.KeywordIf, tmp95);
+//│ Predef.term.print(tmp96) ?? null
+//│ > if 
+//│ >   let scrut = true
+//│ >   scrut is true then true
+//│ >   else false
+
+
+term.print(x `=> `if x `== `0.0 then `1.0 else x)
+//│ JS (unsanitized):
+//│ let x9, tmp97, tmp98, tmp99, tmp100, tmp101, tmp102, tmp103, tmp104, tmp105, tmp106, tmp107, tmp108, tmp109, tmp110, tmp111, tmp112, tmp113, tmp114, tmp115;
+//│ x9 = new this.Predef.term.Symbol("x");
+//│ tmp97 = new this.Predef.term.Symbol("scrut");
+//│ tmp98 = new this.Predef.term.Symbol("==");
+//│ tmp99 = new this.Predef.term.Ref(x9);
+//│ tmp100 = new this.Predef.term.Lit(0.0);
+//│ tmp101 = new this.Predef.term.Ref(tmp98);
+//│ tmp102 = new this.Predef.term.Tup([
+//│   tmp99,
+//│   tmp100
+//│ ]);
+//│ tmp103 = new this.Predef.term.App(tmp101, tmp102);
+//│ tmp104 = new this.Predef.term.Symbol("scrut");
+//│ tmp105 = new this.Predef.term.Ref(tmp104);
+//│ tmp106 = new this.Predef.term.LitPattern(true);
+//│ tmp107 = new this.Predef.term.Lit(1.0);
+//│ tmp108 = new this.Predef.term.Else(tmp107);
+//│ tmp109 = new this.Predef.term.Branch(tmp105, tmp106, tmp108);
+//│ tmp110 = new this.Predef.term.Ref(x9);
+//│ tmp111 = new this.Predef.term.Else(tmp110);
+//│ tmp112 = new this.Predef.term.Cons(tmp109, tmp111);
+//│ tmp113 = new this.Predef.term.Let(tmp97, tmp103, tmp112);
+//│ tmp114 = new this.Predef.term.IfLike(this.Predef.term.KeywordIf, tmp113);
+//│ tmp115 = new this.Predef.term.Lam([
+//│   x9
+//│ ], tmp114);
+//│ Predef.term.print(tmp115) ?? null
+//│ > (x) => if 
+//│ >   let scrut = (==)(x, 0)
+//│ >   scrut is true then 1
+//│ >   else x

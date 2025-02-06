@@ -515,7 +515,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
 
   def quotePattern(p: Pattern)(k: Result => Block)(using Subst): Block = p match
     case Pattern.Lit(lit) => setupTerm("LitPattern", Value.Lit(lit) :: Nil)(k)
-    case _ =>
+    case _ => // TODO
       raise(ErrorReport(
         msg"Unsupported quasiquote pattern type ${p.showDbg}" ->
         p.toLoc :: Nil,

@@ -78,25 +78,47 @@ class Throw(result: Term) extends Term
 class Try(body: Term, finallyDo: Term) extends Term
 
 
-fun showStmt(s) =
-  if s is
+fun showStmt(s, indent) =
+  let res = if s is
     LetDecl(Symbol(name)) then Str.concat("let ", name)
-    DefineVar(Symbol(name), value) then Str.concat(name, " = ", show(value))
+    DefineVar(Symbol(name), value) then Str.concat(name, " = ", show(value, ""))
+  Str.concat(indent, res)
 
 
-fun show(t) =
-  if t is
+fun showPattern(p, indent) =
+  let res = if p is
+    LitPattern(lit) then lit.toString()
+  // TODO: other patterns
+  Str.concat(indent, res)
+
+
+fun showSplit(s, indent, isCont) =
+  let res = if s is
+    Cons(Branch(scrut, ptrn, cont), tail) then
+      Str.concat(show(scrut, ""), " is ", showPattern(ptrn, ""), " then ", showSplit(cont, "", true), "\n", showSplit(tail, indent, false))
+    Let(sym, term, split) then
+      Str.concat("let ", sym.name, " = ", show(term, ""), "\n", showSplit(split, indent, false))
+    Else(term) then // FIXME: keep the indent?
+      if isCont then show(term, "")
+      else Str.concat("else ", show(term, ""))
+    End then ""
+  Str.concat(indent, res)
+
+
+fun show(t, indent) =
+  let res = if t is
     Ref(Symbol(name)) then name
     Lit(lit) then lit.toString()
-    App(lhs, rhs) then Str.concat("(", show(lhs), ")(", show(rhs), ")")
-    Tup(fields) then Predef.join(", ")(Predef.arraymap(t => show(t))(fields))
+    App(lhs, rhs) then Str.concat("(", show(lhs, ""), ")(", show(rhs, ""), ")")
+    Tup(fields) then Predef.join(", ")(Predef.arraymap(t => show(t, ""))(fields))
     Lam(params, body) then
-      Str.concat("(", Predef.join(", ")(Predef.arraymap(s => s.name)(params)), ") => ", show(body))
+      Str.concat("(", Predef.join(", ")(Predef.arraymap(s => s.name)(params)), ") => ", show(body, ""))
     Blk(stats, res) then
-      Str.concat(Predef.join("\n")(Predef.arraymap(s => showStmt(s))(stats)), "\n", show(res))
-    // TODO: IfLike
+      Str.concat(Predef.join("\n")(Predef.arraymap(s => showStmt(s, ""))(stats)), "\n", show(res, ""))
+    IfLike(KeywordIf, split) then Str.concat("if \n", showSplit(split, Str.concat(indent, "  "), false))
+  Str.concat(indent, res)
 
-fun print(t) = log(show(t))
+fun print(t) = log(show(t, ""))
 
 
 // TODO: how to store the generated code?
