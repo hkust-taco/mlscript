@@ -84,6 +84,15 @@ class BlockTransformer(subst: SymbolSubst):
       if (l2 is l) && (res2 is res) && (par2 is par) && (args2 is args) &&
           (cls2 is cls) && (hdr2 is hdr) && (bod2 is bod) && (rst2 is rst)
         then b else HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod2, rst2)
+    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
+      val lhs2 = applyPath(lhs)
+      val fld2 = applyPath(fld)
+      val rhs2 = applyResult(rhs)
+      val rest2 = applyBlock(rest)
+      if (lhs2 is lhs) && (fld2 is fld) && (rhs2 is rhs) && (rest2 is rest)
+      then b
+      else AssignDynField(lhs2, fld2, arrayIdx, rhs2, rest2)
+      
   
   def applyResult2(r: Result)(k: Result => Block): Block = k(applyResult(r))
 
@@ -104,6 +113,12 @@ class BlockTransformer(subst: SymbolSubst):
       val sym2 = p.symbol.mapConserve(_.subst)
       if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2)
     case v: Value => applyValue(v)
+    case DynSelect(qual, fld, ai) =>
+      val qual2 = applyPath(qual)
+      val fld2 = applyPath(fld)
+      if (qual2 is qual) && (fld2 is fld)
+      then p
+      else DynSelect(qual2, fld2, ai)
   
   def applyValue(v: Value): Value = v match
     case Value.Ref(l) =>
