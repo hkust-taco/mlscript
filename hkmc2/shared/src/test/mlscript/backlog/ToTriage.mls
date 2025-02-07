@@ -89,6 +89,9 @@ set g.0 = g.0 + 1
 :todo // TODO instrument Predef
 :re
 id(1, 2)
+//│ ╔══[ERROR] Expected 1 arguments, got 2
+//│ ║  l.91: 	id(1, 2)
+//│ ╙──      	^^
 //│ = 1
 
 // ——— ——— ———
@@ -149,7 +152,7 @@ f of
       2
   of 3
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.150: 	  of 3
+//│ ║  l.153: 	  of 3
 //│ ╙──       	^^
 //│ = [function]
 
@@ -180,7 +183,7 @@ object Oops with
 :e
 Oops.fakeField
 //│ ╔══[ERROR] Object 'Oops' does not contain member 'fakeField'
-//│ ║  l.181: 	Oops.fakeField
+//│ ║  l.184: 	Oops.fakeField
 //│ ╙──       	    ^^^^^^^^^^
 //│ = 1
 
@@ -246,7 +249,7 @@ object Cls(x) with
 :e
 Cls.x
 //│ ╔══[ERROR] Object 'Cls' does not contain member 'x'
-//│ ║  l.247: 	Cls.x
+//│ ║  l.250: 	Cls.x
 //│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
@@ -274,15 +277,15 @@ module Example with
 // whoops
   val a = this
 //│ ╔══[PARSE ERROR] Expected block after type declaration body; found newline instead
-//│ ║  l.273: 	module Example with
+//│ ║  l.276: 	module Example with
 //│ ║         	                   ^
-//│ ║  l.274: 	// whoops
+//│ ║  l.277: 	// whoops
 //│ ╙──       	
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.275: 	  val a = this
+//│ ║  l.278: 	  val a = this
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.275: 	  val a = this
+//│ ║  l.278: 	  val a = this
 //│ ╙──       	^^
 
 // ——— ——— ———
@@ -290,7 +293,7 @@ module Example with
 :fixme // ("Not in scope" error)
 let xs = new Oopsie
 //│ ╔══[ERROR] Name not found: Oopsie
-//│ ║  l.291: 	let xs = new Oopsie
+//│ ║  l.294: 	let xs = new Oopsie
 //│ ╙──       	             ^^^^^^
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: xs (class hkmc2.semantics.VarSymbol)
 

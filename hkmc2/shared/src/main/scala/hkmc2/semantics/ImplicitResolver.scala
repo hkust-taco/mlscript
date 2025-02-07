@@ -144,15 +144,13 @@ class ImplicitResolver(tl: TraceLogger)
         val paramss = tdf.params
         (paramss zip argss).foreach: 
           case (ps, Term.Tup(args)) =>
-            // * TODO: Check the arity.
-            // if ps.paramCountUB
-            // then if ps.paramCountLB != args.length then
-            //   raise(ErrorReport(msg"Expected ${ps.paramCountLB.toString()} arguments, " +
-            //     msg"got ${args.length.toString()}" -> base.toLoc :: Nil))
-            // else if ps.paramCountLB > args.length then
-            //   raise(ErrorReport(msg"Expected at least ${ps.paramCountLB.toString()} arguments, " +
-            //     msg"got ${args.length.toString()}" -> base.toLoc :: Nil))
-            assert(ps.params.sizeCompare(args) === 0)
+            if ps.paramCountUB
+            then if ps.paramCountLB != args.length then
+              raise(ErrorReport(msg"Expected ${ps.paramCountLB.toString()} arguments, " +
+                msg"got ${args.length.toString()}" -> base.toLoc :: Nil))
+            else if ps.paramCountLB > args.length then
+              raise(ErrorReport(msg"Expected at least ${ps.paramCountLB.toString()} arguments, " +
+                msg"got ${args.length.toString()}" -> base.toLoc :: Nil))
             (ps.params zip args).foreach((p, arg) => resolveArg(p, arg)(base))
           case _ =>
             lastWords("Other argument forms.")

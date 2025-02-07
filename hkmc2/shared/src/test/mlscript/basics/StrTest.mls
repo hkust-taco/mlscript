@@ -17,24 +17,32 @@ concat of
 
 // TODO (~) should be sanitized
 
+:e
 (~)("a", "b", "c")
+//│ ╔══[ERROR] Expected 2 arguments, got 3
+//│ ║  l.21: 	(~)("a", "b", "c")
+//│ ╙──      	 ^
 //│ = "ab"
 
 
+:e
 (~)("a")
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.29: 	(~)("a")
+//│ ╙──      	 ^
 //│ = "aundefined"
 
 :ge
 ~"a"
 //│ ╔══[COMPILATION ERROR] Unexpected type annotations ~"a"
-//│ ║  l.28: 	~"a"
+//│ ║  l.36: 	~"a"
 //│ ╙──      	 ^^^
 
 
 :ge
 ~("a", "b")
 //│ ╔══[COMPILATION ERROR] Unexpected type annotations ~{ "a"; "b" }
-//│ ║  l.35: 	~("a", "b")
+//│ ║  l.43: 	~("a", "b")
 //│ ╙──      	       ^^^
 
 
@@ -42,10 +50,10 @@ concat of
 :ge
 ~ of "a", "b"
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found 'of' keyword instead
-//│ ║  l.43: 	~ of "a", "b"
+//│ ║  l.51: 	~ of "a", "b"
 //│ ╙──      	  ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.43: 	~ of "a", "b"
+//│ ║  l.51: 	~ of "a", "b"
 //│ ╙──      	     ^^^
 //│ ═══[COMPILATION ERROR] Unexpected type annotations ~<error>
 
