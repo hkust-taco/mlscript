@@ -8,7 +8,7 @@ class Example with
 val ex = new Example
 //│ ex = Example
 
-let s = ex.f
+let s = ex.("f")
 //│ s = [function f]
 
 :todo
@@ -19,7 +19,7 @@ s(123)
 :sjs
 ex |>. s(123)
 //│ JS (unsanitized):
-//│ let tmp2; tmp2 = Predef.call(ex, s); runtime.safeCall(tmp2(123))
+//│ let tmp1; tmp1 = Predef.call(ex, s); runtime.safeCall(tmp1(123))
 //│ = [123, 456]
 
 

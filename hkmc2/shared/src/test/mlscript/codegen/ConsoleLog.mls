@@ -49,13 +49,13 @@ let y = x + 1
 console.log("c")
 y * 2
 //│ JS (unsanitized):
-//│ let x, y, tmp7, tmp8, tmp9, tmp10;
-//│ tmp7 = runtime.safeCall(this.console.log("a"));
+//│ let x, y, tmp2, tmp3, tmp4, tmp5;
+//│ tmp2 = runtime.safeCall(this.console.log("a"));
 //│ x = 123;
-//│ tmp8 = runtime.safeCall(this.console.log("b"));
-//│ tmp9 = x + 1;
-//│ y = tmp9;
-//│ tmp10 = runtime.safeCall(this.console.log("c"));
+//│ tmp3 = runtime.safeCall(this.console.log("b"));
+//│ tmp4 = x + 1;
+//│ y = tmp4;
+//│ tmp5 = runtime.safeCall(this.console.log("c"));
 //│ y * 2
 //│ > a
 //│ > b

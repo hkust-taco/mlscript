@@ -11,6 +11,8 @@ declare class Array
 declare class JSON
 declare class Number
 declare class Function
+declare class String
+declare class RegExp
 declare class Set
 declare class Map
 declare class Error(msg)
@@ -23,9 +25,6 @@ declare class Num
 declare class Str with
   fun length: Int
   fun concat: Str -> Str
-
-declare class String
-declare class RegExp
 
 // declare module Math // TODO: list members
 declare val Math // so we can, eg, `open { pow }` in the meantime

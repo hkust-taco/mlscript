@@ -23,6 +23,8 @@ set
   globalThis.Region = Region
   globalThis.Ref = Ref
 
+declare class Function
+
 declare class Str(length: Int, concat: Str -> Str)
 
 declare class Error(msg: Str)

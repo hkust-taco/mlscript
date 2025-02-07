@@ -25,6 +25,7 @@ abstract class CodeBuilder:
 class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   
   def checkMLsCalls: Bool = false
+  def checkSelections: Bool = false
   
   val builtinOpsBase: Ls[Str] = Ls(
     "+", "-", "*", "/", "%",
@@ -61,7 +62,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case ts: semantics.TermSymbol =>
       ts.owner match
       case S(owner) =>
-        doc"${result(Value.This(owner))}.${
+        doc"${getVar(owner)}.${
           if (ts.k is syntax.LetBind) && !owner.isInstanceOf[semantics.TopLevelSymbol]
           then "#" + owner.privatesScope.lookup_!(ts)
           else ts.id.name
@@ -159,8 +160,10 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       def mkThis(sym: InnerSymbol): Document =
         result(Value.This(sym))
       val resJS = defn match
-      case ValDefn(own, k: syntax.Val, sym, p) =>
+      case ValDefn(own, k, sym, p) =>
         val sym = defn.sym
+        // * Currently we allow `val` outside of object/module scopes,
+        // * in which case it has no owner and is just a glorified local variable rather than a field.
         own match
         case N =>
           doc"${getVar(sym)} = ${result(p)};${returningTerm(rst, endSemi)}"
@@ -207,6 +210,19 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
               } { #{ ${
                 privs
               } # $ctorOrStatic ${ braced(ctorCode) }${
+                if checkSelections && !isModule
+                then mtds
+                  .flatMap:
+                    case td @ FunDefn(_, _, ps :: pss, bod) => S:
+                      doc" # get ${td.sym.nme}$$__checkNotMethod() { ${
+                        getVar(State.runtimeSymbol)
+                      }.deboundMethod(${JSBuilder.makeStringLiteral(td.sym.nme)}, ${
+                        JSBuilder.makeStringLiteral(sym.nme)
+                      }); }"
+                    case _ => N
+                  .mkDocument(" ")
+                else doc""
+              }${
                 mtds.map: 
                   case td @ FunDefn(_, _, ps :: pss, bod) =>
                     val result = pss.foldRight(bod):
@@ -526,6 +542,7 @@ trait JSBuilderArgNumSanityChecks
     extends JSBuilder:
   
   override def checkMLsCalls: Bool = instrument
+  override def checkSelections: Bool = instrument
   
   val functionParamVarargSymbol = semantics.TempSymbol(N, "args")
   

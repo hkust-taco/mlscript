@@ -96,6 +96,12 @@ M.d
 
 fun f(x) = if x is M.D then 1 else 0
 
+M.D.class
+//│ = class D {       constructor(a) {         this.a = a;       }       toString() { return "D(" + globalThis.Predef.render(this.a) + ")"; }     }
+
+M is M.D
+//│ = false
+
 f(M.d)
 //│ = 1
 
@@ -121,12 +127,12 @@ fun f(x) = if x is
 //│ JS (unsanitized):
 //│ let f4;
 //│ f4 = function f(x3) {
-//│   let param04, x4, scrut1;
+//│   let param04, x4, scrut2;
 //│   if (x3 instanceof Some1.class) {
 //│     param04 = x3.value;
 //│     x4 = param04;
-//│     scrut1 = x4 > 0;
-//│     if (scrut1 === true) {
+//│     scrut2 = x4 > 0;
+//│     if (scrut2 === true) {
 //│       return 42
 //│     } else {
 //│       return log("oops")
@@ -197,22 +203,22 @@ fun f(x) = log of if x is
 //│ JS (unsanitized):
 //│ let f6;
 //│ f6 = function f(x3) {
-//│   let param04, tmp11;
+//│   let param04, tmp9;
 //│   if (x3 instanceof Some1.class) {
 //│     param04 = x3.value;
 //│     if (param04 === 0) {
-//│       tmp11 = "0";
+//│       tmp9 = "0";
 //│     } else {
-//│       tmp11 = "oops";
+//│       tmp9 = "oops";
 //│     }
 //│   } else {
 //│     if (x3 instanceof None1.class) {
-//│       tmp11 = "ok";
+//│       tmp9 = "ok";
 //│     } else {
-//│       tmp11 = "oops";
+//│       tmp9 = "oops";
 //│     }
 //│   }
-//│   return log(tmp11)
+//│   return log(tmp9)
 //│ };
 
 f(Some(0))

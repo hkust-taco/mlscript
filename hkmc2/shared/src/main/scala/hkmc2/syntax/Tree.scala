@@ -202,13 +202,18 @@ enum Tree extends AutoLocated:
     case Spread(Keyword.`...`, _, S(und: Under)) => S(S(true), new Ident("_").withLocOf(und), N)
     case InfixApp(lhs: Ident, Keyword.`:`, rhs) => S(N, lhs, S(rhs))
     case TermDef(ImmutVal, inner, _) => inner.asParam
+    case Modified(Keyword.`using`, _, inner) => inner match
+      // Param of form (using ..., name: Type). Parse it as usual.
+      case inner: InfixApp => inner.asParam
+      // Param of form (using ..., Type). Synthesize an identifier for it.
+      case _ => S(N, Ident(""), S(inner))
   
   def isModuleModifier: Bool = this match
     case Tree.TypeDef(Mod, _, N, N) => true
     case _ => false
 
 object Tree:
-  val DummyApp: App = App(Dummy, Dummy)
+  val DummyApp: App = App(Dummy, Dummy) // TODO change the places where this is used
   val DummyTup: Tup = Tup(Dummy :: Nil)
   def DummyTypeDef(k: TypeDefKind)(using State): TypeDef =
     Tree.TypeDef(syntax.Cls, Tree.Dummy, N, N)
@@ -268,6 +273,7 @@ case object LetBind extends ValLike("let", "let binding")
 case object HandlerBind extends TermDefKind("handler", "handler binding")
 case object ParamBind extends ValLike("", "parameter")
 case object Fun extends TermDefKind("fun", "function")
+case object Ins extends TermDefKind("use", "implicit instance")
 sealed abstract class TypeDefKind(desc: Str) extends DeclKind(desc)
 sealed trait ObjDefKind
 sealed trait ClsLikeKind extends ObjDefKind:
@@ -285,6 +291,9 @@ case object Pat extends TypeDefKind("pattern") with ClsLikeKind
 trait TermDefImpl extends TypeOrTermDef:
   this: TermDef =>
   
+  def sParameterizedMethod: Bool =
+    (k is Fun) && paramLists.length > 0
+  
 
 trait TypeOrTermDef:
   this: TypeDef | TermDef =>
@@ -296,9 +305,23 @@ trait TypeOrTermDef:
   
   lazy val (symbName, name, paramLists, typeParams, annotatedResultType)
       : (Opt[MaybeIdent], MaybeIdent, Ls[Tup], Opt[TyTup], Opt[Tree]) =
+    val k = this match
+      case td: TypeDef => td.k
+      case td: TermDef => td.k
     def rec(t: Tree, symbName: Opt[MaybeIdent], annot: Opt[Tree]): 
       (Opt[MaybeIdent], MaybeIdent, Ls[Tup], Opt[TyTup], Opt[Tree]) = 
       t match
+      
+      // use Foo as foo = ...
+      case InfixApp(typ, Keyword.`as`, id: Ident) if k == Ins =>
+        (S(R(id)), R(id), Nil, N, S(typ))
+      
+      // use Foo = ...
+      case typ if k == Ins =>
+        val name = typ.toString()
+        val id: Ident = Ident(s"instance$$$name")
+        (S(R(id)), R(id), Nil, N, S(typ))
+      
       
       case InfixApp(tree, Keyword.`:`, ann) =>
         rec(tree, symbName, S(ann))

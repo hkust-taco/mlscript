@@ -293,6 +293,7 @@ class ParseRules(using State):
       ),
     Kw(`fun`)(termDefBody(Fun)),
     Kw(`val`)(termDefBody(ImmutVal)),
+    Kw(`use`)(termDefBody(Ins)),
     typeAliasLike(`type`, Als),
     typeAliasLike(`pattern`, Pat),
     Kw(`class`)(typeDeclBody(Cls)),
@@ -320,6 +321,7 @@ class ParseRules(using State):
     modified(`throw`),
     modified(`import`), // TODO improve – only allow strings
     // modified(`type`),
+    modified(`using`),
     singleKw(`true`)(BoolLit(true)),
     singleKw(`false`)(BoolLit(false)),
     singleKw(`undefined`)(UnitLit(false)),

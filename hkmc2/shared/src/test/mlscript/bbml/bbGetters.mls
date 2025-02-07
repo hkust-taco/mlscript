@@ -59,7 +59,17 @@ test2
 //│ = [function test2]
 //│ Type: () -> (Int -> Int)
 
+:sjs
+test2()
+//│ JS (unsanitized):
+//│ test21()
+//│ = [function]
+//│ Type: Int -> Int
+
+:ssjs
 test2()(5)
+//│ JS:
+//│ tmp = test21(); block$res9 = runtime.safeCall(tmp(5)); undefined
 //│ = 5
 //│ Type: Int
 
@@ -93,10 +103,10 @@ fun test2() =
 //│ };
 //│ ═══[WARNING] Pure expression in statement position
 //│ ╔══[ERROR] Function definition shape not yet supported for funny
-//│ ║  l.74: 	    case n then funny(n - 1) + 1
+//│ ║  l.84: 	    case n then funny(n - 1) + 1
 //│ ╙──      	                ^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Variable not found: funny
-//│ ║  l.75: 	  funny
+//│ ║  l.85: 	  funny
 //│ ╙──      	  ^^^^^
 //│ Type: ⊤
 
@@ -105,7 +115,7 @@ fun test2() =
 fun test3 =
   log("Hi")
 //│ ╔══[ERROR] Function definition shape not yet supported for test3
-//│ ║  l.106: 	  log("Hi")
+//│ ║  l.116: 	  log("Hi")
 //│ ╙──       	  ^^^^^^^^^
 //│ Type: ⊤
 

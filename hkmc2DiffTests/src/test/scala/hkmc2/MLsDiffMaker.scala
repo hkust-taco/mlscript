@@ -6,7 +6,9 @@ import mlscript.utils.*, shorthands.*
 import utils.*
 
 import hkmc2.semantics.Elaborator
+import hkmc2.semantics.ImplicitResolver
 
+import semantics.Elaborator.Ctx
 
 abstract class MLsDiffMaker extends DiffMaker:
   
@@ -35,11 +37,14 @@ abstract class MLsDiffMaker extends DiffMaker:
   val silent = NullaryCommand("silent")
   val dbgElab = NullaryCommand("de")
   val dbgParsing = NullaryCommand("dp")
+  val dbgResolving = NullaryCommand("dr")
   
   val showParse = NullaryCommand("p")
   val showParsedTree = DebugTreeCommand("pt")
   val showElab = NullaryCommand("el")
   val showElaboratedTree = DebugTreeCommand("elt")
+  val showResolve = NullaryCommand("r")
+  val showResolvedTree = DebugTreeCommand("rt")
   val showLoweredTree = NullaryCommand("lot")
   val ppLoweredTree = NullaryCommand("slot")
   val showContext = NullaryCommand("ctx")
@@ -57,6 +62,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     override def dbg: Bool =
       dbgParsing.isSet
       || dbgElab.isSet
+      || dbgResolving.isSet
       || debug.isSet
   
   val etl = new TraceLogger:
@@ -69,12 +75,20 @@ abstract class MLsDiffMaker extends DiffMaker:
       // * Perhaps this should be the default behavior of TraceLogger.
       if doTrace then super.trace(pre, post)(thunk)
       else thunk
+      
+  val rtl = new TraceLogger:
+    override def doTrace = dbgResolving.isSet
+    override def emitDbg(str: String): Unit = output(str)
   
   var curCtx = Elaborator.State.init
+  var curICtx = ImplicitResolver.ICtx.empty
   
+  var prelude = Elaborator.Ctx.empty
   
   override def run(): Unit =
-    if file =/= preludeFile then importFile(preludeFile, verbose = false)
+    if file =/= preludeFile then 
+      importFile(preludeFile, verbose = false)
+      prelude = curCtx
     curCtx = curCtx.nest(N)
     super.run()
   
@@ -86,10 +100,11 @@ abstract class MLsDiffMaker extends DiffMaker:
     given raise: Raise = d =>
       output(s"Error: $d")
       ()
-    processTrees(
-      Modified(`import`, N, StrLit(predefFile.toString))
-      :: Open(Ident("Predef"))
-      :: Nil)
+    if file != preludeFile then
+      processTrees(
+        Modified(`import`, N, StrLit(predefFile.toString))
+        :: Open(Ident("Predef"))
+        :: Nil)
     super.init()
   
   
@@ -117,7 +132,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     val imprtSymbol =
       semantics.TopLevelSymbol("import#"+file.baseName)
     given Elaborator.Ctx = curCtx.nest(N)
-    val elab = Elaborator(etl, wd)
+    val elab = Elaborator(etl, wd, Ctx.empty)
     try
       val resBlk = new syntax.Tree.Block(res)
       val (e, newCtx) = elab.importFrom(resBlk)
@@ -173,7 +188,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   private var blockNum = 0
   
   def processTrees(trees: Ls[syntax.Tree])(using Raise): Unit =
-    val elab = Elaborator(etl, file / os.up)
+    val elab = Elaborator(etl, file / os.up, prelude)
     // val blockSymbol =
     //   semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1
@@ -188,6 +203,16 @@ abstract class MLsDiffMaker extends DiffMaker:
     showElaboratedTree.get.foreach: post =>
       output(s"Elaborated tree:")
       output(e.showAsTree(using post))
+      
+    val resolver = ImplicitResolver(rtl)
+    curICtx = resolver.resolveBlk(e)(using curICtx)
+    
+    if showResolve.isSet then
+      output(s"Resolved: ${e.showDbg}")
+    showResolvedTree.get.foreach: post =>
+      output(s"Resolved tree:")
+      output(e.showAsTree(using post))
+    
     processTerm(e, inImport = false)
       
   

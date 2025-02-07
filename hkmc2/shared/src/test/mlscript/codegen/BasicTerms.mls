@@ -44,7 +44,7 @@ log("Hi")
 log("Hi")
 2
 //│ JS (unsanitized):
-//│ let tmp1; tmp1 = runtime.safeCall(this.log("Hi")); 2
+//│ let tmp; tmp = runtime.safeCall(this.log("Hi")); 2
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
@@ -53,27 +53,22 @@ log("Hi")
 //│     rhs = Select{member:log}:
 //│       qual = Ref of globalThis:globalThis
 //│       name = Ident of "log"
-//│     rest = Begin: \
-//│     sub = Match:
-//│       scrut = Ref of $selRes
-//│       arms = Ls of 
-//│         Tuple2:
-//│           _1 = Lit of UnitLit of false
-//│           _2 = Throw of Instantiate:
-//│             cls = Select:
-//│               qual = Ref of globalThis:globalThis
-//│               name = Ident of "Error"
-//│             args = Ls of 
-//│               Lit of StrLit of "Access to required field 'log' yielded 'undefined'"
-//│       dflt = S of Assign:
-//│         lhs = $tmp
-//│         rhs = Ref of $selRes
-//│         rest = End of ""
-//│       rest = End of ""
+//│     rest = Match: \
+//│     scrut = Ref of $selRes
+//│     arms = Ls of 
+//│       Tuple2:
+//│         _1 = Lit of UnitLit of false
+//│         _2 = Throw of Instantiate:
+//│           cls = Select:
+//│             qual = Ref of globalThis:globalThis
+//│             name = Ident of "Error"
+//│           args = Ls of 
+//│             Lit of StrLit of "Access to required field 'log' yielded 'undefined'"
+//│     dflt = N
 //│     rest = Assign: \
 //│     lhs = $tmp
 //│     rhs = Call:
-//│       fun = Ref of $tmp
+//│       fun = Ref of $selRes
 //│       args = Ls of 
 //│         Arg:
 //│           spread = false

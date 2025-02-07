@@ -120,6 +120,7 @@ Cls(1, 2).f(3)
 //│     this.x = x;
 //│     this.y = y;
 //│   }
+//│   get f$__checkNotMethod() { runtime.deboundMethod("f", "Cls"); }
 //│   f(...args) {
 //│     globalThis.Predef.checkArgs("f", 2, true, args.length);
 //│     let z = args[0];
@@ -149,6 +150,7 @@ Cls(1, 2).f(3, 4)(5)
 //│     this.x = x;
 //│     this.y = y;
 //│   }
+//│   get f$__checkNotMethod() { runtime.deboundMethod("f", "Cls"); }
 //│   f(...args) {
 //│     globalThis.Predef.checkArgs("f", 2, true, args.length);
 //│     let z = args[0];
@@ -180,10 +182,8 @@ console.log(1)
 //│ selRes = this.console;
 //│ if (selRes === undefined) {
 //│   throw new this.Error("Access to required field 'console' yielded 'undefined'");
-//│ } else {
-//│   tmp5 = selRes;
 //│ }
-//│ block$res10 = runtime.safeCall(tmp5.log(1));
+//│ block$res10 = runtime.safeCall(selRes.log(1));
 //│ undefined
 //│ > 1
 
@@ -193,12 +193,12 @@ console.log(1)
 globalThis.x
 //│ JS:
 //│ selRes1 = this.x;
+//│ discarded = this.x$__checkNotMethod;
 //│ if (selRes1 === undefined) {
 //│   throw new this.Error("Access to required field 'x' yielded 'undefined'");
-//│ } else {
-//│   block$res11 = selRes1;
-//│   undefined
 //│ }
+//│ block$res11 = selRes1;
+//│ undefined
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
 :re
@@ -227,6 +227,7 @@ if M.A(1).y is
 //│       constructor(x1) {
 //│         this.x = x1;
 //│       }
+//│       get f$__checkNotMethod() { runtime.deboundMethod("f", "A"); }
 //│       f(...args) {
 //│         globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│         let y = args[0];
@@ -237,14 +238,13 @@ if M.A(1).y is
 //│   }
 //│   static toString() { return "M"; }
 //│ };
-//│ tmp6 = runtime.checkCall(M1.A(1));
-//│ selRes2 = tmp6.y;
+//│ tmp5 = runtime.checkCall(M1.A(1));
+//│ selRes2 = tmp5.y;
+//│ discarded1 = tmp5.y$__checkNotMethod;
 //│ if (selRes2 === undefined) {
 //│   throw new this.Error("Access to required field 'y' yielded 'undefined'");
-//│ } else {
-//│   tmp7 = selRes2;
 //│ }
-//│ scrut = tmp7;
+//│ scrut = selRes2;
 //│ x = scrut;
 //│ scrut1 = x == 1;
 //│ if (scrut1 === true) {
@@ -266,17 +266,14 @@ M.A(1).y
 //│ selRes3 = this.console;
 //│ if (selRes3 === undefined) {
 //│   throw new this.Error("Access to required field 'console' yielded 'undefined'");
-//│ } else {
-//│   tmp8 = selRes3;
 //│ }
-//│ tmp9 = runtime.checkCall(M1.A(1));
-//│ selRes4 = tmp9.y;
+//│ tmp6 = runtime.checkCall(M1.A(1));
+//│ selRes4 = tmp6.y;
+//│ discarded2 = tmp6.y$__checkNotMethod;
 //│ if (selRes4 === undefined) {
 //│   throw new this.Error("Access to required field 'y' yielded 'undefined'");
-//│ } else {
-//│   tmp10 = selRes4;
 //│ }
-//│ block$res14 = runtime.safeCall(tmp8.log(tmp10));
+//│ block$res14 = runtime.safeCall(selRes3.log(selRes4));
 //│ undefined
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
@@ -287,7 +284,7 @@ M.A(1).y
 M.A(1).y
   console.log()
 //│ JS:
-//│ tmp11 = M1.A(1); block$res15 = runtime.safeCall(this.console.log(tmp11.y)); undefined
+//│ tmp7 = M1.A(1); block$res15 = runtime.safeCall(this.console.log(tmp7.y)); undefined
 //│ > undefined
 
 :noSanityCheck
@@ -303,15 +300,15 @@ M.A(2).y > 1
 :ssjs
 M.A(1).g(0)
 //│ JS:
-//│ tmp15 = runtime.checkCall(M1.A(1)); block$res18 = runtime.safeCall(tmp15.g(0)); undefined
-//│ ═══[RUNTIME ERROR] TypeError: tmp15.g is not a function
+//│ tmp10 = runtime.checkCall(M1.A(1)); block$res18 = runtime.safeCall(tmp10.g(0)); undefined
+//│ ═══[RUNTIME ERROR] TypeError: tmp10.g is not a function
 
 
 
 :ssjs
 M.A(1).f(0)
 //│ JS:
-//│ tmp16 = runtime.checkCall(M1.A(1)); block$res19 = runtime.safeCall(tmp16.f(0)); undefined
+//│ tmp11 = runtime.checkCall(M1.A(1)); block$res19 = runtime.safeCall(tmp11.f(0)); undefined
 //│ = 1
 
 

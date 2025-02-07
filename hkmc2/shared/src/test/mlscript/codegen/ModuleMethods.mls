@@ -1,35 +1,68 @@
 :js
 
 
-// TODO could use `globalThis.Example` instead of `this` in the generated code
-:sjs
-object Example with
+module Example with
   val a = 456
   fun f(x) = [x, a]
-//│ JS (unsanitized):
-//│ let Example1;
-//│ const Example$class = class Example {
-//│   constructor() {
-//│     this.a = 456;
-//│   }
-//│   f(x) {
-//│     return [
-//│       x,
-//│       this.a
-//│     ]
-//│   }
-//│   toString() { return "Example"; }
-//│ }; Example1 = new Example$class;
-//│ Example1.class = Example$class;
 
+:ssjs
+Example.f(123)
+//│ JS:
+//│ block$res2 = runtime.checkCall(Example1.f(123)); undefined
+//│ = [123, 456]
+
+:ssjs
 let s = Example.f
+//│ JS:
+//│ selRes = Example1.f;
+//│ if (selRes === undefined) {
+//│   throw new this.Error("Access to required field 'f' yielded 'undefined'");
+//│ }
+//│ s = selRes;
+//│ block$res3 = undefined;
 //│ s = [function f]
 
-:re
 s(123)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
-
-Example |>. s(123)
 //│ = [123, 456]
+
+:e
+Example |>. s(123)
+//│ ╔══[ERROR] Only module parameters may receive module arguments (values).
+//│ ║  l.29: 	Example |>. s(123)
+//│ ╙──      	^^^^^^^
+//│ = [123, 456]
+
+
+:sjs
+module Test with
+  let s = 1
+  print(s)
+  fun foo() = print(s)
+  fun bar() = foo()
+//│ JS (unsanitized):
+//│ let Test1;
+//│ Test1 = class Test {
+//│   static #s;
+//│   static {
+//│     let tmp1;
+//│     Test.#s = 1;
+//│     tmp1 = Predef.print(Test.#s);
+//│   }
+//│   static foo() {
+//│     return Predef.print(Test.#s)
+//│   } 
+//│   static bar() {
+//│     return Test.foo()
+//│   }
+//│   static toString() { return "Test"; }
+//│ };
+//│ > 1
+
+let f = Test.foo
+//│ f = [function foo]
+
+// :fixme
+f()
+//│ > 1
 
 

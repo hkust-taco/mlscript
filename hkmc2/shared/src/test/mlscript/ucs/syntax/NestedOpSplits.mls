@@ -23,6 +23,7 @@ fun f(x) =
 //│               sym = x
 //│               sign = N
 //│           restParam = N
+//│       tparams = N
 //│       sign = N
 //│       body = S of IfLike:
 //│         kw = keyword 'if'

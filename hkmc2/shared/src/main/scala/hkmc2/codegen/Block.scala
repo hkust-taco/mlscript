@@ -320,7 +320,8 @@ extension (k: Block => Block)
   def continue(l: Local): Block = k.rest(Continue(l))
   def define(defn: Defn) = k.chain(Define(defn, _))
   def end = k.rest(End())
-  def ifthen(scrut: Path, cse: Case, trm: Block): Block => Block = k.chain(Match(scrut, cse -> trm :: Nil, N, _))
+  def ifthen(scrut: Path, cse: Case, trm: Block, els: Opt[Block] = N): Block => Block =
+    k.chain(Match(scrut, cse -> trm :: Nil, els, _))
   def label(label: Local, body: Block) = k.chain(Label(label, body, _))
   def ret(r: Result) = k.rest(Return(r, false))
   def staticif(b: Boolean, f: (Block => Block) => (Block => Block)) = if b then k.transform(f) else k

@@ -68,7 +68,7 @@ let x = 1, log(x), x
 //│ REPL> Sending: block$res6 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: let x, selRes, tmp, tmp1;try { x = 1; selRes = this.log; if (selRes === undefined) {   throw new this.Error("Access to required field 'log' yielded 'undefined'"); } else {   tmp = selRes; } tmp1 = runtime.safeCall(tmp(x)); block$res6 = x; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ REPL> Sending: let x, selRes, tmp;try { x = 1; selRes = this.log; if (selRes === undefined) {   throw new this.Error("Access to required field 'log' yielded 'undefined'"); } tmp = runtime.safeCall(selRes(x)); block$res6 = x; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ REPL> Collected:
 //│ >  ​Error: Access to required field 'log' yielded 'undefined'​
 //│ >  undefined
@@ -99,7 +99,7 @@ let x = 1, log(x), x
 //│ REPL> Sending: block$res8 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: let x1, tmp2;try { x1 = 1; tmp2 = runtime.checkCall(log(x1)); block$res8 = x1; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: let x1, tmp1;try { x1 = 1; tmp1 = runtime.checkCall(log(x1)); block$res8 = x1; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
 //│ >  undefined

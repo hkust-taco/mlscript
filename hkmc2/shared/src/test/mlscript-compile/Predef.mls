@@ -73,9 +73,12 @@ fun (???) notImplementedError = throw Error("Not implemented")
 fun tuple(...xs) = xs
 
 fun tupleSlice(xs, i, j) =
+  // * This is more robust than `xs.slice(i, xs.length - j)`
+  // * as it is not affected by users redefining `slice`
   globalThis.Array.prototype.slice.call(xs, i, xs.length - j)
 
 fun tupleGet(xs, i) =
+  // * Contrary to `xs.[i]`, this supports negative indices (Python-style)
   globalThis.Array.prototype.at.call(xs, i)
 
 fun map(f)(...xs) = xs.map(pass1(f))

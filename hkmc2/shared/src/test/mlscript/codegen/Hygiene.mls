@@ -76,7 +76,7 @@ module Test with
 //│   static #x;
 //│   static {
 //│     this.x = 1;
-//│     this.#x = 2;
+//│     Test3.#x = 2;
 //│   }
 //│   static toString() { return "Test"; }
 //│ };

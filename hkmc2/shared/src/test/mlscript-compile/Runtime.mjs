@@ -24,6 +24,14 @@ Runtime1 = class Runtime {
     } else {
       return x1
     }
+  } 
+  static deboundMethod(mtdName, clsName) {
+    let tmp, tmp1, tmp2, tmp3;
+    tmp = "[debinding error] Method '" + mtdName;
+    tmp1 = tmp + "' of class '";
+    tmp2 = tmp1 + clsName;
+    tmp3 = tmp2 + "' was accessed without being called.";
+    throw globalThis.Error(tmp3);
   }
   static toString() { return "Runtime"; }
 };

@@ -15,4 +15,8 @@ fun checkCall(x) =
   then throw Error("MLscript call unexpectedly returned `undefined`, the forbidden value.")
   else x
 
+fun deboundMethod(mtdName, clsName) =
+  throw Error of
+    "[debinding error] Method '" + mtdName + "' of class '" + clsName + "' was accessed without being called."
+
 

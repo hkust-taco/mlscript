@@ -11,7 +11,7 @@ object Example with
 Example.f(2)
 //│ = [2, 1]
 
-let oops = Example.f
+let oops = Example.("f")
 //│ oops = [function f]
 
 
@@ -43,7 +43,7 @@ Example . oops(2)
 //│   rhs = Tup of Ls of 
 //│     IntLit of 2
 //│ JS (unsanitized):
-//│ let tmp1; tmp1 = call(Example1, oops); runtime.safeCall(tmp1(2))
+//│ let tmp; tmp = call(Example1, oops); runtime.safeCall(tmp(2))
 //│ = [2, 1]
 
 Example. oops(2)
@@ -67,7 +67,7 @@ class Example2(val a) with
   val a = 1
   fun f(inc) = Example2(a + inc)
 
-let oops2 = Example2(0).f
+let oops2 = Example2(0).("f")
 //│ oops2 = [function f]
 
 Example2(1) . oops2(2) . oops2(2)
@@ -108,7 +108,7 @@ Example .> oops(2)
 //│       rhs = Tup of Ls of 
 //│         IntLit of 2
 //│ JS (unsanitized):
-//│ let tmp25; tmp25 = runtime.safeCall(oops(2)); call1(Example1, tmp25)
+//│ let tmp23; tmp23 = runtime.safeCall(oops(2)); call1(Example1, tmp23)
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
 
 // * Note:
