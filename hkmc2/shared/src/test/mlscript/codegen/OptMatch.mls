@@ -14,12 +14,10 @@ fun isDefined(x) = if x is
 //│ isDefined = function isDefined(x) {
 //│   if (x instanceof Some1.class) {
 //│     return true
+//│   } else if (x instanceof None1.class) {
+//│     return false
 //│   } else {
-//│     if (x instanceof None1.class) {
-//│       return false
-//│     } else {
-//│       throw new globalThis.Error("match error");
-//│     }
+//│     throw new globalThis.Error("match error");
 //│   }
 //│ };
 
@@ -41,12 +39,10 @@ val isDefined = case
 //│   if (caseScrut instanceof Some1.class) {
 //│     param0 = caseScrut.value;
 //│     return true
+//│   } else if (caseScrut instanceof None1.class) {
+//│     return false
 //│   } else {
-//│     if (caseScrut instanceof None1.class) {
-//│       return false
-//│     } else {
-//│       throw new this.Error("match error");
-//│     }
+//│     throw new this.Error("match error");
 //│   }
 //│ };
 //│ isDefined1 = tmp1;

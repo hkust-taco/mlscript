@@ -251,92 +251,78 @@ Predef1 = class Predef {
     let ts, p, scrut, scrut1, scrut2, nme, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20;
     if (arg1 === undefined) {
       return "undefined"
-    } else {
-      if (arg1 === null) {
-        return "null"
-      } else {
-        if (arg1 instanceof globalThis.Array) {
-          tmp = Predef.fold((arg11, arg2) => {
-            return arg11 + arg2
-          });
-          tmp1 = Predef.interleave(", ");
-          tmp2 = Predef.map(Predef.render);
-          tmp3 = runtime.safeCall(tmp2(...arg1));
-          tmp4 = runtime.safeCall(tmp1(...tmp3));
-          return runtime.safeCall(tmp("[", ...tmp4, "]"))
+    } else if (arg1 === null) {
+      return "null"
+    } else if (arg1 instanceof globalThis.Array) {
+      tmp = Predef.fold((arg11, arg2) => {
+        return arg11 + arg2
+      });
+      tmp1 = Predef.interleave(", ");
+      tmp2 = Predef.map(Predef.render);
+      tmp3 = runtime.safeCall(tmp2(...arg1));
+      tmp4 = runtime.safeCall(tmp1(...tmp3));
+      return runtime.safeCall(tmp("[", ...tmp4, "]"))
+    } else if (typeof arg1 === 'string') {
+      return runtime.safeCall(globalThis.JSON.stringify(arg1))
+    } else if (arg1 instanceof globalThis.Set) {
+      tmp5 = Predef.fold((arg11, arg2) => {
+        return arg11 + arg2
+      });
+      tmp6 = Predef.interleave(", ");
+      tmp7 = Predef.map(Predef.render);
+      tmp8 = runtime.safeCall(tmp7(...arg1));
+      tmp9 = runtime.safeCall(tmp6(...tmp8));
+      return runtime.safeCall(tmp5("Set{", ...tmp9, "}"))
+    } else if (arg1 instanceof globalThis.Map) {
+      tmp10 = Predef.fold((arg11, arg2) => {
+        return arg11 + arg2
+      });
+      tmp11 = Predef.interleave(", ");
+      tmp12 = Predef.map(Predef.render);
+      tmp13 = runtime.safeCall(tmp12(...arg1));
+      tmp14 = runtime.safeCall(tmp11(...tmp13));
+      return runtime.safeCall(tmp10("Map{", ...tmp14, "}"))
+    } else if (arg1 instanceof globalThis.Function) {
+      p = globalThis.Object.getOwnPropertyDescriptor(arg1, "prototype");
+      if (p instanceof globalThis.Object) {
+        scrut = p["writable"];
+        if (scrut === true) {
+          tmp15 = true;
         } else {
-          if (typeof arg1 === 'string') {
-            return runtime.safeCall(globalThis.JSON.stringify(arg1))
-          } else {
-            if (arg1 instanceof globalThis.Set) {
-              tmp5 = Predef.fold((arg11, arg2) => {
-                return arg11 + arg2
-              });
-              tmp6 = Predef.interleave(", ");
-              tmp7 = Predef.map(Predef.render);
-              tmp8 = runtime.safeCall(tmp7(...arg1));
-              tmp9 = runtime.safeCall(tmp6(...tmp8));
-              return runtime.safeCall(tmp5("Set{", ...tmp9, "}"))
-            } else {
-              if (arg1 instanceof globalThis.Map) {
-                tmp10 = Predef.fold((arg11, arg2) => {
-                  return arg11 + arg2
-                });
-                tmp11 = Predef.interleave(", ");
-                tmp12 = Predef.map(Predef.render);
-                tmp13 = runtime.safeCall(tmp12(...arg1));
-                tmp14 = runtime.safeCall(tmp11(...tmp13));
-                return runtime.safeCall(tmp10("Map{", ...tmp14, "}"))
-              } else {
-                if (arg1 instanceof globalThis.Function) {
-                  p = globalThis.Object.getOwnPropertyDescriptor(arg1, "prototype");
-                  if (p instanceof globalThis.Object) {
-                    scrut = p["writable"];
-                    if (scrut === true) {
-                      tmp15 = true;
-                    } else {
-                      tmp15 = false;
-                    }
-                  } else {
-                    tmp15 = false;
-                  }
-                  if (p === undefined) {
-                    tmp16 = true;
-                  } else {
-                    tmp16 = false;
-                  }
-                  scrut1 = tmp15 || tmp16;
-                  if (scrut1 === true) {
-                    scrut2 = arg1.name;
-                    if (scrut2 === "") {
-                      tmp17 = "";
-                    } else {
-                      nme = scrut2;
-                      tmp17 = " " + nme;
-                    }
-                    tmp18 = "[function" + tmp17;
-                    return tmp18 + "]"
-                  } else {
-                    return globalThis.String(arg1)
-                  }
-                } else {
-                  if (arg1 instanceof globalThis.Object) {
-                    return globalThis.String(arg1)
-                  } else {
-                    ts = arg1["toString"];
-                    if (ts === undefined) {
-                      tmp19 = typeof arg1;
-                      tmp20 = "[" + tmp19;
-                      return tmp20 + "]"
-                    } else {
-                      return runtime.safeCall(ts.call(arg1))
-                    }
-                  }
-                }
-              }
-            }
-          }
+          tmp15 = false;
         }
+      } else {
+        tmp15 = false;
+      }
+      if (p === undefined) {
+        tmp16 = true;
+      } else {
+        tmp16 = false;
+      }
+      scrut1 = tmp15 || tmp16;
+      if (scrut1 === true) {
+        scrut2 = arg1.name;
+        if (scrut2 === "") {
+          tmp17 = "";
+        } else {
+          nme = scrut2;
+          tmp17 = " " + nme;
+        }
+        tmp18 = "[function" + tmp17;
+        return tmp18 + "]"
+      } else {
+        return globalThis.String(arg1)
+      }
+    } else if (arg1 instanceof globalThis.Object) {
+      return globalThis.String(arg1)
+    } else {
+      ts = arg1["toString"];
+      if (ts === undefined) {
+        tmp19 = typeof arg1;
+        tmp20 = "[" + tmp19;
+        return tmp20 + "]"
+      } else {
+        return runtime.safeCall(ts.call(arg1))
       }
     }
   } 

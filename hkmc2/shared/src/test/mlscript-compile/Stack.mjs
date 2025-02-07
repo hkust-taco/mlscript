@@ -34,12 +34,10 @@ Stack1 = class Stack {
       t = param1;
       tmp = Stack.Cons(h, tail);
       return Stack.reverseAndAppend(t, tmp)
+    } else if (xs1 instanceof Stack.Nil.class) {
+      return tail
     } else {
-      if (xs1 instanceof Stack.Nil.class) {
-        return tail
-      } else {
-        throw new globalThis.Error("match error");
-      }
+      throw new globalThis.Error("match error");
     }
   } 
   static reverse(xs2) {
@@ -107,34 +105,30 @@ Stack1 = class Stack {
             tmp3 = Stack.Cons(t2, tails);
             tmp4 = go(tmp2, tmp3);
             return runtime.safeCall(tmp4(t))
-          } else {
-            if (h instanceof Stack.Nil.class) {
-              tmp5 = go(heads, tails);
-              return runtime.safeCall(tmp5(t))
-            } else {
-              throw new globalThis.Error("match error");
-            }
-          }
-        } else {
-          if (caseScrut instanceof Stack.Nil.class) {
-            if (heads instanceof Stack.Nil.class) {
-              if (tails instanceof Stack.Nil.class) {
-                tmp6 = true;
-              } else {
-                tmp6 = false;
-              }
-              tmp7 = runtime.safeCall(Predef.assert(tmp6));
-              return (tmp7 , Stack.Nil)
-            } else {
-              tmp8 = Stack.toReverseArray(heads);
-              tmp9 = go(Stack.Nil, Stack.Nil);
-              tmp10 = Stack.reverse(tails);
-              tmp11 = runtime.safeCall(tmp9(tmp10));
-              return Stack.Cons(tmp8, tmp11)
-            }
+          } else if (h instanceof Stack.Nil.class) {
+            tmp5 = go(heads, tails);
+            return runtime.safeCall(tmp5(t))
           } else {
             throw new globalThis.Error("match error");
           }
+        } else if (caseScrut instanceof Stack.Nil.class) {
+          if (heads instanceof Stack.Nil.class) {
+            if (tails instanceof Stack.Nil.class) {
+              tmp6 = true;
+            } else {
+              tmp6 = false;
+            }
+            tmp7 = runtime.safeCall(Predef.assert(tmp6));
+            return (tmp7 , Stack.Nil)
+          } else {
+            tmp8 = Stack.toReverseArray(heads);
+            tmp9 = go(Stack.Nil, Stack.Nil);
+            tmp10 = Stack.reverse(tails);
+            tmp11 = runtime.safeCall(tmp9(tmp10));
+            return Stack.Cons(tmp8, tmp11)
+          }
+        } else {
+          throw new globalThis.Error("match error");
         }
       }
     };

@@ -733,19 +733,19 @@ trait LoweringTraceLog
 
 object MergeMatchArmTransformer extends BlockTransformer(new SymbolSubst()):
   override def applyBlock(b: Block): Block = b match
-    case m@Match(s, arms, dflt, rest) =>
-      dflt.map(d => applyBlock(d)).fold(m):
-        case m@Match(s2, arms2, dflt2, _: End) if s2 === s =>
-          Match(
-            s,
-            arms.map((cse, b) => (cse, applyBlock(b))) ::: arms2,
-            dflt2,
-            applyBlock(rest)
-          )
-        case d => Match(
-          s,
-          arms.map((cse, b) => (cse, applyBlock(b))),
-          S(d),
-          applyBlock(rest)
-        )
+    case Match(scrut, arms, Some(dflt), rest) =>
+      val dflt2 = applyBlock(dflt)
+      val arms2 = arms.mapConserve: arm =>
+        val cse2 = applyCase(arm._1)
+        val blk2 = applyBlock(arm._2)
+        if (cse2 is arm._1) && (blk2 is arm._2) then arm else (cse2, blk2)
+      dflt2 match
+        case Match(scrutRewritten, armsRewritten, dfltRewritten, _: End) if scrutRewritten === scrut =>
+          Match(scrut, arms2 ::: armsRewritten, dfltRewritten, applyBlock(rest))
+        case _ =>
+          val scrut2 = applyPath(scrut)
+          val rest2 = applyBlock(rest)
+          if (scrut2 is scrut) && (arms2 is arms) && (dflt2 is dflt) && (rest2 is rest)
+          then b
+          else Match(scrut2, arms2, S(dflt2), rest2)
     case _ => super.applyBlock(b)
