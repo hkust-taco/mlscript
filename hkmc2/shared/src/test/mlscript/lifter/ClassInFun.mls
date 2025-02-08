@@ -85,6 +85,8 @@ f(1, 2).get()
 //│ runtime.safeCall(tmp1.get())
 //│ = 1
 
+:todo
+:w
 :expect 1
 fun f(used1, unused1) =
   fun g(g_arg) =
@@ -97,6 +99,7 @@ fun f(used1, unused1) =
   let foo = Test
   foo(unused1)
 f(1, 2).get()
+//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a higher-order class.
 //│ = 1
 
 :expect 1
@@ -326,14 +329,23 @@ sum(100)
 
 // instance checks
 
-:lift
+:todo
+:w
 fun foo(x, n) =
   class C()
   let res = if x is C then "Y" else "N"
   if n > 0 then res + foo(C(), n - 1) else ""
+//│ ═══[WARNING] Cannot yet lift the class/module `C` as it is used in an instance check.
+
+:todo
+:w
+fun foo() =
+  class C()
+  C
+//│ ═══[WARNING] Cannot yet lift the class `C` as it is used as a higher-order class.
 
 :todo
 :expect "NN"
 foo(0, 2)
-//│ ═══[RUNTIME ERROR] Expected: '"NN"', got: '"NY"'
-//│ = "NY"
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 0 arguments but got 2
+//│ ═══[RUNTIME ERROR] Expected: '"NN"', got: 'undefined'

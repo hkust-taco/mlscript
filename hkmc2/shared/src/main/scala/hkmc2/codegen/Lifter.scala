@@ -5,6 +5,7 @@ import utils.*
 
 import hkmc2.codegen.*
 import hkmc2.semantics.*
+import hkmc2.Message.*
 import hkmc2.semantics.Elaborator.State
 import hkmc2.syntax.Tree
 import hkmc2.codegen.llir.FreshInt
@@ -44,7 +45,7 @@ object Lifter:
   * Lifts classes and functions to the top-level. Also automatically rewrites lambdas.
   * Assumes the input block does not have any `HandleBlock`s.
   */
-class Lifter(using State):
+class Lifter(using State, Raise):
   import Lifter.*
 
   /**
@@ -62,6 +63,7 @@ class Lifter(using State):
   case class LifterCtx(
     val usedLocals: UsedLocalsMap,
     val ignoredDefns: Set[BlockMemberSymbol],
+    val modules: Set[BlockMemberSymbol],
     val localCaptureSyms: Map[Local, LocalSymbol & NamedSymbol],
     val prevFnDefns: List[FunDefn],
     val prevClsDefns: List[ClsLikeDefn],
@@ -82,7 +84,11 @@ class Lifter(using State):
     // how to access a variable in the local scope
     def getLocalPath(l: Local) = localPaths.get(l)
     def getIsymPath(l: InnerSymbol) = isymPaths.get(l)
+    def ignored(b: BlockMemberSymbol) = ignoredDefns.contains(b)
+    def isModule(b: BlockMemberSymbol) = modules.contains(b)
     
+    def addIgnored(defns: Set[BlockMemberSymbol]) = copy(ignoredDefns = ignoredDefns ++ defns)
+    def addModules(mods: Set[BlockMemberSymbol]) = copy(modules = mods ++ modules)
     def addFnDefn(f: FunDefn) = copy(prevFnDefns = f :: prevFnDefns)
     def addClsDefn(c: ClsLikeDefn) = copy(prevClsDefns = c :: prevClsDefns)
     def addLocalCaptureSyms(m: Map[Local, LocalSymbol & NamedSymbol]) = copy(localCaptureSyms = localCaptureSyms ++ m)
@@ -96,8 +102,8 @@ class Lifter(using State):
     def addIsymPath(isym: InnerSymbol, l: Local) = copy(isymPaths = isymPaths + (isym -> l))
   
   object LifterCtx:
-    def empty = LifterCtx(UsedLocalsMap(Map.empty), Set.empty, Map.empty, Nil, Nil, 
-      Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
+    def empty = LifterCtx(UsedLocalsMap(Map.empty), Set.empty, Set.empty,
+      Map.empty, Nil, Nil, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
     def withLocals(u: UsedLocalsMap) = empty.copy(usedLocals = u)
   
   /**
@@ -205,6 +211,62 @@ class Lifter(using State):
     val liftedDefn: T,
     val extraDefns: List[Defn],
   )
+
+  // d is a top-level definition
+  // returns (unliftable classes, modules)
+  def createMetadata(d: Defn): (Set[BlockMemberSymbol], Set[BlockMemberSymbol]) =
+    var clsSymToBms: Map[Local, BlockMemberSymbol] = Map.empty
+    var modules: Set[BlockMemberSymbol] = Set.empty
+    
+    val walker = new BlockTransformer(SymbolSubst()):
+      override def applyDefn(defn: Defn): Defn = 
+        defn match
+          case c: ClsLikeDefn => 
+            clsSymToBms += c.isym -> c.sym
+            if c.k is syntax.Mod then modules += c.sym
+          case _ => ()
+        super.applyDefn(defn)
+    walker.applyDefn(d)
+
+    val clsSyms = clsSymToBms.values.toSet
+    
+    var unliftable: Set[BlockMemberSymbol] = Set.empty
+    val walker2 = new BlockTransformer(SymbolSubst()):
+      override def applyCase(cse: Case): Case = 
+        cse match
+          case Case.Cls(cls, path) => clsSymToBms.get(cls) match
+            case None => ()
+            case Some(value) =>
+              raise(WarningReport(
+                msg"Cannot yet lift the class/module `${value.nme}` as it is used in an instance check." -> N :: Nil,
+                N, Diagnostic.Source.Compilation
+              ))
+              unliftable += value
+          case _ => ()
+        cse
+      
+      override def applyResult(r: Result): Result = r match
+        case Call(Value.Ref(_: BlockMemberSymbol), args) =>
+          args.map(applyArg)
+          r
+        case Instantiate(Select(Value.Ref(_: BlockMemberSymbol), Tree.Ident("class")), args) =>
+          args.map(applyPath)
+          r
+        case _ => super.applyResult(r)
+
+      override def applyValue(v: Value): Value = v match
+        case Value.Ref(l: BlockMemberSymbol) if clsSyms.contains(l) && !modules.contains(l) =>
+          raise(WarningReport(
+            msg"Cannot yet lift the class `${l.nme}` as it is used as a higher-order class." -> N :: Nil,
+            N, Diagnostic.Source.Compilation
+          ))
+          unliftable += l
+          v
+        case _ => super.applyValue(v)
+    walker2.applyDefn(d)
+    
+    (unliftable, modules)    
+      
 
   def createLiftInfoCont(d: Defn, parentCls: Opt[ClsLikeDefn], ctx: LifterCtx): Map[BlockMemberSymbol, LiftedInfo] =
     /* 
@@ -645,9 +707,11 @@ class Lifter(using State):
     val walker = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
         case Define(d, rest) =>
+          val (unliftable, modules) = createMetadata(d)
+          val ctxxx = ctxx.addIgnored(unliftable).addModules(modules)
           val Lifted(lifted, extra) = d match
-            case f: FunDefn => liftDefnsInFn(f, ctxx)
-            case c: ClsLikeDefn => liftDefnsInCls(c, ctxx)
+            case f: FunDefn => liftDefnsInFn(f, ctxxx)
+            case c: ClsLikeDefn => liftDefnsInCls(c, ctxxx)
             case _ => return super.applyBlock(b)
           (lifted :: extra).foldLeft(applyBlock(rest))((acc, defn) => Define(defn, acc))
         case _ => super.applyBlock(b)
