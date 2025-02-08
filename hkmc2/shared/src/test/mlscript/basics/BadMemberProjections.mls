@@ -10,7 +10,7 @@
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ JS (unsanitized):
-//│ (self, ...args) => { return self.x(...args) ?? null }
+//│ (self, ...args) => { return runtime.safeCall(self.x(...args)) }
 //│ = [function block$res1]
 
 :ssjs
@@ -23,12 +23,12 @@
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ JS:
-//│ block$res2 = ((...args1) => {
+//│ block$res2 = runtime.checkCall(((...args1) => {
 //│   globalThis.Predef.checkArgs("", 1, false, args1.length);
 //│   let self = args1[0];
 //│   let args = globalThis.Predef.tupleSlice(args1, 1, 0);
-//│   return self.x(...args) ?? null
-//│ })();
+//│   return runtime.safeCall(self.x(...args))
+//│ })());
 //│ undefined
 //│ ═══[RUNTIME ERROR] Error: Function expected at least 1 argument but got 0
 

@@ -12,7 +12,7 @@ f(2, 3)
 //│   let y = args[1];
 //│   return x + y
 //│ };
-//│ block$res1 = f(2, 3);
+//│ block$res1 = runtime.checkCall(f(2, 3));
 //│ undefined
 //│ = 5
 
@@ -30,7 +30,7 @@ f2(2)
 :re
 f(2)
 //│ JS:
-//│ block$res3 = f(2); undefined
+//│ block$res3 = runtime.checkCall(f(2)); undefined
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
@@ -51,8 +51,8 @@ f(3)(4)
 //│     return tmp1 + z
 //│   }
 //│ };
-//│ tmp = f1(3);
-//│ block$res4 = tmp(4) ?? null;
+//│ tmp = runtime.checkCall(f1(3));
+//│ block$res4 = runtime.safeCall(tmp(4));
 //│ undefined
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
@@ -62,7 +62,7 @@ f(3)(4)
 :noSanityCheck
 let f = (x, y) => x + y in f(2)
 //│ JS:
-//│ f3 = (x, y) => { return x + y }; block$res5 = f3(2) ?? null; undefined
+//│ f3 = (x, y) => { return x + y }; block$res5 = runtime.safeCall(f3(2)); undefined
 //│ = NaN
 
 :ssjs
@@ -76,7 +76,7 @@ f(2)
 //│   let y = args[1];
 //│   return x + y
 //│ };
-//│ block$res6 = f4(2) ?? null;
+//│ block$res6 = runtime.safeCall(f4(2));
 //│ undefined
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 //│ f = [function f4]
@@ -106,7 +106,7 @@ Cls(1, 2).f(3)
 //│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ", " + globalThis.Predef.render(this.y) + ")"; }
 //│ };
 //│ tmp1 = Cls1(1, 2);
-//│ block$res7 = tmp1.f(3) ?? null;
+//│ block$res7 = runtime.safeCall(tmp1.f(3));
 //│ undefined
 //│ = NaN
 
@@ -124,6 +124,7 @@ Cls(1, 2).f(3)
 //│     this.x = x;
 //│     this.y = y;
 //│   }
+//│   get f$__checkNotMethod() { runtime.deboundMethod("f", "Cls"); }
 //│   f(...args) {
 //│     globalThis.Predef.checkArgs("f", 2, true, args.length);
 //│     let z = args[0];
@@ -135,8 +136,8 @@ Cls(1, 2).f(3)
 //│   }
 //│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ", " + globalThis.Predef.render(this.y) + ")"; }
 //│ };
-//│ tmp2 = Cls3(1, 2);
-//│ block$res8 = tmp2.f(3) ?? null;
+//│ tmp2 = runtime.checkCall(Cls3(1, 2));
+//│ block$res8 = runtime.safeCall(tmp2.f(3));
 //│ undefined
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
@@ -155,6 +156,7 @@ Cls(1, 2).f(3, 4)(5)
 //│     this.x = x;
 //│     this.y = y;
 //│   }
+//│   get f$__checkNotMethod() { runtime.deboundMethod("f", "Cls"); }
 //│   f(...args) {
 //│     globalThis.Predef.checkArgs("f", 2, true, args.length);
 //│     let z = args[0];
@@ -173,9 +175,9 @@ Cls(1, 2).f(3, 4)(5)
 //│   }
 //│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ", " + globalThis.Predef.render(this.y) + ")"; }
 //│ };
-//│ tmp3 = Cls5(1, 2);
+//│ tmp3 = runtime.checkCall(Cls5(1, 2));
 //│ tmp4 = tmp3.f(3, 4);
-//│ block$res9 = tmp4(5) ?? null;
+//│ block$res9 = runtime.safeCall(tmp4(5));
 //│ undefined
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
@@ -186,10 +188,8 @@ console.log(1)
 //│ selRes = this.console;
 //│ if (selRes === undefined) {
 //│   throw new this.Error("Access to required field 'console' yielded 'undefined'");
-//│ } else {
-//│   tmp5 = selRes;
 //│ }
-//│ block$res10 = tmp5.log(1) ?? null;
+//│ block$res10 = runtime.safeCall(selRes.log(1));
 //│ undefined
 //│ > 1
 
@@ -199,19 +199,19 @@ console.log(1)
 globalThis.x
 //│ JS:
 //│ selRes1 = this.x;
+//│ discarded = this.x$__checkNotMethod;
 //│ if (selRes1 === undefined) {
 //│   throw new this.Error("Access to required field 'x' yielded 'undefined'");
-//│ } else {
-//│   block$res11 = selRes1;
-//│   undefined
 //│ }
+//│ block$res11 = selRes1;
+//│ undefined
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
 :re
 :ssjs
 globalThis.x()
 //│ JS:
-//│ block$res12 = this.x() ?? null; undefined
+//│ block$res12 = runtime.safeCall(this.x()); undefined
 //│ ═══[RUNTIME ERROR] TypeError: this.x is not a function
 
 
@@ -235,6 +235,7 @@ if M.A(1).y is
 //│       constructor(x1) {
 //│         this.x = x1;
 //│       }
+//│       get f$__checkNotMethod() { runtime.deboundMethod("f", "A"); }
 //│       f(...args) {
 //│         globalThis.Predef.checkArgs("f", 1, true, args.length);
 //│         let y = args[0];
@@ -245,14 +246,13 @@ if M.A(1).y is
 //│   }
 //│   static toString() { return "M"; }
 //│ };
-//│ tmp6 = M1.A(1);
-//│ selRes2 = tmp6.y;
+//│ tmp5 = runtime.checkCall(M1.A(1));
+//│ selRes2 = tmp5.y;
+//│ discarded1 = tmp5.y$__checkNotMethod;
 //│ if (selRes2 === undefined) {
 //│   throw new this.Error("Access to required field 'y' yielded 'undefined'");
-//│ } else {
-//│   tmp7 = selRes2;
 //│ }
-//│ scrut = tmp7;
+//│ scrut = selRes2;
 //│ x = scrut;
 //│ scrut1 = x == 1;
 //│ if (scrut1 === true) {
@@ -274,17 +274,14 @@ M.A(1).y
 //│ selRes3 = this.console;
 //│ if (selRes3 === undefined) {
 //│   throw new this.Error("Access to required field 'console' yielded 'undefined'");
-//│ } else {
-//│   tmp8 = selRes3;
 //│ }
-//│ tmp9 = M1.A(1);
-//│ selRes4 = tmp9.y;
+//│ tmp6 = runtime.checkCall(M1.A(1));
+//│ selRes4 = tmp6.y;
+//│ discarded2 = tmp6.y$__checkNotMethod;
 //│ if (selRes4 === undefined) {
 //│   throw new this.Error("Access to required field 'y' yielded 'undefined'");
-//│ } else {
-//│   tmp10 = selRes4;
 //│ }
-//│ block$res14 = tmp8.log(tmp10) ?? null;
+//│ block$res14 = runtime.safeCall(selRes3.log(selRes4));
 //│ undefined
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
@@ -295,7 +292,7 @@ M.A(1).y
 M.A(1).y
   console.log()
 //│ JS:
-//│ tmp11 = M1.A(1); block$res15 = this.console.log(tmp11.y) ?? null; undefined
+//│ tmp7 = M1.A(1); block$res15 = runtime.safeCall(this.console.log(tmp7.y)); undefined
 //│ > undefined
 
 :noSanityCheck
@@ -311,15 +308,15 @@ M.A(2).y > 1
 :ssjs
 M.A(1).g(0)
 //│ JS:
-//│ tmp15 = M1.A(1); block$res18 = tmp15.g(0) ?? null; undefined
-//│ ═══[RUNTIME ERROR] TypeError: tmp15.g is not a function
+//│ tmp10 = runtime.checkCall(M1.A(1)); block$res18 = runtime.safeCall(tmp10.g(0)); undefined
+//│ ═══[RUNTIME ERROR] TypeError: tmp10.g is not a function
 
 
 
 :ssjs
 M.A(1).f(0)
 //│ JS:
-//│ tmp16 = M1.A(1); block$res19 = tmp16.f(0) ?? null; undefined
+//│ tmp11 = runtime.checkCall(M1.A(1)); block$res19 = runtime.safeCall(tmp11.f(0)); undefined
 //│ = 1
 
 

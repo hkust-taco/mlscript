@@ -13,6 +13,7 @@ import Elaborator.{State, Ctx}
 import hkmc2.codegen.Value.Lam
 
 import Scope.scope
+import hkmc2.syntax.Tree.UnitLit
 
 
 // TODO factor some logic for other codegen backends
@@ -22,6 +23,9 @@ abstract class CodeBuilder:
   
 
 class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
+  
+  def checkMLsCalls: Bool = false
+  def checkSelections: Bool = false
   
   val builtinOpsBase: Ls[Str] = Ls(
     "+", "-", "*", "/", "%",
@@ -58,7 +62,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case ts: semantics.TermSymbol =>
       ts.owner match
       case S(owner) =>
-        doc"${result(Value.This(owner))}.${
+        doc"${getVar(owner)}.${
           if (ts.k is syntax.LetBind) && !owner.isInstanceOf[semantics.TopLevelSymbol]
           then "#" + owner.privatesScope.lookup_!(ts)
           else ts.id.name
@@ -108,7 +112,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       else errExpr(msg"Illegal arity for builtin symbol '${l.nme}'")
     
     case Call(s @ Select(_, id), lhs :: rhs :: Nil) =>
-      Elaborator.ctx.Builtins.getBuiltinOp(id.name) match
+      Elaborator.ctx.builtins.getBuiltinOp(id.name) match
         case S(jsOp) =>
           val res = doc"${operand(lhs)} ${jsOp} ${operand(rhs)}"
           if needsParens(jsOp) then doc"(${res})" else res
@@ -116,7 +120,11 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case c @ Call(fun, args) =>
       val base = subexpression(fun)
       val argsDoc = args.map(argument).mkDocument(", ")
-      if c.isMlsFun then doc"${base}(${argsDoc})" else doc"${base}(${argsDoc}) ?? null"
+      if c.isMlsFun
+      then if checkMLsCalls
+        then doc"${getVar(State.runtimeSymbol)}.checkCall(${base}(${argsDoc}))"
+        else doc"${base}(${argsDoc})"
+      else doc"${getVar(State.runtimeSymbol)}.safeCall(${base}(${argsDoc}))"
     case Value.Lam(ps, bod) => scope.nest givenIn:
       val (params, bodyDoc) = setupFunction(none, ps, bod)
       doc"($params) => ${ braced(bodyDoc) }"
@@ -152,8 +160,10 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       def mkThis(sym: InnerSymbol): Document =
         result(Value.This(sym))
       val resJS = defn match
-      case ValDefn(own, k: syntax.Val, sym, p) =>
+      case ValDefn(own, k, sym, p) =>
         val sym = defn.sym
+        // * Currently we allow `val` outside of object/module scopes,
+        // * in which case it has no owner and is just a glorified local variable rather than a field.
         own match
         case N =>
           doc"${getVar(sym)} = ${result(p)};${returningTerm(rst, endSemi)}"
@@ -215,6 +225,19 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
               } { #{ ${
                 privs
               } # $ctorOrStatic $ctorBod${
+                if checkSelections && !isModule
+                then mtds
+                  .flatMap:
+                    case td @ FunDefn(_, _, ps :: pss, bod) => S:
+                      doc" # get ${td.sym.nme}$$__checkNotMethod() { ${
+                        getVar(State.runtimeSymbol)
+                      }.deboundMethod(${JSBuilder.makeStringLiteral(td.sym.nme)}, ${
+                        JSBuilder.makeStringLiteral(sym.nme)
+                      }); }"
+                    case _ => N
+                  .mkDocument(" ")
+                else doc""
+              }${
                 mtds.map: 
                   case td @ FunDefn(_, _, ps :: pss, bod) =>
                     val result = pss.foldRight(bod):
@@ -297,6 +320,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             doc"const $proxy = this; # $res${returningTerm(rst, endSemi)}"
           case _ => doc"$res${returningTerm(rst, endSemi = false)}"
       doc" # $resJS"
+    case Return(Value.Lit(UnitLit(false)), false) => doc" # return${mkSemi}"
     case Return(res, true) => doc" # ${result(res)}${mkSemi}"
     case Return(res, false) => doc" # return ${result(res)}${mkSemi}"
     
@@ -313,10 +337,10 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           // case _: semantics.ModuleSymbol => doc"=== ${result(pth)}"
           // [invariant:0] If the class represented by `cls` does not exist at
           // runtime, then `pth` is a dummy value and should be discarded.
-          case Elaborator.ctx.Builtins.Str => doc"typeof $sd === 'string'"
-          case Elaborator.ctx.Builtins.Num => doc"typeof $sd === 'number'"
-          case Elaborator.ctx.Builtins.Bool => doc"typeof $sd === 'boolean'"
-          case Elaborator.ctx.Builtins.Int => doc"globalThis.Number.isInteger($sd)"
+          case Elaborator.ctx.builtins.Str => doc"typeof $sd === 'string'"
+          case Elaborator.ctx.builtins.Num => doc"typeof $sd === 'number'"
+          case Elaborator.ctx.builtins.Bool => doc"typeof $sd === 'boolean'"
+          case Elaborator.ctx.builtins.Int => doc"globalThis.Number.isInteger($sd)"
           case _ => doc"$sd instanceof ${result(pth)}"
         case Case.Tup(len, inf) => doc"globalThis.Array.isArray($sd) && $sd.length ${if inf then ">=" else "==="} ${len}"
       val h = doc" # if (${ cond(hd._1) }) ${ braced(returningTerm(hd._2, endSemi = false)) }"
@@ -550,6 +574,9 @@ end JSBuilder
 trait JSBuilderArgNumSanityChecks
     (instrument: Bool)(using Elaborator.State)
     extends JSBuilder:
+  
+  override def checkMLsCalls: Bool = instrument
+  override def checkSelections: Bool = instrument
   
   val functionParamVarargSymbol = semantics.TempSymbol(N, "args")
   

@@ -31,11 +31,10 @@ fun foo(x) = x is Cross
 //│ let foo;
 //│ foo = function foo(x2) {
 //│   let matchResult;
-//│   matchResult = Cross1.unapply(x2) ?? null;
+//│   matchResult = runtime.safeCall(Cross1.unapply(x2));
 //│   if (matchResult instanceof globalThis.Predef.MatchResult.class) {
 //│     return true
 //│   } else {
 //│     return false
 //│   }
 //│ };
-//│ null

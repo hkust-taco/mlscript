@@ -47,7 +47,7 @@ class Desugarer(val elaborator: Elaborator)
       case _ => ()
   
   private def topmostDefault: Split =
-    if kwLocSets._1.nonEmpty then Split.Else(Term.Lit(UnitLit(true))) else Split.End
+    if kwLocSets._1.nonEmpty then Split.Else(Term.UnitVal()) else Split.End
   
   /** An extractor that accepts either `A and B`, `A then B`, and `A do B`. It
    *  also keeps track of the usage of `then` and `do`.

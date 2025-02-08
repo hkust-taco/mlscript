@@ -234,20 +234,20 @@ object Normalization:
     * TODO use base classes and also handle modules
     */
   def compareCasePattern(lhs: Pattern, rhs: Pattern)(using ctx: Elaborator.Ctx): Bool =
-    import Pattern.*, ctx.Builtins.*
+    import Pattern.*, ctx.builtins as blt
     (lhs, rhs) match
     // `Object` is the supertype of all (non-virtual) classes and modules.
-    case (ClassLike(cs: ClassSymbol, _, _, _), ClassLike(`Object`, _, _, _))
-        if !ctx.Builtins.virtualClasses.contains(cs) => true
-    case (ClassLike(cs: ModuleSymbol, _, _, _), ClassLike(`Object`, _, _, _)) => true
+    case (ClassLike(cs: ClassSymbol, _, _, _), ClassLike(blt.`Object`, _, _, _))
+        if !ctx.builtins.virtualClasses.contains(cs) => true
+    case (ClassLike(cs: ModuleSymbol, _, _, _), ClassLike(blt.`Object`, _, _, _)) => true
     case (Tuple(n1, false), Tuple(n2, false)) if n1 == n2 => true
     case (Tuple(n1, _), Tuple(n2, true)) if n2 <= n1 => true
-    case (ClassLike(`Int`, _, _, _), ClassLike(`Num`, _, _, _)) => true
+    case (ClassLike(`Int`, _, _, _), ClassLike(blt.`Num`, _, _, _)) => true
     // case (s1: ClassSymbol, s2: ClassSymbol) => s1 <:< s2 // TODO: find a way to check inheritance
-    case (Lit(Tree.IntLit(_)), ClassLike(`Int` | `Num`, _, _, _)) => true
-    case (Lit(Tree.StrLit(_)), ClassLike(`Str`, _, _, _)) => true
-    case (Lit(Tree.DecLit(_)), ClassLike(`Num`, _, _, _)) => true
-    case (Lit(Tree.BoolLit(_)), ClassLike(`Bool`, _, _, _)) => true
+    case (Lit(Tree.IntLit(_)), ClassLike(blt.`Int` | blt.`Num`, _, _, _)) => true
+    case (Lit(Tree.StrLit(_)), ClassLike(blt.`Str`, _, _, _)) => true
+    case (Lit(Tree.DecLit(_)), ClassLike(blt.`Num`, _, _, _)) => true
+    case (Lit(Tree.BoolLit(_)), ClassLike(blt.`Bool`, _, _, _)) => true
     case (_, _) => false
 
   final case class VarSet(declared: Set[BlockLocalSymbol]):

@@ -35,6 +35,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   private val baseScp: utils.Scope =
     utils.Scope.empty
   
+  val runtimeNme = baseScp.allocateName(Elaborator.State.runtimeSymbol)
+  
   val ltl = new TraceLogger:
     override def doTrace = debugLowering.isSet
     override def emitDbg(str: String): Unit = output(str)
@@ -47,6 +49,10 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     hostCreated = true
     given TL = replTL
     val h = ReplHost(rootPath)
+    h.execute(s"const $runtimeNme = (await import(\"${runtimeFile}\")).default;") match
+    case ReplHost.Result(msg) =>
+      if msg.startsWith("Uncaught") then output(s"Failed to load runtime: $msg")
+    case r => output(s"Failed to load runtime: $r")
     h
   
   private var hostCreated = false
@@ -208,7 +214,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             case _ => ()
             result match
             case "undefined" =>
-            case "null" =>
+            case "()" =>
             case _ =>
               output(s"${if nme.isEmpty then "" else s"$nme "}= ${result.indentNewLines("| ")}")
       

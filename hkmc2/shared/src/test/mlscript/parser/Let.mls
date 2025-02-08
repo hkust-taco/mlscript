@@ -83,7 +83,7 @@ let {}
 
 let ()
 //│ Parsed:
-//│ 	LetLike(keyword 'let',UnitLit(true),None,None)
+//│ 	LetLike(keyword 'let',Unt(),None,None)
 
 :pe
 let // a

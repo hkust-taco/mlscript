@@ -9,7 +9,7 @@
 
 class Foo
 //│ JS (unsanitized):
-//│ let Foo1; Foo1 = class Foo { constructor() {} toString() { return "Foo"; } }; null
+//│ let Foo1; Foo1 = class Foo { constructor() {} toString() { return "Foo"; } };
 
 Foo is Foo
 //│ JS (unsanitized):
@@ -66,13 +66,12 @@ fun test() =
 //│   tmp = log("ok");
 //│   return Foo5
 //│ };
-//│ null
 
 let t = test()
 //│ JS (unsanitized):
-//│ let t, tmp; tmp = test(); t = tmp; null
+//│ let t, tmp; tmp = test(); t = tmp;
 //│ > ok
-//│ t = class Foo4 {     constructor() {       log("hi")     }     toString() { return "Foo"; }   }
+//│ t = class Foo4 {     constructor() {       runtime.checkCall(log("hi"))     }     toString() { return "Foo"; }   }
 
 new t
 //│ JS (unsanitized):
@@ -106,7 +105,6 @@ class Foo with
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
-//│ null
 
 
 class Foo with
@@ -137,7 +135,6 @@ class Foo with
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
-//│ null
 
 
 class Foo with
@@ -160,7 +157,6 @@ class Foo with
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
-//│ null
 
 let a = new Foo
 log(a.x)
@@ -171,9 +167,9 @@ log(a.bar(1))
 //│ tmp1 = new Foo10();
 //│ a = tmp1;
 //│ tmp2 = log(a.x);
-//│ tmp3 = a.foo(1) ?? null;
+//│ tmp3 = runtime.safeCall(a.foo(1));
 //│ tmp4 = log(tmp3);
-//│ tmp5 = a.bar(1) ?? null;
+//│ tmp5 = runtime.safeCall(a.bar(1));
 //│ log(tmp5)
 //│ > 1
 //│ > 2
@@ -188,10 +184,10 @@ class Foo with
   val x = 2
 //│ ╔══[ERROR] Multiple definitions of symbol 'x'
 //│ ╟── defined here
-//│ ║  l.187: 	  val x = 1
+//│ ║  l.183: 	  val x = 1
 //│ ║         	      ^^^^^
 //│ ╟── defined here
-//│ ║  l.188: 	  val x = 2
+//│ ║  l.184: 	  val x = 2
 //│ ╙──       	      ^^^^^
 //│ JS (unsanitized):
 //│ let Foo12;
@@ -202,17 +198,16 @@ class Foo with
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
-//│ null
 
 :e
 class Foo with
   val x = 1
   let x = 2
 //│ ╔══[ERROR] Name 'x' is already used
-//│ ║  l.210: 	  let x = 2
+//│ ║  l.205: 	  let x = 2
 //│ ║         	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.209: 	  val x = 1
+//│ ║  l.204: 	  val x = 1
 //│ ╙──       	      ^^^^^
 //│ JS (unsanitized):
 //│ let Foo14;
@@ -224,7 +219,6 @@ class Foo with
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
-//│ null
 
 
 
@@ -236,13 +230,13 @@ class Foo with
 :fixme
 class Foo with val x = 1
 //│ ╔══[PARSE ERROR] Expected block after type declaration body; found 'val' keyword instead
-//│ ║  l.237: 	class Foo with val x = 1
+//│ ║  l.231: 	class Foo with val x = 1
 //│ ╙──       	               ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.237: 	class Foo with val x = 1
+//│ ║  l.231: 	class Foo with val x = 1
 //│ ╙──       	                     ^
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
-//│ ║  l.237: 	class Foo with val x = 1
+//│ ║  l.231: 	class Foo with val x = 1
 //│ ╙──       	                   ^
 //│ JS (unsanitized):
 //│ /* error */

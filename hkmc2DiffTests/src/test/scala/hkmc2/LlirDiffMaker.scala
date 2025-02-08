@@ -39,7 +39,8 @@ abstract class LlirDiffMaker extends BbmlDiffMaker:
       val low = ltl.givenIn:
         codegen.Lowering(lowerHandlers = false, stackLimit = None, lift = false)
       val le = low.program(trm)
-      given Scope = Scope.empty
+      given scp: Scope = Scope.empty
+      scp.allocateName(Elaborator.State.runtimeSymbol)
       val fresh = Fresh()
       val fuid = FreshInt()
       val cuid = FreshInt()

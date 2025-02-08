@@ -17,7 +17,6 @@ class Foo()
 //│   constructor() {}
 //│   toString() { return "Foo(" + "" + ")"; }
 //│ };
-//│ null
 
 Foo
 //│ JS (unsanitized):
@@ -47,7 +46,6 @@ class Foo(a)
 //│   }
 //│   toString() { return "Foo(" + globalThis.Predef.render(this.a) + ")"; }
 //│ };
-//│ null
 
 Foo
 //│ JS (unsanitized):
@@ -84,21 +82,20 @@ class Foo(a, b)
 //│   }
 //│   toString() { return "Foo(" + globalThis.Predef.render(this.a) + ", " + globalThis.Predef.render(this.b) + ")"; }
 //│ };
-//│ null
 
 let foo = Foo
 //│ JS (unsanitized):
-//│ let foo1; foo1 = Foo5; null
+//│ let foo1; foo1 = Foo5;
 //│ foo = [function Foo]
 
 let f = foo(1, 2)
 //│ JS (unsanitized):
-//│ let f, tmp1; tmp1 = foo1(1, 2) ?? null; f = tmp1; null
+//│ let f, tmp1; tmp1 = runtime.safeCall(foo1(1, 2)); f = tmp1;
 //│ f = Foo(1, 2)
 
 let f = new foo(1, 2)
 //│ JS (unsanitized):
-//│ let f1, tmp2; tmp2 = new foo1(1, 2); f1 = tmp2; null
+//│ let f1, tmp2; tmp2 = new foo1(1, 2); f1 = tmp2;
 //│ f = Foo(1, 2)
 
 f.a
@@ -113,7 +110,7 @@ f.b
 
 let f = Foo(1, 2)
 //│ JS (unsanitized):
-//│ let f2, tmp3; tmp3 = Foo5(1, 2); f2 = tmp3; null
+//│ let f2, tmp3; tmp3 = Foo5(1, 2); f2 = tmp3;
 //│ f = Foo(1, 2)
 
 f.a
@@ -131,7 +128,7 @@ Foo(log(1), log(2))
 //│ let tmp4, tmp5; tmp4 = log(1); tmp5 = log(2); Foo5(tmp4, tmp5)
 //│ > 1
 //│ > 2
-//│ = Foo(null, null)
+//│ = Foo((), ())
 
 
 class Inner(c) with
@@ -152,17 +149,16 @@ class Inner(c) with
 //│   }
 //│   toString() { return "Inner(" + globalThis.Predef.render(this.c) + ")"; }
 //│ };
-//│ null
 
 let i = new Inner(100)
 //│ JS (unsanitized):
-//│ let i, tmp6; tmp6 = new Inner1.class(100); i = tmp6; null
+//│ let i, tmp6; tmp6 = new Inner1.class(100); i = tmp6;
 //│ > 100
 //│ i = Inner(100)
 
 i.i1(20)
 //│ JS (unsanitized):
-//│ i.i1(20) ?? null
+//│ runtime.safeCall(i.i1(20))
 //│ = 120
 
 

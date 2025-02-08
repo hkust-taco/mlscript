@@ -1,6 +1,12 @@
 :js
 
 
+Object.create(()) is Object
+//│ = true
+
+Object.create(new Number()) is Object
+//│ = true
+
 Object.create(null) is Object
 //│ = false
 

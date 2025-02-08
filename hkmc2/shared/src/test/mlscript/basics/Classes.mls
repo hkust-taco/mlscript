@@ -34,7 +34,7 @@ class Foo(x: Int) { log("Hello!") }
 //│ ║  l.32: 	class Foo(x: Int) { log("Hello!") }
 //│ ╙──      	                  ^^^^^^^^^^^^^^^^^
 //│ JS (unsanitized):
-//│ null
+//│ 
 
 
 

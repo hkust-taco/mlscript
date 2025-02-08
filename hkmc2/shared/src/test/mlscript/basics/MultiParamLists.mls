@@ -6,7 +6,7 @@
 
 fun f(n1: Int): Int = n1
 //│ JS (unsanitized):
-//│ let f; f = function f(n1) { return n1 }; null
+//│ let f; f = function f(n1) { return n1 };
 
 f(42)
 //│ JS (unsanitized):
@@ -19,14 +19,14 @@ f(42)
 
 fun f(n1: Int)(n2: Int): Int =  (10 * n1 + n2)
 //│ JS (unsanitized):
-//│ let f1; f1 = function f(n1) { return (n2) => { let tmp; tmp = 10 * n1; return tmp + n2 } }; null
+//│ let f1; f1 = function f(n1) { return (n2) => { let tmp; tmp = 10 * n1; return tmp + n2 } };
 
 // TODO compile this to
 // this.f$(4, 2)
 
 f(4)(2)
 //│ JS (unsanitized):
-//│ let tmp; tmp = f1(4); tmp(2) ?? null
+//│ let tmp; tmp = f1(4); runtime.safeCall(tmp(2))
 //│ = 42
 
 fun f(n1: Int)(n2: Int)(n3: Int): Int = 10 * (10 * n1 + n2) + n3
@@ -43,11 +43,10 @@ fun f(n1: Int)(n2: Int)(n3: Int): Int = 10 * (10 * n1 + n2) + n3
 //│     }
 //│   }
 //│ };
-//│ null
 
 f(4)(2)(0)
 //│ JS (unsanitized):
-//│ let tmp1, tmp2; tmp1 = f2(4); tmp2 = tmp1(2) ?? null; tmp2(0) ?? null
+//│ let tmp1, tmp2; tmp1 = f2(4); tmp2 = runtime.safeCall(tmp1(2)); runtime.safeCall(tmp2(0))
 //│ = 420
 
 fun f(n1: Int)(n2: Int)(n3: Int)(n4: Int): Int = 10 * (10 * (10 * n1 + n2) + n3) + n4
@@ -68,11 +67,14 @@ fun f(n1: Int)(n2: Int)(n3: Int)(n4: Int): Int = 10 * (10 * (10 * n1 + n2) + n3)
 //│     }
 //│   }
 //│ };
-//│ null
 
 f(3)(0)(3)(1)
 //│ JS (unsanitized):
-//│ let tmp3, tmp4, tmp5; tmp3 = f3(3); tmp4 = tmp3(0) ?? null; tmp5 = tmp4(3) ?? null; tmp5(1) ?? null
+//│ let tmp3, tmp4, tmp5;
+//│ tmp3 = f3(3);
+//│ tmp4 = runtime.safeCall(tmp3(0));
+//│ tmp5 = runtime.safeCall(tmp4(3));
+//│ runtime.safeCall(tmp5(1))
 //│ = 3031
 
 

@@ -13,7 +13,7 @@ import semantics.*
 import hkmc2.{semantics => sem}
 import semantics.{Term => st}
 import semantics.Term.{Throw => _, *}
-import semantics.Elaborator.{State, Ctx}
+import semantics.Elaborator.{State, Ctx, ctx}
 
 import syntax.{Literal, Tree}
 
@@ -22,7 +22,10 @@ abstract class TailOp extends (Result => Block)
 object Ret extends TailOp:
   def apply(r: Result): Block = Return(r, implct = false)
 object ImplctRet extends TailOp:
-  def apply(r: Result): Block = Return(r, implct = true)
+  def apply(r: Result): Block =
+    r match
+    case Value.Lit(Tree.UnitLit(false)) => End()
+    case _ => Return(r, implct = true)
 object Thrw extends TailOp:
   def apply(r: Result): Block = Throw(r)
 
@@ -54,6 +57,9 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int], lift: Bool)(using T
   private lazy val unreachableFn =
     Select(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Predef"))(N), Tree.Ident("unreachable"))(N)
   
+  def unit: Path =
+    Select(Value.Ref(State.runtimeSymbol), Tree.Ident("Unit"))(S(summon[Ctx].builtins.Unit))
+  
   def returnedTerm(t: st)(using Subst): Block = term(t)(Ret)
   
   // * Used to work around Scala's @tailrec annotation for those few calls that are not in tail position.
@@ -69,8 +75,9 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int], lift: Bool)(using T
       raise(WarningReport:
         msg"Pure expression in statement position" -> t.toLoc :: Nil)
     t match
+    case st.UnitVal() => k(unit)
     case st.Lit(lit) =>
-      if lit =/= Tree.UnitLit(true) then warnStmt
+      warnStmt
       k(Value.Lit(lit))
     case st.Ret(res) =>
       returnedTerm(res)
@@ -179,6 +186,14 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int], lift: Bool)(using T
             case sem.Fld(flags, value, asc) =>
               TODO("Other argument forms")
             case spd: Spd => true -> spd.term
+            case ca: sem.CtxArg => ca.term match
+              case S(t) => 
+                false -> t
+              case N => 
+                // All contextual arguments should have been
+                // populated by implicit resolution before lowering.
+                // Fail silently.
+                false -> Term.Error
           val l = new TempSymbol(S(t))
             def rec(as: Ls[Bool -> st], asr: Ls[Arg]): Block = as match
               case Nil => k(Call(fr, asr.reverse)(isMlsFun, true))
@@ -224,6 +239,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int], lift: Bool)(using T
             term_nonTail(st.Blk(stmts, res))(HandleBlockReturn(_)),
             k(Value.Ref(resSym)))
       
+    case st.TyApp(lhs, _) => term(lhs)(k)
     case st.Blk(Nil, res) => term(res)(k)
     case st.Blk((t: sem.Term) :: stats, res) =>
       subTerm(t, inStmtPos = true)(r => term_nonTail(st.Blk(stats, res))(k))
@@ -247,6 +263,12 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int], lift: Bool)(using T
             val (paramLists, bodyBlock) = setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme))
             Define(FunDefn(td.owner, td.sym, paramLists, bodyBlock),
               term_nonTail(st.Blk(stats, res))(k))
+          case syntax.Ins =>
+            // Implicit instances are not parameterized for now.
+            assert(td.params.isEmpty)
+            subTerm(bod)(r =>
+              Define(ValDefn(td.owner, syntax.ImmutVal, td.sym, r),
+                term_nonTail(st.Blk(stats, res))(k)))
       case cls: ClassLikeDef if cls.sym.defn.exists(_.isDeclare.isDefined) =>
         // * Declarations have no lowering
         term(st.Blk(stats, res))(k)
@@ -295,20 +317,20 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int], lift: Bool)(using T
       lhs match
       case Ref(sym) =>
         subTerm(rhs): r =>
-          Assign(sym, r, k(Value.Lit(syntax.Tree.UnitLit(true))))
+          Assign(sym, r, k(unit))
       case sel @ SynthSel(prefix, nme) =>
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
-            AssignField(p, nme, r, k(Value.Lit(syntax.Tree.UnitLit(true))))(sel.sym)
+            AssignField(p, nme, r, k(unit))(sel.sym)
       case sel @ Sel(prefix, nme) =>
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
-            AssignField(p, nme, r, k(Value.Lit(syntax.Tree.UnitLit(true))))(sel.sym)
+            AssignField(p, nme, r, k(unit))(sel.sym)
       case sel @ DynSel(prefix, fld, ai) =>
         subTerm(prefix): p =>
           subTerm_nonTail(fld): f =>
             subTerm_nonTail(rhs): r =>
-              AssignDynField(p, f, ai, r, k(Value.Lit(syntax.Tree.UnitLit(true))))
+              AssignDynField(p, f, ai, r, k(unit))
       
     case st.Blk((imp @ Import(sym, path)) :: stats, res) =>
       raise(ErrorReport(
@@ -395,7 +417,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int], lift: Bool)(using T
               case Pattern.Lit(lit) => mkMatch(Case.Lit(lit) -> go(tail, topLevel = false))
               case Pattern.ClassLike(cls: ClassSymbol, _trm, _args0, _refined)
                   // Do not elaborate `_trm` when the `cls` is virtual.
-                  if Elaborator.ctx.Builtins.virtualClasses contains cls =>
+                  if Elaborator.ctx.builtins.virtualClasses contains cls =>
                 // [invariant:0] Some classes (e.g., `Int`) from `Prelude` do
                 // not exist at runtime. If we do lowering on `trm`, backends
                 // (e.g., `JSBuilder`) will not be able to handle the corresponding selections.
@@ -437,13 +459,14 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int], lift: Bool)(using T
         Begin(
           body,
           if usesResTmp then k(Value.Ref(l))
-          else k(Value.Lit(syntax.Tree.UnitLit(true))) // * it seems this currently never happens
+          else k(unit) // * it seems this currently never happens
         )
       
     case sel @ Sel(prefix, nme) =>
       setupSelection(prefix, nme, sel.sym)(k)
         
     case sel @ SynthSel(prefix, nme) =>
+      // * Not using `setupSelection` as these selections are not meant to be sanity-checked
       subTerm(prefix): p =>
         k(Select(p, nme)(sel.sym))
         
@@ -582,6 +605,7 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int], lift: Bool)(using T
   
   def setupSelection(prefix: Term, nme: Tree.Ident, sym: Opt[FieldSymbol])(k: Result => Block)(using Subst): Block =
     subTerm(prefix): p =>
+      val selRes = TempSymbol(N, "selRes")
       k(Select(p, nme)(sym))
   
   final def setupFunctionOrByNameDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
@@ -607,26 +631,25 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int], lift: Bool)(using T
 trait LoweringSelSanityChecks
         (instrument: Bool)(using TL, Raise, State)
     extends Lowering:
-  
   override def setupSelection(prefix: st, nme: Tree.Ident, sym: Opt[FieldSymbol])(k: Result => Block)(using Subst): Block =
-    if instrument then
-      subTerm(prefix): p =>
-        val selRes = TempSymbol(N, "selRes")
-        val split = Split.Cons(
-            Branch(
-              selRes.ref(),
-              Pattern.Lit(syntax.Tree.UnitLit(false)),
-              Split.Else(
-                Term.Throw(Term.New(SynthSel(State.globalThisSymbol.ref(), Tree.Ident("Error"))(N),
-                  Term.Lit(syntax.Tree.StrLit(s"Access to required field '${nme.name}' yielded 'undefined'")) :: Nil, N)
-                ))),
-            Split.Else(selRes.ref()))
-        Assign(
-          selRes,
-          Select(p, nme)(sym),
-          term(IfLike(syntax.Keyword.`if`, split)(split))(k))
-    else
-      super.setupSelection(prefix, nme, sym)(k)
+    if !instrument then return super.setupSelection(prefix, nme, sym)(k)
+    subTerm(prefix): p =>
+      val selRes = TempSymbol(N, "selRes")
+      // * We are careful to access `x.f` before `x.f$__checkNotMethod` in case `x` is, eg, `undefined` and
+      // * the access should throw an error like `TypeError: Cannot read property 'f' of undefined`.
+      val b0 = blockBuilder
+        .assign(selRes, Select(p, nme)(sym))
+      (if sym.isDefined then
+        // * If the symbol is known, the elaborator will have already checked the access [invariant:1]
+        b0
+      else b0
+        .assign(TempSymbol(N, "discarded"), Select(p, Tree.Ident(nme.name+"$__checkNotMethod"))(N)))
+        .ifthen(selRes.asPath,
+          Case.Lit(syntax.Tree.UnitLit(false)),
+          Throw(Instantiate(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Error"))(N),
+            Value.Lit(syntax.Tree.StrLit(s"Access to required field '${nme.name}' yielded 'undefined'")) :: Nil))
+        )
+        .rest(k(selRes.asPath))
 
 
 

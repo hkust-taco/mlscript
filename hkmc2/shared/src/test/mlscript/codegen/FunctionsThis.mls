@@ -9,7 +9,7 @@ val x = 2
 fun foo() =
   x + 1
 //│ JS (unsanitized):
-//│ let foo, x; foo = function foo() { return x + 1 }; x = 2; null
+//│ let foo, x; foo = function foo() { return x + 1 }; x = 2;
 //│ x = 2
 
 :sjs
@@ -25,7 +25,6 @@ class Test with
 //│   }
 //│   toString() { return "Test"; }
 //│ };
-//│ null
 
 new Test
 //│ > 3

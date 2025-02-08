@@ -19,7 +19,6 @@ class Foo(arguments)
 //│   }
 //│   toString() { return "Foo(" + globalThis.Predef.render(this.arguments) + ")"; }
 //│ };
-//│ null
 
 
 class Foo(eval)
@@ -34,7 +33,6 @@ class Foo(eval)
 //│   }
 //│   toString() { return "Foo(" + globalThis.Predef.render(this.eval) + ")"; }
 //│ };
-//│ null
 
 
 class Foo(implements)
@@ -49,7 +47,6 @@ class Foo(implements)
 //│   }
 //│   toString() { return "Foo(" + globalThis.Predef.render(this.implements) + ")"; }
 //│ };
-//│ null
 
 
 class Foo(package)
@@ -64,7 +61,6 @@ class Foo(package)
 //│   }
 //│   toString() { return "Foo(" + globalThis.Predef.render(this.package) + ")"; }
 //│ };
-//│ null
 
 
 class Foo(protected)
@@ -79,7 +75,6 @@ class Foo(protected)
 //│   }
 //│   toString() { return "Foo(" + globalThis.Predef.render(this.protected) + ")"; }
 //│ };
-//│ null
 
 
 class Foo(static)
@@ -94,4 +89,3 @@ class Foo(static)
 //│   }
 //│   toString() { return "Foo(" + globalThis.Predef.render(this.static) + ")"; }
 //│ };
-//│ null

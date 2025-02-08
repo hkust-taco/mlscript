@@ -538,7 +538,7 @@ abstract class Parser(
           val res = bk match
             case Square => Tup(sts).withLoc(S(loc))
             case Round => sts match
-              case Nil => UnitLit(true).withLoc(S(loc))
+              case Nil => Unt().withLoc(S(loc))
               case e :: Nil => Bra(Round, e).withLoc(S(loc))
               case es => Bra(Round, Block(es).withLoc(S(loc)))
           exprCont(res, prec, allowNewlines = true)

@@ -21,7 +21,6 @@ fun fib(a) = if
 //│     return tmp1 + tmp3
 //│   }
 //│ };
-//│ null
 
 fun f(x) = g(x)
 fun g(x) = h(x)

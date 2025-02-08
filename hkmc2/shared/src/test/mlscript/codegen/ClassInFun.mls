@@ -20,7 +20,6 @@ fun test(a) =
 //│   };
 //│   return new C1()
 //│ };
-//│ null
 
 test(12)
 //│ = C
@@ -53,7 +52,6 @@ fun test(x) =
 //│   tmp = x + 1;
 //│   return Foo2(x, tmp)
 //│ };
-//│ null
 
 
 test(123)

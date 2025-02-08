@@ -31,7 +31,7 @@ sealed trait Literal extends AutoLocated:
       case _: IntLit => "integer"
       case _: DecLit => "decimal"
       case _: StrLit => "string"
-      case _: UnitLit => "unit"
+      case UnitLit(isNull) => if isNull then "null" else "undefined"
       case _: BoolLit => "boolean"
     + " literal"
   
@@ -43,13 +43,14 @@ enum Tree extends AutoLocated:
   case Error()
   case Dummy // TODO change the places where this is used
   case Under()
+  case Unt()
   case Ident(name: Str)
   case Keywrd(kw: Keyword)
-  case IntLit(value: BigInt)          extends Tree with Literal
-  case DecLit(value: BigDecimal)      extends Tree with Literal
-  case StrLit(value: Str)             extends Tree with Literal
+  case IntLit(value: BigInt)             extends Tree with Literal
+  case DecLit(value: BigDecimal)         extends Tree with Literal
+  case StrLit(value: Str)                extends Tree with Literal
   case UnitLit(isNullNotUndefined: Bool) extends Tree with Literal
-  case BoolLit(value: Bool)           extends Tree with Literal
+  case BoolLit(value: Bool)              extends Tree with Literal
   case Bra(k: BracketKind, inner: Tree)
   case Block(stmts: Ls[Tree])(using State) extends Tree with semantics.BlockImpl
   case OpBlock(items: Ls[Tree -> Tree])
@@ -86,7 +87,7 @@ enum Tree extends AutoLocated:
   case Annotated(annotation: Tree, target: Tree)
 
   def children: Ls[Tree] = this match
-    case _: Empty | _: Error | _: Ident | _: Literal | _: Under => Nil
+    case _: Empty | _: Error | _: Ident | _: Literal | _: Under | _: Unt => Nil
     case Bra(_, e) => e :: Nil
     case Block(stmts) => stmts
     case OpBlock(items) => items.flatMap:
@@ -201,19 +202,24 @@ enum Tree extends AutoLocated:
     case Spread(Keyword.`...`, _, S(und: Under)) => S(S(true), new Ident("_").withLocOf(und), N)
     case InfixApp(lhs: Ident, Keyword.`:`, rhs) => S(N, lhs, S(rhs))
     case TermDef(ImmutVal, inner, _) => inner.asParam
+    case Modified(Keyword.`using`, _, inner) => inner match
+      // Param of form (using ..., name: Type). Parse it as usual.
+      case inner: InfixApp => inner.asParam
+      // Param of form (using ..., Type). Synthesize an identifier for it.
+      case _ => S(N, Ident(""), S(inner))
   
   def isModuleModifier: Bool = this match
     case Tree.TypeDef(Mod, _, N, N) => true
     case _ => false
 
 object Tree:
-  val DummyApp: App = App(Dummy, Dummy)
+  val DummyApp: App = App(Dummy, Dummy) // TODO change the places where this is used
   val DummyTup: Tup = Tup(Dummy :: Nil)
   def DummyTypeDef(k: TypeDefKind)(using State): TypeDef =
     Tree.TypeDef(syntax.Cls, Tree.Dummy, N, N)
   object Block:
     def mk(stmts: Ls[Tree])(using State): Tree = stmts match
-      case Nil => UnitLit(true)
+      case Nil => UnitLit(false)
       case e :: Nil => e
       case es => Block(es)
   object TyApp:
@@ -267,6 +273,7 @@ case object LetBind extends ValLike("let", "let binding")
 case object HandlerBind extends TermDefKind("handler", "handler binding")
 case object ParamBind extends ValLike("", "parameter")
 case object Fun extends TermDefKind("fun", "function")
+case object Ins extends TermDefKind("use", "implicit instance")
 sealed abstract class TypeDefKind(desc: Str) extends DeclKind(desc)
 sealed trait ObjDefKind
 sealed trait ClsLikeKind extends ObjDefKind:
@@ -284,6 +291,9 @@ case object Pat extends TypeDefKind("pattern") with ClsLikeKind
 trait TermDefImpl extends TypeOrTermDef:
   this: TermDef =>
   
+  def sParameterizedMethod: Bool =
+    (k is Fun) && paramLists.length > 0
+  
 
 trait TypeOrTermDef:
   this: TypeDef | TermDef =>
@@ -295,9 +305,23 @@ trait TypeOrTermDef:
   
   lazy val (symbName, name, paramLists, typeParams, annotatedResultType)
       : (Opt[MaybeIdent], MaybeIdent, Ls[Tup], Opt[TyTup], Opt[Tree]) =
+    val k = this match
+      case td: TypeDef => td.k
+      case td: TermDef => td.k
     def rec(t: Tree, symbName: Opt[MaybeIdent], annot: Opt[Tree]): 
       (Opt[MaybeIdent], MaybeIdent, Ls[Tup], Opt[TyTup], Opt[Tree]) = 
       t match
+      
+      // use Foo as foo = ...
+      case InfixApp(typ, Keyword.`as`, id: Ident) if k == Ins =>
+        (S(R(id)), R(id), Nil, N, S(typ))
+      
+      // use Foo = ...
+      case typ if k == Ins =>
+        val name = typ.toString()
+        val id: Ident = Ident(s"instance$$$name")
+        (S(R(id)), R(id), Nil, N, S(typ))
+      
       
       case InfixApp(tree, Keyword.`:`, ann) =>
         rec(tree, symbName, S(ann))

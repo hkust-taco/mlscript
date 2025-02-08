@@ -79,14 +79,14 @@ let x += 1 = 0 in x
 //│ ╔══[ERROR] Expected a body for let bindings in expression position
 //│ ║  l.78: 	(let x = 1) + 1
 //│ ╙──      	     ^^^^^
-//│ = 1
+//│ = "()1"
 
 :e
 (let f(x) = x) + 1
 //│ ╔══[ERROR] Expected a body for let bindings in expression position
 //│ ║  l.85: 	(let f(x) = x) + 1
 //│ ╙──      	     ^^^^^^^^
-//│ = 1
+//│ = "()1"
 
 (let f(x) = x + 1 in f(42)) + 1
 //│ = 44

@@ -54,7 +54,7 @@ class Lol(h) with
 //│       }
 //│       toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│     };
-//│     tmp = this.h.perform("k") ?? null;
+//│     tmp = runtime.safeCall(this.h.perform("k"));
 //│     if (tmp instanceof globalThis.Predef.__EffectSig.class) {
 //│       tmp.tail.next = Cont$1(0);
 //│       tmp.tail = tmp.tail.next;
@@ -70,7 +70,6 @@ class Lol(h) with
 //│   }
 //│   toString() { return "Lol(" + globalThis.Predef.render(this.h) + ")"; }
 //│ };
-//│ null
 
 
 // * This is a weird use of effect handlers where an effect is raised during the construction of a handler.

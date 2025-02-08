@@ -58,9 +58,9 @@ class Baz(z) extends Bar(z * 1) with
 //│ };
 //│ Baz1.class = class Baz extends Bar3.class {
 //│   constructor(z) {
-//│     let tmp10;
-//│     tmp10 = this.z * 1;
-//│     super(tmp10);
+//│     let tmp2;
+//│     tmp2 = this.z * 1;
+//│     super(tmp2);
 //│     this.z = z;
 //│   }
 //│   get baz() {
@@ -68,7 +68,6 @@ class Baz(z) extends Bar(z * 1) with
 //│   }
 //│   toString() { return "Baz(" + globalThis.Predef.render(this.z) + ")"; }
 //│ };
-//│ null
 
 :fixme
 let b = Baz(42)

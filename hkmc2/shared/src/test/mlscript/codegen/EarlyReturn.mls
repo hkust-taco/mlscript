@@ -29,11 +29,10 @@ fun f(x) =
 //│     tmp = log("whoops");
 //│     return 0
 //│   } else {
-//│     tmp1 = null;
+//│     tmp1 = runtime.Unit;
 //│   }
 //│   return x + 1
 //│ };
-//│ null
 
 f(1)
 //│ = 2

@@ -10,7 +10,7 @@ let x = 0
 :sjs
 let x += 1
 //│ JS (unsanitized):
-//│ let x1, tmp; tmp = x + 1; x1 = tmp; null
+//│ let x1, tmp; tmp = x + 1; x1 = tmp;
 //│ x = 1
 
 x
@@ -19,12 +19,12 @@ x
 :sjs
 set x = 0
 //│ JS (unsanitized):
-//│ x1 = 0; null
+//│ x1 = 0; runtime.Unit
 
 :sjs
 set x += 1
 //│ JS (unsanitized):
-//│ let tmp1; tmp1 = x1 + 1; x1 = tmp1; null
+//│ let tmp1; tmp1 = x1 + 1; x1 = tmp1; runtime.Unit
 
 x
 //│ = 1
@@ -91,7 +91,7 @@ example()
 //│     tmp6 = x2 + 1;
 //│     x2 = tmp6;
 //│     tmp7 = log(x2);
-//│     tmp8 = get_x() ?? null;
+//│     tmp8 = runtime.safeCall(get_x());
 //│     tmp9 = log(tmp8);
 //│     tmp10 = (tmp7 , tmp9);
 //│     tmp5 = tmp10;
@@ -99,7 +99,7 @@ example()
 //│     x2 = old1;
 //│   }
 //│   tmp11 = log(x2);
-//│   tmp12 = get_x() ?? null;
+//│   tmp12 = runtime.safeCall(get_x());
 //│   return log(tmp12)
 //│ };
 //│ example2()
@@ -138,7 +138,7 @@ example()
 //│   }
 //│   y = tmp5;
 //│   tmp9 = log(x2);
-//│   tmp10 = get_x() ?? null;
+//│   tmp10 = runtime.safeCall(get_x());
 //│   tmp11 = log(tmp10);
 //│   return y
 //│ };

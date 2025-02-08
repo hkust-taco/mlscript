@@ -15,7 +15,7 @@ Predef.Test === globalThis.Predef.Test
 
 :fixme
 new Predef.Test is Predef.Test
-//│ ═══[RUNTIME ERROR] TypeError: tmp7 is not a constructor
+//│ ═══[RUNTIME ERROR] TypeError: tmp is not a constructor
 
 (new Predef.Test) is Predef.Test
 //│ > Test
@@ -101,8 +101,8 @@ fold(-)(0, 1, 2, 3)
 
 fold(print)(0, 1, 2, 3)
 //│ > 0 1
-//│ > null 2
-//│ > null 3
+//│ > () 2
+//│ > () 3
 
 fold(tuple)(0, 1, 2, 3)
 //│ = [[[0, 1], 2], 3]

@@ -8,11 +8,13 @@ h.oops
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 :e
+:re
 handle h = Object with {}
 val x = 1
 //│ ╔══[ERROR] Illegal definition in term position.
-//│ ║  l.12: 	val x = 1
+//│ ║  l.13: 	val x = 1
 //│ ╙──      	    ^^^^^
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 handle h = Object with {}
 val x = 1
@@ -22,7 +24,7 @@ x + 1
 :e
 x
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.23: 	x
+//│ ║  l.25: 	x
 //│ ╙──      	^
 
 :fixme
@@ -46,7 +48,7 @@ object Foo with
 :re
 Foo.x
 //│ ╔══[ERROR] Object 'Foo' does not contain member 'x'
-//│ ║  l.47: 	Foo.x
+//│ ║  l.49: 	Foo.x
 //│ ╙──      	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 

@@ -1,3 +1,4 @@
+import runtime from "./Runtime.mjs";
 let Predef1;
 Predef1 = class Predef {
   static {
@@ -35,7 +36,7 @@ Predef1 = class Predef {
           TraceLogger.indentLvl = tmp;
           return prev
         } else {
-          return null
+          return runtime.Unit
         }
       } 
       static resetIndent(n) {
@@ -43,23 +44,23 @@ Predef1 = class Predef {
         scrut = TraceLogger.enabled;
         if (scrut === true) {
           TraceLogger.indentLvl = n;
-          return null
+          return runtime.Unit
         } else {
-          return null
+          return runtime.Unit
         }
       } 
       static log(msg) {
         let scrut, tmp, tmp1, tmp2, tmp3, tmp4;
         scrut = TraceLogger.enabled;
         if (scrut === true) {
-          tmp = "| ".repeat(TraceLogger.indentLvl) ?? null;
-          tmp1 = "  ".repeat(TraceLogger.indentLvl) ?? null;
+          tmp = runtime.safeCall("| ".repeat(TraceLogger.indentLvl));
+          tmp1 = runtime.safeCall("  ".repeat(TraceLogger.indentLvl));
           tmp2 = "\n" + tmp1;
           tmp3 = msg.replaceAll("\n", tmp2);
           tmp4 = tmp + tmp3;
-          return globalThis.console.log(tmp4) ?? null
+          return runtime.safeCall(globalThis.console.log(tmp4))
         } else {
-          return null
+          return runtime.Unit
         }
       }
       static toString() { return "TraceLogger"; }
@@ -101,7 +102,7 @@ Predef1 = class Predef {
       append(elem) {
         this.tail.next = elem;
         this.tail = elem;
-        return null
+        return runtime.Unit
       }
       toString() { return "__ListWithTail(" + globalThis.Predef.render(this.next) + ", " + globalThis.Predef.render(this.tail) + ")"; }
     };
@@ -160,28 +161,28 @@ Predef1 = class Predef {
     }
   } 
   static pipeInto(x2, f) {
-    return f(x2) ?? null
+    return runtime.safeCall(f(x2))
   } 
   static pipeFrom(f1, x3) {
-    return f1(x3) ?? null
+    return runtime.safeCall(f1(x3))
   } 
   static andThen(f2, g) {
     return (x4) => {
       let tmp;
-      tmp = f2(x4) ?? null;
-      return g(tmp) ?? null
+      tmp = runtime.safeCall(f2(x4));
+      return runtime.safeCall(g(tmp))
     }
   } 
   static compose(f3, g1) {
     return (x4) => {
       let tmp;
-      tmp = g1(x4) ?? null;
-      return f3(tmp) ?? null
+      tmp = runtime.safeCall(g1(x4));
+      return runtime.safeCall(f3(tmp))
     }
   } 
   static passTo(receiver, f4) {
     return (...args) => {
-      return f4(receiver, ...args) ?? null
+      return runtime.safeCall(f4(receiver, ...args))
     }
   } 
   static call(receiver1, f5) {
@@ -191,29 +192,29 @@ Predef1 = class Predef {
   } 
   static pass1(f6) {
     return (...xs) => {
-      return f6(xs[0]) ?? null
+      return runtime.safeCall(f6(xs[0]))
     }
   } 
   static pass2(f7) {
     return (...xs) => {
-      return f7(xs[0], xs[1]) ?? null
+      return runtime.safeCall(f7(xs[0], xs[1]))
     }
   } 
   static pass3(f8) {
     return (...xs) => {
-      return f8(xs[0], xs[1], xs[2]) ?? null
+      return runtime.safeCall(f8(xs[0], xs[1], xs[2]))
     }
   } 
   static print(...xs) {
     let tmp, tmp1;
     tmp = Predef.map(Predef.renderAsStr);
-    tmp1 = tmp(...xs) ?? null;
-    return globalThis.console.log(...tmp1) ?? null
+    tmp1 = runtime.safeCall(tmp(...xs));
+    return runtime.safeCall(globalThis.console.log(...tmp1))
   } 
   static printRaw(x4) {
     let tmp;
     tmp = Predef.render(x4);
-    return globalThis.console.log(tmp) ?? null
+    return runtime.safeCall(globalThis.console.log(tmp))
   } 
   static interleave(sep) {
     return (...args) => {
@@ -240,14 +241,14 @@ Predef1 = class Predef {
             if (scrut1 === true) {
               tmp5 = idx + 1;
               res[tmp5] = sep;
-              tmp6 = null;
+              tmp6 = runtime.Unit;
             } else {
-              tmp6 = null;
+              tmp6 = runtime.Unit;
             }
             tmp7 = tmp6;
             continue tmp8;
           } else {
-            tmp7 = null;
+            tmp7 = runtime.Unit;
           }
           break;
         }
@@ -276,12 +277,12 @@ Predef1 = class Predef {
           });
           tmp1 = Predef.interleave(", ");
           tmp2 = Predef.map(Predef.render);
-          tmp3 = tmp2(...arg1) ?? null;
-          tmp4 = tmp1(...tmp3) ?? null;
-          return tmp("[", ...tmp4, "]") ?? null
+          tmp3 = runtime.safeCall(tmp2(...arg1));
+          tmp4 = runtime.safeCall(tmp1(...tmp3));
+          return runtime.safeCall(tmp("[", ...tmp4, "]"))
         } else {
           if (typeof arg1 === 'string') {
-            return globalThis.JSON.stringify(arg1) ?? null
+            return runtime.safeCall(globalThis.JSON.stringify(arg1))
           } else {
             if (arg1 instanceof globalThis.Set) {
               tmp5 = Predef.fold((arg11, arg2) => {
@@ -289,9 +290,9 @@ Predef1 = class Predef {
               });
               tmp6 = Predef.interleave(", ");
               tmp7 = Predef.map(Predef.render);
-              tmp8 = tmp7(...arg1) ?? null;
-              tmp9 = tmp6(...tmp8) ?? null;
-              return tmp5("Set{", ...tmp9, "}") ?? null
+              tmp8 = runtime.safeCall(tmp7(...arg1));
+              tmp9 = runtime.safeCall(tmp6(...tmp8));
+              return runtime.safeCall(tmp5("Set{", ...tmp9, "}"))
             } else {
               if (arg1 instanceof globalThis.Map) {
                 tmp10 = Predef.fold((arg11, arg2) => {
@@ -299,9 +300,9 @@ Predef1 = class Predef {
                 });
                 tmp11 = Predef.interleave(", ");
                 tmp12 = Predef.map(Predef.render);
-                tmp13 = tmp12(...arg1) ?? null;
-                tmp14 = tmp11(...tmp13) ?? null;
-                return tmp10("Map{", ...tmp14, "}") ?? null
+                tmp13 = runtime.safeCall(tmp12(...arg1));
+                tmp14 = runtime.safeCall(tmp11(...tmp13));
+                return runtime.safeCall(tmp10("Map{", ...tmp14, "}"))
               } else {
                 if (arg1 instanceof globalThis.Function) {
                   p = globalThis.Object.getOwnPropertyDescriptor(arg1, "prototype");
@@ -344,7 +345,7 @@ Predef1 = class Predef {
                       tmp20 = "[" + tmp19;
                       return tmp20 + "]"
                     } else {
-                      return ts.call(arg1) ?? null
+                      return runtime.safeCall(ts.call(arg1))
                     }
                   }
                 }
@@ -369,7 +370,7 @@ Predef1 = class Predef {
   static tupleSlice(xs2, i, j) {
     let tmp;
     tmp = xs2.length - j;
-    return globalThis.Array.prototype.slice.call(xs2, i, tmp) ?? null
+    return runtime.safeCall(globalThis.Array.prototype.slice.call(xs2, i, tmp))
   } 
   static tupleGet(xs3, i1) {
     return globalThis.Array.prototype.at.call(xs3, i1)
@@ -378,7 +379,7 @@ Predef1 = class Predef {
     return (...xs4) => {
       let tmp;
       tmp = Predef.pass1(f9);
-      return xs4.map(tmp) ?? null
+      return runtime.safeCall(xs4.map(tmp))
     }
   } 
   static fold(f10) {
@@ -389,15 +390,15 @@ Predef1 = class Predef {
       tmp4: while (true) {
         scrut = i2 < len;
         if (scrut === true) {
-          tmp = rest.at(i2) ?? null;
-          tmp1 = f10(init, tmp) ?? null;
+          tmp = runtime.safeCall(rest.at(i2));
+          tmp1 = runtime.safeCall(f10(init, tmp));
           init = tmp1;
           tmp2 = i2 + 1;
           i2 = tmp2;
-          tmp3 = null;
+          tmp3 = runtime.Unit;
           continue tmp4;
         } else {
-          tmp3 = null;
+          tmp3 = runtime.Unit;
         }
         break;
       }
@@ -414,35 +415,35 @@ Predef1 = class Predef {
       } else {
         tmp = len - 1;
         i2 = tmp;
-        tmp1 = rest.at(i2) ?? null;
+        tmp1 = runtime.safeCall(rest.at(i2));
         init = tmp1;
         tmp6: while (true) {
           scrut = i2 > 0;
           if (scrut === true) {
             tmp2 = i2 - 1;
             i2 = tmp2;
-            tmp3 = rest.at(i2) ?? null;
-            tmp4 = f11(tmp3, init) ?? null;
+            tmp3 = runtime.safeCall(rest.at(i2));
+            tmp4 = runtime.safeCall(f11(tmp3, init));
             init = tmp4;
-            tmp5 = null;
+            tmp5 = runtime.Unit;
             continue tmp6;
           } else {
-            tmp5 = null;
+            tmp5 = runtime.Unit;
           }
           break;
         }
-        return f11(first, init) ?? null
+        return runtime.safeCall(f11(first, init))
       }
     }
   } 
   static stringStartsWith(string, prefix) {
-    return string.startsWith(prefix) ?? null
+    return runtime.safeCall(string.startsWith(prefix))
   } 
   static stringGet(string1, i2) {
-    return string1.at(i2) ?? null
+    return runtime.safeCall(string1.at(i2))
   } 
   static stringDrop(string2, n) {
-    return string2.slice(n) ?? null
+    return runtime.safeCall(string2.slice(n))
   } 
   static get unreachable() {
     throw globalThis.Error("unreachable");
@@ -476,10 +477,10 @@ Predef1 = class Predef {
       } else {
         tmp7 = "s";
       }
-      tmp8 = tmp5("Function", name, " expected ", tmp6, expected, " argument", tmp7, " but got ", got) ?? null;
+      tmp8 = runtime.safeCall(tmp5("Function", name, " expected ", tmp6, expected, " argument", tmp7, " but got ", got));
       throw globalThis.Error(tmp8);
     } else {
-      return null
+      return runtime.Unit
     }
   } 
   static __mkListWithTail() {
@@ -497,14 +498,14 @@ Predef1 = class Predef {
       if (scrut1 === true) {
         throw globalThis.Error("unexpected handler continuation");
       } else {
-        tmp = null;
+        tmp = runtime.Unit;
       }
       cont.next = eff.tail.next;
       eff.tail.next = cont;
-      tmp1 = null;
+      tmp1 = runtime.Unit;
     } else {
       eff.tail.next = cont;
-      tmp1 = null;
+      tmp1 = runtime.Unit;
     }
     return eff
   } 
@@ -521,7 +522,7 @@ Predef1 = class Predef {
     tmp = Predef.__TailList(null);
     tmp1 = new Predef.__HandleBlock.class(tmp, null, null, handler1);
     handleBlock = tmp1;
-    tmp2 = cur.handleBlockList.append(handleBlock) ?? null;
+    tmp2 = runtime.safeCall(cur.handleBlockList.append(handleBlock));
     tmp7: while (true) {
       if (cur instanceof Predef.__EffectSig.class) {
         tmp3 = Predef.__handleEffect(cur);
@@ -531,15 +532,15 @@ Predef1 = class Predef {
           scrut1 = handleBlock.lastHandlerCont === null;
           if (scrut1 === true) {
             cur.tail = handleBlock.contHead;
-            tmp4 = null;
+            tmp4 = runtime.Unit;
           } else {
             cur.tail = handleBlock.lastHandlerCont;
-            tmp4 = null;
+            tmp4 = runtime.Unit;
           }
           return cur
         } else {
           cur = nxt;
-          tmp5 = null;
+          tmp5 = runtime.Unit;
         }
         tmp6 = tmp5;
         continue tmp7;
@@ -559,13 +560,13 @@ Predef1 = class Predef {
         scrut1 = prevBlock.next.handler !== cur1.handler;
         if (scrut1 === true) {
           prevBlock = prevBlock.next;
-          tmp = null;
+          tmp = runtime.Unit;
           continue tmp6;
         } else {
-          tmp = null;
+          tmp = runtime.Unit;
         }
       } else {
-        tmp = null;
+        tmp = runtime.Unit;
       }
       break;
     }
@@ -573,7 +574,7 @@ Predef1 = class Predef {
     if (scrut2 === true) {
       return cur1
     } else {
-      tmp1 = null;
+      tmp1 = runtime.Unit;
     }
     handleBlock = prevBlock.next;
     origTailBlock = cur1.handleBlockList.tail;
@@ -581,7 +582,7 @@ Predef1 = class Predef {
     cur1.handleBlockList.tail = prevBlock;
     savedNext = handleBlock.contHead.next;
     tmp2 = Predef.__resume(cur1, handleBlock.contHead);
-    tmp3 = cur1.handlerFun(tmp2) ?? null;
+    tmp3 = runtime.safeCall(cur1.handlerFun(tmp2));
     cur1 = tmp3;
     scrut3 = savedNext !== handleBlock.contHead.next;
     if (scrut3 === true) {
@@ -589,13 +590,13 @@ Predef1 = class Predef {
       scrut4 = handleBlock.lastHandlerCont === null;
       if (scrut4 === true) {
         handleBlock.lastHandlerCont = handleBlock.contHead.next;
-        tmp4 = null;
+        tmp4 = runtime.Unit;
       } else {
-        tmp4 = null;
+        tmp4 = runtime.Unit;
       }
       tmp5 = tmp4;
     } else {
-      tmp5 = null;
+      tmp5 = runtime.Unit;
     }
     if (cur1 instanceof Predef.__EffectSig.class) {
       cur1.handleBlockList.tail.next = handleBlock;
@@ -612,13 +613,13 @@ Predef1 = class Predef {
       if (scrut === true) {
         throw globalThis.Error("Multiple resumption");
       } else {
-        tmp = null;
+        tmp = runtime.Unit;
       }
       cur2.resumed = true;
       cont1 = cur2.next;
       tmp10: while (true) {
         if (cont1 instanceof Predef.__Cont.class) {
-          tmp1 = cont1.resume(value) ?? null;
+          tmp1 = runtime.safeCall(cont1.resume(value));
           value = tmp1;
           if (value instanceof Predef.__EffectSig.class) {
             scrut1 = value.tail.next !== cont1;
@@ -629,40 +630,40 @@ Predef1 = class Predef {
                 if (scrut3 === true) {
                   throw globalThis.Error("Internal Error: unexpected continuation");
                 } else {
-                  tmp2 = null;
+                  tmp2 = runtime.Unit;
                 }
               } else {
-                tmp2 = null;
+                tmp2 = runtime.Unit;
               }
               tmp3 = tmp2;
             } else {
-              tmp3 = null;
+              tmp3 = runtime.Unit;
             }
             scrut4 = value.tail.next === null;
             if (scrut4 === true) {
               value.tail.next = cont1.next;
-              tmp4 = null;
+              tmp4 = runtime.Unit;
             } else {
-              tmp4 = null;
+              tmp4 = runtime.Unit;
             }
             value.tail = tail;
             scrut5 = cur2.handleBlockList.next !== null;
             if (scrut5 === true) {
               value.handleBlockList.tail.next = cur2.handleBlockList.next;
               value.handleBlockList.tail = cur2.handleBlockList.tail;
-              tmp5 = null;
+              tmp5 = runtime.Unit;
             } else {
-              tmp5 = null;
+              tmp5 = runtime.Unit;
             }
             return value
           } else {
             cont1 = cont1.next;
-            tmp6 = null;
+            tmp6 = runtime.Unit;
           }
           tmp7 = tmp6;
           continue tmp10;
         } else {
-          tmp7 = null;
+          tmp7 = runtime.Unit;
         }
         break;
       }
@@ -674,9 +675,9 @@ Predef1 = class Predef {
         cur2 = tmp8;
         if (cur2 instanceof Predef.__EffectSig.class) {
           cur2.tail = tail;
-          tmp9 = null;
+          tmp9 = runtime.Unit;
         } else {
-          tmp9 = null;
+          tmp9 = runtime.Unit;
         }
         return cur2
       }
@@ -687,7 +688,7 @@ Predef1 = class Predef {
     tmp5: while (true) {
       scrut1 = handleBlock.contHead.next;
       if (scrut1 instanceof Predef.__Cont.class) {
-        tmp = handleBlock.contHead.next.resume(value) ?? null;
+        tmp = runtime.safeCall(handleBlock.contHead.next.resume(value));
         value = tmp;
         if (value instanceof Predef.__EffectSig.class) {
           scrut2 = value.tail.next !== handleBlock.contHead.next;
@@ -696,17 +697,17 @@ Predef1 = class Predef {
             if (scrut3 === true) {
               throw globalThis.Error("Internal Error: unexpected continuation during handle block resumption");
             } else {
-              tmp1 = null;
+              tmp1 = runtime.Unit;
             }
           } else {
-            tmp1 = null;
+            tmp1 = runtime.Unit;
           }
           scrut4 = value.tail.next !== handleBlock.contHead.next;
           if (scrut4 === true) {
             handleBlock.contHead.next = handleBlock.contHead.next.next;
-            tmp2 = null;
+            tmp2 = runtime.Unit;
           } else {
-            tmp2 = null;
+            tmp2 = runtime.Unit;
           }
           value.tail.next = null;
           value.handleBlockList.tail.next = handleBlock;
@@ -714,7 +715,7 @@ Predef1 = class Predef {
           return value
         } else {
           handleBlock.contHead.next = handleBlock.contHead.next.next;
-          tmp3 = null;
+          tmp3 = runtime.Unit;
         }
         tmp4 = tmp3;
         continue tmp5;
@@ -722,7 +723,7 @@ Predef1 = class Predef {
         scrut = handleBlock.next;
         if (scrut instanceof Predef.__HandleBlock.class) {
           handleBlock = handleBlock.next;
-          tmp4 = null;
+          tmp4 = runtime.Unit;
           continue tmp5;
         } else {
           return value
@@ -739,9 +740,9 @@ Predef1 = class Predef {
     tmp2 = Predef.__stackHandler !== null;
     scrut = tmp1 && tmp2;
     if (scrut === true) {
-      return Predef.__stackHandler.perform() ?? null
+      return runtime.safeCall(Predef.__stackHandler.perform())
     } else {
-      return null
+      return runtime.Unit
     }
   } 
   static resetDepth(tmp, curDepth) {
@@ -750,13 +751,12 @@ Predef1 = class Predef {
     scrut = curDepth < Predef.__stackOffset;
     if (scrut === true) {
       Predef.__stackOffset = curDepth;
-      tmp1 = null;
+      tmp1 = runtime.Unit;
     } else {
-      tmp1 = null;
+      tmp1 = runtime.Unit;
     }
     return tmp
   }
   static toString() { return "Predef"; }
 };
-null
 let Predef = Predef1; export default Predef;

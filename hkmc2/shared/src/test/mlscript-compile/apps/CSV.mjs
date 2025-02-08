@@ -1,3 +1,4 @@
+import runtime from "./../Runtime.mjs";
 import Str from "./../Str.mjs";
 import Predef from "./../Predef.mjs";
 let CSV1;
@@ -25,16 +26,16 @@ CSV1.class = class CSV {
       []
     ];
     tmp7: while (true) {
-      arrMatches = this.objPattern.exec(strData) ?? null;
+      arrMatches = runtime.safeCall(this.objPattern.exec(strData));
       scrut = arrMatches !== null;
       if (scrut === true) {
         strMatchedDelimiter = arrMatches[1];
         tmp = strMatchedDelimiter != this.strDelimiter;
         scrut1 = strMatchedDelimiter.length && tmp;
         if (scrut1 === true) {
-          tmp1 = arrData.push([]) ?? null;
+          tmp1 = runtime.safeCall(arrData.push([]));
         } else {
-          tmp1 = null;
+          tmp1 = runtime.Unit;
         }
         scrut2 = arrMatches[2];
         if (scrut2 === true) {
@@ -45,11 +46,11 @@ CSV1.class = class CSV {
         }
         strMatchedValue = tmp3;
         tmp4 = arrData.length - 1;
-        tmp5 = arrData.at(tmp4) ?? null;
-        tmp6 = tmp5.push(strMatchedValue) ?? null;
+        tmp5 = runtime.safeCall(arrData.at(tmp4));
+        tmp6 = runtime.safeCall(tmp5.push(strMatchedValue));
         continue tmp7;
       } else {
-        tmp6 = null;
+        tmp6 = runtime.Unit;
       }
       break;
     }
@@ -57,5 +58,4 @@ CSV1.class = class CSV {
   }
   toString() { return "CSV(" + globalThis.Predef.render(this.strDelimiter) + ")"; }
 };
-null
 let CSV = CSV1; export default CSV;

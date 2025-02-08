@@ -30,6 +30,5 @@ fun foo(h) =
 //│     return A3
 //│   }
 //│ };
-//│ null
 
 

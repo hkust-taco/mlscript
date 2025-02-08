@@ -61,7 +61,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   private def ctorCtx(ctorThis: Path) = funcLikeHandlerCtx(S(ctorThis))
   private def handlerCtx(using HandlerCtx): HandlerCtx = summon
   private val predefPath: Path = State.globalThisSymbol.asPath.selN(Tree.Ident("Predef"))
-  private val predefSym: ModuleSymbol = ctx.Builtins.Predef
+  private val predefSym: ModuleSymbol = ctx.builtins.Predef
   private val effectSigPath: Path = predefPath.selN(Tree.Ident("__EffectSig")).selN(Tree.Ident("class"))
   private val effectSigSym: ClassSymbol = predefSym.tree.definedSymbols.get("__EffectSig").get.asCls.get
   private val contClsPath: Path = predefPath.selN(Tree.Ident("__Cont")).selN(Tree.Ident("class"))

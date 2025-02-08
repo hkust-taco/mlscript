@@ -59,7 +59,7 @@ while x
 //│   if (x2 === true) {
 //│     tmp4 = log("Hello World");
 //│     x2 = false;
-//│     tmp5 = null;
+//│     tmp5 = runtime.Unit;
 //│     continue tmp6;
 //│   } else {
 //│     tmp5 = 42;
@@ -114,10 +114,10 @@ while
 //│     if (scrut3 === true) {
 //│       tmp19 = i2 + 1;
 //│       i2 = tmp19;
-//│       tmp20 = null;
+//│       tmp20 = runtime.Unit;
 //│       continue tmp21;
 //│     } else {
-//│       tmp20 = null;
+//│       tmp20 = runtime.Unit;
 //│     }
 //│     break;
 //│   }
@@ -217,7 +217,6 @@ fun f(ls) =
 //│   }
 //│   return tmp28
 //│ };
-//│ null
 
 f(0)
 //│ > Done!
@@ -255,7 +254,7 @@ while log("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.255: 	  then 0(0)
+//│ ║  l.254: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ═══[ERROR] Unrecognized term split (false literal).
 //│ > Hello World

@@ -1,0 +1,57 @@
+:js
+
+
+:todo // * Initialization error
+:sjs
+module Foo with
+  val self: module Foo = Foo
+//│ JS (unsanitized):
+//│ let Foo1; Foo1 = class Foo { static { this.self = Foo1; } static toString() { return "Foo"; } };
+
+:re
+Foo.self
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'self' yielded 'undefined'
+
+
+module Foo with
+  val self: module Foo = this
+
+Foo.self
+//│ = Foo
+
+
+:todo
+:e
+module Foo with
+  val self = this
+
+Foo.self
+//│ = Foo
+
+
+object Foo with
+  val self = this
+
+Foo.self
+//│ = Foo
+
+
+:todo // * Initialization error
+:sjs
+object Foo with
+  val self = Foo
+//│ JS (unsanitized):
+//│ let Foo9;
+//│ const Foo$class1 = class Foo8 {
+//│   constructor() {
+//│     this.self = Foo9;
+//│   }
+//│   toString() { return "Foo"; }
+//│ }; Foo9 = new Foo$class1;
+//│ Foo9.class = Foo$class1;
+
+:re
+Foo.self
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'self' yielded 'undefined'
+
+

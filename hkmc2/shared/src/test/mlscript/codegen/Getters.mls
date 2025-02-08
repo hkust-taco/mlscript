@@ -4,7 +4,7 @@
 :sjs
 fun t = 42
 //│ JS (unsanitized):
-//│ let t; t = function t() { return 42 }; null
+//│ let t; t = function t() { return 42 };
 
 
 :expect 42
@@ -49,7 +49,6 @@ fun test() =
 //│   tmp2 = whoops();
 //│   return tmp1 + tmp2
 //│ };
-//│ null
 
 test()
 //│ > ok
@@ -82,7 +81,6 @@ module T with
 //│   }
 //│   static toString() { return "T"; }
 //│ };
-//│ null
 
 
 T.a
@@ -102,15 +100,7 @@ T.d
 module M with
   fun t = 0
 //│ JS (unsanitized):
-//│ let M1;
-//│ M1 = class M {
-//│   static {}
-//│   static get t() {
-//│     return 0;
-//│   }
-//│   static toString() { return "M"; }
-//│ };
-//│ null
+//│ let M1; M1 = class M { static {} static get t() { return 0; } static toString() { return "M"; } };
 
 
 :sjs
@@ -134,7 +124,6 @@ fun test() =
 //│   tmp1 = whoops();
 //│   return tmp1
 //│ };
-//│ null
 
 
 :re
@@ -156,7 +145,7 @@ fun bar() =
   fun baz() = 42
   baz
 //│ JS (unsanitized):
-//│ let bar; bar = function bar() { let baz; baz = function baz() { return 42 }; return baz }; null
+//│ let bar; bar = function bar() { let baz; baz = function baz() { return 42 }; return baz };
 
 
 :sjs
@@ -183,7 +172,6 @@ fun baz() =
 //│     return tmp3 + tmp4
 //│   }
 //│ };
-//│ null
 
 
 baz()(3, 4)
@@ -215,7 +203,6 @@ fun a() =
 //│   };
 //│   return c
 //│ };
-//│ null
 
 
 a()()
@@ -246,7 +233,6 @@ fun b() =
 //│   };
 //│   return d
 //│ };
-//│ null
 
 
 b()()
@@ -279,7 +265,6 @@ fun c() =
 //│   tmp4 = d();
 //│   return tmp4
 //│ };
-//│ null
 
 
 c()
@@ -303,7 +288,6 @@ class Foo(x) with
 //│   }
 //│   toString() { return "Foo(" + globalThis.Predef.render(this.x) + ")"; }
 //│ };
-//│ null
 
 
 fun foo(f) =

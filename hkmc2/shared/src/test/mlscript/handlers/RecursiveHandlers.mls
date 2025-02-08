@@ -161,7 +161,7 @@ str
 //│                 } else if (this.pc === 9) {
 //│                   tmp11 = str + "A";
 //│                   str = tmp11;
-//│                   return null
+//│                   return runtime.Unit
 //│                 }
 //│                 break;
 //│               }
@@ -170,7 +170,7 @@ str
 //│           };
 //│           tmp9 = str + "A";
 //│           str = tmp9;
-//│           tmp10 = k(arg) ?? null;
+//│           tmp10 = runtime.safeCall(k(arg));
 //│           if (tmp10 instanceof globalThis.Predef.__EffectSig.class) {
 //│             tmp10.tail.next = Cont$17(8);
 //│             tmp10.tail = tmp10.tail.next;
@@ -181,7 +181,7 @@ str
 //│           }
 //│           tmp11 = str + "A";
 //│           str = tmp11;
-//│           return null
+//│           return runtime.Unit
 //│         })
 //│       }
 //│       toString() { return "Handler$h1$(" + "" + ")"; }
@@ -252,7 +252,7 @@ str
 //│                     tmp13 = str + "B";
 //│                     tmp14 = str + tmp13;
 //│                     str = tmp14;
-//│                     return null
+//│                     return runtime.Unit
 //│                   }
 //│                   break;
 //│                 }
@@ -262,7 +262,7 @@ str
 //│             tmp10 = str + "B";
 //│             tmp11 = str + tmp10;
 //│             str = tmp11;
-//│             tmp12 = k(arg) ?? null;
+//│             tmp12 = runtime.safeCall(k(arg));
 //│             if (tmp12 instanceof globalThis.Predef.__EffectSig.class) {
 //│               tmp12.tail.next = Cont$18(4);
 //│               tmp12.tail = tmp12.tail.next;
@@ -274,7 +274,7 @@ str
 //│             tmp13 = str + "B";
 //│             tmp14 = str + tmp13;
 //│             str = tmp14;
-//│             return null
+//│             return runtime.Unit
 //│           })
 //│         }
 //│         toString() { return "Handler$h2$(" + "" + ")"; }
@@ -303,7 +303,7 @@ str
 //│               this.pc = 3;
 //│               continue contLoop;
 //│             } else if (this.pc === 3) {
-//│               res4 = h1.perform(null) ?? null;
+//│               res4 = runtime.safeCall(h1.perform(runtime.Unit));
 //│               if (res4 instanceof globalThis.Predef.__EffectSig.class) {
 //│                 this.pc = 1;
 //│                 return globalThis.Predef.__appendInCont(res4, this)
@@ -324,7 +324,7 @@ str
 //│         }
 //│         toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│       };
-//│       tmp9 = h2.perform(null) ?? null;
+//│       tmp9 = runtime.safeCall(h2.perform(runtime.Unit));
 //│       if (tmp9 instanceof globalThis.Predef.__EffectSig.class) {
 //│         tmp9.tail.next = Cont$17(0);
 //│         return globalThis.Predef.__handleBlockImpl(tmp9, h2)
@@ -332,7 +332,7 @@ str
 //│       if (tmp9 instanceof globalThis.Predef.__Return.class) {
 //│         return tmp9
 //│       }
-//│       res4 = h1.perform(null) ?? null;
+//│       res4 = runtime.safeCall(h1.perform(runtime.Unit));
 //│       if (res4 instanceof globalThis.Predef.__EffectSig.class) {
 //│         res4.tail.next = Cont$17(1);
 //│         return globalThis.Predef.__handleBlockImpl(res4, h2)
@@ -358,7 +358,7 @@ str
 //│   }
 //│   tmp7 = tmp6;
 //│ } else {
-//│   tmp7 = null;
+//│   tmp7 = runtime.Unit;
 //│ }
 //│ str
 //│ = "BABABA"

@@ -51,7 +51,7 @@ class Outer(a, b) with
 //│     tmp = this.Inner(this.a);
 //│     this.i = tmp;
 //│     tmp1 = log(this.i.c);
-//│     tmp2 = this.i.i1(1) ?? null;
+//│     tmp2 = runtime.safeCall(this.i.i1(1));
 //│     log(tmp2)
 //│   }
 //│   o1(c) {
@@ -60,11 +60,10 @@ class Outer(a, b) with
 //│   o2(c1, d) {
 //│     let tmp;
 //│     tmp = this.Inner(c1);
-//│     return tmp.i1(d) ?? null
+//│     return runtime.safeCall(tmp.i1(d))
 //│   }
 //│   toString() { return "Outer(" + globalThis.Predef.render(this.a) + ", " + globalThis.Predef.render(this.b) + ")"; }
 //│ };
-//│ null
 
 
 val o = Outer(100, 200)

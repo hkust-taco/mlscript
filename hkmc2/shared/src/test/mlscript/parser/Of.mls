@@ -3,7 +3,7 @@
 
 f of ()
 //│ Parsed:
-//│ 	App(Ident(f),Tup(List(UnitLit(true))))
+//│ 	App(Ident(f),Tup(List(Unt())))
 
 f of 1
 //│ Parsed:

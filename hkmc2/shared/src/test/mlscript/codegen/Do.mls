@@ -8,8 +8,8 @@ do ()
 //│   stats = Nil
 //│   res = Blk:
 //│     stats = Ls of 
-//│       Lit of UnitLit of true
-//│     res = Lit of UnitLit of true
+//│       UnitVal
+//│     res = UnitVal
 
 do console.log("ok")
 //│ > ok
@@ -44,7 +44,7 @@ val f = case
 //│ >    let res = "other"
 //│ >    let $doTemp = (member:Predef#666.)print‹member:print›(res#666)
 //│ >    else res#666
-//│ f = [function tmp3]
+//│ f = [function tmp1]
 
 f(0)
 //│ = "null"

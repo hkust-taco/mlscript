@@ -77,6 +77,5 @@ val isDefined = case
 //│   }
 //│ };
 //│ isDefined = tmp5;
-//│ null
 //│ isDefined = [function tmp5]
 

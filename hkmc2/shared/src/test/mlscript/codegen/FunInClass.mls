@@ -58,7 +58,6 @@ fun test(a) =
 //│   };
 //│   return Inner1(42)
 //│ };
-//│ null
 
 let i = test(100)
 //│ > 100
@@ -115,7 +114,6 @@ fun test(a) =
 //│     tmp2
 //│   ]
 //│ };
-//│ null
 
 test(123)
 //│ > [123, 1]
@@ -177,7 +175,7 @@ Bar(1)
 //│     this.x = x;
 //│     let tmp1;
 //│     tmp1 = this.foo();
-//│     tmp1() ?? null
+//│     runtime.safeCall(tmp1())
 //│   }
 //│   foo() {
 //│     return () => {

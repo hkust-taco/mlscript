@@ -24,7 +24,7 @@ trait DesugaringBase(using state: Elaborator.State):
 
   /** Get the class symbol defined in the `Predef` module. */
   protected def resolvePredefMember(name: Str): Ctxl[(Term.SynthSel, ClassSymbol)] =
-    val predefSymbol = ctx.Builtins.Predef
+    val predefSymbol = ctx.builtins.Predef
     val innerSel = sel(globalThisSymbol.ref(), "Predef", predefSymbol)
     val memberSymbol = predefSymbol.tree.definedSymbols.get(name).flatMap(_.asCls).getOrElse:
       lastWords(s"Cannot resolve `$name` in `Predef`.")

@@ -1,9 +1,10 @@
+import runtime from "./Runtime.mjs";
 import Predef from "./Predef.mjs";
 let Example1;
 Example1 = class Example {
   static {}
   static funnySlash(f, arg) {
-    return f(arg) ?? null
+    return runtime.safeCall(f(arg))
   } 
   static inc(x) {
     return x + 1
@@ -25,5 +26,4 @@ Example1 = class Example {
   }
   static toString() { return "Example"; }
 };
-null
 let Example = Example1; export default Example;
