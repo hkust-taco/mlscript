@@ -55,7 +55,8 @@ import Subst.subst
 class Lowering()(using Config, TL, Raise, State, Ctx):
   
   val lowerHandlers: Bool = config.effectHandlers.isDefined
-  
+  val lift: Bool = config.liftDefns.isDefined
+
   private lazy val unreachableFn =
     Select(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Predef"))(N), Tree.Ident("unreachable"))(N)
   

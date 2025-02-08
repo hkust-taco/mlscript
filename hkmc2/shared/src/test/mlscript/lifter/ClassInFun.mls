@@ -2,7 +2,7 @@
 :js
 
 // make sure class fields are discriminated properly for immutable captures when supported
-:handler
+:effectHandlers
 abstract class Effect with
   fun perform()
 handle h = Effect with
@@ -316,7 +316,7 @@ a.getX()
 // handler
 
 :stackSafe 10
-:handler
+:effectHandlers
 fun sum(n) =
   if n == 0 then 0
   else
