@@ -146,15 +146,18 @@ sealed abstract class Block extends Product with AutoLocated:
   // Note that this returns the definitions in reverse order, with the bottommost definiton appearing
   // last. This is so that using defns.foldLeft later to add the definitions to the front of a block, 
   // we don't need to reverse the list again to preserve the order of the definitions.
-  def floatOutDefns(ignore: Set[Local] = Set.empty) =
+  def floatOutDefns(
+    ignore: Defn => Bool = _ => false, 
+    preserve: Defn => Bool = _ => false) =
     var defns: List[Defn] = Nil
     val transformer = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
-        case Define(defn, rest) => defn match
+        case Define(defn, rest) if !ignore(defn) => defn match
           case v: ValDefn => super.applyBlock(b)
           case _ =>
             defns ::= defn
-            applyBlock(rest)
+            if preserve(defn) then super.applyBlock(b)
+            else applyBlock(rest)
         case _ => super.applyBlock(b)
     
     (transformer.applyBlock(this), defns)

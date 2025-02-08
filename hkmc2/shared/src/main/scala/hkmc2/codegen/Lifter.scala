@@ -60,7 +60,8 @@ class Lifter(using State):
     * @param iSymPaths The path to access a particular `innerSymbol` (possibly belonging to a previous class) in the current scope
     */
   case class LifterCtx(
-    val usedLocals: UsedLocalsMap, 
+    val usedLocals: UsedLocalsMap,
+    val ignoredDefns: Set[BlockMemberSymbol],
     val localCaptureSyms: Map[Local, LocalSymbol & NamedSymbol],
     val prevFnDefns: List[FunDefn],
     val prevClsDefns: List[ClsLikeDefn],
@@ -95,7 +96,7 @@ class Lifter(using State):
     def addIsymPath(isym: InnerSymbol, l: Local) = copy(isymPaths = isymPaths + (isym -> l))
   
   object LifterCtx:
-    def empty = LifterCtx(UsedLocalsMap(Map.empty), Map.empty, Nil, Nil, 
+    def empty = LifterCtx(UsedLocalsMap(Map.empty), Set.empty, Map.empty, Nil, Nil, 
       Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
     def withLocals(u: UsedLocalsMap) = empty.copy(usedLocals = u)
   
@@ -197,6 +198,7 @@ class Lifter(using State):
     val reqdInnerSyms: List[InnerSymbol],
     val fakeCtorBms: Option[BlockMemberSymbol], // only for classes
     val singleCallBms: BlockMemberSymbol, // optimization
+    val isMod: Bool
   )
 
   case class Lifted[+T <: Defn](
@@ -245,7 +247,11 @@ class Lifter(using State):
 
     val singleCallBms = BlockMemberSymbol(d.sym.nme + "$", Nil)
 
-    val info = LiftedInfo(includedCaptures.map(_.sym), includedLocals, clsCaptures, fakeCtorBms, singleCallBms)
+    val isMod = d match
+      case c: ClsLikeDefn => c.k is syntax.Mod
+      case _ => false
+
+    val info = LiftedInfo(includedCaptures.map(_.sym), includedLocals, clsCaptures, fakeCtorBms, singleCallBms, isMod)
 
     if includedCaptures.isEmpty && includedLocals.isEmpty && clsCaptures.isEmpty then Map.empty
     else d match
@@ -399,7 +405,7 @@ class Lifter(using State):
   // deals with creating parameter lists
   def liftOutDefnCont(base: Defn, d: Defn, ctx: LifterCtx): Lifted[Defn] = ctx.getBmsReqdInfo(d.sym) match
     case N => Lifted(d, Nil)
-    case S(LiftedInfo(includedCaptures, includedLocals, clsCaptures, fakeCtorBms, singleCallBms)) =>
+    case S(LiftedInfo(includedCaptures, includedLocals, clsCaptures, fakeCtorBms, singleCallBms, isMod)) =>
       val createSym = d match
         case d: ClsLikeDefn =>
           // due to the possibility of capturing a TempSymbol in HandlerLowering, it is necessary to generate a discriminator
@@ -949,26 +955,31 @@ class UsedVarAnalyzer(b: Block):
             defnSyms.get(l) match
             case None => super.applyValue(v)
             case Some(defn) =>
-              val AccessInfo(accessed, muted, refd) = accessMap(defn.sym) 
-              val muts = muted.intersect(thisVars)
-              val reads = defn.freeVars.intersect(thisVars) -- muts
-              // this is a naked reference, we assume things it mutates always needs a capture
-              for l <- muts do
-                reqCapture += l
-                hasMutator += l
-              for l <- reads do
-                if hasMutator.contains(l) then
+              val isMod = defn match
+                case c: ClsLikeDefn => c.k is syntax.Mod
+                case _ => false
+              if isMod then super.applyValue(v)
+              else
+                val AccessInfo(accessed, muted, refd) = accessMap(defn.sym) 
+                val muts = muted.intersect(thisVars)
+                val reads = defn.freeVars.intersect(thisVars) -- muts
+                // this is a naked reference, we assume things it mutates always needs a capture
+                for l <- muts do
                   reqCapture += l
-                hasReader += l    
-              // if this defn calls another defn that creates a class or has a naked reference to a
-              // function, we must capture the latter's mutated variables in a capture, as arbitrarily
-              // many mutators could be created from it
-              for 
-                sym <- refd
-                l <- accessMap(sym).mutated
-              do
-                reqCapture += l
-                hasMutator += l
+                  hasMutator += l
+                for l <- reads do
+                  if hasMutator.contains(l) then
+                    reqCapture += l
+                  hasReader += l    
+                // if this defn calls another defn that creates a class or has a naked reference to a
+                // function, we must capture the latter's mutated variables in a capture, as arbitrarily
+                // many mutators could be created from it
+                for 
+                  sym <- refd
+                  l <- accessMap(sym).mutated
+                do
+                  reqCapture += l
+                  hasMutator += l
               
               v          
           case Value.Ref(l) => 
@@ -976,6 +987,12 @@ class UsedVarAnalyzer(b: Block):
             v
           case _ => super.applyValue(v)
       
+        override def applyDefn(defn: Defn): Defn = defn match
+          case c: ClsLikeDefn if c.k is syntax.Mod =>
+            handleCalledBms(c.sym)
+            super.applyDefn(defn)
+          case _ => super.applyDefn(defn)
+
       walker.applyBlock(b)
 
       CaptureInfo(reqCapture, hasReader, hasMutator)
