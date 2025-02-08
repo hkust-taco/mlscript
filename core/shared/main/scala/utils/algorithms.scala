@@ -2,7 +2,6 @@ package mlscript.utils
 
 import scala.annotation.tailrec
 import scala.collection.immutable.SortedMap
-import scala.collection.mutable.ArrayBuffer
 
 
 object algorithms {
