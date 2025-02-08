@@ -99,7 +99,6 @@ fun f(used1, unused1) =
 f(1, 2).get()
 //│ = 1
 
-:fixme
 :expect 1
 fun f(used1, unused1) =
   fun g(g_arg) =
@@ -111,8 +110,7 @@ fun f(used1, unused1) =
     fun get() = used1
   new Test(unused1)
 f(1, 2).get()
-//│ ═══[RUNTIME ERROR] TypeError: Test$this.class is not a constructor
-//│ ═══[RUNTIME ERROR] Expected: '1', got: 'undefined'
+//│ = 1
 
 :sjs
 :expect 2
@@ -535,7 +533,7 @@ sum(100)
 //│   perform() {
 //│     let lambda$this;
 //│     lambda$this = runtime.safeCall(lambda1(this, this.handleBlock$$capture$0));
-//│     return globalThis.Predef.__mkEffect(this.handleBlock$$capture$0.stackHandler0$, lambda$this)
+//│     return globalThis.Predef.__mkEffect(this.handleBlock$$capture$0.stackHandler1$, lambda$this)
 //│   }
 //│   toString() { return "StackDelay$(" + "" + ")"; }
 //│ };
@@ -568,50 +566,50 @@ sum(100)
 //│   }
 //│   resume(value$) {
 //│     if (this.pc === 3) {
-//│       this.handleBlock$$capture$0.res1$ = value$;
+//│       this.handleBlock$$capture$0.res0$ = value$;
 //│     }
 //│     contLoop: while (true) {
 //│       if (this.pc === 3) {
-//│         if (this.handleBlock$$capture$0.res1$ instanceof globalThis.Predef.__Return.class) {
-//│           return this.handleBlock$$capture$0.res1$
+//│         if (this.handleBlock$$capture$0.res0$ instanceof globalThis.Predef.__Return.class) {
+//│           return this.handleBlock$$capture$0.res0$
 //│         }
 //│         this.pc = 4;
 //│         continue contLoop;
 //│       } else if (this.pc === 4) {
-//│         return this.handleBlock$$capture$0.res1$
+//│         return this.handleBlock$$capture$0.res0$
 //│       }
 //│       break;
 //│     }
 //│   }
 //│   toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│ };
-//│ handleBlock$$capture3 = function handleBlock$$capture(stackHandler0$1, res1$1) {
-//│   return new handleBlock$$capture.class(stackHandler0$1, res1$1);
+//│ handleBlock$$capture3 = function handleBlock$$capture(res0$1, stackHandler1$1) {
+//│   return new handleBlock$$capture.class(res0$1, stackHandler1$1);
 //│ };
 //│ handleBlock$$capture3.class = class handleBlock$$capture2 {
-//│   constructor(stackHandler0$, res1$) {
-//│     this.stackHandler0$ = stackHandler0$;
-//│     this.res1$ = res1$;
+//│   constructor(res0$, stackHandler1$) {
+//│     this.res0$ = res0$;
+//│     this.stackHandler1$ = stackHandler1$;
 //│   }
-//│   toString() { return "handleBlock$$capture(" + globalThis.Predef.render(this.stackHandler0$) + ", " + globalThis.Predef.render(this.res1$) + ")"; }
+//│   toString() { return "handleBlock$$capture(" + globalThis.Predef.render(this.res0$) + ", " + globalThis.Predef.render(this.stackHandler1$) + ")"; }
 //│ };
 //│ handleBlock$1 = function handleBlock$() {
 //│   let capture;
 //│   capture = new handleBlock$$capture3(null, null);
-//│   capture.stackHandler0$ = StackDelay$$(capture);
+//│   capture.stackHandler1$ = StackDelay$$(capture);
 //│   globalThis.Predef.__stackLimit = 10;
 //│   globalThis.Predef.__stackOffset = 0;
 //│   globalThis.Predef.__stackDepth = 1;
-//│   globalThis.Predef.__stackHandler = capture.stackHandler0$;
-//│   capture.res1$ = sum(100);
-//│   if (capture.res1$ instanceof globalThis.Predef.__EffectSig.class) {
-//│     capture.res1$.tail.next = Cont$$4(capture, 3);
-//│     return globalThis.Predef.__handleBlockImpl(capture.res1$, capture.stackHandler0$)
+//│   globalThis.Predef.__stackHandler = capture.stackHandler1$;
+//│   capture.res0$ = sum(100);
+//│   if (capture.res0$ instanceof globalThis.Predef.__EffectSig.class) {
+//│     capture.res0$.tail.next = Cont$$4(capture, 3);
+//│     return globalThis.Predef.__handleBlockImpl(capture.res0$, capture.stackHandler1$)
 //│   }
-//│   if (capture.res1$ instanceof globalThis.Predef.__Return.class) {
-//│     return capture.res1$
+//│   if (capture.res0$ instanceof globalThis.Predef.__Return.class) {
+//│     return capture.res0$
 //│   }
-//│   return capture.res1$
+//│   return capture.res0$
 //│ };
 //│ res = handleBlock$1();
 //│ if (res instanceof this.Predef.__EffectSig.class) {

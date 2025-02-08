@@ -298,6 +298,13 @@ class Lifter(using State):
               val newArgs = args.map(applyArg(_))
               Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun, false)
             case None => super.applyResult(r)
+          case c @ Instantiate(Select(Value.Ref(l: BlockMemberSymbol), Tree.Ident("class")), args) => 
+            ctx.bmsReqdInfo.get(l) match
+            case Some(info) =>
+              val extraArgs = getCallArgs(l, ctx)
+              val newArgs = args.map(applyPath(_)).map(_.asArg)
+              Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(true, false)
+            case None => super.applyResult(r)
           // if possible, directly create the bms and replace the result with it
           case Value.Ref(l: BlockMemberSymbol) if ctx.bmsReqdInfo.contains(l) => createCall(l, ctx)
           case _ => super.applyResult(r)
