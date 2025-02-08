@@ -11,13 +11,10 @@ MyClass
 new MyClass("Bob")
 //│ = [object Object]
 
-:todo
 let C = MyClass
-//│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.15: 	let C = MyClass
-//│ ╙──      	    ^^^^^^^^^^^
+//│ C = class MyClass {  constructor(name) {    this.name = name;  }  greet() {    console.log(`Hello from ${this.name}!`);  }}
 
-let c = MyClass
+let c = C
 //│ c = class MyClass {  constructor(name) {    this.name = name;  }  greet() {    console.log(`Hello from ${this.name}!`);  }}
 
 :todo
@@ -33,7 +30,7 @@ fun foo() =
   import "../../js/MyClass.mjs"
   ()
 //│ ╔══[COMPILATION ERROR] Imports must be at the top level
-//│ ║  l.33: 	  import "../../js/MyClass.mjs"
+//│ ║  l.30: 	  import "../../js/MyClass.mjs"
 //│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^
 
 

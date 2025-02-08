@@ -10,21 +10,33 @@ let Some(x) = Some(42)
 //│ ╙──     	    ^^^^^^^^^^^^^^^^^^
 
 
+object None
+
+let N = None
+//│ N = None
+
+:todo
+let (None) = N
+//│ ╔══[ERROR] Unsupported let binding shape
+//│ ║  l.19: 	let (None) = N
+//│ ╙──      	    ^^^^^^^^^^
+
+
 class Foo(a)
 
 :todo
 let Foo(x) = Foo(1) in log(x)
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.16: 	let Foo(x) = Foo(1) in log(x)
+//│ ║  l.28: 	let Foo(x) = Foo(1) in log(x)
 //│ ╙──      	    ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.16: 	let Foo(x) = Foo(1) in log(x)
+//│ ║  l.28: 	let Foo(x) = Foo(1) in log(x)
 //│ ╙──      	                           ^
 
 :todo
 let Foo(x) and x > 0 = Foo(1) in log("ok")
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.25: 	let Foo(x) and x > 0 = Foo(1) in log("ok")
+//│ ║  l.37: 	let Foo(x) and x > 0 = Foo(1) in log("ok")
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

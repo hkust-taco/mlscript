@@ -44,6 +44,8 @@ class CompileTestRunner
       
       val preludePath = dir/"mlscript"/"decls"/"Prelude.mls"
       
+      given Config = Config.default
+      
       val compiler = MLsCompiler(
         preludePath,
         mkOutput =>

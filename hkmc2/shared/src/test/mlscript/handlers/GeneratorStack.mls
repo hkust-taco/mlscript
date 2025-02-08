@@ -1,5 +1,5 @@
 :js
-:handler
+:effectHandlers
 
 import "../../mlscript-compile/Stack.mls"
 open Stack

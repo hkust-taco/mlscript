@@ -52,7 +52,9 @@ end Subst
 import Subst.subst
 
 
-class Lowering(lowerHandlers: Bool, stackLimit: Option[Int], lift: Bool)(using TL, Raise, State, Ctx):
+class Lowering()(using Config, TL, Raise, State, Ctx):
+  
+  val lowerHandlers: Bool = config.effectHandlers.isDefined
   
   private lazy val unreachableFn =
     Select(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Predef"))(N), Tree.Ident("unreachable"))(N)
@@ -583,9 +585,9 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int], lift: Bool)(using T
   
   def topLevel(t: st): Block =
     val res = term(t)(ImplctRet)(using Subst.empty)
-    val stackSafe = stackLimit match
-      case None => res
-      case Some(lim) => StackSafeTransform(lim).transformTopLevel(res)
+    val stackSafe = config.stackSafety match
+      case N => res
+      case S(sts) => StackSafeTransform(sts.stackLimit).transformTopLevel(res)
     
     val hdlr = 
       if lowerHandlers then HandlerLowering().translateTopLevel(stackSafe) 
@@ -628,9 +630,11 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int], lift: Bool)(using T
       Nil))
 
 
-trait LoweringSelSanityChecks
-        (instrument: Bool)(using TL, Raise, State)
+trait LoweringSelSanityChecks(using Config, TL, Raise, State)
     extends Lowering:
+  
+  private val instrument: Bool = config.sanityChecks.isDefined
+  
   override def setupSelection(prefix: st, nme: Tree.Ident, sym: Opt[FieldSymbol])(k: Result => Block)(using Subst): Block =
     if !instrument then return super.setupSelection(prefix, nme, sym)(k)
     subTerm(prefix): p =>
@@ -653,10 +657,9 @@ trait LoweringSelSanityChecks
 
 
 
-trait LoweringTraceLog
-        (instrument: Bool)(using TL, Raise, State)
+trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
     extends Lowering:
-      
+  
   private def selFromGlobalThis(path: Str*): Path =
       path.foldLeft[Path](Value.Ref(State.globalThisSymbol)):
         (qual, name) => Select(qual, Tree.Ident(name))(N)

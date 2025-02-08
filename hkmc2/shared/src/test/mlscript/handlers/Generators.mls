@@ -1,5 +1,5 @@
 :js
-:handler
+:effectHandlers
 
 abstract class Generator with
   fun produce(result): ()

@@ -833,7 +833,8 @@ extends Importer:
         newCtx.givenIn:
           go(sts, funs, Nil, newAcc)
       
-      case (hd @ LetLike(`let`, Apps(id: Ident, tups), rhso, N)) :: sts if id.name.headOption.exists(_.isLower) =>
+      case (hd @ LetLike(`let`, Apps(id: Ident, tups), rhso, N)) :: sts
+        if tups.isEmpty || id.name.headOption.exists(_.isLower) =>
         val sym =
           fieldOrVarSym(LetBind, id)
         log(s"Processing `let` statement $id (${sym}) ${ctx.outer}")

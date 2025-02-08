@@ -1,5 +1,5 @@
 :js
-:handler
+:effectHandlers
 
 
 // * Notice that the two module definitions are lifted to the top of the block.
