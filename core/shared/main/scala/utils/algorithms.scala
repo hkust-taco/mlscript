@@ -32,14 +32,6 @@ object algorithms {
     sort(toPred, Seq())
   }
 
-  private case class SccNode[A](
-    val node: A,
-    val num: Int, 
-    var lowlink: Int = -1,
-    var visited: Boolean = false,
-    var processed: Boolean = false
-  ) 
-
   /**
     * Partitions a graph into its strongly connected components. The input type must be able to
     * be hashed efficiently as it will be used as a key.
@@ -49,6 +41,15 @@ object algorithms {
     * @return A list of strongly connected components of the graph.
     */
   def partitionScc[A](edges: Iterable[(A, A)], nodes: Iterable[A]): List[List[A]] = {
+    
+    case class SccNode[A](
+      val node: A,
+      val num: Int, 
+      var lowlink: Int = -1,
+      var visited: Boolean = false,
+      var processed: Boolean = false
+    )
+
     // pre-process: assign each node an id
     val edgesSet = edges.toSet
     val nodesUniq = (edgesSet.flatMap { case (a, b) => Set(a, b) } ++ nodes.toSet).toList
@@ -61,6 +62,8 @@ object algorithms {
       .groupBy(_._1)
       .map { case (a, b) => a -> b.map(_._2) }
     
+    // Tarjan's algorithm
+
     var stack: List[SccNode[A]] = List.empty
     var sccs: List[List[A]] = List.empty
     var i = 0
@@ -98,8 +101,65 @@ object algorithms {
     sccs
   }
   
-  // TODO
-  def sscsWithInfo[A](edges: Iterable[(A, A)], nodes: Iterable[A]): List[List[A]] = {
-    ???
+
+  /**
+    * Info about a graph partitioned into its strongly-connected sets. The input type must be able to
+    * be hashed efficiently as it will be used as a key.
+    *
+    * @param sccs The strongly connected sets.
+    * @param edges The edges of the strongly-connected sets. Together with `sccs`, this forms an acyclic graph.
+    * @param inDegs The in-degrees of the above described graph.
+    * @param outDegs The out-degrees of the above described graph.
+    */
+  case class SccsInfo[A](
+    sccs: Map[Int, List[A]],
+    edges: Map[Int, Iterable[Int]],
+    inDegs: Map[Int, Int],
+    outDegs: Map[Int, Int],
+  )
+
+  /**
+    * Partitions a graph into its strongly connected components and returns additional information
+    * about the partition. The input type must be able to be hashed efficiently as it will be used as a key.
+    *
+    * @param edges The edges of the graph.
+    * @param nodes Any additional nodes that are not necessarily in the edges list.
+    * @return The partitioned graph and info about it.
+    */
+  def sscsWithInfo[A](edges: Iterable[(A, A)], nodes: Iterable[A]): SccsInfo[A] = {
+    val sccs = partitionScc(edges, nodes)
+    val withIdx = sccs.zipWithIndex.map(_.swap).toMap
+    val lookup = (
+      for {
+        (id, scc) <- withIdx
+        node <- scc
+      } yield node -> id
+    ).toMap
+
+    val notInSccEdges = edges.map {
+      case (a, b) => (lookup(a), lookup(b))
+    }.filter {
+      case (a, b) => a != b
+    }
+
+    val outs = notInSccEdges.groupBy {
+      case (a, b) => a
+    }
+
+    val sccEdges = outs.map {
+      case (a, edges) => a -> edges.map(_._2)
+    }.toMap
+    
+    val inDegs = notInSccEdges.groupBy {
+      case (a, b) => b
+    }.map {
+      case (b, edges) => b -> edges.size
+    }
+
+    val outDegs = outs.map {
+      case (a, edges) => a -> edges.size
+    }
+
+    SccsInfo(withIdx, sccEdges, inDegs, outDegs)
   }
 }
