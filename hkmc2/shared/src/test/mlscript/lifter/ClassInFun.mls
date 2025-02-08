@@ -82,7 +82,7 @@ f(1, 2).get()
 //│   return Test$(used1, unused1)
 //│ };
 //│ tmp1 = f1(1, 2);
-//│ tmp1.get() ?? null
+//│ runtime.safeCall(tmp1.get())
 //│ = 1
 
 :expect 1
@@ -143,29 +143,29 @@ fun f() =
 f().foo()
 //│ JS (unsanitized):
 //│ let Bad1, Good1, f5, tmp4, Bad$ctor, Bad$, Good$ctor, Good$, f$capture5;
-//│ Good$ = function Good$(z$1, y$2, x$3, f$capture$0) {
+//│ Good$ = function Good$(z$1, x$2, y$3, f$capture$0) {
 //│   let tmp5;
 //│   tmp5 = new Good1();
-//│   return tmp5(z$1, y$2, x$3, f$capture$0)
+//│   return tmp5(z$1, x$2, y$3, f$capture$0)
 //│ };
-//│ Good$ctor = function Good$ctor(z$1, y$2, x$3, f$capture$0) {
+//│ Good$ctor = function Good$ctor(z$1, x$2, y$3, f$capture$0) {
 //│   return () => {
 //│     let tmp5;
 //│     tmp5 = new Good1();
-//│     return tmp5(z$1, y$2, x$3, f$capture$0)
+//│     return tmp5(z$1, x$2, y$3, f$capture$0)
 //│   }
 //│ };
 //│ Good1 = function Good() {
-//│   return (z$11, y$21, x$31, f$capture$01) => {
-//│     return new Good.class()(z$11, y$21, x$31, f$capture$01);
+//│   return (z$11, x$21, y$31, f$capture$01) => {
+//│     return new Good.class()(z$11, x$21, y$31, f$capture$01);
 //│   }
 //│ };
 //│ Good1.class = class Good {
 //│   constructor() {
-//│     return (z$1, y$2, x$3, f$capture$0) => {
+//│     return (z$1, x$2, y$3, f$capture$0) => {
 //│       this.z$1 = z$1;
-//│       this.y$2 = y$2;
-//│       this.x$3 = x$3;
+//│       this.x$2 = x$2;
+//│       this.y$3 = y$3;
 //│       this.f$capture$0 = f$capture$0;
 //│       return this;
 //│     }
@@ -173,42 +173,42 @@ f().foo()
 //│   foo() {
 //│     let tmp5, tmp6;
 //│     this.z$1 = 100;
-//│     tmp5 = this.x$3 + this.y$2;
+//│     tmp5 = this.x$2 + this.y$3;
 //│     tmp6 = tmp5 + this.z$1;
 //│     return tmp6 + this.f$capture$0.w0$
 //│   }
 //│   toString() { return "Good(" + "" + ")"; }
 //│ };
-//│ Bad$ = function Bad$(z$1, y$2, x$3, f$capture$0) {
+//│ Bad$ = function Bad$(z$1, x$2, y$3, f$capture$0) {
 //│   let tmp5;
 //│   tmp5 = new Bad1();
-//│   return tmp5(z$1, y$2, x$3, f$capture$0)
+//│   return tmp5(z$1, x$2, y$3, f$capture$0)
 //│ };
-//│ Bad$ctor = function Bad$ctor(z$1, y$2, x$3, f$capture$0) {
+//│ Bad$ctor = function Bad$ctor(z$1, x$2, y$3, f$capture$0) {
 //│   return () => {
 //│     let tmp5;
 //│     tmp5 = new Bad1();
-//│     return tmp5(z$1, y$2, x$3, f$capture$0)
+//│     return tmp5(z$1, x$2, y$3, f$capture$0)
 //│   }
 //│ };
 //│ Bad1 = function Bad() {
-//│   return (z$11, y$21, x$31, f$capture$01) => {
-//│     return new Bad.class()(z$11, y$21, x$31, f$capture$01);
+//│   return (z$11, x$21, y$31, f$capture$01) => {
+//│     return new Bad.class()(z$11, x$21, y$31, f$capture$01);
 //│   }
 //│ };
 //│ Bad1.class = class Bad {
 //│   constructor() {
-//│     return (z$1, y$2, x$3, f$capture$0) => {
+//│     return (z$1, x$2, y$3, f$capture$0) => {
 //│       this.z$1 = z$1;
-//│       this.y$2 = y$2;
-//│       this.x$3 = x$3;
+//│       this.x$2 = x$2;
+//│       this.y$3 = y$3;
 //│       this.f$capture$0 = f$capture$0;
 //│       return this;
 //│     }
 //│   }
 //│   foo() {
 //│     this.f$capture$0.w0$ = 10000;
-//│     return null
+//│     return runtime.Unit
 //│   }
 //│   toString() { return "Bad(" + "" + ")"; }
 //│ };
@@ -228,12 +228,12 @@ f().foo()
 //│   y = 10;
 //│   z = 10;
 //│   capture.w0$ = 1000;
-//│   tmp5 = Bad$(z, y, x, capture);
-//│   tmp6 = tmp5.foo() ?? null;
-//│   return Good$(z, y, x, capture)
+//│   tmp5 = Bad$(z, x, y, capture);
+//│   tmp6 = runtime.safeCall(tmp5.foo());
+//│   return Good$(z, x, y, capture)
 //│ };
 //│ tmp4 = f5();
-//│ tmp4.foo() ?? null
+//│ runtime.safeCall(tmp4.foo())
 //│ = 10111
 
 :fixme
@@ -244,4 +244,5 @@ class A(a) with
     fun g() = x
     g()
 A(2).f()
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'null'
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'

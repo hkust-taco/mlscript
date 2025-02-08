@@ -398,48 +398,48 @@ handle h = Eff with
   fun perform()(k) = k(())
 foo(h)
 //│ JS (unsanitized):
-//│ let foo7, tmp21, handleBlock$20;
+//│ let foo7, tmp20, handleBlock$20;
 //│ foo7 = function foo(h) {
-//│   let A10, A11, A12, A13, A14, a, scrut, b, scrut1, tmp22, tmp23, tmp24, tmp25, tmp26, tmp27, tmp28, Cont$53;
+//│   let A10, A11, A12, A13, A14, a, scrut, b, scrut1, tmp21, tmp22, tmp23, tmp24, tmp25, tmp26, tmp27, Cont$53;
 //│   Cont$53 = function Cont$(pc1) {
 //│     return new Cont$.class(pc1);
 //│   };
 //│   Cont$53.class = class Cont$50 extends globalThis.Predef.__Cont.class {
 //│     constructor(pc) {
-//│       let tmp29;
-//│       tmp29 = super(null, null);
+//│       let tmp28;
+//│       tmp28 = super(null, null);
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
 //│       if (this.pc === 0) {
-//│         tmp22 = value$;
+//│         tmp21 = value$;
 //│       } else if (this.pc === 2) {
-//│         tmp23 = value$;
+//│         tmp22 = value$;
 //│       } else if (this.pc === 1) {
-//│         tmp23 = value$;
+//│         tmp22 = value$;
 //│       } else if (this.pc === 4) {
-//│         tmp24 = value$;
+//│         tmp23 = value$;
 //│       } else if (this.pc === 3) {
-//│         tmp24 = value$;
+//│         tmp23 = value$;
 //│       } else if (this.pc === 5) {
-//│         tmp25 = value$;
+//│         tmp24 = value$;
 //│       }
 //│       contLoop: while (true) {
 //│         if (this.pc === 0) {
 //│           scrut = true;
 //│           if (scrut === true) {
-//│             tmp23 = A10.f();
-//│             if (tmp23 instanceof globalThis.Predef.__EffectSig.class) {
+//│             tmp22 = A10.f();
+//│             if (tmp22 instanceof globalThis.Predef.__EffectSig.class) {
 //│               this.pc = 1;
-//│               return globalThis.Predef.__appendInCont(tmp23, this)
+//│               return globalThis.Predef.__appendInCont(tmp22, this)
 //│             }
 //│             this.pc = 1;
 //│             continue contLoop;
 //│           } else {
-//│             tmp23 = A11.f();
-//│             if (tmp23 instanceof globalThis.Predef.__EffectSig.class) {
+//│             tmp22 = A11.f();
+//│             if (tmp22 instanceof globalThis.Predef.__EffectSig.class) {
 //│               this.pc = 2;
-//│               return globalThis.Predef.__appendInCont(tmp23, this)
+//│               return globalThis.Predef.__appendInCont(tmp22, this)
 //│             }
 //│             this.pc = 2;
 //│             continue contLoop;
@@ -447,21 +447,21 @@ foo(h)
 //│           this.pc = 7;
 //│           continue contLoop;
 //│         } else if (this.pc === 7) {
-//│           a = tmp23;
+//│           a = tmp22;
 //│           scrut1 = false;
 //│           if (scrut1 === true) {
-//│             tmp24 = A12.f();
-//│             if (tmp24 instanceof globalThis.Predef.__EffectSig.class) {
+//│             tmp23 = A12.f();
+//│             if (tmp23 instanceof globalThis.Predef.__EffectSig.class) {
 //│               this.pc = 3;
-//│               return globalThis.Predef.__appendInCont(tmp24, this)
+//│               return globalThis.Predef.__appendInCont(tmp23, this)
 //│             }
 //│             this.pc = 3;
 //│             continue contLoop;
 //│           } else {
-//│             tmp24 = A13.f();
-//│             if (tmp24 instanceof globalThis.Predef.__EffectSig.class) {
+//│             tmp23 = A13.f();
+//│             if (tmp23 instanceof globalThis.Predef.__EffectSig.class) {
 //│               this.pc = 4;
-//│               return globalThis.Predef.__appendInCont(tmp24, this)
+//│               return globalThis.Predef.__appendInCont(tmp23, this)
 //│             }
 //│             this.pc = 4;
 //│             continue contLoop;
@@ -475,11 +475,11 @@ foo(h)
 //│           this.pc = 7;
 //│           continue contLoop;
 //│         } else if (this.pc === 6) {
-//│           b = tmp24;
-//│           tmp25 = A14();
-//│           if (tmp25 instanceof globalThis.Predef.__EffectSig.class) {
+//│           b = tmp23;
+//│           tmp24 = A14();
+//│           if (tmp24 instanceof globalThis.Predef.__EffectSig.class) {
 //│             this.pc = 5;
-//│             return globalThis.Predef.__appendInCont(tmp25, this)
+//│             return globalThis.Predef.__appendInCont(tmp24, this)
 //│           }
 //│           this.pc = 5;
 //│           continue contLoop;
@@ -490,10 +490,10 @@ foo(h)
 //│           this.pc = 6;
 //│           continue contLoop;
 //│         } else if (this.pc === 5) {
-//│           tmp26 = tmp25 * 100;
-//│           tmp27 = a * 10;
-//│           tmp28 = tmp26 + tmp27;
-//│           return tmp28 + b
+//│           tmp25 = tmp24 * 100;
+//│           tmp26 = a * 10;
+//│           tmp27 = tmp25 + tmp26;
+//│           return tmp27 + b
 //│         }
 //│         break;
 //│       }
@@ -531,56 +531,56 @@ foo(h)
 //│     }
 //│     static toString() { return "A"; }
 //│   };
-//│   tmp22 = h.perform() ?? null;
-//│   if (tmp22 instanceof globalThis.Predef.__EffectSig.class) {
-//│     tmp22.tail.next = Cont$53(0);
-//│     tmp22.tail = tmp22.tail.next;
-//│     return tmp22
+//│   tmp21 = runtime.safeCall(h.perform());
+//│   if (tmp21 instanceof globalThis.Predef.__EffectSig.class) {
+//│     tmp21.tail.next = Cont$53(0);
+//│     tmp21.tail = tmp21.tail.next;
+//│     return tmp21
 //│   }
 //│   scrut = true;
 //│   if (scrut === true) {
-//│     tmp23 = A10.f();
-//│     if (tmp23 instanceof globalThis.Predef.__EffectSig.class) {
-//│       tmp23.tail.next = Cont$53(1);
-//│       tmp23.tail = tmp23.tail.next;
-//│       return tmp23
+//│     tmp22 = A10.f();
+//│     if (tmp22 instanceof globalThis.Predef.__EffectSig.class) {
+//│       tmp22.tail.next = Cont$53(1);
+//│       tmp22.tail = tmp22.tail.next;
+//│       return tmp22
 //│     }
 //│   } else {
-//│     tmp23 = A11.f();
-//│     if (tmp23 instanceof globalThis.Predef.__EffectSig.class) {
-//│       tmp23.tail.next = Cont$53(2);
-//│       tmp23.tail = tmp23.tail.next;
-//│       return tmp23
+//│     tmp22 = A11.f();
+//│     if (tmp22 instanceof globalThis.Predef.__EffectSig.class) {
+//│       tmp22.tail.next = Cont$53(2);
+//│       tmp22.tail = tmp22.tail.next;
+//│       return tmp22
 //│     }
 //│   }
-//│   a = tmp23;
+//│   a = tmp22;
 //│   scrut1 = false;
 //│   if (scrut1 === true) {
-//│     tmp24 = A12.f();
-//│     if (tmp24 instanceof globalThis.Predef.__EffectSig.class) {
-//│       tmp24.tail.next = Cont$53(3);
-//│       tmp24.tail = tmp24.tail.next;
-//│       return tmp24
+//│     tmp23 = A12.f();
+//│     if (tmp23 instanceof globalThis.Predef.__EffectSig.class) {
+//│       tmp23.tail.next = Cont$53(3);
+//│       tmp23.tail = tmp23.tail.next;
+//│       return tmp23
 //│     }
 //│   } else {
-//│     tmp24 = A13.f();
-//│     if (tmp24 instanceof globalThis.Predef.__EffectSig.class) {
-//│       tmp24.tail.next = Cont$53(4);
-//│       tmp24.tail = tmp24.tail.next;
-//│       return tmp24
+//│     tmp23 = A13.f();
+//│     if (tmp23 instanceof globalThis.Predef.__EffectSig.class) {
+//│       tmp23.tail.next = Cont$53(4);
+//│       tmp23.tail = tmp23.tail.next;
+//│       return tmp23
 //│     }
 //│   }
-//│   b = tmp24;
-//│   tmp25 = A14();
-//│   if (tmp25 instanceof globalThis.Predef.__EffectSig.class) {
-//│     tmp25.tail.next = Cont$53(5);
-//│     tmp25.tail = tmp25.tail.next;
-//│     return tmp25
+//│   b = tmp23;
+//│   tmp24 = A14();
+//│   if (tmp24 instanceof globalThis.Predef.__EffectSig.class) {
+//│     tmp24.tail.next = Cont$53(5);
+//│     tmp24.tail = tmp24.tail.next;
+//│     return tmp24
 //│   }
-//│   tmp26 = tmp25 * 100;
-//│   tmp27 = a * 10;
-//│   tmp28 = tmp26 + tmp27;
-//│   return tmp28 + b
+//│   tmp25 = tmp24 * 100;
+//│   tmp26 = a * 10;
+//│   tmp27 = tmp25 + tmp26;
+//│   return tmp27 + b
 //│ };
 //│ handleBlock$20 = function handleBlock$() {
 //│   let h, res3, Cont$53, Handler$h$22;
@@ -589,8 +589,8 @@ foo(h)
 //│   };
 //│   Handler$h$22.class = class Handler$h$21 extends Eff1 {
 //│     constructor() {
-//│       let tmp22;
-//│       tmp22 = super();
+//│       let tmp21;
+//│       tmp21 = super();
 //│     }
 //│     perform() {
 //│       return globalThis.Predef.__mkEffect(h, (k) => {
@@ -600,8 +600,8 @@ foo(h)
 //│         };
 //│         Cont$54.class = class Cont$51 extends globalThis.Predef.__Cont.class {
 //│           constructor(pc) {
-//│             let tmp22;
-//│             tmp22 = super(null, null);
+//│             let tmp21;
+//│             tmp21 = super(null, null);
 //│             this.pc = pc;
 //│           }
 //│           resume(value$) {
@@ -623,7 +623,7 @@ foo(h)
 //│           }
 //│           toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│         };
-//│         res4 = k(null) ?? null;
+//│         res4 = runtime.safeCall(k(runtime.Unit));
 //│         if (res4 instanceof globalThis.Predef.__EffectSig.class) {
 //│           res4.tail.next = Cont$54(10);
 //│           res4.tail = res4.tail.next;
@@ -643,8 +643,8 @@ foo(h)
 //│   };
 //│   Cont$53.class = class Cont$52 extends globalThis.Predef.__Cont.class {
 //│     constructor(pc) {
-//│       let tmp22;
-//│       tmp22 = super(null, null);
+//│       let tmp21;
+//│       tmp21 = super(null, null);
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
@@ -676,9 +676,9 @@ foo(h)
 //│   }
 //│   return res3
 //│ };
-//│ tmp21 = handleBlock$20();
-//│ if (tmp21 instanceof this.Predef.__EffectSig.class) {
+//│ tmp20 = handleBlock$20();
+//│ if (tmp20 instanceof this.Predef.__EffectSig.class) {
 //│   throw new this.Error("Unhandled effects");
 //│ }
-//│ tmp21
+//│ tmp20
 //│ = 123
