@@ -37,14 +37,15 @@ object algorithms {
     * be hashed efficiently as it will be used as a key.
     *
     * @param edges The edges of the graph.
-    * @param nodes Any additional nodes that are not necessarily in the edges list.
+    * @param nodes Any additional nodes that are not necessarily in the edges list. (Overlap is fine)
     * @return A list of strongly connected components of the graph.
     */
   def partitionScc[A](edges: Iterable[(A, A)], nodes: Iterable[A]): List[List[A]] = {
     
     case class SccNode[A](
       val node: A,
-      val num: Int, 
+      val id: Int,
+      var num: Int = -1, 
       var lowlink: Int = -1,
       var visited: Boolean = false,
       var processed: Boolean = false
@@ -54,14 +55,15 @@ object algorithms {
     val edgesSet = edges.toSet
     val nodesUniq = (edgesSet.flatMap { case (a, b) => Set(a, b) } ++ nodes.toSet).toList
     val nodesN = nodesUniq.zipWithIndex.map { case (node, idx) => SccNode(node, idx) }
-    val nodeToIdx = nodesN.map(node => node.node -> node.num).toMap
-    val nodesIdx = nodeToIdx.map { case (node, idx) => idx -> SccNode(node, idx) }
+    val nodeToIdx = nodesN.map(node => node.node -> node.id).toMap
+    val nodesIdx = nodesN.map { case node => node.id -> node }.toMap
 
     val neighbours = edges
       .map { case (a, b) => (nodeToIdx(a), nodesIdx(nodeToIdx(b))) }
       .groupBy(_._1)
       .map { case (a, b) => a -> b.map(_._2) }
-    
+      .withDefault(_ => Nil)
+
     // Tarjan's algorithm
 
     var stack: List[SccNode[A]] = List.empty
@@ -69,11 +71,12 @@ object algorithms {
     var i = 0
 
     def dfs(node: SccNode[A]): Unit = {
+      node.num = i
       node.lowlink = node.num
       node.visited = true
       stack = node :: stack      
       i += 1
-      for (n <- neighbours(node.num)) {
+      for (n <- neighbours(node.id)) {
         if (!n.visited) {
           dfs(n)
           node.lowlink = n.lowlink.min(node.lowlink)
@@ -86,11 +89,12 @@ object algorithms {
         var scc: List[A] = List.empty
         var cur = stack.head
         stack = stack.tail
-        while (cur.num != node.num) {
-          scc = node.node :: scc
+        while (cur.id != node.id) {
+          scc = cur.node :: scc
           cur = stack.head
           stack = stack.tail
         }
+        scc = cur.node :: scc
         sccs = scc :: sccs
       }
     }
@@ -123,10 +127,10 @@ object algorithms {
     * about the partition. The input type must be able to be hashed efficiently as it will be used as a key.
     *
     * @param edges The edges of the graph.
-    * @param nodes Any additional nodes that are not necessarily in the edges list.
+    * @param nodes Any additional nodes that are not necessarily in the edges list. (Overlap is fine)
     * @return The partitioned graph and info about it.
     */
-  def sscsWithInfo[A](edges: Iterable[(A, A)], nodes: Iterable[A]): SccsInfo[A] = {
+  def sccsWithInfo[A](edges: Iterable[(A, A)], nodes: Iterable[A]): SccsInfo[A] = {
     val sccs = partitionScc(edges, nodes)
     val withIdx = sccs.zipWithIndex.map(_.swap).toMap
     val lookup = (
@@ -146,7 +150,9 @@ object algorithms {
       case (a, b) => a
     }
 
-    val sccEdges = outs.map {
+    val sccEdges = withIdx.map {
+      case (a, _) => a -> Nil // add default case
+    } ++ outs.map {
       case (a, edges) => a -> edges.map(_._2)
     }.toMap
     

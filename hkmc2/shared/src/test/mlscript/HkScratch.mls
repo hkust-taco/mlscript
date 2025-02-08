@@ -7,5 +7,190 @@
 :global
 :d
 
-
-
+:handler
+:stackSafe 10
+:sjs
+fun sum(n) =
+  if n == 0 then 0
+  else
+    n + sum(n - 1)
+sum(100)
+//│ Elab: { ‹› fun member:sum‹370›(Param(‹›,n‹371›,None), ) = if { let $scrut‹376› = builtin:==‹9›#0(n‹371›#666, 0); scrut is true -> { else 0 }; else builtin:+‹18›#0(n‹371›#666, member:sum‹370›#666(builtin:-‹7›#0(n‹371›#666, 1))) }; member:sum‹370›#666(100) }
+//│ JS (unsanitized):
+//│ let sum, res, handleBlock$;
+//│ sum = function sum(n) {
+//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, Cont$3;
+//│   Cont$3 = function Cont$(pc1) {
+//│     return new Cont$.class(pc1);
+//│   };
+//│   Cont$3.class = class Cont$ extends globalThis.Predef.__Cont.class {
+//│     constructor(pc) {
+//│       let tmp2;
+//│       tmp2 = super(null, null);
+//│       this.pc = pc;
+//│     }
+//│     resume(value$) {
+//│       if (this.pc === 0) {
+//│         stackDelayRes = value$;
+//│       } else if (this.pc === 1) {
+//│         tmp1 = value$;
+//│       }
+//│       contLoop: while (true) {
+//│         if (this.pc === 0) {
+//│           scrut = n == 0;
+//│           if (scrut === true) {
+//│             return 0
+//│           } else {
+//│             tmp = n - 1;
+//│             globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
+//│             tmp1 = sum(tmp);
+//│             if (tmp1 instanceof globalThis.Predef.__EffectSig.class) {
+//│               this.pc = 1;
+//│               return globalThis.Predef.__appendInCont(tmp1, this)
+//│             }
+//│             this.pc = 1;
+//│             continue contLoop;
+//│           }
+//│           this.pc = 2;
+//│           continue contLoop;
+//│         } else if (this.pc === 2) {
+//│           break contLoop;
+//│         } else if (this.pc === 1) {
+//│           tmp1 = globalThis.Predef.resetDepth(tmp1, curDepth);
+//│           return n + tmp1
+//│         }
+//│         break;
+//│       }
+//│     }
+//│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│   };
+//│   curDepth = globalThis.Predef.__stackDepth;
+//│   stackDelayRes = globalThis.Predef.checkDepth();
+//│   if (stackDelayRes instanceof globalThis.Predef.__EffectSig.class) {
+//│     stackDelayRes.tail.next = Cont$3(0);
+//│     stackDelayRes.tail = stackDelayRes.tail.next;
+//│     return stackDelayRes
+//│   }
+//│   scrut = n == 0;
+//│   if (scrut === true) {
+//│     return 0
+//│   } else {
+//│     tmp = n - 1;
+//│     globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
+//│     tmp1 = sum(tmp);
+//│     if (tmp1 instanceof globalThis.Predef.__EffectSig.class) {
+//│       tmp1.tail.next = Cont$3(1);
+//│       tmp1.tail = tmp1.tail.next;
+//│       return tmp1
+//│     }
+//│     tmp1 = globalThis.Predef.resetDepth(tmp1, curDepth);
+//│     return n + tmp1
+//│   }
+//│ };
+//│ handleBlock$ = function handleBlock$() {
+//│   let stackHandler, res1, Cont$3, StackDelay$1;
+//│   StackDelay$1 = function StackDelay$() {
+//│     return new StackDelay$.class();
+//│   };
+//│   StackDelay$1.class = class StackDelay$ extends globalThis.Predef.__StackDelay {
+//│     constructor() {
+//│       let tmp;
+//│       tmp = super();
+//│     }
+//│     perform() {
+//│       return globalThis.Predef.__mkEffect(stackHandler, (resume) => {
+//│         let res2, Cont$4;
+//│         Cont$4 = function Cont$(pc1) {
+//│           return new Cont$.class(pc1);
+//│         };
+//│         Cont$4.class = class Cont$1 extends globalThis.Predef.__Cont.class {
+//│           constructor(pc) {
+//│             let tmp;
+//│             tmp = super(null, null);
+//│             this.pc = pc;
+//│           }
+//│           resume(value$) {
+//│             if (this.pc === 5) {
+//│               res2 = value$;
+//│             }
+//│             contLoop: while (true) {
+//│               if (this.pc === 5) {
+//│                 if (res2 instanceof globalThis.Predef.__Return.class) {
+//│                   return res2
+//│                 }
+//│                 this.pc = 6;
+//│                 continue contLoop;
+//│               } else if (this.pc === 6) {
+//│                 return res2
+//│               }
+//│               break;
+//│             }
+//│           }
+//│           toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│         };
+//│         globalThis.Predef.__stackOffset = globalThis.Predef.__stackDepth;
+//│         res2 = resume();
+//│         if (res2 instanceof globalThis.Predef.__EffectSig.class) {
+//│           res2.tail.next = Cont$4(5);
+//│           res2.tail = res2.tail.next;
+//│           return res2
+//│         }
+//│         if (res2 instanceof globalThis.Predef.__Return.class) {
+//│           return res2
+//│         }
+//│         return res2
+//│       })
+//│     }
+//│     toString() { return "StackDelay$(" + "" + ")"; }
+//│   };
+//│   stackHandler = StackDelay$1();
+//│   Cont$3 = function Cont$(pc1) {
+//│     return new Cont$.class(pc1);
+//│   };
+//│   Cont$3.class = class Cont$2 extends globalThis.Predef.__Cont.class {
+//│     constructor(pc) {
+//│       let tmp;
+//│       tmp = super(null, null);
+//│       this.pc = pc;
+//│     }
+//│     resume(value$) {
+//│       if (this.pc === 3) {
+//│         res1 = value$;
+//│       }
+//│       contLoop: while (true) {
+//│         if (this.pc === 3) {
+//│           if (res1 instanceof globalThis.Predef.__Return.class) {
+//│             return res1
+//│           }
+//│           this.pc = 4;
+//│           continue contLoop;
+//│         } else if (this.pc === 4) {
+//│           return res1
+//│         }
+//│         break;
+//│       }
+//│     }
+//│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│   };
+//│   globalThis.Predef.__stackLimit = 10;
+//│   globalThis.Predef.__stackOffset = 0;
+//│   globalThis.Predef.__stackDepth = 1;
+//│   globalThis.Predef.__stackHandler = stackHandler;
+//│   res1 = sum(100);
+//│   if (res1 instanceof globalThis.Predef.__EffectSig.class) {
+//│     res1.tail.next = Cont$3(3);
+//│     return globalThis.Predef.__handleBlockImpl(res1, stackHandler)
+//│   }
+//│   if (res1 instanceof globalThis.Predef.__Return.class) {
+//│     return res1
+//│   }
+//│   return res1
+//│ };
+//│ res = handleBlock$();
+//│ if (res instanceof this.Predef.__EffectSig.class) {
+//│   throw new this.Error("Unhandled effects");
+//│ }
+//│ this.Predef.__stackDepth = 0;
+//│ this.Predef.__stackHandler = null;
+//│ res
+//│ = 5050

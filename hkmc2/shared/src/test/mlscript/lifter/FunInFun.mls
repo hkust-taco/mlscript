@@ -45,7 +45,7 @@ fun f(used1, unused1) =
 f(1, 2)
 //│ JS (unsanitized):
 //│ let g1, f1, g$1;
-//│ g$1 = function g$(used2, used1, g_arg) {
+//│ g$1 = function g$(used1, used2, g_arg) {
 //│   return (g_arg2) => {
 //│     let used3, tmp, tmp1;
 //│     used3 = 2;
@@ -54,16 +54,16 @@ f(1, 2)
 //│     return tmp1 + g_arg2
 //│   }
 //│ };
-//│ g1 = function g(used2, used1) {
+//│ g1 = function g(used1, used2) {
 //│   return (g_arg) => {
-//│     return g$1(used2, used1, g_arg)
+//│     return g$1(used1, used2, g_arg)
 //│   }
 //│ };
 //│ f1 = function f(used1, unused1) {
 //│   let used2, unused2, tmp, tmp1;
 //│   used2 = unused1;
 //│   unused2 = 2;
-//│   tmp = g$1(used2, used1, used2);
+//│   tmp = g$1(used1, used2, used2);
 //│   tmp1 = runtime.safeCall(tmp(used2));
 //│   return tmp1 + unused2
 //│ };
@@ -140,9 +140,6 @@ f(1, 2)
 //│ f4(1, 2)
 //│ = 5
 
-
- //│   (used11) =>
-
 // preserve order
 :sjs
 fun f(a1, a2, a3, a4, a5, a6) =
@@ -151,7 +148,7 @@ fun f(a1, a2, a3, a4, a5, a6) =
 f(1,2,3,4,5,6)
 //│ JS (unsanitized):
 //│ let g5, f5, g$4;
-//│ g$4 = function g$(a1, a6, a2, a5, a3, a4) {
+//│ g$4 = function g$(a1, a2, a3, a4, a5, a6) {
 //│   let tmp, tmp1, tmp2, tmp3;
 //│   tmp = a1 + a2;
 //│   tmp1 = tmp + a3;
@@ -159,14 +156,14 @@ f(1,2,3,4,5,6)
 //│   tmp3 = tmp2 + a5;
 //│   return tmp3 + a6
 //│ };
-//│ g5 = function g(a1, a6, a2, a5, a3, a4) {
+//│ g5 = function g(a1, a2, a3, a4, a5, a6) {
 //│   return () => {
-//│     return g$4(a1, a6, a2, a5, a3, a4)
+//│     return g$4(a1, a2, a3, a4, a5, a6)
 //│   }
 //│ };
 //│ f5 = function f(a1, a2, a3, a4, a5, a6) {
 //│   let tmp;
-//│   tmp = g$4(a1, a6, a2, a5, a3, a4);
+//│   tmp = g$4(a1, a2, a3, a4, a5, a6);
 //│   return tmp
 //│ };
 //│ f5(1, 2, 3, 4, 5, 6)
@@ -264,6 +261,7 @@ fun f(used1) =
   fun g22() = used1
   Tuple(g1(10), g22)
 
+:sjs
 :expect "11110110"
 let ret = f(1)
 let gRet = ret.a
@@ -276,6 +274,27 @@ hFun()
 let c = g2()
 let d = iFun()
 a.toString() + b + c + d
+//│ JS (unsanitized):
+//│ let ret1, gRet, g21, hFun, iFun, a, b, c, d, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14;
+//│ tmp6 = f7(1);
+//│ ret1 = tmp6;
+//│ gRet = ret1.a;
+//│ g21 = ret1.b;
+//│ hFun = gRet.a;
+//│ iFun = gRet.b;
+//│ tmp7 = runtime.safeCall(iFun());
+//│ a = tmp7;
+//│ tmp8 = runtime.safeCall(g21());
+//│ b = tmp8;
+//│ tmp9 = runtime.safeCall(hFun());
+//│ tmp10 = runtime.safeCall(g21());
+//│ c = tmp10;
+//│ tmp11 = runtime.safeCall(iFun());
+//│ d = tmp11;
+//│ tmp12 = runtime.safeCall(a.toString());
+//│ tmp13 = tmp12 + b;
+//│ tmp14 = tmp13 + c;
+//│ tmp14 + d
 //│ = "11110110"
 //│ a = 11
 //│ b = 1
@@ -449,14 +468,14 @@ fun g() =
 g()(1)
 //│ JS (unsanitized):
 //│ let h5, f16, g14, tmp15, f$1, h$4, g$capture1;
-//│ h$4 = function h$(k, x1, g$capture2) {
+//│ h$4 = function h$(x1, k, g$capture2) {
 //│   k = 5;
 //│   x1 = 4;
 //│   return x1 + g$capture2.y0$
 //│ };
-//│ h5 = function h(k, x1, g$capture2) {
+//│ h5 = function h(x1, k, g$capture2) {
 //│   return () => {
-//│     return h$4(k, x1, g$capture2)
+//│     return h$4(x1, k, g$capture2)
 //│   }
 //│ };
 //│ f$1 = function f$(g$capture2, x1) {
@@ -503,7 +522,6 @@ ret()
 //│ ret = [function]
 
 :expect 6
-:fixme
 :lift
 fun f(x, y, z) =
   fun g() =
@@ -517,8 +535,7 @@ fun f(x, y, z) =
     set z = 3
   g
 f(0, 0, 0)()
-//│ ═══[RUNTIME ERROR] Expected: '6', got: '1'
-//│ = 1
+//│ = 6
 
 :sjs
 fun f(x, cond) =

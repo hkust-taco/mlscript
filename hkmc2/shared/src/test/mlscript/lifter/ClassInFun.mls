@@ -27,18 +27,18 @@ fun f(used1, unused1) =
 f(1, 2).get()
 //│ JS (unsanitized):
 //│ let h, Test1, g, f1, tmp1, Test$ctor, Test$, g$, h$;
-//│ h$ = function h$(used3, used1) {
+//│ h$ = function h$(used1, used3) {
 //│   return used3
 //│ };
-//│ h = function h(used3, used1) {
+//│ h = function h(used1, used3) {
 //│   return () => {
-//│     return h$(used3, used1)
+//│     return h$(used1, used3)
 //│   }
 //│ };
 //│ g$ = function g$(used1, g_arg) {
 //│   let used3, tmp2;
 //│   used3 = 2;
-//│   tmp2 = h$(used3, used1);
+//│   tmp2 = h$(used1, used3);
 //│   return used1 + tmp2
 //│ };
 //│ g = function g(used1) {
@@ -114,6 +114,7 @@ f(1, 2).get()
 //│ ═══[RUNTIME ERROR] TypeError: Test$this.class is not a constructor
 //│ ═══[RUNTIME ERROR] Expected: '1', got: 'undefined'
 
+:sjs
 :expect 2
 fun f(x) =
   class A() with
@@ -121,6 +122,55 @@ fun f(x) =
   A().f()
   x
 f(1)
+//│ JS (unsanitized):
+//│ let A1, f4, A$ctor, A$, f$capture3;
+//│ A$ = function A$(f$capture$0) {
+//│   let tmp4;
+//│   tmp4 = new A1();
+//│   return tmp4(f$capture$0)
+//│ };
+//│ A$ctor = function A$ctor(f$capture$0) {
+//│   return () => {
+//│     let tmp4;
+//│     tmp4 = new A1();
+//│     return tmp4(f$capture$0)
+//│   }
+//│ };
+//│ A1 = function A() {
+//│   return (f$capture$01) => {
+//│     return new A.class()(f$capture$01);
+//│   }
+//│ };
+//│ A1.class = class A {
+//│   constructor() {
+//│     return (f$capture$0) => {
+//│       this.f$capture$0 = f$capture$0;
+//│       return this;
+//│     }
+//│   }
+//│   f() {
+//│     this.f$capture$0.x0$ = 2;
+//│     return runtime.Unit
+//│   }
+//│   toString() { return "A(" + "" + ")"; }
+//│ };
+//│ f$capture3 = function f$capture(x0$1) {
+//│   return new f$capture.class(x0$1);
+//│ };
+//│ f$capture3.class = class f$capture2 {
+//│   constructor(x0$) {
+//│     this.x0$ = x0$;
+//│   }
+//│   toString() { return "f$capture(" + globalThis.Predef.render(this.x0$) + ")"; }
+//│ };
+//│ f4 = function f(x) {
+//│   let tmp4, tmp5, capture;
+//│   capture = new f$capture3(x);
+//│   tmp4 = A$(capture);
+//│   tmp5 = runtime.safeCall(tmp4.f());
+//│   return capture.x0$
+//│ };
+//│ f4(1)
 //│ = 2
 
 // only w should be in a capture
@@ -143,65 +193,65 @@ fun f() =
 f().foo()
 //│ JS (unsanitized):
 //│ let Bad1, Good1, f5, tmp4, Bad$ctor, Bad$, Good$ctor, Good$, f$capture5;
-//│ Good$ = function Good$(z$1, x$2, y$3, f$capture$0) {
+//│ Good$ = function Good$(x$1, y$2, z$3, f$capture$0) {
 //│   let tmp5;
 //│   tmp5 = new Good1();
-//│   return tmp5(z$1, x$2, y$3, f$capture$0)
+//│   return tmp5(x$1, y$2, z$3, f$capture$0)
 //│ };
-//│ Good$ctor = function Good$ctor(z$1, x$2, y$3, f$capture$0) {
+//│ Good$ctor = function Good$ctor(x$1, y$2, z$3, f$capture$0) {
 //│   return () => {
 //│     let tmp5;
 //│     tmp5 = new Good1();
-//│     return tmp5(z$1, x$2, y$3, f$capture$0)
+//│     return tmp5(x$1, y$2, z$3, f$capture$0)
 //│   }
 //│ };
 //│ Good1 = function Good() {
-//│   return (z$11, x$21, y$31, f$capture$01) => {
-//│     return new Good.class()(z$11, x$21, y$31, f$capture$01);
+//│   return (x$11, y$21, z$31, f$capture$01) => {
+//│     return new Good.class()(x$11, y$21, z$31, f$capture$01);
 //│   }
 //│ };
 //│ Good1.class = class Good {
 //│   constructor() {
-//│     return (z$1, x$2, y$3, f$capture$0) => {
-//│       this.z$1 = z$1;
-//│       this.x$2 = x$2;
-//│       this.y$3 = y$3;
+//│     return (x$1, y$2, z$3, f$capture$0) => {
+//│       this.x$1 = x$1;
+//│       this.y$2 = y$2;
+//│       this.z$3 = z$3;
 //│       this.f$capture$0 = f$capture$0;
 //│       return this;
 //│     }
 //│   }
 //│   foo() {
 //│     let tmp5, tmp6;
-//│     this.z$1 = 100;
-//│     tmp5 = this.x$2 + this.y$3;
-//│     tmp6 = tmp5 + this.z$1;
+//│     this.z$3 = 100;
+//│     tmp5 = this.x$1 + this.y$2;
+//│     tmp6 = tmp5 + this.z$3;
 //│     return tmp6 + this.f$capture$0.w0$
 //│   }
 //│   toString() { return "Good(" + "" + ")"; }
 //│ };
-//│ Bad$ = function Bad$(z$1, x$2, y$3, f$capture$0) {
+//│ Bad$ = function Bad$(x$1, y$2, z$3, f$capture$0) {
 //│   let tmp5;
 //│   tmp5 = new Bad1();
-//│   return tmp5(z$1, x$2, y$3, f$capture$0)
+//│   return tmp5(x$1, y$2, z$3, f$capture$0)
 //│ };
-//│ Bad$ctor = function Bad$ctor(z$1, x$2, y$3, f$capture$0) {
+//│ Bad$ctor = function Bad$ctor(x$1, y$2, z$3, f$capture$0) {
 //│   return () => {
 //│     let tmp5;
 //│     tmp5 = new Bad1();
-//│     return tmp5(z$1, x$2, y$3, f$capture$0)
+//│     return tmp5(x$1, y$2, z$3, f$capture$0)
 //│   }
 //│ };
 //│ Bad1 = function Bad() {
-//│   return (z$11, x$21, y$31, f$capture$01) => {
-//│     return new Bad.class()(z$11, x$21, y$31, f$capture$01);
+//│   return (x$11, y$21, z$31, f$capture$01) => {
+//│     return new Bad.class()(x$11, y$21, z$31, f$capture$01);
 //│   }
 //│ };
 //│ Bad1.class = class Bad {
 //│   constructor() {
-//│     return (z$1, x$2, y$3, f$capture$0) => {
-//│       this.z$1 = z$1;
-//│       this.x$2 = x$2;
-//│       this.y$3 = y$3;
+//│     return (x$1, y$2, z$3, f$capture$0) => {
+//│       this.x$1 = x$1;
+//│       this.y$2 = y$2;
+//│       this.z$3 = z$3;
 //│       this.f$capture$0 = f$capture$0;
 //│       return this;
 //│     }
@@ -228,9 +278,9 @@ f().foo()
 //│   y = 10;
 //│   z = 10;
 //│   capture.w0$ = 1000;
-//│   tmp5 = Bad$(z, x, y, capture);
+//│   tmp5 = Bad$(x, y, z, capture);
 //│   tmp6 = runtime.safeCall(tmp5.foo());
-//│   return Good$(z, x, y, capture)
+//│   return Good$(x, y, z, capture)
 //│ };
 //│ tmp4 = f5();
 //│ runtime.safeCall(tmp4.foo())
@@ -246,3 +296,328 @@ class A(a) with
 A(2).f()
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 //│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+
+:expect 2
+fun f(x) =
+  class A() with
+    fun newA() = A()
+    fun foo() =
+      set x += 1
+      x
+    fun getX() = x
+  A()
+let a = f(0)
+a.foo()
+let b = a.newA()
+b.foo()
+a.getX()
+//│ = 2
+//│ a = A()
+//│ b = A()
+
+// handler
+
+:handler
+:stackSafe 10
+:sjs
+fun sum(n) =
+  if n == 0 then 0
+  else
+    n + sum(n - 1)
+sum(100)
+//│ JS (unsanitized):
+//│ let sum, res, Cont$9, handleBlock$1, Cont$10, Cont$11, StackDelay$1, lambda1, Cont$$ctor3, Cont$$3, Cont$$ctor4, Cont$$4, StackDelay$$ctor, StackDelay$$, lambda$1, Cont$$ctor5, Cont$$5, sum$capture1, handleBlock$$capture3, lambda$capture3;
+//│ Cont$$3 = function Cont$$(n$1, scrut$2, tmp$3, curDepth$4, sum$capture$0, pc) {
+//│   let tmp10;
+//│   tmp10 = new Cont$9(pc);
+//│   return tmp10(n$1, scrut$2, tmp$3, curDepth$4, sum$capture$0)
+//│ };
+//│ Cont$$ctor3 = function Cont$$ctor(n$1, scrut$2, tmp$3, curDepth$4, sum$capture$0) {
+//│   return (pc) => {
+//│     let tmp10;
+//│     tmp10 = new Cont$9(pc);
+//│     return tmp10(n$1, scrut$2, tmp$3, curDepth$4, sum$capture$0)
+//│   }
+//│ };
+//│ Cont$9 = function Cont$(pc1) {
+//│   return (n$11, scrut$21, tmp$31, curDepth$41, sum$capture$01) => {
+//│     return new Cont$.class(pc1)(n$11, scrut$21, tmp$31, curDepth$41, sum$capture$01);
+//│   }
+//│ };
+//│ Cont$9.class = class Cont$6 extends globalThis.Predef.__Cont.class {
+//│   constructor(pc) {
+//│     return (n$1, scrut$2, tmp$3, curDepth$4, sum$capture$0) => {
+//│       let tmp10;
+//│       tmp10 = super(null, null);
+//│       this.pc = pc;
+//│       this.n$1 = n$1;
+//│       this.scrut$2 = scrut$2;
+//│       this.tmp$3 = tmp$3;
+//│       this.curDepth$4 = curDepth$4;
+//│       this.sum$capture$0 = sum$capture$0;
+//│       return this;
+//│     }
+//│   }
+//│   resume(value$) {
+//│     if (this.pc === 0) {
+//│       this.sum$capture$0.stackDelayRes0$ = value$;
+//│     } else if (this.pc === 1) {
+//│       this.sum$capture$0.tmp1$ = value$;
+//│     }
+//│     contLoop: while (true) {
+//│       if (this.pc === 0) {
+//│         this.scrut$2 = this.n$1 == 0;
+//│         if (this.scrut$2 === true) {
+//│           return 0
+//│         } else {
+//│           this.tmp$3 = this.n$1 - 1;
+//│           globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
+//│           this.sum$capture$0.tmp1$ = sum(this.tmp$3);
+//│           if (this.sum$capture$0.tmp1$ instanceof globalThis.Predef.__EffectSig.class) {
+//│             this.pc = 1;
+//│             return globalThis.Predef.__appendInCont(this.sum$capture$0.tmp1$, this)
+//│           }
+//│           this.pc = 1;
+//│           continue contLoop;
+//│         }
+//│         this.pc = 2;
+//│         continue contLoop;
+//│       } else if (this.pc === 2) {
+//│         break contLoop;
+//│       } else if (this.pc === 1) {
+//│         this.sum$capture$0.tmp1$ = globalThis.Predef.resetDepth(this.sum$capture$0.tmp1$, this.curDepth$4);
+//│         return this.n$1 + this.sum$capture$0.tmp1$
+//│       }
+//│       break;
+//│     }
+//│   }
+//│   toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│ };
+//│ sum$capture1 = function sum$capture(stackDelayRes0$1, tmp1$1) {
+//│   return new sum$capture.class(stackDelayRes0$1, tmp1$1);
+//│ };
+//│ sum$capture1.class = class sum$capture {
+//│   constructor(stackDelayRes0$, tmp1$) {
+//│     this.stackDelayRes0$ = stackDelayRes0$;
+//│     this.tmp1$ = tmp1$;
+//│   }
+//│   toString() { return "sum$capture(" + globalThis.Predef.render(this.stackDelayRes0$) + ", " + globalThis.Predef.render(this.tmp1$) + ")"; }
+//│ };
+//│ sum = function sum(n) {
+//│   let scrut, tmp10, curDepth, capture;
+//│   capture = new sum$capture1(null, null);
+//│   curDepth = globalThis.Predef.__stackDepth;
+//│   capture.stackDelayRes0$ = globalThis.Predef.checkDepth();
+//│   if (capture.stackDelayRes0$ instanceof globalThis.Predef.__EffectSig.class) {
+//│     capture.stackDelayRes0$.tail.next = Cont$$3(n, scrut, tmp10, curDepth, capture, 0);
+//│     capture.stackDelayRes0$.tail = capture.stackDelayRes0$.tail.next;
+//│     return capture.stackDelayRes0$
+//│   }
+//│   scrut = n == 0;
+//│   if (scrut === true) {
+//│     return 0
+//│   } else {
+//│     tmp10 = n - 1;
+//│     globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
+//│     capture.tmp1$ = sum(tmp10);
+//│     if (capture.tmp1$ instanceof globalThis.Predef.__EffectSig.class) {
+//│       capture.tmp1$.tail.next = Cont$$3(n, scrut, tmp10, curDepth, capture, 1);
+//│       capture.tmp1$.tail = capture.tmp1$.tail.next;
+//│       return capture.tmp1$
+//│     }
+//│     capture.tmp1$ = globalThis.Predef.resetDepth(capture.tmp1$, curDepth);
+//│     return n + capture.tmp1$
+//│   }
+//│ };
+//│ StackDelay$$ = function StackDelay$$(handleBlock$$capture$0) {
+//│   let tmp10;
+//│   tmp10 = new StackDelay$1();
+//│   return tmp10(handleBlock$$capture$0)
+//│ };
+//│ StackDelay$$ctor = function StackDelay$$ctor(handleBlock$$capture$0) {
+//│   return () => {
+//│     let tmp10;
+//│     tmp10 = new StackDelay$1();
+//│     return tmp10(handleBlock$$capture$0)
+//│   }
+//│ };
+//│ Cont$$5 = function Cont$$(StackDelay$$instance$2, lambda$capture$0, handleBlock$$capture$1, pc) {
+//│   let tmp10;
+//│   tmp10 = new Cont$11(pc);
+//│   return tmp10(StackDelay$$instance$2, lambda$capture$0, handleBlock$$capture$1)
+//│ };
+//│ Cont$$ctor5 = function Cont$$ctor(StackDelay$$instance$2, lambda$capture$0, handleBlock$$capture$1) {
+//│   return (pc) => {
+//│     let tmp10;
+//│     tmp10 = new Cont$11(pc);
+//│     return tmp10(StackDelay$$instance$2, lambda$capture$0, handleBlock$$capture$1)
+//│   }
+//│ };
+//│ Cont$11 = function Cont$(pc1) {
+//│   return (StackDelay$$instance$21, lambda$capture$01, handleBlock$$capture$11) => {
+//│     return new Cont$.class(pc1)(StackDelay$$instance$21, lambda$capture$01, handleBlock$$capture$11);
+//│   }
+//│ };
+//│ Cont$11.class = class Cont$7 extends globalThis.Predef.__Cont.class {
+//│   constructor(pc) {
+//│     return (StackDelay$$instance$2, lambda$capture$0, handleBlock$$capture$1) => {
+//│       let tmp10;
+//│       tmp10 = super(null, null);
+//│       this.pc = pc;
+//│       this.StackDelay$$instance$2 = StackDelay$$instance$2;
+//│       this.lambda$capture$0 = lambda$capture$0;
+//│       this.handleBlock$$capture$1 = handleBlock$$capture$1;
+//│       return this;
+//│     }
+//│   }
+//│   resume(value$) {
+//│     if (this.pc === 5) {
+//│       this.lambda$capture$0.res0$ = value$;
+//│     }
+//│     contLoop: while (true) {
+//│       if (this.pc === 5) {
+//│         if (this.lambda$capture$0.res0$ instanceof globalThis.Predef.__Return.class) {
+//│           return this.lambda$capture$0.res0$
+//│         }
+//│         this.pc = 6;
+//│         continue contLoop;
+//│       } else if (this.pc === 6) {
+//│         return this.lambda$capture$0.res0$
+//│       }
+//│       break;
+//│     }
+//│   }
+//│   toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│ };
+//│ lambda$capture3 = function lambda$capture(res0$1) {
+//│   return new lambda$capture.class(res0$1);
+//│ };
+//│ lambda$capture3.class = class lambda$capture2 {
+//│   constructor(res0$) {
+//│     this.res0$ = res0$;
+//│   }
+//│   toString() { return "lambda$capture(" + globalThis.Predef.render(this.res0$) + ")"; }
+//│ };
+//│ lambda$1 = function lambda$(StackDelay$$instance, handleBlock$$capture4, resume) {
+//│   let capture;
+//│   capture = new lambda$capture3(null);
+//│   globalThis.Predef.__stackOffset = globalThis.Predef.__stackDepth;
+//│   capture.res0$ = resume();
+//│   if (capture.res0$ instanceof globalThis.Predef.__EffectSig.class) {
+//│     capture.res0$.tail.next = Cont$$5(StackDelay$$instance, capture, handleBlock$$capture4, 5);
+//│     capture.res0$.tail = capture.res0$.tail.next;
+//│     return capture.res0$
+//│   }
+//│   if (capture.res0$ instanceof globalThis.Predef.__Return.class) {
+//│     return capture.res0$
+//│   }
+//│   return capture.res0$
+//│ };
+//│ lambda1 = function lambda(StackDelay$$instance, handleBlock$$capture4) {
+//│   return (resume) => {
+//│     return lambda$1(StackDelay$$instance, handleBlock$$capture4, resume)
+//│   }
+//│ };
+//│ StackDelay$1 = function StackDelay$() {
+//│   return (handleBlock$$capture$01) => {
+//│     return new StackDelay$.class()(handleBlock$$capture$01);
+//│   }
+//│ };
+//│ StackDelay$1.class = class StackDelay$ extends globalThis.Predef.__StackDelay {
+//│   constructor() {
+//│     return (handleBlock$$capture$0) => {
+//│       let tmp10;
+//│       tmp10 = super();
+//│       this.handleBlock$$capture$0 = handleBlock$$capture$0;
+//│       return this;
+//│     }
+//│   }
+//│   perform() {
+//│     let lambda$this;
+//│     lambda$this = runtime.safeCall(lambda1(this, this.handleBlock$$capture$0));
+//│     return globalThis.Predef.__mkEffect(this.handleBlock$$capture$0.stackHandler0$, lambda$this)
+//│   }
+//│   toString() { return "StackDelay$(" + "" + ")"; }
+//│ };
+//│ Cont$$4 = function Cont$$(handleBlock$$capture$0, pc) {
+//│   let tmp10;
+//│   tmp10 = new Cont$10(pc);
+//│   return tmp10(handleBlock$$capture$0)
+//│ };
+//│ Cont$$ctor4 = function Cont$$ctor(handleBlock$$capture$0) {
+//│   return (pc) => {
+//│     let tmp10;
+//│     tmp10 = new Cont$10(pc);
+//│     return tmp10(handleBlock$$capture$0)
+//│   }
+//│ };
+//│ Cont$10 = function Cont$(pc1) {
+//│   return (handleBlock$$capture$01) => {
+//│     return new Cont$.class(pc1)(handleBlock$$capture$01);
+//│   }
+//│ };
+//│ Cont$10.class = class Cont$8 extends globalThis.Predef.__Cont.class {
+//│   constructor(pc) {
+//│     return (handleBlock$$capture$0) => {
+//│       let tmp10;
+//│       tmp10 = super(null, null);
+//│       this.pc = pc;
+//│       this.handleBlock$$capture$0 = handleBlock$$capture$0;
+//│       return this;
+//│     }
+//│   }
+//│   resume(value$) {
+//│     if (this.pc === 3) {
+//│       this.handleBlock$$capture$0.res1$ = value$;
+//│     }
+//│     contLoop: while (true) {
+//│       if (this.pc === 3) {
+//│         if (this.handleBlock$$capture$0.res1$ instanceof globalThis.Predef.__Return.class) {
+//│           return this.handleBlock$$capture$0.res1$
+//│         }
+//│         this.pc = 4;
+//│         continue contLoop;
+//│       } else if (this.pc === 4) {
+//│         return this.handleBlock$$capture$0.res1$
+//│       }
+//│       break;
+//│     }
+//│   }
+//│   toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│ };
+//│ handleBlock$$capture3 = function handleBlock$$capture(stackHandler0$1, res1$1) {
+//│   return new handleBlock$$capture.class(stackHandler0$1, res1$1);
+//│ };
+//│ handleBlock$$capture3.class = class handleBlock$$capture2 {
+//│   constructor(stackHandler0$, res1$) {
+//│     this.stackHandler0$ = stackHandler0$;
+//│     this.res1$ = res1$;
+//│   }
+//│   toString() { return "handleBlock$$capture(" + globalThis.Predef.render(this.stackHandler0$) + ", " + globalThis.Predef.render(this.res1$) + ")"; }
+//│ };
+//│ handleBlock$1 = function handleBlock$() {
+//│   let capture;
+//│   capture = new handleBlock$$capture3(null, null);
+//│   capture.stackHandler0$ = StackDelay$$(capture);
+//│   globalThis.Predef.__stackLimit = 10;
+//│   globalThis.Predef.__stackOffset = 0;
+//│   globalThis.Predef.__stackDepth = 1;
+//│   globalThis.Predef.__stackHandler = capture.stackHandler0$;
+//│   capture.res1$ = sum(100);
+//│   if (capture.res1$ instanceof globalThis.Predef.__EffectSig.class) {
+//│     capture.res1$.tail.next = Cont$$4(capture, 3);
+//│     return globalThis.Predef.__handleBlockImpl(capture.res1$, capture.stackHandler0$)
+//│   }
+//│   if (capture.res1$ instanceof globalThis.Predef.__Return.class) {
+//│     return capture.res1$
+//│   }
+//│   return capture.res1$
+//│ };
+//│ res = handleBlock$1();
+//│ if (res instanceof this.Predef.__EffectSig.class) {
+//│   throw new this.Error("Unhandled effects");
+//│ }
+//│ this.Predef.__stackDepth = 0;
+//│ this.Predef.__stackHandler = null;
+//│ res
+//│ = 5050
