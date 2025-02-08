@@ -352,7 +352,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   private def thirdPass(b: Block): Block =
     // to ensure the fun and class references in the continuation class are properly scoped,
     // we move all function defns to the top level of the handler block
-    val (blk, defns) = b.floatOutDefns
+    val (blk, defns) = b.floatOutDefns()
     defns.foldLeft(blk)((acc, defn) => Define(defn, acc))
   
   private def translateFun(f: FunDefn): FunDefn =

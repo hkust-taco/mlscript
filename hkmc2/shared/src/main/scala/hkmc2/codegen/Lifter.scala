@@ -256,11 +256,11 @@ class Lifter(using State):
       case _ => Map.empty
   
   def createLiftInfoFn(f: FunDefn, parentCls: Opt[ClsLikeDefn], ctx: LifterCtx): Map[BlockMemberSymbol, LiftedInfo] =
-    val (_, defns) = f.body.floatOutDefns
+    val (_, defns) = f.body.floatOutDefns()
     defns.flatMap(createLiftInfoCont(_, N, ctx.addFnDefn(f))).toMap
 
   def createLiftInfoCls(c: ClsLikeDefn, ctx: LifterCtx): Map[BlockMemberSymbol, LiftedInfo] =
-    val defns = c.preCtor.floatOutDefns._2 ++ c.ctor.floatOutDefns._2
+    val defns = c.preCtor.floatOutDefns()._2 ++ c.ctor.floatOutDefns()._2
     val newCtx = ctx.addClsDefn(c)
     defns.flatMap(f => createLiftInfoCont(f, N, newCtx)).toMap 
       ++ c.methods.flatMap(f => createLiftInfoFn(f, S(c), newCtx))
@@ -535,8 +535,8 @@ class Lifter(using State):
         case _ => Lifted(d, Nil)
   
   def liftDefnsInCls(c: ClsLikeDefn, ctx: LifterCtx): Lifted[ClsLikeDefn] = 
-    val (preCtor, preCtorDefns) = c.preCtor.floatOutDefns
-    val (ctor, ctorDefns) = c.ctor.floatOutDefns
+    val (preCtor, preCtorDefns) = c.preCtor.floatOutDefns()
+    val (ctor, ctorDefns) = c.ctor.floatOutDefns()
     
     val newCtx = ctx.addIsymPath(c.isym, c.isym) 
     // TODO: add block member symbol replacement
@@ -570,7 +570,7 @@ class Lifter(using State):
   def liftDefnsInFn(f: FunDefn, ctx: LifterCtx): Lifted[FunDefn] =
     val (captureCls, varsMap, varsList) = createCaptureCls(f, ctx)
     
-    val (blk, nested) = f.body.floatOutDefns
+    val (blk, nested) = f.body.floatOutDefns()
 
     // add the mapping from this function's locals to the capture's symbols and the capture path
     val captureSym = FlowSymbol("capture")
@@ -838,7 +838,7 @@ class UsedVarAnalyzer(b: Block):
   // I'll fix it once it's fixed in the IR since we will have more tools to determine
   // what locals belong to what block.
   private def reqdCaptureLocals(f: FunDefn) =
-    var (_, defns) = f.body.floatOutDefns
+    var (_, defns) = f.body.floatOutDefns()
     val defnSyms = defns.collect:
       case f: FunDefn => f.sym -> f
       case c: ClsLikeDefn => c.sym -> c
