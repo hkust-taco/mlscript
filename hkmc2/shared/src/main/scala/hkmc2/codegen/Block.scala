@@ -133,6 +133,29 @@ sealed abstract class Block extends Product with AutoLocated:
     
     (transformer.applyBlock(this), defns)
   
+  def append(b: Block): Block = this match
+    case Match(scrut, arms, dflt, rest) => Match(scrut, arms, dflt, rest.append(b))
+    case Label(label, body, rest) => Label(label, body, rest.append(b))
+    case Begin(sub, rest) => ??? // appending on a Begin Block should never happen
+    case TryBlock(sub, finallyDo, rest) => TryBlock(sub, finallyDo, rest.append(b))
+    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => AssignDynField(lhs, fld, arrayIdx, rhs, rest.append(b))
+    case Assign(lhs, rhs, rest) => Assign(lhs, rhs, rest.append(b))
+    case a@AssignField(lhs, nme, rhs, rest) => AssignField(lhs, nme, rhs, rest.append(b))(a.symbol)
+    case Define(defn, rest) => Define(defn, rest.append(b))
+    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) => HandleBlock(lhs, res, par, args, cls, handlers, body, rest.append(b))
+    case End(msg) => b
+    case _: BlockTail => this
+  
+  object FlattenTransformer extends BlockTransformer(new SymbolSubst()):
+    // no transformation for nested sub-definitions
+    override def applyDefn(defn: Defn): Defn = defn
+    override def applyBlock(b: Block): Block = super.applyBlock(b) match
+      case Begin(sub, rest) => sub.append(rest)
+      case b => b
+  
+  lazy val flatten: Block =
+    FlattenTransformer.applyBlock(this)
+  
 end Block
 
 sealed abstract class BlockTail extends Block
