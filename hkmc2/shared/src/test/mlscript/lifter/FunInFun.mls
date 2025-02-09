@@ -328,12 +328,12 @@ f(1, 2, 1000)
 //│     return g$6(immutable, f$capture6)
 //│   }
 //│ };
-//│ h$2 = function h$(immutable, f$capture6) {
+//│ h$2 = function h$(f$capture6) {
 //│   return f$capture6.mutated0$
 //│ };
-//│ h2 = function h(immutable, f$capture6) {
+//│ h2 = function h(f$capture6) {
 //│   return () => {
-//│     return h$2(immutable, f$capture6)
+//│     return h$2(f$capture6)
 //│   }
 //│ };
 //│ f$capture5 = function f$capture(mutated0$1) {
@@ -350,7 +350,7 @@ f(1, 2, 1000)
 //│   capture = new f$capture5(mutated);
 //│   tmp15 = g$6(immutable, capture);
 //│   a1 = tmp15;
-//│   tmp16 = h$2(immutable, capture);
+//│   tmp16 = h$2(capture);
 //│   tmp17 = a1 + tmp16;
 //│   return tmp17 + unused
 //│ };
@@ -585,14 +585,9 @@ fun f() =
   x
 f()
 //│ JS (unsanitized):
-//│ let f20, g17, f22, f$2, g$13, f$capture15;
-//│ g$13 = function g$(f$capture16) {
+//│ let f20, g17, f22, f$2, f$capture15;
+//│ g17 = function g() {
 //│   return 1
-//│ };
-//│ g17 = function g(f$capture16) {
-//│   return () => {
-//│     return g$13(f$capture16)
-//│   }
 //│ };
 //│ f$2 = function f$(f$capture16) {
 //│   f$capture16.x0$ = 1;
@@ -621,3 +616,14 @@ f()
 //│ };
 //│ f22()
 //│ = 1
+
+let n = 0
+//│ n = 0
+
+fun h() = 3
+
+fun f() =
+  fun g() =
+    set n = n + 1
+  g()
+f()
