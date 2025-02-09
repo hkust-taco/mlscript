@@ -43,6 +43,13 @@ object Lifter:
   object AccessInfo:
     val empty = AccessInfo(Set.empty, Set.empty, Set.empty)
 
+  /**
+    * Describes previously defined locals and definitions which could possibly be accessed or mutated by a definition.
+    *
+    * @param accessed Previously defined locals which could possibly be accessed or mutated.
+    * @param mutated Such locals which could also be mutated by this definition.
+    * @param refdDefns Previously defined definitions which could possibly be used by this definition.
+    */
   case class AccessInfo(
     accessed: Set[Local], 
     mutated: Set[Local], 
@@ -61,6 +68,11 @@ object Lifter:
         accessed.intersect(locals),
         mutated.intersect(locals),
         refdDefns
+      )
+    def withoutBms(locals: Set[BlockMemberSymbol]) = AccessInfo(
+        accessed,
+        mutated,
+        refdDefns -- locals
       )
     def addAccess(l: Local) = this.copy(accessed = accessed + l)
     def addMutated(l: Local) = this.copy(accessed = accessed + l, mutated = mutated + l)
@@ -84,8 +96,13 @@ class Lifter(using State, Raise):
   import Lifter.*
 
   /**
-    * The context of the class lifter.
-    * @param usedLocals Describes the locals belonging to each function that are accessed/mutated by nested defns
+    * The context of the class lifter. One can create an empty context using `Lifter.empty`.
+    * 
+    * @param usedLocals Describes the locals belonging to each function that are accessed/mutated by nested definitions.
+    * @param accessInfo Which previously defined variables/definitions could be accessed/modified by a particular definition, 
+    * possibly through calls to other functions or by constructing a class.
+    * @param ignoredDefns The definitions which must not be lifted.
+    * @param modules The modules in the block to be lifted.
     * @param localCaptureSyms The symbols in a capture corresponding to a particular local
     * @param prevFnLocals Locals belonging to function definitions that have already been traversed
     * @param prevClsDefns Class definitions that have already been traversed
@@ -139,6 +156,7 @@ class Lifter(using State, Raise):
     def replIgnoredBmsPaths(m: Map[BlockMemberSymbol, Local]) = copy(ignoredBmsPaths = m)
     def replIsymPaths(m: Map[InnerSymbol, Local]) = copy(isymPaths = m)
     def addLocalPaths(m: Map[Local, Local]) = copy(localPaths = localPaths ++ m)
+    def addLocalPath(target: Local, path: Local) = copy(localPaths = localPaths + (target -> path))
     def addIgnoredBmsPaths(m: Map[BlockMemberSymbol, Local]) = copy(ignoredBmsPaths = ignoredBmsPaths ++ m)
     def addIsymPath(isym: InnerSymbol, l: Local) = copy(isymPaths = isymPaths + (isym -> l))
   
@@ -246,7 +264,7 @@ class Lifter(using State, Raise):
     val reqdBms: List[BlockMemberSymbol], // pass ignored blockmembersymbols
     val fakeCtorBms: Option[BlockMemberSymbol], // only for classes
     val singleCallBms: BlockMemberSymbol, // optimization
-    val isMod: Bool
+    val modLocal: Opt[FlowSymbol] // for modules
   )
 
   case class Lifted[+T <: Defn](
@@ -315,28 +333,6 @@ class Lifter(using State, Raise):
       
 
   def createLiftInfoCont(d: Defn, parentCls: Opt[ClsLikeDefn], ctx: LifterCtx): Map[BlockMemberSymbol, LiftedInfo] =
-    /* 
-    the commented code is incorrect, more in-depth analysis is needed to properly remove variables/captures
-    that aren't needed. For example,
-    fun f() =
-      fun g(x) = x
-      fun h(y) = y
-    both g and h both capture x and y, but this is not needed.
-    
-    Incorrect code:
-    
-    val includedCaptures = ctx.prevFnDefns.filter(needsCapture(_, d, ctx))
-
-    val includedLocals = ctx.prevFnDefns.flatMap: ls =>
-      neededImutLocals(ls, d, ctx)
-
-    val clsCaptures: List[InnerSymbol] = ctx.prevClsDefns.filter(needsClsCapture(_, d)).map(_.isym).collect:
-      // this line is just to satisfy the type system, in reality anything we capture is an InnerSymbol
-      case s: InnerSymbol => s
-
-    val info = LiftedInfo(includedCaptures.map(_.sym), includedLocals, clsCaptures)
-    */
-
     val AccessInfo(accessed, mutated, refdDefns)= ctx.getAccesses(d.sym)
 
     val includedCaptures = ctx.prevFnLocals.reqCapture
@@ -344,15 +340,13 @@ class Lifter(using State, Raise):
       .map(sym => ctx.lookup(sym).get)
       .toList.sortBy(_.uid)
 
-    val includedLocals = (accessed -- ctx.prevFnLocals.reqCapture).toList.sortBy(_.uid)
+    val refMod = refdDefns.intersect(ctx.modules)
+    val includedLocals = ((accessed -- ctx.prevFnLocals.reqCapture) ++ refMod).toList.sortBy(_.uid)
     val clsCaptures: List[InnerSymbol] = ctx.prevClsDefns.map(_.isym)
     val refBms = refdDefns.intersect(ctx.ignoredDefns).toList.sortBy(_.uid)
 
-    val isMod = d match
-      case c: ClsLikeDefn => c.k is syntax.Mod
-      case _ => false
-
-    if includedCaptures.isEmpty && includedLocals.isEmpty && clsCaptures.isEmpty && refBms.isEmpty then 
+    if ctx.ignored(d.sym) || 
+      (includedCaptures.isEmpty && includedLocals.isEmpty && clsCaptures.isEmpty && refBms.isEmpty) then 
       d match
         case f: FunDefn => 
           createLiftInfoFn(f, parentCls, ctx)
@@ -360,15 +354,20 @@ class Lifter(using State, Raise):
           createLiftInfoCls(c, ctx)
         case _ => Map.empty
     else
+      val modLocal = d match
+        case c: ClsLikeDefn if c.k is syntax.Mod =>
+          S(VarSymbol(Tree.Ident(c.sym.nme + "$")))
+        case _ => N
+
       val fakeCtorBms = d match
-        case c: ClsLikeDefn => S(BlockMemberSymbol(d.sym.nme + "$ctor", Nil))
+        case c: ClsLikeDefn if !modLocal.isDefined => S(BlockMemberSymbol(d.sym.nme + "$ctor", Nil))
         case _ => N
 
       val singleCallBms = BlockMemberSymbol(d.sym.nme + "$", Nil)
 
       val info = LiftedInfo(
         includedCaptures, includedLocals, clsCaptures,
-        refBms, fakeCtorBms, singleCallBms, isMod
+        refBms, fakeCtorBms, singleCallBms, modLocal
       )
       
       d match
@@ -401,25 +400,26 @@ class Lifter(using State, Raise):
         override def applyResult(r: Result): Result = r match
           // if possible, directly rewrite the call using the efficient version
           case c @ Call(Value.Ref(l: BlockMemberSymbol), args) => ctx.bmsReqdInfo.get(l) match
-            case Some(info) =>
+            case Some(info) if !ctx.isModule(l) =>
               val extraArgs = getCallArgs(l, ctx)
               val newArgs = args.map(applyArg(_))
               Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun, false)
-            case None => super.applyResult(r)
+            case _ => super.applyResult(r)
           case c @ Instantiate(Select(Value.Ref(l: BlockMemberSymbol), Tree.Ident("class")), args) => 
             ctx.bmsReqdInfo.get(l) match
-            case Some(info) =>
+            case Some(info) if !ctx.isModule(l) =>
               val extraArgs = getCallArgs(l, ctx)
               val newArgs = args.map(applyPath(_)).map(_.asArg)
               Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(true, false)
-            case None => super.applyResult(r)
+            case _ => super.applyResult(r)
           // if possible, directly create the bms and replace the result with it
-          case Value.Ref(l: BlockMemberSymbol) if ctx.bmsReqdInfo.contains(l) => createCall(l, ctx)
+          case Value.Ref(l: BlockMemberSymbol) if ctx.bmsReqdInfo.contains(l) && !ctx.isModule(l) => 
+            createCall(l, ctx)
           case _ => super.applyResult(r)
         
         // otherwise, there's no choice but to create the call earlier
         override def applyValue(v: Value): Value = v match
-          case Value.Ref(l: BlockMemberSymbol) if ctx.bmsReqdInfo.contains(l) => 
+          case Value.Ref(l: BlockMemberSymbol) if ctx.bmsReqdInfo.contains(l) && !ctx.isModule(l) => 
             val newSym = syms.get(l) match
               case None =>
                 val newSym = FlowSymbol(l.nme + "$this")
@@ -456,12 +456,18 @@ class Lifter(using State, Raise):
           case None => ctx.getLocalPath(lhs) match
             case None => super.applyBlock(b)
             case Some(value) => Assign(value, applyResult(rhs), applyBlock(rest))
+        
+        case Define(d: Defn, rest: Block) => ctx.getBmsReqdInfo(d.sym) match
+          case Some(LiftedInfo(modLocal = S(sym))) =>
+            blockBuilder
+              .assign(sym, Call(d.sym.asPath, getCallArgs(d.sym, ctx))(true, false))
+              .rest(applyBlock(rest))
+          case _ => super.applyBlock(b)
+        
+        
         case _ => super.applyBlock(b)
         
       override def applyPath(p: Path): Path = p match
-        case Value.Ref(b: BlockMemberSymbol) => ctx.getIgnoredBmsPath(b) match
-          case Some(value) => Value.Ref(value)
-          case _ => super.applyPath(p) 
         case Value.Ref(l: InnerSymbol) => ctx.getIsymPath(l) match
           case Some(value) if !belongsToCtor(value) => Value.Ref(value)
           case _ => super.applyPath(p)
@@ -509,7 +515,7 @@ class Lifter(using State, Raise):
       case f: FunDefn => liftDefnsInFn(f, ctx)
       case c: ClsLikeDefn => liftDefnsInCls(c, ctx)
       case _ => Lifted(d, Nil)
-    case S(LiftedInfo(includedCaptures, includedLocals, clsCaptures, reqdBms, fakeCtorBms, singleCallBms, isMod)) =>
+    case S(LiftedInfo(includedCaptures, includedLocals, clsCaptures, reqdBms, fakeCtorBms, singleCallBms, modLocal)) =>
       val createSym = d match
         case d: ClsLikeDefn =>
           // due to the possibility of capturing a TempSymbol in HandlerLowering, it is necessary to generate a discriminator
@@ -592,81 +598,97 @@ class Lifter(using State, Raise):
           
 
           Lifted(mainDefn, auxDefn :: extras)
-        case c: ClsLikeDefn =>
+        case c: ClsLikeDefn if !(c.k is syntax.Mod) =>
           val newDef = c.copy(
             owner = N, auxParams = c.auxParams.appended(PlainParamList(extraParams))
           )
           val Lifted(lifted, extras) = liftDefnsInCls(newDef, newCtx)
 
-          fakeCtorBms match
-          case None => Lifted(lifted, extras) // unreachable
-          case Some(bms) =>
-            // create the fake ctor here
+          val bms = fakeCtorBms.get
 
-            inline def mapParams(ps: ParamList) = ps.params.map(p => VarSymbol(p.sym.id))
+          // create the fake ctor here
+          inline def mapParams(ps: ParamList) = ps.params.map(p => VarSymbol(p.sym.id))
 
-            val paramSyms = c.paramsOpt.map(mapParams)
-            val auxSyms = c.auxParams.map(mapParams)
-            val extraSyms = extraParams.map(p => VarSymbol(p.sym.id))
+          val paramSyms = c.paramsOpt.map(mapParams)
+          val auxSyms = c.auxParams.map(mapParams)
+          val extraSyms = extraParams.map(p => VarSymbol(p.sym.id))
 
-            val paramArgs = paramSyms.getOrElse(Nil).map(_.asPath)
+          val paramArgs = paramSyms.getOrElse(Nil).map(_.asPath)
 
-            inline def toPaths(l: List[Local]) = l.map(_.asPath)
-            
-            var curSym = TempSymbol(None, "tmp")
-            val inst = Instantiate(c.sym.asPath, paramArgs)
-            var acc = blk => Assign(curSym, inst, blk)
-            for ps <- auxSyms do
-              val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true, false)
-              curSym = TempSymbol(None, "tmp")
-              acc = blk => acc(Assign(curSym, call, blk))
-            val bod = acc(Return(Call(curSym.asPath, extraSyms.map(_.asPath.asArg))(true, false), false))
+          inline def toPaths(l: List[Local]) = l.map(_.asPath)
+          
+          var curSym = TempSymbol(None, "tmp")
+          val inst = Instantiate(c.sym.asPath, paramArgs)
+          var acc = blk => Assign(curSym, inst, blk)
+          for ps <- auxSyms do
+            val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true, false)
+            curSym = TempSymbol(None, "tmp")
+            acc = blk => acc(Assign(curSym, call, blk))
+          val bod = acc(Return(Call(curSym.asPath, extraSyms.map(_.asPath.asArg))(true, false), false))
 
-            inline def toPlist(ls: List[VarSymbol]) = PlainParamList(ls.map(s => Param(FldFlags.empty, s, N)))
+          inline def toPlist(ls: List[VarSymbol]) = PlainParamList(ls.map(s => Param(FldFlags.empty, s, N)))
 
-            val paramPlist = paramSyms.map(toPlist)
-            val auxPlist = auxSyms.map(toPlist)
-            val extraPlist = toPlist(extraSyms)
+          val paramPlist = paramSyms.map(toPlist)
+          val auxPlist = auxSyms.map(toPlist)
+          val extraPlist = toPlist(extraSyms)
 
-            val plist = paramPlist match
-              case None => extraPlist :: PlainParamList(Nil) :: auxPlist
-              case Some(value) => extraPlist :: value :: auxPlist
+          val plist = paramPlist match
+            case None => extraPlist :: PlainParamList(Nil) :: auxPlist
+            case Some(value) => extraPlist :: value :: auxPlist
 
-            val fakeCtorDefn = FunDefn(
-              None, bms, plist, bod 
-            )
+          val fakeCtorDefn = FunDefn(
+            None, bms, plist, bod 
+          )
 
-            val paramSym2 = paramSyms.getOrElse(Nil)
-            val auxSym2 = auxSyms.flatMap(l => l)
-            val allSymsMp = (paramSym2 ++ auxSym2 ++ extraSyms).map(s => s -> VarSymbol(s.id)).toMap
-            val subst = new SymbolSubst():
-              override def mapVarSym(s: VarSymbol): VarSymbol = allSymsMp.get(s) match
-                case None => s
-                case Some(value) => value
+          val paramSym2 = paramSyms.getOrElse(Nil)
+          val auxSym2 = auxSyms.flatMap(l => l)
+          val allSymsMp = (paramSym2 ++ auxSym2 ++ extraSyms).map(s => s -> VarSymbol(s.id)).toMap
+          val subst = new SymbolSubst():
+            override def mapVarSym(s: VarSymbol): VarSymbol = allSymsMp.get(s) match
+              case None => s
+              case Some(value) => value
 
-            val headParams = paramPlist match
-              case None => extraPlist
-              case Some(value) => ParamList(value.flags, extraPlist.params ++ value.params, value.restParam)
+          val headParams = paramPlist match
+            case None => extraPlist
+            case Some(value) => ParamList(value.flags, extraPlist.params ++ value.params, value.restParam)
 
-            val auxCtorDefn_ = FunDefn(None, singleCallBms, headParams :: auxPlist, bod)
-            val auxCtorDefn = BlockTransformer(subst).applyFunDefn(auxCtorDefn_)
-            
-            Lifted(lifted, extras ::: (fakeCtorDefn :: auxCtorDefn :: Nil))
+          val auxCtorDefn_ = FunDefn(None, singleCallBms, headParams :: auxPlist, bod)
+          val auxCtorDefn = BlockTransformer(subst).applyFunDefn(auxCtorDefn_)
+          
+          Lifted(lifted, extras ::: (fakeCtorDefn :: auxCtorDefn :: Nil))
+        case c: ClsLikeDefn => // module
+          // force it to be a class
+          val newDef = c.copy(
+            k = syntax.Cls, paramsOpt = N,
+            owner = N, auxParams = PlainParamList(extraParams) :: Nil
+          )
+          liftDefnsInCls(newDef, newCtx)
+
         case _ => Lifted(d, Nil)
   
   def liftDefnsInCls(c: ClsLikeDefn, ctx: LifterCtx): Lifted[ClsLikeDefn] = 
     val (preCtor, preCtorDefns) = c.preCtor.floatOut(ctx)
     val (ctor, ctorDefns) = c.ctor.floatOut(ctx)
+
+    val allCtorDefns = preCtorDefns ++ ctorDefns
+    val (ctorIgnored, ctorIncluded) = allCtorDefns.partition(d => ctx.ignored(d.sym))
+
+    val modPaths: Map[Local, Local] = ctorIncluded.map:
+      case c: ClsLikeDefn if c.k is syntax.Mod => ctx.getBmsReqdInfo(c.sym) match
+        case Some(LiftedInfo(modLocal = Some(sym))) => S(c.sym -> sym)
+        case _ => S(c.sym -> c.sym) 
+      case _ => None
+    .collect:
+      case Some(x) => x
+    .toMap
     
-    val newCtx = ctx.addIsymPath(c.isym, c.isym) 
-    // TODO: add block member symbol replacement
+    val newCtx = ctx
+      .addIsymPath(c.isym, c.isym)
+      .addLocalPaths(modPaths)
 
     val newPreCtor = rewriteBlk(preCtor, S(c), newCtx)
     val newCtor = rewriteBlk(ctor, S(c), newCtx)
-
-    val allCtorDefns = preCtorDefns ++ ctorDefns
-
-    val (ctorIgnored, ctorIncluded) = allCtorDefns.partition(d => ctx.ignored(d.sym))
+    
 
     val ctorDefnsLifted = ctorIncluded.flatMap: defn =>
       val Lifted(liftedDefn, extraDefns) = liftOutDefnCont(c, defn, newCtx)
@@ -698,25 +720,33 @@ class Lifter(using State, Raise):
 
     val (ignored, included) = nested.partition(d => ctx.ignored(d.sym))
 
+    val modPaths: Map[Local, Local] = nested.map:
+        case c: ClsLikeDefn if c.k is syntax.Mod => ctx.getBmsReqdInfo(c.sym) match
+          case Some(LiftedInfo(modLocal = Some(sym))) => S(c.sym -> sym)
+          case _ => S(c.sym -> c.sym) 
+        case _ => None
+      .collect:
+        case Some(x) => x
+      .toMap
+
+    val thisVars = ctx.usedLocals(f.sym)
     // add the mapping from this function's locals to the capture's symbols and the capture path
     val captureSym = FlowSymbol("capture")
     val captureCtx = ctx
       .addLocalCaptureSyms(varsMap) // how to access locals via. the capture class from now on
       .addCapturePath(f.sym, captureSym.asPath) // the path to this function's capture
+      .addLocalPaths((thisVars.vars.toSet -- thisVars.reqCapture).map(s => s -> s).toMap)
+      .addLocalPaths(modPaths)
+      .addIgnoredBmsPaths(ignored.map(d => d.sym -> d.sym).toMap)
     val nestedCtx = captureCtx.addFnLocals(captureCtx.usedLocals(f.sym))
 
     // lift out the nested defns
     val nestedLifted = included.map(liftOutDefnCont(f, _, nestedCtx))
-    val newDefns = nestedLifted.flatMap:
+    val ignoredExtra = ignored.flatMap(liftOutDefnCont(f, _, nestedCtx).extraDefns)
+    val newDefns = ignoredExtra ++ nestedLifted.flatMap:
       case Lifted(liftedDefn, extraDefns) => liftedDefn :: extraDefns
 
-    // some book-keeping
-    val thisVars = ctx.usedLocals(f.sym)
-    val newCtx = captureCtx
-      .addLocalPaths((thisVars.vars.toSet -- thisVars.reqCapture).map(s => s -> s).toMap)
-      .addIgnoredBmsPaths(ignored.map(d => d.sym -> d.sym).toMap)
-
-    val transformed = rewriteBlk(blk, N, newCtx)
+    val transformed = rewriteBlk(blk, N, captureCtx)
 
     if thisVars.reqCapture.size == 0 then
       Lifted(FunDefn(f.owner, f.sym, f.params, transformed), newDefns)
@@ -762,7 +792,6 @@ class Lifter(using State, Raise):
     val blk = desugarLambdas(b)
     val analyzer = UsedVarAnalyzer(blk)
     val ctx = LifterCtx.withLocals(analyzer.findUsedLocals).withAccesses(analyzer.accessMap)
-
     val walker = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
         case Define(d, rest) =>
@@ -789,47 +818,75 @@ class UsedVarAnalyzer(b: Block)(using State):
   // the current problem is that we need extra code to find which variables were really defined by a function
   // this may be resolved in the future when the IR gets explicit variable declarations
 
-  private def findDefinedLocals: (Map[BlockMemberSymbol, Set[Local]], Map[BlockMemberSymbol, Defn]) =
+  private case class DefnMetadata(
+    definedLocals: Map[BlockMemberSymbol, Set[Local]], // locals defined explicitly by that function
+    defnsMap: Map[BlockMemberSymbol, Defn], // map bms to defn
+    existingVars: Map[BlockMemberSymbol, Set[Local]], // variables already existing when that defn is defined
+    nestedDefns: Map[BlockMemberSymbol, Set[BlockMemberSymbol]], // definitions that this defn contains, including itself
+  )
+  private def createMetadata: DefnMetadata =
     var defnsMap: Map[BlockMemberSymbol, Defn] = Map.empty
-    var usedMap: Map[BlockMemberSymbol, Set[Local]] = Map.empty
+    var definedLocals: Map[BlockMemberSymbol, Set[Local]] = Map.empty
+    var existingVars: Map[BlockMemberSymbol, Set[Local]] = Map.empty
+    var nestedDefns: Map[BlockMemberSymbol, Set[BlockMemberSymbol]] = Map.empty
 
-    def findDefinedLocalsFn(f: FunDefn, existing: Set[Local]): Unit =
+    def createMetadataFn(f: FunDefn, existing: Set[Local]): Unit =
+      existingVars += (f.sym -> existing)
       val thisVars = Lifter.getVars(f) -- existing
       val newExisting = existing ++ thisVars
+      var thisNestedDefns: Set[BlockMemberSymbol] = Set.empty + f.sym
 
       defnsMap += (f.sym -> f)
-      usedMap += (f.sym -> thisVars)
+      definedLocals += (f.sym -> thisVars)
       val walker = new BlockTransformerShallow(SymbolSubst()):
         override def applyDefn(defn: Defn): Defn =
-          findDefinedLocalsDefn(defn, newExisting)
+          createMetadataDefn(defn, newExisting)
+          thisNestedDefns ++= nestedDefns(defn.sym)
           defn
       walker.applyBlock(f.body)
+      nestedDefns += (f.sym -> thisNestedDefns)
 
-    def findDefinedLocalsDefn(d: Defn, existing: Set[Local]): Unit =
+    def createMetadataDefn(d: Defn, existing: Set[Local]): Unit =
       d match
       case f: FunDefn => 
-        findDefinedLocalsFn(f, existing)
+        createMetadataFn(f, existing)
       case c: ClsLikeDefn =>
-        findDefinedLocalsCls(c, existing)
+        createMetadataCls(c, existing)
       case d => Map.empty
 
-    def findDefinedLocalsCls(c: ClsLikeDefn, existing: Set[Local]): Unit =
+    def createMetadataCls(c: ClsLikeDefn, existing: Set[Local]): Unit =
+      existingVars += (c.sym -> existing)
       val thisVars = Lifter.getVars(c) -- existing
       val newExisting = existing ++ thisVars
+      var thisNestedDefns: Set[BlockMemberSymbol] = Set.empty + c.sym
+
+      val walker = new BlockTransformerShallow(SymbolSubst()):
+        override def applyDefn(defn: Defn): Defn = defn match
+          case _: ValDefn => super.applyDefn(defn)
+          case _ =>
+            createMetadataDefn(defn, newExisting)
+            thisNestedDefns ++= nestedDefns(defn.sym)
+            defn
+      walker.applyBlock(c.preCtor)
+      walker.applyBlock(c.ctor)
 
       defnsMap += (c.sym -> c)
-      usedMap += (c.sym -> thisVars)
+      definedLocals += (c.sym -> thisVars)
 
-      for f <- c.methods do findDefinedLocalsFn(f, newExisting)
+      for f <- c.methods do 
+        createMetadataFn(f, newExisting)
+        thisNestedDefns ++ nestedDefns(f.sym)
+
+      nestedDefns += (c.sym -> thisNestedDefns)
   
     val walker = new BlockTransformerShallow(SymbolSubst()):
       override def applyDefn(defn: Defn): Defn = 
-        findDefinedLocalsDefn(defn, b.definedVars)
+        createMetadataDefn(defn, b.definedVars)
         defn
     walker.applyBlock(b)
-    (usedMap, defnsMap)
+    DefnMetadata(definedLocals, defnsMap, existingVars, nestedDefns)
 
-  private val (definedLocals, defnsMap) = findDefinedLocals
+  val DefnMetadata(definedLocals, defnsMap, existingVars, nestedDefns) = createMetadata
   
   private val blkMutCache: MutMap[Local, AccessInfo] = MutMap.empty
   private def blkAccessesShallow(b: Block, cacheId: Opt[Local] = N): AccessInfo = 
@@ -892,16 +949,13 @@ class UsedVarAnalyzer(b: Block)(using State):
   private def findAccesses(f: FunDefn): Map[BlockMemberSymbol, AccessInfo] =
     var defns: List[Defn] = Nil
     var definedVarsDeep: Set[Local] = definedLocals(f.sym)
-    var existingVarsAt: Map[BlockMemberSymbol, Set[Local]] = Map.empty
 
     val walker = new BlockTransformer(SymbolSubst()):
       override def applyFunDefn(f: FunDefn): FunDefn =
-        existingVarsAt += (f.sym -> definedVarsDeep)
         defns +:= f; definedVarsDeep ++= definedLocals(f.sym)
         super.applyFunDefn(f)
       
       override def applyDefn(defn: Defn): Defn = 
-        existingVarsAt += (defn.sym -> definedVarsDeep)
         defn match
           case c: ClsLikeDefn => defns +:= c; definedVarsDeep ++= definedLocals(c.sym)
           case _ => 
@@ -948,7 +1002,7 @@ class UsedVarAnalyzer(b: Block)(using State):
     for
       (id, scc) <- sccs
       sym <- scc
-    yield sym -> (sccAccessInfo(id).intersectLocals(existingVarsAt(sym)))
+    yield sym -> (sccAccessInfo(id).intersectLocals(existingVars(sym)).withoutBms(nestedDefns(sym)))
 
   private def findAccessesTop =
     var accessMap: Map[BlockMemberSymbol, AccessInfo] = Map.empty

@@ -1,0 +1,67 @@
+:lift
+:js
+
+:fixme
+:expect 12
+:sjs
+fun foo(x, y) =
+  module M with
+    val test = 2
+    fun foo() =
+      set y = 2
+      x + y + test
+  M.foo()
+foo(10, 0)
+//│ JS (unsanitized):
+//│ let M1, foo, foo$capture1;
+//│ M1 = function M(x$11, foo$capture$01) {
+//│   return new M.class()(x$11, foo$capture$01);
+//│ };
+//│ M1.class = class M {
+//│   constructor() {
+//│     return (x$1, foo$capture$0) => {
+//│       this.x$1 = x$1;
+//│       this.foo$capture$0 = foo$capture$0;
+//│       this.test = 2;
+//│       return this;
+//│     }
+//│   }
+//│   foo() {
+//│     let tmp;
+//│     M.foo$capture$0.y0$ = 2;
+//│     tmp = M.x$1 + M.foo$capture$0.y0$;
+//│     return tmp + M.test
+//│   }
+//│   toString() { return "M"; }
+//│ };
+//│ foo$capture1 = function foo$capture(y0$1) {
+//│   return new foo$capture.class(y0$1);
+//│ };
+//│ foo$capture1.class = class foo$capture {
+//│   constructor(y0$) {
+//│     this.y0$ = y0$;
+//│   }
+//│   toString() { return "foo$capture(" + globalThis.Predef.render(this.y0$) + ")"; }
+//│ };
+//│ foo = function foo(x, y) {
+//│   let M$, capture;
+//│   capture = new foo$capture1(y);
+//│   M$ = M1(x, capture);
+//│   return M$.foo()
+//│ };
+//│ foo(10, 0)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot set properties of undefined (setting 'y0$')
+//│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'
+
+:fixme
+:expect 12
+fun foo(x, y) =
+  module M with
+    fun foo() =
+      set y = 2
+      x + y
+  fun foo = M.foo()
+  foo
+foo(10, 0)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot set properties of undefined (setting 'y0$')
+//│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'

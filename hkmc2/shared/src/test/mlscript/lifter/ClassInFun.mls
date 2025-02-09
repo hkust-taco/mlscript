@@ -15,6 +15,51 @@ f() + f() + f()
 
 :expect 1
 :sjs
+fun f(x) =
+  class Test() with
+    fun get() = x
+  Test()
+f(1).get()
+//│ JS (unsanitized):
+//│ let Test1, f1, tmp1, Test$ctor, Test$;
+//│ Test$ = function Test$(x$0) {
+//│   let tmp2;
+//│   tmp2 = new Test1();
+//│   return tmp2(x$0)
+//│ };
+//│ Test$ctor = function Test$ctor(x$0) {
+//│   return () => {
+//│     let tmp2;
+//│     tmp2 = new Test1();
+//│     return tmp2(x$0)
+//│   }
+//│ };
+//│ Test1 = function Test() {
+//│   return (x$01) => {
+//│     return new Test.class()(x$01);
+//│   }
+//│ };
+//│ Test1.class = class Test {
+//│   constructor() {
+//│     return (x$0) => {
+//│       this.x$0 = x$0;
+//│       return this;
+//│     }
+//│   }
+//│   get() {
+//│     return this.x$0
+//│   }
+//│   toString() { return "Test(" + "" + ")"; }
+//│ };
+//│ f1 = function f(x) {
+//│   return Test$(x)
+//│ };
+//│ tmp1 = f1(1);
+//│ runtime.safeCall(tmp1.get())
+//│ = 1
+
+:expect 1
+:sjs
 fun f(used1, unused1) =
   fun g(g_arg) =
     let used3 = 2
@@ -26,7 +71,7 @@ fun f(used1, unused1) =
   Test(unused1)
 f(1, 2).get()
 //│ JS (unsanitized):
-//│ let h, Test1, g, f1, tmp1, Test$ctor, Test$, g$, h$;
+//│ let h, Test3, g, f2, tmp2, Test$ctor1, Test$1, g$, h$;
 //│ h$ = function h$(used3) {
 //│   return used3
 //│ };
@@ -36,34 +81,34 @@ f(1, 2).get()
 //│   }
 //│ };
 //│ g$ = function g$(used1, g_arg) {
-//│   let used3, tmp2;
+//│   let used3, tmp3;
 //│   used3 = 2;
-//│   tmp2 = h$(used3);
-//│   return used1 + tmp2
+//│   tmp3 = h$(used3);
+//│   return used1 + tmp3
 //│ };
 //│ g = function g(used1) {
 //│   return (g_arg) => {
 //│     return g$(used1, g_arg)
 //│   }
 //│ };
-//│ Test$ = function Test$(used1$0, a) {
-//│   let tmp2;
-//│   tmp2 = new Test1(a);
-//│   return tmp2(used1$0)
+//│ Test$1 = function Test$(used1$0, a) {
+//│   let tmp3;
+//│   tmp3 = new Test3(a);
+//│   return tmp3(used1$0)
 //│ };
-//│ Test$ctor = function Test$ctor(used1$0) {
+//│ Test$ctor1 = function Test$ctor(used1$0) {
 //│   return (a) => {
-//│     let tmp2;
-//│     tmp2 = new Test1(a);
-//│     return tmp2(used1$0)
+//│     let tmp3;
+//│     tmp3 = new Test3(a);
+//│     return tmp3(used1$0)
 //│   }
 //│ };
-//│ Test1 = function Test(a1) {
+//│ Test3 = function Test(a1) {
 //│   return (used1$01) => {
 //│     return new Test.class(a1)(used1$01);
 //│   }
 //│ };
-//│ Test1.class = class Test {
+//│ Test3.class = class Test2 {
 //│   constructor(a) {
 //│     return (used1$0) => {
 //│       this.a = a;
@@ -76,13 +121,13 @@ f(1, 2).get()
 //│   }
 //│   toString() { return "Test(" + globalThis.Predef.render(this.a) + ")"; }
 //│ };
-//│ f1 = function f(used1, unused1) {
+//│ f2 = function f(used1, unused1) {
 //│   let unused2;
 //│   unused2 = 2;
-//│   return Test$(used1, unused1)
+//│   return Test$1(used1, unused1)
 //│ };
-//│ tmp1 = f1(1, 2);
-//│ runtime.safeCall(tmp1.get())
+//│ tmp2 = f2(1, 2);
+//│ runtime.safeCall(tmp2.get())
 //│ = 1
 
 :todo
@@ -100,7 +145,7 @@ fun f(used1, unused1) =
   foo(unused1)
 f(1, 2).get()
 //│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a higher-order class.
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:Test$ctor (class hkmc2.semantics.BlockMemberSymbol)
+//│ = 1
 
 :expect 1
 fun f(used1, unused1) =
@@ -124,17 +169,17 @@ fun f(x) =
   x
 f(1)
 //│ JS (unsanitized):
-//│ let A1, f4, A$ctor, A$, f$capture3;
+//│ let A1, f5, A$ctor, A$, f$capture3;
 //│ A$ = function A$(f$capture$0) {
-//│   let tmp4;
-//│   tmp4 = new A1();
-//│   return tmp4(f$capture$0)
+//│   let tmp5;
+//│   tmp5 = new A1();
+//│   return tmp5(f$capture$0)
 //│ };
 //│ A$ctor = function A$ctor(f$capture$0) {
 //│   return () => {
-//│     let tmp4;
-//│     tmp4 = new A1();
-//│     return tmp4(f$capture$0)
+//│     let tmp5;
+//│     tmp5 = new A1();
+//│     return tmp5(f$capture$0)
 //│   }
 //│ };
 //│ A1 = function A() {
@@ -164,14 +209,14 @@ f(1)
 //│   }
 //│   toString() { return "f$capture(" + globalThis.Predef.render(this.x0$) + ")"; }
 //│ };
-//│ f4 = function f(x) {
-//│   let tmp4, tmp5, capture;
+//│ f5 = function f(x) {
+//│   let tmp5, tmp6, capture;
 //│   capture = new f$capture3(x);
-//│   tmp4 = A$(capture);
-//│   tmp5 = runtime.safeCall(tmp4.f());
+//│   tmp5 = A$(capture);
+//│   tmp6 = runtime.safeCall(tmp5.f());
 //│   return capture.x0$
 //│ };
-//│ f4(1)
+//│ f5(1)
 //│ = 2
 
 // only w should be in a capture
@@ -193,17 +238,17 @@ fun f() =
   Good()
 f().foo()
 //│ JS (unsanitized):
-//│ let Bad1, Good1, f5, tmp4, Bad$ctor, Bad$, Good$ctor, Good$, f$capture5;
+//│ let Bad1, Good1, f6, tmp5, Bad$ctor, Bad$, Good$ctor, Good$, f$capture5;
 //│ Good$ = function Good$(x$1, y$2, f$capture$0) {
-//│   let tmp5;
-//│   tmp5 = new Good1();
-//│   return tmp5(x$1, y$2, f$capture$0)
+//│   let tmp6;
+//│   tmp6 = new Good1();
+//│   return tmp6(x$1, y$2, f$capture$0)
 //│ };
 //│ Good$ctor = function Good$ctor(x$1, y$2, f$capture$0) {
 //│   return () => {
-//│     let tmp5;
-//│     tmp5 = new Good1();
-//│     return tmp5(x$1, y$2, f$capture$0)
+//│     let tmp6;
+//│     tmp6 = new Good1();
+//│     return tmp6(x$1, y$2, f$capture$0)
 //│   }
 //│ };
 //│ Good1 = function Good() {
@@ -221,24 +266,24 @@ f().foo()
 //│     }
 //│   }
 //│   foo() {
-//│     let tmp5, tmp6;
+//│     let tmp6, tmp7;
 //│     this.f$capture$0.z1$ = 100;
-//│     tmp5 = this.x$1 + this.y$2;
-//│     tmp6 = tmp5 + this.f$capture$0.z1$;
-//│     return tmp6 + this.f$capture$0.w0$
+//│     tmp6 = this.x$1 + this.y$2;
+//│     tmp7 = tmp6 + this.f$capture$0.z1$;
+//│     return tmp7 + this.f$capture$0.w0$
 //│   }
 //│   toString() { return "Good(" + "" + ")"; }
 //│ };
 //│ Bad$ = function Bad$(f$capture$0) {
-//│   let tmp5;
-//│   tmp5 = new Bad1();
-//│   return tmp5(f$capture$0)
+//│   let tmp6;
+//│   tmp6 = new Bad1();
+//│   return tmp6(f$capture$0)
 //│ };
 //│ Bad$ctor = function Bad$ctor(f$capture$0) {
 //│   return () => {
-//│     let tmp5;
-//│     tmp5 = new Bad1();
-//│     return tmp5(f$capture$0)
+//│     let tmp6;
+//│     tmp6 = new Bad1();
+//│     return tmp6(f$capture$0)
 //│   }
 //│ };
 //│ Bad1 = function Bad() {
@@ -269,19 +314,19 @@ f().foo()
 //│   }
 //│   toString() { return "f$capture(" + globalThis.Predef.render(this.w0$) + ", " + globalThis.Predef.render(this.z1$) + ")"; }
 //│ };
-//│ f5 = function f() {
-//│   let x, y, tmp5, tmp6, capture;
+//│ f6 = function f() {
+//│   let x, y, tmp6, tmp7, capture;
 //│   capture = new f$capture5(null, null);
 //│   x = 1;
 //│   y = 10;
 //│   capture.z1$ = 10;
 //│   capture.w0$ = 1000;
-//│   tmp5 = Bad$(capture);
-//│   tmp6 = runtime.safeCall(tmp5.foo());
+//│   tmp6 = Bad$(capture);
+//│   tmp7 = runtime.safeCall(tmp6.foo());
 //│   return Good$(x, y, capture)
 //│ };
-//│ tmp4 = f5();
-//│ runtime.safeCall(tmp4.foo())
+//│ tmp5 = f6();
+//│ runtime.safeCall(tmp5.foo())
 //│ = 10111
 
 :fixme
@@ -355,7 +400,63 @@ fun f() =
   foo()(0)
 f().get()
 //│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a higher-order class.
-//│ = 0
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:Test (class hkmc2.semantics.BlockMemberSymbol)
+//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:50)
+//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:55)
+//│ 	at: hkmc2.utils.Scope.lookup_$bang$$anonfun$1(Scope.scala:92)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: hkmc2.utils.Scope.lookup_$bang(Scope.scala:94)
+//│ 	at: hkmc2.codegen.js.JSBuilder.getVar(JSBuilder.scala:77)
+//│ 	at: hkmc2.codegen.js.JSBuilder.result(JSBuilder.scala:96)
+//│ 	at: hkmc2.codegen.js.JSBuilder.returningTerm(JSBuilder.scala:326)
+//│ 	at: hkmc2.codegen.js.JSBuilder.block(JSBuilder.scala:458)
+//│ 	at: hkmc2.codegen.js.JSBuilder.body(JSBuilder.scala:461)
+
+:sjs
+:lift
+:w
+fun f(x) =
+  class Test() with
+    fun get() =
+      fun h() = x
+      h()
+  let foo = Test
+  foo()
+f(2).get()
+//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a higher-order class.
+//│ JS (unsanitized):
+//│ let h3, f9, tmp12, h$3;
+//│ h$3 = function h$(Test$instance, x) {
+//│   return x
+//│ };
+//│ h3 = function h(Test$instance, x) {
+//│   return () => {
+//│     return h$3(Test$instance, x)
+//│   }
+//│ };
+//│ f9 = function f(x) {
+//│   let Test9, foo3;
+//│   Test9 = function Test() {
+//│     return new Test.class();
+//│   };
+//│   Test9.class = class Test8 {
+//│     constructor() {}
+//│     get() {
+//│       h3 = function h() {
+//│         return x
+//│       };
+//│       return h3()
+//│     }
+//│     toString() { return "Test(" + "" + ")"; }
+//│   };
+//│   foo3 = Test9;
+//│   return runtime.safeCall(foo3())
+//│ };
+//│ tmp12 = f9(2);
+//│ runtime.safeCall(tmp12.get())
+//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a higher-order class.
+//│ = 2
 
 :fixme
 class Test
