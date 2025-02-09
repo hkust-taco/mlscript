@@ -400,18 +400,7 @@ fun f() =
   foo()(0)
 f().get()
 //│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a higher-order class.
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:Test (class hkmc2.semantics.BlockMemberSymbol)
-//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:50)
-//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:55)
-//│ 	at: hkmc2.utils.Scope.lookup_$bang$$anonfun$1(Scope.scala:92)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: hkmc2.utils.Scope.lookup_$bang(Scope.scala:94)
-//│ 	at: hkmc2.codegen.js.JSBuilder.getVar(JSBuilder.scala:77)
-//│ 	at: hkmc2.codegen.js.JSBuilder.result(JSBuilder.scala:96)
-//│ 	at: hkmc2.codegen.js.JSBuilder.returningTerm(JSBuilder.scala:326)
-//│ 	at: hkmc2.codegen.js.JSBuilder.block(JSBuilder.scala:458)
-//│ 	at: hkmc2.codegen.js.JSBuilder.body(JSBuilder.scala:461)
+//│ = 0
 
 :sjs
 :lift

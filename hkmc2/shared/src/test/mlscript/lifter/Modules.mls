@@ -1,8 +1,9 @@
 :lift
 :js
 
-:fixme
-:expect 12
+// the problem with all of these tests is that a Ref to a module's own ModuleSymbol 
+// (let's say M) emits `M` instead of `this` in the codegen 
+
 :sjs
 fun foo(x, y) =
   module M with
@@ -11,7 +12,6 @@ fun foo(x, y) =
       set y = 2
       x + y + test
   M.foo()
-foo(10, 0)
 //│ JS (unsanitized):
 //│ let M1, foo, foo$capture1;
 //│ M1 = function M(x$11, foo$capture$01) {
@@ -49,12 +49,13 @@ foo(10, 0)
 //│   M$ = M1(x, capture);
 //│   return M$.foo()
 //│ };
-//│ foo(10, 0)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot set properties of undefined (setting 'y0$')
-//│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'
 
 :fixme
 :expect 12
+foo(10, 0)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot set properties of undefined (setting 'y0$')
+//│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'
+
 fun foo(x, y) =
   module M with
     fun foo() =
@@ -62,6 +63,52 @@ fun foo(x, y) =
       x + y
   fun foo = M.foo()
   foo
+
+:fixme
+:expect 12
 foo(10, 0)
 //│ ═══[RUNTIME ERROR] TypeError: Cannot set properties of undefined (setting 'y0$')
 //│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'
+
+
+:sjs
+class A(x) with
+  module M with
+    fun getB() = x
+  fun getA() = M.getB()
+//│ JS (unsanitized):
+//│ let M5, A1;
+//│ M5 = function M(A$instance$01) {
+//│   return new M.class()(A$instance$01);
+//│ };
+//│ M5.class = class M4 {
+//│   constructor() {
+//│     return (A$instance$0) => {
+//│       this.A$instance$0 = A$instance$0;
+//│       return this;
+//│     }
+//│   }
+//│   getB() {
+//│     return M4.A$instance$0.x
+//│   }
+//│   toString() { return "M"; }
+//│ };
+//│ A1 = function A(x1) {
+//│   return new A.class(x1);
+//│ };
+//│ A1.class = class A {
+//│   constructor(x) {
+//│     this.x = x;
+//│     this.M$ = M5(this);
+//│   }
+//│   getA() {
+//│     return this.M$.getB()
+//│   }
+//│   toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; }
+//│ };
+
+:fixme
+:expect 2
+A(2).getA()
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'

@@ -7,5 +7,31 @@
 :global
 :d
 
-
-
+:sjs
+class A(x) with
+  module M with
+    fun getB() = x
+  fun getA() = M.getB()
+//│ Elab: { Cls AParamList(‹›,List(Param(‹›,class:A‹374›.x,None)),None) { ‹› fun member:getA‹371›() = (class:A‹374›#666.)M‹member:M‹372››.getB‹member:getB‹370››(); Mod M { ‹module› fun member:getB‹370›() = class:A‹374›.x#666; }; }; }
+//│ JS (unsanitized):
+//│ let A1;
+//│ A1 = function A(x1) {
+//│   return new A.class(x1);
+//│ };
+//│ A1.class = class A {
+//│   constructor(x) {
+//│     this.x = x;
+//│     const this$A = this;
+//│     this.M = class M {
+//│       static {}
+//│       static getB() {
+//│         return this$A.x
+//│       }
+//│       static toString() { return "M"; }
+//│     };
+//│   }
+//│   getA() {
+//│     return this.M.getB()
+//│   }
+//│   toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; }
+//│ };
