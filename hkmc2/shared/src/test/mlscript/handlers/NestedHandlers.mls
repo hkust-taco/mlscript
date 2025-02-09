@@ -7,7 +7,6 @@ let id = 0
 
 class MaybeStop with
   fun f(x: Bool): ()
-
 fun handleEffects(g) =
   handle h1 = MaybeStop with
     fun f(x)(k) =
