@@ -100,7 +100,7 @@ fun f(used1, unused1) =
   foo(unused1)
 f(1, 2).get()
 //│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a higher-order class.
-//│ = 1
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:Test$ctor (class hkmc2.semantics.BlockMemberSymbol)
 
 :expect 1
 fun f(used1, unused1) =
@@ -347,21 +347,15 @@ foo(0, 2)
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 0 arguments but got 2
 //│ ═══[RUNTIME ERROR] Expected: '"NN"', got: 'undefined'
 
-:fixme
 :w
-fun f(used1, unused1) =
-  fun g(g_arg) =
-    let used3 = 2
-    fun h = used3
-    used1 + h
-  let unused2 = 2
+fun f() =
   class Test(a) with
-    fun get() = used1
+    fun get() = a
   fun foo() = Test
-  foo()(unused1)
-f(1, 2).get()
+  foo()(0)
+f().get()
 //│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a higher-order class.
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:Test (class hkmc2.semantics.BlockMemberSymbol)
+//│ = 0
 
 :fixme
 class Test
