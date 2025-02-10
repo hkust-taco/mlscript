@@ -144,7 +144,7 @@ fun f(used1, unused1) =
   let foo = Test
   foo(unused1)
 f(1, 2).get()
-//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a first-order class.
+//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a first-class class.
 //│ = 1
 
 :expect 1
@@ -453,7 +453,7 @@ fun foo(x, n) =
 fun foo() =
   class C()
   C
-//│ ═══[WARNING] Cannot yet lift the class `C` as it is used as a first-order class.
+//│ ═══[WARNING] Cannot yet lift the class `C` as it is used as a first-class class.
 
 :todo
 :expect "NN"
@@ -468,7 +468,7 @@ fun f() =
   fun foo() = Test
   foo()(0)
 f().get()
-//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a first-order class.
+//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a first-class class.
 //│ = 0
 
 :sjs
@@ -482,7 +482,7 @@ fun f(x) =
   let foo = Test
   foo()
 f(2).get()
-//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a first-order class.
+//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a first-class class.
 //│ JS (unsanitized):
 //│ let h4, f10, tmp13, h$4;
 //│ h$4 = function h$(Test$instance, x) {
@@ -513,7 +513,7 @@ f(2).get()
 //│ };
 //│ tmp13 = f10(2);
 //│ runtime.safeCall(tmp13.get())
-//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a first-order class.
+//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a first-class class.
 //│ = 2
 
 :fixme

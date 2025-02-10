@@ -353,7 +353,7 @@ class Lifter(using State, Raise):
       override def applyValue(v: Value): Value = v match
         case RefOfBms(l) if clsSyms.contains(l) && !modOrObj(ctx.defns(l)) =>
           raise(WarningReport(
-            msg"Cannot yet lift the class `${l.nme}` as it is used as a first-order class." -> N :: Nil,
+            msg"Cannot yet lift the class `${l.nme}` as it is used as a first-class class." -> N :: Nil,
             N, Diagnostic.Source.Compilation
           ))
           unliftable += l
