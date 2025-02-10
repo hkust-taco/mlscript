@@ -10,13 +10,13 @@ class A(x) with
 //│ let B1, A1, B$ctor, B$;
 //│ B$ = function B$(A$instance$0, y) {
 //│   let tmp;
-//│   tmp = new B1(y);
+//│   tmp = new B1.class(y);
 //│   return tmp(A$instance$0)
 //│ };
 //│ B$ctor = function B$ctor(A$instance$0) {
 //│   return (y) => {
 //│     let tmp;
-//│     tmp = new B1(y);
+//│     tmp = new B1.class(y);
 //│     return tmp(A$instance$0)
 //│   }
 //│ };
@@ -66,13 +66,13 @@ class A(x) with
 //│ let B3, A3, B$ctor1, B$1;
 //│ B$1 = function B$(A$instance$0, y) {
 //│   let tmp1;
-//│   tmp1 = new B3(y);
+//│   tmp1 = new B3.class(y);
 //│   return tmp1(A$instance$0)
 //│ };
 //│ B$ctor1 = function B$ctor(A$instance$0) {
 //│   return (y) => {
 //│     let tmp1;
-//│     tmp1 = new B3(y);
+//│     tmp1 = new B3.class(y);
 //│     return tmp1(A$instance$0)
 //│   }
 //│ };

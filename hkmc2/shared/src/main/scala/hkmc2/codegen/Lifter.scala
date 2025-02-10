@@ -15,6 +15,10 @@ import scala.collection.mutable.LinkedHashSet
 import scala.collection.mutable.LinkedHashMap
 import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
+import hkmc2.syntax.Cls
+import hkmc2.syntax.Mod
+import hkmc2.syntax.Obj
+import hkmc2.syntax.Pat
 
 // TODO: modules not working
 
@@ -99,7 +103,16 @@ object Lifter:
         case Some(value: BlockMemberSymbol) => S(value)
         case _ => N
       case _ => N
+  
+  object InstSel:
+    def unapply(p: Path) = p match
+      case Value.Ref(l: BlockMemberSymbol) => S(l)
+      case s @ Select(Value.Ref(l: BlockMemberSymbol), Tree.Ident("class")) => S(l)
+      case _ => N
 
+  def modOrObj(d: Defn) = d match
+    case c: ClsLikeDefn => (c.k is syntax.Mod) || (c.k is syntax.Obj)
+    case _ => false
 
 /**
   * Lifts classes and functions to the top-level. Also automatically rewrites lambdas.
@@ -155,7 +168,7 @@ class Lifter(using State, Raise):
     def getIsymPath(l: InnerSymbol) = isymPaths.get(l)
     def getIgnoredBmsPath(b: BlockMemberSymbol) = ignoredBmsPaths.get(b)
     def ignored(b: BlockMemberSymbol) = ignoredDefns.contains(b)
-    def isModule(b: BlockMemberSymbol) = modules.contains(b)
+    def isModOrObj(b: BlockMemberSymbol) = modules.contains(b)
     def getAccesses(sym: BlockMemberSymbol) = accessInfo(sym)
     
     def addIgnored(defns: Set[BlockMemberSymbol]) = copy(ignoredDefns = ignoredDefns ++ defns)
@@ -291,7 +304,7 @@ class Lifter(using State, Raise):
 
   // d is a top-level definition
   // returns (unliftable classes, modules)
-  def createMetadata(d: Defn): (Set[BlockMemberSymbol], Set[BlockMemberSymbol]) =
+  def createMetadata(d: Defn, ctx: LifterCtx): (Set[BlockMemberSymbol], Set[BlockMemberSymbol]) =
     var clsSymToBms: Map[Local, BlockMemberSymbol] = Map.empty
     var modules: Set[BlockMemberSymbol] = Set.empty
     
@@ -300,7 +313,12 @@ class Lifter(using State, Raise):
         defn match
           case c: ClsLikeDefn => 
             clsSymToBms += c.isym -> c.sym
-            if c.k is syntax.Mod then modules += c.sym
+            if modOrObj(c) then modules += c.sym
+            if c.k is syntax.Mod then
+              raise(WarningReport(
+                msg"Modules are not yet properly lifted and will break." -> N :: Nil,
+                N, Diagnostic.Source.Compilation
+              ))
           case _ => ()
         super.applyDefn(defn)
     walker.applyDefn(d)
@@ -326,15 +344,16 @@ class Lifter(using State, Raise):
         case Call(Value.Ref(_: BlockMemberSymbol), args) =>
           args.map(applyArg)
           r
-        case Instantiate(Select(Value.Ref(_: BlockMemberSymbol), Tree.Ident("class")), args) =>
+        case Instantiate(InstSel(_), args) =>
           args.map(applyPath)
           r
+        
         case _ => super.applyResult(r)
 
       override def applyValue(v: Value): Value = v match
-        case RefOfBms(l) if clsSyms.contains(l) && !l.isModule =>
+        case RefOfBms(l) if clsSyms.contains(l) && !modOrObj(ctx.defns(l)) =>
           raise(WarningReport(
-            msg"Cannot yet lift the class `${l.nme}` as it is used as a higher-order class." -> N :: Nil,
+            msg"Cannot yet lift the class `${l.nme}` as it is used as a first-order class." -> N :: Nil,
             N, Diagnostic.Source.Compilation
           ))
           unliftable += l
@@ -346,7 +365,7 @@ class Lifter(using State, Raise):
 
   extension (b: Block)
     private def floatOut(ctx: LifterCtx) = 
-      b.floatOutDefns(preserve = defn => ctx.isModule(defn.sym) || ctx.ignored(defn.sym))
+      b.floatOutDefns(preserve = defn => ctx.isModOrObj(defn.sym) || ctx.ignored(defn.sym))
       
 
   def createLiftInfoCont(d: Defn, parentCls: Opt[ClsLikeDefn], ctx: LifterCtx): Map[BlockMemberSymbol, LiftedInfo] =
@@ -374,7 +393,7 @@ class Lifter(using State, Raise):
         case _ => Map.empty
     else
       val modLocal = d match
-        case c: ClsLikeDefn if c.k is syntax.Mod => parentCls match
+        case c: ClsLikeDefn if modOrObj(c) => parentCls match
           case None =>  S(VarSymbol(Tree.Ident(c.sym.nme + "$")))
           case Some(value) =>  S(TermSymbol(syntax.ImmutVal, S(value.isym), Tree.Ident(c.sym.nme + "$")))
         case _ => N
@@ -420,26 +439,26 @@ class Lifter(using State, Raise):
         override def applyResult(r: Result): Result = r match
           // if possible, directly rewrite the call using the efficient version
           case c @ Call(RefOfBms(l), args) => ctx.bmsReqdInfo.get(l) match
-            case Some(info) if !ctx.isModule(l) =>
+            case Some(info) if !ctx.isModOrObj(l) =>
               val extraArgs = getCallArgs(l, ctx)
               val newArgs = args.map(applyArg(_))
               Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun, false)
             case _ => super.applyResult(r)
-          case c @ Instantiate(Select(RefOfBms(l), Tree.Ident("class")), args) => 
+          case c @ Instantiate(InstSel(l), args) => 
             ctx.bmsReqdInfo.get(l) match
-            case Some(info) if !ctx.isModule(l) =>
+            case Some(info) if !ctx.isModOrObj(l) =>
               val extraArgs = getCallArgs(l, ctx)
               val newArgs = args.map(applyPath(_)).map(_.asArg)
               Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(true, false)
             case _ => super.applyResult(r)
           // if possible, directly create the bms and replace the result with it
-          case RefOfBms(l) if ctx.bmsReqdInfo.contains(l) && !ctx.isModule(l) => 
+          case RefOfBms(l) if ctx.bmsReqdInfo.contains(l) && !ctx.isModOrObj(l) => 
             createCall(l, ctx)
           case _ => super.applyResult(r)
         
         // otherwise, there's no choice but to create the call earlier
         override def applyPath(p: Path): Path = p match
-          case RefOfBms(l) if ctx.bmsReqdInfo.contains(l) && !ctx.isModule(l) => 
+          case RefOfBms(l) if ctx.bmsReqdInfo.contains(l) && !ctx.isModOrObj(l) => 
             val newSym = syms.get(l) match
               case None =>
                 val newSym = FlowSymbol(l.nme + "$this")
@@ -499,7 +518,8 @@ class Lifter(using State, Raise):
           ctx.getIsymPath(t.owner.get) match
             case Some(value) if !belongsToCtor(value) => Select(value.asPath, t.id)(N)
             case _ => super.applyPath(p)
-        case s @ Select(qual, ident) => s.symbol.flatMap(ctx.getLocalPath) match
+        case s @ Select(qual, ident) => 
+          s.symbol.flatMap(ctx.getLocalPath) match
           case Some(value: MemberSymbol[?]) => Select(qual, Tree.Ident(value.nme))(S(value))
           case _ => super.applyPath(p) 
         case Value.Ref(l) => ctx.getLocalCaptureSym(l) match
@@ -507,7 +527,7 @@ class Lifter(using State, Raise):
             Select(ctx.getLocalClosPath(l).get, captureSym.id)(N)
           case None => ctx.getLocalPath(l) match
             case Some(value) => Value.Ref(value)
-            case None => super.applyPath(p) 
+            case None => super.applyPath(p)
         case _ => super.applyPath(p)
 
     // rewrites references to block member symbols
@@ -628,7 +648,7 @@ class Lifter(using State, Raise):
           
 
           Lifted(mainDefn, auxDefn :: extras)
-        case c: ClsLikeDefn if !(c.k is syntax.Mod) =>
+        case c: ClsLikeDefn if !modOrObj(c) =>
           val newDef = c.copy(
             owner = N, auxParams = c.auxParams.appended(PlainParamList(extraParams))
           )
@@ -648,7 +668,7 @@ class Lifter(using State, Raise):
           inline def toPaths(l: List[Local]) = l.map(_.asPath)
           
           var curSym = TempSymbol(None, "tmp")
-          val inst = Instantiate(c.sym.asPath, paramArgs)
+          val inst = Instantiate(Select(c.sym.asPath, Tree.Ident("class"))(N), paramArgs)
           var acc = blk => Assign(curSym, inst, blk)
           for ps <- auxSyms do
             val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true, false)
@@ -686,10 +706,15 @@ class Lifter(using State, Raise):
           val auxCtorDefn = BlockTransformer(subst).applyFunDefn(auxCtorDefn_)
           
           Lifted(lifted, extras ::: (fakeCtorDefn :: auxCtorDefn :: Nil))
-        case c: ClsLikeDefn => // module
+        case c: ClsLikeDefn if modOrObj(c) => // module or object
           // force it to be a class
+          val newK = c.k match
+            case Mod => syntax.Mod
+            case Obj => syntax.Cls
+            case _ => c.k // unreachable
+          
           val newDef = c.copy(
-            k = syntax.Cls, paramsOpt = N,
+            k = newK, paramsOpt = N,
             owner = N, auxParams = PlainParamList(extraParams) :: Nil
           )
           liftDefnsInCls(newDef, newCtx)
@@ -704,7 +729,7 @@ class Lifter(using State, Raise):
     val (ctorIgnored, ctorIncluded) = allCtorDefns.partition(d => ctx.ignored(d.sym))
 
     val modPaths: Map[Local, Local] = ctorIncluded.map:
-      case c: ClsLikeDefn if c.k is syntax.Mod => ctx.getBmsReqdInfo(c.sym) match
+      case c: ClsLikeDefn if modOrObj(c) => ctx.getBmsReqdInfo(c.sym) match
         case Some(LiftedInfo(modLocal = Some(sym))) => S(c.sym -> sym)
         case _ => S(c.sym -> c.sym) 
       case _ => None
@@ -751,7 +776,7 @@ class Lifter(using State, Raise):
     val (ignored, included) = nested.partition(d => ctx.ignored(d.sym))
 
     val modPaths: Map[Local, Local] = nested.map:
-        case c: ClsLikeDefn if c.k is syntax.Mod => ctx.getBmsReqdInfo(c.sym) match
+        case c: ClsLikeDefn if modOrObj(c) => ctx.getBmsReqdInfo(c.sym) match
           case Some(LiftedInfo(modLocal = Some(sym))) => S(c.sym -> sym)
           case _ => S(c.sym -> c.sym) 
         case _ => None
@@ -829,7 +854,7 @@ class Lifter(using State, Raise):
     val walker = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
         case Define(d, rest) =>
-          val (unliftable, modules) = createMetadata(d)
+          val (unliftable, modules) = createMetadata(d, ctx)
           val ctxx = ctx.addIgnored(unliftable).addModules(modules)
           val Lifted(lifted, extra) = d match
             case f: FunDefn => liftDefnsInFn(f, ctxx.addBmsReqdInfo(createLiftInfoFn(f, ctxx)))
@@ -1160,7 +1185,7 @@ class UsedVarAnalyzer(b: Block)(using State):
             args.map(super.applyArg(_))
             handleCalledBms(l)
             r
-          case Instantiate(Select(RefOfBms(l), Tree.Ident("class")), args) =>
+          case Instantiate(InstSel(l), args) =>
             args.map(super.applyPath(_))
             handleCalledBms(l)
             r
@@ -1172,7 +1197,7 @@ class UsedVarAnalyzer(b: Block)(using State):
             case None => super.applyPath(p)
             case Some(defn) =>
               val isMod = defn match
-                case c: ClsLikeDefn => c.k is syntax.Mod
+                case c: ClsLikeDefn => modOrObj(c)
                 case _ => false
               if isMod then super.applyPath(p)
               else
@@ -1204,7 +1229,7 @@ class UsedVarAnalyzer(b: Block)(using State):
           case _ => super.applyPath(p)
       
         override def applyDefn(defn: Defn): Defn = defn match
-          case c: ClsLikeDefn if c.k is syntax.Mod =>
+          case c: ClsLikeDefn if modOrObj(c) =>
             handleCalledBms(c.sym)
             super.applyDefn(defn)
           case _ => super.applyDefn(defn)

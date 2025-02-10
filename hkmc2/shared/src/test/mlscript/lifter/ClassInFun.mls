@@ -24,13 +24,13 @@ f(1).get()
 //│ let Test1, f1, tmp1, Test$ctor, Test$;
 //│ Test$ = function Test$(x$0) {
 //│   let tmp2;
-//│   tmp2 = new Test1();
+//│   tmp2 = new Test1.class();
 //│   return tmp2(x$0)
 //│ };
 //│ Test$ctor = function Test$ctor(x$0) {
 //│   return () => {
 //│     let tmp2;
-//│     tmp2 = new Test1();
+//│     tmp2 = new Test1.class();
 //│     return tmp2(x$0)
 //│   }
 //│ };
@@ -93,13 +93,13 @@ f(1, 2).get()
 //│ };
 //│ Test$1 = function Test$(used1$0, a) {
 //│   let tmp3;
-//│   tmp3 = new Test3(a);
+//│   tmp3 = new Test3.class(a);
 //│   return tmp3(used1$0)
 //│ };
 //│ Test$ctor1 = function Test$ctor(used1$0) {
 //│   return (a) => {
 //│     let tmp3;
-//│     tmp3 = new Test3(a);
+//│     tmp3 = new Test3.class(a);
 //│     return tmp3(used1$0)
 //│   }
 //│ };
@@ -144,7 +144,7 @@ fun f(used1, unused1) =
   let foo = Test
   foo(unused1)
 f(1, 2).get()
-//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a higher-order class.
+//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a first-order class.
 //│ = 1
 
 :expect 1
@@ -160,7 +160,7 @@ fun f(used1, unused1) =
 f(1, 2).get()
 //│ = 1
 
-:todo
+:sjs
 :expect 1
 fun f(used1, unused1) =
   fun g(g_arg) =
@@ -172,7 +172,61 @@ fun f(used1, unused1) =
     fun get() = used1
   new Test
 f(1, 2).get()
-//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a higher-order class.
+//│ JS (unsanitized):
+//│ let h3, Test8, g3, f5, tmp5, Test$ctor3, Test$3, g$3, h$3;
+//│ h$3 = function h$(used3) {
+//│   return used3
+//│ };
+//│ h3 = function h(used3) {
+//│   return () => {
+//│     return h$3(used3)
+//│   }
+//│ };
+//│ g$3 = function g$(used1, g_arg) {
+//│   let used3, tmp6;
+//│   used3 = 2;
+//│   tmp6 = h$3(used3);
+//│   return used1 + tmp6
+//│ };
+//│ g3 = function g(used1) {
+//│   return (g_arg) => {
+//│     return g$3(used1, g_arg)
+//│   }
+//│ };
+//│ Test$3 = function Test$(used1$0) {
+//│   let tmp6;
+//│   tmp6 = new Test8.class();
+//│   return tmp6(used1$0)
+//│ };
+//│ Test$ctor3 = function Test$ctor(used1$0) {
+//│   return () => {
+//│     let tmp6;
+//│     tmp6 = new Test8.class();
+//│     return tmp6(used1$0)
+//│   }
+//│ };
+//│ Test8 = function Test(used1$01) {
+//│   return new Test.class()(used1$01);
+//│ };
+//│ Test8.class = class Test7 {
+//│   constructor() {
+//│     return (used1$0) => {
+//│       this.used1$0 = used1$0;
+//│       return this;
+//│     }
+//│   }
+//│   get() {
+//│     return this.used1$0
+//│   }
+//│   toString() { return "Test"; }
+//│ };
+//│ f5 = function f(used1, unused1) {
+//│   let unused2;
+//│   unused2 = 2;
+//│   return Test$3(used1)
+//│ };
+//│ tmp5 = f5(1, 2);
+//│ runtime.safeCall(tmp5.get())
 //│ = 1
 
 :sjs
@@ -187,13 +241,13 @@ f(1)
 //│ let A1, f6, A$ctor, A$, f$capture3;
 //│ A$ = function A$(f$capture$0) {
 //│   let tmp6;
-//│   tmp6 = new A1();
+//│   tmp6 = new A1.class();
 //│   return tmp6(f$capture$0)
 //│ };
 //│ A$ctor = function A$ctor(f$capture$0) {
 //│   return () => {
 //│     let tmp6;
-//│     tmp6 = new A1();
+//│     tmp6 = new A1.class();
 //│     return tmp6(f$capture$0)
 //│   }
 //│ };
@@ -256,13 +310,13 @@ f().foo()
 //│ let Bad1, Good1, f7, tmp6, Bad$ctor, Bad$, Good$ctor, Good$, f$capture5;
 //│ Good$ = function Good$(x$1, y$2, f$capture$0) {
 //│   let tmp7;
-//│   tmp7 = new Good1();
+//│   tmp7 = new Good1.class();
 //│   return tmp7(x$1, y$2, f$capture$0)
 //│ };
 //│ Good$ctor = function Good$ctor(x$1, y$2, f$capture$0) {
 //│   return () => {
 //│     let tmp7;
-//│     tmp7 = new Good1();
+//│     tmp7 = new Good1.class();
 //│     return tmp7(x$1, y$2, f$capture$0)
 //│   }
 //│ };
@@ -291,13 +345,13 @@ f().foo()
 //│ };
 //│ Bad$ = function Bad$(f$capture$0) {
 //│   let tmp7;
-//│   tmp7 = new Bad1();
+//│   tmp7 = new Bad1.class();
 //│   return tmp7(f$capture$0)
 //│ };
 //│ Bad$ctor = function Bad$ctor(f$capture$0) {
 //│   return () => {
 //│     let tmp7;
-//│     tmp7 = new Bad1();
+//│     tmp7 = new Bad1.class();
 //│     return tmp7(f$capture$0)
 //│   }
 //│ };
@@ -399,7 +453,7 @@ fun foo(x, n) =
 fun foo() =
   class C()
   C
-//│ ═══[WARNING] Cannot yet lift the class `C` as it is used as a higher-order class.
+//│ ═══[WARNING] Cannot yet lift the class `C` as it is used as a first-order class.
 
 :todo
 :expect "NN"
@@ -414,7 +468,7 @@ fun f() =
   fun foo() = Test
   foo()(0)
 f().get()
-//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a higher-order class.
+//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a first-order class.
 //│ = 0
 
 :sjs
@@ -428,7 +482,7 @@ fun f(x) =
   let foo = Test
   foo()
 f(2).get()
-//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a higher-order class.
+//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a first-order class.
 //│ JS (unsanitized):
 //│ let h4, f10, tmp13, h$4;
 //│ h$4 = function h$(Test$instance, x) {
@@ -440,11 +494,11 @@ f(2).get()
 //│   }
 //│ };
 //│ f10 = function f(x) {
-//│   let Test10, foo3;
-//│   Test10 = function Test() {
+//│   let Test11, foo3;
+//│   Test11 = function Test() {
 //│     return new Test.class();
 //│   };
-//│   Test10.class = class Test9 {
+//│   Test11.class = class Test10 {
 //│     constructor() {}
 //│     get() {
 //│       h4 = function h() {
@@ -454,12 +508,12 @@ f(2).get()
 //│     }
 //│     toString() { return "Test(" + "" + ")"; }
 //│   };
-//│   foo3 = Test10;
+//│   foo3 = Test11;
 //│   return runtime.safeCall(foo3())
 //│ };
 //│ tmp13 = f10(2);
 //│ runtime.safeCall(tmp13.get())
-//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a higher-order class.
+//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a first-order class.
 //│ = 2
 
 :fixme

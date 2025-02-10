@@ -1,0 +1,129 @@
+:lift
+:js
+
+// the problem with all of these tests is that a Ref to a module's own ModuleSymbol 
+// (let's say M) emits `M` instead of `this` in the codegen 
+
+:todo
+fun foo(x, y) =
+  module M with
+    val test = 2
+    fun foo() =
+      set y = 2
+      x + y + test
+  M.foo()
+//│ ═══[WARNING] Modules are not yet properly lifted and will break.
+//│ > let M1, foo, foo$capture1;try { M1 = class M {   static {     return (x$1, foo$capture$0) => {       this.x$1 = x$1;       this.foo$capture$0 = foo$capture$0;       this.test = 2;       return this;     }   }   static foo(...args) {     globalThis.Predef.checkArgs("foo", 0, true, args.length);     let tmp;     M.foo$capture$0.y0$ = 2;     tmp = M.x$1 + M.foo$capture$0.y0$;     return tmp + M.test   }   static toString() { return "M"; } }; foo$capture1 = function foo$capture(...args) {   return new foo$capture.class(...args); }; foo$capture1.class = class foo$capture {   constructor(y0$) {     this.y0$ = y0$;   }   toString() { return "foo$capture(" + globalThis.Predef.render(this.y0$) + ")"; } }; foo = function foo(...args) {   globalThis.Predef.checkArgs("foo", 2, true, args.length);   let x = args[0];   let y = args[1];   let M$, capture;   capture = new foo$capture1(y);   M$ = runtime.checkCall(M1(x, capture));   return runtime.checkCall(M$.foo()) }; block$res1 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                               ^^^^^^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Illegal return statement
+
+:todo
+:expect 14
+foo(10, 0)
+//│ ═══[RUNTIME ERROR] ReferenceError: foo is not defined
+//│ ═══[RUNTIME ERROR] Expected: '14', got: 'undefined'
+
+:todo
+fun foo(x, y) =
+  module M with
+    fun foo() =
+      set y = 2
+      x + y
+  fun foo = M.foo()
+  foo
+//│ ═══[WARNING] Modules are not yet properly lifted and will break.
+//│ > let foo1, M3, foo2, foo$, foo$capture3;try { foo$ = function foo$(...args) {   globalThis.Predef.checkArgs("foo$", 3, true, args.length);   let M4 = args[0];   let x = args[1];   let foo$capture4 = args[2];   return runtime.checkCall(M4.foo()) }; foo1 = function foo(...args) {   globalThis.Predef.checkArgs("foo", 3, true, args.length);   let M4 = args[0];   let x = args[1];   let foo$capture4 = args[2];   return (...args1) => {     globalThis.Predef.checkArgs("", 0, true, args1.length);     return runtime.checkCall(foo$(M4, x, foo$capture4))   } }; M3 = class M2 {   static {     return (x$1, foo$capture$0) => {       this.x$1 = x$1;       this.foo$capture$0 = foo$capture$0;       return this;     }   }   static foo(...args) {     globalThis.Predef.checkArgs("foo", 0, true, args.length);     M2.foo$capture$0.y0$ = 2;     return M2.x$1 + M2.foo$capture$0.y0$   }   static toString() { return "M"; } }; foo$capture3 = function foo$capture(...args) {   return new foo$capture.class(...args); }; foo$capture3.class = class foo$capture2 {   constructor(y0$) {     this.y0$ = y0$;   }   toString() { return "foo$capture(" + globalThis.Predef.render(this.y0$) + ")"; } }; foo2 = function foo(...args) {   globalThis.Predef.checkArgs("foo", 2, true, args.length);   let x = args[0];   let y = args[1];   let tmp, M$, capture;   capture = new foo$capture3(y);   M$ = runtime.checkCall(M3(x, capture));   tmp = runtime.checkCall(foo$(M$, x, capture));   return tmp }; block$res3 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           ^^^^^^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Illegal return statement
+
+:fixme
+:expect 12
+foo(10, 0)
+//│ ═══[RUNTIME ERROR] ReferenceError: foo2 is not defined
+//│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'
+
+
+:todo
+class A(x) with
+  module M with
+    fun getB() = x
+  fun getA() = M.getB()
+//│ ═══[WARNING] Modules are not yet properly lifted and will break.
+//│ > let M5, A1;try { M5 = class M4 {   static {     return (A$instance$0) => {       this.A$instance$0 = A$instance$0;       return this;     }   }   static getB(...args) {     globalThis.Predef.checkArgs("getB", 0, true, args.length);     return M4.A$instance$0.x   }   static toString() { return "M"; } }; A1 = function A(...args1) {   return new A.class(...args1); }; A1.class = class A {   constructor(x) {     this.x = x;     this.M$ = runtime.checkCall(M5(this));   }   get getA$__checkNotMethod() { runtime.deboundMethod("getA", "A"); }   getA(...args) {     globalThis.Predef.checkArgs("getA", 0, true, args.length);     return runtime.checkCall(this.M$.getB())   }   toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; } }; block$res5 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                 ^^^^^^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Illegal return statement
+
+:todo
+:expect 2
+A(2).getA()
+//│ ═══[RUNTIME ERROR] ReferenceError: A1 is not defined
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+
+
+:todo
+fun foo(x, y) =
+  object M with
+    val test = 2
+    fun foo() =
+      set y = 2
+      x + y + test
+  M.foo()
+
+:todo
+:expect 14
+foo(10, 0)
+//│ = 14
+
+:todo
+fun foo(x, y) =
+  object M with
+    fun foo() =
+      set y = 2
+      x + y
+  fun foo = M.foo()
+  foo
+
+:expect 12
+foo(10, 0)
+//│ = 12
+
+
+:sjs
+class A(x) with
+  object M with
+    fun getB() = x
+  fun getA() = M.getB()
+//│ JS (unsanitized):
+//│ let M11, A3;
+//│ M11 = function M(A$instance$01) {
+//│   return new M.class()(A$instance$01);
+//│ };
+//│ M11.class = class M10 {
+//│   constructor() {
+//│     return (A$instance$0) => {
+//│       this.A$instance$0 = A$instance$0;
+//│       return this;
+//│     }
+//│   }
+//│   getB() {
+//│     return this.A$instance$0.x
+//│   }
+//│   toString() { return "M"; }
+//│ };
+//│ A3 = function A(x1) {
+//│   return new A.class(x1);
+//│ };
+//│ A3.class = class A2 {
+//│   constructor(x) {
+//│     this.x = x;
+//│     this.M$ = M11(this);
+//│   }
+//│   getA() {
+//│     return this.M$.getB()
+//│   }
+//│   toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; }
+//│ };
+
+:expect 2
+A(2).getA()
+//│ = 2

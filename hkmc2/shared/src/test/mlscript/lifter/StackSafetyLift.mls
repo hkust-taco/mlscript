@@ -24,13 +24,13 @@ hi(0)
 //│ let hi, res, Cont$3, handleBlock$, Cont$4, Cont$5, StackDelay$1, lambda, Cont$$ctor, Cont$$, hi$capture1, Cont$$ctor1, Cont$$1, StackDelay$$ctor, StackDelay$$, lambda$, Cont$$ctor2, Cont$$2, handleBlock$$capture1, lambda$capture1;
 //│ Cont$$ = function Cont$$(n$1, hi$capture$0, pc) {
 //│   let tmp;
-//│   tmp = new Cont$3(pc);
+//│   tmp = new Cont$3.class(pc);
 //│   return tmp(n$1, hi$capture$0)
 //│ };
 //│ Cont$$ctor = function Cont$$ctor(n$1, hi$capture$0) {
 //│   return (pc) => {
 //│     let tmp;
-//│     tmp = new Cont$3(pc);
+//│     tmp = new Cont$3.class(pc);
 //│     return tmp(n$1, hi$capture$0)
 //│   }
 //│ };
@@ -105,25 +105,25 @@ hi(0)
 //│ };
 //│ StackDelay$$ = function StackDelay$$(handleBlock$$capture$0) {
 //│   let tmp;
-//│   tmp = new StackDelay$1();
+//│   tmp = new StackDelay$1.class();
 //│   return tmp(handleBlock$$capture$0)
 //│ };
 //│ StackDelay$$ctor = function StackDelay$$ctor(handleBlock$$capture$0) {
 //│   return () => {
 //│     let tmp;
-//│     tmp = new StackDelay$1();
+//│     tmp = new StackDelay$1.class();
 //│     return tmp(handleBlock$$capture$0)
 //│   }
 //│ };
 //│ Cont$$2 = function Cont$$(StackDelay$$instance$1, lambda$capture$0, pc) {
 //│   let tmp;
-//│   tmp = new Cont$5(pc);
+//│   tmp = new Cont$5.class(pc);
 //│   return tmp(StackDelay$$instance$1, lambda$capture$0)
 //│ };
 //│ Cont$$ctor2 = function Cont$$ctor(StackDelay$$instance$1, lambda$capture$0) {
 //│   return (pc) => {
 //│     let tmp;
-//│     tmp = new Cont$5(pc);
+//│     tmp = new Cont$5.class(pc);
 //│     return tmp(StackDelay$$instance$1, lambda$capture$0)
 //│   }
 //│ };
@@ -214,13 +214,13 @@ hi(0)
 //│ };
 //│ Cont$$1 = function Cont$$(handleBlock$$capture$0, pc) {
 //│   let tmp;
-//│   tmp = new Cont$4(pc);
+//│   tmp = new Cont$4.class(pc);
 //│   return tmp(handleBlock$$capture$0)
 //│ };
 //│ Cont$$ctor1 = function Cont$$ctor(handleBlock$$capture$0) {
 //│   return (pc) => {
 //│     let tmp;
-//│     tmp = new Cont$4(pc);
+//│     tmp = new Cont$4.class(pc);
 //│     return tmp(handleBlock$$capture$0)
 //│   }
 //│ };
@@ -308,13 +308,13 @@ sum(10000)
 //│ let sum1, res1, Cont$9, handleBlock$1, Cont$10, Cont$11, StackDelay$3, lambda1, Cont$$ctor3, Cont$$3, sum$capture1, Cont$$ctor4, Cont$$4, StackDelay$$ctor1, StackDelay$$1, lambda$1, Cont$$ctor5, Cont$$5, handleBlock$$capture3, lambda$capture3;
 //│ Cont$$3 = function Cont$$(n$1, curDepth$2, sum$capture$0, pc) {
 //│   let tmp;
-//│   tmp = new Cont$9(pc);
+//│   tmp = new Cont$9.class(pc);
 //│   return tmp(n$1, curDepth$2, sum$capture$0)
 //│ };
 //│ Cont$$ctor3 = function Cont$$ctor(n$1, curDepth$2, sum$capture$0) {
 //│   return (pc) => {
 //│     let tmp;
-//│     tmp = new Cont$9(pc);
+//│     tmp = new Cont$9.class(pc);
 //│     return tmp(n$1, curDepth$2, sum$capture$0)
 //│   }
 //│ };
@@ -410,25 +410,25 @@ sum(10000)
 //│ };
 //│ StackDelay$$1 = function StackDelay$$(handleBlock$$capture$0) {
 //│   let tmp;
-//│   tmp = new StackDelay$3();
+//│   tmp = new StackDelay$3.class();
 //│   return tmp(handleBlock$$capture$0)
 //│ };
 //│ StackDelay$$ctor1 = function StackDelay$$ctor(handleBlock$$capture$0) {
 //│   return () => {
 //│     let tmp;
-//│     tmp = new StackDelay$3();
+//│     tmp = new StackDelay$3.class();
 //│     return tmp(handleBlock$$capture$0)
 //│   }
 //│ };
 //│ Cont$$5 = function Cont$$(StackDelay$$instance$1, lambda$capture$0, pc) {
 //│   let tmp;
-//│   tmp = new Cont$11(pc);
+//│   tmp = new Cont$11.class(pc);
 //│   return tmp(StackDelay$$instance$1, lambda$capture$0)
 //│ };
 //│ Cont$$ctor5 = function Cont$$ctor(StackDelay$$instance$1, lambda$capture$0) {
 //│   return (pc) => {
 //│     let tmp;
-//│     tmp = new Cont$11(pc);
+//│     tmp = new Cont$11.class(pc);
 //│     return tmp(StackDelay$$instance$1, lambda$capture$0)
 //│   }
 //│ };
@@ -519,13 +519,13 @@ sum(10000)
 //│ };
 //│ Cont$$4 = function Cont$$(handleBlock$$capture$0, pc) {
 //│   let tmp;
-//│   tmp = new Cont$10(pc);
+//│   tmp = new Cont$10.class(pc);
 //│   return tmp(handleBlock$$capture$0)
 //│ };
 //│ Cont$$ctor4 = function Cont$$ctor(handleBlock$$capture$0) {
 //│   return (pc) => {
 //│     let tmp;
-//│     tmp = new Cont$10(pc);
+//│     tmp = new Cont$10.class(pc);
 //│     return tmp(handleBlock$$capture$0)
 //│   }
 //│ };
