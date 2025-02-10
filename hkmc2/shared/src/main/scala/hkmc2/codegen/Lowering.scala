@@ -554,6 +554,10 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
       Assign(l, r, setupTerm("Else", Value.Ref(l) :: Nil)(k))
     case Split.End => setupTerm("End", Nil)(k)
 
+  lazy val setupFilename: Path =
+    val state = summon[State]
+    Value.Ref(state.importSymbol).selSN("meta").selSN("url")
+
   def quote(t: st)(k: Result => Block)(using Subst): Block = t match
     case Lit(lit) =>
       setupTerm("Lit", Value.Lit(lit) :: Nil)(k)
@@ -561,6 +565,15 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
       val l = new TempSymbol(N)
       setupTerm("Ref", Value.Ref(l) :: Nil): r2 =>
         Assign(l, r1, k(r2))
+    case SynthSel(Ref(sym: ModuleSymbol), name) => // Local cross-stage references
+      setupSymbol(sym): r1 =>
+        val l1 = new TempSymbol(N)
+        Assign(l1, r1, setupTerm("CSRef", Value.Ref(l1) :: setupFilename :: Nil)(r2 =>
+          val l2 = new TempSymbol(N)
+          Assign(l2, r2, setupTerm("Sel", Value.Ref(l2) :: Value.Lit(syntax.Tree.StrLit(name.name)) :: Nil)(k))
+        ))
+    case SynthSel(Ref(sym: BlockMemberSymbol), name) => // Multi-file cross-stage references
+      setupTerm("Sel", Nil)(k) // TODO
     case Lam(params, body) =>
       def rec(ps: Ls[LocalSymbol & NamedSymbol], ds: Ls[Path])(k: Result => Block)(using Subst): Block = ps match
         case Nil => quote(body): r =>

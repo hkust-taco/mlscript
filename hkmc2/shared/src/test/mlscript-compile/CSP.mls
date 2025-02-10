@@ -1,0 +1,10 @@
+import "./Example.mls"
+open Example
+
+module CSP with ...
+
+fun test() = 123
+fun foo() =
+  `test`() `+ `1
+fun bar() =
+  `inc`(`0)

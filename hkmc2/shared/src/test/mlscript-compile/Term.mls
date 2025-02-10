@@ -1,6 +1,7 @@
 import "fs"
 import "process"
 import "path"
+import "url"
 
 import "./Predef.mls"
 import "./Str.mls"
@@ -59,11 +60,12 @@ class DefineVar(sym: Symbol, rhs: Term) extends Statement
 // TODO: other statements
 
 
-abstract class Term : (Lit | Builtin | Ref | App | Sel | DynSel | Tup | IfLike | Lam | Blk | New |
+abstract class Term : (Lit | Builtin | Ref | CSRef | App | Sel | DynSel | Tup | IfLike | Lam | Blk | New |
   Region | RegRef | Assgn | Deref | SetRef | Ret | Throw | Try) extends Statement
 class Lit(lit: Literal) extends Term
 class Builtin(name: Str) extends Term
 class Ref(sym: Symbol) extends Term
+class CSRef(sym: Symbol, file: Str) extends Term
 class App(lhs: Term, rhs: Term) extends Term
 class Sel(prefix: Term, nme: Str) extends Term
 class DynSel(prefix: Term, fld: Term, arrayIdx: Bool) extends Term
@@ -87,12 +89,18 @@ builtinSymbols.add("+")
 builtinSymbols.add("-")
 builtinSymbols.add("*")
 builtinSymbols.add("/")
+builtinSymbols.add("==")
+builtinSymbols.add("<")
+builtinSymbols.add(">")
+builtinSymbols.add(">=")
+builtinSymbols.add("<=")
 
 
-class Context(symbols: globalThis.Set, printOnly: Bool) with
+class Context(symbols: globalThis.Set, dependencies: globalThis.Set, printOnly: Bool) with
   fun isValid(name) = symbols.has(name) || builtinSymbols.has(name) || printOnly
-  fun nest = Context(new globalThis.Set(symbols), printOnly)
+  fun nest = Context(new globalThis.Set(symbols), dependencies, printOnly)
   fun add(name) = symbols.add(name)
+  fun depends(d) = dependencies.add(d)
 
 
 fun showStmt(s, ctx, indent) =
@@ -131,7 +139,11 @@ fun show(t, ctx, indent) =
     Ref(Symbol(name)) then
       if ctx.isValid(name) then name
       else throw new globalThis.Error(Str.concat("Invalid binding name ", name))
+    CSRef(Symbol(name), file) then
+      ctx.depends(file)
+      name
     Lit(lit) then lit.toString()
+    Sel(prefix, name) then Str.concat("(", show(prefix, ctx, ""), ").", name)
     App(lhs, rhs) then Str.concat("(", show(lhs, ctx, ""), ")(", show(rhs, ctx, ""), ")")
     Tup(fields) then Predef.join(", ")(Predef.arraymap(t => show(t, ctx, ""))(fields))
     Lam(params, body) then
@@ -146,15 +158,18 @@ fun show(t, ctx, indent) =
   Str.concat(indent, res)
 
 fun print(t) =
-  let ctx = Context(new globalThis.Set(), true)
+  let ctx = Context(new globalThis.Set(), new globalThis.Set(), true)
   log(show(t, ctx, ""))
 
 
 fun codegen(t, file) =
-  let ctx = Context(new globalThis.Set(), false)
+  let ctx = Context(new globalThis.Set(), new globalThis.Set(), false)
   let moduleName = path.parse(file).name
-  let code = Str.concat("module ", moduleName, " with ...\nfun res = ", show(t, ctx, "")) // TODO: import
+  let fullpath = path.join(process.cwd(), file)
+  let code = Str.concat("module ", moduleName, " with ...\nfun res = ", show(t, ctx, ""))
+  let dependencies =
+    Predef.arraymap(s => Str.concat("import \"", path.relative(path.dirname(fullpath), url.fileURLToPath(s)).slice(0, -4), ".mls\""))(globalThis.Array.from(ctx.dependencies))
   let fp = fs.openSync(file, "w") // TODO: diff check
-  fs.writeSync(fp, code)
+  fs.writeSync(fp, Str.concat(Predef.join("\n")(dependencies), "\n", code))
   fs.closeSync(fp)
 

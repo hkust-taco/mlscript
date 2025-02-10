@@ -373,3 +373,26 @@ QuoteInc.res(42)
 //│ JS (unsanitized):
 //│ QuoteInc.res(42)
 //│ = 43
+
+
+import "../../mlscript-compile/CSP.mls"
+//│ JS (unsanitized):
+//│ import CSP from "./../../mlscript-compile/CSP.mjs"; null
+
+
+term.codegen(CSP.foo(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPFoo.mls")
+//│ JS (unsanitized):
+//│ let tmp116;
+//│ tmp116 = CSP.foo();
+//│ Predef.term.codegen(tmp116, "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPFoo.mls")
+
+
+import "../../mlscript-compile/quotes/CSPFoo.mls"
+//│ JS (unsanitized):
+//│ import CSPFoo from "./../../mlscript-compile/quotes/CSPFoo.mjs"; null
+
+
+CSPFoo.res
+//│ JS (unsanitized):
+//│ CSPFoo.res
+//│ = 124

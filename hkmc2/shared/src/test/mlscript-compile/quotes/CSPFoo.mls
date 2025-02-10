@@ -1,0 +1,3 @@
+import "../CSP.mls"
+module CSPFoo with ...
+fun res = (+)(((CSP).test)(), 1)

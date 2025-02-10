@@ -1,2 +1,3 @@
+
 module QuoteInc with ...
 fun res = (x) => (+)(x, 1)

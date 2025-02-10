@@ -122,6 +122,8 @@ object Elaborator:
     given State = this
     val suid = new Uid.Symbol.State
     val globalThisSymbol = TopLevelSymbol("globalThis")
+    // a builtin symbol import can be used for getting current file pathes via import.meta
+    val importSymbol = new VarSymbol(syntax.Tree.Ident("import"))
     val builtinOpsMap =
       val baseBuiltins = builtins.map: op =>
           op -> BuiltinSymbol(op,

@@ -115,11 +115,11 @@ class Scope
 
 
 object Scope:
-  
   def scope(using scp: Scope): Scope = scp
   
-  def empty(using State): Scope =
-    Scope(N, S(S(State.globalThisSymbol)), MutMap.empty)
+  def empty(using State): Scope = 
+    val state = summon[State]
+    Scope(N, S(S(State.globalThisSymbol)), MutMap[Local, Str](state.importSymbol -> "import"))
   
   def replaceInvalidCharacters(str: Str): Str =
     str.iterator.map:
