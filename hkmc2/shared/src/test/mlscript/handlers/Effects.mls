@@ -165,7 +165,7 @@ if true do
 //│       tmp13 = super();
 //│     }
 //│     perform(arg) {
-//│       return globalThis.Predef.__mkEffect(h, (k) => {
+//│       return runtime.__mkEffect(h, (k) => {
 //│         return arg
 //│       })
 //│     }
@@ -173,7 +173,7 @@ if true do
 //│   };
 //│   h = new Handler$h$12();
 //│   Cont$24 = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│   Cont$24.class = class Cont$23 extends globalThis.Predef.__Cont.class {
+//│   Cont$24.class = class Cont$23 extends runtime.__Cont.class {
 //│     constructor(pc) {
 //│       let tmp13;
 //│       tmp13 = super(null, null);
@@ -187,7 +187,7 @@ if true do
 //│         if (this.pc === 1) {
 //│           return tmp12
 //│         } else if (this.pc === 0) {
-//│           if (tmp12 instanceof globalThis.Predef.__Return.class) {
+//│           if (tmp12 instanceof runtime.__Return.class) {
 //│             return tmp12
 //│           }
 //│           this.pc = 1;
@@ -204,11 +204,11 @@ if true do
 //│   scrut = true;
 //│   if (scrut === true) {
 //│     tmp12 = f();
-//│     if (tmp12 instanceof globalThis.Predef.__EffectSig.class) {
+//│     if (tmp12 instanceof runtime.__EffectSig.class) {
 //│       tmp12.tail.next = new Cont$24(0);
-//│       return globalThis.Predef.__handleBlockImpl(tmp12, h)
+//│       return runtime.__handleBlockImpl(tmp12, h)
 //│     }
-//│     if (tmp12 instanceof globalThis.Predef.__Return.class) {
+//│     if (tmp12 instanceof runtime.__Return.class) {
 //│       return tmp12
 //│     }
 //│   } else {
@@ -217,7 +217,7 @@ if true do
 //│   return tmp12
 //│ };
 //│ tmp11 = handleBlock$11();
-//│ if (tmp11 instanceof this.Predef.__EffectSig.class) {
+//│ if (tmp11 instanceof runtime.__EffectSig.class) {
 //│   throw new this.Error("Unhandled effects");
 //│ }
 //│ tmp11

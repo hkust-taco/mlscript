@@ -30,6 +30,7 @@ declare class Str(length: Int, concat: Str -> Str)
 declare class Error(msg: Str)
 
 declare module Predef
+declare module Runtime
 
 declare fun run: [T] -> CodeBase[out T, out Nothing, out Any] -> T
 declare fun log: Str -> Any

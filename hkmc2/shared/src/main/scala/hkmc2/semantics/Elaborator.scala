@@ -103,6 +103,7 @@ object Elaborator:
       val untyped = assumeBuiltinTpe("untyped")
       // println(s"Builtins: $Int, $Num, $Str, $untyped")
       val Predef = assumeBuiltinMod("Predef")
+      val Runtime = assumeBuiltinMod("Runtime")
       def getBuiltinOp(op: Str): Opt[Str] =
         if getBuiltin(op).isDefined then builtinBinOps.get(op) else N
       /** Classes that do not use `instanceof` in pattern matching. */

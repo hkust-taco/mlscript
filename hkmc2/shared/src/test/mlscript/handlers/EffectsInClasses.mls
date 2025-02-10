@@ -18,7 +18,7 @@ class Lol(h) with
 //│     let tmp, res, Cont$1;
 //│     const this$Lol = this;
 //│     Cont$1 = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│     Cont$1.class = class Cont$ extends globalThis.Predef.__Cont.class {
+//│     Cont$1.class = class Cont$ extends runtime.__Cont.class {
 //│       constructor(pc) {
 //│         let tmp1;
 //│         tmp1 = super(null, null);
@@ -35,9 +35,9 @@ class Lol(h) with
 //│             return this$Lol
 //│           } else if (this.pc === 0) {
 //│             res = Predef.print(tmp);
-//│             if (res instanceof globalThis.Predef.__EffectSig.class) {
+//│             if (res instanceof runtime.__EffectSig.class) {
 //│               this.pc = 1;
-//│               return globalThis.Predef.__appendInCont(res, this)
+//│               return runtime.__appendInCont(res, this)
 //│             }
 //│             this.pc = 1;
 //│             continue contLoop;
@@ -51,13 +51,13 @@ class Lol(h) with
 //│       toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│     };
 //│     tmp = runtime.safeCall(this.h.perform("k"));
-//│     if (tmp instanceof globalThis.Predef.__EffectSig.class) {
+//│     if (tmp instanceof runtime.__EffectSig.class) {
 //│       tmp.tail.next = new Cont$1.class(0);
 //│       tmp.tail = tmp.tail.next;
 //│       return tmp
 //│     }
 //│     res = Predef.print(tmp);
-//│     if (res instanceof globalThis.Predef.__EffectSig.class) {
+//│     if (res instanceof runtime.__EffectSig.class) {
 //│       res.tail.next = new Cont$1.class(1);
 //│       res.tail = res.tail.next;
 //│       return res

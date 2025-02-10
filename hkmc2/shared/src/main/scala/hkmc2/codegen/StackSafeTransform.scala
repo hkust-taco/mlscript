@@ -14,14 +14,14 @@ class StackSafeTransform(depthLimit: Int)(using State):
   private val STACK_OFFSET_IDENT: Tree.Ident = Tree.Ident("__stackOffset")
   private val STACK_HANDLER_IDENT: Tree.Ident = Tree.Ident("__stackHandler")
 
-  private val predefPath: Path = State.globalThisSymbol.asPath.selN(Tree.Ident("Predef"))
-  private val checkDepthPath: Path = predefPath.selN(Tree.Ident("checkDepth"))
-  private val resetDepthPath: Path = predefPath.selN(Tree.Ident("resetDepth"))
-  private val stackDelayClsPath: Path = predefPath.selN(Tree.Ident("__StackDelay"))
-  private val stackLimitPath: Path = predefPath.selN(STACK_LIMIT_IDENT)
-  private val stackDepthPath: Path = predefPath.selN(STACK_DEPTH_IDENT)
-  private val stackOffsetPath: Path = predefPath.selN(STACK_OFFSET_IDENT)
-  private val stackHandlerPath: Path = predefPath.selN(STACK_HANDLER_IDENT)
+  private val runtimePath: Path = State.runtimeSymbol.asPath
+  private val checkDepthPath: Path = runtimePath.selN(Tree.Ident("checkDepth"))
+  private val resetDepthPath: Path = runtimePath.selN(Tree.Ident("resetDepth"))
+  private val stackDelayClsPath: Path = runtimePath.selN(Tree.Ident("__StackDelay"))
+  private val stackLimitPath: Path = runtimePath.selN(STACK_LIMIT_IDENT)
+  private val stackDepthPath: Path = runtimePath.selN(STACK_DEPTH_IDENT)
+  private val stackOffsetPath: Path = runtimePath.selN(STACK_OFFSET_IDENT)
+  private val stackHandlerPath: Path = runtimePath.selN(STACK_HANDLER_IDENT)
 
   private def intLit(n: BigInt) = Value.Lit(Tree.IntLit(n))
   
@@ -33,13 +33,13 @@ class StackSafeTransform(depthLimit: Int)(using State):
   def extractRes(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol], curDepth: => Symbol) =
     if isTailCall then
       blockBuilder
-        .assignFieldN(predefPath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(1)))
+        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(1)))
         .ret(res)
     else
       val tmp = sym getOrElse TempSymbol(None, "tmp")
       val offsetGtDepth = TempSymbol(None, "offsetGtDepth")
       blockBuilder
-        .assignFieldN(predefPath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(1)))
+        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(1)))
         .assign(tmp, res)
         .assign(tmp, Call(resetDepthPath, tmp.asPath.asArg :: curDepth.asPath.asArg :: Nil)(true, false))
         .rest(f(tmp.asPath))
@@ -68,19 +68,19 @@ class StackSafeTransform(depthLimit: Int)(using State):
             ret
         */
         blockBuilder
-          .assignFieldN(predefPath, STACK_OFFSET_IDENT, stackDepthPath)
+          .assignFieldN(runtimePath, STACK_OFFSET_IDENT, stackDepthPath)
           .assign(handlerRes, Call(Value.Ref(resumeSym), Nil)(true, true))
           .ret(handlerRes.asPath)
       ) :: Nil,
       blockBuilder
-        .assignFieldN(predefPath, STACK_LIMIT_IDENT, intLit(depthLimit)) // set stackLimit before call
-        .assignFieldN(predefPath, STACK_OFFSET_IDENT, intLit(0)) // set stackOffset = 0 before call
-        .assignFieldN(predefPath, STACK_DEPTH_IDENT, intLit(1)) // set stackDepth = 1 before call
-        .assignFieldN(predefPath, STACK_HANDLER_IDENT, handlerSym.asPath) // assign stack handler
+        .assignFieldN(runtimePath, STACK_LIMIT_IDENT, intLit(depthLimit)) // set stackLimit before call
+        .assignFieldN(runtimePath, STACK_OFFSET_IDENT, intLit(0)) // set stackOffset = 0 before call
+        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, intLit(1)) // set stackDepth = 1 before call
+        .assignFieldN(runtimePath, STACK_HANDLER_IDENT, handlerSym.asPath) // assign stack handler
         .rest(HandleBlockReturn(res)),
       blockBuilder // reset the stack safety values
-        .assignFieldN(predefPath, STACK_DEPTH_IDENT, intLit(0)) // set stackDepth = 0 after call
-        .assignFieldN(predefPath, STACK_HANDLER_IDENT, Value.Lit(Tree.UnitLit(true))) // set stackHandler = null
+        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, intLit(0)) // set stackDepth = 0 after call
+        .assignFieldN(runtimePath, STACK_HANDLER_IDENT, Value.Lit(Tree.UnitLit(true))) // set stackHandler = null
         .rest(f(resSym.asPath))
     )
 

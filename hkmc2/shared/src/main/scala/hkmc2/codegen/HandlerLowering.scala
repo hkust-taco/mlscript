@@ -62,16 +62,16 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   private val topLevelCtx = HandlerCtx(true, true, N, _ => rtThrowMsg("Unhandled effects"))
   private def ctorCtx(ctorThis: Path) = funcLikeHandlerCtx(S(ctorThis))
   private def handlerCtx(using HandlerCtx): HandlerCtx = summon
-  private val predefPath: Path = State.globalThisSymbol.asPath.selN(Tree.Ident("Predef"))
-  private val predefSym: ModuleSymbol = ctx.builtins.Predef
-  private val effectSigPath: Path = predefPath.selN(Tree.Ident("__EffectSig")).selN(Tree.Ident("class"))
-  private val effectSigSym: ClassSymbol = predefSym.tree.definedSymbols.get("__EffectSig").get.asCls.get
-  private val contClsPath: Path = predefPath.selN(Tree.Ident("__Cont")).selN(Tree.Ident("class"))
-  private val retClsPath: Path = predefPath.selN(Tree.Ident("__Return")).selN(Tree.Ident("class"))
-  private val retClsSym: ClassSymbol = predefSym.tree.definedSymbols.get("__Return").get.asCls.get
-  private val appendInContPath: Path = predefPath.selN(Tree.Ident("__appendInCont"))
-  private val mkEffectPath: Path = predefPath.selN(Tree.Ident("__mkEffect"))
-  private val handleBlockImplPath: Path = predefPath.selN(Tree.Ident("__handleBlockImpl"))
+  private val runtimePath: Path = State.runtimeSymbol.asPath
+  private val runtimeSym: ModuleSymbol = ctx.builtins.Runtime
+  private val effectSigPath: Path = runtimePath.selN(Tree.Ident("__EffectSig")).selN(Tree.Ident("class"))
+  private val effectSigSym: ClassSymbol = runtimeSym.tree.definedSymbols.get("__EffectSig").get.asCls.get
+  private val contClsPath: Path = runtimePath.selN(Tree.Ident("__Cont")).selN(Tree.Ident("class"))
+  private val retClsPath: Path = runtimePath.selN(Tree.Ident("__Return")).selN(Tree.Ident("class"))
+  private val retClsSym: ClassSymbol = runtimeSym.tree.definedSymbols.get("__Return").get.asCls.get
+  private val appendInContPath: Path = runtimePath.selN(Tree.Ident("__appendInCont"))
+  private val mkEffectPath: Path = runtimePath.selN(Tree.Ident("__mkEffect"))
+  private val handleBlockImplPath: Path = runtimePath.selN(Tree.Ident("__handleBlockImpl"))
   
   private def freshTmp(dbgNme: Str = "tmp") = new TempSymbol(N, dbgNme)
   
