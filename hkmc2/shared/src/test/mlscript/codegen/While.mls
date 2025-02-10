@@ -1,8 +1,5 @@
 :js
 
-:import PredefJS.mls
-//│ Imported 2 member(s)
-
 
 :sjs
 () => (while true then 0)
@@ -21,11 +18,11 @@
 //│   }
 //│   return tmp
 //│ }
-//│ = [function block$res2]
+//│ = [function block$res1]
 
 () =>
   while true then 0
-//│ = [function block$res3]
+//│ = [function block$res2]
 
 
 let x = true
@@ -50,14 +47,14 @@ let y = false
 :sjs
 while x
   then
-    log("Hello World")
+    print("Hello World")
     set x = false
   else 42
 //│ JS (unsanitized):
 //│ let tmp4, tmp5;
 //│ tmp6: while (true) {
 //│   if (x2 === true) {
-//│     tmp4 = log("Hello World");
+//│     tmp4 = Predef.print("Hello World");
 //│     x2 = false;
 //│     tmp5 = runtime.Unit;
 //│     continue tmp6;
@@ -70,7 +67,7 @@ while x
 //│ > Hello World
 //│ = 42
 
-while (log("Hello World"), false)
+while (print("Hello World"), false)
   then 0(0)
   else 1
 //│ > Hello World
@@ -85,9 +82,9 @@ while i < 3 then set i = i + 1 else i
 
 
 let i = 0
-while log("checking"); i < 3
-  then log("not yet"); set i = i + 1
-  else log("ok")
+while print("checking"); i < 3
+  then print("not yet"); set i = i + 1
+  else print("ok")
 //│ > checking
 //│ > not yet
 //│ > checking
@@ -123,7 +120,7 @@ while
 //│   }
 //│   return tmp20
 //│ }
-//│ = [function block$res14]
+//│ = [function block$res13]
 
 
 let i = 0 in
@@ -133,7 +130,7 @@ let i = 0 in
 
 
 let i = 0 in while
-  let _ = log(i)
+  let _ = print(i)
   i < 3 do set i += 1
 //│ > 0
 //│ > 1
@@ -141,7 +138,7 @@ let i = 0 in while
 //│ > 3
 
 let i = 0 in while
-  do log(i)
+  do print(i)
   i < 3 do set i += 1
 //│ > 0
 //│ > 1
@@ -195,8 +192,8 @@ fun f(ls) =
   while ls is
     Cons(h, tl) then
       set ls = tl
-      log(h)
-  else log("Done!")
+      print(h)
+  else print("Done!")
 //│ JS (unsanitized):
 //│ let f;
 //│ f = function f(ls) {
@@ -208,10 +205,10 @@ fun f(ls) =
 //│       h = param0;
 //│       tl = param1;
 //│       ls = tl;
-//│       tmp28 = log(h);
+//│       tmp28 = Predef.print(h);
 //│       continue tmp29;
 //│     } else {
-//│       tmp28 = log("Done!");
+//│       tmp28 = Predef.print("Done!");
 //│     }
 //│     break;
 //│   }
@@ -247,31 +244,31 @@ f(Cons(1, Cons(2, Cons(3, 0))))
 
 
 () => while true then 0
-//│ = [function block$res27]
+//│ = [function block$res26]
 
 :fixme
-while log("Hello World"); false
+while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.254: 	  then 0(0)
+//│ ║  l.251: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ═══[ERROR] Unrecognized term split (false literal).
 //│ > Hello World
 //│ ═══[RUNTIME ERROR] Error: match error
 
 :fixme
-while { log("Hello World"), false }
+while { print("Hello World"), false }
   then 0(0)
   else 1
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',None,Block(List(App(Ident(log),Tup(List(StrLit(Hello World)))), BoolLit(false)))),keyword 'then',App(IntLit(0),Tup(List(IntLit(0))))) (of class hkmc2.syntax.Tree$InfixApp)
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',None,Block(List(App(Ident(print),Tup(List(StrLit(Hello World)))), BoolLit(false)))),keyword 'then',App(IntLit(0),Tup(List(IntLit(0))))) (of class hkmc2.syntax.Tree$InfixApp)
 
 :fixme
 while
-    log("Hello World")
+    print("Hello World")
     false
   then 0(0)
   else 1
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',None,Block(List(App(Ident(log),Tup(List(StrLit(Hello World)))), BoolLit(false)))),keyword 'then',App(IntLit(0),Tup(List(IntLit(0))))) (of class hkmc2.syntax.Tree$InfixApp)
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',None,Block(List(App(Ident(print),Tup(List(StrLit(Hello World)))), BoolLit(false)))),keyword 'then',App(IntLit(0),Tup(List(IntLit(0))))) (of class hkmc2.syntax.Tree$InfixApp)
 
 

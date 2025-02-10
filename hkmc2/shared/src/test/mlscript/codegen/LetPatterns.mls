@@ -25,18 +25,18 @@ let (None) = N
 class Foo(a)
 
 :todo
-let Foo(x) = Foo(1) in log(x)
+let Foo(x) = Foo(1) in print(x)
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.28: 	let Foo(x) = Foo(1) in log(x)
+//│ ║  l.28: 	let Foo(x) = Foo(1) in print(x)
 //│ ╙──      	    ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.28: 	let Foo(x) = Foo(1) in log(x)
-//│ ╙──      	                           ^
+//│ ║  l.28: 	let Foo(x) = Foo(1) in print(x)
+//│ ╙──      	                             ^
 
 :todo
-let Foo(x) and x > 0 = Foo(1) in log("ok")
+let Foo(x) and x > 0 = Foo(1) in print("ok")
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.37: 	let Foo(x) and x > 0 = Foo(1) in log("ok")
+//│ ║  l.37: 	let Foo(x) and x > 0 = Foo(1) in print("ok")
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

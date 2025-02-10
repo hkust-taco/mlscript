@@ -1,8 +1,5 @@
 :js
 
-:import PredefJS.mls
-//│ Imported 2 member(s)
-
 
 fun foo() =
   1 + 2
@@ -62,7 +59,7 @@ fun outerfun(x) =
   let r = x + 1
   fun nested(y) =
     r + x + y
-  log(nested(x))
+  print(nested(x))
   nested
 
 let f = outerfun(100)
@@ -88,15 +85,15 @@ outerfun(100)(200)
 :showRepl
 fun test1(x) = test2(x)
 fun test2(y) = y + 1
-//│ REPL> Sending: block$res19 = undefined
+//│ REPL> Sending: block$res18 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: let test2, test1;try { test1 = function test1(...args) {   globalThis.Predef.checkArgs("test1", 1, true, args.length);   let x = args[0];   return runtime.checkCall(test2(x)) }; test2 = function test2(...args) {   globalThis.Predef.checkArgs("test2", 1, true, args.length);   let y = args[0];   return y + 1 }; block$res19 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: let test2, test1;try { test1 = function test1(...args) {   globalThis.Predef.checkArgs("test1", 1, true, args.length);   let x = args[0];   return runtime.checkCall(test2(x)) }; test2 = function test2(...args) {   globalThis.Predef.checkArgs("test2", 1, true, args.length);   let y = args[0];   return y + 1 }; block$res18 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ REPL> Parsed:
 //│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(this.Predef.printRaw(block$res19)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { runtime.checkCall(this.Predef.printRaw(block$res18)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ >  Unit { class: [class Unit] }

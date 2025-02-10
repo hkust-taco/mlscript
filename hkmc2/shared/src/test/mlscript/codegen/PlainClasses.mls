@@ -1,8 +1,5 @@
 :js
 
-:import PredefJS.mls
-//│ Imported 2 member(s)
-
 :global
 :sjs
 
@@ -43,15 +40,22 @@ Foo()
 //│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
 
 
-class Foo with { log("hi") }
-log("ok")
+class Foo with { print("hi") }
+print("ok")
 //│ JS (unsanitized):
-//│ let Foo3; Foo3 = class Foo2 { constructor() { log("hi") } toString() { return "Foo"; } }; log("ok")
+//│ let Foo3;
+//│ Foo3 = class Foo2 {
+//│   constructor() {
+//│     Predef.print("hi")
+//│   }
+//│   toString() { return "Foo"; }
+//│ };
+//│ Predef.print("ok")
 //│ > ok
 
 fun test() =
-  class Foo with { log("hi") }
-  log("ok")
+  class Foo with { print("hi") }
+  print("ok")
   Foo
 //│ JS (unsanitized):
 //│ let test;
@@ -59,11 +63,11 @@ fun test() =
 //│   let Foo5, tmp;
 //│   Foo5 = class Foo4 {
 //│     constructor() {
-//│       log("hi")
+//│       Predef.print("hi")
 //│     }
 //│     toString() { return "Foo"; }
 //│   };
-//│   tmp = log("ok");
+//│   tmp = Predef.print("ok");
 //│   return Foo5
 //│ };
 
@@ -71,7 +75,7 @@ let t = test()
 //│ JS (unsanitized):
 //│ let t, tmp; tmp = test(); t = tmp;
 //│ > ok
-//│ t = class Foo4 {     constructor() {       runtime.checkCall(log("hi"))     }     toString() { return "Foo"; }   }
+//│ t = class Foo4 {     constructor() {       runtime.checkCall(Predef.print("hi"))     }     toString() { return "Foo"; }   }
 
 new t
 //│ JS (unsanitized):
@@ -114,7 +118,7 @@ class Foo with
   let y2 = 4
   fun z1() = 5
   fun z2() = 6
-  log("hello")
+  print("hello")
 //│ JS (unsanitized):
 //│ let Foo8;
 //│ Foo8 = class Foo7 {
@@ -125,7 +129,7 @@ class Foo with
 //│     this.x2 = 2;
 //│     this.#y1 = 3;
 //│     this.#y2 = 4;
-//│     log("hello")
+//│     Predef.print("hello")
 //│   }
 //│   z1() {
 //│     return 5
@@ -159,18 +163,18 @@ class Foo with
 //│ };
 
 let a = new Foo
-log(a.x)
-log(a.foo(1))
-log(a.bar(1))
+print(a.x)
+print(a.foo(1))
+print(a.bar(1))
 //│ JS (unsanitized):
 //│ let a, tmp1, tmp2, tmp3, tmp4, tmp5;
 //│ tmp1 = new Foo10();
 //│ a = tmp1;
-//│ tmp2 = log(a.x);
+//│ tmp2 = Predef.print(a.x);
 //│ tmp3 = runtime.safeCall(a.foo(1));
-//│ tmp4 = log(tmp3);
+//│ tmp4 = Predef.print(tmp3);
 //│ tmp5 = runtime.safeCall(a.bar(1));
-//│ log(tmp5)
+//│ Predef.print(tmp5)
 //│ > 1
 //│ > 2
 //│ > 3
@@ -184,10 +188,10 @@ class Foo with
   val x = 2
 //│ ╔══[ERROR] Multiple definitions of symbol 'x'
 //│ ╟── defined here
-//│ ║  l.183: 	  val x = 1
+//│ ║  l.187: 	  val x = 1
 //│ ║         	      ^^^^^
 //│ ╟── defined here
-//│ ║  l.184: 	  val x = 2
+//│ ║  l.188: 	  val x = 2
 //│ ╙──       	      ^^^^^
 //│ JS (unsanitized):
 //│ let Foo12;
@@ -204,10 +208,10 @@ class Foo with
   val x = 1
   let x = 2
 //│ ╔══[ERROR] Name 'x' is already used
-//│ ║  l.205: 	  let x = 2
+//│ ║  l.209: 	  let x = 2
 //│ ║         	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.204: 	  val x = 1
+//│ ║  l.208: 	  val x = 1
 //│ ╙──       	      ^^^^^
 //│ JS (unsanitized):
 //│ let Foo14;
@@ -230,13 +234,13 @@ class Foo with
 :fixme
 class Foo with val x = 1
 //│ ╔══[PARSE ERROR] Expected block after type declaration body; found 'val' keyword instead
-//│ ║  l.231: 	class Foo with val x = 1
+//│ ║  l.235: 	class Foo with val x = 1
 //│ ╙──       	               ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.231: 	class Foo with val x = 1
+//│ ║  l.235: 	class Foo with val x = 1
 //│ ╙──       	                     ^
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side.
-//│ ║  l.231: 	class Foo with val x = 1
+//│ ║  l.235: 	class Foo with val x = 1
 //│ ╙──       	                   ^
 //│ JS (unsanitized):
 //│ /* error */

@@ -1,8 +1,5 @@
 :js
 
-:import PredefJS.mls
-//│ Imported 2 member(s)
-
 
 :sjs
 val x = 2
@@ -14,14 +11,14 @@ fun foo() =
 
 :sjs
 class Test with
-  log(foo())
+  print(foo())
 //│ JS (unsanitized):
 //│ let Test1;
 //│ Test1 = class Test {
 //│   constructor() {
 //│     let tmp;
 //│     tmp = foo();
-//│     log(tmp)
+//│     Predef.print(tmp)
 //│   }
 //│   toString() { return "Test"; }
 //│ };

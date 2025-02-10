@@ -1,8 +1,5 @@
 :js
 
-:import PredefJS.mls
-//│ Imported 2 member(s)
-
 
 class Some[out A](value: A)
 
@@ -70,7 +67,7 @@ x => if x is Some(x) then x
 //│     throw new this.Error("match error");
 //│   }
 //│ }
-//│ = [function block$res10]
+//│ = [function block$res9]
 
 
 class C(a)
@@ -123,7 +120,7 @@ f(M.D(27))
 fun f(x) = if x is
   Some(x) and x > 0 then 42
   None then "ok"
-  else log("oops")
+  else print("oops")
 //│ JS (unsanitized):
 //│ let f4;
 //│ f4 = function f(x3) {
@@ -135,13 +132,13 @@ fun f(x) = if x is
 //│     if (scrut2 === true) {
 //│       return 42
 //│     } else {
-//│       return log("oops")
+//│       return Predef.print("oops")
 //│     }
 //│   } else {
 //│     if (x3 instanceof None1.class) {
 //│       return "ok"
 //│     } else {
-//│       return log("oops")
+//│       return Predef.print("oops")
 //│     }
 //│   }
 //│ };
@@ -196,7 +193,7 @@ f(Pair(10, 5))
 
 // UCS term not in tail position
 :sjs
-fun f(x) = log of if x is
+fun f(x) = print of if x is
   Some(0) then "0"
   None then "ok"
   else "oops"
@@ -218,7 +215,7 @@ fun f(x) = log of if x is
 //│       tmp9 = "oops";
 //│     }
 //│   }
-//│   return log(tmp9)
+//│   return Predef.print(tmp9)
 //│ };
 
 f(Some(0))

@@ -1,8 +1,5 @@
 :js
 
-:import PredefJS.mls
-//│ Imported 2 member(s)
-
 
 class Some[out A](value: A)
 
@@ -15,8 +12,8 @@ fun test(x) =
     Some(v) then Some(v + 1)
     None then None
   ) is
-    Some(v) then log(v)
-    None then log("none")
+    Some(v) then print(v)
+    None then print("none")
 //│ JS (unsanitized):
 //│ let test;
 //│ test = function test(x) {
@@ -37,10 +34,10 @@ fun test(x) =
 //│   if (scrut instanceof Some1.class) {
 //│     param01 = scrut.value;
 //│     v1 = param01;
-//│     return log(v1)
+//│     return Predef.print(v1)
 //│   } else {
 //│     if (scrut instanceof None1) {
-//│       return log("none")
+//│       return Predef.print("none")
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }

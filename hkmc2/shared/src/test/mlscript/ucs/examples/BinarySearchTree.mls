@@ -6,7 +6,7 @@ fun (++): (Str, Str) -> Str
 fun toString: Any -> Str
 
 fun (|>) pipe(x, f) = f(x)
-fun (~~>) toBe(x, y) = if x === y then () else error
+fun (~~>) toBe(x, y) = if x === y then ()
 fun (<?) min(x, y) = if x < y then x else y
 fun (>?) max(x, y) = if x > y then x else y
 fun abs(x) = if x < 0 then -x else x

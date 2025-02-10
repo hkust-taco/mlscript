@@ -1,13 +1,10 @@
 :js
 
-:import PredefJS.mls
-//│ Imported 2 member(s)
-
 
 fun f() =
-  log("--- pre ---")
+  print("--- pre ---")
   return 1
-  log("--- post ---")
+  print("--- post ---")
   
 
 f()
@@ -17,7 +14,7 @@ f()
 :sjs
 fun f(x) =
   if x < 0 do
-    log("whoops")
+    print("whoops")
     return 0
   x + 1
 //│ JS (unsanitized):
@@ -26,7 +23,7 @@ fun f(x) =
 //│   let scrut, tmp, tmp1;
 //│   scrut = x < 0;
 //│   if (scrut === true) {
-//│     tmp = log("whoops");
+//│     tmp = Predef.print("whoops");
 //│     return 0
 //│   } else {
 //│     tmp1 = runtime.Unit;
