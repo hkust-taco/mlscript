@@ -3,6 +3,6 @@ import "./Predef.mls"
 module QuoteExample with
   fun test() = 123
   fun foo() = `1 `+ `2
-  fun inc() = x `=> x
+  fun inc() = x `=> x `+ `1
   // fun foo() =
   //   `test`() `+ `1

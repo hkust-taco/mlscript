@@ -152,7 +152,8 @@ fun print(t) =
 
 fun codegen(t, file) =
   let ctx = Context(new globalThis.Set(), false)
-  let code = show(t, ctx, "") // TODO: import & module
+  let moduleName = path.parse(file).name
+  let code = Str.concat("module ", moduleName, " with ...\nfun res = ", show(t, ctx, "")) // TODO: import
   let fp = fs.openSync(file, "w") // TODO: diff check
   fs.writeSync(fp, code)
   fs.closeSync(fp)

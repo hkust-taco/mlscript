@@ -643,15 +643,18 @@ Term2 = class Term {
     return globalThis.log(tmp2) ?? null;
   } 
   static codegen(t2, file) {
-    let ctx4, code, fp, tmp, tmp1, tmp2, tmp3, tmp4;
+    let ctx4, moduleName, code, fp, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
     tmp = new globalThis.Set();
     tmp1 = Term.Context(tmp, false);
     ctx4 = tmp1;
-    tmp2 = Term.show(t2, ctx4, "");
-    code = tmp2;
-    tmp3 = fs.openSync(file, "w");
-    fp = tmp3;
-    tmp4 = fs.writeSync(fp, code);
+    tmp2 = path.parse(file) ?? null;
+    moduleName = tmp2.name;
+    tmp3 = Term.show(t2, ctx4, "");
+    tmp4 = Str.concat("module ", moduleName, " with ...\nfun res = ", tmp3);
+    code = tmp4;
+    tmp5 = fs.openSync(file, "w");
+    fp = tmp5;
+    tmp6 = fs.writeSync(fp, code);
     return fs.closeSync(fp) ?? null;
   }
   static toString() { return "Term"; }

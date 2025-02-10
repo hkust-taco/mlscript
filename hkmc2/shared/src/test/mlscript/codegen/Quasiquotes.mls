@@ -344,20 +344,6 @@ term.print(x `=> `if x `== `0.0 then `1.0 else x)
 //│ >   scrut is true then 1
 //│ >   else x
 
-
-:re
-x `=> term.codegen(x)
-//│ JS (unsanitized):
-//│ let x10, tmp116, tmp117;
-//│ x10 = new this.Predef.term.Symbol("x");
-//│ tmp116 = new this.Predef.term.Ref(x10);
-//│ tmp117 = Predef.term.codegen(tmp116) ?? null;
-//│ new this.Predef.term.Lam([
-//│   x10
-//│ ], tmp117)
-//│ ═══[RUNTIME ERROR] Error: Invalid binding name x
-
-
 import "../../mlscript-compile/QuoteExample2.mls"
 //│ JS (unsanitized):
 //│ import QuoteExample2 from "./../../mlscript-compile/QuoteExample2.mjs"; null
@@ -366,3 +352,24 @@ import "../../mlscript-compile/QuoteExample2.mls"
 QuoteExample2.codegen()
 //│ JS (unsanitized):
 //│ QuoteExample2.codegen()
+
+
+import "../../mlscript-compile/quotes/QuoteFoo.mls"
+//│ JS (unsanitized):
+//│ import QuoteFoo from "./../../mlscript-compile/quotes/QuoteFoo.mjs"; null
+
+QuoteFoo.res
+//│ JS (unsanitized):
+//│ QuoteFoo.res
+//│ = 3
+
+
+import "../../mlscript-compile/quotes/QuoteInc.mls"
+//│ JS (unsanitized):
+//│ import QuoteInc from "./../../mlscript-compile/quotes/QuoteInc.mjs"; null
+
+
+QuoteInc.res(42)
+//│ JS (unsanitized):
+//│ QuoteInc.res(42)
+//│ = 43

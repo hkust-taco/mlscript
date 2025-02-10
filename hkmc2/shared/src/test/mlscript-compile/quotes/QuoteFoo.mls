@@ -1,1 +1,2 @@
-(+)(1, 2)
+module QuoteFoo with ...
+fun res = (+)(1, 2)
