@@ -1,10 +1,6 @@
 :js
 :noSanityCheck // * For some reason, these cause problems
 
-// * For the `log` function
-:import ../codegen/PredefJS.mls
-//│ Imported 2 member(s)
-
 :global
 :bbml
 //│ Type: ⊤
@@ -12,19 +8,19 @@
 
 :todo
 fun test1() =
-  fun sayHi = log("Hi")
+  fun sayHi = print("Hi")
   sayHi, sayHi, sayHi
 //│ ╔══[ERROR] Function definition shape not yet supported for sayHi
-//│ ║  l.15: 	  fun sayHi = log("Hi")
-//│ ╙──      	              ^^^^^^^^^
+//│ ║  l.11: 	  fun sayHi = print("Hi")
+//│ ╙──      	              ^^^^^^^^^^^
 //│ ╔══[ERROR] Variable not found: sayHi
-//│ ║  l.16: 	  sayHi, sayHi, sayHi
+//│ ║  l.12: 	  sayHi, sayHi, sayHi
 //│ ╙──      	  ^^^^^
 //│ ╔══[ERROR] Variable not found: sayHi
-//│ ║  l.16: 	  sayHi, sayHi, sayHi
+//│ ║  l.12: 	  sayHi, sayHi, sayHi
 //│ ╙──      	         ^^^^^
 //│ ╔══[ERROR] Variable not found: sayHi
-//│ ║  l.16: 	  sayHi, sayHi, sayHi
+//│ ║  l.12: 	  sayHi, sayHi, sayHi
 //│ ╙──      	                ^^^^^
 //│ Type: ⊤
 
@@ -42,9 +38,9 @@ fun test2() =
     n then funny(n - 1) + 1
   funny
 //│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but () ->{⊥} [outer, 'caseScrut, 'eff] -> 'caseScrut ->{'eff} Int found
-//│ ║  l.42: 	    n then funny(n - 1) + 1
+//│ ║  l.38: 	    n then funny(n - 1) + 1
 //│ ║        	           ^^^^^^^^^^^^^^^^
-//│ ║  l.43: 	  funny
+//│ ║  l.39: 	  funny
 //│ ╙──      	^^^^^^^
 //│ Type: ⊤
 
@@ -69,7 +65,7 @@ test2()
 :ssjs
 test2()(5)
 //│ JS:
-//│ tmp = test21(); block$res9 = runtime.safeCall(tmp(5)); undefined
+//│ tmp = test21(); block$res8 = runtime.safeCall(tmp(5)); undefined
 //│ = 5
 //│ Type: Int
 
@@ -103,20 +99,20 @@ fun test2() =
 //│ };
 //│ ═══[WARNING] Pure expression in statement position
 //│ ╔══[ERROR] Function definition shape not yet supported for funny
-//│ ║  l.84: 	    case n then funny(n - 1) + 1
+//│ ║  l.80: 	    case n then funny(n - 1) + 1
 //│ ╙──      	                ^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Variable not found: funny
-//│ ║  l.85: 	  funny
+//│ ║  l.81: 	  funny
 //│ ╙──      	  ^^^^^
 //│ Type: ⊤
 
 
 :todo
 fun test3 =
-  log("Hi")
+  print("Hi")
 //│ ╔══[ERROR] Function definition shape not yet supported for test3
-//│ ║  l.116: 	  log("Hi")
-//│ ╙──       	  ^^^^^^^^^
+//│ ║  l.112: 	  print("Hi")
+//│ ╙──       	  ^^^^^^^^^^^
 //│ Type: ⊤
 
 

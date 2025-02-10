@@ -1,8 +1,5 @@
 :js
 
-:import PredefJS.mls
-//│ Imported 2 member(s)
-
 :global
 :sjs
 
@@ -117,9 +114,9 @@ f.b
 //│ f2.b
 //│ = 2
 
-Foo(log(1), log(2))
+Foo(print(1), print(2))
 //│ JS (unsanitized):
-//│ let tmp4, tmp5; tmp4 = log(1); tmp5 = log(2); Foo5(tmp4, tmp5)
+//│ let tmp4, tmp5; tmp4 = Predef.print(1); tmp5 = Predef.print(2); Foo5(tmp4, tmp5)
 //│ > 1
 //│ > 2
 //│ = Foo((), ())
@@ -127,14 +124,14 @@ Foo(log(1), log(2))
 
 class Inner(c) with
   fun i1(d) = c + d
-  log(c)
+  print(c)
 //│ JS (unsanitized):
 //│ let Inner1;
 //│ Inner1 = function Inner(c1) { return new Inner.class(c1); };
 //│ Inner1.class = class Inner {
 //│   constructor(c) {
 //│     this.c = c;
-//│     log(this.c)
+//│     Predef.print(this.c)
 //│   }
 //│   i1(d) {
 //│     return this.c + d

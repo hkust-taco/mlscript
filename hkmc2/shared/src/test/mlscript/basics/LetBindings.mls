@@ -1,20 +1,57 @@
+:js
 
 
 let x = 1
+//│ x = 1
 
 let x = 1 in x
+//│ = 1
 
 let x = 1
 let y = 2
 x + y
+//│ = 3
+//│ x = 1
+//│ y = 2
 
 x
+//│ = 1
 
 let z = 3
 x + y + z
+//│ = 6
+//│ z = 3
 
 let x =
-  log("computing x")
+  print("computing x")
   123
+//│ > computing x
+//│ x = 123
+
+
+let x = 0
+//│ x = 0
+
+let x += 1 in...
+x
+//│ = 1
+
+let x += 1 in...
+print of x
+x
+//│ > 1
+//│ = 1
+
+let x += 1 in...
+print(x)
+x
+//│ > 1
+//│ = 1
+
+let x += 1 in
+  print(x)
+  x
+//│ > 1
+//│ = 1
 
 

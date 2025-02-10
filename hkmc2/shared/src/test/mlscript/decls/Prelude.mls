@@ -49,12 +49,3 @@ declare module Predef with
     fun perform()
 
 
-// TODO: rm
-
-declare fun log: (Any) -> ()
-
-declare fun error: Nothing
-
-declare fun concat: (Str, Str) -> Str
-
-

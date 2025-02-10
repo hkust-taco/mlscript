@@ -37,7 +37,7 @@ class ParserSetup(file: os.Path, dbgParsing: Bool)(using Elaborator.State, Raise
 
 
 // * The weird type of `mkOutput` is to allow wrapping the reporting of diagnostics in synchronized blocks
-class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Unit):
+class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Unit)(using Config):
   
   val runtimeFile: os.Path = preludeFile/os.up/os.up/os.up/"mlscript-compile"/"Runtime.mjs"
   
@@ -82,7 +82,8 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
       val (blk0, _) = elab.importFrom(parsed)
       val blk = blk0.copy(stats = semantics.Import(State.runtimeSymbol, runtimeFile.toString) :: blk0.stats)
       val low = ltl.givenIn:
-        codegen.Lowering(lowerHandlers = false, stackLimit = None) // TODO: properly hook up stack limit
+        new codegen.Lowering()
+          with codegen.LoweringSelSanityChecks
       val jsb = ltl.givenIn:
         codegen.js.JSBuilder()
       val le = low.program(blk)

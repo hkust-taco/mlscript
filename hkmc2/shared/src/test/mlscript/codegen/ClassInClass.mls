@@ -1,21 +1,18 @@
 :js
 
-:import PredefJS.mls
-//│ Imported 2 member(s)
-
 
 :sjs
 class Outer(a, b) with
   class Inner(c) with
     fun i1(d) = [b, c, d]
-    log(a)
-    log(c)
-    log(i1(a))
+    print(a)
+    print(c)
+    print(i1(a))
   fun o1(c) = Inner(c)
   fun o2(c, d) = Inner(c).i1(d)
   val i = Inner(a)
-  log(i.c)
-  log(i.i1(1))
+  print(i.c)
+  print(i.i1(1))
 //│ JS (unsanitized):
 //│ let Outer1;
 //│ Outer1 = function Outer(a1, b1) { return new Outer.class(a1, b1); };
@@ -30,10 +27,10 @@ class Outer(a, b) with
 //│       constructor(c) {
 //│         this.c = c;
 //│         let tmp3, tmp4, tmp5;
-//│         tmp3 = log(this$Outer.a);
-//│         tmp4 = log(this.c);
+//│         tmp3 = Predef.print(this$Outer.a);
+//│         tmp4 = Predef.print(this.c);
 //│         tmp5 = this.i1(this$Outer.a);
-//│         log(tmp5)
+//│         Predef.print(tmp5)
 //│       }
 //│       i1(d) {
 //│         return [
@@ -46,9 +43,9 @@ class Outer(a, b) with
 //│     };
 //│     tmp = this.Inner(this.a);
 //│     this.i = tmp;
-//│     tmp1 = log(this.i.c);
+//│     tmp1 = Predef.print(this.i.c);
 //│     tmp2 = runtime.safeCall(this.i.i1(1));
-//│     log(tmp2)
+//│     Predef.print(tmp2)
 //│   }
 //│   o1(c) {
 //│     return this.Inner(c)
@@ -65,21 +62,21 @@ class Outer(a, b) with
 val o = Outer(100, 200)
 //│ > 100
 //│ > 100
-//│ > [ 200, 100, 100 ]
+//│ > [200, 100, 100]
 //│ > 100
-//│ > [ 200, 100, 1 ]
+//│ > [200, 100, 1]
 //│ o = Outer(100, 200)
 
 o.o1(30)
 //│ > 100
 //│ > 30
-//│ > [ 200, 30, 100 ]
+//│ > [200, 30, 100]
 //│ = Inner(30)
 
 o.o2(30, 40)
 //│ > 100
 //│ > 30
-//│ > [ 200, 30, 100 ]
+//│ > [200, 30, 100]
 //│ = [200, 30, 40]
 
 o.i

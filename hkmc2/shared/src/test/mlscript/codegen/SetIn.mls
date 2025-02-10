@@ -1,8 +1,5 @@
 :js
 
-:import PredefJS.mls
-//│ Imported 2 member(s)
-
 
 let x = 0
 //│ x = 0
@@ -31,14 +28,14 @@ x
 
 
 :sjs
-set x += 1 in log(x)
+set x += 1 in print(x)
 //│ JS (unsanitized):
 //│ let old, tmp2, tmp3, tmp4;
 //│ old = x1;
 //│ try {
 //│   tmp3 = x1 + 1;
 //│   x1 = tmp3;
-//│   tmp4 = log(x1);
+//│   tmp4 = Predef.print(x1);
 //│   tmp2 = tmp4;
 //│ } finally {
 //│   x1 = old;
@@ -54,8 +51,8 @@ fun example() =
   let x = 0
   let get_x() = x
   let x += 1
-  log(x)
-  log(get_x())
+  print(x)
+  print(get_x())
 example()
 //│ > 1
 //│ > 0
@@ -64,8 +61,8 @@ fun example() =
   let x = 0
   let get_x() = x
   set x += 1
-  log(x)
-  log(get_x())
+  print(x)
+  print(get_x())
 example()
 //│ > 1
 //│ > 1
@@ -74,9 +71,9 @@ example()
 fun example() =
   let x = 0
   let get_x() = x
-  set x += 1 in log(x); log(get_x())
-  log(x)
-  log(get_x())
+  set x += 1 in print(x); print(get_x())
+  print(x)
+  print(get_x())
 example()
 //│ JS (unsanitized):
 //│ let example2;
@@ -90,17 +87,17 @@ example()
 //│   try {
 //│     tmp6 = x2 + 1;
 //│     x2 = tmp6;
-//│     tmp7 = log(x2);
+//│     tmp7 = Predef.print(x2);
 //│     tmp8 = runtime.safeCall(get_x());
-//│     tmp9 = log(tmp8);
+//│     tmp9 = Predef.print(tmp8);
 //│     tmp10 = (tmp7 , tmp9);
 //│     tmp5 = tmp10;
 //│   } finally {
 //│     x2 = old1;
 //│   }
-//│   tmp11 = log(x2);
+//│   tmp11 = Predef.print(x2);
 //│   tmp12 = runtime.safeCall(get_x());
-//│   return log(tmp12)
+//│   return Predef.print(tmp12)
 //│ };
 //│ example2()
 //│ > 1
@@ -113,9 +110,9 @@ fun example() =
   let x = 0
   let get_x() = x
   let y =
-    set x += 1 in log(x); x
-  log(x)
-  log(get_x())
+    set x += 1 in print(x); x
+  print(x)
+  print(get_x())
   y
 example()
 //│ JS (unsanitized):
@@ -130,16 +127,16 @@ example()
 //│   try {
 //│     tmp6 = x2 + 1;
 //│     x2 = tmp6;
-//│     tmp7 = log(x2);
+//│     tmp7 = Predef.print(x2);
 //│     tmp8 = (tmp7 , x2);
 //│     tmp5 = tmp8;
 //│   } finally {
 //│     x2 = old1;
 //│   }
 //│   y = tmp5;
-//│   tmp9 = log(x2);
+//│   tmp9 = Predef.print(x2);
 //│   tmp10 = runtime.safeCall(get_x());
-//│   tmp11 = log(tmp10);
+//│   tmp11 = Predef.print(tmp10);
 //│   return y
 //│ };
 //│ example3()

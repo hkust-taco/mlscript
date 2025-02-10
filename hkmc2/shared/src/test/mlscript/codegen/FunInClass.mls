@@ -1,8 +1,5 @@
 :js
 
-:import PredefJS.mls
-//│ Imported 2 member(s)
-
 
 fun test() =
   class C(a) with { fun f() = a }
@@ -15,7 +12,7 @@ test()
 :sjs
 fun test(a) =
   class Inner(b) with
-    log(a)
+    print(a)
     fun f(c) = [a, b, c]
     fun g(d) =
       fun h(e) = [a, b, d, e]
@@ -30,7 +27,7 @@ fun test(a) =
 //│     constructor(b) {
 //│       this.b = b;
 //│       let tmp;
-//│       tmp = log(a);
+//│       tmp = Predef.print(a);
 //│     }
 //│     f(c) {
 //│       return [

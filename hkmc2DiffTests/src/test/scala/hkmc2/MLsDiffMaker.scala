@@ -52,7 +52,38 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   val typeCheck = FlagCommand(false, "typeCheck")
   
+  
+  // * Compiler configuration
+  
+  val noSanityCheck = NullaryCommand("noSanityCheck")
+  val effectHandlers = NullaryCommand("effectHandlers")
+  val stackSafe = Command("stackSafe")(_.trim)
+  
+  def mkConfig: Config =
+    import Config.*
+    if stackSafe.isSet && effectHandlers.isUnset then
+      output(s"$errMarker Option ':stackSafe' requires ':effectHandlers' to be set")
+    Config(
+      sanityChecks = Opt.when(noSanityCheck.isUnset)(SanityChecks(light = true)),
+      effectHandlers = Opt.when(effectHandlers.isSet)(EffectHandlers(
+        stackSafety = stackSafe.get.flatMap:
+          case "off" => N
+          case value => value.toIntOption match
+            case N => S(StackSafety.default)
+            case S(value) =>
+              if value < 0 then
+                failures += 1
+                output("/!\\ Stack limit must be positive, but the stack limit here is set to " + value)
+                S(StackSafety.default)
+              else
+                S(StackSafety(stackLimit = value))
+        ,
+      )),
+    )
+  
+  
   val importCmd = Command("import"): ln =>
+    given Config = mkConfig
     importFile(file / os.up / os.RelPath(ln.trim), verbose = silent.isUnset)
   
   val showUCS = Command("ucs"): ln =>
@@ -87,6 +118,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   override def run(): Unit =
     if file =/= preludeFile then 
+      given Config = mkConfig
       importFile(preludeFile, verbose = false)
       prelude = curCtx
     curCtx = curCtx.nest(N)
@@ -101,6 +133,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       output(s"Error: $d")
       ()
     if file != preludeFile then
+      given Config = mkConfig
       processTrees(
         Modified(`import`, N, StrLit(predefFile.toString))
         :: Open(Ident("Predef"))
@@ -108,7 +141,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     super.init()
   
   
-  def importFile(file: os.Path, verbose: Bool): Unit =
+  def importFile(file: os.Path, verbose: Bool)(using Config): Unit =
     
     // val raise: Raise = throw _
     given raise: Raise = d =>
@@ -153,6 +186,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   def processOrigin(origin: Origin)(using Raise): Unit =
     val oldCtx = curCtx
     
+    given Config = mkConfig
+    
     val lexer = new syntax.Lexer(origin, dbg = dbgParsing.isSet)
     val tokens = lexer.bracketedTokens
     
@@ -176,7 +211,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     //   output(s"AST: $res")
     
     if parseOnly.isUnset then
-      processTrees(res)(using raise)
+      processTrees(res)(using summon, raise)
     
     if showContext.isSet then
       output("Env:")
@@ -187,7 +222,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   private var blockNum = 0
   
-  def processTrees(trees: Ls[syntax.Tree])(using Raise): Unit =
+  def processTrees(trees: Ls[syntax.Tree])(using Config, Raise): Unit =
     val elab = Elaborator(etl, file / os.up, prelude)
     // val blockSymbol =
     //   semantics.TopLevelSymbol("block#"+blockNum)
@@ -217,7 +252,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       
   
   
-  def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Raise): Unit =
+  def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
     if typeCheck.isSet then
       val typer = typing.TypeChecker()
       val ty = typer.typeProd(trm)

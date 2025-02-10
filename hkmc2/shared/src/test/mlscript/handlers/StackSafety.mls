@@ -12,7 +12,7 @@ sum(100)
 // preserve tail calls
 // MUST see "return hi1(tmp)" in the output
 :stackSafe 5
-:handler
+:effectHandlers
 :expect 0
 :sjs
 fun hi(n) =
@@ -172,7 +172,7 @@ hi(0)
 
 :sjs
 :stackSafe 1000
-:handler
+:effectHandlers
 :expect 50005000
 fun sum(n) =
   if n == 0 then 0
@@ -358,7 +358,7 @@ fun sum(n) =
 sum(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
-:handler
+:effectHandlers
 :stackSafe 100
 mut val ctr = 0
 fun dummy(x) = x
@@ -372,7 +372,7 @@ foo(foo)
 //│ ctr = 10001
 
 :stackSafe 1000
-:handler
+:effectHandlers
 :expect 50005000
 val foo =
   val f = n =>
@@ -396,7 +396,7 @@ abstract class Eff with
   fun perform(a): ()
 
 // functions and lambdas inside handlers
-:handler
+:effectHandlers
 :stackSafe 100
 :expect 50005000
 fun foo(h) = h.perform
@@ -410,7 +410,7 @@ foo(h)
 //│ = 50005000
 
 // function call and defn inside handler
-:handler
+:effectHandlers
 :stackSafe 100
 :expect 50005000
 handle h = Eff with
@@ -425,7 +425,7 @@ in
 //│ = 50005000
 
 :re
-:handler
+:effectHandlers
 fun foo(h) = h.perform(2)
 handle h = Eff with
   fun perform(a)(resume) =
@@ -436,7 +436,7 @@ handle h = Eff with
 foo(h)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
-:handler
+:effectHandlers
 :stackSafe
 :sjs
 fun max(a, b) = if a < b then b else a
@@ -453,31 +453,23 @@ fun max(a, b) = if a < b then b else a
 //│ };
 
 
-// * Note that currently the `:sjs` command will not run the code if there is a compilation error
 :sjs
 :stackSafe 42
-:ge
 fun hi(n) = n
 hi(0)
-//│ ═══[COMPILATION ERROR] This code requires effect handler instrumentation but was compiled without it.
+//│ /!!!\ Option ':stackSafe' requires ':effectHandlers' to be set
 //│ JS (unsanitized):
-//│ let hi1, stackHandler;
-//│ hi1 = function hi(n) {
-//│   return n
-//│ };
-//│ throw globalThis.Error("This code requires effect handler instrumentation but was compiled without it.");
-//│ ═══[RUNTIME ERROR] Error: This code requires effect handler instrumentation but was compiled without it.
+//│ let hi1; hi1 = function hi(n) { return n }; hi1(0)
+//│ = 0
 
 :stackSafe 42
-:ge
-:re
 hi(0)
-//│ ═══[COMPILATION ERROR] This code requires effect handler instrumentation but was compiled without it.
-//│ ═══[RUNTIME ERROR] Error: This code requires effect handler instrumentation but was compiled without it.
+//│ /!!!\ Option ':stackSafe' requires ':effectHandlers' to be set
+//│ = 0
 
 
 :stackSafe 1000
-:handler
+:effectHandlers
 :expect 100010000
 fun sum(n) =
   if n == 0 then 0
@@ -486,3 +478,4 @@ fun sum(n) =
 fun bad() = sum(10000) + sum(10000)
 bad()
 //│ = 100010000
+

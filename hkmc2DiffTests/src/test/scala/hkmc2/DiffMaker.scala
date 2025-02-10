@@ -148,8 +148,10 @@ abstract class DiffMaker:
   var _showRelativeLineNums = false
   
   
+  val errMarker: Str = "/!!!\\"
+  
   def uncaught(err: Throwable): Unit =
-    output("/!!!\\ Uncaught error: " + err +
+    output(s"$errMarker Uncaught error: $err" +
       err.getStackTrace().take(
         if fullExceptionStack.isSet || debug.isSet then Int.MaxValue
         else if tolerateErrors || err.isInstanceOf[StackOverflowError] then 0

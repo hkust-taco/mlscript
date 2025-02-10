@@ -18,6 +18,7 @@ abstract class BbmlDiffMaker extends JSBackendDiffMaker:
       noSanityCheck.set
       if file =/= bbPreludeFile then
         curCtx = Elaborator.State.init
+        given Config = mkConfig
         importFile(bbPreludeFile, verbose = false)
   
   
@@ -31,7 +32,7 @@ abstract class BbmlDiffMaker extends JSBackendDiffMaker:
   var bbmlTyper: Opt[BBTyper] = None
   
   
-  override def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Raise): Unit =
+  override def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
     super.processTerm(trm, inImport)
     if bbmlOpt.isSet then
       given Scope = Scope.empty

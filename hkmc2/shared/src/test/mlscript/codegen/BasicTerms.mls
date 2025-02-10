@@ -33,42 +33,25 @@
 //│ = 2
 
 
-:fixme // should be a "linking" error
-log("Hi")
+print("Hi")
 //│ JS (unsanitized):
-//│ runtime.safeCall(this.log("Hi"))
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'log' yielded 'undefined'
+//│ Predef.print("Hi")
+//│ > Hi
 
-:fixme
 :lot
-log("Hi")
+print("Hi")
 2
 //│ JS (unsanitized):
-//│ let tmp; tmp = runtime.safeCall(this.log("Hi")); 2
+//│ let tmp; tmp = Predef.print("Hi"); 2
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
 //│   main = Assign:
-//│     lhs = $selRes
-//│     rhs = Select{member:log}:
-//│       qual = Ref of globalThis:globalThis
-//│       name = Ident of "log"
-//│     rest = Match: \
-//│     scrut = Ref of $selRes
-//│     arms = Ls of 
-//│       Tuple2:
-//│         _1 = Lit of UnitLit of false
-//│         _2 = Throw of Instantiate:
-//│           cls = Select:
-//│             qual = Ref of globalThis:globalThis
-//│             name = Ident of "Error"
-//│           args = Ls of 
-//│             Lit of StrLit of "Access to required field 'log' yielded 'undefined'"
-//│     dflt = N
-//│     rest = Assign: \
 //│     lhs = $tmp
 //│     rhs = Call:
-//│       fun = Ref of $selRes
+//│       fun = Select{member:print}:
+//│         qual = Ref of member:Predef
+//│         name = Ident of "print"
 //│       args = Ls of 
 //│         Arg:
 //│           spread = false
@@ -79,7 +62,8 @@ log("Hi")
 //│     rest = Return: \
 //│     res = Lit of UnitLit of false
 //│     implct = true
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'log' yielded 'undefined'
+//│ > Hi
+//│ = 2
 
 
 :re

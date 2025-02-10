@@ -1,5 +1,5 @@
 :js
-:handler
+:effectHandlers
 
 let id = 0
 //│ id = 0

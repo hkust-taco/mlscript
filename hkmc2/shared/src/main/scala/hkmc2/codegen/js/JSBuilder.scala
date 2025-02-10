@@ -537,9 +537,10 @@ object JSBuilder:
 end JSBuilder
 
 
-trait JSBuilderArgNumSanityChecks
-    (instrument: Bool)(using Elaborator.State)
+trait JSBuilderArgNumSanityChecks(using Config, Elaborator.State)
     extends JSBuilder:
+  
+  val instrument: Bool = config.sanityChecks.isDefined
   
   override def checkMLsCalls: Bool = instrument
   override def checkSelections: Bool = instrument

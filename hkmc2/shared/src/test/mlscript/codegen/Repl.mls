@@ -63,43 +63,11 @@ res
 
 
 :showRepl
-:re
-let x = 1, log(x), x
+let x = 1, print(x), x
 //│ REPL> Sending: block$res6 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: let x, selRes, tmp;try { x = 1; selRes = this.log; if (selRes === undefined) {   throw new this.Error("Access to required field 'log' yielded 'undefined'"); } tmp = runtime.safeCall(selRes(x)); block$res6 = x; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ​Error: Access to required field 'log' yielded 'undefined'​
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  [runtime error] Error: Access to required field 'log' yielded 'undefined'
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'log' yielded 'undefined'
-//│ REPL> Sending: try { runtime.checkCall(this.Predef.printRaw(block$res6)) } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit { class: [class Unit] }
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit { class: [class Unit] }
-//│ REPL> Sending: try { runtime.checkCall(this.Predef.printRaw(x)) } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ REPL> Collected:
-//│ >  1
-//│ >  Unit { class: [class Unit] }
-//│ REPL> Parsed:
-//│ >  1
-//│ >  Unit { class: [class Unit] }
-//│ x = 1
-
-:import PredefJS.mls
-//│ Imported 2 member(s)
-
-:showRepl
-let x = 1, log(x), x
-//│ REPL> Sending: block$res8 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let x1, tmp1;try { x1 = 1; tmp1 = runtime.checkCall(log(x1)); block$res8 = x1; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: let x, tmp;try { x = 1; tmp = runtime.checkCall(Predef.print(x)); block$res6 = x; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
 //│ >  undefined
@@ -107,7 +75,7 @@ let x = 1, log(x), x
 //│ >  1
 //│ >  undefined
 //│ > 1
-//│ REPL> Sending: try { runtime.checkCall(this.Predef.printRaw(block$res8)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { runtime.checkCall(this.Predef.printRaw(block$res6)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
 //│ >  Unit { class: [class Unit] }
@@ -115,7 +83,7 @@ let x = 1, log(x), x
 //│ >  1
 //│ >  Unit { class: [class Unit] }
 //│ = 1
-//│ REPL> Sending: try { runtime.checkCall(this.Predef.printRaw(x1)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { runtime.checkCall(this.Predef.printRaw(x)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
 //│ >  Unit { class: [class Unit] }
