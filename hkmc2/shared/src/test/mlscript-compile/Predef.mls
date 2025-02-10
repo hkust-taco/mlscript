@@ -82,7 +82,7 @@ fun tupleGet(xs, i) =
 fun map(f)(...xs) = xs.map(pass1(f))
 
 fun arraymap(f)(xs) = xs.map(f)
-fun arrayforeach(f)(xs) = xs.foreach(f)
+fun arrayforeach(f)(xs) = xs.forEach(f)
 fun join(ch)(xs) = xs.join(ch)
 
 fun fold(f)(init, ...rest) =

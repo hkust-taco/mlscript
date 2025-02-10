@@ -375,7 +375,7 @@ Predef1 = class Predef {
   } 
   static arrayforeach(f11) {
     return (xs4) => {
-      return xs4.foreach(f11) ?? null;
+      return xs4.forEach(f11) ?? null;
     };
   } 
   static join(ch) {

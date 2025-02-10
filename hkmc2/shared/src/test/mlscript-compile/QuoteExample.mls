@@ -1,0 +1,8 @@
+import "./Predef.mls"
+
+module QuoteExample with
+  fun test() = 123
+  fun foo() = `1 `+ `2
+  fun inc() = x `=> x
+  // fun foo() =
+  //   `test`() `+ `1

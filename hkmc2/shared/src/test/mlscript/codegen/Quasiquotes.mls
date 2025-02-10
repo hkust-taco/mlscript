@@ -345,30 +345,24 @@ term.print(x `=> `if x `== `0.0 then `1.0 else x)
 //│ >   else x
 
 
-term.codegen(`1 `+ `2)
-//│ JS (unsanitized):
-//│ let tmp116, tmp117, tmp118, tmp119, tmp120, tmp121;
-//│ tmp116 = new this.Predef.term.Symbol("+");
-//│ tmp117 = new this.Predef.term.Lit(1);
-//│ tmp118 = new this.Predef.term.Lit(2);
-//│ tmp119 = new this.Predef.term.Ref(tmp116);
-//│ tmp120 = new this.Predef.term.Tup([
-//│   tmp117,
-//│   tmp118
-//│ ]);
-//│ tmp121 = new this.Predef.term.App(tmp119, tmp120);
-//│ Predef.term.codegen(tmp121) ?? null
-//│ = "(+)(1, 2)"
-
-
 :re
 x `=> term.codegen(x)
 //│ JS (unsanitized):
-//│ let x10, tmp122, tmp123;
+//│ let x10, tmp116, tmp117;
 //│ x10 = new this.Predef.term.Symbol("x");
-//│ tmp122 = new this.Predef.term.Ref(x10);
-//│ tmp123 = Predef.term.codegen(tmp122) ?? null;
+//│ tmp116 = new this.Predef.term.Ref(x10);
+//│ tmp117 = Predef.term.codegen(tmp116) ?? null;
 //│ new this.Predef.term.Lam([
 //│   x10
-//│ ], tmp123)
-//│ ═══[RUNTIME ERROR] Invalid binding name x
+//│ ], tmp117)
+//│ ═══[RUNTIME ERROR] Error: Invalid binding name x
+
+
+import "../../mlscript-compile/QuoteExample2.mls"
+//│ JS (unsanitized):
+//│ import QuoteExample2 from "./../../mlscript-compile/QuoteExample2.mjs"; null
+
+
+QuoteExample2.codegen()
+//│ JS (unsanitized):
+//│ QuoteExample2.codegen()

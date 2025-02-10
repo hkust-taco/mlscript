@@ -1,3 +1,6 @@
+import fs from "fs";
+import process from "process";
+import path from "path";
 import Predef from "./Predef.mjs";
 import Str from "./Str.mjs";
 let Term2;
@@ -532,7 +535,7 @@ Term2 = class Term {
     return Str.concat(indent2, res);
   } 
   static show(t, ctx3, indent3) {
-    let res, param0, param1, split, param01, param11, stats, res1, nest, param02, param12, params, body, nest1, param03, fields, param04, param13, lhs, rhs, param05, lit, param06, param07, name, scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19;
+    let res, param0, param1, split, param01, param11, stats, res1, nest, param02, param12, params, body, nest1, param03, fields, param04, param13, lhs, rhs, param05, lit, param06, param07, name, scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20, tmp21;
     if (t instanceof Term.Ref.class) {
       param06 = t.sym;
       if (param06 instanceof Term.Symbol.class) {
@@ -542,9 +545,10 @@ Term2 = class Term {
         if (scrut === true) {
           tmp = name;
         } else {
-          throw Str.concat("Invalid binding name ", name);
+          tmp1 = Str.concat("Invalid binding name ", name);
+          throw new globalThis.Error(tmp1);
         }
-        tmp1 = tmp;
+        tmp2 = tmp;
       } else {
         throw new globalThis.Error("match error");
       }
@@ -552,26 +556,26 @@ Term2 = class Term {
       if (t instanceof Term.Lit.class) {
         param05 = t.lit;
         lit = param05;
-        tmp1 = lit.toString() ?? null;
+        tmp2 = lit.toString() ?? null;
       } else {
         if (t instanceof Term.App.class) {
           param04 = t.lhs;
           param13 = t.rhs;
           lhs = param04;
           rhs = param13;
-          tmp2 = Term.show(lhs, ctx3, "");
-          tmp3 = Term.show(rhs, ctx3, "");
-          tmp1 = Str.concat("(", tmp2, ")(", tmp3, ")");
+          tmp3 = Term.show(lhs, ctx3, "");
+          tmp4 = Term.show(rhs, ctx3, "");
+          tmp2 = Str.concat("(", tmp3, ")(", tmp4, ")");
         } else {
           if (t instanceof Term.Tup.class) {
             param03 = t.fields;
             fields = param03;
-            tmp4 = Predef.join(", ");
-            tmp5 = Predef.arraymap((t1) => {
+            tmp5 = Predef.join(", ");
+            tmp6 = Predef.arraymap((t1) => {
               return Term.show(t1, ctx3, "");
             });
-            tmp6 = tmp5(fields) ?? null;
-            tmp1 = tmp4(tmp6) ?? null;
+            tmp7 = tmp6(fields) ?? null;
+            tmp2 = tmp5(tmp7) ?? null;
           } else {
             if (t instanceof Term.Lam.class) {
               param02 = t.params;
@@ -579,19 +583,18 @@ Term2 = class Term {
               params = param02;
               body = param12;
               nest1 = ctx3.nest;
-              tmp7 = Predef.arrayforeach((s2) => {
-                let tmp20;
-                tmp20 = nest1.add(s2.name) ?? null;
-                return tmp20(params) ?? null;
+              tmp8 = Predef.arrayforeach((s2) => {
+                return nest1.add(s2.name) ?? null;
               });
-              tmp8 = Predef.join(", ");
-              tmp9 = Predef.arraymap((s2) => {
+              tmp9 = tmp8(params) ?? null;
+              tmp10 = Predef.join(", ");
+              tmp11 = Predef.arraymap((s2) => {
                 return s2.name;
               });
-              tmp10 = tmp9(params) ?? null;
-              tmp11 = tmp8(tmp10) ?? null;
-              tmp12 = Term.show(body, nest1, "");
-              tmp1 = Str.concat("(", tmp11, ") => ", tmp12);
+              tmp12 = tmp11(params) ?? null;
+              tmp13 = tmp10(tmp12) ?? null;
+              tmp14 = Term.show(body, nest1, "");
+              tmp2 = Str.concat("(", tmp13, ") => ", tmp14);
             } else {
               if (t instanceof Term.Blk.class) {
                 param01 = t.stats;
@@ -599,23 +602,23 @@ Term2 = class Term {
                 stats = param01;
                 res1 = param11;
                 nest = ctx3.nest;
-                tmp13 = Predef.join("\n");
-                tmp14 = Predef.arraymap((s2) => {
+                tmp15 = Predef.join("\n");
+                tmp16 = Predef.arraymap((s2) => {
                   return Term.showStmt(s2, nest, "");
                 });
-                tmp15 = tmp14(stats) ?? null;
-                tmp16 = tmp13(tmp15) ?? null;
-                tmp17 = Term.show(res1, nest, "");
-                tmp1 = Str.concat(tmp16, "\n", tmp17);
+                tmp17 = tmp16(stats) ?? null;
+                tmp18 = tmp15(tmp17) ?? null;
+                tmp19 = Term.show(res1, nest, "");
+                tmp2 = Str.concat(tmp18, "\n", tmp19);
               } else {
                 if (t instanceof Term.IfLike.class) {
                   param0 = t.kw;
                   param1 = t.desugared;
                   if (param0 instanceof Term.KeywordIf.class) {
                     split = param1;
-                    tmp18 = Str.concat(indent3, "  ");
-                    tmp19 = Term.showSplit(split, ctx3, tmp18, false);
-                    tmp1 = Str.concat("if \n", tmp19);
+                    tmp20 = Str.concat(indent3, "  ");
+                    tmp21 = Term.showSplit(split, ctx3, tmp20, false);
+                    tmp2 = Str.concat("if \n", tmp21);
                   } else {
                     throw new globalThis.Error("match error");
                   }
@@ -628,7 +631,7 @@ Term2 = class Term {
         }
       }
     }
-    res = tmp1;
+    res = tmp2;
     return Str.concat(indent3, res);
   } 
   static print(t1) {
@@ -639,12 +642,17 @@ Term2 = class Term {
     tmp2 = Term.show(t1, ctx4, "");
     return globalThis.log(tmp2) ?? null;
   } 
-  static codegen(t2) {
-    let ctx4, tmp, tmp1;
+  static codegen(t2, file) {
+    let ctx4, code, fp, tmp, tmp1, tmp2, tmp3, tmp4;
     tmp = new globalThis.Set();
     tmp1 = Term.Context(tmp, false);
     ctx4 = tmp1;
-    return Term.show(t2, ctx4, "");
+    tmp2 = Term.show(t2, ctx4, "");
+    code = tmp2;
+    tmp3 = fs.openSync(file, "w");
+    fp = tmp3;
+    tmp4 = fs.writeSync(fp, code);
+    return fs.closeSync(fp) ?? null;
   }
   static toString() { return "Term"; }
 };

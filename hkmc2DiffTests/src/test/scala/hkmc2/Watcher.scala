@@ -96,7 +96,7 @@ class Watcher(dirs: Ls[File]):
       then
         MLsCompiler(preludePath).compileModule(path)
       else
-        val dm = new MainDiffMaker((dirPaths.head/os.up).toString, path, preludePath, predefPath, relativeName):
+        val dm = new MainDiffMaker((os.pwd/os.up).toString, path, preludePath, predefPath, relativeName):
           override def unhandled(blockLineNum: Int, exc: Throwable): Unit =
             exc.printStackTrace()
             super.unhandled(blockLineNum, exc)

@@ -1,3 +1,7 @@
+import "fs"
+import "process"
+import "path"
+
 import "./Predef.mls"
 import "./Str.mls"
 
@@ -126,13 +130,13 @@ fun show(t, ctx, indent) =
   let res = if t is
     Ref(Symbol(name)) then
       if ctx.isValid(name) then name
-      else throw Str.concat("Invalid binding name ", name)
+      else throw new globalThis.Error(Str.concat("Invalid binding name ", name))
     Lit(lit) then lit.toString()
     App(lhs, rhs) then Str.concat("(", show(lhs, ctx, ""), ")(", show(rhs, ctx, ""), ")")
     Tup(fields) then Predef.join(", ")(Predef.arraymap(t => show(t, ctx, ""))(fields))
     Lam(params, body) then
       let nest = ctx.nest
-      Predef.arrayforeach(s => nest.add(s.name)(params))
+      Predef.arrayforeach(s => nest.add(s.name))(params)
       Str.concat("(", Predef.join(", ")(Predef.arraymap(s => s.name)(params)), ") => ", show(body, nest, ""))
     Blk(stats, res) then
       let nest = ctx.nest
@@ -146,7 +150,10 @@ fun print(t) =
   log(show(t, ctx, ""))
 
 
-// TODO: how to store the generated code?
-fun codegen(t) =
+fun codegen(t, file) =
   let ctx = Context(new globalThis.Set(), false)
-  show(t, ctx, "")
+  let code = show(t, ctx, "") // TODO: import & module
+  let fp = fs.openSync(file, "w") // TODO: diff check
+  fs.writeSync(fp, code)
+  fs.closeSync(fp)
+
