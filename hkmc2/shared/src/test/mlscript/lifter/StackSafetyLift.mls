@@ -337,22 +337,22 @@ sum(10000)
 //│   }
 //│   resume(value$) {
 //│     if (this.pc === 0) {
-//│       this.sum$capture$0.stackDelayRes3$ = value$;
+//│       this.sum$capture$0.stackDelayRes0$ = value$;
 //│     } else if (this.pc === 1) {
-//│       this.sum$capture$0.tmp0$ = value$;
+//│       this.sum$capture$0.tmp2$ = value$;
 //│     }
 //│     contLoop: while (true) {
 //│       if (this.pc === 0) {
-//│         this.sum$capture$0.scrut1$ = this.n$1 == 0;
-//│         if (this.sum$capture$0.scrut1$ === true) {
+//│         this.sum$capture$0.scrut3$ = this.n$1 == 0;
+//│         if (this.sum$capture$0.scrut3$ === true) {
 //│           return 0
 //│         } else {
-//│           this.sum$capture$0.tmp2$ = this.n$1 - 1;
+//│           this.sum$capture$0.tmp1$ = this.n$1 - 1;
 //│           globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
-//│           this.sum$capture$0.tmp0$ = sum1(this.sum$capture$0.tmp2$);
-//│           if (this.sum$capture$0.tmp0$ instanceof globalThis.Predef.__EffectSig.class) {
+//│           this.sum$capture$0.tmp2$ = sum1(this.sum$capture$0.tmp1$);
+//│           if (this.sum$capture$0.tmp2$ instanceof globalThis.Predef.__EffectSig.class) {
 //│             this.pc = 1;
-//│             return globalThis.Predef.__appendInCont(this.sum$capture$0.tmp0$, this)
+//│             return globalThis.Predef.__appendInCont(this.sum$capture$0.tmp2$, this)
 //│           }
 //│           this.pc = 1;
 //│           continue contLoop;
@@ -362,50 +362,50 @@ sum(10000)
 //│       } else if (this.pc === 2) {
 //│         break contLoop;
 //│       } else if (this.pc === 1) {
-//│         this.sum$capture$0.tmp0$ = globalThis.Predef.resetDepth(this.sum$capture$0.tmp0$, this.curDepth$2);
-//│         return this.n$1 + this.sum$capture$0.tmp0$
+//│         this.sum$capture$0.tmp2$ = globalThis.Predef.resetDepth(this.sum$capture$0.tmp2$, this.curDepth$2);
+//│         return this.n$1 + this.sum$capture$0.tmp2$
 //│       }
 //│       break;
 //│     }
 //│   }
 //│   toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│ };
-//│ sum$capture1 = function sum$capture(tmp0$1, scrut1$1, tmp2$1, stackDelayRes3$1) {
-//│   return new sum$capture.class(tmp0$1, scrut1$1, tmp2$1, stackDelayRes3$1);
+//│ sum$capture1 = function sum$capture(stackDelayRes0$1, tmp1$1, tmp2$1, scrut3$1) {
+//│   return new sum$capture.class(stackDelayRes0$1, tmp1$1, tmp2$1, scrut3$1);
 //│ };
 //│ sum$capture1.class = class sum$capture {
-//│   constructor(tmp0$, scrut1$, tmp2$, stackDelayRes3$) {
-//│     this.tmp0$ = tmp0$;
-//│     this.scrut1$ = scrut1$;
+//│   constructor(stackDelayRes0$, tmp1$, tmp2$, scrut3$) {
+//│     this.stackDelayRes0$ = stackDelayRes0$;
+//│     this.tmp1$ = tmp1$;
 //│     this.tmp2$ = tmp2$;
-//│     this.stackDelayRes3$ = stackDelayRes3$;
+//│     this.scrut3$ = scrut3$;
 //│   }
-//│   toString() { return "sum$capture(" + globalThis.Predef.render(this.tmp0$) + ", " + globalThis.Predef.render(this.scrut1$) + ", " + globalThis.Predef.render(this.tmp2$) + ", " + globalThis.Predef.render(this.stackDelayRes3$) + ")"; }
+//│   toString() { return "sum$capture(" + globalThis.Predef.render(this.stackDelayRes0$) + ", " + globalThis.Predef.render(this.tmp1$) + ", " + globalThis.Predef.render(this.tmp2$) + ", " + globalThis.Predef.render(this.scrut3$) + ")"; }
 //│ };
 //│ sum1 = function sum(n) {
 //│   let curDepth, capture;
 //│   capture = new sum$capture1(null, null, null, null);
 //│   curDepth = globalThis.Predef.__stackDepth;
-//│   capture.stackDelayRes3$ = globalThis.Predef.checkDepth();
-//│   if (capture.stackDelayRes3$ instanceof globalThis.Predef.__EffectSig.class) {
-//│     capture.stackDelayRes3$.tail.next = Cont$$3(n, curDepth, capture, 0);
-//│     capture.stackDelayRes3$.tail = capture.stackDelayRes3$.tail.next;
-//│     return capture.stackDelayRes3$
+//│   capture.stackDelayRes0$ = globalThis.Predef.checkDepth();
+//│   if (capture.stackDelayRes0$ instanceof globalThis.Predef.__EffectSig.class) {
+//│     capture.stackDelayRes0$.tail.next = Cont$$3(n, curDepth, capture, 0);
+//│     capture.stackDelayRes0$.tail = capture.stackDelayRes0$.tail.next;
+//│     return capture.stackDelayRes0$
 //│   }
-//│   capture.scrut1$ = n == 0;
-//│   if (capture.scrut1$ === true) {
+//│   capture.scrut3$ = n == 0;
+//│   if (capture.scrut3$ === true) {
 //│     return 0
 //│   } else {
-//│     capture.tmp2$ = n - 1;
+//│     capture.tmp1$ = n - 1;
 //│     globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
-//│     capture.tmp0$ = sum1(capture.tmp2$);
-//│     if (capture.tmp0$ instanceof globalThis.Predef.__EffectSig.class) {
-//│       capture.tmp0$.tail.next = Cont$$3(n, curDepth, capture, 1);
-//│       capture.tmp0$.tail = capture.tmp0$.tail.next;
-//│       return capture.tmp0$
+//│     capture.tmp2$ = sum1(capture.tmp1$);
+//│     if (capture.tmp2$ instanceof globalThis.Predef.__EffectSig.class) {
+//│       capture.tmp2$.tail.next = Cont$$3(n, curDepth, capture, 1);
+//│       capture.tmp2$.tail = capture.tmp2$.tail.next;
+//│       return capture.tmp2$
 //│     }
-//│     capture.tmp0$ = globalThis.Predef.resetDepth(capture.tmp0$, curDepth);
-//│     return n + capture.tmp0$
+//│     capture.tmp2$ = globalThis.Predef.resetDepth(capture.tmp2$, curDepth);
+//│     return n + capture.tmp2$
 //│   }
 //│ };
 //│ StackDelay$$1 = function StackDelay$$(handleBlock$$capture$0) {
