@@ -753,16 +753,6 @@ object TrivialStatementsAndMatch:
         handleAssignAndMatch(r =>  AssignDynField(lhs, fld, arrayIdx, rhs, r), m, k)
       case Define(defn, TrivialStatementsAndMatch(k, m)) => 
         handleAssignAndMatch(r => Define(defn, r), m, k)
-      case Return(res, implct) => N
-      case Throw(exc) => N
-      case Label(label, body, rest) => N
-      case Break(label) => N
-      case Continue(label) => N
-      case Begin(sub, rest) => N
-      case TryBlock(sub, finallyDo, rest) => N
-      case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) => N
-      case HandleBlockReturn(res) => N
-      case End(msg) => N
       case _ => N
 
 

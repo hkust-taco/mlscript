@@ -49,6 +49,7 @@ sealed abstract class Block extends Product with AutoLocated:
     case Begin(sub, rst) => sub.size + rst.size
     case Assign(_, _, rst) => 1 + rst.size
     case AssignField(_, _, _, rst) => 1 + rst.size
+    case AssignDynField(_, _, _, _, rst) => 1 + rst.size
     case Match(_, arms, dflt, rst) =>
       1 + arms.map(_._2.size).sum + dflt.map(_.size).getOrElse(0) + rst.size
     case Define(_, rst) => 1 + rst.size
