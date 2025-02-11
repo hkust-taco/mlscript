@@ -44,7 +44,7 @@ render(Object.create(null))
 //│ = "[object]"
 
 render(x => x)
-//│ = "[function]"
+//│ = "[function lambda]"
 
 class Foo
 

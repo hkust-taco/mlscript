@@ -55,8 +55,8 @@ f
 let f
 f(x) = x + 1
 //│ JS (unsanitized):
-//│ let f1; f1 = (x1) => { return x1 + 1 };
-//│ f = [function f1]
+//│ let f1, lambda; lambda = function lambda(x1) { return x1 + 1 }; f1 = lambda;
+//│ f = [function lambda]
 
 f(1)
 //│ JS (unsanitized):

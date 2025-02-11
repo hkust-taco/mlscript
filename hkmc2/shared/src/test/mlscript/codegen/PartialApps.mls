@@ -4,7 +4,7 @@
 fun foo(x, y, z) = [x, y, z]
 
 let f = foo(1, _, 3)
-//│ f = [function f]
+//│ f = [function lambda]
 
 f(2)
 //│ = [1, 2, 3]
@@ -12,14 +12,14 @@ f(2)
 :sjs
 let f = foo(1, _, _)
 //│ JS (unsanitized):
-//│ let f1; f1 = (_, _1) => { return foo(1, _, _1) };
-//│ f = [function f1]
+//│ let f1, lambda1; lambda1 = function lambda(_, _1) { return foo(1, _, _1) }; f1 = lambda1;
+//│ f = [function lambda]
 
 f(2, 3)
 //│ = [1, 2, 3]
 
 let g = f(_, 3)
-//│ g = [function g]
+//│ g = [function lambda]
 
 g(2)
 //│ = [1, 2, 3]
@@ -45,14 +45,14 @@ foo(..._)
 
 
 let h = _ - 2
-//│ h = [function h]
+//│ h = [function lambda]
 
 h(1)
 //│ = -1
 
 
 let i = _(0, 1, _)
-//│ i = [function i]
+//│ i = [function lambda]
 
 i((x, y, z) => x + y + z, 2)
 //│ = 3
@@ -97,12 +97,12 @@ let j = _.x(123)
 :todo
 let j = _.x(1, _)
 //│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ j = [function j]
+//│ j = [function lambda]
 
 :todo // really support this?
 let j = _.x.y(1, _)
 //│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ j = [function j1]
+//│ j = [function lambda]
 
 
 class C(a, b, c)
@@ -120,7 +120,7 @@ class C(a, b, c)
 
 
 _ - _ of 1, 2
-//│ = [function block$res33]
+//│ = [function lambda]
 
 (_ - _) of 1, 2
 //│ = -1
@@ -151,13 +151,18 @@ _ - 2 <| 1
 :sjs
 1 . _ - 2
 //│ JS (unsanitized):
-//│ ((_) => { return Predef.passTo(1, _) }) - 2
+//│ let lambda30; lambda30 = function lambda(_) { return Predef.passTo(1, _) }; lambda30 - 2
 //│ = NaN
 
 :sjs
 1 . (_ - 2)()
 //│ JS (unsanitized):
-//│ let tmp7; tmp7 = Predef.passTo(1, (_) => { return _ - 2 }); runtime.safeCall(tmp7())
+//│ let tmp7, lambda31;
+//│ lambda31 = function lambda(_) {
+//│   return _ - 2
+//│ };
+//│ tmp7 = Predef.passTo(1, lambda31);
+//│ runtime.safeCall(tmp7())
 //│ = -1
 
 1 . (_ - _)(2)

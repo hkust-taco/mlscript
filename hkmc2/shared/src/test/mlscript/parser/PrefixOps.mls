@@ -36,17 +36,17 @@
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.30: 	1
 //│ ╙──      	^
-//│ = [function block$res5]
+//│ = [function lambda]
 
 
 :sjs
 +
 //│ JS (unsanitized):
-//│ (arg1, arg2) => { return arg1 + arg2 }
-//│ = [function block$res6]
+//│ let lambda1; lambda1 = function lambda(arg1, arg2) { return arg1 + arg2 }; lambda1
+//│ = [function lambda]
 
 *
-//│ = [function block$res7]
+//│ = [function lambda]
 
 :w
 :pt
@@ -58,7 +58,7 @@
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.53: 	1
 //│ ╙──      	^
-//│ = [function block$res8]
+//│ = [function lambda]
 
 
 fun (??) foo(x, y) = x + y

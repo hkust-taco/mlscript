@@ -11,14 +11,14 @@ new
 new 2
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not a constructor
 
+// TODO: somehow desugaring lambdas fixed this, is this intended?
+:todo
 :sjs
 :ge
 new 2 + 2
 //│ JS (unsanitized):
-//│ new (arg1, arg2) => { return arg1 + arg2 }(2, 2)
-//│ > try { block$res3 = new (...args) => {   globalThis.Predef.checkArgs("", 2, true, args.length);   let arg1 = args[0];   let arg2 = args[1];   return arg1 + arg2 }(2, 2); undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                    ^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Malformed arrow function parameter list
+//│ let lambda; lambda = function lambda(arg1, arg2) { return arg1 + arg2 }; new lambda(2, 2)
+//│ = [object Object]
 
 :re
 new()

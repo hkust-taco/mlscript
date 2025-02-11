@@ -156,21 +156,22 @@ fun baz() =
 //│ JS (unsanitized):
 //│ let baz;
 //│ baz = function baz() {
-//│   let w, z;
+//│   let w, z, lambda;
 //│   w = function w() {
 //│     return 1
 //│   };
 //│   z = function z() {
 //│     return 2
 //│   };
-//│   return (x, y) => {
+//│   lambda = function lambda(x, y) {
 //│     let tmp1, tmp2, tmp3, tmp4;
 //│     tmp1 = x + y;
 //│     tmp2 = w();
 //│     tmp3 = tmp1 + tmp2;
 //│     tmp4 = z();
 //│     return tmp3 + tmp4
-//│   }
+//│   };
+//│   return lambda
 //│ };
 
 

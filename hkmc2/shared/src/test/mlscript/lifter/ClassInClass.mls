@@ -117,3 +117,25 @@ class A(x) with
 A(1).getA()
 //│ ═══[RUNTIME ERROR] TypeError: this.B is not a function
 //│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+
+:sjs
+class A with
+  val x = 
+    fun g() = 2
+    g
+//│ JS (unsanitized):
+//│ let g, A5, g$;
+//│ g$ = function g$(A$instance) {
+//│   return 2
+//│ };
+//│ g = function g(A$instance) {
+//│   return () => {
+//│     return g$(A$instance)
+//│   }
+//│ };
+//│ A5 = class A4 {
+//│   constructor() {
+//│     this.x = g;
+//│   }
+//│   toString() { return "A"; }
+//│ };

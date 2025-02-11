@@ -238,7 +238,7 @@ fun f(x) =
   x
 f(1)
 //│ JS (unsanitized):
-//│ let A1, f6, A$ctor, A$, f$capture3;
+//│ let A1, f6, A$ctor, A$, f$capture1;
 //│ A$ = function A$(f$capture$0) {
 //│   let tmp6;
 //│   tmp6 = new A1.class();
@@ -269,10 +269,10 @@ f(1)
 //│   }
 //│   toString() { return "A(" + "" + ")"; }
 //│ };
-//│ f$capture3 = function f$capture(x0$1) {
+//│ f$capture1 = function f$capture(x0$1) {
 //│   return new f$capture.class(x0$1);
 //│ };
-//│ f$capture3.class = class f$capture2 {
+//│ f$capture1.class = class f$capture {
 //│   constructor(x0$) {
 //│     this.x0$ = x0$;
 //│   }
@@ -280,7 +280,7 @@ f(1)
 //│ };
 //│ f6 = function f(x) {
 //│   let tmp6, tmp7, capture;
-//│   capture = new f$capture3(x);
+//│   capture = new f$capture1(x);
 //│   tmp6 = A$(capture);
 //│   tmp7 = runtime.safeCall(tmp6.f());
 //│   return capture.x0$
@@ -307,38 +307,39 @@ fun f() =
   Good()
 f().foo()
 //│ JS (unsanitized):
-//│ let Bad1, Good1, f7, tmp6, Bad$ctor, Bad$, Good$ctor, Good$, f$capture5;
-//│ Good$ = function Good$(x$1, y$2, f$capture$0) {
+//│ let Bad1, Good1, f7, tmp6, Bad$ctor, Bad$, Good$ctor, Good$, f$capture3;
+//│ Good$ = function Good$(x$1, y$2, z$3, f$capture$0) {
 //│   let tmp7;
 //│   tmp7 = new Good1.class();
-//│   return tmp7(x$1, y$2, f$capture$0)
+//│   return tmp7(x$1, y$2, z$3, f$capture$0)
 //│ };
-//│ Good$ctor = function Good$ctor(x$1, y$2, f$capture$0) {
+//│ Good$ctor = function Good$ctor(x$1, y$2, z$3, f$capture$0) {
 //│   return () => {
 //│     let tmp7;
 //│     tmp7 = new Good1.class();
-//│     return tmp7(x$1, y$2, f$capture$0)
+//│     return tmp7(x$1, y$2, z$3, f$capture$0)
 //│   }
 //│ };
 //│ Good1 = function Good() {
-//│   return (x$11, y$21, f$capture$01) => {
-//│     return new Good.class()(x$11, y$21, f$capture$01);
+//│   return (x$11, y$21, z$31, f$capture$01) => {
+//│     return new Good.class()(x$11, y$21, z$31, f$capture$01);
 //│   }
 //│ };
 //│ Good1.class = class Good {
 //│   constructor() {
-//│     return (x$1, y$2, f$capture$0) => {
+//│     return (x$1, y$2, z$3, f$capture$0) => {
 //│       this.x$1 = x$1;
 //│       this.y$2 = y$2;
+//│       this.z$3 = z$3;
 //│       this.f$capture$0 = f$capture$0;
 //│       return this;
 //│     }
 //│   }
 //│   foo() {
 //│     let tmp7, tmp8;
-//│     this.f$capture$0.z1$ = 100;
+//│     this.z$3 = 100;
 //│     tmp7 = this.x$1 + this.y$2;
-//│     tmp8 = tmp7 + this.f$capture$0.z1$;
+//│     tmp8 = tmp7 + this.z$3;
 //│     return tmp8 + this.f$capture$0.w0$
 //│   }
 //│   toString() { return "Good(" + "" + ")"; }
@@ -373,26 +374,25 @@ f().foo()
 //│   }
 //│   toString() { return "Bad(" + "" + ")"; }
 //│ };
-//│ f$capture5 = function f$capture(w0$1, z1$1) {
-//│   return new f$capture.class(w0$1, z1$1);
+//│ f$capture3 = function f$capture(w0$1) {
+//│   return new f$capture.class(w0$1);
 //│ };
-//│ f$capture5.class = class f$capture4 {
-//│   constructor(w0$, z1$) {
+//│ f$capture3.class = class f$capture2 {
+//│   constructor(w0$) {
 //│     this.w0$ = w0$;
-//│     this.z1$ = z1$;
 //│   }
-//│   toString() { return "f$capture(" + globalThis.Predef.render(this.w0$) + ", " + globalThis.Predef.render(this.z1$) + ")"; }
+//│   toString() { return "f$capture(" + globalThis.Predef.render(this.w0$) + ")"; }
 //│ };
 //│ f7 = function f() {
-//│   let x, y, tmp7, tmp8, capture;
-//│   capture = new f$capture5(null, null);
+//│   let x, y, z, tmp7, tmp8, capture;
+//│   capture = new f$capture3(null);
 //│   x = 1;
 //│   y = 10;
-//│   capture.z1$ = 10;
+//│   z = 10;
 //│   capture.w0$ = 1000;
 //│   tmp7 = Bad$(capture);
 //│   tmp8 = runtime.safeCall(tmp7.foo());
-//│   return Good$(x, y, capture)
+//│   return Good$(x, y, z, capture)
 //│ };
 //│ tmp6 = f7();
 //│ runtime.safeCall(tmp6.foo())

@@ -88,8 +88,8 @@ fun
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.82: 	@inline let
 //│ ╙──      	 ^^^^^^
-//│ abs = [function abs]
-//│ clamp = [function clamp]
+//│ abs = [function lambda]
+//│ clamp = [function lambda]
 
 :w
 // Only the first variable is annotated with @inline.

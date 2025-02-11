@@ -31,7 +31,7 @@
 
 
 let f = x => x * 2
-//│ f = [function f]
+//│ f = [function lambda]
 
 2
   + 1

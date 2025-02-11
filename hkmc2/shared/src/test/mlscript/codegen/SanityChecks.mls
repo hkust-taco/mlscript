@@ -62,7 +62,12 @@ f(3)(4)
 :noSanityCheck
 let f = (x, y) => x + y in f(2)
 //│ JS:
-//│ f3 = (x, y) => { return x + y }; block$res5 = runtime.safeCall(f3(2)); undefined
+//│ lambda = function lambda(x, y) {
+//│   return x + y
+//│ };
+//│ f3 = lambda;
+//│ block$res5 = runtime.safeCall(f3(2));
+//│ undefined
 //│ = NaN
 
 :ssjs
@@ -70,16 +75,17 @@ let f = (x, y) => x + y in f(2)
 let f = (x, y) => x + y
 f(2)
 //│ JS:
-//│ f4 = (...args) => {
-//│   globalThis.Predef.checkArgs("", 2, true, args.length);
+//│ lambda1 = function lambda(...args) {
+//│   globalThis.Predef.checkArgs("lambda", 2, true, args.length);
 //│   let x = args[0];
 //│   let y = args[1];
 //│   return x + y
 //│ };
+//│ f4 = lambda1;
 //│ block$res6 = runtime.safeCall(f4(2));
 //│ undefined
-//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
-//│ f = [function f4]
+//│ ═══[RUNTIME ERROR] Error: Function 'lambda' expected 2 arguments but got 1
+//│ f = [function lambda]
 
 
 :expect NaN

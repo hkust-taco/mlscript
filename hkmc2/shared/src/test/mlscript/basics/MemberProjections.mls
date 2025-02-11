@@ -46,8 +46,8 @@ M.Foo:: n(foo, 2)
 :sjs
 let m = M.Foo::m
 //│ JS (unsanitized):
-//│ let m; m = (self, ...args) => { return self.m(...args) };
-//│ m = [function m]
+//│ let m, lambda5; lambda5 = function lambda(self, ...args) { return self.m(...args) }; m = lambda5;
+//│ m = [function lambda]
 
 m(foo)
 //│ = 124
@@ -91,7 +91,7 @@ foo.M.Foo::m()
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
-//│ ═══[RUNTIME ERROR] Error: Function expected at least 1 argument but got 0
+//│ ═══[RUNTIME ERROR] Error: Function 'lambda' expected at least 1 argument but got 0
 
 :e
 :re
@@ -114,7 +114,7 @@ Foo::m
 //│ ║         	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
-//│ = [function block$res21]
+//│ = [function lambda]
 
 :e
 :sjs
@@ -128,7 +128,11 @@ Foo::n(foo, 2)
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ JS (unsanitized):
-//│ ((self, ...args) => { return runtime.safeCall(self.n(...args)) })(foo, 2)
+//│ let lambda10;
+//│ lambda10 = function lambda(self, ...args) {
+//│   return runtime.safeCall(self.n(...args))
+//│ };
+//│ lambda10(foo, 2)
 //│ = 125
 
 
