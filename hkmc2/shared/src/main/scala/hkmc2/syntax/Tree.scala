@@ -198,6 +198,7 @@ enum Tree extends AutoLocated:
    */
   def asParam(inUsing: Bool): Opt[(Opt[Bool], Ident, Opt[Tree])] = this match
     case und: Under => S(N, new Ident("_").withLocOf(und), N)
+    // * In `using` clauses, identifiers are understood as type names for unnamed contextual parameters:
     case id: Ident if inUsing => S(N, Ident(""), S(id))
     case id: Ident => S(N, id, N)
     case Spread(Keyword.`..`, _, S(id: Ident)) => S(S(false), id, N)
