@@ -1,0 +1,3 @@
+
+module Cubic with ...
+fun res = (x) => (*)(x, (*)(x, (*)(x, 1)))

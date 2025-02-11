@@ -31,7 +31,10 @@ object Thrw extends TailOp:
   def apply(r: Result): Block = Throw(r)
 
 
-// TODO: clean
+// * Used by quasiquote lowering
+// * e.g., x `=> {body} will allocate a next-stage binding and store it in `x`
+// * In `{body}`, one can refer to the staged code fragment via `x`
+// * Subst maintains the mapping from symbols like `x` to the actual code data
 class Subst(initMap: Map[Local, Value]):
   val map = initMap
 

@@ -83,6 +83,7 @@ fun tupleGet(xs, i) =
   globalThis.Array.prototype.at.call(xs, i)
 
 fun map(f)(...xs) = xs.map(pass1(f))
+
 fun fold(f)(init, ...rest) =
   let
     i = 0

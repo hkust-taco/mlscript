@@ -410,3 +410,20 @@ CSPBar.res
 //│ JS (unsanitized):
 //│ CSPBar.res
 //│ = 1
+
+
+QuoteExample2.genCubic()
+//│ JS (unsanitized):
+//│ QuoteExample2.genCubic()
+
+
+import "../../mlscript-compile/quotes/Cubic.mls"
+//│ JS (unsanitized):
+//│ import Cubic from "./../../mlscript-compile/quotes/Cubic.mjs"; 
+
+let cubic = Cubic.res
+cubic(8)
+//│ JS (unsanitized):
+//│ let cubic; cubic = Cubic.res; runtime.safeCall(cubic(8))
+//│ = 512
+//│ cubic = [function]

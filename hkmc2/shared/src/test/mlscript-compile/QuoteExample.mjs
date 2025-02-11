@@ -30,6 +30,27 @@ QuoteExample1 = class QuoteExample {
     return new globalThis.Predef.term.Lam([
       x
     ], tmp5)
+  } 
+  static power(x) {
+    return (caseScrut) => {
+      let n, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
+      if (caseScrut === 0) {
+        return new globalThis.Predef.term.Lit(1.0)
+      } else {
+        n = caseScrut;
+        tmp = new globalThis.Predef.term.Symbol("*");
+        tmp1 = x;
+        tmp2 = QuoteExample.power(x);
+        tmp3 = n - 1;
+        tmp4 = runtime.safeCall(tmp2(tmp3));
+        tmp5 = new globalThis.Predef.term.Ref(tmp);
+        tmp6 = new globalThis.Predef.term.Tup([
+          tmp1,
+          tmp4
+        ]);
+        return new globalThis.Predef.term.App(tmp5, tmp6)
+      }
+    }
   }
   static toString() { return "QuoteExample"; }
 };

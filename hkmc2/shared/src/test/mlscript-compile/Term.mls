@@ -126,7 +126,7 @@ fun showSplit(s, ctx, indent, isCont) =
       let nest = ctx.nest
       nest.add(sym.name)
       Str.concat("let ", sym.name, " = ", show(term, nest, ""), "\n", showSplit(split, nest, indent, false))
-    Else(term) then // FIXME: keep the indent?
+    Else(term) then
       if isCont then show(term, ctx, "")
       else Str.concat("else ", show(term, ctx, ""))
     End then ""
