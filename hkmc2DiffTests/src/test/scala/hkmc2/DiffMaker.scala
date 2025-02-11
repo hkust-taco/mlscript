@@ -137,7 +137,8 @@ abstract class DiffMaker:
   val strw = new java.io.StringWriter
   val out = new java.io.PrintWriter(strw)
   val output = Outputter(out)
-  val report = ReportFormatter(output.apply)
+  val report = ReportFormatter: outputConsumer =>
+    outputConsumer(output(_))
   
   val failures = mutable.Buffer.empty[Int]
   val unmergedChanges = mutable.Buffer.empty[Int]
@@ -147,8 +148,10 @@ abstract class DiffMaker:
   var _showRelativeLineNums = false
   
   
+  val errMarker: Str = "/!!!\\"
+  
   def uncaught(err: Throwable): Unit =
-    output("/!!!\\ Uncaught error: " + err +
+    output(s"$errMarker Uncaught error: $err" +
       err.getStackTrace().take(
         if fullExceptionStack.isSet || debug.isSet then Int.MaxValue
         else if tolerateErrors || err.isInstanceOf[StackOverflowError] then 0

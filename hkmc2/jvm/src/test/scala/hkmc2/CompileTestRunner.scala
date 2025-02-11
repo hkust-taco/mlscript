@@ -44,7 +44,15 @@ class CompileTestRunner
       
       val preludePath = dir/"mlscript"/"decls"/"Prelude.mls"
       
-      val compiler = MLsCompiler(preludePath)
+      given Config = Config.default
+      
+      val compiler = MLsCompiler(
+        preludePath,
+        mkOutput =>
+          // * Synchronize diagnostic output to avoid interleaving since the compiler tests run in parallel
+          CompileTestRunner.synchronized:
+            mkOutput(System.out.println)
+      )
       compiler.compileModule(file)
       
       if compiler.report.badLines.nonEmpty then
@@ -53,5 +61,7 @@ class CompileTestRunner
             .map("\n\t"+relativeName+"."+file.ext+":"+_).mkString(", "))
       
 end CompileTestRunner
+
+object CompileTestRunner
 
 

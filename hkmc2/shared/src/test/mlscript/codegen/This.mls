@@ -8,13 +8,13 @@ fun test(x) =
   [this.a, x]
 //│ ═══[ERROR] Cannot use 'this' outside of an object scope.
 //│ JS (unsanitized):
-//│ let test; test = function test(x) { /* error */ }; null
+//│ let test; test = function test(x) { /* error */ };
 
 :sjs
 fun test(x) =
   [globalThis.a, x]
 //│ JS (unsanitized):
-//│ let test1; test1 = function test(x) { return [ globalThis.a, x ]; }; null
+//│ let test1; test1 = function test(x) { return [ globalThis.a, x ] };
 
 :re
 test(123)
@@ -46,17 +46,16 @@ module Test with
 //│     this.a = 3;
 //│   }
 //│   static test1(x) {
-//│     return test1(x);
+//│     return test1(x)
 //│   } 
 //│   static test2(x1) {
 //│     return [
 //│       Test.a,
 //│       x1
-//│     ];
+//│     ]
 //│   }
 //│   static toString() { return "Test"; }
 //│ };
-//│ null
 
 
 Test.test1(123)

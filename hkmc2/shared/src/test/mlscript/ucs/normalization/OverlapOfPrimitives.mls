@@ -1,55 +1,76 @@
-:ucs desugared
+:js
+:ucs normalized
+
+fun test(x) = if x is
+  Int then "Int"
+  0 then "Zero"
+//│ Normalized:
+//│ >  if x is Int then "Int"
+
+test(0)
+//│ = "Int"
 
 fun test(x, p) = if x is
   Int and p(x) then "foo"
   0 then "bar"
   else "qax"
-//│ Desugared:
+//│ Normalized:
 //│ >  if
-//│ >    x is Int and
+//│ >    x is refined Int and
 //│ >      let $scrut = p#666(x#666)
 //│ >      $scrut is true then "foo"
-//│ >    x is 0 then "bar"
+//│ >      x is 0 then "bar"
+//│ >      else "qax"
 //│ >    else "qax"
 
 fun test(x, p) = if x is
   Str and p(x) then "foo"
   "lol" then "bar"
   else "qax"
-//│ Desugared:
+//│ Normalized:
 //│ >  if
-//│ >    x is Str and
+//│ >    x is refined Str and
 //│ >      let $scrut = p#666(x#666)
 //│ >      $scrut is true then "foo"
-//│ >    x is "lol" then "bar"
+//│ >      x is "lol" then "bar"
+//│ >      else "qax"
 //│ >    else "qax"
 
-test(0, _ => true)
+test("test", _ => true)
+//│ = "foo"
 
-:todo // handle overlapping branches
+test("lol", _ => true)
+//│ = "foo"
+
+test("lol", _ => false)
+//│ = "bar"
+
+test("", _ => false)
+//│ = "qax"
+
 fun test(x, p) = if x is
   Num and p(x) then "great"
   2.71828 then "E"
   3.14159 then "PI"
   else "other"
-//│ Desugared:
+//│ Normalized:
 //│ >  if
-//│ >    x is Num and
+//│ >    x is refined Num and
 //│ >      let $scrut = p#666(x#666)
 //│ >      $scrut is true then "great"
-//│ >    x is 2.71828 then "E"
-//│ >    x is 3.14159 then "PI"
+//│ >      x is 2.71828 then "E"
+//│ >      x is 3.14159 then "PI"
+//│ >      else "other"
 //│ >    else "other"
 
 fun test(x, p) = if x is
   Bool and p(x) then "great"
   true then "false"
   false then "true"
-//│ Desugared:
-//│ >  if
-//│ >    x is Bool and
-//│ >      let $scrut = p#666(x#666)
-//│ >      $scrut is true then "great"
+//│ Normalized:
+//│ >  if x is refined Bool and
+//│ >    let $scrut = p#666(x#666)
+//│ >    $scrut is true then "great"
 //│ >    x is true then "false"
 //│ >    x is false then "true"
 
@@ -58,13 +79,91 @@ fun test(x, p) = if x is
   Bool and p(x) then "great, again"
   true then "false"
   false then "true"
-//│ Desugared:
+//│ Normalized:
 //│ >  if
 //│ >    x is Object and
 //│ >      let $scrut = p#666(x#666)
 //│ >      $scrut is true then "great"
-//│ >    x is Bool and
+//│ >    x is refined Bool and
 //│ >      let $scrut = p#666(x#666)
 //│ >      $scrut is true then "great, again"
-//│ >    x is true then "false"
-//│ >    x is false then "true"
+//│ >      x is true then "false"
+//│ >      x is false then "true"
+
+object Foo
+
+fun f(arg) = if
+  arg is
+    undefined then "undefined"
+    null      then "null"
+    Object    then String(arg)
+//│ Normalized:
+//│ >  if
+//│ >    arg is undefined then "undefined"
+//│ >    arg is null then "null"
+//│ >    arg is Object then member:String#666(arg#666)
+
+f of undefined
+//│ = "undefined"
+
+f of null
+//│ = "null"
+
+f of Foo
+//│ = "Foo"
+
+fun f(arg) = if
+  arg is
+    Object    then String(arg)
+    undefined then "undefined"
+    null      then "null"
+//│ Normalized:
+//│ >  if
+//│ >    arg is Object then member:String#666(arg#666)
+//│ >    arg is undefined then "undefined"
+//│ >    arg is null then "null"
+
+f of undefined
+//│ = "undefined"
+
+f of null
+//│ = "null"
+
+f of Foo
+//│ = "Foo"
+
+fun f(arg) = if arg is
+  Object then String(arg)
+  Foo then "just Foo"
+//│ Normalized:
+//│ >  if arg is Object then member:String#666(arg#666)
+
+fun f(arg) = if arg is
+  Object then String(arg)
+  MatchResult then "just Foo"
+//│ Normalized:
+//│ >  if arg is Object then member:String#666(arg#666)
+
+fun f(arg) = if arg is
+  Foo then "just Foo"
+  Object then String(arg)
+//│ Normalized:
+//│ >  if
+//│ >    arg is Foo then "just Foo"
+//│ >    arg is Object then member:String#666(arg#666)
+
+fun f(arg) = if arg is
+  Int then "Int"
+  Object then String(arg)
+//│ Normalized:
+//│ >  if
+//│ >    arg is Int then "Int"
+//│ >    arg is Object then member:String#666(arg#666)
+
+fun f(arg) = if arg is
+  Object then String(arg)
+  Int then "Int"
+//│ Normalized:
+//│ >  if
+//│ >    arg is Object then member:String#666(arg#666)
+//│ >    arg is Int then "Int"

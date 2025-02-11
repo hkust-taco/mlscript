@@ -26,7 +26,7 @@ fun compareIntInt(ab, cd) = if ab is [a, b] and cd is [c, d] and
 
 abstract class Map[K, A]: Tip | Bin[K, A]
 
-object Tip extends Map[Top, Nothing]
+object Tip extends Map[Anything, Nothing]
 
 class Bin[K, A](i: Int, k: K, v: A, l: Map[K, A], r: Map[K, A]) extends Map[K, A]
 

@@ -28,6 +28,8 @@ abstract class Symbol(using State) extends Located:
     res
   def refsNumber: Int = directRefs.size
   
+  def isModule: Bool = asMod.nonEmpty
+  
   def asCls: Opt[ClassSymbol] = this match
     case cls: ClassSymbol => S(cls)
     case mem: BlockMemberSymbol => mem.clsTree.flatMap(_.symbol.asCls)
@@ -56,6 +58,10 @@ abstract class Symbol(using State) extends Located:
   def asClsLike: Opt[ClassSymbol | ModuleSymbol | PatternSymbol] =
     (asCls: Opt[ClassSymbol | ModuleSymbol | PatternSymbol]) orElse asModOrObj orElse asPat
   def asTpe: Opt[TypeSymbol] = asCls orElse asAls
+  
+  def asBlkMember: Opt[BlockMemberSymbol] = this match
+    case mem: BlockMemberSymbol => S(mem)
+    case _ => N
   
   override def equals(x: Any): Bool = x match
     case that: Symbol => uid === that.uid
@@ -146,6 +152,8 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[Tree])(using State)
   def trmImplTree: Opt[Tree.TermDef] = trees.collectFirst:
     case t: Tree.TermDef if t.rhs.isDefined => t
   
+  def isParameterizedMethod: Bool = trmTree.exists(_.sParameterizedMethod)
+  
   lazy val hasLiftedClass: Bool =
     objTree.isDefined || trmTree.isDefined || clsTree.exists(_.paramLists.nonEmpty)
   
@@ -191,9 +199,12 @@ case class TupSymbol(arity: Opt[Int])(using State) extends CtorSymbol:
   override def toString: Str = s"tup:$arity"
 
 
-type TypeSymbol = ClassSymbol | TypeAliasSymbol
+/** A TypeSymbol that is not an alias. */
+type BaseTypeSymbol = ClassSymbol
 
-type FieldSymbol = TermSymbol | MemberSymbol[?]
+type TypeSymbol = BaseTypeSymbol | TypeAliasSymbol
+
+type FieldSymbol = MemberSymbol[?]
 
 sealed trait ClassLikeSymbol extends Symbol:
   self: MemberSymbol[? <: ClassDef | ModuleDef] =>

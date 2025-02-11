@@ -1,0 +1,19 @@
+:js
+
+
+null == undefined
+//│ = true
+
+null === undefined
+//│ = false
+
+null === null
+//│ = true
+
+console.log(null is null)
+//│ > true
+
+Object.create(null).("toString") is undefined
+//│ = true
+
+

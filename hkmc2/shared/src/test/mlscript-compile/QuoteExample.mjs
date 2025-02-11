@@ -1,9 +1,10 @@
+import runtime from "./Runtime.mjs";
 import Predef from "./Predef.mjs";
 let QuoteExample1;
 QuoteExample1 = class QuoteExample {
   static {}
   static test() {
-    return 123;
+    return 123
   } 
   static foo() {
     let tmp, tmp1, tmp2, tmp3, tmp4;
@@ -15,7 +16,7 @@ QuoteExample1 = class QuoteExample {
       tmp1,
       tmp2
     ]);
-    return new globalThis.Predef.term.App(tmp3, tmp4);
+    return new globalThis.Predef.term.App(tmp3, tmp4)
   } 
   static inc() {
     let x, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
@@ -31,9 +32,8 @@ QuoteExample1 = class QuoteExample {
     tmp5 = new globalThis.Predef.term.App(tmp3, tmp4);
     return new globalThis.Predef.term.Lam([
       x
-    ], tmp5);
+    ], tmp5)
   }
   static toString() { return "QuoteExample"; }
 };
-null
 let QuoteExample = QuoteExample1; export default QuoteExample;

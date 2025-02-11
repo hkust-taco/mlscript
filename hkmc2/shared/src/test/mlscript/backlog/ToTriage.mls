@@ -80,8 +80,8 @@ set g.0 += 1 // FIXME
 
 :fixme
 set g.0 = g.0 + 1
-//│ > let selRes, tmp1, tmp2;try { selRes = g[0]; if (selRes === undefined) {   throw new this.Error("Access to required field '0' yielded 'undefined'"); } else {   tmp1 = selRes; } tmp2 = tmp1 + 1; g.0 = tmp2; block$res8 = null; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                                                                                                                                                                   ^^
+//│ > let selRes, discarded, tmp1;try { selRes = g[0]; discarded = g["0$__checkNotMethod"]; if (selRes === undefined) {   throw new this.Error("Access to required field '0' yielded 'undefined'"); } tmp1 = selRes + 1; g.0 = tmp1; block$res8 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                                                                                                                                                                                     ^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected number
 
 // ——— ——— ———
@@ -89,6 +89,9 @@ set g.0 = g.0 + 1
 :todo // TODO instrument Predef
 :re
 id(1, 2)
+//│ ╔══[ERROR] Expected 1 arguments, got 2
+//│ ║  l.91: 	id(1, 2)
+//│ ╙──      	^^
 //│ = 1
 
 // ——— ——— ———
@@ -120,7 +123,7 @@ Infinity
 :sjs
 val Infinity = 1
 //│ JS (unsanitized):
-//│ let Infinity; Infinity = 1; null
+//│ let Infinity; Infinity = 1;
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Identifier 'Infinity' has already been declared
 //│ Infinity = Infinity
 
@@ -149,7 +152,7 @@ f of
       2
   of 3
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.150: 	  of 3
+//│ ║  l.153: 	  of 3
 //│ ╙──       	^^
 //│ = [function]
 
@@ -180,7 +183,7 @@ object Oops with
 :e
 Oops.fakeField
 //│ ╔══[ERROR] Object 'Oops' does not contain member 'fakeField'
-//│ ║  l.181: 	Oops.fakeField
+//│ ║  l.184: 	Oops.fakeField
 //│ ╙──       	    ^^^^^^^^^^
 //│ = 1
 
@@ -242,12 +245,11 @@ object Cls(x) with
 //│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ")"; }
 //│ }; Cls1 = new Cls$class;
 //│ Cls1.class = Cls$class;
-//│ null
 
 :e
 Cls.x
 //│ ╔══[ERROR] Object 'Cls' does not contain member 'x'
-//│ ║  l.248: 	Cls.x
+//│ ║  l.250: 	Cls.x
 //│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
@@ -265,7 +267,7 @@ c.x
 
 class Foo' with
   class Bar'
-//│ > let Foo$_1;try { Foo$_1 = class Foo$_ {   constructor() {     this.Bar' = class Bar$_ {       constructor() {}       toString() { return "Bar'"; }     };   }   toString() { return "Foo'"; } }; block$res35 = null; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ > let Foo$_1;try { Foo$_1 = class Foo$_ {   constructor() {     this.Bar' = class Bar$_ {       constructor() {}       toString() { return "Bar'"; }     };   }   toString() { return "Foo'"; } }; block$res35 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ >                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string
 
@@ -275,15 +277,15 @@ module Example with
 // whoops
   val a = this
 //│ ╔══[PARSE ERROR] Expected block after type declaration body; found newline instead
-//│ ║  l.274: 	module Example with
+//│ ║  l.276: 	module Example with
 //│ ║         	                   ^
-//│ ║  l.275: 	// whoops
+//│ ║  l.277: 	// whoops
 //│ ╙──       	
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.276: 	  val a = this
+//│ ║  l.278: 	  val a = this
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.276: 	  val a = this
+//│ ║  l.278: 	  val a = this
 //│ ╙──       	^^
 
 // ——— ——— ———
@@ -291,9 +293,29 @@ module Example with
 :fixme // ("Not in scope" error)
 let xs = new Oopsie
 //│ ╔══[ERROR] Name not found: Oopsie
-//│ ║  l.292: 	let xs = new Oopsie
+//│ ║  l.294: 	let xs = new Oopsie
 //│ ╙──       	             ^^^^^^
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: xs (class hkmc2.semantics.VarSymbol)
+
+// ——— ——— ———
+
+:todo // TODO: warn against using `undefined`
+:w
+fun oops = undefined
+
+:re
+oops
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+
+// ——— ——— ———
+
+// TODO prevent explicit accesses to Unit, Int etc. from Prelude or elaborate them
+
+Unit
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'Unit' yielded 'undefined'
+
+Int
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'Int' yielded 'undefined'
 
 // ——— ——— ———
 

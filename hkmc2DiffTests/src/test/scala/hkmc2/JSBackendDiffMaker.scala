@@ -23,16 +23,14 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val showSanitizedJS = NullaryCommand("ssjs")
   val showJS = NullaryCommand("sjs")
   val showRepl = NullaryCommand("showRepl")
-  val noSanityCheck = NullaryCommand("noSanityCheck")
   val traceJS = NullaryCommand("traceJS")
-  val handler = NullaryCommand("handler")
   val expect = Command("expect"): ln =>
-    ln.trim
-  val stackSafe = Command("stackSafe"): ln =>
     ln.trim
   
   private val baseScp: utils.Scope =
     utils.Scope.empty
+  
+  val runtimeNme = baseScp.allocateName(Elaborator.State.runtimeSymbol)
   
   val ltl = new TraceLogger:
     override def doTrace = debugLowering.isSet
@@ -46,30 +44,22 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     hostCreated = true
     given TL = replTL
     val h = ReplHost(rootPath)
+    h.execute(s"const $runtimeNme = (await import(\"${runtimeFile}\")).default;") match
+    case ReplHost.Result(msg) =>
+      if msg.startsWith("Uncaught") then output(s"Failed to load runtime: $msg")
+    case r => output(s"Failed to load runtime: $r")
     h
   
   private var hostCreated = false
   override def run(): Unit =
     try super.run() finally if hostCreated then host.terminate()
-
-  private val DEFAULT_STACK_LIMT = 500
   
-  override def processTerm(blk: semantics.Term.Blk, inImport: Bool)(using Raise): Unit =
+  override def processTerm(blk: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
     super.processTerm(blk, inImport)
+    
     val outerRaise: Raise = summon
     val reportedMessages = mutable.Set.empty[Str]
-    val stackLimit = stackSafe.get match
-      case None => None
-      case Some("off") => None
-      case Some(value) => value.toIntOption match
-        case None => Some(DEFAULT_STACK_LIMT)
-        case Some(value) =>
-          if value < 0 then
-            failures += 1
-            output("/!\\ Stack limit must be positive, but the stack limit here is set to " + value)
-            Some(DEFAULT_STACK_LIMT)
-          else
-            Some(value)
+    
     if showJS.isSet then
       given Raise =
         case d @ ErrorReport(source = Source.Compilation) =>
@@ -78,12 +68,9 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         case d => outerRaise(d)
       given Elaborator.Ctx = curCtx
       val low = ltl.givenIn:
-        new codegen.Lowering(lowerHandlers = handler.isSet, stackLimit = stackLimit)
-          with codegen.LoweringSelSanityChecks(instrument = false)
-          with codegen.LoweringTraceLog(instrument = false)
+        codegen.Lowering()
       val jsb = ltl.givenIn:
         new JSBuilder
-          with JSBuilderArgNumSanityChecks(instrument = false)
       val le = low.program(blk)
       val nestedScp = baseScp.nest
       val je = nestedScp.givenIn:
@@ -99,12 +86,12 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             output(s"Skipping already reported diagnostic: ${e.mainMsg}")
         case d => outerRaise(d)
       val low = ltl.givenIn:
-        new codegen.Lowering(lowerHandlers = handler.isSet, stackLimit = stackLimit)
-          with codegen.LoweringSelSanityChecks(noSanityCheck.isUnset)
+        new codegen.Lowering()
+          with codegen.LoweringSelSanityChecks
           with codegen.LoweringTraceLog(traceJS.isSet)
       val jsb = ltl.givenIn:
           new JSBuilder
-            with JSBuilderArgNumSanityChecks(noSanityCheck.isUnset)
+            with JSBuilderArgNumSanityChecks
       val resSym = new TempSymbol(S(blk), "block$res")
       val lowered0 = low.program(blk)
       val le = lowered0.copy(main = lowered0.main.mapTail:
@@ -193,10 +180,10 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             Return(
               Call(
                 Value.Ref(Elaborator.State.globalThisSymbol).selSN("Predef").selSN("printRaw"),
-                Arg(false, Value.Ref(sym)) :: Nil)(true),
+                Arg(false, Value.Ref(sym)) :: Nil)(true, false),
             implct = true)
           val je = nestedScp.givenIn:
-            jsb.block(le)
+            jsb.block(le, endSemi = false)
           val jsStr = je.stripBreaks.mkString(100)
           mkQuery("", jsStr): out =>
             val result = out.splitSane('\n').init.mkString // should always ends with "undefined" (TODO: check)
@@ -207,7 +194,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             case _ => ()
             result match
             case "undefined" =>
-            case "null" =>
+            case "()" =>
             case _ =>
               output(s"${if nme.isEmpty then "" else s"$nme "}= ${result.indentNewLines("| ")}")
       

@@ -26,6 +26,7 @@ def errStop(msg: Message)(using Raise) =
 
 
 final case class Ctx(
+  runtimeSymbol: TempSymbol,
   def_acc: ListBuffer[Func],
   class_acc: ListBuffer[ClassInfo],
   symbol_ctx: Map[Str, Name] = Map.empty,
@@ -53,7 +54,8 @@ final case class Ctx(
   def nonTopLevel = copy(is_top_level = false)
 
 object Ctx:
-  def empty = Ctx(ListBuffer.empty, ListBuffer.empty)
+  def empty(using Elaborator.State) =
+    Ctx(Elaborator.State.runtimeSymbol, ListBuffer.empty, ListBuffer.empty)
 
 
 final class LlirBuilder(tl: TraceLogger)(fresh: Fresh, fnUid: FreshInt, clsUid: FreshInt):
@@ -173,6 +175,8 @@ final class LlirBuilder(tl: TraceLogger)(fresh: Fresh, fnUid: FreshInt, clsUid: 
   private def bPath(p: Path)(k: TrivialExpr => Ctx ?=> Node)(using ctx: Ctx)(using Raise, Scope) : Node =
     trace[Node](s"bPath { $p } begin", x => s"bPath end: ${x.show}"):
       p match
+      case s @ Select(Value.Ref(sym), Tree.Ident("Unit")) if sym is ctx.runtimeSymbol =>
+        bPath(Value.Lit(Tree.UnitLit(false)))(k)
       case s @ Select(qual, name) =>
         log(s"bPath Select: $qual.$name with ${s.symbol}")
         s.symbol match
@@ -309,7 +313,7 @@ final class LlirBuilder(tl: TraceLogger)(fresh: Fresh, fnUid: FreshInt, clsUid: 
     case _ =>
       b.subBlocks.foldLeft(ctx)((ctx, rest) => registerClasses(rest)(using ctx))
   
-  def bProg(e: Program)(using Raise, Scope): LlirProgram =
+  def bProg(e: Program)(using Raise, Scope, Elaborator.State): LlirProgram =
     var ctx = Ctx.empty
     
     // * Classes may be defined after other things such as functions,

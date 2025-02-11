@@ -53,7 +53,7 @@ false
 :sjs
 (x => x): [T] -> T -> T
 //│ JS (unsanitized):
-//│ (x1) => { return x1; }
+//│ (x1) => { return x1 }
 //│ = [function block$res8]
 //│ Type: ['T] -> ('T) ->{⊥} 'T
 
@@ -69,7 +69,6 @@ class Foo(x: Int)
 //│   }
 //│   toString() { return "Foo(" + globalThis.Predef.render(this.x) + ")"; }
 //│ };
-//│ null
 //│ Type: ⊤
 
 
@@ -92,7 +91,7 @@ let foo = new Foo(42) in foo.Foo#x
 :sjs
 fun inc(x) = x + 1
 //│ JS (unsanitized):
-//│ let inc; inc = function inc(x1) { return x1 + 1; }; null
+//│ let inc; inc = function inc(x1) { return x1 + 1 };
 //│ Type: ⊤
 
 
@@ -152,17 +151,16 @@ fun pow(x) = case
 //│   return (caseScrut) => {
 //│     let n, tmp2, tmp3, tmp4;
 //│     if (caseScrut === 0) {
-//│       return 1;
+//│       return 1
 //│     } else {
 //│       n = caseScrut;
 //│       tmp2 = pow(x1);
 //│       tmp3 = n - 1;
-//│       tmp4 = tmp2(tmp3) ?? null;
-//│       return x1 * tmp4;
+//│       tmp4 = runtime.safeCall(tmp2(tmp3));
+//│       return x1 * tmp4
 //│     }
-//│   };
+//│   }
 //│ };
-//│ null
 //│ Type: ⊤
 
 
@@ -175,17 +173,16 @@ fun not = case
 //│ not = function not() {
 //│   return (caseScrut) => {
 //│     if (caseScrut === true) {
-//│       return false;
+//│       return false
 //│     } else {
 //│       if (caseScrut === false) {
-//│         return true;
+//│         return true
 //│       } else {
 //│         throw new globalThis.Error("match error");
 //│       }
 //│     }
-//│   };
+//│   }
 //│ };
-//│ null
 //│ Type: ⊤
 
 
@@ -208,17 +205,16 @@ fun fact = case
 //│   return (caseScrut) => {
 //│     let n, tmp3, tmp4, tmp5;
 //│     if (caseScrut === 0) {
-//│       return 1;
+//│       return 1
 //│     } else {
 //│       n = caseScrut;
 //│       tmp3 = fact();
 //│       tmp4 = n - 1;
 //│       tmp5 = tmp3(tmp4);
-//│       return n * tmp5;
+//│       return n * tmp5
 //│     }
-//│   };
+//│   }
 //│ };
-//│ null
 //│ Type: ⊤
 
 

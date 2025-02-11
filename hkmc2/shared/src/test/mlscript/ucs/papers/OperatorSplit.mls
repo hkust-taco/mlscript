@@ -82,6 +82,7 @@ fun example(args) =
 //│               sym = args
 //│               sign = N
 //│           restParam = N
+//│       tparams = N
 //│       sign = N
 //│       body = S of IfLike:
 //│         kw = keyword 'if'
@@ -183,6 +184,6 @@ fun example(args) =
 //│       resSym = ‹result of member:example›
 //│       flags = ()
 //│       annotations = Nil
-//│   res = Lit of UnitLit of true
+//│   res = Lit of UnitLit of false
 
 

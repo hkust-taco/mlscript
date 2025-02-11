@@ -43,6 +43,7 @@
 
 
 null
+//│ = null
 
 undefined
 
@@ -53,7 +54,7 @@ undefined
 :todo
 NaN
 //│ ╔══[ERROR] Name not found: NaN
-//│ ║  l.54: 	NaN
+//│ ║  l.55: 	NaN
 //│ ╙──      	^^^
 
 

@@ -4,7 +4,7 @@
 :sjs
 fun t = 42
 //│ JS (unsanitized):
-//│ let t; t = function t() { return 42; }; null
+//│ let t; t = function t() { return 42 };
 
 
 :expect 42
@@ -43,13 +43,12 @@ fun test() =
 //│   whoops = function whoops() {
 //│     let tmp3;
 //│     tmp3 = Predef.print("ok");
-//│     return 42;
+//│     return 42
 //│   };
 //│   tmp1 = whoops();
 //│   tmp2 = whoops();
-//│   return tmp1 + tmp2;
+//│   return tmp1 + tmp2
 //│ };
-//│ null
 
 test()
 //│ > ok
@@ -75,14 +74,13 @@ module T with
 //│     this.d = T.p;
 //│   }
 //│   static t() {
-//│     return 1;
+//│     return 1
 //│   } 
 //│   static get p() {
 //│     return 2;
 //│   }
 //│   static toString() { return "T"; }
 //│ };
-//│ null
 
 
 T.a
@@ -102,15 +100,7 @@ T.d
 module M with
   fun t = 0
 //│ JS (unsanitized):
-//│ let M1;
-//│ M1 = class M {
-//│   static {}
-//│   static get t() {
-//│     return 0;
-//│   }
-//│   static toString() { return "M"; }
-//│ };
-//│ null
+//│ let M1; M1 = class M { static {} static get t() { return 0; } static toString() { return "M"; } };
 
 
 :sjs
@@ -129,12 +119,11 @@ fun test() =
 //│ test1 = function test() {
 //│   let whoops, tmp1;
 //│   whoops = function whoops() {
-//│     return 42;
+//│     return 42
 //│   };
 //│   tmp1 = whoops();
-//│   return tmp1;
+//│   return tmp1
 //│ };
-//│ null
 
 
 :re
@@ -156,7 +145,7 @@ fun bar() =
   fun baz() = 42
   baz
 //│ JS (unsanitized):
-//│ let bar; bar = function bar() { let baz; baz = function baz() { return 42; }; return baz; }; null
+//│ let bar; bar = function bar() { let baz; baz = function baz() { return 42 }; return baz };
 
 
 :sjs
@@ -169,10 +158,10 @@ fun baz() =
 //│ baz = function baz() {
 //│   let w, z;
 //│   w = function w() {
-//│     return 1;
+//│     return 1
 //│   };
 //│   z = function z() {
-//│     return 2;
+//│     return 2
 //│   };
 //│   return (x, y) => {
 //│     let tmp1, tmp2, tmp3, tmp4;
@@ -180,10 +169,9 @@ fun baz() =
 //│     tmp2 = w();
 //│     tmp3 = tmp1 + tmp2;
 //│     tmp4 = z();
-//│     return tmp3 + tmp4;
-//│   };
+//│     return tmp3 + tmp4
+//│   }
 //│ };
-//│ null
 
 
 baz()(3, 4)
@@ -202,20 +190,19 @@ fun a() =
 //│ a = function a() {
 //│   let b, c;
 //│   b = function b() {
-//│     return 1;
+//│     return 1
 //│   };
 //│   c = function c() {
 //│     let d, tmp2, tmp3;
 //│     d = function d() {
-//│       return 2;
+//│       return 2
 //│     };
 //│     tmp2 = b();
 //│     tmp3 = d();
-//│     return tmp2 + tmp3;
+//│     return tmp2 + tmp3
 //│   };
-//│   return c;
+//│   return c
 //│ };
-//│ null
 
 
 a()()
@@ -234,19 +221,18 @@ fun b() =
 //│ b = function b() {
 //│   let c, d;
 //│   c = function c() {
-//│     return 1;
+//│     return 1
 //│   };
 //│   d = function d() {
 //│     let c1, tmp3;
 //│     c1 = function c() {
-//│       return 2;
+//│       return 2
 //│     };
 //│     tmp3 = c1();
-//│     return tmp3;
+//│     return tmp3
 //│   };
-//│   return d;
+//│   return d
 //│ };
-//│ null
 
 
 b()()
@@ -265,21 +251,20 @@ fun c() =
 //│ c = function c() {
 //│   let d, f, tmp4;
 //│   f = function f() {
-//│     return 1;
+//│     return 1
 //│   };
 //│   d = function d() {
 //│     let e, tmp5, tmp6;
 //│     e = function e() {
-//│       return 1;
+//│       return 1
 //│     };
 //│     tmp5 = e();
 //│     tmp6 = f();
-//│     return tmp5 + tmp6;
+//│     return tmp5 + tmp6
 //│   };
 //│   tmp4 = d();
-//│   return tmp4;
+//│   return tmp4
 //│ };
-//│ null
 
 
 c()
@@ -301,7 +286,6 @@ class Foo(x) with
 //│   }
 //│   toString() { return "Foo(" + globalThis.Predef.render(this.x) + ")"; }
 //│ };
-//│ null
 
 
 fun foo(f) =

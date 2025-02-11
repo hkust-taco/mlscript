@@ -46,7 +46,7 @@ P.x
 //│ TypeDef:
 //│   k = Mod
 //│   head = Ident of "P"
-//│   extension = N
+//│   rhs = N
 //│   body = S of Block of Ls of 
 //│     App:
 //│       lhs = Ident of "print"

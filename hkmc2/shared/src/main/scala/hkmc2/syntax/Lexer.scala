@@ -380,7 +380,7 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
           // * where there is no actual body after the `...`.
           // * It can't be handled in the parser because this is only valid at the top-level,
           // * not within brackets, as in `(arg0, ...) => blah`.
-          go(OPEN_BRACKET(Indent) -> l0 :: LITVAL(Tree.UnitLit(true)) -> l0 :: Nil, false, stack, acc)
+          go(OPEN_BRACKET(Indent) -> l0 :: LITVAL(Tree.UnitLit(false)) -> l0 :: Nil, false, stack, acc)
         case (QUOTE, l0) :: (IDENT("<", true), l1) :: rest =>
           go(rest, false, stack, (IDENT("<", true), l1) :: (QUOTE, l0) :: acc)
         case (QUOTE, l0) :: (IDENT(">", true), l1) :: rest =>

@@ -12,7 +12,7 @@ sum(100)
 // preserve tail calls
 // MUST see "return hi1(tmp)" in the output
 :stackSafe 5
-:handler
+:effectHandlers
 :expect 0
 :sjs
 fun hi(n) =
@@ -22,7 +22,7 @@ hi(0)
 //│ JS (unsanitized):
 //│ let hi, res, handleBlock$;
 //│ hi = function hi(n) {
-//│   let scrut, tmp, diff, diffGeqLimit, handlerExists, scrut1, dummy, res1, Cont$3;
+//│   let scrut, tmp, stackDelayRes, Cont$3;
 //│   Cont$3 = function Cont$(pc1) { return new Cont$.class(pc1); };
 //│   Cont$3.class = class Cont$ extends globalThis.Predef.__Cont.class {
 //│     constructor(pc) {
@@ -32,64 +32,53 @@ hi(0)
 //│     }
 //│     resume(value$) {
 //│       if (this.pc === 0) {
-//│         res1 = value$;
+//│         stackDelayRes = value$;
 //│       }
 //│       contLoop: while (true) {
-//│         if (this.pc === 2) {
+//│         if (this.pc === 0) {
 //│           scrut = n == 0;
 //│           if (scrut === true) {
-//│             return 0;
+//│             return 0
 //│           } else {
 //│             tmp = n - 1;
 //│             globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
-//│             return hi(tmp);
+//│             return hi(tmp)
 //│           }
 //│           this.pc = 1;
 //│           continue contLoop;
 //│         } else if (this.pc === 1) {
 //│           break contLoop;
-//│         } else if (this.pc === 0) {
-//│           dummy = res1;
-//│           this.pc = 2;
-//│           continue contLoop;
 //│         }
 //│         break;
 //│       }
 //│     }
 //│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
-//│   diff = globalThis.Predef.__stackDepth - globalThis.Predef.__stackOffset;
-//│   diffGeqLimit = diff >= globalThis.Predef.__stackLimit;
-//│   handlerExists = globalThis.Predef.__stackHandler !== undefined;
-//│   scrut1 = diffGeqLimit && handlerExists;
-//│   if (scrut1 === true) {
-//│     res1 = globalThis.Predef.__stackHandler.perform();
-//│     if (res1 instanceof globalThis.Predef.__EffectSig.class) {
-//│       res1.tail.next = new Cont$3.class(0);
-//│       res1.tail = res1.tail.next;
-//│       return res1;
-//│     }
-//│     dummy = res1;
+//│   stackDelayRes = globalThis.Predef.checkDepth();
+//│   if (stackDelayRes instanceof globalThis.Predef.__EffectSig.class) {
+//│     stackDelayRes.tail.next = new Cont$3.class(0);
+//│     stackDelayRes.tail = stackDelayRes.tail.next;
+//│     return stackDelayRes
 //│   }
 //│   scrut = n == 0;
 //│   if (scrut === true) {
-//│     return 0;
+//│     return 0
 //│   } else {
 //│     tmp = n - 1;
 //│     globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
-//│     return hi(tmp);
+//│     return hi(tmp)
 //│   }
 //│ };
 //│ handleBlock$ = function handleBlock$() {
 //│   let stackHandler, res1, Cont$3, StackDelay$1;
-//│   StackDelay$1 = class StackDelay$ extends globalThis.Predef.__StackDelay.class {
+//│   StackDelay$1 = class StackDelay$ extends globalThis.Predef.__StackDelay {
 //│     constructor() {
 //│       let tmp;
 //│       tmp = super();
 //│     }
 //│     perform() {
 //│       return globalThis.Predef.__mkEffect(stackHandler, (resume) => {
-//│         let res2, res3, Cont$4;
+//│         let res2, Cont$4;
 //│         Cont$4 = function Cont$(pc1) { return new Cont$.class(pc1); };
 //│         Cont$4.class = class Cont$1 extends globalThis.Predef.__Cont.class {
 //│           constructor(pc) {
@@ -99,12 +88,17 @@ hi(0)
 //│           }
 //│           resume(value$) {
 //│             if (this.pc === 4) {
-//│               res3 = value$;
+//│               res2 = value$;
 //│             }
 //│             contLoop: while (true) {
 //│               if (this.pc === 4) {
-//│                 res2 = res3;
-//│                 return res2;
+//│                 if (res2 instanceof globalThis.Predef.__Return.class) {
+//│                   return res2
+//│                 }
+//│                 this.pc = 5;
+//│                 continue contLoop;
+//│               } else if (this.pc === 5) {
+//│                 return res2
 //│               }
 //│               break;
 //│             }
@@ -112,15 +106,17 @@ hi(0)
 //│           toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│         };
 //│         globalThis.Predef.__stackOffset = globalThis.Predef.__stackDepth;
-//│         res3 = resume();
-//│         if (res3 instanceof globalThis.Predef.__EffectSig.class) {
-//│           res3.tail.next = new Cont$4.class(4);
-//│           res3.tail = res3.tail.next;
-//│           return res3;
+//│         res2 = resume();
+//│         if (res2 instanceof globalThis.Predef.__EffectSig.class) {
+//│           res2.tail.next = new Cont$4.class(4);
+//│           res2.tail = res2.tail.next;
+//│           return res2
 //│         }
-//│         res2 = res3;
-//│         return res2;
-//│       });
+//│         if (res2 instanceof globalThis.Predef.__Return.class) {
+//│           return res2
+//│         }
+//│         return res2
+//│       })
 //│     }
 //│     toString() { return "StackDelay$"; }
 //│   };
@@ -133,12 +129,18 @@ hi(0)
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
-//│       if (this.pc === 3) {
+//│       if (this.pc === 2) {
 //│         res1 = value$;
 //│       }
 //│       contLoop: while (true) {
-//│         if (this.pc === 3) {
-//│           return res1;
+//│         if (this.pc === 2) {
+//│           if (res1 instanceof globalThis.Predef.__Return.class) {
+//│             return res1
+//│           }
+//│           this.pc = 3;
+//│           continue contLoop;
+//│         } else if (this.pc === 3) {
+//│           return res1
 //│         }
 //│         break;
 //│       }
@@ -151,23 +153,26 @@ hi(0)
 //│   globalThis.Predef.__stackHandler = stackHandler;
 //│   res1 = hi(0);
 //│   if (res1 instanceof globalThis.Predef.__EffectSig.class) {
-//│     res1.tail.next = new Cont$3(3);
-//│     return globalThis.Predef.__handleBlockImpl(res1, stackHandler);
+//│     res1.tail.next = new Cont$3(2);
+//│     return globalThis.Predef.__handleBlockImpl(res1, stackHandler)
 //│   }
-//│   return res1;
+//│   if (res1 instanceof globalThis.Predef.__Return.class) {
+//│     return res1
+//│   }
+//│   return res1
 //│ };
 //│ res = handleBlock$();
 //│ if (res instanceof this.Predef.__EffectSig.class) {
 //│   throw new this.Error("Unhandled effects");
 //│ }
 //│ this.Predef.__stackDepth = 0;
-//│ this.Predef.__stackHandler = undefined;
+//│ this.Predef.__stackHandler = null;
 //│ res
 //│ = 0
 
 :sjs
 :stackSafe 1000
-:handler
+:effectHandlers
 :expect 50005000
 fun sum(n) =
   if n == 0 then 0
@@ -177,33 +182,32 @@ sum(10000)
 //│ JS (unsanitized):
 //│ let sum1, res1, handleBlock$1;
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, tmp2, offsetGtDepth, prevDepth, diff, diffGeqLimit, handlerExists, scrut1, dummy, res2, res3, Cont$6;
+//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, Cont$6;
 //│   Cont$6 = function Cont$(pc1) { return new Cont$.class(pc1); };
 //│   Cont$6.class = class Cont$3 extends globalThis.Predef.__Cont.class {
 //│     constructor(pc) {
-//│       let tmp3;
-//│       tmp3 = super(null, null);
+//│       let tmp2;
+//│       tmp2 = super(null, null);
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
-//│       if (this.pc === 1) {
-//│         res3 = value$;
-//│       } else if (this.pc === 0) {
-//│         res2 = value$;
+//│       if (this.pc === 0) {
+//│         stackDelayRes = value$;
+//│       } else if (this.pc === 1) {
+//│         tmp1 = value$;
 //│       }
 //│       contLoop: while (true) {
-//│         if (this.pc === 4) {
+//│         if (this.pc === 0) {
 //│           scrut = n == 0;
 //│           if (scrut === true) {
-//│             return 0;
+//│             return 0
 //│           } else {
 //│             tmp = n - 1;
-//│             prevDepth = globalThis.Predef.__stackDepth;
 //│             globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
-//│             res3 = sum1(tmp);
-//│             if (res3 instanceof globalThis.Predef.__EffectSig.class) {
+//│             tmp1 = sum1(tmp);
+//│             if (tmp1 instanceof globalThis.Predef.__EffectSig.class) {
 //│               this.pc = 1;
-//│               return globalThis.Predef.__appendInCont(res3, this);
+//│               return globalThis.Predef.__appendInCont(tmp1, this)
 //│             }
 //│             this.pc = 1;
 //│             continue contLoop;
@@ -213,75 +217,47 @@ sum(10000)
 //│         } else if (this.pc === 2) {
 //│           break contLoop;
 //│         } else if (this.pc === 1) {
-//│           tmp2 = res3;
-//│           globalThis.Predef.__stackDepth = prevDepth;
-//│           offsetGtDepth = prevDepth < globalThis.Predef.__stackOffset;
-//│           if (offsetGtDepth === true) {
-//│             globalThis.Predef.__stackOffset = prevDepth;
-//│             this.pc = 3;
-//│             continue contLoop;
-//│           }
-//│           this.pc = 3;
-//│           continue contLoop;
-//│         } else if (this.pc === 3) {
-//│           tmp1 = tmp2;
-//│           return n + tmp1;
-//│         } else if (this.pc === 0) {
-//│           dummy = res2;
-//│           this.pc = 4;
-//│           continue contLoop;
+//│           tmp1 = globalThis.Predef.resetDepth(tmp1, curDepth);
+//│           return n + tmp1
 //│         }
 //│         break;
 //│       }
 //│     }
 //│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
-//│   diff = globalThis.Predef.__stackDepth - globalThis.Predef.__stackOffset;
-//│   diffGeqLimit = diff >= globalThis.Predef.__stackLimit;
-//│   handlerExists = globalThis.Predef.__stackHandler !== undefined;
-//│   scrut1 = diffGeqLimit && handlerExists;
-//│   if (scrut1 === true) {
-//│     res2 = globalThis.Predef.__stackHandler.perform();
-//│     if (res2 instanceof globalThis.Predef.__EffectSig.class) {
-//│       res2.tail.next = new Cont$6.class(0);
-//│       res2.tail = res2.tail.next;
-//│       return res2;
-//│     }
-//│     dummy = res2;
+//│   curDepth = globalThis.Predef.__stackDepth;
+//│   stackDelayRes = globalThis.Predef.checkDepth();
+//│   if (stackDelayRes instanceof globalThis.Predef.__EffectSig.class) {
+//│     stackDelayRes.tail.next = new Cont$6.class(0);
+//│     stackDelayRes.tail = stackDelayRes.tail.next;
+//│     return stackDelayRes
 //│   }
 //│   scrut = n == 0;
 //│   if (scrut === true) {
-//│     return 0;
+//│     return 0
 //│   } else {
 //│     tmp = n - 1;
-//│     prevDepth = globalThis.Predef.__stackDepth;
 //│     globalThis.Predef.__stackDepth = globalThis.Predef.__stackDepth + 1;
-//│     res3 = sum1(tmp);
-//│     if (res3 instanceof globalThis.Predef.__EffectSig.class) {
-//│       res3.tail.next = new Cont$6.class(1);
-//│       res3.tail = res3.tail.next;
-//│       return res3;
+//│     tmp1 = sum1(tmp);
+//│     if (tmp1 instanceof globalThis.Predef.__EffectSig.class) {
+//│       tmp1.tail.next = new Cont$6.class(1);
+//│       tmp1.tail = tmp1.tail.next;
+//│       return tmp1
 //│     }
-//│     tmp2 = res3;
-//│     globalThis.Predef.__stackDepth = prevDepth;
-//│     offsetGtDepth = prevDepth < globalThis.Predef.__stackOffset;
-//│     if (offsetGtDepth === true) {
-//│       globalThis.Predef.__stackOffset = prevDepth;
-//│     }
-//│     tmp1 = tmp2;
-//│     return n + tmp1;
+//│     tmp1 = globalThis.Predef.resetDepth(tmp1, curDepth);
+//│     return n + tmp1
 //│   }
 //│ };
 //│ handleBlock$1 = function handleBlock$() {
 //│   let stackHandler, res2, Cont$6, StackDelay$2;
-//│   StackDelay$2 = class StackDelay$1 extends globalThis.Predef.__StackDelay.class {
+//│   StackDelay$2 = class StackDelay$1 extends globalThis.Predef.__StackDelay {
 //│     constructor() {
 //│       let tmp;
 //│       tmp = super();
 //│     }
 //│     perform() {
 //│       return globalThis.Predef.__mkEffect(stackHandler, (resume) => {
-//│         let res3, res4, Cont$7;
+//│         let res3, Cont$7;
 //│         Cont$7 = function Cont$(pc1) { return new Cont$.class(pc1); };
 //│         Cont$7.class = class Cont$4 extends globalThis.Predef.__Cont.class {
 //│           constructor(pc) {
@@ -290,13 +266,18 @@ sum(10000)
 //│             this.pc = pc;
 //│           }
 //│           resume(value$) {
-//│             if (this.pc === 6) {
-//│               res4 = value$;
+//│             if (this.pc === 5) {
+//│               res3 = value$;
 //│             }
 //│             contLoop: while (true) {
-//│               if (this.pc === 6) {
-//│                 res3 = res4;
-//│                 return res3;
+//│               if (this.pc === 5) {
+//│                 if (res3 instanceof globalThis.Predef.__Return.class) {
+//│                   return res3
+//│                 }
+//│                 this.pc = 6;
+//│                 continue contLoop;
+//│               } else if (this.pc === 6) {
+//│                 return res3
 //│               }
 //│               break;
 //│             }
@@ -304,15 +285,17 @@ sum(10000)
 //│           toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│         };
 //│         globalThis.Predef.__stackOffset = globalThis.Predef.__stackDepth;
-//│         res4 = resume();
-//│         if (res4 instanceof globalThis.Predef.__EffectSig.class) {
-//│           res4.tail.next = new Cont$7.class(6);
-//│           res4.tail = res4.tail.next;
-//│           return res4;
+//│         res3 = resume();
+//│         if (res3 instanceof globalThis.Predef.__EffectSig.class) {
+//│           res3.tail.next = new Cont$7.class(5);
+//│           res3.tail = res3.tail.next;
+//│           return res3
 //│         }
-//│         res3 = res4;
-//│         return res3;
-//│       });
+//│         if (res3 instanceof globalThis.Predef.__Return.class) {
+//│           return res3
+//│         }
+//│         return res3
+//│       })
 //│     }
 //│     toString() { return "StackDelay$"; }
 //│   };
@@ -325,12 +308,18 @@ sum(10000)
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
-//│       if (this.pc === 5) {
+//│       if (this.pc === 3) {
 //│         res2 = value$;
 //│       }
 //│       contLoop: while (true) {
-//│         if (this.pc === 5) {
-//│           return res2;
+//│         if (this.pc === 3) {
+//│           if (res2 instanceof globalThis.Predef.__Return.class) {
+//│             return res2
+//│           }
+//│           this.pc = 4;
+//│           continue contLoop;
+//│         } else if (this.pc === 4) {
+//│           return res2
 //│         }
 //│         break;
 //│       }
@@ -343,17 +332,20 @@ sum(10000)
 //│   globalThis.Predef.__stackHandler = stackHandler;
 //│   res2 = sum1(10000);
 //│   if (res2 instanceof globalThis.Predef.__EffectSig.class) {
-//│     res2.tail.next = new Cont$6(5);
-//│     return globalThis.Predef.__handleBlockImpl(res2, stackHandler);
+//│     res2.tail.next = new Cont$6(3);
+//│     return globalThis.Predef.__handleBlockImpl(res2, stackHandler)
 //│   }
-//│   return res2;
+//│   if (res2 instanceof globalThis.Predef.__Return.class) {
+//│     return res2
+//│   }
+//│   return res2
 //│ };
 //│ res1 = handleBlock$1();
 //│ if (res1 instanceof this.Predef.__EffectSig.class) {
 //│   throw new this.Error("Unhandled effects");
 //│ }
 //│ this.Predef.__stackDepth = 0;
-//│ this.Predef.__stackHandler = undefined;
+//│ this.Predef.__stackHandler = null;
 //│ res1
 //│ = 50005000
 
@@ -366,7 +358,7 @@ fun sum(n) =
 sum(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
-:handler
+:effectHandlers
 :stackSafe 100
 mut val ctr = 0
 fun dummy(x) = x
@@ -380,7 +372,7 @@ foo(foo)
 //│ ctr = 10001
 
 :stackSafe 1000
-:handler
+:effectHandlers
 :expect 50005000
 val foo =
   val f = n =>
@@ -404,7 +396,7 @@ abstract class Eff with
   fun perform(a): ()
 
 // functions and lambdas inside handlers
-:handler
+:effectHandlers
 :stackSafe 100
 :expect 50005000
 fun foo(h) = h.perform
@@ -418,7 +410,7 @@ foo(h)
 //│ = 50005000
 
 // function call and defn inside handler
-:handler
+:effectHandlers
 :stackSafe 100
 :expect 50005000
 handle h = Eff with
@@ -433,7 +425,7 @@ in
 //│ = 50005000
 
 :re
-:handler
+:effectHandlers
 fun foo(h) = h.perform(2)
 handle h = Eff with
   fun perform(a)(resume) =
@@ -444,7 +436,7 @@ handle h = Eff with
 foo(h)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
-:handler
+:effectHandlers
 :stackSafe
 :sjs
 fun max(a, b) = if a < b then b else a
@@ -454,39 +446,30 @@ fun max(a, b) = if a < b then b else a
 //│   let scrut;
 //│   scrut = a < b;
 //│   if (scrut === true) {
-//│     return b;
+//│     return b
 //│   } else {
-//│     return a;
+//│     return a
 //│   }
 //│ };
-//│ null
 
 
-// * Note that currently the `:sjs` command will not run the code if there is a compilation error
 :sjs
 :stackSafe 42
-:ge
 fun hi(n) = n
 hi(0)
-//│ ═══[COMPILATION ERROR] This code requires effect handler instrumentation but was compiled without it.
+//│ /!!!\ Option ':stackSafe' requires ':effectHandlers' to be set
 //│ JS (unsanitized):
-//│ let hi1, stackHandler;
-//│ hi1 = function hi(n) {
-//│   return n;
-//│ };
-//│ throw globalThis.Error("This code requires effect handler instrumentation but was compiled without it.");
-//│ ═══[RUNTIME ERROR] Error: This code requires effect handler instrumentation but was compiled without it.
+//│ let hi1; hi1 = function hi(n) { return n }; hi1(0)
+//│ = 0
 
 :stackSafe 42
-:ge
-:re
 hi(0)
-//│ ═══[COMPILATION ERROR] This code requires effect handler instrumentation but was compiled without it.
-//│ ═══[RUNTIME ERROR] Error: This code requires effect handler instrumentation but was compiled without it.
+//│ /!!!\ Option ':stackSafe' requires ':effectHandlers' to be set
+//│ = 0
 
 
 :stackSafe 1000
-:handler
+:effectHandlers
 :expect 100010000
 fun sum(n) =
   if n == 0 then 0
@@ -495,3 +478,4 @@ fun sum(n) =
 fun bad() = sum(10000) + sum(10000)
 bad()
 //│ = 100010000
+

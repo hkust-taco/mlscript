@@ -1,8 +1,5 @@
 :js
 
-:import PredefJS.mls
-//│ Imported 2 member(s)
-
 
 let x = 0
 //│ x = 0
@@ -10,7 +7,7 @@ let x = 0
 :sjs
 let x += 1
 //│ JS (unsanitized):
-//│ let x1, tmp; tmp = x + 1; x1 = tmp; null
+//│ let x1, tmp; tmp = x + 1; x1 = tmp;
 //│ x = 1
 
 x
@@ -19,26 +16,26 @@ x
 :sjs
 set x = 0
 //│ JS (unsanitized):
-//│ x1 = 0; null
+//│ x1 = 0; runtime.Unit
 
 :sjs
 set x += 1
 //│ JS (unsanitized):
-//│ let tmp1; tmp1 = x1 + 1; x1 = tmp1; null
+//│ let tmp1; tmp1 = x1 + 1; x1 = tmp1; runtime.Unit
 
 x
 //│ = 1
 
 
 :sjs
-set x += 1 in log(x)
+set x += 1 in print(x)
 //│ JS (unsanitized):
 //│ let old, tmp2, tmp3, tmp4;
 //│ old = x1;
 //│ try {
 //│   tmp3 = x1 + 1;
 //│   x1 = tmp3;
-//│   tmp4 = log(x1);
+//│   tmp4 = Predef.print(x1);
 //│   tmp2 = tmp4;
 //│ } finally {
 //│   x1 = old;
@@ -54,8 +51,8 @@ fun example() =
   let x = 0
   let get_x() = x
   let x += 1
-  log(x)
-  log(get_x())
+  print(x)
+  print(get_x())
 example()
 //│ > 1
 //│ > 0
@@ -64,8 +61,8 @@ fun example() =
   let x = 0
   let get_x() = x
   set x += 1
-  log(x)
-  log(get_x())
+  print(x)
+  print(get_x())
 example()
 //│ > 1
 //│ > 1
@@ -74,9 +71,9 @@ example()
 fun example() =
   let x = 0
   let get_x() = x
-  set x += 1 in log(x); log(get_x())
-  log(x)
-  log(get_x())
+  set x += 1 in print(x); print(get_x())
+  print(x)
+  print(get_x())
 example()
 //│ JS (unsanitized):
 //│ let example2;
@@ -84,23 +81,23 @@ example()
 //│   let x2, get_x, old1, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12;
 //│   x2 = 0;
 //│   get_x = () => {
-//│     return x2;
+//│     return x2
 //│   };
 //│   old1 = x2;
 //│   try {
 //│     tmp6 = x2 + 1;
 //│     x2 = tmp6;
-//│     tmp7 = log(x2);
-//│     tmp8 = (tmp7 , log);
-//│     tmp9 = get_x() ?? null;
-//│     tmp10 = tmp8(tmp9) ?? null;
+//│     tmp7 = Predef.print(x2);
+//│     tmp8 = runtime.safeCall(get_x());
+//│     tmp9 = Predef.print(tmp8);
+//│     tmp10 = (tmp7 , tmp9);
 //│     tmp5 = tmp10;
 //│   } finally {
 //│     x2 = old1;
 //│   }
-//│   tmp11 = log(x2);
-//│   tmp12 = get_x() ?? null;
-//│   return log(tmp12);
+//│   tmp11 = Predef.print(x2);
+//│   tmp12 = runtime.safeCall(get_x());
+//│   return Predef.print(tmp12)
 //│ };
 //│ example2()
 //│ > 1
@@ -113,9 +110,9 @@ fun example() =
   let x = 0
   let get_x() = x
   let y =
-    set x += 1 in log(x); x
-  log(x)
-  log(get_x())
+    set x += 1 in print(x); x
+  print(x)
+  print(get_x())
   y
 example()
 //│ JS (unsanitized):
@@ -124,23 +121,23 @@ example()
 //│   let x2, get_x, y, old1, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
 //│   x2 = 0;
 //│   get_x = () => {
-//│     return x2;
+//│     return x2
 //│   };
 //│   old1 = x2;
 //│   try {
 //│     tmp6 = x2 + 1;
 //│     x2 = tmp6;
-//│     tmp7 = log(x2);
+//│     tmp7 = Predef.print(x2);
 //│     tmp8 = (tmp7 , x2);
 //│     tmp5 = tmp8;
 //│   } finally {
 //│     x2 = old1;
 //│   }
 //│   y = tmp5;
-//│   tmp9 = log(x2);
-//│   tmp10 = get_x() ?? null;
-//│   tmp11 = log(tmp10);
-//│   return y;
+//│   tmp9 = Predef.print(x2);
+//│   tmp10 = runtime.safeCall(get_x());
+//│   tmp11 = Predef.print(tmp10);
+//│   return y
 //│ };
 //│ example3()
 //│ > 1

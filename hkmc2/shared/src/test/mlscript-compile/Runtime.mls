@@ -1,0 +1,22 @@
+
+
+module Runtime with ...
+
+
+object Unit with
+  fun toString() = "()"
+
+
+fun safeCall(x) =
+  if x is undefined then Unit else x
+
+fun checkCall(x) =
+  if x is undefined
+  then throw Error("MLscript call unexpectedly returned `undefined`, the forbidden value.")
+  else x
+
+fun deboundMethod(mtdName, clsName) =
+  throw Error of
+    "[debinding error] Method '" + mtdName + "' of class '" + clsName + "' was accessed without being called."
+
+

@@ -33,13 +33,14 @@ abstract class LlirDiffMaker extends BbmlDiffMaker:
 
   given Elaborator.Ctx = curCtx
 
-  override def processTerm(trm: Blk, inImport: Bool)(using Raise): Unit = 
+  override def processTerm(trm: Blk, inImport: Bool)(using Config, Raise): Unit = 
     super.processTerm(trm, inImport)
     if llir.isSet then
       val low = ltl.givenIn:
-        codegen.Lowering(lowerHandlers = false, stackLimit = None)
+        codegen.Lowering()
       val le = low.program(trm)
-      given Scope = Scope.empty
+      given scp: Scope = Scope.empty
+      scp.allocateName(Elaborator.State.runtimeSymbol)
       val fresh = Fresh()
       val fuid = FreshInt()
       val cuid = FreshInt()

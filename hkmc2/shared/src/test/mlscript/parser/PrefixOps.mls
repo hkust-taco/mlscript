@@ -42,7 +42,7 @@
 :sjs
 +
 //│ JS (unsanitized):
-//│ (arg1, arg2) => { return arg1 + arg2; }
+//│ (arg1, arg2) => { return arg1 + arg2 }
 //│ = [function block$res6]
 
 *

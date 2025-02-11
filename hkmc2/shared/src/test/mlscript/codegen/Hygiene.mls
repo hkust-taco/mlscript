@@ -18,12 +18,11 @@ object Test with
 //│   foo() {
 //│     let tmp;
 //│     tmp = Predef.print(Test1);
-//│     return Test1.x;
+//│     return Test1.x
 //│   }
 //│   toString() { return "Test"; }
 //│ }; Test1 = new Test$class;
 //│ Test1.class = Test$class;
-//│ null
 
 Test
 //│ = Test
@@ -41,7 +40,7 @@ Test.foo()
 :sjs
 val Test = "oops"
 //│ JS (unsanitized):
-//│ let Test2; Test2 = "oops"; null
+//│ let Test2; Test2 = "oops";
 //│ Test = "oops"
 
 :re
@@ -55,7 +54,7 @@ let f = () => x
 let x = 2
 f()
 //│ JS (unsanitized):
-//│ let x, f, x1; x = 1; f = () => { return x; }; x1 = 2; f() ?? null
+//│ let x, f, x1; x = 1; f = () => { return x }; x1 = 2; runtime.safeCall(f())
 //│ = 1
 //│ f = [function f]
 //│ x = 2
@@ -67,22 +66,21 @@ module Test with
   val x = 1
   let x = 2
 //│ ╔══[ERROR] Name 'x' is already used
-//│ ║  l.68: 	  let x = 2
+//│ ║  l.67: 	  let x = 2
 //│ ║        	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.67: 	  val x = 1
+//│ ║  l.66: 	  val x = 1
 //│ ╙──      	      ^^^^^
 //│ JS:
 //│ Test4 = class Test3 {
 //│   static #x;
 //│   static {
 //│     this.x = 1;
-//│     this.#x = 2;
+//│     Test3.#x = 2;
 //│   }
 //│   static toString() { return "Test"; }
 //│ };
-//│ block$res8 = null;
-//│ undefined
+//│ block$res8 = undefined;
 
 Test.x
 //│ = 1
@@ -126,7 +124,6 @@ class Cls(x) with
 //│   }
 //│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ")"; }
 //│ };
-//│ null
 
 let cls = Cls(10)
 //│ > 10 22
@@ -174,17 +171,16 @@ module Whoops with
 //│         this.w = Whoops1;
 //│       }
 //│       static g() {
-//│         return Whoops.f();
+//│         return Whoops.f()
 //│       }
 //│       static toString() { return "Whoops"; }
 //│     };
 //│   }
 //│   static f() {
-//│     return "Hello";
+//│     return "Hello"
 //│   }
 //│   static toString() { return "Whoops"; }
 //│ };
-//│ null
 
 Whoops.f()
 //│ = "Hello"

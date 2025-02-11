@@ -1,3 +1,4 @@
+import runtime from "./Runtime.mjs";
 import Predef from "./Predef.mjs";
 let Option1;
 Option1 = class Option {
@@ -26,19 +27,18 @@ Option1 = class Option {
   }
   static isDefined(x) {
     if (x instanceof Option.Some.class) {
-      return true;
+      return true
     } else {
       if (x instanceof Option.None.class) {
-        return false;
+        return false
       } else {
         throw new globalThis.Error("match error");
       }
     }
   } 
   static test() {
-    return Predef.pipeInto(2134, Predef.print);
+    return Predef.pipeInto(2134, Predef.print)
   }
   static toString() { return "Option"; }
 };
-null
 let Option = Option1; export default Option;

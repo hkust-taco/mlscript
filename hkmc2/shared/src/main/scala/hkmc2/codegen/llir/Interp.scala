@@ -43,7 +43,8 @@ class Interpreter(verbose: Bool):
         case Literal(BoolLit(lit)) => lit.toString 
         case Literal(DecLit(lit)) => lit.toString
         case Literal(StrLit(lit)) => lit.toString
-        case Literal(UnitLit(undefinedOrNull)) => if undefinedOrNull then "undefined" else "null"
+        case Literal(UnitLit(isNullNotUndefined)) =>
+          if isNullNotUndefined then "null" else "undefined"
 
   private final case class Ctx(
     bindingCtx: Map[Str, Value],

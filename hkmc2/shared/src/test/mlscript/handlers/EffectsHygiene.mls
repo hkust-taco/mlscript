@@ -1,5 +1,5 @@
 :js
-:handler
+:effectHandlers
 
 
 // * Notice that the two module definitions are lifted to the top of the block.
@@ -14,22 +14,21 @@ fun foo(h) =
 //│ JS (unsanitized):
 //│ let foo;
 //│ foo = function foo(h) {
-//│   let A2, scrut, A3;
-//│   A3 = class A {
+//│   let A2, A3, scrut;
+//│   A2 = class A {
 //│     static {}
 //│     static toString() { return "A"; }
 //│   };
-//│   A2 = class A1 {
+//│   A3 = class A1 {
 //│     static {}
 //│     static toString() { return "A"; }
 //│   };
 //│   scrut = false;
 //│   if (scrut === true) {
-//│     return A3;
+//│     return A2
 //│   } else {
-//│     return A2;
+//│     return A3
 //│   }
 //│ };
-//│ null
 
 

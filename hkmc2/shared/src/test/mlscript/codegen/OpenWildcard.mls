@@ -10,7 +10,7 @@ module OtherModule with
 :sjs
 open Option
 //│ JS (unsanitized):
-//│ null
+//│ 
 
 :sjs
 None isDefined()
@@ -52,7 +52,7 @@ none()
 :sjs
 val Option = "Oops"
 //│ JS (unsanitized):
-//│ let Option1; Option1 = "Oops"; null
+//│ let Option1; Option1 = "Oops";
 //│ Option = "Oops"
 
 :sjs
@@ -67,7 +67,7 @@ module Option with
 :sjs
 open Option
 //│ JS (unsanitized):
-//│ null
+//│ 
 
 :sjs
 Some

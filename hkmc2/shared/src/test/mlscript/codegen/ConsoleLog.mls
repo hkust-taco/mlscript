@@ -7,14 +7,17 @@
 :silent
 declare val console
 //│ JS (unsanitized):
-//│ null
+//│ 
 
 
 console.log("a")
 console.log("b")
 123
 //│ JS (unsanitized):
-//│ let tmp, tmp1; tmp = this.console.log("a") ?? null; tmp1 = this.console.log("b") ?? null; 123
+//│ let tmp, tmp1;
+//│ tmp = runtime.safeCall(this.console.log("a"));
+//│ tmp1 = runtime.safeCall(this.console.log("b"));
+//│ 123
 //│ > a
 //│ > b
 //│ = 123
@@ -22,7 +25,7 @@ console.log("b")
 let l = console.log
 l(123)
 //│ JS (unsanitized):
-//│ let l; l = this.console.log; l(123) ?? null
+//│ let l; l = this.console.log; runtime.safeCall(l(123))
 //│ > 123
 //│ l = [function log]
 
@@ -34,7 +37,7 @@ l(123)
 
 console.log("a")
 //│ JS (unsanitized):
-//│ this.console.log("a") ?? null
+//│ runtime.safeCall(this.console.log("a"))
 //│ > a
 
 
@@ -46,13 +49,13 @@ let y = x + 1
 console.log("c")
 y * 2
 //│ JS (unsanitized):
-//│ let x, y, tmp7, tmp8, tmp9, tmp10;
-//│ tmp7 = this.console.log("a") ?? null;
+//│ let x, y, tmp2, tmp3, tmp4, tmp5;
+//│ tmp2 = runtime.safeCall(this.console.log("a"));
 //│ x = 123;
-//│ tmp8 = this.console.log("b") ?? null;
-//│ tmp9 = x + 1;
-//│ y = tmp9;
-//│ tmp10 = this.console.log("c") ?? null;
+//│ tmp3 = runtime.safeCall(this.console.log("b"));
+//│ tmp4 = x + 1;
+//│ y = tmp4;
+//│ tmp5 = runtime.safeCall(this.console.log("c"));
 //│ y * 2
 //│ > a
 //│ > b

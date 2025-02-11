@@ -23,6 +23,7 @@ fun f(x) =
 //│               sym = x
 //│               sign = N
 //│           restParam = N
+//│       tparams = N
 //│       sign = N
 //│       body = S of IfLike:
 //│         kw = keyword 'if'
@@ -61,6 +62,6 @@ fun f(x) =
 //│       resSym = ‹result of member:f›
 //│       flags = ()
 //│       annotations = Nil
-//│   res = Lit of UnitLit of true
+//│   res = Lit of UnitLit of false
 
 

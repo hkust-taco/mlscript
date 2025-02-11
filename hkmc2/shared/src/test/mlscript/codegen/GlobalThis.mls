@@ -38,7 +38,7 @@ foo()
 //│   let scrut1;
 //│   scrut1 = false;
 //│   if (scrut1 === true) {
-//│     return 0;
+//│     return 0
 //│   } else {
 //│     throw new globalThis.Error("match error");
 //│   }

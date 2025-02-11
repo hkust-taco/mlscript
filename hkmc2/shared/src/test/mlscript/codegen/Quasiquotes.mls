@@ -1,8 +1,5 @@
 :js
 
-:import PredefJS.mls
-//│ Imported 2 member(s)
-
 :global
 :sjs
 
@@ -65,18 +62,18 @@ x `=> x
 
 
 x `=>
-  log(x)
+  print(x)
   x
 //│ JS (unsanitized):
 //│ let x1, tmp7, tmp8, tmp9;
 //│ x1 = new this.Predef.term.Symbol("x");
 //│ tmp7 = new this.Predef.term.Ref(x1);
-//│ tmp8 = log(tmp7);
+//│ tmp8 = Predef.print(tmp7);
 //│ tmp9 = new this.Predef.term.Ref(x1);
 //│ new this.Predef.term.Lam([
 //│   x1
 //│ ], tmp9)
-//│ > Ref { sym: Symbol { name: 'x' } }
+//│ > Ref(Symbol("x"))
 //│ = Lam([Symbol("x")], Ref(Symbol("x")))
 
 
@@ -97,7 +94,6 @@ let f = x `=> x `+ `1
 //│   x2
 //│ ], tmp15);
 //│ f = tmp16;
-//│ null
 //│ f = Lam([Symbol("x")], App(Ref(Symbol("+")), Tup([Ref(Symbol("x")), Lit(1)])))
 
 
@@ -128,13 +124,13 @@ f`(`0)
 //│ = Blk([LetDecl(Symbol("x")), DefineVar(Symbol("x"), Lit(42))], Ref(Symbol("x")))
 
 
-`let x = `42 `in log(x); x
+`let x = `42 `in print(x); x
 //│ JS (unsanitized):
 //│ let x4, tmp24, tmp25, tmp26, tmp27, tmp28, tmp29, tmp30;
 //│ x4 = new this.Predef.term.Symbol("x");
 //│ tmp24 = new this.Predef.term.Lit(42);
 //│ tmp25 = new this.Predef.term.Ref(x4);
-//│ tmp26 = log(tmp25);
+//│ tmp26 = Predef.print(tmp25);
 //│ tmp27 = new this.Predef.term.Ref(x4);
 //│ tmp28 = (tmp26 , tmp27);
 //│ tmp29 = new this.Predef.term.LetDecl(x4);
@@ -143,7 +139,7 @@ f`(`0)
 //│   tmp29,
 //│   tmp30
 //│ ], tmp28)
-//│ > Ref { sym: Symbol { name: 'x' } }
+//│ > Ref(Symbol("x"))
 //│ = Blk([LetDecl(Symbol("x")), DefineVar(Symbol("x"), Lit(42))], Ref(Symbol("x")))
 
 
@@ -205,7 +201,7 @@ term.print
 
 term.print(`42)
 //│ JS (unsanitized):
-//│ let tmp61; tmp61 = new this.Predef.term.Lit(42); Predef.term.print(tmp61) ?? null
+//│ let tmp61; tmp61 = new this.Predef.term.Lit(42); runtime.safeCall(Predef.term.print(tmp61))
 //│ > 42
 
 
@@ -214,7 +210,7 @@ term.print(`+)
 //│ let tmp62, tmp63;
 //│ tmp62 = new this.Predef.term.Symbol("+");
 //│ tmp63 = new this.Predef.term.Ref(tmp62);
-//│ Predef.term.print(tmp63) ?? null
+//│ runtime.safeCall(Predef.term.print(tmp63))
 //│ > +
 
 
@@ -230,7 +226,7 @@ term.print(`1 `+ `2)
 //│   tmp66
 //│ ]);
 //│ tmp69 = new this.Predef.term.App(tmp67, tmp68);
-//│ Predef.term.print(tmp69) ?? null
+//│ runtime.safeCall(Predef.term.print(tmp69))
 //│ > (+)(1, 2)
 
 
@@ -242,7 +238,7 @@ term.print(x `=> x)
 //│ tmp71 = new this.Predef.term.Lam([
 //│   x6
 //│ ], tmp70);
-//│ Predef.term.print(tmp71) ?? null
+//│ runtime.safeCall(Predef.term.print(tmp71))
 //│ > (x) => x
 
 
@@ -265,7 +261,7 @@ term.print((x, y) `=> x `+ y)
 //│   x7,
 //│   y
 //│ ], tmp77);
-//│ Predef.term.print(tmp78) ?? null
+//│ runtime.safeCall(Predef.term.print(tmp78))
 //│ > (x, y) => (+)(x, y)
 
 
@@ -281,7 +277,7 @@ term.print(`let x = `42 `in x)
 //│   tmp81,
 //│   tmp82
 //│ ], tmp80);
-//│ Predef.term.print(tmp83) ?? null
+//│ runtime.safeCall(Predef.term.print(tmp83))
 //│ > let x
 //│ > x = 42
 //│ > x
@@ -303,7 +299,7 @@ term.print(`if `true then `true else `false)
 //│ tmp94 = new this.Predef.term.Cons(tmp91, tmp93);
 //│ tmp95 = new this.Predef.term.Let(tmp84, tmp85, tmp94);
 //│ tmp96 = new this.Predef.term.IfLike(this.Predef.term.KeywordIf, tmp95);
-//│ Predef.term.print(tmp96) ?? null
+//│ runtime.safeCall(Predef.term.print(tmp96))
 //│ > if 
 //│ >   let scrut = true
 //│ >   scrut is true then true
@@ -338,7 +334,7 @@ term.print(x `=> `if x `== `0.0 then `1.0 else x)
 //│ tmp115 = new this.Predef.term.Lam([
 //│   x9
 //│ ], tmp114);
-//│ Predef.term.print(tmp115) ?? null
+//│ runtime.safeCall(Predef.term.print(tmp115))
 //│ > (x) => if 
 //│ >   let scrut = (==)(x, 0)
 //│ >   scrut is true then 1
@@ -346,7 +342,7 @@ term.print(x `=> `if x `== `0.0 then `1.0 else x)
 
 import "../../mlscript-compile/QuoteExample2.mls"
 //│ JS (unsanitized):
-//│ import QuoteExample2 from "./../../mlscript-compile/QuoteExample2.mjs"; null
+//│ import QuoteExample2 from "./../../mlscript-compile/QuoteExample2.mjs"; 
 
 
 QuoteExample2.codegen()
@@ -356,7 +352,7 @@ QuoteExample2.codegen()
 
 import "../../mlscript-compile/quotes/QuoteFoo.mls"
 //│ JS (unsanitized):
-//│ import QuoteFoo from "./../../mlscript-compile/quotes/QuoteFoo.mjs"; null
+//│ import QuoteFoo from "./../../mlscript-compile/quotes/QuoteFoo.mjs"; 
 
 QuoteFoo.res
 //│ JS (unsanitized):
@@ -366,7 +362,7 @@ QuoteFoo.res
 
 import "../../mlscript-compile/quotes/QuoteInc.mls"
 //│ JS (unsanitized):
-//│ import QuoteInc from "./../../mlscript-compile/quotes/QuoteInc.mjs"; null
+//│ import QuoteInc from "./../../mlscript-compile/quotes/QuoteInc.mjs"; 
 
 
 QuoteInc.res(42)
@@ -377,7 +373,7 @@ QuoteInc.res(42)
 
 import "../../mlscript-compile/CSP.mls"
 //│ JS (unsanitized):
-//│ import CSP from "./../../mlscript-compile/CSP.mjs"; null
+//│ import CSP from "./../../mlscript-compile/CSP.mjs"; 
 
 
 term.codegen(CSP.foo(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPFoo.mls")
@@ -389,7 +385,7 @@ term.codegen(CSP.foo(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPFoo.
 
 import "../../mlscript-compile/quotes/CSPFoo.mls"
 //│ JS (unsanitized):
-//│ import CSPFoo from "./../../mlscript-compile/quotes/CSPFoo.mjs"; null
+//│ import CSPFoo from "./../../mlscript-compile/quotes/CSPFoo.mjs"; 
 
 
 CSPFoo.res
@@ -407,7 +403,7 @@ term.codegen(CSP.bar(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPBar.
 
 import "../../mlscript-compile/quotes/CSPBar.mls"
 //│ JS (unsanitized):
-//│ import CSPBar from "./../../mlscript-compile/quotes/CSPBar.mjs"; null
+//│ import CSPBar from "./../../mlscript-compile/quotes/CSPBar.mjs"; 
 
 
 CSPBar.res

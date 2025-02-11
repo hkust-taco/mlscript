@@ -8,14 +8,14 @@ x =>
   let y = x
   y
 //│ JS (unsanitized):
-//│ (x) => { let y; y = x; return y; }
+//│ (x) => { let y; y = x; return y }
 //│ = [function block$res1]
 
 
 :todo
 (acc, _) => acc
 //│ JS (unsanitized):
-//│ (acc, _) => { return acc; }
+//│ (acc, _) => { return acc }
 //│ = [function block$res2]
 
 

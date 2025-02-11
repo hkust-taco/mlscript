@@ -204,6 +204,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
   private def typeCode(code: Term)(using ctx: BbCtx, scope: Scope): (Type, Type, Type) =
     given CCtx = CCtx.init(code, N)
     code match
+    case UnitVal() => (Top, Bot, Bot)
     case Lit(lit) => ((lit match
       case _: IntLit => BbCtx.intTy
       case _: DecLit => BbCtx.numTy
@@ -288,40 +289,31 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       (split: Split, sign: Opt[GeneralType])(using ctx: BbCtx)(using CCtx, Scope)
       : (GeneralType, Type) =
     split match
-    case Split.Cons(Branch(scrutinee, Pattern.ClassLike(sym, _, _, _), cons), alts) =>
-      // * Pattern matching for classes
-      val (clsTy, tv, emptyTy) = sym.asCls.flatMap(_.defn) match
+    case Split.Cons(Branch(scrutinee, pattern, cons), alts) =>
+      val (scrutineeTy, scrutineeEff) = typeCheck(scrutinee)
+      val nestCtx1 = ctx.nest
+      val nestCtx2 = ctx.nest
+      val patTy = pattern match
+      case Pattern.ClassLike(sym, _, _, _) =>
+        val (clsTy, tv, emptyTy) = sym.asCls.flatMap(_.defn) match
         case S(cls) =>
           (ClassLikeType(sym, cls.tparams.map(_ => freshWildcard(sym))), (freshVar(new TempSymbol(S(scrutinee), "scrut"))), ClassLikeType(sym, cls.tparams.map(_ => Wildcard.empty)))
         case _ =>
           error(msg"Cannot match ${scrutinee.toString} as ${sym.toString}" -> split.toLoc :: Nil)
           (Bot, Bot, Bot)
-      val (scrutineeTy, scrutineeEff) = typeCheck(scrutinee)
-      constrain(tryMkMono(scrutineeTy, scrutinee), clsTy | (tv & Type.mkNegType(emptyTy)))
-      val nestCtx1 = ctx.nest
-      val nestCtx2 = ctx.nest
-      scrutinee match // * refine
-        case Ref(sym: LocalSymbol) =>
-          nestCtx1 += sym -> clsTy
-          nestCtx2 += sym -> tv
-        case _ => () // TODO: refine all variables holding this value?
-      val (consTy, consEff) = typeSplit(cons, sign)(using nestCtx1)
-      val (altsTy, altsEff) = typeSplit(alts, sign)(using nestCtx2)
-      val allEff = scrutineeEff | (consEff | altsEff)
-      (sign.getOrElse(tryMkMono(consTy, cons) | tryMkMono(altsTy, alts)), allEff)
-    // * Pattern matching for literals
-    case Split.Cons(Branch(scrutinee, Pattern.Lit(lit), cons), alts) =>
-      val (scrutineeTy, scrutineeEff) = typeCheck(scrutinee)
-      val litTy = lit match
+        scrutinee match // * refine
+          case Ref(sym: LocalSymbol) =>
+            nestCtx1 += sym -> clsTy
+            nestCtx2 += sym -> tv
+          case _ => () // TODO: refine all variables holding this value?
+        clsTy | (tv & Type.mkNegType(emptyTy))
+      case Pattern.Lit(lit) => lit match
         case _: Tree.BoolLit => BbCtx.boolTy
         case _: Tree.IntLit => BbCtx.intTy
         case _: Tree.DecLit => BbCtx.numTy
         case _: Tree.StrLit => BbCtx.strTy
         case _: Tree.UnitLit => Top
-      
-      constrain(tryMkMono(scrutineeTy, scrutinee), litTy)
-      val nestCtx1 = ctx.nest
-      val nestCtx2 = ctx.nest
+      constrain(tryMkMono(scrutineeTy, scrutinee), patTy)
       val (consTy, consEff) = typeSplit(cons, sign)(using nestCtx1)
       val (altsTy, altsEff) = typeSplit(alts, sign)(using nestCtx2)
       val allEff = scrutineeEff | (consEff | altsEff)
@@ -449,15 +441,15 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             effBuff += eff
             ctx += sym -> rhsTy
             goStats(stats)
-          case TermDefinition(_, Fun, sym, ps :: Nil, sig, S(body), _, _, _) :: stats =>
+          case TermDefinition(_, Fun, sym, ps :: Nil, _, sig, S(body), _, _, _) :: stats =>
             typeFunDef(sym, Term.Lam(ps, body), sig, ctx)
             goStats(stats)
-          case TermDefinition(_, Fun, sym, Nil, sig, S(body), _, _, _) :: stats =>
+          case TermDefinition(_, Fun, sym, Nil, _, sig, S(body), _, _, _) :: stats =>
             typeFunDef(sym, body, sig, ctx)  // * may be a case expressions
             goStats(stats)
-          case TermDefinition(_, Fun, sym1, _, S(sig), None, _, _, _) :: (td @ TermDefinition(_, Fun, sym2, _, _, S(body), _, _, _)) :: stats
+          case TermDefinition(_, Fun, sym1, _, _, S(sig), None, _, _, _) :: (td @ TermDefinition(_, Fun, sym2, _, _, _, S(body), _, _, _)) :: stats
             if sym1 === sym2 => goStats(td :: stats) // * avoid type check signatures twice
-          case TermDefinition(_, Fun, sym, _, S(sig), None, _, _, _) :: stats =>
+          case TermDefinition(_, Fun, sym, _, _, S(sig), None, _, _, _) :: stats =>
             ctx += sym -> typeType(sig)
             goStats(stats)
           case (clsDef: ClassDef) :: stats =>
@@ -471,6 +463,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         goStats(stats)
         val (ty, eff) = typeCheck(res)
         (ty, effBuff.foldLeft(eff)((res, e) => res | e))
+      case UnitVal() => (Top, Bot)
       case Lit(lit) => ((lit match
         case _: IntLit => BbCtx.intTy
         case _: DecLit => BbCtx.numTy
@@ -511,7 +504,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       case t @ Term.App(lhs, Term.Tup(rhs)) =>
         val (funTy, lhsEff) = typeCheck(lhs)
         app((funTy, lhsEff), rhs, t)
-      case Term.New(cls, args) =>
+      case Term.New(cls, args, N) =>
         cls.symbol.flatMap(_.asCls.flatMap(_.defn)) match
         case S(clsDfn: ClassDef.Parameterized) =>
           require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))

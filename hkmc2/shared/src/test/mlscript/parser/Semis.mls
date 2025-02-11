@@ -38,4 +38,8 @@ let a = 1 in { 2; 3 }
 //│ Parsed:
 //│ 	LetLike(keyword 'let',Ident(a),Some(IntLit(1)),Some(Block(List(App(Ident(;),Tup(List(IntLit(2), IntLit(3))))))))
 
+1; id(2)
+//│ Parsed:
+//│ 	App(Ident(;),Tup(List(IntLit(1), App(Ident(id),Tup(List(IntLit(2)))))))
+
 

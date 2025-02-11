@@ -24,3 +24,30 @@ case x then x
 //│ = [function block$res3]
 
 
+:w
+fun foo(x) =
+  x
+  x
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.29: 	  x
+//│ ╙──      	  ^
+
+:w
+fun foo() =
+  val x = 1
+  x
+  x
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.38: 	  x
+//│ ╙──      	  ^
+
+:w
+fun foo() =
+  let x = 1
+  x
+  x
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.47: 	  x
+//│ ╙──      	  ^
+
+

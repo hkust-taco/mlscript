@@ -1,8 +1,5 @@
 :js
 
-:import PredefJS.mls
-//│ Imported 2 member(s)
-
 
 class Some[out A](value: A)
 
@@ -65,12 +62,12 @@ x => if x is Some(x) then x
 //│   if (x3 instanceof Some1.class) {
 //│     param04 = x3.value;
 //│     x4 = param04;
-//│     return x4;
+//│     return x4
 //│   } else {
 //│     throw new this.Error("match error");
 //│   }
 //│ }
-//│ = [function block$res10]
+//│ = [function block$res9]
 
 
 class C(a)
@@ -96,6 +93,12 @@ M.d
 
 fun f(x) = if x is M.D then 1 else 0
 
+M.D.class
+//│ = class D {       constructor(a) {         this.a = a;       }       toString() { return "D(" + globalThis.Predef.render(this.a) + ")"; }     }
+
+M is M.D
+//│ = false
+
 f(M.d)
 //│ = 1
 
@@ -117,29 +120,28 @@ f(M.D(27))
 fun f(x) = if x is
   Some(x) and x > 0 then 42
   None then "ok"
-  else log("oops")
+  else print("oops")
 //│ JS (unsanitized):
 //│ let f4;
 //│ f4 = function f(x3) {
-//│   let param04, x4, scrut1;
+//│   let param04, x4, scrut2;
 //│   if (x3 instanceof Some1.class) {
 //│     param04 = x3.value;
 //│     x4 = param04;
-//│     scrut1 = x4 > 0;
-//│     if (scrut1 === true) {
-//│       return 42;
+//│     scrut2 = x4 > 0;
+//│     if (scrut2 === true) {
+//│       return 42
 //│     } else {
-//│       return log("oops");
+//│       return Predef.print("oops")
 //│     }
 //│   } else {
 //│     if (x3 instanceof None1.class) {
-//│       return "ok";
+//│       return "ok"
 //│     } else {
-//│       return log("oops");
+//│       return Predef.print("oops")
 //│     }
 //│   }
 //│ };
-//│ null
 
 f(Some(0))
 //│ > oops
@@ -168,20 +170,19 @@ fun f(x) = if x is
 //│   if (x3 instanceof Some1.class) {
 //│     param05 = x3.value;
 //│     u = param05;
-//│     return u;
+//│     return u
 //│   } else {
 //│     if (x3 instanceof Pair1.class) {
 //│       param04 = x3.fst;
 //│       param1 = x3.snd;
 //│       a = param04;
 //│       b = param1;
-//│       return a + b;
+//│       return a + b
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }
 //│   }
 //│ };
-//│ null
 
 f(Some(123))
 //│ = 123
@@ -192,31 +193,30 @@ f(Pair(10, 5))
 
 // UCS term not in tail position
 :sjs
-fun f(x) = log of if x is
+fun f(x) = print of if x is
   Some(0) then "0"
   None then "ok"
   else "oops"
 //│ JS (unsanitized):
 //│ let f6;
 //│ f6 = function f(x3) {
-//│   let param04, tmp11;
+//│   let param04, tmp9;
 //│   if (x3 instanceof Some1.class) {
 //│     param04 = x3.value;
 //│     if (param04 === 0) {
-//│       tmp11 = "0";
+//│       tmp9 = "0";
 //│     } else {
-//│       tmp11 = "oops";
+//│       tmp9 = "oops";
 //│     }
 //│   } else {
 //│     if (x3 instanceof None1.class) {
-//│       tmp11 = "ok";
+//│       tmp9 = "ok";
 //│     } else {
-//│       tmp11 = "oops";
+//│       tmp9 = "oops";
 //│     }
 //│   }
-//│   return log(tmp11);
+//│   return Predef.print(tmp9)
 //│ };
-//│ null
 
 f(Some(0))
 //│ > 0

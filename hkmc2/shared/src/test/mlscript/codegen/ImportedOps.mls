@@ -15,7 +15,7 @@ foo()
 //│ foo = function foo() {
 //│   let tmp;
 //│   tmp = M1.concat("a", "b");
-//│   return M1.concat(tmp, "c");
+//│   return M1.concat(tmp, "c")
 //│ };
 //│ foo()
 //│ = "abc"

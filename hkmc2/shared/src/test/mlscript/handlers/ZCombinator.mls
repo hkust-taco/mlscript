@@ -1,5 +1,5 @@
 :js
-:handler
+:effectHandlers
 :stackSafe 1000
 
 fun selfApp(f) = f(f)

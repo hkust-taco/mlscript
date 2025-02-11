@@ -1,8 +1,8 @@
+import runtime from "./Runtime.mjs";
 import fs from "fs";
 import process from "process";
 import path from "path";
 import url from "url";
-import Predef from "./Predef.mjs";
 import Str from "./Str.mjs";
 let Term2;
 Term2 = class Term {
@@ -21,49 +21,57 @@ Term2 = class Term {
       toString() { return "ConstructorLike"; }
     };
     this.SymbolCons = function SymbolCons(symbol1) { return new SymbolCons.class(symbol1); };
-    this.SymbolCons.class = class SymbolCons {
+    this.SymbolCons.class = class SymbolCons extends Term.ConstructorLike {
       constructor(symbol) {
+        super();
         this.symbol = symbol;
       }
       toString() { return "SymbolCons(" + globalThis.Predef.render(this.symbol) + ")"; }
     };
-    this.StringJoin = class StringJoin {
-      constructor() {}
+    this.StringJoin = class StringJoin extends Term.ConstructorLike {
+      constructor() {
+        super();
+      }
       toString() { return "StringJoin"; }
     };
     this.TupleCapacity = function TupleCapacity(size1, inf1) { return new TupleCapacity.class(size1, inf1); };
-    this.TupleCapacity.class = class TupleCapacity {
+    this.TupleCapacity.class = class TupleCapacity extends Term.ConstructorLike {
       constructor(size, inf) {
+        super();
         this.size = size;
         this.inf = inf;
       }
       toString() { return "TupleCapacity(" + globalThis.Predef.render(this.size) + ", " + globalThis.Predef.render(this.inf) + ")"; }
     };
     this.Instantiation = function Instantiation(symbol1, args1) { return new Instantiation.class(symbol1, args1); };
-    this.Instantiation.class = class Instantiation {
+    this.Instantiation.class = class Instantiation extends Term.ConstructorLike {
       constructor(symbol, args) {
+        super();
         this.symbol = symbol;
         this.args = args;
       }
       toString() { return "Instantiation(" + globalThis.Predef.render(this.symbol) + ", " + globalThis.Predef.render(this.args) + ")"; }
     };
     this.LocalPattern = function LocalPattern(id1) { return new LocalPattern.class(id1); };
-    this.LocalPattern.class = class LocalPattern {
+    this.LocalPattern.class = class LocalPattern extends Term.ConstructorLike {
       constructor(id) {
+        super();
         this.id = id;
       }
       toString() { return "LocalPattern(" + globalThis.Predef.render(this.id) + ")"; }
     };
     this.Parameter = function Parameter(symbol1) { return new Parameter.class(symbol1); };
-    this.Parameter.class = class Parameter {
+    this.Parameter.class = class Parameter extends Term.ConstructorLike {
       constructor(symbol) {
+        super();
         this.symbol = symbol;
       }
       toString() { return "Parameter(" + globalThis.Predef.render(this.symbol) + ")"; }
     };
     this.Nested = function Nested(split1) { return new Nested.class(split1); };
-    this.Nested.class = class Nested {
+    this.Nested.class = class Nested extends Term.ConstructorLike {
       constructor(split) {
+        super();
         this.split = split;
       }
       toString() { return "Nested(" + globalThis.Predef.render(this.split) + ")"; }
@@ -73,15 +81,17 @@ Term2 = class Term {
       toString() { return "PatternStub"; }
     };
     this.LiteralStub = function LiteralStub(value1) { return new LiteralStub.class(value1); };
-    this.LiteralStub.class = class LiteralStub {
+    this.LiteralStub.class = class LiteralStub extends Term.PatternStub {
       constructor(value) {
+        super();
         this.value = value;
       }
       toString() { return "LiteralStub(" + globalThis.Predef.render(this.value) + ")"; }
     };
     this.CharClass = function CharClass(start1, end1, inclusive1) { return new CharClass.class(start1, end1, inclusive1); };
-    this.CharClass.class = class CharClass {
+    this.CharClass.class = class CharClass extends Term.PatternStub {
       constructor(start, end, inclusive) {
+        super();
         this.start = start;
         this.end = end;
         this.inclusive = inclusive;
@@ -89,14 +99,17 @@ Term2 = class Term {
       toString() { return "CharClass(" + globalThis.Predef.render(this.start) + ", " + globalThis.Predef.render(this.end) + ", " + globalThis.Predef.render(this.inclusive) + ")"; }
     };
     this.ClassLikeStub = function ClassLikeStub(cons1) { return new ClassLikeStub.class(cons1); };
-    this.ClassLikeStub.class = class ClassLikeStub {
+    this.ClassLikeStub.class = class ClassLikeStub extends Term.PatternStub {
       constructor(cons) {
+        super();
         this.cons = cons;
       }
       toString() { return "ClassLikeStub(" + globalThis.Predef.render(this.cons) + ")"; }
     };
-    this.Wildcard = class Wildcard {
-      constructor() {}
+    this.Wildcard = class Wildcard extends Term.PatternStub {
+      constructor() {
+        super();
+      }
       toString() { return "Wildcard"; }
     };
     this.DebrujinSplit = class DebrujinSplit {
@@ -104,15 +117,17 @@ Term2 = class Term {
       toString() { return "DebrujinSplit"; }
     };
     this.Binder = function Binder(body1) { return new Binder.class(body1); };
-    this.Binder.class = class Binder {
+    this.Binder.class = class Binder extends Term.DebrujinSplit {
       constructor(body) {
+        super();
         this.body = body;
       }
       toString() { return "Binder(" + globalThis.Predef.render(this.body) + ")"; }
     };
     this.DebrujinBranch = function DebrujinBranch(scrutinee1, ptrn1, consequent1, alternative1) { return new DebrujinBranch.class(scrutinee1, ptrn1, consequent1, alternative1); };
-    this.DebrujinBranch.class = class DebrujinBranch {
+    this.DebrujinBranch.class = class DebrujinBranch extends Term.DebrujinSplit {
       constructor(scrutinee, ptrn, consequent, alternative) {
+        super();
         this.scrutinee = scrutinee;
         this.ptrn = ptrn;
         this.consequent = consequent;
@@ -121,14 +136,17 @@ Term2 = class Term {
       toString() { return "DebrujinBranch(" + globalThis.Predef.render(this.scrutinee) + ", " + globalThis.Predef.render(this.ptrn) + ", " + globalThis.Predef.render(this.consequent) + ", " + globalThis.Predef.render(this.alternative) + ")"; }
     };
     this.Accept = function Accept(outcome1) { return new Accept.class(outcome1); };
-    this.Accept.class = class Accept {
+    this.Accept.class = class Accept extends Term.DebrujinSplit {
       constructor(outcome) {
+        super();
         this.outcome = outcome;
       }
       toString() { return "Accept(" + globalThis.Predef.render(this.outcome) + ")"; }
     };
-    this.Reject = class Reject {
-      constructor() {}
+    this.Reject = class Reject extends Term.DebrujinSplit {
+      constructor() {
+        super();
+      }
       toString() { return "Reject"; }
     };
     this.Pattern = class Pattern {
@@ -136,22 +154,25 @@ Term2 = class Term {
       toString() { return "Pattern"; }
     };
     this.LitPattern = function LitPattern(lit1) { return new LitPattern.class(lit1); };
-    this.LitPattern.class = class LitPattern {
+    this.LitPattern.class = class LitPattern extends Term.Pattern {
       constructor(lit) {
+        super();
         this.lit = lit;
       }
       toString() { return "LitPattern(" + globalThis.Predef.render(this.lit) + ")"; }
     };
     this.Var = function Var(sym1) { return new Var.class(sym1); };
-    this.Var.class = class Var {
+    this.Var.class = class Var extends Term.Pattern {
       constructor(sym) {
+        super();
         this.sym = sym;
       }
       toString() { return "Var(" + globalThis.Predef.render(this.sym) + ")"; }
     };
     this.ClassLike = function ClassLike(sym1, trm1, parameters1) { return new ClassLike.class(sym1, trm1, parameters1); };
-    this.ClassLike.class = class ClassLike {
+    this.ClassLike.class = class ClassLike extends Term.Pattern {
       constructor(sym, trm, parameters) {
+        super();
         this.sym = sym;
         this.trm = trm;
         this.parameters = parameters;
@@ -159,24 +180,27 @@ Term2 = class Term {
       toString() { return "ClassLike(" + globalThis.Predef.render(this.sym) + ", " + globalThis.Predef.render(this.trm) + ", " + globalThis.Predef.render(this.parameters) + ")"; }
     };
     this.Synonym = function Synonym(symbol1, patternArguments1) { return new Synonym.class(symbol1, patternArguments1); };
-    this.Synonym.class = class Synonym {
+    this.Synonym.class = class Synonym extends Term.Pattern {
       constructor(symbol, patternArguments) {
+        super();
         this.symbol = symbol;
         this.patternArguments = patternArguments;
       }
       toString() { return "Synonym(" + globalThis.Predef.render(this.symbol) + ", " + globalThis.Predef.render(this.patternArguments) + ")"; }
     };
     this.Tuple = function Tuple(size1, inf1) { return new Tuple.class(size1, inf1); };
-    this.Tuple.class = class Tuple {
+    this.Tuple.class = class Tuple extends Term.Pattern {
       constructor(size, inf) {
+        super();
         this.size = size;
         this.inf = inf;
       }
       toString() { return "Tuple(" + globalThis.Predef.render(this.size) + ", " + globalThis.Predef.render(this.inf) + ")"; }
     };
     this.Record = function Record(entities1) { return new Record.class(entities1); };
-    this.Record.class = class Record {
+    this.Record.class = class Record extends Term.Pattern {
       constructor(entities) {
+        super();
         this.entities = entities;
       }
       toString() { return "Record(" + globalThis.Predef.render(this.entities) + ")"; }
@@ -195,16 +219,18 @@ Term2 = class Term {
       toString() { return "Split"; }
     };
     this.Cons = function Cons(head1, tail1) { return new Cons.class(head1, tail1); };
-    this.Cons.class = class Cons {
+    this.Cons.class = class Cons extends Term.Split {
       constructor(head, tail) {
+        super();
         this.head = head;
         this.tail = tail;
       }
       toString() { return "Cons(" + globalThis.Predef.render(this.head) + ", " + globalThis.Predef.render(this.tail) + ")"; }
     };
     this.Let = function Let(sym1, term1, tail1) { return new Let.class(sym1, term1, tail1); };
-    this.Let.class = class Let {
+    this.Let.class = class Let extends Term.Split {
       constructor(sym, term, tail) {
+        super();
         this.sym = sym;
         this.term = term;
         this.tail = tail;
@@ -212,14 +238,17 @@ Term2 = class Term {
       toString() { return "Let(" + globalThis.Predef.render(this.sym) + ", " + globalThis.Predef.render(this.term) + ", " + globalThis.Predef.render(this.tail) + ")"; }
     };
     this.Else = function Else(default2) { return new Else.class(default2); };
-    this.Else.class = class Else {
+    this.Else.class = class Else extends Term.Split {
       constructor(default1) {
+        super();
         this.default = default1;
       }
       toString() { return "Else(" + globalThis.Predef.render(this.default) + ")"; }
     };
-    this.End = class End {
-      constructor() {}
+    this.End = class End extends Term.Split {
+      constructor() {
+        super();
+      }
       toString() { return "End"; }
     };
     const KeywordIf$class = class KeywordIf {
@@ -239,15 +268,17 @@ Term2 = class Term {
       toString() { return "Statement"; }
     };
     this.LetDecl = function LetDecl(sym1) { return new LetDecl.class(sym1); };
-    this.LetDecl.class = class LetDecl {
+    this.LetDecl.class = class LetDecl extends Term.Statement {
       constructor(sym) {
+        super();
         this.sym = sym;
       }
       toString() { return "LetDecl(" + globalThis.Predef.render(this.sym) + ")"; }
     };
     this.DefineVar = function DefineVar(sym1, rhs1) { return new DefineVar.class(sym1, rhs1); };
-    this.DefineVar.class = class DefineVar {
+    this.DefineVar.class = class DefineVar extends Term.Statement {
       constructor(sym, rhs) {
+        super();
         this.sym = sym;
         this.rhs = rhs;
       }
@@ -258,29 +289,33 @@ Term2 = class Term {
       toString() { return "Term"; }
     };
     this.Lit = function Lit(lit1) { return new Lit.class(lit1); };
-    this.Lit.class = class Lit {
+    this.Lit.class = class Lit extends Term.Term {
       constructor(lit) {
+        super();
         this.lit = lit;
       }
       toString() { return "Lit(" + globalThis.Predef.render(this.lit) + ")"; }
     };
     this.Builtin = function Builtin(name1) { return new Builtin.class(name1); };
-    this.Builtin.class = class Builtin {
+    this.Builtin.class = class Builtin extends Term.Term {
       constructor(name) {
+        super();
         this.name = name;
       }
       toString() { return "Builtin(" + globalThis.Predef.render(this.name) + ")"; }
     };
     this.Ref = function Ref(sym1) { return new Ref.class(sym1); };
-    this.Ref.class = class Ref {
+    this.Ref.class = class Ref extends Term.Term {
       constructor(sym) {
+        super();
         this.sym = sym;
       }
       toString() { return "Ref(" + globalThis.Predef.render(this.sym) + ")"; }
     };
     this.CSRef = function CSRef(sym1, base1, file1) { return new CSRef.class(sym1, base1, file1); };
-    this.CSRef.class = class CSRef {
+    this.CSRef.class = class CSRef extends Term.Term {
       constructor(sym, base, file) {
+        super();
         this.sym = sym;
         this.base = base;
         this.file = file;
@@ -288,24 +323,27 @@ Term2 = class Term {
       toString() { return "CSRef(" + globalThis.Predef.render(this.sym) + ", " + globalThis.Predef.render(this.base) + ", " + globalThis.Predef.render(this.file) + ")"; }
     };
     this.App = function App(lhs1, rhs1) { return new App.class(lhs1, rhs1); };
-    this.App.class = class App {
+    this.App.class = class App extends Term.Term {
       constructor(lhs, rhs) {
+        super();
         this.lhs = lhs;
         this.rhs = rhs;
       }
       toString() { return "App(" + globalThis.Predef.render(this.lhs) + ", " + globalThis.Predef.render(this.rhs) + ")"; }
     };
     this.Sel = function Sel(prefix1, nme1) { return new Sel.class(prefix1, nme1); };
-    this.Sel.class = class Sel {
+    this.Sel.class = class Sel extends Term.Term {
       constructor(prefix, nme) {
+        super();
         this.prefix = prefix;
         this.nme = nme;
       }
       toString() { return "Sel(" + globalThis.Predef.render(this.prefix) + ", " + globalThis.Predef.render(this.nme) + ")"; }
     };
     this.DynSel = function DynSel(prefix1, fld1, arrayIdx1) { return new DynSel.class(prefix1, fld1, arrayIdx1); };
-    this.DynSel.class = class DynSel {
+    this.DynSel.class = class DynSel extends Term.Term {
       constructor(prefix, fld, arrayIdx) {
+        super();
         this.prefix = prefix;
         this.fld = fld;
         this.arrayIdx = arrayIdx;
@@ -313,117 +351,129 @@ Term2 = class Term {
       toString() { return "DynSel(" + globalThis.Predef.render(this.prefix) + ", " + globalThis.Predef.render(this.fld) + ", " + globalThis.Predef.render(this.arrayIdx) + ")"; }
     };
     this.Tup = function Tup(fields1) { return new Tup.class(fields1); };
-    this.Tup.class = class Tup {
+    this.Tup.class = class Tup extends Term.Term {
       constructor(fields) {
+        super();
         this.fields = fields;
       }
       toString() { return "Tup(" + globalThis.Predef.render(this.fields) + ")"; }
     };
     this.IfLike = function IfLike(kw1, desugared1) { return new IfLike.class(kw1, desugared1); };
-    this.IfLike.class = class IfLike {
+    this.IfLike.class = class IfLike extends Term.Term {
       constructor(kw, desugared) {
+        super();
         this.kw = kw;
         this.desugared = desugared;
       }
       toString() { return "IfLike(" + globalThis.Predef.render(this.kw) + ", " + globalThis.Predef.render(this.desugared) + ")"; }
     };
     this.Lam = function Lam(params1, body1) { return new Lam.class(params1, body1); };
-    this.Lam.class = class Lam {
+    this.Lam.class = class Lam extends Term.Term {
       constructor(params, body) {
+        super();
         this.params = params;
         this.body = body;
       }
       toString() { return "Lam(" + globalThis.Predef.render(this.params) + ", " + globalThis.Predef.render(this.body) + ")"; }
     };
     this.Blk = function Blk(stats1, res1) { return new Blk.class(stats1, res1); };
-    this.Blk.class = class Blk {
+    this.Blk.class = class Blk extends Term.Term {
       constructor(stats, res) {
+        super();
         this.stats = stats;
         this.res = res;
       }
       toString() { return "Blk(" + globalThis.Predef.render(this.stats) + ", " + globalThis.Predef.render(this.res) + ")"; }
     };
     this.New = function New(cls1, args1) { return new New.class(cls1, args1); };
-    this.New.class = class New {
+    this.New.class = class New extends Term.Term {
       constructor(cls, args) {
+        super();
         this.cls = cls;
         this.args = args;
       }
       toString() { return "New(" + globalThis.Predef.render(this.cls) + ", " + globalThis.Predef.render(this.args) + ")"; }
     };
     this.Region = function Region(name1, body1) { return new Region.class(name1, body1); };
-    this.Region.class = class Region {
+    this.Region.class = class Region extends Term.Term {
       constructor(name, body) {
+        super();
         this.name = name;
         this.body = body;
       }
       toString() { return "Region(" + globalThis.Predef.render(this.name) + ", " + globalThis.Predef.render(this.body) + ")"; }
     };
     this.RegRef = function RegRef(reg1, value1) { return new RegRef.class(reg1, value1); };
-    this.RegRef.class = class RegRef {
+    this.RegRef.class = class RegRef extends Term.Term {
       constructor(reg, value) {
+        super();
         this.reg = reg;
         this.value = value;
       }
       toString() { return "RegRef(" + globalThis.Predef.render(this.reg) + ", " + globalThis.Predef.render(this.value) + ")"; }
     };
     this.Assgn = function Assgn(lhs1, rhs1) { return new Assgn.class(lhs1, rhs1); };
-    this.Assgn.class = class Assgn {
+    this.Assgn.class = class Assgn extends Term.Term {
       constructor(lhs, rhs) {
+        super();
         this.lhs = lhs;
         this.rhs = rhs;
       }
       toString() { return "Assgn(" + globalThis.Predef.render(this.lhs) + ", " + globalThis.Predef.render(this.rhs) + ")"; }
     };
     this.Deref = function Deref(ref1) { return new Deref.class(ref1); };
-    this.Deref.class = class Deref {
+    this.Deref.class = class Deref extends Term.Term {
       constructor(ref) {
+        super();
         this.ref = ref;
       }
       toString() { return "Deref(" + globalThis.Predef.render(this.ref) + ")"; }
     };
     this.SetRef = function SetRef(ref1, value1) { return new SetRef.class(ref1, value1); };
-    this.SetRef.class = class SetRef {
+    this.SetRef.class = class SetRef extends Term.Term {
       constructor(ref, value) {
+        super();
         this.ref = ref;
         this.value = value;
       }
       toString() { return "SetRef(" + globalThis.Predef.render(this.ref) + ", " + globalThis.Predef.render(this.value) + ")"; }
     };
     this.Ret = function Ret(result1) { return new Ret.class(result1); };
-    this.Ret.class = class Ret {
+    this.Ret.class = class Ret extends Term.Term {
       constructor(result) {
+        super();
         this.result = result;
       }
       toString() { return "Ret(" + globalThis.Predef.render(this.result) + ")"; }
     };
     this.Throw = function Throw(result1) { return new Throw.class(result1); };
-    this.Throw.class = class Throw {
+    this.Throw.class = class Throw extends Term.Term {
       constructor(result) {
+        super();
         this.result = result;
       }
       toString() { return "Throw(" + globalThis.Predef.render(this.result) + ")"; }
     };
     this.Try = function Try(body1, finallyDo1) { return new Try.class(body1, finallyDo1); };
-    this.Try.class = class Try {
+    this.Try.class = class Try extends Term.Term {
       constructor(body, finallyDo) {
+        super();
         this.body = body;
         this.finallyDo = finallyDo;
       }
       toString() { return "Try(" + globalThis.Predef.render(this.body) + ", " + globalThis.Predef.render(this.finallyDo) + ")"; }
     };
     tmp = new globalThis.Set();
-    this.#builtinSymbols = tmp;
-    tmp1 = this.#builtinSymbols.add("+") ?? null;
-    tmp2 = this.#builtinSymbols.add("-") ?? null;
-    tmp3 = this.#builtinSymbols.add("*") ?? null;
-    tmp4 = this.#builtinSymbols.add("/") ?? null;
-    tmp5 = this.#builtinSymbols.add("==") ?? null;
-    tmp6 = this.#builtinSymbols.add("<") ?? null;
-    tmp7 = this.#builtinSymbols.add(">") ?? null;
-    tmp8 = this.#builtinSymbols.add(">=") ?? null;
-    tmp9 = this.#builtinSymbols.add("<=") ?? null;
-    const this$Term = this;
+    Term.#builtinSymbols = tmp;
+    tmp1 = runtime.safeCall(Term.#builtinSymbols.add("+"));
+    tmp2 = runtime.safeCall(Term.#builtinSymbols.add("-"));
+    tmp3 = runtime.safeCall(Term.#builtinSymbols.add("*"));
+    tmp4 = runtime.safeCall(Term.#builtinSymbols.add("/"));
+    tmp5 = runtime.safeCall(Term.#builtinSymbols.add("=="));
+    tmp6 = runtime.safeCall(Term.#builtinSymbols.add("<"));
+    tmp7 = runtime.safeCall(Term.#builtinSymbols.add(">"));
+    tmp8 = runtime.safeCall(Term.#builtinSymbols.add(">="));
+    tmp9 = runtime.safeCall(Term.#builtinSymbols.add("<="));
     this.Context = function Context(symbols1, dependencies1, printOnly1) { return new Context.class(symbols1, dependencies1, printOnly1); };
     this.Context.class = class Context {
       constructor(symbols, dependencies, printOnly) {
@@ -433,10 +483,10 @@ Term2 = class Term {
       }
       isValid(name) {
         let tmp10, tmp11, tmp12;
-        tmp10 = this.symbols.has(name) ?? null;
-        tmp11 = this$Term.#builtinSymbols.has(name) ?? null;
+        tmp10 = runtime.safeCall(this.symbols.has(name));
+        tmp11 = runtime.safeCall(Term.#builtinSymbols.has(name));
         tmp12 = tmp10 || tmp11;
-        return tmp12 || this.printOnly;
+        return tmp12 || this.printOnly
       } 
       get nest() {
         let tmp10;
@@ -444,10 +494,10 @@ Term2 = class Term {
         return Term.Context(tmp10, this.dependencies, this.printOnly);
       } 
       add(name1) {
-        return this.symbols.add(name1) ?? null;
+        return runtime.safeCall(this.symbols.add(name1))
       } 
       depends(d) {
-        return this.dependencies.add(d) ?? null;
+        return runtime.safeCall(this.dependencies.add(d))
       }
       toString() { return "Context(" + globalThis.Predef.render(this.symbols) + ", " + globalThis.Predef.render(this.dependencies) + ", " + globalThis.Predef.render(this.printOnly) + ")"; }
     };
@@ -459,7 +509,7 @@ Term2 = class Term {
       if (param02 instanceof Term.Symbol.class) {
         param03 = param02.name;
         name1 = param03;
-        tmp = ctx.add(name1) ?? null;
+        tmp = runtime.safeCall(ctx.add(name1));
         tmp1 = Str.concat("let ", name1);
       } else {
         throw new globalThis.Error("match error");
@@ -482,19 +532,19 @@ Term2 = class Term {
       }
     }
     res = tmp1;
-    return Str.concat(indent, res);
+    return Str.concat(indent, res)
   } 
   static showPattern(p, ctx1, indent1) {
     let res, param0, lit, tmp;
     if (p instanceof Term.LitPattern.class) {
       param0 = p.lit;
       lit = param0;
-      tmp = lit.toString() ?? null;
+      tmp = runtime.safeCall(lit.toString());
     } else {
       throw new globalThis.Error("match error");
     }
     res = tmp;
-    return Str.concat(indent1, res);
+    return Str.concat(indent1, res)
   } 
   static showSplit(s1, ctx2, indent2, isCont) {
     let res, param0, term, param01, param1, param2, sym, term1, split, nest, param02, param11, param03, param12, param21, scrut, ptrn, cont, tail, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
@@ -526,7 +576,7 @@ Term2 = class Term {
         term1 = param1;
         split = param2;
         nest = ctx2.nest;
-        tmp5 = nest.add(sym.name) ?? null;
+        tmp5 = runtime.safeCall(nest.add(sym.name));
         tmp6 = Term.show(term1, nest, "");
         tmp7 = Term.showSplit(split, nest, indent2, false);
         tmp4 = Str.concat("let ", sym.name, " = ", tmp6, "\n", tmp7);
@@ -551,7 +601,22 @@ Term2 = class Term {
       }
     }
     res = tmp4;
-    return Str.concat(indent2, res);
+    return Str.concat(indent2, res)
+  } 
+  static arraymap(f) {
+    return (xs) => {
+      return runtime.safeCall(xs.map(f))
+    }
+  } 
+  static arrayforeach(f1) {
+    return (xs) => {
+      return runtime.safeCall(xs.forEach(f1))
+    }
+  } 
+  static join(ch) {
+    return (xs) => {
+      return runtime.safeCall(xs.join(ch))
+    }
   } 
   static show(t, ctx3, indent3) {
     let res, param0, param1, split, param01, param11, stats, res1, nest, param02, param12, params, body, nest1, param03, fields, param04, param13, lhs, rhs, param05, param14, prefix, name, param06, lit, param07, param15, param2, param08, name1, baseFile, file, param09, param010, name2, scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20, tmp21, tmp22, tmp23, tmp24, tmp25;
@@ -560,7 +625,7 @@ Term2 = class Term {
       if (param09 instanceof Term.Symbol.class) {
         param010 = param09.name;
         name2 = param010;
-        scrut = ctx3.isValid(name2) ?? null;
+        scrut = runtime.safeCall(ctx3.isValid(name2));
         if (scrut === true) {
           tmp = name2;
         } else {
@@ -582,11 +647,11 @@ Term2 = class Term {
           baseFile = param15;
           file = param2;
           if (file === undefined) {
-            tmp3 = ctx3.depends(baseFile) ?? null;
+            tmp3 = runtime.safeCall(ctx3.depends(baseFile));
           } else {
-            tmp4 = path.dirname(baseFile) ?? null;
+            tmp4 = runtime.safeCall(path.dirname(baseFile));
             tmp5 = path.join(tmp4, file);
-            tmp3 = ctx3.depends(tmp5) ?? null;
+            tmp3 = runtime.safeCall(ctx3.depends(tmp5));
           }
           tmp2 = name1;
         } else {
@@ -596,7 +661,7 @@ Term2 = class Term {
         if (t instanceof Term.Lit.class) {
           param06 = t.lit;
           lit = param06;
-          tmp2 = lit.toString() ?? null;
+          tmp2 = runtime.safeCall(lit.toString());
         } else {
           if (t instanceof Term.Sel.class) {
             param05 = t.prefix;
@@ -618,12 +683,12 @@ Term2 = class Term {
               if (t instanceof Term.Tup.class) {
                 param03 = t.fields;
                 fields = param03;
-                tmp9 = Predef.join(", ");
-                tmp10 = Predef.arraymap((t1) => {
-                  return Term.show(t1, ctx3, "");
+                tmp9 = Term.join(", ");
+                tmp10 = Term.arraymap((t1) => {
+                  return Term.show(t1, ctx3, "")
                 });
-                tmp11 = tmp10(fields) ?? null;
-                tmp2 = tmp9(tmp11) ?? null;
+                tmp11 = runtime.safeCall(tmp10(fields));
+                tmp2 = runtime.safeCall(tmp9(tmp11));
               } else {
                 if (t instanceof Term.Lam.class) {
                   param02 = t.params;
@@ -631,16 +696,16 @@ Term2 = class Term {
                   params = param02;
                   body = param12;
                   nest1 = ctx3.nest;
-                  tmp12 = Predef.arrayforeach((s2) => {
-                    return nest1.add(s2.name) ?? null;
+                  tmp12 = Term.arrayforeach((s2) => {
+                    return runtime.safeCall(nest1.add(s2.name))
                   });
-                  tmp13 = tmp12(params) ?? null;
-                  tmp14 = Predef.join(", ");
-                  tmp15 = Predef.arraymap((s2) => {
-                    return s2.name;
+                  tmp13 = runtime.safeCall(tmp12(params));
+                  tmp14 = Term.join(", ");
+                  tmp15 = Term.arraymap((s2) => {
+                    return s2.name
                   });
-                  tmp16 = tmp15(params) ?? null;
-                  tmp17 = tmp14(tmp16) ?? null;
+                  tmp16 = runtime.safeCall(tmp15(params));
+                  tmp17 = runtime.safeCall(tmp14(tmp16));
                   tmp18 = Term.show(body, nest1, "");
                   tmp2 = Str.concat("(", tmp17, ") => ", tmp18);
                 } else {
@@ -650,12 +715,12 @@ Term2 = class Term {
                     stats = param01;
                     res1 = param11;
                     nest = ctx3.nest;
-                    tmp19 = Predef.join("\n");
-                    tmp20 = Predef.arraymap((s2) => {
-                      return Term.showStmt(s2, nest, "");
+                    tmp19 = Term.join("\n");
+                    tmp20 = Term.arraymap((s2) => {
+                      return Term.showStmt(s2, nest, "")
                     });
-                    tmp21 = tmp20(stats) ?? null;
-                    tmp22 = tmp19(tmp21) ?? null;
+                    tmp21 = runtime.safeCall(tmp20(stats));
+                    tmp22 = runtime.safeCall(tmp19(tmp21));
                     tmp23 = Term.show(res1, nest, "");
                     tmp2 = Str.concat(tmp22, "\n", tmp23);
                   } else {
@@ -682,7 +747,7 @@ Term2 = class Term {
       }
     }
     res = tmp2;
-    return Str.concat(indent3, res);
+    return Str.concat(indent3, res)
   } 
   static print(t1) {
     let ctx4, tmp, tmp1, tmp2, tmp3;
@@ -691,15 +756,15 @@ Term2 = class Term {
     tmp2 = Term.Context(tmp, tmp1, true);
     ctx4 = tmp2;
     tmp3 = Term.show(t1, ctx4, "");
-    return globalThis.log(tmp3) ?? null;
+    return runtime.safeCall(globalThis.console.log(tmp3))
   } 
   static genImport(base, p1) {
     let tmp, tmp1, tmp2, tmp3;
-    tmp = url.fileURLToPath(p1) ?? null;
+    tmp = runtime.safeCall(url.fileURLToPath(p1));
     tmp1 = path.relative(base, tmp);
     tmp2 = - 4;
     tmp3 = tmp1.slice(0, tmp2);
-    return Str.concat("import \"", tmp3, ".mls\"");
+    return Str.concat("import \"", tmp3, ".mls\"")
   } 
   static codegen(t2, file) {
     let ctx4, moduleName, fullpath, code, dependencies, fp, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15;
@@ -707,31 +772,30 @@ Term2 = class Term {
     tmp1 = new globalThis.Set();
     tmp2 = Term.Context(tmp, tmp1, false);
     ctx4 = tmp2;
-    tmp3 = path.parse(file) ?? null;
+    tmp3 = runtime.safeCall(path.parse(file));
     moduleName = tmp3.name;
-    tmp4 = process.cwd() ?? null;
+    tmp4 = runtime.safeCall(process.cwd());
     tmp5 = path.join(tmp4, file);
     fullpath = tmp5;
     tmp6 = Term.show(t2, ctx4, "");
     tmp7 = Str.concat("module ", moduleName, " with ...\nfun res = ", tmp6);
     code = tmp7;
-    tmp8 = Predef.arraymap((s2) => {
+    tmp8 = Term.arraymap((s2) => {
       let tmp16;
-      tmp16 = path.dirname(fullpath) ?? null;
-      return Term.genImport(tmp16, s2);
+      tmp16 = runtime.safeCall(path.dirname(fullpath));
+      return Term.genImport(tmp16, s2)
     });
-    tmp9 = globalThis.Array.from(ctx4.dependencies) ?? null;
-    tmp10 = tmp8(tmp9) ?? null;
+    tmp9 = runtime.safeCall(globalThis.Array.from(ctx4.dependencies));
+    tmp10 = runtime.safeCall(tmp8(tmp9));
     dependencies = tmp10;
     tmp11 = fs.openSync(file, "w");
     fp = tmp11;
-    tmp12 = Predef.join("\n");
-    tmp13 = tmp12(dependencies) ?? null;
+    tmp12 = Term.join("\n");
+    tmp13 = runtime.safeCall(tmp12(dependencies));
     tmp14 = Str.concat(tmp13, "\n", code);
     tmp15 = fs.writeSync(fp, tmp14);
-    return fs.closeSync(fp) ?? null;
+    return runtime.safeCall(fs.closeSync(fp))
   }
   static toString() { return "Term"; }
 };
-null
 let Term = Term2; export default Term;

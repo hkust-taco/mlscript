@@ -3,9 +3,11 @@
 
 declare class Any
 declare class Nothing
+declare class Object
 
 declare class untyped
 
+declare class Unit
 declare class Bool
 declare class Int
 declare class Num
@@ -20,6 +22,8 @@ set
   globalThis.CodeBase = CodeBase
   globalThis.Region = Region
   globalThis.Ref = Ref
+
+declare class Function
 
 declare class Str(length: Int, concat: Str -> Str)
 
@@ -49,5 +53,8 @@ declare fun (!=): [T] -> (T, T) -> Bool
 
 declare fun (&&): (Bool, Bool) -> Bool
 declare fun (||): (Bool, Bool) -> Bool
+
+
+fun print(x) = @untyped globalThis.console.log(x)
 
 

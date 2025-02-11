@@ -1,8 +1,5 @@
 :js
 
-:import PredefJS.mls
-//│ Imported 2 member(s)
-
 
 let empty = []
 //│ empty = []
@@ -14,7 +11,7 @@ empty.0
 :sjs
 let single = [1]
 //│ JS (unsanitized):
-//│ let single; single = [ 1 ]; null
+//│ let single; single = [ 1 ];
 //│ single = [1]
 
 single.0
@@ -24,7 +21,7 @@ single.0
 :sjs
 val single = [1]
 //│ JS (unsanitized):
-//│ let single1; single1 = [ 1 ]; null
+//│ let single1; single1 = [ 1 ];
 //│ single = [1]
 
 single.0
@@ -52,5 +49,17 @@ triple.3
 :re
 triple.4
 //│ ═══[RUNTIME ERROR] Error: Access to required field '4' yielded 'undefined'
+
+
+// * Array hacking (taken from Anto's original port of nofib, which was slightly deranged)
+
+set Array.prototype.toString =
+  globalThis.eval("(function() { return '(' + Array.prototype.join.call(this, ',') + ')'; })")
+
+[1, 2, 3]
+//│ = [1, 2, 3]
+
+new Array(4)
+//│ = [undefined, undefined, undefined, undefined]
 
 

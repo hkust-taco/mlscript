@@ -1,3 +1,4 @@
+import runtime from "./../Runtime.mjs";
 import Example from "./../Example.mjs";
 let CSPBar1;
 CSPBar1 = class CSPBar {
@@ -7,5 +8,4 @@ CSPBar1 = class CSPBar {
   }
   static toString() { return "CSPBar"; }
 };
-null
 let CSPBar = CSPBar1; export default CSPBar;

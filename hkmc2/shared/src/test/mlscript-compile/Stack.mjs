@@ -1,3 +1,4 @@
+import runtime from "./Runtime.mjs";
 import Predef from "./Predef.mjs";
 let Stack1;
 Stack1 = class Stack {
@@ -19,9 +20,9 @@ Stack1 = class Stack {
   }
   static isEmpty(xs) {
     if (xs instanceof Stack.Nil.class) {
-      return true;
+      return true
     } else {
-      return false;
+      return false
     }
   } 
   static reverseAndAppend(xs1, tail) {
@@ -32,17 +33,17 @@ Stack1 = class Stack {
       h = param0;
       t = param1;
       tmp = Stack.Cons(h, tail);
-      return Stack.reverseAndAppend(t, tmp);
+      return Stack.reverseAndAppend(t, tmp)
     } else {
       if (xs1 instanceof Stack.Nil.class) {
-        return tail;
+        return tail
       } else {
         throw new globalThis.Error("match error");
       }
     }
   } 
   static reverse(xs2) {
-    return Stack.reverseAndAppend(xs2, Stack.Nil);
+    return Stack.reverseAndAppend(xs2, Stack.Nil)
   } 
   static fromArray(arr) {
     let ls, i, len, scrut, tmp, tmp1, tmp2, tmp3;
@@ -52,19 +53,19 @@ Stack1 = class Stack {
     tmp4: while (true) {
       scrut = i < len;
       if (scrut === true) {
-        tmp = arr.at(i) ?? null;
+        tmp = runtime.safeCall(arr.at(i));
         tmp1 = Stack.Cons(tmp, ls);
         ls = tmp1;
         tmp2 = i + 1;
         i = tmp2;
-        tmp3 = null;
+        tmp3 = runtime.Unit;
         continue tmp4;
       } else {
-        tmp3 = null;
+        tmp3 = runtime.Unit;
       }
       break;
     }
-    return ls;
+    return ls
   } 
   static toReverseArray(xs3) {
     let arr1, i, param0, param1, h, t, tmp, tmp1;
@@ -76,16 +77,16 @@ Stack1 = class Stack {
         param1 = xs3.tail;
         h = param0;
         t = param1;
-        tmp = arr1.push(h) ?? null;
+        tmp = runtime.safeCall(arr1.push(h));
         xs3 = t;
-        tmp1 = null;
+        tmp1 = runtime.Unit;
         continue tmp2;
       } else {
-        tmp1 = null;
+        tmp1 = runtime.Unit;
       }
       break;
     }
-    return arr1;
+    return arr1
   } 
   static zip(...xss) {
     let go, tmp, tmp1;
@@ -105,11 +106,11 @@ Stack1 = class Stack {
             tmp2 = Stack.Cons(h2, heads);
             tmp3 = Stack.Cons(t2, tails);
             tmp4 = go(tmp2, tmp3);
-            return tmp4(t) ?? null;
+            return runtime.safeCall(tmp4(t))
           } else {
             if (h instanceof Stack.Nil.class) {
               tmp5 = go(heads, tails);
-              return tmp5(t) ?? null;
+              return runtime.safeCall(tmp5(t))
             } else {
               throw new globalThis.Error("match error");
             }
@@ -122,26 +123,25 @@ Stack1 = class Stack {
               } else {
                 tmp6 = false;
               }
-              tmp7 = Predef.assert(tmp6) ?? null;
-              return (tmp7 , Stack.Nil);
+              tmp7 = runtime.safeCall(Predef.assert(tmp6));
+              return (tmp7 , Stack.Nil)
             } else {
               tmp8 = Stack.toReverseArray(heads);
               tmp9 = go(Stack.Nil, Stack.Nil);
               tmp10 = Stack.reverse(tails);
-              tmp11 = tmp9(tmp10) ?? null;
-              return Stack.Cons(tmp8, tmp11);
+              tmp11 = runtime.safeCall(tmp9(tmp10));
+              return Stack.Cons(tmp8, tmp11)
             }
           } else {
             throw new globalThis.Error("match error");
           }
         }
-      };
+      }
     };
     tmp = go(Stack.Nil, Stack.Nil);
     tmp1 = Stack.fromArray(xss);
-    return tmp(tmp1) ?? null;
+    return runtime.safeCall(tmp(tmp1))
   }
   static toString() { return "Stack"; }
 };
-null
 let Stack = Stack1; export default Stack;

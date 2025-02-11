@@ -3,7 +3,6 @@ import "process"
 import "path"
 import "url"
 
-import "./Predef.mls"
 import "./Str.mls"
 
 module Term with...
@@ -134,6 +133,11 @@ fun showSplit(s, ctx, indent, isCont) =
   Str.concat(indent, res)
 
 
+fun arraymap(f)(xs) = xs.map(f)
+fun arrayforeach(f)(xs) = xs.forEach(f)
+fun join(ch)(xs) = xs.join(ch)
+
+
 fun show(t, ctx, indent) =
   let res = if t is
     Ref(Symbol(name)) then
@@ -146,21 +150,21 @@ fun show(t, ctx, indent) =
     Lit(lit) then lit.toString()
     Sel(prefix, name) then Str.concat("(", show(prefix, ctx, ""), ").", name)
     App(lhs, rhs) then Str.concat("(", show(lhs, ctx, ""), ")(", show(rhs, ctx, ""), ")")
-    Tup(fields) then Predef.join(", ")(Predef.arraymap(t => show(t, ctx, ""))(fields))
+    Tup(fields) then join(", ")(arraymap(t => show(t, ctx, ""))(fields))
     Lam(params, body) then
       let nest = ctx.nest
-      Predef.arrayforeach(s => nest.add(s.name))(params)
-      Str.concat("(", Predef.join(", ")(Predef.arraymap(s => s.name)(params)), ") => ", show(body, nest, ""))
+      arrayforeach(s => nest.add(s.name))(params)
+      Str.concat("(", join(", ")(arraymap(s => s.name)(params)), ") => ", show(body, nest, ""))
     Blk(stats, res) then
       let nest = ctx.nest
-      Str.concat(Predef.join("\n")(Predef.arraymap(s => showStmt(s, nest, ""))(stats)), "\n", show(res, nest, ""))
+      Str.concat(join("\n")(arraymap(s => showStmt(s, nest, ""))(stats)), "\n", show(res, nest, ""))
     IfLike(KeywordIf, split) then Str.concat("if \n", showSplit(split, ctx, Str.concat(indent, "  "), false))
     // TODO: other terms
   Str.concat(indent, res)
 
 fun print(t) =
   let ctx = Context(new globalThis.Set(), new globalThis.Set(), true)
-  log(show(t, ctx, ""))
+  console.log(show(t, ctx, ""))
 
 
 fun genImport(base, p) =
@@ -173,8 +177,8 @@ fun codegen(t, file) =
   let fullpath = path.join(process.cwd(), file)
   let code = Str.concat("module ", moduleName, " with ...\nfun res = ", show(t, ctx, ""))
   let dependencies =
-    Predef.arraymap(s => genImport(path.dirname(fullpath), s))(globalThis.Array.from(ctx.dependencies))
+    arraymap(s => genImport(path.dirname(fullpath), s))(globalThis.Array.from(ctx.dependencies))
   let fp = fs.openSync(file, "w") // TODO: diff check
-  fs.writeSync(fp, Str.concat(Predef.join("\n")(dependencies), "\n", code))
+  fs.writeSync(fp, Str.concat(join("\n")(dependencies), "\n", code))
   fs.closeSync(fp)
 

@@ -5,12 +5,12 @@ import collection.mutable
 import mlscript.utils.*, shorthands.*
 
 
-class ReportFormatter(output: Str => Unit):
+class ReportFormatter(mkOutput: ((Str => Unit) => Unit) => Unit):
   
   val badLines = mutable.Buffer.empty[Int]
   
   // report errors and warnings
-  def apply(blockLineNum: Int, diags: Ls[Diagnostic], showRelativeLineNums: Bool): Unit =
+  def apply(blockLineNum: Int, diags: Ls[Diagnostic], showRelativeLineNums: Bool): Unit = mkOutput: output =>
     diags.foreach { diag =>
       val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
       val onlyOneLine = diag.allMsgs.size =:= 1 && diag.allMsgs.head._2.isEmpty

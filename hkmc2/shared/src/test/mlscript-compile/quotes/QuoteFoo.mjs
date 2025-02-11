@@ -1,3 +1,4 @@
+import runtime from "./../Runtime.mjs";
 let QuoteFoo1;
 QuoteFoo1 = class QuoteFoo {
   static {}
@@ -6,5 +7,4 @@ QuoteFoo1 = class QuoteFoo {
   }
   static toString() { return "QuoteFoo"; }
 };
-null
 let QuoteFoo = QuoteFoo1; export default QuoteFoo;

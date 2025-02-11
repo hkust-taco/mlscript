@@ -29,7 +29,7 @@ class (++) Link(left: Ring, right: Ring) extends Ring
 // Extension with type parameters
 abstract class Option[T]: (Some[T] | None)
 class Some[T](val value: T) extends Option[T]
-module None extends Option[nothing]
+module None extends Option[Nothing]
 //│ Env:
 //│   None -> RefElem(member:None)
 //│   Option -> RefElem(member:Option)
@@ -38,7 +38,7 @@ module None extends Option[nothing]
 // Extension with type parameters and symbolic name
 abstract class List[T]: (Cons[T] | Nil)
 class (::) Cons[T](val head: T, val tail: List[T]) extends List[T]
-module Nil extends List[nothing]
+module Nil extends List[Nothing]
 //│ Env:
 //│   :: -> RefElem(member:Cons)
 //│   Cons -> RefElem(member:Cons)

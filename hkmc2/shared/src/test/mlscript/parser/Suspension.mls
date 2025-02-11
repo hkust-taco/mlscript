@@ -44,12 +44,12 @@ module A with
 //│ TypeDef:
 //│   k = Mod
 //│   head = Ident of "A"
-//│   extension = N
+//│   rhs = N
 //│   body = S of Block of Ls of 
 //│     TypeDef:
 //│       k = Mod
 //│       head = Ident of "B"
-//│       extension = N
+//│       rhs = N
 //│       body = S of Block of Ls of 
 //│         TermDef:
 //│           k = ImmutVal

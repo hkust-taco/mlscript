@@ -5,12 +5,37 @@ object Test with
   fun bar = 1
   fun foo() = bar + 1
 
+:e
 let f = Test.foo
+//│ ╔══[ERROR] [debinding error] Method 'foo' cannot be accessed without being called.
+//│ ║  l.9: 	let f = Test.foo
+//│ ╙──     	            ^^^^
+//│ f = [function foo]
+
+// TODO make this a type error
+// :e
+:re
+let f = id(Test).foo
+//│ ═══[RUNTIME ERROR] Error: [debinding error] Method 'foo' of class 'Test' was accessed without being called.
+
+// * Note that dynamic member accesses are not checked against debinding:
+let f = Test.("foo")
 //│ f = [function foo]
 
 :re
 f()
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'bar')
+
+
+// * I tried compiling selections to essentially the following,
+// * but it doesn't work since many things in JS are "functions"
+// * (and notably may have fields, which are not preserved by `bind`):
+
+let g = if f is Function then f.bind(Test) else f
+//│ g = [function bound foo]
+
+g()
+//│ = 2
 
 
 // * TODO we should probably compile the above as:
@@ -19,7 +44,7 @@ object Test with
   fun bar = 1
   fun foo() = Test.bar + 1
 
-let f = Test.foo
+let f = Test.("foo")
 //│ f = [function foo]
 
 f()
@@ -34,7 +59,7 @@ fun test() =
     fun foo() = Test.bar + 1
   [Test]
 
-let f = test().0.foo
+let f = test().0.("foo")
 //│ f = [function foo]
 
 f()

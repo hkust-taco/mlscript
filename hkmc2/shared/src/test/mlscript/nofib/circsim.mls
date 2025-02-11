@@ -7,7 +7,7 @@
 abstract class BinTree[T, U]: Cell[T] | Node[T, U]
 
 class
-  Cell[T](value: T) extends BinTree[T, U]
+  Cell[T](value: T) extends BinTree[T, Nothing]
   Node[T, U](value: U, left: BinTree[T, U], right: BinTree[T, U]) extends BinTree[T, U]
 
 abstract class Componenet: None_ | Inp | Outp | Dff | Inv | And2 | Or2 | Xor

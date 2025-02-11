@@ -24,6 +24,7 @@ import hkmc2.semantics.TermDefFlags
 import hkmc2.semantics.FldFlags
 import scala.collection.mutable.Buffer
 import mlscript.utils.StringOps
+import hkmc2.semantics.CtxArg
 
 trait ProductWithTail extends Product
 
@@ -57,6 +58,12 @@ extension (t: Product)
         val (sl, _, sc) = origin.fph.getLineColAt(start)
         val (el, _, ec) = origin.fph.getLineColAt(end)
         s"Loc at :$sl:$sc-$el:$ec"
+      case arg: CtxArg => arg.term match
+        case N =>
+          s"CtxArg"
+        case Some(t) => 
+          t.showAsTree
+      
       case t: Product => t.showAsTree(inTailPos)
       case v => v.toString
     val postfix = post(t)

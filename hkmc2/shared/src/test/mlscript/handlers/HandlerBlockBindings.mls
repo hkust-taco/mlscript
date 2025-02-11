@@ -1,5 +1,5 @@
 :js
-:handler
+:effectHandlers
 
 
 abstract class Effect with
@@ -9,39 +9,47 @@ abstract class Effect with
 // non-resumptive handlers
 handle h = Effect with
   fun perform(arg)(k) =
-    "x"
-h.perform("y")
+    "A"
+h.perform("B")
 let x = 123
-//│ = "x"
+//│ = "A"
 
-:fixme
+:e
 x
 //│ ╔══[ERROR] Name not found: x
 //│ ║  l.18: 	x
 //│ ╙──      	^
 
+
 handle h = Effect with
   fun perform(arg)(k) =
     print(arg)
 let x = 123
+x + 1
+//│ = 124
 
-:fixme
+:e
 x
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.29: 	x
+//│ ║  l.32: 	x
 //│ ╙──      	^
 
 
-:fixme
+:e
+:re
 handle h = Effect with
   fun perform(arg)(k) =
     print(arg)
 val y = 123
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:y (class hkmc2.semantics.BlockMemberSymbol)
+//│ ╔══[ERROR] Illegal definition in term position.
+//│ ║  l.43: 	val y = 123
+//│ ╙──      	    ^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
-:fixme
-:expect 123
+:e
 y
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:y (class hkmc2.semantics.BlockMemberSymbol)
+//│ ╔══[ERROR] Name not found: y
+//│ ║  l.50: 	y
+//│ ╙──      	^
 
 

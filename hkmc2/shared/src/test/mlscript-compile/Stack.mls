@@ -6,7 +6,7 @@ open Predef
 // TODO
 // type Stack[A] = Stack.Cons[A] | Stack.Nil
 
-module Stack with ...
+module Stack[T] with ...
 
 class (::) Cons[A](head: A, tail: Stack[A])
 object Nil
