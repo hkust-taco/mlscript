@@ -1096,9 +1096,9 @@ extends Importer:
     if ctx.outer.isDefined then TermSymbol(k, ctx.outer, id)
     else VarSymbol(id)
   
-  def param(t: Tree): Ctxl[Opt[Opt[Bool] -> Param]] = t match
+  def param(t: Tree, inUsing: Bool): Ctxl[Opt[Opt[Bool] -> Param]] = t match
     case TypeDef(Mod, inner, N, N) =>
-      val ps = param(inner).map(_.mapSecond(p => p.copy(flags = p.flags.copy(mod = true))))
+      val ps = param(inner, inUsing).map(_.mapSecond(p => p.copy(flags = p.flags.copy(mod = true))))
       for p <- ps if p._2.flags.mod do p._2.sign match
         case N =>
           raise(ErrorReport(msg"Module parameters must have explicit types." -> t.toLoc :: Nil))
@@ -1107,9 +1107,9 @@ extends Importer:
         case _ => ()
       ps
     case TypeDef(Pat, inner, N, N) =>
-      param(inner).map(_.mapSecond(p => p.copy(flags = p.flags.copy(pat = true))))
+      param(inner, inUsing).map(_.mapSecond(p => p.copy(flags = p.flags.copy(pat = true))))
     case _ =>
-      t.asParam.map: (isSpd, p, t) =>
+      t.asParam(inUsing).map: (isSpd, p, t) =>
         isSpd -> Param(FldFlags.empty, fieldOrVarSym(ParamBind, p), t.map(term(_)))
   
   def params(t: Tree): Ctxl[(ParamList, Ctx)] = t match
@@ -1118,7 +1118,7 @@ extends Importer:
         ps match
         case Nil => (ParamList(flags, acc.reverse, N), ctx)
         case hd :: tl =>
-          param(hd)(using ctx) match
+          param(hd, flags.ctx)(using ctx) match
           case S((isSpd, p)) =>
             val isCtx = hd match
               case Modified(Keyword.`using`, _, _) => true
