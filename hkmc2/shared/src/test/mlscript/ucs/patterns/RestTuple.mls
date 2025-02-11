@@ -51,12 +51,10 @@ fun lead_and_last(xs) = if xs is
 //│     ys = rest;
 //│     y = last0;
 //│     return x + y
+//│   } else if (globalThis.Array.isArray(xs) && xs.length === 0) {
+//│     return 0
 //│   } else {
-//│     if (globalThis.Array.isArray(xs) && xs.length === 0) {
-//│       return 0
-//│     } else {
-//│       throw new globalThis.Error("match error");
-//│     }
+//│     throw new globalThis.Error("match error");
 //│   }
 //│ };
 
@@ -98,12 +96,10 @@ fun nested_tuple_patterns(xs) = if xs is
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }
+//│   } else if (globalThis.Array.isArray(xs) && xs.length === 0) {
+//│     return 0
 //│   } else {
-//│     if (globalThis.Array.isArray(xs) && xs.length === 0) {
-//│       return 0
-//│     } else {
-//│       throw new globalThis.Error("match error");
-//│     }
+//│     throw new globalThis.Error("match error");
 //│   }
 //│ };
 

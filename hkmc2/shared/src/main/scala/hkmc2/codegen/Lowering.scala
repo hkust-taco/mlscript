@@ -589,8 +589,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case N => res
       case S(sts) => StackSafeTransform(sts.stackLimit).transformTopLevel(res)
     
-    if lowerHandlers then HandlerLowering().translateTopLevel(stackSafe)
-    else stackSafe
+    MergeMatchArmTransformer.applyBlock(
+      if lowerHandlers then HandlerLowering().translateTopLevel(stackSafe)
+      else stackSafe
+    )
   
   def program(main: st): Program =
     def go(acc: Ls[Local -> Str], trm: st): Program =
@@ -732,3 +734,42 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
     )
 
 
+object TrivialStatementsAndMatch:
+  def unapply(b: Block): Opt[(Opt[Block => Block], Match)] =
+    def handleAssignAndMatch(
+      assign: Block => Block,
+      m: Match,
+      k: Opt[Block => Block]
+    ): Some[(Some[Block => Block], Match)] =
+      def newK(r: Block): Block =
+        val newR = k.getOrElse(identity: Block => Block)(r)
+        assign(newR)
+      S(S(newK), m)
+    
+    b match
+      case m: Match => S(N, m)
+      case Assign(lhs, rhs: Path, TrivialStatementsAndMatch(k, m)) =>
+        handleAssignAndMatch(r => Assign(lhs, rhs, r), m, k)
+      case a@AssignField(lhs, nme, rhs: Path, TrivialStatementsAndMatch(k, m)) =>
+        handleAssignAndMatch(r => AssignField(lhs, nme, rhs, r)(a.symbol), m, k)
+      case AssignDynField(lhs, fld, arrayIdx, rhs: Path, TrivialStatementsAndMatch(k, m)) =>
+        handleAssignAndMatch(r =>  AssignDynField(lhs, fld, arrayIdx, rhs, r), m, k)
+      case Define(defn, TrivialStatementsAndMatch(k, m)) => 
+        handleAssignAndMatch(r => Define(defn, r), m, k)
+      case _ => N
+
+
+object MergeMatchArmTransformer extends BlockTransformer(new SymbolSubst()):
+  override def applyBlock(b: Block): Block = super.applyBlock(b) match
+    case m@Match(scrut, arms, Some(dflt), rest) =>
+      dflt.flatten match
+        case TrivialStatementsAndMatch(k, Match(scrutRewritten, armsRewritten, dfltRewritten, restRewritten))
+          if (scrutRewritten === scrut) && (restRewritten.size * armsRewritten.length) < 10 =>
+            val newArms = restRewritten match
+              case _: End => armsRewritten
+              case _ => armsRewritten.map:
+                case (cse, body) =>
+                  cse -> Begin(body, restRewritten)
+            k.getOrElse(identity: Block => Block)(Match(scrut, arms ::: newArms, dfltRewritten, rest))
+        case _ => m
+    case b => b

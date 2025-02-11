@@ -1,0 +1,239 @@
+:js
+
+object A
+object B
+object C
+object D
+object E
+
+
+let a = A
+let b = B
+//│ a = A
+//│ b = B
+
+:sjs
+if a is
+  A then 1
+  B then 2
+  C then 3
+  D then 4
+//│ JS (unsanitized):
+//│ if (a instanceof A1.class) {
+//│   1
+//│ } else if (a instanceof B1.class) {
+//│   2
+//│ } else if (a instanceof C1.class) {
+//│   3
+//│ } else if (a instanceof D1.class) {
+//│   4
+//│ } else {
+//│   throw new this.Error("match error");
+//│ }
+//│ = 1
+
+
+// manually written `else if`s branches on the same scrut is also merged 
+:sjs
+if a is
+  A then 1
+  else
+    if a is
+      B then 2
+      C then 3
+//│ JS (unsanitized):
+//│ if (a instanceof A1.class) {
+//│   1
+//│ } else if (a instanceof B1.class) {
+//│   2
+//│ } else if (a instanceof C1.class) {
+//│   3
+//│ } else {
+//│   throw new this.Error("match error");
+//│ }
+//│ = 1
+
+
+:sjs
+if a is
+  A and b is
+    A then 1
+    B then 2
+  B then 2
+  C then 3
+//│ JS (unsanitized):
+//│ if (a instanceof A1.class) {
+//│   if (b instanceof A1.class) {
+//│     1
+//│   } else if (b instanceof B1.class) {
+//│     2
+//│   } else {
+//│     throw new this.Error("match error");
+//│   }
+//│ } else if (a instanceof B1.class) {
+//│   2
+//│ } else if (a instanceof C1.class) {
+//│   3
+//│ } else {
+//│   throw new this.Error("match error");
+//│ }
+//│ = 2
+
+// The match arms here are still merged because
+// `let tmp = 3` is moved out so that it does not get into the way
+// and `print("done")` is duplicated and moved into match arm bodies
+:sjs
+let x = if a is
+  A then 1
+  B then 2
+  C then 3
+  else
+    let tmp = 3
+    if a is
+      D then
+        if a is
+         A then 1 + tmp
+         B then 2 + tmp
+      E then 5
+    print("done")
+print(x)
+//│ JS (unsanitized):
+//│ let x, tmp, tmp1, tmp2, tmp3;
+//│ tmp = 3;
+//│ if (a instanceof A1.class) {
+//│   tmp1 = 1;
+//│ } else if (a instanceof B1.class) {
+//│   tmp1 = 2;
+//│ } else if (a instanceof C1.class) {
+//│   tmp1 = 3;
+//│ } else if (a instanceof D1.class) {
+//│   if (a instanceof A1.class) {
+//│     tmp2 = 1 + tmp;
+//│   } else if (a instanceof B1.class) {
+//│     tmp2 = 2 + tmp;
+//│   } else {
+//│     throw new this.Error("match error");
+//│   }
+//│   tmp3 = tmp2;
+//│   tmp1 = Predef.print("done");
+//│ } else if (a instanceof E1.class) {
+//│   tmp3 = 5;
+//│   tmp1 = Predef.print("done");
+//│ } else {
+//│   throw new this.Error("match error");
+//│ }
+//│ x = tmp1;
+//│ Predef.print(x)
+//│ > 1
+//│ x = 1
+
+
+// The match arms here are still merged because
+// `let tmp = 2` is moved out so that it does not get into the way
+:sjs
+if a is
+  A then 1
+  let tmp = 2
+  B then 2 + tmp
+//│ JS (unsanitized):
+//│ let tmp4;
+//│ tmp4 = 2;
+//│ if (a instanceof A1.class) {
+//│   1
+//│ } else if (a instanceof B1.class) {
+//│   2 + tmp4
+//│ } else {
+//│   throw new this.Error("match error");
+//│ }
+//│ = 1
+
+
+fun printAndId(x) =
+  print(x)
+  x
+
+// `let tmp = printAndId(3)` is not moved out
+// because the rhs is not trivial
+:sjs
+if a is
+  A then 1
+  let tmp = printAndId(3)
+  B then 2 + tmp
+//│ JS (unsanitized):
+//│ let tmp5;
+//│ if (a instanceof A1.class) {
+//│   1
+//│ } else {
+//│   tmp5 = printAndId(3);
+//│   if (a instanceof B1.class) {
+//│     2 + tmp5
+//│   } else {
+//│     throw new this.Error("match error");
+//│   }
+//│ }
+//│ = 1
+
+
+// The match arms here are still merged because
+// `print(x)` is duplicated and moved into match arm bodies
+:sjs
+if a is
+  A then 1
+  else
+    let x = if a is
+      B then 2
+      C then 3
+    print(x)
+//│ JS (unsanitized):
+//│ let x1, tmp6;
+//│ if (a instanceof A1.class) {
+//│   1
+//│ } else if (a instanceof B1.class) {
+//│   tmp6 = 2;
+//│   x1 = tmp6;
+//│   Predef.print(x1)
+//│ } else if (a instanceof C1.class) {
+//│   tmp6 = 3;
+//│   x1 = tmp6;
+//│   Predef.print(x1)
+//│ } else {
+//│   throw new this.Error("match error");
+//│ }
+//│ = 1
+
+
+// The match arms are not merged because
+// `print(x); print(x + 1); print(x + 2)` is
+// not moved into match arm bodies for being too big
+:sjs
+if a is
+  B then 1
+  else
+    let x = if a is
+      A then 2
+      C then 3
+    print(x)
+    print(x + 1)
+    print(x + 2)
+//│ JS (unsanitized):
+//│ let x2, tmp7, tmp8, tmp9, tmp10, tmp11;
+//│ if (a instanceof B1.class) {
+//│   1
+//│ } else {
+//│   if (a instanceof A1.class) {
+//│     tmp7 = 2;
+//│   } else if (a instanceof C1.class) {
+//│     tmp7 = 3;
+//│   } else {
+//│     throw new this.Error("match error");
+//│   }
+//│   x2 = tmp7;
+//│   tmp8 = Predef.print(x2);
+//│   tmp9 = x2 + 1;
+//│   tmp10 = Predef.print(tmp9);
+//│   tmp11 = x2 + 2;
+//│   Predef.print(tmp11)
+//│ }
+//│ > 2
+//│ > 3
+//│ > 4

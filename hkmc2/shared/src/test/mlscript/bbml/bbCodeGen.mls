@@ -174,12 +174,10 @@ fun not = case
 //│   return (caseScrut) => {
 //│     if (caseScrut === true) {
 //│       return false
+//│     } else if (caseScrut === false) {
+//│       return true
 //│     } else {
-//│       if (caseScrut === false) {
-//│         return true
-//│       } else {
-//│         throw new globalThis.Error("match error");
-//│       }
+//│       throw new globalThis.Error("match error");
 //│     }
 //│   }
 //│ };

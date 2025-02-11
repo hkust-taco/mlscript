@@ -68,12 +68,10 @@ val isDefined = case
 //│ tmp5 = (caseScrut) => {
 //│   if (caseScrut instanceof Some1.class) {
 //│     return true
+//│   } else if (caseScrut instanceof None1) {
+//│     return false
 //│   } else {
-//│     if (caseScrut instanceof None1) {
-//│       return false
-//│     } else {
-//│       throw new this.Error("match error");
-//│     }
+//│     throw new this.Error("match error");
 //│   }
 //│ };
 //│ isDefined = tmp5;
