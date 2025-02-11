@@ -3,9 +3,6 @@ import Predef from "./Predef.mjs";
 let QuoteExample1;
 QuoteExample1 = class QuoteExample {
   static {}
-  static test() {
-    return 123
-  } 
   static foo() {
     let tmp, tmp1, tmp2, tmp3, tmp4;
     tmp = new globalThis.Predef.term.Symbol("+");

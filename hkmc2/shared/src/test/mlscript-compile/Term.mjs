@@ -603,23 +603,8 @@ Term2 = class Term {
     res = tmp4;
     return Str.concat(indent2, res)
   } 
-  static arraymap(f) {
-    return (xs) => {
-      return runtime.safeCall(xs.map(f))
-    }
-  } 
-  static arrayforeach(f1) {
-    return (xs) => {
-      return runtime.safeCall(xs.forEach(f1))
-    }
-  } 
-  static join(ch) {
-    return (xs) => {
-      return runtime.safeCall(xs.join(ch))
-    }
-  } 
   static show(t, ctx3, indent3) {
-    let res, param0, param1, split, param01, param11, stats, res1, nest, param02, param12, params, body, nest1, param03, fields, param04, param13, lhs, rhs, param05, param14, prefix, name, param06, lit, param07, param15, param2, param08, name1, baseFile, file, param09, param010, name2, scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20, tmp21, tmp22, tmp23, tmp24, tmp25;
+    let res, param0, param1, split, param01, param11, stats, res1, nest, param02, param12, params, body, nest1, param03, fields, param04, param13, lhs, rhs, param05, param14, prefix, name, param06, lit, param07, param15, param2, param08, name1, baseFile, file, param09, param010, name2, scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18;
     if (t instanceof Term.Ref.class) {
       param09 = t.sym;
       if (param09 instanceof Term.Symbol.class) {
@@ -683,12 +668,10 @@ Term2 = class Term {
               if (t instanceof Term.Tup.class) {
                 param03 = t.fields;
                 fields = param03;
-                tmp9 = Term.join(", ");
-                tmp10 = Term.arraymap((t1) => {
+                tmp9 = runtime.safeCall(fields.map((t1) => {
                   return Term.show(t1, ctx3, "")
-                });
-                tmp11 = runtime.safeCall(tmp10(fields));
-                tmp2 = runtime.safeCall(tmp9(tmp11));
+                }));
+                tmp2 = runtime.safeCall(tmp9.join(", "));
               } else {
                 if (t instanceof Term.Lam.class) {
                   param02 = t.params;
@@ -696,18 +679,15 @@ Term2 = class Term {
                   params = param02;
                   body = param12;
                   nest1 = ctx3.nest;
-                  tmp12 = Term.arrayforeach((s2) => {
+                  tmp10 = runtime.safeCall(params.forEach((s2) => {
                     return runtime.safeCall(nest1.add(s2.name))
-                  });
-                  tmp13 = runtime.safeCall(tmp12(params));
-                  tmp14 = Term.join(", ");
-                  tmp15 = Term.arraymap((s2) => {
+                  }));
+                  tmp11 = runtime.safeCall(params.map((s2) => {
                     return s2.name
-                  });
-                  tmp16 = runtime.safeCall(tmp15(params));
-                  tmp17 = runtime.safeCall(tmp14(tmp16));
-                  tmp18 = Term.show(body, nest1, "");
-                  tmp2 = Str.concat("(", tmp17, ") => ", tmp18);
+                  }));
+                  tmp12 = runtime.safeCall(tmp11.join(", "));
+                  tmp13 = Term.show(body, nest1, "");
+                  tmp2 = Str.concat("(", tmp12, ") => ", tmp13);
                 } else {
                   if (t instanceof Term.Blk.class) {
                     param01 = t.stats;
@@ -715,23 +695,21 @@ Term2 = class Term {
                     stats = param01;
                     res1 = param11;
                     nest = ctx3.nest;
-                    tmp19 = Term.join("\n");
-                    tmp20 = Term.arraymap((s2) => {
+                    tmp14 = runtime.safeCall(stats.map((s2) => {
                       return Term.showStmt(s2, nest, "")
-                    });
-                    tmp21 = runtime.safeCall(tmp20(stats));
-                    tmp22 = runtime.safeCall(tmp19(tmp21));
-                    tmp23 = Term.show(res1, nest, "");
-                    tmp2 = Str.concat(tmp22, "\n", tmp23);
+                    }));
+                    tmp15 = runtime.safeCall(tmp14.join("\n"));
+                    tmp16 = Term.show(res1, nest, "");
+                    tmp2 = Str.concat(tmp15, "\n", tmp16);
                   } else {
                     if (t instanceof Term.IfLike.class) {
                       param0 = t.kw;
                       param1 = t.desugared;
                       if (param0 instanceof Term.KeywordIf.class) {
                         split = param1;
-                        tmp24 = Str.concat(indent3, "  ");
-                        tmp25 = Term.showSplit(split, ctx3, tmp24, false);
-                        tmp2 = Str.concat("if \n", tmp25);
+                        tmp17 = Str.concat(indent3, "  ");
+                        tmp18 = Term.showSplit(split, ctx3, tmp17, false);
+                        tmp2 = Str.concat("if \n", tmp18);
                       } else {
                         throw new globalThis.Error("match error");
                       }
@@ -767,7 +745,7 @@ Term2 = class Term {
     return Str.concat("import \"", tmp3, ".mls\"")
   } 
   static codegen(t2, file) {
-    let ctx4, moduleName, fullpath, code, dependencies, fp, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15;
+    let ctx4, moduleName, fullpath, code, dependencies, fp, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13;
     tmp = new globalThis.Set();
     tmp1 = new globalThis.Set();
     tmp2 = Term.Context(tmp, tmp1, false);
@@ -780,20 +758,18 @@ Term2 = class Term {
     tmp6 = Term.show(t2, ctx4, "");
     tmp7 = Str.concat("module ", moduleName, " with ...\nfun res = ", tmp6);
     code = tmp7;
-    tmp8 = Term.arraymap((s2) => {
-      let tmp16;
-      tmp16 = runtime.safeCall(path.dirname(fullpath));
-      return Term.genImport(tmp16, s2)
-    });
-    tmp9 = runtime.safeCall(globalThis.Array.from(ctx4.dependencies));
-    tmp10 = runtime.safeCall(tmp8(tmp9));
-    dependencies = tmp10;
-    tmp11 = fs.openSync(file, "w");
-    fp = tmp11;
-    tmp12 = Term.join("\n");
-    tmp13 = runtime.safeCall(tmp12(dependencies));
-    tmp14 = Str.concat(tmp13, "\n", code);
-    tmp15 = fs.writeSync(fp, tmp14);
+    tmp8 = runtime.safeCall(globalThis.Array.from(ctx4.dependencies));
+    tmp9 = runtime.safeCall(tmp8.map((s2) => {
+      let tmp14;
+      tmp14 = runtime.safeCall(path.dirname(fullpath));
+      return Term.genImport(tmp14, s2)
+    }));
+    dependencies = tmp9;
+    tmp10 = fs.openSync(file, "w");
+    fp = tmp10;
+    tmp11 = runtime.safeCall(dependencies.join("\n"));
+    tmp12 = Str.concat(tmp11, "\n", code);
+    tmp13 = fs.writeSync(fp, tmp12);
     return runtime.safeCall(fs.closeSync(fp))
   }
   static toString() { return "Term"; }

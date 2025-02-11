@@ -368,22 +368,7 @@ Predef1 = class Predef {
       return runtime.safeCall(xs4.map(tmp))
     }
   } 
-  static arraymap(f10) {
-    return (xs4) => {
-      return runtime.safeCall(xs4.map(f10))
-    }
-  } 
-  static arrayforeach(f11) {
-    return (xs4) => {
-      return runtime.safeCall(xs4.forEach(f11))
-    }
-  } 
-  static join(ch) {
-    return (xs4) => {
-      return runtime.safeCall(xs4.join(ch))
-    }
-  } 
-  static fold(f12) {
+  static fold(f10) {
     return (init, ...rest) => {
       let i2, len, scrut, tmp, tmp1, tmp2, tmp3;
       i2 = 0;
@@ -392,7 +377,7 @@ Predef1 = class Predef {
         scrut = i2 < len;
         if (scrut === true) {
           tmp = runtime.safeCall(rest.at(i2));
-          tmp1 = runtime.safeCall(f12(init, tmp));
+          tmp1 = runtime.safeCall(f10(init, tmp));
           init = tmp1;
           tmp2 = i2 + 1;
           i2 = tmp2;
@@ -406,7 +391,7 @@ Predef1 = class Predef {
       return init
     }
   } 
-  static foldr(f13) {
+  static foldr(f11) {
     return (first, ...rest) => {
       let len, i2, init, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
       len = rest.length;
@@ -424,7 +409,7 @@ Predef1 = class Predef {
             tmp2 = i2 - 1;
             i2 = tmp2;
             tmp3 = runtime.safeCall(rest.at(i2));
-            tmp4 = runtime.safeCall(f13(tmp3, init));
+            tmp4 = runtime.safeCall(f11(tmp3, init));
             init = tmp4;
             tmp5 = runtime.Unit;
             continue tmp6;
@@ -433,7 +418,7 @@ Predef1 = class Predef {
           }
           break;
         }
-        return runtime.safeCall(f13(first, init))
+        return runtime.safeCall(f11(first, init))
       }
     }
   } 

@@ -133,11 +133,6 @@ fun showSplit(s, ctx, indent, isCont) =
   Str.concat(indent, res)
 
 
-fun arraymap(f)(xs) = xs.map(f)
-fun arrayforeach(f)(xs) = xs.forEach(f)
-fun join(ch)(xs) = xs.join(ch)
-
-
 fun show(t, ctx, indent) =
   let res = if t is
     Ref(Symbol(name)) then
@@ -150,14 +145,14 @@ fun show(t, ctx, indent) =
     Lit(lit) then lit.toString()
     Sel(prefix, name) then Str.concat("(", show(prefix, ctx, ""), ").", name)
     App(lhs, rhs) then Str.concat("(", show(lhs, ctx, ""), ")(", show(rhs, ctx, ""), ")")
-    Tup(fields) then join(", ")(arraymap(t => show(t, ctx, ""))(fields))
+    Tup(fields) then fields.map(t => show(t, ctx, "")).join(", ")
     Lam(params, body) then
       let nest = ctx.nest
-      arrayforeach(s => nest.add(s.name))(params)
-      Str.concat("(", join(", ")(arraymap(s => s.name)(params)), ") => ", show(body, nest, ""))
+      params.forEach(s => nest.add(s.name))
+      Str.concat("(", params.map(s => s.name).join(", "), ") => ", show(body, nest, ""))
     Blk(stats, res) then
       let nest = ctx.nest
-      Str.concat(join("\n")(arraymap(s => showStmt(s, nest, ""))(stats)), "\n", show(res, nest, ""))
+      Str.concat(stats.map(s => showStmt(s, nest, "")).join("\n"), "\n", show(res, nest, ""))
     IfLike(KeywordIf, split) then Str.concat("if \n", showSplit(split, ctx, Str.concat(indent, "  "), false))
     // TODO: other terms
   Str.concat(indent, res)
@@ -177,8 +172,8 @@ fun codegen(t, file) =
   let fullpath = path.join(process.cwd(), file)
   let code = Str.concat("module ", moduleName, " with ...\nfun res = ", show(t, ctx, ""))
   let dependencies =
-    arraymap(s => genImport(path.dirname(fullpath), s))(globalThis.Array.from(ctx.dependencies))
+    globalThis.Array.from(ctx.dependencies).map(s => genImport(path.dirname(fullpath), s))
   let fp = fs.openSync(file, "w") // TODO: diff check
-  fs.writeSync(fp, Str.concat(join("\n")(dependencies), "\n", code))
+  fs.writeSync(fp, Str.concat(dependencies.join("\n"), "\n", code))
   fs.closeSync(fp)
 
