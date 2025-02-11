@@ -115,7 +115,7 @@ class Scope
 
 
 object Scope:
-
+  
   def scope(using scp: Scope): Scope = scp
   
   def empty(using State): Scope = 
