@@ -9,7 +9,7 @@ CSP1 = class CSP {
     let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
     tmp = new globalThis.Predef.term.Symbol("+");
     tmp1 = new globalThis.Predef.term.Symbol("CSP");
-    tmp2 = new globalThis.Predef.term.CSRef(tmp1, import.meta.url);
+    tmp2 = new globalThis.Predef.term.CSRef(tmp1, import.meta.url, undefined);
     tmp3 = new globalThis.Predef.term.Sel(tmp2, "test");
     tmp4 = new globalThis.Predef.term.Tup([]);
     tmp5 = new globalThis.Predef.term.App(tmp3, tmp4);
@@ -22,13 +22,15 @@ CSP1 = class CSP {
     return new globalThis.Predef.term.App(tmp7, tmp8);
   } 
   static bar() {
-    let tmp, tmp1, tmp2;
-    tmp = new globalThis.Predef.term.Lit(0);
-    tmp1 = new globalThis.Predef.term.Sel();
-    tmp2 = new globalThis.Predef.term.Tup([
-      tmp
+    let tmp, tmp1, tmp2, tmp3, tmp4;
+    tmp = new globalThis.Predef.term.Symbol("Example");
+    tmp1 = new globalThis.Predef.term.CSRef(tmp, import.meta.url, "Example.mls");
+    tmp2 = new globalThis.Predef.term.Lit(0);
+    tmp3 = new globalThis.Predef.term.Sel(tmp1, "inc");
+    tmp4 = new globalThis.Predef.term.Tup([
+      tmp2
     ]);
-    return new globalThis.Predef.term.App(tmp1, tmp2);
+    return new globalThis.Predef.term.App(tmp3, tmp4);
   }
   static toString() { return "CSP"; }
 };

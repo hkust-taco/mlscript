@@ -396,3 +396,21 @@ CSPFoo.res
 //│ JS (unsanitized):
 //│ CSPFoo.res
 //│ = 124
+
+
+term.codegen(CSP.bar(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPBar.mls")
+//│ JS (unsanitized):
+//│ let tmp117;
+//│ tmp117 = CSP.bar();
+//│ Predef.term.codegen(tmp117, "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPBar.mls")
+
+
+import "../../mlscript-compile/quotes/CSPBar.mls"
+//│ JS (unsanitized):
+//│ import CSPBar from "./../../mlscript-compile/quotes/CSPBar.mjs"; null
+
+
+CSPBar.res
+//│ JS (unsanitized):
+//│ CSPBar.res
+//│ = 1

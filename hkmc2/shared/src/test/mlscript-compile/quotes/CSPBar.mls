@@ -1,0 +1,3 @@
+import "../Example.mls"
+module CSPBar with ...
+fun res = ((Example).inc)(0)

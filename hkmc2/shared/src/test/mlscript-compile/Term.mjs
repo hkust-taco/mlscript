@@ -278,13 +278,14 @@ Term2 = class Term {
       }
       toString() { return "Ref(" + globalThis.Predef.render(this.sym) + ")"; }
     };
-    this.CSRef = function CSRef(sym1, file1) { return new CSRef.class(sym1, file1); };
+    this.CSRef = function CSRef(sym1, base1, file1) { return new CSRef.class(sym1, base1, file1); };
     this.CSRef.class = class CSRef {
-      constructor(sym, file) {
+      constructor(sym, base, file) {
         this.sym = sym;
+        this.base = base;
         this.file = file;
       }
-      toString() { return "CSRef(" + globalThis.Predef.render(this.sym) + ", " + globalThis.Predef.render(this.file) + ")"; }
+      toString() { return "CSRef(" + globalThis.Predef.render(this.sym) + ", " + globalThis.Predef.render(this.base) + ", " + globalThis.Predef.render(this.file) + ")"; }
     };
     this.App = function App(lhs1, rhs1) { return new App.class(lhs1, rhs1); };
     this.App.class = class App {
@@ -553,7 +554,7 @@ Term2 = class Term {
     return Str.concat(indent2, res);
   } 
   static show(t, ctx3, indent3) {
-    let res, param0, param1, split, param01, param11, stats, res1, nest, param02, param12, params, body, nest1, param03, fields, param04, param13, lhs, rhs, param05, param14, prefix, name, param06, lit, param07, param15, param08, name1, file, param09, param010, name2, scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20, tmp21, tmp22, tmp23;
+    let res, param0, param1, split, param01, param11, stats, res1, nest, param02, param12, params, body, nest1, param03, fields, param04, param13, lhs, rhs, param05, param14, prefix, name, param06, lit, param07, param15, param2, param08, name1, baseFile, file, param09, param010, name2, scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20, tmp21, tmp22, tmp23, tmp24, tmp25;
     if (t instanceof Term.Ref.class) {
       param09 = t.sym;
       if (param09 instanceof Term.Symbol.class) {
@@ -573,12 +574,20 @@ Term2 = class Term {
     } else {
       if (t instanceof Term.CSRef.class) {
         param07 = t.sym;
-        param15 = t.file;
+        param15 = t.base;
+        param2 = t.file;
         if (param07 instanceof Term.Symbol.class) {
           param08 = param07.name;
           name1 = param08;
-          file = param15;
-          tmp3 = ctx3.depends(file) ?? null;
+          baseFile = param15;
+          file = param2;
+          if (file === undefined) {
+            tmp3 = ctx3.depends(baseFile) ?? null;
+          } else {
+            tmp4 = path.dirname(baseFile) ?? null;
+            tmp5 = path.join(tmp4, file);
+            tmp3 = ctx3.depends(tmp5) ?? null;
+          }
           tmp2 = name1;
         } else {
           throw new globalThis.Error("match error");
@@ -594,27 +603,27 @@ Term2 = class Term {
             param14 = t.nme;
             prefix = param05;
             name = param14;
-            tmp4 = Term.show(prefix, ctx3, "");
-            tmp2 = Str.concat("(", tmp4, ").", name);
+            tmp6 = Term.show(prefix, ctx3, "");
+            tmp2 = Str.concat("(", tmp6, ").", name);
           } else {
             if (t instanceof Term.App.class) {
               param04 = t.lhs;
               param13 = t.rhs;
               lhs = param04;
               rhs = param13;
-              tmp5 = Term.show(lhs, ctx3, "");
-              tmp6 = Term.show(rhs, ctx3, "");
-              tmp2 = Str.concat("(", tmp5, ")(", tmp6, ")");
+              tmp7 = Term.show(lhs, ctx3, "");
+              tmp8 = Term.show(rhs, ctx3, "");
+              tmp2 = Str.concat("(", tmp7, ")(", tmp8, ")");
             } else {
               if (t instanceof Term.Tup.class) {
                 param03 = t.fields;
                 fields = param03;
-                tmp7 = Predef.join(", ");
-                tmp8 = Predef.arraymap((t1) => {
+                tmp9 = Predef.join(", ");
+                tmp10 = Predef.arraymap((t1) => {
                   return Term.show(t1, ctx3, "");
                 });
-                tmp9 = tmp8(fields) ?? null;
-                tmp2 = tmp7(tmp9) ?? null;
+                tmp11 = tmp10(fields) ?? null;
+                tmp2 = tmp9(tmp11) ?? null;
               } else {
                 if (t instanceof Term.Lam.class) {
                   param02 = t.params;
@@ -622,18 +631,18 @@ Term2 = class Term {
                   params = param02;
                   body = param12;
                   nest1 = ctx3.nest;
-                  tmp10 = Predef.arrayforeach((s2) => {
+                  tmp12 = Predef.arrayforeach((s2) => {
                     return nest1.add(s2.name) ?? null;
                   });
-                  tmp11 = tmp10(params) ?? null;
-                  tmp12 = Predef.join(", ");
-                  tmp13 = Predef.arraymap((s2) => {
+                  tmp13 = tmp12(params) ?? null;
+                  tmp14 = Predef.join(", ");
+                  tmp15 = Predef.arraymap((s2) => {
                     return s2.name;
                   });
-                  tmp14 = tmp13(params) ?? null;
-                  tmp15 = tmp12(tmp14) ?? null;
-                  tmp16 = Term.show(body, nest1, "");
-                  tmp2 = Str.concat("(", tmp15, ") => ", tmp16);
+                  tmp16 = tmp15(params) ?? null;
+                  tmp17 = tmp14(tmp16) ?? null;
+                  tmp18 = Term.show(body, nest1, "");
+                  tmp2 = Str.concat("(", tmp17, ") => ", tmp18);
                 } else {
                   if (t instanceof Term.Blk.class) {
                     param01 = t.stats;
@@ -641,23 +650,23 @@ Term2 = class Term {
                     stats = param01;
                     res1 = param11;
                     nest = ctx3.nest;
-                    tmp17 = Predef.join("\n");
-                    tmp18 = Predef.arraymap((s2) => {
+                    tmp19 = Predef.join("\n");
+                    tmp20 = Predef.arraymap((s2) => {
                       return Term.showStmt(s2, nest, "");
                     });
-                    tmp19 = tmp18(stats) ?? null;
-                    tmp20 = tmp17(tmp19) ?? null;
-                    tmp21 = Term.show(res1, nest, "");
-                    tmp2 = Str.concat(tmp20, "\n", tmp21);
+                    tmp21 = tmp20(stats) ?? null;
+                    tmp22 = tmp19(tmp21) ?? null;
+                    tmp23 = Term.show(res1, nest, "");
+                    tmp2 = Str.concat(tmp22, "\n", tmp23);
                   } else {
                     if (t instanceof Term.IfLike.class) {
                       param0 = t.kw;
                       param1 = t.desugared;
                       if (param0 instanceof Term.KeywordIf.class) {
                         split = param1;
-                        tmp22 = Str.concat(indent3, "  ");
-                        tmp23 = Term.showSplit(split, ctx3, tmp22, false);
-                        tmp2 = Str.concat("if \n", tmp23);
+                        tmp24 = Str.concat(indent3, "  ");
+                        tmp25 = Term.showSplit(split, ctx3, tmp24, false);
+                        tmp2 = Str.concat("if \n", tmp25);
                       } else {
                         throw new globalThis.Error("match error");
                       }
@@ -684,8 +693,16 @@ Term2 = class Term {
     tmp3 = Term.show(t1, ctx4, "");
     return globalThis.log(tmp3) ?? null;
   } 
+  static genImport(base, p1) {
+    let tmp, tmp1, tmp2, tmp3;
+    tmp = url.fileURLToPath(p1) ?? null;
+    tmp1 = path.relative(base, tmp);
+    tmp2 = - 4;
+    tmp3 = tmp1.slice(0, tmp2);
+    return Str.concat("import \"", tmp3, ".mls\"");
+  } 
   static codegen(t2, file) {
-    let ctx4, moduleName, fullpath, code, dependencies, fp, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16;
+    let ctx4, moduleName, fullpath, code, dependencies, fp, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15;
     tmp = new globalThis.Set();
     tmp1 = new globalThis.Set();
     tmp2 = Term.Context(tmp, tmp1, false);
@@ -698,25 +715,20 @@ Term2 = class Term {
     tmp6 = Term.show(t2, ctx4, "");
     tmp7 = Str.concat("module ", moduleName, " with ...\nfun res = ", tmp6);
     code = tmp7;
-    tmp8 = (s2) => {
-      let tmp17, tmp18, tmp19, tmp20, tmp21;
-      tmp17 = path.dirname(fullpath) ?? null;
-      tmp18 = url.fileURLToPath(s2) ?? null;
-      tmp19 = path.relative(tmp17, tmp18);
-      tmp20 = - 4;
-      tmp21 = tmp19.slice(0, tmp20);
-      return Str.concat("import \"", tmp21, ".mls\"");
-    };
-    tmp9 = Predef.arraymap(tmp8);
-    tmp10 = globalThis.Array.from(ctx4.dependencies) ?? null;
-    tmp11 = tmp9(tmp10) ?? null;
-    dependencies = tmp11;
-    tmp12 = fs.openSync(file, "w");
-    fp = tmp12;
-    tmp13 = Predef.join("\n");
-    tmp14 = tmp13(dependencies) ?? null;
-    tmp15 = Str.concat(tmp14, "\n", code);
-    tmp16 = fs.writeSync(fp, tmp15);
+    tmp8 = Predef.arraymap((s2) => {
+      let tmp16;
+      tmp16 = path.dirname(fullpath) ?? null;
+      return Term.genImport(tmp16, s2);
+    });
+    tmp9 = globalThis.Array.from(ctx4.dependencies) ?? null;
+    tmp10 = tmp8(tmp9) ?? null;
+    dependencies = tmp10;
+    tmp11 = fs.openSync(file, "w");
+    fp = tmp11;
+    tmp12 = Predef.join("\n");
+    tmp13 = tmp12(dependencies) ?? null;
+    tmp14 = Str.concat(tmp13, "\n", code);
+    tmp15 = fs.writeSync(fp, tmp14);
     return fs.closeSync(fp) ?? null;
   }
   static toString() { return "Term"; }

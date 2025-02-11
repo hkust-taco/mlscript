@@ -3,6 +3,7 @@ package codegen
 
 import scala.language.implicitConversions
 import scala.annotation.tailrec
+import os.{Path as AbsPath, RelPath}
 
 import mlscript.utils.*, shorthands.*
 import utils.*
@@ -568,12 +569,28 @@ class Lowering(lowerHandlers: Bool, stackLimit: Option[Int])(using TL, Raise, St
     case SynthSel(Ref(sym: ModuleSymbol), name) => // Local cross-stage references
       setupSymbol(sym): r1 =>
         val l1 = new TempSymbol(N)
-        Assign(l1, r1, setupTerm("CSRef", Value.Ref(l1) :: setupFilename :: Nil)(r2 =>
+        Assign(l1, r1, setupTerm("CSRef", Value.Ref(l1) :: setupFilename :: Value.Lit(syntax.Tree.UnitLit(false)) :: Nil)(r2 =>
           val l2 = new TempSymbol(N)
           Assign(l2, r2, setupTerm("Sel", Value.Ref(l2) :: Value.Lit(syntax.Tree.StrLit(name.name)) :: Nil)(k))
         ))
     case SynthSel(Ref(sym: BlockMemberSymbol), name) => // Multi-file cross-stage references
-      setupTerm("Sel", Nil)(k) // TODO
+      (t.toLoc, sym.toLoc) match
+        case (S(Loc(_, _, Origin(base, _, _))), S(Loc(_, _, Origin(filename, _, _)))) => setupSymbol(sym): r1 =>
+          val l1 = new TempSymbol(N)
+          val basePath = AbsPath(base) / os.up
+          val targetPath = AbsPath(filename)
+          val relPath = targetPath.relativeTo(basePath).toString
+          Assign(l1, r1, setupTerm("CSRef", Value.Ref(l1) :: setupFilename :: Value.Lit(syntax.Tree.StrLit(relPath)) :: Nil)(r2 =>
+            val l2 = new TempSymbol(N)
+            Assign(l2, r2, setupTerm("Sel", Value.Ref(l2) :: Value.Lit(syntax.Tree.StrLit(name.name)) :: Nil)(k))
+          ))
+        case _ =>
+          raise(ErrorReport(
+            msg"Cannot refer to imported module ${sym.nme} due to the lack of path." ->
+            t.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation
+          ))
+          End("error")
     case Lam(params, body) =>
       def rec(ps: Ls[LocalSymbol & NamedSymbol], ds: Ls[Path])(k: Result => Block)(using Subst): Block = ps match
         case Nil => quote(body): r =>
