@@ -94,6 +94,10 @@ object Lifter:
         case s: FlowSymbol if !(s is state.runtimeSymbol) => s
     case _ => Set.empty
 
+  def getVarsBlk(b: Block)(using state: State): Set[Local] =
+    b.definedVars.collect:
+      case s: FlowSymbol if !(s is state.runtimeSymbol) => s
+
   object RefOfBms:
     def unapply(p: Path) = p match
       case Value.Ref(l: BlockMemberSymbol) => S(l)
@@ -747,6 +751,7 @@ class Lifter(using State, Raise):
     val newCtx = ctx
       .addIsymPath(c.isym, c.isym)
       .addLocalPaths(modPaths)
+      .addLocalPaths(getVars(c).map(s => s -> s).toMap)
 
     val newPreCtor = rewriteBlk(preCtor, S(c), newCtx)
     val newCtor = rewriteBlk(ctor, S(c), newCtx)
