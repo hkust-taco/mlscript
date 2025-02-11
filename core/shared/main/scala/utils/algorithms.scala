@@ -40,14 +40,13 @@ object algorithms {
     * @return A list of strongly connected components of the graph.
     */
   def partitionScc[A](edges: Iterable[(A, A)], nodes: Iterable[A]): List[List[A]] = {
-    
     case class SccNode[A](
       val node: A,
       val id: Int,
       var num: Int = -1, 
       var lowlink: Int = -1,
       var visited: Boolean = false,
-      var processed: Boolean = false
+      var onStack: Boolean = false
     )
 
     // pre-process: assign each node an id
@@ -69,29 +68,34 @@ object algorithms {
     var sccs: List[List[A]] = List.empty
     var i = 0
 
-    def dfs(node: SccNode[A]): Unit = {
+    def dfs(node: SccNode[A], depth: Int = 0): Unit = {
+      def printlnsp(s: String) = {
+        println(s)
+      }
+      
       node.num = i
       node.lowlink = node.num
       node.visited = true
-      stack = node :: stack      
+      stack = node :: stack
       i += 1
       for (n <- neighbours(node.id)) {
         if (!n.visited) {
-          dfs(n)
+          dfs(n, depth + 1)
           node.lowlink = n.lowlink.min(node.lowlink)
-        } else if (!n.processed) {
+        } else if (!n.onStack) {
           node.lowlink = n.num.min(node.lowlink)
         } 
       }
-      node.processed = true
       if (node.lowlink == node.num) {
         var scc: List[A] = List.empty
         var cur = stack.head
         stack = stack.tail
+        cur.onStack = true
         while (cur.id != node.id) {
           scc = cur.node :: scc
           cur = stack.head
           stack = stack.tail
+          cur.onStack = true
         }
         scc = cur.node :: scc
         sccs = scc :: sccs
