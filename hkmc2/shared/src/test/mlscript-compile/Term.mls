@@ -173,7 +173,10 @@ fun codegen(t, file) =
   let code = Str.concat("module ", moduleName, " with ...\nfun res = ", show(t, ctx, ""))
   let dependencies =
     globalThis.Array.from(ctx.dependencies).map(s => genImport(path.dirname(fullpath), s))
-  let fp = fs.openSync(file, "w") // TODO: diff check
-  fs.writeSync(fp, Str.concat(dependencies.join("\n"), "\n", code))
-  fs.closeSync(fp)
+  if fs.existsSync(file) is false do
+    fs.writeFileSync(file, "", "utf8")
+  let originData = fs.readFileSync(file, "utf8")
+  let newData = Str.concat(dependencies.join("\n"), "\n", code)
+  if newData != originData do
+    fs.writeFileSync(file, newData, "utf8")
 

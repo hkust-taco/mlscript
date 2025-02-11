@@ -745,7 +745,7 @@ Term2 = class Term {
     return Str.concat("import \"", tmp3, ".mls\"")
   } 
   static codegen(t2, file) {
-    let ctx4, moduleName, fullpath, code, dependencies, fp, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13;
+    let ctx4, moduleName, fullpath, code, dependencies, scrut, originData, newData, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13;
     tmp = new globalThis.Set();
     tmp1 = new globalThis.Set();
     tmp2 = Term.Context(tmp, tmp1, false);
@@ -765,12 +765,23 @@ Term2 = class Term {
       return Term.genImport(tmp14, s2)
     }));
     dependencies = tmp9;
-    tmp10 = fs.openSync(file, "w");
-    fp = tmp10;
-    tmp11 = runtime.safeCall(dependencies.join("\n"));
-    tmp12 = Str.concat(tmp11, "\n", code);
-    tmp13 = fs.writeSync(fp, tmp12);
-    return runtime.safeCall(fs.closeSync(fp))
+    scrut = runtime.safeCall(fs.existsSync(file));
+    if (scrut === false) {
+      tmp10 = runtime.safeCall(fs.writeFileSync(file, "", "utf8"));
+    } else {
+      tmp10 = runtime.Unit;
+    }
+    tmp11 = fs.readFileSync(file, "utf8");
+    originData = tmp11;
+    tmp12 = runtime.safeCall(dependencies.join("\n"));
+    tmp13 = Str.concat(tmp12, "\n", code);
+    newData = tmp13;
+    scrut1 = newData != originData;
+    if (scrut1 === true) {
+      return runtime.safeCall(fs.writeFileSync(file, newData, "utf8"))
+    } else {
+      return runtime.Unit
+    }
   }
   static toString() { return "Term"; }
 };
