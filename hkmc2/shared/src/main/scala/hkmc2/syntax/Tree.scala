@@ -193,8 +193,8 @@ enum Tree extends AutoLocated:
     case _ => this
   
   /** 
-   * S(true) means eager spread, S(false) means lazy spread, N means no spread.
-   * ctx means the the param list is modified by `using`.
+   * Parameter `inUsing` means the param list is modified by `using`.
+   * In the first result, `S(true)` means eager spread, `S(false)` means lazy spread, and `N` means no spread.
    */
   def asParam(inUsing: Bool): Opt[(Opt[Bool], Ident, Opt[Tree])] = this match
     case und: Under => S(N, new Ident("_").withLocOf(und), N)
