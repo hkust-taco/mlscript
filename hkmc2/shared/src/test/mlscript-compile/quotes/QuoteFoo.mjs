@@ -3,7 +3,11 @@ let QuoteFoo1;
 QuoteFoo1 = class QuoteFoo {
   static {}
   static get res() {
-    return 1 + 2;
+    let tmp;
+    tmp = 1 + 1;
+    return ((x_10) => {
+      return x_10
+    })(tmp);
   }
   static toString() { return "QuoteFoo"; }
 };

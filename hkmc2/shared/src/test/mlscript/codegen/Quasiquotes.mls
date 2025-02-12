@@ -1,429 +1,199 @@
 :js
 
-:global
-:sjs
-
 
 `42
-//│ JS (unsanitized):
-//│ new this.Predef.term.Lit(42)
 //│ = Lit(42)
 
 
 `3.14
-//│ JS (unsanitized):
-//│ new this.Predef.term.Lit(3.14)
 //│ = Lit(3.14)
 
 
 `true
-//│ JS (unsanitized):
-//│ new this.Predef.term.Lit(true)
 //│ = Lit(true)
 
 
 `"abc"
-//│ JS (unsanitized):
-//│ new this.Predef.term.Lit("abc")
 //│ = Lit("abc")
 
 
 `+
-//│ JS (unsanitized):
-//│ let tmp; tmp = new this.Predef.term.Symbol("+"); new this.Predef.term.Ref(tmp)
 //│ = Ref(Symbol("+"))
 
 
 `1 `+ `2
-//│ JS (unsanitized):
-//│ let tmp1, tmp2, tmp3, tmp4, tmp5;
-//│ tmp1 = new this.Predef.term.Symbol("+");
-//│ tmp2 = new this.Predef.term.Lit(1);
-//│ tmp3 = new this.Predef.term.Lit(2);
-//│ tmp4 = new this.Predef.term.Ref(tmp1);
-//│ tmp5 = new this.Predef.term.Tup([
-//│   tmp2,
-//│   tmp3
-//│ ]);
-//│ new this.Predef.term.App(tmp4, tmp5)
 //│ = App(Ref(Symbol("+")), Tup([Lit(1), Lit(2)]))
 
 
 x `=> x
-//│ JS (unsanitized):
-//│ let x, tmp6;
-//│ x = new this.Predef.term.Symbol("x");
-//│ tmp6 = new this.Predef.term.Ref(x);
-//│ new this.Predef.term.Lam([
-//│   x
-//│ ], tmp6)
-//│ = Lam([Symbol("x")], Ref(Symbol("x")))
+//│ = Lam([Symbol("x_0")], Ref(Symbol("x_0")))
 
 
-
+:sjs
 x `=>
   print(x)
   x
 //│ JS (unsanitized):
-//│ let x1, tmp7, tmp8, tmp9;
-//│ x1 = new this.Predef.term.Symbol("x");
-//│ tmp7 = new this.Predef.term.Ref(x1);
-//│ tmp8 = Predef.print(tmp7);
+//│ let tmp8, x1, tmp9, tmp10, tmp11;
+//│ tmp8 = this.Predef.term.freshName("x");
+//│ x1 = new this.Predef.term.Symbol(tmp8);
 //│ tmp9 = new this.Predef.term.Ref(x1);
+//│ tmp10 = Predef.print(tmp9);
+//│ tmp11 = new this.Predef.term.Ref(x1);
 //│ new this.Predef.term.Lam([
 //│   x1
-//│ ], tmp9)
-//│ > Ref(Symbol("x"))
-//│ = Lam([Symbol("x")], Ref(Symbol("x")))
+//│ ], tmp11)
+//│ > Ref(Symbol("x_1"))
+//│ = Lam([Symbol("x_1")], Ref(Symbol("x_1")))
 
 
 let f = x `=> x `+ `1
-//│ JS (unsanitized):
-//│ let f, x2, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16;
-//│ x2 = new this.Predef.term.Symbol("x");
-//│ tmp10 = new this.Predef.term.Symbol("+");
-//│ tmp11 = new this.Predef.term.Ref(x2);
-//│ tmp12 = new this.Predef.term.Lit(1);
-//│ tmp13 = new this.Predef.term.Ref(tmp10);
-//│ tmp14 = new this.Predef.term.Tup([
-//│   tmp11,
-//│   tmp12
-//│ ]);
-//│ tmp15 = new this.Predef.term.App(tmp13, tmp14);
-//│ tmp16 = new this.Predef.term.Lam([
-//│   x2
-//│ ], tmp15);
-//│ f = tmp16;
-//│ f = Lam([Symbol("x")], App(Ref(Symbol("+")), Tup([Ref(Symbol("x")), Lit(1)])))
+//│ f = Lam([Symbol("x_2")], App(Ref(Symbol("+")), Tup([Ref(Symbol("x_2")), Lit(1)])))
 
 
 f`(`0)
-//│ JS (unsanitized):
-//│ let tmp17, tmp18, tmp19;
-//│ tmp17 = new this.Predef.term.Lit(0);
-//│ tmp18 = f;
-//│ tmp19 = new this.Predef.term.Tup([
-//│   tmp17
-//│ ]);
-//│ new this.Predef.term.App(tmp18, tmp19)
-//│ = App(Lam([Symbol("x")], App(Ref(Symbol("+")), Tup([Ref(Symbol("x")), Lit(1)]))), Tup([Lit(0)]))
+//│ = App(Lam([Symbol("x_2")], App(Ref(Symbol("+")), Tup([Ref(Symbol("x_2")), Lit(1)]))), Tup([Lit(0)]))
 
 
 `let x = `42 `in x
-//│ JS (unsanitized):
-//│ let x3, tmp20, tmp21, tmp22, tmp23;
-//│ x3 = new this.Predef.term.Symbol("x");
-//│ tmp20 = new this.Predef.term.Lit(42);
-//│ tmp21 = new this.Predef.term.Ref(x3);
-//│ tmp22 = new this.Predef.term.LetDecl(x3);
-//│ tmp23 = new this.Predef.term.DefineVar(x3, tmp20);
-//│ new this.Predef.term.Blk([
-//│   tmp22,
-//│   tmp23
-//│ ], tmp21)
-//│ = Blk([LetDecl(Symbol("x")), DefineVar(Symbol("x"), Lit(42))], Ref(Symbol("x")))
+//│ = Blk([LetDecl(Symbol("x_3")), DefineVar(Symbol("x_3"), Lit(42))], Ref(Symbol("x_3")))
 
 
 `let x = `42 `in print(x); x
-//│ JS (unsanitized):
-//│ let x4, tmp24, tmp25, tmp26, tmp27, tmp28, tmp29, tmp30;
-//│ x4 = new this.Predef.term.Symbol("x");
-//│ tmp24 = new this.Predef.term.Lit(42);
-//│ tmp25 = new this.Predef.term.Ref(x4);
-//│ tmp26 = Predef.print(tmp25);
-//│ tmp27 = new this.Predef.term.Ref(x4);
-//│ tmp28 = (tmp26 , tmp27);
-//│ tmp29 = new this.Predef.term.LetDecl(x4);
-//│ tmp30 = new this.Predef.term.DefineVar(x4, tmp24);
-//│ new this.Predef.term.Blk([
-//│   tmp29,
-//│   tmp30
-//│ ], tmp28)
-//│ > Ref(Symbol("x"))
-//│ = Blk([LetDecl(Symbol("x")), DefineVar(Symbol("x"), Lit(42))], Ref(Symbol("x")))
+//│ > Ref(Symbol("x_4"))
+//│ = Blk([LetDecl(Symbol("x_4")), DefineVar(Symbol("x_4"), Lit(42))], Ref(Symbol("x_4")))
 
 
+:sjs
 `if `true then `true else `false
 //│ JS (unsanitized):
-//│ let tmp31, tmp32, tmp33, tmp34, tmp35, tmp36, tmp37, tmp38, tmp39, tmp40, tmp41, tmp42;
-//│ tmp31 = new this.Predef.term.Symbol("scrut");
-//│ tmp32 = new this.Predef.term.Lit(true);
-//│ tmp33 = new this.Predef.term.Symbol("scrut");
-//│ tmp34 = new this.Predef.term.Ref(tmp33);
-//│ tmp35 = new this.Predef.term.LitPattern(true);
-//│ tmp36 = new this.Predef.term.Lit(true);
-//│ tmp37 = new this.Predef.term.Else(tmp36);
-//│ tmp38 = new this.Predef.term.Branch(tmp34, tmp35, tmp37);
-//│ tmp39 = new this.Predef.term.Lit(false);
-//│ tmp40 = new this.Predef.term.Else(tmp39);
-//│ tmp41 = new this.Predef.term.Cons(tmp38, tmp40);
-//│ tmp42 = new this.Predef.term.Let(tmp31, tmp32, tmp41);
-//│ new this.Predef.term.IfLike(this.Predef.term.KeywordIf, tmp42)
-//│ = IfLike(KeywordIf, Let(Symbol("scrut"), Lit(true), Cons(Branch(Ref(Symbol("scrut")), LitPattern(true), Else(Lit(true))), Else(Lit(false)))))
+//│ let tmp36, tmp37, tmp38, tmp39, tmp40, tmp41, tmp42, tmp43, tmp44, tmp45, tmp46, tmp47;
+//│ tmp36 = this.Predef.term.freshName("scrut");
+//│ tmp37 = new this.Predef.term.Symbol(tmp36);
+//│ tmp38 = new this.Predef.term.Lit(true);
+//│ tmp39 = new this.Predef.term.Ref(tmp37);
+//│ tmp40 = new this.Predef.term.LitPattern(true);
+//│ tmp41 = new this.Predef.term.Lit(true);
+//│ tmp42 = new this.Predef.term.Else(tmp41);
+//│ tmp43 = new this.Predef.term.Branch(tmp39, tmp40, tmp42);
+//│ tmp44 = new this.Predef.term.Lit(false);
+//│ tmp45 = new this.Predef.term.Else(tmp44);
+//│ tmp46 = new this.Predef.term.Cons(tmp43, tmp45);
+//│ tmp47 = new this.Predef.term.Let(tmp37, tmp38, tmp46);
+//│ new this.Predef.term.IfLike(this.Predef.term.KeywordIf, tmp47)
+//│ = IfLike(KeywordIf, Let(Symbol("scrut_0"), Lit(true), Cons(Branch(Ref(Symbol("scrut_0")), LitPattern(true), Else(Lit(true))), Else(Lit(false)))))
 
 
 x `=> `if x `== `0.0 then `1.0 else x
-//│ JS (unsanitized):
-//│ let x5, tmp43, tmp44, tmp45, tmp46, tmp47, tmp48, tmp49, tmp50, tmp51, tmp52, tmp53, tmp54, tmp55, tmp56, tmp57, tmp58, tmp59, tmp60;
-//│ x5 = new this.Predef.term.Symbol("x");
-//│ tmp43 = new this.Predef.term.Symbol("scrut");
-//│ tmp44 = new this.Predef.term.Symbol("==");
-//│ tmp45 = new this.Predef.term.Ref(x5);
-//│ tmp46 = new this.Predef.term.Lit(0.0);
-//│ tmp47 = new this.Predef.term.Ref(tmp44);
-//│ tmp48 = new this.Predef.term.Tup([
-//│   tmp45,
-//│   tmp46
-//│ ]);
-//│ tmp49 = new this.Predef.term.App(tmp47, tmp48);
-//│ tmp50 = new this.Predef.term.Symbol("scrut");
-//│ tmp51 = new this.Predef.term.Ref(tmp50);
-//│ tmp52 = new this.Predef.term.LitPattern(true);
-//│ tmp53 = new this.Predef.term.Lit(1.0);
-//│ tmp54 = new this.Predef.term.Else(tmp53);
-//│ tmp55 = new this.Predef.term.Branch(tmp51, tmp52, tmp54);
-//│ tmp56 = new this.Predef.term.Ref(x5);
-//│ tmp57 = new this.Predef.term.Else(tmp56);
-//│ tmp58 = new this.Predef.term.Cons(tmp55, tmp57);
-//│ tmp59 = new this.Predef.term.Let(tmp43, tmp49, tmp58);
-//│ tmp60 = new this.Predef.term.IfLike(this.Predef.term.KeywordIf, tmp59);
-//│ new this.Predef.term.Lam([
-//│   x5
-//│ ], tmp60)
-//│ = Lam([Symbol("x")], IfLike(KeywordIf, Let(Symbol("scrut"), App(Ref(Symbol("==")), Tup([Ref(Symbol("x")), Lit(0)])), Cons(Branch(Ref(Symbol("scrut")), LitPattern(true), Else(Lit(1))), Else(Ref(Symbol("x")))))))
+//│ = Lam([Symbol("x_5")], IfLike(KeywordIf, Let(Symbol("scrut_1"), App(Ref(Symbol("==")), Tup([Ref(Symbol("x_5")), Lit(0)])), Cons(Branch(Ref(Symbol("scrut_1")), LitPattern(true), Else(Lit(1))), Else(Ref(Symbol("x_5")))))))
 
 
 term.print
-//│ JS (unsanitized):
-//│ Predef.term.print
 //│ = [function print]
 
 
 term.print(`42)
-//│ JS (unsanitized):
-//│ let tmp61; tmp61 = new this.Predef.term.Lit(42); runtime.safeCall(Predef.term.print(tmp61))
 //│ > 42
 
 
 term.print(`+)
-//│ JS (unsanitized):
-//│ let tmp62, tmp63;
-//│ tmp62 = new this.Predef.term.Symbol("+");
-//│ tmp63 = new this.Predef.term.Ref(tmp62);
-//│ runtime.safeCall(Predef.term.print(tmp63))
 //│ > +
 
 
 term.print(`1 `+ `2)
-//│ JS (unsanitized):
-//│ let tmp64, tmp65, tmp66, tmp67, tmp68, tmp69;
-//│ tmp64 = new this.Predef.term.Symbol("+");
-//│ tmp65 = new this.Predef.term.Lit(1);
-//│ tmp66 = new this.Predef.term.Lit(2);
-//│ tmp67 = new this.Predef.term.Ref(tmp64);
-//│ tmp68 = new this.Predef.term.Tup([
-//│   tmp65,
-//│   tmp66
-//│ ]);
-//│ tmp69 = new this.Predef.term.App(tmp67, tmp68);
-//│ runtime.safeCall(Predef.term.print(tmp69))
 //│ > (+)(1, 2)
 
 
 term.print(x `=> x)
-//│ JS (unsanitized):
-//│ let x6, tmp70, tmp71;
-//│ x6 = new this.Predef.term.Symbol("x");
-//│ tmp70 = new this.Predef.term.Ref(x6);
-//│ tmp71 = new this.Predef.term.Lam([
-//│   x6
-//│ ], tmp70);
-//│ runtime.safeCall(Predef.term.print(tmp71))
-//│ > (x) => x
-
+//│ > (x_6) =>
+//│ >   x_6
 
 
 term.print((x, y) `=> x `+ y)
-//│ JS (unsanitized):
-//│ let x7, y, tmp72, tmp73, tmp74, tmp75, tmp76, tmp77, tmp78;
-//│ x7 = new this.Predef.term.Symbol("x");
-//│ y = new this.Predef.term.Symbol("y");
-//│ tmp72 = new this.Predef.term.Symbol("+");
-//│ tmp73 = new this.Predef.term.Ref(x7);
-//│ tmp74 = new this.Predef.term.Ref(y);
-//│ tmp75 = new this.Predef.term.Ref(tmp72);
-//│ tmp76 = new this.Predef.term.Tup([
-//│   tmp73,
-//│   tmp74
-//│ ]);
-//│ tmp77 = new this.Predef.term.App(tmp75, tmp76);
-//│ tmp78 = new this.Predef.term.Lam([
-//│   x7,
-//│   y
-//│ ], tmp77);
-//│ runtime.safeCall(Predef.term.print(tmp78))
-//│ > (x, y) => (+)(x, y)
+//│ > (x_7, y_0) =>
+//│ >   (+)(x_7, y_0)
 
 
 term.print(`let x = `42 `in x)
-//│ JS (unsanitized):
-//│ let x8, tmp79, tmp80, tmp81, tmp82, tmp83;
-//│ x8 = new this.Predef.term.Symbol("x");
-//│ tmp79 = new this.Predef.term.Lit(42);
-//│ tmp80 = new this.Predef.term.Ref(x8);
-//│ tmp81 = new this.Predef.term.LetDecl(x8);
-//│ tmp82 = new this.Predef.term.DefineVar(x8, tmp79);
-//│ tmp83 = new this.Predef.term.Blk([
-//│   tmp81,
-//│   tmp82
-//│ ], tmp80);
-//│ runtime.safeCall(Predef.term.print(tmp83))
-//│ > let x
-//│ > x = 42
-//│ > x
+//│ > let x_8
+//│ > x_8 = 42
+//│ > x_8
 
 
 term.print(`if `true then `true else `false)
-//│ JS (unsanitized):
-//│ let tmp84, tmp85, tmp86, tmp87, tmp88, tmp89, tmp90, tmp91, tmp92, tmp93, tmp94, tmp95, tmp96;
-//│ tmp84 = new this.Predef.term.Symbol("scrut");
-//│ tmp85 = new this.Predef.term.Lit(true);
-//│ tmp86 = new this.Predef.term.Symbol("scrut");
-//│ tmp87 = new this.Predef.term.Ref(tmp86);
-//│ tmp88 = new this.Predef.term.LitPattern(true);
-//│ tmp89 = new this.Predef.term.Lit(true);
-//│ tmp90 = new this.Predef.term.Else(tmp89);
-//│ tmp91 = new this.Predef.term.Branch(tmp87, tmp88, tmp90);
-//│ tmp92 = new this.Predef.term.Lit(false);
-//│ tmp93 = new this.Predef.term.Else(tmp92);
-//│ tmp94 = new this.Predef.term.Cons(tmp91, tmp93);
-//│ tmp95 = new this.Predef.term.Let(tmp84, tmp85, tmp94);
-//│ tmp96 = new this.Predef.term.IfLike(this.Predef.term.KeywordIf, tmp95);
-//│ runtime.safeCall(Predef.term.print(tmp96))
 //│ > if 
-//│ >   let scrut = true
-//│ >   scrut is true then true
+//│ >   let scrut_2 = true
+//│ >   scrut_2 is true then true
 //│ >   else false
 
 
 term.print(x `=> `if x `== `0.0 then `1.0 else x)
-//│ JS (unsanitized):
-//│ let x9, tmp97, tmp98, tmp99, tmp100, tmp101, tmp102, tmp103, tmp104, tmp105, tmp106, tmp107, tmp108, tmp109, tmp110, tmp111, tmp112, tmp113, tmp114, tmp115;
-//│ x9 = new this.Predef.term.Symbol("x");
-//│ tmp97 = new this.Predef.term.Symbol("scrut");
-//│ tmp98 = new this.Predef.term.Symbol("==");
-//│ tmp99 = new this.Predef.term.Ref(x9);
-//│ tmp100 = new this.Predef.term.Lit(0.0);
-//│ tmp101 = new this.Predef.term.Ref(tmp98);
-//│ tmp102 = new this.Predef.term.Tup([
-//│   tmp99,
-//│   tmp100
-//│ ]);
-//│ tmp103 = new this.Predef.term.App(tmp101, tmp102);
-//│ tmp104 = new this.Predef.term.Symbol("scrut");
-//│ tmp105 = new this.Predef.term.Ref(tmp104);
-//│ tmp106 = new this.Predef.term.LitPattern(true);
-//│ tmp107 = new this.Predef.term.Lit(1.0);
-//│ tmp108 = new this.Predef.term.Else(tmp107);
-//│ tmp109 = new this.Predef.term.Branch(tmp105, tmp106, tmp108);
-//│ tmp110 = new this.Predef.term.Ref(x9);
-//│ tmp111 = new this.Predef.term.Else(tmp110);
-//│ tmp112 = new this.Predef.term.Cons(tmp109, tmp111);
-//│ tmp113 = new this.Predef.term.Let(tmp97, tmp103, tmp112);
-//│ tmp114 = new this.Predef.term.IfLike(this.Predef.term.KeywordIf, tmp113);
-//│ tmp115 = new this.Predef.term.Lam([
-//│   x9
-//│ ], tmp114);
-//│ runtime.safeCall(Predef.term.print(tmp115))
-//│ > (x) => if 
-//│ >   let scrut = (==)(x, 0)
-//│ >   scrut is true then 1
-//│ >   else x
+//│ > (x_9) =>
+//│ >   if 
+//│ >     let scrut_3 = (==)(x_9, 0)
+//│ >     scrut_3 is true then 1
+//│ >     else x_9
 
 import "../../mlscript-compile/QuoteExample2.mls"
-//│ JS (unsanitized):
-//│ import QuoteExample2 from "./../../mlscript-compile/QuoteExample2.mjs"; 
 
 
 QuoteExample2.codegen()
-//│ JS (unsanitized):
-//│ QuoteExample2.codegen()
 
 
 import "../../mlscript-compile/quotes/QuoteFoo.mls"
-//│ JS (unsanitized):
-//│ import QuoteFoo from "./../../mlscript-compile/quotes/QuoteFoo.mjs"; 
 
 QuoteFoo.res
-//│ JS (unsanitized):
-//│ QuoteFoo.res
-//│ = 3
+//│ = 2
 
 
 import "../../mlscript-compile/quotes/QuoteInc.mls"
-//│ JS (unsanitized):
-//│ import QuoteInc from "./../../mlscript-compile/quotes/QuoteInc.mjs"; 
 
 
 QuoteInc.res(42)
-//│ JS (unsanitized):
-//│ QuoteInc.res(42)
 //│ = 43
 
 
 import "../../mlscript-compile/CSP.mls"
-//│ JS (unsanitized):
-//│ import CSP from "./../../mlscript-compile/CSP.mjs"; 
 
 
 term.codegen(CSP.foo(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPFoo.mls")
-//│ JS (unsanitized):
-//│ let tmp116;
-//│ tmp116 = CSP.foo();
-//│ Predef.term.codegen(tmp116, "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPFoo.mls")
 
 
 import "../../mlscript-compile/quotes/CSPFoo.mls"
-//│ JS (unsanitized):
-//│ import CSPFoo from "./../../mlscript-compile/quotes/CSPFoo.mjs"; 
 
 
 CSPFoo.res
-//│ JS (unsanitized):
-//│ CSPFoo.res
 //│ = 124
 
 
 term.codegen(CSP.bar(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPBar.mls")
-//│ JS (unsanitized):
-//│ let tmp117;
-//│ tmp117 = CSP.bar();
-//│ Predef.term.codegen(tmp117, "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPBar.mls")
 
 
 import "../../mlscript-compile/quotes/CSPBar.mls"
-//│ JS (unsanitized):
-//│ import CSPBar from "./../../mlscript-compile/quotes/CSPBar.mjs"; 
 
 
 CSPBar.res
-//│ JS (unsanitized):
-//│ CSPBar.res
 //│ = 1
 
 
 QuoteExample2.genCubic()
-//│ JS (unsanitized):
-//│ QuoteExample2.genCubic()
 
 
 import "../../mlscript-compile/quotes/Cubic.mls"
-//│ JS (unsanitized):
-//│ import Cubic from "./../../mlscript-compile/quotes/Cubic.mjs"; 
 
 let cubic = Cubic.res
 cubic(8)
-//│ JS (unsanitized):
-//│ let cubic; cubic = Cubic.res; runtime.safeCall(cubic(8))
 //│ = 512
 //│ cubic = [function]
+
+
+QuoteExample2.genGib12()
+
+
+import "../../mlscript-compile/quotes/Gib12.mls"
+
+
+let gib12 = Gib12.res
+gib12(0, 1)
+//│ = 144
+//│ gib12 = [function]

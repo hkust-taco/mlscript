@@ -95,6 +95,15 @@ builtinSymbols.add(">=")
 builtinSymbols.add("<=")
 
 
+let names = new globalThis.Map()
+fun freshName(name) =
+  if names.has(name) == false do
+    names.set(name, 0)
+  let i = names.get(name)
+  names.set(name, i + 1)
+  Str.concat(name, "_", i.toString())
+    
+
 class Context(symbols: globalThis.Set, dependencies: globalThis.Set, printOnly: Bool) with
   fun isValid(name) = symbols.has(name) || builtinSymbols.has(name) || printOnly
   fun nest = Context(new globalThis.Set(symbols), dependencies, printOnly)
@@ -102,39 +111,41 @@ class Context(symbols: globalThis.Set, dependencies: globalThis.Set, printOnly: 
   fun depends(d) = dependencies.add(d)
 
 
-fun showStmt(s, ctx, indent) =
-  let res = if s is
+fun indent(str, ind, keepLeading) =
+  let res = str.split("\n").map(s => Str.concat(ind, s)).join("\n")
+  if keepLeading then res
+  else res.substring(ind.length)
+
+fun showStmt(s, ctx) =
+  if s is
     LetDecl(Symbol(name)) then
       ctx.add(name)
       Str.concat("let ", name)
-    DefineVar(Symbol(name), value) then Str.concat(name, " = ", show(value, ctx, ""))
-  Str.concat(indent, res)
+    DefineVar(Symbol(name), value) then Str.concat(name, " = ", show(value, ctx))
 
 
-fun showPattern(p, ctx, indent) =
-  let res = if p is
+fun showPattern(p, ctx) =
+  if p is
     LitPattern(lit) then lit.toString()
   // TODO: other patterns
-  Str.concat(indent, res)
 
 
-fun showSplit(s, ctx, indent, isCont) =
-  let res = if s is
+fun showSplit(s, ctx, isCont) =
+  if s is
     Cons(Branch(scrut, ptrn, cont), tail) then
-      Str.concat(show(scrut, ctx, ""), " is ", showPattern(ptrn, ctx, ""), " then ", showSplit(cont, ctx, "", true), "\n", showSplit(tail, ctx, indent, false))
+      Str.concat(show(scrut, ctx), " is ", showPattern(ptrn, ctx), " then ", showSplit(cont, ctx, true), "\n", showSplit(tail, ctx, false))
     Let(sym, term, split) then
       let nest = ctx.nest
       nest.add(sym.name)
-      Str.concat("let ", sym.name, " = ", show(term, nest, ""), "\n", showSplit(split, nest, indent, false))
+      Str.concat("let ", sym.name, " = ", show(term, nest), "\n", showSplit(split, nest, false))
     Else(term) then
-      if isCont then show(term, ctx, "")
-      else Str.concat("else ", show(term, ctx, ""))
+      if isCont then show(term, ctx)
+      else Str.concat("else ", show(term, ctx))
     End then ""
-  Str.concat(indent, res)
 
 
-fun show(t, ctx, indent) =
-  let res = if t is
+fun show(t, ctx) =
+  if t is
     Ref(Symbol(name)) then
       if ctx.isValid(name) then name
       else throw new globalThis.Error(Str.concat("Invalid binding name ", name))
@@ -143,23 +154,22 @@ fun show(t, ctx, indent) =
       else ctx.depends(path.join(path.dirname(baseFile), file))
       name
     Lit(lit) then lit.toString()
-    Sel(prefix, name) then Str.concat("(", show(prefix, ctx, ""), ").", name)
-    App(lhs, rhs) then Str.concat("(", show(lhs, ctx, ""), ")(", show(rhs, ctx, ""), ")")
-    Tup(fields) then fields.map(t => show(t, ctx, "")).join(", ")
+    Sel(prefix, name) then Str.concat("(", show(prefix, ctx), ").", name)
+    App(lhs, rhs) then Str.concat("(", show(lhs, ctx), ")(", show(rhs, ctx), ")")
+    Tup(fields) then fields.map(t => show(t, ctx)).join(", ")
     Lam(params, body) then
       let nest = ctx.nest
       params.forEach(s => nest.add(s.name))
-      Str.concat("(", params.map(s => s.name).join(", "), ") => ", show(body, nest, ""))
+      Str.concat("(", params.map(s => s.name).join(", "), ") =>\n", indent(show(body, nest), "  ", true))
     Blk(stats, res) then
       let nest = ctx.nest
-      Str.concat(stats.map(s => showStmt(s, nest, "")).join("\n"), "\n", show(res, nest, ""))
-    IfLike(KeywordIf, split) then Str.concat("if \n", showSplit(split, ctx, Str.concat(indent, "  "), false))
+      Str.concat(stats.map(s => showStmt(s, nest)).join("\n"), "\n", show(res, nest))
+    IfLike(KeywordIf, split) then Str.concat("if \n", indent(showSplit(split, ctx, false), "  ", true))
     // TODO: other terms
-  Str.concat(indent, res)
 
 fun print(t) =
   let ctx = Context(new globalThis.Set(), new globalThis.Set(), true)
-  console.log(show(t, ctx, ""))
+  console.log(show(t, ctx))
 
 
 fun genImport(base, p) =
@@ -170,7 +180,7 @@ fun codegen(t, file) =
   let ctx = Context(new globalThis.Set(), new globalThis.Set(), false)
   let moduleName = path.parse(file).name
   let fullpath = path.join(process.cwd(), file)
-  let code = Str.concat("module ", moduleName, " with ...\nfun res = ", show(t, ctx, ""))
+  let code = Str.concat("module ", moduleName, " with ...\nfun res =\n", indent(show(t, ctx), "  ", true))
   let dependencies =
     globalThis.Array.from(ctx.dependencies).map(s => genImport(path.dirname(fullpath), s))
   if fs.existsSync(file) is false do

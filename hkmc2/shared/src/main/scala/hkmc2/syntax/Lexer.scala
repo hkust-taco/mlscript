@@ -397,7 +397,15 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
               // *     1
               // * which results in token stream `|module| |P| |with|→|(|→|2|)|←|↵|1|`.
               // * So this code commutes the indent/deindent with the open/close parentheses.
-              go(CLOSE_BRACKET(Indent) -> l1.left :: (CLOSE_BRACKET(k1), l1) :: OPEN_BRACKET(Indent) -> l1.right :: rest, false, stack, acc)
+              rest match
+                case (OPEN_BRACKET(k2), l0) :: rest if k1 == Round && k2 == Round =>
+                  // * Special case for immediate lambda applications; e.g.,
+                  // * (x =>
+                  // *   x + 1)(0)
+                  // * do not insert indents around `(0)`
+                  go(CLOSE_BRACKET(Indent) -> l1.left :: (CLOSE_BRACKET(k1), l1) :: (OPEN_BRACKET(k1), l1) :: rest, false, stack, acc)
+                case _ =>
+                  go(CLOSE_BRACKET(Indent) -> l1.left :: (CLOSE_BRACKET(k1), l1) :: OPEN_BRACKET(Indent) -> l1.right :: rest, false, stack, acc)
             case ((Indent, loc), oldAcc) :: stack
             if k1 === Indent && acc.forall { case (SPACE | NEWLINE, _) => true; case _ => false } =>
               // * Ignore empty indented blocks:

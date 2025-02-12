@@ -1,3 +1,5 @@
 
 module QuoteFoo with ...
-fun res = (+)(1, 2)
+fun res =
+  ((x_10) =>
+    x_10)((+)(1, 1))

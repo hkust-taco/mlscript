@@ -12,15 +12,21 @@ QuoteExample21 = class QuoteExample2 {
     return Predef.term.codegen(tmp2, "./hkmc2/shared/src/test/mlscript-compile/quotes/QuoteInc.mls")
   } 
   static genCubic() {
-    let x, tmp, tmp1, tmp2, tmp3;
-    x = new globalThis.Predef.term.Symbol("x");
-    tmp = new globalThis.Predef.term.Ref(x);
-    tmp1 = QuoteExample.power(tmp);
-    tmp2 = runtime.safeCall(tmp1(3));
-    tmp3 = new globalThis.Predef.term.Lam([
+    let tmp, x, tmp1, tmp2, tmp3, tmp4;
+    tmp = globalThis.Predef.term.freshName("x");
+    x = new globalThis.Predef.term.Symbol(tmp);
+    tmp1 = new globalThis.Predef.term.Ref(x);
+    tmp2 = QuoteExample.power(tmp1);
+    tmp3 = runtime.safeCall(tmp2(3));
+    tmp4 = new globalThis.Predef.term.Lam([
       x
-    ], tmp2);
-    return Predef.term.codegen(tmp3, "./hkmc2/shared/src/test/mlscript-compile/quotes/Cubic.mls")
+    ], tmp3);
+    return Predef.term.codegen(tmp4, "./hkmc2/shared/src/test/mlscript-compile/quotes/Cubic.mls")
+  } 
+  static genGib12() {
+    let tmp;
+    tmp = QuoteExample.gib(12);
+    return Predef.term.codegen(tmp, "./hkmc2/shared/src/test/mlscript-compile/quotes/Gib12.mls")
   }
   static toString() { return "QuoteExample2"; }
 };
