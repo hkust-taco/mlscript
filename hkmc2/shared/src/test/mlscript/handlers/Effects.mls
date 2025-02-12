@@ -158,26 +158,27 @@ if true do
 //│ JS (unsanitized):
 //│ let tmp11, handleBlock$11;
 //│ handleBlock$11 = function handleBlock$() {
-//│   let f, h, scrut, tmp12, Cont$handleBlock11, Handler$h$12;
+//│   let f, h, scrut, tmp12, Cont$handleBlock$h$11, Handler$h$12;
 //│   Handler$h$12 = class Handler$h$11 extends Effect1 {
 //│     constructor() {
 //│       let tmp13;
 //│       tmp13 = super();
 //│     }
 //│     perform(arg) {
-//│       return runtime.__mkEffect(h, (k) => {
+//│       return runtime.__mkEffect(h, (k, handleBlock) => {
 //│         return arg
 //│       })
 //│     }
 //│     toString() { return "Handler$h$"; }
 //│   };
 //│   h = new Handler$h$12();
-//│   Cont$handleBlock11 = function Cont$handleBlock(pc1) { return new Cont$handleBlock.class(pc1); };
-//│   Cont$handleBlock11.class = class Cont$handleBlock10 extends runtime.__Cont.class {
-//│     constructor(pc) {
+//│   Cont$handleBlock$h$11 = function Cont$handleBlock$h$(pc1, next1) { return new Cont$handleBlock$h$.class(pc1, next1); };
+//│   Cont$handleBlock$h$11.class = class Cont$handleBlock$h$10 extends runtime.__Cont.class {
+//│     constructor(pc, next) {
 //│       let tmp13;
-//│       tmp13 = super(null, null);
+//│       tmp13 = super(next, false);
 //│       this.pc = pc;
+//│       this.next = next;
 //│     }
 //│     resume(value$) {
 //│       if (this.pc === 0) {
@@ -185,9 +186,11 @@ if true do
 //│       }
 //│       contLoop: while (true) {
 //│         if (this.pc === 1) {
+//│           this.completed = true;
 //│           return tmp12
 //│         } else if (this.pc === 0) {
 //│           if (tmp12 instanceof runtime.__Return.class) {
+//│             this.completed = true;
 //│             return tmp12
 //│           }
 //│           this.pc = 1;
@@ -196,7 +199,7 @@ if true do
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$handleBlock(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$handleBlock$h$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
 //│   };
 //│   f = function f() {
 //│     return 3
@@ -205,7 +208,7 @@ if true do
 //│   if (scrut === true) {
 //│     tmp12 = f();
 //│     if (tmp12 instanceof runtime.__EffectSig.class) {
-//│       tmp12.tail.next = new Cont$handleBlock11(0);
+//│       tmp12.tail.next = new Cont$handleBlock$h$11(0, null);
 //│       return runtime.__handleBlockImpl(tmp12, h)
 //│     }
 //│     if (tmp12 instanceof runtime.__Return.class) {

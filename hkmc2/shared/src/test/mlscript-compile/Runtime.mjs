@@ -10,12 +10,13 @@ Runtime1 = class Runtime {
     };
     this.Unit = new Unit$class;
     this.Unit.class = Unit$class;
-    this.__Cont = function __Cont(next1) { return new __Cont.class(next1); };
+    this.__Cont = function __Cont(next1, completed1) { return new __Cont.class(next1, completed1); };
     this.__Cont.class = class __Cont {
-      constructor(next) {
+      constructor(next, completed) {
         this.next = next;
+        this.completed = completed;
       }
-      toString() { return "__Cont(" + globalThis.Predef.render(this.next) + ")"; }
+      toString() { return "__Cont(" + globalThis.Predef.render(this.next) + ", " + globalThis.Predef.render(this.completed) + ")"; }
     };
     this.__TailList = function __TailList(next1) { return new __TailList.class(next1); };
     this.__TailList.class = class __TailList {
@@ -146,87 +147,96 @@ Runtime1 = class Runtime {
     }
     return tmp6
   } 
+  static showContChain(cont, hl, vis, reps) {
+    let scrut, result, scrut1, scrut2, scrut3, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
+    if (cont instanceof Runtime.__Cont.class) {
+      tmp = cont.constructor.name + "(pc=";
+      tmp1 = tmp + cont.pc;
+      result = tmp1;
+      tmp2 = (m, marker) => {
+        let scrut4, tmp12, tmp13;
+        scrut4 = runtime.safeCall(m.has(cont));
+        if (scrut4 === true) {
+          tmp12 = ", " + marker;
+          tmp13 = result + tmp12;
+          result = tmp13;
+          return runtime.Unit
+        } else {
+          return runtime.Unit
+        }
+      };
+      tmp3 = runtime.safeCall(hl.forEach(tmp2));
+      scrut1 = runtime.safeCall(vis.has(cont));
+      if (scrut1 === true) {
+        tmp4 = reps + 1;
+        reps = tmp4;
+        scrut2 = reps > 10;
+        if (scrut2 === true) {
+          throw globalThis.Error("10 repeated continuation frame (loop?)");
+        } else {
+          tmp5 = runtime.Unit;
+        }
+        tmp6 = result + ", REPEAT";
+        result = tmp6;
+        tmp7 = runtime.Unit;
+      } else {
+        tmp7 = runtime.safeCall(vis.add(cont));
+      }
+      scrut3 = cont.completed;
+      if (scrut3 === true) {
+        tmp8 = result + ", COMPLETED";
+        result = tmp8;
+        tmp9 = runtime.Unit;
+      } else {
+        tmp9 = runtime.Unit;
+      }
+      tmp10 = result + ") -> ";
+      tmp11 = Runtime.showContChain(cont.next, hl, vis, reps);
+      return tmp10 + tmp11
+    } else {
+      scrut = cont === null;
+      if (scrut === true) {
+        return "(null)"
+      } else {
+        return "(NOT CONT)"
+      }
+    }
+  } 
   static debugEff(eff) {
-    let showContChain, showHandlerChain, scrut, repeatCnt, vis, cur1, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
+    let showHandlerChain, scrut, vis1, hl1, cur1, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14;
     if (eff instanceof Runtime.__EffectSig.class) {
-      showContChain = function showContChain(cont, lastHandlerCont) {
-        let scrut2, repeatStr, scrut3, scrut4, tailStr, scrut5, lastHandlerContStr, scrut6, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20, tmp21, tmp22, tmp23, tmp24;
-        if (cont instanceof Runtime.__Cont.class) {
-          scrut3 = runtime.safeCall(vis.has(cont));
+      showHandlerChain = function showHandlerChain(hndl) {
+        let scrut2, tailStr, scrut3, handlerTailStr, scrut4, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20, tmp21, tmp22;
+        if (hndl instanceof Runtime.__HandleBlock.class) {
+          scrut3 = hndl.contHead === eff.tail;
           if (scrut3 === true) {
-            tmp12 = repeatCnt + 1;
-            repeatCnt = tmp12;
-            scrut4 = repeatCnt > 10;
-            if (scrut4 === true) {
-              throw globalThis.Error("10 repeated continuation frame (loop?)");
-            } else {
-              tmp13 = runtime.Unit;
-            }
-            tmp14 = ", REPEAT";
+            tmp15 = ", tail";
           } else {
-            tmp15 = runtime.safeCall(vis.add(cont));
-            tmp14 = "";
+            tmp15 = "";
           }
-          repeatStr = tmp14;
-          scrut5 = cont === eff.tail;
-          if (scrut5 === true) {
-            tmp16 = ", tail";
+          tailStr = tmp15;
+          scrut4 = hndl === eff.handleBlockList.tail;
+          if (scrut4 === true) {
+            tmp16 = ", handler-tail";
           } else {
             tmp16 = "";
           }
-          tailStr = tmp16;
-          scrut6 = cont === lastHandlerCont;
-          if (scrut6 === true) {
-            tmp17 = ", last-handler-cont";
-          } else {
-            tmp17 = "";
-          }
-          lastHandlerContStr = tmp17;
-          tmp18 = cont.constructor.name + "(pc=";
-          tmp19 = tmp18 + cont.pc;
-          tmp20 = tmp19 + tailStr;
-          tmp21 = tmp20 + lastHandlerContStr;
-          tmp22 = tmp21 + repeatStr;
-          tmp23 = tmp22 + ") -> ";
-          tmp24 = showContChain(cont.next, lastHandlerCont);
-          return tmp23 + tmp24
+          handlerTailStr = tmp16;
+          tmp17 = new globalThis.Set([
+            hndl.lastHandlerCont
+          ]);
+          tmp18 = hl1.set("last-handler-cont", tmp17);
+          tmp19 = hndl.handler.constructor.name + tailStr;
+          tmp20 = tmp19 + handlerTailStr;
+          tmp21 = tmp20 + " -> ";
+          tmp22 = Runtime.showContChain(hndl.contHead.next, hl1, vis1, 0);
+          return tmp21 + tmp22
         } else {
-          scrut2 = cont !== null;
+          scrut2 = hndl === null;
           if (scrut2 === true) {
-            return "(NOT CONT)"
-          } else {
             return "(null)"
-          }
-        }
-      };
-      showHandlerChain = function showHandlerChain(hndl) {
-        let scrut2, tailStr, scrut3, handlerTailStr, scrut4, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17;
-        if (hndl instanceof Runtime.__HandleBlock.class) {
-          scrut3 = hndl.contHead === eff.handleBlockList.tail;
-          if (scrut3 === true) {
-            tmp12 = ", tail";
           } else {
-            tmp12 = "";
-          }
-          tailStr = tmp12;
-          scrut4 = hndl === eff.handleBlockList.tail;
-          if (scrut4 === true) {
-            tmp13 = ", handler-tail";
-          } else {
-            tmp13 = "";
-          }
-          handlerTailStr = tmp13;
-          tmp14 = hndl.handler.constructor.name + tailStr;
-          tmp15 = tmp14 + handlerTailStr;
-          tmp16 = tmp15 + " -> ";
-          tmp17 = showContChain(hndl.contHead.next, hndl.lastHandlerCont);
-          return tmp16 + tmp17
-        } else {
-          scrut2 = hndl !== null;
-          if (scrut2 === true) {
-            return "(NOT HANDLE)"
-          } else {
-            return "(null)"
+            return "(NOT HANDLE BLOCK)"
           }
         }
       };
@@ -240,42 +250,47 @@ Runtime1 = class Runtime {
       } else {
         tmp4 = runtime.Unit;
       }
-      repeatCnt = 0;
       tmp5 = new globalThis.Set();
-      vis = tmp5;
-      tmp6 = showContChain(eff.next, null);
-      tmp7 = runtime.safeCall(globalThis.console.log(tmp6));
+      vis1 = tmp5;
+      tmp6 = new globalThis.Map();
+      hl1 = tmp6;
+      tmp7 = new globalThis.Set([
+        eff.tail
+      ]);
+      tmp8 = hl1.set("tail", tmp7);
+      tmp9 = Runtime.showContChain(eff.next, hl1, vis1, 0);
+      tmp10 = runtime.safeCall(globalThis.console.log(tmp9));
       cur1 = eff.handleBlockList.next;
-      tmp12: while (true) {
+      tmp15: while (true) {
         scrut1 = cur1 !== null;
         if (scrut1 === true) {
-          tmp8 = showHandlerChain(cur1);
-          tmp9 = runtime.safeCall(globalThis.console.log(tmp8));
+          tmp11 = showHandlerChain(cur1);
+          tmp12 = runtime.safeCall(globalThis.console.log(tmp11));
           cur1 = cur1.next;
-          tmp10 = runtime.Unit;
-          continue tmp12;
+          tmp13 = runtime.Unit;
+          continue tmp15;
         } else {
-          tmp10 = runtime.Unit;
+          tmp13 = runtime.Unit;
         }
         break;
       }
       return runtime.safeCall(globalThis.console.log())
     } else {
-      tmp11 = runtime.safeCall(globalThis.console.log("Not an effect:"));
+      tmp14 = runtime.safeCall(globalThis.console.log("Not an effect:"));
       return runtime.safeCall(globalThis.console.log(eff))
     }
   } 
   static __handleEffect(cur1) {
-    let prevBlock, scrut, scrut1, scrut2, handleBlock, origTailBlock, savedNext, scrut3, scrut4, scrut5, scrut6, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
+    let prevBlock, scrut, scrut1, scrut2, handleBlock, origTailBlock, savedNext, tmp, tmp1, tmp2, tmp3;
     prevBlock = cur1.handleBlockList;
-    tmp9: while (true) {
+    tmp4: while (true) {
       scrut = prevBlock.next;
       if (scrut instanceof Runtime.__HandleBlock.class) {
         scrut1 = prevBlock.next.handler !== cur1.handler;
         if (scrut1 === true) {
           prevBlock = prevBlock.next;
           tmp = runtime.Unit;
-          continue tmp9;
+          continue tmp4;
         } else {
           tmp = runtime.Unit;
         }
@@ -295,50 +310,20 @@ Runtime1 = class Runtime {
     prevBlock.next = null;
     cur1.handleBlockList.tail = prevBlock;
     savedNext = handleBlock.contHead.next;
-    tmp2 = Runtime.__resume(cur1, handleBlock.contHead);
-    tmp3 = runtime.safeCall(cur1.handlerFun(tmp2));
+    tmp2 = Runtime.__resume(cur1);
+    tmp3 = cur1.handlerFun(tmp2, handleBlock);
     cur1 = tmp3;
     if (cur1 instanceof Runtime.__EffectSig.class) {
       cur1.handleBlockList.tail.next = handleBlock;
       cur1.handleBlockList.tail = origTailBlock;
-      tmp4 = runtime.Unit;
+      return cur1
     } else {
       return Runtime.__resumeHandleBlocks(handleBlock, origTailBlock, cur1)
     }
-    scrut5 = savedNext !== handleBlock.contHead.next;
-    if (scrut5 === true) {
-      handleBlock.contHead.next.next = savedNext;
-      tmp5 = runtime.Unit;
-    } else {
-      scrut3 = cur1.tail.next !== null;
-      if (scrut3 === true) {
-        scrut4 = cur1.tail.next.next !== null;
-        if (scrut4 === true) {
-          throw globalThis.Error("Internal Error: handler must be at tail");
-        } else {
-          tmp6 = runtime.Unit;
-        }
-        cur1.tail.next.next = handleBlock.contHead.next;
-        handleBlock.contHead.next = cur1.tail.next;
-        cur1.tail.next = null;
-        tmp7 = runtime.Unit;
-      } else {
-        tmp7 = runtime.Unit;
-      }
-      tmp5 = tmp7;
-    }
-    scrut6 = handleBlock.lastHandlerCont === null;
-    if (scrut6 === true) {
-      handleBlock.lastHandlerCont = handleBlock.contHead.next;
-      tmp8 = runtime.Unit;
-    } else {
-      tmp8 = runtime.Unit;
-    }
-    return cur1
   } 
-  static __resume(cur2, tail) {
+  static __resume(cur2) {
     return (value) => {
-      let scrut, cont, scrut1, scrut2, scrut3, scrut4, scrut5, scrut6, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
+      let scrut, cont1, scrut1, scrut2, scrut3, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
       scrut = cur2.resumed;
       if (scrut === true) {
         throw globalThis.Error("Multiple resumption");
@@ -346,127 +331,84 @@ Runtime1 = class Runtime {
         tmp = runtime.Unit;
       }
       cur2.resumed = true;
-      cont = cur2.next;
-      tmp10: while (true) {
-        if (cont instanceof Runtime.__Cont.class) {
-          tmp1 = runtime.safeCall(cont.resume(value));
+      cont1 = cur2.next;
+      tmp6: while (true) {
+        if (cont1 instanceof Runtime.__Cont.class) {
+          tmp1 = runtime.safeCall(cont1.resume(value));
           value = tmp1;
           if (value instanceof Runtime.__EffectSig.class) {
-            scrut1 = value.tail.next !== cont;
+            scrut1 = cont1.completed;
             if (scrut1 === true) {
-              scrut2 = cont.next !== null;
-              if (scrut2 === true) {
-                scrut3 = value.tail.next !== null;
-                if (scrut3 === true) {
-                  throw globalThis.Error("Internal Error: unexpected continuation");
-                } else {
-                  tmp2 = runtime.Unit;
-                }
-              } else {
-                tmp2 = runtime.Unit;
-              }
-              tmp3 = tmp2;
+              value.tail.next = cont1.next;
+              tmp2 = runtime.Unit;
+            } else {
+              value.tail.next = cont1;
+              tmp2 = runtime.Unit;
+            }
+            scrut2 = cur2.handleBlockList.next !== null;
+            if (scrut2 === true) {
+              value.handleBlockList.tail.next = cur2.handleBlockList.next;
+              value.handleBlockList.tail = cur2.handleBlockList.tail;
+              tmp3 = runtime.Unit;
             } else {
               tmp3 = runtime.Unit;
             }
-            scrut4 = value.tail.next === null;
-            if (scrut4 === true) {
-              value.tail.next = cont.next;
-              tmp4 = runtime.Unit;
-            } else {
-              tmp4 = runtime.Unit;
-            }
-            value.tail = tail;
-            scrut5 = cur2.handleBlockList.next !== null;
-            if (scrut5 === true) {
-              value.handleBlockList.tail.next = cur2.handleBlockList.next;
-              value.handleBlockList.tail = cur2.handleBlockList.tail;
-              tmp5 = runtime.Unit;
-            } else {
-              tmp5 = runtime.Unit;
-            }
             return value
           } else {
-            cont = cont.next;
-            tmp6 = runtime.Unit;
+            cont1 = cont1.next;
+            tmp4 = runtime.Unit;
           }
-          tmp7 = tmp6;
-          continue tmp10;
+          tmp5 = tmp4;
+          continue tmp6;
         } else {
-          tmp7 = runtime.Unit;
+          tmp5 = runtime.Unit;
         }
         break;
       }
-      scrut6 = cur2.handleBlockList.next === null;
-      if (scrut6 === true) {
+      scrut3 = cur2.handleBlockList.next === null;
+      if (scrut3 === true) {
         return value
       } else {
-        tmp8 = Runtime.__resumeHandleBlocks(cur2.handleBlockList.next, cur2.handleBlockList.tail, value);
-        cur2 = tmp8;
-        if (cur2 instanceof Runtime.__EffectSig.class) {
-          cur2.tail = tail;
-          tmp9 = runtime.Unit;
-        } else {
-          tmp9 = runtime.Unit;
-        }
-        return cur2
+        return Runtime.__resumeHandleBlocks(cur2.handleBlockList.next, cur2.handleBlockList.tail, value)
       }
     }
   } 
   static __resumeHandleBlocks(handleBlock, tailHandleBlock, value) {
-    let scrut, scrut1, scrut2, scrut3, scrut4, scrut5, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
-    tmp6: while (true) {
+    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3;
+    tmp4: while (true) {
       scrut1 = handleBlock.contHead.next;
       if (scrut1 instanceof Runtime.__Cont.class) {
         tmp = runtime.safeCall(handleBlock.contHead.next.resume(value));
         value = tmp;
+        scrut2 = handleBlock.contHead.next.completed;
+        if (scrut2 === true) {
+          handleBlock.contHead.next = handleBlock.contHead.next.next;
+          tmp1 = runtime.Unit;
+        } else {
+          tmp1 = runtime.Unit;
+        }
         if (value instanceof Runtime.__EffectSig.class) {
-          scrut2 = value.tail.next !== handleBlock.contHead.next;
-          if (scrut2 === true) {
-            scrut3 = value.tail.next !== null;
-            if (scrut3 === true) {
-              throw globalThis.Error("Internal Error: unexpected continuation during handle block resumption");
-            } else {
-              tmp1 = runtime.Unit;
-            }
-          } else {
-            tmp1 = runtime.Unit;
-          }
-          scrut5 = value.tail;
-          if (scrut5 instanceof Runtime.__TailList.class) {
-            tmp2 = runtime.Unit;
-          } else {
-            scrut4 = value.tail.next === null;
-            if (scrut4 === true) {
-              handleBlock.contHead.next = handleBlock.contHead.next.next;
-              tmp3 = runtime.Unit;
-            } else {
-              tmp3 = runtime.Unit;
-            }
-            tmp2 = tmp3;
-          }
           value.handleBlockList.tail.next = handleBlock;
           value.handleBlockList.tail = tailHandleBlock;
           return value
         } else {
-          handleBlock.contHead.next = handleBlock.contHead.next.next;
-          tmp4 = runtime.Unit;
+          tmp2 = runtime.Unit;
         }
-        tmp5 = tmp4;
-        continue tmp6;
+        tmp3 = tmp2;
+        continue tmp4;
       } else {
         scrut = handleBlock.next;
         if (scrut instanceof Runtime.__HandleBlock.class) {
           handleBlock = handleBlock.next;
-          tmp5 = runtime.Unit;
-          continue tmp6;
+          tmp3 = runtime.Unit;
+          continue tmp4;
         } else {
           return value
         }
       }
       break;
     }
-    return tmp5
+    return tmp3
   } 
   static checkDepth() {
     let scrut, tmp, tmp1, tmp2;

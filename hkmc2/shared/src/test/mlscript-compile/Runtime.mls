@@ -22,7 +22,8 @@ fun deboundMethod(mtdName, clsName) =
 
 // Private definitions for algebraic effects
 
-abstract class __Cont(next) with
+// completed is used to detect tail call
+abstract class __Cont(next, completed) with
   fun resume(value)
 
 class __TailList(next)
@@ -64,6 +65,28 @@ fun __handleBlockImpl(cur, handler) =
     else
       return cur
 
+fun showContChain(cont, hl, vis, reps) =
+  if cont is __Cont then
+    let result = cont.constructor.name + "(pc=" + cont.pc
+    hl.forEach((m, marker) => if m.has(cont) do set result += ", " + marker)
+    if vis.has(cont) then
+      set reps = reps + 1
+      if reps > 10 do
+        throw Error("10 repeated continuation frame (loop?)")
+      set result += ", REPEAT"
+    else
+      vis.add(cont)
+    if cont.completed do
+      set result += ", COMPLETED"
+    // let tailStr = if cont === eff.tail then ", tail" else ""
+    // let lastHandlerContStr = if cont === lastHandlerCont then ", last-handler-cont" else ""
+    // let compStr = if cont.completed then ", COMPLETED" else ""
+    result + ") -> " + showContChain(cont.next, hl, vis, reps)
+  else if cont === null then
+    "(null)"
+  else
+    "(NOT CONT)"
+
 fun debugEff(eff) =
   if eff is __EffectSig then
     console.log("Debug EffectSig:")
@@ -72,37 +95,21 @@ fun debugEff(eff) =
     console.log("handlerFun: ", eff.handlerFun)
     if eff.tail === eff do
       console.log("<tail is self>")
-    let repeatCnt = 0
     let vis = new Set()
-
-    fun showContChain(cont, lastHandlerCont) =
-      if cont is __Cont then
-        let repeatStr = if vis.has(cont) then
-          set repeatCnt = repeatCnt + 1
-          if repeatCnt > 10 do
-            throw Error("10 repeated continuation frame (loop?)")
-          ", REPEAT"
-        else
-          vis.add(cont)
-          ""
-        let tailStr = if cont === eff.tail then ", tail" else ""
-        let lastHandlerContStr = if cont === lastHandlerCont then ", last-handler-cont" else ""
-        cont.constructor.name + "(pc=" + cont.pc + tailStr + lastHandlerContStr + repeatStr + ") -> " + showContChain(cont.next, lastHandlerCont)
-      else if cont !== null then
-        "(NOT CONT)"
-      else
-        "(null)"
-    console.log(showContChain(eff.next, null))
+    let hl = new Map()
+    hl.set("tail", new Set([eff.tail]))
+    console.log(showContChain(eff.next, hl, vis, 0))
 
     fun showHandlerChain(hndl) =
       if hndl is __HandleBlock then
-        let tailStr = if hndl.contHead === eff.handleBlockList.tail then ", tail" else ""
+        let tailStr = if hndl.contHead === eff.tail then ", tail" else ""
         let handlerTailStr = if hndl === eff.handleBlockList.tail then ", handler-tail" else ""
-        hndl.handler.constructor.name + tailStr + handlerTailStr + " -> " + showContChain(hndl.contHead.next, hndl.lastHandlerCont)
-      else if hndl !== null then
-        "(NOT HANDLE)"
-      else
+        hl.set("last-handler-cont", new Set([hndl.lastHandlerCont]))
+        hndl.handler.constructor.name + tailStr + handlerTailStr + " -> " + showContChain(hndl.contHead.next, hl, vis, 0)
+      else if hndl === null then
         "(null)"
+      else
+        "(NOT HANDLE BLOCK)"
 
     let cur = eff.handleBlockList.next
     while cur !== null do
@@ -116,6 +123,7 @@ fun debugEff(eff) =
 
 // return either new effect, final result or the same continuation if there is no handler
 fun __handleEffect(cur) =
+  // debugEff(cur)
   // find the handle block corresponding to the current effect
   let prevBlock = cur.handleBlockList
   while prevBlock.next is __HandleBlock and prevBlock.next.handler !== cur.handler do
@@ -136,39 +144,18 @@ fun __handleEffect(cur) =
 
   // handle the effect, where the handler continuation will be appended to handleBlock.contHead.next
   let savedNext = handleBlock.contHead.next
-  set cur = cur.handlerFun(__resume(cur, handleBlock.contHead))
+  set cur = cur.handlerFun(__resume(cur), handleBlock)
   if cur is __EffectSig then
     // relink the unlinked handle blocks
     set
       cur.handleBlockList.tail.next = handleBlock
       cur.handleBlockList.tail = origTailBlock
+    cur
   else
     // resume the unlinked handle blocks
-    return __resumeHandleBlocks(handleBlock, origTailBlock, cur)
+    __resumeHandleBlocks(handleBlock, origTailBlock, cur)
 
-  // fixup: 3 cases
-  if savedNext !== handleBlock.contHead.next then
-    // handler inserted to handle block directly due to effect raised during resume call
-    set handleBlock.contHead.next.next = savedNext
-  else if cur.tail.next !== null then
-    // handler appended to cur.tail directly due to effect raised outside of resume call
-    if cur.tail.next.next !== null do
-      throw Error("Internal Error: handler must be at tail")
-    set
-      cur.tail.next.next = handleBlock.contHead.next
-      handleBlock.contHead.next = cur.tail.next
-      cur.tail.next = null
-  else
-    // handler raised effect during tail call, which means the handler is already completed
-    ()
-
-  // this is used for setting cur.tail in case of unwinding, only used for the very last handle block in the effect trace
-  if handleBlock.lastHandlerCont === null do
-    set handleBlock.lastHandlerCont = handleBlock.contHead.next
-
-  cur
-
-fun __resume(cur, tail)(value) =
+fun __resume(cur)(value) =
   if cur.resumed do
     throw Error("Multiple resumption")
   set cur.resumed = true
@@ -178,15 +165,10 @@ fun __resume(cur, tail)(value) =
     cont is __Cont do
       set value = cont.resume(value)
       if value is __EffectSig then
-        if value.tail.next !== cont do
-          if cont.next !== null and value.tail.next !== null do
-            throw Error("Internal Error: unexpected continuation")
-        // in tail call optimization, the continuation is not appended, we append it here
-        if value.tail.next === null do
-          // since it is a tail call, it is already completed so we append the continuation after it
+        if cont.completed then
           set value.tail.next = cont.next
-        // we are returning to handler, which performs unwinding so tail is needed
-        set value.tail = tail
+        else
+          set value.tail.next = cont
         if cur.handleBlockList.next !== null do
           set
             value.handleBlockList.tail.next = cur.handleBlockList.next
@@ -199,10 +181,7 @@ fun __resume(cur, tail)(value) =
   if cur.handleBlockList.next === null then
     value
   else
-    set cur = __resumeHandleBlocks(cur.handleBlockList.next, cur.handleBlockList.tail, value)
-    if cur is __EffectSig do
-      set cur.tail = tail
-    cur
+    __resumeHandleBlocks(cur.handleBlockList.next, cur.handleBlockList.tail, value)
 
 // this does not set the tail when effect is raised during resumption
 fun __resumeHandleBlocks(handleBlock, tailHandleBlock, value) =
@@ -210,23 +189,13 @@ fun __resumeHandleBlocks(handleBlock, tailHandleBlock, value) =
     handleBlock.contHead.next is __Cont then
       // resuming tailHandlerList or post handler continuations
       set value = handleBlock.contHead.next.resume(value)
-      if value is __EffectSig then
-        if value.tail.next !== handleBlock.contHead.next and value.tail.next !== null do
-            throw Error("Internal Error: unexpected continuation during handle block resumption")
-        if value.tail is __TailList then
-          // the continuation belong to handler and handler invokes resume
-          ()
-        else if value.tail.next === null then
-          // if this is a tail call that results in effect, the continuation is already completed
-          // and must be removed
-          set handleBlock.contHead.next = handleBlock.contHead.next.next
-        else ()
+      if handleBlock.contHead.next.completed do
+        set handleBlock.contHead.next = handleBlock.contHead.next.next
+      if value is __EffectSig do
         set
           value.handleBlockList.tail.next = handleBlock
           value.handleBlockList.tail = tailHandleBlock
         return value
-      else
-        set handleBlock.contHead.next = handleBlock.contHead.next.next
     handleBlock.next is __HandleBlock then
       set handleBlock = handleBlock.next
     else

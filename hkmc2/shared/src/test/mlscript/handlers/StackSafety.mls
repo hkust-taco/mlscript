@@ -23,12 +23,13 @@ hi(0)
 //│ let hi, res, handleBlock$;
 //│ hi = function hi(n) {
 //│   let scrut, tmp, stackDelayRes, Cont$func$hi$StackSafety$_mls_L18_4_47$1;
-//│   Cont$func$hi$StackSafety$_mls_L18_4_47$1 = function Cont$func$hi$StackSafety$_mls_L18_4_47$(pc1) { return new Cont$func$hi$StackSafety$_mls_L18_4_47$.class(pc1); };
+//│   Cont$func$hi$StackSafety$_mls_L18_4_47$1 = function Cont$func$hi$StackSafety$_mls_L18_4_47$(pc1, next1) { return new Cont$func$hi$StackSafety$_mls_L18_4_47$.class(pc1, next1); };
 //│   Cont$func$hi$StackSafety$_mls_L18_4_47$1.class = class Cont$func$hi$StackSafety$_mls_L18_4_47$ extends runtime.__Cont.class {
-//│     constructor(pc) {
+//│     constructor(pc, next) {
 //│       let tmp1;
-//│       tmp1 = super(null, null);
+//│       tmp1 = super(next, false);
 //│       this.pc = pc;
+//│       this.next = next;
 //│     }
 //│     resume(value$) {
 //│       if (this.pc === 0) {
@@ -38,10 +39,12 @@ hi(0)
 //│         if (this.pc === 0) {
 //│           scrut = n == 0;
 //│           if (scrut === true) {
+//│             this.completed = true;
 //│             return 0
 //│           } else {
 //│             tmp = n - 1;
 //│             runtime.__stackDepth = runtime.__stackDepth + 1;
+//│             this.completed = true;
 //│             return hi(tmp)
 //│           }
 //│           this.pc = 1;
@@ -52,11 +55,11 @@ hi(0)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$func$hi$StackSafety$_mls_L18_4_47$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$func$hi$StackSafety$_mls_L18_4_47$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
 //│   };
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.__EffectSig.class) {
-//│     stackDelayRes.tail.next = new Cont$func$hi$StackSafety$_mls_L18_4_47$1.class(0);
+//│     stackDelayRes.tail.next = new Cont$func$hi$StackSafety$_mls_L18_4_47$1.class(0, null);
 //│     stackDelayRes.tail = stackDelayRes.tail.next;
 //│     return stackDelayRes
 //│   }
@@ -70,21 +73,22 @@ hi(0)
 //│   }
 //│ };
 //│ handleBlock$ = function handleBlock$() {
-//│   let stackHandler, res1, Cont$handleBlock1, StackDelay$1;
+//│   let stackHandler, res1, Cont$handleBlock$stackHandler$1, StackDelay$1;
 //│   StackDelay$1 = class StackDelay$ extends runtime.__StackDelay {
 //│     constructor() {
 //│       let tmp;
 //│       tmp = super();
 //│     }
 //│     perform() {
-//│       return runtime.__mkEffect(stackHandler, (resume) => {
-//│         let res2, Cont$handler$1;
-//│         Cont$handler$1 = function Cont$handler$(pc1) { return new Cont$handler$.class(pc1); };
-//│         Cont$handler$1.class = class Cont$handler$ extends runtime.__Cont.class {
-//│           constructor(pc) {
+//│       return runtime.__mkEffect(stackHandler, (resume, handleBlock) => {
+//│         let res2, Cont$handler$stackHandler$1;
+//│         Cont$handler$stackHandler$1 = function Cont$handler$stackHandler$(pc1, next1) { return new Cont$handler$stackHandler$.class(pc1, next1); };
+//│         Cont$handler$stackHandler$1.class = class Cont$handler$stackHandler$ extends runtime.__Cont.class {
+//│           constructor(pc, next) {
 //│             let tmp;
-//│             tmp = super(null, null);
+//│             tmp = super(next, false);
 //│             this.pc = pc;
+//│             this.next = next;
 //│           }
 //│           resume(value$) {
 //│             if (this.pc === 4) {
@@ -93,22 +97,27 @@ hi(0)
 //│             contLoop: while (true) {
 //│               if (this.pc === 4) {
 //│                 if (res2 instanceof runtime.__Return.class) {
+//│                   this.completed = true;
 //│                   return res2
 //│                 }
 //│                 this.pc = 5;
 //│                 continue contLoop;
 //│               } else if (this.pc === 5) {
+//│                 this.completed = true;
 //│                 return res2
 //│               }
 //│               break;
 //│             }
 //│           }
-//│           toString() { return "Cont$handler$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│           toString() { return "Cont$handler$stackHandler$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
 //│         };
 //│         runtime.__stackOffset = runtime.__stackDepth;
 //│         res2 = resume();
 //│         if (res2 instanceof runtime.__EffectSig.class) {
-//│           res2.tail.next = new Cont$handler$1.class(4);
+//│           handleBlock.contHead.next = new Cont$handler$stackHandler$1.class(4, handleBlock.contHead.next);
+//│           if (handleBlock.lastHandlerCont === null) {
+//│             handleBlock.lastHandlerCont = handleBlock.contHead.next;
+//│           }
 //│           return res2
 //│         }
 //│         if (res2 instanceof runtime.__Return.class) {
@@ -120,12 +129,13 @@ hi(0)
 //│     toString() { return "StackDelay$"; }
 //│   };
 //│   stackHandler = new StackDelay$1();
-//│   Cont$handleBlock1 = function Cont$handleBlock(pc1) { return new Cont$handleBlock.class(pc1); };
-//│   Cont$handleBlock1.class = class Cont$handleBlock extends runtime.__Cont.class {
-//│     constructor(pc) {
+//│   Cont$handleBlock$stackHandler$1 = function Cont$handleBlock$stackHandler$(pc1, next1) { return new Cont$handleBlock$stackHandler$.class(pc1, next1); };
+//│   Cont$handleBlock$stackHandler$1.class = class Cont$handleBlock$stackHandler$ extends runtime.__Cont.class {
+//│     constructor(pc, next) {
 //│       let tmp;
-//│       tmp = super(null, null);
+//│       tmp = super(next, false);
 //│       this.pc = pc;
+//│       this.next = next;
 //│     }
 //│     resume(value$) {
 //│       if (this.pc === 2) {
@@ -134,17 +144,19 @@ hi(0)
 //│       contLoop: while (true) {
 //│         if (this.pc === 2) {
 //│           if (res1 instanceof runtime.__Return.class) {
+//│             this.completed = true;
 //│             return res1
 //│           }
 //│           this.pc = 3;
 //│           continue contLoop;
 //│         } else if (this.pc === 3) {
+//│           this.completed = true;
 //│           return res1
 //│         }
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$handleBlock(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$handleBlock$stackHandler$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
 //│   };
 //│   runtime.__stackLimit = 5;
 //│   runtime.__stackOffset = 0;
@@ -152,7 +164,7 @@ hi(0)
 //│   runtime.__stackHandler = stackHandler;
 //│   res1 = hi(0);
 //│   if (res1 instanceof runtime.__EffectSig.class) {
-//│     res1.tail.next = new Cont$handleBlock1(2);
+//│     res1.tail.next = new Cont$handleBlock$stackHandler$1(2, null);
 //│     return runtime.__handleBlockImpl(res1, stackHandler)
 //│   }
 //│   if (res1 instanceof runtime.__Return.class) {
@@ -181,13 +193,14 @@ sum(10000)
 //│ JS (unsanitized):
 //│ let sum1, res1, handleBlock$1;
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, Cont$func$sum$StackSafety$_mls_L176_4_57$1;
-//│   Cont$func$sum$StackSafety$_mls_L176_4_57$1 = function Cont$func$sum$StackSafety$_mls_L176_4_57$(pc1) { return new Cont$func$sum$StackSafety$_mls_L176_4_57$.class(pc1); };
-//│   Cont$func$sum$StackSafety$_mls_L176_4_57$1.class = class Cont$func$sum$StackSafety$_mls_L176_4_57$ extends runtime.__Cont.class {
-//│     constructor(pc) {
+//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, Cont$func$sum$StackSafety$_mls_L188_4_57$1;
+//│   Cont$func$sum$StackSafety$_mls_L188_4_57$1 = function Cont$func$sum$StackSafety$_mls_L188_4_57$(pc1, next1) { return new Cont$func$sum$StackSafety$_mls_L188_4_57$.class(pc1, next1); };
+//│   Cont$func$sum$StackSafety$_mls_L188_4_57$1.class = class Cont$func$sum$StackSafety$_mls_L188_4_57$ extends runtime.__Cont.class {
+//│     constructor(pc, next) {
 //│       let tmp2;
-//│       tmp2 = super(null, null);
+//│       tmp2 = super(next, false);
 //│       this.pc = pc;
+//│       this.next = next;
 //│     }
 //│     resume(value$) {
 //│       if (this.pc === 0) {
@@ -199,6 +212,7 @@ sum(10000)
 //│         if (this.pc === 0) {
 //│           scrut = n == 0;
 //│           if (scrut === true) {
+//│             this.completed = true;
 //│             return 0
 //│           } else {
 //│             tmp = n - 1;
@@ -206,7 +220,6 @@ sum(10000)
 //│             tmp1 = sum1(tmp);
 //│             if (tmp1 instanceof runtime.__EffectSig.class) {
 //│               this.pc = 1;
-//│               tmp1.tail.next = this;
 //│               return tmp1
 //│             }
 //│             this.pc = 1;
@@ -218,17 +231,18 @@ sum(10000)
 //│           break contLoop;
 //│         } else if (this.pc === 1) {
 //│           tmp1 = runtime.resetDepth(tmp1, curDepth);
+//│           this.completed = true;
 //│           return n + tmp1
 //│         }
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$func$sum$StackSafety$_mls_L176_4_57$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$func$sum$StackSafety$_mls_L188_4_57$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
 //│   };
 //│   curDepth = runtime.__stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.__EffectSig.class) {
-//│     stackDelayRes.tail.next = new Cont$func$sum$StackSafety$_mls_L176_4_57$1.class(0);
+//│     stackDelayRes.tail.next = new Cont$func$sum$StackSafety$_mls_L188_4_57$1.class(0, null);
 //│     stackDelayRes.tail = stackDelayRes.tail.next;
 //│     return stackDelayRes
 //│   }
@@ -240,7 +254,7 @@ sum(10000)
 //│     runtime.__stackDepth = runtime.__stackDepth + 1;
 //│     tmp1 = sum1(tmp);
 //│     if (tmp1 instanceof runtime.__EffectSig.class) {
-//│       tmp1.tail.next = new Cont$func$sum$StackSafety$_mls_L176_4_57$1.class(1);
+//│       tmp1.tail.next = new Cont$func$sum$StackSafety$_mls_L188_4_57$1.class(1, null);
 //│       tmp1.tail = tmp1.tail.next;
 //│       return tmp1
 //│     }
@@ -249,21 +263,22 @@ sum(10000)
 //│   }
 //│ };
 //│ handleBlock$1 = function handleBlock$() {
-//│   let stackHandler, res2, Cont$handleBlock2, StackDelay$2;
+//│   let stackHandler, res2, Cont$handleBlock$stackHandler$2, StackDelay$2;
 //│   StackDelay$2 = class StackDelay$1 extends runtime.__StackDelay {
 //│     constructor() {
 //│       let tmp;
 //│       tmp = super();
 //│     }
 //│     perform() {
-//│       return runtime.__mkEffect(stackHandler, (resume) => {
-//│         let res3, Cont$handler$2;
-//│         Cont$handler$2 = function Cont$handler$(pc1) { return new Cont$handler$.class(pc1); };
-//│         Cont$handler$2.class = class Cont$handler$1 extends runtime.__Cont.class {
-//│           constructor(pc) {
+//│       return runtime.__mkEffect(stackHandler, (resume, handleBlock) => {
+//│         let res3, Cont$handler$stackHandler$2;
+//│         Cont$handler$stackHandler$2 = function Cont$handler$stackHandler$(pc1, next1) { return new Cont$handler$stackHandler$.class(pc1, next1); };
+//│         Cont$handler$stackHandler$2.class = class Cont$handler$stackHandler$1 extends runtime.__Cont.class {
+//│           constructor(pc, next) {
 //│             let tmp;
-//│             tmp = super(null, null);
+//│             tmp = super(next, false);
 //│             this.pc = pc;
+//│             this.next = next;
 //│           }
 //│           resume(value$) {
 //│             if (this.pc === 5) {
@@ -272,22 +287,27 @@ sum(10000)
 //│             contLoop: while (true) {
 //│               if (this.pc === 5) {
 //│                 if (res3 instanceof runtime.__Return.class) {
+//│                   this.completed = true;
 //│                   return res3
 //│                 }
 //│                 this.pc = 6;
 //│                 continue contLoop;
 //│               } else if (this.pc === 6) {
+//│                 this.completed = true;
 //│                 return res3
 //│               }
 //│               break;
 //│             }
 //│           }
-//│           toString() { return "Cont$handler$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│           toString() { return "Cont$handler$stackHandler$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
 //│         };
 //│         runtime.__stackOffset = runtime.__stackDepth;
 //│         res3 = resume();
 //│         if (res3 instanceof runtime.__EffectSig.class) {
-//│           res3.tail.next = new Cont$handler$2.class(5);
+//│           handleBlock.contHead.next = new Cont$handler$stackHandler$2.class(5, handleBlock.contHead.next);
+//│           if (handleBlock.lastHandlerCont === null) {
+//│             handleBlock.lastHandlerCont = handleBlock.contHead.next;
+//│           }
 //│           return res3
 //│         }
 //│         if (res3 instanceof runtime.__Return.class) {
@@ -299,12 +319,13 @@ sum(10000)
 //│     toString() { return "StackDelay$"; }
 //│   };
 //│   stackHandler = new StackDelay$2();
-//│   Cont$handleBlock2 = function Cont$handleBlock(pc1) { return new Cont$handleBlock.class(pc1); };
-//│   Cont$handleBlock2.class = class Cont$handleBlock1 extends runtime.__Cont.class {
-//│     constructor(pc) {
+//│   Cont$handleBlock$stackHandler$2 = function Cont$handleBlock$stackHandler$(pc1, next1) { return new Cont$handleBlock$stackHandler$.class(pc1, next1); };
+//│   Cont$handleBlock$stackHandler$2.class = class Cont$handleBlock$stackHandler$1 extends runtime.__Cont.class {
+//│     constructor(pc, next) {
 //│       let tmp;
-//│       tmp = super(null, null);
+//│       tmp = super(next, false);
 //│       this.pc = pc;
+//│       this.next = next;
 //│     }
 //│     resume(value$) {
 //│       if (this.pc === 3) {
@@ -313,17 +334,19 @@ sum(10000)
 //│       contLoop: while (true) {
 //│         if (this.pc === 3) {
 //│           if (res2 instanceof runtime.__Return.class) {
+//│             this.completed = true;
 //│             return res2
 //│           }
 //│           this.pc = 4;
 //│           continue contLoop;
 //│         } else if (this.pc === 4) {
+//│           this.completed = true;
 //│           return res2
 //│         }
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$handleBlock(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$handleBlock$stackHandler$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
 //│   };
 //│   runtime.__stackLimit = 1000;
 //│   runtime.__stackOffset = 0;
@@ -331,7 +354,7 @@ sum(10000)
 //│   runtime.__stackHandler = stackHandler;
 //│   res2 = sum1(10000);
 //│   if (res2 instanceof runtime.__EffectSig.class) {
-//│     res2.tail.next = new Cont$handleBlock2(3);
+//│     res2.tail.next = new Cont$handleBlock$stackHandler$2(3, null);
 //│     return runtime.__handleBlockImpl(res2, stackHandler)
 //│   }
 //│   if (res2 instanceof runtime.__Return.class) {

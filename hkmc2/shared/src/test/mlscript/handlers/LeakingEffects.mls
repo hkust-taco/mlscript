@@ -35,7 +35,9 @@ while xs.pop() is
 //│ xs = []
 
 
-:re
+// g is non-resumptive, which means g.perform("a") does not resume
+// hence it should exit the entire handle block with the return value of xs.push(k1)
+:expect 1
 handle h = Effect with
   fun perform(arg)(k) =
     print("A " + arg)
@@ -62,8 +64,6 @@ print(g.perform("c"))
 // g.perform("adios")
 //│ > A hi
 //│ > B hi a
-//│ > 1
-//│ > —
-//│ ═══[RUNTIME ERROR] Error: Unhandled effects
+//│ = 1
 
 
