@@ -61,7 +61,6 @@ A(2).getA()
 //│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
 
 
-:todo
 fun foo(x, y) =
   object M with
     val test = 2
@@ -70,7 +69,6 @@ fun foo(x, y) =
       x + y + test
   M.foo()
 
-:todo
 :expect 14
 foo(10, 0)
 //│ = 14

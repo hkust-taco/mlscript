@@ -130,11 +130,12 @@ class Lifter(using State, Raise):
     * The context of the class lifter. One can create an empty context using `Lifter.empty`.
     * 
     * @param usedLocals Describes the locals belonging to each function that are accessed/mutated by nested definitions.
+    * @param nestedDefns Definitions which are nested in a given definition (shallow).
     * @param accessInfo Which previously defined variables/definitions could be accessed/modified by a particular definition, 
     * possibly through calls to other functions or by constructing a class.
     * @param ignoredDefns The definitions which must not be lifted.
     * @param inScopeDefns Definitions which are in scope to another definition (excluding itself and its nested definitions).
-    * @param modules The modules in the block to be lifted.
+    * @param modLocals A map from the modules and objects to the local to which it is instantiated after lifting.
     * @param localCaptureSyms The symbols in a capture corresponding to a particular local
     * @param prevFnLocals Locals belonging to function definitions that have already been traversed
     * @param prevClsDefns Class definitions that have already been traversed, excluding modules
@@ -151,7 +152,7 @@ class Lifter(using State, Raise):
     val accessInfo: Map[BlockMemberSymbol, AccessInfo] = Map.empty,
     val ignoredDefns: Set[BlockMemberSymbol] = Set.empty,
     val inScopeDefns: Map[BlockMemberSymbol, Set[BlockMemberSymbol]] = Map.empty,
-    val modulesObjs: Set[BlockMemberSymbol] = Set.empty,
+    val modLocals: Map[BlockMemberSymbol, Local] = Map.empty,
     val localCaptureSyms: Map[Local, LocalSymbol & NamedSymbol] = Map.empty,
     val prevFnLocals: FreeVars = FreeVars.empty,
     val prevClsDefns: List[ClsLikeDefn] = Nil,
@@ -163,22 +164,19 @@ class Lifter(using State, Raise):
   ):
     // gets the function to which a local belongs
     def lookup(l: Local) = usedLocals.lookup(l)
-    // the path to access the capture of a particular function
+
     def getCapturePath(b: BlockMemberSymbol) = capturePaths.get(b)
-    // the path to access the capture of the function that a local belongs to
     def getLocalClosPath(l: Local) = lookup(l).flatMap(capturePaths.get(_))
-    // the symbol in the capture corresponding to a particular local
     def getLocalCaptureSym(l: Local) = localCaptureSyms.get(l)
-    // how to access a variable in the local scope
     def getLocalPath(l: Local) = localPaths.get(l)
     def getIsymPath(l: InnerSymbol) = isymPaths.get(l)
     def getIgnoredBmsPath(b: BlockMemberSymbol) = ignoredBmsPaths.get(b)
     def ignored(b: BlockMemberSymbol) = ignoredDefns.contains(b)
-    def isModOrObj(b: BlockMemberSymbol) = modulesObjs.contains(b)
+    def isModOrObj(b: BlockMemberSymbol) = modLocals.contains(b)
     def getAccesses(sym: BlockMemberSymbol) = accessInfo(sym)
     
     def addIgnored(defns: Set[BlockMemberSymbol]) = copy(ignoredDefns = ignoredDefns ++ defns)
-    def addModulesObjs(mods: Set[BlockMemberSymbol]) = copy(modulesObjs = mods ++ modulesObjs)
+    def withModLocals(mp: Map[BlockMemberSymbol, Local]) = copy(modLocals = modLocals ++ mp)
     def withDefns(mp: Map[BlockMemberSymbol, Defn]) = copy(defns = mp)
     def withNestedDefns(mp: Map[BlockMemberSymbol, List[Defn]]) = copy(nestedDefns = mp)
     def withAccesses(mp: Map[BlockMemberSymbol, AccessInfo]) = copy(accessInfo = mp)
@@ -302,7 +300,6 @@ class Lifter(using State, Raise):
     val reqdBms: List[BlockMemberSymbol], // pass ignored blockmembersymbols
     val fakeCtorBms: Option[BlockMemberSymbol], // only for classes
     val singleCallBms: BlockMemberSymbol, // optimization
-    val modLocal: Opt[Local] // for modules
   )
 
   case class Lifted[+T <: Defn](
@@ -440,10 +437,16 @@ class Lifter(using State, Raise):
       .map(sym => ctx.lookup(sym).get)
       .toList.sortBy(_.uid)
 
-    val refMod = inScopeRefs.intersect(ctx.modulesObjs)
+    val refMod = inScopeRefs.intersect(ctx.modLocals.keySet)
     val includedLocals = ((accessed -- ctx.prevFnLocals.reqCapture) ++ refMod).toList.sortBy(_.uid)
     val clsCaptures: List[InnerSymbol] = ctx.prevClsDefns.map(_.isym)
     val refBms = inScopeRefs.intersect(ctx.ignoredDefns).toList.sortBy(_.uid)
+
+    val modLocal = d match
+      case c: ClsLikeDefn if modOrObj(c) => parentCls match
+        case None => S(VarSymbol(Tree.Ident(c.sym.nme + "$")))
+        case Some(value) => S(TermSymbol(syntax.ImmutVal, S(value.isym), Tree.Ident(c.sym.nme + "$")))
+      case _ => N
 
     if ctx.ignored(d.sym) ||
       (includedCaptures.isEmpty && includedLocals.isEmpty && clsCaptures.isEmpty && refBms.isEmpty) then
@@ -454,12 +457,6 @@ class Lifter(using State, Raise):
           createLiftInfoCls(c, ctx)
         case _ => Map.empty
     else
-      val modLocal = d match
-        case c: ClsLikeDefn if modOrObj(c) => parentCls match
-          case None => S(VarSymbol(Tree.Ident(c.sym.nme + "$")))
-          case Some(value) => S(TermSymbol(syntax.ImmutVal, S(value.isym), Tree.Ident(c.sym.nme + "$")))
-        case _ => N
-
       val fakeCtorBms = d match
         case c: ClsLikeDefn if !modLocal.isDefined => S(BlockMemberSymbol(d.sym.nme + "$ctor", Nil))
         case _ => N
@@ -468,7 +465,7 @@ class Lifter(using State, Raise):
 
       val info = LiftedInfo(
         includedCaptures, includedLocals, clsCaptures,
-        refBms, fakeCtorBms, singleCallBms, modLocal
+        refBms, fakeCtorBms, singleCallBms
       )
       
       d match
@@ -515,11 +512,16 @@ class Lifter(using State, Raise):
             case None => super.applyBlock(b)
             case Some(value) => Assign(value, applyResult(rhs), applyBlock(rest))
         
-        case Define(d: Defn, rest: Block) => ctx.getBmsReqdInfo(d.sym) match
-          case Some(LiftedInfo(modLocal = S(sym))) =>
-            blockBuilder
-              .assign(sym, Call(d.sym.asPath, getCallArgs(d.sym, ctx))(true, false))
-              .rest(applyBlock(rest))
+        case Define(d: Defn, rest: Block) => ctx.modLocals.get(d.sym) match 
+          case Some(sym) => ctx.getBmsReqdInfo(d.sym) match
+            case Some(_) => 
+              blockBuilder
+                .assign(sym, Call(d.sym.asPath, getCallArgs(d.sym, ctx))(true, false))
+                .rest(applyBlock(rest))
+            case None => 
+              blockBuilder
+                .assign(sym, Call(d.sym.asPath, Nil)(true, false))
+                .rest(applyBlock(rest))
           case _ => super.applyBlock(b)
         
         case _ => super.applyBlock(b)
@@ -657,7 +659,7 @@ class Lifter(using State, Raise):
       case f: FunDefn => liftDefnsInFn(f, ctx)
       case c: ClsLikeDefn => liftDefnsInCls(c, ctx)
       case _ => Lifted(d, Nil)
-    case S(LiftedInfo(includedCaptures, includedLocals, clsCaptures, reqdBms, fakeCtorBms, singleCallBms, modLocal)) =>
+    case S(LiftedInfo(includedCaptures, includedLocals, clsCaptures, reqdBms, fakeCtorBms, singleCallBms)) =>
       val createSym = d match
         case d: ClsLikeDefn =>
           // due to the possibility of capturing a TempSymbol in HandlerLowering, it is necessary to generate a discriminator
@@ -831,8 +833,8 @@ class Lifter(using State, Raise):
         )
       else Nil
     val nestedClsPaths: Map[Local, Local] = ctorIncluded.map:
-      case c: ClsLikeDefn if modOrObj(c) => ctx.getBmsReqdInfo(c.sym) match
-        case Some(LiftedInfo(modLocal = Some(sym))) => S(c.sym -> sym)
+      case c: ClsLikeDefn if modOrObj(c) => ctx.modLocals.get(c.sym) match
+        case Some(sym) => S(c.sym -> sym)
         case _ => S(c.sym -> c.sym)
       case _ => None
     .collect:
@@ -893,8 +895,8 @@ class Lifter(using State, Raise):
     val (ignored, included) = nested.partition(d => ctx.ignored(d.sym))
 
     val modPaths: Map[Local, Local] = nested.map:
-        case c: ClsLikeDefn if modOrObj(c) => ctx.getBmsReqdInfo(c.sym) match
-          case Some(LiftedInfo(modLocal = Some(sym))) => S(c.sym -> sym)
+        case c: ClsLikeDefn if modOrObj(c) => ctx.modLocals.get(c.sym) match
+          case Some(sym) => S(c.sym -> sym)
           case _ => S(c.sym -> c.sym)
         case _ => None
       .collect:
@@ -1005,9 +1007,21 @@ class Lifter(using State, Raise):
 
     walker.applyBlock(b)
 
+    val modLocals = (modules ++ objects).map: c =>
+      analyzer.nestedIn.get(c.sym) match
+        case Some(bms) =>
+          val nestedIn = analyzer.defnsMap(bms)
+          nestedIn match
+            case cls: ClsLikeDefn => S(c.sym -> TermSymbol(syntax.ImmutVal, S(cls.isym), Tree.Ident(c.sym.nme + "$")))
+            case _ => S(c.sym -> VarSymbol(Tree.Ident(c.sym.nme + "$")))
+        case _ => N
+    .collect:
+      case S(v) => v
+    .toMap
+
     val ctxx = ctx
       .addIgnored(unliftable)
-      .addModulesObjs((modules ++ objects).map(_.sym).toSet)
+      .withModLocals(modLocals)
       .addIsymPaths(modules.map(m => m.isym -> m.sym).toMap)
 
     val walker1 = new BlockTransformerShallow(SymbolSubst()):

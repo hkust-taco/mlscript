@@ -1,0 +1,149 @@
+:js
+:lift
+:todo
+
+// We use the optional `symbol` parameter of `Select` to detect references to the
+// BlockMemberSymbol. But when this symbol is not present, there is no way to properly
+// detect it. What do to?
+:expect 3
+class A(x) with
+  class B(y) with
+    fun getB() = x + y
+  fun getA() = this.B(2).getB()
+A(1).getA()
+//│ ═══[RUNTIME ERROR] TypeError: this.B is not a function
+//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+
+// This is due to the order of classes after lifting
+class Test
+fun hello() =
+  class Test2 extends Test
+  2
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
+
+// This is due to subclasses not calling `super` with the required locals. The analysis to
+// determine which locals are required is in-place yet.
+:expect 2
+fun test(x) =
+  class A with
+    fun get = x
+  class B() extends A
+  B().get
+test(2)
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'get' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+
+/// The following are related to first-class classes and instance checks. ///
+
+:w
+:expect 1
+fun f(used1, unused1) =
+  fun g(g_arg) =
+    let used3 = 2
+    fun h = used3
+    used1 + h
+  let unused2 = 2
+  class Test(a) with
+    fun get() = used1
+  let foo = Test
+  foo(unused1)
+f(1, 2).get()
+//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a first-class class.
+//│ = 1
+
+
+:todo
+:w
+fun foo(x, n) =
+  class C()
+  let res = if x is C then "Y" else "N"
+  if n > 0 then res + foo(C(), n - 1) else ""
+//│ ═══[WARNING] Cannot yet lift the class/module `C` as it is used in an instance check.
+
+:todo
+:w
+fun foo() =
+  class C()
+  C
+//│ ═══[WARNING] Cannot yet lift the class `C` as it is used as a first-class class.
+
+:todo
+:expect "NN"
+foo(0, 2)
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 0 arguments but got 2
+//│ ═══[RUNTIME ERROR] Expected: '"NN"', got: 'undefined'
+
+:todo
+fun test(x) =
+  class A with
+    fun get = x
+  class B() extends A
+  0 is A
+  B().get
+test(2)
+//│ ═══[WARNING] Cannot yet lift the class/module `A` as it is used in an instance check.
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:A (class hkmc2.semantics.BlockMemberSymbol)
+
+/// The following are related to modules and objects. ///
+
+:todo
+fun foo(x, y) =
+  module M with
+    val test = 2
+    fun foo() =
+      set y = 2
+      x + y + test
+  M.foo()
+//│ ═══[WARNING] Modules are not yet properly lifted and will break.
+//│ ═══[WARNING] Modules are not yet properly lifted and will break.
+//│ > let M1, foo2;try { M1 = class M {   static {     return (x$0, y$1) => {       this.x$0 = x$0;       this.y$1 = y$1;       this.test = 2;       return this;     }   }   static foo(...args) {     globalThis.Predef.checkArgs("foo", 0, true, args.length);     let tmp2;     M.y$1 = 2;     tmp2 = M.x$0 + M.y$1;     return tmp2 + M.test   }   static toString() { return "M"; } }; foo2 = function foo(...args) {   globalThis.Predef.checkArgs("foo", 2, true, args.length);   let x = args[0];   let y = args[1];   let M$;   M$ = runtime.checkCall(M1(x, y));   return runtime.checkCall(M$.foo()) }; block$res9 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                  ^^^^^^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Illegal return statement
+
+:expect 14
+foo(10, 0)
+//│ ═══[RUNTIME ERROR] ReferenceError: foo2 is not defined
+//│ ═══[RUNTIME ERROR] Expected: '14', got: 'undefined'
+
+fun foo(x, y) =
+  module M with
+    fun foo() =
+      set y = 2
+      x + y
+  fun foo = M.foo()
+  foo
+//│ ═══[WARNING] Modules are not yet properly lifted and will break.
+//│ ═══[WARNING] Modules are not yet properly lifted and will break.
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: M$ (class hkmc2.semantics.VarSymbol)
+
+:expect 12
+foo(10, 0)
+//│ ═══[RUNTIME ERROR] ReferenceError: foo4 is not defined
+//│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'
+
+
+class A(x) with
+  module M with
+    fun getB() = x
+  fun getA() = M.getB()
+//│ ═══[WARNING] Modules are not yet properly lifted and will break.
+//│ ═══[WARNING] Modules are not yet properly lifted and will break.
+//│ > let M5, A6;try { M5 = class M4 {   static {     return (A$instance$0) => {       this.A$instance$0 = A$instance$0;       return this;     }   }   static getB(...args) {     globalThis.Predef.checkArgs("getB", 0, true, args.length);     return M4.A$instance$0.x   }   static toString() { return "M"; } }; A6 = function A(...args1) {   return new A.class(...args1); }; A6.class = class A5 {   constructor(x) {     this.x = x;     this.M$ = runtime.checkCall(M5(this));   }   get getA$__checkNotMethod() { runtime.deboundMethod("getA", "A"); }   getA(...args) {     globalThis.Predef.checkArgs("getA", 0, true, args.length);     return runtime.checkCall(this.M$.getB())   }   toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; } }; block$res13 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                 ^^^^^^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Illegal return statement
+
+:expect 2
+A(2).getA()
+//│ ═══[RUNTIME ERROR] ReferenceError: A6 is not defined
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+
+fun foo(x) =
+  object Foo with
+    fun self1 = this
+    fun self2 = Foo
+  class Bar extends Foo
+  new Bar.self2
+foo(2)
+//│ ═══[WARNING] Cannot yet lift the class `Bar` as it is used as a first-class class.
+//│ ═══[WARNING] Cannot yet lift the class `Bar` as it is used as a first-class class.
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: Foo$ (class hkmc2.semantics.VarSymbol)
