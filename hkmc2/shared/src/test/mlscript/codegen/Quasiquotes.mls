@@ -197,3 +197,18 @@ let gib12 = Gib12.res
 gib12(0, 1)
 //│ = 144
 //│ gib12 = [function]
+
+
+QuoteExample2.genSafeDiv()
+
+
+import "../../mlscript-compile/quotes/SafeDiv.mls"
+
+let safeDiv = SafeDiv.res
+//│ safeDiv = [function]
+
+safeDiv(10, 3, 0)
+//│ = 3.3333333333333335
+
+safeDiv(10, 0, -1)
+//│ = -1

@@ -27,6 +27,11 @@ QuoteExample21 = class QuoteExample2 {
     let tmp;
     tmp = QuoteExample.gib(12);
     return Predef.term.codegen(tmp, "./hkmc2/shared/src/test/mlscript-compile/quotes/Gib12.mls")
+  } 
+  static genSafeDiv() {
+    let tmp;
+    tmp = QuoteExample.safeDiv();
+    return Predef.term.codegen(tmp, "./hkmc2/shared/src/test/mlscript-compile/quotes/SafeDiv.mls")
   }
   static toString() { return "QuoteExample2"; }
 };

@@ -120,6 +120,49 @@ QuoteExample1 = class QuoteExample {
       x2,
       y1
     ], tmp5)
+  } 
+  static safeDiv() {
+    let tmp, x2, tmp1, y1, tmp2, d, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20, tmp21, tmp22, tmp23, tmp24, tmp25;
+    tmp = globalThis.Predef.term.freshName("x");
+    x2 = new globalThis.Predef.term.Symbol(tmp);
+    tmp1 = globalThis.Predef.term.freshName("y");
+    y1 = new globalThis.Predef.term.Symbol(tmp1);
+    tmp2 = globalThis.Predef.term.freshName("d");
+    d = new globalThis.Predef.term.Symbol(tmp2);
+    tmp3 = globalThis.Predef.term.freshName("scrut");
+    tmp4 = new globalThis.Predef.term.Symbol(tmp3);
+    tmp5 = new globalThis.Predef.term.Symbol("==");
+    tmp6 = new globalThis.Predef.term.Ref(y1);
+    tmp7 = new globalThis.Predef.term.Lit(0.0);
+    tmp8 = new globalThis.Predef.term.Ref(tmp5);
+    tmp9 = new globalThis.Predef.term.Tup([
+      tmp6,
+      tmp7
+    ]);
+    tmp10 = new globalThis.Predef.term.App(tmp8, tmp9);
+    tmp11 = new globalThis.Predef.term.Ref(tmp4);
+    tmp12 = new globalThis.Predef.term.LitPattern(true);
+    tmp13 = new globalThis.Predef.term.Ref(d);
+    tmp14 = new globalThis.Predef.term.Else(tmp13);
+    tmp15 = new globalThis.Predef.term.Branch(tmp11, tmp12, tmp14);
+    tmp16 = new globalThis.Predef.term.Symbol("/");
+    tmp17 = new globalThis.Predef.term.Ref(x2);
+    tmp18 = new globalThis.Predef.term.Ref(y1);
+    tmp19 = new globalThis.Predef.term.Ref(tmp16);
+    tmp20 = new globalThis.Predef.term.Tup([
+      tmp17,
+      tmp18
+    ]);
+    tmp21 = new globalThis.Predef.term.App(tmp19, tmp20);
+    tmp22 = new globalThis.Predef.term.Else(tmp21);
+    tmp23 = new globalThis.Predef.term.Cons(tmp15, tmp22);
+    tmp24 = new globalThis.Predef.term.Let(tmp4, tmp10, tmp23);
+    tmp25 = new globalThis.Predef.term.IfLike(globalThis.Predef.term.KeywordIf, tmp24);
+    return new globalThis.Predef.term.Lam([
+      x2,
+      y1,
+      d
+    ], tmp25)
   }
   static toString() { return "QuoteExample"; }
 };

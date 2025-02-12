@@ -12,3 +12,4 @@ module QuoteExample with
     1 then y
     n then bind of x `+ y, (z => body(y, z)(n - 1))
   fun gib(n) = (x, y) `=> body(x, y)(n)
+  fun safeDiv() = (x, y, d) `=> `if y `== `0.0 then d else x `/ y
