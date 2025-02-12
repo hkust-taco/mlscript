@@ -85,13 +85,13 @@ class BlockTransformer(subst: SymbolSubst):
           (cls2 is cls) && (hdr2 is hdr) && (bod2 is bod) && (rst2 is rst)
         then b else HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod2, rst2)
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
-      val lhs2 = applyPath(lhs)
-      val fld2 = applyPath(fld)
-      val rhs2 = applyResult(rhs)
-      val rest2 = applyBlock(rest)
-      if (lhs2 is lhs) && (fld2 is fld) && (rhs2 is rhs) && (rest2 is rest)
-      then b
-      else AssignDynField(lhs2, fld2, arrayIdx, rhs2, rest2)
+      applyResult2(rhs): rhs2 =>
+        val lhs2 = applyPath(lhs)
+        val fld2 = applyPath(fld)
+        val rest2 = applyBlock(rest)
+        if (lhs2 is lhs) && (fld2 is fld) && (rhs2 is rhs) && (rest2 is rest)
+        then b
+        else AssignDynField(lhs2, fld2, arrayIdx, rhs2, rest2)
       
   
   def applyResult2(r: Result)(k: Result => Block): Block = k(applyResult(r))

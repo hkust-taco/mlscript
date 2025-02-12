@@ -127,4 +127,20 @@ let oops =
 oops.h
 //│ = Handler$h$
 
+let obj = {}
 
+handle h = Effect with
+  fun perform(arg)(k) =
+    k()
+    print(arg)
+set obj.["s"] = h.perform("k")
+//│ > k
+
+fun f() = ()
+
+:fixme
+module A with
+  f()
+  () // defeats tail call optimization
+//│ > let A1;try { A1 = class A {   static {     let tmp5, Cont$15;     Cont$15 = function Cont$(...args1) { return new Cont$.class(...args1); };     Cont$15.class = class Cont$14 extends globalThis.Predef.__Cont.class {       constructor(pc) {         let tmp6;         tmp6 = super(null, null);         this.pc = pc;       }       get resume$__checkNotMethod() { runtime.deboundMethod("resume", "Cont$"); }       resume(...args) {         globalThis.Predef.checkArgs("resume", 1, true, args.length);         let value$ = args[0];         if (this.pc === 0) {           tmp5 = value$;         }         contLoop: while (true) {           if (this.pc === 1) {             return A           } else if (this.pc === 0) {             this.pc = 1;             continue contLoop;           }           break;         }       }       toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }     };     tmp5 = runtime.checkCall(f());     if (tmp5 instanceof globalThis.Predef.__EffectSig.class) {       tmp5.tail.next = new Cont$15.class(0);       tmp5.tail = tmp5.tail.next;       return tmp5     }     runtime.Unit   }   static toString() { return "A"; } }; block$res13 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Illegal return statement
