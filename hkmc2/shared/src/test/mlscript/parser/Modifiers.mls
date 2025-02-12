@@ -10,3 +10,10 @@ mut mut let x = 1
 //│ 	Modified(keyword 'mut',None,Modified(keyword 'mut',None,LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None)))
 
 
+fun id(spec x) = x
+//│ Parsed:
+//│ 	TermDef(Fun,App(Ident(id),Tup(List(Modified(keyword 'spec',None,Ident(x))))),Some(Ident(x)))
+
+fun add(spec x, spec y) = x + y
+//│ Parsed:
+//│ 	TermDef(Fun,App(Ident(add),Tup(List(Modified(keyword 'spec',None,Ident(x)), Modified(keyword 'spec',None,Ident(y))))),Some(App(Ident(+),Tup(List(Ident(x), Ident(y))))))

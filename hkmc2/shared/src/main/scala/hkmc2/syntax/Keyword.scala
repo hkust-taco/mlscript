@@ -51,6 +51,7 @@ object Keyword:
   val `class` = Keyword("class", N, curPrec)
   val `val` = Keyword("val", N, curPrec)
   val `mut` = Keyword("mut", N, curPrec)
+  val `spec` = Keyword("spec", N, curPrec)
   
   val eqPrec = nextPrec
   val ascPrec = nextPrec // * `x => x : T` should parsed as `x => (x : T)`
@@ -130,7 +131,7 @@ object Keyword:
   val __ = Keyword("_", N, N)
   
   val modifiers = Set(
-    `abstract`, mut, virtual, `override`, declare, public, `private`)
+    `abstract`, mut, virtual, `override`, declare, public, `private`, `spec`)
   
   type Infix = `and`.type | `or`.type | `then`.type | `else`.type | `is`.type | `:`.type | `->`.type |
     `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type

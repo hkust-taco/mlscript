@@ -494,6 +494,7 @@ object Lexer:
     // "any",
     // "all",
     "mut",
+    "spec",
     "set",
     "do",
     "while",
