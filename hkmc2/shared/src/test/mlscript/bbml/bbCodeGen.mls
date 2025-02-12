@@ -179,12 +179,10 @@ fun not = case
 //│   lambda1 = function lambda(caseScrut) {
 //│     if (caseScrut === true) {
 //│       return false
+//│     } else if (caseScrut === false) {
+//│       return true
 //│     } else {
-//│       if (caseScrut === false) {
-//│         return true
-//│       } else {
-//│         throw new globalThis.Error("match error");
-//│       }
+//│       throw new globalThis.Error("match error");
 //│     }
 //│   };
 //│   return lambda1

@@ -12,16 +12,12 @@ Example1 = class Example {
   static test(x1) {
     if (globalThis.Number.isInteger(x1)) {
       return "int"
+    } else if (typeof x1 === 'number') {
+      return "num"
+    } else if (typeof x1 === 'string') {
+      return "str"
     } else {
-      if (typeof x1 === 'number') {
-        return "num"
-      } else {
-        if (typeof x1 === 'string') {
-          return "str"
-        } else {
-          return "other"
-        }
-      }
+      return "other"
     }
   }
   static toString() { return "Example"; }

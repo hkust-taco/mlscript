@@ -86,12 +86,10 @@ val isDefined = case
 //│ lambda11 = function lambda(caseScrut) {
 //│   if (caseScrut instanceof Some1.class) {
 //│     return true
+//│   } else if (caseScrut instanceof None1) {
+//│     return false
 //│   } else {
-//│     if (caseScrut instanceof None1) {
-//│       return false
-//│     } else {
-//│       throw new globalThis.Error("match error");
-//│     }
+//│     throw new this.Error("match error");
 //│   }
 //│ };
 //│ tmp5 = lambda11;

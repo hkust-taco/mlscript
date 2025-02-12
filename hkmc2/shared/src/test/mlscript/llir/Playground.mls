@@ -128,16 +128,12 @@ main()
 //│       None =>
 //│         let* (x$16) = aaa() in
 //│         x$16
+//│       Some =>
+//│         let x$17 = x$15.<Some:x> in
+//│         let* (x$18) = bbb() in
+//│         x$18
 //│       _ =>
-//│         case x$15 of
-//│           Some =>
-//│             let x$17 = x$15.<Some:x> in
-//│             let* (x$18) = bbb() in
-//│             x$18
-//│           _ =>
-//│             panic "match error"
-//│   def j$4() =
-//│     jump j$3()
+//│         panic "match error"
 //│   def j$3() =
 //│     undefined
 //│   let* (x$19) = main() in

@@ -192,20 +192,25 @@ enum Tree extends AutoLocated:
       LetLike(letLike, id, S(App(Ident(nme.init), Tup(id :: r :: Nil))), bodo).withLocOf(this).desugared
     case _ => this
   
-  /** S(true) means eager spread, S(false) means lazy spread, N means no spread. */
-  def asParam: Opt[(Opt[Bool], Ident, Opt[Tree])] = this match
+  /** 
+   * Parameter `inUsing` means the param list is modified by `using`.
+   * In the first result, `S(true)` means eager spread, `S(false)` means lazy spread, and `N` means no spread.
+   */
+  def asParam(inUsing: Bool): Opt[(Opt[Bool], Ident, Opt[Tree])] = this match
     case und: Under => S(N, new Ident("_").withLocOf(und), N)
+    // * In `using` clauses, identifiers are understood as type names for unnamed contextual parameters:
+    case id: Ident if inUsing => S(N, Ident(""), S(id))
     case id: Ident => S(N, id, N)
     case Spread(Keyword.`..`, _, S(id: Ident)) => S(S(false), id, N)
     case Spread(Keyword.`...`, _, S(id: Ident)) => S(S(true), id, N)
     case Spread(Keyword.`..`, _, S(und: Under)) => S(S(false), new Ident("_").withLocOf(und), N)
     case Spread(Keyword.`...`, _, S(und: Under)) => S(S(true), new Ident("_").withLocOf(und), N)
     case InfixApp(lhs: Ident, Keyword.`:`, rhs) => S(N, lhs, S(rhs))
-    case TermDef(ImmutVal, inner, _) => inner.asParam
+    case TermDef(ImmutVal, inner, _) => inner.asParam(inUsing)
     case Modified(Keyword.`using`, _, inner) => inner match
-      // Param of form (using ..., name: Type). Parse it as usual.
-      case inner: InfixApp => inner.asParam
-      // Param of form (using ..., Type). Synthesize an identifier for it.
+      // Param of form (using name: Type). Parse it as usual.
+      case inner: InfixApp => inner.asParam(inUsing)
+      // Param of form (using Type). Synthesize an identifier for it.
       case _ => S(N, Ident(""), S(inner))
   
   def isModuleModifier: Bool = this match
@@ -400,7 +405,7 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
   
   lazy val clsParams: Ls[semantics.TermSymbol] =
     this.paramLists.headOption.fold(Nil): tup =>
-      tup.fields.iterator.flatMap(_.asParam).map:
+      tup.fields.iterator.flatMap(_.asParam(false)).map:
         case (S(spd), id, _) => ??? // spreads are not allowed in class parameters
         case (N, id, _) => semantics.TermSymbol(ParamBind, symbol.asClsLike, id)
       .toList
