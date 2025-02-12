@@ -11,15 +11,15 @@ new
 new 2
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not a constructor
 
-:re
-new()
-//│ ═══[RUNTIME ERROR] TypeError: runtime.Unit is not a constructor
-
 :sjs
 new 2 + 2
 //│ JS (unsanitized):
 //│ let lambda; lambda = function lambda(arg1, arg2) { return arg1 + arg2 }; new lambda(2, 2)
 //│ = [object Object]
+
+:re
+new()
+//│ ═══[RUNTIME ERROR] TypeError: runtime.Unit is not a constructor
 
 :re
 new {}
