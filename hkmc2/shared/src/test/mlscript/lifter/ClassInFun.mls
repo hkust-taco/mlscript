@@ -532,7 +532,28 @@ fun test(x) =
 test(2)
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'get' yielded 'undefined'
 
+:expect 2
+fun test() =
+  class A with
+    fun get = 2
+  class B() extends A
+  B().get
+test()
+//│ = 2
+
 :fixme
+:expect 2
+fun test(x) =
+  class A with
+    fun get = x
+  class B() extends A
+  B().get
+test(2)
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'get' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+
+// will be easier with when `let class` is added
+:todo
 fun test(x) =
   class A with
     fun get = x

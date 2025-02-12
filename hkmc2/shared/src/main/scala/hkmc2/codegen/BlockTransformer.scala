@@ -241,14 +241,17 @@ class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst
 // does not traverse into any other block
 class BlockTransformerNoRec(subst: SymbolSubst) extends BlockTransformerShallow(subst):
   override def applyBlock(b: Block): Block = b match
-    case Match(scrut, arms, dflt, rest) => 
+    case Match(scrut, arms, dflt, rest) =>
       val scrut2 = applyPath(scrut)
+      val arms2 = arms.mapConserve: arm =>
+        val cse2 = applyCase(arm._1)
+        if (cse2 is arm._1) then arm else (cse2, arm._2)
       if (scrut is scrut2) then b else Match(scrut2, arms, dflt, rest)
-    case Assign(lhs, rhs, rest) => 
+    case Assign(lhs, rhs, rest) =>
       applyResult2(rhs): rhs2 =>
         val lhs2 = lhs.subst
         if (lhs is lhs2) && (rhs is rhs2) then b else Assign(lhs2, rhs2, rest)
-    case AssignField(lhs, ident, rhs, rest) => 
+    case AssignField(lhs, ident, rhs, rest) =>
       applyResult2(rhs): rhs2 =>
         val lhs2 = applyPath(lhs)
         if rhs is rhs2 then b else AssignField(lhs2, ident, rhs2, rest)(N)

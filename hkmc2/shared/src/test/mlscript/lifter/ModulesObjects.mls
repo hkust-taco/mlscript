@@ -34,9 +34,7 @@ fun foo(x, y) =
   foo
 //│ ═══[WARNING] Modules are not yet properly lifted and will break.
 //│ ═══[WARNING] Modules are not yet properly lifted and will break.
-//│ > let foo1, M3, foo2, foo$, foo$capture1;try { foo$ = function foo$(...args) {   globalThis.Predef.checkArgs("foo$", 3, true, args.length);   let M4 = args[0];   let x = args[1];   let foo$capture2 = args[2];   return runtime.checkCall(M4.foo()) }; foo1 = function foo(...args) {   globalThis.Predef.checkArgs("foo", 3, true, args.length);   let M4 = args[0];   let x = args[1];   let foo$capture2 = args[2];   return (...args1) => {     globalThis.Predef.checkArgs("", 0, true, args1.length);     return runtime.checkCall(foo$(M4, x, foo$capture2))   } }; M3 = class M2 {   static {     return (x$1, foo$capture$0) => {       this.x$1 = x$1;       this.foo$capture$0 = foo$capture$0;       return this;     }   }   static foo(...args) {     globalThis.Predef.checkArgs("foo", 0, true, args.length);     M2.foo$capture$0.y0$ = 2;     return M2.x$1 + M2.foo$capture$0.y0$   }   static toString() { return "M"; } }; foo$capture1 = function foo$capture(...args) {   return new foo$capture.class(...args); }; foo$capture1.class = class foo$capture {   constructor(y0$) {     this.y0$ = y0$;   }   toString() { return "foo$capture(" + globalThis.Predef.render(this.y0$) + ")"; } }; foo2 = function foo(...args) {   globalThis.Predef.checkArgs("foo", 2, true, args.length);   let x = args[0];   let y = args[1];   let tmp, M$, capture;   capture = new foo$capture1(y);   M$ = runtime.checkCall(M3(x, capture));   tmp = runtime.checkCall(foo$(M$, x, capture));   return tmp }; block$res3 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           ^^^^^^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Illegal return statement
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: M$ (class hkmc2.semantics.VarSymbol)
 
 :fixme
 :expect 12
@@ -77,14 +75,57 @@ fun foo(x, y) =
 foo(10, 0)
 //│ = 14
 
-:todo
+:sjs
 fun foo(x, y) =
   object M with
-    fun foo() =
+    fun foo2() =
       set y = 2
       x + y
-  fun foo = M.foo()
-  foo
+  fun foo3 = M.foo2()
+  foo3
+//│ JS (unsanitized):
+//│ let M9, foo31, foo4, foo3$, foo$capture1;
+//│ foo3$ = function foo3$(M10, x, foo$capture2) {
+//│   return M10.foo2()
+//│ };
+//│ foo31 = function foo3(M10, x, foo$capture2) {
+//│   return () => {
+//│     return foo3$(M10, x, foo$capture2)
+//│   }
+//│ };
+//│ M9 = function M(x$11, foo$capture$01) {
+//│   return new M.class()(x$11, foo$capture$01);
+//│ };
+//│ M9.class = class M8 {
+//│   constructor() {
+//│     return (x$1, foo$capture$0) => {
+//│       this.x$1 = x$1;
+//│       this.foo$capture$0 = foo$capture$0;
+//│       return this;
+//│     }
+//│   }
+//│   foo2() {
+//│     this.foo$capture$0.y0$ = 2;
+//│     return this.x$1 + this.foo$capture$0.y0$
+//│   }
+//│   toString() { return "M"; }
+//│ };
+//│ foo$capture1 = function foo$capture(y0$1) {
+//│   return new foo$capture.class(y0$1);
+//│ };
+//│ foo$capture1.class = class foo$capture {
+//│   constructor(y0$) {
+//│     this.y0$ = y0$;
+//│   }
+//│   toString() { return "foo$capture(" + globalThis.Predef.render(this.y0$) + ")"; }
+//│ };
+//│ foo4 = function foo(x, y) {
+//│   let tmp1, M$, capture;
+//│   capture = new foo$capture1(y);
+//│   M$ = M9(x, capture);
+//│   tmp1 = foo3$(M$, x, capture);
+//│   return tmp1
+//│ };
 
 :expect 12
 foo(10, 0)
@@ -167,4 +208,50 @@ object M with
     fun g() = x
     g
 M.f()()
+//│ = 2
+
+:sjs
+module M with
+  class A() with
+    fun get = M.x + x
+  val x = if A() is A then 2 else 3
+M.A().get
+//│ JS (unsanitized):
+//│ let A9, M21, tmp4;
+//│ A9 = function A() {
+//│   return new A.class();
+//│ };
+//│ A9.class = class A8 {
+//│   constructor() {}
+//│   get get() {
+//│     return M21.x + M21.x;
+//│   }
+//│   toString() { return "A(" + "" + ")"; }
+//│ };
+//│ M21 = class M20 {
+//│   static {
+//│     let scrut, tmp5;
+//│     scrut = M20.A();
+//│     if (scrut instanceof A9.class) {
+//│       tmp5 = 2;
+//│     } else {
+//│       tmp5 = 3;
+//│     }
+//│     this.x = tmp5;
+//│   }
+//│   static get A() {
+//│     return A9;
+//│   }
+//│   static toString() { return "M"; }
+//│ };
+//│ tmp4 = M21.A();
+//│ tmp4.get
+//│ = 4
+
+module M with
+  val x = 2
+  class A with
+    fun get = x
+  class B() extends A
+M.B().get
 //│ = 2
