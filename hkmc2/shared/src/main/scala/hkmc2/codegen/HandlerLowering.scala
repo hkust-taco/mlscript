@@ -79,14 +79,14 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   private def handlerCtx(using HandlerCtx): HandlerCtx = summon
   private val runtimePath: Path = State.runtimeSymbol.asPath
   private val runtimeSym: ModuleSymbol = ctx.builtins.Runtime
-  private val effectSigPath: Path = runtimePath.selN(Tree.Ident("__EffectSig")).selN(Tree.Ident("class"))
-  private val effectSigSym: ClassSymbol = runtimeSym.tree.definedSymbols.get("__EffectSig").get.asCls.get
-  private val contClsPath: Path = runtimePath.selN(Tree.Ident("__Cont")).selN(Tree.Ident("class"))
-  private val retClsPath: Path = runtimePath.selN(Tree.Ident("__Return")).selN(Tree.Ident("class"))
-  private val retClsSym: ClassSymbol = runtimeSym.tree.definedSymbols.get("__Return").get.asCls.get
-  private val appendInContPath: Path = runtimePath.selN(Tree.Ident("__appendInCont"))
-  private val mkEffectPath: Path = runtimePath.selN(Tree.Ident("__mkEffect"))
-  private val handleBlockImplPath: Path = runtimePath.selN(Tree.Ident("__handleBlockImpl"))
+  private val effectSigPath: Path = runtimePath.selN(Tree.Ident("EffectSig")).selN(Tree.Ident("class"))
+  private val effectSigSym: ClassSymbol = runtimeSym.tree.definedSymbols.get("EffectSig").get.asCls.get
+  private val contClsPath: Path = runtimePath.selN(Tree.Ident("Cont")).selN(Tree.Ident("class"))
+  private val retClsPath: Path = runtimePath.selN(Tree.Ident("Return")).selN(Tree.Ident("class"))
+  private val retClsSym: ClassSymbol = runtimeSym.tree.definedSymbols.get("Return").get.asCls.get
+  private val appendInContPath: Path = runtimePath.selN(Tree.Ident("appendInCont"))
+  private val mkEffectPath: Path = runtimePath.selN(Tree.Ident("mkEffect"))
+  private val handleBlockImplPath: Path = runtimePath.selN(Tree.Ident("handleBlockImpl"))
   
   private def freshTmp(dbgNme: Str = "tmp") = new TempSymbol(N, dbgNme)
   

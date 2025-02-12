@@ -165,7 +165,7 @@ if true do
 //│       tmp13 = super();
 //│     }
 //│     perform(arg) {
-//│       return runtime.__mkEffect(h, (k, handleBlock) => {
+//│       return runtime.mkEffect(h, (k, handleBlock) => {
 //│         return arg
 //│       })
 //│     }
@@ -173,7 +173,7 @@ if true do
 //│   };
 //│   h = new Handler$h$12();
 //│   Cont$handleBlock$h$11 = function Cont$handleBlock$h$(pc1, next1) { return new Cont$handleBlock$h$.class(pc1, next1); };
-//│   Cont$handleBlock$h$11.class = class Cont$handleBlock$h$10 extends runtime.__Cont.class {
+//│   Cont$handleBlock$h$11.class = class Cont$handleBlock$h$10 extends runtime.Cont.class {
 //│     constructor(pc, next) {
 //│       let tmp13;
 //│       tmp13 = super(next, false);
@@ -189,7 +189,7 @@ if true do
 //│           this.completed = true;
 //│           return tmp12
 //│         } else if (this.pc === 0) {
-//│           if (tmp12 instanceof runtime.__Return.class) {
+//│           if (tmp12 instanceof runtime.Return.class) {
 //│             this.completed = true;
 //│             return tmp12
 //│           }
@@ -207,11 +207,11 @@ if true do
 //│   scrut = true;
 //│   if (scrut === true) {
 //│     tmp12 = f();
-//│     if (tmp12 instanceof runtime.__EffectSig.class) {
+//│     if (tmp12 instanceof runtime.EffectSig.class) {
 //│       tmp12.tail.next = new Cont$handleBlock$h$11(0, null);
-//│       return runtime.__handleBlockImpl(tmp12, h)
+//│       return runtime.handleBlockImpl(tmp12, h)
 //│     }
-//│     if (tmp12 instanceof runtime.__Return.class) {
+//│     if (tmp12 instanceof runtime.Return.class) {
 //│       return tmp12
 //│     }
 //│   } else {
@@ -220,7 +220,7 @@ if true do
 //│   return tmp12
 //│ };
 //│ tmp11 = handleBlock$11();
-//│ if (tmp11 instanceof runtime.__EffectSig.class) {
+//│ if (tmp11 instanceof runtime.EffectSig.class) {
 //│   throw new this.Error("Unhandled effects");
 //│ }
 //│ tmp11

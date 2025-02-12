@@ -18,7 +18,7 @@ class Lol(h) with
 //│     let tmp, res, Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$1;
 //│     const this$Lol = this;
 //│     Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$1 = function Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$(pc1, next1) { return new Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$.class(pc1, next1); };
-//│     Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$1.class = class Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$ extends runtime.__Cont.class {
+//│     Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$1.class = class Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$ extends runtime.Cont.class {
 //│       constructor(pc, next) {
 //│         let tmp1;
 //│         tmp1 = super(next, false);
@@ -37,7 +37,7 @@ class Lol(h) with
 //│             return this$Lol
 //│           } else if (this.pc === 0) {
 //│             res = Predef.print(tmp);
-//│             if (res instanceof runtime.__EffectSig.class) {
+//│             if (res instanceof runtime.EffectSig.class) {
 //│               this.pc = 1;
 //│               return res
 //│             }
@@ -53,13 +53,13 @@ class Lol(h) with
 //│       toString() { return "Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
 //│     };
 //│     tmp = runtime.safeCall(this.h.perform("k"));
-//│     if (tmp instanceof runtime.__EffectSig.class) {
+//│     if (tmp instanceof runtime.EffectSig.class) {
 //│       tmp.tail.next = new Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$1.class(0, null);
 //│       tmp.tail = tmp.tail.next;
 //│       return tmp
 //│     }
 //│     res = Predef.print(tmp);
-//│     if (res instanceof runtime.__EffectSig.class) {
+//│     if (res instanceof runtime.EffectSig.class) {
 //│       res.tail.next = new Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$1.class(1, null);
 //│       res.tail = res.tail.next;
 //│       return res

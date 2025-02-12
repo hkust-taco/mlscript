@@ -129,10 +129,10 @@ str
 //│         tmp9 = super();
 //│       }
 //│       perform(arg) {
-//│         return runtime.__mkEffect(h1, (k, handleBlock) => {
+//│         return runtime.mkEffect(h1, (k, handleBlock) => {
 //│           let tmp9, tmp10, tmp11, Cont$handler$h1$RecursiveHandlers$_mls_L104_58_1301;
 //│           Cont$handler$h1$RecursiveHandlers$_mls_L104_58_1301 = function Cont$handler$h1$RecursiveHandlers$_mls_L104_58_130(pc1, next1) { return new Cont$handler$h1$RecursiveHandlers$_mls_L104_58_130.class(pc1, next1); };
-//│           Cont$handler$h1$RecursiveHandlers$_mls_L104_58_1301.class = class Cont$handler$h1$RecursiveHandlers$_mls_L104_58_130 extends runtime.__Cont.class {
+//│           Cont$handler$h1$RecursiveHandlers$_mls_L104_58_1301.class = class Cont$handler$h1$RecursiveHandlers$_mls_L104_58_130 extends runtime.Cont.class {
 //│             constructor(pc, next) {
 //│               let tmp12;
 //│               tmp12 = super(next, false);
@@ -145,7 +145,7 @@ str
 //│               }
 //│               contLoop: while (true) {
 //│                 if (this.pc === 8) {
-//│                   if (tmp10 instanceof runtime.__Return.class) {
+//│                   if (tmp10 instanceof runtime.Return.class) {
 //│                     this.completed = true;
 //│                     return tmp10
 //│                   }
@@ -165,14 +165,14 @@ str
 //│           tmp9 = str + "A";
 //│           str = tmp9;
 //│           tmp10 = runtime.safeCall(k(arg));
-//│           if (tmp10 instanceof runtime.__EffectSig.class) {
+//│           if (tmp10 instanceof runtime.EffectSig.class) {
 //│             handleBlock.contHead.next = new Cont$handler$h1$RecursiveHandlers$_mls_L104_58_1301.class(8, handleBlock.contHead.next);
 //│             if (handleBlock.lastHandlerCont === null) {
 //│               handleBlock.lastHandlerCont = handleBlock.contHead.next;
 //│             }
 //│             return tmp10
 //│           }
-//│           if (tmp10 instanceof runtime.__Return.class) {
+//│           if (tmp10 instanceof runtime.Return.class) {
 //│             return tmp10
 //│           }
 //│           tmp11 = str + "A";
@@ -184,7 +184,7 @@ str
 //│     };
 //│     h1 = new Handler$h1$2();
 //│     Cont$handleBlock$h1$2 = function Cont$handleBlock$h1$(pc1, next1) { return new Cont$handleBlock$h1$.class(pc1, next1); };
-//│     Cont$handleBlock$h1$2.class = class Cont$handleBlock$h1$1 extends runtime.__Cont.class {
+//│     Cont$handleBlock$h1$2.class = class Cont$handleBlock$h1$1 extends runtime.Cont.class {
 //│       constructor(pc, next) {
 //│         let tmp9;
 //│         tmp9 = super(next, false);
@@ -197,7 +197,7 @@ str
 //│         }
 //│         contLoop: while (true) {
 //│           if (this.pc === 6) {
-//│             if (tmp8 instanceof runtime.__Return.class) {
+//│             if (tmp8 instanceof runtime.Return.class) {
 //│               this.completed = true;
 //│               return tmp8
 //│             }
@@ -220,10 +220,10 @@ str
 //│           tmp10 = super();
 //│         }
 //│         perform(arg) {
-//│           return runtime.__mkEffect(h2, (k, handleBlock) => {
+//│           return runtime.mkEffect(h2, (k, handleBlock) => {
 //│             let tmp10, tmp11, tmp12, tmp13, tmp14, Cont$handler$h2$RecursiveHandlers$_mls_L104_165_2491;
 //│             Cont$handler$h2$RecursiveHandlers$_mls_L104_165_2491 = function Cont$handler$h2$RecursiveHandlers$_mls_L104_165_249(pc1, next1) { return new Cont$handler$h2$RecursiveHandlers$_mls_L104_165_249.class(pc1, next1); };
-//│             Cont$handler$h2$RecursiveHandlers$_mls_L104_165_2491.class = class Cont$handler$h2$RecursiveHandlers$_mls_L104_165_249 extends runtime.__Cont.class {
+//│             Cont$handler$h2$RecursiveHandlers$_mls_L104_165_2491.class = class Cont$handler$h2$RecursiveHandlers$_mls_L104_165_249 extends runtime.Cont.class {
 //│               constructor(pc, next) {
 //│                 let tmp15;
 //│                 tmp15 = super(next, false);
@@ -236,7 +236,7 @@ str
 //│                 }
 //│                 contLoop: while (true) {
 //│                   if (this.pc === 4) {
-//│                     if (tmp12 instanceof runtime.__Return.class) {
+//│                     if (tmp12 instanceof runtime.Return.class) {
 //│                       this.completed = true;
 //│                       return tmp12
 //│                     }
@@ -258,14 +258,14 @@ str
 //│             tmp11 = str + tmp10;
 //│             str = tmp11;
 //│             tmp12 = runtime.safeCall(k(arg));
-//│             if (tmp12 instanceof runtime.__EffectSig.class) {
+//│             if (tmp12 instanceof runtime.EffectSig.class) {
 //│               handleBlock.contHead.next = new Cont$handler$h2$RecursiveHandlers$_mls_L104_165_2491.class(4, handleBlock.contHead.next);
 //│               if (handleBlock.lastHandlerCont === null) {
 //│                 handleBlock.lastHandlerCont = handleBlock.contHead.next;
 //│               }
 //│               return tmp12
 //│             }
-//│             if (tmp12 instanceof runtime.__Return.class) {
+//│             if (tmp12 instanceof runtime.Return.class) {
 //│               return tmp12
 //│             }
 //│             tmp13 = str + "B";
@@ -278,7 +278,7 @@ str
 //│       };
 //│       h2 = new Handler$h2$2();
 //│       Cont$handleBlock$h2$2 = function Cont$handleBlock$h2$(pc1, next1) { return new Cont$handleBlock$h2$.class(pc1, next1); };
-//│       Cont$handleBlock$h2$2.class = class Cont$handleBlock$h2$1 extends runtime.__Cont.class {
+//│       Cont$handleBlock$h2$2.class = class Cont$handleBlock$h2$1 extends runtime.Cont.class {
 //│         constructor(pc, next) {
 //│           let tmp10;
 //│           tmp10 = super(next, false);
@@ -293,7 +293,7 @@ str
 //│           }
 //│           contLoop: while (true) {
 //│             if (this.pc === 0) {
-//│               if (tmp9 instanceof runtime.__Return.class) {
+//│               if (tmp9 instanceof runtime.Return.class) {
 //│                 this.completed = true;
 //│                 return tmp9
 //│               }
@@ -301,14 +301,14 @@ str
 //│               continue contLoop;
 //│             } else if (this.pc === 3) {
 //│               res4 = runtime.safeCall(h1.perform(runtime.Unit));
-//│               if (res4 instanceof runtime.__EffectSig.class) {
+//│               if (res4 instanceof runtime.EffectSig.class) {
 //│                 this.pc = 1;
 //│                 return res4
 //│               }
 //│               this.pc = 1;
 //│               continue contLoop;
 //│             } else if (this.pc === 1) {
-//│               if (res4 instanceof runtime.__Return.class) {
+//│               if (res4 instanceof runtime.Return.class) {
 //│                 this.completed = true;
 //│                 return res4
 //│               }
@@ -324,35 +324,35 @@ str
 //│         toString() { return "Cont$handleBlock$h2$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
 //│       };
 //│       tmp9 = runtime.safeCall(h2.perform(runtime.Unit));
-//│       if (tmp9 instanceof runtime.__EffectSig.class) {
+//│       if (tmp9 instanceof runtime.EffectSig.class) {
 //│         tmp9.tail.next = new Cont$handleBlock$h2$2(0, null);
-//│         return runtime.__handleBlockImpl(tmp9, h2)
+//│         return runtime.handleBlockImpl(tmp9, h2)
 //│       }
-//│       if (tmp9 instanceof runtime.__Return.class) {
+//│       if (tmp9 instanceof runtime.Return.class) {
 //│         return tmp9
 //│       }
 //│       res4 = runtime.safeCall(h1.perform(runtime.Unit));
-//│       if (res4 instanceof runtime.__EffectSig.class) {
+//│       if (res4 instanceof runtime.EffectSig.class) {
 //│         res4.tail.next = new Cont$handleBlock$h2$2(1, null);
-//│         return runtime.__handleBlockImpl(res4, h2)
+//│         return runtime.handleBlockImpl(res4, h2)
 //│       }
-//│       if (res4 instanceof runtime.__Return.class) {
+//│       if (res4 instanceof runtime.Return.class) {
 //│         return res4
 //│       }
 //│       return res4
 //│     };
 //│     tmp8 = handleBlock$5();
-//│     if (tmp8 instanceof runtime.__EffectSig.class) {
+//│     if (tmp8 instanceof runtime.EffectSig.class) {
 //│       tmp8.tail.next = new Cont$handleBlock$h1$2(6, null);
-//│       return runtime.__handleBlockImpl(tmp8, h1)
+//│       return runtime.handleBlockImpl(tmp8, h1)
 //│     }
-//│     if (tmp8 instanceof runtime.__Return.class) {
+//│     if (tmp8 instanceof runtime.Return.class) {
 //│       return tmp8
 //│     }
 //│     return tmp8
 //│   };
 //│   tmp6 = handleBlock$4();
-//│   if (tmp6 instanceof runtime.__EffectSig.class) {
+//│   if (tmp6 instanceof runtime.EffectSig.class) {
 //│     throw new this.Error("Unhandled effects");
 //│   }
 //│   tmp7 = tmp6;

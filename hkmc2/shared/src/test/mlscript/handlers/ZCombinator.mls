@@ -81,7 +81,7 @@ let fact =
   fun a(self) =
     fun b(x) =
       if x == 0 then 1 else
-        console.log(Runtime.__stackDepth, Runtime.__stackOffset)
+        console.log(Runtime.stackDepth, Runtime.stackOffset)
         let prev = self(x - 1)
         console.log("resumed:", x)
         x * prev
