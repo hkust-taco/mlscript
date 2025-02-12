@@ -613,15 +613,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val stackSafe = config.stackSafety match
       case N => res
       case S(sts) => StackSafeTransform(sts.stackLimit).transformTopLevel(res)
-    
-    MergeMatchArmTransformer.applyBlock(
+
       val hdlr = 
         if lowerHandlers then HandlerLowering().translateTopLevel(stackSafe)
         else stackSafe
       
-      if lift then Lifter().transform(hdlr)
-      else hdlr
-    )
+      val lifted = 
+        if lift then Lifter().transform(hdlr)
+        else hdlr
+    
+    MergeMatchArmTransformer.applyBlock(lifted)
   
   def program(main: st): Program =
     def go(acc: Ls[Local -> Str], trm: st): Program =

@@ -89,7 +89,7 @@ val isDefined = case
 //│   } else if (caseScrut instanceof None1) {
 //│     return false
 //│   } else {
-//│     throw new this.Error("match error");
+//│     throw new globalThis.Error("match error");
 //│   }
 //│ };
 //│ tmp5 = lambda11;
