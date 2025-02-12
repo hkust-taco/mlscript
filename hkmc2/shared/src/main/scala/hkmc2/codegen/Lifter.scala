@@ -361,6 +361,37 @@ class Lifter(using State, Raise):
         
         case _ => super.applyResult(r)
 
+      // don't search within `extends`
+      override def applyDefn(defn: Defn): Defn = defn match
+        case defn: FunDefn => applyFunDefn(defn)
+        case ValDefn(owner, k, sym, rhs) =>
+          val owner2 = owner.mapConserve(_.subst)
+          val sym2 = sym.subst
+          val rhs2 = applyPath(rhs)
+          if (owner2 is owner) && (sym2 is sym) && (rhs2 is rhs)
+            then defn else ValDefn(owner2, k, sym2, rhs2)
+        case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentPath, methods,
+          privateFields, publicFields, preCtor, ctor) =>
+          val own2 = own.mapConserve(_.subst)
+          val isym2 = isym.subst
+          val sym2 = sym.subst
+          val paramsOpt2 = paramsOpt.mapConserve(applyParamList)
+          val auxParams2 = auxParams.mapConserve(applyParamList)
+          val methods2 = methods.mapConserve(applyFunDefn)
+          val privateFields2 = privateFields.mapConserve(_.subst)
+          val publicFields2 = publicFields.mapConserve(applyTermDefinition)
+          val preCtor2 = applyBlock(preCtor)
+          val ctor2 = applyBlock(ctor)
+          if (own2 is own) && (isym2 is isym) && (sym2 is sym) &&
+              (paramsOpt2 is paramsOpt) &&
+              (auxParams2 is auxParams) &&
+              (methods2 is methods) &&
+              (privateFields2 is privateFields) &&
+              (publicFields2 is publicFields) &&
+              (preCtor2 is preCtor) && (ctor2 is ctor)
+            then defn else ClsLikeDefn(own2, isym2, sym2, k, paramsOpt2,
+              auxParams2, parentPath, methods2, privateFields2, publicFields2, preCtor2, ctor2)
+
       override def applyValue(v: Value): Value = v match
         case RefOfBms(l) if clsSyms.contains(l) && !modOrObj(ctx.defns(l)) =>
           raise(WarningReport(
