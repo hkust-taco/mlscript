@@ -275,3 +275,4 @@ while
   else 1
 //│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',None,Block(List(App(Ident(print),Tup(List(StrLit(Hello World)))), BoolLit(false)))),keyword 'then',App(IntLit(0),Tup(List(IntLit(0))))) (of class hkmc2.syntax.Tree$InfixApp)
 
+
