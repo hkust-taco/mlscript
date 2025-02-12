@@ -407,7 +407,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     
     val body = blockBuilder
       .define(clsDefn)
-      .assign(h.lhs, Call(clsDefn.sym.asPath, Nil)(true, false))
+      .assign(h.lhs, PureCall(clsDefn.sym.asPath, Nil))
       .rest(handlerBody)
     
     val defn = FunDefn(

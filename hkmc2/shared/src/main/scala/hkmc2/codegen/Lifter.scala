@@ -961,26 +961,6 @@ class Lifter(using State, Raise):
         super.applyBlock(ret)
     transformer.applyBlock(b)
 
-  // lift things out of top-level modules. this is easy
-  def liftOutTopLevelMod(c: ClsLikeDefn, ctx: LifterCtx): Lifted[Defn] =
-    val clsDefns = ctx.nestedDefns(c.sym).collect:
-      case c: ClsLikeDefn => c
-    val isymMap = clsDefns.map: c =>
-      c.isym -> c.sym
-    .toMap
-    val bmsMap = clsDefns.map: c =>
-      c.sym -> BlockMemberSymbol(c.sym.nme, Nil)
-    .toMap
-
-    val newDefs = bmsMap.toList.map:
-      case bms -> bms2 => ValDefn(S(c.isym), syntax.ImmutVal, bms2, bms.asPath)
-    val walker = new BlockTransformerShallow(SymbolSubst()):
-      override def applyBlock(b: Block): Block = b match
-        case Define(defn, rest) => applyBlock(rest)
-        case _ => super.applyBlock(b)
-
-    ???
-
   // top-level
   def transform(b: Block) =
     val blk = desugarLambdas(b)
