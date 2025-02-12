@@ -49,6 +49,7 @@ sealed abstract class Block extends Product with AutoLocated:
     case Begin(sub, rst) => sub.size + rst.size
     case Assign(_, _, rst) => 1 + rst.size
     case AssignField(_, _, _, rst) => 1 + rst.size
+    case AssignDynField(_, _, _, _, rst) => 1 + rst.size
     case Match(_, arms, dflt, rst) =>
       1 + arms.map(_._2.size).sum + dflt.map(_.size).getOrElse(0) + rst.size
     case Define(_, rst) => 1 + rst.size
@@ -132,6 +133,45 @@ sealed abstract class Block extends Product with AutoLocated:
         case _ => super.applyBlock(b)
     
     (transformer.applyBlock(this), defns)
+    
+  lazy val flatten: Block = 
+    // traverses a Block like a list, flatten `Begin`s using an accumulator
+    // returns the flattend but reversed Block (with the dummy tail `End("for flatten only")`) and the actual tail of the Block
+    def getReversedFlattenAndTrueTail(b: Block, acc: Block): (Block, BlockTail) = b match
+      case Match(scrut, arms, dflt, rest) => getReversedFlattenAndTrueTail(rest, Match(scrut, arms, dflt, acc))
+      case Label(label, body, rest) => getReversedFlattenAndTrueTail(rest, Label(label, body, acc))
+      case Begin(sub, rest) =>
+        val (firstBlockRev, firstTail) = getReversedFlattenAndTrueTail(sub, acc)
+        firstTail match
+          case _: End => getReversedFlattenAndTrueTail(rest, firstBlockRev)
+          // if the tail of `sub` is not `End`, ignore the `rest` of this `Begin`
+          case _ => firstBlockRev -> firstTail
+      case TryBlock(sub, finallyDo, rest) => getReversedFlattenAndTrueTail(rest, TryBlock(sub, finallyDo, acc))
+      case Assign(lhs, rhs, rest) => getReversedFlattenAndTrueTail(rest, Assign(lhs, rhs, acc))
+      case a@AssignField(lhs, nme, rhs, rest) => getReversedFlattenAndTrueTail(rest, AssignField(lhs, nme, rhs, acc)(a.symbol))
+      case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => getReversedFlattenAndTrueTail(rest, AssignDynField(lhs, fld, arrayIdx, rhs, acc))
+      case Define(defn, rest) => getReversedFlattenAndTrueTail(rest, Define(defn, acc))
+      case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) => getReversedFlattenAndTrueTail(rest, HandleBlock(lhs, res, par, args, cls, handlers, body, acc))
+      case t: BlockTail => acc -> t
+    
+    // reverse the Block returnned from the previous function,
+    // which does not contain `Begin` (except for the nested ones),
+    // and whose tail must be the dummy `End("for flatten only")`
+    def rev(b: Block, t: Block): Block = b match
+      case Match(scrut, arms, dflt, rest) => rev(rest, Match(scrut, arms, dflt, t))
+      case Label(label, body, rest) => rev(rest, Label(label, body, t))
+      case TryBlock(sub, finallyDo, rest) => rev(rest, TryBlock(sub, finallyDo, t))
+      case Assign(lhs, rhs, rest) => rev(rest, Assign(lhs, rhs, t))
+      case a@AssignField(lhs, nme, rhs, rest) => rev(rest, AssignField(lhs, nme, rhs, t)(a.symbol))
+      case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => rev(rest, AssignDynField(lhs, fld, arrayIdx, rhs, t))
+      case Define(defn, rest) => rev(rest, Define(defn, t))
+      case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) => rev(rest, HandleBlock(lhs, res, par, args, cls, handlers, body, t))
+      case End(msg) => t
+      case _: BlockTail => ??? // unreachable
+      case Begin(sub, rest) => ??? // unreachable
+    
+    val (flattenRev, actualTail) = getReversedFlattenAndTrueTail(this, End("for flatten only"))
+    rev(flattenRev, actualTail)
   
 end Block
 

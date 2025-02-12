@@ -24,6 +24,18 @@ module M with
 module M with
   fun f(using foo: Int)(using bar: Int) = 42
 
+module M with
+  fun f(using foo: Int, bar: Int) = 42
+
+module M with
+  fun f(using Int, Int) = 42
+
+module M with
+  fun foo(using Int, arg: Str) = 42
+
+module M with
+  fun foo(using arg: Str, Int) = 42
+
 
 // Basic Resolution
 

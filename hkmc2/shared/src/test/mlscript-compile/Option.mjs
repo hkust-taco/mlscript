@@ -28,12 +28,10 @@ Option1 = class Option {
   static isDefined(x) {
     if (x instanceof Option.Some.class) {
       return true
+    } else if (x instanceof Option.None.class) {
+      return false
     } else {
-      if (x instanceof Option.None.class) {
-        return false
-      } else {
-        throw new globalThis.Error("match error");
-      }
+      throw new globalThis.Error("match error");
     }
   } 
   static test() {

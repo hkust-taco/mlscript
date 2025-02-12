@@ -23,24 +23,20 @@ fun test(x) =
 //│     v = param0;
 //│     tmp = v + 1;
 //│     tmp1 = Some1(tmp);
+//│   } else if (x instanceof None1) {
+//│     tmp1 = None1;
 //│   } else {
-//│     if (x instanceof None1) {
-//│       tmp1 = None1;
-//│     } else {
-//│       throw new globalThis.Error("match error");
-//│     }
+//│     throw new globalThis.Error("match error");
 //│   }
 //│   scrut = tmp1;
 //│   if (scrut instanceof Some1.class) {
 //│     param01 = scrut.value;
 //│     v1 = param01;
 //│     return Predef.print(v1)
+//│   } else if (scrut instanceof None1) {
+//│     return Predef.print("none")
 //│   } else {
-//│     if (scrut instanceof None1) {
-//│       return Predef.print("none")
-//│     } else {
-//│       throw new globalThis.Error("match error");
-//│     }
+//│     throw new globalThis.Error("match error");
 //│   }
 //│ };
 

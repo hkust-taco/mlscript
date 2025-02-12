@@ -134,12 +134,10 @@ fun f(x) = if x is
 //│     } else {
 //│       return Predef.print("oops")
 //│     }
+//│   } else if (x3 instanceof None1.class) {
+//│     return "ok"
 //│   } else {
-//│     if (x3 instanceof None1.class) {
-//│       return "ok"
-//│     } else {
-//│       return Predef.print("oops")
-//│     }
+//│     return Predef.print("oops")
 //│   }
 //│ };
 
@@ -171,16 +169,14 @@ fun f(x) = if x is
 //│     param05 = x3.value;
 //│     u = param05;
 //│     return u
+//│   } else if (x3 instanceof Pair1.class) {
+//│     param04 = x3.fst;
+//│     param1 = x3.snd;
+//│     a = param04;
+//│     b = param1;
+//│     return a + b
 //│   } else {
-//│     if (x3 instanceof Pair1.class) {
-//│       param04 = x3.fst;
-//│       param1 = x3.snd;
-//│       a = param04;
-//│       b = param1;
-//│       return a + b
-//│     } else {
-//│       throw new globalThis.Error("match error");
-//│     }
+//│     throw new globalThis.Error("match error");
 //│   }
 //│ };
 
@@ -208,12 +204,10 @@ fun f(x) = print of if x is
 //│     } else {
 //│       tmp9 = "oops";
 //│     }
+//│   } else if (x3 instanceof None1.class) {
+//│     tmp9 = "ok";
 //│   } else {
-//│     if (x3 instanceof None1.class) {
-//│       tmp9 = "ok";
-//│     } else {
-//│       tmp9 = "oops";
-//│     }
+//│     tmp9 = "oops";
 //│   }
 //│   return Predef.print(tmp9)
 //│ };
