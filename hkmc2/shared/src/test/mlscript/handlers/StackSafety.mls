@@ -22,9 +22,9 @@ hi(0)
 //│ JS (unsanitized):
 //│ let hi, res, handleBlock$;
 //│ hi = function hi(n) {
-//│   let scrut, tmp, stackDelayRes, Cont$3;
-//│   Cont$3 = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│   Cont$3.class = class Cont$ extends runtime.__Cont.class {
+//│   let scrut, tmp, stackDelayRes, Cont$func$hi$StackSafety$_mls_L18_4_47$1;
+//│   Cont$func$hi$StackSafety$_mls_L18_4_47$1 = function Cont$func$hi$StackSafety$_mls_L18_4_47$(pc1) { return new Cont$func$hi$StackSafety$_mls_L18_4_47$.class(pc1); };
+//│   Cont$func$hi$StackSafety$_mls_L18_4_47$1.class = class Cont$func$hi$StackSafety$_mls_L18_4_47$ extends runtime.__Cont.class {
 //│     constructor(pc) {
 //│       let tmp1;
 //│       tmp1 = super(null, null);
@@ -52,11 +52,11 @@ hi(0)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$func$hi$StackSafety$_mls_L18_4_47$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.__EffectSig.class) {
-//│     stackDelayRes.tail.next = new Cont$3.class(0);
+//│     stackDelayRes.tail.next = new Cont$func$hi$StackSafety$_mls_L18_4_47$1.class(0);
 //│     stackDelayRes.tail = stackDelayRes.tail.next;
 //│     return stackDelayRes
 //│   }
@@ -70,7 +70,7 @@ hi(0)
 //│   }
 //│ };
 //│ handleBlock$ = function handleBlock$() {
-//│   let stackHandler, res1, Cont$3, StackDelay$1;
+//│   let stackHandler, res1, Cont$handleBlock1, StackDelay$1;
 //│   StackDelay$1 = class StackDelay$ extends runtime.__StackDelay {
 //│     constructor() {
 //│       let tmp;
@@ -78,9 +78,9 @@ hi(0)
 //│     }
 //│     perform() {
 //│       return runtime.__mkEffect(stackHandler, (resume) => {
-//│         let res2, Cont$4;
-//│         Cont$4 = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│         Cont$4.class = class Cont$1 extends runtime.__Cont.class {
+//│         let res2, Cont$handler$1;
+//│         Cont$handler$1 = function Cont$handler$(pc1) { return new Cont$handler$.class(pc1); };
+//│         Cont$handler$1.class = class Cont$handler$ extends runtime.__Cont.class {
 //│           constructor(pc) {
 //│             let tmp;
 //│             tmp = super(null, null);
@@ -103,13 +103,12 @@ hi(0)
 //│               break;
 //│             }
 //│           }
-//│           toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│           toString() { return "Cont$handler$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│         };
 //│         runtime.__stackOffset = runtime.__stackDepth;
 //│         res2 = resume();
 //│         if (res2 instanceof runtime.__EffectSig.class) {
-//│           res2.tail.next = new Cont$4.class(4);
-//│           res2.tail = res2.tail.next;
+//│           res2.tail.next = new Cont$handler$1.class(4);
 //│           return res2
 //│         }
 //│         if (res2 instanceof runtime.__Return.class) {
@@ -121,8 +120,8 @@ hi(0)
 //│     toString() { return "StackDelay$"; }
 //│   };
 //│   stackHandler = new StackDelay$1();
-//│   Cont$3 = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│   Cont$3.class = class Cont$2 extends runtime.__Cont.class {
+//│   Cont$handleBlock1 = function Cont$handleBlock(pc1) { return new Cont$handleBlock.class(pc1); };
+//│   Cont$handleBlock1.class = class Cont$handleBlock extends runtime.__Cont.class {
 //│     constructor(pc) {
 //│       let tmp;
 //│       tmp = super(null, null);
@@ -145,7 +144,7 @@ hi(0)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$handleBlock(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   runtime.__stackLimit = 5;
 //│   runtime.__stackOffset = 0;
@@ -153,7 +152,7 @@ hi(0)
 //│   runtime.__stackHandler = stackHandler;
 //│   res1 = hi(0);
 //│   if (res1 instanceof runtime.__EffectSig.class) {
-//│     res1.tail.next = new Cont$3(2);
+//│     res1.tail.next = new Cont$handleBlock1(2);
 //│     return runtime.__handleBlockImpl(res1, stackHandler)
 //│   }
 //│   if (res1 instanceof runtime.__Return.class) {
@@ -182,9 +181,9 @@ sum(10000)
 //│ JS (unsanitized):
 //│ let sum1, res1, handleBlock$1;
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, Cont$6;
-//│   Cont$6 = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│   Cont$6.class = class Cont$3 extends runtime.__Cont.class {
+//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, Cont$func$sum$StackSafety$_mls_L176_4_57$1;
+//│   Cont$func$sum$StackSafety$_mls_L176_4_57$1 = function Cont$func$sum$StackSafety$_mls_L176_4_57$(pc1) { return new Cont$func$sum$StackSafety$_mls_L176_4_57$.class(pc1); };
+//│   Cont$func$sum$StackSafety$_mls_L176_4_57$1.class = class Cont$func$sum$StackSafety$_mls_L176_4_57$ extends runtime.__Cont.class {
 //│     constructor(pc) {
 //│       let tmp2;
 //│       tmp2 = super(null, null);
@@ -207,7 +206,8 @@ sum(10000)
 //│             tmp1 = sum1(tmp);
 //│             if (tmp1 instanceof runtime.__EffectSig.class) {
 //│               this.pc = 1;
-//│               return runtime.__appendInCont(tmp1, this)
+//│               tmp1.tail.next = this;
+//│               return tmp1
 //│             }
 //│             this.pc = 1;
 //│             continue contLoop;
@@ -223,12 +223,12 @@ sum(10000)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$func$sum$StackSafety$_mls_L176_4_57$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   curDepth = runtime.__stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.__EffectSig.class) {
-//│     stackDelayRes.tail.next = new Cont$6.class(0);
+//│     stackDelayRes.tail.next = new Cont$func$sum$StackSafety$_mls_L176_4_57$1.class(0);
 //│     stackDelayRes.tail = stackDelayRes.tail.next;
 //│     return stackDelayRes
 //│   }
@@ -240,7 +240,7 @@ sum(10000)
 //│     runtime.__stackDepth = runtime.__stackDepth + 1;
 //│     tmp1 = sum1(tmp);
 //│     if (tmp1 instanceof runtime.__EffectSig.class) {
-//│       tmp1.tail.next = new Cont$6.class(1);
+//│       tmp1.tail.next = new Cont$func$sum$StackSafety$_mls_L176_4_57$1.class(1);
 //│       tmp1.tail = tmp1.tail.next;
 //│       return tmp1
 //│     }
@@ -249,7 +249,7 @@ sum(10000)
 //│   }
 //│ };
 //│ handleBlock$1 = function handleBlock$() {
-//│   let stackHandler, res2, Cont$6, StackDelay$2;
+//│   let stackHandler, res2, Cont$handleBlock2, StackDelay$2;
 //│   StackDelay$2 = class StackDelay$1 extends runtime.__StackDelay {
 //│     constructor() {
 //│       let tmp;
@@ -257,9 +257,9 @@ sum(10000)
 //│     }
 //│     perform() {
 //│       return runtime.__mkEffect(stackHandler, (resume) => {
-//│         let res3, Cont$7;
-//│         Cont$7 = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│         Cont$7.class = class Cont$4 extends runtime.__Cont.class {
+//│         let res3, Cont$handler$2;
+//│         Cont$handler$2 = function Cont$handler$(pc1) { return new Cont$handler$.class(pc1); };
+//│         Cont$handler$2.class = class Cont$handler$1 extends runtime.__Cont.class {
 //│           constructor(pc) {
 //│             let tmp;
 //│             tmp = super(null, null);
@@ -282,13 +282,12 @@ sum(10000)
 //│               break;
 //│             }
 //│           }
-//│           toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│           toString() { return "Cont$handler$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│         };
 //│         runtime.__stackOffset = runtime.__stackDepth;
 //│         res3 = resume();
 //│         if (res3 instanceof runtime.__EffectSig.class) {
-//│           res3.tail.next = new Cont$7.class(5);
-//│           res3.tail = res3.tail.next;
+//│           res3.tail.next = new Cont$handler$2.class(5);
 //│           return res3
 //│         }
 //│         if (res3 instanceof runtime.__Return.class) {
@@ -300,8 +299,8 @@ sum(10000)
 //│     toString() { return "StackDelay$"; }
 //│   };
 //│   stackHandler = new StackDelay$2();
-//│   Cont$6 = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│   Cont$6.class = class Cont$5 extends runtime.__Cont.class {
+//│   Cont$handleBlock2 = function Cont$handleBlock(pc1) { return new Cont$handleBlock.class(pc1); };
+//│   Cont$handleBlock2.class = class Cont$handleBlock1 extends runtime.__Cont.class {
 //│     constructor(pc) {
 //│       let tmp;
 //│       tmp = super(null, null);
@@ -324,7 +323,7 @@ sum(10000)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$handleBlock(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   runtime.__stackLimit = 1000;
 //│   runtime.__stackOffset = 0;
@@ -332,7 +331,7 @@ sum(10000)
 //│   runtime.__stackHandler = stackHandler;
 //│   res2 = sum1(10000);
 //│   if (res2 instanceof runtime.__EffectSig.class) {
-//│     res2.tail.next = new Cont$6(3);
+//│     res2.tail.next = new Cont$handleBlock2(3);
 //│     return runtime.__handleBlockImpl(res2, stackHandler)
 //│   }
 //│   if (res2 instanceof runtime.__Return.class) {

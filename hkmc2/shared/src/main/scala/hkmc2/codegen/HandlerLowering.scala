@@ -32,13 +32,16 @@ object HandlerLowering:
   // whether the current block is the top level block, as we do not emit code for continuation class on the top level
   // since we cannot return an effect signature on the top level (we are not in a function so return statement are invalid)
   // and we do not have any `return` statement in the top level block so we do not need the `ReturnCont` workarounds.
+  // contName: the name of the continuation class
   // ctorThis: the path to `this` in the constructor, this is used to insert `return this;` at the end of constructor.
   // linkAndHandle:
   // a function that takes a LinkState and returns a block that links the continuation class and handles the effect
   // this is a convenience function which initializes the continuation class in function context or throw an error in top level
   private case class HandlerCtx(
     isHandleFree: Bool,
+    isHandler: Bool,
     isTopLevel: Bool,
+    contName: Str,
     ctorThis: Option[Path],
     linkAndHandle: LinkState => Block
   )
@@ -49,18 +52,18 @@ import HandlerLowering.*
 
 class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
 
-  private def funcLikeHandlerCtx(ctorThis: Option[Path]) =
-    HandlerCtx(true, false, ctorThis, state =>
+  private def funcLikeHandlerCtx(ctorThis: Option[Path], isHandler: Bool, nme: Str) =
+    HandlerCtx(!isHandler, isHandler, false, nme, ctorThis, state =>
       val tmp = freshTmp()
       blockBuilder
         .assignFieldN(state.res.tail, nextIdent, Instantiate(
           state.cls.selN(Tree.Ident("class")),
           Value.Lit(Tree.IntLit(state.uid)) :: Nil))
-        .assignFieldN(state.res, tailIdent, state.res.tail.next)
+        .staticif(!isHandler, _.assignFieldN(state.res, tailIdent, state.res.tail.next))
         .ret(state.res))
-  private val functionHandlerCtx = funcLikeHandlerCtx(N)
-  private val topLevelCtx = HandlerCtx(true, true, N, _ => rtThrowMsg("Unhandled effects"))
-  private def ctorCtx(ctorThis: Path) = funcLikeHandlerCtx(S(ctorThis))
+  private def functionHandlerCtx(isHandler: Bool, nme: Str) = funcLikeHandlerCtx(N, isHandler, nme)
+  private def topLevelCtx(nme: Str) = HandlerCtx(true, false, true, nme, N, _ => rtThrowMsg("Unhandled effects"))
+  private def ctorCtx(ctorThis: Path, nme: Str) = funcLikeHandlerCtx(S(ctorThis), false, nme)
   private def handlerCtx(using HandlerCtx): HandlerCtx = summon
   private val runtimePath: Path = State.runtimeSymbol.asPath
   private val runtimeSym: ModuleSymbol = ctx.builtins.Runtime
@@ -337,7 +340,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
           val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(cls2, args2)
           ResultPlaceholder(res, freshId(), !handlerCtx.isHandleFree, c2, k(Value.Ref(res)))
         case r => super.applyResult2(r)(k)
-      override def applyLam(lam: Value.Lam): Value.Lam = Value.Lam(lam.params, translateBlock(lam.body, functionHandlerCtx))
+      override def applyLam(lam: Value.Lam): Value.Lam = Value.Lam(lam.params, translateBlock(lam.body, functionHandlerCtx(false, s"Cont$$lambda$$")))
       override def applyDefn(defn: Defn): Defn = defn match
         case f: FunDefn => translateFun(f)
         case c: ClsLikeDefn => translateCls(c, handlerCtx.isTopLevel)
@@ -357,12 +360,18 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     val (blk, defns) = b.floatOutDefns
     defns.foldLeft(blk)((acc, defn) => Define(defn, acc))
   
+  private def locToStr(l: Loc): Str =
+    Scope.replaceInvalidCharacters(l.origin.fileName + "_L" + l.origin.startLineNum + "_" + l.spanStart + "_" + l.spanEnd)
+  
   private def translateFun(f: FunDefn): FunDefn =
-    FunDefn(f.owner, f.sym, f.params, translateBlock(f.body, functionHandlerCtx))
+    FunDefn(f.owner, f.sym, f.params, translateBlock(f.body, functionHandlerCtx(false, s"Cont$$func$$${f.sym.nme}$$${f.sym.toLoc.fold("")(locToStr)}$$")))
   
   private def translateCls(cls: ClsLikeDefn, isTopLevel: Bool): ClsLikeDefn =
-    val curCtorCtx = if isTopLevel && (cls.k is syntax.Mod) then topLevelCtx else
-      ctorCtx(cls.sym.asClsLike.getOrElse(wat("asClsLike", cls.sym)).asPath)
+    val curCtorCtx = if isTopLevel && (cls.k is syntax.Mod)
+      then topLevelCtx(s"Cont$$modCtor$$${cls.sym.nme}$$${cls.sym.toLoc.fold("")(_.toString)}$$")
+      else ctorCtx(
+        cls.sym.asClsLike.getOrElse(wat("asClsLike", cls.sym)).asPath,
+        s"Cont$$ctor$$${cls.sym.nme}$$${cls.sym.toLoc.fold("")(locToStr)}$$")
     cls.copy(methods = cls.methods.map(translateFun),
       ctor = translateBlock(cls.ctor, curCtorCtx))
   
@@ -385,15 +394,14 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
           case _ => super.applyBlock(b)
       transform.applyBlock(b)
     
-    val handlerBody = translateBlock(prepareBody(h.body), HandlerCtx(false, false, N, state => blockBuilder
+    val handlerBody = translateBlock(prepareBody(h.body), HandlerCtx(false, false, false, "Cont$handleBlock", N, state => blockBuilder
       .assignFieldN(state.res.tail, nextIdent, Instantiate(state.cls, Value.Lit(Tree.IntLit(state.uid)) :: Nil))
       .ret(PureCall(handleBlockImplPath, state.res :: h.lhs.asPath :: Nil))))
     
     val handlers = h.handlers.map: handler =>
       val lam = Value.Lam(
         PlainParamList(Param(FldFlags.empty, handler.resumeSym, N) :: Nil),
-        translateBlock(handler.body, functionHandlerCtx.copy(isHandleFree = false)))
-      val tmp = freshTmp()
+        translateBlock(handler.body, functionHandlerCtx(true, s"Cont$$handler$$${handler.sym.toLoc.fold("")(locToStr)}")))
       FunDefn(
         S(h.cls),
         handler.sym, handler.params, Return(PureCall(mkEffectPath, h.lhs.asPath :: lam :: Nil), false))
@@ -424,7 +432,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   private def genContClass(b: Block)(using HandlerCtx): Opt[ClsLikeDefn] =
     val clsSym = ClassSymbol(
       Tree.DummyTypeDef(syntax.Cls),
-      Tree.Ident("Cont$")
+      Tree.Ident(handlerCtx.contName)
     )
     
     val pcVar = VarSymbol(Tree.Ident("pc"))
@@ -467,7 +475,8 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
           case ReturnCont(res, uid) =>
             blockBuilder
               .assign(pcSymbol, Value.Lit(Tree.IntLit(uid)))
-              .ret(PureCall(appendInContPath, res.asPath :: clsSym.asPath :: Nil))
+              .staticif(!handlerCtx.isHandler, _.assignFieldN(res.asPath.tail, nextIdent, clsSym.asPath))
+              .ret(res.asPath)
           case StateTransition(uid) =>
             blockBuilder
               .assign(pcSymbol, Value.Lit(Tree.IntLit(uid)))
@@ -554,5 +563,5 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     transform.applyBlock(b)
 
   def translateTopLevel(b: Block): Block =
-    translateBlock(b, topLevelCtx)
+    translateBlock(b, topLevelCtx(s"Cont$$topLevel$$BAD"))
     

@@ -15,10 +15,10 @@ class Lol(h) with
 //│ Lol1.class = class Lol {
 //│   constructor(h) {
 //│     this.h = h;
-//│     let tmp, res, Cont$1;
+//│     let tmp, res, Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$1;
 //│     const this$Lol = this;
-//│     Cont$1 = function Cont$(pc1) { return new Cont$.class(pc1); };
-//│     Cont$1.class = class Cont$ extends runtime.__Cont.class {
+//│     Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$1 = function Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$(pc1) { return new Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$.class(pc1); };
+//│     Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$1.class = class Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$ extends runtime.__Cont.class {
 //│       constructor(pc) {
 //│         let tmp1;
 //│         tmp1 = super(null, null);
@@ -37,7 +37,8 @@ class Lol(h) with
 //│             res = Predef.print(tmp);
 //│             if (res instanceof runtime.__EffectSig.class) {
 //│               this.pc = 1;
-//│               return runtime.__appendInCont(res, this)
+//│               res.tail.next = this;
+//│               return res
 //│             }
 //│             this.pc = 1;
 //│             continue contLoop;
@@ -48,17 +49,17 @@ class Lol(h) with
 //│           break;
 //│         }
 //│       }
-//│       toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│       toString() { return "Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│     };
 //│     tmp = runtime.safeCall(this.h.perform("k"));
 //│     if (tmp instanceof runtime.__EffectSig.class) {
-//│       tmp.tail.next = new Cont$1.class(0);
+//│       tmp.tail.next = new Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$1.class(0);
 //│       tmp.tail = tmp.tail.next;
 //│       return tmp
 //│     }
 //│     res = Predef.print(tmp);
 //│     if (res instanceof runtime.__EffectSig.class) {
-//│       res.tail.next = new Cont$1.class(1);
+//│       res.tail.next = new Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$1.class(1);
 //│       res.tail = res.tail.next;
 //│       return res
 //│     }
