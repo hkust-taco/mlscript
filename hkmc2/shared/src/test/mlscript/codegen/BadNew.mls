@@ -11,15 +11,6 @@ new
 new 2
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not a constructor
 
-// TODO: somehow desugaring lambdas fixed this, is this intended?
-:todo
-:sjs
-:ge
-new 2 + 2
-//│ JS (unsanitized):
-//│ let lambda; lambda = function lambda(arg1, arg2) { return arg1 + arg2 }; new lambda(2, 2)
-//│ = [object Object]
-
 :re
 new()
 //│ ═══[RUNTIME ERROR] TypeError: runtime.Unit is not a constructor
@@ -43,7 +34,7 @@ new { x = 1 }
 //│       rhs = IntLit of 1
 //│   rft = N
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.37: 	new { x = 1 }
+//│ ║  l.28: 	new { x = 1 }
 //│ ╙──      	      ^
 
 

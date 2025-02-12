@@ -296,13 +296,6 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                   S(doc"function ${sym.nme}($ps) ${ funBodRet }")
                 case Nil => N
               
-              /*
-              val fun = paramsOpt match
-                case S(params) =>
-                  val (ps, bod) = setupFunction(some(sym.nme), params, End())
-                  S(doc"function ${sym.nme}($ps) { return new ${sym.nme}.class($ps); }")
-                case N => N
-              */
               ownr match
               case S(owner) =>
                 val ths = mkThis(owner)
