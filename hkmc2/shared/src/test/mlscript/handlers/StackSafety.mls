@@ -424,7 +424,6 @@ in
   foo(h)
 //│ = 50005000
 
-:fixme
 :effectHandlers
 :stackSafe 100
 :expect 50005000
@@ -434,8 +433,7 @@ module A with
     else n + f(n-1)
   val x = f(10000)
 A.x
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
-//│ ═══[RUNTIME ERROR] Expected: '50005000', got: 'undefined'
+//│ = 50005000
 
 :re
 :effectHandlers

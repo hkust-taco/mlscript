@@ -98,7 +98,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
       override def applyFunDefn(fun: FunDefn): FunDefn = rewriteFn(fun)
       
       override def applyDefn(defn: Defn): Defn = defn match
-        case defn: ClsLikeDefn => rewriteCls(defn)
+        case defn: ClsLikeDefn => rewriteCls(defn, isTopLevel)
         case _: FunDefn | _: ValDefn => super.applyDefn(defn)
 
       override def applyBlock(b: Block): Block = b match
@@ -143,12 +143,13 @@ class StackSafeTransform(depthLimit: Int)(using State):
     walker.applyBlock(b)
     trivial
 
-  def rewriteCls(defn: ClsLikeDefn): ClsLikeDefn = 
+  def rewriteCls(defn: ClsLikeDefn, isTopLevel: Bool): ClsLikeDefn = 
     val ClsLikeDefn(owner, isym, sym, k, paramsOpt, 
       parentPath, methods, privateFields, publicFields, preCtor, ctor) = defn
     ClsLikeDefn(
       owner, isym, sym, k, paramsOpt, parentPath, methods.map(rewriteFn), privateFields,
-      publicFields, rewriteBlk(preCtor), rewriteBlk(ctor)
+      publicFields, rewriteBlk(preCtor),
+      if isTopLevel && (defn.k is syntax.Mod) then transformTopLevel(ctor) else rewriteBlk(ctor)
     )
 
   def rewriteBlk(blk: Block) =
