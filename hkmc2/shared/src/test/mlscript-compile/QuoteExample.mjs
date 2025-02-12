@@ -82,27 +82,25 @@ QuoteExample1 = class QuoteExample {
       let n, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
       if (caseScrut === 0) {
         return x1
+      } else if (caseScrut === 1) {
+        return y
       } else {
-        if (caseScrut === 1) {
-          return y
-        } else {
-          n = caseScrut;
-          tmp = new globalThis.Predef.term.Symbol("+");
-          tmp1 = x1;
-          tmp2 = y;
-          tmp3 = new globalThis.Predef.term.Ref(tmp);
-          tmp4 = new globalThis.Predef.term.Tup([
-            tmp1,
-            tmp2
-          ]);
-          tmp5 = new globalThis.Predef.term.App(tmp3, tmp4);
-          return QuoteExample.bind(tmp5, (z) => {
-            let tmp6, tmp7;
-            tmp6 = QuoteExample.body(y, z);
-            tmp7 = n - 1;
-            return runtime.safeCall(tmp6(tmp7))
-          })
-        }
+        n = caseScrut;
+        tmp = new globalThis.Predef.term.Symbol("+");
+        tmp1 = x1;
+        tmp2 = y;
+        tmp3 = new globalThis.Predef.term.Ref(tmp);
+        tmp4 = new globalThis.Predef.term.Tup([
+          tmp1,
+          tmp2
+        ]);
+        tmp5 = new globalThis.Predef.term.App(tmp3, tmp4);
+        return QuoteExample.bind(tmp5, (z) => {
+          let tmp6, tmp7;
+          tmp6 = QuoteExample.body(y, z);
+          tmp7 = n - 1;
+          return runtime.safeCall(tmp6(tmp7))
+        })
       }
     }
   } 
