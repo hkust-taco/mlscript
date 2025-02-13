@@ -127,4 +127,17 @@ let oops =
 oops.h
 //│ = Handler$h$
 
+let obj = {}
 
+handle h = Effect with
+  fun perform(arg)(k) =
+    k()
+    print(arg)
+set obj.["s"] = h.perform("k")
+//│ > k
+
+fun f() = ()
+
+module A with
+  f()
+  () // defeats tail call optimization

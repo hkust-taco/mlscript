@@ -239,19 +239,23 @@ f(Cons(1, Cons(2, Cons(3, 0))))
 //│ > Cons(3, 0)
 //│ > 0
 
+while false do
+  class A
+  new A
+
 
 // ——— FIXME: ———
 
 
 () => while true then 0
-//│ = [function block$res26]
+//│ = [function block$res27]
 
 :fixme
 while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.251: 	  then 0(0)
+//│ ║  l.255: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ═══[ERROR] Unrecognized term split (false literal).
 //│ > Hello World

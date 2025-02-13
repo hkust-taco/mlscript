@@ -59,6 +59,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
         .assignFieldN(state.res, tailIdent, state.res.tail.next)
         .ret(state.res))
   private val functionHandlerCtx = funcLikeHandlerCtx(N)
+  private val topLevelCtx = HandlerCtx(true, true, N, _ => rtThrowMsg("Unhandled effects"))
   private def ctorCtx(ctorThis: Path) = funcLikeHandlerCtx(S(ctorThis))
   private def handlerCtx(using HandlerCtx): HandlerCtx = summon
   private val predefPath: Path = State.globalThisSymbol.asPath.selN(Tree.Ident("Predef"))
@@ -267,6 +268,9 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       case blk @ AssignField(lhs, nme, rhs, rest) =>
         val PartRet(head, parts) = go(rest)
         PartRet(AssignField(lhs, nme, rhs, head)(blk.symbol), parts)
+      case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
+        val PartRet(head, parts) = go(rest)
+        PartRet(AssignDynField(lhs, fld, arrayIdx, rhs, head), parts)
       case Return(_, _) => PartRet(blk, Nil)
       // ignored cases
       case TryBlock(sub, finallyDo, rest) => ??? // ignore
@@ -336,7 +340,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       override def applyLam(lam: Value.Lam): Value.Lam = Value.Lam(lam.params, translateBlock(lam.body, functionHandlerCtx))
       override def applyDefn(defn: Defn): Defn = defn match
         case f: FunDefn => translateFun(f)
-        case c: ClsLikeDefn => translateCls(c)
+        case c: ClsLikeDefn => translateCls(c, handlerCtx.isTopLevel)
         case _: ValDefn => super.applyDefn(defn)
     transformer.applyBlock(b)
   
@@ -356,9 +360,11 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   private def translateFun(f: FunDefn): FunDefn =
     FunDefn(f.owner, f.sym, f.params, translateBlock(f.body, functionHandlerCtx))
   
-  private def translateCls(cls: ClsLikeDefn): ClsLikeDefn =
+  private def translateCls(cls: ClsLikeDefn, isTopLevel: Bool): ClsLikeDefn =
+    val curCtorCtx = if isTopLevel && (cls.k is syntax.Mod) then topLevelCtx else
+      ctorCtx(cls.sym.asClsLike.getOrElse(wat("asClsLike", cls.sym)).asPath)
     cls.copy(methods = cls.methods.map(translateFun),
-      ctor = translateBlock(cls.ctor, ctorCtx(cls.sym.asClsLike.getOrElse(wat("asClsLike", cls.sym)).asPath)))
+      ctor = translateBlock(cls.ctor, curCtorCtx))
   
   // Handle block becomes a FunDefn and CallPlaceholder
   private def translateHandleBlock(h: HandleBlock): Block =
@@ -548,5 +554,5 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     transform.applyBlock(b)
 
   def translateTopLevel(b: Block): Block =
-    translateBlock(b, HandlerCtx(true, true, N, _ => rtThrowMsg("Unhandled effects")))
+    translateBlock(b, topLevelCtx)
     
