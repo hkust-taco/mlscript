@@ -37,12 +37,14 @@ abstract class MLsDiffMaker extends DiffMaker:
   val silent = NullaryCommand("silent")
   val dbgElab = NullaryCommand("de")
   val dbgParsing = NullaryCommand("dp")
+  val dbgSpec = NullaryCommand("ds")
   val dbgResolving = NullaryCommand("dr")
   
   val showParse = NullaryCommand("p")
   val showParsedTree = DebugTreeCommand("pt")
   val showElab = NullaryCommand("el")
   val showElaboratedTree = DebugTreeCommand("elt")
+  val showSpecialisedTree = DebugTreeCommand("spt")
   val showResolve = NullaryCommand("r")
   val showResolvedTree = DebugTreeCommand("rt")
   val showLoweredTree = NullaryCommand("lot")
@@ -107,6 +109,10 @@ abstract class MLsDiffMaker extends DiffMaker:
       if doTrace then super.trace(pre, post)(thunk)
       else thunk
       
+  val stl = new TraceLogger:
+    override def doTrace = dbgSpec.isSet
+    override def emitDbg(str: String): Unit = output(str)
+
   val rtl = new TraceLogger:
     override def doTrace = dbgResolving.isSet
     override def emitDbg(str: String): Unit = output(str)
@@ -238,6 +244,11 @@ abstract class MLsDiffMaker extends DiffMaker:
     showElaboratedTree.get.foreach: post =>
       output(s"Elaborated tree:")
       output(e.showAsTree(using post))
+
+    val sp = semantics.Specialiser(stl).topLevel(e)
+    showSpecialisedTree.get.foreach: post =>
+      output(s"Specialised tree:")
+      output(sp.showAsTree(using post))
       
     val resolver = ImplicitResolver(rtl)
     curICtx = resolver.resolveBlk(e)(using curICtx)

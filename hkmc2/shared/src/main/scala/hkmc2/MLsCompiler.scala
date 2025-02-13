@@ -7,6 +7,7 @@ import utils.*
 
 import hkmc2.semantics.MemberSymbol
 import hkmc2.semantics.Elaborator
+import hkmc2.semantics.Specialiser
 import semantics.Elaborator.Ctx
 import hkmc2.syntax.Keyword.`override`
 import semantics.Elaborator.State
@@ -50,6 +51,7 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
   
   // TODO adapt logic
   val etl = new TraceLogger{override def doTrace: Bool = false}
+  val stl = new TraceLogger{override def doTrace: Bool = false}
   val ltl = new TraceLogger{override def doTrace: Bool = false}
   
   
@@ -80,7 +82,8 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
       val elab = Elaborator(etl, wd, newCtx)
       val parsed = mainParse.resultBlk
       val (blk0, _) = elab.importFrom(parsed)
-      val blk = blk0.copy(stats = semantics.Import(State.runtimeSymbol, runtimeFile.toString) :: blk0.stats)
+      val blk: semantics.Term.Blk = blk0.copy(stats = semantics.Import(State.runtimeSymbol, runtimeFile.toString) :: blk0.stats)
+      val spBlk = Specialiser(stl).topLevel(blk)
       val low = ltl.givenIn:
         new codegen.Lowering()
           with codegen.LoweringSelSanityChecks

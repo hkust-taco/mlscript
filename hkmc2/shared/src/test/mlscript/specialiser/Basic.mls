@@ -1,0 +1,142 @@
+:js
+
+:elt
+fun add(spec x, spec y) = x + y
+//│ Elaborated tree:
+//│ Blk:
+//│   stats = Ls of 
+//│     TermDefinition:
+//│       owner = N
+//│       k = Fun
+//│       sym = member:add
+//│       params = Ls of 
+//│         ParamList:
+//│           flags = ParamListFlags of false
+//│           params = Ls of 
+//│             Param:
+//│               flags = (spec)
+//│               sym = x
+//│               sign = N
+//│             Param:
+//│               flags = (spec)
+//│               sym = y
+//│               sign = N
+//│           restParam = N
+//│       tparams = N
+//│       sign = N
+//│       body = S of App:
+//│         lhs = Ref of builtin:+
+//│         rhs = Tup of Ls of 
+//│           Fld:
+//│             flags = ()
+//│             term = Ref of x
+//│             asc = N
+//│           Fld:
+//│             flags = ()
+//│             term = Ref of y
+//│             asc = N
+//│       resSym = ‹result of member:add›
+//│       flags = ()
+//│       annotations = Nil
+//│   res = Lit of UnitLit of false
+
+
+:sjs
+fun id(spec x) = x
+fun add(spec a, spec b) = id(a) + id(b)
+add(1, 2)
+add("a", 1)
+//│ JS (unsanitized):
+//│ let add1, id, tmp;
+//│ id = function id(x) {
+//│   return x
+//│ };
+//│ add1 = function add(a, b) {
+//│   let tmp1, tmp2;
+//│   tmp1 = id(a);
+//│   tmp2 = id(b);
+//│   return tmp1 + tmp2
+//│ };
+//│ tmp = add1(1, 2);
+//│ add1("a", 1)
+//│ = "a1"
+
+:sjs
+fun id(x) = x
+id("a")
+id of 1
+//│ JS (unsanitized):
+//│ let id1, tmp1; id1 = function id(x) { return x }; tmp1 = id1("a"); id1(1)
+//│ = 1
+
+:sjs
+fun id(x) = x
+let a = 1
+id(a)
+//│ JS (unsanitized):
+//│ let id2, a; id2 = function id(x) { return x }; a = 1; id2(a)
+//│ = 1
+//│ a = 1
+
+:sjs
+fun id(x) = x
+fun id2(y) = id of y
+id of "a"
+id2 of 1
+//│ JS (unsanitized):
+//│ let id21, id3, tmp2;
+//│ id3 = function id(x) {
+//│   return x
+//│ };
+//│ id21 = function id2(y) {
+//│   return id3(y)
+//│ };
+//│ tmp2 = id3("a");
+//│ id21(1)
+//│ = 1
+
+:sjs
+module A with
+    fun test(spec x) = x
+    fun id(spec b) = test of 1
+//│ JS (unsanitized):
+//│ let A1;
+//│ A1 = class A {
+//│   static {}
+//│   static test(x) {
+//│     return x
+//│   } 
+//│   static id(b) {
+//│     return A.test(1)
+//│   }
+//│   static toString() { return "A"; }
+//│ };
+
+:sjs
+fun id(spec x) =
+    fun inner(spec y) = y
+    inner(x)
+id(1)
+id("a")
+//│ JS (unsanitized):
+//│ let id4, tmp3;
+//│ id4 = function id(x) {
+//│   let inner;
+//│   inner = function inner(y) {
+//│     return y
+//│   };
+//│   return inner(x)
+//│ };
+//│ tmp3 = id4(1);
+//│ id4("a")
+//│ = "a"
+
+:sjs
+fun id(spec x) = x
+fun id2(spec y) =
+    id of y
+id2(1)
+//│ JS (unsanitized):
+//│ let id22, id5; id5 = function id(x) { return x }; id22 = function id2(y) { return id5(y) }; id22(1)
+//│ = 1
+
