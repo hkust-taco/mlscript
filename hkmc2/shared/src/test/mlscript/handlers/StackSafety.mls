@@ -424,6 +424,17 @@ in
   foo(h)
 //│ = 50005000
 
+:effectHandlers
+:stackSafe 100
+:expect 50005000
+module A with
+  val f = n =>
+    if n <= 0 then 0
+    else n + f(n-1)
+  val x = f(10000)
+A.x
+//│ = 50005000
+
 :re
 :effectHandlers
 fun foo(h) = h.perform(2)

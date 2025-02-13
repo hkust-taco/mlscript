@@ -106,13 +106,14 @@ sealed abstract class Block extends Product with AutoLocated:
     case AssignDynField(_, _, _, rhs, rest) => rhs.subBlocks ::: rest :: Nil
     case Define(d, rest) => d.subBlocks ::: rest :: Nil
     case HandleBlock(_, _, par, args, _, handlers, body, rest) => par.subBlocks ++ args.flatMap(_.subBlocks) ++ handlers.map(_.body) :+ body :+ rest
+    case Label(_, body, rest) => body :: rest :: Nil
     
     // TODO rm Lam from values and thus the need for these cases
     case Return(r, _) => r.subBlocks
     case HandleBlockReturn(r) => r.subBlocks
     case Throw(r) => r.subBlocks
     
-    case _: Return | _: Throw | _: Label | _: Break | _: Continue | _: End | _: HandleBlockReturn => Nil
+    case _: Return | _: Throw | _: Break | _: Continue | _: End | _: HandleBlockReturn => Nil
   
   // Moves definitions in a block to the top. Only scans the top-level definitions of the block;
   // i.e, definitions inside other definitions are not moved out. Definitions inside `match`/`if`
