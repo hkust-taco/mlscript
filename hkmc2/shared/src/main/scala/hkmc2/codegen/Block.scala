@@ -135,11 +135,11 @@ sealed abstract class Block extends Product with AutoLocated:
     
     (transformer.applyBlock(this), defns)
   
-  // the flatten function that preserves the information in `End`
+  // the flatten function that preserves the information in `End` by turning `b` into a `End => Block`
   def flattenConcat(b: End => Block): Block = this match
     case Match(scrut, arms, dflt, rest) => Match(scrut, arms, dflt, rest.flattenConcat(b))
     case Label(label, body, rest) => Label(label, body, rest.flattenConcat(b))
-    case Begin(sub, rest) => sub.flattenConcat(_ => rest.flattenConcat(b))
+    case Begin(sub, rest) => sub.flattenConcat(_ => rest.flattenConcat(b)) // discard the `End` in the first block `sub`
     case TryBlock(sub, finallyDo, rest) => TryBlock(sub, finallyDo, rest.flattenConcat(b))
     case Assign(lhs, rhs, rest) => Assign(lhs, rhs, rest.flattenConcat(b))
     case a@AssignField(lhs, nme, rhs, rest) => AssignField(lhs, nme, rhs, rest.flattenConcat(b))(a.symbol)
@@ -151,11 +151,11 @@ sealed abstract class Block extends Product with AutoLocated:
   
   lazy val flattenTopLevel = this.flattenConcat(identity)
   
-  // the block transformer that go through nested blocks and flatten them
-  object DeepBlockFlattenTransformer extends BlockTransformer(new SymbolSubst()):
+  // the block transformer that goes through nested blocks and flatten them
+  object DeepFlattenTransformer extends BlockTransformer(new SymbolSubst()):
     override def applyBlock(b: Block): Block = super.applyBlock(b.flattenTopLevel)
   
-  lazy val flatten = DeepBlockFlattenTransformer.applyBlock(this)
+  lazy val flatten = DeepFlattenTransformer.applyBlock(this)
   
   
   // private lazy val flattenContAndTailAndRes: (Block => Block) -> BlockTail -> Block = this match
