@@ -147,7 +147,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
     val ClsLikeDefn(owner, isym, sym, k, paramsOpt, auxParams,
       parentPath, methods, privateFields, publicFields, preCtor, ctor) = defn
     ClsLikeDefn(
-      owner, isym, sym, k, paramsOpt, parentPath, methods.map(rewriteFn), privateFields,
+      owner, isym, sym, k, paramsOpt, auxParams, parentPath, methods.map(rewriteFn), privateFields,
       publicFields, rewriteBlk(preCtor),
       if isTopLevel && (defn.k is syntax.Mod) then transformTopLevel(ctor) else rewriteBlk(ctor)
     )
