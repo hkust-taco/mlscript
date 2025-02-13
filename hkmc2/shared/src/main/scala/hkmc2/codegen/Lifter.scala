@@ -129,8 +129,10 @@ class Lifter(using State, Raise):
   /**
     * The context of the class lifter. One can create an empty context using `Lifter.empty`.
     * 
-    * @param usedLocals Describes the locals belonging to each function that are accessed/mutated by nested definitions.
+    * @param defns A map from all BlockMemberSymbols to their definitions.
+    * @param defnsCur All definitions that are nested in the current top level definition.
     * @param nestedDefns Definitions which are nested in a given definition (shallow).
+    * @param usedLocals Describes the locals belonging to each function that are accessed/mutated by nested definitions.
     * @param accessInfo Which previously defined variables/definitions could be accessed/modified by a particular definition, 
     * possibly through calls to other functions or by constructing a class.
     * @param ignoredDefns The definitions which must not be lifted.
@@ -149,6 +151,7 @@ class Lifter(using State, Raise):
     */
   case class LifterCtx(
     val defns: Map[BlockMemberSymbol, Defn] = Map.empty,
+    val defnsCur: Set[BlockMemberSymbol] = Set.empty,
     val nestedDefns: Map[BlockMemberSymbol, List[Defn]] = Map.empty,
     val usedLocals: UsedLocalsMap = UsedLocalsMap(Map.empty),
     val accessInfo: Map[BlockMemberSymbol, AccessInfo] = Map.empty,
@@ -178,10 +181,12 @@ class Lifter(using State, Raise):
     def ignored(b: BlockMemberSymbol) = ignoredDefns.contains(b)
     def isModOrObj(b: BlockMemberSymbol) = modLocals.contains(b)
     def getAccesses(sym: BlockMemberSymbol) = accessInfo(sym)
+    def isRelevant(sym: BlockMemberSymbol) = defnsCur.contains(sym)
     
     def addIgnored(defns: Set[BlockMemberSymbol]) = copy(ignoredDefns = ignoredDefns ++ defns)
     def withModLocals(mp: Map[BlockMemberSymbol, Local]) = copy(modLocals = modLocals ++ mp)
     def withDefns(mp: Map[BlockMemberSymbol, Defn]) = copy(defns = mp)
+    def withDefnsCur(defns: Set[BlockMemberSymbol]) = copy(defnsCur = defns)
     def withNestedDefns(mp: Map[BlockMemberSymbol, List[Defn]]) = copy(nestedDefns = mp)
     def withAccesses(mp: Map[BlockMemberSymbol, AccessInfo]) = copy(accessInfo = mp)
     def withInScopes(mp: Map[BlockMemberSymbol, Set[BlockMemberSymbol]]) = copy(inScopeDefns = mp)
@@ -552,7 +557,7 @@ class Lifter(using State, Raise):
             case _ => super.applyPath(p)
         
         // Rewrites this.className.class to reference the top-level definition
-        case s @ Select(RefOfBms(l), Tree.Ident("class")) if !ctx.ignored(l) =>
+        case s @ Select(RefOfBms(l), Tree.Ident("class")) if !ctx.ignored(l) && ctx.isRelevant(l) =>
           // this class will be lifted, rewrite the ref to strip it of `Select`
           Select(Value.Ref(l), Tree.Ident("class"))(s.symbol)
 
@@ -566,7 +571,7 @@ class Lifter(using State, Raise):
 
         // This is to rewrite references to classes that are not lifted (when their BlockMemberSymbol
         // reference is passed as function parameters).
-        case RefOfBms(l) if ctx.ignored(l) => ctx.getIgnoredBmsPath(l) match
+        case RefOfBms(l) if ctx.ignored(l) && ctx.isRelevant(l) => ctx.getIgnoredBmsPath(l) match
           case Some(value) => Value.Ref(value)
           case None => super.applyPath(p)
         
@@ -885,11 +890,11 @@ class Lifter(using State, Raise):
       case d => d
 
     def rewriteExtends(p: Path): Path = p match
-      case RefOfBms(b) if !ctx.ignored(b) =>
+      case RefOfBms(b) if !ctx.ignored(b) && ctx.isRelevant(b) =>
         // we may need to add `class` in case the lifting added extra params
         if ctxx.getBmsReqdInfo(b).isDefined then Select(b.asPath, Tree.Ident("class"))(N)
         else b.asPath
-      case Select(RefOfBms(b), Tree.Ident("class")) if !ctx.ignored(b) => 
+      case Select(RefOfBms(b), Tree.Ident("class")) if !ctx.ignored(b) && ctx.isRelevant(b) => 
         Select(b.asPath, Tree.Ident("class"))(N)
       case _ => return p
       
@@ -1032,15 +1037,17 @@ class Lifter(using State, Raise):
     val walker1 = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
         case Define(d, rest) =>
-
           val Lifted(lifted, extra) = d match
-            case f: FunDefn => liftDefnsInFn(f, ctxx.addBmsReqdInfo(createLiftInfoFn(f, ctxx)))
-            case c: ClsLikeDefn => liftDefnsInCls(c, ctxx.addBmsReqdInfo(createLiftInfoCls(c, ctxx)))
+            case f: FunDefn => 
+              val ctxxx = ctxx.withDefnsCur(analyzer.nestedDeep(d.sym))
+              liftDefnsInFn(f, ctxxx.addBmsReqdInfo(createLiftInfoFn(f, ctxxx)))
+            case c: ClsLikeDefn => 
+              val ctxxx = ctxx.withDefnsCur(analyzer.nestedDeep(d.sym))
+              liftDefnsInCls(c, ctxxx.addBmsReqdInfo(createLiftInfoCls(c, ctxxx)))
             case _ => return super.applyBlock(b)
           (lifted :: extra).foldLeft(applyBlock(rest))((acc, defn) => Define(defn, acc))
         case _ => super.applyBlock(b)
     walker1.applyBlock(blk)
-
 /**
   * Analyzes which variables have been used and mutated by which functions.
   * Also finds which variables can be passed to a capture class without a heap
@@ -1059,7 +1066,8 @@ class UsedVarAnalyzer(b: Block)(using State):
     defnsMap: Map[BlockMemberSymbol, Defn], // map bms to defn
     existingVars: Map[BlockMemberSymbol, Set[Local]], // variables already existing when that defn is defined
     inScopeDefns: Map[BlockMemberSymbol, Set[BlockMemberSymbol]], // definitions that are in scope and not nested within this defn, and not including itself
-    nestedDefns: Map[BlockMemberSymbol, List[Defn]], // definitions directly nested within another defn (shallow)
+    nestedDefns: Map[BlockMemberSymbol, List[Defn]], // definitions that are a successor of the current defn
+    nestedDeep: Map[BlockMemberSymbol, Set[BlockMemberSymbol]], // definitions nested within another defn, including that defn (deep)
     nestedIn: Map[BlockMemberSymbol, BlockMemberSymbol], // the definition that a definition is directly nested in
   )
   private def createMetadata: DefnMetadata =
@@ -1068,9 +1076,12 @@ class UsedVarAnalyzer(b: Block)(using State):
     var existingVars: Map[BlockMemberSymbol, Set[Local]] = Map.empty
     var inScopeDefns: Map[BlockMemberSymbol, Set[BlockMemberSymbol]] = Map.empty
     var nestedDefns: Map[BlockMemberSymbol, List[Defn]] = Map.empty
+    var nestedDeep: Map[BlockMemberSymbol, Set[BlockMemberSymbol]] = Map.empty
     var nestedIn: Map[BlockMemberSymbol, BlockMemberSymbol] = Map.empty
 
     def createMetadataFn(f: FunDefn, existing: Set[Local], inScope: Set[BlockMemberSymbol]): Unit =
+      var nested: Set[BlockMemberSymbol] = Set.empty
+      
       existingVars += (f.sym -> existing)
       val thisVars = Lifter.getVars(f) -- existing
       val newExisting = existing ++ thisVars
@@ -1082,6 +1093,7 @@ class UsedVarAnalyzer(b: Block)(using State):
       val newInScope = inScope ++ thisScopeDefns.map(_.sym)
       for s <- thisScopeDefns do
         inScopeDefns += s.sym -> (newInScope - s.sym)
+        nested += s.sym
 
       defnsMap += (f.sym -> f)
       definedLocals += (f.sym -> thisVars)
@@ -1089,12 +1101,9 @@ class UsedVarAnalyzer(b: Block)(using State):
       for d <- thisScopeDefns do
         nestedIn += (d.sym -> f.sym)
         createMetadataDefn(d, newExisting, newInScope)
+        nested ++= nestedDeep(d.sym)
       
-      val walker = new BlockTransformerShallow(SymbolSubst()):
-        override def applyDefn(defn: Defn): Defn =
-          createMetadataDefn(defn, newExisting, inScope)
-          defn
-      walker.applyBlock(f.body)
+      nestedDeep += f.sym -> nested
 
     def createMetadataDefn(d: Defn, existing: Set[Local], inScope: Set[BlockMemberSymbol]): Unit =
       d match
@@ -1105,6 +1114,8 @@ class UsedVarAnalyzer(b: Block)(using State):
       case d => Map.empty
 
     def createMetadataCls(c: ClsLikeDefn, existing: Set[Local], inScope: Set[BlockMemberSymbol]): Unit =
+      var nested: Set[BlockMemberSymbol] = Set.empty
+      
       existingVars += (c.sym -> existing)
       val thisVars = Lifter.getVars(c) -- existing
       val newExisting = existing ++ thisVars
@@ -1117,6 +1128,7 @@ class UsedVarAnalyzer(b: Block)(using State):
       val newInScope = inScope ++ thisScopeDefns.map(_.sym)
       for s <- thisScopeDefns do
         inScopeDefns += s.sym -> (newInScope - s.sym)
+        nested += s.sym
       
       defnsMap += (c.sym -> c)
       definedLocals += (c.sym -> thisVars)
@@ -1124,6 +1136,9 @@ class UsedVarAnalyzer(b: Block)(using State):
       for d <- thisScopeDefns do
         nestedIn += (d.sym -> c.sym)
         createMetadataDefn(d, newExisting, newInScope)
+        nested ++= nestedDeep(d.sym)
+      
+      nestedDeep += c.sym -> nested
   
     val walker = new BlockTransformerShallow(SymbolSubst()):
       override def applyDefn(defn: Defn): Defn =
@@ -1131,10 +1146,10 @@ class UsedVarAnalyzer(b: Block)(using State):
         createMetadataDefn(defn, b.definedVars, Set.empty)
         defn
     walker.applyBlock(b)
-    DefnMetadata(definedLocals, defnsMap, existingVars, inScopeDefns, nestedDefns, nestedIn)
+    DefnMetadata(definedLocals, defnsMap, existingVars, inScopeDefns, nestedDefns, nestedDeep, nestedIn)
 
-  val DefnMetadata(definedLocals, defnsMap,
-    existingVars, inScopeDefns, nestedDefns, nestedIn) = createMetadata
+  val DefnMetadata(definedLocals, defnsMap, existingVars, 
+    inScopeDefns, nestedDefns, nestedDeep, nestedIn) = createMetadata
 
   def isModule(s: BlockMemberSymbol) = defnsMap.get(s) match
     case S(c: ClsLikeDefn) => c.k is syntax.Mod
