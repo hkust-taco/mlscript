@@ -580,14 +580,6 @@ class Lifter(using State, Raise):
             case None => super.applyPath(p)
         case _ => super.applyPath(p)
 
-      override def applyDefn(defn: Defn): Defn = defn match
-        case c: ClsLikeDefn =>
-          val par2 = c.parentPath.mapConserve(applyPath)
-          if par2 is c.parentPath then defn
-          else c.copy(parentPath = par2)
-        case _ => super.applyDefn(defn)
-
-
   def rewriteBlk(b: Block, ctorCls: Opt[ClsLikeDefn], ctx: LifterCtx): Block =
     // replaces references to BlockMemberSymbols as needed with fresh variables, and
     // returns the mapping from the symbol to the required variable. When possible,
