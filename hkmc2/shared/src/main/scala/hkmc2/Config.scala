@@ -11,7 +11,7 @@ def config(using Config): Config = summon
 case class Config(
   sanityChecks: Opt[SanityChecks],
   effectHandlers: Opt[EffectHandlers],
-  liftDefns: Opt[LiftDefns]
+  liftDefns: Opt[LiftDefns],
 ):
   
   def stackSafety: Opt[StackSafety] = effectHandlers.flatMap(_.stackSafety)

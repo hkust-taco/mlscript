@@ -353,7 +353,7 @@ sealed abstract class Result:
     case Value.Lam(params, body) => body :: Nil
     case Value.Arr(elems) => elems.flatMap(_.value.subBlocks)
     case _ => Nil
-
+  
   lazy val freeVars: Set[Local] = this match
     case Call(fun, args) => fun.freeVars ++ args.flatMap(_.value.freeVars).toSet
     case Instantiate(cls, args) => cls.freeVars ++ args.flatMap(_.freeVars).toSet
