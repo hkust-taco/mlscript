@@ -523,7 +523,7 @@ class Lifter(using State, Raise):
             case Some(value) => Assign(value, applyResult(rhs), applyBlock(rest))
         
         case Define(d: Defn, rest: Block) => ctx.modLocals.get(d.sym) match 
-          case Some(sym) => ctx.getBmsReqdInfo(d.sym) match
+          case Some(sym) if !ctx.ignored(d.sym) => ctx.getBmsReqdInfo(d.sym) match
             case Some(_) => 
               blockBuilder
                 .assign(sym, Call(d.sym.asPath, getCallArgs(d.sym, ctx))(true, false))
@@ -839,7 +839,7 @@ class Lifter(using State, Raise):
 
     // if this is a module, add a method to reference the classes lifted out
     val extraMethods = if c.k is syntax.Mod then ctorIncluded.collect:
-      case cls: ClsLikeDefn if cls.k is syntax.Cls =>
+      case cls: ClsLikeDefn if (cls.k is syntax.Cls) && !ctx.ignored(cls.sym) =>
         FunDefn(
           S(c.isym),
           BlockMemberSymbol(cls.sym.nme, Nil),

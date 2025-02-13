@@ -331,3 +331,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│ tmp7 = runtime.safeCall(tmp6.newB.newA_B(3));
 //│ tmp7.newB.get
 //│ = 3
+
+module M with
+  class A
+  object B extends A
