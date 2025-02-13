@@ -139,11 +139,13 @@ class Lifter(using State, Raise):
     * @param localCaptureSyms The symbols in a capture corresponding to a particular local
     * @param prevFnLocals Locals belonging to function definitions that have already been traversed
     * @param prevClsDefns Class definitions that have already been traversed, excluding modules
+    * @param curModules Modules that that we are currently nested in (cleared if we are lifted out)
     * @param capturePaths The path to access a particular function's capture in the local scope
     * @param bmsReqdInfo The (mutable) captures and (immutable) local variables each function requires
     * @param ignoredBmsPaths The path to access a particular BlockMemberSymbol (for definitions which could not be lifted)
     * @param localPaths The path to access a particular local (possibly belonging to a previous function) in the current scope
     * @param iSymPaths The path to access a particular `innerSymbol` (possibly belonging to a previous class) in the current scope
+    * @param replDefns Ignored definitions whose definitions we should replace in the block itself
     */
   case class LifterCtx(
     val defns: Map[BlockMemberSymbol, Defn] = Map.empty,
@@ -156,11 +158,13 @@ class Lifter(using State, Raise):
     val localCaptureSyms: Map[Local, LocalSymbol & NamedSymbol] = Map.empty,
     val prevFnLocals: FreeVars = FreeVars.empty,
     val prevClsDefns: List[ClsLikeDefn] = Nil,
+    val curModules: List[ClsLikeDefn] = Nil,
     val capturePaths: Map[BlockMemberSymbol, Path] = Map.empty,
     val bmsReqdInfo: Map[BlockMemberSymbol, LiftedInfo] = Map.empty, // required captures
     val ignoredBmsPaths: Map[BlockMemberSymbol, Local] = Map.empty,
     val localPaths: Map[Local, Local] = Map.empty,
     val isymPaths: Map[InnerSymbol, Local] = Map.empty,
+    val replDefns: Map[BlockMemberSymbol, Defn] = Map.empty,
   ):
     // gets the function to which a local belongs
     def lookup(l: Local) = usedLocals.lookup(l)
@@ -196,6 +200,11 @@ class Lifter(using State, Raise):
     def addIgnoredBmsPaths(m: Map[BlockMemberSymbol, Local]) = copy(ignoredBmsPaths = ignoredBmsPaths ++ m)
     def addIsymPath(isym: InnerSymbol, l: Local) = copy(isymPaths = isymPaths + (isym -> l))
     def addIsymPaths(mp: Map[InnerSymbol, Local]) = copy(isymPaths = isymPaths ++ mp)
+    def addReplDefns(mp: Map[BlockMemberSymbol, Defn]) = copy(replDefns = replDefns ++ mp)
+    def inModule(defn: ClsLikeDefn) = copy(curModules = defn :: curModules)
+    def flushModules = 
+      // called when we are lifted out while in some modules, so we need to add the modules' isym paths
+      copy(curModules = Nil).addIsymPaths(curModules.map(d => d.isym -> d.sym).toMap)
   
   object LifterCtx:
     def empty = LifterCtx()
@@ -308,9 +317,9 @@ class Lifter(using State, Raise):
   )
 
   // d is a top-level definition
-  // returns (unliftable classes, modules, objects)
+  // returns (ignored classes, modules, objects)
   def createMetadata(d: Defn, ctx: LifterCtx): (Set[BlockMemberSymbol], List[ClsLikeDefn], List[ClsLikeDefn]) =
-    var unliftable: Set[BlockMemberSymbol] = Set.empty
+    var ignored: Set[BlockMemberSymbol] = Set.empty
     var clsSymToBms: Map[Local, BlockMemberSymbol] = Map.empty
     var modules: List[ClsLikeDefn] = Nil
     var objects: List[ClsLikeDefn] = Nil
@@ -340,7 +349,7 @@ class Lifter(using State, Raise):
         super.applyDefn(defn)
     walker.applyDefn(d)
 
-    // search for defns nested within a top-level module, which can always be lifted
+    // search for defns nested within a top-level module, which are unnecessary to lift
     def inModuleDefns(d: Defn): Set[BlockMemberSymbol] =
       val nested = ctx.nestedDefns(d.sym)
       nested.map(_.sym).toSet ++ nested.flatMap: nested =>
@@ -350,7 +359,8 @@ class Lifter(using State, Raise):
       case c: ClsLikeDefn if c.k is syntax.Mod => true
       case _ => false
 
-    val liftable = if isMod then inModuleDefns(d) else Set.empty
+    val inModTopLevel = if isMod then inModuleDefns(d) else Set.empty
+    ignored ++= inModTopLevel
 
     val clsSyms = clsSymToBms.values.toSet
     val walker2 = new BlockTransformer(SymbolSubst()):
@@ -358,12 +368,12 @@ class Lifter(using State, Raise):
         cse match
           case Case.Cls(cls, path) =>
             clsSymToBms.get(cls) match
-            case Some(value) if !liftable.contains(value) =>
+            case Some(value) if !ignored.contains(value) => // don't generate a warning if it's already ignored
               raise(WarningReport(
                 msg"Cannot yet lift the class/module `${value.nme}` as it is used in an instance check." -> N :: Nil,
                 N, Diagnostic.Source.Compilation
               ))
-              unliftable += value
+              ignored += value
             case _ => ()
           case _ => ()
         cse
@@ -415,12 +425,12 @@ class Lifter(using State, Raise):
             msg"Cannot yet lift the class `${l.nme}` as it is used as a first-class class." -> N :: Nil,
             N, Diagnostic.Source.Compilation
           ))
-          unliftable += l
+          ignored += l
           v
         case _ => super.applyValue(v)
     walker2.applyDefn(d)
 
-    (unliftable, modules, objects)
+    (ignored, modules, objects)
 
   extension (b: Block)
     private def floatOut(ctx: LifterCtx) =
@@ -522,7 +532,10 @@ class Lifter(using State, Raise):
               blockBuilder
                 .assign(sym, Call(d.sym.asPath, Nil)(true, false))
                 .rest(applyBlock(rest))
-          case _ => super.applyBlock(b)
+          case _ => ctx.replDefns.get(d.sym) match
+            case Some(value) => Define(value, applyBlock(rest))
+            case None => super.applyBlock(b)
+          
         
         case _ => super.applyBlock(b)
       
@@ -621,7 +634,7 @@ class Lifter(using State, Raise):
     end rewriteBms
     
     
-    // rewrites references to variables
+    // rewrites references to variables and defns
     val transformer1 = refRewriter(ctx, ctorCls)
 
     // rewrites references to block member symbols
@@ -710,7 +723,7 @@ class Lifter(using State, Raise):
       val newCtx = ctx
         .replCapturePaths(newCapturePaths)
         .replLocalPaths(newLocalsPaths)
-        .replIsymPaths(newIsymPaths)
+        .addIsymPaths(newIsymPaths)
         .replIgnoredBmsPaths(newBmsPaths)
 
       d match
@@ -816,11 +829,13 @@ class Lifter(using State, Raise):
         case _ => Lifted(d, Nil)
   
   def liftDefnsInCls(c: ClsLikeDefn, ctx: LifterCtx): Lifted[ClsLikeDefn] =
-    val (preCtor, preCtorDefns) = c.preCtor.floatOut(ctx)
-    val (ctor, ctorDefns) = c.ctor.floatOut(ctx)
+    val ctxx = if c.k is syntax.Mod then ctx.inModule(c) else ctx
+    
+    val (preCtor, preCtorDefns) = c.preCtor.floatOut(ctxx)
+    val (ctor, ctorDefns) = c.ctor.floatOut(ctxx)
 
     val allCtorDefns = preCtorDefns ++ ctorDefns
-    val (ctorIgnored, ctorIncluded) = allCtorDefns.partition(d => ctx.ignored(d.sym))
+    val (ctorIgnored, ctorIncluded) = allCtorDefns.partition(d => ctxx.ignored(d.sym))
 
     // if this is a module, add a method to reference the classes lifted out
     val extraMethods = if c.k is syntax.Mod then ctorIncluded.collect:
@@ -833,7 +848,7 @@ class Lifter(using State, Raise):
         )
       else Nil
     val nestedClsPaths: Map[Local, Local] = ctorIncluded.map:
-      case c: ClsLikeDefn if modOrObj(c) => ctx.modLocals.get(c.sym) match
+      case c: ClsLikeDefn if modOrObj(c) => ctxx.modLocals.get(c.sym) match
         case Some(sym) => S(c.sym -> sym)
         case _ => S(c.sym -> c.sym)
       case _ => None
@@ -841,20 +856,30 @@ class Lifter(using State, Raise):
       case Some(x) => x
     .toMap
     
-    val newCtx_ = ctx
+    val newCtx_ = ctxx
       .addLocalPaths(nestedClsPaths)
       .addLocalPaths(getVars(c).map(s => s -> s).toMap)
 
     val newCtx = c.k match
       case syntax.Mod => newCtx_
       case _ => newCtx_.addIsymPath(c.isym, c.isym)
-
-    val newPreCtor = rewriteBlk(preCtor, S(c), newCtx)
-    val newCtor = rewriteBlk(ctor, S(c), newCtx)
     
     val ctorDefnsLifted = ctorIncluded.flatMap: defn =>
-      val Lifted(liftedDefn, extraDefns) = liftOutDefnCont(c, defn, newCtx)
+      val Lifted(liftedDefn, extraDefns) = liftOutDefnCont(c, defn, newCtx.flushModules)
       liftedDefn :: extraDefns
+    
+    val ctorIgnoredLift = ctorIgnored.map: defn =>
+      liftOutDefnCont(c, defn, newCtx)
+      
+    val ctorIgnoredExtra = ctorIgnoredLift.flatMap(_.extraDefns)
+    val ctorIgnoredRewrite = ctorIgnoredLift.map: lifted =>
+        lifted.liftedDefn.sym -> lifted.liftedDefn
+      .toMap
+    
+    val replDefnsCtx = newCtx.addReplDefns(ctorIgnoredRewrite)
+    val newPreCtor = rewriteBlk(preCtor, S(c), replDefnsCtx)
+    val newCtor = rewriteBlk(ctor, S(c), replDefnsCtx)
+    
     
     val fLifted = c.methods.map(liftDefnsInFn(_, newCtx))
     val methods = fLifted.collect:
@@ -862,17 +887,18 @@ class Lifter(using State, Raise):
     val fExtra = fLifted.flatMap:
       case Lifted(liftedDefn, extraDefns) => extraDefns
 
-    val extras = (ctorDefnsLifted ++ fExtra).map:
+    val extras = (ctorDefnsLifted ++ fExtra ++ ctorIgnoredExtra).map:
       case f: FunDefn => f.copy(owner = N)
       case c: ClsLikeDefn => c.copy(owner = N)
       case d => d
 
     def rewriteExtends(p: Path): Path = p match
-      case RefOfBms(b) =>
+      case RefOfBms(b) if !ctx.ignored(b) =>
         // we may need to add `class` in case the lifting added extra params
-        if ctx.getBmsReqdInfo(b).isDefined then Select(b.asPath, Tree.Ident("class"))(N)
+        if ctxx.getBmsReqdInfo(b).isDefined then Select(b.asPath, Tree.Ident("class"))(N)
         else b.asPath
-      case Select(RefOfBms(b), Tree.Ident("class")) => Select(b.asPath, Tree.Ident("class"))(N)
+      case Select(RefOfBms(b), Tree.Ident("class")) if !ctx.ignored(b) => 
+        Select(b.asPath, Tree.Ident("class"))(N)
       case _ => return p
       
     // if this class extends something, rewrite
@@ -915,12 +941,17 @@ class Lifter(using State, Raise):
     val nestedCtx = captureCtx.addFnLocals(captureCtx.usedLocals(f.sym))
 
     // lift out the nested defns
-    val nestedLifted = included.map(liftOutDefnCont(f, _, nestedCtx))
-    val ignoredExtra = ignored.flatMap(liftOutDefnCont(f, _, nestedCtx).extraDefns)
+    val nestedLifted = included.map(liftOutDefnCont(f, _, nestedCtx.flushModules))
+    val ignoredLifted = ignored.map(liftOutDefnCont(f, _, nestedCtx))
+    val ignoredExtra = ignoredLifted.flatMap(_.extraDefns)
     val newDefns = ignoredExtra ++ nestedLifted.flatMap:
       case Lifted(liftedDefn, extraDefns) => liftedDefn :: extraDefns
+      
+    val ignoredRewrite = ignoredLifted.map: lifted =>
+        lifted.liftedDefn.sym -> lifted.liftedDefn
+      .toMap
 
-    val transformed = rewriteBlk(blk, N, captureCtx)
+    val transformed = rewriteBlk(blk, N, captureCtx.addReplDefns(ignoredRewrite))
 
     if thisVars.reqCapture.size == 0 then
       Lifted(FunDefn(f.owner, f.sym, f.params, transformed), newDefns)
@@ -1005,7 +1036,6 @@ class Lifter(using State, Raise):
     val ctxx = ctx
       .addIgnored(unliftable)
       .withModLocals(modLocals)
-      .addIsymPaths(modules.map(m => m.isym -> m.sym).toMap)
 
     val walker1 = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match

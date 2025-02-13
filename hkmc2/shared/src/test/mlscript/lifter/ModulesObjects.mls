@@ -215,30 +215,27 @@ module M with
   val x = if A() is A then 2 else 3
 M.A().get
 //│ JS (unsanitized):
-//│ let A9, M21, tmp4;
-//│ A9 = function A() {
-//│   return new A.class();
-//│ };
-//│ A9.class = class A8 {
-//│   constructor() {}
-//│   get get() {
-//│     return M21.x + M21.x;
-//│   }
-//│   toString() { return "A(" + "" + ")"; }
-//│ };
+//│ let M21, tmp4;
 //│ M21 = class M20 {
 //│   static {
 //│     let scrut, tmp5;
+//│     this.A = function A() {
+//│       return new A.class();
+//│     };
+//│     this.A.class = class A7 {
+//│       constructor() {}
+//│       get get() {
+//│         return M21.x + M20.x;
+//│       }
+//│       toString() { return "A(" + "" + ")"; }
+//│     };
 //│     scrut = M20.A();
-//│     if (scrut instanceof A9.class) {
+//│     if (scrut instanceof M20.A.class) {
 //│       tmp5 = 2;
 //│     } else {
 //│       tmp5 = 3;
 //│     }
 //│     this.x = tmp5;
-//│   }
-//│   static get A() {
-//│     return A9;
 //│   }
 //│   static toString() { return "M"; }
 //│ };
@@ -253,3 +250,84 @@ module M with
   class B() extends A
 M.B().get
 //│ = 2
+
+/// Top Level Modules ///
+
+// newA should reference the class symbol
+// newA_B should reference the BlockMemberSymbol
+:lift
+:sjs
+module M with
+  class A(x) with
+    class B() with
+      fun get = x
+      fun newA_B(y) = A(y)
+    fun newA = A()
+    fun newB = B()
+  0 is A
+M.A(2).newB.newA_B(3).newB.get
+//│ JS (unsanitized):
+//│ let B2, M25, tmp6, tmp7, B$ctor, B$;
+//│ B$ = function B$(A$instance$0) {
+//│   let tmp8;
+//│   tmp8 = new B2.class();
+//│   return tmp8(A$instance$0)
+//│ };
+//│ B$ctor = function B$ctor(A$instance$0) {
+//│   return () => {
+//│     let tmp8;
+//│     tmp8 = new B2.class();
+//│     return tmp8(A$instance$0)
+//│   }
+//│ };
+//│ B2 = function B() {
+//│   return (A$instance$01) => {
+//│     return new B.class()(A$instance$01);
+//│   }
+//│ };
+//│ B2.class = class B1 {
+//│   constructor() {
+//│     return (A$instance$0) => {
+//│       this.A$instance$0 = A$instance$0;
+//│       return this;
+//│     }
+//│   }
+//│   get get() {
+//│     return this.A$instance$0.x;
+//│   } 
+//│   newA_B(y) {
+//│     return M25.A(y)
+//│   }
+//│   toString() { return "B(" + "" + ")"; }
+//│ };
+//│ M25 = class M24 {
+//│   static {
+//│     let scrut;
+//│     this.A = function A(x1) {
+//│       return new A.class(x1);
+//│     };
+//│     this.A.class = class A9 {
+//│       constructor(x) {
+//│         this.x = x;
+//│       }
+//│       get newA() {
+//│         return M24.A();
+//│       } 
+//│       get newB() {
+//│         return B$(this);
+//│       }
+//│       toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; }
+//│     };
+//│     scrut = 0;
+//│     if (scrut instanceof M24.A.class) {
+//│       true
+//│     } else {
+//│       false
+//│     }
+//│   }
+//│   static toString() { return "M"; }
+//│ };
+//│ tmp6 = M25.A(2);
+//│ tmp7 = runtime.safeCall(tmp6.newB.newA_B(3));
+//│ tmp7.newB.get
+//│ = 3

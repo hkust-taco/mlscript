@@ -501,10 +501,7 @@ f(2).get()
 //│   Test11.class = class Test10 {
 //│     constructor() {}
 //│     get() {
-//│       h4 = function h() {
-//│         return x
-//│       };
-//│       return h4()
+//│       return h$4(this, x)
 //│     }
 //│     toString() { return "Test(" + "" + ")"; }
 //│   };
