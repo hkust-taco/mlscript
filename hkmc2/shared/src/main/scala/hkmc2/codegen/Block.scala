@@ -135,22 +135,47 @@ sealed abstract class Block extends Product with AutoLocated:
     
     (transformer.applyBlock(this), defns)
     
+  private lazy val fAndRest: (Block => Block, BlockTail) = this match
+    case Match(scrut, arms, dflt, rest) =>
+      val (f, r) = rest.fAndRest
+      ((k: Block) => Match(scrut, arms, dflt, f(k))) -> r
+    case Label(label, body, rest) =>
+      val (f, r) = rest.fAndRest
+      ((k: Block) => Label(label, body, f(k))) -> r
+    case Begin(sub, rest) =>
+      val (f, r) = sub.fAndRest
+      r match
+        case End(_) =>
+          val (f1, r1) = rest.fAndRest
+          ((k: Block) => f(f1(k))) -> r1
+        case _ => f -> r
+    case TryBlock(sub, finallyDo, rest) =>
+      val (f, r) = rest.fAndRest
+      ((k: Block) => TryBlock(sub, finallyDo, f(k))) -> r
+    case Assign(lhs, rhs, rest) =>
+      val (f, r) = rest.fAndRest
+      ((k: Block) => Assign(lhs, rhs, f(k))) -> r
+    case a@AssignField(lhs, nme, rhs, rest) =>
+      val (f, r) = rest.fAndRest
+      ((k: Block) => AssignField(lhs, nme, rhs, f(k))(a.symbol)) -> r
+    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
+      val (f, r) = rest.fAndRest
+      ((k: Block) => AssignDynField(lhs, fld, arrayIdx, rhs, f(k))) -> r
+    case Define(defn, rest) =>
+      val (f, r) = rest.fAndRest
+      ((k: Block) => Define(defn, f(k))) -> r
+    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
+      val (f, r) = rest.fAndRest
+      ((k: Block) => HandleBlock(lhs, res, par, args, cls, handlers, body, f(k))) -> r
+    case t: BlockTail => (identity: Block => Block) -> t
+  
+  lazy val flattenTopLevel = fAndRest._1(fAndRest._2)
+  
+  object FlattenAllNested extends BlockTransformer(new SymbolSubst()):
+    override def applyBlock(b: Block): Block = super.applyBlock(b.flattenTopLevel)
+  
   lazy val flatten: Block =
-    
-    def flattenConcat(a: Block, b: => Block): Block = a match
-      case Match(scrut, arms, dflt, rest) => Match(scrut, arms, dflt, flattenConcat(rest, b))
-      case Label(label, body, rest) => Label(label, body, flattenConcat(rest, b))
-      case Begin(sub, rest) => flattenConcat(sub, flattenConcat(rest, b))
-      case TryBlock(sub, finallyDo, rest) => TryBlock(sub, finallyDo, flattenConcat(rest, b))
-      case Assign(lhs, rhs, rest) => Assign(lhs, rhs, flattenConcat(rest, b))
-      case a@AssignField(lhs, nme, rhs, rest) => AssignField(lhs, nme, rhs, flattenConcat(rest, b))(a.symbol)
-      case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => AssignDynField(lhs, fld, arrayIdx, rhs, flattenConcat(rest, b))
-      case Define(defn, rest) => Define(defn, flattenConcat(rest, b))
-      case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) => HandleBlock(lhs, res, par, args, cls, handlers, body, flattenConcat(rest, b))
-      case End(_) => b
-      case _: BlockTail => a
-    
-    flattenConcat(this, End(""))
+    FlattenAllNested.applyBlock(this)
   
 end Block
 
