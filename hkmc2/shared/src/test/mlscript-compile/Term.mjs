@@ -506,20 +506,19 @@ Term2 = class Term {
     };
   }
   static freshName(name) {
-    let scrut, i, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
-    tmp = runtime.safeCall(Term.#names.has(name));
-    scrut = tmp == false;
-    if (scrut === true) {
-      tmp1 = Term.#names.set(name, 0);
+    let scrut, i, tmp, tmp1, tmp2, tmp3, tmp4;
+    scrut = runtime.safeCall(Term.#names.has(name));
+    if (scrut === false) {
+      tmp = Term.#names.set(name, 0);
     } else {
-      tmp1 = runtime.Unit;
+      tmp = runtime.Unit;
     }
-    tmp2 = runtime.safeCall(Term.#names.get(name));
-    i = tmp2;
-    tmp3 = i + 1;
-    tmp4 = Term.#names.set(name, tmp3);
-    tmp5 = runtime.safeCall(i.toString());
-    return Str.concat(name, "_", tmp5)
+    tmp1 = runtime.safeCall(Term.#names.get(name));
+    i = tmp1;
+    tmp2 = i + 1;
+    tmp3 = Term.#names.set(name, tmp2);
+    tmp4 = runtime.safeCall(i.toString());
+    return Str.concat(name, "_", tmp4)
   } 
   static indent(str, ind, keepLeading) {
     let res, tmp, tmp1, tmp2;
@@ -633,7 +632,7 @@ Term2 = class Term {
           return name3
         } else {
           tmp = Str.concat("Invalid binding name ", name3);
-          throw new globalThis.Error(tmp);
+          throw globalThis.Error(tmp);
         }
       } else {
         throw new globalThis.Error("match error");
@@ -757,7 +756,7 @@ Term2 = class Term {
     fullpath = tmp5;
     tmp6 = Term.show(t2, ctx4);
     tmp7 = Term.indent(tmp6, "  ", true);
-    tmp8 = Str.concat("module ", moduleName, " with ...\nfun res =\n", tmp7);
+    tmp8 = Str.concat("module ", moduleName, " with ...\nfun res =\n", tmp7, "\n");
     code = tmp8;
     tmp9 = runtime.safeCall(globalThis.Array.from(ctx4.dependencies));
     tmp10 = runtime.safeCall(tmp9.map((s2) => {

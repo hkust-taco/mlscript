@@ -118,8 +118,7 @@ object Scope:
   
   def scope(using scp: Scope): Scope = scp
   
-  def empty(using State): Scope = 
-    val state = summon[State]
+  def empty(using state: State): Scope = 
     Scope(N, S(S(State.globalThisSymbol)), MutMap[Local, Str](state.importSymbol -> "import"))
   
   def replaceInvalidCharacters(str: Str): Str =

@@ -15,7 +15,7 @@ abstract class ConstructorLike : (SymbolCons | StringJoin | TupleCapacity | Inst
 class SymbolCons(symbol: Symbol) extends ConstructorLike
 class StringJoin extends ConstructorLike
 class TupleCapacity(size: Int, inf: Bool) extends ConstructorLike
-class Instantiation(symbol: Symbol, args: globalThis.Array[DebrujinSplit]) extends ConstructorLike
+class Instantiation(symbol: Symbol, args: Array[DebrujinSplit]) extends ConstructorLike
 class LocalPattern(id: Int) extends ConstructorLike
 class Parameter(symbol: Symbol) extends ConstructorLike
 class Nested(split: DebrujinSplit) extends ConstructorLike
@@ -35,10 +35,10 @@ class Reject extends DebrujinSplit
 abstract class Pattern : (LitPattern | Var | ClassLike | Synonym | Tuple | Record)
 class LitPattern(lit: Literal) extends Pattern
 class Var(sym: Symbol) extends Pattern
-class ClassLike(sym: Symbol, trm: Term, parameters: globalThis.Array[Symbol] | null) extends Pattern
-class Synonym(symbol: Symbol, patternArguments: globalThis.Array[DebrujinSplit]) extends Pattern
+class ClassLike(sym: Symbol, trm: Term, parameters: Array[Symbol] | null) extends Pattern
+class Synonym(symbol: Symbol, patternArguments: Array[DebrujinSplit]) extends Pattern
 class Tuple(size: Int, inf: Bool) extends Pattern
-class Record(entities: globalThis.Array[(Str, Symbol)]) extends Pattern
+class Record(entities: Array[(Str, Symbol)]) extends Pattern
 
 class Branch(scrutinee: Ref, ptrn: Pattern, continuation: Split)
 
@@ -68,11 +68,11 @@ class CSRef(sym: Symbol, base: Str, file: Str | undefined) extends Term
 class App(lhs: Term, rhs: Term) extends Term
 class Sel(prefix: Term, nme: Str) extends Term
 class DynSel(prefix: Term, fld: Term, arrayIdx: Bool) extends Term
-class Tup(fields: globalThis.Array[Term]) extends Term
+class Tup(fields: Array[Term]) extends Term
 class IfLike(kw: KeywordIf | KeywordWhile, desugared: Split) extends Term
-class Lam(params: globalThis.Array[Symbol], body: Term) extends Term
-class Blk(stats: globalThis.Array[Statement], res: Term) extends Term
-class New(cls: Term, args: globalThis.Array[Term]) extends Term
+class Lam(params: Array[Symbol], body: Term) extends Term
+class Blk(stats: Array[Statement], res: Term) extends Term
+class New(cls: Term, args: Array[Term]) extends Term
 class Region(name: Symbol, body: Term) extends Term
 class RegRef(reg: Term, value: Term) extends Term
 class Assgn(lhs: Term, rhs: Term) extends Term
@@ -83,7 +83,7 @@ class Throw(result: Term) extends Term
 class Try(body: Term, finallyDo: Term) extends Term
 
 
-let builtinSymbols = new globalThis.Set()
+let builtinSymbols = new Set()
 builtinSymbols.add("+")
 builtinSymbols.add("-")
 builtinSymbols.add("*")
@@ -95,18 +95,18 @@ builtinSymbols.add(">=")
 builtinSymbols.add("<=")
 
 
-let names = new globalThis.Map()
+let names = new Map()
 fun freshName(name) =
-  if names.has(name) == false do
+  if names.has(name) is false do
     names.set(name, 0)
   let i = names.get(name)
   names.set(name, i + 1)
   Str.concat(name, "_", i.toString())
     
 
-class Context(symbols: globalThis.Set, dependencies: globalThis.Set, printOnly: Bool) with
+class Context(symbols: Set, dependencies: Set, printOnly: Bool) with
   fun isValid(name) = symbols.has(name) || builtinSymbols.has(name) || printOnly
-  fun nest = Context(new globalThis.Set(symbols), dependencies, printOnly)
+  fun nest = Context(new Set(symbols), dependencies, printOnly)
   fun add(name) = symbols.add(name)
   fun depends(d) = dependencies.add(d)
 
@@ -148,7 +148,7 @@ fun show(t, ctx) =
   if t is
     Ref(Symbol(name)) then
       if ctx.isValid(name) then name
-      else throw new globalThis.Error(Str.concat("Invalid binding name ", name))
+      else throw Error(Str.concat("Invalid binding name ", name))
     CSRef(Symbol(name), baseFile, file) then
       if file is undefined then ctx.depends(baseFile)
       else ctx.depends(path.join(path.dirname(baseFile), file))
@@ -168,7 +168,7 @@ fun show(t, ctx) =
     // TODO: other terms
 
 fun print(t) =
-  let ctx = Context(new globalThis.Set(), new globalThis.Set(), true)
+  let ctx = Context(new Set(), new Set(), true)
   console.log(show(t, ctx))
 
 
@@ -177,12 +177,12 @@ fun genImport(base, p) =
 
 
 fun codegen(t, file) =
-  let ctx = Context(new globalThis.Set(), new globalThis.Set(), false)
+  let ctx = Context(new Set(), new Set(), false)
   let moduleName = path.parse(file).name
   let fullpath = path.join(process.cwd(), file)
-  let code = Str.concat("module ", moduleName, " with ...\nfun res =\n", indent(show(t, ctx), "  ", true))
+  let code = Str.concat("module ", moduleName, " with ...\nfun res =\n", indent(show(t, ctx), "  ", true), "\n")
   let dependencies =
-    globalThis.Array.from(ctx.dependencies).map(s => genImport(path.dirname(fullpath), s))
+    Array.from(ctx.dependencies).map(s => genImport(path.dirname(fullpath), s))
   if fs.existsSync(file) is false do
     fs.writeFileSync(file, "", "utf8")
   let originData = fs.readFileSync(file, "utf8")

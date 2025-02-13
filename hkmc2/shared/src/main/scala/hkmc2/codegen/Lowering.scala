@@ -154,7 +154,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         case S(_) => ()
         case N => () // TODO panic here; can only lower refs to elab'd symbols
       case _ =>
-        val subst = summon[Subst]
         subst.get(sym, false) match
           case S(r: Value.Ref) => return setupTerm("Ref", r :: Nil)(k)
           case _ => ()
