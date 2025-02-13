@@ -134,61 +134,84 @@ sealed abstract class Block extends Product with AutoLocated:
         case _ => super.applyBlock(b)
     
     (transformer.applyBlock(this), defns)
-      
-  private lazy val flattenContAndTailAndRes: (Block => Block) -> BlockTail -> Block = this match
-    case Match(scrut, arms, dflt, rest) =>
-      val f -> t -> r = rest.flattenContAndTailAndRes
-      ((k: Block) => Match(scrut, arms, dflt, f(k))) ->
-      t ->
-      (if r is rest then this else Match(scrut, arms, dflt, r))
-    case Label(label, body, rest) =>
-      val f -> t -> r = rest.flattenContAndTailAndRes
-      ((k: Block) => Label(label, body, f(k)))->
-      t ->
-      (if r is rest then this else Label(label, body, r))
-    case Begin(sub, rest) =>
-      val f -> t -> r = sub.flattenContAndTailAndRes
-      t match
-        case End(_) =>
-          val f1 -> t1 -> r1 = rest.flattenContAndTailAndRes
-          ((k: Block) => f(f1(k))) ->
-          t1 ->
-          f(r1)
-        case _ => f -> t -> r
-    case TryBlock(sub, finallyDo, rest) =>
-      val f -> t -> r = rest.flattenContAndTailAndRes
-      ((k: Block) => TryBlock(sub, finallyDo, f(k))) ->
-      t ->
-      (if r is rest then this else TryBlock(sub, finallyDo, r))
-    case Assign(lhs, rhs, rest) =>
-      val f -> t -> r = rest.flattenContAndTailAndRes
-      ((k: Block) => Assign(lhs, rhs, f(k))) ->
-      t ->
-      (if r is rest then this else Assign(lhs, rhs, r))
-    case a@AssignField(lhs, nme, rhs, rest) =>
-      val f -> t -> r = rest.flattenContAndTailAndRes
-      ((k: Block) => AssignField(lhs, nme, rhs, f(k))(a.symbol)) ->
-      t ->
-      (if r is rest then this else AssignField(lhs, nme, rhs, r)(a.symbol))
-    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
-      val f -> t -> r = rest.flattenContAndTailAndRes
-      ((k: Block) => AssignDynField(lhs, fld, arrayIdx, rhs, f(k))) ->
-      t ->
-      (if r is rest then this else AssignDynField(lhs, fld, arrayIdx, rhs, r))
-    case Define(defn, rest) =>
-      val f -> t -> r = rest.flattenContAndTailAndRes
-      ((k: Block) => Define(defn, f(k))) ->
-      t ->
-      (if r is rest then this else Define(defn, r))
-    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
-      val f -> t -> r = rest.flattenContAndTailAndRes
-      ((k: Block) => HandleBlock(lhs, res, par, args, cls, handlers, body, f(k))) ->
-      t ->
-      (if r is rest then this else HandleBlock(lhs, res, par, args, cls, handlers, body, r))
-    case t: BlockTail => 
-      (identity: Block => Block) -> t -> t
+  
+  // the flatten function that preserves the information in `End`
+  def flattenConcat(b: End => Block): Block = this match
+    case Match(scrut, arms, dflt, rest) => Match(scrut, arms, dflt, rest.flattenConcat(b))
+    case Label(label, body, rest) => Label(label, body, rest.flattenConcat(b))
+    case Begin(sub, rest) => sub.flattenConcat(_ => rest.flattenConcat(b))
+    case TryBlock(sub, finallyDo, rest) => TryBlock(sub, finallyDo, rest.flattenConcat(b))
+    case Assign(lhs, rhs, rest) => Assign(lhs, rhs, rest.flattenConcat(b))
+    case a@AssignField(lhs, nme, rhs, rest) => AssignField(lhs, nme, rhs, rest.flattenConcat(b))(a.symbol)
+    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => AssignDynField(lhs, fld, arrayIdx, rhs, rest.flattenConcat(b))
+    case Define(defn, rest) => Define(defn, rest.flattenConcat(b))
+    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) => HandleBlock(lhs, res, par, args, cls, handlers, body, rest.flattenConcat(b))
+    case e: End => b(e)
+    case _: BlockTail => this
+  
+  lazy val flattenTopLevel = this.flattenConcat(identity)
+  
+  // the block transformer that go through nested blocks and flatten them
+  object DeepBlockFlattenTransformer extends BlockTransformer(new SymbolSubst()):
+    override def applyBlock(b: Block): Block = super.applyBlock(b.flattenTopLevel)
+  
+  lazy val flatten = DeepBlockFlattenTransformer.applyBlock(this)
+  
+  
+  // private lazy val flattenContAndTailAndRes: (Block => Block) -> BlockTail -> Block = this match
+  //   case Match(scrut, arms, dflt, rest) =>
+  //     val f -> t -> r = rest.flattenContAndTailAndRes
+  //     ((k: Block) => Match(scrut, arms, dflt, f(k))) ->
+  //     t ->
+  //     (if r is rest then this else Match(scrut, arms, dflt, r))
+  //   case Label(label, body, rest) =>
+  //     val f -> t -> r = rest.flattenContAndTailAndRes
+  //     ((k: Block) => Label(label, body, f(k)))->
+  //     t ->
+  //     (if r is rest then this else Label(label, body, r))
+  //   case Begin(sub, rest) =>
+  //     val f -> t -> r = sub.flattenContAndTailAndRes
+  //     t match
+  //       case End(_) =>
+  //         val f1 -> t1 -> r1 = rest.flattenContAndTailAndRes
+  //         ((k: Block) => f(f1(k))) ->
+  //         t1 ->
+  //         f(r1)
+  //       case _ => f -> t -> r
+  //   case TryBlock(sub, finallyDo, rest) =>
+  //     val f -> t -> r = rest.flattenContAndTailAndRes
+  //     ((k: Block) => TryBlock(sub, finallyDo, f(k))) ->
+  //     t ->
+  //     (if r is rest then this else TryBlock(sub, finallyDo, r))
+  //   case Assign(lhs, rhs, rest) =>
+  //     val f -> t -> r = rest.flattenContAndTailAndRes
+  //     ((k: Block) => Assign(lhs, rhs, f(k))) ->
+  //     t ->
+  //     (if r is rest then this else Assign(lhs, rhs, r))
+  //   case a@AssignField(lhs, nme, rhs, rest) =>
+  //     val f -> t -> r = rest.flattenContAndTailAndRes
+  //     ((k: Block) => AssignField(lhs, nme, rhs, f(k))(a.symbol)) ->
+  //     t ->
+  //     (if r is rest then this else AssignField(lhs, nme, rhs, r)(a.symbol))
+  //   case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
+  //     val f -> t -> r = rest.flattenContAndTailAndRes
+  //     ((k: Block) => AssignDynField(lhs, fld, arrayIdx, rhs, f(k))) ->
+  //     t ->
+  //     (if r is rest then this else AssignDynField(lhs, fld, arrayIdx, rhs, r))
+  //   case Define(defn, rest) =>
+  //     val f -> t -> r = rest.flattenContAndTailAndRes
+  //     ((k: Block) => Define(defn, f(k))) ->
+  //     t ->
+  //     (if r is rest then this else Define(defn, r))
+  //   case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
+  //     val f -> t -> r = rest.flattenContAndTailAndRes
+  //     ((k: Block) => HandleBlock(lhs, res, par, args, cls, handlers, body, f(k))) ->
+  //     t ->
+  //     (if r is rest then this else HandleBlock(lhs, res, par, args, cls, handlers, body, r))
+  //   case t: BlockTail => 
+  //     (identity: Block => Block) -> t -> t
     
-  lazy val flatten: Block = this.flattenContAndTailAndRes._2
+  // lazy val flatten: Block = this.flattenContAndTailAndRes._2
   
 end Block
 
