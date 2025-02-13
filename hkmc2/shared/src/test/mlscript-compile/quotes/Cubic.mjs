@@ -3,11 +3,11 @@ let Cubic1;
 Cubic1 = class Cubic {
   static {}
   static get res() {
-    return (x_12) => {
+    return (x_2) => {
       let tmp, tmp1;
-      tmp = x_12 * 1;
-      tmp1 = x_12 * tmp;
-      return x_12 * tmp1
+      tmp = x_2 * 1;
+      tmp1 = x_2 * tmp;
+      return x_2 * tmp1
     };
   }
   static toString() { return "Cubic"; }

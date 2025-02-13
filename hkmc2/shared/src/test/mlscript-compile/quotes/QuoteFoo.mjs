@@ -5,8 +5,8 @@ QuoteFoo1 = class QuoteFoo {
   static get res() {
     let tmp;
     tmp = 1 + 1;
-    return ((x_10) => {
-      return x_10
+    return ((x_0) => {
+      return x_0
     })(tmp);
   }
   static toString() { return "QuoteFoo"; }

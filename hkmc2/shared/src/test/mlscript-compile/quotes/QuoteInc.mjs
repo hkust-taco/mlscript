@@ -3,8 +3,8 @@ let QuoteInc1;
 QuoteInc1 = class QuoteInc {
   static {}
   static get res() {
-    return (x_11) => {
-      return x_11 + 1
+    return (x_1) => {
+      return x_1 + 1
     };
   }
   static toString() { return "QuoteInc"; }

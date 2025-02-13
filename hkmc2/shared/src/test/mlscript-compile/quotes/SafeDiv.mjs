@@ -3,13 +3,13 @@ let SafeDiv1;
 SafeDiv1 = class SafeDiv {
   static {}
   static get res() {
-    return (x_25, y_2, d_0) => {
-      let scrut_4;
-      scrut_4 = y_2 == 0;
-      if (scrut_4 === true) {
+    return (x_15, y_1, d_0) => {
+      let scrut_0;
+      scrut_0 = y_1 == 0;
+      if (scrut_0 === true) {
         return d_0
       } else {
-        return x_25 / y_2
+        return x_15 / y_1
       }
     };
   }
