@@ -1,5 +1,4 @@
 
 module QuoteFoo with ...
 fun res =
-  ((x_0) =>
-    x_0)((+)(1, 1))
+  (+)(1, 1)

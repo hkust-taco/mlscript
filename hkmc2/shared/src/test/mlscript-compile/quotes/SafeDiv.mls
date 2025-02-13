@@ -1,8 +1,8 @@
 
 module SafeDiv with ...
 fun res =
-  (x_15, y_1, d_0) =>
+  (x_14, y_1, d_0) =>
     if 
       let scrut_0 = (==)(y_1, 0)
       scrut_0 is true then d_0
-      else (/)(x_15, y_1)
+      else (/)(x_14, y_1)

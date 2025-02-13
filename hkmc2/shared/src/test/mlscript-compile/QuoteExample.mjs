@@ -4,26 +4,16 @@ let QuoteExample1;
 QuoteExample1 = class QuoteExample {
   static {}
   static foo() {
-    let tmp, x, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
-    tmp = globalThis.Predef.term.freshName("x");
-    x = new globalThis.Predef.term.Symbol(tmp);
-    tmp1 = new globalThis.Predef.term.Ref(x);
-    tmp2 = new globalThis.Predef.term.Symbol("+");
-    tmp3 = new globalThis.Predef.term.Lit(1);
-    tmp4 = new globalThis.Predef.term.Lit(1);
-    tmp5 = new globalThis.Predef.term.Ref(tmp2);
-    tmp6 = new globalThis.Predef.term.Tup([
-      tmp3,
-      tmp4
+    let tmp, tmp1, tmp2, tmp3, tmp4;
+    tmp = new globalThis.Predef.term.Symbol("+");
+    tmp1 = new globalThis.Predef.term.Lit(1);
+    tmp2 = new globalThis.Predef.term.Lit(1);
+    tmp3 = new globalThis.Predef.term.Ref(tmp);
+    tmp4 = new globalThis.Predef.term.Tup([
+      tmp1,
+      tmp2
     ]);
-    tmp7 = new globalThis.Predef.term.App(tmp5, tmp6);
-    tmp8 = new globalThis.Predef.term.Lam([
-      x
-    ], tmp1);
-    tmp9 = new globalThis.Predef.term.Tup([
-      tmp7
-    ]);
-    return new globalThis.Predef.term.App(tmp8, tmp9)
+    return new globalThis.Predef.term.App(tmp3, tmp4)
   } 
   static inc() {
     let tmp, x, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;

@@ -41,5 +41,9 @@ fun ~ concat(a, b) = a + b
 fun not(b) = !b
 
 
+:fixme
 (x =>
   x + 1)(0)
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side.
+//│ ║  l.46: 	  x + 1)(0)
+//│ ╙──      	        ^^^
