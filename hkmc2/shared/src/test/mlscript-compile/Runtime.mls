@@ -1,4 +1,4 @@
-
+import "./Term.mls"
 
 module Runtime with ...
 
@@ -19,4 +19,6 @@ fun deboundMethod(mtdName, clsName) =
   throw Error of
     "[debinding error] Method '" + mtdName + "' of class '" + clsName + "' was accessed without being called."
 
+
+val term: module Term = Term
 

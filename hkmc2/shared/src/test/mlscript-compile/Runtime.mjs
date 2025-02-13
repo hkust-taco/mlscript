@@ -1,4 +1,5 @@
 import runtime from "./Runtime.mjs";
+import Term from "./Term.mjs";
 let Runtime1;
 Runtime1 = class Runtime {
   static {
@@ -10,6 +11,7 @@ Runtime1 = class Runtime {
     };
     this.Unit = new Unit$class;
     this.Unit.class = Unit$class;
+    this.term = Term;
   }
   static safeCall(x) {
     if (x === undefined) {

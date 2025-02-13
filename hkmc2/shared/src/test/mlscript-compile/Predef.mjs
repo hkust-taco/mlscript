@@ -1,5 +1,4 @@
 import runtime from "./Runtime.mjs";
-import Term from "./Term.mjs";
 let Predef1;
 Predef1 = class Predef {
   static {
@@ -134,7 +133,6 @@ Predef1 = class Predef {
       constructor() {}
       toString() { return "__StackDelay"; }
     };
-    this.term = Term;
   }
   static id(x) {
     return x

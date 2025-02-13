@@ -3,7 +3,10 @@ import "process"
 import "path"
 import "url"
 
+import "./Predef.mls"
 import "./Str.mls"
+
+open Predef
 
 module Term with...
 
@@ -82,22 +85,9 @@ class Ret(result: Term) extends Term
 class Throw(result: Term) extends Term
 class Try(body: Term, finallyDo: Term) extends Term
 
-
-let builtinSymbols = new Set()
-builtinSymbols.add("+")
-builtinSymbols.add("-")
-builtinSymbols.add("*")
-builtinSymbols.add("/")
-builtinSymbols.add("==")
-builtinSymbols.add("<")
-builtinSymbols.add(">")
-builtinSymbols.add(">=")
-builtinSymbols.add("<=")
-
-
 let names = new Map()
 fun freshName(name) =
-  if names.has(name) is false do
+  if not(names.has(name)) do
     names.set(name, 0)
   let i = names.get(name)
   names.set(name, i + 1)
@@ -105,7 +95,7 @@ fun freshName(name) =
     
 
 class Context(symbols: Set, dependencies: Set, printOnly: Bool) with
-  fun isValid(name) = symbols.has(name) || builtinSymbols.has(name) || printOnly
+  fun isValid(name) = symbols.has(name) || printOnly
   fun nest = Context(new Set(symbols), dependencies, printOnly)
   fun add(name) = symbols.add(name)
   fun depends(d) = dependencies.add(d)
@@ -154,6 +144,7 @@ fun show(t, ctx) =
       else ctx.depends(path.join(path.dirname(baseFile), file))
       name
     Lit(lit) then lit.toString()
+    Builtin(name) then name
     Sel(prefix, name) then Str.concat("(", show(prefix, ctx), ").", name)
     App(lhs, rhs) then Str.concat("(", show(lhs, ctx), ")(", show(rhs, ctx), ")")
     Tup(fields) then fields.map(t => show(t, ctx)).join(", ")
@@ -183,7 +174,7 @@ fun codegen(t, file) =
   let code = Str.concat("module ", moduleName, " with ...\nfun res =\n", indent(show(t, ctx), "  ", true), "\n")
   let dependencies =
     Array.from(ctx.dependencies).map(s => genImport(path.dirname(fullpath), s))
-  if fs.existsSync(file) is false do
+  if not(fs.existsSync(file)) do
     fs.writeFileSync(file, "", "utf8")
   let originData = fs.readFileSync(file, "utf8")
   let newData = Str.concat(dependencies.join("\n"), "\n", code)

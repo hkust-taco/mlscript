@@ -1,7 +1,7 @@
-import "./Predef.mls"
+import "./Runtime.mls"
 import "./QuoteExample.mls"
 
-open Predef
+open Runtime
 
 module QuoteExample2 with
   fun codegen() = 

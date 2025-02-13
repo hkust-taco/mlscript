@@ -1,6 +1,57 @@
 :js
 
 
+import "../../mlscript-compile/Runtime.mls"
+open Runtime
+
+
+term.print
+//│ = [function print]
+
+
+term.print(`42)
+//│ > 42
+
+
+term.print(`+)
+//│ > +
+
+
+term.print(`1 `+ `2)
+//│ > (+)(1, 2)
+
+
+term.print(x `=> x)
+//│ > (x_0) =>
+//│ >   x_0
+
+
+term.print((x, y) `=> x `+ y)
+//│ > (x_1, y_0) =>
+//│ >   (+)(x_1, y_0)
+
+
+term.print(`let x = `42 `in x)
+//│ > let x_2
+//│ > x_2 = 42
+//│ > x_2
+
+
+term.print(`if `true then `true else `false)
+//│ > if 
+//│ >   let scrut_0 = true
+//│ >   scrut_0 is true then true
+//│ >   else false
+
+
+term.print(x `=> `if x `== `0.0 then `1.0 else x)
+//│ > (x_3) =>
+//│ >   if 
+//│ >     let scrut_1 = (==)(x_3, 0)
+//│ >     scrut_1 is true then 1
+//│ >     else x_3
+
+
 import "../../mlscript-compile/QuoteExample2.mls"
 
 

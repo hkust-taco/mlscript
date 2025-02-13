@@ -1,4 +1,3 @@
-import "./Term.mls"
 
 module Predef with ...
 
@@ -327,8 +326,6 @@ val __stackHandler = null
 abstract class __StackDelay with
   fun perform()
 
-
-val term: module Term = Term
 fun checkDepth() =
   if __stackDepth - __stackOffset >= __stackLimit && __stackHandler !== null then
     // this is a tail call to effectful function
