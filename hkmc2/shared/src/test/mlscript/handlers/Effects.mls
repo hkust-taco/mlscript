@@ -189,10 +189,6 @@ if true do
 //│           this.completed = true;
 //│           return tmp12
 //│         } else if (this.pc === 0) {
-//│           if (tmp12 instanceof runtime.Return.class) {
-//│             this.completed = true;
-//│             return tmp12
-//│           }
 //│           this.pc = 1;
 //│           continue contLoop;
 //│         }
@@ -210,9 +206,6 @@ if true do
 //│     if (tmp12 instanceof runtime.EffectSig.class) {
 //│       tmp12.tail.next = new Cont$handleBlock$h$11(0, null);
 //│       return runtime.handleBlockImpl(tmp12, h)
-//│     }
-//│     if (tmp12 instanceof runtime.Return.class) {
-//│       return tmp12
 //│     }
 //│   } else {
 //│     tmp12 = runtime.Unit;

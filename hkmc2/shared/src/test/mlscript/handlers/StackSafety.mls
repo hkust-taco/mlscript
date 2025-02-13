@@ -81,49 +81,8 @@ hi(0)
 //│     }
 //│     perform() {
 //│       return runtime.mkEffect(stackHandler, (resume, handleBlock) => {
-//│         let res2, Cont$handler$stackHandler$1;
-//│         Cont$handler$stackHandler$1 = function Cont$handler$stackHandler$(pc1, next1) { return new Cont$handler$stackHandler$.class(pc1, next1); };
-//│         Cont$handler$stackHandler$1.class = class Cont$handler$stackHandler$ extends runtime.Cont.class {
-//│           constructor(pc, next) {
-//│             let tmp;
-//│             tmp = super(next, false);
-//│             this.pc = pc;
-//│             this.next = next;
-//│           }
-//│           resume(value$) {
-//│             if (this.pc === 4) {
-//│               res2 = value$;
-//│             }
-//│             contLoop: while (true) {
-//│               if (this.pc === 4) {
-//│                 if (res2 instanceof runtime.Return.class) {
-//│                   this.completed = true;
-//│                   return res2
-//│                 }
-//│                 this.pc = 5;
-//│                 continue contLoop;
-//│               } else if (this.pc === 5) {
-//│                 this.completed = true;
-//│                 return res2
-//│               }
-//│               break;
-//│             }
-//│           }
-//│           toString() { return "Cont$handler$stackHandler$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
-//│         };
 //│         runtime.stackOffset = runtime.stackDepth;
-//│         res2 = resume();
-//│         if (res2 instanceof runtime.EffectSig.class) {
-//│           handleBlock.contHead.next = new Cont$handler$stackHandler$1.class(4, handleBlock.contHead.next);
-//│           if (handleBlock.lastHandlerCont === null) {
-//│             handleBlock.lastHandlerCont = handleBlock.contHead.next;
-//│           }
-//│           return res2
-//│         }
-//│         if (res2 instanceof runtime.Return.class) {
-//│           return res2
-//│         }
-//│         return res2
+//│         return resume()
 //│       })
 //│     }
 //│     toString() { return "StackDelay$"; }
@@ -143,13 +102,6 @@ hi(0)
 //│       }
 //│       contLoop: while (true) {
 //│         if (this.pc === 2) {
-//│           if (res1 instanceof runtime.Return.class) {
-//│             this.completed = true;
-//│             return res1
-//│           }
-//│           this.pc = 3;
-//│           continue contLoop;
-//│         } else if (this.pc === 3) {
 //│           this.completed = true;
 //│           return res1
 //│         }
@@ -166,9 +118,6 @@ hi(0)
 //│   if (res1 instanceof runtime.EffectSig.class) {
 //│     res1.tail.next = new Cont$handleBlock$stackHandler$1(2, null);
 //│     return runtime.handleBlockImpl(res1, stackHandler)
-//│   }
-//│   if (res1 instanceof runtime.Return.class) {
-//│     return res1
 //│   }
 //│   return res1
 //│ };
@@ -193,9 +142,9 @@ sum(10000)
 //│ JS (unsanitized):
 //│ let sum1, res1, handleBlock$1;
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, Cont$func$sum$StackSafety$_mls_L188_4_57$1;
-//│   Cont$func$sum$StackSafety$_mls_L188_4_57$1 = function Cont$func$sum$StackSafety$_mls_L188_4_57$(pc1, next1) { return new Cont$func$sum$StackSafety$_mls_L188_4_57$.class(pc1, next1); };
-//│   Cont$func$sum$StackSafety$_mls_L188_4_57$1.class = class Cont$func$sum$StackSafety$_mls_L188_4_57$ extends runtime.Cont.class {
+//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, Cont$func$sum$StackSafety$_mls_L137_4_57$1;
+//│   Cont$func$sum$StackSafety$_mls_L137_4_57$1 = function Cont$func$sum$StackSafety$_mls_L137_4_57$(pc1, next1) { return new Cont$func$sum$StackSafety$_mls_L137_4_57$.class(pc1, next1); };
+//│   Cont$func$sum$StackSafety$_mls_L137_4_57$1.class = class Cont$func$sum$StackSafety$_mls_L137_4_57$ extends runtime.Cont.class {
 //│     constructor(pc, next) {
 //│       let tmp2;
 //│       tmp2 = super(next, false);
@@ -237,12 +186,12 @@ sum(10000)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$func$sum$StackSafety$_mls_L188_4_57$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
+//│     toString() { return "Cont$func$sum$StackSafety$_mls_L137_4_57$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
 //│   };
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     stackDelayRes.tail.next = new Cont$func$sum$StackSafety$_mls_L188_4_57$1.class(0, null);
+//│     stackDelayRes.tail.next = new Cont$func$sum$StackSafety$_mls_L137_4_57$1.class(0, null);
 //│     stackDelayRes.tail = stackDelayRes.tail.next;
 //│     return stackDelayRes
 //│   }
@@ -254,7 +203,7 @@ sum(10000)
 //│     runtime.stackDepth = runtime.stackDepth + 1;
 //│     tmp1 = sum1(tmp);
 //│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       tmp1.tail.next = new Cont$func$sum$StackSafety$_mls_L188_4_57$1.class(1, null);
+//│       tmp1.tail.next = new Cont$func$sum$StackSafety$_mls_L137_4_57$1.class(1, null);
 //│       tmp1.tail = tmp1.tail.next;
 //│       return tmp1
 //│     }
@@ -271,49 +220,8 @@ sum(10000)
 //│     }
 //│     perform() {
 //│       return runtime.mkEffect(stackHandler, (resume, handleBlock) => {
-//│         let res3, Cont$handler$stackHandler$2;
-//│         Cont$handler$stackHandler$2 = function Cont$handler$stackHandler$(pc1, next1) { return new Cont$handler$stackHandler$.class(pc1, next1); };
-//│         Cont$handler$stackHandler$2.class = class Cont$handler$stackHandler$1 extends runtime.Cont.class {
-//│           constructor(pc, next) {
-//│             let tmp;
-//│             tmp = super(next, false);
-//│             this.pc = pc;
-//│             this.next = next;
-//│           }
-//│           resume(value$) {
-//│             if (this.pc === 5) {
-//│               res3 = value$;
-//│             }
-//│             contLoop: while (true) {
-//│               if (this.pc === 5) {
-//│                 if (res3 instanceof runtime.Return.class) {
-//│                   this.completed = true;
-//│                   return res3
-//│                 }
-//│                 this.pc = 6;
-//│                 continue contLoop;
-//│               } else if (this.pc === 6) {
-//│                 this.completed = true;
-//│                 return res3
-//│               }
-//│               break;
-//│             }
-//│           }
-//│           toString() { return "Cont$handler$stackHandler$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
-//│         };
 //│         runtime.stackOffset = runtime.stackDepth;
-//│         res3 = resume();
-//│         if (res3 instanceof runtime.EffectSig.class) {
-//│           handleBlock.contHead.next = new Cont$handler$stackHandler$2.class(5, handleBlock.contHead.next);
-//│           if (handleBlock.lastHandlerCont === null) {
-//│             handleBlock.lastHandlerCont = handleBlock.contHead.next;
-//│           }
-//│           return res3
-//│         }
-//│         if (res3 instanceof runtime.Return.class) {
-//│           return res3
-//│         }
-//│         return res3
+//│         return resume()
 //│       })
 //│     }
 //│     toString() { return "StackDelay$"; }
@@ -333,13 +241,6 @@ sum(10000)
 //│       }
 //│       contLoop: while (true) {
 //│         if (this.pc === 3) {
-//│           if (res2 instanceof runtime.Return.class) {
-//│             this.completed = true;
-//│             return res2
-//│           }
-//│           this.pc = 4;
-//│           continue contLoop;
-//│         } else if (this.pc === 4) {
 //│           this.completed = true;
 //│           return res2
 //│         }
@@ -356,9 +257,6 @@ sum(10000)
 //│   if (res2 instanceof runtime.EffectSig.class) {
 //│     res2.tail.next = new Cont$handleBlock$stackHandler$2(3, null);
 //│     return runtime.handleBlockImpl(res2, stackHandler)
-//│   }
-//│   if (res2 instanceof runtime.Return.class) {
-//│     return res2
 //│   }
 //│   return res2
 //│ };

@@ -140,18 +140,18 @@ str
 //│               this.next = next;
 //│             }
 //│             resume(value$) {
-//│               if (this.pc === 8) {
+//│               if (this.pc === 6) {
 //│                 tmp10 = value$;
 //│               }
 //│               contLoop: while (true) {
-//│                 if (this.pc === 8) {
+//│                 if (this.pc === 6) {
 //│                   if (tmp10 instanceof runtime.Return.class) {
 //│                     this.completed = true;
 //│                     return tmp10
 //│                   }
-//│                   this.pc = 9;
+//│                   this.pc = 7;
 //│                   continue contLoop;
-//│                 } else if (this.pc === 9) {
+//│                 } else if (this.pc === 7) {
 //│                   tmp11 = str + "A";
 //│                   str = tmp11;
 //│                   this.completed = true;
@@ -166,7 +166,7 @@ str
 //│           str = tmp9;
 //│           tmp10 = runtime.safeCall(k(arg));
 //│           if (tmp10 instanceof runtime.EffectSig.class) {
-//│             handleBlock.contHead.next = new Cont$handler$h1$RecursiveHandlers$_mls_L104_58_1301.class(8, handleBlock.contHead.next);
+//│             handleBlock.contHead.next = new Cont$handler$h1$RecursiveHandlers$_mls_L104_58_1301.class(6, handleBlock.contHead.next);
 //│             if (handleBlock.lastHandlerCont === null) {
 //│               handleBlock.lastHandlerCont = handleBlock.contHead.next;
 //│             }
@@ -192,18 +192,18 @@ str
 //│         this.next = next;
 //│       }
 //│       resume(value$) {
-//│         if (this.pc === 6) {
+//│         if (this.pc === 4) {
 //│           tmp8 = value$;
 //│         }
 //│         contLoop: while (true) {
-//│           if (this.pc === 6) {
+//│           if (this.pc === 4) {
 //│             if (tmp8 instanceof runtime.Return.class) {
 //│               this.completed = true;
 //│               return tmp8
 //│             }
-//│             this.pc = 7;
+//│             this.pc = 5;
 //│             continue contLoop;
-//│           } else if (this.pc === 7) {
+//│           } else if (this.pc === 5) {
 //│             this.completed = true;
 //│             return tmp8
 //│           }
@@ -231,18 +231,18 @@ str
 //│                 this.next = next;
 //│               }
 //│               resume(value$) {
-//│                 if (this.pc === 4) {
+//│                 if (this.pc === 2) {
 //│                   tmp12 = value$;
 //│                 }
 //│                 contLoop: while (true) {
-//│                   if (this.pc === 4) {
+//│                   if (this.pc === 2) {
 //│                     if (tmp12 instanceof runtime.Return.class) {
 //│                       this.completed = true;
 //│                       return tmp12
 //│                     }
-//│                     this.pc = 5;
+//│                     this.pc = 3;
 //│                     continue contLoop;
-//│                   } else if (this.pc === 5) {
+//│                   } else if (this.pc === 3) {
 //│                     tmp13 = str + "B";
 //│                     tmp14 = str + tmp13;
 //│                     str = tmp14;
@@ -259,7 +259,7 @@ str
 //│             str = tmp11;
 //│             tmp12 = runtime.safeCall(k(arg));
 //│             if (tmp12 instanceof runtime.EffectSig.class) {
-//│               handleBlock.contHead.next = new Cont$handler$h2$RecursiveHandlers$_mls_L104_165_2491.class(4, handleBlock.contHead.next);
+//│               handleBlock.contHead.next = new Cont$handler$h2$RecursiveHandlers$_mls_L104_165_2491.class(2, handleBlock.contHead.next);
 //│               if (handleBlock.lastHandlerCont === null) {
 //│                 handleBlock.lastHandlerCont = handleBlock.contHead.next;
 //│               }
@@ -293,13 +293,6 @@ str
 //│           }
 //│           contLoop: while (true) {
 //│             if (this.pc === 0) {
-//│               if (tmp9 instanceof runtime.Return.class) {
-//│                 this.completed = true;
-//│                 return tmp9
-//│               }
-//│               this.pc = 3;
-//│               continue contLoop;
-//│             } else if (this.pc === 3) {
 //│               res4 = runtime.safeCall(h1.perform(runtime.Unit));
 //│               if (res4 instanceof runtime.EffectSig.class) {
 //│                 this.pc = 1;
@@ -308,13 +301,6 @@ str
 //│               this.pc = 1;
 //│               continue contLoop;
 //│             } else if (this.pc === 1) {
-//│               if (res4 instanceof runtime.Return.class) {
-//│                 this.completed = true;
-//│                 return res4
-//│               }
-//│               this.pc = 2;
-//│               continue contLoop;
-//│             } else if (this.pc === 2) {
 //│               this.completed = true;
 //│               return res4
 //│             }
@@ -328,22 +314,16 @@ str
 //│         tmp9.tail.next = new Cont$handleBlock$h2$2(0, null);
 //│         return runtime.handleBlockImpl(tmp9, h2)
 //│       }
-//│       if (tmp9 instanceof runtime.Return.class) {
-//│         return tmp9
-//│       }
 //│       res4 = runtime.safeCall(h1.perform(runtime.Unit));
 //│       if (res4 instanceof runtime.EffectSig.class) {
 //│         res4.tail.next = new Cont$handleBlock$h2$2(1, null);
 //│         return runtime.handleBlockImpl(res4, h2)
 //│       }
-//│       if (res4 instanceof runtime.Return.class) {
-//│         return res4
-//│       }
 //│       return res4
 //│     };
 //│     tmp8 = handleBlock$5();
 //│     if (tmp8 instanceof runtime.EffectSig.class) {
-//│       tmp8.tail.next = new Cont$handleBlock$h1$2(6, null);
+//│       tmp8.tail.next = new Cont$handleBlock$h1$2(4, null);
 //│       return runtime.handleBlockImpl(tmp8, h1)
 //│     }
 //│     if (tmp8 instanceof runtime.Return.class) {

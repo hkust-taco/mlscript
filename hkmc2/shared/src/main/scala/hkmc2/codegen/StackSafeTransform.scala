@@ -48,7 +48,6 @@ class StackSafeTransform(depthLimit: Int)(using State):
     val resumeSym = VarSymbol(Tree.Ident("resume"))
     val handlerSym = TempSymbol(None, "stackHandler")
     val resSym = sym getOrElse TempSymbol(None, "res")
-    val handlerRes = TempSymbol(None, "res")
     
     val clsSym = ClassSymbol(
       Tree.TypeDef(syntax.Cls, Tree.Error(), N, N),
@@ -64,13 +63,11 @@ class StackSafeTransform(depthLimit: Int)(using State):
         /* 
           fun perform() =
             stackOffset = stackDepth
-            let ret = resume()
-            ret
+            resume()
         */
         blockBuilder
           .assignFieldN(runtimePath, STACK_OFFSET_IDENT, stackDepthPath)
-          .assign(handlerRes, Call(Value.Ref(resumeSym), Nil)(true, true))
-          .ret(handlerRes.asPath)
+          .ret(Call(Value.Ref(resumeSym), Nil)(true, true))
       ) :: Nil,
       blockBuilder
         .assignFieldN(runtimePath, STACK_LIMIT_IDENT, intLit(depthLimit)) // set stackLimit before call
