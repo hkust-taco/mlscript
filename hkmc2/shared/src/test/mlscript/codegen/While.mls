@@ -243,6 +243,10 @@ f(Cons(1, Cons(2, Cons(3, 0))))
 //│ > Cons(3, 0)
 //│ > 0
 
+while false do
+  class A
+  new A
+
 
 // ——— FIXME: ———
 
