@@ -1108,6 +1108,8 @@ extends Importer:
       ps
     case TypeDef(Pat, inner, N, N) =>
       param(inner, inUsing).map(_.mapSecond(p => p.copy(flags = p.flags.copy(pat = true))))
+    case Modified(Keyword.`spec`, _, inner) =>
+      param(inner, inUsing).map(_.mapSecond(p => p.copy(flags = p.flags.copy(spec = true))))
     case _ =>
       t.asParam(inUsing).map: (isSpd, p, t) =>
         isSpd -> Param(FldFlags.empty, fieldOrVarSym(ParamBind, p), t.map(term(_)))
