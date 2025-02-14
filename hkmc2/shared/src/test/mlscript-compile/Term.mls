@@ -97,7 +97,7 @@ fun freshName(name) =
     names.set(name, 0)
   let i = names.get(name)
   names.set(name, i + 1)
-  Str.concat(name, "_", i.toString())
+  Str.concat of name, "_", i.toString()
     
 
 class Context(symbols: Set, dependencies: Set, printOnly: Bool) with
@@ -117,7 +117,7 @@ fun showStmt(s, ctx) =
     LetDecl(Symbol(name)) then
       ctx.add(name)
       Str.concat("let ", name)
-    DefineVar(Symbol(name), value) then Str.concat(name, " = ", show(value, ctx))
+    DefineVar(Symbol(name), value) then Str.concat of name, " = ", show(value, ctx)
 
 
 fun showPattern(p, ctx) =
@@ -128,20 +128,20 @@ fun showPattern(p, ctx) =
 
 fun paren(t, ctx) =
   if (t is Ref) || (t is CSRef) || (t is Lit) || (t is Sel) then show(t, ctx)
-  else Str.concat("(", show(t, ctx), ")")
+  else Str.concat of "(", show(t, ctx), ")"
 
 
 fun showSplit(s, ctx, isCont) =
   if s is
     Cons(Branch(scrut, ptrn, cont), tail) then
-      Str.concat(show(scrut, ctx), " is ", showPattern(ptrn, ctx), " then ", showSplit(cont, ctx, true), "\n", showSplit(tail, ctx, false))
+      Str.concat of show(scrut, ctx), " is ", showPattern(ptrn, ctx), " then ", showSplit(cont, ctx, true), "\n", showSplit(tail, ctx, false)
     Let(sym, term, split) then
       let nest = ctx.nest
       nest.add(sym.name)
-      Str.concat("let ", sym.name, " = ", show(term, nest), "\n", showSplit(split, nest, false))
+      Str.concat of "let ", sym.name, " = ", show(term, nest), "\n", showSplit(split, nest, false)
     Else(term) then
       if isCont then show(term, ctx)
-      else Str.concat("else ", show(term, ctx))
+      else Str.concat of "else ", show(term, ctx)
     End then ""
 
 
@@ -152,21 +152,21 @@ fun show(t, ctx) =
       else throw Error(Str.concat("Invalid binding name ", name))
     CSRef(Symbol(name), baseFile, file) then
       if file is undefined then ctx.depends(baseFile)
-      else ctx.depends(path.join(path.dirname(baseFile), file))
+      else ctx.depends(path.join of path.dirname(baseFile), file)
       name
     Lit(lit) then lit.toString()
     Builtin(name) then name
-    Sel(prefix, name) then Str.concat(paren(prefix, ctx), ".", name)
-    App(lhs, rhs) then Str.concat(paren(lhs, ctx), show(rhs, ctx))
-    Tup(fields) then Str.concat("(", fields.map(t => show(t, ctx)).join(", "), ")")
+    Sel(prefix, name) then Str.concat of paren(prefix, ctx), ".", name
+    App(lhs, rhs) then Str.concat of paren(lhs, ctx), show(rhs, ctx)
+    Tup(fields) then Str.concat of "(", fields.map(t => show(t, ctx)).join(", "), ")"
     Lam(params, body) then
       let nest = ctx.nest
       params.forEach(s => nest.add(s.name))
-      Str.concat("(", params.map(s => s.name).join(", "), ") =>\n", indent(show(body, nest), "  ", true))
+      Str.concat of "(", params.map(s => s.name).join(", "), ") =>\n", indent(show(body, nest), "  ", true)
     Blk(stats, res) then
       let nest = ctx.nest
-      Str.concat(stats.map(s => showStmt(s, nest)).join("\n"), "\n", show(res, nest))
-    IfLike(KeywordIf, split) then Str.concat("if \n", indent(showSplit(split, ctx, false), "  ", true))
+      Str.concat of stats.map(s => showStmt(s, nest)).join("\n"), "\n", show(res, nest)
+    IfLike(KeywordIf, split) then Str.concat of "if \n", indent(showSplit(split, ctx, false), "  ", true)
     // TODO: other terms
 
 fun print(t) =
@@ -175,20 +175,20 @@ fun print(t) =
 
 
 fun genImport(base, p) =
-  Str.concat("import \"", path.relative(base, url.fileURLToPath(p)).slice(0, -4), ".mls\"")
+  Str.concat of "import \"", path.relative(base, url.fileURLToPath(p)).slice(0, -4), ".mls\""
 
 
 fun codegen(t, file) =
   let ctx = Context(new Set(), new Set(), false)
   let moduleName = path.parse(file).name
-  let fullpath = path.join(process.cwd(), file)
-  let code = Str.concat("module ", moduleName, " with ...\nfun res =\n", indent(show(t, ctx), "  ", true), "\n")
+  let fullpath = path.join of process.cwd(), file
+  let code = Str.concat of "module ", moduleName, " with ...\nfun res =\n", indent(show(t, ctx), "  ", true), "\n"
   let dependencies =
     Array.from(ctx.dependencies).map(s => genImport(path.dirname(fullpath), s))
   if not(fs.existsSync(file)) do
     fs.writeFileSync(file, "", "utf8")
   let originData = fs.readFileSync(file, "utf8")
-  let newData = Str.concat(dependencies.join("\n"), "\n", code)
+  let newData = Str.concat of dependencies.join("\n"), "\n", code
   if newData != originData do
     fs.writeFileSync(file, newData, "utf8")
 
