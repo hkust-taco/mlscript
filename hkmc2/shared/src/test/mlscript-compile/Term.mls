@@ -14,76 +14,82 @@ class Symbol(name: Str)
 type Literal = null | undefined | Str | Int | Num | Bool
 
 
-abstract class ConstructorLike : (SymbolCons | StringJoin | TupleCapacity | Instantiation | LocalPattern | Parameter | Nested)
-class SymbolCons(symbol: Symbol) extends ConstructorLike
-class StringJoin extends ConstructorLike
-class TupleCapacity(size: Int, inf: Bool) extends ConstructorLike
-class Instantiation(symbol: Symbol, args: Array[DebrujinSplit]) extends ConstructorLike
-class LocalPattern(id: Int) extends ConstructorLike
-class Parameter(symbol: Symbol) extends ConstructorLike
-class Nested(split: DebrujinSplit) extends ConstructorLike
+class ConstructorLike with
+  constructor
+    SymbolCons(symbol: Symbol)
+    StringJoin
+    TupleCapacity(size: Int, inf: Bool)
+    Instantiation(symbol: Symbol, args: Array[DebrujinSplit])
+    LocalPattern(id: Int)
+    Parameter(symbol: Symbol)
+    Nested(split: DebrujinSplit)
 
-abstract class PatternStub : (LiteralStub | CharClass | ClassLikeStub | Wildcard)
-class LiteralStub(value: Literal) extends PatternStub
-class CharClass(start: Str, end: Str, inclusive: Bool) extends PatternStub
-class ClassLikeStub(cons: ConstructorLike) extends PatternStub
-class Wildcard extends PatternStub
+class PatternStub with
+  constructor
+    LiteralStub(value: Literal)
+    CharClass(start: Str, end: Str, inclusive: Bool)
+    ClassLikeStub(cons: ConstructorLike)
+    Wildcard
 
-abstract class DebrujinSplit : (Binder | DebrujinBranch | Accept | Reject)
-class Binder(body: DebrujinSplit) extends DebrujinSplit
-class DebrujinBranch(scrutinee: Int, ptrn, consequent: DebrujinSplit, alternative: DebrujinSplit) extends DebrujinSplit
-class Accept(outcome: Int) extends DebrujinSplit
-class Reject extends DebrujinSplit
+class DebrujinSplit with
+  constructor
+    Binder(body: DebrujinSplit)
+    DebrujinBranch(scrutinee: Int, ptrn, consequent: DebrujinSplit, alternative: DebrujinSplit)
+    Accept(outcome: Int)
+    Reject
 
-abstract class Pattern : (LitPattern | Var | ClassLike | Synonym | Tuple | Record)
-class LitPattern(lit: Literal) extends Pattern
-class Var(sym: Symbol) extends Pattern
-class ClassLike(sym: Symbol, trm: Term, parameters: Array[Symbol] | null) extends Pattern
-class Synonym(symbol: Symbol, patternArguments: Array[DebrujinSplit]) extends Pattern
-class Tuple(size: Int, inf: Bool) extends Pattern
-class Record(entities: Array[(Str, Symbol)]) extends Pattern
+class Pattern with
+  constructor
+    LitPattern(lit: Literal)
+    Var(sym: Symbol)
+    ClassLike(sym: Symbol, trm: Term, parameters: Array[Symbol] | null)
+    Synonym(symbol: Symbol, patternArguments: Array[DebrujinSplit])
+    Tuple(size: Int, inf: Bool)
+    Record(entities: Array[(Str, Symbol)])
 
 class Branch(scrutinee: Ref, ptrn: Pattern, continuation: Split)
 
-abstract class Split : (Cons | Let | Else | End)
-class Cons(head: Branch, tail: Split) extends Split
-class Let(sym: Symbol, term: Term, tail: Split) extends Split
-class Else(default: Term) extends Split
-class End extends Split
+class Split with
+  constructor
+    Cons(head: Branch, tail: Split)
+    Let(sym: Symbol, term: Term, tail: Split)
+    Else(default: Term)
+    End
 
 
 object KeywordIf
 object KeywordWhile
 
 
-abstract class Statement : (Term | LetDecl | DefineVar)
-class LetDecl(sym: Symbol) extends Statement
-class DefineVar(sym: Symbol, rhs: Term) extends Statement
-// TODO: other statements
+class Statement with
+  constructor
+    LetDecl(sym: Symbol)
+    DefineVar(sym: Symbol, rhs: Term)
+    // TODO: other statements
 
 
-abstract class Term : (Lit | Builtin | Ref | CSRef | App | Sel | DynSel | Tup | IfLike | Lam | Blk | New |
-  Region | RegRef | Assgn | Deref | SetRef | Ret | Throw | Try) extends Statement
-class Lit(lit: Literal) extends Term
-class Builtin(name: Str) extends Term
-class Ref(sym: Symbol) extends Term
-class CSRef(sym: Symbol, base: Str, file: Str | undefined) extends Term
-class App(lhs: Term, rhs: Term) extends Term
-class Sel(prefix: Term, nme: Str) extends Term
-class DynSel(prefix: Term, fld: Term, arrayIdx: Bool) extends Term
-class Tup(fields: Array[Term]) extends Term
-class IfLike(kw: KeywordIf | KeywordWhile, desugared: Split) extends Term
-class Lam(params: Array[Symbol], body: Term) extends Term
-class Blk(stats: Array[Statement], res: Term) extends Term
-class New(cls: Term, args: Array[Term]) extends Term
-class Region(name: Symbol, body: Term) extends Term
-class RegRef(reg: Term, value: Term) extends Term
-class Assgn(lhs: Term, rhs: Term) extends Term
-class Deref(ref: Term) extends Term
-class SetRef(ref: Term, value: Term) extends Term
-class Ret(result: Term) extends Term
-class Throw(result: Term) extends Term
-class Try(body: Term, finallyDo: Term) extends Term
+class Term with
+  constructor
+    Lit(lit: Literal)
+    Builtin(name: Str)
+    Ref(sym: Symbol)
+    CSRef(sym: Symbol, base: Str, file: Str | undefined)
+    App(lhs: Term, rhs: Term)
+    Sel(prefix: Term, nme: Str)
+    DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
+    Tup(fields: Array[Term])
+    IfLike(kw: KeywordIf | KeywordWhile, desugared: Split)
+    Lam(params: Array[Symbol], body: Term)
+    Blk(stats: Array[Statement], res: Term)
+    New(cls: Term, args: Array[Term])
+    Region(name: Symbol, body: Term)
+    RegRef(reg: Term, value: Term)
+    Assgn(lhs: Term, rhs: Term)
+    Deref(ref: Term)
+    SetRef(ref: Term, value: Term)
+    Ret(result: Term)
+    Throw(result: Term)
+    Try(body: Term, finallyDo: Term)
 
 let names = new Map()
 fun freshName(name) =
