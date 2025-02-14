@@ -120,6 +120,11 @@ fun showPattern(p, ctx) =
   // TODO: other patterns
 
 
+fun paren(t, ctx) =
+  if (t is Ref) || (t is CSRef) || (t is Lit) || (t is Sel) then show(t, ctx)
+  else Str.concat("(", show(t, ctx), ")")
+
+
 fun showSplit(s, ctx, isCont) =
   if s is
     Cons(Branch(scrut, ptrn, cont), tail) then
@@ -145,9 +150,9 @@ fun show(t, ctx) =
       name
     Lit(lit) then lit.toString()
     Builtin(name) then name
-    Sel(prefix, name) then Str.concat("(", show(prefix, ctx), ").", name)
-    App(lhs, rhs) then Str.concat("(", show(lhs, ctx), ")(", show(rhs, ctx), ")")
-    Tup(fields) then fields.map(t => show(t, ctx)).join(", ")
+    Sel(prefix, name) then Str.concat(paren(prefix, ctx), ".", name)
+    App(lhs, rhs) then Str.concat(paren(lhs, ctx), show(rhs, ctx))
+    Tup(fields) then Str.concat("(", fields.map(t => show(t, ctx)).join(", "), ")")
     Lam(params, body) then
       let nest = ctx.nest
       params.forEach(s => nest.add(s.name))
