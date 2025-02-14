@@ -165,7 +165,7 @@ if true do
 //│       tmp13 = super();
 //│     }
 //│     perform(arg) {
-//│       return runtime.mkEffect(h, (k, handleBlock) => {
+//│       return runtime.mkEffect(h, (k) => {
 //│         return arg
 //│       })
 //│     }
@@ -173,10 +173,10 @@ if true do
 //│   };
 //│   h = new Handler$h$12();
 //│   Cont$handleBlock$h$11 = function Cont$handleBlock$h$(pc1, next1) { return new Cont$handleBlock$h$.class(pc1, next1); };
-//│   Cont$handleBlock$h$11.class = class Cont$handleBlock$h$10 extends runtime.Cont.class {
+//│   Cont$handleBlock$h$11.class = class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
 //│     constructor(pc, next) {
 //│       let tmp13;
-//│       tmp13 = super(next, false);
+//│       tmp13 = super(next);
 //│       this.pc = pc;
 //│       this.next = next;
 //│     }
@@ -186,7 +186,6 @@ if true do
 //│       }
 //│       contLoop: while (true) {
 //│         if (this.pc === 1) {
-//│           this.completed = true;
 //│           return tmp12
 //│         } else if (this.pc === 0) {
 //│           this.pc = 1;
@@ -204,7 +203,7 @@ if true do
 //│   if (scrut === true) {
 //│     tmp12 = f();
 //│     if (tmp12 instanceof runtime.EffectSig.class) {
-//│       tmp12.tail.next = new Cont$handleBlock$h$11(0, null);
+//│       tmp12.contTrace.last.next = new Cont$handleBlock$h$11(0, null);
 //│       return runtime.handleBlockImpl(tmp12, h)
 //│     }
 //│   } else {

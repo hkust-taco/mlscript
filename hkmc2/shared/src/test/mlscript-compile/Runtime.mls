@@ -23,28 +23,16 @@ fun deboundMethod(mtdName, clsName) =
 // Private definitions for algebraic effects
 
 // completed is used to detect tail call
-abstract class Cont(next, completed) with
+abstract class FunctionContFrame(next) with
   fun resume(value)
+class HandlerContFrame(next, nextHandler, handler)
 
-class TailList(next)
-
-class ListWithTail(next, tail) with
-  fun append(elem) =
-    set tail.next = elem
-    set tail = elem
-fun mkListWithTail() =
-  let res = new ListWithTail(null, null)
-  set res.tail = res
-  res
-
-class HandleBlock(contHead, lastHandlerCont, next, handler)
-
-class EffectSig(next, tail, handleBlockList, resumed, handler, handlerFun)
+class ContTrace(next, last, nextHandler, lastHandler, resumed)
+class EffectSig(contTrace, handler, handlerFun)
 class Return(value)
 
-// debug functions
-fun showContChain(cont, hl, vis, reps) =
-  if cont is Cont then
+fun showFunctionContChain(cont, hl, vis, reps) =
+  if cont is FunctionContFrame then
     let result = cont.constructor.name + "(pc=" + cont.pc
     hl.forEach((m, marker) => if m.has(cont) do set result += ", " + marker)
     if vis.has(cont) then
@@ -56,147 +44,166 @@ fun showContChain(cont, hl, vis, reps) =
       vis.add(cont)
     if cont.completed do
       set result += ", COMPLETED"
-    result + ") -> " + showContChain(cont.next, hl, vis, reps)
+    result + ") -> " + showFunctionContChain(cont.next, hl, vis, reps)
   else if cont === null then
     "(null)"
   else
     "(NOT CONT)"
 
+fun showHandlerContChain(cont, hl, vis, reps) =
+  if cont is HandlerContFrame then
+    let result = cont.handler.constructor.name
+    hl.forEach((m, marker) => if m.has(cont) do set result += ", " + marker)
+    if vis.has(cont) then
+      set reps = reps + 1
+      if reps > 10 do
+        throw Error("10 repeated continuation frame (loop?)")
+      set result += ", REPEAT"
+    else
+      vis.add(cont)
+    result + " -> " + showFunctionContChain(cont.next, hl, vis, reps)
+  else if cont === null then
+    "(null)"
+  else
+    "(NOT HANDLER CONT)"
+
+fun debugCont(cont) = console.log(showFunctionContChain(cont, new Map(), new Set(), 0))
+fun debugHandler(cont) = console.log(showHandlerContChain(cont, new Map(), new Set(), 0))
+
+fun debugContTrace(contTrace) =
+  if contTrace is ContTrace then
+    console.log("resumed: ", contTrace.resumed)
+    if contTrace.last === contTrace do
+      console.log("<last is self>")
+    if contTrace.lastHandler === contTrace do
+      console.log("<lastHandler is self>")
+    let vis = new Set()
+    let hl = new Map()
+    hl.set("last", new Set([contTrace.last]))
+    hl.set("last-handler", new Set([contTrace.lastHandler]))
+    console.log(showFunctionContChain(contTrace.next, hl, vis, 0))
+    let cur = contTrace.nextHandler
+    while cur !== null do
+      console.log(showHandlerContChain(cur, hl, vis, 0))
+      set cur = cur.nextHandler
+    console.log()
+  else
+    console.log("Not a cont trace:")
+    console.log(contTrace)
+
 fun debugEff(eff) =
   if eff is EffectSig then
     console.log("Debug EffectSig:")
-    console.log("resumed: ", eff.resumed)
     console.log("handler: ", eff.handler.constructor.name)
     console.log("handlerFun: ", eff.handlerFun)
-    if eff.tail === eff do
-      console.log("<tail is self>")
-    let vis = new Set()
-    let hl = new Map()
-    hl.set("tail", new Set([eff.tail]))
-    console.log(showContChain(eff.next, hl, vis, 0))
-
-    fun showHandlerChain(hndl) =
-      if hndl is HandleBlock then
-        let tailStr = if hndl.contHead === eff.tail then ", tail" else ""
-        let handlerTailStr = if hndl === eff.handleBlockList.tail then ", handler-tail" else ""
-        hl.set("last-handler-cont", new Set([hndl.lastHandlerCont]))
-        hndl.handler.constructor.name + tailStr + handlerTailStr + " -> " + showContChain(hndl.contHead.next, hl, vis, 0)
-      else if hndl === null then
-        "(null)"
-      else
-        "(NOT HANDLE BLOCK)"
-
-    let cur = eff.handleBlockList.next
-    while cur !== null do
-      console.log(showHandlerChain(cur))
-      set cur = cur.next
-    console.log()
-
+    debugContTrace(eff.contTrace)
   else
     console.log("Not an effect:")
     console.log(eff)
 
 // runtime implementations
 fun mkEffect(handler, handlerFun) =
-  let res = new EffectSig(null, null, mkListWithTail(), false, handler, handlerFun)
-  set res.tail = res
+  let res = new EffectSig(new ContTrace(null, null, null, null, false), handler, handlerFun)
+  set
+    res.contTrace.last = res.contTrace
+    res.contTrace.lastHandler = res.contTrace
   res
 
 fun handleBlockImpl(cur, handler) =
-  let handleBlock = new HandleBlock(TailList(null), null, null, handler)
-  cur.handleBlockList.append(handleBlock)
+  let handlerFrame = new HandlerContFrame(null, null, handler)
+  set
+    cur.contTrace.lastHandler.nextHandler = handlerFrame
+    cur.contTrace.lastHandler = handlerFrame
+    cur.contTrace.last = handlerFrame
   while cur is
     EffectSig then
       let nxt = handleEffect(cur)
       if cur === nxt then
-        // handler not found, begin unwinding
-        if handleBlock.lastHandlerCont === null then
-          set cur.tail = handleBlock.contHead
-        else
-          set cur.tail = handleBlock.lastHandlerCont
         return cur
       else
         set cur = nxt
     else
       return cur
 
+fun enterHandleBlock(handler, body) =
+  let cur = body()
+  if cur is EffectSig then
+    handleBlockImpl(cur, handler)
+  else
+    cur
+
 // return either new effect, final result or the same continuation if there is no handler
 fun handleEffect(cur) =
   // debugEff(cur)
   // find the handle block corresponding to the current effect
-  let prevBlock = cur.handleBlockList
-  while prevBlock.next is HandleBlock and prevBlock.next.handler !== cur.handler do
-    set prevBlock = prevBlock.next
+  let prevHandlerFrame = cur.contTrace
+  while prevHandlerFrame.nextHandler !== null and prevHandlerFrame.nextHandler.handler !== cur.handler do
+    set prevHandlerFrame = prevHandlerFrame.nextHandler
 
   // no matching handle block
-  if prevBlock.next === null do
+  if prevHandlerFrame.nextHandler === null do
     return cur
 
   // the matching handle block
-  let handleBlock = prevBlock.next
+  let handlerFrame = prevHandlerFrame.nextHandler
 
-  // unlink the unrelated handle blocks, which is never null
-  let origTailBlock = cur.handleBlockList.tail
+  // unlink and save frames
+  let saved = new ContTrace(
+    handlerFrame.next,
+    cur.contTrace.last,
+    handlerFrame.nextHandler,
+    cur.contTrace.lastHandler,
+    false
+  )
   set
-    prevBlock.next = null
-    cur.handleBlockList.tail = prevBlock
+    cur.contTrace.last = handlerFrame
+    cur.contTrace.lastHandler = handlerFrame
+    handlerFrame.next = null
+    handlerFrame.nextHandler = null
 
-  // handle the effect, where the handler continuation will be appended to handleBlock.contHead.next
-  let savedNext = handleBlock.contHead.next
-  set cur = cur.handlerFun(resume(cur), handleBlock)
+  // handle the effect
+  set cur = cur.handlerFun(resume(cur.contTrace))
   if cur is EffectSig then
-    // relink the unlinked handle blocks
-    set
-      cur.handleBlockList.tail.next = handleBlock
-      cur.handleBlockList.tail = origTailBlock
+    // relink the saved frames
+    if saved.next !== null do
+      set
+        cur.contTrace.last.next = saved.next
+        cur.contTrace.last = saved.last
+      if saved.nextHandler !== null do
+        set
+          cur.contTrace.lastHandler.nextHandler = saved.nextHandler
+          cur.contTrace.lastHandler = saved.lastHandler
     cur
   else
     // resume the unlinked handle blocks
-    resumeHandleBlocks(handleBlock, origTailBlock, cur)
+    resumeContTrace(saved, cur)
 
-fun resume(cur)(value) =
-  if cur.resumed do
+fun resume(contTrace)(value) =
+  if contTrace.resumed do
     throw Error("Multiple resumption")
-  set cur.resumed = true
+  set contTrace.resumed = true
+  resumeContTrace(contTrace, value)
 
-  let cont = cur.next
+fun resumeContTrace(contTrace, value) =
+  let cont = contTrace.next
+  let handlerCont = contTrace.nextHandler
   while
-    cont is Cont do
+    cont is FunctionContFrame then
       set value = cont.resume(value)
       if value is EffectSig then
-        if cont.completed then
-          set value.tail.next = cont.next
-        else
-          set value.tail.next = cont
-        if cur.handleBlockList.next !== null do
-          set
-            value.handleBlockList.tail.next = cur.handleBlockList.next
-            value.handleBlockList.tail = cur.handleBlockList.tail
+        set
+          value.contTrace.last.next = cont.next
+          value.contTrace.lastHandler.nextHandler = handlerCont
+        if contTrace.last !== cont do
+          set value.contTrace.last = contTrace.last
+        if handlerCont !== null do
+          set value.contTrace.lastHandler = contTrace.lastHandler
         return value
       else
         set cont = cont.next
-
-  // We're done with the head, now resume the handle blocks
-  if cur.handleBlockList.next === null then
-    value
-  else
-    resumeHandleBlocks(cur.handleBlockList.next, cur.handleBlockList.tail, value)
-
-// this does not set the tail when effect is raised during resumption
-fun resumeHandleBlocks(handleBlock, tailHandleBlock, value) =
-  while
-    handleBlock.contHead.next is Cont then
-      // resuming tailHandlerList or post handler continuations
-      set value = handleBlock.contHead.next.resume(value)
-      if handleBlock.contHead.next.completed do
-        set handleBlock.contHead.next = handleBlock.contHead.next.next
-      if value is EffectSig do
-        set
-          value.handleBlockList.tail.next = handleBlock
-          value.handleBlockList.tail = tailHandleBlock
-        return value
-    handleBlock.next is HandleBlock then
-      set handleBlock = handleBlock.next
+    handlerCont is HandlerContFrame then
+      set cont = handlerCont.next
+      set handlerCont = handlerCont.nextHandler
     else
       return value
 

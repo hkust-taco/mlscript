@@ -24,10 +24,10 @@ hi(0)
 //│ hi = function hi(n) {
 //│   let scrut, tmp, stackDelayRes, Cont$func$hi$StackSafety$_mls_L18_4_47$1;
 //│   Cont$func$hi$StackSafety$_mls_L18_4_47$1 = function Cont$func$hi$StackSafety$_mls_L18_4_47$(pc1, next1) { return new Cont$func$hi$StackSafety$_mls_L18_4_47$.class(pc1, next1); };
-//│   Cont$func$hi$StackSafety$_mls_L18_4_47$1.class = class Cont$func$hi$StackSafety$_mls_L18_4_47$ extends runtime.Cont.class {
+//│   Cont$func$hi$StackSafety$_mls_L18_4_47$1.class = class Cont$func$hi$StackSafety$_mls_L18_4_47$ extends runtime.FunctionContFrame.class {
 //│     constructor(pc, next) {
 //│       let tmp1;
-//│       tmp1 = super(next, false);
+//│       tmp1 = super(next);
 //│       this.pc = pc;
 //│       this.next = next;
 //│     }
@@ -39,12 +39,10 @@ hi(0)
 //│         if (this.pc === 0) {
 //│           scrut = n == 0;
 //│           if (scrut === true) {
-//│             this.completed = true;
 //│             return 0
 //│           } else {
 //│             tmp = n - 1;
 //│             runtime.stackDepth = runtime.stackDepth + 1;
-//│             this.completed = true;
 //│             return hi(tmp)
 //│           }
 //│           this.pc = 1;
@@ -59,8 +57,8 @@ hi(0)
 //│   };
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     stackDelayRes.tail.next = new Cont$func$hi$StackSafety$_mls_L18_4_47$1.class(0, null);
-//│     stackDelayRes.tail = stackDelayRes.tail.next;
+//│     stackDelayRes.contTrace.last.next = new Cont$func$hi$StackSafety$_mls_L18_4_47$1.class(0, null);
+//│     stackDelayRes.contTrace.last = stackDelayRes.contTrace.last.next;
 //│     return stackDelayRes
 //│   }
 //│   scrut = n == 0;
@@ -80,7 +78,7 @@ hi(0)
 //│       tmp = super();
 //│     }
 //│     perform() {
-//│       return runtime.mkEffect(stackHandler, (resume, handleBlock) => {
+//│       return runtime.mkEffect(stackHandler, (resume) => {
 //│         runtime.stackOffset = runtime.stackDepth;
 //│         return resume()
 //│       })
@@ -89,10 +87,10 @@ hi(0)
 //│   };
 //│   stackHandler = new StackDelay$1();
 //│   Cont$handleBlock$stackHandler$1 = function Cont$handleBlock$stackHandler$(pc1, next1) { return new Cont$handleBlock$stackHandler$.class(pc1, next1); };
-//│   Cont$handleBlock$stackHandler$1.class = class Cont$handleBlock$stackHandler$ extends runtime.Cont.class {
+//│   Cont$handleBlock$stackHandler$1.class = class Cont$handleBlock$stackHandler$ extends runtime.FunctionContFrame.class {
 //│     constructor(pc, next) {
 //│       let tmp;
-//│       tmp = super(next, false);
+//│       tmp = super(next);
 //│       this.pc = pc;
 //│       this.next = next;
 //│     }
@@ -102,7 +100,6 @@ hi(0)
 //│       }
 //│       contLoop: while (true) {
 //│         if (this.pc === 2) {
-//│           this.completed = true;
 //│           return res1
 //│         }
 //│         break;
@@ -116,7 +113,7 @@ hi(0)
 //│   runtime.stackHandler = stackHandler;
 //│   res1 = hi(0);
 //│   if (res1 instanceof runtime.EffectSig.class) {
-//│     res1.tail.next = new Cont$handleBlock$stackHandler$1(2, null);
+//│     res1.contTrace.last.next = new Cont$handleBlock$stackHandler$1(2, null);
 //│     return runtime.handleBlockImpl(res1, stackHandler)
 //│   }
 //│   return res1
@@ -142,12 +139,12 @@ sum(10000)
 //│ JS (unsanitized):
 //│ let sum1, res1, handleBlock$1;
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, Cont$func$sum$StackSafety$_mls_L137_4_57$1;
-//│   Cont$func$sum$StackSafety$_mls_L137_4_57$1 = function Cont$func$sum$StackSafety$_mls_L137_4_57$(pc1, next1) { return new Cont$func$sum$StackSafety$_mls_L137_4_57$.class(pc1, next1); };
-//│   Cont$func$sum$StackSafety$_mls_L137_4_57$1.class = class Cont$func$sum$StackSafety$_mls_L137_4_57$ extends runtime.Cont.class {
+//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, Cont$func$sum$StackSafety$_mls_L134_4_57$1;
+//│   Cont$func$sum$StackSafety$_mls_L134_4_57$1 = function Cont$func$sum$StackSafety$_mls_L134_4_57$(pc1, next1) { return new Cont$func$sum$StackSafety$_mls_L134_4_57$.class(pc1, next1); };
+//│   Cont$func$sum$StackSafety$_mls_L134_4_57$1.class = class Cont$func$sum$StackSafety$_mls_L134_4_57$ extends runtime.FunctionContFrame.class {
 //│     constructor(pc, next) {
 //│       let tmp2;
-//│       tmp2 = super(next, false);
+//│       tmp2 = super(next);
 //│       this.pc = pc;
 //│       this.next = next;
 //│     }
@@ -161,7 +158,6 @@ sum(10000)
 //│         if (this.pc === 0) {
 //│           scrut = n == 0;
 //│           if (scrut === true) {
-//│             this.completed = true;
 //│             return 0
 //│           } else {
 //│             tmp = n - 1;
@@ -169,6 +165,8 @@ sum(10000)
 //│             tmp1 = sum1(tmp);
 //│             if (tmp1 instanceof runtime.EffectSig.class) {
 //│               this.pc = 1;
+//│               tmp1.contTrace.last.next = this;
+//│               tmp1.contTrace.last = this;
 //│               return tmp1
 //│             }
 //│             this.pc = 1;
@@ -180,19 +178,18 @@ sum(10000)
 //│           break contLoop;
 //│         } else if (this.pc === 1) {
 //│           tmp1 = runtime.resetDepth(tmp1, curDepth);
-//│           this.completed = true;
 //│           return n + tmp1
 //│         }
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$func$sum$StackSafety$_mls_L137_4_57$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
+//│     toString() { return "Cont$func$sum$StackSafety$_mls_L134_4_57$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
 //│   };
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     stackDelayRes.tail.next = new Cont$func$sum$StackSafety$_mls_L137_4_57$1.class(0, null);
-//│     stackDelayRes.tail = stackDelayRes.tail.next;
+//│     stackDelayRes.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L134_4_57$1.class(0, null);
+//│     stackDelayRes.contTrace.last = stackDelayRes.contTrace.last.next;
 //│     return stackDelayRes
 //│   }
 //│   scrut = n == 0;
@@ -203,8 +200,8 @@ sum(10000)
 //│     runtime.stackDepth = runtime.stackDepth + 1;
 //│     tmp1 = sum1(tmp);
 //│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       tmp1.tail.next = new Cont$func$sum$StackSafety$_mls_L137_4_57$1.class(1, null);
-//│       tmp1.tail = tmp1.tail.next;
+//│       tmp1.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L134_4_57$1.class(1, null);
+//│       tmp1.contTrace.last = tmp1.contTrace.last.next;
 //│       return tmp1
 //│     }
 //│     tmp1 = runtime.resetDepth(tmp1, curDepth);
@@ -219,7 +216,7 @@ sum(10000)
 //│       tmp = super();
 //│     }
 //│     perform() {
-//│       return runtime.mkEffect(stackHandler, (resume, handleBlock) => {
+//│       return runtime.mkEffect(stackHandler, (resume) => {
 //│         runtime.stackOffset = runtime.stackDepth;
 //│         return resume()
 //│       })
@@ -228,10 +225,10 @@ sum(10000)
 //│   };
 //│   stackHandler = new StackDelay$2();
 //│   Cont$handleBlock$stackHandler$2 = function Cont$handleBlock$stackHandler$(pc1, next1) { return new Cont$handleBlock$stackHandler$.class(pc1, next1); };
-//│   Cont$handleBlock$stackHandler$2.class = class Cont$handleBlock$stackHandler$1 extends runtime.Cont.class {
+//│   Cont$handleBlock$stackHandler$2.class = class Cont$handleBlock$stackHandler$1 extends runtime.FunctionContFrame.class {
 //│     constructor(pc, next) {
 //│       let tmp;
-//│       tmp = super(next, false);
+//│       tmp = super(next);
 //│       this.pc = pc;
 //│       this.next = next;
 //│     }
@@ -241,7 +238,6 @@ sum(10000)
 //│       }
 //│       contLoop: while (true) {
 //│         if (this.pc === 3) {
-//│           this.completed = true;
 //│           return res2
 //│         }
 //│         break;
@@ -255,7 +251,7 @@ sum(10000)
 //│   runtime.stackHandler = stackHandler;
 //│   res2 = sum1(10000);
 //│   if (res2 instanceof runtime.EffectSig.class) {
-//│     res2.tail.next = new Cont$handleBlock$stackHandler$2(3, null);
+//│     res2.contTrace.last.next = new Cont$handleBlock$stackHandler$2(3, null);
 //│     return runtime.handleBlockImpl(res2, stackHandler)
 //│   }
 //│   return res2

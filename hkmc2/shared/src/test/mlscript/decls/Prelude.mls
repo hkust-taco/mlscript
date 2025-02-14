@@ -44,7 +44,7 @@ declare module Predef with
   class MatchFailure(errors)
 
 declare module Runtime with
-  class EffectSig(next, tail, handleBlockList, resumed, handler, handlerFun)
+  class EffectSig(contTrace, handler, handlerFun)
   class Return(value)
   // This declaration is not used currently except for experimentation
   abstract class StackDelay with

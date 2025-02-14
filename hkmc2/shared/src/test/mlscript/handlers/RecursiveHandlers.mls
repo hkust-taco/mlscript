@@ -72,7 +72,11 @@ let res =
 in res.toString()
 //│ > A hi
 //│ > B hi bye
-//│ = "‹,hi,bye,›"
+//│ > B hi friend
+//│ > A hola
+//│ > B hola adios
+//│ > B hola amigos
+//│ = "‹,‹,‹,‹,hola,amigos,›,adios,›,friend,›,bye,›"
 
 
 // Output for the "later" handle block as the inner one
@@ -129,13 +133,13 @@ str
 //│         tmp9 = super();
 //│       }
 //│       perform(arg) {
-//│         return runtime.mkEffect(h1, (k, handleBlock) => {
-//│           let tmp9, tmp10, tmp11, Cont$handler$h1$RecursiveHandlers$_mls_L104_58_1301;
-//│           Cont$handler$h1$RecursiveHandlers$_mls_L104_58_1301 = function Cont$handler$h1$RecursiveHandlers$_mls_L104_58_130(pc1, next1) { return new Cont$handler$h1$RecursiveHandlers$_mls_L104_58_130.class(pc1, next1); };
-//│           Cont$handler$h1$RecursiveHandlers$_mls_L104_58_1301.class = class Cont$handler$h1$RecursiveHandlers$_mls_L104_58_130 extends runtime.Cont.class {
+//│         return runtime.mkEffect(h1, (k) => {
+//│           let tmp9, tmp10, tmp11, Cont$handler$h1$RecursiveHandlers$_mls_L108_58_1301;
+//│           Cont$handler$h1$RecursiveHandlers$_mls_L108_58_1301 = function Cont$handler$h1$RecursiveHandlers$_mls_L108_58_130(pc1, next1) { return new Cont$handler$h1$RecursiveHandlers$_mls_L108_58_130.class(pc1, next1); };
+//│           Cont$handler$h1$RecursiveHandlers$_mls_L108_58_1301.class = class Cont$handler$h1$RecursiveHandlers$_mls_L108_58_130 extends runtime.FunctionContFrame.class {
 //│             constructor(pc, next) {
 //│               let tmp12;
-//│               tmp12 = super(next, false);
+//│               tmp12 = super(next);
 //│               this.pc = pc;
 //│               this.next = next;
 //│             }
@@ -146,7 +150,6 @@ str
 //│               contLoop: while (true) {
 //│                 if (this.pc === 6) {
 //│                   if (tmp10 instanceof runtime.Return.class) {
-//│                     this.completed = true;
 //│                     return tmp10
 //│                   }
 //│                   this.pc = 7;
@@ -154,22 +157,19 @@ str
 //│                 } else if (this.pc === 7) {
 //│                   tmp11 = str + "A";
 //│                   str = tmp11;
-//│                   this.completed = true;
 //│                   return runtime.Unit
 //│                 }
 //│                 break;
 //│               }
 //│             }
-//│             toString() { return "Cont$handler$h1$RecursiveHandlers$_mls_L104_58_130(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
+//│             toString() { return "Cont$handler$h1$RecursiveHandlers$_mls_L108_58_130(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
 //│           };
 //│           tmp9 = str + "A";
 //│           str = tmp9;
 //│           tmp10 = runtime.safeCall(k(arg));
 //│           if (tmp10 instanceof runtime.EffectSig.class) {
-//│             handleBlock.contHead.next = new Cont$handler$h1$RecursiveHandlers$_mls_L104_58_1301.class(6, handleBlock.contHead.next);
-//│             if (handleBlock.lastHandlerCont === null) {
-//│               handleBlock.lastHandlerCont = handleBlock.contHead.next;
-//│             }
+//│             tmp10.contTrace.last.next = new Cont$handler$h1$RecursiveHandlers$_mls_L108_58_1301.class(6, null);
+//│             tmp10.contTrace.last = tmp10.contTrace.last.next;
 //│             return tmp10
 //│           }
 //│           if (tmp10 instanceof runtime.Return.class) {
@@ -184,10 +184,10 @@ str
 //│     };
 //│     h1 = new Handler$h1$2();
 //│     Cont$handleBlock$h1$2 = function Cont$handleBlock$h1$(pc1, next1) { return new Cont$handleBlock$h1$.class(pc1, next1); };
-//│     Cont$handleBlock$h1$2.class = class Cont$handleBlock$h1$1 extends runtime.Cont.class {
+//│     Cont$handleBlock$h1$2.class = class Cont$handleBlock$h1$1 extends runtime.FunctionContFrame.class {
 //│       constructor(pc, next) {
 //│         let tmp9;
-//│         tmp9 = super(next, false);
+//│         tmp9 = super(next);
 //│         this.pc = pc;
 //│         this.next = next;
 //│       }
@@ -198,13 +198,11 @@ str
 //│         contLoop: while (true) {
 //│           if (this.pc === 4) {
 //│             if (tmp8 instanceof runtime.Return.class) {
-//│               this.completed = true;
 //│               return tmp8
 //│             }
 //│             this.pc = 5;
 //│             continue contLoop;
 //│           } else if (this.pc === 5) {
-//│             this.completed = true;
 //│             return tmp8
 //│           }
 //│           break;
@@ -220,13 +218,13 @@ str
 //│           tmp10 = super();
 //│         }
 //│         perform(arg) {
-//│           return runtime.mkEffect(h2, (k, handleBlock) => {
-//│             let tmp10, tmp11, tmp12, tmp13, tmp14, Cont$handler$h2$RecursiveHandlers$_mls_L104_165_2491;
-//│             Cont$handler$h2$RecursiveHandlers$_mls_L104_165_2491 = function Cont$handler$h2$RecursiveHandlers$_mls_L104_165_249(pc1, next1) { return new Cont$handler$h2$RecursiveHandlers$_mls_L104_165_249.class(pc1, next1); };
-//│             Cont$handler$h2$RecursiveHandlers$_mls_L104_165_2491.class = class Cont$handler$h2$RecursiveHandlers$_mls_L104_165_249 extends runtime.Cont.class {
+//│           return runtime.mkEffect(h2, (k) => {
+//│             let tmp10, tmp11, tmp12, tmp13, tmp14, Cont$handler$h2$RecursiveHandlers$_mls_L108_165_2491;
+//│             Cont$handler$h2$RecursiveHandlers$_mls_L108_165_2491 = function Cont$handler$h2$RecursiveHandlers$_mls_L108_165_249(pc1, next1) { return new Cont$handler$h2$RecursiveHandlers$_mls_L108_165_249.class(pc1, next1); };
+//│             Cont$handler$h2$RecursiveHandlers$_mls_L108_165_2491.class = class Cont$handler$h2$RecursiveHandlers$_mls_L108_165_249 extends runtime.FunctionContFrame.class {
 //│               constructor(pc, next) {
 //│                 let tmp15;
-//│                 tmp15 = super(next, false);
+//│                 tmp15 = super(next);
 //│                 this.pc = pc;
 //│                 this.next = next;
 //│               }
@@ -237,7 +235,6 @@ str
 //│                 contLoop: while (true) {
 //│                   if (this.pc === 2) {
 //│                     if (tmp12 instanceof runtime.Return.class) {
-//│                       this.completed = true;
 //│                       return tmp12
 //│                     }
 //│                     this.pc = 3;
@@ -246,23 +243,20 @@ str
 //│                     tmp13 = str + "B";
 //│                     tmp14 = str + tmp13;
 //│                     str = tmp14;
-//│                     this.completed = true;
 //│                     return runtime.Unit
 //│                   }
 //│                   break;
 //│                 }
 //│               }
-//│               toString() { return "Cont$handler$h2$RecursiveHandlers$_mls_L104_165_249(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
+//│               toString() { return "Cont$handler$h2$RecursiveHandlers$_mls_L108_165_249(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
 //│             };
 //│             tmp10 = str + "B";
 //│             tmp11 = str + tmp10;
 //│             str = tmp11;
 //│             tmp12 = runtime.safeCall(k(arg));
 //│             if (tmp12 instanceof runtime.EffectSig.class) {
-//│               handleBlock.contHead.next = new Cont$handler$h2$RecursiveHandlers$_mls_L104_165_2491.class(2, handleBlock.contHead.next);
-//│               if (handleBlock.lastHandlerCont === null) {
-//│                 handleBlock.lastHandlerCont = handleBlock.contHead.next;
-//│               }
+//│               tmp12.contTrace.last.next = new Cont$handler$h2$RecursiveHandlers$_mls_L108_165_2491.class(2, null);
+//│               tmp12.contTrace.last = tmp12.contTrace.last.next;
 //│               return tmp12
 //│             }
 //│             if (tmp12 instanceof runtime.Return.class) {
@@ -278,10 +272,10 @@ str
 //│       };
 //│       h2 = new Handler$h2$2();
 //│       Cont$handleBlock$h2$2 = function Cont$handleBlock$h2$(pc1, next1) { return new Cont$handleBlock$h2$.class(pc1, next1); };
-//│       Cont$handleBlock$h2$2.class = class Cont$handleBlock$h2$1 extends runtime.Cont.class {
+//│       Cont$handleBlock$h2$2.class = class Cont$handleBlock$h2$1 extends runtime.FunctionContFrame.class {
 //│         constructor(pc, next) {
 //│           let tmp10;
-//│           tmp10 = super(next, false);
+//│           tmp10 = super(next);
 //│           this.pc = pc;
 //│           this.next = next;
 //│         }
@@ -296,12 +290,13 @@ str
 //│               res4 = runtime.safeCall(h1.perform(runtime.Unit));
 //│               if (res4 instanceof runtime.EffectSig.class) {
 //│                 this.pc = 1;
+//│                 res4.contTrace.last.next = this;
+//│                 res4.contTrace.last = this;
 //│                 return res4
 //│               }
 //│               this.pc = 1;
 //│               continue contLoop;
 //│             } else if (this.pc === 1) {
-//│               this.completed = true;
 //│               return res4
 //│             }
 //│             break;
@@ -311,19 +306,19 @@ str
 //│       };
 //│       tmp9 = runtime.safeCall(h2.perform(runtime.Unit));
 //│       if (tmp9 instanceof runtime.EffectSig.class) {
-//│         tmp9.tail.next = new Cont$handleBlock$h2$2(0, null);
+//│         tmp9.contTrace.last.next = new Cont$handleBlock$h2$2(0, null);
 //│         return runtime.handleBlockImpl(tmp9, h2)
 //│       }
 //│       res4 = runtime.safeCall(h1.perform(runtime.Unit));
 //│       if (res4 instanceof runtime.EffectSig.class) {
-//│         res4.tail.next = new Cont$handleBlock$h2$2(1, null);
+//│         res4.contTrace.last.next = new Cont$handleBlock$h2$2(1, null);
 //│         return runtime.handleBlockImpl(res4, h2)
 //│       }
 //│       return res4
 //│     };
 //│     tmp8 = handleBlock$5();
 //│     if (tmp8 instanceof runtime.EffectSig.class) {
-//│       tmp8.tail.next = new Cont$handleBlock$h1$2(4, null);
+//│       tmp8.contTrace.last.next = new Cont$handleBlock$h1$2(4, null);
 //│       return runtime.handleBlockImpl(tmp8, h1)
 //│     }
 //│     if (tmp8 instanceof runtime.Return.class) {

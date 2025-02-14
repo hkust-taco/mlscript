@@ -1,0 +1,88 @@
+:js
+:effectHandlers
+
+abstract class ThreadEffect with
+  val tasks = []
+  fun start(thread: ThreadEffect -> ()): ()
+  fun fork(thread: ThreadEffect -> ()): ()
+  fun yld(): ThreadEffect
+
+class Lock(locked) with
+  fun lock(th: ThreadEffect) =
+    while locked do
+      th.yld()
+    set locked = true
+  fun unlock() =
+    set locked = false
+
+fun f(x)(h) =
+  print("f " + x)
+  h.yld()
+  print("f " + x)
+  h.yld()
+  print("f " + x)
+
+fun main(h) =
+  print("main start")
+  h.fork(f(0))
+  h.fork(f(1))
+  h.fork(f(2))
+  print("main end")
+
+
+// LIFO
+handle h = ThreadEffect with
+  fun fork(thread)(k) =
+    this.tasks.unshift(thread)
+    k(())
+  fun yld()(k) =
+    this.tasks.push(k)
+    globalThis.eval("runtime").enterHandleBlock(this, () => this.tasks.shift()(this))
+  fun start(main)(k) =
+    this.tasks.push(main)
+    while this.tasks.length != 0 do
+      globalThis.eval("runtime").enterHandleBlock(this, () => this.tasks.shift()(this))
+    k()
+in
+  h.start(main)
+//│ > main start
+//│ > main end
+//│ > f 2
+//│ > f 1
+//│ > f 0
+//│ > f 2
+//│ > f 1
+//│ > f 0
+//│ > f 2
+//│ > f 1
+//│ > f 0
+
+
+// FIFO
+handle h = ThreadEffect with
+  fun fork(thread)(k) =
+    this.tasks.push(thread)
+    k(())
+  fun yld()(k) =
+    this.tasks.push(k)
+    globalThis.eval("runtime").enterHandleBlock(this, () => this.tasks.shift()(this))
+  fun start(main)(k) =
+    this.tasks.push(main)
+    while this.tasks.length != 0 do
+      globalThis.eval("runtime").enterHandleBlock(this, () => this.tasks.shift()(this))
+    k()
+in
+  h.start(main)
+//│ > main start
+//│ > main end
+//│ > f 0
+//│ > f 1
+//│ > f 2
+//│ > f 0
+//│ > f 1
+//│ > f 2
+//│ > f 0
+//│ > f 1
+//│ > f 2
+
+
