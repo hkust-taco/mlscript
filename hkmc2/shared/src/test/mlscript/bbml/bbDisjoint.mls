@@ -295,3 +295,19 @@ foo
 //│   'T <: To
 //│   'S <: So
 
+
+fun borrow: [S, T, E extends ~S] -> Region[S] -> (Region[S] ->{E} T) ->{E} T
+//│ Type: ⊤
+
+
+fun foo(f) =
+  region r in
+    let x = r.ref 0
+    f(n => x := n)
+    borrow(r) of it =>
+      foo(f)
+foo
+//│ Type: [outer, 'n, 'eff] -> (('n ->{¬outer} ('n ∨ Int)) ->{'eff} ⊤) ->{'eff} ⊥
+//│ Where:
+//│   'n <: Int
+//│   'eff <: outer
