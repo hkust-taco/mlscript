@@ -762,7 +762,7 @@ object TrivialStatementsAndMatch:
 object MergeMatchArmTransformer extends BlockTransformer(new SymbolSubst()):
   override def applyBlock(b: Block): Block = super.applyBlock(b) match
     case m@Match(scrut, arms, Some(dflt), rest) =>
-      dflt.flatten match
+      dflt.flattened match
         case TrivialStatementsAndMatch(k, Match(scrutRewritten, armsRewritten, dfltRewritten, restRewritten))
           if (scrutRewritten === scrut) && (restRewritten.size * armsRewritten.length) < 10 =>
             val newArms = restRewritten match

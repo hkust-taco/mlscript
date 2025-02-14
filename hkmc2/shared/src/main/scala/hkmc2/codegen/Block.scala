@@ -134,84 +134,88 @@ sealed abstract class Block extends Product with AutoLocated:
         case _ => super.applyBlock(b)
     
     (transformer.applyBlock(this), defns)
-  
-  // the flatten function that preserves the information in `End` by turning `b` into a `End => Block`
-  def flattenConcat(b: End => Block): Block = this match
-    case Match(scrut, arms, dflt, rest) => Match(scrut, arms, dflt, rest.flattenConcat(b))
-    case Label(label, body, rest) => Label(label, body, rest.flattenConcat(b))
-    case Begin(sub, rest) => sub.flattenConcat(_ => rest.flattenConcat(b)) // discard the `End` in the first block `sub`
-    case TryBlock(sub, finallyDo, rest) => TryBlock(sub, finallyDo, rest.flattenConcat(b))
-    case Assign(lhs, rhs, rest) => Assign(lhs, rhs, rest.flattenConcat(b))
-    case a@AssignField(lhs, nme, rhs, rest) => AssignField(lhs, nme, rhs, rest.flattenConcat(b))(a.symbol)
-    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => AssignDynField(lhs, fld, arrayIdx, rhs, rest.flattenConcat(b))
-    case Define(defn, rest) => Define(defn, rest.flattenConcat(b))
-    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) => HandleBlock(lhs, res, par, args, cls, handlers, body, rest.flattenConcat(b))
-    case e: End => b(e)
-    case _: BlockTail => this
-  
-  lazy val flattenTopLevel = this.flattenConcat(identity)
-  
-  // the block transformer that goes through nested blocks and flatten them
-  object DeepFlattenTransformer extends BlockTransformer(new SymbolSubst()):
-    override def applyBlock(b: Block): Block = super.applyBlock(b.flattenTopLevel)
-  
-  lazy val flatten = DeepFlattenTransformer.applyBlock(this)
-  
-  
-  // private lazy val flattenContAndTailAndRes: (Block => Block) -> BlockTail -> Block = this match
-  //   case Match(scrut, arms, dflt, rest) =>
-  //     val f -> t -> r = rest.flattenContAndTailAndRes
-  //     ((k: Block) => Match(scrut, arms, dflt, f(k))) ->
-  //     t ->
-  //     (if r is rest then this else Match(scrut, arms, dflt, r))
-  //   case Label(label, body, rest) =>
-  //     val f -> t -> r = rest.flattenContAndTailAndRes
-  //     ((k: Block) => Label(label, body, f(k)))->
-  //     t ->
-  //     (if r is rest then this else Label(label, body, r))
-  //   case Begin(sub, rest) =>
-  //     val f -> t -> r = sub.flattenContAndTailAndRes
-  //     t match
-  //       case End(_) =>
-  //         val f1 -> t1 -> r1 = rest.flattenContAndTailAndRes
-  //         ((k: Block) => f(f1(k))) ->
-  //         t1 ->
-  //         f(r1)
-  //       case _ => f -> t -> r
-  //   case TryBlock(sub, finallyDo, rest) =>
-  //     val f -> t -> r = rest.flattenContAndTailAndRes
-  //     ((k: Block) => TryBlock(sub, finallyDo, f(k))) ->
-  //     t ->
-  //     (if r is rest then this else TryBlock(sub, finallyDo, r))
-  //   case Assign(lhs, rhs, rest) =>
-  //     val f -> t -> r = rest.flattenContAndTailAndRes
-  //     ((k: Block) => Assign(lhs, rhs, f(k))) ->
-  //     t ->
-  //     (if r is rest then this else Assign(lhs, rhs, r))
-  //   case a@AssignField(lhs, nme, rhs, rest) =>
-  //     val f -> t -> r = rest.flattenContAndTailAndRes
-  //     ((k: Block) => AssignField(lhs, nme, rhs, f(k))(a.symbol)) ->
-  //     t ->
-  //     (if r is rest then this else AssignField(lhs, nme, rhs, r)(a.symbol))
-  //   case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
-  //     val f -> t -> r = rest.flattenContAndTailAndRes
-  //     ((k: Block) => AssignDynField(lhs, fld, arrayIdx, rhs, f(k))) ->
-  //     t ->
-  //     (if r is rest then this else AssignDynField(lhs, fld, arrayIdx, rhs, r))
-  //   case Define(defn, rest) =>
-  //     val f -> t -> r = rest.flattenContAndTailAndRes
-  //     ((k: Block) => Define(defn, f(k))) ->
-  //     t ->
-  //     (if r is rest then this else Define(defn, r))
-  //   case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
-  //     val f -> t -> r = rest.flattenContAndTailAndRes
-  //     ((k: Block) => HandleBlock(lhs, res, par, args, cls, handlers, body, f(k))) ->
-  //     t ->
-  //     (if r is rest then this else HandleBlock(lhs, res, par, args, cls, handlers, body, r))
-  //   case t: BlockTail => 
-  //     (identity: Block => Block) -> t -> t
     
-  // lazy val flatten: Block = this.flattenContAndTailAndRes._2
+  lazy val flattened: Block = this.flatten(identity)
+  
+  private def flatten(k: End => Block): Block = this match
+    case Match(scrut, arms, dflt, rest) =>
+      val newRest = rest.flatten(k)
+      val newArms = arms.mapConserve: arm =>
+        val newBody = arm._2.flattened
+        if newBody is arm._2 then arm else (arm._1, newBody)
+      val newDflt = dflt.map(_.flattened)
+      if (newRest is rest) && (newArms is arms) && (dflt is newDflt)
+      then this
+      else Match(scrut, newArms, newDflt, newRest)
+
+    case Label(label, body, rest) =>
+      val newBody = body.flattened
+      val newRest = rest.flatten(k)
+      if (newBody is body) && (newRest is rest)
+      then this
+      else Label(label, newBody, newRest)
+      
+    case Begin(sub, rest) =>
+      sub.flatten(_ => rest.flatten(k))
+    
+    case TryBlock(sub, finallyDo, rest) =>
+      val newSub = sub.flattened
+      val newFinallyDo = finallyDo.flattened
+      val newRest = rest.flatten(k)
+      if (newSub is sub) && (newFinallyDo is finallyDo) && (newRest is rest)
+      then this
+      else TryBlock(newSub, newFinallyDo, newRest)
+      
+    case Assign(lhs, rhs, rest) =>
+      val newRest = rest.flatten(k)
+      if newRest is rest
+      then this
+      else Assign(lhs, rhs, newRest)
+      
+    case a@AssignField(lhs, nme, rhs, rest) =>
+      val newRest = rest.flatten(k)
+      if newRest is rest
+      then this
+      else AssignField(lhs, nme, rhs, newRest)(a.symbol)
+      
+    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
+      val newRest = rest.flatten(k)
+      if newRest is rest
+      then this
+      else AssignDynField(lhs, fld, arrayIdx, rhs, newRest)
+    
+    case Define(defn, rest) =>
+      val newDefn = defn match
+        case d: FunDefn =>
+          val newBody = d.body.flattened
+          if newBody is d.body
+          then d
+          else d.copy(body = newBody)
+        case v: ValDefn => v
+        case c: ClsLikeDefn =>
+          val newPreCtor = c.preCtor.flattened
+          val newCtor = c.ctor.flattened
+          if (newPreCtor is c.preCtor) && (newCtor is c.ctor)
+          then c
+          else c.copy(preCtor = newPreCtor, ctor = newCtor)
+      
+      val newRest = rest.flatten(k)
+      if newRest is rest
+      then this
+      else Define(newDefn, newRest)
+    
+    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
+      val newHandlers = handlers.mapConserve: h =>
+        val newBody = h.body.flattened
+        if newBody is h.body then h else h.copy(body = newBody)
+      val newBody = body.flattened
+      val newRest = rest.flatten(k)
+      if (newHandlers is handlers) && (newBody is body) && (newRest is rest)
+      then this
+      else HandleBlock(lhs, res, par, args, cls, newHandlers, newBody, newRest)
+
+    case e: End => k(e)
+    case t: BlockTail => this
   
 end Block
 
