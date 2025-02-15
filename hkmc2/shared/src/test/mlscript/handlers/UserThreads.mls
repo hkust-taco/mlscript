@@ -149,8 +149,8 @@ abstract class ThreadEffect with
   fun xchg(x: Int): Int
 
 val tasks = []
-fun enqueue(k) =
-  tasks.push(k)
+fun enqueue(k, x) =
+  tasks.push(k.bind(null, x))
 fun dequeue() =
   if tasks.length != 0 do
     tasks.shift()()
@@ -162,16 +162,16 @@ let exchanger = None
 fun start(thread: ThreadEffect -> ()) =
   handle h = ThreadEffect with
     fun fork(new_thread)(k) =
-      enqueue(k)
+      enqueue(k, ())
       start(new_thread)
     fun yld()(k) =
-      enqueue(k)
+      enqueue(k, ())
       dequeue()
     fun xchg(x)(k) =
       if exchanger is
         Some([y, k1]) then
           set exchanger = None
-          enqueue(k1.bind(null, x))
+          enqueue(k1, x)
           k(y)
         None then
           set exchanger = Some([x, k])
