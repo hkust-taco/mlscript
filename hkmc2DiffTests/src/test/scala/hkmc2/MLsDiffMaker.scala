@@ -150,7 +150,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     
     val block = os.read(file)
     val fph = new FastParseHelpers(block)
-    val origin = Origin(file.toString, 0, fph)
+    val origin = Origin(file, 0, fph)
     
     val lexer = new syntax.Lexer(origin, dbg = dbgParsing.isSet)
     val tokens = lexer.bracketedTokens

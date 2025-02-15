@@ -372,7 +372,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     defns.foldLeft(blk)((acc, defn) => Define(defn, acc))
   
   private def locToStr(l: Loc): Str =
-    Scope.replaceInvalidCharacters(l.origin.fileName + "_L" + l.origin.startLineNum + "_" + l.spanStart + "_" + l.spanEnd)
+    Scope.replaceInvalidCharacters(l.origin.fileName.last + "_L" + l.origin.startLineNum + "_" + l.spanStart + "_" + l.spanEnd)
   
   private def translateFun(f: FunDefn): FunDefn =
     FunDefn(f.owner, f.sym, f.params, translateBlock(f.body, functionHandlerCtx(s"Cont$$func$$${f.sym.nme}$$${f.sym.toLoc.fold("")(locToStr)}$$")))
