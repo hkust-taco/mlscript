@@ -1,8 +1,6 @@
 :js
 :effectHandlers
 
-import "../../mlscript-compile/Runtime.mls"
-open Runtime { enterHandleBlock }
 
 abstract class ThreadEffect with
   val tasks = []

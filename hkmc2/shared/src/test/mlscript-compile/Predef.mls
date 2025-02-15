@@ -1,4 +1,6 @@
 
+import "./Runtime.mls"
+
 module Predef with ...
 
 fun id(x) = x
@@ -158,3 +160,9 @@ module TraceLogger with
 class Test with
   print("Test")
   val y = 1
+
+// This binds the handler in body, which means body can raise effects in handler
+fun enterHandleBlock(handler, body) =
+  // This is a simple wrapper of a handler runtime function, which must not be instrumented so cannot be directly implemented here.
+  // It also calls other internal runtime functions as well.
+  Runtime.enterHandleBlock(handler, body)

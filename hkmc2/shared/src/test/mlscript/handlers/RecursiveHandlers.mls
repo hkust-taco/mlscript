@@ -1,8 +1,6 @@
 :js
 :effectHandlers
 
-import "../../mlscript-compile/Runtime.mls"
-open Runtime { enterHandleBlock }
 
 abstract class Effect[A] with
   fun perform(arg: A): A
@@ -21,13 +19,13 @@ h1.perform("hello")
 :e
 h1
 //│ ╔══[ERROR] Name not found: h1
-//│ ║  l.22: 	h1
+//│ ║  l.20: 	h1
 //│ ╙──      	^^
 
 :e
 h1.perform("oops")
 //│ ╔══[ERROR] Name not found: h1
-//│ ║  l.28: 	h1.perform("oops")
+//│ ║  l.26: 	h1.perform("oops")
 //│ ╙──      	^^
 
 :re
@@ -73,7 +71,7 @@ handle h2 = Effect with
   h2.perform(3)
 ]
 //│ ╔══[ERROR] Name not found: h2
-//│ ║  l.67: 	      then h2.perform(arg - 1) + " " + arg
+//│ ║  l.65: 	      then h2.perform(arg - 1) + " " + arg
 //│ ╙──      	           ^^
 //│ > –––
 //│ > performing 2
@@ -167,9 +165,9 @@ str
 //│       }
 //│       perform(arg) {
 //│         return runtime.mkEffect(h1, (k) => {
-//│           let tmp12, tmp13, tmp14, Cont$handler$h1$RecursiveHandlers$_mls_L141_58_1301;
-//│           Cont$handler$h1$RecursiveHandlers$_mls_L141_58_1301 = function Cont$handler$h1$RecursiveHandlers$_mls_L141_58_130(pc1) { return new Cont$handler$h1$RecursiveHandlers$_mls_L141_58_130.class(pc1); };
-//│           Cont$handler$h1$RecursiveHandlers$_mls_L141_58_1301.class = class Cont$handler$h1$RecursiveHandlers$_mls_L141_58_130 extends runtime.FunctionContFrame.class {
+//│           let tmp12, tmp13, tmp14, Cont$handler$h1$RecursiveHandlers$_mls_L139_58_1301;
+//│           Cont$handler$h1$RecursiveHandlers$_mls_L139_58_1301 = function Cont$handler$h1$RecursiveHandlers$_mls_L139_58_130(pc1) { return new Cont$handler$h1$RecursiveHandlers$_mls_L139_58_130.class(pc1); };
+//│           Cont$handler$h1$RecursiveHandlers$_mls_L139_58_1301.class = class Cont$handler$h1$RecursiveHandlers$_mls_L139_58_130 extends runtime.FunctionContFrame.class {
 //│             constructor(pc) {
 //│               let tmp15;
 //│               tmp15 = super(null);
@@ -194,13 +192,13 @@ str
 //│                 break;
 //│               }
 //│             }
-//│             toString() { return "Cont$handler$h1$RecursiveHandlers$_mls_L141_58_130(" + globalThis.Predef.render(this.pc) + ")"; }
+//│             toString() { return "Cont$handler$h1$RecursiveHandlers$_mls_L139_58_130(" + globalThis.Predef.render(this.pc) + ")"; }
 //│           };
 //│           tmp12 = str + "A";
 //│           str = tmp12;
 //│           tmp13 = runtime.safeCall(k(arg));
 //│           if (tmp13 instanceof runtime.EffectSig.class) {
-//│             tmp13.contTrace.last.next = new Cont$handler$h1$RecursiveHandlers$_mls_L141_58_1301.class(6);
+//│             tmp13.contTrace.last.next = new Cont$handler$h1$RecursiveHandlers$_mls_L139_58_1301.class(6);
 //│             tmp13.contTrace.last = tmp13.contTrace.last.next;
 //│             return tmp13
 //│           }
@@ -250,9 +248,9 @@ str
 //│         }
 //│         perform(arg) {
 //│           return runtime.mkEffect(h2, (k) => {
-//│             let tmp13, tmp14, tmp15, tmp16, tmp17, Cont$handler$h2$RecursiveHandlers$_mls_L141_165_2491;
-//│             Cont$handler$h2$RecursiveHandlers$_mls_L141_165_2491 = function Cont$handler$h2$RecursiveHandlers$_mls_L141_165_249(pc1) { return new Cont$handler$h2$RecursiveHandlers$_mls_L141_165_249.class(pc1); };
-//│             Cont$handler$h2$RecursiveHandlers$_mls_L141_165_2491.class = class Cont$handler$h2$RecursiveHandlers$_mls_L141_165_249 extends runtime.FunctionContFrame.class {
+//│             let tmp13, tmp14, tmp15, tmp16, tmp17, Cont$handler$h2$RecursiveHandlers$_mls_L139_165_2491;
+//│             Cont$handler$h2$RecursiveHandlers$_mls_L139_165_2491 = function Cont$handler$h2$RecursiveHandlers$_mls_L139_165_249(pc1) { return new Cont$handler$h2$RecursiveHandlers$_mls_L139_165_249.class(pc1); };
+//│             Cont$handler$h2$RecursiveHandlers$_mls_L139_165_2491.class = class Cont$handler$h2$RecursiveHandlers$_mls_L139_165_249 extends runtime.FunctionContFrame.class {
 //│               constructor(pc) {
 //│                 let tmp18;
 //│                 tmp18 = super(null);
@@ -278,14 +276,14 @@ str
 //│                   break;
 //│                 }
 //│               }
-//│               toString() { return "Cont$handler$h2$RecursiveHandlers$_mls_L141_165_249(" + globalThis.Predef.render(this.pc) + ")"; }
+//│               toString() { return "Cont$handler$h2$RecursiveHandlers$_mls_L139_165_249(" + globalThis.Predef.render(this.pc) + ")"; }
 //│             };
 //│             tmp13 = str + "B";
 //│             tmp14 = str + tmp13;
 //│             str = tmp14;
 //│             tmp15 = runtime.safeCall(k(arg));
 //│             if (tmp15 instanceof runtime.EffectSig.class) {
-//│               tmp15.contTrace.last.next = new Cont$handler$h2$RecursiveHandlers$_mls_L141_165_2491.class(2);
+//│               tmp15.contTrace.last.next = new Cont$handler$h2$RecursiveHandlers$_mls_L139_165_2491.class(2);
 //│               tmp15.contTrace.last = tmp15.contTrace.last.next;
 //│               return tmp15
 //│             }

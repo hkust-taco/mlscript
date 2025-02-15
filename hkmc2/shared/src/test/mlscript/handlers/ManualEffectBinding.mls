@@ -1,9 +1,6 @@
 :js
 :effectHandlers
 
-import "../../mlscript-compile/Runtime.mls"
-open Runtime { enterHandleBlock }
-
 abstract class Effect with
   fun perform(): ()
 

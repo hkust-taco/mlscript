@@ -406,8 +406,6 @@ bad()
 :effectHandlers
 :stackSafe 100
 :expect 0
-import "../../mlscript-compile/Runtime.mls"
-open Runtime { enterHandleBlock }
 let depth = 0
 handle h = Object with
   fun whoops()(k) =

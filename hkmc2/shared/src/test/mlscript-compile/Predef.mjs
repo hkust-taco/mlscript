@@ -1,4 +1,5 @@
 import runtime from "./Runtime.mjs";
+import Runtime from "./Runtime.mjs";
 let Predef1;
 Predef1 = class Predef {
   static {
@@ -388,6 +389,9 @@ Predef1 = class Predef {
     } else {
       return runtime.Unit
     }
+  } 
+  static enterHandleBlock(handler, body) {
+    return Runtime.enterHandleBlock(handler, body)
   }
   static toString() { return "Predef"; }
 };
