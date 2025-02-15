@@ -406,3 +406,17 @@ fun bad() = sum(10000) + sum(10000)
 bad()
 //│ = 100010000
 
+
+:effectHandlers
+:stackSafe 100
+:expect 0
+let depth = 0
+handle h = Object with
+  fun whoops()(k) =
+    if depth >= 50000 then 0
+    else
+      set depth += 1
+      globalThis.eval("runtime").enterHandleBlock(this, () => whoops())
+h.whoops()
+//│ = 0
+//│ depth = 50000
