@@ -41,10 +41,13 @@ h.write(2)
 
 handle h = Object with
   fun write(x)(k) =
-    if x < 10 do enterHandleBlock(this, () => write(10))
+    if x < 10 do
+      print(enterHandleBlock(this, () => write(10)))
     [x, k(())]
 h.write(1)
 h.write(2)
+//│ > [10, ()]
+//│ > [10, ()]
 //│ = [1, [2, ()]]
 
 // deep handler
@@ -62,7 +65,7 @@ handle h2 = Effect with
   h2.perform(3)
 ]
 //│ ╔══[ERROR] Name not found: h2
-//│ ║  l.56: 	      then h2.perform(arg - 1) + " " + arg
+//│ ║  l.59: 	      then h2.perform(arg - 1) + " " + arg
 //│ ╙──      	           ^^
 //│ > –––
 //│ > performing 2
@@ -152,9 +155,9 @@ str
 //│       }
 //│       perform(arg) {
 //│         return runtime.mkEffect(h1, (k) => {
-//│           let tmp11, tmp12, tmp13, Cont$handler$h1$RecursiveHandlers$_mls_L126_58_1301;
-//│           Cont$handler$h1$RecursiveHandlers$_mls_L126_58_1301 = function Cont$handler$h1$RecursiveHandlers$_mls_L126_58_130(pc1, next1) { return new Cont$handler$h1$RecursiveHandlers$_mls_L126_58_130.class(pc1, next1); };
-//│           Cont$handler$h1$RecursiveHandlers$_mls_L126_58_1301.class = class Cont$handler$h1$RecursiveHandlers$_mls_L126_58_130 extends runtime.FunctionContFrame.class {
+//│           let tmp11, tmp12, tmp13, Cont$handler$h1$RecursiveHandlers$_mls_L129_58_1301;
+//│           Cont$handler$h1$RecursiveHandlers$_mls_L129_58_1301 = function Cont$handler$h1$RecursiveHandlers$_mls_L129_58_130(pc1, next1) { return new Cont$handler$h1$RecursiveHandlers$_mls_L129_58_130.class(pc1, next1); };
+//│           Cont$handler$h1$RecursiveHandlers$_mls_L129_58_1301.class = class Cont$handler$h1$RecursiveHandlers$_mls_L129_58_130 extends runtime.FunctionContFrame.class {
 //│             constructor(pc, next) {
 //│               let tmp14;
 //│               tmp14 = super(next);
@@ -180,13 +183,13 @@ str
 //│                 break;
 //│               }
 //│             }
-//│             toString() { return "Cont$handler$h1$RecursiveHandlers$_mls_L126_58_130(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
+//│             toString() { return "Cont$handler$h1$RecursiveHandlers$_mls_L129_58_130(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
 //│           };
 //│           tmp11 = str + "A";
 //│           str = tmp11;
 //│           tmp12 = runtime.safeCall(k(arg));
 //│           if (tmp12 instanceof runtime.EffectSig.class) {
-//│             tmp12.contTrace.last.next = new Cont$handler$h1$RecursiveHandlers$_mls_L126_58_1301.class(6, null);
+//│             tmp12.contTrace.last.next = new Cont$handler$h1$RecursiveHandlers$_mls_L129_58_1301.class(6, null);
 //│             tmp12.contTrace.last = tmp12.contTrace.last.next;
 //│             return tmp12
 //│           }
@@ -237,9 +240,9 @@ str
 //│         }
 //│         perform(arg) {
 //│           return runtime.mkEffect(h2, (k) => {
-//│             let tmp12, tmp13, tmp14, tmp15, tmp16, Cont$handler$h2$RecursiveHandlers$_mls_L126_165_2491;
-//│             Cont$handler$h2$RecursiveHandlers$_mls_L126_165_2491 = function Cont$handler$h2$RecursiveHandlers$_mls_L126_165_249(pc1, next1) { return new Cont$handler$h2$RecursiveHandlers$_mls_L126_165_249.class(pc1, next1); };
-//│             Cont$handler$h2$RecursiveHandlers$_mls_L126_165_2491.class = class Cont$handler$h2$RecursiveHandlers$_mls_L126_165_249 extends runtime.FunctionContFrame.class {
+//│             let tmp12, tmp13, tmp14, tmp15, tmp16, Cont$handler$h2$RecursiveHandlers$_mls_L129_165_2491;
+//│             Cont$handler$h2$RecursiveHandlers$_mls_L129_165_2491 = function Cont$handler$h2$RecursiveHandlers$_mls_L129_165_249(pc1, next1) { return new Cont$handler$h2$RecursiveHandlers$_mls_L129_165_249.class(pc1, next1); };
+//│             Cont$handler$h2$RecursiveHandlers$_mls_L129_165_2491.class = class Cont$handler$h2$RecursiveHandlers$_mls_L129_165_249 extends runtime.FunctionContFrame.class {
 //│               constructor(pc, next) {
 //│                 let tmp17;
 //│                 tmp17 = super(next);
@@ -266,14 +269,14 @@ str
 //│                   break;
 //│                 }
 //│               }
-//│               toString() { return "Cont$handler$h2$RecursiveHandlers$_mls_L126_165_249(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
+//│               toString() { return "Cont$handler$h2$RecursiveHandlers$_mls_L129_165_249(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
 //│             };
 //│             tmp12 = str + "B";
 //│             tmp13 = str + tmp12;
 //│             str = tmp13;
 //│             tmp14 = runtime.safeCall(k(arg));
 //│             if (tmp14 instanceof runtime.EffectSig.class) {
-//│               tmp14.contTrace.last.next = new Cont$handler$h2$RecursiveHandlers$_mls_L126_165_2491.class(2, null);
+//│               tmp14.contTrace.last.next = new Cont$handler$h2$RecursiveHandlers$_mls_L129_165_2491.class(2, null);
 //│               tmp14.contTrace.last = tmp14.contTrace.last.next;
 //│               return tmp14
 //│             }
