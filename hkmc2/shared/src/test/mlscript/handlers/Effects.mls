@@ -172,13 +172,12 @@ if true do
 //│     toString() { return "Handler$h$"; }
 //│   };
 //│   h = new Handler$h$12();
-//│   Cont$handleBlock$h$11 = function Cont$handleBlock$h$(pc1, next1) { return new Cont$handleBlock$h$.class(pc1, next1); };
+//│   Cont$handleBlock$h$11 = function Cont$handleBlock$h$(pc1) { return new Cont$handleBlock$h$.class(pc1); };
 //│   Cont$handleBlock$h$11.class = class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
-//│     constructor(pc, next) {
+//│     constructor(pc) {
 //│       let tmp13;
-//│       tmp13 = super(next);
+//│       tmp13 = super(null);
 //│       this.pc = pc;
-//│       this.next = next;
 //│     }
 //│     resume(value$) {
 //│       if (this.pc === 0) {
@@ -194,7 +193,7 @@ if true do
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$handleBlock$h$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
+//│     toString() { return "Cont$handleBlock$h$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   f = function f() {
 //│     return 3

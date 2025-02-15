@@ -156,13 +156,12 @@ str
 //│       perform(arg) {
 //│         return runtime.mkEffect(h1, (k) => {
 //│           let tmp11, tmp12, tmp13, Cont$handler$h1$RecursiveHandlers$_mls_L129_58_1301;
-//│           Cont$handler$h1$RecursiveHandlers$_mls_L129_58_1301 = function Cont$handler$h1$RecursiveHandlers$_mls_L129_58_130(pc1, next1) { return new Cont$handler$h1$RecursiveHandlers$_mls_L129_58_130.class(pc1, next1); };
+//│           Cont$handler$h1$RecursiveHandlers$_mls_L129_58_1301 = function Cont$handler$h1$RecursiveHandlers$_mls_L129_58_130(pc1) { return new Cont$handler$h1$RecursiveHandlers$_mls_L129_58_130.class(pc1); };
 //│           Cont$handler$h1$RecursiveHandlers$_mls_L129_58_1301.class = class Cont$handler$h1$RecursiveHandlers$_mls_L129_58_130 extends runtime.FunctionContFrame.class {
-//│             constructor(pc, next) {
+//│             constructor(pc) {
 //│               let tmp14;
-//│               tmp14 = super(next);
+//│               tmp14 = super(null);
 //│               this.pc = pc;
-//│               this.next = next;
 //│             }
 //│             resume(value$) {
 //│               if (this.pc === 6) {
@@ -183,13 +182,13 @@ str
 //│                 break;
 //│               }
 //│             }
-//│             toString() { return "Cont$handler$h1$RecursiveHandlers$_mls_L129_58_130(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
+//│             toString() { return "Cont$handler$h1$RecursiveHandlers$_mls_L129_58_130(" + globalThis.Predef.render(this.pc) + ")"; }
 //│           };
 //│           tmp11 = str + "A";
 //│           str = tmp11;
 //│           tmp12 = runtime.safeCall(k(arg));
 //│           if (tmp12 instanceof runtime.EffectSig.class) {
-//│             tmp12.contTrace.last.next = new Cont$handler$h1$RecursiveHandlers$_mls_L129_58_1301.class(6, null);
+//│             tmp12.contTrace.last.next = new Cont$handler$h1$RecursiveHandlers$_mls_L129_58_1301.class(6);
 //│             tmp12.contTrace.last = tmp12.contTrace.last.next;
 //│             return tmp12
 //│           }
@@ -204,13 +203,12 @@ str
 //│       toString() { return "Handler$h1$"; }
 //│     };
 //│     h1 = new Handler$h1$2();
-//│     Cont$handleBlock$h1$2 = function Cont$handleBlock$h1$(pc1, next1) { return new Cont$handleBlock$h1$.class(pc1, next1); };
+//│     Cont$handleBlock$h1$2 = function Cont$handleBlock$h1$(pc1) { return new Cont$handleBlock$h1$.class(pc1); };
 //│     Cont$handleBlock$h1$2.class = class Cont$handleBlock$h1$1 extends runtime.FunctionContFrame.class {
-//│       constructor(pc, next) {
+//│       constructor(pc) {
 //│         let tmp11;
-//│         tmp11 = super(next);
+//│         tmp11 = super(null);
 //│         this.pc = pc;
-//│         this.next = next;
 //│       }
 //│       resume(value$) {
 //│         if (this.pc === 4) {
@@ -229,7 +227,7 @@ str
 //│           break;
 //│         }
 //│       }
-//│       toString() { return "Cont$handleBlock$h1$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
+//│       toString() { return "Cont$handleBlock$h1$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│     };
 //│     handleBlock$7 = function handleBlock$() {
 //│       let h2, tmp11, res6, Cont$handleBlock$h2$2, Handler$h2$2;
@@ -241,13 +239,12 @@ str
 //│         perform(arg) {
 //│           return runtime.mkEffect(h2, (k) => {
 //│             let tmp12, tmp13, tmp14, tmp15, tmp16, Cont$handler$h2$RecursiveHandlers$_mls_L129_165_2491;
-//│             Cont$handler$h2$RecursiveHandlers$_mls_L129_165_2491 = function Cont$handler$h2$RecursiveHandlers$_mls_L129_165_249(pc1, next1) { return new Cont$handler$h2$RecursiveHandlers$_mls_L129_165_249.class(pc1, next1); };
+//│             Cont$handler$h2$RecursiveHandlers$_mls_L129_165_2491 = function Cont$handler$h2$RecursiveHandlers$_mls_L129_165_249(pc1) { return new Cont$handler$h2$RecursiveHandlers$_mls_L129_165_249.class(pc1); };
 //│             Cont$handler$h2$RecursiveHandlers$_mls_L129_165_2491.class = class Cont$handler$h2$RecursiveHandlers$_mls_L129_165_249 extends runtime.FunctionContFrame.class {
-//│               constructor(pc, next) {
+//│               constructor(pc) {
 //│                 let tmp17;
-//│                 tmp17 = super(next);
+//│                 tmp17 = super(null);
 //│                 this.pc = pc;
-//│                 this.next = next;
 //│               }
 //│               resume(value$) {
 //│                 if (this.pc === 2) {
@@ -269,14 +266,14 @@ str
 //│                   break;
 //│                 }
 //│               }
-//│               toString() { return "Cont$handler$h2$RecursiveHandlers$_mls_L129_165_249(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
+//│               toString() { return "Cont$handler$h2$RecursiveHandlers$_mls_L129_165_249(" + globalThis.Predef.render(this.pc) + ")"; }
 //│             };
 //│             tmp12 = str + "B";
 //│             tmp13 = str + tmp12;
 //│             str = tmp13;
 //│             tmp14 = runtime.safeCall(k(arg));
 //│             if (tmp14 instanceof runtime.EffectSig.class) {
-//│               tmp14.contTrace.last.next = new Cont$handler$h2$RecursiveHandlers$_mls_L129_165_2491.class(2, null);
+//│               tmp14.contTrace.last.next = new Cont$handler$h2$RecursiveHandlers$_mls_L129_165_2491.class(2);
 //│               tmp14.contTrace.last = tmp14.contTrace.last.next;
 //│               return tmp14
 //│             }
@@ -292,13 +289,12 @@ str
 //│         toString() { return "Handler$h2$"; }
 //│       };
 //│       h2 = new Handler$h2$2();
-//│       Cont$handleBlock$h2$2 = function Cont$handleBlock$h2$(pc1, next1) { return new Cont$handleBlock$h2$.class(pc1, next1); };
+//│       Cont$handleBlock$h2$2 = function Cont$handleBlock$h2$(pc1) { return new Cont$handleBlock$h2$.class(pc1); };
 //│       Cont$handleBlock$h2$2.class = class Cont$handleBlock$h2$1 extends runtime.FunctionContFrame.class {
-//│         constructor(pc, next) {
+//│         constructor(pc) {
 //│           let tmp12;
-//│           tmp12 = super(next);
+//│           tmp12 = super(null);
 //│           this.pc = pc;
-//│           this.next = next;
 //│         }
 //│         resume(value$) {
 //│           if (this.pc === 0) {
@@ -323,7 +319,7 @@ str
 //│             break;
 //│           }
 //│         }
-//│         toString() { return "Cont$handleBlock$h2$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
+//│         toString() { return "Cont$handleBlock$h2$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│       };
 //│       tmp11 = runtime.safeCall(h2.perform(runtime.Unit));
 //│       if (tmp11 instanceof runtime.EffectSig.class) {

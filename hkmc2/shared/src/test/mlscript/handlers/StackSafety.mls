@@ -23,13 +23,12 @@ hi(0)
 //│ let hi, res, handleBlock$;
 //│ hi = function hi(n) {
 //│   let scrut, tmp, stackDelayRes, Cont$func$hi$StackSafety$_mls_L18_4_47$1;
-//│   Cont$func$hi$StackSafety$_mls_L18_4_47$1 = function Cont$func$hi$StackSafety$_mls_L18_4_47$(pc1, next1) { return new Cont$func$hi$StackSafety$_mls_L18_4_47$.class(pc1, next1); };
+//│   Cont$func$hi$StackSafety$_mls_L18_4_47$1 = function Cont$func$hi$StackSafety$_mls_L18_4_47$(pc1) { return new Cont$func$hi$StackSafety$_mls_L18_4_47$.class(pc1); };
 //│   Cont$func$hi$StackSafety$_mls_L18_4_47$1.class = class Cont$func$hi$StackSafety$_mls_L18_4_47$ extends runtime.FunctionContFrame.class {
-//│     constructor(pc, next) {
+//│     constructor(pc) {
 //│       let tmp1;
-//│       tmp1 = super(next);
+//│       tmp1 = super(null);
 //│       this.pc = pc;
-//│       this.next = next;
 //│     }
 //│     resume(value$) {
 //│       if (this.pc === 0) {
@@ -53,11 +52,11 @@ hi(0)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$func$hi$StackSafety$_mls_L18_4_47$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
+//│     toString() { return "Cont$func$hi$StackSafety$_mls_L18_4_47$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     stackDelayRes.contTrace.last.next = new Cont$func$hi$StackSafety$_mls_L18_4_47$1.class(0, null);
+//│     stackDelayRes.contTrace.last.next = new Cont$func$hi$StackSafety$_mls_L18_4_47$1.class(0);
 //│     stackDelayRes.contTrace.last = stackDelayRes.contTrace.last.next;
 //│     return stackDelayRes
 //│   }
@@ -86,13 +85,12 @@ hi(0)
 //│     toString() { return "StackDelay$"; }
 //│   };
 //│   stackHandler = new StackDelay$1();
-//│   Cont$handleBlock$stackHandler$1 = function Cont$handleBlock$stackHandler$(pc1, next1) { return new Cont$handleBlock$stackHandler$.class(pc1, next1); };
+//│   Cont$handleBlock$stackHandler$1 = function Cont$handleBlock$stackHandler$(pc1) { return new Cont$handleBlock$stackHandler$.class(pc1); };
 //│   Cont$handleBlock$stackHandler$1.class = class Cont$handleBlock$stackHandler$ extends runtime.FunctionContFrame.class {
-//│     constructor(pc, next) {
+//│     constructor(pc) {
 //│       let tmp;
-//│       tmp = super(next);
+//│       tmp = super(null);
 //│       this.pc = pc;
-//│       this.next = next;
 //│     }
 //│     resume(value$) {
 //│       if (this.pc === 2) {
@@ -105,7 +103,7 @@ hi(0)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$handleBlock$stackHandler$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
+//│     toString() { return "Cont$handleBlock$stackHandler$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   runtime.stackLimit = 5;
 //│   runtime.stackOffset = 0;
@@ -140,13 +138,12 @@ sum(10000)
 //│ let sum1, res1, handleBlock$1;
 //│ sum1 = function sum(n) {
 //│   let scrut, tmp, tmp1, curDepth, stackDelayRes, Cont$func$sum$StackSafety$_mls_L134_4_57$1;
-//│   Cont$func$sum$StackSafety$_mls_L134_4_57$1 = function Cont$func$sum$StackSafety$_mls_L134_4_57$(pc1, next1) { return new Cont$func$sum$StackSafety$_mls_L134_4_57$.class(pc1, next1); };
+//│   Cont$func$sum$StackSafety$_mls_L134_4_57$1 = function Cont$func$sum$StackSafety$_mls_L134_4_57$(pc1) { return new Cont$func$sum$StackSafety$_mls_L134_4_57$.class(pc1); };
 //│   Cont$func$sum$StackSafety$_mls_L134_4_57$1.class = class Cont$func$sum$StackSafety$_mls_L134_4_57$ extends runtime.FunctionContFrame.class {
-//│     constructor(pc, next) {
+//│     constructor(pc) {
 //│       let tmp2;
-//│       tmp2 = super(next);
+//│       tmp2 = super(null);
 //│       this.pc = pc;
-//│       this.next = next;
 //│     }
 //│     resume(value$) {
 //│       if (this.pc === 0) {
@@ -183,12 +180,12 @@ sum(10000)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$func$sum$StackSafety$_mls_L134_4_57$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
+//│     toString() { return "Cont$func$sum$StackSafety$_mls_L134_4_57$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     stackDelayRes.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L134_4_57$1.class(0, null);
+//│     stackDelayRes.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L134_4_57$1.class(0);
 //│     stackDelayRes.contTrace.last = stackDelayRes.contTrace.last.next;
 //│     return stackDelayRes
 //│   }
@@ -200,7 +197,7 @@ sum(10000)
 //│     runtime.stackDepth = runtime.stackDepth + 1;
 //│     tmp1 = sum1(tmp);
 //│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       tmp1.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L134_4_57$1.class(1, null);
+//│       tmp1.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L134_4_57$1.class(1);
 //│       tmp1.contTrace.last = tmp1.contTrace.last.next;
 //│       return tmp1
 //│     }
@@ -224,13 +221,12 @@ sum(10000)
 //│     toString() { return "StackDelay$"; }
 //│   };
 //│   stackHandler = new StackDelay$2();
-//│   Cont$handleBlock$stackHandler$2 = function Cont$handleBlock$stackHandler$(pc1, next1) { return new Cont$handleBlock$stackHandler$.class(pc1, next1); };
+//│   Cont$handleBlock$stackHandler$2 = function Cont$handleBlock$stackHandler$(pc1) { return new Cont$handleBlock$stackHandler$.class(pc1); };
 //│   Cont$handleBlock$stackHandler$2.class = class Cont$handleBlock$stackHandler$1 extends runtime.FunctionContFrame.class {
-//│     constructor(pc, next) {
+//│     constructor(pc) {
 //│       let tmp;
-//│       tmp = super(next);
+//│       tmp = super(null);
 //│       this.pc = pc;
-//│       this.next = next;
 //│     }
 //│     resume(value$) {
 //│       if (this.pc === 3) {
@@ -243,7 +239,7 @@ sum(10000)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$handleBlock$stackHandler$(" + globalThis.Predef.render(this.pc) + ", " + globalThis.Predef.render(this.next) + ")"; }
+//│     toString() { return "Cont$handleBlock$stackHandler$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   runtime.stackLimit = 1000;
 //│   runtime.stackOffset = 0;

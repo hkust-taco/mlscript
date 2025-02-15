@@ -56,25 +56,18 @@ import HandlerLowering.*
 
 class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
 
-  private def funcLikeHandlerCtx(ctorThis: Option[Path], nme: Str) =
-    HandlerCtx(true, false, false, false, nme, ctorThis, state =>
+  private def funcLikeHandlerCtx(ctorThis: Option[Path], isHandlerMtd: Bool, nme: Str) =
+    HandlerCtx(!isHandlerMtd, false, isHandlerMtd, false, nme, ctorThis, state =>
       blockBuilder
         .assignFieldN(state.res.contTrace.last, nextIdent, Instantiate(
           state.cls.selN(Tree.Ident("class")),
-          Value.Lit(Tree.IntLit(state.uid)) :: Value.Lit(Tree.UnitLit(true)) :: Nil))
+          Value.Lit(Tree.IntLit(state.uid)) :: Nil))
         .assignFieldN(state.res.contTrace, lastIdent, state.res.contTrace.last.next)
         .ret(state.res))
-  private def functionHandlerCtx(nme: Str) = funcLikeHandlerCtx(N, nme)
+  private def functionHandlerCtx(nme: Str) = funcLikeHandlerCtx(N, false, nme)
   private def topLevelCtx(nme: Str) = HandlerCtx(false, true, false, false, nme, N, _ => rtThrowMsg("Unhandled effects"))
-  private def ctorCtx(ctorThis: Path, nme: Str) = funcLikeHandlerCtx(S(ctorThis), nme)
-  private def handlerMtdCtx(nme: Str) =
-    HandlerCtx(false, false, true, false, nme, N, state =>
-      blockBuilder
-        .assignFieldN(state.res.contTrace.last, nextIdent, Instantiate(
-          state.cls.selN(Tree.Ident("class")),
-          Value.Lit(Tree.IntLit(state.uid)) :: Value.Lit(Tree.UnitLit(true)) :: Nil))
-        .assignFieldN(state.res.contTrace, lastIdent, state.res.contTrace.last.next)
-        .ret(state.res))
+  private def ctorCtx(ctorThis: Path, nme: Str) = funcLikeHandlerCtx(S(ctorThis), false, nme)
+  private def handlerMtdCtx(nme: Str) = funcLikeHandlerCtx(N, true, nme)
   private def handlerCtx(using HandlerCtx): HandlerCtx = summon
   private val runtimePath: Path = State.runtimeSymbol.asPath
   private val runtimeSym: ModuleSymbol = ctx.builtins.Runtime
@@ -541,21 +534,19 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       resumeBody
     )
     
-    val nextVar = VarSymbol(Tree.Ident("next"))
-
     S(ClsLikeDefn(
       N, // no owner
       clsSym,
       BlockMemberSymbol(clsSym.nme, Nil),
       syntax.Cls,
-      S(PlainParamList(Param(FldFlags.empty, pcVar, N) :: Param(FldFlags.empty, nextVar, N) :: Nil)),
+      S(PlainParamList(Param(FldFlags.empty, pcVar, N) :: Nil)),
       S(contClsPath),
       resumeFnDef :: Nil,
       Nil,
       Nil,
       Assign(freshTmp(), PureCall(
-        Value.Ref(State.builtinOpsMap("super")), // refers to runtime.__Cont which is pure
-        Value.Ref(nextVar) :: Nil), End()),
+        Value.Ref(State.builtinOpsMap("super")), // refers to runtime.FunctionContFrame which is pure
+        Value.Lit(Tree.UnitLit(true)) :: Nil), End()),
       End()))
   
   private def genNormalBody(b: Block, clsSym: BlockMemberSymbol)(using HandlerCtx): Block =
