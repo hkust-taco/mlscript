@@ -588,11 +588,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val stackSafe = config.stackSafety match
       case N => res
       case S(sts) => StackSafeTransform(sts.stackLimit).transformTopLevel(res)
-    
-    MergeMatchArmTransformer.applyBlock(
-      if lowerHandlers then HandlerLowering().translateTopLevel(stackSafe)
+    val withHandlers = if lowerHandlers
+      then HandlerLowering().translateTopLevel(stackSafe)
       else stackSafe
-    )
+    val flattened = withHandlers.flattened
+    
+    MergeMatchArmTransformer.applyBlock(flattened)
   
   def program(main: st): Program =
     def go(acc: Ls[Local -> Str], trm: st): Program =
@@ -762,7 +763,7 @@ object TrivialStatementsAndMatch:
 object MergeMatchArmTransformer extends BlockTransformer(new SymbolSubst()):
   override def applyBlock(b: Block): Block = super.applyBlock(b) match
     case m@Match(scrut, arms, Some(dflt), rest) =>
-      dflt.flattened match
+      dflt match
         case TrivialStatementsAndMatch(k, Match(scrutRewritten, armsRewritten, dfltRewritten, restRewritten))
           if (scrutRewritten === scrut) && (restRewritten.size * armsRewritten.length) < 10 =>
             val newArms = restRewritten match
