@@ -86,3 +86,38 @@ in
 //│ > f 2
 
 
+// Adapted from: https://ocaml.org/manual/5.3/effects.html
+
+abstract class ThreadEffect with
+  fun fork(thread: ThreadEffect -> ()): ()
+  fun yld(): ()
+
+val tasks = []
+//│ tasks = []
+
+fun start(thread: ThreadEffect -> ()) =
+  handle h = ThreadEffect with
+    fun fork(new_thread)(k) =
+      tasks.push(k)
+      start(new_thread)
+    fun yld()(k) =
+      tasks.push(k)
+      if tasks.length != 0 do
+        tasks.shift()()
+  in
+    thread(h)
+  if tasks.length != 0 do
+    tasks.shift()()
+
+start(main)
+//│ > main start
+//│ > f 0
+//│ > f 1
+//│ > f 0
+//│ > f 2
+//│ > f 1
+//│ > f 0
+//│ > main end
+//│ > f 2
+//│ > f 1
+//│ > f 2
