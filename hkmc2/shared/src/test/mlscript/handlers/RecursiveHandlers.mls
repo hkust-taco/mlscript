@@ -74,7 +74,7 @@ handle h2 = Effect with
 //│ = [undefined, undefined]
 
 
-// The current implementation insert new handlers surrounding the entire handle block, and hence "later" handle block become the outer one
+// passing additional handlers to the handler body
 let res =
   handle h = Effect with
     fun perform(arg)(k) =
@@ -100,22 +100,26 @@ in res.toString()
 //│ = "‹,‹,‹,‹,hola,amigos,›,adios,›,friend,›,bye,›"
 
 
-// Output for the "later" handle block as the inner one
+// This is equivalent to the above, with all calls to h.perform expanded
 let res =
   print("A " + "hi")
   handle g = Effect with
     fun perform(arg1)(k1) =
       print("B " + "hi" + " " + arg1)
       ["‹", k1("hi"), arg1, "›"]
-  g.perform("bye")
-  g.perform("friend")
-  print("A " + "hola")
-  handle g2 = Effect with
-    fun perform(arg1)(k1) =
-      print("B " + "hola" + " " + arg1)
-      ["‹", k1("hola"), arg1, "›"]
-  g2.perform("adios")
-  g2.perform("amigos")
+  [(() =>
+    g.perform("bye")
+    g.perform("friend")
+    print("A " + "hola")
+    handle g2 = Effect with
+      fun perform(arg1)(k1) =
+        print("B " + "hola" + " " + arg1)
+        ["‹", k1("hola"), arg1, "›"]
+    [(() =>
+      g2.perform("adios")
+      g2.perform("amigos")
+    )()]
+  )()]
 in res.toString()
 //│ > A hi
 //│ > B hi bye
@@ -155,9 +159,9 @@ str
 //│       }
 //│       perform(arg) {
 //│         return runtime.mkEffect(h1, (k) => {
-//│           let tmp11, tmp12, tmp13, Cont$handler$h1$RecursiveHandlers$_mls_L129_58_1301;
-//│           Cont$handler$h1$RecursiveHandlers$_mls_L129_58_1301 = function Cont$handler$h1$RecursiveHandlers$_mls_L129_58_130(pc1) { return new Cont$handler$h1$RecursiveHandlers$_mls_L129_58_130.class(pc1); };
-//│           Cont$handler$h1$RecursiveHandlers$_mls_L129_58_1301.class = class Cont$handler$h1$RecursiveHandlers$_mls_L129_58_130 extends runtime.FunctionContFrame.class {
+//│           let tmp11, tmp12, tmp13, Cont$handler$h1$RecursiveHandlers$_mls_L133_58_1301;
+//│           Cont$handler$h1$RecursiveHandlers$_mls_L133_58_1301 = function Cont$handler$h1$RecursiveHandlers$_mls_L133_58_130(pc1) { return new Cont$handler$h1$RecursiveHandlers$_mls_L133_58_130.class(pc1); };
+//│           Cont$handler$h1$RecursiveHandlers$_mls_L133_58_1301.class = class Cont$handler$h1$RecursiveHandlers$_mls_L133_58_130 extends runtime.FunctionContFrame.class {
 //│             constructor(pc) {
 //│               let tmp14;
 //│               tmp14 = super(null);
@@ -182,13 +186,13 @@ str
 //│                 break;
 //│               }
 //│             }
-//│             toString() { return "Cont$handler$h1$RecursiveHandlers$_mls_L129_58_130(" + globalThis.Predef.render(this.pc) + ")"; }
+//│             toString() { return "Cont$handler$h1$RecursiveHandlers$_mls_L133_58_130(" + globalThis.Predef.render(this.pc) + ")"; }
 //│           };
 //│           tmp11 = str + "A";
 //│           str = tmp11;
 //│           tmp12 = runtime.safeCall(k(arg));
 //│           if (tmp12 instanceof runtime.EffectSig.class) {
-//│             tmp12.contTrace.last.next = new Cont$handler$h1$RecursiveHandlers$_mls_L129_58_1301.class(6);
+//│             tmp12.contTrace.last.next = new Cont$handler$h1$RecursiveHandlers$_mls_L133_58_1301.class(6);
 //│             tmp12.contTrace.last = tmp12.contTrace.last.next;
 //│             return tmp12
 //│           }
@@ -238,9 +242,9 @@ str
 //│         }
 //│         perform(arg) {
 //│           return runtime.mkEffect(h2, (k) => {
-//│             let tmp12, tmp13, tmp14, tmp15, tmp16, Cont$handler$h2$RecursiveHandlers$_mls_L129_165_2491;
-//│             Cont$handler$h2$RecursiveHandlers$_mls_L129_165_2491 = function Cont$handler$h2$RecursiveHandlers$_mls_L129_165_249(pc1) { return new Cont$handler$h2$RecursiveHandlers$_mls_L129_165_249.class(pc1); };
-//│             Cont$handler$h2$RecursiveHandlers$_mls_L129_165_2491.class = class Cont$handler$h2$RecursiveHandlers$_mls_L129_165_249 extends runtime.FunctionContFrame.class {
+//│             let tmp12, tmp13, tmp14, tmp15, tmp16, Cont$handler$h2$RecursiveHandlers$_mls_L133_165_2491;
+//│             Cont$handler$h2$RecursiveHandlers$_mls_L133_165_2491 = function Cont$handler$h2$RecursiveHandlers$_mls_L133_165_249(pc1) { return new Cont$handler$h2$RecursiveHandlers$_mls_L133_165_249.class(pc1); };
+//│             Cont$handler$h2$RecursiveHandlers$_mls_L133_165_2491.class = class Cont$handler$h2$RecursiveHandlers$_mls_L133_165_249 extends runtime.FunctionContFrame.class {
 //│               constructor(pc) {
 //│                 let tmp17;
 //│                 tmp17 = super(null);
@@ -266,14 +270,14 @@ str
 //│                   break;
 //│                 }
 //│               }
-//│               toString() { return "Cont$handler$h2$RecursiveHandlers$_mls_L129_165_249(" + globalThis.Predef.render(this.pc) + ")"; }
+//│               toString() { return "Cont$handler$h2$RecursiveHandlers$_mls_L133_165_249(" + globalThis.Predef.render(this.pc) + ")"; }
 //│             };
 //│             tmp12 = str + "B";
 //│             tmp13 = str + tmp12;
 //│             str = tmp13;
 //│             tmp14 = runtime.safeCall(k(arg));
 //│             if (tmp14 instanceof runtime.EffectSig.class) {
-//│               tmp14.contTrace.last.next = new Cont$handler$h2$RecursiveHandlers$_mls_L129_165_2491.class(2);
+//│               tmp14.contTrace.last.next = new Cont$handler$h2$RecursiveHandlers$_mls_L133_165_2491.class(2);
 //│               tmp14.contTrace.last = tmp14.contTrace.last.next;
 //│               return tmp14
 //│             }
