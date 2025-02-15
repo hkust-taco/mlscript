@@ -1,6 +1,9 @@
 :js
 :effectHandlers
 
+import "../../mlscript-compile/Runtime.mls"
+open Runtime { enterHandleBlock }
+
 abstract class ThreadEffect with
   val tasks = []
   fun start(thread: () -> ()): ()
@@ -37,11 +40,11 @@ handle h = ThreadEffect with
     k(())
   fun yld()(k) =
     this.tasks.push(k.bind(null, ()))
-    globalThis.eval("runtime").enterHandleBlock(this, () => this.tasks.shift()())
+    enterHandleBlock(this, () => this.tasks.shift()())
   fun start(main)(k) =
     this.tasks.push(() => main(this))
     while this.tasks.length != 0 do
-      globalThis.eval("runtime").enterHandleBlock(this, () => this.tasks.shift()())
+      enterHandleBlock(this, () => this.tasks.shift()())
     k(())
 in
   h.start(main)
@@ -65,11 +68,11 @@ handle h = ThreadEffect with
     k(())
   fun yld()(k) =
     this.tasks.push(k.bind(null, ()))
-    globalThis.eval("runtime").enterHandleBlock(this, () => this.tasks.shift()())
+    enterHandleBlock(this, () => this.tasks.shift()())
   fun start(main)(k) =
     this.tasks.push(() => main(this))
     while this.tasks.length != 0 do
-      globalThis.eval("runtime").enterHandleBlock(this, () => this.tasks.shift()())
+      enterHandleBlock(this, () => this.tasks.shift()())
     k(())
 in
   h.start(main)
