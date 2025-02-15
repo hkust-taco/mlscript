@@ -169,10 +169,10 @@ fun handleEffect(cur) =
       set
         cur.contTrace.last.next = saved.next
         cur.contTrace.last = saved.last
-      if saved.nextHandler !== null do
-        set
-          cur.contTrace.lastHandler.nextHandler = saved.nextHandler
-          cur.contTrace.lastHandler = saved.lastHandler
+    if saved.nextHandler !== null do
+      set
+        cur.contTrace.lastHandler.nextHandler = saved.nextHandler
+        cur.contTrace.lastHandler = saved.lastHandler
     cur
   else
     // resume the unlinked handle blocks

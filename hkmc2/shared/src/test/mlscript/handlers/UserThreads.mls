@@ -3,9 +3,9 @@
 
 abstract class ThreadEffect with
   val tasks = []
-  fun start(thread: ThreadEffect -> ()): ()
-  fun fork(thread: ThreadEffect -> ()): ()
-  fun yld(): ThreadEffect
+  fun start(thread: () -> ()): ()
+  fun fork(thread: () -> ()): ()
+  fun yld(): ()
 
 class Lock(locked) with
   fun lock(th: ThreadEffect) =
@@ -15,7 +15,7 @@ class Lock(locked) with
   fun unlock() =
     set locked = false
 
-fun f(x)(h) =
+fun f(h, x) =
   print("f " + x)
   h.yld()
   print("f " + x)
@@ -24,9 +24,9 @@ fun f(x)(h) =
 
 fun main(h) =
   print("main start")
-  h.fork(f(0))
-  h.fork(f(1))
-  h.fork(f(2))
+  h.fork(() => f(h, 0))
+  h.fork(() => f(h, 1))
+  h.fork(() => f(h, 2))
   print("main end")
 
 
@@ -36,13 +36,13 @@ handle h = ThreadEffect with
     this.tasks.unshift(thread)
     k(())
   fun yld()(k) =
-    this.tasks.push(k)
-    globalThis.eval("runtime").enterHandleBlock(this, () => this.tasks.shift()(this))
+    this.tasks.push(k.bind(null, ()))
+    globalThis.eval("runtime").enterHandleBlock(this, () => this.tasks.shift()())
   fun start(main)(k) =
-    this.tasks.push(main)
+    this.tasks.push(() => main(this))
     while this.tasks.length != 0 do
-      globalThis.eval("runtime").enterHandleBlock(this, () => this.tasks.shift()(this))
-    k()
+      globalThis.eval("runtime").enterHandleBlock(this, () => this.tasks.shift()())
+    k(())
 in
   h.start(main)
 //│ > main start
@@ -64,13 +64,13 @@ handle h = ThreadEffect with
     this.tasks.push(thread)
     k(())
   fun yld()(k) =
-    this.tasks.push(k)
-    globalThis.eval("runtime").enterHandleBlock(this, () => this.tasks.shift()(this))
+    this.tasks.push(k.bind(null, ()))
+    globalThis.eval("runtime").enterHandleBlock(this, () => this.tasks.shift()())
   fun start(main)(k) =
-    this.tasks.push(main)
+    this.tasks.push(() => main(this))
     while this.tasks.length != 0 do
-      globalThis.eval("runtime").enterHandleBlock(this, () => this.tasks.shift()(this))
-    k()
+      globalThis.eval("runtime").enterHandleBlock(this, () => this.tasks.shift()())
+    k(())
 in
   h.start(main)
 //│ > main start
@@ -95,9 +95,23 @@ abstract class ThreadEffect with
 val tasks = []
 //│ tasks = []
 
+fun f(x)(h) =
+  print("f " + x)
+  h.yld()
+  print("f " + x)
+  h.yld()
+  print("f " + x)
+
+fun main(h) =
+  print("main start")
+  h.fork(f(0))
+  h.fork(f(1))
+  h.fork(f(2))
+  print("main end")
+
 fun dequeue() =
   if tasks.length != 0 do
-    tasks.shift()()
+    tasks.shift()(())
 
 fun start(thread: ThreadEffect -> ()) =
   handle h = ThreadEffect with
@@ -164,8 +178,7 @@ fun start(thread: ThreadEffect -> ()) =
           dequeue()
   in
     thread(h)
-  if tasks.length != 0 do
-    tasks.shift()()
+  dequeue()
 
 fun main(h) =
   h.fork(h =>

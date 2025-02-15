@@ -346,15 +346,15 @@ Runtime1 = class Runtime {
       if (scrut3 === true) {
         cur1.contTrace.last.next = saved.next;
         cur1.contTrace.last = saved.last;
-        scrut4 = saved.nextHandler !== null;
-        if (scrut4 === true) {
-          cur1.contTrace.lastHandler.nextHandler = saved.nextHandler;
-          cur1.contTrace.lastHandler = saved.lastHandler;
-          tmp5 = runtime.Unit;
-        } else {
-          tmp5 = runtime.Unit;
-        }
-        tmp6 = tmp5;
+        tmp5 = runtime.Unit;
+      } else {
+        tmp5 = runtime.Unit;
+      }
+      scrut4 = saved.nextHandler !== null;
+      if (scrut4 === true) {
+        cur1.contTrace.lastHandler.nextHandler = saved.nextHandler;
+        cur1.contTrace.lastHandler = saved.lastHandler;
+        tmp6 = runtime.Unit;
       } else {
         tmp6 = runtime.Unit;
       }
