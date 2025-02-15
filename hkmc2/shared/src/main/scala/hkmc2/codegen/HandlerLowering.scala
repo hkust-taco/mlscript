@@ -381,7 +381,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     val curCtorCtx = if handlerCtx.isTopLevel && (cls.k is syntax.Mod)
       then topLevelCtx(s"Cont$$modCtor$$${cls.sym.nme}$$${cls.sym.toLoc.fold("")(_.toString)}$$")
       else ctorCtx(
-        cls.sym.asClsLike.getOrElse(wat("asClsLike", cls.sym)).asPath,
+        cls.isym.asPath,
         s"Cont$$ctor$$${cls.sym.nme}$$${cls.sym.toLoc.fold("")(locToStr)}$$")
     cls.copy(methods = cls.methods.map(translateFun),
       ctor = translateBlock(cls.ctor, curCtorCtx))
