@@ -156,7 +156,6 @@ fun dequeue() =
     tasks.shift()()
 //│ tasks = []
 
-class Tuple2(a, b)
 let exchanger = None
 //│ exchanger = None
 
@@ -170,12 +169,12 @@ fun start(thread: ThreadEffect -> ()) =
       dequeue()
     fun xchg(x)(k) =
       if exchanger is
-        Some(Tuple2(y, k1)) then
+        Some([y, k1]) then
           set exchanger = None
           enqueue(k1.bind(null, x))
           k(y)
         None then
-          set exchanger = Some(Tuple2(x, k))
+          set exchanger = Some([x, k])
           dequeue()
   in
     thread(h)
