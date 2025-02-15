@@ -22,7 +22,6 @@ fun deboundMethod(mtdName, clsName) =
 
 // Private definitions for algebraic effects
 
-// completed is used to detect tail call
 abstract class FunctionContFrame(next) with
   fun resume(value)
 class HandlerContFrame(next, nextHandler, handler)
