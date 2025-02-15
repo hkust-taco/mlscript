@@ -95,6 +95,10 @@ abstract class ThreadEffect with
 val tasks = []
 //│ tasks = []
 
+fun dequeue() =
+  if tasks.length != 0 do
+    tasks.shift()()
+
 fun start(thread: ThreadEffect -> ()) =
   handle h = ThreadEffect with
     fun fork(new_thread)(k) =
@@ -102,12 +106,10 @@ fun start(thread: ThreadEffect -> ()) =
       start(new_thread)
     fun yld()(k) =
       tasks.push(k)
-      if tasks.length != 0 do
-        tasks.shift()()
+      dequeue()
   in
     thread(h)
-  if tasks.length != 0 do
-    tasks.shift()()
+  dequeue()
 
 start(main)
 //│ > main start
@@ -121,3 +123,62 @@ start(main)
 //│ > f 2
 //│ > f 1
 //│ > f 2
+
+
+import "../../mlscript-compile/Option.mls"
+open Option
+
+abstract class ThreadEffect with
+  fun fork(thread: ThreadEffect -> ()): ()
+  fun yld(): ()
+  fun xchg(x: Int): Int
+
+val tasks = []
+fun enqueue(k) =
+  tasks.push(k)
+fun dequeue() =
+  if tasks.length != 0 do
+    tasks.shift()()
+//│ tasks = []
+
+class Tuple2(a, b)
+let exchanger = None
+//│ exchanger = None
+
+fun start(thread: ThreadEffect -> ()) =
+  handle h = ThreadEffect with
+    fun fork(new_thread)(k) =
+      enqueue(k)
+      start(new_thread)
+    fun yld()(k) =
+      enqueue(k)
+      dequeue()
+    fun xchg(x)(k) =
+      if exchanger is
+        Some(Tuple2(y, k1)) then
+          set exchanger = None
+          enqueue(k1.bind(null, x))
+          k(y)
+        None then
+          set exchanger = Some(Tuple2(x, k))
+          dequeue()
+  in
+    thread(h)
+  if tasks.length != 0 do
+    tasks.shift()()
+
+fun main(h) =
+  h.fork(h =>
+    print("[t1] Sending 0")
+    let v = h.xchg(0)
+    print("[t1] received " + v.toString()))
+  h.fork(h =>
+    print("[t2] Sending 1")
+    let v = h.xchg(1)
+    print("[t2] received " + v.toString()))
+
+start(main)
+//│ > [t1] Sending 0
+//│ > [t2] Sending 1
+//│ > [t2] received 0
+//│ > [t1] received 1
