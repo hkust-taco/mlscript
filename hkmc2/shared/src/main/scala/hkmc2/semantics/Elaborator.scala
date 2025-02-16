@@ -59,7 +59,9 @@ object Elaborator:
     def nest(outer: Opt[InnerSymbol]): Ctx = Ctx(outer, Some(this), Map.empty, mode)
     
     def get(name: Str): Opt[Ctx.Elem] =
-      env.get(name).orElse(parent.flatMap(_.get(name)))
+      parent match
+      case S(parent = N) if name == "Runtime" => N
+      case _ => env.get(name).orElse(parent.flatMap(_.get(name)))
     def getOuter: Opt[InnerSymbol] = outer.orElse(parent.flatMap(_.getOuter))
     
     // * Invariant: We expect that the top-level context only contain hard-coded symbols like `globalThis`

@@ -192,3 +192,10 @@ Whoops.Whoops.g()
 //│ = "Hello"
 
 
+:e
+Runtime
+//│ ╔══[ERROR] Name not found: Runtime
+//│ ║  l.196: 	Runtime
+//│ ╙──       	^^^^^^^
+
+
