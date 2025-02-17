@@ -200,7 +200,7 @@ sealed abstract class Block extends Product with AutoLocated:
           else c.copy(preCtor = newPreCtor, ctor = newCtor)
       
       val newRest = rest.flatten(k)
-      if newRest is rest
+      if (newDefn is defn) && (newRest is rest)
       then this
       else Define(newDefn, newRest)
     
