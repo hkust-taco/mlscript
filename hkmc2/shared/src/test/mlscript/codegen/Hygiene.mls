@@ -156,10 +156,10 @@ foo()
 
 :sjs
 module Whoops with
-  val v = this
+  val v: module Whoops = this
   fun f() = "Hello"
   module Whoops with
-    val w = this
+    val w: module Whoops = this
     fun g() = f()
 //│ JS (unsanitized):
 //│ let Whoops2;

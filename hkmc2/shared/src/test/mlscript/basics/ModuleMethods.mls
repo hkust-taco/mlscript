@@ -68,14 +68,16 @@ fun f7(): module M
 //│ ╙──      	    ^^^^^^^^^^^^^^
 
 
-:todo // should be an error
 :e
 fun f8(module m: M) = m
+//│ ╔══[ERROR] Functions returning module values must have explicit return types.
+//│ ║  l.72: 	fun f8(module m: M) = m
+//│ ╙──      	    ^^^^^^^^^^^^^^^
 
 :e
 fun f9(module m: M): module M = m
 //│ ╔══[ERROR] Only module methods may return module values.
-//│ ║  l.76: 	fun f9(module m: M): module M = m
+//│ ║  l.78: 	fun f9(module m: M): module M = m
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 module Test with

@@ -263,14 +263,14 @@ final case class LetDecl(sym: LocalSymbol, annotations: Ls[Annot]) extends State
 
 final case class DefineVar(sym: LocalSymbol, rhs: Term) extends Statement
 
-final case class TermDefFlags(isModMember: Bool):
+final case class TermDefFlags(isModMember: Bool, isModTyped: Bool):
   def showDbg: Str = 
     val flags = Buffer.empty[String]
     if isModMember then flags += "module"
     flags.mkString(" ")
   override def toString: String = "‹" + showDbg + "›"
 
-object TermDefFlags { val empty: TermDefFlags = TermDefFlags(false) }
+object TermDefFlags { val empty: TermDefFlags = TermDefFlags(false, false) }
 
 final case class TermDefinition(
     owner: Opt[InnerSymbol],
@@ -494,7 +494,7 @@ final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extend
 
 
 final case class Param(flags: FldFlags, sym: LocalSymbol & NamedSymbol, sign: Opt[Term]) 
-extends AutoLocated:
+extends Declaration with AutoLocated:
   def subTerms: Ls[Term] = sign.toList
   override protected def children: List[Located] = subTerms
   // def children: Ls[Located] = self.value :: self.asc.toList ::: Nil

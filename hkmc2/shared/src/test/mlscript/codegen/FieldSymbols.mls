@@ -60,7 +60,7 @@ case
 //│   stats = Nil
 //│   res = Lam:
 //│     params = ParamList:
-//│       flags = ParamListFlags of false
+//│       flags = ()
 //│       params = Ls of 
 //│         Param:
 //│           flags = ()
@@ -92,7 +92,7 @@ case
 //│     lhs = $block$res
 //│     rhs = Lam:
 //│       params = ParamList:
-//│         flags = ParamListFlags of false
+//│         flags = ()
 //│         params = Ls of 
 //│           Param:
 //│             flags = ()

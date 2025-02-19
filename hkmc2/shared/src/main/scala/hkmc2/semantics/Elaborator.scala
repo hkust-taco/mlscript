@@ -1092,13 +1092,14 @@ extends Importer:
       N
     case N => N
   
-  def fieldOrVarSym(k: TermDefKind, id: Ident)(using Ctx): LocalSymbol & NamedSymbol =
+  def fieldOrVarSym(k: TermDefKind, id: Ident)(using Ctx): TermSymbol | VarSymbol =
     if ctx.outer.isDefined then TermSymbol(k, ctx.outer, id)
     else VarSymbol(id)
   
-  def param(t: Tree, inUsing: Bool): Ctxl[Opt[Opt[Bool] -> Param]] = t match
+  def param(t: Tree, inUsing: Bool): Ctxl[Opt[Opt[Bool] -> Param]] =
+    def go(t: Tree, inUsing: Bool, flags: FldFlags): Ctxl[Opt[Opt[Bool] -> Param]] = t match
     case TypeDef(Mod, inner, N, N) =>
-      val ps = param(inner, inUsing).map(_.mapSecond(p => p.copy(flags = p.flags.copy(mod = true))))
+      val ps = go(inner, inUsing, flags.copy(mod = true))
       for p <- ps if p._2.flags.mod do p._2.sign match
         case N =>
           raise(ErrorReport(msg"Module parameters must have explicit types." -> t.toLoc :: Nil))
@@ -1107,10 +1108,21 @@ extends Importer:
         case _ => ()
       ps
     case TypeDef(Pat, inner, N, N) =>
-      param(inner, inUsing).map(_.mapSecond(p => p.copy(flags = p.flags.copy(pat = true))))
+      go(inner, inUsing, flags.copy(pat = true))
     case _ =>
       t.asParam(inUsing).map: (isSpd, p, t) =>
-        isSpd -> Param(FldFlags.empty, fieldOrVarSym(ParamBind, p), t.map(term(_)))
+        val sym = fieldOrVarSym(ParamBind, p)
+        val sign = t.map(term(_))
+        val param = Param(flags, sym, sign)
+        sym match
+          case sym: TermSymbol =>
+            // TODO: How can a TermSymbol accept a Declaration
+            // sym.defn = S(TermDefinition(ctx.outer, Fun, sym, Nil, Nil, sign, N, FlowSymbol(s"‹result of ${sym}›"), TermDefFlags.empty, Nil))
+          case sym: VarSymbol =>
+            sym.decl = S(param)
+        isSpd -> param
+    go(t, inUsing, FldFlags.empty)
+      
   
   def params(t: Tree): Ctxl[(ParamList, Ctx)] = t match
     case Tup(ps) =>

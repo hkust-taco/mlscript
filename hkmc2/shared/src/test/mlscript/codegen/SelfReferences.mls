@@ -20,10 +20,12 @@ Foo.self
 //│ = Foo
 
 
-:todo
 :e
 module Foo with
   val self = this
+//│ ╔══[ERROR] Functions returning module values must have explicit return types.
+//│ ║  l.25: 	  val self = this
+//│ ╙──      	      ^^^^
 
 Foo.self
 //│ = Foo

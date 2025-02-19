@@ -22,6 +22,7 @@ extension (s: String)
 
 import hkmc2.semantics.TermDefFlags
 import hkmc2.semantics.FldFlags
+import hkmc2.semantics.ParamListFlags
 import scala.collection.mutable.Buffer
 import mlscript.utils.StringOps
 import hkmc2.semantics.CtxArg
@@ -42,9 +43,10 @@ extension (t: Product)
       case xs: List[_] => "Ls of \n" + xs.iterator.map(aux(_)).mkString("\n").indent("  ")
       case xs: Vector[_] => "Vector of \n" + xs.iterator.map(aux(_)).mkString("\n").indent("  ")
       case s: String => s.escaped
-      case TermDefFlags(mod) =>
+      case TermDefFlags(isModMember, isModTyped) =>
         val flags = Buffer.empty[String]
-        if mod then flags += "module"
+        if isModMember then flags += "modMember"
+        if isModMember then flags += "modTyped"
         flags.mkString("(", ", ", ")")
       case FldFlags(mut, spec, genGetter, mod, pat) =>
         val flags = Buffer.empty[String]
@@ -53,6 +55,10 @@ extension (t: Product)
         if genGetter then flags += "gen"
         if mod then flags += "module"
         if pat then flags += "pat"
+        flags.mkString("(", ", ", ")")
+      case ParamListFlags(ctx) =>
+        val flags = Buffer.empty[String]
+        if ctx then flags += "ctx"
         flags.mkString("(", ", ", ")")
       case Loc(start, end, origin) =>
         val (sl, _, sc) = origin.fph.getLineColAt(start)
