@@ -181,15 +181,22 @@ enum Tree extends AutoLocated:
     case LetLike(kw, und @ Under(), r, b) =>
       LetLike(kw, Ident("_").withLocOf(und), r, b)
     
-    case Modified(Keyword.`declare`, modLoc, s) =>
-      Annotated(Keywrd(Keyword.`declare`), s) // TODO properly attach location
-    case Modified(Keyword.`abstract`, modLoc, s) =>
-      Annotated(Keywrd(Keyword.`abstract`), s) // TODO properly attach location
-    case Modified(Keyword.`mut`, modLoc, TermDef(ImmutVal, anme, rhs)) =>
-      TermDef(MutVal, anme, rhs).withLocOf(this).desugared
-    case LetLike(letLike, App(f @ Ident(nme), Tup((id: Ident) :: r :: Nil)), N, bodo)
+    case PossiblyAnnotated(anns, m: Modified) =>
+      PossiblyAnnotated(anns,
+        m match
+        case Modified(Keyword.`declare`, modLoc, s) =>
+          Annotated(Keywrd(Keyword.`declare`), s.desugared) // TODO properly attach location
+        case Modified(Keyword.`abstract`, modLoc, s) =>
+          Annotated(Keywrd(Keyword.`abstract`), s.desugared) // TODO properly attach location
+        case Modified(Keyword.`mut`, modLoc, TermDef(ImmutVal, anme, rhs)) =>
+          TermDef(MutVal, anme, rhs).withLocOf(this).desugared
+        case _ => m
+      )
+    
+    case PossiblyAnnotated(anns, LetLike(letLike, App(f @ Ident(nme), Tup((id: Ident) :: r :: Nil)), N, bodo))
     if nme.endsWith("=") =>
-      LetLike(letLike, id, S(App(Ident(nme.init), Tup(id :: r :: Nil))), bodo).withLocOf(this).desugared
+      PossiblyAnnotated(anns, LetLike(letLike, id, S(App(Ident(nme.init), Tup(id :: r :: Nil))), bodo).withLocOf(this).desugared)
+    
     case _ => this
   
   /** 

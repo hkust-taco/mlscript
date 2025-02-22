@@ -588,11 +588,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val stackSafe = config.stackSafety match
       case N => res
       case S(sts) => StackSafeTransform(sts.stackLimit).transformTopLevel(res)
-    
-    MergeMatchArmTransformer.applyBlock(
-      if lowerHandlers then HandlerLowering().translateTopLevel(stackSafe)
+    val withHandlers = if lowerHandlers
+      then HandlerLowering().translateTopLevel(stackSafe)
       else stackSafe
-    )
+    val flattened = withHandlers.flattened
+    
+    MergeMatchArmTransformer.applyBlock(flattened)
   
   def program(main: st): Program =
     def go(acc: Ls[Local -> Str], trm: st): Program =
@@ -618,13 +619,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       (using Subst): (List[ParamList], Block) =
     (paramLists, returnedTerm(bodyTerm))
   
-  def reportAnnotations(target: Statement, annotations: Ls[Annot]): Unit = if annotations.nonEmpty then
-    raise(WarningReport(
-      (msg"This annotation has no effect." -> annotations.foldLeft[Opt[Loc]](N):
-        case (acc, term) => acc match
-          case N => term.toLoc
-          case S(loc) => S(loc ++ term.toLoc)) ::
-      Nil))
+  def reportAnnotations(target: Statement, annotations: Ls[Annot]): Unit =
+    annotations.foreach:
+      case Annot.Untyped => ()
+      case annot => raise:
+        WarningReport(msg"This annotation has no effect." -> annot.toLoc :: Nil)
 
 
 trait LoweringSelSanityChecks(using Config, TL, Raise, State)
@@ -762,7 +761,7 @@ object TrivialStatementsAndMatch:
 object MergeMatchArmTransformer extends BlockTransformer(new SymbolSubst()):
   override def applyBlock(b: Block): Block = super.applyBlock(b) match
     case m@Match(scrut, arms, Some(dflt), rest) =>
-      dflt.flatten match
+      dflt match
         case TrivialStatementsAndMatch(k, Match(scrutRewritten, armsRewritten, dfltRewritten, restRewritten))
           if (scrutRewritten === scrut) && (restRewritten.size * armsRewritten.length) < 10 =>
             val newArms = restRewritten match

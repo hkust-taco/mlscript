@@ -38,10 +38,13 @@ abstract class DiffMaker:
   def doFail(blockLineNum: Int, msg: String): Unit =
     System.err.println(fansi.Color.Red("FAILURE: ").toString + msg)
   def unhandled(blockLineNum: Int, exc: Throwable): Unit =
-    unexpected("exception", blockLineNum, () => N)
+    unexpected("exception", blockLineNum, N, () => N)
   
-  final def unexpected(what: Str, blockLineNum: Int, mkExtraInfo: () => Opt[Any]): Unit =
+  final def unexpected(what: Str, blockLineNum: Int, srcLoc: Opt[Str], mkExtraInfo: () => Opt[Any]): Unit =
     output(s"FAILURE: Unexpected $what")
+    srcLoc match
+      case S(loc) => output(s"FAILURE LOCATION: $loc")
+      case N => ()
     mkExtraInfo() match
       case S(info: Product) => output(s"FAILURE INFO: ${info.showAsTree}")
       case S(info) => output(s"FAILURE INFO: $info")
@@ -174,34 +177,34 @@ abstract class DiffMaker:
           parseErrors += 1
           if expectParseErrors.isUnset && !tolerateErrors then
             failures += globalStartLineNum
-            unexpected("lexing error", blockLineNum, d.mkExtraInfo)
+            unexpected("lexing error", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
         case Diagnostic.Source.Parsing =>
           parseErrors += 1
           if expectParseErrors.isUnset && !tolerateErrors then
             failures += globalStartLineNum
             // doFail(fileName, blockLineNum, "unexpected parse error at ")
-            unexpected("parse error", blockLineNum, d.mkExtraInfo)
+            unexpected("parse error", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
             // report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
         case Diagnostic.Source.Typing =>
           typeErrors += 1
           if expectTypeErrors.isUnset && !tolerateErrors then
             failures += globalStartLineNum
-            unexpected("type error", blockLineNum, d.mkExtraInfo)
+            unexpected("type error", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
         case Diagnostic.Source.Compilation =>
           compilationErrors += 1
           if expectCodeGenErrors.isUnset && !tolerateErrors then
             failures += globalStartLineNum
-            unexpected("compilation error", blockLineNum, d.mkExtraInfo)
+            unexpected("compilation error", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
         case Diagnostic.Source.Runtime =>
           runtimeErrors += 1
           if !expectRuntimeOrCodeGenErrors && !tolerateErrors then
             failures += globalStartLineNum
-            unexpected("runtime error", blockLineNum, d.mkExtraInfo)
+            unexpected("runtime error", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
       case Diagnostic.Kind.Warning =>
         warnings += 1
         if expectWarnings.isUnset && !tolerateErrors then
           failures += globalStartLineNum
-          unexpected("warning", blockLineNum, d.mkExtraInfo)
+          unexpected("warning", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
       case Diagnostic.Kind.Internal =>
         if !tolerateErrors then
           failures += globalStartLineNum
@@ -215,23 +218,23 @@ abstract class DiffMaker:
     // Use `todo` when the errors are expected but not yet implemented.
     if expectParseErrors.isSet && parseErrors == 0 && todo.isUnset && breakme.isUnset then
       failures += globalStartLineNum
-      unexpected("lack of parse error", blockLineNum, () => N)
+      unexpected("lack of parse error", blockLineNum, N, () => N)
     if expectTypeErrors.isSet && typeErrors == 0 && todo.isUnset && breakme.isUnset then
       failures += globalStartLineNum
-      unexpected("lack of type error", blockLineNum, () => N)
+      unexpected("lack of type error", blockLineNum, N, () => N)
     if expectCodeGenErrors.isSet && compilationErrors == 0 && todo.isUnset && breakme.isUnset then
       failures += globalStartLineNum
-      unexpected("lack of compilation error", blockLineNum, () => N)
+      unexpected("lack of compilation error", blockLineNum, N, () => N)
     if expectRuntimeErrors.isSet && runtimeErrors == 0 && todo.isUnset && breakme.isUnset then
       failures += globalStartLineNum
-      unexpected("lack of runtime error", blockLineNum, () => N)
+      unexpected("lack of runtime error", blockLineNum, N, () => N)
     if expectWarnings.isSet && warnings == 0 && todo.isUnset && breakme.isUnset then
       failures += globalStartLineNum
-      unexpected("lack of warnings", blockLineNum, () => N)
+      unexpected("lack of warnings", blockLineNum, N, () => N)
     
     if fixme.isSet && (parseErrors + typeErrors + compilationErrors + runtimeErrors) == 0 then
       failures += globalStartLineNum
-      unexpected("lack of error to fix", blockLineNum, () => N)
+      unexpected("lack of error to fix", blockLineNum, N, () => N)
   
   
   

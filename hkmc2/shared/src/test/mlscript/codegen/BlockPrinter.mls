@@ -21,18 +21,18 @@ let x = x + 1
 //│ Pretty Lowered:
 //│  
 //│ set x2 = 1 in
-//│ begin
-//│   set scrut = ==(x2, 0) in
-//│   match scrut
-//│     true =>
-//│       set tmp = 1 in
-//│       end
-//│     else
-//│       set tmp = 0 in
-//│       end;
-//│   set x3 = tmp in
-//│   set tmp1 = +(x3, 1) in
-//│   set x4 = tmp1 in
-//│   set block$res3 = undefined in
-//│   end
+//│ set scrut = ==(x2, 0) in
+//│ match scrut
+//│   true =>
+//│     set tmp = 1 in
+//│     end
+//│   else
+//│     set tmp = 0 in
+//│     end
+//│ in
+//│ set x3 = tmp in
+//│ set tmp1 = +(x3, 1) in
+//│ set x4 = tmp1 in
+//│ set block$res3 = undefined in
+//│ end 
 //│ x = 1

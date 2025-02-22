@@ -1,15 +1,21 @@
 package hkmc2
 
 import scala.util.chaining._
+import sourcecode.{Name, Line, FileName}
+
 import mlscript.utils._, shorthands._
 
 import Diagnostic._
 
-sealed abstract class Diagnostic(val theMsg: String) extends Exception(theMsg):
+sealed abstract class Diagnostic
+      (val theMsg: String)
+      (using val srcLine: Line, val srcName: Name, val srcFile: FileName)
+    extends Exception(theMsg):
   val allMsgs: Ls[Message -> Opt[Loc]]
   val kind: Kind
   val source: Source
   val mkExtraInfo: () => Opt[Any]
+  def srcLoc: Str = s"${srcName.value} (${srcFile.value}:${srcLine.value})"
 object Diagnostic:
   
   enum Kind:
@@ -30,10 +36,12 @@ final case class ErrorReport(
     allMsgs: Ls[Message -> Opt[Loc]],
     mkExtraInfo: () => Opt[Any],
     source: Source,
-) extends Diagnostic(mainMsg):
+)(using Line, Name, FileName) extends Diagnostic(mainMsg):
   val kind: Kind = Kind.Error
 object ErrorReport:
-  def apply(msgs: Ls[Message -> Opt[Loc]], extraInfo: => Opt[Any] = N, source: Source = Source.Typing): ErrorReport =
+  def apply(using Line, FileName)
+      (msgs: Ls[Message -> Opt[Loc]], extraInfo: => Opt[Any] = N, source: Source = Source.Typing)
+      (using Name): ErrorReport =
     ErrorReport(msgs.head._1.show, msgs, () => extraInfo, source)
 
 final case class WarningReport(
@@ -41,17 +49,25 @@ final case class WarningReport(
     allMsgs: Ls[Message -> Opt[Loc]],
     mkExtraInfo: () => Opt[Any],
     source: Source,
-) extends Diagnostic(mainMsg):
+)(using Line, Name, FileName) extends Diagnostic(mainMsg):
   val kind: Kind = Kind.Warning
 object WarningReport:
-  def apply(msgs: Ls[Message -> Opt[Loc]], extraInfo: => Opt[Any] = N, source: Source = Source.Typing): WarningReport =
+  def apply(using Line, FileName)
+      (msgs: Ls[Message -> Opt[Loc]], extraInfo: => Opt[Any] = N, source: Source = Source.Typing)
+      (using Name): WarningReport =
     WarningReport(msgs.head._1.show, msgs, () => extraInfo, source)
 
-final case class InternalError(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]], source: Source) extends Diagnostic(mainMsg):
+final case class InternalError(
+    mainMsg: Str,
+    allMsgs: Ls[Message -> Opt[Loc]],
+    source: Source
+)(using Line, Name, FileName) extends Diagnostic(mainMsg):
   val kind: Kind = Kind.Internal
   val mkExtraInfo: () => Opt[Any] = () => N
 object InternalError:
-  def apply(msgs: Ls[Message -> Opt[Loc]], source: Source = Source.Typing): InternalError =
+  def apply(using Line, FileName)
+      (msgs: Ls[Message -> Opt[Loc]], source: Source = Source.Typing)
+      (using Name): InternalError =
     InternalError(msgs.head._1.show, msgs, source)
 
 
