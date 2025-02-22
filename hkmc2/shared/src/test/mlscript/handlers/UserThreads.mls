@@ -37,7 +37,7 @@ handle h = ThreadEffect with
     this.tasks.unshift(thread)
     k(())
   fun yld()(k) =
-    this.tasks.push(k.bind(null, ()))
+    this.tasks.push(() => k(()))
     enterHandleBlock(this, () => this.tasks.shift()())
   fun start(main)(k) =
     this.tasks.push(() => main(this))
@@ -65,7 +65,7 @@ handle h = ThreadEffect with
     this.tasks.push(thread)
     k(())
   fun yld()(k) =
-    this.tasks.push(k.bind(null, ()))
+    this.tasks.push(() => k(()))
     enterHandleBlock(this, () => this.tasks.shift()())
   fun start(main)(k) =
     this.tasks.push(() => main(this))
@@ -150,7 +150,7 @@ abstract class ThreadEffect with
 
 val tasks = []
 fun enqueue(k, x) =
-  tasks.push(k.bind(null, x))
+  tasks.push(() => k(x))
 fun dequeue() =
   if tasks.length != 0 do
     tasks.shift()()
