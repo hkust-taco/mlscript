@@ -43,11 +43,4 @@ declare module Predef with
   class MatchResult(captures)
   class MatchFailure(errors)
 
-declare module Runtime with
-  class EffectSig(contTrace, handler, handlerFun)
-  class Return(value)
-  // This declaration is not used currently except for experimentation
-  abstract class StackDelay with
-    fun perform()
-
 

@@ -70,12 +70,11 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   private def handlerMtdCtx(nme: Str) = funcLikeHandlerCtx(N, true, nme)
   private def handlerCtx(using HandlerCtx): HandlerCtx = summon
   private val runtimePath: Path = State.runtimeSymbol.asPath
-  private val runtimeSym: ModuleSymbol = ctx.builtins.Runtime
   private val effectSigPath: Path = runtimePath.selN(Tree.Ident("EffectSig")).selN(Tree.Ident("class"))
-  private val effectSigSym: ClassSymbol = runtimeSym.tree.definedSymbols.get("EffectSig").get.asCls.get
+  private val effectSigSym: ClassSymbol = State.effectSigSymbol
   private val contClsPath: Path = runtimePath.selN(Tree.Ident("FunctionContFrame")).selN(Tree.Ident("class"))
   private val retClsPath: Path = runtimePath.selN(Tree.Ident("Return")).selN(Tree.Ident("class"))
-  private val retClsSym: ClassSymbol = runtimeSym.tree.definedSymbols.get("Return").get.asCls.get
+  private val retClsSym: ClassSymbol = State.returnClsSymbol
   private val mkEffectPath: Path = runtimePath.selN(Tree.Ident("mkEffect"))
   private val handleBlockImplPath: Path = runtimePath.selN(Tree.Ident("handleBlockImpl"))
   

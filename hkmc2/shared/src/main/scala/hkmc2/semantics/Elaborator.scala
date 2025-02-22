@@ -59,9 +59,7 @@ object Elaborator:
     def nest(outer: Opt[InnerSymbol]): Ctx = Ctx(outer, Some(this), Map.empty, mode)
     
     def get(name: Str): Opt[Ctx.Elem] =
-      parent match
-      case S(parent = N) if name == "Runtime" => N
-      case _ => env.get(name).orElse(parent.flatMap(_.get(name)))
+      env.get(name).orElse(parent.flatMap(_.get(name)))
     def getOuter: Opt[InnerSymbol] = outer.orElse(parent.flatMap(_.getOuter))
     
     // * Invariant: We expect that the top-level context only contain hard-coded symbols like `globalThis`
@@ -105,7 +103,6 @@ object Elaborator:
       val untyped = assumeBuiltinTpe("untyped")
       // println(s"Builtins: $Int, $Num, $Str, $untyped")
       val Predef = assumeBuiltinMod("Predef")
-      val Runtime = assumeBuiltinMod("Runtime")
       def getBuiltinOp(op: Str): Opt[Str] =
         if getBuiltin(op).isDefined then builtinBinOps.get(op) else N
       /** Classes that do not use `instanceof` in pattern matching. */
@@ -145,6 +142,8 @@ object Elaborator:
     given State = this
     val globalThisSymbol = TopLevelSymbol("globalThis")
     val runtimeSymbol = TempSymbol(N, "runtime")
+    val effectSigSymbol = ClassSymbol(Tree.TypeDef(syntax.Cls, Tree.Error(), N, N), Tree.Ident("EffectSig"))
+    val returnClsSymbol = ClassSymbol(Tree.TypeDef(syntax.Cls, Tree.Error(), N, N), Tree.Ident("Return"))
     val builtinOpsMap =
       val baseBuiltins = builtins.map: op =>
           op -> BuiltinSymbol(op,
