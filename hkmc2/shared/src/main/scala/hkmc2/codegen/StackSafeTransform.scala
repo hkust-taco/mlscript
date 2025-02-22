@@ -43,7 +43,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
         .assign(tmp, res)
         .assign(tmp, Call(resetDepthPath, tmp.asPath.asArg :: curDepth.asPath.asArg :: Nil)(true, false))
         .rest(f(tmp.asPath))
-
+  
   def wrapStackSafe(body: Block, resSym: Local, rest: Block) =
     val resumeSym = VarSymbol(Tree.Ident("resume"))
     val handlerSym = TempSymbol(None, "stackHandler")
