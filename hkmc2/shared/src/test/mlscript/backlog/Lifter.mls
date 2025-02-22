@@ -60,10 +60,17 @@ fun foo(x, n) =
   if n > 0 then res + foo(C(), n - 1) else ""
 //│ ═══[WARNING] Cannot yet lift the class/module `C` as it is used in an instance check.
 
-:todo
+:todo // should return the function that creates C instances
 :w
 fun foo() =
   class C()
+  C
+//│ ═══[WARNING] Cannot yet lift the class `C` as it is used as a first-class class.
+
+:w
+fun foo() =
+  class C()
+  fun f = C()
   C
 //│ ═══[WARNING] Cannot yet lift the class `C` as it is used as a first-class class.
 
@@ -96,13 +103,13 @@ fun foo(x, y) =
   M.foo()
 //│ ═══[WARNING] Modules are not yet properly lifted and will break.
 //│ ═══[WARNING] Modules are not yet properly lifted and will break.
-//│ > let M1, foo2;try { M1 = class M {   static {     return (x$0, y$1) => {       this.x$0 = x$0;       this.y$1 = y$1;       this.test = 2;       return this;     }   }   static foo(...args) {     globalThis.Predef.checkArgs("foo", 0, true, args.length);     let tmp2;     M.y$1 = 2;     tmp2 = M.x$0 + M.y$1;     return tmp2 + M.test   }   static toString() { return "M"; } }; foo2 = function foo(...args) {   globalThis.Predef.checkArgs("foo", 2, true, args.length);   let x = args[0];   let y = args[1];   let M$;   M$ = runtime.checkCall(M1(x, y));   return runtime.checkCall(M$.foo()) }; block$res9 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ > let M1, foo3;try { M1 = class M {   static {     return (x$0, y$1) => {       this.x$0 = x$0;       this.y$1 = y$1;       this.test = 2;       return this;     }   }   static foo(...args) {     globalThis.Predef.checkArgs("foo", 0, true, args.length);     let tmp2;     M.y$1 = 2;     tmp2 = M.x$0 + M.y$1;     return tmp2 + M.test   }   static toString() { return "M"; } }; foo3 = function foo(...args) {   globalThis.Predef.checkArgs("foo", 2, true, args.length);   let x = args[0];   let y = args[1];   let M$;   M$ = runtime.checkCall(M1(x, y));   return runtime.checkCall(M$.foo()) }; block$res10 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ >                                                  ^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Illegal return statement
 
 :expect 14
 foo(10, 0)
-//│ ═══[RUNTIME ERROR] ReferenceError: foo2 is not defined
+//│ ═══[RUNTIME ERROR] ReferenceError: foo3 is not defined
 //│ ═══[RUNTIME ERROR] Expected: '14', got: 'undefined'
 
 fun foo(x, y) =
@@ -118,7 +125,7 @@ fun foo(x, y) =
 
 :expect 12
 foo(10, 0)
-//│ ═══[RUNTIME ERROR] ReferenceError: foo4 is not defined
+//│ ═══[RUNTIME ERROR] ReferenceError: foo5 is not defined
 //│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'
 
 
@@ -128,7 +135,7 @@ class A(x) with
   fun getA() = M.getB()
 //│ ═══[WARNING] Modules are not yet properly lifted and will break.
 //│ ═══[WARNING] Modules are not yet properly lifted and will break.
-//│ > let M5, A6;try { M5 = class M4 {   static {     return (A$instance$0) => {       this.A$instance$0 = A$instance$0;       return this;     }   }   static getB(...args) {     globalThis.Predef.checkArgs("getB", 0, true, args.length);     return M4.A$instance$0.x   }   static toString() { return "M"; } }; A6 = function A(...args1) {   return new A.class(...args1); }; A6.class = class A5 {   constructor(x) {     this.x = x;     this.M$ = runtime.checkCall(M5(this));   }   get getA$__checkNotMethod() { runtime.deboundMethod("getA", "A"); }   getA(...args) {     globalThis.Predef.checkArgs("getA", 0, true, args.length);     return runtime.checkCall(this.M$.getB())   }   toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; } }; block$res13 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ > let M5, A6;try { M5 = class M4 {   static {     return (A$instance$0) => {       this.A$instance$0 = A$instance$0;       return this;     }   }   static getB(...args) {     globalThis.Predef.checkArgs("getB", 0, true, args.length);     return M4.A$instance$0.x   }   static toString() { return "M"; } }; A6 = function A(...args1) {   return new A.class(...args1); }; A6.class = class A5 {   constructor(x) {     this.x = x;     this.M$ = runtime.checkCall(M5(this));   }   get getA$__checkNotMethod() { runtime.deboundMethod("getA", "A"); }   getA(...args) {     globalThis.Predef.checkArgs("getA", 0, true, args.length);     return runtime.checkCall(this.M$.getB())   }   toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; } }; block$res14 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ >                                                 ^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Illegal return statement
 

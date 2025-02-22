@@ -335,3 +335,16 @@ M.A(2).newB.newA_B(3).newB.get
 module M with
   class A
   object B extends A
+
+
+:lift
+fun foo(x) =
+  object O with
+    fun bar = x
+    val baz = x
+  [x === O.bar, set x += 1 in [x === O.bar, x === O.baz], x === O.bar]
+
+foo(123)
+//│ = [true, [true, false], true]
+
+

@@ -319,3 +319,47 @@ Int
 
 // ——— ——— ———
 
+class C
+
+:sjs
+class D extends id(C)
+//│ JS (unsanitized):
+//│ let D1;
+//│ D1 = class D extends Predef.id.class {
+//│   constructor() {
+//│     super(C1);
+//│   }
+//│   toString() { return "D"; }
+//│ };
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
+
+// ——— ——— ———
+
+let x = 0
+//│ x = 0
+
+set x += 1; ()
+//│ /!!!\ Uncaught error: scala.MatchError: LetLike(keyword 'set',App(Ident(;),Tup(List(App(Ident(+=),Tup(List(Ident(x), IntLit(1)))), Unt()))),None,None) (of class hkmc2.syntax.Tree$LetLike)
+
+[x, set x += 1; x]
+//│ /!!!\ Uncaught error: scala.MatchError: LetLike(keyword 'set',App(Ident(;),Tup(List(App(Ident(+=),Tup(List(Ident(x), IntLit(1)))), Ident(x)))),None,None) (of class hkmc2.syntax.Tree$LetLike)
+
+// ——— ——— ———
+
+// TODO `baz()` should be in tail position (this is due to its by-name nature)
+:sjs
+fun baz = 1
+fun bar() = baz
+//│ JS (unsanitized):
+//│ let bar, baz;
+//│ baz = function baz() {
+//│   return 1
+//│ };
+//│ bar = function bar() {
+//│   let tmp10;
+//│   tmp10 = baz();
+//│   return tmp10
+//│ };
+
+// ——— ——— ———
+
