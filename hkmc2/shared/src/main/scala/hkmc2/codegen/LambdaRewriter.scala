@@ -7,8 +7,8 @@ import hkmc2.codegen.*
 import hkmc2.semantics.*
 import semantics.Elaborator.State
 
-class LambdaRewriter(using State):
-  def desugar(b: Block) =
+object LambdaRewriter:
+  def desugar(b: Block)(using State) =
     def rewriteOneBlk(b: Block) =
       var lambdasList: List[(BlockMemberSymbol, Value.Lam)] = Nil
       val lambdaRewriter = new BlockTransformerNoRec(SymbolSubst()):

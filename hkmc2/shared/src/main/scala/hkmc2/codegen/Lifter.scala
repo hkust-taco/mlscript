@@ -963,7 +963,7 @@ class Lifter(using State, Raise):
   def transform(b: Block) =
     // this is already done once in the lowering, but the handler lowering adds lambdas currently
     // so we need to desugar them again
-    val blk = new LambdaRewriter().desugar(b)
+    val blk = LambdaRewriter.desugar(b)
 
     val analyzer = UsedVarAnalyzer(blk)
     val ctx = LifterCtx

@@ -585,7 +585,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   //   subTerm(t)(r => codegen.Assign(resSym, r, codegen.End()))(using Subst.empty)
 
   def topLevel(t: st): Block =
-    val res = new LambdaRewriter().desugar(term(t)(ImplctRet)(using Subst.empty))
+    val res = LambdaRewriter.desugar(term(t)(ImplctRet)(using Subst.empty))
     val stackSafe = config.stackSafety match
       case N => res
       case S(sts) => StackSafeTransform(sts.stackLimit).transformTopLevel(res)
