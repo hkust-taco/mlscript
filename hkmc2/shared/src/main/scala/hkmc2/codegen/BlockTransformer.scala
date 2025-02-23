@@ -141,8 +141,7 @@ class BlockTransformer(subst: SymbolSubst):
     if (own2 is fun.owner) && (sym2 is fun.sym) && (params2 is fun.params) && (body2 is fun.body)
       then fun else FunDefn(own2, sym2, params2, body2)
   
-  def applyDefn(defn: Defn): Defn = 
-    defn match
+  def applyDefn(defn: Defn): Defn = defn match
     case defn: FunDefn => applyFunDefn(defn)
     case ValDefn(owner, k, sym, rhs) =>
       val owner2 = owner.mapConserve(_.subst)
