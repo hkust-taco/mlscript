@@ -10,15 +10,12 @@ import hkmc2.semantics.Elaborator.State
 import hkmc2.syntax.Tree
 import hkmc2.codegen.llir.FreshInt
 
-import scala.collection.mutable.ListBuffer
-import scala.collection.mutable.LinkedHashSet
 import scala.collection.mutable.LinkedHashMap
 import scala.collection.mutable.Map as MutMap
-import scala.collection.mutable.Set as MutSet
 
 object Lifter:
   /**
-    * Describes the free variables of a function that have been accessed by nested definitions.
+    * Describes the free variables of a function that have been accessed by its nested definitions.
     * @param vars The free variables that are accessed by nested classes/functions.
     * @param reqCapture The free variables that must be captured using a heap-allocated object.
     */
@@ -28,7 +25,7 @@ object Lifter:
     val empty = FreeVars(Set.empty, Set.empty)
 
   /**
-    * Describes the free variables of a function that have been accessed by nested definitions.
+    * Describes the free variables of functions that have been accessed by their nested definitions.
     * @param mp The map from functions' `BlockMemberSymbol`s to their accessed variables.
     */
   class UsedLocalsMap(val mp: Map[BlockMemberSymbol, FreeVars]):
@@ -37,10 +34,7 @@ object Lifter:
       case fn -> vars => vars.vars.map(v => v -> fn)
     // gets the function to which a local belongs
     def lookup(l: Local) = inverse.get(l)
-
-  object AccessInfo:
-    val empty = AccessInfo(Set.empty, Set.empty, Set.empty)
-
+  
   /**
     * Describes previously defined locals and definitions which could possibly be accessed or mutated by a definition.
     *
@@ -49,9 +43,10 @@ object Lifter:
     * @param refdDefns Previously defined definitions which could possibly be used by this definition.
     */
   case class AccessInfo(
-    accessed: Set[Local], 
-    mutated: Set[Local], 
-    refdDefns: Set[BlockMemberSymbol]):
+      accessed: Set[Local], 
+      mutated: Set[Local], 
+      refdDefns: Set[BlockMemberSymbol]
+    ):
     def ++(that: AccessInfo) = AccessInfo(
         accessed ++ that.accessed,
         mutated ++ that.mutated,
@@ -77,9 +72,12 @@ object Lifter:
         mutated,
         refdDefns.intersect(locals)
       )
-    def addAccess(l: Local) = this.copy(accessed = accessed + l)
-    def addMutated(l: Local) = this.copy(accessed = accessed + l, mutated = mutated + l)
-    def addRefdDefn(l: BlockMemberSymbol) = this.copy(refdDefns = refdDefns + l)
+    def addAccess(l: Local) = copy(accessed = accessed + l)
+    def addMutated(l: Local) = copy(accessed = accessed + l, mutated = mutated + l)
+    def addRefdDefn(l: BlockMemberSymbol) = copy(refdDefns = refdDefns + l)
+    
+  object AccessInfo:
+    val empty = AccessInfo(Set.empty, Set.empty, Set.empty)
 
   def getVars(d: Defn)(using state: State): Set[Local] = d match
     case f: FunDefn =>

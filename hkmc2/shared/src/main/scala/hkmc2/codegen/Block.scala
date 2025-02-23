@@ -56,7 +56,6 @@ sealed abstract class Block extends Product with AutoLocated:
     case TryBlock(sub, fin, rst) => 1 + sub.size + fin.size + rst.size
     case Label(_, bod, rst) => 1 + bod.size + rst.size
     case HandleBlock(lhs, res, par, args, cls, handlers, bdy, rst) => 1 + handlers.map(_.body.size).sum + bdy.size + rst.size
-    case AssignDynField(lhs, fld, arrayIdx, rhs, rst) => 1 + rst.size
   
   // TODO conserve if no changes
   def mapTail(f: BlockTail => Block): Block = this match
@@ -149,8 +148,9 @@ sealed abstract class Block extends Product with AutoLocated:
   // last. This is so that using defns.foldLeft later to add the definitions to the front of a block, 
   // we don't need to reverse the list again to preserve the order of the definitions.
   def floatOutDefns(
-    ignore: Defn => Bool = _ => false, 
-    preserve: Defn => Bool = _ => false) =
+      ignore: Defn => Bool = _ => false, 
+      preserve: Defn => Bool = _ => false
+    ) =
     var defns: List[Defn] = Nil
     val transformer = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
