@@ -123,8 +123,9 @@ class A with
   val x = 
     fun g() = 2
     g
+(new A).x()
 //│ JS (unsanitized):
-//│ let g, A5, g$;
+//│ let g, A5, tmp2, g$;
 //│ g$ = function g$(A$instance) {
 //│   return 2
 //│ };
@@ -135,7 +136,12 @@ class A with
 //│ };
 //│ A5 = class A4 {
 //│   constructor() {
-//│     this.x = g;
+//│     let g$this;
+//│     g$this = runtime.safeCall(g(this));
+//│     this.x = g$this;
 //│   }
 //│   toString() { return "A"; }
 //│ };
+//│ tmp2 = new A5();
+//│ runtime.safeCall(tmp2.x())
+//│ = 2
