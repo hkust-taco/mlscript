@@ -110,7 +110,10 @@ let
   if n < 2 then n else fib(n - 1) + fib(n - 2)
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.109: 	@inline @tailrec fun fib(n) =
-//│ ╙──       	 ^^^^^^^^^^^^^^^
+//│ ╙──       	 ^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.109: 	@inline @tailrec fun fib(n) =
+//│ ╙──       	         ^^^^^^^
 
 module internal
 
@@ -121,16 +124,16 @@ module internal
   transient
   volatile
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.118: 	@internal object
+//│ ║  l.121: 	@internal object
 //│ ╙──       	 ^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.118: 	@internal object
+//│ ║  l.121: 	@internal object
 //│ ╙──       	 ^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.118: 	@internal object
+//│ ║  l.121: 	@internal object
 //│ ╙──       	 ^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.118: 	@internal object
+//│ ║  l.121: 	@internal object
 //│ ╙──       	 ^^^^^^^^
 
 :w
@@ -140,28 +143,31 @@ module internal
   @volatile @transient empty = ""
   normal = ()
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.137: 	@volatile let
-//│ ║         	 ^^^^^^^^^^^^
-//│ ║  l.138: 	  @shared counter = 0
-//│ ╙──       	^^^^^^^^^
+//│ ║  l.140: 	@volatile let
+//│ ╙──       	 ^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.137: 	@volatile let
-//│ ║         	 ^^^^^^^^^^^^
-//│ ║  l.138: 	  @shared counter = 0
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.139: 	  @transient @thread_local cache = ()
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.141: 	  @shared counter = 0
+//│ ╙──       	   ^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.137: 	@volatile let
-//│ ║         	 ^^^^^^^^^^^^
-//│ ║  l.138: 	  @shared counter = 0
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.139: 	  @transient @thread_local cache = ()
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.140: 	  @volatile @transient empty = ""
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.140: 	@volatile let
+//│ ╙──       	 ^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.137: 	@volatile let
+//│ ║  l.142: 	  @transient @thread_local cache = ()
+//│ ╙──       	   ^^^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.142: 	  @transient @thread_local cache = ()
+//│ ╙──       	              ^^^^^^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.140: 	@volatile let
+//│ ╙──       	 ^^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.143: 	  @volatile @transient empty = ""
+//│ ╙──       	   ^^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.143: 	  @volatile @transient empty = ""
+//│ ╙──       	             ^^^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.140: 	@volatile let
 //│ ╙──       	 ^^^^^^^^
 //│ counter = 0
 //│ empty = ""

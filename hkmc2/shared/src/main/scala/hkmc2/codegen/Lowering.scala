@@ -648,13 +648,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       (using Subst): (List[ParamList], Block) =
     (paramLists, returnedTerm(bodyTerm))
   
-  def reportAnnotations(target: Statement, annotations: Ls[Annot]): Unit = if annotations.nonEmpty then
-    raise(WarningReport(
-      (msg"This annotation has no effect." -> annotations.foldLeft[Opt[Loc]](N):
-        case (acc, term) => acc match
-          case N => term.toLoc
-          case S(loc) => S(loc ++ term.toLoc)) ::
-      Nil))
+  def reportAnnotations(target: Statement, annotations: Ls[Annot]): Unit =
+    annotations.foreach:
+      case Annot.Untyped => ()
+      case annot => raise:
+        WarningReport(msg"This annotation has no effect." -> annot.toLoc :: Nil)
 
 
 trait LoweringSelSanityChecks(using Config, TL, Raise, State)
