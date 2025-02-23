@@ -147,7 +147,7 @@ class Lifter(using State, Raise):
     * @param ignoredBmsPaths The path to access a particular BlockMemberSymbol (for definitions which could not be lifted)
     * @param localPaths The path to access a particular local (possibly belonging to a previous function) in the current scope
     * @param iSymPaths The path to access a particular `innerSymbol` (possibly belonging to a previous class) in the current scope
-    * @param replacedDefns Ignored definitions that have been rewritten and need to be replaced at the definition site.
+    * @param replacedDefns Ignored (unlifted) definitions that have been rewritten and need to be replaced at the definition site.
     */
   case class LifterCtx private (
     val defns: Map[BlockMemberSymbol, Defn] = Map.empty,
