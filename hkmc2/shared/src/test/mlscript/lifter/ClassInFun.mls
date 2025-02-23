@@ -144,7 +144,7 @@ fun f(used1, unused1) =
   let foo = Test
   foo(unused1)
 f(1, 2).get()
-//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a first-class class.
+//│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ = 1
 
 :expect 1
@@ -446,14 +446,14 @@ fun foo(x, n) =
   class C()
   let res = if x is C then "Y" else "N"
   if n > 0 then res + foo(C(), n - 1) else ""
-//│ ═══[WARNING] Cannot yet lift the class/module `C` as it is used in an instance check.
+//│ ═══[WARNING] Cannot yet lift class/module `C` as it is used in an instance check.
 
 :todo
 :w
 fun foo() =
   class C()
   C
-//│ ═══[WARNING] Cannot yet lift the class `C` as it is used as a first-class class.
+//│ ═══[WARNING] Cannot yet lift class `C` as it is used as a first-class class.
 
 :todo
 :expect "NN"
@@ -468,7 +468,7 @@ fun f() =
   fun foo() = Test
   foo()(0)
 f().get()
-//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a first-class class.
+//│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ = 0
 
 :sjs
@@ -482,7 +482,7 @@ fun f(x) =
   let foo = Test
   foo()
 f(2).get()
-//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a first-class class.
+//│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ JS (unsanitized):
 //│ let h4, f10, tmp13, h$4;
 //│ h$4 = function h$(Test$instance, x) {
@@ -510,7 +510,7 @@ f(2).get()
 //│ };
 //│ tmp13 = f10(2);
 //│ runtime.safeCall(tmp13.get())
-//│ ═══[WARNING] Cannot yet lift the class `Test` as it is used as a first-class class.
+//│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ = 2
 
 :fixme
@@ -549,5 +549,5 @@ fun test(x) =
   0 is A
   B().get
 test(2)
-//│ ═══[WARNING] Cannot yet lift the class/module `A` as it is used in an instance check.
+//│ ═══[WARNING] Cannot yet lift class/module `A` as it is used in an instance check.
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:A (class hkmc2.semantics.BlockMemberSymbol)
