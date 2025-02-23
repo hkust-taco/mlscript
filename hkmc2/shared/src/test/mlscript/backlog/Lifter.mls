@@ -80,6 +80,7 @@ foo(0, 2)
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 0 arguments but got 2
 //│ ═══[RUNTIME ERROR] Expected: '"NN"', got: 'undefined'
 
+// B is lifted but A is not, and since B extends A, it cannot access A's BlockMemberSymbol.
 :todo
 fun test(x) =
   class A with
@@ -102,7 +103,6 @@ fun foo(x, y) =
       x + y + test
   M.foo()
 //│ ═══[WARNING] Modules are not yet lifted.
-//│ ═══[WARNING] Modules are not yet lifted.
 
 :expect 14
 foo(10, 0)
@@ -115,7 +115,6 @@ fun foo(x, y) =
       x + y
   fun foo = M.foo()
   foo
-//│ ═══[WARNING] Modules are not yet lifted.
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:M (class hkmc2.semantics.BlockMemberSymbol)
 
@@ -130,19 +129,28 @@ class A(x) with
     fun getB() = x
   fun getA() = M.getB()
 //│ ═══[WARNING] Modules are not yet lifted.
-//│ ═══[WARNING] Modules are not yet lifted.
 
 :expect 2
 A(2).getA()
 //│ = 2
 
+// TODO: Foo needs to be put in a mutable capture. Also, we need to pass the Foo instance itself into Foo
 fun foo(x) =
   object Foo with
     fun self1 = this
     fun self2 = Foo
   class Bar extends Foo
-  new Bar.self2
+  (new Bar).self2
 foo(2)
-//│ ═══[WARNING] Cannot yet lift the class `Bar` as it is used as a first-class class.
-//│ ═══[WARNING] Cannot yet lift the class `Bar` as it is used as a first-class class.
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: Foo$ (class hkmc2.semantics.VarSymbol)
+
+// `h` is lifted out, but then cannot access the BlockMemberSymbol M.
+:fixme
+fun f =
+  module M with
+    fun g =
+      fun h = M.g
+      h
+  M.g
+//│ ═══[WARNING] Modules are not yet lifted.
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:M (class hkmc2.semantics.BlockMemberSymbol)

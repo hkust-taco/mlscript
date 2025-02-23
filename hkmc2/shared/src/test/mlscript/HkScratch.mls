@@ -8,4 +8,214 @@
 :d
 
 
+:sjs
+:lift
+fun f(x) =
+  fun g =
+    if 2 is A do ()
+    class A with
+      fun h =
+        fun i = x
+        i
+    2
+  2
+//│ Elab: { ‹› fun member:f‹368›(Param(‹›,x‹369›,None), ) = { ‹› fun member:g‹367› = { if { let $scrut‹370› = 2; scrut is A -> { else () }; else () }; Cls A { ‹› fun member:h‹365› = { ‹› fun member:i‹364› = x‹369›#666; member:i‹364›#666 }; }; 2 }; 2 }; }
+//│ FAILURE: Unexpected warning
+//│ ═══[WARNING] Cannot yet lift the class/module `A` as it is used in an instance check.
+//│ JS (unsanitized):
+//│ let i, g, f, g$, i$;
+//│ i$ = function i$(A$instance, x) {
+//│   return x
+//│ };
+//│ i = function i(A$instance, x) {
+//│   return () => {
+//│     return i$(A$instance, x)
+//│   }
+//│ };
+//│ g$ = function g$(x) {
+//│   let A1, scrut, tmp;
+//│   scrut = 2;
+//│   if (scrut instanceof A1) {
+//│     tmp = runtime.Unit;
+//│   } else {
+//│     tmp = runtime.Unit;
+//│   }
+//│   A1 = class A {
+//│     constructor() {}
+//│     get h() {
+//│       let tmp1;
+//│       tmp1 = i$(this, x);
+//│       return tmp1;
+//│     }
+//│     toString() { return "A"; }
+//│   };
+//│   return 2
+//│ };
+//│ g = function g(x) {
+//│   return () => {
+//│     return g$(x)
+//│   }
+//│ };
+//│ f = function f(x) {
+//│   return 2
+//│ };
+//│ FAILURE: Unexpected warning
+//│ ═══[WARNING] Cannot yet lift the class/module `A` as it is used in an instance check.
 
+:lot
+:lift
+fun foo(x) =
+  object Foo with
+    fun self1 = this
+    fun self2 = Foo
+  class Bar extends Foo
+  (new Bar).self2
+foo(2)
+//│ Elab: { ‹› fun member:foo‹435›(Param(‹›,x‹436›,None), ) = { Obj Foo { ‹module› fun member:self1‹431› = object:Foo‹437›#0; ‹module› fun member:self2‹432› = member:Foo‹434›#666; }; Cls Bar { }; new Ref(member:Bar‹433›)().self2 }; member:foo‹435›#666(2) }
+//│ Lowered:
+//│ Program:
+//│   imports = Nil
+//│   main = Define:
+//│     defn = ClsLikeDefn:
+//│       owner = N
+//│       isym = object:Foo‹437›
+//│       sym = member:Foo‹434›
+//│       k = Obj
+//│       paramsOpt = N
+//│       auxParams = Nil
+//│       parentPath = N
+//│       methods = Ls of 
+//│         FunDefn:
+//│           owner = S of object:Foo‹437›
+//│           sym = member:self1‹431›
+//│           params = Nil
+//│           body = Return:
+//│             res = Ref of object:Foo‹437›
+//│             implct = false
+//│         FunDefn:
+//│           owner = S of object:Foo‹437›
+//│           sym = member:self2‹432›
+//│           params = Nil
+//│           body = Return:
+//│             res = Ref of Foo$‹451›
+//│             implct = false
+//│       privateFields = Nil
+//│       publicFields = Nil
+//│       preCtor = End of ""
+//│       ctor = End of ""
+//│     rest = Define: \
+//│     defn = ClsLikeDefn:
+//│       owner = N
+//│       isym = class:Bar‹441›
+//│       sym = member:Bar‹433›
+//│       k = Cls
+//│       paramsOpt = N
+//│       auxParams = Nil
+//│       parentPath = S of Select:
+//│         qual = Ref of member:Foo‹434›
+//│         name = Ident of "class"
+//│       methods = Nil
+//│       privateFields = Nil
+//│       publicFields = Nil
+//│       preCtor = Return:
+//│         res = Call:
+//│           fun = Ref of builtin:super‹5›
+//│           args = Nil
+//│         implct = true
+//│       ctor = End of ""
+//│     rest = Define: \
+//│     defn = FunDefn:
+//│       owner = N
+//│       sym = member:foo‹435›
+//│       params = Ls of 
+//│         ParamList:
+//│           flags = ParamListFlags of false
+//│           params = Ls of 
+//│             Param:
+//│               flags = ()
+//│               sym = x‹436›
+//│               sign = N
+//│           restParam = N
+//│       body = Assign:
+//│         lhs = Foo$‹451›
+//│         rhs = Call:
+//│           fun = Ref of member:Foo‹434›
+//│           args = Nil
+//│         rest = Assign: \
+//│         lhs = $tmp‹447›
+//│         rhs = Instantiate:
+//│           cls = Ref of member:Bar‹433›
+//│           args = Nil
+//│         rest = Assign: \
+//│         lhs = $selRes‹448›
+//│         rhs = Select:
+//│           qual = Ref of $tmp‹447›
+//│           name = Ident of "self2"
+//│         rest = Assign: \
+//│         lhs = $discarded‹449›
+//│         rhs = Select:
+//│           qual = Ref of $tmp‹447›
+//│           name = Ident of "self2$__checkNotMethod"
+//│         rest = Match: \
+//│         scrut = Ref of $selRes‹448›
+//│         arms = Ls of 
+//│           Tuple2:
+//│             _1 = Lit of UnitLit of false
+//│             _2 = Throw of Instantiate:
+//│               cls = Select:
+//│                 qual = Ref of globalThis:globalThis‹0›
+//│                 name = Ident of "Error"
+//│               args = Ls of 
+//│                 Lit of StrLit of "Access to required field 'self2' yielded 'undefined'"
+//│         dflt = N
+//│         rest = Return: \
+//│         res = Ref of $selRes‹448›
+//│         implct = false
+//│     rest = Assign: \
+//│     lhs = $block$res‹446›
+//│     rhs = Call:
+//│       fun = Ref of member:foo‹435›
+//│       args = Ls of 
+//│         Arg:
+//│           spread = false
+//│           value = Lit of IntLit of 2
+//│     rest = Return: \
+//│     res = Lit of UnitLit of false
+//│     implct = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: Foo$‹451› (class hkmc2.semantics.VarSymbol)
+//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:50)
+//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:55)
+//│ 	at: hkmc2.utils.Scope.lookup_$bang$$anonfun$1(Scope.scala:92)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: hkmc2.utils.Scope.lookup_$bang(Scope.scala:94)
+//│ 	at: hkmc2.codegen.js.JSBuilder.getVar(JSBuilder.scala:77)
+//│ 	at: hkmc2.codegen.js.JSBuilder.result(JSBuilder.scala:96)
+//│ 	at: hkmc2.codegen.js.JSBuilder.returningTerm(JSBuilder.scala:319)
+//│ 	at: hkmc2.codegen.js.JSBuilder.block(JSBuilder.scala:451)
+//│ 	at: hkmc2.codegen.js.JSBuilder.body(JSBuilder.scala:454)
+//│ 	at: hkmc2.codegen.js.JSBuilder.$anonfun$17(JSBuilder.scala:249)
+//│ 	at: scala.collection.immutable.List.map(List.scala:251)
+//│ 	at: hkmc2.codegen.js.JSBuilder.$anonfun$3(JSBuilder.scala:242)
+//│ 	at: hkmc2.utils.Scope.nestRebindThis(Scope.scala:76)
+//│ 	at: hkmc2.codegen.js.JSBuilder.returningTerm(JSBuilder.scala:178)
+//│ 	at: hkmc2.codegen.js.JSBuilder.worksheet(JSBuilder.scala:438)
+//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:122)
+//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
+//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:37)
+//│ 	at: hkmc2.MLsDiffMaker.processTrees(MLsDiffMaker.scala:253)
+//│ 	at: hkmc2.MLsDiffMaker.processOrigin(MLsDiffMaker.scala:216)
+//│ 	at: hkmc2.DiffMaker.processBlock(DiffMaker.scala:212)
+//│ 	at: hkmc2.DiffMaker.rec(DiffMaker.scala:315)
+//│ 	at: hkmc2.DiffMaker.run(DiffMaker.scala:338)
+//│ 	at: hkmc2.MLsDiffMaker.run(MLsDiffMaker.scala:127)
+//│ 	at: hkmc2.JSBackendDiffMaker.run(JSBackendDiffMaker.scala:55)
+//│ 	at: hkmc2.Watcher.go(Watcher.scala:104)
+//│ 	at: hkmc2.Watcher.onModify(Watcher.scala:119)
+//│ 	at: hkmc2.Watcher$$anon$1.onEvent(Watcher.scala:67)
+//│ 	at: io.methvin.watcher.DirectoryWatcher.onEvent(DirectoryWatcher.java:425)
+//│ 	at: io.methvin.watcher.DirectoryWatcher.runEventLoop(DirectoryWatcher.java:356)
+//│ 	at: io.methvin.watcher.DirectoryWatcher.watch(DirectoryWatcher.java:250)
+//│ 	at: hkmc2.Watcher.run(Watcher.scala:79)
+//│ 	at: hkmc2.MainWatcher$.main(Watcher.scala:18)
+//│ 	at: hkmc2.MainWatcher.main(Watcher.scala)
