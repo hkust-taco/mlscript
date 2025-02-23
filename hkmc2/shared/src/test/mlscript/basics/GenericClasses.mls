@@ -25,12 +25,17 @@ class Foo[A] with
 
 
 
+// Note: the elaborator elaborates class parameters into additional field definitions;
+// this is why the following code yields two same errors.
 
 :fixme
 :e
 class Foo[A](x: Foo[A, A])
 //│ ╔══[ERROR] Wrong number of type arguments
-//│ ║  l.31: 	class Foo[A](x: Foo[A, A])
+//│ ║  l.33: 	class Foo[A](x: Foo[A, A])
+//│ ╙──      	                ^^^^^^^^
+//│ ╔══[ERROR] Wrong number of type arguments
+//│ ║  l.33: 	class Foo[A](x: Foo[A, A])
 //│ ╙──      	                ^^^^^^^^
 
 :fixme
@@ -38,6 +43,9 @@ class Foo[A](x: Foo[A, A])
 class Foo[A](x: Bar[A])
 class Bar(x: Foo[Int])
 //│ ╔══[ERROR] Wrong number of type arguments
-//│ ║  l.38: 	class Foo[A](x: Bar[A])
+//│ ║  l.43: 	class Foo[A](x: Bar[A])
+//│ ╙──      	                ^^^^^
+//│ ╔══[ERROR] Wrong number of type arguments
+//│ ║  l.43: 	class Foo[A](x: Bar[A])
 //│ ╙──      	                ^^^^^
 

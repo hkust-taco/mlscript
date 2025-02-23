@@ -108,8 +108,8 @@ class Cls(x) with
 //│   #x;
 //│   #x1;
 //│   constructor(x2) {
-//│     this.x = x2;
 //│     let tmp, tmp1;
+//│     this.x = x2;
 //│     tmp = this.x + 1;
 //│     this.#x = tmp;
 //│     tmp1 = this.#x * 2;

@@ -988,6 +988,35 @@ extends Importer:
               params(ps)
             newCtx = newCtx2
             res
+        def withFields(using Ctx)(fn: (Ctx) ?=> (Term.Blk, Ctx)): (Term.Blk, Ctx) =
+          val fields = ps.map: ps =>
+            ps.params.map: p =>
+              // For class-like types, "desugar" the parameters into additional class fields.
+              val owner = td.symbol match
+                // Any MemberSymbol should be an InnerSymbol, except for TypeAliasSymbol, 
+                // but type aliases should not call this function.
+                case s: InnerSymbol => S(s)
+                case _: TypeAliasSymbol => die
+              val fsym = BlockMemberSymbol(p.sym.nme, Nil)
+              val fdef = TermDefinition(
+                owner,
+                ImmutVal,
+                fsym,
+                Nil, N, p.sign,
+                S(Term.Ref(p.sym)(p.sym.id, 666)), // FIXME: 666 is a dummy value
+                FlowSymbol("‹class-param-res›"),
+                TermDefFlags.empty.copy(isModMember = k is Mod),
+                Nil
+              )
+              sym.defn = S(fdef)
+              fdef
+          val ctxWithFields = ctx.withMembers(
+            fields.fold(Nil)(_.map(f => f.sym.nme -> f.sym)),
+            ctx.outer
+          )
+          val (blk, c) = fn(using ctxWithFields)
+          val blkWithFields = fields.fold[Term.Blk](blk)(fs => blk.copy(stats = fs ::: blk.stats))
+          (blkWithFields, c)
         val defn = k match
         case Als =>
           val alsSym = td.symbol.asInstanceOf[TypeAliasSymbol] // TODO improve `asInstanceOf`
@@ -1039,7 +1068,8 @@ extends Importer:
           newCtx.nest(S(clsSym)).givenIn:
             log(s"Processing type definition $nme")
             val cd =
-              val (bod, c) = body match
+              val (bod, c) = withFields: 
+                body match
                 case S(b: Tree.Block) => block(b, hasResult = false)
                 // case S(t) => block(t :: Nil)
                 case S(t) => ???
@@ -1053,7 +1083,8 @@ extends Importer:
           newCtx.nest(S(clsSym)).givenIn:
             log(s"Processing type definition $nme")
             val cd =
-              val (bod, c) = body match
+              val (bod, c) = withFields: 
+                body match
                 case S(b: Tree.Block) => block(b, hasResult = false)
                 // case S(t) => block(t :: Nil)
                 case S(t) => ???
@@ -1111,15 +1142,10 @@ extends Importer:
       go(inner, inUsing, flags.copy(pat = true))
     case _ =>
       t.asParam(inUsing).map: (isSpd, p, t) =>
-        val sym = fieldOrVarSym(ParamBind, p)
+        val sym = VarSymbol(p)
         val sign = t.map(term(_))
         val param = Param(flags, sym, sign)
-        sym match
-          case sym: TermSymbol =>
-            // TODO: How can a TermSymbol accept a Declaration
-            // sym.defn = S(TermDefinition(ctx.outer, Fun, sym, Nil, Nil, sign, N, FlowSymbol(s"‹result of ${sym}›"), TermDefFlags.empty, Nil))
-          case sym: VarSymbol =>
-            sym.decl = S(param)
+        sym.decl = S(param)
         isSpd -> param
     go(t, inUsing, FldFlags.empty)
       

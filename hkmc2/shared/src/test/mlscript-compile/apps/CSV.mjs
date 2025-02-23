@@ -5,8 +5,8 @@ let CSV1;
 CSV1 = function CSV(strDelimiter1) { return new CSV.class(strDelimiter1); };
 CSV1.class = class CSV {
   constructor(strDelimiter) {
-    this.strDelimiter = strDelimiter;
     let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+    this.strDelimiter = strDelimiter;
     tmp = this.strDelimiter || ",";
     this.strDelimiter = tmp;
     tmp1 = "(\\" + this.strDelimiter;

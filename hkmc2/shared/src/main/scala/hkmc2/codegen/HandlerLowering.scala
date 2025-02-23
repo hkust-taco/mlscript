@@ -530,7 +530,12 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       Assign(freshTmp(), PureCall(
         Value.Ref(State.builtinOpsMap("super")), // refers to Predef.__Cont which is pure
         Value.Lit(Tree.UnitLit(true)) :: Value.Lit(Tree.UnitLit(true)) :: Nil), End()),
-      End()))
+      AssignField(
+        clsSym.asPath,
+        pcVar.id,
+        Value.Ref(pcVar),
+        End()
+      )(S(pcSymbol))))
   
   private def genNormalBody(b: Block, clsSym: BlockMemberSymbol)(using HandlerCtx): Block =
     val transform = new BlockTransformerShallow(SymbolSubst()):

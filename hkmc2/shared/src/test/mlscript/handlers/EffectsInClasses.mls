@@ -14,7 +14,6 @@ class Lol(h) with
 //│ Lol1 = function Lol(h1) { return new Lol.class(h1); };
 //│ Lol1.class = class Lol {
 //│   constructor(h) {
-//│     this.h = h;
 //│     let tmp, res, Cont$1;
 //│     const this$Lol = this;
 //│     Cont$1 = function Cont$(pc1) { return new Cont$.class(pc1); };
@@ -50,6 +49,7 @@ class Lol(h) with
 //│       }
 //│       toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│     };
+//│     this.h = h;
 //│     tmp = runtime.safeCall(this.h.perform("k"));
 //│     if (tmp instanceof globalThis.Predef.__EffectSig.class) {
 //│       tmp.tail.next = new Cont$1.class(0);

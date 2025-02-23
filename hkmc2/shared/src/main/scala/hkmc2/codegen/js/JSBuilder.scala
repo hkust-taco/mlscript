@@ -196,9 +196,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                   val nme = scp.allocateName(fld)
                   doc" # $mtdPrefix#$nme;"
                 .mkDocument(doc"")
-            val preCtorCode = ctorParams.foldLeft(body(preCtor, endSemi = true)):
-              case (acc, (sym, nme)) =>
-                doc"$acc # this.${sym.name} = $nme;"
+            val preCtorCode = body(preCtor, endSemi = true)
             val ctorCode = doc"$preCtorCode${body(ctor, endSemi = false)}"
             val ctorOrStatic = if isModule
               then doc"static"

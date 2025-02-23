@@ -12,9 +12,9 @@ class Lazy[out A](init: () -> A) with
 fun lazy(x) = Lazy(x)
 //│ LLIR:
 //│   class Option()
-//│   class Some(x)
+//│   class Some(x,x)
 //│   class None()
-//│   class Lazy(init,cache)
+//│   class Lazy(init,init,cache)
 //│   def fromSome(s) =
 //│     case s of
 //│       Some =>
@@ -74,10 +74,10 @@ main()
 //│ = 404
 //│ LLIR:
 //│   class Option()
-//│   class Some(x)
+//│   class Some(x,x)
 //│   class None()
 //│   class Nat()
-//│   class S(s)
+//│   class S(s,s)
 //│   class O()
 //│   def fromSome(s) =
 //│     case s of

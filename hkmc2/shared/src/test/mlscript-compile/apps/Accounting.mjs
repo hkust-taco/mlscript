@@ -49,8 +49,8 @@ Accounting1 = class Accounting {
     this.Report = function Report(fileName1) { return new Report.class(fileName1); };
     this.Report.class = class Report {
       constructor(fileName) {
-        this.fileName = fileName;
         let tmp;
+        this.fileName = fileName;
         tmp = fs.writeFileSync(this.fileName, "# Accounting\n");
       }
       w(txt) {

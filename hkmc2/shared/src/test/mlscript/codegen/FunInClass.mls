@@ -25,8 +25,8 @@ fun test(a) =
 //│   Inner1 = function Inner(b1) { return new Inner.class(b1); };
 //│   Inner1.class = class Inner {
 //│     constructor(b) {
-//│       this.b = b;
 //│       let tmp;
+//│       this.b = b;
 //│       tmp = Predef.print(a);
 //│     }
 //│     f(c) {
@@ -159,8 +159,8 @@ Bar(1)
 //│ Bar1 = function Bar(x1) { return new Bar.class(x1); };
 //│ Bar1.class = class Bar {
 //│   constructor(x) {
-//│     this.x = x;
 //│     let tmp1;
+//│     this.x = x;
 //│     tmp1 = this.foo();
 //│     runtime.safeCall(tmp1())
 //│   }
