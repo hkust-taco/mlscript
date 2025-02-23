@@ -135,11 +135,11 @@ class StackSafeTransform(depthLimit: Int)(using State):
   
   def isTrivial(b: Block): Boolean =
     var trivial = true
-    val walker = new BlockTransformerShallow(SymbolSubst()):
-      override def applyResult(r: Result): Result = r match
-        case Call(Value.Ref(_: BuiltinSymbol), _) => r
-        case _: Call | _: Instantiate => trivial = false; r
-        case _ => r
+    val walker = new BlockTraverserShallow(SymbolSubst()):
+      override def applyResult(r: Result): Unit = r match
+        case Call(Value.Ref(_: BuiltinSymbol), _) => ()
+        case _: Call | _: Instantiate => trivial = false
+        case _ => ()
     walker.applyBlock(b)
     trivial
 

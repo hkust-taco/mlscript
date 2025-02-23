@@ -242,6 +242,8 @@ class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst
         then b else HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod, rst2)
     case _ => super.applyBlock(b)
 
-// does not traverse into any other block
-class BlockTransformerNoRec(subst: SymbolSubst) extends BlockTransformerShallow(subst):
+// Does not traverse into sub-blocks or definitions. The purpose of this is is to only rewrite a block's data, i.e. 
+// paths, values, cases, etc. within a block. Can be used in tandem with `BlockTransformer` or `BlockTransformerShallow` 
+// to traverse sub-blocks while using this class to perform more complicated transformations on the blocks themselves.
+class BlockDataTransformer(subst: SymbolSubst) extends BlockTransformerShallow(subst):
   override def applySubBlock(b: Block): Block = b

@@ -11,7 +11,7 @@ object LambdaRewriter:
   def desugar(b: Block)(using State) =
     def rewriteOneBlk(b: Block) =
       var lambdasList: List[(BlockMemberSymbol, Value.Lam)] = Nil
-      val lambdaRewriter = new BlockTransformerNoRec(SymbolSubst()):
+      val lambdaRewriter = new BlockDataTransformer(SymbolSubst()):
         override def applyValue(v: Value): Value = v match
           case lam: Value.Lam => 
             val sym = BlockMemberSymbol("lambda", Nil)
