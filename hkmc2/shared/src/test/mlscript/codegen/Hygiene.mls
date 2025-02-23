@@ -73,10 +73,10 @@ module Test with
   val x = 1
   let x = 2
 //│ ╔══[ERROR] Name 'x' is already used
-//│ ║  l.74: 	  let x = 2
+//│ ║  l.67: 	  let x = 2
 //│ ║        	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.73: 	  val x = 1
+//│ ║  l.66: 	  val x = 1
 //│ ╙──      	      ^^^^^
 //│ JS:
 //│ Test4 = class Test3 {
