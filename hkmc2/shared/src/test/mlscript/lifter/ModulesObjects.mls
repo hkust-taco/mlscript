@@ -12,17 +12,12 @@ fun foo(x, y) =
       set y = 2
       x + y + test
   M.foo()
-//│ ═══[WARNING] Modules are not yet properly lifted and will break.
-//│ ═══[WARNING] Modules are not yet properly lifted and will break.
-//│ > let M1, foo;try { M1 = class M {   static {     return (x$0, y$1) => {       this.x$0 = x$0;       this.y$1 = y$1;       this.test = 2;       return this;     }   }   static foo(...args) {     globalThis.Predef.checkArgs("foo", 0, true, args.length);     let tmp;     M.y$1 = 2;     tmp = M.x$0 + M.y$1;     return tmp + M.test   }   static toString() { return "M"; } }; foo = function foo(...args) {   globalThis.Predef.checkArgs("foo", 2, true, args.length);   let x = args[0];   let y = args[1];   let M$;   M$ = runtime.checkCall(M1(x, y));   return runtime.checkCall(M$.foo()) }; block$res1 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                 ^^^^^^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Illegal return statement
+//│ ═══[WARNING] Modules are not yet lifted.
 
 :todo
 :expect 14
 foo(10, 0)
-//│ ═══[RUNTIME ERROR] ReferenceError: foo is not defined
-//│ ═══[RUNTIME ERROR] Expected: '14', got: 'undefined'
+//│ = 14
 
 :todo
 fun foo(x, y) =
@@ -32,9 +27,8 @@ fun foo(x, y) =
       x + y
   fun foo = M.foo()
   foo
-//│ ═══[WARNING] Modules are not yet properly lifted and will break.
-//│ ═══[WARNING] Modules are not yet properly lifted and will break.
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: M$ (class hkmc2.semantics.VarSymbol)
+//│ ═══[WARNING] Modules are not yet lifted.
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:M (class hkmc2.semantics.BlockMemberSymbol)
 
 :fixme
 :expect 12
@@ -48,17 +42,12 @@ class A(x) with
   module M with
     fun getB() = x
   fun getA() = M.getB()
-//│ ═══[WARNING] Modules are not yet properly lifted and will break.
-//│ ═══[WARNING] Modules are not yet properly lifted and will break.
-//│ > let M5, A1;try { M5 = class M4 {   static {     return (A$instance$0) => {       this.A$instance$0 = A$instance$0;       return this;     }   }   static getB(...args) {     globalThis.Predef.checkArgs("getB", 0, true, args.length);     return M4.A$instance$0.x   }   static toString() { return "M"; } }; A1 = function A(...args1) {   return new A.class(...args1); }; A1.class = class A {   constructor(x) {     this.x = x;     this.M$ = runtime.checkCall(M5(this));   }   get getA$__checkNotMethod() { runtime.deboundMethod("getA", "A"); }   getA(...args) {     globalThis.Predef.checkArgs("getA", 0, true, args.length);     return runtime.checkCall(this.M$.getB())   }   toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; } }; block$res5 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                 ^^^^^^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Illegal return statement
+//│ ═══[WARNING] Modules are not yet lifted.
 
 :todo
 :expect 2
 A(2).getA()
-//│ ═══[RUNTIME ERROR] ReferenceError: A1 is not defined
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+//│ = 2
 
 
 fun foo(x, y) =
@@ -82,19 +71,19 @@ fun foo(x, y) =
   fun foo3 = M.foo2()
   foo3
 //│ JS (unsanitized):
-//│ let M9, foo31, foo4, foo3$, foo$capture1;
-//│ foo3$ = function foo3$(M10, x, foo$capture2) {
-//│   return M10.foo2()
+//│ let M6, foo31, foo4, foo3$, foo$capture1;
+//│ foo3$ = function foo3$(M7, x, foo$capture2) {
+//│   return M7.foo2()
 //│ };
-//│ foo31 = function foo3(M10, x, foo$capture2) {
+//│ foo31 = function foo3(M7, x, foo$capture2) {
 //│   return () => {
-//│     return foo3$(M10, x, foo$capture2)
+//│     return foo3$(M7, x, foo$capture2)
 //│   }
 //│ };
-//│ M9 = function M(x$11, foo$capture$01) {
+//│ M6 = function M(x$11, foo$capture$01) {
 //│   return new M.class()(x$11, foo$capture$01);
 //│ };
-//│ M9.class = class M8 {
+//│ M6.class = class M5 {
 //│   constructor() {
 //│     return (x$1, foo$capture$0) => {
 //│       this.x$1 = x$1;
@@ -120,7 +109,7 @@ fun foo(x, y) =
 //│ foo4 = function foo(x, y) {
 //│   let tmp1, M$, capture;
 //│   capture = new foo$capture1(y);
-//│   M$ = M9(x, capture);
+//│   M$ = M6(x, capture);
 //│   tmp1 = foo3$(M$, x, capture);
 //│   return tmp1
 //│ };
@@ -136,11 +125,11 @@ class A(x) with
     fun getB() = x
   fun getA() = M.getB()
 //│ JS (unsanitized):
-//│ let M11, A3;
-//│ M11 = function M(A$instance$01) {
+//│ let M8, A3;
+//│ M8 = function M(A$instance$01) {
 //│   return new M.class()(A$instance$01);
 //│ };
-//│ M11.class = class M10 {
+//│ M8.class = class M7 {
 //│   constructor() {
 //│     return (A$instance$0) => {
 //│       this.A$instance$0 = A$instance$0;
@@ -158,7 +147,7 @@ class A(x) with
 //│ A3.class = class A2 {
 //│   constructor(x) {
 //│     this.x = x;
-//│     this.M$ = M11(this);
+//│     this.M$ = M8(this);
 //│   }
 //│   getA() {
 //│     return this.M$.getB()
@@ -215,8 +204,8 @@ module M with
   val x = if A() is A then 2 else 3
 M.A().get
 //│ JS (unsanitized):
-//│ let M21, tmp4;
-//│ M21 = class M20 {
+//│ let M18, tmp4;
+//│ M18 = class M17 {
 //│   static {
 //│     let scrut, tmp5;
 //│     this.A = function A() {
@@ -225,12 +214,12 @@ M.A().get
 //│     this.A.class = class A7 {
 //│       constructor() {}
 //│       get get() {
-//│         return M21.x + M20.x;
+//│         return M18.x + M17.x;
 //│       }
 //│       toString() { return "A(" + "" + ")"; }
 //│     };
-//│     scrut = M20.A();
-//│     if (scrut instanceof M20.A.class) {
+//│     scrut = M17.A();
+//│     if (scrut instanceof M17.A.class) {
 //│       tmp5 = 2;
 //│     } else {
 //│       tmp5 = 3;
@@ -239,7 +228,7 @@ M.A().get
 //│   }
 //│   static toString() { return "M"; }
 //│ };
-//│ tmp4 = M21.A();
+//│ tmp4 = M18.A();
 //│ tmp4.get
 //│ = 4
 
@@ -267,7 +256,7 @@ module M with
   0 is A
 M.A(2).newB.newA_B(3).newB.get
 //│ JS (unsanitized):
-//│ let B2, M25, tmp6, tmp7, B$ctor, B$;
+//│ let B2, M22, tmp6, tmp7, B$ctor, B$;
 //│ B$ = function B$(A$instance$0) {
 //│   let tmp8;
 //│   tmp8 = new B2.class();
@@ -296,11 +285,11 @@ M.A(2).newB.newA_B(3).newB.get
 //│     return this.A$instance$0.x;
 //│   } 
 //│   newA_B(y) {
-//│     return M25.A(y)
+//│     return M22.A(y)
 //│   }
 //│   toString() { return "B(" + "" + ")"; }
 //│ };
-//│ M25 = class M24 {
+//│ M22 = class M21 {
 //│   static {
 //│     let scrut;
 //│     this.A = function A(x1) {
@@ -311,7 +300,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│         this.x = x;
 //│       }
 //│       get newA() {
-//│         return M24.A();
+//│         return M21.A();
 //│       } 
 //│       get newB() {
 //│         return B$(this);
@@ -319,7 +308,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│       toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; }
 //│     };
 //│     scrut = 0;
-//│     if (scrut instanceof M24.A.class) {
+//│     if (scrut instanceof M21.A.class) {
 //│       true
 //│     } else {
 //│       false
@@ -327,7 +316,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│   }
 //│   static toString() { return "M"; }
 //│ };
-//│ tmp6 = M25.A(2);
+//│ tmp6 = M22.A(2);
 //│ tmp7 = runtime.safeCall(tmp6.newB.newA_B(3));
 //│ tmp7.newB.get
 //│ = 3
@@ -347,4 +336,12 @@ fun foo(x) =
 foo(123)
 //│ = [true, [true, false], true]
 
-
+:fixme
+fun f =
+  module M with
+    fun g =
+      fun h = M.g
+      h
+  M.g
+//│ ═══[WARNING] Modules are not yet lifted.
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:M (class hkmc2.semantics.BlockMemberSymbol)

@@ -117,12 +117,6 @@ class BlockTransformer(subst: SymbolSubst):
       val sym2 = p.symbol.mapConserve(_.subst)
       if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2)
     case v: Value => applyValue(v)
-    case DynSelect(qual, fld, ai) =>
-      val qual2 = applyPath(qual)
-      val fld2 = applyPath(fld)
-      if (qual2 is qual) && (fld2 is fld)
-      then p
-      else DynSelect(qual2, fld2, ai)
   
   def applyValue(v: Value): Value = v match
     case Value.Ref(l) =>
@@ -147,7 +141,8 @@ class BlockTransformer(subst: SymbolSubst):
     if (own2 is fun.owner) && (sym2 is fun.sym) && (params2 is fun.params) && (body2 is fun.body)
       then fun else FunDefn(own2, sym2, params2, body2)
   
-  def applyDefn(defn: Defn): Defn = defn match
+  def applyDefn(defn: Defn): Defn = 
+    defn match
     case defn: FunDefn => applyFunDefn(defn)
     case ValDefn(owner, k, sym, rhs) =>
       val owner2 = owner.mapConserve(_.subst)
