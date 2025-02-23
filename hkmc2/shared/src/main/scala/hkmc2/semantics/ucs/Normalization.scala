@@ -120,7 +120,7 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
                 // the number of free variables, bind them, and substitute them
                 // with the new indices.
                 val paramSymbols = (1 to split.arity).map: i =>
-                  TermSymbol(ParamBind, N, Ident(s"param$i"))
+                  VarSymbol(Ident(s"param$i"))
                 .toVector
                 val paramList = PlainParamList:
                   paramSymbols.iterator.map(Param(FldFlags.empty, _, N)).toList

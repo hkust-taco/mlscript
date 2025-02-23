@@ -321,7 +321,7 @@ final case class ClsLikeDefn(
 
 final case class Handler(
     sym: BlockMemberSymbol,
-    resumeSym: LocalSymbol & NamedSymbol,
+    resumeSym: VarSymbol,
     params: Ls[ParamList],
     body: Block,
 ):

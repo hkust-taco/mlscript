@@ -9,7 +9,6 @@ import syntax.{Fun, Ins, Mod}
 import semantics.Term
 import semantics.Elaborator.State
 import ImplicitResolver.ICtx.Type
-import ImplicitResolver.TyParamSymbol
 
 import Message.MessageContext
 
@@ -25,15 +24,13 @@ class CtxArgImpl extends CtxArg:
 
 object ImplicitResolver:
   
-  type TyParamSymbol = LocalSymbol & NamedSymbol
-  
   /*
    * An "implicit" or "instance" context, as opposed to the one in Elaborator.
    */
   case class ICtx(
     parent: Opt[ICtx], 
     iEnv: Map[Type.Sym, Ls[(Type, ICtx.Instance)]],
-    tEnv: Map[TyParamSymbol, Type]
+    tEnv: Map[VarSymbol, Type]
   ):
     
     def +(typ: Type.Concrete, sym: Symbol): ICtx =
@@ -41,7 +38,7 @@ object ImplicitResolver:
       val newEnv = iEnv + (typ.toSym -> newLs)
       copy(iEnv = newEnv)
     
-    def withTypeArg(param: TyParamSymbol, arg: Type): ICtx =
+    def withTypeArg(param: VarSymbol, arg: Type): ICtx =
       copy(tEnv = tEnv + (param -> arg))
     
     def get(query: Type.Concrete): Opt[ICtx.Instance] =
@@ -131,7 +128,7 @@ class ImplicitResolver(tl: TraceLogger)
                   msg"got ${targs.length.toString()}" -> base.toLoc :: Nil))
               (tparams zip targs).foldLeft(ictx):
                 case (ictx, (tparam, targ)) => (tparam.sym, resolveType(targ)) match
-                  case (sym: TyParamSymbol, S(typ)) =>
+                  case (sym: VarSymbol, S(typ)) =>
                     log(s"Resolving App with type arg ${sym} = $typ")
                     ictx.withTypeArg(sym, typ)
                   case _ => ictx

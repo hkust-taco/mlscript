@@ -372,7 +372,7 @@ extension (split: DeBrujinSplit)
           Split.End // TODO: report mismatched arity
   
   /** To instantiate the body of a pattern synonym. */
-  def instantiate(context: Map[LocalSymbol & NamedSymbol, DeBrujinSplit])(using tl: TraceLogger): DeBrujinSplit =
+  def instantiate(context: Map[VarSymbol, DeBrujinSplit])(using tl: TraceLogger): DeBrujinSplit =
     import DeBrujinSplit.*, PatternStub.*, ConstructorLike.*, tl.*
     def go(split: DeBrujinSplit): DeBrujinSplit = split.traceChange("instantiate"):
       split match

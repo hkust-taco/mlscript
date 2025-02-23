@@ -289,7 +289,7 @@ final case class TermDefinition(
     case _ => true
 
 final case class HandlerTermDefinition(
-  resumeSym: LocalSymbol & NamedSymbol,
+  resumeSym: VarSymbol,
   td: TermDefinition
 )
 
@@ -493,7 +493,7 @@ final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extend
     flags.showDbg + sym
 
 
-final case class Param(flags: FldFlags, sym: LocalSymbol & NamedSymbol, sign: Opt[Term]) 
+final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term]) 
 extends Declaration with AutoLocated:
   def subTerms: Ls[Term] = sign.toList
   override protected def children: List[Located] = subTerms
