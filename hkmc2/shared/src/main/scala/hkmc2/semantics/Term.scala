@@ -372,6 +372,11 @@ sealed abstract class ClassDef extends ClassLikeDef:
   val body: ObjBody
   val companion: Opt[CompanionValue]
   val annotations: Ls[Annot]
+  def isData: Opt[Annot.Modifier] = annotations.collectFirst:
+    case mod @ Annot.Modifier(Keyword.`data`) => mod
+  override def extraAnnotations: Ls[Annot] = super.extraAnnotations.filter:
+    case Annot.Modifier(Keyword.`data`) => false
+    case _ => true
 
 object ClassDef:
   def apply(

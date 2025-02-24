@@ -1,0 +1,22 @@
+:js
+
+
+data class Foo(x: Int)
+
+Foo(1).x
+//│ = 1
+
+
+// TODO: support?
+:todo
+data Foo(x: Int)
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.12: 	data Foo(x: Int)
+//│ ╙──      	         ^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ╟── Such annotations are not supported on application terms.
+//│ ║  l.12: 	data Foo(x: Int)
+//│ ╙──      	     ^^^^^^^^^^^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: Other argument forms (of class String)
+
+

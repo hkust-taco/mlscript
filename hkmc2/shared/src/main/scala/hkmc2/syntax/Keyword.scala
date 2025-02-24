@@ -86,6 +86,7 @@ object Keyword:
   val `out` = Keyword("out", N, curPrec)
   val `set` = Keyword("set", N, curPrec)
   val `declare` = Keyword("declare", N, N)
+  val `data` = Keyword("data", N, N)
   val `trait` = Keyword("trait", N, N)
   val `mixin` = Keyword("mixin", N, N)
   val `interface` = Keyword("interface", N, N)
