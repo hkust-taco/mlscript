@@ -83,6 +83,8 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
       val parsed = mainParse.resultBlk
       val (blk0, _) = elab.importFrom(parsed)
       val blk: semantics.Term.Blk = blk0.copy(stats = semantics.Import(State.runtimeSymbol, runtimeFile.toString) :: blk0.stats)
+      val typ = new semantics.SimpleSub(stl)
+      typ.analyzeTermTypes(blk)
       val spBlk = Specialiser(stl).topLevel(blk)
       val low = ltl.givenIn:
         new codegen.Lowering()

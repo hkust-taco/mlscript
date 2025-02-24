@@ -1,0 +1,126 @@
+:js
+
+
+:todo
+:sjs
+:ds
+class Simple(val x) with
+    fun inner = x
+Simple(1).inner
+//│ Typing term: { Cls SimpleParamList(‹›,List(Param(‹›,class:Simple.x,None)),None) { ‹› fun member:inner = class:Simple.x#666; }; member:Simple#666(1).inner }
+//│ Processing class: member:Simple
+//│ Typing term: member:Simple#666(1).inner
+//│ Typing term: member:Simple#666(1)
+//│ Class constructor call for Simple
+//│ Typing term: 1
+//│ Result type: 'l
+//│ JS (unsanitized):
+//│ let Simple1, tmp;
+//│ Simple1 = function Simple(x1) { return new Simple.class(x1); };
+//│ Simple1.class = class Simple {
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   get inner() {
+//│     return this.x;
+//│   }
+//│   toString() { return "Simple(" + globalThis.Predef.render(this.x) + ")"; }
+//│ };
+//│ tmp = Simple1(1);
+//│ tmp.inner
+//│ = 1
+
+:todo
+:ds
+abstract class Option
+class Some(val x) extends Option with
+    fun unwrap = x
+class None extends Option
+Some(1).unwrap
+//│ Typing term: { Cls Option { }; Cls SomeParamList(‹›,List(Param(‹›,class:Some.x,None)),None) { ‹› fun member:unwrap = class:Some.x#666; }; Cls None { }; member:Some#666(1).unwrap }
+//│ Processing class: member:Option
+//│ Processing class: member:Some
+//│ Processing class: member:None
+//│ Typing term: member:Some#666(1).unwrap
+//│ Typing term: member:Some#666(1)
+//│ Class constructor call for Some
+//│ Typing term: 1
+//│ Result type: 'l
+//│ = 1
+
+:todo
+:ds
+abstract class Opt[T]
+class None extends Opt
+class Some[T](val value: T) extends Opt[T]
+fun id(x: Opt[Int]) = x
+let a = Some(1)
+id(a)
+//│ Typing term: { ‹› fun member:id(Param(‹›,x,Some(TyApp(Ref(member:Opt),List(Ref(member:Int))))), ) = x#666; Cls Opt[T] { }; Cls None { }; Cls Some[out T]ParamList(‹›,List(Param(‹›,class:Some.value,Some(Ref(T)))),None) { }; let a; a = member:Some#666(1); member:id#666(a#666) }
+//│ Typing term: x#666
+//│ Constraining 'm <: 'l
+//│ Processing class: member:Opt
+//│ Processing class: member:None
+//│ Processing class: member:Some
+//│ Typing term: member:Some#666(1)
+//│ Class constructor call for Some
+//│ Typing term: 1
+//│ Constraining class class:Some { value: 'n } <: 'o
+//│ Typing term: member:id#666(a#666)
+//│ Typing term: member:id#666
+//│ Typing term: a#666
+//│ Constraining ('m -> 'l) <: (class class:Some { value: 'n } -> 'q)
+//│ Constraining class class:Some { value: 'n } <: 'm
+//│ Constraining class class:Some { value: 'n } <: 'l
+//│ Constraining 'l <: 'q
+//│ Constraining class class:Some { value: 'n } <: 'q
+//│ Result type: class Some { value: 'n }
+//│ = Some(1)
+//│ a = Some(1)
+
+:todo
+:ds
+abstract class List[T]
+class Nil extends List
+class Cons[T](val head: T, val tail: List[T]) extends List[T]
+fun (::) cons[T](head: T, tail: List[T]) = Cons(head, tail)
+1 :: 2 :: 3 :: Nil
+//│ Typing term: { ‹› fun member:cons[List(T)](Param(‹›,head,Some(Ref(T))), Param(‹›,tail,Some(TyApp(Ref(member:List),List(Ref(T))))), ) = member:Cons#666(head#666, tail#666); Cls List[T] { }; Cls Nil { }; Cls Cons[out T]ParamList(‹›,List(Param(‹›,class:Cons.head,Some(Ref(T))), Param(‹›,class:Cons.tail,Some(TyApp(Ref(member:List),List(Ref(T)))))),None) { }; member:cons#666(1, member:cons#666(2, member:cons#666(3, member:Nil#666))) }
+//│ Typing term: member:Cons#666(head#666, tail#666)
+//│ Class constructor call for Cons
+//│ Typing term: member:Cons#666
+//│ Warning: Symbol not found in context: member:Cons
+//│ Typing term: head#666
+//│ Typing term: tail#666
+//│ Constraining 'p <: ({ _0: 'm; _1: 'n } -> 'o)
+//│ Constraining 'o <: 'l
+//│ Processing class: member:List
+//│ Processing class: member:Nil
+//│ Processing class: member:Cons
+//│ Typing term: member:cons#666(1, member:cons#666(2, member:cons#666(3, member:Nil#666)))
+//│ Typing term: member:cons#666
+//│ Typing term: 1
+//│ Typing term: member:cons#666(2, member:cons#666(3, member:Nil#666))
+//│ Typing term: member:cons#666
+//│ Typing term: 2
+//│ Typing term: member:cons#666(3, member:Nil#666)
+//│ Typing term: member:cons#666
+//│ Typing term: 3
+//│ Typing term: member:Nil#666
+//│ Constraining ({ head: 'm; tail: 'n } -> 'l) <: ({ _0: Int; _1: class class:Nil {  } } -> 'u)
+//│ Constraining { _0: Int; _1: class class:Nil {  } } <: { head: 'm; tail: 'n }
+//│ Error: missing field: head in { _0: Int; _1: class class:Nil {  } }
+//│ Error: missing field: tail in { _0: Int; _1: class class:Nil {  } }
+//│ Constraining 'l <: 'u
+//│ Constraining ({ head: 'm; tail: 'n } -> 'l) <: ({ _0: Int; _1: 'u } -> 't)
+//│ Constraining { _0: Int; _1: 'u } <: { head: 'm; tail: 'n }
+//│ Error: missing field: head in { _0: Int; _1: 'u }
+//│ Error: missing field: tail in { _0: Int; _1: 'u }
+//│ Constraining 'l <: 't
+//│ Constraining ({ head: 'm; tail: 'n } -> 'l) <: ({ _0: Int; _1: 't } -> 's)
+//│ Constraining { _0: Int; _1: 't } <: { head: 'm; tail: 'n }
+//│ Error: missing field: head in { _0: Int; _1: 't }
+//│ Error: missing field: tail in { _0: Int; _1: 't }
+//│ Constraining 'l <: 's
+//│ Result type: 's
+//│ = Cons(1, Cons(2, Cons(3, class Nil extends List1 {   constructor() {     super();   }   toString() { return "Nil"; } })))
