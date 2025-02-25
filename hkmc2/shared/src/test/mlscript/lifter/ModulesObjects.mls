@@ -1,55 +1,6 @@
 :lift
 :js
 
-// the problem with all of these tests is that a Ref to a module's own ModuleSymbol 
-// (let's say M) emits `M` instead of `this` in the codegen 
-
-:todo
-fun foo(x, y) =
-  module M with
-    val test = 2
-    fun foo() =
-      set y = 2
-      x + y + test
-  M.foo()
-//│ ═══[WARNING] Modules are not yet lifted.
-
-:todo
-:expect 14
-foo(10, 0)
-//│ = 14
-
-:todo
-fun foo(x, y) =
-  module M with
-    fun foo() =
-      set y = 2
-      x + y
-  fun foo = M.foo()
-  foo
-//│ ═══[WARNING] Modules are not yet lifted.
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:M (class hkmc2.semantics.BlockMemberSymbol)
-
-:fixme
-:expect 12
-foo(10, 0)
-//│ ═══[RUNTIME ERROR] ReferenceError: foo2 is not defined
-//│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'
-
-
-:todo
-class A(x) with
-  module M with
-    fun getB() = x
-  fun getA() = M.getB()
-//│ ═══[WARNING] Modules are not yet lifted.
-
-:todo
-:expect 2
-A(2).getA()
-//│ = 2
-
-
 fun foo(x, y) =
   object M with
     val test = 2
@@ -71,19 +22,19 @@ fun foo(x, y) =
   fun foo3 = M.foo2()
   foo3
 //│ JS (unsanitized):
-//│ let M6, foo31, foo4, foo3$, foo$capture1;
-//│ foo3$ = function foo3$(M7, x, foo$capture2) {
-//│   return M7.foo2()
+//│ let M3, foo3, foo1, foo3$, foo$capture1;
+//│ foo3$ = function foo3$(M4, x, foo$capture2) {
+//│   return M4.foo2()
 //│ };
-//│ foo31 = function foo3(M7, x, foo$capture2) {
+//│ foo3 = function foo3(M4, x, foo$capture2) {
 //│   return () => {
-//│     return foo3$(M7, x, foo$capture2)
+//│     return foo3$(M4, x, foo$capture2)
 //│   }
 //│ };
-//│ M6 = function M(x$11, foo$capture$01) {
+//│ M3 = function M(x$11, foo$capture$01) {
 //│   return new M.class()(x$11, foo$capture$01);
 //│ };
-//│ M6.class = class M5 {
+//│ M3.class = class M2 {
 //│   constructor() {
 //│     return (x$1, foo$capture$0) => {
 //│       this.x$1 = x$1;
@@ -106,12 +57,12 @@ fun foo(x, y) =
 //│   }
 //│   toString() { return "foo$capture(" + globalThis.Predef.render(this.y0$) + ")"; }
 //│ };
-//│ foo4 = function foo(x, y) {
-//│   let tmp1, M$, capture;
+//│ foo1 = function foo(x, y) {
+//│   let tmp, M$, capture;
 //│   capture = new foo$capture1(y);
-//│   M$ = M6(x, capture);
-//│   tmp1 = foo3$(M$, x, capture);
-//│   return tmp1
+//│   M$ = M3(x, capture);
+//│   tmp = foo3$(M$, x, capture);
+//│   return tmp
 //│ };
 
 :expect 12
@@ -125,11 +76,11 @@ class A(x) with
     fun getB() = x
   fun getA() = M.getB()
 //│ JS (unsanitized):
-//│ let M8, A3;
-//│ M8 = function M(A$instance$01) {
+//│ let M5, A1;
+//│ M5 = function M(A$instance$01) {
 //│   return new M.class()(A$instance$01);
 //│ };
-//│ M8.class = class M7 {
+//│ M5.class = class M4 {
 //│   constructor() {
 //│     return (A$instance$0) => {
 //│       this.A$instance$0 = A$instance$0;
@@ -141,13 +92,13 @@ class A(x) with
 //│   }
 //│   toString() { return "M"; }
 //│ };
-//│ A3 = function A(x1) {
+//│ A1 = function A(x1) {
 //│   return new A.class(x1);
 //│ };
-//│ A3.class = class A2 {
+//│ A1.class = class A {
 //│   constructor(x) {
 //│     this.x = x;
-//│     this.M$ = M8(this);
+//│     this.M$ = M5(this);
 //│   }
 //│   getA() {
 //│     return this.M$.getB()
@@ -204,32 +155,32 @@ module M with
   val x = if A() is A then 2 else 3
 M.A().get
 //│ JS (unsanitized):
-//│ let M18, tmp4;
-//│ M18 = class M17 {
+//│ let M15, tmp3;
+//│ M15 = class M14 {
 //│   static {
-//│     let scrut, tmp5;
+//│     let scrut, tmp4;
 //│     this.A = function A() {
 //│       return new A.class();
 //│     };
-//│     this.A.class = class A7 {
+//│     this.A.class = class A5 {
 //│       constructor() {}
 //│       get get() {
-//│         return M18.x + M17.x;
+//│         return M15.x + M14.x;
 //│       }
 //│       toString() { return "A(" + "" + ")"; }
 //│     };
-//│     scrut = M17.A();
-//│     if (scrut instanceof M17.A.class) {
-//│       tmp5 = 2;
+//│     scrut = M14.A();
+//│     if (scrut instanceof M14.A.class) {
+//│       tmp4 = 2;
 //│     } else {
-//│       tmp5 = 3;
+//│       tmp4 = 3;
 //│     }
-//│     this.x = tmp5;
+//│     this.x = tmp4;
 //│   }
 //│   static toString() { return "M"; }
 //│ };
-//│ tmp4 = M18.A();
-//│ tmp4.get
+//│ tmp3 = M15.A();
+//│ tmp3.get
 //│ = 4
 
 module M with
@@ -256,17 +207,17 @@ module M with
   0 is A
 M.A(2).newB.newA_B(3).newB.get
 //│ JS (unsanitized):
-//│ let B2, M22, tmp6, tmp7, B$ctor, B$;
+//│ let B2, M19, tmp5, tmp6, B$ctor, B$;
 //│ B$ = function B$(A$instance$0) {
-//│   let tmp8;
-//│   tmp8 = new B2.class();
-//│   return tmp8(A$instance$0)
+//│   let tmp7;
+//│   tmp7 = new B2.class();
+//│   return tmp7(A$instance$0)
 //│ };
 //│ B$ctor = function B$ctor(A$instance$0) {
 //│   return () => {
-//│     let tmp8;
-//│     tmp8 = new B2.class();
-//│     return tmp8(A$instance$0)
+//│     let tmp7;
+//│     tmp7 = new B2.class();
+//│     return tmp7(A$instance$0)
 //│   }
 //│ };
 //│ B2 = function B() {
@@ -285,22 +236,22 @@ M.A(2).newB.newA_B(3).newB.get
 //│     return this.A$instance$0.x;
 //│   } 
 //│   newA_B(y) {
-//│     return M22.A(y)
+//│     return M19.A(y)
 //│   }
 //│   toString() { return "B(" + "" + ")"; }
 //│ };
-//│ M22 = class M21 {
+//│ M19 = class M18 {
 //│   static {
 //│     let scrut;
 //│     this.A = function A(x1) {
 //│       return new A.class(x1);
 //│     };
-//│     this.A.class = class A9 {
+//│     this.A.class = class A7 {
 //│       constructor(x) {
 //│         this.x = x;
 //│       }
 //│       get newA() {
-//│         return M21.A();
+//│         return M18.A();
 //│       } 
 //│       get newB() {
 //│         return B$(this);
@@ -308,7 +259,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│       toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; }
 //│     };
 //│     scrut = 0;
-//│     if (scrut instanceof M21.A.class) {
+//│     if (scrut instanceof M18.A.class) {
 //│       true
 //│     } else {
 //│       false
@@ -316,9 +267,9 @@ M.A(2).newB.newA_B(3).newB.get
 //│   }
 //│   static toString() { return "M"; }
 //│ };
-//│ tmp6 = M22.A(2);
-//│ tmp7 = runtime.safeCall(tmp6.newB.newA_B(3));
-//│ tmp7.newB.get
+//│ tmp5 = M19.A(2);
+//│ tmp6 = runtime.safeCall(tmp5.newB.newA_B(3));
+//│ tmp6.newB.get
 //│ = 3
 
 module M with
@@ -335,13 +286,3 @@ fun foo(x) =
 
 foo(123)
 //│ = [true, [true, false], true]
-
-:fixme
-fun f =
-  module M with
-    fun g =
-      fun h = M.g
-      h
-  M.g
-//│ ═══[WARNING] Modules are not yet lifted.
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:M (class hkmc2.semantics.BlockMemberSymbol)

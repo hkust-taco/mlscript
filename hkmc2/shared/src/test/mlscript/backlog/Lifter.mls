@@ -111,7 +111,7 @@ foo(0, 2)
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 0 arguments but got 2
 //│ ═══[RUNTIME ERROR] Expected: '"NN"', got: 'undefined'
 
-// B is lifted but A is not, and since B extends A, it cannot access A's BlockMemberSymbol.
+// Since B extends A and A is not lifted, B cannot access A's BlockMemberSymbol. We can't lift B.
 :todo
 fun test(x) =
   class A with

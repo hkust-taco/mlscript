@@ -58,87 +58,22 @@ A(1).getA()
 //│ = 3
 
 :sjs
-class A(x) with
-  class B(y) with
-    fun getB() = x + y
-  fun getA() = this.B(2).getB()
-//│ JS (unsanitized):
-//│ let B3, A3, B$ctor1, B$1;
-//│ B$1 = function B$(A$instance$0, y) {
-//│   let tmp1;
-//│   tmp1 = new B3.class(y);
-//│   return tmp1(A$instance$0)
-//│ };
-//│ B$ctor1 = function B$ctor(A$instance$0) {
-//│   return (y) => {
-//│     let tmp1;
-//│     tmp1 = new B3.class(y);
-//│     return tmp1(A$instance$0)
-//│   }
-//│ };
-//│ B3 = function B(y1) {
-//│   return (A$instance$01) => {
-//│     return new B.class(y1)(A$instance$01);
-//│   }
-//│ };
-//│ B3.class = class B2 {
-//│   constructor(y) {
-//│     return (A$instance$0) => {
-//│       this.y = y;
-//│       this.A$instance$0 = A$instance$0;
-//│       return this;
-//│     }
-//│   }
-//│   getB() {
-//│     return this.A$instance$0.x + this.y
-//│   }
-//│   toString() { return "B(" + globalThis.Predef.render(this.y) + ")"; }
-//│ };
-//│ A3 = function A(x1) {
-//│   return new A.class(x1);
-//│ };
-//│ A3.class = class A2 {
-//│   constructor(x) {
-//│     this.x = x;
-//│   }
-//│   getA() {
-//│     let tmp1;
-//│     tmp1 = runtime.safeCall(this.B(2));
-//│     return runtime.safeCall(tmp1.getB())
-//│   }
-//│   toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; }
-//│ };
-
-// I use the optional `symbol` parameter of `Select` to detect references to the
-// BlockMemberSymbol. But when this symbol is not present, there is no way to properly
-// detect it. What do to?
-:fixme
-:expect 3
-A(1).getA()
-//│ ═══[RUNTIME ERROR] TypeError: this.B is not a function
-//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
-
-:ssjs
 class A with
   val x = 
     fun g() = 2
     g
 (new A).x()
-//│ JS:
-//│ g$ = function g$(...args) {
-//│   globalThis.Predef.checkArgs("g$", 1, true, args.length);
-//│   let A$instance = args[0];
+//│ JS (unsanitized):
+//│ let g, A3, tmp1, g$;
+//│ g$ = function g$(A$instance) {
 //│   return 2
 //│ };
-//│ g = function g(...args) {
-//│   globalThis.Predef.checkArgs("g", 1, true, args.length);
-//│   let A$instance = args[0];
-//│   return (...args1) => {
-//│     globalThis.Predef.checkArgs("", 0, true, args1.length);
-//│     return runtime.checkCall(g$(A$instance))
+//│ g = function g(A$instance) {
+//│   return () => {
+//│     return g$(A$instance)
 //│   }
 //│ };
-//│ A5 = class A4 {
+//│ A3 = class A2 {
 //│   constructor() {
 //│     let g$this;
 //│     g$this = runtime.safeCall(g(this));
@@ -146,7 +81,6 @@ class A with
 //│   }
 //│   toString() { return "A"; }
 //│ };
-//│ tmp2 = new A5();
-//│ block$res5 = runtime.safeCall(tmp2.x());
-//│ undefined
+//│ tmp1 = new A3();
+//│ runtime.safeCall(tmp1.x())
 //│ = 2
