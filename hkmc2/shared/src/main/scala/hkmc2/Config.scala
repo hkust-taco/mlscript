@@ -25,7 +25,7 @@ object Config:
     sanityChecks = N, // TODO make the default S
     // sanityChecks = S(SanityChecks(light = true)),
     effectHandlers = N,
-    liftDefns = N
+    liftDefns = N,
   )
   
   case class SanityChecks(light: Bool)
