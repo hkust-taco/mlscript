@@ -100,7 +100,7 @@ Runtime1 = class Runtime {
       tmp = cont.constructor.name + "(pc=";
       tmp1 = tmp + cont.pc;
       result = tmp1;
-      lambda = function lambda(m, marker) {
+      lambda = (undefined, function (m, marker) {
         let scrut4, tmp12, tmp13;
         scrut4 = runtime.safeCall(m.has(cont));
         if (scrut4 === true) {
@@ -111,7 +111,7 @@ Runtime1 = class Runtime {
         } else {
           return runtime.Unit
         }
-      };
+      });
       tmp2 = lambda;
       tmp3 = runtime.safeCall(hl.forEach(tmp2));
       scrut1 = runtime.safeCall(vis.has(cont));
@@ -154,7 +154,7 @@ Runtime1 = class Runtime {
     let scrut, result, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, lambda;
     if (cont1 instanceof Runtime.HandlerContFrame.class) {
       result = cont1.handler.constructor.name;
-      lambda = function lambda(m, marker) {
+      lambda = (undefined, function (m, marker) {
         let scrut3, tmp8, tmp9;
         scrut3 = runtime.safeCall(m.has(cont1));
         if (scrut3 === true) {
@@ -165,7 +165,7 @@ Runtime1 = class Runtime {
         } else {
           return runtime.Unit
         }
-      };
+      });
       tmp = lambda;
       tmp1 = runtime.safeCall(hl1.forEach(tmp));
       scrut1 = runtime.safeCall(vis1.has(cont1));

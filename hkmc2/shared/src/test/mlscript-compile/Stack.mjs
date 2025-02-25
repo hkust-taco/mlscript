@@ -92,7 +92,7 @@ Stack1 = class Stack {
     let go, tmp, tmp1;
     go = function go(heads, tails) {
       let lambda;
-      lambda = function lambda(caseScrut) {
+      lambda = (undefined, function (caseScrut) {
         let param0, param1, h, t, param01, param11, h2, t2, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
         if (caseScrut instanceof Stack.Cons.class) {
           param0 = caseScrut.head;
@@ -133,7 +133,7 @@ Stack1 = class Stack {
         } else {
           throw new globalThis.Error("match error");
         }
-      };
+      });
       return lambda
     };
     tmp = go(Stack.Nil, Stack.Nil);

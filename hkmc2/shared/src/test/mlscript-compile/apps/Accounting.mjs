@@ -72,9 +72,9 @@ Accounting1 = class Accounting {
         tmp = this.wln("");
         tmp1 = Str.concat2("|", "Year");
         tmp2 = Str.concat2(tmp1, "|");
-        lambda = function lambda(x) {
+        lambda = (undefined, function (x) {
           return x.name
-        };
+        });
         tmp3 = runtime.safeCall(this$Accounting.lines.map(lambda));
         tmp4 = runtime.safeCall(tmp3.join("|"));
         tmp5 = Str.concat2(tmp2, tmp4);
@@ -82,9 +82,9 @@ Accounting1 = class Accounting {
         tmp7 = this.wln(tmp6);
         tmp8 = Str.concat2("|", "---");
         tmp9 = Str.concat2(tmp8, "|");
-        lambda1 = function lambda(x) {
+        lambda1 = (undefined, function (x) {
           return "--:"
-        };
+        });
         tmp10 = runtime.safeCall(this$Accounting.lines.map(lambda1));
         tmp11 = runtime.safeCall(tmp10.join("|"));
         tmp12 = Str.concat2(tmp9, tmp11);
@@ -96,9 +96,9 @@ Accounting1 = class Accounting {
         tmp = runtime.safeCall(globalThis.String(label));
         tmp1 = Str.concat2("|", tmp);
         tmp2 = Str.concat2(tmp1, "|");
-        lambda = function lambda(x) {
+        lambda = (undefined, function (x) {
           return this$Accounting.display(x.balance)
-        };
+        });
         tmp3 = runtime.safeCall(this$Accounting.lines.map(lambda));
         tmp4 = runtime.safeCall(tmp3.join("|"));
         tmp5 = Str.concat2(tmp2, tmp4);
@@ -109,11 +109,11 @@ Accounting1 = class Accounting {
         let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20, tmp21, tmp22, tmp23, tmp24, tmp25, tmp26, lambda, lambda1, lambda2, lambda3, lambda4, lambda5, lambda6;
         tmp = this.wln("");
         const this$Report = this;
-        lambda = function lambda(x) {
+        lambda = (undefined, function (x) {
           let tmp27;
           tmp27 = this$Report.wln(x);
           return this$Report.wln("")
-        };
+        });
         tmp1 = runtime.safeCall(this$Accounting.warnings.forEach(lambda));
         tmp2 = this.wln("### Remaining Available Funds");
         tmp3 = this.wln("");
@@ -125,17 +125,17 @@ Accounting1 = class Accounting {
         tmp9 = this.wln(tmp8);
         tmp10 = Str.concat2("|", "Matchable");
         tmp11 = Str.concat2(tmp10, "|");
-        lambda1 = function lambda(x) {
+        lambda1 = (undefined, function (x) {
           return x.isMatchable
-        };
+        });
         tmp12 = runtime.safeCall(this$Accounting.lines.filter(lambda1));
-        lambda2 = function lambda(x) {
+        lambda2 = (undefined, function (x) {
           return x.balance
-        };
+        });
         tmp13 = runtime.safeCall(tmp12.map(lambda2));
-        lambda3 = function lambda(a, b) {
+        lambda3 = (undefined, function (a, b) {
           return a + b
-        };
+        });
         tmp14 = tmp13.reduce(lambda3, 0);
         tmp15 = this$Accounting.display(tmp14);
         tmp16 = Str.concat2(tmp11, tmp15);
@@ -143,17 +143,17 @@ Accounting1 = class Accounting {
         tmp18 = this.wln(tmp17);
         tmp19 = Str.concat2("|", "Non-matchable");
         tmp20 = Str.concat2(tmp19, "|");
-        lambda4 = function lambda(x) {
+        lambda4 = (undefined, function (x) {
           return Predef.not(x.isMatchable)
-        };
+        });
         tmp21 = runtime.safeCall(this$Accounting.lines.filter(lambda4));
-        lambda5 = function lambda(x) {
+        lambda5 = (undefined, function (x) {
           return x.balance
-        };
+        });
         tmp22 = runtime.safeCall(tmp21.map(lambda5));
-        lambda6 = function lambda(a, b) {
+        lambda6 = (undefined, function (a, b) {
           return a + b
-        };
+        });
         tmp23 = tmp22.reduce(lambda6, 0);
         tmp24 = this$Accounting.display(tmp23);
         tmp25 = Str.concat2(tmp20, tmp24);

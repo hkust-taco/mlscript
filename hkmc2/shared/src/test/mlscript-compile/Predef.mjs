@@ -195,9 +195,9 @@ Predef1 = class Predef {
     } else if (arg1 === null) {
       return "null"
     } else if (arg1 instanceof globalThis.Array) {
-      lambda = function lambda(arg11, arg2) {
+      lambda = (undefined, function (arg11, arg2) {
         return arg11 + arg2
-      };
+      });
       tmp = Predef.fold(lambda);
       tmp1 = Predef.interleave(", ");
       tmp2 = Predef.map(Predef.render);
@@ -207,9 +207,9 @@ Predef1 = class Predef {
     } else if (typeof arg1 === 'string') {
       return runtime.safeCall(globalThis.JSON.stringify(arg1))
     } else if (arg1 instanceof globalThis.Set) {
-      lambda1 = function lambda(arg11, arg2) {
+      lambda1 = (undefined, function (arg11, arg2) {
         return arg11 + arg2
-      };
+      });
       tmp5 = Predef.fold(lambda1);
       tmp6 = Predef.interleave(", ");
       tmp7 = Predef.map(Predef.render);
@@ -217,9 +217,9 @@ Predef1 = class Predef {
       tmp9 = runtime.safeCall(tmp6(...tmp8));
       return runtime.safeCall(tmp5("Set{", ...tmp9, "}"))
     } else if (arg1 instanceof globalThis.Map) {
-      lambda2 = function lambda(arg11, arg2) {
+      lambda2 = (undefined, function (arg11, arg2) {
         return arg11 + arg2
-      };
+      });
       tmp10 = Predef.fold(lambda2);
       tmp11 = Predef.interleave(", ");
       tmp12 = Predef.map(Predef.render);
@@ -377,9 +377,9 @@ Predef1 = class Predef {
         tmp4 = "";
       }
       name = tmp4;
-      lambda = function lambda(arg11, arg2) {
+      lambda = (undefined, function (arg11, arg2) {
         return arg11 + arg2
-      };
+      });
       tmp5 = Predef.fold(lambda);
       if (isUB === true) {
         tmp6 = "";
