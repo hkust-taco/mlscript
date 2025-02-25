@@ -97,6 +97,14 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
             cctx.nest(bd -> v) givenIn:
               v.state.lowerBounds ::= bd
               v.state.upperBounds.foreach(ub => constrainImpl(bd, ub))
+              v.state.disjsub.foreach:(d)=>
+                Type.disjoint(d.disjoint(v),bd.toBasic.simp)match
+                  case N=>
+                    d.remove(v)
+                    if d.disjoint.isEmpty then
+                      d.dss.foreach(_.commit())
+                      d.cs.foreach((a,b)=>constrainImpl(a,b))
+                  case S(k)=>d.disjoint++=k
       case Conj(i, u, Nil) => (conj.i, conj.u) match
         case (_, Union(N, Nil)) =>
           // raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} ∧ ¬⊥" -> N :: Nil))
@@ -107,16 +115,37 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
               constrainArgs(ta1, ta2)
           else constrainConj(Conj(conj.i, Union(f, rest), Nil))
         case (int: Inter, Union(f, _ :: rest)) => constrainConj(Conj(int, Union(f, rest), Nil))
-        case (Inter(S(FunType(args1, ret1, eff1))), Union(S(FunType(args2, ret2, eff2)), Nil)) =>
+        case (Inter(S(FunType(args1, ret1, eff1)::Nil)), Union(S(FunType(args2, ret2, eff2)), Nil)) =>
           if args1.length =/= args2.length then
             // raise(ErrorReport(msg"Cannot constrain ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
             cctx.err
           else
-            args1.zip(args2).foreach {
-              case (a1, a2) => constrainImpl(a2, a1)
-            }
-            constrainImpl(ret1, ret2)
-            constrainImpl(eff1, eff2)
+            val k=args2.flatMap(x=>Type.disjoint(x,x))
+            if k.isEmpty then
+              args1.zip(args2).foreach {
+                case (a1, a2) => constrainImpl(a2, a1)
+              }
+              constrainImpl(ret1, ret2)
+              constrainImpl(eff1, eff2)
+            else if !k.contains(Nil)then
+              DisjSub(mutable.Map.from(k.flatten),Nil,(ret1,ret2)::(eff1,eff2)::args2.zip(args1)).commit()
+        case (Inter(S(fs:Ls[FunType])), Union(S(FunType(args2, ret2, eff2)), Nil)) =>
+          val f=fs.filter(_.args.length===args2.length)
+          val args=f.map(_.args).transpose
+          val k=args2.flatMap(x=>Type.disjoint(x,x))
+          if!k.contains(Nil)then
+            // assume distinguished by the first arg
+            constrainImpl(args2.head,args.head.foldLeft(Bot:Type)(_|_))
+            args.head.iterator.zip(f).foreach:(a,b)=>
+              val s=args2.zip(b.args).tail
+              Type.disjoint(args2.head.toBasic.simp,a.toBasic.simp)match
+                case N =>
+                  s.foreach((x,y)=>constrainImpl(x,y))
+                  constrainImpl(b.ret,ret2)
+                  constrainImpl(b.eff,eff2)
+                case S(k) =>
+                  val ds=DisjSub(mutable.Map.from(k),Nil,(b.ret,ret2)::(b.eff,eff2)::s)
+                  ds.commit()
         case _ =>
           // raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
           cctx.err

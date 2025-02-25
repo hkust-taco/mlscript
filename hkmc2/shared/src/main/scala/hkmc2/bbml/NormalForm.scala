@@ -76,7 +76,7 @@ object Conj:
   }){}
   lazy val empty: Conj = Conj(Inter.empty, Union.empty, Nil)
   def mkVar(v: InfVar, pol: Bool) = Conj(Inter.empty, Union.empty, (v, pol) :: Nil)
-  def mkInter(inter: ClassLikeType | FunType) =
+  def mkInter(inter: ClassLikeType | Ls[FunType]) =
     Conj(Inter(S(inter)), Union.empty, Nil)
   def mkUnion(union: ClassLikeType | FunType) =
     Conj(Inter.empty, union match {
@@ -85,18 +85,23 @@ object Conj:
     }, Nil)
 
 // * Some(ClassType) -> C[in D_i out D_i], Some(FunType) -> D_1 ->{D_2} D_3, None -> Top
-final case class Inter(v: Opt[ClassLikeType | FunType]) extends NormalForm:
+final case class Inter(v: Opt[ClassLikeType | Ls[FunType]]) extends NormalForm:
   def isTop: Bool = v.isEmpty
   def merge(other: Inter): Option[Inter] = (v, other.v) match
     case (S(ClassLikeType(cls1, targs1)), S(ClassLikeType(cls2, targs2))) if cls1.uid === cls2.uid =>
       S(Inter(S(ClassLikeType(cls1, targs1.lazyZip(targs2).map(_ & _)))))
     case (S(_: ClassLikeType), S(_: ClassLikeType)) => N
-    case (S(FunType(a1, r1, e1)), S(FunType(a2, r2, e2))) =>
-      S(Inter(S(FunType(a1.lazyZip(a2).map(_ | _), r1 & r2, e1 & e2))))
+    // case (S(FunType(a1, r1, e1)), S(FunType(a2, r2, e2))) =>
+    //   S(Inter(S(FunType(a1.lazyZip(a2).map(_ | _), r1 & r2, e1 & e2))))
+    case (S(a:Ls[FunType]),S(b:Ls[FunType]))=>S(Inter(S(a++b)))
     case (S(v), N) => S(Inter(S(v)))
     case (N, v) => S(Inter(v))
     case _ => N
-  def toBasic: BasicType = v.getOrElse(Top)
+  def toBasic: BasicType = v match
+    case N=>Top
+    case S(x:ClassLikeType)=>x
+    case S(Nil)=>Top
+    case S(x:Ls[FunType])=>x.reduce[Type](_&_).toBasic
   def toDnf(using TL): Disj = Disj(Conj(this, Union(N, Nil), Nil) :: Nil)
   override def show(using Scope): Str =
     toBasic.show
@@ -182,7 +187,7 @@ object NormalForm:
     case Bot => Disj.bot
     case v: InfVar => Disj(Conj.mkVar(v, true) :: Nil)
     case ct: ClassLikeType => Disj(Conj.mkInter(ct.toNorm) :: Nil)
-    case ft: FunType => Disj(Conj.mkInter(ft.toNorm) :: Nil)
+    case ft: FunType => Disj(Conj.mkInter(Ls(ft.toNorm)) :: Nil)
     case ComposedType(lhs, rhs, pol) =>
       if pol then union(dnf(lhs), dnf(rhs)) else inter(dnf(lhs), dnf(rhs))
     case NegType(ty) => neg(ty)

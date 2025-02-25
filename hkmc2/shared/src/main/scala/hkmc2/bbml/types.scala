@@ -5,7 +5,7 @@ import mlscript.utils.*, shorthands.*
 import syntax.*
 import semantics.*, semantics.Term.*
 import utils.*
-import scala.collection.mutable.{Set => MutSet}
+import scala.collection.mutable.{Set => MutSet, Map => MutMap}
 import utils.Scope
 import Elaborator.State
 
@@ -281,6 +281,13 @@ object Type:
     then lhs | rhs
     else lhs & rhs
   def mkNegType(ty: Type): Type = ty.!
+  def disjoint(a:Type,b:Type):Opt[Ls[InfVar->BasicType]]=(a,b)match
+    case (Bot,_)|(_,Bot)=>S(Nil)
+    case (ClassLikeType(a,_),ClassLikeType(b,_))if a.uid=/=b.uid=>S(Nil)
+    case (a:ClassLikeType,v:InfVar)=>S(Ls(v->a))
+    case (v:InfVar,a:ClassLikeType)=>S(Ls(v->a))
+    case _=>N
+
 
 // * Poly types can not be used as type arguments
 case class PolyType(tvs: Ls[InfVar], outer: Opt[InfVar], body: GeneralType) extends GeneralType:
@@ -388,3 +395,10 @@ case class PolyFunType(args: Ls[GeneralType], ret: GeneralType, eff: Type) exten
 class VarState:
   var lowerBounds: Ls[Type] = Nil
   var upperBounds: Ls[Type] = Nil
+  val disjsub: MutSet[DisjSub] = MutSet.empty
+
+case class DisjSub(disjoint:MutMap[InfVar,BasicType],dss:Ls[DisjSub],cs:Ls[Type->Type]):
+  def commit()=disjoint.keys.foreach(_.state.disjsub+=this)
+  def remove(v:InfVar)=
+    v.state.disjsub-=this
+    disjoint-=v

@@ -1,0 +1,33 @@
+:bbml
+//│ Type: ⊤
+
+//│ Type: ⊤
+
+fun andt(x)=x&&true
+fun k(f:Nothing->Bool)=1
+fun ap(f)=x=>f(x)
+//│ Type: ⊤
+
+k(andt)
+//│ Type: Int
+
+k(ap(andt))
+//│ Type: Int
+
+fun id:(Int->Int)&(Bool->Bool)
+//│ Type: ⊤
+
+id(1)
+//│ Type: Int
+
+fun ap1(f)=f(1)
+ap1(id)
+//│ Type: Int
+
+ap(id)(1)
+//│ Type: Int
+
+:todo
+x=>id(x)
+//│ Type: (Int ∨ Bool) ->{⊥} ⊥
+
