@@ -10,14 +10,18 @@ Runtime1 = class Runtime {
     };
     this.Unit = new Unit$class;
     this.Unit.class = Unit$class;
-    this.FunctionContFrame = function FunctionContFrame(next1) { return new FunctionContFrame.class(next1); };
+    this.FunctionContFrame = function FunctionContFrame(next1) {
+      return new FunctionContFrame.class(next1);
+    };
     this.FunctionContFrame.class = class FunctionContFrame {
       constructor(next) {
         this.next = next;
       }
       toString() { return "FunctionContFrame(" + globalThis.Predef.render(this.next) + ")"; }
     };
-    this.HandlerContFrame = function HandlerContFrame(next1, nextHandler1, handler1) { return new HandlerContFrame.class(next1, nextHandler1, handler1); };
+    this.HandlerContFrame = function HandlerContFrame(next1, nextHandler1, handler1) {
+      return new HandlerContFrame.class(next1, nextHandler1, handler1);
+    };
     this.HandlerContFrame.class = class HandlerContFrame {
       constructor(next, nextHandler, handler) {
         this.next = next;
@@ -26,7 +30,9 @@ Runtime1 = class Runtime {
       }
       toString() { return "HandlerContFrame(" + globalThis.Predef.render(this.next) + ", " + globalThis.Predef.render(this.nextHandler) + ", " + globalThis.Predef.render(this.handler) + ")"; }
     };
-    this.ContTrace = function ContTrace(next1, last1, nextHandler1, lastHandler1, resumed1) { return new ContTrace.class(next1, last1, nextHandler1, lastHandler1, resumed1); };
+    this.ContTrace = function ContTrace(next1, last1, nextHandler1, lastHandler1, resumed1) {
+      return new ContTrace.class(next1, last1, nextHandler1, lastHandler1, resumed1);
+    };
     this.ContTrace.class = class ContTrace {
       constructor(next, last, nextHandler, lastHandler, resumed) {
         this.next = next;
@@ -37,7 +43,9 @@ Runtime1 = class Runtime {
       }
       toString() { return "ContTrace(" + globalThis.Predef.render(this.next) + ", " + globalThis.Predef.render(this.last) + ", " + globalThis.Predef.render(this.nextHandler) + ", " + globalThis.Predef.render(this.lastHandler) + ", " + globalThis.Predef.render(this.resumed) + ")"; }
     };
-    this.EffectSig = function EffectSig(contTrace1, handler1, handlerFun1) { return new EffectSig.class(contTrace1, handler1, handlerFun1); };
+    this.EffectSig = function EffectSig(contTrace1, handler1, handlerFun1) {
+      return new EffectSig.class(contTrace1, handler1, handlerFun1);
+    };
     this.EffectSig.class = class EffectSig {
       constructor(contTrace, handler, handlerFun) {
         this.contTrace = contTrace;
@@ -46,7 +54,9 @@ Runtime1 = class Runtime {
       }
       toString() { return "EffectSig(" + globalThis.Predef.render(this.contTrace) + ", " + globalThis.Predef.render(this.handler) + ", " + globalThis.Predef.render(this.handlerFun) + ")"; }
     };
-    this.Return = function Return(value1) { return new Return.class(value1); };
+    this.Return = function Return(value1) {
+      return new Return.class(value1);
+    };
     this.Return.class = class Return {
       constructor(value) {
         this.value = value;
@@ -85,12 +95,12 @@ Runtime1 = class Runtime {
     throw globalThis.Error(tmp3);
   } 
   static showFunctionContChain(cont, hl, vis, reps) {
-    let scrut, result, scrut1, scrut2, scrut3, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
+    let scrut, result, scrut1, scrut2, scrut3, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, lambda;
     if (cont instanceof Runtime.FunctionContFrame.class) {
       tmp = cont.constructor.name + "(pc=";
       tmp1 = tmp + cont.pc;
       result = tmp1;
-      tmp2 = (m, marker) => {
+      lambda = function lambda(m, marker) {
         let scrut4, tmp12, tmp13;
         scrut4 = runtime.safeCall(m.has(cont));
         if (scrut4 === true) {
@@ -102,6 +112,7 @@ Runtime1 = class Runtime {
           return runtime.Unit
         }
       };
+      tmp2 = lambda;
       tmp3 = runtime.safeCall(hl.forEach(tmp2));
       scrut1 = runtime.safeCall(vis.has(cont));
       if (scrut1 === true) {
@@ -140,10 +151,10 @@ Runtime1 = class Runtime {
     }
   } 
   static showHandlerContChain(cont1, hl1, vis1, reps1) {
-    let scrut, result, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+    let scrut, result, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, lambda;
     if (cont1 instanceof Runtime.HandlerContFrame.class) {
       result = cont1.handler.constructor.name;
-      tmp = (m, marker) => {
+      lambda = function lambda(m, marker) {
         let scrut3, tmp8, tmp9;
         scrut3 = runtime.safeCall(m.has(cont1));
         if (scrut3 === true) {
@@ -155,6 +166,7 @@ Runtime1 = class Runtime {
           return runtime.Unit
         }
       };
+      tmp = lambda;
       tmp1 = runtime.safeCall(hl1.forEach(tmp));
       scrut1 = runtime.safeCall(vis1.has(cont1));
       if (scrut1 === true) {
