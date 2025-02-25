@@ -163,14 +163,14 @@ fun baz() =
 //│   z = function z() {
 //│     return 2
 //│   };
-//│   lambda = function lambda(x, y) {
+//│   lambda = (undefined, function (x, y) {
 //│     let tmp1, tmp2, tmp3, tmp4;
 //│     tmp1 = x + y;
 //│     tmp2 = w();
 //│     tmp3 = tmp1 + tmp2;
 //│     tmp4 = z();
 //│     return tmp3 + tmp4
-//│   };
+//│   } );
 //│   return lambda
 //│ };
 

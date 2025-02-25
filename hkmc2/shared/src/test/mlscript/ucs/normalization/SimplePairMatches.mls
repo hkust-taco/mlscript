@@ -10,7 +10,7 @@ class B
 x => if x is Pair(A, B) then 1
 //│ JS (unsanitized):
 //│ let lambda;
-//│ lambda = function lambda(x) {
+//│ lambda = (undefined, function (x) {
 //│   let param0, param1;
 //│   if (x instanceof Pair1.class) {
 //│     param0 = x.a;
@@ -27,9 +27,9 @@ x => if x is Pair(A, B) then 1
 //│   } else {
 //│     throw new globalThis.Error("match error");
 //│   }
-//│ };
+//│ } );
 //│ lambda
-//│ = [function lambda]
+//│ = [function]
 
 
 // :e // FIXME: should be an exhaustiveness error

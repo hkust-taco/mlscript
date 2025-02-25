@@ -131,7 +131,7 @@ class BuiltinSymbol
 
 /** This is the outside-facing symbol associated to a possibly-overloaded
   * definition living in a block – e.g., a module or class. */
-class BlockMemberSymbol(val nme: Str, val trees: Ls[Tree])(using State)
+class BlockMemberSymbol(val nme: Str, val trees: Ls[Tree], val isTmp: Bool = false)(using State)
     extends MemberSymbol[Definition]:
   
   def toLoc: Option[Loc] = Loc(trees)

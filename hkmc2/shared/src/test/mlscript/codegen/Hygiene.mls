@@ -56,14 +56,14 @@ f()
 //│ JS (unsanitized):
 //│ let x, f, x1, lambda;
 //│ x = 1;
-//│ lambda = function lambda() {
+//│ lambda = (undefined, function () {
 //│   return x
-//│ };
+//│ } );
 //│ f = lambda;
 //│ x1 = 2;
 //│ runtime.safeCall(f())
 //│ = 1
-//│ f = [function lambda]
+//│ f = [function]
 //│ x = 2
 
 

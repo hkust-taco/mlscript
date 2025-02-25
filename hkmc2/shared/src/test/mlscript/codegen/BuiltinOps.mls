@@ -20,7 +20,7 @@
 //│ = 2
 
 +
-//│ = [function lambda]
+//│ = [function]
 
 // * A bit confusing... but at least there's a warning!
 :w
@@ -42,7 +42,7 @@
 //│ ═══[RUNTIME ERROR] Error: Cannot call non-unary builtin symbol '*'
 
 (+)
-//│ = [function lambda]
+//│ = [function]
 
 (+)(2, 3)
 //│ = 5
@@ -59,7 +59,7 @@
 //│ ═══[RUNTIME ERROR] Error: Cannot call non-unary builtin symbol '*'
 
 id(+)
-//│ = [function lambda]
+//│ = [function]
 
 id(+)(1, 2)
 //│ = 3
@@ -75,9 +75,9 @@ id(+)(1, 2)
 id(+)(1)
 //│ JS (unsanitized):
 //│ let tmp1, lambda4;
-//│ lambda4 = function lambda(arg1, arg2) {
+//│ lambda4 = (undefined, function (arg1, arg2) {
 //│   return arg1 + arg2
-//│ };
+//│ } );
 //│ tmp1 = Predef.id(lambda4);
 //│ runtime.safeCall(tmp1(1))
 //│ ═══[RUNTIME ERROR] Error: Function 'lambda' expected 2 arguments but got 1
@@ -96,9 +96,9 @@ fun (+) lol(a, b) = [a, b]
 id(~)(2)
 //│ JS (unsanitized):
 //│ let tmp2, lambda5;
-//│ lambda5 = function lambda(arg) {
+//│ lambda5 = (undefined, function (arg) {
 //│   return ~ arg
-//│ };
+//│ } );
 //│ tmp2 = Predef.id(lambda5);
 //│ runtime.safeCall(tmp2(2))
 //│ = -3
@@ -108,7 +108,7 @@ id(~)(2)
 
 
 typeof
-//│ = [function lambda]
+//│ = [function]
 
 typeof(1)
 //│ = "number"

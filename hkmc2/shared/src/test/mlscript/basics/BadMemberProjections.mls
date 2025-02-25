@@ -11,11 +11,11 @@
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ JS (unsanitized):
 //│ let lambda;
-//│ lambda = function lambda(self, ...args) {
+//│ lambda = (undefined, function (self, ...args) {
 //│   return runtime.safeCall(self.x(...args))
-//│ };
+//│ } );
 //│ lambda
-//│ = [function lambda]
+//│ = [function]
 
 :ssjs
 :e
@@ -27,12 +27,12 @@
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ JS:
-//│ lambda1 = function lambda(...args1) {
+//│ lambda1 = (undefined, function (...args1) {
 //│   globalThis.Predef.checkArgs("lambda", 1, false, args1.length);
 //│   let self = args1[0];
 //│   let args = globalThis.Predef.tupleSlice(args1, 1, 0);
 //│   return runtime.safeCall(self.x(...args))
-//│ };
+//│ } );
 //│ block$res2 = runtime.checkCall(lambda1());
 //│ undefined
 //│ ═══[RUNTIME ERROR] Error: Function 'lambda' expected at least 1 argument but got 0
@@ -56,7 +56,7 @@ let x = 1
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
-//│ = [function lambda]
+//│ = [function]
 
 :e
 "A" ::x
@@ -65,6 +65,6 @@ let x = 1
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
-//│ = [function lambda]
+//│ = [function]
 
 

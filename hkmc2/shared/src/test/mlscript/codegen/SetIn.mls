@@ -80,9 +80,9 @@ example()
 //│ example2 = function example() {
 //│   let x2, get_x, old1, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, lambda;
 //│   x2 = 0;
-//│   lambda = function lambda() {
+//│   lambda = (undefined, function () {
 //│     return x2
-//│   };
+//│   } );
 //│   get_x = lambda;
 //│   old1 = x2;
 //│   try {
@@ -121,9 +121,9 @@ example()
 //│ example3 = function example() {
 //│   let x2, get_x, y, old1, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, lambda;
 //│   x2 = 0;
-//│   lambda = function lambda() {
+//│   lambda = (undefined, function () {
 //│     return x2
-//│   };
+//│   } );
 //│   get_x = lambda;
 //│   old1 = x2;
 //│   try {

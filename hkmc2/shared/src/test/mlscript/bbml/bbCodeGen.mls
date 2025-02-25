@@ -53,8 +53,8 @@ false
 :sjs
 (x => x): [T] -> T -> T
 //│ JS (unsanitized):
-//│ let lambda; lambda = function lambda(x1) { return x1 }; lambda
-//│ = [function lambda]
+//│ let lambda; lambda = (undefined, function (x1) { return x1 } ); lambda
+//│ = [function]
 //│ Type: ['T] -> ('T) ->{⊥} 'T
 
 
@@ -151,7 +151,7 @@ fun pow(x) = case
 //│ let pow;
 //│ pow = function pow(x1) {
 //│   let lambda1;
-//│   lambda1 = function lambda(caseScrut) {
+//│   lambda1 = (undefined, function (caseScrut) {
 //│     let n, tmp2, tmp3, tmp4;
 //│     if (caseScrut === 0) {
 //│       return 1
@@ -162,7 +162,7 @@ fun pow(x) = case
 //│       tmp4 = runtime.safeCall(tmp2(tmp3));
 //│       return x1 * tmp4
 //│     }
-//│   };
+//│   } );
 //│   return lambda1
 //│ };
 //│ Type: ⊤
@@ -176,7 +176,7 @@ fun not = case
 //│ let not;
 //│ not = function not() {
 //│   let lambda1;
-//│   lambda1 = function lambda(caseScrut) {
+//│   lambda1 = (undefined, function (caseScrut) {
 //│     if (caseScrut === true) {
 //│       return false
 //│     } else if (caseScrut === false) {
@@ -184,7 +184,7 @@ fun not = case
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }
-//│   };
+//│   } );
 //│   return lambda1
 //│ };
 //│ Type: ⊤
@@ -207,7 +207,7 @@ fun fact = case
 //│ let fact;
 //│ fact = function fact() {
 //│   let lambda1;
-//│   lambda1 = function lambda(caseScrut) {
+//│   lambda1 = (undefined, function (caseScrut) {
 //│     let n, tmp3, tmp4, tmp5;
 //│     if (caseScrut === 0) {
 //│       return 1
@@ -218,7 +218,7 @@ fun fact = case
 //│       tmp5 = tmp3(tmp4);
 //│       return n * tmp5
 //│     }
-//│   };
+//│   } );
 //│   return lambda1
 //│ };
 //│ Type: ⊤

@@ -5,7 +5,7 @@
 () => (while true then 0)
 //│ JS (unsanitized):
 //│ let lambda;
-//│ lambda = function lambda() {
+//│ lambda = (undefined, function () {
 //│   let scrut, tmp;
 //│   tmp1: while (true) {
 //│     scrut = true;
@@ -18,13 +18,13 @@
 //│     break;
 //│   }
 //│   return tmp
-//│ };
+//│ } );
 //│ lambda
-//│ = [function lambda]
+//│ = [function]
 
 () =>
   while true then 0
-//│ = [function lambda]
+//│ = [function]
 
 
 let x = true
@@ -106,7 +106,7 @@ while
   i < 10 do set i += 1
 //│ JS (unsanitized):
 //│ let lambda2;
-//│ lambda2 = function lambda() {
+//│ lambda2 = (undefined, function () {
 //│   let i2, scrut3, tmp19, tmp20;
 //│   tmp21: while (true) {
 //│     i2 = 0;
@@ -122,9 +122,9 @@ while
 //│     break;
 //│   }
 //│   return tmp20
-//│ };
+//│ } );
 //│ lambda2
-//│ = [function lambda]
+//│ = [function]
 
 
 let i = 0 in
@@ -252,7 +252,7 @@ while false do
 
 
 () => while true then 0
-//│ = [function lambda]
+//│ = [function]
 
 :fixme
 while print("Hello World"); false

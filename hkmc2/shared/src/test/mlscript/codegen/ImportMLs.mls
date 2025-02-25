@@ -28,10 +28,10 @@ None isDefined()
 //│ = false
 
 case Some(x) then x
-//│ = [function lambda]
+//│ = [function]
 
 case { Some(x) then x }
-//│ = [function lambda]
+//│ = [function]
 
 Some(1) isDefined()
 //│ = true

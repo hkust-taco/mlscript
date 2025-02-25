@@ -181,9 +181,12 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           case FunDefn(own, sym, ps :: pss, bod) =>
             val result = pss.foldRight(bod):
               case (ps, block) => 
-                Return(Lam(ps, block), false)
+                Return(Lam(ps, block), false)              
             val (params, bodyDoc) = setupFunction(some(sym.nme), ps, result)
-            doc"${getVar(sym)} = function ${sym.nme}($params) ${ braced(bodyDoc) };"
+            if sym.isTmp then
+              doc"${getVar(sym)} = (undefined, function ($params) ${ braced(bodyDoc) } );"
+            else
+              doc"${getVar(sym)} = function ${sym.nme}($params) ${ braced(bodyDoc) };"
           case ClsLikeDefn(ownr, isym, sym, kind, paramsOpt, auxParams, par, mtds, privFlds, _pubFlds, preCtor, ctor) =>
             // * Note: `_pubFlds` is not used because in JS, fields are not declared
             val clsParams = paramsOpt.fold(Nil)(_.paramSyms)

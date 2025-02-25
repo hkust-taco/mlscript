@@ -59,7 +59,7 @@ test2
 test2()
 //│ JS (unsanitized):
 //│ test21()
-//│ = [function lambda]
+//│ = [function]
 //│ Type: Int -> Int
 
 :ssjs
@@ -86,14 +86,14 @@ fun test2() =
 //│   let funny, tmp1;
 //│   funny = function funny() {
 //│     let lambda;
-//│     lambda = function lambda(caseScrut) {
+//│     lambda = (undefined, function (caseScrut) {
 //│       let n, tmp2, tmp3, tmp4;
 //│       n = caseScrut;
 //│       tmp2 = funny();
 //│       tmp3 = n - 1;
 //│       tmp4 = tmp2(tmp3);
 //│       return tmp4 + 1
-//│     };
+//│     } );
 //│     return lambda
 //│   };
 //│   tmp1 = funny();

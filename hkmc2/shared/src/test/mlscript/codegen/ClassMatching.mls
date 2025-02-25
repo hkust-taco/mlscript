@@ -58,7 +58,7 @@ if s is
 x => if x is Some(x) then x
 //│ JS (unsanitized):
 //│ let lambda;
-//│ lambda = function lambda(x3) {
+//│ lambda = (undefined, function (x3) {
 //│   let param04, x4;
 //│   if (x3 instanceof Some1.class) {
 //│     param04 = x3.value;
@@ -67,9 +67,9 @@ x => if x is Some(x) then x
 //│   } else {
 //│     throw new globalThis.Error("match error");
 //│   }
-//│ };
+//│ } );
 //│ lambda
-//│ = [function lambda]
+//│ = [function]
 
 
 class C(a)

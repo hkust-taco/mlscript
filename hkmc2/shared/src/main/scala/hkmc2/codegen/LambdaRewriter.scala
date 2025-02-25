@@ -14,7 +14,7 @@ object LambdaRewriter:
       val lambdaRewriter = new BlockDataTransformer(SymbolSubst()):
         override def applyValue(v: Value): Value = v match
           case lam: Value.Lam => 
-            val sym = BlockMemberSymbol("lambda", Nil)
+            val sym = BlockMemberSymbol("lambda", Nil, true)
             lambdasList ::= (sym -> super.applyLam(lam))
             Value.Ref(sym)
           case _ => super.applyValue(v)

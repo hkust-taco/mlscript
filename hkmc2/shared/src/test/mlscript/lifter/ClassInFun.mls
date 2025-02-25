@@ -21,11 +21,11 @@ f() + f() + f()
 //│ lambda$ = function lambda$(Handler$h$$instance, k) {
 //│   return runtime.safeCall(k())
 //│ };
-//│ lambda = function lambda(Handler$h$$instance) {
+//│ lambda = (undefined, function (Handler$h$$instance) {
 //│   return (k) => {
 //│     return lambda$(Handler$h$$instance, k)
 //│   }
-//│ };
+//│ } );
 //│ Handler$h$1 = class Handler$h$ extends Effect1 {
 //│   constructor() {
 //│     let tmp1;

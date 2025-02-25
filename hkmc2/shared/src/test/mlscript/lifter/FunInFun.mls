@@ -551,19 +551,19 @@ fun f(x, cond) =
 //│ lambda$1 = function lambda$(x1) {
 //│   return x1
 //│ };
-//│ lambda = function lambda(x1) {
+//│ lambda = (undefined, function (x1) {
 //│   return () => {
 //│     return lambda$1(x1)
 //│   }
-//│ };
+//│ } );
 //│ lambda$ = function lambda$(x1) {
 //│   return x1
 //│ };
-//│ lambda1 = function lambda(x1) {
+//│ lambda1 = (undefined, function (x1) {
 //│   return () => {
 //│     return lambda$(x1)
 //│   }
-//│ };
+//│ } );
 //│ f19 = function f(x1, cond) {
 //│   x1 = 1;
 //│   x1 = 2;

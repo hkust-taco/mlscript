@@ -134,7 +134,7 @@ case
 //│     rest = Return: \
 //│     res = Lit of UnitLit of false
 //│     implct = true
-//│ = [function lambda]
+//│ = [function]
 
 
 // TODO support:

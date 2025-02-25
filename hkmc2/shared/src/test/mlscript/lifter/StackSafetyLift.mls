@@ -97,11 +97,11 @@ hi(0)
 //│   runtime.stackOffset = runtime.stackDepth;
 //│   return resume()
 //│ };
-//│ lambda = function lambda(StackDelay$$instance) {
+//│ lambda = (undefined, function (StackDelay$$instance) {
 //│   return (resume) => {
 //│     return lambda$(StackDelay$$instance, resume)
 //│   }
-//│ };
+//│ } );
 //│ StackDelay$1 = class StackDelay$ extends runtime.StackDelay {
 //│   constructor() {
 //│     let tmp;
@@ -286,11 +286,11 @@ sum(10000)
 //│   runtime.stackOffset = runtime.stackDepth;
 //│   return resume()
 //│ };
-//│ lambda1 = function lambda(StackDelay$$instance) {
+//│ lambda1 = (undefined, function (StackDelay$$instance) {
 //│   return (resume) => {
 //│     return lambda$1(StackDelay$$instance, resume)
 //│   }
-//│ };
+//│ } );
 //│ StackDelay$3 = class StackDelay$2 extends runtime.StackDelay {
 //│   constructor() {
 //│     let tmp;
