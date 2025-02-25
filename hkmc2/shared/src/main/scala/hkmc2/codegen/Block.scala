@@ -433,6 +433,7 @@ case class Instantiate(cls: Path, args: Ls[Path]) extends Result
 
 sealed abstract class Path extends Result:
   def selN(id: Tree.Ident): Path = Select(this, id)(N)
+  def sel(id: Tree.Ident, sym: FieldSymbol): Path = Select(this, id)(S(sym))
   def selSN(id: Str): Path = selN(new Tree.Ident(id))
   def asArg = Arg(false, this)
 

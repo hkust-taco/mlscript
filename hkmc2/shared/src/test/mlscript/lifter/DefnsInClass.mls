@@ -118,20 +118,24 @@ A(1).getA()
 //│ ═══[RUNTIME ERROR] TypeError: this.B is not a function
 //│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
 
-:sjs
+:ssjs
 class A with
   val x = 
     fun g() = 2
     g
 (new A).x()
-//│ JS (unsanitized):
-//│ let g, A5, tmp2, g$;
-//│ g$ = function g$(A$instance) {
+//│ JS:
+//│ g$ = function g$(...args) {
+//│   globalThis.Predef.checkArgs("g$", 1, true, args.length);
+//│   let A$instance = args[0];
 //│   return 2
 //│ };
-//│ g = function g(A$instance) {
-//│   return () => {
-//│     return g$(A$instance)
+//│ g = function g(...args) {
+//│   globalThis.Predef.checkArgs("g", 1, true, args.length);
+//│   let A$instance = args[0];
+//│   return (...args1) => {
+//│     globalThis.Predef.checkArgs("", 0, true, args1.length);
+//│     return runtime.checkCall(g$(A$instance))
 //│   }
 //│ };
 //│ A5 = class A4 {
@@ -143,5 +147,6 @@ class A with
 //│   toString() { return "A"; }
 //│ };
 //│ tmp2 = new A5();
-//│ runtime.safeCall(tmp2.x())
+//│ block$res5 = runtime.safeCall(tmp2.x());
+//│ undefined
 //│ = 2
