@@ -320,9 +320,11 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
   // returns (ignored classes, modules, objects)
   def createMetadata(d: Defn, ctx: LifterCtx): (Set[BlockMemberSymbol], List[ClsLikeDefn], List[ClsLikeDefn]) =
     var ignored: Set[BlockMemberSymbol] = Set.empty
+    var unliftable: Set[BlockMemberSymbol] = Set.empty
     var clsSymToBms: Map[Local, BlockMemberSymbol] = Map.empty
     var modules: List[ClsLikeDefn] = Nil
     var objects: List[ClsLikeDefn] = Nil
+    var extendsGraph: Set[(BlockMemberSymbol, BlockMemberSymbol)] = Set.empty
 
     d match
       case c @ ClsLikeDefn(k = syntax.Mod) => modules +:= c
@@ -364,7 +366,8 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
 
     val inModTopLevel = if isMod then inModuleDefns(d) else Set.empty
     ignored ++= inModTopLevel
-
+    
+    // search for unliftable classes and build the extends graph
     val clsSyms = clsSymToBms.values.toSet
     new BlockTraverser(SymbolSubst()):
       applyDefn(d)
@@ -378,6 +381,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
                 N, Diagnostic.Source.Compilation
               ))
               ignored += value
+              unliftable += value
             case _ => ()
           case _ => ()
 
@@ -400,18 +404,23 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           own.mapConserve(_.subst)
           isym.subst
           sym.subst
-          // Check if `extends` is a complex expression, i.e. not just extending a class
+          // Check if `extends` is a complex expression, i.e. not just extending a class.
+          // If it's just a class, add it to an graph where edges are class extensions.
+          // If B extends A, then A -> B is an edge
           parentPath match
             case None => ()
             case Some(path) if isHandlerClsPath(path) => ()
-            case Some(Select(RefOfBms(s), Tree.Ident("class"))) if !ignored.contains(s) => ()
-            case Some(RefOfBms(s)) if !ignored.contains(s) => ()
+            case Some(Select(RefOfBms(s), Tree.Ident("class"))) =>
+               if clsSyms.contains(s) then extendsGraph += (s -> defn.sym)
+            case Some(RefOfBms(s)) =>
+               if clsSyms.contains(s) then extendsGraph += (s -> defn.sym)
             case _ if !ignored.contains(defn.sym) =>
               raise(WarningReport(
-                msg"Cannot yet lift class/module `${sym.nme}` as it extends a first-class class or an expression." -> N :: Nil,
+                msg"Cannot yet lift class/module `${sym.nme}` as it extends an expression." -> N :: Nil,
                 N, Diagnostic.Source.Compilation
               ))
               ignored += defn.sym
+              unliftable += defn.sym
             case _ => ()
           paramsOpt.map(applyParamList)
           auxParams.map(applyParamList)
@@ -428,9 +437,30 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
             N, Diagnostic.Source.Compilation
           ))
           ignored += l
+          unliftable += l
         case _ => super.applyValue(v)
 
-    (ignored, modules, objects)
+    // analyze the extends graph
+    val extendsEdges = extendsGraph.groupBy(_._1).map:
+        case (a, bs) => a -> bs.map(_._2)
+      .toMap
+    var newUnliftable: Set[BlockMemberSymbol] = Set.empty
+    // dfs starting from unliftable classes
+    def dfs(s: BlockMemberSymbol): Unit =
+      for 
+        edges <- extendsEdges.get(s)
+        b <- edges if !newUnliftable.contains(b) && !ignored.contains(b) 
+      do 
+        raise(WarningReport(
+          msg"Cannot yet lift class/module `${b.nme}` as it extends an unliftable class." -> N :: Nil,
+          N, Diagnostic.Source.Compilation
+        ))
+        newUnliftable += b
+        dfs(b)
+    for s <- ignored do
+      dfs(s)
+    
+    (ignored ++ newUnliftable, modules, objects)
 
   extension (b: Block)
     private def floatOut(ctx: LifterCtx) =
