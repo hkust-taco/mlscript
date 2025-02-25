@@ -113,10 +113,9 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
     case S(c: ClsLikeDefn) => c.k is syntax.Mod
     case _ => false
     
-  def isContClassPth(p: Path) = handlerPaths match
+  def isHandlerClsPath(p: Path) = handlerPaths match
     case None => false
-    case Some(paths) => paths.contClsPath eq p
-  
+    case Some(paths) => paths.isHandlerClsPath(p)
   
   private val blkMutCache: MutMap[Local, AccessInfo] = MutMap.empty
   private def blkAccessesShallow(b: Block, cacheId: Opt[Local] = N): AccessInfo =
@@ -328,7 +327,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
             // special case continuation classes
             defn match
               case c: ClsLikeDefn => c.parentPath match
-                case S(path) if isContClassPth(path) => return
+                case S(path) if isHandlerClsPath(path) => return
                     // treat the continuation class as if it does not exist
                 case _ => ()
               case _ => ()

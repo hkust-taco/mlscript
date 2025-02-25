@@ -586,18 +586,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
 
   def topLevel(t: st): Block =
     val res = LambdaRewriter.desugar(term(t)(ImplctRet)(using Subst.empty))
+    val handlerPaths = new HandlerPaths
     val stackSafe = config.stackSafety match
       case N => res
-      case S(sts) => StackSafeTransform(sts.stackLimit).transformTopLevel(res)
-    val (withHandlers, handlerPaths) = 
-      if lowerHandlers then 
-        val (b, paths) = HandlerLowering().translateTopLevel(stackSafe)
-        (b, S(paths))
-      else (stackSafe, N)
+      case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths).transformTopLevel(res)
+    val withHandlers = if lowerHandlers 
+      then HandlerLowering(handlerPaths).translateTopLevel(stackSafe)
+      else stackSafe
     val flattened = withHandlers.flattened
     
     val lifted = 
-      if lift then Lifter(handlerPaths).transform(flattened)
+      if lift then Lifter(S(handlerPaths)).transform(flattened)
       else flattened
     
     MergeMatchArmTransformer.applyBlock(lifted)

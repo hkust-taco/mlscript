@@ -208,6 +208,10 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
   object LifterCtx:
     def empty = LifterCtx()
     def withLocals(u: UsedLocalsMap) = empty.copy(usedLocals = u)
+    
+  def isHandlerClsPath(p: Path) = handlerPaths match
+    case None => false
+    case Some(paths) => paths.isHandlerClsPath(p)
   
   /**
     * Creates a capture class for a function consisting of its mutable (and possibly immutable) local variables.
@@ -396,23 +400,19 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           own.mapConserve(_.subst)
           isym.subst
           sym.subst
-          // `parentPath` is currently not checked, as checking it as shown below breaks lowering continuation classes
-          // and other handler-related classes.
-          /*
           // Check if `extends` is a complex expression, i.e. not just extending a class
           parentPath match
             case None => ()
+            case Some(path) if isHandlerClsPath(path) => ()
             case Some(Select(RefOfBms(s), Tree.Ident("class"))) if !ignored.contains(s) => ()
             case Some(RefOfBms(s)) if !ignored.contains(s) => ()
             case _ if !ignored.contains(defn.sym) =>
-              println(parentPath)
               raise(WarningReport(
                 msg"Cannot yet lift class/module `${sym.nme}` as it extends a first-class class or an expression." -> N :: Nil,
                 N, Diagnostic.Source.Compilation
               ))
               ignored += defn.sym
             case _ => ()
-          */
           paramsOpt.map(applyParamList)
           auxParams.map(applyParamList)
           methods.map(applyFunDefn)

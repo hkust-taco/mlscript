@@ -63,8 +63,12 @@ class HandlerPaths(using Elaborator.State):
   val retClsSym: ClassSymbol = State.returnClsSymbol
   val mkEffectPath: Path = runtimePath.selN(Tree.Ident("mkEffect"))
   val handleBlockImplPath: Path = runtimePath.selN(Tree.Ident("handleBlockImpl"))
+  val stackDelayClsPath: Path = runtimePath.selN(Tree.Ident("StackDelay"))
+  
+  def isHandlerClsPath(p: Path) =
+    (p eq contClsPath)  || (p eq stackDelayClsPath) || (p eq effectSigPath) || (p eq retClsPath)
 
-class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
+class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, Elaborator.Ctx):
 
   private def funcLikeHandlerCtx(ctorThis: Option[Path], isHandlerMtd: Bool, nme: Str) =
     HandlerCtx(!isHandlerMtd, false, isHandlerMtd, false, nme, ctorThis, state =>
@@ -79,8 +83,6 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   private def ctorCtx(ctorThis: Path, nme: Str) = funcLikeHandlerCtx(S(ctorThis), false, nme)
   private def handlerMtdCtx(nme: Str) = funcLikeHandlerCtx(N, true, nme)
   private def handlerCtx(using HandlerCtx): HandlerCtx = summon
-  
-  private val paths = new HandlerPaths
   
   private def freshTmp(dbgNme: Str = "tmp") = new TempSymbol(N, dbgNme)
   
@@ -574,6 +576,6 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     
     transform.applyBlock(b)
 
-  def translateTopLevel(b: Block): (Block, HandlerPaths) =
-    (translateBlock(b, topLevelCtx(s"Cont$$topLevel$$BAD")), paths)
+  def translateTopLevel(b: Block): Block =
+    translateBlock(b, topLevelCtx(s"Cont$$topLevel$$BAD"))
     
