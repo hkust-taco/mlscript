@@ -164,9 +164,11 @@ str
 //│         tmp12 = super();
 //│       }
 //│       perform(arg) {
-//│         return runtime.mkEffect(h1, (k) => {
+//│         return runtime.mkEffect(this, (k) => {
 //│           let tmp12, tmp13, tmp14, Cont$handler$h1$RecursiveHandlers$_mls_L139_58_1301;
-//│           Cont$handler$h1$RecursiveHandlers$_mls_L139_58_1301 = function Cont$handler$h1$RecursiveHandlers$_mls_L139_58_130(pc1) { return new Cont$handler$h1$RecursiveHandlers$_mls_L139_58_130.class(pc1); };
+//│           Cont$handler$h1$RecursiveHandlers$_mls_L139_58_1301 = function Cont$handler$h1$RecursiveHandlers$_mls_L139_58_130(pc1) {
+//│             return new Cont$handler$h1$RecursiveHandlers$_mls_L139_58_130.class(pc1);
+//│           };
 //│           Cont$handler$h1$RecursiveHandlers$_mls_L139_58_1301.class = class Cont$handler$h1$RecursiveHandlers$_mls_L139_58_130 extends runtime.FunctionContFrame.class {
 //│             constructor(pc) {
 //│               let tmp15;
@@ -210,14 +212,12 @@ str
 //│           return runtime.Unit
 //│         })
 //│       }
-//│       toString() { return "Handler$h1$(" + "" + ")"; }
-//│     };
-//│     h1 = Handler$h1$2();
-//│     Cont$16 = function Cont$(pc1) {
-//│       return new Cont$.class(pc1);
+//│       toString() { return "Handler$h1$"; }
 //│     };
 //│     h1 = new Handler$h1$2();
-//│     Cont$handleBlock$h1$2 = function Cont$handleBlock$h1$(pc1) { return new Cont$handleBlock$h1$.class(pc1); };
+//│     Cont$handleBlock$h1$2 = function Cont$handleBlock$h1$(pc1) {
+//│       return new Cont$handleBlock$h1$.class(pc1);
+//│     };
 //│     Cont$handleBlock$h1$2.class = class Cont$handleBlock$h1$1 extends runtime.FunctionContFrame.class {
 //│       constructor(pc) {
 //│         let tmp12;
@@ -251,9 +251,11 @@ str
 //│           tmp13 = super();
 //│         }
 //│         perform(arg) {
-//│           return runtime.mkEffect(h2, (k) => {
+//│           return runtime.mkEffect(this, (k) => {
 //│             let tmp13, tmp14, tmp15, tmp16, tmp17, Cont$handler$h2$RecursiveHandlers$_mls_L139_165_2491;
-//│             Cont$handler$h2$RecursiveHandlers$_mls_L139_165_2491 = function Cont$handler$h2$RecursiveHandlers$_mls_L139_165_249(pc1) { return new Cont$handler$h2$RecursiveHandlers$_mls_L139_165_249.class(pc1); };
+//│             Cont$handler$h2$RecursiveHandlers$_mls_L139_165_2491 = function Cont$handler$h2$RecursiveHandlers$_mls_L139_165_249(pc1) {
+//│               return new Cont$handler$h2$RecursiveHandlers$_mls_L139_165_249.class(pc1);
+//│             };
 //│             Cont$handler$h2$RecursiveHandlers$_mls_L139_165_2491.class = class Cont$handler$h2$RecursiveHandlers$_mls_L139_165_249 extends runtime.FunctionContFrame.class {
 //│               constructor(pc) {
 //│                 let tmp18;
@@ -300,14 +302,12 @@ str
 //│             return runtime.Unit
 //│           })
 //│         }
-//│         toString() { return "Handler$h2$(" + "" + ")"; }
-//│       };
-//│       h2 = Handler$h2$2();
-//│       Cont$17 = function Cont$(pc1) {
-//│         return new Cont$.class(pc1);
+//│         toString() { return "Handler$h2$"; }
 //│       };
 //│       h2 = new Handler$h2$2();
-//│       Cont$handleBlock$h2$2 = function Cont$handleBlock$h2$(pc1) { return new Cont$handleBlock$h2$.class(pc1); };
+//│       Cont$handleBlock$h2$2 = function Cont$handleBlock$h2$(pc1) {
+//│         return new Cont$handleBlock$h2$.class(pc1);
+//│       };
 //│       Cont$handleBlock$h2$2.class = class Cont$handleBlock$h2$1 extends runtime.FunctionContFrame.class {
 //│         constructor(pc) {
 //│           let tmp13;
@@ -341,19 +341,19 @@ str
 //│       };
 //│       tmp12 = runtime.safeCall(h2.perform(runtime.Unit));
 //│       if (tmp12 instanceof runtime.EffectSig.class) {
-//│         tmp12.contTrace.last.next = new Cont$handleBlock$h2$2(0, null);
+//│         tmp12.contTrace.last.next = Cont$handleBlock$h2$2(0);
 //│         return runtime.handleBlockImpl(tmp12, h2)
 //│       }
 //│       res7 = runtime.safeCall(h1.perform(runtime.Unit));
 //│       if (res7 instanceof runtime.EffectSig.class) {
-//│         res7.contTrace.last.next = new Cont$handleBlock$h2$2(1, null);
+//│         res7.contTrace.last.next = Cont$handleBlock$h2$2(1);
 //│         return runtime.handleBlockImpl(res7, h2)
 //│       }
 //│       return res7
 //│     };
 //│     tmp11 = handleBlock$8();
 //│     if (tmp11 instanceof runtime.EffectSig.class) {
-//│       tmp11.contTrace.last.next = new Cont$handleBlock$h1$2(4, null);
+//│       tmp11.contTrace.last.next = Cont$handleBlock$h1$2(4);
 //│       return runtime.handleBlockImpl(tmp11, h1)
 //│     }
 //│     if (tmp11 instanceof runtime.Return.class) {

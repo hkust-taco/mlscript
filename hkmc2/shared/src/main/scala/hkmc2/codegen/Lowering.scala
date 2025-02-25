@@ -589,13 +589,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val stackSafe = config.stackSafety match
       case N => res
       case S(sts) => StackSafeTransform(sts.stackLimit).transformTopLevel(res)
-    val withHandlers = if lowerHandlers
-      then HandlerLowering().translateTopLevel(stackSafe)
-      else stackSafe
+    val (withHandlers, handlerPaths) = 
+      if lowerHandlers then 
+        val (b, paths) = HandlerLowering().translateTopLevel(stackSafe)
+        (b, S(paths))
+      else (stackSafe, N)
     val flattened = withHandlers.flattened
     
     val lifted = 
-      if lift then Lifter().transform(flattened)
+      if lift then Lifter(handlerPaths).transform(flattened)
       else flattened
     
     MergeMatchArmTransformer.applyBlock(lifted)

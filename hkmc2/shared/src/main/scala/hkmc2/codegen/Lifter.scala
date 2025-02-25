@@ -112,18 +112,12 @@ object Lifter:
     case c: ClsLikeDefn => (c.k is syntax.Mod) || (c.k is syntax.Obj)
     case _ => false
 
-  // TODO: this is very unclean
-  def isContClassPth(p: Path)(using s: State) = p match
-    case Select(Select(Select(Value.Ref(s.globalThisSymbol), Tree.Ident("Predef")), 
-      Tree.Ident("__Cont")), Tree.Ident("class")) => true
-    case _ => false
-
 
 /**
   * Lifts classes and functions to the top-level. Also automatically rewrites lambdas.
   * Assumes the input block does not have any `HandleBlock`s.
   */
-class Lifter(using State, Raise):
+class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
   import Lifter.*
 
   /**
@@ -953,7 +947,7 @@ class Lifter(using State, Raise):
     // so we need to desugar them again
     val blk = LambdaRewriter.desugar(b)
 
-    val analyzer = UsedVarAnalyzer(blk)
+    val analyzer = UsedVarAnalyzer(blk, handlerPaths)
     val ctx = LifterCtx
       .withLocals(analyzer.findUsedLocals)
       .withDefns(analyzer.defnsMap)

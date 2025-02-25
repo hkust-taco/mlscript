@@ -17,7 +17,7 @@ import scala.collection.mutable.Map as MutMap
   *
   * Assumes the input trees have no lambdas.
   */
-class UsedVarAnalyzer(b: Block)(using State):
+class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
   import Lifter.*
 
   private case class DefnMetadata(
@@ -112,6 +112,11 @@ class UsedVarAnalyzer(b: Block)(using State):
   def isModule(s: BlockMemberSymbol) = defnsMap.get(s) match
     case S(c: ClsLikeDefn) => c.k is syntax.Mod
     case _ => false
+    
+  def isContClassPth(p: Path) = handlerPaths match
+    case None => false
+    case Some(paths) => paths.contClsPath eq p
+  
   
   private val blkMutCache: MutMap[Local, AccessInfo] = MutMap.empty
   private def blkAccessesShallow(b: Block, cacheId: Opt[Local] = N): AccessInfo =
@@ -323,7 +328,7 @@ class UsedVarAnalyzer(b: Block)(using State):
             // special case continuation classes
             defn match
               case c: ClsLikeDefn => c.parentPath match
-                case S(path) if Lifter.isContClassPth(path) => return
+                case S(path) if isContClassPth(path) => return
                     // treat the continuation class as if it does not exist
                 case _ => ()
               case _ => ()
