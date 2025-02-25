@@ -2,6 +2,25 @@
 :lift
 :todo
 
+
+// The following are problems with lifting functions inside other functions.
+
+
+// Lifting functions with spread arguments is broken.
+:expect [1]
+fun f(x) =
+  fun g(...rest) = 
+    print(x)
+    rest
+  let a = g
+  a(1)
+f(2)
+//│ > 2
+//│ ═══[RUNTIME ERROR] Expected: '[1]', got: '[]'
+//│ = []
+
+// The following are problems with lifting classes inside other definitions.
+
 // We use the optional `symbol` parameter of `Select` to detect references to the
 // BlockMemberSymbol. But when this symbol is not present, there is no way to properly
 // detect it. What do to?

@@ -627,3 +627,17 @@ fun f() =
     set n = n + 1
   g()
 f()
+
+:fixme
+:expect [1]
+:lift
+fun f(x) =
+  fun g(...rest) = 
+    print(x)
+    rest
+  let a = g
+  a(1)
+f(2)
+//│ > 2
+//│ ═══[RUNTIME ERROR] Expected: '[1]', got: '[]'
+//│ = []
