@@ -46,12 +46,8 @@ M.Foo:: n(foo, 2)
 :sjs
 let m = M.Foo::m
 //│ JS (unsanitized):
-//│ let m, lambda5;
-//│ lambda5 = (undefined, function (self, ...args) {
-//│   return self.m(...args)
-//│ });
-//│ m = lambda5;
-//│ m = [function]
+//│ let m, m1; m1 = function m(self, ...args) { return self.m(...args) }; m = m1;
+//│ m = [function m]
 
 m(foo)
 //│ = 124
@@ -80,10 +76,10 @@ do
 :e
 foo.Foo#m()
 //│ ╔══[ERROR] Name not found: Foo
-//│ ║  l.81: 	foo.Foo#m()
+//│ ║  l.77: 	foo.Foo#m()
 //│ ╙──      	   ^^^^
 //│ ╔══[ERROR] Identifier `Foo` does not name a known class symbol.
-//│ ║  l.81: 	foo.Foo#m()
+//│ ║  l.77: 	foo.Foo#m()
 //│ ╙──      	   ^^^^
 //│ = 124
 
@@ -91,7 +87,7 @@ foo.Foo#m()
 :re
 foo.M.Foo::m()
 //│ ╔══[ERROR] Selection is not a known class.
-//│ ║  l.92: 	foo.M.Foo::m()
+//│ ║  l.88: 	foo.M.Foo::m()
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
@@ -101,20 +97,20 @@ foo.M.Foo::m()
 :re
 foo.M.Foo#m()
 //│ ╔══[ERROR] Name not found: Foo
-//│ ║  l.102: 	foo.M.Foo#m()
-//│ ╙──       	     ^^^^
+//│ ║  l.98: 	foo.M.Foo#m()
+//│ ╙──      	     ^^^^
 //│ ╔══[ERROR] Identifier `Foo` does not name a known class symbol.
-//│ ║  l.102: 	foo.M.Foo#m()
-//│ ╙──       	     ^^^^
+//│ ║  l.98: 	foo.M.Foo#m()
+//│ ╙──      	     ^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'M' yielded 'undefined'
 
 :e
 Foo::m
 //│ ╔══[ERROR] Name not found: Foo
-//│ ║  l.112: 	Foo::m
+//│ ║  l.108: 	Foo::m
 //│ ╙──       	^^^
 //│ ╔══[ERROR] Identifier is not a known class.
-//│ ║  l.112: 	Foo::m
+//│ ║  l.108: 	Foo::m
 //│ ║         	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
@@ -124,19 +120,19 @@ Foo::m
 :sjs
 Foo::n(foo, 2)
 //│ ╔══[ERROR] Name not found: Foo
-//│ ║  l.125: 	Foo::n(foo, 2)
+//│ ║  l.121: 	Foo::n(foo, 2)
 //│ ╙──       	^^^
 //│ ╔══[ERROR] Identifier is not a known class.
-//│ ║  l.125: 	Foo::n(foo, 2)
+//│ ║  l.121: 	Foo::n(foo, 2)
 //│ ║         	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ JS (unsanitized):
-//│ let lambda10;
-//│ lambda10 = (undefined, function (self, ...args) {
+//│ let lambda9;
+//│ lambda9 = (undefined, function (self, ...args) {
 //│   return runtime.safeCall(self.n(...args))
 //│ });
-//│ lambda10(foo, 2)
+//│ lambda9(foo, 2)
 //│ = 125
 
 

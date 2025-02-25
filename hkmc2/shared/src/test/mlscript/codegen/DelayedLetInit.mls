@@ -55,8 +55,8 @@ f
 let f
 f(x) = x + 1
 //│ JS (unsanitized):
-//│ let f1, lambda; lambda = (undefined, function (x1) { return x1 + 1 }); f1 = lambda;
-//│ f = [function]
+//│ let f1, f2; f2 = function f(x1) { return x1 + 1 }; f1 = f2;
+//│ f = [function f]
 
 f(1)
 //│ JS (unsanitized):
@@ -111,11 +111,11 @@ else
 fun f() =
   foo = 42
 //│ JS (unsanitized):
-//│ let f2; f2 = function f() { foo2 = 42; return runtime.Unit };
+//│ let f3; f3 = function f() { foo2 = 42; return runtime.Unit };
 
 f()
 //│ JS (unsanitized):
-//│ f2()
+//│ f3()
 
 foo
 //│ JS (unsanitized):
@@ -129,6 +129,6 @@ fun f() = foo = 0
 //│ ║  l.127: 	fun f() = foo = 0
 //│ ╙──       	              ^
 //│ JS (unsanitized):
-//│ let f3; f3 = function f() { return foo2 };
+//│ let f4; f4 = function f() { return foo2 };
 
 
