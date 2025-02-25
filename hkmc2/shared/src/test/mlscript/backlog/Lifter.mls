@@ -23,7 +23,7 @@ f(2)
 
 // We use the optional `symbol` parameter of `Select` to detect references to the
 // BlockMemberSymbol. But when this symbol is not present, there is no way to properly
-// detect it. What do to?
+// detect it. What to do?
 :expect 3
 class A(x) with
   class B(y) with
