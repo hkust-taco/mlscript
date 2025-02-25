@@ -20,3 +20,209 @@ fun deboundMethod(mtdName, clsName) =
     "[debinding error] Method '" + mtdName + "' of class '" + clsName + "' was accessed without being called."
 
 
+// Private definitions for algebraic effects
+
+abstract class FunctionContFrame(next) with
+  fun resume(value)
+class HandlerContFrame(next, nextHandler, handler)
+
+class ContTrace(next, last, nextHandler, lastHandler, resumed)
+class EffectSig(contTrace, handler, handlerFun)
+class Return(value)
+
+fun showFunctionContChain(cont, hl, vis, reps) =
+  if cont is FunctionContFrame then
+    let result = cont.constructor.name + "(pc=" + cont.pc
+    hl.forEach((m, marker) => if m.has(cont) do set result += ", " + marker)
+    if vis.has(cont) then
+      set reps = reps + 1
+      if reps > 10 do
+        throw Error("10 repeated continuation frame (loop?)")
+      set result += ", REPEAT"
+    else
+      vis.add(cont)
+    if cont.completed do
+      set result += ", COMPLETED"
+    result + ") -> " + showFunctionContChain(cont.next, hl, vis, reps)
+  else if cont === null then
+    "(null)"
+  else
+    "(NOT CONT)"
+
+fun showHandlerContChain(cont, hl, vis, reps) =
+  if cont is HandlerContFrame then
+    let result = cont.handler.constructor.name
+    hl.forEach((m, marker) => if m.has(cont) do set result += ", " + marker)
+    if vis.has(cont) then
+      set reps = reps + 1
+      if reps > 10 do
+        throw Error("10 repeated continuation frame (loop?)")
+      set result += ", REPEAT"
+    else
+      vis.add(cont)
+    result + " -> " + showFunctionContChain(cont.next, hl, vis, reps)
+  else if cont === null then
+    "(null)"
+  else
+    "(NOT HANDLER CONT)"
+
+fun debugCont(cont) = console.log(showFunctionContChain(cont, new Map(), new Set(), 0))
+fun debugHandler(cont) = console.log(showHandlerContChain(cont, new Map(), new Set(), 0))
+
+fun debugContTrace(contTrace) =
+  if contTrace is ContTrace then
+    console.log("resumed: ", contTrace.resumed)
+    if contTrace.last === contTrace do
+      console.log("<last is self>")
+    if contTrace.lastHandler === contTrace do
+      console.log("<lastHandler is self>")
+    let vis = new Set()
+    let hl = new Map()
+    hl.set("last", new Set([contTrace.last]))
+    hl.set("last-handler", new Set([contTrace.lastHandler]))
+    console.log(showFunctionContChain(contTrace.next, hl, vis, 0))
+    let cur = contTrace.nextHandler
+    while cur !== null do
+      console.log(showHandlerContChain(cur, hl, vis, 0))
+      set cur = cur.nextHandler
+    console.log()
+  else
+    console.log("Not a cont trace:")
+    console.log(contTrace)
+
+fun debugEff(eff) =
+  if eff is EffectSig then
+    console.log("Debug EffectSig:")
+    console.log("handler: ", eff.handler.constructor.name)
+    console.log("handlerFun: ", eff.handlerFun)
+    debugContTrace(eff.contTrace)
+  else
+    console.log("Not an effect:")
+    console.log(eff)
+
+// runtime implementations
+fun mkEffect(handler, handlerFun) =
+  let res = new EffectSig(new ContTrace(null, null, null, null, false), handler, handlerFun)
+  set
+    res.contTrace.last = res.contTrace
+    res.contTrace.lastHandler = res.contTrace
+  res
+
+fun handleBlockImpl(cur, handler) =
+  let handlerFrame = new HandlerContFrame(null, null, handler)
+  set
+    cur.contTrace.lastHandler.nextHandler = handlerFrame
+    cur.contTrace.lastHandler = handlerFrame
+    cur.contTrace.last = handlerFrame
+  while cur is
+    EffectSig then
+      let nxt = handleEffect(cur)
+      if cur === nxt then
+        return cur
+      else
+        set cur = nxt
+    else
+      return cur
+
+fun enterHandleBlock(handler, body) =
+  let cur = body()
+  if cur is EffectSig then
+    handleBlockImpl(cur, handler)
+  else
+    cur
+
+// return either new effect, final result or the same continuation if there is no handler
+fun handleEffect(cur) =
+  // debugEff(cur)
+  // find the handle block corresponding to the current effect
+  let prevHandlerFrame = cur.contTrace
+  while prevHandlerFrame.nextHandler !== null and prevHandlerFrame.nextHandler.handler !== cur.handler do
+    set prevHandlerFrame = prevHandlerFrame.nextHandler
+
+  // no matching handle block
+  if prevHandlerFrame.nextHandler === null do
+    return cur
+
+  // the matching handle block
+  let handlerFrame = prevHandlerFrame.nextHandler
+
+  // unlink and save frames
+  let saved = new ContTrace(
+    handlerFrame.next,
+    cur.contTrace.last,
+    handlerFrame.nextHandler,
+    cur.contTrace.lastHandler,
+    false
+  )
+  set
+    cur.contTrace.last = handlerFrame
+    cur.contTrace.lastHandler = handlerFrame
+    handlerFrame.next = null
+    handlerFrame.nextHandler = null
+
+  // handle the effect
+  set cur = cur.handlerFun(resume(cur.contTrace))
+  if cur is EffectSig then
+    // relink the saved frames
+    if saved.next !== null do
+      set
+        cur.contTrace.last.next = saved.next
+        cur.contTrace.last = saved.last
+    if saved.nextHandler !== null do
+      set
+        cur.contTrace.lastHandler.nextHandler = saved.nextHandler
+        cur.contTrace.lastHandler = saved.lastHandler
+    cur
+  else
+    // resume the unlinked handle blocks
+    resumeContTrace(saved, cur)
+
+fun resume(contTrace)(value) =
+  if contTrace.resumed do
+    throw Error("Multiple resumption")
+  set contTrace.resumed = true
+  resumeContTrace(contTrace, value)
+
+fun resumeContTrace(contTrace, value) =
+  let cont = contTrace.next
+  let handlerCont = contTrace.nextHandler
+  while
+    cont is FunctionContFrame then
+      set value = cont.resume(value)
+      if value is EffectSig then
+        set
+          value.contTrace.last.next = cont.next
+          value.contTrace.lastHandler.nextHandler = handlerCont
+        if contTrace.last !== cont do
+          set value.contTrace.last = contTrace.last
+        if handlerCont !== null do
+          set value.contTrace.lastHandler = contTrace.lastHandler
+        return value
+      else
+        set cont = cont.next
+    handlerCont is HandlerContFrame then
+      set cont = handlerCont.next
+      set handlerCont = handlerCont.nextHandler
+    else
+      return value
+
+// stack safety
+val stackLimit = 0 // How deep the stack can go before heapifying the stack
+val stackDepth = 0 // Tracks the virtual + real stack depth
+val stackOffset = 0 // How much to offset stackDepth by to get the true stack depth (i.e. the virtual depth)
+val stackHandler = null
+abstract class StackDelay with
+  fun perform()
+
+fun checkDepth() =
+  if stackDepth - stackOffset >= stackLimit && stackHandler !== null then
+    // this is a tail call to effectful function
+    stackHandler.perform()
+  else
+    ()
+
+fun resetDepth(tmp, curDepth) =
+  set stackDepth = curDepth
+  if curDepth < stackOffset do
+    set stackOffset = curDepth
+  tmp

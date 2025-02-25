@@ -17,15 +17,13 @@ class Lol(h) with
 //│ Lol1.class = class Lol {
 //│   constructor(h) {
 //│     this.h = h;
-//│     let tmp, res, Cont$1;
+//│     let tmp, res, Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$1;
 //│     const this$Lol = this;
-//│     Cont$1 = function Cont$(pc1) {
-//│       return new Cont$.class(pc1);
-//│     };
-//│     Cont$1.class = class Cont$ extends globalThis.Predef.__Cont.class {
+//│     Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$1 = function Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$(pc1) { return new Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$.class(pc1); };
+//│     Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$1.class = class Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$ extends runtime.FunctionContFrame.class {
 //│       constructor(pc) {
 //│         let tmp1;
-//│         tmp1 = super(null, null);
+//│         tmp1 = super(null);
 //│         this.pc = pc;
 //│       }
 //│       resume(value$) {
@@ -39,9 +37,11 @@ class Lol(h) with
 //│             return this$Lol
 //│           } else if (this.pc === 0) {
 //│             res = Predef.print(tmp);
-//│             if (res instanceof globalThis.Predef.__EffectSig.class) {
+//│             if (res instanceof runtime.EffectSig.class) {
 //│               this.pc = 1;
-//│               return globalThis.Predef.__appendInCont(res, this)
+//│               res.contTrace.last.next = this;
+//│               res.contTrace.last = this;
+//│               return res
 //│             }
 //│             this.pc = 1;
 //│             continue contLoop;
@@ -52,18 +52,18 @@ class Lol(h) with
 //│           break;
 //│         }
 //│       }
-//│       toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│       toString() { return "Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│     };
 //│     tmp = runtime.safeCall(this.h.perform("k"));
-//│     if (tmp instanceof globalThis.Predef.__EffectSig.class) {
-//│       tmp.tail.next = Cont$1(0);
-//│       tmp.tail = tmp.tail.next;
+//│     if (tmp instanceof runtime.EffectSig.class) {
+//│       tmp.contTrace.last.next = new Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$1.class(0);
+//│       tmp.contTrace.last = tmp.contTrace.last.next;
 //│       return tmp
 //│     }
 //│     res = Predef.print(tmp);
-//│     if (res instanceof globalThis.Predef.__EffectSig.class) {
-//│       res.tail.next = Cont$1(1);
-//│       res.tail = res.tail.next;
+//│     if (res instanceof runtime.EffectSig.class) {
+//│       res.contTrace.last.next = new Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$1.class(1);
+//│       res.contTrace.last = res.contTrace.last.next;
 //│       return res
 //│     }
 //│     res
@@ -145,3 +145,9 @@ fun f() = ()
 module A with
   f()
   () // defeats tail call optimization
+
+let obj = new Object with
+  fun foo() = print("Hello")
+  foo()
+//│ > Hello
+//│ obj = $anon

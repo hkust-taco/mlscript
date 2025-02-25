@@ -311,7 +311,7 @@ abstract class DiffMaker:
       val processedBlockStr = processedBlock.mkString
       val fph = new FastParseHelpers(block)
       
-      val origin = Origin(fileName, blockLineNum, fph)
+      val origin = Origin(file, blockLineNum, fph)
       
       try
         

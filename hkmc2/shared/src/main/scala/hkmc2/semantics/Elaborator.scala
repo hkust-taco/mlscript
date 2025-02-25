@@ -142,6 +142,8 @@ object Elaborator:
     given State = this
     val globalThisSymbol = TopLevelSymbol("globalThis")
     val runtimeSymbol = TempSymbol(N, "runtime")
+    val effectSigSymbol = ClassSymbol(Tree.TypeDef(syntax.Cls, Tree.Error(), N, N), Tree.Ident("EffectSig"))
+    val returnClsSymbol = ClassSymbol(Tree.TypeDef(syntax.Cls, Tree.Error(), N, N), Tree.Ident("Return"))
     val builtinOpsMap =
       val baseBuiltins = builtins.map: op =>
           op -> BuiltinSymbol(op,

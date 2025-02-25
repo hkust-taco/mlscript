@@ -76,11 +76,12 @@ fun mkrec(g) =
   selfApp(a)
 
 :stackSafe 5
-let fact = 
+import "../../mlscript-compile/Runtime.mls"
+let fact =
   fun a(self) =
     fun b(x) =
-      if x == 0 then 1 else 
-        console.log(__stackDepth, __stackOffset)
+      if x == 0 then 1 else
+        console.log(Runtime.stackDepth, Runtime.stackOffset)
         let prev = self(x - 1)
         console.log("resumed:", x)
         x * prev
@@ -91,16 +92,16 @@ let fact =
 :expect 3628800
 :stackSafe 5
 fact(10)
-//│ > 2 0
-//│ > 4 0
-//│ > 6 4
-//│ > 8 4
-//│ > 10 8
-//│ > 12 8
-//│ > 14 12
-//│ > 16 12
-//│ > 18 16
-//│ > 20 16
+//│ > 1 0
+//│ > 3 0
+//│ > 5 4
+//│ > 7 4
+//│ > 9 8
+//│ > 11 8
+//│ > 13 12
+//│ > 15 12
+//│ > 17 16
+//│ > 19 16
 //│ > resumed: 1
 //│ > resumed: 2
 //│ > resumed: 3

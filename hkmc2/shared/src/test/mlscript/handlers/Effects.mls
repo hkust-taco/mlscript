@@ -158,17 +158,14 @@ if true do
 //│ JS (unsanitized):
 //│ let tmp11, handleBlock$11;
 //│ handleBlock$11 = function handleBlock$() {
-//│   let f, h, scrut, tmp12, Cont$24, Handler$h$12;
-//│   Handler$h$12 = function Handler$h$() {
-//│     return new Handler$h$.class();
-//│   };
-//│   Handler$h$12.class = class Handler$h$11 extends Effect1 {
+//│   let f, h, scrut, tmp12, Cont$handleBlock$h$11, Handler$h$12;
+//│   Handler$h$12 = class Handler$h$11 extends Effect1 {
 //│     constructor() {
 //│       let tmp13;
 //│       tmp13 = super();
 //│     }
 //│     perform(arg) {
-//│       return globalThis.Predef.__mkEffect(h, (k) => {
+//│       return runtime.mkEffect(h, (k) => {
 //│         return arg
 //│       })
 //│     }
@@ -178,10 +175,12 @@ if true do
 //│   Cont$24 = function Cont$(pc1) {
 //│     return new Cont$.class(pc1);
 //│   };
-//│   Cont$24.class = class Cont$23 extends globalThis.Predef.__Cont.class {
+//│   h = new Handler$h$12();
+//│   Cont$handleBlock$h$11 = function Cont$handleBlock$h$(pc1) { return new Cont$handleBlock$h$.class(pc1); };
+//│   Cont$handleBlock$h$11.class = class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
 //│     constructor(pc) {
 //│       let tmp13;
-//│       tmp13 = super(null, null);
+//│       tmp13 = super(null);
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
@@ -192,16 +191,13 @@ if true do
 //│         if (this.pc === 1) {
 //│           return tmp12
 //│         } else if (this.pc === 0) {
-//│           if (tmp12 instanceof globalThis.Predef.__Return.class) {
-//│             return tmp12
-//│           }
 //│           this.pc = 1;
 //│           continue contLoop;
 //│         }
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$handleBlock$h$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   f = function f() {
 //│     return 3
@@ -209,12 +205,9 @@ if true do
 //│   scrut = true;
 //│   if (scrut === true) {
 //│     tmp12 = f();
-//│     if (tmp12 instanceof globalThis.Predef.__EffectSig.class) {
-//│       tmp12.tail.next = Cont$24(0);
-//│       return globalThis.Predef.__handleBlockImpl(tmp12, h)
-//│     }
-//│     if (tmp12 instanceof globalThis.Predef.__Return.class) {
-//│       return tmp12
+//│     if (tmp12 instanceof runtime.EffectSig.class) {
+//│       tmp12.contTrace.last.next = new Cont$handleBlock$h$11(0, null);
+//│       return runtime.handleBlockImpl(tmp12, h)
 //│     }
 //│   } else {
 //│     tmp12 = runtime.Unit;
@@ -222,7 +215,7 @@ if true do
 //│   return tmp12
 //│ };
 //│ tmp11 = handleBlock$11();
-//│ if (tmp11 instanceof this.Predef.__EffectSig.class) {
+//│ if (tmp11 instanceof runtime.EffectSig.class) {
 //│   throw new this.Error("Unhandled effects");
 //│ }
 //│ tmp11
