@@ -44,7 +44,7 @@ val isDefined = case
 //│   } else {
 //│     throw new globalThis.Error("match error");
 //│   }
-//│ } );
+//│ });
 //│ tmp1 = lambda;
 //│ isDefined1 = tmp1;
 //│ isDefined = [function]

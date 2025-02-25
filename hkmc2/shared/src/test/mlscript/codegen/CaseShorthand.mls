@@ -7,13 +7,7 @@ case x then x
 :sjs
 case { x then x }
 //│ JS (unsanitized):
-//│ let lambda1;
-//│ lambda1 = (undefined, function (caseScrut) {
-//│   let x;
-//│   x = caseScrut;
-//│   return x
-//│ } );
-//│ lambda1
+//│ let lambda1; lambda1 = (undefined, function (caseScrut) { let x; x = caseScrut; return x }); lambda1
 //│ = [function]
 
 :sjs
@@ -27,7 +21,7 @@ x => if x is
 //│   } else {
 //│     throw new globalThis.Error("match error");
 //│   }
-//│ } );
+//│ });
 //│ lambda2
 //│ = [function]
 
@@ -41,7 +35,7 @@ case 0 then true
 //│   } else {
 //│     throw new globalThis.Error("match error");
 //│   }
-//│ } );
+//│ });
 //│ lambda3
 //│ = [function]
 
@@ -76,7 +70,7 @@ case
 //│   } else {
 //│     return false
 //│   }
-//│ } );
+//│ });
 //│ lambda10
 //│ = [function]
 
@@ -97,7 +91,7 @@ val isDefined = case
 //│   } else {
 //│     throw new globalThis.Error("match error");
 //│   }
-//│ } );
+//│ });
 //│ tmp5 = lambda11;
 //│ isDefined = tmp5;
 //│ isDefined = [function]

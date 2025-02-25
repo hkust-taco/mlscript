@@ -67,7 +67,7 @@ x => if x is Some(x) then x
 //│   } else {
 //│     throw new globalThis.Error("match error");
 //│   }
-//│ } );
+//│ });
 //│ lambda
 //│ = [function]
 

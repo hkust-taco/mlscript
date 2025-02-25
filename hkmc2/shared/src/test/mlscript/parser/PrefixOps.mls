@@ -42,7 +42,7 @@
 :sjs
 +
 //│ JS (unsanitized):
-//│ let lambda1; lambda1 = (undefined, function (arg1, arg2) { return arg1 + arg2 } ); lambda1
+//│ let lambda1; lambda1 = (undefined, function (arg1, arg2) { return arg1 + arg2 }); lambda1
 //│ = [function]
 
 *

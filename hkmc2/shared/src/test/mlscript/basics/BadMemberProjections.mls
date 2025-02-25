@@ -13,7 +13,7 @@
 //│ let lambda;
 //│ lambda = (undefined, function (self, ...args) {
 //│   return runtime.safeCall(self.x(...args))
-//│ } );
+//│ });
 //│ lambda
 //│ = [function]
 
@@ -28,14 +28,14 @@
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ JS:
 //│ lambda1 = (undefined, function (...args1) {
-//│   globalThis.Predef.checkArgs("lambda", 1, false, args1.length);
+//│   globalThis.Predef.checkArgs("", 1, false, args1.length);
 //│   let self = args1[0];
 //│   let args = globalThis.Predef.tupleSlice(args1, 1, 0);
 //│   return runtime.safeCall(self.x(...args))
-//│ } );
+//│ });
 //│ block$res2 = runtime.checkCall(lambda1());
 //│ undefined
-//│ ═══[RUNTIME ERROR] Error: Function 'lambda' expected at least 1 argument but got 0
+//│ ═══[RUNTIME ERROR] Error: Function expected at least 1 argument but got 0
 
 
 fun (::) f(a, b) = [a, b]

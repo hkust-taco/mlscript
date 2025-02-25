@@ -25,7 +25,7 @@ f() + f() + f()
 //│   return (k) => {
 //│     return lambda$(Handler$h$$instance, k)
 //│   }
-//│ } );
+//│ });
 //│ Handler$h$1 = class Handler$h$ extends Effect1 {
 //│   constructor() {
 //│     let tmp1;

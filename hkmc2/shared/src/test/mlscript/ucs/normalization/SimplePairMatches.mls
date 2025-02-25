@@ -27,7 +27,7 @@ x => if x is Pair(A, B) then 1
 //│   } else {
 //│     throw new globalThis.Error("match error");
 //│   }
-//│ } );
+//│ });
 //│ lambda
 //│ = [function]
 

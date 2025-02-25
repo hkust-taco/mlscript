@@ -555,7 +555,7 @@ fun f(x, cond) =
 //│   return () => {
 //│     return lambda$1(x1)
 //│   }
-//│ } );
+//│ });
 //│ lambda$ = function lambda$(x1) {
 //│   return x1
 //│ };
@@ -563,7 +563,7 @@ fun f(x, cond) =
 //│   return () => {
 //│     return lambda$(x1)
 //│   }
-//│ } );
+//│ });
 //│ f19 = function f(x1, cond) {
 //│   x1 = 1;
 //│   x1 = 2;

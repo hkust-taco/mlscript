@@ -12,7 +12,7 @@ f(2)
 :sjs
 let f = foo(1, _, _)
 //│ JS (unsanitized):
-//│ let f1, lambda1; lambda1 = (undefined, function (_, _1) { return foo(1, _, _1) } ); f1 = lambda1;
+//│ let f1, lambda1; lambda1 = (undefined, function (_, _1) { return foo(1, _, _1) }); f1 = lambda1;
 //│ f = [function]
 
 f(2, 3)
@@ -151,7 +151,7 @@ _ - 2 <| 1
 :sjs
 1 . _ - 2
 //│ JS (unsanitized):
-//│ let lambda30; lambda30 = (undefined, function (_) { return Predef.passTo(1, _) } ); lambda30 - 2
+//│ let lambda30; lambda30 = (undefined, function (_) { return Predef.passTo(1, _) }); lambda30 - 2
 //│ = NaN
 
 :sjs
@@ -160,7 +160,7 @@ _ - 2 <| 1
 //│ let tmp7, lambda31;
 //│ lambda31 = (undefined, function (_) {
 //│   return _ - 2
-//│ } );
+//│ });
 //│ tmp7 = Predef.passTo(1, lambda31);
 //│ runtime.safeCall(tmp7())
 //│ = -1

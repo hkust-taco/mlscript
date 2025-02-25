@@ -16,7 +16,7 @@ let f = x => if x then print("ok") else print("ko")
 //│   } else {
 //│     return Predef.print("ko")
 //│   }
-//│ } );
+//│ });
 //│ f = lambda;
 //│ f = [function]
 
@@ -40,7 +40,7 @@ let f = x => print((if x then "ok" else "ko") + "!")
 //│   }
 //│   tmp2 = tmp1 + "!";
 //│   return Predef.print(tmp2)
-//│ } );
+//│ });
 //│ tmp = lambda1;
 //│ f1 = tmp;
 //│ f = [function]
@@ -58,7 +58,7 @@ let f = x => print((if x and x then "ok" else "ko") + "!")
 //│   }
 //│   tmp3 = tmp2 + "!";
 //│   return Predef.print(tmp3)
-//│ } );
+//│ });
 //│ tmp1 = lambda2;
 //│ f2 = tmp1;
 //│ f = [function]

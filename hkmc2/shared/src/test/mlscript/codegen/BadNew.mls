@@ -14,7 +14,7 @@ new 2
 :sjs
 new 2 + 2
 //│ JS (unsanitized):
-//│ let lambda; lambda = (undefined, function (arg1, arg2) { return arg1 + arg2 } ); new lambda(2, 2)
+//│ let lambda; lambda = (undefined, function (arg1, arg2) { return arg1 + arg2 }); new lambda(2, 2)
 //│ = [object Object]
 
 :re

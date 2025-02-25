@@ -101,7 +101,7 @@ hi(0)
 //│   return (resume) => {
 //│     return lambda$(StackDelay$$instance, resume)
 //│   }
-//│ } );
+//│ });
 //│ StackDelay$1 = class StackDelay$ extends runtime.StackDelay {
 //│   constructor() {
 //│     let tmp;
@@ -290,7 +290,7 @@ sum(10000)
 //│   return (resume) => {
 //│     return lambda$1(StackDelay$$instance, resume)
 //│   }
-//│ } );
+//│ });
 //│ StackDelay$3 = class StackDelay$2 extends runtime.StackDelay {
 //│   constructor() {
 //│     let tmp;

@@ -53,7 +53,7 @@ false
 :sjs
 (x => x): [T] -> T -> T
 //│ JS (unsanitized):
-//│ let lambda; lambda = (undefined, function (x1) { return x1 } ); lambda
+//│ let lambda; lambda = (undefined, function (x1) { return x1 }); lambda
 //│ = [function]
 //│ Type: ['T] -> ('T) ->{⊥} 'T
 
@@ -162,7 +162,7 @@ fun pow(x) = case
 //│       tmp4 = runtime.safeCall(tmp2(tmp3));
 //│       return x1 * tmp4
 //│     }
-//│   } );
+//│   });
 //│   return lambda1
 //│ };
 //│ Type: ⊤
@@ -184,7 +184,7 @@ fun not = case
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }
-//│   } );
+//│   });
 //│   return lambda1
 //│ };
 //│ Type: ⊤
@@ -218,7 +218,7 @@ fun fact = case
 //│       tmp5 = tmp3(tmp4);
 //│       return n * tmp5
 //│     }
-//│   } );
+//│   });
 //│   return lambda1
 //│ };
 //│ Type: ⊤

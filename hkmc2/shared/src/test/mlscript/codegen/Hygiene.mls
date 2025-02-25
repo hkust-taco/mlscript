@@ -58,7 +58,7 @@ f()
 //│ x = 1;
 //│ lambda = (undefined, function () {
 //│   return x
-//│ } );
+//│ });
 //│ f = lambda;
 //│ x1 = 2;
 //│ runtime.safeCall(f())
