@@ -23,7 +23,19 @@ f(2)
 
 // We use the optional `symbol` parameter of `Select` to detect references to the
 // BlockMemberSymbol. But when this symbol is not present, there is no way to properly
-// detect it. What to do?
+// detect it.
+// 
+// The following could instead be lifted as:
+//
+// class B$(y)(a) with
+//   fun getB() = a.x + y
+// class A(x) with
+//   fun B(y) = B$(y)(this)
+//   set B.class = B // so that `new a.B(n)` still works
+//   fun getA() = this.B(2).getB()
+// A(1).getA()
+//
+// where B must be marked as final.
 :expect 3
 class A(x) with
   class B(y) with
