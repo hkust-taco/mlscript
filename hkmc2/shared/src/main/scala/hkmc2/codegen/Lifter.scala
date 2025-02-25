@@ -961,40 +961,27 @@ class Lifter(using State, Raise):
       .withAccesses(analyzer.accessMap)
       .withInScopes(analyzer.inScopeDefns)
 
-    var unliftable: Set[BlockMemberSymbol] = Set.empty
-    var modules: List[ClsLikeDefn] = List.empty
-    var objects: List[ClsLikeDefn] = List.empty
-
-
-    val walker = new BlockTransformerShallow(SymbolSubst()):
-      override def applyDefn(defn: Defn): Defn = 
-        val (unl, mod, obj) = createMetadata(defn, ctx)
-        unliftable ++= unl
-        modules ++= mod
-        objects ++= obj
-        defn
-
-    walker.applyBlock(b)
-
-    val modLocals = (modules ++ objects).map: c =>
-        analyzer.nestedIn.get(c.sym) match
-          case Some(bms) =>
-            val nestedIn = analyzer.defnsMap(bms)
-            nestedIn match
-              case cls: ClsLikeDefn => S(c.sym -> TermSymbol(syntax.ImmutVal, S(cls.isym), Tree.Ident(c.sym.nme + "$")))
-              case _ => S(c.sym -> VarSymbol(Tree.Ident(c.sym.nme + "$")))
-          case _ => N
-      .collect:
-        case S(v) => v
-      .toMap
-
-    val ctxx = ctx
-      .addIgnored(unliftable)
-      .withModLocals(modLocals)
-
     val walker1 = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
         case Define(d, rest) =>
+          val (unliftable, modules, objects) = createMetadata(d, ctx)
+
+          val modLocals = (modules ++ objects).map: c =>
+              analyzer.nestedIn.get(c.sym) match
+                case Some(bms) =>
+                  val nestedIn = analyzer.defnsMap(bms)
+                  nestedIn match
+                    case cls: ClsLikeDefn => S(c.sym -> TermSymbol(syntax.ImmutVal, S(cls.isym), Tree.Ident(c.sym.nme + "$")))
+                    case _ => S(c.sym -> VarSymbol(Tree.Ident(c.sym.nme + "$")))
+                case _ => N
+            .collect:
+              case S(v) => v
+            .toMap
+
+          val ctxx = ctx
+            .addIgnored(unliftable)
+            .withModLocals(modLocals)
+          
           val Lifted(lifted, extra) = d match
             case f: FunDefn => 
               val ctxxx = ctxx.withDefnsCur(analyzer.nestedDeep(d.sym))
