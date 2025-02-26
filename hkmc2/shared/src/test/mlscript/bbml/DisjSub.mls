@@ -3,6 +3,7 @@
 
 //│ Type: ⊤
 
+
 fun andt(x)=x&&true
 fun k(f:Nothing->Bool)=1
 fun ap(f)=x=>f(x)
@@ -14,20 +15,88 @@ k(andt)
 k(ap(andt))
 //│ Type: Int
 
-fun id:(Int->Int)&(Bool->Bool)
+k(k)
+//│ Type: Int
+
+fun idIB: (Int -> Int) & (Bool -> Bool)
 //│ Type: ⊤
 
-id(1)
+idIB(1)
 //│ Type: Int
+
+idIB(true)
+//│ Type: Bool
+
+idIB(if true then 1 else true)
+//│ Type: Bool ∨ Int
+
 
 fun ap1(f)=f(1)
-ap1(id)
+ap1(idIB)
 //│ Type: Int
 
-ap(id)(1)
+ap(idIB)(1)
 //│ Type: Int
 
 :todo
-x=>id(x)
+x=>idIB(x)
 //│ Type: (Int ∨ Bool) ->{⊥} ⊥
+
+
+:todo // BbML
+fun idIIBB: ([Int, Int] -> Int) & ([Bool, Bool] -> Bool)
+//│ ╔══[ERROR] General type is not allowed here.
+//│ ║  l.47: 	fun idIIBB: ([Int, Int] -> Int) & ([Bool, Bool] -> Bool)
+//│ ╙──      	                           ^^^
+//│ ╔══[ERROR] General type is not allowed here.
+//│ ║  l.47: 	fun idIIBB: ([Int, Int] -> Int) & ([Bool, Bool] -> Bool)
+//│ ╙──      	                                                   ^^^^
+//│ Type: ⊤
+
+:todo // BbML
+idIIBB([1, 2])
+//│ ╔══[ERROR] Term shape not yet supported by BbML: Tup(List(Fld(‹›,Lit(IntLit(1)),None), Fld(‹›,Lit(IntLit(2)),None)))
+//│ ║  l.57: 	idIIBB([1, 2])
+//│ ╙──      	       ^^^^^^
+//│ Type: ⊥
+
+
+class Pair[out A, out B](fst: A, snd: B)
+//│ Type: ⊤
+
+new Pair(1, 2)
+//│ Type: Pair['A, 'B]
+//│ Where:
+//│   Int <: 'A
+//│   Int <: 'B
+
+:todo // WF check on intersection types
+:e
+fun idIIBB: (Pair[Int, Int] -> Int) & (Pair[Bool, Bool] -> Bool)
+//│ Type: ⊤
+
+idIIBB(new Pair(1, 2))
+//│ Type: Bool ∨ Int
+
+idIIBB(new Pair(1, true))
+//│ Type: Bool ∨ Int
+
+
+
+:todo
+fun foo: ["x": Int, "y": Int]
+//│ ╔══[ERROR] Invalid type
+//│ ║  l.87: 	fun foo: ["x": Int, "y": Int]
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^
+//│ Type: ⊤
+
+foo
+//│ Type: ⊥
+
+:todo
+fun foo(x) = if x is
+  [true, true] then 1
+  [false, false] then 2
+//│ /!!!\ Uncaught error: scala.MatchError: Tuple(2,false) (of class hkmc2.semantics.Pattern$Tuple)
+
 

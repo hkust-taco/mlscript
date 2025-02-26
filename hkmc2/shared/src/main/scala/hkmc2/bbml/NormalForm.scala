@@ -126,7 +126,7 @@ extends NormalForm with CachedBasicType:
     case (cls1, cls2) => cls1.name.uid <= cls2.name.uid
   }.foldLeft[Ls[ClassLikeType]](Nil)((res, cls) => (res, cls) match {
     case (Nil, cls) => cls :: Nil
-    case (ClassLikeType(cls1, targs1) :: tail, ClassLikeType(cls2, targs2)) if cls1.uid === cls2.uid => 
+    case (ClassLikeType(cls1, targs1) :: tail, ClassLikeType(cls2, targs2)) if cls1.uid === cls2.uid =>
       ClassLikeType(cls1, targs1.lazyZip(targs2).map(_ | _)) :: tail
     case (head :: tail, cls) => cls :: head :: tail
   }))
