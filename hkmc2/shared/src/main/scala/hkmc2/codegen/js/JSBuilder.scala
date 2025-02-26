@@ -182,13 +182,13 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             val result = pss.foldRight(bod):
               case (ps, block) => 
                 Return(Lam(ps, block), false)
-            val name = if sym.nameIsTemp then none else some(sym.nme)              
+            val name = if sym.nameIsMeaningful then S(sym.nme) else N
             val (params, bodyDoc) = setupFunction(name, ps, result)
-            if sym.nameIsTemp then
+            if sym.nameIsMeaningful then
+              doc"${getVar(sym)} = function ${sym.nme}($params) ${ braced(bodyDoc) };"
+            else
               // in JS, let name = (0, function (args) => {} ) prevents function's name from being bound to `name`
               doc"${getVar(sym)} = (undefined, function ($params) ${ braced(bodyDoc) });"
-            else
-              doc"${getVar(sym)} = function ${sym.nme}($params) ${ braced(bodyDoc) };"
           case ClsLikeDefn(ownr, isym, sym, kind, paramsOpt, auxParams, par, mtds, privFlds, _pubFlds, preCtor, ctor) =>
             // * Note: `_pubFlds` is not used because in JS, fields are not declared
             val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
