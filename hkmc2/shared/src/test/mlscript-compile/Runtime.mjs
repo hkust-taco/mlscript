@@ -94,6 +94,73 @@ Runtime1 = class Runtime {
     tmp3 = tmp2 + "' was accessed without being called.";
     throw globalThis.Error(tmp3);
   } 
+  static topLevelEffect(tr) {
+    let zwsp, msg, curHandler, atTail, scrut, cur, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18;
+    tmp = Runtime.handleEffects(tr);
+    tr = tmp;
+    if (tr instanceof Runtime.EffectSig.class) {
+      tmp1 = runtime.Unit;
+    } else {
+      return tr
+    }
+    tmp2 = runtime.safeCall(globalThis.String.fromCodePoint(8203));
+    zwsp = tmp2;
+    tmp3 = zwsp + "Error: Unhandled effect ";
+    tmp4 = tmp3 + tr.handler.constructor.name;
+    msg = tmp4;
+    curHandler = tr.contTrace;
+    atTail = true;
+    tmp19: while (true) {
+      scrut = curHandler !== null;
+      if (scrut === true) {
+        cur = curHandler.next;
+        tmp20: while (true) {
+          scrut1 = cur !== null;
+          if (scrut1 === true) {
+            tmp5 = "\n\tat " + cur.constructor.name;
+            tmp6 = tmp5 + "(pc=";
+            tmp7 = tmp6 + cur.pc;
+            tmp8 = tmp7 + ")";
+            tmp9 = msg + tmp8;
+            msg = tmp9;
+            cur = cur.next;
+            atTail = false;
+            tmp10 = runtime.Unit;
+            continue tmp20;
+          } else {
+            tmp10 = runtime.Unit;
+          }
+          break;
+        }
+        curHandler = curHandler.nextHandler;
+        scrut2 = curHandler !== null;
+        if (scrut2 === true) {
+          tmp11 = "\n\twith handler " + curHandler.handler.constructor.name;
+          tmp12 = msg + tmp11;
+          msg = tmp12;
+          atTail = false;
+          tmp13 = runtime.Unit;
+        } else {
+          tmp13 = runtime.Unit;
+        }
+        tmp14 = tmp13;
+        continue tmp19;
+      } else {
+        tmp14 = runtime.Unit;
+      }
+      break;
+    }
+    if (atTail === true) {
+      tmp15 = msg + "\n\tat tail position";
+      msg = tmp15;
+      tmp16 = runtime.Unit;
+    } else {
+      tmp16 = runtime.Unit;
+    }
+    tmp17 = msg + zwsp;
+    tmp18 = runtime.safeCall(globalThis.console.log(tmp17));
+    throw globalThis.Error("Unhandled effects");
+  } 
   static showFunctionContChain(cont, hl, vis, reps) {
     let scrut, result, scrut1, scrut2, scrut3, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, lambda;
     if (cont instanceof Runtime.FunctionContFrame.class) {
@@ -282,31 +349,13 @@ Runtime1 = class Runtime {
     return res
   } 
   static handleBlockImpl(cur, handler1) {
-    let handlerFrame, nxt, scrut, tmp, tmp1, tmp2, tmp3;
+    let handlerFrame, tmp;
     tmp = new Runtime.HandlerContFrame.class(null, null, handler1);
     handlerFrame = tmp;
     cur.contTrace.lastHandler.nextHandler = handlerFrame;
     cur.contTrace.lastHandler = handlerFrame;
     cur.contTrace.last = handlerFrame;
-    tmp4: while (true) {
-      if (cur instanceof Runtime.EffectSig.class) {
-        tmp1 = Runtime.handleEffect(cur);
-        nxt = tmp1;
-        scrut = cur === nxt;
-        if (scrut === true) {
-          return cur
-        } else {
-          cur = nxt;
-          tmp2 = runtime.Unit;
-        }
-        tmp3 = tmp2;
-        continue tmp4;
-      } else {
-        return cur
-      }
-      break;
-    }
-    return tmp3
+    return Runtime.handleEffects(cur)
   } 
   static enterHandleBlock(handler2, body) {
     let cur1, tmp;
@@ -318,13 +367,35 @@ Runtime1 = class Runtime {
       return cur1
     }
   } 
-  static handleEffect(cur1) {
+  static handleEffects(cur1) {
+    let nxt, scrut, tmp, tmp1, tmp2;
+    tmp3: while (true) {
+      if (cur1 instanceof Runtime.EffectSig.class) {
+        tmp = Runtime.handleEffect(cur1);
+        nxt = tmp;
+        scrut = cur1 === nxt;
+        if (scrut === true) {
+          return cur1
+        } else {
+          cur1 = nxt;
+          tmp1 = runtime.Unit;
+        }
+        tmp2 = tmp1;
+        continue tmp3;
+      } else {
+        return cur1
+      }
+      break;
+    }
+    return tmp2
+  } 
+  static handleEffect(cur2) {
     let prevHandlerFrame, scrut, scrut1, scrut2, handlerFrame, saved, scrut3, scrut4, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
-    prevHandlerFrame = cur1.contTrace;
+    prevHandlerFrame = cur2.contTrace;
     tmp7: while (true) {
       scrut = prevHandlerFrame.nextHandler !== null;
       if (scrut === true) {
-        scrut1 = prevHandlerFrame.nextHandler.handler !== cur1.handler;
+        scrut1 = prevHandlerFrame.nextHandler.handler !== cur2.handler;
         if (scrut1 === true) {
           prevHandlerFrame = prevHandlerFrame.nextHandler;
           tmp = runtime.Unit;
@@ -339,40 +410,40 @@ Runtime1 = class Runtime {
     }
     scrut2 = prevHandlerFrame.nextHandler === null;
     if (scrut2 === true) {
-      return cur1
+      return cur2
     } else {
       tmp1 = runtime.Unit;
     }
     handlerFrame = prevHandlerFrame.nextHandler;
-    tmp2 = new Runtime.ContTrace.class(handlerFrame.next, cur1.contTrace.last, handlerFrame.nextHandler, cur1.contTrace.lastHandler, false);
+    tmp2 = new Runtime.ContTrace.class(handlerFrame.next, cur2.contTrace.last, handlerFrame.nextHandler, cur2.contTrace.lastHandler, false);
     saved = tmp2;
-    cur1.contTrace.last = handlerFrame;
-    cur1.contTrace.lastHandler = handlerFrame;
+    cur2.contTrace.last = handlerFrame;
+    cur2.contTrace.lastHandler = handlerFrame;
     handlerFrame.next = null;
     handlerFrame.nextHandler = null;
-    tmp3 = Runtime.resume(cur1.contTrace);
-    tmp4 = runtime.safeCall(cur1.handlerFun(tmp3));
-    cur1 = tmp4;
-    if (cur1 instanceof Runtime.EffectSig.class) {
+    tmp3 = Runtime.resume(cur2.contTrace);
+    tmp4 = runtime.safeCall(cur2.handlerFun(tmp3));
+    cur2 = tmp4;
+    if (cur2 instanceof Runtime.EffectSig.class) {
       scrut3 = saved.next !== null;
       if (scrut3 === true) {
-        cur1.contTrace.last.next = saved.next;
-        cur1.contTrace.last = saved.last;
+        cur2.contTrace.last.next = saved.next;
+        cur2.contTrace.last = saved.last;
         tmp5 = runtime.Unit;
       } else {
         tmp5 = runtime.Unit;
       }
       scrut4 = saved.nextHandler !== null;
       if (scrut4 === true) {
-        cur1.contTrace.lastHandler.nextHandler = saved.nextHandler;
-        cur1.contTrace.lastHandler = saved.lastHandler;
+        cur2.contTrace.lastHandler.nextHandler = saved.nextHandler;
+        cur2.contTrace.lastHandler = saved.lastHandler;
         tmp6 = runtime.Unit;
       } else {
         tmp6 = runtime.Unit;
       }
-      return cur1
+      return cur2
     } else {
-      return Runtime.resumeContTrace(saved, cur1)
+      return Runtime.resumeContTrace(saved, cur2)
     }
   } 
   static resume(contTrace1) {

@@ -170,7 +170,7 @@ hi(0)
 //│ };
 //│ res = handleBlock$();
 //│ if (res instanceof runtime.EffectSig.class) {
-//│   throw new this.Error("Unhandled effects");
+//│   res = runtime.topLevelEffect(res);
 //│ }
 //│ runtime.stackDepth = 0;
 //│ runtime.stackHandler = null;
@@ -359,7 +359,7 @@ sum(10000)
 //│ };
 //│ res1 = handleBlock$1();
 //│ if (res1 instanceof runtime.EffectSig.class) {
-//│   throw new this.Error("Unhandled effects");
+//│   res1 = runtime.topLevelEffect(res1);
 //│ }
 //│ runtime.stackDepth = 0;
 //│ runtime.stackHandler = null;

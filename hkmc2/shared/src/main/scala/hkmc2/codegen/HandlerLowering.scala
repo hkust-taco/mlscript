@@ -27,7 +27,7 @@ object HandlerLowering:
     def last = p.selN(lastIdent)
     def contTrace = p.selN(contTraceIdent)
   
-  private case class LinkState(res: Path, cls: Path, uid: StateId)
+  private case class LinkState(res: Local, cls: Path, uid: StateId)
   
   // shouldUnwrapRet: whether the current block should unwrap the runtime.Return if it encounter one
   // isTopLevel:
@@ -56,14 +56,15 @@ import HandlerLowering.*
 
 class HandlerPaths(using Elaborator.State):
   val runtimePath: Path = State.runtimeSymbol.asPath
-  val effectSigPath: Path = runtimePath.selN(Tree.Ident("EffectSig")).selN(Tree.Ident("class"))
+  val effectSigPath: Path = runtimePath.selSN("EffectSig").selSN("class")
   val effectSigSym: ClassSymbol = State.effectSigSymbol
-  val contClsPath: Path = runtimePath.selN(Tree.Ident("FunctionContFrame")).selN(Tree.Ident("class"))
-  val retClsPath: Path = runtimePath.selN(Tree.Ident("Return")).selN(Tree.Ident("class"))
+  val contClsPath: Path = runtimePath.selSN("FunctionContFrame").selSN("class")
+  val retClsPath: Path = runtimePath.selSN("Return").selSN("class")
   val retClsSym: ClassSymbol = State.returnClsSymbol
-  val mkEffectPath: Path = runtimePath.selN(Tree.Ident("mkEffect"))
-  val handleBlockImplPath: Path = runtimePath.selN(Tree.Ident("handleBlockImpl"))
-  val stackDelayClsPath: Path = runtimePath.selN(Tree.Ident("StackDelay"))
+  val mkEffectPath: Path = runtimePath.selSN("mkEffect")
+  val handleBlockImplPath: Path = runtimePath.selSN("handleBlockImpl")
+  val stackDelayClsPath: Path = runtimePath.selSN("StackDelay")
+  val topLevelEffectPath: Path = runtimePath.selSN("topLevelEffect")
   
   def isHandlerClsPath(p: Path) =
     (p eq contClsPath)  || (p eq stackDelayClsPath) || (p eq effectSigPath) || (p eq retClsPath)
@@ -73,13 +74,16 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
   private def funcLikeHandlerCtx(ctorThis: Option[Path], isHandlerMtd: Bool, nme: Str) =
     HandlerCtx(!isHandlerMtd, false, isHandlerMtd, false, nme, ctorThis, state =>
       blockBuilder
-        .assignFieldN(state.res.contTrace.last, nextIdent, Instantiate(
+        .assignFieldN(state.res.asPath.contTrace.last, nextIdent, Instantiate(
           state.cls.selN(Tree.Ident("class")),
           Value.Lit(Tree.IntLit(state.uid)) :: Nil))
-        .assignFieldN(state.res.contTrace, lastIdent, state.res.contTrace.last.next)
-        .ret(state.res))
+        .assignFieldN(state.res.asPath.contTrace, lastIdent, state.res.asPath.contTrace.last.next)
+        .ret(state.res.asPath))
   private def functionHandlerCtx(nme: Str) = funcLikeHandlerCtx(N, false, nme)
-  private def topLevelCtx(nme: Str) = HandlerCtx(false, true, false, false, nme, N, _ => rtThrowMsg("Unhandled effects"))
+  private def topLevelCtx(nme: Str) = HandlerCtx(false, true, false, false, nme, N, state => Assign(
+      state.res,
+      Call(paths.topLevelEffectPath, state.res.asPath.asArg :: Nil)(true, false),
+      End()))
   private def ctorCtx(ctorThis: Path, nme: Str) = funcLikeHandlerCtx(S(ctorThis), false, nme)
   private def handlerMtdCtx(nme: Str) = funcLikeHandlerCtx(N, true, nme)
   private def handlerCtx(using HandlerCtx): HandlerCtx = summon
@@ -405,8 +409,8 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
     
     val handlerBody = translateBlock(prepareBody(h.body), HandlerCtx(false, false, false, true,
       s"Cont$$handleBlock$$${h.lhs.nme}$$", N, state => blockBuilder
-        .assignFieldN(state.res.contTrace.last, nextIdent, PureCall(state.cls, Value.Lit(Tree.IntLit(state.uid)) :: Nil))
-        .ret(PureCall(paths.handleBlockImplPath, state.res :: h.lhs.asPath :: Nil))))
+        .assignFieldN(state.res.asPath.contTrace.last, nextIdent, PureCall(state.cls, Value.Lit(Tree.IntLit(state.uid)) :: Nil))
+        .ret(PureCall(paths.handleBlockImplPath, state.res.asPath :: h.lhs.asPath :: Nil))))
     
     val handlerMtds = h.handlers.map: handler =>
       val handleBlockSym = VarSymbol(Tree.Ident("handleBlock"))
@@ -564,7 +568,7 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
             .ifthen(
               res.asPath,
               Case.Cls(paths.effectSigSym, paths.effectSigPath),
-              handlerCtx.linkAndHandle(LinkState(res.asPath, clsSym.asPath, uid))
+              handlerCtx.linkAndHandle(LinkState(res, clsSym.asPath, uid))
             )
             .staticif(canRet, _.ifthen(
               res.asPath,

@@ -42,7 +42,12 @@ in
 //│ > main start
 //│ > main end
 //│ > f 2
-//│ ═══[RUNTIME ERROR] Error: Unhandled effects
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
+//│ 	at Cont$func$f$UserThreadsSafe$_mls_L15_4_89$(pc=1)
+//│ 	at Cont$func$drain$UserThreadsSafe$_mls_L5_63_123$(pc=2)
+//│ 	at Cont$handler$h$UserThreadsSafe$_mls_L32_35_105(pc=3)
+//│ 	at Cont$handler$h$UserThreadsSafe$_mls_L32_35_105(pc=3)​
+//│ ​Error: Unhandled effects
 
 
 // FIFO
@@ -60,6 +65,11 @@ in
 //│ > main start
 //│ > main end
 //│ > f 0
-//│ ═══[RUNTIME ERROR] Error: Unhandled effects
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$1
+//│ 	at Cont$func$f$UserThreadsSafe$_mls_L15_4_89$(pc=1)
+//│ 	at Cont$func$drain$UserThreadsSafe$_mls_L5_63_123$(pc=2)
+//│ 	at Cont$handler$h$UserThreadsSafe$_mls_L55_35_108(pc=3)
+//│ 	at Cont$handler$h$UserThreadsSafe$_mls_L55_35_108(pc=3)​
+//│ ​Error: Unhandled effects
 
 

@@ -30,6 +30,34 @@ class ContTrace(next, last, nextHandler, lastHandler, resumed)
 class EffectSig(contTrace, handler, handlerFun)
 class Return(value)
 
+fun topLevelEffect(tr) =
+  set tr = handleEffects(tr)
+  if tr is EffectSig then
+    ()
+  else
+    return tr
+  let
+    zwsp = String.fromCodePoint(0x200B)
+    msg = zwsp + "Error: Unhandled effect " + tr.handler.constructor.name
+    curHandler = tr.contTrace
+    atTail = true
+  while curHandler !== null do
+    let cur = curHandler.next
+    while cur !== null do
+      set
+        msg += "\n\tat " + cur.constructor.name + "(pc=" + cur.pc + ")"
+        cur = cur.next
+        atTail = false
+    set curHandler = curHandler.nextHandler
+    if curHandler !== null do
+      set
+        msg += "\n\twith handler " + curHandler.handler.constructor.name
+        atTail = false
+  if atTail do
+    set msg += "\n\tat tail position"
+  console.log(msg + zwsp)
+  throw Error("Unhandled effects")
+
 fun showFunctionContChain(cont, hl, vis, reps) =
   if cont is FunctionContFrame then
     let result = cont.constructor.name + "(pc=" + cont.pc
@@ -114,6 +142,16 @@ fun handleBlockImpl(cur, handler) =
     cur.contTrace.lastHandler.nextHandler = handlerFrame
     cur.contTrace.lastHandler = handlerFrame
     cur.contTrace.last = handlerFrame
+  handleEffects(cur)
+
+fun enterHandleBlock(handler, body) =
+  let cur = body()
+  if cur is EffectSig then
+    handleBlockImpl(cur, handler)
+  else
+    cur
+
+fun handleEffects(cur) =
   while cur is
     EffectSig then
       let nxt = handleEffect(cur)
@@ -123,13 +161,6 @@ fun handleBlockImpl(cur, handler) =
         set cur = nxt
     else
       return cur
-
-fun enterHandleBlock(handler, body) =
-  let cur = body()
-  if cur is EffectSig then
-    handleBlockImpl(cur, handler)
-  else
-    cur
 
 // return either new effect, final result or the same continuation if there is no handler
 fun handleEffect(cur) =

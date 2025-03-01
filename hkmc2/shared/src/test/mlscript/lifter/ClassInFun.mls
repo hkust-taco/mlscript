@@ -185,7 +185,7 @@ f() + f() + f()
 //│ };
 //│ tmp = handleBlock$();
 //│ if (tmp instanceof runtime.EffectSig.class) {
-//│   throw new this.Error("Unhandled effects");
+//│   tmp = runtime.topLevelEffect(tmp);
 //│ }
 //│ tmp
 //│ = 3
