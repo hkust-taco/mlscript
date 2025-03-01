@@ -10,7 +10,7 @@ sealed abstract class Token:
     case SPACE => "space"
     case COMMA => "comma"
     case SEMI => "semicolon"
-    case NEWLINE => "newline"
+    case NEWLINE => "new line"
     case INDENT => "indentation"
     case DEINDENT => "deindentation"
     case ERROR => "error"

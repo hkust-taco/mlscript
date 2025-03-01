@@ -623,7 +623,7 @@ extends Importer:
         case Block(sts) :: trees =>
           go(acc, sts ::: trees)
         case tree :: trees =>
-          raise(ErrorReport(msg"Illegal juxtaposition right-hand side." -> tree.toLoc :: Nil))
+          raise(ErrorReport(msg"Illegal juxtaposition right-hand side (${tree.describe})." -> tree.toLoc :: Nil))
           go(acc, trees)
       
       go(term(lhs), rhs :: Nil)

@@ -28,13 +28,31 @@ new
   Foo()
 //│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
 
-:todo
+:e
 new
   Foo
     ()
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side.
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (unit).
 //│ ║  l.34: 	    ()
 //│ ╙──      	    ^^
+//│ = Foo
+
+:w
+:re
+new
+  Foo
+  ()
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.43: 	  Foo
+//│ ╙──      	  ^^^
+//│ ═══[RUNTIME ERROR] TypeError: runtime.Unit is not a constructor
+
+:e
+new Foo
+  ()
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (unit).
+//│ ║  l.52: 	  ()
+//│ ╙──      	  ^^
 //│ = Foo
 
 

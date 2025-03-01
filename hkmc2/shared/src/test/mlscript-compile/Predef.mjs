@@ -91,44 +91,57 @@ Predef1 = class Predef {
   static pipeFrom(f1, x3) {
     return runtime.safeCall(f1(x3))
   } 
-  static andThen(f2, g) {
-    return (x4) => {
+  static tap(x4, f2) {
+    let tmp;
+    tmp = runtime.safeCall(f2(x4));
+    return (tmp , x4)
+  } 
+  static pat(f3, x5) {
+    let tmp;
+    tmp = runtime.safeCall(f3(x5));
+    return (tmp , x5)
+  } 
+  static andThen(f4, g) {
+    return (x6) => {
       let tmp;
-      tmp = runtime.safeCall(f2(x4));
+      tmp = runtime.safeCall(f4(x6));
       return runtime.safeCall(g(tmp))
     }
   } 
-  static compose(f3, g1) {
-    return (x4) => {
+  static compose(f5, g1) {
+    return (x6) => {
       let tmp;
-      tmp = runtime.safeCall(g1(x4));
-      return runtime.safeCall(f3(tmp))
+      tmp = runtime.safeCall(g1(x6));
+      return runtime.safeCall(f5(tmp))
     }
   } 
-  static passTo(receiver, f4) {
+  static passTo(receiver, f6) {
     return (...args) => {
-      return runtime.safeCall(f4(receiver, ...args))
+      return runtime.safeCall(f6(receiver, ...args))
     }
   } 
-  static call(receiver1, f5) {
+  static call(receiver1, f7) {
     return (...args) => {
-      return f5.call(receiver1, ...args)
+      return f7.call(receiver1, ...args)
     }
   } 
-  static pass1(f6) {
+  static pass1(f8) {
     return (...xs) => {
-      return runtime.safeCall(f6(xs[0]))
+      return runtime.safeCall(f8(xs[0]))
     }
   } 
-  static pass2(f7) {
+  static pass2(f9) {
     return (...xs) => {
-      return runtime.safeCall(f7(xs[0], xs[1]))
+      return runtime.safeCall(f9(xs[0], xs[1]))
     }
   } 
-  static pass3(f8) {
+  static pass3(f10) {
     return (...xs) => {
-      return runtime.safeCall(f8(xs[0], xs[1], xs[2]))
+      return runtime.safeCall(f10(xs[0], xs[1], xs[2]))
     }
+  } 
+  static passing(f11, ...args) {
+    return f11.bind(null, ...args)
   } 
   static print(...xs) {
     let tmp, tmp1;
@@ -136,30 +149,30 @@ Predef1 = class Predef {
     tmp1 = runtime.safeCall(tmp(...xs));
     return runtime.safeCall(globalThis.console.log(...tmp1))
   } 
-  static printRaw(x4) {
+  static printRaw(x6) {
     let tmp;
-    tmp = Predef.render(x4);
+    tmp = Predef.render(x6);
     return runtime.safeCall(globalThis.console.log(tmp))
   } 
   static interleave(sep) {
-    return (...args) => {
+    return (...args1) => {
       let res, len, i, scrut, idx, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
-      scrut2 = args.length === 0;
+      scrut2 = args1.length === 0;
       if (scrut2 === true) {
         return []
       } else {
-        tmp = args.length * 2;
+        tmp = args1.length * 2;
         tmp1 = tmp - 1;
         tmp2 = globalThis.Array(tmp1);
         res = tmp2;
-        len = args.length;
+        len = args1.length;
         i = 0;
         tmp8: while (true) {
           scrut = i < len;
           if (scrut === true) {
             tmp3 = i * 2;
             idx = tmp3;
-            res[idx] = args[i];
+            res[idx] = args1[i];
             tmp4 = i + 1;
             i = tmp4;
             scrut1 = i < len;
@@ -289,14 +302,14 @@ Predef1 = class Predef {
   static tupleGet(xs3, i1) {
     return globalThis.Array.prototype.at.call(xs3, i1)
   } 
-  static map(f9) {
+  static map(f12) {
     return (...xs4) => {
       let tmp;
-      tmp = Predef.pass1(f9);
+      tmp = Predef.pass1(f12);
       return runtime.safeCall(xs4.map(tmp))
     }
   } 
-  static fold(f10) {
+  static fold(f13) {
     return (init, ...rest) => {
       let i2, len, scrut, tmp, tmp1, tmp2, tmp3;
       i2 = 0;
@@ -305,7 +318,7 @@ Predef1 = class Predef {
         scrut = i2 < len;
         if (scrut === true) {
           tmp = runtime.safeCall(rest.at(i2));
-          tmp1 = runtime.safeCall(f10(init, tmp));
+          tmp1 = runtime.safeCall(f13(init, tmp));
           init = tmp1;
           tmp2 = i2 + 1;
           i2 = tmp2;
@@ -319,7 +332,7 @@ Predef1 = class Predef {
       return init
     }
   } 
-  static foldr(f11) {
+  static foldr(f14) {
     return (first, ...rest) => {
       let len, i2, init, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
       len = rest.length;
@@ -337,7 +350,7 @@ Predef1 = class Predef {
             tmp2 = i2 - 1;
             i2 = tmp2;
             tmp3 = runtime.safeCall(rest.at(i2));
-            tmp4 = runtime.safeCall(f11(tmp3, init));
+            tmp4 = runtime.safeCall(f14(tmp3, init));
             init = tmp4;
             tmp5 = runtime.Unit;
             continue tmp6;
@@ -346,7 +359,7 @@ Predef1 = class Predef {
           }
           break;
         }
-        return runtime.safeCall(f11(first, init))
+        return runtime.safeCall(f14(first, init))
       }
     }
   } 

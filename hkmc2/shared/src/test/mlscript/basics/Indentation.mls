@@ -1,20 +1,116 @@
 :js
 
 
+tuple(
+  )
+//│ = []
+
+tuple(
+  )
+  tuple()
+//│ = [[]]
+
+tuple(
+  ) tuple()
+//│ = [[]]
+
+tuple(
+  id(2
+    +2))
+            tuple()
+//│ = [[4]]
+
+tuple(
+  id(2
+    +2))
+    tuple()
+//│ = [[4]]
+
+tuple(
+  id(2
+    +2))
+tuple()
+//│ = []
+
+tuple(
+  id(2
+    +2))
+    tuple()
+  tuple()
+//│ = [[[4]]]
+
+// 🤔
+:e
+tuple(
+  id(2
+    +2))
+      tuple()
+    tuple()
+  tuple()
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (juxtaposition).
+//│ ║  l.47: 	      tuple()
+//│ ║        	      ^^^^^^^
+//│ ║  l.48: 	    tuple()
+//│ ║        	^^^^^^^^^^^
+//│ ║  l.49: 	  tuple()
+//│ ╙──      	^^
+//│ = [[4]]
+
+module A with {
+}
+
+:p
+tuple(
+)
+//│ |tuple|(|↵|)|
+//│ Parsed:
+//│ 	App(Ident(tuple),Tup(List()))
+//│ = []
+
+:w
+tuple(
+1
+)
+//│ ╔══[WARNING] This literal should be indented
+//│ ║  l.72: 	1
+//│ ║        	^
+//│ ╟── since it is a continuation of the new line here
+//│ ║  l.71: 	tuple(
+//│ ║        	      ^
+//│ ║  l.72: 	1
+//│ ╙──      	
+//│ = [1]
+
+tuple(
+  )
+//│ = []
+
 print(
   2)
 1
 //│ > 2
 //│ = 1
 
+id(
+  1)
+//│ = 1
+
+id(
+  id)(1)
+//│ = 1
+
 :p
 id(
   2)
   print()
-//│ |id|(|→|2|←|)|→|↵|print|(||)|←|
+//│ |id|(|→|2|←|)|→|print|(||)|←|
 //│ Parsed:
 //│ 	Jux(App(Ident(id),Tup(List(IntLit(2)))),Block(List(App(Ident(print),Tup(List())))))
 //│ > 2
+
+id(0
+  passTo(id))(2)
+//│ = 0
 
 :p
 id(
@@ -25,6 +121,40 @@ id(
 //│ Parsed:
 //│ 	Jux(App(Ident(id),Tup(List(IntLit(2)))),Block(List(App(Ident(print),Tup(List())))))
 //│ > 2
+
+:p
+id(
+  id
+)(1)
+//│ |id|(|→|id|←|↵|)|(|1|)|
+//│ Parsed:
+//│ 	App(App(Ident(id),Tup(List(Ident(id)))),Tup(List(IntLit(1))))
+//│ = 1
+
+:e
+:p
+id
+  1
+//│ |id|→|1|←|
+//│ Parsed:
+//│ 	Jux(Ident(id),Block(List(IntLit(1))))
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (integer literal).
+//│ ║  l.137: 	  1
+//│ ╙──       	  ^
+//│ = [function id]
+
+:e
+:re
+:p
+id(0
+  id)(1)
+//│ |id|(|0|→|id|←|)|(|1|)|
+//│ Parsed:
+//│ 	App(App(Ident(id),Tup(List(Jux(IntLit(0),Block(List(Ident(id))))))),Tup(List(IntLit(1))))
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
+//│ ║  l.150: 	  id)(1)
+//│ ╙──       	  ^^
+//│ ═══[RUNTIME ERROR] TypeError: tmp25 is not a function
 
 
 fun test2() =
@@ -68,16 +198,10 @@ module P with
     )
   module TraceLogger
 
-:pe
 module P with
   (
   )
   module TraceLogger
-//│ ╔══[PARSE ERROR] Expected an expression; found new line instead
-//│ ║  l.73: 	  (
-//│ ║        	   ^
-//│ ║  l.74: 	  )
-//│ ╙──      	^^
 
 
 module P with ...

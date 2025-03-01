@@ -58,6 +58,46 @@ print(1, 2, 3)
 //│ = [function]
 
 
+2 + 2 |> print
+//│ > 4
+
+print <| 2 + 2
+//│ > 4
+
+(_ * 2) <| 2 + 2 |> (_ + 1)
+//│ = 9
+
+2 + 2 !> print
+//│ > 4
+//│ = 4
+
+print <! 2 + 2
+//│ > 4
+//│ = 4
+
+print <! 2 + 2 |> (_ + 1)
+//│ > 4
+//│ = 5
+
+(_ + 1) <| 2 + 2 !> print
+//│ > 4
+//│ = 5
+
+
+tuple passing(1, 2, 3) <| 4
+//│ = [1, 2, 3, 4]
+
+passing(tuple, 1, 2, 3) of 4, 5, 6
+//│ = [1, 2, 3, 4, 5, 6]
+
+(tuple passing(1, 2, 3)) of 4, 5, 6
+//│ = [1, 2, 3, 4, 5, 6]
+
+:re
+tuple passing(1, 2, 3) of 4, 5, 6
+//│ ═══[RUNTIME ERROR] TypeError: f11.bind is not a function
+
+
 :re
 ??("oops")
 //│ ═══[RUNTIME ERROR] Error: Not implemented: oops

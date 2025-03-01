@@ -372,6 +372,7 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
         toks: Ls[Token -> Loc],
         canStartAngles: Bool,
         stack: Ls[BracketKind -> Loc -> Ls[Stroken -> Loc]],
+        swallowedInd: Int, // * Number of previous indentations that were not closed by deindents but by closing other brackets
         acc: Ls[Stroken -> Loc],
     ): Ls[Stroken -> Loc] =
       toks match
@@ -380,28 +381,32 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
           // * where there is no actual body after the `...`.
           // * It can't be handled in the parser because this is only valid at the top-level,
           // * not within brackets, as in `(arg0, ...) => blah`.
-          go(OPEN_BRACKET(Indent) -> l0 :: LITVAL(Tree.UnitLit(false)) -> l0 :: Nil, false, stack, acc)
+          go(OPEN_BRACKET(Indent) -> l0 :: LITVAL(Tree.UnitLit(false)) -> l0 :: Nil, false, stack, swallowedInd, acc)
         case (QUOTE, l0) :: (IDENT("<", true), l1) :: rest =>
-          go(rest, false, stack, (IDENT("<", true), l1) :: (QUOTE, l0) :: acc)
+          go(rest, false, stack, swallowedInd, (IDENT("<", true), l1) :: (QUOTE, l0) :: acc)
         case (QUOTE, l0) :: (IDENT(">", true), l1) :: rest =>
-          go(rest, false, stack, (IDENT(">", true), l1) :: (QUOTE, l0) :: acc)
+          go(rest, false, stack, swallowedInd, (IDENT(">", true), l1) :: (QUOTE, l0) :: acc)
         case (OPEN_BRACKET(k), l0) :: rest =>
-          go(rest, false, k -> l0 -> acc :: stack, Nil)
+          go(rest, false, k -> l0 -> acc :: stack, swallowedInd, Nil)
+        case (NEWLINE, l1) :: rest if swallowedInd > 0 =>
+          go((OPEN_BRACKET(Indent), l1) :: rest, false, stack, swallowedInd - 1, acc)
+        case (CLOSE_BRACKET(Indent), l1) :: rest if swallowedInd > 0 => go(rest, false, stack, swallowedInd - 1, acc)
         case (CLOSE_BRACKET(k1), l1) :: rest =>
           stack match
-            case ((Indent, loc), oldAcc) :: _ if k1 =/= Indent =>
+            case ((k0 @ Indent, l0), oldAcc) :: oldStack if k1 =/= Indent =>
               // * Sometimes, open/close parentheses are interleaved with indent/deindent; eg in
               // *   module P with
               // *     (
               // *       2)
               // *     1
               // * which results in token stream `|module| |P| |with|→|(|→|2|)|←|↵|1|`.
-              // * So this code commutes the indent/deindent with the open/close parentheses.
-              go(CLOSE_BRACKET(Indent) -> l1.left :: (CLOSE_BRACKET(k1), l1) :: OPEN_BRACKET(Indent) -> l1.right :: rest, false, stack, acc)
+              // * So we temporarily swallow indentations until we reach a NL or deindent.
+              go(toks, false, oldStack, swallowedInd + 1,
+                BRACKETS(k0, acc.reverse)(l0.right ++ l1.left) -> (l0 ++ l1) :: oldAcc)
             case ((Indent, loc), oldAcc) :: stack
             if k1 === Indent && acc.forall { case (SPACE | NEWLINE, _) => true; case _ => false } =>
               // * Ignore empty indented blocks:
-              go(rest, false, stack, oldAcc)
+              go(rest, false, stack, swallowedInd, oldAcc)
             case ((k0, l0), oldAcc) :: stack =>
               if k0 =/= k1 && !(k0 === Unquote && k1 === Curly) then
                 raise(ErrorReport(msg"Mistmatched closing ${k1.name}" -> S(l1) ::
@@ -421,43 +426,43 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
                 case (NEWLINE, _) :: (BRACKETS(Indent, acc), _) :: Nil if k0 is Curly => acc
                 case _ => acc.reverse
               val accr2 = accr.dropWhile(_._1 === SPACE)
-              go(rest, true, stack, BRACKETS(k0, accr2)(l0.right ++ l1.left) -> (l0 ++ l1) :: oldAcc)
+              go(rest, true, stack, swallowedInd, BRACKETS(k0, accr2)(l0.right ++ l1.left) -> (l0 ++ l1) :: oldAcc)
             case Nil =>
               raise(ErrorReport(msg"Unexpected closing ${k1.name}" -> S(l1) :: Nil,
                 source = Parsing))
-              go(rest, false, stack, acc)
+              go(rest, false, stack, swallowedInd, acc)
         case (INDENT, loc) :: rest =>
-          go(OPEN_BRACKET(Indent) -> loc :: rest, false, stack, acc)
+          go(OPEN_BRACKET(Indent) -> loc :: rest, false, stack, swallowedInd, acc)
         case (DEINDENT, loc) :: rest =>
-          go(CLOSE_BRACKET(Indent) -> loc :: rest, false, stack, acc)
+          go(CLOSE_BRACKET(Indent) -> loc :: rest, false, stack, swallowedInd, acc)
         case (IDENT("<", true), loc) :: rest if canStartAngles =>
-          go(OPEN_BRACKET(Angle) -> loc :: rest, false, stack, acc)
+          go(OPEN_BRACKET(Angle) -> loc :: rest, false, stack, swallowedInd, acc)
         case (IDENT(">", true), loc) :: rest if canStartAngles && (stack match {
           case ((Angle, _), _) :: _ => true
           case _ => false
         }) =>
-          go(CLOSE_BRACKET(Angle) -> loc :: rest, false, stack, acc)
+          go(CLOSE_BRACKET(Angle) -> loc :: rest, false, stack, swallowedInd, acc)
         case (IDENT(id, true), loc) :: rest
         if (canStartAngles && id.forall(_ == '>') && id.length > 1 && (stack match {
           case ((Angle, _), _) :: _ => true
           case _ => false
         })) => // split  `>>` to `>` and `>` so that code like `A<B<C>>` can be parsed correctly
-          go((CLOSE_BRACKET(Angle) -> loc.left) :: (IDENT(id.drop(1), true) -> loc) :: rest, false, stack, acc)
+          go((CLOSE_BRACKET(Angle) -> loc.left) :: (IDENT(id.drop(1), true) -> loc) :: rest, false, stack, swallowedInd, acc)
         case ((tk @ IDENT(">", true), loc)) :: rest if canStartAngles =>
           raise(WarningReport(
             msg"This looks like an angle bracket, but it does not close any angle bracket section" -> S(loc) ::
             msg"Add spaces around it if you intended to use `<` as an operator" -> N :: Nil,
             source = Parsing))
-          go(rest, false, stack, tk -> loc :: acc)
+          go(rest, false, stack,swallowedInd, tk -> loc :: acc)
         case (tk: Stroken, loc) :: rest =>
           go(rest, tk match {
             case SPACE | NEWLINE => false
             case _ => true
-          }, stack, tk -> loc :: acc)
+          }, stack, swallowedInd, tk -> loc :: acc)
         case Nil =>
           stack match
             case ((Indent, loc), oldAcc) :: _ =>
-              go(CLOSE_BRACKET(Indent) -> loc/*FIXME not proper loc...*/ :: Nil, false, stack, acc)
+              go(CLOSE_BRACKET(Indent) -> loc/*FIXME not proper loc...*/ :: Nil, false, stack, swallowedInd, acc)
             case ((k, l0), oldAcc) :: stack =>
               raise(ErrorReport(msg"Unmatched opening ${k.name}" -> S(l0) :: (
                 if k === Angle then
@@ -467,7 +472,7 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
               (oldAcc ::: acc).reverse
             case Nil => acc.reverse
     
-    go(tokens, false, Nil, Nil)
+    go(tokens, false, Nil, 0, Nil)
     
   
 
