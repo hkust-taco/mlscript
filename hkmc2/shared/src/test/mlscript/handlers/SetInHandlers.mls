@@ -1,0 +1,49 @@
+:js
+:effectHandlers
+
+
+// * This feature relies on `finally`
+:sjs
+let x = 1
+set x += 1 in print(x)
+x
+//│ JS (unsanitized):
+//│ let x, old, tmp, tmp1, tmp2;
+//│ x = 1;
+//│ old = x;
+//│ try {
+//│   tmp1 = x + 1;
+//│   x = tmp1;
+//│   tmp2 = Predef.print(x);
+//│   if (tmp2 instanceof runtime.EffectSig.class) {
+//│     throw new this.Error("Unhandled effects");
+//│   }
+//│   tmp = tmp2;
+//│ } finally {
+//│   x = old;
+//│ }
+//│ x
+//│ > 2
+//│ = 1
+//│ x = 1
+
+
+// * But `finally` is not yet supported by effect handlers
+
+:todo
+let x = 1
+handle h = Object with
+  fun test()(k) =
+    print("SUSPENDING")
+    let res = k(42)
+    print("DONE")
+    res
+set x += 1 in
+  print("init")
+  print(h.test())
+  print(x)
+  print("end")
+x
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+
