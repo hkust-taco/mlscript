@@ -135,8 +135,9 @@ class BlockTransformer(subst: SymbolSubst):
     case Value.Rcd(fields) =>
       val fields2 = fields.mapConserve:
         case arg @ RcdArg(idx, v) =>
+          val idx2 = idx.mapConserve(applyPath)
           val v2 = applyPath(v)
-          if v2 is v then arg else RcdArg(idx, v2)
+          if (idx2 is idx) && (v2 is v) then arg else RcdArg(idx2, v2)
       if fields2 is fields then v else Value.Rcd(fields2)
   
   def applyLocal(sym: Local): Local = sym.subst

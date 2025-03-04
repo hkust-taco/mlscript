@@ -68,6 +68,8 @@ class BlockTraverser(subst: SymbolSubst):
     case Value.Lit(lit) => ()
     case v @ Value.Lam(params, body) => applyLam(v)
     case Value.Arr(elems) => elems.map(applyArg)
+    case Value.Rcd(fields) => fields.map:
+      case RcdArg(idx, value) => idx.map(applyPath); applyPath(value)
   
   def applyLocal(sym: Local): Unit = sym.subst
   
