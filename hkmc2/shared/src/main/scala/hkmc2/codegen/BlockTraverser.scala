@@ -146,5 +146,5 @@ class BlockTraverserShallow(subst: SymbolSubst) extends BlockTraverser(subst):
       applySubBlock(rst)
     case _ => super.applyBlock(b)
 
-class BlockDataTraverse(subst: SymbolSubst) extends BlockTraverserShallow(subst):
+class BlockDataTraverser(subst: SymbolSubst) extends BlockTraverserShallow(subst):
   override def applySubBlock(b: Block): Unit = ()
