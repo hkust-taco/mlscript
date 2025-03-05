@@ -191,15 +191,17 @@ class TypeSimplifier(tl: TraceLogger):
             tv.state.upperBounds = newUBs
             val isPos = Analysis.posVars.contains(tv)
             val isNeg = Analysis.negVars.contains(tv)
-            // if (isPos && !isNeg && (Analysis.occsNum(tv) === 1 && {newLBs match { case (tv: IV) :: Nil => true; case _ => false }} || newLBs.forall(_.isSmall))) {
-            if isPos && !isNeg && ({newLBs match { case (tv: IV) :: Nil => true; case _ => false }} || newLBs.forall(_ => true)) then {
-            // if (isPos && !isNeg && ({newLBs match { case (tv: IV) :: Nil => true; case _ => false }})) {
-              newLBs.foldLeft(Bot: Type)(_ | _)
-            } else
-            // if (isNeg && !isPos && (Analysis.occsNum(tv) === 1 && {newUBs match { case (tv: IV) :: Nil => true; case _ => false }} || newUBs.forall(_.isSmall))) {
-            if isNeg && !isPos && ({newUBs match { case (tv: IV) :: Nil => true; case _ => false }} || newUBs.forall(_ => true)) then
-            // if (isNeg && !isPos && ({newUBs match { case (tv: IV) :: Nil => true; case _ => false }})) {
-              newUBs.foldLeft(Top: Type)(_ & _)
+            if tv.state.disjsub.isEmpty then
+              // if (isPos && !isNeg && (Analysis.occsNum(tv) === 1 && {newLBs match { case (tv: IV) :: Nil => true; case _ => false }} || newLBs.forall(_.isSmall))) {
+              if isPos && !isNeg && ({newLBs match { case (tv: IV) :: Nil => true; case _ => false }} || newLBs.forall(_ => true)) then {
+              // if (isPos && !isNeg && ({newLBs match { case (tv: IV) :: Nil => true; case _ => false }})) {
+                newLBs.foldLeft(Bot: Type)(_ | _)
+              } else
+              // if (isNeg && !isPos && (Analysis.occsNum(tv) === 1 && {newUBs match { case (tv: IV) :: Nil => true; case _ => false }} || newUBs.forall(_.isSmall))) {
+              if isNeg && !isPos && ({newUBs match { case (tv: IV) :: Nil => true; case _ => false }} || newUBs.forall(_ => true)) then
+              // if (isNeg && !isPos && ({newUBs match { case (tv: IV) :: Nil => true; case _ => false }})) {
+                newUBs.foldLeft(Top: Type)(_ & _)
+              else tv
             else
               // tv.lowerBounds = newLBs
               // tv.upperBounds = newUBs

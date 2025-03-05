@@ -87,6 +87,7 @@ bazbaz
 //│ Type: ['A] -> ('A) ->{⊥} ('A -> 'A) ->{⊥} 'A
 //│ Where:
 //│   'A <: Int
+//│   'A#Int ∨ 'A<:'A ∧ ⊥<:⊥ ∧ 'A<:'A}
 
 bazbaz(42)(x => x + 1)
 //│ Type: Int
@@ -97,6 +98,7 @@ cc
 //│ Where:
 //│   'A -> 'A <: 'B
 //│   'B <: 'A -> 'A
+//│   'B#'B ∨ 'B<:'B ∧ ⊥<:⊥ ∧ 'B<:'B}
 //│   'B -> 'B <: 'A
 //│   'A <: 'B -> 'B
 
@@ -112,17 +114,19 @@ fun h: [C] -> ([A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B
 :e
 bazbaz: [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
 //│ ╔══[ERROR] Cannot type non-function term Ref(member:bazbaz) as (A) ->{⊥} ([outer, 'B] -> 'B) ->{⊥} A
-//│ ║  l.113: 	bazbaz: [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
+//│ ║  l.115: 	bazbaz: [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
 //│ ╙──       	^^^^^^
 //│ Type: ['A] -> ('A) ->{⊥} ('A -> 'A) ->{⊥} 'A
 //│ Where:
 //│   'A <: Int
+//│   'A#Int ∨ 'A<:'A ∧ ⊥<:⊥ ∧ 'A<:'A}
 
 
 (x => f => bazbaz(x)(f)): [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
 //│ Type: ['A] -> ('A) ->{⊥} ('A -> 'A) ->{⊥} 'A
 //│ Where:
 //│   'A <: Int
+//│   'A#Int ∨ 'A<:'A ∧ ⊥<:⊥ ∧ 'A<:'A}
 
 
 h(x => f => bazbaz(x)(f))(42)
