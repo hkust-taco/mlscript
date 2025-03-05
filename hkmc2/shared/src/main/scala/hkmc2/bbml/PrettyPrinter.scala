@@ -38,7 +38,8 @@ object PrettyPrinter:
               apply(false)(bd)
               (v, bd)
             res ++= state.disjsub.map: d =>
-              val ds = d.disjoint.iterator
+              val ds = d.disjoint.iterator.flatMap:
+                case (v, u) => u.map(v -> _)
               val k = ds.next()
               (k, ds.toList, d.cs.toList)
             super.apply(pol)(ty)

@@ -422,8 +422,9 @@ class VarState:
   val disjsub: MutSet[DisjSub] = MutSet.empty
   override def toString = "<>"
 
-case class DisjSub(disjoint: MutMap[InfVar,BasicType], dss:Ls[DisjSub], cs:Ls[Type->Type]):
+case class DisjSub(disjoint: MutMap[InfVar, Set[BasicType]], dss:Ls[DisjSub], cs:Ls[Type->Type]):
   def commit() = disjoint.keys.foreach(_.state.disjsub += this)
+  def clear() = disjoint.keys.foreach(_.state.disjsub -= this)
   def remove(v:InfVar)=
-    v.state.disjsub-=this
-    disjoint-=v
+    v.state.disjsub -= this
+    disjoint -= v

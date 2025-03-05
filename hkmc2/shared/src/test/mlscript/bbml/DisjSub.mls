@@ -37,8 +37,8 @@ x=>
 //│ Where:
 //│   'x <: Int ∨ Bool
 //│   'x <: Int
-//│   'x#Int ∨ Int<:'app ∧ ⊥<:'eff}
 //│   'x#Bool ∨ Bool<:'app ∧ ⊥<:'eff}
+//│   'x#Int ∨ Int<:'app ∧ ⊥<:'eff}
 
 fun ap1(f)=f(1)
 ap1(idIB)

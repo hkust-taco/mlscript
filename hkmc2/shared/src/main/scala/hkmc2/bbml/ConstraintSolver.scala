@@ -98,14 +98,17 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
               v.state.lowerBounds ::= bd
               v.state.upperBounds.foreach(ub => constrainImpl(bd, ub))
               v.state.disjsub.foreach: d =>
-                Type.disjoint(d.disjoint(v), bd.toBasic.simp.toBasic)(Set.empty)(using c = mutable.Map.empty) match
-                  case N =>
-                    d.remove(v)
-                    if d.disjoint.isEmpty then
-                      d.dss.foreach(_.commit())
-                      d.cs.foreach((a, b) => constrainImpl(a, b))
-                  case S(k) =>
-                    k.foreach(k => DisjSub(d.disjoint ++ k, d.dss, d.cs).commit())
+                val u = d.disjoint(v).flatMap: t =>
+                  Type.disjoint(t, bd.toBasic.simp.toBasic)(Set.empty)(using c = mutable.Map.empty)
+                if u.isEmpty then
+                  d.remove(v)
+                  if d.disjoint.isEmpty then
+                    d.dss.foreach(_.commit())
+                    d.cs.foreach((a, b) => constrainImpl(a, b))
+                else
+                  d.clear()
+                  u.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
+                    DisjSub(mutable.Map.from(k.groupMap(_._1)(_._2)), d.dss, d.cs).commit()
       case Conj(i, u, Nil) => (conj.i, conj.u) match
         case (_, Union(N, Nil)) =>
           // raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} ∧ ¬⊥" -> N :: Nil))
@@ -133,7 +136,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
             else
               val cs = (ret1, ret2) :: (eff1, eff2) :: args2.zip(args1)
               k.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
-                DisjSub(mutable.Map.from(k), Nil, cs).commit()
+                DisjSub(mutable.Map.from(k.groupMap(_._1)(_._2)), Nil, cs).commit()
         case (Inter(S(fs:Ls[FunType])), Union(S(FunType(args2, ret2, eff2)), Nil)) =>
           val f = fs.filter(_.args.length === args2.length)
           val args = f.map(_.args).transpose
@@ -152,7 +155,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
                   constrainImpl(b.eff, eff2)
                 case S(k) =>
                   val cs = (b.ret,ret2) :: (b.eff,eff2) :: s
-                  k.foreach(k => DisjSub(mutable.Map.from(k), Nil, cs).commit())
+                  k.foreach(k => DisjSub(mutable.Map.from(k.groupMap(_._1)(_._2)), Nil, cs).commit())
         case _ =>
           // raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
           cctx.err
