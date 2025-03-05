@@ -1,0 +1,79 @@
+:js
+
+
+// * Record fields can be interleaved with other statements.
+// * Also, later record fields can refer to prior ones.
+
+
+let rcd =
+  a: 0
+  print(a)
+  let y = a + 1
+  b: y
+//│ > 0
+//│ rcd = {a: 0, b: 1}
+
+let rcd =
+  a: 1
+  print(a)
+  b: a + 1
+  let tmp = a + b
+  c: tmp
+  print("Done!")
+//│ > 1
+//│ > Done!
+//│ rcd = {a: 1, b: 2, c: 3}
+
+
+fun foo(x) =
+  x: x + 1
+  y: x
+
+let r = foo(123) in [r.x, r.y]
+//│ = [124, 124]
+
+
+// * Yaml!
+
+let rcd =
+  a: 0
+  b:
+    y: 1
+    z: 2
+  c: b.z
+//│ rcd = {a: 0, b: {y: 1, z: 2}, c: 2}
+
+[rcd.b.y, rcd.c]
+//│ = [1, 2]
+
+
+// * Imperative Yaml!
+
+let config(useModules) =
+  ext: "js"
+  if useModules do set ext = "m" + ext
+  base: "main"
+  full: base + "." + ext
+//│ config = [function]
+
+config(true)
+//│ = {ext: "mjs", base: "main", full: "main.mjs"}
+
+config(false)
+//│ = {ext: "js", base: "main", full: "main.js"}
+
+
+// * When any statement is a record field, the whole block is a record.
+
+:w
+let rcd =
+  print("Hello!")
+  a: 0
+  42
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.72: 	  42
+//│ ╙──      	  ^^
+//│ > Hello!
+//│ rcd = {a: 0}
+
+

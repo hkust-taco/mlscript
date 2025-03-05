@@ -9,7 +9,8 @@ class B
 :sjs
 x => if x is Pair(A, B) then 1
 //│ JS (unsanitized):
-//│ (x) => {
+//│ let lambda;
+//│ lambda = (undefined, function (x) {
 //│   let param0, param1;
 //│   if (x instanceof Pair1.class) {
 //│     param0 = x.a;
@@ -18,16 +19,17 @@ x => if x is Pair(A, B) then 1
 //│       if (param1 instanceof B1) {
 //│         return 1
 //│       } else {
-//│         throw new this.Error("match error");
+//│         throw new globalThis.Error("match error");
 //│       }
 //│     } else {
-//│       throw new this.Error("match error");
+//│       throw new globalThis.Error("match error");
 //│     }
 //│   } else {
-//│     throw new this.Error("match error");
+//│     throw new globalThis.Error("match error");
 //│   }
-//│ }
-//│ = [function block$res2]
+//│ });
+//│ lambda
+//│ = [function]
 
 
 // :e // FIXME: should be an exhaustiveness error

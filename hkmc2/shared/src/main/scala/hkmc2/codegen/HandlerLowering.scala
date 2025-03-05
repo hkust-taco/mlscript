@@ -54,7 +54,21 @@ object HandlerLowering:
 
 import HandlerLowering.*
 
-class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
+class HandlerPaths(using Elaborator.State):
+  val runtimePath: Path = State.runtimeSymbol.asPath
+  val effectSigPath: Path = runtimePath.selN(Tree.Ident("EffectSig")).selN(Tree.Ident("class"))
+  val effectSigSym: ClassSymbol = State.effectSigSymbol
+  val contClsPath: Path = runtimePath.selN(Tree.Ident("FunctionContFrame")).selN(Tree.Ident("class"))
+  val retClsPath: Path = runtimePath.selN(Tree.Ident("Return")).selN(Tree.Ident("class"))
+  val retClsSym: ClassSymbol = State.returnClsSymbol
+  val mkEffectPath: Path = runtimePath.selN(Tree.Ident("mkEffect"))
+  val handleBlockImplPath: Path = runtimePath.selN(Tree.Ident("handleBlockImpl"))
+  val stackDelayClsPath: Path = runtimePath.selN(Tree.Ident("StackDelay"))
+  
+  def isHandlerClsPath(p: Path) =
+    (p eq contClsPath)  || (p eq stackDelayClsPath) || (p eq effectSigPath) || (p eq retClsPath)
+
+class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, Elaborator.Ctx):
 
   private def funcLikeHandlerCtx(ctorThis: Option[Path], isHandlerMtd: Bool, nme: Str) =
     HandlerCtx(!isHandlerMtd, false, isHandlerMtd, false, nme, ctorThis, state =>
@@ -69,14 +83,6 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   private def ctorCtx(ctorThis: Path, nme: Str) = funcLikeHandlerCtx(S(ctorThis), false, nme)
   private def handlerMtdCtx(nme: Str) = funcLikeHandlerCtx(N, true, nme)
   private def handlerCtx(using HandlerCtx): HandlerCtx = summon
-  private val runtimePath: Path = State.runtimeSymbol.asPath
-  private val effectSigPath: Path = runtimePath.selN(Tree.Ident("EffectSig")).selN(Tree.Ident("class"))
-  private val effectSigSym: ClassSymbol = State.effectSigSymbol
-  private val contClsPath: Path = runtimePath.selN(Tree.Ident("FunctionContFrame")).selN(Tree.Ident("class"))
-  private val retClsPath: Path = runtimePath.selN(Tree.Ident("Return")).selN(Tree.Ident("class"))
-  private val retClsSym: ClassSymbol = State.returnClsSymbol
-  private val mkEffectPath: Path = runtimePath.selN(Tree.Ident("mkEffect"))
-  private val handleBlockImplPath: Path = runtimePath.selN(Tree.Ident("handleBlockImpl"))
   
   private def freshTmp(dbgNme: Str = "tmp") = new TempSymbol(N, dbgNme)
   
@@ -360,7 +366,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   private def thirdPass(b: Block): Block =
     // to ensure the fun and class references in the continuation class are properly scoped,
     // we move all function defns to the top level of the handler block
-    val (blk, defns) = b.floatOutDefns
+    val (blk, defns) = b.floatOutDefns()
     defns.foldLeft(blk)((acc, defn) => Define(defn, acc))
   
   private def locToStr(l: Loc): Str =
@@ -391,7 +397,7 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
           b match
           case Return(res, implct) =>
             // In case res is effectful, it will be handled in translateBlock
-            Assign(tmp, res, Return(Instantiate(retClsPath, tmp.asPath :: Nil), implct))
+            Assign(tmp, res, Return(Instantiate(paths.retClsPath, tmp.asPath :: Nil), implct))
           case HandleBlockReturn(res) =>
             Return(res, false)
           case _ => super.applyBlock(b)
@@ -399,8 +405,8 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
     
     val handlerBody = translateBlock(prepareBody(h.body), HandlerCtx(false, false, false, true,
       s"Cont$$handleBlock$$${h.lhs.nme}$$", N, state => blockBuilder
-        .assignFieldN(state.res.contTrace.last, nextIdent, Instantiate(state.cls, Value.Lit(Tree.IntLit(state.uid)) :: Value.Lit(Tree.UnitLit(true)) :: Nil))
-        .ret(PureCall(handleBlockImplPath, state.res :: h.lhs.asPath :: Nil))))
+        .assignFieldN(state.res.contTrace.last, nextIdent, PureCall(state.cls, Value.Lit(Tree.IntLit(state.uid)) :: Nil))
+        .ret(PureCall(paths.handleBlockImplPath, state.res :: h.lhs.asPath :: Nil))))
     
     val handlerMtds = h.handlers.map: handler =>
       val handleBlockSym = VarSymbol(Tree.Ident("handleBlock"))
@@ -409,14 +415,14 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
         translateBlock(handler.body, handlerMtdCtx(s"Cont$$handler$$${h.lhs.nme}$$${handler.sym.toLoc.fold("")(locToStr)}")))
       FunDefn(
         S(h.cls),
-        handler.sym, handler.params, Return(PureCall(mkEffectPath, h.lhs.asPath :: lam :: Nil), false))
+        handler.sym, handler.params, Return(PureCall(paths.mkEffectPath, h.cls.asPath :: lam :: Nil), false))
     
     val clsDefn = ClsLikeDefn(
       N, // no owner
       h.cls,
       BlockMemberSymbol(h.cls.id.name, Nil),
       syntax.Cls,
-      N,
+      N, Nil,
       S(h.par), handlerMtds, Nil, Nil,
       Assign(freshTmp(), Call(Value.Ref(State.builtinOpsMap("super")), h.args.map(_.asArg))(true, true), End()), End()) // TODO: handle effect in super call
     // NOTE: the super call is inside the preCtor
@@ -453,13 +459,13 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
               .assign(res, c)
               .ifthen(
                 res.asPath,
-                Case.Cls(effectSigSym, effectSigPath),
+                Case.Cls(paths.effectSigSym, paths.effectSigPath),
                 ReturnCont(res, uid)
               )
               .chain(ResumptionPoint(res, uid, _))
               .staticif(canRet, _.ifthen(
                 res.asPath,
-                Case.Cls(retClsSym, retClsPath),
+                Case.Cls(paths.retClsSym, paths.retClsPath),
                 blockBuilder
                   .ret(if handlerCtx.shouldUnwrapRet then res.asPath.value else res.asPath)
               ))
@@ -539,7 +545,8 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
       BlockMemberSymbol(clsSym.nme, Nil),
       syntax.Cls,
       S(PlainParamList(Param(FldFlags.empty, pcVar, N) :: Nil)),
-      S(contClsPath),
+      Nil,
+      S(paths.contClsPath),
       resumeFnDef :: Nil,
       Nil,
       Nil,
@@ -556,12 +563,12 @@ class HandlerLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx):
             .assign(res, c)
             .ifthen(
               res.asPath,
-              Case.Cls(effectSigSym, effectSigPath),
+              Case.Cls(paths.effectSigSym, paths.effectSigPath),
               handlerCtx.linkAndHandle(LinkState(res.asPath, clsSym.asPath, uid))
             )
             .staticif(canRet, _.ifthen(
               res.asPath,
-              Case.Cls(retClsSym, retClsPath),
+              Case.Cls(paths.retClsSym, paths.retClsPath),
               blockBuilder.ret(if handlerCtx.shouldUnwrapRet then res.asPath.value else res.asPath)
             ))
             .rest(applyBlock(rest))

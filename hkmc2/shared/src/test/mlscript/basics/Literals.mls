@@ -57,4 +57,84 @@ NaN
 //│ ║  l.55: 	NaN
 //│ ╙──      	^^^
 
+"\u0068\u0065\u006c\u006c\u006f"
+//│ = "hello"
 
+"\u{a}"
+//│ = "\n"
+
+"\ud83d\ude00"
+//│ = "😀"
+
+"\u{1F600}"
+//│ = "😀"
+
+"\u{1F600}" == "\ud83d\ude00"
+//│ = true
+
+:w
+"\uFE&&"
+//│ ╔══[WARNING] Invalid Unicode escape sequence: expected 4 hexadecimal digits but got 2
+//│ ║  l.76: 	"\uFE&&"
+//│ ╙──      	   ^^
+//│ = "&&"
+
+:w
+"\u{}"
+//│ ╔══[WARNING] Expected at least one hexadecimal digit in Unicode escape sequence
+//│ ║  l.83: 	"\u{}"
+//│ ╙──      	   ^
+//│ = ""
+
+:w
+"\u{ffffffff}"
+//│ ╔══[WARNING] Too many hexadecimal digits in Unicode escape sequence
+//│ ║  l.90: 	"\u{ffffffff}"
+//│ ╙──      	          ^^
+//│ = ""
+
+:w
+"\u{efefef}"
+//│ ╔══[WARNING] Unicode code point out of range: 0xefefef
+//│ ║  l.97: 	"\u{efefef}"
+//│ ╙──      	    ^^^^^^
+//│ = ""
+
+:w
+"\u{55"
+//│ ╔══[WARNING] Unterminated Unicode escape sequence: missing '}'
+//│ ║  l.104: 	"\u{55"
+//│ ╙──       	      ^
+//│ = "U"
+
+:w
+"\u{41****"
+//│ ╔══[WARNING] Unterminated Unicode escape sequence: missing '}'
+//│ ║  l.111: 	"\u{41****"
+//│ ╙──       	      ^
+//│ = "A****"
+
+print of fold(+) of
+  "\u{250c}\u{2500}\u{252c}\u{2510}"
+  "\u{2554}\u{2550}\u{2566}\u{2557}"
+  "\u{2553}\u{2500}\u{2565}\u{2556}"
+  "\u{2552}\u{2550}\u{2564}\u{2555}"
+  "\u000A"
+  "\u{2502}\u{20}\u{2502}\u{2502}"
+  "\u{2551}\u{20}\u{2551}\u{2551}"
+  "\u{2551}\u{20}\u{2551}\u{2551}"
+  "\u{2502}\u{20}\u{2502}\u{2502}"
+  "\u000A"
+  "\u{251c}\u{2500}\u{253c}\u{2524}"
+  "\u{2560}\u{2550}\u{256c}\u{2563}"
+  "\u{255f}\u{2500}\u{256b}\u{2562}"
+  "\u{255e}\u{2550}\u{256a}\u{2561}"
+  "\u000A"
+  "\u{2514}\u{2500}\u{2534}\u{2518}"
+  "\u{255a}\u{2550}\u{2569}\u{255d}"
+  "\u{2559}\u{2500}\u{2568}\u{255c}"
+  "\u{2558}\u{2550}\u{2567}\u{255b}"
+//│ > ┌─┬┐╔═╦╗╓─╥╖╒═╤╕
+//│ > │ ││║ ║║║ ║║│ ││
+//│ > ├─┼┤╠═╬╣╟─╫╢╞═╪╡
+//│ > └─┴┘╚═╩╝╙─╨╜╘═╧╛

@@ -2,32 +2,42 @@
 
 
 case x then x
-//│ = [function block$res1]
+//│ = [function]
 
 :sjs
 case { x then x }
 //│ JS (unsanitized):
-//│ (caseScrut) => { let x; x = caseScrut; return x }
-//│ = [function block$res2]
+//│ let lambda1; lambda1 = (undefined, function (caseScrut) { let x; x = caseScrut; return x }); lambda1
+//│ = [function]
 
 :sjs
 x => if x is
   0 then true
 //│ JS (unsanitized):
-//│ (x) => { if (x === 0) { return true } else { throw new this.Error("match error"); } }
-//│ = [function block$res3]
+//│ let lambda2;
+//│ lambda2 = (undefined, function (x) {
+//│   if (x === 0) {
+//│     return true
+//│   } else {
+//│     throw new globalThis.Error("match error");
+//│   }
+//│ });
+//│ lambda2
+//│ = [function]
 
 :sjs
 case 0 then true
 //│ JS (unsanitized):
-//│ (caseScrut) => {
+//│ let lambda3;
+//│ lambda3 = (undefined, function (caseScrut) {
 //│   if (caseScrut === 0) {
 //│     return true
 //│   } else {
-//│     throw new this.Error("match error");
+//│     throw new globalThis.Error("match error");
 //│   }
-//│ }
-//│ = [function block$res4]
+//│ });
+//│ lambda3
+//│ = [function]
 
 (case x then x) of 1
 //│ = 1
@@ -53,8 +63,16 @@ case
   0 then true
   _ then false
 //│ JS (unsanitized):
-//│ (caseScrut) => { if (caseScrut === 0) { return true } else { return false } }
-//│ = [function block$res10]
+//│ let lambda10;
+//│ lambda10 = (undefined, function (caseScrut) {
+//│   if (caseScrut === 0) {
+//│     return true
+//│   } else {
+//│     return false
+//│   }
+//│ });
+//│ lambda10
+//│ = [function]
 
 class Some(value)
 module None
@@ -64,16 +82,17 @@ val isDefined = case
   Some then true
   None then false
 //│ JS (unsanitized):
-//│ let isDefined, tmp5;
-//│ tmp5 = (caseScrut) => {
+//│ let isDefined, tmp5, lambda11;
+//│ lambda11 = (undefined, function (caseScrut) {
 //│   if (caseScrut instanceof Some1.class) {
 //│     return true
 //│   } else if (caseScrut instanceof None1) {
 //│     return false
 //│   } else {
-//│     throw new this.Error("match error");
+//│     throw new globalThis.Error("match error");
 //│   }
-//│ };
+//│ });
+//│ tmp5 = lambda11;
 //│ isDefined = tmp5;
-//│ isDefined = [function tmp5]
+//│ isDefined = [function]
 

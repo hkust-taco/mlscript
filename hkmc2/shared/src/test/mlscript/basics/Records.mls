@@ -1,0 +1,135 @@
+:js
+
+
+// * Note that this currently denotes unit, not an empty record...
+// * (we could make them the same thing) 
+
+{}
+
+let r = {}
+//│ r = ()
+
+
+{1}
+//│ = 1
+
+:w
+{1, 2}
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.17: 	{1, 2}
+//│ ╙──      	 ^
+//│ = 2
+
+{foo: 1}
+//│ = {foo: 1}
+
+
+let rcd = { foo: 1, bar: "..." }
+//│ rcd = {foo: 1, bar: "..."}
+
+[rcd.foo, rcd.bar]
+//│ = [1, "..."]
+
+typeof(rcd)
+//│ = "object"
+
+
+// * Should we allow this syntax?
+
+let rcd = (foo: 1, bar: "...")
+//│ rcd = {foo: 1, bar: "..."}
+
+[rcd.foo, rcd.bar]
+//│ = [1, "..."]
+
+let rcd = (
+  foo: 1
+  bar: "..."
+)
+//│ rcd = {foo: 1, bar: "..."}
+
+let rcd =
+  foo: 1
+  bar:
+    "..."
+//│ rcd = {foo: 1, bar: "..."}
+
+[rcd.foo, rcd.bar]
+//│ = [1, "..."]
+
+print <|
+  foo: 1
+  bar:
+    "..."
+//│ > {foo: 1, bar: "..."}
+
+
+// * But not this syntax...
+
+:e
+:fixme
+let rcd =
+  foo = 1
+  bar =
+    "..."
+//│ ╔══[ERROR] Name not found: foo
+//│ ║  l.72: 	  foo = 1
+//│ ╙──      	  ^^^
+//│ ╔══[ERROR] Name not found: bar
+//│ ║  l.73: 	  bar =
+//│ ╙──      	  ^^^
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: rcd (class hkmc2.semantics.VarSymbol)
+
+
+// * How about this syntax?
+
+:todo
+let rcd = new with
+  foo = 1
+  bar =
+    "..."
+//│ ╔══[ERROR] Name not found: foo
+//│ ║  l.88: 	  foo = 1
+//│ ╙──      	  ^^^
+//│ ╔══[ERROR] Name not found: bar
+//│ ║  l.89: 	  bar =
+//│ ╙──      	  ^^^
+//│ rcd = $anon
+
+
+// * Should probably be made to work
+
+:fixme
+id of { x: 1 }
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.103: 	id of { x: 1 }
+//│ ╙──       	        ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: Other argument forms (of class String)
+
+:fixme
+id of ({ x: 1 })
+//│ ╔══[ERROR] Unexpected colon in this position.
+//│ ║  l.110: 	id of ({ x: 1 })
+//│ ╙──       	         ^^^^
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.110: 	id of ({ x: 1 })
+//│ ╙──       	         ^
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+
+:fixme
+id of { x: 1, y: 2 }
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.120: 	id of { x: 1, y: 2 }
+//│ ╙──       	        ^
+//│ ╔══[ERROR] Name not found: y
+//│ ║  l.120: 	id of { x: 1, y: 2 }
+//│ ╙──       	              ^
+//│ ╔══[ERROR] Expected 1 arguments, got 2
+//│ ║  l.120: 	id of { x: 1, y: 2 }
+//│ ╙──       	^^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: Other argument forms (of class String)
+
+id of ({ x: 1, y: 2 })
+//│ = {x: 1, y: 2}
+
+

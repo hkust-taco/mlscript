@@ -78,11 +78,12 @@ example()
 //│ JS (unsanitized):
 //│ let example2;
 //│ example2 = function example() {
-//│   let x2, get_x, old1, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12;
+//│   let x2, get_x, old1, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, get_x1;
 //│   x2 = 0;
-//│   get_x = () => {
+//│   get_x1 = function get_x() {
 //│     return x2
 //│   };
+//│   get_x = get_x1;
 //│   old1 = x2;
 //│   try {
 //│     tmp6 = x2 + 1;
@@ -118,11 +119,12 @@ example()
 //│ JS (unsanitized):
 //│ let example3;
 //│ example3 = function example() {
-//│   let x2, get_x, y, old1, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
+//│   let x2, get_x, y, old1, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, get_x1;
 //│   x2 = 0;
-//│   get_x = () => {
+//│   get_x1 = function get_x() {
 //│     return x2
 //│   };
+//│   get_x = get_x1;
 //│   old1 = x2;
 //│   try {
 //│     tmp6 = x2 + 1;

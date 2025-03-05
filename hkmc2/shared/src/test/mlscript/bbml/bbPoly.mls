@@ -3,13 +3,13 @@
 
 //│ Type: ⊤
 
-42: [A] -> Int
+42 as [A] -> Int
 //│ Type: Int
 
 :e
-42: [A] -> Str
+42 as [A] -> Str
 //│ ╔══[ERROR] Type error in integer literal with expected type Str
-//│ ║  l.10: 	42: [A] -> Str
+//│ ║  l.10: 	42 as [A] -> Str
 //│ ║        	^^
 //│ ╙── because: cannot constrain  Int  <:  Str
 //│ Type: Str
@@ -22,25 +22,25 @@ id
 //│ Type: ['A] -> ('A) ->{⊥} 'A
 
 :e
-(x => x + 1): [A] -> A -> A
+(x => x + 1) as [A] -> A -> A
 //│ ╔══[ERROR] Type error in reference with expected type Int
-//│ ║  l.25: 	(x => x + 1): [A] -> A -> A
+//│ ║  l.25: 	(x => x + 1) as [A] -> A -> A
 //│ ║        	      ^
 //│ ╙── because: cannot constrain  A  <:  Int
 //│ ╔══[ERROR] Type error in application with expected type A
-//│ ║  l.25: 	(x => x + 1): [A] -> A -> A
+//│ ║  l.25: 	(x => x + 1) as [A] -> A -> A
 //│ ║        	      ^^^^^
 //│ ╙── because: cannot constrain  Int  <:  A
 //│ Type: ['A] -> ('A) ->{⊥} 'A
 
 
-(x => x): [A] -> A -> A
+(x => x) as [A] -> A -> A
 //│ Type: ['A] -> ('A) ->{⊥} 'A
 
-id: [A] -> A -> A
+id as [A] -> A -> A
 //│ Type: ['A] -> ('A) ->{⊥} 'A
 
-id: Int -> Int
+id as Int -> Int
 //│ Type: (Int) ->{⊥} Int
 
 fun myInc(inc: Int -> Int, x: Int) = inc(x)
@@ -49,7 +49,7 @@ fun myInc(inc: Int -> Int, x: Int) = inc(x)
 myInc(id, 0)
 //│ Type: Int
 
-let t = 42 in ((x => x): [A] -> A -> A)
+let t = 42 in ((x => x) as [A] -> A -> A)
 //│ Type: ['A] -> ('A) ->{⊥} 'A
 
 
@@ -83,7 +83,7 @@ let t = new Pair(42, true) in swap(t)
 let t = new Pair("114", "514") in swap(t)
 //│ Type: Pair[out Str, out Str]
 
-let id = ((x => x): [A] -> A -> A) in new Pair(id(42), id("42"))
+let id = ((x => x) as [A] -> A -> A) in new Pair(id(42), id("42"))
 //│ Type: Pair['A, 'B]
 //│ Where:
 //│   Int <: 'A
@@ -130,17 +130,17 @@ let bar = new Bar(0, id) in bar.Bar#f(bar.Bar#x)
 class Some[A](value: A)
 //│ Type: ⊤
 
-new Some((x => x): [A] -> A -> A)
+new Some((x => x) as [A] -> A -> A)
 //│ Type: Some['A]
 //│ Where:
 //│   'x -> 'x <: 'A
 
-let s = new Some((x => x): [A] -> A -> A) in let t = s.Some#value(42) in s.Some#value(false)
+let s = new Some((x => x) as [A] -> A -> A) in let t = s.Some#value(42) in s.Some#value(false)
 //│ Type: Bool ∨ Int
 
 fun gen: Int -> [A] -> A -> A
 fun gen(x) =
-  let t = x + 1 in ((y => y): [A] -> A -> A)
+  let t = x + 1 in ((y => y) as [A] -> A -> A)
 //│ Type: ⊤
 
 gen

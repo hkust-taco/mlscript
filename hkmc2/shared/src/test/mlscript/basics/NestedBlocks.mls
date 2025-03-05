@@ -1,0 +1,42 @@
+:js
+
+
+// * Checking that a `val` in a nested block is not treated as a member of the enclosing object
+
+object Foo with
+  if true then
+    val x = 0
+
+:e
+:re
+Foo.x
+//│ ╔══[ERROR] Object 'Foo' does not contain member 'x'
+//│ ║  l.12: 	Foo.x
+//│ ╙──      	   ^^
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+
+
+module Oops with
+  if true then
+    fun f = 1
+    ()
+
+// * We used to forget to reset the owner to None in sub-blocks like this one
+:re
+object Oops with
+  if true then
+    val fakeField = 1
+    print(fakeField)
+  print(this.fakeField) // shouldn't work!
+//│ > 1
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'fakeField' yielded 'undefined'
+
+:e
+:re
+Oops.fakeField
+//│ ╔══[ERROR] Object 'Oops' does not contain member 'fakeField'
+//│ ║  l.36: 	Oops.fakeField
+//│ ╙──      	    ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'fakeField')
+
+

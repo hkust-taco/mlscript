@@ -36,7 +36,9 @@ fun test(x) =
 //│ let test2;
 //│ test2 = function test(x) {
 //│   let Foo2, tmp;
-//│   Foo2 = function Foo(a1, b1) { return new Foo.class(a1, b1); };
+//│   Foo2 = function Foo(a1, b1) {
+//│     return new Foo.class(a1, b1);
+//│   };
 //│   Foo2.class = class Foo1 {
 //│     constructor(a, b) {
 //│       this.a = a;

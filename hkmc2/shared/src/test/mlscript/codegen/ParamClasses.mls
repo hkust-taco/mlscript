@@ -7,7 +7,9 @@
 class Foo()
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ Foo1 = function Foo() { return new Foo.class(); };
+//│ Foo1 = function Foo() {
+//│   return new Foo.class();
+//│ };
 //│ Foo1.class = class Foo {
 //│   constructor() {}
 //│   toString() { return "Foo(" + "" + ")"; }
@@ -32,7 +34,9 @@ Foo.class
 class Foo(a)
 //│ JS (unsanitized):
 //│ let Foo3;
-//│ Foo3 = function Foo(a1) { return new Foo.class(a1); };
+//│ Foo3 = function Foo(a1) {
+//│   return new Foo.class(a1);
+//│ };
 //│ Foo3.class = class Foo2 {
 //│   constructor(a) {
 //│     this.a = a;
@@ -65,7 +69,9 @@ foo(27)
 class Foo(a, b)
 //│ JS (unsanitized):
 //│ let Foo5;
-//│ Foo5 = function Foo(a1, b1) { return new Foo.class(a1, b1); };
+//│ Foo5 = function Foo(a1, b1) {
+//│   return new Foo.class(a1, b1);
+//│ };
 //│ Foo5.class = class Foo4 {
 //│   constructor(a, b) {
 //│     this.a = a;
@@ -127,7 +133,9 @@ class Inner(c) with
   print(c)
 //│ JS (unsanitized):
 //│ let Inner1;
-//│ Inner1 = function Inner(c1) { return new Inner.class(c1); };
+//│ Inner1 = function Inner(c1) {
+//│   return new Inner.class(c1);
+//│ };
 //│ Inner1.class = class Inner {
 //│   constructor(c) {
 //│     this.c = c;

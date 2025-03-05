@@ -228,7 +228,8 @@ package object utils {
   def TODO(msg: Any, cond: Bool): Unit = if (cond) TODO(msg)
   def die: Nothing = lastWords("Program reached an unexpected state.")
   def lastWords(msg: String): Nothing = throw new Exception(s"Internal Error: $msg")
-  def wat(msg: String, wat: Any): Nothing = lastWords(s"$msg ($wat)")
+  def wat(msg: String, obj: Any): Nothing = lastWords(s"$msg ($obj)")
+  def wat(obj: Any): Nothing = wat(s"unexpected value", obj)
   
   /** To make Scala unexhaustivity warnings believed to be spurious go away,
    * while clearly indicating the intent. */

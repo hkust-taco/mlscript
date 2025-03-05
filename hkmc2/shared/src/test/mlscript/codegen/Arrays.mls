@@ -63,3 +63,16 @@ new Array(4)
 //│ = [undefined, undefined, undefined, undefined]
 
 
+// TODO also sanity-check these accesses
+
+:todo
+:re
+empty.(0)
+
+:todo
+:re
+empty.[0]
+
+empty.["oops"]
+
+

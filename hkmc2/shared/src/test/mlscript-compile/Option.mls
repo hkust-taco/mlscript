@@ -20,3 +20,11 @@ fun test() = 2134 |> print
 class Both(fst, snd)
 
 
+fun getOrElse(opt, default) = if opt is
+  Some(value) then value
+  None then default
+
+module unsafe with
+  fun get(opt) = if opt is
+    Some(value) then value
+    None then throw Error("None.get")

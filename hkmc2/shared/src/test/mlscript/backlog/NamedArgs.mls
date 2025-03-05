@@ -1,0 +1,54 @@
+:js
+:todo
+
+
+// * Named tuple
+
+[a: 0]
+//│ ╔══[ERROR] Name not found: a
+//│ ║  l.7: 	[a: 0]
+//│ ╙──     	 ^
+
+
+// * Named arguments
+
+// :de
+:elt
+id(a: 0)
+//│ ╔══[ERROR] Name not found: a
+//│ ║  l.17: 	id(a: 0)
+//│ ╙──      	   ^
+//│ Elaborated tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = App:
+//│     lhs = SynthSel{member:id}:
+//│       prefix = Ref of member:Predef
+//│       nme = Ident of "id"
+//│     rhs = Tup of Ls of 
+//│       Fld:
+//│         flags = ()
+//│         term = Error
+//│         asc = S of Lit of IntLit of 0
+//│ /!!!\ Uncaught error: scala.NotImplementedError: Other argument forms (of class String)
+
+id of a: 0
+//│ ╔══[ERROR] Name not found: a
+//│ ║  l.35: 	id of a: 0
+//│ ╙──      	      ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: Other argument forms (of class String)
+
+
+print of
+  foo: 1
+  bar:
+    "..."
+//│ ╔══[ERROR] Name not found: foo
+//│ ║  l.43: 	  foo: 1
+//│ ╙──      	  ^^^
+//│ ╔══[ERROR] Name not found: bar
+//│ ║  l.44: 	  bar:
+//│ ╙──      	  ^^^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: Other argument forms (of class String)
+
+

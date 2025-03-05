@@ -1,0 +1,606 @@
+:lift
+:js
+
+:expect 5
+:sjs
+fun f(used1, unused1) =
+  let used2 = unused1
+  fun g(g_arg) =
+    let used3 = 2
+    used1 + used2
+  let unused2 = 2
+  g(used2) + unused2
+f(1, 2)
+//│ JS (unsanitized):
+//│ let g, f, g$;
+//│ g$ = function g$(used1, used2, g_arg) {
+//│   let used3;
+//│   used3 = 2;
+//│   return used1 + used2
+//│ };
+//│ g = function g(used1, used2) {
+//│   return (g_arg) => {
+//│     return g$(used1, used2, g_arg)
+//│   }
+//│ };
+//│ f = function f(used1, unused1) {
+//│   let used2, unused2, tmp;
+//│   used2 = unused1;
+//│   unused2 = 2;
+//│   tmp = g$(used1, used2, used2);
+//│   return tmp + unused2
+//│ };
+//│ f(1, 2)
+//│ = 5
+
+:expect 9
+:sjs
+fun f(used1, unused1) =
+  let used2 = unused1
+  fun g(g_arg)(g_arg2) =
+    let used3 = 2
+    used1 + used2 + g_arg + g_arg2
+  let unused2 = 2
+  g(used2)(used2) + unused2
+f(1, 2)
+//│ JS (unsanitized):
+//│ let g1, f1, g$1;
+//│ g$1 = function g$(used1, used2, g_arg) {
+//│   return (g_arg2) => {
+//│     let used3, tmp, tmp1;
+//│     used3 = 2;
+//│     tmp = used1 + used2;
+//│     tmp1 = tmp + g_arg;
+//│     return tmp1 + g_arg2
+//│   }
+//│ };
+//│ g1 = function g(used1, used2) {
+//│   return (g_arg) => {
+//│     return g$1(used1, used2, g_arg)
+//│   }
+//│ };
+//│ f1 = function f(used1, unused1) {
+//│   let used2, unused2, tmp, tmp1;
+//│   used2 = unused1;
+//│   unused2 = 2;
+//│   tmp = g$1(used1, used2, used2);
+//│   tmp1 = runtime.safeCall(tmp(used2));
+//│   return tmp1 + unused2
+//│ };
+//│ f1(1, 2)
+//│ = 9
+
+:expect 9
+fun f(used1, unused1) =
+  let used2 = unused1
+  fun g(g_arg)(g_arg2) =
+    let used3 = 2
+    used1 + used2 + g_arg + g_arg2
+  let unused2 = 2
+  let foo = g
+  foo(used2)(used2) + unused2
+f(1, 2)
+//│ = 9
+
+:expect 5
+:sjs
+fun f(used1, unused1) =
+  let used2 = unused1
+  fun g(g_arg) =
+    let used3 = 2
+    used1 + used2
+  let unused2 = 2
+  let foo = g
+  foo(used2) + unused2
+f(1, 2)
+//│ JS (unsanitized):
+//│ let g3, f3, g$3;
+//│ g$3 = function g$(used1, used2, g_arg) {
+//│   let used3;
+//│   used3 = 2;
+//│   return used1 + used2
+//│ };
+//│ g3 = function g(used1, used2) {
+//│   return (g_arg) => {
+//│     return g$3(used1, used2, g_arg)
+//│   }
+//│ };
+//│ f3 = function f(used1, unused1) {
+//│   let used2, unused2, foo, tmp;
+//│   used2 = unused1;
+//│   unused2 = 2;
+//│   foo = runtime.safeCall(g3(used1, used2));
+//│   tmp = runtime.safeCall(foo(used2));
+//│   return tmp + unused2
+//│ };
+//│ f3(1, 2)
+//│ = 5
+
+// preserve order
+:sjs
+fun f(a1, a2, a3, a4, a5, a6) =
+  fun g = a1 + a2 + a3 + a4 + a5 + a6  
+  g
+f(1,2,3,4,5,6)
+//│ JS (unsanitized):
+//│ let g4, f4, g$4;
+//│ g$4 = function g$(a1, a2, a3, a4, a5, a6) {
+//│   let tmp, tmp1, tmp2, tmp3;
+//│   tmp = a1 + a2;
+//│   tmp1 = tmp + a3;
+//│   tmp2 = tmp1 + a4;
+//│   tmp3 = tmp2 + a5;
+//│   return tmp3 + a6
+//│ };
+//│ g4 = function g(a1, a2, a3, a4, a5, a6) {
+//│   return () => {
+//│     return g$4(a1, a2, a3, a4, a5, a6)
+//│   }
+//│ };
+//│ f4 = function f(a1, a2, a3, a4, a5, a6) {
+//│   let tmp;
+//│   tmp = g$4(a1, a2, a3, a4, a5, a6);
+//│   return tmp
+//│ };
+//│ f4(1, 2, 3, 4, 5, 6)
+//│ = 21
+
+:expect "01"
+:sjs
+class Tuple(a, b)
+fun f() =
+  let a = 0
+  fun g() = set a = 1
+  fun h() = a
+  Tuple(g, h) 
+let ret = f()
+let f1 = ret.a
+let f2 = ret.b
+let x = f2().toString()
+f1()
+let y = f2().toString()
+x + y
+//│ JS (unsanitized):
+//│ let g5, h, f5, Tuple1, ret, f11, f21, x, y, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, h$, g$5, f$capture1;
+//│ g$5 = function g$(f$capture2) {
+//│   f$capture2.a0$ = 1;
+//│   return runtime.Unit
+//│ };
+//│ g5 = function g(f$capture2) {
+//│   return () => {
+//│     return g$5(f$capture2)
+//│   }
+//│ };
+//│ h$ = function h$(f$capture2) {
+//│   return f$capture2.a0$
+//│ };
+//│ h = function h(f$capture2) {
+//│   return () => {
+//│     return h$(f$capture2)
+//│   }
+//│ };
+//│ f$capture1 = function f$capture(a0$1) {
+//│   return new f$capture.class(a0$1);
+//│ };
+//│ f$capture1.class = class f$capture {
+//│   constructor(a0$) {
+//│     this.a0$ = a0$;
+//│   }
+//│   toString() { return "f$capture(" + globalThis.Predef.render(this.a0$) + ")"; }
+//│ };
+//│ f5 = function f() {
+//│   let capture, g$this, h$this;
+//│   capture = new f$capture1(null);
+//│   capture.a0$ = 0;
+//│   g$this = runtime.safeCall(g5(capture));
+//│   h$this = runtime.safeCall(h(capture));
+//│   return Tuple1(g$this, h$this)
+//│ };
+//│ Tuple1 = function Tuple(a1, b1) {
+//│   return new Tuple.class(a1, b1);
+//│ };
+//│ Tuple1.class = class Tuple {
+//│   constructor(a, b) {
+//│     this.a = a;
+//│     this.b = b;
+//│   }
+//│   toString() { return "Tuple(" + globalThis.Predef.render(this.a) + ", " + globalThis.Predef.render(this.b) + ")"; }
+//│ };
+//│ tmp = f5();
+//│ ret = tmp;
+//│ f11 = ret.a;
+//│ f21 = ret.b;
+//│ tmp1 = runtime.safeCall(f21());
+//│ tmp2 = runtime.safeCall(tmp1.toString());
+//│ x = tmp2;
+//│ tmp3 = runtime.safeCall(f11());
+//│ tmp4 = runtime.safeCall(f21());
+//│ tmp5 = runtime.safeCall(tmp4.toString());
+//│ y = tmp5;
+//│ x + y
+//│ = "01"
+//│ f1 = [function]
+//│ f2 = [function]
+//│ ret = Tuple([function], [function])
+//│ x = "0"
+//│ y = "1"
+
+
+class Tuple(a, b)
+fun f(used1) =
+  fun g1(used2) =
+    fun h() = 
+      set used1 = 10
+      set used2 = 100
+    fun i() = used1 + used2
+    Tuple(h, i)
+  fun g22() = used1
+  Tuple(g1(10), g22)
+
+:sjs
+:expect "11110110"
+let ret = f(1)
+let gRet = ret.a
+let g2 = ret.b
+let hFun = gRet.a
+let iFun = gRet.b
+let a = iFun()
+let b = g2()
+hFun()
+let c = g2()
+let d = iFun()
+a.toString() + b + c + d
+//│ JS (unsanitized):
+//│ let ret1, gRet, g21, hFun, iFun, a, b, c, d, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14;
+//│ tmp6 = f6(1);
+//│ ret1 = tmp6;
+//│ gRet = ret1.a;
+//│ g21 = ret1.b;
+//│ hFun = gRet.a;
+//│ iFun = gRet.b;
+//│ tmp7 = runtime.safeCall(iFun());
+//│ a = tmp7;
+//│ tmp8 = runtime.safeCall(g21());
+//│ b = tmp8;
+//│ tmp9 = runtime.safeCall(hFun());
+//│ tmp10 = runtime.safeCall(g21());
+//│ c = tmp10;
+//│ tmp11 = runtime.safeCall(iFun());
+//│ d = tmp11;
+//│ tmp12 = runtime.safeCall(a.toString());
+//│ tmp13 = tmp12 + b;
+//│ tmp14 = tmp13 + c;
+//│ tmp14 + d
+//│ = "11110110"
+//│ a = 11
+//│ b = 1
+//│ c = 10
+//│ d = 110
+//│ g2 = [function]
+//│ gRet = Tuple([function], [function])
+//│ hFun = [function]
+//│ iFun = [function]
+//│ ret = Tuple(Tuple([function], [function]), [function])
+
+// some variables mutated, some not
+:sjs
+:expect 7
+fun f(unused, immutable, mutated) =
+  fun g() =
+    set mutated = 2
+    immutable + mutated
+  fun h() = mutated
+  let a = g()
+  a + h() + unused
+f(1, 2, 1000)
+//│ JS (unsanitized):
+//│ let g6, h2, f7, h$2, g$6, f$capture5;
+//│ g$6 = function g$(immutable, f$capture6) {
+//│   f$capture6.mutated0$ = 2;
+//│   return immutable + f$capture6.mutated0$
+//│ };
+//│ g6 = function g(immutable, f$capture6) {
+//│   return () => {
+//│     return g$6(immutable, f$capture6)
+//│   }
+//│ };
+//│ h$2 = function h$(f$capture6) {
+//│   return f$capture6.mutated0$
+//│ };
+//│ h2 = function h(f$capture6) {
+//│   return () => {
+//│     return h$2(f$capture6)
+//│   }
+//│ };
+//│ f$capture5 = function f$capture(mutated0$1) {
+//│   return new f$capture.class(mutated0$1);
+//│ };
+//│ f$capture5.class = class f$capture4 {
+//│   constructor(mutated0$) {
+//│     this.mutated0$ = mutated0$;
+//│   }
+//│   toString() { return "f$capture(" + globalThis.Predef.render(this.mutated0$) + ")"; }
+//│ };
+//│ f7 = function f(unused, immutable, mutated) {
+//│   let a1, tmp15, tmp16, tmp17, capture;
+//│   capture = new f$capture5(mutated);
+//│   tmp15 = g$6(immutable, capture);
+//│   a1 = tmp15;
+//│   tmp16 = h$2(capture);
+//│   tmp17 = a1 + tmp16;
+//│   return tmp17 + unused
+//│ };
+//│ f7(1, 2, 1000)
+//│ = 7
+
+// if used as a higher order function, pass closures
+:expect 2
+fun f() =
+  let x = g
+  let y = 2
+  fun g() = y
+  x()
+f()
+//│ = 2
+
+:expect 2
+fun f() =
+  let y = 1
+  fun g() = y
+  let x = g
+  set y = 2
+  x()
+f()
+//│ = 2
+
+:sjs
+:expect 2
+fun f(arg) =
+  fun g(n) = if n <= 0 then arg else h(n-1)
+  fun h(n) = if n <= 0 then arg else g(n-1)
+  h(5)
+f(2)
+//│ JS (unsanitized):
+//│ let g9, h3, f10, h$3, g$9;
+//│ g$9 = function g$(arg, n) {
+//│   let scrut, tmp15;
+//│   scrut = n <= 0;
+//│   if (scrut === true) {
+//│     return arg
+//│   } else {
+//│     tmp15 = n - 1;
+//│     return h$3(arg, tmp15)
+//│   }
+//│ };
+//│ g9 = function g(arg) {
+//│   return (n) => {
+//│     return g$9(arg, n)
+//│   }
+//│ };
+//│ h$3 = function h$(arg, n) {
+//│   let scrut, tmp15;
+//│   scrut = n <= 0;
+//│   if (scrut === true) {
+//│     return arg
+//│   } else {
+//│     tmp15 = n - 1;
+//│     return g$9(arg, tmp15)
+//│   }
+//│ };
+//│ h3 = function h(arg) {
+//│   return (n) => {
+//│     return h$3(arg, n)
+//│   }
+//│ };
+//│ f10 = function f(arg) {
+//│   return h$3(arg, 5)
+//│ };
+//│ f10(2)
+//│ = 2
+
+:expect 1
+fun f() =
+  let x = 1
+  fun g() = x
+  fun f() = g()
+  f()
+f()
+//│ = 1
+
+:sjs
+fun f() = 3
+fun g() =
+  fun h() = 3
+  h()
+g()
+//│ JS (unsanitized):
+//│ let h4, f14, g12;
+//│ f14 = function f() {
+//│   return 3
+//│ };
+//│ h4 = function h() {
+//│   return 3
+//│ };
+//│ g12 = function g() {
+//│   return h4()
+//│ };
+//│ g12()
+//│ = 3
+
+:sjs
+fun g() =
+  let y = 0
+  fun f(x) =
+    let k = 4
+    set y = 2
+    // set x = 3
+    // just a dummy function to force class generation
+    fun h() =
+      set k = 5
+      set x = 4
+      x + y
+    x
+  f
+g()(1)
+//│ JS (unsanitized):
+//│ let h5, f15, g13, tmp15, f$1, h$4, g$capture1;
+//│ h$4 = function h$(x1, k, g$capture2) {
+//│   k = 5;
+//│   x1 = 4;
+//│   return x1 + g$capture2.y0$
+//│ };
+//│ h5 = function h(x1, k, g$capture2) {
+//│   return () => {
+//│     return h$4(x1, k, g$capture2)
+//│   }
+//│ };
+//│ f$1 = function f$(g$capture2, x1) {
+//│   let k;
+//│   k = 4;
+//│   g$capture2.y0$ = 2;
+//│   return x1
+//│ };
+//│ f15 = function f(g$capture2) {
+//│   return (x1) => {
+//│     return f$1(g$capture2, x1)
+//│   }
+//│ };
+//│ g$capture1 = function g$capture(y0$1) {
+//│   return new g$capture.class(y0$1);
+//│ };
+//│ g$capture1.class = class g$capture {
+//│   constructor(y0$) {
+//│     this.y0$ = y0$;
+//│   }
+//│   toString() { return "g$capture(" + globalThis.Predef.render(this.y0$) + ")"; }
+//│ };
+//│ g13 = function g() {
+//│   let capture;
+//│   capture = new g$capture1(null);
+//│   capture.y0$ = 0;
+//│   return runtime.safeCall(f15(capture))
+//│ };
+//│ tmp15 = g13();
+//│ runtime.safeCall(tmp15(1))
+//│ = 1
+
+:expect 2
+fun f() =
+  let b = 0
+  fun g() =
+    set b += 1
+    b
+  g
+let ret = f()
+ret()
+ret()
+//│ = 2
+//│ ret = [function]
+
+:expect 6
+:lift
+fun f(x, y, z) =
+  fun g() =
+    set x = 1
+    h()
+    x + y + z
+  fun h() =
+    set y = 2
+    i()
+  fun i() =
+    set z = 3
+  g
+f(0, 0, 0)()
+//│ = 6
+
+:sjs
+fun f(x, cond) =
+  set x = 1
+  set x = 2
+  if cond then
+    () => x
+  else
+    set x = 3
+    () => x
+//│ JS (unsanitized):
+//│ let f18, lambda, lambda1, lambda$, lambda$1;
+//│ lambda$1 = function lambda$(x1) {
+//│   return x1
+//│ };
+//│ lambda = (undefined, function (x1) {
+//│   return () => {
+//│     return lambda$1(x1)
+//│   }
+//│ });
+//│ lambda$ = function lambda$(x1) {
+//│   return x1
+//│ };
+//│ lambda1 = (undefined, function (x1) {
+//│   return () => {
+//│     return lambda$(x1)
+//│   }
+//│ });
+//│ f18 = function f(x1, cond) {
+//│   x1 = 1;
+//│   x1 = 2;
+//│   if (cond === true) {
+//│     return runtime.safeCall(lambda(x1))
+//│   } else {
+//│     x1 = 3;
+//│     return runtime.safeCall(lambda1(x1))
+//│   }
+//│ };
+
+:sjs
+:expect 1
+fun f() =
+  let x = 1
+  fun g() = 1
+  fun f() = set x = 1
+  f()
+  x
+f()
+//│ JS (unsanitized):
+//│ let f19, g16, f20, f$2, f$capture15;
+//│ g16 = function g() {
+//│   return 1
+//│ };
+//│ f$2 = function f$(f$capture16) {
+//│   f$capture16.x0$ = 1;
+//│   return runtime.Unit
+//│ };
+//│ f19 = function f(f$capture16) {
+//│   return () => {
+//│     return f$2(f$capture16)
+//│   }
+//│ };
+//│ f$capture15 = function f$capture(x0$1) {
+//│   return new f$capture.class(x0$1);
+//│ };
+//│ f$capture15.class = class f$capture14 {
+//│   constructor(x0$) {
+//│     this.x0$ = x0$;
+//│   }
+//│   toString() { return "f$capture(" + globalThis.Predef.render(this.x0$) + ")"; }
+//│ };
+//│ f20 = function f() {
+//│   let tmp19, capture;
+//│   capture = new f$capture15(null);
+//│   capture.x0$ = 1;
+//│   tmp19 = f$2(capture);
+//│   return capture.x0$
+//│ };
+//│ f20()
+//│ = 1
+
+let n = 0
+//│ n = 0
+
+fun h() = 3
+
+fun f() =
+  fun g() =
+    set n = n + 1
+  g()
+f()
+

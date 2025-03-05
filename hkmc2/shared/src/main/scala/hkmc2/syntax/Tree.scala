@@ -124,6 +124,7 @@ enum Tree extends AutoLocated:
     case Annotated(annotation, target) => annotation :: target :: Nil
     case MemberProj(cls, name) => cls :: Nil
     case Keywrd(kw) => Nil
+    case Dummy => Nil
   
   def describe: Str = this match
     case Empty() => "empty"
@@ -133,8 +134,9 @@ enum Tree extends AutoLocated:
     case IntLit(value) => "integer literal"
     case DecLit(value) => "decimal literal"
     case StrLit(value) => "string literal"
-    case UnitLit(value) => if value then "null" else "undefined"
     case BoolLit(value) => s"$value literal"
+    case UnitLit(value) => if value then "null" else "undefined"
+    case Unt() => "unit"
     case Bra(k, _) => k.name + " section"
     case Block(stmts) => "block"
     case OpBlock(_) => "operator block"
@@ -168,6 +170,7 @@ enum Tree extends AutoLocated:
     case Open(_) => "open"
     case MemberProj(_, _) => "member projection"
     case Keywrd(kw) => s"'${kw.name}' keyword"
+    case Dummy => "‹dummy›"
     
   def deparenthesized: Tree = this match
     case Bra(BracketKind.Round, inner) => inner.deparenthesized

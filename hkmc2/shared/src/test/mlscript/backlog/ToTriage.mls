@@ -19,7 +19,7 @@
 "a" +
 // a
 "b"
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found newline instead
+//│ ╔══[PARSE ERROR] Expected start of statement in this position; found new line instead
 //│ ║  l.20: 	// a
 //│ ║        	    ^
 //│ ║  l.21: 	"b"
@@ -165,30 +165,6 @@ f of
 
 // ——— ——— ———
 
-object Oops with
-  if true then
-    fun f = 1
-    ()
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:f (class hkmc2.semantics.BlockMemberSymbol)
-
-// We forget to reset the owner to None in sub-blocks like this one
-object Oops with
-  if true then
-    val fakeField = 1
-    print(fakeField)
-  print(this.fakeField) // shouldn't work!
-//│ > 1
-//│ > 1
-
-:e
-Oops.fakeField
-//│ ╔══[ERROR] Object 'Oops' does not contain member 'fakeField'
-//│ ║  l.184: 	Oops.fakeField
-//│ ╙──       	    ^^^^^^^^^^
-//│ = 1
-
-// ——— ——— ———
-
 fun p: Int
 
 :fixme // make this a proper error
@@ -249,7 +225,7 @@ object Cls(x) with
 :e
 Cls.x
 //│ ╔══[ERROR] Object 'Cls' does not contain member 'x'
-//│ ║  l.250: 	Cls.x
+//│ ║  l.226: 	Cls.x
 //│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
@@ -267,7 +243,7 @@ c.x
 
 class Foo' with
   class Bar'
-//│ > let Foo$_1;try { Foo$_1 = class Foo$_ {   constructor() {     this.Bar' = class Bar$_ {       constructor() {}       toString() { return "Bar'"; }     };   }   toString() { return "Foo'"; } }; block$res35 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ > let Foo$_1;try { Foo$_1 = class Foo$_ {   constructor() {     this.Bar' = class Bar$_ {       constructor() {}       toString() { return "Bar'"; }     };   }   toString() { return "Foo'"; } }; block$res32 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ >                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string
 
@@ -276,16 +252,16 @@ class Foo' with
 module Example with
 // whoops
   val a = this
-//│ ╔══[PARSE ERROR] Expected block after type declaration body; found newline instead
-//│ ║  l.276: 	module Example with
+//│ ╔══[PARSE ERROR] Expected block after type declaration body; found new line instead
+//│ ║  l.252: 	module Example with
 //│ ║         	                   ^
-//│ ║  l.277: 	// whoops
+//│ ║  l.253: 	// whoops
 //│ ╙──       	
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.278: 	  val a = this
+//│ ║  l.254: 	  val a = this
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.278: 	  val a = this
+//│ ║  l.254: 	  val a = this
 //│ ╙──       	^^
 
 // ——— ——— ———
@@ -293,7 +269,7 @@ module Example with
 :fixme // ("Not in scope" error)
 let xs = new Oopsie
 //│ ╔══[ERROR] Name not found: Oopsie
-//│ ║  l.294: 	let xs = new Oopsie
+//│ ║  l.270: 	let xs = new Oopsie
 //│ ╙──       	             ^^^^^^
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: xs (class hkmc2.semantics.VarSymbol)
 
@@ -316,6 +292,116 @@ Unit
 
 Int
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'Int' yielded 'undefined'
+
+// ——— ——— ———
+
+class C
+
+:sjs
+class D extends id(C)
+//│ JS (unsanitized):
+//│ let D1;
+//│ D1 = class D extends Predef.id.class {
+//│   constructor() {
+//│     super(C1);
+//│   }
+//│   toString() { return "D"; }
+//│ };
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
+
+// ——— ——— ———
+
+let x = 0
+//│ x = 0
+
+set x += 1; ()
+//│ /!!!\ Uncaught error: scala.MatchError: LetLike(keyword 'set',App(Ident(;),Tup(List(App(Ident(+=),Tup(List(Ident(x), IntLit(1)))), Unt()))),None,None) (of class hkmc2.syntax.Tree$LetLike)
+
+[x, set x += 1; x]
+//│ /!!!\ Uncaught error: scala.MatchError: LetLike(keyword 'set',App(Ident(;),Tup(List(App(Ident(+=),Tup(List(Ident(x), IntLit(1)))), Ident(x)))),None,None) (of class hkmc2.syntax.Tree$LetLike)
+
+// ——— ——— ———
+
+// TODO `baz()` should be in tail position (this is due to its by-name nature)
+:sjs
+fun baz = 1
+fun bar() = baz
+//│ JS (unsanitized):
+//│ let bar, baz;
+//│ baz = function baz() {
+//│   return 1
+//│ };
+//│ bar = function bar() {
+//│   let tmp10;
+//│   tmp10 = baz();
+//│   return tmp10
+//│ };
+
+// ——— ——— ———
+
+import "../../mlscript-compile/Stack.mls"
+
+// The parser rejects this, but it should be allowed.
+open Stack { ::, Nil }
+//│ ╔══[PARSE ERROR] Expected start of statement in this position; found comma instead
+//│ ║  l.345: 	open Stack { ::, Nil }
+//│ ╙──       	               ^
+//│ ╔══[PARSE ERROR] Unexpected comma in this position
+//│ ║  l.345: 	open Stack { ::, Nil }
+//│ ╙──       	               ^
+//│ ╔══[PARSE ERROR] Unexpected identifier here
+//│ ║  l.345: 	open Stack { ::, Nil }
+//│ ╙──       	                 ^^^
+//│ ╔══[ERROR] Illegal 'open' statement shape.
+//│ ║  l.345: 	open Stack { ::, Nil }
+//│ ╙──       	     ^^^^^^^^^^^
+
+// Instead, if we parenthesize the operator, it is rejected by the elaborator.
+open Stack { (::), Nil }
+//│ ╔══[ERROR] Illegal 'open' statement element.
+//│ ║  l.360: 	open Stack { (::), Nil }
+//│ ╙──       	             ^^^^
+
+open Stack { Nil, :: }
+
+:sjs
+1 :: Nil
+//│ JS (unsanitized):
+//│ Stack["::"](1, Stack.Nil)
+//│ ═══[RUNTIME ERROR] TypeError: Stack.:: is not a function
+
+// ——— ——— ———
+
+mkStr of ... // hello
+"oops"
+//│ ╔══[PARSE ERROR] Expected start of statement in this position; found new line instead
+//│ ║  l.375: 	mkStr of ... // hello
+//│ ║         	                     ^
+//│ ║  l.376: 	"oops"
+//│ ╙──       	
+//│ = "oops"
+
+// ——— ——— ———
+
+set [].0 = 1
+//│ > try { [].0 = 1; block$res49 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >         ^^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected number
+
+let arr = []
+set arr.0 = 1
+//│ > let arr;try { arr = []; arr.0 = 1; block$res50 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                            ^^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected number
+//│ ═══[RUNTIME ERROR] ReferenceError: arr is not defined
+
+// ——— ——— ———
+
+class Foo(x, y)
+
+// TODO missing sanity check
+Foo(1)
+//│ = Foo(1, undefined)
 
 // ——— ——— ———
 

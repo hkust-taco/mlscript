@@ -1,0 +1,86 @@
+:js
+:lift
+
+:sjs
+class A(x) with
+  class B(y) with
+    fun getB() = x + y
+  fun getA() = B(2).getB()
+//│ JS (unsanitized):
+//│ let B1, A1, B$ctor, B$;
+//│ B$ = function B$(A$instance$0, y) {
+//│   let tmp;
+//│   tmp = new B1.class(y);
+//│   return tmp(A$instance$0)
+//│ };
+//│ B$ctor = function B$ctor(A$instance$0) {
+//│   return (y) => {
+//│     let tmp;
+//│     tmp = new B1.class(y);
+//│     return tmp(A$instance$0)
+//│   }
+//│ };
+//│ B1 = function B(y1) {
+//│   return (A$instance$01) => {
+//│     return new B.class(y1)(A$instance$01);
+//│   }
+//│ };
+//│ B1.class = class B {
+//│   constructor(y) {
+//│     return (A$instance$0) => {
+//│       this.y = y;
+//│       this.A$instance$0 = A$instance$0;
+//│       return this;
+//│     }
+//│   }
+//│   getB() {
+//│     return this.A$instance$0.x + this.y
+//│   }
+//│   toString() { return "B(" + globalThis.Predef.render(this.y) + ")"; }
+//│ };
+//│ A1 = function A(x1) {
+//│   return new A.class(x1);
+//│ };
+//│ A1.class = class A {
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   getA() {
+//│     let tmp;
+//│     tmp = B$(this, 2);
+//│     return runtime.safeCall(tmp.getB())
+//│   }
+//│   toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; }
+//│ };
+
+:expect 3
+A(1).getA()
+//│ = 3
+
+:sjs
+class A with
+  val x = 
+    fun g() = 2
+    g
+(new A).x()
+//│ JS (unsanitized):
+//│ let g, A3, tmp1, g$;
+//│ g$ = function g$(A$instance) {
+//│   return 2
+//│ };
+//│ g = function g(A$instance) {
+//│   return () => {
+//│     return g$(A$instance)
+//│   }
+//│ };
+//│ A3 = class A2 {
+//│   constructor() {
+//│     let g$this;
+//│     g$this = runtime.safeCall(g(this));
+//│     this.x = g$this;
+//│   }
+//│   toString() { return "A"; }
+//│ };
+//│ tmp1 = new A3();
+//│ runtime.safeCall(tmp1.x())
+//│ = 2

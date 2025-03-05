@@ -53,7 +53,9 @@ class Baz(z) extends Bar(z * 1) with
   fun baz = this.bar * 2
 //│ JS (unsanitized):
 //│ let Baz1;
-//│ Baz1 = function Baz(z1) { return new Baz.class(z1); };
+//│ Baz1 = function Baz(z1) {
+//│   return new Baz.class(z1);
+//│ };
 //│ Baz1.class = class Baz extends Bar3.class {
 //│   constructor(z) {
 //│     let tmp2;
@@ -70,6 +72,7 @@ class Baz(z) extends Bar(z * 1) with
 :fixme
 let b = Baz(42)
 //│ ═══[RUNTIME ERROR] ReferenceError: Must call super constructor in derived class before accessing 'this' or returning from derived constructor
+//│ b = undefined
 
 b is Foo
 //│ = false

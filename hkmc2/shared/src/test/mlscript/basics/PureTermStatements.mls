@@ -21,7 +21,7 @@ case x then x
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.19: 	case x then x
 //│ ╙──      	            ^
-//│ = [function block$res3]
+//│ = [function]
 
 
 :w
@@ -49,5 +49,14 @@ fun foo() =
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.47: 	  x
 //│ ╙──      	  ^
+
+
+// * Note that uses of `;` currently do not warn...
+
+:sjs
+1; id(2)
+//│ JS (unsanitized):
+//│ let tmp; tmp = Predef.id(2); (1 , tmp)
+//│ = 2
 
 

@@ -44,6 +44,7 @@ fun foo() = bar()
 let r = foo()
 fun bar() = r
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ r = undefined
 
 // * Similar
 :re

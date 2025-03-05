@@ -47,6 +47,7 @@ enum Term extends Statement:
   case Forall(tvs: Ls[QuantVar], outer: Opt[VarSymbol], body: Term)
   case WildcardTy(in: Opt[Term], out: Opt[Term])
   case Blk(stats: Ls[Statement], res: Term)
+  case Rcd(stats: Ls[Statement])
   case Quoted(body: Term)
   case Unquoted(body: Term)
   case New(cls: Term, args: Ls[Term], rft: Opt[ClassSymbol -> ObjBody])
@@ -64,7 +65,7 @@ enum Term extends Statement:
   case Try(body: Term, finallyDo: Term)
   case Annotated(annot: Annot, target: Term)
   case Handle(lhs: LocalSymbol, rhs: Term, args: List[Term],
-    derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition])
+    derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)
   
   lazy val symbol: Opt[Symbol] = this match
     case Ref(sym) => S(sym)
@@ -73,9 +74,9 @@ enum Term extends Statement:
     case sel: SelProj => sel.sym
     case _ => N
   
-  def sel(id: Tree.Ident, sym: Opt[FieldSymbol]) =
+  def sel(id: Tree.Ident, sym: Opt[FieldSymbol]): Sel =
     Sel(this, id)(sym)
-  def selNoSym(nme: Str, synth: Bool = false) =
+  def selNoSym(nme: Str, synth: Bool = false): Sel | SynthSel =
     val id = new Tree.Ident(nme)
     if synth
     then SynthSel(this, id)(N)
@@ -118,9 +119,11 @@ end Term
 
 import Term.*
 
+
 extension (self: Blk)
   def mapRes(f: Term => Term) =
     Blk(self.stats, f(self.res))
+
 
 sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
   
@@ -134,6 +137,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
   def subTerms: Ls[Term] = this match
     case Error | _: Lit | _: Ref | _: Builtin | _: UnitVal => Nil
     case App(lhs, rhs) => lhs :: rhs :: Nil
+    case RcdField(lhs, rhs) => lhs :: rhs :: Nil
     case FunTy(lhs, rhs, eff) => lhs :: rhs :: eff.toList
     case TyApp(pre, tarsg) => pre :: tarsg
     case Sel(pre, _) => pre :: Nil
@@ -143,6 +147,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case IfLike(_, body) => body.subTerms
     case Lam(params, body) => body :: Nil
     case Blk(stats, res) => stats.flatMap(_.subTerms) ::: res :: Nil
+    case Rcd(stats) => stats.flatMap(_.subTerms)
     case Quoted(term) => term :: Nil
     case Unquoted(term) => term :: Nil
     case New(_, args, rft) => args ::: rft.toList.flatMap(_._2.blk.subTerms)
@@ -172,7 +177,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
       pat.paramsOpt.toList.flatMap(_.subTerms) ::: pat.body.blk :: Nil
     case Import(sym, pth) => Nil
     case Try(body, finallyDo) => body :: finallyDo :: Nil
-    case Handle(lhs, rhs, args, derivedClsSym, defs) => rhs :: args ::: defs.flatMap(_.td.subTerms)
+    case Handle(lhs, rhs, args, derivedClsSym, defs, bod) => rhs :: args ::: defs.flatMap(_.td.subTerms) ::: bod :: Nil
     case Neg(e) => e :: Nil
     case Annotated(ann, target) => ann.subTerms ::: target :: Nil
   
@@ -204,6 +209,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case r @ Ref(symbol) => symbol.toString+"#"+r.refNum
     case App(lhs, tup: Tup) => s"${lhs.showDbg}(${tup.fields.map(_.showDbg).mkString(", ")})"
     case App(lhs, rhs) => s"${lhs.showDbg}(...${rhs.showDbg})"
+    case RcdField(lhs, rhs) => s"${lhs.showDbg}: ${rhs.showDbg}"
     case FunTy(lhs: Tup, rhs, eff) =>
       s"${lhs.fields.map(_.showDbg).mkString(", ")} ->${
         eff.map(e => s"{${e.showDbg}}").getOrElse("")} ${rhs.showDbg}"
@@ -219,6 +225,9 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Lam(params, body) => s"λ${params.showDbg}. ${body.showDbg}"
     case Blk(stats, res) =>
       (stats.map(_.showDbg + "; ") :+ (res match { case Lit(Tree.UnitLit(false)) => "" case x => x.showDbg + " " }))
+      .mkString("( ", "", ")")
+    case Rcd(stats) =>
+      (stats.map(_.showDbg + "; "))
       .mkString("{ ", "", "}")
     case Quoted(term) => s"""code"${term.showDbg}""""
     case Unquoted(term) => s"$${${term.showDbg}}"
@@ -228,7 +237,8 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Asc(term, ty) => s"${term.toString}: ${ty.toString}"
     case LetDecl(sym, _) => s"let ${sym}"
     case DefineVar(sym, rhs) => s"${sym} = ${rhs.showDbg}"
-    case Handle(lhs, rhs, args, derivedClsSym, defs) => s"handle ${lhs} = ${rhs}(${args.mkString(", ")}) ${defs}"
+    case Handle(lhs, rhs, args, derivedClsSym, defs, bod) =>
+      s"handle ${lhs} = ${rhs}(${args.mkString(", ")}) ${defs} in ${bod}"
     case Region(name, body) => s"region ${name.nme} in ${body.showDbg}"
     case RegRef(reg, value) => s"(${reg.showDbg}).ref ${value.showDbg}"
     case Assgn(lhs, rhs) => s"${lhs.showDbg} := ${rhs.showDbg}"
@@ -257,9 +267,11 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Try(body, finallyDo) => s"try ${body.showDbg} finally ${finallyDo.showDbg}"
     case Ret(res) => s"return ${res.showDbg}"
     case TypeDef(sym, tparams, rhs, _, _) =>
-      s"type ${sym}${tparams.mkStringOr(", ", "[", "]")}${rhs.fold("")(rhs => s" = ${rhs.showDbg}")}"
+      s"type ${sym}${tparams.mkStringOr(", ", "[", "]")} = ${rhs.fold("")(x => x.showDbg)}"
 
 final case class LetDecl(sym: LocalSymbol, annotations: Ls[Annot]) extends Statement
+
+final case class RcdField(field: Term, rhs: Term) extends Statement
 
 final case class DefineVar(sym: LocalSymbol, rhs: Term) extends Statement
 
@@ -326,7 +338,7 @@ sealed abstract class TypeLikeDef extends Definition:
 sealed abstract class ClassLikeDef extends TypeLikeDef:
   val owner: Opt[InnerSymbol]
   val kind: ClsLikeKind
-  val sym: MemberSymbol[? <: ClassLikeDef]
+  val sym: MemberSymbol[? <: ClassLikeDef] & InnerSymbol
   val bsym: BlockMemberSymbol
   val tparams: Ls[TyParam]
   val paramsOpt: Opt[ParamList]

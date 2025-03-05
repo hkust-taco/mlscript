@@ -130,8 +130,10 @@ class BuiltinSymbol
 
 
 /** This is the outside-facing symbol associated to a possibly-overloaded
-  * definition living in a block – e.g., a module or class. */
-class BlockMemberSymbol(val nme: Str, val trees: Ls[Tree])(using State)
+  * definition living in a block – e.g., a module or class.
+  * `nameIsMeaningful` is `true` when the name comes from the user's source code;
+  *   it is false when the name is a default given by the compiler, such as "lambda" when lifting lambdas. */
+class BlockMemberSymbol(val nme: Str, val trees: Ls[Tree], val nameIsMeaningful: Bool = true)(using State)
     extends MemberSymbol[Definition]:
   
   def toLoc: Option[Loc] = Loc(trees)

@@ -22,6 +22,8 @@ case class Program(
 
 sealed abstract class Block extends Product with AutoLocated:
   
+  def ~(that: Block): Block = Begin(this, that)
+  
   protected def children: Ls[Located] = ??? // Maybe extending AutoLocated is unnecessary
   
   lazy val definedVars: Set[Local] = this match
@@ -91,10 +93,35 @@ sealed abstract class Block extends Product with AutoLocated:
     case TryBlock(sub, finallyDo, rest) => sub.freeVars ++ finallyDo.freeVars ++ rest.freeVars
     case Assign(lhs, rhs, rest) => Set(lhs) ++ rhs.freeVars ++ rest.freeVars
     case AssignField(lhs, nme, rhs, rest) => lhs.freeVars ++ rhs.freeVars ++ rest.freeVars
+    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs.freeVars ++ fld.freeVars ++ rhs.freeVars ++ rest.freeVars
     case Define(defn, rest) => defn.freeVars ++ rest.freeVars
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
       (bod.freeVars - lhs) ++ rst.freeVars ++ hdr.flatMap(_.freeVars)
     case HandleBlockReturn(res) => res.freeVars
+    case End(msg) => Set.empty
+  
+  // TODO: freeVarsLLIR skips `fun` and `cls` in `Call` and `Instantiate` respectively, which is needed in some
+  // other places. However, adding them breaks some LLIR tests. Supposedly, once the IR uses the new symbol system, 
+  // this should no longer happen. This version should be removed once that is resolved.
+  lazy val freeVarsLLIR: Set[Local] = this match
+    case Match(scrut, arms, dflt, rest) =>
+      scrut.freeVarsLLIR ++ dflt.toList.flatMap(_.freeVarsLLIR) ++ rest.freeVarsLLIR
+      ++ arms.flatMap:
+        (pat, arm) => arm.freeVarsLLIR -- pat.freeVars
+    case Return(res, implct) => res.freeVarsLLIR
+    case Throw(exc) => exc.freeVarsLLIR
+    case Label(label, body, rest) => (body.freeVarsLLIR - label) ++ rest.freeVarsLLIR 
+    case Break(label) => Set(label)
+    case Continue(label) => Set(label)
+    case Begin(sub, rest) => sub.freeVarsLLIR ++ rest.freeVarsLLIR
+    case TryBlock(sub, finallyDo, rest) => sub.freeVarsLLIR ++ finallyDo.freeVarsLLIR ++ rest.freeVarsLLIR
+    case Assign(lhs, rhs, rest) => Set(lhs) ++ rhs.freeVarsLLIR ++ rest.freeVarsLLIR
+    case AssignField(lhs, nme, rhs, rest) => lhs.freeVarsLLIR ++ rhs.freeVarsLLIR ++ rest.freeVarsLLIR
+    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs.freeVarsLLIR ++ fld.freeVarsLLIR ++ rhs.freeVarsLLIR ++ rest.freeVarsLLIR
+    case Define(defn, rest) => defn.freeVarsLLIR ++ rest.freeVarsLLIR
+    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
+      (bod.freeVarsLLIR - lhs) ++ rst.freeVarsLLIR ++ hdr.flatMap(_.freeVars)
+    case HandleBlockReturn(res) => res.freeVarsLLIR
     case End(msg) => Set.empty
   
   lazy val subBlocks: Ls[Block] = this match
@@ -122,15 +149,19 @@ sealed abstract class Block extends Product with AutoLocated:
   // Note that this returns the definitions in reverse order, with the bottommost definiton appearing
   // last. This is so that using defns.foldLeft later to add the definitions to the front of a block, 
   // we don't need to reverse the list again to preserve the order of the definitions.
-  def floatOutDefns =
+  def floatOutDefns(
+      ignore: Defn => Bool = _ => false, 
+      preserve: Defn => Bool = _ => false
+    ) =
     var defns: List[Defn] = Nil
     val transformer = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
-        case Define(defn, rest) => defn match
+        case Define(defn, rest) if !ignore(defn) => defn match
           case v: ValDefn => super.applyBlock(b)
           case _ =>
             defns ::= defn
-            applyBlock(rest)
+            if preserve(defn) then super.applyBlock(b)
+            else applyBlock(rest)
         case _ => super.applyBlock(b)
     
     (transformer.applyBlock(this), defns)
@@ -281,10 +312,20 @@ sealed abstract class Defn:
   lazy val freeVars: Set[Local] = this match
     case FunDefn(own, sym, params, body) => body.freeVars -- params.flatMap(_.paramSyms) - sym
     case ValDefn(owner, k, sym, rhs) => rhs.freeVars
-    case ClsLikeDefn(own, isym, sym, k, paramsOpt, parentSym, methods, privateFields, publicFields, preCtor, ctor) =>
+    case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, 
+      methods, privateFields, publicFields, preCtor, ctor) =>
       preCtor.freeVars
         ++ ctor.freeVars ++ methods.flatMap(_.freeVars)
-        -- privateFields -- publicFields.map(_.sym)
+        -- privateFields -- publicFields.map(_.sym) -- auxParams.flatMap(_.paramSyms)
+  
+  lazy val freeVarsLLIR: Set[Local] = this match
+    case FunDefn(own, sym, params, body) => body.freeVarsLLIR -- params.flatMap(_.paramSyms) - sym
+    case ValDefn(owner, k, sym, rhs) => rhs.freeVarsLLIR
+    case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, 
+      methods, privateFields, publicFields, preCtor, ctor) =>
+      preCtor.freeVarsLLIR
+        ++ ctor.freeVarsLLIR ++ methods.flatMap(_.freeVarsLLIR)
+        -- privateFields -- publicFields.map(_.sym) -- auxParams.flatMap(_.paramSyms)
   
 final case class FunDefn(
     owner: Opt[InnerSymbol],
@@ -304,10 +345,11 @@ final case class ValDefn(
 
 final case class ClsLikeDefn(
     owner: Opt[InnerSymbol],
-    isym: MemberSymbol[? <: ClassLikeDef],
+    isym: MemberSymbol[? <: ClassLikeDef] & InnerSymbol,
     sym: BlockMemberSymbol,
     k: syntax.ClsLikeKind,
     paramsOpt: Opt[ParamList],
+    auxParams: List[ParamList],
     parentPath: Opt[Path],
     methods: Ls[FunDefn],
     privateFields: Ls[TermSymbol],
@@ -325,6 +367,7 @@ final case class Handler(
     params: Ls[ParamList],
     body: Block,
 ):
+  lazy val freeVarsLLIR: Set[Local] = body.freeVarsLLIR -- params.flatMap(_.paramSyms) - sym - resumeSym
   lazy val freeVars: Set[Local] = body.freeVars -- params.flatMap(_.paramSyms) - sym - resumeSym
 
 /* Represents either unreachable code (for functions that must return a result)
@@ -340,6 +383,13 @@ enum Case:
     case Lit(_) => Set.empty
     case Cls(_, path) => path.freeVars
     case Tup(_, _) => Set.empty
+  
+  lazy val freeVarsLLIR: Set[Local] = this match
+    case Lit(_) => Set.empty
+    case Cls(_, path) => path.freeVarsLLIR
+    case Tup(_, _) => Set.empty
+
+sealed trait TrivialResult extends Result
 
 sealed abstract class Result:
   
@@ -353,14 +403,26 @@ sealed abstract class Result:
     case _ => Nil
   
   lazy val freeVars: Set[Local] = this match
-    case Call(fun, args) => args.flatMap(_.value.freeVars).toSet
-    case Instantiate(cls, args) => args.flatMap(_.freeVars).toSet
+    case Call(fun, args) => fun.freeVars ++ args.flatMap(_.value.freeVars).toSet
+    case Instantiate(cls, args) => cls.freeVars ++ args.flatMap(_.freeVars).toSet
     case Select(qual, name) => qual.freeVars 
     case Value.Ref(l) => Set(l)
     case Value.This(sym) => Set.empty
     case Value.Lit(lit) => Set.empty
     case Value.Lam(params, body) => body.freeVars -- params.paramSyms
     case Value.Arr(elems) => elems.flatMap(_.value.freeVars).toSet
+    case DynSelect(qual, fld, arrayIdx) => qual.freeVars ++ fld.freeVars
+
+  lazy val freeVarsLLIR: Set[Local] = this match
+    case Call(fun, args) => args.flatMap(_.value.freeVarsLLIR).toSet
+    case Instantiate(cls, args) => args.flatMap(_.freeVarsLLIR).toSet
+    case Select(qual, name) => qual.freeVarsLLIR 
+    case Value.Ref(l) => Set(l)
+    case Value.This(sym) => Set.empty
+    case Value.Lit(lit) => Set.empty
+    case Value.Lam(params, body) => body.freeVarsLLIR -- params.paramSyms
+    case Value.Arr(elems) => elems.flatMap(_.value.freeVarsLLIR).toSet
+    case DynSelect(qual, fld, arrayIdx) => qual.freeVarsLLIR ++ fld.freeVarsLLIR
   
 // type Local = LocalSymbol
 type Local = Symbol
@@ -373,8 +435,9 @@ case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool, val mayRaiseEffect
 
 case class Instantiate(cls: Path, args: Ls[Path]) extends Result
 
-sealed abstract class Path extends Result:
+sealed abstract class Path extends TrivialResult:
   def selN(id: Tree.Ident): Path = Select(this, id)(N)
+  def sel(id: Tree.Ident, sym: FieldSymbol): Path = Select(this, id)(S(sym))
   def selSN(id: Str): Path = selN(new Tree.Ident(id))
   def asArg = Arg(false, this)
 
@@ -389,8 +452,14 @@ enum Value extends Path:
   case Lit(lit: Literal)
   case Lam(params: ParamList, body: Block)
   case Arr(elems: Ls[Arg])
+  case Rcd(elems: Ls[RcdArg])
 
 case class Arg(spread: Bool, value: Path)
+
+// * `IndxdArg(S(idx), value)` represents a key-value pair in a record `(idx): value`
+// * `IndxdArg(N, value)` represents a spread element in a record `...value`
+case class RcdArg(idx: Opt[Path], value: Path):
+  def spread: Bool = idx.isEmpty
 
 extension (k: Block => Block)
   

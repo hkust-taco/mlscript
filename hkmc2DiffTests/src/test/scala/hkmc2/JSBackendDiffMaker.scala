@@ -192,10 +192,11 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
               ErrorReport(msg"Expected: '${expected}', got: '${result}'" -> N :: Nil,
                 source = Diagnostic.Source.Runtime)
             case _ => ()
+            val anon = nme.isEmpty
             result match
-            case "undefined" =>
-            case "()" =>
+            case "undefined" if anon =>
+            case "()" if anon =>
             case _ =>
-              output(s"${if nme.isEmpty then "" else s"$nme "}= ${result.indentNewLines("| ")}")
+              output(s"${if anon then "" else s"$nme "}= ${result.indentNewLines("| ")}")
       
 

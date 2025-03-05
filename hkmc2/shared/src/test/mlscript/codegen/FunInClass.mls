@@ -22,7 +22,9 @@ fun test(a) =
 //│ let test1;
 //│ test1 = function test(a) {
 //│   let Inner1;
-//│   Inner1 = function Inner(b1) { return new Inner.class(b1); };
+//│   Inner1 = function Inner(b1) {
+//│     return new Inner.class(b1);
+//│   };
 //│   Inner1.class = class Inner {
 //│     constructor(b) {
 //│       this.b = b;
@@ -76,7 +78,9 @@ fun test(a) =
 //│ let test2;
 //│ test2 = function test(a) {
 //│   let C11, C21, tmp1, tmp2;
-//│   C11 = function C1(b1) { return new C1.class(b1); };
+//│   C11 = function C1(b1) {
+//│     return new C1.class(b1);
+//│   };
 //│   C11.class = class C1 {
 //│     constructor(b) {
 //│       this.b = b;
@@ -87,7 +91,9 @@ fun test(a) =
 //│     }
 //│     toString() { return "C1(" + globalThis.Predef.render(this.b) + ")"; }
 //│   };
-//│   C21 = function C2(b1) { return new C2.class(b1); };
+//│   C21 = function C2(b1) {
+//│     return new C2.class(b1);
+//│   };
 //│   C21.class = class C2 {
 //│     constructor(b) {
 //│       this.b = b;
@@ -123,7 +129,9 @@ class Foo(a) with
 Foo(123)
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ Foo1 = function Foo(a1) { return new Foo.class(a1); };
+//│ Foo1 = function Foo(a1) {
+//│   return new Foo.class(a1);
+//│ };
 //│ Foo1.class = class Foo {
 //│   constructor(a) {
 //│     this.a = a;
@@ -156,7 +164,9 @@ class Bar(x) with
 Bar(1)
 //│ JS (unsanitized):
 //│ let Bar1;
-//│ Bar1 = function Bar(x1) { return new Bar.class(x1); };
+//│ Bar1 = function Bar(x1) {
+//│   return new Bar.class(x1);
+//│ };
 //│ Bar1.class = class Bar {
 //│   constructor(x) {
 //│     this.x = x;

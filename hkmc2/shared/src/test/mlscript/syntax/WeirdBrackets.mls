@@ -1,0 +1,59 @@
+:js
+
+
+{( 123 )}
+//│ = 123
+
+{({( a: 1, b: 2 )})}
+//│ = {a: 1, b: 2}
+
+
+:e
+\{ Int }
+//│ ╔══[ERROR] Name not found: \
+//│ ║  l.12: 	\{ Int }
+//│ ╙──      	^
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
+//│ ║  l.12: 	\{ Int }
+//│ ╙──      	   ^^^
+
+:e
+\(0)
+//│ ╔══[ERROR] Name not found: \
+//│ ║  l.21: 	\(0)
+//│ ╙──      	^
+
+fun (\) huh(x) = x
+
+\(0)
+//│ = 0
+
+
+fun f(x) = if x is {( Int then 1, Bool then 2 )}
+
+
+// * Potential alternative syntaxes for UCS splits
+
+:e
+fun f(x) = if x is ( Int then 1, Bool then 2 )
+//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ║  l.38: 	fun f(x) = if x is ( Int then 1, Bool then 2 )
+//│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+fun f(x) = if x is \{ Int then 1, Bool then 2 }
+//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ║  l.44: 	fun f(x) = if x is \{ Int then 1, Bool then 2 }
+//│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+fun f(x) = if x is \( Int then 1, Bool then 2 )
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.50: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
+//│ ╙──      	                   ^
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.50: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
+//│ ╙──      	                   ^
+
+
+

@@ -10,6 +10,15 @@ Str1 = class Str {
   } 
   static from(value) {
     return runtime.safeCall(globalThis.String(value))
+  } 
+  static parenthesizedIf(x, cond) {
+    let tmp;
+    if (cond === true) {
+      tmp = "(" + x;
+      return tmp + ")"
+    } else {
+      return x
+    }
   }
   static toString() { return "Str"; }
 };

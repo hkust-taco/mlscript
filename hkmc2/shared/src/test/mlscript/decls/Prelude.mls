@@ -15,7 +15,9 @@ declare class String
 declare class RegExp
 declare class Set
 declare class Map
-declare class Error(msg)
+declare class Error
+declare class TypeError
+declare class Symbol
 
 // MLscript-specific types
 declare class Unit
@@ -29,6 +31,7 @@ declare class Str with
 // declare module Math // TODO: list members
 declare val Math // so we can, eg, `open { pow }` in the meantime
 
+declare val Reflect
 declare val console
 declare val process
 declare val fs
@@ -36,11 +39,18 @@ declare val Infinity
 
 // declare fun typeof: (Any) -> Str
 
+declare fun parseInt(str: Str, radix: Int): Int
+declare fun parseFloat(str: Str): Num
 
-declare module Predef with
-  class Test with
-    val x = 0
-  class MatchResult(captures)
-  class MatchFailure(errors)
+
+declare module source with
+  object
+    line
+    name
+    file
+
+declare module js with
+  fun
+    try_catch
 
 

@@ -8,7 +8,7 @@ import hkmc2.semantics.Elaborator.State
 import hkmc2.semantics.*
 import hkmc2.syntax.Tree
 
-class StackSafeTransform(depthLimit: Int)(using State):
+class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
   private val STACK_LIMIT_IDENT: Tree.Ident = Tree.Ident("stackLimit")
   private val STACK_DEPTH_IDENT: Tree.Ident = Tree.Ident("stackDepth")
   private val STACK_OFFSET_IDENT: Tree.Ident = Tree.Ident("stackOffset")
@@ -17,7 +17,6 @@ class StackSafeTransform(depthLimit: Int)(using State):
   private val runtimePath: Path = State.runtimeSymbol.asPath
   private val checkDepthPath: Path = runtimePath.selN(Tree.Ident("checkDepth"))
   private val resetDepthPath: Path = runtimePath.selN(Tree.Ident("resetDepth"))
-  private val stackDelayClsPath: Path = runtimePath.selN(Tree.Ident("StackDelay"))
   private val stackLimitPath: Path = runtimePath.selN(STACK_LIMIT_IDENT)
   private val stackDepthPath: Path = runtimePath.selN(STACK_DEPTH_IDENT)
   private val stackOffsetPath: Path = runtimePath.selN(STACK_OFFSET_IDENT)
@@ -56,7 +55,7 @@ class StackSafeTransform(depthLimit: Int)(using State):
     // the global stack handler is created here
     HandleBlock(
       handlerSym, resSym,
-      stackDelayClsPath, Nil, clsSym,
+      paths.stackDelayClsPath, Nil, clsSym,
       Handler(
         BlockMemberSymbol("perform", Nil), resumeSym, ParamList(ParamListFlags.empty, Nil, N) :: Nil,
         /* 
@@ -148,19 +147,19 @@ class StackSafeTransform(depthLimit: Int)(using State):
   
   def isTrivial(b: Block): Boolean =
     var trivial = true
-    val walker = new BlockTransformerShallow(SymbolSubst()):
-      override def applyResult(r: Result): Result = r match
-        case Call(Value.Ref(_: BuiltinSymbol), _) => r
-        case _: Call | _: Instantiate => trivial = false; r
-        case _ => r
-    walker.applyBlock(b)
+    new BlockTraverserShallow(SymbolSubst()):
+      applyBlock(b)
+      override def applyResult(r: Result): Unit = r match
+        case Call(Value.Ref(_: BuiltinSymbol), _) => ()
+        case _: Call | _: Instantiate => trivial = false
+        case _ => ()
     trivial
 
   def rewriteCls(defn: ClsLikeDefn, isTopLevel: Bool): ClsLikeDefn = 
-    val ClsLikeDefn(owner, isym, sym, k, paramsOpt, 
+    val ClsLikeDefn(owner, isym, sym, k, paramsOpt, auxParams,
       parentPath, methods, privateFields, publicFields, preCtor, ctor) = defn
     ClsLikeDefn(
-      owner, isym, sym, k, paramsOpt, parentPath, methods.map(rewriteFn), privateFields,
+      owner, isym, sym, k, paramsOpt, auxParams, parentPath, methods.map(rewriteFn), privateFields,
       publicFields, rewriteBlk(preCtor),
       if isTopLevel && (defn.k is syntax.Mod) then transformTopLevel(ctor) else rewriteBlk(ctor)
     )

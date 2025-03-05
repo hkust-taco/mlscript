@@ -79,14 +79,14 @@ add(2)
 
 :e
 42 { add(2) inc() }
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side.
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (juxtaposition).
 //│ ║  l.81: 	42 { add(2) inc() }
 //│ ╙──      	     ^^^^^^^^^^^^
 //│ = 42
 
 :e
 42 { add(2) { inc() } }
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side.
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (juxtaposition).
 //│ ║  l.88: 	42 { add(2) { inc() } }
 //│ ╙──      	     ^^^^^^^^^^^^^^^^
 //│ = 42
@@ -126,7 +126,7 @@ inc(2) * 2
 42
   inc()
     add(2)
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side.
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (juxtaposition).
 //│ ║  l.127: 	  inc()
 //│ ║         	  ^^^^^
 //│ ║  l.128: 	    add(2)
@@ -199,7 +199,7 @@ inc()
 
 :e
 42 console.log
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side.
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (selection).
 //│ ║  l.201: 	42 console.log
 //│ ╙──       	   ^^^^^^^
 //│ = 42

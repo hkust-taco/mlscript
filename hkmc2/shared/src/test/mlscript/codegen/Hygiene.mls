@@ -54,7 +54,7 @@ let f = () => x
 let x = 2
 f()
 //│ JS (unsanitized):
-//│ let x, f, x1; x = 1; f = () => { return x }; x1 = 2; runtime.safeCall(f())
+//│ let x, f, x1, f1; x = 1; f1 = function f() { return x }; f = f1; x1 = 2; runtime.safeCall(f())
 //│ = 1
 //│ f = [function f]
 //│ x = 2
@@ -103,7 +103,9 @@ class Cls(x) with
   print(this.x, x)
 //│ JS (unsanitized):
 //│ let Cls1;
-//│ Cls1 = function Cls(x3) { return new Cls.class(x3); };
+//│ Cls1 = function Cls(x3) {
+//│   return new Cls.class(x3);
+//│ };
 //│ Cls1.class = class Cls {
 //│   #x;
 //│   #x1;
@@ -195,7 +197,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[ERROR] Name not found: Runtime
-//│ ║  l.196: 	Runtime
+//│ ║  l.198: 	Runtime
 //│ ╙──       	^^^^^^^
 
 

@@ -33,8 +33,8 @@ val isDefined = case
   Some(_) then true
   None    then false
 //│ JS (unsanitized):
-//│ let isDefined1, tmp1;
-//│ tmp1 = (caseScrut) => {
+//│ let isDefined1, tmp1, lambda;
+//│ lambda = (undefined, function (caseScrut) {
 //│   let param0;
 //│   if (caseScrut instanceof Some1.class) {
 //│     param0 = caseScrut.value;
@@ -42,11 +42,12 @@ val isDefined = case
 //│   } else if (caseScrut instanceof None1.class) {
 //│     return false
 //│   } else {
-//│     throw new this.Error("match error");
+//│     throw new globalThis.Error("match error");
 //│   }
-//│ };
+//│ });
+//│ tmp1 = lambda;
 //│ isDefined1 = tmp1;
-//│ isDefined = [function tmp1]
+//│ isDefined = [function]
 
 isDefined(Some(1))
 //│ = true
@@ -58,7 +59,7 @@ isDefined(None)
 val isDefined = x => if x is
   Some(_) then true
   None    then false
-//│ isDefined = [function tmp3]
+//│ isDefined = [function]
 
 isDefined(Some(1))
 //│ = true
@@ -73,7 +74,7 @@ module Foo with
 val isOther = x => if x is
   Foo.Other(_) then true
   None    then false
-//│ isOther = [function tmp5]
+//│ isOther = [function]
 
 
 fun keepIfGreaterThan(x, y) =

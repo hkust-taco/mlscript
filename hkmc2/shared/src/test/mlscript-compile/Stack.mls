@@ -49,4 +49,30 @@ fun zip(...xss) =
       else heads toReverseArray() :: go(Nil, Nil) of tails reverse()
   go(Nil, Nil) of fromArray(xss)
 
+// Non-recursive and efficient yet mutable list concatenation.
+fun (:::) concat(xs, ys) = if
+  ys is Nil then xs
+  xs is
+    Nil then ys
+    head' :: tail' then
+      let
+        result = head' :: ys
+        current = result // the insertion point
+        rest = tail' // the remaining of `xs`
+      while rest is head :: tail do
+        let next = head :: ys
+        set
+          current.tail = next
+          current = next
+          rest = tail
+      result
+
+fun (:+) append(xs, y) = xs ::: y :: Nil
+
+fun filter(xs, f) = if xs is
+  head :: tail and
+    f(head) then head :: filter(tail, f)
+    else filter(tail, f)
+  Nil then Nil
+
 

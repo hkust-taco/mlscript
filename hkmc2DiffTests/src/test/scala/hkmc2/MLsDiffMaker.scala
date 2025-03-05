@@ -58,6 +58,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val noSanityCheck = NullaryCommand("noSanityCheck")
   val effectHandlers = NullaryCommand("effectHandlers")
   val stackSafe = Command("stackSafe")(_.trim)
+  val liftDefns = NullaryCommand("lift")
   
   def mkConfig: Config =
     import Config.*
@@ -79,6 +80,7 @@ abstract class MLsDiffMaker extends DiffMaker:
                 S(StackSafety(stackLimit = value))
         ,
       )),
+      liftDefns = Opt.when(liftDefns.isSet)(LiftDefns())
     )
   
   

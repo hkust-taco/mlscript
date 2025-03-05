@@ -15,14 +15,18 @@ class Outer(a, b) with
   print(i.i1(1))
 //│ JS (unsanitized):
 //│ let Outer1;
-//│ Outer1 = function Outer(a1, b1) { return new Outer.class(a1, b1); };
+//│ Outer1 = function Outer(a1, b1) {
+//│   return new Outer.class(a1, b1);
+//│ };
 //│ Outer1.class = class Outer {
 //│   constructor(a, b) {
 //│     this.a = a;
 //│     this.b = b;
 //│     let tmp, tmp1, tmp2;
 //│     const this$Outer = this;
-//│     this.Inner = function Inner(c1) { return new Inner.class(c1); };
+//│     this.Inner = function Inner(c1) {
+//│       return new Inner.class(c1);
+//│     };
 //│     this.Inner.class = class Inner {
 //│       constructor(c) {
 //│         this.c = c;

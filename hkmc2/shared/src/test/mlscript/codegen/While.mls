@@ -4,7 +4,8 @@
 :sjs
 () => (while true then 0)
 //│ JS (unsanitized):
-//│ () => {
+//│ let lambda;
+//│ lambda = (undefined, function () {
 //│   let scrut, tmp;
 //│   tmp1: while (true) {
 //│     scrut = true;
@@ -12,17 +13,18 @@
 //│       tmp = 0;
 //│       continue tmp1;
 //│     } else {
-//│       throw new this.Error("match error");
+//│       throw new globalThis.Error("match error");
 //│     }
 //│     break;
 //│   }
 //│   return tmp
-//│ }
-//│ = [function block$res1]
+//│ });
+//│ lambda
+//│ = [function]
 
 () =>
   while true then 0
-//│ = [function block$res2]
+//│ = [function]
 
 
 let x = true
@@ -103,7 +105,8 @@ while
   let i = 0
   i < 10 do set i += 1
 //│ JS (unsanitized):
-//│ () => {
+//│ let lambda2;
+//│ lambda2 = (undefined, function () {
 //│   let i2, scrut3, tmp19, tmp20;
 //│   tmp21: while (true) {
 //│     i2 = 0;
@@ -119,8 +122,9 @@ while
 //│     break;
 //│   }
 //│   return tmp20
-//│ }
-//│ = [function block$res13]
+//│ });
+//│ lambda2
+//│ = [function]
 
 
 let i = 0 in
@@ -248,14 +252,14 @@ while false do
 
 
 () => while true then 0
-//│ = [function block$res27]
+//│ = [function]
 
 :fixme
 while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.255: 	  then 0(0)
+//│ ║  l.259: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ═══[ERROR] Unrecognized term split (false literal).
 //│ > Hello World

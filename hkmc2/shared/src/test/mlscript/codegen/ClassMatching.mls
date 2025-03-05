@@ -57,17 +57,19 @@ if s is
 :sjs
 x => if x is Some(x) then x
 //│ JS (unsanitized):
-//│ (x3) => {
+//│ let lambda;
+//│ lambda = (undefined, function (x3) {
 //│   let param04, x4;
 //│   if (x3 instanceof Some1.class) {
 //│     param04 = x3.value;
 //│     x4 = param04;
 //│     return x4
 //│   } else {
-//│     throw new this.Error("match error");
+//│     throw new globalThis.Error("match error");
 //│   }
-//│ }
-//│ = [function block$res9]
+//│ });
+//│ lambda
+//│ = [function]
 
 
 class C(a)

@@ -28,10 +28,10 @@ None isDefined()
 //│ = false
 
 case Some(x) then x
-//│ = [function block$res8]
+//│ = [function]
 
 case { Some(x) then x }
-//│ = [function block$res9]
+//│ = [function]
 
 Some(1) isDefined()
 //│ = true

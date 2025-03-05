@@ -27,7 +27,9 @@ class Foo(x) with
     val y = x
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ Foo1 = function Foo(x1) { return new Foo.class(x1); };
+//│ Foo1 = function Foo(x1) {
+//│   return new Foo.class(x1);
+//│ };
 //│ Foo1.class = class Foo {
 //│   constructor(x) {
 //│     this.x = x;
@@ -65,10 +67,10 @@ do
 let foo = 1
 fun foo(x) = foo
 //│ ╔══[ERROR] Name 'foo' is already used
-//│ ║  l.65: 	let foo = 1
+//│ ║  l.67: 	let foo = 1
 //│ ║        	    ^^^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.66: 	fun foo(x) = foo
+//│ ║  l.68: 	fun foo(x) = foo
 //│ ╙──      	    ^^^^^^^^^^^^
 //│ JS (unsanitized):
 //│ let foo3, foo4; foo3 = function foo(x) { return foo4 }; foo4 = 1;

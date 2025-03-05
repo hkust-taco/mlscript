@@ -156,21 +156,22 @@ fun baz() =
 //│ JS (unsanitized):
 //│ let baz;
 //│ baz = function baz() {
-//│   let w, z;
+//│   let w, z, lambda;
 //│   w = function w() {
 //│     return 1
 //│   };
 //│   z = function z() {
 //│     return 2
 //│   };
-//│   return (x, y) => {
+//│   lambda = (undefined, function (x, y) {
 //│     let tmp1, tmp2, tmp3, tmp4;
 //│     tmp1 = x + y;
 //│     tmp2 = w();
 //│     tmp3 = tmp1 + tmp2;
 //│     tmp4 = z();
 //│     return tmp3 + tmp4
-//│   }
+//│   });
+//│   return lambda
 //│ };
 
 
@@ -276,7 +277,9 @@ class Foo(x) with
   fun oops = x
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ Foo1 = function Foo(x1) { return new Foo.class(x1); };
+//│ Foo1 = function Foo(x1) {
+//│   return new Foo.class(x1);
+//│ };
 //│ Foo1.class = class Foo {
 //│   constructor(x) {
 //│     this.x = x;

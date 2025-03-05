@@ -5,10 +5,12 @@
 // TODO show undefined-valued defined bindings
 val a = b
 val b = 1
+//│ a = undefined
 //│ b = 1
 
 
 val a = ()
+//│ a = ()
 
 a
 

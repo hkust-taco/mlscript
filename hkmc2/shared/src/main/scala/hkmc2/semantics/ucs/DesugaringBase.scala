@@ -3,10 +3,10 @@ package semantics
 package ucs
 
 import mlscript.utils.*, shorthands.*
-import syntax.Tree.*, Elaborator.{Ctxl, ctx}
+import syntax.Tree.*, Elaborator.{Ctxl, ctx}, Elaborator.State
 
 /** Contains some helpers that makes UCS desugaring easier. */
-trait DesugaringBase(using state: Elaborator.State):
+trait DesugaringBase(using state: State):
   val elaborator: Elaborator
 
   import elaborator.tl.*, state.globalThisSymbol
@@ -22,30 +22,24 @@ trait DesugaringBase(using state: Elaborator.State):
   protected final def app(l: Term, r: Term, label: Str): Term.App = app(l, r, FlowSymbol(label))
   protected final def app(l: Term, r: Term, s: FlowSymbol): Term.App = Term.App(l, r)(App(Empty(), Empty()), s)
 
-  /** Get the class symbol defined in the `Predef` module. */
-  protected def resolvePredefMember(name: Str): Ctxl[(Term.SynthSel, ClassSymbol)] =
-    val predefSymbol = ctx.builtins.Predef
-    val innerSel = sel(globalThisSymbol.ref(), "Predef", predefSymbol)
-    val memberSymbol = predefSymbol.tree.definedSymbols.get(name).flatMap(_.asCls).getOrElse:
-      lastWords(s"Cannot resolve `$name` in `Predef`.")
-    (sel(innerSel, name, memberSymbol), memberSymbol)
-
   /** Make a term looks like `globalThis.Predef.MatchResult` with its symbol. */
-  protected lazy val matchResultClass: Ctxl[(Term.SynthSel, ClassSymbol)] = resolvePredefMember("MatchResult")
+  protected lazy val matchResultClass: Ctxl[(Term.Sel | Term.SynthSel, ClassSymbol)] =
+    (State.runtimeSymbol.ref().selNoSym("MatchResult", synth=true), State.matchResultClsSymbol)
 
   /** Make a pattern looks like `globalThis.Predef.MatchResult.class`. */
   protected def matchResultPattern(parameters: Opt[List[BlockLocalSymbol]]): Ctxl[Pattern.ClassLike] =
     val (classRef, classSym) = matchResultClass
-    val classSel = Term.SynthSel(matchResultClass._1, Ident("class"))(S(classSym))
+    val classSel = Term.SynthSel(classRef, Ident("class"))(S(classSym))
     Pattern.ClassLike(classSym, classSel, parameters, false)(Empty())
 
   /** Make a term looks like `globalThis.Predef.MatchFailure` with its symbol. */
-  protected lazy val matchFailureClass: Ctxl[(Term.SynthSel, ClassSymbol)] = resolvePredefMember("MatchFailure")
+  protected lazy val matchFailureClass: Ctxl[(Term.Sel | Term.SynthSel, ClassSymbol)] =
+    (State.runtimeSymbol.ref().selNoSym("MatchFailure", synth=true), State.matchFailureClsSymbol)
 
   /** Make a pattern looks like `globalThis.Predef.MatchFailure.class`. */
   protected def matchFailurePattern(parameters: Opt[List[BlockLocalSymbol]]): Ctxl[Pattern.ClassLike] =
     val (classRef, classSym) = matchResultClass
-    val classSel = Term.SynthSel(matchResultClass._1, Ident("class"))(S(classSym))
+    val classSel = Term.SynthSel(classRef, Ident("class"))(S(classSym))
     Pattern.ClassLike(classSym, classSel, parameters, false)(Empty())
 
   /** Create a term that selects a method in the `Predef` module. */

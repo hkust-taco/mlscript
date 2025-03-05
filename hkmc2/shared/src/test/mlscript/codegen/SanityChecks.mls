@@ -62,7 +62,7 @@ f(3)(4)
 :noSanityCheck
 let f = (x, y) => x + y in f(2)
 //│ JS:
-//│ f3 = (x, y) => { return x + y }; block$res5 = runtime.safeCall(f3(2)); undefined
+//│ f4 = function f(x, y) { return x + y }; f3 = f4; block$res5 = runtime.safeCall(f3(2)); undefined
 //│ = NaN
 
 :ssjs
@@ -70,16 +70,17 @@ let f = (x, y) => x + y in f(2)
 let f = (x, y) => x + y
 f(2)
 //│ JS:
-//│ f4 = (...args) => {
-//│   globalThis.Predef.checkArgs("", 2, true, args.length);
+//│ f6 = function f(...args) {
+//│   globalThis.Predef.checkArgs("f", 2, true, args.length);
 //│   let x = args[0];
 //│   let y = args[1];
 //│   return x + y
 //│ };
-//│ block$res6 = runtime.safeCall(f4(2));
+//│ f5 = f6;
+//│ block$res6 = runtime.safeCall(f5(2));
 //│ undefined
-//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
-//│ f = [function f4]
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
+//│ f = [function f]
 
 
 :expect NaN
@@ -89,7 +90,9 @@ class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 Cls(1, 2).f(3)
 //│ JS:
-//│ Cls1 = function Cls(x1, y1) { return new Cls.class(x1, y1); };
+//│ Cls1 = function Cls(x1, y1) {
+//│   return new Cls.class(x1, y1);
+//│ };
 //│ Cls1.class = class Cls {
 //│   constructor(x, y) {
 //│     this.x = x;
@@ -114,7 +117,9 @@ class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 Cls(1, 2).f(3)
 //│ JS:
-//│ Cls3 = function Cls(...args1) { return new Cls.class(...args1); };
+//│ Cls3 = function Cls(...args1) {
+//│   return new Cls.class(...args1);
+//│ };
 //│ Cls3.class = class Cls2 {
 //│   constructor(x, y) {
 //│     this.x = x;
@@ -144,7 +149,9 @@ class Cls(x, y) with
   fun f(z, p)(q, s) = x + y + z + p + q + s
 Cls(1, 2).f(3, 4)(5)
 //│ JS:
-//│ Cls5 = function Cls(...args1) { return new Cls.class(...args1); };
+//│ Cls5 = function Cls(...args1) {
+//│   return new Cls.class(...args1);
+//│ };
 //│ Cls5.class = class Cls4 {
 //│   constructor(x, y) {
 //│     this.x = x;
@@ -222,7 +229,9 @@ if M.A(1).y is
 //│ JS:
 //│ M1 = class M {
 //│   static {
-//│     this.A = function A(...args1) { return new A.class(...args1); };
+//│     this.A = function A(...args1) {
+//│       return new A.class(...args1);
+//│     };
 //│     this.A.class = class A {
 //│       constructor(x1) {
 //│         this.x = x1;

@@ -17,6 +17,7 @@ let f = Test.foo
 :re
 let f = id(Test).foo
 //│ ═══[RUNTIME ERROR] Error: [debinding error] Method 'foo' of class 'Test' was accessed without being called.
+//│ f = undefined
 
 // * Note that dynamic member accesses are not checked against debinding:
 let f = Test.("foo")

@@ -1,0 +1,29 @@
+:js
+
+
+// * `try`/`catch`
+
+js.try_catch(() => 123, id)
+//│ = 123
+
+js.try_catch(() => 123(), id)
+//│ = TypeError: 123 is not a function
+
+js.try_catch of
+  () => 123()
+  case { TypeError then 666, e then throw e }
+//│ = 666
+
+:re
+js.try_catch of
+  () => throw Error("whoops")
+  case TypeError then 666
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:re
+js.try_catch of
+  () => throw Error("whoops")
+  case { TypeError then 666, e then throw e }
+//│ ═══[RUNTIME ERROR] Error: whoops
+
+
