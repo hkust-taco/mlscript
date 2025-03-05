@@ -38,6 +38,7 @@ x=>
 //│   'x <: Int ∨ Bool
 //│   'x <: Int
 //│   'x#Int ∨ Int<:'app ∧ ⊥<:'eff}
+//│   'x#Bool ∨ Bool<:'app ∧ ⊥<:'eff}
 
 fun ap1(f)=f(1)
 ap1(idIB)
@@ -58,17 +59,17 @@ x=>idIB(x)
 :todo // BbML
 fun idIIBB: ([Int, Int] -> Int) & ([Bool, Bool] -> Bool)
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ║  l.59: 	fun idIIBB: ([Int, Int] -> Int) & ([Bool, Bool] -> Bool)
+//│ ║  l.60: 	fun idIIBB: ([Int, Int] -> Int) & ([Bool, Bool] -> Bool)
 //│ ╙──      	                           ^^^
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ║  l.59: 	fun idIIBB: ([Int, Int] -> Int) & ([Bool, Bool] -> Bool)
+//│ ║  l.60: 	fun idIIBB: ([Int, Int] -> Int) & ([Bool, Bool] -> Bool)
 //│ ╙──      	                                                   ^^^^
 //│ Type: ⊤
 
 :todo // BbML
 idIIBB([1, 2])
 //│ ╔══[ERROR] Term shape not yet supported by BbML: Tup(List(Fld(‹›,Lit(IntLit(1)),None), Fld(‹›,Lit(IntLit(2)),None)))
-//│ ║  l.69: 	idIIBB([1, 2])
+//│ ║  l.70: 	idIIBB([1, 2])
 //│ ╙──      	       ^^^^^^
 //│ Type: ⊥
 
@@ -98,8 +99,8 @@ idIIBB(new Pair(1, true))
 :todo
 fun foo: ["x": Int, "y": Int]
 //│ ╔══[ERROR] Invalid type
-//│ ║  l.99: 	fun foo: ["x": Int, "y": Int]
-//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.100: 	fun foo: ["x": Int, "y": Int]
+//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
 foo

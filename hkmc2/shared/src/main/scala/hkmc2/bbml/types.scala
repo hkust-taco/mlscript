@@ -306,11 +306,8 @@ object Type:
         case (v: InfVar, _) =>
             val p = prev + (v->b)
             val k = v.state.lowerBounds.map(lb => disjoint(lb.toBasic.simp.toBasic, b)(p))
-              if k.exists(_.isEmpty) then N
-              else
-                val u = (k.flatten.flatten.toSet + Set.empty).map(_ + (v -> b))
-                val w = v.state.upperBounds.flatMap(ub => disjoint(ub.toBasic.simp.toBasic, b)(p))
-                S(w.fold(u)((x, y) => y.flatMap(y => x.map(_ ++ y))))
+            if k.exists(_.isEmpty) then N
+            else S((k.flatten.flatten.toSet + Set.empty).map(_ + (v -> b)))
         case (_, v: InfVar) => disjoint(v, a)(prev)
         case _ => N
     }) else N

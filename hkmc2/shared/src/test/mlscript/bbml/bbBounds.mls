@@ -87,7 +87,7 @@ bazbaz
 //│ Type: ['A] -> ('A) ->{⊥} ('A -> 'A) ->{⊥} 'A
 //│ Where:
 //│   'A <: Int
-//│   'A#Int ∨ 'A<:'A ∧ ⊥<:⊥ ∧ 'A<:'A}
+//│   'A#'A ∨ 'A<:'A ∧ ⊥<:⊥ ∧ 'A<:'A}
 
 bazbaz(42)(x => x + 1)
 //│ Type: Int
@@ -119,14 +119,14 @@ bazbaz as [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> 
 //│ Type: ['A] -> ('A) ->{⊥} ('A -> 'A) ->{⊥} 'A
 //│ Where:
 //│   'A <: Int
-//│   'A#Int ∨ 'A<:'A ∧ ⊥<:⊥ ∧ 'A<:'A}
+//│   'A#'A ∨ 'A<:'A ∧ ⊥<:⊥ ∧ 'A<:'A}
 
 
 (x => f => bazbaz(x)(f)) as [A extends Int] -> A -> ([B extends A -> A restricts A -> A] -> B) -> A
 //│ Type: ['A] -> ('A) ->{⊥} ('A -> 'A) ->{⊥} 'A
 //│ Where:
 //│   'A <: Int
-//│   'A#Int ∨ 'A<:'A ∧ ⊥<:⊥ ∧ 'A<:'A}
+//│   'A#'A ∨ 'A<:'A ∧ ⊥<:⊥ ∧ 'A<:'A}
 
 
 h(x => f => bazbaz(x)(f))(42)

@@ -92,9 +92,6 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
             cctx.nest(v -> nc) givenIn:
               v.state.upperBounds ::= nc
               v.state.lowerBounds.foreach(lb => constrainImpl(lb, nc))
-              v.state.disjsub.foreach: d =>
-                Type.disjoint(d.disjoint(v), bd.toBasic.simp.toBasic)(Set.empty)(using c = mutable.Map.empty)
-                  .foreach(_.foreach(k => DisjSub(d.disjoint ++ k, d.dss, d.cs).commit()))
           else
             log(s"New bound: ${v.showDbg} :> ${bd.showDbg}")
             cctx.nest(bd -> v) givenIn:

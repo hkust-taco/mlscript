@@ -40,7 +40,7 @@ let foo(f) = (f(x => x(x)) as [A] -> A -> A) in foo
 :todo
 fun foo(f) = (f(x => x(x)) as [A] -> A -> A)
 //│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but ('f) ->{⊥} [outer, 'A] -> ('A) ->{⊥} 'A found
-//│ ║  l.42: 	fun foo(f) = (f(x => x(x)) as [A] -> A -> A)
+//│ ║  l.41: 	fun foo(f) = (f(x => x(x)) as [A] -> A -> A)
 //│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
