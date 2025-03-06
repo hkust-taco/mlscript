@@ -74,6 +74,17 @@ Runtime1 = class Runtime {
       }
       toString() { return "EffectSig(" + globalThis.Predef.render(this.contTrace) + ", " + globalThis.Predef.render(this.handler) + ", " + globalThis.Predef.render(this.handlerFun) + ")"; }
     };
+    this.NonLocalReturn = class NonLocalReturn {
+      constructor() {}
+      ret(value) {
+        let lambda;
+        lambda = (undefined, function (k) {
+          return value
+        });
+        return Runtime.mkEffect(this, lambda)
+      }
+      toString() { return "NonLocalReturn"; }
+    };
     this.stackLimit = 0;
     this.stackDepth = 0;
     this.stackOffset = 0;

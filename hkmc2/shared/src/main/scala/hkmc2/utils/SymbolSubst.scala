@@ -6,6 +6,7 @@ class SymbolSubst:
   def mapBlockMemberSym(s: BlockMemberSymbol): BlockMemberSymbol = s
   def mapFlowSym(s: FlowSymbol): FlowSymbol = s
   def mapTempSym(s: TempSymbol): TempSymbol = s
+  def mapWeakTempSym(s: WeakTempSymbol): WeakTempSymbol = s
   def mapVarSym(s: VarSymbol): VarSymbol = s
   def mapInstSym(s: InstSymbol): InstSymbol = s
   def mapBuiltInSym(s: BuiltinSymbol): BuiltinSymbol = s
