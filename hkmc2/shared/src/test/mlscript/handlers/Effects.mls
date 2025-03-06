@@ -156,9 +156,16 @@ if true do
   fun f() = 3
   f()
 //│ JS (unsanitized):
-//│ let tmp11, handleBlock$11;
+//│ let tmp11, getLocals14, handleBlock$11;
+//│ getLocals14 = function getLocals() {
+//│   let prev, thisInfo, tmp12;
+//│   prev = [];
+//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$topLevel$BAD", []);
+//│   tmp12 = runtime.safeCall(prev.push(thisInfo));
+//│   return prev
+//│ };
 //│ handleBlock$11 = function handleBlock$() {
-//│   let f, h, scrut, tmp12, Cont$handleBlock$h$11, Handler$h$12;
+//│   let f, h, scrut, tmp12, getLocals15, Cont$handleBlock$h$11, Handler$h$12;
 //│   Handler$h$12 = class Handler$h$11 extends Effect1 {
 //│     constructor() {
 //│       let tmp13;
@@ -166,12 +173,30 @@ if true do
 //│     }
 //│     perform(arg) {
 //│       return runtime.mkEffect(this, (k) => {
+//│         let getLocals16;
+//│         getLocals16 = function getLocals() {
+//│           let arg1, prev, thisInfo, tmp13;
+//│           prev = getLocals14();
+//│           arg1 = new runtime.FnLocalsInfo.class("arg", "1349", arg);
+//│           thisInfo = new runtime.FnLocalsInfo.class("Cont$handler$h$Effects$_mls_L153_29_50", [
+//│             arg1
+//│           ]);
+//│           tmp13 = runtime.safeCall(prev.push(thisInfo));
+//│           return prev
+//│         };
 //│         return arg
 //│       })
 //│     }
 //│     toString() { return "Handler$h$"; }
 //│   };
 //│   h = new Handler$h$12();
+//│   getLocals15 = function getLocals() {
+//│     let prev, thisInfo, tmp13;
+//│     prev = getLocals14();
+//│     thisInfo = new runtime.FnLocalsInfo.class("Cont$handleBlock$h$", []);
+//│     tmp13 = runtime.safeCall(prev.push(thisInfo));
+//│     return prev
+//│   };
 //│   Cont$handleBlock$h$11 = function Cont$handleBlock$h$(pc1) {
 //│     return new Cont$handleBlock$h$.class(pc1);
 //│   };
@@ -204,10 +229,21 @@ if true do
 //│         }
 //│         break;
 //│       }
+//│     } 
+//│     get getLocals() {
+//│       return getLocals15();
 //│     }
 //│     toString() { return "Cont$handleBlock$h$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   f = function f() {
+//│     let getLocals16;
+//│     getLocals16 = function getLocals() {
+//│       let prev, thisInfo, tmp13;
+//│       prev = getLocals15();
+//│       thisInfo = new runtime.FnLocalsInfo.class("Cont$func$f$Effects$_mls_L153_68_75$", []);
+//│       tmp13 = runtime.safeCall(prev.push(thisInfo));
+//│       return prev
+//│     };
 //│     return 3
 //│   };
 //│   scrut = true;

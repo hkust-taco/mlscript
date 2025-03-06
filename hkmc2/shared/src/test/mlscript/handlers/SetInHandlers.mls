@@ -8,7 +8,17 @@ let x = 1
 set x += 1 in print(x)
 x
 //│ JS (unsanitized):
-//│ let x, old, tmp, tmp1, tmp2;
+//│ let x, old, tmp, tmp1, tmp2, getLocals1;
+//│ getLocals1 = function getLocals() {
+//│   let x1, prev, thisInfo, tmp3;
+//│   prev = [];
+//│   x1 = new runtime.FnLocalsInfo.class("x", "448", x);
+//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$topLevel$BAD", [
+//│     x1
+//│   ]);
+//│   tmp3 = runtime.safeCall(prev.push(thisInfo));
+//│   return prev
+//│ };
 //│ x = 1;
 //│ old = x;
 //│ try {

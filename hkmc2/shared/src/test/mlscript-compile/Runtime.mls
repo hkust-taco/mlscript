@@ -39,6 +39,9 @@ class ContTrace(next, last, nextHandler, lastHandler, resumed)
 class EffectSig(contTrace, handler, handlerFun)
 class Return(value)
 
+class FnLocalsInfo(fnName, locals)
+class LocalVarInfo(localName, uid, value)
+
 fun topLevelEffect(tr) =
   set tr = handleEffects(tr)
   if tr is EffectSig then

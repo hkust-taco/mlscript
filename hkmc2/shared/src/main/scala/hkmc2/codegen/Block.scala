@@ -41,7 +41,9 @@ sealed abstract class Block extends Product with AutoLocated:
     case Define(defn, rst) =>
       val rest = rst.definedVars
       if defn.isOwned then rest else rest + defn.sym
-    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => bod.definedVars ++ rst.definedVars + lhs
+    // we do not consider lhs and anything inside the body, as those are inside the handle block, which
+    // be moved into a new function definition
+    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.definedVars
     case HandleBlockReturn(_) => Set.empty
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
     case Label(lbl, bod, rst) => bod.definedVars ++ rst.definedVars
@@ -412,6 +414,7 @@ sealed abstract class Result:
     case Value.Lam(params, body) => body.freeVars -- params.paramSyms
     case Value.Arr(elems) => elems.flatMap(_.value.freeVars).toSet
     case DynSelect(qual, fld, arrayIdx) => qual.freeVars ++ fld.freeVars
+    case Value.Rcd(args) => args.flatMap(arg => arg.idx.fold(Set.empty)(_.freeVars) ++ arg.value.freeVars).toSet
 
   lazy val freeVarsLLIR: Set[Local] = this match
     case Call(fun, args) => args.flatMap(_.value.freeVarsLLIR).toSet
@@ -423,6 +426,7 @@ sealed abstract class Result:
     case Value.Lam(params, body) => body.freeVarsLLIR -- params.paramSyms
     case Value.Arr(elems) => elems.flatMap(_.value.freeVarsLLIR).toSet
     case DynSelect(qual, fld, arrayIdx) => qual.freeVarsLLIR ++ fld.freeVarsLLIR
+    case Value.Rcd(args) => args.flatMap(arg => arg.idx.fold(Set.empty)(_.freeVarsLLIR) ++ arg.value.freeVarsLLIR).toSet
   
 // type Local = LocalSymbol
 type Local = Symbol
@@ -478,6 +482,7 @@ extension (k: Block => Block)
   def label(label: Local, body: Block) = k.chain(Label(label, body, _))
   def ret(r: Result) = k.rest(Return(r, false))
   def staticif(b: Boolean, f: (Block => Block) => (Block => Block)) = if b then k.transform(f) else k
+  def foldLeft[A](xs: Iterable[A])(f: (Block => Block, A) => Block => Block) = xs.foldLeft(k)(f)
 
 def blockBuilder: Block => Block = identity
 

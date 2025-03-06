@@ -20,9 +20,26 @@ fun hi(n) =
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
-//│ let hi, res, handleBlock$;
+//│ let hi, res, getLocals, handleBlock$;
+//│ getLocals = function getLocals() {
+//│   let prev, thisInfo, tmp;
+//│   prev = [];
+//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$topLevel$BAD", []);
+//│   tmp = runtime.safeCall(prev.push(thisInfo));
+//│   return prev
+//│ };
 //│ hi = function hi(n) {
-//│   let scrut, tmp, stackDelayRes, Cont$func$hi$StackSafety$_mls_L18_4_47$1;
+//│   let scrut, tmp, stackDelayRes, getLocals1, Cont$func$hi$StackSafety$_mls_L18_4_47$1;
+//│   getLocals1 = function getLocals() {
+//│     let n1, prev, thisInfo, tmp1;
+//│     prev = getLocals();
+//│     n1 = new runtime.FnLocalsInfo.class("n", "458", n);
+//│     thisInfo = new runtime.FnLocalsInfo.class("Cont$func$hi$StackSafety$_mls_L18_4_47$", [
+//│       n1
+//│     ]);
+//│     tmp1 = runtime.safeCall(prev.push(thisInfo));
+//│     return prev
+//│   };
 //│   Cont$func$hi$StackSafety$_mls_L18_4_47$1 = function Cont$func$hi$StackSafety$_mls_L18_4_47$(pc1) {
 //│     return new Cont$func$hi$StackSafety$_mls_L18_4_47$.class(pc1);
 //│   };
@@ -56,6 +73,9 @@ hi(0)
 //│         }
 //│         break;
 //│       }
+//│     } 
+//│     get getLocals() {
+//│       return getLocals1();
 //│     }
 //│     toString() { return "Cont$func$hi$StackSafety$_mls_L18_4_47$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
@@ -75,7 +95,7 @@ hi(0)
 //│   }
 //│ };
 //│ handleBlock$ = function handleBlock$() {
-//│   let stackHandler, res1, Cont$handleBlock$stackHandler$1, StackDelay$1;
+//│   let stackHandler, getLocals1, res1, Cont$handleBlock$stackHandler$1, StackDelay$1;
 //│   StackDelay$1 = class StackDelay$ extends runtime.StackDelay {
 //│     constructor() {
 //│       let tmp;
@@ -83,6 +103,14 @@ hi(0)
 //│     }
 //│     perform() {
 //│       return runtime.mkEffect(this, (resume) => {
+//│         let getLocals2;
+//│         getLocals2 = function getLocals() {
+//│           let prev, thisInfo, tmp;
+//│           prev = getLocals();
+//│           thisInfo = new runtime.FnLocalsInfo.class("Cont$handler$stackHandler$", []);
+//│           tmp = runtime.safeCall(prev.push(thisInfo));
+//│           return prev
+//│         };
 //│         runtime.stackOffset = runtime.stackDepth;
 //│         return resume()
 //│       })
@@ -90,6 +118,13 @@ hi(0)
 //│     toString() { return "StackDelay$"; }
 //│   };
 //│   stackHandler = new StackDelay$1();
+//│   getLocals1 = function getLocals() {
+//│     let prev, thisInfo, tmp;
+//│     prev = getLocals();
+//│     thisInfo = new runtime.FnLocalsInfo.class("Cont$handleBlock$stackHandler$", []);
+//│     tmp = runtime.safeCall(prev.push(thisInfo));
+//│     return prev
+//│   };
 //│   Cont$handleBlock$stackHandler$1 = function Cont$handleBlock$stackHandler$(pc1) {
 //│     return new Cont$handleBlock$stackHandler$.class(pc1);
 //│   };
@@ -109,6 +144,9 @@ hi(0)
 //│         }
 //│         break;
 //│       }
+//│     } 
+//│     get getLocals() {
+//│       return getLocals1();
 //│     }
 //│     toString() { return "Cont$handleBlock$stackHandler$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
@@ -142,13 +180,30 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ JS (unsanitized):
-//│ let sum1, res1, handleBlock$1;
+//│ let sum1, res1, getLocals1, handleBlock$1;
+//│ getLocals1 = function getLocals() {
+//│   let prev, thisInfo, tmp;
+//│   prev = [];
+//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$topLevel$BAD", []);
+//│   tmp = runtime.safeCall(prev.push(thisInfo));
+//│   return prev
+//│ };
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, Cont$func$sum$StackSafety$_mls_L139_4_57$1;
-//│   Cont$func$sum$StackSafety$_mls_L139_4_57$1 = function Cont$func$sum$StackSafety$_mls_L139_4_57$(pc1) {
-//│     return new Cont$func$sum$StackSafety$_mls_L139_4_57$.class(pc1);
+//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, getLocals2, Cont$func$sum$StackSafety$_mls_L174_4_57$1;
+//│   getLocals2 = function getLocals() {
+//│     let n1, prev, thisInfo, tmp2;
+//│     prev = getLocals1();
+//│     n1 = new runtime.FnLocalsInfo.class("n", "596", n);
+//│     thisInfo = new runtime.FnLocalsInfo.class("Cont$func$sum$StackSafety$_mls_L174_4_57$", [
+//│       n1
+//│     ]);
+//│     tmp2 = runtime.safeCall(prev.push(thisInfo));
+//│     return prev
 //│   };
-//│   Cont$func$sum$StackSafety$_mls_L139_4_57$1.class = class Cont$func$sum$StackSafety$_mls_L139_4_57$ extends runtime.FunctionContFrame.class {
+//│   Cont$func$sum$StackSafety$_mls_L174_4_57$1 = function Cont$func$sum$StackSafety$_mls_L174_4_57$(pc1) {
+//│     return new Cont$func$sum$StackSafety$_mls_L174_4_57$.class(pc1);
+//│   };
+//│   Cont$func$sum$StackSafety$_mls_L174_4_57$1.class = class Cont$func$sum$StackSafety$_mls_L174_4_57$ extends runtime.FunctionContFrame.class {
 //│     constructor(pc) {
 //│       let tmp2;
 //│       tmp2 = super(null);
@@ -191,13 +246,16 @@ sum(10000)
 //│         }
 //│         break;
 //│       }
+//│     } 
+//│     get getLocals() {
+//│       return getLocals2();
 //│     }
-//│     toString() { return "Cont$func$sum$StackSafety$_mls_L139_4_57$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$func$sum$StackSafety$_mls_L174_4_57$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     stackDelayRes.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L139_4_57$1.class(0);
+//│     stackDelayRes.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L174_4_57$1.class(0);
 //│     stackDelayRes.contTrace.last = stackDelayRes.contTrace.last.next;
 //│     return stackDelayRes
 //│   }
@@ -209,7 +267,7 @@ sum(10000)
 //│     runtime.stackDepth = runtime.stackDepth + 1;
 //│     tmp1 = sum1(tmp);
 //│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       tmp1.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L139_4_57$1.class(1);
+//│       tmp1.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L174_4_57$1.class(1);
 //│       tmp1.contTrace.last = tmp1.contTrace.last.next;
 //│       return tmp1
 //│     }
@@ -218,7 +276,7 @@ sum(10000)
 //│   }
 //│ };
 //│ handleBlock$1 = function handleBlock$() {
-//│   let stackHandler, res2, Cont$handleBlock$stackHandler$2, StackDelay$2;
+//│   let stackHandler, getLocals2, res2, Cont$handleBlock$stackHandler$2, StackDelay$2;
 //│   StackDelay$2 = class StackDelay$1 extends runtime.StackDelay {
 //│     constructor() {
 //│       let tmp;
@@ -226,6 +284,14 @@ sum(10000)
 //│     }
 //│     perform() {
 //│       return runtime.mkEffect(this, (resume) => {
+//│         let getLocals3;
+//│         getLocals3 = function getLocals() {
+//│           let prev, thisInfo, tmp;
+//│           prev = getLocals1();
+//│           thisInfo = new runtime.FnLocalsInfo.class("Cont$handler$stackHandler$", []);
+//│           tmp = runtime.safeCall(prev.push(thisInfo));
+//│           return prev
+//│         };
 //│         runtime.stackOffset = runtime.stackDepth;
 //│         return resume()
 //│       })
@@ -233,6 +299,13 @@ sum(10000)
 //│     toString() { return "StackDelay$"; }
 //│   };
 //│   stackHandler = new StackDelay$2();
+//│   getLocals2 = function getLocals() {
+//│     let prev, thisInfo, tmp;
+//│     prev = getLocals1();
+//│     thisInfo = new runtime.FnLocalsInfo.class("Cont$handleBlock$stackHandler$", []);
+//│     tmp = runtime.safeCall(prev.push(thisInfo));
+//│     return prev
+//│   };
 //│   Cont$handleBlock$stackHandler$2 = function Cont$handleBlock$stackHandler$(pc1) {
 //│     return new Cont$handleBlock$stackHandler$.class(pc1);
 //│   };
@@ -252,6 +325,9 @@ sum(10000)
 //│         }
 //│         break;
 //│       }
+//│     } 
+//│     get getLocals() {
+//│       return getLocals2();
 //│     }
 //│     toString() { return "Cont$handleBlock$stackHandler$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
@@ -382,9 +458,28 @@ foo(h)
 :sjs
 fun max(a, b) = if a < b then b else a
 //│ JS (unsanitized):
-//│ let max;
+//│ let max, getLocals8;
+//│ getLocals8 = function getLocals() {
+//│   let prev, thisInfo, tmp5;
+//│   prev = [];
+//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$topLevel$BAD", []);
+//│   tmp5 = runtime.safeCall(prev.push(thisInfo));
+//│   return prev
+//│ };
 //│ max = function max(a, b) {
-//│   let scrut;
+//│   let scrut, getLocals9;
+//│   getLocals9 = function getLocals() {
+//│     let a1, b1, prev, thisInfo, tmp5;
+//│     prev = getLocals8();
+//│     a1 = new runtime.FnLocalsInfo.class("a", "1508", a);
+//│     b1 = new runtime.FnLocalsInfo.class("b", "1509", b);
+//│     thisInfo = new runtime.FnLocalsInfo.class("Cont$func$max$StackSafety$_mls_L453_4_38$", [
+//│       a1,
+//│       b1
+//│     ]);
+//│     tmp5 = runtime.safeCall(prev.push(thisInfo));
+//│     return prev
+//│   };
 //│   scrut = a < b;
 //│   if (scrut === true) {
 //│     return b

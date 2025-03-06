@@ -484,7 +484,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
 
     val modLocal = d match
       case c: ClsLikeDefn if modOrObj(c) && !ctx.ignored(c.sym) => parentCls match
-        case None => S(VarSymbol(Tree.Ident(c.sym.nme + "$")))
+        case None => S(FlowSymbol(c.sym.nme + "$"))
         case Some(value) => S(TermSymbol(syntax.ImmutVal, S(value.isym), Tree.Ident(c.sym.nme + "$")))
       case _ => N
 
@@ -996,7 +996,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
                   val nestedIn = analyzer.defnsMap(bms)
                   nestedIn match
                     case cls: ClsLikeDefn => S(c.sym -> TermSymbol(syntax.ImmutVal, S(cls.isym), Tree.Ident(c.sym.nme + "$")))
-                    case _ => S(c.sym -> VarSymbol(Tree.Ident(c.sym.nme + "$")))
+                    case _ => S(c.sym -> FlowSymbol(c.sym.nme + "$"))
                 case _ => N
             .collect:
               case S(v) => v

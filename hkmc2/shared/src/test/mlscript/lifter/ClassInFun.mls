@@ -13,10 +13,41 @@ fun f() =
   1
 f() + f() + f()
 //│ JS (unsanitized):
-//│ let f, Effect1, tmp, handleBlock$, Cont$func$f$ClassInFun$_mls_L7_95_118$1, Cont$handleBlock$h$1, Handler$h$1, lambda, f$, Cont$func$f$ClassInFun$_mls_L7_95_118$$ctor, Cont$func$f$ClassInFun$_mls_L7_95_118$$, Cont$handleBlock$h$$ctor, Cont$handleBlock$h$$, lambda$;
+//│ let f, Effect1, tmp, getLocals, getLocals1, handleBlock$, getLocals2, getLocals3, Cont$func$f$ClassInFun$_mls_L7_95_118$1, Cont$handleBlock$h$1, getLocals4, Handler$h$1, lambda, getLocals$, f$, Cont$func$f$ClassInFun$_mls_L7_95_118$$ctor, Cont$func$f$ClassInFun$_mls_L7_95_118$$, Cont$handleBlock$h$$ctor, Cont$handleBlock$h$$, lambda$, getLocals$1;
+//│ getLocals = function getLocals() {
+//│   let prev, thisInfo, tmp1;
+//│   prev = [];
+//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$topLevel$BAD", []);
+//│   tmp1 = runtime.safeCall(prev.push(thisInfo));
+//│   return prev
+//│ };
+//│ getLocals$ = function getLocals$(Effect$instance) {
+//│   let prev, thisInfo, tmp1;
+//│   prev = getLocals();
+//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$ctor$Effect$ClassInFun$_mls_L7_15_42$", []);
+//│   tmp1 = runtime.safeCall(prev.push(thisInfo));
+//│   return prev
+//│ };
+//│ getLocals1 = function getLocals(Effect$instance) {
+//│   return () => {
+//│     return getLocals$(Effect$instance)
+//│   }
+//│ };
 //│ Effect1 = class Effect {
 //│   constructor() {}
 //│   toString() { return "Effect"; }
+//│ };
+//│ getLocals$1 = function getLocals$(Handler$h$$instance) {
+//│   let prev, thisInfo, tmp1;
+//│   prev = getLocals();
+//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$handler$h$ClassInFun$_mls_L7_72_90", []);
+//│   tmp1 = runtime.safeCall(prev.push(thisInfo));
+//│   return prev
+//│ };
+//│ getLocals4 = function getLocals(Handler$h$$instance) {
+//│   return () => {
+//│     return getLocals$1(Handler$h$$instance)
+//│   }
 //│ };
 //│ lambda$ = function lambda$(Handler$h$$instance, k) {
 //│   return runtime.safeCall(k())
@@ -37,6 +68,13 @@ f() + f() + f()
 //│     return runtime.mkEffect(this, lambda$this)
 //│   }
 //│   toString() { return "Handler$h$"; }
+//│ };
+//│ getLocals2 = function getLocals() {
+//│   let prev, thisInfo, tmp1;
+//│   prev = getLocals();
+//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$handleBlock$h$", []);
+//│   tmp1 = runtime.safeCall(prev.push(thisInfo));
+//│   return prev
 //│ };
 //│ Cont$handleBlock$h$$ = function Cont$handleBlock$h$$(h$0, tmp$1, tmp$2, tmp$3, tmp$4, pc) {
 //│   let tmp1;
@@ -120,8 +158,18 @@ f() + f() + f()
 //│       }
 //│       break;
 //│     }
+//│   } 
+//│   get getLocals() {
+//│     return getLocals2();
 //│   }
 //│   toString() { return "Cont$handleBlock$h$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│ };
+//│ getLocals3 = function getLocals() {
+//│   let prev, thisInfo, tmp1;
+//│   prev = getLocals2();
+//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$func$f$ClassInFun$_mls_L7_95_118$", []);
+//│   tmp1 = runtime.safeCall(prev.push(thisInfo));
+//│   return prev
 //│ };
 //│ Cont$func$f$ClassInFun$_mls_L7_95_118$$ = function Cont$func$f$ClassInFun$_mls_L7_95_118$$(h$0, tmp$1, pc) {
 //│   let tmp1;
@@ -171,6 +219,9 @@ f() + f() + f()
 //│       }
 //│       break;
 //│     }
+//│   } 
+//│   get getLocals() {
+//│     return getLocals3();
 //│   }
 //│   toString() { return "Cont$func$f$ClassInFun$_mls_L7_95_118$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│ };

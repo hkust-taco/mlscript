@@ -10,14 +10,28 @@ abstract class Effect with
 class Lol(h) with
   print(h.perform("k"))
 //│ JS (unsanitized):
-//│ let Lol1;
+//│ let Lol1, getLocals2;
+//│ getLocals2 = function getLocals() {
+//│   let prev, thisInfo, tmp;
+//│   prev = [];
+//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$topLevel$BAD", []);
+//│   tmp = runtime.safeCall(prev.push(thisInfo));
+//│   return prev
+//│ };
 //│ Lol1 = function Lol(h1) {
 //│   return new Lol.class(h1);
 //│ };
 //│ Lol1.class = class Lol {
 //│   constructor(h) {
 //│     this.h = h;
-//│     let tmp, res, Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$1;
+//│     let tmp, getLocals3, res, Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$1;
+//│     getLocals3 = function getLocals() {
+//│       let prev, thisInfo, tmp1;
+//│       prev = getLocals2();
+//│       thisInfo = new runtime.FnLocalsInfo.class("Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$", []);
+//│       tmp1 = runtime.safeCall(prev.push(thisInfo));
+//│       return prev
+//│     };
 //│     const this$Lol = this;
 //│     Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$1 = function Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$(pc1) {
 //│       return new Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$.class(pc1);
@@ -66,6 +80,9 @@ class Lol(h) with
 //│           }
 //│           break;
 //│         }
+//│       } 
+//│       get getLocals() {
+//│         return getLocals3();
 //│       }
 //│       toString() { return "Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│     };

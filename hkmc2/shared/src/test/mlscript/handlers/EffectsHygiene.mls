@@ -12,15 +12,50 @@ fun foo(h) =
     module A
     A
 //│ JS (unsanitized):
-//│ let foo;
+//│ let foo, getLocals1;
+//│ getLocals1 = function getLocals() {
+//│   let prev, thisInfo, tmp;
+//│   prev = [];
+//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$topLevel$BAD", []);
+//│   tmp = runtime.safeCall(prev.push(thisInfo));
+//│   return prev
+//│ };
 //│ foo = function foo(h) {
-//│   let A2, A3, scrut;
+//│   let A2, A3, scrut, getLocals2;
+//│   getLocals2 = function getLocals() {
+//│     let h1, prev, thisInfo, tmp;
+//│     prev = getLocals1();
+//│     h1 = new runtime.FnLocalsInfo.class("h", "451", h);
+//│     thisInfo = new runtime.FnLocalsInfo.class("Cont$func$foo$EffectsHygiene$_mls_L7_4_73$", [
+//│       h1
+//│     ]);
+//│     tmp = runtime.safeCall(prev.push(thisInfo));
+//│     return prev
+//│   };
 //│   A2 = class A {
-//│     static {}
+//│     static {
+//│       let getLocals3;
+//│       getLocals3 = function getLocals() {
+//│         let prev, thisInfo, tmp;
+//│         prev = getLocals2();
+//│         thisInfo = new runtime.FnLocalsInfo.class("Cont$ctor$A$EffectsHygiene$_mls_L7_40_41$", []);
+//│         tmp = runtime.safeCall(prev.push(thisInfo));
+//│         return prev
+//│       };
+//│     }
 //│     static toString() { return "A"; }
 //│   };
 //│   A3 = class A1 {
-//│     static {}
+//│     static {
+//│       let getLocals3;
+//│       getLocals3 = function getLocals() {
+//│         let prev, thisInfo, tmp;
+//│         prev = getLocals2();
+//│         thisInfo = new runtime.FnLocalsInfo.class("Cont$ctor$A$EffectsHygiene$_mls_L7_66_67$", []);
+//│         tmp = runtime.safeCall(prev.push(thisInfo));
+//│         return prev
+//│       };
+//│     }
 //│     static toString() { return "A"; }
 //│   };
 //│   scrut = false;
