@@ -136,70 +136,63 @@ Runtime1 = class Runtime {
     throw globalThis.Error(tmp3);
   } 
   static topLevelEffect(tr) {
-    let zwsp, msg, curHandler, atTail, scrut, cur, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18;
-    tmp = Runtime.handleEffects(tr);
-    tr = tmp;
-    if (tr instanceof Runtime.EffectSig.class) {
-      tmp1 = runtime.Unit;
-    } else {
-      return tr
-    }
-    tmp2 = runtime.safeCall(globalThis.String.fromCodePoint(8203));
-    zwsp = tmp2;
-    tmp3 = zwsp + "Error: Unhandled effect ";
-    tmp4 = tmp3 + tr.handler.constructor.name;
-    msg = tmp4;
+    let zwsp, msg, curHandler, atTail, scrut, cur, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16;
+    tmp = runtime.safeCall(globalThis.String.fromCodePoint(8203));
+    zwsp = tmp;
+    tmp1 = zwsp + "Error: Unhandled effect ";
+    tmp2 = tmp1 + tr.handler.constructor.name;
+    msg = tmp2;
     curHandler = tr.contTrace;
     atTail = true;
-    tmp19: while (true) {
+    tmp17: while (true) {
       scrut = curHandler !== null;
       if (scrut === true) {
         cur = curHandler.next;
-        tmp20: while (true) {
+        tmp18: while (true) {
           scrut1 = cur !== null;
           if (scrut1 === true) {
-            tmp5 = "\n\tat " + cur.constructor.name;
-            tmp6 = tmp5 + "(pc=";
-            tmp7 = tmp6 + cur.pc;
-            tmp8 = tmp7 + ")";
-            tmp9 = msg + tmp8;
-            msg = tmp9;
+            tmp3 = "\n\tat " + cur.constructor.name;
+            tmp4 = tmp3 + "(pc=";
+            tmp5 = tmp4 + cur.pc;
+            tmp6 = tmp5 + ")";
+            tmp7 = msg + tmp6;
+            msg = tmp7;
             cur = cur.next;
             atTail = false;
-            tmp10 = runtime.Unit;
-            continue tmp20;
+            tmp8 = runtime.Unit;
+            continue tmp18;
           } else {
-            tmp10 = runtime.Unit;
+            tmp8 = runtime.Unit;
           }
           break;
         }
         curHandler = curHandler.nextHandler;
         scrut2 = curHandler !== null;
         if (scrut2 === true) {
-          tmp11 = "\n\twith handler " + curHandler.handler.constructor.name;
-          tmp12 = msg + tmp11;
-          msg = tmp12;
+          tmp9 = "\n\twith handler " + curHandler.handler.constructor.name;
+          tmp10 = msg + tmp9;
+          msg = tmp10;
           atTail = false;
-          tmp13 = runtime.Unit;
+          tmp11 = runtime.Unit;
         } else {
-          tmp13 = runtime.Unit;
+          tmp11 = runtime.Unit;
         }
-        tmp14 = tmp13;
-        continue tmp19;
+        tmp12 = tmp11;
+        continue tmp17;
       } else {
-        tmp14 = runtime.Unit;
+        tmp12 = runtime.Unit;
       }
       break;
     }
     if (atTail === true) {
-      tmp15 = msg + "\n\tat tail position";
-      msg = tmp15;
-      tmp16 = runtime.Unit;
+      tmp13 = msg + "\n\tat tail position";
+      msg = tmp13;
+      tmp14 = runtime.Unit;
     } else {
-      tmp16 = runtime.Unit;
+      tmp14 = runtime.Unit;
     }
-    tmp17 = msg + zwsp;
-    tmp18 = runtime.safeCall(globalThis.console.log(tmp17));
+    tmp15 = msg + zwsp;
+    tmp16 = runtime.safeCall(globalThis.console.log(tmp15));
     throw globalThis.Error("Unhandled effects");
   } 
   static showFunctionContChain(cont, hl, vis, reps) {
@@ -489,7 +482,7 @@ Runtime1 = class Runtime {
   } 
   static resume(contTrace1) {
     return (value) => {
-      let scrut, tmp;
+      let scrut, tmp, tmp1;
       scrut = contTrace1.resumed;
       if (scrut === true) {
         throw globalThis.Error("Multiple resumption");
@@ -497,7 +490,8 @@ Runtime1 = class Runtime {
         tmp = runtime.Unit;
       }
       contTrace1.resumed = true;
-      return Runtime.resumeContTrace(contTrace1, value)
+      tmp1 = Runtime.resumeContTrace(contTrace1, value);
+      return Runtime.handleEffects(tmp1)
     }
   } 
   static resumeContTrace(contTrace2, value) {

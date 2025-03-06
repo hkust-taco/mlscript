@@ -43,11 +43,6 @@ class FnLocalsInfo(fnName, locals)
 class LocalVarInfo(localName, uid, value)
 
 fun topLevelEffect(tr) =
-  set tr = handleEffects(tr)
-  if tr is EffectSig then
-    ()
-  else
-    return tr
   let
     zwsp = String.fromCodePoint(0x200B)
     msg = zwsp + "Error: Unhandled effect " + tr.handler.constructor.name
@@ -224,7 +219,7 @@ fun resume(contTrace)(value) =
   if contTrace.resumed do
     throw Error("Multiple resumption")
   set contTrace.resumed = true
-  resumeContTrace(contTrace, value)
+  handleEffects(resumeContTrace(contTrace, value))
 
 fun resumeContTrace(contTrace, value) =
   let cont = contTrace.next
