@@ -22,6 +22,8 @@ case class Program(
 
 sealed abstract class Block extends Product with AutoLocated:
   
+  def ~(that: Block): Block = Begin(this, that)
+  
   protected def children: Ls[Located] = ??? // Maybe extending AutoLocated is unnecessary
   
   lazy val definedVars: Set[Local] = this match
@@ -381,11 +383,13 @@ enum Case:
     case Lit(_) => Set.empty
     case Cls(_, path) => path.freeVars
     case Tup(_, _) => Set.empty
-
+  
   lazy val freeVarsLLIR: Set[Local] = this match
     case Lit(_) => Set.empty
     case Cls(_, path) => path.freeVarsLLIR
     case Tup(_, _) => Set.empty
+
+sealed trait TrivialResult extends Result
 
 sealed abstract class Result:
   
@@ -431,7 +435,7 @@ case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool, val mayRaiseEffect
 
 case class Instantiate(cls: Path, args: Ls[Path]) extends Result
 
-sealed abstract class Path extends Result:
+sealed abstract class Path extends TrivialResult:
   def selN(id: Tree.Ident): Path = Select(this, id)(N)
   def sel(id: Tree.Ident, sym: FieldSymbol): Path = Select(this, id)(S(sym))
   def selSN(id: Str): Path = selN(new Tree.Ident(id))
@@ -448,8 +452,14 @@ enum Value extends Path:
   case Lit(lit: Literal)
   case Lam(params: ParamList, body: Block)
   case Arr(elems: Ls[Arg])
+  case Rcd(elems: Ls[RcdArg])
 
 case class Arg(spread: Bool, value: Path)
+
+// * `IndxdArg(S(idx), value)` represents a key-value pair in a record `(idx): value`
+// * `IndxdArg(N, value)` represents a spread element in a record `...value`
+case class RcdArg(idx: Opt[Path], value: Path):
+  def spread: Bool = idx.isEmpty
 
 extension (k: Block => Block)
   

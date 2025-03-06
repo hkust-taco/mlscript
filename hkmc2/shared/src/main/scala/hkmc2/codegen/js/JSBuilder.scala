@@ -144,6 +144,14 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case Value.Arr(es) if es.isEmpty => doc"[]"
     case Value.Arr(es) =>
       doc"[ #{  # ${es.map(argument).mkDocument(doc", # ")} #}  # ]"
+    case Value.Rcd(flds) =>
+      doc"{ #  #{ ${
+        flds.map:
+          case RcdArg(S(idx), v) =>
+            doc"${result(idx)}: ${result(v)}"
+          case RcdArg(N, v) => doc"...${result(v)}"
+        .mkDocument(", ")
+      } #}  # }"
   
   def returningTerm(t: Block, endSemi: Bool)(using Raise, Scope): Document =
     def mkSemi = if endSemi then ";" else ""

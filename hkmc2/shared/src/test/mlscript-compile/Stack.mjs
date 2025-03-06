@@ -139,6 +139,71 @@ Stack1 = class Stack {
     tmp = go(Stack.Nil, Stack.Nil);
     tmp1 = Stack.fromArray(xss);
     return runtime.safeCall(tmp(tmp1))
+  } 
+  static concat(xs4, ys) {
+    let param0, param1, head$_, tail$_, result, current, rest, param01, param11, head, tail1, next, tmp, tmp1, tmp2;
+    if (ys instanceof Stack.Nil.class) {
+      return xs4
+    } else {
+      if (xs4 instanceof Stack.Nil.class) {
+        return ys
+      } else if (xs4 instanceof Stack.Cons.class) {
+        param0 = xs4.head;
+        param1 = xs4.tail;
+        head$_ = param0;
+        tail$_ = param1;
+        tmp = Stack.Cons(head$_, ys);
+        result = tmp;
+        current = result;
+        rest = tail$_;
+        tmp3: while (true) {
+          if (rest instanceof Stack.Cons.class) {
+            param01 = rest.head;
+            param11 = rest.tail;
+            head = param01;
+            tail1 = param11;
+            tmp1 = Stack.Cons(head, ys);
+            next = tmp1;
+            current.tail = next;
+            current = next;
+            rest = tail1;
+            tmp2 = runtime.Unit;
+            continue tmp3;
+          } else {
+            tmp2 = runtime.Unit;
+          }
+          break;
+        }
+        return result
+      } else {
+        throw new globalThis.Error("match error");
+      }
+    }
+  } 
+  static append(xs5, y) {
+    let tmp;
+    tmp = Stack.Cons(y, Stack.Nil);
+    return Stack.concat(xs5, tmp)
+  } 
+  static filter(xs6, f) {
+    let param0, param1, head, tail1, scrut, tmp;
+    if (xs6 instanceof Stack.Cons.class) {
+      param0 = xs6.head;
+      param1 = xs6.tail;
+      head = param0;
+      tail1 = param1;
+      scrut = runtime.safeCall(f(head));
+      if (scrut === true) {
+        tmp = Stack.filter(tail1, f);
+        return Stack.Cons(head, tmp)
+      } else {
+        return Stack.filter(tail1, f)
+      }
+    } else if (xs6 instanceof Stack.Nil.class) {
+      return Stack.Nil
+    } else {
+      throw new globalThis.Error("match error");
+    }
   }
   static toString() { return "Stack"; }
 };

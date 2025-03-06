@@ -1,3 +1,4 @@
+import "./RuntimeJS.mjs" 
 
 
 module Runtime with ...
@@ -18,6 +19,14 @@ fun checkCall(x) =
 fun deboundMethod(mtdName, clsName) =
   throw Error of
     "[debinding error] Method '" + mtdName + "' of class '" + clsName + "' was accessed without being called."
+
+
+val try_catch = RuntimeJS.try_catch
+
+
+// For `pattern` definitions
+class MatchResult(captures)
+class MatchFailure(errors)
 
 
 // Private definitions for algebraic effects

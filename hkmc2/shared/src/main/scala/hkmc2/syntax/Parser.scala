@@ -17,6 +17,32 @@ import hkmc2.syntax.Keyword.Ellipsis
 import semantics.Elaborator.State
 
 
+val charPrecList: List[Str] = List(
+    "", // `of` rhs
+    ",",
+    // ^ for keywords
+    ";",
+    // "=", // higher than || means `a == 1 || b` parses surprisingly
+    "@",
+    ":",
+    "|",
+    "&",
+    "=",
+    "/ \\",
+    "^",
+    // "= !",
+    "!",
+    "< >",
+    "+ -",
+    // "* / %",
+    "* %",
+    "~",
+    "", // Precedence of prefix operators
+    "", // Precedence of application
+    ".",
+  )
+
+
 object Parser:
   
   type TokLoc = (Stroken, Loc)
@@ -31,30 +57,7 @@ object Parser:
     false
   
   private val precOf: Map[Char,Int] =
-    List(
-      "", // `of` rhs
-      ",",
-      // ^ for keywords
-      ";",
-      // "=", // higher than || means `a == 1 || b` parses surprisingly
-      "@",
-      ":",
-      "|",
-      "&",
-      "=",
-      "/ \\",
-      "^",
-      // "= !",
-      "!",
-      "< >",
-      "+ -",
-      // "* / %",
-      "* %",
-      "~",
-      "", // Precedence of prefix operators
-      "", // Precedence of application
-      ".",
-    ).zipWithIndex.flatMap {
+    charPrecList.zipWithIndex.flatMap {
       case (cs, i) => cs.filterNot(_ === ' ').map(_ -> (i + Keyword.maxPrec.get))
     }.toMap.withDefaultValue(Int.MaxValue)
   
@@ -72,7 +75,7 @@ object Parser:
       (Keyword.maxPrec.get, Keyword.maxPrec.get)
     case _ =>
       val r = opStr.last
-      (precOf(opStr.head), precOf(r) - (if r === '@' || r === '/' || r === ',' || r === ':' then 1 else 0))
+      (precOf(opStr.head), precOf(r) - (if r === '/' || r === ',' || r === ':' then 1 else 0))
   }
   val prefixOps: Set[Str] = Set("!", "+", "-", "~", "@")
   
@@ -275,7 +278,7 @@ abstract class Parser(
     case Nil => Nil
     case (NEWLINE, _) :: _ if allowNewlines => consume; blockOf(rule, annotations, allowNewlines)
     case (SPACE, _) :: _ => consume; blockOf(rule, annotations, allowNewlines)
-    case (IDENT("@", _), l0) :: _ =>
+    case (IDENT("@", _), l0) :: rest if rest.nonEmpty =>
       consume
       blockOf(rule, simpleExpr(AppPrec) :: annotations, allowNewlines)
     case (tok @ (id: IDENT), loc) :: _ =>
@@ -498,7 +501,7 @@ abstract class Parser(
   def simpleExpr(prec: Int)(using Line): Tree = wrap(prec)(simpleExprImpl(prec))
   def simpleExprImpl(prec: Int): Tree =
     yeetSpaces match
-    case (IDENT("@", _), l0) :: _ =>
+    case (IDENT("@", _), l0) :: rest if rest.nonEmpty =>
       consume
       val annotation = simpleExpr(AppPrec)
       Annotated(annotation, simpleExpr(prec))
@@ -522,7 +525,7 @@ abstract class Parser(
     case (LITVAL(lit), loc) :: _ =>
       consume
       exprCont(lit.asTree.withLoc(S(loc)), prec, allowNewlines = true)
-    case (br @ BRACKETS(bk @ (Round | Square), toks), loc) :: _ =>
+    case (br @ BRACKETS(bk @ (Round | Curly | Square), toks), loc) :: _ =>
       consume
       val ps = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
       yeetSpaces match
@@ -532,15 +535,18 @@ abstract class Parser(
             val rhs = effectfulRhs(kw.rightPrecOrMin)
             val lhs = bk match
               case Round => Tup(ps)
+              case Curly => Bra(Curly, Block(ps))
               case Square => TyTup(ps)
             exprCont(
               Quoted(InfixApp(lhs, kw, Unquoted(rhs)).withLoc(S(loc))).withLoc(S(l ++ loc)),
               prec, allowNewlines = true)
-        case (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ =>
+        case (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _
+        if kw.leftPrecOrMin > prec =>
           consume
           val rhs = effectfulRhs(kw.rightPrecOrMin)
           val lhs = bk match
             case Round => Tup(ps)
+            case Curly => ???
             case Square => TyTup(ps)
           val res = InfixApp(lhs, kw, rhs).withLoc(S(loc))
           exprCont(res, prec, allowNewlines = true)
@@ -552,6 +558,7 @@ abstract class Parser(
               case Nil => Unt().withLoc(S(loc))
               case e :: Nil => Bra(Round, e).withLoc(S(loc))
               case es => Bra(Round, Block(es).withLoc(S(loc)))
+            case Curly => Bra(Curly, Block(ps))
           exprCont(res, prec, allowNewlines = true)
     case (QUOTE, loc) :: _ =>
       consume
@@ -753,7 +760,8 @@ abstract class Parser(
       // case (KEYWORD(kw @ (Keyword.`=`)), l0) :: _ if kw.leftPrecOrMin > prec =>
       //   consume
       //   ???
-      case (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ if kw.leftPrecOrMin > prec =>
+      case (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _
+      if kw.leftPrecOrMin > prec =>
         consume
         val rhs = effectfulRhs(kw.rightPrecOrMin)
         val res = acc match
@@ -992,7 +1000,7 @@ abstract class Parser(
                 yeetSpaces match
                   case (NEWLINE, l0) :: _ =>
                     consume
-                    ???
+                    lastWords(s"infix on newline at ${l0.showStart}:${l0.showEnd}")
                   case _ =>
                 if verbose then printDbg("$ parsing the right-hand side")
                 val rhs = expr(kw.rightPrecOrMin)

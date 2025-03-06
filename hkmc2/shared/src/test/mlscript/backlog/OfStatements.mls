@@ -11,19 +11,21 @@ print of
 //│ ╔══[ERROR] Name not found: x
 //│ ║  l.7: 	  x + 1
 //│ ╙──     	  ^
+//│ > ()
 
 print of 
   open Predef
   let x = 1
   x + 1
 //│ ╔══[ERROR] Illegal position for 'open' statement.
-//│ ║  l.16: 	  open Predef
+//│ ║  l.17: 	  open Predef
 //│ ╙──      	       ^^^^^^
 //│ ╔══[ERROR] Expected a body for let bindings in expression position
-//│ ║  l.17: 	  let x = 1
+//│ ║  l.18: 	  let x = 1
 //│ ╙──      	      ^^^^^
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.18: 	  x + 1
+//│ ║  l.19: 	  x + 1
 //│ ╙──      	  ^
+//│ > 
 
 

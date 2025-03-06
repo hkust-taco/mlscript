@@ -29,7 +29,16 @@ declare class Str(length: Int, concat: Str -> Str)
 
 declare class Error(msg: Str)
 
-declare module Predef
+
+declare module source with
+  object
+    line: Int
+    name: Str
+    file: Str
+
+declare module js with
+  fun try_catch
+
 
 declare fun run: [T] -> CodeBase[out T, out Nothing, out Any] -> T
 declare fun log: Str -> Any

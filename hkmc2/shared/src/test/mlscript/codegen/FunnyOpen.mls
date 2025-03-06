@@ -32,26 +32,25 @@ Mod.|>
 //│ ╙──      	   ^^^
 
 
-:fixme
 1 |> x => print(x)
-//│ /!!!\ Uncaught error: scala.MatchError: App(Ident(|>),Tup(List(IntLit(1), Ident(x)))) (of class hkmc2.syntax.Tree$App)
+//│ > 1
 
 
 :pe
 :e
 open Mod { |> }
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found end of input instead
-//│ ║  l.42: 	open Mod { |> }
+//│ ║  l.41: 	open Mod { |> }
 //│ ╙──      	              ^
 //│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.42: 	open Mod { |> }
+//│ ║  l.41: 	open Mod { |> }
 //│ ╙──      	     ^^^^^^^^^
 
 
 :e
 open Mod { (|>) }
 //│ ╔══[ERROR] Illegal 'open' statement element.
-//│ ║  l.52: 	open Mod { (|>) }
+//│ ║  l.51: 	open Mod { (|>) }
 //│ ╙──      	           ^^^^
 
 12 |> print

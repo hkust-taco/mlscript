@@ -63,13 +63,16 @@ hi(0)
 //│           return 0
 //│         } else {
 //│           this.tmp$2 = this.n$0 - 1;
-//│           runtime.stackDepth = runtime.stackDepth + 1;
-//│           return hi(this.tmp$2)
+//│           this.pc = 2;
+//│           continue contLoop;
 //│         }
 //│         this.pc = 1;
 //│         continue contLoop;
 //│       } else if (this.pc === 1) {
 //│         break contLoop;
+//│       } else if (this.pc === 2) {
+//│         runtime.stackDepth = runtime.stackDepth + 1;
+//│         return hi(this.tmp$2)
 //│       }
 //│       break;
 //│     }
@@ -142,11 +145,11 @@ hi(0)
 //│     }
 //│   }
 //│   resume(value$) {
-//│     if (this.pc === 2) {
+//│     if (this.pc === 3) {
 //│       this.res$0 = value$;
 //│     }
 //│     contLoop: while (true) {
-//│       if (this.pc === 2) {
+//│       if (this.pc === 3) {
 //│         return this.res$0
 //│       }
 //│       break;
@@ -163,7 +166,7 @@ hi(0)
 //│   runtime.stackHandler = stackHandler;
 //│   res1 = hi(0);
 //│   if (res1 instanceof runtime.EffectSig.class) {
-//│     res1.contTrace.last.next = Cont$handleBlock$stackHandler$$(res1, 2);
+//│     res1.contTrace.last.next = Cont$handleBlock$stackHandler$$(res1, 3);
 //│     return runtime.handleBlockImpl(res1, stackHandler)
 //│   }
 //│   return res1
@@ -187,25 +190,25 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ JS (unsanitized):
-//│ let sum1, res1, Cont$func$sum$StackSafetyLift$_mls_L184_4_57$1, handleBlock$1, Cont$handleBlock$stackHandler$3, StackDelay$3, lambda1, Cont$func$sum$StackSafetyLift$_mls_L184_4_57$$ctor, Cont$func$sum$StackSafetyLift$_mls_L184_4_57$$, Cont$handleBlock$stackHandler$$ctor1, Cont$handleBlock$stackHandler$$1, lambda$1;
-//│ Cont$func$sum$StackSafetyLift$_mls_L184_4_57$$ = function Cont$func$sum$StackSafetyLift$_mls_L184_4_57$$(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5, pc) {
+//│ let sum1, res1, Cont$func$sum$StackSafetyLift$_mls_L187_4_57$1, handleBlock$1, Cont$handleBlock$stackHandler$3, StackDelay$3, lambda1, Cont$func$sum$StackSafetyLift$_mls_L187_4_57$$ctor, Cont$func$sum$StackSafetyLift$_mls_L187_4_57$$, Cont$handleBlock$stackHandler$$ctor1, Cont$handleBlock$stackHandler$$1, lambda$1;
+//│ Cont$func$sum$StackSafetyLift$_mls_L187_4_57$$ = function Cont$func$sum$StackSafetyLift$_mls_L187_4_57$$(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5, pc) {
 //│   let tmp;
-//│   tmp = new Cont$func$sum$StackSafetyLift$_mls_L184_4_57$1.class(pc);
+//│   tmp = new Cont$func$sum$StackSafetyLift$_mls_L187_4_57$1.class(pc);
 //│   return tmp(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5)
 //│ };
-//│ Cont$func$sum$StackSafetyLift$_mls_L184_4_57$$ctor = function Cont$func$sum$StackSafetyLift$_mls_L184_4_57$$ctor(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5) {
+//│ Cont$func$sum$StackSafetyLift$_mls_L187_4_57$$ctor = function Cont$func$sum$StackSafetyLift$_mls_L187_4_57$$ctor(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5) {
 //│   return (pc) => {
 //│     let tmp;
-//│     tmp = new Cont$func$sum$StackSafetyLift$_mls_L184_4_57$1.class(pc);
+//│     tmp = new Cont$func$sum$StackSafetyLift$_mls_L187_4_57$1.class(pc);
 //│     return tmp(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5)
 //│   }
 //│ };
-//│ Cont$func$sum$StackSafetyLift$_mls_L184_4_57$1 = function Cont$func$sum$StackSafetyLift$_mls_L184_4_57$(pc1) {
+//│ Cont$func$sum$StackSafetyLift$_mls_L187_4_57$1 = function Cont$func$sum$StackSafetyLift$_mls_L187_4_57$(pc1) {
 //│   return (n$01, scrut$11, tmp$21, tmp$31, curDepth$41, stackDelayRes$51) => {
-//│     return new Cont$func$sum$StackSafetyLift$_mls_L184_4_57$.class(pc1)(n$01, scrut$11, tmp$21, tmp$31, curDepth$41, stackDelayRes$51);
+//│     return new Cont$func$sum$StackSafetyLift$_mls_L187_4_57$.class(pc1)(n$01, scrut$11, tmp$21, tmp$31, curDepth$41, stackDelayRes$51);
 //│   }
 //│ };
-//│ Cont$func$sum$StackSafetyLift$_mls_L184_4_57$1.class = class Cont$func$sum$StackSafetyLift$_mls_L184_4_57$ extends runtime.FunctionContFrame.class {
+//│ Cont$func$sum$StackSafetyLift$_mls_L187_4_57$1.class = class Cont$func$sum$StackSafetyLift$_mls_L187_4_57$ extends runtime.FunctionContFrame.class {
 //│   constructor(pc) {
 //│     return (n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5) => {
 //│       let tmp;
@@ -233,21 +236,24 @@ sum(10000)
 //│           return 0
 //│         } else {
 //│           this.tmp$2 = this.n$0 - 1;
-//│           runtime.stackDepth = runtime.stackDepth + 1;
-//│           this.tmp$3 = sum1(this.tmp$2);
-//│           if (this.tmp$3 instanceof runtime.EffectSig.class) {
-//│             this.pc = 1;
-//│             this.tmp$3.contTrace.last.next = this;
-//│             this.tmp$3.contTrace.last = this;
-//│             return this.tmp$3
-//│           }
-//│           this.pc = 1;
+//│           this.pc = 3;
 //│           continue contLoop;
 //│         }
 //│         this.pc = 2;
 //│         continue contLoop;
 //│       } else if (this.pc === 2) {
 //│         break contLoop;
+//│       } else if (this.pc === 3) {
+//│         runtime.stackDepth = runtime.stackDepth + 1;
+//│         this.tmp$3 = sum1(this.tmp$2);
+//│         if (this.tmp$3 instanceof runtime.EffectSig.class) {
+//│           this.pc = 1;
+//│           this.tmp$3.contTrace.last.next = this;
+//│           this.tmp$3.contTrace.last = this;
+//│           return this.tmp$3
+//│         }
+//│         this.pc = 1;
+//│         continue contLoop;
 //│       } else if (this.pc === 1) {
 //│         this.tmp$3 = runtime.resetDepth(this.tmp$3, this.curDepth$4);
 //│         return this.n$0 + this.tmp$3
@@ -255,14 +261,14 @@ sum(10000)
 //│       break;
 //│     }
 //│   }
-//│   toString() { return "Cont$func$sum$StackSafetyLift$_mls_L184_4_57$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│   toString() { return "Cont$func$sum$StackSafetyLift$_mls_L187_4_57$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│ };
 //│ sum1 = function sum(n) {
 //│   let scrut, tmp, tmp1, curDepth, stackDelayRes;
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     stackDelayRes.contTrace.last.next = Cont$func$sum$StackSafetyLift$_mls_L184_4_57$$(n, scrut, tmp, tmp1, curDepth, stackDelayRes, 0);
+//│     stackDelayRes.contTrace.last.next = Cont$func$sum$StackSafetyLift$_mls_L187_4_57$$(n, scrut, tmp, tmp1, curDepth, stackDelayRes, 0);
 //│     stackDelayRes.contTrace.last = stackDelayRes.contTrace.last.next;
 //│     return stackDelayRes
 //│   }
@@ -274,7 +280,7 @@ sum(10000)
 //│     runtime.stackDepth = runtime.stackDepth + 1;
 //│     tmp1 = sum1(tmp);
 //│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       tmp1.contTrace.last.next = Cont$func$sum$StackSafetyLift$_mls_L184_4_57$$(n, scrut, tmp, tmp1, curDepth, stackDelayRes, 1);
+//│       tmp1.contTrace.last.next = Cont$func$sum$StackSafetyLift$_mls_L187_4_57$$(n, scrut, tmp, tmp1, curDepth, stackDelayRes, 1);
 //│       tmp1.contTrace.last = tmp1.contTrace.last.next;
 //│       return tmp1
 //│     }
@@ -331,11 +337,11 @@ sum(10000)
 //│     }
 //│   }
 //│   resume(value$) {
-//│     if (this.pc === 3) {
+//│     if (this.pc === 4) {
 //│       this.res$0 = value$;
 //│     }
 //│     contLoop: while (true) {
-//│       if (this.pc === 3) {
+//│       if (this.pc === 4) {
 //│         return this.res$0
 //│       }
 //│       break;
@@ -352,7 +358,7 @@ sum(10000)
 //│   runtime.stackHandler = stackHandler;
 //│   res2 = sum1(10000);
 //│   if (res2 instanceof runtime.EffectSig.class) {
-//│     res2.contTrace.last.next = Cont$handleBlock$stackHandler$$1(res2, 3);
+//│     res2.contTrace.last.next = Cont$handleBlock$stackHandler$$1(res2, 4);
 //│     return runtime.handleBlockImpl(res2, stackHandler)
 //│   }
 //│   return res2

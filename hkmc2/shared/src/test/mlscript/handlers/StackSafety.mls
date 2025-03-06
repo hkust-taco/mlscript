@@ -43,13 +43,16 @@ hi(0)
 //│             return 0
 //│           } else {
 //│             tmp = n - 1;
-//│             runtime.stackDepth = runtime.stackDepth + 1;
-//│             return hi(tmp)
+//│             this.pc = 2;
+//│             continue contLoop;
 //│           }
 //│           this.pc = 1;
 //│           continue contLoop;
 //│         } else if (this.pc === 1) {
 //│           break contLoop;
+//│         } else if (this.pc === 2) {
+//│           runtime.stackDepth = runtime.stackDepth + 1;
+//│           return hi(tmp)
 //│         }
 //│         break;
 //│       }
@@ -97,11 +100,11 @@ hi(0)
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
-//│       if (this.pc === 2) {
+//│       if (this.pc === 3) {
 //│         res1 = value$;
 //│       }
 //│       contLoop: while (true) {
-//│         if (this.pc === 2) {
+//│         if (this.pc === 3) {
 //│           return res1
 //│         }
 //│         break;
@@ -115,7 +118,7 @@ hi(0)
 //│   runtime.stackHandler = stackHandler;
 //│   res1 = hi(0);
 //│   if (res1 instanceof runtime.EffectSig.class) {
-//│     res1.contTrace.last.next = Cont$handleBlock$stackHandler$1(2);
+//│     res1.contTrace.last.next = Cont$handleBlock$stackHandler$1(3);
 //│     return runtime.handleBlockImpl(res1, stackHandler)
 //│   }
 //│   return res1
@@ -141,11 +144,11 @@ sum(10000)
 //│ JS (unsanitized):
 //│ let sum1, res1, handleBlock$1;
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, Cont$func$sum$StackSafety$_mls_L136_4_57$1;
-//│   Cont$func$sum$StackSafety$_mls_L136_4_57$1 = function Cont$func$sum$StackSafety$_mls_L136_4_57$(pc1) {
-//│     return new Cont$func$sum$StackSafety$_mls_L136_4_57$.class(pc1);
+//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, Cont$func$sum$StackSafety$_mls_L139_4_57$1;
+//│   Cont$func$sum$StackSafety$_mls_L139_4_57$1 = function Cont$func$sum$StackSafety$_mls_L139_4_57$(pc1) {
+//│     return new Cont$func$sum$StackSafety$_mls_L139_4_57$.class(pc1);
 //│   };
-//│   Cont$func$sum$StackSafety$_mls_L136_4_57$1.class = class Cont$func$sum$StackSafety$_mls_L136_4_57$ extends runtime.FunctionContFrame.class {
+//│   Cont$func$sum$StackSafety$_mls_L139_4_57$1.class = class Cont$func$sum$StackSafety$_mls_L139_4_57$ extends runtime.FunctionContFrame.class {
 //│     constructor(pc) {
 //│       let tmp2;
 //│       tmp2 = super(null);
@@ -164,21 +167,24 @@ sum(10000)
 //│             return 0
 //│           } else {
 //│             tmp = n - 1;
-//│             runtime.stackDepth = runtime.stackDepth + 1;
-//│             tmp1 = sum1(tmp);
-//│             if (tmp1 instanceof runtime.EffectSig.class) {
-//│               this.pc = 1;
-//│               tmp1.contTrace.last.next = this;
-//│               tmp1.contTrace.last = this;
-//│               return tmp1
-//│             }
-//│             this.pc = 1;
+//│             this.pc = 3;
 //│             continue contLoop;
 //│           }
 //│           this.pc = 2;
 //│           continue contLoop;
 //│         } else if (this.pc === 2) {
 //│           break contLoop;
+//│         } else if (this.pc === 3) {
+//│           runtime.stackDepth = runtime.stackDepth + 1;
+//│           tmp1 = sum1(tmp);
+//│           if (tmp1 instanceof runtime.EffectSig.class) {
+//│             this.pc = 1;
+//│             tmp1.contTrace.last.next = this;
+//│             tmp1.contTrace.last = this;
+//│             return tmp1
+//│           }
+//│           this.pc = 1;
+//│           continue contLoop;
 //│         } else if (this.pc === 1) {
 //│           tmp1 = runtime.resetDepth(tmp1, curDepth);
 //│           return n + tmp1
@@ -186,12 +192,12 @@ sum(10000)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$func$sum$StackSafety$_mls_L136_4_57$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$func$sum$StackSafety$_mls_L139_4_57$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     stackDelayRes.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L136_4_57$1.class(0);
+//│     stackDelayRes.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L139_4_57$1.class(0);
 //│     stackDelayRes.contTrace.last = stackDelayRes.contTrace.last.next;
 //│     return stackDelayRes
 //│   }
@@ -203,7 +209,7 @@ sum(10000)
 //│     runtime.stackDepth = runtime.stackDepth + 1;
 //│     tmp1 = sum1(tmp);
 //│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       tmp1.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L136_4_57$1.class(1);
+//│       tmp1.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L139_4_57$1.class(1);
 //│       tmp1.contTrace.last = tmp1.contTrace.last.next;
 //│       return tmp1
 //│     }
@@ -237,11 +243,11 @@ sum(10000)
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
-//│       if (this.pc === 3) {
+//│       if (this.pc === 4) {
 //│         res2 = value$;
 //│       }
 //│       contLoop: while (true) {
-//│         if (this.pc === 3) {
+//│         if (this.pc === 4) {
 //│           return res2
 //│         }
 //│         break;
@@ -255,7 +261,7 @@ sum(10000)
 //│   runtime.stackHandler = stackHandler;
 //│   res2 = sum1(10000);
 //│   if (res2 instanceof runtime.EffectSig.class) {
-//│     res2.contTrace.last.next = Cont$handleBlock$stackHandler$2(3);
+//│     res2.contTrace.last.next = Cont$handleBlock$stackHandler$2(4);
 //│     return runtime.handleBlockImpl(res2, stackHandler)
 //│   }
 //│   return res2

@@ -114,7 +114,7 @@ region x in
 
 
 region x in
-  (region y in let t = helper(y) in 42): [A] -> Int
+  (region y in let t = helper(y) in 42) as [A] -> Int
 //│ Type: Int
 
 
@@ -126,9 +126,9 @@ region x in
 
 :e
 region x in
-  (region y in let t = helper(x) in 42): [A] -> Int
+  (region y in let t = helper(x) in 42) as [A] -> Int
 //│ ╔══[ERROR] Type error in reference with expected type 'r1
-//│ ║  l.129: 	  (region y in let t = helper(x) in 42): [A] -> Int
+//│ ║  l.129: 	  (region y in let t = helper(x) in 42) as [A] -> Int
 //│ ║         	                              ^
 //│ ╟── because: cannot constrain  Region[x]  <:  'r1
 //│ ╟── because: cannot constrain  Region[in x out x]  <:  'r1
@@ -139,7 +139,7 @@ region x in
 //│ ╟── because: cannot constrain  x  <:  'env
 //│ ╙── because: cannot constrain  x  <:  outer ∨ y
 //│ ╔══[ERROR] Type error in region expression with expected type [outer, 'A] -> Int
-//│ ║  l.129: 	  (region y in let t = helper(x) in 42): [A] -> Int
+//│ ║  l.129: 	  (region y in let t = helper(x) in 42) as [A] -> Int
 //│ ║         	                       ^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'eff  <:  ⊥
 //│ ╟── because: cannot constrain  'eff  <:  ¬()
@@ -281,7 +281,7 @@ fun bar: [outer S, T extends S] -> Region[T] ->{T} Int
 //│ Type: ⊤
 
 
-bar: [outer Q, P extends Q] -> Region[P] ->{P} Int
+bar as [outer Q, P extends Q] -> Region[P] ->{P} Int
 //│ Type: [outer Q, 'P] -> (Region['P]) ->{'P} Int
 //│ Where:
 //│   'P <: Q

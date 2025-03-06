@@ -12,7 +12,7 @@ arr.map(_ === false)
 
 :todo
 arr.map((e, ...) => e === false)
-//│ /!!!\ Uncaught error: scala.MatchError: Spread(keyword '...',Some(Loc(12,15,Array.mls:+14)),None) (of class hkmc2.syntax.Tree$Spread)
+//│ /!!!\ Uncaught error: scala.MatchError: Spread(keyword '...',Some(Loc(12,15,Arrays.mls:+14)),None) (of class hkmc2.syntax.Tree$Spread)
 
 arr.map(pass1(_ === false))
 //│ = [false, true]

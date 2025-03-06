@@ -165,6 +165,69 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
           case 'r' => str(i + 1, false, '\r' :: cur)
           case 'b' => str(i + 1, false, '\b' :: cur)
           case 'f' => str(i + 1, false, '\f' :: cur)
+          case 'u' => 
+            /**
+              * This code handles two types of Unicode escape sequences:
+              *
+              * + Traditional Unicode escape: "\uXXXX"
+              *   - Consists of the characters '\' and 'u' followed by exactly
+              *     four hexadecimal digits.
+              *   - Example: "\u0041" represents the character 'A'.
+              * + Unicode code point escape: "\u{XXXXXX}"
+              *   - Starts with "\u{" and ends with "}", allowing between 1 and
+              *     6 hexadecimal digits in between.
+              *   - Example: "\u{1F600}" represents the grinning face emoji.
+              *
+              * In both cases, the scanned code point is validated to ensure
+              * that it falls within the allowed Unicode range (0x0 to 0x10FFFF).
+              * If any errors occur during scanning or conversion, such as
+              * invalid characters, missing digits, or code points out of range,
+              * a warning is raised with a precise location.
+              */
+            @tailrec
+            def scanHexDigits(idx: Int, maxDigits: Int, value: Int, count: Int): (Int, Int, Int) =
+              if idx < length && isHexDigit(bytes(idx)) then
+                if count < maxDigits then
+                  scanHexDigits(idx + 1, maxDigits, (value << 4) + Character.digit(bytes(idx), 16), count + 1)
+                else
+                  scanHexDigits(idx + 1, maxDigits, value, count + 1)
+              else
+                (idx, value, count)
+            
+            if i + 1 < length && bytes(i + 1) == '{' then
+              // Scan up to 6 hex digits after the opening brace.
+              val (nextIdx, acc, count) = scanHexDigits(i + 2, 6, 0, 0)
+              val result = if count == 0 then
+                raise(WarningReport(msg"Expected at least one hexadecimal digit in Unicode escape sequence" -> S(loc(i + 1, nextIdx)) :: Nil,
+                  source = Lexing))
+                cur
+              else if count > 6 then
+                raise(WarningReport(msg"Too many hexadecimal digits in Unicode escape sequence" -> S(loc(nextIdx - (count - 6), nextIdx)) :: Nil,
+                  source = Lexing))
+                cur
+              else if acc > 0x10FFFF then
+                raise(WarningReport(msg"Unicode code point out of range: 0x${acc.toHexString}" -> S(loc(i + 2, nextIdx)) :: Nil,
+                  source = Lexing))
+                cur
+              else
+                Character.toChars(acc).reverseIterator.toList ::: cur
+              // Close the brace.
+              val finalIdx = if nextIdx >= length || bytes(nextIdx) != '}' then
+                raise(WarningReport(msg"Unterminated Unicode escape sequence: missing '}'" -> S(loc(nextIdx, nextIdx)) :: Nil,
+                  source = Lexing))
+                nextIdx
+              else
+                nextIdx + 1
+              str(finalIdx, false, result)
+            else
+              // Process the traditional 4-digit Unicode escape (\uXXXX).
+              val (nextIdx, acc, count) = scanHexDigits(i + 1, 4, 0, 0)
+              if count != 4 then
+                raise(WarningReport(msg"Invalid Unicode escape sequence: expected 4 hexadecimal digits but got ${count.toString}" -> S(loc(i + 1, nextIdx)) :: Nil,
+                  source = Lexing))
+                str(nextIdx, false, cur)
+              else
+                str(nextIdx, false, acc.toChar :: cur)
           case ch =>
             raise(WarningReport(msg"Found invalid escape character" -> S(loc(i, i + 1)) :: Nil,
               source = Lexing))

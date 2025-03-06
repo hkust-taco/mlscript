@@ -8,6 +8,8 @@ fun id(x) = x
 fun not(x) = x is false
 
 
+fun (@) apply(f, ...args) = f(...args)
+
 fun (|>) pipeInto(x, f) = f(x)
 fun (<|) pipeFrom(f, x) = f(x)
 
@@ -63,10 +65,15 @@ fun render(arg) = if
       let p = Object.getOwnPropertyDescriptor(arg, "prototype")
       (p is Object and p.("writable")) || (p is undefined) then
         "[function" + (if arg.name is
-          "" then ""
+          ""  then ""
           nme then " " + nme
         ) + "]"
-    Object    then String(arg)
+    Object then
+      if arg.constructor.name is "Object"
+      then
+        let es = Object.entries(arg)
+        fold(+)("{", ...interleave(", ")(...map(case [k, v] then k + ": " + render(v))(...es)), "}")
+      else String(arg)
   let ts = arg.("toString") // not accessing as `arg.toString` to avoid the sanity check
   ts is undefined then "[" + typeof(arg) + "]"
   else ts.call(arg)
@@ -115,6 +122,9 @@ fun foldr(f)(first, ...rest) =
       init = f(rest.at(i), init)
   f(first, init)
 
+fun mkStr(...xs) =
+  fold((acc, x) => assert(x is Str); acc + x) of ...xs
+
 
 fun stringStartsWith(string, prefix) = string.startsWith(prefix)
 
@@ -122,9 +132,6 @@ fun stringGet(string, i) = string.at(i)
 
 fun stringDrop(string, n) = string.slice(n)
 
-
-class MatchResult(captures)
-class MatchFailure(errors)
 
 fun unreachable = throw Error("unreachable")
 

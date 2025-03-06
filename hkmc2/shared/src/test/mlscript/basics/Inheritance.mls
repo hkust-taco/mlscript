@@ -72,6 +72,7 @@ class Baz(z) extends Bar(z * 1) with
 :fixme
 let b = Baz(42)
 //│ ═══[RUNTIME ERROR] ReferenceError: Must call super constructor in derived class before accessing 'this' or returning from derived constructor
+//│ b = undefined
 
 b is Foo
 //│ = false

@@ -10,6 +10,7 @@ import syntax.Literal
 import Keyword.{as, and, `do`, `else`, is, let, `then`}
 import collection.mutable.{HashMap, SortedSet}
 import Elaborator.{ctx, Ctxl}
+import scala.annotation.targetName
 
 object Desugarer:
   extension (op: Keyword.Infix)
@@ -70,9 +71,18 @@ class Desugarer(val elaborator: Elaborator)
   type Ctor = SynthSel | Sel | Ident
 
   extension (sequel: Sequel)
+    @targetName("traceSequel")
     def traced(pre: Str, post: Split => Str): Sequel =
       if doTrace then ctx => trace(pre, post)(sequel(ctx)) else sequel
-
+  
+  extension (desugar: Split => Sequel)
+    @targetName("traceDesugar")
+    def traced(pre: Str, post: Split => Str): Split => Sequel =
+      if doTrace then
+        fallback => ctx => trace(pre, post)(desugar(fallback)(ctx))
+      else
+        desugar
+  
   extension (split: Split)
     /** Concatenate two splits. */
     def ++(fallback: Split): Split =
@@ -347,7 +357,17 @@ class Desugarer(val elaborator: Elaborator)
    *  @param tree the `Tree` representing the pattern split
    *  @param scrutSymbol the symbol representing the elaborated scrutinee
    */
-  def patternSplit(tree: Tree, scrutSymbol: BlockLocalSymbol): Split => Sequel = tree match
+  def patternSplit(tree: Tree, scrutSymbol: BlockLocalSymbol): Split => Sequel =
+    patternSplit(N, tree, scrutSymbol)
+  
+  /** Similar to `patternSplit`, but allows a transformation on the pattern head.
+   *  @param transform the partial pattern before enter this pattern split
+   */
+  def patternSplit(
+      finish: Opt[Tree => Tree],
+      tree: Tree,
+      scrutSymbol: BlockLocalSymbol
+  ): Split => Sequel = tree match
     case blk: Block => blk.desugStmts.foldRight(default): (branch, elabFallback) =>
       // Terminology: _fallback_ refers to subsequent branches, _backup_ refers
       // to the backup plan passed from the parent split.
@@ -376,12 +396,26 @@ class Desugarer(val elaborator: Elaborator)
         pre = "patternSplit (alternative)",
         post = (res: Split) => s"patternSplit (alternative) >>> ${res.showDbg}"
       ):
-        patternSplit(branch, scrutSymbol)(elabFallback(backup)(ctx))(ctx)
+        patternSplit(finish, branch, scrutSymbol)(elabFallback(backup)(ctx))(ctx)
+    // For example, `Some of "A" then 0`, and
+    // ```
+    // Some of
+    //   "A" then 0
+    //   "B" then 1
+    // ```
+    // The precedence of `of` is higher than `then`.
+    case app @ App(_: (Ident | Sel | SynthSel), Tup(branches)) =>
+      patternSplit(S(tree => app.copy(rhs = Tup(tree :: Nil))), Block(branches), scrutSymbol)
+        .traced(pre = s"patternSplit <<< partial pattern", post = (_) => s"patternSplit >>>")
     case patternAndMatches ~> consequent => fallback =>
       // There are N > 0 conjunct matches. We use `::[T]` instead of `List[T]`.
       // Each match is represented by a pair of a _coda_ and a _pattern_
       // that is yet to be elaborated.
       val (headPattern, _) :: tail = disaggregate(patternAndMatches)
+      val realPattern = finish match
+        case N => headPattern
+        case S(f) => f(headPattern)
+      log(s"realPattern: $realPattern")
       // The `consequent` serves as the innermost split, based on which we
       // expand from the N-th to the second match.
       val tailSplit =
@@ -395,7 +429,7 @@ class Desugarer(val elaborator: Elaborator)
         .traced(
           pre = s"conjunct matches <<< $tail",
           post = (res: Split) => s"conjunct matches >>> $res")
-      expandMatch(scrutSymbol, headPattern, tailSplit)(fallback).traced(
+      expandMatch(scrutSymbol, realPattern, tailSplit)(fallback).traced(
         pre = s"patternBranch <<< $patternAndMatches -> ${consequent.fold(_.showDbg, _.showDbg)}",
         post = (res: Split) => s"patternBranch >>> ${res.showDbg}")
     case _ =>
@@ -447,11 +481,11 @@ class Desugarer(val elaborator: Elaborator)
         val arity = cls.arity
         if arity =/= args.length then
           val m = args.length.toString
-          ErrorReport:
+          error:
             if arity == 0 then
-              msg"the constructor does not take any arguments but found $m" -> app.toLoc :: Nil
+              msg"the constructor does not take any arguments but found $m" -> app.toLoc
             else
-              msg"mismatched arity: expect ${arity.toString}, found $m" -> app.toLoc :: Nil
+              msg"mismatched arity: expect ${arity.toString}, found $m" -> app.toLoc
         val params = scrutSymbol.getSubScrutinees(cls)
         Branch(
           ref,

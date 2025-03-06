@@ -25,23 +25,23 @@ class BlockTraverser(subst: SymbolSubst):
     case HandleBlockReturn(res) => applyResult(res)
     case Match(scrut, arms, dflt, rst) =>
       val scrut2 = applyPath(scrut)
-      arms.map: arm =>
+      arms.foreach: arm =>
         applyCase(arm._1); applySubBlock(arm._2)
-      dflt.map(applySubBlock)
+      dflt.foreach(applySubBlock)
       applySubBlock(rst)
     case Label(lbl, bod, rst) => applyLocal(lbl); applySubBlock(bod); applySubBlock(rst)
     case Begin(sub, rst) => applySubBlock(sub); applySubBlock(rst)
     case TryBlock(sub, fin, rst) => applySubBlock(sub); applySubBlock(fin); applySubBlock(rst)
     case Assign(l, r, rst) => applyLocal(l); applyResult(r); applySubBlock(rst)
     case b @ AssignField(l, n, r, rst) =>
-      applyPath(l); applyResult(r); applySubBlock(rst); b.symbol.map(_.subst)
+      applyPath(l); applyResult(r); applySubBlock(rst); b.symbol.foreach(_.subst)
     case Define(defn, rst) => applyDefn(defn); applySubBlock(rst)
     case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
       applyLocal(l)
       applyLocal(res)
       applyPath(par)
-      args.map(applyPath)
-      hdr.map(applyHandler)
+      args.foreach(applyPath)
+      hdr.foreach(applyHandler)
       applySubBlock(bod)
       applySubBlock(rst)
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
@@ -51,15 +51,15 @@ class BlockTraverser(subst: SymbolSubst):
       applySubBlock(rest)
   
   def applyResult(r: Result): Unit = r match
-    case r @ Call(fun, args) => applyPath(fun); args.map(applyArg)
-    case Instantiate(cls, args) =>; applyPath(cls); args.map(applyPath)
+    case r @ Call(fun, args) => applyPath(fun); args.foreach(applyArg)
+    case Instantiate(cls, args) =>; applyPath(cls); args.foreach(applyPath)
     case p: Path => applyPath(p)
   
   def applyPath(p: Path): Unit = p match
     case DynSelect(qual, fld, arrayIdx) =>
       applyPath(qual); applyPath(fld)
     case p @ Select(qual, name) =>
-      applyPath(qual); p.symbol.map(_.subst)
+      applyPath(qual); p.symbol.foreach(_.subst)
     case v: Value => applyValue(v)
   
   def applyValue(v: Value): Unit = v match
@@ -67,30 +67,32 @@ class BlockTraverser(subst: SymbolSubst):
     case Value.This(sym) => sym.subst
     case Value.Lit(lit) => ()
     case v @ Value.Lam(params, body) => applyLam(v)
-    case Value.Arr(elems) => elems.map(applyArg)
+    case Value.Arr(elems) => elems.foreach(applyArg)
+    case Value.Rcd(fields) => fields.foreach:
+      case RcdArg(idx, value) => idx.foreach(applyPath); applyPath(value)
   
   def applyLocal(sym: Local): Unit = sym.subst
   
   def applyFunDefn(fun: FunDefn): Unit =
-    fun.owner.map(_.subst)
+    fun.owner.foreach(_.subst)
     fun.sym.subst
-    fun.params.map(applyParamList)
+    fun.params.foreach(applyParamList)
     applySubBlock(fun.body)
   
   def applyDefn(defn: Defn): Unit = defn match
     case defn: FunDefn => applyFunDefn(defn)
-    case ValDefn(owner, k, sym, rhs) => owner.map(_.subst); sym.subst; applyPath(rhs)
+    case ValDefn(owner, k, sym, rhs) => owner.foreach(_.subst); sym.subst; applyPath(rhs)
     case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentPath, methods, 
       privateFields, publicFields, preCtor, ctor) =>
-      own.map(_.subst)
+      own.foreach(_.subst)
       isym.subst
       sym.subst
-      paramsOpt.map(applyParamList)
-      auxParams.map(applyParamList)
-      parentPath.map(applyPath)
-      methods.map(applyFunDefn)
-      privateFields.map(_.subst)
-      publicFields.map(applyTermDefinition)
+      paramsOpt.foreach(applyParamList)
+      auxParams.foreach(applyParamList)
+      parentPath.foreach(applyPath)
+      methods.foreach(applyFunDefn)
+      privateFields.foreach(_.subst)
+      publicFields.foreach(applyTermDefinition)
       applySubBlock(preCtor)
       applySubBlock(ctor)
   
@@ -98,8 +100,8 @@ class BlockTraverser(subst: SymbolSubst):
     applyPath(arg.value)
   
   def applyParamList(pl: ParamList): Unit =
-    pl.params.map(_.sym.subst)
-    pl.restParam.map(_.sym.subst)
+    pl.params.foreach(_.sym.subst)
+    pl.restParam.foreach(_.sym.subst)
   
   def applyCase(cse: Case): Unit = cse match
     case Case.Lit(lit) => ()
@@ -111,7 +113,7 @@ class BlockTraverser(subst: SymbolSubst):
   def applyHandler(hdr: Handler): Unit =
     hdr.sym.subst
     hdr.resumeSym.subst
-    hdr.params.map(applyParamList)
+    hdr.params.foreach(applyParamList)
     applySubBlock(hdr.body)
   
   def applyLam(lam: Value.Lam): Unit =
@@ -119,9 +121,9 @@ class BlockTraverser(subst: SymbolSubst):
     applySubBlock(lam.body)
   
   def applyTermDefinition(td: TermDefinition): Unit =
-    td.owner.map(_.subst)
+    td.owner.foreach(_.subst)
     td.sym.subst
-    td.params.map(applyParamList)
+    td.params.foreach(applyParamList)
     td.resSym.subst
 
 class BlockTraverserShallow(subst: SymbolSubst) extends BlockTraverser(subst):
@@ -138,11 +140,11 @@ class BlockTraverserShallow(subst: SymbolSubst) extends BlockTraverser(subst):
       applyLocal(l)
       applyLocal(res)
       applyPath(par)
-      args.map(applyPath)
+      args.foreach(applyPath)
       cls.subst
-      hdr.map(applyHandler)
+      hdr.foreach(applyHandler)
       applySubBlock(rst)
     case _ => super.applyBlock(b)
 
-class BlockDataTraverse(subst: SymbolSubst) extends BlockTraverserShallow(subst):
+class BlockDataTraverser(subst: SymbolSubst) extends BlockTraverserShallow(subst):
   override def applySubBlock(b: Block): Unit = ()

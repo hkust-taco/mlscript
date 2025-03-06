@@ -51,7 +51,7 @@ false
 //│ Type: Bool
 
 :sjs
-(x => x): [T] -> T -> T
+(x => x) as [T] -> T -> T
 //│ JS (unsanitized):
 //│ let lambda; lambda = (undefined, function (x1) { return x1 }); lambda
 //│ = [function]

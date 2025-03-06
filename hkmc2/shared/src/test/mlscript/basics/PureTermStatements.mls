@@ -51,3 +51,12 @@ fun foo() =
 //│ ╙──      	  ^
 
 
+// * Note that uses of `;` currently do not warn...
+
+:sjs
+1; id(2)
+//│ JS (unsanitized):
+//│ let tmp; tmp = Predef.id(2); (1 , tmp)
+//│ = 2
+
+

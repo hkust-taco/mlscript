@@ -37,7 +37,7 @@ class Lol(h) with
 //│         contLoop: while (true) {
 //│           if (this.pc === 2) {
 //│             return this$Lol
-//│           } else if (this.pc === 0) {
+//│           } else if (this.pc === 3) {
 //│             res = Predef.print(tmp);
 //│             if (res instanceof runtime.EffectSig.class) {
 //│               this.pc = 1;
@@ -46,6 +46,19 @@ class Lol(h) with
 //│               return res
 //│             }
 //│             this.pc = 1;
+//│             continue contLoop;
+//│           } else if (this.pc === 4) {
+//│             tmp = runtime.safeCall(this$Lol.h.perform("k"));
+//│             if (tmp instanceof runtime.EffectSig.class) {
+//│               this.pc = 0;
+//│               tmp.contTrace.last.next = this;
+//│               tmp.contTrace.last = this;
+//│               return tmp
+//│             }
+//│             this.pc = 0;
+//│             continue contLoop;
+//│           } else if (this.pc === 0) {
+//│             this.pc = 3;
 //│             continue contLoop;
 //│           } else if (this.pc === 1) {
 //│             this.pc = 2;
@@ -134,6 +147,7 @@ oops.h
 //│ = Handler$h$
 
 let obj = {}
+//│ obj = ()
 
 handle h = Effect with
   fun perform(arg)(k) =

@@ -18,10 +18,10 @@ f(x => x, 42)
 fun id: [A] -> A -> A
 //│ Type: ⊤
 
-id : [A] -> A -> A
+id as [A] -> A -> A
 //│ Type: ['A] -> ('A) ->{⊥} 'A
 
-id(id) : [A] -> A -> A
+id(id) as [A] -> A -> A
 //│ Type: ['A] -> ('A) ->{⊥} 'A
 
 

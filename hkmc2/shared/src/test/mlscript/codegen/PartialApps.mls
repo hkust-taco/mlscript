@@ -33,11 +33,13 @@ foo(_, _, 3)(1, 2)
 :fixme
 foo(_, _, 3)(1, _)(2)
 //│ ═══[ERROR] Illegal position for '_' placeholder.
+//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
 
 :todo
 foo(..._)
 //│ ═══[ERROR] Illegal position for '_' placeholder.
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 3 arguments but got 0
 
 :todo
 [..._]
@@ -113,6 +115,7 @@ class C(a, b, c)
 :todo
 (2 |> new C(1, _, 3)) |> print
 //│ ═══[ERROR] Illegal position for '_' placeholder.
+//│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
 
 :fixme // parsing precedence
 2 |> new C(1, _, 3) |> print
@@ -137,10 +140,10 @@ _ - 2 <| 1
 1
 |> _ - 2
 //│ ╔══[PARSE ERROR] Expected end of input; found '_' keyword instead
-//│ ║  l.138: 	|> _ - 2
+//│ ║  l.141: 	|> _ - 2
 //│ ╙──       	   ^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.137: 	1
+//│ ║  l.140: 	1
 //│ ╙──       	^
 //│ = [function pipeInto]
 
@@ -151,18 +154,18 @@ _ - 2 <| 1
 :sjs
 1 . _ - 2
 //│ JS (unsanitized):
-//│ let lambda23; lambda23 = (undefined, function (_) { return Predef.passTo(1, _) }); lambda23 - 2
+//│ let lambda24; lambda24 = (undefined, function (_) { return Predef.passTo(1, _) }); lambda24 - 2
 //│ = NaN
 
 :sjs
 1 . (_ - 2)()
 //│ JS (unsanitized):
-//│ let tmp7, lambda24;
-//│ lambda24 = (undefined, function (_) {
+//│ let tmp9, lambda25;
+//│ lambda25 = (undefined, function (_) {
 //│   return _ - 2
 //│ });
-//│ tmp7 = Predef.passTo(1, lambda24);
-//│ runtime.safeCall(tmp7())
+//│ tmp9 = Predef.passTo(1, lambda25);
+//│ runtime.safeCall(tmp9())
 //│ = -1
 
 1 . (_ - _)(2)

@@ -1,0 +1,46 @@
+import "./Predef.mls"
+import "./Iter.mls"
+
+open Predef
+open Iter { mapping, joined }
+
+
+class StyleAttributeValue(rules)
+
+
+module XML with ...
+
+fun serializeValue(value) = if value is
+  Str then JSON.stringify(value)
+  StyleAttributeValue(rules) then JSON.stringify of rules
+    mapping of case [name, value] then name + ": " + value
+    joined("; ")
+
+fun joinAttributes(attributes) =
+  if attributes is [] then "" else " " + attributes
+    mapping of case [name, value] then name + "=" + serializeValue(value)
+    joined(" ")
+
+fun elem(tagName, ...attributes)(...elements) = fold(+) of
+  "<"
+  tagName
+  joinAttributes(attributes)
+  ">"
+  ...elements
+  "</"
+  tagName
+  ">"
+
+fun tag(tagName)(...attributes) = fold(+) of
+  "<"
+  tagName
+  joinAttributes(attributes)
+  " "
+  "/>"
+
+fun style(...rules) = ["style", StyleAttributeValue(rules)]
+
+fun html(attributes)(...elements) =
+  "<!DOCTYPE html>" + elem("html", attributes)(...elements)
+
+

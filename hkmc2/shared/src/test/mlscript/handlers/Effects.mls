@@ -188,6 +188,16 @@ if true do
 //│       contLoop: while (true) {
 //│         if (this.pc === 1) {
 //│           return tmp12
+//│         } else if (this.pc === 2) {
+//│           tmp12 = f();
+//│           if (tmp12 instanceof runtime.EffectSig.class) {
+//│             this.pc = 0;
+//│             tmp12.contTrace.last.next = this;
+//│             tmp12.contTrace.last = this;
+//│             return tmp12
+//│           }
+//│           this.pc = 0;
+//│           continue contLoop;
 //│         } else if (this.pc === 0) {
 //│           this.pc = 1;
 //│           continue contLoop;
