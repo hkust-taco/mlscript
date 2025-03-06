@@ -158,11 +158,11 @@ if true do
 //│ JS (unsanitized):
 //│ let tmp11, handleBlock$11;
 //│ handleBlock$11 = function handleBlock$() {
-//│   let f, h, scrut, tmp12, Cont$handleBlock$h$11, Handler$h$12;
+//│   let f, h, scrut, res, Cont$handleBlock$h$11, Handler$h$12;
 //│   Handler$h$12 = class Handler$h$11 extends Effect1 {
 //│     constructor() {
-//│       let tmp13;
-//│       tmp13 = super();
+//│       let tmp12;
+//│       tmp12 = super();
 //│     }
 //│     perform(arg) {
 //│       return runtime.mkEffect(this, (k) => {
@@ -177,30 +177,29 @@ if true do
 //│   };
 //│   Cont$handleBlock$h$11.class = class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
 //│     constructor(pc) {
-//│       let tmp13;
-//│       tmp13 = super(null);
+//│       let tmp12;
+//│       tmp12 = super(null);
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
 //│       if (this.pc === 0) {
-//│         tmp12 = value$;
+//│         res = value$;
 //│       }
 //│       contLoop: while (true) {
 //│         if (this.pc === 1) {
-//│           return tmp12
+//│           break contLoop;
 //│         } else if (this.pc === 2) {
-//│           tmp12 = f();
-//│           if (tmp12 instanceof runtime.EffectSig.class) {
+//│           res = f();
+//│           if (res instanceof runtime.EffectSig.class) {
 //│             this.pc = 0;
-//│             tmp12.contTrace.last.next = this;
-//│             tmp12.contTrace.last = this;
-//│             return tmp12
+//│             res.contTrace.last.next = this;
+//│             res.contTrace.last = this;
+//│             return res
 //│           }
 //│           this.pc = 0;
 //│           continue contLoop;
 //│         } else if (this.pc === 0) {
-//│           this.pc = 1;
-//│           continue contLoop;
+//│           return res
 //│         }
 //│         break;
 //│       }
@@ -212,15 +211,15 @@ if true do
 //│   };
 //│   scrut = true;
 //│   if (scrut === true) {
-//│     tmp12 = f();
-//│     if (tmp12 instanceof runtime.EffectSig.class) {
-//│       tmp12.contTrace.last.next = Cont$handleBlock$h$11(0);
-//│       return runtime.handleBlockImpl(tmp12, h)
+//│     res = f();
+//│     if (res instanceof runtime.EffectSig.class) {
+//│       res.contTrace.last.next = Cont$handleBlock$h$11(0);
+//│       return runtime.handleBlockImpl(res, h)
 //│     }
+//│     return res
 //│   } else {
-//│     tmp12 = runtime.Unit;
+//│     return runtime.Unit
 //│   }
-//│   return tmp12
 //│ };
 //│ tmp11 = handleBlock$11();
 //│ if (tmp11 instanceof runtime.EffectSig.class) {

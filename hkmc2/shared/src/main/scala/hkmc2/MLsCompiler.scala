@@ -72,11 +72,11 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
     
     val elab = Elaborator(etl, wd, Ctx.empty)
     
-    val initState = State.init.nest(N)
+    val initState = State.init.nest(N, false)
     
     val (pblk, newCtx) = elab.importFrom(preludeParse.resultBlk)(using initState)
     
-    newCtx.nest(N).givenIn:
+    newCtx.nest(N, false).givenIn:
       val elab = Elaborator(etl, wd, newCtx)
       val parsed = mainParse.resultBlk
       val (blk0, _) = elab.importFrom(parsed)

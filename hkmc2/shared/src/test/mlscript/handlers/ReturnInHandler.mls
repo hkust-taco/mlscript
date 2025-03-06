@@ -4,6 +4,8 @@
 abstract class Effect with
   fun f(): ()
 
+// TODO: implement non local return, Bye! should not be printed
+:w
 fun f() =
   handle h = Effect with
     fun foo()(r) =
@@ -13,8 +15,13 @@ fun f() =
   h.foo()
   return 3 // Note: changing this to just `3` leads to `print("Bye!")` executing
 f()
+//│ ╔══[WARNING] Non local return will be treated as a local return.
+//│ ║  l.16: 	  return 3 // Note: changing this to just `3` leads to `print("Bye!")` executing
+//│ ╙──      	         ^
+//│ > Bye!
 //│ = 3
 
+:w
 fun f() =
   handle h = Effect with
     fun foo()(r) =
@@ -25,21 +32,33 @@ fun f() =
     h.foo()
     return 3
   10
+//│ ╔══[WARNING] Non local return will be treated as a local return.
+//│ ║  l.33: 	    return 3
+//│ ╙──      	           ^
 
+:fixme
 :expect 3
 f()
-//│ = 3
+//│ > Bye!
+//│ ═══[RUNTIME ERROR] Expected: '3', got: '10'
+//│ = 10
 
+:e
 let l = () =>
   handle h = Effect with
     fun foo()(r) = r(())
   return 3
   4
+//│ ╔══[ERROR] Return statement outside of a function.
+//│ ║  l.50: 	  return 3
+//│ ╙──      	         ^
 //│ l = [function l]
 
+:re
 l()
-//│ = 3
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
+:e
 handle h1 = Effect with
   fun foo()(r) = r(())
 let l = () =>
@@ -49,4 +68,6 @@ let l = () =>
   return 3
   4
 l()
-//│ = 3
+//│ ╔══[ERROR] Return statement outside of a function.
+//│ ║  l.68: 	  return 3
+//│ ╙──      	         ^

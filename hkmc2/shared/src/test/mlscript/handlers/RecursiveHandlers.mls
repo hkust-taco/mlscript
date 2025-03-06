@@ -176,27 +176,21 @@ str
 //│               this.pc = pc;
 //│             }
 //│             resume(value$) {
-//│               if (this.pc === 9) {
+//│               if (this.pc === 7) {
 //│                 tmp13 = value$;
 //│               }
 //│               contLoop: while (true) {
-//│                 if (this.pc === 11) {
+//│                 if (this.pc === 8) {
 //│                   tmp13 = runtime.safeCall(k(arg));
 //│                   if (tmp13 instanceof runtime.EffectSig.class) {
-//│                     this.pc = 9;
+//│                     this.pc = 7;
 //│                     tmp13.contTrace.last.next = this;
 //│                     tmp13.contTrace.last = this;
 //│                     return tmp13
 //│                   }
-//│                   this.pc = 9;
+//│                   this.pc = 7;
 //│                   continue contLoop;
-//│                 } else if (this.pc === 9) {
-//│                   if (tmp13 instanceof runtime.Return.class) {
-//│                     return tmp13
-//│                   }
-//│                   this.pc = 10;
-//│                   continue contLoop;
-//│                 } else if (this.pc === 10) {
+//│                 } else if (this.pc === 7) {
 //│                   tmp14 = str + "A";
 //│                   str = tmp14;
 //│                   return runtime.Unit
@@ -210,11 +204,8 @@ str
 //│           str = tmp12;
 //│           tmp13 = runtime.safeCall(k(arg));
 //│           if (tmp13 instanceof runtime.EffectSig.class) {
-//│             tmp13.contTrace.last.next = new Cont$handler$h1$RecursiveHandlers$_mls_L139_58_1301.class(9);
+//│             tmp13.contTrace.last.next = new Cont$handler$h1$RecursiveHandlers$_mls_L139_58_1301.class(7);
 //│             tmp13.contTrace.last = tmp13.contTrace.last.next;
-//│             return tmp13
-//│           }
-//│           if (tmp13 instanceof runtime.Return.class) {
 //│             return tmp13
 //│           }
 //│           tmp14 = str + "A";
@@ -235,17 +226,11 @@ str
 //│         this.pc = pc;
 //│       }
 //│       resume(value$) {
-//│         if (this.pc === 7) {
+//│         if (this.pc === 6) {
 //│           tmp11 = value$;
 //│         }
 //│         contLoop: while (true) {
-//│           if (this.pc === 7) {
-//│             if (tmp11 instanceof runtime.Return.class) {
-//│               return tmp11
-//│             }
-//│             this.pc = 8;
-//│             continue contLoop;
-//│           } else if (this.pc === 8) {
+//│           if (this.pc === 6) {
 //│             return tmp11
 //│           }
 //│           break;
@@ -277,7 +262,7 @@ str
 //│                   tmp15 = value$;
 //│                 }
 //│                 contLoop: while (true) {
-//│                   if (this.pc === 6) {
+//│                   if (this.pc === 5) {
 //│                     tmp15 = runtime.safeCall(k(arg));
 //│                     if (tmp15 instanceof runtime.EffectSig.class) {
 //│                       this.pc = 4;
@@ -288,12 +273,6 @@ str
 //│                     this.pc = 4;
 //│                     continue contLoop;
 //│                   } else if (this.pc === 4) {
-//│                     if (tmp15 instanceof runtime.Return.class) {
-//│                       return tmp15
-//│                     }
-//│                     this.pc = 5;
-//│                     continue contLoop;
-//│                   } else if (this.pc === 5) {
 //│                     tmp16 = str + "B";
 //│                     tmp17 = str + tmp16;
 //│                     str = tmp17;
@@ -311,9 +290,6 @@ str
 //│             if (tmp15 instanceof runtime.EffectSig.class) {
 //│               tmp15.contTrace.last.next = new Cont$handler$h2$RecursiveHandlers$_mls_L139_165_2491.class(4);
 //│               tmp15.contTrace.last = tmp15.contTrace.last.next;
-//│               return tmp15
-//│             }
-//│             if (tmp15 instanceof runtime.Return.class) {
 //│               return tmp15
 //│             }
 //│             tmp16 = str + "B";
@@ -386,11 +362,8 @@ str
 //│     };
 //│     tmp11 = handleBlock$8();
 //│     if (tmp11 instanceof runtime.EffectSig.class) {
-//│       tmp11.contTrace.last.next = Cont$handleBlock$h1$2(7);
+//│       tmp11.contTrace.last.next = Cont$handleBlock$h1$2(6);
 //│       return runtime.handleBlockImpl(tmp11, h1)
-//│     }
-//│     if (tmp11 instanceof runtime.Return.class) {
-//│       return tmp11
 //│     }
 //│     return tmp11
 //│   };
