@@ -287,25 +287,25 @@ object Type:
     if !prev.contains(a -> b) then c.getOrElseUpdate(a -> b, {
       (a, b) match
         case (Bot, _) | (_, Bot) => S(Set.empty)
-        case (NegType(t),_) => t.toBasic.!.simp.toBasic match
+        case (NegType(t),_) => t.!.simp.toBasic match
           case NegType(_) => N
           case a => disjoint(a, b)(prev)
-        case (_, NegType(t)) => t.toBasic.!.simp.toBasic match
+        case (_, NegType(t)) => t.!.simp.toBasic match
           case NegType(_) => N
           case a => disjoint(a, b)(prev)
         case (ClassLikeType(a, _), ClassLikeType(b, _)) if a.uid =/= b.uid => S(Set.empty)
         case (ComposedType(p, q, true), _) =>
-          val u = disjoint(p.toBasic.simp.toBasic, b)(prev)
-          val w = disjoint(q.toBasic.simp.toBasic, b)(prev)
+          val u = disjoint(p.simp.toBasic, b)(prev)
+          val w = disjoint(q.simp.toBasic, b)(prev)
           u.flatMap(u => w.map(u ++ _))
         case (_, ComposedType(p, q, true)) =>
-          val u = disjoint(a, p.toBasic.simp.toBasic)(prev)
-          val w = disjoint(a, q.toBasic.simp.toBasic)(prev)
+          val u = disjoint(a, p.simp.toBasic)(prev)
+          val w = disjoint(a, q.simp.toBasic)(prev)
           u.flatMap(u => w.map(u ++ _))
         case (a: InfVar, b: InfVar) if a.uid =/= b.uid => N
         case (v: InfVar, _) =>
             val p = prev + (v->b)
-            val k = v.state.lowerBounds.map(lb => disjoint(lb.toBasic.simp.toBasic, b)(p))
+            val k = v.state.lowerBounds.map(lb => disjoint(lb.simp.toBasic, b)(p))
             if k.exists(_.isEmpty) then N
             else S((k.flatten.flatten.toSet + Set.empty).map(_ + (v -> b)))
         case (_, v: InfVar) => disjoint(v, a)(prev)
