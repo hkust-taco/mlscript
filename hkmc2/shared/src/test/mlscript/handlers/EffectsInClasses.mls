@@ -14,7 +14,7 @@ class Lol(h) with
 //│ getLocals2 = function getLocals() {
 //│   let prev, thisInfo, tmp;
 //│   prev = [];
-//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$topLevel$BAD", []);
+//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039top level\u203A", []);
 //│   tmp = runtime.safeCall(prev.push(thisInfo));
 //│   return prev
 //│ };
@@ -28,7 +28,7 @@ class Lol(h) with
 //│     getLocals3 = function getLocals() {
 //│       let prev, thisInfo, tmp1;
 //│       prev = getLocals2();
-//│       thisInfo = new runtime.FnLocalsInfo.class("Cont$ctor$Lol$EffectsInClasses$_mls_L10_6_41$", []);
+//│       thisInfo = new runtime.FnLocalsInfo.class("\u2039constructor of Lol\u203A", []);
 //│       tmp1 = runtime.safeCall(prev.push(thisInfo));
 //│       return prev
 //│     };

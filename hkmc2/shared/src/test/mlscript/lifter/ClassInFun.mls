@@ -17,14 +17,14 @@ f() + f() + f()
 //│ getLocals = function getLocals() {
 //│   let prev, thisInfo, tmp1;
 //│   prev = [];
-//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$topLevel$BAD", []);
+//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039top level\u203A", []);
 //│   tmp1 = runtime.safeCall(prev.push(thisInfo));
 //│   return prev
 //│ };
 //│ getLocals$ = function getLocals$(Effect$instance) {
 //│   let prev, thisInfo, tmp1;
 //│   prev = getLocals();
-//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$ctor$Effect$ClassInFun$_mls_L7_15_42$", []);
+//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039constructor of Effect\u203A", []);
 //│   tmp1 = runtime.safeCall(prev.push(thisInfo));
 //│   return prev
 //│ };
@@ -40,7 +40,7 @@ f() + f() + f()
 //│ getLocals$1 = function getLocals$(Handler$h$$instance) {
 //│   let prev, thisInfo, tmp1;
 //│   prev = getLocals();
-//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$handler$h$ClassInFun$_mls_L7_72_90", []);
+//│   thisInfo = new runtime.FnLocalsInfo.class("perform", []);
 //│   tmp1 = runtime.safeCall(prev.push(thisInfo));
 //│   return prev
 //│ };
@@ -72,7 +72,7 @@ f() + f() + f()
 //│ getLocals2 = function getLocals() {
 //│   let prev, thisInfo, tmp1;
 //│   prev = getLocals();
-//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$handleBlock$h$", []);
+//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039handler body of h\u203A", []);
 //│   tmp1 = runtime.safeCall(prev.push(thisInfo));
 //│   return prev
 //│ };
@@ -167,7 +167,7 @@ f() + f() + f()
 //│ getLocals3 = function getLocals() {
 //│   let prev, thisInfo, tmp1;
 //│   prev = getLocals2();
-//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$func$f$ClassInFun$_mls_L7_95_118$", []);
+//│   thisInfo = new runtime.FnLocalsInfo.class("f", []);
 //│   tmp1 = runtime.safeCall(prev.push(thisInfo));
 //│   return prev
 //│ };

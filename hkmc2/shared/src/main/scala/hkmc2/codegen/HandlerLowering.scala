@@ -52,12 +52,19 @@ object HandlerLowering:
       isHandlerBody: Bool,
       contName: Str,
       ctorThis: Option[Path],
-      inScopeLocals: Set[Local],
-      prevLocalsFn: Opt[Path],
+      debugInfo: DebugInfo,
       linkAndHandle: LinkState => Block,
     ):
-    def withLocals(locals: Set[Local]) = copy(inScopeLocals = inScopeLocals ++ locals)
-    def withPrevLocalsFn(localsFn: Path) = copy(prevLocalsFn = S(localsFn))
+    def nestDebugScope(locals: Set[Local], localsFn: Path) = copy(debugInfo = DebugInfo(
+      debugInfo.inScopeLocals ++ locals, S(localsFn)))
+  
+  private case class DebugInfo(
+      inScopeLocals: Set[Local],
+      prevLocalsFn: Opt[Path],
+    )
+  
+  private object DebugInfo:
+    def topLevel = DebugInfo(Set.empty, N)
   
   type StateId = BigInt
 
@@ -81,7 +88,7 @@ class HandlerPaths(using Elaborator.State):
 class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, Elaborator.Ctx):
 
   private def funcLikeHandlerCtx(ctorThis: Option[Path], isHandlerMtd: Bool, nme: Str)(using h: HandlerCtx) =
-    HandlerCtx(!isHandlerMtd, false, isHandlerMtd, false, nme, ctorThis, h.inScopeLocals, h.prevLocalsFn, state =>
+    HandlerCtx(!isHandlerMtd, false, isHandlerMtd, false, nme, ctorThis, h.debugInfo, state =>
       blockBuilder
         .assignFieldN(state.res.asPath.contTrace.last, nextIdent, Instantiate(
           state.cls.selN(Tree.Ident("class")),
@@ -89,7 +96,7 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
         .assignFieldN(state.res.asPath.contTrace, lastIdent, state.res.asPath.contTrace.last.next)
         .ret(state.res.asPath))
   private def functionHandlerCtx(nme: Str)(using HandlerCtx) = funcLikeHandlerCtx(N, false, nme)
-  private def topLevelCtx(nme: Str) = HandlerCtx(false, true, false, false, nme, N, Set.empty, N, state => Assign(
+  private def topLevelCtx(nme: Str) = HandlerCtx(false, true, false, false, nme, N, DebugInfo.topLevel, state => Assign(
       state.res,
       Call(paths.topLevelEffectPath, state.res.asPath.asArg :: Nil)(true, false),
       End()))
@@ -308,8 +315,8 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
   val runtimePath = State.runtimeSymbol.asPath
   val fnLocalsPath: Path = runtimePath.selSN("FnLocalsInfo").selSN("class")
   val localVarInfoPath: Path = runtimePath.selSN("LocalVarInfo").selSN("class")
-  private def createGetLocalsFn(b: Block, extraLocals: Set[Local])(using h: HandlerCtx) =
-    val locals = (b.userDefinedVars ++ extraLocals) -- h.inScopeLocals
+  private def createGetLocalsFn(b: Block, extraLocals: Set[Local], displayName: Str)(using h: HandlerCtx) =
+    val locals = (b.userDefinedVars ++ extraLocals) -- h.debugInfo.inScopeLocals
     val localsInfo = locals.toList.sortBy(_.uid).map: s =>
       FlowSymbol(s.nme) -> Instantiate(localVarInfoPath,
         Value.Lit(Tree.StrLit(s.nme)) :: Value.Lit(Tree.StrLit(s.uid.toString())) :: s.asPath :: Nil
@@ -318,14 +325,14 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
     val thisInfo = FlowSymbol("thisInfo")
     
     val body = blockBuilder
-      .assign(startSym, h.prevLocalsFn match
+      .assign(startSym, h.debugInfo.prevLocalsFn match
           case None => Value.Arr(Nil)
           case Some(value) => PureCall(value, Nil)
         )
       .foldLeft(localsInfo):
         case (acc, (sym, res)) => acc.assign(sym, res)
       .assign(thisInfo, Instantiate(fnLocalsPath,
-          Value.Lit(Tree.StrLit(h.contName)) // TODO: this name is very bad, change it
+          Value.Lit(Tree.StrLit(displayName))
             :: Value.Arr(localsInfo.map(v => v._1.asPath.asArg))
             :: Nil
         ))
@@ -343,9 +350,9 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
    * 3. float out definitions
    */
   
-  private def translateBlock(b: Block, extraLocals: Set[Local], h: HandlerCtx): Block =
-    val getLocalsFn = createGetLocalsFn(b, extraLocals)(using h)
-    given HandlerCtx = h.withLocals(b.userDefinedVars ++ extraLocals).withPrevLocalsFn(getLocalsFn.sym.asPath)
+  private def translateBlock(b: Block, extraLocals: Set[Local], h: HandlerCtx, debugNme: Str): Block =
+    val getLocalsFn = createGetLocalsFn(b, extraLocals, debugNme)(using h)
+    given HandlerCtx = h.nestDebugScope(b.userDefinedVars ++ extraLocals, getLocalsFn.sym.asPath)
     
     val stage1 = firstPass(b)
     val stage2 = secondPass(stage1, getLocalsFn)
@@ -393,7 +400,7 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
           ResultPlaceholder(res, freshId(), handlerCtx.isHandlerMtd, c2, k(Value.Ref(res)))
         case r => super.applyResult2(r)(k)
       override def applyLam(lam: Value.Lam): Value.Lam =
-        Value.Lam(lam.params, translateBlock(lam.body, lam.params.paramSyms.toSet, functionHandlerCtx(s"Cont$$lambda$$")))
+        Value.Lam(lam.params, translateBlock(lam.body, lam.params.paramSyms.toSet, functionHandlerCtx(s"Cont$$lambda$$"), "‹lambda›"))
       override def applyDefn(defn: Defn): Defn = defn match
         case f: FunDefn => translateFun(f)
         case c: ClsLikeDefn => translateCls(c)
@@ -418,9 +425,9 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
     Scope.replaceInvalidCharacters(l.origin.fileName.last + "_L" + l.origin.startLineNum + "_" + l.spanStart + "_" + l.spanEnd)
   
   private def translateFun(f: FunDefn)(using HandlerCtx): FunDefn =
-    FunDefn(f.owner, f.sym, f.params, translateBlock(f.body, 
-      f.params.flatMap(_.paramSyms).toSet, 
-      functionHandlerCtx(s"Cont$$func$$${f.sym.nme}$$${f.sym.toLoc.fold("")(locToStr)}$$"))
+    FunDefn(f.owner, f.sym, f.params, translateBlock(f.body,
+      f.params.flatMap(_.paramSyms).toSet,
+      functionHandlerCtx(s"Cont$$func$$${f.sym.nme}$$${f.sym.toLoc.fold("")(locToStr)}$$"), f.sym.nme)
     )
   
   private def translateCls(cls: ClsLikeDefn)(using HandlerCtx): ClsLikeDefn =
@@ -430,7 +437,7 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
         cls.isym.asPath,
         s"Cont$$ctor$$${cls.sym.nme}$$${cls.sym.toLoc.fold("")(locToStr)}$$")
     cls.copy(methods = cls.methods.map(translateFun),
-      ctor = translateBlock(cls.ctor, Set.empty, curCtorCtx))
+      ctor = translateBlock(cls.ctor, Set.empty, curCtorCtx, s"‹constructor of ${cls.sym.nme}›"))
   
   // Handle block becomes a FunDefn and CallPlaceholder
   private def translateHandleBlock(h: HandleBlock)(using HandlerCtx): Block =
@@ -452,16 +459,16 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
       transform.applyBlock(b)
     
     val handlerBody = translateBlock(prepareBody(h.body), Set.empty, HandlerCtx(false, false, false, true,
-      s"Cont$$handleBlock$$${h.lhs.nme}$$", N, handlerCtx.inScopeLocals, handlerCtx.prevLocalsFn, state => blockBuilder
+      s"Cont$$handleBlock$$${h.lhs.nme}$$", N, handlerCtx.debugInfo, state => blockBuilder
         .assignFieldN(state.res.asPath.contTrace.last, nextIdent, PureCall(state.cls, Value.Lit(Tree.IntLit(state.uid)) :: Nil))
-        .ret(PureCall(paths.handleBlockImplPath, state.res.asPath :: h.lhs.asPath :: Nil))))
+        .ret(PureCall(paths.handleBlockImplPath, state.res.asPath :: h.lhs.asPath :: Nil))), s"‹handler body of ${h.lhs.nme}›")
     
     val handlerMtds = h.handlers.map: handler =>
       val lam = Value.Lam(
         PlainParamList(Param(FldFlags.empty, handler.resumeSym, N) :: Nil),
         translateBlock(handler.body,
           handler.params.flatMap(_.paramSyms).toSet,
-          handlerMtdCtx(s"Cont$$handler$$${h.lhs.nme}$$${handler.sym.toLoc.fold("")(locToStr)}")))
+          handlerMtdCtx(s"Cont$$handler$$${h.lhs.nme}$$${handler.sym.nme}$$${handler.sym.toLoc.fold("")(locToStr)}"), handler.sym.nme))
       FunDefn(
         S(h.cls),
         handler.sym, handler.params, Return(PureCall(paths.mkEffectPath, h.cls.asPath :: lam :: Nil), false))
@@ -590,7 +597,7 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
     
     val getLocalsSym = BlockMemberSymbol("getLocals", List())
     
-    val localsRes = h.prevLocalsFn match
+    val localsRes = h.debugInfo.prevLocalsFn match
       case Some(value) => PureCall(value, Nil)
       case None => Value.Arr(Nil)
     
@@ -639,5 +646,5 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
     transform.applyBlock(b)
 
   def translateTopLevel(b: Block): Block =
-    translateBlock(b, Set.empty, topLevelCtx(s"Cont$$topLevel$$BAD"))
+    translateBlock(b, Set.empty, topLevelCtx(s"Cont$$topLevel$$BAD"), "‹top level›")
     

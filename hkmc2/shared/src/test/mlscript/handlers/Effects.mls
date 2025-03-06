@@ -160,7 +160,7 @@ if true do
 //│ getLocals14 = function getLocals() {
 //│   let prev, thisInfo, tmp12;
 //│   prev = [];
-//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$topLevel$BAD", []);
+//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039top level\u203A", []);
 //│   tmp12 = runtime.safeCall(prev.push(thisInfo));
 //│   return prev
 //│ };
@@ -178,7 +178,7 @@ if true do
 //│           let arg1, prev, thisInfo, tmp13;
 //│           prev = getLocals14();
 //│           arg1 = new runtime.LocalVarInfo.class("arg", "1349", arg);
-//│           thisInfo = new runtime.FnLocalsInfo.class("Cont$handler$h$Effects$_mls_L153_29_50", [
+//│           thisInfo = new runtime.FnLocalsInfo.class("perform", [
 //│             arg1
 //│           ]);
 //│           tmp13 = runtime.safeCall(prev.push(thisInfo));
@@ -193,7 +193,7 @@ if true do
 //│   getLocals15 = function getLocals() {
 //│     let prev, thisInfo, tmp13;
 //│     prev = getLocals14();
-//│     thisInfo = new runtime.FnLocalsInfo.class("Cont$handleBlock$h$", []);
+//│     thisInfo = new runtime.FnLocalsInfo.class("\u2039handler body of h\u203A", []);
 //│     tmp13 = runtime.safeCall(prev.push(thisInfo));
 //│     return prev
 //│   };
@@ -240,7 +240,7 @@ if true do
 //│     getLocals16 = function getLocals() {
 //│       let prev, thisInfo, tmp13;
 //│       prev = getLocals15();
-//│       thisInfo = new runtime.FnLocalsInfo.class("Cont$func$f$Effects$_mls_L153_68_75$", []);
+//│       thisInfo = new runtime.FnLocalsInfo.class("f", []);
 //│       tmp13 = runtime.safeCall(prev.push(thisInfo));
 //│       return prev
 //│     };

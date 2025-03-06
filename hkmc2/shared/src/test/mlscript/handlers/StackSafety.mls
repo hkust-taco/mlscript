@@ -24,7 +24,7 @@ hi(0)
 //│ getLocals = function getLocals() {
 //│   let prev, thisInfo, tmp;
 //│   prev = [];
-//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$topLevel$BAD", []);
+//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039top level\u203A", []);
 //│   tmp = runtime.safeCall(prev.push(thisInfo));
 //│   return prev
 //│ };
@@ -34,7 +34,7 @@ hi(0)
 //│     let n1, prev, thisInfo, tmp1;
 //│     prev = getLocals();
 //│     n1 = new runtime.LocalVarInfo.class("n", "458", n);
-//│     thisInfo = new runtime.FnLocalsInfo.class("Cont$func$hi$StackSafety$_mls_L18_4_47$", [
+//│     thisInfo = new runtime.FnLocalsInfo.class("hi", [
 //│       n1
 //│     ]);
 //│     tmp1 = runtime.safeCall(prev.push(thisInfo));
@@ -107,7 +107,7 @@ hi(0)
 //│         getLocals2 = function getLocals() {
 //│           let prev, thisInfo, tmp;
 //│           prev = getLocals();
-//│           thisInfo = new runtime.FnLocalsInfo.class("Cont$handler$stackHandler$", []);
+//│           thisInfo = new runtime.FnLocalsInfo.class("perform", []);
 //│           tmp = runtime.safeCall(prev.push(thisInfo));
 //│           return prev
 //│         };
@@ -121,7 +121,7 @@ hi(0)
 //│   getLocals1 = function getLocals() {
 //│     let prev, thisInfo, tmp;
 //│     prev = getLocals();
-//│     thisInfo = new runtime.FnLocalsInfo.class("Cont$handleBlock$stackHandler$", []);
+//│     thisInfo = new runtime.FnLocalsInfo.class("\u2039handler body of stackHandler\u203A", []);
 //│     tmp = runtime.safeCall(prev.push(thisInfo));
 //│     return prev
 //│   };
@@ -184,7 +184,7 @@ sum(10000)
 //│ getLocals1 = function getLocals() {
 //│   let prev, thisInfo, tmp;
 //│   prev = [];
-//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$topLevel$BAD", []);
+//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039top level\u203A", []);
 //│   tmp = runtime.safeCall(prev.push(thisInfo));
 //│   return prev
 //│ };
@@ -194,7 +194,7 @@ sum(10000)
 //│     let n1, prev, thisInfo, tmp2;
 //│     prev = getLocals1();
 //│     n1 = new runtime.LocalVarInfo.class("n", "596", n);
-//│     thisInfo = new runtime.FnLocalsInfo.class("Cont$func$sum$StackSafety$_mls_L177_4_57$", [
+//│     thisInfo = new runtime.FnLocalsInfo.class("sum", [
 //│       n1
 //│     ]);
 //│     tmp2 = runtime.safeCall(prev.push(thisInfo));
@@ -288,7 +288,7 @@ sum(10000)
 //│         getLocals3 = function getLocals() {
 //│           let prev, thisInfo, tmp;
 //│           prev = getLocals1();
-//│           thisInfo = new runtime.FnLocalsInfo.class("Cont$handler$stackHandler$", []);
+//│           thisInfo = new runtime.FnLocalsInfo.class("perform", []);
 //│           tmp = runtime.safeCall(prev.push(thisInfo));
 //│           return prev
 //│         };
@@ -302,7 +302,7 @@ sum(10000)
 //│   getLocals2 = function getLocals() {
 //│     let prev, thisInfo, tmp;
 //│     prev = getLocals1();
-//│     thisInfo = new runtime.FnLocalsInfo.class("Cont$handleBlock$stackHandler$", []);
+//│     thisInfo = new runtime.FnLocalsInfo.class("\u2039handler body of stackHandler\u203A", []);
 //│     tmp = runtime.safeCall(prev.push(thisInfo));
 //│     return prev
 //│   };
@@ -462,7 +462,7 @@ fun max(a, b) = if a < b then b else a
 //│ getLocals8 = function getLocals() {
 //│   let prev, thisInfo, tmp5;
 //│   prev = [];
-//│   thisInfo = new runtime.FnLocalsInfo.class("Cont$topLevel$BAD", []);
+//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039top level\u203A", []);
 //│   tmp5 = runtime.safeCall(prev.push(thisInfo));
 //│   return prev
 //│ };
@@ -473,7 +473,7 @@ fun max(a, b) = if a < b then b else a
 //│     prev = getLocals8();
 //│     a1 = new runtime.LocalVarInfo.class("a", "1508", a);
 //│     b1 = new runtime.LocalVarInfo.class("b", "1509", b);
-//│     thisInfo = new runtime.FnLocalsInfo.class("Cont$func$max$StackSafety$_mls_L459_4_38$", [
+//│     thisInfo = new runtime.FnLocalsInfo.class("max", [
 //│       a1,
 //│       b1
 //│     ]);
