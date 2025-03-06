@@ -325,7 +325,7 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
       .foldLeft(localsInfo):
         case (acc, (sym, res)) => acc.assign(sym, res)
       .assign(thisInfo, Instantiate(fnLocalsPath,
-          Value.Lit(Tree.StrLit(h.contName))
+          Value.Lit(Tree.StrLit(h.contName)) // TODO: this name is very bad, change it
             :: Value.Arr(localsInfo.map(v => v._1.asPath.asArg))
             :: Nil
         ))
