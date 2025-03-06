@@ -36,7 +36,7 @@ handle h = Object with
 h.write(1)
 h.write(2)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at Cont$handler$h$RecursiveHandlers$_mls_L32_29_84(pc=3)​
+//│ 	at Cont$handler$h$RecursiveHandlers$_mls_L32_29_84(pc=5)​
 //│ ​Error: Unhandled effects
 
 handle h = Object with
@@ -212,7 +212,7 @@ str
 //│           str = tmp12;
 //│           tmp13 = runtime.safeCall(k(arg));
 //│           if (tmp13 instanceof runtime.EffectSig.class) {
-//│             tmp13.contTrace.last.next = new Cont$handler$h1$RecursiveHandlers$_mls_L139_58_1301.class(9);
+//│             tmp13.contTrace.last.next = new Cont$handler$h1$RecursiveHandlers$_mls_L141_58_1301.class(9);
 //│             tmp13.contTrace.last = tmp13.contTrace.last.next;
 //│             return tmp13
 //│           }
@@ -311,7 +311,7 @@ str
 //│             str = tmp14;
 //│             tmp15 = runtime.safeCall(k(arg));
 //│             if (tmp15 instanceof runtime.EffectSig.class) {
-//│               tmp15.contTrace.last.next = new Cont$handler$h2$RecursiveHandlers$_mls_L139_165_2491.class(4);
+//│               tmp15.contTrace.last.next = new Cont$handler$h2$RecursiveHandlers$_mls_L141_165_2491.class(4);
 //│               tmp15.contTrace.last = tmp15.contTrace.last.next;
 //│               return tmp15
 //│             }
