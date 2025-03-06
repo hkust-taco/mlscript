@@ -158,7 +158,7 @@ str
 //│ getLocals11 = function getLocals() {
 //│   let str1, prev, thisInfo, tmp11;
 //│   prev = [];
-//│   str1 = new runtime.FnLocalsInfo.class("str", "1229", str);
+//│   str1 = new runtime.LocalVarInfo.class("str", "1229", str);
 //│   thisInfo = new runtime.FnLocalsInfo.class("Cont$topLevel$BAD", [
 //│     str1
 //│   ]);
@@ -181,7 +181,7 @@ str
 //│           getLocals13 = function getLocals() {
 //│             let arg1, prev, thisInfo, tmp15;
 //│             prev = getLocals11();
-//│             arg1 = new runtime.FnLocalsInfo.class("arg", "1236", arg);
+//│             arg1 = new runtime.LocalVarInfo.class("arg", "1236", arg);
 //│             thisInfo = new runtime.FnLocalsInfo.class("Cont$handler$h1$RecursiveHandlers$_mls_L141_58_130", [
 //│               arg1
 //│             ]);
@@ -301,7 +301,7 @@ str
 //│             getLocals14 = function getLocals() {
 //│               let arg1, prev, thisInfo, tmp18;
 //│               prev = getLocals12();
-//│               arg1 = new runtime.FnLocalsInfo.class("arg", "1247", arg);
+//│               arg1 = new runtime.LocalVarInfo.class("arg", "1247", arg);
 //│               thisInfo = new runtime.FnLocalsInfo.class("Cont$handler$h2$RecursiveHandlers$_mls_L141_165_249", [
 //│                 arg1
 //│               ]);

@@ -177,7 +177,7 @@ if true do
 //│         getLocals16 = function getLocals() {
 //│           let arg1, prev, thisInfo, tmp13;
 //│           prev = getLocals14();
-//│           arg1 = new runtime.FnLocalsInfo.class("arg", "1349", arg);
+//│           arg1 = new runtime.LocalVarInfo.class("arg", "1349", arg);
 //│           thisInfo = new runtime.FnLocalsInfo.class("Cont$handler$h$Effects$_mls_L153_29_50", [
 //│             arg1
 //│           ]);

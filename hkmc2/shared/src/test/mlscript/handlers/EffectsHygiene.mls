@@ -25,7 +25,7 @@ fun foo(h) =
 //│   getLocals2 = function getLocals() {
 //│     let h1, prev, thisInfo, tmp;
 //│     prev = getLocals1();
-//│     h1 = new runtime.FnLocalsInfo.class("h", "451", h);
+//│     h1 = new runtime.LocalVarInfo.class("h", "451", h);
 //│     thisInfo = new runtime.FnLocalsInfo.class("Cont$func$foo$EffectsHygiene$_mls_L7_4_73$", [
 //│       h1
 //│     ]);

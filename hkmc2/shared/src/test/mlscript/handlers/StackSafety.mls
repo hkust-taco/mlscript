@@ -33,7 +33,7 @@ hi(0)
 //│   getLocals1 = function getLocals() {
 //│     let n1, prev, thisInfo, tmp1;
 //│     prev = getLocals();
-//│     n1 = new runtime.FnLocalsInfo.class("n", "458", n);
+//│     n1 = new runtime.LocalVarInfo.class("n", "458", n);
 //│     thisInfo = new runtime.FnLocalsInfo.class("Cont$func$hi$StackSafety$_mls_L18_4_47$", [
 //│       n1
 //│     ]);
@@ -189,21 +189,21 @@ sum(10000)
 //│   return prev
 //│ };
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, getLocals2, Cont$func$sum$StackSafety$_mls_L174_4_57$1;
+//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, getLocals2, Cont$func$sum$StackSafety$_mls_L177_4_57$1;
 //│   getLocals2 = function getLocals() {
 //│     let n1, prev, thisInfo, tmp2;
 //│     prev = getLocals1();
-//│     n1 = new runtime.FnLocalsInfo.class("n", "596", n);
-//│     thisInfo = new runtime.FnLocalsInfo.class("Cont$func$sum$StackSafety$_mls_L174_4_57$", [
+//│     n1 = new runtime.LocalVarInfo.class("n", "596", n);
+//│     thisInfo = new runtime.FnLocalsInfo.class("Cont$func$sum$StackSafety$_mls_L177_4_57$", [
 //│       n1
 //│     ]);
 //│     tmp2 = runtime.safeCall(prev.push(thisInfo));
 //│     return prev
 //│   };
-//│   Cont$func$sum$StackSafety$_mls_L174_4_57$1 = function Cont$func$sum$StackSafety$_mls_L174_4_57$(pc1) {
-//│     return new Cont$func$sum$StackSafety$_mls_L174_4_57$.class(pc1);
+//│   Cont$func$sum$StackSafety$_mls_L177_4_57$1 = function Cont$func$sum$StackSafety$_mls_L177_4_57$(pc1) {
+//│     return new Cont$func$sum$StackSafety$_mls_L177_4_57$.class(pc1);
 //│   };
-//│   Cont$func$sum$StackSafety$_mls_L174_4_57$1.class = class Cont$func$sum$StackSafety$_mls_L174_4_57$ extends runtime.FunctionContFrame.class {
+//│   Cont$func$sum$StackSafety$_mls_L177_4_57$1.class = class Cont$func$sum$StackSafety$_mls_L177_4_57$ extends runtime.FunctionContFrame.class {
 //│     constructor(pc) {
 //│       let tmp2;
 //│       tmp2 = super(null);
@@ -250,12 +250,12 @@ sum(10000)
 //│     get getLocals() {
 //│       return getLocals2();
 //│     }
-//│     toString() { return "Cont$func$sum$StackSafety$_mls_L174_4_57$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$func$sum$StackSafety$_mls_L177_4_57$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     stackDelayRes.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L174_4_57$1.class(0);
+//│     stackDelayRes.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L177_4_57$1.class(0);
 //│     stackDelayRes.contTrace.last = stackDelayRes.contTrace.last.next;
 //│     return stackDelayRes
 //│   }
@@ -267,7 +267,7 @@ sum(10000)
 //│     runtime.stackDepth = runtime.stackDepth + 1;
 //│     tmp1 = sum1(tmp);
 //│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       tmp1.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L174_4_57$1.class(1);
+//│       tmp1.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L177_4_57$1.class(1);
 //│       tmp1.contTrace.last = tmp1.contTrace.last.next;
 //│       return tmp1
 //│     }
@@ -471,9 +471,9 @@ fun max(a, b) = if a < b then b else a
 //│   getLocals9 = function getLocals() {
 //│     let a1, b1, prev, thisInfo, tmp5;
 //│     prev = getLocals8();
-//│     a1 = new runtime.FnLocalsInfo.class("a", "1508", a);
-//│     b1 = new runtime.FnLocalsInfo.class("b", "1509", b);
-//│     thisInfo = new runtime.FnLocalsInfo.class("Cont$func$max$StackSafety$_mls_L453_4_38$", [
+//│     a1 = new runtime.LocalVarInfo.class("a", "1508", a);
+//│     b1 = new runtime.LocalVarInfo.class("b", "1509", b);
+//│     thisInfo = new runtime.FnLocalsInfo.class("Cont$func$max$StackSafety$_mls_L459_4_38$", [
 //│       a1,
 //│       b1
 //│     ]);

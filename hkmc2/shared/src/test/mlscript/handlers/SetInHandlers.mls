@@ -12,7 +12,7 @@ x
 //│ getLocals1 = function getLocals() {
 //│   let x1, prev, thisInfo, tmp3;
 //│   prev = [];
-//│   x1 = new runtime.FnLocalsInfo.class("x", "448", x);
+//│   x1 = new runtime.LocalVarInfo.class("x", "448", x);
 //│   thisInfo = new runtime.FnLocalsInfo.class("Cont$topLevel$BAD", [
 //│     x1
 //│   ]);

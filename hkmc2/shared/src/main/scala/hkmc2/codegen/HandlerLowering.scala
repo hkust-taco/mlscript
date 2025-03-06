@@ -311,7 +311,7 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
   private def createGetLocalsFn(b: Block, extraLocals: Set[Local])(using h: HandlerCtx) =
     val locals = (b.userDefinedVars ++ extraLocals) -- h.inScopeLocals
     val localsInfo = locals.toList.sortBy(_.uid).map: s =>
-      FlowSymbol(s.nme) -> Instantiate(fnLocalsPath,
+      FlowSymbol(s.nme) -> Instantiate(localVarInfoPath,
         Value.Lit(Tree.StrLit(s.nme)) :: Value.Lit(Tree.StrLit(s.uid.toString())) :: s.asPath :: Nil
       )
     val startSym = FlowSymbol("prev")
