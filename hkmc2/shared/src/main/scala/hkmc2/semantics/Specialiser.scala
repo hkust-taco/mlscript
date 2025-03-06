@@ -228,36 +228,42 @@ class Specialiser(val tl: TraceLogger)(using Raise, Elaborator.State):
 
   def topLevel(b: Blk): Blk = b
     // block(b, Map.empty)(using Ctx.empty)._1
-    //
+
 end Specialiser
 
 class SimpleSub(val tl: TraceLogger):
   import tl.*
 
-  // New ClassInfo class to encapsulate class information
   case class ClassInfo(
     sym: ClassSymbol,
+    params: Ls[Str] = Nil,
     supers: Ls[SimpleType] = Nil,
-    members: Map[Str, SimpleType] = Map.empty
+    members: Map[Str, SimpleType] = Map.empty,
+    fields: Map[Str, SimpleType] = Map.empty
   ):
     override def toString: String = 
       val superStr = if supers.isEmpty then "" else 
         s" extends ${supers.mkString(" with ")}"
-      s"class ${sym.nme}$superStr { ${members.map { case (n, t) => s"$n: $t" }.mkString(", ")} }"
+      val fieldsStr = if fields.isEmpty then "" else 
+        fields.map { case (n, t) => s"val $n: $t" }.mkString(", ")
+      val membersStr = members.map { case (n, t) => s"$n: $t" }.mkString(", ")
+      val contentStr = (if fieldsStr.nonEmpty && membersStr.nonEmpty then s"$fieldsStr; $membersStr" 
+                       else fieldsStr + membersStr)
+      s"class ${sym.nme}$superStr { $contentStr }"
 
   enum SimpleType:
     case Variable(state: VariableState)
     case Primitive(name: Str)
     case Function(lhs: SimpleType, rhs: SimpleType)
     case Record(fields: Ls[(Str, SimpleType)])
-    case ClassType(info: ClassInfo) // Now uses ClassInfo
+    case ClassType(info: ClassInfo)
     
     override def toString: String = this match
       case Variable(state) => s"${state.uniqueName}"
       case Primitive(name) => name
       case Function(lhs, rhs) => s"(${lhs} -> ${rhs})"
       case Record(fields) => fields.map(f => s"${f._1}: ${f._2}").mkString("{ ", "; ", " }")
-      case ClassType(info) => info.toString // Delegates to ClassInfo's toString
+      case ClassType(info) => info.toString
 
   import SimpleType.*
   
@@ -274,17 +280,11 @@ class SimpleSub(val tl: TraceLogger):
   
   class TypeContext(val mapping: Map[Symbol, SimpleType] = Map.empty):
     def get(sym: Symbol): Option[SimpleType] = mapping.get(sym)
-    
-    def getOrFresh(sym: Symbol): SimpleType = 
-      mapping.getOrElse(sym, {
-        log(s"Warning: Symbol not found in context: $sym")
-        freshVar()
-      })
+    def getOrFresh(sym: Symbol): SimpleType = mapping.getOrElse(sym, freshVar())
     def +(pair: (Symbol, SimpleType)): TypeContext = TypeContext(mapping + pair)
     def ++(pairs: Iterable[(Symbol, SimpleType)]): TypeContext = TypeContext(mapping ++ pairs)
     override def toString: String = mapping.map { case (sym, ty) => s"$sym: $ty" }.mkString(", ")
   
-  // Common primitive types
   val IntType = Primitive("Int")
   val BoolType = Primitive("Bool")
   val StrType = Primitive("Str")
@@ -316,18 +316,13 @@ class SimpleSub(val tl: TraceLogger):
     
     TypeContext(builtinTypes)
     
-  def unwrapSingleElementTuple(ty: SimpleType): SimpleType = ty match
-    case Record(fields) if fields.size == 1 && fields.head._1 == "_0" => 
-      fields.head._2
-    case _ => ty
-    
   def constrain(lhs: SimpleType, rhs: SimpleType)(using cache: mutable.Set[(SimpleType, SimpleType)] = mutable.Set.empty): Unit =
     if cache.contains(lhs -> rhs) then return () else cache += lhs -> rhs
     
     log(s"Constraining ${lhs} <: ${rhs}")
     
     (lhs, rhs) match
-      case (Primitive(n0), Primitive(n1)) if n0 == n1 => 
+      case (Primitive(n0), Primitive(n1)) if n0 == n1 => ()
       case (Function(l0, r0), Function(l1, r1)) =>
         constrain(l1, l0)
         constrain(r0, r1)
@@ -339,35 +334,36 @@ class SimpleSub(val tl: TraceLogger):
             case Some((_, t0)) => 
               constrain(t0, t1)
         }
-      case (ClassType(info0), ClassType(info1)) =>
-        if info0.sym == info1.sym then
-          info1.members.foreach { case (name, memberType1) =>
-            info0.members.get(name) match
-              case None => 
-                log(s"Error: missing member: $name in class ${info0.sym}")
-              case Some(memberType0) => 
-                constrain(memberType0, memberType1)
-          }
-        else
-          val isSubtype = info0.supers.exists {
-            case ClassType(superInfo) if superInfo.sym == info1.sym => true
-            case superType => 
-              val superResult = mutable.Set[(SimpleType, SimpleType)]()
-              constrain(superType, rhs)(using superResult)
-              superResult.nonEmpty
-          }
-          
-          if !isSubtype then
-            log(s"Error: class ${info0.sym} is not a subtype of ${info1.sym}")
-      
+      case (Variable(lhs), Variable(rhs)) if lhs == rhs => ()
       case (Variable(lhs), rhs) =>
         lhs.upperBounds = rhs :: lhs.upperBounds
         lhs.lowerBounds.foreach(constrain(_, rhs))
-      
       case (lhs, Variable(rhs)) =>
         rhs.lowerBounds = lhs :: rhs.lowerBounds
         rhs.upperBounds.foreach(constrain(lhs, _))
-      
+      case (ClassType(info), Record(fields)) =>
+        fields.foreach { case (fieldName, fieldType) =>
+          info.members.get(fieldName).orElse(info.fields.get(fieldName)) match
+            case Some(memberType) => constrain(memberType, fieldType)
+            case None => log(s"Error: class ${info.sym.nme} has no member or field named '${fieldName}'")
+        }
+      case (ClassType(info), Function(paramType, resultType)) =>
+        if info.params.length == 1 then
+          val fieldType = info.fields.getOrElse(info.params.head, freshVar())
+          constrain(paramType, fieldType)
+          constrain(ClassType(info), resultType)
+        else if info.params.isEmpty then
+          log(s"Error: class ${info.sym.nme} has no parameters but is used with arguments")
+        else
+          paramType match
+            case Record(fields) if fields.size == info.params.size =>
+              info.params.zip(fields).foreach { case (paramName, (_, fieldType)) =>
+                val classFieldType = info.fields.getOrElse(paramName, freshVar())
+                constrain(fieldType, classFieldType)
+              }
+              constrain(ClassType(info), resultType)
+            case _ =>
+              log(s"Error: class ${info.sym.nme} expects ${info.params.length} parameters")
       case _ => 
         log(s"Error: cannot constrain $lhs <: $rhs")
   
@@ -380,7 +376,7 @@ class SimpleSub(val tl: TraceLogger):
       
       case UnitVal() => 
         UnitType
-      
+
       case Lit(lit) => lit match
         case Tree.IntLit(_) => IntType
         case Tree.StrLit(_) => StrType
@@ -388,96 +384,55 @@ class SimpleSub(val tl: TraceLogger):
         case Tree.UnitLit(_) => UnitType
         case _ => Primitive("Unknown")
       
-      case Ref(sym) => ctx.getOrFresh(sym)
-      
       case app @ App(lhs, rhs) =>
         val resultType = freshVar()
+        val lhsType = typeTerm(lhs)
+        val rhsType = rhs match
+          case Tup(fields) if fields.length > 1 =>
+            Record(fields.zipWithIndex.map { 
+              case (Fld(_, term, _), idx) => s"_${idx}" -> typeTerm(term)
+              case (_, idx) => s"_${idx}" -> freshVar()
+            })
+          case Tup(fields) if fields.length == 1 =>
+            fields.head match
+              case Fld(_, term, _) => typeTerm(term)
+              case _ => freshVar()
+          case _ => typeTerm(rhs)
         
-        if lhs.symbol.flatMap(_.asCls).isDefined then
-          lhs.symbol.flatMap(_.asCls) match
-            case Some(classSym) =>
-              log(s"Class constructor call for ${classSym.nme}")
-              
-              ctx.get(classSym) orElse ctx.get(lhs.symbol.flatMap(_.asBlkMember).getOrElse(classSym)) match
-                case Some(ClassType(classInfo)) =>
-                  val argTypes = rhs match
-                    case Tup(fields) => fields.map {
-                      case Fld(_, term, _) => typeTerm(term)
-                      case _ => freshVar()
-                    }
-                    case _ => List(typeTerm(rhs))
-                    
-                  val paramToArgMap = classInfo.sym.tree.paramLists.headOption
-                    .map(_.fields.map(_.toString))
-                    .getOrElse(Nil)
-                    .zip(argTypes)
-                    .toMap
-                  
-                  val instanceMembers = classInfo.members.map { case (name, memberType) =>
-                    memberType match
-                      case _: Variable if classInfo.members.contains(name) && paramToArgMap.contains(name) => 
-                        name -> paramToArgMap(name)
-                      case _ => 
-                        name -> memberType
-                  }
-                  
-                  ClassType(ClassInfo(classInfo.sym, classInfo.supers, instanceMembers))
-                case _ =>
-                  val lhsType = typeTerm(lhs)
-                  val rhsType = processArg(rhs)
-                  constrain(lhsType, Function(rhsType, resultType))
-                  resultType
-            case None =>
-              val lhsType = typeTerm(lhs)
-              val rhsType = processArg(rhs)
-              constrain(lhsType, Function(rhsType, resultType))
-              resultType
-        else
-          val lhsType = typeTerm(lhs)
-          val rhsType = processArg(rhs)
-          constrain(lhsType, Function(rhsType, resultType))
-          resultType
-      
-      case TyApp(lhs, targs) => 
-        typeTerm(lhs)
-      
-      case Lam(params, body) =>
-        val paramTypes = params.params.map(_ => freshVar())
-        val paramTypePairs = params.params.zip(paramTypes).map { case (param, ty) => param.sym -> ty }
-        val bodyType = typeTerm(body)(using ctx ++ paramTypePairs)
-        
-        if paramTypes.length == 1 then
-          Function(paramTypes.head, bodyType)
-        else
-          val paramRecord = Record(params.params.zip(paramTypes).map { 
-            case (param, ty) => param.sym.nme -> ty 
-          })
-          Function(paramRecord, bodyType)
-      
-      case FunTy(lhs, rhs, _) => 
-        Function(typeTerm(lhs), typeTerm(rhs))
-      
-      case Tup(fields) =>
-        Record(fields.zipWithIndex.map { 
-          case (fld, idx) => fld match
-            case Fld(_, term, _) => s"_${idx}" -> typeTerm(term)
-            case _ => s"_${idx}" -> freshVar()
-        })
+        constrain(lhsType, Function(rhsType, resultType))
+        resultType
       
       case New(cls, args, _) =>
         val clsType = typeTerm(cls)
         val argTypes = args.map(typeTerm)
         
         cls.symbol match
-          case Some(sym) =>
-            ctx.get(sym) match
-              case Some(ClassType(classInfo)) => ClassType(classInfo)
-              case otherType =>
-                log(s"Warning: Symbol $sym does not reference a class: $otherType")
-                clsType
-          case None =>
-            log(s"Warning: Cannot resolve class symbol for new expression")
-            clsType
+          case Some(clsSym) =>
+            ctx.get(clsSym) match
+              case Some(ClassType(classInfo)) => 
+                if classInfo.params.length != args.length then
+                  log(s"Error: ${clsSym.nme} constructor expects ${classInfo.params.length} arguments, but got ${args.length}")
+                val instanceFields = classInfo.params.zip(argTypes).toMap
+                ClassType(classInfo.copy(fields = classInfo.fields ++ instanceFields))
+              case _ => clsType
+          case None => clsType
+
+      case Ref(sym) => 
+        log(s"Looking up symbol reference: ${sym.nme}")
+        val symType = ctx.getOrFresh(sym)
+        log(s"Found type for ${sym.nme}: ${symType}")
+        symType match
+          case ClassType(info) if info.params.nonEmpty =>
+            if info.params.length == 1 then
+              val paramType = info.fields.getOrElse(info.params.head, freshVar())
+              Function(paramType, symType)
+            else
+              val recordFields = info.params.map { paramName =>
+                val fieldType = info.fields.getOrElse(paramName, freshVar())
+                paramName -> fieldType
+              }
+              Function(Record(recordFields), symType)
+          case _ => symType
       
       case Sel(prefix, name) =>
         val prefixType = typeTerm(prefix)
@@ -485,20 +440,21 @@ class SimpleSub(val tl: TraceLogger):
         prefixType match
           case ClassType(classInfo) =>
             classInfo.members.get(name.name) match
-              case Some(memberType) => memberType
-              case None => 
-                log(s"Error: No member named ${name.name} found in class")
+              case Some(methodType) => methodType
+              case None => classInfo.fields.getOrElse(name.name, {
+                log(s"Error: No member or field '${name.name}' found in class ${classInfo.sym.nme}")
                 freshVar()
+              })
           
           case Variable(vs) =>
             val resultType = freshVar()
-            
             vs.upperBounds.foreach {
-              case ClassType(classInfo) if classInfo.members.contains(name.name) =>
-                constrain(resultType, classInfo.members(name.name))
-              case _ =>
+              case ClassType(classInfo) =>
+                classInfo.members.get(name.name).orElse(classInfo.fields.get(name.name)) match
+                  case Some(memberType) => constrain(resultType, memberType)
+                  case None => ()
+              case _ => ()
             }
-            
             constrain(prefixType, Record(List(name.name -> resultType)))
             resultType
           
@@ -508,33 +464,32 @@ class SimpleSub(val tl: TraceLogger):
             resultType
       
       case SynthSel(prefix, name) =>
-          val prefixType = typeTerm(prefix)
+        val prefixType = typeTerm(prefix)
+        
+        prefixType match
+          case ClassType(classInfo) =>
+            classInfo.members.get(name.name).orElse(classInfo.fields.get(name.name)) match
+              case Some(memberType) => memberType
+              case None =>
+                log(s"Error: No member or field '${name.name}' found in class ${classInfo.sym.nme}")
+                freshVar()
           
-          prefixType match
-            case ClassType(classInfo) =>
-              // Special handling for class instances - check members map directly
-              classInfo.members.get(name.name) match
-                case Some(memberType) => memberType
-                case None => 
-                  log(s"Error: No member named ${name.name} found in class")
-                  freshVar()
-            case Variable(vs) =>
-              // Handle type variables as before
-              val resultType = freshVar()
-              
-              vs.upperBounds.foreach {
-                case ClassType(classInfo) if classInfo.members.contains(name.name) =>
-                  constrain(resultType, classInfo.members(name.name))
-                case _ =>
-              }
-              
-              constrain(prefixType, Record(List(name.name -> resultType)))
-              resultType
-            case _ =>
-              // Default case for non-class types
-              val resultType = freshVar()
-              constrain(prefixType, Record(List(name.name -> resultType)))
-              resultType
+          case Variable(vs) =>
+            val resultType = freshVar()
+            vs.upperBounds.foreach {
+              case ClassType(classInfo) =>
+                classInfo.members.get(name.name).orElse(classInfo.fields.get(name.name)) match
+                  case Some(memberType) => constrain(resultType, memberType)
+                  case None => ()
+              case _ => ()
+            }
+            constrain(prefixType, Record(List(name.name -> resultType)))
+            resultType
+          
+          case _ =>
+            val resultType = freshVar()
+            constrain(prefixType, Record(List(name.name -> resultType)))
+            resultType
       
       case Blk(stats, res) =>
         var currentCtx = ctx
@@ -546,173 +501,91 @@ class SimpleSub(val tl: TraceLogger):
           
           case DefineVar(sym, rhs) =>
             val rhsTy = typeTerm(rhs)(using currentCtx)
-            currentCtx.get(sym).foreach(symTy => constrain(rhsTy, symTy))
+            currentCtx.get(sym).foreach(constrain(rhsTy, _))
             currentCtx = currentCtx + (sym -> rhsTy)
           
           case td: TermDefinition =>
-            val resultTy = freshVar()
-            val paramSymToType = mutable.Map.empty[Symbol, SimpleType]
+            log(s"Processing function definition: ${td.sym.nme}")
+            val paramTypes = td.params.flatMap(paramList => 
+              paramList.params.map(param => {
+                val paramType = freshVar()
+                log(s"Assigned type ${paramType} to parameter ${param.sym.nme}")
+                param.sym -> paramType
+              })
+            ).toMap
             
-            // Create the function type, remembering the parameter types
+            val functionCtx = currentCtx ++ paramTypes
+            
+            val resultType = td.body match
+              case Some(body) => 
+                val bodyType = typeTerm(body)(using functionCtx)
+                log(s"Function ${td.sym.nme} body has type: ${bodyType}")
+                bodyType
+              case None => 
+                freshVar()
+            
             val functionType = if td.params.nonEmpty then
-              td.params.reverse.foldLeft(resultTy: SimpleType) { (currentReturnType, paramLs) =>
-                if paramLs.params.length == 1 then
-                  // Single parameter case
-                  val paramTy = freshVar()
-                  paramSymToType(paramLs.params.head.sym) = paramTy
-                  Function(paramTy, currentReturnType)
+              td.params.foldRight(resultType): (paramList, currentReturnType) =>
+                if paramList.params.length == 1 then
+                  val paramSym = paramList.params.head.sym
+                  val paramType = paramTypes.getOrElse(paramSym, freshVar())
+                  Function(paramType, currentReturnType)
                 else
-                  // Multiple parameters case - use record
-                  val paramTypes = paramLs.params.map { param =>
-                    val paramTy = freshVar()
-                    paramSymToType(param.sym) = paramTy
-                    paramTy
-                  }
-                  
-                  Function(
-                    Record(paramLs.params.zip(paramTypes).map { 
-                      case (param, ty) => param.sym.nme -> ty 
-                    }),
-                    currentReturnType
-                  )
-              }
+                  val recordType = Record(paramList.params.map(param => 
+                    param.sym.nme -> paramTypes.getOrElse(param.sym, freshVar())
+                  ))
+                  Function(recordType, currentReturnType)
             else
-              resultTy
+              resultType
             
-            // Add the function to the context
+            log(s"Function ${td.sym.nme} has type: ${functionType}")
             currentCtx = currentCtx + (td.sym -> functionType)
-            
-            // Type check the function body
-            td.body.foreach { body =>
-              var bodyCtx = currentCtx
-              
-              // Use the same parameter types from the function type
-              val paramCtx = paramSymToType.toMap
-              bodyCtx = bodyCtx ++ paramCtx
-              
-              val bodyTy = typeTerm(body)(using bodyCtx)
-              constrain(bodyTy, resultTy)
-            }
-            
-            td.sign.foreach { returnTy =>
-              val inferredReturnTy = typeTerm(returnTy)(using currentCtx)
-              constrain(resultTy, inferredReturnTy)
-            }
           
           case cls: ClassDef =>
-            log(s"Processing class: ${cls.bsym}")
+            log(s"Processing class: ${cls.sym.nme}")
             
             val members = mutable.Map.empty[String, SimpleType]
-            val paramSymToType = mutable.Map.empty[Symbol, SimpleType]
+            val fields = mutable.Map.empty[String, SimpleType]
             
-            cls.paramsOpt.foreach { params =>
-              params.params.foreach { param =>
-                val paramType = freshVar()
-                members += (param.sym.name -> paramType)
-                paramSymToType += (param.sym -> paramType)
-              }
+            val paramNames = cls.paramsOpt.map { params =>
+              params.params.map(_.sym.name)
+            }.getOrElse(Nil)
+            
+            paramNames.foreach { paramName =>
+              fields(paramName) = freshVar()
             }
+            
+            val classInfo = ClassInfo(cls.sym, paramNames, Nil, Map.empty, fields.toMap)
+            val classType = ClassType(classInfo)
+            
+            currentCtx = currentCtx + (cls.sym -> classType)
+            currentCtx = currentCtx + (cls.bsym -> classType)
             
             cls.body.blk.stats.foreach {
               case td: TermDefinition =>
                 val methodType = td.body match
+                  case Some(Ref(sym)) if fields.contains(sym.nme) =>
+                    fields(sym.nme)
                   case Some(body) =>
-                    val methodCtx = currentCtx ++ paramSymToType
-                    body match
-                      case Ref(sym) if paramSymToType.contains(sym) => paramSymToType(sym)
-                      case _ => typeTerm(body)(using methodCtx) 
-                  case None => freshVar()
+                    typeTerm(body)(using currentCtx)
+                  case None =>
+                    freshVar()
                 
-                members += (td.sym.nme -> methodType)
-              case _ =>
+                members(td.sym.nme) = methodType
+              
+              case _ => // Skip other statements
             }
             
-            val classInfo = ClassInfo(cls.sym, Nil, members.toMap)
-            val classType = ClassType(classInfo)
-            currentCtx = currentCtx + (cls.sym -> classType)
-            currentCtx = currentCtx + (cls.bsym -> classType)
+            val updatedClassInfo = classInfo.copy(members = members.toMap)
+            val updatedClassType = ClassType(updatedClassInfo)
             
-          case stmt => 
-            stmt.subTerms.foreach(term => typeTerm(term)(using currentCtx))
+            currentCtx = currentCtx + (cls.sym -> updatedClassType)
+            currentCtx = currentCtx + (cls.bsym -> updatedClassType)
+          case _ => // Skip other statements
         }
         
         typeTerm(res)(using currentCtx)
-      
-      case Asc(term, ty) =>
-        val termTy = typeTerm(term)
-        val ascTy = typeTerm(ty)
-        constrain(termTy, ascTy)
-        ascTy
-      
-      case CompType(lhs, rhs, true) =>
-        val lhsTy = typeTerm(lhs)
-        val rhsTy = typeTerm(rhs)
-        val resultTy = freshVar()
-        constrain(lhsTy, resultTy)
-        constrain(rhsTy, resultTy)
-        resultTy
-      
-      case CompType(lhs, rhs, false) =>
-        val lhsTy = typeTerm(lhs)
-        val rhsTy = typeTerm(rhs)
-        val resultTy = freshVar()
-        constrain(resultTy, lhsTy)
-        constrain(resultTy, rhsTy)
-        resultTy
-      
-      case Neg(rhs) => 
-        typeTerm(rhs)
-      
-      case Deref(ref) =>
-        val refTy = typeTerm(ref)
-        freshVar()
-      
-      case RegRef(reg, value) => 
-        typeTerm(value)
-      
-      case Assgn(lhs, rhs) =>
-        val lhsTy = typeTerm(lhs)
-        val rhsTy = typeTerm(rhs)
-        constrain(rhsTy, lhsTy)
-        UnitType
-      
-      case SetRef(ref, value) =>
-        typeTerm(ref)
-        typeTerm(value)
-        UnitType
-      
-      case Ret(result) => typeTerm(result)
-      
-      case Throw(result) =>
-        typeTerm(result)
-        freshVar()
-      
-      case Try(body, finallyDo) =>
-        val bodyTy = typeTerm(body)
-        typeTerm(finallyDo)
-        bodyTy
-      
-      case Annotated(annot, target) => typeTerm(target)
-      
-      case _ =>
-        log(s"Unhandled term type: ${term.getClass.getSimpleName}")
-        freshVar()
-  
-  def processArg(arg: Term)(using TypeContext): SimpleType = arg match
-    case Tup(fields) if fields.length > 1 =>
-      Record(fields.zipWithIndex.map { 
-        case (fld, idx) => fld match
-          case Fld(_, term, _) => s"_${idx}" -> typeTerm(term)
-          case _ => s"_${idx}" -> freshVar()
-      })
-    
-    case Tup(fields) if fields.length == 1 =>
-      fields.head match
-        case Fld(_, term, _) => typeTerm(term)
-        case _ => freshVar()
-    
-    case _ => 
-      typeTerm(arg)
+      case _ => freshVar()
   
   def analyzeTermTypes(term: Term)(using state: Elaborator.State): Unit =
     val ctx = createInitialContext()
@@ -723,8 +596,7 @@ class SimpleSub(val tl: TraceLogger):
     val recursive = mutable.Map[(VariableState, Boolean), String]()
     
     def go(ty: SimpleType, polar: Boolean, inProcess: Set[(VariableState, Boolean)]): String = ty match
-      case Primitive(name) => 
-        name
+      case Primitive(name) => name
       
       case Function(lhs, rhs) =>
         s"(${go(lhs, !polar, inProcess)} -> ${go(rhs, polar, inProcess)})"
@@ -734,13 +606,7 @@ class SimpleSub(val tl: TraceLogger):
           s"$name: ${go(fieldTy, polar, inProcess)}" 
         }.mkString("{ ", "; ", " }")
       
-      case ClassType(info) =>
-        val superStr = if info.supers.isEmpty then "" else 
-          s" extends ${info.supers.map(s => go(s, polar, inProcess)).mkString(" with ")}"
-        val memberStr = info.members.map { case (n, t) => 
-          s"$n: ${go(t, polar, inProcess)}" 
-        }.mkString(", ")
-        s"class ${info.sym.nme}$superStr { $memberStr }"
+      case ClassType(info) => info.toString
       
       case Variable(vs) =>
         val vs_pol = vs -> polar
@@ -750,8 +616,7 @@ class SimpleSub(val tl: TraceLogger):
         else
           val bounds = if polar then vs.lowerBounds else vs.upperBounds
           
-          if bounds.isEmpty then
-            vs.uniqueName
+          if bounds.isEmpty then vs.uniqueName
           else
             val boundTypes = bounds.map(go(_, polar, inProcess + vs_pol))
             val mrg = if polar then " | " else " & "
