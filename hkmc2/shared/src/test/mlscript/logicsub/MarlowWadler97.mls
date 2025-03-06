@@ -1,0 +1,62 @@
+:bbml
+//│ Type: ⊤
+:js
+
+//│ Type: ⊤
+
+
+// * Sec. 9 of A Practical Subtyping System For Erlang
+// * (https://homepages.inf.ed.ac.uk/wadler/papers/erlang/erlang.pdf)
+
+
+class
+  Tru()
+  Fls()
+//│ Type: ⊤
+
+let
+  tru = new Tru()
+  fls = new Fls()
+//│ fls = Fls()
+//│ tru = Tru()
+//│ Type: ⊤
+
+:ucs normalized
+fun test(x, y) = if
+  x is Tru and y is Tru then tru
+  x is Fls then fls
+  y is Fls then fls
+//│ Normalized:
+//│ >  if
+//│ >    x is Tru and
+//│ >      y is Tru then tru#666
+//│ >      y is Fls then fls#666
+//│ >    x is Fls then fls#666
+//│ >    y is Fls then fls#666
+//│ Type: ⊤
+
+test(tru, tru)
+//│ = Tru()
+//│ Type: Tru ∨ Fls
+
+test(tru, fls)
+//│ = Fls()
+//│ Type: Tru ∨ Fls
+
+test(fls, tru)
+//│ = Fls()
+//│ Type: Tru ∨ Fls
+
+test(fls, fls)
+//│ = Fls()
+//│ Type: Tru ∨ Fls
+
+
+:fixme
+:e
+test(true, false)
+//│ ═══[RUNTIME ERROR] Error: match error
+//│ Type: Tru ∨ Fls
+//│ FAILURE: Unexpected lack of type error
+
+
