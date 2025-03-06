@@ -136,63 +136,62 @@ Runtime1 = class Runtime {
     throw globalThis.Error(tmp3);
   } 
   static topLevelEffect(tr) {
-    let zwsp, msg, curHandler, atTail, scrut, cur, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16;
-    tmp = runtime.safeCall(globalThis.String.fromCodePoint(8203));
-    zwsp = tmp;
-    tmp1 = zwsp + "Error: Unhandled effect ";
-    tmp2 = tmp1 + tr.handler.constructor.name;
-    msg = tmp2;
+    let zwsp, msg, curHandler, atTail, scrut, cur, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15;
+    zwsp = "\u200B";
+    tmp = zwsp + "Error: Unhandled effect ";
+    tmp1 = tmp + tr.handler.constructor.name;
+    msg = tmp1;
     curHandler = tr.contTrace;
     atTail = true;
-    tmp17: while (true) {
+    tmp16: while (true) {
       scrut = curHandler !== null;
       if (scrut === true) {
         cur = curHandler.next;
-        tmp18: while (true) {
+        tmp17: while (true) {
           scrut1 = cur !== null;
           if (scrut1 === true) {
-            tmp3 = "\n\tat " + cur.constructor.name;
-            tmp4 = tmp3 + "(pc=";
-            tmp5 = tmp4 + cur.pc;
-            tmp6 = tmp5 + ")";
-            tmp7 = msg + tmp6;
-            msg = tmp7;
+            tmp2 = "\n\tat " + cur.constructor.name;
+            tmp3 = tmp2 + "(pc=";
+            tmp4 = tmp3 + cur.pc;
+            tmp5 = tmp4 + ")";
+            tmp6 = msg + tmp5;
+            msg = tmp6;
             cur = cur.next;
             atTail = false;
-            tmp8 = runtime.Unit;
-            continue tmp18;
+            tmp7 = runtime.Unit;
+            continue tmp17;
           } else {
-            tmp8 = runtime.Unit;
+            tmp7 = runtime.Unit;
           }
           break;
         }
         curHandler = curHandler.nextHandler;
         scrut2 = curHandler !== null;
         if (scrut2 === true) {
-          tmp9 = "\n\twith handler " + curHandler.handler.constructor.name;
-          tmp10 = msg + tmp9;
-          msg = tmp10;
+          tmp8 = "\n\twith handler " + curHandler.handler.constructor.name;
+          tmp9 = msg + tmp8;
+          msg = tmp9;
           atTail = false;
-          tmp11 = runtime.Unit;
+          tmp10 = runtime.Unit;
         } else {
-          tmp11 = runtime.Unit;
+          tmp10 = runtime.Unit;
         }
-        tmp12 = tmp11;
-        continue tmp17;
+        tmp11 = tmp10;
+        continue tmp16;
       } else {
-        tmp12 = runtime.Unit;
+        tmp11 = runtime.Unit;
       }
       break;
     }
     if (atTail === true) {
-      tmp13 = msg + "\n\tat tail position";
-      msg = tmp13;
-      tmp14 = runtime.Unit;
+      tmp12 = msg + "\n\tat tail position";
+      msg = tmp12;
+      tmp13 = runtime.Unit;
     } else {
-      tmp14 = runtime.Unit;
+      tmp13 = runtime.Unit;
     }
-    tmp15 = msg + zwsp;
-    tmp16 = runtime.safeCall(globalThis.console.log(tmp15));
+    tmp14 = msg + zwsp;
+    tmp15 = runtime.safeCall(globalThis.console.log(tmp14));
     throw globalThis.Error("Unhandled effects");
   } 
   static showFunctionContChain(cont, hl, vis, reps) {

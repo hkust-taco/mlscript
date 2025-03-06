@@ -44,7 +44,7 @@ class LocalVarInfo(localName, uid, value)
 
 fun topLevelEffect(tr) =
   let
-    zwsp = String.fromCodePoint(0x200B)
+    zwsp = "\u200B"
     msg = zwsp + "Error: Unhandled effect " + tr.handler.constructor.name
     curHandler = tr.contTrace
     atTail = true
