@@ -2,12 +2,14 @@ package hkmc2
 package semantics
 
 import scala.collection.immutable.Queue
+import scala.collection.mutable
 
 import mlscript.utils.*, shorthands.*
 import hkmc2.Message.MessageContext
 import hkmc2.semantics.Elaborator.*
 import hkmc2.semantics.Split.{Let, Else}
 import hkmc2.semantics.Term.*
+import hkmc2.syntax.Tree
 import hkmc2.syntax.Tree.{Ident, IntLit, StrLit, UnitLit}
 import hkmc2.utils.TraceLogger
 
@@ -229,27 +231,33 @@ class Specialiser(val tl: TraceLogger)(using Raise, Elaborator.State):
     //
 end Specialiser
 
-import scala.collection.mutable
-import mlscript.utils.*, shorthands.*
-import syntax.*
-import semantics.*
-
 class SimpleSub(val tl: TraceLogger):
   import tl.*
+
+  // New ClassInfo class to encapsulate class information
+  case class ClassInfo(
+    sym: ClassSymbol,
+    supers: Ls[SimpleType] = Nil,
+    members: Map[Str, SimpleType] = Map.empty
+  ):
+    override def toString: String = 
+      val superStr = if supers.isEmpty then "" else 
+        s" extends ${supers.mkString(" with ")}"
+      s"class ${sym.nme}$superStr { ${members.map { case (n, t) => s"$n: $t" }.mkString(", ")} }"
 
   enum SimpleType:
     case Variable(state: VariableState)
     case Primitive(name: Str)
     case Function(lhs: SimpleType, rhs: SimpleType)
     case Record(fields: Ls[(Str, SimpleType)])
-    case ClassType(sym: ClassSymbol, supers: Ls[SimpleType], members: Map[Str, SimpleType])
+    case ClassType(info: ClassInfo) // Now uses ClassInfo
     
     override def toString: String = this match
       case Variable(state) => s"${state.uniqueName}"
       case Primitive(name) => name
       case Function(lhs, rhs) => s"(${lhs} -> ${rhs})"
       case Record(fields) => fields.map(f => s"${f._1}: ${f._2}").mkString("{ ", "; ", " }")
-      case ClassType(sym, supers, members) => s"class $sym { ${members.map { case (n, t) => s"$n: $t" }.mkString(", ")} }"
+      case ClassType(info) => info.toString // Delegates to ClassInfo's toString
 
   import SimpleType.*
   
@@ -331,18 +339,18 @@ class SimpleSub(val tl: TraceLogger):
             case Some((_, t0)) => 
               constrain(t0, t1)
         }
-      case (ClassType(sym0, supers0, members0), ClassType(sym1, supers1, members1)) =>
-        if sym0 == sym1 then
-          members1.foreach { case (name, memberType1) =>
-            members0.get(name) match
+      case (ClassType(info0), ClassType(info1)) =>
+        if info0.sym == info1.sym then
+          info1.members.foreach { case (name, memberType1) =>
+            info0.members.get(name) match
               case None => 
-                log(s"Error: missing member: $name in class $sym0")
+                log(s"Error: missing member: $name in class ${info0.sym}")
               case Some(memberType0) => 
                 constrain(memberType0, memberType1)
           }
         else
-          val isSubtype = supers0.exists {
-            case ClassType(s, _, _) if s == sym1 => true
+          val isSubtype = info0.supers.exists {
+            case ClassType(superInfo) if superInfo.sym == info1.sym => true
             case superType => 
               val superResult = mutable.Set[(SimpleType, SimpleType)]()
               constrain(superType, rhs)(using superResult)
@@ -350,7 +358,7 @@ class SimpleSub(val tl: TraceLogger):
           }
           
           if !isSubtype then
-            log(s"Error: class $sym0 is not a subtype of $sym1")
+            log(s"Error: class ${info0.sym} is not a subtype of ${info1.sym}")
       
       case (Variable(lhs), rhs) =>
         lhs.upperBounds = rhs :: lhs.upperBounds
@@ -391,7 +399,7 @@ class SimpleSub(val tl: TraceLogger):
               log(s"Class constructor call for ${classSym.nme}")
               
               ctx.get(classSym) orElse ctx.get(lhs.symbol.flatMap(_.asBlkMember).getOrElse(classSym)) match
-                case Some(classType @ ClassType(sym, supers, members)) =>
+                case Some(ClassType(classInfo)) =>
                   val argTypes = rhs match
                     case Tup(fields) => fields.map {
                       case Fld(_, term, _) => typeTerm(term)
@@ -399,21 +407,21 @@ class SimpleSub(val tl: TraceLogger):
                     }
                     case _ => List(typeTerm(rhs))
                     
-                  val paramToArgMap = sym.tree.paramLists.headOption
+                  val paramToArgMap = classInfo.sym.tree.paramLists.headOption
                     .map(_.fields.map(_.toString))
                     .getOrElse(Nil)
                     .zip(argTypes)
                     .toMap
                   
-                  val instanceMembers = members.map { case (name, memberType) =>
+                  val instanceMembers = classInfo.members.map { case (name, memberType) =>
                     memberType match
-                      case _: Variable if members.contains(name) && paramToArgMap.contains(name) => 
+                      case _: Variable if classInfo.members.contains(name) && paramToArgMap.contains(name) => 
                         name -> paramToArgMap(name)
                       case _ => 
                         name -> memberType
                   }
                   
-                  ClassType(sym, supers, instanceMembers)
+                  ClassType(ClassInfo(classInfo.sym, classInfo.supers, instanceMembers))
                 case _ =>
                   val lhsType = typeTerm(lhs)
                   val rhsType = processArg(rhs)
@@ -463,7 +471,7 @@ class SimpleSub(val tl: TraceLogger):
         cls.symbol match
           case Some(sym) =>
             ctx.get(sym) match
-              case Some(classType: ClassType) => classType
+              case Some(ClassType(classInfo)) => ClassType(classInfo)
               case otherType =>
                 log(s"Warning: Symbol $sym does not reference a class: $otherType")
                 clsType
@@ -475,8 +483,8 @@ class SimpleSub(val tl: TraceLogger):
         val prefixType = typeTerm(prefix)
         
         prefixType match
-          case classType @ ClassType(_, _, members) =>
-            members.get(name.name) match
+          case ClassType(classInfo) =>
+            classInfo.members.get(name.name) match
               case Some(memberType) => memberType
               case None => 
                 log(s"Error: No member named ${name.name} found in class")
@@ -486,8 +494,8 @@ class SimpleSub(val tl: TraceLogger):
             val resultType = freshVar()
             
             vs.upperBounds.foreach {
-              case ClassType(_, _, members) if members.contains(name.name) =>
-                constrain(resultType, members(name.name))
+              case ClassType(classInfo) if classInfo.members.contains(name.name) =>
+                constrain(resultType, classInfo.members(name.name))
               case _ =>
             }
             
@@ -503,9 +511,9 @@ class SimpleSub(val tl: TraceLogger):
           val prefixType = typeTerm(prefix)
           
           prefixType match
-            case classType @ ClassType(_, _, members) =>
+            case ClassType(classInfo) =>
               // Special handling for class instances - check members map directly
-              members.get(name.name) match
+              classInfo.members.get(name.name) match
                 case Some(memberType) => memberType
                 case None => 
                   log(s"Error: No member named ${name.name} found in class")
@@ -515,8 +523,8 @@ class SimpleSub(val tl: TraceLogger):
               val resultType = freshVar()
               
               vs.upperBounds.foreach {
-                case ClassType(_, _, members) if members.contains(name.name) =>
-                  constrain(resultType, members(name.name))
+                case ClassType(classInfo) if classInfo.members.contains(name.name) =>
+                  constrain(resultType, classInfo.members(name.name))
                 case _ =>
               }
               
@@ -619,7 +627,8 @@ class SimpleSub(val tl: TraceLogger):
               case _ =>
             }
             
-            val classType = ClassType(cls.sym, Nil, members.toMap)
+            val classInfo = ClassInfo(cls.sym, Nil, members.toMap)
+            val classType = ClassType(classInfo)
             currentCtx = currentCtx + (cls.sym -> classType)
             currentCtx = currentCtx + (cls.bsym -> classType)
             
@@ -725,13 +734,13 @@ class SimpleSub(val tl: TraceLogger):
           s"$name: ${go(fieldTy, polar, inProcess)}" 
         }.mkString("{ ", "; ", " }")
       
-      case ClassType(sym, supers, members) =>
-        val superStr = if supers.isEmpty then "" else 
-          s" extends ${supers.map(s => go(s, polar, inProcess)).mkString(" with ")}"
-        val memberStr = members.map { case (n, t) => 
+      case ClassType(info) =>
+        val superStr = if info.supers.isEmpty then "" else 
+          s" extends ${info.supers.map(s => go(s, polar, inProcess)).mkString(" with ")}"
+        val memberStr = info.members.map { case (n, t) => 
           s"$n: ${go(t, polar, inProcess)}" 
         }.mkString(", ")
-        s"class ${sym.nme}$superStr { $memberStr }"
+        s"class ${info.sym.nme}$superStr { $memberStr }"
       
       case Variable(vs) =>
         val vs_pol = vs -> polar
