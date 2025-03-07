@@ -189,10 +189,6 @@ object Elaborator:
     val nonLocalRet =
       val id = new Ident("ret")
       BlockMemberSymbol(id.name, Nil, true)
-    val enterHandleBlockTrm =
-      val id = new Ident("enterHandleBlock")
-      val sym = BlockMemberSymbol(id.name, Nil, true)
-      Term.Sel(runtimeSymbol.ref(), id)(S(sym))
     val matchResultClsSymbol =
       val id = new Ident("MatchResult")
       ClassSymbol(TypeDef(syntax.Cls, App(id, Tup(Ident("captures") :: Nil)), N, N), id)
@@ -996,7 +992,7 @@ extends Importer:
             val sym = members.getOrElse(id.name, die)
             val owner = ctx.outer.inner
             val isModMember = owner.exists(_.isInstanceOf[ModuleSymbol])
-            val nonLocalRetHandler = TempSymbol(N, s"nonLocalRetHandler$$$nme")
+            val nonLocalRetHandler = TempSymbol(N, s"nonLocalRetHandler$$${id.name}")
             val tdf = ctx.nest(OuterCtx.Function(nonLocalRetHandler)).givenIn:
               // * Add type parameters to context
               val (tps, newCtx1) = td.typeParams match
@@ -1017,14 +1013,15 @@ extends Importer:
                 then rhs.map(term(_)(using newCtx))
                 else S(Term.Missing)
               val nb: Opt[Term] = if nonLocalRetHandler.directRefs.isEmpty then b else b.map: inner =>
-                // TODO: emit Term.Handle instead of using enterHandleBlock
-                val handler = Term.New(state.nonLocalRetHandlerTrm, Nil, N)
-                val lam = PlainFld(Term.Lam(ParamList(ParamListFlags.empty, Nil, N), inner))
-                val handleBlockArgs = Term.Tup(nonLocalRetHandler.ref() :: lam :: Nil)(Tree.DummyTup)
-                val rs = FlowSymbol("‹app-res›")
-                Term.Blk(
-                  Term.Assgn(nonLocalRetHandler.ref(), handler) :: Nil,
-                  Term.App(state.enterHandleBlockTrm, handleBlockArgs)(Tree.DummyApp, rs))
+                val clsSym = ClassSymbol(Tree.DummyTypeDef(Cls), Tree.Ident("‹non local return effect›"))
+                val valueSym = VarSymbol(Ident("value"))
+                val resumeSym = VarSymbol(Ident("resume"))
+                val mtdSym = BlockMemberSymbol("ret", Nil, true)
+                val td = TermDefinition(
+                  N, Fun, mtdSym, PlainParamList(Param(FldFlags.empty, valueSym, N) :: Nil) :: Nil,
+                  N, N, S(valueSym.ref(Ident("value"))), FlowSymbol(s"‹result of non local return›"), TermDefFlags.empty, Nil)
+                val htd = HandlerTermDefinition(resumeSym, td)
+                Term.Handle(nonLocalRetHandler, state.nonLocalRetHandlerTrm, Nil, clsSym, htd :: Nil, inner)
               val r = FlowSymbol(s"‹result of ${sym}›")
               val tdf = TermDefinition(owner, k, sym, pss, tps, s, nb, r, 
                 TermDefFlags.empty.copy(isModMember = isModMember), annotations)
