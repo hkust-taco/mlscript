@@ -87,7 +87,6 @@ addc(1)
 //│ Constraining ('l -> ('m -> 'n)) <: (Int -> 'o)
 //│ Constraining Int <: 'l
 //│ Constraining Int <: Num
-//│ Error: cannot constrain Int <: Num
 //│ Constraining ('m -> 'n) <: 'o
 //│ Result type: (Num -> Num)
 //│ = [function]
@@ -146,7 +145,6 @@ x
 //│ Constraining ({ _0: Num; _1: Num } -> Num) <: ({ _0: Int; _1: Int } -> 'l)
 //│ Constraining { _0: Int; _1: Int } <: { _0: Num; _1: Num }
 //│ Constraining Int <: Num
-//│ Error: cannot constrain Int <: Num
 //│ Constraining Num <: 'l
 //│ Function x body has type: 'l
 //│ Function x has type: 'l

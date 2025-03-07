@@ -323,6 +323,9 @@ class SimpleSub(val tl: TraceLogger):
     
     (lhs, rhs) match
       case (Primitive(n0), Primitive(n1)) if n0 == n1 => ()
+      case (_, Primitive("Any")) => ()
+      case (Primitive("Unit"), _) => ()
+      case (Primitive(n0), Primitive(n1)) if n0 == "Int" && n1 == "Num" => ()
       case (Function(l0, r0), Function(l1, r1)) =>
         constrain(l1, l0)
         constrain(r0, r1)
