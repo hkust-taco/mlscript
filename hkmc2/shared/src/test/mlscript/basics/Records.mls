@@ -97,39 +97,28 @@ let rcd = new with
 //│ rcd = $anon
 
 
-// * Should probably be made to work
+id of (x: 1)
+//│ = {x: 1}
 
-:fixme
 id of { x: 1 }
-//│ ╔══[ERROR] Name not found: x
-//│ ║  l.103: 	id of { x: 1 }
-//│ ╙──       	        ^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: Other argument forms (of class String)
+//│ = {x: 1}
 
-:fixme
 id of ({ x: 1 })
-//│ ╔══[ERROR] Unexpected colon in this position.
-//│ ║  l.110: 	id of ({ x: 1 })
-//│ ╙──       	         ^^^^
-//│ ╔══[ERROR] Name not found: x
-//│ ║  l.110: 	id of ({ x: 1 })
-//│ ╙──       	         ^
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ = {x: 1}
 
-:fixme
-id of { x: 1, y: 2 }
-//│ ╔══[ERROR] Name not found: x
-//│ ║  l.120: 	id of { x: 1, y: 2 }
-//│ ╙──       	        ^
-//│ ╔══[ERROR] Name not found: y
-//│ ║  l.120: 	id of { x: 1, y: 2 }
-//│ ╙──       	              ^
-//│ ╔══[ERROR] Expected 1 arguments, got 2
-//│ ║  l.120: 	id of { x: 1, y: 2 }
-//│ ╙──       	^^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: Other argument forms (of class String)
 
 id of ({ x: 1, y: 2 })
+//│ = {x: 1, y: 2}
+
+id of (x: 1, y: 2)
+//│ = {x: 1, y: 2}
+
+// * FIXME: handling of record arguments in resolver/checker
+:fixme
+id of { x: 1, y: 2 }
+//│ ╔══[ERROR] Expected 1 arguments, got 2
+//│ ║  l.118: 	id of { x: 1, y: 2 }
+//│ ╙──       	^^
 //│ = {x: 1, y: 2}
 
 

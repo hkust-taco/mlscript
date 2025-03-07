@@ -133,9 +133,6 @@ fun stringGet(string, i) = string.at(i)
 fun stringDrop(string, n) = string.slice(n)
 
 
-data class MatchResult(captures)
-data class MatchFailure(errors)
-
 fun unreachable = throw Error("unreachable")
 
 fun checkArgs(functionName, expected, isUB, got) =

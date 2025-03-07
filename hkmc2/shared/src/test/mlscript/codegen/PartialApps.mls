@@ -44,6 +44,7 @@ foo(..._)
 :todo
 [..._]
 //│ ═══[ERROR] Illegal position for '_' placeholder.
+//│ = []
 
 
 let h = _ - 2
@@ -140,10 +141,10 @@ _ - 2 <| 1
 1
 |> _ - 2
 //│ ╔══[PARSE ERROR] Expected end of input; found '_' keyword instead
-//│ ║  l.141: 	|> _ - 2
+//│ ║  l.142: 	|> _ - 2
 //│ ╙──       	   ^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.140: 	1
+//│ ║  l.141: 	1
 //│ ╙──       	^
 //│ = [function pipeInto]
 

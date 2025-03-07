@@ -15,8 +15,8 @@ declare class String
 declare class RegExp
 declare class Set
 declare class Map
-declare class Error(msg)
-declare class TypeError(msg)
+declare class Error
+declare class TypeError
 declare class Symbol
 
 // MLscript-specific types
@@ -42,18 +42,15 @@ declare val Infinity
 declare fun parseInt(str: Str, radix: Int): Int
 declare fun parseFloat(str: Str): Num
 
-declare module Predef with
-  class Test with
-    val x = 0
-  class MatchResult(captures)
-  class MatchFailure(errors)
-  // This declaration is not used currently except for experimentation
-  abstract class __StackDelay with
-    fun perform()
-
 
 declare module source with
   object
     line
     name
     file
+
+declare module js with
+  fun
+    try_catch
+
+

@@ -149,7 +149,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         flds.map:
           case RcdArg(S(idx), v) =>
             doc"${result(idx)}: ${result(v)}"
-          case RcdArg(N, v) => ???
+          case RcdArg(N, v) => doc"...${result(v)}"
         .mkDocument(", ")
       } #}  # }"
   

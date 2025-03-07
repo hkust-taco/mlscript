@@ -103,16 +103,20 @@ object Elaborator:
       val Object = assumeBuiltinCls("Object")
       val untyped = assumeBuiltinTpe("untyped")
       // println(s"Builtins: $Int, $Num, $Str, $untyped")
-      val Predef = assumeBuiltinMod("Predef")
-      object source:
-        private val module = assumeBuiltinMod("source")
-        private def assumeObject(nme: Str): BlockMemberSymbol =
+      class VirtualModule(val module: ModuleSymbol):
+        val bms = getBuiltin(module.nme) match
+          case S(Ctx.RefElem(bms: BlockMemberSymbol)) => bms
+          case huh => wat(huh)
+        protected def assumeObject(nme: Str): BlockMemberSymbol =
           module.tree.definedSymbols.get(nme).getOrElse:
             throw new NoSuchElementException:
               s"builtin module symbol source.$nme. we have"
+      object source extends VirtualModule(assumeBuiltinMod("source")):
         val line = assumeObject("line")
         val name = assumeObject("name")
         val file = assumeObject("file")
+      object js extends VirtualModule(assumeBuiltinMod("js")):
+        val try_catch = assumeObject("try_catch")
       def getBuiltinOp(op: Str): Opt[Str] =
         if getBuiltin(op).isDefined then builtinBinOps.get(op) else N
       /** Classes that do not use `instanceof` in pattern matching. */
@@ -152,8 +156,14 @@ object Elaborator:
     given State = this
     val globalThisSymbol = TopLevelSymbol("globalThis")
     val runtimeSymbol = TempSymbol(N, "runtime")
-    val effectSigSymbol = ClassSymbol(Tree.TypeDef(syntax.Cls, Tree.Error(), N, N), Tree.Ident("EffectSig"))
-    val returnClsSymbol = ClassSymbol(Tree.TypeDef(syntax.Cls, Tree.Error(), N, N), Tree.Ident("Return"))
+    val effectSigSymbol = ClassSymbol(TypeDef(syntax.Cls, Dummy, N, N), Ident("EffectSig"))
+    val returnClsSymbol = ClassSymbol(TypeDef(syntax.Cls, Dummy, N, N), Ident("Return"))
+    val matchResultClsSymbol =
+      val id = new Ident("MatchResult")
+      ClassSymbol(TypeDef(syntax.Cls, App(id, Tup(Ident("captures") :: Nil)), N, N), id)
+    val matchFailureClsSymbol =
+      val id = new Ident("MatchFailure")
+      ClassSymbol(TypeDef(syntax.Cls, App(id, Tup(Ident("errors") :: Nil)), N, N), id)
     val builtinOpsMap =
       val baseBuiltins = builtins.map: op =>
           op -> BuiltinSymbol(op,
@@ -391,9 +401,7 @@ extends Importer:
     case InfixApp(lhs, Keyword.`as`, rhs) =>
       Term.Asc(term(lhs), term(rhs))
     case InfixApp(lhs, Keyword.`:`, rhs) =>
-      raise:
-        ErrorReport(msg"Unexpected colon in this position." -> tree.toLoc :: Nil, S(tree))
-      term(lhs)
+      block(tree :: Nil, hasResult = false)._1
     case tree @ InfixApp(lhs, Keyword.`is` | Keyword.`and`, rhs) =>
       val des = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
@@ -658,7 +666,7 @@ extends Importer:
     case DynAccess(obj, fld, ai) =>
       Term.DynSel(term(obj), term(fld), ai)
     case Spread(kw, kwLoc, body) =>
-      raise(ErrorReport(msg"Illegal position for '${kw.name}' spread operator." -> tree.toLoc :: Nil))
+      raise(ErrorReport(msg"Illegal position for '${kw.name}' spread operator." -> kwLoc :: Nil))
       Term.Error
     case Under() =>
       raise(ErrorReport(msg"Illegal position for '_' placeholder." -> tree.toLoc :: Nil))
@@ -723,6 +731,8 @@ extends Importer:
         t
   
   def fld(tree: Tree): Ctxl[Elem] = tree match
+    case InfixApp(id: Ident, Keyword.`:`, rhs) =>
+      Fld(FldFlags.empty, Term.Lit(StrLit(id.name).withLocOf(id)), S(term(rhs)))
     case InfixApp(lhs, Keyword.`:`, rhs) =>
       Fld(FldFlags.empty, term(lhs), S(term(rhs)))
     case Spread(Keyword.`..`, _, S(trm)) =>
@@ -860,6 +870,9 @@ extends Importer:
         newCtx.givenIn:
           go(sts, funs, Nil, newAcc)
       
+      case Spread(Keyword.`...`, kwLoc, S(body)) :: sts =>
+        reportUnusedAnnotations
+        go(sts, funs, Nil, RcdSpread(term(body)) :: acc)
       case InfixApp(lhs, Keyword.`:`, rhs) :: sts =>
         var newCtx = ctx
         val newAcc = lhs match
@@ -1178,7 +1191,7 @@ extends Importer:
   def mkBlk(funs: Ls[TermDefinition], acc: Ls[Statement], res: Opt[Term], hasResult: Bool): Blk | Rcd =
     // TODO forbid certain kinds of terms in records
     val isRcd = acc.exists:
-      case RcdField(_, _) => true
+      case _: (RcdField | RcdSpread) => true
       case _ => false
     if isRcd then Term.Rcd(funs reverse_::: (res.toList ::: acc).reverse)
     else Blk(funs reverse_::: acc.reverse, res.getOrElse:

@@ -1,9 +1,12 @@
 :js
 
+import "../../mlscript-compile/Runtime.mls"
+
+
 pattern Zero = "0"
 
 :expect true
-Zero.unapply("0") is MatchResult
+Zero.unapply("0") is Runtime.MatchResult
 //│ = true
 
 :expect true

@@ -308,7 +308,7 @@ Iter1 = class Iter {
     next = tmp1;
     scrut = next.done;
     if (scrut === true) {
-      throw new globalThis.Error.class("Empty iterator");
+      throw new globalThis.Error("Empty iterator");
     } else {
       tmp2 = runtime.Unit;
     }

@@ -74,9 +74,9 @@ enum Term extends Statement:
     case sel: SelProj => sel.sym
     case _ => N
   
-  def sel(id: Tree.Ident, sym: Opt[FieldSymbol]) =
+  def sel(id: Tree.Ident, sym: Opt[FieldSymbol]): Sel =
     Sel(this, id)(sym)
-  def selNoSym(nme: Str, synth: Bool = false) =
+  def selNoSym(nme: Str, synth: Bool = false): Sel | SynthSel =
     val id = new Tree.Ident(nme)
     if synth
     then SynthSel(this, id)(N)
@@ -138,6 +138,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Error | _: Lit | _: Ref | _: Builtin | _: UnitVal => Nil
     case App(lhs, rhs) => lhs :: rhs :: Nil
     case RcdField(lhs, rhs) => lhs :: rhs :: Nil
+    case RcdSpread(bod) => bod :: Nil
     case FunTy(lhs, rhs, eff) => lhs :: rhs :: eff.toList
     case TyApp(pre, tarsg) => pre :: tarsg
     case Sel(pre, _) => pre :: Nil
@@ -210,6 +211,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case App(lhs, tup: Tup) => s"${lhs.showDbg}(${tup.fields.map(_.showDbg).mkString(", ")})"
     case App(lhs, rhs) => s"${lhs.showDbg}(...${rhs.showDbg})"
     case RcdField(lhs, rhs) => s"${lhs.showDbg}: ${rhs.showDbg}"
+    case RcdSpread(bod) => s"...${bod.showDbg}"
     case FunTy(lhs: Tup, rhs, eff) =>
       s"${lhs.fields.map(_.showDbg).mkString(", ")} ->${
         eff.map(e => s"{${e.showDbg}}").getOrElse("")} ${rhs.showDbg}"
@@ -272,6 +274,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
 final case class LetDecl(sym: LocalSymbol, annotations: Ls[Annot]) extends Statement
 
 final case class RcdField(field: Term, rhs: Term) extends Statement
+final case class RcdSpread(rcd: Term) extends Statement
 
 final case class DefineVar(sym: LocalSymbol, rhs: Term) extends Statement
 
