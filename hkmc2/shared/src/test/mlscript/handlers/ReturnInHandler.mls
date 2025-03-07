@@ -58,14 +58,3 @@ l()
 //│ ╔══[ERROR] Return statement outside of a function.
 //│ ║  l.55: 	  return 3
 //│ ╙──      	         ^
-
-
-:re
-fun f() = () => return 3
-f()()
-//│ ═══[RUNTIME ERROR] Error: Unhandled effects
-
-:re
-fun f(): () -> Int = () => return () => 3
-f()()
-//│ ═══[RUNTIME ERROR] Error: Unhandled effects

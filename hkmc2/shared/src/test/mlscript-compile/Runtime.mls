@@ -39,7 +39,7 @@ class ContTrace(next, last, nextHandler, lastHandler, resumed)
 class EffectSig(contTrace, handler, handlerFun)
 
 class NonLocalReturn with
-  fun ret(value) = mkEffect(this, k => value)
+  fun ret(value)
 
 fun showFunctionContChain(cont, hl, vis, reps) =
   if cont is FunctionContFrame then

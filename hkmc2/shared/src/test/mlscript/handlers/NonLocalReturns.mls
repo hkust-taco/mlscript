@@ -1,0 +1,54 @@
+:js
+:effectHandlers
+
+
+fun f() =
+  (() => return 100)()
+  print("Bad")
+f()
+//│ = 100
+
+
+:expect 123
+fun f() =
+  let lam = () => return 123
+  fun g() =
+    let lam2 = () => return 200
+    lam()
+    lam2()
+    100
+  print("Ok")
+  g()
+  print("Bad")
+  100
+f()
+//│ > Ok
+//│ = 123
+
+:expect 100
+fun f() =
+  let lam = () => return 123
+  fun g() =
+    let lam2 = () => return 200
+    lam2()
+    lam()
+    100
+  print("Ok")
+  print(g())
+  print("Continue")
+  100
+f()
+//│ > Ok
+//│ > 200
+//│ > Continue
+//│ = 100
+
+:re
+fun f() = () => return 3
+f()()
+//│ ═══[RUNTIME ERROR] Error: Unhandled effects
+
+:re
+fun f(): () -> Int = () => return () => 3
+f()()
+//│ ═══[RUNTIME ERROR] Error: Unhandled effects
