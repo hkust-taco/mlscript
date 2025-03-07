@@ -281,7 +281,8 @@ object Type:
     then lhs | rhs
     else lhs & rhs
   def mkNegType(ty: Type): Type = ty.!
-  def disjoint(a: BasicType, b: BasicType)(prev: Set[BasicType -> BasicType])
+  def discriminant(a: Ls[Type]): (BasicType, Ls[Type]) = (a.head.toBasic.simp.toBasic, a.tail)
+  def disjointImpl(a: BasicType, b: BasicType)(prev: Set[BasicType -> BasicType])
     (using c: MutMap[BasicType -> BasicType, Opt[Set[Set[InfVar->BasicType]]]])
     : Opt[Set[Set[InfVar->BasicType]]] =
     if !prev.contains(a -> b) then c.getOrElseUpdate(a -> b, {
@@ -289,28 +290,34 @@ object Type:
         case (Bot, _) | (_, Bot) => S(Set.empty)
         case (NegType(t),_) => t.!.simp.toBasic match
           case NegType(_) => N
-          case a => disjoint(a, b)(prev)
+          case a => disjointImpl(a, b)(prev)
         case (_, NegType(t)) => t.!.simp.toBasic match
           case NegType(_) => N
-          case a => disjoint(a, b)(prev)
+          case a => disjointImpl(a, b)(prev)
         case (ClassLikeType(a, _), ClassLikeType(b, _)) if a.uid =/= b.uid => S(Set.empty)
         case (ComposedType(p, q, true), _) =>
-          val u = disjoint(p.simp.toBasic, b)(prev)
-          val w = disjoint(q.simp.toBasic, b)(prev)
+          val u = disjointImpl(p.simp.toBasic, b)(prev)
+          val w = disjointImpl(q.simp.toBasic, b)(prev)
           u.flatMap(u => w.map(u ++ _))
         case (_, ComposedType(p, q, true)) =>
-          val u = disjoint(a, p.simp.toBasic)(prev)
-          val w = disjoint(a, q.simp.toBasic)(prev)
+          val u = disjointImpl(a, p.simp.toBasic)(prev)
+          val w = disjointImpl(a, q.simp.toBasic)(prev)
           u.flatMap(u => w.map(u ++ _))
         case (a: InfVar, b: InfVar) if a.uid =/= b.uid => N
         case (v: InfVar, _) =>
-            val p = prev + (v->b)
-            val k = v.state.lowerBounds.map(lb => disjoint(lb.simp.toBasic, b)(p))
-            if k.exists(_.isEmpty) then N
-            else S((k.flatten.flatten.toSet + Set.empty).map(_ + (v -> b)))
-        case (_, v: InfVar) => disjoint(v, a)(prev)
+          val p = prev + (v -> b)
+          val k = v.state.lowerBounds.map(lb => disjointImpl(lb.toBasic.simp.toBasic, b)(p))
+          if k.exists(_.isEmpty) then N
+          else S((k.flatten.flatten.toSet + Set.empty).map(_ + (v -> b)))
+        case (_, v: InfVar) =>
+          val p = prev + (a -> v)
+          val k = v.state.lowerBounds.map(lb => disjointImpl(a, lb.toBasic.simp.toBasic)(p))
+          if k.exists(_.isEmpty) then N
+          else S((k.flatten.flatten.toSet + Set.empty).map(_ + (v -> a)))
         case _ => N
-    }) else N
+    }) else S(Set.empty)
+  def disjoint(a: Type, b: Type): Opt[Set[Set[InfVar->BasicType]]] =
+    disjointImpl(a.simp.toBasic, b.simp.toBasic)(Set.empty)(using c = MutMap.empty)
 
 
 // * Poly types can not be used as type arguments
@@ -422,9 +429,39 @@ class VarState:
   val disjsub: MutSet[DisjSub] = MutSet.empty
   override def toString = "<>"
 
-case class DisjSub(disjoint: MutMap[InfVar, Set[BasicType]], dss:Ls[DisjSub], cs:Ls[Type->Type]):
+case class DisjSub(disjoint: MutSet[InfVar -> BasicType], dss: Ls[DisjSub], cs: Ls[Type -> Type]):
   def commit() = disjoint.keys.foreach(_.state.disjsub += this)
-  def clear() = disjoint.keys.foreach(_.state.disjsub -= this)
-  def remove(v:InfVar)=
-    v.state.disjsub -= this
-    disjoint -= v
+  def checkAndCommit()(using c: MutMap[BasicType -> BasicType, Opt[Set[Set[InfVar->BasicType]]]]): Ls[Type -> Type] =
+    val cc: MutSet[InfVar -> BasicType] = MutSet.empty
+    val d = disjoint.flatMap: u =>
+      Type.disjointImpl(u._2, u._1)(Set.empty) match
+        case N =>
+          disjoint -= u
+          cc += u
+          N
+        case S(k) => if k.nonEmpty then S(k) else N
+    if disjoint.isEmpty then
+      dss.flatMap(_.checkAndCommit()) ++ cs
+    else
+      if d.nonEmpty then
+        commit()
+        d.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
+          DisjSub(MutSet.from(k), dss, cs).commit()
+      Nil
+  def checkImpl(v: InfVar)(using c: MutMap[BasicType -> BasicType, Opt[Set[Set[InfVar->BasicType]]]]) =
+    val (u, w) = disjoint.toList.partition(_._1.uid === v.uid)
+    val d = u.flatMap: u =>
+      Type.disjointImpl(u._2, u._1)(Set.empty) match
+        case N =>
+          disjoint -= u
+          N
+        case S(k) => if k.nonEmpty then S(k) else N
+    if disjoint.isEmpty then
+      dss.flatMap(_.checkAndCommit()) ++ cs
+    else
+      if disjoint.forall(_._1.uid =/= v.uid) then v.state.disjsub -= this
+      else if d.nonEmpty then
+        d.foldLeft(Set(w))((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
+          DisjSub(MutSet.from(k), dss, cs).commit()
+      Nil
+  def check(v: InfVar) = checkImpl(v)(using c = MutMap.empty)

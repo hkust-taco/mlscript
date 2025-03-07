@@ -20,7 +20,9 @@ foo
 //│ Type: (⊤) ->{⊥} Int
 
 f(foo)
-//│ Type: ⊤ -> Int
+//│ Type: 'A -> Int
+//│ Where:
+//│   'A#⊤ ∨  ∧ ⊤<:'A ∧ Int<:Int ∧ ⊥<:⊥
 
 fun g: ([A] -> A -> Int) -> ([A] -> A -> Int)
 fun g(y) =
@@ -36,7 +38,7 @@ g(foo)
 :e
 y `=> (let t = run(x `=> x `+ y) in y)
 //│ ╔══[ERROR] Type error in quoted term with expected type CodeBase[out 'T, ⊥, ?]
-//│ ║  l.37: 	y `=> (let t = run(x `=> x `+ y) in y)
+//│ ║  l.39: 	y `=> (let t = run(x `=> x `+ y) in y)
 //│ ║        	                   ^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  CodeBase[out 'x -> 'cde, out 'ctx, ?]  <:  CodeBase[out 'T, ⊥, ?]
 //│ ╟── because: cannot constrain  'ctx  <:  ⊥
@@ -45,8 +47,6 @@ y `=> (let t = run(x `=> x `+ y) in y)
 //│ ╟── because: cannot constrain  y  <:  'x1
 //│ ╙── because: cannot constrain  y  <:  ¬()
 //│ Type: CodeBase[out 'y -> 'y, ⊥, ?]
-//│ Where:
-//│   'y <: Int
 
 class C[A](m: A, n: A -> Int)
 //│ Type: ⊤

@@ -35,10 +35,8 @@ x =>
   idIB(x)
 //│ Type: ('x) ->{⊥} ⊥
 //│ Where:
-//│   'x <: Int ∨ Bool
 //│   'x <: Int
-//│   'x#Int ∨ Int<:'app ∧ ⊥<:'eff}
-//│   'x#Bool ∨ Bool<:'app ∧ ⊥<:'eff}
+//│   'x#'x ∨ (  'x#Int ∨  ∧ 'x<:Int ∨ Bool ∧ Int<:'app ∧ ⊥<:'eff) ∧ (  'x#Bool ∨  ∧ 'x<:Int ∨ Bool ∧ Bool<:'app ∧ ⊥<:'eff)
 
 (x: Int) =>
   let y = x + 1
@@ -51,7 +49,7 @@ x =>
 
 (x: Bool) =>
   idIB(idIB(x))
-//│ Type: (Bool) ->{⊥} Bool ∨ Int
+//│ Type: (Bool) ->{⊥} Bool
 
 fun ap1(f)=f(1)
 ap1(idIB)
@@ -64,17 +62,13 @@ ap(idIB)(1)
 x => idIB(x)
 //│ Type: ('x) ->{⊥} ⊥
 //│ Where:
-//│   'x <: Int ∨ Bool
-//│   'x#Bool ∨ Bool<:'app ∧ ⊥<:'eff}
-//│   'x#Int ∨ Int<:'app ∧ ⊥<:'eff}
+//│   'x#'x ∨ (  'x#Int ∨  ∧ 'x<:Int ∨ Bool ∧ Int<:'app ∧ ⊥<:'eff) ∧ (  'x#Bool ∨  ∧ 'x<:Int ∨ Bool ∧ Bool<:'app ∧ ⊥<:'eff)
 
 fun forward(x) = idIB(x)
 forward
 //│ Type: ['x] -> 'x -> ⊥
 //│ Where:
-//│   'x <: Int ∨ Bool
-//│   'x#Bool ∨ Bool<:'app ∧ ⊥<:'eff}
-//│   'x#Int ∨ Int<:'app ∧ ⊥<:'eff}
+//│   'x#'x ∨ (  'x#Int ∨  ∧ 'x<:Int ∨ Bool ∧ Int<:'app ∧ ⊥<:'eff) ∧ (  'x#Bool ∨  ∧ 'x<:Int ∨ Bool ∧ Bool<:'app ∧ ⊥<:'eff)
 
 forward(1)
 //│ Type: ⊥
@@ -86,17 +80,17 @@ forward(true)
 :todo // BbML
 fun idIIBB: ([Int, Int] -> Int) & ([Bool, Bool] -> Bool)
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ║  l.87: 	fun idIIBB: ([Int, Int] -> Int) & ([Bool, Bool] -> Bool)
+//│ ║  l.81: 	fun idIIBB: ([Int, Int] -> Int) & ([Bool, Bool] -> Bool)
 //│ ╙──      	                           ^^^
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ║  l.87: 	fun idIIBB: ([Int, Int] -> Int) & ([Bool, Bool] -> Bool)
+//│ ║  l.81: 	fun idIIBB: ([Int, Int] -> Int) & ([Bool, Bool] -> Bool)
 //│ ╙──      	                                                   ^^^^
 //│ Type: ⊤
 
 :todo // BbML
 idIIBB([1, 2])
 //│ ╔══[ERROR] Term shape not yet supported by BbML: Tup(List(Fld(‹›,Lit(IntLit(1)),None), Fld(‹›,Lit(IntLit(2)),None)))
-//│ ║  l.97: 	idIIBB([1, 2])
+//│ ║  l.91: 	idIIBB([1, 2])
 //│ ╙──      	       ^^^^^^
 //│ Type: ⊥
 
@@ -133,7 +127,7 @@ idIIBB(new Pair(1, true))
 :todo
 fun foo: ["x": Int, "y": Int]
 //│ ╔══[ERROR] Invalid type
-//│ ║  l.134: 	fun foo: ["x": Int, "y": Int]
+//│ ║  l.128: 	fun foo: ["x": Int, "y": Int]
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 

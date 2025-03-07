@@ -4,6 +4,12 @@ import scala.collection.mutable.{Set => MutSet, ListBuffer}
 import utils.Scope
 
 class PrettyPrinter(output: String => Unit)(using Scope):
+  def showDisjSub(ds: DisjSub): String = ds match
+    case DisjSub(d, dss, cs) =>
+      val g = d.iterator.map { case (x, y) => s"${x.show}#${y.show} ∨ " }.mkString
+      val h = dss.iterator.map("(" + showDisjSub(_) + ")").mkString(" ∧ ")
+      val b = cs.map { case (x, y) => s" ∧ ${x.simp.show}<:${y.simp.show}"}.mkString
+      s"  $g$h$b"
   def print(ty: GeneralType): Unit =
     output(s"Type: ${ty.show}")
     val bounds = PrettyPrinter.collectBounds(ty).distinct
@@ -11,21 +17,16 @@ class PrettyPrinter(output: String => Unit)(using Scope):
       output("Where:")
       bounds.foreach {
         case (lhs, rhs) => output(s"  ${lhs.show} <: ${rhs.show}")
-        case ((x, y), z, w) =>
-          val g = s"${x.show}#${y.show} ∨ "
-          val h = z.iterator.map { case (x, y) => s"${x.show}#${y.show} ∨ "}.mkString
-          val b = w.iterator.map { case (x, y) => s"${x.show}<:${y.show}"}.mkString(" ∧ ")
-          output(s"  $g$h$b}")
+        case ds: DisjSub => output(showDisjSub(ds))
       }
 
 object PrettyPrinter:
   def apply(output: String => Unit)(using Scope): PrettyPrinter = new PrettyPrinter(output)
 
   type Bound = (Type, Type) // * Type <: Type
-  type DisjBound=(Bound,List[Bound],List[Bound])
 
-  private def collectBounds(ty: GeneralType): List[Bound|DisjBound] =
-    val res = ListBuffer[Bound|DisjBound]()
+  private def collectBounds(ty: GeneralType): List[Bound | DisjSub] =
+    val res = ListBuffer[Bound | DisjSub]()
     val cache = MutSet[Uid[InfVar]]()
     object CollectBounds extends TypeTraverser:
       override def apply(pol: Boolean)(ty: GeneralType): Unit = ty match
@@ -37,11 +38,7 @@ object PrettyPrinter:
             res ++= state.upperBounds.map: bd =>
               apply(false)(bd)
               (v, bd)
-            res ++= state.disjsub.map: d =>
-              val ds = d.disjoint.iterator.flatMap:
-                case (v, u) => u.map(v -> _)
-              val k = ds.next()
-              (k, ds.toList, d.cs.toList)
+            res ++= state.disjsub
             super.apply(pol)(ty)
         case _ => super.apply(pol)(ty)
     CollectBounds(true)(ty)

@@ -53,10 +53,8 @@ test(fls, fls)
 
 
 :fixme
-:e
 test(true, false)
 //│ ═══[RUNTIME ERROR] Error: match error
 //│ Type: Tru ∨ Fls
-//│ FAILURE: Unexpected lack of type error
 
 

@@ -37,7 +37,7 @@ fun f(x) = f(x)
 f
 //│ Type: ['x] -> 'x -> ⊥
 //│ Where:
-//│   'x#'x ∨ 'app<:'app ∧ 'eff<:'eff ∧ 'x<:'x}
+//│   'x#'x ∨ (  'x#'x ∨  ∧ 'x<:'x ∧ 'app<:'app ∧ 'eff<:'eff)
 
 :todo
 fun f(x) = f(x.a)
@@ -73,6 +73,6 @@ fun f(x) = f(x.Foo#a)
 f
 //│ Type: ['A] -> Foo[out 'A] -> ⊥
 //│ Where:
-//│   'A#'A ∨ 'app<:'app ∧ 'eff<:'eff ∧ 'A<:'x}
+//│   'A#'A ∨  ∧ 'A<:'x ∧ 'app<:'app ∧ 'eff<:'eff
 
 

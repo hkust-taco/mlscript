@@ -207,55 +207,10 @@ region x in
 
 // Cannot type check since foo: 'foo <: Region[T] ->{'eff} 'app 
 // Annotation is required for recursive calls
-:e
 fun foo(r1) =
   region r2 in
     fork((_ => r1.ref 1), (_ => r2.ref 2))
     foo(r2)
-//│ ╔══[ERROR] Type error in function literal
-//│ ║  l.211: 	fun foo(r1) =
-//│ ║         	        ^^^^^
-//│ ║  l.212: 	  region r2 in
-//│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.213: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.214: 	    foo(r2)
-//│ ║         	^^^^^^^^^^^
-//│ ╟── because: cannot constrain  'r1 ->{'eff} 'app  <:  'foo
-//│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo
-//│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  Region[in 'r2 out 'r21] ->{'eff1} 'app1
-//│ ╟── because: cannot constrain  Region[in 'r2 out 'r21]  <:  'r1
-//│ ╟── because: cannot constrain  Region[in 'r2 out 'r21]  <:  'r1
-//│ ╟── because: cannot constrain  Region[in 'r2 out 'r21]  <:  Region[in 'reg out 'reg1]
-//│ ╟── because: cannot constrain  'r21  <:  'reg1
-//│ ╟── because: cannot constrain  'r21  <:  ¬(¬'reg1)
-//│ ╟── because: cannot constrain  ¬outer  <:  ¬(¬'reg1)
-//│ ╟── because: cannot constrain  ¬outer  <:  'reg1
-//│ ╟── because: cannot constrain  ¬outer  <:  ¬'r22 ∨ outer
-//│ ╟── because: cannot constrain  'r22  <:  ¬(¬outer)
-//│ ╙── because: cannot constrain  ¬outer  <:  ¬(¬outer)
-//│ ╔══[ERROR] Type error in function literal
-//│ ║  l.211: 	fun foo(r1) =
-//│ ║         	        ^^^^^
-//│ ║  l.212: 	  region r2 in
-//│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.213: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.214: 	    foo(r2)
-//│ ║         	^^^^^^^^^^^
-//│ ╟── because: cannot constrain  'r1 ->{'eff} 'app  <:  'foo
-//│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo
-//│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  Region[in 'r2 out 'r21] ->{'eff1} 'app1
-//│ ╟── because: cannot constrain  Region[in 'r2 out 'r21]  <:  'r1
-//│ ╟── because: cannot constrain  Region[in 'r2 out 'r21]  <:  'r1
-//│ ╟── because: cannot constrain  Region[in 'r2 out 'r21]  <:  Region[in 'reg out 'reg1]
-//│ ╟── because: cannot constrain  'r21  <:  'reg1
-//│ ╟── because: cannot constrain  'r21  <:  ¬(¬'reg1)
-//│ ╟── because: cannot constrain  ¬outer  <:  ¬(¬'reg1)
-//│ ╟── because: cannot constrain  ¬outer  <:  'reg1
-//│ ╟── because: cannot constrain  ¬outer  <:  'reg
-//│ ╟── because: cannot constrain  ¬outer  <:  'reg
-//│ ╙── because: cannot constrain  ¬outer  <:  ¬()
 //│ Type: ⊤
 
 
