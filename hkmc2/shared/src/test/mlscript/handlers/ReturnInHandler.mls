@@ -4,7 +4,7 @@
 abstract class Effect with
   fun f(): ()
 
-// return within handle blocks are implemented as usual non local return
+// `return` within handle blocks is implemented as a non-local return
 fun f() =
   handle h = Effect with
     fun foo()(r) =
