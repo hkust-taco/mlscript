@@ -13,226 +13,38 @@ import hkmc2.syntax.Tree
 import hkmc2.syntax.Tree.{Ident, IntLit, StrLit, UnitLit}
 import hkmc2.utils.TraceLogger
 
-object Specialiser:
-  transparent inline def ctx(using Ctx): Ctx = summon
-  transparent inline def state(using Elaborator.State): Elaborator.State = summon
-  private transparent inline def wq(using Queue[TermDefinition]): Queue[TermDefinition] = summon
 
-  import hkmc2.semantics.Elaborator.Ctx.Elem
-
-  extension (ctx: Ctx)
-    def elem_+(local: Str -> Ctx.Elem): Ctx = ctx.copy(ctx.outer, env = ctx.env + local)
-    def map(f: Str -> Ctx.Elem => Str -> Ctx.Elem): Ctx =
-      ctx.copy(parent = ctx.parent.map(_.map(f)), env = ctx.env.map(f))
-    def showDbg: Str = ctx.env.map((k, v) => s"$k -> ${v}").mkString(", ")
-
-  final case class Binding(val sym: Symbol, val typ: Opt[Ref]) extends Elem:
-    def nme: Str = sym.nme
-    def symbol: Opt[Symbol] = S(sym)
-    def ref(id: Ident)(using Elaborator.State): Term = ??? // TODO: Make own context; this is dumb
-
-  final case class TD(val td: TermDefinition) extends Elem:
-    def nme: Str = td.sym.nme
-    def symbol: Opt[Symbol] = S(td.sym)
-    def ref(id: Ident = Ident(""))(using Elaborator.State): Term = td.sym.ref()
-
-  object Spec:
-    val empty: Spec = Spec(Nil)
-  final case class Spec(val tys: Ls[Symbol -> (Ref | SynthSel)])
-
-  type Ctxl[T] = Ctx ?=> T
-  type Apps = Map[Str, Ls[Spec]]
-
-class Specialiser(val tl: TraceLogger)(using Raise, Elaborator.State):
+class SimpleSub(val tl: TraceLogger)(using Elaborator.State):
   import tl.*
-  import Specialiser.*
 
-  private val tInt: Ref = Ref(TopLevelSymbol("import#Prelude"))(Ident("Int"), 0)
-  private val tStr: Ref = Ref(TopLevelSymbol("import#Prelude"))(Ident("Str"), 0)
-  private val tUnit: Ref = Ref(TopLevelSymbol("import#Prelude"))(Ident("Unit"), 0)
+  private val specialisationPoints = mutable.Map[Symbol, SpecPoint]()
 
-  def block(blk: Blk, apps: Apps): Ctxl[(Blk, Apps)] = trace(s"Specialising block ${blk.showDbg}"):
-    @annotation.tailrec
-    def go(sts: Ls[Statement], acc: Ls[Statement], apps: Apps): Ctxl[(Blk, Apps)] =
-      log(s"Specialising ${sts.headOption.map(_.showDbg).getOrElse("block end. \n")}")
-      sts match
-        case (b: Blk) :: sts =>
-          val (newBlk, lowerApps) = block(b, apps)(using ctx.nest(N))
-          go(sts, newBlk :: acc, lowerApps)
-        case (t: Term) :: sts =>
-          val (newTerm, lowerApps) = term(t, apps)(using ctx.nest(N))
-          go(sts, newTerm :: acc, lowerApps)
-
-        case (l: LetDecl) :: sts =>
-          ctx.get(l.sym.nme) match
-            case S(_) => go(sts, l :: acc, apps)
-            case N => go(sts, l :: acc, apps)(using ctx elem_+ l.sym.nme -> Binding(l.sym, N))
-        case (d: DefineVar) :: sts =>
-          val ntyp: Opt[Ref] = d.rhs match
-            case Lit(lit) => lit.asTree match
-              case _: IntLit => S(tInt)
-              case _: StrLit => S(tStr)
-              case _: UnitLit => S(tUnit)
-              case _ => N
-            case _ => N // TODO: Infer type from other bindings; tuple type inference
-          ctx.map((k, v) => if k == d.sym.nme then k -> Binding(d.sym, ntyp) else k -> v).givenIn:
-            go(sts, d :: acc, apps)
-        case (td : TermDefinition) :: sts => go(sts, acc, apps)(using ctx elem_+ td.sym.nme -> TD(td))
-
-        case (i: Import) :: sts => go(sts, i :: acc, apps)
-        case (md @ ModuleDef(_, sym, _, _, _, _, _, bdy, _)) :: sts =>
-          val (newBlk, lowerApps) = block(bdy.blk, apps)(using ctx.nest(S(sym)))
-          go(sts, md.copy(body = bdy.copy(blk = newBlk)) :: acc, lowerApps)
-        case (pd @ PatternDef(_, sym, _, _, _, bdy, _)) :: sts =>
-          val (newBlk, lowerApps) = block(bdy.blk, apps)(using ctx.nest(S(sym)))
-          go(sts, pd.copy(body = bdy.copy(blk = newBlk)) :: acc, lowerApps)
-        case (p @ ClassDef.Parameterized(_, _, sym, _, _, _, _, bdy, _, _)) :: sts =>
-          val (newBlk, lowerApps) = block(bdy.blk, apps)(using ctx.nest(S(sym)))
-          go(sts, p.copy(body = bdy.copy(blk = newBlk)) :: acc, lowerApps)
-        case (pl @ ClassDef.Plain(_, _, sym, _, _, _, bdy, _, _)) :: sts =>
-          val (newBlk, lowerApps) = block(bdy.blk, apps)(using ctx.nest(S(sym)))
-          go(sts, pl.copy(body = bdy.copy(blk = newBlk)) :: acc, lowerApps)
-        case (t: TypeLikeDef) :: sts => go(sts, t :: acc, apps)
-
-        case Nil =>
-          log(s"Res: ${blk.res.showDbg}")
-          val (newRes, lowerApps) = term(blk.res, apps)
-
-          val tds = ctx.env.collect{case (_, v: TD) => v.td}.toList
-          log(s"Ctx: ${ctx.showDbg}")
-          log(s"Term definitions: ${tds}")
-          log(s"Applications: ${lowerApps}")
-
-          val wq = tds.map(td => td -> lowerApps.getOrElse(td.sym.nme, Nil)).foldLeft(Queue.empty[TermDefinition -> Ls[Spec]]):
-            (acc, v) => acc.enqueue(v)
-          log(s"Queue: ${wq}")
-
-          val newStats = processQueue(wq)(using ctx, tds)
-
-          (Blk(tds ::: newStats ::: acc.reverse, newRes), lowerApps)
-
-    def processQueue(q: Queue[TermDefinition -> Ls[Spec]])(using ctx: Ctx, tds: Ls[TermDefinition]): Ls[Statement] = q match
-      case q if q.isEmpty => Nil
-      case q => 
-        log(s"Processing queue: ${q}")
-        val ((td, typs), nq) = q.dequeue
-        log(s"Processing ${td.sym} with ${typs}")
-        val (speccedDefs, nnq) = typs.foldLeft((Ls.empty[Statement], nq))((acc, app) =>
-          val name = app.tys.map {
-            case (_, s: SynthSel) => s.nme
-            case (_, r: Ref) => r.tree.name
-          }.mkString(td.sym.nme + "_", "_", "")
-          val (nt, apps) = td.body match // FIXME
-            case S(body) => term(body, Map.empty)(using ctx elem_++ app.tys.foldLeft(Ls.empty[Str -> Binding])((acc, v) => v._2 match
-              case r: Ref => v._1.nme -> Binding(v._1, S(r)) :: acc
-            )).mapFirst(S(_))
-            case N => (N, Nil)
-          log(s"Chain specialising ${td.sym} containing ${apps}")
-          val newSpeccs = apps.foldLeft(Ls.empty[TermDefinition -> Ls[Spec]])((acc, v) => tds.find(_.sym.nme == v._1).map(_ -> v._2 :: acc).getOrElse(acc))
-          (td.copy(sym = BlockMemberSymbol(name, td.sym.trees), body = nt) :: acc._1, nq.enqueueAll(newSpeccs)))
-        speccedDefs ++ processQueue(nnq)
-
-
-    go(blk.stats, Nil, apps)
-
-  def term(t: Term, apps: Apps): Ctxl[(Term, Apps)] = trace(s"Specialising term ${t.showDbg}"):
-    t match
-      case app @ App(lhs, rhs) =>
-        lhs match
-          case s @ SynthSel(_, n) => 
-            val name = n.name
-            log(s"Ctx: ${ctx.showDbg}")
-            val params = ctx.get(name).map { case td: TD => td.td.params }.getOrElse(Nil)
-            val typ: Spec = rhs match
-              case Tup(fields) => fields.zip(params.head.params).foldLeft(Spec(Nil)):
-                (acc, fieldPair) => fieldPair._1 match
-                case Fld(_, Lit(lit), _) => lit.asTree match
-                  case _: IntLit => acc.copy(tys = (fieldPair._2.sym -> tInt) :: acc.tys)
-                  case _: StrLit => acc.copy(tys = (fieldPair._2.sym -> tStr) :: acc.tys)
-                  case _: UnitLit => acc.copy(tys = (fieldPair._2.sym -> tUnit) :: acc.tys)
-                  case _ => acc
-                case Fld(_, Ref(r), _) => acc.copy(tys = fieldPair._2.sym -> ctx.get(r.nme).flatMap(_.asInstanceOf[Binding].typ).get :: acc.tys) // FIXME
-                case _ => acc
-              case _ => Spec(Nil)
-
-            // log(s"Found application of ${name} with types ${typ.showDbg}")
-            val newApps = apps + (name -> (typ :: apps.getOrElse(name, Nil).filterNot(_ == typ)))
-
-            val newName: Ident = Ident(name + typ.tys.map{ case (_, r: Ref) => r.tree.name }.mkString("_", "_", ""))
-            val specApp: App = app.copy(lhs = s.copy(nme = newName)(s.sym))(app.tree, app.resSym)
-            (specApp, newApps)
-          // TODO: Fix these two
-          case r: Ref => 
-            val name = r.sym.nme
-            val typ: Opt[Ref] = rhs match
-              case Tup(fields) => fields.head match // FIXME: This can obviously be more than primitives
-                case Fld(_, Lit(lit), _) => lit.asTree match
-                  case _: IntLit => S(tInt)
-                  case _: StrLit => S(tStr)
-                  case _: UnitLit => S(tUnit)
-                  case _ => N
-                case Fld(_, Ref(r), _) => ctx.get(r.nme).flatMap(_.asInstanceOf[Binding].typ)
-                case _ => N
-              case _ => N
-
-            log(s"Found application of ${name} with type ${typ.map(_.tree.name).getOrElse("error")}")
-            val newApps = typ match
-              case Some(t) => apps + (name -> (t :: apps.getOrElse(name, Nil).filterNot(_ == t)))
-              case N => apps
-
-            // val newName: Ident = Ident(name + "_" + typ.map(_.tree.name).getOrElse("oops"))
-            // (specApp, newApps)
-            (t, apps)
-          case _: Sel => (t, apps)
-          case _ =>
-            raise(ErrorReport(msg"I messed up :(" -> t.toLoc :: Nil)) // FIXME
-            (t, apps)
-      case il @ IfLike(_, desug) => desug match
-        case Let(s, b, t) =>
-          val (nb, lowerApps) = term(b, apps)
-          (il.copy(desugared = Let(s, nb, t))(il.normalized), lowerApps)
-        case Else(d) =>
-          val (nd, lowerApps) = term(d, apps)
-          (il.copy(desugared = Else(nd))(il.normalized), lowerApps)
-        case _ => (il, apps)
-      case Lam(params, body) => // TODO: specialise the lambda
-        val (newBody, newApps) = term(body, apps)
-        (Lam(params, newBody), newApps)
-      case Forall(tvs, outer, body) => // FIXME
-        val (newTerm, newApps) = term(body, apps)
-        (Forall(tvs, outer, newTerm), newApps)
-      case Quoted(b) =>
-        val (newTerm, newApps) = term(b, apps)
-        (Quoted(newTerm), newApps)
-      case Unquoted(b) =>
-        val (newTerm, newApps) = term(b, apps)
-        (Unquoted(newTerm), newApps)
-      case Region(name, body) =>
-        val (newTerm, newApps) = term(body, apps)
-        (Region(name, newTerm), newApps)
-      case Deref(ref) =>
-        val (newTerm, newApps) = term(ref, apps)
-        (Deref(newTerm), newApps)
-      case Ret(expr) =>
-        val (newTerm, newApps) = term(expr, apps)
-        (Ret(newTerm), newApps)
-      case Throw(expr) =>
-        val (newTerm, newApps) = term(expr, apps)
-        (Throw(newTerm), newApps)
-      case Try(body, finallyDo) =>
-        val (b1, apps1) = term(body, apps)
-        val (b2, apps2) = term(finallyDo, apps1)
-        (Try(b1, b2), apps2)
-      case b: Blk => block(b, apps)
-      case _ => (t, apps) // TODO: Handle the few other term types
-
-  def topLevel(b: Blk): Blk = b
-    // block(b, Map.empty)(using Ctx.empty)._1
-
-end Specialiser
-
-class SimpleSub(val tl: TraceLogger):
-  import tl.*
+  case class SpecPoint(
+    paramSym: Symbol,
+    parentFunctionSym: Symbol,
+    concreteTypes: mutable.Set[SimpleType] = mutable.Set.empty,
+    typeVars: mutable.Set[VariableState] = mutable.Set.empty
+  ):
+    def addConcrete(ty: SimpleType): Unit =
+      log(s"Adding concrete type $ty to spec point ${paramSym.nme}")
+      concreteTypes += ty
+      
+    def addVar(vs: VariableState): Unit =
+      log(s"Adding var ${vs.uniqueName} to spec point ${paramSym.nme}")
+      typeVars += vs
+      
+    def updateFromVars(): Unit =
+      typeVars.foreach { vs =>
+        vs.lowerBounds.foreach { bound =>
+          if isConcreteType(bound) then
+            log(s"Found concrete bound $bound for var ${vs.uniqueName} in spec point ${paramSym.nme}")
+            concreteTypes += bound
+        }
+      }
+    
+    override def toString: String = 
+      val typeStrs = concreteTypes.toList.map(ty => coalesceType(ty))
+      s"${paramSym.nme} in ${parentFunctionSym.nme} can be specialised for: [${typeStrs.mkString(", ")}]"
 
   case class ClassInfo(
     sym: ClassSymbol,
@@ -249,12 +61,25 @@ class SimpleSub(val tl: TraceLogger):
                         else fieldsStr + membersStr)
       s"class ${sym.nme}$superStr { $contentStr }"
 
+  object VariableState:
+    private var nextIdCounter = 0
+    def nextId =
+      val id = nextIdCounter
+      nextIdCounter += 1
+      id
+
+  class VariableState(var lowerBounds: Ls[SimpleType] = Nil, var upperBounds: Ls[SimpleType] = Nil):
+    private val id = VariableState.nextId
+    val uniqueName: String = s"'${('a' + id % 26).toChar}${if id >= 26 then (id / 26).toString else ""}"
+
+  
   enum SimpleType:
     case Variable(state: VariableState)
     case Primitive(name: Str)
     case Function(lhs: SimpleType, rhs: SimpleType)
     case Record(fields: Ls[(Str, SimpleType)])
     case ClassType(info: ClassInfo)
+    case SpecialisableType(specPoint: SpecPoint, underlying: SimpleType)
     
     override def toString: String = this match
       case Variable(state) => s"${state.uniqueName}"
@@ -262,19 +87,26 @@ class SimpleSub(val tl: TraceLogger):
       case Function(lhs, rhs) => s"(${lhs} -> ${rhs})"
       case Record(fields) => fields.map(f => s"${f._1}: ${f._2}").mkString("{ ", "; ", " }")
       case ClassType(info) => info.toString
+      case SpecialisableType(specPoint, underlying) => s"spec[${underlying}]"
 
   import SimpleType.*
-  
-  class VariableState(var lowerBounds: Ls[SimpleType] = Nil, var upperBounds: Ls[SimpleType] = Nil):
-    private val id = VariableState.nextId
-    val uniqueName: String = s"'${('a' + id % 26).toChar}${if id >= 26 then (id / 26).toString else ""}"
-  
-  object VariableState:
-    private var nextIdCounter = 0
-    def nextId =
-      val id = nextIdCounter
-      nextIdCounter += 1
-      id
+
+  val IntType = Primitive("Int")
+  val BoolType = Primitive("Bool")
+  val StrType = Primitive("Str")
+  val UnitType = Primitive("Unit")
+  val AnyType = Primitive("Any")
+  val NumType = Primitive("Num")
+
+  def freshVar: Variable = Variable(VariableState())
+
+  def isConcreteType(ty: SimpleType): Boolean = ty match
+    case Variable(_) => false
+    case Function(lhs, rhs) => isConcreteType(lhs) && isConcreteType(rhs)
+    case Record(fields) => fields.forall((_, t) => isConcreteType(t))
+    case SpecialisableType(_, underlying) => isConcreteType(underlying)
+    case Primitive(_) => true
+    case ClassType(_) => true
   
   class TypeContext(val mapping: Map[Symbol, SimpleType] = Map.empty):
     def get(sym: Symbol): Option[SimpleType] = mapping.get(sym)
@@ -282,16 +114,7 @@ class SimpleSub(val tl: TraceLogger):
     def +(pair: (Symbol, SimpleType)): TypeContext = TypeContext(mapping + pair)
     def ++(pairs: Iterable[(Symbol, SimpleType)]): TypeContext = TypeContext(mapping ++ pairs)
     override def toString: String = mapping.map { case (sym, ty) => s"$sym: $ty" }.mkString(", ")
-  
-  val IntType = Primitive("Int")
-  val BoolType = Primitive("Bool")
-  val StrType = Primitive("Str")
-  val UnitType = Primitive("Unit")
-  val AnyType = Primitive("Any")
-  val NumType = Primitive("Num")
-  
-  def freshVar: Variable = Variable(VariableState())
-  
+
   def initialContext(using state: Elaborator.State): TypeContext =
     val builtinTypes = Map(
       state.builtinOpsMap.values.map { sym =>
@@ -313,16 +136,32 @@ class SimpleSub(val tl: TraceLogger):
     )
     
     TypeContext(builtinTypes)
-    
+
   def constrain(lhs: SimpleType, rhs: SimpleType)(using cache: mutable.Set[(SimpleType, SimpleType)] = mutable.Set.empty): Unit =
     if cache.contains(lhs -> rhs) then return () else cache += lhs -> rhs
     
     log(s"Constraining ${lhs} <: ${rhs}")
     
     (lhs, rhs) match
+      case (concrete, SpecialisableType(specPoint, underlying)) =>
+        if isConcreteType(concrete) then
+          log(s"Recording concrete type ${concrete} for specialisation point ${specPoint.paramSym.nme}")
+          specPoint.addConcrete(concrete)
+        else 
+          concrete match
+            case Variable(vs) =>
+              log(s"Recording variable ${vs.uniqueName} for specialisation point ${specPoint.paramSym.nme}")
+              specPoint.addVar(vs)
+            case _ => 
+              log(s"Non-concrete, non-variable type ${concrete} flowing into spec param ${specPoint.paramSym.nme}")
+        
+        constrain(concrete, underlying)
+        
+      case (SpecialisableType(specPoint, underlying), other) =>
+        constrain(underlying, other)
+        
       case (Primitive(n0), Primitive(n1)) if n0 == n1 => ()
       case (_, Primitive("Any")) => ()
-      case (Primitive("Unit"), _) => ()
       case (Primitive(n0), Primitive(n1)) if n0 == "Int" && n1 == "Num" => ()
       case (Function(l0, r0), Function(l1, r1)) =>
         constrain(l1, l0)
@@ -333,15 +172,35 @@ class SimpleSub(val tl: TraceLogger):
             case None => 
               log(s"Error: missing field: $n1 in $lhs")
             case Some((_, t0)) => 
-              constrain(t0, t1)
+              (t0, t1) match
+                case (SpecialisableType(specPoint, underlying), concrete) if isConcreteType(concrete) =>
+                  log(s"Record field: recording concrete type ${concrete} for specialisation point ${specPoint.paramSym.nme}")
+                  specPoint.addConcrete(concrete)
+                  constrain(underlying, concrete)
+                case _ => constrain(t0, t1)
         }
       case (Variable(lhs), Variable(rhs)) if lhs == rhs => ()
       case (Variable(lhs), rhs) =>
         lhs.upperBounds = rhs :: lhs.upperBounds
         lhs.lowerBounds.foreach(constrain(_, rhs))
+        
+        specialisationPoints.values.foreach { specPoint =>
+          if specPoint.typeVars.contains(lhs) && isConcreteType(rhs) then
+            log(s"Variable ${lhs.uniqueName} tracked by ${specPoint.paramSym.nme} now bound to concrete type $rhs")
+            specPoint.addConcrete(rhs)
+        }
+        
       case (lhs, Variable(rhs)) =>
         rhs.lowerBounds = lhs :: rhs.lowerBounds
         rhs.upperBounds.foreach(constrain(lhs, _))
+        
+        if isConcreteType(lhs) then
+          specialisationPoints.values.foreach { specPoint =>
+            if specPoint.typeVars.contains(rhs) then
+              log(s"Variable ${rhs.uniqueName} tracked by ${specPoint.paramSym.nme} now has concrete lower bound $lhs")
+              specPoint.addConcrete(lhs)
+          }
+          
       case (ClassType(info), Record(fields)) =>
         fields.foreach { case (fieldName, fieldType) =>
           info.members.get(fieldName).orElse(info.fields.get(fieldName)) match
@@ -431,7 +290,28 @@ class SimpleSub(val tl: TraceLogger):
               case _ => freshVar
           case _ => term(rhs)
         
-        constrain(lhsType, Function(rhsType, resultType))
+        log(s"Application: constraining $lhsType and $rhsType")
+        
+        lhsType match
+          case Function(Record(namedParams), retType) =>
+            rhsType match
+              case Record(numericFields) if numericFields.forall(_._1.startsWith("_")) && 
+                                           namedParams.length == numericFields.length =>
+                log(s"Handling application with named parameters and positional arguments")
+                namedParams.zip(numericFields).foreach { 
+                  case ((paramName, paramType), (_, argType)) =>
+                    constrain(argType, paramType)
+                    
+                    (paramType, argType) match
+                      case (SpecialisableType(specPoint, _), concrete) if isConcreteType(concrete) =>
+                        log(s"Direct arg flow: recording concrete type ${concrete} for specialisation point ${specPoint.paramSym.nme}")
+                        specPoint.addConcrete(concrete)
+                      case _ => ()
+                }
+                constrain(retType, resultType)
+              case _ => constrain(lhsType, Function(rhsType, resultType))
+          case _ => constrain(lhsType, Function(rhsType, resultType))
+          
         resultType
       
       case New(cls, args, _) =>
@@ -584,8 +464,21 @@ class SimpleSub(val tl: TraceLogger):
         val paramTypes = td.params.flatMap(paramList => 
           paramList.params.map(param => {
             val paramType = freshVar
-            log(s"Assigned type ${paramType} to parameter ${param.sym.nme}")
-            param.sym -> paramType
+            
+            val isSpecialised = param.flags.spec
+            log(s"Parameter ${param.sym.nme} of function ${td.sym.nme} has spec=${isSpecialised}")
+            
+            val finalType = if isSpecialised then
+              val specPoint = specialisationPoints.getOrElseUpdate(
+                param.sym, 
+                SpecPoint(param.sym, td.sym)
+              )
+              SpecialisableType(specPoint, paramType)
+            else
+              paramType
+              
+            log(s"Assigned type ${finalType} to parameter ${param.sym.nme}")
+            param.sym -> finalType
           })
         ).toMap
         
@@ -617,12 +510,27 @@ class SimpleSub(val tl: TraceLogger):
 
       case _ => // Skip other statements
     }
+
+    b.stats.foreach {
+      case t: Term => term(t)(using currentCtx)
+      case _ => // Skip other statements
+    }
     term(b.res)(using currentCtx)
   
-  def analyzeTermTypes(t: Term)(using state: Elaborator.State): Unit =
+  def analyzeTermTypes(t: Term): Unit =
     val ctx = initialContext
     val resultType = term(t)(using ctx)
     log(s"Result type: ${coalesceType(resultType)}")
+    
+    specialisationPoints.values.foreach(_.updateFromVars())
+    
+    if specialisationPoints.nonEmpty then
+      log("=== Specialisation Opportunities ===")
+      specialisationPoints.values.foreach { specPoint =>
+        if specPoint.concreteTypes.nonEmpty then
+          log(specPoint.toString)
+      }
+      log("====================================")
   
   def coalesceType(ty: SimpleType): String =
     val recursive = mutable.Map[(VariableState, Boolean), String]()
@@ -636,6 +544,9 @@ class SimpleSub(val tl: TraceLogger):
         }.mkString("{ ", "; ", " }")
       
       case ClassType(info) => info.toString
+      
+      case SpecialisableType(_, underlying) => 
+        s"spec(${go(underlying, polar, inProcess)})"
       
       case Variable(vs) =>
         val vs_pol = vs -> polar

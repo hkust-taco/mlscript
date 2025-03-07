@@ -16,6 +16,7 @@ s.inner
 //│ ❁ Type for member:Simple#666: ('l -> class Simple { val x: 'l; inner: 'l })
 //│ Typing term: 1
 //│ ❁ Type for 1: Int
+//│ Application: constraining ('l -> class Simple { val x: 'l; inner: 'l }) and Int
 //│ Constraining ('l -> class Simple { val x: 'l; inner: 'l }) <: (Int -> 'm)
 //│ Constraining Int <: 'l
 //│ Constraining class Simple { val x: 'l; inner: 'l } <: 'm
@@ -55,6 +56,7 @@ Some(1).unwrap
 //│ ❁ Type for member:Some#666: ('l -> class Some { val x: 'l; unwrap: 'l })
 //│ Typing term: 1
 //│ ❁ Type for 1: Int
+//│ Application: constraining ('l -> class Some { val x: 'l; unwrap: 'l }) and Int
 //│ Constraining ('l -> class Some { val x: 'l; unwrap: 'l }) <: (Int -> 'm)
 //│ Constraining Int <: 'l
 //│ Constraining class Some { val x: 'l; unwrap: 'l } <: 'm
@@ -88,6 +90,7 @@ id(a)
 //│ ❁ Type for member:Some#666: ('l -> class Some { val value: 'l })
 //│ Typing term: 1
 //│ ❁ Type for 1: Int
+//│ Application: constraining ('l -> class Some { val value: 'l }) and Int
 //│ Constraining ('l -> class Some { val value: 'l }) <: (Int -> 'n)
 //│ Constraining Int <: 'l
 //│ Constraining class Some { val value: 'l } <: 'n
@@ -95,6 +98,7 @@ id(a)
 //│ Constraining 'n <: 'm
 //│ Constraining class Some { val value: 'l } <: 'm
 //│ Processing function definition: id
+//│ Parameter x of function id has spec=false
 //│ Assigned type 'o to parameter x
 //│ Typing term: x#666
 //│ Looking up symbol reference: x
@@ -111,6 +115,7 @@ id(a)
 //│ Looking up symbol reference: a
 //│ Found type for a: 'n
 //│ ❁ Type for a#666: class Some { val value: 'l }
+//│ Application: constraining ('o -> 'o) and 'n
 //│ Constraining ('o -> 'o) <: ('n -> 'p)
 //│ Constraining 'n <: 'o
 //│ Constraining class Some { val value: 'l } <: 'o
@@ -133,7 +138,9 @@ fun (::) cons[T](head: T, tail: List[T]) = Cons(head, tail)
 //│ Processing class: Nil
 //│ Processing class: Cons
 //│ Processing function definition: cons
+//│ Parameter head of function cons has spec=false
 //│ Assigned type 'n to parameter head
+//│ Parameter tail of function cons has spec=false
 //│ Assigned type 'o to parameter tail
 //│ Typing term: member:Cons#666(head#666, tail#666)
 //│ Typing term: member:Cons#666
@@ -148,10 +155,10 @@ fun (::) cons[T](head: T, tail: List[T]) = Cons(head, tail)
 //│ Looking up symbol reference: tail
 //│ Found type for tail: 'o
 //│ ❁ Type for tail#666: 'o
-//│ Constraining ({ head: 'l; tail: 'm } -> class Cons { val head: 'l, val tail: 'm }) <: ({ _0: 'n; _1: 'o } -> 'p)
-//│ Constraining { _0: 'n; _1: 'o } <: { head: 'l; tail: 'm }
-//│ Error: missing field: head in { _0: 'n; _1: 'o }
-//│ Error: missing field: tail in { _0: 'n; _1: 'o }
+//│ Application: constraining ({ head: 'l; tail: 'm } -> class Cons { val head: 'l, val tail: 'm }) and { _0: 'n; _1: 'o }
+//│ Handling application with named parameters and positional arguments
+//│ Constraining 'n <: 'l
+//│ Constraining 'o <: 'm
 //│ Constraining class Cons { val head: 'l, val tail: 'm } <: 'p
 //│ ❁ Type for member:Cons#666(head#666, tail#666): class Cons { val head: 'l, val tail: 'm }
 //│ Function cons body has type: 'p
@@ -160,21 +167,21 @@ fun (::) cons[T](head: T, tail: List[T]) = Cons(head, tail)
 //│ Typing term: member:cons#666
 //│ Looking up symbol reference: cons
 //│ Found type for cons: ({ head: 'n; tail: 'o } -> 'p)
-//│ ❁ Type for member:cons#666: ({ head: 'n; tail: 'o } -> class Cons { val head: 'l, val tail: 'm })
+//│ ❁ Type for member:cons#666: ({ head: 'l; tail: 'm } -> class Cons { val head: 'l, val tail: 'm })
 //│ Typing term: 1
 //│ ❁ Type for 1: Int
 //│ Typing term: member:cons#666(2, member:cons#666(3, member:Nil#666))
 //│ Typing term: member:cons#666
 //│ Looking up symbol reference: cons
 //│ Found type for cons: ({ head: 'n; tail: 'o } -> 'p)
-//│ ❁ Type for member:cons#666: ({ head: 'n; tail: 'o } -> class Cons { val head: 'l, val tail: 'm })
+//│ ❁ Type for member:cons#666: ({ head: 'l; tail: 'm } -> class Cons { val head: 'l, val tail: 'm })
 //│ Typing term: 2
 //│ ❁ Type for 2: Int
 //│ Typing term: member:cons#666(3, member:Nil#666)
 //│ Typing term: member:cons#666
 //│ Looking up symbol reference: cons
 //│ Found type for cons: ({ head: 'n; tail: 'o } -> 'p)
-//│ ❁ Type for member:cons#666: ({ head: 'n; tail: 'o } -> class Cons { val head: 'l, val tail: 'm })
+//│ ❁ Type for member:cons#666: ({ head: 'l; tail: 'm } -> class Cons { val head: 'l, val tail: 'm })
 //│ Typing term: 3
 //│ ❁ Type for 3: Int
 //│ Typing term: member:Nil#666
@@ -182,24 +189,32 @@ fun (::) cons[T](head: T, tail: List[T]) = Cons(head, tail)
 //│ Found type for Nil: class Nil {  }
 //│ Using class Nil as a value
 //│ ❁ Type for member:Nil#666: class Nil {  }
-//│ Constraining ({ head: 'n; tail: 'o } -> 'p) <: ({ _0: Int; _1: class Nil {  } } -> 's)
-//│ Constraining { _0: Int; _1: class Nil {  } } <: { head: 'n; tail: 'o }
-//│ Error: missing field: head in { _0: Int; _1: class Nil {  } }
-//│ Error: missing field: tail in { _0: Int; _1: class Nil {  } }
+//│ Application: constraining ({ head: 'n; tail: 'o } -> 'p) and { _0: Int; _1: class Nil {  } }
+//│ Handling application with named parameters and positional arguments
+//│ Constraining Int <: 'n
+//│ Constraining Int <: 'l
+//│ Constraining class Nil {  } <: 'o
+//│ Constraining class Nil {  } <: 'm
 //│ Constraining 'p <: 's
 //│ Constraining class Cons { val head: 'l, val tail: 'm } <: 's
 //│ ❁ Type for member:cons#666(3, member:Nil#666): class Cons { val head: 'l, val tail: 'm }
-//│ Constraining ({ head: 'n; tail: 'o } -> 'p) <: ({ _0: Int; _1: 's } -> 'r)
-//│ Constraining { _0: Int; _1: 's } <: { head: 'n; tail: 'o }
-//│ Error: missing field: head in { _0: Int; _1: 's }
-//│ Error: missing field: tail in { _0: Int; _1: 's }
+//│ Application: constraining ({ head: 'n; tail: 'o } -> 'p) and { _0: Int; _1: 's }
+//│ Handling application with named parameters and positional arguments
+//│ Constraining Int <: 'n
+//│ Constraining Int <: 'l
+//│ Constraining 's <: 'o
+//│ Constraining class Cons { val head: 'l, val tail: 'm } <: 'o
+//│ Constraining class Cons { val head: 'l, val tail: 'm } <: 'm
 //│ Constraining 'p <: 'r
 //│ Constraining class Cons { val head: 'l, val tail: 'm } <: 'r
 //│ ❁ Type for member:cons#666(2, member:cons#666(3, member:Nil#666)): class Cons { val head: 'l, val tail: 'm }
-//│ Constraining ({ head: 'n; tail: 'o } -> 'p) <: ({ _0: Int; _1: 'r } -> 'q)
-//│ Constraining { _0: Int; _1: 'r } <: { head: 'n; tail: 'o }
-//│ Error: missing field: head in { _0: Int; _1: 'r }
-//│ Error: missing field: tail in { _0: Int; _1: 'r }
+//│ Application: constraining ({ head: 'n; tail: 'o } -> 'p) and { _0: Int; _1: 'r }
+//│ Handling application with named parameters and positional arguments
+//│ Constraining Int <: 'n
+//│ Constraining Int <: 'l
+//│ Constraining 'r <: 'o
+//│ Constraining class Cons { val head: 'l, val tail: 'm } <: 'o
+//│ Constraining class Cons { val head: 'l, val tail: 'm } <: 'm
 //│ Constraining 'p <: 'q
 //│ Constraining class Cons { val head: 'l, val tail: 'm } <: 'q
 //│ ❁ Type for member:cons#666(1, member:cons#666(2, member:cons#666(3, member:Nil#666))): class Cons { val head: 'l, val tail: 'm }

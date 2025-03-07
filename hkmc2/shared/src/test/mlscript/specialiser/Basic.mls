@@ -2,31 +2,43 @@
 
 
 :ds
-fun id(x) = x
+:sjs
+fun id(spec x) = x
 id(1)
-//│ Typing term: { ‹› fun member:id(Param(‹›,x,None), ) = x#666; member:id#666(1) }
+//│ Typing term: { ‹› fun member:id(Param(‹spec›,x,None), ) = x#666; member:id#666(1) }
 //│ Processing function definition: id
-//│ Assigned type 'l to parameter x
+//│ Parameter x of function id has spec=true
+//│ Assigned type spec['l] to parameter x
 //│ Typing term: x#666
 //│ Looking up symbol reference: x
-//│ Found type for x: 'l
-//│ ❁ Type for x#666: 'l
-//│ Function id body has type: 'l
-//│ Function id has type: ('l -> 'l)
+//│ Found type for x: spec['l]
+//│ ❁ Type for x#666: spec('l)
+//│ Function id body has type: spec['l]
+//│ Function id has type: (spec['l] -> spec['l])
 //│ Typing term: member:id#666(1)
 //│ Typing term: member:id#666
 //│ Looking up symbol reference: id
-//│ Found type for id: ('l -> 'l)
-//│ ❁ Type for member:id#666: ('l -> 'l)
+//│ Found type for id: (spec['l] -> spec['l])
+//│ ❁ Type for member:id#666: (spec('l) -> spec('l))
 //│ Typing term: 1
 //│ ❁ Type for 1: Int
-//│ Constraining ('l -> 'l) <: (Int -> 'm)
+//│ Application: constraining (spec['l] -> spec['l]) and Int
+//│ Constraining (spec['l] -> spec['l]) <: (Int -> 'm)
+//│ Constraining Int <: spec['l]
+//│ Recording concrete type Int for specialisation point x
+//│ Adding concrete type Int to spec point x
 //│ Constraining Int <: 'l
+//│ Constraining spec['l] <: 'm
 //│ Constraining 'l <: 'm
 //│ Constraining Int <: 'm
 //│ ❁ Type for member:id#666(1): Int
-//│ ❁ Type for { ‹› fun member:id(Param(‹›,x,None), ) = x#666; member:id#666(1) }: Int
+//│ ❁ Type for { ‹› fun member:id(Param(‹spec›,x,None), ) = x#666; member:id#666(1) }: Int
 //│ Result type: Int
+//│ === Specialisation Opportunities ===
+//│ x in id can be specialised for: [Int]
+//│ ====================================
+//│ JS (unsanitized):
+//│ let id; id = function id(x) { return x }; id(1)
 //│ = 1
 
 
@@ -78,6 +90,7 @@ even(2)
 //│ Processing class: Even
 //│ Processing class: Odd
 //│ Processing function definition: even
+//│ Parameter x of function even has spec=false
 //│ Assigned type 'l to parameter x
 //│ Typing term: if { let $scrut = builtin:==#0(builtin:%#0(x#666, 2), 0); scrut is true -> { else member:Even#666 }; else member:Odd#666 }
 //│ Typing if-like expression with keyword: keyword 'if'
@@ -98,16 +111,16 @@ even(2)
 //│ ❁ Type for x#666: 'l
 //│ Typing term: 2
 //│ ❁ Type for 2: Int
-//│ Constraining ({ _0: Num; _1: Num } -> Num) <: ({ _0: 'l; _1: Int } -> 'n)
-//│ Constraining { _0: 'l; _1: Int } <: { _0: Num; _1: Num }
+//│ Application: constraining ({ _0: Num; _1: Num } -> Num) and { _0: 'l; _1: Int }
+//│ Handling application with named parameters and positional arguments
 //│ Constraining 'l <: Num
 //│ Constraining Int <: Num
 //│ Constraining Num <: 'n
 //│ ❁ Type for builtin:%#0(x#666, 2): Num
 //│ Typing term: 0
 //│ ❁ Type for 0: Int
-//│ Constraining ({ _0: 'd; _1: 'd } -> Bool) <: ({ _0: 'n; _1: Int } -> 'm)
-//│ Constraining { _0: 'n; _1: Int } <: { _0: 'd; _1: 'd }
+//│ Application: constraining ({ _0: 'd; _1: 'd } -> Bool) and { _0: 'n; _1: Int }
+//│ Handling application with named parameters and positional arguments
 //│ Constraining 'n <: 'd
 //│ Constraining Num <: 'd
 //│ Constraining Int <: 'd
@@ -146,6 +159,7 @@ even(2)
 //│ ❁ Type for member:even#666: (Num -> class Odd {  } | class Even {  })
 //│ Typing term: 2
 //│ ❁ Type for 2: Int
+//│ Application: constraining ('l -> 'o) and Int
 //│ Constraining ('l -> 'o) <: (Int -> 'p)
 //│ Constraining Int <: 'l
 //│ Constraining Int <: Num
@@ -157,12 +171,121 @@ even(2)
 //│ Result type: class Even {  } | class Odd {  }
 //│ = class Even {   constructor() {}   toString() { return "Even"; } }
 
+
+:ds
+fun fac(x) = if x == 0 then 1 else x * fac(x - 1)
+fac(4)
+//│ Typing term: { ‹› fun member:fac(Param(‹›,x,None), ) = if { let $scrut = builtin:==#1(x#666, 0); scrut is true -> { else 1 }; else builtin:*#0(x#666, member:fac#666(builtin:-#0(x#666, 1))) }; member:fac#666(4) }
+//│ Processing function definition: fac
+//│ Parameter x of function fac has spec=false
+//│ Assigned type 'l to parameter x
+//│ Typing term: if { let $scrut = builtin:==#1(x#666, 0); scrut is true -> { else 1 }; else builtin:*#0(x#666, member:fac#666(builtin:-#0(x#666, 1))) }
+//│ Typing if-like expression with keyword: keyword 'if'
+//│ Processing let binding in conditional: scrut
+//│ Typing term: builtin:==#1(x#666, 0)
+//│ Typing term: builtin:==#1
+//│ Looking up symbol reference: ==
+//│ Found type for ==: ({ _0: 'd; _1: 'd } -> Bool)
+//│ ❁ Type for builtin:==#1: ({ _0: 'd; _1: 'd } -> Bool)
+//│ Typing term: x#666
+//│ Looking up symbol reference: x
+//│ Found type for x: 'l
+//│ ❁ Type for x#666: 'l
+//│ Typing term: 0
+//│ ❁ Type for 0: Int
+//│ Application: constraining ({ _0: 'd; _1: 'd } -> Bool) and { _0: 'l; _1: Int }
+//│ Handling application with named parameters and positional arguments
+//│ Constraining 'l <: 'd
+//│ Constraining Int <: 'd
+//│ Constraining Bool <: 'm
+//│ ❁ Type for builtin:==#1(x#666, 0): Bool
+//│ Typing term: if { scrut is true -> { else 1 }; else builtin:*#0(x#666, member:fac#666(builtin:-#0(x#666, 1))) }
+//│ Typing if-like expression with keyword: keyword 'if'
+//│ Typing term: $scrut#0
+//│ Looking up symbol reference: scrut
+//│ Found type for scrut: 'm
+//│ ❁ Type for $scrut#0: Bool
+//│ Constraining 'm <: Bool
+//│ Constraining Bool <: Bool
+//│ Processing else branch
+//│ Typing term: 1
+//│ ❁ Type for 1: Int
+//│ Processing else branch
+//│ Typing term: builtin:*#0(x#666, member:fac#666(builtin:-#0(x#666, 1)))
+//│ Typing term: builtin:*#0
+//│ Looking up symbol reference: *
+//│ Found type for *: ({ _0: Num; _1: Num } -> Num)
+//│ ❁ Type for builtin:*#0: ({ _0: Num; _1: Num } -> Num)
+//│ Typing term: x#666
+//│ Looking up symbol reference: x
+//│ Found type for x: 'l
+//│ ❁ Type for x#666: 'l
+//│ Typing term: member:fac#666(builtin:-#0(x#666, 1))
+//│ Typing term: member:fac#666
+//│ Looking up symbol reference: fac
+//│ Found type for fac: 'p
+//│ ❁ Type for member:fac#666: 'p
+//│ Typing term: builtin:-#0(x#666, 1)
+//│ Typing term: builtin:-#0
+//│ Looking up symbol reference: -
+//│ Found type for -: ({ _0: Num; _1: Num } -> Num)
+//│ ❁ Type for builtin:-#0: ({ _0: Num; _1: Num } -> Num)
+//│ Typing term: x#666
+//│ Looking up symbol reference: x
+//│ Found type for x: 'l
+//│ ❁ Type for x#666: 'l
+//│ Typing term: 1
+//│ ❁ Type for 1: Int
+//│ Application: constraining ({ _0: Num; _1: Num } -> Num) and { _0: 'l; _1: Int }
+//│ Handling application with named parameters and positional arguments
+//│ Constraining 'l <: Num
+//│ Constraining Int <: Num
+//│ Constraining Num <: 'q
+//│ ❁ Type for builtin:-#0(x#666, 1): Num
+//│ Application: constraining 'p and 'q
+//│ Constraining 'p <: ('q -> 'o)
+//│ ❁ Type for member:fac#666(builtin:-#0(x#666, 1)): 'o
+//│ Application: constraining ({ _0: Num; _1: Num } -> Num) and { _0: 'l; _1: 'o }
+//│ Handling application with named parameters and positional arguments
+//│ Constraining 'l <: Num
+//│ Constraining 'o <: Num
+//│ Constraining Num <: 'n
+//│ ❁ Type for builtin:*#0(x#666, member:fac#666(builtin:-#0(x#666, 1))): Num
+//│ Constraining Int <: 'r
+//│ Constraining 'n <: 'r
+//│ Constraining Num <: 'r
+//│ ❁ Type for if { scrut is true -> { else 1 }; else builtin:*#0(x#666, member:fac#666(builtin:-#0(x#666, 1))) }: Num | Int
+//│ ❁ Type for if { let $scrut = builtin:==#1(x#666, 0); scrut is true -> { else 1 }; else builtin:*#0(x#666, member:fac#666(builtin:-#0(x#666, 1))) }: Num | Int
+//│ Function fac body has type: 'r
+//│ Function fac has type: ('l -> 'r)
+//│ Typing term: member:fac#666(4)
+//│ Typing term: member:fac#666
+//│ Looking up symbol reference: fac
+//│ Found type for fac: ('l -> 'r)
+//│ ❁ Type for member:fac#666: (Num & Num & 'd -> Num | Int)
+//│ Typing term: 4
+//│ ❁ Type for 4: Int
+//│ Application: constraining ('l -> 'r) and Int
+//│ Constraining ('l -> 'r) <: (Int -> 's)
+//│ Constraining Int <: 'l
+//│ Constraining Int <: Num
+//│ Constraining Int <: 'd
+//│ Constraining 'r <: 's
+//│ Constraining Num <: 's
+//│ Constraining Int <: 's
+//│ ❁ Type for member:fac#666(4): Int | Num
+//│ ❁ Type for { ‹› fun member:fac(Param(‹›,x,None), ) = if { let $scrut = builtin:==#1(x#666, 0); scrut is true -> { else 1 }; else builtin:*#0(x#666, member:fac#666(builtin:-#0(x#666, 1))) }; member:fac#666(4) }: Int | Num
+//│ Result type: Int | Num
+//│ = 24
+
 :ds
 fun addc(x)(y) = x + y
 addc
 //│ Typing term: { ‹› fun member:addc(Param(‹›,x,None), )(Param(‹›,y,None), ) = builtin:+#0(x#666, y#666); member:addc#666 }
 //│ Processing function definition: addc
+//│ Parameter x of function addc has spec=false
 //│ Assigned type 'l to parameter x
+//│ Parameter y of function addc has spec=false
 //│ Assigned type 'm to parameter y
 //│ Typing term: builtin:+#0(x#666, y#666)
 //│ Typing term: builtin:+#0
@@ -177,8 +300,8 @@ addc
 //│ Looking up symbol reference: y
 //│ Found type for y: 'm
 //│ ❁ Type for y#666: 'm
-//│ Constraining ({ _0: Num; _1: Num } -> Num) <: ({ _0: 'l; _1: 'm } -> 'n)
-//│ Constraining { _0: 'l; _1: 'm } <: { _0: Num; _1: Num }
+//│ Application: constraining ({ _0: Num; _1: Num } -> Num) and { _0: 'l; _1: 'm }
+//│ Handling application with named parameters and positional arguments
 //│ Constraining 'l <: Num
 //│ Constraining 'm <: Num
 //│ Constraining Num <: 'n
@@ -198,7 +321,9 @@ fun addc(x)(y) = x + y
 addc(1)
 //│ Typing term: { ‹› fun member:addc(Param(‹›,x,None), )(Param(‹›,y,None), ) = builtin:+#1(x#666, y#666); member:addc#666(1) }
 //│ Processing function definition: addc
+//│ Parameter x of function addc has spec=false
 //│ Assigned type 'l to parameter x
+//│ Parameter y of function addc has spec=false
 //│ Assigned type 'm to parameter y
 //│ Typing term: builtin:+#1(x#666, y#666)
 //│ Typing term: builtin:+#1
@@ -213,8 +338,8 @@ addc(1)
 //│ Looking up symbol reference: y
 //│ Found type for y: 'm
 //│ ❁ Type for y#666: 'm
-//│ Constraining ({ _0: Num; _1: Num } -> Num) <: ({ _0: 'l; _1: 'm } -> 'n)
-//│ Constraining { _0: 'l; _1: 'm } <: { _0: Num; _1: Num }
+//│ Application: constraining ({ _0: Num; _1: Num } -> Num) and { _0: 'l; _1: 'm }
+//│ Handling application with named parameters and positional arguments
 //│ Constraining 'l <: Num
 //│ Constraining 'm <: Num
 //│ Constraining Num <: 'n
@@ -228,6 +353,7 @@ addc(1)
 //│ ❁ Type for member:addc#666: (Num -> (Num -> Num))
 //│ Typing term: 1
 //│ ❁ Type for 1: Int
+//│ Application: constraining ('l -> ('m -> 'n)) and Int
 //│ Constraining ('l -> ('m -> 'n)) <: (Int -> 'o)
 //│ Constraining Int <: 'l
 //│ Constraining Int <: Num
@@ -259,29 +385,30 @@ x
 :ds
 val x = 1 == 1
 x
-//│ Typing term: { ‹› val member:x = builtin:==#1(1, 1); member:x#666 }
+//│ Typing term: { ‹› val member:x = builtin:==#2(1, 1); member:x#666 }
 //│ Processing function definition: x
-//│ Typing term: builtin:==#1(1, 1)
-//│ Typing term: builtin:==#1
+//│ Typing term: builtin:==#2(1, 1)
+//│ Typing term: builtin:==#2
 //│ Looking up symbol reference: ==
 //│ Found type for ==: ({ _0: 'd; _1: 'd } -> Bool)
-//│ ❁ Type for builtin:==#1: ({ _0: 'd; _1: 'd } -> Bool)
+//│ ❁ Type for builtin:==#2: ({ _0: 'd; _1: 'd } -> Bool)
 //│ Typing term: 1
 //│ ❁ Type for 1: Int
 //│ Typing term: 1
 //│ ❁ Type for 1: Int
-//│ Constraining ({ _0: 'd; _1: 'd } -> Bool) <: ({ _0: Int; _1: Int } -> 'l)
-//│ Constraining { _0: Int; _1: Int } <: { _0: 'd; _1: 'd }
+//│ Application: constraining ({ _0: 'd; _1: 'd } -> Bool) and { _0: Int; _1: Int }
+//│ Handling application with named parameters and positional arguments
+//│ Constraining Int <: 'd
 //│ Constraining Int <: 'd
 //│ Constraining Bool <: 'l
-//│ ❁ Type for builtin:==#1(1, 1): Bool
+//│ ❁ Type for builtin:==#2(1, 1): Bool
 //│ Function x body has type: 'l
 //│ Function x has type: 'l
 //│ Typing term: member:x#666
 //│ Looking up symbol reference: x
 //│ Found type for x: 'l
 //│ ❁ Type for member:x#666: Bool
-//│ ❁ Type for { ‹› val member:x = builtin:==#1(1, 1); member:x#666 }: Bool
+//│ ❁ Type for { ‹› val member:x = builtin:==#2(1, 1); member:x#666 }: Bool
 //│ Result type: Bool
 //│ = true
 //│ x = true
@@ -300,8 +427,9 @@ x
 //│ ❁ Type for 1: Int
 //│ Typing term: 1
 //│ ❁ Type for 1: Int
-//│ Constraining ({ _0: Num; _1: Num } -> Num) <: ({ _0: Int; _1: Int } -> 'l)
-//│ Constraining { _0: Int; _1: Int } <: { _0: Num; _1: Num }
+//│ Application: constraining ({ _0: Num; _1: Num } -> Num) and { _0: Int; _1: Int }
+//│ Handling application with named parameters and positional arguments
+//│ Constraining Int <: Num
 //│ Constraining Int <: Num
 //│ Constraining Num <: 'l
 //│ ❁ Type for builtin:+#2(1, 1): Num
@@ -316,3 +444,510 @@ x
 //│ = 2
 //│ x = 2
 
+:ds
+:elt
+fun add(spec x, spec y) = x + y
+add(1, 2)
+//│ Elaborated tree:
+//│ Blk:
+//│   stats = Ls of 
+//│     TermDefinition:
+//│       owner = N
+//│       k = Fun
+//│       sym = member:add
+//│       params = Ls of 
+//│         ParamList:
+//│           flags = ParamListFlags of false
+//│           params = Ls of 
+//│             Param:
+//│               flags = (spec)
+//│               sym = x
+//│               sign = N
+//│             Param:
+//│               flags = (spec)
+//│               sym = y
+//│               sign = N
+//│           restParam = N
+//│       tparams = N
+//│       sign = N
+//│       body = S of App:
+//│         lhs = Ref of builtin:+
+//│         rhs = Tup of Ls of 
+//│           Fld:
+//│             flags = ()
+//│             term = Ref of x
+//│             asc = N
+//│           Fld:
+//│             flags = ()
+//│             term = Ref of y
+//│             asc = N
+//│       resSym = ‹result of member:add›
+//│       flags = ()
+//│       annotations = Nil
+//│   res = App:
+//│     lhs = Ref of member:add
+//│     rhs = Tup of Ls of 
+//│       Fld:
+//│         flags = ()
+//│         term = Lit of IntLit of 1
+//│         asc = N
+//│       Fld:
+//│         flags = ()
+//│         term = Lit of IntLit of 2
+//│         asc = N
+//│ Typing term: { ‹› fun member:add(Param(‹spec›,x,None), Param(‹spec›,y,None), ) = builtin:+#3(x#666, y#666); member:add#666(1, 2) }
+//│ Processing function definition: add
+//│ Parameter x of function add has spec=true
+//│ Assigned type spec['l] to parameter x
+//│ Parameter y of function add has spec=true
+//│ Assigned type spec['m] to parameter y
+//│ Typing term: builtin:+#3(x#666, y#666)
+//│ Typing term: builtin:+#3
+//│ Looking up symbol reference: +
+//│ Found type for +: ({ _0: Num; _1: Num } -> Num)
+//│ ❁ Type for builtin:+#3: ({ _0: Num; _1: Num } -> Num)
+//│ Typing term: x#666
+//│ Looking up symbol reference: x
+//│ Found type for x: spec['l]
+//│ ❁ Type for x#666: spec('l)
+//│ Typing term: y#666
+//│ Looking up symbol reference: y
+//│ Found type for y: spec['m]
+//│ ❁ Type for y#666: spec('m)
+//│ Application: constraining ({ _0: Num; _1: Num } -> Num) and { _0: spec['l]; _1: spec['m] }
+//│ Handling application with named parameters and positional arguments
+//│ Constraining spec['l] <: Num
+//│ Constraining 'l <: Num
+//│ Constraining spec['m] <: Num
+//│ Constraining 'm <: Num
+//│ Constraining Num <: 'n
+//│ ❁ Type for builtin:+#3(x#666, y#666): Num
+//│ Function add body has type: 'n
+//│ Function add has type: ({ x: spec['l]; y: spec['m] } -> 'n)
+//│ Typing term: member:add#666(1, 2)
+//│ Typing term: member:add#666
+//│ Looking up symbol reference: add
+//│ Found type for add: ({ x: spec['l]; y: spec['m] } -> 'n)
+//│ ❁ Type for member:add#666: ({ x: spec(Num); y: spec(Num) } -> Num)
+//│ Typing term: 1
+//│ ❁ Type for 1: Int
+//│ Typing term: 2
+//│ ❁ Type for 2: Int
+//│ Application: constraining ({ x: spec['l]; y: spec['m] } -> 'n) and { _0: Int; _1: Int }
+//│ Handling application with named parameters and positional arguments
+//│ Constraining Int <: spec['l]
+//│ Recording concrete type Int for specialisation point x
+//│ Adding concrete type Int to spec point x
+//│ Constraining Int <: 'l
+//│ Constraining Int <: Num
+//│ Direct arg flow: recording concrete type Int for specialisation point x
+//│ Adding concrete type Int to spec point x
+//│ Constraining Int <: spec['m]
+//│ Recording concrete type Int for specialisation point y
+//│ Adding concrete type Int to spec point y
+//│ Constraining Int <: 'm
+//│ Constraining Int <: Num
+//│ Direct arg flow: recording concrete type Int for specialisation point y
+//│ Adding concrete type Int to spec point y
+//│ Constraining 'n <: 'o
+//│ Constraining Num <: 'o
+//│ ❁ Type for member:add#666(1, 2): Num
+//│ ❁ Type for { ‹› fun member:add(Param(‹spec›,x,None), Param(‹spec›,y,None), ) = builtin:+#3(x#666, y#666); member:add#666(1, 2) }: Num
+//│ Result type: Num
+//│ === Specialisation Opportunities ===
+//│ x in add can be specialised for: [Int]
+//│ y in add can be specialised for: [Int]
+//│ ====================================
+//│ = 3
+
+:ds
+fun id(spec x) = x
+id(1)
+id("Str")
+//│ Typing term: { ‹› fun member:id(Param(‹spec›,x,None), ) = x#666; member:id#666(1); member:id#666("Str") }
+//│ Processing function definition: id
+//│ Parameter x of function id has spec=true
+//│ Assigned type spec['l] to parameter x
+//│ Typing term: x#666
+//│ Looking up symbol reference: x
+//│ Found type for x: spec['l]
+//│ ❁ Type for x#666: spec('l)
+//│ Function id body has type: spec['l]
+//│ Function id has type: (spec['l] -> spec['l])
+//│ Typing term: member:id#666(1)
+//│ Typing term: member:id#666
+//│ Looking up symbol reference: id
+//│ Found type for id: (spec['l] -> spec['l])
+//│ ❁ Type for member:id#666: (spec('l) -> spec('l))
+//│ Typing term: 1
+//│ ❁ Type for 1: Int
+//│ Application: constraining (spec['l] -> spec['l]) and Int
+//│ Constraining (spec['l] -> spec['l]) <: (Int -> 'm)
+//│ Constraining Int <: spec['l]
+//│ Recording concrete type Int for specialisation point x
+//│ Adding concrete type Int to spec point x
+//│ Constraining Int <: 'l
+//│ Constraining spec['l] <: 'm
+//│ Constraining 'l <: 'm
+//│ Constraining Int <: 'm
+//│ ❁ Type for member:id#666(1): Int
+//│ Typing term: member:id#666("Str")
+//│ Typing term: member:id#666
+//│ Looking up symbol reference: id
+//│ Found type for id: (spec['l] -> spec['l])
+//│ ❁ Type for member:id#666: (spec('m) -> spec(Int))
+//│ Typing term: "Str"
+//│ ❁ Type for "Str": Str
+//│ Application: constraining (spec['l] -> spec['l]) and Str
+//│ Constraining (spec['l] -> spec['l]) <: (Str -> 'n)
+//│ Constraining Str <: spec['l]
+//│ Recording concrete type Str for specialisation point x
+//│ Adding concrete type Str to spec point x
+//│ Constraining Str <: 'l
+//│ Constraining Str <: 'm
+//│ Constraining spec['l] <: 'n
+//│ Constraining 'l <: 'n
+//│ Constraining Str <: 'n
+//│ Constraining Int <: 'n
+//│ ❁ Type for member:id#666("Str"): Int | Str
+//│ ❁ Type for { ‹› fun member:id(Param(‹spec›,x,None), ) = x#666; member:id#666(1); member:id#666("Str") }: Int | Str
+//│ Result type: Int | Str
+//│ === Specialisation Opportunities ===
+//│ x in id can be specialised for: [Str, Int]
+//│ ====================================
+//│ = "Str"
+
+:ds
+fun foo(x) =
+    fun bar(spec y) = y
+    bar(x)
+foo(1)
+//│ Typing term: { ‹› fun member:foo(Param(‹›,x,None), ) = { ‹› fun member:bar(Param(‹spec›,y,None), ) = y#666; member:bar#666(x#666) }; member:foo#666(1) }
+//│ Processing function definition: foo
+//│ Parameter x of function foo has spec=false
+//│ Assigned type 'l to parameter x
+//│ Typing term: { ‹› fun member:bar(Param(‹spec›,y,None), ) = y#666; member:bar#666(x#666) }
+//│ Processing function definition: bar
+//│ Parameter y of function bar has spec=true
+//│ Assigned type spec['m] to parameter y
+//│ Typing term: y#666
+//│ Looking up symbol reference: y
+//│ Found type for y: spec['m]
+//│ ❁ Type for y#666: spec('m)
+//│ Function bar body has type: spec['m]
+//│ Function bar has type: (spec['m] -> spec['m])
+//│ Typing term: member:bar#666(x#666)
+//│ Typing term: member:bar#666
+//│ Looking up symbol reference: bar
+//│ Found type for bar: (spec['m] -> spec['m])
+//│ ❁ Type for member:bar#666: (spec('m) -> spec('m))
+//│ Typing term: x#666
+//│ Looking up symbol reference: x
+//│ Found type for x: 'l
+//│ ❁ Type for x#666: 'l
+//│ Application: constraining (spec['m] -> spec['m]) and 'l
+//│ Constraining (spec['m] -> spec['m]) <: ('l -> 'n)
+//│ Constraining 'l <: spec['m]
+//│ Recording variable 'l for specialisation point y
+//│ Adding var 'l to spec point y
+//│ Constraining 'l <: 'm
+//│ Constraining spec['m] <: 'n
+//│ Constraining 'm <: 'n
+//│ ❁ Type for member:bar#666(x#666): 'n
+//│ ❁ Type for { ‹› fun member:bar(Param(‹spec›,y,None), ) = y#666; member:bar#666(x#666) }: 'n
+//│ Function foo body has type: 'n
+//│ Function foo has type: ('l -> 'n)
+//│ Typing term: member:foo#666(1)
+//│ Typing term: member:foo#666
+//│ Looking up symbol reference: foo
+//│ Found type for foo: ('l -> 'n)
+//│ ❁ Type for member:foo#666: ('n -> 'n)
+//│ Typing term: 1
+//│ ❁ Type for 1: Int
+//│ Application: constraining ('l -> 'n) and Int
+//│ Constraining ('l -> 'n) <: (Int -> 'o)
+//│ Constraining Int <: 'l
+//│ Constraining Int <: 'm
+//│ Constraining Int <: 'n
+//│ Variable 'l tracked by y now has concrete lower bound Int
+//│ Adding concrete type Int to spec point y
+//│ Constraining 'n <: 'o
+//│ Constraining Int <: 'o
+//│ ❁ Type for member:foo#666(1): Int
+//│ ❁ Type for { ‹› fun member:foo(Param(‹›,x,None), ) = { ‹› fun member:bar(Param(‹spec›,y,None), ) = y#666; member:bar#666(x#666) }; member:foo#666(1) }: Int
+//│ Result type: Int
+//│ Found concrete bound Int for var 'l in spec point y
+//│ === Specialisation Opportunities ===
+//│ y in bar can be specialised for: [Int]
+//│ ====================================
+//│ = 1
+
+:ds
+fun add(spec x, spec y) = x + y
+add(1, 2)
+//│ Typing term: { ‹› fun member:add(Param(‹spec›,x,None), Param(‹spec›,y,None), ) = builtin:+#4(x#666, y#666); member:add#666(1, 2) }
+//│ Processing function definition: add
+//│ Parameter x of function add has spec=true
+//│ Assigned type spec['l] to parameter x
+//│ Parameter y of function add has spec=true
+//│ Assigned type spec['m] to parameter y
+//│ Typing term: builtin:+#4(x#666, y#666)
+//│ Typing term: builtin:+#4
+//│ Looking up symbol reference: +
+//│ Found type for +: ({ _0: Num; _1: Num } -> Num)
+//│ ❁ Type for builtin:+#4: ({ _0: Num; _1: Num } -> Num)
+//│ Typing term: x#666
+//│ Looking up symbol reference: x
+//│ Found type for x: spec['l]
+//│ ❁ Type for x#666: spec('l)
+//│ Typing term: y#666
+//│ Looking up symbol reference: y
+//│ Found type for y: spec['m]
+//│ ❁ Type for y#666: spec('m)
+//│ Application: constraining ({ _0: Num; _1: Num } -> Num) and { _0: spec['l]; _1: spec['m] }
+//│ Handling application with named parameters and positional arguments
+//│ Constraining spec['l] <: Num
+//│ Constraining 'l <: Num
+//│ Constraining spec['m] <: Num
+//│ Constraining 'm <: Num
+//│ Constraining Num <: 'n
+//│ ❁ Type for builtin:+#4(x#666, y#666): Num
+//│ Function add body has type: 'n
+//│ Function add has type: ({ x: spec['l]; y: spec['m] } -> 'n)
+//│ Typing term: member:add#666(1, 2)
+//│ Typing term: member:add#666
+//│ Looking up symbol reference: add
+//│ Found type for add: ({ x: spec['l]; y: spec['m] } -> 'n)
+//│ ❁ Type for member:add#666: ({ x: spec(Num); y: spec(Num) } -> Num)
+//│ Typing term: 1
+//│ ❁ Type for 1: Int
+//│ Typing term: 2
+//│ ❁ Type for 2: Int
+//│ Application: constraining ({ x: spec['l]; y: spec['m] } -> 'n) and { _0: Int; _1: Int }
+//│ Handling application with named parameters and positional arguments
+//│ Constraining Int <: spec['l]
+//│ Recording concrete type Int for specialisation point x
+//│ Adding concrete type Int to spec point x
+//│ Constraining Int <: 'l
+//│ Constraining Int <: Num
+//│ Direct arg flow: recording concrete type Int for specialisation point x
+//│ Adding concrete type Int to spec point x
+//│ Constraining Int <: spec['m]
+//│ Recording concrete type Int for specialisation point y
+//│ Adding concrete type Int to spec point y
+//│ Constraining Int <: 'm
+//│ Constraining Int <: Num
+//│ Direct arg flow: recording concrete type Int for specialisation point y
+//│ Adding concrete type Int to spec point y
+//│ Constraining 'n <: 'o
+//│ Constraining Num <: 'o
+//│ ❁ Type for member:add#666(1, 2): Num
+//│ ❁ Type for { ‹› fun member:add(Param(‹spec›,x,None), Param(‹spec›,y,None), ) = builtin:+#4(x#666, y#666); member:add#666(1, 2) }: Num
+//│ Result type: Num
+//│ === Specialisation Opportunities ===
+//│ x in add can be specialised for: [Int]
+//│ y in add can be specialised for: [Int]
+//│ ====================================
+//│ = 3
+
+:ds
+class Pair(a, b)
+fun foo(a) = 
+    fun pair(spec x, spec y, z) = Pair(x, y + z)
+    pair(a, 10.4, 1)
+foo(1)
+foo("Str")
+//│ Typing term: { ‹› fun member:foo(Param(‹›,a,None), ) = { ‹› fun member:pair(Param(‹spec›,x,None), Param(‹spec›,y,None), Param(‹›,z,None), ) = member:Pair#666(x#666, builtin:+#5(y#666, z#666)); member:pair#666(a#666, 10.4, 1) }; Cls PairParamList(‹›,List(Param(‹›,class:Pair.a,None), Param(‹›,class:Pair.b,None)),None) { }; member:foo#666(1); member:foo#666("Str") }
+//│ Processing class: Pair
+//│ Processing function definition: foo
+//│ Parameter a of function foo has spec=false
+//│ Assigned type 'n to parameter a
+//│ Typing term: { ‹› fun member:pair(Param(‹spec›,x,None), Param(‹spec›,y,None), Param(‹›,z,None), ) = member:Pair#666(x#666, builtin:+#5(y#666, z#666)); member:pair#666(a#666, 10.4, 1) }
+//│ Processing function definition: pair
+//│ Parameter x of function pair has spec=true
+//│ Assigned type spec['o] to parameter x
+//│ Parameter y of function pair has spec=true
+//│ Assigned type spec['p] to parameter y
+//│ Parameter z of function pair has spec=false
+//│ Assigned type 'q to parameter z
+//│ Typing term: member:Pair#666(x#666, builtin:+#5(y#666, z#666))
+//│ Typing term: member:Pair#666
+//│ Looking up symbol reference: Pair
+//│ Found type for Pair: class Pair { val a: 'l, val b: 'm }
+//│ ❁ Type for member:Pair#666: ({ a: 'l; b: 'm } -> class Pair { val a: 'l, val b: 'm })
+//│ Typing term: x#666
+//│ Looking up symbol reference: x
+//│ Found type for x: spec['o]
+//│ ❁ Type for x#666: spec('o)
+//│ Typing term: builtin:+#5(y#666, z#666)
+//│ Typing term: builtin:+#5
+//│ Looking up symbol reference: +
+//│ Found type for +: ({ _0: Num; _1: Num } -> Num)
+//│ ❁ Type for builtin:+#5: ({ _0: Num; _1: Num } -> Num)
+//│ Typing term: y#666
+//│ Looking up symbol reference: y
+//│ Found type for y: spec['p]
+//│ ❁ Type for y#666: spec('p)
+//│ Typing term: z#666
+//│ Looking up symbol reference: z
+//│ Found type for z: 'q
+//│ ❁ Type for z#666: 'q
+//│ Application: constraining ({ _0: Num; _1: Num } -> Num) and { _0: spec['p]; _1: 'q }
+//│ Handling application with named parameters and positional arguments
+//│ Constraining spec['p] <: Num
+//│ Constraining 'p <: Num
+//│ Constraining 'q <: Num
+//│ Constraining Num <: 's
+//│ ❁ Type for builtin:+#5(y#666, z#666): Num
+//│ Application: constraining ({ a: 'l; b: 'm } -> class Pair { val a: 'l, val b: 'm }) and { _0: spec['o]; _1: 's }
+//│ Handling application with named parameters and positional arguments
+//│ Constraining spec['o] <: 'l
+//│ Constraining 'o <: 'l
+//│ Constraining 's <: 'm
+//│ Constraining Num <: 'm
+//│ Constraining class Pair { val a: 'l, val b: 'm } <: 'r
+//│ ❁ Type for member:Pair#666(x#666, builtin:+#5(y#666, z#666)): class Pair { val a: 'l, val b: 'm }
+//│ Function pair body has type: 'r
+//│ Function pair has type: ({ x: spec['o]; y: spec['p]; z: 'q } -> 'r)
+//│ Typing term: member:pair#666(a#666, 10.4, 1)
+//│ Typing term: member:pair#666
+//│ Looking up symbol reference: pair
+//│ Found type for pair: ({ x: spec['o]; y: spec['p]; z: 'q } -> 'r)
+//│ ❁ Type for member:pair#666: ({ x: spec('l); y: spec(Num); z: Num } -> class Pair { val a: 'l, val b: 'm })
+//│ Typing term: a#666
+//│ Looking up symbol reference: a
+//│ Found type for a: 'n
+//│ ❁ Type for a#666: 'n
+//│ Typing term: 10.4
+//│ ❁ Type for 10.4: Num
+//│ Typing term: 1
+//│ ❁ Type for 1: Int
+//│ Application: constraining ({ x: spec['o]; y: spec['p]; z: 'q } -> 'r) and { _0: 'n; _1: Num; _2: Int }
+//│ Handling application with named parameters and positional arguments
+//│ Constraining 'n <: spec['o]
+//│ Recording variable 'n for specialisation point x
+//│ Adding var 'n to spec point x
+//│ Constraining 'n <: 'o
+//│ Constraining Num <: spec['p]
+//│ Recording concrete type Num for specialisation point y
+//│ Adding concrete type Num to spec point y
+//│ Constraining Num <: 'p
+//│ Constraining Num <: Num
+//│ Direct arg flow: recording concrete type Num for specialisation point y
+//│ Adding concrete type Num to spec point y
+//│ Constraining Int <: 'q
+//│ Constraining Int <: Num
+//│ Constraining 'r <: 't
+//│ Constraining class Pair { val a: 'l, val b: 'm } <: 't
+//│ ❁ Type for member:pair#666(a#666, 10.4, 1): class Pair { val a: 'l, val b: 'm }
+//│ ❁ Type for { ‹› fun member:pair(Param(‹spec›,x,None), Param(‹spec›,y,None), Param(‹›,z,None), ) = member:Pair#666(x#666, builtin:+#5(y#666, z#666)); member:pair#666(a#666, 10.4, 1) }: class Pair { val a: 'l, val b: 'm }
+//│ Function foo body has type: 't
+//│ Function foo has type: ('n -> 't)
+//│ Typing term: member:foo#666(1)
+//│ Typing term: member:foo#666
+//│ Looking up symbol reference: foo
+//│ Found type for foo: ('n -> 't)
+//│ ❁ Type for member:foo#666: ('l -> class Pair { val a: 'l, val b: 'm })
+//│ Typing term: 1
+//│ ❁ Type for 1: Int
+//│ Application: constraining ('n -> 't) and Int
+//│ Constraining ('n -> 't) <: (Int -> 'u)
+//│ Constraining Int <: 'n
+//│ Constraining Int <: 'o
+//│ Constraining Int <: 'l
+//│ Variable 'n tracked by x now has concrete lower bound Int
+//│ Adding concrete type Int to spec point x
+//│ Constraining 't <: 'u
+//│ Constraining class Pair { val a: 'l, val b: 'm } <: 'u
+//│ ❁ Type for member:foo#666(1): class Pair { val a: 'l, val b: 'm }
+//│ Typing term: member:foo#666("Str")
+//│ Typing term: member:foo#666
+//│ Looking up symbol reference: foo
+//│ Found type for foo: ('n -> 't)
+//│ ❁ Type for member:foo#666: ('l -> class Pair { val a: 'l, val b: 'm })
+//│ Typing term: "Str"
+//│ ❁ Type for "Str": Str
+//│ Application: constraining ('n -> 't) and Str
+//│ Constraining ('n -> 't) <: (Str -> 'v)
+//│ Constraining Str <: 'n
+//│ Constraining Str <: 'o
+//│ Constraining Str <: 'l
+//│ Variable 'n tracked by x now has concrete lower bound Str
+//│ Adding concrete type Str to spec point x
+//│ Constraining 't <: 'v
+//│ Constraining class Pair { val a: 'l, val b: 'm } <: 'v
+//│ ❁ Type for member:foo#666("Str"): class Pair { val a: 'l, val b: 'm }
+//│ ❁ Type for { ‹› fun member:foo(Param(‹›,a,None), ) = { ‹› fun member:pair(Param(‹spec›,x,None), Param(‹spec›,y,None), Param(‹›,z,None), ) = member:Pair#666(x#666, builtin:+#5(y#666, z#666)); member:pair#666(a#666, 10.4, 1) }; Cls PairParamList(‹›,List(Param(‹›,class:Pair.a,None), Param(‹›,class:Pair.b,None)),None) { }; member:foo#666(1); member:foo#666("Str") }: class Pair { val a: 'l, val b: 'm }
+//│ Result type: class Pair { val a: 'l, val b: 'm }
+//│ Found concrete bound Str for var 'n in spec point x
+//│ Found concrete bound Int for var 'n in spec point x
+//│ === Specialisation Opportunities ===
+//│ x in pair can be specialised for: [Str, Int]
+//│ y in pair can be specialised for: [Num]
+//│ ====================================
+//│ = Pair("Str", 11.4)
+
+:ds
+fun id(spec x) = x
+fun foo(spec x) = x
+id(foo(1))
+//│ Typing term: { ‹› fun member:id(Param(‹spec›,x,None), ) = x#666; ‹› fun member:foo(Param(‹spec›,x,None), ) = x#666; member:id#666(member:foo#666(1)) }
+//│ Processing function definition: id
+//│ Parameter x of function id has spec=true
+//│ Assigned type spec['l] to parameter x
+//│ Typing term: x#666
+//│ Looking up symbol reference: x
+//│ Found type for x: spec['l]
+//│ ❁ Type for x#666: spec('l)
+//│ Function id body has type: spec['l]
+//│ Function id has type: (spec['l] -> spec['l])
+//│ Processing function definition: foo
+//│ Parameter x of function foo has spec=true
+//│ Assigned type spec['m] to parameter x
+//│ Typing term: x#666
+//│ Looking up symbol reference: x
+//│ Found type for x: spec['m]
+//│ ❁ Type for x#666: spec('m)
+//│ Function foo body has type: spec['m]
+//│ Function foo has type: (spec['m] -> spec['m])
+//│ Typing term: member:id#666(member:foo#666(1))
+//│ Typing term: member:id#666
+//│ Looking up symbol reference: id
+//│ Found type for id: (spec['l] -> spec['l])
+//│ ❁ Type for member:id#666: (spec('l) -> spec('l))
+//│ Typing term: member:foo#666(1)
+//│ Typing term: member:foo#666
+//│ Looking up symbol reference: foo
+//│ Found type for foo: (spec['m] -> spec['m])
+//│ ❁ Type for member:foo#666: (spec('m) -> spec('m))
+//│ Typing term: 1
+//│ ❁ Type for 1: Int
+//│ Application: constraining (spec['m] -> spec['m]) and Int
+//│ Constraining (spec['m] -> spec['m]) <: (Int -> 'o)
+//│ Constraining Int <: spec['m]
+//│ Recording concrete type Int for specialisation point x
+//│ Adding concrete type Int to spec point x
+//│ Constraining Int <: 'm
+//│ Constraining spec['m] <: 'o
+//│ Constraining 'm <: 'o
+//│ Constraining Int <: 'o
+//│ ❁ Type for member:foo#666(1): Int
+//│ Application: constraining (spec['l] -> spec['l]) and 'o
+//│ Constraining (spec['l] -> spec['l]) <: ('o -> 'n)
+//│ Constraining 'o <: spec['l]
+//│ Recording variable 'o for specialisation point x
+//│ Adding var 'o to spec point x
+//│ Constraining 'o <: 'l
+//│ Constraining Int <: 'l
+//│ Constraining spec['l] <: 'n
+//│ Constraining 'l <: 'n
+//│ Constraining Int <: 'n
+//│ ❁ Type for member:id#666(member:foo#666(1)): Int
+//│ ❁ Type for { ‹› fun member:id(Param(‹spec›,x,None), ) = x#666; ‹› fun member:foo(Param(‹spec›,x,None), ) = x#666; member:id#666(member:foo#666(1)) }: Int
+//│ Result type: Int
+//│ Found concrete bound Int for var 'o in spec point x
+//│ === Specialisation Opportunities ===
+//│ x in foo can be specialised for: [Int]
+//│ x in id can be specialised for: [Int]
+//│ ====================================
+//│ = 1
