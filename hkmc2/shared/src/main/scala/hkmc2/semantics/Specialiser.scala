@@ -378,6 +378,43 @@ class SimpleSub(val tl: TraceLogger):
         case Tree.BoolLit(_) => BoolType
         case Tree.UnitLit(_) => UnitType
         case Tree.DecLit(_) => NumType
+
+      case ifLike @ IfLike(kw, desugared) =>
+        log(s"Typing if-like expression with keyword: $kw")
+        
+        def typeSplit(split: Split): SimpleType = split match
+          case Split.Cons(head, tail) =>
+            val Branch(scrutinee, pattern, continuation) = head
+            val scrutType = term(scrutinee)
+            
+            if kw == syntax.Keyword.`if` then constrain(scrutType, BoolType)
+            
+            pattern match
+              case Pattern.Lit(lit) if lit.isInstanceOf[Tree.BoolLit] =>
+              case _ => log(s"Pattern matching on: ${pattern.showDbg}")
+            
+            val branchType = typeSplit(continuation)
+            val tailType = typeSplit(tail)
+            val resultType = freshVar
+
+            constrain(branchType, resultType)
+            constrain(tailType, resultType)
+            resultType
+            
+          case Split.Let(sym, t, tail) =>
+            log(s"Processing let binding in conditional: ${sym.nme}")
+            val bindingType = term(t)
+            val extendedCtx = ctx + (sym -> bindingType)
+            term(IfLike(kw, tail)(tail))(using extendedCtx)
+            
+          case Split.Else(default) =>
+            log(s"Processing else branch")
+            term(default)
+            
+          case Split.End => UnitType
+        
+        val splitType = typeSplit(desugared)
+        if kw == syntax.Keyword.`while` then UnitType else splitType
       
       case app @ App(lhs, rhs) =>
         val resultType = freshVar

@@ -31,6 +31,45 @@ id(1)
 
 
 :ds
+val x = if true then 1 else "str"
+x
+//│ Typing term: { ‹› val member:x = if { let $scrut = true; scrut is true -> { else 1 }; else "str" }; member:x#666 }
+//│ Processing function definition: x
+//│ Typing term: if { let $scrut = true; scrut is true -> { else 1 }; else "str" }
+//│ Typing if-like expression with keyword: keyword 'if'
+//│ Processing let binding in conditional: scrut
+//│ Typing term: true
+//│ ❁ Type for true: Bool
+//│ Typing term: if { scrut is true -> { else 1 }; else "str" }
+//│ Typing if-like expression with keyword: keyword 'if'
+//│ Typing term: $scrut#0
+//│ Looking up symbol reference: scrut
+//│ Found type for scrut: Bool
+//│ ❁ Type for $scrut#0: Bool
+//│ Constraining Bool <: Bool
+//│ Processing else branch
+//│ Typing term: 1
+//│ ❁ Type for 1: Int
+//│ Processing else branch
+//│ Typing term: "str"
+//│ ❁ Type for "str": Str
+//│ Constraining Int <: 'l
+//│ Constraining Str <: 'l
+//│ ❁ Type for if { scrut is true -> { else 1 }; else "str" }: Str | Int
+//│ ❁ Type for if { let $scrut = true; scrut is true -> { else 1 }; else "str" }: Str | Int
+//│ Function x body has type: 'l
+//│ Function x has type: 'l
+//│ Typing term: member:x#666
+//│ Looking up symbol reference: x
+//│ Found type for x: 'l
+//│ ❁ Type for member:x#666: Str | Int
+//│ ❁ Type for { ‹› val member:x = if { let $scrut = true; scrut is true -> { else 1 }; else "str" }; member:x#666 }: Str | Int
+//│ Result type: Str | Int
+//│ = 1
+//│ x = 1
+
+
+:ds
 fun addc(x)(y) = x + y
 addc
 //│ Typing term: { ‹› fun member:addc(Param(‹›,x,None), )(Param(‹›,y,None), ) = builtin:+#0(x#666, y#666); member:addc#666 }
