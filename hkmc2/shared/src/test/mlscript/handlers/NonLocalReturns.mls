@@ -82,3 +82,41 @@ fun f() =
     print("Bad")
 f()
 //│ = 100
+
+// broken due to handler does not handle object properly
+:fixme
+:expect 100
+fun f() =
+  object A with
+    return 100
+  4
+f()
+//│ ═══[RUNTIME ERROR] Expected: '100', got: '4'
+//│ = 4
+
+:expect 100
+fun f() =
+  class A with
+    return 100
+  new A
+f()
+//│ = 100
+
+:fixme
+:expect 100
+fun f() =
+  object A with
+    (() => return 100)()
+  4
+f()
+//│ ═══[RUNTIME ERROR] Expected: '100', got: '4'
+//│ = 4
+
+:expect 100
+fun f() =
+  class A with
+    (() => return 100)()
+  new A
+  4
+f()
+//│ = 100
