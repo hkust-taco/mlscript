@@ -103,6 +103,7 @@ class TempSymbol(val trm: Opt[Term], dbgNme: Str = "tmp")(using State) extends B
   override def toString: Str = s"$$${super.toString}"
   override def subst(using s: SymbolSubst): TempSymbol = s.mapTempSym(this)
 
+
 // * When instantiating forall-qualified TVs, we need to duplicate the information
 // * for pretty-printing, but each instantiation should be different from each other
 // * i.e., UID should be different
