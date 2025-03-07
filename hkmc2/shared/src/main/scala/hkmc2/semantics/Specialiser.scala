@@ -464,6 +464,9 @@ class SimpleSub(val tl: TraceLogger):
                 paramName -> fieldType
               }
               Function(Record(recordFields), symType)
+          case classType @ ClassType(info) if info.params.isEmpty =>
+            log(s"Using class ${info.sym.nme} as a value")
+            classType
           case _ => symType
       
       case Sel(prefix, name) =>
@@ -539,6 +542,43 @@ class SimpleSub(val tl: TraceLogger):
         currentCtx.get(sym).foreach(constrain(rhsTy, _))
         currentCtx = currentCtx + (sym -> rhsTy)
       
+      case cls: ClassDef =>
+        log(s"Processing class: ${cls.sym.nme}")
+        
+        val members = mutable.Map.empty[String, SimpleType]
+        val fields = mutable.Map.empty[String, SimpleType]
+        val paramNames = cls.paramsOpt.map { params => params.params.map(_.sym.name) }.getOrElse(Nil)
+        
+        paramNames.foreach { paramName => fields(paramName) = freshVar }
+        
+        val classInfo = ClassInfo(cls.sym, paramNames, Nil, Map.empty, fields.toMap)
+        val classType = ClassType(classInfo)
+        
+        currentCtx = currentCtx + (cls.sym -> classType)
+        currentCtx = currentCtx + (cls.bsym -> classType)
+        
+        cls.body.blk.stats.foreach {
+          case td: TermDefinition =>
+            val methodType = td.body match
+              case Some(Ref(sym)) if fields.contains(sym.nme) => fields(sym.nme)
+              case Some(body) => term(body)(using currentCtx)
+              case None => freshVar
+            
+            members(td.sym.nme) = methodType
+          
+          case _ => // Skip other statements
+        }
+        
+        val updatedClassInfo = classInfo.copy(members = members.toMap)
+        val updatedClassType = ClassType(updatedClassInfo)
+        
+        currentCtx = currentCtx + (cls.sym -> updatedClassType)
+        currentCtx = currentCtx + (cls.bsym -> updatedClassType)
+
+      case _ => // Skip other statements including function definitions; they will be processed later
+    }
+
+    b.stats.foreach {
       case td: TermDefinition =>
         log(s"Processing function definition: ${td.sym.nme}")
         val paramTypes = td.params.flatMap(paramList => 
@@ -574,39 +614,7 @@ class SimpleSub(val tl: TraceLogger):
         
         log(s"Function ${td.sym.nme} has type: ${functionType}")
         currentCtx = currentCtx + (td.sym -> functionType)
-      
-      case cls: ClassDef =>
-        log(s"Processing class: ${cls.sym.nme}")
-        
-        val members = mutable.Map.empty[String, SimpleType]
-        val fields = mutable.Map.empty[String, SimpleType]
-        val paramNames = cls.paramsOpt.map { params => params.params.map(_.sym.name) }.getOrElse(Nil)
-        
-        paramNames.foreach { paramName => fields(paramName) = freshVar }
-        
-        val classInfo = ClassInfo(cls.sym, paramNames, Nil, Map.empty, fields.toMap)
-        val classType = ClassType(classInfo)
-        
-        currentCtx = currentCtx + (cls.sym -> classType)
-        currentCtx = currentCtx + (cls.bsym -> classType)
-        
-        cls.body.blk.stats.foreach {
-          case td: TermDefinition =>
-            val methodType = td.body match
-              case Some(Ref(sym)) if fields.contains(sym.nme) => fields(sym.nme)
-              case Some(body) => term(body)(using currentCtx)
-              case None => freshVar
-            
-            members(td.sym.nme) = methodType
-          
-          case _ => // Skip other statements
-        }
-        
-        val updatedClassInfo = classInfo.copy(members = members.toMap)
-        val updatedClassType = ClassType(updatedClassInfo)
-        
-        currentCtx = currentCtx + (cls.sym -> updatedClassType)
-        currentCtx = currentCtx + (cls.bsym -> updatedClassType)
+
       case _ => // Skip other statements
     }
     term(b.res)(using currentCtx)

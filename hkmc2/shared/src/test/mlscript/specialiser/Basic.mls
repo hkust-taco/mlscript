@@ -70,6 +70,94 @@ x
 
 
 :ds
+class Even
+class Odd
+fun even(x) = if x % 2 == 0 then Even else Odd
+even(2)
+//│ Typing term: { ‹› fun member:even(Param(‹›,x,None), ) = if { let $scrut = builtin:==#0(builtin:%#0(x#666, 2), 0); scrut is true -> { else member:Even#666 }; else member:Odd#666 }; Cls Even { }; Cls Odd { }; member:even#666(2) }
+//│ Processing class: Even
+//│ Processing class: Odd
+//│ Processing function definition: even
+//│ Assigned type 'l to parameter x
+//│ Typing term: if { let $scrut = builtin:==#0(builtin:%#0(x#666, 2), 0); scrut is true -> { else member:Even#666 }; else member:Odd#666 }
+//│ Typing if-like expression with keyword: keyword 'if'
+//│ Processing let binding in conditional: scrut
+//│ Typing term: builtin:==#0(builtin:%#0(x#666, 2), 0)
+//│ Typing term: builtin:==#0
+//│ Looking up symbol reference: ==
+//│ Found type for ==: ({ _0: 'd; _1: 'd } -> Bool)
+//│ ❁ Type for builtin:==#0: ({ _0: 'd; _1: 'd } -> Bool)
+//│ Typing term: builtin:%#0(x#666, 2)
+//│ Typing term: builtin:%#0
+//│ Looking up symbol reference: %
+//│ Found type for %: ({ _0: Num; _1: Num } -> Num)
+//│ ❁ Type for builtin:%#0: ({ _0: Num; _1: Num } -> Num)
+//│ Typing term: x#666
+//│ Looking up symbol reference: x
+//│ Found type for x: 'l
+//│ ❁ Type for x#666: 'l
+//│ Typing term: 2
+//│ ❁ Type for 2: Int
+//│ Constraining ({ _0: Num; _1: Num } -> Num) <: ({ _0: 'l; _1: Int } -> 'n)
+//│ Constraining { _0: 'l; _1: Int } <: { _0: Num; _1: Num }
+//│ Constraining 'l <: Num
+//│ Constraining Int <: Num
+//│ Constraining Num <: 'n
+//│ ❁ Type for builtin:%#0(x#666, 2): Num
+//│ Typing term: 0
+//│ ❁ Type for 0: Int
+//│ Constraining ({ _0: 'd; _1: 'd } -> Bool) <: ({ _0: 'n; _1: Int } -> 'm)
+//│ Constraining { _0: 'n; _1: Int } <: { _0: 'd; _1: 'd }
+//│ Constraining 'n <: 'd
+//│ Constraining Num <: 'd
+//│ Constraining Int <: 'd
+//│ Constraining Bool <: 'm
+//│ ❁ Type for builtin:==#0(builtin:%#0(x#666, 2), 0): Bool
+//│ Typing term: if { scrut is true -> { else member:Even#666 }; else member:Odd#666 }
+//│ Typing if-like expression with keyword: keyword 'if'
+//│ Typing term: $scrut#0
+//│ Looking up symbol reference: scrut
+//│ Found type for scrut: 'm
+//│ ❁ Type for $scrut#0: Bool
+//│ Constraining 'm <: Bool
+//│ Constraining Bool <: Bool
+//│ Processing else branch
+//│ Typing term: member:Even#666
+//│ Looking up symbol reference: Even
+//│ Found type for Even: class Even {  }
+//│ Using class Even as a value
+//│ ❁ Type for member:Even#666: class Even {  }
+//│ Processing else branch
+//│ Typing term: member:Odd#666
+//│ Looking up symbol reference: Odd
+//│ Found type for Odd: class Odd {  }
+//│ Using class Odd as a value
+//│ ❁ Type for member:Odd#666: class Odd {  }
+//│ Constraining class Even {  } <: 'o
+//│ Constraining class Odd {  } <: 'o
+//│ ❁ Type for if { scrut is true -> { else member:Even#666 }; else member:Odd#666 }: class Odd {  } | class Even {  }
+//│ ❁ Type for if { let $scrut = builtin:==#0(builtin:%#0(x#666, 2), 0); scrut is true -> { else member:Even#666 }; else member:Odd#666 }: class Odd {  } | class Even {  }
+//│ Function even body has type: 'o
+//│ Function even has type: ('l -> 'o)
+//│ Typing term: member:even#666(2)
+//│ Typing term: member:even#666
+//│ Looking up symbol reference: even
+//│ Found type for even: ('l -> 'o)
+//│ ❁ Type for member:even#666: (Num -> class Odd {  } | class Even {  })
+//│ Typing term: 2
+//│ ❁ Type for 2: Int
+//│ Constraining ('l -> 'o) <: (Int -> 'p)
+//│ Constraining Int <: 'l
+//│ Constraining Int <: Num
+//│ Constraining 'o <: 'p
+//│ Constraining class Odd {  } <: 'p
+//│ Constraining class Even {  } <: 'p
+//│ ❁ Type for member:even#666(2): class Even {  } | class Odd {  }
+//│ ❁ Type for { ‹› fun member:even(Param(‹›,x,None), ) = if { let $scrut = builtin:==#0(builtin:%#0(x#666, 2), 0); scrut is true -> { else member:Even#666 }; else member:Odd#666 }; Cls Even { }; Cls Odd { }; member:even#666(2) }: class Even {  } | class Odd {  }
+//│ Result type: class Even {  } | class Odd {  }
+//│ = class Even {   constructor() {}   toString() { return "Even"; } }
+
+:ds
 fun addc(x)(y) = x + y
 addc
 //│ Typing term: { ‹› fun member:addc(Param(‹›,x,None), )(Param(‹›,y,None), ) = builtin:+#0(x#666, y#666); member:addc#666 }
@@ -171,13 +259,13 @@ x
 :ds
 val x = 1 == 1
 x
-//│ Typing term: { ‹› val member:x = builtin:==#0(1, 1); member:x#666 }
+//│ Typing term: { ‹› val member:x = builtin:==#1(1, 1); member:x#666 }
 //│ Processing function definition: x
-//│ Typing term: builtin:==#0(1, 1)
-//│ Typing term: builtin:==#0
+//│ Typing term: builtin:==#1(1, 1)
+//│ Typing term: builtin:==#1
 //│ Looking up symbol reference: ==
 //│ Found type for ==: ({ _0: 'd; _1: 'd } -> Bool)
-//│ ❁ Type for builtin:==#0: ({ _0: 'd; _1: 'd } -> Bool)
+//│ ❁ Type for builtin:==#1: ({ _0: 'd; _1: 'd } -> Bool)
 //│ Typing term: 1
 //│ ❁ Type for 1: Int
 //│ Typing term: 1
@@ -186,14 +274,14 @@ x
 //│ Constraining { _0: Int; _1: Int } <: { _0: 'd; _1: 'd }
 //│ Constraining Int <: 'd
 //│ Constraining Bool <: 'l
-//│ ❁ Type for builtin:==#0(1, 1): Bool
+//│ ❁ Type for builtin:==#1(1, 1): Bool
 //│ Function x body has type: 'l
 //│ Function x has type: 'l
 //│ Typing term: member:x#666
 //│ Looking up symbol reference: x
 //│ Found type for x: 'l
 //│ ❁ Type for member:x#666: Bool
-//│ ❁ Type for { ‹› val member:x = builtin:==#0(1, 1); member:x#666 }: Bool
+//│ ❁ Type for { ‹› val member:x = builtin:==#1(1, 1); member:x#666 }: Bool
 //│ Result type: Bool
 //│ = true
 //│ x = true

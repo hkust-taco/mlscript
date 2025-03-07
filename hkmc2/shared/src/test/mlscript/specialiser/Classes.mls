@@ -13,26 +13,26 @@ s.inner
 //│ Typing term: member:Simple#666
 //│ Looking up symbol reference: Simple
 //│ Found type for Simple: class Simple { val x: 'l; inner: 'l }
-//│ Type for member:Simple#666: ('l -> class Simple { val x: 'l; inner: 'l })
+//│ ❁ Type for member:Simple#666: ('l -> class Simple { val x: 'l; inner: 'l })
 //│ Typing term: 1
-//│ Type for 1: Int
+//│ ❁ Type for 1: Int
 //│ Constraining ('l -> class Simple { val x: 'l; inner: 'l }) <: (Int -> 'm)
 //│ Constraining Int <: 'l
 //│ Constraining class Simple { val x: 'l; inner: 'l } <: 'm
-//│ Type for member:Simple#666(1): class Simple { val x: 'l; inner: 'l }
+//│ ❁ Type for member:Simple#666(1): class Simple { val x: 'l; inner: 'l }
 //│ Function s body has type: 'm
 //│ Function s has type: 'm
 //│ Typing term: member:s#666.inner
 //│ Typing term: member:s#666
 //│ Looking up symbol reference: s
 //│ Found type for s: 'm
-//│ Type for member:s#666: class Simple { val x: 'l; inner: 'l }
+//│ ❁ Type for member:s#666: class Simple { val x: 'l; inner: 'l }
 //│ Constraining 'm <: { inner: 'n }
 //│ Constraining class Simple { val x: 'l; inner: 'l } <: { inner: 'n }
 //│ Constraining 'l <: 'n
 //│ Constraining Int <: 'n
-//│ Type for member:s#666.inner: Int
-//│ Type for { Cls SimpleParamList(‹›,List(Param(‹›,class:Simple.x,None)),None) { ‹› fun member:inner = class:Simple.x#666; }; ‹› val member:s = member:Simple#666(1); member:s#666.inner }: Int
+//│ ❁ Type for member:s#666.inner: Int
+//│ ❁ Type for { Cls SimpleParamList(‹›,List(Param(‹›,class:Simple.x,None)),None) { ‹› fun member:inner = class:Simple.x#666; }; ‹› val member:s = member:Simple#666(1); member:s#666.inner }: Int
 //│ Result type: Int
 //│ = 1
 //│ s = Simple(1)
@@ -52,19 +52,19 @@ Some(1).unwrap
 //│ Typing term: member:Some#666
 //│ Looking up symbol reference: Some
 //│ Found type for Some: class Some { val x: 'l; unwrap: 'l }
-//│ Type for member:Some#666: ('l -> class Some { val x: 'l; unwrap: 'l })
+//│ ❁ Type for member:Some#666: ('l -> class Some { val x: 'l; unwrap: 'l })
 //│ Typing term: 1
-//│ Type for 1: Int
+//│ ❁ Type for 1: Int
 //│ Constraining ('l -> class Some { val x: 'l; unwrap: 'l }) <: (Int -> 'm)
 //│ Constraining Int <: 'l
 //│ Constraining class Some { val x: 'l; unwrap: 'l } <: 'm
-//│ Type for member:Some#666(1): class Some { val x: 'l; unwrap: 'l }
+//│ ❁ Type for member:Some#666(1): class Some { val x: 'l; unwrap: 'l }
 //│ Constraining 'm <: { unwrap: 'n }
 //│ Constraining class Some { val x: 'l; unwrap: 'l } <: { unwrap: 'n }
 //│ Constraining 'l <: 'n
 //│ Constraining Int <: 'n
-//│ Type for member:Some#666(1).unwrap: Int
-//│ Type for { Cls Option { }; Cls None { }; Cls SomeParamList(‹›,List(Param(‹›,class:Some.x,None)),None) { ‹› fun member:unwrap = class:Some.x#666; }; member:Some#666(1).unwrap }: Int
+//│ ❁ Type for member:Some#666(1).unwrap: Int
+//│ ❁ Type for { Cls Option { }; Cls None { }; Cls SomeParamList(‹›,List(Param(‹›,class:Some.x,None)),None) { ‹› fun member:unwrap = class:Some.x#666; }; member:Some#666(1).unwrap }: Int
 //│ Result type: Int
 //│ = 1
 
@@ -78,51 +78,50 @@ fun id(x) = x
 let a = Some(1)
 id(a)
 //│ Typing term: { ‹› fun member:id(Param(‹›,x,None), ) = x#666; Cls Opt[T] { }; Cls None { }; Cls Some[out T]ParamList(‹›,List(Param(‹›,class:Some.value,Some(Ref(T)))),None) { }; let a; a = member:Some#666(1); member:id#666(a#666) }
-//│ Processing function definition: id
-//│ Assigned type 'l to parameter x
-//│ Typing term: x#666
-//│ Looking up symbol reference: x
-//│ Found type for x: 'l
-//│ Type for x#666: 'l
-//│ Function id body has type: 'l
-//│ Function id has type: ('l -> 'l)
 //│ Processing class: Opt
 //│ Processing class: None
 //│ Processing class: Some
 //│ Typing term: member:Some#666(1)
 //│ Typing term: member:Some#666
 //│ Looking up symbol reference: Some
-//│ Found type for Some: class Some { val value: 'm }
-//│ Type for member:Some#666: ('m -> class Some { val value: 'm })
+//│ Found type for Some: class Some { val value: 'l }
+//│ ❁ Type for member:Some#666: ('l -> class Some { val value: 'l })
 //│ Typing term: 1
-//│ Type for 1: Int
-//│ Constraining ('m -> class Some { val value: 'm }) <: (Int -> 'o)
-//│ Constraining Int <: 'm
-//│ Constraining class Some { val value: 'm } <: 'o
-//│ Type for member:Some#666(1): class Some { val value: 'm }
-//│ Constraining 'o <: 'n
-//│ Constraining class Some { val value: 'm } <: 'n
+//│ ❁ Type for 1: Int
+//│ Constraining ('l -> class Some { val value: 'l }) <: (Int -> 'n)
+//│ Constraining Int <: 'l
+//│ Constraining class Some { val value: 'l } <: 'n
+//│ ❁ Type for member:Some#666(1): class Some { val value: 'l }
+//│ Constraining 'n <: 'm
+//│ Constraining class Some { val value: 'l } <: 'm
+//│ Processing function definition: id
+//│ Assigned type 'o to parameter x
+//│ Typing term: x#666
+//│ Looking up symbol reference: x
+//│ Found type for x: 'o
+//│ ❁ Type for x#666: 'o
+//│ Function id body has type: 'o
+//│ Function id has type: ('o -> 'o)
 //│ Typing term: member:id#666(a#666)
 //│ Typing term: member:id#666
 //│ Looking up symbol reference: id
-//│ Found type for id: ('l -> 'l)
-//│ Type for member:id#666: ('l -> 'l)
+//│ Found type for id: ('o -> 'o)
+//│ ❁ Type for member:id#666: ('o -> 'o)
 //│ Typing term: a#666
 //│ Looking up symbol reference: a
-//│ Found type for a: 'o
-//│ Type for a#666: class Some { val value: 'm }
-//│ Constraining ('l -> 'l) <: ('o -> 'p)
-//│ Constraining 'o <: 'l
-//│ Constraining class Some { val value: 'm } <: 'l
-//│ Constraining 'l <: 'p
-//│ Constraining class Some { val value: 'm } <: 'p
-//│ Type for member:id#666(a#666): class Some { val value: 'm }
-//│ Type for { ‹› fun member:id(Param(‹›,x,None), ) = x#666; Cls Opt[T] { }; Cls None { }; Cls Some[out T]ParamList(‹›,List(Param(‹›,class:Some.value,Some(Ref(T)))),None) { }; let a; a = member:Some#666(1); member:id#666(a#666) }: class Some { val value: 'm }
-//│ Result type: class Some { val value: 'm }
+//│ Found type for a: 'n
+//│ ❁ Type for a#666: class Some { val value: 'l }
+//│ Constraining ('o -> 'o) <: ('n -> 'p)
+//│ Constraining 'n <: 'o
+//│ Constraining class Some { val value: 'l } <: 'o
+//│ Constraining 'o <: 'p
+//│ Constraining class Some { val value: 'l } <: 'p
+//│ ❁ Type for member:id#666(a#666): class Some { val value: 'l }
+//│ ❁ Type for { ‹› fun member:id(Param(‹›,x,None), ) = x#666; Cls Opt[T] { }; Cls None { }; Cls Some[out T]ParamList(‹›,List(Param(‹›,class:Some.value,Some(Ref(T)))),None) { }; let a; a = member:Some#666(1); member:id#666(a#666) }: class Some { val value: 'l }
+//│ Result type: class Some { val value: 'l }
 //│ = Some(1)
 //│ a = Some(1)
 
-:todo // This doesn't work because the inferred type is of Nil/Cons, not list
 :ds
 abstract class List[T]
 class Nil extends List
@@ -130,72 +129,80 @@ class Cons[T](val head: T, val tail: List[T]) extends List[T]
 fun (::) cons[T](head: T, tail: List[T]) = Cons(head, tail)
 1 :: 2 :: 3 :: Nil
 //│ Typing term: { ‹› fun member:cons[List(T)](Param(‹›,head,Some(Ref(T))), Param(‹›,tail,Some(TyApp(Ref(member:List),List(Ref(T))))), ) = member:Cons#666(head#666, tail#666); Cls List[T] { }; Cls Nil { }; Cls Cons[out T]ParamList(‹›,List(Param(‹›,class:Cons.head,Some(Ref(T))), Param(‹›,class:Cons.tail,Some(TyApp(Ref(member:List),List(Ref(T)))))),None) { }; member:cons#666(1, member:cons#666(2, member:cons#666(3, member:Nil#666))) }
-//│ Processing function definition: cons
-//│ Assigned type 'l to parameter head
-//│ Assigned type 'm to parameter tail
-//│ Typing term: member:Cons#666(head#666, tail#666)
-//│ Typing term: member:Cons#666
-//│ Looking up symbol reference: Cons
-//│ Found type for Cons: 'o
-//│ Type for member:Cons#666: 'o
-//│ Typing term: head#666
-//│ Looking up symbol reference: head
-//│ Found type for head: 'l
-//│ Type for head#666: 'l
-//│ Typing term: tail#666
-//│ Looking up symbol reference: tail
-//│ Found type for tail: 'm
-//│ Type for tail#666: 'm
-//│ Constraining 'o <: ({ _0: 'l; _1: 'm } -> 'n)
-//│ Type for member:Cons#666(head#666, tail#666): 'n
-//│ Function cons body has type: 'n
-//│ Function cons has type: ({ head: 'l; tail: 'm } -> 'n)
 //│ Processing class: List
 //│ Processing class: Nil
 //│ Processing class: Cons
+//│ Processing function definition: cons
+//│ Assigned type 'n to parameter head
+//│ Assigned type 'o to parameter tail
+//│ Typing term: member:Cons#666(head#666, tail#666)
+//│ Typing term: member:Cons#666
+//│ Looking up symbol reference: Cons
+//│ Found type for Cons: class Cons { val head: 'l, val tail: 'm }
+//│ ❁ Type for member:Cons#666: ({ head: 'l; tail: 'm } -> class Cons { val head: 'l, val tail: 'm })
+//│ Typing term: head#666
+//│ Looking up symbol reference: head
+//│ Found type for head: 'n
+//│ ❁ Type for head#666: 'n
+//│ Typing term: tail#666
+//│ Looking up symbol reference: tail
+//│ Found type for tail: 'o
+//│ ❁ Type for tail#666: 'o
+//│ Constraining ({ head: 'l; tail: 'm } -> class Cons { val head: 'l, val tail: 'm }) <: ({ _0: 'n; _1: 'o } -> 'p)
+//│ Constraining { _0: 'n; _1: 'o } <: { head: 'l; tail: 'm }
+//│ Error: missing field: head in { _0: 'n; _1: 'o }
+//│ Error: missing field: tail in { _0: 'n; _1: 'o }
+//│ Constraining class Cons { val head: 'l, val tail: 'm } <: 'p
+//│ ❁ Type for member:Cons#666(head#666, tail#666): class Cons { val head: 'l, val tail: 'm }
+//│ Function cons body has type: 'p
+//│ Function cons has type: ({ head: 'n; tail: 'o } -> 'p)
 //│ Typing term: member:cons#666(1, member:cons#666(2, member:cons#666(3, member:Nil#666)))
 //│ Typing term: member:cons#666
 //│ Looking up symbol reference: cons
-//│ Found type for cons: ({ head: 'l; tail: 'm } -> 'n)
-//│ Type for member:cons#666: ({ head: 'l; tail: 'm } -> 'n)
+//│ Found type for cons: ({ head: 'n; tail: 'o } -> 'p)
+//│ ❁ Type for member:cons#666: ({ head: 'n; tail: 'o } -> class Cons { val head: 'l, val tail: 'm })
 //│ Typing term: 1
-//│ Type for 1: Int
+//│ ❁ Type for 1: Int
 //│ Typing term: member:cons#666(2, member:cons#666(3, member:Nil#666))
 //│ Typing term: member:cons#666
 //│ Looking up symbol reference: cons
-//│ Found type for cons: ({ head: 'l; tail: 'm } -> 'n)
-//│ Type for member:cons#666: ({ head: 'l; tail: 'm } -> 'n)
+//│ Found type for cons: ({ head: 'n; tail: 'o } -> 'p)
+//│ ❁ Type for member:cons#666: ({ head: 'n; tail: 'o } -> class Cons { val head: 'l, val tail: 'm })
 //│ Typing term: 2
-//│ Type for 2: Int
+//│ ❁ Type for 2: Int
 //│ Typing term: member:cons#666(3, member:Nil#666)
 //│ Typing term: member:cons#666
 //│ Looking up symbol reference: cons
-//│ Found type for cons: ({ head: 'l; tail: 'm } -> 'n)
-//│ Type for member:cons#666: ({ head: 'l; tail: 'm } -> 'n)
+//│ Found type for cons: ({ head: 'n; tail: 'o } -> 'p)
+//│ ❁ Type for member:cons#666: ({ head: 'n; tail: 'o } -> class Cons { val head: 'l, val tail: 'm })
 //│ Typing term: 3
-//│ Type for 3: Int
+//│ ❁ Type for 3: Int
 //│ Typing term: member:Nil#666
 //│ Looking up symbol reference: Nil
 //│ Found type for Nil: class Nil {  }
-//│ Type for member:Nil#666: class Nil {  }
-//│ Constraining ({ head: 'l; tail: 'm } -> 'n) <: ({ _0: Int; _1: class Nil {  } } -> 't)
-//│ Constraining { _0: Int; _1: class Nil {  } } <: { head: 'l; tail: 'm }
+//│ Using class Nil as a value
+//│ ❁ Type for member:Nil#666: class Nil {  }
+//│ Constraining ({ head: 'n; tail: 'o } -> 'p) <: ({ _0: Int; _1: class Nil {  } } -> 's)
+//│ Constraining { _0: Int; _1: class Nil {  } } <: { head: 'n; tail: 'o }
 //│ Error: missing field: head in { _0: Int; _1: class Nil {  } }
 //│ Error: missing field: tail in { _0: Int; _1: class Nil {  } }
-//│ Constraining 'n <: 't
-//│ Type for member:cons#666(3, member:Nil#666): 't
-//│ Constraining ({ head: 'l; tail: 'm } -> 'n) <: ({ _0: Int; _1: 't } -> 's)
-//│ Constraining { _0: Int; _1: 't } <: { head: 'l; tail: 'm }
-//│ Error: missing field: head in { _0: Int; _1: 't }
-//│ Error: missing field: tail in { _0: Int; _1: 't }
-//│ Constraining 'n <: 's
-//│ Type for member:cons#666(2, member:cons#666(3, member:Nil#666)): 's
-//│ Constraining ({ head: 'l; tail: 'm } -> 'n) <: ({ _0: Int; _1: 's } -> 'r)
-//│ Constraining { _0: Int; _1: 's } <: { head: 'l; tail: 'm }
+//│ Constraining 'p <: 's
+//│ Constraining class Cons { val head: 'l, val tail: 'm } <: 's
+//│ ❁ Type for member:cons#666(3, member:Nil#666): class Cons { val head: 'l, val tail: 'm }
+//│ Constraining ({ head: 'n; tail: 'o } -> 'p) <: ({ _0: Int; _1: 's } -> 'r)
+//│ Constraining { _0: Int; _1: 's } <: { head: 'n; tail: 'o }
 //│ Error: missing field: head in { _0: Int; _1: 's }
 //│ Error: missing field: tail in { _0: Int; _1: 's }
-//│ Constraining 'n <: 'r
-//│ Type for member:cons#666(1, member:cons#666(2, member:cons#666(3, member:Nil#666))): 'r
-//│ Type for { ‹› fun member:cons[List(T)](Param(‹›,head,Some(Ref(T))), Param(‹›,tail,Some(TyApp(Ref(member:List),List(Ref(T))))), ) = member:Cons#666(head#666, tail#666); Cls List[T] { }; Cls Nil { }; Cls Cons[out T]ParamList(‹›,List(Param(‹›,class:Cons.head,Some(Ref(T))), Param(‹›,class:Cons.tail,Some(TyApp(Ref(member:List),List(Ref(T)))))),None) { }; member:cons#666(1, member:cons#666(2, member:cons#666(3, member:Nil#666))) }: 'r
-//│ Result type: 'r
+//│ Constraining 'p <: 'r
+//│ Constraining class Cons { val head: 'l, val tail: 'm } <: 'r
+//│ ❁ Type for member:cons#666(2, member:cons#666(3, member:Nil#666)): class Cons { val head: 'l, val tail: 'm }
+//│ Constraining ({ head: 'n; tail: 'o } -> 'p) <: ({ _0: Int; _1: 'r } -> 'q)
+//│ Constraining { _0: Int; _1: 'r } <: { head: 'n; tail: 'o }
+//│ Error: missing field: head in { _0: Int; _1: 'r }
+//│ Error: missing field: tail in { _0: Int; _1: 'r }
+//│ Constraining 'p <: 'q
+//│ Constraining class Cons { val head: 'l, val tail: 'm } <: 'q
+//│ ❁ Type for member:cons#666(1, member:cons#666(2, member:cons#666(3, member:Nil#666))): class Cons { val head: 'l, val tail: 'm }
+//│ ❁ Type for { ‹› fun member:cons[List(T)](Param(‹›,head,Some(Ref(T))), Param(‹›,tail,Some(TyApp(Ref(member:List),List(Ref(T))))), ) = member:Cons#666(head#666, tail#666); Cls List[T] { }; Cls Nil { }; Cls Cons[out T]ParamList(‹›,List(Param(‹›,class:Cons.head,Some(Ref(T))), Param(‹›,class:Cons.tail,Some(TyApp(Ref(member:List),List(Ref(T)))))),None) { }; member:cons#666(1, member:cons#666(2, member:cons#666(3, member:Nil#666))) }: class Cons { val head: 'l, val tail: 'm }
+//│ Result type: class Cons { val head: 'l, val tail: 'm }
 //│ = Cons(1, Cons(2, Cons(3, class Nil extends List1 {   constructor() {     super();   }   toString() { return "Nil"; } })))
