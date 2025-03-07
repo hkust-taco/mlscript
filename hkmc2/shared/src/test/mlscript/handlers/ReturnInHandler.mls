@@ -38,7 +38,7 @@ let l = () =>
   return 3
   4
 //│ ╔══[ERROR] Return statement outside of a function.
-//│ ║  l.37: 	  return 3
+//│ ║  l.38: 	  return 3
 //│ ╙──      	         ^
 //│ l = [function l]
 
@@ -57,5 +57,5 @@ let l = () =>
   4
 l()
 //│ ╔══[ERROR] Return statement outside of a function.
-//│ ║  l.55: 	  return 3
+//│ ║  l.56: 	  return 3
 //│ ╙──      	         ^
