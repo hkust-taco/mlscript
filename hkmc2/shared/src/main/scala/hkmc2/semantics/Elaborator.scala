@@ -79,6 +79,7 @@ object Elaborator:
     def getNonLocalRetHandler: Opt[TempSymbol] = outer match
       case OuterCtx.Function(sym) => S(sym)
       case _ => parent.flatMap(_.getNonLocalRetHandler)
+    // Returns N if no return handler is required (a direct `return` is possible).
     // Returns S(N) if the return handler is required but not found.
     def getRetHandler: Opt[Opt[TempSymbol]] = outer match
       case OuterCtx.Function(sym) => N
@@ -639,7 +640,7 @@ extends Importer:
         val rs = FlowSymbol("‹app-res›")
         val retMtdTree = new Tree.Ident("ret")
         val argTree = new Tree.Tup(body :: Nil)
-        val dummyIdent = new Tree.Ident("return").withLocOf(tree)
+        val dummyIdent = new Tree.Ident("return").withLocOf(kwLoc)
         Term.App(
           Term.Sel(sym.ref(dummyIdent), retMtdTree)(S(state.nonLocalRet)),
           Term.Tup(PlainFld(term(body)) :: Nil)(argTree)
