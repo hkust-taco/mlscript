@@ -1,0 +1,197 @@
+:js
+:effectHandlers
+
+
+abstract class ThreadEffect with
+  val tasks = []
+  fun start(thread: () -> ()): ()
+  fun fork(thread: () -> ()): ()
+  fun yld(): ()
+
+class Lock(locked) with
+  fun lock(th: ThreadEffect) =
+    while locked do
+      th.yld()
+    set locked = true
+  fun unlock() =
+    set locked = false
+
+fun f(h, x) =
+  print("f " + x)
+  h.yld()
+  print("f " + x)
+  h.yld()
+  print("f " + x)
+
+fun main(h) =
+  print("main start")
+  h.fork(() => f(h, 0))
+  h.fork(() => f(h, 1))
+  h.fork(() => f(h, 2))
+  print("main end")
+
+
+// LIFO
+handle h = ThreadEffect with
+  fun fork(thread)(k) =
+    this.tasks.unshift(thread)
+    k(())
+  fun yld()(k) =
+    this.tasks.push(() => k(()))
+    enterHandleBlock(this, () => this.tasks.shift()())
+  fun start(main)(k) =
+    this.tasks.push(() => main(this))
+    while this.tasks.length != 0 do
+      enterHandleBlock(this, () => this.tasks.shift()())
+    k(())
+in
+  h.start(main)
+//│ > main start
+//│ > main end
+//│ > f 2
+//│ > f 1
+//│ > f 0
+//│ > f 2
+//│ > f 1
+//│ > f 0
+//│ > f 2
+//│ > f 1
+//│ > f 0
+
+
+// FIFO
+handle h = ThreadEffect with
+  fun fork(thread)(k) =
+    this.tasks.push(thread)
+    k(())
+  fun yld()(k) =
+    this.tasks.push(() => k(()))
+    enterHandleBlock(this, () => this.tasks.shift()())
+  fun start(main)(k) =
+    this.tasks.push(() => main(this))
+    while this.tasks.length != 0 do
+      enterHandleBlock(this, () => this.tasks.shift()())
+    k(())
+in
+  h.start(main)
+//│ > main start
+//│ > main end
+//│ > f 0
+//│ > f 1
+//│ > f 2
+//│ > f 0
+//│ > f 1
+//│ > f 2
+//│ > f 0
+//│ > f 1
+//│ > f 2
+
+
+// Adapted from: https://ocaml.org/manual/5.3/effects.html
+
+abstract class ThreadEffect with
+  fun fork(thread: ThreadEffect -> ()): ()
+  fun yld(): ()
+
+val tasks = []
+//│ tasks = []
+
+fun f(x)(h) =
+  print("f " + x)
+  h.yld()
+  print("f " + x)
+  h.yld()
+  print("f " + x)
+
+fun main(h) =
+  print("main start")
+  h.fork(f(0))
+  h.fork(f(1))
+  h.fork(f(2))
+  print("main end")
+
+fun dequeue() =
+  if tasks.length != 0 do
+    tasks.shift()(())
+
+fun start(thread: ThreadEffect -> ()) =
+  handle h = ThreadEffect with
+    fun fork(new_thread)(k) =
+      tasks.push(k)
+      start(new_thread)
+    fun yld()(k) =
+      tasks.push(k)
+      dequeue()
+  in
+    thread(h)
+  dequeue()
+
+start(main)
+//│ > main start
+//│ > f 0
+//│ > f 1
+//│ > f 0
+//│ > f 2
+//│ > f 1
+//│ > f 0
+//│ > main end
+//│ > f 2
+//│ > f 1
+//│ > f 2
+
+
+import "../../mlscript-compile/Option.mls"
+open Option
+
+abstract class ThreadEffect with
+  fun fork(thread: ThreadEffect -> ()): ()
+  fun yld(): ()
+  fun xchg(x: Int): Int
+
+val tasks = []
+fun enqueue(k, x) =
+  tasks.push(() => k(x))
+fun dequeue() =
+  if tasks.length != 0 do
+    tasks.shift()()
+//│ tasks = []
+
+let exchanger = None
+//│ exchanger = None
+
+fun start(thread: ThreadEffect -> ()) =
+  handle h = ThreadEffect with
+    fun fork(new_thread)(k) =
+      enqueue(k, ())
+      start(new_thread)
+    fun yld()(k) =
+      enqueue(k, ())
+      dequeue()
+    fun xchg(x)(k) =
+      if exchanger is
+        Some([y, k1]) then
+          set exchanger = None
+          enqueue(k1, x)
+          k(y)
+        None then
+          set exchanger = Some([x, k])
+          dequeue()
+  in
+    thread(h)
+  dequeue()
+
+fun main(h) =
+  h.fork(h =>
+    print("[t1] Sending 0")
+    let v = h.xchg(0)
+    print("[t1] received " + v.toString()))
+  h.fork(h =>
+    print("[t2] Sending 1")
+    let v = h.xchg(1)
+    print("[t2] received " + v.toString()))
+
+start(main)
+//│ > [t1] Sending 0
+//│ > [t2] Sending 1
+//│ > [t2] received 0
+//│ > [t1] received 1

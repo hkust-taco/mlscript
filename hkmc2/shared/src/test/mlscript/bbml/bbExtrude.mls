@@ -3,7 +3,7 @@
 
 //│ Type: ⊤
 fun f(y) =
-  let local = ((x => y(x) + 1): [A] -> A -> Int) in y
+  let local = ((x => y(x) + 1) as [A] -> A -> Int) in y
 //│ Type: ⊤
 
 // * the parameter type of y is extruded.
@@ -24,7 +24,7 @@ f(foo)
 
 fun g: ([A] -> A -> Int) -> ([A] -> A -> Int)
 fun g(y) =
-  let local = ((x => y(x) + 1): ([A] -> A -> Int)) in y
+  let local = ((x => y(x) + 1) as ([A] -> A -> Int)) in y
 //│ Type: ⊤
 
 g

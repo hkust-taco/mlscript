@@ -1,0 +1,48 @@
+:js
+
+import "../../../mlscript-compile/Option.mls"
+
+open Option { Some, None }
+
+fun getOrHello(x) = if x is
+  None then "hello"
+  Some of
+    a then a
+
+getOrHello(None)
+//│ = "hello"
+
+getOrHello(Some of 42)
+//│ = 42
+
+fun getOrElse(x, defaultValue) = if x is
+  None then defaultValue
+  Some of value then value
+
+None getOrElse(42)
+//│ = 42
+
+Some(0) getOrElse(42)
+//│ = 0
+
+let getOr42 = case
+  Some of value then value
+  None then 42
+//│ getOr42 = [function]
+
+None getOr42()
+//│ = 42
+
+Some(0) getOr42()
+//│ = 0
+
+fun check(x) = x is Some of 42
+
+check(None)
+//│ = false
+
+check(Some(42))
+//│ = true
+
+check(Some(77))
+//│ = false

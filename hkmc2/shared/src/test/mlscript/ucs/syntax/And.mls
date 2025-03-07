@@ -138,7 +138,7 @@ if x is
     and v is
     B then z
   B then C
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: infix on newline at Ln 3 Col 13:Ln 3 Col 13
 
 if x is
   A(u, v, w)

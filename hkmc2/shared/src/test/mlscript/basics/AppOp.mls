@@ -1,0 +1,137 @@
+:js
+
+
+id @ 123
+//│ = 123
+
+id@123
+//│ = 123
+
+
+fun inc(n) = n + 1
+
+inc @ 1
+//│ = 2
+
+:re
+inc @ inc @ 1
+//│ ═══[RUNTIME ERROR] TypeError: f is not a function
+
+inc @ (inc @ 1)
+//│ = 3
+
+inc of inc @ 1
+//│ = 3
+
+inc @ inc of 1
+//│ = 3
+
+
+fun add(l)(r) = l + r
+
+add @ 1 @ 2
+//│ = 3
+
+add@1@2
+//│ = 3
+
+
+@
+//│ = [function apply]
+
+@(id, 123)
+
+(@)(id, 123)
+//│ = 123
+
+
+[tuple of 1, 2, 3]
+//│ = [[1, 2, 3]]
+
+[tuple @ 1, 2, 3]
+//│ = [[1], 2, 3]
+
+
+fun test(f) = f(42)
+
+// :dp
+test @ x => x + 1
+//│ = 43
+
+test @ (x) => x + 1
+//│ = 43
+
+test @ _ + 1
+//│ = 43
+
+
+pipeInto of 1, inc
+//│ = 2
+
+:re
+pipeInto @ 1, inc
+//│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
+
+pipeInto(1, _) @ inc
+//│ = 2
+
+1 pipeInto(inc)
+//│ = 2
+
+// * Indeed should not work...
+// * application shorthand needs an actual application on the right-hand side
+:e
+:re
+1 pipeInto @ inc
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
+//│ ║  l.85: 	1 pipeInto @ inc
+//│ ╙──      	  ^^^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: f is not a function
+
+:fixme
+1 pipeInto(_) @ inc
+//│ ═══[ERROR] Illegal position for '_' placeholder.
+//│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
+
+
+// * Another argument for using `.` rather than juxtaposition
+1 . pipeInto @ inc
+//│ = 2
+
+// * This is a bit surprising... parses as `(inc @ (1 . pipeInto)) @ inc`
+:re
+inc @ 1 . pipeInto @ inc
+//│ ═══[RUNTIME ERROR] TypeError: f is not a function
+
+(inc @ 1) . pipeInto @ inc
+//│ = 3
+
+
+// * Maybe `of` shouldn't have more binding power than `.`
+:fixme
+1 . pipeInto of inc
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.112: 	1 . pipeInto of inc
+//│ ╙──       	    ^^^^^^^^
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.112: 	1 . pipeInto of inc
+//│ ╙──       	    ^^^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
+
+(1 . pipeInto) of inc
+//│ = 2
+
+
+let n = inc of 42
+//│ n = 43
+
+n. pipeInto @ inc
+//│ = 44
+
+:todo
+n
+  . pipeInto @ inc
+  . pipeInto @ inc
+//│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
+
+

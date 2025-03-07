@@ -1,0 +1,52 @@
+:js
+
+
+let rcd = { x: 0, y: undefined, z: null}
+//│ rcd = {x: 0, y: undefined, z: null}
+
+rcd.constructor
+//│ = function Object() { [native code] }
+
+typeof(rcd.constructor)
+//│ = "function"
+
+Object.entries of rcd
+//│ = [["x", 0], ["y", undefined], ["z", null]]
+
+
+class Foo(val x, val y) with
+  let z = 2
+  val a = 3
+  fun f = 4
+  fun g() = 5
+
+let foo = Foo(1,2)
+//│ foo = Foo(1, 2)
+
+
+Object.entries of Foo
+//│ = [["class", class Foo {   #z;   constructor(x1, y1) {     this.x = x1;     this.y = y1;     this.#z = 2;     this.a = 3;   }   get g$__checkNotMethod() { runtime.deboundMethod("g", "Foo"); }   get f() {     return 4;   }    g(...args) {     globalThis.Predef.checkArgs("g", 0, true, args.length);     return 5   }   toString() { return "Foo(" + globalThis.Predef.render(this.x) + ", " + globalThis.Predef.render(this.y) + ")"; } }]]
+
+Object.entries of foo
+//│ = [["x", 1], ["y", 2], ["a", 3]]
+
+Foo.name
+//│ = "Foo"
+
+Foo.class.name
+//│ = "Foo"
+
+foo.constructor
+//│ = class Foo {   #z;   constructor(x1, y1) {     this.x = x1;     this.y = y1;     this.#z = 2;     this.a = 3;   }   get g$__checkNotMethod() { runtime.deboundMethod("g", "Foo"); }   get f() {     return 4;   }    g(...args) {     globalThis.Predef.checkArgs("g", 0, true, args.length);     return 5   }   toString() { return "Foo(" + globalThis.Predef.render(this.x) + ", " + globalThis.Predef.render(this.y) + ")"; } }
+
+// ! will be changed by minification
+foo.constructor.name
+//│ = "Foo"
+
+typeof(foo)
+//│ = "object"
+
+typeof(foo.constructor)
+//│ = "function"
+
+

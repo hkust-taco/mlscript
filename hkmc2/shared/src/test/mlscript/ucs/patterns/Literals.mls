@@ -27,7 +27,7 @@ fun g(x) = if x is true then 1 else 2
 
 fun g(x) = if x && true is true then 1 else 2
 
-fun h(x) = if (x : Bool) then 1 else 2
+fun h(x) = if (x as Bool) then 1 else 2
 
 fun mix(x) = if x is
   true then "true"

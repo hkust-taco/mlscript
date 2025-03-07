@@ -213,9 +213,13 @@ fun f(x) =
       Nil() then "oh"
 //│ ╔══[ERROR] Unrecognized pattern split.
 //│ ║  l.212: 	    0 ::
-//│ ║         	    ^^^^
-//│ ║  l.213: 	      Nil() then "oh"
-//│ ╙──       	^^^^^^
+//│ ╙──       	    ^
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.212: 	    0 ::
+//│ ╙──       	      ^^
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.212: 	    0 ::
+//│ ╙──       	      ^^
 
 
 fun f(x) =

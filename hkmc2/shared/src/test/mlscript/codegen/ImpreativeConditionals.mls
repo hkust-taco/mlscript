@@ -29,6 +29,9 @@ fun hasZeroElement(xs) =
 //│ ╙──      	                ^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern split.
 //│ ║  l.24: 	    Cons(0, tl) return true
-//│ ╙──      	    ^^^^^^^^^^^
+//│ ╙──      	         ^
+//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ║  l.24: 	    Cons(0, tl) return true
+//│ ╙──      	            ^^
 
 

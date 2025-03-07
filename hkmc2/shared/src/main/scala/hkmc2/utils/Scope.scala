@@ -89,7 +89,14 @@ class Scope
   
   def lookup_!(l: Local)(using Raise): Str =
     lookup(l).getOrElse:
-      raise(InternalError(msg"Not in scope: ${l.toString} (${l.getClass.toString})" -> l.toLoc :: Nil,
+      // Prevent long-winded error messages which quote the entire definition.
+      val loc = l match
+        case sym: semantics.BlockMemberSymbol =>
+          sym.trees.collectFirst:
+            case t: syntax.Tree.TypeDef => t.head.toLoc
+          .flatten.orElse(l.toLoc)
+        case other => other.toLoc
+      raise(InternalError(msg"Not in scope: ${l.toString} (${l.getClass.toString})" -> loc :: Nil,
         source = Diagnostic.Source.Compilation))
       l.nme
   

@@ -28,6 +28,7 @@ fun main(h) =
 
 
 // LIFO
+:re
 handle h = ThreadEffect with
   fun fork(thread)(k) =
     this.tasks.push(thread)
@@ -41,17 +42,11 @@ in
 //│ > main start
 //│ > main end
 //│ > f 2
-//│ > f 1
-//│ > f 0
-//│ > f 2
-//│ > f 1
-//│ > f 0
-//│ > f 2
-//│ > f 1
-//│ > f 0
+//│ ═══[RUNTIME ERROR] Error: Unhandled effects
 
 
 // FIFO
+:re
 handle h = ThreadEffect with
   fun fork(thread)(k) =
     this.tasks.unshift(thread)
@@ -65,13 +60,6 @@ in
 //│ > main start
 //│ > main end
 //│ > f 0
-//│ > f 1
-//│ > f 2
-//│ > f 0
-//│ > f 1
-//│ > f 2
-//│ > f 0
-//│ > f 1
-//│ > f 2
+//│ ═══[RUNTIME ERROR] Error: Unhandled effects
 
 

@@ -46,7 +46,7 @@ M.Foo:: n(foo, 2)
 :sjs
 let m = M.Foo::m
 //│ JS (unsanitized):
-//│ let m; m = (self, ...args) => { return self.m(...args) };
+//│ let m, m1; m1 = function m(self, ...args) { return self.m(...args) }; m = m1;
 //│ m = [function m]
 
 m(foo)
@@ -114,7 +114,7 @@ Foo::m
 //│ ║         	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
-//│ = [function block$res21]
+//│ = [function]
 
 :e
 :sjs
@@ -128,7 +128,11 @@ Foo::n(foo, 2)
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ JS (unsanitized):
-//│ ((self, ...args) => { return runtime.safeCall(self.n(...args)) })(foo, 2)
+//│ let lambda9;
+//│ lambda9 = (undefined, function (self, ...args) {
+//│   return runtime.safeCall(self.n(...args))
+//│ });
+//│ lambda9(foo, 2)
 //│ = 125
 
 

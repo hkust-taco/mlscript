@@ -3,7 +3,9 @@ import Predef from "./Predef.mjs";
 let Stack1;
 Stack1 = class Stack {
   static {
-    this.Cons = function Cons(head1, tail1) { return new Cons.class(head1, tail1); };
+    this.Cons = function Cons(head1, tail1) {
+      return new Cons.class(head1, tail1);
+    };
     this.Cons.class = class Cons {
       constructor(head, tail) {
         this.head = head;
@@ -89,7 +91,8 @@ Stack1 = class Stack {
   static zip(...xss) {
     let go, tmp, tmp1;
     go = function go(heads, tails) {
-      return (caseScrut) => {
+      let lambda;
+      lambda = (undefined, function (caseScrut) {
         let param0, param1, h, t, param01, param11, h2, t2, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
         if (caseScrut instanceof Stack.Cons.class) {
           param0 = caseScrut.head;
@@ -130,11 +133,77 @@ Stack1 = class Stack {
         } else {
           throw new globalThis.Error("match error");
         }
-      }
+      });
+      return lambda
     };
     tmp = go(Stack.Nil, Stack.Nil);
     tmp1 = Stack.fromArray(xss);
     return runtime.safeCall(tmp(tmp1))
+  } 
+  static concat(xs4, ys) {
+    let param0, param1, head$_, tail$_, result, current, rest, param01, param11, head, tail1, next, tmp, tmp1, tmp2;
+    if (ys instanceof Stack.Nil.class) {
+      return xs4
+    } else {
+      if (xs4 instanceof Stack.Nil.class) {
+        return ys
+      } else if (xs4 instanceof Stack.Cons.class) {
+        param0 = xs4.head;
+        param1 = xs4.tail;
+        head$_ = param0;
+        tail$_ = param1;
+        tmp = Stack.Cons(head$_, ys);
+        result = tmp;
+        current = result;
+        rest = tail$_;
+        tmp3: while (true) {
+          if (rest instanceof Stack.Cons.class) {
+            param01 = rest.head;
+            param11 = rest.tail;
+            head = param01;
+            tail1 = param11;
+            tmp1 = Stack.Cons(head, ys);
+            next = tmp1;
+            current.tail = next;
+            current = next;
+            rest = tail1;
+            tmp2 = runtime.Unit;
+            continue tmp3;
+          } else {
+            tmp2 = runtime.Unit;
+          }
+          break;
+        }
+        return result
+      } else {
+        throw new globalThis.Error("match error");
+      }
+    }
+  } 
+  static append(xs5, y) {
+    let tmp;
+    tmp = Stack.Cons(y, Stack.Nil);
+    return Stack.concat(xs5, tmp)
+  } 
+  static filter(xs6, f) {
+    let param0, param1, head, tail1, scrut, tmp;
+    if (xs6 instanceof Stack.Cons.class) {
+      param0 = xs6.head;
+      param1 = xs6.tail;
+      head = param0;
+      tail1 = param1;
+      scrut = runtime.safeCall(f(head));
+      if (scrut === true) {
+        tmp = Stack.filter(tail1, f);
+        return Stack.Cons(head, tmp)
+      } else {
+        return Stack.filter(tail1, f)
+      }
+    } else if (xs6 instanceof Stack.Nil.class) {
+      return Stack.Nil
+    } else {
+      throw new globalThis.Error("match error");
+    }
   }
   static toString() { return "Stack"; }
 };

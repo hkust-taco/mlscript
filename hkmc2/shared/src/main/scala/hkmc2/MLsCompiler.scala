@@ -16,7 +16,7 @@ class ParserSetup(file: os.Path, dbgParsing: Bool)(using Elaborator.State, Raise
   
   val block = os.read(file)
   val fph = new FastParseHelpers(block)
-  val origin = Origin(file.toString, 0, fph)
+  val origin = Origin(file, 0, fph)
   
   val lexer = new syntax.Lexer(origin, dbg = dbgParsing)
   val tokens = lexer.bracketedTokens

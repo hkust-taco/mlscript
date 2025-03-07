@@ -91,6 +91,6 @@ object Loc:
   def apply(xs: IterableOnce[Located]): Opt[Loc] =
     xs.iterator.foldLeft(none[Loc])((acc, l) => acc.fold(l.toLoc)(_ ++ l.toLoc |> some))
 
-final case class Origin(fileName: Str, startLineNum: Int, fph: FastParseHelpers):
-  override def toString = s"$fileName:+$startLineNum"
+final case class Origin(fileName: os.Path, startLineNum: Int, fph: FastParseHelpers):
+  override def toString = s"${fileName.last}:+$startLineNum"
 

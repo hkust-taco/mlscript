@@ -1,0 +1,288 @@
+:lift
+:js
+
+fun foo(x, y) =
+  object M with
+    val test = 2
+    fun foo() =
+      set y = 2
+      x + y + test
+  M.foo()
+
+:expect 14
+foo(10, 0)
+//│ = 14
+
+:sjs
+fun foo(x, y) =
+  object M with
+    fun foo2() =
+      set y = 2
+      x + y
+  fun foo3 = M.foo2()
+  foo3
+//│ JS (unsanitized):
+//│ let M3, foo3, foo1, foo3$, foo$capture1;
+//│ foo3$ = function foo3$(M4, x, foo$capture2) {
+//│   return M4.foo2()
+//│ };
+//│ foo3 = function foo3(M4, x, foo$capture2) {
+//│   return () => {
+//│     return foo3$(M4, x, foo$capture2)
+//│   }
+//│ };
+//│ M3 = function M(x$11, foo$capture$01) {
+//│   return new M.class()(x$11, foo$capture$01);
+//│ };
+//│ M3.class = class M2 {
+//│   constructor() {
+//│     return (x$1, foo$capture$0) => {
+//│       this.x$1 = x$1;
+//│       this.foo$capture$0 = foo$capture$0;
+//│       return this;
+//│     }
+//│   }
+//│   foo2() {
+//│     this.foo$capture$0.y0$ = 2;
+//│     return this.x$1 + this.foo$capture$0.y0$
+//│   }
+//│   toString() { return "M"; }
+//│ };
+//│ foo$capture1 = function foo$capture(y0$1) {
+//│   return new foo$capture.class(y0$1);
+//│ };
+//│ foo$capture1.class = class foo$capture {
+//│   constructor(y0$) {
+//│     this.y0$ = y0$;
+//│   }
+//│   toString() { return "foo$capture(" + globalThis.Predef.render(this.y0$) + ")"; }
+//│ };
+//│ foo1 = function foo(x, y) {
+//│   let tmp, M$, capture;
+//│   capture = new foo$capture1(y);
+//│   M$ = M3(x, capture);
+//│   tmp = foo3$(M$, x, capture);
+//│   return tmp
+//│ };
+
+:expect 12
+foo(10, 0)
+//│ = 12
+
+
+:sjs
+data class A(x) with
+  object M with
+    fun getB() = x
+  fun getA() = M.getB()
+//│ JS (unsanitized):
+//│ let M5, A1;
+//│ M5 = function M(A$instance$01) {
+//│   return new M.class()(A$instance$01);
+//│ };
+//│ M5.class = class M4 {
+//│   constructor() {
+//│     return (A$instance$0) => {
+//│       this.A$instance$0 = A$instance$0;
+//│       return this;
+//│     }
+//│   }
+//│   getB() {
+//│     return this.A$instance$0.x
+//│   }
+//│   toString() { return "M"; }
+//│ };
+//│ A1 = function A(x1) {
+//│   return new A.class(x1);
+//│ };
+//│ A1.class = class A {
+//│   constructor(x) {
+//│     this.x = x;
+//│     this.M$ = M5(this);
+//│   }
+//│   getA() {
+//│     return this.M$.getB()
+//│   }
+//│   toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; }
+//│ };
+
+:expect 2
+A(2).getA()
+//│ = 2
+
+// Classes and functions in modules //
+
+:expect 2
+module M with
+  val x = 2
+  class A() with
+    fun get = x
+  val hi = A()
+M.hi.get
+//│ = 2
+
+:expect 2
+module M with
+  val x = 2
+  fun f() =
+    fun g() = x
+    g
+M.f()()
+//│ = 2
+
+:expect 2
+object M with
+  val x = 2
+  class A() with
+    fun get = x
+  val hi = A()
+M.hi.get
+//│ = 2
+
+:expect 2
+object M with
+  val x = 2
+  fun f() =
+    fun g() = x
+    g
+M.f()()
+//│ = 2
+
+:sjs
+module M with
+  class A() with
+    fun get = M.x + x
+  val x = if A() is A then 2 else 3
+M.A().get
+//│ JS (unsanitized):
+//│ let M15, tmp3;
+//│ M15 = class M14 {
+//│   static {
+//│     let scrut, tmp4;
+//│     this.A = function A() {
+//│       return new A.class();
+//│     };
+//│     this.A.class = class A5 {
+//│       constructor() {}
+//│       get get() {
+//│         return M15.x + M14.x;
+//│       }
+//│       toString() { return "A(" + "" + ")"; }
+//│     };
+//│     scrut = M14.A();
+//│     if (scrut instanceof M14.A.class) {
+//│       tmp4 = 2;
+//│     } else {
+//│       tmp4 = 3;
+//│     }
+//│     this.x = tmp4;
+//│   }
+//│   static toString() { return "M"; }
+//│ };
+//│ tmp3 = M15.A();
+//│ tmp3.get
+//│ = 4
+
+module M with
+  val x = 2
+  class A with
+    fun get = x
+  class B() extends A
+M.B().get
+//│ = 2
+
+/// Top Level Modules ///
+
+// newA should reference the class symbol
+// newA_B should reference the BlockMemberSymbol
+:lift
+:sjs
+module M with
+  data class A(x) with
+    class B() with
+      fun get = x
+      fun newA_B(y) = A(y)
+    fun newA = A()
+    fun newB = B()
+  0 is A
+M.A(2).newB.newA_B(3).newB.get
+//│ JS (unsanitized):
+//│ let B2, M19, tmp5, tmp6, B$ctor, B$;
+//│ B$ = function B$(A$instance$0) {
+//│   let tmp7;
+//│   tmp7 = new B2.class();
+//│   return tmp7(A$instance$0)
+//│ };
+//│ B$ctor = function B$ctor(A$instance$0) {
+//│   return () => {
+//│     let tmp7;
+//│     tmp7 = new B2.class();
+//│     return tmp7(A$instance$0)
+//│   }
+//│ };
+//│ B2 = function B() {
+//│   return (A$instance$01) => {
+//│     return new B.class()(A$instance$01);
+//│   }
+//│ };
+//│ B2.class = class B1 {
+//│   constructor() {
+//│     return (A$instance$0) => {
+//│       this.A$instance$0 = A$instance$0;
+//│       return this;
+//│     }
+//│   }
+//│   get get() {
+//│     return this.A$instance$0.x;
+//│   } 
+//│   newA_B(y) {
+//│     return M19.A(y)
+//│   }
+//│   toString() { return "B(" + "" + ")"; }
+//│ };
+//│ M19 = class M18 {
+//│   static {
+//│     let scrut;
+//│     this.A = function A(x1) {
+//│       return new A.class(x1);
+//│     };
+//│     this.A.class = class A7 {
+//│       constructor(x) {
+//│         this.x = x;
+//│       }
+//│       get newA() {
+//│         return M18.A();
+//│       } 
+//│       get newB() {
+//│         return B$(this);
+//│       }
+//│       toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; }
+//│     };
+//│     scrut = 0;
+//│     if (scrut instanceof M18.A.class) {
+//│       true
+//│     } else {
+//│       false
+//│     }
+//│   }
+//│   static toString() { return "M"; }
+//│ };
+//│ tmp5 = M19.A(2);
+//│ tmp6 = runtime.safeCall(tmp5.newB.newA_B(3));
+//│ tmp6.newB.get
+//│ = 3
+
+module M with
+  class A
+  object B extends A
+
+
+:lift
+fun foo(x) =
+  object O with
+    fun bar = x
+    val baz = x
+  [x === O.bar, set x += 1 in [x === O.bar, x === O.baz], x === O.bar]
+
+foo(123)
+//│ = [true, [true, false], true]

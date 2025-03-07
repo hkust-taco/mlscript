@@ -41,7 +41,9 @@ module M with
 //│       constructor() {}
 //│       toString() { return "C"; }
 //│     };
-//│     this.D = function D() { return new D.class(); };
+//│     this.D = function D() {
+//│       return new D.class();
+//│     };
 //│     this.D.class = class D {
 //│       constructor() {}
 //│       toString() { return "D(" + "" + ")"; }
@@ -72,7 +74,7 @@ M.y
 :re
 M.oops
 //│ ╔══[ERROR] Module 'M' does not contain member 'oops'
-//│ ║  l.73: 	M.oops
+//│ ║  l.75: 	M.oops
 //│ ╙──      	 ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 

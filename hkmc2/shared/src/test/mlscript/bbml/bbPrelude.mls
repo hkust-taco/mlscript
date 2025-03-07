@@ -32,6 +32,11 @@ declare class Error(msg: Str)
 
 declare module Predef
 
+declare module source with
+  object line: Int
+  object name: Str
+  object file: Str
+
 declare fun run: [T] -> CodeBase[out T, out Nothing, out Any] -> T
 declare fun log: Str -> Any
 declare fun error: Nothing

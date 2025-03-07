@@ -1,0 +1,23 @@
+:js
+
+
+(x => x).constructor == Function
+//│ = true
+
+fun foo(x) = x
+foo.constructor == Function
+//│ = true
+
+foo.name
+//│ = "foo"
+
+foo.constructor.name
+//│ = "Function"
+
+typeof(foo)
+//│ = "function"
+
+typeof(foo.constructor)
+//│ = "function"
+
+

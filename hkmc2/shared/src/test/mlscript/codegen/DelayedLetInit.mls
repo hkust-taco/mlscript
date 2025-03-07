@@ -7,6 +7,7 @@
 let x
 //│ JS (unsanitized):
 //│ let x; x = undefined;
+//│ x = undefined
 
 x = 1
 //│ JS (unsanitized):
@@ -36,7 +37,7 @@ let y = 1
 :e
 z = 1
 //│ ╔══[ERROR] Name not found: z
-//│ ║  l.37: 	z = 1
+//│ ║  l.38: 	z = 1
 //│ ╙──      	^
 //│ JS (unsanitized):
 //│ /* error */
@@ -55,8 +56,8 @@ f
 let f
 f(x) = x + 1
 //│ JS (unsanitized):
-//│ let f1; f1 = (x1) => { return x1 + 1 };
-//│ f = [function f1]
+//│ let f1, f2; f2 = function f(x1) { return x1 + 1 }; f1 = f2;
+//│ f = [function f]
 
 f(1)
 //│ JS (unsanitized):
@@ -76,7 +77,7 @@ if true
 then foo = 0
 else foo = 1
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.76: 	then foo = 0
+//│ ║  l.77: 	then foo = 0
 //│ ╙──      	         ^
 //│ JS (unsanitized):
 //│ let foo1, scrut;
@@ -87,6 +88,7 @@ else foo = 1
 //│ } else {
 //│   throw new this.Error("match error");
 //│ }
+//│ foo = undefined
 
 let foo
 if true
@@ -111,11 +113,11 @@ else
 fun f() =
   foo = 42
 //│ JS (unsanitized):
-//│ let f2; f2 = function f() { foo2 = 42; return runtime.Unit };
+//│ let f3; f3 = function f() { foo2 = 42; return runtime.Unit };
 
 f()
 //│ JS (unsanitized):
-//│ f2()
+//│ f3()
 
 foo
 //│ JS (unsanitized):
@@ -126,9 +128,9 @@ foo
 :fixme
 fun f() = foo = 0
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.127: 	fun f() = foo = 0
+//│ ║  l.129: 	fun f() = foo = 0
 //│ ╙──       	              ^
 //│ JS (unsanitized):
-//│ let f3; f3 = function f() { return foo2 };
+//│ let f4; f4 = function f() { return foo2 };
 
 

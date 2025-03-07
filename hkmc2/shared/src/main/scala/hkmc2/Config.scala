@@ -11,6 +11,7 @@ def config(using Config): Config = summon
 case class Config(
   sanityChecks: Opt[SanityChecks],
   effectHandlers: Opt[EffectHandlers],
+  liftDefns: Opt[LiftDefns],
 ):
   
   def stackSafety: Opt[StackSafety] = effectHandlers.flatMap(_.stackSafety)
@@ -24,6 +25,7 @@ object Config:
     sanityChecks = N, // TODO make the default S
     // sanityChecks = S(SanityChecks(light = true)),
     effectHandlers = N,
+    liftDefns = N,
   )
   
   case class SanityChecks(light: Bool)
@@ -35,6 +37,8 @@ object Config:
     val default: StackSafety = StackSafety(
       stackLimit = 500,
     )
+
+  case class LiftDefns() // there may be other settings in the future, having it as a case class now
   
 end Config
 

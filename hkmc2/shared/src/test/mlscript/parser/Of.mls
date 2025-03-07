@@ -74,16 +74,40 @@ of 1
 //│ 	Ident(log)
 //│ 	Error()
 
-:fixme
+:w
 print of 
 123
-//│ ╔══[PARSE ERROR] Expected an expression; found new line instead
+//│ ╔══[WARNING] This literal should be indented
+//│ ║  l.79: 	123
+//│ ║        	^^^
+//│ ╟── since it is a continuation of the new line here
 //│ ║  l.78: 	print of 
 //│ ║        	         ^
 //│ ║  l.79: 	123
 //│ ╙──      	
 //│ Parsed:
-//│ 	App(Ident(print),Tup(List(Error())))
-//│ 	IntLit(123)
+//│ 	App(Ident(print),Tup(List(IntLit(123))))
+
+:w
+print of 
+1
+2
+//│ ╔══[WARNING] This literal should be indented
+//│ ║  l.93: 	1
+//│ ║        	^
+//│ ╟── since it is a continuation of the new line here
+//│ ║  l.92: 	print of 
+//│ ║        	         ^
+//│ ║  l.93: 	1
+//│ ╙──      	
+//│ Parsed:
+//│ 	App(Ident(print),Tup(List(IntLit(1))))
+//│ 	IntLit(2)
+
+print of...
+1
+2
+//│ Parsed:
+//│ 	App(Ident(print),Tup(List(IntLit(1), IntLit(2))))
 
 

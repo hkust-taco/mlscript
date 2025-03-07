@@ -2,7 +2,9 @@ import runtime from "./../Runtime.mjs";
 import Str from "./../Str.mjs";
 import Predef from "./../Predef.mjs";
 let CSV1;
-CSV1 = function CSV(strDelimiter1) { return new CSV.class(strDelimiter1); };
+CSV1 = function CSV(strDelimiter1) {
+  return new CSV.class(strDelimiter1);
+};
 CSV1.class = class CSV {
   constructor(strDelimiter) {
     let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;

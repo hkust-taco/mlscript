@@ -41,7 +41,7 @@ concat of
 
 :ge
 ~("a", "b")
-//│ ╔══[COMPILATION ERROR] Unexpected type annotations ~{ "a"; "b" }
+//│ ╔══[COMPILATION ERROR] Unexpected type annotations ~( "a"; "b" )
 //│ ║  l.43: 	~("a", "b")
 //│ ╙──      	       ^^^
 

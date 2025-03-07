@@ -53,14 +53,14 @@ fun baz(x) = "bbb"
 add(1, 2)
 //│ Type: Int
 
-add(1, 2): Int
+add(1, 2) as Int
 //│ Type: Int
 
 
 :e
-add(0, 0): Str
+add(0, 0) as Str
 //│ ╔══[ERROR] Type error in application with expected type Str
-//│ ║  l.61: 	add(0, 0): Str
+//│ ║  l.61: 	add(0, 0) as Str
 //│ ║        	^^^^^^^^^
 //│ ╙── because: cannot constrain  Int  <:  Str
 //│ Type: Str
@@ -81,7 +81,7 @@ high
 //│ Type: (['A] -> ('A) ->{⊥} 'A) ->{⊥} Int
 
 
-high((x => x): [A] -> A -> A)
+high((x => x) as [A] -> A -> A)
 //│ Type: Int
 
 high(x => x)
@@ -99,11 +99,11 @@ high(x => x + 1)
 //│ ╙── because: cannot constrain  Int  <:  A
 //│ Type: Int
 
-(let a = 0 in x => x): [A] -> A -> A
+(let a = 0 in x => x) as [A] -> A -> A
 //│ Type: ['A] -> ('A) ->{⊥} 'A
 
 
-(if false then x => x else y => y): [A] -> A -> A
+(if false then x => x else y => y) as [A] -> A -> A
 //│ Type: ['A] -> ('A) ->{⊥} 'A
 
 
@@ -114,13 +114,13 @@ fun baz(z) =
 
 fun baz: Int -> (([A] -> A -> A), Int) -> Int
 fun baz(z) =
-  ((f, x) => f(x)): (([A] -> A -> A), Int) -> Int
+  ((f, x) => f(x)) as (([A] -> A -> A), Int) -> Int
 //│ Type: ⊤
 
 :e
-baz: Int -> (([A] -> A -> A), Int) -> Int
+baz as Int -> (([A] -> A -> A), Int) -> Int
 //│ ╔══[ERROR] Cannot type non-function term Ref(member:baz) as (Int) ->{⊥} ([outer, 'A] -> ('A) ->{⊥} 'A, Int) ->{⊥} Int
-//│ ║  l.121: 	baz: Int -> (([A] -> A -> A), Int) -> Int
+//│ ║  l.121: 	baz as Int -> (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^
 //│ Type: ⊥
 
@@ -129,13 +129,13 @@ baz(42)
 //│ Type: (['A] -> ('A) ->{⊥} 'A, Int) ->{⊥} Int
 
 :e
-baz(42): (([A] -> A -> A), Int) -> Int
+baz(42) as (([A] -> A -> A), Int) -> Int
 //│ ╔══[ERROR] Cannot type non-function term App(Ref(member:baz),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))) as ([outer, 'A] -> ('A) ->{⊥} 'A, Int) ->{⊥} Int
-//│ ║  l.132: 	baz(42): (([A] -> A -> A), Int) -> Int
+//│ ║  l.132: 	baz(42) as (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^^^^^
 //│ Type: ⊥
 
-(z => (f, x) => baz(z)(f, x)): Int -> (([A] -> A -> A), Int) -> Int
+(z => (f, x) => baz(z)(f, x)) as Int -> (([A] -> A -> A), Int) -> Int
 //│ Type: (Int) ->{⊥} (['A] -> ('A) ->{⊥} 'A, Int) ->{⊥} Int
 
 
@@ -143,21 +143,21 @@ fun id: [A] -> A -> A
 fun id(x) = x
 //│ Type: ⊤
 
-id: [A] -> A -> A
+id as [A] -> A -> A
 //│ Type: ['A] -> ('A) ->{⊥} 'A
 
 
-(id: [A] -> A -> A): [A] -> A -> A
+(id as [A] -> A -> A) as [A] -> A -> A
 //│ Type: ['A] -> ('A) ->{⊥} 'A
 
-42: Int | Num
+42 as Int | Num
 //│ Type: Int ∨ Num
 
-42: [A] -> Int
+42 as [A] -> Int
 //│ Type: Int
 
 
-42: [A] -> Int | Num
+42 as [A] -> Int | Num
 //│ Type: Int ∨ Num
 
 fun foo: Int -> Int

@@ -58,6 +58,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val noSanityCheck = NullaryCommand("noSanityCheck")
   val effectHandlers = NullaryCommand("effectHandlers")
   val stackSafe = Command("stackSafe")(_.trim)
+  val liftDefns = NullaryCommand("lift")
   
   def mkConfig: Config =
     import Config.*
@@ -79,6 +80,7 @@ abstract class MLsDiffMaker extends DiffMaker:
                 S(StackSafety(stackLimit = value))
         ,
       )),
+      liftDefns = Opt.when(liftDefns.isSet)(LiftDefns())
     )
   
   
@@ -150,7 +152,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     
     val block = os.read(file)
     val fph = new FastParseHelpers(block)
-    val origin = Origin(file.toString, 0, fph)
+    val origin = Origin(file, 0, fph)
     
     val lexer = new syntax.Lexer(origin, dbg = dbgParsing.isSet)
     val tokens = lexer.bracketedTokens
