@@ -43,6 +43,7 @@ f()
 //│ > Continue
 //│ = 100
 
+
 :re
 fun f() = () => return 3
 f()()
@@ -52,3 +53,32 @@ f()()
 fun f(): () -> Int = () => return () => 3
 f()()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effects
+
+
+:e
+return 100
+//│ ╔══[ERROR] Return statement outside of a function.
+//│ ║  l.59: 	return 100
+//│ ╙──      	       ^^^
+
+:e
+if true do
+  while false do
+    let f = () => return 100
+//│ ╔══[ERROR] Return statement outside of a function.
+//│ ║  l.67: 	    let f = () => return 100
+//│ ╙──      	                         ^^^
+
+:expect 100
+fun f() =
+  if true do
+    let f = null
+    let done = false
+    while not(done) do
+      set
+        f = () => return 100
+        done = true
+    f()
+    print("Bad")
+f()
+//│ = 100
