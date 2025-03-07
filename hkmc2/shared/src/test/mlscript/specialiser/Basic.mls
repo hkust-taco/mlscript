@@ -10,17 +10,22 @@ id(1)
 //│ Typing term: x#666
 //│ Looking up symbol reference: x
 //│ Found type for x: 'l
+//│ ❁ Type for x#666: 'l
 //│ Function id body has type: 'l
 //│ Function id has type: ('l -> 'l)
 //│ Typing term: member:id#666(1)
 //│ Typing term: member:id#666
 //│ Looking up symbol reference: id
 //│ Found type for id: ('l -> 'l)
+//│ ❁ Type for member:id#666: ('l -> 'l)
 //│ Typing term: 1
+//│ ❁ Type for 1: Int
 //│ Constraining ('l -> 'l) <: (Int -> 'm)
 //│ Constraining Int <: 'l
 //│ Constraining 'l <: 'm
 //│ Constraining Int <: 'm
+//│ ❁ Type for member:id#666(1): Int
+//│ ❁ Type for { ‹› fun member:id(Param(‹›,x,None), ) = x#666; member:id#666(1) }: Int
 //│ Result type: Int
 //│ = 1
 
@@ -36,22 +41,28 @@ addc
 //│ Typing term: builtin:+#0
 //│ Looking up symbol reference: +
 //│ Found type for +: ({ _0: Num; _1: Num } -> Num)
+//│ ❁ Type for builtin:+#0: ({ _0: Num; _1: Num } -> Num)
 //│ Typing term: x#666
 //│ Looking up symbol reference: x
 //│ Found type for x: 'l
+//│ ❁ Type for x#666: 'l
 //│ Typing term: y#666
 //│ Looking up symbol reference: y
 //│ Found type for y: 'm
+//│ ❁ Type for y#666: 'm
 //│ Constraining ({ _0: Num; _1: Num } -> Num) <: ({ _0: 'l; _1: 'm } -> 'n)
 //│ Constraining { _0: 'l; _1: 'm } <: { _0: Num; _1: Num }
 //│ Constraining 'l <: Num
 //│ Constraining 'm <: Num
 //│ Constraining Num <: 'n
+//│ ❁ Type for builtin:+#0(x#666, y#666): Num
 //│ Function addc body has type: 'n
 //│ Function addc has type: ('l -> ('m -> 'n))
 //│ Typing term: member:addc#666
 //│ Looking up symbol reference: addc
 //│ Found type for addc: ('l -> ('m -> 'n))
+//│ ❁ Type for member:addc#666: (Num -> (Num -> Num))
+//│ ❁ Type for { ‹› fun member:addc(Param(‹›,x,None), )(Param(‹›,y,None), ) = builtin:+#0(x#666, y#666); member:addc#666 }: (Num -> (Num -> Num))
 //│ Result type: (Num -> (Num -> Num))
 //│ = [function addc]
 
@@ -66,28 +77,36 @@ addc(1)
 //│ Typing term: builtin:+#1
 //│ Looking up symbol reference: +
 //│ Found type for +: ({ _0: Num; _1: Num } -> Num)
+//│ ❁ Type for builtin:+#1: ({ _0: Num; _1: Num } -> Num)
 //│ Typing term: x#666
 //│ Looking up symbol reference: x
 //│ Found type for x: 'l
+//│ ❁ Type for x#666: 'l
 //│ Typing term: y#666
 //│ Looking up symbol reference: y
 //│ Found type for y: 'm
+//│ ❁ Type for y#666: 'm
 //│ Constraining ({ _0: Num; _1: Num } -> Num) <: ({ _0: 'l; _1: 'm } -> 'n)
 //│ Constraining { _0: 'l; _1: 'm } <: { _0: Num; _1: Num }
 //│ Constraining 'l <: Num
 //│ Constraining 'm <: Num
 //│ Constraining Num <: 'n
+//│ ❁ Type for builtin:+#1(x#666, y#666): Num
 //│ Function addc body has type: 'n
 //│ Function addc has type: ('l -> ('m -> 'n))
 //│ Typing term: member:addc#666(1)
 //│ Typing term: member:addc#666
 //│ Looking up symbol reference: addc
 //│ Found type for addc: ('l -> ('m -> 'n))
+//│ ❁ Type for member:addc#666: (Num -> (Num -> Num))
 //│ Typing term: 1
+//│ ❁ Type for 1: Int
 //│ Constraining ('l -> ('m -> 'n)) <: (Int -> 'o)
 //│ Constraining Int <: 'l
 //│ Constraining Int <: Num
 //│ Constraining ('m -> 'n) <: 'o
+//│ ❁ Type for member:addc#666(1): (Num -> Num)
+//│ ❁ Type for { ‹› fun member:addc(Param(‹›,x,None), )(Param(‹›,y,None), ) = builtin:+#1(x#666, y#666); member:addc#666(1) }: (Num -> Num)
 //│ Result type: (Num -> Num)
 //│ = [function]
 
@@ -97,11 +116,14 @@ x
 //│ Typing term: { ‹› val member:x = 3; member:x#666 }
 //│ Processing function definition: x
 //│ Typing term: 3
+//│ ❁ Type for 3: Int
 //│ Function x body has type: Int
 //│ Function x has type: Int
 //│ Typing term: member:x#666
 //│ Looking up symbol reference: x
 //│ Found type for x: Int
+//│ ❁ Type for member:x#666: Int
+//│ ❁ Type for { ‹› val member:x = 3; member:x#666 }: Int
 //│ Result type: Int
 //│ = 3
 //│ x = 3
@@ -116,17 +138,23 @@ x
 //│ Typing term: builtin:==#0
 //│ Looking up symbol reference: ==
 //│ Found type for ==: ({ _0: 'd; _1: 'd } -> Bool)
+//│ ❁ Type for builtin:==#0: ({ _0: 'd; _1: 'd } -> Bool)
 //│ Typing term: 1
+//│ ❁ Type for 1: Int
 //│ Typing term: 1
+//│ ❁ Type for 1: Int
 //│ Constraining ({ _0: 'd; _1: 'd } -> Bool) <: ({ _0: Int; _1: Int } -> 'l)
 //│ Constraining { _0: Int; _1: Int } <: { _0: 'd; _1: 'd }
 //│ Constraining Int <: 'd
 //│ Constraining Bool <: 'l
+//│ ❁ Type for builtin:==#0(1, 1): Bool
 //│ Function x body has type: 'l
 //│ Function x has type: 'l
 //│ Typing term: member:x#666
 //│ Looking up symbol reference: x
 //│ Found type for x: 'l
+//│ ❁ Type for member:x#666: Bool
+//│ ❁ Type for { ‹› val member:x = builtin:==#0(1, 1); member:x#666 }: Bool
 //│ Result type: Bool
 //│ = true
 //│ x = true
@@ -140,17 +168,23 @@ x
 //│ Typing term: builtin:+#2
 //│ Looking up symbol reference: +
 //│ Found type for +: ({ _0: Num; _1: Num } -> Num)
+//│ ❁ Type for builtin:+#2: ({ _0: Num; _1: Num } -> Num)
 //│ Typing term: 1
+//│ ❁ Type for 1: Int
 //│ Typing term: 1
+//│ ❁ Type for 1: Int
 //│ Constraining ({ _0: Num; _1: Num } -> Num) <: ({ _0: Int; _1: Int } -> 'l)
 //│ Constraining { _0: Int; _1: Int } <: { _0: Num; _1: Num }
 //│ Constraining Int <: Num
 //│ Constraining Num <: 'l
+//│ ❁ Type for builtin:+#2(1, 1): Num
 //│ Function x body has type: 'l
 //│ Function x has type: 'l
 //│ Typing term: member:x#666
 //│ Looking up symbol reference: x
 //│ Found type for x: 'l
+//│ ❁ Type for member:x#666: Num
+//│ ❁ Type for { ‹› val member:x = builtin:+#2(1, 1); member:x#666 }: Num
 //│ Result type: Num
 //│ = 2
 //│ x = 2
