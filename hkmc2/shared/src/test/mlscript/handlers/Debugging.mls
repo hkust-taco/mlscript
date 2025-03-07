@@ -32,7 +32,7 @@ import "../../mlscript-compile/Runtime.mls"
 let res = Runtime.try(f)
 
 res.reified.contTrace.next.getLocals
-//│ = [FnLocalsInfo("‹top level›", []), FnLocalsInfo("f", [LocalVarInfo("i", "608", 0), LocalVarInfo("j", "609", 100), LocalVarInfo("k", "610", 2000)])]
+//│ = [FnLocalsInfo("‹top level›", []), FnLocalsInfo("f", [LocalVarInfo("i", "616", 0), LocalVarInfo("j", "617", 100), LocalVarInfo("k", "618", 2000)])]
 
 Runtime.debugEff(res.reified)
 //│ > Debug EffectSig:

@@ -177,7 +177,7 @@ if true do
 //│         getLocals16 = function getLocals() {
 //│           let arg1, prev, thisInfo, tmp12;
 //│           prev = getLocals14();
-//│           arg1 = new runtime.LocalVarInfo.class("arg", "1456", arg);
+//│           arg1 = new runtime.LocalVarInfo.class("arg", "1464", arg);
 //│           thisInfo = new runtime.FnLocalsInfo.class("perform", [
 //│             arg1
 //│           ]);

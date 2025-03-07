@@ -133,10 +133,21 @@ Runtime1 = class Runtime {
     this.stackDepth = 0;
     this.stackOffset = 0;
     this.stackHandler = null;
-    this.StackDelay = class StackDelay {
+    this.stackResume = null;
+    const StackDelayHandler$class = class StackDelayHandler {
       constructor() {}
-      toString() { return "StackDelay"; }
+      delay() {
+        let lambda;
+        lambda = (undefined, function (k) {
+          Runtime.stackResume = k;
+          return runtime.Unit
+        });
+        return Runtime.mkEffect(this, lambda)
+      }
+      toString() { return "StackDelayHandler"; }
     };
+    this.StackDelayHandler = new StackDelayHandler$class;
+    this.StackDelayHandler.class = StackDelayHandler$class;
   }
   static safeCall(x) {
     if (x === undefined) {
@@ -588,7 +599,7 @@ Runtime1 = class Runtime {
     tmp2 = Runtime.stackHandler !== null;
     scrut = tmp1 && tmp2;
     if (scrut === true) {
-      return runtime.safeCall(Runtime.stackHandler.perform())
+      return runtime.safeCall(Runtime.stackHandler.delay())
     } else {
       return runtime.Unit
     }
@@ -604,6 +615,35 @@ Runtime1 = class Runtime {
       tmp1 = runtime.Unit;
     }
     return tmp
+  } 
+  static runStackSafe(limit, f1) {
+    let result, scrut, saved, tmp1, tmp2, tmp3;
+    Runtime.stackLimit = limit;
+    Runtime.stackDepth = 0;
+    Runtime.stackOffset = 0;
+    Runtime.stackHandler = Runtime.StackDelayHandler;
+    tmp1 = Runtime.enterHandleBlock(Runtime.StackDelayHandler, f1);
+    result = tmp1;
+    tmp4: while (true) {
+      scrut = Runtime.stackResume !== null;
+      if (scrut === true) {
+        saved = Runtime.stackResume;
+        Runtime.stackResume = null;
+        Runtime.stackOffset = Runtime.stackDepth;
+        tmp2 = runtime.safeCall(saved());
+        result = tmp2;
+        tmp3 = runtime.Unit;
+        continue tmp4;
+      } else {
+        tmp3 = runtime.Unit;
+      }
+      break;
+    }
+    Runtime.stackLimit = 0;
+    Runtime.stackDepth = 0;
+    Runtime.stackOffset = 0;
+    Runtime.stackHandler = null;
+    return result
   }
   static toString() { return "Runtime"; }
 };

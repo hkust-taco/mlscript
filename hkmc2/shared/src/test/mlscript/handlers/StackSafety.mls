@@ -20,7 +20,7 @@ fun hi(n) =
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
-//│ let hi, res, getLocals, handleBlock$;
+//│ let hi, res, getLocals;
 //│ getLocals = function getLocals() {
 //│   let prev, thisInfo, tmp;
 //│   prev = [];
@@ -33,7 +33,7 @@ hi(0)
 //│   getLocals1 = function getLocals() {
 //│     let n1, prev, thisInfo, tmp1;
 //│     prev = getLocals();
-//│     n1 = new runtime.LocalVarInfo.class("n", "606", n);
+//│     n1 = new runtime.LocalVarInfo.class("n", "614", n);
 //│     thisInfo = new runtime.FnLocalsInfo.class("hi", [
 //│       n1
 //│     ]);
@@ -94,79 +94,20 @@ hi(0)
 //│     return hi(tmp)
 //│   }
 //│ };
-//│ handleBlock$ = function handleBlock$() {
-//│   let stackHandler, getLocals1, res1, Cont$handleBlock$stackHandler$1, StackDelay$1;
-//│   StackDelay$1 = class StackDelay$ extends runtime.StackDelay {
-//│     constructor() {
-//│       let tmp;
-//│       tmp = super();
-//│     }
-//│     perform() {
-//│       return runtime.mkEffect(this, (resume) => {
-//│         let getLocals2;
-//│         getLocals2 = function getLocals() {
-//│           let prev, thisInfo, tmp;
-//│           prev = getLocals();
-//│           thisInfo = new runtime.FnLocalsInfo.class("perform", []);
-//│           tmp = runtime.safeCall(prev.push(thisInfo));
-//│           return prev
-//│         };
-//│         runtime.stackOffset = runtime.stackDepth;
-//│         return resume()
-//│       })
-//│     }
-//│     toString() { return "StackDelay$"; }
-//│   };
-//│   stackHandler = new StackDelay$1();
+//│ res = runtime.runStackSafe(5, () => {
+//│   let getLocals1;
 //│   getLocals1 = function getLocals() {
 //│     let prev, thisInfo, tmp;
 //│     prev = getLocals();
-//│     thisInfo = new runtime.FnLocalsInfo.class("\u2039handler body of stackHandler\u203A", []);
+//│     thisInfo = new runtime.FnLocalsInfo.class("\u2039lambda\u203A", []);
 //│     tmp = runtime.safeCall(prev.push(thisInfo));
 //│     return prev
 //│   };
-//│   Cont$handleBlock$stackHandler$1 = function Cont$handleBlock$stackHandler$(pc1) {
-//│     return new Cont$handleBlock$stackHandler$.class(pc1);
-//│   };
-//│   Cont$handleBlock$stackHandler$1.class = class Cont$handleBlock$stackHandler$ extends runtime.FunctionContFrame.class {
-//│     constructor(pc) {
-//│       let tmp;
-//│       tmp = super(null);
-//│       this.pc = pc;
-//│     }
-//│     resume(value$) {
-//│       if (this.pc === 3) {
-//│         res1 = value$;
-//│       }
-//│       contLoop: while (true) {
-//│         if (this.pc === 3) {
-//│           return res1
-//│         }
-//│         break;
-//│       }
-//│     } 
-//│     get getLocals() {
-//│       return getLocals1();
-//│     }
-//│     toString() { return "Cont$handleBlock$stackHandler$(" + globalThis.Predef.render(this.pc) + ")"; }
-//│   };
-//│   runtime.stackLimit = 5;
-//│   runtime.stackOffset = 0;
-//│   runtime.stackDepth = 1;
-//│   runtime.stackHandler = stackHandler;
-//│   res1 = hi(0);
-//│   if (res1 instanceof runtime.EffectSig.class) {
-//│     res1.contTrace.last.next = Cont$handleBlock$stackHandler$1(3);
-//│     return runtime.handleBlockImpl(res1, stackHandler)
-//│   }
-//│   return res1
-//│ };
-//│ res = handleBlock$();
+//│   return hi(0)
+//│ });
 //│ if (res instanceof runtime.EffectSig.class) {
 //│   res = runtime.topLevelEffect(res);
 //│ }
-//│ runtime.stackDepth = 0;
-//│ runtime.stackHandler = null;
 //│ res
 //│ = 0
 
@@ -180,7 +121,7 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ JS (unsanitized):
-//│ let sum1, res1, getLocals1, handleBlock$1;
+//│ let sum1, res1, getLocals1;
 //│ getLocals1 = function getLocals() {
 //│   let prev, thisInfo, tmp;
 //│   prev = [];
@@ -189,21 +130,21 @@ sum(10000)
 //│   return prev
 //│ };
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, getLocals2, Cont$func$sum$StackSafety$_mls_L177_4_57$1;
+//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, getLocals2, Cont$func$sum$StackSafety$_mls_L118_4_57$1;
 //│   getLocals2 = function getLocals() {
 //│     let n1, prev, thisInfo, tmp2;
 //│     prev = getLocals1();
-//│     n1 = new runtime.LocalVarInfo.class("n", "739", n);
+//│     n1 = new runtime.LocalVarInfo.class("n", "697", n);
 //│     thisInfo = new runtime.FnLocalsInfo.class("sum", [
 //│       n1
 //│     ]);
 //│     tmp2 = runtime.safeCall(prev.push(thisInfo));
 //│     return prev
 //│   };
-//│   Cont$func$sum$StackSafety$_mls_L177_4_57$1 = function Cont$func$sum$StackSafety$_mls_L177_4_57$(pc1) {
-//│     return new Cont$func$sum$StackSafety$_mls_L177_4_57$.class(pc1);
+//│   Cont$func$sum$StackSafety$_mls_L118_4_57$1 = function Cont$func$sum$StackSafety$_mls_L118_4_57$(pc1) {
+//│     return new Cont$func$sum$StackSafety$_mls_L118_4_57$.class(pc1);
 //│   };
-//│   Cont$func$sum$StackSafety$_mls_L177_4_57$1.class = class Cont$func$sum$StackSafety$_mls_L177_4_57$ extends runtime.FunctionContFrame.class {
+//│   Cont$func$sum$StackSafety$_mls_L118_4_57$1.class = class Cont$func$sum$StackSafety$_mls_L118_4_57$ extends runtime.FunctionContFrame.class {
 //│     constructor(pc) {
 //│       let tmp2;
 //│       tmp2 = super(null);
@@ -250,12 +191,12 @@ sum(10000)
 //│     get getLocals() {
 //│       return getLocals2();
 //│     }
-//│     toString() { return "Cont$func$sum$StackSafety$_mls_L177_4_57$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$func$sum$StackSafety$_mls_L118_4_57$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     stackDelayRes.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L177_4_57$1.class(0);
+//│     stackDelayRes.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L118_4_57$1.class(0);
 //│     stackDelayRes.contTrace.last = stackDelayRes.contTrace.last.next;
 //│     return stackDelayRes
 //│   }
@@ -267,7 +208,7 @@ sum(10000)
 //│     runtime.stackDepth = runtime.stackDepth + 1;
 //│     tmp1 = sum1(tmp);
 //│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       tmp1.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L177_4_57$1.class(1);
+//│       tmp1.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L118_4_57$1.class(1);
 //│       tmp1.contTrace.last = tmp1.contTrace.last.next;
 //│       return tmp1
 //│     }
@@ -275,79 +216,20 @@ sum(10000)
 //│     return n + tmp1
 //│   }
 //│ };
-//│ handleBlock$1 = function handleBlock$() {
-//│   let stackHandler, getLocals2, res2, Cont$handleBlock$stackHandler$2, StackDelay$2;
-//│   StackDelay$2 = class StackDelay$1 extends runtime.StackDelay {
-//│     constructor() {
-//│       let tmp;
-//│       tmp = super();
-//│     }
-//│     perform() {
-//│       return runtime.mkEffect(this, (resume) => {
-//│         let getLocals3;
-//│         getLocals3 = function getLocals() {
-//│           let prev, thisInfo, tmp;
-//│           prev = getLocals1();
-//│           thisInfo = new runtime.FnLocalsInfo.class("perform", []);
-//│           tmp = runtime.safeCall(prev.push(thisInfo));
-//│           return prev
-//│         };
-//│         runtime.stackOffset = runtime.stackDepth;
-//│         return resume()
-//│       })
-//│     }
-//│     toString() { return "StackDelay$"; }
-//│   };
-//│   stackHandler = new StackDelay$2();
+//│ res1 = runtime.runStackSafe(1000, () => {
+//│   let getLocals2;
 //│   getLocals2 = function getLocals() {
 //│     let prev, thisInfo, tmp;
 //│     prev = getLocals1();
-//│     thisInfo = new runtime.FnLocalsInfo.class("\u2039handler body of stackHandler\u203A", []);
+//│     thisInfo = new runtime.FnLocalsInfo.class("\u2039lambda\u203A", []);
 //│     tmp = runtime.safeCall(prev.push(thisInfo));
 //│     return prev
 //│   };
-//│   Cont$handleBlock$stackHandler$2 = function Cont$handleBlock$stackHandler$(pc1) {
-//│     return new Cont$handleBlock$stackHandler$.class(pc1);
-//│   };
-//│   Cont$handleBlock$stackHandler$2.class = class Cont$handleBlock$stackHandler$1 extends runtime.FunctionContFrame.class {
-//│     constructor(pc) {
-//│       let tmp;
-//│       tmp = super(null);
-//│       this.pc = pc;
-//│     }
-//│     resume(value$) {
-//│       if (this.pc === 4) {
-//│         res2 = value$;
-//│       }
-//│       contLoop: while (true) {
-//│         if (this.pc === 4) {
-//│           return res2
-//│         }
-//│         break;
-//│       }
-//│     } 
-//│     get getLocals() {
-//│       return getLocals2();
-//│     }
-//│     toString() { return "Cont$handleBlock$stackHandler$(" + globalThis.Predef.render(this.pc) + ")"; }
-//│   };
-//│   runtime.stackLimit = 1000;
-//│   runtime.stackOffset = 0;
-//│   runtime.stackDepth = 1;
-//│   runtime.stackHandler = stackHandler;
-//│   res2 = sum1(10000);
-//│   if (res2 instanceof runtime.EffectSig.class) {
-//│     res2.contTrace.last.next = Cont$handleBlock$stackHandler$2(4);
-//│     return runtime.handleBlockImpl(res2, stackHandler)
-//│   }
-//│   return res2
-//│ };
-//│ res1 = handleBlock$1();
+//│   return sum1(10000)
+//│ });
 //│ if (res1 instanceof runtime.EffectSig.class) {
 //│   res1 = runtime.topLevelEffect(res1);
 //│ }
-//│ runtime.stackDepth = 0;
-//│ runtime.stackHandler = null;
 //│ res1
 //│ = 50005000
 
@@ -385,7 +267,6 @@ foo
 //│ = 50005000
 //│ foo = 50005000
 
-:fixme
 :stackSafe 0
 :effectHandlers
 :expect 50005000
@@ -395,9 +276,8 @@ val foo =
     else n + f(n-1)
   f(10000)
 foo
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
-//│ ═══[RUNTIME ERROR] Expected: '50005000', got: 'undefined'
-//│ foo = undefined
+//│ = 50005000
+//│ foo = 50005000
 
 :re
 fun foo() =
@@ -485,8 +365,8 @@ fun max(a, b) = if a < b then b else a
 //│   getLocals10 = function getLocals() {
 //│     let a1, b1, prev, thisInfo, tmp7;
 //│     prev = getLocals9();
-//│     a1 = new runtime.LocalVarInfo.class("a", "1705", a);
-//│     b1 = new runtime.LocalVarInfo.class("b", "1706", b);
+//│     a1 = new runtime.LocalVarInfo.class("a", "1459", a);
+//│     b1 = new runtime.LocalVarInfo.class("b", "1460", b);
 //│     thisInfo = new runtime.FnLocalsInfo.class("max", [
 //│       a1,
 //│       b1
