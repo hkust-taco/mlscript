@@ -38,11 +38,21 @@ object Elaborator:
     op -> op).toMap
 
   val reservedNames = binaryOps.toSet ++ aliasOps.keySet + "NaN" + "Infinity"
+
+  enum OuterCtx:
+    case Function(returnHandlerSymbol: TempSymbol)
+    case InnerScope(innerSymbol: InnerSymbol)
+    case LocalScope
+    case LambdaOrHandlerBlock
+
+    def inner: Opt[InnerSymbol] = this match
+      case InnerScope(inner) => S(inner)
+      case _ => N
   
   // isFunLike specifies the current context begins a function-like control flow where `return` would exit from the flow.
   // nonLocalRetHandler specifies the current context is a binding site of `return`.
-  case class Ctx(outer: Opt[InnerSymbol], parent: Opt[Ctx], env: Map[Str, Ctx.Elem], 
-    isFunLike: Bool, nonLocalRetHandler: Opt[WeakTempSymbol], mode: Mode):
+  case class Ctx(outer: OuterCtx, parent: Opt[Ctx], env: Map[Str, Ctx.Elem], 
+    mode: Mode):
     
     def +(local: Str -> Symbol): Ctx = copy(outer, env = env + local.mapSecond(Ctx.RefElem(_)))
     def ++(locals: IterableOnce[Str -> Symbol]): Ctx =
@@ -53,27 +63,28 @@ object Elaborator:
     def withMembers(members: Iterable[Str -> MemberSymbol[?]], out: Opt[Symbol] = N): Ctx =
       copy(env = env ++ members.map:
         case (nme, sym) =>
-          val elem = out orElse outer match
+          val elem = out orElse outer.inner match
             case S(outer) => Ctx.SelElem(outer, sym.nme, S(sym))
             case N => Ctx.RefElem(sym)
           nme -> elem
       )
     
-    def nest(outer: Opt[InnerSymbol], isFunLike: Bool): Ctx = Ctx(outer, Some(this), Map.empty, isFunLike, N, mode)
-    def nestReturn(retHandler: WeakTempSymbol): Ctx = Ctx(N, Some(this), Map.empty, true, S(retHandler), mode)
+    def nest(outerCtx: OuterCtx): Ctx = Ctx(outerCtx, Some(this), Map.empty, mode)
+    def nestLocal: Ctx = nest(OuterCtx.LocalScope)
+    def nestInner(inner: InnerSymbol): Ctx = nest(OuterCtx.InnerScope(inner))
     
     def get(name: Str): Opt[Ctx.Elem] =
       env.get(name).orElse(parent.flatMap(_.get(name)))
-    def getOuter: Opt[InnerSymbol] = outer.orElse(parent.flatMap(_.getOuter))
-    def getNonLocalRetHandler: Opt[WeakTempSymbol] =
-      nonLocalRetHandler.orElse(parent.flatMap(_.getNonLocalRetHandler))
+    def getOuter: Opt[InnerSymbol] = outer.inner.orElse(parent.flatMap(_.getOuter))
+    def getNonLocalRetHandler: Opt[TempSymbol] = outer match
+      case OuterCtx.Function(sym) => S(sym)
+      case _ => parent.flatMap(_.getNonLocalRetHandler)
     // Returns S(N) if the return handler is required but not found.
-    def getRetHandler: Opt[Opt[WeakTempSymbol]] =
-      if isFunLike && nonLocalRetHandler.isEmpty then
-        parent.map(_.getNonLocalRetHandler)
-      else if isFunLike then
-        N
-      else
+    def getRetHandler: Opt[Opt[TempSymbol]] = outer match
+      case OuterCtx.Function(sym) => N
+      case OuterCtx.LambdaOrHandlerBlock | OuterCtx.InnerScope => S(getNonLocalRetHandler)
+      case _ =>
+        // If parent is empty, we are at the top-level context.
         parent.fold(S(N))(_.getRetHandler)
     
     // * Invariant: We expect that the top-level context only contain hard-coded symbols like `globalThis`
@@ -154,7 +165,7 @@ object Elaborator:
           new Tree.Ident(nme).withLocOf(id))(symOpt)
       def symbol = symOpt
     given Conversion[Symbol, Elem] = RefElem(_)
-    val empty: Ctx = Ctx(N, N, Map.empty, false, N, Mode.Full)
+    val empty: Ctx = Ctx(OuterCtx.LocalScope, N, Map.empty, Mode.Full)
     
   enum Mode:
     case Full
@@ -284,7 +295,7 @@ extends Importer:
         raise(ErrorReport(msg"Unsupported ${k.name} in this position" -> tree.toLoc :: Nil))
       term(e)
     case b: Block =>
-      ctx.nest(N, false).givenIn:
+      ctx.nestLocal.givenIn:
         block(b, hasResult = true)._1 match
         case Term.Blk(Nil, res) => res
         case res => res
@@ -313,7 +324,7 @@ extends Importer:
             term(bod),
         ), Term.Assgn(lt, sym.ref(id))))
       case _ => ??? // TODO error
-    case (hd @ Hndl(id: Ident, c, Block(sts_), S(bod))) => ctx.nest(N, true).givenIn:
+    case (hd @ Hndl(id: Ident, c, Block(sts_), S(bod))) => ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
       
       val sym = fieldOrVarSym(HandlerBind, id)
       log(s"Processing `handle` statement $id (${sym}) ${ctx.outer}")
@@ -324,7 +335,7 @@ extends Importer:
         BlockMemberSymbol(derivedClsSym.name, Nil),
         Nil, N, N, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), List()))
       
-      val elabed = ctx.nest(S(derivedClsSym), true).givenIn:
+      val elabed = ctx.nestInner(derivedClsSym).givenIn:
         block(sts_, hasResult = false)._1
       
       elabed.res match
@@ -418,7 +429,7 @@ extends Importer:
     case InfixApp(lhs, Keyword.`->`, rhs) =>
       Term.FunTy(term(lhs), term(rhs), N)
     case InfixApp(lhs, Keyword.`=>`, rhs) =>
-      ctx.nest(N, true).givenIn:
+      ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
         val (syms, nestCtx) = params(lhs)
         Term.Lam(syms, term(rhs)(using nestCtx))
     case InfixApp(lhs, Keyword.`as`, rhs) =>
@@ -586,7 +597,7 @@ extends Importer:
     case New(body, rfto) => // TODO handle Under
       lazy val bodo = rfto.map: rft =>
         val clsSym = new ClassSymbol(Tree.DummyTypeDef(syntax.Cls), Tree.Ident("$anon"))
-        ctx.nest(S(clsSym), true).givenIn:
+        ctx.nestInner(clsSym).givenIn:
           clsSym ->
             // TODO integrate context inherited from cls
             // TODO make context with var symbols for class parameters
@@ -626,10 +637,13 @@ extends Importer:
       ctx.getRetHandler match
       case S(S(sym)) =>
         val rs = FlowSymbol("‹app-res›")
+        val retMtdTree = new Tree.Ident("ret")
+        val argTree = new Tree.Tup(body :: Nil)
+        val dummyIdent = new Tree.Ident("return").withLocOf(tree)
         Term.App(
-          Term.Sel(sym.ref(), Ident("ret"))(S(state.nonLocalRet)),
-          Term.Tup(PlainFld(term(body)) :: Nil)(Tree.Tup(Tree.Error() :: Nil))
-        )(Tree.App(Tree.Error(), Tree.Error()), rs)
+          Term.Sel(sym.ref(dummyIdent), retMtdTree)(S(state.nonLocalRet)),
+          Term.Tup(PlainFld(term(body)) :: Nil)(argTree)
+        )(Tree.App(Tree.Sel(dummyIdent, retMtdTree), argTree), rs)
       case S(N) =>
         raise:
           ErrorReport(msg"Return statement outside of a function." -> tree.toLoc :: Nil)
@@ -979,10 +993,10 @@ extends Importer:
         td.name match
           case R(id) =>
             val sym = members.getOrElse(id.name, die)
-            val owner = ctx.outer
+            val owner = ctx.outer.inner
             val isModMember = owner.exists(_.isInstanceOf[ModuleSymbol])
-            val nonLocalRetHandler = WeakTempSymbol(N, s"nonLocalRetHandler$$$nme")
-            val tdf = ctx.nestReturn(nonLocalRetHandler).givenIn:
+            val nonLocalRetHandler = TempSymbol(N, s"nonLocalRetHandler$$$nme")
+            val tdf = ctx.nest(OuterCtx.Function(nonLocalRetHandler)).givenIn:
               // * Add type parameters to context
               val (tps, newCtx1) = td.typeParams match
                 case S(t) => 
@@ -1001,7 +1015,7 @@ extends Importer:
               val b = if ctx.mode != Mode.Light
                 then rhs.map(term(_)(using newCtx))
                 else S(Term.Missing)
-              val nb: Opt[Term] = if !nonLocalRetHandler.used then b else b.map: inner =>
+              val nb: Opt[Term] = if nonLocalRetHandler.directRefs.isEmpty then b else b.map: inner =>
                 val handler = Term.New(state.nonLocalRetHandlerTrm, Nil, N)
                 val lam = PlainFld(Term.Lam(ParamList(ParamListFlags.empty, Nil, N), inner))
                 val handleBlockArgs = Term.Tup(nonLocalRetHandler.ref() :: lam :: Nil)(Tree.Tup(Tree.Error() :: Tree.Error() :: Nil))
@@ -1061,8 +1075,9 @@ extends Importer:
             raise(d)
             return go(sts, funs, Nil, acc)
         val sym = members.getOrElse(nme.name, lastWords(s"Symbol not found: ${nme.name}"))
-        var newCtx = ctx.nest(S(td.symbol).collectFirst{
-          case s: InnerSymbol => s }, true)
+        var newCtx = S(td.symbol).collectFirst:
+            case s: InnerSymbol => s
+          .fold(ctx.nestLocal)(ctx.nestInner(_))
         val tps = td.typeParams match
           case S(ts) =>
             ts.tys.flatMap: targ =>
@@ -1099,7 +1114,7 @@ extends Importer:
         case Als =>
           val alsSym = td.symbol.asInstanceOf[TypeAliasSymbol] // TODO improve `asInstanceOf`
           // newCtx.nest(S(alsSym)).givenIn:
-          newCtx.nest(N, true).givenIn:
+          newCtx.nestLocal.givenIn:
             assert(ps.isEmpty)
             assert(body.isEmpty)
             val d =
@@ -1109,8 +1124,8 @@ extends Importer:
             d
         case Pat =>
           val patSym = td.symbol.asInstanceOf[PatternSymbol] // TODO improve `asInstanceOf`
-          val owner = ctx.outer
-          newCtx.nest(S(patSym), true).givenIn:
+          val owner = ctx.outer.inner
+          newCtx.nestInner(patSym).givenIn:
             assert(body.isEmpty)
             td.rhs match
               case N => raise(ErrorReport(msg"Pattern definitions must have a body." -> td.toLoc :: Nil))
@@ -1142,8 +1157,8 @@ extends Importer:
             pd
         case k: (Mod.type | Obj.type) =>
           val clsSym = td.symbol.asInstanceOf[ModuleSymbol] // TODO: improve `asInstanceOf`
-          val owner = ctx.outer
-          newCtx.nest(S(clsSym), true).givenIn:
+          val owner = ctx.outer.inner
+          newCtx.nestInner(clsSym).givenIn:
             log(s"Processing type definition $nme")
             val cd =
               val (bod, c) = body match
@@ -1156,8 +1171,8 @@ extends Importer:
             cd
         case Cls =>
           val clsSym = td.symbol.asInstanceOf[ClassSymbol] // TODO: improve `asInstanceOf`
-          val owner = ctx.outer
-          newCtx.nest(S(clsSym), true).givenIn:
+          val owner = ctx.outer.inner
+          newCtx.nestInner(clsSym).givenIn:
             log(s"Processing type definition $nme")
             val cd =
               val (bod, c) = body match
@@ -1181,7 +1196,7 @@ extends Importer:
         case _ => go(sts, funs, Nil, res :: acc)
     end go
     
-    c.withMembers(members, c.outer).givenIn:
+    c.withMembers(members, c.outer.inner).givenIn:
       go(blk.desugStmts, Nil, Nil, Nil)
   
   
@@ -1212,7 +1227,7 @@ extends Importer:
     case N => N
   
   def fieldOrVarSym(k: TermDefKind, id: Ident)(using Ctx): LocalSymbol & NamedSymbol =
-    if ctx.outer.isDefined then TermSymbol(k, ctx.outer, id)
+    if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id)
     else VarSymbol(id)
   
   def param(t: Tree, inUsing: Bool): Ctxl[Opt[Opt[Bool] -> Param]] = t match

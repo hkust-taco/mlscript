@@ -103,16 +103,6 @@ class TempSymbol(val trm: Opt[Term], dbgNme: Str = "tmp")(using State) extends B
   override def toString: Str = s"$$${super.toString}"
   override def subst(using s: SymbolSubst): TempSymbol = s.mapTempSym(this)
 
-class WeakTempSymbol(trm: Opt[Term], dbgNme: Str = "weak")(using State) extends TempSymbol(trm, dbgNme):
-  var used: Bool = false
-  def use: WeakTempSymbol =
-    used = true
-    this
-  override def ref(id: Ident): Term.Ref =
-    used = true
-    super.ref(id)
-  override def subst(using s: SymbolSubst): WeakTempSymbol = s.mapWeakTempSym(this)
-
 // * When instantiating forall-qualified TVs, we need to duplicate the information
 // * for pretty-printing, but each instantiation should be different from each other
 // * i.e., UID should be different
