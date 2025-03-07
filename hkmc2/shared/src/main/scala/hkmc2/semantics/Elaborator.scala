@@ -640,7 +640,7 @@ extends Importer:
         val rs = FlowSymbol("‹app-res›")
         val retMtdTree = new Tree.Ident("ret")
         val argTree = new Tree.Tup(body :: Nil)
-        val dummyIdent = new Tree.Ident("return").withLocOf(kwLoc)
+        val dummyIdent = new Tree.Ident("return").withLoc(kwLoc)
         Term.App(
           Term.Sel(sym.ref(dummyIdent), retMtdTree)(S(state.nonLocalRet)),
           Term.Tup(PlainFld(term(body)) :: Nil)(argTree)
@@ -1017,13 +1017,14 @@ extends Importer:
                 then rhs.map(term(_)(using newCtx))
                 else S(Term.Missing)
               val nb: Opt[Term] = if nonLocalRetHandler.directRefs.isEmpty then b else b.map: inner =>
+                // TODO: emit Term.Handle instead of using enterHandleBlock
                 val handler = Term.New(state.nonLocalRetHandlerTrm, Nil, N)
                 val lam = PlainFld(Term.Lam(ParamList(ParamListFlags.empty, Nil, N), inner))
-                val handleBlockArgs = Term.Tup(nonLocalRetHandler.ref() :: lam :: Nil)(Tree.Tup(Tree.Error() :: Tree.Error() :: Nil))
+                val handleBlockArgs = Term.Tup(nonLocalRetHandler.ref() :: lam :: Nil)(Tree.DummyTup)
                 val rs = FlowSymbol("‹app-res›")
                 Term.Blk(
                   Term.Assgn(nonLocalRetHandler.ref(), handler) :: Nil,
-                  Term.App(state.enterHandleBlockTrm, handleBlockArgs)(Tree.App(Tree.Error(), Tree.Error()), rs))
+                  Term.App(state.enterHandleBlockTrm, handleBlockArgs)(Tree.DummyApp, rs))
               val r = FlowSymbol(s"‹result of ${sym}›")
               val tdf = TermDefinition(owner, k, sym, pss, tps, s, nb, r, 
                 TermDefFlags.empty.copy(isModMember = isModMember), annotations)
