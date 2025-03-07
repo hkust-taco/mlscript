@@ -29,12 +29,10 @@ object HandlerLowering:
   
   private case class LinkState(res: Path, cls: Path, uid: StateId)
   
-  // shouldUnwrapRet: whether the current block should unwrap the runtime.Return if it encounter one
   // isTopLevel:
   // whether the current block is the top level block, as we do not emit code for continuation class on the top level
   // since we cannot return an effect signature on the top level (we are not in a function so return statement are invalid)
   // and we do not have any `return` statement in the top level block so we do not need the `runtime.Return` workarounds.
-  // isHandler: whether the current block is the body of handler method
   // contName: the name of the continuation class
   // ctorThis: the path to `this` in the constructor, this is used to insert `return this;` at the end of constructor.
   // linkAndHandle:

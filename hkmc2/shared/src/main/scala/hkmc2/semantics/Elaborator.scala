@@ -78,10 +78,10 @@ object Elaborator:
       case OuterCtx.Function(sym) => S(sym)
       case _ => parent.flatMap(_.getNonLocalRetHandler)
     // Returns N if no return handler is required (a direct `return` is possible).
-    // Returns S(N) if the return handler is required but not found.
+    // Returns S(N) if there is no function in scope.
     def getRetHandler: Opt[Opt[TempSymbol]] = outer match
       case OuterCtx.Function(sym) => N
-      case OuterCtx.LambdaOrHandlerBlock | OuterCtx.InnerScope(_) => S(getNonLocalRetHandler)
+      case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope) => S(getNonLocalRetHandler)
       case _ =>
         // If parent is empty, we are at the top-level context.
         parent.fold(S(N))(_.getRetHandler)
@@ -629,7 +629,7 @@ extends Importer:
     case Modified(Keyword.`return`, kwLoc, body) =>
       ctx.getRetHandler match
       case S(S(sym)) =>
-        tl.log(s"Non local return: $sym")
+        tl.log(s"Non-local return: $sym")
         val rs = FlowSymbol("‹app-res›")
         val retMtdTree = new Tree.Ident("ret")
         val argTree = new Tree.Tup(body :: Nil)
@@ -643,7 +643,6 @@ extends Importer:
           ErrorReport(msg"Return statement outside of a function." -> tree.toLoc :: Nil)
         Term.Error
       case N =>
-        tl.log(s"Normal return: $ctx")
         Term.Ret(term(body))
     case Modified(Keyword.`throw`, kwLoc, body) =>
       Term.Throw(term(body))
@@ -1013,13 +1012,13 @@ extends Importer:
                 then rhs.map(term(_)(using newCtx))
                 else S(Term.Missing)
               val nb: Opt[Term] = if nonLocalRetHandler.directRefs.isEmpty then b else b.map: inner =>
-                val clsSym = ClassSymbol(Tree.DummyTypeDef(Cls), Tree.Ident("‹non local return effect›"))
+                val clsSym = ClassSymbol(Tree.DummyTypeDef(Cls), Tree.Ident("‹non-local return effect›"))
                 val valueSym = VarSymbol(Ident("value"))
                 val resumeSym = VarSymbol(Ident("resume"))
                 val mtdSym = BlockMemberSymbol("ret", Nil, true)
                 val td = TermDefinition(
                   N, Fun, mtdSym, PlainParamList(Param(FldFlags.empty, valueSym, N) :: Nil) :: Nil,
-                  N, N, S(valueSym.ref(Ident("value"))), FlowSymbol(s"‹result of non local return›"), TermDefFlags.empty, Nil)
+                  N, N, S(valueSym.ref(Ident("value"))), FlowSymbol(s"‹result of non-local return›"), TermDefFlags.empty, Nil)
                 val htd = HandlerTermDefinition(resumeSym, td)
                 Term.Handle(nonLocalRetHandler, state.nonLocalRetHandlerTrm, Nil, clsSym, htd :: Nil, inner)
               val r = FlowSymbol(s"‹result of ${sym}›")
@@ -1028,7 +1027,7 @@ extends Importer:
               sym.defn = S(tdf)
               
               // indicates if the function really returns a module
-              // TODO: check non local returns
+              // TODO: check non-local returns
               val em = b.exists(ModuleChecker.evalsToModule)
               // indicates if the function marks its result as "module"
               val mm = st match
