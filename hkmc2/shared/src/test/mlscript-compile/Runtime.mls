@@ -1,6 +1,5 @@
 import "./RuntimeJS.mjs" 
 
-
 module Runtime with ...
 
 
@@ -31,6 +30,8 @@ class MatchFailure(errors)
 
 // Private definitions for algebraic effects
 
+object FatalEffect
+
 abstract class FunctionContFrame(next) with
   fun resume(value)
 class HandlerContFrame(next, nextHandler, handler)
@@ -42,6 +43,31 @@ class Return(value)
 class FnLocalsInfo(fnName, locals)
 class LocalVarInfo(localName, uid, value)
 
+fun render(arg) = if
+  arg is
+    undefined then "undefined"
+    null      then "null"
+    Array     then fold(+)("[", ...interleave(", ")(...map(render)(...arg)), "]")
+    Str       then JSON.stringify(arg)
+    Set       then fold(+)("Set{", ...interleave(", ")(...map(render)(...arg)), "}")
+    Map       then fold(+)("Map{", ...interleave(", ")(...map(render)(...arg)), "}")
+    Function  and
+      let p = Object.getOwnPropertyDescriptor(arg, "prototype")
+      (p is Object and p.("writable")) || (p is undefined) then
+        "[function" + (if arg.name is
+          ""  then ""
+          nme then " " + nme
+        ) + "]"
+    Object then
+      if arg.constructor.name is "Object"
+      then
+        let es = Object.entries(arg)
+        fold(+)("{", ...interleave(", ")(...map(case [k, v] then k + ": " + render(v))(...es)), "}")
+      else String(arg)
+  let ts = arg.("toString") // not accessing as `arg.toString` to avoid the sanity check
+  ts is undefined then "[" + typeof(arg) + "]"
+  else ts.call(arg)
+
 fun topLevelEffect(tr) =
   let
     zwsp = "\u200B"
@@ -51,8 +77,11 @@ fun topLevelEffect(tr) =
   while curHandler !== null do
     let cur = curHandler.next
     while cur !== null do
+      let locals = cur.getLocals
+      let curLocals = locals.at(locals.length - 1)
       set
-        msg += "\n\tat " + cur.constructor.name + "(pc=" + cur.pc + ")"
+        msg += "\n\tat " + curLocals.fnName + "(pc=" + cur.pc + ")"
+        msg += " with locals: " + curLocals.locals.map(l => l.localName + "=" + render(l.value)).join(", ")
         cur = cur.next
         atTail = false
     set curHandler = curHandler.nextHandler

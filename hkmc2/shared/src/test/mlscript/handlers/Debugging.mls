@@ -1,0 +1,23 @@
+:js
+:effectHandlers
+
+:re
+raiseUnhandledEffect()
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
+//│ 	at tail position​
+//│ ​Error: Unhandled effects
+
+
+fun f() =
+  let i = 0
+  let j = 100
+  let k = 2000
+  if i == 0 do
+    raiseUnhandledEffect()
+  j / i
+
+:re
+f()
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
+//│ 	at f(pc=0) with locals: i=0, j=100, k=2000​
+//│ ​Error: Unhandled effects

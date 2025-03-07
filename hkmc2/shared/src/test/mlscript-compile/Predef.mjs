@@ -475,6 +475,9 @@ Predef1 = class Predef {
   } 
   static enterHandleBlock(handler, body) {
     return Runtime.enterHandleBlock(handler, body)
+  } 
+  static raiseUnhandledEffect() {
+    return Runtime.mkEffect(Runtime.FatalEffect, null)
   }
   static toString() { return "Predef"; }
 };

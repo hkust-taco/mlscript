@@ -30,6 +30,12 @@ Runtime1 = class Runtime {
       }
       toString() { return "MatchFailure(" + globalThis.Predef.render(this.errors) + ")"; }
     };
+    const FatalEffect$class = class FatalEffect {
+      constructor() {}
+      toString() { return "FatalEffect"; }
+    };
+    this.FatalEffect = new FatalEffect$class;
+    this.FatalEffect.class = FatalEffect$class;
     this.FunctionContFrame = function FunctionContFrame(next1) {
       return new FunctionContFrame.class(next1);
     };
@@ -135,63 +141,150 @@ Runtime1 = class Runtime {
     tmp3 = tmp2 + "' was accessed without being called.";
     throw globalThis.Error(tmp3);
   } 
+  static render(arg) {
+    let ts, scrut, es, p, scrut1, scrut2, scrut3, nme, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+    if (arg === undefined) {
+      return "undefined"
+    } else if (arg === null) {
+      return "null"
+    } else if (arg instanceof globalThis.Array) {
+      /* error */
+    } else if (typeof arg === 'string') {
+      return runtime.safeCall(globalThis.JSON.stringify(arg))
+    } else if (arg instanceof globalThis.Set) {
+      /* error */
+    } else if (arg instanceof globalThis.Map) {
+      /* error */
+    } else if (arg instanceof globalThis.Function) {
+      p = globalThis.Object.getOwnPropertyDescriptor(arg, "prototype");
+      if (p instanceof globalThis.Object) {
+        scrut1 = p["writable"];
+        if (scrut1 === true) {
+          tmp = true;
+        } else {
+          tmp = false;
+        }
+      } else {
+        tmp = false;
+      }
+      if (p === undefined) {
+        tmp1 = true;
+      } else {
+        tmp1 = false;
+      }
+      scrut2 = tmp || tmp1;
+      if (scrut2 === true) {
+        scrut3 = arg.name;
+        if (scrut3 === "") {
+          tmp2 = "";
+        } else {
+          nme = scrut3;
+          tmp2 = " " + nme;
+        }
+        tmp3 = "[function" + tmp2;
+        return tmp3 + "]"
+      } else {
+        scrut = arg.constructor.name;
+        if (scrut === "Object") {
+          tmp4 = runtime.safeCall(globalThis.Object.entries(arg));
+          es = tmp4;
+          /* error */
+        } else {
+          return globalThis.String(arg)
+        }
+      }
+    } else if (arg instanceof globalThis.Object) {
+      scrut = arg.constructor.name;
+      if (scrut === "Object") {
+        tmp5 = runtime.safeCall(globalThis.Object.entries(arg));
+        es = tmp5;
+        /* error */
+      } else {
+        return globalThis.String(arg)
+      }
+    } else {
+      ts = arg["toString"];
+      if (ts === undefined) {
+        tmp6 = typeof arg;
+        tmp7 = "[" + tmp6;
+        return tmp7 + "]"
+      } else {
+        return runtime.safeCall(ts.call(arg))
+      }
+    }
+  } 
   static topLevelEffect(tr) {
-    let zwsp, msg, curHandler, atTail, scrut, cur, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15;
+    let zwsp, msg, curHandler, atTail, scrut, cur, scrut1, locals, curLocals, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20, tmp21, lambda;
     zwsp = "\u200B";
     tmp = zwsp + "Error: Unhandled effect ";
     tmp1 = tmp + tr.handler.constructor.name;
     msg = tmp1;
     curHandler = tr.contTrace;
     atTail = true;
-    tmp16: while (true) {
+    tmp22: while (true) {
       scrut = curHandler !== null;
       if (scrut === true) {
         cur = curHandler.next;
-        tmp17: while (true) {
+        tmp23: while (true) {
           scrut1 = cur !== null;
           if (scrut1 === true) {
-            tmp2 = "\n\tat " + cur.constructor.name;
-            tmp3 = tmp2 + "(pc=";
-            tmp4 = tmp3 + cur.pc;
-            tmp5 = tmp4 + ")";
-            tmp6 = msg + tmp5;
-            msg = tmp6;
+            locals = cur.getLocals;
+            tmp2 = locals.length - 1;
+            tmp3 = runtime.safeCall(locals.at(tmp2));
+            curLocals = tmp3;
+            tmp4 = "\n\tat " + curLocals.fnName;
+            tmp5 = tmp4 + "(pc=";
+            tmp6 = tmp5 + cur.pc;
+            tmp7 = tmp6 + ")";
+            tmp8 = msg + tmp7;
+            msg = tmp8;
+            lambda = (undefined, function (l) {
+              let tmp24, tmp25;
+              tmp24 = l.localName + "=";
+              tmp25 = Runtime.render(l.value);
+              return tmp24 + tmp25
+            });
+            tmp9 = runtime.safeCall(curLocals.locals.map(lambda));
+            tmp10 = runtime.safeCall(tmp9.join(", "));
+            tmp11 = " with locals: " + tmp10;
+            tmp12 = msg + tmp11;
+            msg = tmp12;
             cur = cur.next;
             atTail = false;
-            tmp7 = runtime.Unit;
-            continue tmp17;
+            tmp13 = runtime.Unit;
+            continue tmp23;
           } else {
-            tmp7 = runtime.Unit;
+            tmp13 = runtime.Unit;
           }
           break;
         }
         curHandler = curHandler.nextHandler;
         scrut2 = curHandler !== null;
         if (scrut2 === true) {
-          tmp8 = "\n\twith handler " + curHandler.handler.constructor.name;
-          tmp9 = msg + tmp8;
-          msg = tmp9;
+          tmp14 = "\n\twith handler " + curHandler.handler.constructor.name;
+          tmp15 = msg + tmp14;
+          msg = tmp15;
           atTail = false;
-          tmp10 = runtime.Unit;
+          tmp16 = runtime.Unit;
         } else {
-          tmp10 = runtime.Unit;
+          tmp16 = runtime.Unit;
         }
-        tmp11 = tmp10;
-        continue tmp16;
+        tmp17 = tmp16;
+        continue tmp22;
       } else {
-        tmp11 = runtime.Unit;
+        tmp17 = runtime.Unit;
       }
       break;
     }
     if (atTail === true) {
-      tmp12 = msg + "\n\tat tail position";
-      msg = tmp12;
-      tmp13 = runtime.Unit;
+      tmp18 = msg + "\n\tat tail position";
+      msg = tmp18;
+      tmp19 = runtime.Unit;
     } else {
-      tmp13 = runtime.Unit;
+      tmp19 = runtime.Unit;
     }
-    tmp14 = msg + zwsp;
-    tmp15 = runtime.safeCall(globalThis.console.log(tmp14));
+    tmp20 = msg + zwsp;
+    tmp21 = runtime.safeCall(globalThis.console.log(tmp20));
     throw globalThis.Error("Unhandled effects");
   } 
   static showFunctionContChain(cont, hl, vis, reps) {
