@@ -557,16 +557,22 @@ fun testMate_nofib(dummy) =
     solve(bd, c, n)
 
 print(nofibListToString(testMate_nofib(0)))
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:146)
-//│ ═══[RUNTIME ERROR] Error: ENOENT: no such file or directory, open 'hkmc2/shared/src/test/mlscript/nofib/input/heathcote3.prob'
-//│     at Object.openSync (node:fs:562:18)
-//│     at Object.readFileSync (node:fs:446:35)
-//│     at testMate_nofib (REPL226:1:388)
-//│     at REPL229:1:47
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:597:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:926:10)
-//│     at REPLServer.emit (node:events:524:28)
+//│ >  - - - - - - - -
+//│ >  - - - - - - - -
+//│ >  - - - - - - - -
+//│ >  - - - - P - - -
+//│ >  - - - - p - k b
+//│ >  - P n - K - - -
+//│ >  - P - - - - - -
+//│ >  - q - - - - - -
+//│ > 
+//│ > White to move and mate in 3
+//│ > 
+//│ > 1. N/QB3-QR2,
+//│ >  if K-Q5; 2. B/KR4-KB2, K-QB5; 3. Q/QN1-KB1++
+//│ >  if K-Q7; 2. K-KB3, P/QN6xN/QR7; 3. B/KR4-K1++
+//│ >  if K-K7; 2. N/QR2-QN4,
+//│ >   if K-Q7; 3. Q/QN1-K1++
+//│ >   if K-K6; 3. Q/QN1-Q3++
+//│ >  if P/QN6xN/QR7; 2. Q/QN1-QB2, ...; 3. B/KR4-KB2++
+//│ > 
