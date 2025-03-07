@@ -8,7 +8,7 @@ fun test(x) =
   [this.a, x]
 //│ ═══[ERROR] Cannot use 'this' outside of an object scope.
 //│ JS (unsanitized):
-//│ let test; test = function test(x) { /* error */ };
+//│ let test; test = function test(x) { return [] };
 
 :sjs
 fun test(x) =

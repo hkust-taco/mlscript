@@ -432,9 +432,7 @@ extends Importer:
     case InfixApp(lhs, Keyword.`as`, rhs) =>
       Term.Asc(term(lhs), term(rhs))
     case InfixApp(lhs, Keyword.`:`, rhs) =>
-      raise:
-        ErrorReport(msg"Unexpected colon in this position." -> tree.toLoc :: Nil, S(tree))
-      term(lhs)
+      block(tree :: Nil, hasResult = false)._1
     case tree @ InfixApp(lhs, Keyword.`is` | Keyword.`and`, rhs) =>
       val des = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
@@ -779,6 +777,8 @@ extends Importer:
         t
   
   def fld(tree: Tree): Ctxl[Elem] = tree match
+    case InfixApp(id: Ident, Keyword.`:`, rhs) =>
+      Fld(FldFlags.empty, Term.Lit(StrLit(id.name).withLocOf(id)), S(term(rhs)))
     case InfixApp(lhs, Keyword.`:`, rhs) =>
       Fld(FldFlags.empty, term(lhs), S(term(rhs)))
     case Spread(Keyword.`..`, _, S(trm)) =>

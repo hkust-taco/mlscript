@@ -156,7 +156,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
           subTerm(ext.cls): clsp =>
             val pctor = // TODO dedup with New case
-              args(ext.args): args =>
+              plainArgs(ext.args): args =>
                 Return(Call(Value.Ref(State.builtinOpsMap("super")), args)(true, true), implct = true)
             Define(
               ClsLikeDefn(
@@ -188,12 +188,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case st.Asc(lhs, rhs) =>
       term(lhs, inStmtPos = inStmtPos)(k)
     case st.Tup(fs) =>
-      fs.foldRight[Ls[Arg] => Block](args => k(Value.Arr(args.reverse))){
-        case (a: Fld, acc) =>
-          args => subTerm_nonTail(a.term)(r => acc(Arg(false, r) :: args))
-        case (s: Spd, acc) =>
-          args => subTerm_nonTail(s.term)(r => acc(Arg(true, r) :: args))
-      }(Nil)
+      args(fs)(args => k(Value.Arr(args)))
     case ref @ st.Ref(sym) =>
       sym match
       case ctx.builtins.source.bms | ctx.builtins.js.bms =>
@@ -289,42 +284,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       def conclude(fr: Path) =
         arg match
         case Tup(fs) =>
-          val as = fs.map:
-            case sem.Fld(sem.FldFlags.benign(), value, N) => false -> value
-            case sem.Fld(flags, value, asc) =>
-              TODO("Other argument forms")
-            case spd: Spd => true -> spd.term
-            case ca: sem.CtxArg => ca.term match
-              case S(t) => 
-                false -> t
-              case N => 
-                // All contextual arguments should have been
-                // populated by implicit resolution before lowering.
-                // Fail silently.
-                false -> Term.Error
-          val l = new TempSymbol(S(t))
-          // * The straightforward way to lower arguments creates too much recursion depth
-          // * and makes Lowering stack overflow when lowering functions with lots of arguments.
-          /* 
-          def rec(as: Ls[Bool -> st], asr: Ls[Arg]): Block = as match
-            case Nil => k(Call(fr, asr.reverse)(isMlsFun, true))
-            case (spd, a) :: as =>
-              subTerm_nonTail(a): ar =>
-                rec(as, Arg(spd, ar) :: asr)
-          rec(as, Nil)
-          */
-          var asr: Ls[Arg] = Nil
-          def rec(as: Ls[Bool -> st]): Block = as match
-            case Nil => End()
-            case (spd, a) :: as =>
-              subTerm_nonTail(a): ar =>
-                asr ::= Arg(spd, ar)
-                rec(as)
-          val b = rec(as)
-          Begin(
-            b,
-            k(Call(fr, asr.reverse)(isMlsFun, true))
-          )
+          args(fs)(as => k(Call(fr, as)(isMlsFun, true)))
         case _ =>
           // Application arguments that are not tuples represent spreads, as in `f(...arg)`
           subTerm_nonTail(arg): ar =>
@@ -537,7 +497,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         val sym = new BlockMemberSymbol(isym.name, Nil)
         val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
         val pctor =
-          args(as): args =>
+          plainArgs(as): args =>
             Return(Call(Value.Ref(State.builtinOpsMap("super")), args)(true, true), implct = true)
         val clsDef = ClsLikeDefn(N, isym, sym, syntax.Cls, N, Nil, S(clsp),
           mtds, privateFlds, publicFlds, pctor, ctor)
@@ -608,8 +568,52 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           case t => t
     (mtds, publicFlds, privateFlds, ctor)
   
-  inline def args(ts: Ls[st])(k: Ls[Arg] => Block)(using Subst): Block =
+  def args(elems: Ls[Elem])(k: Ls[Arg] => Block)(using Subst): Block =
+    val as = elems.map:
+      case sem.Fld(sem.FldFlags.benign(), value, N) => R(false -> value)
+      case sem.Fld(sem.FldFlags.benign(), idx, S(rhs)) => L(idx -> rhs)
+      case arg @ sem.Fld(flags, value, asc) => TODO(s"Other argument forms: $arg")
+      case spd: Spd => R(true -> spd.term)
+      case ca: sem.CtxArg => ca.term match
+        case S(t) => 
+          R(false -> t)
+        case N => 
+          // * All contextual arguments should have been
+          // * populated by implicit resolution before lowering.
+          die
+    // * The straightforward way to lower arguments creates too much recursion depth
+    // * and makes Lowering stack overflow when lowering functions with lots of arguments.
+    /* 
+    def rec(as: Ls[Bool -> st], asr: Ls[Arg]): Block = as match
+      case Nil => k(Call(fr, asr.reverse)(isMlsFun, true))
+      case (spd, a) :: as =>
+        subTerm_nonTail(a): ar =>
+          rec(as, Arg(spd, ar) :: asr)
+    rec(as, Nil)
+    */
+    var asr: Ls[Arg] = Nil
+    var fsr: Ls[RcdArg] = Nil
+    def rec(as: Ls[(Term -> Term) \/ (Bool -> st)]): Block = as match
+      case Nil => End()
+      case R((spd, a)) :: as =>
+        subTerm_nonTail(a): ar =>
+          asr ::= Arg(spd, ar)
+          rec(as)
+      case L((idx, t)) :: as =>
+        subTerm_nonTail(idx): ir =>
+          subTerm_nonTail(t): tr =>
+            fsr ::= RcdArg(S(ir), tr)
+            rec(as)
+    val b = rec(as)
+    val args = if fsr.isEmpty then asr else Arg(false, Value.Rcd(fsr.reverse)) :: asr
+    Begin(
+      b,
+      k(args.reverse)
+    )
+  
+  inline def plainArgs(ts: Ls[st])(k: Ls[Arg] => Block)(using Subst): Block =
     subTerms(ts)(asr => k(asr.map(Arg(false, _))))
+  
   inline def subTerms(ts: Ls[st])(k: Ls[Path] => Block)(using Subst): Block =
     // @tailrec // TODO
     def rec(as: Ls[st], asr: Ls[Path]): Block = as match
