@@ -517,7 +517,84 @@ class SimpleSub(val tl: TraceLogger)(using Elaborator.State):
     }
     term(b.res)(using currentCtx)
   
-  def analyzeTermTypes(t: Term): Unit =
+  def formatTypeForName(ty: SimpleType): String =
+    coalesceType(ty)
+      .replace(" ", "_")
+      .replace("->", "To")
+      .replace("{", "")
+      .replace("}", "")
+      .replace(";", "_")
+      .replace(":", "_")
+      .replace("|", "Or")
+      .replace("&", "And")
+      .replace("'", "")
+      .replace("μ", "")
+      .replace(".", "")
+
+  def generateSpecializedVersions(term: Term): Term = term match
+    case blk @ Blk(stats, res) =>
+      val funcsToSpecialize = stats.collect {
+        case td: TermDefinition if specialisationPoints.values.exists(sp => 
+          sp.parentFunctionSym == td.sym && sp.concreteTypes.nonEmpty) => td
+      }
+      
+      val specializedFuncs = funcsToSpecialize.flatMap { td =>
+        val specPoints = specialisationPoints.values.filter(sp => 
+          sp.parentFunctionSym == td.sym && sp.concreteTypes.nonEmpty).toList
+        
+        def generateCombinations(
+          points: List[SpecPoint], 
+          current: List[(Symbol, SimpleType)] = Nil
+        ): List[List[(Symbol, SimpleType)]] = points match
+          case Nil => List(current)
+          case point :: rest =>
+            point.concreteTypes.toList.flatMap { ty =>
+              generateCombinations(rest, current :+ (point.paramSym -> ty))
+            }
+        
+        val typeCombinations = generateCombinations(specPoints)
+        
+        typeCombinations.map { typeCombination =>
+          val suffix = typeCombination.map { case (_, ty) => formatTypeForName(ty) }.mkString("_")
+          val specializedName = s"${td.sym.nme}_$suffix"
+          log(s"Creating specialized function: $specializedName")
+          val specializedSym = new BlockMemberSymbol(specializedName, td.sym.trees)
+          val typeList = typeCombination.map(_._2).toList
+          log(s"Generated specialized version ${specializedName} for ${td.sym.nme} with types [${typeList.mkString(", ")}]")
+          
+          TermDefinition(
+            td.owner, 
+            td.k, 
+            specializedSym, 
+            td.params, 
+            td.tparams, 
+            td.sign, 
+            td.body,  
+            td.resSym, 
+            td.flags, 
+            td.annotations
+          )
+        }
+      }
+      
+      val nestedProcessedStats = stats.map {
+        case nested: Blk => generateSpecializedVersions(nested)
+        case td: TermDefinition => 
+          td.body match
+            case Some(body: Blk) => 
+              val processedBody = generateSpecializedVersions(body)
+              TermDefinition(td.owner, td.k, td.sym, td.params, td.tparams, 
+                             td.sign, Some(processedBody), td.resSym, td.flags, td.annotations)
+            case _ => td
+        case other => other
+      }
+      
+      val newStats = nestedProcessedStats ++ specializedFuncs
+      Blk(newStats, res)
+      
+    case other => other
+
+  def analyzeTermTypes(t: Term): Term =
     val ctx = initialContext
     val resultType = term(t)(using ctx)
     log(s"Result type: ${coalesceType(resultType)}")
@@ -531,6 +608,9 @@ class SimpleSub(val tl: TraceLogger)(using Elaborator.State):
           log(specPoint.toString)
       }
       log("====================================")
+      
+      generateSpecializedVersions(t)
+    else t
   
   def coalesceType(ty: SimpleType): String =
     val recursive = mutable.Map[(VariableState, Boolean), String]()

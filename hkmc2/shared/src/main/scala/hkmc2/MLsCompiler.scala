@@ -83,13 +83,13 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
       val (blk0, _) = elab.importFrom(parsed)
       val blk: semantics.Term.Blk = blk0.copy(stats = semantics.Import(State.runtimeSymbol, runtimeFile.toString) :: blk0.stats)
       val typ = new semantics.SimpleSub(stl)
-      typ.analyzeTermTypes(blk)
+      val spBlk = typ.analyzeTermTypes(blk)
       val low = ltl.givenIn:
         new codegen.Lowering()
           with codegen.LoweringSelSanityChecks
       val jsb = ltl.givenIn:
         codegen.js.JSBuilder()
-      val le = low.program(blk)
+      val le = low.program(spBlk)
       val baseScp: utils.Scope =
         utils.Scope.empty
       val nestedScp = baseScp.nest
