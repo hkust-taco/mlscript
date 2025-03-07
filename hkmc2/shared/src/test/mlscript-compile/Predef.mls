@@ -116,8 +116,8 @@ fun stringGet(string, i) = string.at(i)
 fun stringDrop(string, n) = string.slice(n)
 
 
-class MatchResult(captures)
-class MatchFailure(errors)
+data class MatchResult(captures)
+data class MatchFailure(errors)
 
 fun unreachable = throw Error("unreachable")
 
@@ -155,18 +155,18 @@ module TraceLogger with
     else ()
 
 
-class Test with
+data class Test with
   print("Test")
   val y = 1
 
 // Private definitions for algebraic effects
 
-abstract class __Cont(next) with
+abstract class __Cont(val next) with
   fun resume(value)
 
-class __TailList(next)
+data class __TailList(next)
 
-class __ListWithTail(next, tail) with
+data class __ListWithTail(next, tail) with
   fun append(elem) =
     set tail.next = elem
     set tail = elem
@@ -175,10 +175,10 @@ fun __mkListWithTail() =
   set res.tail = res
   res
 
-class __HandleBlock(contHead, lastHandlerCont, next, handler)
+data class __HandleBlock(contHead, lastHandlerCont, next, handler)
 
-class __EffectSig(next, tail, handleBlockList, resumed, handler, handlerFun)
-class __Return(value)
+data class __EffectSig(next, tail, handleBlockList, resumed, handler, handlerFun)
+data class __Return(value)
 
 fun __appendInCont(eff, cont) =
   if eff.tail is __TailList then
@@ -267,6 +267,7 @@ fun __resume(cur, tail)(value) =
       if value is __EffectSig then
         if value.tail.next !== cont do
           if cont.next !== null and value.tail.next !== null do
+            console.log(value.tail)
             throw Error("Internal Error: unexpected continuation")
         // in tail call optimization, the continuation is not appended, we append it here
         if value.tail.next === null do

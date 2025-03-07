@@ -9,8 +9,8 @@ class Derived extends Base
 
 // Extension with parameters
 abstract class Box
-class IntBox(val value: Int) extends Box
-class StrBox(val value: Str) extends Box
+data class IntBox(val value: Int) extends Box
+data class StrBox(val value: Str) extends Box
 //│ Env:
 //│   Box -> RefElem(member:Box)
 //│   IntBox -> RefElem(member:IntBox)
@@ -19,7 +19,7 @@ class StrBox(val value: Str) extends Box
 // Extension with symbolic name
 abstract class Ring
 module End extends Ring
-class (++) Link(left: Ring, right: Ring) extends Ring
+data class (++) Link(left: Ring, right: Ring) extends Ring
 //│ Env:
 //│   ++ -> RefElem(member:Link)
 //│   End -> RefElem(member:End)
@@ -28,7 +28,7 @@ class (++) Link(left: Ring, right: Ring) extends Ring
 
 // Extension with type parameters
 abstract class Option[T]: (Some[T] | None)
-class Some[T](val value: T) extends Option[T]
+data class Some[T](val value: T) extends Option[T]
 module None extends Option[Nothing]
 //│ Env:
 //│   None -> RefElem(member:None)
@@ -37,7 +37,7 @@ module None extends Option[Nothing]
 
 // Extension with type parameters and symbolic name
 abstract class List[T]: (Cons[T] | Nil)
-class (::) Cons[T](val head: T, val tail: List[T]) extends List[T]
+data class (::) Cons[T](val head: T, val tail: List[T]) extends List[T]
 module Nil extends List[Nothing]
 //│ Env:
 //│   :: -> RefElem(member:Cons)

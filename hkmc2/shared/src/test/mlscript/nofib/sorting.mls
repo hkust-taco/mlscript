@@ -114,7 +114,7 @@ abstract class Tree[T]: Tip | Branch[T]
 
 object Tip extends Tree[Nothing]
 
-class Branch[T](a: T, l: Tree[T], r: Tree[T]) extends Tree[T]
+data class Branch[T](a: T, l: Tree[T], r: Tree[T]) extends Tree[T]
 
 fun treeSort(param) =
   fun mkTree(innerparam) =
@@ -133,9 +133,10 @@ abstract class Tree2[T]: Tip2 | Twig2[T] | Branch2[T]
 
 object Tip2 extends Tree2[Nothing]
 
-class
-  Twig2[T](a: T) extends Tree2[T]
-  Branch2[T](a: T, l: Tree2[T], r: Tree2[T]) extends Tree2[T]
+data
+  class
+    Twig2[T](a: T) extends Tree2[T]
+    Branch2[T](a: T, l: Tree2[T], r: Tree2[T]) extends Tree2[T]
 
 fun treeSort2(param) =
   fun mkTree(innerparam) =
@@ -215,4 +216,16 @@ fun testSorting_nofib(d) =
   hash(mangle(f))
 
 testSorting_nofib(0)
-//│ = 51324117188054929115411819706576305711291550658570113274291768822777898552447837804420193403034280334581113235670099168108057310001444698188883902000871912629747889286942274533143362191347715770581074120684028066661549409447053566864805982796651442411825424058139343253169753750307013113236996387277789074623630137288987589869641913268610508598505040964906263227437054452571059796961267985287441539342423613634888118731387934522320394294636575704912348025851038478882488022787377510287490741895262233989080994241592338442788051616303082788441666485156091668196999668892850523930511918729736856089560984406499736606084171798216360770991023233180481976810767432750226966921480421914178641779179040473344962763594357880599983085435482161632405644389584578524102239884780307588440751057343783694537559222924711205140877849398042544407611747227163056408231621727687968160470282720794027470616537695447289808133239223198869
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:146)
+//│ ═══[RUNTIME ERROR] Error: ENOENT: no such file or directory, open 'hkmc2/shared/src/test/mlscript/nofib/input/Main.hs'
+//│     at Object.openSync (node:fs:562:18)
+//│     at Object.readFileSync (node:fs:446:35)
+//│     at testSorting_nofib (REPL108:1:240)
+//│     at REPL111:1:39
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:597:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:926:10)
+//│     at REPLServer.emit (node:events:524:28)

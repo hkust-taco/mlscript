@@ -60,9 +60,10 @@ object
 
 abstract class Term: Var | Fun | ERROR
 
-class
-  Var(i: Id) extends Term
-  Fun(i: Id, t: List[Term], l: [Term, Term]) extends Term
+data
+  class
+    Var(i: Id) extends Term
+    Fun(i: Id, t: List[Term], l: [Term, Term]) extends Term
 object ERROR extends Term
 
 

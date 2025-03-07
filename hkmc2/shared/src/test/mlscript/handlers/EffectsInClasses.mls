@@ -7,7 +7,7 @@ abstract class Effect with
 
 
 :sjs
-class Lol(h) with
+data class Lol(h) with
   print(h.perform("k"))
 //│ JS (unsanitized):
 //│ let Lol1;
@@ -47,7 +47,7 @@ class Lol(h) with
 //│           break;
 //│         }
 //│       }
-//│       toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│       toString() { return "Cont$(" + "" + ")"; }
 //│     };
 //│     this.h = h;
 //│     tmp = runtime.safeCall(this.h.perform("k"));

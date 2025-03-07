@@ -161,7 +161,7 @@ str
 //│                 break;
 //│               }
 //│             }
-//│             toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│             toString() { return "Cont$(" + "" + ")"; }
 //│           };
 //│           tmp9 = str + "A";
 //│           str = tmp9;
@@ -206,7 +206,7 @@ str
 //│           break;
 //│         }
 //│       }
-//│       toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│       toString() { return "Cont$(" + "" + ")"; }
 //│     };
 //│     handleBlock$5 = function handleBlock$() {
 //│       let h2, tmp9, res4, Cont$17, Handler$h2$2;
@@ -245,7 +245,7 @@ str
 //│                   break;
 //│                 }
 //│               }
-//│               toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│               toString() { return "Cont$(" + "" + ")"; }
 //│             };
 //│             tmp10 = str + "B";
 //│             tmp11 = str + tmp10;
@@ -308,7 +308,7 @@ str
 //│             break;
 //│           }
 //│         }
-//│         toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│         toString() { return "Cont$(" + "" + ")"; }
 //│       };
 //│       tmp9 = runtime.safeCall(h2.perform(runtime.Unit));
 //│       if (tmp9 instanceof globalThis.Predef.__EffectSig.class) {

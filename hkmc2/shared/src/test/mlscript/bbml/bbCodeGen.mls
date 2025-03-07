@@ -59,7 +59,7 @@ false
 
 
 :sjs
-class Foo(x: Int)
+data class Foo(x: Int)
 //│ JS (unsanitized):
 //│ let Foo1;
 //│ Foo1 = function Foo(x2) { return new Foo.class(x2); };
@@ -119,7 +119,7 @@ if 1 is Int then 1 else 0
 //│ Type: Int
 
 
-class Foo()
+data class Foo()
 //│ Type: ⊤
 
 

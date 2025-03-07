@@ -2,8 +2,8 @@
 
 
 :sjs
-class Outer(a, b) with
-  class Inner(c) with
+data class Outer(a, b) with
+  data class Inner(c) with
     fun i1(d) = [b, c, d]
     print(a)
     print(c)

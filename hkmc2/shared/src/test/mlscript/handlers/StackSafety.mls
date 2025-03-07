@@ -52,7 +52,7 @@ hi(0)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$(" + "" + ")"; }
 //│   };
 //│   stackDelayRes = globalThis.Predef.checkDepth();
 //│   if (stackDelayRes instanceof globalThis.Predef.__EffectSig.class) {
@@ -103,7 +103,7 @@ hi(0)
 //│               break;
 //│             }
 //│           }
-//│           toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│           toString() { return "Cont$(" + "" + ")"; }
 //│         };
 //│         globalThis.Predef.__stackOffset = globalThis.Predef.__stackDepth;
 //│         res2 = resume();
@@ -145,7 +145,7 @@ hi(0)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$(" + "" + ")"; }
 //│   };
 //│   globalThis.Predef.__stackLimit = 5;
 //│   globalThis.Predef.__stackOffset = 0;
@@ -223,7 +223,7 @@ sum(10000)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$(" + "" + ")"; }
 //│   };
 //│   curDepth = globalThis.Predef.__stackDepth;
 //│   stackDelayRes = globalThis.Predef.checkDepth();
@@ -282,7 +282,7 @@ sum(10000)
 //│               break;
 //│             }
 //│           }
-//│           toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│           toString() { return "Cont$(" + "" + ")"; }
 //│         };
 //│         globalThis.Predef.__stackOffset = globalThis.Predef.__stackDepth;
 //│         res3 = resume();
@@ -324,7 +324,7 @@ sum(10000)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$(" + "" + ")"; }
 //│   };
 //│   globalThis.Predef.__stackLimit = 1000;
 //│   globalThis.Predef.__stackOffset = 0;

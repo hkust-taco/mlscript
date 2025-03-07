@@ -4,7 +4,7 @@ import "../../../mlscript-compile/Option.mls"
 open Stack
 open Option
 
-class Pair[A, B](x: A, y: B)
+data class Pair[A, B](x: A, y: B)
 
 fun foo(xs) =
   if xs is

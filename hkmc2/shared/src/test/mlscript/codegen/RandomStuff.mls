@@ -22,7 +22,7 @@ fun foo() = foo()
 
 
 :sjs
-class Foo(x) with
+data class Foo(x) with
   class Bar with
     val y = x
 //│ JS (unsanitized):

@@ -55,7 +55,7 @@ fun set_(s_) = s => [s_, s]
 let incr = update(x => x + 1)
 //│ incr = [function]
 
-class Node[T](a: T, b: List[Node[T]])
+data class Node[T](a: T, b: List[Node[T]])
 
 fun labelTree(t) =
   fun label(t) = if t is Node(x, xs) then

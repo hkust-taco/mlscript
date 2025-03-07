@@ -1,7 +1,7 @@
 :js
 
 
-class Foo(val x) with
+data class Foo(val x) with
   val y = x
 
 

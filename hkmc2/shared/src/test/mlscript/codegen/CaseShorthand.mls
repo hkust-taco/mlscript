@@ -56,7 +56,7 @@ case
 //│ (caseScrut) => { if (caseScrut === 0) { return true } else { return false } }
 //│ = [function block$res10]
 
-class Some(value)
+data class Some(value)
 module None
 
 :sjs

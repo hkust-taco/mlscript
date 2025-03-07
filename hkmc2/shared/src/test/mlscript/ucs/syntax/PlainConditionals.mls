@@ -4,7 +4,7 @@ fun f: Any -> Bool
 fun g: Any -> Bool
 fun h: Any -> Bool
 
-class Pair[A, B](fst: A, snd: B)
+data class Pair[A, B](fst: A, snd: B)
 
 
 Pair(0, 1) is Pair
@@ -70,7 +70,7 @@ fun foo(x) = x is (Pair(a, b) and a > b) | Int
 
 
 
-class A[T](arg: T)
+data class A[T](arg: T)
 
 
 x => (x is A(_))

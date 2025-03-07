@@ -188,6 +188,10 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             // * Note: `_pubFlds` is not used because in JS, fields are not declared
             val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
             val ctorParams = clsParams.map(p => p -> scope.allocateName(p))
+            val ctorFields = ctorParams.filter: p =>
+              p._1.decl match
+              case S(Param(flags = FldFlags(value = true))) => true
+              case _ => false
             val isModule = kind is syntax.Mod
             val mtdPrefix = if isModule then "static " else ""
             val privs =
@@ -237,9 +241,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 else doc""" # ${mtdPrefix}toString() { return "${sym.nme}${
                   if paramsOpt.isEmpty then doc"""""""
                   else doc"""(" + ${
-                      ctorParams.headOption.fold("\"\"")("globalThis.Predef.render(this." + _._1.name + ")")
+                      ctorFields.headOption.fold("\"\"")("globalThis.Predef.render(this." + _._1.name + ")")
                     }${
-                      ctorParams.tailOption.fold("")(_.map(
+                      ctorFields.tailOption.fold("")(_.map(
                         """ + ", " + globalThis.Predef.render(this.""" + _._1.name + ")").mkString)
                     } + ")""""
                 }; }"""

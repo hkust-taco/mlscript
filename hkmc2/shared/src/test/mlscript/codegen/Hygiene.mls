@@ -95,7 +95,7 @@ module Test with
 
 
 :sjs
-class Cls(x) with
+data class Cls(x) with
   let x += 1
   fun foo = x
   let x *= 2

@@ -3,7 +3,7 @@
 
 //│ Type: ⊤
 
-class Option[out A](inspect: [E, Res] -> (() ->{E} Res, A ->{E} Res) ->{E} Res)
+data class Option[out A](inspect: [E, Res] -> (() ->{E} Res, A ->{E} Res) ->{E} Res)
 //│ Type: ⊤
 
 opt => opt.Option#inspect

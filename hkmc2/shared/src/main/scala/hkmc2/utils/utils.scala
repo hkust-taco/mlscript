@@ -48,13 +48,14 @@ extension (t: Product)
         if isModMember then flags += "modMember"
         if isModMember then flags += "modTyped"
         flags.mkString("(", ", ", ")")
-      case FldFlags(mut, spec, genGetter, mod, pat) =>
+      case FldFlags(mut, spec, genGetter, mod, pat, value) =>
         val flags = Buffer.empty[String]
         if mut then flags += "mut"
         if spec then flags += "spec"
         if genGetter then flags += "gen"
         if mod then flags += "module"
         if pat then flags += "pat"
+        if value then flags += "val"
         flags.mkString("(", ", ", ")")
       case ParamListFlags(ctx) =>
         val flags = Buffer.empty[String]

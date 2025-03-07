@@ -105,7 +105,7 @@ let j = _.x.y(1, _)
 //│ j = [function j1]
 
 
-class C(a, b, c)
+data class C(a, b, c)
 
 2 |> C(1, _, 3) |> print
 //│ > C(1, 2, 3)

@@ -334,7 +334,7 @@ sealed abstract class ClassLikeDef extends TypeLikeDef:
   val body: ObjBody
   val annotations: Ls[Annot]
   def extraAnnotations: Ls[Annot] = annotations.filter:
-    case Annot.Modifier(Keyword.`declare` | Keyword.`abstract`) => false
+    case Annot.Modifier(Keyword.`declare` | Keyword.`abstract` | Keyword.`data`) => false
     case _ => true
 
 
@@ -439,7 +439,7 @@ case class TypeDef(
 
 
 // TODO Store optional source locations for the flags instead of booleans
-final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool, mod: Bool, pat: Bool):
+final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool, mod: Bool, pat: Bool, value: Bool):
   def showDbg: Str = 
     val flags = Buffer.empty[String]
     if mut then flags += "mut"
@@ -447,11 +447,12 @@ final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool, mod: Bool, pat
     if genGetter then flags += "gen"
     if mod then flags += "module"
     if pat then flags += "pattern"
+    if value then flags += "val"
     flags.mkString(" ")
   override def toString: String = "‹" + showDbg + "›"
 
 object FldFlags:
-  val empty: FldFlags = FldFlags(false, false, false, false, false)
+  val empty: FldFlags = FldFlags(false, false, false, false, false, false)
   object benign:
     // * Some flags like `mut` and `module` are "benign" in the sense that they don't affect code-gen
     def unapply(flags: FldFlags): Bool =

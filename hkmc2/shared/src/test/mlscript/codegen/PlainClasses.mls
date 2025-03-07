@@ -40,7 +40,7 @@ Foo()
 //│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
 
 
-class Foo with { print("hi") }
+data class Foo with { print("hi") }
 print("ok")
 //│ JS (unsanitized):
 //│ let Foo3;
@@ -54,7 +54,7 @@ print("ok")
 //│ > ok
 
 fun test() =
-  class Foo with { print("hi") }
+  data class Foo with { print("hi") }
   print("ok")
   Foo
 //│ JS (unsanitized):

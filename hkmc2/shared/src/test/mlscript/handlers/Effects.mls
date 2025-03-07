@@ -196,7 +196,7 @@ if true do
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$(" + "" + ")"; }
 //│   };
 //│   f = function f() {
 //│     return 3
@@ -224,7 +224,7 @@ if true do
 //│ = 3
 
 module A with
-  class Effect(x) with
+  data class Effect(x) with
     fun test() = x
     fun perform(arg)
 handle h = A.Effect(3) with

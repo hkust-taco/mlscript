@@ -14,9 +14,10 @@ fun isDigit(c) =
 
 abstract class Tree[E]: Node | Leaf | Empty
 
-class
-  Node[E](k: Int, l: Tree[E], r: Tree[E]) extends Tree[E]
-  Leaf[E](k: Int, e: E) extends Tree[E]
+data
+  class
+    Node[E](k: Int, l: Tree[E], r: Tree[E]) extends Tree[E]
+    Leaf[E](k: Int, e: E) extends Tree[E]
 
 object Empty extends Tree
 
@@ -75,7 +76,7 @@ fun testTreejoin_nofib(n) =
 
 :re // nodejs stack size 8192 can handle this
 testTreejoin_nofib(0).toString()
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+//│ ═══[RUNTIME ERROR] Error: ENOENT: no such file or directory, open 'hkmc2/shared/src/test/mlscript/nofib/input/1500.1'
 
 
 // //│ = 'Node(26790, Node(25449, Node(24977, Node(24359, Node(24314, Leaf(24314, (9658,1890,24314,24314,7755)), Leaf(24359, (17282,5066,24359,24359,134))), Node(24452, Leaf(24452, (13985,4700,24452,24452,8400)), Node(24776, Leaf(24776, (9392,18824,24776,24776,25492)), Leaf(24977, (21044,6260,24977,24977,3296))))), Node(25347, Node(25087, Leaf(25087, (9226,22666,25087,25087,19595)), Leaf(25347, (9331,1734,25347,25347,12071))), Leaf(25449, (24361,14401,25449,25449,5552)))), Node(26770, Node(26207, Node(25780, Node(25457, Leaf(25457, (5457,5273,25457,25457,5149)), Leaf(25780, (21801,92,25780,25780,2781))), Leaf(26207, (22839,18759,26207,26207,20366))), Node(26436, Node(26274, Node(26222, Leaf(26222, (11315,3470,26222,26222,23055)), Leaf(26274, (19231,20706,26274,26274,24107))), Node(26276, Leaf(26276, (3545,169,26276,26276,7584)), Leaf(26436, (22148,24244,26436,26436,2448)))), Node(26473, Leaf(26473, (13180,15097,26473,26473,16469)), Leaf(26770, (23746,15943,26770,26770,1467))))), Leaf(26790, (25643,16230,26790,26790,970)))), Leaf(26932, (24868,11500,26932,26932,3741)))'

@@ -578,7 +578,7 @@ Predef1 = class Predef {
   } 
   static __resume(cur2, tail) {
     return (value) => {
-      let scrut, cont1, scrut1, scrut2, scrut3, scrut4, scrut5, scrut6, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
+      let scrut, cont1, scrut1, scrut2, scrut3, scrut4, scrut5, scrut6, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10;
       scrut = cur2.resumed;
       if (scrut === true) {
         throw globalThis.Error("Multiple resumption");
@@ -587,7 +587,7 @@ Predef1 = class Predef {
       }
       cur2.resumed = true;
       cont1 = cur2.next;
-      tmp10: while (true) {
+      tmp11: while (true) {
         if (cont1 instanceof Predef.__Cont.class) {
           tmp1 = runtime.safeCall(cont1.resume(value));
           value = tmp1;
@@ -598,42 +598,43 @@ Predef1 = class Predef {
               if (scrut2 === true) {
                 scrut3 = value.tail.next !== null;
                 if (scrut3 === true) {
+                  tmp2 = runtime.safeCall(globalThis.console.log(value.tail));
                   throw globalThis.Error("Internal Error: unexpected continuation");
                 } else {
-                  tmp2 = runtime.Unit;
+                  tmp3 = runtime.Unit;
                 }
               } else {
-                tmp2 = runtime.Unit;
+                tmp3 = runtime.Unit;
               }
-              tmp3 = tmp2;
+              tmp4 = tmp3;
             } else {
-              tmp3 = runtime.Unit;
+              tmp4 = runtime.Unit;
             }
             scrut4 = value.tail.next === null;
             if (scrut4 === true) {
               value.tail.next = cont1.next;
-              tmp4 = runtime.Unit;
+              tmp5 = runtime.Unit;
             } else {
-              tmp4 = runtime.Unit;
+              tmp5 = runtime.Unit;
             }
             value.tail = tail;
             scrut5 = cur2.handleBlockList.next !== null;
             if (scrut5 === true) {
               value.handleBlockList.tail.next = cur2.handleBlockList.next;
               value.handleBlockList.tail = cur2.handleBlockList.tail;
-              tmp5 = runtime.Unit;
+              tmp6 = runtime.Unit;
             } else {
-              tmp5 = runtime.Unit;
+              tmp6 = runtime.Unit;
             }
             return value
           } else {
             cont1 = cont1.next;
-            tmp6 = runtime.Unit;
+            tmp7 = runtime.Unit;
           }
-          tmp7 = tmp6;
-          continue tmp10;
+          tmp8 = tmp7;
+          continue tmp11;
         } else {
-          tmp7 = runtime.Unit;
+          tmp8 = runtime.Unit;
         }
         break;
       }
@@ -641,13 +642,13 @@ Predef1 = class Predef {
       if (scrut6 === true) {
         return value
       } else {
-        tmp8 = Predef.__resumeHandleBlocks(cur2.handleBlockList.next, cur2.handleBlockList.tail, value);
-        cur2 = tmp8;
+        tmp9 = Predef.__resumeHandleBlocks(cur2.handleBlockList.next, cur2.handleBlockList.tail, value);
+        cur2 = tmp9;
         if (cur2 instanceof Predef.__EffectSig.class) {
           cur2.tail = tail;
-          tmp9 = runtime.Unit;
+          tmp10 = runtime.Unit;
         } else {
-          tmp9 = runtime.Unit;
+          tmp10 = runtime.Unit;
         }
         return cur2
       }

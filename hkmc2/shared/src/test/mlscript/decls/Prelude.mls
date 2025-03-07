@@ -40,10 +40,10 @@ declare val Infinity
 declare module Predef with
   class Test with
     val x = 0
-  class MatchResult(captures)
-  class MatchFailure(errors)
-  class __EffectSig(next, tail, handleBlockList, resumed, handler, handlerFun)
-  class __Return(value)
+  data class MatchResult(captures)
+  data class MatchFailure(errors)
+  data class __EffectSig(next, tail, handleBlockList, resumed, handler, handlerFun)
+  data class __Return(value)
   // This declaration is not used currently except for experimentation
   abstract class __StackDelay with
     fun perform()

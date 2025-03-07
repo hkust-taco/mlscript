@@ -1,6 +1,6 @@
 :js
 
-class Box[A](val value: A)
+data class Box[A](val value: A)
 
 pattern Sign = -1 | 0 | 1
 

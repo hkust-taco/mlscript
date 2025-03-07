@@ -231,7 +231,7 @@ fun main() =
 // * Or these parameters should have default values.
 
 :sjs
-object Cls(x) with
+data object Cls(x) with
   fun huh = x
 //│ JS (unsanitized):
 //│ let Cls1;

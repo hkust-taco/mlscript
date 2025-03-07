@@ -1,12 +1,12 @@
 
 
 abstract class Option[A]: Some[A] | None
-class Some[A](value: A) extends Option[A]
+data class Some[A](value: A) extends Option[A]
 object None extends Option
 
 abstract class Either[out A, out B]: Left[A] | Right[B]
-class Left[A](leftValue: A) extends Either[A, Nothing]
-class Right[B](rightValue: B) extends Either[Nothing, B]
+data class Left[A](leftValue: A) extends Either[A, Nothing]
+data class Right[B](rightValue: B) extends Either[Nothing, B]
 
 fun f(x, y) =
   if x is
@@ -39,8 +39,8 @@ fun f(x, y) =
     Some(x) and y is
       Some(y) then 0
 
-class A[T](value: T)
-class B[T](value: T)
+data class A[T](value: T)
+data class B[T](value: T)
 
 fun f(x, y, u, v) =
   if x is
@@ -188,11 +188,11 @@ g(5, Some(7))
 g(0 - 5, None)
 g(0 - 5, Some(9))
 
-class Var(name: Str)
+data class Var(name: Str)
 abstract class ValBase: (IntVal | BoolVal)
-class IntVal(value: Int) extends ValBase
-class BoolVal(value: Bool) extends ValBase
-class Lit(value: ValBase)
+data class IntVal(value: Int) extends ValBase
+data class BoolVal(value: Bool) extends ValBase
+data class Lit(value: ValBase)
 
 fun p(e, context) =
   if e is
@@ -202,7 +202,7 @@ fun p(e, context) =
     Lit(IntVal(v)) then Left(v)
     Lit(BoolVal(v)) then Right(v)
 
-class Nil()
+data class Nil()
 
 // Support operator constructor like ::
 :todo

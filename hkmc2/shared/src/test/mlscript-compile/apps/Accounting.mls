@@ -14,7 +14,7 @@ declare class Bool
 declare val String
 
 
-class Accounting with ...
+data class Accounting with ...
 
 
 fun display(amt): Str = (amt / 1000).toFixed(1)
@@ -22,10 +22,10 @@ fun display(amt): Str = (amt / 1000).toFixed(1)
 val warnings = []
 
 
-class Project(val num: Str)
+data class Project(val num: Str)
 
 
-class Line(val name: Str, val proj: Project, val starting_balance: Num, val isMatchable: Bool) with
+data class Line(val name: Str, val proj: Project, val starting_balance: Num, val isMatchable: Bool) with
   mut val balance = starting_balance
   fun expense(amt) =
     set balance = balance -. amt
@@ -41,7 +41,7 @@ fun mkLine(nme, proj, starting_balance, matchable) =
   line
 
 
-class Report(fileName) with
+data class Report(fileName) with
   
   fs.writeFileSync(fileName, "# Accounting\n")
   

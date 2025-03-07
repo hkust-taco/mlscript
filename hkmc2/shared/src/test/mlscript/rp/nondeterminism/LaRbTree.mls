@@ -1,6 +1,6 @@
 :js
 
-class Pair[S, T](val first: S, val second: T)
+data class Pair[S, T](val first: S, val second: T)
 
 object A
 object B

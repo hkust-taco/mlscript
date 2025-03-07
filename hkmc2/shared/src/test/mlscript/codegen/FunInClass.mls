@@ -2,7 +2,7 @@
 
 
 fun test() =
-  class C(a) with { fun f() = a }
+  data class C(a) with { fun f() = a }
   C(0).f()
 
 test()
@@ -11,7 +11,7 @@ test()
 
 :sjs
 fun test(a) =
-  class Inner(b) with
+  data class Inner(b) with
     print(a)
     fun f(c) = [a, b, c]
     fun g(d) =
@@ -67,9 +67,9 @@ i.g(200)
 
 :sjs
 fun test(a) =
-  class C1(b) with
+  data class C1(b) with
     print of [a, b]
-  class C2(b) with
+  data class C2(b) with
     print of [a, b]
   [C1(1), C2(2)]
 //│ JS (unsanitized):
@@ -113,7 +113,7 @@ test(123)
 
 
 :sjs
-class Foo(a) with
+data class Foo(a) with
   fun foo() =
     fun bar() = a
     fun baz() = a
@@ -147,7 +147,7 @@ Foo(123)
 //│ = Foo(123)
 
 :sjs
-class Bar(x) with
+data class Bar(x) with
   fun foo()() =
     fun bar() =
       x

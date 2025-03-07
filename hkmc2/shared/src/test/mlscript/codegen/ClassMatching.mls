@@ -1,7 +1,7 @@
 :js
 
 
-class Some[out A](value: A)
+data class Some[out A](value: A)
 
 object None
 
@@ -70,7 +70,7 @@ x => if x is Some(x) then x
 //│ = [function block$res9]
 
 
-class C(a)
+data class C(a)
 
 fun f(x) = if x is C(a) then a else 0
 
@@ -85,7 +85,7 @@ f(C(27))
 
 
 module M with
-  class D(a)
+  data class D(a)
   val d = D(27)
 
 M.d
@@ -154,7 +154,7 @@ f(0)
 //│ > oops
 
 
-class Pair[out A, out B](fst: A, snd: B)
+data class Pair[out A, out B](fst: A, snd: B)
 
 
 :sjs

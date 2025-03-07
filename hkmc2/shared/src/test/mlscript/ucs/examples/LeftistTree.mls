@@ -11,7 +11,7 @@ fun abs(x) = if x < 0 then -x else x
 
 
 abstract class Option[out T]: (Some[T] | None)
-class Some[out T](val value: T) extends Option[T]
+data class Some[out T](val value: T) extends Option[T]
 object None extends Option[Nothing]
 
 fun (??) getOrElse(o, v) = if o is
@@ -19,13 +19,13 @@ fun (??) getOrElse(o, v) = if o is
   None then v
 
 abstract class List[out T]: (Cons[T] | Nil)
-class Cons[out T](val head: T, val tail: List[T]) extends List[T]
+data class Cons[out T](val head: T, val tail: List[T]) extends List[T]
 object Nil extends List[Nothing]
 
 fun (::) cons(head, tail) = Cons(head, tail)
 
 abstract class Tree[out A]: (Empty | Node[A])
-class Node[out A](value: A, left: Tree[A], right: Tree[A], rank: Int) extends Tree[A]
+data class Node[out A](value: A, left: Tree[A], right: Tree[A], rank: Int) extends Tree[A]
 object Empty extends Tree[Nothing]
 
 fun show(t: Tree[Any]): Str = if t is
