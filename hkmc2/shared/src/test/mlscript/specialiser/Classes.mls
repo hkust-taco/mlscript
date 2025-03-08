@@ -1,223 +1,65 @@
 :js
 
 
-:ds
 class Simple(val x) with
     fun inner = x
 val s = Simple(1)
 s.inner
-//│ Typing term: { Cls SimpleParamList(‹›,List(Param(‹›,class:Simple.x,None)),None) { ‹› fun member:inner = class:Simple.x#666; }; ‹› val member:s = member:Simple#666(1); member:s#666.inner }
-//│ Processing class: Simple
-//│ Processing function definition: s
-//│ Typing term: member:Simple#666(1)
-//│ Typing term: member:Simple#666
-//│ Looking up symbol reference: Simple
-//│ Found type for Simple: class Simple { val x: 'l; inner: 'l }
-//│ ❁ Type for member:Simple#666: ('l -> class Simple { val x: 'l; inner: 'l })
-//│ Typing term: 1
-//│ ❁ Type for 1: Int
-//│ Application: constraining ('l -> class Simple { val x: 'l; inner: 'l }) and Int
-//│ Constraining ('l -> class Simple { val x: 'l; inner: 'l }) <: (Int -> 'm)
-//│ Constraining Int <: 'l
-//│ Constraining class Simple { val x: 'l; inner: 'l } <: 'm
-//│ ❁ Type for member:Simple#666(1): class Simple { val x: 'l; inner: 'l }
-//│ Function s body has type: 'm
-//│ Function s has type: 'm
-//│ Typing term: member:s#666.inner
-//│ Typing term: member:s#666
-//│ Looking up symbol reference: s
-//│ Found type for s: 'm
-//│ ❁ Type for member:s#666: class Simple { val x: 'l; inner: 'l }
-//│ Constraining 'm <: { inner: 'n }
-//│ Constraining class Simple { val x: 'l; inner: 'l } <: { inner: 'n }
-//│ Constraining 'l <: 'n
-//│ Constraining Int <: 'n
-//│ ❁ Type for member:s#666.inner: Int
-//│ ❁ Type for { Cls SimpleParamList(‹›,List(Param(‹›,class:Simple.x,None)),None) { ‹› fun member:inner = class:Simple.x#666; }; ‹› val member:s = member:Simple#666(1); member:s#666.inner }: Int
-//│ Result type: Int
 //│ = 1
 //│ s = Simple(1)
 
-:ds
 abstract class Option
 class None extends Option
 class Some(val x) extends Option with
     fun unwrap = x
 Some(1).unwrap
-//│ Typing term: { Cls Option { }; Cls None { }; Cls SomeParamList(‹›,List(Param(‹›,class:Some.x,None)),None) { ‹› fun member:unwrap = class:Some.x#666; }; member:Some#666(1).unwrap }
-//│ Processing class: Option
-//│ Processing class: None
-//│ Processing class: Some
-//│ Typing term: member:Some#666(1).unwrap
-//│ Typing term: member:Some#666(1)
-//│ Typing term: member:Some#666
-//│ Looking up symbol reference: Some
-//│ Found type for Some: class Some { val x: 'l; unwrap: 'l }
-//│ ❁ Type for member:Some#666: ('l -> class Some { val x: 'l; unwrap: 'l })
-//│ Typing term: 1
-//│ ❁ Type for 1: Int
-//│ Application: constraining ('l -> class Some { val x: 'l; unwrap: 'l }) and Int
-//│ Constraining ('l -> class Some { val x: 'l; unwrap: 'l }) <: (Int -> 'm)
-//│ Constraining Int <: 'l
-//│ Constraining class Some { val x: 'l; unwrap: 'l } <: 'm
-//│ ❁ Type for member:Some#666(1): class Some { val x: 'l; unwrap: 'l }
-//│ Constraining 'm <: { unwrap: 'n }
-//│ Constraining class Some { val x: 'l; unwrap: 'l } <: { unwrap: 'n }
-//│ Constraining 'l <: 'n
-//│ Constraining Int <: 'n
-//│ ❁ Type for member:Some#666(1).unwrap: Int
-//│ ❁ Type for { Cls Option { }; Cls None { }; Cls SomeParamList(‹›,List(Param(‹›,class:Some.x,None)),None) { ‹› fun member:unwrap = class:Some.x#666; }; member:Some#666(1).unwrap }: Int
-//│ Result type: Int
 //│ = 1
 
-// This needs inheritance, type should be Opt not Some
-:todo
-:ds
+
+:todo // Specialisation of classes should not be consider field values
+:sjs
 abstract class Opt[T]
 class None extends Opt
 class Some[T](val value: T) extends Opt[T]
-fun id(x) = x
+fun id(spec x) = x
 let a = Some(1)
 id(a)
-//│ Typing term: { ‹› fun member:id(Param(‹›,x,None), ) = x#666; Cls Opt[T] { }; Cls None { }; Cls Some[out T]ParamList(‹›,List(Param(‹›,class:Some.value,Some(Ref(T)))),None) { }; let a; a = member:Some#666(1); member:id#666(a#666) }
-//│ Processing class: Opt
-//│ Processing class: None
-//│ Processing class: Some
-//│ Typing term: member:Some#666(1)
-//│ Typing term: member:Some#666
-//│ Looking up symbol reference: Some
-//│ Found type for Some: class Some { val value: 'l }
-//│ ❁ Type for member:Some#666: ('l -> class Some { val value: 'l })
-//│ Typing term: 1
-//│ ❁ Type for 1: Int
-//│ Application: constraining ('l -> class Some { val value: 'l }) and Int
-//│ Constraining ('l -> class Some { val value: 'l }) <: (Int -> 'n)
-//│ Constraining Int <: 'l
-//│ Constraining class Some { val value: 'l } <: 'n
-//│ ❁ Type for member:Some#666(1): class Some { val value: 'l }
-//│ Constraining 'n <: 'm
-//│ Constraining class Some { val value: 'l } <: 'm
-//│ Processing function definition: id
-//│ Parameter x of function id has spec=false
-//│ Assigned type 'o to parameter x
-//│ Typing term: x#666
-//│ Looking up symbol reference: x
-//│ Found type for x: 'o
-//│ ❁ Type for x#666: 'o
-//│ Function id body has type: 'o
-//│ Function id has type: ('o -> 'o)
-//│ Typing term: member:id#666(a#666)
-//│ Typing term: member:id#666
-//│ Looking up symbol reference: id
-//│ Found type for id: ('o -> 'o)
-//│ ❁ Type for member:id#666: ('o -> 'o)
-//│ Typing term: a#666
-//│ Looking up symbol reference: a
-//│ Found type for a: 'n
-//│ ❁ Type for a#666: class Some { val value: 'l }
-//│ Application: constraining ('o -> 'o) and 'n
-//│ Constraining ('o -> 'o) <: ('n -> 'p)
-//│ Constraining 'n <: 'o
-//│ Constraining class Some { val value: 'l } <: 'o
-//│ Constraining 'o <: 'p
-//│ Constraining class Some { val value: 'l } <: 'p
-//│ ❁ Type for member:id#666(a#666): class Some { val value: 'l }
-//│ ❁ Type for { ‹› fun member:id(Param(‹›,x,None), ) = x#666; Cls Opt[T] { }; Cls None { }; Cls Some[out T]ParamList(‹›,List(Param(‹›,class:Some.value,Some(Ref(T)))),None) { }; let a; a = member:Some#666(1); member:id#666(a#666) }: class Some { val value: 'l }
-//│ Result type: class Some { val value: 'l }
+//│ JS (unsanitized):
+//│ let Opt1, Some3, id, None3, a, id_class_Some__val_value__l_, id_arg0, tmp2;
+//│ id = function id(x) {
+//│   return x
+//│ };
+//│ Opt1 = class Opt {
+//│   constructor() {}
+//│   toString() { return "Opt"; }
+//│ };
+//│ None3 = class None2 extends Opt1 {
+//│   constructor() {
+//│     super();
+//│   }
+//│   toString() { return "None"; }
+//│ };
+//│ Some3 = function Some(value1) { return new Some.class(value1); };
+//│ Some3.class = class Some2 extends Opt1 {
+//│   constructor(value) {
+//│     super();
+//│     this.value = value;
+//│   }
+//│   toString() { return "Some(" + globalThis.Predef.render(this.value) + ")"; }
+//│ };
+//│ tmp2 = Some3(1);
+//│ a = tmp2;
+//│ id_class_Some__val_value__l_ = function id_class_Some__val_value__l_(x) {
+//│   return x
+//│ };
+//│ id_arg0 = a;
+//│ id(id_arg0)
 //│ = Some(1)
 //│ a = Some(1)
 
-:ds
 abstract class List[T]
 class Nil extends List
 class Cons[T](val head: T, val tail: List[T]) extends List[T]
 fun (::) cons[T](head: T, tail: List[T]) = Cons(head, tail)
 1 :: 2 :: 3 :: Nil
-//│ Typing term: { ‹› fun member:cons[List(T)](Param(‹›,head,Some(Ref(T))), Param(‹›,tail,Some(TyApp(Ref(member:List),List(Ref(T))))), ) = member:Cons#666(head#666, tail#666); Cls List[T] { }; Cls Nil { }; Cls Cons[out T]ParamList(‹›,List(Param(‹›,class:Cons.head,Some(Ref(T))), Param(‹›,class:Cons.tail,Some(TyApp(Ref(member:List),List(Ref(T)))))),None) { }; member:cons#666(1, member:cons#666(2, member:cons#666(3, member:Nil#666))) }
-//│ Processing class: List
-//│ Processing class: Nil
-//│ Processing class: Cons
-//│ Processing function definition: cons
-//│ Parameter head of function cons has spec=false
-//│ Assigned type 'n to parameter head
-//│ Parameter tail of function cons has spec=false
-//│ Assigned type 'o to parameter tail
-//│ Typing term: member:Cons#666(head#666, tail#666)
-//│ Typing term: member:Cons#666
-//│ Looking up symbol reference: Cons
-//│ Found type for Cons: class Cons { val head: 'l, val tail: 'm }
-//│ ❁ Type for member:Cons#666: ({ head: 'l; tail: 'm } -> class Cons { val head: 'l, val tail: 'm })
-//│ Typing term: head#666
-//│ Looking up symbol reference: head
-//│ Found type for head: 'n
-//│ ❁ Type for head#666: 'n
-//│ Typing term: tail#666
-//│ Looking up symbol reference: tail
-//│ Found type for tail: 'o
-//│ ❁ Type for tail#666: 'o
-//│ Application: constraining ({ head: 'l; tail: 'm } -> class Cons { val head: 'l, val tail: 'm }) and { _0: 'n; _1: 'o }
-//│ Handling application with named parameters and positional arguments
-//│ Constraining 'n <: 'l
-//│ Constraining 'o <: 'm
-//│ Constraining class Cons { val head: 'l, val tail: 'm } <: 'p
-//│ ❁ Type for member:Cons#666(head#666, tail#666): class Cons { val head: 'l, val tail: 'm }
-//│ Function cons body has type: 'p
-//│ Function cons has type: ({ head: 'n; tail: 'o } -> 'p)
-//│ Typing term: member:cons#666(1, member:cons#666(2, member:cons#666(3, member:Nil#666)))
-//│ Typing term: member:cons#666
-//│ Looking up symbol reference: cons
-//│ Found type for cons: ({ head: 'n; tail: 'o } -> 'p)
-//│ ❁ Type for member:cons#666: ({ head: 'l; tail: 'm } -> class Cons { val head: 'l, val tail: 'm })
-//│ Typing term: 1
-//│ ❁ Type for 1: Int
-//│ Typing term: member:cons#666(2, member:cons#666(3, member:Nil#666))
-//│ Typing term: member:cons#666
-//│ Looking up symbol reference: cons
-//│ Found type for cons: ({ head: 'n; tail: 'o } -> 'p)
-//│ ❁ Type for member:cons#666: ({ head: 'l; tail: 'm } -> class Cons { val head: 'l, val tail: 'm })
-//│ Typing term: 2
-//│ ❁ Type for 2: Int
-//│ Typing term: member:cons#666(3, member:Nil#666)
-//│ Typing term: member:cons#666
-//│ Looking up symbol reference: cons
-//│ Found type for cons: ({ head: 'n; tail: 'o } -> 'p)
-//│ ❁ Type for member:cons#666: ({ head: 'l; tail: 'm } -> class Cons { val head: 'l, val tail: 'm })
-//│ Typing term: 3
-//│ ❁ Type for 3: Int
-//│ Typing term: member:Nil#666
-//│ Looking up symbol reference: Nil
-//│ Found type for Nil: class Nil {  }
-//│ Using class Nil as a value
-//│ ❁ Type for member:Nil#666: class Nil {  }
-//│ Application: constraining ({ head: 'n; tail: 'o } -> 'p) and { _0: Int; _1: class Nil {  } }
-//│ Handling application with named parameters and positional arguments
-//│ Constraining Int <: 'n
-//│ Constraining Int <: 'l
-//│ Constraining class Nil {  } <: 'o
-//│ Constraining class Nil {  } <: 'm
-//│ Constraining 'p <: 's
-//│ Constraining class Cons { val head: 'l, val tail: 'm } <: 's
-//│ ❁ Type for member:cons#666(3, member:Nil#666): class Cons { val head: 'l, val tail: 'm }
-//│ Application: constraining ({ head: 'n; tail: 'o } -> 'p) and { _0: Int; _1: 's }
-//│ Handling application with named parameters and positional arguments
-//│ Constraining Int <: 'n
-//│ Constraining Int <: 'l
-//│ Constraining 's <: 'o
-//│ Constraining class Cons { val head: 'l, val tail: 'm } <: 'o
-//│ Constraining class Cons { val head: 'l, val tail: 'm } <: 'm
-//│ Constraining 'p <: 'r
-//│ Constraining class Cons { val head: 'l, val tail: 'm } <: 'r
-//│ ❁ Type for member:cons#666(2, member:cons#666(3, member:Nil#666)): class Cons { val head: 'l, val tail: 'm }
-//│ Application: constraining ({ head: 'n; tail: 'o } -> 'p) and { _0: Int; _1: 'r }
-//│ Handling application with named parameters and positional arguments
-//│ Constraining Int <: 'n
-//│ Constraining Int <: 'l
-//│ Constraining 'r <: 'o
-//│ Constraining class Cons { val head: 'l, val tail: 'm } <: 'o
-//│ Constraining class Cons { val head: 'l, val tail: 'm } <: 'm
-//│ Constraining 'p <: 'q
-//│ Constraining class Cons { val head: 'l, val tail: 'm } <: 'q
-//│ ❁ Type for member:cons#666(1, member:cons#666(2, member:cons#666(3, member:Nil#666))): class Cons { val head: 'l, val tail: 'm }
-//│ ❁ Type for { ‹› fun member:cons[List(T)](Param(‹›,head,Some(Ref(T))), Param(‹›,tail,Some(TyApp(Ref(member:List),List(Ref(T))))), ) = member:Cons#666(head#666, tail#666); Cls List[T] { }; Cls Nil { }; Cls Cons[out T]ParamList(‹›,List(Param(‹›,class:Cons.head,Some(Ref(T))), Param(‹›,class:Cons.tail,Some(TyApp(Ref(member:List),List(Ref(T)))))),None) { }; member:cons#666(1, member:cons#666(2, member:cons#666(3, member:Nil#666))) }: class Cons { val head: 'l, val tail: 'm }
-//│ Result type: class Cons { val head: 'l, val tail: 'm }
 //│ = Cons(1, Cons(2, Cons(3, class Nil extends List1 {   constructor() {     super();   }   toString() { return "Nil"; } })))
