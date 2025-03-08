@@ -246,13 +246,13 @@ abstract class MLsDiffMaker extends DiffMaker:
       output(e.showAsTree(using post))
 
     val checker = new semantics.SimpleSub(stl)
-    val spt = checker.analyzeTermTypes(e)
+    val spt = checker.analyzeTermTypes(e).asInstanceOf[semantics.Term.Blk]
     if showSpecialisedTree.isSet then
       output(s"Specialised tree:")
       output(spt.showAsTree)
 
     val resolver = ImplicitResolver(rtl)
-    curICtx = resolver.resolveBlk(spt.asInstanceOf[semantics.Term.Blk])(using curICtx)
+    curICtx = resolver.resolveBlk(spt)(using curICtx)
     
     if showResolve.isSet then
       output(s"Resolved: ${e.showDbg}")
@@ -260,7 +260,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       output(s"Resolved tree:")
       output(e.showAsTree(using post))
     
-    processTerm(e, inImport = false)
+    processTerm(spt, inImport = false)
       
   
   

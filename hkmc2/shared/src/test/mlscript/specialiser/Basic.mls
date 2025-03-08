@@ -1,58 +1,37 @@
 :js
 
 
-:spt
+:sjs
 fun id(spec x) = x
 id(1)
-//│ Specialised tree:
-//│ Blk:
-//│   stats = Ls of 
-//│     TermDefinition:
-//│       owner = N
-//│       k = Fun
-//│       sym = member:id
-//│       params = Ls of 
-//│         ParamList:
-//│           flags = ParamListFlags of false
-//│           params = Ls of 
-//│             Param:
-//│               flags = (spec)
-//│               sym = x
-//│               sign = N
-//│           restParam = N
-//│       tparams = N
-//│       sign = N
-//│       body = S of Ref of x
-//│       resSym = ‹result of member:id›
-//│       flags = ()
-//│       annotations = Nil
-//│     TermDefinition:
-//│       owner = N
-//│       k = Fun
-//│       sym = member:id_Int
-//│       params = Ls of 
-//│         ParamList:
-//│           flags = ParamListFlags of false
-//│           params = Ls of 
-//│             Param:
-//│               flags = (spec)
-//│               sym = x
-//│               sign = N
-//│           restParam = N
-//│       tparams = N
-//│       sign = N
-//│       body = S of Ref of x
-//│       resSym = ‹result of member:id›
-//│       flags = ()
-//│       annotations = Nil
-//│   res = App:
-//│     lhs = Ref of member:id
-//│     rhs = Tup of Ls of 
-//│       Fld:
-//│         flags = ()
-//│         term = Lit of IntLit of 1
-//│         asc = N
+//│ JS (unsanitized):
+//│ let id, id_Int, id_arg0;
+//│ id = function id(x) {
+//│   return x
+//│ };
+//│ id_Int = function id_Int(x) {
+//│   return x
+//│ };
+//│ id_arg0 = 1;
+//│ id(id_arg0)
 //│ = 1
+
+
+:sjs
+fun add(spec x, spec y) = x + y
+add(1, 2)
+//│ JS (unsanitized):
+//│ let add, add_Int_Int, add_arg0, add_arg1;
+//│ add = function add(x, y) {
+//│   return x + y
+//│ };
+//│ add_Int_Int = function add_Int_Int(x, y) {
+//│   return x + y
+//│ };
+//│ add_arg0 = 1;
+//│ add_arg1 = 2;
+//│ add(add_arg0, add_arg1)
+//│ = 3
 
 
 :ds
@@ -294,45 +273,7 @@ fac(4)
 :ds
 fun addc(x)(y) = x + y
 addc
-//│ Typing term: { ‹› fun member:addc(Param(‹›,x,None), )(Param(‹›,y,None), ) = builtin:+#0(x#666, y#666); member:addc#666 }
-//│ Processing function definition: addc
-//│ Parameter x of function addc has spec=false
-//│ Assigned type 'l to parameter x
-//│ Parameter y of function addc has spec=false
-//│ Assigned type 'm to parameter y
-//│ Typing term: builtin:+#0(x#666, y#666)
-//│ Typing term: builtin:+#0
-//│ Looking up symbol reference: +
-//│ Found type for +: ({ _0: Num; _1: Num } -> Num)
-//│ ❁ Type for builtin:+#0: ({ _0: Num; _1: Num } -> Num)
-//│ Typing term: x#666
-//│ Looking up symbol reference: x
-//│ Found type for x: 'l
-//│ ❁ Type for x#666: 'l
-//│ Typing term: y#666
-//│ Looking up symbol reference: y
-//│ Found type for y: 'm
-//│ ❁ Type for y#666: 'm
-//│ Application: constraining ({ _0: Num; _1: Num } -> Num) and { _0: 'l; _1: 'm }
-//│ Handling application with named parameters and positional arguments
-//│ Constraining 'l <: Num
-//│ Constraining 'm <: Num
-//│ Constraining Num <: 'n
-//│ ❁ Type for builtin:+#0(x#666, y#666): Num
-//│ Function addc body has type: 'n
-//│ Function addc has type: ('l -> ('m -> 'n))
-//│ Typing term: member:addc#666
-//│ Looking up symbol reference: addc
-//│ Found type for addc: ('l -> ('m -> 'n))
-//│ ❁ Type for member:addc#666: (Num -> (Num -> Num))
-//│ ❁ Type for { ‹› fun member:addc(Param(‹›,x,None), )(Param(‹›,y,None), ) = builtin:+#0(x#666, y#666); member:addc#666 }: (Num -> (Num -> Num))
-//│ Result type: (Num -> (Num -> Num))
-//│ = [function addc]
-
-:ds
-fun addc(x)(y) = x + y
-addc(1)
-//│ Typing term: { ‹› fun member:addc(Param(‹›,x,None), )(Param(‹›,y,None), ) = builtin:+#1(x#666, y#666); member:addc#666(1) }
+//│ Typing term: { ‹› fun member:addc(Param(‹›,x,None), )(Param(‹›,y,None), ) = builtin:+#1(x#666, y#666); member:addc#666 }
 //│ Processing function definition: addc
 //│ Parameter x of function addc has spec=false
 //│ Assigned type 'l to parameter x
@@ -359,6 +300,44 @@ addc(1)
 //│ ❁ Type for builtin:+#1(x#666, y#666): Num
 //│ Function addc body has type: 'n
 //│ Function addc has type: ('l -> ('m -> 'n))
+//│ Typing term: member:addc#666
+//│ Looking up symbol reference: addc
+//│ Found type for addc: ('l -> ('m -> 'n))
+//│ ❁ Type for member:addc#666: (Num -> (Num -> Num))
+//│ ❁ Type for { ‹› fun member:addc(Param(‹›,x,None), )(Param(‹›,y,None), ) = builtin:+#1(x#666, y#666); member:addc#666 }: (Num -> (Num -> Num))
+//│ Result type: (Num -> (Num -> Num))
+//│ = [function addc]
+
+:ds
+fun addc(x)(y) = x + y
+addc(1)
+//│ Typing term: { ‹› fun member:addc(Param(‹›,x,None), )(Param(‹›,y,None), ) = builtin:+#2(x#666, y#666); member:addc#666(1) }
+//│ Processing function definition: addc
+//│ Parameter x of function addc has spec=false
+//│ Assigned type 'l to parameter x
+//│ Parameter y of function addc has spec=false
+//│ Assigned type 'm to parameter y
+//│ Typing term: builtin:+#2(x#666, y#666)
+//│ Typing term: builtin:+#2
+//│ Looking up symbol reference: +
+//│ Found type for +: ({ _0: Num; _1: Num } -> Num)
+//│ ❁ Type for builtin:+#2: ({ _0: Num; _1: Num } -> Num)
+//│ Typing term: x#666
+//│ Looking up symbol reference: x
+//│ Found type for x: 'l
+//│ ❁ Type for x#666: 'l
+//│ Typing term: y#666
+//│ Looking up symbol reference: y
+//│ Found type for y: 'm
+//│ ❁ Type for y#666: 'm
+//│ Application: constraining ({ _0: Num; _1: Num } -> Num) and { _0: 'l; _1: 'm }
+//│ Handling application with named parameters and positional arguments
+//│ Constraining 'l <: Num
+//│ Constraining 'm <: Num
+//│ Constraining Num <: 'n
+//│ ❁ Type for builtin:+#2(x#666, y#666): Num
+//│ Function addc body has type: 'n
+//│ Function addc has type: ('l -> ('m -> 'n))
 //│ Typing term: member:addc#666(1)
 //│ Typing term: member:addc#666
 //│ Looking up symbol reference: addc
@@ -372,7 +351,7 @@ addc(1)
 //│ Constraining Int <: Num
 //│ Constraining ('m -> 'n) <: 'o
 //│ ❁ Type for member:addc#666(1): (Num -> Num)
-//│ ❁ Type for { ‹› fun member:addc(Param(‹›,x,None), )(Param(‹›,y,None), ) = builtin:+#1(x#666, y#666); member:addc#666(1) }: (Num -> Num)
+//│ ❁ Type for { ‹› fun member:addc(Param(‹›,x,None), )(Param(‹›,y,None), ) = builtin:+#2(x#666, y#666); member:addc#666(1) }: (Num -> Num)
 //│ Result type: (Num -> Num)
 //│ = [function]
 
@@ -429,13 +408,13 @@ x
 :ds
 val x = 1 + 1
 x
-//│ Typing term: { ‹› val member:x = builtin:+#2(1, 1); member:x#666 }
+//│ Typing term: { ‹› val member:x = builtin:+#3(1, 1); member:x#666 }
 //│ Processing function definition: x
-//│ Typing term: builtin:+#2(1, 1)
-//│ Typing term: builtin:+#2
+//│ Typing term: builtin:+#3(1, 1)
+//│ Typing term: builtin:+#3
 //│ Looking up symbol reference: +
 //│ Found type for +: ({ _0: Num; _1: Num } -> Num)
-//│ ❁ Type for builtin:+#2: ({ _0: Num; _1: Num } -> Num)
+//│ ❁ Type for builtin:+#3: ({ _0: Num; _1: Num } -> Num)
 //│ Typing term: 1
 //│ ❁ Type for 1: Int
 //│ Typing term: 1
@@ -445,14 +424,14 @@ x
 //│ Constraining Int <: Num
 //│ Constraining Int <: Num
 //│ Constraining Num <: 'l
-//│ ❁ Type for builtin:+#2(1, 1): Num
+//│ ❁ Type for builtin:+#3(1, 1): Num
 //│ Function x body has type: 'l
 //│ Function x has type: 'l
 //│ Typing term: member:x#666
 //│ Looking up symbol reference: x
 //│ Found type for x: 'l
 //│ ❁ Type for member:x#666: Num
-//│ ❁ Type for { ‹› val member:x = builtin:+#2(1, 1); member:x#666 }: Num
+//│ ❁ Type for { ‹› val member:x = builtin:+#3(1, 1); member:x#666 }: Num
 //│ Result type: Num
 //│ = 2
 //│ x = 2
@@ -508,17 +487,17 @@ add(1, 2)
 //│         flags = ()
 //│         term = Lit of IntLit of 2
 //│         asc = N
-//│ Typing term: { ‹› fun member:add(Param(‹spec›,x,None), Param(‹spec›,y,None), ) = builtin:+#3(x#666, y#666); member:add#666(1, 2) }
+//│ Typing term: { ‹› fun member:add(Param(‹spec›,x,None), Param(‹spec›,y,None), ) = builtin:+#4(x#666, y#666); member:add#666(1, 2) }
 //│ Processing function definition: add
 //│ Parameter x of function add has spec=true
 //│ Assigned type spec['l] to parameter x
 //│ Parameter y of function add has spec=true
 //│ Assigned type spec['m] to parameter y
-//│ Typing term: builtin:+#3(x#666, y#666)
-//│ Typing term: builtin:+#3
+//│ Typing term: builtin:+#4(x#666, y#666)
+//│ Typing term: builtin:+#4
 //│ Looking up symbol reference: +
 //│ Found type for +: ({ _0: Num; _1: Num } -> Num)
-//│ ❁ Type for builtin:+#3: ({ _0: Num; _1: Num } -> Num)
+//│ ❁ Type for builtin:+#4: ({ _0: Num; _1: Num } -> Num)
 //│ Typing term: x#666
 //│ Looking up symbol reference: x
 //│ Found type for x: spec['l]
@@ -534,7 +513,7 @@ add(1, 2)
 //│ Constraining spec['m] <: Num
 //│ Constraining 'm <: Num
 //│ Constraining Num <: 'n
-//│ ❁ Type for builtin:+#3(x#666, y#666): Num
+//│ ❁ Type for builtin:+#4(x#666, y#666): Num
 //│ Function add body has type: 'n
 //│ Function add has type: ({ x: spec['l]; y: spec['m] } -> 'n)
 //│ Typing term: member:add#666(1, 2)
@@ -565,14 +544,15 @@ add(1, 2)
 //│ Constraining 'n <: 'o
 //│ Constraining Num <: 'o
 //│ ❁ Type for member:add#666(1, 2): Num
-//│ ❁ Type for { ‹› fun member:add(Param(‹spec›,x,None), Param(‹spec›,y,None), ) = builtin:+#3(x#666, y#666); member:add#666(1, 2) }: Num
+//│ ❁ Type for { ‹› fun member:add(Param(‹spec›,x,None), Param(‹spec›,y,None), ) = builtin:+#4(x#666, y#666); member:add#666(1, 2) }: Num
 //│ Result type: Num
 //│ === Specialisation Opportunities ===
 //│ x in add can be specialised for: [Int]
 //│ y in add can be specialised for: [Int]
 //│ ====================================
-//│ Creating specialized function: add_Int_Int
-//│ Generated specialized version add_Int_Int for add with types [Int, Int]
+//│ Creating specialised function: add_Int_Int
+//│ Generated specialised version add_Int_Int for add with types [Int, Int]
+//│ Found function call with specialised params: add
 //│ = 3
 
 :ds
@@ -630,10 +610,13 @@ id("Str")
 //│ === Specialisation Opportunities ===
 //│ x in id can be specialised for: [Str, Int]
 //│ ====================================
-//│ Creating specialized function: id_Str
-//│ Generated specialized version id_Str for id with types [Str]
-//│ Creating specialized function: id_Int
-//│ Generated specialized version id_Int for id with types [Int]
+//│ Creating specialised function: id_Str
+//│ Generated specialised version id_Str for id with types [Str]
+//│ Creating specialised function: id_Int
+//│ Generated specialised version id_Int for id with types [Int]
+//│ Found function call with specialised params: id
+//│ Found function call with specialised params: id
+//│ Found function call with specialised params: id
 //│ = "Str"
 
 :spt
@@ -699,13 +682,26 @@ foo(1)
 //│             resSym = ‹result of member:bar›
 //│             flags = ()
 //│             annotations = Nil
-//│         res = App:
-//│           lhs = Ref of member:bar
-//│           rhs = Tup of Ls of 
-//│             Fld:
+//│         res = Blk:
+//│           stats = Ls of 
+//│             TermDefinition:
+//│               owner = N
+//│               k = ImmutVal
+//│               sym = member:bar_arg0
+//│               params = Nil
+//│               tparams = N
+//│               sign = N
+//│               body = S of Ref of x
+//│               resSym = result of bar_arg0
 //│               flags = ()
-//│               term = Ref of x
-//│               asc = N
+//│               annotations = Nil
+//│           res = App:
+//│             lhs = Ref of member:bar
+//│             rhs = Tup of Ls of 
+//│               Fld:
+//│                 flags = ()
+//│                 term = Ref of member:bar_arg0
+//│                 asc = N
 //│       resSym = ‹result of member:foo›
 //│       flags = ()
 //│       annotations = Nil
@@ -718,429 +714,122 @@ foo(1)
 //│         asc = N
 //│ = 1
 
-:spt
+:sjs
 fun add(spec x, spec y) = x + y
 add(1, 2)
-//│ Specialised tree:
-//│ Blk:
-//│   stats = Ls of 
-//│     TermDefinition:
-//│       owner = N
-//│       k = Fun
-//│       sym = member:add
-//│       params = Ls of 
-//│         ParamList:
-//│           flags = ParamListFlags of false
-//│           params = Ls of 
-//│             Param:
-//│               flags = (spec)
-//│               sym = x
-//│               sign = N
-//│             Param:
-//│               flags = (spec)
-//│               sym = y
-//│               sign = N
-//│           restParam = N
-//│       tparams = N
-//│       sign = N
-//│       body = S of App:
-//│         lhs = Ref of builtin:+
-//│         rhs = Tup of Ls of 
-//│           Fld:
-//│             flags = ()
-//│             term = Ref of x
-//│             asc = N
-//│           Fld:
-//│             flags = ()
-//│             term = Ref of y
-//│             asc = N
-//│       resSym = ‹result of member:add›
-//│       flags = ()
-//│       annotations = Nil
-//│     TermDefinition:
-//│       owner = N
-//│       k = Fun
-//│       sym = member:add_Int_Int
-//│       params = Ls of 
-//│         ParamList:
-//│           flags = ParamListFlags of false
-//│           params = Ls of 
-//│             Param:
-//│               flags = (spec)
-//│               sym = x
-//│               sign = N
-//│             Param:
-//│               flags = (spec)
-//│               sym = y
-//│               sign = N
-//│           restParam = N
-//│       tparams = N
-//│       sign = N
-//│       body = S of App:
-//│         lhs = Ref of builtin:+
-//│         rhs = Tup of Ls of 
-//│           Fld:
-//│             flags = ()
-//│             term = Ref of x
-//│             asc = N
-//│           Fld:
-//│             flags = ()
-//│             term = Ref of y
-//│             asc = N
-//│       resSym = ‹result of member:add›
-//│       flags = ()
-//│       annotations = Nil
-//│   res = App:
-//│     lhs = Ref of member:add
-//│     rhs = Tup of Ls of 
-//│       Fld:
-//│         flags = ()
-//│         term = Lit of IntLit of 1
-//│         asc = N
-//│       Fld:
-//│         flags = ()
-//│         term = Lit of IntLit of 2
-//│         asc = N
+//│ JS (unsanitized):
+//│ let add2, add_Int_Int2, add_arg02, add_arg12;
+//│ add2 = function add(x4, y) {
+//│   return x4 + y
+//│ };
+//│ add_Int_Int2 = function add_Int_Int(x4, y) {
+//│   return x4 + y
+//│ };
+//│ add_arg02 = 1;
+//│ add_arg12 = 2;
+//│ add2(add_arg02, add_arg12)
 //│ = 3
 
-:spt
+:sjs
 class Pair(a, b)
 fun foo(a) = 
     fun pair(spec x, spec y, z) = Pair(x, y +  + z)
     pair(a, 10.4, 1)
 foo(1)
 foo("Str")
-//│ Specialised tree:
-//│ Blk:
-//│   stats = Ls of 
-//│     TermDefinition:
-//│       owner = N
-//│       k = Fun
-//│       sym = member:foo
-//│       params = Ls of 
-//│         ParamList:
-//│           flags = ParamListFlags of false
-//│           params = Ls of 
-//│             Param:
-//│               flags = ()
-//│               sym = a
-//│               sign = N
-//│           restParam = N
-//│       tparams = N
-//│       sign = N
-//│       body = S of Blk:
-//│         stats = Ls of 
-//│           TermDefinition:
-//│             owner = N
-//│             k = Fun
-//│             sym = member:pair
-//│             params = Ls of 
-//│               ParamList:
-//│                 flags = ParamListFlags of false
-//│                 params = Ls of 
-//│                   Param:
-//│                     flags = (spec)
-//│                     sym = x
-//│                     sign = N
-//│                   Param:
-//│                     flags = (spec)
-//│                     sym = y
-//│                     sign = N
-//│                   Param:
-//│                     flags = ()
-//│                     sym = z
-//│                     sign = N
-//│                 restParam = N
-//│             tparams = N
-//│             sign = N
-//│             body = S of App:
-//│               lhs = Ref of member:Pair
-//│               rhs = Tup of Ls of 
-//│                 Fld:
-//│                   flags = ()
-//│                   term = Ref of x
-//│                   asc = N
-//│                 Fld:
-//│                   flags = ()
-//│                   term = App:
-//│                     lhs = Ref of builtin:+
-//│                     rhs = Tup of Ls of 
-//│                       Fld:
-//│                         flags = ()
-//│                         term = Ref of y
-//│                         asc = N
-//│                       Fld:
-//│                         flags = ()
-//│                         term = App:
-//│                           lhs = Ref of builtin:+
-//│                           rhs = Tup of Ls of 
-//│                             Fld:
-//│                               flags = ()
-//│                               term = Ref of z
-//│                               asc = N
-//│                         asc = N
-//│                   asc = N
-//│             resSym = ‹result of member:pair›
-//│             flags = ()
-//│             annotations = Nil
-//│           TermDefinition:
-//│             owner = N
-//│             k = Fun
-//│             sym = member:pair_Num_Str
-//│             params = Ls of 
-//│               ParamList:
-//│                 flags = ParamListFlags of false
-//│                 params = Ls of 
-//│                   Param:
-//│                     flags = (spec)
-//│                     sym = x
-//│                     sign = N
-//│                   Param:
-//│                     flags = (spec)
-//│                     sym = y
-//│                     sign = N
-//│                   Param:
-//│                     flags = ()
-//│                     sym = z
-//│                     sign = N
-//│                 restParam = N
-//│             tparams = N
-//│             sign = N
-//│             body = S of App:
-//│               lhs = Ref of member:Pair
-//│               rhs = Tup of Ls of 
-//│                 Fld:
-//│                   flags = ()
-//│                   term = Ref of x
-//│                   asc = N
-//│                 Fld:
-//│                   flags = ()
-//│                   term = App:
-//│                     lhs = Ref of builtin:+
-//│                     rhs = Tup of Ls of 
-//│                       Fld:
-//│                         flags = ()
-//│                         term = Ref of y
-//│                         asc = N
-//│                       Fld:
-//│                         flags = ()
-//│                         term = App:
-//│                           lhs = Ref of builtin:+
-//│                           rhs = Tup of Ls of 
-//│                             Fld:
-//│                               flags = ()
-//│                               term = Ref of z
-//│                               asc = N
-//│                         asc = N
-//│                   asc = N
-//│             resSym = ‹result of member:pair›
-//│             flags = ()
-//│             annotations = Nil
-//│           TermDefinition:
-//│             owner = N
-//│             k = Fun
-//│             sym = member:pair_Num_Int
-//│             params = Ls of 
-//│               ParamList:
-//│                 flags = ParamListFlags of false
-//│                 params = Ls of 
-//│                   Param:
-//│                     flags = (spec)
-//│                     sym = x
-//│                     sign = N
-//│                   Param:
-//│                     flags = (spec)
-//│                     sym = y
-//│                     sign = N
-//│                   Param:
-//│                     flags = ()
-//│                     sym = z
-//│                     sign = N
-//│                 restParam = N
-//│             tparams = N
-//│             sign = N
-//│             body = S of App:
-//│               lhs = Ref of member:Pair
-//│               rhs = Tup of Ls of 
-//│                 Fld:
-//│                   flags = ()
-//│                   term = Ref of x
-//│                   asc = N
-//│                 Fld:
-//│                   flags = ()
-//│                   term = App:
-//│                     lhs = Ref of builtin:+
-//│                     rhs = Tup of Ls of 
-//│                       Fld:
-//│                         flags = ()
-//│                         term = Ref of y
-//│                         asc = N
-//│                       Fld:
-//│                         flags = ()
-//│                         term = App:
-//│                           lhs = Ref of builtin:+
-//│                           rhs = Tup of Ls of 
-//│                             Fld:
-//│                               flags = ()
-//│                               term = Ref of z
-//│                               asc = N
-//│                         asc = N
-//│                   asc = N
-//│             resSym = ‹result of member:pair›
-//│             flags = ()
-//│             annotations = Nil
-//│         res = App:
-//│           lhs = Ref of member:pair
-//│           rhs = Tup of Ls of 
-//│             Fld:
-//│               flags = ()
-//│               term = Ref of a
-//│               asc = N
-//│             Fld:
-//│               flags = ()
-//│               term = Lit of DecLit of 10.4
-//│               asc = N
-//│             Fld:
-//│               flags = ()
-//│               term = Lit of IntLit of 1
-//│               asc = N
-//│       resSym = ‹result of member:foo›
-//│       flags = ()
-//│       annotations = Nil
-//│     Parameterized:
-//│       owner = N
-//│       kind = Cls
-//│       sym = class:Pair
-//│       bsym = member:Pair
-//│       tparams = Nil
-//│       params = ParamList:
-//│         flags = ParamListFlags of false
-//│         params = Ls of 
-//│           Param:
-//│             flags = ()
-//│             sym = class:Pair.a
-//│             sign = N
-//│           Param:
-//│             flags = ()
-//│             sym = class:Pair.b
-//│             sign = N
-//│         restParam = N
-//│       ext = N
-//│       body = ObjBody of Blk:
-//│         stats = Nil
-//│         res = Lit of UnitLit of false
-//│       companion = N
-//│       annotations = Nil
-//│     App:
-//│       lhs = Ref of member:foo
-//│       rhs = Tup of Ls of 
-//│         Fld:
-//│           flags = ()
-//│           term = Lit of IntLit of 1
-//│           asc = N
-//│   res = App:
-//│     lhs = Ref of member:foo
-//│     rhs = Tup of Ls of 
-//│       Fld:
-//│         flags = ()
-//│         term = Lit of StrLit of "Str"
-//│         asc = N
+//│ JS (unsanitized):
+//│ let foo1, Pair1, tmp4;
+//│ foo1 = function foo(a) {
+//│   let pair, pair_arg0, pair_arg1, pair_Str_Num, pair_Int_Num;
+//│   pair = function pair(x4, y, z) {
+//│     let tmp5, tmp6;
+//│     tmp5 = + z;
+//│     tmp6 = y + tmp5;
+//│     return Pair1(x4, tmp6)
+//│   };
+//│   pair_Str_Num = function pair_Str_Num(x4, y, z) {
+//│     let tmp5, tmp6;
+//│     tmp5 = + z;
+//│     tmp6 = y + tmp5;
+//│     return Pair1(x4, tmp6)
+//│   };
+//│   pair_Int_Num = function pair_Int_Num(x4, y, z) {
+//│     let tmp5, tmp6;
+//│     tmp5 = + z;
+//│     tmp6 = y + tmp5;
+//│     return Pair1(x4, tmp6)
+//│   };
+//│   pair_arg0 = a;
+//│   pair_arg1 = 10.4;
+//│   return pair(pair_arg0, pair_arg1, 1)
+//│ };
+//│ Pair1 = function Pair(a1, b1) { return new Pair.class(a1, b1); };
+//│ Pair1.class = class Pair {
+//│   constructor(a, b) {
+//│     this.a = a;
+//│     this.b = b;
+//│   }
+//│   toString() { return "Pair(" + globalThis.Predef.render(this.a) + ", " + globalThis.Predef.render(this.b) + ")"; }
+//│ };
+//│ tmp4 = foo1(1);
+//│ foo1("Str")
 //│ = Pair("Str", 11.4)
 
-:spt
+:sjs
 fun id(spec x) = x
 fun foo(spec x) = x
 id(foo(1))
-//│ Specialised tree:
-//│ Blk:
-//│   stats = Ls of 
-//│     TermDefinition:
-//│       owner = N
-//│       k = Fun
-//│       sym = member:id
-//│       params = Ls of 
-//│         ParamList:
-//│           flags = ParamListFlags of false
-//│           params = Ls of 
-//│             Param:
-//│               flags = (spec)
-//│               sym = x
-//│               sign = N
-//│           restParam = N
-//│       tparams = N
-//│       sign = N
-//│       body = S of Ref of x
-//│       resSym = ‹result of member:id›
-//│       flags = ()
-//│       annotations = Nil
-//│     TermDefinition:
-//│       owner = N
-//│       k = Fun
-//│       sym = member:foo
-//│       params = Ls of 
-//│         ParamList:
-//│           flags = ParamListFlags of false
-//│           params = Ls of 
-//│             Param:
-//│               flags = (spec)
-//│               sym = x
-//│               sign = N
-//│           restParam = N
-//│       tparams = N
-//│       sign = N
-//│       body = S of Ref of x
-//│       resSym = ‹result of member:foo›
-//│       flags = ()
-//│       annotations = Nil
-//│     TermDefinition:
-//│       owner = N
-//│       k = Fun
-//│       sym = member:id_Int
-//│       params = Ls of 
-//│         ParamList:
-//│           flags = ParamListFlags of false
-//│           params = Ls of 
-//│             Param:
-//│               flags = (spec)
-//│               sym = x
-//│               sign = N
-//│           restParam = N
-//│       tparams = N
-//│       sign = N
-//│       body = S of Ref of x
-//│       resSym = ‹result of member:id›
-//│       flags = ()
-//│       annotations = Nil
-//│     TermDefinition:
-//│       owner = N
-//│       k = Fun
-//│       sym = member:foo_Int
-//│       params = Ls of 
-//│         ParamList:
-//│           flags = ParamListFlags of false
-//│           params = Ls of 
-//│             Param:
-//│               flags = (spec)
-//│               sym = x
-//│               sign = N
-//│           restParam = N
-//│       tparams = N
-//│       sign = N
-//│       body = S of Ref of x
-//│       resSym = ‹result of member:foo›
-//│       flags = ()
-//│       annotations = Nil
-//│   res = App:
-//│     lhs = Ref of member:id
-//│     rhs = Tup of Ls of 
-//│       Fld:
-//│         flags = ()
-//│         term = App:
-//│           lhs = Ref of member:foo
-//│           rhs = Tup of Ls of 
-//│             Fld:
-//│               flags = ()
-//│               term = Lit of IntLit of 1
-//│               asc = N
-//│         asc = N
+//│ JS (unsanitized):
+//│ let foo2, id2, id_Int2, foo_Int, id_arg02, foo_arg0, tmp5;
+//│ id2 = function id(x4) {
+//│   return x4
+//│ };
+//│ foo2 = function foo(x4) {
+//│   return x4
+//│ };
+//│ id_Int2 = function id_Int(x4) {
+//│   return x4
+//│ };
+//│ foo_Int = function foo_Int(x4) {
+//│   return x4
+//│ };
+//│ foo_arg0 = 1;
+//│ tmp5 = foo2(foo_arg0);
+//│ id_arg02 = tmp5;
+//│ id2(id_arg02)
 //│ = 1
+
+:sjs
+fun foo(spec x, y) =
+    fun bar(spec a, spec b) = a + b
+    bar(x, y)
+foo(1, 2)
+foo(1, 1.5)
+//│ JS (unsanitized):
+//│ let foo3, foo_Int1, foo_arg01, tmp6;
+//│ foo3 = function foo(x4, y) {
+//│   let bar, bar_arg0, bar_arg1, bar_Num, bar_Int;
+//│   bar = function bar(a, b) {
+//│     return a + b
+//│   };
+//│   bar_Num = function bar_Num(a, b) {
+//│     return a + b
+//│   };
+//│   bar_Int = function bar_Int(a, b) {
+//│     return a + b
+//│   };
+//│   bar_arg0 = x4;
+//│   bar_arg1 = y;
+//│   return bar(bar_arg0, bar_arg1)
+//│ };
+//│ foo_arg01 = 1;
+//│ tmp6 = foo3(foo_arg01, 2);
+//│ foo_Int1 = function foo_Int(x4, y) {
+//│   let bar;
+//│   bar = function bar(a, b) {
+//│     return a + b
+//│   };
+//│   return bar(x4, y)
+//│ };
+//│ foo3(1, 1.5)
+//│ = 2.5
