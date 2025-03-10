@@ -44,10 +44,17 @@ object Elaborator:
     case InnerScope(innerSymbol: InnerSymbol)
     case LocalScope
     case LambdaOrHandlerBlock
+    case NonReturnContext
 
     def inner: Opt[InnerSymbol] = this match
       case InnerScope(inner) => S(inner)
       case _ => N
+  
+  enum ReturnHandler:
+    case Required(handler: TempSymbol)
+    case Direct
+    case NotInFunction
+    case Forbidden
   
   case class Ctx(outer: OuterCtx, parent: Opt[Ctx], env: Map[Str, Ctx.Elem], 
     mode: Mode):
@@ -77,14 +84,13 @@ object Elaborator:
     def getNonLocalRetHandler: Opt[TempSymbol] = outer match
       case OuterCtx.Function(sym) => S(sym)
       case _ => parent.flatMap(_.getNonLocalRetHandler)
-    // Returns N if no return handler is required (a direct `return` is possible).
-    // Returns S(N) if there is no function in scope.
-    def getRetHandler: Opt[Opt[TempSymbol]] = outer match
-      case OuterCtx.Function(sym) => N
-      case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope) => S(getNonLocalRetHandler)
-      case _ =>
-        // If parent is empty, we are at the top-level context.
-        parent.fold(S(N))(_.getRetHandler)
+    def getRetHandler: ReturnHandler = outer match
+      case OuterCtx.Function(sym) => ReturnHandler.Direct
+      case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope) =>
+        getNonLocalRetHandler.fold(ReturnHandler.NotInFunction)(ReturnHandler.Required(_))
+      case OuterCtx.NonReturnContext => ReturnHandler.Forbidden
+      case OuterCtx.LocalScope =>
+        parent.fold(ReturnHandler.NotInFunction)(_.getRetHandler)
     
     // * Invariant: We expect that the top-level context only contain hard-coded symbols like `globalThis`
     // * and that built-in symbols like Int and Str be imported into another nested context on top of it.
@@ -628,7 +634,7 @@ extends Importer:
         ), Term.IfLike(Keyword.`if`, des)(nor))
     case Modified(Keyword.`return`, kwLoc, body) =>
       ctx.getRetHandler match
-      case S(S(sym)) =>
+      case ReturnHandler.Required(sym) =>
         tl.log(s"Non-local return: $sym")
         val rs = FlowSymbol("‹app-res›")
         val retMtdTree = new Tree.Ident("ret")
@@ -638,12 +644,16 @@ extends Importer:
           Term.Sel(sym.ref(dummyIdent), retMtdTree)(S(state.nonLocalRet)),
           Term.Tup(PlainFld(term(body)) :: Nil)(argTree)
         )(Tree.App(Tree.Sel(dummyIdent, retMtdTree), argTree), rs)
-      case S(N) =>
+      case ReturnHandler.NotInFunction =>
         raise:
-          ErrorReport(msg"Return statement outside of a function." -> tree.toLoc :: Nil)
+          ErrorReport(msg"Return statements are not allowed outside of a function." -> tree.toLoc :: Nil)
         Term.Error
-      case N =>
+      case ReturnHandler.Direct =>
         Term.Ret(term(body))
+      case ReturnHandler.Forbidden =>
+        raise:
+          ErrorReport(msg"Return statements are not allowed in this context." -> tree.toLoc :: Nil)
+        Term.Error
     case Modified(Keyword.`throw`, kwLoc, body) =>
       Term.Throw(term(body))
     case Modified(Keyword.`do`, kwLoc, body) =>
@@ -1075,7 +1085,7 @@ extends Importer:
         val sym = members.getOrElse(nme.name, lastWords(s"Symbol not found: ${nme.name}"))
         var newCtx = S(td.symbol).collectFirst:
             case s: InnerSymbol => s
-          .fold(ctx.nest(OuterCtx.LambdaOrHandlerBlock))(ctx.nestInner(_))
+          .fold(ctx.nest(OuterCtx.NonReturnContext))(ctx.nestInner(_))
         val tps = td.typeParams match
           case S(ts) =>
             ts.tys.flatMap: targ =>
