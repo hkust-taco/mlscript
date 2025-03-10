@@ -83,8 +83,6 @@ fun showFunctionContChain(cont, hl, vis, reps) =
       set result += ", REPEAT"
     else
       vis.add(cont)
-    if cont.completed do
-      set result += ", COMPLETED"
     result + ") -> " + showFunctionContChain(cont.next, hl, vis, reps)
   else if cont === null then
     "(null)"
