@@ -81,7 +81,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
 
   def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol], curDepth: => Symbol) =
     val resSym = sym getOrElse TempSymbol(None, "res")
-    wrapStackSafe(HandleBlockReturn(res), resSym, f(resSym.asPath))
+    wrapStackSafe(Ret(res), resSym, f(resSym.asPath))
 
   // Rewrites anything that can contain a Call to increase the stack depth
   def transform(b: Block, curDepth: => Symbol, isTopLevel: Bool = false): Block =
@@ -120,7 +120,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
           val rst2 = applyBlock(rst)
           if isTopLevel then
             val newRes = TempSymbol(N, "res")
-            val newHandler = HandleBlock(l2, newRes, par2, args2, cls2, hdr2, bod2, HandleBlockReturn(newRes.asPath))
+            val newHandler = HandleBlock(l2, newRes, par2, args2, cls2, hdr2, bod2, Ret(newRes.asPath))
             wrapStackSafe(newHandler, res2, rst2)
           else
             HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod2, rst2)

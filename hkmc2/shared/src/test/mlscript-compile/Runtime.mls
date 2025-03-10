@@ -37,7 +37,9 @@ data class HandlerContFrame(next, nextHandler, handler)
 
 data class ContTrace(next, last, nextHandler, lastHandler, resumed)
 data class EffectSig(contTrace, handler, handlerFun)
-data class Return(value)
+
+class NonLocalReturn with
+  fun ret(value)
 
 fun showFunctionContChain(cont, hl, vis, reps) =
   if cont is FunctionContFrame then

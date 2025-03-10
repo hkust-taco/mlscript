@@ -22,7 +22,6 @@ class BlockTraverser(subst: SymbolSubst):
     case Continue(lbl) => applyLocal(lbl)
     case Return(res, implct) => applyResult(res)
     case Throw(exc) => applyResult(exc)
-    case HandleBlockReturn(res) => applyResult(res)
     case Match(scrut, arms, dflt, rst) =>
       val scrut2 = applyPath(scrut)
       arms.foreach: arm =>

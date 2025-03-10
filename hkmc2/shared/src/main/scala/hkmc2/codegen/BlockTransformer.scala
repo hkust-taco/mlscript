@@ -29,9 +29,6 @@ class BlockTransformer(subst: SymbolSubst):
     case Throw(exc) =>
       applyResult2(exc): exc2 =>
         if exc2 is exc then b else Throw(exc2)
-    case HandleBlockReturn(res) =>
-      applyResult2(res): res2 =>
-        if res2 is res then b else HandleBlockReturn(res2)
     case Match(scrut, arms, dflt, rst) =>
       val scrut2 = applyPath(scrut)
       val arms2 = arms.mapConserve: arm =>

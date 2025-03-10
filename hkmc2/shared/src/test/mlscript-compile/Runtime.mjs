@@ -74,14 +74,9 @@ Runtime1 = class Runtime {
       }
       toString() { return "EffectSig(" + globalThis.Predef.render(this.contTrace) + ", " + globalThis.Predef.render(this.handler) + ", " + globalThis.Predef.render(this.handlerFun) + ")"; }
     };
-    this.Return = function Return(value1) {
-      return new Return.class(value1);
-    };
-    this.Return.class = class Return {
-      constructor(value) {
-        this.value = value;
-      }
-      toString() { return "Return(" + globalThis.Predef.render(this.value) + ")"; }
+    this.NonLocalReturn = class NonLocalReturn {
+      constructor() {}
+      toString() { return "NonLocalReturn"; }
     };
     this.stackLimit = 0;
     this.stackDepth = 0;

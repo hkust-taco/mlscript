@@ -321,7 +321,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       subTerm(rhs): par =>
         subTerms(as): asr =>
           HandleBlock(lhs, resSym, par, asr, cls, handlers,
-            term_nonTail(bod)(HandleBlockReturn(_)),
+            term_nonTail(bod)(Ret),
             k(Value.Ref(resSym)))
     case st.Blk(sts, res) => block(sts, R(res))(k)
     case Assgn(lhs, rhs) =>
