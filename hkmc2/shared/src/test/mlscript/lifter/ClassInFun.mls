@@ -1,9 +1,6 @@
 :lift
 :js
-:sjs
 
-//│ JS (unsanitized):
-//│ import Predef from "./../../mlscript-compile/Predef.mjs"; 
 // make sure class fields are discriminated properly for immutable captures when supported
 :effectHandlers
 :sjs
@@ -16,7 +13,7 @@ fun f() =
   1
 f() + f() + f()
 //│ JS (unsanitized):
-//│ let f, Effect1, tmp, handleBlock$, Cont$func$f$ClassInFun$_mls_L10_95_118$1, Cont$handleBlock$h$1, Handler$h$1, lambda, f$, Cont$func$f$ClassInFun$_mls_L10_95_118$$ctor, Cont$func$f$ClassInFun$_mls_L10_95_118$$, Cont$handleBlock$h$$ctor, Cont$handleBlock$h$$, lambda$;
+//│ let f, Effect1, tmp, handleBlock$, Cont$func$f$ClassInFun$_mls_L9_95_118$1, Cont$handleBlock$h$1, Handler$h$1, lambda, f$, Cont$func$f$ClassInFun$_mls_L9_95_118$$ctor, Cont$func$f$ClassInFun$_mls_L9_95_118$$, Cont$handleBlock$h$$ctor, Cont$handleBlock$h$$, lambda$;
 //│ Effect1 = class Effect {
 //│   constructor() {}
 //│   toString() { return "Effect"; }
@@ -126,24 +123,24 @@ f() + f() + f()
 //│   }
 //│   toString() { return "Cont$handleBlock$h$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│ };
-//│ Cont$func$f$ClassInFun$_mls_L10_95_118$$ = function Cont$func$f$ClassInFun$_mls_L10_95_118$$(h$0, tmp$1, pc) {
+//│ Cont$func$f$ClassInFun$_mls_L9_95_118$$ = function Cont$func$f$ClassInFun$_mls_L9_95_118$$(h$0, tmp$1, pc) {
 //│   let tmp1;
-//│   tmp1 = new Cont$func$f$ClassInFun$_mls_L10_95_118$1.class(pc);
+//│   tmp1 = new Cont$func$f$ClassInFun$_mls_L9_95_118$1.class(pc);
 //│   return tmp1(h$0, tmp$1)
 //│ };
-//│ Cont$func$f$ClassInFun$_mls_L10_95_118$$ctor = function Cont$func$f$ClassInFun$_mls_L10_95_118$$ctor(h$0, tmp$1) {
+//│ Cont$func$f$ClassInFun$_mls_L9_95_118$$ctor = function Cont$func$f$ClassInFun$_mls_L9_95_118$$ctor(h$0, tmp$1) {
 //│   return (pc) => {
 //│     let tmp1;
-//│     tmp1 = new Cont$func$f$ClassInFun$_mls_L10_95_118$1.class(pc);
+//│     tmp1 = new Cont$func$f$ClassInFun$_mls_L9_95_118$1.class(pc);
 //│     return tmp1(h$0, tmp$1)
 //│   }
 //│ };
-//│ Cont$func$f$ClassInFun$_mls_L10_95_118$1 = function Cont$func$f$ClassInFun$_mls_L10_95_118$(pc1) {
+//│ Cont$func$f$ClassInFun$_mls_L9_95_118$1 = function Cont$func$f$ClassInFun$_mls_L9_95_118$(pc1) {
 //│   return (h$01, tmp$11) => {
-//│     return new Cont$func$f$ClassInFun$_mls_L10_95_118$.class(pc1)(h$01, tmp$11);
+//│     return new Cont$func$f$ClassInFun$_mls_L9_95_118$.class(pc1)(h$01, tmp$11);
 //│   }
 //│ };
-//│ Cont$func$f$ClassInFun$_mls_L10_95_118$1.class = class Cont$func$f$ClassInFun$_mls_L10_95_118$ extends runtime.FunctionContFrame.class {
+//│ Cont$func$f$ClassInFun$_mls_L9_95_118$1.class = class Cont$func$f$ClassInFun$_mls_L9_95_118$ extends runtime.FunctionContFrame.class {
 //│   constructor(pc) {
 //│     return (h$0, tmp$1) => {
 //│       let tmp1;
@@ -175,13 +172,13 @@ f() + f() + f()
 //│       break;
 //│     }
 //│   }
-//│   toString() { return "Cont$func$f$ClassInFun$_mls_L10_95_118$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│   toString() { return "Cont$func$f$ClassInFun$_mls_L9_95_118$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│ };
 //│ f$ = function f$(h) {
 //│   let tmp1;
 //│   tmp1 = runtime.safeCall(h.perform());
 //│   if (tmp1 instanceof runtime.EffectSig.class) {
-//│     tmp1.contTrace.last.next = Cont$func$f$ClassInFun$_mls_L10_95_118$$(h, tmp1, 0);
+//│     tmp1.contTrace.last.next = Cont$func$f$ClassInFun$_mls_L9_95_118$$(h, tmp1, 0);
 //│     tmp1.contTrace.last = tmp1.contTrace.last.next;
 //│     return tmp1
 //│   }
@@ -349,65 +346,6 @@ fun f(used1, unused1) =
     fun get() = used1
   new Test(unused1)
 f(1, 2).get()
-//│ JS (unsanitized):
-//│ let h1, Test5, g1, f3, tmp3, Test$ctor2, Test$2, g$1, h$1;
-//│ h$1 = function h$(used3) {
-//│   return used3
-//│ };
-//│ h1 = function h(used3) {
-//│   return () => {
-//│     return h$1(used3)
-//│   }
-//│ };
-//│ g$1 = function g$(used1, g_arg) {
-//│   let used3, tmp4;
-//│   used3 = 2;
-//│   tmp4 = h$1(used3);
-//│   return used1 + tmp4
-//│ };
-//│ g1 = function g(used1) {
-//│   return (g_arg) => {
-//│     return g$1(used1, g_arg)
-//│   }
-//│ };
-//│ Test$2 = function Test$(used1$0, a) {
-//│   let tmp4;
-//│   tmp4 = new Test5.class(a);
-//│   return tmp4(used1$0)
-//│ };
-//│ Test$ctor2 = function Test$ctor(used1$0) {
-//│   return (a) => {
-//│     let tmp4;
-//│     tmp4 = new Test5.class(a);
-//│     return tmp4(used1$0)
-//│   }
-//│ };
-//│ Test5 = function Test(a1) {
-//│   return (used1$01) => {
-//│     return new Test.class(a1)(used1$01);
-//│   }
-//│ };
-//│ Test5.class = class Test4 {
-//│   #a;
-//│   constructor(a) {
-//│     return (used1$0) => {
-//│       this.used1$0 = used1$0;
-//│       this.#a = a;
-//│       return this;
-//│     }
-//│   }
-//│   get() {
-//│     return this.used1$0
-//│   }
-//│   toString() { return "Test(" + "" + ")"; }
-//│ };
-//│ f3 = function f(used1, unused1) {
-//│   let unused2;
-//│   unused2 = 2;
-//│   return Test$2(used1, unused1)
-//│ };
-//│ tmp3 = f3(1, 2);
-//│ runtime.safeCall(tmp3.get())
 //│ = 1
 
 :sjs
@@ -656,33 +594,6 @@ class A(a) with
     fun g() = x
     g()
 A(2).f()
-//│ JS (unsanitized):
-//│ let g3, A3, tmp6, g$3;
-//│ g$3 = function g$(A$instance) {
-//│   return A$instance.x
-//│ };
-//│ g3 = function g(A$instance) {
-//│   return () => {
-//│     return g$3(A$instance)
-//│   }
-//│ };
-//│ A3 = function A(a1) {
-//│   return new A.class(a1);
-//│ };
-//│ A3.class = class A2 {
-//│   #a;
-//│   #x;
-//│   constructor(a) {
-//│     this.#a = a;
-//│     this.#x = 2;
-//│   }
-//│   f() {
-//│     return g$3(this)
-//│   }
-//│   toString() { return "A(" + "" + ")"; }
-//│ };
-//│ tmp6 = A3(2);
-//│ runtime.safeCall(tmp6.f())
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 //│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
 
@@ -700,67 +611,6 @@ a.foo()
 let b = a.newA()
 b.foo()
 a.getX()
-//│ JS (unsanitized):
-//│ let A5, f7, a, b, tmp7, tmp8, tmp9, tmp10, A$ctor1, A$1, f$capture5;
-//│ A$1 = function A$(f$capture$0) {
-//│   let tmp11;
-//│   tmp11 = new A5.class();
-//│   return tmp11(f$capture$0)
-//│ };
-//│ A$ctor1 = function A$ctor(f$capture$0) {
-//│   return () => {
-//│     let tmp11;
-//│     tmp11 = new A5.class();
-//│     return tmp11(f$capture$0)
-//│   }
-//│ };
-//│ A5 = function A() {
-//│   return (f$capture$01) => {
-//│     return new A.class()(f$capture$01);
-//│   }
-//│ };
-//│ A5.class = class A4 {
-//│   constructor() {
-//│     return (f$capture$0) => {
-//│       this.f$capture$0 = f$capture$0;
-//│       return this;
-//│     }
-//│   }
-//│   newA() {
-//│     return A$1(this.f$capture$0)
-//│   } 
-//│   foo() {
-//│     let tmp11;
-//│     tmp11 = this.f$capture$0.x0$ + 1;
-//│     this.f$capture$0.x0$ = tmp11;
-//│     return this.f$capture$0.x0$
-//│   } 
-//│   getX() {
-//│     return this.f$capture$0.x0$
-//│   }
-//│   toString() { return "A(" + "" + ")"; }
-//│ };
-//│ f$capture5 = function f$capture(x0$1) {
-//│   return new f$capture.class(x0$1);
-//│ };
-//│ f$capture5.class = class f$capture4 {
-//│   constructor(x0$) {
-//│     this.x0$ = x0$;
-//│   }
-//│   toString() { return "f$capture(" + globalThis.Predef.render(this.x0$) + ")"; }
-//│ };
-//│ f7 = function f(x) {
-//│   let capture;
-//│   capture = new f$capture5(x);
-//│   return A$1(capture)
-//│ };
-//│ tmp7 = f7(0);
-//│ a = tmp7;
-//│ tmp8 = runtime.safeCall(a.foo());
-//│ tmp9 = runtime.safeCall(a.newA());
-//│ b = tmp9;
-//│ tmp10 = runtime.safeCall(b.foo());
-//│ runtime.safeCall(a.getX())
 //│ = 2
 //│ a = A()
 //│ b = A()
@@ -774,187 +624,6 @@ fun sum(n) =
   else
     n + sum(n - 1)
 sum(100)
-//│ JS (unsanitized):
-//│ let sum, res, Cont$func$sum$ClassInFun$_mls_L772_4_57$1, handleBlock$1, Cont$handleBlock$stackHandler$1, StackDelay$1, lambda1, Cont$func$sum$ClassInFun$_mls_L772_4_57$$ctor, Cont$func$sum$ClassInFun$_mls_L772_4_57$$, Cont$handleBlock$stackHandler$$ctor, Cont$handleBlock$stackHandler$$, lambda$1;
-//│ Cont$func$sum$ClassInFun$_mls_L772_4_57$$ = function Cont$func$sum$ClassInFun$_mls_L772_4_57$$(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5, pc) {
-//│   let tmp11;
-//│   tmp11 = new Cont$func$sum$ClassInFun$_mls_L772_4_57$1.class(pc);
-//│   return tmp11(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5)
-//│ };
-//│ Cont$func$sum$ClassInFun$_mls_L772_4_57$$ctor = function Cont$func$sum$ClassInFun$_mls_L772_4_57$$ctor(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5) {
-//│   return (pc) => {
-//│     let tmp11;
-//│     tmp11 = new Cont$func$sum$ClassInFun$_mls_L772_4_57$1.class(pc);
-//│     return tmp11(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5)
-//│   }
-//│ };
-//│ Cont$func$sum$ClassInFun$_mls_L772_4_57$1 = function Cont$func$sum$ClassInFun$_mls_L772_4_57$(pc1) {
-//│   return (n$01, scrut$11, tmp$21, tmp$31, curDepth$41, stackDelayRes$51) => {
-//│     return new Cont$func$sum$ClassInFun$_mls_L772_4_57$.class(pc1)(n$01, scrut$11, tmp$21, tmp$31, curDepth$41, stackDelayRes$51);
-//│   }
-//│ };
-//│ Cont$func$sum$ClassInFun$_mls_L772_4_57$1.class = class Cont$func$sum$ClassInFun$_mls_L772_4_57$ extends runtime.FunctionContFrame.class {
-//│   constructor(pc) {
-//│     return (n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5) => {
-//│       let tmp11;
-//│       tmp11 = super(null);
-//│       this.n$0 = n$0;
-//│       this.scrut$1 = scrut$1;
-//│       this.tmp$2 = tmp$2;
-//│       this.tmp$3 = tmp$3;
-//│       this.curDepth$4 = curDepth$4;
-//│       this.stackDelayRes$5 = stackDelayRes$5;
-//│       this.pc = pc;
-//│       return this;
-//│     }
-//│   }
-//│   resume(value$) {
-//│     if (this.pc === 0) {
-//│       this.stackDelayRes$5 = value$;
-//│     } else if (this.pc === 1) {
-//│       this.tmp$3 = value$;
-//│     }
-//│     contLoop: while (true) {
-//│       if (this.pc === 0) {
-//│         this.scrut$1 = this.n$0 == 0;
-//│         if (this.scrut$1 === true) {
-//│           return 0
-//│         } else {
-//│           this.tmp$2 = this.n$0 - 1;
-//│           this.pc = 3;
-//│           continue contLoop;
-//│         }
-//│         this.pc = 2;
-//│         continue contLoop;
-//│       } else if (this.pc === 2) {
-//│         break contLoop;
-//│       } else if (this.pc === 3) {
-//│         runtime.stackDepth = runtime.stackDepth + 1;
-//│         this.tmp$3 = sum(this.tmp$2);
-//│         if (this.tmp$3 instanceof runtime.EffectSig.class) {
-//│           this.pc = 1;
-//│           this.tmp$3.contTrace.last.next = this;
-//│           this.tmp$3.contTrace.last = this;
-//│           return this.tmp$3
-//│         }
-//│         this.pc = 1;
-//│         continue contLoop;
-//│       } else if (this.pc === 1) {
-//│         this.tmp$3 = runtime.resetDepth(this.tmp$3, this.curDepth$4);
-//│         return this.n$0 + this.tmp$3
-//│       }
-//│       break;
-//│     }
-//│   }
-//│   toString() { return "Cont$func$sum$ClassInFun$_mls_L772_4_57$(" + globalThis.Predef.render(this.pc) + ")"; }
-//│ };
-//│ sum = function sum(n) {
-//│   let scrut, tmp11, tmp12, curDepth, stackDelayRes;
-//│   curDepth = runtime.stackDepth;
-//│   stackDelayRes = runtime.checkDepth();
-//│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     stackDelayRes.contTrace.last.next = Cont$func$sum$ClassInFun$_mls_L772_4_57$$(n, scrut, tmp11, tmp12, curDepth, stackDelayRes, 0);
-//│     stackDelayRes.contTrace.last = stackDelayRes.contTrace.last.next;
-//│     return stackDelayRes
-//│   }
-//│   scrut = n == 0;
-//│   if (scrut === true) {
-//│     return 0
-//│   } else {
-//│     tmp11 = n - 1;
-//│     runtime.stackDepth = runtime.stackDepth + 1;
-//│     tmp12 = sum(tmp11);
-//│     if (tmp12 instanceof runtime.EffectSig.class) {
-//│       tmp12.contTrace.last.next = Cont$func$sum$ClassInFun$_mls_L772_4_57$$(n, scrut, tmp11, tmp12, curDepth, stackDelayRes, 1);
-//│       tmp12.contTrace.last = tmp12.contTrace.last.next;
-//│       return tmp12
-//│     }
-//│     tmp12 = runtime.resetDepth(tmp12, curDepth);
-//│     return n + tmp12
-//│   }
-//│ };
-//│ lambda$1 = function lambda$(StackDelay$$instance, resume) {
-//│   runtime.stackOffset = runtime.stackDepth;
-//│   return resume()
-//│ };
-//│ lambda1 = (undefined, function (StackDelay$$instance) {
-//│   return (resume) => {
-//│     return lambda$1(StackDelay$$instance, resume)
-//│   }
-//│ });
-//│ StackDelay$1 = class StackDelay$ extends runtime.StackDelay {
-//│   constructor() {
-//│     let tmp11;
-//│     tmp11 = super();
-//│   }
-//│   perform() {
-//│     let lambda$this;
-//│     lambda$this = runtime.safeCall(lambda1(this));
-//│     return runtime.mkEffect(this, lambda$this)
-//│   }
-//│   toString() { return "StackDelay$"; }
-//│ };
-//│ Cont$handleBlock$stackHandler$$ = function Cont$handleBlock$stackHandler$$(res$0, pc) {
-//│   let tmp11;
-//│   tmp11 = new Cont$handleBlock$stackHandler$1.class(pc);
-//│   return tmp11(res$0)
-//│ };
-//│ Cont$handleBlock$stackHandler$$ctor = function Cont$handleBlock$stackHandler$$ctor(res$0) {
-//│   return (pc) => {
-//│     let tmp11;
-//│     tmp11 = new Cont$handleBlock$stackHandler$1.class(pc);
-//│     return tmp11(res$0)
-//│   }
-//│ };
-//│ Cont$handleBlock$stackHandler$1 = function Cont$handleBlock$stackHandler$(pc1) {
-//│   return (res$01) => {
-//│     return new Cont$handleBlock$stackHandler$.class(pc1)(res$01);
-//│   }
-//│ };
-//│ Cont$handleBlock$stackHandler$1.class = class Cont$handleBlock$stackHandler$ extends runtime.FunctionContFrame.class {
-//│   constructor(pc) {
-//│     return (res$0) => {
-//│       let tmp11;
-//│       tmp11 = super(null);
-//│       this.res$0 = res$0;
-//│       this.pc = pc;
-//│       return this;
-//│     }
-//│   }
-//│   resume(value$) {
-//│     if (this.pc === 4) {
-//│       this.res$0 = value$;
-//│     }
-//│     contLoop: while (true) {
-//│       if (this.pc === 4) {
-//│         return this.res$0
-//│       }
-//│       break;
-//│     }
-//│   }
-//│   toString() { return "Cont$handleBlock$stackHandler$(" + globalThis.Predef.render(this.pc) + ")"; }
-//│ };
-//│ handleBlock$1 = function handleBlock$() {
-//│   let stackHandler, res1;
-//│   stackHandler = new StackDelay$1();
-//│   runtime.stackLimit = 10;
-//│   runtime.stackOffset = 0;
-//│   runtime.stackDepth = 1;
-//│   runtime.stackHandler = stackHandler;
-//│   res1 = sum(100);
-//│   if (res1 instanceof runtime.EffectSig.class) {
-//│     res1.contTrace.last.next = Cont$handleBlock$stackHandler$$(res1, 4);
-//│     return runtime.handleBlockImpl(res1, stackHandler)
-//│   }
-//│   return res1
-//│ };
-//│ res = handleBlock$1();
-//│ if (res instanceof runtime.EffectSig.class) {
-//│   throw new this.Error("Unhandled effects");
-//│ }
-//│ runtime.stackDepth = 0;
-//│ runtime.stackHandler = null;
-//│ res
 //│ = 5050
 
 // instance checks
@@ -966,37 +635,6 @@ fun f() =
   fun foo() = Test
   foo()(0)
 f().get()
-//│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
-//│ JS (unsanitized):
-//│ let foo, f8, tmp11, foo$;
-//│ foo$ = function foo$(Test$member) {
-//│   return Test$member
-//│ };
-//│ foo = function foo(Test$member) {
-//│   return () => {
-//│     return foo$(Test$member)
-//│   }
-//│ };
-//│ f8 = function f() {
-//│   let Test9, tmp12;
-//│   Test9 = function Test(a2) {
-//│     return new Test.class(a2);
-//│   };
-//│   Test9.class = class Test8 {
-//│     #a;
-//│     constructor(a1) {
-//│       this.#a = a1;
-//│     }
-//│     get() {
-//│       return this.a
-//│     }
-//│     toString() { return "Test(" + "" + ")"; }
-//│   };
-//│   tmp12 = foo$(Test9);
-//│   return runtime.safeCall(tmp12(0))
-//│ };
-//│ tmp11 = f8();
-//│ runtime.safeCall(tmp11.get())
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 
 :sjs
@@ -1048,28 +686,4 @@ fun test() =
   class B() extends A
   B().get
 test()
-//│ JS (unsanitized):
-//│ let A7, B1, test;
-//│ A7 = class A6 {
-//│   constructor() {}
-//│   get get() {
-//│     return 2;
-//│   }
-//│   toString() { return "A"; }
-//│ };
-//│ B1 = function B() {
-//│   return new B.class();
-//│ };
-//│ B1.class = class B extends A7 {
-//│   constructor() {
-//│     super();
-//│   }
-//│   toString() { return "B(" + "" + ")"; }
-//│ };
-//│ test = function test() {
-//│   let tmp13;
-//│   tmp13 = B1();
-//│   return tmp13.get
-//│ };
-//│ test()
 //│ = 2
