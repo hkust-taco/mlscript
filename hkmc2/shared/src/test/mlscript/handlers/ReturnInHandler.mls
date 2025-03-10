@@ -1,6 +1,7 @@
 :js
 :effectHandlers
 
+
 abstract class Effect with
   fun f(): ()
 
@@ -38,7 +39,7 @@ let l = () =>
   return 3
   4
 //│ ╔══[ERROR] Return statements are not allowed outside of a function.
-//│ ║  l.38: 	  return 3
+//│ ║  l.39: 	  return 3
 //│ ╙──      	         ^
 //│ l = [function l]
 
@@ -57,5 +58,7 @@ let l = () =>
   4
 l()
 //│ ╔══[ERROR] Return statements are not allowed outside of a function.
-//│ ║  l.56: 	  return 3
+//│ ║  l.57: 	  return 3
 //│ ╙──      	         ^
+
+

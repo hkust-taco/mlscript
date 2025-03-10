@@ -1037,7 +1037,7 @@ extends Importer:
               sym.defn = S(tdf)
               
               // indicates if the function really returns a module
-              // TODO: check non-local returns
+              // TODO: check non-local returns (see [test:T4])
               val em = b.exists(ModuleChecker.evalsToModule)
               // indicates if the function marks its result as "module"
               val mm = st match

@@ -9,6 +9,14 @@ f()
 //│ = 100
 
 
+fun foo(x) =
+  let xs = [() => return x + 1]
+  xs.0()
+
+foo(123)
+//│ = 124
+
+
 :expect 123
 fun f() =
   let lam = () => return 123
@@ -58,7 +66,7 @@ f()()
 :e
 return 100
 //│ ╔══[ERROR] Return statements are not allowed outside of a function.
-//│ ║  l.59: 	return 100
+//│ ║  l.67: 	return 100
 //│ ╙──      	       ^^^
 
 :e
@@ -66,14 +74,14 @@ if true do
   while false do
     let f = () => return 100
 //│ ╔══[ERROR] Return statements are not allowed outside of a function.
-//│ ║  l.67: 	    let f = () => return 100
+//│ ║  l.75: 	    let f = () => return 100
 //│ ╙──      	                         ^^^
 
 :e
 fun f() =
   type A = return "lol"
 //│ ╔══[ERROR] Return statements are not allowed in this context.
-//│ ║  l.74: 	  type A = return "lol"
+//│ ║  l.82: 	  type A = return "lol"
 //│ ╙──      	                  ^^^^^
 
 
