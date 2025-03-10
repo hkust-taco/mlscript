@@ -56,7 +56,7 @@ x `=> y `=> x `+ y
 (x, y, z) `=> x `+ y `+ z
 //│ Type: CodeBase[out ('x, ⊤, ⊤) -> ⊥, ⊥, ?]
 //│ Where:
-//│   'cde#Int ∨ 'x#Int ∨  ∧ 'cde<:Int ∧ Int<:'app ∧ ⊥<:⊥ ∧ 'cde1<:Int
+//│   'x#Int ∨ 'cde#Int ∨  ∧ 'cde<:Int ∧ Int<:'app ∧ ⊥<:⊥ ∧ 'cde1<:Int
 
 f `=> x `=> y `=> f`(x, y)
 //│ Type: CodeBase[out (('x, 'y) -> 'app) -> ('x -> ('y -> 'app)), ⊥, ?]

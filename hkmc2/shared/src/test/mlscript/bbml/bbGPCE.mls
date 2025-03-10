@@ -41,7 +41,7 @@ inc
 //│ Type: ['x, 'eff, 'x1] -> (CodeBase[⊥, ?, ?] ->{'eff} ⊤) ->{'eff} CodeBase[out 'x -> ⊥, ⊥, ?]
 //│ Where:
 //│   'x <: 'x1
-//│   'cde#Int ∨ 'x1#Int ∨  ∧ 'cde<:Int ∧ Int<:'app ∧ ⊥<:⊥ ∧ 'cde1<:Int
+//│   'x1#Int ∨ 'cde#Int ∨  ∧ 'cde<:Int ∧ Int<:'app ∧ ⊥<:⊥ ∧ 'cde1<:Int
 
 inc(c => log(show(c)))
 //│ Type: CodeBase[out ⊤ -> ⊥, ⊥, ?]

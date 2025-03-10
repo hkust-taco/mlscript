@@ -128,7 +128,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
                   Type.disjoint(q, args2.head) match
                     case N => (cs, Nil)
                     case S(k) =>
-                      if k.nonEmpty then (Nil, k.map(k => DisjSub(mutable.Set.from(k), Nil, cs)))
+                      if k.nonEmpty then (Nil, k.map(k => DisjSub(mutable.LinkedHashSet.from(k), Nil, cs)))
                       else (Nil, Nil)).toList.unzip
               if k.isEmpty then
                 if f.isEmpty then
@@ -138,7 +138,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
                   dss.flatten.foreach(_.commit())
               else
                 k.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
-                  DisjSub(mutable.Set.from(k), dss.flatten, cs.flatten).commit()
+                  DisjSub(mutable.LinkedHashSet.from(k), dss.flatten, cs.flatten).commit()
         case _ =>
           // raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
           cctx.err

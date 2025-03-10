@@ -52,7 +52,8 @@ test(fls, fls)
 //│ Type: Tru ∨ Fls
 
 
-:fixme
+:todo
+:e
 test(true, false)
 //│ ═══[RUNTIME ERROR] Error: match error
 //│ Type: Tru ∨ Fls

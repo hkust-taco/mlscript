@@ -5,7 +5,7 @@ import mlscript.utils.*, shorthands.*
 import syntax.*
 import semantics.*, semantics.Term.*
 import utils.*
-import scala.collection.mutable.{Set => MutSet, Map => MutMap}
+import scala.collection.mutable.{Set => MutSet, Map => MutMap, LinkedHashSet}
 import utils.Scope
 import Elaborator.State
 
@@ -426,10 +426,10 @@ case class PolyFunType(args: Ls[GeneralType], ret: GeneralType, eff: Type) exten
 class VarState:
   var lowerBounds: Ls[Type] = Nil
   var upperBounds: Ls[Type] = Nil
-  val disjsub: MutSet[DisjSub] = MutSet.empty
+  val disjsub: LinkedHashSet[DisjSub] = LinkedHashSet.empty
   override def toString = "<>"
 
-case class DisjSub(disjoint: MutSet[InfVar -> BasicType], dss: Ls[DisjSub], cs: Ls[Type -> Type]):
+case class DisjSub(disjoint: LinkedHashSet[InfVar -> BasicType], dss: Ls[DisjSub], cs: Ls[Type -> Type]):
   def commit() = disjoint.keys.foreach(_.state.disjsub += this)
   def checkAndCommit()(using c: MutMap[BasicType -> BasicType, Opt[Set[Set[InfVar->BasicType]]]]): Ls[Type -> Type] =
     val cc: MutSet[InfVar -> BasicType] = MutSet.empty
@@ -446,7 +446,7 @@ case class DisjSub(disjoint: MutSet[InfVar -> BasicType], dss: Ls[DisjSub], cs: 
       if d.nonEmpty then
         commit()
         d.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
-          DisjSub(MutSet.from(k), dss, cs).commit()
+          DisjSub(LinkedHashSet.from(k), dss, cs).commit()
       Nil
   def checkImpl(v: InfVar)(using c: MutMap[BasicType -> BasicType, Opt[Set[Set[InfVar->BasicType]]]]) =
     val (u, w) = disjoint.toList.partition(_._1.uid === v.uid)
@@ -462,6 +462,6 @@ case class DisjSub(disjoint: MutSet[InfVar -> BasicType], dss: Ls[DisjSub], cs: 
       if disjoint.forall(_._1.uid =/= v.uid) then v.state.disjsub -= this
       else if d.nonEmpty then
         d.foldLeft(Set(w))((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
-          DisjSub(MutSet.from(k), dss, cs).commit()
+          DisjSub(LinkedHashSet.from(k), dss, cs).commit()
       Nil
   def check(v: InfVar) = checkImpl(v)(using c = MutMap.empty)

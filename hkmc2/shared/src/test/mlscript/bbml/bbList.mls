@@ -43,6 +43,8 @@ region r in
 
 // * Should be an error. This definition would not be referentially transparent.
 // * The error message needs improvement, though.
+:todo
+:e
 fun mapi: [A, E] -> List[out A] -> ((Int, A) ->{E} A) ->{E} List[out A]
 fun mapi = s =>
   region r in
