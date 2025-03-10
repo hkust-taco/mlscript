@@ -91,7 +91,7 @@ fun f() =
 f()
 //│ = 100
 
-// broken due to handler does not handle object properly
+// broken due to handlers currently not handling `object` properly
 :fixme
 :expect 100
 fun f() =
