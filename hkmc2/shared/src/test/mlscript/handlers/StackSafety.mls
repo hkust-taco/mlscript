@@ -385,6 +385,20 @@ foo
 //│ = 50005000
 //│ foo = 50005000
 
+:fixme
+:stackSafe 0
+:effectHandlers
+:expect 50005000
+val foo =
+  val f = n =>
+    if n <= 0 then 0
+    else n + f(n-1)
+  f(10000)
+foo
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+//│ ═══[RUNTIME ERROR] Expected: '50005000', got: 'undefined'
+//│ foo = undefined
+
 :re
 fun foo() =
   let f = ()
@@ -458,26 +472,26 @@ foo(h)
 :sjs
 fun max(a, b) = if a < b then b else a
 //│ JS (unsanitized):
-//│ let max, getLocals8;
-//│ getLocals8 = function getLocals() {
-//│   let prev, thisInfo, tmp5;
+//│ let max, getLocals9;
+//│ getLocals9 = function getLocals() {
+//│   let prev, thisInfo, tmp7;
 //│   prev = [];
 //│   thisInfo = new runtime.FnLocalsInfo.class("\u2039top level\u203A", []);
-//│   tmp5 = runtime.safeCall(prev.push(thisInfo));
+//│   tmp7 = runtime.safeCall(prev.push(thisInfo));
 //│   return prev
 //│ };
 //│ max = function max(a, b) {
-//│   let scrut, getLocals9;
-//│   getLocals9 = function getLocals() {
-//│     let a1, b1, prev, thisInfo, tmp5;
-//│     prev = getLocals8();
-//│     a1 = new runtime.LocalVarInfo.class("a", "1605", a);
-//│     b1 = new runtime.LocalVarInfo.class("b", "1606", b);
+//│   let scrut, getLocals10;
+//│   getLocals10 = function getLocals() {
+//│     let a1, b1, prev, thisInfo, tmp7;
+//│     prev = getLocals9();
+//│     a1 = new runtime.LocalVarInfo.class("a", "1686", a);
+//│     b1 = new runtime.LocalVarInfo.class("b", "1687", b);
 //│     thisInfo = new runtime.FnLocalsInfo.class("max", [
 //│       a1,
 //│       b1
 //│     ]);
-//│     tmp5 = runtime.safeCall(prev.push(thisInfo));
+//│     tmp7 = runtime.safeCall(prev.push(thisInfo));
 //│     return prev
 //│   };
 //│   scrut = a < b;
