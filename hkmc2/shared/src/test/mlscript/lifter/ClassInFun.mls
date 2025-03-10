@@ -270,7 +270,7 @@ fun f(used1, unused1) =
     fun h = used3
     used1 + h
   let unused2 = 2
-  class Test(a) with
+  data class Test(a) with
     fun get() = used1
   Test(unused1)
 f(1, 2).get()
@@ -313,18 +313,17 @@ f(1, 2).get()
 //│   }
 //│ };
 //│ Test3.class = class Test2 {
-//│   #a;
 //│   constructor(a) {
 //│     return (used1$0) => {
 //│       this.used1$0 = used1$0;
-//│       this.#a = a;
+//│       this.a = a;
 //│       return this;
 //│     }
 //│   }
 //│   get() {
 //│     return this.used1$0
 //│   }
-//│   toString() { return "Test(" + "" + ")"; }
+//│   toString() { return "Test(" + globalThis.Predef.render(this.a) + ")"; }
 //│ };
 //│ f2 = function f(used1, unused1) {
 //│   let unused2;
