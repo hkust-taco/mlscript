@@ -1160,7 +1160,6 @@ extends Importer:
             ) ++ fields.fold(Nil)(_.collect:
               case d: LetDecl => d.sym.nme -> d.sym // class params
             )
-          val ctxWithLets = ctx 
           val (blk, c) = fn(using ctxWithFields)
           val blkWithFields = fields.fold[Term.Blk](blk)(fs => blk.copy(stats = fs ::: blk.stats))
           (blkWithFields, c)
