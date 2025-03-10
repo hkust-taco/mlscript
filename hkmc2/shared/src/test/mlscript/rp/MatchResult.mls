@@ -17,7 +17,7 @@ MatchFailure("oops")
 if MatchFailure("oops") is MatchFailure(x) then x
 //│ = "oops"
 
-class MatchResult(x, y, z)
+data class MatchResult(x, y, z)
 
 MatchResult(0)
 //│ = MatchResult(0, undefined, undefined)

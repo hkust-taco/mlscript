@@ -75,7 +75,7 @@ fun example(args) =
 //│       sym = member:example
 //│       params = Ls of 
 //│         ParamList:
-//│           flags = ParamListFlags of false
+//│           flags = ()
 //│           params = Ls of 
 //│             Param:
 //│               flags = ()

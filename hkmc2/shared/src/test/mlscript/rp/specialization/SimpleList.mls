@@ -1,14 +1,14 @@
 :js
 
-class Pair[A, B](a: A, b: B)
+data class Pair[A, B](a: A, b: B)
 
-class Box[A](value: A)
+data class Box[A](value: A)
 
-class Bowl[A](value: A)
+data class Bowl[A](value: A)
 
-class Basket[A](value: A)
+data class Basket[A](value: A)
 
-class Triplet[A, B, C](a: A, b: B, c: C)
+data class Triplet[A, B, C](a: A, b: B, c: C)
 
 pattern Everything = _
 

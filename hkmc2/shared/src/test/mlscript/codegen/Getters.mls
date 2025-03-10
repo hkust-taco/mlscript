@@ -273,7 +273,7 @@ c()
 
 
 :sjs
-class Foo(x) with
+data class Foo(x) with
   fun oops = x
 //│ JS (unsanitized):
 //│ let Foo1;
@@ -302,7 +302,7 @@ foo(Foo(42))
 fun foo(f) =
   f.oops
 
-class Foo(x) with
+data class Foo(x) with
   fun oops = x
 
 foo(Foo(42))

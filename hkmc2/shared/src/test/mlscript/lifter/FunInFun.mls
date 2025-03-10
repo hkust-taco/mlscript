@@ -147,7 +147,7 @@ f(1,2,3,4,5,6)
 
 :expect "01"
 :sjs
-class Tuple(a, b)
+data class Tuple(a, b)
 fun f() =
   let a = 0
   fun g() = set a = 1
@@ -226,7 +226,7 @@ x + y
 //│ y = "1"
 
 
-class Tuple(a, b)
+data class Tuple(a, b)
 fun f(used1) =
   fun g1(used2) =
     fun h() = 

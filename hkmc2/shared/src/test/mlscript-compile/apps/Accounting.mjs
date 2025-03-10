@@ -55,8 +55,8 @@ Accounting1 = class Accounting {
     };
     this.Report.class = class Report {
       constructor(fileName) {
-        this.fileName = fileName;
         let tmp;
+        this.fileName = fileName;
         tmp = fs.writeFileSync(this.fileName, "# Accounting\n");
       }
       w(txt) {

@@ -6,10 +6,11 @@ StyleAttributeValue1 = function StyleAttributeValue(rules1) {
   return new StyleAttributeValue.class(rules1);
 };
 StyleAttributeValue1.class = class StyleAttributeValue {
+  #rules;
   constructor(rules) {
-    this.rules = rules;
+    this.#rules = rules;
   }
-  toString() { return "StyleAttributeValue(" + globalThis.Predef.render(this.rules) + ")"; }
+  toString() { return "StyleAttributeValue(" + "" + ")"; }
 };
 XML1 = class XML {
   static {}

@@ -48,7 +48,7 @@ y `=> (let t = run(x `=> x `+ y) in y)
 //│ Where:
 //│   'y <: Int
 
-class C[A](m: A, n: A -> Int)
+data class C[A](m: A, n: A -> Int)
 //│ Type: ⊤
 
 

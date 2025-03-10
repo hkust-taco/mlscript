@@ -32,7 +32,7 @@ hi(0)
 //│ getLocals$ = function getLocals$(n) {
 //│   let n1, prev, thisInfo, tmp;
 //│   prev = getLocals();
-//│   n1 = new runtime.LocalVarInfo.class("n", "462", n);
+//│   n1 = new runtime.LocalVarInfo.class("n", "591", n);
 //│   thisInfo = new runtime.FnLocalsInfo.class("hi", [
 //│     n1
 //│   ]);
@@ -66,11 +66,11 @@ hi(0)
 //│     return (n$0, scrut$1, tmp$2, stackDelayRes$3) => {
 //│       let tmp;
 //│       tmp = super(null);
-//│       this.pc = pc;
 //│       this.n$0 = n$0;
 //│       this.scrut$1 = scrut$1;
 //│       this.tmp$2 = tmp$2;
 //│       this.stackDelayRes$3 = stackDelayRes$3;
+//│       this.pc = pc;
 //│       return this;
 //│     }
 //│   }
@@ -183,8 +183,8 @@ hi(0)
 //│     return (res$0) => {
 //│       let tmp;
 //│       tmp = super(null);
-//│       this.pc = pc;
 //│       this.res$0 = res$0;
+//│       this.pc = pc;
 //│       return this;
 //│     }
 //│   }
@@ -248,7 +248,7 @@ sum(10000)
 //│ getLocals$2 = function getLocals$(n) {
 //│   let n1, prev, thisInfo, tmp;
 //│   prev = getLocals4();
-//│   n1 = new runtime.LocalVarInfo.class("n", "770", n);
+//│   n1 = new runtime.LocalVarInfo.class("n", "904", n);
 //│   thisInfo = new runtime.FnLocalsInfo.class("sum", [
 //│     n1
 //│   ]);
@@ -282,13 +282,13 @@ sum(10000)
 //│     return (n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5) => {
 //│       let tmp;
 //│       tmp = super(null);
-//│       this.pc = pc;
 //│       this.n$0 = n$0;
 //│       this.scrut$1 = scrut$1;
 //│       this.tmp$2 = tmp$2;
 //│       this.tmp$3 = tmp$3;
 //│       this.curDepth$4 = curDepth$4;
 //│       this.stackDelayRes$5 = stackDelayRes$5;
+//│       this.pc = pc;
 //│       return this;
 //│     }
 //│   }
@@ -422,8 +422,8 @@ sum(10000)
 //│     return (res$0) => {
 //│       let tmp;
 //│       tmp = super(null);
-//│       this.pc = pc;
 //│       this.res$0 = res$0;
+//│       this.pc = pc;
 //│       return this;
 //│     }
 //│   }
@@ -573,8 +573,8 @@ fun max(a, b) = if a < b then b else a
 //│ getLocals$20 = function getLocals$(a, b) {
 //│   let a1, b1, prev, thisInfo, tmp5;
 //│   prev = getLocals36();
-//│   a1 = new runtime.LocalVarInfo.class("a", "2582", a);
-//│   b1 = new runtime.LocalVarInfo.class("b", "2583", b);
+//│   a1 = new runtime.LocalVarInfo.class("a", "2784", a);
+//│   b1 = new runtime.LocalVarInfo.class("b", "2785", b);
 //│   thisInfo = new runtime.FnLocalsInfo.class("max", [
 //│     a1,
 //│     b1

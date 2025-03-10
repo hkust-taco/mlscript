@@ -4,17 +4,17 @@
 
 :sllir
 abstract class Option[out T]: Some[T] | None
-class Some[out T](x: T) extends Option[T]
+data class Some[out T](x: T) extends Option[T]
 object None extends Option
 fun fromSome(s) = if s is Some(x) then x
-class Lazy[out A](init: () -> A) with
+data class Lazy[out A](init: () -> A) with
   mut val cache: Option[A] = None
 fun lazy(x) = Lazy(x)
 //│ LLIR:
 //│   class Option()
-//│   class Some(x)
+//│   class Some(x,x)
 //│   class None()
-//│   class Lazy(init,cache)
+//│   class Lazy(init,init,cache)
 //│   def fromSome(s) =
 //│     case s of
 //│       Some =>
@@ -45,11 +45,11 @@ fun testCtor2() = new None
 :sllir
 :intl
 abstract class Option[out T]: Some[T] | None
-class Some[out T](x: T) extends Option[T]
+data class Some[out T](x: T) extends Option[T]
 object None extends Option
 fun fromSome(s) = if s is Some(x) then x
 abstract class Nat: S[Nat] | O
-class S(s: Nat) extends Nat
+data class S(s: Nat) extends Nat
 object O extends Nat
 fun aaa() =
   let m = 1
@@ -74,10 +74,10 @@ main()
 //│ = 404
 //│ LLIR:
 //│   class Option()
-//│   class Some(x)
+//│   class Some(x,x)
 //│   class None()
 //│   class Nat()
-//│   class S(s)
+//│   class S(s,s)
 //│   class O()
 //│   def fromSome(s) =
 //│     case s of

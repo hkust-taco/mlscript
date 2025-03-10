@@ -4,7 +4,7 @@
 //│ Type: ⊤
 
 
-class List[A](inspect: [E, Res] -> (() ->{E} Res, (A, List[A]) ->{E} Res) ->{E} Res)
+data class List[A](inspect: [E, Res] -> (() ->{E} Res, (A, List[A]) ->{E} Res) ->{E} Res)
 //│ Type: ⊤
 
 fun map: [A, B, E] -> List[out A] -> (A ->{E} B) ->{E} List[out B]

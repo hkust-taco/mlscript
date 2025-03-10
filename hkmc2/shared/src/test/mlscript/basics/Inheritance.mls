@@ -31,7 +31,7 @@ Bar is String
 // :pt
 // :elt
 // :de
-class Bar(y) extends Foo with
+data class Bar(y) extends Foo with
   fun bar = y + 1
 
 let b = Bar(42)
@@ -47,9 +47,8 @@ b is String
 //│ = [10, 11]
 
 
-// FIXME: in super calls, class params should actually be viewed as a `VarSymbol`, not a `TermSymbol` wit owner
 :sjs
-class Baz(z) extends Bar(z * 1) with
+data class Baz(z) extends Bar(z * 1) with
   fun baz = this.bar * 2
 //│ JS (unsanitized):
 //│ let Baz1;
@@ -59,7 +58,7 @@ class Baz(z) extends Bar(z * 1) with
 //│ Baz1.class = class Baz extends Bar3.class {
 //│   constructor(z) {
 //│     let tmp2;
-//│     tmp2 = this.z * 1;
+//│     tmp2 = z * 1;
 //│     super(tmp2);
 //│     this.z = z;
 //│   }
@@ -69,26 +68,23 @@ class Baz(z) extends Bar(z * 1) with
 //│   toString() { return "Baz(" + globalThis.Predef.render(this.z) + ")"; }
 //│ };
 
-:fixme
 let b = Baz(42)
-//│ ═══[RUNTIME ERROR] ReferenceError: Must call super constructor in derived class before accessing 'this' or returning from derived constructor
-//│ b = undefined
+//│ b = Baz(42)
 
 b is Foo
-//│ = false
+//│ = true
 
 b is String
 //│ = false
 
-:fixme
 [b.x, b.foo]
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
+//│ = [10, 11]
 
 
 
 abstract class Option[out T]: Some[T] | None
 object None extends Option[Nothing]
-class Some[out T](x: T) extends Option[T]
+data class Some[out T](x: T) extends Option[T]
 [Some(123) is Option, None is Option, Some(123) is String, None is String]
 //│ = [true, true, false, false]
 

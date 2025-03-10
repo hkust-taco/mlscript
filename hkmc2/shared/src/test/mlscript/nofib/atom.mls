@@ -4,7 +4,7 @@
 :import NofibPrelude.mls
 
 
-class State(position: List[Num], velocity: List[Num])
+data class State(position: List[Num], velocity: List[Num])
 
 fun dotPlus(fs, gs) = if
   fs is Nil then gs

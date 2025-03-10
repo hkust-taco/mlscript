@@ -14,7 +14,7 @@ Object.entries of rcd
 //│ = [["x", 0], ["y", undefined], ["z", null]]
 
 
-class Foo(val x, y) with
+class Foo(val x, val y) with
   let z = 2
   val a = 3
   fun f = 4

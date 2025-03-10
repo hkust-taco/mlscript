@@ -33,7 +33,7 @@ hi(0)
 //│   getLocals1 = function getLocals() {
 //│     let n1, prev, thisInfo, tmp1;
 //│     prev = getLocals();
-//│     n1 = new runtime.LocalVarInfo.class("n", "458", n);
+//│     n1 = new runtime.LocalVarInfo.class("n", "587", n);
 //│     thisInfo = new runtime.FnLocalsInfo.class("hi", [
 //│       n1
 //│     ]);
@@ -193,7 +193,7 @@ sum(10000)
 //│   getLocals2 = function getLocals() {
 //│     let n1, prev, thisInfo, tmp2;
 //│     prev = getLocals1();
-//│     n1 = new runtime.LocalVarInfo.class("n", "596", n);
+//│     n1 = new runtime.LocalVarInfo.class("n", "720", n);
 //│     thisInfo = new runtime.FnLocalsInfo.class("sum", [
 //│       n1
 //│     ]);
@@ -471,8 +471,8 @@ fun max(a, b) = if a < b then b else a
 //│   getLocals9 = function getLocals() {
 //│     let a1, b1, prev, thisInfo, tmp5;
 //│     prev = getLocals8();
-//│     a1 = new runtime.LocalVarInfo.class("a", "1508", a);
-//│     b1 = new runtime.LocalVarInfo.class("b", "1509", b);
+//│     a1 = new runtime.LocalVarInfo.class("a", "1605", a);
+//│     b1 = new runtime.LocalVarInfo.class("b", "1606", b);
 //│     thisInfo = new runtime.FnLocalsInfo.class("max", [
 //│       a1,
 //│       b1

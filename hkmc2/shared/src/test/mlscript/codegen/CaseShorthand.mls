@@ -74,7 +74,7 @@ case
 //│ lambda10
 //│ = [function]
 
-class Some(value)
+data class Some(value)
 module None
 
 :sjs

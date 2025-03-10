@@ -156,7 +156,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   def returningTerm(t: Block, endSemi: Bool)(using Raise, Scope): Document =
     def mkSemi = if endSemi then ";" else ""
     t match
-    case _: (HandleBlockReturn | HandleBlock) =>
+    case _: HandleBlock =>
       errStmt(msg"This code requires effect handler instrumentation but was compiled without it.")
     case Assign(l, r, rst) =>
       doc" # ${getVar(l)} = ${result(r)};${returningTerm(rst, endSemi)}"
@@ -201,6 +201,10 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             // * Note: `_pubFlds` is not used because in JS, fields are not declared
             val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
             val ctorParams = clsParams.map(p => p -> scope.allocateName(p))
+            val ctorFields = ctorParams.filter: p =>
+              p._1.decl match
+              case S(Param(flags = FldFlags(value = true))) => true
+              case _ => false
             val ctorAuxParams = auxParams.map(ps => ps.params.map(p => p.sym -> scope.allocateName(p.sym)))
 
             val isModule = kind is syntax.Mod
@@ -212,7 +216,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                   val nme = scp.allocateName(fld)
                   doc" # $mtdPrefix#$nme;"
                 .mkDocument(doc"")
-            val preCtorCode = (ctorParams ++ ctorAuxParams.flatMap(ps => ps)).foldLeft(body(preCtor, endSemi = true)):
+            val preCtorCode = ctorAuxParams.flatMap(ps => ps).foldLeft(body(preCtor, endSemi = true)):
               case (acc, (sym, nme)) =>
                 doc"$acc # this.${sym.name} = $nme;"
             val ctorCode = doc"$preCtorCode${body(ctor, endSemi = false)}"
@@ -267,9 +271,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 else doc""" # ${mtdPrefix}toString() { return "${sym.nme}${
                   if paramsOpt.isEmpty then doc"""""""
                   else doc"""(" + ${
-                      ctorParams.headOption.fold("\"\"")("globalThis.Predef.render(this." + _._1.name + ")")
+                      ctorFields.headOption.fold("\"\"")("globalThis.Predef.render(this." + _._1.name + ")")
                     }${
-                      ctorParams.tailOption.fold("")(_.map(
+                      ctorFields.tailOption.fold("")(_.map(
                         """ + ", " + globalThis.Predef.render(this.""" + _._1.name + ")").mkString)
                     } + ")""""
                 }; }"""

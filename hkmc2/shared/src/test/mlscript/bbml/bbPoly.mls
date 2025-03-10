@@ -60,7 +60,7 @@ id("abc")
 //│ Type: Str
 
 
-class Pair[A, B](a: A, b: B)
+data class Pair[A, B](a: A, b: B)
 //│ Type: ⊤
 
 new Pair(42, true)
@@ -102,7 +102,7 @@ foo(id)
 foo(x => x)
 //│ Type: Int
 
-class Foo(foo: [A] -> A -> A)
+data class Foo(foo: [A] -> A -> A)
 //│ Type: ⊤
 
 new Foo(id)
@@ -115,7 +115,7 @@ new Foo(x => x)
 let foo = new Foo(id) in foo.Foo#foo(42)
 //│ Type: Int
 
-class Bar[A](x: A, f: [B] -> B -> B)
+data class Bar[A](x: A, f: [B] -> B -> B)
 //│ Type: ⊤
 
 
@@ -127,7 +127,7 @@ new Bar(0, id)
 let bar = new Bar(0, id) in bar.Bar#f(bar.Bar#x)
 //│ Type: Int
 
-class Some[A](value: A)
+data class Some[A](value: A)
 //│ Type: ⊤
 
 new Some((x => x) as [A] -> A -> A)

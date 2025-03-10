@@ -1,9 +1,11 @@
 :js
 :effectHandlers
 
+
 abstract class Effect with
   fun f(): ()
 
+// `return` within handle blocks is implemented as a non-local return
 fun f() =
   handle h = Effect with
     fun foo()(r) =
@@ -30,16 +32,22 @@ fun f() =
 f()
 //│ = 3
 
+:e
 let l = () =>
   handle h = Effect with
     fun foo()(r) = r(())
   return 3
   4
+//│ ╔══[ERROR] Return statements are not allowed outside of a function.
+//│ ║  l.39: 	  return 3
+//│ ╙──      	         ^
 //│ l = [function l]
 
+:re
 l()
-//│ = 3
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
+:e
 handle h1 = Effect with
   fun foo()(r) = r(())
 let l = () =>
@@ -49,4 +57,8 @@ let l = () =>
   return 3
   4
 l()
-//│ = 3
+//│ ╔══[ERROR] Return statements are not allowed outside of a function.
+//│ ║  l.57: 	  return 3
+//│ ╙──      	         ^
+
+

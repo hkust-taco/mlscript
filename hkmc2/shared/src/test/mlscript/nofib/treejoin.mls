@@ -14,9 +14,10 @@ fun isDigit(c) =
 
 abstract class Tree[E]: Node | Leaf | Empty
 
-class
-  Node[E](k: Int, l: Tree[E], r: Tree[E]) extends Tree[E]
-  Leaf[E](k: Int, e: E) extends Tree[E]
+data
+  class
+    Node[E](k: Int, l: Tree[E], r: Tree[E]) extends Tree[E]
+    Leaf[E](k: Int, e: E) extends Tree[E]
 
 object Empty extends Tree
 

@@ -3,25 +3,25 @@
 :parseOnly
 
 //│ Type: ⊤
-class Foo
+data class Foo
 //│ Parsed:
-//│ 	TypeDef(Cls,Ident(Foo),None,None)
+//│ 	Modified(keyword 'data',None,TypeDef(Cls,Ident(Foo),None,None))
 
-class Bar(x: Int)
+data class Bar(x: Int)
 //│ Parsed:
-//│ 	TypeDef(Cls,App(Ident(Bar),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int))))),None,None)
+//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(Ident(Bar),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int))))),None,None))
 
-class Bar2(x: Int, y: Int)
+data class Bar2(x: Int, y: Int)
 //│ Parsed:
-//│ 	TypeDef(Cls,App(Ident(Bar2),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int)), InfixApp(Ident(y),keyword ':',Ident(Int))))),None,None)
+//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(Ident(Bar2),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int)), InfixApp(Ident(y),keyword ':',Ident(Int))))),None,None))
 
-class Baz[A]
+data class Baz[A]
 //│ Parsed:
-//│ 	TypeDef(Cls,App(Ident(Baz),TyTup(List(Ident(A)))),None,None)
+//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(Ident(Baz),TyTup(List(Ident(A)))),None,None))
 
-class BazBaz[A](f: A -> A)
+data class BazBaz[A](f: A -> A)
 //│ Parsed:
-//│ 	TypeDef(Cls,App(App(Ident(BazBaz),TyTup(List(Ident(A)))),Tup(List(InfixApp(Ident(f),keyword ':',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))))),None,None)
+//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(App(Ident(BazBaz),TyTup(List(Ident(A)))),Tup(List(InfixApp(Ident(f),keyword ':',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))))),None,None))
 
 Baz[Int]
 //│ Parsed:

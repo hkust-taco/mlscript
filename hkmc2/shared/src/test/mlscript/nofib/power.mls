@@ -8,7 +8,7 @@ abstract class Pss[T]: Pz | Pc[T]
 
 type Ps[T] = Lazy[Pss[T]]
 
-class Pc[T](f: T, s: Ps[T]) extends Pss[T]
+data class Pc[T](f: T, s: Ps[T]) extends Pss[T]
 
 object Pz extends Pss
 

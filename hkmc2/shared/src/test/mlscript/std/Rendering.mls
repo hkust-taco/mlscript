@@ -71,7 +71,7 @@ interleave(", ") of 1, 2
 //│ = [1, ", ", 2]
 
 
-class Foo(val xs)
+data class Foo(val xs)
 
 render(Foo([1, 2, 3]))
 //│ = "Foo([1, 2, 3])"

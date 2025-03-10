@@ -41,7 +41,7 @@ Oops().Oops#a()
 //│ ╙──      	      ^^^^^
 //│ Type: ⊥
 
-class Oops2()
+data class Oops2()
 (new Oops2()).Oops2#a()
 //│ ╔══[ERROR] Class 'Oops2' does not contain member 'a'.
 //│ ║  l.45: 	(new Oops2()).Oops2#a()

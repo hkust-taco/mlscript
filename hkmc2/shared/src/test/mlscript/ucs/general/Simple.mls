@@ -3,8 +3,8 @@
 // Simple and single-line UCS expressions.
 
 
-class Box[T](value: T)
-class Bottle[T](value: T)
+data class Box[T](value: T)
+data class Bottle[T](value: T)
 
 
 fun foo(x) = if x is Box(y) then y

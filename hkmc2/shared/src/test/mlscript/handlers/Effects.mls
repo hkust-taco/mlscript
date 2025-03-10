@@ -165,23 +165,23 @@ if true do
 //│   return prev
 //│ };
 //│ handleBlock$11 = function handleBlock$() {
-//│   let f, h, scrut, tmp12, getLocals15, Cont$handleBlock$h$11, Handler$h$12;
+//│   let f, h, scrut, getLocals15, res, Cont$handleBlock$h$11, Handler$h$12;
 //│   Handler$h$12 = class Handler$h$11 extends Effect1 {
 //│     constructor() {
-//│       let tmp13;
-//│       tmp13 = super();
+//│       let tmp12;
+//│       tmp12 = super();
 //│     }
 //│     perform(arg) {
 //│       return runtime.mkEffect(this, (k) => {
 //│         let getLocals16;
 //│         getLocals16 = function getLocals() {
-//│           let arg1, prev, thisInfo, tmp13;
+//│           let arg1, prev, thisInfo, tmp12;
 //│           prev = getLocals14();
-//│           arg1 = new runtime.LocalVarInfo.class("arg", "1349", arg);
+//│           arg1 = new runtime.LocalVarInfo.class("arg", "1437", arg);
 //│           thisInfo = new runtime.FnLocalsInfo.class("perform", [
 //│             arg1
 //│           ]);
-//│           tmp13 = runtime.safeCall(prev.push(thisInfo));
+//│           tmp12 = runtime.safeCall(prev.push(thisInfo));
 //│           return prev
 //│         };
 //│         return arg
@@ -191,10 +191,10 @@ if true do
 //│   };
 //│   h = new Handler$h$12();
 //│   getLocals15 = function getLocals() {
-//│     let prev, thisInfo, tmp13;
+//│     let prev, thisInfo, tmp12;
 //│     prev = getLocals14();
 //│     thisInfo = new runtime.FnLocalsInfo.class("\u2039handler body of h\u203A", []);
-//│     tmp13 = runtime.safeCall(prev.push(thisInfo));
+//│     tmp12 = runtime.safeCall(prev.push(thisInfo));
 //│     return prev
 //│   };
 //│   Cont$handleBlock$h$11 = function Cont$handleBlock$h$(pc1) {
@@ -202,30 +202,29 @@ if true do
 //│   };
 //│   Cont$handleBlock$h$11.class = class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
 //│     constructor(pc) {
-//│       let tmp13;
-//│       tmp13 = super(null);
+//│       let tmp12;
+//│       tmp12 = super(null);
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
 //│       if (this.pc === 0) {
-//│         tmp12 = value$;
+//│         res = value$;
 //│       }
 //│       contLoop: while (true) {
 //│         if (this.pc === 1) {
-//│           return tmp12
+//│           break contLoop;
 //│         } else if (this.pc === 2) {
-//│           tmp12 = f();
-//│           if (tmp12 instanceof runtime.EffectSig.class) {
+//│           res = f();
+//│           if (res instanceof runtime.EffectSig.class) {
 //│             this.pc = 0;
-//│             tmp12.contTrace.last.next = this;
-//│             tmp12.contTrace.last = this;
-//│             return tmp12
+//│             res.contTrace.last.next = this;
+//│             res.contTrace.last = this;
+//│             return res
 //│           }
 //│           this.pc = 0;
 //│           continue contLoop;
 //│         } else if (this.pc === 0) {
-//│           this.pc = 1;
-//│           continue contLoop;
+//│           return res
 //│         }
 //│         break;
 //│       }
@@ -238,25 +237,25 @@ if true do
 //│   f = function f() {
 //│     let getLocals16;
 //│     getLocals16 = function getLocals() {
-//│       let prev, thisInfo, tmp13;
+//│       let prev, thisInfo, tmp12;
 //│       prev = getLocals15();
 //│       thisInfo = new runtime.FnLocalsInfo.class("f", []);
-//│       tmp13 = runtime.safeCall(prev.push(thisInfo));
+//│       tmp12 = runtime.safeCall(prev.push(thisInfo));
 //│       return prev
 //│     };
 //│     return 3
 //│   };
 //│   scrut = true;
 //│   if (scrut === true) {
-//│     tmp12 = f();
-//│     if (tmp12 instanceof runtime.EffectSig.class) {
-//│       tmp12.contTrace.last.next = Cont$handleBlock$h$11(0);
-//│       return runtime.handleBlockImpl(tmp12, h)
+//│     res = f();
+//│     if (res instanceof runtime.EffectSig.class) {
+//│       res.contTrace.last.next = Cont$handleBlock$h$11(0);
+//│       return runtime.handleBlockImpl(res, h)
 //│     }
+//│     return res
 //│   } else {
-//│     tmp12 = runtime.Unit;
+//│     return runtime.Unit
 //│   }
-//│   return tmp12
 //│ };
 //│ tmp11 = handleBlock$11();
 //│ if (tmp11 instanceof runtime.EffectSig.class) {
@@ -266,7 +265,7 @@ if true do
 //│ = 3
 
 module A with
-  class Effect(x) with
+  data class Effect(x) with
     fun test() = x
     fun perform(arg)
 handle h = A.Effect(3) with

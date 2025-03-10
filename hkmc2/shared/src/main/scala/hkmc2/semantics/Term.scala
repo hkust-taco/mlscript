@@ -278,14 +278,14 @@ final case class RcdSpread(rcd: Term) extends Statement
 
 final case class DefineVar(sym: LocalSymbol, rhs: Term) extends Statement
 
-final case class TermDefFlags(isModMember: Bool):
+final case class TermDefFlags(isModMember: Bool, isModTyped: Bool):
   def showDbg: Str = 
     val flags = Buffer.empty[String]
     if isModMember then flags += "module"
     flags.mkString(" ")
   override def toString: String = "‹" + showDbg + "›"
 
-object TermDefFlags { val empty: TermDefFlags = TermDefFlags(false) }
+object TermDefFlags { val empty: TermDefFlags = TermDefFlags(false, false) }
 
 final case class TermDefinition(
     owner: Opt[InnerSymbol],
@@ -304,7 +304,7 @@ final case class TermDefinition(
     case _ => true
 
 final case class HandlerTermDefinition(
-  resumeSym: LocalSymbol & NamedSymbol,
+  resumeSym: VarSymbol,
   td: TermDefinition
 )
 
@@ -349,7 +349,7 @@ sealed abstract class ClassLikeDef extends TypeLikeDef:
   val body: ObjBody
   val annotations: Ls[Annot]
   def extraAnnotations: Ls[Annot] = annotations.filter:
-    case Annot.Modifier(Keyword.`declare` | Keyword.`abstract`) => false
+    case Annot.Modifier(Keyword.`declare` | Keyword.`abstract` | Keyword.`data`) => false
     case _ => true
 
 
@@ -387,6 +387,11 @@ sealed abstract class ClassDef extends ClassLikeDef:
   val body: ObjBody
   val companion: Opt[CompanionValue]
   val annotations: Ls[Annot]
+  def isData: Opt[Annot.Modifier] = annotations.collectFirst:
+    case mod @ Annot.Modifier(Keyword.`data`) => mod
+  override def extraAnnotations: Ls[Annot] = super.extraAnnotations.filter:
+    case Annot.Modifier(Keyword.`data`) => false
+    case _ => true
 
 object ClassDef:
   def apply(
@@ -449,7 +454,7 @@ case class TypeDef(
 
 
 // TODO Store optional source locations for the flags instead of booleans
-final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool, mod: Bool, pat: Bool):
+final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool, mod: Bool, pat: Bool, value: Bool):
   def showDbg: Str = 
     val flags = Buffer.empty[String]
     if mut then flags += "mut"
@@ -457,11 +462,12 @@ final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool, mod: Bool, pat
     if genGetter then flags += "gen"
     if mod then flags += "module"
     if pat then flags += "pattern"
+    if value then flags += "val"
     flags.mkString(" ")
   override def toString: String = "‹" + showDbg + "›"
 
 object FldFlags:
-  val empty: FldFlags = FldFlags(false, false, false, false, false)
+  val empty: FldFlags = FldFlags(false, false, false, false, false, false)
   object benign:
     // * Some flags like `mut` and `module` are "benign" in the sense that they don't affect code-gen
     def unapply(flags: FldFlags): Bool =
@@ -508,8 +514,8 @@ final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extend
     flags.showDbg + sym
 
 
-final case class Param(flags: FldFlags, sym: LocalSymbol & NamedSymbol, sign: Opt[Term]) 
-extends AutoLocated:
+final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term]) 
+extends Declaration with AutoLocated:
   def subTerms: Ls[Term] = sign.toList
   override protected def children: List[Located] = subTerms
   // def children: Ls[Located] = self.value :: self.asc.toList ::: Nil

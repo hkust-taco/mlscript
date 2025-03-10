@@ -66,7 +66,7 @@ f(5)
 
 
 abstract class E: S | N
-class S(x) with
+data class S(x) with
   fun toString() = "S(" + x + "): " + toInt(succ(x))
 class N() with
   fun toString() = "N: 0" 
@@ -100,7 +100,7 @@ fun toInt(x) = if x is
 //│ = "S(S(N: 0): 1): 2"
 
 
-class Cls(a, b, c, d, e, f)
+data class Cls(a, b, c, d, e, f)
 fun id(y) =
   if y ==
     0 then Cls("aaaa", "bbbb", "cccc", "dddd", "eeee", "ffff")

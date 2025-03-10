@@ -1,6 +1,6 @@
 
 
-class Some[T](value: T)
+data class Some[T](value: T)
 
 
 :fixme

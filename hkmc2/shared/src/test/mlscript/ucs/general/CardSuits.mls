@@ -1,6 +1,6 @@
 
 
-class Card[T](color: T)
+data class Card[T](color: T)
 
 class Suit
 module Heart extends Suit

@@ -10,7 +10,7 @@ open Predef
 
 
 // The default delimiter is the comma, but this can be overriden here.
-class CSV(strDelimiter) with ...
+data class CSV(strDelimiter) with ...
 
 
 // Check to see if the delimiter is defined. If not, then default to comma.

@@ -8,9 +8,10 @@
 abstract class Lisplist: Nill | Atom | Conss
 
 object Nill extends Lisplist
-class
-  Atom(a: List[Char]) extends Lisplist
-  Conss(a: [Lisplist, Lisplist]) extends Lisplist
+data
+  class
+    Atom(a: List[Char]) extends Lisplist
+    Conss(a: [Lisplist, Lisplist]) extends Lisplist
 
 fun lispListEq(x, y) = if x is
   Nill and y is Nill then true
@@ -107,7 +108,7 @@ abstract class LUT: Empty | Node
 
 object Empty extends LUT
 
-class Node(x: [LUT, LUTentry, LUT]) extends LUT
+data class Node(x: [LUT, LUTentry, LUT]) extends LUT
 
 fun addtoLUT(k_l_lut) = if k_l_lut is
   [k, l, Empty] then Node([Empty, [k, l :: Nil], Empty])

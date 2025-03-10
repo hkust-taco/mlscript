@@ -89,7 +89,7 @@ handleEffects(f)
 
 class Eff with
   fun perform(): ()
-class Box(n)
+data class Box(n)
 let box = Box(0)
 //│ box = Box(0)
 

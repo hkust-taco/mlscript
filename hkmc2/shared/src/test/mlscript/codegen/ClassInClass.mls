@@ -2,8 +2,8 @@
 
 
 :sjs
-class Outer(a, b) with
-  class Inner(c) with
+data class Outer(a, b) with
+  data class Inner(c) with
     fun i1(d) = [b, c, d]
     print(a)
     print(c)
@@ -20,17 +20,17 @@ class Outer(a, b) with
 //│ };
 //│ Outer1.class = class Outer {
 //│   constructor(a, b) {
+//│     let tmp, tmp1, tmp2;
 //│     this.a = a;
 //│     this.b = b;
-//│     let tmp, tmp1, tmp2;
 //│     const this$Outer = this;
 //│     this.Inner = function Inner(c1) {
 //│       return new Inner.class(c1);
 //│     };
 //│     this.Inner.class = class Inner {
 //│       constructor(c) {
-//│         this.c = c;
 //│         let tmp3, tmp4, tmp5;
+//│         this.c = c;
 //│         tmp3 = Predef.print(this$Outer.a);
 //│         tmp4 = Predef.print(this.c);
 //│         tmp5 = this.i1(this$Outer.a);

@@ -80,14 +80,9 @@ Runtime1 = class Runtime {
       }
       toString() { return "EffectSig(" + globalThis.Predef.render(this.contTrace) + ", " + globalThis.Predef.render(this.handler) + ", " + globalThis.Predef.render(this.handlerFun) + ")"; }
     };
-    this.Return = function Return(value1) {
-      return new Return.class(value1);
-    };
-    this.Return.class = class Return {
-      constructor(value) {
-        this.value = value;
-      }
-      toString() { return "Return(" + globalThis.Predef.render(this.value) + ")"; }
+    this.NonLocalReturn = class NonLocalReturn {
+      constructor() {}
+      toString() { return "NonLocalReturn"; }
     };
     this.FnLocalsInfo = function FnLocalsInfo(fnName1, locals1) {
       return new FnLocalsInfo.class(fnName1, locals1);
@@ -141,78 +136,6 @@ Runtime1 = class Runtime {
     tmp3 = tmp2 + "' was accessed without being called.";
     throw globalThis.Error(tmp3);
   } 
-  static render(arg) {
-    let ts, scrut, es, p, scrut1, scrut2, scrut3, nme, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
-    if (arg === undefined) {
-      return "undefined"
-    } else if (arg === null) {
-      return "null"
-    } else if (arg instanceof globalThis.Array) {
-      /* error */
-    } else if (typeof arg === 'string') {
-      return runtime.safeCall(globalThis.JSON.stringify(arg))
-    } else if (arg instanceof globalThis.Set) {
-      /* error */
-    } else if (arg instanceof globalThis.Map) {
-      /* error */
-    } else if (arg instanceof globalThis.Function) {
-      p = globalThis.Object.getOwnPropertyDescriptor(arg, "prototype");
-      if (p instanceof globalThis.Object) {
-        scrut1 = p["writable"];
-        if (scrut1 === true) {
-          tmp = true;
-        } else {
-          tmp = false;
-        }
-      } else {
-        tmp = false;
-      }
-      if (p === undefined) {
-        tmp1 = true;
-      } else {
-        tmp1 = false;
-      }
-      scrut2 = tmp || tmp1;
-      if (scrut2 === true) {
-        scrut3 = arg.name;
-        if (scrut3 === "") {
-          tmp2 = "";
-        } else {
-          nme = scrut3;
-          tmp2 = " " + nme;
-        }
-        tmp3 = "[function" + tmp2;
-        return tmp3 + "]"
-      } else {
-        scrut = arg.constructor.name;
-        if (scrut === "Object") {
-          tmp4 = runtime.safeCall(globalThis.Object.entries(arg));
-          es = tmp4;
-          /* error */
-        } else {
-          return globalThis.String(arg)
-        }
-      }
-    } else if (arg instanceof globalThis.Object) {
-      scrut = arg.constructor.name;
-      if (scrut === "Object") {
-        tmp5 = runtime.safeCall(globalThis.Object.entries(arg));
-        es = tmp5;
-        /* error */
-      } else {
-        return globalThis.String(arg)
-      }
-    } else {
-      ts = arg["toString"];
-      if (ts === undefined) {
-        tmp6 = typeof arg;
-        tmp7 = "[" + tmp6;
-        return tmp7 + "]"
-      } else {
-        return runtime.safeCall(ts.call(arg))
-      }
-    }
-  } 
   static topLevelEffect(tr) {
     let zwsp, msg, curHandler, atTail, scrut, cur, scrut1, locals, curLocals, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20, tmp21, lambda;
     zwsp = "\u200B";
@@ -241,7 +164,7 @@ Runtime1 = class Runtime {
             lambda = (undefined, function (l) {
               let tmp24, tmp25;
               tmp24 = l.localName + "=";
-              tmp25 = Runtime.render(l.value);
+              tmp25 = runtime.safeCall(globalThis.Predef.render(l.value));
               return tmp24 + tmp25
             });
             tmp9 = runtime.safeCall(curLocals.locals.map(lambda));

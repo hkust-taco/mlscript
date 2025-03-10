@@ -8,7 +8,7 @@ fun lookup(k, t) = if t is
   Nil then None
   [x, v] :: t then if listEq(k, x) then Some(v) else lookup(k, t)
 
-class MyState[S, A](r: S -> [S, A])
+data class MyState[S, A](r: S -> [S, A])
 
 fun myRunState(m, s) = if m is MyState(f) then f(s)
 
@@ -26,14 +26,15 @@ abstract class Term: Var | Con | Incr | Add | Lam | App | IfZero | Thunk
 
 object Incr extends Term
 
-class
-  Var(s: String) extends Term
-  Con(i: Int) extends Term
-  Add(a: Term, b: Term) extends Term
-  Lam(s: String, t: Term) extends Term
-  App(a: Term, b: Term) extends Term
-  IfZero(a: Term, b: Term, c: Term) extends Term
-  Thunk(t: Term, e: List[[String, Term]]) extends Term
+data
+  class
+    Var(s: String) extends Term
+    Con(i: Int) extends Term
+    Add(a: Term, b: Term) extends Term
+    Lam(s: String, t: Term) extends Term
+    App(a: Term, b: Term) extends Term
+    IfZero(a: Term, b: Term, c: Term) extends Term
+    Thunk(t: Term, e: List[[String, Term]]) extends Term
 
 object Unit
 

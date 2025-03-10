@@ -21,7 +21,7 @@ fun fact(n) =
 //│ ║  l.17: 	  @tailrec fun go(n, acc) =
 //│ ╙──      	   ^^^^^^^
 
-class Freezed(degree: Num)
+data class Freezed(degree: Num)
 
 :w
 @Freezed(-273.15) class AbsoluteZero
@@ -46,10 +46,10 @@ class Freezed(degree: Num)
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.39: 	@Freezed(-4) let drink = Beverage("Coke")
 //│ ╙──      	 ^^^^^^^^^^^
-//│ drink = Beverage("Coke")
+//│ drink = Beverage()
 
 module Foo with
-  class Bar(qax: Str)
+  data class Bar(qax: Str)
 
 :w
 @Foo.Bar("baz") class Qux
