@@ -269,7 +269,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         p
       )),
       Nil, None, Nil, Nil, 
-      varsList.map(varsMap(_)._2), // 
+      varsList.map(varsMap(_)._2),
       varsList.map(varsMap(_)).foldLeft[Block](End()):
         case (acc, (varSym, fldDef)) =>
           AssignField(
