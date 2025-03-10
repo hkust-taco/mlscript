@@ -282,7 +282,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       End()
     )
 
-    (defn, varsMap.mapValues(_.mapSecond(_.sym)).toMap, varsList)
+    (defn, varsMap.view.mapValues(_.mapSecond(_.sym)).toMap, varsList)
 
   private val innerSymCache: MutMap[Local, Set[Local]] = MutMap.empty
   
