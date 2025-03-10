@@ -132,7 +132,8 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     * @param ignoredDefns The definitions which must not be lifted.
     * @param inScopeDefns Definitions which are in scope to another definition (excluding itself and its nested definitions).
     * @param modLocals A map from the modules and objects to the local to which it is instantiated after lifting.
-    * @param localCaptureSyms The symbols in a capture corresponding to a particular local
+    * @param localCaptureSyms The symbols in a capture corresponding to a particular local. 
+    * The `VarSymbol` is the parameter in the capture class, and the `BlockMemberSymbol` is the field in the class.
     * @param prevFnLocals Locals belonging to function definitions that have already been traversed
     * @param prevClsDefns Class definitions that have already been traversed, excluding modules
     * @param curModules Modules that that we are currently nested in (cleared if we are lifted out)
@@ -152,7 +153,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     val ignoredDefns: Set[BlockMemberSymbol] = Set.empty,
     val inScopeDefns: Map[BlockMemberSymbol, Set[BlockMemberSymbol]] = Map.empty,
     val modLocals: Map[BlockMemberSymbol, Local] = Map.empty,
-    val localCaptureSyms: Map[Local, (VarSymbol, TermDefinition)] = Map.empty,
+    val localCaptureSyms: Map[Local, (VarSymbol, BlockMemberSymbol)] = Map.empty,
     val prevFnLocals: FreeVars = FreeVars.empty,
     val prevClsDefns: List[ClsLikeDefn] = Nil,
     val curModules: List[ClsLikeDefn] = Nil,
@@ -186,7 +187,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     def withInScopes(mp: Map[BlockMemberSymbol, Set[BlockMemberSymbol]]) = copy(inScopeDefns = mp)
     def addFnLocals(f: FreeVars) = copy(prevFnLocals = prevFnLocals ++ f)
     def addClsDefn(c: ClsLikeDefn) = copy(prevClsDefns = c :: prevClsDefns)
-    def addLocalCaptureSyms(m: Map[Local, (VarSymbol, TermDefinition)]) = copy(localCaptureSyms = localCaptureSyms ++ m)
+    def addLocalCaptureSyms(m: Map[Local, (VarSymbol, BlockMemberSymbol)]) = copy(localCaptureSyms = localCaptureSyms ++ m)
     def getBmsReqdInfo(sym: BlockMemberSymbol) = bmsReqdInfo.get(sym)
     def replCapturePaths(paths: Map[BlockMemberSymbol, Path]) = copy(capturePaths = paths)
     def addCapturePath(src: BlockMemberSymbol, path: Path) = copy(capturePaths = capturePaths + (src -> path))
@@ -218,7 +219,8 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     * @param f The function to create the capture class for.
     * @param ctx The lifter context. Determines which variables will be captured.
     * @return The triple (defn, varsMap, varsList), where `defn` is the capture class's definition,
-    * `varsMap` maps the function's locals to the correpsonding `VarSymbol` in the class, and
+    * `varsMap` maps the function's locals to the correpsonding `VarSymbol` (for the class parameters)
+    *  and `BlockLocalSymbol` (for the class fields) in the class, and
     * `varsList` specifies the order of these variables in the class's constructor. 
     */
   def createCaptureCls(f: FunDefn, ctx: LifterCtx) =
@@ -267,7 +269,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         p
       )),
       Nil, None, Nil, Nil, 
-      varsList.map(varsMap(_)._2),
+      varsList.map(varsMap(_)._2), // 
       varsList.map(varsMap(_)).foldLeft[Block](End()):
         case (acc, (varSym, fldDef)) =>
           AssignField(
@@ -280,7 +282,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       End()
     )
 
-    (defn, varsMap, varsList)
+    (defn, varsMap.mapValues(_.mapSecond(_.sym)).toMap, varsList)
 
   private val innerSymCache: MutMap[Local, Set[Local]] = MutMap.empty
   
