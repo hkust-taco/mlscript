@@ -313,7 +313,7 @@ case class ObjBody(blk: Term.Blk):
   lazy val (methods, nonMethods) = blk.stats.partitionMap:
     case td: TermDefinition if td.k is syntax.Fun => L(td)
     case s => R(s)
-  lazy val publicFlds = nonMethods.collect:
+  lazy val publicFlds: Ls[TermDefinition] = nonMethods.collect:
     case td @ TermDefinition(k = (_: syntax.Val)) => td
   
   // override def toString: String = statmts.mkString("{ ", "; ", " }")

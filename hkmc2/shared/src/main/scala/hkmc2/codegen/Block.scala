@@ -303,23 +303,27 @@ sealed abstract class Defn:
     case ClsLikeDefn(preCtor = preCtor, ctor = ctor, methods = mtds) =>
       preCtor :: ctor :: mtds.flatMap(_.subBlocks)
   
+  // * Note that `privateFields` abd `publicFields` can't possibly be free since they are never
+  // * referred to directly (they are only accessed through selections).
+  // * At some point we'll want to make `Local` more specific than `Symbol` to express this
+  // * in the type system.
   lazy val freeVars: Set[Local] = this match
     case FunDefn(own, sym, params, body) => body.freeVars -- params.flatMap(_.paramSyms) - sym
     case ValDefn(owner, k, sym, rhs) => rhs.freeVars
     case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, 
-      methods, privateFields, publicFields, preCtor, ctor) =>
+        methods, privateFields, publicFields, preCtor, ctor) =>
       preCtor.freeVars
         ++ ctor.freeVars ++ methods.flatMap(_.freeVars)
-        -- privateFields -- publicFields.map(_.sym) -- auxParams.flatMap(_.paramSyms)
+        -- auxParams.flatMap(_.paramSyms)
   
   lazy val freeVarsLLIR: Set[Local] = this match
     case FunDefn(own, sym, params, body) => body.freeVarsLLIR -- params.flatMap(_.paramSyms) - sym
     case ValDefn(owner, k, sym, rhs) => rhs.freeVarsLLIR
     case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, 
-      methods, privateFields, publicFields, preCtor, ctor) =>
+        methods, privateFields, publicFields, preCtor, ctor) =>
       preCtor.freeVarsLLIR
         ++ ctor.freeVarsLLIR ++ methods.flatMap(_.freeVarsLLIR)
-        -- privateFields -- publicFields.map(_.sym) -- auxParams.flatMap(_.paramSyms)
+        -- auxParams.flatMap(_.paramSyms)
   
 final case class FunDefn(
     owner: Opt[InnerSymbol],
@@ -347,12 +351,10 @@ final case class ClsLikeDefn(
     parentPath: Opt[Path],
     methods: Ls[FunDefn],
     privateFields: Ls[TermSymbol],
-    publicFields: Ls[TermDefinition],
+    publicFields: Ls[BlockMemberSymbol],
     preCtor: Block,
     ctor: Block,
 ) extends Defn:
-  publicFields.foreach: f =>
-    require(f.owner.contains(isym))
   val innerSym = S(isym)
 
 final case class Handler(
@@ -405,6 +407,7 @@ sealed abstract class Result:
     case Value.Lit(lit) => Set.empty
     case Value.Lam(params, body) => body.freeVars -- params.paramSyms
     case Value.Arr(elems) => elems.flatMap(_.value.freeVars).toSet
+    case Value.Rcd(elems) => elems.flatMap(_.value.freeVars).toSet
     case DynSelect(qual, fld, arrayIdx) => qual.freeVars ++ fld.freeVars
 
   lazy val freeVarsLLIR: Set[Local] = this match
@@ -416,6 +419,7 @@ sealed abstract class Result:
     case Value.Lit(lit) => Set.empty
     case Value.Lam(params, body) => body.freeVarsLLIR -- params.paramSyms
     case Value.Arr(elems) => elems.flatMap(_.value.freeVarsLLIR).toSet
+    case Value.Rcd(elems) => elems.flatMap(_.value.freeVarsLLIR).toSet
     case DynSelect(qual, fld, arrayIdx) => qual.freeVarsLLIR ++ fld.freeVarsLLIR
   
 // type Local = LocalSymbol

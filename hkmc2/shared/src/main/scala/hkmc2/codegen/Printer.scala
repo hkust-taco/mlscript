@@ -72,7 +72,7 @@ object Printer:
       val auxClsParams = auxParams.flatMap(_.paramSyms)
       val ctorParams = (clsParams ++ auxClsParams).map(p => summon[Scope].allocateName(p))
       val privFields = privateFields.map(x => doc"let ${x.id.name} = ...").mkDocument(sep = doc" # ")
-      val pubFields = publicFields.map(x => doc"${x.k.str} ${x.sym.nme}${optFldBody(x)}").mkDocument(sep = doc" # ")
+      val pubFields = publicFields.map(x => doc"${x.nme}").mkDocument(sep = doc" # ")
       val docPrivFlds = if privateFields.isEmpty then doc"" else doc" # ${privFields}"
       val docPubFlds = if publicFields.isEmpty then doc"" else doc" # ${pubFields}"
       val docBody = if publicFields.isEmpty && privateFields.isEmpty then doc"" else doc" { #{ ${docPrivFlds}${docPubFlds} #}  # }"

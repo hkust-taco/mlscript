@@ -147,14 +147,17 @@ class BlockTransformer(subst: SymbolSubst):
     if (own2 is fun.owner) && (sym2 is fun.sym) && (params2 is fun.params) && (body2 is fun.body)
       then fun else FunDefn(own2, sym2, params2, body2)
   
+  def applyValDefn(defn: ValDefn): ValDefn =
+    val ValDefn(owner, k, sym, rhs) = defn
+    val owner2 = owner.mapConserve(_.subst)
+    val sym2 = sym.subst
+    val rhs2 = applyPath(rhs)
+    if (owner2 is owner) && (sym2 is sym) && (rhs2 is rhs)
+      then defn else ValDefn(owner2, k, sym2, rhs2)
+  
   def applyDefn(defn: Defn): Defn = defn match
     case defn: FunDefn => applyFunDefn(defn)
-    case ValDefn(owner, k, sym, rhs) =>
-      val owner2 = owner.mapConserve(_.subst)
-      val sym2 = sym.subst
-      val rhs2 = applyPath(rhs)
-      if (owner2 is owner) && (sym2 is sym) && (rhs2 is rhs)
-        then defn else ValDefn(owner2, k, sym2, rhs2)
+    case defn: ValDefn => applyValDefn(defn)
     case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentPath, methods, 
       privateFields, publicFields, preCtor, ctor) =>
       val own2 = own.mapConserve(_.subst)
@@ -165,7 +168,7 @@ class BlockTransformer(subst: SymbolSubst):
       val parentPath2 = parentPath.mapConserve(applyPath)
       val methods2 = methods.mapConserve(applyFunDefn)
       val privateFields2 = privateFields.mapConserve(_.subst)
-      val publicFields2 = publicFields.mapConserve(applyTermDefinition)
+      val publicFields2 = publicFields.mapConserve(_.subst)
       val preCtor2 = applySubBlock(preCtor)
       val ctor2 = applySubBlock(ctor)
       if (own2 is own) && (isym2 is isym) && (sym2 is sym) &&
@@ -214,15 +217,6 @@ class BlockTransformer(subst: SymbolSubst):
     val body2 = applySubBlock(lam.body)
     if (params2 is lam.params) && (body2 is lam.body) then lam else Value.Lam(params2, body2)
   
-  def applyTermDefinition(td: TermDefinition): TermDefinition =
-    val owner2 = td.owner.mapConserve(_.subst)
-    val sym2 = td.sym.subst
-    val params2 = td.params.mapConserve(applyParamList)
-    val resSym2 = td.resSym.subst
-    if (owner2 is td.owner) && (sym2 is td.sym) &&
-        (params2 is td.params) && (resSym2 is td.resSym)
-      then td else TermDefinition(owner2, td.k, sym2, params2, td.tparams, td.sign, td.body, resSym2, td.flags, td.annotations)
-
 class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst):
   override def applyLam(lam: Value.Lam) = lam
   override def applyFunDefn(fun: FunDefn): FunDefn = fun
