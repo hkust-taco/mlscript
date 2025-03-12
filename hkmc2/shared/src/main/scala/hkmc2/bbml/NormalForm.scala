@@ -93,15 +93,15 @@ final case class Inter(v: Opt[ClassLikeType | Ls[FunType]]) extends NormalForm:
     case (S(_: ClassLikeType), S(_: ClassLikeType)) => N
     // case (S(FunType(a1, r1, e1)), S(FunType(a2, r2, e2))) =>
     //   S(Inter(S(FunType(a1.lazyZip(a2).map(_ | _), r1 & r2, e1 & e2))))
-    case (S(a:Ls[FunType]),S(b:Ls[FunType]))=>S(Inter(S(a++b)))
+    case (S(a: Ls[FunType]), S(b: Ls[FunType])) => S(Inter(S(a ++ b)))
     case (S(v), N) => S(Inter(S(v)))
     case (N, v) => S(Inter(v))
     case _ => N
   def toBasic: BasicType = v match
-    case N=>Top
-    case S(x:ClassLikeType)=>x
-    case S(Nil)=>Top
-    case S(x:Ls[FunType])=>x.reduce[Type](_&_).toBasic
+    case N => Top
+    case S(x: ClassLikeType) => x
+    case S(Nil) => Top
+    case S(x: Ls[FunType]) => x.reduce[Type](_&_).toBasic
   def toDnf(using TL): Disj = Disj(Conj(this, Union(N, Nil), Nil) :: Nil)
   override def show(using Scope): Str =
     toBasic.show

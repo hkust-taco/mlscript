@@ -186,16 +186,12 @@ new TFun(inc)
 //│   'T#'T ∨  ∧ 'T<:'x ∧ Int<:'T ∧ ⊥<:⊥
 
 let tf = new TFun(inc) in tf.TFun#f(1)
-//│ Type: 'T
-//│ Where:
-//│   Int <: 'T
-//│   'T <: Int
-//│    ∧ 'T<:'x ∧ Int<:'T ∧ ⊥<:⊥
+//│ Type: Int
 
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ╔══[ERROR] Type error in string literal with expected type 'T
-//│ ║  l.196: 	let tf = new TFun(inc) in tf.TFun#f("1")
+//│ ║  l.192: 	let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
@@ -206,26 +202,7 @@ let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ╟── because: cannot constrain  'T  <:  ¬¬Int
 //│ ╟── because: cannot constrain  'T  <:  ¬(¬{Int})
 //│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int})
-//│ ╔══[ERROR] Type error in string literal with expected type 'T
-//│ ║  l.196: 	let tf = new TFun(inc) in tf.TFun#f("1")
-//│ ║         	                                    ^^^
-//│ ╟── because: cannot constrain  Str  <:  'T
-//│ ╟── because: cannot constrain  Str  <:  'T
-//│ ╟── because: cannot constrain  Str  <:  ¬(¬'T)
-//│ ╟── because: cannot constrain  Str  <:  'T
-//│ ╟── because: cannot constrain  Int  <:  'T
-//│ ╟── because: cannot constrain  Int  <:  'T
-//│ ╟── because: cannot constrain  'T  <:  'x
-//│ ╟── because: cannot constrain  'T  <:  'x
-//│ ╟── because: cannot constrain  'T  <:  ¬¬Int
-//│ ╟── because: cannot constrain  'T  <:  ¬(¬{Int})
-//│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int})
-//│ Type: 'T
-//│ Where:
-//│   Int <: 'T
-//│   Str <: 'T
-//│   'T <: Int
-//│    ∧ 'T<:'x ∧ Int<:'T ∧ ⊥<:⊥
+//│ Type: Int ∨ Str
 
 class Pair[A, B](fst: A, snd: B)
 //│ Type: ⊤
@@ -285,7 +262,7 @@ fun fact(n) =
 //│ Type: ⊤
 
 fact
-//│ Type: ['n] -> 'n -> Int
+//│ Type: ['n, 'eff, 'app] -> 'n ->{'eff} Int
 //│ Where:
 //│   'n <: Int
 //│   'n#Int ∨  ∧ Int<:'n ∧ Int<:'app ∧ 'eff<:'eff
@@ -312,7 +289,7 @@ fun fact2 = case
 //│ Type: ⊤
 
 fact2
-//│ Type: ['caseScrut] -> 'caseScrut -> Int
+//│ Type: ['caseScrut, 'eff, 'app] -> 'caseScrut ->{'eff} Int
 //│ Where:
 //│   'caseScrut <: Int
 //│   'caseScrut#Int ∨  ∧ Int<:'caseScrut ∧ Int<:'app ∧ 'eff<:'eff
@@ -347,7 +324,7 @@ throw new Error("oops")
 :e
 throw 42
 //│ ╔══[ERROR] Type error in throw
-//│ ║  l.348: 	throw 42
+//│ ║  l.325: 	throw 42
 //│ ║         	      ^^
 //│ ╙── because: cannot constrain  Int  <:  Error
 //│ Type: ⊥

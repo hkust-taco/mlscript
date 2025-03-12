@@ -38,10 +38,11 @@ show
 fun inc(dbg) =
   x `=> let c = x `+ `1 in let t = dbg(c) in c
 inc
-//│ Type: ['x, 'eff, 'x1] -> (CodeBase[⊥, ?, ?] ->{'eff} ⊤) ->{'eff} CodeBase[out 'x -> ⊥, ⊥, ?]
+//│ Type: ['x, 'cde, 'cde1, 'app, 'app1, 'eff, 'cde2, 'x1] -> (CodeBase[out 'app1, ?, ?] ->{'eff} ⊤) ->{'eff} CodeBase[out 'x -> 'cde2, ⊥, ?]
 //│ Where:
 //│   'x <: 'x1
 //│   'x1#Int ∨ 'cde#Int ∨  ∧ 'cde<:Int ∧ Int<:'app ∧ ⊥<:⊥ ∧ 'cde1<:Int
+//│   'cde2 <: ⊤
 
 inc(c => log(show(c)))
 //│ Type: CodeBase[out ⊤ -> ⊥, ⊥, ?]

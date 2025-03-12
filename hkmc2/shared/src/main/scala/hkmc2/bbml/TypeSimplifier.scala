@@ -60,6 +60,8 @@ class TypeSimplifier(tl: TraceLogger):
       val varSubst: MutMap[IV, IV] = MutMap.empty
       
       val traversedTVs: MutSet[IV] = MutSet.empty
+
+      val traversedDisjSub: MutSet[DisjSub] = MutSet.empty
       
       def getRepr(tv: IV): IV = varSubst.get(tv) match {
         case S(tv2) =>
@@ -129,6 +131,13 @@ class TypeSimplifier(tl: TraceLogger):
                 // traversingTVs += tv
                 // traversedTVs += tv
                 super.apply(pol)(ty)
+                val (p, n) = (tv.state.disjsub.flatMap: ds =>
+                  ds.subDisjSub.map: k =>
+                    if traversedDisjSub.add(ds) then
+                      ds.children()
+                    else (Nil, Nil)).unzip
+                p.flatten.foreach(apply(true))
+                n.flatten.foreach(apply(false))
                 // traversingTVs -= tv
                 curPath = oldPath
             case pt @ PolyType(tvs, outer, _) => // Avoid simplify outer variables to Top unexpectedly

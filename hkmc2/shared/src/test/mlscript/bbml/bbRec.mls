@@ -35,7 +35,7 @@ f
 
 fun f(x) = f(x)
 f
-//│ Type: ['x] -> 'x -> ⊥
+//│ Type: ['x, 'eff, 'app] -> 'x ->{'eff} 'app
 //│ Where:
 //│   'x#'x ∨ (  'x#'x ∨  ∧ 'x<:'x ∧ 'app<:'app ∧ 'eff<:'eff)
 
@@ -71,7 +71,7 @@ fun f(x) = f(Foo.a(x))
 
 fun f(x) = f(x.Foo#a)
 f
-//│ Type: ['A] -> Foo[out 'A] -> ⊥
+//│ Type: ['x, 'A, 'eff, 'app] -> Foo[out 'A] ->{'eff} 'app
 //│ Where:
 //│   'A#'A ∨  ∧ 'A<:'x ∧ 'app<:'app ∧ 'eff<:'eff
 

@@ -9,16 +9,10 @@ f
 
 
 f((x => x), 42)
-//│ Type: 'y
-//│ Where:
-//│   Int <: 'y
-//│    ∧ 'y<:'x ∧ 'x<:'app ∧ ⊥<:'eff
+//│ Type: Int
 
 f(x => x, 42)
-//│ Type: 'y
-//│ Where:
-//│   Int <: 'y
-//│    ∧ 'y<:'x ∧ 'x<:'app ∧ ⊥<:'eff
+//│ Type: Int
 
 
 fun id: [A] -> A -> A

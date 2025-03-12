@@ -388,6 +388,9 @@ object PolyType:
               apply(true)(bd)
             state.upperBounds.foreach: bd =>
               apply(false)(bd)
+            val (p, n) = state.disjsub.map(_.children()).unzip
+            p.flatten.foreach(apply(true))
+            n.flatten.foreach(apply(false))
             super.apply(pol)(ty)
         case _ => super.apply(pol)(ty)
     CollectTVs(true)(ty)
@@ -432,23 +435,24 @@ class VarState:
 case class DisjSub(disjoint: LinkedHashSet[InfVar -> BasicType], dss: Ls[DisjSub], cs: Ls[Type -> Type]):
   def commit() = disjoint.keys.foreach(_.state.disjsub += this)
   def checkAndCommit()(using c: MutMap[BasicType -> BasicType, Opt[Set[Set[InfVar->BasicType]]]]): Ls[Type -> Type] =
-    val cc: MutSet[InfVar -> BasicType] = MutSet.empty
+    disjoint.keys.foreach(_.state.disjsub -= this)
     val d = disjoint.flatMap: u =>
       Type.disjointImpl(u._2, u._1)(Set.empty) match
         case N =>
           disjoint -= u
-          cc += u
           N
         case S(k) => if k.nonEmpty then S(k) else N
     if disjoint.isEmpty then
       dss.flatMap(_.checkAndCommit()) ++ cs
     else
+      disjoint.keys.foreach(_.state.disjsub += this)
       if d.nonEmpty then
         commit()
         d.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
           DisjSub(LinkedHashSet.from(k), dss, cs).commit()
       Nil
   def checkImpl(v: InfVar)(using c: MutMap[BasicType -> BasicType, Opt[Set[Set[InfVar->BasicType]]]]) =
+    v.state.disjsub -= this
     val (u, w) = disjoint.toList.partition(_._1.uid === v.uid)
     val d = u.flatMap: u =>
       Type.disjointImpl(u._2, u._1)(Set.empty) match
@@ -459,9 +463,13 @@ case class DisjSub(disjoint: LinkedHashSet[InfVar -> BasicType], dss: Ls[DisjSub
     if disjoint.isEmpty then
       dss.flatMap(_.checkAndCommit()) ++ cs
     else
-      if disjoint.forall(_._1.uid =/= v.uid) then v.state.disjsub -= this
+      if disjoint.exists(_._1.uid === v.uid) then v.state.disjsub += this
       else if d.nonEmpty then
         d.foldLeft(Set(w))((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
           DisjSub(LinkedHashSet.from(k), dss, cs).commit()
       Nil
   def check(v: InfVar) = checkImpl(v)(using c = MutMap.empty)
+  def children(): (Ls[Type], Ls[Type]) =
+    val (p, n) = dss.map(_.children()).unzip
+    (p.flatten ++ disjoint.keys ++ cs.keys, n.flatten ++ cs.values)
+  def subDisjSub: Ls[DisjSub] = this :: dss.flatMap(_.subDisjSub)

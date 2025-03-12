@@ -41,22 +41,22 @@ f `=> x `=> f`(x)
 
 
 x `=> y `=> x `+ y
-//│ Type: CodeBase[out 'x -> (⊤ -> ⊥), ⊥, ?]
+//│ Type: CodeBase[out 'x -> ('y -> 'cde), ⊥, ?]
 //│ Where:
-//│   'x#Int ∨ 'cde#Int ∨  ∧ 'cde<:Int ∧ Int<:'app ∧ ⊥<:⊥ ∧ 'cde1<:Int
+//│   'x#Int ∨ 'cde1#Int ∨  ∧ 'cde1<:Int ∧ Int<:'app ∧ ⊥<:⊥ ∧ 'cde2<:Int
 
 
 
 (x, y) `=> x `+ y
-//│ Type: CodeBase[out ('x, ⊤) -> ⊥, ⊥, ?]
+//│ Type: CodeBase[out ('x, 'y) -> 'cde, ⊥, ?]
 //│ Where:
-//│   'x#Int ∨ 'cde#Int ∨  ∧ 'cde<:Int ∧ Int<:'app ∧ ⊥<:⊥ ∧ 'cde1<:Int
+//│   'x#Int ∨ 'cde1#Int ∨  ∧ 'cde1<:Int ∧ Int<:'app ∧ ⊥<:⊥ ∧ 'cde2<:Int
 
 
 (x, y, z) `=> x `+ y `+ z
-//│ Type: CodeBase[out ('x, ⊤, ⊤) -> ⊥, ⊥, ?]
+//│ Type: CodeBase[out ('x, 'y, 'z) -> 'cde, ⊥, ?]
 //│ Where:
-//│   'x#Int ∨ 'cde#Int ∨  ∧ 'cde<:Int ∧ Int<:'app ∧ ⊥<:⊥ ∧ 'cde1<:Int
+//│   'x#Int ∨ 'cde1#Int ∨  ∧ 'cde1<:Int ∧ Int<:'app ∧ ⊥<:⊥ ∧ 'cde2<:Int
 
 f `=> x `=> y `=> f`(x, y)
 //│ Type: CodeBase[out (('x, 'y) -> 'app) -> ('x -> ('y -> 'app)), ⊥, ?]

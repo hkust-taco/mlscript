@@ -33,7 +33,7 @@ idIB(if true then 1 else true)
 x =>
   let y = x+1
   idIB(x)
-//│ Type: ('x) ->{⊥} ⊥
+//│ Type: ('x) ->{'eff} 'app
 //│ Where:
 //│   'x <: Int
 //│   'x#'x ∨ (  'x#Int ∨  ∧ 'x<:Int ∨ Bool ∧ Int<:'app ∧ ⊥<:'eff) ∧ (  'x#Bool ∨  ∧ 'x<:Int ∨ Bool ∧ Bool<:'app ∧ ⊥<:'eff)
@@ -60,13 +60,13 @@ ap(idIB)(1)
 
 :todo
 x => idIB(x)
-//│ Type: ('x) ->{⊥} ⊥
+//│ Type: ('x) ->{'eff} 'app
 //│ Where:
 //│   'x#'x ∨ (  'x#Int ∨  ∧ 'x<:Int ∨ Bool ∧ Int<:'app ∧ ⊥<:'eff) ∧ (  'x#Bool ∨  ∧ 'x<:Int ∨ Bool ∧ Bool<:'app ∧ ⊥<:'eff)
 
 fun forward(x) = idIB(x)
 forward
-//│ Type: ['x] -> 'x -> ⊥
+//│ Type: ['x, 'eff, 'app] -> 'x ->{'eff} 'app
 //│ Where:
 //│   'x#'x ∨ (  'x#Int ∨  ∧ 'x<:Int ∨ Bool ∧ Int<:'app ∧ ⊥<:'eff) ∧ (  'x#Bool ∨  ∧ 'x<:Int ∨ Bool ∧ Bool<:'app ∧ ⊥<:'eff)
 
