@@ -126,12 +126,6 @@ class BlockTraverser:
     applyParamList(lam.params)
     applySubBlock(lam.body)
   
-  def applyTermDefinition(td: TermDefinition): Unit =
-    td.owner.foreach(_.traverse)
-    td.sym.traverse
-    td.params.foreach(applyParamList)
-    td.resSym.traverse
-
 class BlockTraverserShallow extends BlockTraverser:
   override def applyLam(lam: Value.Lam) = ()
   override def applyFunDefn(fun: FunDefn): Unit = ()

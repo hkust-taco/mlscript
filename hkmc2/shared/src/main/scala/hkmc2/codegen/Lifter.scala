@@ -133,7 +133,8 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     * @param inScopeDefns Definitions which are in scope to another definition (excluding itself and its nested definitions).
     * @param modLocals A map from the modules and objects to the local to which it is instantiated after lifting.
     * @param localCaptureSyms The symbols in a capture corresponding to a particular local. 
-    * The `VarSymbol` is the parameter in the capture class, and the `BlockMemberSymbol` is the field in the class.
+    * The `VarSymbol` is the parameter in the capture class.
+    *   We used to also store along with it a `BlockMemberSymbol`, the field in the class, but it wasn't used.
     * @param prevFnLocals Locals belonging to function definitions that have already been traversed
     * @param prevClsDefns Class definitions that have already been traversed, excluding modules
     * @param curModules Modules that that we are currently nested in (cleared if we are lifted out)
@@ -219,8 +220,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     * @param f The function to create the capture class for.
     * @param ctx The lifter context. Determines which variables will be captured.
     * @return The triple (defn, varsMap, varsList), where `defn` is the capture class's definition,
-    * `varsMap` maps the function's locals to the correpsonding `VarSymbol` (for the class parameters)
-    *  and `BlockLocalSymbol` (for the class fields) in the class, and
+    * `varsMap` maps the function's locals to the corresponding `VarSymbol` (for the class parameters), and
     * `varsList` specifies the order of these variables in the class's constructor. 
     */
   def createCaptureCls(f: FunDefn, ctx: LifterCtx)
