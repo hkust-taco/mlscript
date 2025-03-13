@@ -177,7 +177,7 @@ sealed abstract class BasicType extends Type:
     case NegType(ty) => s"¬${ty.paren}"
     case Top => "⊤"
     case Bot => "⊥"
-
+  
   override def showDbg: Str = this match
     case ClassLikeType(name, targs) =>
       if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.map(_.showDbg).mkString(", ")}]"
@@ -251,6 +251,8 @@ case class ClassLikeType(name: TypeSymbol | ModuleSymbol, targs: Ls[TypeArg]) ex
 
 final case class InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, isSkolem: Bool)(val sym: Symbol, val hint: Str) extends BasicType:
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = map.get(uid).getOrElse(this)
+  def showBounds: Str =
+    s"lower: ${state.lowerBounds.map(_.showDbg).mkString(", ")} upper: ${state.upperBounds.map(_.showDbg).mkString(", ")} disjsub: ${state.disjsub}"
 
 given Ordering[InfVar] = Ordering.by(_.uid)
 
@@ -347,19 +349,20 @@ case class PolyType(tvs: Ls[InfVar], outer: Opt[InfVar], body: GeneralType) exte
         newSt.upperBounds = state.upperBounds.map(_.subst)
         InfVar(lvl, uid, newSt, skolem)(v.sym, v.hint)
     }, outer, body.subst) // * outer should have no bound!
-
+  
   // * This function will only return the body after substitution
   // * and \dom(map) should cover all tvs.
   // * This function is dedicated to `skolemize` and `instantiate`.
-  private def substAndGetBody(using map: Map[Uid[InfVar], InfVar]): GeneralType =
+  private def substAndGetBody(using map: Map[Uid[InfVar], InfVar])(using TL): GeneralType =
     tvs.foreach:
       case InfVar(lvl, uid, state, skolem) =>
         val v = map(uid)
         v.state.lowerBounds = state.lowerBounds.map(_.subst)
         v.state.upperBounds = state.upperBounds.map(_.subst)
+        tl.log(s"adding bounds to $v: ${v.showBounds}")
     body.subst
-
-  def skolemize(nextUid: => Uid[InfVar], lvl: Int)(tl: TL) =
+  
+  def skolemize(nextUid: => Uid[InfVar], lvl: Int)(using TL) =
     // * Note that by this point, the state is supposed to be frozen/treated as immutable
     // * `outer` is already skolemized when it is declared
     val map = tvs.map(v =>
@@ -369,20 +372,22 @@ case class PolyType(tvs: Ls[InfVar], outer: Opt[InfVar], body: GeneralType) exte
     ).toMap
     substAndGetBody(using map)
   
-  def instantiate(nextUid: => Uid[InfVar], env: InfVar, lvl: Int)(tl: TL)(using State): GeneralType =
+  def instantiate(nextUid: => Uid[InfVar], env: InfVar, lvl: Int)(using State, TL): GeneralType =
     val map = (outer.map(_.uid -> env).toList ++ tvs.map(v =>
       val nv = InfVar(lvl, nextUid, new VarState(), false)(new InstSymbol(v.sym), v.hint)
       tl.log(s"instantiate ${v.showDbg} ~> ${nv.showDbg}")
+      // tl.log(s"where ${nv.showBounds}")
       v.uid -> nv
     )).toMap
     substAndGetBody(using map)
 
 object PolyType:
-  def collectTVs(ty: GeneralType): Set[InfVar] =
+  def collectTVs(ty: GeneralType)(using TL): Set[InfVar] =
     val visited = MutSet.empty[InfVar]
     object CollectTVs extends TypeTraverser:
       override def apply(pol: Boolean)(ty: GeneralType): Unit = ty match
         case v @ InfVar(_, _, state, _) =>
+          tl.log(s"collect ${v.showDbg} ${state.upperBounds}")
           if visited.add(v) then
             state.lowerBounds.foreach: bd =>
               apply(true)(bd)
@@ -396,7 +401,7 @@ object PolyType:
     CollectTVs(true)(ty)
     visited.toSet
 
-  def generalize(ty: GeneralType, outer: Opt[InfVar], lvl: Int): PolyType =
+  def generalize(ty: GeneralType, outer: Opt[InfVar], lvl: Int)(using TL): PolyType =
     PolyType(collectTVs(ty).filter(v => outer.map(_.uid != v.uid).getOrElse(true)).toList.sorted, outer, ty)
 
 // * Functions that accept/return a polymorphic type.

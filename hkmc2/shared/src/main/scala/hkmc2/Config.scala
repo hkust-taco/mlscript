@@ -12,6 +12,7 @@ case class Config(
   sanityChecks: Opt[SanityChecks],
   effectHandlers: Opt[EffectHandlers],
   liftDefns: Opt[LiftDefns],
+  simplifyTypes: Bool,
 ):
   
   def stackSafety: Opt[StackSafety] = effectHandlers.flatMap(_.stackSafety)
@@ -26,6 +27,7 @@ object Config:
     // sanityChecks = S(SanityChecks(light = true)),
     effectHandlers = N,
     liftDefns = N,
+    simplifyTypes = true,
   )
   
   case class SanityChecks(light: Bool)

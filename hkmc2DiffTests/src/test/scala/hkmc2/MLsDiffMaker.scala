@@ -51,6 +51,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val parseOnly = NullaryCommand("parseOnly")
   
   val typeCheck = FlagCommand(false, "typeCheck")
+  val noTypeSimplification = FlagCommand(false, "ns")
   
   
   // * Compiler configuration
@@ -80,7 +81,8 @@ abstract class MLsDiffMaker extends DiffMaker:
                 S(StackSafety(stackLimit = value))
         ,
       )),
-      liftDefns = Opt.when(liftDefns.isSet)(LiftDefns())
+      liftDefns = Opt.when(liftDefns.isSet)(LiftDefns()),
+      simplifyTypes = noTypeSimplification.isUnset,
     )
   
   

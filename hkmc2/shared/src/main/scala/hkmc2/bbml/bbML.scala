@@ -73,7 +73,7 @@ object BbCtx:
 end BbCtx
 
 
-class BBTyper(using elState: Elaborator.State, tl: TL):
+class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
   import tl.{trace, log}
   
   private val infVarState = new InfVarUid.State()
@@ -190,7 +190,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
     typeAndSubstType(ty, pol = true)(using Map.empty)
   
   private def instantiate(ty: PolyType)(using ctx: BbCtx): GeneralType =
-    ty.instantiate(infVarState.nextUid, freshEnv(new TempSymbol(N, "env")), ctx.lvl)(tl)
+    ty.instantiate(infVarState.nextUid, freshEnv(new TempSymbol(N, "env")), ctx.lvl)
 
   private def extrude(ty: GeneralType)(using ctx: BbCtx, pol: Bool, cctx: CCtx): GeneralType = ty match
     case ty: Type => solver.extrude(ty)(using ctx.lvl, pol, HashMap.empty)
@@ -401,7 +401,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       constrain(tryMkMono(funTy, t), FunType(argTy.map((tryMkMono(_, t))), retVar, effVar))
       (retVar, argEff.foldLeft[Type](effVar | lhsEff)((res, e) => res | e))
 
-  private def skolemize(ty: PolyType)(using ctx: BbCtx) = ty.skolemize(infVarState.nextUid, ctx.lvl)(tl)
+  private def skolemize(ty: PolyType)(using ctx: BbCtx) = ty.skolemize(infVarState.nextUid, ctx.lvl)
 
   // TODO: implement toLoc
   private def monoOrErr(ty: GeneralType, sc: Located)(using BbCtx) =

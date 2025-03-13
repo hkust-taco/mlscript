@@ -146,14 +146,33 @@ class Printer[T](f: T -> Str)
 //│ Type: ⊤
 
 fun foofoo(x) =
+  if x is Int then
+    let t = x + 1 in "foo"
+foofoo
+//│ Type: (¬Int ∨ Int) -> Str
+
+fun foofoo(x) =
   let t = x + 1 in "foo"
 //│ Type: ⊤
 
-:todo
-new Printer(foofoo)
-//│ Type: Printer['T]
+:ns
+foofoo
+//│ Type: [outer, 'x] -> 'x -> Str
+//│ Where:
+//│   'x <: ¬(¬{Int})
+
+// TODO
+fun f() = new Printer(foofoo)
+f
+//│ Type: ['T, 'x] -> () -> Printer['T]
 //│ Where:
 //│   'T#'T ∨  ∧ 'T<:'x ∧ Str<:Str ∧ ⊥<:⊥
+
+f().Printer#f(42)
+//│ Type: Str
+
+f().Printer#f("oops")
+//│ Type: Str
 
 let ip = new Printer(foofoo) in ip.Printer#f(42)
 //│ Type: Str
@@ -161,7 +180,7 @@ let ip = new Printer(foofoo) in ip.Printer#f(42)
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ╔══[ERROR] Type error in string literal with expected type 'T
-//│ ║  l.162: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
+//│ ║  l.181: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ║         	                                             ^^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
@@ -191,7 +210,7 @@ let tf = new TFun(inc) in tf.TFun#f(1)
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ╔══[ERROR] Type error in string literal with expected type 'T
-//│ ║  l.192: 	let tf = new TFun(inc) in tf.TFun#f("1")
+//│ ║  l.211: 	let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
@@ -324,7 +343,7 @@ throw new Error("oops")
 :e
 throw 42
 //│ ╔══[ERROR] Type error in throw
-//│ ║  l.325: 	throw 42
+//│ ║  l.344: 	throw 42
 //│ ║         	      ^^
 //│ ╙── because: cannot constrain  Int  <:  Error
 //│ Type: ⊥

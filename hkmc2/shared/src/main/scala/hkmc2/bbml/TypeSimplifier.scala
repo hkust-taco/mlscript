@@ -14,7 +14,7 @@ final def printPol(pol: Bool): Str = pol match {
     case false => "-"
   }
 
-class TypeSimplifier(tl: TraceLogger):
+class TypeSimplifier(using tl: TL):
   import tl.{trace, log}
   
   def apply(pol: Bool, lvl: Int)(ty: GeneralType): GeneralType =
@@ -222,7 +222,7 @@ class TypeSimplifier(tl: TraceLogger):
     
     subst(ty)
 
-  def simplifyForall(ty: GeneralType): GeneralType = ty match
+  def simplifyForall(ty: GeneralType)(using TL): GeneralType = ty match
     case PolyType(tvs, outer, body) =>
       val newBody = simplifyForall(body)
       val visited = PolyType.collectTVs(newBody)
