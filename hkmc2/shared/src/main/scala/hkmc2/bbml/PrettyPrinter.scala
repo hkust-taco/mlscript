@@ -39,6 +39,9 @@ object PrettyPrinter:
               apply(false)(bd)
               (v, bd)
             res ++= state.disjsub
+            val (p, n) = state.disjsub.map(_.children()).unzip
+            p.flatten.foreach(apply(true))
+            n.flatten.foreach(apply(false))
             super.apply(pol)(ty)
         case _ => super.apply(pol)(ty)
     CollectBounds(true)(ty)

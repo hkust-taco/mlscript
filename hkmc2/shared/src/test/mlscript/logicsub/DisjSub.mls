@@ -71,10 +71,10 @@ forward
 //│   'x#'x ∨ (  'x#Int ∨  ∧ 'x<:Int ∨ Bool ∧ Int<:'app ∧ ⊥<:'eff) ∧ (  'x#Bool ∨  ∧ 'x<:Int ∨ Bool ∧ Bool<:'app ∧ ⊥<:'eff)
 
 forward(1)
-//│ Type: ⊥
+//│ Type: Int
 
 forward(true)
-//│ Type: ⊥
+//│ Type: Bool
 
 
 :todo // BbML

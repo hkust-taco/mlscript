@@ -167,11 +167,25 @@ f
 //│ Type: ['T, 'x] -> () -> Printer['T]
 //│ Where:
 //│   'T#'T ∨  ∧ 'T<:'x ∧ Str<:Str ∧ ⊥<:⊥
+//│   'x <: Int
 
 f().Printer#f(42)
 //│ Type: Str
 
+:e
 f().Printer#f("oops")
+//│ ╔══[ERROR] Type error in string literal with expected type 'T
+//│ ║  l.176: 	f().Printer#f("oops")
+//│ ║         	              ^^^^^^
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╟── because: cannot constrain  Str  <:  ¬(¬'T1)
+//│ ╟── because: cannot constrain  Str  <:  'T1
+//│ ╟── because: cannot constrain  'T1  <:  'x
+//│ ╟── because: cannot constrain  'T1  <:  'x
+//│ ╟── because: cannot constrain  'T1  <:  Int
+//│ ╟── because: cannot constrain  'T1  <:  ¬(¬{Int})
+//│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int})
 //│ Type: Str
 
 let ip = new Printer(foofoo) in ip.Printer#f(42)
@@ -180,7 +194,7 @@ let ip = new Printer(foofoo) in ip.Printer#f(42)
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ╔══[ERROR] Type error in string literal with expected type 'T
-//│ ║  l.181: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
+//│ ║  l.195: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ║         	                                             ^^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
@@ -203,6 +217,7 @@ new TFun(inc)
 //│ Type: TFun['T]
 //│ Where:
 //│   'T#'T ∨  ∧ 'T<:'x ∧ Int<:'T ∧ ⊥<:⊥
+//│   'x <: ¬¬Int
 
 let tf = new TFun(inc) in tf.TFun#f(1)
 //│ Type: Int
@@ -210,7 +225,7 @@ let tf = new TFun(inc) in tf.TFun#f(1)
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ╔══[ERROR] Type error in string literal with expected type 'T
-//│ ║  l.211: 	let tf = new TFun(inc) in tf.TFun#f("1")
+//│ ║  l.226: 	let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
@@ -285,6 +300,7 @@ fact
 //│ Where:
 //│   'n <: Int
 //│   'n#Int ∨  ∧ Int<:'n ∧ Int<:'app ∧ 'eff<:'eff
+//│   'app <: Int
 
 fact(1)
 //│ Type: Int
@@ -312,6 +328,7 @@ fact2
 //│ Where:
 //│   'caseScrut <: Int
 //│   'caseScrut#Int ∨  ∧ Int<:'caseScrut ∧ Int<:'app ∧ 'eff<:'eff
+//│   'app <: Int
 
 fact2(0)
 //│ Type: Int
@@ -343,7 +360,7 @@ throw new Error("oops")
 :e
 throw 42
 //│ ╔══[ERROR] Type error in throw
-//│ ║  l.344: 	throw 42
+//│ ║  l.361: 	throw 42
 //│ ║         	      ^^
 //│ ╙── because: cannot constrain  Int  <:  Error
 //│ Type: ⊥

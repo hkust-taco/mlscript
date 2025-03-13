@@ -347,6 +347,7 @@ case class PolyType(tvs: Ls[InfVar], outer: Opt[InfVar], body: GeneralType) exte
         val newSt = new VarState()
         newSt.lowerBounds = state.lowerBounds.map(_.subst)
         newSt.upperBounds = state.upperBounds.map(_.subst)
+        newSt.disjsub ++= state.disjsub.map(_.subst)
         InfVar(lvl, uid, newSt, skolem)(v.sym, v.hint)
     }, outer, body.subst) // * outer should have no bound!
   
@@ -359,6 +360,8 @@ case class PolyType(tvs: Ls[InfVar], outer: Opt[InfVar], body: GeneralType) exte
         val v = map(uid)
         v.state.lowerBounds = state.lowerBounds.map(_.subst)
         v.state.upperBounds = state.upperBounds.map(_.subst)
+        v.state.disjsub ++= state.disjsub.map(_.subst)
+        v.state.disjsub.foreach(_.commit())
         tl.log(s"adding bounds to $v: ${v.showBounds}")
     body.subst
   
@@ -478,3 +481,7 @@ case class DisjSub(disjoint: LinkedHashSet[InfVar -> BasicType], dss: Ls[DisjSub
     val (p, n) = dss.map(_.children()).unzip
     (p.flatten ++ disjoint.keys ++ cs.keys, n.flatten ++ cs.values)
   def subDisjSub: Ls[DisjSub] = this :: dss.flatMap(_.subDisjSub)
+  def subst(using map: Map[Uid[InfVar], InfVar]): DisjSub =
+    val d = disjoint.map:
+      case (v, t) => (map.get(v.uid).getOrElse(v), t.subst.toBasic)
+    DisjSub(d, dss.map(_.subst), cs.map(u => (u._1.subst, u._2.subst)))

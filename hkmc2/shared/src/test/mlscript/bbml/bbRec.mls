@@ -74,5 +74,6 @@ f
 //│ Type: ['x, 'A, 'eff, 'app] -> Foo[out 'A] ->{'eff} 'app
 //│ Where:
 //│   'A#'A ∨  ∧ 'A<:'x ∧ 'app<:'app ∧ 'eff<:'eff
+//│   'x <: Foo[out 'A]
 
 
