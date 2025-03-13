@@ -1,4 +1,4 @@
-import "./RuntimeJS.mjs" 
+import "./RuntimeJS.mjs"
 
 module Runtime with ...
 
@@ -21,6 +21,17 @@ fun deboundMethod(mtdName, clsName) =
 
 
 val try_catch = RuntimeJS.try_catch
+
+class EffectHandle(_reified) with
+  val reified = _reified
+  fun resumeWith(value) =
+    Runtime.try(() => resume(reified.contTrace)(value))
+  fun raise() =
+    topLevelEffect(reified)
+
+fun try(f) =
+  let res = f()
+  if res is EffectSig then EffectHandle(res) else res
 
 
 // For `pattern` definitions
@@ -59,7 +70,7 @@ fun topLevelEffect(tr) =
       let curLocals = locals.at(locals.length - 1)
       set
         msg += "\n\tat " + curLocals.fnName + "(pc=" + cur.pc + ")"
-        msg += " with locals: " + curLocals.locals.map(l => l.localName + "=" + globalThis.Predef.render(l.value)).join(", ")
+        msg += " with locals: " + curLocals.locals.map(l => l.localName + "=" + RuntimeJS.Predef.render(l.value)).join(", ")
         cur = cur.next
         atTail = false
     set curHandler = curHandler.nextHandler

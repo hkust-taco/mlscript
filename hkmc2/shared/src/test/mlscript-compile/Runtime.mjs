@@ -12,6 +12,30 @@ Runtime1 = class Runtime {
     this.Unit = new Unit$class;
     this.Unit.class = Unit$class;
     this.try_catch = RuntimeJS.try_catch;
+    this.EffectHandle = function EffectHandle(_reified1) {
+      return new EffectHandle.class(_reified1);
+    };
+    this.EffectHandle.class = class EffectHandle {
+      #_reified;
+      constructor(_reified) {
+        this.#_reified = _reified;
+        this.reified = this.#_reified;
+      }
+      resumeWith(value) {
+        let lambda;
+        const this$EffectHandle = this;
+        lambda = (undefined, function () {
+          let tmp;
+          tmp = Runtime.resume(this$EffectHandle.reified.contTrace);
+          return runtime.safeCall(tmp(value))
+        });
+        return Runtime1.try(lambda)
+      } 
+      raise() {
+        return Runtime.topLevelEffect(this.reified)
+      }
+      toString() { return "EffectHandle(" + "" + ")"; }
+    };
     this.MatchResult = function MatchResult(captures1) {
       return new MatchResult.class(captures1);
     };
@@ -136,6 +160,16 @@ Runtime1 = class Runtime {
     tmp3 = tmp2 + "' was accessed without being called.";
     throw globalThis.Error(tmp3);
   } 
+  static try(f) {
+    let res, tmp;
+    tmp = runtime.safeCall(f());
+    res = tmp;
+    if (res instanceof Runtime.EffectSig.class) {
+      return Runtime.EffectHandle(res)
+    } else {
+      return res
+    }
+  } 
   static topLevelEffect(tr) {
     let zwsp, msg, curHandler, atTail, scrut, cur, scrut1, locals, curLocals, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20, tmp21, lambda;
     zwsp = "\u200B";
@@ -164,7 +198,7 @@ Runtime1 = class Runtime {
             lambda = (undefined, function (l) {
               let tmp24, tmp25;
               tmp24 = l.localName + "=";
-              tmp25 = runtime.safeCall(globalThis.Predef.render(l.value));
+              tmp25 = runtime.safeCall(RuntimeJS.Predef.render(l.value));
               return tmp24 + tmp25
             });
             tmp9 = runtime.safeCall(curLocals.locals.map(lambda));

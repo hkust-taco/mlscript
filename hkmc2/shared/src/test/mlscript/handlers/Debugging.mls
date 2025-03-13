@@ -1,6 +1,8 @@
 :js
 :effectHandlers
 
+
+
 :re
 raiseUnhandledEffect()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
@@ -13,7 +15,7 @@ fun f() =
   let j = 100
   let k = 2000
   if i == 0 do
-    raiseUnhandledEffect()
+    print of raiseUnhandledEffect()
   j / i
 
 :re
@@ -21,3 +23,69 @@ f()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
 //│ 	at f(pc=0) with locals: i=0, j=100, k=2000​
 //│ ​Error: Unhandled effects
+
+
+
+import "../../mlscript-compile/Runtime.mls"
+
+:silent
+let res = Runtime.try(f)
+
+res.reified.contTrace.next.getLocals
+//│ = [FnLocalsInfo("‹top level›", []), FnLocalsInfo("f", [LocalVarInfo("i", "608", 0), LocalVarInfo("j", "609", 100), LocalVarInfo("k", "610", 2000)])]
+
+Runtime.debugEff(res.reified)
+//│ > Debug EffectSig:
+//│ > handler:  FatalEffect
+//│ > handlerFun:  null
+//│ > resumed:  false
+//│ > <lastHandler is self>
+//│ > Cont$func$f$Debugging$_mls_L13_4_109$(pc=0, last) -> (null)
+//│ > 
+
+res.resumeWith(42)
+//│ > 42
+//│ = Infinity
+
+
+
+class Debugger() with
+  fun break(payload)
+
+module Test with
+  fun test(j)(using dbg: Debugger) =
+    let i = 0
+    let k = 2000
+    if i == 0 do
+      set i = dbg.break("whoops")
+    j / i
+  fun main()(using Debugger) =
+    test(12) + test(34)
+
+let res =
+  handle h = Debugger with
+    fun break(payload)(resume) = resume
+  use Debugger = h
+  Runtime.try(() => Test.main())
+//│ res = EffectHandle()
+
+:re
+res.raise()
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
+//│ 	at test(pc=0) with locals: j=12, dbg=Handler$h$, i=0, k=2000
+//│ 	at main(pc=4) with locals: =Handler$h$​
+//│ ​Error: Unhandled effects
+
+set res = res.resumeWith(42)
+
+:re
+res.raise()
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
+//│ 	at test(pc=0) with locals: j=34, dbg=Handler$h$, i=0, k=2000
+//│ 	at main(pc=6) with locals: =Handler$h$​
+//│ ​Error: Unhandled effects
+
+res.resumeWith(666)
+//│ = 0.33676533676533676
+
+

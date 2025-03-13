@@ -158,7 +158,7 @@ str
 //│ getLocals11 = function getLocals() {
 //│   let str1, prev, thisInfo, tmp11;
 //│   prev = [];
-//│   str1 = new runtime.LocalVarInfo.class("str", "1310", str);
+//│   str1 = new runtime.LocalVarInfo.class("str", "1329", str);
 //│   thisInfo = new runtime.FnLocalsInfo.class("\u2039top level\u203A", [
 //│     str1
 //│   ]);
@@ -181,7 +181,7 @@ str
 //│           getLocals13 = function getLocals() {
 //│             let arg1, prev, thisInfo, tmp15;
 //│             prev = getLocals11();
-//│             arg1 = new runtime.LocalVarInfo.class("arg", "1318", arg);
+//│             arg1 = new runtime.LocalVarInfo.class("arg", "1337", arg);
 //│             thisInfo = new runtime.FnLocalsInfo.class("perform", [
 //│               arg1
 //│             ]);
@@ -286,7 +286,7 @@ str
 //│             getLocals14 = function getLocals() {
 //│               let arg1, prev, thisInfo, tmp18;
 //│               prev = getLocals12();
-//│               arg1 = new runtime.LocalVarInfo.class("arg", "1330", arg);
+//│               arg1 = new runtime.LocalVarInfo.class("arg", "1349", arg);
 //│               thisInfo = new runtime.FnLocalsInfo.class("perform", [
 //│                 arg1
 //│               ]);
