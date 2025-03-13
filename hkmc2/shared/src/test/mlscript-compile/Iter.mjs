@@ -7,12 +7,13 @@ Iterable1 = function Iterable(mk1) {
   return new Iterable.class(mk1);
 };
 Iterable1.class = class Iterable {
+  #mk;
   constructor(mk) {
-    this.mk = mk;
-    this[globalThis.Symbol.iterator] = this.mk;
+    this.#mk = mk;
+    this[globalThis.Symbol.iterator] = this.#mk;
     runtime.Unit
   }
-  toString() { return "Iterable(" + globalThis.Predef.render(this.mk) + ")"; }
+  toString() { return "Iterable(" + "" + ")"; }
 };
 Iterator1 = function Iterator(next1) {
   return new Iterator.class(next1);

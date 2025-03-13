@@ -9,7 +9,6 @@ import syntax.{Fun, Ins, Mod}
 import semantics.Term
 import semantics.Elaborator.State
 import ImplicitResolver.ICtx.Type
-import ImplicitResolver.TyParamSymbol
 
 import Message.MessageContext
 
@@ -25,15 +24,13 @@ class CtxArgImpl extends CtxArg:
 
 object ImplicitResolver:
   
-  type TyParamSymbol = LocalSymbol & NamedSymbol
-  
   /*
    * An "implicit" or "instance" context, as opposed to the one in Elaborator.
    */
   case class ICtx(
     parent: Opt[ICtx], 
     iEnv: Map[Type.Sym, Ls[(Type, ICtx.Instance)]],
-    tEnv: Map[TyParamSymbol, Type]
+    tEnv: Map[VarSymbol, Type]
   ):
     
     def +(typ: Type.Concrete, sym: Symbol): ICtx =
@@ -41,7 +38,7 @@ object ImplicitResolver:
       val newEnv = iEnv + (typ.toSym -> newLs)
       copy(iEnv = newEnv)
     
-    def withTypeArg(param: TyParamSymbol, arg: Type): ICtx =
+    def withTypeArg(param: VarSymbol, arg: Type): ICtx =
       copy(tEnv = tEnv + (param -> arg))
     
     def get(query: Type.Concrete): Opt[ICtx.Instance] =
@@ -131,7 +128,7 @@ class ImplicitResolver(tl: TraceLogger)
                   msg"got ${targs.length.toString()}" -> base.toLoc :: Nil))
               (tparams zip targs).foldLeft(ictx):
                 case (ictx, (tparam, targ)) => (tparam.sym, resolveType(targ)) match
-                  case (sym: TyParamSymbol, S(typ)) =>
+                  case (sym: VarSymbol, S(typ)) =>
                     log(s"Resolving App with type arg ${sym} = $typ")
                     ictx.withTypeArg(sym, typ)
                   case _ => ictx
@@ -282,21 +279,50 @@ object ModuleChecker:
     .exists(_.isInstanceOf[TyParam])
   
   /** Checks if a term evaluates to a module value. */
-  def evalsToModule(t: Term): Bool = 
-    def isModule(t: Tree): Bool = t match
-      case Tree.TypeDef(Mod, _, _, _) => true
-      case _ => false
+  def evalsToModule(t: Term): Bool =
     def returnsModule(t: Tree.TermDef): Bool = t.annotatedResultType match
       case S(Tree.TypeDef(Mod, _, N, N)) => true
       case _ => false
+    def checkDecl(decl: Declaration): Bool = decl match
+      // All TypeLikeDef are not modules, except for modules themselves.
+      // Objects use ModuleDef but is not a module.
+      case ModuleDef(kind = Mod) =>
+        true
+      case _: TypeLikeDef =>
+        false
+      // Check Member/Local symbols
+      case defn: TermDefinition => 
+        defn.flags.isModTyped
+      case defn: Param =>
+        defn.flags.mod
+      case defn: TyParam =>
+        defn.flags.mod
+    def checkSym(sym: Symbol): Bool = sym match
+      case sym if sym.asMod.nonEmpty => true
+      case sym if sym.asBlkMember.flatMap(_.trmTree).exists(returnsModule) => true
+      case _: (BuiltinSymbol | TopLevelSymbol) => false
+      case sym: BlockLocalSymbol => sym.decl match
+        case S(decl) => checkDecl(decl)
+        case N =>
+          // Most local symbols are let-bindings 
+          // which do not have a definition at this point.
+          false
+      case sym: MemberSymbol[?] => sym.defn match
+        case S(defn) => checkDecl(defn)
+        case N =>
+          // At this point all member symbols should have definition,
+          // except for the class(-like) that are currently being elaborated.
+          // TODO: We will fix this by deferring the checks to the resolution stage.
+          false
+      case sym => 
+        lastWords(s"Unsupported symbol kind ${sym}")
     t match
       case Term.Blk(_, res) => evalsToModule(res)
       case Term.App(lhs, rhs) => lhs.symbol match
         case S(sym: BlockMemberSymbol) => sym.trmTree.exists(returnsModule)
         case _ => false
-      case t => t.symbol match
-        case S(sym: BlockMemberSymbol) => sym.modTree.exists(isModule)
-        case _ => false
+      case t: Term.Ref => checkSym(t.sym)
+      case t => t.symbol.exists(checkSym)
   
   /**
    * An extractor that extracts the (tree) definition of a module method.

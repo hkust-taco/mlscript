@@ -35,7 +35,7 @@ print of globalThis.console.log("Hello, world!")
 //│ > ()
 
 
-class Box(value)
+data class Box(value)
 
 fun foo() =
   if false do 0

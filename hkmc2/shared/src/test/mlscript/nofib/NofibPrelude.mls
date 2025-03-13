@@ -2,12 +2,12 @@
 type Char = String
 
 abstract class Option[out T]: Some[T] | None
-class Some[out T](x: T) extends Option[T]
+data class Some[out T](x: T) extends Option[T]
 object None extends Option
 
 fun fromSome(s) = if s is Some(x) then x
 
-class Lazy[out A](init: () -> A) with
+data class Lazy[out A](init: () -> A) with
   mut val cached: Option[A] = None
   fun get() =
     if cached is
@@ -20,7 +20,7 @@ fun lazy(x) = Lazy(x)
 fun force(x) = if x is Lazy then x.Lazy#get()
 
 abstract class List[out T]: Cons[T] | Nil
-class (::) Cons[out T](head: T, tail: List[T]) extends List[T] with
+data class (::) Cons[out T](head: T, tail: List[T]) extends List[T] with
   fun toString() =
     "[" + _internal_cons_to_str(Cons(head, tail)) + "]"
 object Nil extends List with
@@ -45,7 +45,7 @@ fun list(...args) = if args is
 
 type LazyList[out T] = Lazy[LzList[T]]
 abstract class LzList[out T]: LzCons[T] | LzNil
-class LzCons[out T](head: T, tail: LazyList[T]) extends LzList[T]
+data class LzCons[out T](head: T, tail: LazyList[T]) extends LzList[T]
 object LzNil extends LzList
 
 fun ltTup2(t1, t2, lt1, gt1, lt2) = if t1 is [a, b] and t2 is [c, d] and

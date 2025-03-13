@@ -15,7 +15,7 @@ fun delete_(xs, e) = deleteBy((x, y) => x === y, e, xs)
 
 fun listDiff(a, ls) = foldl(delete_, a, ls)
 
-class StateT[S, M, A](run)
+data class StateT[S, M, A](run)
 
 fun runStateT(m, s) = if m is StateT(run) then run(s)
 
@@ -38,7 +38,7 @@ fun put(s) = StateT(x => [Unit, s] :: Nil)
 let get = StateT(s => [s, s] :: Nil)
 //│ get = StateT([function])
 
-class Digits(i: List[Int], c: List[[Char, Int]])
+data class Digits(i: List[Int], c: List[[Char, Int]])
 
 fun digits(d) = if d is Digits(a, b) then a
 

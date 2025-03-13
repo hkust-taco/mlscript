@@ -71,7 +71,7 @@ foo(10, 0)
 
 
 :sjs
-class A(x) with
+data class A(x) with
   object M with
     fun getB() = x
   fun getA() = M.getB()
@@ -198,7 +198,7 @@ M.B().get
 :lift
 :sjs
 module M with
-  class A(x) with
+  data class A(x) with
     class B() with
       fun get = x
       fun newA_B(y) = A(y)

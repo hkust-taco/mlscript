@@ -65,7 +65,7 @@ open Str
 //│ ╙──      	            ^
 //│ = 3
 
-class Log(msg: Str)
+data class Log(msg: Str)
 
 :w
 id(@Log 5)

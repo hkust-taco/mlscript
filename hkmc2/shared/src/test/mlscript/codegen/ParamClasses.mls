@@ -4,7 +4,7 @@
 :sjs
 
 
-class Foo()
+data class Foo()
 //│ JS (unsanitized):
 //│ let Foo1;
 //│ Foo1 = function Foo() {
@@ -31,7 +31,7 @@ Foo.class
 //│ = class Foo {   constructor() {}   toString() { return "Foo(" + "" + ")"; } }
 
 
-class Foo(a)
+data class Foo(a)
 //│ JS (unsanitized):
 //│ let Foo3;
 //│ Foo3 = function Foo(a1) {
@@ -66,7 +66,7 @@ foo(27)
 //│ = Foo(27)
 
 
-class Foo(a, b)
+data class Foo(a, b)
 //│ JS (unsanitized):
 //│ let Foo5;
 //│ Foo5 = function Foo(a1, b1) {
@@ -128,7 +128,7 @@ Foo(print(1), print(2))
 //│ = Foo((), ())
 
 
-class Inner(c) with
+data class Inner(c) with
   fun i1(d) = c + d
   print(c)
 //│ JS (unsanitized):

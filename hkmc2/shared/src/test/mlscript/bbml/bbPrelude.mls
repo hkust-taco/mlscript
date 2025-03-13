@@ -12,10 +12,11 @@ declare class Bool
 declare class Int
 declare class Num
 
-class
-  CodeBase[T, C, S]
-  Region[T]
-  Ref[T, S](reg: Region[T], value: S)
+data
+  class
+    CodeBase[T, C, S]
+    Region[T]
+    Ref[T, S](reg: Region[T], value: S)
 
 @untyped
 set

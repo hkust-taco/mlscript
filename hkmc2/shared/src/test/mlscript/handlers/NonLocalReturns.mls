@@ -1,0 +1,138 @@
+:js
+:effectHandlers
+
+
+fun f() =
+  (() => return 100)()
+  print("Bad")
+f()
+//│ = 100
+
+
+fun foo(x) =
+  let xs = [() => return x + 1]
+  xs.0()
+
+foo(123)
+//│ = 124
+
+
+:expect 123
+fun f() =
+  let lam = () => return 123
+  fun g() =
+    let lam2 = () => return 200
+    lam()
+    lam2()
+    100
+  print("Ok")
+  g()
+  print("Bad")
+  100
+f()
+//│ > Ok
+//│ = 123
+
+:expect 100
+fun f() =
+  let lam = () => return 123
+  fun g() =
+    let lam2 = () => return 200
+    lam2()
+    lam()
+    100
+  print("Ok")
+  print(g())
+  print("Continue")
+  100
+f()
+//│ > Ok
+//│ > 200
+//│ > Continue
+//│ = 100
+
+
+:re
+fun f() = () => return 3
+f()()
+//│ ═══[RUNTIME ERROR] Error: Unhandled effects
+
+:re
+fun f(): () -> Int = () => return () => 3
+f()()
+//│ ═══[RUNTIME ERROR] Error: Unhandled effects
+
+
+:e
+return 100
+//│ ╔══[ERROR] Return statements are not allowed outside of a function.
+//│ ║  l.67: 	return 100
+//│ ╙──      	       ^^^
+
+:e
+if true do
+  while false do
+    let f = () => return 100
+//│ ╔══[ERROR] Return statements are not allowed outside of a function.
+//│ ║  l.75: 	    let f = () => return 100
+//│ ╙──      	                         ^^^
+
+:e
+fun f() =
+  type A = return "lol"
+//│ ╔══[ERROR] Return statements are not allowed in this context.
+//│ ║  l.82: 	  type A = return "lol"
+//│ ╙──      	                  ^^^^^
+
+
+:expect 100
+fun f() =
+  if true do
+    let f = null
+    let done = false
+    while not(done) do
+      set
+        f = () => return 100
+        done = true
+    f()
+    print("Bad")
+f()
+//│ = 100
+
+// broken due to handlers currently not handling `object` properly
+:fixme
+:expect 100
+fun f() =
+  object A with
+    return 100
+  4
+f()
+//│ ═══[RUNTIME ERROR] Expected: '100', got: '4'
+//│ = 4
+
+:expect 100
+fun f() =
+  class A with
+    return 100
+  new A
+f()
+//│ = 100
+
+:fixme
+:expect 100
+fun f() =
+  object A with
+    (() => return 100)()
+  4
+f()
+//│ ═══[RUNTIME ERROR] Expected: '100', got: '4'
+//│ = 4
+
+:expect 100
+fun f() =
+  class A with
+    (() => return 100)()
+  new A
+  4
+f()
+//│ = 100

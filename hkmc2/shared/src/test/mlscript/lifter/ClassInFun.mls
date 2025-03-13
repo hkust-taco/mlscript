@@ -60,12 +60,12 @@ f() + f() + f()
 //│     return (h$0, tmp$1, tmp$2, tmp$3, tmp$4) => {
 //│       let tmp1;
 //│       tmp1 = super(null);
-//│       this.pc = pc;
 //│       this.h$0 = h$0;
 //│       this.tmp$1 = tmp$1;
 //│       this.tmp$2 = tmp$2;
 //│       this.tmp$3 = tmp$3;
 //│       this.tmp$4 = tmp$4;
+//│       this.pc = pc;
 //│       return this;
 //│     }
 //│   }
@@ -145,9 +145,9 @@ f() + f() + f()
 //│     return (h$0, tmp$1) => {
 //│       let tmp1;
 //│       tmp1 = super(null);
-//│       this.pc = pc;
 //│       this.h$0 = h$0;
 //│       this.tmp$1 = tmp$1;
+//│       this.pc = pc;
 //│       return this;
 //│     }
 //│   }
@@ -270,7 +270,7 @@ fun f(used1, unused1) =
     fun h = used3
     used1 + h
   let unused2 = 2
-  class Test(a) with
+  data class Test(a) with
     fun get() = used1
   Test(unused1)
 f(1, 2).get()
@@ -315,8 +315,8 @@ f(1, 2).get()
 //│ Test3.class = class Test2 {
 //│   constructor(a) {
 //│     return (used1$0) => {
-//│       this.a = a;
 //│       this.used1$0 = used1$0;
+//│       this.a = a;
 //│       return this;
 //│     }
 //│   }
@@ -635,7 +635,6 @@ fun f() =
   foo()(0)
 f().get()
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
-//│ = 0
 
 :sjs
 :lift

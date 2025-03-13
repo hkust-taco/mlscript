@@ -6,9 +6,9 @@
 
 
 abstract class Option[T]
-class Some[T](value: T) extends Option[T]
+data class Some[T](value: T) extends Option[T]
 object None extends Option[Nothing]
-class Pair[A, B](x: A, y: B)
+data class Pair[A, B](x: A, y: B)
 
 // All `add_n` functions should be inferred to have the same type.
 

@@ -42,12 +42,11 @@ sealed abstract class Block extends Product with AutoLocated:
       val rest = rst.definedVars
       if defn.isOwned then rest else rest + defn.sym
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => bod.definedVars ++ rst.definedVars + lhs
-    case HandleBlockReturn(_) => Set.empty
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
     case Label(lbl, bod, rst) => bod.definedVars ++ rst.definedVars
   
   lazy val size: Int = this match
-    case _: Return | _: Throw | _: End | _: Break | _: Continue | _: HandleBlockReturn => 1
+    case _: Return | _: Throw | _: End | _: Break | _: Continue => 1
     case Begin(sub, rst) => sub.size + rst.size
     case Assign(_, _, rst) => 1 + rst.size
     case AssignField(_, _, _, rst) => 1 + rst.size
@@ -97,7 +96,6 @@ sealed abstract class Block extends Product with AutoLocated:
     case Define(defn, rest) => defn.freeVars ++ rest.freeVars
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
       (bod.freeVars - lhs) ++ rst.freeVars ++ hdr.flatMap(_.freeVars)
-    case HandleBlockReturn(res) => res.freeVars
     case End(msg) => Set.empty
   
   // TODO: freeVarsLLIR skips `fun` and `cls` in `Call` and `Instantiate` respectively, which is needed in some
@@ -121,7 +119,6 @@ sealed abstract class Block extends Product with AutoLocated:
     case Define(defn, rest) => defn.freeVarsLLIR ++ rest.freeVarsLLIR
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
       (bod.freeVarsLLIR - lhs) ++ rst.freeVarsLLIR ++ hdr.flatMap(_.freeVars)
-    case HandleBlockReturn(res) => res.freeVarsLLIR
     case End(msg) => Set.empty
   
   lazy val subBlocks: Ls[Block] = this match
@@ -137,10 +134,9 @@ sealed abstract class Block extends Product with AutoLocated:
     
     // TODO rm Lam from values and thus the need for these cases
     case Return(r, _) => r.subBlocks
-    case HandleBlockReturn(r) => r.subBlocks
     case Throw(r) => r.subBlocks
     
-    case _: Return | _: Throw | _: Break | _: Continue | _: End | _: HandleBlockReturn => Nil
+    case _: Return | _: Throw | _: Break | _: Continue | _: End => Nil
   
   // Moves definitions in a block to the top. Only scans the top-level definitions of the block;
   // i.e, definitions inside other definitions are not moved out. Definitions inside `match`/`if`
@@ -295,8 +291,6 @@ case class HandleBlock(
     rest: Block
 ) extends Block with ProductWithTail
 
-case class HandleBlockReturn(res: Result) extends BlockTail
-
 sealed abstract class Defn:
   val innerSym: Opt[MemberSymbol[?]]
   val sym: BlockMemberSymbol
@@ -309,23 +303,27 @@ sealed abstract class Defn:
     case ClsLikeDefn(preCtor = preCtor, ctor = ctor, methods = mtds) =>
       preCtor :: ctor :: mtds.flatMap(_.subBlocks)
   
+  // * Note that `privateFields` abd `publicFields` can't possibly be free since they are never
+  // * referred to directly (they are only accessed through selections).
+  // * At some point we'll want to make `Local` more specific than `Symbol` to express this
+  // * in the type system.
   lazy val freeVars: Set[Local] = this match
     case FunDefn(own, sym, params, body) => body.freeVars -- params.flatMap(_.paramSyms) - sym
     case ValDefn(owner, k, sym, rhs) => rhs.freeVars
     case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, 
-      methods, privateFields, publicFields, preCtor, ctor) =>
+        methods, privateFields, publicFields, preCtor, ctor) =>
       preCtor.freeVars
         ++ ctor.freeVars ++ methods.flatMap(_.freeVars)
-        -- privateFields -- publicFields.map(_.sym) -- auxParams.flatMap(_.paramSyms)
+        -- auxParams.flatMap(_.paramSyms)
   
   lazy val freeVarsLLIR: Set[Local] = this match
     case FunDefn(own, sym, params, body) => body.freeVarsLLIR -- params.flatMap(_.paramSyms) - sym
     case ValDefn(owner, k, sym, rhs) => rhs.freeVarsLLIR
     case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, 
-      methods, privateFields, publicFields, preCtor, ctor) =>
+        methods, privateFields, publicFields, preCtor, ctor) =>
       preCtor.freeVarsLLIR
         ++ ctor.freeVarsLLIR ++ methods.flatMap(_.freeVarsLLIR)
-        -- privateFields -- publicFields.map(_.sym) -- auxParams.flatMap(_.paramSyms)
+        -- auxParams.flatMap(_.paramSyms)
   
 final case class FunDefn(
     owner: Opt[InnerSymbol],
@@ -353,17 +351,15 @@ final case class ClsLikeDefn(
     parentPath: Opt[Path],
     methods: Ls[FunDefn],
     privateFields: Ls[TermSymbol],
-    publicFields: Ls[TermDefinition],
+    publicFields: Ls[BlockMemberSymbol],
     preCtor: Block,
     ctor: Block,
 ) extends Defn:
-  publicFields.foreach: f =>
-    require(f.owner.contains(isym))
   val innerSym = S(isym)
 
 final case class Handler(
     sym: BlockMemberSymbol,
-    resumeSym: LocalSymbol & NamedSymbol,
+    resumeSym: VarSymbol,
     params: Ls[ParamList],
     body: Block,
 ):
@@ -411,6 +407,7 @@ sealed abstract class Result:
     case Value.Lit(lit) => Set.empty
     case Value.Lam(params, body) => body.freeVars -- params.paramSyms
     case Value.Arr(elems) => elems.flatMap(_.value.freeVars).toSet
+    case Value.Rcd(elems) => elems.flatMap(_.value.freeVars).toSet
     case DynSelect(qual, fld, arrayIdx) => qual.freeVars ++ fld.freeVars
 
   lazy val freeVarsLLIR: Set[Local] = this match
@@ -422,6 +419,7 @@ sealed abstract class Result:
     case Value.Lit(lit) => Set.empty
     case Value.Lam(params, body) => body.freeVarsLLIR -- params.paramSyms
     case Value.Arr(elems) => elems.flatMap(_.value.freeVarsLLIR).toSet
+    case Value.Rcd(elems) => elems.flatMap(_.value.freeVarsLLIR).toSet
     case DynSelect(qual, fld, arrayIdx) => qual.freeVarsLLIR ++ fld.freeVarsLLIR
   
 // type Local = LocalSymbol

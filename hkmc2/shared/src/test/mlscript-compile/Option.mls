@@ -8,7 +8,7 @@ open Predef
 
 module Option with ...
 
-class Some(value)
+data class Some(value)
 object None
 
 fun isDefined(x) = if x is
@@ -17,7 +17,7 @@ fun isDefined(x) = if x is
 
 fun test() = 2134 |> print
 
-class Both(fst, snd)
+data class Both(fst, snd)
 
 
 fun getOrElse(opt, default) = if opt is

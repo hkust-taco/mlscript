@@ -1,7 +1,7 @@
 :js
 
 
-class Some(value)
+data class Some(value)
 object None
 
 
@@ -69,7 +69,7 @@ isDefined(None)
 
 
 module Foo with
-  class Other(v)
+  data class Other(v)
 
 val isOther = x => if x is
   Foo.Other(_) then true

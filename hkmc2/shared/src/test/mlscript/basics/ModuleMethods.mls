@@ -30,18 +30,35 @@ module N with
 //│ ║  l.28: 	  fun f3() = M
 //│ ╙──      	      ^^^^
 
+:todo
+:e
+module N with
+  fun f3() = return M
+
+:todo
+:e
+module N with
+  fun f3() = (() => M)()
+
+// * [test:T4]
+:todo
+:e
+:effectHandlers
+module N with
+  fun f3() = (() => return M)()
+
 :e
 module N with
   fun f4[T](): module T = M
 //│ ╔══[ERROR] Functions returning module values must have concrete return types.
-//│ ║  l.35: 	  fun f4[T](): module T = M
+//│ ║  l.52: 	  fun f4[T](): module T = M
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^
 
 :e
 module N with
   fun f5(): M = M
 //│ ╔══[ERROR] The return type of functions returning module values must be prefixed with module keyword.
-//│ ║  l.42: 	  fun f5(): M = M
+//│ ║  l.59: 	  fun f5(): M = M
 //│ ╙──      	      ^^^^^^^
 
 
@@ -50,32 +67,34 @@ fun f6(m: M) = m
 :e
 f6(M)
 //│ ╔══[ERROR] Only module parameters may receive module arguments (values).
-//│ ║  l.51: 	f6(M)
+//│ ║  l.68: 	f6(M)
 //│ ╙──      	   ^
 //│ = M
 
 :e
 f6(M.self())
 //│ ╔══[ERROR] Only module parameters may receive module arguments (values).
-//│ ║  l.58: 	f6(M.self())
+//│ ║  l.75: 	f6(M.self())
 //│ ╙──      	   ^^^^^^^^
 //│ = M
 
 :e
 fun f7(): module M
 //│ ╔══[ERROR] Only module methods may return module values.
-//│ ║  l.65: 	fun f7(): module M
+//│ ║  l.82: 	fun f7(): module M
 //│ ╙──      	    ^^^^^^^^^^^^^^
 
 
-:todo // should be an error
 :e
 fun f8(module m: M) = m
+//│ ╔══[ERROR] Functions returning module values must have explicit return types.
+//│ ║  l.89: 	fun f8(module m: M) = m
+//│ ╙──      	    ^^^^^^^^^^^^^^^
 
 :e
 fun f9(module m: M): module M = m
 //│ ╔══[ERROR] Only module methods may return module values.
-//│ ║  l.76: 	fun f9(module m: M): module M = m
+//│ ║  l.95: 	fun f9(module m: M): module M = m
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 module Test with

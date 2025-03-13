@@ -4,7 +4,7 @@
 :sjs
 
 
-class Foo(arguments)
+data class Foo(arguments)
 //│ JS (unsanitized):
 //│ let Foo1;
 //│ Foo1 = function Foo(arguments2) {
@@ -18,7 +18,7 @@ class Foo(arguments)
 //│ };
 
 
-class Foo(eval)
+data class Foo(eval)
 //│ JS (unsanitized):
 //│ let Foo3;
 //│ Foo3 = function Foo(eval2) {
@@ -32,7 +32,7 @@ class Foo(eval)
 //│ };
 
 
-class Foo(implements)
+data class Foo(implements)
 //│ JS (unsanitized):
 //│ let Foo5;
 //│ Foo5 = function Foo(implements2) {
@@ -46,7 +46,7 @@ class Foo(implements)
 //│ };
 
 
-class Foo(package)
+data class Foo(package)
 //│ JS (unsanitized):
 //│ let Foo7;
 //│ Foo7 = function Foo(package2) {
@@ -60,7 +60,7 @@ class Foo(package)
 //│ };
 
 
-class Foo(protected)
+data class Foo(protected)
 //│ JS (unsanitized):
 //│ let Foo9;
 //│ Foo9 = function Foo(protected2) {
@@ -74,7 +74,7 @@ class Foo(protected)
 //│ };
 
 
-class Foo(static)
+data class Foo(static)
 //│ JS (unsanitized):
 //│ let Foo11;
 //│ Foo11 = function Foo(static2) {

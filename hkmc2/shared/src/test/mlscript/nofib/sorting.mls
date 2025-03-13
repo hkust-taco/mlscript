@@ -114,7 +114,7 @@ abstract class Tree[T]: Tip | Branch[T]
 
 object Tip extends Tree[Nothing]
 
-class Branch[T](a: T, l: Tree[T], r: Tree[T]) extends Tree[T]
+data class Branch[T](a: T, l: Tree[T], r: Tree[T]) extends Tree[T]
 
 fun treeSort(param) =
   fun mkTree(innerparam) =
@@ -133,9 +133,10 @@ abstract class Tree2[T]: Tip2 | Twig2[T] | Branch2[T]
 
 object Tip2 extends Tree2[Nothing]
 
-class
-  Twig2[T](a: T) extends Tree2[T]
-  Branch2[T](a: T, l: Tree2[T], r: Tree2[T]) extends Tree2[T]
+data
+  class
+    Twig2[T](a: T) extends Tree2[T]
+    Branch2[T](a: T, l: Tree2[T], r: Tree2[T]) extends Tree2[T]
 
 fun treeSort2(param) =
   fun mkTree(innerparam) =

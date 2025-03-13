@@ -2,7 +2,7 @@
 :js
 
 :expect 6
-class A(a) with
+data class A(a) with
   fun f(b) =
     fun g(c) = 
       set b = 2

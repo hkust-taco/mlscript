@@ -169,7 +169,7 @@ module TraceLogger with
     else ()
 
 
-class Test with
+data class Test with
   print("Test")
   val y = 1
 

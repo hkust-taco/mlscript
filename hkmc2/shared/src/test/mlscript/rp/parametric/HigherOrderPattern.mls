@@ -35,7 +35,7 @@ A is @compile Nullable(A)
 2 is @compile Nullable(1 | 2)
 //│ = true
 
-class Pair[A, B](val first: A, val second: B)
+data class Pair[A, B](val first: A, val second: B)
 
 pattern Stack(pattern T) = null | Pair(T, Stack(T))
 

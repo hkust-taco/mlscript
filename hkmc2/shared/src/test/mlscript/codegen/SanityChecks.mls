@@ -86,7 +86,7 @@ f(2)
 :expect NaN
 :ssjs
 :noSanityCheck
-class Cls(x, y) with
+data class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 Cls(1, 2).f(3)
 //│ JS:
@@ -113,7 +113,7 @@ Cls(1, 2).f(3)
 
 :ssjs
 :re
-class Cls(x, y) with
+data class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 Cls(1, 2).f(3)
 //│ JS:
@@ -145,7 +145,7 @@ Cls(1, 2).f(3)
 
 :ssjs
 :re
-class Cls(x, y) with
+data class Cls(x, y) with
   fun f(z, p)(q, s) = x + y + z + p + q + s
 Cls(1, 2).f(3, 4)(5)
 //│ JS:
@@ -221,7 +221,7 @@ globalThis.x()
 :re
 :ssjs
 module M with
-  class A(x) with
+  data class A(x) with
     fun f(y) = x + y
 if M.A(1).y is
   x and x == 1 then x

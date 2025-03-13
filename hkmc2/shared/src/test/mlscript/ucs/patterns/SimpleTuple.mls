@@ -28,7 +28,7 @@ test("")
 test(12)
 //│ ═══[RUNTIME ERROR] Error: match error
 
-class Point(x: Int, y: Int)
+data class Point(x: Int, y: Int)
 
 fun with_other_constructors(thing) =
   if thing is

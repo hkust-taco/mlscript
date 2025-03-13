@@ -1,7 +1,7 @@
 :js
 
 
-class Foo(val x) with
+data class Foo(val x) with
   val y = x
 
 
@@ -60,7 +60,7 @@ case
 //│   stats = Nil
 //│   res = Lam:
 //│     params = ParamList:
-//│       flags = ParamListFlags of false
+//│       flags = ()
 //│       params = Ls of 
 //│         Param:
 //│           flags = ()
@@ -94,7 +94,7 @@ case
 //│       sym = member:lambda
 //│       params = Ls of 
 //│         ParamList:
-//│           flags = ParamListFlags of false
+//│           flags = ()
 //│           params = Ls of 
 //│             Param:
 //│               flags = ()

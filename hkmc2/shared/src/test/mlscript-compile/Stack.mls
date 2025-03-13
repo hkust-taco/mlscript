@@ -8,7 +8,7 @@ open Predef
 
 module Stack[T] with ...
 
-class (::) Cons[A](head: A, tail: Stack[A])
+data class (::) Cons[A](head: A, tail: Stack[A])
 object Nil
 
 fun isEmpty(xs) = xs is Nil

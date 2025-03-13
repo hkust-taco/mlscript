@@ -44,11 +44,11 @@ hi(0)
 //│     return (n$0, scrut$1, tmp$2, stackDelayRes$3) => {
 //│       let tmp;
 //│       tmp = super(null);
-//│       this.pc = pc;
 //│       this.n$0 = n$0;
 //│       this.scrut$1 = scrut$1;
 //│       this.tmp$2 = tmp$2;
 //│       this.stackDelayRes$3 = stackDelayRes$3;
+//│       this.pc = pc;
 //│       return this;
 //│     }
 //│   }
@@ -139,8 +139,8 @@ hi(0)
 //│     return (res$0) => {
 //│       let tmp;
 //│       tmp = super(null);
-//│       this.pc = pc;
 //│       this.res$0 = res$0;
+//│       this.pc = pc;
 //│       return this;
 //│     }
 //│   }
@@ -213,13 +213,13 @@ sum(10000)
 //│     return (n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5) => {
 //│       let tmp;
 //│       tmp = super(null);
-//│       this.pc = pc;
 //│       this.n$0 = n$0;
 //│       this.scrut$1 = scrut$1;
 //│       this.tmp$2 = tmp$2;
 //│       this.tmp$3 = tmp$3;
 //│       this.curDepth$4 = curDepth$4;
 //│       this.stackDelayRes$5 = stackDelayRes$5;
+//│       this.pc = pc;
 //│       return this;
 //│     }
 //│   }
@@ -331,8 +331,8 @@ sum(10000)
 //│     return (res$0) => {
 //│       let tmp;
 //│       tmp = super(null);
-//│       this.pc = pc;
 //│       this.res$0 = res$0;
+//│       this.pc = pc;
 //│       return this;
 //│     }
 //│   }

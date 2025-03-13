@@ -25,19 +25,21 @@ val try_catch = RuntimeJS.try_catch
 
 
 // For `pattern` definitions
-class MatchResult(captures)
-class MatchFailure(errors)
+data class MatchResult(captures)
+data class MatchFailure(errors)
 
 
 // Private definitions for algebraic effects
 
-abstract class FunctionContFrame(next) with
+data abstract class FunctionContFrame(next) with
   fun resume(value)
-class HandlerContFrame(next, nextHandler, handler)
+data class HandlerContFrame(next, nextHandler, handler)
 
-class ContTrace(next, last, nextHandler, lastHandler, resumed)
-class EffectSig(contTrace, handler, handlerFun)
-class Return(value)
+data class ContTrace(next, last, nextHandler, lastHandler, resumed)
+data class EffectSig(contTrace, handler, handlerFun)
+
+class NonLocalReturn with
+  fun ret(value)
 
 fun showFunctionContChain(cont, hl, vis, reps) =
   if cont is FunctionContFrame then

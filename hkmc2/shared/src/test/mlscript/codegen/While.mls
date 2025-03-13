@@ -189,7 +189,7 @@ if x
 // TODO use
 // import "../../mlscript-compile/Stack.mls"
 
-class Cons(hd, tl)
+data class Cons(hd, tl)
 
 :sjs
 fun f(ls) =

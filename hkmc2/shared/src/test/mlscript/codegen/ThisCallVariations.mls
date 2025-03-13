@@ -60,7 +60,7 @@ id(Example) . oops(2)
 //│ = [2, 1]
 
 
-class Example2(val a) with
+data class Example2(val a) with
   val a = 1
   fun f(inc) = Example2(a + inc)
 

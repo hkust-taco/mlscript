@@ -4,7 +4,7 @@
 //│ Type: ⊤
 
 
-class Seq[A, E](next: () ->{E} A)
+data class Seq[A, E](next: () ->{E} A)
 //│ Type: ⊤
 
 fun map: [A, B, E] -> Seq[out A, out E] -> (A ->{E} B) -> Seq[out B, out E]

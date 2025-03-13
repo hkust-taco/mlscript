@@ -1,7 +1,7 @@
 :js
 
 
-class Foo(a)
+data class Foo(a)
 
 
 :todo // Treat else-less single-branch UCS as implicitly returning () in default case

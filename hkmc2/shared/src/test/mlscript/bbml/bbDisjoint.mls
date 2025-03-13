@@ -4,7 +4,7 @@
 //│ Type: ⊤
 
 
-class Pair[P, Q](fst: P, snd: Q)
+data class Pair[P, Q](fst: P, snd: Q)
 //│ Type: ⊤
 
 fun fork: [A, B extends ~A, T1, T2] -> (Any ->{A} T1, Any ->{B} T2) ->{A | B} Pair[out T1, out T2]

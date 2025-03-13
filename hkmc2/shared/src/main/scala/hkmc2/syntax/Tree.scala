@@ -189,6 +189,8 @@ enum Tree extends AutoLocated:
         m match
         case Modified(Keyword.`declare`, modLoc, s) =>
           Annotated(Keywrd(Keyword.`declare`), s.desugared) // TODO properly attach location
+        case Modified(Keyword.`data`, modLoc, s) =>
+          Annotated(Keywrd(Keyword.`data`), s.desugared) // TODO properly attach location
         case Modified(Keyword.`abstract`, modLoc, s) =>
           Annotated(Keywrd(Keyword.`abstract`), s.desugared) // TODO properly attach location
         case Modified(Keyword.`mut`, modLoc, TermDef(ImmutVal, anme, rhs)) =>

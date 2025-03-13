@@ -2,7 +2,7 @@
 
 
 module Foo with
-  class C(x)
+  data class C(x)
 
 Foo.C(123).x
 //│ = 123

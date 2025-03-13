@@ -28,7 +28,7 @@ abstract class Map[K, A]: Tip | Bin[K, A]
 
 object Tip extends Map[Anything, Nothing]
 
-class Bin[K, A](i: Int, k: K, v: A, l: Map[K, A], r: Map[K, A]) extends Map[K, A]
+data class Bin[K, A](i: Int, k: K, v: A, l: Map[K, A], r: Map[K, A]) extends Map[K, A]
 
 fun mapLookup(k, m) = if m is
   Tip then None
@@ -90,7 +90,7 @@ fun insert(kx, x, m) = if m is
 
 fun indent(n) = if n <= 0 then Nil else " " :: indent(n - 1)
 
-class P(i: Char, a: List[List[[Int, Int]]], b: List[List[[Int, Int]]])
+data class P(i: Char, a: List[List[[Int, Int]]], b: List[List[[Int, Int]]])
 
 abstract class S: Male | Female
 
@@ -106,10 +106,11 @@ abstract class Solution: Soln | Choose | Fail
 
 type Board = Map[[Int, Int], Char]
 
-class
-  Soln(b: Board) extends Solution
-  Choose(s: List[Solution]) extends Solution
-  Fail(b: Board, s: [Int, Int]) extends Solution
+data
+  class
+    Soln(b: Board) extends Solution
+    Choose(s: List[Solution]) extends Solution
+    Fail(b: Board, s: [Int, Int]) extends Solution
 
 fun addIntInt(row_col, orow_ocol) = if row_col is [row, col] and orow_ocol is [orow, ocol] then
   [row + orow, col + ocol]
@@ -300,10 +301,11 @@ object
 
 abstract class TextDetails: Chr | Str | PStr
 
-class
-  Chr(c: Char) extends TextDetails
-  Str(s: String) extends TextDetails
-  PStr(s: String) extends TextDetails
+data
+  class
+    Chr(c: Char) extends TextDetails
+    Str(s: String) extends TextDetails
+    PStr(s: String) extends TextDetails
 
 abstract class AnnotDetails: AnnotStart | NoAnnot | AnnotEnd
 
@@ -311,7 +313,7 @@ object
   AnnotStart extends AnnotDetails
   AnnotEnd extends AnnotDetails
 
-class NoAnnot(t: TextDetails, i: Int) extends AnnotDetails
+data class NoAnnot(t: TextDetails, i: Int) extends AnnotDetails
 
 abstract class IsEmptyy: IsEmpty | NotEmpty
 
@@ -325,13 +327,14 @@ object
   Empty extends Doc
   NoDoc extends Doc
 
-class
-  NilAbove(d: Doc) extends Doc
-  TextBeside(a: AnnotDetails, d: Doc) extends Doc
-  Nest(i: Int, d: Doc) extends Doc
-  Union(d1: Doc, d2: Doc) extends Doc
-  Beside(d1: Doc, b: Bool, d2: Doc) extends Doc
-  Above(d1: Doc, b: Bool, d2: Doc) extends Doc
+data
+  class
+    NilAbove(d: Doc) extends Doc
+    TextBeside(a: AnnotDetails, d: Doc) extends Doc
+    Nest(i: Int, d: Doc) extends Doc
+    Union(d1: Doc, d2: Doc) extends Doc
+    Beside(d1: Doc, b: Bool, d2: Doc) extends Doc
+    Above(d1: Doc, b: Bool, d2: Doc) extends Doc
 
 let spaceText = NoAnnot(Chr(" "), 1)
 //│ spaceText = NoAnnot(Chr(" "), 1)

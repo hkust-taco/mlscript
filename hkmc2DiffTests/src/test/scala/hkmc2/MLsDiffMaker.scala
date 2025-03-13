@@ -125,7 +125,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       given Config = mkConfig
       importFile(preludeFile, verbose = false)
       prelude = curCtx
-    curCtx = curCtx.nest(N)
+    curCtx = curCtx.nestLocal
     super.run()
   
   
@@ -168,7 +168,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     val res = p.parseAll(p.block(allowNewlines = true))
     val imprtSymbol =
       semantics.TopLevelSymbol("import#"+file.baseName)
-    given Elaborator.Ctx = curCtx.nest(N)
+    given Elaborator.Ctx = curCtx.nestLocal
     val elab = Elaborator(etl, wd, Ctx.empty)
     try
       val resBlk = new syntax.Tree.Block(res)
@@ -232,7 +232,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     //   semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1
     // given Elaborator.Ctx = curCtx.nest(S(blockSymbol))
-    given Elaborator.Ctx = curCtx.nest(N)
+    given Elaborator.Ctx = curCtx.nestLocal
     val blk = new syntax.Tree.Block(trees)
     val (e, newCtx) = elab.topLevel(blk)
     curCtx = newCtx

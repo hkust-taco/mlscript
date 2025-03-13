@@ -117,6 +117,7 @@ class InstSymbol(val origin: Symbol)(using State) extends LocalSymbol:
 
 class VarSymbol(val id: Ident)(using State) extends BlockLocalSymbol(id.name) with NamedSymbol with LocalSymbol:
   val name: Str = id.name
+  override def toLoc: Opt[Loc] = id.toLoc
   // override def toString: Str = s"$name@$uid"
   override def subst(using s: SymbolSubst): VarSymbol = s.mapVarSym(this)
 

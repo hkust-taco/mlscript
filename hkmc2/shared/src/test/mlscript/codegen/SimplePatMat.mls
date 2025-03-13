@@ -1,7 +1,7 @@
 :js
 
 
-class Some[out A](value: A)
+data class Some[out A](value: A)
 
 
 :todo

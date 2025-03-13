@@ -22,9 +22,9 @@ fun last(ls) =
     h :: t then go(h, t)
     else throw Error("last: empty list")
 
-class K(s: String, c1: Char, c2: Char, i: Int)
+data class K(s: String, c1: Char, c2: Char, i: Int)
 
-class H(f: Option[Int], s: Option[Int], ls: List[Int])
+data class H(f: Option[Int], s: Option[Int], ls: List[Int])
 
 fun ends(k) = if k is K(_, a, z, _) then a :: z :: Nil
 
@@ -92,9 +92,10 @@ let maxval = listLen(freqtab)
 
 abstract class Status[T]: NotEver | YesIts[T]
 
-class
-  NotEver(i: Int) extends Status[Nothing]
-  YesIts[T](i: Int, t: T) extends Status[T]
+data
+  class
+    NotEver(i: Int) extends Status[Nothing]
+    YesIts[T](i: Int, t: T) extends Status[T]
 
 fun hinsert(h, hh) = if hh is H(lo, hi, hs) then
   let lo_ = minm(lo, h)

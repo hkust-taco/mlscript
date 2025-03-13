@@ -2,7 +2,7 @@
 
 
 module M with
-  class Foo(x) with
+  data class Foo(x) with
     fun m() = this.x + 1
     fun n(y) = this.x + y
 

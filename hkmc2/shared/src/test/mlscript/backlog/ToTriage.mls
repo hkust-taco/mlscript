@@ -207,7 +207,7 @@ fun main() =
 // * Or these parameters should have default values.
 
 :sjs
-object Cls(x) with
+data object Cls(x) with
   fun huh = x
 //│ JS (unsanitized):
 //│ let Cls1;
@@ -397,7 +397,7 @@ set arr.0 = 1
 
 // ——— ——— ———
 
-class Foo(x, y)
+data class Foo(x, y)
 
 // TODO missing sanity check
 Foo(1)

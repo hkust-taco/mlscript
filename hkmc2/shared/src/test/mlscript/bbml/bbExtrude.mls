@@ -48,7 +48,7 @@ y `=> (let t = run(x `=> x `+ y) in y)
 //│ ╙── because: cannot constrain  y  <:  ¬()
 //│ Type: CodeBase[out 'y -> 'y, ⊥, ?]
 
-class C[A](m: A, n: A -> Int)
+data class C[A](m: A, n: A -> Int)
 //│ Type: ⊤
 
 

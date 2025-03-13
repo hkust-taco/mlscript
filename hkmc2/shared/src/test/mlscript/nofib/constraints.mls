@@ -5,9 +5,9 @@
 
 
 // -- Figure 1. CSPs in Haskell.
-class Assign(varr: Int, value: Int)
+data class Assign(varr: Int, value: Int)
 
-class CSP(vars: Int, vals: Int, rel: Int)
+data class CSP(vars: Int, vals: Int, rel: Int)
 
 :...
 //│ ————————————————————————————————————————————————————————————————————————————————
@@ -86,7 +86,7 @@ fun safe(as1, as2) = if as1 is Assign(i, m) and as2 is Assign(j, n) then not(m =
 fun queens(n) = CSP(n, n, safe)
 
 // -- Figure 2.  Trees in Haskell.
-class Node[out T](lab: T, children: List[Node[T]])
+data class Node[out T](lab: T, children: List[Node[T]])
 
 fun label(n) = if n is Node(l, _) then l
 
@@ -145,7 +145,7 @@ fun btsolver0(csp) =
 
 // -- Figure 6. Conflict-directed solving of CSPs.
 abstract class ConflictSet: Known | Unknown
-class Known(vs: List[Int]) extends ConflictSet
+data class Known(vs: List[Int]) extends ConflictSet
 object Unknown extends ConflictSet
 
 fun knownConflict(c) = if c is

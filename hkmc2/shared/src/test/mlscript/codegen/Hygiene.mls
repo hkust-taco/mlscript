@@ -95,7 +95,7 @@ module Test with
 
 
 :sjs
-class Cls(x) with
+data class Cls(x) with
   let x += 1
   fun foo = x
   let x *= 2
@@ -110,8 +110,8 @@ class Cls(x) with
 //│   #x;
 //│   #x1;
 //│   constructor(x2) {
-//│     this.x = x2;
 //│     let tmp, tmp1;
+//│     this.x = x2;
 //│     tmp = this.x + 1;
 //│     this.#x = tmp;
 //│     tmp1 = this.#x * 2;
@@ -158,10 +158,10 @@ foo()
 
 :sjs
 module Whoops with
-  val v = this
+  val v: module Whoops = this
   fun f() = "Hello"
   module Whoops with
-    val w = this
+    val w: module Whoops = this
     fun g() = f()
 //│ JS (unsanitized):
 //│ let Whoops2;

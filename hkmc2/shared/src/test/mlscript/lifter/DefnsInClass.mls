@@ -2,8 +2,8 @@
 :lift
 
 :sjs
-class A(x) with
-  class B(y) with
+data class A(x) with
+  data class B(y) with
     fun getB() = x + y
   fun getA() = B(2).getB()
 //│ JS (unsanitized):
@@ -28,8 +28,8 @@ class A(x) with
 //│ B1.class = class B {
 //│   constructor(y) {
 //│     return (A$instance$0) => {
-//│       this.y = y;
 //│       this.A$instance$0 = A$instance$0;
+//│       this.y = y;
 //│       return this;
 //│     }
 //│   }
