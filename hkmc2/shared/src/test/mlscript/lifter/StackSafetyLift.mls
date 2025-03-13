@@ -573,8 +573,8 @@ fun max(a, b) = if a < b then b else a
 //│ getLocals$20 = function getLocals$(a, b) {
 //│   let a1, b1, prev, thisInfo, tmp5;
 //│   prev = getLocals36();
-//│   a1 = new runtime.LocalVarInfo.class("a", "2784", a);
-//│   b1 = new runtime.LocalVarInfo.class("b", "2785", b);
+//│   a1 = new runtime.LocalVarInfo.class("a", "2780", a);
+//│   b1 = new runtime.LocalVarInfo.class("b", "2781", b);
 //│   thisInfo = new runtime.FnLocalsInfo.class("max", [
 //│     a1,
 //│     b1

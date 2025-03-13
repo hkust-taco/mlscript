@@ -211,18 +211,18 @@ Runtime1 = class Runtime {
     throw globalThis.Error("Unhandled effects");
   } 
   static showFunctionContChain(cont, hl, vis, reps) {
-    let scrut, result, scrut1, scrut2, scrut3, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, lambda;
+    let scrut, result, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, lambda;
     if (cont instanceof Runtime.FunctionContFrame.class) {
       tmp = cont.constructor.name + "(pc=";
       tmp1 = tmp + cont.pc;
       result = tmp1;
       lambda = (undefined, function (m, marker) {
-        let scrut4, tmp12, tmp13;
-        scrut4 = runtime.safeCall(m.has(cont));
-        if (scrut4 === true) {
-          tmp12 = ", " + marker;
-          tmp13 = result + tmp12;
-          result = tmp13;
+        let scrut3, tmp10, tmp11;
+        scrut3 = runtime.safeCall(m.has(cont));
+        if (scrut3 === true) {
+          tmp10 = ", " + marker;
+          tmp11 = result + tmp10;
+          result = tmp11;
           return runtime.Unit
         } else {
           return runtime.Unit
@@ -246,17 +246,9 @@ Runtime1 = class Runtime {
       } else {
         tmp7 = runtime.safeCall(vis.add(cont));
       }
-      scrut3 = cont.completed;
-      if (scrut3 === true) {
-        tmp8 = result + ", COMPLETED";
-        result = tmp8;
-        tmp9 = runtime.Unit;
-      } else {
-        tmp9 = runtime.Unit;
-      }
-      tmp10 = result + ") -> ";
-      tmp11 = Runtime.showFunctionContChain(cont.next, hl, vis, reps);
-      return tmp10 + tmp11
+      tmp8 = result + ") -> ";
+      tmp9 = Runtime.showFunctionContChain(cont.next, hl, vis, reps);
+      return tmp8 + tmp9
     } else {
       scrut = cont === null;
       if (scrut === true) {
