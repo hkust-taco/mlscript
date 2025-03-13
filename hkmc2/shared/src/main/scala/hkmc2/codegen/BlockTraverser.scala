@@ -10,9 +10,12 @@ import os.write.over
 // These all work like BlockTransformer and its derivatives, but do not rewrite the block. See BlockTransformer.scala.
 // Please use this instead of BlockTransformer for static analysis.
 
-class BlockTraverser(subst: SymbolSubst):
+class BlockTraverser:
   
-  given SymbolSubst = subst
+  extension (sym: Symbol)
+    inline def traverse: Unit = applySymbol(sym)
+  
+  def applySymbol(sym: Symbol): Unit = ()
   
   def applySubBlock(b: Block): Unit = applyBlock(b)
   
@@ -33,7 +36,7 @@ class BlockTraverser(subst: SymbolSubst):
     case TryBlock(sub, fin, rst) => applySubBlock(sub); applySubBlock(fin); applySubBlock(rst)
     case Assign(l, r, rst) => applyLocal(l); applyResult(r); applySubBlock(rst)
     case b @ AssignField(l, n, r, rst) =>
-      applyPath(l); applyResult(r); applySubBlock(rst); b.symbol.foreach(_.subst)
+      applyPath(l); applyResult(r); applySubBlock(rst); b.symbol.foreach(_.traverse)
     case Define(defn, rst) => applyDefn(defn); applySubBlock(rst)
     case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
       applyLocal(l)
@@ -58,40 +61,44 @@ class BlockTraverser(subst: SymbolSubst):
     case DynSelect(qual, fld, arrayIdx) =>
       applyPath(qual); applyPath(fld)
     case p @ Select(qual, name) =>
-      applyPath(qual); p.symbol.foreach(_.subst)
+      applyPath(qual); p.symbol.foreach(_.traverse)
     case v: Value => applyValue(v)
   
   def applyValue(v: Value): Unit = v match
-    case Value.Ref(l) => l.subst
-    case Value.This(sym) => sym.subst
+    case Value.Ref(l) => l.traverse
+    case Value.This(sym) => sym.traverse
     case Value.Lit(lit) => ()
     case v @ Value.Lam(params, body) => applyLam(v)
     case Value.Arr(elems) => elems.foreach(applyArg)
     case Value.Rcd(fields) => fields.foreach:
       case RcdArg(idx, value) => idx.foreach(applyPath); applyPath(value)
   
-  def applyLocal(sym: Local): Unit = sym.subst
+  def applyLocal(sym: Local): Unit = sym.traverse
   
   def applyFunDefn(fun: FunDefn): Unit =
-    fun.owner.foreach(_.subst)
-    fun.sym.subst
+    fun.owner.foreach(_.traverse)
+    fun.sym.traverse
     fun.params.foreach(applyParamList)
     applySubBlock(fun.body)
   
+  def applyValDefn(defn: ValDefn): Unit =
+    val ValDefn(owner, k, sym, rhs) = defn
+    owner.foreach(_.traverse); sym.traverse; applyPath(rhs)
+  
   def applyDefn(defn: Defn): Unit = defn match
     case defn: FunDefn => applyFunDefn(defn)
-    case ValDefn(owner, k, sym, rhs) => owner.foreach(_.subst); sym.subst; applyPath(rhs)
+    case defn: ValDefn => applyValDefn(defn)
     case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentPath, methods, 
       privateFields, publicFields, preCtor, ctor) =>
-      own.foreach(_.subst)
-      isym.subst
-      sym.subst
+      own.foreach(_.traverse)
+      isym.traverse
+      sym.traverse
       paramsOpt.foreach(applyParamList)
       auxParams.foreach(applyParamList)
       parentPath.foreach(applyPath)
       methods.foreach(applyFunDefn)
-      privateFields.foreach(_.subst)
-      publicFields.foreach(applyTermDefinition)
+      privateFields.foreach(_.traverse)
+      publicFields.foreach(_.traverse)
       applySubBlock(preCtor)
       applySubBlock(ctor)
   
@@ -99,19 +106,19 @@ class BlockTraverser(subst: SymbolSubst):
     applyPath(arg.value)
   
   def applyParamList(pl: ParamList): Unit =
-    pl.params.foreach(_.sym.subst)
-    pl.restParam.foreach(_.sym.subst)
+    pl.params.foreach(_.sym.traverse)
+    pl.restParam.foreach(_.sym.traverse)
   
   def applyCase(cse: Case): Unit = cse match
     case Case.Lit(lit) => ()
     case Case.Cls(cls, path) =>
-      cls.subst
+      cls.traverse
       applyPath(path)
     case Case.Tup(len, inf) => ()
   
   def applyHandler(hdr: Handler): Unit =
-    hdr.sym.subst
-    hdr.resumeSym.subst
+    hdr.sym.traverse
+    hdr.resumeSym.traverse
     hdr.params.foreach(applyParamList)
     applySubBlock(hdr.body)
   
@@ -119,13 +126,7 @@ class BlockTraverser(subst: SymbolSubst):
     applyParamList(lam.params)
     applySubBlock(lam.body)
   
-  def applyTermDefinition(td: TermDefinition): Unit =
-    td.owner.foreach(_.subst)
-    td.sym.subst
-    td.params.foreach(applyParamList)
-    td.resSym.subst
-
-class BlockTraverserShallow(subst: SymbolSubst) extends BlockTraverser(subst):
+class BlockTraverserShallow extends BlockTraverser:
   override def applyLam(lam: Value.Lam) = ()
   override def applyFunDefn(fun: FunDefn): Unit = ()
   override def applyDefn(defn: Defn): Unit = defn match
@@ -140,10 +141,11 @@ class BlockTraverserShallow(subst: SymbolSubst) extends BlockTraverser(subst):
       applyLocal(res)
       applyPath(par)
       args.foreach(applyPath)
-      cls.subst
+      cls.traverse
       hdr.foreach(applyHandler)
       applySubBlock(rst)
     case _ => super.applyBlock(b)
 
-class BlockDataTraverser(subst: SymbolSubst) extends BlockTraverserShallow(subst):
+class BlockDataTraverser extends BlockTraverserShallow:
   override def applySubBlock(b: Block): Unit = ()
+

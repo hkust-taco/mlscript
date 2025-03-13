@@ -99,7 +99,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
       
       nestedDeep += c.sym -> nested
   
-    new BlockTraverserShallow(SymbolSubst()):
+    new BlockTraverserShallow:
       applyBlock(b)
       override def applyDefn(defn: Defn): Unit =
         inScopeDefns += defn.sym -> Set.empty
@@ -123,7 +123,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
     case Some(value) => value
     case None => 
       var accessed: AccessInfo = AccessInfo.empty
-      new BlockTraverserShallow(SymbolSubst()):
+      new BlockTraverserShallow:
         applyBlock(b)
         
         override def applyBlock(b: Block): Unit = b match
@@ -184,7 +184,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
     var defns: List[Defn] = Nil
     var definedVarsDeep: Set[Local] = Set.empty
 
-    new BlockTraverser(SymbolSubst()):
+    new BlockTraverser:
       applyDefn(d)
       
       override def applyFunDefn(f: FunDefn): Unit =
@@ -241,7 +241,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
 
   private def findAccessesTop =
     var accessMap: Map[BlockMemberSymbol, AccessInfo] = Map.empty
-    new BlockTraverserShallow(SymbolSubst()):
+    new BlockTraverserShallow:
       applyBlock(b)
       override def applyDefn(defn: Defn): Unit = defn match
         case _: FunDefn | _: ClsLikeDefn =>
@@ -279,7 +279,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
       def rec(blk: Block) =
         go(blk, reqCapture, hasReader, hasMutator)
       
-      new BlockTraverserShallow(SymbolSubst()):
+      new BlockTraverserShallow:
         applyBlock(b)
         override def applyBlock(b: Block): Unit = b match
           case Assign(lhs, rhs, rest) =>
@@ -445,7 +445,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
     */
   def findUsedLocals: Lifter.UsedLocalsMap =
     var usedMap: Map[BlockMemberSymbol, FreeVars] = Map.empty
-    new BlockTraverserShallow(SymbolSubst()):
+    new BlockTraverserShallow:
       applyBlock(b)
       override def applyDefn(defn: Defn): Unit =
         usedMap ++= findUsedLocalsDefn(defn)

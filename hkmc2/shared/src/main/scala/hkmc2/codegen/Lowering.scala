@@ -343,13 +343,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             subTerm_nonTail(rhs): r =>
               AssignDynField(p, f, ai, r, k(unit))
       
-    case st.Blk((imp @ Import(sym, path)) :: stats, res) =>
-      raise(ErrorReport(
-        msg"Imports must be at the top level" ->
-        imp.toLoc :: Nil,
-        source = Diagnostic.Source.Compilation))
-      term(st.Blk(stats, res))(k)
-      
     case st.Lam(params, body) =>
       warnStmt
       val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N)
@@ -549,13 +542,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     // case _ =>
     //   subTerm(t)(k)
   
-  def gatherMembers(clsBody: ObjBody)(using Subst): (Ls[FunDefn], Ls[TermDefinition], Ls[TermSymbol], Block) =
+  def gatherMembers(clsBody: ObjBody)(using Subst): (Ls[FunDefn], Ls[BlockMemberSymbol], Ls[TermSymbol], Block) =
     val mtds = clsBody.methods
       .flatMap: td =>
         td.body.map: bod =>
           val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))
           FunDefn(td.owner, td.sym, paramLists, bodyBlock)
-    val publicFlds = clsBody.publicFlds
+    val publicFlds = clsBody.publicFlds.map(_.sym)
     val privateFlds = clsBody.nonMethods.collect:
       case decl @ LetDecl(sym: TermSymbol, annotations) =>
         reportAnnotations(decl, annotations)

@@ -147,7 +147,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
   
   def isTrivial(b: Block): Boolean =
     var trivial = true
-    new BlockTraverserShallow(SymbolSubst()):
+    new BlockTraverserShallow:
       applyBlock(b)
       override def applyResult(r: Result): Unit = r match
         case Call(Value.Ref(_: BuiltinSymbol), _) => ()

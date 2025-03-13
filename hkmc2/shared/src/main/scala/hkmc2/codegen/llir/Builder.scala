@@ -149,7 +149,7 @@ final class LlirBuilder(tl: TraceLogger)(fresh: Fresh, fnUid: FreshInt, clsUid: 
       else
         val clsDefn = sym.defn.getOrElse(die)
         val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
-        val clsFields = publicFields.map(_.sym)
+        val clsFields = publicFields
         ClassInfo(
           clsUid.make,
           sym.nme,
