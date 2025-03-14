@@ -245,7 +245,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       output(s"Elaborated tree:")
       output(e.showAsTree(using post))
 
-    val checker = new semantics.SimpleSub(stl)
+    val checker = new semantics.SimpleSub(curCtx, stl)
     val spt = checker.analyzeTermTypes(e).asInstanceOf[semantics.Term.Blk]
     if showSpecialisedTree.isSet then
       output(s"Specialised tree:")

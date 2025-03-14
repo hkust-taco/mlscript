@@ -1,18 +1,71 @@
 :js
 
 
+:sjs
+fun id(spec x) = x
 class Simple(val x) with
     fun inner = x
-val s = Simple(1)
-s.inner
-//│ = 1
-//│ s = Simple(1)
+id(Simple(1))
+//│ JS (unsanitized):
+//│ let id, Simple1, id_class_Simple__val_x__l__inner__l_, id_arg0, $scrut0, tmp, tmp1;
+//│ id = function id(x) {
+//│   return x
+//│ };
+//│ Simple1 = function Simple(x1) { return new Simple.class(x1); };
+//│ Simple1.class = class Simple {
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   get inner() {
+//│     return this.x;
+//│   }
+//│   toString() { return "Simple(" + globalThis.Predef.render(this.x) + ")"; }
+//│ };
+//│ id_class_Simple__val_x__l__inner__l_ = function id_class_Simple__val_x__l__inner__l_(x) {
+//│   return x
+//│ };
+//│ tmp = Simple1(1);
+//│ id_arg0 = tmp;
+//│ $scrut0 = id_arg0;
+//│ if ($scrut0 instanceof Simple1.class) {
+//│   tmp1 = Simple1(1);
+//│   id(tmp1)
+//│ } else {
+//│   throw new this.Error("match error");
+//│ }
+//│ = Simple(1)
 
+:sjs
 abstract class Option
 class None extends Option
 class Some(val x) extends Option with
     fun unwrap = x
 Some(1).unwrap
+//│ JS (unsanitized):
+//│ let Some1, Option1, None1, tmp2;
+//│ Option1 = class Option {
+//│   constructor() {}
+//│   toString() { return "Option"; }
+//│ };
+//│ None1 = class None extends Option1 {
+//│   constructor() {
+//│     super();
+//│   }
+//│   toString() { return "None"; }
+//│ };
+//│ Some1 = function Some(x1) { return new Some.class(x1); };
+//│ Some1.class = class Some extends Option1 {
+//│   constructor(x) {
+//│     super();
+//│     this.x = x;
+//│   }
+//│   get unwrap() {
+//│     return this.x;
+//│   }
+//│   toString() { return "Some(" + globalThis.Predef.render(this.x) + ")"; }
+//│ };
+//│ tmp2 = Some1(1);
+//│ tmp2.unwrap
 //│ = 1
 
 
@@ -25,8 +78,8 @@ fun id(spec x) = x
 let a = Some(1)
 id(a)
 //│ JS (unsanitized):
-//│ let Opt1, Some3, id, None3, a, id_class_Some__val_value__l_, id_arg0, tmp2;
-//│ id = function id(x) {
+//│ let Opt1, Some3, id1, None3, a, id_class_Some__val_value__l_, id_arg01, $scrut01, tmp3;
+//│ id1 = function id(x) {
 //│   return x
 //│ };
 //│ Opt1 = class Opt {
@@ -47,13 +100,18 @@ id(a)
 //│   }
 //│   toString() { return "Some(" + globalThis.Predef.render(this.value) + ")"; }
 //│ };
-//│ tmp2 = Some3(1);
-//│ a = tmp2;
+//│ tmp3 = Some3(1);
+//│ a = tmp3;
 //│ id_class_Some__val_value__l_ = function id_class_Some__val_value__l_(x) {
 //│   return x
 //│ };
-//│ id_arg0 = a;
-//│ id(id_arg0)
+//│ id_arg01 = a;
+//│ $scrut01 = id_arg01;
+//│ if ($scrut01 instanceof Some3.class) {
+//│   id1(a)
+//│ } else {
+//│   throw new this.Error("match error");
+//│ }
 //│ = Some(1)
 //│ a = Some(1)
 
