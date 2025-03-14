@@ -6,10 +6,9 @@ import scala.collection.mutable
 import mlscript.utils.*, shorthands.*
 import hkmc2.Message.MessageContext
 import hkmc2.semantics.Elaborator.*
-import hkmc2.semantics.Split.{Let, Else}
 import hkmc2.semantics.Term.*
 import hkmc2.syntax.Tree
-import hkmc2.syntax.Tree.{Ident, IntLit, StrLit, UnitLit, BoolLit}
+import hkmc2.syntax.Tree.Ident
 import hkmc2.utils.TraceLogger
 
 
@@ -562,8 +561,7 @@ class SimpleSub(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborator.
     case ClassType(info) =>
       val classSel = SynthSel(info.memberSym.ref(), Ident("class"))(Some(info.sym))
       Pattern.ClassLike(info.sym, classSel, None, false)(Tree.Empty())
-    case _ =>
-      Pattern.Lit(BoolLit(true))
+    case _ => Pattern.Lit(Tree.BoolLit(true))
 
   def processTree(term: Term): Term =
     case class SpecContext(funcs: mutable.Buffer[TermDefinition] = mutable.Buffer.empty)
