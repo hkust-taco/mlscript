@@ -5,14 +5,13 @@ import scala.collection.mutable
 
 import mlscript.utils.*, shorthands.*
 import hkmc2.Message.MessageContext
-import hkmc2.semantics.Elaborator.*
 import hkmc2.semantics.Term.*
 import hkmc2.syntax.Tree
 import hkmc2.syntax.Tree.Ident
 import hkmc2.utils.TraceLogger
 
 
-class SimpleSub(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborator.State):
+class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborator.State):
   import tl.*
 
   private val specialisationPoints = mutable.Map[Symbol, SpecPoint]()
@@ -107,14 +106,14 @@ class SimpleSub(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborator.
     case Primitive(_) => true
     case ClassType(_) => true
   
-  class TypeContext(val mapping: Map[Symbol, SimpleType] = Map.empty):
+  class Ctx(val mapping: Map[Symbol, SimpleType] = Map.empty):
     def get(sym: Symbol): Option[SimpleType] = mapping.get(sym)
     def getOrFresh(sym: Symbol): SimpleType = mapping.getOrElse(sym, freshVar)
-    def +(pair: (Symbol, SimpleType)): TypeContext = TypeContext(mapping + pair)
-    def ++(pairs: Iterable[(Symbol, SimpleType)]): TypeContext = TypeContext(mapping ++ pairs)
+    def +(pair: (Symbol, SimpleType)): Ctx = Ctx(mapping + pair)
+    def ++(pairs: Iterable[(Symbol, SimpleType)]): Ctx = Ctx(mapping ++ pairs)
     override def toString: String = mapping.map { case (sym, ty) => s"$sym: $ty" }.mkString(", ")
 
-  def initialContext(using state: Elaborator.State): TypeContext =
+  def initialContext(using state: Elaborator.State): Ctx =
     val builtinTypes = Map(
       state.builtinOpsMap.values.map { sym =>
         val opType = sym.nme match
@@ -134,7 +133,7 @@ class SimpleSub(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborator.
       }.toSeq*
     )
     
-    TypeContext(builtinTypes)
+    Ctx(builtinTypes)
 
   def constrain(lhs: SimpleType, rhs: SimpleType)(using cache: mutable.Set[(SimpleType, SimpleType)] = mutable.Set.empty): Unit =
     if cache.contains(lhs -> rhs) then return () else cache += lhs -> rhs
@@ -224,7 +223,7 @@ class SimpleSub(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborator.
             case _ => log(s"Error: class ${info.sym.nme} expects ${info.params.length} parameters")
       case _ => log(s"Error: cannot constrain $lhs <: $rhs")
   
-  def term(t: Term)(using ctx: TypeContext): SimpleType =
+  def term(t: Term)(using ctx: Ctx): SimpleType =
     log(s"Typing term: ${t.showDbg}")
     val typed = t match
       case Error | Missing => freshVar
@@ -409,7 +408,7 @@ class SimpleSub(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborator.
     log(s"❁ Type for ${t.showDbg}: ${coalesceType(typed)}")
     typed
 
-  def block(b: Blk)(using ctx: TypeContext): SimpleType =
+  def block(b: Blk)(using ctx: Ctx): SimpleType =
     var currentCtx = ctx
     b.stats.foreach {
       case LetDecl(sym, _) =>
@@ -563,10 +562,10 @@ class SimpleSub(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborator.
       Pattern.ClassLike(info.sym, classSel, None, false)(Tree.Empty())
     case _ => Pattern.Lit(Tree.BoolLit(true))
 
-  def processTree(term: Term): Term =
+  def process(term: Term): Term =
     case class SpecContext(funcs: mutable.Buffer[TermDefinition] = mutable.Buffer.empty)
     
-    def process(t: Term)(implicit ctx: SpecContext): Term = t match
+    def go(t: Term)(implicit ctx: SpecContext): Term = t match
       case app @ App(lhs, rhs @ Tup(fields)) =>
         lhs match
           case Ref(funcSym) =>
@@ -578,7 +577,7 @@ class SimpleSub(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborator.
               val memberSymbols = specialisedIndices.map { idx =>
                 val argName = s"${funcSym.nme}_arg$idx"
                 val arg = fields(idx) match
-                  case Fld(_, arg, _) => process(arg)
+                  case Fld(_, arg, _) => go(arg)
                   case _ => lastWords(s"Expected Fld at index $idx")
                 
                 idx -> (new BlockMemberSymbol(argName, Nil), arg)
@@ -613,7 +612,7 @@ class SimpleSub(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborator.
                 
                 case (field, _) => 
                   field match
-                    case Fld(flags, arg, asc) => Fld(flags, process(arg), asc)
+                    case Fld(flags, arg, asc) => Fld(flags, go(arg), asc)
                     case other => other
               }
   
@@ -678,7 +677,7 @@ class SimpleSub(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborator.
             
       case tup @ Tup(fields) =>
         val newFields = fields.map {
-          case Fld(flags, arg, asc) => Fld(flags, process(arg), asc)
+          case Fld(flags, arg, asc) => Fld(flags, go(arg), asc)
           case other => other
         }
         Tup(newFields)(tup.tree)
@@ -723,7 +722,7 @@ class SimpleSub(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborator.
               td.params, 
               td.tparams, 
               td.sign, 
-              td.body.map(body => process(body)(blockCtx)),  
+              td.body.map(body => go(body)(blockCtx)),  
               td.resSym, 
               td.flags, 
               td.annotations
@@ -732,50 +731,47 @@ class SimpleSub(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborator.
         }
         
         val newStats = stats.map(stat => processStatement(stat)(blockCtx))
-        val newRes = process(res)(blockCtx)
+        val newRes = go(res)(blockCtx)
         Blk(newStats ++ blockCtx.funcs, newRes)
       case ifLike @ IfLike(kw, desugared) => IfLike(kw, processSplit(desugared)(using SpecContext()))(ifLike.normalized)
-      case Lam(params, body) => Lam(params, process(body)(using SpecContext()))
-      case TyApp(lhs, targs) => TyApp(process(lhs)(using SpecContext()), targs.map(arg => process(arg)(using SpecContext())))
-      case sel @ Sel(prefix, name) => Sel(process(prefix)(using SpecContext()), name)(sel.sym)
-      case sel @ SynthSel(prefix, name) => SynthSel(process(prefix)(using SpecContext()), name)(sel.sym)
-      case New(cls, args, rft) => New(process(cls)(using SpecContext()), args.map(arg => process(arg)(using SpecContext())), rft)
+      case Lam(params, body) => Lam(params, go(body)(using SpecContext()))
+      case TyApp(lhs, targs) => TyApp(go(lhs)(using SpecContext()), targs.map(arg => go(arg)(using SpecContext())))
+      case sel @ Sel(prefix, name) => Sel(go(prefix)(using SpecContext()), name)(sel.sym)
+      case sel @ SynthSel(prefix, name) => SynthSel(go(prefix)(using SpecContext()), name)(sel.sym)
+      case New(cls, args, rft) => New(go(cls)(using SpecContext()), args.map(arg => go(arg)(using SpecContext())), rft)
       case other => other
   
     def processStatement(stat: Statement)(implicit ctx: SpecContext): Statement = stat match
-      case t: Term => process(t)
+      case t: Term => go(t)
       
       case LetDecl(sym, annots) => LetDecl(sym, annots)
-      case DefineVar(sym, rhs) => DefineVar(sym, process(rhs))
+      case DefineVar(sym, rhs) => DefineVar(sym, go(rhs))
       case td: TermDefinition => 
         td.body match
           case Some(body) => 
             TermDefinition(td.owner, td.k, td.sym, td.params, td.tparams, 
-                           td.sign, Some(process(body)), td.resSym, td.flags, td.annotations)
+                           td.sign, Some(go(body)), td.resSym, td.flags, td.annotations)
           case None => td
       case other => other
     
     def processSplit(split: Split)(implicit ctx: SpecContext): Split = split match
       case Split.Cons(head, tail) =>
         val Branch(scrutinee, pattern, continuation) = head
-        val newScrutinee = process(scrutinee) match
+        val newScrutinee = go(scrutinee) match
           case ref: Ref => ref
           case other => 
             ErrorReport(msg"Warning: Expected Ref but got ${other.getClass.getSimpleName} in Branch" -> other.toLoc :: Nil)
             scrutinee
         Split.Cons(Branch(newScrutinee, pattern, processSplit(continuation)), processSplit(tail))
-      case Split.Let(sym, t, tail) => Split.Let(sym, process(t), processSplit(tail))
-      case Split.Else(default) => Split.Else(process(default))
+      case Split.Let(sym, t, tail) => Split.Let(sym, go(t), processSplit(tail))
+      case Split.Else(default) => Split.Else(go(default))
       case Split.End => Split.End
 
     implicit val rootCtx = SpecContext()
-    process(term)(rootCtx)
+    go(term)(rootCtx)
 
-  def analyzeTermTypes(t: Term): Term =
-    specialisationPoints.clear()
-    
-    val ctx = initialContext
-    val resultType = term(t)(using ctx)
+  def specialise(t: Term)(using ctx: Ctx = initialContext): Term =
+    val resultType = term(t)
     log(s"Result type: ${coalesceType(resultType)}")
     
     specialisationPoints.values.foreach(_.updateFromVars())
@@ -788,7 +784,7 @@ class SimpleSub(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborator.
       }
       log("====================================")
       
-      processTree(t)
+      process(t)
     else t
   
   def coalesceType(ty: SimpleType): String =
@@ -817,3 +813,7 @@ class SimpleSub(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborator.
             recursive.get(vs_pol).fold(res)(recVar => s"μ$recVar.$res")
     
     go(ty, true, Set.empty)
+
+  def topLevel(t: Term): Term = 
+    specialisationPoints.clear()
+    specialise(t)(using initialContext)
