@@ -21,29 +21,115 @@ id(1)
 //│ = 1
 
 
+:sjs
+fun id(spec x) =
+    fun inner(spec y) = y
+    inner(x)
+id(1)
+id("Str")
+//│ JS (unsanitized):
+//│ let id1, id_Str, id_Int1, id_arg01, $scrut01, id_arg02, $scrut02, tmp;
+//│ id1 = function id(x) {
+//│   let inner, inner_Str, inner_Int, inner_arg0, $scrut03;
+//│   inner = function inner(y) {
+//│     return y
+//│   };
+//│   inner_Str = function inner_Str(y) {
+//│     return y
+//│   };
+//│   inner_Int = function inner_Int(y) {
+//│     return y
+//│   };
+//│   inner_arg0 = x;
+//│   $scrut03 = inner_arg0;
+//│   if (typeof $scrut03 === 'string') {
+//│     return inner(x)
+//│   } else if (globalThis.Number.isInteger($scrut03)) {
+//│     return inner(x)
+//│   } else {
+//│     throw new globalThis.Error("match error");
+//│   }
+//│ };
+//│ id_arg01 = 1;
+//│ $scrut01 = id_arg01;
+//│ if (typeof $scrut01 === 'string') {
+//│   tmp = id1(1);
+//│ } else if (globalThis.Number.isInteger($scrut01)) {
+//│   tmp = id1(1);
+//│ } else {
+//│   throw new this.Error("match error");
+//│ }
+//│ id_Str = function id_Str(x) {
+//│   let inner, inner_Str, inner_arg0, $scrut03;
+//│   inner = function inner(y) {
+//│     return y
+//│   };
+//│   inner_Str = function inner_Str(y) {
+//│     return y
+//│   };
+//│   inner_arg0 = x;
+//│   $scrut03 = inner_arg0;
+//│   if (typeof $scrut03 === 'string') {
+//│     return inner(x)
+//│   } else {
+//│     throw new globalThis.Error("match error");
+//│   }
+//│ };
+//│ id_Int1 = function id_Int(x) {
+//│   let inner, inner_Str, inner_Int, inner_arg0, $scrut03;
+//│   inner = function inner(y) {
+//│     return y
+//│   };
+//│   inner_Str = function inner_Str(y) {
+//│     return y
+//│   };
+//│   inner_Int = function inner_Int(y) {
+//│     return y
+//│   };
+//│   inner_arg0 = x;
+//│   $scrut03 = inner_arg0;
+//│   if (typeof $scrut03 === 'string') {
+//│     return inner(x)
+//│   } else if (globalThis.Number.isInteger($scrut03)) {
+//│     return inner(x)
+//│   } else {
+//│     throw new globalThis.Error("match error");
+//│   }
+//│ };
+//│ id_arg02 = "Str";
+//│ $scrut02 = id_arg02;
+//│ if (typeof $scrut02 === 'string') {
+//│   id1("Str")
+//│ } else if (globalThis.Number.isInteger($scrut02)) {
+//│   id1("Str")
+//│ } else {
+//│   throw new this.Error("match error");
+//│ }
+//│ = "Str"
+
 :todo // ? Not sure how specialisation should work with higher order functions
 :sjs
 // :ds
 fun twice(spec f, spec a) = f(f(a))
 twice(x => x + 1, 1)
 //│ JS (unsanitized):
-//│ let twice, twice_Int, twice_arg0, twice_arg1, $scrut01;
+//│ let twice, twice_Int, twice_arg0, twice_arg1, $scrut03;
 //│ twice = function twice(f, a) {
-//│   let tmp;
-//│   tmp = runtime.safeCall(f(a));
-//│   return runtime.safeCall(f(tmp))
+//│   let tmp1;
+//│   tmp1 = runtime.safeCall(f(a));
+//│   return runtime.safeCall(f(tmp1))
 //│ };
 //│ twice_Int = function twice_Int(f, a) {
-//│   let tmp;
-//│   tmp = runtime.safeCall(f(a));
-//│   return runtime.safeCall(f(tmp))
+//│   let tmp1;
+//│   tmp1 = runtime.safeCall(f(a));
+//│   return runtime.safeCall(f(tmp1))
 //│ };
 //│ twice_arg0 = (x) => {
 //│   return x + 1
 //│ };
 //│ twice_arg1 = 1;
-//│ $scrut01 = twice_arg0;
-//│ if (globalThis.Number.isInteger($scrut01)) {
+//│ $scrut03 = twice_arg0;
+//│ if (globalThis.Number.isInteger($scrut03)) {
 //│   twice((x) => {
 //│     return x + 1
 //│   }, 1)
@@ -57,7 +143,7 @@ twice(x => x + 1, 1)
 fun add(spec x, spec y) = x + y
 add(1, 2)
 //│ JS (unsanitized):
-//│ let add, add_Int_Int, add_arg0, add_arg1, $scrut02, $scrut1;
+//│ let add, add_Int_Int, add_arg0, add_arg1, $scrut04, $scrut1;
 //│ add = function add(x, y) {
 //│   return x + y
 //│ };
@@ -66,9 +152,9 @@ add(1, 2)
 //│ };
 //│ add_arg0 = 1;
 //│ add_arg1 = 2;
-//│ $scrut02 = add_arg0;
+//│ $scrut04 = add_arg0;
 //│ $scrut1 = add_arg1;
-//│ if (globalThis.Number.isInteger($scrut02)) {
+//│ if (globalThis.Number.isInteger($scrut04)) {
 //│   if (globalThis.Number.isInteger($scrut1)) {
 //│     add(1, 2)
 //│   } else {
@@ -85,31 +171,31 @@ fun id(spec x) = x
 id(1)
 id("Str")
 //│ JS (unsanitized):
-//│ let id1, id_Str, id_Int1, id_arg01, $scrut03, id_arg02, $scrut04, tmp;
-//│ id1 = function id(x) {
+//│ let id2, id_Str1, id_Int2, id_arg03, $scrut05, id_arg04, $scrut06, tmp1;
+//│ id2 = function id(x) {
 //│   return x
 //│ };
-//│ id_arg01 = 1;
-//│ $scrut03 = id_arg01;
-//│ if (typeof $scrut03 === 'string') {
-//│   tmp = id1(1);
-//│ } else if (globalThis.Number.isInteger($scrut03)) {
-//│   tmp = id1(1);
+//│ id_arg03 = 1;
+//│ $scrut05 = id_arg03;
+//│ if (typeof $scrut05 === 'string') {
+//│   tmp1 = id2(1);
+//│ } else if (globalThis.Number.isInteger($scrut05)) {
+//│   tmp1 = id2(1);
 //│ } else {
 //│   throw new this.Error("match error");
 //│ }
-//│ id_Str = function id_Str(x) {
+//│ id_Str1 = function id_Str(x) {
 //│   return x
 //│ };
-//│ id_Int1 = function id_Int(x) {
+//│ id_Int2 = function id_Int(x) {
 //│   return x
 //│ };
-//│ id_arg02 = "Str";
-//│ $scrut04 = id_arg02;
-//│ if (typeof $scrut04 === 'string') {
-//│   id1("Str")
-//│ } else if (globalThis.Number.isInteger($scrut04)) {
-//│   id1("Str")
+//│ id_arg04 = "Str";
+//│ $scrut06 = id_arg04;
+//│ if (typeof $scrut06 === 'string') {
+//│   id2("Str")
+//│ } else if (globalThis.Number.isInteger($scrut06)) {
+//│   id2("Str")
 //│ } else {
 //│   throw new this.Error("match error");
 //│ }
@@ -124,7 +210,7 @@ foo(1)
 //│ JS (unsanitized):
 //│ let foo;
 //│ foo = function foo(x) {
-//│   let bar, bar_Int, bar_arg0, $scrut05;
+//│   let bar, bar_Int, bar_arg0, $scrut07;
 //│   bar = function bar(y) {
 //│     return y
 //│   };
@@ -132,8 +218,8 @@ foo(1)
 //│     return y
 //│   };
 //│   bar_arg0 = x;
-//│   $scrut05 = bar_arg0;
-//│   if (globalThis.Number.isInteger($scrut05)) {
+//│   $scrut07 = bar_arg0;
+//│   if (globalThis.Number.isInteger($scrut07)) {
 //│     return bar(x)
 //│   } else {
 //│     throw new globalThis.Error("match error");
@@ -151,38 +237,38 @@ fun foo(a) =
 foo(1)
 foo("Str")
 //│ JS (unsanitized):
-//│ let foo1, Pair1, tmp1;
+//│ let foo1, Pair1, tmp2;
 //│ foo1 = function foo(a) {
-//│   let pair, pair_Str_Num, pair_Int_Num, pair_arg0, pair_arg1, $scrut05, $scrut11;
+//│   let pair, pair_Str_Num, pair_Int_Num, pair_arg0, pair_arg1, $scrut07, $scrut11;
 //│   pair = function pair(x, y, z) {
-//│     let tmp2, tmp3;
-//│     tmp2 = + z;
-//│     tmp3 = y + tmp2;
-//│     return Pair1(x, tmp3)
+//│     let tmp3, tmp4;
+//│     tmp3 = + z;
+//│     tmp4 = y + tmp3;
+//│     return Pair1(x, tmp4)
 //│   };
 //│   pair_Str_Num = function pair_Str_Num(x, y, z) {
-//│     let tmp2, tmp3;
-//│     tmp2 = + z;
-//│     tmp3 = y + tmp2;
-//│     return Pair1(x, tmp3)
+//│     let tmp3, tmp4;
+//│     tmp3 = + z;
+//│     tmp4 = y + tmp3;
+//│     return Pair1(x, tmp4)
 //│   };
 //│   pair_Int_Num = function pair_Int_Num(x, y, z) {
-//│     let tmp2, tmp3;
-//│     tmp2 = + z;
-//│     tmp3 = y + tmp2;
-//│     return Pair1(x, tmp3)
+//│     let tmp3, tmp4;
+//│     tmp3 = + z;
+//│     tmp4 = y + tmp3;
+//│     return Pair1(x, tmp4)
 //│   };
 //│   pair_arg0 = a;
 //│   pair_arg1 = 10.4;
-//│   $scrut05 = pair_arg0;
+//│   $scrut07 = pair_arg0;
 //│   $scrut11 = pair_arg1;
-//│   if (typeof $scrut05 === 'string') {
+//│   if (typeof $scrut07 === 'string') {
 //│     if (typeof $scrut11 === 'number') {
 //│       return pair(a, 10.4, 1)
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }
-//│   } else if (globalThis.Number.isInteger($scrut05)) {
+//│   } else if (globalThis.Number.isInteger($scrut07)) {
 //│     if (typeof $scrut11 === 'number') {
 //│       return pair(a, 10.4, 1)
 //│     } else {
@@ -200,7 +286,7 @@ foo("Str")
 //│   }
 //│   toString() { return "Pair(" + globalThis.Predef.render(this.a) + ", " + globalThis.Predef.render(this.b) + ")"; }
 //│ };
-//│ tmp1 = foo1(1);
+//│ tmp2 = foo1(1);
 //│ foo1("Str")
 //│ = Pair("Str", 11.4)
 
@@ -210,31 +296,31 @@ fun id(spec x) = x
 fun foo(spec x) = x
 id(foo(1))
 //│ JS (unsanitized):
-//│ let foo2, id2, id_Int2, foo_Int, foo_arg0, $scrut05, id_arg03, $scrut06, tmp2, tmp3;
-//│ id2 = function id(x) {
+//│ let foo2, id3, id_Int3, foo_Int, foo_arg0, $scrut07, id_arg05, $scrut08, tmp3, tmp4;
+//│ id3 = function id(x) {
 //│   return x
 //│ };
 //│ foo2 = function foo(x) {
 //│   return x
 //│ };
-//│ id_Int2 = function id_Int(x) {
+//│ id_Int3 = function id_Int(x) {
 //│   return x
 //│ };
 //│ foo_Int = function foo_Int(x) {
 //│   return x
 //│ };
 //│ foo_arg0 = 1;
-//│ $scrut05 = foo_arg0;
-//│ if (globalThis.Number.isInteger($scrut05)) {
-//│   tmp2 = foo2(1);
+//│ $scrut07 = foo_arg0;
+//│ if (globalThis.Number.isInteger($scrut07)) {
+//│   tmp3 = foo2(1);
 //│ } else {
 //│   throw new this.Error("match error");
 //│ }
-//│ id_arg03 = tmp2;
-//│ $scrut06 = id_arg03;
-//│ if (globalThis.Number.isInteger($scrut06)) {
-//│   tmp3 = foo2(1);
-//│   id2(tmp3)
+//│ id_arg05 = tmp3;
+//│ $scrut08 = id_arg05;
+//│ if (globalThis.Number.isInteger($scrut08)) {
+//│   tmp4 = foo2(1);
+//│   id3(tmp4)
 //│ } else {
 //│   throw new this.Error("match error");
 //│ }
@@ -248,9 +334,9 @@ fun foo(x, y) =
 foo(1, 2)
 foo(1.5, 1)
 //│ JS (unsanitized):
-//│ let foo3, tmp4;
+//│ let foo3, tmp5;
 //│ foo3 = function foo(x, y) {
-//│   let bar, bar_Num_Int, bar_Int_Int, bar_arg0, bar_arg1, $scrut07, $scrut11;
+//│   let bar, bar_Num_Int, bar_Int_Int, bar_arg0, bar_arg1, $scrut09, $scrut11;
 //│   bar = function bar(a, b) {
 //│     return a + b
 //│   };
@@ -262,15 +348,15 @@ foo(1.5, 1)
 //│   };
 //│   bar_arg0 = x;
 //│   bar_arg1 = y;
-//│   $scrut07 = bar_arg0;
+//│   $scrut09 = bar_arg0;
 //│   $scrut11 = bar_arg1;
-//│   if (typeof $scrut07 === 'number') {
+//│   if (typeof $scrut09 === 'number') {
 //│     if (globalThis.Number.isInteger($scrut11)) {
 //│       return bar(x, y)
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }
-//│   } else if (globalThis.Number.isInteger($scrut07)) {
+//│   } else if (globalThis.Number.isInteger($scrut09)) {
 //│     if (globalThis.Number.isInteger($scrut11)) {
 //│       return bar(x, y)
 //│     } else {
@@ -280,6 +366,6 @@ foo(1.5, 1)
 //│     throw new globalThis.Error("match error");
 //│   }
 //│ };
-//│ tmp4 = foo3(1, 2);
+//│ tmp5 = foo3(1, 2);
 //│ foo3(1.5, 1)
 //│ = 2.5

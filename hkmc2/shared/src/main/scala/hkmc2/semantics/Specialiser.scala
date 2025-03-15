@@ -563,9 +563,9 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
     case _ => Pattern.Lit(Tree.BoolLit(true))
 
   def process(term: Term): Term =
-    case class SpecContext(funcs: mutable.Buffer[TermDefinition] = mutable.Buffer.empty)
+    case class SpecCtx(funcs: mutable.Buffer[TermDefinition] = mutable.Buffer.empty)
     
-    def go(t: Term)(implicit ctx: SpecContext): Term = t match
+    def go(t: Term)(implicit ctx: SpecCtx): Term = t match
       case app @ App(lhs, rhs @ Tup(fields)) =>
         lhs match
           case Ref(funcSym) =>
@@ -683,7 +683,7 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
         Tup(newFields)(tup.tree)
       
       case blk @ Blk(stats, res) =>
-        implicit val blockCtx = SpecContext()
+        val blockCtx = SpecCtx()
         
         val funcsToSpecialize = stats.collect {
           case td: TermDefinition if specialisationPoints.values.exists(sp => 
@@ -712,6 +712,16 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
             log(s"Creating specialised function: $specialisedName")
     
             val specialisedSym = new BlockMemberSymbol(specialisedName, Nil)
+            val typeMap = typeCombination.toMap
+            val concreteTypeCtx = initialContext ++ typeMap
+            
+            val specialisedBody = td.body match {
+              case Some(body) =>
+                log(s"Specializing body with concrete types: ${typeMap.map((sym, ty) => s"${sym.nme}: ${coalesceType(ty)}").mkString(", ")}")
+                Some(specialise(body)(using concreteTypeCtx))
+              case None => None
+            }
+            
             val typeList = typeCombination.map(_._2).toList
             log(s"Generated specialised version ${specialisedName} for ${td.sym.nme} with types [${typeList.mkString(", ")}]")
             
@@ -722,7 +732,7 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
               td.params, 
               td.tparams, 
               td.sign, 
-              td.body.map(body => go(body)(blockCtx)),  
+              specialisedBody,  
               td.resSym, 
               td.flags, 
               td.annotations
@@ -733,15 +743,15 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
         val newStats = stats.map(stat => processStatement(stat)(blockCtx))
         val newRes = go(res)(blockCtx)
         Blk(newStats ++ blockCtx.funcs, newRes)
-      case ifLike @ IfLike(kw, desugared) => IfLike(kw, processSplit(desugared)(using SpecContext()))(ifLike.normalized)
-      case Lam(params, body) => Lam(params, go(body)(using SpecContext()))
-      case TyApp(lhs, targs) => TyApp(go(lhs)(using SpecContext()), targs.map(arg => go(arg)(using SpecContext())))
-      case sel @ Sel(prefix, name) => Sel(go(prefix)(using SpecContext()), name)(sel.sym)
-      case sel @ SynthSel(prefix, name) => SynthSel(go(prefix)(using SpecContext()), name)(sel.sym)
-      case New(cls, args, rft) => New(go(cls)(using SpecContext()), args.map(arg => go(arg)(using SpecContext())), rft)
+      case ifLike @ IfLike(kw, desugared) => IfLike(kw, processSplit(desugared)(using SpecCtx()))(ifLike.normalized)
+      case Lam(params, body) => Lam(params, go(body)(using SpecCtx()))
+      case TyApp(lhs, targs) => TyApp(go(lhs)(using SpecCtx()), targs.map(arg => go(arg)(using SpecCtx())))
+      case sel @ Sel(prefix, name) => Sel(go(prefix)(using SpecCtx()), name)(sel.sym)
+      case sel @ SynthSel(prefix, name) => SynthSel(go(prefix)(using SpecCtx()), name)(sel.sym)
+      case New(cls, args, rft) => New(go(cls)(using SpecCtx()), args.map(arg => go(arg)(using SpecCtx())), rft)
       case other => other
   
-    def processStatement(stat: Statement)(implicit ctx: SpecContext): Statement = stat match
+    def processStatement(stat: Statement)(implicit ctx: SpecCtx): Statement = stat match
       case t: Term => go(t)
       
       case LetDecl(sym, annots) => LetDecl(sym, annots)
@@ -754,7 +764,7 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
           case None => td
       case other => other
     
-    def processSplit(split: Split)(implicit ctx: SpecContext): Split = split match
+    def processSplit(split: Split)(implicit ctx: SpecCtx): Split = split match
       case Split.Cons(head, tail) =>
         val Branch(scrutinee, pattern, continuation) = head
         val newScrutinee = go(scrutinee) match
@@ -767,10 +777,10 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
       case Split.Else(default) => Split.Else(go(default))
       case Split.End => Split.End
 
-    implicit val rootCtx = SpecContext()
-    go(term)(rootCtx)
+    given SpecCtx = SpecCtx()
+    go(term)
 
-  def specialise(t: Term)(using ctx: Ctx = initialContext): Term =
+  def specialise(t: Term)(using ctx: Ctx): Term =
     val resultType = term(t)
     log(s"Result type: ${coalesceType(resultType)}")
     

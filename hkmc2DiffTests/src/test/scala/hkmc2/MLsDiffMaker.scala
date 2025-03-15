@@ -246,7 +246,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       output(e.showAsTree(using post))
 
     val checker = new semantics.Specialiser(curCtx, stl)
-    val spt = checker.specialise(e).asInstanceOf[semantics.Term.Blk]
+    val spt = checker.topLevel(e).asInstanceOf[semantics.Term.Blk]
     if showSpecialisedTree.isSet then
       output(s"Specialised tree:")
       output(spt.showAsTree)
