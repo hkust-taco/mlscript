@@ -99,7 +99,7 @@ public:
 #define _mls_assert(e)                                                         \
   (__builtin_expect(!(e), 0)                                                   \
        ? _mlsUtil::panic_with("assertion failed", __func__,                    \
-                              __ASSERT_FILE_NAME, __LINE__)                    \
+                              __FILE__, __LINE__)                              \
        : (void)0)
 
 struct _mlsFloatShape : public _mlsObject {
@@ -385,7 +385,7 @@ inline int _mlsLargeStack(void *(*fn)(void *)) {
   pthread_t thread;
   pthread_attr_t attr;
 
-  size_t stacksize = 512 * 1024 * 1024;
+  size_t stacksize = 1024 * 1024 * 1024;
   pthread_attr_init(&attr);
   pthread_attr_setstacksize(&attr, stacksize);
 

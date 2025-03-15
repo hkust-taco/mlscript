@@ -5,7 +5,7 @@ LDLIBS := -lmimalloc -lgmp -lboost_stacktrace_basic
 SRC :=
 INCLUDES := mlsprelude.h
 DST :=
-DEFAULT_TARGET := mls
+DEFAULT_TARGET := $(SRC:=.out)
 TARGET := $(or $(DST),$(DEFAULT_TARGET))
 
 .PHONY: pre all run clean auto

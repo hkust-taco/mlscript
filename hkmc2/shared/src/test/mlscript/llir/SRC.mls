@@ -1,0 +1,253 @@
+:llir
+
+:global
+
+:sopt
+:optf simp,!split
+:wcpp orig.cpp
+abstract class Iter[T]
+object Done
+class Yield(n)
+class Map(f, it)
+fun done(it) = if it is Done then true else false
+fun map(f, it) = Map(f, it)
+fun dec(n) = Yield(n)
+fun next(it) = if it is
+  Yield(n) then
+    if n == 0 then [0, Done]
+    else [n, Yield(n - 1)]
+  Map(f, it) then
+    if next(it) is [n, it] then
+      if done(it) then [f(n), Done]
+      else [f(n), Map(f, it)]
+fun fold(acc, it) =
+  if next(it) is [n, it] then
+    if done(it) then acc else fold(n + acc, it)
+fun map_sum(f, n) = let it = map(f, dec(n)) in fold(0, it)
+map_sum(x => x, 2000000)
+//│ 
+//│ Opt:
+//│   class Done()
+//│   class Yield(n$234)
+//│   class Map(f$237,it$238)
+//│   class Lambda() extends Callable {
+//│     def apply1$344(x$292) =
+//│       x$292
+//│   }
+//│   def done$223(it$239) =
+//│     case it$239 of
+//│       Done$230 =>
+//│         true
+//│       _ =>
+//│         false
+//│   def map$217(f$241,it$242) =
+//│     let x$320 = Map$235(f$241,it$242) in
+//│     x$320
+//│   def dec$226(n$245) =
+//│     let x$321 = Yield$232(n$245) in
+//│     x$321
+//│   def next$222(it$248) =
+//│     case it$248 of
+//│       Yield$232 =>
+//│         let x$323 = it$248.<Yield$232:n> in
+//│         let x$324 = ==(x$323,0) in
+//│         case x$324 of
+//│           BoolLit(true) =>
+//│             let x$326 = Done$230() in
+//│             let x$327 = Tuple2$328(0,x$326) in
+//│             x$327
+//│           _ =>
+//│             let x$330 = -(x$323,1) in
+//│             let x$331 = Yield$232(x$330) in
+//│             let x$332 = Tuple2$328(x$323,x$331) in
+//│             x$332
+//│       _ =>
+//│         case it$248 of
+//│           Map$235 =>
+//│             let x$334 = it$248.<Map$235:f> in
+//│             let x$335 = it$248.<Map$235:it> in
+//│             let* (x$336) = next(x$335) in
+//│             case x$336 of
+//│               Tuple2$328 =>
+//│                 let x$338 = x$336.<Tuple2$328:0> in
+//│                 let x$339 = x$336.<Tuple2$328:1> in
+//│                 let* (x$340) = done(x$339) in
+//│                 case x$340 of
+//│                   BoolLit(true) =>
+//│                     let x$342 = Callable.apply1$344(x$334,x$338) in
+//│                     let x$345 = Done$230() in
+//│                     let x$346 = Tuple2$328(x$342,x$345) in
+//│                     x$346
+//│                   _ =>
+//│                     let x$347 = Callable.apply1$344(x$334,x$338) in
+//│                     let x$348 = Map$235(x$334,x$339) in
+//│                     let x$349 = Tuple2$328(x$347,x$348) in
+//│                     x$349
+//│               _ =>
+//│                 panic "match error"
+//│           _ =>
+//│             panic "match error"
+//│   def fold$219(acc$271,it$272) =
+//│     let* (x$350) = next(it$272) in
+//│     case x$350 of
+//│       Tuple2$328 =>
+//│         let x$352 = x$350.<Tuple2$328:0> in
+//│         let x$353 = x$350.<Tuple2$328:1> in
+//│         let* (x$354) = done(x$353) in
+//│         case x$354 of
+//│           BoolLit(true) =>
+//│             acc$271
+//│           _ =>
+//│             let x$356 = +(x$352,acc$271) in
+//│             let* (x$357) = fold(x$356,x$353) in
+//│             x$357
+//│       _ =>
+//│         panic "match error"
+//│   def map_sum$225(f$284,n$285) =
+//│     let* (x$358) = dec(n$285) in
+//│     let* (x$359) = map(f$284,x$358) in
+//│     let* (x$360) = fold(0,x$359) in
+//│     x$360
+//│   def entry$365() =
+//│     let x$364 = Lambda$362() in
+//│     let* (x$361) = map_sum(x$364,2000000) in
+//│     x$361
+//│   entry = entry$365
+
+
+:sopt
+:optf simp,!split
+:wcpp inlined.cpp
+abstract class Iter[T]
+object Done
+class Yield(n)
+class Map(f, it)
+fun done(it) = if it is Done then true else false
+fun map(f, it) = Map(f, it)
+fun dec(n) = Yield(n)
+fun next(it) = if it is
+  Yield(n) then
+    if n == 0 then [0, Done]
+    else [n, Yield(n - 1)]
+  Map(f, it) then
+    if next(it) is [n, it] then
+      if done(it) then [f(n), Done]
+      else [f(n), Map(f, it)]
+fun fold(acc, iter) = if iter is
+  Yield(n) then
+    if n == 0 then acc
+    else fold(n + acc, Yield(n - 1))
+  Map(f, it) then
+    if next(it) is [n, it] then
+      if it is Done then acc else fold(f(n) + acc, Map(f, it))
+fun map_sum(f, n) = let it = map(f, dec(n)) in fold(0, it)
+map_sum(x => x, 2000000)
+//│ 
+//│ Opt:
+//│   class Done()
+//│   class Yield(n$386)
+//│   class Map(f$389,it$390)
+//│   class Lambda() extends Callable {
+//│     def apply1$344(x$456) =
+//│       x$456
+//│   }
+//│   def done$375(it$391) =
+//│     case it$391 of
+//│       Done$382 =>
+//│         true
+//│       _ =>
+//│         false
+//│   def map$369(f$393,it$394) =
+//│     let x$492 = Map$387(f$393,it$394) in
+//│     x$492
+//│   def dec$378(n$397) =
+//│     let x$493 = Yield$384(n$397) in
+//│     x$493
+//│   def next$374(it$400) =
+//│     case it$400 of
+//│       Yield$384 =>
+//│         let x$495 = it$400.<Yield$384:n> in
+//│         let x$496 = ==(x$495,0) in
+//│         case x$496 of
+//│           BoolLit(true) =>
+//│             let x$498 = Done$382() in
+//│             let x$499 = Tuple2$328(0,x$498) in
+//│             x$499
+//│           _ =>
+//│             let x$500 = -(x$495,1) in
+//│             let x$501 = Yield$384(x$500) in
+//│             let x$502 = Tuple2$328(x$495,x$501) in
+//│             x$502
+//│       _ =>
+//│         case it$400 of
+//│           Map$387 =>
+//│             let x$504 = it$400.<Map$387:f> in
+//│             let x$505 = it$400.<Map$387:it> in
+//│             let* (x$506) = next(x$505) in
+//│             case x$506 of
+//│               Tuple2$328 =>
+//│                 let x$508 = x$506.<Tuple2$328:0> in
+//│                 let x$509 = x$506.<Tuple2$328:1> in
+//│                 let* (x$510) = done(x$509) in
+//│                 case x$510 of
+//│                   BoolLit(true) =>
+//│                     let x$512 = Callable.apply1$344(x$504,x$508) in
+//│                     let x$513 = Done$382() in
+//│                     let x$514 = Tuple2$328(x$512,x$513) in
+//│                     x$514
+//│                   _ =>
+//│                     let x$515 = Callable.apply1$344(x$504,x$508) in
+//│                     let x$516 = Map$387(x$504,x$509) in
+//│                     let x$517 = Tuple2$328(x$515,x$516) in
+//│                     x$517
+//│               _ =>
+//│                 panic "match error"
+//│           _ =>
+//│             panic "match error"
+//│   def fold$371(acc$423,iter$424) =
+//│     case iter$424 of
+//│       Yield$384 =>
+//│         let x$519 = iter$424.<Yield$384:n> in
+//│         let x$520 = ==(x$519,0) in
+//│         case x$520 of
+//│           BoolLit(true) =>
+//│             acc$423
+//│           _ =>
+//│             let x$522 = +(x$519,acc$423) in
+//│             let x$523 = -(x$519,1) in
+//│             let x$524 = Yield$384(x$523) in
+//│             let* (x$525) = fold(x$522,x$524) in
+//│             x$525
+//│       _ =>
+//│         case iter$424 of
+//│           Map$387 =>
+//│             let x$527 = iter$424.<Map$387:f> in
+//│             let x$528 = iter$424.<Map$387:it> in
+//│             let* (x$529) = next(x$528) in
+//│             case x$529 of
+//│               Tuple2$328 =>
+//│                 let x$531 = x$529.<Tuple2$328:0> in
+//│                 let x$532 = x$529.<Tuple2$328:1> in
+//│                 case x$532 of
+//│                   Done$382 =>
+//│                     acc$423
+//│                   _ =>
+//│                     let x$534 = Callable.apply1$344(x$527,x$531) in
+//│                     let x$535 = +(x$534,acc$423) in
+//│                     let x$536 = Map$387(x$527,x$532) in
+//│                     let* (x$537) = fold(x$535,x$536) in
+//│                     x$537
+//│               _ =>
+//│                 panic "match error"
+//│           _ =>
+//│             panic "match error"
+//│   def map_sum$377(f$448,n$449) =
+//│     let* (x$538) = dec(n$449) in
+//│     let* (x$539) = map(f$448,x$538) in
+//│     let* (x$540) = fold(0,x$539) in
+//│     x$540
+//│   def entry$545() =
+//│     let x$544 = Lambda$542() in
+//│     let* (x$541) = map_sum(x$544,2000000) in
+//│     x$541
+//│   entry = entry$545
