@@ -394,7 +394,7 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
         case r => super.applyResult2(r)(k)
       override def applyLam(lam: Value.Lam): Value.Lam =
         // This should normally be unreachable, but we can just emit a warning and proceed with the transformation
-        raise(WarningReport(msg"BUG: Unexpected lambda during handler lowering" -> lam.toLoc :: Nil,
+        raise(InternalError(msg"Unexpected lambda during handler lowering" -> lam.toLoc :: Nil,
           source = Diagnostic.Source.Compilation))
         Value.Lam(lam.params, translateBlock(lam.body, lam.params.paramSyms.toSet, functionHandlerCtx(s"Cont$$lambda$$", "‹lambda›")))
       override def applyDefn(defn: Defn): Defn = defn match
