@@ -4,7 +4,7 @@
 :sjs
 declare fun foo: Int
 //│ JS (unsanitized):
-//│ null
+//│ 
 
 :re
 :sjs

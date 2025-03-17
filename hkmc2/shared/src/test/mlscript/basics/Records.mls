@@ -1,0 +1,124 @@
+:js
+
+
+// * Note that this currently denotes unit, not an empty record...
+// * (we could make them the same thing) 
+
+{}
+
+let r = {}
+//│ r = ()
+
+
+{1}
+//│ = 1
+
+:w
+{1, 2}
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.17: 	{1, 2}
+//│ ╙──      	 ^
+//│ = 2
+
+{foo: 1}
+//│ = {foo: 1}
+
+
+let rcd = { foo: 1, bar: "..." }
+//│ rcd = {foo: 1, bar: "..."}
+
+[rcd.foo, rcd.bar]
+//│ = [1, "..."]
+
+typeof(rcd)
+//│ = "object"
+
+
+// * Should we allow this syntax?
+
+let rcd = (foo: 1, bar: "...")
+//│ rcd = {foo: 1, bar: "..."}
+
+[rcd.foo, rcd.bar]
+//│ = [1, "..."]
+
+let rcd = (
+  foo: 1
+  bar: "..."
+)
+//│ rcd = {foo: 1, bar: "..."}
+
+let rcd =
+  foo: 1
+  bar:
+    "..."
+//│ rcd = {foo: 1, bar: "..."}
+
+[rcd.foo, rcd.bar]
+//│ = [1, "..."]
+
+print <|
+  foo: 1
+  bar:
+    "..."
+//│ > {foo: 1, bar: "..."}
+
+
+// * But not this syntax...
+
+:e
+:fixme
+let rcd =
+  foo = 1
+  bar =
+    "..."
+//│ ╔══[ERROR] Name not found: foo
+//│ ║  l.72: 	  foo = 1
+//│ ╙──      	  ^^^
+//│ ╔══[ERROR] Name not found: bar
+//│ ║  l.73: 	  bar =
+//│ ╙──      	  ^^^
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: rcd (class hkmc2.semantics.VarSymbol)
+
+
+// * How about this syntax?
+
+:todo
+let rcd = new with
+  foo = 1
+  bar =
+    "..."
+//│ ╔══[ERROR] Name not found: foo
+//│ ║  l.88: 	  foo = 1
+//│ ╙──      	  ^^^
+//│ ╔══[ERROR] Name not found: bar
+//│ ║  l.89: 	  bar =
+//│ ╙──      	  ^^^
+//│ rcd = $anon
+
+
+id of (x: 1)
+//│ = {x: 1}
+
+id of { x: 1 }
+//│ = {x: 1}
+
+id of ({ x: 1 })
+//│ = {x: 1}
+
+
+id of ({ x: 1, y: 2 })
+//│ = {x: 1, y: 2}
+
+id of (x: 1, y: 2)
+//│ = {x: 1, y: 2}
+
+// * FIXME: handling of record arguments in resolver/checker
+:fixme
+id of { x: 1, y: 2 }
+//│ ╔══[ERROR] Expected 1 arguments, got 2
+//│ ║  l.118: 	id of { x: 1, y: 2 }
+//│ ╙──       	^^
+//│ = {x: 1, y: 2}
+
+

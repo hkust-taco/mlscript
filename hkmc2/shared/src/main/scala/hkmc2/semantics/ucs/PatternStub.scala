@@ -19,7 +19,7 @@ enum ConstructorLike:
   /** This case represents pattern parameters, which only make sense within the
     * body of the pattern declaration.
     */
-  case Parameter(symbol: LocalSymbol & NamedSymbol)
+  case Parameter(symbol: VarSymbol)
   /**
     * This case represents a nested split, where the arity of the split must be 1
     * (there is exactly one `Binder` at the top level). The split must not have

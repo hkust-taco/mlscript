@@ -1,5 +1,5 @@
 :js
-:handler
+:effectHandlers
 
 
 abstract class Effect with
@@ -35,19 +35,15 @@ x
 //│ ╙──      	^
 
 
-:e
 handle h = Effect with
   fun perform(arg)(k) =
     print(arg)
 val y = 123
-//│ ╔══[ERROR] Illegal definition in term position.
-//│ ║  l.42: 	val y = 123
-//│ ╙──      	    ^^^^^^^
 
 :e
 y
 //│ ╔══[ERROR] Name not found: y
-//│ ║  l.48: 	y
+//│ ║  l.44: 	y
 //│ ╙──      	^
 
 

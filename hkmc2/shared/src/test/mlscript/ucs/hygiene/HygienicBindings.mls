@@ -6,15 +6,15 @@ fun (~~>) expect(a, b) = if a == b then () else error
 
 type Option[out T] = None | Some[T]
 object None
-class Some[out T](val value: T)
+data class Some[out T](val value: T)
 
 type Either[A, B] = Left[A] | Right[B]
-class Left[A](val leftValue: A)
-class Right[B](val rightValue: B)
+data class Left[A](val leftValue: A)
+data class Right[B](val rightValue: B)
 
 type List[out A] = Nil | Cons[A]
 object Nil
-class Cons[out A](head: A, tail: List[A])
+data class Cons[out A](head: A, tail: List[A])
 
 fun justTrue(_) = true
 fun justFalse(_) = false

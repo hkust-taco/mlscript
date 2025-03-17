@@ -69,11 +69,11 @@ abstract class LlirDiffMaker extends BbmlDiffMaker:
         entry = wholeProg.last.entry
       )
 
-  override def processTerm(trm: Blk, inImport: Bool)(using Raise): Unit = 
+  override def processTerm(trm: Blk, inImport: Bool)(using Config, Raise): Unit = 
     super.processTerm(trm, inImport)
     if llir.isSet then
       val low = ltl.givenIn:
-        codegen.Lowering(lowerHandlers = false, stackLimit = None)
+        codegen.Lowering()
       var le = low.program(trm)
       given Scope = scope
       given Ctx = ctx

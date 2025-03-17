@@ -11,7 +11,7 @@ foo(1){x => x}
 //│ ╔══[ERROR] Name not found: foo
 //│ ║  l.10: 	foo(1){x => x}
 //│ ╙──      	^^^
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side.
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (infix operation).
 //│ ║  l.10: 	foo(1){x => x}
 //│ ╙──      	       ^^^^^^
 
@@ -20,7 +20,7 @@ foo(1)
 //│ ╔══[ERROR] Name not found: foo
 //│ ║  l.18: 	foo(1)
 //│ ╙──      	^^^
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side.
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (infix operation).
 //│ ║  l.19: 	  x => x
 //│ ╙──      	  ^^^^^^
 
@@ -28,7 +28,7 @@ foo(1) { x => x }
 //│ ╔══[ERROR] Name not found: foo
 //│ ║  l.27: 	foo(1) { x => x }
 //│ ╙──      	^^^
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side.
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (infix operation).
 //│ ║  l.27: 	foo(1) { x => x }
 //│ ╙──      	         ^^^^^^
 

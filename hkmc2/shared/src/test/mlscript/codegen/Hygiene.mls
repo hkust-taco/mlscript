@@ -23,7 +23,6 @@ object Test with
 //│   toString() { return "Test"; }
 //│ }; Test1 = new Test$class;
 //│ Test1.class = Test$class;
-//│ null
 
 Test
 //│ = Test
@@ -41,7 +40,7 @@ Test.foo()
 :sjs
 val Test = "oops"
 //│ JS (unsanitized):
-//│ let Test2; Test2 = "oops"; null
+//│ let Test2; Test2 = "oops";
 //│ Test = "oops"
 
 :re
@@ -55,7 +54,7 @@ let f = () => x
 let x = 2
 f()
 //│ JS (unsanitized):
-//│ let x, f, x1; x = 1; f = () => { return x }; x1 = 2; f() ?? null
+//│ let x, f, x1, f1; x = 1; f1 = function f() { return x }; f = f1; x1 = 2; runtime.safeCall(f())
 //│ = 1
 //│ f = [function f]
 //│ x = 2
@@ -67,22 +66,21 @@ module Test with
   val x = 1
   let x = 2
 //│ ╔══[ERROR] Name 'x' is already used
-//│ ║  l.68: 	  let x = 2
+//│ ║  l.67: 	  let x = 2
 //│ ║        	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.67: 	  val x = 1
+//│ ║  l.66: 	  val x = 1
 //│ ╙──      	      ^^^^^
 //│ JS:
 //│ Test4 = class Test3 {
 //│   static #x;
 //│   static {
 //│     this.x = 1;
-//│     this.#x = 2;
+//│     Test3.#x = 2;
 //│   }
 //│   static toString() { return "Test"; }
 //│ };
-//│ block$res8 = null;
-//│ undefined
+//│ block$res8 = undefined;
 
 Test.x
 //│ = 1
@@ -97,7 +95,7 @@ module Test with
 
 
 :sjs
-class Cls(x) with
+data class Cls(x) with
   let x += 1
   fun foo = x
   let x *= 2
@@ -105,13 +103,15 @@ class Cls(x) with
   print(this.x, x)
 //│ JS (unsanitized):
 //│ let Cls1;
-//│ Cls1 = function Cls(x3) { return new Cls.class(x3); };
+//│ Cls1 = function Cls(x3) {
+//│   return new Cls.class(x3);
+//│ };
 //│ Cls1.class = class Cls {
 //│   #x;
 //│   #x1;
 //│   constructor(x2) {
-//│     this.x = x2;
 //│     let tmp, tmp1;
+//│     this.x = x2;
 //│     tmp = this.x + 1;
 //│     this.#x = tmp;
 //│     tmp1 = this.#x * 2;
@@ -126,7 +126,6 @@ class Cls(x) with
 //│   }
 //│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ")"; }
 //│ };
-//│ null
 
 let cls = Cls(10)
 //│ > 10 22
@@ -159,10 +158,10 @@ foo()
 
 :sjs
 module Whoops with
-  val v = this
+  val v: module Whoops = this
   fun f() = "Hello"
   module Whoops with
-    val w = this
+    val w: module Whoops = this
     fun g() = f()
 //│ JS (unsanitized):
 //│ let Whoops2;
@@ -184,7 +183,6 @@ module Whoops with
 //│   }
 //│   static toString() { return "Whoops"; }
 //│ };
-//│ null
 
 Whoops.f()
 //│ = "Hello"
@@ -194,5 +192,12 @@ Whoops.Whoops
 
 Whoops.Whoops.g()
 //│ = "Hello"
+
+
+:e
+Runtime
+//│ ╔══[ERROR] Name not found: Runtime
+//│ ║  l.198: 	Runtime
+//│ ╙──       	^^^^^^^
 
 

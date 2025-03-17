@@ -204,6 +204,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
   private def typeCode(code: Term)(using ctx: BbCtx, scope: Scope): (Type, Type, Type) =
     given CCtx = CCtx.init(code, N)
     code match
+    case UnitVal() => (Top, Bot, Bot)
     case Lit(lit) => ((lit match
       case _: IntLit => BbCtx.intTy
       case _: DecLit => BbCtx.numTy
@@ -246,7 +247,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val cr = freshVar(new TempSymbol(S(unq), "ctx"))
       constrain(tryMkMono(ty, body), BbCtx.codeTy(tv, cr))
       (tv, cr, eff)
-    case blk @ Term.Blk(LetDecl(sym, _) :: DefineVar(sym2, rhs) :: Nil, body) if sym2 is sym => // TODO: more than one!!
+    case blk @ Term.Blk(LetDecl(sym, _) :: DefineVar(sym2, rhs) :: Nil, body)
+    if sym2 is sym => // TODO: more than one!!
       val (rhsTy, rhsCtx, rhsEff) = typeCode(rhs)(using ctx)
       val nestCtx = ctx.nextLevel
       given BbCtx = nestCtx
@@ -440,15 +442,15 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             effBuff += eff
             ctx += sym -> rhsTy
             goStats(stats)
-          case TermDefinition(_, Fun, sym, ps :: Nil, sig, S(body), _, _, _) :: stats =>
+          case TermDefinition(_, Fun, sym, ps :: Nil, _, sig, S(body), _, _, _) :: stats =>
             typeFunDef(sym, Term.Lam(ps, body), sig, ctx)
             goStats(stats)
-          case TermDefinition(_, Fun, sym, Nil, sig, S(body), _, _, _) :: stats =>
+          case TermDefinition(_, Fun, sym, Nil, _, sig, S(body), _, _, _) :: stats =>
             typeFunDef(sym, body, sig, ctx)  // * may be a case expressions
             goStats(stats)
-          case TermDefinition(_, Fun, sym1, _, S(sig), None, _, _, _) :: (td @ TermDefinition(_, Fun, sym2, _, _, S(body), _, _, _)) :: stats
+          case TermDefinition(_, Fun, sym1, _, _, S(sig), None, _, _, _) :: (td @ TermDefinition(_, Fun, sym2, _, _, _, S(body), _, _, _)) :: stats
             if sym1 === sym2 => goStats(td :: stats) // * avoid type check signatures twice
-          case TermDefinition(_, Fun, sym, _, S(sig), None, _, _, _) :: stats =>
+          case TermDefinition(_, Fun, sym, _, _, S(sig), None, _, _, _) :: stats =>
             ctx += sym -> typeType(sig)
             goStats(stats)
           case (clsDef: ClassDef) :: stats =>
@@ -462,6 +464,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         goStats(stats)
         val (ty, eff) = typeCheck(res)
         (ty, effBuff.foldLeft(eff)((res, e) => res | e))
+      case UnitVal() => (Top, Bot)
       case Lit(lit) => ((lit match
         case _: IntLit => BbCtx.intTy
         case _: DecLit => BbCtx.numTy

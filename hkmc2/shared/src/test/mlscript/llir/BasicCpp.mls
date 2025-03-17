@@ -1,4 +1,4 @@
-
+:js
 :global
 :llir
 :cpp
@@ -11,31 +11,42 @@ fun foo(a) =
   x + 1
 //│ LLIR:
 //│   
-//│   def foo$216(a$217) =
-//│     let x$224 = null in
-//│     let x$225 = >(a$217,0) in
-//│     case x$225 of
+//│   def foo$567(a$569) =
+//│     let x$579 = undefined in
+//│     let x$580 = >(a$569,0) in
+//│     case x$580 of
 //│       BoolLit(true) =>
-//│         let x$227 = 1 in
-//│         let x$228 = undefined in
-//│         jump j$226(x$227)
+//│         let x$582 = 1 in
+//│         let x$583 = undefined in
+//│         jump j$581(x$582)
 //│       _ =>
-//│         let x$229 = undefined in
-//│         jump j$226(x$224)
-//│   def j$226(x$218) =
-//│     let x$230 = +(x$218,1) in
-//│     x$230
-//│   def entry$231() =
+//│         let x$584 = undefined in
+//│         jump j$581(x$579)
+//│   def j$581(x$570) =
+//│     let x$585 = +(x$570,1) in
+//│     x$585
+//│   def entry$586() =
 //│     undefined
-//│   entry = entry$231
+//│   entry = entry$586
 
 :showWholeCpp
 fun bar(x) =
   x + 1
 foo(1)
+//│ = 2
+//│ LLIR:
+//│   
+//│   def bar$587(x$589) =
+//│     let x$595 = +(x$589,1) in
+//│     x$595
+//│   def entry$597() =
+//│     let* (x$596) = foo(1) in
+//│     x$596
+//│   entry = entry$597
 //│ 
 //│ WholeProgramCpp:
 //│ #include "mlsprelude.h"
+//│ _mlsValue _mls_entry2();
 //│ _mlsValue _mls_foo(_mlsValue);
 //│ _mlsValue _mls_entry();
 //│ _mlsValue _mls_j(_mlsValue);
@@ -53,10 +64,15 @@ foo(1)
 //│   _mls_retval = _mls_x;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_entry1() {
+//│ _mlsValue _mls_entry2() {
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x9 = _mls_foo(_mlsValue::fromIntLit(1));
 //│   _mls_retval = _mls_x9;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_entry1() {
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mlsValue::create<_mls_Unit>();
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_entry() {
@@ -78,5 +94,5 @@ foo(1)
 //│   }
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mlsMain() { return _mls_entry1(); }
+//│ _mlsValue _mlsMain() { return _mls_entry2(); }
 //│ int main() { return _mlsLargeStack(_mlsMainWrapper); }

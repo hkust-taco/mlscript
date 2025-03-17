@@ -1,13 +1,32 @@
 :bbml
 //│ Type: ⊤
+:js
 
 //│ Type: ⊤
 
 
 @untyped 1
+//│ = 1
 //│ Type: ⊥
 
+:re
 (@untyped 1)(2)
+//│ ═══[RUNTIME ERROR] TypeError: 1 is not a function
 //│ Type: ⊥
+
+@untyped
+fun f: Int
+//│ Type: ⊤
+
+@untyped declare fun f: Int
+//│ Type: ⊤
+
+@untyped 
+@untyped 
+declare fun f: Int
+//│ Type: ⊤
+
+@untyped fun f() = 1
+//│ Type: ⊤
 
 

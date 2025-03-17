@@ -7,6 +7,7 @@ import utils.*
 
 import hkmc2.semantics.MemberSymbol
 import hkmc2.semantics.Elaborator
+import semantics.Elaborator.Ctx
 import hkmc2.syntax.Keyword.`override`
 import semantics.Elaborator.State
 
@@ -15,7 +16,7 @@ class ParserSetup(file: os.Path, dbgParsing: Bool)(using Elaborator.State, Raise
   
   val block = os.read(file)
   val fph = new FastParseHelpers(block)
-  val origin = Origin(file.toString, 0, fph)
+  val origin = Origin(file, 0, fph)
   
   val lexer = new syntax.Lexer(origin, dbg = dbgParsing)
   val tokens = lexer.bracketedTokens
@@ -35,11 +36,16 @@ class ParserSetup(file: os.Path, dbgParsing: Bool)(using Elaborator.State, Raise
   
 
 
-class MLsCompiler(preludeFile: os.Path):
+// * The weird type of `mkOutput` is to allow wrapping the reporting of diagnostics in synchronized blocks
+class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Unit)(using Config):
+  
+  val runtimeFile: os.Path = preludeFile/os.up/os.up/os.up/"mlscript-compile"/"Runtime.mjs"
   
   
-  val report = ReportFormatter: str =>
-    System.out.println(fansi.Color.Red(str))
+  val report = ReportFormatter: outputConsumer =>
+    mkOutput: output =>
+      outputConsumer: str =>
+        output(fansi.Color.Red(str).toString)
   
   
   // TODO adapt logic
@@ -55,7 +61,8 @@ class MLsCompiler(preludeFile: os.Path):
     val wd = file / os.up
     
     given raise: Raise = d =>
-      System.out.println(fansi.Color.LightRed(s"/!!!\\ Error in ${file.relativeTo(wd/os.up)} /!!!\\"))
+      mkOutput:
+        _(fansi.Color.LightRed(s"/!!!\\ Error in ${file.relativeTo(wd/os.up)} /!!!\\").toString)
       report(0, d :: Nil, showRelativeLineNums = false)
     
     given Elaborator.State = new Elaborator.State
@@ -63,18 +70,23 @@ class MLsCompiler(preludeFile: os.Path):
     val preludeParse = ParserSetup(preludeFile, dbgParsing)
     val mainParse = ParserSetup(file, dbgParsing)
     
-    val elab = Elaborator(etl, wd)
+    val elab = Elaborator(etl, wd, Ctx.empty)
     
-    val initState = State.init.nest(N)
+    val initState = State.init.nestLocal
     
     val (pblk, newCtx) = elab.importFrom(preludeParse.resultBlk)(using initState)
     
-    newCtx.nest(N).givenIn:
-      
+    newCtx.nestLocal.givenIn:
+      val elab = Elaborator(etl, wd, newCtx)
       val parsed = mainParse.resultBlk
-      val (blk, newCtx) = elab.importFrom(parsed)
+      val (blk0, _) = elab.importFrom(parsed)
+      val blk = new semantics.Term.Blk(
+        semantics.Import(State.runtimeSymbol, runtimeFile.toString) :: blk0.stats,
+        blk0.res
+      )
       val low = ltl.givenIn:
-        codegen.Lowering(lowerHandlers = false, stackLimit = None) // TODO: properly hook up stack limit
+        new codegen.Lowering()
+          with codegen.LoweringSelSanityChecks
       val jsb = ltl.givenIn:
         codegen.js.JSBuilder()
       val le = low.program(blk)

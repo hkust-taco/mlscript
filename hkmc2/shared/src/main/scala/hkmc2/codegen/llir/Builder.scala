@@ -35,6 +35,7 @@ final case class BuiltinSymbols(
   def hiddenClasses = callableSym.toSet
 
 final case class Ctx(
+  runtimeSymbol: TempSymbol,
   def_acc: ListBuffer[Func],
   class_acc: ListBuffer[ClassInfo],
   symbol_ctx: Map[Local, Local] = Map.empty,
@@ -62,7 +63,8 @@ final case class Ctx(
   def nonTopLevel = copy(is_top_level = false)
 
 object Ctx:
-  def empty = Ctx(ListBuffer.empty, ListBuffer.empty)
+  def empty(using Elaborator.State) =
+    Ctx(Elaborator.State.runtimeSymbol, ListBuffer.empty, ListBuffer.empty)
 
 final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   import tl.{trace, log, logs}
@@ -215,13 +217,12 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   private def bClsLikeDef(e: ClsLikeDefn)(using ctx: Ctx)(using Raise, Scope): ClassInfo =
     trace[ClassInfo](s"bClsLikeDef begin", x => s"bClsLikeDef end: ${x.show}"):
       val ClsLikeDefn(
-        _own, isym, _sym, kind, paramsOpt, parentSym, methods, privateFields, publicFields, preCtor, ctor) = e
+        _own, isym, _sym, kind, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor) = e
       if !ctx.is_top_level then
         bErrStop(msg"Non top-level definition ${isym.toString()} not supported")
       else
         val clsDefn = isym.defn.getOrElse(die)
         val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
-        val clsFields = publicFields.map(_.sym)
         given Ctx = ctx.setClass(isym)
         val funcs = methods.map(bMethodDef)
         def parentFromPath(p: Path): Set[Local] = p match
@@ -231,7 +232,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         ClassInfo(
           uid.make,
           isym,
-          clsParams ++ clsFields,
+          clsParams,
           parentSym.fold(Set.empty)(parentFromPath),
           funcs.map(f => f.name -> f).toMap,
         )
@@ -331,6 +332,8 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   private def bPath(p: Path)(k: TrivialExpr => Ctx ?=> Node)(using ctx: Ctx)(using Raise, Scope) : Node =
     trace[Node](s"bPath { $p } begin", x => s"bPath end: ${x.show}"):
       p match
+      case s @ Select(Value.Ref(sym), Tree.Ident("Unit")) if sym is ctx.runtimeSymbol =>
+        bPath(Value.Lit(Tree.UnitLit(false)))(k)
       case s @ Select(Value.Ref(cls: ClassSymbol), name) if ctx.method_class.contains(cls) =>
         s.symbol match
           case None =>
@@ -511,7 +514,10 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   
   def registerClasses(b: Block)(using ctx: Ctx)(using Raise, Scope): Ctx =
     b match
-    case Define(cd @ ClsLikeDefn(_own, isym, sym, kind, _paramsOpt, parentSym, methods, privateFields, publicFields, preCtor, ctor), rest) =>
+    case Define(cd @ ClsLikeDefn(_own, isym, sym, kind, _paramsOpt, auxParams,
+        parentSym, methods, privateFields, publicFields, preCtor, ctor), rest) =>
+      if !auxParams.isEmpty then
+        bErrStop(msg"The class ${sym.nme} has auxiliary parameters, which are not yet supported")
       val c = bClsLikeDef(cd)
       ctx.class_acc += c
       val new_ctx = ctx.addClassInfo(isym, c)
@@ -557,7 +563,6 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
     case Define(defn, rest) => registerFunctions(rest)
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
       TODO("HandleBlock not supported")
-    case HandleBlockReturn(res) => ctx
     case End(msg) => ctx
   
   def bProg(e: Program)(using Raise, Scope, Ctx): (LlirProgram, Ctx) =

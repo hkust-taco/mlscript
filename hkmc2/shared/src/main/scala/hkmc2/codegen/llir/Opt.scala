@@ -619,7 +619,7 @@ final class LlirOpt(using Elaborator.State, Raise)(tl: TraceLogger, freshInt: Fr
     def sNode(node: Node, splitPos: Loc, thisFunc: Func)(acc: Node => Node): SplittingMode = 
       trace[SplittingMode](s"sNode: $node"): 
         node match
-        case Node.Result(res) => oErrStop("sNode: unexpected Result")
+        case Node.Result(res) => oErrStop(s"sNode: unexpected Result $res")
         case Node.Jump(func, args) =>
           // B mode
           val sym = newFunSym(s"${thisFunc.name.nme}_pre")

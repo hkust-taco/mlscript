@@ -1,7 +1,7 @@
 :js
 
 
-class Foo(val x) with
+data class Foo(val x) with
   val y = x
 
 
@@ -60,7 +60,7 @@ case
 //│   stats = Nil
 //│   res = Lam:
 //│     params = ParamList:
-//│       flags = ParamListFlags of false
+//│       flags = ()
 //│       params = Ls of 
 //│         Param:
 //│           flags = ()
@@ -88,17 +88,19 @@ case
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
-//│   main = Assign:
-//│     lhs = $block$res
-//│     rhs = Lam:
-//│       params = ParamList:
-//│         flags = ParamListFlags of false
-//│         params = Ls of 
-//│           Param:
-//│             flags = ()
-//│             sym = caseScrut
-//│             sign = N
-//│         restParam = N
+//│   main = Define:
+//│     defn = FunDefn:
+//│       owner = N
+//│       sym = member:lambda
+//│       params = Ls of 
+//│         ParamList:
+//│           flags = ()
+//│           params = Ls of 
+//│             Param:
+//│               flags = ()
+//│               sym = caseScrut
+//│               sign = N
+//│           restParam = N
 //│       body = Match:
 //│         scrut = Ref of caseScrut
 //│         arms = Ls of 
@@ -126,10 +128,13 @@ case
 //│           args = Ls of 
 //│             Lit of StrLit of "match error"
 //│         rest = End of ""
+//│     rest = Assign: \
+//│     lhs = $block$res
+//│     rhs = Ref of member:lambda
 //│     rest = Return: \
 //│     res = Lit of UnitLit of false
 //│     implct = true
-//│ = [function block$res6]
+//│ = [function]
 
 
 // TODO support:

@@ -56,13 +56,13 @@ type Piece = [Colour,Kind]
 
 type Square = [Int,Int]
 
-class Board(a: List[[Kind, Square]], b: List[[Kind, Square]])
+data class Board(a: List[[Kind, Square]], b: List[[Kind, Square]])
 
-class Move(a: Square, b: Option[Piece], c: Option[Piece])
+data class Move(a: Square, b: Option[Piece], c: Option[Piece])
 
-class MoveInFull(a: Piece, b: Square, c: Move)
+data class MoveInFull(a: Piece, b: Square, c: Move)
 
-class Solution(a: MoveInFull, b: List[[List[MoveInFull],Solution]])
+data class Solution(a: MoveInFull, b: List[[List[MoveInFull],Solution]])
 
 fun maybe(d, f, x) = if x is
   None then d
@@ -482,7 +482,7 @@ fun solution(bd, c, n) =
   else throw Error("n <= 0")
 //│ ————————————————————————————————————————————————————————————————————————————————
 
-class Soln(a: MoveInFull, b: List[[List[MoveInFull],Soln]])
+data class Soln(a: MoveInFull, b: List[[List[MoveInFull],Soln]])
 
 fun tab(n) = if n <= 0 then Nil else " " :: tab(n - 1)
 

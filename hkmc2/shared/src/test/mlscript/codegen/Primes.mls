@@ -7,7 +7,7 @@ let x = 1
 :sjs
 let x' = 2
 //│ JS (unsanitized):
-//│ let x$_; x$_ = 2; null
+//│ let x$_; x$_ = 2;
 //│ x' = 2
 
 x'

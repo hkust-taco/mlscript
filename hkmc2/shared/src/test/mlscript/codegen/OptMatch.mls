@@ -1,7 +1,7 @@
 :js
 
 
-class Some(value)
+data class Some(value)
 object None
 
 
@@ -14,15 +14,12 @@ fun isDefined(x) = if x is
 //│ isDefined = function isDefined(x) {
 //│   if (x instanceof Some1.class) {
 //│     return true
+//│   } else if (x instanceof None1.class) {
+//│     return false
 //│   } else {
-//│     if (x instanceof None1.class) {
-//│       return false
-//│     } else {
-//│       throw new globalThis.Error("match error");
-//│     }
+//│     throw new globalThis.Error("match error");
 //│   }
 //│ };
-//│ null
 
 isDefined(Some(1))
 //│ = true
@@ -36,23 +33,21 @@ val isDefined = case
   Some(_) then true
   None    then false
 //│ JS (unsanitized):
-//│ let isDefined1, tmp1;
-//│ tmp1 = (caseScrut) => {
+//│ let isDefined1, tmp1, lambda;
+//│ lambda = (undefined, function (caseScrut) {
 //│   let param0;
 //│   if (caseScrut instanceof Some1.class) {
 //│     param0 = caseScrut.value;
 //│     return true
+//│   } else if (caseScrut instanceof None1.class) {
+//│     return false
 //│   } else {
-//│     if (caseScrut instanceof None1.class) {
-//│       return false
-//│     } else {
-//│       throw new this.Error("match error");
-//│     }
+//│     throw new globalThis.Error("match error");
 //│   }
-//│ };
+//│ });
+//│ tmp1 = lambda;
 //│ isDefined1 = tmp1;
-//│ null
-//│ isDefined = [function tmp1]
+//│ isDefined = [function]
 
 isDefined(Some(1))
 //│ = true
@@ -64,7 +59,7 @@ isDefined(None)
 val isDefined = x => if x is
   Some(_) then true
   None    then false
-//│ isDefined = [function tmp3]
+//│ isDefined = [function]
 
 isDefined(Some(1))
 //│ = true
@@ -74,12 +69,12 @@ isDefined(None)
 
 
 module Foo with
-  class Other(v)
+  data class Other(v)
 
 val isOther = x => if x is
   Foo.Other(_) then true
   None    then false
-//│ isOther = [function tmp5]
+//│ isOther = [function]
 
 
 fun keepIfGreaterThan(x, y) =

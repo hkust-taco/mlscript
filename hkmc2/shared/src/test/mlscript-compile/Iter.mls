@@ -1,0 +1,196 @@
+import "./Predef.mls"
+import "./Option.mls"
+import "./Stack.mls"
+
+open Predef
+open Option { Some, None }
+open Stack { Nil, Cons }
+
+// * Implements the `Iterable` protocol.
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterable_protocol
+class Iterable(mk) with
+  set this.(Symbol.iterator) = mk
+
+// * Implements the `Iterator` protocol.
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol
+class Iterator(val next)
+
+module Result with
+  class Next(val value) with
+    val done = false
+  object Done with
+    val done = true
+
+module Iter with ...
+
+// A helper function to detect if `Symbol.iterator` is on an object, and if not,
+// indicate the object's class in the error message, which is useful for debugging.
+fun getIterator(something) =
+  let test = something.(Symbol.iterator)
+  if test is undefined then
+    throw TypeError of "Not an iterable: " + if
+      something is undefined then "undefined"
+      something is null then "null"
+      let prototype = Reflect.getPrototypeOf of something
+      prototype is null then "object"
+      else prototype.constructor.name
+  else test.call(something)
+
+fun adaptIterable(iterable, makeNext) = Iterable of () =>
+  let iterator = getIterator of iterable
+  Iterator of makeNext of iterator
+
+fun mapping(xs, op) =
+  xs adaptIterable of iterator => () =>
+    let next = iterator.next()
+    if next.done then
+      Result.Done
+    else
+      Result.Next of op(next.value)
+
+fun flattening(xss) =
+  Iterable of () =>
+    let iterableIterator = getIterator of xss
+    // Get the first `Iterator` from the first `Iterable`.
+    let currentIterator = if
+      let firstIterableResult = iterableIterator.next()
+      firstIterableResult.done then None
+      else Some of getIterator of firstIterableResult.value
+    // Recursively skip empty `Iterable`s and get the next `Iterator` and value.
+    fun skipEmptyIterables() = if
+      let nextIterableResult = iterableIterator.next()
+      nextIterableResult.done then None
+      let nextIterator = getIterator of nextIterableResult.value
+      let nextResult = nextIterator.next()
+      nextResult.done then skipEmptyIterables()
+      else Some of [nextIterator, nextResult.value]
+    Iterator of () =>
+      if currentIterator is
+        None then Result.Done // No more `Iterator`s means we're done.
+        Some(iterator) and
+          let next = iterator.next() // The next item from the current `Iterator`.
+          next.done and skipEmptyIterables() is // The current `Iterator` is drained.
+            Some([nextIterator, value]) then
+              set currentIterator = Some of nextIterator
+              Result.Next of value
+            None then
+              set currentIterator = None
+              Result.Done
+          else Result.Next of next.value
+
+fun filtering(xs, op) =
+  xs adaptIterable of iterator => () =>
+    let next = iterator.next()
+    while next.done is false and op(next.value) is false do
+      set next = iterator.next()
+    if next.done then
+      Result.Done
+    else
+      Result.Next of next.value
+
+fun taking(xs, n) =
+  let i = 0
+  filtering of xs, _ =>
+    set i = i + 1
+    i <= n
+
+fun zippingWithIndex(xs) =
+  let i = 0
+  mapping of xs, x =>
+    let j = i
+    set i = i + 1
+    [x, j]
+
+fun foldingImpl(iterator, acc, op) =
+  let next = iterator.next()
+  while next.done is false do
+    set acc = op(acc, next.value)
+    set next = iterator.next()
+  acc
+
+fun appended(xs, ys) =
+  Iterable of () =>
+    let xsIterator = getIterator of xs
+    let currentIterator = xsIterator
+    Iterator of () => if
+      let next = currentIterator.next()
+      next.done and
+        currentIterator == xsIterator and
+          do set currentIterator = getIterator of ys
+          let next = currentIterator.next()
+          next.done then Result.Done
+          else Result.Next of next.value
+        else Result.Done
+      else Result.Next of next.value
+
+fun reduced(xs, op) =
+  let iterator = getIterator of xs
+  let next = iterator.next()
+  if next.done do
+    throw new Error("Empty iterator")
+  foldingImpl(iterator, next.value, op)
+
+fun folded(xs, z, op) =
+  let iterator = getIterator of xs
+  foldingImpl(iterator, z, op)
+
+fun rightFolded(xs, z, op) =
+  let iterator = getIterator of xs
+  fun go() = if
+    let next = iterator.next()
+    next.done is true then
+      z
+    else
+      op of next.value, go()
+  go()
+
+fun joined(xs, sep) =
+  let iterator = getIterator of xs
+  let next = iterator.next()
+  if next.done then "" else
+    let sep' = String(sep)
+    foldingImpl of
+      iterator
+      String(next.value)
+      (acc, x) => acc + sep + String(x)
+
+fun firstDefined(xs, op) =
+  let iterator = getIterator of xs
+  let next = iterator.next()
+  let result = None
+  while next.done is false and result is None do
+    set
+      result = op(next.value)
+      next = iterator.next()
+  result
+
+// `exists` is a keyword
+fun some(xs, op) =
+  let iterator = getIterator of xs
+  let next = iterator.next()
+  let result = None
+  while result is None do
+    if ...
+    next.done then set result = Some(false)
+    op(next.value) then set result = Some(true)
+    else set next = iterator.next()
+  result Option.getOrElse(false)
+
+fun each(xs, op) =
+  let iterator = getIterator of xs
+  let next = iterator.next()
+  while next.done is false do
+    op(next.value)
+    set next = iterator.next()
+
+fun toArray(view) = Array.from(view)
+
+fun fromStack(stack) = Iterable of () =>
+  let current = stack
+  Iterator of () => if current is
+    Cons(head, tail) then
+      set current = tail
+      Result.Next of head
+    Nil then Result.Done
+
+fun toStack(xs) = xs rightFolded of Nil, Cons

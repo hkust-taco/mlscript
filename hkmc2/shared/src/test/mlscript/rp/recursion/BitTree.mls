@@ -1,6 +1,6 @@
 :js
 
-class Pair[A, B](val first: A, val second: B)
+data class Pair[A, B](val first: A, val second: B)
 
 pattern Bit = 0 | 1
 

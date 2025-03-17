@@ -41,7 +41,7 @@ Oops().Oops#a()
 //│ ╙──      	      ^^^^^
 //│ Type: ⊥
 
-class Oops2()
+data class Oops2()
 (new Oops2()).Oops2#a()
 //│ ╔══[ERROR] Class 'Oops2' does not contain member 'a'.
 //│ ║  l.45: 	(new Oops2()).Oops2#a()
@@ -64,9 +64,9 @@ inc("oops")
 //│ Type: Int
 
 fun inc(x) = x + 1
-inc : Int
+inc as Int
 //│ ╔══[ERROR] Type error in reference with expected type Int
-//│ ║  l.67: 	inc : Int
+//│ ║  l.67: 	inc as Int
 //│ ║        	^^^
 //│ ╙── because: cannot constrain  'x -> Int  <:  Int
 //│ Type: Int

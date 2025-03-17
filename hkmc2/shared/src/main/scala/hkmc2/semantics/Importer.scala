@@ -44,7 +44,7 @@ class Importer:
         
         val block = os.read(file)
         val fph = new FastParseHelpers(block)
-        val origin = Origin(file.toString, 0, fph)
+        val origin = Origin(file, 0, fph)
         
         val sym = tl.trace(s">>> Importing $file"):
           
@@ -60,15 +60,9 @@ class Importer:
           val res = p.parseAll(p.block(allowNewlines = true))
           val resBlk = new syntax.Tree.Block(res)
           
-          // * Note: we don't even need to elaborate the block!
-          // * Though doing so may be needed later for type checking,
-          // * so we should probably do it lazily in the future.
-          /* 
-          given Elaborator.State = new Elaborator.State
-          given Elaborator.Ctx = Elaborator.Ctx.init.nest(N)
-          val elab = Elaborator(tl, file / os.up)
-          val (blk, newCtx) = elab.importFrom(resBlk)
-          */
+          given Elaborator.Ctx = prelude.copy(mode = Mode.Light).nestLocal
+          val elab = Elaborator(tl, file / os.up, prelude)
+          elab.importFrom(resBlk)
           
           resBlk.definedSymbols.find(_._1 === nme) match
           case Some(nme -> sym) => sym

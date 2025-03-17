@@ -1,5 +1,5 @@
 :js
-:handler
+:effectHandlers
 
 // * This file demonstrates the handler-based mechanism of our stack safety implementation
 // * by manually applying the transformation of a recursive factorial function
@@ -117,5 +117,4 @@ test(10, 5)
 //│ > finished at offset: 5
 //│ > finished at offset: 0
 //│ = 3628800
-
 

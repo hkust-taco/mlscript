@@ -144,7 +144,8 @@ enum Expr:
       case Literal(Tree.IntLit(lit)) => s"$lit"
       case Literal(Tree.DecLit(lit)) => s"$lit"
       case Literal(Tree.StrLit(lit)) => s"${lit.escaped}"
-      case Literal(Tree.UnitLit(undefinedOrNull)) => if undefinedOrNull then "undefined" else "null"
+      case Literal(Tree.UnitLit(isNullNotUndefined)) =>
+        if isNullNotUndefined then "null" else "undefined"
       case CtorApp(cls, args) =>
         doc"${docSymWithUid(cls)}(${args.map(_.toString).mkString(",")})"
       case Select(s, cls, fld) =>

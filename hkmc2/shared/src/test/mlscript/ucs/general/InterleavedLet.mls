@@ -1,7 +1,7 @@
 
 
 abstract class List[out T]
-class Cons[out T](head: T, tail: List[T]) extends List[T]
+data class Cons[out T](head: T, tail: List[T]) extends List[T]
 module Nil extends List[Nothing]
 
 
@@ -15,7 +15,7 @@ module Bot
 
 
 abstract class Option[T]
-class Some[T](value: T) extends Option[T]
+data class Some[T](value: T) extends Option[T]
 module None extends Option[Nothing]
 
 

@@ -1,6 +1,15 @@
 :js
 
 
+render(())
+//│ = "()"
+
+render(null)
+//│ = "null"
+
+render(undefined)
+//│ = "undefined"
+
 render(123)
 //│ = "123"
 
@@ -31,6 +40,20 @@ render([1,2,3,4])
 render(1)
 //│ = "1"
 
+render(Object.create(null))
+//│ = "[object]"
+
+render(x => x)
+//│ = "[function]"
+
+class Foo
+
+render(Foo)
+//│ = "class Foo { constructor() {} toString() { return \"Foo\"; } }"
+
+render(new Foo)
+//│ = "Foo"
+
 
 interleave(0) of 1, 2, 3
 //│ = [1, 0, 2, 0, 3]
@@ -48,7 +71,7 @@ interleave(", ") of 1, 2
 //│ = [1, ", ", 2]
 
 
-class Foo(val xs)
+data class Foo(val xs)
 
 render(Foo([1, 2, 3]))
 //│ = "Foo([1, 2, 3])"

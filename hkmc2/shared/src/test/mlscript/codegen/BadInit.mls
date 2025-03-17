@@ -22,7 +22,6 @@ module Bar with
 //│   }
 //│   static toString() { return "Bar"; }
 //│ };
-//│ null
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
 
 

@@ -1,11 +1,8 @@
 :js
 
-:import PredefJS.mls
-//│ Imported 2 member(s)
-
 
 fun test() =
-  class C(a) with { fun f() = a }
+  data class C(a) with { fun f() = a }
   C(0).f()
 
 test()
@@ -14,8 +11,8 @@ test()
 
 :sjs
 fun test(a) =
-  class Inner(b) with
-    log(a)
+  data class Inner(b) with
+    print(a)
     fun f(c) = [a, b, c]
     fun g(d) =
       fun h(e) = [a, b, d, e]
@@ -25,12 +22,14 @@ fun test(a) =
 //│ let test1;
 //│ test1 = function test(a) {
 //│   let Inner1;
-//│   Inner1 = function Inner(b1) { return new Inner.class(b1); };
+//│   Inner1 = function Inner(b1) {
+//│     return new Inner.class(b1);
+//│   };
 //│   Inner1.class = class Inner {
 //│     constructor(b) {
-//│       this.b = b;
 //│       let tmp;
-//│       tmp = log(a);
+//│       this.b = b;
+//│       tmp = Predef.print(a);
 //│     }
 //│     f(c) {
 //│       return [
@@ -56,7 +55,6 @@ fun test(a) =
 //│   };
 //│   return Inner1(42)
 //│ };
-//│ null
 
 let i = test(100)
 //│ > 100
@@ -71,16 +69,18 @@ i.g(200)
 
 :sjs
 fun test(a) =
-  class C1(b) with
+  data class C1(b) with
     print of [a, b]
-  class C2(b) with
+  data class C2(b) with
     print of [a, b]
   [C1(1), C2(2)]
 //│ JS (unsanitized):
 //│ let test2;
 //│ test2 = function test(a) {
 //│   let C11, C21, tmp1, tmp2;
-//│   C11 = function C1(b1) { return new C1.class(b1); };
+//│   C11 = function C1(b1) {
+//│     return new C1.class(b1);
+//│   };
 //│   C11.class = class C1 {
 //│     constructor(b) {
 //│       this.b = b;
@@ -91,7 +91,9 @@ fun test(a) =
 //│     }
 //│     toString() { return "C1(" + globalThis.Predef.render(this.b) + ")"; }
 //│   };
-//│   C21 = function C2(b1) { return new C2.class(b1); };
+//│   C21 = function C2(b1) {
+//│     return new C2.class(b1);
+//│   };
 //│   C21.class = class C2 {
 //│     constructor(b) {
 //│       this.b = b;
@@ -109,7 +111,6 @@ fun test(a) =
 //│     tmp2
 //│   ]
 //│ };
-//│ null
 
 test(123)
 //│ > [123, 1]
@@ -118,7 +119,7 @@ test(123)
 
 
 :sjs
-class Foo(a) with
+data class Foo(a) with
   fun foo() =
     fun bar() = a
     fun baz() = a
@@ -128,7 +129,9 @@ class Foo(a) with
 Foo(123)
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ Foo1 = function Foo(a1) { return new Foo.class(a1); };
+//│ Foo1 = function Foo(a1) {
+//│   return new Foo.class(a1);
+//│ };
 //│ Foo1.class = class Foo {
 //│   constructor(a) {
 //│     this.a = a;
@@ -152,7 +155,7 @@ Foo(123)
 //│ = Foo(123)
 
 :sjs
-class Bar(x) with
+data class Bar(x) with
   fun foo()() =
     fun bar() =
       x
@@ -161,13 +164,15 @@ class Bar(x) with
 Bar(1)
 //│ JS (unsanitized):
 //│ let Bar1;
-//│ Bar1 = function Bar(x1) { return new Bar.class(x1); };
+//│ Bar1 = function Bar(x1) {
+//│   return new Bar.class(x1);
+//│ };
 //│ Bar1.class = class Bar {
 //│   constructor(x) {
-//│     this.x = x;
 //│     let tmp1;
+//│     this.x = x;
 //│     tmp1 = this.foo();
-//│     tmp1() ?? null
+//│     runtime.safeCall(tmp1())
 //│   }
 //│   foo() {
 //│     return () => {

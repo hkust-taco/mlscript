@@ -10,28 +10,28 @@ fun testCtor1() = None
 fun testCtor2() = new None
 //│ LLIR:
 //│   class None()
-//│   def testCtor1$220() =
-//│     let x$229 = None$222() in
-//│     x$229
-//│   def testCtor2$219() =
-//│     let x$230 = None$222() in
-//│     x$230
-//│   def entry$231() =
+//│   def testCtor1$568() =
+//│     let x$579 = None$570() in
+//│     x$579
+//│   def testCtor2$567() =
+//│     let x$580 = None$570() in
+//│     x$580
+//│   def entry$581() =
 //│     undefined
-//│   entry = entry$231
+//│   entry = entry$581
 
 :sllir
 class A(x)
 fun testCtor1() = A(1)
 fun testCtor2() = new A(1)
 //│ LLIR:
-//│   class A(x$237)
-//│   def testCtor1$234() =
-//│     let x$245 = A$235(1) in
-//│     x$245
-//│   def testCtor2$233() =
-//│     let x$246 = A$235(1) in
-//│     x$246
-//│   def entry$247() =
+//│   class A(x$587)
+//│   def testCtor1$584() =
+//│     let x$596 = A$585(1) in
+//│     x$596
+//│   def testCtor2$583() =
+//│     let x$597 = A$585(1) in
+//│     x$597
+//│   def entry$598() =
 //│     undefined
-//│   entry = entry$247
+//│   entry = entry$598

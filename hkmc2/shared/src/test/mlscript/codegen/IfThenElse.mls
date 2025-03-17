@@ -1,8 +1,5 @@
 :js
 
-:import PredefJS.mls
-//│ Imported 2 member(s)
-
 
 // :elt
 if true then 1 else 0
@@ -10,10 +7,19 @@ if true then 1 else 0
 
 
 :sjs
-let f = x => if x then log("ok") else log("ko")
+let f = x => if x then print("ok") else print("ko")
 //│ JS (unsanitized):
-//│ let f; f = (x) => { if (x === true) { return log("ok") } else { return log("ko") } }; null
-//│ f = [function f]
+//│ let f, tmp, lambda;
+//│ lambda = (undefined, function (x) {
+//│   if (x === true) {
+//│     return Predef.print("ok")
+//│   } else {
+//│     return Predef.print("ko")
+//│   }
+//│ });
+//│ tmp = lambda;
+//│ f = tmp;
+//│ f = [function]
 
 f(true)
 //│ > ok
@@ -23,28 +29,10 @@ f(false)
 
 
 :sjs
-let f = x => log((if x then "ok" else "ko") + "!")
+let f = x => print((if x then "ok" else "ko") + "!")
 //│ JS (unsanitized):
-//│ let f1, tmp;
-//│ tmp = (x) => {
-//│   let tmp1, tmp2;
-//│   if (x === true) {
-//│     tmp1 = "ok";
-//│   } else {
-//│     tmp1 = "ko";
-//│   }
-//│   tmp2 = tmp1 + "!";
-//│   return log(tmp2)
-//│ };
-//│ f1 = tmp;
-//│ null
-//│ f = [function tmp]
-
-:sjs
-let f = x => log((if x and x then "ok" else "ko") + "!")
-//│ JS (unsanitized):
-//│ let f2, tmp1;
-//│ tmp1 = (x) => {
+//│ let f1, tmp1, lambda1;
+//│ lambda1 = (undefined, function (x) {
 //│   let tmp2, tmp3;
 //│   if (x === true) {
 //│     tmp2 = "ok";
@@ -52,11 +40,29 @@ let f = x => log((if x and x then "ok" else "ko") + "!")
 //│     tmp2 = "ko";
 //│   }
 //│   tmp3 = tmp2 + "!";
-//│   return log(tmp3)
-//│ };
-//│ f2 = tmp1;
-//│ null
-//│ f = [function tmp1]
+//│   return Predef.print(tmp3)
+//│ });
+//│ tmp1 = lambda1;
+//│ f1 = tmp1;
+//│ f = [function]
+
+:sjs
+let f = x => print((if x and x then "ok" else "ko") + "!")
+//│ JS (unsanitized):
+//│ let f2, tmp2, lambda2;
+//│ lambda2 = (undefined, function (x) {
+//│   let tmp3, tmp4;
+//│   if (x === true) {
+//│     tmp3 = "ok";
+//│   } else {
+//│     tmp3 = "ko";
+//│   }
+//│   tmp4 = tmp3 + "!";
+//│   return Predef.print(tmp4)
+//│ });
+//│ tmp2 = lambda2;
+//│ f2 = tmp2;
+//│ f = [function]
 // --- TODO: What we want ---
 // this.f = (x) => {
 //   let tmp, tmp1, flag;
@@ -73,7 +79,7 @@ let f = x => log((if x and x then "ok" else "ko") + "!")
 //     tmp = "ko";
 //   }
 //   tmp1 = tmp + "!";
-//   return log(tmp1)
+//   return print(tmp1)
 // };
 // undefined
 // f = [Function (anonymous)]
@@ -85,19 +91,19 @@ f(false)
 //│ > ko!
 
 
-x => if x > 0 then log("Hi") else log("Bye")
-//│ = [function block$res10]
+x => if x > 0 then print("Hi") else print("Bye")
+//│ = [function]
 
-x => log(if true then "Hi" else "Bye")
-//│ = [function block$res11]
+x => print(if true then "Hi" else "Bye")
+//│ = [function]
 
-x => log(if x + 1 > 0 then "Hi" else "Bye")
-//│ = [function block$res12]
+x => print(if x + 1 > 0 then "Hi" else "Bye")
+//│ = [function]
 
 x =>
-  let str = concat(if x + 1 > 0 then "Hello" else "Bye", "World")
-  log(str)
-//│ = [function block$res13]
+  let str = (+)(if x + 1 > 0 then "Hello" else "Bye", "World")
+  print(str)
+//│ = [function]
 
 
 fun f(x, y) =

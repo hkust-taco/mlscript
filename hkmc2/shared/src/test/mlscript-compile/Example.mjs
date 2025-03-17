@@ -1,9 +1,18 @@
+import runtime from "./Runtime.mjs";
 import Predef from "./Predef.mjs";
-let Example1;
+let privFun, Example1;
+privFun = function privFun() {
+  return "hi"
+};
 Example1 = class Example {
   static {}
+  static get pubFun() {
+    let tmp;
+    tmp = privFun();
+    return tmp;
+  } 
   static funnySlash(f, arg) {
-    return f(arg) ?? null
+    return runtime.safeCall(f(arg))
   } 
   static inc(x) {
     return x + 1
@@ -11,19 +20,14 @@ Example1 = class Example {
   static test(x1) {
     if (globalThis.Number.isInteger(x1)) {
       return "int"
+    } else if (typeof x1 === 'number') {
+      return "num"
+    } else if (typeof x1 === 'string') {
+      return "str"
     } else {
-      if (typeof x1 === 'number') {
-        return "num"
-      } else {
-        if (typeof x1 === 'string') {
-          return "str"
-        } else {
-          return "other"
-        }
-      }
+      return "other"
     }
   }
   static toString() { return "Example"; }
 };
-null
 let Example = Example1; export default Example;

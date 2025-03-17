@@ -28,6 +28,8 @@ abstract class Symbol(using State) extends Located:
     res
   def refsNumber: Int = directRefs.size
   
+  def isModule: Bool = asMod.nonEmpty
+  
   def asCls: Opt[ClassSymbol] = this match
     case cls: ClassSymbol => S(cls)
     case mem: BlockMemberSymbol => mem.clsTree.flatMap(_.symbol.asCls)
@@ -56,6 +58,10 @@ abstract class Symbol(using State) extends Located:
   def asClsLike: Opt[ClassSymbol | ModuleSymbol | PatternSymbol] =
     (asCls: Opt[ClassSymbol | ModuleSymbol | PatternSymbol]) orElse asModOrObj orElse asPat
   def asTpe: Opt[TypeSymbol] = asCls orElse asAls
+  
+  def asBlkMember: Opt[BlockMemberSymbol] = this match
+    case mem: BlockMemberSymbol => S(mem)
+    case _ => N
   
   override def equals(x: Any): Bool = x match
     case that: Symbol => uid === that.uid
@@ -111,6 +117,7 @@ class InstSymbol(val origin: Symbol)(using State) extends LocalSymbol:
 
 class VarSymbol(val id: Ident)(using State) extends BlockLocalSymbol(id.name) with NamedSymbol with LocalSymbol:
   val name: Str = id.name
+  override def toLoc: Opt[Loc] = id.toLoc
   // override def toString: Str = s"$name@$uid"
   override def subst(using s: SymbolSubst): VarSymbol = s.mapVarSym(this)
 
@@ -124,8 +131,10 @@ class BuiltinSymbol
 
 
 /** This is the outside-facing symbol associated to a possibly-overloaded
-  * definition living in a block – e.g., a module or class. */
-class BlockMemberSymbol(val nme: Str, val trees: Ls[Tree])(using State)
+  * definition living in a block – e.g., a module or class.
+  * `nameIsMeaningful` is `true` when the name comes from the user's source code;
+  *   it is false when the name is a default given by the compiler, such as "lambda" when lifting lambdas. */
+class BlockMemberSymbol(val nme: Str, val trees: Ls[Tree], val nameIsMeaningful: Bool = true)(using State)
     extends MemberSymbol[Definition]:
   
   def toLoc: Option[Loc] = Loc(trees)
@@ -145,6 +154,8 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[Tree])(using State)
     case t: Tree.TermDef /* if t.k is  */ => t
   def trmImplTree: Opt[Tree.TermDef] = trees.collectFirst:
     case t: Tree.TermDef if t.rhs.isDefined => t
+  
+  def isParameterizedMethod: Bool = trmTree.exists(_.sParameterizedMethod)
   
   lazy val hasLiftedClass: Bool =
     objTree.isDefined || trmTree.isDefined || clsTree.exists(_.paramLists.nonEmpty)
@@ -191,9 +202,12 @@ case class TupSymbol(arity: Opt[Int])(using State) extends CtorSymbol:
   override def toString: Str = s"tup:$arity"
 
 
-type TypeSymbol = ClassSymbol | TypeAliasSymbol
+/** A TypeSymbol that is not an alias. */
+type BaseTypeSymbol = ClassSymbol
 
-type FieldSymbol = TermSymbol | MemberSymbol[?]
+type TypeSymbol = BaseTypeSymbol | TypeAliasSymbol
+
+type FieldSymbol = MemberSymbol[?]
 
 sealed trait ClassLikeSymbol extends Symbol:
   self: MemberSymbol[? <: ClassDef | ModuleDef] =>

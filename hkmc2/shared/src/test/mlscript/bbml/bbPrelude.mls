@@ -7,14 +7,16 @@ declare class Object
 
 declare class untyped
 
+declare class Unit
 declare class Bool
 declare class Int
 declare class Num
 
-class
-  CodeBase[T, C, S]
-  Region[T]
-  Ref[T, S](reg: Region[T], value: S)
+data
+  class
+    CodeBase[T, C, S]
+    Region[T]
+    Ref[T, S](reg: Region[T], value: S)
 
 @untyped
 set
@@ -22,11 +24,22 @@ set
   globalThis.Region = Region
   globalThis.Ref = Ref
 
+declare class Function
+
 declare class Str(length: Int, concat: Str -> Str)
 
 declare class Error(msg: Str)
 
-declare module Predef
+
+declare module source with
+  object
+    line: Int
+    name: Str
+    file: Str
+
+declare module js with
+  fun try_catch
+
 
 declare fun run: [T] -> CodeBase[out T, out Nothing, out Any] -> T
 declare fun log: Str -> Any
@@ -50,5 +63,8 @@ declare fun (!=): [T] -> (T, T) -> Bool
 
 declare fun (&&): (Bool, Bool) -> Bool
 declare fun (||): (Bool, Bool) -> Bool
+
+
+fun print(x) = @untyped globalThis.console.log(x)
 
 

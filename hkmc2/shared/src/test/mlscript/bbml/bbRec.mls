@@ -45,7 +45,7 @@ fun f(x) = f(x.a)
 //│ Type: ⊤
 
 
-class Foo[A](a: A)
+data class Foo[A](a: A)
 //│ Type: ⊤
 
 :todo proper error

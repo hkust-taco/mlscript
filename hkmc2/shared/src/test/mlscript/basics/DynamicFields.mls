@@ -13,7 +13,7 @@ xs.(0)
 :sjs
 set xs.(0) = 4
 //│ JS (unsanitized):
-//│ xs[0] = 4; null
+//│ xs[0] = 4; runtime.Unit
 
 xs.(0)
 //│ = 4

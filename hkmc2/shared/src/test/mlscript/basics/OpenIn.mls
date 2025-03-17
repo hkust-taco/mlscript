@@ -6,7 +6,14 @@ import "../../mlscript-compile/Str.mls"
 Str.{~}
 //│ = [function concat2]
 
+Str.{~}("a", "b")
+//│ = "ab"
+
+:e
 Str.{~}("a", "b", "c")
+//│ ╔══[ERROR] Expected 2 arguments, got 3
+//│ ║  l.13: 	Str.{~}("a", "b", "c")
+//│ ╙──      	     ^
 //│ = "ab"
 
 Str.{"a" ~ "b"}
@@ -21,10 +28,10 @@ Str.{"a" ~ from(123)}
 :e
 Str.~
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found end of input instead
-//│ ║  l.22: 	Str.~
+//│ ║  l.29: 	Str.~
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Name not found: .~
-//│ ║  l.22: 	Str.~
+//│ ║  l.29: 	Str.~
 //│ ╙──      	   ^^
 
 

@@ -1,0 +1,48 @@
+:js
+
+
+()
+
+print(())
+//│ > ()
+
+print(print("hello!"))
+//│ > hello!
+//│ > ()
+
+
+// * One can import the Runtime module explicitly
+
+import "../../mlscript-compile/Runtime.mls"
+
+print(Runtime.Unit)
+//│ > ()
+
+open Runtime
+
+print(Unit)
+//│ > ()
+
+print of safeCall(123)
+//│ > 123
+
+print of safeCall(null)
+//│ > null
+
+print of safeCall(undefined)
+//│ > ()
+
+print of safeCall(())
+//│ > ()
+
+print of  checkCall(123)
+//│ > 123
+
+print of  checkCall(null)
+//│ > null
+
+:re
+print of  checkCall(undefined)
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+
+

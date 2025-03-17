@@ -15,7 +15,7 @@ Predef.Test === globalThis.Predef.Test
 
 :fixme
 new Predef.Test is Predef.Test
-//│ ═══[RUNTIME ERROR] TypeError: tmp7 is not a constructor
+//│ ═══[RUNTIME ERROR] TypeError: tmp is not a constructor
 
 (new Predef.Test) is Predef.Test
 //│ > Test
@@ -35,6 +35,18 @@ new Predef.Test
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
 
+id(123)
+//│ = 123
+
+:e
+:re
+id()
+//│ ╔══[ERROR] Expected 1 arguments, got 0
+//│ ║  l.43: 	id()
+//│ ╙──      	^^
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+
+
 print(1, 2, 3)
 //│ > 1 2 3
 
@@ -48,14 +60,57 @@ print(1, 2, 3)
 //│ > 1
 
 :e
+:re
 1 . print(_)()
 //│ ═══[ERROR] Illegal position for '_' placeholder.
+//│ > 1
+//│ ═══[RUNTIME ERROR] TypeError: tmp6 is not a function
 
 // FIXME: should have the same semantics...
 1
   . print()
 //│ > 
 //│ = [function]
+
+
+2 + 2 |> print
+//│ > 4
+
+print <| 2 + 2
+//│ > 4
+
+(_ * 2) <| 2 + 2 |> (_ + 1)
+//│ = 9
+
+2 + 2 !> print
+//│ > 4
+//│ = 4
+
+print <! 2 + 2
+//│ > 4
+//│ = 4
+
+print <! 2 + 2 |> (_ + 1)
+//│ > 4
+//│ = 5
+
+(_ + 1) <| 2 + 2 !> print
+//│ > 4
+//│ = 5
+
+
+tuple passing(1, 2, 3) <| 4
+//│ = [1, 2, 3, 4]
+
+passing(tuple, 1, 2, 3) of 4, 5, 6
+//│ = [1, 2, 3, 4, 5, 6]
+
+(tuple passing(1, 2, 3)) of 4, 5, 6
+//│ = [1, 2, 3, 4, 5, 6]
+
+:re
+tuple passing(1, 2, 3) of 4, 5, 6
+//│ ═══[RUNTIME ERROR] TypeError: f12.bind is not a function
 
 
 :re
@@ -101,8 +156,8 @@ fold(-)(0, 1, 2, 3)
 
 fold(print)(0, 1, 2, 3)
 //│ > 0 1
-//│ > null 2
-//│ > null 3
+//│ > () 2
+//│ > () 3
 
 fold(tuple)(0, 1, 2, 3)
 //│ = [[[0, 1], 2], 3]
@@ -157,5 +212,13 @@ foldr(+)(0, 1, 2, 3)
 
 foldr(-)(0, 1, 2, 3)
 //│ = -2
+
+
+fold(+) of
+  "0"
+  "1"
+  "2"
+  "3"
+//│ = "0123"
 
 

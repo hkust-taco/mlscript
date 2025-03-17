@@ -11,20 +11,22 @@ declare class Array
 declare class JSON
 declare class Number
 declare class Function
+declare class String
+declare class RegExp
 declare class Set
 declare class Map
-declare class Error(msg)
+declare class Error
+declare class TypeError
+declare class Symbol
 
 // MLscript-specific types
+declare class Unit
 declare class Bool
 declare class Int
 declare class Num
 declare class Str with
   fun length: Int
   fun concat: Str -> Str
-
-declare class String
-declare class RegExp
 
 declare module Math with
   // TODO: add more functions
@@ -39,6 +41,7 @@ declare module Math with
   fun min: (Num, Num) -> Num
   fun max: (Num, Num) -> Num
 
+declare val Reflect
 declare val console
 declare val process
 declare val fs
@@ -46,25 +49,18 @@ declare val Infinity
 
 // declare fun typeof: (Any) -> Str
 
-
-declare module Predef with
-  class Test with
-    val x = 0
-  class MatchResult(captures)
-  class MatchFailure(errors)
-  class __EffectSig(next, tail, handleBlockList, resumed, handler, handlerFun)
-  class __Return(value)
-  // This declaration is not used currently except for experimentation
-  abstract class __StackDelay with
-    fun perform()
+declare fun parseInt(str: Str, radix: Int): Int
+declare fun parseFloat(str: Str): Num
 
 
-// TODO: rm
+declare module source with
+  object
+    line
+    name
+    file
 
-declare fun log: (Any) -> ()
-
-declare fun error: Nothing
-
-declare fun concat: (Str, Str) -> Str
+declare module js with
+  fun
+    try_catch
 
 

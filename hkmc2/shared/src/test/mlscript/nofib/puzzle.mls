@@ -42,7 +42,7 @@ fun bankEq(a, b) = if a is
   RightBank and b is RightBank then true
   else false
 
-class State(b: BankType, e: BankType, l: BankType, a: BankType)
+data class State(b: BankType, e: BankType, l: BankType, a: BankType)
 
 fun stateEq(s1, s2) = if s1 is State(a, b, c, d) and s2 is State(e, f, g, h) then
   (bankEq(a, e) && bankEq(b, f) && bankEq(c, g) && bankEq(d, h))

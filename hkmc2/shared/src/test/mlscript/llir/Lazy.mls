@@ -21,38 +21,38 @@ fun main() =
   ()
 main()
 //│ LLIR:
-//│   class Lambda() extends Callable {
-//│     def apply0$283() =
-//│       let* (x$284) = side_effect() in
-//│       x$284
+//│   class Lambda_lambda() extends Callable {
+//│     def apply0$633() =
+//│       let* (x$634) = side_effect() in
+//│       x$634
 //│   }
-//│   def side_effect$256() =
-//│     let* (x$278) = <builtin>("println","executed") in
+//│   def side_effect$608() =
+//│     let* (x$628) = <builtin>("println","executed") in
 //│     1
-//│   def main$255() =
-//│     let x$286 = Lambda$281() in
-//│     let* (x$280) = lazy(x$286) in
-//│     let* (x$287) = force(x$280) in
-//│     let* (x$288) = force(x$280) in
+//│   def main$607() =
+//│     let x$636 = Lambda_lambda$630() in
+//│     let* (x$637) = lazy(x$636) in
+//│     let* (x$638) = force(x$637) in
+//│     let* (x$639) = force(x$637) in
 //│     undefined
-//│   def entry$290() =
-//│     let* (x$289) = main() in
-//│     x$289
-//│   entry = entry$290
+//│   def entry$641() =
+//│     let* (x$640) = main() in
+//│     x$640
+//│   entry = entry$641
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"
-//│ struct _mls_Lambda;
+//│ struct _mls_Lambda_lambda;
 //│ _mlsValue _mls_side_effect();
 //│ _mlsValue _mls_main();
 //│ _mlsValue _mls_entry();
-//│ struct _mls_Lambda: public _mls_Callable {
+//│ struct _mls_Lambda_lambda: public _mls_Callable {
 //│   
-//│   constexpr static inline const char *typeName = "Lambda";
+//│   constexpr static inline const char *typeName = "Lambda_lambda";
 //│   constexpr static inline uint32_t typeTag = nextTypeTag();
 //│   virtual void print() const override { std::printf("%s", typeName); }
 //│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
-//│   static _mlsValue create() { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_Lambda; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│   static _mlsValue create() { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_Lambda_lambda; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
 //│   virtual _mlsValue _mls_apply0();
 //│ };
 //│ _mlsValue _mls_side_effect() {
@@ -63,7 +63,7 @@ main()
 //│ }
 //│ _mlsValue _mls_main() {
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x2 = _mlsValue::create<_mls_Lambda>();
+//│   auto _mls_x2 = _mlsValue::create<_mls_Lambda_lambda>();
 //│   auto _mls_x3 = _mls_lazy(_mls_x2);
 //│   auto _mls_x4 = _mls_force(_mls_x3);
 //│   auto _mls_x5 = _mls_force(_mls_x3);
@@ -76,7 +76,7 @@ main()
 //│   _mls_retval = _mls_x6;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_Lambda::_mls_apply0() {
+//│ _mlsValue _mls_Lambda_lambda::_mls_apply0() {
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x = _mls_side_effect();
 //│   _mls_retval = _mls_x;

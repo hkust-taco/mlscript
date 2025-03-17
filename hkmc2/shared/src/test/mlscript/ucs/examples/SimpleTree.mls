@@ -1,12 +1,12 @@
 
 
 type Option[out A] = Some[A] | None
-class Some[out A](value: A)
+data class Some[out A](value: A)
 object None
 
 type Tree[out A] = Node[A] | Empty
 object Empty
-class Node[out A](value: A, left: Tree[A], right: Tree[A])
+data class Node[out A](value: A, left: Tree[A], right: Tree[A])
 
 fun find(t, v) = if t is
   Node(v', l, r) and

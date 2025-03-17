@@ -1,27 +1,27 @@
-
+:js
 :global
 :llir
 :cpp
 
 :sllir
-:slot
 class A(m) with
   fun f() = m
 fun main() =
   let a = A(1)
   a.A#f()
 main()
+//│ = 1
 //│ LLIR:
-//│   class A(m$221) {
-//│     def f$216() =
-//│       m$221
+//│   class A(m$572) {
+//│     def f$567() =
+//│       m$573
 //│   }
-//│   def main$218() =
-//│     let x$233 = A$219(1) in
-//│     let x$234 = A.f$216(x$233) in
-//│     x$234
-//│   def entry$236() =
-//│     let* (x$235) = main() in
-//│     x$235
-//│   entry = entry$236
+//│   def main$569() =
+//│     let x$587 = A$570(1) in
+//│     let x$588 = A.f$567(x$587) in
+//│     x$588
+//│   def entry$590() =
+//│     let* (x$589) = main() in
+//│     x$589
+//│   entry = entry$590
 

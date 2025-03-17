@@ -59,11 +59,11 @@ f(1,2)(3)
 f(1,2)(-3)
 //│ REPL> Sending: globalThis.Predef.TraceLogger.enabled = true; globalThis.Predef.TraceLogger.resetIndent(0)
 //│ REPL> Collected:
-//│ >  null
+//│ >  Unit { class: [class Unit] }
 //│ REPL> Sending: block$res9 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: let tmp4, tmp5;try { tmp4 = f(1, 2); tmp5 = - 3; block$res9 = tmp4(tmp5) ?? null; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: let tmp4, tmp5;try { tmp4 = runtime.checkCall(f(1, 2)); tmp5 = - 3; block$res9 = runtime.safeCall(tmp4(tmp5)); undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  CALL g(-3)
 //│ >  | CALL g(-2)
@@ -89,13 +89,13 @@ f(1,2)(-3)
 //│ REPL> Sending: globalThis.Predef.TraceLogger.enabled = false
 //│ REPL> Collected:
 //│ >  false
-//│ REPL> Sending: try { this.Predef.printRaw(block$res9) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { runtime.checkCall(this.Predef.printRaw(block$res9)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  45
-//│ >  null
+//│ >  Unit { class: [class Unit] }
 //│ REPL> Parsed:
 //│ >  45
-//│ >  null
+//│ >  Unit { class: [class Unit] }
 //│ = 45
 
 :showRepl
@@ -103,16 +103,16 @@ f(1,2)(-4)
 //│ REPL> Sending: block$res10 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: let tmp6, tmp7;try { tmp6 = f(1, 2); tmp7 = - 4; block$res10 = tmp6(tmp7) ?? null; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: let tmp6, tmp7;try { tmp6 = runtime.checkCall(f(1, 2)); tmp7 = - 4; block$res10 = runtime.safeCall(tmp6(tmp7)); undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ REPL> Parsed:
 //│ >  undefined
-//│ REPL> Sending: try { this.Predef.printRaw(block$res10) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { runtime.checkCall(this.Predef.printRaw(block$res10)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  45
-//│ >  null
+//│ >  Unit { class: [class Unit] }
 //│ REPL> Parsed:
 //│ >  45
-//│ >  null
+//│ >  Unit { class: [class Unit] }
 //│ = 45

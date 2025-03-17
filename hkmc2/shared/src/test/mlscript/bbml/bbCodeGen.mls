@@ -51,25 +51,26 @@ false
 //│ Type: Bool
 
 :sjs
-(x => x): [T] -> T -> T
+(x => x) as [T] -> T -> T
 //│ JS (unsanitized):
-//│ (x1) => { return x1 }
-//│ = [function block$res8]
+//│ let lambda; lambda = (undefined, function (x1) { return x1 }); lambda
+//│ = [function]
 //│ Type: ['T] -> ('T) ->{⊥} 'T
 
 
 :sjs
-class Foo(x: Int)
+data class Foo(x: Int)
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ Foo1 = function Foo(x2) { return new Foo.class(x2); };
+//│ Foo1 = function Foo(x2) {
+//│   return new Foo.class(x2);
+//│ };
 //│ Foo1.class = class Foo {
 //│   constructor(x1) {
 //│     this.x = x1;
 //│   }
 //│   toString() { return "Foo(" + globalThis.Predef.render(this.x) + ")"; }
 //│ };
-//│ null
 //│ Type: ⊤
 
 
@@ -92,7 +93,7 @@ let foo = new Foo(42) in foo.Foo#x
 :sjs
 fun inc(x) = x + 1
 //│ JS (unsanitized):
-//│ let inc; inc = function inc(x1) { return x1 + 1 }; null
+//│ let inc; inc = function inc(x1) { return x1 + 1 };
 //│ Type: ⊤
 
 
@@ -120,7 +121,7 @@ if 1 is Int then 1 else 0
 //│ Type: Int
 
 
-class Foo()
+data class Foo()
 //│ Type: ⊤
 
 
@@ -149,7 +150,8 @@ fun pow(x) = case
 //│ JS (unsanitized):
 //│ let pow;
 //│ pow = function pow(x1) {
-//│   return (caseScrut) => {
+//│   let lambda1;
+//│   lambda1 = (undefined, function (caseScrut) {
 //│     let n, tmp2, tmp3, tmp4;
 //│     if (caseScrut === 0) {
 //│       return 1
@@ -157,12 +159,12 @@ fun pow(x) = case
 //│       n = caseScrut;
 //│       tmp2 = pow(x1);
 //│       tmp3 = n - 1;
-//│       tmp4 = tmp2(tmp3) ?? null;
+//│       tmp4 = runtime.safeCall(tmp2(tmp3));
 //│       return x1 * tmp4
 //│     }
-//│   }
+//│   });
+//│   return lambda1
 //│ };
-//│ null
 //│ Type: ⊤
 
 
@@ -173,19 +175,18 @@ fun not = case
 //│ JS (unsanitized):
 //│ let not;
 //│ not = function not() {
-//│   return (caseScrut) => {
+//│   let lambda1;
+//│   lambda1 = (undefined, function (caseScrut) {
 //│     if (caseScrut === true) {
 //│       return false
+//│     } else if (caseScrut === false) {
+//│       return true
 //│     } else {
-//│       if (caseScrut === false) {
-//│         return true
-//│       } else {
-//│         throw new globalThis.Error("match error");
-//│       }
+//│       throw new globalThis.Error("match error");
 //│     }
-//│   }
+//│   });
+//│   return lambda1
 //│ };
-//│ null
 //│ Type: ⊤
 
 
@@ -205,7 +206,8 @@ fun fact = case
 //│ JS (unsanitized):
 //│ let fact;
 //│ fact = function fact() {
-//│   return (caseScrut) => {
+//│   let lambda1;
+//│   lambda1 = (undefined, function (caseScrut) {
 //│     let n, tmp3, tmp4, tmp5;
 //│     if (caseScrut === 0) {
 //│       return 1
@@ -216,9 +218,9 @@ fun fact = case
 //│       tmp5 = tmp3(tmp4);
 //│       return n * tmp5
 //│     }
-//│   }
+//│   });
+//│   return lambda1
 //│ };
-//│ null
 //│ Type: ⊤
 
 

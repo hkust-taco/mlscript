@@ -22,15 +22,15 @@ id
 fun id(x) = x
 //│ Type: ⊤
 
-id : [A] -> A -> A
+id as [A] -> A -> A
 //│ Type: ['A] -> ('A) ->{⊥} 'A
 
 
-(y => y) : [A] -> A -> A
+(y => y) as [A] -> A -> A
 //│ Type: ['A] -> ('A) ->{⊥} 'A
 
 fun id(x) = x
-(y => id(y)) : [A] -> A -> A
+(y => id(y)) as [A] -> A -> A
 //│ Type: ['A] -> ('A) ->{⊥} 'A
 
 

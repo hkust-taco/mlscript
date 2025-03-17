@@ -94,7 +94,8 @@ class Watcher(dirs: Ls[File]):
       val isModuleFile = path.segments.contains("mlscript-compile")
       if isModuleFile
       then
-        MLsCompiler(preludePath).compileModule(path)
+        given Config = Config.default
+        MLsCompiler(preludePath, outputConsumer => outputConsumer(System.out.println)).compileModule(path)
       else
         val dm = new MainDiffMaker((dirPaths.head/os.up).toString, path, preludePath, predefPath, relativeName):
           override def unhandled(blockLineNum: Int, exc: Throwable): Unit =

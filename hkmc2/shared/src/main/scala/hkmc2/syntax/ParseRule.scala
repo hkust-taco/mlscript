@@ -143,15 +143,20 @@ class ParseRules(using State):
                   ParseRule(s"'${kw.name}' binding right-hand side")(
                     Kw(`in`):
                       ParseRule(s"'${kw.name}' binding `in` clause")(
-                        exprOrBlk(ParseRule(s"'${kw.name}' binding body")(End(())))((body, _: Unit) => S(body))*
+                        exprOrBlk(
+                          ParseRule(s"'${kw.name}' binding body"){End{()}}
+                        ){ (body, _: Unit) => S(body) }*
                       ),
                     End(N)
                   )
                 ) { (rhs, body) => (S(rhs), body) }*
               ),
             Kw(`in`):
-              ParseRule(s"'${kw.name}' binding `in` clause"):
-                Expr(ParseRule(s"'${kw.name}' binding body")(End(())))((body, _: Unit) => N -> S(body))
+              ParseRule(s"'${kw.name}' binding `in` clause")(
+                exprOrBlk(
+                  ParseRule(s"'${kw.name}' binding body")(End(()))
+                ){ (body, _: Unit) => N -> S(body) }*
+              )
             ,
             End(N -> N)
           )
@@ -293,6 +298,7 @@ class ParseRules(using State):
       ),
     Kw(`fun`)(termDefBody(Fun)),
     Kw(`val`)(termDefBody(ImmutVal)),
+    Kw(`use`)(termDefBody(Ins)),
     typeAliasLike(`type`, Als),
     typeAliasLike(`pattern`, Pat),
     Kw(`class`)(typeDeclBody(Cls)),
@@ -313,6 +319,7 @@ class ParseRules(using State):
     modified(`virtual`),
     modified(`override`),
     modified(`declare`),
+    modified(`data`),
     modified(`public`),
     modified(`private`),
     modified(`out`),
@@ -320,6 +327,7 @@ class ParseRules(using State):
     modified(`throw`),
     modified(`import`), // TODO improve – only allow strings
     // modified(`type`),
+    modified(`using`),
     singleKw(`true`)(BoolLit(true)),
     singleKw(`false`)(BoolLit(false)),
     singleKw(`undefined`)(UnitLit(false)),

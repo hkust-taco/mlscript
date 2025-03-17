@@ -5,19 +5,21 @@
 
 abstract class Formula: Sym | Not | Dis | Con | Imp | Eqv
 
-class
-  Sym(a: Char) extends Formula
-  Not(a: Formula) extends Formula
-  Dis(a: Formula, b: Formula) extends Formula
-  Con(a: Formula, b: Formula) extends Formula
-  Imp(a: Formula, b: Formula) extends Formula
-  Eqv(a: Formula, b: Formula) extends Formula
+data
+  class
+    Sym(a: Char) extends Formula
+    Not(a: Formula) extends Formula
+    Dis(a: Formula, b: Formula) extends Formula
+    Con(a: Formula, b: Formula) extends Formula
+    Imp(a: Formula, b: Formula) extends Formula
+    Eqv(a: Formula, b: Formula) extends Formula
 
 abstract class StackFrame: Ast | Lex
 
-class
-  Ast(f: Formula) extends StackFrame
-  Lex(s: Char) extends StackFrame
+data
+  class
+    Ast(f: Formula) extends StackFrame
+    Lex(s: Char) extends StackFrame
 
 fun charLt(a, b) = a < b
 fun charLeq(a, b) = a <= b

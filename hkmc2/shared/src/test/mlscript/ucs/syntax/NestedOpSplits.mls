@@ -16,13 +16,14 @@ fun f(x) =
 //│       sym = member:f
 //│       params = Ls of 
 //│         ParamList:
-//│           flags = ParamListFlags of false
+//│           flags = ()
 //│           params = Ls of 
 //│             Param:
 //│               flags = ()
 //│               sym = x
 //│               sign = N
 //│           restParam = N
+//│       tparams = N
 //│       sign = N
 //│       body = S of IfLike:
 //│         kw = keyword 'if'
@@ -61,6 +62,6 @@ fun f(x) =
 //│       resSym = ‹result of member:f›
 //│       flags = ()
 //│       annotations = Nil
-//│   res = Lit of UnitLit of true
+//│   res = Lit of UnitLit of false
 
 
