@@ -24,7 +24,28 @@ sealed abstract class Block extends Product with AutoLocated:
   
   def ~(that: Block): Block = Begin(this, that)
   
-  protected def children: Ls[Located] = ??? // Maybe extending AutoLocated is unnecessary
+  protected def children: Ls[Located] = this match
+    case Match(scrut, arms, dflt, rest) => scrut :: arms.map(_._2) ++ dflt.toList :+ rest
+    case Return(res, implct) => res :: Nil
+    case Throw(exc) => exc :: Nil
+    case Label(label, body, rest) => label :: body :: rest :: Nil
+    case Break(label) => label :: Nil
+    case Continue(label) => label :: Nil
+    case Begin(sub, rest) => sub :: rest :: Nil
+    case TryBlock(sub, finallyDo, rest) => sub :: finallyDo :: rest :: Nil
+    case Assign(lhs, rhs, rest) => lhs :: rhs :: rest :: Nil
+    case AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block) => lhs :: nme :: rhs :: rest :: Nil
+    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs :: fld :: rhs :: rest :: Nil
+    case Define(FunDefn(owner, sym, params, body), rest) => sym :: (params :+ body :+ rest)
+    case Define(ValDefn(owner, k, sym, rhs), rest) => sym :: rhs :: rest :: Nil
+    case Define(ClsLikeDefn(owner, isym, sym, k, paramsOpt, aux, parentSym, methods, privFlds, pubFlds, preCtor, ctor), rest) =>
+      isym :: sym :: paramsOpt.toList ++ aux ++ parentSym.toList ++ methods.flatMap(_.subBlocks) ++ privFlds ++ pubFlds
+      ++ preCtor.subBlocks ++ ctor.subBlocks :+ rest
+    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
+      lhs :: res :: par :: args ++ handlers.flatMap: handler =>
+        handler.sym :: handler.resumeSym :: (handler.params :+ handler.body)
+      :+ body :+ rest
+    case End(msg) => Nil
   
   lazy val definedVars: Set[Local] = this match
     case _: Return | _: Throw => Set.empty
@@ -389,7 +410,19 @@ enum Case:
 
 sealed trait TrivialResult extends Result
 
-sealed abstract class Result:
+sealed abstract class Result extends AutoLocated:
+
+  protected def children: List[Located] = this match
+    case Call(fun, args) => fun :: args.map(_.value)
+    case Instantiate(cls, args) => cls :: args
+    case Select(qual, name) => qual :: name :: Nil
+    case DynSelect(qual, fld, arrayIdx) => qual :: fld :: Nil
+    case Value.Ref(l) => l :: Nil
+    case Value.This(sym) => sym :: Nil
+    case Value.Lit(lit) => lit :: Nil
+    case Value.Lam(params, body) => params :: body :: Nil
+    case Value.Arr(elems) => elems.map(_.value)
+    case Value.Rcd(elems) => elems.map(_.value)
   
   // TODO rm Lam from values and thus the need for this method
   def subBlocks: Ls[Block] = this match

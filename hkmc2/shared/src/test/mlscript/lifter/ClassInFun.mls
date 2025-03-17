@@ -13,7 +13,7 @@ fun f() =
   1
 f() + f() + f()
 //│ JS (unsanitized):
-//│ let f, Effect1, tmp, getLocals, getLocals1, handleBlock$, getLocals2, getLocals3, Cont$func$f$ClassInFun$_mls_L7_95_118$1, Cont$handleBlock$h$1, getLocals4, Handler$h$1, lambda, getLocals$, f$, Cont$func$f$ClassInFun$_mls_L7_95_118$$ctor, Cont$func$f$ClassInFun$_mls_L7_95_118$$, Cont$handleBlock$h$$ctor, Cont$handleBlock$h$$, lambda$, getLocals$1;
+//│ let f, Effect1, tmp, getLocals, getLocals1, handleBlock$, getLocals2, getLocals3, Cont$func$f$ClassInFun$_mls_L7_95_118$1, Cont$handleBlock$h$ClassInFun$_mls_L7_50_51$1, getLocals4, Handler$h$1, lambda, getLocals$, f$, Cont$func$f$ClassInFun$_mls_L7_95_118$$ctor, Cont$func$f$ClassInFun$_mls_L7_95_118$$, Cont$handleBlock$h$ClassInFun$_mls_L7_50_51$$ctor, Cont$handleBlock$h$ClassInFun$_mls_L7_50_51$$, lambda$, getLocals$1;
 //│ getLocals = function getLocals() {
 //│   let prev, thisInfo, tmp1;
 //│   prev = [];
@@ -76,24 +76,24 @@ f() + f() + f()
 //│   tmp1 = runtime.safeCall(prev.push(thisInfo));
 //│   return prev
 //│ };
-//│ Cont$handleBlock$h$$ = function Cont$handleBlock$h$$(h$0, tmp$1, tmp$2, tmp$3, tmp$4, pc) {
+//│ Cont$handleBlock$h$ClassInFun$_mls_L7_50_51$$ = function Cont$handleBlock$h$ClassInFun$_mls_L7_50_51$$(h$0, tmp$1, tmp$2, tmp$3, tmp$4, pc) {
 //│   let tmp1;
-//│   tmp1 = new Cont$handleBlock$h$1.class(pc);
+//│   tmp1 = new Cont$handleBlock$h$ClassInFun$_mls_L7_50_51$1.class(pc);
 //│   return tmp1(h$0, tmp$1, tmp$2, tmp$3, tmp$4)
 //│ };
-//│ Cont$handleBlock$h$$ctor = function Cont$handleBlock$h$$ctor(h$0, tmp$1, tmp$2, tmp$3, tmp$4) {
+//│ Cont$handleBlock$h$ClassInFun$_mls_L7_50_51$$ctor = function Cont$handleBlock$h$ClassInFun$_mls_L7_50_51$$ctor(h$0, tmp$1, tmp$2, tmp$3, tmp$4) {
 //│   return (pc) => {
 //│     let tmp1;
-//│     tmp1 = new Cont$handleBlock$h$1.class(pc);
+//│     tmp1 = new Cont$handleBlock$h$ClassInFun$_mls_L7_50_51$1.class(pc);
 //│     return tmp1(h$0, tmp$1, tmp$2, tmp$3, tmp$4)
 //│   }
 //│ };
-//│ Cont$handleBlock$h$1 = function Cont$handleBlock$h$(pc1) {
+//│ Cont$handleBlock$h$ClassInFun$_mls_L7_50_51$1 = function Cont$handleBlock$h$ClassInFun$_mls_L7_50_51$(pc1) {
 //│   return (h$01, tmp$11, tmp$21, tmp$31, tmp$41) => {
-//│     return new Cont$handleBlock$h$.class(pc1)(h$01, tmp$11, tmp$21, tmp$31, tmp$41);
+//│     return new Cont$handleBlock$h$ClassInFun$_mls_L7_50_51$.class(pc1)(h$01, tmp$11, tmp$21, tmp$31, tmp$41);
 //│   }
 //│ };
-//│ Cont$handleBlock$h$1.class = class Cont$handleBlock$h$ extends runtime.FunctionContFrame.class {
+//│ Cont$handleBlock$h$ClassInFun$_mls_L7_50_51$1.class = class Cont$handleBlock$h$ClassInFun$_mls_L7_50_51$ extends runtime.FunctionContFrame.class {
 //│   constructor(pc) {
 //│     return (h$0, tmp$1, tmp$2, tmp$3, tmp$4) => {
 //│       let tmp1;
@@ -162,7 +162,7 @@ f() + f() + f()
 //│   get getLocals() {
 //│     return getLocals2();
 //│   }
-//│   toString() { return "Cont$handleBlock$h$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│   toString() { return "Cont$handleBlock$h$ClassInFun$_mls_L7_50_51$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│ };
 //│ getLocals3 = function getLocals() {
 //│   let prev, thisInfo, tmp1;
@@ -245,18 +245,18 @@ f() + f() + f()
 //│   h = new Handler$h$1();
 //│   tmp1 = f$(h);
 //│   if (tmp1 instanceof runtime.EffectSig.class) {
-//│     tmp1.contTrace.last.next = Cont$handleBlock$h$$(h, tmp1, tmp2, tmp3, tmp4, 2);
+//│     tmp1.contTrace.last.next = Cont$handleBlock$h$ClassInFun$_mls_L7_50_51$$(h, tmp1, tmp2, tmp3, tmp4, 2);
 //│     return runtime.handleBlockImpl(tmp1, h)
 //│   }
 //│   tmp2 = f$(h);
 //│   if (tmp2 instanceof runtime.EffectSig.class) {
-//│     tmp2.contTrace.last.next = Cont$handleBlock$h$$(h, tmp1, tmp2, tmp3, tmp4, 3);
+//│     tmp2.contTrace.last.next = Cont$handleBlock$h$ClassInFun$_mls_L7_50_51$$(h, tmp1, tmp2, tmp3, tmp4, 3);
 //│     return runtime.handleBlockImpl(tmp2, h)
 //│   }
 //│   tmp3 = tmp1 + tmp2;
 //│   tmp4 = f$(h);
 //│   if (tmp4 instanceof runtime.EffectSig.class) {
-//│     tmp4.contTrace.last.next = Cont$handleBlock$h$$(h, tmp1, tmp2, tmp3, tmp4, 4);
+//│     tmp4.contTrace.last.next = Cont$handleBlock$h$ClassInFun$_mls_L7_50_51$$(h, tmp1, tmp2, tmp3, tmp4, 4);
 //│     return runtime.handleBlockImpl(tmp4, h)
 //│   }
 //│   return tmp3 + tmp4

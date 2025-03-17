@@ -24,6 +24,17 @@ f()
 //│ 	at f(pc=0) with locals: i=0, j=100, k=2000​
 //│ ​Error: Unhandled effects
 
+:re
+fun lambda_test(f) =
+  f()
+  200
+lambda_test(() =>
+  raiseUnhandledEffect()
+  100)
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
+//│ 	at lambda(pc=2) with locals: 
+//│ 	at lambda_test(pc=0) with locals: f=[function]​
+//│ ​Error: Unhandled effects
 
 
 import "../../mlscript-compile/Runtime.mls"

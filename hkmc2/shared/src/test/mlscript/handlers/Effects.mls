@@ -165,7 +165,7 @@ if true do
 //│   return prev
 //│ };
 //│ handleBlock$11 = function handleBlock$() {
-//│   let f, h, scrut, getLocals15, res, Cont$handleBlock$h$11, Handler$h$12;
+//│   let f, h, scrut, getLocals15, res, Cont$handleBlock$h$Effects$_mls_L153_7_8$1, Handler$h$12;
 //│   Handler$h$12 = class Handler$h$11 extends Effect1 {
 //│     constructor() {
 //│       let tmp12;
@@ -197,10 +197,10 @@ if true do
 //│     tmp12 = runtime.safeCall(prev.push(thisInfo));
 //│     return prev
 //│   };
-//│   Cont$handleBlock$h$11 = function Cont$handleBlock$h$(pc1) {
-//│     return new Cont$handleBlock$h$.class(pc1);
+//│   Cont$handleBlock$h$Effects$_mls_L153_7_8$1 = function Cont$handleBlock$h$Effects$_mls_L153_7_8$(pc1) {
+//│     return new Cont$handleBlock$h$Effects$_mls_L153_7_8$.class(pc1);
 //│   };
-//│   Cont$handleBlock$h$11.class = class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
+//│   Cont$handleBlock$h$Effects$_mls_L153_7_8$1.class = class Cont$handleBlock$h$Effects$_mls_L153_7_8$ extends runtime.FunctionContFrame.class {
 //│     constructor(pc) {
 //│       let tmp12;
 //│       tmp12 = super(null);
@@ -232,7 +232,7 @@ if true do
 //│     get getLocals() {
 //│       return getLocals15();
 //│     }
-//│     toString() { return "Cont$handleBlock$h$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$handleBlock$h$Effects$_mls_L153_7_8$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   f = function f() {
 //│     let getLocals16;
@@ -249,7 +249,7 @@ if true do
 //│   if (scrut === true) {
 //│     res = f();
 //│     if (res instanceof runtime.EffectSig.class) {
-//│       res.contTrace.last.next = Cont$handleBlock$h$11(0);
+//│       res.contTrace.last.next = Cont$handleBlock$h$Effects$_mls_L153_7_8$1(0);
 //│       return runtime.handleBlockImpl(res, h)
 //│     }
 //│     return res

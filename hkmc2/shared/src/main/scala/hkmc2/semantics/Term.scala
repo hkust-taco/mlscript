@@ -522,7 +522,9 @@ extends Declaration with AutoLocated:
   // def showDbg: Str = flags.showDbg + sym.name + ": " + sign.showDbg
   def showDbg: Str = flags.showDbg + sym + sign.fold("")(": " + _.showDbg)
 
-final case class ParamList(flags: ParamListFlags, params: Ls[Param], restParam: Opt[Param]):
+final case class ParamList(flags: ParamListFlags, params: Ls[Param], restParam: Opt[Param])
+extends AutoLocated:
+  override protected def children: List[Located] = params ::: restParam.toList
   def foreach(f: Param => Unit): Unit =
     (params ++ restParam).foreach(f)
   def paramCountLB: Int = params.length

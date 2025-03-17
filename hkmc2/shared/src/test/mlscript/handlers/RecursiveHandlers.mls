@@ -169,7 +169,7 @@ str
 //│ scrut = true;
 //│ if (scrut === true) {
 //│   handleBlock$7 = function handleBlock$() {
-//│     let h1, tmp11, getLocals12, handleBlock$8, Cont$handleBlock$h1$2, Handler$h1$2;
+//│     let h1, tmp11, getLocals12, handleBlock$8, Cont$handleBlock$h1$RecursiveHandlers$_mls_L141_33_35$1, Handler$h1$2;
 //│     Handler$h1$2 = class Handler$h1$1 extends Effect1 {
 //│       constructor() {
 //│         let tmp12;
@@ -177,7 +177,7 @@ str
 //│       }
 //│       perform(arg) {
 //│         return runtime.mkEffect(this, (k) => {
-//│           let tmp12, tmp13, tmp14, getLocals13, Cont$handler$h1$perform$RecursiveHandlers$_mls_L141_58_1301;
+//│           let tmp12, tmp13, tmp14, getLocals13, Cont$handler$h1$RecursiveHandlers$_mls_L141_33_35$perform$RecursiveHandlers$_mls_L141_58_130$1;
 //│           getLocals13 = function getLocals() {
 //│             let arg1, prev, thisInfo, tmp15;
 //│             prev = getLocals11();
@@ -188,10 +188,10 @@ str
 //│             tmp15 = runtime.safeCall(prev.push(thisInfo));
 //│             return prev
 //│           };
-//│           Cont$handler$h1$perform$RecursiveHandlers$_mls_L141_58_1301 = function Cont$handler$h1$perform$RecursiveHandlers$_mls_L141_58_130(pc1) {
-//│             return new Cont$handler$h1$perform$RecursiveHandlers$_mls_L141_58_130.class(pc1);
+//│           Cont$handler$h1$RecursiveHandlers$_mls_L141_33_35$perform$RecursiveHandlers$_mls_L141_58_130$1 = function Cont$handler$h1$RecursiveHandlers$_mls_L141_33_35$perform$RecursiveHandlers$_mls_L141_58_130$(pc1) {
+//│             return new Cont$handler$h1$RecursiveHandlers$_mls_L141_33_35$perform$RecursiveHandlers$_mls_L141_58_130$.class(pc1);
 //│           };
-//│           Cont$handler$h1$perform$RecursiveHandlers$_mls_L141_58_1301.class = class Cont$handler$h1$perform$RecursiveHandlers$_mls_L141_58_130 extends runtime.FunctionContFrame.class {
+//│           Cont$handler$h1$RecursiveHandlers$_mls_L141_33_35$perform$RecursiveHandlers$_mls_L141_58_130$1.class = class Cont$handler$h1$RecursiveHandlers$_mls_L141_33_35$perform$RecursiveHandlers$_mls_L141_58_130$ extends runtime.FunctionContFrame.class {
 //│             constructor(pc) {
 //│               let tmp15;
 //│               tmp15 = super(null);
@@ -223,13 +223,13 @@ str
 //│             get getLocals() {
 //│               return getLocals13();
 //│             }
-//│             toString() { return "Cont$handler$h1$perform$RecursiveHandlers$_mls_L141_58_130(" + globalThis.Predef.render(this.pc) + ")"; }
+//│             toString() { return "Cont$handler$h1$RecursiveHandlers$_mls_L141_33_35$perform$RecursiveHandlers$_mls_L141_58_130$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│           };
 //│           tmp12 = str + "A";
 //│           str = tmp12;
 //│           tmp13 = runtime.safeCall(k(arg));
 //│           if (tmp13 instanceof runtime.EffectSig.class) {
-//│             tmp13.contTrace.last.next = new Cont$handler$h1$perform$RecursiveHandlers$_mls_L141_58_1301.class(7);
+//│             tmp13.contTrace.last.next = new Cont$handler$h1$RecursiveHandlers$_mls_L141_33_35$perform$RecursiveHandlers$_mls_L141_58_130$1.class(7);
 //│             tmp13.contTrace.last = tmp13.contTrace.last.next;
 //│             return tmp13
 //│           }
@@ -248,10 +248,10 @@ str
 //│       tmp12 = runtime.safeCall(prev.push(thisInfo));
 //│       return prev
 //│     };
-//│     Cont$handleBlock$h1$2 = function Cont$handleBlock$h1$(pc1) {
-//│       return new Cont$handleBlock$h1$.class(pc1);
+//│     Cont$handleBlock$h1$RecursiveHandlers$_mls_L141_33_35$1 = function Cont$handleBlock$h1$RecursiveHandlers$_mls_L141_33_35$(pc1) {
+//│       return new Cont$handleBlock$h1$RecursiveHandlers$_mls_L141_33_35$.class(pc1);
 //│     };
-//│     Cont$handleBlock$h1$2.class = class Cont$handleBlock$h1$1 extends runtime.FunctionContFrame.class {
+//│     Cont$handleBlock$h1$RecursiveHandlers$_mls_L141_33_35$1.class = class Cont$handleBlock$h1$RecursiveHandlers$_mls_L141_33_35$ extends runtime.FunctionContFrame.class {
 //│       constructor(pc) {
 //│         let tmp12;
 //│         tmp12 = super(null);
@@ -271,10 +271,10 @@ str
 //│       get getLocals() {
 //│         return getLocals12();
 //│       }
-//│       toString() { return "Cont$handleBlock$h1$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│       toString() { return "Cont$handleBlock$h1$RecursiveHandlers$_mls_L141_33_35$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│     };
 //│     handleBlock$8 = function handleBlock$() {
-//│       let h2, tmp12, getLocals13, res7, Cont$handleBlock$h2$2, Handler$h2$2;
+//│       let h2, tmp12, getLocals13, res7, Cont$handleBlock$h2$RecursiveHandlers$_mls_L141_140_142$1, Handler$h2$2;
 //│       Handler$h2$2 = class Handler$h2$1 extends Effect1 {
 //│         constructor() {
 //│           let tmp13;
@@ -282,7 +282,7 @@ str
 //│         }
 //│         perform(arg) {
 //│           return runtime.mkEffect(this, (k) => {
-//│             let tmp13, tmp14, tmp15, tmp16, tmp17, getLocals14, Cont$handler$h2$perform$RecursiveHandlers$_mls_L141_165_2491;
+//│             let tmp13, tmp14, tmp15, tmp16, tmp17, getLocals14, Cont$handler$h2$RecursiveHandlers$_mls_L141_140_142$perform$RecursiveHandlers$_mls_L141_165_249$1;
 //│             getLocals14 = function getLocals() {
 //│               let arg1, prev, thisInfo, tmp18;
 //│               prev = getLocals12();
@@ -293,10 +293,10 @@ str
 //│               tmp18 = runtime.safeCall(prev.push(thisInfo));
 //│               return prev
 //│             };
-//│             Cont$handler$h2$perform$RecursiveHandlers$_mls_L141_165_2491 = function Cont$handler$h2$perform$RecursiveHandlers$_mls_L141_165_249(pc1) {
-//│               return new Cont$handler$h2$perform$RecursiveHandlers$_mls_L141_165_249.class(pc1);
+//│             Cont$handler$h2$RecursiveHandlers$_mls_L141_140_142$perform$RecursiveHandlers$_mls_L141_165_249$1 = function Cont$handler$h2$RecursiveHandlers$_mls_L141_140_142$perform$RecursiveHandlers$_mls_L141_165_249$(pc1) {
+//│               return new Cont$handler$h2$RecursiveHandlers$_mls_L141_140_142$perform$RecursiveHandlers$_mls_L141_165_249$.class(pc1);
 //│             };
-//│             Cont$handler$h2$perform$RecursiveHandlers$_mls_L141_165_2491.class = class Cont$handler$h2$perform$RecursiveHandlers$_mls_L141_165_249 extends runtime.FunctionContFrame.class {
+//│             Cont$handler$h2$RecursiveHandlers$_mls_L141_140_142$perform$RecursiveHandlers$_mls_L141_165_249$1.class = class Cont$handler$h2$RecursiveHandlers$_mls_L141_140_142$perform$RecursiveHandlers$_mls_L141_165_249$ extends runtime.FunctionContFrame.class {
 //│               constructor(pc) {
 //│                 let tmp18;
 //│                 tmp18 = super(null);
@@ -329,14 +329,14 @@ str
 //│               get getLocals() {
 //│                 return getLocals14();
 //│               }
-//│               toString() { return "Cont$handler$h2$perform$RecursiveHandlers$_mls_L141_165_249(" + globalThis.Predef.render(this.pc) + ")"; }
+//│               toString() { return "Cont$handler$h2$RecursiveHandlers$_mls_L141_140_142$perform$RecursiveHandlers$_mls_L141_165_249$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│             };
 //│             tmp13 = str + "B";
 //│             tmp14 = str + tmp13;
 //│             str = tmp14;
 //│             tmp15 = runtime.safeCall(k(arg));
 //│             if (tmp15 instanceof runtime.EffectSig.class) {
-//│               tmp15.contTrace.last.next = new Cont$handler$h2$perform$RecursiveHandlers$_mls_L141_165_2491.class(4);
+//│               tmp15.contTrace.last.next = new Cont$handler$h2$RecursiveHandlers$_mls_L141_140_142$perform$RecursiveHandlers$_mls_L141_165_249$1.class(4);
 //│               tmp15.contTrace.last = tmp15.contTrace.last.next;
 //│               return tmp15
 //│             }
@@ -356,10 +356,10 @@ str
 //│         tmp13 = runtime.safeCall(prev.push(thisInfo));
 //│         return prev
 //│       };
-//│       Cont$handleBlock$h2$2 = function Cont$handleBlock$h2$(pc1) {
-//│         return new Cont$handleBlock$h2$.class(pc1);
+//│       Cont$handleBlock$h2$RecursiveHandlers$_mls_L141_140_142$1 = function Cont$handleBlock$h2$RecursiveHandlers$_mls_L141_140_142$(pc1) {
+//│         return new Cont$handleBlock$h2$RecursiveHandlers$_mls_L141_140_142$.class(pc1);
 //│       };
-//│       Cont$handleBlock$h2$2.class = class Cont$handleBlock$h2$1 extends runtime.FunctionContFrame.class {
+//│       Cont$handleBlock$h2$RecursiveHandlers$_mls_L141_140_142$1.class = class Cont$handleBlock$h2$RecursiveHandlers$_mls_L141_140_142$ extends runtime.FunctionContFrame.class {
 //│         constructor(pc) {
 //│           let tmp13;
 //│           tmp13 = super(null);
@@ -404,23 +404,23 @@ str
 //│         get getLocals() {
 //│           return getLocals13();
 //│         }
-//│         toString() { return "Cont$handleBlock$h2$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│         toString() { return "Cont$handleBlock$h2$RecursiveHandlers$_mls_L141_140_142$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│       };
 //│       tmp12 = runtime.safeCall(h2.perform(runtime.Unit));
 //│       if (tmp12 instanceof runtime.EffectSig.class) {
-//│         tmp12.contTrace.last.next = Cont$handleBlock$h2$2(0);
+//│         tmp12.contTrace.last.next = Cont$handleBlock$h2$RecursiveHandlers$_mls_L141_140_142$1(0);
 //│         return runtime.handleBlockImpl(tmp12, h2)
 //│       }
 //│       res7 = runtime.safeCall(h1.perform(runtime.Unit));
 //│       if (res7 instanceof runtime.EffectSig.class) {
-//│         res7.contTrace.last.next = Cont$handleBlock$h2$2(1);
+//│         res7.contTrace.last.next = Cont$handleBlock$h2$RecursiveHandlers$_mls_L141_140_142$1(1);
 //│         return runtime.handleBlockImpl(res7, h2)
 //│       }
 //│       return res7
 //│     };
 //│     tmp11 = handleBlock$8();
 //│     if (tmp11 instanceof runtime.EffectSig.class) {
-//│       tmp11.contTrace.last.next = Cont$handleBlock$h1$2(6);
+//│       tmp11.contTrace.last.next = Cont$handleBlock$h1$RecursiveHandlers$_mls_L141_33_35$1(6);
 //│       return runtime.handleBlockImpl(tmp11, h1)
 //│     }
 //│     return tmp11

@@ -39,8 +39,9 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
         .rest(f(tmp.asPath))
   
   def wrapStackSafe(body: Block, resSym: Local, rest: Block) =
-    val bodLam = Value.Lam(ParamList(ParamListFlags.empty, Nil, N), body)
-    Assign(resSym, Call(runStackSafePath, intLit(depthLimit).asArg :: bodLam.asArg :: Nil)(true, true), rest)
+    val bodSym = BlockMemberSymbol("‹stack safe body›", Nil, false)
+    val bodFun = FunDefn(N, bodSym, ParamList(ParamListFlags.empty, Nil, N) :: Nil, body)
+    Define(bodFun, Assign(resSym, Call(runStackSafePath, intLit(depthLimit).asArg :: bodSym.asPath.asArg :: Nil)(true, true), rest))
 
   def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol], curDepth: => Symbol) =
     val resSym = sym getOrElse TempSymbol(None, "res")

@@ -393,6 +393,9 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
           ResultPlaceholder(res, freshId(), c2, k(Value.Ref(res)))
         case r => super.applyResult2(r)(k)
       override def applyLam(lam: Value.Lam): Value.Lam =
+        // This should normally be unreachable, but we can just emit a warning and proceed with the transformation
+        raise(WarningReport(msg"BUG: Unexpected lambda during handler lowering" -> lam.toLoc :: Nil,
+          source = Diagnostic.Source.Compilation))
         Value.Lam(lam.params, translateBlock(lam.body, lam.params.paramSyms.toSet, functionHandlerCtx(s"Cont$$lambda$$", "‹lambda›")))
       override def applyDefn(defn: Defn): Defn = defn match
         case f: FunDefn => translateFun(f)
@@ -417,18 +420,21 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
   private def locToStr(l: Loc): Str =
     Scope.replaceInvalidCharacters(l.origin.fileName.last + "_L" + l.origin.startLineNum + "_" + l.spanStart + "_" + l.spanEnd)
   
+  private def symToStr(s: Symbol): Str =
+      s"${Scope.replaceInvalidCharacters(s.nme)}$$${s.toLoc.fold("")(locToStr)}"
+  
   private def translateFun(f: FunDefn)(using HandlerCtx): FunDefn =
     FunDefn(f.owner, f.sym, f.params, translateBlock(f.body,
       f.params.flatMap(_.paramSyms).toSet,
-      functionHandlerCtx(s"Cont$$func$$${f.sym.nme}$$${f.sym.toLoc.fold("")(locToStr)}$$", f.sym.nme))
+      functionHandlerCtx(s"Cont$$func$$${symToStr(f.sym)}$$", f.sym.nme))
     )
   
   private def translateCls(cls: ClsLikeDefn)(using HandlerCtx): ClsLikeDefn =
     val curCtorCtx = if handlerCtx.isTopLevel && (cls.k is syntax.Mod)
-      then topLevelCtx(s"Cont$$modCtor$$${cls.sym.nme}$$${cls.sym.toLoc.fold("")(_.toString)}$$", s"‹constructor of ${cls.sym.nme}›")
+      then topLevelCtx(s"Cont$$modCtor$$${symToStr(cls.sym)}$$", s"‹constructor of ${cls.sym.nme}›")
       else ctorCtx(
         cls.isym.asPath,
-        s"Cont$$ctor$$${cls.sym.nme}$$${cls.sym.toLoc.fold("")(locToStr)}$$", s"‹constructor of ${cls.sym.nme}›")
+        s"Cont$$ctor$$${symToStr(cls.sym)}$$", s"‹constructor of ${cls.sym.nme}›")
     cls.copy(methods = cls.methods.map(translateFun),
       ctor = translateBlock(cls.ctor, Set.empty, curCtorCtx))
   
@@ -439,7 +445,7 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
     val lblLoop = freshTmp("handlerLoop")
     
     val handlerBody = translateBlock(h.body, Set.empty, HandlerCtx(false, true,
-      s"Cont$$handleBlock$$${h.lhs.nme}$$", N, handlerCtx.debugInfo.copy(debugNme = s"‹handler body of ${h.lhs.nme}›"), state => blockBuilder
+      s"Cont$$handleBlock$$${symToStr(h.lhs)}$$", N, handlerCtx.debugInfo.copy(debugNme = s"‹handler body of ${h.lhs.nme}›"), state => blockBuilder
         .assignFieldN(state.res.asPath.contTrace.last, nextIdent, PureCall(state.cls, Value.Lit(Tree.IntLit(state.uid)) :: Nil))
         .ret(PureCall(paths.handleBlockImplPath, state.res.asPath :: h.lhs.asPath :: Nil))))
     
@@ -448,7 +454,7 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
         PlainParamList(Param(FldFlags.empty, handler.resumeSym, N) :: Nil),
         translateBlock(handler.body,
           handler.params.flatMap(_.paramSyms).toSet,
-          handlerMtdCtx(s"Cont$$handler$$${h.lhs.nme}$$${handler.sym.nme}$$${handler.sym.toLoc.fold("")(locToStr)}", handler.sym.nme)))
+          handlerMtdCtx(s"Cont$$handler$$${symToStr(h.lhs)}$$${symToStr(handler.sym)}$$", handler.sym.nme)))
       FunDefn(
         S(h.cls),
         handler.sym, handler.params, Return(PureCall(paths.mkEffectPath, h.cls.asPath :: lam :: Nil), false))

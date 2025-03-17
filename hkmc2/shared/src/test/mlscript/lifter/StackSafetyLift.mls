@@ -21,7 +21,7 @@ fun hi(n) =
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
-//│ let hi, res, getLocals, getLocals1, Cont$func$hi$StackSafetyLift$_mls_L19_4_47$1, getLocals2, lambda, Cont$func$hi$StackSafetyLift$_mls_L19_4_47$$ctor, Cont$func$hi$StackSafetyLift$_mls_L19_4_47$$, getLocals$;
+//│ let hi, res, $_stack$_safe$_body$_, getLocals, getLocals1, Cont$func$hi$StackSafetyLift$_mls_L19_4_47$1, getLocals2, Cont$func$hi$StackSafetyLift$_mls_L19_4_47$$ctor, Cont$func$hi$StackSafetyLift$_mls_L19_4_47$$, getLocals$;
 //│ getLocals = function getLocals() {
 //│   let prev, thisInfo, tmp;
 //│   prev = [];
@@ -124,14 +124,14 @@ hi(0)
 //│ getLocals2 = function getLocals() {
 //│   let prev, thisInfo, tmp;
 //│   prev = getLocals();
-//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039lambda\u203A", []);
+//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039stack safe body\u203A", []);
 //│   tmp = runtime.safeCall(prev.push(thisInfo));
 //│   return prev
 //│ };
-//│ lambda = (undefined, function () {
+//│ $_stack$_safe$_body$_ = (undefined, function () {
 //│   return hi(0)
 //│ });
-//│ res = runtime.runStackSafe(5, lambda);
+//│ res = runtime.runStackSafe(5, $_stack$_safe$_body$_);
 //│ if (res instanceof runtime.EffectSig.class) {
 //│   res = runtime.topLevelEffect(res);
 //│ }
@@ -148,7 +148,7 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ JS (unsanitized):
-//│ let sum1, res1, getLocals3, getLocals4, Cont$func$sum$StackSafetyLift$_mls_L145_4_57$1, getLocals5, lambda1, Cont$func$sum$StackSafetyLift$_mls_L145_4_57$$ctor, Cont$func$sum$StackSafetyLift$_mls_L145_4_57$$, getLocals$1;
+//│ let sum1, res1, $_stack$_safe$_body$_1, getLocals3, getLocals4, Cont$func$sum$StackSafetyLift$_mls_L145_4_57$1, getLocals5, Cont$func$sum$StackSafetyLift$_mls_L145_4_57$$ctor, Cont$func$sum$StackSafetyLift$_mls_L145_4_57$$, getLocals$1;
 //│ getLocals3 = function getLocals() {
 //│   let prev, thisInfo, tmp;
 //│   prev = [];
@@ -274,14 +274,14 @@ sum(10000)
 //│ getLocals5 = function getLocals() {
 //│   let prev, thisInfo, tmp;
 //│   prev = getLocals3();
-//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039lambda\u203A", []);
+//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039stack safe body\u203A", []);
 //│   tmp = runtime.safeCall(prev.push(thisInfo));
 //│   return prev
 //│ };
-//│ lambda1 = (undefined, function () {
+//│ $_stack$_safe$_body$_1 = (undefined, function () {
 //│   return sum1(10000)
 //│ });
-//│ res1 = runtime.runStackSafe(1000, lambda1);
+//│ res1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
 //│ if (res1 instanceof runtime.EffectSig.class) {
 //│   res1 = runtime.topLevelEffect(res1);
 //│ }
