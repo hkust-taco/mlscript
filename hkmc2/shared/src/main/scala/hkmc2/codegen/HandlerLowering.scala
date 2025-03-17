@@ -41,25 +41,26 @@ object HandlerLowering:
   // a function that takes a LinkState and returns a block that links the continuation class and handles the effect
   // this is a convenience function which initializes the continuation class in function context or throw an error in top level
   private case class HandlerCtx(
-        isTopLevel: Bool,
-        isHandlerBody: Bool,
-        contName: Str,
-        ctorThis: Option[Path],
-        debugInfo: DebugInfo,
-        linkAndHandle: LinkState => Block,
-    ):
-    def nestDebugScope(locals: Set[Local], localsFn: Path) = copy(debugInfo = DebugInfo(
-      debugInfo.inScopeLocals ++ locals, S(localsFn)))
+      isTopLevel: Bool,
+      isHandlerBody: Bool,
+      contName: Str,
+      ctorThis: Option[Path],
+      debugInfo: DebugInfo,
+      linkAndHandle: LinkState => Block,
+  ):
+    def nestDebugScope(locals: Set[Local], localsFn: Path) = copy(debugInfo = debugInfo.copy(inScopeLocals =
+      debugInfo.inScopeLocals ++ locals, prevLocalsFn = S(localsFn)))
   
   // inScopeLocals: Local variables that are in scope.
   // prevLocalsFn: The function that gets the outer function's locals.
   private case class DebugInfo(
-      inScopeLocals: Set[Local],
-      prevLocalsFn: Opt[Path],
-    )
+    debugNme: Str,
+    inScopeLocals: Set[Local],
+    prevLocalsFn: Opt[Path],
+  )
   
   private object DebugInfo:
-    def topLevel = DebugInfo(Set.empty, N)
+    def topLevel(debugNme: Str) = DebugInfo(debugNme, Set.empty, N)
   
   type StateId = BigInt
 
@@ -80,21 +81,21 @@ class HandlerPaths(using Elaborator.State):
 
 class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, Elaborator.Ctx):
 
-  private def funcLikeHandlerCtx(ctorThis: Option[Path], isHandlerMtd: Bool, nme: Str)(using h: HandlerCtx) =
-    HandlerCtx(false, false, nme, ctorThis, h.debugInfo, state =>
+  private def funcLikeHandlerCtx(ctorThis: Option[Path], isHandlerMtd: Bool, contNme: Str, debugNme: Str)(using h: HandlerCtx) =
+    HandlerCtx(false, false, contNme, ctorThis, h.debugInfo.copy(debugNme), state =>
       blockBuilder
         .assignFieldN(state.res.asPath.contTrace.last, nextIdent, Instantiate(
           state.cls.selN(Tree.Ident("class")),
           Value.Lit(Tree.IntLit(state.uid)) :: Nil))
         .assignFieldN(state.res.asPath.contTrace, lastIdent, state.res.asPath.contTrace.last.next)
         .ret(state.res.asPath))
-  private def functionHandlerCtx(nme: Str)(using HandlerCtx) = funcLikeHandlerCtx(N, false, nme)
-  private def topLevelCtx(nme: Str) = HandlerCtx(true, false, nme, N, DebugInfo.topLevel, state => Assign(
+  private def functionHandlerCtx(nme: Str, debugNme: Str)(using HandlerCtx) = funcLikeHandlerCtx(N, false, nme, debugNme)
+  private def topLevelCtx(nme: Str, debugNme: Str) = HandlerCtx(true, false, nme, N, DebugInfo.topLevel(debugNme), state => Assign(
       state.res,
       Call(paths.topLevelEffectPath, state.res.asPath.asArg :: Nil)(true, false),
       End()))
-  private def ctorCtx(ctorThis: Path, nme: Str)(using HandlerCtx) = funcLikeHandlerCtx(S(ctorThis), false, nme)
-  private def handlerMtdCtx(nme: Str)(using HandlerCtx) = funcLikeHandlerCtx(N, true, nme)
+  private def ctorCtx(ctorThis: Path, nme: Str, debugNme: Str)(using HandlerCtx) = funcLikeHandlerCtx(S(ctorThis), false, nme, debugNme)
+  private def handlerMtdCtx(nme: Str, debugNme: Str)(using HandlerCtx) = funcLikeHandlerCtx(N, true, nme, debugNme)
   private def handlerCtx(using HandlerCtx): HandlerCtx = summon
   
   private def freshTmp(dbgNme: Str = "tmp") = new TempSymbol(N, dbgNme)
@@ -307,7 +308,7 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
   val runtimePath = State.runtimeSymbol.asPath
   val fnLocalsPath: Path = runtimePath.selSN("FnLocalsInfo").selSN("class")
   val localVarInfoPath: Path = runtimePath.selSN("LocalVarInfo").selSN("class")
-  private def createGetLocalsFn(b: Block, extraLocals: Set[Local], displayName: Str)(using h: HandlerCtx) =
+  private def createGetLocalsFn(b: Block, extraLocals: Set[Local])(using h: HandlerCtx) =
     val locals = (b.userDefinedVars ++ extraLocals) -- h.debugInfo.inScopeLocals
     val localsInfo = locals.toList.sortBy(_.uid).map: s =>
       FlowSymbol(s.nme) -> Instantiate(localVarInfoPath,
@@ -324,7 +325,7 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
       .foldLeft(localsInfo):
         case (acc, (sym, res)) => acc.assign(sym, res)
       .assign(thisInfo, Instantiate(fnLocalsPath,
-          Value.Lit(Tree.StrLit(displayName))
+          Value.Lit(Tree.StrLit(h.debugInfo.debugNme))
             :: Value.Arr(localsInfo.map(v => v._1.asPath.asArg))
             :: Nil
         ))
@@ -342,8 +343,8 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
    * 3. float out definitions
    */
   
-  private def translateBlock(b: Block, extraLocals: Set[Local], h: HandlerCtx, debugNme: Str): Block =
-    val getLocalsFn = createGetLocalsFn(b, extraLocals, debugNme)(using h)
+  private def translateBlock(b: Block, extraLocals: Set[Local], h: HandlerCtx): Block =
+    val getLocalsFn = createGetLocalsFn(b, extraLocals)(using h)
     given HandlerCtx = h.nestDebugScope(b.userDefinedVars ++ extraLocals, getLocalsFn.sym.asPath)
     
     val stage1 = firstPass(b)
@@ -392,7 +393,7 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
           ResultPlaceholder(res, freshId(), c2, k(Value.Ref(res)))
         case r => super.applyResult2(r)(k)
       override def applyLam(lam: Value.Lam): Value.Lam =
-        Value.Lam(lam.params, translateBlock(lam.body, lam.params.paramSyms.toSet, functionHandlerCtx(s"Cont$$lambda$$"), "‹lambda›"))
+        Value.Lam(lam.params, translateBlock(lam.body, lam.params.paramSyms.toSet, functionHandlerCtx(s"Cont$$lambda$$", "‹lambda›")))
       override def applyDefn(defn: Defn): Defn = defn match
         case f: FunDefn => translateFun(f)
         case c: ClsLikeDefn => translateCls(c)
@@ -419,17 +420,17 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
   private def translateFun(f: FunDefn)(using HandlerCtx): FunDefn =
     FunDefn(f.owner, f.sym, f.params, translateBlock(f.body,
       f.params.flatMap(_.paramSyms).toSet,
-      functionHandlerCtx(s"Cont$$func$$${f.sym.nme}$$${f.sym.toLoc.fold("")(locToStr)}$$"), f.sym.nme)
+      functionHandlerCtx(s"Cont$$func$$${f.sym.nme}$$${f.sym.toLoc.fold("")(locToStr)}$$", f.sym.nme))
     )
   
   private def translateCls(cls: ClsLikeDefn)(using HandlerCtx): ClsLikeDefn =
     val curCtorCtx = if handlerCtx.isTopLevel && (cls.k is syntax.Mod)
-      then topLevelCtx(s"Cont$$modCtor$$${cls.sym.nme}$$${cls.sym.toLoc.fold("")(_.toString)}$$")
+      then topLevelCtx(s"Cont$$modCtor$$${cls.sym.nme}$$${cls.sym.toLoc.fold("")(_.toString)}$$", s"‹constructor of ${cls.sym.nme}›")
       else ctorCtx(
         cls.isym.asPath,
-        s"Cont$$ctor$$${cls.sym.nme}$$${cls.sym.toLoc.fold("")(locToStr)}$$")
+        s"Cont$$ctor$$${cls.sym.nme}$$${cls.sym.toLoc.fold("")(locToStr)}$$", s"‹constructor of ${cls.sym.nme}›")
     cls.copy(methods = cls.methods.map(translateFun),
-      ctor = translateBlock(cls.ctor, Set.empty, curCtorCtx, s"‹constructor of ${cls.sym.nme}›"))
+      ctor = translateBlock(cls.ctor, Set.empty, curCtorCtx))
   
   // Handle block becomes a FunDefn and CallPlaceholder
   private def translateHandleBlock(h: HandleBlock)(using HandlerCtx): Block =
@@ -438,16 +439,16 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
     val lblLoop = freshTmp("handlerLoop")
     
     val handlerBody = translateBlock(h.body, Set.empty, HandlerCtx(false, true,
-      s"Cont$$handleBlock$$${h.lhs.nme}$$", N, handlerCtx.debugInfo, state => blockBuilder
+      s"Cont$$handleBlock$$${h.lhs.nme}$$", N, handlerCtx.debugInfo.copy(debugNme = s"‹handler body of ${h.lhs.nme}›"), state => blockBuilder
         .assignFieldN(state.res.asPath.contTrace.last, nextIdent, PureCall(state.cls, Value.Lit(Tree.IntLit(state.uid)) :: Nil))
-        .ret(PureCall(paths.handleBlockImplPath, state.res.asPath :: h.lhs.asPath :: Nil))), s"‹handler body of ${h.lhs.nme}›")
+        .ret(PureCall(paths.handleBlockImplPath, state.res.asPath :: h.lhs.asPath :: Nil))))
     
     val handlerMtds = h.handlers.map: handler =>
       val lam = Value.Lam(
         PlainParamList(Param(FldFlags.empty, handler.resumeSym, N) :: Nil),
         translateBlock(handler.body,
           handler.params.flatMap(_.paramSyms).toSet,
-          handlerMtdCtx(s"Cont$$handler$$${h.lhs.nme}$$${handler.sym.nme}$$${handler.sym.toLoc.fold("")(locToStr)}"), handler.sym.nme))
+          handlerMtdCtx(s"Cont$$handler$$${h.lhs.nme}$$${handler.sym.nme}$$${handler.sym.toLoc.fold("")(locToStr)}", handler.sym.nme)))
       FunDefn(
         S(h.cls),
         handler.sym, handler.params, Return(PureCall(paths.mkEffectPath, h.cls.asPath :: lam :: Nil), false))
@@ -623,5 +624,5 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
     transform.applyBlock(b)
 
   def translateTopLevel(b: Block): Block =
-    translateBlock(b, Set.empty, topLevelCtx(s"Cont$$topLevel$$BAD"), "‹top level›")
+    translateBlock(b, Set.empty, topLevelCtx(s"Cont$$topLevel$$BAD", "‹top level›"))
     
