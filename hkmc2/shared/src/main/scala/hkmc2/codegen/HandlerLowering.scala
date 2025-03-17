@@ -393,7 +393,7 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
           ResultPlaceholder(res, freshId(), c2, k(Value.Ref(res)))
         case r => super.applyResult2(r)(k)
       override def applyLam(lam: Value.Lam): Value.Lam =
-        // This should normally be unreachable, but we can just emit a warning and proceed with the transformation
+        // This should normally be unreachable due to prior desugaring of lambda
         raise(InternalError(msg"Unexpected lambda during handler lowering" -> lam.toLoc :: Nil,
           source = Diagnostic.Source.Compilation))
         Value.Lam(lam.params, translateBlock(lam.body, lam.params.paramSyms.toSet, functionHandlerCtx(s"Cont$$lambda$$", "‹lambda›")))
@@ -489,14 +489,16 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
     )
     
     val pcVar = VarSymbol(pcIdent)
+
+    // Also used to check if the block is trivial
+    val pcToLoc = collection.mutable.Map.empty[StateId, Option[Loc]]
     
-    var trivial = true
     def prepareBlock(b: Block): Block =
       val transform = new BlockTransformerShallow(SymbolSubst()):
         override def applyBlock(b: Block): Block = b match
           case Define(_: (ClsLikeDefn | FunDefn), rst) => applyBlock(rst)
           case ResultPlaceholder(res, uid, c, rest) =>
-            trivial = false
+            pcToLoc(uid) = c.toLoc
             blockBuilder
               .assign(res, c)
               .ifthen(
@@ -511,7 +513,7 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
     val actualBlock = handlerCtx.ctorThis match
       case N => prepareBlock(b)
       case S(thisPath) => Begin(prepareBlock(b), Return(thisPath, false))
-    if trivial then return N
+    if pcToLoc.isEmpty then return N
     
     val parts = partitionBlock(actualBlock)
     val loopLbl = freshTmp("contLoop")
@@ -587,6 +589,19 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
       List(),
       Return(localsRes, false)
     )
+
+    val getLocSym = BlockMemberSymbol("getLoc", List())
+    val getLocFnDef = FunDefn(
+      S(clsSym),
+      getLocSym,
+      List(),
+      Match(pcSymbol.asPath, pcToLoc.toSortedMap.iterator.map: (stateId, loc) =>
+        Case.Lit(Tree.IntLit(stateId)) -> Return(Value.Lit(loc.fold(Tree.UnitLit(true)): loc =>
+          val (line, _, col) = loc.origin.fph.getLineColAt(loc.spanStart)
+          Tree.StrLit(s"${loc.origin.fileName.baseName}:${line + loc.origin.startLineNum - 1}:$col")
+        ), false)
+      .toList, N, End()),
+    )
     
     S(ClsLikeDefn(
       N, // no owner
@@ -600,7 +615,7 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
       } :: Nil)),
       Nil,
       S(paths.contClsPath),
-      resumeFnDef :: getLocalsFnDef :: Nil,
+      resumeFnDef :: getLocalsFnDef :: getLocFnDef :: Nil,
       Nil,
       Nil,
       Assign(freshTmp(), PureCall(

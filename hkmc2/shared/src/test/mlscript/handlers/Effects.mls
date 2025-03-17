@@ -177,7 +177,7 @@ if true do
 //│         getLocals16 = function getLocals() {
 //│           let arg1, prev, thisInfo, tmp12;
 //│           prev = getLocals14();
-//│           arg1 = new runtime.LocalVarInfo.class("arg", "1464", arg);
+//│           arg1 = new runtime.LocalVarInfo.class("arg", "1485", arg);
 //│           thisInfo = new runtime.FnLocalsInfo.class("perform", [
 //│             arg1
 //│           ]);
@@ -231,6 +231,11 @@ if true do
 //│     } 
 //│     get getLocals() {
 //│       return getLocals15();
+//│     } 
+//│     get getLoc() {
+//│       if (this.pc === 0) {
+//│         return "Effects:157:3"
+//│       }
 //│     }
 //│     toString() { return "Cont$handleBlock$h$Effects$_mls_L153_7_8$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };

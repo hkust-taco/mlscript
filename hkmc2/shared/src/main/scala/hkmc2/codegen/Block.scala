@@ -417,8 +417,8 @@ sealed abstract class Result extends AutoLocated:
     case Instantiate(cls, args) => cls :: args
     case Select(qual, name) => qual :: name :: Nil
     case DynSelect(qual, fld, arrayIdx) => qual :: fld :: Nil
-    case Value.Ref(l) => l :: Nil
-    case Value.This(sym) => sym :: Nil
+    case Value.Ref(l) => Nil
+    case Value.This(sym) => Nil
     case Value.Lit(lit) => lit :: Nil
     case Value.Lam(params, body) => params :: body :: Nil
     case Value.Arr(elems) => elems.map(_.value)

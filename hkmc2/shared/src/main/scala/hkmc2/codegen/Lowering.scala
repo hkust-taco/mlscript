@@ -284,11 +284,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       def conclude(fr: Path) =
         arg match
         case Tup(fs) =>
-          args(fs)(as => k(Call(fr, as)(isMlsFun, true)))
+          args(fs)(as => k(Call(fr, as)(isMlsFun, true).withLocOf(t)))
         case _ =>
           // Application arguments that are not tuples represent spreads, as in `f(...arg)`
           subTerm_nonTail(arg): ar =>
-            k(Call(fr, Arg(spread = true, ar) :: Nil)(isMlsFun, true))
+            k(Call(fr, Arg(spread = true, ar) :: Nil)(isMlsFun, true).withLocOf(t))
       f match
       case t if t.symbol.isDefined && (t.symbol.get is ctx.builtins.js.try_catch) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("try_catch")))

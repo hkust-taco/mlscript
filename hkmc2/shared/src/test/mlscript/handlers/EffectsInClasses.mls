@@ -82,6 +82,13 @@ data class Lol(h) with
 //│       } 
 //│       get getLocals() {
 //│         return getLocals3();
+//│       } 
+//│       get getLoc() {
+//│         if (this.pc === 0) {
+//│           return "EffectsInClasses:11:9"
+//│         } else if (this.pc === 1) {
+//│           return "EffectsInClasses:11:3"
+//│         }
 //│       }
 //│       toString() { return "Cont$ctor$Lol$EffectsInClasses$_mls_L10_11_46$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│     };
