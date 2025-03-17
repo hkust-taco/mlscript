@@ -43,11 +43,10 @@ in
 //│ > main end
 //│ > f 2
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at f(pc=1) with locals: h=Handler$h$, x=2
-//│ 	at drain(pc=2) with locals: 
-//│ 	at fork(pc=4) with locals: thread=[function]
-//│ 	at fork(pc=4) with locals: thread=[function]​
-//│ ​Error: Unhandled effects
+//│ 	at f (UserThreadsSafe.mls:17:3) with locals: h=Handler$h$, x=2
+//│ 	at drain (UserThreadsSafe.mls:10:7) with locals: 
+//│ 	at fork (UserThreadsSafe.mls:35:5) with locals: thread=[function]
+//│ 	at fork (UserThreadsSafe.mls:35:5) with locals: thread=[function]
 
 
 // FIFO
@@ -66,10 +65,9 @@ in
 //│ > main end
 //│ > f 0
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$1
-//│ 	at f(pc=1) with locals: h=Handler$h$, x=0
-//│ 	at drain(pc=2) with locals: 
-//│ 	at fork(pc=4) with locals: thread=[function]
-//│ 	at fork(pc=4) with locals: thread=[function]​
-//│ ​Error: Unhandled effects
+//│ 	at f (UserThreadsSafe.mls:17:3) with locals: h=Handler$h$, x=0
+//│ 	at drain (UserThreadsSafe.mls:10:7) with locals: 
+//│ 	at fork (UserThreadsSafe.mls:57:5) with locals: thread=[function]
+//│ 	at fork (UserThreadsSafe.mls:57:5) with locals: thread=[function]
 
 

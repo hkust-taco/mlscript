@@ -164,11 +164,11 @@ f() + f() + f()
 //│   } 
 //│   get getLoc() {
 //│     if (this.pc === 2) {
-//│       return "ClassInFun:14:1"
+//│       return "ClassInFun.mls:14:1"
 //│     } else if (this.pc === 3) {
-//│       return "ClassInFun:14:7"
+//│       return "ClassInFun.mls:14:7"
 //│     } else if (this.pc === 4) {
-//│       return "ClassInFun:14:13"
+//│       return "ClassInFun.mls:14:13"
 //│     }
 //│   }
 //│   toString() { return "Cont$handleBlock$h$ClassInFun$_mls_L7_50_51$(" + globalThis.Predef.render(this.pc) + ")"; }
@@ -234,7 +234,7 @@ f() + f() + f()
 //│   } 
 //│   get getLoc() {
 //│     if (this.pc === 0) {
-//│       return "ClassInFun:12:3"
+//│       return "ClassInFun.mls:12:3"
 //│     }
 //│   }
 //│   toString() { return "Cont$func$f$ClassInFun$_mls_L7_95_118$(" + globalThis.Predef.render(this.pc) + ")"; }

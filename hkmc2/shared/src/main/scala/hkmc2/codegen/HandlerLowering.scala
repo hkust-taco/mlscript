@@ -598,7 +598,7 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
       Match(pcSymbol.asPath, pcToLoc.toSortedMap.iterator.map: (stateId, loc) =>
         Case.Lit(Tree.IntLit(stateId)) -> Return(Value.Lit(loc.fold(Tree.UnitLit(true)): loc =>
           val (line, _, col) = loc.origin.fph.getLineColAt(loc.spanStart)
-          Tree.StrLit(s"${loc.origin.fileName.baseName}:${line + loc.origin.startLineNum - 1}:$col")
+          Tree.StrLit(s"${loc.origin.fileName.last}:${line + loc.origin.startLineNum - 1}:$col")
         ), false)
       .toList, N, End()),
     )

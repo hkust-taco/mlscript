@@ -59,8 +59,7 @@ data class LocalVarInfo(localName, uid, value)
 
 fun topLevelEffect(tr) =
   let
-    zwsp = "\u200B"
-    msg = zwsp + "Error: Unhandled effect " + tr.handler.constructor.name
+    msg = "Error: Unhandled effect " + tr.handler.constructor.name
     curHandler = tr.contTrace
     atTail = true
   while curHandler !== null do
@@ -68,8 +67,10 @@ fun topLevelEffect(tr) =
     while cur !== null do
       let locals = cur.getLocals
       let curLocals = locals.at(locals.length - 1)
+      let loc = cur.getLoc
+      let loc = if loc is null then "pc=" + cur.pc else loc
       set
-        msg += "\n\tat " + curLocals.fnName + "(pc=" + cur.pc + ")"
+        msg += "\n\tat " + curLocals.fnName + " (" + loc + ")"
         msg += " with locals: " + curLocals.locals.map(l => l.localName + "=" + RuntimeJS.Predef.render(l.value)).join(", ")
         cur = cur.next
         atTail = false
@@ -80,8 +81,7 @@ fun topLevelEffect(tr) =
         atTail = false
   if atTail do
     set msg += "\n\tat tail position"
-  console.log(msg + zwsp)
-  throw Error("Unhandled effects")
+  throw msg
 
 fun showFunctionContChain(cont, hl, vis, reps) =
   if cont is FunctionContFrame then

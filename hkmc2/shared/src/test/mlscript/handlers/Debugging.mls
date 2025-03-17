@@ -6,8 +6,7 @@
 :re
 raiseUnhandledEffect()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at tail position​
-//│ ​Error: Unhandled effects
+//│ 	at tail position
 
 
 fun f() =
@@ -21,8 +20,7 @@ fun f() =
 :re
 f()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at f(pc=0) with locals: i=0, j=100, k=2000​
-//│ ​Error: Unhandled effects
+//│ 	at f (Debugging.mls:17:14) with locals: i=0, j=100, k=2000
 
 :re
 fun lambda_test(f) =
@@ -32,9 +30,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda(pc=2) with locals: 
-//│ 	at lambda_test(pc=0) with locals: f=[function]​
-//│ ​Error: Unhandled effects
+//│ 	at lambda (Debugging.mls:30:3) with locals: 
+//│ 	at lambda_test (Debugging.mls:27:3) with locals: f=[function]
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -51,7 +48,7 @@ Runtime.debugEff(res.reified)
 //│ > handlerFun:  null
 //│ > resumed:  false
 //│ > <lastHandler is self>
-//│ > Cont$func$f$Debugging$_mls_L13_4_109$(pc=0, last) -> (null)
+//│ > Cont$func$f$Debugging$_mls_L12_4_109$(pc=0, last) -> (null)
 //│ > 
 
 res.resumeWith(42)
@@ -83,18 +80,16 @@ let res =
 :re
 res.raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at test(pc=0) with locals: j=12, dbg=Handler$h$, i=0, k=2000
-//│ 	at main(pc=4) with locals: =Handler$h$​
-//│ ​Error: Unhandled effects
+//│ 	at test (Debugging.mls:68:15) with locals: j=12, dbg=Handler$h$, i=0, k=2000
+//│ 	at main (pc=4) with locals: =Handler$h$
 
 set res = res.resumeWith(42)
 
 :re
 res.raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at test(pc=0) with locals: j=34, dbg=Handler$h$, i=0, k=2000
-//│ 	at main(pc=6) with locals: =Handler$h$​
-//│ ​Error: Unhandled effects
+//│ 	at test (Debugging.mls:68:15) with locals: j=34, dbg=Handler$h$, i=0, k=2000
+//│ 	at main (pc=6) with locals: =Handler$h$
 
 res.resumeWith(666)
 //│ = 0.33676533676533676

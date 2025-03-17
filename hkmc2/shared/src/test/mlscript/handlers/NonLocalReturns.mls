@@ -56,21 +56,19 @@ f()
 fun f() = () => return 3
 f()()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect $_non$_local$_return$_effect$_6
-//│ 	at tail position​
-//│ ​Error: Unhandled effects
+//│ 	at tail position
 
 :re
 fun f(): () -> Int = () => return () => 3
 f()()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect $_non$_local$_return$_effect$_7
-//│ 	at tail position​
-//│ ​Error: Unhandled effects
+//│ 	at tail position
 
 
 :e
 return 100
 //│ ╔══[ERROR] Return statements are not allowed outside of a function.
-//│ ║  l.71: 	return 100
+//│ ║  l.69: 	return 100
 //│ ╙──      	       ^^^
 
 :e
@@ -78,14 +76,14 @@ if true do
   while false do
     let f = () => return 100
 //│ ╔══[ERROR] Return statements are not allowed outside of a function.
-//│ ║  l.79: 	    let f = () => return 100
+//│ ║  l.77: 	    let f = () => return 100
 //│ ╙──      	                         ^^^
 
 :e
 fun f() =
   type A = return "lol"
 //│ ╔══[ERROR] Return statements are not allowed in this context.
-//│ ║  l.86: 	  type A = return "lol"
+//│ ║  l.84: 	  type A = return "lol"
 //│ ╙──      	                  ^^^^^
 
 

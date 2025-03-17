@@ -182,35 +182,40 @@ Runtime1 = class Runtime {
     }
   } 
   static topLevelEffect(tr) {
-    let zwsp, msg, curHandler, atTail, scrut, cur, scrut1, locals, curLocals, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20, tmp21, lambda;
-    zwsp = "\u200B";
-    tmp = zwsp + "Error: Unhandled effect ";
-    tmp1 = tmp + tr.handler.constructor.name;
-    msg = tmp1;
+    let msg, curHandler, atTail, scrut, cur, scrut1, locals, curLocals, loc, loc1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, lambda;
+    tmp = "Error: Unhandled effect " + tr.handler.constructor.name;
+    msg = tmp;
     curHandler = tr.contTrace;
     atTail = true;
-    tmp22: while (true) {
+    tmp20: while (true) {
       scrut = curHandler !== null;
       if (scrut === true) {
         cur = curHandler.next;
-        tmp23: while (true) {
+        tmp21: while (true) {
           scrut1 = cur !== null;
           if (scrut1 === true) {
             locals = cur.getLocals;
-            tmp2 = locals.length - 1;
-            tmp3 = runtime.safeCall(locals.at(tmp2));
-            curLocals = tmp3;
+            tmp1 = locals.length - 1;
+            tmp2 = runtime.safeCall(locals.at(tmp1));
+            curLocals = tmp2;
+            loc = cur.getLoc;
+            if (loc === null) {
+              tmp3 = "pc=" + cur.pc;
+            } else {
+              tmp3 = loc;
+            }
+            loc1 = tmp3;
             tmp4 = "\n\tat " + curLocals.fnName;
-            tmp5 = tmp4 + "(pc=";
-            tmp6 = tmp5 + cur.pc;
+            tmp5 = tmp4 + " (";
+            tmp6 = tmp5 + loc1;
             tmp7 = tmp6 + ")";
             tmp8 = msg + tmp7;
             msg = tmp8;
             lambda = (undefined, function (l) {
-              let tmp24, tmp25;
-              tmp24 = l.localName + "=";
-              tmp25 = runtime.safeCall(RuntimeJS.Predef.render(l.value));
-              return tmp24 + tmp25
+              let tmp22, tmp23;
+              tmp22 = l.localName + "=";
+              tmp23 = runtime.safeCall(RuntimeJS.Predef.render(l.value));
+              return tmp22 + tmp23
             });
             tmp9 = runtime.safeCall(curLocals.locals.map(lambda));
             tmp10 = runtime.safeCall(tmp9.join(", "));
@@ -220,7 +225,7 @@ Runtime1 = class Runtime {
             cur = cur.next;
             atTail = false;
             tmp13 = runtime.Unit;
-            continue tmp23;
+            continue tmp21;
           } else {
             tmp13 = runtime.Unit;
           }
@@ -238,7 +243,7 @@ Runtime1 = class Runtime {
           tmp16 = runtime.Unit;
         }
         tmp17 = tmp16;
-        continue tmp22;
+        continue tmp20;
       } else {
         tmp17 = runtime.Unit;
       }
@@ -251,9 +256,7 @@ Runtime1 = class Runtime {
     } else {
       tmp19 = runtime.Unit;
     }
-    tmp20 = msg + zwsp;
-    tmp21 = runtime.safeCall(globalThis.console.log(tmp20));
-    throw globalThis.Error("Unhandled effects");
+    throw msg;
   } 
   static showFunctionContChain(cont, hl, vis, reps) {
     let scrut, result, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, lambda;
