@@ -98,7 +98,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   private def freeVarsFilter(fvs: Set[Local]) =
     trace[Set[Local]](s"freeVarsFilter begin", x => s"freeVarsFilter end: $x"):
       fvs.filter:
-        case _: (BuiltinSymbol | TopLevelSymbol | ClassSymbol) => false
+        case _: (BuiltinSymbol | TopLevelSymbol | ClassSymbol | TermSymbol) => false
         case ms: MemberSymbol[?] => ms.defn match
           case Some(d: ClassLikeDef) => false
           case _ => true
@@ -241,8 +241,10 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
     trace[Node](s"bLam begin", x => s"bLam end: ${x.show}"):
       val Value.Lam(params, body) = lam
       // Generate an auxiliary class inheriting from Callable
-      val freeVars = freeVarsFilter(lam.freeVars -- body.definedVars -- recName.iterator -- ctx.fn_ctx.keySet)
-      log(s"Match free vars: ${lam.freeVars -- body.definedVars} ${ctx.fn_ctx.keySet} ${params.params.map(p => p.sym)}")
+      val freeVars = freeVarsFilter(lam.freeVarsLLIR -- body.definedVars -- recName.iterator -- ctx.fn_ctx.keySet)
+      log(s"Defined vars: ${body.definedVars}")
+      log(s"Match free vars: ${lam.freeVarsLLIR -- body.definedVars} ${ctx.fn_ctx.keySet} ${params.params.map(p => p.sym)}")
+      log(s"Lot: $lam")
       val name = newClassSym(s"Lambda${nameHint.fold("")(x => "_" + x)}")
       val freeVarsList = freeVars.toList
       val args = freeVarsList.map(symMap)
@@ -444,9 +446,9 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
           case e: TrivialExpr =>
             val nextCont = Begin(rest, ct)
             val jp: Local = newNamedTemp("j")
-            val fvset = freeVarsFilter(nextCont.freeVars -- nextCont.definedVars -- ctx.fn_ctx.keySet)
+            val fvset = freeVarsFilter(nextCont.freeVarsLLIR -- nextCont.definedVars -- ctx.fn_ctx.keySet)
             val fvs1 = fvset.toList
-            log(s"Match free vars: $fvset ${nextCont.freeVars -- nextCont.definedVars} $fvs1")
+            log(s"Match free vars: $fvset ${nextCont.freeVarsLLIR -- nextCont.definedVars} $fvs1")
             val new_ctx = fvs1.foldLeft(ctx)((acc, x) => acc.addName(x, x))
             val fvs = fvs1.map(new_ctx.findName(_))
             def cont(x: TrivialExpr)(using ctx: Ctx) = Node.Jump(
