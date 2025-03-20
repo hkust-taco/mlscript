@@ -28,7 +28,6 @@
               mimalloc
               sbt
               nodejs_22
-              hyperfine
             ];
           };
       });

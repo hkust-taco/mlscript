@@ -31,11 +31,11 @@ final case class BuiltinSymbols(
   fieldSym: MutMap[Int, Local] = MutMap.empty,
   applySym: MutMap[Int, Local] = MutMap.empty,
   tupleSym: MutMap[Int, Local] = MutMap.empty,
+  runtimeSym: Opt[TempSymbol] = None,
 ):
   def hiddenClasses = callableSym.toSet
 
 final case class Ctx(
-  runtimeSymbol: TempSymbol,
   def_acc: ListBuffer[Func],
   class_acc: ListBuffer[ClassInfo],
   symbol_ctx: Map[Local, Local] = Map.empty,
@@ -64,7 +64,9 @@ final case class Ctx(
 
 object Ctx:
   def empty(using Elaborator.State) =
-    Ctx(Elaborator.State.runtimeSymbol, ListBuffer.empty, ListBuffer.empty)
+    Ctx(ListBuffer.empty, ListBuffer.empty).copy(builtin_sym = BuiltinSymbols(
+      runtimeSym = Some(Elaborator.State.runtimeSymbol)
+    ))
 
 final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   import tl.{trace, log, logs}
@@ -281,7 +283,6 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   private def bValue(v: Value)(k: TrivialExpr => Ctx ?=> Node)(using ctx: Ctx)(using Raise, Scope) : Node =
     trace[Node](s"bValue { $v } begin", x => s"bValue end: ${x.show}"):
       v match
-      // TODO: why?
       case Value.Ref(l: TermSymbol) if l.owner.nonEmpty =>
         k(l |> sr)
       case Value.Ref(sym) if sym.nme.isCapitalized =>
@@ -306,6 +307,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
           case args: Ls[TrivialExpr] =>
             val v: Local = newTemp
             Node.LetExpr(v, Expr.CtorApp(builtinTuple(elems.length), args), k(v |> sr))
+      case Value.Rcd(fields) => bErrStop(msg"Unsupported value: Rcd")
         
   
   private def getClassOfField(p: FieldSymbol)(using ctx: Ctx)(using Raise, Scope): Local =
@@ -334,7 +336,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   private def bPath(p: Path)(k: TrivialExpr => Ctx ?=> Node)(using ctx: Ctx)(using Raise, Scope) : Node =
     trace[Node](s"bPath { $p } begin", x => s"bPath end: ${x.show}"):
       p match
-      case s @ Select(Value.Ref(sym), Tree.Ident("Unit")) if sym is ctx.runtimeSymbol =>
+      case s @ Select(Value.Ref(sym), Tree.Ident("Unit")) if sym is ctx.builtin_sym.runtimeSym =>
         bPath(Value.Lit(Tree.UnitLit(false)))(k)
       case s @ Select(Value.Ref(cls: ClassSymbol), name) if ctx.method_class.contains(cls) =>
         s.symbol match

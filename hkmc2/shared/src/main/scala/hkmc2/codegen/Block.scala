@@ -90,10 +90,10 @@ sealed abstract class Block extends Product with AutoLocated:
     case Continue(label) => Set(label)
     case Begin(sub, rest) => sub.freeVars ++ rest.freeVars
     case TryBlock(sub, finallyDo, rest) => sub.freeVars ++ finallyDo.freeVars ++ rest.freeVars
-    case Assign(l, rhs, rest) => Set(l) ++ rhs.freeVars ++ rest.freeVars
+    case Assign(lhs, rhs, rest) => Set(lhs) ++ rhs.freeVars ++ rest.freeVars
     case AssignField(lhs, nme, rhs, rest) => lhs.freeVars ++ rhs.freeVars ++ rest.freeVars
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs.freeVars ++ fld.freeVars ++ rhs.freeVars ++ rest.freeVars
-    case Define(defn, rest) => defn.freeVars ++ (rest.freeVars - defn.sym)
+    case Define(defn, rest) => defn.freeVars ++ rest.freeVars
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
       (bod.freeVars - lhs) ++ rst.freeVars ++ hdr.flatMap(_.freeVars)
     case End(msg) => Set.empty
@@ -110,7 +110,7 @@ sealed abstract class Block extends Product with AutoLocated:
     case Continue(label) => Set(label)
     case Begin(sub, rest) => sub.freeVarsLLIR ++ rest.freeVarsLLIR
     case TryBlock(sub, finallyDo, rest) => sub.freeVarsLLIR ++ finallyDo.freeVarsLLIR ++ rest.freeVarsLLIR
-    case Assign(l, rhs, rest) => rhs.freeVarsLLIR ++ (rest.freeVarsLLIR - l)
+    case Assign(lhs, rhs, rest) => rhs.freeVarsLLIR ++ (rest.freeVarsLLIR - lhs)
     case AssignField(lhs, nme, rhs, rest) => lhs.freeVarsLLIR ++ rhs.freeVarsLLIR ++ rest.freeVarsLLIR
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs.freeVarsLLIR ++ fld.freeVarsLLIR ++ rhs.freeVarsLLIR ++ rest.freeVarsLLIR
     case Define(defn, rest) => defn.freeVarsLLIR ++ (rest.freeVarsLLIR - defn.sym)
@@ -321,7 +321,7 @@ sealed abstract class Defn:
       preCtor.freeVarsLLIR
         ++ ctor.freeVarsLLIR ++ methods.flatMap(_.freeVarsLLIR)
         -- auxParams.flatMap(_.paramSyms)
-  
+
 final case class FunDefn(
     owner: Opt[InnerSymbol],
     sym: BlockMemberSymbol,
@@ -376,7 +376,7 @@ enum Case:
     case Lit(_) => Set.empty
     case Cls(_, path) => path.freeVars
     case Tup(_, _) => Set.empty
-
+  
   lazy val freeVarsLLIR: Set[Local] = this match
     case Lit(_) => Set.empty
     case Cls(_, path) => path.freeVarsLLIR

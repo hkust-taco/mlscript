@@ -1,8 +1,0 @@
--O
--Wall
--std=c++20
--I.
--Wno-inconsistent-missing-override
--I/opt/homebrew/include
--L/opt/homebrew/lib
--xc++

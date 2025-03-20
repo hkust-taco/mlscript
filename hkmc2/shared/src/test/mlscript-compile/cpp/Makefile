@@ -1,11 +1,11 @@
 CXX := g++
-CFLAGS += -O3 -g -Wall -Wextra -std=c++20 -I. -Wno-inconsistent-missing-override -I/opt/homebrew/include
+CFLAGS += -O3 -Wall -Wextra -std=c++20 -I. -Wno-inconsistent-missing-override -I/opt/homebrew/include
 LDFLAGS += -L/opt/homebrew/lib
-LDLIBS := -lmimalloc -lgmp -lboost_stacktrace_basic
+LDLIBS := -lmimalloc -lgmp
 SRC :=
 INCLUDES := mlsprelude.h
 DST :=
-DEFAULT_TARGET := $(SRC:=.out)
+DEFAULT_TARGET := mls
 TARGET := $(or $(DST),$(DEFAULT_TARGET))
 
 .PHONY: pre all run clean auto
