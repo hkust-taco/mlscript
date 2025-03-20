@@ -336,7 +336,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   private def bPath(p: Path)(k: TrivialExpr => Ctx ?=> Node)(using ctx: Ctx)(using Raise, Scope) : Node =
     trace[Node](s"bPath { $p } begin", x => s"bPath end: ${x.show}"):
       p match
-      case s @ Select(Value.Ref(sym), Tree.Ident("Unit")) if sym is ctx.builtin_sym.runtimeSym =>
+      case s @ Select(Value.Ref(sym), Tree.Ident("Unit")) if sym is ctx.builtin_sym.runtimeSym.get =>
         bPath(Value.Lit(Tree.UnitLit(false)))(k)
       case s @ Select(Value.Ref(cls: ClassSymbol), name) if ctx.method_class.contains(cls) =>
         s.symbol match
