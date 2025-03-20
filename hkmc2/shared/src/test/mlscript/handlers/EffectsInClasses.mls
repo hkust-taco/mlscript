@@ -16,12 +16,12 @@ data class Lol(h) with
 //│ };
 //│ Lol1.class = class Lol {
 //│   constructor(h) {
-//│     let tmp, res, Cont$ctor$Lol$EffectsInClasses$_mls_L10_11_46$1;
+//│     let tmp, res, Cont$ctor$Lol$1;
 //│     const this$Lol = this;
-//│     Cont$ctor$Lol$EffectsInClasses$_mls_L10_11_46$1 = function Cont$ctor$Lol$EffectsInClasses$_mls_L10_11_46$(pc1) {
-//│       return new Cont$ctor$Lol$EffectsInClasses$_mls_L10_11_46$.class(pc1);
+//│     Cont$ctor$Lol$1 = function Cont$ctor$Lol$(pc1) {
+//│       return new Cont$ctor$Lol$.class(pc1);
 //│     };
-//│     Cont$ctor$Lol$EffectsInClasses$_mls_L10_11_46$1.class = class Cont$ctor$Lol$EffectsInClasses$_mls_L10_11_46$ extends runtime.FunctionContFrame.class {
+//│     Cont$ctor$Lol$1.class = class Cont$ctor$Lol$ extends runtime.FunctionContFrame.class {
 //│       constructor(pc) {
 //│         let tmp1;
 //│         tmp1 = super(null);
@@ -66,18 +66,18 @@ data class Lol(h) with
 //│           break;
 //│         }
 //│       }
-//│       toString() { return "Cont$ctor$Lol$EffectsInClasses$_mls_L10_11_46$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│       toString() { return "Cont$ctor$Lol$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│     };
 //│     this.h = h;
 //│     tmp = runtime.safeCall(this.h.perform("k"));
 //│     if (tmp instanceof runtime.EffectSig.class) {
-//│       tmp.contTrace.last.next = new Cont$ctor$Lol$EffectsInClasses$_mls_L10_11_46$1.class(0);
+//│       tmp.contTrace.last.next = new Cont$ctor$Lol$1.class(0);
 //│       tmp.contTrace.last = tmp.contTrace.last.next;
 //│       return tmp
 //│     }
 //│     res = Predef.print(tmp);
 //│     if (res instanceof runtime.EffectSig.class) {
-//│       res.contTrace.last.next = new Cont$ctor$Lol$EffectsInClasses$_mls_L10_11_46$1.class(1);
+//│       res.contTrace.last.next = new Cont$ctor$Lol$1.class(1);
 //│       res.contTrace.last = res.contTrace.last.next;
 //│       return res
 //│     }

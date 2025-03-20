@@ -26,7 +26,7 @@ fun f() =
 //│   return prev
 //│ };
 //│ f = function f() {
-//│   let i, j, k, scrut, tmp, tmp1, getLocals3, Cont$func$f$Debugging$_mls_L12_4_109$1;
+//│   let i, j, k, scrut, tmp, tmp1, getLocals3, Cont$func$f$1;
 //│   getLocals3 = function getLocals() {
 //│     let i1, j1, k1, prev, thisInfo, tmp2;
 //│     prev = getLocals2();
@@ -41,10 +41,10 @@ fun f() =
 //│     tmp2 = runtime.safeCall(prev.push(thisInfo));
 //│     return prev
 //│   };
-//│   Cont$func$f$Debugging$_mls_L12_4_109$1 = function Cont$func$f$Debugging$_mls_L12_4_109$(pc1) {
-//│     return new Cont$func$f$Debugging$_mls_L12_4_109$.class(pc1);
+//│   Cont$func$f$1 = function Cont$func$f$(pc1) {
+//│     return new Cont$func$f$.class(pc1);
 //│   };
-//│   Cont$func$f$Debugging$_mls_L12_4_109$1.class = class Cont$func$f$Debugging$_mls_L12_4_109$ extends runtime.FunctionContFrame.class {
+//│   Cont$func$f$1.class = class Cont$func$f$ extends runtime.FunctionContFrame.class {
 //│     constructor(pc) {
 //│       let tmp2;
 //│       tmp2 = super(null);
@@ -99,7 +99,7 @@ fun f() =
 //│         return "Debugging.mls:17:5"
 //│       }
 //│     }
-//│     toString() { return "Cont$func$f$Debugging$_mls_L12_4_109$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$func$f$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   i = 0;
 //│   j = 100;
@@ -108,13 +108,13 @@ fun f() =
 //│   if (scrut === true) {
 //│     tmp = Predef.raiseUnhandledEffect();
 //│     if (tmp instanceof runtime.EffectSig.class) {
-//│       tmp.contTrace.last.next = new Cont$func$f$Debugging$_mls_L12_4_109$1.class(0);
+//│       tmp.contTrace.last.next = new Cont$func$f$1.class(0);
 //│       tmp.contTrace.last = tmp.contTrace.last.next;
 //│       return tmp
 //│     }
 //│     tmp1 = Predef.print(tmp);
 //│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       tmp1.contTrace.last.next = new Cont$func$f$Debugging$_mls_L12_4_109$1.class(1);
+//│       tmp1.contTrace.last.next = new Cont$func$f$1.class(1);
 //│       tmp1.contTrace.last = tmp1.contTrace.last.next;
 //│       return tmp1
 //│     }
@@ -155,7 +155,7 @@ Runtime.debugEff(res.reified)
 //│ > handlerFun:  null
 //│ > resumed:  false
 //│ > <lastHandler is self>
-//│ > Cont$func$f$Debugging$_mls_L12_4_109$(pc=0, last) -> (null)
+//│ > Cont$func$f$(pc=0, last) -> (null)
 //│ > 
 
 res.resumeWith(42)

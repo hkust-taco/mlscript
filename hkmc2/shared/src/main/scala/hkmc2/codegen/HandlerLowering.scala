@@ -425,7 +425,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     Scope.replaceInvalidCharacters(l.origin.fileName.last + "_L" + l.origin.startLineNum + "_" + l.spanStart + "_" + l.spanEnd)
   
   private def symToStr(s: Symbol): Str =
-      s"${Scope.replaceInvalidCharacters(s.nme)}$$${s.toLoc.fold("")(locToStr)}"
+      s"${Scope.replaceInvalidCharacters(s.nme)}"
   
   private def translateFun(f: FunDefn)(using HandlerCtx): FunDefn =
     FunDefn(f.owner, f.sym, f.params, translateBlock(f.body,
