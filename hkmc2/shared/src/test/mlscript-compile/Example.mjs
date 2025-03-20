@@ -1,8 +1,16 @@
 import runtime from "./Runtime.mjs";
 import Predef from "./Predef.mjs";
-let Example1;
+let privFun, Example1;
+privFun = function privFun() {
+  return "hi"
+};
 Example1 = class Example {
   static {}
+  static get pubFun() {
+    let tmp;
+    tmp = privFun();
+    return tmp;
+  } 
   static funnySlash(f, arg) {
     return runtime.safeCall(f(arg))
   } 
