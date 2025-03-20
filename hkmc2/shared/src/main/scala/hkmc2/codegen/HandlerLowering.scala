@@ -353,6 +353,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     if h.isTopLevel then stage2 else thirdPass(stage2)
   
   private def firstPass(b: Block)(using HandlerCtx): Block =
+    val getLocalSym = ctx.builtins.debug.getLocals
     val transformer = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block) = b match
         case b: HandleBlock =>
@@ -393,6 +394,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(cls2, args2)
           ResultPlaceholder(res, freshId(), c2, k(Value.Ref(res)))
         case r => super.applyResult2(r)(k)
+      override def applyPath(p: Path): Path = p match
+        case Value.Ref(`getLocalSym`) => handlerCtx.debugInfo.prevLocalsFn.get
+        case _ => super.applyPath(p)
       override def applyLam(lam: Value.Lam): Value.Lam =
         // This should normally be unreachable due to prior desugaring of lambda
         raise(InternalError(msg"Unexpected lambda during handler lowering" -> lam.toLoc :: Nil,

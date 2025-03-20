@@ -42,6 +42,7 @@ data class MatchFailure(errors)
 // Private definitions for algebraic effects
 
 object FatalEffect
+object PrintStackEffect
 
 data abstract class FunctionContFrame(next) with
   fun resume(value)
@@ -57,9 +58,19 @@ data class FnLocalsInfo(fnName, locals)
 data class LocalVarInfo(localName, uid, value)
 
 
+fun raisePrintStackEffect() =
+  mkEffect(PrintStackEffect, null)
+
 fun topLevelEffect(tr, debug) =
+  if tr.handler === PrintStackEffect then
+    console.log(showStackTrace("Stack Trace:", tr, debug))
+    resume(tr.contTrace)(())
+  else
+    throw showStackTrace("Error: Unhandled effect " + tr.handler.constructor.name, tr, debug)
+
+fun showStackTrace(header, tr, debug) =
   let
-    msg = "Error: Unhandled effect " + tr.handler.constructor.name
+    msg = header
     curHandler = tr.contTrace
     atTail = true
   if debug do
@@ -82,7 +93,7 @@ fun topLevelEffect(tr, debug) =
           atTail = false
     if atTail do
       set msg += "\n\tat tail position"
-  throw msg
+  msg
 
 fun showFunctionContChain(cont, hl, vis, reps) =
   if cont is FunctionContFrame then

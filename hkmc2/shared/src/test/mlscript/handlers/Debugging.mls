@@ -30,9 +30,9 @@ fun f() =
 //│   getLocals3 = function getLocals() {
 //│     let i1, j1, k1, prev, thisInfo, tmp2;
 //│     prev = getLocals2();
-//│     i1 = new runtime.LocalVarInfo.class("i", "617", i);
-//│     j1 = new runtime.LocalVarInfo.class("j", "618", j);
-//│     k1 = new runtime.LocalVarInfo.class("k", "619", k);
+//│     i1 = new runtime.LocalVarInfo.class("i", "638", i);
+//│     j1 = new runtime.LocalVarInfo.class("j", "639", j);
+//│     k1 = new runtime.LocalVarInfo.class("k", "640", k);
 //│     thisInfo = new runtime.FnLocalsInfo.class("f", [
 //│       i1,
 //│       j1,
@@ -147,7 +147,7 @@ import "../../mlscript-compile/Runtime.mls"
 let res = Runtime.try(f)
 
 res.reified.contTrace.next.getLocals
-//│ = [FnLocalsInfo("‹top level›", []), FnLocalsInfo("f", [LocalVarInfo("i", "617", 0), LocalVarInfo("j", "618", 100), LocalVarInfo("k", "619", 2000)])]
+//│ = [FnLocalsInfo("‹top level›", []), FnLocalsInfo("f", [LocalVarInfo("i", "638", 0), LocalVarInfo("j", "639", 100), LocalVarInfo("k", "640", 2000)])]
 
 Runtime.debugEff(res.reified)
 //│ > Debug EffectSig:
@@ -197,4 +197,16 @@ res.raise()
 res.resumeWith(666)
 //│ = 0.33676533676533676
 
+let i = 100
+fun f() =
+  let j = 200
+  print(debug.getLocals())
+  debug.printStack()
+  print(debug.getLocals())
+//│ i = 100
 
+f()
+//│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", "1314", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", "1316", 200)])]
+//│ > Stack Trace:
+//│ > 	at f (Debugging.mls:204:3) with locals: j=200
+//│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", "1314", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", "1316", 200)])]

@@ -60,6 +60,12 @@ Runtime1 = class Runtime {
     };
     this.FatalEffect = new FatalEffect$class;
     this.FatalEffect.class = FatalEffect$class;
+    const PrintStackEffect$class = class PrintStackEffect {
+      constructor() {}
+      toString() { return "PrintStackEffect"; }
+    };
+    this.PrintStackEffect = new PrintStackEffect$class;
+    this.PrintStackEffect.class = PrintStackEffect$class;
     this.FunctionContFrame = function FunctionContFrame(next1) {
       return new FunctionContFrame.class(next1);
     };
@@ -181,87 +187,102 @@ Runtime1 = class Runtime {
       return res
     }
   } 
+  static raisePrintStackEffect() {
+    return Runtime.mkEffect(Runtime.PrintStackEffect, null)
+  } 
   static topLevelEffect(tr, debug) {
-    let msg, curHandler, atTail, scrut, cur, scrut1, locals, curLocals, loc, loc1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20, lambda;
-    tmp = "Error: Unhandled effect " + tr.handler.constructor.name;
-    msg = tmp;
-    curHandler = tr.contTrace;
+    let scrut, tmp, tmp1, tmp2, tmp3;
+    scrut = tr.handler === Runtime.PrintStackEffect;
+    if (scrut === true) {
+      tmp = Runtime.showStackTrace("Stack Trace:", tr, debug);
+      tmp1 = runtime.safeCall(globalThis.console.log(tmp));
+      tmp2 = Runtime.resume(tr.contTrace);
+      return runtime.safeCall(tmp2(runtime.Unit))
+    } else {
+      tmp3 = "Error: Unhandled effect " + tr.handler.constructor.name;
+      throw Runtime.showStackTrace(tmp3, tr, debug);
+    }
+  } 
+  static showStackTrace(header, tr1, debug1) {
+    let msg, curHandler, atTail, scrut, cur, scrut1, locals, curLocals, loc, loc1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, lambda;
+    msg = header;
+    curHandler = tr1.contTrace;
     atTail = true;
-    if (debug === true) {
-      tmp21: while (true) {
+    if (debug1 === true) {
+      tmp20: while (true) {
         scrut = curHandler !== null;
         if (scrut === true) {
           cur = curHandler.next;
-          tmp22: while (true) {
+          tmp21: while (true) {
             scrut1 = cur !== null;
             if (scrut1 === true) {
               locals = cur.getLocals;
-              tmp1 = locals.length - 1;
-              tmp2 = runtime.safeCall(locals.at(tmp1));
-              curLocals = tmp2;
+              tmp = locals.length - 1;
+              tmp1 = runtime.safeCall(locals.at(tmp));
+              curLocals = tmp1;
               loc = cur.getLoc;
               if (loc === null) {
-                tmp3 = "pc=" + cur.pc;
+                tmp2 = "pc=" + cur.pc;
               } else {
-                tmp3 = loc;
+                tmp2 = loc;
               }
-              loc1 = tmp3;
-              tmp4 = "\n\tat " + curLocals.fnName;
-              tmp5 = tmp4 + " (";
-              tmp6 = tmp5 + loc1;
-              tmp7 = tmp6 + ")";
-              tmp8 = msg + tmp7;
-              msg = tmp8;
+              loc1 = tmp2;
+              tmp3 = "\n\tat " + curLocals.fnName;
+              tmp4 = tmp3 + " (";
+              tmp5 = tmp4 + loc1;
+              tmp6 = tmp5 + ")";
+              tmp7 = msg + tmp6;
+              msg = tmp7;
               lambda = (undefined, function (l) {
-                let tmp23, tmp24;
-                tmp23 = l.localName + "=";
-                tmp24 = runtime.safeCall(RuntimeJS.Predef.render(l.value));
-                return tmp23 + tmp24
+                let tmp22, tmp23;
+                tmp22 = l.localName + "=";
+                tmp23 = runtime.safeCall(RuntimeJS.Predef.render(l.value));
+                return tmp22 + tmp23
               });
-              tmp9 = runtime.safeCall(curLocals.locals.map(lambda));
-              tmp10 = runtime.safeCall(tmp9.join(", "));
-              tmp11 = " with locals: " + tmp10;
-              tmp12 = msg + tmp11;
-              msg = tmp12;
+              tmp8 = runtime.safeCall(curLocals.locals.map(lambda));
+              tmp9 = runtime.safeCall(tmp8.join(", "));
+              tmp10 = " with locals: " + tmp9;
+              tmp11 = msg + tmp10;
+              msg = tmp11;
               cur = cur.next;
               atTail = false;
-              tmp13 = runtime.Unit;
-              continue tmp22;
+              tmp12 = runtime.Unit;
+              continue tmp21;
             } else {
-              tmp13 = runtime.Unit;
+              tmp12 = runtime.Unit;
             }
             break;
           }
           curHandler = curHandler.nextHandler;
           scrut2 = curHandler !== null;
           if (scrut2 === true) {
-            tmp14 = "\n\twith handler " + curHandler.handler.constructor.name;
-            tmp15 = msg + tmp14;
-            msg = tmp15;
+            tmp13 = "\n\twith handler " + curHandler.handler.constructor.name;
+            tmp14 = msg + tmp13;
+            msg = tmp14;
             atTail = false;
-            tmp16 = runtime.Unit;
+            tmp15 = runtime.Unit;
           } else {
-            tmp16 = runtime.Unit;
+            tmp15 = runtime.Unit;
           }
-          tmp17 = tmp16;
-          continue tmp21;
+          tmp16 = tmp15;
+          continue tmp20;
         } else {
-          tmp17 = runtime.Unit;
+          tmp16 = runtime.Unit;
         }
         break;
       }
       if (atTail === true) {
-        tmp18 = msg + "\n\tat tail position";
-        msg = tmp18;
-        tmp19 = runtime.Unit;
+        tmp17 = msg + "\n\tat tail position";
+        msg = tmp17;
+        tmp18 = runtime.Unit;
       } else {
-        tmp19 = runtime.Unit;
+        tmp18 = runtime.Unit;
       }
-      tmp20 = tmp19;
+      tmp19 = tmp18;
     } else {
-      tmp20 = runtime.Unit;
+      tmp19 = runtime.Unit;
     }
-    throw msg;
+    return msg
   } 
   static showFunctionContChain(cont, hl, vis, reps) {
     let scrut, result, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, lambda;
