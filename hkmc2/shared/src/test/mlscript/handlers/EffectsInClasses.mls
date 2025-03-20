@@ -10,27 +10,13 @@ abstract class Effect with
 data class Lol(h) with
   print(h.perform("k"))
 //│ JS (unsanitized):
-//│ let Lol1, getLocals2;
-//│ getLocals2 = function getLocals() {
-//│   let prev, thisInfo, tmp;
-//│   prev = [];
-//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039top level\u203A", []);
-//│   tmp = runtime.safeCall(prev.push(thisInfo));
-//│   return prev
-//│ };
+//│ let Lol1;
 //│ Lol1 = function Lol(h1) {
 //│   return new Lol.class(h1);
 //│ };
 //│ Lol1.class = class Lol {
 //│   constructor(h) {
-//│     let tmp, getLocals3, res, Cont$ctor$Lol$EffectsInClasses$_mls_L10_11_46$1;
-//│     getLocals3 = function getLocals() {
-//│       let prev, thisInfo, tmp1;
-//│       prev = getLocals2();
-//│       thisInfo = new runtime.FnLocalsInfo.class("\u2039constructor of Lol\u203A", []);
-//│       tmp1 = runtime.safeCall(prev.push(thisInfo));
-//│       return prev
-//│     };
+//│     let tmp, res, Cont$ctor$Lol$EffectsInClasses$_mls_L10_11_46$1;
 //│     const this$Lol = this;
 //│     Cont$ctor$Lol$EffectsInClasses$_mls_L10_11_46$1 = function Cont$ctor$Lol$EffectsInClasses$_mls_L10_11_46$(pc1) {
 //│       return new Cont$ctor$Lol$EffectsInClasses$_mls_L10_11_46$.class(pc1);
@@ -78,16 +64,6 @@ data class Lol(h) with
 //│             continue contLoop;
 //│           }
 //│           break;
-//│         }
-//│       } 
-//│       get getLocals() {
-//│         return getLocals3();
-//│       } 
-//│       get getLoc() {
-//│         if (this.pc === 0) {
-//│           return "EffectsInClasses.mls:11:9"
-//│         } else if (this.pc === 1) {
-//│           return "EffectsInClasses.mls:11:3"
 //│         }
 //│       }
 //│       toString() { return "Cont$ctor$Lol$EffectsInClasses$_mls_L10_11_46$(" + globalThis.Predef.render(this.pc) + ")"; }

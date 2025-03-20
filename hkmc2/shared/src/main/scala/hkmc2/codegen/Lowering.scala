@@ -638,9 +638,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val stackSafe = config.stackSafety match
       case N => res
       case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths).transformTopLevel(res)
-    val withHandlers = if lowerHandlers 
-      then HandlerLowering(handlerPaths).translateTopLevel(stackSafe)
-      else stackSafe
+    val withHandlers = config.effectHandlers.fold(stackSafe): opt =>
+      HandlerLowering(handlerPaths, opt).translateTopLevel(stackSafe)
     val flattened = withHandlers.flattened
     
     val lifted = 

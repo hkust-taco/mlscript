@@ -8,17 +8,7 @@ let x = 1
 set x += 1 in print(x)
 x
 //│ JS (unsanitized):
-//│ let x, old, tmp, tmp1, tmp2, getLocals1;
-//│ getLocals1 = function getLocals() {
-//│   let x1, prev, thisInfo, tmp3;
-//│   prev = [];
-//│   x1 = new runtime.LocalVarInfo.class("x", "604", x);
-//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039top level\u203A", [
-//│     x1
-//│   ]);
-//│   tmp3 = runtime.safeCall(prev.push(thisInfo));
-//│   return prev
-//│ };
+//│ let x, old, tmp, tmp1, tmp2;
 //│ x = 1;
 //│ old = x;
 //│ try {
@@ -26,7 +16,7 @@ x
 //│   x = tmp1;
 //│   tmp2 = Predef.print(x);
 //│   if (tmp2 instanceof runtime.EffectSig.class) {
-//│     tmp2 = runtime.topLevelEffect(tmp2);
+//│     tmp2 = runtime.topLevelEffect(tmp2, false);
 //│   }
 //│   tmp = tmp2;
 //│ } finally {

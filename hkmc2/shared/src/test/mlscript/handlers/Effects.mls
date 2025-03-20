@@ -156,16 +156,9 @@ if true do
   fun f() = 3
   f()
 //│ JS (unsanitized):
-//│ let tmp11, getLocals14, handleBlock$11;
-//│ getLocals14 = function getLocals() {
-//│   let prev, thisInfo, tmp12;
-//│   prev = [];
-//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039top level\u203A", []);
-//│   tmp12 = runtime.safeCall(prev.push(thisInfo));
-//│   return prev
-//│ };
+//│ let tmp11, handleBlock$11;
 //│ handleBlock$11 = function handleBlock$() {
-//│   let f, h, scrut, getLocals15, res, Cont$handleBlock$h$Effects$_mls_L153_7_8$1, Handler$h$12;
+//│   let f, h, scrut, res, Cont$handleBlock$h$Effects$_mls_L153_7_8$1, Handler$h$12;
 //│   Handler$h$12 = class Handler$h$11 extends Effect1 {
 //│     constructor() {
 //│       let tmp12;
@@ -173,30 +166,12 @@ if true do
 //│     }
 //│     perform(arg) {
 //│       return runtime.mkEffect(this, (k) => {
-//│         let getLocals16;
-//│         getLocals16 = function getLocals() {
-//│           let arg1, prev, thisInfo, tmp12;
-//│           prev = getLocals14();
-//│           arg1 = new runtime.LocalVarInfo.class("arg", "1485", arg);
-//│           thisInfo = new runtime.FnLocalsInfo.class("perform", [
-//│             arg1
-//│           ]);
-//│           tmp12 = runtime.safeCall(prev.push(thisInfo));
-//│           return prev
-//│         };
 //│         return arg
 //│       })
 //│     }
 //│     toString() { return "Handler$h$"; }
 //│   };
 //│   h = new Handler$h$12();
-//│   getLocals15 = function getLocals() {
-//│     let prev, thisInfo, tmp12;
-//│     prev = getLocals14();
-//│     thisInfo = new runtime.FnLocalsInfo.class("\u2039handler body of h\u203A", []);
-//│     tmp12 = runtime.safeCall(prev.push(thisInfo));
-//│     return prev
-//│   };
 //│   Cont$handleBlock$h$Effects$_mls_L153_7_8$1 = function Cont$handleBlock$h$Effects$_mls_L153_7_8$(pc1) {
 //│     return new Cont$handleBlock$h$Effects$_mls_L153_7_8$.class(pc1);
 //│   };
@@ -228,26 +203,10 @@ if true do
 //│         }
 //│         break;
 //│       }
-//│     } 
-//│     get getLocals() {
-//│       return getLocals15();
-//│     } 
-//│     get getLoc() {
-//│       if (this.pc === 0) {
-//│         return "Effects.mls:157:3"
-//│       }
 //│     }
 //│     toString() { return "Cont$handleBlock$h$Effects$_mls_L153_7_8$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   f = function f() {
-//│     let getLocals16;
-//│     getLocals16 = function getLocals() {
-//│       let prev, thisInfo, tmp12;
-//│       prev = getLocals15();
-//│       thisInfo = new runtime.FnLocalsInfo.class("f", []);
-//│       tmp12 = runtime.safeCall(prev.push(thisInfo));
-//│       return prev
-//│     };
 //│     return 3
 //│   };
 //│   scrut = true;
@@ -264,7 +223,7 @@ if true do
 //│ };
 //│ tmp11 = handleBlock$11();
 //│ if (tmp11 instanceof runtime.EffectSig.class) {
-//│   tmp11 = runtime.topLevelEffect(tmp11);
+//│   tmp11 = runtime.topLevelEffect(tmp11, false);
 //│ }
 //│ tmp11
 //│ = 3

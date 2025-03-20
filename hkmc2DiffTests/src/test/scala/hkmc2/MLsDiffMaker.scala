@@ -56,7 +56,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   // * Compiler configuration
   
   val noSanityCheck = NullaryCommand("noSanityCheck")
-  val effectHandlers = NullaryCommand("effectHandlers")
+  val effectHandlers = Command("effectHandlers")(_.trim)
+  val effectHandlersOptions = Set("debug", "")
   val stackSafe = Command("stackSafe")(_.trim)
   val liftDefns = NullaryCommand("lift")
   
@@ -64,9 +65,12 @@ abstract class MLsDiffMaker extends DiffMaker:
     import Config.*
     if stackSafe.isSet && effectHandlers.isUnset then
       output(s"$errMarker Option ':stackSafe' requires ':effectHandlers' to be set")
+    if !effectHandlers.get.forall(effectHandlersOptions.contains(_)) then
+      output(s"$errMarker Option ':effectHandlers' only supports 'debug' as option")
     Config(
       sanityChecks = Opt.when(noSanityCheck.isUnset)(SanityChecks(light = true)),
       effectHandlers = Opt.when(effectHandlers.isSet)(EffectHandlers(
+        debug = effectHandlers.get.contains("debug"),
         stackSafety = stackSafe.get.flatMap:
           case "off" => N
           case value => value.toIntOption match

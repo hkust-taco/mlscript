@@ -1,5 +1,5 @@
 :js
-:effectHandlers
+:effectHandlers debug
 
 
 class ThreadEffect with

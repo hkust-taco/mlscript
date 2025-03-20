@@ -12,50 +12,15 @@ fun foo(h) =
     module A
     A
 //│ JS (unsanitized):
-//│ let foo, getLocals1;
-//│ getLocals1 = function getLocals() {
-//│   let prev, thisInfo, tmp;
-//│   prev = [];
-//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039top level\u203A", []);
-//│   tmp = runtime.safeCall(prev.push(thisInfo));
-//│   return prev
-//│ };
+//│ let foo;
 //│ foo = function foo(h) {
-//│   let A2, A3, scrut, getLocals2;
-//│   getLocals2 = function getLocals() {
-//│     let h1, prev, thisInfo, tmp;
-//│     prev = getLocals1();
-//│     h1 = new runtime.LocalVarInfo.class("h", "608", h);
-//│     thisInfo = new runtime.FnLocalsInfo.class("foo", [
-//│       h1
-//│     ]);
-//│     tmp = runtime.safeCall(prev.push(thisInfo));
-//│     return prev
-//│   };
+//│   let A2, A3, scrut;
 //│   A2 = class A {
-//│     static {
-//│       let getLocals3;
-//│       getLocals3 = function getLocals() {
-//│         let prev, thisInfo, tmp;
-//│         prev = getLocals2();
-//│         thisInfo = new runtime.FnLocalsInfo.class("\u2039constructor of A\u203A", []);
-//│         tmp = runtime.safeCall(prev.push(thisInfo));
-//│         return prev
-//│       };
-//│     }
+//│     static {}
 //│     static toString() { return "A"; }
 //│   };
 //│   A3 = class A1 {
-//│     static {
-//│       let getLocals3;
-//│       getLocals3 = function getLocals() {
-//│         let prev, thisInfo, tmp;
-//│         prev = getLocals2();
-//│         thisInfo = new runtime.FnLocalsInfo.class("\u2039constructor of A\u203A", []);
-//│         tmp = runtime.safeCall(prev.push(thisInfo));
-//│         return prev
-//│       };
-//│     }
+//│     static {}
 //│     static toString() { return "A"; }
 //│   };
 //│   scrut = false;

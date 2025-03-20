@@ -30,7 +30,7 @@ object Config:
   
   case class SanityChecks(light: Bool)
   
-  case class EffectHandlers(stackSafety: Opt[StackSafety])
+  case class EffectHandlers(debug: Bool, stackSafety: Opt[StackSafety])
   
   case class StackSafety(stackLimit: Int)
   object StackSafety:

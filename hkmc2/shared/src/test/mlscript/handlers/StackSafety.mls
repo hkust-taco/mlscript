@@ -20,26 +20,9 @@ fun hi(n) =
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
-//│ let hi, res, $_stack$_safe$_body$_, getLocals;
-//│ getLocals = function getLocals() {
-//│   let prev, thisInfo, tmp;
-//│   prev = [];
-//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039top level\u203A", []);
-//│   tmp = runtime.safeCall(prev.push(thisInfo));
-//│   return prev
-//│ };
+//│ let hi, res, $_stack$_safe$_body$_;
 //│ hi = function hi(n) {
-//│   let scrut, tmp, stackDelayRes, getLocals1, Cont$func$hi$StackSafety$_mls_L18_4_47$1;
-//│   getLocals1 = function getLocals() {
-//│     let n1, prev, thisInfo, tmp1;
-//│     prev = getLocals();
-//│     n1 = new runtime.LocalVarInfo.class("n", "614", n);
-//│     thisInfo = new runtime.FnLocalsInfo.class("hi", [
-//│       n1
-//│     ]);
-//│     tmp1 = runtime.safeCall(prev.push(thisInfo));
-//│     return prev
-//│   };
+//│   let scrut, tmp, stackDelayRes, Cont$func$hi$StackSafety$_mls_L18_4_47$1;
 //│   Cont$func$hi$StackSafety$_mls_L18_4_47$1 = function Cont$func$hi$StackSafety$_mls_L18_4_47$(pc1) {
 //│     return new Cont$func$hi$StackSafety$_mls_L18_4_47$.class(pc1);
 //│   };
@@ -73,14 +56,6 @@ hi(0)
 //│         }
 //│         break;
 //│       }
-//│     } 
-//│     get getLocals() {
-//│       return getLocals1();
-//│     } 
-//│     get getLoc() {
-//│       if (this.pc === 0) {
-//│         return null
-//│       }
 //│     }
 //│     toString() { return "Cont$func$hi$StackSafety$_mls_L18_4_47$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
@@ -100,19 +75,11 @@ hi(0)
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_ = (undefined, function () {
-//│   let getLocals1;
-//│   getLocals1 = function getLocals() {
-//│     let prev, thisInfo, tmp;
-//│     prev = getLocals();
-//│     thisInfo = new runtime.FnLocalsInfo.class("\u2039stack safe body\u203A", []);
-//│     tmp = runtime.safeCall(prev.push(thisInfo));
-//│     return prev
-//│   };
 //│   return hi(0)
 //│ });
 //│ res = runtime.runStackSafe(5, $_stack$_safe$_body$_);
 //│ if (res instanceof runtime.EffectSig.class) {
-//│   res = runtime.topLevelEffect(res);
+//│   res = runtime.topLevelEffect(res, false);
 //│ }
 //│ res
 //│ = 0
@@ -127,30 +94,13 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ JS (unsanitized):
-//│ let sum1, res1, $_stack$_safe$_body$_1, getLocals1;
-//│ getLocals1 = function getLocals() {
-//│   let prev, thisInfo, tmp;
-//│   prev = [];
-//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039top level\u203A", []);
-//│   tmp = runtime.safeCall(prev.push(thisInfo));
-//│   return prev
-//│ };
+//│ let sum1, res1, $_stack$_safe$_body$_1;
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, getLocals2, Cont$func$sum$StackSafety$_mls_L124_4_57$1;
-//│   getLocals2 = function getLocals() {
-//│     let n1, prev, thisInfo, tmp2;
-//│     prev = getLocals1();
-//│     n1 = new runtime.LocalVarInfo.class("n", "701", n);
-//│     thisInfo = new runtime.FnLocalsInfo.class("sum", [
-//│       n1
-//│     ]);
-//│     tmp2 = runtime.safeCall(prev.push(thisInfo));
-//│     return prev
+//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, Cont$func$sum$StackSafety$_mls_L91_4_57$1;
+//│   Cont$func$sum$StackSafety$_mls_L91_4_57$1 = function Cont$func$sum$StackSafety$_mls_L91_4_57$(pc1) {
+//│     return new Cont$func$sum$StackSafety$_mls_L91_4_57$.class(pc1);
 //│   };
-//│   Cont$func$sum$StackSafety$_mls_L124_4_57$1 = function Cont$func$sum$StackSafety$_mls_L124_4_57$(pc1) {
-//│     return new Cont$func$sum$StackSafety$_mls_L124_4_57$.class(pc1);
-//│   };
-//│   Cont$func$sum$StackSafety$_mls_L124_4_57$1.class = class Cont$func$sum$StackSafety$_mls_L124_4_57$ extends runtime.FunctionContFrame.class {
+//│   Cont$func$sum$StackSafety$_mls_L91_4_57$1.class = class Cont$func$sum$StackSafety$_mls_L91_4_57$ extends runtime.FunctionContFrame.class {
 //│     constructor(pc) {
 //│       let tmp2;
 //│       tmp2 = super(null);
@@ -193,23 +143,13 @@ sum(10000)
 //│         }
 //│         break;
 //│       }
-//│     } 
-//│     get getLocals() {
-//│       return getLocals2();
-//│     } 
-//│     get getLoc() {
-//│       if (this.pc === 0) {
-//│         return null
-//│       } else if (this.pc === 1) {
-//│         return "StackSafety.mls:127:9"
-//│       }
 //│     }
-//│     toString() { return "Cont$func$sum$StackSafety$_mls_L124_4_57$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$func$sum$StackSafety$_mls_L91_4_57$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│   };
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     stackDelayRes.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L124_4_57$1.class(0);
+//│     stackDelayRes.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L91_4_57$1.class(0);
 //│     stackDelayRes.contTrace.last = stackDelayRes.contTrace.last.next;
 //│     return stackDelayRes
 //│   }
@@ -221,7 +161,7 @@ sum(10000)
 //│     runtime.stackDepth = runtime.stackDepth + 1;
 //│     tmp1 = sum1(tmp);
 //│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       tmp1.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L124_4_57$1.class(1);
+//│       tmp1.contTrace.last.next = new Cont$func$sum$StackSafety$_mls_L91_4_57$1.class(1);
 //│       tmp1.contTrace.last = tmp1.contTrace.last.next;
 //│       return tmp1
 //│     }
@@ -230,19 +170,11 @@ sum(10000)
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_1 = (undefined, function () {
-//│   let getLocals2;
-//│   getLocals2 = function getLocals() {
-//│     let prev, thisInfo, tmp;
-//│     prev = getLocals1();
-//│     thisInfo = new runtime.FnLocalsInfo.class("\u2039stack safe body\u203A", []);
-//│     tmp = runtime.safeCall(prev.push(thisInfo));
-//│     return prev
-//│   };
 //│   return sum1(10000)
 //│ });
 //│ res1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
 //│ if (res1 instanceof runtime.EffectSig.class) {
-//│   res1 = runtime.topLevelEffect(res1);
+//│   res1 = runtime.topLevelEffect(res1, false);
 //│ }
 //│ res1
 //│ = 50005000
@@ -366,28 +298,9 @@ foo(h)
 :sjs
 fun max(a, b) = if a < b then b else a
 //│ JS (unsanitized):
-//│ let max, getLocals9;
-//│ getLocals9 = function getLocals() {
-//│   let prev, thisInfo, tmp7;
-//│   prev = [];
-//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039top level\u203A", []);
-//│   tmp7 = runtime.safeCall(prev.push(thisInfo));
-//│   return prev
-//│ };
+//│ let max;
 //│ max = function max(a, b) {
-//│   let scrut, getLocals10;
-//│   getLocals10 = function getLocals() {
-//│     let a1, b1, prev, thisInfo, tmp7;
-//│     prev = getLocals9();
-//│     a1 = new runtime.LocalVarInfo.class("a", "1492", a);
-//│     b1 = new runtime.LocalVarInfo.class("b", "1493", b);
-//│     thisInfo = new runtime.FnLocalsInfo.class("max", [
-//│       a1,
-//│       b1
-//│     ]);
-//│     tmp7 = runtime.safeCall(prev.push(thisInfo));
-//│     return prev
-//│   };
+//│   let scrut;
 //│   scrut = a < b;
 //│   if (scrut === true) {
 //│     return b

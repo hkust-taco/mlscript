@@ -12,6 +12,7 @@ import syntax.{Literal, Tree, ParamBind}
 import semantics.*
 import semantics.Elaborator.ctx
 import semantics.Elaborator.State
+import hkmc2.Config.EffectHandlers
 
 object HandlerLowering:
 
@@ -79,7 +80,7 @@ class HandlerPaths(using Elaborator.State):
   def isHandlerClsPath(p: Path) =
     (p eq contClsPath)  || (p eq stackDelayClsPath) || (p eq effectSigPath)
 
-class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, Elaborator.Ctx):
+class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise, Elaborator.State, Elaborator.Ctx):
 
   private def funcLikeHandlerCtx(ctorThis: Option[Path], isHandlerMtd: Bool, contNme: Str, debugNme: Str)(using h: HandlerCtx) =
     HandlerCtx(false, false, contNme, ctorThis, h.debugInfo.copy(debugNme), state =>
@@ -92,7 +93,7 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
   private def functionHandlerCtx(nme: Str, debugNme: Str)(using HandlerCtx) = funcLikeHandlerCtx(N, false, nme, debugNme)
   private def topLevelCtx(nme: Str, debugNme: Str) = HandlerCtx(true, false, nme, N, DebugInfo.topLevel(debugNme), state => Assign(
       state.res,
-      Call(paths.topLevelEffectPath, state.res.asPath.asArg :: Nil)(true, false),
+      Call(paths.topLevelEffectPath, state.res.asPath.asArg :: Value.Lit(Tree.BoolLit(opt.debug)).asArg :: Nil)(true, false),
       End()))
   private def ctorCtx(ctorThis: Path, nme: Str, debugNme: Str)(using HandlerCtx) = funcLikeHandlerCtx(S(ctorThis), false, nme, debugNme)
   private def handlerMtdCtx(nme: Str, debugNme: Str)(using HandlerCtx) = funcLikeHandlerCtx(N, true, nme, debugNme)
@@ -408,7 +409,10 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
     val ret = cls match
       case None => genNormalBody(b, BlockMemberSymbol("", Nil))
       case Some(cls) => Define(cls, genNormalBody(b, cls.sym))
-    Define(getLocalsFn, ret)
+    if opt.debug then
+      Define(getLocalsFn, ret)
+    else
+      ret
   
   // moves definitions to the top level of the block
   private def thirdPass(b: Block): Block =
@@ -576,32 +580,36 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
       List(PlainParamList(List(Param(FldFlags.empty, resumedVal, N)))),
       resumeBody
     )
-    
-    val getLocalsSym = BlockMemberSymbol("getLocals", List())
-    
-    val localsRes = h.debugInfo.prevLocalsFn match
-      case Some(value) => PureCall(value, Nil)
-      case None => Value.Arr(Nil)
-    
-    val getLocalsFnDef = FunDefn(
-      S(clsSym),
-      getLocalsSym,
-      List(),
-      Return(localsRes, false)
-    )
 
-    val getLocSym = BlockMemberSymbol("getLoc", List())
-    val getLocFnDef = FunDefn(
-      S(clsSym),
-      getLocSym,
-      List(),
-      Match(pcSymbol.asPath, pcToLoc.toSortedMap.iterator.map: (stateId, loc) =>
-        Case.Lit(Tree.IntLit(stateId)) -> Return(Value.Lit(loc.fold(Tree.UnitLit(true)): loc =>
-          val (line, _, col) = loc.origin.fph.getLineColAt(loc.spanStart)
-          Tree.StrLit(s"${loc.origin.fileName.last}:${line + loc.origin.startLineNum - 1}:$col")
-        ), false)
-      .toList, N, End()),
-    )
+    val debugMtds = if !opt.debug then Nil else
+    
+      val getLocalsSym = BlockMemberSymbol("getLocals", List())
+      
+      val localsRes = h.debugInfo.prevLocalsFn match
+        case Some(value) => PureCall(value, Nil)
+        case None => Value.Arr(Nil)
+      
+      val getLocalsFnDef = FunDefn(
+        S(clsSym),
+        getLocalsSym,
+        List(),
+        Return(localsRes, false)
+      )
+
+      val getLocSym = BlockMemberSymbol("getLoc", List())
+      val getLocFnDef = FunDefn(
+        S(clsSym),
+        getLocSym,
+        List(),
+        Match(pcSymbol.asPath, pcToLoc.toSortedMap.iterator.map: (stateId, loc) =>
+          Case.Lit(Tree.IntLit(stateId)) -> Return(Value.Lit(loc.fold(Tree.UnitLit(true)): loc =>
+            val (line, _, col) = loc.origin.fph.getLineColAt(loc.spanStart)
+            Tree.StrLit(s"${loc.origin.fileName.last}:${line + loc.origin.startLineNum - 1}:$col")
+          ), false)
+        .toList, N, End()),
+      )
+
+      getLocalsFnDef :: getLocFnDef :: Nil
     
     S(ClsLikeDefn(
       N, // no owner
@@ -615,7 +623,7 @@ class HandlerLowering(paths: HandlerPaths)(using TL, Raise, Elaborator.State, El
       } :: Nil)),
       Nil,
       S(paths.contClsPath),
-      resumeFnDef :: getLocalsFnDef :: getLocFnDef :: Nil,
+      resumeFnDef :: debugMtds,
       Nil,
       Nil,
       Assign(freshTmp(), PureCall(
