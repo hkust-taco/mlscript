@@ -276,9 +276,6 @@ fun try_(n, algorithm) = listLen(search(algorithm, queens(n)))
 
 fun testConstraints_nofib(n) = map(x => try_(n, x), bt :: bm :: bjbt :: bjbt_ :: fc :: Nil)
 
-
-:wholeOpt
-:wholeOptFlags simp,!split
 :runWholeCpp
 print(testConstraints_nofib(6))
 //│ 

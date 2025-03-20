@@ -36,18 +36,6 @@ abstract class LlirDiffMaker extends BbmlDiffMaker:
   val rWholeCpp = NullaryCommand("runWholeCpp")
   val wWholeCpp = Command[Str]("writeWholeCpp", false)(x => x.stripLeading())
 
-  val dopt = NullaryCommand("dopt")
-
-  // Optimizer commands for individual blocks
-  val opt = NullaryCommand("opt")
-  val sopt = NullaryCommand("sopt")
-  val optFlags = Command[Set[Str]]("optf", false)(x => x.stripLeading().split(",").toSet)
-
-  // Optimizer commands for the whole program
-  val wholeOpt = NullaryCommand("wholeOpt")
-  val sWholeOpt = NullaryCommand("showWholeOpt")
-  val wholeOptFlags = Command[Set[Str]]("wholeOptFlags", false)(x => x.stripLeading().split(",").toSet)
-
   def printToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) =
     val p = new java.io.PrintWriter(f)
     try { op(p) } finally { p.close() }
@@ -85,20 +73,6 @@ abstract class LlirDiffMaker extends BbmlDiffMaker:
         if sllir.isSet then
           output("LLIR:")
           output(llirProg.show())
-        def optimize(name: String, prog: Program, opt: Bool, show: Bool, optFlags: Set[Str]): Program =
-          given tl: TraceLogger with
-            override def doTrace = dopt.isSet
-            override def emitDbg(str: String): Unit = output(str)
-          if opt || show then
-            tl.log(s"Optimizing $name")
-            val opt = codegen.llir.LlirOpt(tl, freshId, optFlags)
-            val optProg = opt.run(prog)
-            if show then
-              output(s"\n$name:")
-              output(optProg.show())
-            optProg
-          else
-            prog
         def cppGen(name: String, prog: Program, gen: Bool, show: Bool, run: Bool, write: Opt[Str]): Unit =
           tl.log(s"Generating $name")
           if gen || show || run || write.isDefined then
@@ -122,11 +96,9 @@ abstract class LlirDiffMaker extends BbmlDiffMaker:
               else
                 output("\n")
                 cppHost.compileAndRun(cpp.toDocument.toString)
-        cppGen("Cpp", 
-          optimize("Opt", llirProg, opt.isSet, sopt.isSet, optFlags.get.getOrElse(Set.empty)), 
+        cppGen("Cpp", llirProg, 
           cpp.isSet, scpp.isSet, rcpp.isSet, wcpp.get)
-        cppGen("WholeProgramCpp",
-          optimize("WholeProgramOpt", mkWholeProgram, wholeOpt.isSet, sWholeOpt.isSet, wholeOptFlags.get.getOrElse(Set.empty)),
+        cppGen("WholeProgramCpp", mkWholeProgram,
           wholeCpp.isSet, sWholeCpp.isSet, rWholeCpp.isSet, wWholeCpp.get)
         if intl.isSet then
           val intr = codegen.llir.Interpreter(tl)
@@ -135,6 +107,3 @@ abstract class LlirDiffMaker extends BbmlDiffMaker:
       catch
         case e: LowLevelIRError =>
           output("Stopped due to an error during the Llir generation")
-        case e: OptErr =>
-          output("Stopped due to an error during the optimization")
-

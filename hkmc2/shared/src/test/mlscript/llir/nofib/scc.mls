@@ -49,8 +49,6 @@ fun testScc_nofib(d) =
   
   stronglyConnComp(edges, vertices)
 
-:wholeOpt
-:wholeOptFlags simp,!split
 :runWholeCpp
 print(testScc_nofib(0))
 //│ 
