@@ -187,24 +187,35 @@ Runtime1 = class Runtime {
       return res
     }
   } 
-  static raisePrintStackEffect() {
-    return Runtime.mkEffect(Runtime.PrintStackEffect, null)
+  static raisePrintStackEffect(showLocals) {
+    return Runtime.mkEffect(Runtime.PrintStackEffect, showLocals)
   } 
   static topLevelEffect(tr, debug) {
-    let scrut, tmp, tmp1, tmp2, tmp3;
-    scrut = tr.handler === Runtime.PrintStackEffect;
-    if (scrut === true) {
-      tmp = Runtime.showStackTrace("Stack Trace:", tr, debug);
-      tmp1 = runtime.safeCall(globalThis.console.log(tmp));
-      tmp2 = Runtime.resume(tr.contTrace);
-      return runtime.safeCall(tmp2(runtime.Unit))
+    let scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+    tmp6: while (true) {
+      scrut = tr.handler === Runtime.PrintStackEffect;
+      if (scrut === true) {
+        tmp = Runtime.showStackTrace("Stack Trace:", tr, debug, tr.handlerFun);
+        tmp1 = runtime.safeCall(globalThis.console.log(tmp));
+        tmp2 = Runtime.resume(tr.contTrace);
+        tmp3 = runtime.safeCall(tmp2(runtime.Unit));
+        tr = tmp3;
+        tmp4 = runtime.Unit;
+        continue tmp6;
+      } else {
+        tmp4 = runtime.Unit;
+      }
+      break;
+    }
+    if (tr instanceof Runtime.EffectSig.class) {
+      tmp5 = "Error: Unhandled effect " + tr.handler.constructor.name;
+      throw Runtime.showStackTrace(tmp5, tr, debug, false);
     } else {
-      tmp3 = "Error: Unhandled effect " + tr.handler.constructor.name;
-      throw Runtime.showStackTrace(tmp3, tr, debug);
+      return tr
     }
   } 
-  static showStackTrace(header, tr1, debug1) {
-    let msg, curHandler, atTail, scrut, cur, scrut1, locals, curLocals, loc, loc1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, lambda;
+  static showStackTrace(header, tr1, debug1, showLocals1) {
+    let msg, curHandler, atTail, scrut, cur, scrut1, locals, curLocals, loc, loc1, localsMsg, scrut2, scrut3, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, lambda;
     msg = header;
     curHandler = tr1.contTrace;
     atTail = true;
@@ -227,22 +238,32 @@ Runtime1 = class Runtime {
                 tmp2 = loc;
               }
               loc1 = tmp2;
-              tmp3 = "\n\tat " + curLocals.fnName;
-              tmp4 = tmp3 + " (";
-              tmp5 = tmp4 + loc1;
-              tmp6 = tmp5 + ")";
-              tmp7 = msg + tmp6;
-              msg = tmp7;
-              lambda = (undefined, function (l) {
-                let tmp22, tmp23;
-                tmp22 = l.localName + "=";
-                tmp23 = runtime.safeCall(RuntimeJS.Predef.render(l.value));
-                return tmp22 + tmp23
-              });
-              tmp8 = runtime.safeCall(curLocals.locals.map(lambda));
-              tmp9 = runtime.safeCall(tmp8.join(", "));
-              tmp10 = " with locals: " + tmp9;
-              tmp11 = msg + tmp10;
+              if (showLocals1 === true) {
+                scrut2 = curLocals.locals.length > 0;
+                if (scrut2 === true) {
+                  lambda = (undefined, function (l) {
+                    let tmp22, tmp23;
+                    tmp22 = l.localName + "=";
+                    tmp23 = runtime.safeCall(RuntimeJS.Predef.render(l.value));
+                    return tmp22 + tmp23
+                  });
+                  tmp3 = runtime.safeCall(curLocals.locals.map(lambda));
+                  tmp4 = runtime.safeCall(tmp3.join(", "));
+                  tmp5 = " with locals: " + tmp4;
+                } else {
+                  tmp5 = "";
+                }
+              } else {
+                tmp5 = "";
+              }
+              localsMsg = tmp5;
+              tmp6 = "\n\tat " + curLocals.fnName;
+              tmp7 = tmp6 + " (";
+              tmp8 = tmp7 + loc1;
+              tmp9 = tmp8 + ")";
+              tmp10 = msg + tmp9;
+              msg = tmp10;
+              tmp11 = msg + localsMsg;
               msg = tmp11;
               cur = cur.next;
               atTail = false;
@@ -254,8 +275,8 @@ Runtime1 = class Runtime {
             break;
           }
           curHandler = curHandler.nextHandler;
-          scrut2 = curHandler !== null;
-          if (scrut2 === true) {
+          scrut3 = curHandler !== null;
+          if (scrut3 === true) {
             tmp13 = "\n\twith handler " + curHandler.handler.constructor.name;
             tmp14 = msg + tmp13;
             msg = tmp14;

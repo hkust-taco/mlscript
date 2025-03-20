@@ -58,17 +58,19 @@ data class FnLocalsInfo(fnName, locals)
 data class LocalVarInfo(localName, uid, value)
 
 
-fun raisePrintStackEffect() =
-  mkEffect(PrintStackEffect, null)
+fun raisePrintStackEffect(showLocals) =
+  mkEffect(PrintStackEffect, showLocals)
 
 fun topLevelEffect(tr, debug) =
-  if tr.handler === PrintStackEffect then
-    console.log(showStackTrace("Stack Trace:", tr, debug))
-    resume(tr.contTrace)(())
+  while tr.handler === PrintStackEffect do
+    console.log(showStackTrace("Stack Trace:", tr, debug, tr.handlerFun))
+    set tr = resume(tr.contTrace)(())
+  if tr is EffectSig then
+    throw showStackTrace("Error: Unhandled effect " + tr.handler.constructor.name, tr, debug, false)
   else
-    throw showStackTrace("Error: Unhandled effect " + tr.handler.constructor.name, tr, debug)
+    tr
 
-fun showStackTrace(header, tr, debug) =
+fun showStackTrace(header, tr, debug, showLocals) =
   let
     msg = header
     curHandler = tr.contTrace
@@ -81,9 +83,13 @@ fun showStackTrace(header, tr, debug) =
         let curLocals = locals.at(locals.length - 1)
         let loc = cur.getLoc
         let loc = if loc is null then "pc=" + cur.pc else loc
+        let localsMsg = if showLocals and curLocals.locals.length > 0 then
+          " with locals: " + curLocals.locals.map(l => l.localName + "=" + RuntimeJS.Predef.render(l.value)).join(", ")
+        else
+          ""
         set
           msg += "\n\tat " + curLocals.fnName + " (" + loc + ")"
-          msg += " with locals: " + curLocals.locals.map(l => l.localName + "=" + RuntimeJS.Predef.render(l.value)).join(", ")
+          msg += localsMsg
           cur = cur.next
           atTail = false
       set curHandler = curHandler.nextHandler

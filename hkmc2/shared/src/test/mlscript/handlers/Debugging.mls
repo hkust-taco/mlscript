@@ -30,9 +30,9 @@ fun f() =
 //│   getLocals3 = function getLocals() {
 //│     let i1, j1, k1, prev, thisInfo, tmp2;
 //│     prev = getLocals2();
-//│     i1 = new runtime.LocalVarInfo.class("i", "638", i);
-//│     j1 = new runtime.LocalVarInfo.class("j", "639", j);
-//│     k1 = new runtime.LocalVarInfo.class("k", "640", k);
+//│     i1 = new runtime.LocalVarInfo.class("i", "640", i);
+//│     j1 = new runtime.LocalVarInfo.class("j", "641", j);
+//│     k1 = new runtime.LocalVarInfo.class("k", "642", k);
 //│     thisInfo = new runtime.FnLocalsInfo.class("f", [
 //│       i1,
 //│       j1,
@@ -127,7 +127,7 @@ fun f() =
 :re
 f()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at f (Debugging.mls:17:14) with locals: i=0, j=100, k=2000
+//│ 	at f (Debugging.mls:17:14)
 
 :re
 fun lambda_test(f) =
@@ -137,8 +137,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:137:3) with locals: 
-//│ 	at lambda_test (Debugging.mls:134:3) with locals: f=[function]
+//│ 	at lambda (Debugging.mls:137:3)
+//│ 	at lambda_test (Debugging.mls:134:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -147,7 +147,7 @@ import "../../mlscript-compile/Runtime.mls"
 let res = Runtime.try(f)
 
 res.reified.contTrace.next.getLocals
-//│ = [FnLocalsInfo("‹top level›", []), FnLocalsInfo("f", [LocalVarInfo("i", "638", 0), LocalVarInfo("j", "639", 100), LocalVarInfo("k", "640", 2000)])]
+//│ = [FnLocalsInfo("‹top level›", []), FnLocalsInfo("f", [LocalVarInfo("i", "640", 0), LocalVarInfo("j", "641", 100), LocalVarInfo("k", "642", 2000)])]
 
 Runtime.debugEff(res.reified)
 //│ > Debug EffectSig:
@@ -201,12 +201,19 @@ let i = 100
 fun f() =
   let j = 200
   print(debug.getLocals())
-  debug.printStack()
+  debug.printStack(true)
+  set j = 300
+  debug.printStack(false)
+  debug.printStack(true)
   print(debug.getLocals())
 //│ i = 100
 
 f()
-//│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", "1314", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", "1316", 200)])]
+//│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", "1318", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", "1320", 200)])]
 //│ > Stack Trace:
 //│ > 	at f (Debugging.mls:204:3) with locals: j=200
-//│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", "1314", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", "1316", 200)])]
+//│ > Stack Trace:
+//│ > 	at f (Debugging.mls:206:3)
+//│ > Stack Trace:
+//│ > 	at f (Debugging.mls:207:3) with locals: j=300
+//│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", "1318", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", "1320", 300)])]
