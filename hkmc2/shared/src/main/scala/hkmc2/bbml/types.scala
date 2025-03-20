@@ -133,11 +133,11 @@ sealed abstract class Type extends GeneralType with TypeArg:
     case _ => NegType(this)
   
   protected[bbml] def paren(using Scope): Str = toBasic match
-    case _: InfVar | _: ClassLikeType | _: NegType | Top | Bot => show
+    case _: InfVar | _: ClassLikeType | _: RcdType | _: NegType | Top | Bot => show
     case _: ComposedType | _: FunType => s"($show)"
 
   protected[bbml] def parenDbg: Str = toBasic match
-    case _: InfVar | _: ClassLikeType | _: NegType | Top | Bot => showDbg
+    case _: InfVar | _: ClassLikeType | _: RcdType | _: NegType | Top | Bot => showDbg
     case _: ComposedType | _: FunType => s"($showDbg)"
 
 sealed abstract class BasicType extends Type:
@@ -148,6 +148,7 @@ sealed abstract class BasicType extends Type:
     case InfVar(lvl, _, _, _) => lvl
     case FunType(args, ret, eff) =>
       (ret :: eff :: args).map(_.lvl).max
+    case RcdType(fields) => fields.values.map(_.lvl).max
     case ComposedType(lhs, rhs, _) =>
       lhs.lvl.max(rhs.lvl)
     case NegType(ty) => ty.lvl
@@ -156,6 +157,7 @@ sealed abstract class BasicType extends Type:
   def mapBasic(f: Type => Type): Type = this match
     case ClassLikeType(name, targs) => ClassLikeType(name, targs.map(_.mapArg(f)))
     case FunType(args, ret, eff) => FunType(args.map(f), f(ret), f(eff))
+    case RcdType(fields) => RcdType(fields.mapValues(f))
     case ComposedType(lhs, rhs, pol) => Type.mkComposedType(f(lhs), f(rhs), pol)
     case NegType(ty) => Type.mkNegType(f(ty))
     case Top | Bot | _: InfVar => this
@@ -173,6 +175,7 @@ sealed abstract class BasicType extends Type:
       if isSkolem then name else s"'${name}"
     case FunType(arg :: Nil, ret, eff) => s"${arg.paren} ->${printEff(eff)} ${ret.paren}"
     case FunType(args, ret, eff) => s"(${args.map(_.show).mkString(", ")}) ->${printEff(eff)} ${ret.paren}"
+    case RcdType(fields) => s"{${fields.map { case (l, t) => s"$l: ${t.show}" }.mkString(", ")}}"
     case ComposedType(lhs, rhs, pol) => s"${lhs.paren} ${if pol then "∨" else "∧"} ${rhs.paren}"
     case NegType(ty) => s"¬${ty.paren}"
     case Top => "⊤"
@@ -186,6 +189,7 @@ sealed abstract class BasicType extends Type:
       if isSkolem then s"${name}${uid}_${lvl}" else s"'${name}${uid}_${lvl}"
     case FunType(arg :: Nil, ret, eff) => s"${arg.parenDbg} ->{${eff.showDbg}} ${ret.parenDbg}"
     case FunType(args, ret, eff) => s"(${args.map(_.showDbg).mkString(", ")}) ->{${eff.showDbg}} ${ret.parenDbg}"
+    case RcdType(fields) => s"{${fields.map { case (l, t) => s"$l: ${t.showDbg}" }.mkString(", ")}}"
     case ComposedType(lhs, rhs, pol) => s"${lhs.parenDbg} ${if pol then "∨" else "∧"} ${rhs.parenDbg}"
     case NegType(ty) => s"¬${ty.parenDbg}"
     case Top => "⊤"
@@ -223,7 +227,7 @@ trait CachedNorm[A <: AnyRef]:
       _norm = d
       d
     else _norm
-  
+
 
 object BasicType:
   // TOOD dedup
@@ -262,6 +266,14 @@ case class FunType(args: Ls[Type], ret: Type, eff: Type) extends BasicType with 
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
     FunType(args.map(_.subst), ret.subst, eff.subst)
 
+case class RcdType(fields: Ls[Str -> Type]) extends BasicType with CachedNorm[RcdType]:
+  def mkNorm(using TL): RcdType =
+    RcdType(fields.mapValues(_.toDnf))
+  override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
+    RcdType(fields.mapValues(_.subst))
+  def & (that: RcdType): RcdType =
+    RcdType((fields ++ that.fields).groupMapReduce(_._1)(_._2)(_ & _).toList)
+
 case class ComposedType(lhs: Type, rhs: Type, pol: Bool) extends BasicType: // * Positive -> union
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
     Type.mkComposedType(lhs.subst, rhs.subst, pol)
@@ -288,7 +300,7 @@ object Type:
     (using c: MutMap[BasicType -> BasicType, Opt[Set[Set[InfVar->BasicType]]]])
     : Opt[Set[Set[InfVar->BasicType]]] =
     if !prev.contains(a -> b) then c.getOrElseUpdate(a -> b, {
-      (a, b) match
+      (a.simp.toBasic, b.simp.toBasic) match
         case (Bot, _) | (_, Bot) => S(Set.empty)
         case (NegType(t),_) => t.!.simp.toBasic match
           case NegType(_) => N
@@ -297,23 +309,40 @@ object Type:
           case NegType(_) => N
           case a => disjointImpl(a, b)(prev)
         case (ClassLikeType(a, _), ClassLikeType(b, _)) if a.uid =/= b.uid => S(Set.empty)
+        case (RcdType(u), RcdType(w)) if u.nonEmpty && w.nonEmpty =>
+          val um = u.toMap
+          val wm = w.toMap
+          val k = um.keySet & wm.keySet
+          val ur = RcdType((um -- k).toList)
+          val wr = RcdType((wm -- k).toList)
+          val ud = disjointImpl(ur, ur)(prev)
+          val wd = disjointImpl(wr, wr)(prev)
+          if ud.exists(_.isEmpty) || wd.exists(_.isEmpty) then
+            S(Set.empty)
+          else
+            val d = k.flatMap(k => disjointImpl(um(k).toBasic, wm(k).toBasic)(prev)) ++ Ls(ud, wd).flatten
+            if d.isEmpty then N
+            else if d.exists(_.isEmpty) then S(Set.empty)
+            else S(d.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))))
+        case (_: RcdType, _: FunType) | (_: FunType, _: RcdType) => S(Set.empty)
+        case (_: ClassLikeType, _: FunType) | (_: FunType, _: ClassLikeType) => S(Set.empty)
         case (ComposedType(p, q, true), _) =>
-          val u = disjointImpl(p.simp.toBasic, b)(prev)
-          val w = disjointImpl(q.simp.toBasic, b)(prev)
+          val u = disjointImpl(p.toBasic, b)(prev)
+          val w = disjointImpl(q.toBasic, b)(prev)
           u.flatMap(u => w.map(u ++ _))
         case (_, ComposedType(p, q, true)) =>
-          val u = disjointImpl(a, p.simp.toBasic)(prev)
-          val w = disjointImpl(a, q.simp.toBasic)(prev)
+          val u = disjointImpl(a, p.toBasic)(prev)
+          val w = disjointImpl(a, q.toBasic)(prev)
           u.flatMap(u => w.map(u ++ _))
         case (a: InfVar, b: InfVar) if a.uid =/= b.uid => N
         case (v: InfVar, _) =>
           val p = prev + (v -> b)
-          val k = v.state.lowerBounds.map(lb => disjointImpl(lb.toBasic.simp.toBasic, b)(p))
+          val k = v.state.lowerBounds.map(lb => disjointImpl(lb.toBasic, b)(p))
           if k.exists(_.isEmpty) then N
           else S((k.flatten.flatten.toSet + Set.empty).map(_ + (v -> b)))
         case (_, v: InfVar) =>
           val p = prev + (a -> v)
-          val k = v.state.lowerBounds.map(lb => disjointImpl(a, lb.toBasic.simp.toBasic)(p))
+          val k = v.state.lowerBounds.map(lb => disjointImpl(a, lb.toBasic)(p))
           if k.exists(_.isEmpty) then N
           else S((k.flatten.flatten.toSet + Set.empty).map(_ + (v -> a)))
         case _ => N

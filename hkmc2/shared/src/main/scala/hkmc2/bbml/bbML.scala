@@ -580,6 +580,24 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
         (Bot, eff)
       case Term.Error =>
         (Bot, Bot) // TODO: error type?
+      case Rcd(fields@((_: RcdField) :: _)) =>
+        val u = fields.collect:
+          case RcdField(Lit(StrLit(a)), t) => (a, t, typeCheck(t))
+        val (w, e) = u.foldRight((Nil: Ls[Str -> Type], Bot: Type)):
+          case ((a, t, (ty, e)), (w, e0)) => ((a -> tryMkMono(ty, t) :: w), e | e0)
+        (RcdType(w), e)
+      case Rcd(stats) =>
+        // TODO RcdSpread
+        val (s, r) = stats.partitionMap: k =>
+          k match
+            case RcdField(Lit(_: StrLit), _) => R(k)
+            case _ => L(k)
+        typeCheck(Blk(s, Rcd(r)))
+      case Term.Sel(u, Ident(a)) =>
+        val (ty, e) = typeCheck(u)
+        val v = freshVar(new TempSymbol(S(t), "sel"))
+        constrain(tryMkMono(ty, u), RcdType(Ls(a -> v)))
+        (v, e)
       case _ =>
         (error(msg"Term shape not yet supported by BbML: ${t.toString}" -> t.toLoc :: Nil), Bot)
 

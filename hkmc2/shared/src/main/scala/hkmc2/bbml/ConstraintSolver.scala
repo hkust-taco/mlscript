@@ -97,19 +97,37 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
             cctx.nest(bd -> v) givenIn:
               v.state.lowerBounds ::= bd
               v.state.upperBounds.foreach(ub => constrainImpl(bd, ub))
-              v.state.disjsub.toList.iterator.flatMap(_.check(v)).foreach:
+              v.state.disjsub.iterator.flatMap(_.check(v)).foreach:
                 case (a, b) => constrainImpl(a, b)
       case Conj(i, u, Nil) => (conj.i, conj.u) match
-        case (_, Union(N, Nil)) =>
+        case (_, Union(N, Nil, Nil)) =>
           // raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} ∧ ¬⊥" -> N :: Nil))
           cctx.err
-        case (Inter(S(ClassLikeType(cls1, targs1))), Union(f, ClassLikeType(cls2, targs2) :: rest)) =>
+        case (Inter(S(ClassLikeType(cls1, targs1))), Union(f, ClassLikeType(cls2, targs2) :: rest, rcd)) =>
           if cls1.uid === cls2.uid then
             targs1.zip(targs2).foreach: (ta1, ta2) =>
               constrainArgs(ta1, ta2)
-          else constrainConj(Conj(conj.i, Union(f, rest), Nil))
-        case (int: Inter, Union(f, _ :: rest)) => constrainConj(Conj(int, Union(f, rest), Nil))
-        case (Inter(S(fs:Ls[FunType])), Union(S(FunType(args2, ret2, eff2)), Nil)) =>
+          else constrainConj(Conj(conj.i, Union(f, rest, rcd), Nil))
+        case (int: Inter, Union(f, _ :: rest, rcd)) => constrainConj(Conj(int, Union(f, rest, rcd), Nil))
+        case (Inter(S(RcdType(u))), Union(f, Nil, RcdType(w) :: Nil)) =>
+          val um = u.toMap
+          val wm = w.toMap
+          val k = w.keys.toSet
+          if k.subsetOf(um.keySet) then
+            k.foreach(k => constrainImpl(um(k), wm(k)))
+          else cctx.err
+        case (Inter(S(u: RcdType)), Union(f, Nil, rs@(RcdType(w) :: z))) =>
+          val um = u.fields.toMap
+          val k = w.keys.toSet
+          if k.subsetOf(um.keySet) then
+            val r = RcdType(um.filterKeys(k(_)).toList)
+            val ws = rs.filter(w => Type.disjoint(w, r).isEmpty)
+            if ws.nonEmpty then
+              // TODO
+              constrainImpl(u, ws.reduce(_ & _))
+            else cctx.err
+          else cctx.err
+        case (Inter(S(fs: Ls[FunType])), Union(S(FunType(args2, ret2, eff2)), Nil, Nil)) =>
           val k = args2.flatMap(x => Type.disjoint(x, x))
           if k.forall(_.nonEmpty) then
             val f = fs.filter(_.args.length === args2.length)
@@ -121,24 +139,25 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
                 constrainImpl(f.eff, eff2)
             else
               val args = f.map(x => Type.discriminant(x.args))
-              val c = (args2.head, args.foldLeft(Bot: Type) { case (t, (q, _)) => t | q })
+
               val (cs, dss) = (args.iterator.zip(f).map:
                 case ((q, r), f) =>
-                  val cs = c :: (f.ret, ret2) :: (f.eff, eff2) :: args2.tail.zip(r)
+                  val cs = (f.ret, ret2) :: (f.eff, eff2) :: args2.tail.zip(r)
                   Type.disjoint(q, args2.head) match
                     case N => (cs, Nil)
                     case S(k) =>
-                      if k.nonEmpty then (Nil, k.map(k => DisjSub(mutable.LinkedHashSet.from(k), Nil, cs)))
-                      else (Nil, Nil)).toList.unzip
+                      (Nil, k.map(k => DisjSub(mutable.LinkedHashSet.from(k), Nil, cs)))).toList.unzip
+              val c = (args2.head, args.foldLeft(Bot: Type) { case (t, (q, _)) => t | q })
               if k.isEmpty then
                 if f.isEmpty then
                   cctx.err
                 else
-                  cs.flatten.foreach(u => constrainImpl(u._1, u._2))
                   dss.flatten.foreach(_.commit())
+                  constrainImpl(c._1, c._2)
+                  cs.flatten.foreach(u => constrainImpl(u._1, u._2))
               else
                 k.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
-                  DisjSub(mutable.LinkedHashSet.from(k), dss.flatten, cs.flatten).commit()
+                  DisjSub(mutable.LinkedHashSet.from(k), dss.flatten, c :: cs.flatten).commit()
         case _ =>
           // raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
           cctx.err
@@ -156,7 +175,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
       inlineSkolemBounds(if pol then state.upperBounds.foldLeft[Type](v)(_ & _) else state.lowerBounds.foldLeft[Type](v)(_ | _), pol)
     case ComposedType(lhs, rhs, p) => ComposedType(inlineSkolemBounds(lhs, pol), inlineSkolemBounds(rhs, pol), p)
     case NegType(ty) => NegType(inlineSkolemBounds(ty, !pol))
-    case _: ClassLikeType | _: FunType | _: InfVar | Top | Bot => ty
+    case _: ClassLikeType | _: FunType | _: RcdType |_: InfVar | Top | Bot => ty
 
   private def constrainImpl(lhs: Type, rhs: Type)(using BbCtx, CCtx, TL): Unit =
     if cctx.cache((lhs, rhs)) then log(s"Cached!")

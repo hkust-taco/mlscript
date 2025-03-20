@@ -296,11 +296,7 @@ fun fact(n) =
 //│ Type: ⊤
 
 fact
-//│ Type: ['n, 'eff, 'app] -> 'n ->{'eff} Int
-//│ Where:
-//│   'n <: Int
-//│   'n#Int ∨  ∧ Int<:'n ∧ Int<:'app ∧ 'eff<:'eff
-//│   'app <: Int
+//│ Type: Int -> Int
 
 fact(1)
 //│ Type: Int
@@ -324,11 +320,7 @@ fun fact2 = case
 //│ Type: ⊤
 
 fact2
-//│ Type: ['caseScrut, 'eff, 'app] -> 'caseScrut ->{'eff} Int
-//│ Where:
-//│   'caseScrut <: Int
-//│   'caseScrut#Int ∨  ∧ Int<:'caseScrut ∧ Int<:'app ∧ 'eff<:'eff
-//│   'app <: Int
+//│ Type: Int -> Int
 
 fact2(0)
 //│ Type: Int
@@ -360,7 +352,7 @@ throw new Error("oops")
 :e
 throw 42
 //│ ╔══[ERROR] Type error in throw
-//│ ║  l.361: 	throw 42
+//│ ║  l.353: 	throw 42
 //│ ║         	      ^^
 //│ ╙── because: cannot constrain  Int  <:  Error
 //│ Type: ⊥

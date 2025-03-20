@@ -101,6 +101,7 @@ enum Term extends Statement:
     case Forall(tvs, outer, body) => "universal quantification"
     case WildcardTy(in, out) => "wildcard type"
     case Blk(stats, res) => "block"
+    case Rcd(stats) => "record"
     case Quoted(term) => "quoted term"
     case Unquoted(term) => "unquoted term"
     case New(cls, args, rft) => "object creation"

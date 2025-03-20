@@ -76,16 +76,17 @@ object Conj:
   }){}
   lazy val empty: Conj = Conj(Inter.empty, Union.empty, Nil)
   def mkVar(v: InfVar, pol: Bool) = Conj(Inter.empty, Union.empty, (v, pol) :: Nil)
-  def mkInter(inter: ClassLikeType | Ls[FunType]) =
+  def mkInter(inter: ClassLikeType | Ls[FunType] | RcdType) =
     Conj(Inter(S(inter)), Union.empty, Nil)
-  def mkUnion(union: ClassLikeType | FunType) =
+  def mkUnion(union: ClassLikeType | FunType | RcdType) =
     Conj(Inter.empty, union match {
-      case cls: ClassLikeType => Union(N, cls :: Nil)
-      case fun: FunType => Union(S(fun), Nil)
+      case cls: ClassLikeType => Union(N, cls :: Nil, Nil)
+      case fun: FunType => Union(S(fun), Nil, Nil)
+      case r: RcdType => Union(N, Nil, Ls(r))
     }, Nil)
 
 // * Some(ClassType) -> C[in D_i out D_i], Some(FunType) -> D_1 ->{D_2} D_3, None -> Top
-final case class Inter(v: Opt[ClassLikeType | Ls[FunType]]) extends NormalForm:
+final case class Inter(v: Opt[ClassLikeType | Ls[FunType] | RcdType]) extends NormalForm:
   def isTop: Bool = v.isEmpty
   def merge(other: Inter): Option[Inter] = (v, other.v) match
     case (S(ClassLikeType(cls1, targs1)), S(ClassLikeType(cls2, targs2))) if cls1.uid === cls2.uid =>
@@ -94,6 +95,7 @@ final case class Inter(v: Opt[ClassLikeType | Ls[FunType]]) extends NormalForm:
     // case (S(FunType(a1, r1, e1)), S(FunType(a2, r2, e2))) =>
     //   S(Inter(S(FunType(a1.lazyZip(a2).map(_ | _), r1 & r2, e1 & e2))))
     case (S(a: Ls[FunType]), S(b: Ls[FunType])) => S(Inter(S(a ++ b)))
+    case (S(a: RcdType), S(b: RcdType)) => S(Inter(S(a & b)))
     case (S(v), N) => S(Inter(S(v)))
     case (N, v) => S(Inter(v))
     case _ => N
@@ -102,7 +104,8 @@ final case class Inter(v: Opt[ClassLikeType | Ls[FunType]]) extends NormalForm:
     case S(x: ClassLikeType) => x
     case S(Nil) => Top
     case S(x: Ls[FunType]) => x.reduce[Type](_&_).toBasic
-  def toDnf(using TL): Disj = Disj(Conj(this, Union(N, Nil), Nil) :: Nil)
+    case S(x: RcdType) => x
+  def toDnf(using TL): Disj = Disj(Conj(this, Union(N, Nil, Nil), Nil) :: Nil)
   override def show(using Scope): Str =
     toBasic.show
 
@@ -111,11 +114,11 @@ object Inter:
   lazy val empty: Inter = Inter(N)
 
 // * fun: Some(FunType) -> D_1 ->{D_2} D_3, None -> bot
-final case class Union(fun: Opt[FunType], cls: Ls[ClassLikeType])
+final case class Union(fun: Opt[FunType], cls: Ls[ClassLikeType], rcd: Ls[RcdType])
 extends NormalForm with CachedBasicType:
-  def isBot = fun.isEmpty && cls.isEmpty
+  def isBot = fun.isEmpty && cls.isEmpty && rcd.isEmpty
   def toType = fun.getOrElse(Bot) |
-    cls.foldLeft[Type](Bot)(_ | _)
+    cls.foldLeft[Type](Bot)(_ | _) | rcd.foldLeft[Type](Bot)(_ | _)
   def merge(other: Union): Union = Union((fun, other.fun) match {
     case (S(FunType(a1, r1, e1)), S(FunType(a2, r2, e2))) =>
       S(FunType(a1.lazyZip(a2).map(_ & _), r1 | r2, e1 | e2))
@@ -129,16 +132,16 @@ extends NormalForm with CachedBasicType:
     case (ClassLikeType(cls1, targs1) :: tail, ClassLikeType(cls2, targs2)) if cls1.uid === cls2.uid =>
       ClassLikeType(cls1, targs1.lazyZip(targs2).map(_ | _)) :: tail
     case (head :: tail, cls) => cls :: head :: tail
-  }))
+  }), rcd ++ other.rcd)
   def mkBasic: BasicType =
-    BasicType.union(fun.toList ::: cls)
+    BasicType.union(fun.toList ::: cls ::: rcd)
   def toDnf(using TL): Disj = NormalForm.neg(this)
   override def show(using Scope): Str =
     toType.show
 
   override def showDbg: Str = toType.showDbg
 object Union:
-  val empty: Union = Union(N, Nil)
+  val empty: Union = Union(N, Nil, Nil)
 
 sealed abstract class NormalForm extends TypeExt:
   def toBasic: BasicType
@@ -172,6 +175,7 @@ object NormalForm:
     case v: InfVar => Disj(Conj.mkVar(v, false) :: Nil)
     case ct: ClassLikeType => Disj(Conj.mkUnion(ct) :: Nil)
     case ft: FunType => Disj(Conj.mkUnion(ft) :: Nil)
+    case r: RcdType => Disj(Conj.mkUnion(r) :: Nil)
     case ComposedType(lhs, rhs, pol) =>
       if pol then inter(neg(lhs), neg(rhs)) else union(neg(lhs), neg(rhs))
     case NegType(ty) => dnf(ty)
@@ -181,13 +185,14 @@ object NormalForm:
     ty match
     case d: Disj => d
     case c: Conj => Disj(c :: Nil)
-    case i: Inter => Disj(Conj(i, Union(N, Nil), Nil) :: Nil)
+    case i: Inter => Disj(Conj(i, Union(N, Nil, Nil), Nil) :: Nil)
     case _ => ty.toBasic match
     case Top => Disj.top
     case Bot => Disj.bot
     case v: InfVar => Disj(Conj.mkVar(v, true) :: Nil)
     case ct: ClassLikeType => Disj(Conj.mkInter(ct.toNorm) :: Nil)
     case ft: FunType => Disj(Conj.mkInter(Ls(ft.toNorm)) :: Nil)
+    case r: RcdType => Disj(Conj.mkInter(r.toNorm) :: Nil)
     case ComposedType(lhs, rhs, pol) =>
       if pol then union(dnf(lhs), dnf(rhs)) else inter(dnf(lhs), dnf(rhs))
     case NegType(ty) => neg(ty)

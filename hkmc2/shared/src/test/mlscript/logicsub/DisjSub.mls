@@ -36,7 +36,7 @@ x =>
 //│ Type: ('x) ->{'eff} 'app
 //│ Where:
 //│   'x <: Int
-//│   'x#'x ∨ (  'x#Int ∨  ∧ 'x<:Int ∨ Bool ∧ Int<:'app ∧ ⊥<:'eff) ∧ (  'x#Bool ∨  ∧ 'x<:Int ∨ Bool ∧ Bool<:'app ∧ ⊥<:'eff)
+//│   'x#'x ∨ (  'x#Int ∨  ∧ Int<:'app ∧ ⊥<:'eff) ∧ (  'x#Bool ∨  ∧ Bool<:'app ∧ ⊥<:'eff) ∧ 'x<:Int ∨ Bool
 
 (x: Int) =>
   let y = x + 1
@@ -62,13 +62,13 @@ ap(idIB)(1)
 x => idIB(x)
 //│ Type: ('x) ->{'eff} 'app
 //│ Where:
-//│   'x#'x ∨ (  'x#Int ∨  ∧ 'x<:Int ∨ Bool ∧ Int<:'app ∧ ⊥<:'eff) ∧ (  'x#Bool ∨  ∧ 'x<:Int ∨ Bool ∧ Bool<:'app ∧ ⊥<:'eff)
+//│   'x#'x ∨ (  'x#Int ∨  ∧ Int<:'app ∧ ⊥<:'eff) ∧ (  'x#Bool ∨  ∧ Bool<:'app ∧ ⊥<:'eff) ∧ 'x<:Int ∨ Bool
 
 fun forward(x) = idIB(x)
 forward
 //│ Type: ['x, 'eff, 'app] -> 'x ->{'eff} 'app
 //│ Where:
-//│   'x#'x ∨ (  'x#Int ∨  ∧ 'x<:Int ∨ Bool ∧ Int<:'app ∧ ⊥<:'eff) ∧ (  'x#Bool ∨  ∧ 'x<:Int ∨ Bool ∧ Bool<:'app ∧ ⊥<:'eff)
+//│   'x#'x ∨ (  'x#Int ∨  ∧ Int<:'app ∧ ⊥<:'eff) ∧ (  'x#Bool ∨  ∧ Bool<:'app ∧ ⊥<:'eff) ∧ 'x<:Int ∨ Bool
 
 forward(1)
 //│ Type: Int
@@ -140,4 +140,107 @@ fun foo(x) = if x is
   [false, false] then 2
 //│ /!!!\ Uncaught error: scala.MatchError: Tuple(2,false) (of class hkmc2.semantics.Pattern$Tuple)
 
+{x:1, y:true}
+//│ Type: {x: Int, y: Bool}
 
+fun k(f) =
+  a: f(0)
+  b: f(true)
+k
+//│ Type: ['eff, 'app, 'eff1, 'app1] -> ((Bool ->{'eff1} 'app1) ∧ (Int ->{'eff} 'app)) ->{'eff ∨ 'eff1} {a: 'app, b: 'app1}
+
+k(idIB)
+//│ Type: {a: Int, b: Bool}
+
+fun k(f) = (x, y) =>
+  a: f(x)
+  b: f(y)
+k
+//│ Type: ['x, 'y, 'eff, 'app, 'eff1, 'app1] -> (('y ->{'eff1} 'app1) ∧ ('x ->{'eff} 'app)) -> (('x, 'y) ->{'eff ∨ 'eff1} {a: 'app, b: 'app1})
+
+k(idIB)(true, 1)
+//│ Type: {a: Bool, b: Int}
+
+:e
+k(idIB)("true", 1)
+//│ ╔══[ERROR] Type error in string literal with expected type 'x
+//│ ║  l.165: 	k(idIB)("true", 1)
+//│ ║         	        ^^^^^^
+//│ ╟── because: cannot constrain  Str  <:  'x
+//│ ╟── because: cannot constrain  Str  <:  'x
+//│ ╟── because: cannot constrain  'x  <:  Int ∨ Bool
+//│ ╟── because: cannot constrain  'x  <:  ¬(¬{Int ∨ Bool})
+//│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int ∨ Bool})
+//│ Type: {a: ⊥, b: Int}
+
+(x => x.x + idIB(x.y)) of (x:0, y:1)
+//│ Type: Int
+
+data class Ls[A](prim: [R] -> (() -> R, (A, Ls[A]) -> R) -> R)
+fun nil() = new Ls((n, _) => n())
+fun cons(x, y) = new Ls((n, r) => r(x, y))
+//│ Type: ⊤
+
+fun map: [A, B, E] -> Ls[out A] -> (A -> B) -> Ls[out B]
+//│ Type: ⊤
+
+fun map: [A, B, E] -> Ls[A] -> (A -> B) -> Ls[B]
+fun map = x => f => x.Ls#prim(() => nil(), (a, b) => cons(f(a), map(b)(f)))
+//│ Type: ⊤
+
+// fun map = x => f => new Ls((n, r) => x.Ls#prim(n, (a, b) => r(f(a), map(b)(f))))
+
+x => map(x)(idIB)
+//│ Type: (Ls['A]) ->{⊥} Ls['B]
+//│ Where:
+//│   'A#'A ∨ (  'A#Int ∨  ∧ Int<:'B ∧ ⊥<:⊥) ∧ (  'A#Bool ∨  ∧ Bool<:'B ∧ ⊥<:⊥) ∧ 'A<:Int ∨ Bool
+
+map(nil())(idIB)
+//│ Type: Ls['B]
+
+map(nil())(idIB) as Ls[Str]
+//│ Type: Ls[Str]
+
+map(cons(1, nil()))(idIB)
+//│ Type: Ls['B]
+//│ Where:
+//│   Int <: 'B
+
+map(cons(1, cons(true, nil())))(idIB)
+//│ Type: Ls['B]
+//│ Where:
+//│   Bool <: 'B
+//│   Int <: 'B
+
+:e
+let x = cons(1, cons(true, nil())) in
+  map(cons(x, x))(idIB)
+//│ ╔══[ERROR] Type error in reference with expected type ('A) ->{⊥} 'B
+//│ ║  l.217: 	  map(cons(x, x))(idIB)
+//│ ║         	                  ^^^^
+//│ ╟── because: cannot constrain  (Int -> Int) ∧ (Bool -> Bool)  <:  'A -> 'B
+//│ ╟── because: cannot constrain  'A  <:  Int ∨ Bool
+//│ ╟── because: cannot constrain  'A  <:  ¬(¬{Int ∨ Bool})
+//│ ╙── because: cannot constrain  Ls['A1]  <:  ¬(¬{Int ∨ Bool})
+//│ ╔══[ERROR] Type error in reference with expected type ('A) ->{⊥} 'B
+//│ ║  l.217: 	  map(cons(x, x))(idIB)
+//│ ║         	                  ^^^^
+//│ ╟── because: cannot constrain  (Int -> Int) ∧ (Bool -> Bool)  <:  'A -> 'B
+//│ ╟── because: cannot constrain  'A  <:  Int ∨ Bool
+//│ ╟── because: cannot constrain  'A  <:  ¬(¬{Int ∨ Bool})
+//│ ╟── because: cannot constrain  'A1  <:  ¬(¬{Int ∨ Bool})
+//│ ╟── because: cannot constrain  'A1  <:  ¬(¬{Int ∨ Bool})
+//│ ╙── because: cannot constrain  Ls['A1]  <:  ¬(¬{Int ∨ Bool})
+//│ ╔══[ERROR] Type error in reference with expected type ('A) ->{⊥} 'B
+//│ ║  l.217: 	  map(cons(x, x))(idIB)
+//│ ║         	                  ^^^^
+//│ ╟── because: cannot constrain  (Int -> Int) ∧ (Bool -> Bool)  <:  'A -> 'B
+//│ ╟── because: cannot constrain  'A  <:  Int ∨ Bool
+//│ ╟── because: cannot constrain  'A  <:  ¬(¬{Int ∨ Bool})
+//│ ╟── because: cannot constrain  'A1  <:  ¬(¬{Int ∨ Bool})
+//│ ╟── because: cannot constrain  'A1  <:  ¬(¬{Int ∨ Bool})
+//│ ╙── because: cannot constrain  Ls['A1]  <:  ¬(¬{Int ∨ Bool})
+//│ Type: Ls['B]
+//│ Where:
+//│   Bool <: 'B
+//│   Int <: 'B

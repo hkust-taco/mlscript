@@ -20,6 +20,7 @@ class TypeTraverser:
         case ty: Type =>
           apply(pol)(ty)
           apply(!pol)(ty)
+    case RcdType(fields) => fields.values.foreach(apply(pol))
     case InfVar(vlvl, uid, state, _) =>
       if pol then state.lowerBounds.foreach(apply(true))
       else state.upperBounds.foreach(apply(false))

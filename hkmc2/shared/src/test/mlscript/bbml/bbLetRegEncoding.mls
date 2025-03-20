@@ -70,8 +70,21 @@ let f = letreg(r => arg => r.ref arg)
 f
 //│ Type: 'arg ->{⊤} Ref['arg, ?]
 
+:e
 letreg(r => arg => r.ref arg)(0)
-//│ Type: ⊥
+//│ ╔══[ERROR] Type error in block
+//│ ║  l.74: 	letreg(r => arg => r.ref arg)(0)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'eff ∨ 'E  <:  ⊥
+//│ ╟── because: cannot constrain  'eff  <:  ¬()
+//│ ╟── because: cannot constrain  'reg  <:  ¬()
+//│ ╟── because: cannot constrain  'reg  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'R  <:  ¬()
+//│ ╟── because: cannot constrain  'R  <:  ¬()
+//│ ╙── because: cannot constrain    <:  ¬()
+//│ Type: Ref['arg, ?]
+//│ Where:
+//│   Int <: 'arg
 
 
 
@@ -83,7 +96,7 @@ fun letreg: [E,Res] -> ([R] -> Region[R] -> Res) ->{E} Res
 :e
 letreg(r => r.ref 1)
 //│ ╔══[ERROR] Type error in function literal with expected type (Region[R]) ->{⊥} 'Res
-//│ ║  l.84: 	letreg(r => r.ref 1)
+//│ ║  l.97: 	letreg(r => r.ref 1)
 //│ ║        	       ^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ¬()
@@ -93,16 +106,16 @@ letreg(r => r.ref 1)
 :e
 letreg(r => !(r.ref 1))
 //│ ╔══[ERROR] Type error in function literal with expected type (Region[R]) ->{⊥} 'Res
-//│ ║  l.94: 	letreg(r => !(r.ref 1))
-//│ ║        	       ^^^^^^^^^^^^^^
+//│ ║  l.107: 	letreg(r => !(r.ref 1))
+//│ ║         	       ^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'reg1  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ¬()
 //│ ╟── because: cannot constrain  'reg1  <:  ¬()
 //│ ╟── because: cannot constrain  'reg1  <:  ¬()
 //│ ╙── because: cannot constrain  R  <:  ¬()
 //│ ╔══[ERROR] Type error in function literal with expected type (Region[R]) ->{⊥} 'Res
-//│ ║  l.94: 	letreg(r => !(r.ref 1))
-//│ ║        	       ^^^^^^^^^^^^^^
+//│ ║  l.107: 	letreg(r => !(r.ref 1))
+//│ ║         	       ^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'reg1  <:  ⊥
 //│ ╟── because: cannot constrain  'reg1  <:  ¬()
 //│ ╙── because: cannot constrain  R  <:  ¬()

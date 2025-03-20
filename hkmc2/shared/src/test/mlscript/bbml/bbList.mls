@@ -43,7 +43,6 @@ region r in
 
 // * Should be an error. This definition would not be referentially transparent.
 // * The error message needs improvement, though.
-:todo
 :e
 fun mapi: [A, E] -> List[out A] -> ((Int, A) ->{E} A) ->{E} List[out A]
 fun mapi = s =>
@@ -52,7 +51,119 @@ fun mapi = s =>
     f => map(s) of x =>
       i := !i + 1
       f(!i, x)
+//│ ╔══[ERROR] Type error in region expression with expected type ((Int, A) ->{E} A) ->{E} List[out A]
+//│ ║  l.50: 	    let i = r.ref 0
+//│ ║        	            ^^^^^^^
+//│ ║  l.51: 	    f => map(s) of x =>
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.52: 	      i := !i + 1
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ║  l.53: 	      f(!i, x)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'f ->{'E1} List[out 'B]  <:  ((Int, A) ->{E} A) ->{E} List[out A]
+//│ ╟── because: cannot constrain  (Int, A) ->{E} A  <:  'f
+//│ ╟── because: cannot constrain  (Int, A) ->{E} (A)  <:  'f
+//│ ╟── because: cannot constrain  'E1  <:  E
+//│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  (¬⊥ ∧ 'r) ∧ ¬outer  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'r  <:  ¬(¬E ∧ ¬outer)
+//│ ╙── because: cannot constrain  ¬outer  <:  ¬(¬E ∧ ¬outer)
+//│ ╔══[ERROR] Type error in region expression with expected type ((Int, A) ->{E} A) ->{E} List[out A]
+//│ ║  l.50: 	    let i = r.ref 0
+//│ ║        	            ^^^^^^^
+//│ ║  l.51: 	    f => map(s) of x =>
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.52: 	      i := !i + 1
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ║  l.53: 	      f(!i, x)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'f ->{'E1} List[out 'B]  <:  ((Int, A) ->{E} A) ->{E} List[out A]
+//│ ╟── because: cannot constrain  (Int, A) ->{E} A  <:  'f
+//│ ╟── because: cannot constrain  (Int, A) ->{E} (A)  <:  'f
+//│ ╟── because: cannot constrain  'E1  <:  E
+//│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  (¬⊥ ∧ 'r) ∧ ¬outer  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'r  <:  ¬(¬E ∧ ¬outer)
+//│ ╙── because: cannot constrain  ¬outer  <:  ¬(¬E ∧ ¬outer)
+//│ ╔══[ERROR] Type error in region expression with expected type ((Int, A) ->{E} A) ->{E} List[out A]
+//│ ║  l.50: 	    let i = r.ref 0
+//│ ║        	            ^^^^^^^
+//│ ║  l.51: 	    f => map(s) of x =>
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.52: 	      i := !i + 1
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ║  l.53: 	      f(!i, x)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'f ->{'E1} List[out 'B]  <:  ((Int, A) ->{E} A) ->{E} List[out A]
+//│ ╟── because: cannot constrain  (Int, A) ->{E} A  <:  'f
+//│ ╟── because: cannot constrain  (Int, A) ->{E} (A)  <:  'f
+//│ ╟── because: cannot constrain  'E1  <:  E
+//│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  (¬⊥ ∧ 'r) ∧ ¬outer  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  'r  <:  ¬(¬E ∧ ¬outer)
+//│ ╙── because: cannot constrain  ¬outer  <:  ¬(¬E ∧ ¬outer)
 //│ Type: ⊤
 
+fun mapii = s =>
+  region r in
+    let i = r.ref 0
+    f => map(s) of x =>
+      i := !i + 1
+      f(!i, x)
+//│ Type: ⊤
 
-
+:e
+region r in
+  let sum = r.ref 0
+  let s1 = mkList of !sum
+  let s2 = mapii(s1) of (x, i) => x * i
+  !sum + head(s2)
+//│ ╔══[ERROR] Type error in block
+//│ ║  l.123: 	  let sum = r.ref 0
+//│ ║         	            ^^^^^^^
+//│ ║  l.124: 	  let s1 = mkList of !sum
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.125: 	  let s2 = mapii(s1) of (x, i) => x * i
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.126: 	  !sum + head(s2)
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'eff  <:  ⊥
+//│ ╟── because: cannot constrain  'eff  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ ¬'r  <:  ¬()
+//│ ╟── because: cannot constrain    <:  'r
+//│ ╙── because: cannot constrain    <:  ¬()
+//│ ╔══[ERROR] Type error in block
+//│ ║  l.123: 	  let sum = r.ref 0
+//│ ║         	            ^^^^^^^
+//│ ║  l.124: 	  let s1 = mkList of !sum
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.125: 	  let s2 = mapii(s1) of (x, i) => x * i
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.126: 	  !sum + head(s2)
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'eff  <:  ⊥
+//│ ╟── because: cannot constrain  'eff  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ ¬'r1  <:  ¬()
+//│ ╟── because: cannot constrain    <:  'r1
+//│ ╙── because: cannot constrain    <:  ¬()
+//│ ╔══[ERROR] Type error in block
+//│ ║  l.123: 	  let sum = r.ref 0
+//│ ║         	            ^^^^^^^
+//│ ║  l.124: 	  let s1 = mkList of !sum
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.125: 	  let s2 = mapii(s1) of (x, i) => x * i
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.126: 	  !sum + head(s2)
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'eff  <:  ⊥
+//│ ╟── because: cannot constrain  'eff  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ ∧ ¬'r2  <:  ¬()
+//│ ╟── because: cannot constrain    <:  'r2
+//│ ╙── because: cannot constrain    <:  ¬()
+//│ Type: Int
