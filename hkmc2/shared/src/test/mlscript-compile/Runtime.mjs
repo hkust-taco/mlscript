@@ -627,7 +627,7 @@ Runtime1 = class Runtime {
   static runStackSafe(limit, f1) {
     let result, scrut, saved, tmp1, tmp2, tmp3;
     Runtime.stackLimit = limit;
-    Runtime.stackDepth = 0;
+    Runtime.stackDepth = 1;
     Runtime.stackOffset = 0;
     Runtime.stackHandler = Runtime.StackDelayHandler;
     tmp1 = Runtime.enterHandleBlock(Runtime.StackDelayHandler, f1);

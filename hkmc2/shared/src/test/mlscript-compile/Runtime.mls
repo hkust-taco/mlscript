@@ -288,7 +288,7 @@ fun resetDepth(tmp, curDepth) =
 fun runStackSafe(limit, f) =
   set
     stackLimit = limit
-    stackDepth = 0
+    stackDepth = 1
     stackOffset = 0
     stackHandler = StackDelayHandler
   let result = enterHandleBlock(StackDelayHandler, f)
