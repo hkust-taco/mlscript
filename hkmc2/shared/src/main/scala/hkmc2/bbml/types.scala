@@ -148,7 +148,7 @@ sealed abstract class BasicType extends Type:
     case InfVar(lvl, _, _, _) => lvl
     case FunType(args, ret, eff) =>
       (ret :: eff :: args).map(_.lvl).max
-    case RcdType(fields) => fields.values.map(_.lvl).max
+    case RcdType(fields) => fields.values.map(_.lvl).maxOption.getOrElse(0)
     case ComposedType(lhs, rhs, _) =>
       lhs.lvl.max(rhs.lvl)
     case NegType(ty) => ty.lvl
@@ -295,7 +295,26 @@ object Type:
     then lhs | rhs
     else lhs & rhs
   def mkNegType(ty: Type): Type = ty.!
-  def discriminant(a: Ls[Type]): (BasicType, Ls[Type]) = (a.head.toBasic.simp.toBasic, a.tail)
+  def discriminant(a: Ls[Type]): (RcdType, RcdType) =
+    discriminantRcd(RcdType(a.zipWithIndex.map(u => (s"${u._2}", u._1.toBasic))))
+  def discriminantRcd(a: RcdType): (RcdType, RcdType) =
+    val (u, w) = (a.fields.map:
+      case (a, t) =>
+        val (q, r) = discriminant(t.toBasic)
+        (RcdType(Ls(a -> q)), RcdType(Ls(a -> r)))
+    ).unzip
+    (u.reduce(_ & _), w.reduce(_ & _))
+  def discriminant(a: BasicType): (BasicType, BasicType) = a.simp.toBasic match
+    case Bot => (Bot, Bot)
+    case c@ClassLikeType(_, Nil) => (c, Top)
+    case ClassLikeType(c, t) => (ClassLikeType(c, t.map(_ => Wildcard.empty)), a)
+    case a@RcdType(_ :: _) => discriminantRcd(a)
+    case a@ComposedType(l, r, true) => ((discriminant(l.toBasic)._1 | discriminant(r.toBasic)._1).toBasic, a)
+    case ComposedType(l, r, false) =>
+      val (u, w) = discriminant(l.toBasic)
+      val (q, p) = discriminant(r.toBasic)
+      ((u & q).toBasic, (w & p).toBasic)
+    case a => (Top, a)
   def disjointImpl(a: BasicType, b: BasicType)(prev: Set[BasicType -> BasicType])
     (using c: MutMap[BasicType -> BasicType, Opt[Set[Set[InfVar->BasicType]]]])
     : Opt[Set[Set[InfVar->BasicType]]] =

@@ -61,8 +61,6 @@ fun mapi = s =>
 //│ ║  l.53: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'f ->{'E1} List[out 'B]  <:  ((Int, A) ->{E} A) ->{E} List[out A]
-//│ ╟── because: cannot constrain  (Int, A) ->{E} A  <:  'f
-//│ ╟── because: cannot constrain  (Int, A) ->{E} (A)  <:  'f
 //│ ╟── because: cannot constrain  'E1  <:  E
 //│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
@@ -80,8 +78,6 @@ fun mapi = s =>
 //│ ║  l.53: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'f ->{'E1} List[out 'B]  <:  ((Int, A) ->{E} A) ->{E} List[out A]
-//│ ╟── because: cannot constrain  (Int, A) ->{E} A  <:  'f
-//│ ╟── because: cannot constrain  (Int, A) ->{E} (A)  <:  'f
 //│ ╟── because: cannot constrain  'E1  <:  E
 //│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
@@ -99,8 +95,6 @@ fun mapi = s =>
 //│ ║  l.53: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'f ->{'E1} List[out 'B]  <:  ((Int, A) ->{E} A) ->{E} List[out A]
-//│ ╟── because: cannot constrain  (Int, A) ->{E} A  <:  'f
-//│ ╟── because: cannot constrain  (Int, A) ->{E} (A)  <:  'f
 //│ ╟── because: cannot constrain  'E1  <:  E
 //│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
@@ -125,13 +119,13 @@ region r in
   let s2 = mapii(s1) of (x, i) => x * i
   !sum + head(s2)
 //│ ╔══[ERROR] Type error in block
-//│ ║  l.123: 	  let sum = r.ref 0
+//│ ║  l.117: 	  let sum = r.ref 0
 //│ ║         	            ^^^^^^^
-//│ ║  l.124: 	  let s1 = mkList of !sum
+//│ ║  l.118: 	  let s1 = mkList of !sum
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.125: 	  let s2 = mapii(s1) of (x, i) => x * i
+//│ ║  l.119: 	  let s2 = mapii(s1) of (x, i) => x * i
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.126: 	  !sum + head(s2)
+//│ ║  l.120: 	  !sum + head(s2)
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'eff  <:  ⊥
 //│ ╟── because: cannot constrain  'eff  <:  ¬()
@@ -139,13 +133,13 @@ region r in
 //│ ╟── because: cannot constrain    <:  'r
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ ╔══[ERROR] Type error in block
-//│ ║  l.123: 	  let sum = r.ref 0
+//│ ║  l.117: 	  let sum = r.ref 0
 //│ ║         	            ^^^^^^^
-//│ ║  l.124: 	  let s1 = mkList of !sum
+//│ ║  l.118: 	  let s1 = mkList of !sum
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.125: 	  let s2 = mapii(s1) of (x, i) => x * i
+//│ ║  l.119: 	  let s2 = mapii(s1) of (x, i) => x * i
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.126: 	  !sum + head(s2)
+//│ ║  l.120: 	  !sum + head(s2)
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'eff  <:  ⊥
 //│ ╟── because: cannot constrain  'eff  <:  ¬()
@@ -153,13 +147,13 @@ region r in
 //│ ╟── because: cannot constrain    <:  'r1
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ ╔══[ERROR] Type error in block
-//│ ║  l.123: 	  let sum = r.ref 0
+//│ ║  l.117: 	  let sum = r.ref 0
 //│ ║         	            ^^^^^^^
-//│ ║  l.124: 	  let s1 = mkList of !sum
+//│ ║  l.118: 	  let s1 = mkList of !sum
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.125: 	  let s2 = mapii(s1) of (x, i) => x * i
+//│ ║  l.119: 	  let s2 = mapii(s1) of (x, i) => x * i
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.126: 	  !sum + head(s2)
+//│ ║  l.120: 	  !sum + head(s2)
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'eff  <:  ⊥
 //│ ╟── because: cannot constrain  'eff  <:  ¬()

@@ -116,16 +116,27 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
           if k.subsetOf(um.keySet) then
             k.foreach(k => constrainImpl(um(k), wm(k)))
           else cctx.err
-        case (Inter(S(u: RcdType)), Union(f, Nil, rs@(RcdType(w) :: z))) =>
+        case (Inter(S(u: RcdType)), Union(f, Nil, rs@(RcdType(w) :: _))) =>
           val um = u.fields.toMap
           val k = w.keys.toSet
           if k.subsetOf(um.keySet) then
             val r = RcdType(um.filterKeys(k(_)).toList)
-            val ws = rs.filter(w => Type.disjoint(w, r).isEmpty)
-            if ws.nonEmpty then
-              // TODO
-              constrainImpl(u, ws.reduce(_ & _))
-            else cctx.err
+            rs.filter(w => Type.disjoint(w, r).isEmpty) match
+              case Nil => cctx.err
+              case w :: Nil => constrainImpl(u, w)
+              case ws@(RcdType(w) :: RcdType(z) :: _) =>
+                val (wm, zm) = (w.toMap, z.toMap)
+                k.filter(k => Type.disjoint(wm(k), zm(k)) === S(Set.empty)).toList match
+                  case Nil => ???
+                  case k :: Nil =>
+                    val (ku, i) = ws.foldLeft((Bot: Type, RcdType(Nil))):
+                      case ((ku, i), RcdType(w)) =>
+                        val (a :: _, b) = w.partition(_._1 === k)
+                        (ku | a._2, i & RcdType(b))
+                    constrainImpl(um(k), ku)
+                    constrainImpl(u, i)
+                  case _ =>
+                    constrainImpl(u, ws.reduce(_ & _))
           else cctx.err
         case (Inter(S(fs: Ls[FunType])), Union(S(FunType(args2, ret2, eff2)), Nil, Nil)) =>
           val k = args2.flatMap(x => Type.disjoint(x, x))
@@ -138,16 +149,26 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
                 constrainImpl(f.ret, ret2)
                 constrainImpl(f.eff, eff2)
             else
-              val args = f.map(x => Type.discriminant(x.args))
-
+              val dargs = f.map(x => Type.discriminant(x.args))
+              val ks = if f.nonEmpty then
+                dargs.iterator.map(_._1.fields.keys.toSet).reduce(_ & _)
+              else Set.empty
+              val args = dargs.map:
+                case (u, w) =>
+                  val (q, p) = u.fields.partition(x => ks(x._1))
+                  (RcdType(q), RcdType(p) & w)
+              val args2r = args2.zipWithIndex.map(u => (s"${u._2}", u._1))
+              val args2q = RcdType(args2r.filter(x => ks(x._1)))
               val (cs, dss) = (args.iterator.zip(f).map:
                 case ((q, r), f) =>
-                  val cs = (f.ret, ret2) :: (f.eff, eff2) :: args2.tail.zip(r)
-                  Type.disjoint(q, args2.head) match
+                  val rm = r.fields.toMap
+                  val rcs = args2r.flatMap(u => rm.get(u._1).filter(_ =/= Top).map(u._2 -> _))
+                  val cs = (f.ret, ret2) :: (f.eff, eff2) :: rcs
+                  Type.disjoint(q, args2q) match
                     case N => (cs, Nil)
                     case S(k) =>
                       (Nil, k.map(k => DisjSub(mutable.LinkedHashSet.from(k), Nil, cs)))).toList.unzip
-              val c = (args2.head, args.foldLeft(Bot: Type) { case (t, (q, _)) => t | q })
+              val c = (args2q, args.foldLeft(Bot: Type) { case (t, (q, _)) => t | q })
               if k.isEmpty then
                 if f.isEmpty then
                   cctx.err
@@ -156,8 +177,10 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
                   constrainImpl(c._1, c._2)
                   cs.flatten.foreach(u => constrainImpl(u._1, u._2))
               else
+                val cs0 = c :: cs.flatten
+                val dss0 = dss.flatten
                 k.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
-                  DisjSub(mutable.LinkedHashSet.from(k), dss.flatten, c :: cs.flatten).commit()
+                  DisjSub(mutable.LinkedHashSet.from(k), dss0, cs0).commit()
         case _ =>
           // raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
           cctx.err

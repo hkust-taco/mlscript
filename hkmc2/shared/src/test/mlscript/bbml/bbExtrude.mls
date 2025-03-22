@@ -45,6 +45,21 @@ y `=> (let t = run(x `=> x `+ y) in y)
 //│ ╟── because: cannot constrain  y  <:  'x1
 //│ ╙── because: cannot constrain  y  <:  ¬()
 //│ Type: CodeBase[out 'y -> 'y, ⊥, ?]
+//│ Where:
+//│   'y <: Int
+//│   'x#Int ∨ 'cde1#Int ∨ 'y#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥
+//│   'cde1#Int ∨ 'y#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥
+//│   'x2 <: ¬(¬{Int})
+//│   'x2 <: 'x
+//│   'x <: ¬(¬{Int})
+//│   'x#Int ∨ 'cde1#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥
+//│   'x <: 'cde1
+//│   'cde1 <: ¬(¬{Int})
+//│   'cde1#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥
+//│   'y <: 'cde2
+//│   'cde2 <: ¬(¬{Int})
+//│   'cde <: 'cde3
+//│   'app <: ¬(¬'cde)
 
 data class C[A](m: A, n: A -> Int)
 //│ Type: ⊤
@@ -60,7 +75,7 @@ g
 
 
 f(g)
-//│ Type: (¬C[?] ∨ C[in Int out ⊥]) ->{⊥} Int
+//│ Type: ((¬C[?] ∨ C[in Int out ⊥]) ∧ (¬C[?] ∨ C[?])) ->{⊥} Int
 
 fun foo: C[in Int out Nothing]
 foo
@@ -76,7 +91,7 @@ f(g)(foo)
 :fixme // ???
 f(g)(bar)
 //│ ╔══[ERROR] Type error in reference with expected type 'A
-//│ ║  l.77: 	f(g)(bar)
+//│ ║  l.92: 	f(g)(bar)
 //│ ║        	     ^^^
 //│ ╟── because: cannot constrain  C[Int]  <:  'A
 //│ ╟── because: cannot constrain  C[in Int out Int]  <:  'A

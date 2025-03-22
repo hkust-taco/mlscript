@@ -38,18 +38,17 @@ show
 fun inc(dbg) =
   x `=> let c = x `+ `1 in let t = dbg(c) in c
 inc
-//│ Type: ['x, 'cde, 'cde1, 'app, 'app1, 'eff, 'cde2, 'x1] -> (CodeBase[out 'app1, ?, ?] ->{'eff} ⊤) ->{'eff} CodeBase[out 'x -> 'cde2, ⊥, ?]
+//│ Type: ['x, 'cde, 'app, 'app1, 'eff, 'cde1, 'x1] -> (CodeBase[out 'app1, ?, ?] ->{'eff} ⊤) ->{'eff} CodeBase[out 'x -> 'cde1, ⊥, ?]
 //│ Where:
 //│   'x <: Int
 //│   'x <: 'x1
 //│   'x1 <: Int
-//│   'x1#Int ∨ 'cde#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥ ∧ 'cde1<:Int
+//│   'x1#Int ∨ 'cde#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥
 //│   'x1 <: 'cde
 //│   'cde <: Int
-//│   'cde#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥ ∧ 'cde1<:Int
-//│   Int <: 'cde1
-//│   'cde2 <: ⊤
-//│   'app <: 'cde2
+//│   'cde#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥
+//│   'cde1 <: ⊤
+//│   'app <: 'cde1
 //│   'app <: 'app1
 
 inc(c => log(show(c)))
@@ -58,11 +57,10 @@ inc(c => log(show(c)))
 //│   'x1 <: Int
 //│   'x1 <: 'x
 //│   'x <: Int
-//│   'x#Int ∨ 'cde1#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥ ∧ 'cde2<:Int
+//│   'x#Int ∨ 'cde1#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥
 //│   'x <: 'cde1
 //│   'cde1 <: Int
-//│   'cde1#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥ ∧ 'cde2<:Int
-//│   Int <: 'cde2
+//│   'cde1#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥
 //│   'cde <: ⊤
 //│   'app <: 'cde
 //│   'app <: 'app1
@@ -89,7 +87,7 @@ fun body(x, y) = case
   1 then y
   n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
 //│ ╔══[ERROR] Type error in application with expected type CodeBase[out Int, out G, ?]
-//│ ║  l.90: 	  n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
+//│ ║  l.88: 	  n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  CodeBase[out 'cde, out 'ctx ∨ 'ctx1, ?]  <:  CodeBase[out Int, out G, ?]
 //│ ╟── because: cannot constrain  'ctx ∨ 'ctx1  <:  G

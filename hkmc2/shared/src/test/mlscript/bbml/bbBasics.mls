@@ -166,7 +166,7 @@ fun f() = new Printer(foofoo)
 f
 //│ Type: ['T, 'x] -> () -> Printer['T]
 //│ Where:
-//│   'T#'T ∨  ∧ 'T<:'x ∧ Str<:Str ∧ ⊥<:⊥
+//│   'T#'T ∨ (  'T#⊤ ∨  ∧ Str<:Str ∧ ⊥<:⊥ ∧ 'T<:'x) ∧ {0: 'T}<:{0: ⊤}
 //│   'x <: Int
 
 f().Printer#f(42)
@@ -216,7 +216,7 @@ fun inc(x) = x + 1
 new TFun(inc)
 //│ Type: TFun['T]
 //│ Where:
-//│   'T#'T ∨  ∧ 'T<:'x ∧ Int<:'T ∧ ⊥<:⊥
+//│   'T#'T ∨ (  'T#⊤ ∨  ∧ Int<:'T ∧ ⊥<:⊥ ∧ 'T<:'x) ∧ {0: 'T}<:{0: ⊤}
 //│   'x <: ¬¬Int
 
 let tf = new TFun(inc) in tf.TFun#f(1)
@@ -339,7 +339,7 @@ f
 f(x => x).Foo#x
 //│ Type: ('A) ->{⊥} 'A
 //│ Where:
-//│   'A#'A ∨  ∧ 'A<:'x ∧ 'x<:'A ∧ ⊥<:⊥
+//│   'A#'A ∨ (  'A#⊤ ∨  ∧ 'x<:'A ∧ ⊥<:⊥ ∧ 'A<:'x) ∧ {0: 'A}<:{0: ⊤}
 
 g => (new Foo(g)).Foo#x
 //│ Type: ('A -> 'A) ->{⊥} ('A) ->{⊥} 'A
