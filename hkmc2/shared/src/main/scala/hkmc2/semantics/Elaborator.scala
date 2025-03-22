@@ -63,13 +63,16 @@ object Elaborator:
     def ++(locals: IterableOnce[Str -> Symbol]): Ctx =
       copy(outer, env = env ++ locals.mapValues(Ctx.RefElem(_)))
     def elem_++(locals: IterableOnce[Str -> Ctx.Elem]): Ctx =
-      copy(outer, env = env ++ locals)
+      copy(outer, env = env ++ locals.iterator.filter: kv =>
+        // * Imports should not shadow symbols defined in the same scope;
+        // * but they should be allowed to shadow previous imports.
+        env.get(kv._1).forall(_.isImport))
     
     def withMembers(members: Iterable[Str -> MemberSymbol[?]], out: Opt[Symbol] = N): Ctx =
       copy(env = env ++ members.map:
         case (nme, sym) =>
           val elem = out orElse outer.inner match
-            case S(outer) => Ctx.SelElem(outer, sym.nme, S(sym))
+            case S(outer) => Ctx.SelElem(outer, sym.nme, S(sym), isImport = false)
             case N => Ctx.RefElem(sym)
           nme -> elem
       )
@@ -156,14 +159,16 @@ object Elaborator:
       def nme: Str
       def ref(id: Tree.Ident)(using Elaborator.State): Term
       def symbol: Opt[Symbol]
-    final case class RefElem(val sym: Symbol) extends Elem:
+      def isImport: Bool
+    final case class RefElem(sym: Symbol) extends Elem:
       val nme = sym.nme
       def ref(id: Tree.Ident)(using Elaborator.State): Term =
         // * Note: due to symbolic ops, we may have `id.name =/= nme`;
         // * e.g., we can have `id.name = "|>"` and `nme = "pipe"`.
         Term.Ref(sym)(id, 666) // FIXME: 666 is a temporary placeholder
       def symbol = S(sym)
-    final case class SelElem(val base: Elem, val nme: Str, val symOpt: Opt[FieldSymbol]) extends Elem:
+      def isImport: Bool = false
+    final case class SelElem(base: Elem, nme: Str, symOpt: Opt[FieldSymbol], isImport: Bool) extends Elem:
       def ref(id: Tree.Ident)(using Elaborator.State): Term =
         // * Same remark as in RefElem#ref
         Term.SynthSel(base.ref(Ident(base.nme)),
@@ -890,14 +895,16 @@ extends Importer:
                   baseElem.symbol match
                   case S(sym: BlockMemberSymbol) if sym.modOrObjTree.isDefined =>
                     sym.modOrObjTree.get.definedSymbols.map:
-                      case (nme, sym) => nme -> Ctx.SelElem(baseElem, sym.nme, S(sym))
+                      case (nme, sym) => nme -> Ctx.SelElem(baseElem, sym.nme, S(sym), isImport = true)
                   case _ =>
                     raise(ErrorReport(msg"Wildcard 'open' not supported for this kind of symbol." -> baseId.toLoc :: Nil))
                     Nil
                 case S(sts) => sts.flatMap:
                   case id: Ident =>
+                    if ctx.env.contains(id.name) then
+                      raise(WarningReport(msg"Imported name '${id.name}' is shadowed by a name already defined in the same scope" -> id.toLoc :: Nil))
                     val sym = resolveField(id, baseElem.symbol, id)
-                    val e = Ctx.SelElem(baseElem, id.name, sym)
+                    val e = Ctx.SelElem(baseElem, id.name, sym, isImport = true)
                     id.name -> e :: Nil
                   case t =>
                     raise(ErrorReport(msg"Illegal 'open' statement element." -> t.toLoc :: Nil))
