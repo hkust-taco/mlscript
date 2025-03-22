@@ -1,5 +1,4 @@
 :js
-:global
 :llir
 :cpp
 
@@ -34,15 +33,6 @@ fun bar(x) =
   x + 1
 foo(1)
 //│ = 2
-//│ LLIR:
-//│   
-//│   def bar$587(x$589) =
-//│     let x$595 = +(x$589,1) in
-//│     x$595
-//│   def entry$597() =
-//│     let* (x$596) = foo(1) in
-//│     x$596
-//│   entry = entry$597
 //│ 
 //│ WholeProgramCpp:
 //│ #include "mlsprelude.h"

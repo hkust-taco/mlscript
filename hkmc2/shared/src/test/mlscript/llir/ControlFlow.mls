@@ -2,8 +2,6 @@
 :llir
 :cpp
 
-:global
-
 :sllir
 :intl
 fun f1() =

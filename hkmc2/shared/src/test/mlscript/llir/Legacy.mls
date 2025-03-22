@@ -2,8 +2,6 @@
 :llir
 :cpp
 
-:global
-
 :intl
 class Pair[A, B](x: A, y: B)
 fun mktup2(x, y) = mktup(x, y)

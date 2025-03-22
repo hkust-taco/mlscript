@@ -2,8 +2,6 @@
 :llir
 :cpp
 
-:global
-
 :sllir
 object None
 fun testCtor1() = None

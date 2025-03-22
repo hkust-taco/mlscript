@@ -2,8 +2,6 @@
 :llir
 :cpp
 
-:global
-
 :intl
 :sllir
 :scpp

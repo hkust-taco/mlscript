@@ -1,7 +1,5 @@
 :llir
 
-:global
-
 abstract class Iter[T]
 object Done
 class Yield(n)
