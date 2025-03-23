@@ -44,43 +44,6 @@ fun maxLevel(ls) = if ls is
 
 fun complete(csp, s) = if csp is CSP(v, _, _) then maxLevel(s) == v
 
-fun generate(csp) =
-  fun g(vals, var_) =
-    fun lscomp1(ls) = if ls is
-      Nil then Nil
-      val_ :: t1 then
-        fun lscomp2(ls) = if ls is
-          Nil then lscomp1(t1)
-          st :: t2 then (Assign(var_, val_) :: st) :: lscomp2(t2)
-        lscomp2(g(vals, var_ - 1))
-    if var_ == 0 then
-      Nil :: Nil
-    else
-      lscomp1(enumFromTo(1, vals))
-  
-  if csp is CSP(vars, vals, rel) then g(vals, vars)
-
-
-fun inconsistencies(csp, as_) = if csp is CSP(vars, vals, rel) then
-  fun lscomp1(ls) = if ls is
-    Nil then Nil
-    a :: t1 then
-      fun lscomp2(ls) = if ls is
-        Nil then lscomp1(t1)
-        b :: t2 and
-          a > b and not(rel(a, b)) then [level(a), (b)] :: lscomp2(t2)
-          else lscomp2(t2)
-      lscomp2(reverse(as_))
-  
-  lscomp1(as_)
-
-
-fun consistent(csp, x) = null_(inconsistencies(csp, x))
-
-fun test(csp) = filter(consistent(csp))
-
-fun solver(csp) = test(csp, generate(csp))
-
 fun safe(as1, as2) = if as1 is Assign(i, m) and as2 is Assign(j, n) then not(m == n) and not(abs(i - j) == abs(m - n))
 
 fun queens(n) = CSP(n, n, safe)
