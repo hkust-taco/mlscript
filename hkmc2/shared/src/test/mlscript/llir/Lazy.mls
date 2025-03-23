@@ -6,7 +6,7 @@ fun lazy(x) = Lazy(x)
 fun force(x) = if x is Lazy then x.Lazy#get()
 type LazyList[out T] = Lazy[LzList[T]]
 abstract class LzList[out T]: LzCons[T] | LzNil
-class LzCons[out T](head: T, tail: LazyList[T]) extends LzList[T]
+data class LzCons[out T](head: T, tail: LazyList[T]) extends LzList[T]
 object LzNil extends LzList
 
 :sllir
@@ -22,23 +22,23 @@ fun main() =
 main()
 //│ LLIR:
 //│   class Lambda_lambda() extends Callable {
-//│     def apply0$633() =
-//│       let* (x$634) = side_effect() in
-//│       x$634
+//│     def apply0$635() =
+//│       let* (x$636) = side_effect() in
+//│       x$636
 //│   }
-//│   def side_effect$608() =
-//│     let* (x$628) = <builtin>("println","executed") in
+//│   def side_effect$610() =
+//│     let* (x$630) = <builtin>("println","executed") in
 //│     1
-//│   def main$607() =
-//│     let x$636 = Lambda_lambda$630() in
-//│     let* (x$637) = lazy(x$636) in
-//│     let* (x$638) = force(x$637) in
-//│     let* (x$639) = force(x$637) in
+//│   def main$609() =
+//│     let x$638 = Lambda_lambda$632() in
+//│     let* (x$639) = lazy(x$638) in
+//│     let* (x$640) = force(x$639) in
+//│     let* (x$641) = force(x$639) in
 //│     undefined
-//│   def entry$641() =
-//│     let* (x$640) = main() in
-//│     x$640
-//│   entry = entry$641
+//│   def entry$643() =
+//│     let* (x$642) = main() in
+//│     x$642
+//│   entry = entry$643
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"

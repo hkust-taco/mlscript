@@ -107,6 +107,16 @@ class Interpreter(tl: TraceLogger):
         xs <- evalArgs(args)
         cls <- ctx.classCtx.get(cls).toRight(StuckExpr(expr, s"undefined class ${cls.nme}"))
       yield Value.Class(cls, xs)
+    case Select(name, cls, field) if field.forall(_.isDigit) =>
+      val nth = field.toInt
+      ctx.bindingCtx.get(name).toRight(StuckExpr(expr, s"undefined variable $name")).flatMap {
+        case Value.Class(cls2, xs) if cls == cls2.name =>
+          xs.lift(nth) match
+            case Some(x) => R(x)
+            case None => L(StuckExpr(expr, s"unable to find selected field $field"))
+        case Value.Class(cls2, xs) => L(StuckExpr(expr, s"unexpected class $cls2"))
+        case x => L(StuckExpr(expr, s"unexpected value $x"))
+      }
     case Select(name, cls, field) =>
       ctx.bindingCtx.get(name).toRight(StuckExpr(expr, s"undefined variable $name")).flatMap {
         case Value.Class(cls2, xs) if cls == cls2.name =>

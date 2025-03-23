@@ -3,45 +3,45 @@
 :cpp
 
 :intl
-class Pair[A, B](x: A, y: B)
+data class Pair[A, B](x: A, y: B)
 fun mktup2(x, y) = mktup(x, y)
 fun mktup(x, y) = Pair(x, y)
 fun foo() =
   mktup2(1, 2)
 foo()
-//│ = Pair()
+//│ = Pair(1, 2)
 //│ 
 //│ Interpreted:
 //│ Pair(1,2)
 
 :intl
-class Pair[A, B](x: A, y: B)
+data class Pair[A, B](x: A, y: B)
 fun foo(pair) =
   if pair is
     Pair(x, y) then Pair(x, y)
 fun bar() =
   foo(Pair(1, 2))
 bar()
-//│ = Pair()
+//│ = Pair(1, 2)
 //│ 
 //│ Interpreted:
 //│ Pair(1,2)
 
 :intl
-class Pair[A, B](x: A, y: B)
+data class Pair[A, B](x: A, y: B)
 fun foo(pair) =
   if pair is
     Pair(x, y) then Pair(x, y)
 fun bar() =
   foo(Pair(1, 2))
 bar()
-//│ = Pair()
+//│ = Pair(1, 2)
 //│ 
 //│ Interpreted:
 //│ Pair(1,2)
 
 :intl
-class Pair[A, B](x: A, y: B)
+data class Pair[A, B](x: A, y: B)
 fun silly(pair) =
   let x = 0
   let n = if pair is
@@ -54,13 +54,13 @@ fun foo() =
     let b = silly(a)
     b
 foo()
-//│ = NaN
+//│ = 2
 //│ 
 //│ Interpreted:
 //│ 2
 
 :intl
-class Pair[A, B](x: A, y: B)
+data class Pair[A, B](x: A, y: B)
 fun inc_fst(pair) =
   let c = 2
   if pair is
@@ -70,13 +70,13 @@ fun foo() =
     let b = inc_fst(a)
     b
 foo()
-//│ = NaN
+//│ = 2
 //│ 
 //│ Interpreted:
 //│ 2
 
 :intl
-class Pair[A, B](x: A, y: B)
+data class Pair[A, B](x: A, y: B)
 fun inc_fst(pair) =
   let x = 0
   if pair is
@@ -85,7 +85,7 @@ fun foo() =
     let b = inc_fst(Pair(0, 1))
     b
 foo()
-//│ = NaN
+//│ = 2
 //│ 
 //│ Interpreted:
 //│ 2
@@ -206,7 +206,7 @@ foo()
 
 :intl
 abstract class Option[out T]: Some[T] | None
-class Some[out T](x: T) extends Option[T]
+data class Some[out T](x: T) extends Option[T]
 object None extends Option
 fun not(x) =
   if x then false else true
@@ -215,18 +215,18 @@ fun foo(x) =
        else Some(foo(not(x)))
 fun main() = foo(false)
 main()
-//│ = Some()
+//│ = Some(None)
 //│ 
 //│ Interpreted:
 //│ Some(None())
 
 :intl
 abstract class Option[out T]: Some[T] | None
-class Some[out T](x: T) extends Option[T]
+data class Some[out T](x: T) extends Option[T]
 object None extends Option
 fun fromSome(s) = if s is Some(x) then x
 abstract class Nat: S[Nat] | O
-class S(s: Nat) extends Nat
+data class S(s: Nat) extends Nat
 object O extends Nat
 fun aaa() =
   let m = 1
@@ -339,10 +339,10 @@ main()
 :todo "this is a bug because we use reference equality to locate the split point, but the reference changed after previous iteration"
 :intl
 abstract class Option[out T]: Some[T] | None
-class Some[out T](x: T) extends Option[T]
+data class Some[out T](x: T) extends Option[T]
 object None extends Option
 abstract class List[out T]: Cons[T] | Nil
-class (::) Cons[out T](head: T, tail: List[T]) extends List[T]
+data class (::) Cons[out T](head: T, tail: List[T]) extends List[T]
 object Nil extends List
 fun head_opt(l) =
   if l is
@@ -364,10 +364,10 @@ main()
 
 :intl
 abstract class Option[out T]: Some[T] | None
-class Some[out T](x: T) extends Option[T]
+data class Some[out T](x: T) extends Option[T]
 object None extends Option
 abstract class List[out T]: Cons[T] | Nil
-class (::) Cons[out T](head: T, tail: List[T]) extends List[T]
+data class (::) Cons[out T](head: T, tail: List[T]) extends List[T]
 object Nil extends List
 fun mk_list(n) =
   if n == 0 then Nil else Cons(n, mk_list(n - 1))
@@ -416,7 +416,7 @@ main()
 
 :intl
 abstract class Option[out T]: Some[T] | None
-class Some[out T](x: T) extends Option[T]
+data class Some[out T](x: T) extends Option[T]
 object None extends Option
 fun is_some(o) =
   if o is
@@ -444,7 +444,7 @@ fun f(x) =
 fun main() =
   f(Some(2)) + f(None)
 main()
-//│ = NaN
+//│ = 115
 //│ 
 //│ Interpreted:
 //│ 115

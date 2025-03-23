@@ -1,9 +1,10 @@
 :llir
 
+:intl
 abstract class Iter[T]
 object Done
-class Yield(n)
-class Map(f, it)
+data class Yield(n)
+data class Map(f, it)
 fun done(it) = if it is Done then true else false
 fun map(f, it) = Map(f, it)
 fun dec(n) = Yield(n)
@@ -19,12 +20,16 @@ fun fold(acc, it) =
   if next(it) is [n, it] then
     if done(it) then acc else fold(n + acc, it)
 fun map_sum(f, n) = let it = map(f, dec(n)) in fold(0, it)
-map_sum(x => x, 2000000)
+map_sum(x => x, 200)
+//│ 
+//│ Interpreted:
+//│ 20100
 
+:intl
 abstract class Iter[T]
 object Done
-class Yield(n)
-class Map(f, it)
+data class Yield(n)
+data class Map(f, it)
 fun done(it) = if it is Done then true else false
 fun map(f, it) = Map(f, it)
 fun dec(n) = Yield(n)
@@ -44,4 +49,7 @@ fun fold(acc, iter) = if iter is
     if next(it) is [n, it] then
       if it is Done then acc else fold(f(n) + acc, Map(f, it))
 fun map_sum(f, n) = let it = map(f, dec(n)) in fold(0, it)
-map_sum(x => x, 2000000)
+map_sum(x => x, 200)
+//│ 
+//│ Interpreted:
+//│ 20100
