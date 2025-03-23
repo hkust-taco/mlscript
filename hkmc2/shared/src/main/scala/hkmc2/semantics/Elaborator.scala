@@ -292,7 +292,7 @@ extends Importer:
   trace[Term](s"Elab term ${tree.showDbg}", r => s"~> $r"):
     def maybeApp(t: Term): Ctxl[Term] =
       if !inAppPrefix && !inTyAppPrefix // to ensure that nested App/TyApp are only wrapped once.
-      then maybeModuleMethodApp(t)
+      then maybeFunctionApp(t)
       else t
     tree.desugared match
     case unt @ Unt() => unit.withLocOf(unt)
@@ -379,13 +379,13 @@ extends Importer:
         msg"Unsupported handle binding shape" ->
           h.toLoc :: Nil))
       Term.Error
-    case id @ Ident("this") =>
+    case id @ Ident("this") => maybeApp:
       ctx.getOuter match
       case S(sym) => sym.ref(id)
       case N =>
         raise(ErrorReport(msg"Cannot use 'this' outside of an object scope." -> tree.toLoc :: Nil))
         Term.Error
-    case id @ Ident(name) =>
+    case id @ Ident(name) => maybeApp:
       ctx.get(name) match
       case S(elem) => elem.ref(id)
       case N =>
@@ -507,38 +507,6 @@ extends Importer:
       val sym = FlowSymbol("‹app-res›")
       val lt = term(lhs, inAppPrefix = true)
       val rt = term(rhs)
-      
-      // Check if module arguments match module parameters
-      val args = rt match
-        case Term.Tup(fields) => S(fields)
-        case _ => N
-      if args.exists:
-        _.exists:
-          case spd: Spd => false
-          case fld: Fld => fld.flags.mod
-      then
-        val params = lt.symbol
-          .collect:
-            case sym: BlockMemberSymbol => sym.trmTree
-          .flatten
-          .collect:
-            case td: TermDef => td.paramLists.headOption
-          .flatten
-        for
-          (args, params) <- (args zip params)
-          (arg, param) <- (args zip params.fields)
-        do
-          arg match
-          case spd: Spd =>
-            TODO(spd)
-          case arg: Fld =>
-            val argMod = arg.flags.mod
-            val paramMod = param.isModuleModifier
-            if argMod && !paramMod then raise:
-              ErrorReport:
-                msg"Only module parameters may receive module arguments (values)." -> 
-                arg.toLoc :: Nil
-      
       maybeApp:
         Term.App(lt, rt)(tree, sym)
     case SynthSel(pre, nme) =>
@@ -743,8 +711,11 @@ extends Importer:
     // case _ =>
     //   ???
   
-  /** Module method applications that require further elaboration with type information. */
-  def maybeModuleMethodApp(t: Term): Ctxl[Term] =
+  /** 
+   * Function (as opposed to method) applications 
+   * that may require further elaboration with type information. 
+   */
+  def maybeFunctionApp(t: Term): Ctxl[Term] =
     // * Some function definitions might not be fully elaborated yet.
     // * We need to do some very lightweight tree parsing here.
     case class Param(ctx: Bool)(tree: Tree)
@@ -780,16 +751,26 @@ extends Importer:
         t
       case (_, Nil) => t
     
+    /**
+     * An extractor that extracts the (tree) definition of a module method.
+     */
+    object FunctionTreeDef:
+      def unapply(t: Term): Opt[Tree.TermDef] = t.symbol match
+        case S(sym: BlockMemberSymbol) => sym.trmTree match
+          case S(tree @ Tree.TermDef(k = Fun)) => S(tree)
+          case _ => N
+        case _ => N
+    
     t match
-      // M.f[T](foo)(bar)
-      case semantics.Apps(Term.TyApp(ModuleChecker.MethodTreeDef(tree), _), argss) =>
+      // f[T](foo)(bar)
+      case semantics.Apps(Term.TyApp(FunctionTreeDef(tree), _), argss) =>
         trace[Term](s"Elab module method application ${t.showDbg}", r => s"~> $r"):
           zip(t, tree.paramLists.map(paramList).reverse)
-      // M.f(foo)(bar)
-      case semantics.Apps(ModuleChecker.MethodTreeDef(tree), argss) =>
+      // f(foo)(bar)
+      case semantics.Apps(FunctionTreeDef(tree), argss) =>
         trace[Term](s"Elab module method application ${t.showDbg}", r => s"~> $r"):
           zip(t, tree.paramLists.map(paramList).reverse)
-      // Not a module method application.
+      // The definition does not exist.
       case _ =>
         t
   
@@ -1010,7 +991,7 @@ extends Importer:
           case R(id) =>
             val sym = members.getOrElse(id.name, die)
             val owner = ctx.outer.inner
-            val isModMember = owner.exists(_.isInstanceOf[ModuleSymbol])
+            val isMethod = owner.exists(_.isInstanceOf[ClassSymbol])
             val nonLocalRetHandler = TempSymbol(N, s"nonLocalRetHandler$$${id.name}")
             val tdf = ctx.nest(OuterCtx.Function(nonLocalRetHandler)).givenIn:
               // * Add type parameters to context
@@ -1042,37 +1023,13 @@ extends Importer:
                 val htd = HandlerTermDefinition(resumeSym, td)
                 Term.Handle(nonLocalRetHandler, state.nonLocalRetHandlerTrm, Nil, clsSym, htd :: Nil, inner)
               val r = FlowSymbol(s"‹result of ${sym}›")
-              val tdf = TermDefinition(owner, k, sym, pss, tps, s, nb, r, 
-                TermDefFlags.empty.copy(isModMember = isModMember), annotations)
-              sym.defn = S(tdf)
-              
-              // indicates if the function really returns a module
-              // TODO: check non-local returns (see [test:T4])
-              val em = b.exists(ModuleChecker.evalsToModule)
               // indicates if the function marks its result as "module"
-              val mm = st match
+              val isModTyped = st match
                 case Some(TypeDef(Mod, _, N, N)) => true
                 case _ => false
-              
-              // checks rules regarding module methods
-              s match
-                case N if em => raise:
-                  ErrorReport:
-                    msg"Functions returning module values must have explicit return types." ->
-                    td.head.toLoc :: Nil
-                case S(t) if em && ModuleChecker.isTypeParam(t) => raise:
-                  ErrorReport:
-                    msg"Functions returning module values must have concrete return types." ->
-                    td.head.toLoc :: Nil
-                case S(_) if em && !mm => raise:
-                  ErrorReport:
-                    msg"The return type of functions returning module values must be prefixed with module keyword." ->
-                    td.head.toLoc :: Nil
-                case S(_) if mm && !isModMember => raise:
-                  ErrorReport:
-                    msg"Only module methods may return module values." ->
-                    td.head.toLoc :: Nil
-                case _ => ()
+              val tdf = TermDefinition(owner, k, sym, pss, tps, s, nb, r, 
+                TermDefFlags.empty.copy(isMethod = isMethod, isModTyped = isModTyped), annotations)
+              sym.defn = S(tdf)
               
               tdf
             go(sts, Nil, tdf :: acc)
@@ -1148,7 +1105,7 @@ extends Importer:
                   Nil, N, N,
                   S(Term.Ref(p.sym)(p.sym.id, 666)), // FIXME: 666 is a dummy value
                   FlowSymbol("‹class-param-res›"),
-                  TermDefFlags.empty.copy(isModMember = k is Mod),
+                  TermDefFlags.empty.copy(isMethod = (k is Cls)),
                   Nil
                 )
                 sym.defn = S(fdef)
@@ -1296,14 +1253,7 @@ extends Importer:
   def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Opt[Opt[Bool] -> Param]] =
     def go(t: Tree, inUsing: Bool, flags: FldFlags): Ctxl[Opt[Opt[Bool] -> Param]] = t match
     case TypeDef(Mod, inner, N, N) =>
-      val ps = go(inner, inUsing, flags.copy(mod = true))
-      for p <- ps if p._2.flags.mod do p._2.sign match
-        case N =>
-          raise(ErrorReport(msg"Module parameters must have explicit types." -> t.toLoc :: Nil))
-        case S(ret) if ModuleChecker.isTypeParam(ret) => 
-          raise(ErrorReport(msg"Module parameters must have concrete types." -> t.toLoc :: Nil))
-        case _ => ()
-      ps
+      go(inner, inUsing, flags.copy(mod = true))
     case TypeDef(Pat, inner, N, N) =>
       go(inner, inUsing, flags.copy(pat = true))
     case TermDef(ImmutVal, inner, _) =>
@@ -1387,7 +1337,7 @@ extends Importer:
   class VarianceTraverser(var changed: Bool = true) extends Traverser:
     override def traverseType(pol: Pol)(trm: Term): Unit = trm match
       case Term.TyApp(lhs, targs) =>
-        lhs.symbol.flatMap(sym => sym.asTpe orElse sym.asMod) match
+        lhs.symbol.flatMap(sym => sym.asTpe orElse sym.asMod orElse sym.asObj) match
           case S(sym: ClassSymbol) =>
             sym.defn match
             case S(td: ClassDef) =>

@@ -171,6 +171,7 @@ fold(+) of
 
 :todo
 :re
+:e
 fold(+)()
 
 fold(tuple) of
@@ -192,6 +193,9 @@ foldr(tuple)(0, 1, 2, 3)
 :todo
 :re
 foldr(+)()
+//│ ╔══[ERROR] Expected at least 1 arguments, got 0
+//│ ║  l.195: 	foldr(+)()
+//│ ╙──       	^^^^^
 
 
 // An alternative implementation of foldr

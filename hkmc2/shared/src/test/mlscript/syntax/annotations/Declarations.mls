@@ -1,6 +1,6 @@
 :js
 
-module tailrec
+object tailrec
 
 tailrec
 //│ = tailrec
@@ -69,7 +69,7 @@ module Foo with
 //│ ║  l.67: 	@(1 + 2) class Qux
 //│ ╙──      	  ^^^^^
 
-module inline
+object inline
 
 :w
 // All functions are annotated with @inline.

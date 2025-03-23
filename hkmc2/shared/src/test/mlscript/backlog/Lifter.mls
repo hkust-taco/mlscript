@@ -85,21 +85,21 @@ f(1, 2).get()
 
 :todo
 :w
-fun foo(x, n) =
+fun foo1(x, n) =
   class C()
   let res = if x is C then "Y" else "N"
-  if n > 0 then res + foo(C(), n - 1) else ""
+  if n > 0 then res + foo1(C(), n - 1) else ""
 //│ ═══[WARNING] Cannot yet lift class/module `C` as it is used in an instance check.
 
 :todo // should return the function that creates C instances
 :w
-fun foo() =
+fun foo2() =
   class C()
   C
 //│ ═══[WARNING] Cannot yet lift class `C` as it is used as a first-class class.
 
 :w
-fun foo() =
+fun foo3() =
   class C()
   fun f = C()
   C
@@ -107,9 +107,8 @@ fun foo() =
 
 :todo
 :expect "NN"
-foo(0, 2)
-//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 0 arguments but got 2
-//│ ═══[RUNTIME ERROR] Expected: '"NN"', got: 'undefined'
+foo1(0, 2)
+//│ = "NN"
 
 // Since B extends A and A is not lifted, B cannot access A's BlockMemberSymbol. We can't lift B.
 :todo

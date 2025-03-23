@@ -93,6 +93,9 @@ fun keepIfGreaterThan(x, y) =
 :fixme
 1
   . keepIfGreaterThan(0)
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.95: 	  . keepIfGreaterThan(0)
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'keepIfGreaterThan' expected 2 arguments but got 1
 
 
@@ -101,6 +104,9 @@ fun keepIfGreaterThan(x, y) =
   . keepIfGreaterThan(0)
   . isDefined()
   . console.log()
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.104: 	  . keepIfGreaterThan(0)
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'keepIfGreaterThan' expected 2 arguments but got 1
 
 

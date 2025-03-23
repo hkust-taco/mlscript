@@ -144,8 +144,9 @@ cls.foo
 cls.bar
 //│ = 22
 
+module M
 
-fun foo() =
+fun foo(): module M =
   if false then
     module A
     A
@@ -200,7 +201,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[ERROR] Name not found: Runtime
-//│ ║  l.201: 	Runtime
+//│ ║  l.202: 	Runtime
 //│ ╙──       	^^^^^^^
 
 

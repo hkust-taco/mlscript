@@ -92,6 +92,7 @@ enum Term extends Statement:
     case Ref(sym) => "reference"
     case App(lhs, rhs) => "application"
     case TyApp(lhs, targs) => "type application"
+    case Sel(pre, nme) => "selection"
     case SynthSel(pre, nme) => "selection"
     case Tup(fields) => "tuple literal"
     case IfLike(Keyword.`if`, body) => "`if` expression"
@@ -115,6 +116,7 @@ enum Term extends Statement:
     case Deref(ref) => "dereference"
     case Throw(e) => "throw"
     case Annotated(annotation, target) => "annotation"
+    case Ret(res) => "return"
 end Term
 
 import Term.*
@@ -278,10 +280,15 @@ final case class RcdSpread(rcd: Term) extends Statement
 
 final case class DefineVar(sym: LocalSymbol, rhs: Term) extends Statement
 
-final case class TermDefFlags(isModMember: Bool, isModTyped: Bool):
+/**
+ * isMethod: if the term is a method (as opposed to a function)
+ * isModTyped: if the term's return type is marked as `module`.
+ */
+final case class TermDefFlags(isMethod: Bool, isModTyped: Bool):
   def showDbg: Str = 
     val flags = Buffer.empty[String]
-    if isModMember then flags += "module"
+    if isMethod then flags += "method"
+    if isModTyped then flags += "modTyped"
     flags.mkString(" ")
   override def toString: String = "‹" + showDbg + "›"
 
@@ -517,10 +524,8 @@ final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extend
 final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term]) 
 extends Declaration with AutoLocated:
   def subTerms: Ls[Term] = sign.toList
-  override protected def children: List[Located] = subTerms
-  // def children: Ls[Located] = self.value :: self.asc.toList ::: Nil
-  // def showDbg: Str = flags.showDbg + sym.name + ": " + sign.showDbg
-  def showDbg: Str = flags.showDbg + sym + sign.fold("")(": " + _.showDbg)
+  override protected def children: List[Located] = sym :: sign.toList
+  def showDbg: Str = flags.toString + sym + sign.fold("")(": " + _.showDbg)
 
 final case class ParamList(flags: ParamListFlags, params: Ls[Param], restParam: Opt[Param])
 extends AutoLocated:

@@ -75,7 +75,7 @@ case
 //│ = [function]
 
 data class Some(value)
-module None
+object None
 
 :sjs
 val isDefined = case
@@ -86,7 +86,7 @@ val isDefined = case
 //│ lambda11 = (undefined, function (caseScrut) {
 //│   if (caseScrut instanceof Some1.class) {
 //│     return true
-//│   } else if (caseScrut instanceof None1) {
+//│   } else if (caseScrut instanceof None1.class) {
 //│     return false
 //│   } else {
 //│     throw new globalThis.Error("match error");

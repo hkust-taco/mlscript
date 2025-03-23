@@ -611,7 +611,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         case N => 
           // * All contextual arguments should have been
           // * populated by implicit resolution before lowering.
-          die
+          lastWords(s"Found unpopulated contextual argument: ${ca}.")
     // * The straightforward way to lower arguments creates too much recursion depth
     // * and makes Lowering stack overflow when lowering functions with lots of arguments.
     /* 

@@ -30,6 +30,9 @@ Mod.|>
 //│ ╔══[ERROR] Name not found: .|>
 //│ ║  l.26: 	Mod.|>
 //│ ╙──      	   ^^^
+//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ║  l.26: 	Mod.|>
+//│ ╙──      	^^^
 
 
 1 |> x => print(x)
@@ -40,17 +43,17 @@ Mod.|>
 :e
 open Mod { |> }
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found end of input instead
-//│ ║  l.41: 	open Mod { |> }
+//│ ║  l.44: 	open Mod { |> }
 //│ ╙──      	              ^
 //│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.41: 	open Mod { |> }
+//│ ║  l.44: 	open Mod { |> }
 //│ ╙──      	     ^^^^^^^^^
 
 
 :e
 open Mod { (|>) }
 //│ ╔══[ERROR] Illegal 'open' statement element.
-//│ ║  l.51: 	open Mod { (|>) }
+//│ ║  l.54: 	open Mod { (|>) }
 //│ ╙──      	           ^^^^
 
 12 |> print

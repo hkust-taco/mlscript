@@ -43,10 +43,10 @@ extension (t: Product)
       case xs: List[_] => "Ls of \n" + xs.iterator.map(aux(_)).mkString("\n").indent("  ")
       case xs: Vector[_] => "Vector of \n" + xs.iterator.map(aux(_)).mkString("\n").indent("  ")
       case s: String => s.escaped
-      case TermDefFlags(isModMember, isModTyped) =>
+      case TermDefFlags(isMethod, isModTyped) =>
         val flags = Buffer.empty[String]
-        if isModMember then flags += "modMember"
-        if isModMember then flags += "modTyped"
+        if isMethod then flags += "method"
+        if isModTyped then flags += "modTyped"
         flags.mkString("(", ", ", ")")
       case FldFlags(mut, spec, genGetter, mod, pat, value) =>
         val flags = Buffer.empty[String]

@@ -27,8 +27,12 @@ foo(1, 2, 3)
 
 fun foo(a, ...b) = [a, ...b]
 
+:e
 :re
 foo()
+//│ ╔══[ERROR] Expected at least 1 arguments, got 0
+//│ ║  l.32: 	foo()
+//│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected at least 1 argument but got 0
 
 
@@ -38,6 +42,6 @@ fun foo(1) = 2
 
 :todo // proper error
 fun foo(...1) = 2
-//│ /!!!\ Uncaught error: scala.MatchError: Spread(keyword '...',Some(Loc(8,11,BadSpreads.mls:+40)),Some(IntLit(1))) (of class hkmc2.syntax.Tree$Spread)
+//│ /!!!\ Uncaught error: scala.MatchError: Spread(keyword '...',Some(Loc(8,11,BadSpreads.mls:+44)),Some(IntLit(1))) (of class hkmc2.syntax.Tree$Spread)
 
 
