@@ -162,7 +162,24 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
     case Neg(rhs) =>
       mono(rhs, !pol).!
     case CompType(lhs, rhs, pol) =>
-      Type.mkComposedType(typeMonoType(lhs), typeMonoType(rhs), pol)
+      val (l, r) = (typeMonoType(lhs), typeMonoType(rhs))
+      if !pol then
+        val lfa = l.toDnf.conjs.flatMap(_.i.v).collect:
+          case (f :: fs) =>
+            val fd = Type.discriminant(f.args)._1
+            fs.foldLeft(fd: Type, fd.fields.keys.toSet): (x, y) =>
+              val d = Type.discriminant(y.args)._1
+              (x._1 | d, x._2 & d.fields.keys.toSet)
+        val rfa = r.toDnf.conjs.flatMap(_.i.v).collect:
+          case (f :: fs) =>
+            val fd = Type.discriminant(f.args)._1
+            fs.foldLeft(fd: Type, fd.fields.keys.toSet): (x, y) =>
+              val d = Type.discriminant(y.args)._1
+              (x._1 | d, x._2 & d.fields.keys.toSet)
+        val d = lfa.iterator.flatMap(x => rfa.iterator.map(y => (x, y))).exists:
+          case ((x, u), (y, w)) => (u & w).isEmpty || Type.disjoint(x, y) =/= S(Set.empty)
+        if d then error(msg"Ill-formed functions intersection" -> ty.toLoc :: Nil)
+      Type.mkComposedType(l, r, pol)
     case _ =>
       ty.symbol.flatMap(_.asTpe) match
       case S(cls: (ClassSymbol | TypeAliasSymbol)) => typeAndSubstType(Term.TyApp(ty, Nil), pol)

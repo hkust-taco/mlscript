@@ -117,27 +117,27 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
             k.foreach(k => constrainImpl(um(k), wm(k)))
           else cctx.err
         case (Inter(S(u: RcdType)), Union(f, Nil, rs@(RcdType(w) :: _))) =>
-          val um = u.fields.toMap
           val k = w.keys.toSet
-          if k.subsetOf(um.keySet) then
-            val r = RcdType(um.filterKeys(k(_)).toList)
-            rs.filter(w => Type.disjoint(w, r).isEmpty) match
-              case Nil => cctx.err
-              case w :: Nil => constrainImpl(u, w)
-              case ws@(RcdType(w) :: RcdType(z) :: _) =>
-                val (wm, zm) = (w.toMap, z.toMap)
-                k.filter(k => Type.disjoint(wm(k), zm(k)) === S(Set.empty)).toList match
-                  case Nil => ???
-                  case k :: Nil =>
-                    val (ku, i) = ws.foldLeft((Bot: Type, RcdType(Nil))):
-                      case ((ku, i), RcdType(w)) =>
-                        val (a :: _, b) = w.partition(_._1 === k)
-                        (ku | a._2, i & RcdType(b))
-                    constrainImpl(um(k), ku)
-                    constrainImpl(u, i)
-                  case _ =>
-                    constrainImpl(u, ws.reduce(_ & _))
-          else cctx.err
+          val r = RcdType(u.fields.filter(p => k(p._1)))
+          val ws = rs.foldLeft(Nil): (x, w) =>
+            val d = Type.disjoint(w, r)
+            if d === S(Set.empty) then x else Ls(d -> w) ++ x
+          ws match
+            case Nil => cctx.err
+            case (_, w) :: Nil => constrainImpl(u, w)
+            case ((_, RcdType(w)) :: (_, RcdType(z)) :: _) =>
+              val (wm, zm) = (w.toMap, z.toMap)
+              val dk = k.find(k => Type.disjoint(wm(k), zm(k)) === S(Set.empty)).get
+              val ku = ws.foldLeft(Bot: Type):
+                case (ku, (_, w)) => ku | w.fields.find(_._1 === dk).get._2
+              ws.foreach:
+                case (S(k), w) => k.foreach: k =>
+                  DisjSub(mutable.LinkedHashSet.from(k), Nil, Ls(u -> RcdType(w.fields.filter(_._1 =/= k)))).commit()
+                case _ =>
+              constrainImpl(r.fields.find(_._1 === dk).get._2, ku)
+              ws.foreach:
+                case (N, w) => constrainImpl(u, RcdType(w.fields.filter(_._1 =/= dk)))
+                case _ =>
         case (Inter(S(fs: Ls[FunType])), Union(S(FunType(args2, ret2, eff2)), Nil, Nil)) =>
           val k = args2.flatMap(x => Type.disjoint(x, x))
           if k.forall(_.nonEmpty) then
