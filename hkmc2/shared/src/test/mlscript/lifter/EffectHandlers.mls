@@ -1,0 +1,20 @@
+:js
+:lift
+
+fun f() = 3
+
+:fixme
+:effectHandlers
+module A with
+  data class Test with
+    f()
+    val a = 1
+//│ /!!!\ Uncaught error: hkmc2.InternalError: `this` not in scope: class:Test
+
+// caused by: ValDefn inside continuation class was still using the old `this`
+:fixme
+:effectHandlers
+class Test with
+  f()
+  val aaaaaaa = 1
+//│ /!!!\ Uncaught error: hkmc2.InternalError: `this` not in scope: class:Test

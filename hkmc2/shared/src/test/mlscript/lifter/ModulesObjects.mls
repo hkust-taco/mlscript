@@ -286,3 +286,56 @@ fun foo(x) =
 
 foo(123)
 //│ = [true, [true, false], true]
+
+:fixme
+module A with
+  val a = (() => 1)()
+//│ ═══[RUNTIME ERROR] TypeError: A9.lambda is not a function
+
+// This is related to the above, but it will look into the ignored bms map
+:fixme
+module A with
+  val x =
+    fun f() = 1
+    f()
+//│ ═══[RUNTIME ERROR] TypeError: A11.f is not a function
+
+
+// NOTE: This problem have a related test in codegen/Modules.mls with comment "report initialization problem or make it work"
+// Maybe we can assign A11 to A12 inside the static block?
+:sjs
+:fixme
+module A with
+  fun g = 1
+  fun f = () => g
+  f()
+//│ JS (unsanitized):
+//│ let A14, lambda;
+//│ lambda = (undefined, function () {
+//│   return A14.g
+//│ });
+//│ A14 = class A13 {
+//│   static {
+//│     A13.f()
+//│   }
+//│   static get g() {
+//│     return 1;
+//│   } 
+//│   static get f() {
+//│     return lambda;
+//│   }
+//│   static toString() { return "A"; }
+//│ };
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'g')
+
+// private variables in modules, this should at least not fail silently...
+:fixme
+module A with
+  let x = 1
+  fun mtd =
+    fun nested() = x
+    nested()
+A.mtd
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+
+

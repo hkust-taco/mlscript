@@ -86,3 +86,21 @@ data class Foo(static)
 //│   }
 //│   toString() { return "Foo(" + globalThis.Predef.render(this.static) + ")"; }
 //│ };
+
+
+:fixme
+data class Foo(v')
+//│ JS (unsanitized):
+//│ let Foo13;
+//│ Foo13 = function Foo(v$_1) {
+//│   return new Foo.class(v$_1);
+//│ };
+//│ Foo13.class = class Foo12 {
+//│   constructor(v$_) {
+//│     this.v' = v$_;
+//│   }
+//│   toString() { return "Foo(" + globalThis.Predef.render(this.v') + ")"; }
+//│ };
+//│ > let Foo13;try { Foo13 = function Foo(...args) {   return new Foo.class(...args); }; Foo13.class = class Foo12 {   constructor(v$_) {     this.v' = v$_;   }   toString() { return "Foo(" + globalThis.Predef.render(this.v') + ")"; } }; block$res7 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string
