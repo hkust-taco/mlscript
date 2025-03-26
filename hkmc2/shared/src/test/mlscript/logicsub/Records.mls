@@ -1,0 +1,84 @@
+:bbml
+//│ Type: ⊤
+
+//│ Type: ⊤
+
+{}
+//│ Type: ⊤
+
+let r = {}
+//│ Type: ⊤
+
+{1}
+//│ Type: Int
+
+{1, 2}
+//│ Type: Int
+
+{foo: 1}
+//│ Type: {foo: Int}
+
+let rcd = { foo: 1, bar: "..." }
+//│ Type: ⊤
+
+:todo
+[rcd.foo, rcd.bar]
+//│ ╔══[ERROR] Term shape not yet supported by BbML: Tup(List(Fld(‹›,Sel(Ref(rcd),Ident(foo)),None), Fld(‹›,Sel(Ref(rcd),Ident(bar)),None)))
+//│ ║  l.25: 	[rcd.foo, rcd.bar]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
+//│ Type: ⊥
+
+:todo // IntLit as label?
+"0": rcd.foo
+"1": rcd.bar
+//│ Type: {0: Int, 1: Str}
+
+fun id(x) = x
+//│ Type: ⊤
+
+id of (x: 1)
+//│ Type: {x: Int}
+
+:todo
+id of { x: 1 }
+//│ Type: Str
+
+id of ({ x: 1 })
+//│ Type: {x: Int}
+
+id of ({ x: 1, y: 2 })
+//│ Type: {x: Int, y: Int}
+
+id of (x: 1, y: 2)
+//│ Type: {x: Int, y: Int}
+
+// * FIXME: handling of record arguments in resolver/checker
+:fixme
+id of { x: 1, y: 2 }
+//│ ╔══[ERROR] Incorrect number of arguments
+//│ ║  l.57: 	id of { x: 1, y: 2 }
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
+//│ Type: ⊥
+
+:todo
+fun f(x) =
+  x: x.a
+  y: x.b
+f of (a: 1, b: true)
+//│ ╔══[ERROR] Type error in record with expected type 'x
+//│ ║  l.67: 	f of (a: 1, b: true)
+//│ ║        	      ^^^^^^^
+//│ ╟── because: cannot constrain  {a: Int, b: Bool}  <:  'x
+//│ ╟── because: cannot constrain  {a: Int, b: Bool}  <:  'x
+//│ ╟── because: cannot constrain  {a: Int, b: Bool}  <:  ¬¬{a: 'sel}
+//│ ╟── because: cannot constrain  Int  <:  'sel
+//│ ╟── because: cannot constrain  Int  <:  'sel
+//│ ╙── because: cannot constrain  Int  <:  ¬¬{b: 'sel1}
+//│ Type: {x: Int, y: ⊥}
+
+x: 1
+y: x
+//│ Type: {x: Int, y: Int}
+
+(x => (x: 1, y: x))("")
+//│ Type: {x: Int, y: Int}

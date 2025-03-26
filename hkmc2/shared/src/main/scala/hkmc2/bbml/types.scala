@@ -273,6 +273,11 @@ case class RcdType(fields: Ls[Str -> Type]) extends BasicType with CachedNorm[Rc
     RcdType(fields.mapValues(_.subst))
   def & (that: RcdType): RcdType =
     RcdType((fields ++ that.fields).groupMapReduce(_._1)(_._2)(_ & _).toList)
+  def flatten: RcdType =
+    RcdType(fields.flatMap: u =>
+      (u._1, u._2.toBasic.simp.toBasic) match
+        case (a, r: RcdType) => r.flatten.fields.map(u => (s"$a.${u._1}", u._2))
+        case u => Ls(u))
 
 case class ComposedType(lhs: Type, rhs: Type, pol: Bool) extends BasicType: // * Positive -> union
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
@@ -296,7 +301,7 @@ object Type:
     else lhs & rhs
   def mkNegType(ty: Type): Type = ty.!
   def discriminant(a: Ls[Type]): (RcdType, RcdType) =
-    discriminantRcd(RcdType(a.zipWithIndex.map(u => (s"${u._2}", u._1.toBasic))))
+    discriminantRcd(RcdType(a.zipWithIndex.map(u => (s"${u._2}", u._1.toBasic))).flatten)
   def discriminantRcd(a: RcdType): (RcdType, RcdType) =
     val (u, w) = (a.fields.map:
       case (a, t) =>

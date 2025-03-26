@@ -159,6 +159,13 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
           ClassLikeType(tpeSym, ts)
       case N =>
         error(msg"Not a valid class: ${cls.describe}" -> cls.toLoc :: Nil)
+    case Term.Tup(fields) =>
+      // TODO
+      // denote record type by Tup for now
+      val u = fields.map:
+        case Fld(_, Lit(StrLit(a)), S(t)) => (a, typeMonoType(t))
+        case _ => ???
+      RcdType(u)
     case Neg(rhs) =>
       mono(rhs, !pol).!
     case CompType(lhs, rhs, pol) =>
@@ -430,7 +437,37 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
     case ft: PolyFunType =>
       ft.monoOr(error(msg"Expected a monomorphic type or an instantiable type here, but ${ty.show} found" -> sc.toLoc :: Nil))
     case ty: Type => ty
-  
+
+  def goStats(stats: Ls[Statement])(using ctx: BbCtx, scope: Scope, cctx: CCtx, effBuff: ListBuffer[Type]): Unit = stats match
+    case Nil => ()
+    case (term: Term) :: stats =>
+      effBuff += typeCheck(term)._2
+      goStats(stats)
+    case LetDecl(sym, _) :: DefineVar(sym2, rhs) :: stats =>
+      require(sym2 is sym)
+      val (rhsTy, eff) = typeCheck(rhs)
+      effBuff += eff
+      ctx += sym -> rhsTy
+      goStats(stats)
+    case TermDefinition(_, Fun, sym, ps :: Nil, _, sig, S(body), _, _, _) :: stats =>
+      typeFunDef(sym, Term.Lam(ps, body), sig, ctx)
+      goStats(stats)
+    case TermDefinition(_, Fun, sym, Nil, _, sig, S(body), _, _, _) :: stats =>
+      typeFunDef(sym, body, sig, ctx)  // * may be a case expressions
+      goStats(stats)
+    case TermDefinition(_, Fun, sym1, _, _, S(sig), None, _, _, _) :: (td @ TermDefinition(_, Fun, sym2, _, _, _, S(body), _, _, _)) :: stats
+      if sym1 === sym2 => goStats(td :: stats) // * avoid type check signatures twice
+    case TermDefinition(_, Fun, sym, _, _, S(sig), None, _, _, _) :: stats =>
+      ctx += sym -> typeType(sig)
+      goStats(stats)
+    case (clsDef: ClassDef) :: stats =>
+      goStats(stats)
+    case (modDef: ModuleDef) :: stats =>
+      goStats(stats)
+    case Import(sym, pth) :: stats =>
+      goStats(stats) // TODO:
+    case stat :: _ =>
+      TODO(stat)
   private def typeCheck(t: Term)(using ctx: BbCtx, scope: Scope): (GeneralType, Type) =
   trace[(GeneralType, Type)](s"${ctx.lvl}. Typing ${t.showDbg}", res => s": (${res._1.showDbg}, ${res._2.showDbg})"):
     given CCtx = CCtx.init(t, N)
@@ -447,38 +484,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
             (error(msg"Variable not found: ${sym.nme}"
               -> t.toLoc :: Nil), Bot)
       case Blk(stats, res) =>
-        val effBuff = ListBuffer.empty[Type]
-        def goStats(stats: Ls[Statement]): Unit = stats match
-          case Nil => ()
-          case (term: Term) :: stats =>
-            effBuff += typeCheck(term)._2
-            goStats(stats)
-          case LetDecl(sym, _) :: DefineVar(sym2, rhs) :: stats =>
-            require(sym2 is sym)
-            val (rhsTy, eff) = typeCheck(rhs)
-            effBuff += eff
-            ctx += sym -> rhsTy
-            goStats(stats)
-          case TermDefinition(_, Fun, sym, ps :: Nil, _, sig, S(body), _, _, _) :: stats =>
-            typeFunDef(sym, Term.Lam(ps, body), sig, ctx)
-            goStats(stats)
-          case TermDefinition(_, Fun, sym, Nil, _, sig, S(body), _, _, _) :: stats =>
-            typeFunDef(sym, body, sig, ctx)  // * may be a case expressions
-            goStats(stats)
-          case TermDefinition(_, Fun, sym1, _, _, S(sig), None, _, _, _) :: (td @ TermDefinition(_, Fun, sym2, _, _, _, S(body), _, _, _)) :: stats
-            if sym1 === sym2 => goStats(td :: stats) // * avoid type check signatures twice
-          case TermDefinition(_, Fun, sym, _, _, S(sig), None, _, _, _) :: stats =>
-            ctx += sym -> typeType(sig)
-            goStats(stats)
-          case (clsDef: ClassDef) :: stats =>
-            goStats(stats)
-          case (modDef: ModuleDef) :: stats =>
-            goStats(stats)
-          case Import(sym, pth) :: stats =>
-            goStats(stats) // TODO:
-          case stat :: _ =>
-            TODO(stat)
-        goStats(stats)
+        val effBuff: ListBuffer[Type] = ListBuffer.empty
+        goStats(stats)(using effBuff = effBuff)
         val (ty, eff) = typeCheck(res)
         (ty, effBuff.foldLeft(eff)((res, e) => res | e))
       case UnitVal() => (Top, Bot)
@@ -597,19 +604,19 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
         (Bot, eff)
       case Term.Error =>
         (Bot, Bot) // TODO: error type?
-      case Rcd(fields@((_: RcdField) :: _)) =>
-        val u = fields.collect:
-          case RcdField(Lit(StrLit(a)), t) => (a, t, typeCheck(t))
-        val (w, e) = u.foldRight((Nil: Ls[Str -> Type], Bot: Type)):
-          case ((a, t, (ty, e)), (w, e0)) => ((a -> tryMkMono(ty, t) :: w), e | e0)
-        (RcdType(w), e)
       case Rcd(stats) =>
         // TODO RcdSpread
         val (s, r) = stats.partitionMap: k =>
           k match
             case RcdField(Lit(_: StrLit), _) => R(k)
             case _ => L(k)
-        typeCheck(Blk(s, Rcd(r)))
+        val effBuff: ListBuffer[Type] = ListBuffer.empty
+        goStats(s)(using effBuff = effBuff)
+        val u = r.map:
+          case RcdField(Lit(StrLit(a)), t) => (a, t, typeCheck(t))
+        val (w, eff) = u.foldRight((Nil: Ls[Str -> Type], Bot: Type)):
+          case ((a, t, (ty, e)), (w, e0)) => ((a -> tryMkMono(ty, t) :: w), e | e0)
+        (RcdType(w), effBuff.foldLeft(eff)((res, e) => res | e))
       case Term.Sel(u, Ident(a)) =>
         val (ty, e) = typeCheck(u)
         val v = freshVar(new TempSymbol(S(t), "sel"))
