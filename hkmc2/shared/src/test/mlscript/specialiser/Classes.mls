@@ -7,8 +7,11 @@ class Simple(val x) with
     fun inner = x
 id(Simple(1))
 //│ JS (unsanitized):
-//│ let id, Simple1, id_class_Simple__val_x__l__inner__l_, id_arg0, $scrut0, tmp, tmp1;
+//│ let id, Simple1, id_class_Simple__val_x__l__inner__l_, id_arg0;
 //│ id = function id(x) {
+//│   return x
+//│ };
+//│ id_class_Simple__val_x__l__inner__l_ = function id_class_Simple__val_x__l__inner__l_(x) {
 //│   return x
 //│ };
 //│ Simple1 = function Simple(x1) { return new Simple.class(x1); };
@@ -21,15 +24,9 @@ id(Simple(1))
 //│   }
 //│   toString() { return "Simple(" + globalThis.Predef.render(this.x) + ")"; }
 //│ };
-//│ id_class_Simple__val_x__l__inner__l_ = function id_class_Simple__val_x__l__inner__l_(x) {
-//│   return x
-//│ };
-//│ tmp = Simple1(1);
-//│ id_arg0 = tmp;
-//│ $scrut0 = id_arg0;
-//│ if ($scrut0 instanceof Simple1.class) {
-//│   tmp1 = Simple1(1);
-//│   id(tmp1)
+//│ id_arg0 = Simple1(1);
+//│ if (id_arg0 instanceof Simple1.class) {
+//│   runtime.safeCall(id_class_Simple__val_x__l__inner__l_(id_arg0))
 //│ } else {
 //│   throw new this.Error("match error");
 //│ }
@@ -42,7 +39,7 @@ class Some(val x) extends Option with
     fun unwrap = x
 Some(1).unwrap
 //│ JS (unsanitized):
-//│ let Some1, Option1, None1, tmp2;
+//│ let Some1, Option1, None1, tmp;
 //│ Option1 = class Option {
 //│   constructor() {}
 //│   toString() { return "Option"; }
@@ -64,8 +61,8 @@ Some(1).unwrap
 //│   }
 //│   toString() { return "Some(" + globalThis.Predef.render(this.x) + ")"; }
 //│ };
-//│ tmp2 = Some1(1);
-//│ tmp2.unwrap
+//│ tmp = Some1(1);
+//│ tmp.unwrap
 //│ = 1
 
 
@@ -78,8 +75,11 @@ fun id(spec x) = x
 let a = Some(1)
 id(a)
 //│ JS (unsanitized):
-//│ let Opt1, Some3, id1, None3, a, id_class_Some__val_value__l_, id_arg01, $scrut01, tmp3;
+//│ let Opt1, Some3, id1, None3, a, id_class_Some__val_value__l_, id_arg01, tmp1;
 //│ id1 = function id(x) {
+//│   return x
+//│ };
+//│ id_class_Some__val_value__l_ = function id_class_Some__val_value__l_(x) {
 //│   return x
 //│ };
 //│ Opt1 = class Opt {
@@ -100,15 +100,11 @@ id(a)
 //│   }
 //│   toString() { return "Some(" + globalThis.Predef.render(this.value) + ")"; }
 //│ };
-//│ tmp3 = Some3(1);
-//│ a = tmp3;
-//│ id_class_Some__val_value__l_ = function id_class_Some__val_value__l_(x) {
-//│   return x
-//│ };
+//│ tmp1 = Some3(1);
+//│ a = tmp1;
 //│ id_arg01 = a;
-//│ $scrut01 = id_arg01;
-//│ if ($scrut01 instanceof Some3.class) {
-//│   id1(a)
+//│ if (id_arg01 instanceof Some3.class) {
+//│   runtime.safeCall(id_class_Some__val_value__l_(id_arg01))
 //│ } else {
 //│   throw new this.Error("match error");
 //│ }
@@ -118,6 +114,6 @@ id(a)
 abstract class List[T]
 class Nil extends List
 class Cons[T](val head: T, val tail: List[T]) extends List[T]
-fun (::) cons[T](head: T, tail: List[T]) = Cons(head, tail)
+fun (::) cons[T](spec head: T, tail: List[T]) = Cons(head, tail)
 1 :: 2 :: 3 :: Nil
 //│ = Cons(1, Cons(2, Cons(3, class Nil extends List1 {   constructor() {     super();   }   toString() { return "Nil"; } })))

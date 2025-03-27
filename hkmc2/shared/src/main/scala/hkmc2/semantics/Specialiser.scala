@@ -14,74 +14,6 @@ import hkmc2.utils.TraceLogger
 class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborator.State):
   import tl.*
   
-  private val specialisationPoints = mutable.Map[Symbol, SpecPoint]()
-  
-  case class SpecPoint(
-    paramSym: Symbol,
-    parentFunctionSym: Symbol,
-    concreteTypes: mutable.Set[SimpleType] = mutable.Set.empty,
-    typeVars: mutable.Set[VariableState] = mutable.Set.empty,
-    flowsInto: mutable.Set[Symbol] = mutable.Set.empty
-  ):
-    def addConcrete(ty: SimpleType): Unit =
-      log(s"Adding concrete type $ty to spec point ${paramSym.nme}")
-      if concreteTypes.add(ty) then
-        flowsInto.foreach(sym => specialisationPoints.get(sym).foreach(_.addConcrete(ty)))
-        
-      
-    def addVar(vs: VariableState): Unit =
-      log(s"Adding var ${vs.uniqueName} to spec point ${paramSym.nme}")
-      typeVars += vs
-      
-    def updateFromVars(): Unit =
-      typeVars.foreach { vs =>
-        vs.upperBounds.foreach { bound =>
-          if isConcreteType(bound) then
-            log(s"Found concrete bound $bound for var ${vs.uniqueName} in spec point ${paramSym.nme}")
-            addConcrete(bound)
-        }
-      }
-    
-    def addFlow(targetSym: Symbol): Unit =
-      log(s"Adding flow from ${paramSym.nme} to ${targetSym}")
-      flowsInto += targetSym
-      specialisationPoints.get(targetSym).foreach { targetPoint =>
-        concreteTypes.foreach(targetPoint.addConcrete)
-        typeVars.foreach(targetPoint.addVar)
-      }
-    
-    override def toString: String = 
-      val typeStrs = concreteTypes.toList.map(ty => coalesceType(ty))
-      val flowsStr = if flowsInto.isEmpty then "" else s" flows into [${flowsInto.map(_.nme).mkString(", ")}]"
-      s"${paramSym.nme} in ${parentFunctionSym.nme} can be specialised for: [${typeStrs.mkString(", ")}]$flowsStr"
-  
-  case class ClassInfo(
-    sym: ClassSymbol,
-    memberSym: BlockMemberSymbol,
-    params: Ls[Str] = Nil,
-    supers: Ls[SimpleType] = Nil,
-    members: Map[Str, SimpleType] = Map.empty,
-    fields: Map[Str, SimpleType] = Map.empty
-  ):
-    override def toString: String = 
-      val superStr = if supers.isEmpty then "" else s" extends ${supers.mkString(" with ")}"
-      val fieldsStr = if fields.isEmpty then "" else fields.map { case (n, t) => s"val $n: $t" }.mkString(", ")
-      val membersStr = members.map { case (n, t) => s"$n: $t" }.mkString(", ")
-      val contentStr = (if fieldsStr.nonEmpty && membersStr.nonEmpty then s"$fieldsStr; $membersStr" 
-                        else fieldsStr + membersStr)
-      s"class ${sym.nme}$superStr { $contentStr }"
-  
-  object VariableState:
-    private var nextIdCounter = 0
-    def nextId =
-      val id = nextIdCounter
-      nextIdCounter += 1
-      id
-  
-  class VariableState(var lowerBounds: Ls[SimpleType] = Nil, var upperBounds: Ls[SimpleType] = Nil):
-    private val id = VariableState.nextId
-    val uniqueName: String = s"'${('a' + id % 26).toChar}${if id >= 26 then (id / 26).toString else ""}"
-  
   enum SimpleType:
     case Variable(state: VariableState)
     case Primitive(name: Str)
@@ -100,14 +32,112 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
   
   import SimpleType.*
   
+  object VariableState:
+    private var nextIdCounter = 0
+    def nextId =
+      val id = nextIdCounter
+      nextIdCounter += 1
+      id
+  
+  class VariableState(var lowerBounds: Ls[SimpleType] = Nil, var upperBounds: Ls[SimpleType] = Nil):
+    private val id = VariableState.nextId
+    val uniqueName: String = s"'${('a' + id % 26).toChar}${if id >= 26 then (id / 26).toString else ""}"
+  
+  def freshVar: Variable = Variable(VariableState())
+  
+  case class ClassInfo(
+    sym: ClassSymbol,
+    memberSym: BlockMemberSymbol,
+    params: Ls[Str] = Nil,
+    supers: Ls[SimpleType] = Nil,
+    members: Map[Str, SimpleType] = Map.empty,
+    fields: Map[Str, SimpleType] = Map.empty
+  ):
+    override def toString: String = 
+      val superStr = if supers.isEmpty then "" else s" extends ${supers.mkString(" with ")}"
+      val fieldsStr = if fields.isEmpty then "" else fields.map { case (n, t) => s"val $n: $t" }.mkString(", ")
+      val membersStr = members.map { case (n, t) => s"$n: $t" }.mkString(", ")
+      val contentStr = (if fieldsStr.nonEmpty && membersStr.nonEmpty then s"$fieldsStr; $membersStr" 
+                        else fieldsStr + membersStr)
+      s"class ${sym.nme}$superStr { $contentStr }"
+  
+  case class SpecPoint(
+    paramSym: Symbol,
+    parentFunctionSym: Symbol,
+    concreteTypes: mutable.Set[SimpleType] = mutable.Set.empty,
+    typeVars: mutable.Set[SimpleType] = mutable.Set.empty,
+    flowsInto: mutable.Set[Symbol] = mutable.Set.empty
+  ):
+    def addConcrete(ty: SimpleType): Unit =
+      log(s"Adding concrete type $ty to spec point ${paramSym.nme}")
+      if concreteTypes.add(ty) then flowsInto.foreach(sym => specialisationPoints.get(sym).foreach(_.addConcrete(ty)))
+      
+    def addVar(ty: SimpleType): Unit = ty match
+      case v @ Variable(vs) =>
+        log(s"Adding var ${vs.uniqueName} to spec point ${paramSym.nme}")
+        typeVars += v
+        vs.upperBounds.foreach(bound => if isConcreteType(bound) then addConcrete(bound))
+        vs.lowerBounds.foreach(bound => if isConcreteType(bound) then addConcrete(bound))
+      case f @ Function(lhs, rhs) =>
+        log(s"Adding function type ${f} to spec point ${paramSym.nme}")
+        typeVars += f
+        if isConcreteType(f) then addConcrete(f)
+      case r @ Record(_) =>
+        log(s"Adding record type ${r} to spec point ${paramSym.nme}")
+        typeVars += r
+        if isConcreteType(r) then addConcrete(r)
+      case other =>
+        log(s"Adding type ${other} to spec point ${paramSym.nme}")
+        if !isConcreteType(other) then typeVars += other
+        else addConcrete(other)
+    
+    def updateFromVars(): Unit =
+      def resolveToMostConcreteType(ty: SimpleType): SimpleType = ty match
+        case v @ Variable(vs) =>
+          val concreteBounds = vs.upperBounds.filter(isConcreteType) ++ vs.lowerBounds.filter(isConcreteType)
+          if concreteBounds.nonEmpty then concreteBounds.head else v
+        case Function(lhs, rhs) =>
+          Function(resolveToMostConcreteType(lhs), resolveToMostConcreteType(rhs))
+        case Record(fields) =>
+          Record(fields.map((name, t) => (name, resolveToMostConcreteType(t))))
+        case other => other
+      
+      typeVars.collect { case f: Function => f }.foreach { f =>
+        val concreteFunction = resolveToMostConcreteType(f)
+        log(s"Checking updated function ${f} -> ${concreteFunction}")
+        if isConcreteType(concreteFunction) then 
+          log(s"Function type became concrete after constraints: ${concreteFunction}")
+          addConcrete(concreteFunction)
+      }
+      
+      // Process variable types
+      typeVars.collect { case v: Variable => v }.foreach { v =>
+        v.state.upperBounds.foreach(bound => if isConcreteType(bound) then addConcrete(bound))
+        v.state.lowerBounds.foreach(bound => if isConcreteType(bound) then addConcrete(bound))
+      }
+    
+    def addFlow(targetSym: Symbol): Unit =
+      log(s"Adding flow from ${paramSym.nme} to ${targetSym}")
+      flowsInto += targetSym
+      specialisationPoints.get(targetSym).foreach { targetPoint =>
+        concreteTypes.foreach(targetPoint.addConcrete)
+        typeVars.foreach(targetPoint.addVar)
+      }
+    
+    override def toString: String = 
+      val typeStrs = concreteTypes.toList.map(ty => coalesceType(ty))
+      val flowsStr = if flowsInto.isEmpty then "" else s" flows into [${flowsInto.map(_.nme).mkString(", ")}]"
+      
+      s"${paramSym.nme} in ${parentFunctionSym.nme} can be specialised for: [${typeStrs.mkString(", ")}]$flowsStr"
+
+  private val specialisationPoints = mutable.Map[Symbol, SpecPoint]()
+  
   val IntType = Primitive("Int")
   val BoolType = Primitive("Bool")
   val StrType = Primitive("Str")
   val UnitType = Primitive("Unit")
   val AnyType = Primitive("Any")
   val NumType = Primitive("Num")
-  
-  def freshVar: Variable = Variable(VariableState())
   
   def isConcreteType(ty: SimpleType): Boolean = ty match
     case Variable(_) => false
@@ -152,26 +182,19 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
     log(s"Constraining ${lhs} <: ${rhs}")
     
     (lhs, rhs) match
-      case (concrete, SpecialisableType(specPoint, underlying)) =>
-        if isConcreteType(concrete) then
-          log(s"Recording concrete type ${concrete} for specialisation point ${specPoint.paramSym.nme}")
-          specPoint.addConcrete(concrete)
-        else 
-          concrete match
-            case Variable(vs) =>
-              log(s"Recording variable ${vs.uniqueName} for specialisation point ${specPoint.paramSym.nme}")
-              specPoint.addVar(vs)
-            case SpecialisableType(sourcePoint, _) => 
-              log(s"Recording flow from ${sourcePoint.paramSym.nme} to ${specPoint.paramSym.nme}")
-              sourcePoint.addFlow(specPoint.paramSym)
-            case _ => 
-              log(s"Non-concrete, non-variable type ${concrete} flowing into spec param ${specPoint.paramSym.nme}")
-        
+      case (concrete, SpecialisableType(specPoint, underlying)) if isConcreteType(concrete) =>
+        log(s"Recording concrete type ${concrete} for specialisation point ${specPoint.paramSym.nme}")
+        specPoint.addConcrete(concrete)
         constrain(concrete, underlying)
-        
-      case (SpecialisableType(specPoint, underlying), other) =>
-        constrain(underlying, other)
-        
+      case (spec @ SpecialisableType(sourcePoint, _), SpecialisableType(specPoint, underlying)) =>
+        log(s"Recording flow from ${sourcePoint.paramSym.nme} to ${specPoint.paramSym.nme}")
+        sourcePoint.addFlow(specPoint.paramSym)
+        constrain(spec, underlying)
+      case (concrete: (Variable | Function | Record), SpecialisableType(specPoint, underlying)) =>
+        log(s"Recording variable ${concrete} for specialisation point ${specPoint.paramSym.nme}")
+        specPoint.addVar(concrete)
+        constrain(concrete, underlying)
+      case (SpecialisableType(specPoint, underlying), other) => constrain(underlying, other)
       case (Primitive(n0), Primitive(n1)) if n0 == n1 => ()
       case (_, Primitive("Any")) => ()
       case (Primitive(n0), Primitive(n1)) if n0 == "Int" && n1 == "Num" => ()
@@ -197,21 +220,38 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
         lhs.lowerBounds.foreach(constrain(_, rhs))
         
         specialisationPoints.values.foreach { specPoint =>
-          if specPoint.typeVars.contains(lhs) && isConcreteType(rhs) then
-            log(s"Variable ${lhs.uniqueName} tracked by ${specPoint.paramSym.nme} now bound to concrete type $rhs")
-            specPoint.addConcrete(rhs)
+          if specPoint.typeVars.exists {
+            case Variable(vs) => vs == lhs
+            case _ => false
+          } then
+            if isConcreteType(rhs) then
+              log(s"Variable ${lhs.uniqueName} tracked by ${specPoint.paramSym.nme} now bound to concrete type $rhs")
+              specPoint.addConcrete(rhs)
+            else rhs match
+              case f @ Function(_, _) =>
+                log(s"Variable ${lhs.uniqueName} tracked by ${specPoint.paramSym.nme} now bound to function type $f")
+                specPoint.addVar(f)
+              case _ => ()
         }
         
       case (lhs, Variable(rhs)) =>
         rhs.lowerBounds = lhs :: rhs.lowerBounds
         rhs.upperBounds.foreach(constrain(lhs, _))
         
-        if isConcreteType(lhs) then
-          specialisationPoints.values.foreach { specPoint =>
-            if specPoint.typeVars.contains(rhs) then
+        specialisationPoints.values.foreach { specPoint =>
+          if specPoint.typeVars.exists {
+            case Variable(vs) => vs == rhs
+            case _ => false
+          } then
+            if isConcreteType(lhs) then
               log(s"Variable ${rhs.uniqueName} tracked by ${specPoint.paramSym.nme} now has concrete lower bound $lhs")
               specPoint.addConcrete(lhs)
-          }
+            else lhs match
+              case f @ Function(_, _) =>
+                log(s"Variable ${rhs.uniqueName} tracked by ${specPoint.paramSym.nme} now has function lower bound $f")
+                specPoint.addVar(f)
+              case _ => ()
+        }
           
       case (ClassType(info), Record(fields)) =>
         fields.foreach { case (fieldName, fieldType) =>
@@ -417,6 +457,25 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
             val resultType = freshVar
             constrain(prefixType, Record(List(name.name -> resultType)))
             resultType
+      case Lam(params, body) =>
+        log(s"Processing lambda with params: ${params.showDbg}")
+        val paramTypes = params.params.map { param =>
+          val paramType = freshVar
+          param.sym -> paramType
+        }.toMap
+        
+        val lambdaCtx = ctx ++ paramTypes
+        val bodyType = term(body)(using lambdaCtx)
+        
+        if params.params.length == 1 then
+          val paramSym = params.params.head.sym
+          val paramType = paramTypes.getOrElse(paramSym, freshVar)
+          Function(paramType, bodyType)
+        else
+          val recordType = Record(params.params.map(param => 
+            param.sym.nme -> paramTypes.getOrElse(param.sym, freshVar)
+          ))
+          Function(recordType, bodyType)
       case _ => freshVar
     
     log(s"❁ Type for ${t.showDbg}: ${coalesceType(typed)}")
@@ -533,6 +592,8 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
       .replace("->", "To")
       .replace("{", "")
       .replace("}", "")
+      .replace("(", "")
+      .replace(")", "")
       .replace(";", "_")
       .replace(":", "_")
       .replace("|", "Or")
@@ -574,12 +635,12 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
     case ClassType(info) =>
       val classSel = SynthSel(info.memberSym.ref(), Ident("class"))(Some(info.sym))
       Pattern.ClassLike(info.sym, classSel, None, false)(Tree.Empty())
-    case _: (Function | Lam) =>
+    case _: Function =>
       val funcSym = ectx.builtins.Function
       val classSel = SynthSel(funcSym.ref(), Ident("class"))(Some(funcSym.asCls.get))
       Pattern.ClassLike(funcSym.asCls.get, classSel, None, false)(Tree.Empty())
     case _ => Pattern.Lit(Tree.BoolLit(true))
-
+  
   class SpecCtx(
     val funcs: mutable.Buffer[TermDefinition] = mutable.Buffer.empty,
     val typeContext: mutable.Map[Symbol, Set[SimpleType]] = mutable.Map.empty
@@ -600,127 +661,105 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
           log(s"Using context-specific types for ${sp.paramSym.nme}: ${types.mkString(", ")}")
           types
         case _ => sp.concreteTypes.toSet
-
+  
   def generateCombinations[A, B](
     mappings: List[(A, Set[B])], 
     current: List[(A, B)] = Nil
   ): List[List[(A, B)]] = mappings match
     case Nil => List(current)
     case (sym, types) :: rest => types.toList.flatMap(ty => generateCombinations(rest, current :+ (sym -> ty)))
-      
   
   def process(term: Term)(using ctx: SpecCtx = new SpecCtx()): Term =
+    val specialsedFunctions = mutable.Map[String, Symbol]()
+    
+    def collectSpecialsedFunctions(t: Statement): Unit = t match
+      case Blk(stats, res) =>
+        stats.foreach:
+          case td: TermDefinition if td.sym.nme.contains('_') && 
+                                     specialisationPoints.values.exists(sp => td.sym.nme.startsWith(s"${sp.parentFunctionSym.nme}_")) =>
+            log(s"Registering specialsed function: ${td.sym.nme}")
+            specialsedFunctions(td.sym.nme) = td.sym
+          case Blk(innerStats, _) =>
+            innerStats.foreach(collectSpecialsedFunctions)
+          case _ =>
+        collectSpecialsedFunctions(res)
+      case _ =>
+    
     def go(t: Term): Term = t match
       case app @ App(lhs, rhs @ Tup(fields)) =>
         lhs match
           case Ref(funcSym) =>
             val specialisedIndices = getSpecialisedParamIndices(funcSym)
             
-            if specialisedIndices.isEmpty then app else
+            if specialisedIndices.isEmpty then
+              App(lhs, Tup(fields.map {
+                case Fld(flags, arg, asc) => Fld(flags, go(arg), asc)
+                case other => other
+              })(rhs.tree))(app.tree, app.resSym)
+            else
               log(s"Found function ${funcSym.nme} call with specialised params: ${specialisedIndices}")
               
-              val memberSymbols = specialisedIndices.map { idx =>
-                val argName = s"${funcSym.nme}_arg$idx"
+              val scrutSyms = specialisedIndices.map { idx =>
                 val arg = fields(idx) match
                   case Fld(_, arg, _) => go(arg)
                   case _ => lastWords(s"Expected Fld at index $idx")
                 
-                idx -> (new BlockMemberSymbol(argName, Nil), arg)
-              }.toMap
+                TempSymbol(Some(arg), s"${funcSym.nme}_arg$idx")
+              }
               
-              val termDefs = memberSymbols.map { case (idx, (memberSym, arg)) =>
-                val resSym = FlowSymbol(s"result of ${memberSym.nme}")
-                
-                TermDefinition(
-                  owner = None,
-                  k = syntax.ImmutVal,
-                  sym = memberSym,
-                  params = Nil,
-                  tparams = None,
-                  sign = None,
-                  body = Some(arg),
-                  resSym = resSym,
-                  flags = TermDefFlags(false),
-                  annotations = Nil
-                )
-              }.toList
-              
-              val newFields = fields.zipWithIndex.map {
-                case (field @ Fld(flags, _, asc), idx) if memberSymbols.contains(idx) =>
-                  val (memberSym, _) = memberSymbols(idx)
-                  Fld(flags, memberSym.ref(), asc)
-                
-                case (field @ Fld(flags, _, asc), idx) if specialisedIndices.contains(idx) && !memberSymbols.contains(idx) =>
-                  val argName = s"${funcSym.nme}_arg$idx"
-                  val existingMemberSym = new BlockMemberSymbol(argName, Nil)
-                  Fld(flags, existingMemberSym.ref(), asc)
-                
+              val newFields = fields.zipWithIndex.map:
+                case (field @ Fld(flags, _, asc), idx) if specialisedIndices.contains(idx) =>
+                  Fld(flags, scrutSyms(specialisedIndices.indexOf(idx)).ref(), asc)
                 case (field, _) => 
                   field match
                     case Fld(flags, arg, asc) => Fld(flags, go(arg), asc)
                     case other => other
-              }
-               
-              val specPoints = specialisedIndices.flatMap { idx =>
-                specialisationPoints.values.find(sp => 
+              
+              val paramTypesList = specialisedIndices.zipWithIndex.map { case (paramIdx, i) =>
+                val specPoint = specialisationPoints.values.find(sp => 
                   sp.parentFunctionSym == funcSym && 
-                  specialisationPoints.values.filter(_.parentFunctionSym == funcSym).toList.indexWhere(_.paramSym.nme == sp.paramSym.nme) == idx
-                )
+                  specialisationPoints.values.filter(_.parentFunctionSym == funcSym).toList.indexWhere(_.paramSym.nme == sp.paramSym.nme) == specialisedIndices.indexOf(paramIdx)
+                ).getOrElse(lastWords(s"Could not find spec point for param $paramIdx"))
+                
+                val paramSym = specPoint.paramSym
+                val concreteTypes = specPoint.concreteTypes.toList
+                
+                (scrutSyms(i), paramSym, concreteTypes, concreteTypes.map(toInternalType))
               }
               
-              val contextFilteredSpecPoints = specPoints.map { sp =>
-                val relevantTypes = ctx.filterRelevantTypes(sp)
-                if relevantTypes.nonEmpty then
-                  log(s"Application: filtered types for ${sp.paramSym.nme}: ${relevantTypes.mkString(", ")}")
-                  (sp, relevantTypes)
+              def buildNestedIfs(idx: Int, typeCombination: List[(Symbol, SimpleType)] = Nil): Split =
+                if idx >= paramTypesList.size then
+                  val suffix = typeCombination.map { case (_, ty) => formatTypeForName(ty) }.mkString("_")
+                  val specialisedName = s"${funcSym.nme}_$suffix"
+                  
+                  log(s"Looking for specialsed function $specialisedName")
+                  
+                  val specialsedApp = specialsedFunctions.get(specialisedName) match
+                    case Some(specialisedSym) =>
+                      log(s"Found specialsed function $specialisedName in registry")
+                      val specialisedRef = Ref(specialisedSym)(lhs.asInstanceOf[Ref].tree, 0)
+                      App(specialisedRef, Tup(newFields)(rhs.tree))(app.tree, app.resSym)
+                    case None =>
+                      log(s"Warning: Specialsed function $specialisedName not found in registry")
+                      App(lhs, Tup(newFields)(rhs.tree))(app.tree, app.resSym)
+                  Split.Else(specialsedApp)
                 else 
-                  (sp, sp.concreteTypes.toSet)
-              }.filter(_._2.nonEmpty)
+                  val (scrutSym, paramSym, types, patterns) = paramTypesList(idx)
+                  
+                  if patterns.isEmpty then Split.End
+                  else 
+                    types.zip(patterns).foldRight(Split.End: Split) { case ((ty, pattern), elseBranch) =>
+                      val newCombination = typeCombination :+ (paramSym -> ty)
+                      val innerBranch = buildNestedIfs(idx + 1, newCombination)
+                      Split.Cons(Branch(scrutSym.ref(), pattern, innerBranch), elseBranch)
+                    }
               
-              if contextFilteredSpecPoints.isEmpty then app else 
-                val scrutSyms = contextFilteredSpecPoints.zipWithIndex.map { case ((sp, _), i) =>
-                  val idx = specialisedIndices(specPoints.indexOf(sp))
-                  val (memberSym, _) = memberSymbols(idx)
-                  TempSymbol(Some(memberSym.ref()), s"$$scrut${i}")
-                }
-                
-                val typeCombinations = generateCombinations(contextFilteredSpecPoints.toList)
-                log(s"Application: generated ${typeCombinations.size} type combinations for ${funcSym.nme}")
-                
-                val branches = typeCombinations.map { combination =>
-                  val patterns = combination.zip(scrutSyms).map { case ((specPoint, ty), scrutSym) =>
-                    (scrutSym.ref(), toInternalType(ty))
-                  }
-                  
-                  val (firstScrutinee, firstPattern) = patterns.head
-                  
-                  val innerSplit = patterns.tail.foldRight(Split.Else(app)) { 
-                    case ((scrutinee, pattern), innerTail) =>
-                      Split.Cons(Branch(scrutinee, pattern, innerTail), Split.End)
-                  }
-                    
-                  Branch(firstScrutinee, firstPattern, innerSplit)
-                }
-                
-                val defaultBranch = Split.End
-                
-                val splitWithBranches = branches.foldRight(defaultBranch) { (branch, tail) =>
-                  Split.Cons(branch, tail)
-                }
-                
-                val letBindings = scrutSyms.zip(contextFilteredSpecPoints.map(_._1)).foldRight(splitWithBranches) { 
-                  case ((scrutSym, specPoint), split) =>
-                    val idx = specialisedIndices(specPoints.indexOf(specPoint))
-                    val (memberSym, _) = memberSymbols(idx)
-                    Split.Let(scrutSym, memberSym.ref(), split)
-                }
-                
-                val ifLikeTerm = IfLike(syntax.Keyword.`if`, letBindings)(letBindings)
-                val finalTerm = Blk(termDefs, ifLikeTerm)
-                
-                finalTerm
+              val ifStructure = buildNestedIfs(0)
+              val letBindings = scrutSyms.foldRight(ifStructure):
+                (scrutSym, split) => Split.Let(scrutSym, scrutSym.trm.getOrElse(Term.Error), split)
+
+              IfLike(syntax.Keyword.`if`, letBindings)(letBindings)
           case _ => app
-            
       case tup @ Tup(fields) =>
         val newFields = fields.map {
           case Fld(flags, arg, asc) => Fld(flags, go(arg), asc)
@@ -731,11 +770,13 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
       case blk @ Blk(stats, res) =>
         val blockCtx = ctx.nest
         
-        val funcsToSpecialize = stats.collect:
+        val funcsToSpecialse = stats.collect:
           case td: TermDefinition if specialisationPoints.values.exists(sp => 
             sp.parentFunctionSym == td.sym && sp.concreteTypes.nonEmpty) => td
         
-        funcsToSpecialize.foreach { td =>
+        val specialsations = mutable.Map[TermDefinition, List[TermDefinition]]()
+        
+        funcsToSpecialse.foreach { td =>
           val specPoints = specialisationPoints.values.filter(sp => 
             sp.parentFunctionSym == td.sym && sp.concreteTypes.nonEmpty).toList
           
@@ -746,16 +787,17 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
           }
           
           val typeCombinations = generateCombinations(pointTypeMappings)
-          log(s"Generated ${typeCombinations.size} specialization combinations for ${td.sym.nme}")
+          log(s"Generated ${typeCombinations.size} specialsation combinations for ${td.sym.nme}")
           
-          typeCombinations.foreach { typeCombination =>
+          val specialsedFuncs = typeCombinations.map { typeCombination =>
             val suffix = typeCombination.map { case (_, ty) => formatTypeForName(ty) }.mkString("_")
             val specialisedName = s"${td.sym.nme}_$suffix"
             log(s"Creating specialised function: $specialisedName")
             
             val specialisedSym = new BlockMemberSymbol(specialisedName, Nil)
-            
             val bodyContext = blockCtx.nest
+  
+            specialsedFunctions(specialisedName) = specialisedSym
             
             // Store the specialised concrete types in the context
             typeCombination.foreach { case (paramSym, ty) =>
@@ -779,7 +821,7 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
             val typeList = typeCombination.map(_._2).toList
             log(s"Generated specialised version ${specialisedName} for ${td.sym.nme} with types [${typeList.mkString(", ")}]")
             
-            blockCtx.funcs += TermDefinition(
+            TermDefinition(
               td.owner, 
               td.k, 
               specialisedSym, 
@@ -792,11 +834,17 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
               td.annotations
             )
           }
+          
+          specialsations(td) = specialsedFuncs.toList
         }
         
-        val newStats = stats.map(stat => processStatement(stat))
+        val newStats = stats.flatMap { stat => stat match
+          case td: TermDefinition if specialsations.contains(td) => processStatement(td) :: specialsations(td).map(processStatement)
+          case _ => List(processStatement(stat))
+        }
+        
         val newRes = go(res)
-        Blk(newStats ++ blockCtx.funcs, newRes)
+        Blk(newStats, newRes)
       
       case ifLike @ IfLike(kw, desugared) => IfLike(kw, processSplit(desugared))(ifLike.normalized)
       case Lam(params, body) => Lam(params, go(body))
@@ -812,11 +860,12 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
       case LetDecl(sym, annots) => LetDecl(sym, annots)
       case DefineVar(sym, rhs) => DefineVar(sym, go(rhs))
       case td: TermDefinition => 
-        td.body match
-          case Some(body) => 
-            TermDefinition(td.owner, td.k, td.sym, td.params, td.tparams, 
-                           td.sign, Some(go(body)), td.resSym, td.flags, td.annotations)
-          case None => td
+        val is_spec = td.params.flatMap(_.params).exists(_.flags.spec)
+
+        td.copy(body = td.body.map {
+          case b: Blk if !is_spec => go(b)
+          case b => b
+        })
       case other => other
     
     def processSplit(split: Split): Split = split match
@@ -832,6 +881,7 @@ class Specialiser(val ectx: Elaborator.Ctx, val tl: TraceLogger)(using Elaborato
       case Split.Else(default) => Split.Else(go(default))
       case Split.End => Split.End
     
+    collectSpecialsedFunctions(term)
     go(term)
   
   def specialise(t: Term)(using ctx: Ctx): Term =
