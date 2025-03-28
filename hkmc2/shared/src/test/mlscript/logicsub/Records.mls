@@ -28,7 +28,7 @@ let rcd = { foo: 1, bar: "..." }
 //│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ Type: ⊥
 
-:todo // IntLit as label?
+// TODO: IntLit as label?
 "0": rcd.foo
 "1": rcd.bar
 //│ Type: {0: Int, 1: Str}
