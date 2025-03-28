@@ -623,6 +623,12 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
             case None => super.applyBlock(rewritten)
             case Some(value) => Assign(value, applyResult(rhs), applyBlock(rest))
         
+        case Define(d: ValDefn, rest: Block) if d.owner.isDefined =>
+          ctx.getIsymPath(d.owner.get) match
+            case Some(value) if !belongsToCtor(d.owner.get) =>
+              AssignField(value.asPath, Tree.Ident(d.sym.nme), applyResult(d.rhs), applyBlock(rest))(N)
+            case _ => super.applyBlock(rewritten)
+        
         case Define(d: Defn, rest: Block) => ctx.modLocals.get(d.sym) match 
           case Some(sym) if !ctx.ignored(d.sym) => ctx.getBmsReqdInfo(d.sym) match
             case Some(_) => 
