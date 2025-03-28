@@ -885,7 +885,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     val newCtx_ = ctxx
       .addLocalPaths(nestedClsPaths)
       .addLocalPaths(getVars(c).map(s => s -> s).toMap)
-      .addIgnoredBmsPaths(ctorIgnored.map(d => d.sym -> Select(c.isym.asPath, Tree.Ident(d.sym.nme))(S(d.sym))).toMap)
+      .addIgnoredBmsPaths(ctorIgnored.map(d => d.sym -> d.sym.asPath).toMap)
 
     val newCtx = c.k match
       case syntax.Mod if !ctx.ignored(c.sym) => newCtx_

@@ -287,22 +287,8 @@ fun foo(x) =
 foo(123)
 //│ = [true, [true, false], true]
 
-:fixme
-module A with
-  val a = (() => 1)()
-//│ ═══[RUNTIME ERROR] TypeError: A9.lambda is not a function
-
-// This is related to the above, but it will look into the ignored bms map
-:fixme
-module A with
-  val x =
-    fun f() = 1
-    f()
-//│ ═══[RUNTIME ERROR] TypeError: A11.f is not a function
-
-
 // NOTE: This problem have a related test in codegen/Modules.mls with comment "report initialization problem or make it work"
-// Maybe we can codegen A14 = A13; at the beginning of the static block?
+// Maybe we can codegen A10 = A9; at the beginning of the static block?
 :sjs
 :fixme
 module A with
@@ -310,13 +296,13 @@ module A with
   fun f = () => g
   f()
 //│ JS (unsanitized):
-//│ let A14, lambda;
+//│ let A10, lambda;
 //│ lambda = (undefined, function () {
-//│   return A14.g
+//│   return A10.g
 //│ });
-//│ A14 = class A13 {
+//│ A10 = class A9 {
 //│   static {
-//│     A13.f()
+//│     A9.f()
 //│   }
 //│   static get g() {
 //│     return 1;
@@ -327,6 +313,53 @@ module A with
 //│   static toString() { return "A"; }
 //│ };
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'g')
+
+module A with
+  val a = (() => 1)()
+
+// This is related to the above, but it will look into the ignored bms map
+module A with
+  val x =
+    fun f() = 1
+    f()
+
+:sjs
+module A with
+  val x =
+    fun f() = 1
+    fun g() =
+      fun h() = f()
+      h()
+    f() + g()
+A.x
+//│ JS (unsanitized):
+//│ let h, A16, h$;
+//│ h$ = function h$(f$member) {
+//│   return f$member()
+//│ };
+//│ h = function h(f$member) {
+//│   return () => {
+//│     return h$(f$member)
+//│   }
+//│ };
+//│ A16 = class A15 {
+//│   static {
+//│     let f, g2, tmp7, tmp8, tmp9;
+//│     f = function f() {
+//│       return 1
+//│     };
+//│     g2 = function g() {
+//│       return h$(f)
+//│     };
+//│     tmp7 = f();
+//│     tmp8 = g2();
+//│     tmp9 = tmp7 + tmp8;
+//│     this.x = tmp9;
+//│   }
+//│   static toString() { return "A"; }
+//│ };
+//│ A16.x
+//│ = 2
 
 // private fields in modules, this should at least not fail silently...
 :fixme
