@@ -16,5 +16,5 @@ module A with
 :effectHandlers
 class Test with
   f()
-  val aaaaaaa = 1
+  val a = 1
 //│ /!!!\ Uncaught error: hkmc2.InternalError: `this` not in scope: class:Test

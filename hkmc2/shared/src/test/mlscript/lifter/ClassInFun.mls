@@ -585,6 +585,7 @@ f().foo()
 //│ runtime.safeCall(tmp5.foo())
 //│ = 10111
 
+// private fields
 :fixme
 :expect 2
 class A(a) with

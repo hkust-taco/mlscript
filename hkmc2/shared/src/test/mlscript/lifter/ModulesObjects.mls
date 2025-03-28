@@ -302,7 +302,7 @@ module A with
 
 
 // NOTE: This problem have a related test in codegen/Modules.mls with comment "report initialization problem or make it work"
-// Maybe we can assign A11 to A12 inside the static block?
+// Maybe we can codegen A14 = A13; at the beginning of the static block?
 :sjs
 :fixme
 module A with
@@ -328,7 +328,7 @@ module A with
 //│ };
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'g')
 
-// private variables in modules, this should at least not fail silently...
+// private fields in modules, this should at least not fail silently...
 :fixme
 module A with
   let x = 1
