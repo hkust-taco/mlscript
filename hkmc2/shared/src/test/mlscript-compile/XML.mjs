@@ -13,7 +13,9 @@ StyleAttributeValue1.class = class StyleAttributeValue {
   toString() { return "StyleAttributeValue(" + "" + ")"; }
 };
 XML1 = class XML {
-  static {}
+  static {
+    XML1 = XML;
+  }
   static serializeValue(value) {
     let param0, rules, tmp, tmp1, tmp2, lambda;
     if (typeof value === 'string') {

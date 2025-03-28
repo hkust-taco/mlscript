@@ -75,6 +75,7 @@ module Test with
 //│ Test4 = class Test3 {
 //│   static #x;
 //│   static {
+//│     Test4 = Test3;
 //│     this.x = 1;
 //│     Test3.#x = 2;
 //│   }
@@ -167,9 +168,11 @@ module Whoops with
 //│ let Whoops2;
 //│ Whoops2 = class Whoops {
 //│   static {
+//│     Whoops2 = Whoops;
 //│     this.v = Whoops;
 //│     this.Whoops = class Whoops1 {
 //│       static {
+//│         this.Whoops = Whoops1;
 //│         this.w = Whoops1;
 //│       }
 //│       static g() {
@@ -197,7 +200,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[ERROR] Name not found: Runtime
-//│ ║  l.198: 	Runtime
+//│ ║  l.201: 	Runtime
 //│ ╙──       	^^^^^^^
 
 

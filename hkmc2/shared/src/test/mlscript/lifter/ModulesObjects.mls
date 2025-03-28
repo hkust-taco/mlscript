@@ -158,6 +158,7 @@ M.A().get
 //│ let M15, tmp3;
 //│ M15 = class M14 {
 //│   static {
+//│     M15 = M14;
 //│     let scrut, tmp4;
 //│     this.A = function A() {
 //│       return new A.class();
@@ -242,6 +243,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│ };
 //│ M19 = class M18 {
 //│   static {
+//│     M19 = M18;
 //│     let scrut;
 //│     this.A = function A(x1) {
 //│       return new A.class(x1);
@@ -287,10 +289,7 @@ fun foo(x) =
 foo(123)
 //│ = [true, [true, false], true]
 
-// NOTE: This problem have a related test in codegen/Modules.mls with comment "report initialization problem or make it work"
-// Maybe we can codegen A10 = A9; at the beginning of the static block?
 :sjs
-:fixme
 module A with
   fun g = 1
   fun f = () => g
@@ -302,6 +301,7 @@ module A with
 //│ });
 //│ A10 = class A9 {
 //│   static {
+//│     A10 = A9;
 //│     A9.f()
 //│   }
 //│   static get g() {
@@ -312,7 +312,6 @@ module A with
 //│   }
 //│   static toString() { return "A"; }
 //│ };
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'g')
 
 module A with
   val a = (() => 1)()
@@ -344,6 +343,7 @@ A.x
 //│ };
 //│ A16 = class A15 {
 //│   static {
+//│     A16 = A15;
 //│     let f, g2, tmp7, tmp8, tmp9;
 //│     f = function f() {
 //│       return 1

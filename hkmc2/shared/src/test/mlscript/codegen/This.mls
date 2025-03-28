@@ -43,6 +43,7 @@ module Test with
 //│ let Test1;
 //│ Test1 = class Test {
 //│   static {
+//│     Test1 = Test;
 //│     this.a = 3;
 //│   }
 //│   static test1(x) {

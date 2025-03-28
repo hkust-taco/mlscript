@@ -229,6 +229,7 @@ if M.A(1).y is
 //│ JS:
 //│ M1 = class M {
 //│   static {
+//│     M1 = M;
 //│     this.A = function A(...args1) {
 //│       return new A.class(...args1);
 //│     };
