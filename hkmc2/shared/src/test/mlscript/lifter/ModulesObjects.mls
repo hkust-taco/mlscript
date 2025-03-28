@@ -361,7 +361,7 @@ A.x
 //│ A16.x
 //│ = 2
 
-// private fields in modules, this should at least not fail silently...
+// private fields in modules
 :fixme
 module A with
   let x = 1
@@ -369,6 +369,7 @@ module A with
     fun nested() = x
     nested()
 A.mtd
+//│ ═══[COMPILATION ERROR] Usage of private fields cannot be lifted.
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 

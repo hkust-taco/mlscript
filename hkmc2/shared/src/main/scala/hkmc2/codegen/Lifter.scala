@@ -613,6 +613,12 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         case Assign(t: TermSymbol, rhs, rest) if t.owner.isDefined =>
           ctx.getIsymPath(t.owner.get) match
             case Some(value) if !belongsToCtor(t.owner.get) =>
+              if (t.k is syntax.LetBind) && !t.owner.forall(_.isInstanceOf[semantics.TopLevelSymbol]) then
+                // TODO: can we do better?
+                raise(ErrorReport(
+                  msg"Usage of private fields cannot be lifted." -> N :: Nil,
+                  N, Diagnostic.Source.Compilation
+                ))
               AssignField(value.asPath, t.id, applyResult(rhs), applyBlock(rest))(N)
             case _ => super.applyBlock(rewritten)
         
@@ -656,7 +662,14 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         case _ => super.applyPath(p)
       case Value.Ref(t: TermSymbol) if t.owner.isDefined =>
         ctx.getIsymPath(t.owner.get) match
-          case Some(value) if !belongsToCtor(t.owner.get) => Select(value.asPath, t.id)(N)
+          case Some(value) if !belongsToCtor(t.owner.get) =>
+            if (t.k is syntax.LetBind) && !t.owner.forall(_.isInstanceOf[semantics.TopLevelSymbol]) then
+              // TODO: can we do better?
+              raise(ErrorReport(
+                msg"Usage of private fields cannot be lifted." -> N :: Nil,
+                N, Diagnostic.Source.Compilation
+              ))
+            Select(value.asPath, t.id)(N)
           case _ => super.applyPath(p)
       
       // Rewrites this.className.class to reference the top-level definition

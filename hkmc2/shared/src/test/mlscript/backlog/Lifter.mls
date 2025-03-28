@@ -37,8 +37,8 @@ f(2)
 //
 // where B must be marked as final.
 :expect 3
-class A(x) with
-  class B(y) with
+data class A(x) with
+  data class B(y) with
     fun getB() = x + y
   fun getA() = this.B(2).getB()
 A(1).getA()
