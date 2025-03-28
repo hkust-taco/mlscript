@@ -225,7 +225,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             val preCtorCode = ctorAuxParams.flatMap(ps => ps).foldLeft(body(preCtor, endSemi = true)):
               case (acc, (sym, nme)) =>
                 doc"$acc # this${fieldSelect(sym.name)} = $nme;"
-            val ctorCode = doc"$preCtorCode${body(ctor, endSemi = false)}"
+            val ctorCode = doc"$preCtorCode${body(ctor, endSemi = auxParams.nonEmpty)}"
 
             val ctorBod = if auxParams.isEmpty then
               doc"${braced(ctorCode)}"

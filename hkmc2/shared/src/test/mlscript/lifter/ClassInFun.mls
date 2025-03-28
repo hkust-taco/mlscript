@@ -688,12 +688,8 @@ fun test() =
 test()
 //│ = 2
 
-// Semicolon missing for auxparam before `return this;`
-:fixme
+// Semicolon required for auxparam before `return this;`
 fun test(f) =
   class A(x) with
     f(x)
   A(1)
-//│ > let A9, test1, A$ctor2, A$2;try { A$2 = function A$(...args) {   globalThis.Predef.checkArgs("A$", 2, true, args.length);   let f$0 = args[0];   let x = args[1];   let tmp13;   tmp13 = new A9.class(x);   return runtime.checkCall(tmp13(f$0)) }; A$ctor2 = function A$ctor(...args) {   globalThis.Predef.checkArgs("A$ctor", 1, true, args.length);   let f$0 = args[0];   return (...args1) => {     globalThis.Predef.checkArgs("", 1, true, args1.length);     let x = args1[0];     let tmp13;     tmp13 = new A9.class(x);     return runtime.checkCall(tmp13(f$0))   } }; A9 = function A(...args) {   return (...args1) => {     return new A.class(...args)(...args1);   } }; A9.class = class A8 {   #x;   constructor(x) {     return (f$0) => {       this.f$0 = f$0;       this.#x = x;       runtime.safeCall(this.f$0(this.#x))       return this;     }   }   toString() { return "A(" + "" + ")"; } }; test1 = function test(...args) {   globalThis.Predef.checkArgs("test", 1, true, args.length);   let f10 = args[0];   return runtime.checkCall(A$2(f10, 1)) }; block$res14 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         ^^^^^^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token 'return'
