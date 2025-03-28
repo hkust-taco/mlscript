@@ -604,9 +604,6 @@ fun f() =
   g()
 f()
 
-// Field name should be sanitized
-// NOTE: this is not just a problem with lifter, see codegen/Classes.mls
-:fixme
 :sjs
 fun f(es, vs) =
   let v' = es
@@ -633,8 +630,8 @@ fun f(es, vs) =
 //│ A1.class = class A {
 //│   constructor() {
 //│     return (v$_$0) => {
-//│       this.v'$0 = v$_$0;
-//│       this.fld = this.v'$0;
+//│       this["v'$0"] = v$_$0;
+//│       this.fld = this["v'$0"];
 //│       return this;
 //│     }
 //│   }
@@ -645,7 +642,4 @@ fun f(es, vs) =
 //│   v$_ = es;
 //│   return A$(v$_)
 //│ };
-//│ > let A1, f23, A$ctor, A$;try { A$ = function A$(...args) {   globalThis.Predef.checkArgs("A$", 1, true, args.length);   let v$_$0 = args[0];   let tmp19;   tmp19 = new A1.class();   return runtime.checkCall(tmp19(v$_$0)) }; A$ctor = function A$ctor(...args) {   globalThis.Predef.checkArgs("A$ctor", 1, true, args.length);   let v$_$0 = args[0];   return (...args1) => {     globalThis.Predef.checkArgs("", 0, true, args1.length);     let tmp19;     tmp19 = new A1.class();     return runtime.checkCall(tmp19(v$_$0))   } }; A1 = function A(...args) {   return new A.class()(...args); }; A1.class = class A {   constructor() {     return (v$_$0) => {       this.v'$0 = v$_$0;       this.fld = this.v'$0;       return this;     }   }   toString() { return "A"; } }; f23 = function f(...args) {   globalThis.Predef.checkArgs("f", 2, true, args.length);   let es = args[0];   let vs = args[1];   let v$_;   v$_ = es;   return runtime.checkCall(A$(v$_)) }; block$res23 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string
 
