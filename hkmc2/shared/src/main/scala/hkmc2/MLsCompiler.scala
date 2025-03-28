@@ -80,7 +80,10 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
       val elab = Elaborator(etl, wd, newCtx)
       val parsed = mainParse.resultBlk
       val (blk0, _) = elab.importFrom(parsed)
-      val blk = blk0.copy(stats = semantics.Import(State.runtimeSymbol, runtimeFile.toString) :: blk0.stats)
+      val blk = new semantics.Term.Blk(
+        semantics.Import(State.runtimeSymbol, runtimeFile.toString) :: blk0.stats,
+        blk0.res
+      )
       val low = ltl.givenIn:
         new codegen.Lowering()
           with codegen.LoweringSelSanityChecks

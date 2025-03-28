@@ -63,13 +63,16 @@ object Elaborator:
     def ++(locals: IterableOnce[Str -> Symbol]): Ctx =
       copy(outer, env = env ++ locals.mapValues(Ctx.RefElem(_)))
     def elem_++(locals: IterableOnce[Str -> Ctx.Elem]): Ctx =
-      copy(outer, env = env ++ locals)
+      copy(outer, env = env ++ locals.iterator.filter: kv =>
+        // * Imports should not shadow symbols defined in the same scope;
+        // * but they should be allowed to shadow previous imports.
+        env.get(kv._1).forall(_.isImport))
     
     def withMembers(members: Iterable[Str -> MemberSymbol[?]], out: Opt[Symbol] = N): Ctx =
       copy(env = env ++ members.map:
         case (nme, sym) =>
           val elem = out orElse outer.inner match
-            case S(outer) => Ctx.SelElem(outer, sym.nme, S(sym))
+            case S(outer) => Ctx.SelElem(outer, sym.nme, S(sym), isImport = false)
             case N => Ctx.RefElem(sym)
           nme -> elem
       )
@@ -156,14 +159,16 @@ object Elaborator:
       def nme: Str
       def ref(id: Tree.Ident)(using Elaborator.State): Term
       def symbol: Opt[Symbol]
-    final case class RefElem(val sym: Symbol) extends Elem:
+      def isImport: Bool
+    final case class RefElem(sym: Symbol) extends Elem:
       val nme = sym.nme
       def ref(id: Tree.Ident)(using Elaborator.State): Term =
         // * Note: due to symbolic ops, we may have `id.name =/= nme`;
         // * e.g., we can have `id.name = "|>"` and `nme = "pipe"`.
         Term.Ref(sym)(id, 666) // FIXME: 666 is a temporary placeholder
       def symbol = S(sym)
-    final case class SelElem(val base: Elem, val nme: Str, val symOpt: Opt[FieldSymbol]) extends Elem:
+      def isImport: Bool = false
+    final case class SelElem(base: Elem, nme: Str, symOpt: Opt[FieldSymbol], isImport: Bool) extends Elem:
       def ref(id: Tree.Ident)(using Elaborator.State): Term =
         // * Same remark as in RefElem#ref
         Term.SynthSel(base.ref(Ident(base.nme)),
@@ -851,7 +856,7 @@ extends Importer:
     // * @param funs:
     // *  While elaborating a block, we move all function definitions to the top (similar to JS function semantics)
     @tailrec
-    def go(sts: Ls[Tree], funs: Ls[TermDefinition], annotations: Ls[Annot], acc: Ls[Statement]): Ctxl[(Blk | Rcd, Ctx)] =
+    def go(sts: Ls[Tree], annotations: Ls[Annot], acc: Ls[Statement]): Ctxl[(Blk | Rcd, Ctx)] =
       /** Call this function when the following term cannot be annotated. */
       def reportUnusedAnnotations: Unit = if annotations.nonEmpty then raise:
         WarningReport:
@@ -866,7 +871,7 @@ extends Importer:
       sts match
       case Nil =>
         reportUnusedAnnotations
-        (mkBlk(funs, acc, N, hasResult), ctx)
+        (mkBlk(acc, N, hasResult), ctx)
       case Open(bod) :: sts =>
         reportUnusedAnnotations
         bod match
@@ -879,7 +884,7 @@ extends Importer:
             raise(ErrorReport(msg"Illegal 'open' statement shape." -> bod.toLoc :: Nil))
             N
         match
-        case N => go(sts, funs, annotations, acc)
+        case N => go(sts, annotations, acc)
         case S((base, importedTrees)) =>
           base match
           case baseId: Ident =>
@@ -890,26 +895,28 @@ extends Importer:
                   baseElem.symbol match
                   case S(sym: BlockMemberSymbol) if sym.modOrObjTree.isDefined =>
                     sym.modOrObjTree.get.definedSymbols.map:
-                      case (nme, sym) => nme -> Ctx.SelElem(baseElem, sym.nme, S(sym))
+                      case (nme, sym) => nme -> Ctx.SelElem(baseElem, sym.nme, S(sym), isImport = true)
                   case _ =>
                     raise(ErrorReport(msg"Wildcard 'open' not supported for this kind of symbol." -> baseId.toLoc :: Nil))
                     Nil
                 case S(sts) => sts.flatMap:
                   case id: Ident =>
+                    if ctx.env.contains(id.name) then
+                      raise(WarningReport(msg"Imported name '${id.name}' is shadowed by a name already defined in the same scope" -> id.toLoc :: Nil))
                     val sym = resolveField(id, baseElem.symbol, id)
-                    val e = Ctx.SelElem(baseElem, id.name, sym)
+                    val e = Ctx.SelElem(baseElem, id.name, sym, isImport = true)
                     id.name -> e :: Nil
                   case t =>
                     raise(ErrorReport(msg"Illegal 'open' statement element." -> t.toLoc :: Nil))
                     Nil
               (ctx elem_++ importedNames).givenIn:
-                go(sts, funs, Nil, acc)
+                go(sts, Nil, acc)
             case N =>
               raise(ErrorReport(msg"Name not found: ${baseId.name}" -> baseId.toLoc :: Nil))
-              go(sts, funs, Nil, acc)
+              go(sts, Nil, acc)
           case _ =>
             raise(ErrorReport(msg"Illegal 'open' statement base." -> base.toLoc :: Nil))
-            go(sts, funs, Nil, acc)
+            go(sts, Nil, acc)
       case (m @ Modified(Keyword.`import`, absLoc, arg)) :: sts =>
         reportUnusedAnnotations
         val (newCtx, newAcc) = arg match
@@ -923,11 +930,11 @@ extends Importer:
               arg.toLoc :: Nil))
             (ctx, acc)
         newCtx.givenIn:
-          go(sts, funs, Nil, newAcc)
+          go(sts, Nil, newAcc)
       
       case Spread(Keyword.`...`, kwLoc, S(body)) :: sts =>
         reportUnusedAnnotations
-        go(sts, funs, Nil, RcdSpread(term(body)) :: acc)
+        go(sts, Nil, RcdSpread(term(body)) :: acc)
       case InfixApp(lhs, Keyword.`:`, rhs) :: sts =>
         var newCtx = ctx
         val newAcc = lhs match
@@ -948,7 +955,7 @@ extends Importer:
             raise(ErrorReport(msg"Unexpected record key shape." -> lhs.toLoc :: Nil))
             RcdField(Term.Error, term(rhs)) :: acc
         newCtx.givenIn:
-          go(sts, funs, Nil, newAcc)
+          go(sts, Nil, newAcc)
       case (hd @ LetLike(`let`, Apps(id: Ident, tups), rhso, N)) :: sts
       if tups.isEmpty || id.name.headOption.exists(_.isLower) =>
         reportUnusedAnnotations
@@ -968,10 +975,10 @@ extends Importer:
               raise(ErrorReport(msg"Expected a right-hand side for let bindings with parameters" -> hd.toLoc :: Nil))
             LetDecl(sym, annotations) :: acc
         (ctx + (id.name -> sym)) givenIn:
-          go(sts, funs, Nil, newAcc)
+          go(sts, Nil, newAcc)
       case (tree @ LetLike(`let`, lhs, S(rhs), N)) :: sts =>
         raise(ErrorReport(msg"Unsupported let binding shape" -> tree.toLoc :: Nil))
-        go(sts, funs, Nil, Term.Error :: acc)
+        go(sts, Nil, Term.Error :: acc)
       case Def(lhs, rhs) :: sts =>
         reportUnusedAnnotations
         lhs match
@@ -980,17 +987,17 @@ extends Importer:
           ctx.get(id.name) match
           case S(elem) =>
             elem.symbol match
-            case S(sym: LocalSymbol) => go(sts, funs, Nil, DefineVar(sym, r) :: acc)
+            case S(sym: LocalSymbol) => go(sts, Nil, DefineVar(sym, r) :: acc)
           case N =>
             // TODO lookup in members? inherited/refined stuff?
             raise(ErrorReport(msg"Name not found: ${id.name}" -> id.toLoc :: Nil))
-            go(sts, funs, Nil, Term.Error :: acc)
+            go(sts, Nil, Term.Error :: acc)
         case App(base, args) =>
-          go(Def(base, InfixApp(args, Keyword.`=>`, rhs)) :: sts, funs, Nil, acc)
+          go(Def(base, InfixApp(args, Keyword.`=>`, rhs)) :: sts, Nil, acc)
         case _ =>
           raise(ErrorReport(msg"Unrecognized definitional assignment left-hand side: ${lhs.describe}"
             -> lhs.toLoc :: Nil)) // TODO BE
-          go(sts, funs, Nil, Term.Error :: acc)
+          go(sts, Nil, Term.Error :: acc)
       case (td @ TermDef(k, nme, rhs)) :: sts =>
         log(s"Processing term definition $nme")
         td.symbName match
@@ -1065,13 +1072,11 @@ extends Importer:
                 case _ => ()
               
               tdf
-            tdf.k match
-            case Fun => go(sts, tdf :: funs, Nil, acc)
-            case _ => go(sts, funs, Nil, tdf :: acc)
+            go(sts, Nil, tdf :: acc)
           case L(d) =>
             reportUnusedAnnotations
             raise(d)
-            go(sts, funs, Nil, acc)
+            go(sts, Nil, acc)
       case (td @ TypeDef(k, head, rhs, body)) :: sts =>
         assert((k is Als) || (k is Cls) || (k is Mod) || (k is Obj) || (k is Pat), k)
         td.symbName match
@@ -1081,7 +1086,7 @@ extends Importer:
           case R(id) => id
           case L(d) =>
             raise(d)
-            return go(sts, funs, Nil, acc)
+            return go(sts, Nil, acc)
         val sym = members.getOrElse(nme.name, lastWords(s"Symbol not found: ${nme.name}"))
         var newCtx = S(td.symbol).collectFirst:
             case s: InnerSymbol => s
@@ -1239,29 +1244,29 @@ extends Importer:
             clsSym.defn = S(cd)
             cd
         sym.defn = S(defn)
-        go(sts, funs, Nil, defn :: acc)
+        go(sts, Nil, defn :: acc)
       case Annotated(annotation, target) :: sts =>
-        go(target :: sts, funs, annotations ++ annot(annotation), acc)
+        go(target :: sts, annotations ++ annot(annotation), acc)
       case (st: Tree) :: sts =>
         // TODO reject plain term statements? Currently, `(1, 2)` is allowed to elaborate (tho it should be rejected in type checking later)
         val res = annotations.foldLeft(term(st)):
           case (acc, ann) => Term.Annotated(ann, acc)
         sts match
-        case Nil => (mkBlk(funs, acc, S(res), hasResult), ctx)
-        case _ => go(sts, funs, Nil, res :: acc)
+        case Nil => (mkBlk(acc, S(res), hasResult), ctx)
+        case _ => go(sts, Nil, res :: acc)
     end go
     
     c.withMembers(members, c.outer.inner).givenIn:
-      go(blk.desugStmts, Nil, Nil, Nil)
+      go(blk.desugStmts, Nil, Nil)
   
   
-  def mkBlk(funs: Ls[TermDefinition], acc: Ls[Statement], res: Opt[Term], hasResult: Bool): Blk | Rcd =
+  def mkBlk(acc: Ls[Statement], res: Opt[Term], hasResult: Bool): Blk | Rcd =
     // TODO forbid certain kinds of terms in records
     val isRcd = acc.exists:
       case _: (RcdField | RcdSpread) => true
       case _ => false
-    if isRcd then Term.Rcd(funs reverse_::: (res.toList ::: acc).reverse)
-    else Blk(funs reverse_::: acc.reverse, res.getOrElse:
+    if isRcd then Term.Rcd((res.toList ::: acc).reverse)
+    else Blk(acc.reverse, res.getOrElse:
       if hasResult
         then unit
         else Term.Lit(UnitLit(false))

@@ -72,11 +72,32 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   final def term_nonTail(t: st, inStmtPos: Bool = false)(k: Result => Block)(using Subst): Block =
     term(t: st, inStmtPos: Bool)(k)
   
+
+  @tailrec
+  final def splitBlock(stats: Ls[Statement], imps: Ls[Import], funs: Ls[TermDefinition], rest: Ls[Statement])
+      : (Ls[Import], Ls[TermDefinition], Ls[Statement])
+      =
+    stats match
+    case (imp: Import) :: stats =>
+      splitBlock(stats, imp :: imps, funs, rest)
+    case (fun: TermDefinition) :: stats if fun.k is syntax.Fun =>
+      splitBlock(stats, imps, fun :: funs, rest)
+    case stat :: stats =>
+      splitBlock(stats, imps, funs, stat :: rest)
+    case Nil =>
+      (imps.reverse, funs.reverse, rest.reverse)
+  
+  
   def block(stats: Ls[Statement], res: Rcd \/ Term)(k: Result => Block)(using Subst): Block =
+    // TODO we should also isolate and reorder classes by inheritance topological sort
+    val (imps, funs, rest) = splitBlock(stats, Nil, Nil, Nil)
+    blockImpl(imps ::: funs ::: rest, res)(k)
+  
+  def blockImpl(stats: Ls[Statement], res: Rcd \/ Term)(k: Result => Block)(using Subst): Block =
     stats match
     case (t: sem.Term) :: stats =>
       subTerm(t, inStmtPos = true): r =>
-        block(stats, res)(r => k(r))
+        blockImpl(stats, res)(r => k(r))
     case Nil =>
       res match
       case R(res) => term(res)(k)
@@ -87,36 +108,36 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case R(_) => wat("RcdField in non-Rcd context", res)
       case L(flds) =>
         subTerm(bod): l =>
-          block(stats, L(RcdArg(N, l) :: flds))(k)
+          blockImpl(stats, L(RcdArg(N, l) :: flds))(k)
     case RcdField(lhs, rhs) :: stats =>
       res match
       case R(_) => wat("RcdField in non-Rcd context", res)
       case L(flds) =>
         subTerm(lhs): l =>
           subTerm_nonTail(rhs): r =>
-            block(stats, L(RcdArg(S(l), r) :: flds))(k)
+            blockImpl(stats, L(RcdArg(S(l), r) :: flds))(k)
     case (decl @ LetDecl(sym, annotations)) :: (stats @ ((_: DefineVar) :: _)) =>
       reportAnnotations(decl, annotations)
-      block(stats, res)(k)
+      blockImpl(stats, res)(k)
     case (decl @ LetDecl(sym, annotations)) :: stats =>
       reportAnnotations(decl, annotations)
-      block(DefineVar(sym, Term.Lit(Tree.UnitLit(false))) :: stats, res)(k)
+      blockImpl(DefineVar(sym, Term.Lit(Tree.UnitLit(false))) :: stats, res)(k)
     case DefineVar(sym, rhs) :: stats =>
       subTerm(rhs): r =>
-        Assign(sym, r, block(stats, res)(k))
+        Assign(sym, r, blockImpl(stats, res)(k))
     case (imp @ Import(sym, path)) :: stats =>
       raise(ErrorReport(
         msg"Imports must be at the top level" ->
         imp.toLoc :: Nil,
         source = Diagnostic.Source.Compilation))
-      block(stats, res)(k)
+      blockImpl(stats, res)(k)
     case (d: Declaration) :: stats =>
       d match
       case td: TermDefinition =>
         reportAnnotations(td, td.extraAnnotations)
         td.body match
         case N => // abstract declarations have no lowering
-          block(stats, res)(k)
+          blockImpl(stats, res)(k)
         case S(bod) =>
           td.k match
           case knd: syntax.Val =>
@@ -125,20 +146,20 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               // Assign(td.sym, r,
               //   term(st.Blk(stats, res))(k)))
               Define(ValDefn(td.owner, knd, td.sym, r),
-                block(stats, res)(k)))
+                blockImpl(stats, res)(k)))
           case syntax.Fun =>
             val (paramLists, bodyBlock) = setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme))
             Define(FunDefn(td.owner, td.sym, paramLists, bodyBlock),
-              block(stats, res)(k))
+              blockImpl(stats, res)(k))
           case syntax.Ins =>
             // Implicit instances are not parameterized for now.
             assert(td.params.isEmpty)
             subTerm(bod)(r =>
               Define(ValDefn(td.owner, syntax.ImmutVal, td.sym, r),
-                block(stats, res)(k)))
+                blockImpl(stats, res)(k)))
       case cls: ClassLikeDef if cls.sym.defn.exists(_.isDeclare.isDefined) =>
         // * Declarations have no lowering
-        block(stats, res)(k)
+        blockImpl(stats, res)(k)
       case cls: ClassLikeDef =>
         reportAnnotations(cls, cls.extraAnnotations)
         val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(cls.body)
@@ -151,7 +172,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                 End(),
                 ctor
               ),
-            block(stats, res)(k))
+            blockImpl(stats, res)(k))
         case S(ext) =>
           assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
           subTerm(ext.cls): clsp =>
@@ -163,10 +184,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                 cls.owner, cls.sym, cls.bsym, cls.kind, cls.paramsOpt, Nil, S(clsp),
                 mtds, privateFlds, publicFlds, pctor, ctor
               ),
-              block(stats, res)(k)
+              blockImpl(stats, res)(k)
             )
       case td: TypeDef => // * Type definitions are erased
-        block(stats, res)(k)
+        blockImpl(stats, res)(k)
+  
   
   @tailrec
   final def term(t: st, inStmtPos: Bool = false)(k: Result => Block)(using Subst): Block =
@@ -628,34 +650,35 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         Assign(l, r, k(l |> Value.Ref.apply))
   
   
-  // val resSym = new TermSymbol(N, Tree.Ident("$res"))
-  // def topLevel(t: st): Block =
-  //   subTerm(t)(r => codegen.Assign(resSym, r, codegen.End()))(using Subst.empty)
-
-  def topLevel(t: st): Block =
-    val res = LambdaRewriter.desugar(term(t)(ImplctRet)(using Subst.empty))
+  def program(main: st.Blk): Program =
+    
+    val (imps, funs, rest) = splitBlock(main.stats, Nil, Nil, Nil)
+    
+    val blk = block(funs ::: rest, R(main.res))(ImplctRet)(using Subst.empty)
+    
+    val desug = LambdaRewriter.desugar(blk)
+    
     val handlerPaths = new HandlerPaths
     val stackSafe = config.stackSafety match
-      case N => res
-      case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths).transformTopLevel(res)
-    val withHandlers = if lowerHandlers 
+      case N => desug
+      case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths).transformTopLevel(desug)
+    val withHandlers = if lowerHandlers
       then HandlerLowering(handlerPaths).translateTopLevel(stackSafe)
       else stackSafe
+    
     val flattened = withHandlers.flattened
     
     val lifted = 
       if lift then Lifter(S(handlerPaths)).transform(flattened)
       else flattened
     
-    MergeMatchArmTransformer.applyBlock(lifted)
+    val res = MergeMatchArmTransformer.applyBlock(lifted)
+    
+    Program(
+      imps.map(imp => imp.sym -> imp.file),
+      res
+    )
   
-  def program(main: st): Program =
-    def go(acc: Ls[Local -> Str], trm: st): Program =
-      trm match
-      case st.Blk((imp @ Import(sym, path)) :: stats, res) =>
-        go(sym -> path.toString :: acc, st.Blk(stats, res))
-      case _ => Program(acc.reverse, topLevel(trm))
-    go(Nil, main)
   
   def setupSelection(prefix: Term, nme: Tree.Ident, sym: Opt[FieldSymbol])(k: Result => Block)(using Subst): Block =
     subTerm(prefix): p =>

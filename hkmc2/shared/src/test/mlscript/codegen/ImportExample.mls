@@ -12,6 +12,18 @@ Example.funnySlash(Example.inc, 123)
 //│ = 124
 
 
+Example.pubFun
+//│ = "hi"
+
+:e
+:re
+Example.privFun
+//│ ╔══[ERROR] Module 'Example' does not contain member 'privFun'
+//│ ║  l.20: 	Example.privFun
+//│ ╙──      	       ^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'privFun' yielded 'undefined'
+
+
 let n = 42
 //│ n = 42
 
