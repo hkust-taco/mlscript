@@ -36,33 +36,40 @@ test
 //│ >    x is Fls then fls#666
 //│ >    y is Fls then fls#666
 //│ = [function test]
-//│ Type: (((¬Fls ∨ Fls) ∨ Tru) ∧ (¬Tru ∨ Tru), (¬Fls ∨ Fls) ∧ (¬Tru ∨ Tru)) -> (Tru ∨ Fls)
+//│ Type: ['x, 'y, 'eff, 'cons, 'scrut, 'scrut1, 'eff1, 'eff2, 'cons1, 'eff3, 'cons2] -> ('x, 'y) ->{('eff ∨ 'eff2) ∨ 'eff3} (('cons ∨ 'cons1) ∨ 'cons2)
+//│ Where:
+//│   'x <: (¬Fls ∨ Fls) ∨ Tru
+//│   'x <: ¬Tru ∨ Tru
+//│   'x#Tru ∨ (  'scrut#Tru ∨  ∧ ⊥<:'eff ∧ Tru<:'cons) ∧ 'eff<:'eff1 ∧ 'y<:(Tru ∧ 'scrut) ∨ (¬Tru ∧ 'scrut1)
+//│   'x#Fls ∨  ∧ ⊥<:'eff2 ∧ Fls<:'cons1
+//│   'y <: ¬Fls ∨ Fls
+//│   'y#Fls ∨  ∧ ⊥<:'eff3 ∧ Fls<:'cons2
 
 test(tru, tru)
 //│ = Tru()
-//│ Type: Tru ∨ Fls
+//│ Type: Tru
 
 test(tru, fls)
 //│ = Fls()
-//│ Type: Tru ∨ Fls
+//│ Type: Fls
 
 test(fls, tru)
 //│ = Fls()
-//│ Type: Tru ∨ Fls
+//│ Type: Fls
 
 test(fls, fls)
 //│ = Fls()
-//│ Type: Tru ∨ Fls
+//│ Type: Fls
 
 test("hi", fls)
 //│ = Fls()
-//│ Type: Tru ∨ Fls
+//│ Type: Fls
 
 
 :todo
 :e
 test(true, false)
 //│ ═══[RUNTIME ERROR] Error: match error
-//│ Type: Tru ∨ Fls
+//│ Type: ⊥
 
 

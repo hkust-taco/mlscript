@@ -358,17 +358,26 @@ object Type:
           val u = disjointImpl(a, p.toBasic)(prev)
           val w = disjointImpl(a, q.toBasic)(prev)
           u.flatMap(u => w.map(u ++ _))
-        case (a: InfVar, b: InfVar) if a.uid =/= b.uid => N
+        case (ComposedType(p, q, false), _) =>
+          (disjointImpl(p.toBasic, b)(prev), disjointImpl(q.toBasic, b)(prev)) match
+            case (N, w) => w
+            case (u, N) => u
+            case (S(u), S(w)) => S(u.flatMap(u => w.map(u ++ _)))
+        case (_, ComposedType(p, q, false)) =>
+          (disjointImpl(a, p.toBasic)(prev), disjointImpl(a, q.toBasic)(prev)) match
+            case (N, w) => w
+            case (u, N) => u
+            case (S(u), S(w)) => S(u.flatMap(u => w.map(u ++ _)))
         case (v: InfVar, _) =>
           val p = prev + (v -> b)
           val k = v.state.lowerBounds.map(lb => disjointImpl(lb.toBasic, b)(p))
           if k.exists(_.isEmpty) then N
-          else S((k.flatten.flatten.toSet + Set.empty).map(_ + (v -> b)))
+          else S(k.flatten.flatten.toSet + Set(v -> b))
         case (_, v: InfVar) =>
           val p = prev + (a -> v)
           val k = v.state.lowerBounds.map(lb => disjointImpl(a, lb.toBasic)(p))
           if k.exists(_.isEmpty) then N
-          else S((k.flatten.flatten.toSet + Set.empty).map(_ + (v -> a)))
+          else S(k.flatten.flatten.toSet + Set(v -> a))
         case _ => N
     }) else S(Set.empty)
   def disjoint(a: Type, b: Type): Opt[Set[Set[InfVar->BasicType]]] =
@@ -502,11 +511,10 @@ case class DisjSub(disjoint: LinkedHashSet[InfVar -> BasicType], dss: Ls[DisjSub
         case N =>
           disjoint -= u
           N
-        case S(k) => if k.nonEmpty then S(k) else N
+        case k => k
     if disjoint.isEmpty then
       dss.flatMap(_.checkAndCommit()) ++ cs
     else
-      disjoint.keys.foreach(_.state.disjsub += this)
       if d.nonEmpty then
         commit()
         d.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
@@ -520,12 +528,11 @@ case class DisjSub(disjoint: LinkedHashSet[InfVar -> BasicType], dss: Ls[DisjSub
         case N =>
           disjoint -= u
           N
-        case S(k) => if k.nonEmpty then S(k) else N
+        case k => k
     if disjoint.isEmpty then
       dss.flatMap(_.checkAndCommit()) ++ cs
     else
-      if disjoint.exists(_._1.uid === v.uid) then v.state.disjsub += this
-      else if d.nonEmpty then
+      if d.nonEmpty then
         d.foldLeft(Set(w))((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
           DisjSub(LinkedHashSet.from(k), dss, cs).commit()
       Nil

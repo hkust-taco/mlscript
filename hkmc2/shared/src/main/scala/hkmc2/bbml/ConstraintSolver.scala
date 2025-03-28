@@ -97,7 +97,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
             cctx.nest(bd -> v) givenIn:
               v.state.lowerBounds ::= bd
               v.state.upperBounds.foreach(ub => constrainImpl(bd, ub))
-              v.state.disjsub.iterator.flatMap(_.check(v)).foreach:
+              v.state.disjsub.toList.flatMap(_.check(v)).foreach:
                 case (a, b) => constrainImpl(a, b)
       case Conj(i, u, Nil) => (conj.i, conj.u) match
         case (_, Union(N, Nil, Nil)) =>

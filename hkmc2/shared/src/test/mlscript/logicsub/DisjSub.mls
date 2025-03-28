@@ -97,7 +97,12 @@ idIIBB([1, 2])
 x => if x is
   Int then 0
   Bool then 0
-//│ Type: (((¬Bool ∨ Int) ∨ Bool) ∧ (¬Int ∨ Int)) ->{⊥} Int
+//│ Type: ('x) ->{'eff ∨ 'eff1} 'cons ∨ 'cons1
+//│ Where:
+//│   'x <: (¬Bool ∨ Int) ∨ Bool
+//│   'x <: ¬Int ∨ Int
+//│   'x#Int ∨  ∧ ⊥<:'eff ∧ Int<:'cons
+//│   'x#Bool ∨  ∧ ⊥<:'eff1 ∧ Int<:'cons1
 
 
 
@@ -114,14 +119,14 @@ new Pair(1, 2)
 :e
 fun idIIBB: (Pair[Int, Int] -> Int) & (Pair[Bool, Bool] -> Bool)
 //│ ╔══[ERROR] Ill-formed functions intersection
-//│ ║  l.115: 	fun idIIBB: (Pair[Int, Int] -> Int) & (Pair[Bool, Bool] -> Bool)
+//│ ║  l.120: 	fun idIIBB: (Pair[Int, Int] -> Int) & (Pair[Bool, Bool] -> Bool)
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
 :e
 idIIBB(new Pair(1, 2))
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.122: 	idIIBB(new Pair(1, 2))
+//│ ║  l.127: 	idIIBB(new Pair(1, 2))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  (Pair[out Int, out Int] -> Int) ∧ (Pair[out Bool, out Bool] -> Bool)  <:  Pair['A, 'B] ->{'eff} 'app
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[in ⊥ out Bool, in ⊥ out Bool]
@@ -129,7 +134,7 @@ idIIBB(new Pair(1, 2))
 //│ ╟── because: cannot constrain  'A  <:  ¬(¬{Bool})
 //│ ╙── because: cannot constrain  Int  <:  ¬(¬{Bool})
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.122: 	idIIBB(new Pair(1, 2))
+//│ ║  l.127: 	idIIBB(new Pair(1, 2))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  (Pair[out Int, out Int] -> Int) ∧ (Pair[out Bool, out Bool] -> Bool)  <:  Pair['A, 'B] ->{'eff} 'app
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[in ⊥ out Bool, in ⊥ out Bool]
@@ -141,7 +146,7 @@ idIIBB(new Pair(1, 2))
 :e
 idIIBB(new Pair(1, true))
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.142: 	idIIBB(new Pair(1, true))
+//│ ║  l.147: 	idIIBB(new Pair(1, true))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  (Pair[out Int, out Int] -> Int) ∧ (Pair[out Bool, out Bool] -> Bool)  <:  Pair['A, 'B] ->{'eff} 'app
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[in ⊥ out Int, in ⊥ out Int]
@@ -149,7 +154,7 @@ idIIBB(new Pair(1, true))
 //│ ╟── because: cannot constrain  'B  <:  ¬(¬{Int})
 //│ ╙── because: cannot constrain  Bool  <:  ¬(¬{Int})
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.142: 	idIIBB(new Pair(1, true))
+//│ ║  l.147: 	idIIBB(new Pair(1, true))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  (Pair[out Int, out Int] -> Int) ∧ (Pair[out Bool, out Bool] -> Bool)  <:  Pair['A, 'B] ->{'eff} 'app
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[in ⊥ out Bool, in ⊥ out Bool]
@@ -160,7 +165,7 @@ idIIBB(new Pair(1, true))
 
 
 
-:todo
+
 fun foo: ["x": Int, "y": Int]
 //│ Type: ⊤
 
@@ -197,7 +202,7 @@ k(idIB)(true, 1)
 :e
 k(idIB)("true", 1)
 //│ ╔══[ERROR] Type error in string literal with expected type 'x
-//│ ║  l.198: 	k(idIB)("true", 1)
+//│ ║  l.203: 	k(idIB)("true", 1)
 //│ ║         	        ^^^^^^
 //│ ╟── because: cannot constrain  Str  <:  'x
 //│ ╟── because: cannot constrain  Str  <:  'x
@@ -250,7 +255,7 @@ map(cons(1, cons(true, nil())))(idIB)
 let x = cons(1, cons(true, nil())) in
   map(cons(x, x))(idIB)
 //│ ╔══[ERROR] Type error in reference with expected type ('A) ->{⊥} 'B
-//│ ║  l.251: 	  map(cons(x, x))(idIB)
+//│ ║  l.256: 	  map(cons(x, x))(idIB)
 //│ ║         	                  ^^^^
 //│ ╟── because: cannot constrain  (Int -> Int) ∧ (Bool -> Bool)  <:  'A -> 'B
 //│ ╟── because: cannot constrain  {0: 'A}  <:  {0: Int} ∨ {0: Bool}
@@ -258,7 +263,7 @@ let x = cons(1, cons(true, nil())) in
 //│ ╟── because: cannot constrain  'A  <:  ¬(¬{Int ∨ Bool})
 //│ ╙── because: cannot constrain  Ls['A1]  <:  ¬(¬{Int ∨ Bool})
 //│ ╔══[ERROR] Type error in reference with expected type ('A) ->{⊥} 'B
-//│ ║  l.251: 	  map(cons(x, x))(idIB)
+//│ ║  l.256: 	  map(cons(x, x))(idIB)
 //│ ║         	                  ^^^^
 //│ ╟── because: cannot constrain  (Int -> Int) ∧ (Bool -> Bool)  <:  'A -> 'B
 //│ ╟── because: cannot constrain  {0: 'A}  <:  {0: Int} ∨ {0: Bool}
@@ -268,7 +273,7 @@ let x = cons(1, cons(true, nil())) in
 //│ ╟── because: cannot constrain  'A1  <:  ¬(¬{Int ∨ Bool})
 //│ ╙── because: cannot constrain  Ls['A1]  <:  ¬(¬{Int ∨ Bool})
 //│ ╔══[ERROR] Type error in reference with expected type ('A) ->{⊥} 'B
-//│ ║  l.251: 	  map(cons(x, x))(idIB)
+//│ ║  l.256: 	  map(cons(x, x))(idIB)
 //│ ║         	                  ^^^^
 //│ ╟── because: cannot constrain  (Int -> Int) ∧ (Bool -> Bool)  <:  'A -> 'B
 //│ ╟── because: cannot constrain  {0: 'A}  <:  {0: Int} ∨ {0: Bool}
@@ -299,14 +304,14 @@ x => k(x, x)
 :e
 fun ill: ((Int | Bool, Int | Bool) -> Str) & ((Bool | Str, Bool | Str) -> Str)
 //│ ╔══[ERROR] Ill-formed functions intersection
-//│ ║  l.300: 	fun ill: ((Int | Bool, Int | Bool) -> Str) & ((Bool | Str, Bool | Str) -> Str)
+//│ ║  l.305: 	fun ill: ((Int | Bool, Int | Bool) -> Str) & ((Bool | Str, Bool | Str) -> Str)
 //│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
 :e
 fun id: [A] -> (A -> A) & (Int -> Int)
 //│ ╔══[ERROR] Ill-formed functions intersection
-//│ ║  l.307: 	fun id: [A] -> (A -> A) & (Int -> Int)
+//│ ║  l.312: 	fun id: [A] -> (A -> A) & (Int -> Int)
 //│ ╙──       	                ^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
@@ -322,7 +327,7 @@ fst(cons(1, nil()))
 :e
 fun idInt: (Int -> Int) & (Int -> Int)
 //│ ╔══[ERROR] Ill-formed functions intersection
-//│ ║  l.323: 	fun idInt: (Int -> Int) & (Int -> Int)
+//│ ║  l.328: 	fun idInt: (Int -> Int) & (Int -> Int)
 //│ ╙──       	            ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
@@ -338,7 +343,7 @@ wf(true)
 :e
 wf(1)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.339: 	wf(1)
+//│ ║  l.344: 	wf(1)
 //│ ║         	^^^^^
 //│ ╟── because: cannot constrain  (((Int ∨ Bool) -> Int) ∨ (Bool -> Bool)) ∧ (Str -> Str)  <:  Int ->{'eff} 'app
 //│ ╙── because: cannot constrain  {0: Int}  <:  {0: Bool} ∨ {0: Str}
@@ -359,14 +364,14 @@ zs
 :e
 wf(zs, zs)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.360: 	wf(zs, zs)
+//│ ║  l.365: 	wf(zs, zs)
 //│ ║         	^^^^^^^^^^
 //│ ╟── because: cannot constrain  (((Z, Z) -> Z) ∧ ((Z, S) -> S)) ∧ ((S, Z ∨ S) -> S)  <:  (Z ∨ S, Z ∨ S) ->{'eff} 'app
 //│ ╟── because: cannot constrain  {0: Z ∨ S, 1: Z ∨ S}  <:  ({0: Z, 1: Z} ∨ {0: Z, 1: S}) ∨ {0: S, 1: Z ∨ S}
 //│ ╟── because: cannot constrain  {0: Z ∨ S, 1: Z ∨ S}  <:  {1: S}
 //│ ╙── because: cannot constrain  Z ∨ S  <:  S
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.360: 	wf(zs, zs)
+//│ ║  l.365: 	wf(zs, zs)
 //│ ║         	^^^^^^^^^^
 //│ ╟── because: cannot constrain  (((Z, Z) -> Z) ∧ ((Z, S) -> S)) ∧ ((S, Z ∨ S) -> S)  <:  (Z ∨ S, Z ∨ S) ->{'eff} 'app
 //│ ╟── because: cannot constrain  {0: Z ∨ S, 1: Z ∨ S}  <:  ({0: Z, 1: Z} ∨ {0: Z, 1: S}) ∨ {0: S, 1: Z ∨ S}
@@ -380,11 +385,11 @@ fun ill:
   (([b: Bool, c: Bool]) -> Bool) &
   (([a: Str, c: Str]) -> Str)
 //│ ╔══[ERROR] Ill-formed functions intersection
-//│ ║  l.379: 	  (([a: Int, b:Int]) -> Int) &
+//│ ║  l.384: 	  (([a: Int, b:Int]) -> Int) &
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.380: 	  (([b: Bool, c: Bool]) -> Bool) &
+//│ ║  l.385: 	  (([b: Bool, c: Bool]) -> Bool) &
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.381: 	  (([a: Str, c: Str]) -> Str)
+//│ ║  l.386: 	  (([a: Str, c: Str]) -> Str)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
@@ -394,10 +399,49 @@ fun nested:
   (([tag: [b: Bool, c: Bool]]) -> Bool) &
   (([tag: [a: Str, c: Str]]) -> Str)
 //│ ╔══[ERROR] Ill-formed functions intersection
-//│ ║  l.393: 	  (([tag: [a: Int, b:Int]]) -> Int) &
+//│ ║  l.398: 	  (([tag: [a: Int, b:Int]]) -> Int) &
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.394: 	  (([tag: [b: Bool, c: Bool]]) -> Bool) &
+//│ ║  l.399: 	  (([tag: [b: Bool, c: Bool]]) -> Bool) &
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.395: 	  (([tag: [a: Str, c: Str]]) -> Str)
+//│ ║  l.400: 	  (([tag: [a: Str, c: Str]]) -> Str)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
+
+if 0 is
+  Bool then ""
+  Int then true
+  Str then 0
+//│ Type: Bool
+
+fun not: Bool -> Bool
+//│ Type: ⊤
+
+fun foorec(x, y, r) = if
+  x is Int and y is Int then x + y
+  x is Str then not(y)
+  y is Str then r(y, x, r)
+//│ Type: ⊤
+
+fun foo(x, y) = foorec(x, y, foorec)
+//│ Type: ⊤
+
+foo(true, "")
+//│ Type: Bool
+
+foo(1, 2)
+//│ Type: Int
+
+foo as (Int, Int) -> Int
+//│ Type: (Int, Int) ->{⊥} Int
+
+(x => foo(x, true)) as Str -> Bool
+//│ Type: (Str) ->{⊥} Bool
+
+(x => foo(x, "")) as Bool -> Bool
+//│ Type: (Bool) ->{⊥} Bool
+
+(x => foo(x, "")) as Int -> Bool
+//│ Type: (Int) ->{⊥} Bool
+
+foo(1, "")
+//│ Type: Bool

@@ -46,18 +46,13 @@ y `=> (let t = run(x `=> x `+ y) in y)
 //│ ╙── because: cannot constrain  y  <:  ¬()
 //│ Type: CodeBase[out 'y -> 'y, ⊥, ?]
 //│ Where:
-//│   'y <: Int
-//│   'x#Int ∨ 'cde1#Int ∨ 'y#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥
-//│   'cde1#Int ∨ 'y#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥
-//│   'x2 <: ¬(¬{Int})
+//│   'x#'cde1 ∨ 'y#'cde2 ∨ (  'x#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'x#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ {0: 'cde1, 1: 'cde2}<:{0: Int, 1: Int}
+//│   'cde1#'cde1 ∨ 'y#'cde2 ∨ (  'x#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'x#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ {0: 'cde1, 1: 'cde2}<:{0: Int, 1: Int}
 //│   'x2 <: 'x
-//│   'x <: ¬(¬{Int})
-//│   'x#Int ∨ 'cde1#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥
+//│   'x#'cde1 ∨ 'cde2#'cde2 ∨ (  'x#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'x#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ {0: 'cde1, 1: 'cde2}<:{0: Int, 1: Int}
 //│   'x <: 'cde1
-//│   'cde1 <: ¬(¬{Int})
-//│   'cde1#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥
+//│   'cde1#'cde1 ∨ 'cde2#'cde2 ∨ (  'x#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'x#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ {0: 'cde1, 1: 'cde2}<:{0: Int, 1: Int}
 //│   'y <: 'cde2
-//│   'cde2 <: ¬(¬{Int})
 //│   'cde <: 'cde3
 //│   'app <: ¬(¬'cde)
 
@@ -75,7 +70,9 @@ g
 
 
 f(g)
-//│ Type: ((¬C[?] ∨ C[in Int out ⊥]) ∧ (¬C[?] ∨ C[?])) ->{⊥} Int
+//│ Type: ('A) ->{⊥} Int
+//│ Where:
+//│   'A#C[out B] ∨ 'A#'A ∨ (  'A#C[?] ∨  ∧ 'D<:B ∧ ⊥<:⊥ ∧ C[out B] ∧ 'A<:C[in Int out 'D]) ∧ {0: C[out B] ∧ 'A}<:{0: C[?]}
 
 fun foo: C[in Int out Nothing]
 foo
@@ -91,16 +88,18 @@ f(g)(foo)
 :fixme // ???
 f(g)(bar)
 //│ ╔══[ERROR] Type error in reference with expected type 'A
-//│ ║  l.92: 	f(g)(bar)
+//│ ║  l.89: 	f(g)(bar)
 //│ ║        	     ^^^
 //│ ╟── because: cannot constrain  C[Int]  <:  'A
 //│ ╟── because: cannot constrain  C[in Int out Int]  <:  'A
-//│ ╟── because: cannot constrain  C[in Int out Int]  <:  ¬C[in ⊥ out ¬⊥ ∧ 'B] ∨ C[in Int out ¬⊥ ∧ 'D]
-//│ ╟── because: cannot constrain  (Int) ∧ ('B)  <:  ¬⊥ ∧ 'D
-//│ ╟── because: cannot constrain  Int ∧ 'B  <:  'D
-//│ ╟── because: cannot constrain  Int ∧ 'B  <:  'B1
-//│ ╟── because: cannot constrain  Int ∧ 'B  <:  'B1
-//│ ╟── because: cannot constrain  Int ∧ 'B  <:  ¬()
-//│ ╟── because: cannot constrain  'B  <:  ¬(Int)
+//│ ╟── because: cannot constrain  C[out B] ∧ 'A  <:  C[in Int out 'D]
+//│ ╟── because: cannot constrain  'A  <:  ¬C[in ⊥ out ¬⊥ ∧ 'B1] ∨ C[in Int out ¬⊥ ∧ 'D1]
+//│ ╟── because: cannot constrain  C[in Int out Int]  <:  ¬C[in ⊥ out ¬⊥ ∧ 'B1] ∨ C[in Int out ¬⊥ ∧ 'D1]
+//│ ╟── because: cannot constrain  (Int) ∧ ('B1)  <:  ¬⊥ ∧ 'D1
+//│ ╟── because: cannot constrain  Int ∧ 'B1  <:  'D1
+//│ ╟── because: cannot constrain  Int ∧ 'B1  <:  'B2
+//│ ╟── because: cannot constrain  Int ∧ 'B1  <:  'B2
+//│ ╟── because: cannot constrain  Int ∧ 'B1  <:  ¬()
+//│ ╟── because: cannot constrain  'B1  <:  ¬(Int)
 //│ ╙── because: cannot constrain    <:  ¬(Int)
 //│ Type: Int
