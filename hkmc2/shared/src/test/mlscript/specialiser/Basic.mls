@@ -326,3 +326,44 @@ id(foo(1))
 //│ }
 //│ = 1
 
+
+:sjs
+fun foo(x, y) =
+    fun bar(spec a, spec b) = a + b
+    bar(x, y)
+foo(1, 2)
+foo(1.5, 1)
+//│ JS (unsanitized):
+//│ let foo3, tmp6;
+//│ foo3 = function foo(x, y) {
+//│   let bar, bar_Num_Int, bar_Int_Int, bar_arg0, bar_arg1;
+//│   bar = function bar(a, b) {
+//│     return a + b
+//│   };
+//│   bar_Num_Int = function bar_Num_Int(a, b) {
+//│     return a + b
+//│   };
+//│   bar_Int_Int = function bar_Int_Int(a, b) {
+//│     return a + b
+//│   };
+//│   bar_arg0 = x;
+//│   bar_arg1 = y;
+//│   if (typeof bar_arg0 === 'number') {
+//│     if (globalThis.Number.isInteger(bar_arg1)) {
+//│       return runtime.safeCall(bar_Num_Int(bar_arg0, bar_arg1))
+//│     } else {
+//│       throw new globalThis.Error("match error");
+//│     }
+//│   } else if (globalThis.Number.isInteger(bar_arg0)) {
+//│     if (globalThis.Number.isInteger(bar_arg1)) {
+//│       return runtime.safeCall(bar_Int_Int(bar_arg0, bar_arg1))
+//│     } else {
+//│       throw new globalThis.Error("match error");
+//│     }
+//│   } else {
+//│     throw new globalThis.Error("match error");
+//│   }
+//│ };
+//│ tmp6 = foo3(1, 2);
+//│ foo3(1.5, 1)
+//│ = 2.5
