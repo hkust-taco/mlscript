@@ -70,7 +70,7 @@ abstract class LlirDiffMaker extends BbmlDiffMaker:
         val (llirProg, ctx2) = llb.bProg(le)
         ctx = ctx2
         wholeProg += llirProg
-        if sllir.isSet then
+        if sllir.isSet && !silent.isSet then
           output("LLIR:")
           output(llirProg.show())
         def cppGen(name: String, prog: Program, gen: Bool, show: Bool, run: Bool, write: Opt[Str]): Unit =
@@ -93,7 +93,7 @@ abstract class LlirDiffMaker extends BbmlDiffMaker:
               val cppHost = CppCompilerHost(auxPath.toString, output.apply)
               if !cppHost.ready then
                 output("\nCpp Compilation Failed: Cpp compiler or GNU Make not found")
-              else
+              else if !silent.isSet then
                 output("\n")
                 cppHost.compileAndRun(cpp.toDocument.toString)
         cppGen("Cpp", llirProg, 

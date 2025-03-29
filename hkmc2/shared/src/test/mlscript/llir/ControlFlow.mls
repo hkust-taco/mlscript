@@ -149,7 +149,6 @@ f5()
 //│ 5
 
 :sllir
-:scpp
 fun test() =
   if true do test()
 //│ LLIR:
@@ -167,38 +166,8 @@ fun test() =
 //│   def entry$665() =
 //│     undefined
 //│   entry = entry$665
-//│ 
-//│ Cpp:
-//│ #include "mlsprelude.h"
-//│ _mlsValue _mls_j5();
-//│ _mlsValue _mls_test();
-//│ _mlsValue _mls_entry6();
-//│ _mlsValue _mls_j5() {
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mlsValue::create<_mls_Unit>();
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_test() {
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x23 = _mlsValue::fromIntLit(1);
-//│   if (_mlsValue::isIntLit(_mls_x23, 1)) {
-//│     auto _mls_x24 = _mls_test();
-//│     _mls_retval = _mls_x24;
-//│   } else {
-//│     _mls_retval = _mlsValue::create<_mls_Unit>();
-//│   }
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_entry6() {
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mlsValue::create<_mls_Unit>();
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mlsMain() { return _mls_entry6(); }
-//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 
 :sllir
-:scpp
 fun test() =
   (if true then test()) + 1
 //│ LLIR:
@@ -217,41 +186,10 @@ fun test() =
 //│   def entry$680() =
 //│     undefined
 //│   entry = entry$680
-//│ 
-//│ Cpp:
-//│ #include "mlsprelude.h"
-//│ _mlsValue _mls_j6(_mlsValue);
-//│ _mlsValue _mls_test1();
-//│ _mlsValue _mls_entry7();
-//│ _mlsValue _mls_j6(_mlsValue _mls_tmp3) {
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x25 = (_mls_tmp3 + _mlsValue::fromIntLit(1));
-//│   _mls_retval = _mls_x25;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_test1() {
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x26 = _mlsValue::fromIntLit(1);
-//│   if (_mlsValue::isIntLit(_mls_x26, 1)) {
-//│     auto _mls_x27 = _mls_test1();
-//│     _mls_retval = _mls_j6(_mls_x27);
-//│   } else {
-//│     throw std::runtime_error("match error");
-//│   }
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_entry7() {
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mlsValue::create<_mls_Unit>();
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mlsMain() { return _mls_entry7(); }
-//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 
 
 :sllir
 :intl
-:scpp
 fun f() =
   let x = 10
   if true do
@@ -278,39 +216,6 @@ f()
 //│     let* (x$700) = f() in
 //│     x$700
 //│   entry = entry$701
-//│ 
-//│ Cpp:
-//│ #include "mlsprelude.h"
-//│ _mlsValue _mls_j7(_mlsValue);
-//│ _mlsValue _mls_f();
-//│ _mlsValue _mls_entry8();
-//│ _mlsValue _mls_j7(_mlsValue _mls_x28) {
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x28;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_f() {
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x29 = _mlsValue::fromIntLit(10);
-//│   auto _mls_x30 = _mlsValue::fromIntLit(1);
-//│   if (_mlsValue::isIntLit(_mls_x30, 1)) {
-//│     auto _mls_x32 = (_mls_x29 + _mlsValue::fromIntLit(1));
-//│     auto _mls_x33 = _mlsValue::create<_mls_Unit>();
-//│     _mls_retval = _mls_j7(_mls_x32);
-//│   } else {
-//│     auto _mls_x31 = _mlsValue::create<_mls_Unit>();
-//│     _mls_retval = _mls_j7(_mls_x29);
-//│   }
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_entry8() {
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x34 = _mls_f();
-//│   _mls_retval = _mls_x34;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mlsMain() { return _mls_entry8(); }
-//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 //│ 
 //│ Interpreted:
 //│ 11

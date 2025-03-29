@@ -2,6 +2,8 @@
 :llir
 :cpp
 
+// This file contains all legacy tests for LLIR in the old MLScript compiler.
+
 :intl
 data class Pair[A, B](x: A, y: B)
 fun mktup2(x, y) = mktup(x, y)
@@ -128,8 +130,8 @@ foo()
 //│ O()
 
 :intl
-class A(x, y, z)
-class B(m, n)
+data class A(x, y, z)
+data class B(m, n)
 fun complex_foo(t) =
   let r = if t is
     A(x, y, z) then x + y * z
@@ -143,7 +145,7 @@ fun bar() =
   complex_foo(A(6, 7, 8))
   complex_foo(B(9, 10))
 bar()
-//│ = NaN
+//│ = 3
 //│ 
 //│ Interpreted:
 //│ 3

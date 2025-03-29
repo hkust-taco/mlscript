@@ -2,31 +2,11 @@
 :llir
 :cpp
 
-:sllir
 fun foo(a) =
   let x
   if a > 0 do
     x = 1
   x + 1
-//│ LLIR:
-//│   
-//│   def foo$567(a$569) =
-//│     let x$579 = undefined in
-//│     let x$580 = >(a$569,0) in
-//│     case x$580 of
-//│       BoolLit(true) =>
-//│         let x$582 = 1 in
-//│         let x$583 = undefined in
-//│         jump j$581(x$582)
-//│       _ =>
-//│         let x$584 = undefined in
-//│         jump j$581(x$579)
-//│   def j$581(x$570) =
-//│     let x$585 = +(x$570,1) in
-//│     x$585
-//│   def entry$586() =
-//│     undefined
-//│   entry = entry$586
 
 :showWholeCpp
 fun bar(x) =
