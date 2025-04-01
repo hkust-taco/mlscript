@@ -23,7 +23,16 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
   val mlsValType = Type.Prim("_mlsValue")
   val mlsUnitValue = Expr.Call(Expr.Var("_mlsValue::create<_mls_Unit>"), Ls());
   val mlsRetValue  = "_mls_retval"
-  val mlsRetValueDecl = Decl.VarDecl(mlsRetValue, mlsValType)
+  def mlsRetValType(n: Int) =
+    if n == 1 then
+      mlsValType
+    else
+      Type.Template("std::tuple", Ls.fill(n)(mlsValType))
+  def mlsRetValueDecl(n: Int) =
+    if n == 1 then
+      Decl.VarDecl(mlsRetValue, mlsValType)
+    else
+      Decl.VarDecl(mlsRetValue, mlsRetValType(n))
   val mlsMainName = "_mlsMain"
   val mlsPrelude = "#include \"mlsprelude.h\""
   val mlsPreludeImpl = "#include \"mlsprelude.cpp\""
@@ -42,7 +51,7 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
   def mlsIsBoolLit(scrut: Expr, lit: hkmc2.syntax.Tree.BoolLit) = Expr.Call(Expr.Var("_mlsValue::isIntLit"), Ls(scrut, Expr.IntLit(if lit.value then 1 else 0)))
   def mlsIsIntLit(scrut: Expr, lit: hkmc2.syntax.Tree.IntLit) = Expr.Call(Expr.Var("_mlsValue::isIntLit"), Ls(scrut, Expr.IntLit(lit.value)))
   def mlsDebugPrint(x: Expr) = Expr.Call(Expr.Var("_mlsValue::print"), Ls(x))
-  def mlsTupleValue(init: Expr) = Expr.Constructor("_mlsValue::tuple", init)
+  def mlsTupleValue(init: Ls[Expr]) = Expr.Call(Expr.Var("std::make_tuple"), init)
   def mlsAs(name: Str, cls: Str) = Expr.Var(s"_mlsValue::as<$cls>($name)")
   def mlsAsUnchecked(name: Str, cls: Str) = Expr.Var(s"_mlsValue::cast<$cls>($name)")
   def mlsObjectNameMethod(name: Str) = s"constexpr static inline const char *typeName = \"${name}\";"
@@ -149,7 +158,7 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
   def wrapMultiValues(exprs: Ls[TrivialExpr])(using Ctx, Raise, Scope): Expr = exprs match
     case x :: Nil => toExpr(x, reifyUnit = true).get
     case _ => 
-      val init = Expr.Initializer(exprs.map{x => toExpr(x)})
+      val init = exprs.map{x => toExpr(x)}
       mlsTupleValue(init)
   
   def codegenCaseWithIfs(scrut: TrivialExpr, cases: Ls[(Pat, Node)], default: Opt[Node], storeInto: Str)(using decls: Ls[Decl], stmts: Ls[Stmt])(using Ctx, Raise, Scope): (Ls[Decl], Ls[Stmt]) =
@@ -269,12 +278,12 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
     
   def codegenDefn(using Ctx, Raise, Scope)(defn: Func): (Def, Decl) = defn match
     case Func(id, name, params, resultNum, body) =>
-      val decls = Ls(mlsRetValueDecl)
+      val decls = Ls(mlsRetValueDecl(resultNum))
       val stmts = Ls.empty[Stmt]
       val (decls2, stmts2) = codegen(body, mlsRetValue)(using decls, stmts)
       val stmtsWithReturn = stmts2 :+ Stmt.Return(Expr.Var(mlsRetValue))
-      val theDef = Def.FuncDef(mlsValType, name |> allocIfNew, params.map(x => (x |> allocIfNew, mlsValType)), Stmt.Block(decls2, stmtsWithReturn))
-      val decl = Decl.FuncDecl(mlsValType, name |> allocIfNew, params.map(x => mlsValType))
+      val theDef = Def.FuncDef(mlsRetValType(resultNum), name |> allocIfNew, params.map(x => (x |> allocIfNew, mlsValType)), Stmt.Block(decls2, stmtsWithReturn))
+      val decl = Decl.FuncDecl(mlsRetValType(resultNum), name |> allocIfNew, params.map(x => mlsValType))
       (theDef, decl)
 
   // Topological sort of classes based on inheritance relationships
