@@ -327,16 +327,20 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
               val nestCtx1 = ctx.nest
               val nestCtx2 = ctx.nest
               val clsTy = ClassLikeType(sym, cls.tparams.map(_ => Wildcard.empty))
-              val ctv = freshVar(new TempSymbol(S(scrutinee), "scrut"))
-              val atv = freshVar(new TempSymbol(S(scrutinee), "scrut"))
+              val sty = tryMkMono(scrutineeTy, scrutinee)
+              val res = sign.orElse(S(freshVar(new TempSymbol(N, "res"))))
+              // val ctv = freshVar(new TempSymbol(S(scrutinee), "scrut"))
+              // val atv = freshVar(new TempSymbol(S(scrutinee), "scrut"))
               scrutinee match // * refine
                 case Ref(sym: LocalSymbol) =>
-                  nestCtx1 += sym -> ctv
-                  nestCtx2 += sym -> atv
+                  nestCtx1 += sym -> (clsTy & sty)
+                  nestCtx2 += sym -> sty
+                  // nestCtx1 += sym -> ctv
+                  // nestCtx2 += sym -> atv
                 case _ => () // TODO: refine all variables holding this value?
-              constrain(tryMkMono(scrutineeTy, scrutinee), (clsTy & ctv) | (clsTy.! & atv))
-              val (consTy, consEff) = Type.disjoint(clsTy, ctv) match
-                case N => typeSplit(cons, sign)(using nestCtx1)
+              // constrain(sty, (clsTy & ctv) | (clsTy.! & atv))
+              val (consTy, consEff) = Type.disjoint(clsTy, sty) match
+                case N => typeSplit(cons, res)(using nestCtx1)
                 case S(k) =>
                  if k.isEmpty then (Bot, Bot)
                  else
@@ -347,12 +351,13 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
                        cs += lhs -> rhs
                      def commit(ds: DisjSub) = dss += ds
                    val eff = freshVar(new TempSymbol(N, "eff"))
-                   val (t, e) = typeSplit(cons, sign.orElse(S(freshVar(new TempSymbol(N, "cons")))))(using nestCtx1, nc)
+                   val (t, e) = typeSplit(cons, res)(using nestCtx1, nc)
                    k.foreach(k => c.commit(DisjSub(LinkedHashSet.from(k), dss.toList, (e, eff) :: cs.toList)))
                    (t, eff)
-              val (altsTy, altsEff) = typeSplit(alts, sign)(using nestCtx2)
+              val (altsTy, altsEff) = typeSplit(alts, res)(using nestCtx2)
               val allEff = scrutineeEff | (consEff | altsEff)
-              (sign.getOrElse(tryMkMono(consTy, cons) | tryMkMono(altsTy, alts)), allEff)
+              // (sign.getOrElse(tryMkMono(consTy, cons) | tryMkMono(altsTy, alts)), allEff)
+              (res.get, allEff)
             case _ =>
               error(msg"Cannot match ${scrutinee.toString} as ${sym.toString}" -> split.toLoc :: Nil)
               (Bot, Bot)

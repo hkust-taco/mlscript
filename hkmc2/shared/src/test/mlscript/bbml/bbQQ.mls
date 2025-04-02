@@ -41,17 +41,19 @@ f `=> x `=> f`(x)
 
 
 x `=> y `=> x `+ y
-//│ Type: CodeBase[out 'x -> ('y -> 'cde), ⊥, ?]
+//│ Type: CodeBase[out 'x -> ('x -> 'cde), ⊥, ?]
 //│ Where:
-//│   'x#'cde1 ∨ 'y1#'cde2 ∨ (  'x#Int ∨ 'y1#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'y1#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'x#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ {0: 'cde1, 1: 'cde2}<:{0: Int, 1: Int}
-//│   'x#'cde1 ∨ 'cde2#'cde2 ∨ (  'x#Int ∨ 'y1#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'y1#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'x#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ {0: 'cde1, 1: 'cde2}<:{0: Int, 1: Int}
-//│   'y <: 'y1
-//│   'cde1#'cde1 ∨ 'y1#'cde2 ∨ (  'x#Int ∨ 'y1#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'y1#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'x#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ {0: 'cde1, 1: 'cde2}<:{0: Int, 1: Int}
+//│   'x#'cde1 ∨ 'y#'cde2 ∨ (  'x#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'x#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ {0: 'cde1, 1: 'cde2}<:{0: Int, 1: Int}
+//│   'x#'cde1 ∨ 'cde2#'cde2 ∨ (  'x#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'x#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ {0: 'cde1, 1: 'cde2}<:{0: Int, 1: Int}
+//│   'x#'cde1 ∨ 'y1#'cde2 ∨ (  'x#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'x#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ {0: 'cde1, 1: 'cde2}<:{0: Int, 1: Int}
+//│   'cde1#'cde1 ∨ 'y1#'cde2 ∨ (  'x#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'x#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ {0: 'cde1, 1: 'cde2}<:{0: Int, 1: Int}
 //│   'x <: 'cde1
-//│   'cde1#'cde1 ∨ 'cde2#'cde2 ∨ (  'x#Int ∨ 'y1#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'y1#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'x#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ {0: 'cde1, 1: 'cde2}<:{0: Int, 1: Int}
-//│   'y1 <: 'cde2
+//│   'cde1#'cde1 ∨ 'y#'cde2 ∨ (  'x#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'x#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ {0: 'cde1, 1: 'cde2}<:{0: Int, 1: Int}
+//│   'cde1#'cde1 ∨ 'cde2#'cde2 ∨ (  'x#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'y#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'x#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨  ∧ Int<:'app ∧ ⊥<:⊥) ∧ {0: 'cde1, 1: 'cde2}<:{0: Int, 1: Int}
+//│   'y <: 'cde2
 //│   'cde3 <: 'cde
 //│   'app <: ¬(¬'cde3)
+//│   'y1 <: 'y
 
 
 
@@ -91,7 +93,7 @@ f `=> x `=> y `=> f`(x, y)
 :e
 `let x = 42 `in x
 //│ ╔══[ERROR] Type error in unquoted term
-//│ ║  l.92: 	`let x = 42 `in x
+//│ ║  l.94: 	`let x = 42 `in x
 //│ ║        	         ^^
 //│ ╙── because: cannot constrain  Int  <:  CodeBase[out 'cde, out 'ctx, ?]
 //│ Type: CodeBase[⊥, ⊥, ?]
@@ -99,7 +101,7 @@ f `=> x `=> y `=> f`(x, y)
 :e
 `let x = `0 `in 1
 //│ ╔══[ERROR] Type error in unquoted term
-//│ ║  l.100: 	`let x = `0 `in 1
+//│ ║  l.102: 	`let x = `0 `in 1
 //│ ║         	                ^
 //│ ╙── because: cannot constrain  Int  <:  CodeBase[out 'cde, out 'ctx, ?]
 //│ Type: CodeBase[⊥, ⊥, ?]
@@ -128,7 +130,7 @@ run(`1)
 :e
 run(1)
 //│ ╔══[ERROR] Type error in integer literal with expected type CodeBase[out 'T, ⊥, ?]
-//│ ║  l.129: 	run(1)
+//│ ║  l.131: 	run(1)
 //│ ║         	    ^
 //│ ╙── because: cannot constrain  Int  <:  CodeBase[out 'T, ⊥, ?]
 //│ Type: ⊥
@@ -136,7 +138,7 @@ run(1)
 :e
 x `=> run(x)
 //│ ╔══[ERROR] Type error in reference with expected type CodeBase[out 'T, ⊥, ?]
-//│ ║  l.137: 	x `=> run(x)
+//│ ║  l.139: 	x `=> run(x)
 //│ ║         	          ^
 //│ ╟── because: cannot constrain  CodeBase['x, x, ⊥]  <:  CodeBase[out 'T, ⊥, ?]
 //│ ╙── because: cannot constrain  x  <:  ⊥
@@ -145,12 +147,12 @@ x `=> run(x)
 :e
 `let x = `42 `in run(x)
 //│ ╔══[ERROR] Type error in reference with expected type CodeBase[out 'T, ⊥, ?]
-//│ ║  l.146: 	`let x = `42 `in run(x)
+//│ ║  l.148: 	`let x = `42 `in run(x)
 //│ ║         	                     ^
 //│ ╟── because: cannot constrain  CodeBase['cde, x, ⊥]  <:  CodeBase[out 'T, ⊥, ?]
 //│ ╙── because: cannot constrain  x  <:  ⊥
 //│ ╔══[ERROR] Type error in unquoted term
-//│ ║  l.146: 	`let x = `42 `in run(x)
+//│ ║  l.148: 	`let x = `42 `in run(x)
 //│ ║         	                 ^^^^^^
 //│ ╟── because: cannot constrain  'T  <:  CodeBase[out 'cde1, out 'ctx, ?]
 //│ ╟── because: cannot constrain  'T  <:  ¬(¬{CodeBase[out 'cde1, out 'ctx, ?]})

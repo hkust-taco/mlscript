@@ -149,12 +149,9 @@ fun foofoo(x) =
   if x is Int then
     let t = x + 1 in "foo"
 foofoo
-//│ Type: ['x, 'scrut, 'eff, 'cons] -> 'x ->{'eff} 'cons
+//│ Type: ['x, 'res, 'eff] -> 'x ->{'eff} 'res
 //│ Where:
-//│   'x <: ¬Int ∨ Int
-//│   'x#Int ∨  ∧ ⊥<:'eff ∧ 'scrut<:Int ∧ Int<:Int ∧ Str<:'cons
-//│   Int ∧ 'x <: 'scrut
-//│   'scrut#Int ∨  ∧ ⊥<:'eff ∧ 'scrut<:Int ∧ Int<:Int ∧ Str<:'cons
+//│   'x#Int ∨  ∧ ⊥<:'eff ∧ Int ∧ 'x<:Int ∧ Int<:Int ∧ Str<:'res
 
 fun foofoo(x) =
   let t = x + 1 in "foo"
@@ -180,7 +177,7 @@ f().Printer#f(42)
 :e
 f().Printer#f("oops")
 //│ ╔══[ERROR] Type error in string literal with expected type 'T
-//│ ║  l.181: 	f().Printer#f("oops")
+//│ ║  l.178: 	f().Printer#f("oops")
 //│ ║         	              ^^^^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
@@ -199,7 +196,7 @@ let ip = new Printer(foofoo) in ip.Printer#f(42)
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ╔══[ERROR] Type error in string literal with expected type 'T
-//│ ║  l.200: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
+//│ ║  l.197: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ║         	                                             ^^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
@@ -230,7 +227,7 @@ let tf = new TFun(inc) in tf.TFun#f(1)
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ╔══[ERROR] Type error in string literal with expected type 'T
-//│ ║  l.231: 	let tf = new TFun(inc) in tf.TFun#f("1")
+//│ ║  l.228: 	let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
@@ -286,12 +283,10 @@ if 1 is Foo then 0 else 1
 fun test(x) =
   if x is Int then x + 1 else 0
 test
-//│ Type: ['x, 'scrut, 'eff, 'cons] -> 'x ->{'eff} ('cons ∨ Int)
+//│ Type: ['x, 'res, 'eff] -> 'x ->{'eff} 'res
 //│ Where:
-//│   'x <: ¬Int ∨ Int
-//│   'x#Int ∨  ∧ ⊥<:'eff ∧ 'scrut<:Int ∧ Int<:Int ∧ Int<:'cons
-//│   Int ∧ 'x <: 'scrut
-//│   'scrut#Int ∨  ∧ ⊥<:'eff ∧ 'scrut<:Int ∧ Int<:Int ∧ Int<:'cons
+//│   'x#Int ∨  ∧ ⊥<:'eff ∧ Int ∧ 'x<:Int ∧ Int<:Int ∧ Int<:'res
+//│   Int <: 'res
 
 test(1)
 //│ Type: Int
@@ -362,7 +357,7 @@ throw new Error("oops")
 :e
 throw 42
 //│ ╔══[ERROR] Type error in throw
-//│ ║  l.363: 	throw 42
+//│ ║  l.358: 	throw 42
 //│ ║         	      ^^
 //│ ╙── because: cannot constrain  Int  <:  Error
 //│ Type: ⊥

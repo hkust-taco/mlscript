@@ -70,6 +70,11 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
         else
           v.state.lowerBounds ::= nv
           nv.state.upperBounds = v.state.upperBounds.map(extrude) // * propagate
+          nv.state.disjsub ++= v.state.disjsub.map:
+            case DisjSub(ds, dss, cs) =>
+              val d = ds.mapKeys(v0 => if v === v0 then nv else v0)
+              DisjSub(mutable.LinkedHashSet.from(d), dss, cs)
+          nv.state.disjsub.foreach(_.commit())
         nv
       })
     case ft @ FunType(args, ret, eff) =>
@@ -117,16 +122,15 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
             k.foreach(k => constrainImpl(um(k), wm(k)))
           else cctx.err
         case (Inter(S(u: RcdType)), Union(f, Nil, rs@(RcdType(w) :: _))) =>
-          val k = w.keys.toSet
-          val r = RcdType(u.fields.filter(p => k(p._1)))
           val ws = rs.foldLeft(Nil): (x, w) =>
-            val d = Type.disjoint(w, r)
+            val d = Type.disjoint(w, u)
             if d === S(Set.empty) then x else Ls(d -> w) ++ x
           ws match
             case Nil => cctx.err
             case (_, w) :: Nil => constrainImpl(u, w)
             case ((_, RcdType(w)) :: (_, RcdType(z)) :: _) =>
               val (wm, zm) = (w.toMap, z.toMap)
+              val k = wm.keySet & zm.keySet
               val dk = k.find(k => Type.disjoint(wm(k), zm(k)) === S(Set.empty)).get
               val ku = ws.foldLeft(Bot: Type):
                 case (ku, (_, w)) => ku | w.fields.find(_._1 === dk).get._2
@@ -134,7 +138,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
                 case (S(k), w) => k.foreach: k =>
                   DisjSub(mutable.LinkedHashSet.from(k), Nil, Ls(u -> RcdType(w.fields.filter(_._1 =/= k)))).commit()
                 case _ =>
-              constrainImpl(r.fields.find(_._1 === dk).get._2, ku)
+              constrainImpl(u.fields.find(_._1 === dk).get._2, ku)
               ws.foreach:
                 case (N, w) => constrainImpl(u, RcdType(w.fields.filter(_._1 =/= dk)))
                 case _ =>
@@ -149,16 +153,9 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
                 constrainImpl(f.ret, ret2)
                 constrainImpl(f.eff, eff2)
             else
-              val dargs = f.map(x => Type.discriminant(x.args))
-              val ks = if f.nonEmpty then
-                dargs.iterator.map(_._1.fields.keys.toSet).reduce(_ & _)
-              else Set.empty
-              val args = dargs.map:
-                case (u, w) =>
-                  val (q, p) = u.fields.partition(x => ks(x._1))
-                  (RcdType(q), RcdType(p) & w)
+              val args = f.map(x => Type.discriminant(x.args))
               val args2r = args2.zipWithIndex.map(u => (s"${u._2}", u._1))
-              val args2q = RcdType(args2r.filter(x => ks(x._1)))
+              val args2q = RcdType(args2r)
               val (cs, dss) = (args.iterator.zip(f).map:
                 case ((q, r), f) =>
                   val rm = r.fields.toMap

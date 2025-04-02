@@ -326,12 +326,6 @@ object Type:
     if !prev.contains(a -> b) then c.getOrElseUpdate(a -> b, {
       (a.simp.toBasic, b.simp.toBasic) match
         case (Bot, _) | (_, Bot) => S(Set.empty)
-        case (NegType(t),_) => t.!.simp.toBasic match
-          case NegType(_) => N
-          case a => disjointImpl(a, b)(prev)
-        case (_, NegType(t)) => t.!.simp.toBasic match
-          case NegType(_) => N
-          case a => disjointImpl(a, b)(prev)
         case (ClassLikeType(a, _), ClassLikeType(b, _)) if a.uid =/= b.uid => S(Set.empty)
         case (RcdType(u), RcdType(w)) if u.nonEmpty && w.nonEmpty =>
           val um = u.toMap
@@ -378,6 +372,12 @@ object Type:
           val k = v.state.lowerBounds.map(lb => disjointImpl(a, lb.toBasic)(p))
           if k.exists(_.isEmpty) then N
           else S(k.flatten.flatten.toSet + Set(v -> a))
+        case (NegType(t),_) => t.!.simp.toBasic match
+          case NegType(_) => N
+          case a => disjointImpl(a, b)(prev)
+        case (_, NegType(t)) => t.!.simp.toBasic match
+          case NegType(_) => N
+          case a => disjointImpl(a, b)(prev)
         case _ => N
     }) else S(Set.empty)
   def disjoint(a: Type, b: Type): Opt[Set[Set[InfVar->BasicType]]] =
