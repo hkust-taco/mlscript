@@ -615,9 +615,9 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
             case Some(value) if !belongsToCtor(t.owner.get) =>
               if (t.k is syntax.LetBind) && !t.owner.forall(_.isInstanceOf[semantics.TopLevelSymbol]) then
                 // TODO: can we do better?
-                raise(ErrorReport(
-                  msg"Usage of private fields cannot be lifted." -> N :: Nil,
-                  N, Diagnostic.Source.Compilation
+                raise(InternalError(
+                  msg"Uses of private fields cannot yet be lifted." -> N :: Nil,
+                  Diagnostic.Source.Compilation
                 ))
               AssignField(value.asPath, t.id, applyResult(rhs), applyBlock(rest))(N)
             case _ => super.applyBlock(rewritten)
@@ -632,7 +632,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         case Define(d: ValDefn, rest: Block) if d.owner.isDefined =>
           ctx.getIsymPath(d.owner.get) match
             case Some(value) if !belongsToCtor(d.owner.get) =>
-              AssignField(value.asPath, Tree.Ident(d.sym.nme), applyResult(d.rhs), applyBlock(rest))(N)
+              AssignField(value.asPath, Tree.Ident(d.sym.nme), applyResult(d.rhs), applyBlock(rest))(S(d.sym))
             case _ => super.applyBlock(rewritten)
         
         case Define(d: Defn, rest: Block) => ctx.modLocals.get(d.sym) match 
@@ -665,9 +665,9 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           case Some(value) if !belongsToCtor(t.owner.get) =>
             if (t.k is syntax.LetBind) && !t.owner.forall(_.isInstanceOf[semantics.TopLevelSymbol]) then
               // TODO: can we do better?
-              raise(ErrorReport(
-                msg"Usage of private fields cannot be lifted." -> N :: Nil,
-                N, Diagnostic.Source.Compilation
+              raise(InternalError(
+                msg"Uses of private fields cannot yet be lifted." -> N :: Nil,
+                Diagnostic.Source.Compilation
               ))
             Select(value.asPath, t.id)(N)
           case _ => super.applyPath(p)

@@ -585,19 +585,6 @@ f().foo()
 //│ runtime.safeCall(tmp5.foo())
 //│ = 10111
 
-// private fields
-:fixme
-:expect 2
-class A(a) with
-  let x = 2
-  fun f() =
-    fun g() = x
-    g()
-A(2).f()
-//│ ═══[COMPILATION ERROR] Usage of private fields cannot be lifted.
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
-
 :expect 2
 fun f(x) =
   class A() with
@@ -652,7 +639,7 @@ fun f(x) =
 f(2).get()
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ JS (unsanitized):
-//│ let h3, f9, tmp12, h$3;
+//│ let h3, f9, tmp11, h$3;
 //│ h$3 = function h$(Test$instance, x) {
 //│   return x
 //│ };
@@ -676,8 +663,8 @@ f(2).get()
 //│   foo1 = Test10;
 //│   return runtime.safeCall(foo1())
 //│ };
-//│ tmp12 = f9(2);
-//│ runtime.safeCall(tmp12.get())
+//│ tmp11 = f9(2);
+//│ runtime.safeCall(tmp11.get())
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ = 2
 

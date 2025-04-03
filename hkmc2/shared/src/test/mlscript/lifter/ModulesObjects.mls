@@ -369,7 +369,6 @@ module A with
     fun nested() = x
     nested()
 A.mtd
-//│ ═══[COMPILATION ERROR] Usage of private fields cannot be lifted.
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Uses of private fields cannot yet be lifted.
 
 
