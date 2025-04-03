@@ -167,7 +167,7 @@ abstract class DiffMaker:
     val blockLineNum = origin.startLineNum
     // * ^ In previous DiffTest versions, these two could be different due to relative line numbers
     
-    var parseErrors, typeErrors, compilationErrors, runtimeErrors, warnings = 0
+    var parseErrors, typeErrors, compilationErrors, runtimeErrors, warnings, internalErrors = 0
     
     val raise: Raise = d =>
       d.kind match
@@ -206,10 +206,11 @@ abstract class DiffMaker:
           failures += globalStartLineNum
           unexpected("warning", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
       case Diagnostic.Kind.Internal =>
+        internalErrors += 1
         if !tolerateErrors then
           failures += globalStartLineNum
-        // unexpected("internal error", blockLineNum)
-        throw d
+          unexpected("internal error", blockLineNum, S(d.srcLoc), d.mkExtraInfo)
+        // throw d
       report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
     
     processOrigin(origin)(using raise)
@@ -232,7 +233,7 @@ abstract class DiffMaker:
       failures += globalStartLineNum
       unexpected("lack of warnings", blockLineNum, N, () => N)
     
-    if fixme.isSet && (parseErrors + typeErrors + compilationErrors + runtimeErrors) == 0 then
+    if fixme.isSet && (parseErrors + typeErrors + compilationErrors + runtimeErrors + internalErrors) == 0 then
       failures += globalStartLineNum
       unexpected("lack of error to fix", blockLineNum, N, () => N)
   
