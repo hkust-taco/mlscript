@@ -3,7 +3,6 @@ import Predef from "./Predef.mjs";
 let Option1;
 Option1 = class Option {
   static {
-    Option1 = Option;
     this.Some = function Some(value1) {
       return new Some.class(value1);
     };
@@ -30,9 +29,7 @@ Option1 = class Option {
       toString() { return "Both(" + globalThis.Predef.render(this.fst) + ", " + globalThis.Predef.render(this.snd) + ")"; }
     };
     this.unsafe = class unsafe {
-      static {
-        this.unsafe = unsafe;
-      }
+      static {}
       static get(opt) {
         let param0, value;
         if (opt instanceof Option.Some.class) {

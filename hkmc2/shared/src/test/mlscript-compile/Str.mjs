@@ -1,9 +1,7 @@
 import runtime from "./Runtime.mjs";
 let Str1;
 Str1 = class Str {
-  static {
-    Str1 = Str;
-  }
+  static {}
   static concat2(a, b) {
     return a + b
   } 

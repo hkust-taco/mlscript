@@ -227,8 +227,8 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 doc"$acc # this${fieldSelect(sym.name)} = $nme;"
             val ctorCode = doc"$preCtorCode${body(ctor, endSemi = auxParams.nonEmpty)}"
 
-            val ctorAux = if auxParams.isEmpty then
-              ctorCode
+            val ctorBod = if auxParams.isEmpty then
+              doc"${braced(ctorCode)}"
             else
               val pss = ctorAuxParams.map(_.map(_._2))
               val newCtorCode = doc"$ctorCode # return this;"
@@ -236,16 +236,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
               val funBod = pss.foldRight(ctorBraced):
                 case (psDoc, doc) => doc"(${psDoc.mkDocument(", ")}) => $doc"
 
-              doc" # return $funBod";
-            
-            val ctorBod = if isModule then
-              ownr match
-              case S(owner) =>
-                braced(doc" # ${mkThis(owner)}.${sym.nme} = ${getVar(isym)};$ctorCode")
-              case N =>
-                braced(doc" # ${getVar(sym)} = ${getVar(isym)};$ctorCode")
-            else
-              braced(ctorAux)
+              doc"${ braced(doc" # return $funBod") }"
             
             val ctorOrStatic = if isModule
               then doc"static"

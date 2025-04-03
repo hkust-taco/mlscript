@@ -5,9 +5,7 @@ privFun = function privFun() {
   return "hi"
 };
 Example1 = class Example {
-  static {
-    Example1 = Example;
-  }
+  static {}
   static get pubFun() {
     let tmp;
     tmp = privFun();
