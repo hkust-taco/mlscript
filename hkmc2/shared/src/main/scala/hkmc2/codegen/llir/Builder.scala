@@ -28,8 +28,8 @@ final case class BuiltinSymbols(
   var callableSym: Opt[Local] = None,
   var thisSym: Opt[Local] = None,
   var builtinSym: Opt[Local] = None,
-  fieldSym: MutMap[Int, Local] = MutMap.empty,
-  applySym: MutMap[Int, Local] = MutMap.empty,
+  fieldSym: MutMap[Int, VarSymbol] = MutMap.empty,
+  applySym: MutMap[Int, BlockMemberSymbol] = MutMap.empty,
   tupleSym: MutMap[Int, MemberSymbol[? <: ClassLikeDef]] = MutMap.empty,
   runtimeSym: Opt[TempSymbol] = None,
 ):
@@ -113,15 +113,16 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
 
   private def newTemp = TempSymbol(N, "x")
   private def newNamedTemp(name: Str) = TempSymbol(N, name)
+  private def newNamedBlockMem(name: Str) = BlockMemberSymbol(name, Nil)
   private def newNamed(name: Str) = VarSymbol(Tree.Ident(name))
   private def newClassSym(name: Str) =
     ClassSymbol(Tree.TypeDef(hkmc2.syntax.Cls, Tree.Empty(), N, N), Tree.Ident(name))
   private def newTupleSym(len: Int) =
     ClassSymbol(Tree.TypeDef(hkmc2.syntax.Cls, Tree.Empty(), N, N), Tree.Ident(s"Tuple$len"))
-  private def newMemSym(name: Str) = TermSymbol(hkmc2.syntax.ImmutVal, None, Tree.Ident(name))
-  private def newFunSym(name: Str) = TermSymbol(hkmc2.syntax.Fun, None, Tree.Ident(name))
+  private def newVarSym(name: Str) = VarSymbol(Tree.Ident(name))
+  private def newFunSym(name: Str) = BlockMemberSymbol(name, Nil)
   private def newBuiltinSym(name: Str) = BuiltinSymbol(name, false, false, false, false)
-  private def builtinField(n: Int)(using Ctx) = summon[Ctx].builtin_sym.fieldSym.getOrElseUpdate(n, newMemSym(s"field$n"))
+  private def builtinField(n: Int)(using Ctx) = summon[Ctx].builtin_sym.fieldSym.getOrElseUpdate(n, newVarSym(s"field$n"))
   private def builtinApply(n: Int)(using Ctx) = summon[Ctx].builtin_sym.applySym.getOrElseUpdate(n, newFunSym(s"apply$n"))
   private def builtinTuple(n: Int)(using Ctx) = summon[Ctx].builtin_sym.tupleSym.getOrElseUpdate(n, newTupleSym(n))
   private def builtinCallable(using ctx: Ctx) : Local =
@@ -254,7 +255,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       // args may have the same name (with different uid)
       // it's not allowed when generating the names of fields in the backend
       val clsParams = args.zipWithIndex.map:
-        case (arg, i) => newNamedTemp(s"lam_arg$i")
+        case (arg, i) => newVarSym(s"lam_arg$i")
       val applyParams = params.params
       // add the parameters of lambda expression to the context
       val ctx2 = applyParams.foldLeft(ctx)((acc, x) => acc.addName(x.sym, x.sym))
@@ -451,7 +452,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         bPath(scrut):
           case e: TrivialExpr =>
             val nextCont = Begin(rest, ct)
-            val jp: Local = newNamedTemp("j")
+            val jp: BlockMemberSymbol = newNamedBlockMem("j")
             val fvset = freeVarsFilter(nextCont.freeVarsLLIR -- nextCont.definedVars -- ctx.fn_ctx.keySet)
             val fvs1 = fvset.toList
             log(s"Match free vars: $fvset ${nextCont.freeVarsLLIR -- nextCont.definedVars} $fvs1")

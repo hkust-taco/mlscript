@@ -8,7 +8,7 @@ import scala.collection.mutable.ListBuffer
 
 import llir.{Expr => IExpr, _}
 import utils.{Scope, TraceLogger}
-import semantics.BuiltinSymbol
+import semantics._
 
 class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
   import tl.{trace, log, logs}
@@ -79,7 +79,6 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
   val mlsThis = Expr.Var("_mlsValue(this, _mlsValue::inc_ref_tag{})") // first construct a value, then incRef()
 
   case class Ctx(
-    defnCtx: Set[Local],
     fieldCtx: Set[Local],
   )
 
@@ -109,7 +108,7 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
       else
         val methods = cls.methods.map:
           case (name, defn) =>
-            val (cdef, decl) = codegenDefn(using Ctx(summon[Ctx].defnCtx + cls.name, summon[Ctx].fieldCtx ++ cls.fields))(defn)
+            val (cdef, decl) = codegenDefn(using Ctx(summon[Ctx].fieldCtx ++ cls.fields))(defn)
             val cdef2 = cdef match
               case x: Def.FuncDef if builtinApply.contains(defn.name.nme) => x.copy(name = defn.name |> directName, in_scope = Some(cls.name |> mapClsLikeName))
               case x: Def.FuncDef => x.copy(in_scope = Some(cls.name |> mapClsLikeName))
@@ -301,9 +300,8 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
 
   def codegen(prog: Program)(using Raise, Scope): CompilationUnit =
     val sortedClasses = sortClasses(prog)
-    val defnCtx = prog.defs.map(_.name)
     val fieldCtx = Set.empty[Local]
-    given Ctx = Ctx(defnCtx, fieldCtx)
+    given Ctx = Ctx(fieldCtx)
     val (defs, decls, methodsDef) = sortedClasses.map(codegenClassInfo).unzip3
     val (defs2, decls2) = prog.defs.map(codegenDefn).unzip
     CompilationUnit(Ls(mlsPrelude), decls ++ decls2, defs.flatten ++ defs2 ++ methodsDef.flatten :+ Def.RawDef(mlsCallEntry(prog.entry |> allocIfNew)) :+ Def.RawDef(mlsEntryPoint))

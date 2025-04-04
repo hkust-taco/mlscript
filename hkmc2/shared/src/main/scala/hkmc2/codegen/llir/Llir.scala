@@ -58,7 +58,7 @@ implicit object ClassInfoOrdering extends Ordering[ClassInfo] {
 case class ClassInfo(
   id: Int,
   name: MemberSymbol[? <: ClassLikeDef],
-  fields: Ls[Local],
+  fields: Ls[VarSymbol],
   parents: Set[Local],
   methods: Map[Local, Func],
 ):
@@ -91,7 +91,7 @@ implicit object FuncOrdering extends Ordering[Func] {
 
 case class Func(
   id: Int,
-  name: Local,
+  name: BlockMemberSymbol,
   params: Ls[Local],
   resultNum: Int,
   body: Node
