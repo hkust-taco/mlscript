@@ -385,7 +385,11 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
           case args: Ls[TrivialExpr] =>
             val v: Local = newTemp
             Node.LetExpr(v, Expr.BasicOp(sym, args), k(v |> sr))
-      case Call(Value.Ref(sym), args) if sym.nme.isCapitalized =>
+      case Call(Value.Ref(sym: MemberSymbol[?]), args) if sym.defn.exists(defn => defn match
+        case cls: ClassLikeDef => true
+        case _ => false
+      ) =>
+        log(s"xxx $sym is ${sym.getClass()}")
         bArgs(args):
           case args: Ls[TrivialExpr] =>
             val v: Local = newTemp
