@@ -9,7 +9,9 @@ module A with
 //│ JS (unsanitized):
 //│ let A1;
 //│ A1 = class A {
-//│   static {}
+//│   static {
+//│     A1 = A;
+//│   }
 //│   static f(x) {
 //│     if (x instanceof Option.Some.class) {
 //│       return true

@@ -3,6 +3,7 @@ import RuntimeJS from "./RuntimeJS.mjs";
 let Runtime1;
 Runtime1 = class Runtime {
   static {
+    Runtime1 = Runtime;
     const Unit$class = class Unit {
       constructor() {}
       toString() {

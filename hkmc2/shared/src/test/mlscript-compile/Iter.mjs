@@ -26,6 +26,7 @@ Iterator1.class = class Iterator {
 };
 Result1 = class Result {
   static {
+    Result1 = Result;
     this.Next = function Next(value1) {
       return new Next.class(value1);
     };
@@ -48,7 +49,9 @@ Result1 = class Result {
   static toString() { return "Result"; }
 };
 Iter1 = class Iter {
-  static {}
+  static {
+    Iter1 = Iter;
+  }
   static getIterator(something) {
     let test, prototype, tmp, tmp1;
     test = something[globalThis.Symbol.iterator];
