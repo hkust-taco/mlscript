@@ -8,13 +8,13 @@ import mlscript.utils.shorthands._
 import syntax._
 import Message.MessageContext
 import document._
-import codegen.Local
+import codegen._
 
 import util.Sorting
 import collection.immutable.SortedSet
 import language.implicitConversions
 import collection.mutable.{Map as MutMap, Set as MutSet, HashMap, ListBuffer}
-import hkmc2.semantics.BuiltinSymbol
+import hkmc2.semantics._
 
 private def raw(x: String): Document = doc"$x"
 
@@ -57,7 +57,7 @@ implicit object ClassInfoOrdering extends Ordering[ClassInfo] {
 
 case class ClassInfo(
   id: Int,
-  name: Local,
+  name: MemberSymbol[? <: ClassLikeDef],
   fields: Ls[Local],
   parents: Set[Local],
   methods: Map[Local, Func],

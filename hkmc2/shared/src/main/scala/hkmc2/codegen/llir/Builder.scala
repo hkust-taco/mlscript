@@ -30,7 +30,7 @@ final case class BuiltinSymbols(
   var builtinSym: Opt[Local] = None,
   fieldSym: MutMap[Int, Local] = MutMap.empty,
   applySym: MutMap[Int, Local] = MutMap.empty,
-  tupleSym: MutMap[Int, Local] = MutMap.empty,
+  tupleSym: MutMap[Int, MemberSymbol[? <: ClassLikeDef]] = MutMap.empty,
   runtimeSym: Opt[TempSymbol] = None,
 ):
   def hiddenClasses = callableSym.toSet
@@ -43,7 +43,7 @@ final case class Ctx(
   class_ctx: Map[Local, ClassInfo] = Map.empty,
   flow_ctx: Map[Path, Local] = Map.empty,
   is_top_level: Bool = true,
-  method_class: Opt[Symbol] = None,
+  method_class: Opt[MemberSymbol[? <: ClassLikeDef]] = None,
   builtin_sym: BuiltinSymbols = BuiltinSymbols()
 ):
   def addFuncName(n: Local, paramsSize: Int) = copy(fn_ctx = fn_ctx + (n -> FuncInfo(paramsSize)))
@@ -59,7 +59,7 @@ final case class Ctx(
     case None => bErrStop(msg"Class not found: ${n.toString}")
     case Some(value) => value
   def addKnownClass(n: Path, m: Local) = copy(flow_ctx = flow_ctx + (n -> m))
-  def setClass(c: Symbol) = copy(method_class = Some(c))
+  def setClass(c: MemberSymbol[? <: ClassLikeDef]) = copy(method_class = Some(c))
   def nonTopLevel = copy(is_top_level = false)
 
 object Ctx:
