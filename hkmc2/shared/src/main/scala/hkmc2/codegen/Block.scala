@@ -106,8 +106,8 @@ sealed abstract class Block extends Product with AutoLocated:
     case Return(res, implct) => res.freeVarsLLIR
     case Throw(exc) => exc.freeVarsLLIR
     case Label(label, body, rest) => (body.freeVarsLLIR - label) ++ rest.freeVarsLLIR 
-    case Break(label) => Set(label)
-    case Continue(label) => Set(label)
+    case Break(label) => Set.empty
+    case Continue(label) => Set.empty
     case Begin(sub, rest) => sub.freeVarsLLIR ++ rest.freeVarsLLIR
     case TryBlock(sub, finallyDo, rest) => sub.freeVarsLLIR ++ finallyDo.freeVarsLLIR ++ rest.freeVarsLLIR
     case Assign(lhs, rhs, rest) => rhs.freeVarsLLIR ++ (rest.freeVarsLLIR - lhs)
@@ -411,6 +411,10 @@ sealed abstract class Result:
     case Call(fun, args) => fun.freeVarsLLIR ++ args.flatMap(_.value.freeVarsLLIR).toSet
     case Instantiate(cls, args) => cls.freeVarsLLIR ++ args.flatMap(_.freeVarsLLIR).toSet
     case Select(qual, name) => qual.freeVarsLLIR 
+    case Value.Ref(l: (BuiltinSymbol | TopLevelSymbol | ClassSymbol | TermSymbol)) => Set.empty
+    case Value.Ref(l: MemberSymbol[?]) => l.defn match
+      case Some(d: ClassLikeDef) => Set.empty
+      case _ => Set(l)
     case Value.Ref(l) => Set(l)
     case Value.This(sym) => Set.empty
     case Value.Lit(lit) => Set.empty
