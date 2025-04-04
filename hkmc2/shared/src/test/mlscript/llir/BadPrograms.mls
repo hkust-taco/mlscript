@@ -1,7 +1,6 @@
 :llir
 :cpp
 
-:todo
 :ge
 fun oops(a) =
   class A with

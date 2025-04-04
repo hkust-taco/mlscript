@@ -314,7 +314,6 @@ foo()
 //│ Interpreted:
 //│ false
 
-:todo "this is a bug because we use reference equality to locate the split point, but the reference changed after previous iteration"
 :intl
 abstract class Nat: S[Nat] | O
 data class S(s: Nat) extends Nat
@@ -338,7 +337,6 @@ main()
 //│ Interpreted:
 //│ true
 
-:todo "this is a bug because we use reference equality to locate the split point, but the reference changed after previous iteration"
 :intl
 abstract class Option[out T]: Some[T] | None
 data class Some[out T](x: T) extends Option[T]
