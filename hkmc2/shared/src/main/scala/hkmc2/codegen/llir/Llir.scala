@@ -128,7 +128,7 @@ private def showArguments(args: Ls[TrivialExpr]) = args map (_.show) mkString ",
 enum Expr:
   case Ref(sym: Local) extends Expr, TrivialExpr 
   case Literal(lit: hkmc2.syntax.Literal) extends Expr, TrivialExpr
-  case CtorApp(cls: Local, args: Ls[TrivialExpr])
+  case CtorApp(cls: MemberSymbol[? <: ClassLikeDef], args: Ls[TrivialExpr])
   case Select(name: Local, cls: Local, field: Str)
   case BasicOp(name: BuiltinSymbol, args: Ls[TrivialExpr])
   case AssignField(assignee: Local, cls: Local, field: Str, value: TrivialExpr)

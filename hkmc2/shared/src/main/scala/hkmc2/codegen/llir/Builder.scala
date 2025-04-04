@@ -40,7 +40,8 @@ final case class Ctx(
   class_acc: ListBuffer[ClassInfo],
   symbol_ctx: Map[Local, Local] = Map.empty,
   fn_ctx: Map[Local, FuncInfo] = Map.empty, // is a known function
-  class_ctx: Map[Local, ClassInfo] = Map.empty,
+  class_ctx: Map[MemberSymbol[? <: ClassLikeDef], ClassInfo] = Map.empty,
+  class_sym_ctx: Map[BlockMemberSymbol, MemberSymbol[? <: ClassLikeDef]] = Map.empty,
   flow_ctx: Map[Path, Local] = Map.empty,
   is_top_level: Bool = true,
   method_class: Opt[MemberSymbol[? <: ClassLikeDef]] = None,
@@ -50,12 +51,13 @@ final case class Ctx(
   def findFuncName(n: Local)(using Raise) = fn_ctx.get(n) match
     case None => bErrStop(msg"Function name not found: ${n.toString()}")
     case Some(value) => value
-  def addClassInfo(n: Local, m: ClassInfo) = copy(class_ctx = class_ctx + (n -> m))
+  def addClassInfo(n: MemberSymbol[? <: ClassLikeDef], bsym: BlockMemberSymbol, m: ClassInfo) =
+    copy(class_ctx = class_ctx + (n -> m), class_sym_ctx = class_sym_ctx + (bsym -> n))
   def addName(n: Local, m: Local) = copy(symbol_ctx = symbol_ctx + (n -> m))
   def findName(n: Local)(using Raise) = symbol_ctx.get(n) match
     case None => bErrStop(msg"Name not found: ${n.toString}")
     case Some(value) => value
-  def findClassInfo(n: Local)(using Raise) = class_ctx.get(n) match
+  def findClassInfo(n: MemberSymbol[? <: ClassLikeDef])(using Raise) = class_ctx.get(n) match
     case None => bErrStop(msg"Class not found: ${n.toString}")
     case Some(value) => value
   def addKnownClass(n: Path, m: Local) = copy(flow_ctx = flow_ctx + (n -> m))
@@ -320,13 +322,12 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         case Some(value) => bErrStop(msg"Member symbol without class definition ${value.toString}")
         case None => bErrStop(msg"Member symbol without definition ${ms.toString}") 
   
-  private def fromMemToClass(m: Symbol)(using ctx: Ctx)(using Raise, Scope): Local =
-    trace[Local](s"bFromMemToClass $m", x => s"bFromMemToClass end: $x"):
+  private def fromMemToClass(m: Symbol)(using ctx: Ctx)(using Raise, Scope): MemberSymbol[? <: ClassLikeDef] =
+    trace[MemberSymbol[? <: ClassLikeDef]](s"bFromMemToClass $m", x => s"bFromMemToClass end: $x"):
       m match
       case ms: MemberSymbol[?] =>
         ms.defn match
         case Some(d: ClassLikeDef) => d.sym.asClsLike.getOrElse(bErrStop(msg"Class definition without symbol"))
-        case Some(d: TermDefinition) => d.sym
         case Some(value) => bErrStop(msg"Member symbol without class definition ${value.toString}")
         case None => bErrStop(msg"Member symbol without definition ${ms.toString}") 
       case _ => bErrStop(msg"Unsupported symbol kind ${m.toString}")
@@ -424,7 +425,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
               case args: Ls[TrivialExpr] =>
                 val v: Local = newTemp
                 log(s"Method Call Select: $r.$fld with ${s.symbol}")
-                Node.LetMethodCall(Ls(v), getClassOfField(s.symbol.get), fromMemToClass(s.symbol.get), r :: args, k(v |> sr))
+                Node.LetMethodCall(Ls(v), getClassOfField(s.symbol.get), s.symbol.get, r :: args, k(v |> sr))
       case Call(_, _) => bErrStop(msg"Unsupported kind of Call ${r.toString()}")
       case Instantiate(
         Select(Value.Ref(sym), Tree.Ident("class")), args) =>
@@ -523,7 +524,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         bErrStop(msg"The class ${sym.nme} has auxiliary parameters, which are not yet supported")
       val c = bClsLikeDef(cd)
       ctx.class_acc += c
-      val new_ctx = ctx.addClassInfo(isym, c)
+      val new_ctx = ctx.addClassInfo(isym, sym, c)
       log(s"Define class: ${isym.toString()} -> ${ctx}")
       registerClasses(rest)(using new_ctx)
     case _ =>
@@ -534,7 +535,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       case (ctx, (len, sym)) =>
         val c = ClassInfo(uid.make, sym, (0 until len).map(x => builtinField(x)).toList, Set.empty, Map.empty)
         ctx.class_acc += c
-        ctx.addClassInfo(sym, c)
+        ctx.addClassInfo(sym, BlockMemberSymbol(sym.nme, Nil), c)
   
   def registerFunctions(b: Block)(using ctx: Ctx)(using Raise, Scope): Ctx =
     var ctx2 = ctx
