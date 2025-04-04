@@ -131,9 +131,7 @@ class A(a) with
     fun g() = x
     g()
 A(2).f()
-//│ ═══[INTERNAL ERROR] Uses of private fields cannot yet be lifted.
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Uses of private fields cannot yet be lifted.
 
 /// The following are related to modules and objects. ///
 
@@ -159,13 +157,11 @@ fun foo(x, y) =
   fun foo = M.foo()
   foo
 //│ ═══[WARNING] Modules are not yet lifted.
-//│ ╔══[INTERNAL ERROR] Not in scope: member:M (class hkmc2.semantics.BlockMemberSymbol)
-//│ ║  l.155: 	  module M with
-//│ ╙──       	         ^
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:M (class hkmc2.semantics.BlockMemberSymbol)
 
 :expect 12
 foo(10, 0)
-//│ ═══[RUNTIME ERROR] ReferenceError: M is not defined
+//│ ═══[RUNTIME ERROR] ReferenceError: foo5 is not defined
 //│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'
 
 
@@ -187,8 +183,7 @@ fun foo(x) =
   class Bar extends Foo
   (new Bar).self2
 foo(2)
-//│ ═══[INTERNAL ERROR] Not in scope: Foo$ (class hkmc2.semantics.VarSymbol)
-//│ ═══[RUNTIME ERROR] TypeError: Foo1 is not a function
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: Foo$ (class hkmc2.semantics.VarSymbol)
 
 // `h` is lifted out, but then cannot access the BlockMemberSymbol M.
 :fixme
@@ -199,6 +194,4 @@ fun f =
       h
   M.g
 //│ ═══[WARNING] Modules are not yet lifted.
-//│ ╔══[INTERNAL ERROR] Not in scope: member:M (class hkmc2.semantics.BlockMemberSymbol)
-//│ ║  l.196: 	  module M with
-//│ ╙──       	         ^
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:M (class hkmc2.semantics.BlockMemberSymbol)

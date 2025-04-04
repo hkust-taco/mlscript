@@ -90,18 +90,12 @@ _ + 1 >> _ * 2 <| 123
 :todo
 let j = _.x
 //│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ ╔══[INTERNAL ERROR] Not in scope: j (class hkmc2.semantics.VarSymbol)
-//│ ║  l.91: 	let j = _.x
-//│ ╙──      	    ^
-//│ ═══[RUNTIME ERROR] ReferenceError: j is not defined
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: j (class hkmc2.semantics.VarSymbol)
 
 :todo
 let j = _.x(123)
 //│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ ╔══[INTERNAL ERROR] Not in scope: j (class hkmc2.semantics.VarSymbol)
-//│ ║  l.99: 	let j = _.x(123)
-//│ ╙──      	    ^
-//│ ═══[RUNTIME ERROR] ReferenceError: j is not defined
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: j (class hkmc2.semantics.VarSymbol)
 
 :todo
 let j = _.x(1, _)
@@ -147,10 +141,10 @@ _ - 2 <| 1
 1
 |> _ - 2
 //│ ╔══[PARSE ERROR] Expected end of input; found '_' keyword instead
-//│ ║  l.148: 	|> _ - 2
+//│ ║  l.142: 	|> _ - 2
 //│ ╙──       	   ^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.147: 	1
+//│ ║  l.141: 	1
 //│ ╙──       	^
 //│ = [function pipeInto]
 

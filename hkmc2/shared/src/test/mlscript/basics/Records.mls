@@ -78,10 +78,7 @@ let rcd =
 //│ ╔══[ERROR] Name not found: bar
 //│ ║  l.73: 	  bar =
 //│ ╙──      	  ^^^
-//│ ╔══[INTERNAL ERROR] Not in scope: rcd (class hkmc2.semantics.VarSymbol)
-//│ ║  l.71: 	let rcd =
-//│ ╙──      	    ^^^
-//│ rcd = {foo: 1, bar: "..."}
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: rcd (class hkmc2.semantics.VarSymbol)
 
 
 // * How about this syntax?
@@ -92,10 +89,10 @@ let rcd = new with
   bar =
     "..."
 //│ ╔══[ERROR] Name not found: foo
-//│ ║  l.91: 	  foo = 1
+//│ ║  l.88: 	  foo = 1
 //│ ╙──      	  ^^^
 //│ ╔══[ERROR] Name not found: bar
-//│ ║  l.92: 	  bar =
+//│ ║  l.89: 	  bar =
 //│ ╙──      	  ^^^
 //│ rcd = $anon
 
@@ -120,7 +117,7 @@ id of (x: 1, y: 2)
 :fixme
 id of { x: 1, y: 2 }
 //│ ╔══[ERROR] Expected 1 arguments, got 2
-//│ ║  l.121: 	id of { x: 1, y: 2 }
+//│ ║  l.118: 	id of { x: 1, y: 2 }
 //│ ╙──       	^^
 //│ = {x: 1, y: 2}
 
