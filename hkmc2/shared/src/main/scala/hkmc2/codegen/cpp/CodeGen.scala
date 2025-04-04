@@ -280,7 +280,7 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
       ++ builtinClassSymbols.map(x => (x |> mapClsLikeName, Set.empty[String]))
     log(s"depgraph: $depgraph")
     var degree = depgraph.view.mapValues(_.size).toMap
-    def removeNode(node: String) =
+    def removeNode(node: Str) =
       degree -= node
       depgraph -= node
       depgraph = depgraph.view.mapValues(_.filter(_ != node)).toMap
@@ -290,7 +290,7 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
     while work.nonEmpty do
       val node = work.head
       work -= node
-      prog.classes.find(x => (x.name |> mapClsLikeName) == node).fold(())(sorted.addOne)
+      prog.classes.find(x => (x.name |> mapClsLikeName) == node).foreach(sorted.addOne)
       removeNode(node)
       val next = degree.filter(_._2 == 0).keys
       work ++= next

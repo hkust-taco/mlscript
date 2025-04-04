@@ -64,7 +64,7 @@ final case class Ctx(
 
 object Ctx:
   def empty(using Elaborator.State) =
-    Ctx(ListBuffer.empty, ListBuffer.empty).copy(builtin_sym = BuiltinSymbols(
+    Ctx(ListBuffer.empty, ListBuffer.empty, builtin_sym = BuiltinSymbols(
       runtimeSym = Some(Elaborator.State.runtimeSymbol)
     ))
 
@@ -223,7 +223,6 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       if !ctx.is_top_level then
         bErrStop(msg"Non top-level definition ${isym.toString()} not supported")
       else
-        val clsDefn = isym.defn.getOrElse(die)
         val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
         given Ctx = ctx.setClass(isym)
         val funcs = methods.map(bMethodDef)
@@ -530,7 +529,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
     case _ =>
       b.subBlocks.foldLeft(ctx)((ctx, rest) => registerClasses(rest)(using ctx))
 
-  def registerInternalClasses(using ctx: Ctx)(using Raise, Scope): Ctx =
+  def registerBuiltinClasses(using ctx: Ctx)(using Raise, Scope): Ctx =
     ctx.builtin_sym.tupleSym.foldLeft(ctx):
       case (ctx, (len, sym)) =>
         val c = ClassInfo(uid.make, sym, (0 until len).map(x => builtinField(x)).toList, Set.empty, Map.empty)
@@ -538,36 +537,37 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         ctx.addClassInfo(sym, c)
   
   def registerFunctions(b: Block)(using ctx: Ctx)(using Raise, Scope): Ctx =
-    b match
-    case Match(scrut, arms, dflt, rest) => registerFunctions(rest)
-    case Return(res, implct) => ctx
-    case Throw(exc) => ctx
-    case Label(label, body, rest) => registerFunctions(rest)
-    case Break(label) => ctx
-    case Continue(label) => ctx
-    case Begin(sub, rest) =>
-      val ctx1 = registerFunctions(sub)
-      registerFunctions(rest)(using ctx1)
-    case TryBlock(sub, finallyDo, rest) =>
-      val ctx1 = registerFunctions(sub)
-      val ctx2 = registerFunctions(finallyDo)
-      registerFunctions(rest)(using ctx2)
-    case Assign(lhs, rhs, rest) =>
-      registerFunctions(rest)
-    case AssignField(lhs, nme, rhs, rest) =>
-      registerFunctions(rest)
-    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
-      registerFunctions(rest)
-    case Define(fd @ FunDefn(_own, sym, params, body), rest) =>
-      if params.length == 0 then
-        bErrStop(msg"Function without arguments not supported: ${params.length.toString}")
-      val ctx2 = ctx.addFuncName(sym, params.head.params.length)
-      log(s"Define function: ${sym.nme} -> ${ctx2}")
-      registerFunctions(rest)(using ctx2)
-    case Define(defn, rest) => registerFunctions(rest)
-    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
-      TODO("HandleBlock not supported")
-    case End(msg) => ctx
+    var ctx2 = ctx
+    new BlockTraverser:
+      applyBlock(b)
+
+      override def applyBlock(b: Block): Unit = b match
+        case Match(scrut, arms, dflt, rest) => applyBlock(rest)
+        case Return(res, implct) =>
+        case Throw(exc) =>
+        case Label(label, body, rest) => applyBlock(rest)
+        case Break(label) =>
+        case Continue(label) =>
+        case Begin(sub, rest) => applyBlock(rest)
+        case TryBlock(sub, finallyDo, rest) => applyBlock(rest)
+        case Assign(lhs, rhs, rest) => applyBlock(rest)
+        case AssignField(_, _, _, rest) => applyBlock(rest)
+        case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => applyBlock(rest)
+        case Define(defn, rest) => applyDefn(defn); applyBlock(rest)
+        case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) => applyBlock(rest)
+        case End(msg) =>
+      
+      override def applyDefn(defn: Defn): Unit = defn match
+        case f: FunDefn => applyFunDefn(f)
+        case _ => ()
+  
+      override def applyFunDefn(fun: FunDefn): Unit =
+        val FunDefn(_own, sym, params, body) = fun
+        if params.length == 0 then
+          bErrStop(msg"Function without arguments not supported: ${params.length.toString}")
+        ctx2 = ctx2.addFuncName(sym, params.head.params.length)
+        log(s"Define function: ${sym.nme} -> ${ctx2}")
+    ctx2
   
   def bProg(e: Program)(using Raise, Scope, Ctx): (LlirProgram, Ctx) =
     var ctx = summon[Ctx]
@@ -586,7 +586,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
     )
     ctx.def_acc += entryFunc
 
-    ctx = registerInternalClasses(using ctx)
+    ctx = registerBuiltinClasses(using ctx)
     
     val prog = LlirProgram(ctx.class_acc.toSet, ctx.def_acc.toSet, entryFunc.name)
 
