@@ -1,16 +1,14 @@
-package hkmc2.codegen.cpp
+package hkmc2
+package codegen
+package cpp
 
 import mlscript.utils._
 import mlscript.utils.shorthands._
 import scala.collection.mutable.ListBuffer
 
-import hkmc2.codegen.llir.{Expr => IExpr, _}
-import hkmc2.codegen.cpp._
-import hkmc2.codegen.Local
-import hkmc2.utils.{Scope, TraceLogger}
-import hkmc2.Raise
-import hkmc2.semantics.BuiltinSymbol
-import hkmc2.escaped
+import llir.{Expr => IExpr, _}
+import utils.{Scope, TraceLogger}
+import semantics.BuiltinSymbol
 
 class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
   import tl.{trace, log, logs}
@@ -113,12 +111,12 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
           case (name, defn) =>
             val (cdef, decl) = codegenDefn(using Ctx(summon[Ctx].defnCtx + cls.name, summon[Ctx].fieldCtx ++ cls.fields))(defn)
             val cdef2 = cdef match
-              case x: Def.FuncDef if builtinApply.contains(defn.name.nme) => x.copy(name = defn.name |> directName, scope = Some(cls.name |> mapClsLikeName))
-              case x: Def.FuncDef => x.copy(scope = Some(cls.name |> mapClsLikeName))
+              case x: Def.FuncDef if builtinApply.contains(defn.name.nme) => x.copy(name = defn.name |> directName, in_scope = Some(cls.name |> mapClsLikeName))
+              case x: Def.FuncDef => x.copy(in_scope = Some(cls.name |> mapClsLikeName))
               case _ => throw new Exception(s"codegenClassInfo: unexpected def $cdef")
             val decl2 = decl match
-              case x: Decl.FuncDecl if builtinApply.contains(defn.name.nme) => x.copy(virt = true, name = defn.name |> directName)
-              case x: Decl.FuncDecl => x.copy(virt = true)
+              case x: Decl.FuncDecl if builtinApply.contains(defn.name.nme) => x.copy(is_virtual = true, name = defn.name |> directName)
+              case x: Decl.FuncDecl => x.copy(is_virtual = true)
               case _ => throw new Exception(s"codegenClassInfo: unexpected decl $decl")
             log(s"codegenClassInfo: ${cls.name} method ${defn.name} $decl2")
             (cdef2, decl2)
@@ -181,7 +179,7 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
         val (decls2, stmts2) = codegen(arm, storeInto)(using Ls.empty, Ls.empty[Stmt])
         val stmt = Stmt.If(mlsIsBoolLit(scrut2, i), Stmt.Block(decls2, stmts2), nextarm)
         S(stmt)
-      case _ => TODO("codegenCaseWithIfs don't support these patterns currently")
+      case _ => TODO("codegenCaseWithIfs doesn't support these patterns currently")
     }
     (decls, stmt.fold(stmts)(x => stmts :+ x))
 
@@ -190,29 +188,19 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
     val stmts2 = stmts ++ Ls(storeInto.fold(Stmt.Return(call))(x => Stmt.Assign(x, call)))
     (decls, stmts2)
 
-  def codegenOps(op: Local, args: Ls[TrivialExpr])(using Ctx, Raise, Scope) = 
+  def codegenOps(op: BuiltinSymbol, args: Ls[TrivialExpr])(using Ctx, Raise, Scope) = 
     trace[Expr](s"codegenOps $op begin"):
-      val op2 = op.nme
-      op2 match
-      case "+" => 
-        if args.size == 1 then Expr.Unary("+", toExpr(args(0)))
-        else Expr.Binary("+", toExpr(args(0)), toExpr(args(1)))
-      case "-" => 
-        if args.size == 1 then Expr.Unary("-", toExpr(args(0)))
-        else Expr.Binary("-", toExpr(args(0)), toExpr(args(1)))
-      case "*" => Expr.Binary("*", toExpr(args(0)), toExpr(args(1)))
-      case "/" => Expr.Binary("/", toExpr(args(0)), toExpr(args(1)))
-      case "%" => Expr.Binary("%", toExpr(args(0)), toExpr(args(1)))
-      case "==" | "===" => Expr.Binary("==", toExpr(args(0)), toExpr(args(1)))
-      case "!=" => Expr.Binary("!=", toExpr(args(0)), toExpr(args(1)))
-      case "<" => Expr.Binary("<", toExpr(args(0)), toExpr(args(1)))
-      case "<=" => Expr.Binary("<=", toExpr(args(0)), toExpr(args(1)))
-      case ">" => Expr.Binary(">", toExpr(args(0)), toExpr(args(1)))
-      case ">=" => Expr.Binary(">=", toExpr(args(0)), toExpr(args(1)))
-      case "&&" => Expr.Binary("&&", toExpr(args(0)), toExpr(args(1)))
-      case "||" => Expr.Binary("||", toExpr(args(0)), toExpr(args(1)))
-      case "!" => Expr.Unary("!", toExpr(args(0)))
-      case _ => TODO(s"codegenOps $op2")
+      var op2 = op.nme
+      if op2 == "===" then
+        op2 = "=="
+      else if op2 == "!===" then
+        op2 = "!="
+      if op.binary && args.length == 2 then 
+        Expr.Binary(op2, toExpr(args(0)), toExpr(args(1)))
+      else if op.unary && args.length == 1 then
+        Expr.Unary(op2, toExpr(args(0)))
+      else
+        TODO(s"codegenOps ${op.nme} ${args.size} ${op.binary} ${op.unary} ${args.map(_.show)}")
 
 
   def codegen(expr: IExpr)(using Ctx, Raise, Scope): Expr = expr match
@@ -282,8 +270,8 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
       val stmts = Ls.empty[Stmt]
       val (decls2, stmts2) = codegen(body, mlsRetValue)(using decls, stmts)
       val stmtsWithReturn = stmts2 :+ Stmt.Return(Expr.Var(mlsRetValue))
-      val theDef = Def.FuncDef(mlsRetValType(resultNum), name |> allocIfNew, params.map(x => (x |> allocIfNew, mlsValType)), Stmt.Block(decls2, stmtsWithReturn))
-      val decl = Decl.FuncDecl(mlsRetValType(resultNum), name |> allocIfNew, params.map(x => mlsValType))
+      val theDef = Def.FuncDef(mlsRetValType(resultNum), name |> allocIfNew, params.map(x => (x |> allocIfNew, mlsValType)), Stmt.Block(decls2, stmtsWithReturn), false, false, None)
+      val decl = Decl.FuncDecl(mlsRetValType(resultNum), name |> allocIfNew, params.map(x => mlsValType), false, false)
       (theDef, decl)
 
   // Topological sort of classes based on inheritance relationships

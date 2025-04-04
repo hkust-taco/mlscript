@@ -7,15 +7,15 @@ import scala.collection.mutable.{HashMap => MutMap}
 
 import mlscript.utils.*
 import mlscript.utils.shorthands.*
-import hkmc2.utils.*
-import hkmc2.document.*
-import hkmc2.Message.MessageContext
+import utils.*
+import document.*
+import Message.MessageContext
 
-import hkmc2.syntax.Tree
-import hkmc2.semantics.*
-import hkmc2.codegen.llir.{ Program => LlirProgram, Node, Func }
-import hkmc2.codegen.Program
-import hkmc2.codegen.cpp.Expr.StrLit
+import syntax.Tree
+import semantics.*
+import codegen.llir.{ Program => LlirProgram, Node, Func }
+import codegen.Program
+import cpp.Expr.StrLit
 
 private def bErrStop(msg: Message)(using Raise) =
   raise(ErrorReport(msg -> N :: Nil,

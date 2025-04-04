@@ -1,14 +1,12 @@
-package hkmc2.codegen.cpp
+package hkmc2
+package codegen.cpp
 
 import mlscript._
 import mlscript.utils._
 import mlscript.utils.shorthands._
-
-import hkmc2.Message.MessageContext
-import hkmc2.document._
-
 import scala.language.implicitConversions
-import hkmc2.escaped
+
+import document._
 
 private def raw(x: String): Document = doc"$x"
 given Conversion[String, Document] = x => doc"$x"
@@ -169,7 +167,7 @@ case class CompilationUnit(includes: Ls[Str], decls: Ls[Decl], defs: Ls[Def]):
 enum Decl:
   case StructDecl(name: Str)
   case EnumDecl(name: Str)
-  case FuncDecl(ret: Type, name: Str, args: Ls[Type], or: Bool = false, virt: Bool = false)
+  case FuncDecl(ret: Type, name: Str, args: Ls[Type], is_override: Bool, is_virtual: Bool)
   case VarDecl(name: Str, typ: Type)
 
   def toDocument: Document =
@@ -187,9 +185,9 @@ enum Decl:
     aux(this)
 
 enum Def:
-  case StructDef(name: Str, fields: Ls[(Str, Type)], inherit: Opt[Ls[Str]], methods: Ls[Def] = Ls.empty, methods_decl: Ls[Decl] = Ls.empty)
+  case StructDef(name: Str, fields: Ls[(Str, Type)], inherit: Opt[Ls[Str]], methods: Ls[Def], methods_decl: Ls[Decl])
   case EnumDef(name: Str, fields: Ls[(Str, Opt[Int])])
-  case FuncDef(specret: Type, name: Str, args: Ls[(Str, Type)], body: Stmt.Block, or: Bool = false, virt: Bool = false, scope: Opt[Str] = None)
+  case FuncDef(specret: Type, name: Str, args: Ls[(Str, Type)], body: Stmt.Block, is_override: Bool, is_virtual: Bool = false, in_scope: Opt[Str])
   case VarDef(typ: Type, name: Str, init: Opt[Expr])
   case RawDef(raw: Str)
 

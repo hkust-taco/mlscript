@@ -2,7 +2,7 @@
 :llir
 :cpp
 
-// This file contains all legacy tests for LLIR in the old MLScript compiler.
+// This file contains all tests for LLIR in the original MLscript compiler.
 
 :intl
 data class Pair[A, B](x: A, y: B)

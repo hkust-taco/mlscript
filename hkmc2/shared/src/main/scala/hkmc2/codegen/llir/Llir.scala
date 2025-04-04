@@ -1,19 +1,20 @@
-package hkmc2.codegen.llir
+package hkmc2
+package codegen.llir
 
 import mlscript._
 import mlscript.utils._
 import mlscript.utils.shorthands._
 
-import hkmc2.syntax._
-import hkmc2.Message.MessageContext
-import hkmc2.document._
-import hkmc2.codegen.Local
+import syntax._
+import Message.MessageContext
+import document._
+import codegen.Local
 
 import util.Sorting
 import collection.immutable.SortedSet
 import language.implicitConversions
 import collection.mutable.{Map as MutMap, Set as MutSet, HashMap, ListBuffer}
-import hkmc2.escaped
+import hkmc2.semantics.BuiltinSymbol
 
 private def raw(x: String): Document = doc"$x"
 
@@ -129,7 +130,7 @@ enum Expr:
   case Literal(lit: hkmc2.syntax.Literal) extends Expr, TrivialExpr
   case CtorApp(cls: Local, args: Ls[TrivialExpr])
   case Select(name: Local, cls: Local, field: Str)
-  case BasicOp(name: Local, args: Ls[TrivialExpr])
+  case BasicOp(name: BuiltinSymbol, args: Ls[TrivialExpr])
   case AssignField(assignee: Local, cls: Local, field: Str, value: TrivialExpr)
   
   override def toString: String = show

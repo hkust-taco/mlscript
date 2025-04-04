@@ -1,18 +1,15 @@
-package hkmc2.codegen.llir
+package hkmc2
+package codegen
+package llir
 
 import mlscript._
-import hkmc2.codegen._
-import hkmc2.codegen.llir.{ Program => LlirProgram, Node, Func }
 import mlscript.utils._
 import mlscript.utils.shorthands._
-import hkmc2.semantics.BuiltinSymbol
-import hkmc2.syntax.Tree.UnitLit
-import hkmc2.codegen.Local
-import hkmc2.{Raise, raise, Diagnostic, ErrorReport, Message}
-import hkmc2.Message.MessageContext
-import hkmc2.semantics.InnerSymbol
-import scala.collection.mutable.ListBuffer
+import semantics.BuiltinSymbol
+import syntax.Tree.UnitLit
+import semantics.InnerSymbol
 
+import scala.collection.mutable.ListBuffer
 import scala.annotation.tailrec
 import scala.collection.immutable.*
 import scala.collection.mutable.{HashMap => MutHMap}

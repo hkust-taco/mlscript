@@ -1,4 +1,6 @@
-package hkmc2.codegen.llir
+package hkmc2
+package codegen
+package llir
 
 import mlscript.*
 import mlscript.utils.*
@@ -7,11 +9,9 @@ import scala.collection.mutable.ListBuffer
 import shorthands.*
 import scala.util.boundary, boundary.break
 
-import hkmc2.codegen.llir.*
-import hkmc2.syntax.Tree
-import hkmc2.codegen.Local
+import syntax.Tree
 import hkmc2.utils.TraceLogger
-import hkmc2.semantics.BuiltinSymbol
+import semantics.BuiltinSymbol
 
 enum Stuck:
   case StuckExpr(expr: Expr, msg: Str)

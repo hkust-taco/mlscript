@@ -321,7 +321,7 @@ sealed abstract class Defn:
       preCtor.freeVarsLLIR
         ++ ctor.freeVarsLLIR ++ methods.flatMap(_.freeVarsLLIR)
         -- auxParams.flatMap(_.paramSyms)
-
+  
 final case class FunDefn(
     owner: Opt[InnerSymbol],
     sym: BlockMemberSymbol,
