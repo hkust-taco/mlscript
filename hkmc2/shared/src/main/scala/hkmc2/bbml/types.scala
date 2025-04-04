@@ -320,68 +320,90 @@ object Type:
       val (q, p) = discriminant(r.toBasic)
       ((u & q).toBasic, (w & p).toBasic)
     case a => (Top, a)
+  def in(a: BasicType, b: BasicType)(prev: Set[BasicType -> BasicType])
+    (using c: MutMap[BasicType -> BasicType, Opt[Set[Set[InfVar->BasicType]]]])
+    : Opt[Set[Set[InfVar->BasicType]]] = (a.simp.toBasic, b.simp.toBasic) match
+    case (a, NegType(b)) => disjointImpl(a, b.toBasic)(prev)
+    case (v: InfVar, b) =>
+      val p = prev + (v -> NegType(b))
+      val k = v.state.lowerBounds.map(lb => in(lb.toBasic, b)(p))
+      if k.exists(_.isEmpty) then N
+      else S(k.flatten.flatten.toSet + Set(v -> NegType(b)))
+    case (ComposedType(p, q, true), b) =>
+      val u = in(p.toBasic, b)(prev)
+      val w = in(q.toBasic, b)(prev)
+      u.flatMap(u => w.map(u ++ _))
+    case (ComposedType(p, q, false), b) =>
+      (in(p.toBasic, b)(prev), in(q.toBasic, b)(prev)) match
+        case (N, w) => w
+        case (u, N) => u
+        case (S(u), S(w)) => S(u.flatMap(u => w.map(u ++ _)))
+    case (a: ClassLikeType, b: ClassLikeType) if a.name.uid === b.name.uid => S(Set.empty)
+    case (a: ClassLikeType, ComposedType(p, q, true)) =>
+      (in(a, p.toBasic)(prev), in(a, q.toBasic)(prev)) match
+        case (N, w) => w
+        case (u, N) => u
+        case (S(u), S(w)) => S(u.flatMap(u => w.map(u ++ _)))
+    case _ => N
   def disjointImpl(a: BasicType, b: BasicType)(prev: Set[BasicType -> BasicType])
     (using c: MutMap[BasicType -> BasicType, Opt[Set[Set[InfVar->BasicType]]]])
     : Opt[Set[Set[InfVar->BasicType]]] =
     if !prev.contains(a -> b) then c.getOrElseUpdate(a -> b, {
-      (a.simp.toBasic, b.simp.toBasic) match
-        case (Bot, _) | (_, Bot) => S(Set.empty)
-        case (ClassLikeType(a, _), ClassLikeType(b, _)) if a.uid =/= b.uid => S(Set.empty)
-        case (RcdType(u), RcdType(w)) if u.nonEmpty && w.nonEmpty =>
-          val um = u.toMap
-          val wm = w.toMap
-          val k = um.keySet & wm.keySet
-          val ur = RcdType((um -- k).toList)
-          val wr = RcdType((wm -- k).toList)
-          val ud = disjointImpl(ur, ur)(prev)
-          val wd = disjointImpl(wr, wr)(prev)
-          if ud.exists(_.isEmpty) || wd.exists(_.isEmpty) then
-            S(Set.empty)
-          else
-            val d = k.flatMap(k => disjointImpl(um(k).toBasic, wm(k).toBasic)(prev)) ++ Ls(ud, wd).flatten
-            if d.isEmpty then N
-            else if d.exists(_.isEmpty) then S(Set.empty)
-            else S(d.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))))
-        case (_: RcdType, _: FunType) | (_: FunType, _: RcdType) => S(Set.empty)
-        case (_: ClassLikeType, _: FunType) | (_: FunType, _: ClassLikeType) => S(Set.empty)
-        case (ComposedType(p, q, true), _) =>
-          val u = disjointImpl(p.toBasic, b)(prev)
-          val w = disjointImpl(q.toBasic, b)(prev)
-          u.flatMap(u => w.map(u ++ _))
-        case (_, ComposedType(p, q, true)) =>
-          val u = disjointImpl(a, p.toBasic)(prev)
-          val w = disjointImpl(a, q.toBasic)(prev)
-          u.flatMap(u => w.map(u ++ _))
-        case (ComposedType(p, q, false), _) =>
-          (disjointImpl(p.toBasic, b)(prev), disjointImpl(q.toBasic, b)(prev)) match
-            case (N, w) => w
-            case (u, N) => u
-            case (S(u), S(w)) => S(u.flatMap(u => w.map(u ++ _)))
-        case (_, ComposedType(p, q, false)) =>
-          (disjointImpl(a, p.toBasic)(prev), disjointImpl(a, q.toBasic)(prev)) match
-            case (N, w) => w
-            case (u, N) => u
-            case (S(u), S(w)) => S(u.flatMap(u => w.map(u ++ _)))
-        case (v: InfVar, _) =>
-          val p = prev + (v -> b)
-          val k = v.state.lowerBounds.map(lb => disjointImpl(lb.toBasic, b)(p))
-          if k.exists(_.isEmpty) then N
-          else S(k.flatten.flatten.toSet + Set(v -> b))
-        case (_, v: InfVar) =>
-          val p = prev + (a -> v)
-          val k = v.state.lowerBounds.map(lb => disjointImpl(a, lb.toBasic)(p))
-          if k.exists(_.isEmpty) then N
-          else S(k.flatten.flatten.toSet + Set(v -> a))
-        case (NegType(t),_) => t.!.simp.toBasic match
-          case NegType(_) => N
-          case a => disjointImpl(a, b)(prev)
-        case (_, NegType(t)) => t.!.simp.toBasic match
-          case NegType(_) => N
-          case a => disjointImpl(a, b)(prev)
-        case _ => N
+      (a, b) match
+        case (NegType(a), b) => in(b, a.toBasic)(prev)
+        case (a, NegType(b)) => in(a, b.toBasic)(prev)
+        case _ => (a.simp.toBasic, b.simp.toBasic) match
+          case (Bot, _) | (_, Bot) => S(Set.empty)
+          case (ClassLikeType(a, _), ClassLikeType(b, _)) if a.uid =/= b.uid => S(Set.empty)
+          case (RcdType(u), RcdType(w)) if u.nonEmpty && w.nonEmpty =>
+            val um = u.toMap
+            val wm = w.toMap
+            val k = um.keySet & wm.keySet
+            val ur = RcdType((um -- k).toList)
+            val wr = RcdType((wm -- k).toList)
+            val ud = disjointImpl(ur, ur)(prev)
+            val wd = disjointImpl(wr, wr)(prev)
+            if ud.exists(_.isEmpty) || wd.exists(_.isEmpty) then
+              S(Set.empty)
+            else
+              val d = k.flatMap(k => disjointImpl(um(k).toBasic, wm(k).toBasic)(prev)) ++ Ls(ud, wd).flatten
+              if d.isEmpty then N
+              else if d.exists(_.isEmpty) then S(Set.empty)
+              else S(d.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))))
+          case (_: RcdType, _: FunType) | (_: FunType, _: RcdType) => S(Set.empty)
+          case (_: ClassLikeType, _: FunType) | (_: FunType, _: ClassLikeType) => S(Set.empty)
+          case (ComposedType(p, q, true), b) =>
+            val u = disjointImpl(p.toBasic, b)(prev)
+            val w = disjointImpl(q.toBasic, b)(prev)
+            u.flatMap(u => w.map(u ++ _))
+          case (a, ComposedType(p, q, true)) =>
+            val u = disjointImpl(a, p.toBasic)(prev)
+            val w = disjointImpl(a, q.toBasic)(prev)
+            u.flatMap(u => w.map(u ++ _))
+          case (ComposedType(p, q, false), b) =>
+            (disjointImpl(p.toBasic, b)(prev), disjointImpl(q.toBasic, b)(prev)) match
+              case (N, w) => w
+              case (u, N) => u
+              case (S(u), S(w)) => S(u.flatMap(u => w.map(u ++ _)))
+          case (a, ComposedType(p, q, false)) =>
+            (disjointImpl(a, p.toBasic)(prev), disjointImpl(a, q.toBasic)(prev)) match
+              case (N, w) => w
+              case (u, N) => u
+              case (S(u), S(w)) => S(u.flatMap(u => w.map(u ++ _)))
+          case (v: InfVar, b) =>
+            val p = prev + (v -> b)
+            val k = v.state.lowerBounds.map(lb => disjointImpl(lb.toBasic, b)(p))
+            if k.exists(_.isEmpty) then N
+            else S(k.flatten.flatten.toSet + Set(v -> b))
+          case (a, v: InfVar) =>
+            val p = prev + (a -> v)
+            val k = v.state.lowerBounds.map(lb => disjointImpl(a, lb.toBasic)(p))
+            if k.exists(_.isEmpty) then N
+            else S(k.flatten.flatten.toSet + Set(v -> a))
+          case _ => N
     }) else S(Set.empty)
   def disjoint(a: Type, b: Type): Opt[Set[Set[InfVar->BasicType]]] =
-    disjointImpl(a.simp.toBasic, b.simp.toBasic)(Set.empty)(using c = MutMap.empty)
+    disjointImpl(a.toBasic, b.toBasic)(Set.empty)(using c = MutMap.empty)
 
 
 // * Poly types can not be used as type arguments

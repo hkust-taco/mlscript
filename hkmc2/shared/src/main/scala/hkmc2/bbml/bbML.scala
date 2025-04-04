@@ -2,7 +2,7 @@ package hkmc2
 package bbml
 
 
-import scala.collection.mutable.{HashSet, HashMap, ListBuffer, LinkedHashSet}
+import scala.collection.mutable.{HashSet, HashMap, ListBuffer, LinkedHashSet, LinkedHashMap}
 import scala.annotation.tailrec
 
 import mlscript.utils.*, shorthands.*
@@ -226,6 +226,15 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
     def constrain(lhs: Type, rhs: Type)(using ctx: BbCtx, cctx: CCtx): Unit
     def commit(ds: DisjSub): Unit
 
+  private def constraintCollector =
+    val cs = ListBuffer.empty[Type -> Type]
+    val dss = ListBuffer.empty[DisjSub]
+    val nc = new ConstraintHandler:
+      def constrain(lhs: Type, rhs: Type)(using ctx: BbCtx, cctx: CCtx) =
+        cs += lhs -> rhs
+      def commit(ds: DisjSub) = dss += ds
+    (nc, dss, cs)
+
   private def constrain(lhs: Type, rhs: Type)(using ctx: BbCtx, cctx: CCtx, c: ConstraintHandler): Unit =
     c.constrain(lhs, rhs)
 
@@ -314,8 +323,32 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
         pctx += sym -> PolyType.generalize(funTy, S(outer), 1)
     case _ => error(msg"Function definition shape not yet supported for ${sym.nme}" -> lam.toLoc :: Nil)
 
+  private def typeSplitBr(split: Split, sign: GeneralType, isElse: Bool)(using ctx: BbCtx, c: ConstraintHandler)(using CCtx, Scope): (Type, Ls[Ls[Type -> ClassLikeType]]) = split match
+    case Split.Cons(Branch(Ref(sym), c: Pattern.ClassLike, cons), alts) =>
+      val sty = tryMkMono(ctx.get(sym).get, sym)
+      val cls = ClassLikeType(c.sym, Nil)
+      val ctx1 = ctx.nest
+      ctx1 += sym -> (cls & sty)
+      val (ce, p0) = typeSplitBr(cons, sign, false)(using ctx1)
+      val (ae, p1) = typeSplitBr(alts, sign, true)
+      val p = if p1.isEmpty then
+        if isElse then Nil else Ls(sty -> cls) :: p0
+      else
+        (Ls(sty -> cls) :: p0).flatMap(u => p1.map(u ++ _))
+      (ce | ae, p)
+    case Split.Let(name, term, tail) =>
+      val nestCtx = ctx.nest
+      given BbCtx = nestCtx
+      val (termTy, termEff) = typeCheck(term)
+      val sk = freshSkolem(name)
+      nestCtx += name -> termTy
+      val (tailEff, p) = typeSplitBr(tail, sign, isElse)(using nestCtx)
+      (termEff | tailEff, p)
+    case Split.Else(alts) => (ascribe(alts, sign)._2, Nil)
+    case Split.End => (Bot, Nil)
+
   private def typeSplit
-      (split: Split, sign: Opt[GeneralType])(using ctx: BbCtx, c: ConstraintHandler)(using CCtx, Scope)
+      (split: Split, sign: Opt[GeneralType], path: Ls[Ls[Type -> ClassLikeType]] = Ls(Nil))(using ctx: BbCtx, c: ConstraintHandler)(using CCtx, Scope)
       : (GeneralType, Type) =
     split match
     case Split.Cons(Branch(scrutinee, pattern, cons), alts) =>
@@ -329,34 +362,23 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
               val clsTy = ClassLikeType(sym, cls.tparams.map(_ => Wildcard.empty))
               val sty = tryMkMono(scrutineeTy, scrutinee)
               val res = sign.orElse(S(freshVar(new TempSymbol(N, "res"))))
-              // val ctv = freshVar(new TempSymbol(S(scrutinee), "scrut"))
-              // val atv = freshVar(new TempSymbol(S(scrutinee), "scrut"))
               scrutinee match // * refine
                 case Ref(sym: LocalSymbol) =>
                   nestCtx1 += sym -> (clsTy & sty)
                   nestCtx2 += sym -> sty
-                  // nestCtx1 += sym -> ctv
-                  // nestCtx2 += sym -> atv
                 case _ => () // TODO: refine all variables holding this value?
-              // constrain(sty, (clsTy & ctv) | (clsTy.! & atv))
-              val (consTy, consEff) = Type.disjoint(clsTy, sty) match
-                case N => typeSplit(cons, res)(using nestCtx1)
+              val (consEff, p) = Type.disjoint(clsTy, sty) match
+                case N => typeSplitBr(cons, res.get, false)(using nestCtx1)
                 case S(k) =>
-                 if k.isEmpty then (Bot, Bot)
+                 if k.isEmpty then (Bot, Ls(Nil))
                  else
-                   val cs = ListBuffer.empty[Type -> Type]
-                   val dss = ListBuffer.empty[DisjSub]
-                   val nc = new ConstraintHandler:
-                     def constrain(lhs: Type, rhs: Type)(using ctx: BbCtx, cctx: CCtx) =
-                       cs += lhs -> rhs
-                     def commit(ds: DisjSub) = dss += ds
+                   val (nc, dss, cs) = constraintCollector
                    val eff = freshVar(new TempSymbol(N, "eff"))
-                   val (t, e) = typeSplit(cons, res)(using nestCtx1, nc)
+                   val (e, p) = typeSplitBr(cons, res.get, false)(using nestCtx1, nc)
                    k.foreach(k => c.commit(DisjSub(LinkedHashSet.from(k), dss.toList, (e, eff) :: cs.toList)))
-                   (t, eff)
-              val (altsTy, altsEff) = typeSplit(alts, res)(using nestCtx2)
+                   (eff, p)
+              val (altsTy, altsEff) = typeSplit(alts, res, (Ls(sty -> clsTy) :: p).flatMap(u => path.map(u ++ _)))(using nestCtx2)
               val allEff = scrutineeEff | (consEff | altsEff)
-              // (sign.getOrElse(tryMkMono(consTy, cons) | tryMkMono(altsTy, alts)), allEff)
               (res.get, allEff)
             case _ =>
               error(msg"Cannot match ${scrutinee.toString} as ${sym.toString}" -> split.toLoc :: Nil)
@@ -380,10 +402,35 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
       nestCtx += name -> termTy
       val (tailTy, tailEff) = typeSplit(tail, sign)(using nestCtx)
       (tailTy, termEff | tailEff)
-    case Split.Else(alts) => sign match
-      case S(sign) => ascribe(alts, sign)
-      case _ => typeCheck(alts)
-    case Split.End => (Bot, Bot)
+    case Split.Else(alts) =>
+      val p = path.map: u =>
+        val m = LinkedHashMap.empty[Type, Type]
+        u.foreach { case (t, c) => m.updateWith(t)(_.map(_ | c).orElse(S(c))) }
+        m.flatMap { case (t, c) => Type.disjoint(NegType(c), t) }.toList
+      if p.exists(_.isEmpty) then
+        sign match
+          case S(sign) => ascribe(alts, sign)
+          case _ => typeCheck(alts)
+      else
+        val (nc, dss, cs) = constraintCollector
+        val res = sign.orElse(S(freshVar(new TempSymbol(N, "res")))).get
+        val eff = freshVar(new TempSymbol(N, "eff"))
+        val (_, e) = ascribe(alts, res)(using c = nc)
+        p.foreach(_.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
+          c.commit(DisjSub(LinkedHashSet.from(k), dss.toList, (e, eff) :: cs.toList)))
+        (res, e)
+    case Split.End =>
+      val ss = path.flatMap(_.map(_._1 -> Bot))
+      val p = path.map: u =>
+        val m = LinkedHashMap.empty[Type, Type]
+        u.foreach { case (t, c) => m.updateWith(t)(_.map(_ | c).orElse(S(c))) }
+        m.flatMap { case (t, c) => Type.disjoint(NegType(c), t) }.toList
+      if p.exists(_.isEmpty) then
+        ss.foreach { case (x, y) => constrain(x, y) }
+      else
+        p.foreach(_.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
+          c.commit(DisjSub(LinkedHashSet.from(k), Nil, ss)))
+      (Bot, Bot)
 
   // * Note: currently, the returned type is not used or useful, but it could be in the future
   private def ascribe(lhs: Term, rhs: GeneralType)(using ctx: BbCtx, scope: Scope, c: ConstraintHandler): (GeneralType, Type) =
