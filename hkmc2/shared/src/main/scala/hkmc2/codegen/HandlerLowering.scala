@@ -353,7 +353,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     if h.isTopLevel then stage2 else thirdPass(stage2)
   
   private def firstPass(b: Block)(using HandlerCtx): Block =
-    val getLocalSym = ctx.builtins.debug.getLocals
+    val getLocalsSym = ctx.builtins.debug.getLocals
     val transformer = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block) = b match
         case b: HandleBlock =>
