@@ -124,16 +124,15 @@ Runtime1 = class Runtime {
       }
       toString() { return "FnLocalsInfo(" + globalThis.Predef.render(this.fnName) + ", " + globalThis.Predef.render(this.locals) + ")"; }
     };
-    this.LocalVarInfo = function LocalVarInfo(localName1, uid1, value1) {
-      return new LocalVarInfo.class(localName1, uid1, value1);
+    this.LocalVarInfo = function LocalVarInfo(localName1, value1) {
+      return new LocalVarInfo.class(localName1, value1);
     };
     this.LocalVarInfo.class = class LocalVarInfo {
-      constructor(localName, uid, value) {
+      constructor(localName, value) {
         this.localName = localName;
-        this.uid = uid;
         this.value = value;
       }
-      toString() { return "LocalVarInfo(" + globalThis.Predef.render(this.localName) + ", " + globalThis.Predef.render(this.uid) + ", " + globalThis.Predef.render(this.value) + ")"; }
+      toString() { return "LocalVarInfo(" + globalThis.Predef.render(this.localName) + ", " + globalThis.Predef.render(this.value) + ")"; }
     };
     this.stackLimit = 0;
     this.stackDepth = 0;

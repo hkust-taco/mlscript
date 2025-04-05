@@ -313,7 +313,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val locals = (b.userDefinedVars ++ extraLocals) -- h.debugInfo.inScopeLocals
     val localsInfo = locals.toList.sortBy(_.uid).map: s =>
       FlowSymbol(s.nme) -> Instantiate(localVarInfoPath,
-        Value.Lit(Tree.StrLit(s.nme)) :: Value.Lit(Tree.StrLit(s.uid.toString())) :: s.asPath :: Nil
+        Value.Lit(Tree.StrLit(s.nme)) :: s.asPath :: Nil
       )
     val startSym = FlowSymbol("prev")
     val thisInfo = FlowSymbol("thisInfo")
