@@ -498,7 +498,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     
     val pcVar = VarSymbol(pcIdent)
 
-    // Also used to check if the block is trivial
+    // This maps each state id to an optional location
+    // Note that the value is an Option, and None must be inserted even if the location is not known
+    // so that we can use the same map to enumerate all possible state id and check if there is any state id
     val pcToLoc = collection.mutable.Map.empty[StateId, Option[Loc]]
     
     def prepareBlock(b: Block): Block =
@@ -521,6 +523,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val actualBlock = handlerCtx.ctorThis match
       case N => prepareBlock(b)
       case S(thisPath) => Begin(prepareBlock(b), Return(thisPath, false))
+    // If there is no state id found during prepareBlock, the block is trivial.
     if pcToLoc.isEmpty then return N
     
     val parts = partitionBlock(actualBlock)
