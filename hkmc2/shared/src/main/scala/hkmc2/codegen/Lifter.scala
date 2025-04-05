@@ -614,10 +614,10 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           ctx.getIsymPath(t.owner.get) match
             case Some(value) if !belongsToCtor(t.owner.get) =>
               if (t.k is syntax.LetBind) && !t.owner.forall(_.isInstanceOf[semantics.TopLevelSymbol]) then
-                // TODO: can we do better?
-                raise(InternalError(
+                // TODO: improve the error message
+                raise(ErrorReport(
                   msg"Uses of private fields cannot yet be lifted." -> N :: Nil,
-                  Diagnostic.Source.Compilation
+                  N, Diagnostic.Source.Compilation
                 ))
               AssignField(value.asPath, t.id, applyResult(rhs), applyBlock(rest))(N)
             case _ => super.applyBlock(rewritten)
@@ -664,10 +664,10 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         ctx.getIsymPath(t.owner.get) match
           case Some(value) if !belongsToCtor(t.owner.get) =>
             if (t.k is syntax.LetBind) && !t.owner.forall(_.isInstanceOf[semantics.TopLevelSymbol]) then
-              // TODO: can we do better?
-              raise(InternalError(
+              // TODO: improve the error message
+              raise(ErrorReport(
                 msg"Uses of private fields cannot yet be lifted." -> N :: Nil,
-                Diagnostic.Source.Compilation
+                N, Diagnostic.Source.Compilation
               ))
             Select(value.asPath, t.id)(N)
           case _ => super.applyPath(p)
