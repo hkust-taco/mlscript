@@ -280,11 +280,11 @@ fun resumeContTrace(contTrace, value) =
       return value
 
 // stack safety
-val stackLimit = 0 // How deep the stack can go before heapifying the stack
-val stackDepth = 0 // Tracks the virtual + real stack depth
-val stackOffset = 0 // How much to offset stackDepth by to get the true stack depth (i.e. the virtual depth)
-val stackHandler = null
-val stackResume = null
+mut val stackLimit = 0 // How deep the stack can go before heapifying the stack
+mut val stackDepth = 0 // Tracks the virtual + real stack depth
+mut val stackOffset = 0 // How much to offset stackDepth by to get the true stack depth (i.e. the virtual depth)
+mut val stackHandler = null
+mut val stackResume = null
 
 object StackDelayHandler with
   fun delay() = mkEffect of this, k =>
