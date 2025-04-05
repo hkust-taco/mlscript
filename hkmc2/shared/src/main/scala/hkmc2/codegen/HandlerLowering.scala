@@ -395,7 +395,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           ResultPlaceholder(res, freshId(), c2, k(Value.Ref(res)))
         case r => super.applyResult2(r)(k)
       override def applyPath(p: Path): Path = p match
-        case Value.Ref(`getLocalSym`) => handlerCtx.debugInfo.prevLocalsFn.get
+        case Value.Ref(`getLocalsSym`) => handlerCtx.debugInfo.prevLocalsFn.get
         case _ => super.applyPath(p)
       override def applyLam(lam: Value.Lam): Value.Lam =
         // This should normally be unreachable due to prior desugaring of lambda
