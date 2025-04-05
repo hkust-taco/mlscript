@@ -316,8 +316,8 @@ class ImplicitResolver(tl: TraceLogger)
                 arg.populate(ref)
               case N =>
                 raise(ErrorReport(
-                  msg"Missing instance for contextual parameter ${tpe.show}" -> p.toLoc ::
-                  msg"Required by module method application at: " -> t.toLoc ::
+                  msg"Missing instance for contextual parameter of type `${tpe.show}` in this call" -> t.toLoc ::
+                  msg"Required by contextual parameter declaration: " -> p.toLoc ::
                   msg"Expected: ${tpe.show}; Available: ${ictx.iEnv.toString()}" -> N :: Nil))
           case N =>
         case N =>

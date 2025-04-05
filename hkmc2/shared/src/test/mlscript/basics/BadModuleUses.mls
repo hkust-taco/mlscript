@@ -88,4 +88,15 @@ let m = M
 //│ m = M
 
 
+:e
+module A with
+  fun f() = 2
+module B with
+  val a: module A = A
+print(B.a)
+//│ ╔══[ERROR] Unexpected moduleful selection.
+//│ ║  l.96: 	print(B.a)
+//│ ╙──      	      ^^^
+//│ > A
+
 

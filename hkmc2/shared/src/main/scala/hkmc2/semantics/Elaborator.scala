@@ -728,7 +728,7 @@ extends Importer:
       ParamList(ps, ps.exists(_.ctx))(tree)
       
     /**
-     * Zips a module method application term along with its parameter lists,
+     * Zips a `fun` application term along with its parameter lists,
      * inserting any missing contextual argument lists.
      * 
      * M.foo -> M.foo(<using> ...)
@@ -752,7 +752,7 @@ extends Importer:
       case (_, Nil) => t
     
     /**
-     * An extractor that extracts the (tree) definition of a module method.
+     * An extractor that extracts the (tree) definition of a `fun`.
      */
     object FunctionTreeDef:
       def unapply(t: Term): Opt[Tree.TermDef] = t.symbol match
@@ -764,11 +764,11 @@ extends Importer:
     t match
       // f[T](foo)(bar)
       case semantics.Apps(Term.TyApp(FunctionTreeDef(tree), _), argss) =>
-        trace[Term](s"Elab module method application ${t.showDbg}", r => s"~> $r"):
+        trace[Term](s"Elab `fun` application ${t.showDbg}", r => s"~> $r"):
           zip(t, tree.paramLists.map(paramList).reverse)
       // f(foo)(bar)
       case semantics.Apps(FunctionTreeDef(tree), argss) =>
-        trace[Term](s"Elab module method application ${t.showDbg}", r => s"~> $r"):
+        trace[Term](s"Elab `fun` application ${t.showDbg}", r => s"~> $r"):
           zip(t, tree.paramLists.map(paramList).reverse)
       // The definition does not exist.
       case _ =>
@@ -1415,6 +1415,8 @@ extends Importer:
       // case _ => ???
       case Term.Neg(ty) => 
         traverseType(pol.!)(ty)
+      case _ =>
+        // TODO
     def traverseType(pol: Pol)(f: Elem): Unit = f match
       case f: Fld =>
         traverseType(pol)(f.term)
