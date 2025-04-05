@@ -62,9 +62,8 @@ sealed abstract class Block extends Product with AutoLocated:
     case Define(defn, rst) =>
       val rest = rst.definedVars
       if defn.isOwned then rest else rest + defn.sym
-    // we do not consider lhs and anything inside the body, as those are inside the handle block, which
-    // be moved into a new function definition
-    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.definedVars
+    // Note that the handler's LHS and body are not part of the current block, so we do not consider them here.
+    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.definedVars + res
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
     case Label(lbl, bod, rst) => bod.definedVars ++ rst.definedVars
   
