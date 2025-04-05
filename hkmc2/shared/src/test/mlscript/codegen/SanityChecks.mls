@@ -227,7 +227,7 @@ if M.A(1).y is
   x and x == 1 then x
   else 0
 //│ JS:
-//│ (undefined, class M {
+//│ (class M {
 //│   static {
 //│     M1 = M;
 //│     this.A = function A(...args1) {

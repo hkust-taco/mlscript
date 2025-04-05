@@ -300,13 +300,13 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 assert((kind is syntax.Pat) || paramsOpt.isEmpty)
                 // doc"${mkThis(owner)}.${sym.nme} = new ${clsJS}"
                 if isModule
-                then doc"(undefined, ${clsJS});"
+                then doc"(${clsJS});"
                 else doc"const $clsTmp = ${clsJS}; # ${mkThis(owner)}.${sym.nme} = new ${clsTmp
                   }; # ${mkThis(owner)}.${sym.nme}.class = $clsTmp;"
               case N =>
                 val v = getVar(sym)
                 if isModule
-                then doc"(undefined, ${clsJS});"
+                then doc"(${clsJS});"
                 else doc"const $clsTmp = ${clsJS}; ${v} = new ${clsTmp
                   }; # ${v}.class = $clsTmp;"
             else

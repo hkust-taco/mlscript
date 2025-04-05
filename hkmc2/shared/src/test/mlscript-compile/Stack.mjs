@@ -1,7 +1,7 @@
 import runtime from "./Runtime.mjs";
 import Predef from "./Predef.mjs";
 let Stack1;
-(undefined, class Stack {
+(class Stack {
   static {
     Stack1 = Stack;
     this.Cons = function Cons(head1, tail1) {

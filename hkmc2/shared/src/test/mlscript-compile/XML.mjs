@@ -12,7 +12,7 @@ StyleAttributeValue1.class = class StyleAttributeValue {
   }
   toString() { return "StyleAttributeValue(" + "" + ")"; }
 };
-(undefined, class XML {
+(class XML {
   static {
     XML1 = XML;
   }

@@ -24,7 +24,7 @@ Iterator1.class = class Iterator {
   }
   toString() { return "Iterator(" + globalThis.Predef.render(this.next) + ")"; }
 };
-(undefined, class Result {
+(class Result {
   static {
     Result1 = Result;
     this.Next = function Next(value1) {
@@ -48,7 +48,7 @@ Iterator1.class = class Iterator {
   }
   static toString() { return "Result"; }
 });
-(undefined, class Iter {
+(class Iter {
   static {
     Iter1 = Iter;
   }

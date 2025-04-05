@@ -41,7 +41,7 @@ module Test with
     [this.a, x]
 //│ JS (unsanitized):
 //│ let Test1;
-//│ (undefined, class Test {
+//│ (class Test {
 //│   static {
 //│     Test1 = Test;
 //│     this.a = 3;

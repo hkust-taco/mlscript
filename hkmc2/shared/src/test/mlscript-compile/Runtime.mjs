@@ -1,7 +1,7 @@
 import runtime from "./Runtime.mjs";
 import RuntimeJS from "./RuntimeJS.mjs";
 let Runtime1;
-(undefined, class Runtime {
+(class Runtime {
   static {
     Runtime1 = Runtime;
     const Unit$class = class Unit {

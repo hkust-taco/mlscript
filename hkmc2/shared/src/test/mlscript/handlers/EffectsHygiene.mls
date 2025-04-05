@@ -15,13 +15,13 @@ fun foo(h) =
 //│ let foo;
 //│ foo = function foo(h) {
 //│   let A2, A3, scrut;
-//│   (undefined, class A {
+//│   (class A {
 //│     static {
 //│       A2 = A;
 //│     }
 //│     static toString() { return "A"; }
 //│   });
-//│   (undefined, class A1 {
+//│   (class A1 {
 //│     static {
 //│       A3 = A1;
 //│     }

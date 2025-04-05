@@ -4,7 +4,7 @@ let privFun, Example1;
 privFun = function privFun() {
   return "hi"
 };
-(undefined, class Example {
+(class Example {
   static {
     Example1 = Example;
   }

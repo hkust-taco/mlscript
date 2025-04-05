@@ -66,7 +66,7 @@ module T with
   val d = this.p
 //│ JS (unsanitized):
 //│ let T1;
-//│ (undefined, class T {
+//│ (class T {
 //│   static {
 //│     T1 = T;
 //│     this.a = T.t;
@@ -102,7 +102,7 @@ module M with
   fun t = 0
 //│ JS (unsanitized):
 //│ let M1;
-//│ (undefined, class M {
+//│ (class M {
 //│   static {
 //│     M1 = M;
 //│   }

@@ -156,7 +156,7 @@ module M with
 M.A().get
 //│ JS (unsanitized):
 //│ let M15, tmp3;
-//│ (undefined, class M14 {
+//│ (class M14 {
 //│   static {
 //│     M15 = M14;
 //│     let scrut, tmp4;
@@ -241,7 +241,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│   }
 //│   toString() { return "B(" + "" + ")"; }
 //│ };
-//│ (undefined, class M18 {
+//│ (class M18 {
 //│   static {
 //│     M19 = M18;
 //│     let scrut;
@@ -299,7 +299,7 @@ module A with
 //│ lambda = (undefined, function () {
 //│   return A10.g
 //│ });
-//│ (undefined, class A9 {
+//│ (class A9 {
 //│   static {
 //│     A10 = A9;
 //│     A9.f()
@@ -341,7 +341,7 @@ A.x
 //│     return h$(f$member)
 //│   }
 //│ };
-//│ (undefined, class A15 {
+//│ (class A15 {
 //│   static {
 //│     A16 = A15;
 //│     let f, g2, tmp7, tmp8, tmp9;

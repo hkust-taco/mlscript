@@ -6,7 +6,7 @@ module Foo with
   val self: module Foo = Foo
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ (undefined, class Foo {
+//│ (class Foo {
 //│   static {
 //│     Foo1 = Foo;
 //│     this.self = Foo1;

@@ -1,7 +1,7 @@
 import runtime from "./Runtime.mjs";
 import Predef from "./Predef.mjs";
 let Option1;
-(undefined, class Option {
+(class Option {
   static {
     Option1 = Option;
     this.Some = function Some(value1) {
@@ -29,7 +29,7 @@ let Option1;
       }
       toString() { return "Both(" + globalThis.Predef.render(this.fst) + ", " + globalThis.Predef.render(this.snd) + ")"; }
     };
-    (undefined, class unsafe {
+    (class unsafe {
       static {
         Option.unsafe = unsafe;
       }

@@ -1,6 +1,6 @@
 import runtime from "./Runtime.mjs";
 let Str1;
-(undefined, class Str {
+(class Str {
   static {
     Str1 = Str;
   }

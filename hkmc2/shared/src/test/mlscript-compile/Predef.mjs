@@ -1,12 +1,12 @@
 import runtime from "./Runtime.mjs";
 import Runtime from "./Runtime.mjs";
 let Predef1;
-(undefined, class Predef {
+(class Predef {
   static {
     Predef1 = Predef;
     this.assert = globalThis.console.assert;
     this.foldl = Predef.fold;
-    (undefined, class TraceLogger {
+    (class TraceLogger {
       static {
         Predef.TraceLogger = TraceLogger;
         this.enabled = false;
