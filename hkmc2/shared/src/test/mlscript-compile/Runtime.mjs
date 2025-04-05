@@ -1,5 +1,6 @@
 import runtime from "./Runtime.mjs";
 import RuntimeJS from "./RuntimeJS.mjs";
+import Rendering from "./Rendering.mjs";
 let Runtime1;
 Runtime1 = class Runtime {
   static {
@@ -243,7 +244,7 @@ Runtime1 = class Runtime {
                   lambda = (undefined, function (l) {
                     let tmp22, tmp23;
                     tmp22 = l.localName + "=";
-                    tmp23 = runtime.safeCall(RuntimeJS.Predef.render(l.value));
+                    tmp23 = Rendering.render(l.value);
                     return tmp22 + tmp23
                   });
                   tmp3 = runtime.safeCall(curLocals.locals.map(lambda));

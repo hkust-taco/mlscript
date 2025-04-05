@@ -1,4 +1,5 @@
-import "./RuntimeJS.mjs" 
+import "./RuntimeJS.mjs"
+import "./Rendering.mls"
 
 
 module Runtime with ...
@@ -85,7 +86,7 @@ fun showStackTrace(header, tr, debug, showLocals) =
         let loc = cur.getLoc
         let loc = if loc is null then "pc=" + cur.pc else loc
         let localsMsg = if showLocals and curLocals.locals.length > 0 then
-          " with locals: " + curLocals.locals.map(l => l.localName + "=" + RuntimeJS.Predef.render(l.value)).join(", ")
+          " with locals: " + curLocals.locals.map(l => l.localName + "=" + Rendering.render(l.value)).join(", ")
         else
           ""
         set
