@@ -131,7 +131,9 @@ class A(a) with
     fun g() = x
     g()
 A(2).f()
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Uses of private fields cannot yet be lifted.
+//│ ═══[COMPILATION ERROR] Uses of private fields cannot yet be lifted.
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
 
 /// The following are related to modules and objects. ///
 
