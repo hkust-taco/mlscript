@@ -72,7 +72,7 @@ module Test with
 //│ ║  l.66: 	  val x = 1
 //│ ╙──      	      ^^^^^
 //│ JS:
-//│ Test4 = class Test3 {
+//│ (undefined, class Test3 {
 //│   static #x;
 //│   static {
 //│     Test4 = Test3;
@@ -80,7 +80,7 @@ module Test with
 //│     Test3.#x = 2;
 //│   }
 //│   static toString() { return "Test"; }
-//│ };
+//│ });
 //│ block$res8 = undefined;
 
 Test.x
@@ -166,26 +166,26 @@ module Whoops with
     fun g() = f()
 //│ JS (unsanitized):
 //│ let Whoops2;
-//│ Whoops2 = class Whoops {
+//│ (undefined, class Whoops {
 //│   static {
 //│     Whoops2 = Whoops;
 //│     this.v = Whoops;
-//│     this.Whoops = class Whoops1 {
+//│     (undefined, class Whoops1 {
 //│       static {
-//│         this.Whoops = Whoops1;
+//│         Whoops.Whoops = Whoops1;
 //│         this.w = Whoops1;
 //│       }
 //│       static g() {
 //│         return Whoops.f()
 //│       }
 //│       static toString() { return "Whoops"; }
-//│     };
+//│     });
 //│   }
 //│   static f() {
 //│     return "Hello"
 //│   }
 //│   static toString() { return "Whoops"; }
-//│ };
+//│ });
 
 Whoops.f()
 //│ = "Hello"

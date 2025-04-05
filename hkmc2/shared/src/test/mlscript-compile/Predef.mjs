@@ -1,14 +1,14 @@
 import runtime from "./Runtime.mjs";
 import Runtime from "./Runtime.mjs";
 let Predef1;
-Predef1 = class Predef {
+(undefined, class Predef {
   static {
     Predef1 = Predef;
     this.assert = globalThis.console.assert;
     this.foldl = Predef.fold;
-    this.TraceLogger = class TraceLogger {
+    (undefined, class TraceLogger {
       static {
-        this.TraceLogger = TraceLogger;
+        Predef.TraceLogger = TraceLogger;
         this.enabled = false;
         this.indentLvl = 0;
       }
@@ -49,7 +49,7 @@ Predef1 = class Predef {
         }
       }
       static toString() { return "TraceLogger"; }
-    };
+    });
     this.Test = class Test {
       constructor() {
         let tmp;
@@ -479,5 +479,5 @@ Predef1 = class Predef {
     return Runtime.enterHandleBlock(handler, body)
   }
   static toString() { return "Predef"; }
-};
+});
 let Predef = Predef1; export default Predef;

@@ -1,7 +1,7 @@
 import runtime from "./Runtime.mjs";
 import RuntimeJS from "./RuntimeJS.mjs";
 let Runtime1;
-Runtime1 = class Runtime {
+(undefined, class Runtime {
   static {
     Runtime1 = Runtime;
     const Unit$class = class Unit {
@@ -475,5 +475,5 @@ Runtime1 = class Runtime {
     return tmp
   }
   static toString() { return "Runtime"; }
-};
+});
 let Runtime = Runtime1; export default Runtime;

@@ -1,7 +1,7 @@
 import runtime from "./Runtime.mjs";
 import Predef from "./Predef.mjs";
 let Option1;
-Option1 = class Option {
+(undefined, class Option {
   static {
     Option1 = Option;
     this.Some = function Some(value1) {
@@ -29,9 +29,9 @@ Option1 = class Option {
       }
       toString() { return "Both(" + globalThis.Predef.render(this.fst) + ", " + globalThis.Predef.render(this.snd) + ")"; }
     };
-    this.unsafe = class unsafe {
+    (undefined, class unsafe {
       static {
-        this.unsafe = unsafe;
+        Option.unsafe = unsafe;
       }
       static get(opt) {
         let param0, value;
@@ -46,7 +46,7 @@ Option1 = class Option {
         }
       }
       static toString() { return "unsafe"; }
-    };
+    });
   }
   static isDefined(x) {
     if (x instanceof Option.Some.class) {
@@ -73,5 +73,5 @@ Option1 = class Option {
     }
   }
   static toString() { return "Option"; }
-};
+});
 let Option = Option1; export default Option;

@@ -241,7 +241,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             val ctorBod = if isModule then
               ownr match
               case S(owner) =>
-                braced(doc" # ${mkThis(owner)}.${sym.nme} = ${getVar(isym)};$ctorCode")
+                braced(doc" # ${result(Value.Ref(owner))}.${sym.nme} = ${getVar(isym)};$ctorCode")
               case N =>
                 braced(doc" # ${getVar(sym)} = ${getVar(isym)};$ctorCode")
             else
@@ -300,13 +300,13 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 assert((kind is syntax.Pat) || paramsOpt.isEmpty)
                 // doc"${mkThis(owner)}.${sym.nme} = new ${clsJS}"
                 if isModule
-                then doc"${mkThis(owner)}.${sym.nme} = ${clsJS};"
+                then doc"(undefined, ${clsJS});"
                 else doc"const $clsTmp = ${clsJS}; # ${mkThis(owner)}.${sym.nme} = new ${clsTmp
                   }; # ${mkThis(owner)}.${sym.nme}.class = $clsTmp;"
               case N =>
                 val v = getVar(sym)
                 if isModule
-                then doc"${v} = ${clsJS};"
+                then doc"(undefined, ${clsJS});"
                 else doc"const $clsTmp = ${clsJS}; ${v} = new ${clsTmp
                   }; # ${v}.class = $clsTmp;"
             else

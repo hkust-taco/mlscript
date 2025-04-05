@@ -6,13 +6,13 @@ module Foo with
   val self: module Foo = Foo
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ Foo1 = class Foo {
+//│ (undefined, class Foo {
 //│   static {
 //│     Foo1 = Foo;
 //│     this.self = Foo1;
 //│   }
 //│   static toString() { return "Foo"; }
-//│ };
+//│ });
 
 Foo.self
 //│ = Foo

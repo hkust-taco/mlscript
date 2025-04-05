@@ -4,7 +4,7 @@ let privFun, Example1;
 privFun = function privFun() {
   return "hi"
 };
-Example1 = class Example {
+(undefined, class Example {
   static {
     Example1 = Example;
   }
@@ -31,5 +31,5 @@ Example1 = class Example {
     }
   }
   static toString() { return "Example"; }
-};
+});
 let Example = Example1; export default Example;

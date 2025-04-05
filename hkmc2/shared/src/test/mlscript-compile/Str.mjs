@@ -1,6 +1,6 @@
 import runtime from "./Runtime.mjs";
 let Str1;
-Str1 = class Str {
+(undefined, class Str {
   static {
     Str1 = Str;
   }
@@ -23,5 +23,5 @@ Str1 = class Str {
     }
   }
   static toString() { return "Str"; }
-};
+});
 let Str = Str1; export default Str;

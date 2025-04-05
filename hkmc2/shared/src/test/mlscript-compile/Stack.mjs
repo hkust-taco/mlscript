@@ -1,7 +1,7 @@
 import runtime from "./Runtime.mjs";
 import Predef from "./Predef.mjs";
 let Stack1;
-Stack1 = class Stack {
+(undefined, class Stack {
   static {
     Stack1 = Stack;
     this.Cons = function Cons(head1, tail1) {
@@ -207,5 +207,5 @@ Stack1 = class Stack {
     }
   }
   static toString() { return "Stack"; }
-};
+});
 let Stack = Stack1; export default Stack;

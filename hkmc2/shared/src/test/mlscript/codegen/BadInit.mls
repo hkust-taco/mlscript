@@ -8,19 +8,19 @@ module Bar with
     val a = Bar.x
 //│ JS (unsanitized):
 //│ let Bar1;
-//│ Bar1 = class Bar {
+//│ (undefined, class Bar {
 //│   static {
 //│     Bar1 = Bar;
 //│     this.x = 1;
-//│     this.Baz = class Baz {
+//│     (undefined, class Baz {
 //│       static {
-//│         this.Baz = Baz;
+//│         Bar.Baz = Baz;
 //│         this.a = Bar1.x;
 //│       }
 //│       static toString() { return "Baz"; }
-//│     };
+//│     });
 //│   }
 //│   static toString() { return "Bar"; }
-//│ };
+//│ });
 
 

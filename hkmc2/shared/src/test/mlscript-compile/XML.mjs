@@ -12,7 +12,7 @@ StyleAttributeValue1.class = class StyleAttributeValue {
   }
   toString() { return "StyleAttributeValue(" + "" + ")"; }
 };
-XML1 = class XML {
+(undefined, class XML {
   static {
     XML1 = XML;
   }
@@ -108,5 +108,5 @@ XML1 = class XML {
     }
   }
   static toString() { return "XML"; }
-};
+});
 let XML = XML1; export default XML;
