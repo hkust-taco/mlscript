@@ -459,7 +459,7 @@ foo(1, "")
 //│ ╟── because: cannot constrain  ¬⊥ ∧ 'x2  <:  ¬(¬{Bool})
 //│ ╟── because: cannot constrain  'x2  <:  ¬(¬{Bool})
 //│ ╙── because: cannot constrain  Int  <:  ¬(¬{Bool})
-//│ Type: Bool ∨ Int
+//│ Type: Bool
 
 fun intstr: Int | Str
 //│ Type: ⊤

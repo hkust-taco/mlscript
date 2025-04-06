@@ -36,13 +36,13 @@ test
 //│ >    x is Fls then fls#666
 //│ >    y is Fls then fls#666
 //│ = [function test]
-//│ Type: ['x, 'y, 'res, 'eff, 'eff1, 'eff2] -> ('x, 'y) ->{('eff ∨ 'eff1) ∨ 'eff2} 'res
+//│ Type: ['x, 'y, 'res, 'eff, 'eff1, 'eff2, 'eff3] -> ('x, 'y) ->{('eff ∨ 'eff2) ∨ 'eff3} 'res
 //│ Where:
-//│   'x#Tru ∨  ∧ ⊥<:'eff ∧ Tru<:'res
-//│   'x#Fls ∨  ∧ ⊥<:'eff1 ∧ Fls<:'res
+//│   'x#Tru ∨ (  'y#Tru ∨  ∧ ⊥<:'eff ∧ Tru<:'res) ∧ 'eff<:'eff1
+//│   'x#Fls ∨  ∧ ⊥<:'eff2 ∧ Fls<:'res
 //│   'y#¬Fls ∨ 'x#¬(Fls ∨ Tru) ∨  ∧ 'y<:⊥ ∧ 'x<:⊥ ∧ 'x<:⊥ ∧ 'y<:⊥ ∧ 'x<:⊥ ∧ 'y<:⊥
 //│   'y#¬(Fls ∨ Tru) ∨ 'x#¬Fls ∨  ∧ 'y<:⊥ ∧ 'x<:⊥ ∧ 'x<:⊥ ∧ 'y<:⊥ ∧ 'x<:⊥ ∧ 'y<:⊥
-//│   'y#Fls ∨  ∧ ⊥<:'eff2 ∧ Fls<:'res
+//│   'y#Fls ∨  ∧ ⊥<:'eff3 ∧ Fls<:'res
 
 test(tru, tru)
 //│ = Tru()
@@ -50,7 +50,7 @@ test(tru, tru)
 
 test(tru, fls)
 //│ = Fls()
-//│ Type: Fls ∨ Tru
+//│ Type: Fls
 
 test(fls, tru)
 //│ = Fls()

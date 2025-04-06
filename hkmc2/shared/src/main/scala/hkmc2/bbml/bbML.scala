@@ -323,13 +323,22 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
         pctx += sym -> PolyType.generalize(funTy, S(outer), 1)
     case _ => error(msg"Function definition shape not yet supported for ${sym.nme}" -> lam.toLoc :: Nil)
 
-  private def typeSplitBr(split: Split, sign: GeneralType, isElse: Bool)(using ctx: BbCtx, c: ConstraintHandler)(using CCtx, Scope): (Type, Ls[Ls[Type -> ClassLikeType]]) = split match
+  private def typeSplitBr(split: Split, sign: GeneralType, isElse: Bool)(using ctx: BbCtx, ch: ConstraintHandler)(using CCtx, Scope): (Type, Ls[Ls[Type -> ClassLikeType]]) = split match
     case Split.Cons(Branch(Ref(sym), c: Pattern.ClassLike, cons), alts) =>
       val sty = tryMkMono(ctx.get(sym).get, sym)
       val cls = ClassLikeType(c.sym, Nil)
       val ctx1 = ctx.nest
       ctx1 += sym -> (cls & sty)
-      val (ce, p0) = typeSplitBr(cons, sign, false)(using ctx1)
+      val (ce, p0) = Type.disjoint(cls, sty) match
+        case N => typeSplitBr(cons, sign, false)(using ctx1)
+        case S(k) =>
+          if k.isEmpty then (Bot, Ls(Nil))
+          else
+            val (nc, dss, cs) = constraintCollector
+            val eff = freshVar(new TempSymbol(N, "eff"))
+            val (e, p) = typeSplitBr(cons, sign, false)(using ctx1, nc)
+            k.foreach(k => ch.commit(DisjSub(LinkedHashSet.from(k), dss.toList, (e, eff) :: cs.toList)))
+            (eff, p)
       val (ae, p1) = typeSplitBr(alts, sign, true)
       val p = if p1.isEmpty then
         if isElse then Nil else Ls(sty -> cls) :: p0
