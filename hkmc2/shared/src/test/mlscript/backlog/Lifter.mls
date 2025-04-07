@@ -174,7 +174,7 @@ fun foo(x) =
   class Bar extends Foo
   (new Bar).self2
 foo(2)
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: Foo$ (class hkmc2.semantics.FlowSymbol)
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: Foo$ (class hkmc2.semantics.VarSymbol)
 
 // `h` is lifted out, but then cannot access the BlockMemberSymbol M.
 :fixme
