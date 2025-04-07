@@ -677,8 +677,10 @@ fun test() =
 test()
 //│ = 2
 
-// Semicolon required for auxparam before `return this;`
+// Note: semicolon required for auxparam before `return this;`
+// :sjs
 fun test(f) =
   class A(x) with
     f(x)
   A(1)
+
