@@ -119,6 +119,7 @@ enum Tree extends AutoLocated:
     case SynthSel(prefix, name) => prefix :: Nil
     case DynAccess(prefix, fld, ai) => prefix :: fld :: Nil
     case Open(bod) => bod :: Nil
+    case OpenIn(opened, body) => opened :: body :: Nil
     case Def(lhs, rhs) => lhs :: rhs :: Nil
     case Spread(_, _, body) => body.toList
     case Annotated(annotation, target) => annotation :: target :: Nil

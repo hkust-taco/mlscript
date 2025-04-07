@@ -1,0 +1,60 @@
+
+
+module Rendering with ...
+
+fun pass1(f)(...xs) = f(xs.0)
+fun pass2(f)(...xs) = f(xs.0, xs.1)
+fun pass3(f)(...xs) = f(xs.0, xs.1, xs.2)
+
+fun passing(f, ...args) = f.bind(null, ...args)
+
+fun map(f)(...xs) = xs.map(pass1(f))
+
+fun fold(f)(init, ...rest) =
+  let
+    i = 0
+    len = rest.length
+  while i < len do
+    set
+      init = f(init, rest.at(i))
+      i += 1
+  init
+
+fun interleave(sep)(...args) =
+  if args.length === 0 then [] else...
+  let
+    res = Array of args.length * 2 - 1
+    len = args.length
+    i = 0
+  while i < len do
+    let idx = i * 2
+    set
+      res.[idx] = args.[i]
+      i += 1
+    if i < len do set res.[idx + 1] = sep
+  res
+
+fun render(arg) = if
+  arg is
+    undefined then "undefined"
+    null      then "null"
+    Array     then fold(+)("[", ...interleave(", ")(...map(render)(...arg)), "]")
+    Str       then JSON.stringify(arg)
+    Set       then fold(+)("Set{", ...interleave(", ")(...map(render)(...arg)), "}")
+    Map       then fold(+)("Map{", ...interleave(", ")(...map(render)(...arg)), "}")
+    Function  and
+      let p = Object.getOwnPropertyDescriptor(arg, "prototype")
+      (p is Object and p.("writable")) || (p is undefined) then
+        "[function" + (if arg.name is
+          ""  then ""
+          nme then " " + nme
+        ) + "]"
+    Object then
+      if arg.constructor.name is "Object"
+      then
+        let es = Object.entries(arg)
+        fold(+)("{", ...interleave(", ")(...map(case [k, v] then k + ": " + render(v))(...es)), "}")
+      else String(arg)
+  let ts = arg.("toString") // not accessing as `arg.toString` to avoid the sanity check
+  ts is undefined then "[" + typeof(arg) + "]"
+  else ts.call(arg)

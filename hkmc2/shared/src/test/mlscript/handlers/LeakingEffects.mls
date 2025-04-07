@@ -6,7 +6,6 @@ abstract class Effect[A] with
   fun perform(arg: A): A
 
 
-:re
 let
   xs = []
   count = 0
@@ -30,9 +29,10 @@ while xs.pop() is
 //│ > B a
 //│ > 1
 //│ > —
-//│ ═══[RUNTIME ERROR] Error: Unhandled effects
+//│ > B b
+//│ > ?
 //│ count = 1
-//│ xs = []
+//│ xs = [[function]]
 
 
 // g is non-resumptive, which means g.perform("a") does not resume

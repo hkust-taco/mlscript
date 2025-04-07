@@ -223,7 +223,7 @@ if true do
 //│ };
 //│ tmp11 = handleBlock$11();
 //│ if (tmp11 instanceof runtime.EffectSig.class) {
-//│   throw new this.Error("Unhandled effects");
+//│   tmp11 = runtime.topLevelEffect(tmp11, false);
 //│ }
 //│ tmp11
 //│ = 3

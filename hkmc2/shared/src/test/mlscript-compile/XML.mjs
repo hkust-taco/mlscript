@@ -75,7 +75,7 @@ StyleAttributeValue1.class = class StyleAttributeValue {
       lambda = (undefined, function (arg1, arg2) {
         return arg1 + arg2
       });
-      tmp = Predef.fold(lambda);
+      tmp = runtime.safeCall(Predef.fold(lambda));
       tmp1 = XML.joinAttributes(attributes1);
       return runtime.safeCall(tmp("<", tagName, tmp1, ">", ...elements, "</", tagName, ">"))
     }
@@ -86,7 +86,7 @@ StyleAttributeValue1.class = class StyleAttributeValue {
       lambda = (undefined, function (arg1, arg2) {
         return arg1 + arg2
       });
-      tmp = Predef.fold(lambda);
+      tmp = runtime.safeCall(Predef.fold(lambda));
       tmp1 = XML.joinAttributes(attributes2);
       return runtime.safeCall(tmp("<", tagName1, tmp1, " ", "/>"))
     }

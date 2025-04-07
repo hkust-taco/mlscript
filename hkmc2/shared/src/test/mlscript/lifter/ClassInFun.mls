@@ -13,7 +13,7 @@ fun f() =
   1
 f() + f() + f()
 //│ JS (unsanitized):
-//│ let f, Effect1, tmp, handleBlock$, Cont$func$f$ClassInFun$_mls_L7_95_118$1, Cont$handleBlock$h$1, Handler$h$1, lambda, f$, Cont$func$f$ClassInFun$_mls_L7_95_118$$ctor, Cont$func$f$ClassInFun$_mls_L7_95_118$$, Cont$handleBlock$h$$ctor, Cont$handleBlock$h$$, lambda$;
+//│ let f, Effect1, tmp, handleBlock$, Cont$func$f$1, Cont$handleBlock$h$1, Handler$h$1, lambda, f$, Cont$func$f$$ctor, Cont$func$f$$, Cont$handleBlock$h$$ctor, Cont$handleBlock$h$$, lambda$;
 //│ Effect1 = class Effect {
 //│   constructor() {}
 //│   toString() { return "Effect"; }
@@ -123,24 +123,24 @@ f() + f() + f()
 //│   }
 //│   toString() { return "Cont$handleBlock$h$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│ };
-//│ Cont$func$f$ClassInFun$_mls_L7_95_118$$ = function Cont$func$f$ClassInFun$_mls_L7_95_118$$(h$0, tmp$1, pc) {
+//│ Cont$func$f$$ = function Cont$func$f$$(h$0, tmp$1, pc) {
 //│   let tmp1;
-//│   tmp1 = new Cont$func$f$ClassInFun$_mls_L7_95_118$1.class(pc);
+//│   tmp1 = new Cont$func$f$1.class(pc);
 //│   return tmp1(h$0, tmp$1)
 //│ };
-//│ Cont$func$f$ClassInFun$_mls_L7_95_118$$ctor = function Cont$func$f$ClassInFun$_mls_L7_95_118$$ctor(h$0, tmp$1) {
+//│ Cont$func$f$$ctor = function Cont$func$f$$ctor(h$0, tmp$1) {
 //│   return (pc) => {
 //│     let tmp1;
-//│     tmp1 = new Cont$func$f$ClassInFun$_mls_L7_95_118$1.class(pc);
+//│     tmp1 = new Cont$func$f$1.class(pc);
 //│     return tmp1(h$0, tmp$1)
 //│   }
 //│ };
-//│ Cont$func$f$ClassInFun$_mls_L7_95_118$1 = function Cont$func$f$ClassInFun$_mls_L7_95_118$(pc1) {
+//│ Cont$func$f$1 = function Cont$func$f$(pc1) {
 //│   return (h$01, tmp$11) => {
-//│     return new Cont$func$f$ClassInFun$_mls_L7_95_118$.class(pc1)(h$01, tmp$11);
+//│     return new Cont$func$f$.class(pc1)(h$01, tmp$11);
 //│   }
 //│ };
-//│ Cont$func$f$ClassInFun$_mls_L7_95_118$1.class = class Cont$func$f$ClassInFun$_mls_L7_95_118$ extends runtime.FunctionContFrame.class {
+//│ Cont$func$f$1.class = class Cont$func$f$ extends runtime.FunctionContFrame.class {
 //│   constructor(pc) {
 //│     return (h$0, tmp$1) => {
 //│       let tmp1;
@@ -172,13 +172,13 @@ f() + f() + f()
 //│       break;
 //│     }
 //│   }
-//│   toString() { return "Cont$func$f$ClassInFun$_mls_L7_95_118$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│   toString() { return "Cont$func$f$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│ };
 //│ f$ = function f$(h) {
 //│   let tmp1;
 //│   tmp1 = runtime.safeCall(h.perform());
 //│   if (tmp1 instanceof runtime.EffectSig.class) {
-//│     tmp1.contTrace.last.next = Cont$func$f$ClassInFun$_mls_L7_95_118$$(h, tmp1, 0);
+//│     tmp1.contTrace.last.next = Cont$func$f$$(h, tmp1, 0);
 //│     tmp1.contTrace.last = tmp1.contTrace.last.next;
 //│     return tmp1
 //│   }
@@ -212,7 +212,7 @@ f() + f() + f()
 //│ };
 //│ tmp = handleBlock$();
 //│ if (tmp instanceof runtime.EffectSig.class) {
-//│   throw new this.Error("Unhandled effects");
+//│   tmp = runtime.topLevelEffect(tmp, false);
 //│ }
 //│ tmp
 //│ = 3
