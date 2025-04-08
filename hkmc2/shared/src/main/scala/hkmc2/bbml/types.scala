@@ -527,21 +527,23 @@ class VarState:
 case class DisjSub(disjoint: LinkedHashSet[InfVar -> BasicType], dss: Ls[DisjSub], cs: Ls[Type -> Type]):
   def commit() = disjoint.keys.foreach(_.state.disjsub += this)
   def checkAndCommit()(using c: MutMap[BasicType -> BasicType, Opt[Set[Set[InfVar->BasicType]]]]): Ls[Type -> Type] =
-    disjoint.keys.foreach(_.state.disjsub -= this)
-    val d = disjoint.flatMap: u =>
-      Type.disjointImpl(u._2, u._1)(Set.empty) match
-        case N =>
-          disjoint -= u
-          N
-        case k => k
-    if disjoint.isEmpty then
-      dss.flatMap(_.checkAndCommit()) ++ cs
-    else
-      if d.nonEmpty then
-        commit()
-        d.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
-          DisjSub(LinkedHashSet.from(k), dss, cs).commit()
-      Nil
+    if disjoint.nonEmpty then
+      disjoint.keys.foreach(_.state.disjsub -= this)
+      val d = disjoint.flatMap: u =>
+        Type.disjointImpl(u._2, u._1)(Set.empty) match
+          case N =>
+            disjoint -= u
+            N
+          case k => k
+      if disjoint.isEmpty then
+        dss.flatMap(_.checkAndCommit()) ++ cs
+      else
+        if d.nonEmpty then
+          commit()
+          d.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
+            DisjSub(LinkedHashSet.from(k), dss, cs).commit()
+        Nil
+    else Nil
   def checkImpl(v: InfVar)(using c: MutMap[BasicType -> BasicType, Opt[Set[Set[InfVar->BasicType]]]]) =
     v.state.disjsub -= this
     val (u, w) = disjoint.toList.partition(_._1.uid === v.uid)

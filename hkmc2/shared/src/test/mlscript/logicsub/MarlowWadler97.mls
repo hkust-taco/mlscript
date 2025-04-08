@@ -36,13 +36,11 @@ test
 //│ >    x is Fls then fls#666
 //│ >    y is Fls then fls#666
 //│ = [function test]
-//│ Type: ['x, 'y, 'res, 'eff, 'eff1, 'eff2, 'eff3] -> ('x, 'y) ->{('eff ∨ 'eff2) ∨ 'eff3} 'res
+//│ Type: ['x, 'y, 'res, 'eff, 'x1, 'y1] -> ('x, 'x) ->{'eff} 'res
 //│ Where:
-//│   'x#Tru ∨ (  'y#Tru ∨  ∧ ⊥<:'eff ∧ Tru<:'res) ∧ 'eff<:'eff1
-//│   'x#Fls ∨  ∧ ⊥<:'eff2 ∧ Fls<:'res
-//│   'y#¬Fls ∨ 'x#¬(Fls ∨ Tru) ∨  ∧ 'y<:⊥ ∧ 'x<:⊥ ∧ 'x<:⊥ ∧ 'y<:⊥ ∧ 'x<:⊥ ∧ 'y<:⊥
-//│   'y#¬(Fls ∨ Tru) ∨ 'x#¬Fls ∨  ∧ 'y<:⊥ ∧ 'x<:⊥ ∧ 'x<:⊥ ∧ 'y<:⊥ ∧ 'x<:⊥ ∧ 'y<:⊥
-//│   'y#Fls ∨  ∧ ⊥<:'eff3 ∧ Fls<:'res
+//│   'x#Tru ∨ (  'y#Tru ∨  ∧ Tru<:'res ∧ ⊥<:'eff) ∧ (  'y#¬Tru ∨  ∧ ¬Tru ∧ 'y<:'y1 ∧ Tru ∧ 'x<:'x1)
+//│   'x#¬Tru ∨ (  'x1#Fls ∨  ∧ Fls<:'res ∧ ⊥<:'eff) ∧ (  'x1#¬(Tru ∨ Fls) ∨ (  'y1#Fls ∨  ∧ Fls<:'res ∧ ⊥<:'eff) ∧ (  'x1#¬(Tru ∨ Fls) ∨ 'y1#¬Fls ∨  ∧ ¬Fls ∧ 'y1<:'y1 ∧ (¬Tru ∧ ¬Fls) ∧ 'x1<:'x1 ∧ ⊤<:⊥) ∧ (  'y1#¬(Tru ∨ Fls) ∨ 'x1#¬Fls ∨  ∧ (¬Tru ∧ ¬Fls) ∧ 'y1<:'y1 ∧ ¬Fls ∧ 'x1<:'x1 ∧ ⊤<:⊥) ∧ 'y1<:'y1 ∧ (¬Tru ∧ ¬Fls) ∧ 'x1<:'x1) ∧ (  'y1#¬Tru ∨ 'x1#¬Fls ∨ (  'y1#Fls ∨  ∧ Fls<:'res ∧ ⊥<:'eff) ∧ (  'x1#¬(Tru ∨ Fls) ∨ 'y1#¬Fls ∨  ∧ ¬Fls ∧ 'y1<:'y1 ∧ (¬Tru ∧ ¬Fls) ∧ 'x1<:'x1 ∧ ⊤<:⊥) ∧ (  'y1#¬(Tru ∨ Fls) ∨ 'x1#¬Fls ∨  ∧ (¬Tru ∧ ¬Fls) ∧ 'y1<:'y1 ∧ ¬Fls ∧ 'x1<:'x1 ∧ ⊤<:⊥) ∧ ¬Tru ∧ 'y1<:'y1 ∧ ¬Fls ∧ 'x1<:'x1) ∧ 'y<:'y1 ∧ ¬Tru ∧ 'x<:'x1
+//│   'y#¬Tru ∨ (  'x1#Fls ∨  ∧ Fls<:'res ∧ ⊥<:'eff) ∧ (  'x1#¬(Tru ∨ Fls) ∨ (  'y1#Fls ∨  ∧ Fls<:'res ∧ ⊥<:'eff) ∧ (  'x1#¬(Tru ∨ Fls) ∨ 'y1#¬Fls ∨  ∧ ¬Fls ∧ 'y1<:'y1 ∧ (¬Tru ∧ ¬Fls) ∧ 'x1<:'x1 ∧ ⊤<:⊥) ∧ (  'y1#¬(Tru ∨ Fls) ∨ 'x1#¬Fls ∨  ∧ (¬Tru ∧ ¬Fls) ∧ 'y1<:'y1 ∧ ¬Fls ∧ 'x1<:'x1 ∧ ⊤<:⊥) ∧ 'y1<:'y1 ∧ (¬Tru ∧ ¬Fls) ∧ 'x1<:'x1) ∧ (  'y1#¬Tru ∨ 'x1#¬Fls ∨ (  'y1#Fls ∨  ∧ Fls<:'res ∧ ⊥<:'eff) ∧ (  'x1#¬(Tru ∨ Fls) ∨ 'y1#¬Fls ∨  ∧ ¬Fls ∧ 'y1<:'y1 ∧ (¬Tru ∧ ¬Fls) ∧ 'x1<:'x1 ∧ ⊤<:⊥) ∧ (  'y1#¬(Tru ∨ Fls) ∨ 'x1#¬Fls ∨  ∧ (¬Tru ∧ ¬Fls) ∧ 'y1<:'y1 ∧ ¬Fls ∧ 'x1<:'x1 ∧ ⊤<:⊥) ∧ ¬Tru ∧ 'y1<:'y1 ∧ ¬Fls ∧ 'x1<:'x1) ∧ ¬Tru ∧ 'y<:'y1 ∧ 'x<:'x1
 
 test(tru, tru)
 //│ = Tru()
@@ -72,75 +70,45 @@ test(true, false)
 //│ ╔══[ERROR] Type error in boolean literal with expected type 'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
-//│ ╟── because: cannot constrain  'y  <:  ⊥
-//│ ╟── because: cannot constrain  'y  <:  ¬()
-//│ ╙── because: cannot constrain  Bool  <:  ¬()
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ ╔══[ERROR] Type error in boolean literal with expected type 'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
-//│ ╟── because: cannot constrain  'x  <:  ⊥
-//│ ╟── because: cannot constrain  'x  <:  ¬()
-//│ ╙── because: cannot constrain  Bool  <:  ¬()
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ ╔══[ERROR] Type error in boolean literal with expected type 'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
-//│ ╟── because: cannot constrain  'x  <:  ⊥
-//│ ╟── because: cannot constrain  'x  <:  ¬()
-//│ ╙── because: cannot constrain  Bool  <:  ¬()
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ ╔══[ERROR] Type error in boolean literal with expected type 'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
-//│ ╟── because: cannot constrain  'y  <:  ⊥
-//│ ╟── because: cannot constrain  'y  <:  ¬()
-//│ ╙── because: cannot constrain  Bool  <:  ¬()
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ ╔══[ERROR] Type error in boolean literal with expected type 'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
-//│ ╟── because: cannot constrain  'x  <:  ⊥
-//│ ╟── because: cannot constrain  'x  <:  ¬()
-//│ ╙── because: cannot constrain  Bool  <:  ¬()
+//│ ╟── because: cannot constrain  ¬Tru ∧ 'y  <:  'y1
+//│ ╟── because: cannot constrain  ¬{Tru} ∧ 'y  <:  'y1
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ ╔══[ERROR] Type error in boolean literal with expected type 'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
-//│ ╟── because: cannot constrain  'y  <:  ⊥
-//│ ╟── because: cannot constrain  'y  <:  ¬()
-//│ ╙── because: cannot constrain  Bool  <:  ¬()
+//│ ╟── because: cannot constrain  ¬Tru ∧ 'y  <:  'y1
+//│ ╟── because: cannot constrain  ¬{Tru} ∧ 'y  <:  'y1
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ ╔══[ERROR] Type error in boolean literal with expected type 'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
-//│ ╟── because: cannot constrain  'y  <:  ⊥
-//│ ╟── because: cannot constrain  'y  <:  ¬()
-//│ ╙── because: cannot constrain  Bool  <:  ¬()
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ ╔══[ERROR] Type error in boolean literal with expected type 'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
-//│ ╟── because: cannot constrain  'x  <:  ⊥
-//│ ╟── because: cannot constrain  'x  <:  ¬()
-//│ ╙── because: cannot constrain  Bool  <:  ¬()
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ ╔══[ERROR] Type error in boolean literal with expected type 'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
-//│ ╟── because: cannot constrain  'x  <:  ⊥
-//│ ╟── because: cannot constrain  'x  <:  ¬()
-//│ ╙── because: cannot constrain  Bool  <:  ¬()
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ ╔══[ERROR] Type error in boolean literal with expected type 'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
-//│ ╟── because: cannot constrain  'y  <:  ⊥
-//│ ╟── because: cannot constrain  'y  <:  ¬()
-//│ ╙── because: cannot constrain  Bool  <:  ¬()
-//│ ╔══[ERROR] Type error in boolean literal with expected type 'y
-//│ ╟── because: cannot constrain  Bool  <:  'y
-//│ ╟── because: cannot constrain  Bool  <:  'y
-//│ ╟── because: cannot constrain  'x  <:  ⊥
-//│ ╟── because: cannot constrain  'x  <:  ¬()
-//│ ╙── because: cannot constrain  Bool  <:  ¬()
-//│ ╔══[ERROR] Type error in boolean literal with expected type 'y
-//│ ╟── because: cannot constrain  Bool  <:  'y
-//│ ╟── because: cannot constrain  Bool  <:  'y
-//│ ╟── because: cannot constrain  'y  <:  ⊥
-//│ ╟── because: cannot constrain  'y  <:  ¬()
-//│ ╙── because: cannot constrain  Bool  <:  ¬()
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: ⊥
-
-

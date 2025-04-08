@@ -149,10 +149,10 @@ fun foofoo(x) =
   if x is Int then
     let t = x + 1 in "foo"
 foofoo
-//│ Type: ['x, 'res, 'eff] -> 'x ->{'eff} 'res
+//│ Type: ['x, 'res, 'eff, 'x1] -> 'x ->{'eff} 'res
 //│ Where:
-//│   'x#Int ∨  ∧ ⊥<:'eff ∧ Int ∧ 'x<:Int ∧ Int<:Int ∧ Str<:'res
-//│   'x#¬Int ∨  ∧ 'x<:⊥
+//│   'x#Int ∨  ∧ Int ∧ 'x<:Int ∧ Int<:Int ∧ Str<:'res ∧ ⊥<:'eff
+//│   'x#¬Int ∨  ∧ ¬Int ∧ 'x<:'x1 ∧ ⊤<:⊥
 
 fun foofoo(x) =
   let t = x + 1 in "foo"
@@ -270,7 +270,7 @@ if 1 < 2 then 1 else 0
 
 
 if false then 1 else "1"
-//│ Type: Int ∨ Str
+//│ Type: Str ∨ Int
 
 
 if 1 is Int then 1 else 0
@@ -284,10 +284,10 @@ if 1 is Foo then 0 else 1
 fun test(x) =
   if x is Int then x + 1 else 0
 test
-//│ Type: ['x, 'res, 'eff, 'eff1] -> 'x ->{'eff} 'res
+//│ Type: ['x, 'res, 'eff, 'x1] -> 'x ->{'eff} 'res
 //│ Where:
-//│   'x#Int ∨  ∧ ⊥<:'eff ∧ Int ∧ 'x<:Int ∧ Int<:Int ∧ Int<:'res
-//│   'x#¬Int ∨  ∧ ⊥<:'eff1 ∧ Int<:'res
+//│   'x#Int ∨  ∧ Int ∧ 'x<:Int ∧ Int<:Int ∧ Int<:'res ∧ ⊥<:'eff
+//│   'x#¬Int ∨  ∧ ¬Int ∧ 'x<:'x1 ∧ Int<:'res ∧ ⊥<:'eff
 
 test(1)
 //│ Type: Int

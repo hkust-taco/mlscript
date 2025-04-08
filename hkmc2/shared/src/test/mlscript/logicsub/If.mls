@@ -1,0 +1,180 @@
+:bbml
+//│ Type: ⊤
+
+//│ Type: ⊤
+
+fun ib: Int | Bool
+fun si: Str | Int
+fun sib: Str | Int | Bool
+fun rev: Str -> Str
+fun not: Bool -> Bool
+//│ Type: ⊤
+
+fun f(x) = if x is
+  Int then 0
+  Bool then x
+f
+//│ Type: ['x, 'res, 'eff, 'x1] -> 'x ->{'eff} 'res
+//│ Where:
+//│   'x#Int ∨  ∧ Int<:'res ∧ ⊥<:'eff
+//│   'x#¬Int ∨ (  'x1#Bool ∨  ∧ Bool ∧ 'x1<:'res ∧ ⊥<:'eff) ∧ (  'x1#¬(Int ∨ Bool) ∨  ∧ (¬Int ∧ ¬Bool) ∧ 'x1<:'x1 ∧ ⊤<:⊥) ∧ ¬Int ∧ 'x<:'x1
+
+f(ib) as Int | Bool
+//│ Type: Int ∨ Bool
+
+f(f(ib)) as Int | Bool
+f(f(ib))
+//│ Type: Int ∨ ((Bool ∧ ¬Int) ∧ 'x)
+//│ Where:
+//│   Int <: 'x
+//│   Bool ∧ ¬Int <: 'x
+//│   'x#¬(Int ∨ Bool) ∨  ∧ (¬Int ∧ ¬Bool) ∧ 'x1<:'x1 ∧ ⊤<:⊥
+//│   ¬{Int} ∧ 'x <: 'x1
+//│   Int <: 'res
+//│   (Bool ∧ ¬Int) ∧ 'x <: 'res
+//│   'x1 <: ¬(Bool ∧ ¬'res)
+//│   'x1#¬(Int ∨ Bool) ∨  ∧ (¬Int ∧ ¬Bool) ∧ 'x1<:'x1 ∧ ⊤<:⊥
+
+:e
+f(si)
+//│ ╔══[ERROR] Type error in reference with expected type 'x
+//│ ║  l.39: 	f(si)
+//│ ║        	  ^^
+//│ ╟── because: cannot constrain  Str ∨ Int  <:  'x
+//│ ╟── because: cannot constrain  Str  <:  'x
+//│ ╟── because: cannot constrain  ¬Int ∧ 'x  <:  'x1
+//│ ╟── because: cannot constrain  ¬{Int} ∧ 'x  <:  'x1
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: Int
+
+
+// order dependent
+
+fun f(x, y) = if
+  x is Int then 1
+  y is Str then ""
+f(1, "")
+//│ Type: Int
+
+fun f(x, y) = if
+  y is Str then ""
+  x is Int then 1
+f(1, "")
+//│ Type: Str
+
+f(1, sib)
+//│ Type: Int ∨ Str
+
+
+fun foorec(x, y, r) = if
+  x is Int and y is Int then x + y
+  x is Str then not(y)
+  y is Str then r(y, x, r)
+//│ Type: ⊤
+
+fun foo(x, y) = foorec(x, y, foorec)
+//│ Type: ⊤
+
+foo(true, "")
+foo(1, 2)
+foo as (Int, Int) -> Int
+foo as (Str, Bool) -> Bool
+(x => foo(x, true)) as Str -> Bool
+(x => foo(x, "")) as Bool -> Bool
+//│ Type: (Bool) ->{⊥} Bool
+
+:e
+foo(1, "")
+//│ ╔══[ERROR] Type error in string literal with expected type 'y
+//│ ║  l.87: 	foo(1, "")
+//│ ║        	       ^^
+//│ ╟── because: cannot constrain  Str  <:  'y
+//│ ╟── because: cannot constrain  Str  <:  'y
+//│ ╟── because: cannot constrain  ¬Int ∧ 'y1  <:  'y2
+//│ ╟── because: cannot constrain  ¬{Int} ∧ 'y1  <:  'y2
+//│ ╟── because: cannot constrain  'r  <:  (Str ∧ 'y2, 'x, 'r) ->{'eff} 'app
+//│ ╟── because: cannot constrain  'r  <:  ¬(¬{(Str ∧ 'y2, 'x, 'r) ->{'eff} 'app})
+//│ ╟── because: cannot constrain  ((¬⊥ ∧ 'x1, ¬⊥ ∧ 'y3, ¬⊥ ∧ 'r1) ->{¬⊥ ∧ 'eff1} (¬⊥ ∧ 'res)) ∧ ¬⊥  <:  ¬(¬{(Str ∧ 'y2, 'x, 'r) ->{'eff} 'app})
+//│ ╟── because: cannot constrain  'x  <:  'y3
+//│ ╟── because: cannot constrain  'x  <:  'y3
+//│ ╟── because: cannot constrain  'x  <:  ¬(¬{Bool})
+//│ ╟── because: cannot constrain  'x  <:  ¬(¬{Bool})
+//│ ╟── because: cannot constrain  'x2  <:  ¬(¬{Bool})
+//│ ╟── because: cannot constrain  'x2  <:  ¬(¬{Bool})
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'x3  <:  ¬(¬{Bool})
+//│ ╟── because: cannot constrain  'x3  <:  ¬(¬{Bool})
+//│ ╙── because: cannot constrain  Int  <:  ¬(¬{Bool})
+//│ ╔══[ERROR] Type error in string literal with expected type 'y
+//│ ║  l.87: 	foo(1, "")
+//│ ║        	       ^^
+//│ ╟── because: cannot constrain  Str  <:  'y
+//│ ╟── because: cannot constrain  Str  <:  'y
+//│ ╟── because: cannot constrain  Int ∧ 'x2  <:  'x
+//│ ╟── because: cannot constrain  Int ∧ 'x2  <:  'x
+//│ ╟── because: cannot constrain  Int ∧ 'x2  <:  ¬(¬{Bool})
+//│ ╟── because: cannot constrain  'x2  <:  ¬(Int ∧ ¬{Bool})
+//│ ╟── because: cannot constrain  ¬⊥ ∧ 'x3  <:  ¬(Int ∧ ¬{Bool})
+//│ ╟── because: cannot constrain  'x3  <:  ¬(Int ∧ ¬{Bool})
+//│ ╙── because: cannot constrain  Int  <:  ¬(Int ∧ ¬{Bool})
+//│ Type: Bool
+
+fun increv(x) = if x is
+  Int then x + 1
+  else
+    rev(x)
+increv
+//│ Type: ['x, 'res, 'eff, 'x1] -> 'x ->{'eff} 'res
+//│ Where:
+//│   'x#Int ∨  ∧ Int ∧ 'x<:Int ∧ Int<:Int ∧ Int<:'res ∧ ⊥<:'eff
+//│   'x#¬Int ∨  ∧ ¬Int ∧ 'x<:'x1 ∧ 'x1<:Str ∧ Str<:'res ∧ ⊥<:'eff
+
+fun increv'(x) = if x is
+  Int then x + 1
+  Str then rev(x)
+increv'
+//│ Type: ['x, 'res, 'eff, 'x1] -> 'x ->{'eff} 'res
+//│ Where:
+//│   'x#Int ∨  ∧ Int ∧ 'x<:Int ∧ Int<:Int ∧ Int<:'res ∧ ⊥<:'eff
+//│   'x#¬Int ∨ (  'x1#Str ∨  ∧ Str ∧ 'x1<:Str ∧ Str<:'res ∧ ⊥<:'eff) ∧ (  'x1#¬(Int ∨ Str) ∨  ∧ (¬Int ∧ ¬Str) ∧ 'x1<:'x1 ∧ ⊤<:⊥) ∧ ¬Int ∧ 'x<:'x1
+
+:e
+increv(sib)
+//│ ╔══[ERROR] Type error in reference with expected type 'x
+//│ ║  l.141: 	increv(sib)
+//│ ║         	       ^^^
+//│ ╟── because: cannot constrain  (Str ∨ Int) ∨ Bool  <:  'x
+//│ ╟── because: cannot constrain  Bool  <:  'x
+//│ ╙── because: cannot constrain  Bool  <:  ¬(¬{Str ∨ Int})
+//│ Type: Int ∨ Str
+
+:e
+increv'(sib)
+//│ ╔══[ERROR] Type error in reference with expected type 'x
+//│ ║  l.151: 	increv'(sib)
+//│ ║         	        ^^^
+//│ ╟── because: cannot constrain  (Str ∨ Int) ∨ Bool  <:  'x
+//│ ╟── because: cannot constrain  Bool  <:  'x
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: Int ∨ Str
+
+increv(si)
+//│ Type: Int ∨ Str
+
+increv'(si)
+//│ Type: Int ∨ Str
+
+fun f(x, y) = if
+  x is Int and y is Int then 1
+  x is Bool then y
+//│ Type: ⊤
+
+// literal matching not yet implemented
+
+:todo
+x => if x is
+ true then 0
+ false then 0
+//│ ╔══[ERROR] Type error in `if` expression
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: (Bool) ->{⊥} Int
+
