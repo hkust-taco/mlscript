@@ -90,17 +90,17 @@ foo(1, "")
 //│ ║        	       ^^
 //│ ╟── because: cannot constrain  Str  <:  'y
 //│ ╟── because: cannot constrain  Str  <:  'y
-//│ ╟── because: cannot constrain  ¬Int ∧ 'y1  <:  'y2
-//│ ╟── because: cannot constrain  ¬{Int} ∧ 'y1  <:  'y2
-//│ ╟── because: cannot constrain  'r  <:  (Str ∧ 'y2, 'x, 'r) ->{'eff} 'app
-//│ ╟── because: cannot constrain  'r  <:  ¬(¬{(Str ∧ 'y2, 'x, 'r) ->{'eff} 'app})
-//│ ╟── because: cannot constrain  ((¬⊥ ∧ 'x1, ¬⊥ ∧ 'y3, ¬⊥ ∧ 'r1) ->{¬⊥ ∧ 'eff1} (¬⊥ ∧ 'res)) ∧ ¬⊥  <:  ¬(¬{(Str ∧ 'y2, 'x, 'r) ->{'eff} 'app})
-//│ ╟── because: cannot constrain  'x  <:  'y3
-//│ ╟── because: cannot constrain  'x  <:  'y3
+//│ ╟── because: cannot constrain  'x  <:  'x1
+//│ ╟── because: cannot constrain  'x  <:  'x1
+//│ ╟── because: cannot constrain  'r  <:  (Str ∧ 'y1, 'x1, 'r) ->{'eff} 'app
+//│ ╟── because: cannot constrain  'r  <:  ¬(¬{(Str ∧ 'y1, 'x1, 'r) ->{'eff} 'app})
+//│ ╟── because: cannot constrain  ((¬⊥ ∧ 'x2, ¬⊥ ∧ 'y2, ¬⊥ ∧ 'r1) ->{¬⊥ ∧ 'eff1} (¬⊥ ∧ 'res)) ∧ ¬⊥  <:  ¬(¬{(Str ∧ 'y1, 'x1, 'r) ->{'eff} 'app})
+//│ ╟── because: cannot constrain  'x1  <:  'y2
+//│ ╟── because: cannot constrain  'x1  <:  'y2
+//│ ╟── because: cannot constrain  'x1  <:  ¬(¬{Bool})
+//│ ╟── because: cannot constrain  'x1  <:  ¬(¬{Bool})
 //│ ╟── because: cannot constrain  'x  <:  ¬(¬{Bool})
 //│ ╟── because: cannot constrain  'x  <:  ¬(¬{Bool})
-//│ ╟── because: cannot constrain  'x2  <:  ¬(¬{Bool})
-//│ ╟── because: cannot constrain  'x2  <:  ¬(¬{Bool})
 //│ ╟── because: cannot constrain  ¬⊥ ∧ 'x3  <:  ¬(¬{Bool})
 //│ ╟── because: cannot constrain  'x3  <:  ¬(¬{Bool})
 //│ ╙── because: cannot constrain  Int  <:  ¬(¬{Bool})
@@ -109,10 +109,10 @@ foo(1, "")
 //│ ║        	       ^^
 //│ ╟── because: cannot constrain  Str  <:  'y
 //│ ╟── because: cannot constrain  Str  <:  'y
-//│ ╟── because: cannot constrain  Int ∧ 'x2  <:  'x
-//│ ╟── because: cannot constrain  Int ∧ 'x2  <:  'x
-//│ ╟── because: cannot constrain  Int ∧ 'x2  <:  ¬(¬{Bool})
-//│ ╟── because: cannot constrain  'x2  <:  ¬(Int ∧ ¬{Bool})
+//│ ╟── because: cannot constrain  Int ∧ 'x  <:  'x1
+//│ ╟── because: cannot constrain  Int ∧ 'x  <:  'x1
+//│ ╟── because: cannot constrain  Int ∧ 'x  <:  ¬(¬{Bool})
+//│ ╟── because: cannot constrain  'x  <:  ¬(Int ∧ ¬{Bool})
 //│ ╟── because: cannot constrain  ¬⊥ ∧ 'x3  <:  ¬(Int ∧ ¬{Bool})
 //│ ╟── because: cannot constrain  'x3  <:  ¬(Int ∧ ¬{Bool})
 //│ ╙── because: cannot constrain  Int  <:  ¬(Int ∧ ¬{Bool})
