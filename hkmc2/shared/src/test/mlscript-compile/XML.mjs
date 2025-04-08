@@ -12,8 +12,10 @@ StyleAttributeValue1.class = class StyleAttributeValue {
   }
   toString() { return "StyleAttributeValue(" + "" + ")"; }
 };
-XML1 = class XML {
-  static {}
+(class XML {
+  static {
+    XML1 = XML;
+  }
   static serializeValue(value) {
     let param0, rules, tmp, tmp1, tmp2, lambda;
     if (typeof value === 'string') {
@@ -73,7 +75,7 @@ XML1 = class XML {
       lambda = (undefined, function (arg1, arg2) {
         return arg1 + arg2
       });
-      tmp = Predef.fold(lambda);
+      tmp = runtime.safeCall(Predef.fold(lambda));
       tmp1 = XML.joinAttributes(attributes1);
       return runtime.safeCall(tmp("<", tagName, tmp1, ">", ...elements, "</", tagName, ">"))
     }
@@ -84,7 +86,7 @@ XML1 = class XML {
       lambda = (undefined, function (arg1, arg2) {
         return arg1 + arg2
       });
-      tmp = Predef.fold(lambda);
+      tmp = runtime.safeCall(Predef.fold(lambda));
       tmp1 = XML.joinAttributes(attributes2);
       return runtime.safeCall(tmp("<", tagName1, tmp1, " ", "/>"))
     }
@@ -106,5 +108,5 @@ XML1 = class XML {
     }
   }
   static toString() { return "XML"; }
-};
+});
 let XML = XML1; export default XML;

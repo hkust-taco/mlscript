@@ -213,7 +213,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       args(fs)(args => k(Value.Arr(args)))
     case ref @ st.Ref(sym) =>
       sym match
-      case ctx.builtins.source.bms | ctx.builtins.js.bms =>
+      case ctx.builtins.source.bms | ctx.builtins.js.bms | ctx.builtins.debug.bms =>
         raise:
           ErrorReport(
             msg"Module '${sym.nme}' is virtual (i.e., \"compiler fiction\"); cannot be used directly" -> t.toLoc ::
@@ -306,14 +306,30 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       def conclude(fr: Path) =
         arg match
         case Tup(fs) =>
-          args(fs)(as => k(Call(fr, as)(isMlsFun, true)))
+          args(fs)(as => k(Call(fr, as)(isMlsFun, true).withLocOf(t)))
         case _ =>
           // Application arguments that are not tuples represent spreads, as in `f(...arg)`
           subTerm_nonTail(arg): ar =>
-            k(Call(fr, Arg(spread = true, ar) :: Nil)(isMlsFun, true))
+            k(Call(fr, Arg(spread = true, ar) :: Nil)(isMlsFun, true).withLocOf(t))
       f match
       case t if t.symbol.isDefined && (t.symbol.get is ctx.builtins.js.try_catch) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("try_catch")))
+      case t if t.symbol.isDefined && (t.symbol.get is ctx.builtins.debug.printStack) =>
+        if !config.effectHandlers.exists(_.debug) then
+          raise(ErrorReport(
+            msg"Debugging functions are not enabled" ->
+            t.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation))
+          return End("error")
+        conclude(Value.Ref(State.runtimeSymbol).selSN("raisePrintStackEffect").withLocOf(f))
+      case t if t.symbol.isDefined && (t.symbol.get is ctx.builtins.debug.getLocals) =>
+        if !config.effectHandlers.exists(_.debug) then
+          raise(ErrorReport(
+            msg"Debugging functions are not enabled" ->
+            t.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation))
+          return End("error")
+        conclude(Value.Ref(ctx.builtins.debug.getLocals).withLocOf(f))
       // * Due to whacky JS semantics, we need to make sure that selections leading to a call
       // * are preserved in the call and not moved to a temporary variable.
       case sel @ Sel(prefix, nme) =>
@@ -662,9 +678,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val stackSafe = config.stackSafety match
       case N => desug
       case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths).transformTopLevel(desug)
-    val withHandlers = if lowerHandlers
-      then HandlerLowering(handlerPaths).translateTopLevel(stackSafe)
-      else stackSafe
+    val withHandlers = config.effectHandlers.fold(stackSafe): opt =>
+      HandlerLowering(handlerPaths, opt).translateTopLevel(stackSafe)
     
     val flattened = withHandlers.flattened
     

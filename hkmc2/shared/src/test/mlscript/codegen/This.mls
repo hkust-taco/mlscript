@@ -41,8 +41,9 @@ module Test with
     [this.a, x]
 //│ JS (unsanitized):
 //│ let Test1;
-//│ Test1 = class Test {
+//│ (class Test {
 //│   static {
+//│     Test1 = Test;
 //│     this.a = 3;
 //│   }
 //│   static test1(x) {
@@ -55,7 +56,7 @@ module Test with
 //│     ]
 //│   }
 //│   static toString() { return "Test"; }
-//│ };
+//│ });
 
 
 Test.test1(123)

@@ -13,7 +13,7 @@ fun f() =
   1
 f() + f() + f()
 //│ JS (unsanitized):
-//│ let f, Effect1, tmp, handleBlock$, Cont$func$f$ClassInFun$_mls_L7_95_118$1, Cont$handleBlock$h$1, Handler$h$1, lambda, f$, Cont$func$f$ClassInFun$_mls_L7_95_118$$ctor, Cont$func$f$ClassInFun$_mls_L7_95_118$$, Cont$handleBlock$h$$ctor, Cont$handleBlock$h$$, lambda$;
+//│ let f, Effect1, tmp, handleBlock$, Cont$func$f$1, Cont$handleBlock$h$1, Handler$h$1, lambda, f$, Cont$func$f$$ctor, Cont$func$f$$, Cont$handleBlock$h$$ctor, Cont$handleBlock$h$$, lambda$;
 //│ Effect1 = class Effect {
 //│   constructor() {}
 //│   toString() { return "Effect"; }
@@ -123,24 +123,24 @@ f() + f() + f()
 //│   }
 //│   toString() { return "Cont$handleBlock$h$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│ };
-//│ Cont$func$f$ClassInFun$_mls_L7_95_118$$ = function Cont$func$f$ClassInFun$_mls_L7_95_118$$(h$0, tmp$1, pc) {
+//│ Cont$func$f$$ = function Cont$func$f$$(h$0, tmp$1, pc) {
 //│   let tmp1;
-//│   tmp1 = new Cont$func$f$ClassInFun$_mls_L7_95_118$1.class(pc);
+//│   tmp1 = new Cont$func$f$1.class(pc);
 //│   return tmp1(h$0, tmp$1)
 //│ };
-//│ Cont$func$f$ClassInFun$_mls_L7_95_118$$ctor = function Cont$func$f$ClassInFun$_mls_L7_95_118$$ctor(h$0, tmp$1) {
+//│ Cont$func$f$$ctor = function Cont$func$f$$ctor(h$0, tmp$1) {
 //│   return (pc) => {
 //│     let tmp1;
-//│     tmp1 = new Cont$func$f$ClassInFun$_mls_L7_95_118$1.class(pc);
+//│     tmp1 = new Cont$func$f$1.class(pc);
 //│     return tmp1(h$0, tmp$1)
 //│   }
 //│ };
-//│ Cont$func$f$ClassInFun$_mls_L7_95_118$1 = function Cont$func$f$ClassInFun$_mls_L7_95_118$(pc1) {
+//│ Cont$func$f$1 = function Cont$func$f$(pc1) {
 //│   return (h$01, tmp$11) => {
-//│     return new Cont$func$f$ClassInFun$_mls_L7_95_118$.class(pc1)(h$01, tmp$11);
+//│     return new Cont$func$f$.class(pc1)(h$01, tmp$11);
 //│   }
 //│ };
-//│ Cont$func$f$ClassInFun$_mls_L7_95_118$1.class = class Cont$func$f$ClassInFun$_mls_L7_95_118$ extends runtime.FunctionContFrame.class {
+//│ Cont$func$f$1.class = class Cont$func$f$ extends runtime.FunctionContFrame.class {
 //│   constructor(pc) {
 //│     return (h$0, tmp$1) => {
 //│       let tmp1;
@@ -172,13 +172,13 @@ f() + f() + f()
 //│       break;
 //│     }
 //│   }
-//│   toString() { return "Cont$func$f$ClassInFun$_mls_L7_95_118$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│   toString() { return "Cont$func$f$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│ };
 //│ f$ = function f$(h) {
 //│   let tmp1;
 //│   tmp1 = runtime.safeCall(h.perform());
 //│   if (tmp1 instanceof runtime.EffectSig.class) {
-//│     tmp1.contTrace.last.next = Cont$func$f$ClassInFun$_mls_L7_95_118$$(h, tmp1, 0);
+//│     tmp1.contTrace.last.next = Cont$func$f$$(h, tmp1, 0);
 //│     tmp1.contTrace.last = tmp1.contTrace.last.next;
 //│     return tmp1
 //│   }
@@ -212,7 +212,7 @@ f() + f() + f()
 //│ };
 //│ tmp = handleBlock$();
 //│ if (tmp instanceof runtime.EffectSig.class) {
-//│   throw new this.Error("Unhandled effects");
+//│   tmp = runtime.topLevelEffect(tmp, false);
 //│ }
 //│ tmp
 //│ = 3
@@ -585,17 +585,6 @@ f().foo()
 //│ runtime.safeCall(tmp5.foo())
 //│ = 10111
 
-:fixme
-:expect 2
-class A(a) with
-  let x = 2
-  fun f() =
-    fun g() = x
-    g()
-A(2).f()
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
-
 :expect 2
 fun f(x) =
   class A() with
@@ -629,12 +618,13 @@ sum(100)
 
 :w
 fun f() =
-  class Test(a) with
+  data class Test(a) with
     fun get() = a
   fun foo() = Test
   foo()(0)
 f().get()
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
+//│ = 0
 
 :sjs
 :lift
@@ -649,7 +639,7 @@ fun f(x) =
 f(2).get()
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ JS (unsanitized):
-//│ let h3, f9, tmp12, h$3;
+//│ let h3, f9, tmp11, h$3;
 //│ h$3 = function h$(Test$instance, x) {
 //│   return x
 //│ };
@@ -673,8 +663,8 @@ f(2).get()
 //│   foo1 = Test10;
 //│   return runtime.safeCall(foo1())
 //│ };
-//│ tmp12 = f9(2);
-//│ runtime.safeCall(tmp12.get())
+//│ tmp11 = f9(2);
+//│ runtime.safeCall(tmp11.get())
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ = 2
 
@@ -686,3 +676,11 @@ fun test() =
   B().get
 test()
 //│ = 2
+
+// Note: semicolon required for auxparam before `return this;`
+// :sjs
+fun test(f) =
+  class A(x) with
+    f(x)
+  A(1)
+

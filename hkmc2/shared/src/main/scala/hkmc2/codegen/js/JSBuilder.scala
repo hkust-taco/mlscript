@@ -62,10 +62,10 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case ts: semantics.TermSymbol =>
       ts.owner match
       case S(owner) =>
-        doc"${getVar(owner)}.${
+        doc"${getVar(owner)}${
           if (ts.k is syntax.LetBind) && !owner.isInstanceOf[semantics.TopLevelSymbol]
-          then "#" + owner.privatesScope.lookup_!(ts)
-          else ts.id.name
+          then ".#" + owner.privatesScope.lookup_!(ts)
+          else fieldSelect(ts.id.name)
         }"
       case N => summon[Scope].lookup_!(ts)
     case ts: semantics.InnerSymbol =>
@@ -85,6 +85,12 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   def subexpression(r: Result)(using Raise, Scope): Document = r match
     case _: Value.Lam => doc"(${result(r)})"
     case _ => result(r)
+  
+  def fieldSelect(s: Str): Document =
+    if JSBuilder.isValidFieldName(s) then doc".$s"
+    else s.toIntOption match
+      case S(index) => s"[$index]"
+      case N => s"[${JSBuilder.makeStringLiteral(s)}]"
   
   def result(r: Result)(using Raise, Scope): Document = r match
     case Value.This(sym) => summon[Scope].findThis_!(sym)
@@ -161,7 +167,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case Assign(l, r, rst) =>
       doc" # ${getVar(l)} = ${result(r)};${returningTerm(rst, endSemi)}"
     case AssignField(p, n, r, rst) =>
-      doc" # ${result(p)}.${n.name} = ${result(r)};${returningTerm(rst, endSemi)}"
+      doc" # ${result(p)}${fieldSelect(n.name)} = ${result(r)};${returningTerm(rst, endSemi)}"
     case AssignDynField(p, f, ai, r, rst) =>
       doc" # ${result(p)}[${result(f)}] = ${result(r)};${returningTerm(rst, endSemi)}"
     case Define(defn, rst) =>
@@ -176,7 +182,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         case N =>
           doc"${getVar(sym)} = ${result(p)};${returningTerm(rst, endSemi)}"
         case S(owner) =>
-          doc"${mkThis(owner)}.${sym.nme} = ${result(p)};${returningTerm(rst, endSemi)}"
+          doc"${mkThis(owner)}${fieldSelect(sym.nme)} = ${result(p)};${returningTerm(rst, endSemi)}"
       case defn: (FunDefn | ClsLikeDefn) =>
         val outerScope = scope
         val (thisProxy, res) = scope.nestRebindThis(
@@ -218,11 +224,11 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 .mkDocument(doc"")
             val preCtorCode = ctorAuxParams.flatMap(ps => ps).foldLeft(body(preCtor, endSemi = true)):
               case (acc, (sym, nme)) =>
-                doc"$acc # this.${sym.name} = $nme;"
-            val ctorCode = doc"$preCtorCode${body(ctor, endSemi = false)}"
+                doc"$acc # this${fieldSelect(sym.name)} = $nme;"
+            val ctorCode = doc"$preCtorCode${body(ctor, endSemi = auxParams.nonEmpty)}"
 
-            val ctorBod = if auxParams.isEmpty then
-              doc"${braced(ctorCode)}"
+            val ctorAux = if auxParams.isEmpty then
+              ctorCode
             else
               val pss = ctorAuxParams.map(_.map(_._2))
               val newCtorCode = doc"$ctorCode # return this;"
@@ -230,7 +236,16 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
               val funBod = pss.foldRight(ctorBraced):
                 case (psDoc, doc) => doc"(${psDoc.mkDocument(", ")}) => $doc"
 
-              doc"${ braced(doc" # return $funBod") }"
+              doc" # return $funBod"
+            
+            val ctorBod = if isModule then
+              ownr match
+              case S(owner) =>
+                braced(doc" # ${result(Value.Ref(owner))}.${sym.nme} = ${getVar(isym)};$ctorCode")
+              case N =>
+                braced(doc" # ${getVar(sym)} = ${getVar(isym)};$ctorCode")
+            else
+              braced(ctorAux)
             
             val ctorOrStatic = if isModule
               then doc"static"
@@ -271,10 +286,10 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 else doc""" # ${mtdPrefix}toString() { return "${sym.nme}${
                   if paramsOpt.isEmpty then doc"""""""
                   else doc"""(" + ${
-                      ctorFields.headOption.fold("\"\"")("globalThis.Predef.render(this." + _._1.name + ")")
+                      ctorFields.headOption.fold("\"\"")(f => "globalThis.Predef.render(this" + fieldSelect(f._1.name) + ")")
                     }${
-                      ctorFields.tailOption.fold("")(_.map(
-                        """ + ", " + globalThis.Predef.render(this.""" + _._1.name + ")").mkString)
+                      ctorFields.tailOption.fold("")(_.map(f =>
+                        """ + ", " + globalThis.Predef.render(this""" + fieldSelect(f._1.name) + ")").mkString)
                     } + ")""""
                 }; }"""
               } #}  # }"
@@ -285,13 +300,13 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 assert((kind is syntax.Pat) || paramsOpt.isEmpty)
                 // doc"${mkThis(owner)}.${sym.nme} = new ${clsJS}"
                 if isModule
-                then doc"${mkThis(owner)}.${sym.nme} = ${clsJS};"
+                then doc"(${clsJS});"
                 else doc"const $clsTmp = ${clsJS}; # ${mkThis(owner)}.${sym.nme} = new ${clsTmp
                   }; # ${mkThis(owner)}.${sym.nme}.class = $clsTmp;"
               case N =>
                 val v = getVar(sym)
                 if isModule
-                then doc"${v} = ${clsJS};"
+                then doc"(${clsJS});"
                 else doc"const $clsTmp = ${clsJS}; ${v} = new ${clsTmp
                   }; # ${v}.class = $clsTmp;"
             else

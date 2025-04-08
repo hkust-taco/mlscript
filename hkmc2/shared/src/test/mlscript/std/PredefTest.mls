@@ -110,7 +110,7 @@ passing(tuple, 1, 2, 3) of 4, 5, 6
 
 :re
 tuple passing(1, 2, 3) of 4, 5, 6
-//│ ═══[RUNTIME ERROR] TypeError: f12.bind is not a function
+//│ ═══[RUNTIME ERROR] TypeError: f3.bind is not a function
 
 
 :re

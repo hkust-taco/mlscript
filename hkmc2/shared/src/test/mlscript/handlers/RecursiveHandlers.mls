@@ -35,7 +35,7 @@ handle h = Object with
     [x, k(())]
 h.write(1)
 h.write(2)
-//│ ═══[RUNTIME ERROR] Error: Unhandled effects
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
 
 handle h = Object with
   fun write(x)(k) =
@@ -165,11 +165,11 @@ str
 //│       }
 //│       perform(arg) {
 //│         return runtime.mkEffect(this, (k) => {
-//│           let tmp12, tmp13, tmp14, Cont$handler$h1$RecursiveHandlers$_mls_L139_58_1301;
-//│           Cont$handler$h1$RecursiveHandlers$_mls_L139_58_1301 = function Cont$handler$h1$RecursiveHandlers$_mls_L139_58_130(pc1) {
-//│             return new Cont$handler$h1$RecursiveHandlers$_mls_L139_58_130.class(pc1);
+//│           let tmp12, tmp13, tmp14, Cont$handler$h1$perform$2;
+//│           Cont$handler$h1$perform$2 = function Cont$handler$h1$perform$(pc1) {
+//│             return new Cont$handler$h1$perform$.class(pc1);
 //│           };
-//│           Cont$handler$h1$RecursiveHandlers$_mls_L139_58_1301.class = class Cont$handler$h1$RecursiveHandlers$_mls_L139_58_130 extends runtime.FunctionContFrame.class {
+//│           Cont$handler$h1$perform$2.class = class Cont$handler$h1$perform$1 extends runtime.FunctionContFrame.class {
 //│             constructor(pc) {
 //│               let tmp15;
 //│               tmp15 = super(null);
@@ -198,13 +198,13 @@ str
 //│                 break;
 //│               }
 //│             }
-//│             toString() { return "Cont$handler$h1$RecursiveHandlers$_mls_L139_58_130(" + globalThis.Predef.render(this.pc) + ")"; }
+//│             toString() { return "Cont$handler$h1$perform$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│           };
 //│           tmp12 = str + "A";
 //│           str = tmp12;
 //│           tmp13 = runtime.safeCall(k(arg));
 //│           if (tmp13 instanceof runtime.EffectSig.class) {
-//│             tmp13.contTrace.last.next = new Cont$handler$h1$RecursiveHandlers$_mls_L139_58_1301.class(7);
+//│             tmp13.contTrace.last.next = new Cont$handler$h1$perform$2.class(7);
 //│             tmp13.contTrace.last = tmp13.contTrace.last.next;
 //│             return tmp13
 //│           }
@@ -247,11 +247,11 @@ str
 //│         }
 //│         perform(arg) {
 //│           return runtime.mkEffect(this, (k) => {
-//│             let tmp13, tmp14, tmp15, tmp16, tmp17, Cont$handler$h2$RecursiveHandlers$_mls_L139_165_2491;
-//│             Cont$handler$h2$RecursiveHandlers$_mls_L139_165_2491 = function Cont$handler$h2$RecursiveHandlers$_mls_L139_165_249(pc1) {
-//│               return new Cont$handler$h2$RecursiveHandlers$_mls_L139_165_249.class(pc1);
+//│             let tmp13, tmp14, tmp15, tmp16, tmp17, Cont$handler$h2$perform$2;
+//│             Cont$handler$h2$perform$2 = function Cont$handler$h2$perform$(pc1) {
+//│               return new Cont$handler$h2$perform$.class(pc1);
 //│             };
-//│             Cont$handler$h2$RecursiveHandlers$_mls_L139_165_2491.class = class Cont$handler$h2$RecursiveHandlers$_mls_L139_165_249 extends runtime.FunctionContFrame.class {
+//│             Cont$handler$h2$perform$2.class = class Cont$handler$h2$perform$1 extends runtime.FunctionContFrame.class {
 //│               constructor(pc) {
 //│                 let tmp18;
 //│                 tmp18 = super(null);
@@ -281,14 +281,14 @@ str
 //│                   break;
 //│                 }
 //│               }
-//│               toString() { return "Cont$handler$h2$RecursiveHandlers$_mls_L139_165_249(" + globalThis.Predef.render(this.pc) + ")"; }
+//│               toString() { return "Cont$handler$h2$perform$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│             };
 //│             tmp13 = str + "B";
 //│             tmp14 = str + tmp13;
 //│             str = tmp14;
 //│             tmp15 = runtime.safeCall(k(arg));
 //│             if (tmp15 instanceof runtime.EffectSig.class) {
-//│               tmp15.contTrace.last.next = new Cont$handler$h2$RecursiveHandlers$_mls_L139_165_2491.class(4);
+//│               tmp15.contTrace.last.next = new Cont$handler$h2$perform$2.class(4);
 //│               tmp15.contTrace.last = tmp15.contTrace.last.next;
 //│               return tmp15
 //│             }
@@ -369,7 +369,7 @@ str
 //│   };
 //│   tmp9 = handleBlock$7();
 //│   if (tmp9 instanceof runtime.EffectSig.class) {
-//│     throw new this.Error("Unhandled effects");
+//│     tmp9 = runtime.topLevelEffect(tmp9, false);
 //│   }
 //│   tmp10 = tmp9;
 //│ } else {

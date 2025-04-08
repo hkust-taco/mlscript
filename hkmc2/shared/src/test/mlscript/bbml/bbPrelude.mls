@@ -40,6 +40,10 @@ declare module source with
 declare module js with
   fun try_catch
 
+declare module debug with
+  fun printStack
+  fun getLocals
+
 
 declare fun run: [T] -> CodeBase[out T, out Nothing, out Any] -> T
 declare fun log: Str -> Any

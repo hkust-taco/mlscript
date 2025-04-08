@@ -15,7 +15,7 @@ set h1 = h
 
 :re
 h1.perform()
-//│ ═══[RUNTIME ERROR] Error: Unhandled effects
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
 
 enterHandleBlock(h1, () => h1.perform())
 //│ > perform

@@ -24,8 +24,9 @@ Iterator1.class = class Iterator {
   }
   toString() { return "Iterator(" + globalThis.Predef.render(this.next) + ")"; }
 };
-Result1 = class Result {
+(class Result {
   static {
+    Result1 = Result;
     this.Next = function Next(value1) {
       return new Next.class(value1);
     };
@@ -46,9 +47,11 @@ Result1 = class Result {
     this.Done.class = Done$class;
   }
   static toString() { return "Result"; }
-};
-Iter1 = class Iter {
-  static {}
+});
+(class Iter {
+  static {
+    Iter1 = Iter;
+  }
   static getIterator(something) {
     let test, prototype, tmp, tmp1;
     test = something[globalThis.Symbol.iterator];
@@ -474,5 +477,5 @@ Iter1 = class Iter {
     return Iter.rightFolded(xs12, Stack.Nil, Stack.Cons)
   }
   static toString() { return "Iter"; }
-};
+});
 let Iter = Iter1; export default Iter;

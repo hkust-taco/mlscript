@@ -72,14 +72,15 @@ module Test with
 //│ ║  l.66: 	  val x = 1
 //│ ╙──      	      ^^^^^
 //│ JS:
-//│ Test4 = class Test3 {
+//│ (class Test3 {
 //│   static #x;
 //│   static {
+//│     Test4 = Test3;
 //│     this.x = 1;
 //│     Test3.#x = 2;
 //│   }
 //│   static toString() { return "Test"; }
-//│ };
+//│ });
 //│ block$res8 = undefined;
 
 Test.x
@@ -165,24 +166,26 @@ module Whoops with
     fun g() = f()
 //│ JS (unsanitized):
 //│ let Whoops2;
-//│ Whoops2 = class Whoops {
+//│ (class Whoops {
 //│   static {
+//│     Whoops2 = Whoops;
 //│     this.v = Whoops;
-//│     this.Whoops = class Whoops1 {
+//│     (class Whoops1 {
 //│       static {
+//│         Whoops.Whoops = Whoops1;
 //│         this.w = Whoops1;
 //│       }
 //│       static g() {
 //│         return Whoops.f()
 //│       }
 //│       static toString() { return "Whoops"; }
-//│     };
+//│     });
 //│   }
 //│   static f() {
 //│     return "Hello"
 //│   }
 //│   static toString() { return "Whoops"; }
-//│ };
+//│ });
 
 Whoops.f()
 //│ = "Hello"
@@ -197,7 +200,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[ERROR] Name not found: Runtime
-//│ ║  l.198: 	Runtime
+//│ ║  l.201: 	Runtime
 //│ ╙──       	^^^^^^^
 
 

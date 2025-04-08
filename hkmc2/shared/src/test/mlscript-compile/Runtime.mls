@@ -1,4 +1,5 @@
-import "./RuntimeJS.mjs" 
+import "./RuntimeJS.mjs"
+import "./Rendering.mls"
 
 
 module Runtime with ...
@@ -23,6 +24,17 @@ fun deboundMethod(mtdName, clsName) =
 
 val try_catch = RuntimeJS.try_catch
 
+class EffectHandle(_reified) with
+  val reified = _reified
+  fun resumeWith(value) =
+    Runtime.try(() => resume(reified.contTrace)(value))
+  fun raise() =
+    topLevelEffect(reified)
+
+fun try(f) =
+  let res = f()
+  if res is EffectSig then EffectHandle(res) else res
+
 
 // For `pattern` definitions
 data class MatchResult(captures)
@@ -30,6 +42,9 @@ data class MatchFailure(errors)
 
 
 // Private definitions for algebraic effects
+
+object FatalEffect
+object PrintStackEffect
 
 data abstract class FunctionContFrame(next) with
   fun resume(value)
@@ -40,6 +55,53 @@ data class EffectSig(contTrace, handler, handlerFun)
 
 class NonLocalReturn with
   fun ret(value)
+
+data class FnLocalsInfo(fnName, locals)
+data class LocalVarInfo(localName, value)
+
+
+fun raisePrintStackEffect(showLocals) =
+  mkEffect(PrintStackEffect, showLocals)
+
+fun topLevelEffect(tr, debug) =
+  while tr.handler === PrintStackEffect do
+    console.log(showStackTrace("Stack Trace:", tr, debug, tr.handlerFun))
+    set tr = resume(tr.contTrace)(())
+  if tr is EffectSig then
+    throw showStackTrace("Error: Unhandled effect " + tr.handler.constructor.name, tr, debug, false)
+  else
+    tr
+
+fun showStackTrace(header, tr, debug, showLocals) =
+  let
+    msg = header
+    curHandler = tr.contTrace
+    atTail = true
+  if debug do
+    while curHandler !== null do
+      let cur = curHandler.next
+      while cur !== null do
+        let locals = cur.getLocals
+        let curLocals = locals.at(locals.length - 1)
+        let loc = cur.getLoc
+        let loc = if loc is null then "pc=" + cur.pc else loc
+        let localsMsg = if showLocals and curLocals.locals.length > 0 then
+          " with locals: " + curLocals.locals.map(l => l.localName + "=" + Rendering.render(l.value)).join(", ")
+        else
+          ""
+        set
+          msg += "\n\tat " + curLocals.fnName + " (" + loc + ")"
+          msg += localsMsg
+          cur = cur.next
+          atTail = false
+      set curHandler = curHandler.nextHandler
+      if curHandler !== null do
+        set
+          msg += "\n\twith handler " + curHandler.handler.constructor.name
+          atTail = false
+    if atTail do
+      set msg += "\n\tat tail position"
+  msg
 
 fun showFunctionContChain(cont, hl, vis, reps) =
   if cont is FunctionContFrame then
@@ -52,8 +114,6 @@ fun showFunctionContChain(cont, hl, vis, reps) =
       set result += ", REPEAT"
     else
       vis.add(cont)
-    if cont.completed do
-      set result += ", COMPLETED"
     result + ") -> " + showFunctionContChain(cont.next, hl, vis, reps)
   else if cont === null then
     "(null)"
@@ -125,6 +185,16 @@ fun handleBlockImpl(cur, handler) =
     cur.contTrace.lastHandler.nextHandler = handlerFrame
     cur.contTrace.lastHandler = handlerFrame
     cur.contTrace.last = handlerFrame
+  handleEffects(cur)
+
+fun enterHandleBlock(handler, body) =
+  let cur = body()
+  if cur is EffectSig then
+    handleBlockImpl(cur, handler)
+  else
+    cur
+
+fun handleEffects(cur) =
   while cur is
     EffectSig then
       let nxt = handleEffect(cur)
@@ -134,13 +204,6 @@ fun handleBlockImpl(cur, handler) =
         set cur = nxt
     else
       return cur
-
-fun enterHandleBlock(handler, body) =
-  let cur = body()
-  if cur is EffectSig then
-    handleBlockImpl(cur, handler)
-  else
-    cur
 
 // return either new effect, final result or the same continuation if there is no handler
 fun handleEffect(cur) =
@@ -192,7 +255,7 @@ fun resume(contTrace)(value) =
   if contTrace.resumed do
     throw Error("Multiple resumption")
   set contTrace.resumed = true
-  resumeContTrace(contTrace, value)
+  handleEffects(resumeContTrace(contTrace, value))
 
 fun resumeContTrace(contTrace, value) =
   let cont = contTrace.next
@@ -218,17 +281,20 @@ fun resumeContTrace(contTrace, value) =
       return value
 
 // stack safety
-val stackLimit = 0 // How deep the stack can go before heapifying the stack
-val stackDepth = 0 // Tracks the virtual + real stack depth
-val stackOffset = 0 // How much to offset stackDepth by to get the true stack depth (i.e. the virtual depth)
-val stackHandler = null
-abstract class StackDelay with
-  fun perform()
+mut val stackLimit = 0 // How deep the stack can go before heapifying the stack
+mut val stackDepth = 0 // Tracks the virtual + real stack depth
+mut val stackOffset = 0 // How much to offset stackDepth by to get the true stack depth (i.e. the virtual depth)
+mut val stackHandler = null
+mut val stackResume = null
+
+object StackDelayHandler with
+  fun delay() = mkEffect of this, k =>
+    set stackResume = k
 
 fun checkDepth() =
   if stackDepth - stackOffset >= stackLimit && stackHandler !== null then
     // this is a tail call to effectful function
-    stackHandler.perform()
+    stackHandler.delay()
   else
     ()
 
@@ -237,3 +303,23 @@ fun resetDepth(tmp, curDepth) =
   if curDepth < stackOffset do
     set stackOffset = curDepth
   tmp
+
+fun runStackSafe(limit, f) =
+  set
+    stackLimit = limit
+    stackDepth = 1
+    stackOffset = 0
+    stackHandler = StackDelayHandler
+  let result = enterHandleBlock(StackDelayHandler, f)
+  while stackResume !== null do
+    let saved = stackResume
+    set
+      stackResume = null
+      stackOffset = stackDepth
+      result = saved()
+  set
+    stackLimit = 0
+    stackDepth = 0
+    stackOffset = 0
+    stackHandler = null
+  result

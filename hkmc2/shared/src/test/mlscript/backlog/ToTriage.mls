@@ -78,11 +78,7 @@ let g = [0]
 set g.0 += 1 // FIXME
 //│ /!!!\ Uncaught error: scala.MatchError: LetLike(keyword 'set',App(Ident(+=),Tup(List(Sel(Ident(g),Ident(0)), IntLit(1)))),None,None) (of class hkmc2.syntax.Tree$LetLike)
 
-:fixme
 set g.0 = g.0 + 1
-//│ > let selRes, discarded, tmp1;try { selRes = g[0]; discarded = g["0$__checkNotMethod"]; if (selRes === undefined) {   throw new this.Error("Access to required field '0' yielded 'undefined'"); } tmp1 = selRes + 1; g.0 = tmp1; block$res8 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                                                                                                                                                                                     ^^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected number
 
 // ——— ——— ———
 
@@ -90,7 +86,7 @@ set g.0 = g.0 + 1
 :re
 id(1, 2)
 //│ ╔══[ERROR] Expected 1 arguments, got 2
-//│ ║  l.91: 	id(1, 2)
+//│ ║  l.87: 	id(1, 2)
 //│ ╙──      	^^
 //│ = 1
 
@@ -152,7 +148,7 @@ f of
       2
   of 3
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.153: 	  of 3
+//│ ║  l.149: 	  of 3
 //│ ╙──       	^^
 //│ = [function]
 
@@ -225,7 +221,7 @@ data object Cls(x) with
 :e
 Cls.x
 //│ ╔══[ERROR] Object 'Cls' does not contain member 'x'
-//│ ║  l.226: 	Cls.x
+//│ ║  l.222: 	Cls.x
 //│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
@@ -253,15 +249,15 @@ module Example with
 // whoops
   val a = this
 //│ ╔══[PARSE ERROR] Expected block after type declaration body; found new line instead
-//│ ║  l.252: 	module Example with
+//│ ║  l.248: 	module Example with
 //│ ║         	                   ^
-//│ ║  l.253: 	// whoops
+//│ ║  l.249: 	// whoops
 //│ ╙──       	
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.254: 	  val a = this
+//│ ║  l.250: 	  val a = this
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.254: 	  val a = this
+//│ ║  l.250: 	  val a = this
 //│ ╙──       	^^
 
 // ——— ——— ———
@@ -269,7 +265,7 @@ module Example with
 :fixme // ("Not in scope" error)
 let xs = new Oopsie
 //│ ╔══[ERROR] Name not found: Oopsie
-//│ ║  l.270: 	let xs = new Oopsie
+//│ ║  l.266: 	let xs = new Oopsie
 //│ ╙──       	             ^^^^^^
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: xs (class hkmc2.semantics.VarSymbol)
 
@@ -344,22 +340,22 @@ import "../../mlscript-compile/Stack.mls"
 // The parser rejects this, but it should be allowed.
 open Stack { ::, Nil }
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found comma instead
-//│ ║  l.345: 	open Stack { ::, Nil }
+//│ ║  l.341: 	open Stack { ::, Nil }
 //│ ╙──       	               ^
 //│ ╔══[PARSE ERROR] Unexpected comma in this position
-//│ ║  l.345: 	open Stack { ::, Nil }
+//│ ║  l.341: 	open Stack { ::, Nil }
 //│ ╙──       	               ^
 //│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.345: 	open Stack { ::, Nil }
+//│ ║  l.341: 	open Stack { ::, Nil }
 //│ ╙──       	                 ^^^
 //│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.345: 	open Stack { ::, Nil }
+//│ ║  l.341: 	open Stack { ::, Nil }
 //│ ╙──       	     ^^^^^^^^^^^
 
 // Instead, if we parenthesize the operator, it is rejected by the elaborator.
 open Stack { (::), Nil }
 //│ ╔══[ERROR] Illegal 'open' statement element.
-//│ ║  l.360: 	open Stack { (::), Nil }
+//│ ║  l.356: 	open Stack { (::), Nil }
 //│ ╙──       	             ^^^^
 
 open Stack { Nil, :: }
@@ -375,25 +371,11 @@ open Stack { Nil, :: }
 mkStr of ... // hello
 "oops"
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found new line instead
-//│ ║  l.375: 	mkStr of ... // hello
+//│ ║  l.371: 	mkStr of ... // hello
 //│ ║         	                     ^
-//│ ║  l.376: 	"oops"
+//│ ║  l.372: 	"oops"
 //│ ╙──       	
 //│ = "oops"
-
-// ——— ——— ———
-
-set [].0 = 1
-//│ > try { [].0 = 1; block$res49 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >         ^^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected number
-
-let arr = []
-set arr.0 = 1
-//│ > let arr;try { arr = []; arr.0 = 1; block$res50 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                            ^^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected number
-//│ ═══[RUNTIME ERROR] ReferenceError: arr is not defined
 
 // ——— ——— ———
 
@@ -402,6 +384,32 @@ data class Foo(x, y)
 // TODO missing sanity check
 Foo(1)
 //│ = Foo(1, undefined)
+
+// ——— ——— ———
+
+data class Foo(...args)
+
+Foo(1, 2, 3).args
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'args' yielded 'undefined'
+
+:todo
+if Foo(1, 2, 3) is Foo(...args) then args
+//│ ╔══[ERROR] Unrecognized pattern (spread)
+//│ ║  l.396: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ╙──       	                          ^^^^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ╔══[ERROR] mismatched arity: expect 1, found 3
+//│ ║  l.402: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ╙──       	                   ^^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: b
+//│ ║  l.402: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ╙──       	                                         ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+if Foo(1, 2, 3) is Foo(arg) then arg
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 // ——— ——— ———
 

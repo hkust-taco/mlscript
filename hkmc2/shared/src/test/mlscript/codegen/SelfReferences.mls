@@ -1,16 +1,21 @@
 :js
 
 
-:todo // * Initialization error
 :sjs
 module Foo with
   val self: module Foo = Foo
 //│ JS (unsanitized):
-//│ let Foo1; Foo1 = class Foo { static { this.self = Foo1; } static toString() { return "Foo"; } };
+//│ let Foo1;
+//│ (class Foo {
+//│   static {
+//│     Foo1 = Foo;
+//│     this.self = Foo1;
+//│   }
+//│   static toString() { return "Foo"; }
+//│ });
 
-:re
 Foo.self
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'self' yielded 'undefined'
+//│ = Foo
 
 
 module Foo with
@@ -24,7 +29,7 @@ Foo.self
 module Foo with
   val self = this
 //│ ╔══[ERROR] Functions returning module values must have explicit return types.
-//│ ║  l.25: 	  val self = this
+//│ ║  l.30: 	  val self = this
 //│ ╙──      	      ^^^^
 
 Foo.self

@@ -21,25 +21,25 @@ fun hi(n) =
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
-//│ let hi, res, Cont$func$hi$StackSafetyLift$_mls_L19_4_47$1, handleBlock$, Cont$handleBlock$stackHandler$1, StackDelay$1, lambda, Cont$func$hi$StackSafetyLift$_mls_L19_4_47$$ctor, Cont$func$hi$StackSafetyLift$_mls_L19_4_47$$, Cont$handleBlock$stackHandler$$ctor, Cont$handleBlock$stackHandler$$, lambda$;
-//│ Cont$func$hi$StackSafetyLift$_mls_L19_4_47$$ = function Cont$func$hi$StackSafetyLift$_mls_L19_4_47$$(n$0, scrut$1, tmp$2, stackDelayRes$3, pc) {
+//│ let hi, res, $_stack$_safe$_body$_, Cont$func$hi$1, Cont$func$hi$$ctor, Cont$func$hi$$;
+//│ Cont$func$hi$$ = function Cont$func$hi$$(n$0, scrut$1, tmp$2, stackDelayRes$3, pc) {
 //│   let tmp;
-//│   tmp = new Cont$func$hi$StackSafetyLift$_mls_L19_4_47$1.class(pc);
+//│   tmp = new Cont$func$hi$1.class(pc);
 //│   return tmp(n$0, scrut$1, tmp$2, stackDelayRes$3)
 //│ };
-//│ Cont$func$hi$StackSafetyLift$_mls_L19_4_47$$ctor = function Cont$func$hi$StackSafetyLift$_mls_L19_4_47$$ctor(n$0, scrut$1, tmp$2, stackDelayRes$3) {
+//│ Cont$func$hi$$ctor = function Cont$func$hi$$ctor(n$0, scrut$1, tmp$2, stackDelayRes$3) {
 //│   return (pc) => {
 //│     let tmp;
-//│     tmp = new Cont$func$hi$StackSafetyLift$_mls_L19_4_47$1.class(pc);
+//│     tmp = new Cont$func$hi$1.class(pc);
 //│     return tmp(n$0, scrut$1, tmp$2, stackDelayRes$3)
 //│   }
 //│ };
-//│ Cont$func$hi$StackSafetyLift$_mls_L19_4_47$1 = function Cont$func$hi$StackSafetyLift$_mls_L19_4_47$(pc1) {
+//│ Cont$func$hi$1 = function Cont$func$hi$(pc1) {
 //│   return (n$01, scrut$11, tmp$21, stackDelayRes$31) => {
-//│     return new Cont$func$hi$StackSafetyLift$_mls_L19_4_47$.class(pc1)(n$01, scrut$11, tmp$21, stackDelayRes$31);
+//│     return new Cont$func$hi$.class(pc1)(n$01, scrut$11, tmp$21, stackDelayRes$31);
 //│   }
 //│ };
-//│ Cont$func$hi$StackSafetyLift$_mls_L19_4_47$1.class = class Cont$func$hi$StackSafetyLift$_mls_L19_4_47$ extends runtime.FunctionContFrame.class {
+//│ Cont$func$hi$1.class = class Cont$func$hi$ extends runtime.FunctionContFrame.class {
 //│   constructor(pc) {
 //│     return (n$0, scrut$1, tmp$2, stackDelayRes$3) => {
 //│       let tmp;
@@ -77,13 +77,13 @@ hi(0)
 //│       break;
 //│     }
 //│   }
-//│   toString() { return "Cont$func$hi$StackSafetyLift$_mls_L19_4_47$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│   toString() { return "Cont$func$hi$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│ };
 //│ hi = function hi(n) {
 //│   let scrut, tmp, stackDelayRes;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     stackDelayRes.contTrace.last.next = Cont$func$hi$StackSafetyLift$_mls_L19_4_47$$(n, scrut, tmp, stackDelayRes, 0);
+//│     stackDelayRes.contTrace.last.next = Cont$func$hi$$(n, scrut, tmp, stackDelayRes, 0);
 //│     stackDelayRes.contTrace.last = stackDelayRes.contTrace.last.next;
 //│     return stackDelayRes
 //│   }
@@ -96,87 +96,13 @@ hi(0)
 //│     return hi(tmp)
 //│   }
 //│ };
-//│ lambda$ = function lambda$(StackDelay$$instance, resume) {
-//│   runtime.stackOffset = runtime.stackDepth;
-//│   return resume()
-//│ };
-//│ lambda = (undefined, function (StackDelay$$instance) {
-//│   return (resume) => {
-//│     return lambda$(StackDelay$$instance, resume)
-//│   }
+//│ $_stack$_safe$_body$_ = (undefined, function () {
+//│   return hi(0)
 //│ });
-//│ StackDelay$1 = class StackDelay$ extends runtime.StackDelay {
-//│   constructor() {
-//│     let tmp;
-//│     tmp = super();
-//│   }
-//│   perform() {
-//│     let lambda$this;
-//│     lambda$this = runtime.safeCall(lambda(this));
-//│     return runtime.mkEffect(this, lambda$this)
-//│   }
-//│   toString() { return "StackDelay$"; }
-//│ };
-//│ Cont$handleBlock$stackHandler$$ = function Cont$handleBlock$stackHandler$$(res$0, pc) {
-//│   let tmp;
-//│   tmp = new Cont$handleBlock$stackHandler$1.class(pc);
-//│   return tmp(res$0)
-//│ };
-//│ Cont$handleBlock$stackHandler$$ctor = function Cont$handleBlock$stackHandler$$ctor(res$0) {
-//│   return (pc) => {
-//│     let tmp;
-//│     tmp = new Cont$handleBlock$stackHandler$1.class(pc);
-//│     return tmp(res$0)
-//│   }
-//│ };
-//│ Cont$handleBlock$stackHandler$1 = function Cont$handleBlock$stackHandler$(pc1) {
-//│   return (res$01) => {
-//│     return new Cont$handleBlock$stackHandler$.class(pc1)(res$01);
-//│   }
-//│ };
-//│ Cont$handleBlock$stackHandler$1.class = class Cont$handleBlock$stackHandler$ extends runtime.FunctionContFrame.class {
-//│   constructor(pc) {
-//│     return (res$0) => {
-//│       let tmp;
-//│       tmp = super(null);
-//│       this.res$0 = res$0;
-//│       this.pc = pc;
-//│       return this;
-//│     }
-//│   }
-//│   resume(value$) {
-//│     if (this.pc === 3) {
-//│       this.res$0 = value$;
-//│     }
-//│     contLoop: while (true) {
-//│       if (this.pc === 3) {
-//│         return this.res$0
-//│       }
-//│       break;
-//│     }
-//│   }
-//│   toString() { return "Cont$handleBlock$stackHandler$(" + globalThis.Predef.render(this.pc) + ")"; }
-//│ };
-//│ handleBlock$ = function handleBlock$() {
-//│   let stackHandler, res1;
-//│   stackHandler = new StackDelay$1();
-//│   runtime.stackLimit = 5;
-//│   runtime.stackOffset = 0;
-//│   runtime.stackDepth = 1;
-//│   runtime.stackHandler = stackHandler;
-//│   res1 = hi(0);
-//│   if (res1 instanceof runtime.EffectSig.class) {
-//│     res1.contTrace.last.next = Cont$handleBlock$stackHandler$$(res1, 3);
-//│     return runtime.handleBlockImpl(res1, stackHandler)
-//│   }
-//│   return res1
-//│ };
-//│ res = handleBlock$();
+//│ res = runtime.runStackSafe(5, $_stack$_safe$_body$_);
 //│ if (res instanceof runtime.EffectSig.class) {
-//│   throw new this.Error("Unhandled effects");
+//│   res = runtime.topLevelEffect(res, false);
 //│ }
-//│ runtime.stackDepth = 0;
-//│ runtime.stackHandler = null;
 //│ res
 //│ = 0
 
@@ -190,25 +116,25 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ JS (unsanitized):
-//│ let sum1, res1, Cont$func$sum$StackSafetyLift$_mls_L187_4_57$1, handleBlock$1, Cont$handleBlock$stackHandler$3, StackDelay$3, lambda1, Cont$func$sum$StackSafetyLift$_mls_L187_4_57$$ctor, Cont$func$sum$StackSafetyLift$_mls_L187_4_57$$, Cont$handleBlock$stackHandler$$ctor1, Cont$handleBlock$stackHandler$$1, lambda$1;
-//│ Cont$func$sum$StackSafetyLift$_mls_L187_4_57$$ = function Cont$func$sum$StackSafetyLift$_mls_L187_4_57$$(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5, pc) {
+//│ let sum1, res1, $_stack$_safe$_body$_1, Cont$func$sum$1, Cont$func$sum$$ctor, Cont$func$sum$$;
+//│ Cont$func$sum$$ = function Cont$func$sum$$(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5, pc) {
 //│   let tmp;
-//│   tmp = new Cont$func$sum$StackSafetyLift$_mls_L187_4_57$1.class(pc);
+//│   tmp = new Cont$func$sum$1.class(pc);
 //│   return tmp(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5)
 //│ };
-//│ Cont$func$sum$StackSafetyLift$_mls_L187_4_57$$ctor = function Cont$func$sum$StackSafetyLift$_mls_L187_4_57$$ctor(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5) {
+//│ Cont$func$sum$$ctor = function Cont$func$sum$$ctor(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5) {
 //│   return (pc) => {
 //│     let tmp;
-//│     tmp = new Cont$func$sum$StackSafetyLift$_mls_L187_4_57$1.class(pc);
+//│     tmp = new Cont$func$sum$1.class(pc);
 //│     return tmp(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5)
 //│   }
 //│ };
-//│ Cont$func$sum$StackSafetyLift$_mls_L187_4_57$1 = function Cont$func$sum$StackSafetyLift$_mls_L187_4_57$(pc1) {
+//│ Cont$func$sum$1 = function Cont$func$sum$(pc1) {
 //│   return (n$01, scrut$11, tmp$21, tmp$31, curDepth$41, stackDelayRes$51) => {
-//│     return new Cont$func$sum$StackSafetyLift$_mls_L187_4_57$.class(pc1)(n$01, scrut$11, tmp$21, tmp$31, curDepth$41, stackDelayRes$51);
+//│     return new Cont$func$sum$.class(pc1)(n$01, scrut$11, tmp$21, tmp$31, curDepth$41, stackDelayRes$51);
 //│   }
 //│ };
-//│ Cont$func$sum$StackSafetyLift$_mls_L187_4_57$1.class = class Cont$func$sum$StackSafetyLift$_mls_L187_4_57$ extends runtime.FunctionContFrame.class {
+//│ Cont$func$sum$1.class = class Cont$func$sum$ extends runtime.FunctionContFrame.class {
 //│   constructor(pc) {
 //│     return (n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5) => {
 //│       let tmp;
@@ -261,14 +187,14 @@ sum(10000)
 //│       break;
 //│     }
 //│   }
-//│   toString() { return "Cont$func$sum$StackSafetyLift$_mls_L187_4_57$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│   toString() { return "Cont$func$sum$(" + globalThis.Predef.render(this.pc) + ")"; }
 //│ };
 //│ sum1 = function sum(n) {
 //│   let scrut, tmp, tmp1, curDepth, stackDelayRes;
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     stackDelayRes.contTrace.last.next = Cont$func$sum$StackSafetyLift$_mls_L187_4_57$$(n, scrut, tmp, tmp1, curDepth, stackDelayRes, 0);
+//│     stackDelayRes.contTrace.last.next = Cont$func$sum$$(n, scrut, tmp, tmp1, curDepth, stackDelayRes, 0);
 //│     stackDelayRes.contTrace.last = stackDelayRes.contTrace.last.next;
 //│     return stackDelayRes
 //│   }
@@ -280,7 +206,7 @@ sum(10000)
 //│     runtime.stackDepth = runtime.stackDepth + 1;
 //│     tmp1 = sum1(tmp);
 //│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       tmp1.contTrace.last.next = Cont$func$sum$StackSafetyLift$_mls_L187_4_57$$(n, scrut, tmp, tmp1, curDepth, stackDelayRes, 1);
+//│       tmp1.contTrace.last.next = Cont$func$sum$$(n, scrut, tmp, tmp1, curDepth, stackDelayRes, 1);
 //│       tmp1.contTrace.last = tmp1.contTrace.last.next;
 //│       return tmp1
 //│     }
@@ -288,87 +214,13 @@ sum(10000)
 //│     return n + tmp1
 //│   }
 //│ };
-//│ lambda$1 = function lambda$(StackDelay$$instance, resume) {
-//│   runtime.stackOffset = runtime.stackDepth;
-//│   return resume()
-//│ };
-//│ lambda1 = (undefined, function (StackDelay$$instance) {
-//│   return (resume) => {
-//│     return lambda$1(StackDelay$$instance, resume)
-//│   }
+//│ $_stack$_safe$_body$_1 = (undefined, function () {
+//│   return sum1(10000)
 //│ });
-//│ StackDelay$3 = class StackDelay$2 extends runtime.StackDelay {
-//│   constructor() {
-//│     let tmp;
-//│     tmp = super();
-//│   }
-//│   perform() {
-//│     let lambda$this;
-//│     lambda$this = runtime.safeCall(lambda1(this));
-//│     return runtime.mkEffect(this, lambda$this)
-//│   }
-//│   toString() { return "StackDelay$"; }
-//│ };
-//│ Cont$handleBlock$stackHandler$$1 = function Cont$handleBlock$stackHandler$$(res$0, pc) {
-//│   let tmp;
-//│   tmp = new Cont$handleBlock$stackHandler$3.class(pc);
-//│   return tmp(res$0)
-//│ };
-//│ Cont$handleBlock$stackHandler$$ctor1 = function Cont$handleBlock$stackHandler$$ctor(res$0) {
-//│   return (pc) => {
-//│     let tmp;
-//│     tmp = new Cont$handleBlock$stackHandler$3.class(pc);
-//│     return tmp(res$0)
-//│   }
-//│ };
-//│ Cont$handleBlock$stackHandler$3 = function Cont$handleBlock$stackHandler$(pc1) {
-//│   return (res$01) => {
-//│     return new Cont$handleBlock$stackHandler$.class(pc1)(res$01);
-//│   }
-//│ };
-//│ Cont$handleBlock$stackHandler$3.class = class Cont$handleBlock$stackHandler$2 extends runtime.FunctionContFrame.class {
-//│   constructor(pc) {
-//│     return (res$0) => {
-//│       let tmp;
-//│       tmp = super(null);
-//│       this.res$0 = res$0;
-//│       this.pc = pc;
-//│       return this;
-//│     }
-//│   }
-//│   resume(value$) {
-//│     if (this.pc === 4) {
-//│       this.res$0 = value$;
-//│     }
-//│     contLoop: while (true) {
-//│       if (this.pc === 4) {
-//│         return this.res$0
-//│       }
-//│       break;
-//│     }
-//│   }
-//│   toString() { return "Cont$handleBlock$stackHandler$(" + globalThis.Predef.render(this.pc) + ")"; }
-//│ };
-//│ handleBlock$1 = function handleBlock$() {
-//│   let stackHandler, res2;
-//│   stackHandler = new StackDelay$3();
-//│   runtime.stackLimit = 1000;
-//│   runtime.stackOffset = 0;
-//│   runtime.stackDepth = 1;
-//│   runtime.stackHandler = stackHandler;
-//│   res2 = sum1(10000);
-//│   if (res2 instanceof runtime.EffectSig.class) {
-//│     res2.contTrace.last.next = Cont$handleBlock$stackHandler$$1(res2, 4);
-//│     return runtime.handleBlockImpl(res2, stackHandler)
-//│   }
-//│   return res2
-//│ };
-//│ res1 = handleBlock$1();
+//│ res1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
 //│ if (res1 instanceof runtime.EffectSig.class) {
-//│   throw new this.Error("Unhandled effects");
+//│   res1 = runtime.topLevelEffect(res1, false);
 //│ }
-//│ runtime.stackDepth = 0;
-//│ runtime.stackHandler = null;
 //│ res1
 //│ = 50005000
 

@@ -8,8 +8,10 @@ module A with
   fun f(x) = x is Option.Some
 //│ JS (unsanitized):
 //│ let A1;
-//│ A1 = class A {
-//│   static {}
+//│ (class A {
+//│   static {
+//│     A1 = A;
+//│   }
 //│   static f(x) {
 //│     if (x instanceof Option.Some.class) {
 //│       return true
@@ -18,5 +20,5 @@ module A with
 //│     }
 //│   }
 //│   static toString() { return "A"; }
-//│ };
+//│ });
 

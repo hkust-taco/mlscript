@@ -21,11 +21,13 @@ x
 //│ ║  l.19: 	x
 //│ ╙──      	^
 
+
+// Getter
 :fixme
 handle h = Object with
   fun lol(k) = k(())
 h.lol
-//│ ═══[RUNTIME ERROR] Error: Unhandled effects
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$3
 
 handle h = Object with
   fun lol()(k) = k(42)
@@ -42,7 +44,7 @@ object Foo with
 :re
 Foo.x
 //│ ╔══[ERROR] Object 'Foo' does not contain member 'x'
-//│ ║  l.43: 	Foo.x
+//│ ║  l.45: 	Foo.x
 //│ ╙──      	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 

@@ -1,3 +1,4 @@
+import Predef from "./Predef.mjs";
 
 const RuntimeJS = {
   try_catch(computation, onError) {
