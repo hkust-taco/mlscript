@@ -66,8 +66,9 @@ module T with
   val d = this.p
 //│ JS (unsanitized):
 //│ let T1;
-//│ T1 = class T {
+//│ (class T {
 //│   static {
+//│     T1 = T;
 //│     this.a = T.t;
 //│     this.b = T.t;
 //│     this.c = T.p;
@@ -80,7 +81,7 @@ module T with
 //│     return 2;
 //│   }
 //│   static toString() { return "T"; }
-//│ };
+//│ });
 
 
 T.a
@@ -100,7 +101,16 @@ T.d
 module M with
   fun t = 0
 //│ JS (unsanitized):
-//│ let M1; M1 = class M { static {} static get t() { return 0; } static toString() { return "M"; } };
+//│ let M1;
+//│ (class M {
+//│   static {
+//│     M1 = M;
+//│   }
+//│   static get t() {
+//│     return 0;
+//│   }
+//│   static toString() { return "M"; }
+//│ });
 
 
 :sjs

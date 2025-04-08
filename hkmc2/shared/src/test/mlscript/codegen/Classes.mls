@@ -32,57 +32,31 @@ data class Foo(eval)
 //│ };
 
 
-data class Foo(implements)
-//│ JS (unsanitized):
-//│ let Foo5;
-//│ Foo5 = function Foo(implements2) {
-//│   return new Foo.class(implements2);
-//│ };
-//│ Foo5.class = class Foo4 {
-//│   constructor(implements1) {
-//│     this.implements = implements1;
-//│   }
-//│   toString() { return "Foo(" + globalThis.Predef.render(this.implements) + ")"; }
-//│ };
-
-
-data class Foo(package)
-//│ JS (unsanitized):
-//│ let Foo7;
-//│ Foo7 = function Foo(package2) {
-//│   return new Foo.class(package2);
-//│ };
-//│ Foo7.class = class Foo6 {
-//│   constructor(package1) {
-//│     this.package = package1;
-//│   }
-//│   toString() { return "Foo(" + globalThis.Predef.render(this.package) + ")"; }
-//│ };
-
-
-data class Foo(protected)
-//│ JS (unsanitized):
-//│ let Foo9;
-//│ Foo9 = function Foo(protected2) {
-//│   return new Foo.class(protected2);
-//│ };
-//│ Foo9.class = class Foo8 {
-//│   constructor(protected1) {
-//│     this.protected = protected1;
-//│   }
-//│   toString() { return "Foo(" + globalThis.Predef.render(this.protected) + ")"; }
-//│ };
-
-
 data class Foo(static)
 //│ JS (unsanitized):
-//│ let Foo11;
-//│ Foo11 = function Foo(static2) {
+//│ let Foo5;
+//│ Foo5 = function Foo(static2) {
 //│   return new Foo.class(static2);
 //│ };
-//│ Foo11.class = class Foo10 {
+//│ Foo5.class = class Foo4 {
 //│   constructor(static1) {
 //│     this.static = static1;
 //│   }
 //│   toString() { return "Foo(" + globalThis.Predef.render(this.static) + ")"; }
 //│ };
+
+
+data class Foo(v')
+//│ JS (unsanitized):
+//│ let Foo7;
+//│ Foo7 = function Foo(v$_1) {
+//│   return new Foo.class(v$_1);
+//│ };
+//│ Foo7.class = class Foo6 {
+//│   constructor(v$_) {
+//│     this["v'"] = v$_;
+//│   }
+//│   toString() { return "Foo(" + globalThis.Predef.render(this["v'"]) + ")"; }
+//│ };
+
+

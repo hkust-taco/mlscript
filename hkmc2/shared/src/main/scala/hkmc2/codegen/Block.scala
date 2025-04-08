@@ -24,7 +24,28 @@ sealed abstract class Block extends Product with AutoLocated:
   
   def ~(that: Block): Block = Begin(this, that)
   
-  protected def children: Ls[Located] = ??? // Maybe extending AutoLocated is unnecessary
+  protected def children: Ls[Located] = this match
+    case Match(scrut, arms, dflt, rest) => scrut :: arms.map(_._2) ++ dflt.toList :+ rest
+    case Return(res, implct) => res :: Nil
+    case Throw(exc) => exc :: Nil
+    case Label(label, body, rest) => label :: body :: rest :: Nil
+    case Break(label) => label :: Nil
+    case Continue(label) => label :: Nil
+    case Begin(sub, rest) => sub :: rest :: Nil
+    case TryBlock(sub, finallyDo, rest) => sub :: finallyDo :: rest :: Nil
+    case Assign(lhs, rhs, rest) => lhs :: rhs :: rest :: Nil
+    case AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block) => lhs :: nme :: rhs :: rest :: Nil
+    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs :: fld :: rhs :: rest :: Nil
+    case Define(FunDefn(owner, sym, params, body), rest) => sym :: (params :+ body :+ rest)
+    case Define(ValDefn(owner, k, sym, rhs), rest) => sym :: rhs :: rest :: Nil
+    case Define(ClsLikeDefn(owner, isym, sym, k, paramsOpt, aux, parentSym, methods, privFlds, pubFlds, preCtor, ctor), rest) =>
+      isym :: sym :: paramsOpt.toList ++ aux ++ parentSym.toList ++ methods.flatMap(_.subBlocks) ++ privFlds ++ pubFlds
+      ++ preCtor.subBlocks ++ ctor.subBlocks :+ rest
+    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
+      lhs :: res :: par :: args ++ handlers.flatMap: handler =>
+        handler.sym :: handler.resumeSym :: (handler.params :+ handler.body)
+      :+ body :+ rest
+    case End(msg) => Nil
   
   lazy val definedVars: Set[Local] = this match
     case _: Return | _: Throw => Set.empty
@@ -41,7 +62,8 @@ sealed abstract class Block extends Product with AutoLocated:
     case Define(defn, rst) =>
       val rest = rst.definedVars
       if defn.isOwned then rest else rest + defn.sym
-    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => bod.definedVars ++ rst.definedVars + lhs
+    // Note that the handler's LHS and body are not part of the current block, so we do not consider them here.
+    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.definedVars + res
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
     case Label(lbl, bod, rst) => bod.definedVars ++ rst.definedVars
   
@@ -387,7 +409,19 @@ enum Case:
 
 sealed trait TrivialResult extends Result
 
-sealed abstract class Result:
+sealed abstract class Result extends AutoLocated:
+
+  protected def children: List[Located] = this match
+    case Call(fun, args) => fun :: args.map(_.value)
+    case Instantiate(cls, args) => cls :: args
+    case Select(qual, name) => qual :: name :: Nil
+    case DynSelect(qual, fld, arrayIdx) => qual :: fld :: Nil
+    case Value.Ref(l) => Nil
+    case Value.This(sym) => Nil
+    case Value.Lit(lit) => lit :: Nil
+    case Value.Lam(params, body) => params :: body :: Nil
+    case Value.Arr(elems) => elems.map(_.value)
+    case Value.Rcd(elems) => elems.map(_.value)
   
   // TODO rm Lam from values and thus the need for this method
   def subBlocks: Ls[Block] = this match
@@ -409,6 +443,7 @@ sealed abstract class Result:
     case Value.Arr(elems) => elems.flatMap(_.value.freeVars).toSet
     case Value.Rcd(elems) => elems.flatMap(_.value.freeVars).toSet
     case DynSelect(qual, fld, arrayIdx) => qual.freeVars ++ fld.freeVars
+    case Value.Rcd(args) => args.flatMap(arg => arg.idx.fold(Set.empty)(_.freeVars) ++ arg.value.freeVars).toSet
 
   lazy val freeVarsLLIR: Set[Local] = this match
     case Call(fun, args) => args.flatMap(_.value.freeVarsLLIR).toSet
@@ -421,6 +456,7 @@ sealed abstract class Result:
     case Value.Arr(elems) => elems.flatMap(_.value.freeVarsLLIR).toSet
     case Value.Rcd(elems) => elems.flatMap(_.value.freeVarsLLIR).toSet
     case DynSelect(qual, fld, arrayIdx) => qual.freeVarsLLIR ++ fld.freeVarsLLIR
+    case Value.Rcd(args) => args.flatMap(arg => arg.idx.fold(Set.empty)(_.freeVarsLLIR) ++ arg.value.freeVarsLLIR).toSet
   
 // type Local = LocalSymbol
 type Local = Symbol
@@ -476,6 +512,7 @@ extension (k: Block => Block)
   def label(label: Local, body: Block) = k.chain(Label(label, body, _))
   def ret(r: Result) = k.rest(Return(r, false))
   def staticif(b: Boolean, f: (Block => Block) => (Block => Block)) = if b then k.transform(f) else k
+  def foldLeft[A](xs: Iterable[A])(f: (Block => Block, A) => Block => Block) = xs.foldLeft(k)(f)
 
 def blockBuilder: Block => Block = identity
 

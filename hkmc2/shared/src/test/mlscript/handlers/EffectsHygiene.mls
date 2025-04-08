@@ -15,14 +15,18 @@ fun foo(h) =
 //│ let foo;
 //│ foo = function foo(h) {
 //│   let A2, A3, scrut;
-//│   A2 = class A {
-//│     static {}
+//│   (class A {
+//│     static {
+//│       A2 = A;
+//│     }
 //│     static toString() { return "A"; }
-//│   };
-//│   A3 = class A1 {
-//│     static {}
+//│   });
+//│   (class A1 {
+//│     static {
+//│       A3 = A1;
+//│     }
 //│     static toString() { return "A"; }
-//│   };
+//│   });
 //│   scrut = false;
 //│   if (scrut === true) {
 //│     return A2

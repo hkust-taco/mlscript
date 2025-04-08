@@ -149,6 +149,9 @@ object Elaborator:
         val file = assumeObject("file")
       object js extends VirtualModule(assumeBuiltinMod("js")):
         val try_catch = assumeObject("try_catch")
+      object debug extends VirtualModule(assumeBuiltinMod("debug")):
+        val printStack = assumeObject("printStack")
+        val getLocals = assumeObject("getLocals")
       def getBuiltinOp(op: Str): Opt[Str] =
         if getBuiltin(op).isDefined then builtinBinOps.get(op) else N
       /** Classes that do not use `instanceof` in pattern matching. */

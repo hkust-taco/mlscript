@@ -37,8 +37,8 @@ f(2)
 //
 // where B must be marked as final.
 :expect 3
-class A(x) with
-  class B(y) with
+data class A(x) with
+  data class B(y) with
     fun getB() = x + y
   fun getA() = this.B(2).getB()
 A(1).getA()
@@ -64,7 +64,7 @@ test(2)
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'get' yielded 'undefined'
 //│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
 
-/// The following are related to first-class classes and instance checks. ///
+/// The following are related to first-class classes, instance checks, and private fields. ///
 
 :w
 :expect 1
@@ -123,6 +123,17 @@ test(2)
 //│ ═══[WARNING] Cannot yet lift class/module `A` as it is used in an instance check.
 //│ ═══[WARNING] Cannot yet lift class/module `B` as it extends an unliftable class.
 //│ = 2
+
+:expect 2
+class A(a) with
+  let x = 2
+  fun f() =
+    fun g() = x
+    g()
+A(2).f()
+//│ ═══[COMPILATION ERROR] Uses of private fields cannot yet be lifted.
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
 
 /// The following are related to modules and objects. ///
 

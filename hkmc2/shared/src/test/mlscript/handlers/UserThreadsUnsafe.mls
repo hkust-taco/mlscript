@@ -1,5 +1,5 @@
 :js
-:effectHandlers
+:effectHandlers debug
 
 
 class ThreadEffect with
@@ -45,7 +45,11 @@ in
 //│ > main start
 //│ > main end
 //│ > f 2
-//│ ═══[RUNTIME ERROR] Error: Unhandled effects
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
+//│ 	at f (UserThreadsUnsafe.mls:12:3)
+//│ 	at drain (UserThreadsUnsafe.mls:29:5)
+//│ 	at fork (UserThreadsUnsafe.mls:38:5)
+//│ 	at fork (UserThreadsUnsafe.mls:38:5)
 
 
 // FIFO
@@ -63,6 +67,10 @@ in
 //│ > main start
 //│ > main end
 //│ > f 1
-//│ ═══[RUNTIME ERROR] Error: Unhandled effects
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
+//│ 	at f (UserThreadsUnsafe.mls:12:3)
+//│ 	at drain (UserThreadsUnsafe.mls:29:5)
+//│ 	at fork (UserThreadsUnsafe.mls:60:5)
+//│ 	at fork (UserThreadsUnsafe.mls:60:5)
 
 

@@ -604,3 +604,42 @@ fun f() =
   g()
 f()
 
+:sjs
+fun f(es, vs) =
+  let v' = es
+  class A with
+    val fld = v'
+  new A
+//│ JS (unsanitized):
+//│ let A1, f23, A$ctor, A$;
+//│ A$ = function A$(v$_$0) {
+//│   let tmp19;
+//│   tmp19 = new A1.class();
+//│   return tmp19(v$_$0)
+//│ };
+//│ A$ctor = function A$ctor(v$_$0) {
+//│   return () => {
+//│     let tmp19;
+//│     tmp19 = new A1.class();
+//│     return tmp19(v$_$0)
+//│   }
+//│ };
+//│ A1 = function A(v$_$01) {
+//│   return new A.class()(v$_$01);
+//│ };
+//│ A1.class = class A {
+//│   constructor() {
+//│     return (v$_$0) => {
+//│       this["v'$0"] = v$_$0;
+//│       this.fld = this["v'$0"];
+//│       return this;
+//│     }
+//│   }
+//│   toString() { return "A"; }
+//│ };
+//│ f23 = function f(es, vs) {
+//│   let v$_;
+//│   v$_ = es;
+//│   return A$(v$_)
+//│ };
+

@@ -16,7 +16,7 @@ x
 //│   x = tmp1;
 //│   tmp2 = Predef.print(x);
 //│   if (tmp2 instanceof runtime.EffectSig.class) {
-//│     throw new this.Error("Unhandled effects");
+//│     tmp2 = runtime.topLevelEffect(tmp2, false);
 //│   }
 //│   tmp = tmp2;
 //│ } finally {

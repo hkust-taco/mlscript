@@ -9,18 +9,13 @@ import hkmc2.semantics.*
 import hkmc2.syntax.Tree
 
 class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
-  private val STACK_LIMIT_IDENT: Tree.Ident = Tree.Ident("stackLimit")
   private val STACK_DEPTH_IDENT: Tree.Ident = Tree.Ident("stackDepth")
-  private val STACK_OFFSET_IDENT: Tree.Ident = Tree.Ident("stackOffset")
-  private val STACK_HANDLER_IDENT: Tree.Ident = Tree.Ident("stackHandler")
 
   private val runtimePath: Path = State.runtimeSymbol.asPath
   private val checkDepthPath: Path = runtimePath.selN(Tree.Ident("checkDepth"))
   private val resetDepthPath: Path = runtimePath.selN(Tree.Ident("resetDepth"))
-  private val stackLimitPath: Path = runtimePath.selN(STACK_LIMIT_IDENT)
+  private val runStackSafePath: Path = runtimePath.selN(Tree.Ident("runStackSafe"))
   private val stackDepthPath: Path = runtimePath.selN(STACK_DEPTH_IDENT)
-  private val stackOffsetPath: Path = runtimePath.selN(STACK_OFFSET_IDENT)
-  private val stackHandlerPath: Path = runtimePath.selN(STACK_HANDLER_IDENT)
 
   private def intLit(n: BigInt) = Value.Lit(Tree.IntLit(n))
   
@@ -44,40 +39,9 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
         .rest(f(tmp.asPath))
   
   def wrapStackSafe(body: Block, resSym: Local, rest: Block) =
-    val resumeSym = VarSymbol(Tree.Ident("resume"))
-    val handlerSym = TempSymbol(None, "stackHandler")
-    
-    val clsSym = ClassSymbol(
-      Tree.TypeDef(syntax.Cls, Tree.Error(), N, N),
-      Tree.Ident("StackDelay$")
-    )
-
-    // the global stack handler is created here
-    HandleBlock(
-      handlerSym, resSym,
-      paths.stackDelayClsPath, Nil, clsSym,
-      Handler(
-        BlockMemberSymbol("perform", Nil), resumeSym, ParamList(ParamListFlags.empty, Nil, N) :: Nil,
-        /* 
-          fun perform() =
-            stackOffset = stackDepth
-            resume()
-        */
-        blockBuilder
-          .assignFieldN(runtimePath, STACK_OFFSET_IDENT, stackDepthPath)
-          .ret(Call(Value.Ref(resumeSym), Nil)(true, true))
-      ) :: Nil,
-      blockBuilder
-        .assignFieldN(runtimePath, STACK_LIMIT_IDENT, intLit(depthLimit)) // set stackLimit before call
-        .assignFieldN(runtimePath, STACK_OFFSET_IDENT, intLit(0)) // set stackOffset = 0 before call
-        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, intLit(1)) // set stackDepth = 1 before call
-        .assignFieldN(runtimePath, STACK_HANDLER_IDENT, handlerSym.asPath) // assign stack handler
-        .rest(body),
-      blockBuilder // reset the stack safety values
-        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, intLit(0)) // set stackDepth = 0 after call
-        .assignFieldN(runtimePath, STACK_HANDLER_IDENT, Value.Lit(Tree.UnitLit(true))) // set stackHandler = null
-        .rest(rest)
-    )
+    val bodSym = BlockMemberSymbol("‹stack safe body›", Nil, false)
+    val bodFun = FunDefn(N, bodSym, ParamList(ParamListFlags.empty, Nil, N) :: Nil, body)
+    Define(bodFun, Assign(resSym, Call(runStackSafePath, intLit(depthLimit).asArg :: bodSym.asPath.asArg :: Nil)(true, true), rest))
 
   def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol], curDepth: => Symbol) =
     val resSym = sym getOrElse TempSymbol(None, "res")

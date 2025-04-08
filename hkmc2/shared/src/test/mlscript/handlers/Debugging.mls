@@ -1,0 +1,219 @@
+:js
+:effectHandlers debug
+
+
+
+:re
+raiseUnhandledEffect()
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
+//│ 	at tail position
+
+:sjs
+fun f() =
+  let i = 0
+  let j = 100
+  let k = 2000
+  if i == 0 do
+    print of raiseUnhandledEffect()
+  j / i
+//│ JS (unsanitized):
+//│ let f, getLocals2;
+//│ getLocals2 = function getLocals() {
+//│   let prev, thisInfo, tmp;
+//│   prev = [];
+//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039top level\u203A", []);
+//│   tmp = runtime.safeCall(prev.push(thisInfo));
+//│   return prev
+//│ };
+//│ f = function f() {
+//│   let i, j, k, scrut, tmp, tmp1, getLocals3, Cont$func$f$1;
+//│   getLocals3 = function getLocals() {
+//│     let i1, j1, k1, prev, thisInfo, tmp2;
+//│     prev = getLocals2();
+//│     i1 = new runtime.LocalVarInfo.class("i", i);
+//│     j1 = new runtime.LocalVarInfo.class("j", j);
+//│     k1 = new runtime.LocalVarInfo.class("k", k);
+//│     thisInfo = new runtime.FnLocalsInfo.class("f", [
+//│       i1,
+//│       j1,
+//│       k1
+//│     ]);
+//│     tmp2 = runtime.safeCall(prev.push(thisInfo));
+//│     return prev
+//│   };
+//│   Cont$func$f$1 = function Cont$func$f$(pc1) {
+//│     return new Cont$func$f$.class(pc1);
+//│   };
+//│   Cont$func$f$1.class = class Cont$func$f$ extends runtime.FunctionContFrame.class {
+//│     constructor(pc) {
+//│       let tmp2;
+//│       tmp2 = super(null);
+//│       this.pc = pc;
+//│     }
+//│     resume(value$) {
+//│       if (this.pc === 0) {
+//│         tmp = value$;
+//│       } else if (this.pc === 1) {
+//│         tmp1 = value$;
+//│       }
+//│       contLoop: while (true) {
+//│         if (this.pc === 2) {
+//│           return j / i
+//│         } else if (this.pc === 3) {
+//│           tmp1 = Predef.print(tmp);
+//│           if (tmp1 instanceof runtime.EffectSig.class) {
+//│             this.pc = 1;
+//│             tmp1.contTrace.last.next = this;
+//│             tmp1.contTrace.last = this;
+//│             return tmp1
+//│           }
+//│           this.pc = 1;
+//│           continue contLoop;
+//│         } else if (this.pc === 4) {
+//│           tmp = Predef.raiseUnhandledEffect();
+//│           if (tmp instanceof runtime.EffectSig.class) {
+//│             this.pc = 0;
+//│             tmp.contTrace.last.next = this;
+//│             tmp.contTrace.last = this;
+//│             return tmp
+//│           }
+//│           this.pc = 0;
+//│           continue contLoop;
+//│         } else if (this.pc === 0) {
+//│           this.pc = 3;
+//│           continue contLoop;
+//│         } else if (this.pc === 1) {
+//│           this.pc = 2;
+//│           continue contLoop;
+//│         }
+//│         break;
+//│       }
+//│     } 
+//│     get getLocals() {
+//│       return getLocals3();
+//│     } 
+//│     get getLoc() {
+//│       if (this.pc === 0) {
+//│         return "Debugging.mls:17:14"
+//│       } else if (this.pc === 1) {
+//│         return "Debugging.mls:17:5"
+//│       }
+//│     }
+//│     toString() { return "Cont$func$f$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│   };
+//│   i = 0;
+//│   j = 100;
+//│   k = 2000;
+//│   scrut = i == 0;
+//│   if (scrut === true) {
+//│     tmp = Predef.raiseUnhandledEffect();
+//│     if (tmp instanceof runtime.EffectSig.class) {
+//│       tmp.contTrace.last.next = new Cont$func$f$1.class(0);
+//│       tmp.contTrace.last = tmp.contTrace.last.next;
+//│       return tmp
+//│     }
+//│     tmp1 = Predef.print(tmp);
+//│     if (tmp1 instanceof runtime.EffectSig.class) {
+//│       tmp1.contTrace.last.next = new Cont$func$f$1.class(1);
+//│       tmp1.contTrace.last = tmp1.contTrace.last.next;
+//│       return tmp1
+//│     }
+//│   } else {
+//│     tmp1 = runtime.Unit;
+//│   }
+//│   return j / i
+//│ };
+
+:re
+f()
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
+//│ 	at f (Debugging.mls:17:14)
+
+:re
+fun lambda_test(f) =
+  f()
+  200
+lambda_test(() =>
+  raiseUnhandledEffect()
+  100)
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
+//│ 	at lambda (Debugging.mls:137:3)
+//│ 	at lambda_test (Debugging.mls:134:3)
+
+
+import "../../mlscript-compile/Runtime.mls"
+
+:silent
+let res = Runtime.try(f)
+
+res.reified.contTrace.next.getLocals
+//│ = [FnLocalsInfo("‹top level›", []), FnLocalsInfo("f", [LocalVarInfo("i", 0), LocalVarInfo("j", 100), LocalVarInfo("k", 2000)])]
+
+Runtime.debugEff(res.reified)
+//│ > Debug EffectSig:
+//│ > handler:  FatalEffect
+//│ > handlerFun:  null
+//│ > resumed:  false
+//│ > <lastHandler is self>
+//│ > Cont$func$f$(pc=0, last) -> (null)
+//│ > 
+
+res.resumeWith(42)
+//│ > 42
+//│ = Infinity
+
+
+
+class Debugger() with
+  fun break(payload)
+
+module Test with
+  fun test(j)(using dbg: Debugger) =
+    let i = 0
+    let k = 2000
+    if i == 0 do
+      set i = dbg.break("whoops")
+    j / i
+  fun main()(using Debugger) =
+    test(12) + test(34)
+
+let res =
+  handle h = Debugger with
+    fun break(payload)(resume) = resume
+  use Debugger = h
+  Runtime.try(() => Test.main())
+//│ res = EffectHandle()
+
+:re
+res.raise()
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
+
+set res = res.resumeWith(42)
+
+:re
+res.raise()
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
+
+res.resumeWith(666)
+//│ = 0.33676533676533676
+
+let i = 100
+fun f() =
+  let j = 200
+  print(debug.getLocals())
+  debug.printStack(true)
+  set j = 300
+  debug.printStack(false)
+  debug.printStack(true)
+  print(debug.getLocals())
+//│ i = 100
+
+f()
+//│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 200)])]
+//│ > Stack Trace:
+//│ > 	at f (Debugging.mls:204:3) with locals: j=200
+//│ > Stack Trace:
+//│ > 	at f (Debugging.mls:206:3)
+//│ > Stack Trace:
+//│ > 	at f (Debugging.mls:207:3) with locals: j=300
+//│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 300)])]

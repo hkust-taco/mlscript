@@ -4,24 +4,53 @@
 :todo // check init
 :sjs
 :re
-module Bar with
+object Bar with
   val x = 1
   module Baz with
     val a = Bar.x
 //│ JS (unsanitized):
 //│ let Bar1;
-//│ Bar1 = class Bar {
-//│   static {
+//│ const Bar$class = class Bar {
+//│   constructor() {
 //│     this.x = 1;
-//│     this.Baz = class Baz {
+//│     const this$Bar = this;
+//│     (class Baz {
 //│       static {
+//│         this$Bar.Baz = Baz;
 //│         this.a = Bar1.x;
 //│       }
 //│       static toString() { return "Baz"; }
-//│     };
+//│     });
+//│   }
+//│   toString() { return "Bar"; }
+//│ }; Bar1 = new Bar$class;
+//│ Bar1.class = Bar$class;
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
+
+
+// * Modules don't have this initialization problem because they set their bindings
+// * as the first thing in their static ctors.
+// * Objects can't really do so because their (non-static) ctors could be called from child classes.
+:sjs
+module Bar with
+  val x = 1
+  module Baz with
+    val a = Bar.x
+//│ JS (unsanitized):
+//│ let Bar3;
+//│ (class Bar2 {
+//│   static {
+//│     Bar3 = Bar2;
+//│     this.x = 1;
+//│     (class Baz1 {
+//│       static {
+//│         Bar2.Baz = Baz1;
+//│         this.a = Bar3.x;
+//│       }
+//│       static toString() { return "Baz"; }
+//│     });
 //│   }
 //│   static toString() { return "Bar"; }
-//│ };
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
+//│ });
 
 

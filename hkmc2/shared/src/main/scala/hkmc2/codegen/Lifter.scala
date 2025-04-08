@@ -613,6 +613,12 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         case Assign(t: TermSymbol, rhs, rest) if t.owner.isDefined =>
           ctx.getIsymPath(t.owner.get) match
             case Some(value) if !belongsToCtor(t.owner.get) =>
+              if (t.k is syntax.LetBind) && !t.owner.forall(_.isInstanceOf[semantics.TopLevelSymbol]) then
+                // TODO: improve the error message
+                raise(ErrorReport(
+                  msg"Uses of private fields cannot yet be lifted." -> N :: Nil,
+                  N, Diagnostic.Source.Compilation
+                ))
               AssignField(value.asPath, t.id, applyResult(rhs), applyBlock(rest))(N)
             case _ => super.applyBlock(rewritten)
         
@@ -622,6 +628,12 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           case None => ctx.getLocalPath(lhs) match
             case None => super.applyBlock(rewritten)
             case Some(value) => Assign(value, applyResult(rhs), applyBlock(rest))
+        
+        case Define(d: ValDefn, rest: Block) if d.owner.isDefined =>
+          ctx.getIsymPath(d.owner.get) match
+            case Some(value) if !belongsToCtor(d.owner.get) =>
+              AssignField(value.asPath, Tree.Ident(d.sym.nme), applyResult(d.rhs), applyBlock(rest))(S(d.sym))
+            case _ => super.applyBlock(rewritten)
         
         case Define(d: Defn, rest: Block) => ctx.modLocals.get(d.sym) match 
           case Some(sym) if !ctx.ignored(d.sym) => ctx.getBmsReqdInfo(d.sym) match
@@ -650,7 +662,14 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         case _ => super.applyPath(p)
       case Value.Ref(t: TermSymbol) if t.owner.isDefined =>
         ctx.getIsymPath(t.owner.get) match
-          case Some(value) if !belongsToCtor(t.owner.get) => Select(value.asPath, t.id)(N)
+          case Some(value) if !belongsToCtor(t.owner.get) =>
+            if (t.k is syntax.LetBind) && !t.owner.forall(_.isInstanceOf[semantics.TopLevelSymbol]) then
+              // TODO: improve the error message
+              raise(ErrorReport(
+                msg"Uses of private fields cannot yet be lifted." -> N :: Nil,
+                N, Diagnostic.Source.Compilation
+              ))
+            Select(value.asPath, t.id)(N)
           case _ => super.applyPath(p)
       
       // Rewrites this.className.class to reference the top-level definition
@@ -885,7 +904,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     val newCtx_ = ctxx
       .addLocalPaths(nestedClsPaths)
       .addLocalPaths(getVars(c).map(s => s -> s).toMap)
-      .addIgnoredBmsPaths(ctorIgnored.map(d => d.sym -> Select(c.isym.asPath, Tree.Ident(d.sym.nme))(S(d.sym))).toMap)
+      .addIgnoredBmsPaths(ctorIgnored.map(d => d.sym -> d.sym.asPath).toMap)
 
     val newCtx = c.k match
       case syntax.Mod if !ctx.ignored(c.sym) => newCtx_

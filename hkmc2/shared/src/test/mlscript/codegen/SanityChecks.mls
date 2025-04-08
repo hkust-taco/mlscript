@@ -227,8 +227,9 @@ if M.A(1).y is
   x and x == 1 then x
   else 0
 //│ JS:
-//│ M1 = class M {
+//│ (class M {
 //│   static {
+//│     M1 = M;
 //│     this.A = function A(...args1) {
 //│       return new A.class(...args1);
 //│     };
@@ -246,7 +247,7 @@ if M.A(1).y is
 //│     };
 //│   }
 //│   static toString() { return "M"; }
-//│ };
+//│ });
 //│ tmp5 = runtime.checkCall(M1.A(1));
 //│ selRes2 = tmp5.y;
 //│ discarded1 = tmp5.y$__checkNotMethod;

@@ -55,12 +55,12 @@ f()
 :re
 fun f() = () => return 3
 f()()
-//│ ═══[RUNTIME ERROR] Error: Unhandled effects
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect $_non$_local$_return$_effect$_6
 
 :re
 fun f(): () -> Int = () => return () => 3
 f()()
-//│ ═══[RUNTIME ERROR] Error: Unhandled effects
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect $_non$_local$_return$_effect$_7
 
 
 :e
