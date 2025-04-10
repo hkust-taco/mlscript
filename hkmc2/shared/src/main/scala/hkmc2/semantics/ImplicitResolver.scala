@@ -241,10 +241,11 @@ class ImplicitResolver(tl: TraceLogger)
               case tup: Term.Tup => (
                 !tup.fields.exists(_.isInstanceOf[Spd]),
                 tup.fields.map:
-                  case _: Fld => 1
-                  case _: Spd => 0
-                  case _: CtxArg => 1
-                .sum,
+                  case Fld(_, _, N) | _: CtxArg => 1
+                  case Fld(_, _, S(_)) | _: Spd => 0
+                .sum + tup.fields.collectFirst:
+                  case Fld(_, _, S(_)) => 1
+                .getOrElse(0),
               )
               // Other: spread arguments
               case _ => (false, 0)

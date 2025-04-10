@@ -113,12 +113,7 @@ id of ({ x: 1, y: 2 })
 id of (x: 1, y: 2)
 //│ = {x: 1, y: 2}
 
-// * FIXME: handling of record arguments in resolver/checker
-:fixme
 id of { x: 1, y: 2 }
-//│ ╔══[ERROR] Expected 1 arguments, got 2
-//│ ║  l.118: 	id of { x: 1, y: 2 }
-//│ ╙──       	^^
 //│ = {x: 1, y: 2}
 
 
