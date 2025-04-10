@@ -135,13 +135,14 @@ fun output(i, s) = print of "  ".repeat(i) + s
 
 fun t(kind, props) =
   if graphics.has(kind) then
-    (x, y, i) => output of i, kind + " " + showProps(x, y, props)
+    (args) => output of args.i, kind + " " + showProps(args.x, args.y, props)
   else
-    (...children) => (x, y, i) =>
-      output of i, kind + " " + showProps(x, y, props) + " with"
-      let x = x + props.("x")
-      let y = y + props.("y")
-      children Iter.each of child => child(x, y, i + 1)
+    (...children) => (args) =>
+      output of args.i, kind + " " + showProps(args.x, args.y, props) + " with"
+      children Iter.each of child => child of
+        x: args.x + props.x
+        y: args.y + props.y
+        i: args.i + 1
 
 let display = t("group", x: 20, y: 20) of
   t("circle", x: 30, y: 30, r: 42)
@@ -149,16 +150,16 @@ let display = t("group", x: 20, y: 20) of
   t("ellipse", x: 50, y: 50, rx: 40, ry: 60)
 //│ display = [function]
 
-display(11, 22, 0)
-//│ > group x: 31, y: 42 with
-//│ >   circle x: 61, y: 72, r: 42
-//│ >   rect x: 71, y: 82, width: 80, height: 90
-//│ >   ellipse x: 81, y: 92, rx: 40, ry: 60
+display(x: 11, y: 22, i: 2)
+//│ >     group x: 31, y: 42 with
+//│ >       circle x: 61, y: 72, r: 42
+//│ >       rect x: 71, y: 82, width: 80, height: 90
+//│ >       ellipse x: 81, y: 92, rx: 40, ry: 60
 
 let display = t("group", x: 0, y: 0) of
   t("circle", x: 10, y: 10, r: 42)
 //│ display = [function]
 
-display(88, 99, 0)
+display(x: 88, y: 99, i: 0)
 //│ > group x: 88, y: 99 with
 //│ >   circle x: 98, y: 109, r: 42
