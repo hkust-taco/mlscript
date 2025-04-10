@@ -175,8 +175,20 @@ class ImplicitResolver(tl: TraceLogger)
       // we purely traverse the subterms with `expect = Any` here.
       case blk: Term.Blk => 
         resolveBlk(blk)
-      case t: Term.IfLike =>
-        t.subTerms.foreach(resolve(_, expect = Any))
+      case Term.IfLike(_, s) =>
+        def split(s: Split): Unit = s match
+          case Split.Cons(head, tail) =>
+            resolve(head.scrutinee, expect = NonModule(N))
+            head.pattern.subTerms.foreach(resolve(_, expect = NonModule(N)))
+            split(head.continuation)
+            split(tail)
+          case Split.Let(sym, term, tail) =>
+            resolve(term, expect = NonModule(N))
+            split(tail)
+          case Split.Else(default) =>
+            resolve(default, expect = Any)
+          case Split.End =>
+        split(s)
       case Term.Sel(p, _) =>
         resolve(p, expect = Any)
       case Term.SynthSel(p, _) =>

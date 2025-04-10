@@ -63,7 +63,7 @@ fun powerPs(a, n) = if n <= 0 then fromIntegerPs(1) else multPs(a, powerPs(a, n 
 fun divPs(fss, gss) = lazy of () => if force(fss) is
   Pz and force(gss) is
     Pz then throw Error("power series 0/0")
-    Pc(0, gs) then force(divPs(lazy of () => Pz, gs))
+    Pc(0, gs) then force(divPs((lazy of () => Pz), gs))
     else Pz
   Pc(0, fs_) and force(gss) is
     Pc(0, gs) then force(divPs(fs_, gs))
@@ -80,14 +80,14 @@ fun compose_(fss, gss) = lazy of () => if force(fss) is
   Pc(f, fs_) and force(gss) is
     Pz then Pc(f, lazy of () => Pz)
     Pc(0, gs) then Pc(f, multPs(gs, compose_(fs_, lazy of () => Pc(0, gs))))
-    else force(addPs(lazy of () => Pc(f, lazy of () => Pz)), multPs(gss, compose_(fs_, gss)))
+    else force(addPs((lazy of () => Pc(f, lazy of () => Pz)), multPs(gss, compose_(fs_, gss))))
 
 fun composeSndLz_(fss, gss) = lazy of () => if force(fss) is
   Pz then Pz
   Pc(f, fs_) and force(force(gss)) is
     Pz then Pc(f, lazy of () => Pz)
     Pc(0, gs) then Pc(f, multPs(gs, compose_(fs_, lazy of () => Pc(0, gs))))
-    else force(addPs(lazy of () => Pc(f, lazy of () => Pz)), multPs(gss, composeSndLz_(fs_, gss)))
+    else force(addPs((lazy of () => Pc(f, lazy of () => Pz)), multPs(gss, composeSndLz_(fs_, gss))))
 
 fun revert(fss) = lazy of () => if force(fss) is
   Pc(0, fs_) then

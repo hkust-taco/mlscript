@@ -3,12 +3,16 @@
 fun plus(x, y) = x + y
 
 :traceJS
+:e
 fun g(z) =
   if
     z < -1 then g(z + 1)
     z == -1 then 42
     z == 0 then plus(0)
     z > 0 then g(z - 1)
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.11: 	    z == 0 then plus(0)
+//│ ╙──      	                ^^^^
 
 fun f(x, y)(z) =
   x + y + g(z)

@@ -96,7 +96,7 @@ let foo = 1
 //│ ╙──      	                         ^^^
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.91: 	x => if false then 0 else...
-//│ ╙──      	^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 //│ foo = 1
 
 
