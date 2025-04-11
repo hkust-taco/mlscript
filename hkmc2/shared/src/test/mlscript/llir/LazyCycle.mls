@@ -1,5 +1,8 @@
 :llir
 
+// This should ideally be a declaration.
+// Now it is a built-in class specially handled in the C++ backend,
+// with related logic defined in `mlsprelude.h`.
 abstract class Lazy[out A](init: () -> A) with
   fun get: A
 fun lazy(x) = Lazy(x)

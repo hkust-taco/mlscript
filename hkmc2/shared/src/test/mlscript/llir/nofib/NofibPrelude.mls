@@ -7,6 +7,9 @@ abstract class Option[out T]: Some[T] | None
 data class Some[out T](x: T) extends Option[T]
 object None extends Option
 
+// This should ideally be a declaration.
+// Now it is a built-in class specially handled in the C++ backend,
+// with related logic defined in `mlsprelude.h`.
 abstract class Lazy[out A](init: () -> A) with
   fun get()
 fun lazy(x) = Lazy(x) 
