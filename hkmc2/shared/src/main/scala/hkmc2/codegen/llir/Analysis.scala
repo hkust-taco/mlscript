@@ -93,7 +93,9 @@ class FreeVarAnalysis(ctx: Local => Func):
         case _ => fv
       val fv3 = cases.foldLeft(fv2):
         case (acc, (cls, body)) => f(using defined)(body, acc)
-      fv3
+      default match
+        case Some(body) => f(using defined)(body, fv3)
+        case None => fv3
     case Panic(msg) => fv
     case LetMethodCall(resultNames, cls, method, args, body) =>
       var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
