@@ -82,7 +82,7 @@ fun test2() =
     case n then funny(n - 1) + 1
   funny
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.81: 	    case 0 then 0
+//│ ║  l.79: 	    case 0 then 0
 //│ ╙──      	                ^
 //│ JS (unsanitized):
 //│ let test22;
@@ -104,15 +104,15 @@ fun test2() =
 //│   return tmp1
 //│ };
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.81: 	    case 0 then 0
+//│ ║  l.79: 	    case 0 then 0
 //│ ╙──      	                ^
 //│ ╔══[ERROR] Function definition shape not yet supported for funny
-//│ ║  l.81: 	    case 0 then 0
+//│ ║  l.79: 	    case 0 then 0
 //│ ║        	                ^
-//│ ║  l.82: 	    case n then funny(n - 1) + 1
+//│ ║  l.80: 	    case n then funny(n - 1) + 1
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Variable not found: funny
-//│ ║  l.83: 	  funny
+//│ ║  l.81: 	  funny
 //│ ╙──      	  ^^^^^
 //│ Type: ⊤
 
@@ -121,7 +121,7 @@ fun test2() =
 fun test3 =
   print("Hi")
 //│ ╔══[ERROR] Function definition shape not yet supported for test3
-//│ ║  l.122: 	  print("Hi")
+//│ ║  l.114: 	  print("Hi")
 //│ ╙──       	  ^^^^^^^^^^^
 //│ Type: ⊤
 

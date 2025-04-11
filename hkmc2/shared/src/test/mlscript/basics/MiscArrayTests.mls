@@ -65,7 +65,7 @@ xs
 //│         rhs = Tup of Ls of 
 //│           Ident of "f"
 //│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.56: 	  . map(f)
+//│ ║  l.53: 	  . map(f)
 //│ ╙──      	    ^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 
@@ -73,7 +73,7 @@ xs
 xs
   . map(x => x * 2)
 //│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.74: 	  . map(x => x * 2)
+//│ ║  l.68: 	  . map(x => x * 2)
 //│ ╙──      	    ^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 
@@ -82,7 +82,7 @@ xs
   . map(x => x * 2)
   . print()
 //│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.82: 	  . map(x => x * 2)
+//│ ║  l.73: 	  . map(x => x * 2)
 //│ ╙──      	    ^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 
