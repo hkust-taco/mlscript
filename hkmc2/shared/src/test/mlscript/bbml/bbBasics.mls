@@ -151,8 +151,8 @@ fun foofoo(x) =
 foofoo
 //│ Type: ['x, 'res, 'eff, 'x1] -> 'x ->{'eff} 'res
 //│ Where:
-//│   'x#Int ∨  ∧ Int ∧ 'x<:Int ∧ Int<:Int ∧ Str<:'res ∧ ⊥<:'eff
-//│   'x#¬Int ∨  ∧ ¬Int ∧ 'x<:'x1 ∧ ⊤<:⊥
+//│   'x#Int ∨ Int & 'x <: Int ∧ Int <: Int ∧ Str <: 'res ∧ ⊥ <: 'eff
+//│   'x#¬Int ∨ ¬Int & 'x <: 'x1 ∧ ⊤ <: ⊥
 
 fun foofoo(x) =
   let t = x + 1 in "foo"
@@ -169,7 +169,7 @@ fun f() = new Printer(foofoo)
 f
 //│ Type: ['T, 'x] -> () -> Printer['T]
 //│ Where:
-//│   'T#'T ∨ (  'T#⊤ ∨  ∧ Str<:Str ∧ ⊥<:⊥ ∧ 'T<:'x) ∧ {0: 'T}<:{0: ⊤}
+//│   'T#'T ∨ (  'T#⊤ ∨ Str <: Str ∧ ⊥ <: ⊥ ∧ 'T <: 'x){0: 'T} <: {0: ⊤}
 //│   'x <: Int
 
 f().Printer#f(42)
@@ -219,7 +219,7 @@ fun inc(x) = x + 1
 new TFun(inc)
 //│ Type: TFun['T]
 //│ Where:
-//│   'T#'T ∨ (  'T#⊤ ∨  ∧ Int<:'T ∧ ⊥<:⊥ ∧ 'T<:'x) ∧ {0: 'T}<:{0: ⊤}
+//│   'T#'T ∨ (  'T#⊤ ∨ Int <: 'T ∧ ⊥ <: ⊥ ∧ 'T <: 'x){0: 'T} <: {0: ⊤}
 //│   'x <: ¬¬Int
 
 let tf = new TFun(inc) in tf.TFun#f(1)
@@ -239,7 +239,7 @@ let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ╟── because: cannot constrain  'T  <:  ¬¬Int
 //│ ╟── because: cannot constrain  'T  <:  ¬(¬{Int})
 //│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int})
-//│ Type: Int ∨ Str
+//│ Type: Int | Str
 
 data class Pair[A, B](fst: A, snd: B)
 //│ Type: ⊤
@@ -270,7 +270,7 @@ if 1 < 2 then 1 else 0
 
 
 if false then 1 else "1"
-//│ Type: Str ∨ Int
+//│ Type: Str | Int
 
 
 if 1 is Int then 1 else 0
@@ -286,8 +286,8 @@ fun test(x) =
 test
 //│ Type: ['x, 'res, 'eff, 'x1] -> 'x ->{'eff} 'res
 //│ Where:
-//│   'x#Int ∨  ∧ Int ∧ 'x<:Int ∧ Int<:Int ∧ Int<:'res ∧ ⊥<:'eff
-//│   'x#¬Int ∨  ∧ ¬Int ∧ 'x<:'x1 ∧ Int<:'res ∧ ⊥<:'eff
+//│   'x#Int ∨ Int & 'x <: Int ∧ Int <: Int ∧ Int <: 'res ∧ ⊥ <: 'eff
+//│   'x#¬Int ∨ ¬Int & 'x <: 'x1 ∧ Int <: 'res ∧ ⊥ <: 'eff
 
 test(1)
 //│ Type: Int
@@ -345,7 +345,7 @@ f
 f(x => x).Foo#x
 //│ Type: ('A) ->{⊥} 'A
 //│ Where:
-//│   'A#'A ∨ (  'A#⊤ ∨  ∧ 'x<:'A ∧ ⊥<:⊥ ∧ 'A<:'x) ∧ {0: 'A}<:{0: ⊤}
+//│   'A#'A ∨ (  'A#⊤ ∨ 'x <: 'A ∧ ⊥ <: ⊥ ∧ 'A <: 'x){0: 'A} <: {0: ⊤}
 
 g => (new Foo(g)).Foo#x
 //│ Type: ('A -> 'A) ->{⊥} ('A) ->{⊥} 'A

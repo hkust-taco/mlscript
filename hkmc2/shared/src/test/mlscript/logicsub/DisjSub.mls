@@ -28,7 +28,7 @@ idIB(true)
 //│ Type: Bool
 
 idIB(if true then 1 else true)
-//│ Type: Bool ∨ Int
+//│ Type: Bool | Int
 
 x =>
   let y = x+1
@@ -36,7 +36,7 @@ x =>
 //│ Type: ('x) ->{'eff} 'app
 //│ Where:
 //│   'x <: Int
-//│   'x#'x ∨ (  'x#Int ∨  ∧ Int<:'app ∧ ⊥<:'eff) ∧ (  'x#Bool ∨  ∧ Bool<:'app ∧ ⊥<:'eff) ∧ {0: 'x}<:{0: Int} ∨ {0: Bool}
+//│   'x#'x ∨ (  'x#Int ∨ Int <: 'app ∧ ⊥ <: 'eff) ∧ (  'x#Bool ∨ Bool <: 'app ∧ ⊥ <: 'eff){0: 'x} <: {0: Int} | {0: Bool}
 
 (x: Int) =>
   let y = x + 1
@@ -61,13 +61,13 @@ ap(idIB)(1)
 x => idIB(x)
 //│ Type: ('x) ->{'eff} 'app
 //│ Where:
-//│   'x#'x ∨ (  'x#Int ∨  ∧ Int<:'app ∧ ⊥<:'eff) ∧ (  'x#Bool ∨  ∧ Bool<:'app ∧ ⊥<:'eff) ∧ {0: 'x}<:{0: Int} ∨ {0: Bool}
+//│   'x#'x ∨ (  'x#Int ∨ Int <: 'app ∧ ⊥ <: 'eff) ∧ (  'x#Bool ∨ Bool <: 'app ∧ ⊥ <: 'eff){0: 'x} <: {0: Int} | {0: Bool}
 
 fun forward(x) = idIB(x)
 forward
 //│ Type: ['x, 'eff, 'app] -> 'x ->{'eff} 'app
 //│ Where:
-//│   'x#'x ∨ (  'x#Int ∨  ∧ Int<:'app ∧ ⊥<:'eff) ∧ (  'x#Bool ∨  ∧ Bool<:'app ∧ ⊥<:'eff) ∧ {0: 'x}<:{0: Int} ∨ {0: Bool}
+//│   'x#'x ∨ (  'x#Int ∨ Int <: 'app ∧ ⊥ <: 'eff) ∧ (  'x#Bool ∨ Bool <: 'app ∧ ⊥ <: 'eff){0: 'x} <: {0: Int} | {0: Bool}
 
 forward(1)
 //│ Type: Int
@@ -115,7 +115,7 @@ idIIBB(new Pair(1, 2))
 //│ ╔══[ERROR] Type error in application
 //│ ║  l.114: 	idIIBB(new Pair(1, 2))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  (Pair[out Int, out Int] -> Int) ∧ (Pair[out Bool, out Bool] -> Bool)  <:  Pair['A, 'B] ->{'eff} 'app
+//│ ╟── because: cannot constrain  (Pair[out Int, out Int] -> Int) & (Pair[out Bool, out Bool] -> Bool)  <:  Pair['A, 'B] ->{'eff} 'app
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[in ⊥ out Bool, in ⊥ out Bool]
 //│ ╟── because: cannot constrain  'A  <:  Bool
 //│ ╟── because: cannot constrain  'A  <:  ¬(¬{Bool})
@@ -123,19 +123,19 @@ idIIBB(new Pair(1, 2))
 //│ ╔══[ERROR] Type error in application
 //│ ║  l.114: 	idIIBB(new Pair(1, 2))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  (Pair[out Int, out Int] -> Int) ∧ (Pair[out Bool, out Bool] -> Bool)  <:  Pair['A, 'B] ->{'eff} 'app
+//│ ╟── because: cannot constrain  (Pair[out Int, out Int] -> Int) & (Pair[out Bool, out Bool] -> Bool)  <:  Pair['A, 'B] ->{'eff} 'app
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[in ⊥ out Bool, in ⊥ out Bool]
 //│ ╟── because: cannot constrain  'B  <:  Bool
 //│ ╟── because: cannot constrain  'B  <:  ¬(¬{Bool})
 //│ ╙── because: cannot constrain  Int  <:  ¬(¬{Bool})
-//│ Type: Bool ∨ Int
+//│ Type: Bool | Int
 
 :e
 idIIBB(new Pair(1, true))
 //│ ╔══[ERROR] Type error in application
 //│ ║  l.134: 	idIIBB(new Pair(1, true))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  (Pair[out Int, out Int] -> Int) ∧ (Pair[out Bool, out Bool] -> Bool)  <:  Pair['A, 'B] ->{'eff} 'app
+//│ ╟── because: cannot constrain  (Pair[out Int, out Int] -> Int) & (Pair[out Bool, out Bool] -> Bool)  <:  Pair['A, 'B] ->{'eff} 'app
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[in ⊥ out Int, in ⊥ out Int]
 //│ ╟── because: cannot constrain  'B  <:  Int
 //│ ╟── because: cannot constrain  'B  <:  ¬(¬{Int})
@@ -143,12 +143,12 @@ idIIBB(new Pair(1, true))
 //│ ╔══[ERROR] Type error in application
 //│ ║  l.134: 	idIIBB(new Pair(1, true))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  (Pair[out Int, out Int] -> Int) ∧ (Pair[out Bool, out Bool] -> Bool)  <:  Pair['A, 'B] ->{'eff} 'app
+//│ ╟── because: cannot constrain  (Pair[out Int, out Int] -> Int) & (Pair[out Bool, out Bool] -> Bool)  <:  Pair['A, 'B] ->{'eff} 'app
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[in ⊥ out Bool, in ⊥ out Bool]
 //│ ╟── because: cannot constrain  'A  <:  Bool
 //│ ╟── because: cannot constrain  'A  <:  ¬(¬{Bool})
 //│ ╙── because: cannot constrain  Int  <:  ¬(¬{Bool})
-//│ Type: Bool ∨ Int
+//│ Type: Bool | Int
 
 
 
@@ -172,7 +172,7 @@ fun k(f) =
   a: f(0)
   b: f(true)
 k
-//│ Type: ['eff, 'app, 'eff1, 'app1] -> ((Bool ->{'eff1} 'app1) ∧ (Int ->{'eff} 'app)) ->{'eff ∨ 'eff1} {a: 'app, b: 'app1}
+//│ Type: ['eff, 'app, 'eff1, 'app1] -> ((Bool ->{'eff1} 'app1) & (Int ->{'eff} 'app)) ->{'eff | 'eff1} {a: 'app, b: 'app1}
 
 k(idIB)
 //│ Type: {a: Int, b: Bool}
@@ -181,7 +181,7 @@ fun k(f) = (x, y) =>
   a: f(x)
   b: f(y)
 k
-//│ Type: ['x, 'y, 'eff, 'app, 'eff1, 'app1] -> (('y ->{'eff1} 'app1) ∧ ('x ->{'eff} 'app)) -> (('x, 'y) ->{'eff ∨ 'eff1} {a: 'app, b: 'app1})
+//│ Type: ['x, 'y, 'eff, 'app, 'eff1, 'app1] -> (('y ->{'eff1} 'app1) & ('x ->{'eff} 'app)) -> (('x, 'y) ->{'eff | 'eff1} {a: 'app, b: 'app1})
 
 k(idIB)(true, 1)
 //│ Type: {a: Bool, b: Int}
@@ -193,10 +193,10 @@ k(idIB)("true", 1)
 //│ ║         	        ^^^^^^
 //│ ╟── because: cannot constrain  Str  <:  'x
 //│ ╟── because: cannot constrain  Str  <:  'x
-//│ ╟── because: cannot constrain  {0: 'x}  <:  {0: Int} ∨ {0: Bool}
-//│ ╟── because: cannot constrain  'x  <:  Bool ∨ Int
-//│ ╟── because: cannot constrain  'x  <:  ¬(¬{Int ∨ Bool})
-//│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int ∨ Bool})
+//│ ╟── because: cannot constrain  {0: 'x}  <:  {0: Int} | {0: Bool}
+//│ ╟── because: cannot constrain  'x  <:  Bool | Int
+//│ ╟── because: cannot constrain  'x  <:  ¬(¬{Int | Bool})
+//│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int | Bool})
 //│ Type: {a: ⊥, b: Int}
 
 (x => x.x + idIB(x.y)) of (x:0, y:1)
@@ -219,7 +219,7 @@ fun map = x => f => x.Ls#prim(() => nil(), (a, b) => cons(f(a), map(b)(f)))
 x => map(x)(idIB)
 //│ Type: (Ls['A]) ->{⊥} Ls['B]
 //│ Where:
-//│   'A#'A ∨ (  'A#Int ∨  ∧ Int<:'B ∧ ⊥<:⊥) ∧ (  'A#Bool ∨  ∧ Bool<:'B ∧ ⊥<:⊥) ∧ {0: 'A}<:{0: Int} ∨ {0: Bool}
+//│   'A#'A ∨ (  'A#Int ∨ Int <: 'B ∧ ⊥ <: ⊥) ∧ (  'A#Bool ∨ Bool <: 'B ∧ ⊥ <: ⊥){0: 'A} <: {0: Int} | {0: Bool}
 
 map(nil())(idIB)
 //│ Type: Ls['B]
@@ -244,31 +244,31 @@ let x = cons(1, cons(true, nil())) in
 //│ ╔══[ERROR] Type error in reference with expected type ('A) ->{⊥} 'B
 //│ ║  l.243: 	  map(cons(x, x))(idIB)
 //│ ║         	                  ^^^^
-//│ ╟── because: cannot constrain  (Int -> Int) ∧ (Bool -> Bool)  <:  'A -> 'B
-//│ ╟── because: cannot constrain  {0: 'A}  <:  {0: Int} ∨ {0: Bool}
-//│ ╟── because: cannot constrain  'A  <:  Bool ∨ Int
-//│ ╟── because: cannot constrain  'A  <:  ¬(¬{Int ∨ Bool})
-//│ ╙── because: cannot constrain  Ls['A1]  <:  ¬(¬{Int ∨ Bool})
+//│ ╟── because: cannot constrain  (Int -> Int) & (Bool -> Bool)  <:  'A -> 'B
+//│ ╟── because: cannot constrain  {0: 'A}  <:  {0: Int} | {0: Bool}
+//│ ╟── because: cannot constrain  'A  <:  Bool | Int
+//│ ╟── because: cannot constrain  'A  <:  ¬(¬{Int | Bool})
+//│ ╙── because: cannot constrain  Ls['A1]  <:  ¬(¬{Int | Bool})
 //│ ╔══[ERROR] Type error in reference with expected type ('A) ->{⊥} 'B
 //│ ║  l.243: 	  map(cons(x, x))(idIB)
 //│ ║         	                  ^^^^
-//│ ╟── because: cannot constrain  (Int -> Int) ∧ (Bool -> Bool)  <:  'A -> 'B
-//│ ╟── because: cannot constrain  {0: 'A}  <:  {0: Int} ∨ {0: Bool}
-//│ ╟── because: cannot constrain  'A  <:  Bool ∨ Int
-//│ ╟── because: cannot constrain  'A  <:  ¬(¬{Int ∨ Bool})
-//│ ╟── because: cannot constrain  'A1  <:  ¬(¬{Int ∨ Bool})
-//│ ╟── because: cannot constrain  'A1  <:  ¬(¬{Int ∨ Bool})
-//│ ╙── because: cannot constrain  Ls['A1]  <:  ¬(¬{Int ∨ Bool})
+//│ ╟── because: cannot constrain  (Int -> Int) & (Bool -> Bool)  <:  'A -> 'B
+//│ ╟── because: cannot constrain  {0: 'A}  <:  {0: Int} | {0: Bool}
+//│ ╟── because: cannot constrain  'A  <:  Bool | Int
+//│ ╟── because: cannot constrain  'A  <:  ¬(¬{Int | Bool})
+//│ ╟── because: cannot constrain  'A1  <:  ¬(¬{Int | Bool})
+//│ ╟── because: cannot constrain  'A1  <:  ¬(¬{Int | Bool})
+//│ ╙── because: cannot constrain  Ls['A1]  <:  ¬(¬{Int | Bool})
 //│ ╔══[ERROR] Type error in reference with expected type ('A) ->{⊥} 'B
 //│ ║  l.243: 	  map(cons(x, x))(idIB)
 //│ ║         	                  ^^^^
-//│ ╟── because: cannot constrain  (Int -> Int) ∧ (Bool -> Bool)  <:  'A -> 'B
-//│ ╟── because: cannot constrain  {0: 'A}  <:  {0: Int} ∨ {0: Bool}
-//│ ╟── because: cannot constrain  'A  <:  Bool ∨ Int
-//│ ╟── because: cannot constrain  'A  <:  ¬(¬{Int ∨ Bool})
-//│ ╟── because: cannot constrain  'A1  <:  ¬(¬{Int ∨ Bool})
-//│ ╟── because: cannot constrain  'A1  <:  ¬(¬{Int ∨ Bool})
-//│ ╙── because: cannot constrain  Ls['A1]  <:  ¬(¬{Int ∨ Bool})
+//│ ╟── because: cannot constrain  (Int -> Int) & (Bool -> Bool)  <:  'A -> 'B
+//│ ╟── because: cannot constrain  {0: 'A}  <:  {0: Int} | {0: Bool}
+//│ ╟── because: cannot constrain  'A  <:  Bool | Int
+//│ ╟── because: cannot constrain  'A  <:  ¬(¬{Int | Bool})
+//│ ╟── because: cannot constrain  'A1  <:  ¬(¬{Int | Bool})
+//│ ╟── because: cannot constrain  'A1  <:  ¬(¬{Int | Bool})
+//│ ╙── because: cannot constrain  Ls['A1]  <:  ¬(¬{Int | Bool})
 //│ Type: Ls['B]
 //│ Where:
 //│   Bool <: 'B
@@ -278,7 +278,7 @@ fun k: ((Int | Str, Int) -> Int) & ((Bool | Str, Bool) -> Bool)
 //│ Type: ⊤
 
 k("", if true then 1 else true)
-//│ Type: Bool ∨ Int
+//│ Type: Bool | Int
 
 fun k: ((Int, Int) -> Int) & ((Bool, Bool) -> Bool)
 //│ Type: ⊤
@@ -286,7 +286,7 @@ fun k: ((Int, Int) -> Int) & ((Bool, Bool) -> Bool)
 x => k(x, x)
 //│ Type: ('x) ->{'eff} 'app
 //│ Where:
-//│   'x#'x ∨ (  'x#Int ∨  ∧ Int<:'app ∧ ⊥<:'eff) ∧ (  'x#Bool ∨  ∧ Bool<:'app ∧ ⊥<:'eff) ∧ {0: 'x, 1: 'x}<:{0: Int, 1: Int} ∨ {0: Bool, 1: Bool}
+//│   'x#'x ∨ (  'x#Int ∨ Int <: 'app ∧ ⊥ <: 'eff) ∧ (  'x#Bool ∨ Bool <: 'app ∧ ⊥ <: 'eff){0: 'x, 1: 'x} <: {0: Int, 1: Int} | {0: Bool, 1: Bool}
 
 :e
 fun ill: ((Int | Bool, Int | Bool) -> Str) & ((Bool | Str, Bool | Str) -> Str)
@@ -325,15 +325,15 @@ wf("")
 //│ Type: Str
 
 wf(true)
-//│ Type: Bool ∨ Int
+//│ Type: Bool | Int
 
 :e
 wf(1)
 //│ ╔══[ERROR] Type error in application
 //│ ║  l.331: 	wf(1)
 //│ ║         	^^^^^
-//│ ╟── because: cannot constrain  (((Int ∨ Bool) -> Int) ∨ (Bool -> Bool)) ∧ (Str -> Str)  <:  Int ->{'eff} 'app
-//│ ╙── because: cannot constrain  {0: Int}  <:  {0: Bool} ∨ {0: Str}
+//│ ╟── because: cannot constrain  (((Int | Bool) -> Int) | (Bool -> Bool)) & (Str -> Str)  <:  Int ->{'eff} 'app
+//│ ╙── because: cannot constrain  {0: Int}  <:  {0: Bool} | {0: Str}
 //│ Type: Int
 
 class
@@ -346,15 +346,15 @@ fun wf: ((Z, Z) -> Z) & ((Z, S) -> S) & ((S, Z | S) -> S)
 
 let zs = if true then new Z() else new S()
 zs
-//│ Type: S ∨ Z
+//│ Type: S | Z
 
 :e
 wf(zs, zs)
 //│ ╔══[ERROR] Type error in application
 //│ ║  l.352: 	wf(zs, zs)
 //│ ║         	^^^^^^^^^^
-//│ ╟── because: cannot constrain  (((Z, Z) -> Z) ∧ ((Z, S) -> S)) ∧ ((S, Z ∨ S) -> S)  <:  ('res, 'res) ->{'eff} 'app
-//│ ╟── because: cannot constrain  {0: 'res, 1: 'res}  <:  ({0: Z, 1: Z} ∨ {0: Z, 1: S}) ∨ {0: S, 1: Z ∨ S}
+//│ ╟── because: cannot constrain  (((Z, Z) -> Z) & ((Z, S) -> S)) & ((S, Z | S) -> S)  <:  ('res, 'res) ->{'eff} 'app
+//│ ╟── because: cannot constrain  {0: 'res, 1: 'res}  <:  ({0: Z, 1: Z} | {0: Z, 1: S}) | {0: S, 1: Z | S}
 //│ ╟── because: cannot constrain  {0: 'res, 1: 'res}  <:  {1: S}
 //│ ╟── because: cannot constrain  'res  <:  S
 //│ ╟── because: cannot constrain  'res  <:  ¬(¬{S})
@@ -362,13 +362,13 @@ wf(zs, zs)
 //│ ╔══[ERROR] Type error in application
 //│ ║  l.352: 	wf(zs, zs)
 //│ ║         	^^^^^^^^^^
-//│ ╟── because: cannot constrain  (((Z, Z) -> Z) ∧ ((Z, S) -> S)) ∧ ((S, Z ∨ S) -> S)  <:  ('res, 'res) ->{'eff} 'app
-//│ ╟── because: cannot constrain  {0: 'res, 1: 'res}  <:  ({0: Z, 1: Z} ∨ {0: Z, 1: S}) ∨ {0: S, 1: Z ∨ S}
+//│ ╟── because: cannot constrain  (((Z, Z) -> Z) & ((Z, S) -> S)) & ((S, Z | S) -> S)  <:  ('res, 'res) ->{'eff} 'app
+//│ ╟── because: cannot constrain  {0: 'res, 1: 'res}  <:  ({0: Z, 1: Z} | {0: Z, 1: S}) | {0: S, 1: Z | S}
 //│ ╟── because: cannot constrain  {0: 'res, 1: 'res}  <:  {1: Z}
 //│ ╟── because: cannot constrain  'res  <:  Z
 //│ ╟── because: cannot constrain  'res  <:  ¬(¬{Z})
 //│ ╙── because: cannot constrain  S  <:  ¬(¬{Z})
-//│ Type: S ∨ Z
+//│ Type: S | Z
 
 :e
 fun ill:

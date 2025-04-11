@@ -46,8 +46,8 @@ fun foo(f) = (f(x => x(x)) as [A] -> A -> A)
 
 
 f => (let g = x => x(x) in let tmp = g(g) in f(g)) as [A] -> A -> A
-//│ Type: (((('x ∨ ('x ->{'eff} 'app)) -> 'app) ->{'eff} 'app) -> (⊤ -> ⊥)) ->{⊥} ['A] -> ('A) ->{⊥} 'A
+//│ Type: (((('x | ('x ->{'eff} 'app)) -> 'app) ->{'eff} 'app) -> (⊤ -> ⊥)) ->{⊥} ['A] -> ('A) ->{⊥} 'A
 //│ Where:
-//│   'x <: ('x ∨ ('x ->{'eff} 'app)) -> 'app
+//│   'x <: ('x | ('x ->{'eff} 'app)) -> 'app
 
 

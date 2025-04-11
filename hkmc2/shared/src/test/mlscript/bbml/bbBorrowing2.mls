@@ -49,7 +49,7 @@ letreg of r =>
 //│ ║        	^^^^^^^^^^
 //│ ╟── because: cannot constrain  'E  <:  ⊥
 //│ ╟── because: cannot constrain  'E  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'Rg  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ & 'Rg  <:  ¬()
 //│ ╟── because: cannot constrain  'Rg  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Int
@@ -88,7 +88,7 @@ letreg of r =>
 //│ ║        	^^^^^^^^^^
 //│ ╟── because: cannot constrain  'E  <:  ⊥
 //│ ╟── because: cannot constrain  'E  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'Rg  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ & 'Rg  <:  ¬()
 //│ ╟── because: cannot constrain  'Rg  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Int

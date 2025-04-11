@@ -38,9 +38,9 @@ test
 //│ = [function test]
 //│ Type: ['x, 'y, 'res, 'eff, 'x1, 'y1] -> ('x, 'x) ->{'eff} 'res
 //│ Where:
-//│   'x#Tru ∨ (  'y#Tru ∨  ∧ Tru<:'res ∧ ⊥<:'eff) ∧ (  'y#¬Tru ∨  ∧ Tru ∧ 'x<:'x1 ∧ ¬Tru ∧ 'y<:'y1)
-//│   'x#¬Tru ∨ (  'x1#Fls ∨  ∧ Fls<:'res ∧ ⊥<:'eff) ∧ (  'x1#¬(Tru ∨ Fls) ∨ (  'y1#Fls ∨  ∧ Fls<:'res ∧ ⊥<:'eff) ∧ (  'x1#¬(Tru ∨ Fls) ∨ 'y1#¬Fls ∨  ∧ (¬Tru ∧ ¬Fls) ∧ 'x1<:'x1 ∧ ¬Fls ∧ 'y1<:'y1 ∧ ⊤<:⊥) ∧ (  'y1#¬(Tru ∨ Fls) ∨ 'x1#¬Fls ∨  ∧ ¬Fls ∧ 'x1<:'x1 ∧ (¬Tru ∧ ¬Fls) ∧ 'y1<:'y1 ∧ ⊤<:⊥) ∧ (¬Tru ∧ ¬Fls) ∧ 'x1<:'x1 ∧ 'y1<:'y1) ∧ (  'y1#¬Tru ∨ 'x1#¬Fls ∨ (  'y1#Fls ∨  ∧ Fls<:'res ∧ ⊥<:'eff) ∧ (  'x1#¬(Tru ∨ Fls) ∨ 'y1#¬Fls ∨  ∧ (¬Tru ∧ ¬Fls) ∧ 'x1<:'x1 ∧ ¬Fls ∧ 'y1<:'y1 ∧ ⊤<:⊥) ∧ (  'y1#¬(Tru ∨ Fls) ∨ 'x1#¬Fls ∨  ∧ ¬Fls ∧ 'x1<:'x1 ∧ (¬Tru ∧ ¬Fls) ∧ 'y1<:'y1 ∧ ⊤<:⊥) ∧ ¬Fls ∧ 'x1<:'x1 ∧ ¬Tru ∧ 'y1<:'y1) ∧ ¬Tru ∧ 'x<:'x1 ∧ 'y<:'y1
-//│   'y#¬Tru ∨ (  'x1#Fls ∨  ∧ Fls<:'res ∧ ⊥<:'eff) ∧ (  'x1#¬(Tru ∨ Fls) ∨ (  'y1#Fls ∨  ∧ Fls<:'res ∧ ⊥<:'eff) ∧ (  'x1#¬(Tru ∨ Fls) ∨ 'y1#¬Fls ∨  ∧ (¬Tru ∧ ¬Fls) ∧ 'x1<:'x1 ∧ ¬Fls ∧ 'y1<:'y1 ∧ ⊤<:⊥) ∧ (  'y1#¬(Tru ∨ Fls) ∨ 'x1#¬Fls ∨  ∧ ¬Fls ∧ 'x1<:'x1 ∧ (¬Tru ∧ ¬Fls) ∧ 'y1<:'y1 ∧ ⊤<:⊥) ∧ (¬Tru ∧ ¬Fls) ∧ 'x1<:'x1 ∧ 'y1<:'y1) ∧ (  'y1#¬Tru ∨ 'x1#¬Fls ∨ (  'y1#Fls ∨  ∧ Fls<:'res ∧ ⊥<:'eff) ∧ (  'x1#¬(Tru ∨ Fls) ∨ 'y1#¬Fls ∨  ∧ (¬Tru ∧ ¬Fls) ∧ 'x1<:'x1 ∧ ¬Fls ∧ 'y1<:'y1 ∧ ⊤<:⊥) ∧ (  'y1#¬(Tru ∨ Fls) ∨ 'x1#¬Fls ∨  ∧ ¬Fls ∧ 'x1<:'x1 ∧ (¬Tru ∧ ¬Fls) ∧ 'y1<:'y1 ∧ ⊤<:⊥) ∧ ¬Fls ∧ 'x1<:'x1 ∧ ¬Tru ∧ 'y1<:'y1) ∧ 'x<:'x1 ∧ ¬Tru ∧ 'y<:'y1
+//│   'x#Tru ∨ (  'y#Tru ∨ Tru <: 'res ∧ ⊥ <: 'eff) ∧ (  'y#¬Tru ∨ Tru & 'x <: 'x1 ∧ ¬Tru & 'y <: 'y1)
+//│   'x#¬Tru ∨ (  'x1#Fls ∨ Fls <: 'res ∧ ⊥ <: 'eff) ∧ (  'x1#¬(Tru | Fls) ∨ (  'y1#Fls ∨ Fls <: 'res ∧ ⊥ <: 'eff) ∧ (  'x1#¬(Tru | Fls) ∨ 'y1#¬Fls ∨ (¬Tru & ¬Fls) & 'x1 <: 'x1 ∧ ¬Fls & 'y1 <: 'y1 ∧ ⊤ <: ⊥) ∧ (  'y1#¬(Tru | Fls) ∨ 'x1#¬Fls ∨ ¬Fls & 'x1 <: 'x1 ∧ (¬Tru & ¬Fls) & 'y1 <: 'y1 ∧ ⊤ <: ⊥)(¬Tru & ¬Fls) & 'x1 <: 'x1 ∧ 'y1 <: 'y1) ∧ (  'y1#¬Tru ∨ 'x1#¬Fls ∨ (  'y1#Fls ∨ Fls <: 'res ∧ ⊥ <: 'eff) ∧ (  'x1#¬(Tru | Fls) ∨ 'y1#¬Fls ∨ (¬Tru & ¬Fls) & 'x1 <: 'x1 ∧ ¬Fls & 'y1 <: 'y1 ∧ ⊤ <: ⊥) ∧ (  'y1#¬(Tru | Fls) ∨ 'x1#¬Fls ∨ ¬Fls & 'x1 <: 'x1 ∧ (¬Tru & ¬Fls) & 'y1 <: 'y1 ∧ ⊤ <: ⊥)¬Fls & 'x1 <: 'x1 ∧ ¬Tru & 'y1 <: 'y1)¬Tru & 'x <: 'x1 ∧ 'y <: 'y1
+//│   'y#¬Tru ∨ (  'x1#Fls ∨ Fls <: 'res ∧ ⊥ <: 'eff) ∧ (  'x1#¬(Tru | Fls) ∨ (  'y1#Fls ∨ Fls <: 'res ∧ ⊥ <: 'eff) ∧ (  'x1#¬(Tru | Fls) ∨ 'y1#¬Fls ∨ (¬Tru & ¬Fls) & 'x1 <: 'x1 ∧ ¬Fls & 'y1 <: 'y1 ∧ ⊤ <: ⊥) ∧ (  'y1#¬(Tru | Fls) ∨ 'x1#¬Fls ∨ ¬Fls & 'x1 <: 'x1 ∧ (¬Tru & ¬Fls) & 'y1 <: 'y1 ∧ ⊤ <: ⊥)(¬Tru & ¬Fls) & 'x1 <: 'x1 ∧ 'y1 <: 'y1) ∧ (  'y1#¬Tru ∨ 'x1#¬Fls ∨ (  'y1#Fls ∨ Fls <: 'res ∧ ⊥ <: 'eff) ∧ (  'x1#¬(Tru | Fls) ∨ 'y1#¬Fls ∨ (¬Tru & ¬Fls) & 'x1 <: 'x1 ∧ ¬Fls & 'y1 <: 'y1 ∧ ⊤ <: ⊥) ∧ (  'y1#¬(Tru | Fls) ∨ 'x1#¬Fls ∨ ¬Fls & 'x1 <: 'x1 ∧ (¬Tru & ¬Fls) & 'y1 <: 'y1 ∧ ⊤ <: ⊥)¬Fls & 'x1 <: 'x1 ∧ ¬Tru & 'y1 <: 'y1)'x <: 'x1 ∧ ¬Tru & 'y <: 'y1
 
 test(tru, tru)
 //│ = Tru()
@@ -86,13 +86,13 @@ test(true, false)
 //│ ╔══[ERROR] Type error in boolean literal with expected type 'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
-//│ ╟── because: cannot constrain  ¬Tru ∧ 'y  <:  'y1
+//│ ╟── because: cannot constrain  ¬Tru & 'y  <:  'y1
 //│ ╟── because: cannot constrain  ¬{Tru} ∧ 'y  <:  'y1
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ ╔══[ERROR] Type error in boolean literal with expected type 'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
 //│ ╟── because: cannot constrain  Bool  <:  'y
-//│ ╟── because: cannot constrain  ¬Tru ∧ 'y  <:  'y1
+//│ ╟── because: cannot constrain  ¬Tru & 'y  <:  'y1
 //│ ╟── because: cannot constrain  ¬{Tru} ∧ 'y  <:  'y1
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ ╔══[ERROR] Type error in boolean literal with expected type 'y
@@ -112,3 +112,25 @@ test(true, false)
 //│ ╟── because: cannot constrain  Bool  <:  'y
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: ⊥
+
+
+// * Note: this version generates a large type
+
+fun test(x, y) = if
+  x is Tru and y is Tru then tru
+  x is Fls and y is Tru then fls
+  y is Fls then fls
+// test
+//│ Type: ⊤
+
+// * Note: and this one even larger
+
+fun test(x, y) = if
+  x is Tru and y is Tru then tru
+  x is Fls and y is Tru then fls
+  y is Fls then fls
+  y is Fls then fls
+// test
+//│ Type: ⊤
+
+

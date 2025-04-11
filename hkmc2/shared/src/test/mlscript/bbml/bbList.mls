@@ -63,9 +63,9 @@ fun mapi = s =>
 //│ ╟── because: cannot constrain  'f ->{'E1} List[out 'B]  <:  ((Int, A) ->{E} A) ->{E} List[out A]
 //│ ╟── because: cannot constrain  'E1  <:  E
 //│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ & 'reg  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  (¬⊥ ∧ 'r) ∧ ¬outer  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  (¬⊥ & 'r) & ¬outer  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  'r  <:  ¬(¬E ∧ ¬outer)
 //│ ╙── because: cannot constrain  ¬outer  <:  ¬(¬E ∧ ¬outer)
 //│ ╔══[ERROR] Type error in region expression with expected type ((Int, A) ->{E} A) ->{E} List[out A]
@@ -80,9 +80,9 @@ fun mapi = s =>
 //│ ╟── because: cannot constrain  'f ->{'E1} List[out 'B]  <:  ((Int, A) ->{E} A) ->{E} List[out A]
 //│ ╟── because: cannot constrain  'E1  <:  E
 //│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ & 'reg  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  (¬⊥ ∧ 'r) ∧ ¬outer  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  (¬⊥ & 'r) & ¬outer  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  'r  <:  ¬(¬E ∧ ¬outer)
 //│ ╙── because: cannot constrain  ¬outer  <:  ¬(¬E ∧ ¬outer)
 //│ ╔══[ERROR] Type error in region expression with expected type ((Int, A) ->{E} A) ->{E} List[out A]
@@ -97,9 +97,9 @@ fun mapi = s =>
 //│ ╟── because: cannot constrain  'f ->{'E1} List[out 'B]  <:  ((Int, A) ->{E} A) ->{E} List[out A]
 //│ ╟── because: cannot constrain  'E1  <:  E
 //│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ & 'reg  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  (¬⊥ ∧ 'r) ∧ ¬outer  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  (¬⊥ & 'r) & ¬outer  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  'r  <:  ¬(¬E ∧ ¬outer)
 //│ ╙── because: cannot constrain  ¬outer  <:  ¬(¬E ∧ ¬outer)
 //│ Type: ⊤
@@ -129,7 +129,7 @@ region r in
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'eff  <:  ⊥
 //│ ╟── because: cannot constrain  'eff  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ ¬'r  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ & ¬'r  <:  ¬()
 //│ ╟── because: cannot constrain    <:  'r
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ ╔══[ERROR] Type error in block
@@ -143,7 +143,7 @@ region r in
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'eff  <:  ⊥
 //│ ╟── because: cannot constrain  'eff  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ ¬'r1  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ & ¬'r1  <:  ¬()
 //│ ╟── because: cannot constrain    <:  'r1
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ ╔══[ERROR] Type error in block
@@ -157,7 +157,7 @@ region r in
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'eff  <:  ⊥
 //│ ╟── because: cannot constrain  'eff  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ ¬'r2  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ & ¬'r2  <:  ¬()
 //│ ╟── because: cannot constrain    <:  'r2
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Int

@@ -8,7 +8,7 @@ fun letreg: [E,Res] -> ([R] -> Region[R] ->{E | R} Res) ->{E} Res
 //│ Type: ⊤
 
 letreg
-//│ Type: ['E, 'Res] -> (['R] -> (Region['R]) ->{'E ∨ 'R} 'Res) ->{'E} 'Res
+//│ Type: ['E, 'Res] -> (['R] -> (Region['R]) ->{'E | 'R} 'Res) ->{'E} 'Res
 
 letreg(r => r)
 //│ Type: Region[?]
@@ -20,7 +20,7 @@ letreg(r => r).ref 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'Res  <:  Region['reg]
 //│ ╟── because: cannot constrain  'Res  <:  ¬(¬{Region['reg]})
-//│ ╟── because: cannot constrain  Region[in ¬⊥ ∧ 'R out ¬⊥ ∧ 'R1] ∧ ¬⊥  <:  ¬(¬{Region['reg]})
+//│ ╟── because: cannot constrain  Region[in ¬⊥ & 'R out ¬⊥ & 'R1] & ¬⊥  <:  ¬(¬{Region['reg]})
 //│ ╟── because: cannot constrain  'R1  <:  'reg
 //│ ╟── because: cannot constrain  'R1  <:  'reg
 //│ ╟── because: cannot constrain  'R1  <:  ¬(¬'R)
@@ -31,7 +31,7 @@ letreg(r => r).ref 1
 //│ ╔══[ERROR] Type error in block
 //│ ║  l.17: 	letreg(r => r).ref 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  'reg ∨ 'E  <:  ⊥
+//│ ╟── because: cannot constrain  'reg | 'E  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ¬()
 //│ ╟── because: cannot constrain  'R1  <:  ¬()
 //│ ╟── because: cannot constrain  'R1  <:  ¬()
@@ -49,11 +49,11 @@ letreg(r => !(r.ref 1))
 //│ ╔══[ERROR] Type error in block
 //│ ║  l.48: 	!letreg(r => r.ref 1)
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  'reg ∨ 'E  <:  ⊥
+//│ ╟── because: cannot constrain  'reg | 'E  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ¬()
 //│ ╟── because: cannot constrain  'reg1  <:  ¬()
 //│ ╟── because: cannot constrain  'reg1  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'R  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ & 'R  <:  ¬()
 //│ ╟── because: cannot constrain  'R  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Int
@@ -75,11 +75,11 @@ letreg(r => arg => r.ref arg)(0)
 //│ ╔══[ERROR] Type error in block
 //│ ║  l.74: 	letreg(r => arg => r.ref arg)(0)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  'eff ∨ 'E  <:  ⊥
+//│ ╟── because: cannot constrain  'eff | 'E  <:  ⊥
 //│ ╟── because: cannot constrain  'eff  <:  ¬()
 //│ ╟── because: cannot constrain  'reg  <:  ¬()
 //│ ╟── because: cannot constrain  'reg  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'R  <:  ¬()
+//│ ╟── because: cannot constrain  ¬⊥ & 'R  <:  ¬()
 //│ ╟── because: cannot constrain  'R  <:  ¬()
 //│ ╙── because: cannot constrain    <:  ¬()
 //│ Type: Ref['arg, ?]
@@ -108,7 +108,7 @@ letreg(r => !(r.ref 1))
 //│ ╔══[ERROR] Type error in function literal with expected type (Region[R]) ->{⊥} 'Res
 //│ ║  l.107: 	letreg(r => !(r.ref 1))
 //│ ║         	       ^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  'reg ∨ 'reg1  <:  ⊥
+//│ ╟── because: cannot constrain  'reg | 'reg1  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ¬()
 //│ ╟── because: cannot constrain  'reg1  <:  ¬()
 //│ ╟── because: cannot constrain  'reg1  <:  ¬()
@@ -116,7 +116,7 @@ letreg(r => !(r.ref 1))
 //│ ╔══[ERROR] Type error in function literal with expected type (Region[R]) ->{⊥} 'Res
 //│ ║  l.107: 	letreg(r => !(r.ref 1))
 //│ ║         	       ^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  'reg ∨ 'reg1  <:  ⊥
+//│ ╟── because: cannot constrain  'reg | 'reg1  <:  ⊥
 //│ ╟── because: cannot constrain  'reg1  <:  ¬()
 //│ ╙── because: cannot constrain  R  <:  ¬()
 //│ Type: Int

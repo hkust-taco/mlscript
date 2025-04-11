@@ -136,7 +136,7 @@ new Some((x => x) as [A] -> A -> A)
 //│   'x -> 'x <: 'A
 
 let s = new Some((x => x) as [A] -> A -> A) in let t = s.Some#value(42) in s.Some#value(false)
-//│ Type: Bool ∨ Int
+//│ Type: Bool | Int
 
 fun gen: Int -> [A] -> A -> A
 fun gen(x) =

@@ -8,7 +8,7 @@ class PrettyPrinter(output: String => Unit)(using Scope):
     case DisjSub(d, dss, cs) =>
       val g = d.iterator.map { case (x, y) => s"${x.show}#${y.show} ∨ " }.mkString
       val h = dss.iterator.map("(" + showDisjSub(_) + ")").mkString(" ∧ ")
-      val b = cs.map { case (x, y) => s" ∧ ${x.simp.show}<:${y.simp.show}"}.mkString
+      val b = cs.iterator.map{ case (x, y) => s"${x.simp.show} <: ${y.simp.show}" }.mkString(" ∧ ")
       s"  $g$h$b"
   def print(ty: GeneralType): Unit =
     output(s"Type: ${ty.show}")

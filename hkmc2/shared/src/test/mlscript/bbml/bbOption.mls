@@ -28,6 +28,6 @@ opt => opt as Option[out Int]
 //│ Type: (Option[out Int]) ->{⊥} Option[out Int]
 
 opt => (opt as Option[Int]) as Option[Int | Str]
-//│ Type: (Option[out Int ∨ Str] ∧ Option[out Int]) ->{⊥} Option[out Int ∨ Str]
+//│ Type: (Option[out Int | Str] & Option[out Int]) ->{⊥} Option[out Int | Str]
 
 
