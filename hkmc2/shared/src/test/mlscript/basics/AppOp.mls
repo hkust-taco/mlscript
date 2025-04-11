@@ -113,9 +113,6 @@ inc @ 1 . pipeInto @ inc
 //│ ╔══[ERROR] Expected 2 arguments, got 1
 //│ ║  l.112: 	1 . pipeInto of inc
 //│ ╙──       	    ^^^^^^^^
-//│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.112: 	1 . pipeInto of inc
-//│ ╙──       	    ^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
 
 (1 . pipeInto) of inc

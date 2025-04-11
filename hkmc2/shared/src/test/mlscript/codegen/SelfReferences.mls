@@ -28,9 +28,8 @@ Foo.self
 :e
 module Foo with
   val self = this
-//│ ╔══[ERROR] Functions returning module values must have explicit return types.
-//│ ║  l.30: 	  val self = this
-//│ ╙──      	      ^^^^
+//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ╙── Value must be marked as returning a 'module' in order to return a module.
 
 Foo.self
 //│ = Foo

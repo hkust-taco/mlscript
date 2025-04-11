@@ -396,6 +396,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     
     case Label(lbl, bod, rst) =>
       scope.allocateName(lbl)
+      
+      // [fixme:0] TODO check scope and allocate local variables here (see: https://github.com/hkust-taco/mlscript/pull/293#issuecomment-2792229849)
+      
       doc" # ${getVar(lbl)}: while (true) { #{ ${
         returningTerm(bod, endSemi = false)
       } # break; #}  # }${returningTerm(rst, endSemi)}"

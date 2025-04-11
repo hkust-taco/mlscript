@@ -45,9 +45,10 @@ g(123)
 
 :e
 Example |>. g(123)
-//│ ╔══[ERROR] Only module parameters may receive module arguments (values).
+//│ ╔══[ERROR] Unexpected moduleful reference.
 //│ ║  l.47: 	Example |>. g(123)
-//│ ╙──      	^^^^^^^
+//│ ║        	^^^^^^^
+//│ ╙── Module argument passed to a non-module parameter.
 //│ = [123, 456, [123, 456]]
 
 // * Passing `ex` as `this` has no effect

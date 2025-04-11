@@ -1,0 +1,92 @@
+:js
+
+
+class Foo[A]
+class Bar[B]
+class Baz
+
+
+fun foo[A](using Foo[A], A)
+
+use Foo[Baz] = new Foo
+
+
+:todo
+foo[Baz]
+//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ║  l.15: 	foo[Baz]
+//│ ║        	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.9: 	fun foo[A](using Foo[A], A)
+//│ ║       	                         ^
+//│ ╙── Expected: A; Available: Map(Sym(class:Foo) -> List((App(Sym(class:Foo),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Foo),TyTup(List(Ident(Baz))))))))
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Found unpopulated contextual argument: CtxArg(None).
+
+:todo
+foo
+//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ║  l.26: 	foo
+//│ ║        	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.9: 	fun foo[A](using Foo[A], A)
+//│ ║       	                         ^
+//│ ╙── Expected: A; Available: Map(Sym(class:Foo) -> List((App(Sym(class:Foo),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Foo),TyTup(List(Ident(Baz))))))))
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Found unpopulated contextual argument: CtxArg(None).
+
+
+fun foo[A](using Foo[A])(using A)
+
+:todo
+foo
+//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ║  l.40: 	foo
+//│ ║        	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.37: 	fun foo[A](using Foo[A])(using A)
+//│ ║        	                               ^
+//│ ╙── Expected: A; Available: Map(Sym(class:Foo) -> List((App(Sym(class:Foo),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Foo),TyTup(List(Ident(Baz))))))))
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Found unpopulated contextual argument: CtxArg(None).
+
+
+fun foo[A](using A)(using Foo[A])
+
+:todo
+foo
+//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ║  l.54: 	foo
+//│ ║        	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.51: 	fun foo[A](using A)(using Foo[A])
+//│ ║        	                 ^
+//│ ╙── Expected: A; Available: Map(Sym(class:Foo) -> List((App(Sym(class:Foo),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Foo),TyTup(List(Ident(Baz))))))))
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Found unpopulated contextual argument: CtxArg(None).
+
+
+use Foo[Bar[Baz]] = new Foo
+
+:fixme // Internal Error should never reach users
+:e
+foo
+//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ║  l.69: 	foo
+//│ ║        	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.51: 	fun foo[A](using A)(using Foo[A])
+//│ ║        	                 ^
+//│ ╙── Expected: A; Available: Map(Sym(class:Foo) -> List((App(Sym(class:Foo),List(App(Sym(class:Bar),List(Sym(class:Baz))))),Instance(member:instance$App(Ident(Foo),TyTup(List(App(Ident(Bar),TyTup(List(Ident(Baz))))))))), (App(Sym(class:Foo),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Foo),TyTup(List(Ident(Baz))))))))
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Found unpopulated contextual argument: CtxArg(None).
+
+use Bar[Baz] = new Bar
+
+:todo
+foo
+//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ║  l.82: 	foo
+//│ ║        	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.51: 	fun foo[A](using A)(using Foo[A])
+//│ ║        	                 ^
+//│ ╙── Expected: A; Available: Map(Sym(class:Foo) -> List((App(Sym(class:Foo),List(App(Sym(class:Bar),List(Sym(class:Baz))))),Instance(member:instance$App(Ident(Foo),TyTup(List(App(Ident(Bar),TyTup(List(Ident(Baz))))))))), (App(Sym(class:Foo),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Foo),TyTup(List(Ident(Baz))))))), Sym(class:Bar) -> List((App(Sym(class:Bar),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Bar),TyTup(List(Ident(Baz))))))))
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Found unpopulated contextual argument: CtxArg(None).
+
+

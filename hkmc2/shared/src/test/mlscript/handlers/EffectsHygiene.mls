@@ -1,10 +1,11 @@
 :js
 :effectHandlers
 
+module M
 
 // * Notice that the two module definitions are lifted to the top of the block.
 :sjs
-fun foo(h) =
+fun foo(h): module M =
   if false then
     module A
     A

@@ -159,3 +159,20 @@ M.foldInt(2, 3, 4)
 use Monoid[Int] = IntAddMonoid
 M.fold(1, 2, 3)
 //│ = 6
+
+
+// Generalized Module Methods
+
+use Int = 42
+
+:expect 42
+fun foo()(using i: Int) = i
+foo()
+//│ = 42
+
+:expect 42
+fun main() =
+  fun foo()(using i: Int) = i
+  foo()
+main()
+//│ = 42

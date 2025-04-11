@@ -1,7 +1,7 @@
 :js
 // The annotations for the following expressions are not supported for now.
 
-module debug
+object debug
 
 import "../../../mlscript-compile/Str.mls"
 

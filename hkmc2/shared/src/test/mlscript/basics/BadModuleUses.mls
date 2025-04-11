@@ -4,13 +4,20 @@
 module M with
   fun mtd() = 42
 
+:e
 module Example with
   fun foo(): module null = M
+//│ ╔══[ERROR] Expected a module, found non-moduleful null literal.
+//│ ╙── Function marked as returning a 'module' must have a module return type.
 
 module Example with
   fun foo(): module M = M
 
+:e
 let m = Example.foo()
+//│ ╔══[ERROR] Unexpected moduleful application.
+//│ ║  l.17: 	let m = Example.foo()
+//│ ╙──      	        ^^^^^^^^^^^^^
 //│ m = M
 
 :todo // FIXME: should be an error
@@ -24,51 +31,72 @@ Example.foo()
 
 :e
 id(Example.foo())
-//│ ╔══[ERROR] Only module parameters may receive module arguments (values).
-//│ ║  l.26: 	id(Example.foo())
-//│ ╙──      	   ^^^^^^^^^^^^^
+//│ ╔══[ERROR] Unexpected moduleful application.
+//│ ║  l.33: 	id(Example.foo())
+//│ ║        	   ^^^^^^^^^^^^^
+//│ ╙── Module argument passed to a non-module parameter.
 //│ = M
 
 Example.foo().mtd()
 //│ = 42
 
+:e
 Example.foo() + 1
+//│ ╔══[ERROR] Unexpected moduleful application.
+//│ ║  l.44: 	Example.foo() + 1
+//│ ╙──      	^^^^^^^^^^^^^
 //│ = "M1"
 
-:todo // FIXME: should be an error
 :e
 M + 1
+//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ║  l.51: 	M + 1
+//│ ╙──      	^
 //│ = "M1"
 
 :e
 M |> id
-//│ ╔══[ERROR] Only module parameters may receive module arguments (values).
-//│ ║  l.44: 	M |> id
-//│ ╙──      	^
+//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ║  l.58: 	M |> id
+//│ ║        	^
+//│ ╙── Module argument passed to a non-module parameter.
 //│ = M
 
 :e
 id <| M
-//│ ╔══[ERROR] Only module parameters may receive module arguments (values).
-//│ ║  l.51: 	id <| M
-//│ ╙──      	      ^
+//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ║  l.66: 	id <| M
+//│ ║        	      ^
+//│ ╙── Module argument passed to a non-module parameter.
 //│ = M
 
 fun (+) lol(a, b) = [a, b]
 
 :e
 M + 1
-//│ ╔══[ERROR] Only module parameters may receive module arguments (values).
-//│ ║  l.60: 	M + 1
-//│ ╙──      	^
+//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ║  l.76: 	M + 1
+//│ ║        	^
+//│ ╙── Module argument passed to a non-module parameter.
 //│ = [M, 1]
 
-
-
-:todo // FIXME: should be an error
 :e
 let m = M
+//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ║  l.84: 	let m = M
+//│ ╙──      	        ^
 //│ m = M
 
+
+:e
+module A with
+  fun f() = 2
+module B with
+  val a: module A = A
+print(B.a)
+//│ ╔══[ERROR] Unexpected moduleful selection.
+//│ ║  l.96: 	print(B.a)
+//│ ╙──      	      ^^^
+//│ > A
 
 

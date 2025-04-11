@@ -44,14 +44,14 @@ fun returnn(s, consume) = consume(reverse(s))
 
 :...
 //│ ————————————————————————————————————————————————————————————————————————————————
-fun deletee(n, s, l, consume) = if n > 0 then writeString(nofibStringToList("BS_BS"), loop(n - 1, tail(s), l, consume)) else ringBell(loop(0, nofibStringToList(""), l, consume))
+fun deletee(n, s, l, consume, d) = if n > 0 then writeString(nofibStringToList("BS_BS"), loop(n - 1, tail(s), l, consume), d) else ringBell(loop(0, nofibStringToList(""), l, consume), d)
 
 fun loop(n, s, l, consume) = x => readChar of
   returnn(s, consume)
   (c, d) => if
-            c == "B" then deletee(n, s, l, consume) 
-            c == "D" then deletee(n, s, l, consume)
-            c == "`" then returnn(s, consume)
+            c == "B" then deletee(n, s, l, consume, d) 
+            c == "D" then deletee(n, s, l, consume, d)
+            c == "`" then returnn(s, consume)(d)
             n < l then writeChar(c, loop(n + 1, c :: s, l, consume), d)
             else ringBell(loop(n, s, l, consume), d)
   x

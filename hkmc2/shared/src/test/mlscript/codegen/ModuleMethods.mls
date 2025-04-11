@@ -27,9 +27,10 @@ s(123)
 
 :e
 Example |>. s(123)
-//│ ╔══[ERROR] Only module parameters may receive module arguments (values).
+//│ ╔══[ERROR] Unexpected moduleful reference.
 //│ ║  l.29: 	Example |>. s(123)
-//│ ╙──      	^^^^^^^
+//│ ║        	^^^^^^^
+//│ ╙── Module argument passed to a non-module parameter.
 //│ = [123, 456]
 
 

@@ -129,22 +129,6 @@ fun pseudocorner(arg, q6, q7) = quartet(corner2, side2, (a, b, c) => rot(side2, 
 
 fun pseudolimit(arg, p2, p3) = cycle_(pseudocorner, arg, p2, p3)
 
-fun nonet(p1, p2, p3, p4, p5, p6, p7, p8, p9, arg1, arg2) =
-  above of
-    1
-    2
-    (b5, b6, b7) => beside(1, 2, p1, (b5, b6, b7) => beside(1, 1, p2, p3, b5, b6, b7), b5, b6, b7)
-    (a1, a2, a3) => above of
-      1
-      1
-      (b5, b6, b7) => beside(1, 2, p4, (b5, b6, b7) => beside(1, 1, p5, p6, b5, b6, b7), b5, b6, b7)
-      (b5, b6, b7) => beside(1, 2, p7, (b5, b6, b7) => beside(1, 1, p8, p9, b5, b6, b7), b5, b6, b7)
-      a1
-      a2
-      a3
-    arg1
-    arg2
-
 fun showFourTupleofInt(a_b_c_d) = if a_b_c_d is [a, b, c, d] then
   nofibStringToList("(") +:
   nofibStringToList(stringOfInt(a)) +:

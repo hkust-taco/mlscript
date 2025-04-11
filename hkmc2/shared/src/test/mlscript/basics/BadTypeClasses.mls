@@ -11,12 +11,12 @@ module M with
 
 :e
 M.f
-//│ ╔══[ERROR] Missing instance for contextual parameter Int
-//│ ║  l.10: 	  fun f(using Int)
-//│ ║        	              ^^^
-//│ ╟── Required by module method application at: 
+//│ ╔══[ERROR] Missing instance for contextual parameter of type `Int` in this call
 //│ ║  l.13: 	M.f
 //│ ║        	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.10: 	  fun f(using Int)
+//│ ║        	              ^^^
 //│ ╙── Expected: Int; Available: Map()
 
 :e

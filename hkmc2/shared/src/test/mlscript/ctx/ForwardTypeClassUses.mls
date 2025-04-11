@@ -1,0 +1,71 @@
+:js
+
+
+use Str = "ok"
+
+fun bar = M.foo()
+module M with
+  fun foo()(using s: Str) = s
+
+:expect "ok"
+bar
+//│ = "ok"
+
+
+fun bar = M.getN.foo()
+module M with
+  fun getN: module N = N
+module N with
+  fun foo()(using Str) = 1
+
+:fixme
+:expect "ok"
+bar
+//│ ═══[RUNTIME ERROR] Expected: '"ok"', got: '[function]'
+//│ = [function]
+
+
+:fixme // Internal Error should never reach users
+:e
+fun test = M.mtd()
+module M with
+  fun mtd()(using n: Int) = n
+module Example with
+  fun foo(): module M = M
+test
+//│ ╔══[ERROR] Missing instance for contextual parameter of type `Int` in this call
+//│ ║  l.30: 	fun test = M.mtd()
+//│ ║        	           ^^^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.32: 	  fun mtd()(using n: Int) = n
+//│ ║        	                  ^^^^^^
+//│ ╙── Expected: Int; Available: Map(Sym(class:Str) -> List((Sym(class:Str),Instance(member:instance$Ident(Str)))))
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Found unpopulated contextual argument: CtxArg(None).
+
+
+:todo // FIXME lack of error
+:e
+fun test = Example.foo().mtd()
+module M with
+  fun mtd()(using n: Int) = n
+module Example with
+  fun foo(): module M = M
+test
+//│ = [function]
+
+
+use Int = 42
+
+fun test = Example.foo().mtd()
+module M with
+  fun mtd()(using n: Int) = n
+module Example with
+  fun foo(): module M = M
+
+:fixme
+:expect 42
+test
+//│ ═══[RUNTIME ERROR] Expected: '42', got: '[function]'
+//│ = [function]
+
+

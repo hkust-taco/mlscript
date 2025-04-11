@@ -20,15 +20,23 @@ f(2, 3)
 :expect NaN
 :ssjs
 :noSanityCheck
+:e
 fun f2(x, y) = x + y
 f2(2)
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.25: 	f2(2)
+//│ ╙──      	^^
 //│ JS:
 //│ f2 = function f2(x, y) { return x + y }; block$res2 = f2(2); undefined
 //│ = NaN
 
 :ssjs
 :re
+:e
 f(2)
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.36: 	f(2)
+//│ ╙──      	^
 //│ JS:
 //│ block$res3 = runtime.checkCall(f(2)); undefined
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
@@ -36,8 +44,12 @@ f(2)
 
 :ssjs
 :re
+:e
 fun f(x)(y, z) = x + y + z
 f(3)(4)
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.49: 	f(3)(4)
+//│ ╙──      	^
 //│ JS:
 //│ f1 = function f(...args) {
 //│   globalThis.Predef.checkArgs("f", 1, true, args.length);

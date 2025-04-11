@@ -5,7 +5,7 @@ import "../../mlscript-compile/Stack.mls"
 open Stack
 
 class Generator with
-  fun produce(result: Stack[Int]): ()
+  fun produce(result: Stack.T[Int]): ()
 
 fun (++) concat(l1, l2) =
   if l1 is 
