@@ -500,11 +500,11 @@ extends Importer:
     case tree @ App(lhs, OpBlock(ops)) =>
       ops.foldLeft(term(lhs)):
         case (acc, (op, arg)) =>
-          val sym = FlowSymbol("‹app-res›")
+          val sym = FlowSymbol.app
           val tup = new Tup(Nil) // TODO
           Term.App(term(op), Term.Tup(PlainFld(acc) :: PlainFld(term(arg)) :: Nil)(tup))(tree, sym)
     case tree @ App(lhs, rhs) =>
-      val sym = FlowSymbol("‹app-res›")
+      val sym = FlowSymbol.app
       val lt = term(lhs, inAppPrefix = true)
       val rt = term(rhs)
       maybeApp:
@@ -561,7 +561,7 @@ extends Importer:
         S:
           Param(FldFlags.empty, args, N)
       )
-      val rs = FlowSymbol("‹app-res›")
+      val rs = FlowSymbol.app
       Term.Lam(ps,
         Term.App(Term.SelProj(self.ref(), c, nme)(f), args.ref())(
           Tree.App(nme, Tree.Tup(Nil)) // FIXME
@@ -612,7 +612,7 @@ extends Importer:
       ctx.getRetHandler match
       case ReturnHandler.Required(sym) =>
         tl.log(s"Non-local return: $sym")
-        val rs = FlowSymbol("‹app-res›")
+        val rs = FlowSymbol.app
         val retMtdTree = new Tree.Ident("ret")
         val argTree = new Tree.Tup(body :: Nil)
         val dummyIdent = new Tree.Ident("return").withLoc(kwLoc)
@@ -672,13 +672,13 @@ extends Importer:
         // * TODO would be better to keep the fixity of applications part of the Tree repr.
         case (ap @ App(f: Ident, tup @ Tup(lhs :: args))) :: trees if !f.name.head.isLetter =>
           val res = go(acc, lhs :: Nil)
-          val sym = FlowSymbol("‹app-res›")
+          val sym = FlowSymbol.app
           val fl = Fld(FldFlags.empty, res, N)
           val app = Term.App(term(f, inAppPrefix = true), Term.Tup(
             fl :: args.map(fld))(tup))(ap, sym)
           go(app, trees)
         case (ap @ App(f, tup @ Tup(args))) :: trees =>
-          val sym = FlowSymbol("‹app-res›")
+          val sym = FlowSymbol.app
           go(Term.App(term(f, inAppPrefix = true),
               Term.Tup(Fld(FldFlags.empty, acc, N) :: args.map(fld))(tup)
             )(ap, sym), trees)
@@ -741,7 +741,7 @@ extends Importer:
         val appTree = new Tree.App(Tree.Empty(), Tree.Empty())
         val tupTree = new Tree.Tup(Nil)
         val args = Term.Tup(ps.ps.map(_ => CtxArgImpl()))(tupTree)
-        Term.App(zip(t, pss), args)(appTree, FlowSymbol("‹app-res›"))
+        Term.App(zip(t, pss), args)(appTree, FlowSymbol.app)
       case (t @ Term.App(lhs, rhs), ps :: pss) =>
         Term.App(zip(lhs, pss), rhs)(t.tree, t.resSym)
       case (t, params :: pRest) =>

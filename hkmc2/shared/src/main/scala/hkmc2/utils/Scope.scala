@@ -23,7 +23,7 @@ import hkmc2.codegen.js.JSBuilder
   * When `curThis` is Some(Some(sym)), it means the scope rebinds `this`
   * to an inner symbol (e.g., class or module). */
 class Scope
-    (val parent: Opt[Scope], val curThis: Opt[Opt[InnerSymbol]], val bindings: MutMap[Local, Str])
+    (val parent: Opt[Scope], val curThis: Opt[Opt[InnerSymbol]], val bindings: MutMap[Local, Str], escapeChars: Bool)
     (using State):
   
   private var thisProxyAccessed = false
@@ -65,14 +65,14 @@ class Scope
       case S(S(`thisSym`)) => thisProxy
       case _ => parent.fold(thisError(thisSym))(_.findThisProxy_!(thisSym))
   
-  def nest: Scope = Scope(Some(this), N, MutMap.empty)
+  def nest: Scope = Scope(Some(this), N, MutMap.empty, escapeChars = escapeChars)
   
   def getThisScope: Opt[Scope] = curThis.fold(parent.flatMap(_.getThisScope))(_ => S(this))
   
   def getOuterThisScope: Opt[Scope] = parent.flatMap(_.getThisScope)
   
   def nestRebindThis[R](thisSym: Opt[InnerSymbol])(k: Scope ?=> R): (Opt[Str], R) =
-    val nested = Scope(Some(this), S(thisSym), MutMap.empty)
+    val nested = Scope(Some(this), S(thisSym), MutMap.empty, escapeChars = escapeChars)
     val res = k(using nested)
     getOuterThisScope match
     case N => (N, res)
@@ -107,7 +107,7 @@ class Scope
         prefix + tmp.nameHints.head
       case _ => if l.nme.isEmpty && prefix.isEmpty then "tmp" else prefix + l.nme
     
-    val realBase = Scope.replaceInvalidCharacters(base)
+    val realBase = if escapeChars then Scope.replaceInvalidCharacters(base) else base
     
     val name =
       // Try just realBase.
@@ -126,7 +126,10 @@ object Scope:
   def scope(using scp: Scope): Scope = scp
   
   def empty(using State): Scope =
-    Scope(N, S(S(State.globalThisSymbol)), MutMap.empty)
+    Scope(N, S(S(State.globalThisSymbol)), MutMap.empty, escapeChars = true)
+  
+  def reallyEmpty(using State): Scope =
+    Scope(N, N, MutMap.empty, escapeChars = false)
   
   def replaceInvalidCharacters(str: Str): Str =
     str.iterator.map:

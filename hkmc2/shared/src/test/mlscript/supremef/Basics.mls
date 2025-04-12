@@ -1,0 +1,167 @@
+:js
+
+:global
+:supreme-f
+// :d
+// :todo
+
+
+
+1
+//│ : 1
+//│ ====== (1) ======
+//│ Cons:   
+//│ Term: 1
+//│ = 1
+
+
+:re
+:tt
+1(2)
+//│ SupremeF Type: Inf of app^692
+//│ : ∀app. (1 ≤ 2 -> app) => app
+//│ ====== (1) ======
+//│  Constr:
+//│   ctx = Bind:
+//│     ctx = Empty
+//│     sym = app^692
+//│   cst = Constraint:
+//│     in = Base of Lit of IntLit of 1
+//│     out = App:
+//│       lhs = Base of Lit of IntLit of 2
+//│       rhs = app^692
+//│ Cons:   app, 1 ≤ 2 -> app
+//│ Term: let app = 1 2 in app
+//│ ====== (2) ======
+//│  Err of Constraint:
+//│   in = Base of Lit of IntLit of 1
+//│   out = App:
+//│     lhs = Base of Lit of IntLit of 2
+//│     rhs = app^692
+//│ Cons:   ERROR: 1 ≤ 2 -> app
+//│ Term: ‹error›
+//│ ═══[RUNTIME ERROR] TypeError: 1 is not a function
+
+
+x => x
+//│ : ∀x. x -> x
+//│ ====== (1) ======
+//│ Cons:   x
+//│ Term: λx. x
+//│ = [function]
+
+(x => x)(42)
+//│ : ∀x. ∀app. (x -> x ≤ 42 -> app) => app
+//│ ====== (1) ======
+//│ Cons:   x, app, x -> x ≤ 42 -> app
+//│ Term: let app = (λx. x) 42 in app
+//│ ====== (2) ======
+//│ Cons:   x, app, 42 ≤ x, x ≤ app
+//│ Term: let x = 42 in let app = x in app
+//│ ====== (3) ======
+//│ Cons:   app, 42 ≤ app
+//│ Term: let app = 42 in app
+//│ = 42
+
+(x => x)(y => y)
+//│ : ∀x. ∀app. (x -> x ≤ (∀y. y -> y) -> app) => app
+//│ ====== (1) ======
+//│ Cons:   x, app, x -> x ≤ (∀y. y -> y) -> app
+//│ Term: let app = (λx. x) (λy. y) in app
+//│ ====== (2) ======
+//│ Cons:   x, app, ∀y. y -> y ≤ x, x ≤ app
+//│ Term: let x = λy. y in let app = x in app
+//│ ====== (3) ======
+//│ Cons:   app, ∀y. y -> y ≤ app
+//│ Term: let app = λy. y in app
+//│ = [function]
+
+(x => x)(y => y)(42)
+//│ : ∀x. ∀app. (x -> x ≤ (∀y. y -> y) -> app) => ∀app1. (app ≤ 42 -> app1) => app1
+//│ ====== (1) ======
+//│ Cons:   x, app, x -> x ≤ (∀y. y -> y) -> app, app1, app ≤ 42 -> app1
+//│ Term: let app = (λx. x) (λy. y) in let app1 = app 42 in app1
+//│ ====== (2) ======
+//│ Cons:   x, app, ∀y. y -> y ≤ x, x ≤ app, app1, app ≤ 42 -> app1
+//│ Term: let x = λy. y in let app = x in let app1 = app 42 in app1
+//│ ====== (3) ======
+//│ Cons:   x, app, ∀y. y -> y ≤ x, x ≤ app, app1, x ≤ 42 -> app1
+//│ Term: let x = λy. y in let app = x in let app1 = x 42 in app1
+//│ ====== (4) ======
+//│ Cons:   app1, ∀y. y -> y ≤ 42 -> app1
+//│ Term: let app1 = (λy. y) 42 in app1
+//│ ====== (5) ======
+//│ Cons:   app1, y1 -> y1 ≤ 42 -> app1
+//│ Term: let app1 = (λy1. y1) 42 in app1
+//│ ====== (6) ======
+//│ Cons:   app1, 42 ≤ y1, y1 ≤ app1
+//│ Term: let y1 = 42 in let app1 = y1 in app1
+//│ ====== (7) ======
+//│ Cons:   app1, 42 ≤ app1
+//│ Term: let app1 = 42 in app1
+//│ = 42
+
+(x => x(x))(y => y)(42)
+//│ : ∀x. ∀app. (x -> ∀app1. (x ≤ x -> app1) => app1 ≤ (∀y. y -> y) -> app) => ∀app2. (app ≤ 42 -> app2) => app2
+//│ ====== (1) ======
+//│ Cons:   x, app, x -> ∀app1. (x ≤ x -> app1) => app1 ≤ (∀y. y -> y) -> app, app2, app ≤ 42 -> app2
+//│ Term: let app = (λx. let app1 = x x in app1) (λy. y) in let app2 = app 42 in app2
+//│ ====== (2) ======
+//│ Cons:   x, app, ∀y. y -> y ≤ x, ∀app1. (x ≤ x -> app1) => app1 ≤ app, app2, app ≤ 42 -> app2
+//│ Term: let x = λy. y in let app = let app1 = x x in app1 in let app2 = app 42 in app2
+//│ ====== (3) ======
+//│ Cons:   x, ∀y. y -> y ≤ x, app2, ∀app1. (x ≤ x -> app1) => app1 ≤ 42 -> app2
+//│ Term: let x = λy. y in let app2 = let app1 = x x in app1 42 in app2
+//│ ====== (4) ======
+//│ Cons:   x, ∀y. y -> y ≤ x, app2, (x ≤ x -> app3) => app3 ≤ 42 -> app2
+//│ Term: let x = λy. y in let app2 = let app3 = x x in app3 42 in app2
+//│ ====== (5) ======
+//│ Cons:   x, ∀y. y -> y ≤ x, app2, x ≤ x -> app3, app3 ≤ 42 -> app2
+//│ Term: let x = λy. y in let app3 = x x in let app2 = app3 42 in app2
+//│ ====== (6) ======
+//│ Cons:   x, ∀y. y -> y ≤ x, app2, ∀y. y -> y ≤ x -> app3, app3 ≤ 42 -> app2
+//│ Term: let x = λy. y in let app3 = (λy. y) x in let app2 = app3 42 in app2
+//│ ====== (7) ======
+//│ Cons:   x, ∀y. y -> y ≤ x, app2, y1 -> y1 ≤ x -> app3, app3 ≤ 42 -> app2
+//│ Term: let x = λy. y in let app3 = (λy1. y1) x in let app2 = app3 42 in app2
+//│ ====== (8) ======
+//│ Cons:   x, ∀y. y -> y ≤ x, app2, x ≤ y1, y1 ≤ app3, app3 ≤ 42 -> app2
+//│ Term: let x = λy. y in let y1 = x in let app3 = y1 in let app2 = app3 42 in app2
+//│ ====== (9) ======
+//│ Cons:   x, ∀y. y -> y ≤ x, app2, x ≤ y1, y1 ≤ app3, y1 ≤ 42 -> app2
+//│ Term: let x = λy. y in let y1 = x in let app3 = y1 in let app2 = y1 42 in app2
+//│ ====== (10) ======
+//│ Cons:   x, ∀y. y -> y ≤ x, app2, x ≤ y1, x ≤ 42 -> app2
+//│ Term: let x = λy. y in let y1 = x in let app2 = x 42 in app2
+//│ ====== (11) ======
+//│ Cons:   app2, ∀y. y -> y ≤ 42 -> app2
+//│ Term: let app2 = (λy. y) 42 in app2
+//│ ====== (12) ======
+//│ Cons:   app2, y2 -> y2 ≤ 42 -> app2
+//│ Term: let app2 = (λy2. y2) 42 in app2
+//│ ====== (13) ======
+//│ Cons:   app2, 42 ≤ y2, y2 ≤ app2
+//│ Term: let y2 = 42 in let app2 = y2 in app2
+//│ ====== (14) ======
+//│ Cons:   app2, 42 ≤ app2
+//│ Term: let app2 = 42 in app2
+//│ = 42
+
+
+thunk => (x => x(x))(y => y(y))
+//│ : ∀thunk. thunk -> ∀x. ∀app. (x -> ∀app1. (x ≤ x -> app1) =>
+//│   app1 ≤ (∀y. y -> ∀app2. (y ≤ y -> app2) =>
+//│   app2) -> app) =>
+//│   app
+//│ ====== (1) ======
+//│ Cons:   thunk
+//│ Term: λthunk. let app = (λx. let app1 = x x in app1) (λy. let app2 = y y in app2) in app
+//│ = [function]
+
+
+// * As expected, runs out of fuel
+// :re
+// (x => x(x))(y => y(y))(1)
+
+
+

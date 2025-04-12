@@ -85,6 +85,10 @@ class FlowSymbol(label: Str)(using State) extends Symbol:
 
   def subst(using s: SymbolSubst): FlowSymbol = s.mapFlowSym(this)
 
+object FlowSymbol:
+  def app(using State): FlowSymbol = new FlowSymbol("app")
+end FlowSymbol
+
 
 sealed trait LocalSymbol extends Symbol:
   def subst(using s: SymbolSubst): LocalSymbol

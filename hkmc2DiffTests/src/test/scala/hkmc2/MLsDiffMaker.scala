@@ -51,6 +51,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   val parseOnly = NullaryCommand("parseOnly")
   
   val typeCheck = FlagCommand(false, "typeCheck")
+  val supremeF = FlagCommand(false, "supreme-f")
+  val showTypeAsTree = DebugTreeCommand("tt")
   
   
   // * Compiler configuration
@@ -263,5 +265,43 @@ abstract class MLsDiffMaker extends DiffMaker:
       val typer = typing.TypeChecker()
       val ty = typer.typeProd(trm)
       output(s"Type: ${ty}")
+    if supremeF.isSet then
+      import typing.*
+      import typing.supremef.*
+      val typer = Typer()
+      given supremef.Ctx = supremef.Ctx(Map.empty)
+      var (ty, cs) = typer.typeCheck(trm)
+      locally:
+        // given Scope = Scope.empty
+        // given Scope =
+        //   import scala.collection.mutable.{Map => MutMap}
+        //   new Scope(N, N, MutMap.empty, escapeChars = false)
+        given Scope = Scope.reallyEmpty
+        // given TL = new TraceLogger:
+        //   // override def doTrace = dbgResolving.isSet
+        //   override def emitDbg(str: String): Unit = output(str)
+        val fuel = 50
+        var iter = 0
+        showTypeAsTree.get.foreach: post =>
+          output(s"SupremeF Type: ${ty.showAsTree(using post)}")
+        // output(s": ${ty.showAsType.mkString(120)}")
+        output(s": ${cs.quantify(ty).showAsType.mkString(120)}")
+        while iter < fuel do
+          iter += 1
+          output(s"====== (${iter}) ======")
+          if tl.doTrace then output("Pregc " + cs.show.mkString(120))
+          cs = cs.gc(ty)
+          showTypeAsTree.get.foreach: post =>
+            // output(s"====== (${iter}) ======\n ${cs.showAsTree(using post)}")
+            output(s" ${cs.showAsTree(using post)}")
+          // output(s"${cs.quantify(ty).showAsType.mkString(120)}")
+          output("Cons: " + cs.show.mkString(120))
+          output("Term: " + cs.quantify(ty).showAsTerm.mkString(120))
+          cs.step match
+          case N => iter = fuel + 1
+          case S(ncs) => cs = ncs
+        if iter == fuel then
+          output(s"/!!\\ Warning: reached fuel limit ($fuel) in SupremeF /!!\\")
+      
   
 
