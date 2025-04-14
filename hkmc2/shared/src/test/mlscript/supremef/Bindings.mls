@@ -1,0 +1,39 @@
+:js
+
+:global
+:supreme-f
+
+
+
+let id(x) = x
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: hkmc2.typing.supremef.Typer.go$3(SupremeF.scala:427)
+//│ 	at: hkmc2.typing.supremef.Typer.typeCheck(SupremeF.scala:428)
+//│ 	at: hkmc2.MLsDiffMaker.processTerm(MLsDiffMaker.scala:273)
+//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:58)
+//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
+//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:37)
+//│ 	at: hkmc2.MLsDiffMaker.processTrees(MLsDiffMaker.scala:259)
+//│ 	at: hkmc2.MLsDiffMaker.processOrigin(MLsDiffMaker.scala:222)
+//│ 	at: hkmc2.DiffMaker.processBlock(DiffMaker.scala:215)
+
+let a = 1
+let b = 2
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: hkmc2.typing.supremef.Typer.go$3(SupremeF.scala:427)
+//│ 	at: hkmc2.typing.supremef.Typer.typeCheck(SupremeF.scala:428)
+//│ 	at: hkmc2.MLsDiffMaker.processTerm(MLsDiffMaker.scala:273)
+//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:58)
+//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
+//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:37)
+//│ 	at: hkmc2.MLsDiffMaker.processTrees(MLsDiffMaker.scala:259)
+//│ 	at: hkmc2.MLsDiffMaker.processOrigin(MLsDiffMaker.scala:222)
+//│ 	at: hkmc2.DiffMaker.processBlock(DiffMaker.scala:215)
+
+
+
+

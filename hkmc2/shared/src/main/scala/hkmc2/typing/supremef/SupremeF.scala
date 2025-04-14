@@ -407,6 +407,26 @@ class Typer(using State, TL, Raise):
         typeCheck(bod)
       val lamTy = PosType.Lam(param, bodCtx.quantify(bodTy))
       (lamTy, CCtx.Empty + param)
+    // case blk @ Term.Blk(LetDecl(sym, _) :: DefineVar(sym2, rhs) :: Nil, body)
+    // if sym2 is sym => // TODO: more than one!!
+    //   ???
+    case Term.Blk(stats, res) =>
+      def go(stats: Ls[Statement]): (PosType, CCtx) = stats match
+        case Nil => typeCheck(res)
+        // case (term: Term) :: stats =>
+        //   effBuff += typeCheck(term)._2
+        //   go(stats)
+        case LetDecl(sym, _) :: DefineVar(sym2, rhs) :: stats =>
+          require(sym2 is sym)
+          val (rhsTy, rhsCtx) = typeCheck(rhs)
+          // val (bodTy, bodCtx) =
+          //   given Ctx = ctx + (p.sym -> PosType.Inf(param))
+          //   typeCheck(bod)
+          // ctx += sym -> rhsTy
+          // go(stats)
+          ???
+      go(stats)
+    
   
 end Typer
 

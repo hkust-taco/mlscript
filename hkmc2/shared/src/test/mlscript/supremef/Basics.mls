@@ -147,6 +147,35 @@ x => x
 //│ Term: let app2 = 42 in app2
 //│ = 42
 
+// TODO not fully reduced 
+:re
+(x => x)(1(2))
+//│ : ∀x. ∀app. (x -> x ≤ (∀app1. (1 ≤ 2 -> app1) => app1) -> app) => app
+//│ ====== (1) ======
+//│ Cons:   x, app, x -> x ≤ (∀app1. (1 ≤ 2 -> app1) => app1) -> app
+//│ Term: let app = (λx. x) let app1 = 1 2 in app1 in app
+//│ ====== (2) ======
+//│ Cons:   x, app, ∀app1. (1 ≤ 2 -> app1) => app1 ≤ x, x ≤ app
+//│ Term: let x = let app1 = 1 2 in app1 in let app = x in app
+//│ ====== (3) ======
+//│ Cons:   app, ∀app1. (1 ≤ 2 -> app1) => app1 ≤ app
+//│ Term: let app = let app1 = 1 2 in app1 in app
+//│ ═══[RUNTIME ERROR] TypeError: 1 is not a function
+
+// TODO not fully reduced 
+(x => x)((y => y)(42))
+//│ : ∀x. ∀app. (x -> x ≤ (∀y. ∀app1. (y -> y ≤ 42 -> app1) => app1) -> app) => app
+//│ ====== (1) ======
+//│ Cons:   x, app, x -> x ≤ (∀y. ∀app1. (y -> y ≤ 42 -> app1) => app1) -> app
+//│ Term: let app = (λx. x) let app1 = (λy. y) 42 in app1 in app
+//│ ====== (2) ======
+//│ Cons:   x, app, ∀y. ∀app1. (y -> y ≤ 42 -> app1) => app1 ≤ x, x ≤ app
+//│ Term: let x = let app1 = (λy. y) 42 in app1 in let app = x in app
+//│ ====== (3) ======
+//│ Cons:   app, ∀y. ∀app1. (y -> y ≤ 42 -> app1) => app1 ≤ app
+//│ Term: let app = let app1 = (λy. y) 42 in app1 in app
+//│ = 42
+
 
 thunk => (x => x(x))(y => y(y))
 //│ : ∀thunk. thunk -> ∀x. ∀app. (x -> ∀app1. (x ≤ x -> app1) =>
