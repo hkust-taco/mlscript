@@ -19,13 +19,13 @@ fun id(x) = x
 run(x `=> id(x) `* x)
 //│ Type: 'x -> 'cde
 //│ Where:
-//│   'x#'cde1 ∨ 'x#'cde2 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
-//│   'cde1#'cde1 ∨ 'x#'cde2 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
-//│   'x#'cde1 ∨ 'cde2#'cde2 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
+//│   'x#'x1 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
+//│   'cde1#'cde1 ∨ 'x#'x1 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
+//│   'x#'x1 ∨ 'cde2#'cde2 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
 //│   'x <: 'x1
-//│   'x1#'cde1 ∨ 'x1#'cde2 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
-//│   'cde1#'cde1 ∨ 'x1#'cde2 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
-//│   'x1#'cde1 ∨ 'cde2#'cde2 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
+//│   'x1#'x1 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
+//│   'cde1#'cde1 ∨ 'x1#'x1 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
+//│   'x1#'x1 ∨ 'cde2#'cde2 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
 //│   'x1 <: 'cde1
 //│   'cde1#'cde1 ∨ 'cde2#'cde2 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
 //│   'x1 <: 'cde2
@@ -40,9 +40,9 @@ let checkedDiv = x `=> y `=> x `/. (assertNotZero(y))
 run(checkedDiv)
 //│ Type: 'x -> (Num -> 'cde)
 //│ Where:
-//│   'x#'cde1 ∨ (  'x1#Num ∨ Num <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Num ∨ Num <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Num, 1: Num}
+//│   'x#'x1 ∨ (  'x1#Num ∨ Num <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Num ∨ Num <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Num, 1: Num}
 //│   'x <: 'x1
-//│   'x1#'cde1 ∨ (  'x1#Num ∨ Num <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Num ∨ Num <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Num, 1: Num}
+//│   'x1#'x1 ∨ (  'x1#Num ∨ Num <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Num ∨ Num <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Num, 1: Num}
 //│   'x1 <: 'cde1
 //│   'cde1#'cde1 ∨ (  'x1#Num ∨ Num <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Num ∨ Num <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Num, 1: Num}
 //│   Num <: 'cde2
@@ -63,7 +63,7 @@ fun inc(dbg) =
 inc
 //│ Type: ['x, 'cde, 'cde1, 'app, 'app1, 'eff, 'cde2, 'x1] -> (CodeBase[out 'app1, ?, ?] ->{'eff} ⊤) ->{'eff} CodeBase[out 'x -> 'cde2, ⊥, ?]
 //│ Where:
-//│   'x#'cde ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde, 1: 'cde1} <: {0: Int, 1: Int}
+//│   'x#'x1 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde, 1: 'cde1} <: {0: Int, 1: Int}
 //│   'x1 <: 'cde
 //│   'cde#'cde ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde, 1: 'cde1} <: {0: Int, 1: Int}
 //│   Int <: 'cde1
@@ -71,12 +71,12 @@ inc
 //│   'app <: 'cde2
 //│   'app <: 'app1
 //│   'x <: 'x1
-//│   'x1#'cde ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde, 1: 'cde1} <: {0: Int, 1: Int}
+//│   'x1#'x1 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde, 1: 'cde1} <: {0: Int, 1: Int}
 
 inc(c => log(show(c)))
 //│ Type: CodeBase[out 'x -> 'cde, ⊥, ?]
 //│ Where:
-//│   'x1#'cde1 ∨ (  'x#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
+//│   'x1#'x ∨ (  'x#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
 //│   'x <: 'cde1
 //│   'cde1#'cde1 ∨ (  'x#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
 //│   Int <: 'cde2
@@ -84,7 +84,7 @@ inc(c => log(show(c)))
 //│   'app <: 'cde
 //│   'app <: 'app1
 //│   'x1 <: 'x
-//│   'x#'cde1 ∨ (  'x#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
+//│   'x#'x ∨ (  'x#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
 
 
 fun body: [T, C] -> (CodeBase[out Int, out T, out Any], CodeBase[out Int, out C, out Any]) -> Int -> CodeBase[out Int, out T | C, out Any]

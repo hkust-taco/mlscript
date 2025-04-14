@@ -17,7 +17,7 @@ f
 //│ Type: ['x, 'res, 'eff, 'x1] -> 'x ->{'eff} 'res
 //│ Where:
 //│   'x#Int ∨ Int <: 'res ∧ ⊥ <: 'eff
-//│   'x#¬Int ∨ (  'x1#Bool ∨ Bool & 'x1 <: 'res ∧ ⊥ <: 'eff) ∧ (  'x1#¬(Int | Bool) ∨ (¬Int & ¬Bool) & 'x1 <: 'x1 ∧ ⊤ <: ⊥)¬Int & 'x <: 'x1
+//│   'x#¬Int ∨ (  'x1#Bool ∨ Bool & 'x1 <: 'res ∧ ⊥ <: 'eff) ∧ (  'x1#¬Int & ¬Bool ∨ (¬Int & ¬Bool) & 'x1 <: 'x1 ∧ ⊤ <: ⊥)¬Int & 'x <: 'x1
 
 f(ib) as Int | Bool
 //│ Type: Int | Bool
@@ -28,12 +28,12 @@ f(f(ib))
 //│ Where:
 //│   Int <: 'x
 //│   Bool & ¬Int <: 'x
-//│   'x#¬(Int | Bool) ∨ (¬Int & ¬Bool) & 'x1 <: 'x1 ∧ ⊤ <: ⊥
+//│   'x#¬Int & ¬Bool ∨ (¬Int & ¬Bool) & 'x1 <: 'x1 ∧ ⊤ <: ⊥
 //│   ¬{Int} ∧ 'x <: 'x1
 //│   Int <: 'res
 //│   (Bool & ¬Int) & 'x <: 'res
 //│   'x1 <: ¬(Bool ∧ ¬'res)
-//│   'x1#¬(Int | Bool) ∨ (¬Int & ¬Bool) & 'x1 <: 'x1 ∧ ⊤ <: ⊥
+//│   'x1#¬Int & ¬Bool ∨ (¬Int & ¬Bool) & 'x1 <: 'x1 ∧ ⊤ <: ⊥
 
 :e
 f(si)
@@ -138,7 +138,7 @@ increv'
 //│ Type: ['x, 'res, 'eff, 'x1] -> 'x ->{'eff} 'res
 //│ Where:
 //│   'x#Int ∨ Int & 'x <: Int ∧ Int <: Int ∧ Int <: 'res ∧ ⊥ <: 'eff
-//│   'x#¬Int ∨ (  'x1#Str ∨ Str & 'x1 <: Str ∧ Str <: 'res ∧ ⊥ <: 'eff) ∧ (  'x1#¬(Int | Str) ∨ (¬Int & ¬Str) & 'x1 <: 'x1 ∧ ⊤ <: ⊥)¬Int & 'x <: 'x1
+//│   'x#¬Int ∨ (  'x1#Str ∨ Str & 'x1 <: Str ∧ Str <: 'res ∧ ⊥ <: 'eff) ∧ (  'x1#¬Str & ¬Int ∨ (¬Int & ¬Str) & 'x1 <: 'x1 ∧ ⊤ <: ⊥)¬Int & 'x <: 'x1
 
 :e
 increv(sib)
