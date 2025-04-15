@@ -304,7 +304,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             case SynthSel(s, _) => base(s)
             case _ => t
           base(f) match
-            case st.Ref(symbol) => symbol == summon[State].runtimeSymbol
+            case st.Ref(symbol) => symbol == State.runtimeSymbol
             case _ => false
         }
       ):
