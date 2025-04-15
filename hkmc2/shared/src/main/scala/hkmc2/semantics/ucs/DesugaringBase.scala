@@ -26,17 +26,17 @@ trait DesugaringBase(using state: State):
   protected lazy val matchResultClass: Ctxl[(Term.Sel | Term.SynthSel, ClassSymbol)] =
     (State.runtimeSymbol.ref().selNoSym("MatchResult", synth=true), State.matchResultClsSymbol)
 
-  /** Make a pattern looks like `runtime.MatchResult.class`. */
+  /** Make a pattern that looks like `runtime.MatchResult.class`. */
   protected def matchResultPattern(parameters: Opt[List[BlockLocalSymbol]]): Ctxl[Pattern.ClassLike] =
     val (classRef, classSym) = matchResultClass
     val classSel = Term.SynthSel(classRef, Ident("class"))(S(classSym))
     Pattern.ClassLike(classSym, classSel, parameters, false)(Empty())
 
-  /** Make a term looks like `runtime.MatchFailure` with its symbol. */
+  /** Make a term that looks like `runtime.MatchFailure` with its symbol. */
   protected lazy val matchFailureClass: Ctxl[(Term.Sel | Term.SynthSel, ClassSymbol)] =
     (State.runtimeSymbol.ref().selNoSym("MatchFailure", synth=true), State.matchFailureClsSymbol)
 
-  /** Make a pattern looks like `runtime.MatchFailure.class`. */
+  /** Make a pattern that looks like `runtime.MatchFailure.class`. */
   protected def matchFailurePattern(parameters: Opt[List[BlockLocalSymbol]]): Ctxl[Pattern.ClassLike] =
     val (classRef, classSym) = matchResultClass
     val classSel = Term.SynthSel(classRef, Ident("class"))(S(classSym))
