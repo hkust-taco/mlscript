@@ -56,6 +56,20 @@ let Runtime1;
       }
       toString() { return "MatchFailure(" + globalThis.Predef.render(this.errors) + ")"; }
     };
+    (class Tuple {
+      static {
+        Runtime.Tuple = Tuple;
+      }
+      static slice(xs, i, j) {
+        let tmp;
+        tmp = xs.length - j;
+        return runtime.safeCall(globalThis.Array.prototype.slice.call(xs, i, tmp))
+      } 
+      static get(xs1, i1) {
+        return globalThis.Array.prototype.at.call(xs1, i1)
+      }
+      static toString() { return "Tuple"; }
+    });
     const FatalEffect$class = class FatalEffect {
       constructor() {}
       toString() { return "FatalEffect"; }

@@ -46,8 +46,10 @@ trait DesugaringBase(using state: State):
   protected final def selectPredefMethod =
     sel(sel(globalThisSymbol.ref(), "Predef"), _: Str)
 
-  protected lazy val tupleSlice = selectPredefMethod("tupleSlice")
-  protected lazy val tupleGet = selectPredefMethod("tupleGet")
+  protected lazy val tupleSlice =
+    sel(sel(state.runtimeSymbol.ref(), "Tuple"), "slice")
+  protected lazy val tupleGet =
+    sel(sel(state.runtimeSymbol.ref(), "Tuple"), "get")
   protected lazy val stringStartsWith = selectPredefMethod("stringStartsWith")
   protected lazy val stringGet = selectPredefMethod("stringGet")
   protected lazy val stringDrop = selectPredefMethod("stringDrop")
