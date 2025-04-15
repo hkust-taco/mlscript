@@ -22,7 +22,7 @@ trait DesugaringBase(using state: State):
   protected final def app(l: Term, r: Term, label: Str): Term.App = app(l, r, FlowSymbol(label))
   protected final def app(l: Term, r: Term, s: FlowSymbol): Term.App = Term.App(l, r)(App(Empty(), Empty()), s)
 
-  /** Make a term looks like `runtime.MatchResult` with its symbol. */
+  /** Make a term that looks like `runtime.MatchResult` with its symbol. */
   protected lazy val matchResultClass: Ctxl[(Term.Sel | Term.SynthSel, ClassSymbol)] =
     (State.runtimeSymbol.ref().selNoSym("MatchResult", synth=true), State.matchResultClsSymbol)
 
