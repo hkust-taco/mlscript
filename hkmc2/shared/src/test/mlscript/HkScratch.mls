@@ -1,12 +1,77 @@
 :js
 // :de
-// :sjs
+:sjs
 // :pt
 // :elt
 
+//│ JS (unsanitized):
+//│ import Predef from "./../mlscript-compile/Predef.mjs"; 
 :global
-:d
+// :d
 :todo
 
+import "../mlscript-compile/Option.mls"
+//│ JS (unsanitized):
+//│ import Option from "./../mlscript-compile/Option.mjs"; 
 
+fun test(x) =
+  if x is Option.Some(a) then a
+//│ JS (unsanitized):
+//│ let test;
+//│ test = function test(x) {
+//│   let param0, a;
+//│   if (x instanceof Option.Some.class) {
+//│     param0 = x.value;
+//│     a = param0;
+//│     return a
+//│   } else {
+//│     throw new globalThis.Error("match error");
+//│   }
+//│ };
+
+class Test(a: Int, b: Int)
+//│ JS (unsanitized):
+//│ let Test1;
+//│ Test1 = function Test(a1, b1) {
+//│   return new Test.class(a1, b1);
+//│ };
+//│ Test1.class = class Test {
+//│   #a;
+//│   #b;
+//│   constructor(a, b) {
+//│     this.#a = a;
+//│     this.#b = b;
+//│   }
+//│   toString() { return "Test(" + "" + ")"; }
+//│ };
+
+fun test(x) =
+  if x is Test(a, b) then a + b
+//│ ╔══[ERROR] parameter a is not extractable
+//│ ║  l.32: 	class Test(a: Int, b: Int)
+//│ ║        	           ^
+//│ ╟── which corresponds to this pattern
+//│ ║  l.49: 	  if x is Test(a, b) then a + b
+//│ ╙──      	               ^
+//│ ╔══[ERROR] parameter b is not extractable
+//│ ║  l.32: 	class Test(a: Int, b: Int)
+//│ ║        	                   ^
+//│ ╟── which corresponds to this pattern
+//│ ║  l.49: 	  if x is Test(a, b) then a + b
+//│ ╙──      	                  ^
+//│ ╔══[ERROR] Name not found: a
+//│ ║  l.49: 	  if x is Test(a, b) then a + b
+//│ ╙──      	                          ^
+//│ ╔══[ERROR] Name not found: b
+//│ ║  l.49: 	  if x is Test(a, b) then a + b
+//│ ╙──      	                              ^
+//│ JS (unsanitized):
+//│ let test1;
+//│ test1 = function test(x) {
+//│   if (x instanceof Test1.class) {
+//│     /* error */
+//│   } else {
+//│     throw new globalThis.Error("match error");
+//│   }
+//│ };
 

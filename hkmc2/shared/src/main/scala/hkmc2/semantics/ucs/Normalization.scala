@@ -223,8 +223,9 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
   private def aliasBindings(p: Pattern, q: Pattern): Split => Split = (p, q) match
     case (Pattern.ClassLike(_, _, S(ps1), _), Pattern.ClassLike(_, _, S(ps2), _)) =>
       ps1.iterator.zip(ps2.iterator).foldLeft(identity[Split]):
-        case (acc, (p1, p2)) if p1 == p2 => acc
-        case (acc, (p1, p2)) => innermost => Split.Let(p2, p1.ref(), acc(innermost))
+        case (acc, (S(p1), S(p2))) if p1 == p2 => acc
+        case (acc, (S(p1), S(p2))) => innermost => Split.Let(p2, p1.ref(), acc(innermost))
+        case (acc, (_, _)) => acc
     case (_, _) => identity
 end Normalization
 

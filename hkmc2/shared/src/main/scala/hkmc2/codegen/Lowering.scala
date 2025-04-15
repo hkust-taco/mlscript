@@ -479,7 +479,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                     case (param, arg) :: args =>
                       val (cse, blk) = mkArgs(args)
                       (cse, Assign(arg, Select(sr, param.id/*FIXME incorrect Ident?*/)(S(param)), blk))
-                  mkMatch(mkArgs(clsParams.zip(args)))
+                  mkMatch(mkArgs(clsParams.iterator.zip(args).collect { case (s1, S(s2)) => (s1, s2) }.toList))
               case Pattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> go(tail, topLevel = false))
         case Split.Else(els) =>
           if k.isInstanceOf[TailOp] && isIf then term_nonTail(els)(k)

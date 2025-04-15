@@ -78,7 +78,7 @@ case
 //│               prefix = Ref of member:Foo
 //│               nme = Ident of "class"
 //│             parameters = S of Ls of 
-//│               $param0
+//│               S of $param0
 //│             refined = false
 //│           continuation = Let:
 //│             sym = a

@@ -1,0 +1,91 @@
+:js
+
+class Foo(a: Int, val b: Int)
+
+:e
+fun foo(x) = if x is Foo(p, q) then p + q
+//│ ╔══[ERROR] parameter a is not extractable
+//│ ║  l.3: 	class Foo(a: Int, val b: Int)
+//│ ║       	          ^
+//│ ╟── which corresponds to this pattern
+//│ ║  l.6: 	fun foo(x) = if x is Foo(p, q) then p + q
+//│ ╙──     	                         ^
+//│ ╔══[ERROR] Name not found: p
+//│ ║  l.6: 	fun foo(x) = if x is Foo(p, q) then p + q
+//│ ╙──     	                                    ^
+
+:re
+foo(Foo(2, 3))
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+
+fun foo(x) = if x is Foo(_, q) then q
+
+foo(Foo(2, 3))
+//│ = 3
+
+class Test(a, b, c, d, e, f)
+
+fun test(x) = if x is Test then "ok"
+
+:e
+fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ╔══[ERROR] parameter a is not extractable
+//│ ║  l.26: 	class Test(a, b, c, d, e, f)
+//│ ║        	           ^
+//│ ╟── which corresponds to this pattern
+//│ ║  l.31: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ╙──      	                           ^
+//│ ╔══[ERROR] parameter b is not extractable
+//│ ║  l.26: 	class Test(a, b, c, d, e, f)
+//│ ║        	              ^
+//│ ╟── which corresponds to this pattern
+//│ ║  l.31: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ╙──      	                              ^
+//│ ╔══[ERROR] parameter c is not extractable
+//│ ║  l.26: 	class Test(a, b, c, d, e, f)
+//│ ║        	                 ^
+//│ ╟── which corresponds to this pattern
+//│ ║  l.31: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ╙──      	                                 ^
+//│ ╔══[ERROR] parameter d is not extractable
+//│ ║  l.26: 	class Test(a, b, c, d, e, f)
+//│ ║        	                    ^
+//│ ╟── which corresponds to this pattern
+//│ ║  l.31: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ╙──      	                                    ^
+//│ ╔══[ERROR] parameter e is not extractable
+//│ ║  l.26: 	class Test(a, b, c, d, e, f)
+//│ ║        	                       ^
+//│ ╟── which corresponds to this pattern
+//│ ║  l.31: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ╙──      	                                       ^
+//│ ╔══[ERROR] parameter f is not extractable
+//│ ║  l.26: 	class Test(a, b, c, d, e, f)
+//│ ║        	                          ^
+//│ ╟── which corresponds to this pattern
+//│ ║  l.31: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ╙──      	                                          ^
+
+:e
+fun test(x) = if x is Test(_, _, _) then "ok"
+//│ ╔══[ERROR] mismatched arity: expect 6, found 3
+//│ ║  l.70: 	fun test(x) = if x is Test(_, _, _) then "ok"
+//│ ╙──      	                      ^^^^^^^^^^^^^
+
+fun test(x) = if x is Test(_, _, _, _, _, _) then "ok"
+
+:e
+fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
+//│ ╔══[ERROR] parameter d is not extractable
+//│ ║  l.26: 	class Test(a, b, c, d, e, f)
+//│ ║        	                    ^
+//│ ╟── which corresponds to this pattern
+//│ ║  l.78: 	fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
+//│ ╙──      	                                    ^
+
+class Point(val x: Int, val y: Int)
+
+fun point(p) = if p is Point(x, y) then x + y
+
+point(Point(2, 4))
+//│ = 6

@@ -8,7 +8,7 @@ import ucs.DeBrujinSplit
 /** Flat patterns for pattern matching */
 enum Pattern extends AutoLocated:
   case Lit(literal: Literal)
-  case ClassLike(sym: ClassSymbol | ModuleSymbol, trm: Term, parameters: Opt[List[BlockLocalSymbol]], var refined: Bool)(val tree: Tree)
+  case ClassLike(sym: ClassSymbol | ModuleSymbol, trm: Term, parameters: Opt[List[Opt[BlockLocalSymbol]]], var refined: Bool)(val tree: Tree)
   case Synonym(symbol: PatternSymbol, patternArguments: Ls[(split: DeBrujinSplit, tree: Tree)])
   case Tuple(size: Int, inf: Bool)
   case Record(entries: List[(Ident -> BlockLocalSymbol)])
@@ -22,7 +22,8 @@ enum Pattern extends AutoLocated:
   
   def children: Ls[Located] = this match
     case Lit(literal) => literal :: Nil
-    case ClassLike(_, t, parameters, _) => t :: parameters.toList.flatten
+    case ClassLike(_, t, parameters, _) =>
+      t :: parameters.fold(Nil)(_.collect { case S(symbol) => symbol })
     case Synonym(_, arguments) => arguments.map(_.tree)
     case Tuple(fields, _) => Nil
     case Record(entries) => entries.flatMap { case (nme, als) => nme :: als :: Nil }
@@ -30,7 +31,7 @@ enum Pattern extends AutoLocated:
   def showDbg: Str = this match
     case Lit(literal) => literal.idStr
     case ClassLike(sym, t, ps, rfd) => (if rfd then "refined " else "") +
-      sym.nme + ps.fold("")(_.mkString("(", ", ", ")"))
+      sym.nme + ps.fold("")(_.iterator.map(_.fold("_")(_.toString)).mkString("(", ", ", ")"))
     case Synonym(symbol, arguments) =>
       symbol.nme + arguments.iterator.map(_.tree.showDbg).mkString("(", ", ", ")")
     case Tuple(size, inf) => "[]" + (if inf then ">=" else "=") + size

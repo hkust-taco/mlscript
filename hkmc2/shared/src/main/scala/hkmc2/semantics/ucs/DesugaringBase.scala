@@ -30,7 +30,7 @@ trait DesugaringBase(using state: State):
   protected def matchResultPattern(parameters: Opt[List[BlockLocalSymbol]]): Ctxl[Pattern.ClassLike] =
     val (classRef, classSym) = matchResultClass
     val classSel = Term.SynthSel(classRef, Ident("class"))(S(classSym))
-    Pattern.ClassLike(classSym, classSel, parameters, false)(Empty())
+    Pattern.ClassLike(classSym, classSel, parameters.map(_.map(S.apply)), false)(Empty())
 
   /** Make a term looks like `globalThis.Predef.MatchFailure` with its symbol. */
   protected lazy val matchFailureClass: Ctxl[(Term.Sel | Term.SynthSel, ClassSymbol)] =
@@ -40,7 +40,7 @@ trait DesugaringBase(using state: State):
   protected def matchFailurePattern(parameters: Opt[List[BlockLocalSymbol]]): Ctxl[Pattern.ClassLike] =
     val (classRef, classSym) = matchResultClass
     val classSel = Term.SynthSel(classRef, Ident("class"))(S(classSym))
-    Pattern.ClassLike(classSym, classSel, parameters, false)(Empty())
+    Pattern.ClassLike(classSym, classSel, parameters.map(_.map(S.apply)), false)(Empty())
 
   /** Create a term that selects a method in the `Predef` module. */
   protected final def selectPredefMethod =
