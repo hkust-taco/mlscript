@@ -198,15 +198,6 @@ let Predef1;
     tmp1 = runtime.safeCall(Predef.fold(tmp));
     return runtime.safeCall(tmp1(...xs2))
   } 
-  static stringStartsWith(string, prefix) {
-    return runtime.safeCall(string.startsWith(prefix))
-  } 
-  static stringGet(string1, i) {
-    return runtime.safeCall(string1.at(i))
-  } 
-  static stringDrop(string2, n) {
-    return runtime.safeCall(string2.slice(n))
-  } 
   static get unreachable() {
     throw globalThis.Error("unreachable");
   } 

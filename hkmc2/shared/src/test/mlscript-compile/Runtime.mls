@@ -51,6 +51,13 @@ module Tuple with
     // * Contrary to `xs.[i]`, this supports negative indices (Python-style)
     globalThis.Array.prototype.at.call(xs, i)
 
+module Str with
+  fun startsWith(string, prefix) = string.startsWith(prefix)
+
+  fun get(string, i) = string.at(i)
+
+  fun drop(string, n) = string.slice(n)
+
 // Private definitions for algebraic effects
 
 object FatalEffect

@@ -70,6 +70,21 @@ let Runtime1;
       }
       static toString() { return "Tuple"; }
     });
+    (class Str {
+      static {
+        Runtime.Str = Str;
+      }
+      static startsWith(string, prefix) {
+        return runtime.safeCall(string.startsWith(prefix))
+      } 
+      static get(string1, i) {
+        return runtime.safeCall(string1.at(i))
+      } 
+      static drop(string2, n) {
+        return runtime.safeCall(string2.slice(n))
+      }
+      static toString() { return "Str"; }
+    });
     const FatalEffect$class = class FatalEffect {
       constructor() {}
       toString() { return "FatalEffect"; }
