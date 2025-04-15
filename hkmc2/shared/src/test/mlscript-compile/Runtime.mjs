@@ -66,7 +66,9 @@ let Runtime1;
         return runtime.safeCall(globalThis.Array.prototype.slice.call(xs, i, tmp))
       } 
       static get(xs1, i1) {
-        return globalThis.Array.prototype.at.call(xs1, i1)
+        let tmp;
+        tmp = globalThis.Array.prototype.at.call(xs1, i1);
+        return Runtime.safeCall(tmp)
       }
       static toString() { return "Tuple"; }
     });
