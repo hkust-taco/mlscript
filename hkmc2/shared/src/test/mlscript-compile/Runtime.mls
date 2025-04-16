@@ -40,6 +40,28 @@ fun try(f) =
 data class MatchResult(captures)
 data class MatchFailure(errors)
 
+// For pattern matching on tuples
+module Tuple with
+  fun slice(xs, i, j) =
+    // * This is more robust than `xs.slice(i, xs.length - j)`
+    // * as it is not affected by users redefining `slice`
+    globalThis.Array.prototype.slice.call(xs, i, xs.length - j)
+
+  fun get(xs, i) =
+    // * Contrary to `xs.[i]`, this supports negative indices (Python-style)
+    if i >= xs.length then
+      throw RangeError("Tuple.get: index out of bounds")
+    else globalThis.Array.prototype.at.call(xs, i)
+
+module Str with
+  fun startsWith(string, prefix) = string.startsWith(prefix)
+
+  fun get(string, i) =
+    if i >= string.length then
+      throw RangeError("Str.get: index out of bounds")
+    else string.at(i)
+
+  fun drop(string, n) = string.slice(n)
 
 // Private definitions for algebraic effects
 
