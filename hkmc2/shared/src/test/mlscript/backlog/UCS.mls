@@ -111,20 +111,18 @@ if 1 + 1
 
 // ——— ——— ———
 
-class Some(v)
+class Some(val v)
 
 Some(1) is
   Some of [process, rest] do "hi"
-//│ ╔══[ERROR] This pattern cannot be matched
+//│ ╔══[ERROR] Unrecognized pattern (infix operation)
 //│ ║  l.117: 	  Some of [process, rest] do "hi"
-//│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because the corresponding parameter v is not accessible
-//│ ║  l.114: 	class Some(v)
-//│ ╙──       	           ^
-//│ = true
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^
+//│ = false
 
 // ——— ——— ———
 
+class Some(val v)
 object None
 
 // :ucs normalized
@@ -159,97 +157,24 @@ fun parse(text: Str): [Int, Str] =
     else [idx, ""]
   
   launch(0)
-//│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.151: 	  fun launch(idx: Int) = if char(idx) is Some(ch) and ch ==
-//│ ║         	                                              ^^
-//│ ╟── because the corresponding parameter v is not accessible
-//│ ║  l.114: 	class Some(v)
-//│ ╙──       	           ^
-//│ ╔══[ERROR] Name not found: ch
-//│ ║  l.151: 	  fun launch(idx: Int) = if char(idx) is Some(ch) and ch ==
-//│ ╙──       	                                                      ^^
 
 // ——— ——— ———
 
-class
-  Tuple(a, b, c)
-  Ident(n)
+data class Tuple(a, b, c)
 
-fun foo(tree) =
-  fun go(x) = ???
-  if tree is
-    Tuple(category, choice, function) and
-      category is Ident(categoryName) and
-        function is Ident(functionName) and
-          choice is
-            Tuple(elements) then Some(go(elements))
-            other then Some(go(other))
-        else
-          console.warn("expect the choice to be a bracketed term but found " + choice)
-          None
-      else
-        console.warn("expect a the category to be an identifier but found " + category)
-        None
-    else
-      console.warn("expect the definition to be a tuple but found " + tree)
-      None
-//│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.181: 	    Tuple(category, choice, function) and
-//│ ║         	          ^^^^^^^^
-//│ ╟── because the corresponding parameter a is not accessible
-//│ ║  l.175: 	  Tuple(a, b, c)
-//│ ╙──       	        ^
-//│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.181: 	    Tuple(category, choice, function) and
-//│ ║         	                    ^^^^^^
-//│ ╟── because the corresponding parameter b is not accessible
-//│ ║  l.175: 	  Tuple(a, b, c)
-//│ ╙──       	           ^
-//│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.181: 	    Tuple(category, choice, function) and
-//│ ║         	                            ^^^^^^^^
-//│ ╟── because the corresponding parameter c is not accessible
-//│ ║  l.175: 	  Tuple(a, b, c)
-//│ ╙──       	              ^
-//│ ╔══[ERROR] Name not found: category
-//│ ║  l.191: 	        console.warn("expect a the category to be an identifier but found " + category)
-//│ ╙──       	                                                                              ^^^^^^^^
-//│ ╔══[ERROR] Name not found: category
-//│ ║  l.182: 	      category is Ident(categoryName) and
-//│ ╙──       	      ^^^^^^^^
-//│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.182: 	      category is Ident(categoryName) and
-//│ ║         	                        ^^^^^^^^^^^^
-//│ ╟── because the corresponding parameter n is not accessible
-//│ ║  l.176: 	  Ident(n)
-//│ ╙──       	        ^
-//│ ╔══[ERROR] Name not found: choice
-//│ ║  l.188: 	          console.warn("expect the choice to be a bracketed term but found " + choice)
-//│ ╙──       	                                                                               ^^^^^^
-//│ ╔══[ERROR] Name not found: function
-//│ ║  l.183: 	        function is Ident(functionName) and
-//│ ╙──       	        ^^^^^^^^
-//│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.183: 	        function is Ident(functionName) and
-//│ ║         	                          ^^^^^^^^^^^^
-//│ ╟── because the corresponding parameter n is not accessible
-//│ ║  l.176: 	  Ident(n)
-//│ ╙──       	        ^
-//│ ╔══[ERROR] Name not found: choice
-//│ ║  l.184: 	          choice is
-//│ ╙──       	          ^^^^^^
+let foo =
+  case
+    Tuple(...elements) then elements
 //│ ╔══[ERROR] mismatched arity: expect 3, found 1
-//│ ║  l.185: 	            Tuple(elements) then Some(go(elements))
-//│ ╙──       	            ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.185: 	            Tuple(elements) then Some(go(elements))
-//│ ║         	                  ^^^^^^^^
-//│ ╟── because the corresponding parameter a is not accessible
-//│ ║  l.175: 	  Tuple(a, b, c)
-//│ ╙──       	        ^
-//│ ╔══[ERROR] Name not found: elements
-//│ ║  l.185: 	            Tuple(elements) then Some(go(elements))
-//│ ╙──       	                                         ^^^^^^^^
+//│ ║  l.167: 	    Tuple(...elements) then elements
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Unrecognized pattern (spread)
+//│ ║  l.167: 	    Tuple(...elements) then elements
+//│ ╙──       	             ^^^^^^^^
+//│ foo = [function]
+
+foo(Tuple(1, 2, 3))
+//│ ═══[RUNTIME ERROR] Error: match error
 
 // ——— ——— ———
 
@@ -262,28 +187,28 @@ fun foo(x) = if x is Foo.
   Bar then "Bar"
   Foo then "Foo"
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.261: 	fun foo(x) = if x is Foo.
+//│ ║  l.186: 	fun foo(x) = if x is Foo.
 //│ ╙──       	                     ^^^
 //│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.261: 	fun foo(x) = if x is Foo.
+//│ ║  l.186: 	fun foo(x) = if x is Foo.
 //│ ╙──       	                        ^
 //│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.261: 	fun foo(x) = if x is Foo.
+//│ ║  l.186: 	fun foo(x) = if x is Foo.
 //│ ╙──       	                        ^
 
 fun foo(x) = if x is Foo
   .Bar then "Bar"
   .Foo then "Foo"
 //│ ╔══[PARSE ERROR] Expected an expression; found selector instead
-//│ ║  l.275: 	  .Bar then "Bar"
+//│ ║  l.200: 	  .Bar then "Bar"
 //│ ╙──       	  ^^^^
 //│ ╔══[PARSE ERROR] Unexpected selector here
-//│ ║  l.275: 	  .Bar then "Bar"
+//│ ║  l.200: 	  .Bar then "Bar"
 //│ ╙──       	  ^^^^
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.274: 	fun foo(x) = if x is Foo
+//│ ║  l.199: 	fun foo(x) = if x is Foo
 //│ ║         	                     ^^^
-//│ ║  l.275: 	  .Bar then "Bar"
+//│ ║  l.200: 	  .Bar then "Bar"
 //│ ╙──       	^^
 
 // ——— ——— ———

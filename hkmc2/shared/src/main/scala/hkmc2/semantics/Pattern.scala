@@ -7,10 +7,22 @@ import ucs.DeBrujinSplit
 
 /** Flat patterns for pattern matching */
 enum Pattern extends AutoLocated:
+  
   case Lit(literal: Literal)
-  case ClassLike(sym: ClassSymbol | ModuleSymbol, trm: Term, parameters: Opt[List[Opt[BlockLocalSymbol]]], var refined: Bool)(val tree: Tree)
+  
+  /** An individual argument is None when it is not matched, i.e. when an underscore is used there.
+    * The whole argument list is None when no argument list is being matched at all, as in `x is Some then ...`. */
+  case ClassLike(
+    sym: ClassSymbol | ModuleSymbol,
+    trm: Term,
+    args: Opt[List[Opt[BlockLocalSymbol]]],
+    var refined: Bool,
+  )(val tree: Tree)
+  
   case Synonym(symbol: PatternSymbol, patternArguments: Ls[(split: DeBrujinSplit, tree: Tree)])
+  
   case Tuple(size: Int, inf: Bool)
+  
   case Record(entries: List[(Ident -> BlockLocalSymbol)])
   
   def subTerms: Ls[Term] = this match
@@ -22,8 +34,8 @@ enum Pattern extends AutoLocated:
   
   def children: Ls[Located] = this match
     case Lit(literal) => literal :: Nil
-    case ClassLike(_, t, parameters, _) =>
-      t :: parameters.fold(Nil)(_.collect { case S(symbol) => symbol })
+    case ClassLike(_, t, args, _) =>
+      t :: args.fold(Nil)(_.collect { case S(symbol) => symbol })
     case Synonym(_, arguments) => arguments.map(_.tree)
     case Tuple(fields, _) => Nil
     case Record(entries) => entries.flatMap { case (nme, als) => nme :: als :: Nil }

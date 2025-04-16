@@ -636,7 +636,8 @@ class Desugarer(val elaborator: Elaborator)
     case (_, Under()) :: rest => subMatches(rest, sequel)
     case (L(paramSymbol), pattern) :: rest =>
       error(msg"This pattern cannot be matched" -> pattern.toLoc,
-        msg"because the corresponding parameter ${paramSymbol.name} is not accessible" -> paramSymbol.toLoc)
+        msg"because the corresponding parameter `${paramSymbol.name}` is not publicly accessible" -> paramSymbol.toLoc,
+        msg"Marking this parameter with `val` could resolve the issue" -> N)
       subMatches(rest, sequel)
     case (R(scrutinee), pattern) :: rest => fallback => trace(
       pre = s"subMatches (nested) <<< $scrutinee is $pattern",

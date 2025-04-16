@@ -7,9 +7,10 @@ fun foo(x) = if x is Foo(p, q) then p + q
 //│ ╔══[ERROR] This pattern cannot be matched
 //│ ║  l.6: 	fun foo(x) = if x is Foo(p, q) then p + q
 //│ ║       	                         ^
-//│ ╟── because the corresponding parameter a is not accessible
+//│ ╟── because the corresponding parameter `a` is not publicly accessible
 //│ ║  l.3: 	class Foo(a: Int, val b: Int)
-//│ ╙──     	          ^
+//│ ║       	          ^
+//│ ╙── Marking this parameter with `val` could resolve the issue
 //│ ╔══[ERROR] Name not found: p
 //│ ║  l.6: 	fun foo(x) = if x is Foo(p, q) then p + q
 //│ ╙──     	                                    ^
@@ -30,46 +31,52 @@ fun test(x) = if x is Test then "ok"
 :e
 fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.31: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║  l.32: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                           ^
-//│ ╟── because the corresponding parameter a is not accessible
-//│ ║  l.26: 	class Test(a, b, c, d, e, f)
-//│ ╙──      	           ^
+//│ ╟── because the corresponding parameter `a` is not publicly accessible
+//│ ║  l.27: 	class Test(a, b, c, d, e, f)
+//│ ║        	           ^
+//│ ╙── Marking this parameter with `val` could resolve the issue
 //│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.31: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║  l.32: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                              ^
-//│ ╟── because the corresponding parameter b is not accessible
-//│ ║  l.26: 	class Test(a, b, c, d, e, f)
-//│ ╙──      	              ^
+//│ ╟── because the corresponding parameter `b` is not publicly accessible
+//│ ║  l.27: 	class Test(a, b, c, d, e, f)
+//│ ║        	              ^
+//│ ╙── Marking this parameter with `val` could resolve the issue
 //│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.31: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║  l.32: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                                 ^
-//│ ╟── because the corresponding parameter c is not accessible
-//│ ║  l.26: 	class Test(a, b, c, d, e, f)
-//│ ╙──      	                 ^
+//│ ╟── because the corresponding parameter `c` is not publicly accessible
+//│ ║  l.27: 	class Test(a, b, c, d, e, f)
+//│ ║        	                 ^
+//│ ╙── Marking this parameter with `val` could resolve the issue
 //│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.31: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║  l.32: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                                    ^
-//│ ╟── because the corresponding parameter d is not accessible
-//│ ║  l.26: 	class Test(a, b, c, d, e, f)
-//│ ╙──      	                    ^
+//│ ╟── because the corresponding parameter `d` is not publicly accessible
+//│ ║  l.27: 	class Test(a, b, c, d, e, f)
+//│ ║        	                    ^
+//│ ╙── Marking this parameter with `val` could resolve the issue
 //│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.31: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║  l.32: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                                       ^
-//│ ╟── because the corresponding parameter e is not accessible
-//│ ║  l.26: 	class Test(a, b, c, d, e, f)
-//│ ╙──      	                       ^
+//│ ╟── because the corresponding parameter `e` is not publicly accessible
+//│ ║  l.27: 	class Test(a, b, c, d, e, f)
+//│ ║        	                       ^
+//│ ╙── Marking this parameter with `val` could resolve the issue
 //│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.31: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║  l.32: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                                          ^
-//│ ╟── because the corresponding parameter f is not accessible
-//│ ║  l.26: 	class Test(a, b, c, d, e, f)
-//│ ╙──      	                          ^
+//│ ╟── because the corresponding parameter `f` is not publicly accessible
+//│ ║  l.27: 	class Test(a, b, c, d, e, f)
+//│ ║        	                          ^
+//│ ╙── Marking this parameter with `val` could resolve the issue
 
 :e
 fun test(x) = if x is Test(_, _, _) then "ok"
 //│ ╔══[ERROR] mismatched arity: expect 6, found 3
-//│ ║  l.70: 	fun test(x) = if x is Test(_, _, _) then "ok"
+//│ ║  l.77: 	fun test(x) = if x is Test(_, _, _) then "ok"
 //│ ╙──      	                      ^^^^^^^^^^^^^
 
 fun test(x) = if x is Test(_, _, _, _, _, _) then "ok"
@@ -77,11 +84,12 @@ fun test(x) = if x is Test(_, _, _, _, _, _) then "ok"
 :e
 fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
 //│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.78: 	fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
+//│ ║  l.85: 	fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
 //│ ║        	                                    ^
-//│ ╟── because the corresponding parameter d is not accessible
-//│ ║  l.26: 	class Test(a, b, c, d, e, f)
-//│ ╙──      	                    ^
+//│ ╟── because the corresponding parameter `d` is not publicly accessible
+//│ ║  l.27: 	class Test(a, b, c, d, e, f)
+//│ ║        	                    ^
+//│ ╙── Marking this parameter with `val` could resolve the issue
 
 class Point(val x: Int, val y: Int)
 
