@@ -2,18 +2,18 @@ package hkmc2
 package codegen
 package llir
 
+import scala.annotation.tailrec
+import scala.collection.immutable.*
+import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{HashMap => MutHMap}
+import scala.collection.mutable.{HashSet => MutHSet, Set => MutSet}
+
 import mlscript._
 import mlscript.utils._
 import mlscript.utils.shorthands._
-import semantics.BuiltinSymbol
-import syntax.Tree.UnitLit
-import semantics.InnerSymbol
 
-import scala.collection.mutable.ListBuffer
-import scala.annotation.tailrec
-import scala.collection.immutable.*
-import scala.collection.mutable.{HashMap => MutHMap}
-import scala.collection.mutable.{HashSet => MutHSet, Set => MutSet}
+import syntax.Tree.UnitLit
+import semantics.{BuiltinSymbol, InnerSymbol}
 
 class UsefulnessAnalysis(verbose: Bool = false): 
   import Expr._

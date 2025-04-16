@@ -129,7 +129,6 @@ enum Expr:
   case Unary(op: Str, expr: Expr)
   case Binary(op: Str, lhs: Expr, rhs: Expr)
   case Initializer(exprs: Ls[Expr])
-  case Constructor(name: Str, init: Expr)
 
   def toDocument: Document =
     def aux(x: Expr): Document = x match
@@ -150,8 +149,6 @@ enum Expr:
         doc"(${lhs.toDocument} $op ${rhs.toDocument})"
       case Initializer(exprs) => 
         doc"{${Expr.toDocuments(exprs, sep = ", ")}}"
-      case Constructor(name, init) =>
-        doc"$name(${init.toDocument})"
     aux(this)
 
 case class CompilationUnit(includes: Ls[Str], decls: Ls[Decl], defs: Ls[Def]):
@@ -167,7 +164,7 @@ case class CompilationUnit(includes: Ls[Str], decls: Ls[Decl], defs: Ls[Def]):
 enum Decl:
   case StructDecl(name: Str)
   case EnumDecl(name: Str)
-  case FuncDecl(ret: Type, name: Str, args: Ls[Type], is_override: Bool, is_virtual: Bool)
+  case FuncDecl(ret: Type, name: Str, args: Ls[Type], isOverride: Bool, isVirtual: Bool)
   case VarDecl(name: Str, typ: Type)
 
   def toDocument: Document =
@@ -185,9 +182,9 @@ enum Decl:
     aux(this)
 
 enum Def:
-  case StructDef(name: Str, fields: Ls[(Str, Type)], inherit: Opt[Ls[Str]], methods: Ls[Def], methods_decl: Ls[Decl])
+  case StructDef(name: Str, fields: Ls[(Str, Type)], inherit: Opt[Ls[Str]], methods: Ls[Def], methodsDecl: Ls[Decl])
   case EnumDef(name: Str, fields: Ls[(Str, Opt[Int])])
-  case FuncDef(specret: Type, name: Str, args: Ls[(Str, Type)], body: Stmt.Block, is_override: Bool, is_virtual: Bool = false, in_scope: Opt[Str])
+  case FuncDef(specret: Type, name: Str, args: Ls[(Str, Type)], body: Stmt.Block, isOverride: Bool, isVirtual: Bool = false, in_scope: Opt[Str])
   case VarDef(typ: Type, name: Str, init: Opt[Expr])
   case RawDef(raw: Str)
 

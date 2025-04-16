@@ -41,7 +41,7 @@ case class Program(
 
   def show(hide: Str => Bool = defaultHidden) = toDocument(hide).toString
   def toDocument(hide: Str => Bool = defaultHidden) : Document =
-    val t1 = classes.iterator.filterNot(c => hide(c.name.nme)).toArray
+    val t1 = classes.iterator.filterNot(c => hide(c.symbol.nme)).toArray
     val t2 = defs.toArray
     Sorting.quickSort(t1)
     Sorting.quickSort(t2)
@@ -57,23 +57,23 @@ implicit object ClassInfoOrdering extends Ordering[ClassInfo] {
 
 case class ClassInfo(
   id: Int,
-  name: MemberSymbol[? <: ClassLikeDef],
+  symbol: MemberSymbol[? <: ClassLikeDef],
   fields: Ls[VarSymbol],
   parents: Set[Local],
   methods: Map[Local, Func],
 ):
   override def hashCode: Int = id
   override def toString: String =
-    s"ClassInfo($id, $name, [${fields mkString ","}], parents: ${parents mkString ","}, methods:\n${methods mkString ",\n"})"
+    s"ClassInfo($id, $symbol, [${fields mkString ","}], parents: ${parents mkString ","}, methods:\n${methods mkString ",\n"})"
 
   def show = toDocument.toString
   def toDocument: Document =
     given Conversion[String, Document] = raw
     val ext = if parents.isEmpty then "" else " extends " + parents.map(_.nme).mkString(", ")
     if methods.isEmpty then
-      doc"class ${name.nme}(${fields.map(docSymWithUid).mkString(",")})$ext"
+      doc"class ${symbol.nme}(${fields.map(docSymWithUid).mkString(",")})$ext"
     else
-      val docFirst = doc"class ${name.nme}(${fields.map(docSymWithUid).mkString(",")})$ext {"
+      val docFirst = doc"class ${symbol.nme}(${fields.map(docSymWithUid).mkString(",")})$ext {"
       val docMethods = methods.map { (_, func) => func.toDocument }.toList.mkDocument(doc" # ")
       val docLast = doc"}"
       doc"$docFirst #{  # $docMethods #}  # $docLast"
@@ -81,7 +81,7 @@ case class ClassInfo(
 class FuncRef(var func: Local):
   def name: String = func.nme
   override def equals(o: Any): Bool = o match {
-    case o: FuncRef => o.name == this.name
+    case o: FuncRef => o.name === this.name
     case _ => false
   }
 

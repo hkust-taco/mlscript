@@ -76,7 +76,7 @@ abstract class LlirDiffMaker extends BbmlDiffMaker:
         def cppGen(name: String, prog: Program, gen: Bool, show: Bool, run: Bool, write: Opt[Str]): Unit =
           tl.log(s"Generating $name")
           if gen || show || run || write.isDefined then
-            val cpp = CppCodeGen(ctx.builtin_sym.hiddenClasses, tl).codegen(prog)
+            val cpp = CppCodeGen(ctx.builtinSym.hiddenClasses, tl).codegen(prog)
             if show then
               output(s"\n$name:")
               output(cpp.toDocument.toString)

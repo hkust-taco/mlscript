@@ -12,7 +12,7 @@ import semantics._
 
 class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
   import tl.{trace, log, logs}
-  def mapName(name: Str): Str = "_mls_" + name.replace('$', '_').replace('\'', '_')
+  def mapName(name: Str): Str = "_mls_" + Scope.replaceInvalidCharacters(name)
   def mapClsLikeName(sym: Local)(using Raise, Scope): Str = 
     if builtinClassSymbols.contains(sym) then sym.nme |> mapName
     else allocIfNew(sym)
@@ -22,12 +22,12 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
   val mlsUnitValue = Expr.Call(Expr.Var("_mlsValue::create<_mls_Unit>"), Ls());
   val mlsRetValue  = "_mls_retval"
   def mlsRetValType(n: Int) =
-    if n == 1 then
+    if n === 1 then
       mlsValType
     else
       Type.Template("std::tuple", Ls.fill(n)(mlsValType))
   def mlsRetValueDecl(n: Int) =
-    if n == 1 then
+    if n === 1 then
       Decl.VarDecl(mlsRetValue, mlsValType)
     else
       Decl.VarDecl(mlsRetValue, mlsRetValType(n))
@@ -99,41 +99,41 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
         summon[Scope].allocateName(l) |> mapName
   
   def codegenClassInfo(using Ctx, Raise, Scope)(cls: ClassInfo) =
-    trace[(Opt[Def], Decl, Ls[Def])](s"codegenClassInfo ${cls.name} begin"):
+    trace[(Opt[Def], Decl, Ls[Def])](s"codegenClassInfo ${cls.symbol} begin"):
       val fields = cls.fields.map{x => (x |> directName, mlsValType)}
       cls.fields.foreach(x => summon[Scope].allocateName(x))
       val parents = if cls.parents.nonEmpty then cls.parents.toList.map(mapClsLikeName) else mlsObject :: Nil
-      val decl = Decl.StructDecl(cls.name |> mapClsLikeName)
-      if mlsIsInternalClass(cls.name) then (None, decl, Ls.empty)
+      val decl = Decl.StructDecl(cls.symbol |> mapClsLikeName)
+      if mlsIsInternalClass(cls.symbol) then (None, decl, Ls.empty)
       else
         val methods = cls.methods.map:
           case (name, defn) =>
             val (cdef, decl) = codegenDefn(using Ctx(summon[Ctx].fieldCtx ++ cls.fields))(defn)
             val cdef2 = cdef match
-              case x: Def.FuncDef if builtinApply.contains(defn.name.nme) => x.copy(name = defn.name |> directName, in_scope = Some(cls.name |> mapClsLikeName))
-              case x: Def.FuncDef => x.copy(in_scope = Some(cls.name |> mapClsLikeName))
+              case x: Def.FuncDef if builtinApply.contains(defn.name.nme) => x.copy(name = defn.name |> directName, in_scope = Some(cls.symbol |> mapClsLikeName))
+              case x: Def.FuncDef => x.copy(in_scope = Some(cls.symbol |> mapClsLikeName))
               case _ => throw new Exception(s"codegenClassInfo: unexpected def $cdef")
             val decl2 = decl match
-              case x: Decl.FuncDecl if builtinApply.contains(defn.name.nme) => x.copy(is_virtual = true, name = defn.name |> directName)
-              case x: Decl.FuncDecl => x.copy(is_virtual = true)
+              case x: Decl.FuncDecl if builtinApply.contains(defn.name.nme) => x.copy(isVirtual = true, name = defn.name |> directName)
+              case x: Decl.FuncDecl => x.copy(isVirtual = true)
               case _ => throw new Exception(s"codegenClassInfo: unexpected decl $decl")
-            log(s"codegenClassInfo: ${cls.name} method ${defn.name} $decl2")
+            log(s"codegenClassInfo: ${cls.symbol} method ${defn.name} $decl2")
             (cdef2, decl2)
         val theDef = Def.StructDef(
-          cls.name |> mapClsLikeName, fields,
+          cls.symbol |> mapClsLikeName, fields,
           if parents.nonEmpty then Some(parents) else None,
-          Ls(Def.RawDef(mlsObjectNameMethod(cls.name.nme)),
+          Ls(Def.RawDef(mlsObjectNameMethod(cls.symbol.nme)),
             Def.RawDef(mlsTypeTag()),
             Def.RawDef(mlsCommonPrintMethod(cls.fields.map(directName))),
-            Def.RawDef(mlsCommonDestructorMethod(cls.name |> mapClsLikeName, cls.fields.map(directName))),
-            Def.RawDef(mlsCommonCreateMethod(cls.name |> mapClsLikeName, cls.fields.map(directName), cls.id))),
+            Def.RawDef(mlsCommonDestructorMethod(cls.symbol |> mapClsLikeName, cls.fields.map(directName))),
+            Def.RawDef(mlsCommonCreateMethod(cls.symbol |> mapClsLikeName, cls.fields.map(directName), cls.id))),
           methods.iterator.map(_._2).toList
         )
         (S(theDef), decl, methods.iterator.map(_._1).toList)
   
   def toExpr(texpr: TrivialExpr, reifyUnit: Bool = false)(using Ctx, Raise, Scope): Opt[Expr] = texpr match
     case IExpr.Ref(name) if summon[Ctx].fieldCtx.contains(name) => S(Expr.Var(name |> directName))
-    case IExpr.Ref(name: BuiltinSymbol) if name.nme == "<this>" => S(mlsThis)
+    case IExpr.Ref(name: BuiltinSymbol) if name.nme === "<this>" => S(mlsThis)
     case IExpr.Ref(name) => S(Expr.Var(name |> allocIfNew))
     case IExpr.Literal(hkmc2.syntax.Tree.BoolLit(x)) => S(mlsIntLit(if x then 1 else 0))
     case IExpr.Literal(hkmc2.syntax.Tree.IntLit(x)) => S(mlsIntLit(x))
@@ -143,7 +143,7 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
   
   def toExpr(texpr: TrivialExpr)(using Ctx, Raise, Scope): Expr = texpr match
     case IExpr.Ref(name) if summon[Ctx].fieldCtx.contains(name) => Expr.Var(name |> directName)
-    case IExpr.Ref(name: BuiltinSymbol) if name.nme == "<this>" => mlsThis
+    case IExpr.Ref(name: BuiltinSymbol) if name.nme === "<this>" => mlsThis
     case IExpr.Ref(name) => Expr.Var(name |> allocIfNew)
     case IExpr.Literal(hkmc2.syntax.Tree.BoolLit(x)) => mlsIntLit(if x then 1 else 0)
     case IExpr.Literal(hkmc2.syntax.Tree.IntLit(x)) => mlsIntLit(x)
@@ -190,13 +190,13 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
   def codegenOps(op: BuiltinSymbol, args: Ls[TrivialExpr])(using Ctx, Raise, Scope) = 
     trace[Expr](s"codegenOps $op begin"):
       var op2 = op.nme
-      if op2 == "===" then
+      if op2 === "===" then
         op2 = "=="
-      else if op2 == "!===" then
+      else if op2 === "!===" then
         op2 = "!="
-      if op.binary && args.length == 2 then 
+      if op.binary && args.length === 2 then 
         Expr.Binary(op2, toExpr(args(0)), toExpr(args(1)))
-      else if op.unary && args.length == 1 then
+      else if op.unary && args.length === 1 then
         Expr.Unary(op2, toExpr(args(0)))
       else
         TODO(s"codegenOps ${op.nme} ${args.size} ${op.binary} ${op.unary} ${args.map(_.show)}")
@@ -241,10 +241,10 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
       case Node.LetExpr(name, expr, body) =>
         val stmts2 = stmts ++ Ls(Stmt.AutoBind(Ls(name |> allocIfNew), codegen(expr)))
         codegen(body, storeInto)(using decls, stmts2)
-      case Node.LetCall(names, bin: BuiltinSymbol, args, body) if bin.nme == "<builtin>" =>
+      case Node.LetCall(names, bin: BuiltinSymbol, args, body) if bin.nme === "<builtin>" =>
         val stmts2 = stmts ++ codegenBuiltin(names, args.head.toString.replace("\"", ""), args.tail)
         codegen(body, storeInto)(using decls, stmts2)
-      case Node.LetMethodCall(names, cls, method, IExpr.Ref(bin: BuiltinSymbol) :: args, body) if bin.nme == "<this>" =>
+      case Node.LetMethodCall(names, cls, method, IExpr.Ref(bin: BuiltinSymbol) :: args, body) if bin.nme === "<this>" =>
         val call = mlsThisCall(cls, method |> directName, args.map(toExpr))
         val stmts2 = stmts ++ Ls(Stmt.AutoBind(names.map(allocIfNew), call))
         codegen(body, storeInto)(using decls, stmts2)
@@ -275,23 +275,23 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
 
   // Topological sort of classes based on inheritance relationships
   def sortClasses(prog: Program)(using Raise, Scope): Ls[ClassInfo] =
-    var depgraph = prog.classes.map(x => (x.name |> mapClsLikeName, x.parents.map(mapClsLikeName))).toMap
-      ++ builtinClassSymbols.map(x => (x |> mapClsLikeName, Set.empty[String]))
+    var depgraph = prog.classes.map(x => (x.symbol, x.parents)).toMap
+      ++ builtinClassSymbols.map(x => (x, Set.empty[Symbol]))
     log(s"depgraph: $depgraph")
     var degree = depgraph.view.mapValues(_.size).toMap
-    def removeNode(node: Str) =
+    def removeNode(node: Symbol) =
       degree -= node
       depgraph -= node
-      depgraph = depgraph.view.mapValues(_.filter(_ != node)).toMap
+      depgraph = depgraph.view.mapValues(_.filter(_ =/= node)).toMap
       degree = depgraph.view.mapValues(_.size).toMap
     val sorted = ListBuffer.empty[ClassInfo]
-    var work = degree.filter(_._2 == 0).keys.toSet
+    var work = degree.filter(_._2 === 0).keys.toSet
     while work.nonEmpty do
       val node = work.head
       work -= node
-      prog.classes.find(x => (x.name |> mapClsLikeName) == node).foreach(sorted.addOne)
+      prog.classes.find(x => (x.symbol) === node).foreach(sorted.addOne)
       removeNode(node)
-      val next = degree.filter(_._2 == 0).keys
+      val next = degree.filter(_._2 === 0).keys
       work ++= next
     if depgraph.nonEmpty then
       val cycle = depgraph.keys.mkString(", ")

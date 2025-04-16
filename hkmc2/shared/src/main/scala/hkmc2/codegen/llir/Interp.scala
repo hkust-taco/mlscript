@@ -41,7 +41,7 @@ class Interpreter(tl: TraceLogger):
     override def toString: String =
       import hkmc2.syntax.Tree.*
       this match
-        case Class(cls, fields) => s"${cls.name.nme}(${fields.mkString(",")})"
+        case Class(cls, fields) => s"${cls.symbol.nme}(${fields.mkString(",")})"
         case Literal(IntLit(lit)) => lit.toString
         case Literal(BoolLit(lit)) => lit.toString 
         case Literal(DecLit(lit)) => lit.toString
@@ -72,8 +72,8 @@ class Interpreter(tl: TraceLogger):
     case ("/", Li(IntLit(x)), Li(IntLit(y))) => S(Li(IntLit(x / y)))
     case ("&&", Li(BoolLit(x)), Li(BoolLit(y))) => S(if x && y then getTrue else getFalse)
     case ("||", Li(BoolLit(x)), Li(BoolLit(y))) => S(if x || y then getTrue else getFalse)
-    case ("==", Li(IntLit(x)), Li(IntLit(y))) => S(if x == y then getTrue else getFalse)
-    case ("===", Li(IntLit(x)), Li(IntLit(y))) => S(if x == y then getTrue else getFalse)
+    case ("==", Li(IntLit(x)), Li(IntLit(y))) => S(if x === y then getTrue else getFalse)
+    case ("===", Li(IntLit(x)), Li(IntLit(y))) => S(if x === y then getTrue else getFalse)
     case ("!=", Li(IntLit(x)), Li(IntLit(y))) => S(if x != y then getTrue else getFalse)
     case ("<=", Li(IntLit(x)), Li(IntLit(y))) => S(if x <= y then getTrue else getFalse)
     case (">=", Li(IntLit(x)), Li(IntLit(y))) => S(if x >= y then getTrue else getFalse)
@@ -110,7 +110,7 @@ class Interpreter(tl: TraceLogger):
     case Select(name, cls, field) if field.forall(_.isDigit) =>
       val nth = field.toInt
       ctx.bindingCtx.get(name).toRight(StuckExpr(expr, s"undefined variable $name")).flatMap {
-        case Value.Class(cls2, xs) if cls == cls2.name =>
+        case Value.Class(cls2, xs) if cls === cls2.symbol =>
           xs.lift(nth) match
             case Some(x) => R(x)
             case None => L(StuckExpr(expr, s"unable to find selected field $field"))
@@ -119,8 +119,8 @@ class Interpreter(tl: TraceLogger):
       }
     case Select(name, cls, field) =>
       ctx.bindingCtx.get(name).toRight(StuckExpr(expr, s"undefined variable $name")).flatMap {
-        case Value.Class(cls2, xs) if cls == cls2.name =>
-          xs.zip(cls2.fields).find{_._2.nme == field} match
+        case Value.Class(cls2, xs) if cls === cls2.symbol =>
+          xs.zip(cls2.fields).find{_._2.nme === field} match
             case Some((x, _)) => R(x)
             case None => L(StuckExpr(expr, s"unable to find selected field $field"))
         case Value.Class(cls2, xs) => L(StuckExpr(expr, s"unexpected class $cls2"))
@@ -140,10 +140,10 @@ class Interpreter(tl: TraceLogger):
         x <- eval_t(Ref(assignee): TrivialExpr)
         y <- eval_t(value)
         res <- x match
-          case obj @ Value.Class(cls2, xs) if cls == cls2 =>
-            xs.zip(cls2.fields).find{_._2.nme == field} match
+          case obj @ Value.Class(cls2, xs) if cls === cls2 =>
+            xs.zip(cls2.fields).find{_._2.nme === field} match
               case Some((_, _)) =>
-                obj.fields = xs.map(x => if x == obj then y else x)
+                obj.fields = xs.map(x => if x === obj then y else x)
                 // Ideally, we should return a unit value here, but here we return the assignee value for simplicity.
                 R(obj)
               case None => L(StuckExpr(expr, s"unable to find selected field $field"))
@@ -164,18 +164,18 @@ class Interpreter(tl: TraceLogger):
       eval_t(scrut) flatMap {
         case Value.Class(cls, fields) => 
           cases.find {
-            case (Pat.Class(cls2), _) => cls.name == cls2
+            case (Pat.Class(cls2), _) => cls.symbol === cls2
             case _ => false
           } match {
             case Some((_, x)) => eval(x)
             case None => 
               default match
                 case S(x) => eval(x)
-                case N => L(StuckNode(node, s"can not find the matched case, ${cls.name} expected"))
+                case N => L(StuckNode(node, s"can not find the matched case, ${cls.symbol} expected"))
           }
         case Value.Literal(lit) => 
           cases.find {
-            case (Pat.Lit(lit2), _) => lit == lit2
+            case (Pat.Lit(lit2), _) => lit === lit2
             case _ => false
           } match {
             case Some((_, x)) => eval(x)
@@ -197,7 +197,7 @@ class Interpreter(tl: TraceLogger):
         // But they have different symbols for the method definition.
         // So, we don't directly use the method symbol to find the method.
         // Instead, we fallback to use the method name.
-        cls.methods.find(_._1.nme == method.nme).map(_._2)
+        cls.methods.find(_._1.nme === method.nme).map(_._2)
       for
         ys <- evalArgs(args).flatMap {
           case (ths @ Value.Class(cls2, xs)) :: args =>
@@ -228,7 +228,7 @@ class Interpreter(tl: TraceLogger):
     val Program(classes, defs, entry) = prog
     given Ctx = Ctx(
       bindingCtx = Map.empty,
-      classCtx = classes.map(cls => (cls.name, cls)).toMap,
+      classCtx = classes.map(cls => (cls.symbol, cls)).toMap,
       funcCtx = defs.map(func => (func.name, func)).toMap,
       thisVal = None,
     )

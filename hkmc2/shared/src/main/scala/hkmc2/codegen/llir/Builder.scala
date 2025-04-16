@@ -43,9 +43,9 @@ final case class Ctx(
   class_ctx: Map[MemberSymbol[? <: ClassLikeDef], ClassInfo] = Map.empty,
   class_sym_ctx: Map[BlockMemberSymbol, MemberSymbol[? <: ClassLikeDef]] = Map.empty,
   flow_ctx: Map[Path, Local] = Map.empty,
-  is_top_level: Bool = true,
+  isTopLevel: Bool = true,
   method_class: Opt[MemberSymbol[? <: ClassLikeDef]] = None,
-  builtin_sym: BuiltinSymbols = BuiltinSymbols()
+  builtinSym: BuiltinSymbols = BuiltinSymbols()
 ):
   def addFuncName(n: Local, paramsSize: Int) = copy(fn_ctx = fn_ctx + (n -> FuncInfo(paramsSize)))
   def findFuncName(n: Local)(using Raise) = fn_ctx.get(n) match
@@ -62,11 +62,11 @@ final case class Ctx(
     case Some(value) => value
   def addKnownClass(n: Path, m: Local) = copy(flow_ctx = flow_ctx + (n -> m))
   def setClass(c: MemberSymbol[? <: ClassLikeDef]) = copy(method_class = Some(c))
-  def nonTopLevel = copy(is_top_level = false)
+  def nonTopLevel = copy(isTopLevel = false)
 
 object Ctx:
   def empty(using Elaborator.State) =
-    Ctx(ListBuffer.empty, ListBuffer.empty, builtin_sym = BuiltinSymbols(
+    Ctx(ListBuffer.empty, ListBuffer.empty, builtinSym = BuiltinSymbols(
       runtimeSym = Some(Elaborator.State.runtimeSymbol)
     ))
 
@@ -113,28 +113,28 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   private def newVarSym(name: Str) = VarSymbol(Tree.Ident(name))
   private def newFunSym(name: Str) = BlockMemberSymbol(name, Nil)
   private def newBuiltinSym(name: Str) = BuiltinSymbol(name, false, false, false, false)
-  private def builtinField(n: Int)(using Ctx) = summon[Ctx].builtin_sym.fieldSym.getOrElseUpdate(n, newVarSym(s"field$n"))
-  private def builtinApply(n: Int)(using Ctx) = summon[Ctx].builtin_sym.applySym.getOrElseUpdate(n, newFunSym(s"apply$n"))
-  private def builtinTuple(n: Int)(using Ctx) = summon[Ctx].builtin_sym.tupleSym.getOrElseUpdate(n, newTupleSym(n))
+  private def builtinField(n: Int)(using Ctx) = summon[Ctx].builtinSym.fieldSym.getOrElseUpdate(n, newVarSym(s"field$n"))
+  private def builtinApply(n: Int)(using Ctx) = summon[Ctx].builtinSym.applySym.getOrElseUpdate(n, newFunSym(s"apply$n"))
+  private def builtinTuple(n: Int)(using Ctx) = summon[Ctx].builtinSym.tupleSym.getOrElseUpdate(n, newTupleSym(n))
   private def builtinCallable(using ctx: Ctx) : Local =
-    ctx.builtin_sym.callableSym match
+    ctx.builtinSym.callableSym match
       case None => 
         val sym = newBuiltinSym("Callable")
-        ctx.builtin_sym.callableSym = Some(sym);
+        ctx.builtinSym.callableSym = Some(sym);
         sym
       case Some(value) => value
   private def builtinThis(using ctx: Ctx) : Local =
-    ctx.builtin_sym.thisSym match
+    ctx.builtinSym.thisSym match
       case None => 
         val sym = newBuiltinSym("<this>")
-        ctx.builtin_sym.thisSym = Some(sym);
+        ctx.builtinSym.thisSym = Some(sym);
         sym
       case Some(value) => value
   private def builtin(using ctx: Ctx) : Local =
-    ctx.builtin_sym.builtinSym match
+    ctx.builtinSym.builtinSym match
       case None => 
         val sym = newBuiltinSym("<builtin>")
-        ctx.builtin_sym.builtinSym = Some(sym);
+        ctx.builtinSym.builtinSym = Some(sym);
         sym
       case Some(value) => value
 
@@ -170,7 +170,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   private def bNestedFunDef(e: FunDefn)(k: TrivialExpr => Ctx ?=> Node)(using ctx: Ctx)(using Raise, Scope): Node =
     val FunDefn(_own, sym, params, body) = e
     // generate it as a single named lambda expression that may be self-recursing
-    if params.length == 0 then
+    if params.length === 0 then
       bErrStop(msg"Function without arguments not supported: ${params.length.toString}")
     else
       val fstParams = params.head
@@ -180,8 +180,8 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   private def bFunDef(e: FunDefn)(using ctx: Ctx)(using Raise, Scope): Func =
     trace[Func](s"bFunDef begin: ${e.sym}", x => s"bFunDef end: ${x.show}"):
       val FunDefn(_own, sym, params, body) = e
-      assert(ctx.is_top_level)
-      if params.length == 0 then
+      assert(ctx.isTopLevel)
+      if params.length === 0 then
         bErrStop(msg"Function without arguments not supported: ${params.length.toString}")
       else 
         val paramsList = params.head.params
@@ -196,9 +196,9 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   private def bMethodDef(e: FunDefn)(using ctx: Ctx)(using Raise, Scope): Func =
     trace[Func](s"bFunDef begin: ${e.sym}", x => s"bFunDef end: ${x.show}"):
       val FunDefn(_own, sym, params, body) = e
-      if !ctx.is_top_level then
+      if !ctx.isTopLevel then
         bErrStop(msg"Non top-level definition ${sym.nme} not supported")
-      else if params.length == 0 then
+      else if params.length === 0 then
         bErrStop(msg"Function without arguments not supported: ${params.length.toString}")
       else 
         val paramsList = params.head.params
@@ -214,7 +214,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
     trace[ClassInfo](s"bClsLikeDef begin", x => s"bClsLikeDef end: ${x.show}"):
       val ClsLikeDefn(
         _own, isym, _sym, kind, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor) = e
-      if !ctx.is_top_level then
+      if !ctx.isTopLevel then
         bErrStop(msg"Non top-level definition ${isym.toString()} not supported")
       else
         val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
@@ -328,7 +328,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   private def bPath(p: Path)(k: TrivialExpr => Ctx ?=> Node)(using ctx: Ctx)(using Raise, Scope) : Node =
     trace[Node](s"bPath { $p } begin", x => s"bPath end: ${x.show}"):
       p match
-      case s @ Select(Value.Ref(sym), Tree.Ident("Unit")) if sym is ctx.builtin_sym.runtimeSym.get =>
+      case s @ Select(Value.Ref(sym), Tree.Ident("Unit")) if sym is ctx.builtinSym.runtimeSym.get =>
         bPath(Value.Lit(Tree.UnitLit(false)))(k)
       case s @ Select(Value.Ref(cls: ClassSymbol), name) if ctx.method_class.contains(cls) =>
         s.symbol match
@@ -387,18 +387,18 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
             val v: Local = newTemp
             Node.LetExpr(v, Expr.CtorApp(fromMemToClass(sym), args), k(v |> sr))
       case Call(s @ Value.Ref(sym), args) =>
-            val v: Local = newTemp
-            ctx.fn_ctx.get(sym) match
-              case Some(f) =>
+        val v: Local = newTemp
+        ctx.fn_ctx.get(sym) match
+          case Some(f) =>
+            bArgs(args):
+              case args: Ls[TrivialExpr] =>
+                Node.LetCall(Ls(v), sym, args, k(v |> sr))
+          case None =>
+            bPath(s):
+              case f: TrivialExpr =>
                 bArgs(args):
                   case args: Ls[TrivialExpr] =>
-                    Node.LetCall(Ls(v), sym, args, k(v |> sr))
-              case None =>
-                bPath(s):
-                  case f: TrivialExpr =>
-                    bArgs(args):
-                      case args: Ls[TrivialExpr] =>
-                        Node.LetMethodCall(Ls(v), builtinCallable, builtinApply(args.length), f :: args, k(v |> sr))
+                    Node.LetMethodCall(Ls(v), builtinCallable, builtinApply(args.length), f :: args, k(v |> sr))
       case Call(Select(Value.Ref(_: TopLevelSymbol), Tree.Ident("builtin")), args) =>
         bArgs(args):
           case args: Ls[TrivialExpr] =>
@@ -472,7 +472,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
             summon[Ctx].def_acc += jpdef
             Node.Case(e, casesList, defaultCase)
       case Return(res, implct) => bResult(res)(x => Node.Result(Ls(x)))
-      case Throw(Instantiate(Select(Value.Ref(_), ident), Ls(Value.Lit(Tree.StrLit(e))))) if ident.name == "Error" =>
+      case Throw(Instantiate(Select(Value.Ref(_), ident), Ls(Value.Lit(Tree.StrLit(e))))) if ident.name === "Error" =>
         Node.Panic(e)
       case Label(label, body, rest) => TODO("Label not supported")
       case Break(label) => TODO("Break not supported")
@@ -498,7 +498,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         bBind(S(lhs), rhs, rest)(k)(ct)
       case AssignField(lhs, nme, rhs, rest) => TODO("AssignField not supported")
       case Define(fd @ FunDefn(_own, sym, params, body), rest) =>
-        if ctx.is_top_level then
+        if ctx.isTopLevel then
           val f = bFunDef(fd)
           ctx.def_acc += f
           bBlock(rest)(k)(ct)
@@ -527,7 +527,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       b.subBlocks.foldLeft(ctx)((ctx, rest) => registerClasses(rest)(using ctx))
 
   def registerBuiltinClasses(using ctx: Ctx)(using Raise, Scope): Ctx =
-    ctx.builtin_sym.tupleSym.foldLeft(ctx):
+    ctx.builtinSym.tupleSym.foldLeft(ctx):
       case (ctx, (len, sym)) =>
         val c = ClassInfo(uid.make, sym, (0 until len).map(x => builtinField(x)).toList, Set.empty, Map.empty)
         ctx.class_acc += c
@@ -560,7 +560,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   
       override def applyFunDefn(fun: FunDefn): Unit =
         val FunDefn(_own, sym, params, body) = fun
-        if params.length == 0 then
+        if params.length === 0 then
           bErrStop(msg"Function without arguments not supported: ${params.length.toString}")
         ctx2 = ctx2.addFuncName(sym, params.head.params.length)
         log(s"Define function: ${sym.nme} -> ${ctx2}")

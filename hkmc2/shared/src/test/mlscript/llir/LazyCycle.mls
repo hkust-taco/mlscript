@@ -45,10 +45,10 @@ llist(1)
 //│ #include "mlsprelude.h"
 //│ struct _mls_Lazy;
 //│ struct _mls_LzList;
+//│ struct _mls_LzCons;
+//│ struct _mls_LzNil;
 //│ struct _mls_Lambda_lambda;
 //│ struct _mls_Lambda_f;
-//│ struct _mls_LzNil;
-//│ struct _mls_LzCons;
 //│ _mlsValue _mls_entry2();
 //│ _mlsValue _mls_entry();
 //│ _mlsValue _mls_llist(_mlsValue);
@@ -63,6 +63,25 @@ llist(1)
 //│   virtual void print() const override { std::printf("%s", typeName); }
 //│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   static _mlsValue create() { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_LzList; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│   
+//│ };
+//│ struct _mls_LzCons: public _mls_LzList {
+//│   _mlsValue _mls_head;
+//│   _mlsValue _mls_tail;
+//│   constexpr static inline const char *typeName = "LzCons";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_head.print(); std::printf(", "); this->_mls_tail.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_head); _mlsValue::destroy(this->_mls_tail);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   static _mlsValue create(_mlsValue _mls_head, _mlsValue _mls_tail) { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_LzCons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_head = _mls_head; _mlsVal->_mls_tail = _mls_tail;  return _mlsValue(_mlsVal); }
+//│   
+//│ };
+//│ struct _mls_LzNil: public _mls_LzList {
+//│   
+//│   constexpr static inline const char *typeName = "LzNil";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   static _mlsValue create() { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_LzNil; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
 //│   
 //│ };
 //│ struct _mls_Lambda_lambda: public _mls_Callable {
@@ -83,25 +102,6 @@ llist(1)
 //│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   static _mlsValue create() { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_Lambda_f; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
 //│   virtual _mlsValue _mls_apply1(_mlsValue);
-//│ };
-//│ struct _mls_LzNil: public _mls_LzList {
-//│   
-//│   constexpr static inline const char *typeName = "LzNil";
-//│   constexpr static inline uint32_t typeTag = nextTypeTag();
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
-//│   static _mlsValue create() { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_LzNil; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
-//│   
-//│ };
-//│ struct _mls_LzCons: public _mls_LzList {
-//│   _mlsValue _mls_head;
-//│   _mlsValue _mls_tail;
-//│   constexpr static inline const char *typeName = "LzCons";
-//│   constexpr static inline uint32_t typeTag = nextTypeTag();
-//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_head.print(); std::printf(", "); this->_mls_tail.print();  std::printf(")"); }
-//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_head); _mlsValue::destroy(this->_mls_tail);  operator delete (this, std::align_val_t(_mlsAlignment)); }
-//│   static _mlsValue create(_mlsValue _mls_head, _mlsValue _mls_tail) { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_LzCons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_head = _mls_head; _mlsVal->_mls_tail = _mls_tail;  return _mlsValue(_mlsVal); }
-//│   
 //│ };
 //│ _mlsValue _mls_j() {
 //│   _mlsValue _mls_retval;
