@@ -9,7 +9,7 @@ fun nonsense(xs) = if xs is
 //│ nonsense = function nonsense(xs) {
 //│   let rest, ys;
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 0) {
-//│     rest = runtime.Tuple.slice(xs, 0, 0);
+//│     rest = runtime.safeCall(runtime.Tuple.slice(xs, 0, 0));
 //│     ys = rest;
 //│     return ys
 //│   } else {
@@ -33,7 +33,7 @@ fun lead_and_last(xs) = if xs is
 //│   let last0, rest, first0, x, ys, y;
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];
-//│     rest = runtime.Tuple.slice(xs, 1, 1);
+//│     rest = runtime.safeCall(runtime.Tuple.slice(xs, 1, 1));
 //│     last0 = runtime.Tuple.get(xs, -1);
 //│     x = first0;
 //│     ys = rest;
@@ -69,7 +69,7 @@ fun nested_tuple_patterns(xs) = if xs is
 //│   let last0, rest, first0, x, first1, first01, y, z, w, tmp, tmp1;
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];
-//│     rest = runtime.Tuple.slice(xs, 1, 1);
+//│     rest = runtime.safeCall(runtime.Tuple.slice(xs, 1, 1));
 //│     last0 = runtime.Tuple.get(xs, -1);
 //│     x = first0;
 //│     if (globalThis.Array.isArray(rest) && rest.length === 2) {

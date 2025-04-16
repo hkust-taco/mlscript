@@ -298,16 +298,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         End("error")
     case st.TyApp(f, ts) => term(f)(k) // * Type arguments are erased
     case st.App(f, arg) =>
-      val isMlsFun = f.symbol.fold(
-        f.isInstanceOf[st.Lam] || {
-          @tailrec def base(t: Term): Term = t match
-            case SynthSel(s, _) => base(s)
-            case _ => t
-          base(f) match
-            case st.Ref(symbol) => symbol == State.runtimeSymbol
-            case _ => false
-        }
-      ):
+      val isMlsFun = f.symbol.fold(f.isInstanceOf[st.Lam]):
         case _: sem.BuiltinSymbol => true
         case sym: sem.BlockMemberSymbol =>
           sym.trmImplTree.fold(sym.clsTree.isDefined)(_.k is syntax.Fun)
