@@ -49,12 +49,17 @@ module Tuple with
 
   fun get(xs, i) =
     // * Contrary to `xs.[i]`, this supports negative indices (Python-style)
-    safeCall of globalThis.Array.prototype.at.call(xs, i)
+    if i >= xs.length then
+      throw RangeError("Tuple.get: index out of bounds")
+    else globalThis.Array.prototype.at.call(xs, i)
 
 module Str with
   fun startsWith(string, prefix) = string.startsWith(prefix)
 
-  fun get(string, i) = string.at(i)
+  fun get(string, i) =
+    if i >= string.length then
+      throw RangeError("Str.get: index out of bounds")
+    else string.at(i)
 
   fun drop(string, n) = string.slice(n)
 

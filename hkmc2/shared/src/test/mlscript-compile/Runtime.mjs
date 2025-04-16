@@ -66,9 +66,13 @@ let Runtime1;
         return runtime.safeCall(globalThis.Array.prototype.slice.call(xs, i, tmp))
       } 
       static get(xs1, i1) {
-        let tmp;
-        tmp = globalThis.Array.prototype.at.call(xs1, i1);
-        return Runtime.safeCall(tmp)
+        let scrut;
+        scrut = i1 >= xs1.length;
+        if (scrut === true) {
+          throw globalThis.RangeError("Tuple.get: index out of bounds");
+        } else {
+          return globalThis.Array.prototype.at.call(xs1, i1)
+        }
       }
       static toString() { return "Tuple"; }
     });
@@ -80,7 +84,13 @@ let Runtime1;
         return runtime.safeCall(string.startsWith(prefix))
       } 
       static get(string1, i) {
-        return runtime.safeCall(string1.at(i))
+        let scrut;
+        scrut = i >= string1.length;
+        if (scrut === true) {
+          throw globalThis.RangeError("Str.get: index out of bounds");
+        } else {
+          return runtime.safeCall(string1.at(i))
+        }
       } 
       static drop(string2, n) {
         return runtime.safeCall(string2.slice(n))
