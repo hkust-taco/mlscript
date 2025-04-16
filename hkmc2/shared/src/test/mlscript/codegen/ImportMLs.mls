@@ -48,12 +48,12 @@ Some(1)
 
 :re
 new Some(1) isDefined()
-//│ ═══[RUNTIME ERROR] TypeError: tmp5 is not a constructor
+//│ ═══[RUNTIME ERROR] TypeError: tmp5.class is not a constructor
 
 :re
 new Some(1)
   isDefined()
-//│ ═══[RUNTIME ERROR] TypeError: tmp7 is not a constructor
+//│ ═══[RUNTIME ERROR] TypeError: tmp7.class is not a constructor
 
 
 open Option { Some, None, isDefined }

@@ -64,6 +64,9 @@ open Mod { print, |> }
 
 :fixme
 12 |> print
+//│ ╔══[ERROR] Module 'Mod' does not contain member '|>'
+//│ ║  l.66: 	12 |> print
+//│ ╙──      	   ^^
 //│ ═══[RUNTIME ERROR] TypeError: Mod1.|> is not a function
 
 

@@ -1,12 +1,49 @@
 :js
-// :de
-// :sjs
-// :pt
-// :elt
-
-:global
-:d
-:todo
 
 
+class Foo with
+  val x = 10
+  fun foo = x + 1
 
+data class Bar(y) extends Foo with
+  fun bar = y + 1
+
+:dr
+data class Baz(z) extends Bar(z * 1) with
+  fun baz = this.bar * 2
+//│ Traversing block: Blk(List(Parameterized(None,Cls,class:Baz‹715›,member:Baz‹714›,List(),ParamList(‹›,List(Param(‹val›,z‹717›,None,Modulefulness(None))),None),Some(New(SynthSel(Ref(member:Bar‹702›),Ident(class)),List(App(Ref(builtin:*‹21›),Tup(List(Fld(‹›,Ref(z‹717›),None), Fld(‹›,Lit(IntLit(1)),None))))),None)),( ‹method› val member:z‹718› = z‹717›#0; ‹method› fun member:baz‹713› = builtin:*‹21›#0(class:Baz‹715›#0.bar, 2)‹builtin:*‹21››; ),None,List(Modifier(keyword 'data')))),Lit(UnitLit(false)))
+//│ | Traversing statement: Parameterized(None,Cls,class:Baz‹715›,member:Baz‹714›,List(),ParamList(‹›,List(Param(‹val›,z‹717›,None,Modulefulness(None))),None),Some(New(SynthSel(Ref(member:Bar‹702›),Ident(class)),List(App(Ref(builtin:*‹21›),Tup(List(Fld(‹›,Ref(z‹717›),None), Fld(‹›,Lit(IntLit(1)),None))))),None)),( ‹method› val member:z‹718› = z‹717›#0; ‹method› fun member:baz‹713› = builtin:*‹21›#0(class:Baz‹715›#0.bar, 2)‹builtin:*‹21››; ),None,List(Modifier(keyword 'data')))
+//│ | Resolving definition: Parameterized(None,Cls,class:Baz‹715›,member:Baz‹714›,List(),ParamList(‹›,List(Param(‹val›,z‹717›,None,Modulefulness(None))),None),Some(New(SynthSel(Ref(member:Bar‹702›),Ident(class)),List(App(Ref(builtin:*‹21›),Tup(List(Fld(‹›,Ref(z‹717›),None), Fld(‹›,Lit(IntLit(1)),None))))),None)),( ‹method› val member:z‹718› = z‹717›#0; ‹method› fun member:baz‹713› = builtin:*‹21›#0(class:Baz‹715›#0.bar, 2)‹builtin:*‹21››; ),None,List(Modifier(keyword 'data')))
+//│ | | Resolving class definition Parameterized(None,Cls,class:Baz‹715›,member:Baz‹714›,List(),ParamList(‹›,List(Param(‹val›,z‹717›,None,Modulefulness(None))),None),Some(New(SynthSel(Ref(member:Bar‹702›),Ident(class)),List(App(Ref(builtin:*‹21›),Tup(List(Fld(‹›,Ref(z‹717›),None), Fld(‹›,Lit(IntLit(1)),None))))),None)),( ‹method› val member:z‹718› = z‹717›#0; ‹method› fun member:baz‹713› = builtin:*‹21›#0(class:Baz‹715›#0.bar, 2)‹builtin:*‹21››; ),None,List(Modifier(keyword 'data')))
+//│ | | Resolving parameter ‹val›z‹717›
+//│ | | Traversing block: Blk(List(TermDefinition(Some(class:Baz‹715›),ImmutVal,member:z‹718›,List(),None,None,Some(Ref(z‹717›)),‹class-param-res›‹719›,‹method›,Modulefulness(None),List()), TermDefinition(Some(class:Baz‹715›),Fun,member:baz‹713›,List(),None,None,Some(App(Ref(builtin:*‹21›),Tup(List(Fld(‹›,Sel(Ref(class:Baz‹715›),Ident(bar)),None), Fld(‹›,Lit(IntLit(2)),None))))),‹result of member:baz‹713››‹722›,‹method›,Modulefulness(None),List())),Lit(UnitLit(false)))
+//│ | | | Traversing statement: TermDefinition(Some(class:Baz‹715›),ImmutVal,member:z‹718›,List(),None,None,Some(Ref(z‹717›)),‹class-param-res›‹719›,‹method›,Modulefulness(None),List())
+//│ | | | Resolving definition: TermDefinition(Some(class:Baz‹715›),ImmutVal,member:z‹718›,List(),None,None,Some(Ref(z‹717›)),‹class-param-res›‹719›,‹method›,Modulefulness(None),List())
+//│ | | | | Resolving value definition TermDefinition(Some(class:Baz‹715›),ImmutVal,member:z‹718›,List(),None,None,Some(Ref(z‹717›)),‹class-param-res›‹719›,‹method›,Modulefulness(None),List())
+//│ | | | | Traversing term: Ref(z‹717›)
+//│ | | | | | Resolving resolvable term: Ref(z‹717›), (inPrefix = false)
+//│ | | | | | | Resolving with defn = None
+//│ | | | | | ~> Ref(z‹717›)
+//│ | | | Traversing statement: TermDefinition(Some(class:Baz‹715›),Fun,member:baz‹713›,List(),None,None,Some(App(Ref(builtin:*‹21›),Tup(List(Fld(‹›,Sel(Ref(class:Baz‹715›),Ident(bar)),None), Fld(‹›,Lit(IntLit(2)),None))))),‹result of member:baz‹713››‹722›,‹method›,Modulefulness(None),List())
+//│ | | | Resolving definition: TermDefinition(Some(class:Baz‹715›),Fun,member:baz‹713›,List(),None,None,Some(App(Ref(builtin:*‹21›),Tup(List(Fld(‹›,Sel(Ref(class:Baz‹715›),Ident(bar)),None), Fld(‹›,Lit(IntLit(2)),None))))),‹result of member:baz‹713››‹722›,‹method›,Modulefulness(None),List())
+//│ | | | | Resolving function definition TermDefinition(Some(class:Baz‹715›),Fun,member:baz‹713›,List(),None,None,Some(App(Ref(builtin:*‹21›),Tup(List(Fld(‹›,Sel(Ref(class:Baz‹715›),Ident(bar)),None), Fld(‹›,Lit(IntLit(2)),None))))),‹result of member:baz‹713››‹722›,‹method›,Modulefulness(None),List())
+//│ | | | | Traversing term: App(Ref(builtin:*‹21›),Tup(List(Fld(‹›,Sel(Ref(class:Baz‹715›),Ident(bar)),None), Fld(‹›,Lit(IntLit(2)),None))))
+//│ | | | | | Resolving resolvable term: App(Ref(builtin:*‹21›),Tup(List(Fld(‹›,Sel(Ref(class:Baz‹715›),Ident(bar)),None), Fld(‹›,Lit(IntLit(2)),None)))), (inPrefix = false)
+//│ | | | | | | Resolving resolvable term: Ref(builtin:*‹21›), (inPrefix = false)
+//│ | | | | | | | Resolving with defn = None
+//│ | | | | | | ~> Ref(builtin:*‹21›)
+//│ | | | | | | Resolving with defn = None
+//│ | | | | | | Traversing term: Tup(List(Fld(‹›,Sel(Ref(class:Baz‹715›),Ident(bar)),None), Fld(‹›,Lit(IntLit(2)),None)))
+//│ | | | | | | | Traversing term: Sel(Ref(class:Baz‹715›),Ident(bar))
+//│ | | | | | | | | Resolving resolvable term: Sel(Ref(class:Baz‹715›),Ident(bar)), (inPrefix = false)
+//│ | | | | | | | | | Traversing term: Ref(class:Baz‹715›)
+//│ | | | | | | | | | | Resolving resolvable term: Ref(class:Baz‹715›), (inPrefix = false)
+//│ | | | | | | | | | | | Resolving with defn = None
+//│ | | | | | | | | | | ~> Ref(class:Baz‹715›)
+//│ | | | | | | | | | Resolving symbol for Sel(Ref(class:Baz‹715›),Ident(bar)), defn = Some(Parameterized(None,Cls,class:Baz‹715›,member:Baz‹714›,List(),ParamList(‹›,List(Param(‹val›,z‹717›,None,Modulefulness(None))),None),Some(New(SynthSel(Ref(member:Bar‹702›),Ident(class)),List(App(Ref(builtin:*‹21›),Tup(List(Fld(‹›,Ref(z‹717›),None), Fld(‹›,Lit(IntLit(1)),None))))),None)),( ‹method› val member:z‹718› = z‹717›#0; ‹method› fun member:baz‹713› = builtin:*‹21›#0(class:Baz‹715›#0.bar, 2)‹builtin:*‹21››; ),None,List(Modifier(keyword 'data'))))
+//│ | | | | | | | | | Resolving with defn = None
+//│ | | | | | | | | ~> Sel(Ref(class:Baz‹715›),Ident(bar))
+//│ | | | | | | | Traversing term: Lit(IntLit(2))
+//│ | | | | | ~> App(Ref(builtin:*‹21›),Tup(List(Fld(‹›,Sel(Ref(class:Baz‹715›),Ident(bar)),None), Fld(‹›,Lit(IntLit(2)),None))))
+//│ | | | Traversing term: Lit(UnitLit(false))
+//│ | Traversing term: Lit(UnitLit(false))

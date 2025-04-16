@@ -11,27 +11,44 @@ fun foo[A](using Foo[A], A)
 use Foo[Baz] = new Foo
 
 
-:todo
+// FIXME: error message refers to `A`
+:e
+:fixme // Internal Error should never reach users
 foo[Baz]
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.15: 	foo[Baz]
+//│ ║  l.17: 	foo[Baz]
+//│ ║        	^^^^^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.9: 	fun foo[A](using Foo[A], A)
+//│ ║       	                         ^
+//│ ╙── Expected: A; Available: (Foo[Baz])
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
+
+:e
+:fixme // Internal Error should never reach users
+foo
+//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ║  l.29: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.9: 	fun foo[A](using Foo[A], A)
 //│ ║       	                         ^
-//│ ╙── Expected: A; Available: Map(Sym(class:Foo) -> List((App(Sym(class:Foo),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Foo),TyTup(List(Ident(Baz))))))))
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Found unpopulated contextual argument: CtxArg(None).
+//│ ╙── Expected: A; Available: (Foo[Baz])
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
+
+
+use Baz = new Baz
 
 :todo
 foo
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.26: 	foo
+//│ ║  l.43: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.9: 	fun foo[A](using Foo[A], A)
 //│ ║       	                         ^
-//│ ╙── Expected: A; Available: Map(Sym(class:Foo) -> List((App(Sym(class:Foo),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Foo),TyTup(List(Ident(Baz))))))))
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Found unpopulated contextual argument: CtxArg(None).
+//│ ╙── Expected: A; Available: (Foo[Baz], Baz)
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
 
 
 fun foo[A](using Foo[A])(using A)
@@ -39,13 +56,13 @@ fun foo[A](using Foo[A])(using A)
 :todo
 foo
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.40: 	foo
+//│ ║  l.57: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.37: 	fun foo[A](using Foo[A])(using A)
+//│ ║  l.54: 	fun foo[A](using Foo[A])(using A)
 //│ ║        	                               ^
-//│ ╙── Expected: A; Available: Map(Sym(class:Foo) -> List((App(Sym(class:Foo),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Foo),TyTup(List(Ident(Baz))))))))
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Found unpopulated contextual argument: CtxArg(None).
+//│ ╙── Expected: A; Available: (Foo[Baz], Baz)
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
 
 
 fun foo[A](using A)(using Foo[A])
@@ -53,13 +70,13 @@ fun foo[A](using A)(using Foo[A])
 :todo
 foo
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.54: 	foo
+//│ ║  l.71: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.51: 	fun foo[A](using A)(using Foo[A])
+//│ ║  l.68: 	fun foo[A](using A)(using Foo[A])
 //│ ║        	                 ^
-//│ ╙── Expected: A; Available: Map(Sym(class:Foo) -> List((App(Sym(class:Foo),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Foo),TyTup(List(Ident(Baz))))))))
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Found unpopulated contextual argument: CtxArg(None).
+//│ ╙── Expected: A; Available: (Foo[Baz], Baz)
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
 
 
 use Foo[Bar[Baz]] = new Foo
@@ -68,25 +85,51 @@ use Foo[Bar[Baz]] = new Foo
 :e
 foo
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.69: 	foo
+//│ ║  l.86: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.51: 	fun foo[A](using A)(using Foo[A])
+//│ ║  l.68: 	fun foo[A](using A)(using Foo[A])
 //│ ║        	                 ^
-//│ ╙── Expected: A; Available: Map(Sym(class:Foo) -> List((App(Sym(class:Foo),List(App(Sym(class:Bar),List(Sym(class:Baz))))),Instance(member:instance$App(Ident(Foo),TyTup(List(App(Ident(Bar),TyTup(List(Ident(Baz))))))))), (App(Sym(class:Foo),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Foo),TyTup(List(Ident(Baz))))))))
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Found unpopulated contextual argument: CtxArg(None).
+//│ ╙── Expected: A; Available: (Foo[Bar[Baz]], Foo[Baz], Baz)
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
+
+use Bar[Baz] = new Bar
+
+:fixme
+foo
+//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ║  l.99: 	foo
+//│ ║        	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.68: 	fun foo[A](using A)(using Foo[A])
+//│ ║        	                 ^
+//│ ╙── Expected: A; Available: (Foo[Bar[Baz]], Foo[Baz], Baz, Bar[Baz])
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
+
+use Bar[Int] = new Bar
+
+:fixme
+foo
+//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ║  l.112: 	foo
+//│ ║         	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.68: 	fun foo[A](using A)(using Foo[A])
+//│ ║        	                 ^
+//│ ╙── Expected: A; Available: (Foo[Bar[Baz]], Foo[Baz], Baz, Bar[Int], Bar[Baz])
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
 
 use Bar[Baz] = new Bar
 
 :todo
 foo
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.82: 	foo
-//│ ║        	^^^
+//│ ║  l.125: 	foo
+//│ ║         	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.51: 	fun foo[A](using A)(using Foo[A])
+//│ ║  l.68: 	fun foo[A](using A)(using Foo[A])
 //│ ║        	                 ^
-//│ ╙── Expected: A; Available: Map(Sym(class:Foo) -> List((App(Sym(class:Foo),List(App(Sym(class:Bar),List(Sym(class:Baz))))),Instance(member:instance$App(Ident(Foo),TyTup(List(App(Ident(Bar),TyTup(List(Ident(Baz))))))))), (App(Sym(class:Foo),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Foo),TyTup(List(Ident(Baz))))))), Sym(class:Bar) -> List((App(Sym(class:Bar),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Bar),TyTup(List(Ident(Baz))))))))
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Found unpopulated contextual argument: CtxArg(None).
+//│ ╙── Expected: A; Available: (Foo[Bar[Baz]], Foo[Baz], Baz, Bar[Baz], Bar[Int], Bar[Baz])
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
 
 
