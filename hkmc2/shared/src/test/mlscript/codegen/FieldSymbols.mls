@@ -12,7 +12,7 @@ Foo(42).x
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel:
-//│     prefix = App:
+//│     prefix = App{Some(member:Foo), None}:
 //│       lhs = Ref of member:Foo
 //│       rhs = Tup of Ls of 
 //│         Fld:
@@ -66,6 +66,7 @@ case
 //│           flags = ()
 //│           sym = caseScrut
 //│           sign = N
+//│           modulefulness = Modulefulness of N
 //│       restParam = N
 //│     body = IfLike:
 //│       kw = keyword 'if'
@@ -100,6 +101,7 @@ case
 //│               flags = ()
 //│               sym = caseScrut
 //│               sign = N
+//│               modulefulness = Modulefulness of N
 //│           restParam = N
 //│       body = Match:
 //│         scrut = Ref of caseScrut

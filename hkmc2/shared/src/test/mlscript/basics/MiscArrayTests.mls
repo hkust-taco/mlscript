@@ -47,7 +47,7 @@ xs.
 //│ 	App(Ident(.),Tup(List(Ident(xs), Block(List(App(Ident(map),Tup(List(InfixApp(Tup(List(Ident(x))),keyword '=>',App(Ident(*),Tup(List(Ident(x), IntLit(2)))))))))))))
 //│ ╔══[ERROR] Expected 2 arguments, got 1
 //│ ║  l.44: 	  map(x => x * 2)
-//│ ╙──      	  ^^^
+//│ ╙──      	     ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 
 :fixme
@@ -66,7 +66,7 @@ xs
 //│           Ident of "f"
 //│ ╔══[ERROR] Expected 2 arguments, got 1
 //│ ║  l.56: 	  . map(f)
-//│ ╙──      	    ^^^
+//│ ╙──      	       ^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 
 :fixme
@@ -74,7 +74,7 @@ xs
   . map(x => x * 2)
 //│ ╔══[ERROR] Expected 2 arguments, got 1
 //│ ║  l.74: 	  . map(x => x * 2)
-//│ ╙──      	    ^^^
+//│ ╙──      	       ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 
 :fixme
@@ -83,7 +83,7 @@ xs
   . print()
 //│ ╔══[ERROR] Expected 2 arguments, got 1
 //│ ║  l.82: 	  . map(x => x * 2)
-//│ ╙──      	    ^^^
+//│ ╙──      	       ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 
 fun f = print(0)

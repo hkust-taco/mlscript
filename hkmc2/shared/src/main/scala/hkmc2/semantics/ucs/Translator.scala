@@ -82,7 +82,7 @@ class Translator(val elaborator: Elaborator)
             errorSplit
         ctor match
         case Ident(ctorName) => patternParams.find(_.sym.nme == ctorName) match
-          case S(Param(_, symbol, _)) => failure // TODO: handle input patterns
+          case S(Param(sym = symbol)) => failure // TODO: handle input patterns
           case N => resolved
         case ctor: Sel => resolved
       case App(ctor @ (_: Ident | _: Sel), Tup(params)) =>
@@ -100,7 +100,7 @@ class Translator(val elaborator: Elaborator)
             errorSplit
         ctor match
         case Ident(ctorName) => patternParams.find(_.sym.nme == ctorName) match
-          case S(Param(_, symbol, _)) => failure // TODO: handle input patterns
+          case S(Param(sym = symbol)) => failure // TODO: handle input patterns
           case N => resolved
         case ctor: Sel => resolved
       case pat =>
@@ -201,10 +201,10 @@ class Translator(val elaborator: Elaborator)
   private def makeMatcher(name: Str, scrut: VarSymbol, topmost: Split)(using Raise): TermDefinition =
     val normalize = new Normalization(elaborator)
     val sym = BlockMemberSymbol(name, Nil)
-    val ps = PlainParamList(Param(FldFlags.empty, scrut, N) :: Nil)
+    val ps = PlainParamList(Param(FldFlags.empty, scrut, N, Modulefulness.none) :: Nil)
     val body = Term.IfLike(Keyword.`if`, topmost)(normalize(topmost))
     val res = FlowSymbol(s"result of $name")
-    TermDefinition(N, Fun, sym, ps :: Nil, N, N, S(body), res, TermDefFlags.empty, Nil)
+    TermDefinition(N, Fun, sym, ps :: Nil, N, N, S(body), res, TermDefFlags.empty, Modulefulness.none, Nil)
   
   /** Translate a list of extractor/matching functions for the given pattern.
    *  There are currently two functions: `unapply` and `unapplyStringPrefix`.

@@ -40,7 +40,7 @@ Example . oops(2)
 //│   rhs = Tup of Ls of 
 //│     IntLit of 2
 //│ JS (unsanitized):
-//│ let tmp; tmp = call(Example1, oops); runtime.safeCall(tmp(2))
+//│ let tmp; tmp = call(Example1, oops); tmp(2)
 //│ = [2, 1]
 
 Example. oops(2)

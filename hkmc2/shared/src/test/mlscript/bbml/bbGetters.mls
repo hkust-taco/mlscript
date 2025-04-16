@@ -67,7 +67,7 @@ test2()
 :ssjs
 test2()(5)
 //│ JS:
-//│ tmp = test21(); block$res8 = runtime.safeCall(tmp(5)); undefined
+//│ tmp = test21(); block$res8 = tmp(5); undefined
 //│ = 5
 //│ Type: Int
 

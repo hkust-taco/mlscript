@@ -166,7 +166,7 @@ _ - 2 <| 1
 //│   return _ - 2
 //│ });
 //│ tmp9 = Predef.passTo(1, lambda25);
-//│ runtime.safeCall(tmp9())
+//│ tmp9()
 //│ = -1
 
 1 . (_ - _)(2)

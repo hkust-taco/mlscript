@@ -22,6 +22,7 @@ fun f(x) =
 //│               flags = ()
 //│               sym = x
 //│               sign = N
+//│               modulefulness = Modulefulness of N
 //│           restParam = N
 //│       tparams = N
 //│       sign = N
@@ -29,7 +30,7 @@ fun f(x) =
 //│         kw = keyword 'if'
 //│         desugared = Let:
 //│           sym = $scrut
-//│           term = App:
+//│           term = App{Some(builtin:==), None}:
 //│             lhs = Ref of builtin:==
 //│             rhs = Tup of Ls of 
 //│               Fld:
@@ -42,7 +43,7 @@ fun f(x) =
 //│                 asc = N
 //│           tail = Let: \
 //│           sym = $scrut
-//│           term = App:
+//│           term = App{Some(builtin:+), None}:
 //│             lhs = Ref of builtin:+
 //│             rhs = Tup of Ls of 
 //│               Fld:
@@ -61,6 +62,7 @@ fun f(x) =
 //│           tail = Else of Lit of IntLit of 1
 //│       resSym = ‹result of member:f›
 //│       flags = ()
+//│       modulefulness = Modulefulness of N
 //│       annotations = Nil
 //│   res = Lit of UnitLit of false
 

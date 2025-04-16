@@ -58,7 +58,7 @@ val Option = "Oops"
 :sjs
 Some(123)
 //│ JS (unsanitized):
-//│ Option.Some(123)
+//│ runtime.safeCall(Option.Some(123))
 //│ = Some(123)
 
 module Option with

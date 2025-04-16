@@ -459,7 +459,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     
     val handlerMtds = h.handlers.map: handler =>
       val lam = Value.Lam(
-        PlainParamList(Param(FldFlags.empty, handler.resumeSym, N) :: Nil),
+        PlainParamList(Param(FldFlags.empty, handler.resumeSym, N, Modulefulness.none) :: Nil),
         translateBlock(handler.body,
           handler.params.flatMap(_.paramSyms).toSet,
           handlerMtdCtx(s"Cont$$handler$$${symToStr(h.lhs)}$$${symToStr(handler.sym)}$$", handler.sym.nme)))
@@ -584,7 +584,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val resumeFnDef = FunDefn(
       S(clsSym), // owner
       resumeSym,
-      List(PlainParamList(List(Param(FldFlags.empty, resumedVal, N)))),
+      List(PlainParamList(List(Param(FldFlags.empty, resumedVal, N, Modulefulness.none)))),
       resumeBody
     )
 
@@ -624,7 +624,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       BlockMemberSymbol(clsSym.nme, Nil),
       syntax.Cls,
       S(PlainParamList({
-        val p = Param(FldFlags.empty.copy(value = true), pcVar, N)
+        val p = Param(FldFlags.empty.copy(value = true), pcVar, N, Modulefulness.none)
         pcVar.decl = S(p)
         p
       } :: Nil)),

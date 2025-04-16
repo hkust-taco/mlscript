@@ -198,7 +198,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     def warnStmt = if inStmtPos then
       raise:
         WarningReport(msg"Pure expression in statement position" -> t.toLoc :: Nil, S(t))
+    
+    // Funny Scala: the non-exhaustive match is actually the second match
     t match
+      case t: sem.Resolvable => t.instantiate
+      case t => t
+    match
     case st.UnitVal() => k(unit)
     case st.Lit(lit) =>
       warnStmt
@@ -224,13 +229,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         if sym.binary then
           val t1 = new Tree.Ident("arg1")
           val t2 = new Tree.Ident("arg2")
-          val p1 = Param(FldFlags.empty, VarSymbol(t1), N)
-          val p2 = Param(FldFlags.empty, VarSymbol(t2), N)
+          val p1 = Param(FldFlags.empty, VarSymbol(t1), N, Modulefulness.none)
+          val p2 = Param(FldFlags.empty, VarSymbol(t2), N, Modulefulness.none)
           val ps = PlainParamList(p1 :: p2 :: Nil)
           val bod = st.App(t, st.Tup(List(st.Ref(p1.sym)(t1, 666), st.Ref(p2.sym)(t2, 666)))
             (Tree.Tup(Nil // FIXME should not be required (using dummy value)
               )))(
               Tree.App(Tree.Empty(), Tree.Empty()), // FIXME should not be required (using dummy value)
+              N,
               FlowSymbol(sym.nme)
             )
           val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
@@ -239,12 +245,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           return k(Value.Lam(paramLists.head, bodyBlock))
         if sym.unary then
           val t1 = new Tree.Ident("arg")
-          val p1 = Param(FldFlags.empty, VarSymbol(t1), N)
+          val p1 = Param(FldFlags.empty, VarSymbol(t1), N, Modulefulness.none)
           val ps = PlainParamList(p1 :: Nil)
           val bod = st.App(t, st.Tup(List(st.Ref(p1.sym)(t1, 666)))
             (Tree.Tup(Nil // FIXME should not be required (using dummy value)
               )))(
               Tree.App(Tree.Empty(), Tree.Empty()), // FIXME should not be required (using dummy value)
+              N,
               FlowSymbol(sym.nme)
             )
           val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
@@ -605,13 +612,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case sem.Fld(sem.FldFlags.benign(), idx, S(rhs)) => L(idx -> rhs)
       case arg @ sem.Fld(flags, value, asc) => TODO(s"Other argument forms: $arg")
       case spd: Spd => R(true -> spd.term)
-      case ca: sem.CtxArg => ca.term match
-        case S(t) => 
-          R(false -> t)
-        case N => 
-          // * All contextual arguments should have been
-          // * populated by implicit resolution before lowering.
-          lastWords(s"Found unpopulated contextual argument: ${ca}.")
     // * The straightforward way to lower arguments creates too much recursion depth
     // * and makes Lowering stack overflow when lowering functions with lots of arguments.
     /* 

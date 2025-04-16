@@ -42,7 +42,7 @@ val f = case
 //│ >    let $doTemp = member:console#666.log("non-null")
 //│ >    caseScrut is 1 then "unit"
 //│ >    let res = "other"
-//│ >    let $doTemp = (member:Predef#666.)print‹member:print›(res#666)
+//│ >    let $doTemp = (member:Predef#666.)print‹member:print›(res#666)‹member:print›
 //│ >    else res#666
 //│ f = [function]
 

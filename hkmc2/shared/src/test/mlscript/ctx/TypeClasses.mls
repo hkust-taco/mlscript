@@ -58,27 +58,33 @@ use Foo[Int] = new IntFoo()
 use Foo[Str] = new StrFoo()
 
 // should resolve to foo(i)
+:expect 24
 M.foo
 //│ = 24
 
 // should resolve to intFoo(new IntFoo())
+:expect 42
 M.intFoo
 //│ = 42
 
 // should resolve to strFoo(new StrFoo())
+:expect "42"
 M.strFoo
 //│ = "42"
 
 // should resolve to 100 + intFoo(new IntFoo())
+:expect 142
 100 + M.intFoo
 //│ = 142
 
 // should be able to resolve in function body from outer scope
+:expect 42
 fun f: Int = M.intFoo
 f
 //│ = 42
 
 // should be able to resolve in function body from parameters
+:expect 3.14
 module N with
   fun f(using someNum: Num): Num = someNum
   fun g(using Num): Num = N.f
@@ -90,10 +96,12 @@ N.g
 // Parameterized Type Resolution
 
 // should resolve to tFoo(new StrFoo())
+:expect "42"
 M.tFoo
 //│ = "42"
 
 // should resolve to tFoo(new IntFoo())
+:expect 42
 M.tFoo[Int]
 //│ = 42
 
@@ -112,18 +120,22 @@ use Bar[Int, Str] = new IntStrBar()
 use Bar[Str, Int] = new StrIntBar()
 
 // should resolve to tFoo1(new IntStrBar())
+:expect "IntStr"
 M.tBar1
 //│ = "IntStr"
 
 // should resolve to tFoo2(new StrIntBar())
+:expect "StrInt"
 M.tBar2
 //│ = "StrInt"
 
 // should resolve to tFoo3(new StrIntBar())
+:expect "StrInt"
 M.tBar3
 //│ = "StrInt"
 
 // should resolve to tFoo3(new IntStrBar())
+:expect "IntStr"
 M.tBar3[Int, Str]
 //│ = "IntStr"
 
@@ -147,15 +159,18 @@ module M with
     m.combine(x1, m.combine(x2, m.combine(x3, m.empty)))
   fun fold[T](x1: T, x2: T, x3: T)(using m: Monoid[T]): T =
     m.combine(x1, m.combine(x2, m.combine(x3, m.empty)))
-    
+
+:expect 9
 use Monoid[Int] = IntAddMonoid
 M.foldInt(2, 3, 4)
 //│ = 9
 
+:expect 24
 use Monoid[Int] = IntMulMonoid
 M.foldInt(2, 3, 4)
 //│ = 24
 
+:expect 6
 use Monoid[Int] = IntAddMonoid
 M.fold(1, 2, 3)
 //│ = 6

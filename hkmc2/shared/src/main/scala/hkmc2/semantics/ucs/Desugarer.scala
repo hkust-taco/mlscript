@@ -258,7 +258,7 @@ class Desugarer(val elaborator: Elaborator)
           val second = Fld(FldFlags.empty, rhsTerm, N)
           val arguments = Term.Tup(first :: second :: Nil)(rawTup)
           val joint = FlowSymbol("‹applied-result›")
-          Term.App(opRef, arguments)(tree, joint)
+          Term.App(opRef, arguments)(tree, N, joint)
         termSplit(rhs, finishInner)(fallback)
     case tree @ App(lhs, blk @ OpBlock(opRhsApps)) => fallback => ctx =>
       nominate(ctx, finish(term(lhs)(using ctx))): vs =>
@@ -268,7 +268,7 @@ class Desugarer(val elaborator: Elaborator)
           val rawTup = Tup(lhs :: Nil): Tup // <-- loc might be wrong
           val arguments = Term.Tup(first :: second :: Nil)(rawTup)
           val joint = FlowSymbol("‹applied-result›")
-          Term.App(op, arguments)(tree, joint)
+          Term.App(op, arguments)(tree, N, joint)
         opRhsApps.foldRight(Function.const(fallback): Sequel): (tt, elabFallback) =>
           tt match
           case (Tree.Empty(), LetLike(`let`, pat, termTree, N)) => ctx =>

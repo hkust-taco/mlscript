@@ -16,10 +16,10 @@ foo of (id of x => 1), id of y => 2
 foo(id of x => 1, id of y => 2) 
 //│ ╔══[ERROR] Expected 2 arguments, got 1
 //│ ║  l.16: 	foo(id of x => 1, id of y => 2) 
-//│ ╙──      	^^^
+//│ ╙──      	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Expected 1 arguments, got 2
 //│ ║  l.16: 	foo(id of x => 1, id of y => 2) 
-//│ ╙──      	    ^^
+//│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'id' expected 1 argument but got 2
 
 

@@ -123,7 +123,7 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
                   VarSymbol(Ident(s"param$i"))
                 .toVector
                 val paramList = PlainParamList:
-                  paramSymbols.iterator.map(Param(FldFlags.empty, _, N)).toList
+                  paramSymbols.iterator.map(Param(FldFlags.empty, _, N, Modulefulness.none)).toList
                 val success = Split.Else(desugaring.makeMatchResult(Term.Tup(Nil)(Tree.Tup(Nil))))
                 val failure = Split.Else(desugaring.makeMatchFailure)
                 val bodySplit = scoped("ucs:rp:split"):
