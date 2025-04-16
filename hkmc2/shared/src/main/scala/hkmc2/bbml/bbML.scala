@@ -323,49 +323,45 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
         pctx += sym -> PolyType.generalize(funTy, S(outer), 1)
     case _ => error(msg"Function definition shape not yet supported for ${sym.nme}" -> lam.toLoc :: Nil)
 
-  private def typeSplitImpl(split: Split, sign: GeneralType, eff: Type, br: Bool, path: Ls[LinkedHashMap[Ref, Type]])
-    (using ctx: BbCtx, c: ConstraintHandler, sv: HashMap[Ref, InfVar])(using CCtx, Scope)
-    : Ls[LinkedHashMap[Ref, Type]] = split match
+  private def typeSplitImpl(split: Split, sign: GeneralType, eff: Type, br: Bool, cons: Bool, path: Ls[Ls[Ref -> Type]])
+    (using ctx: BbCtx, c: ConstraintHandler, sv: HashMap[Ref, Type])(using CCtx, Scope)
+    : Ls[Ls[Ref -> Type]] = split match
     case Split.Cons(Branch(s: Ref, cp: Pattern.ClassLike, cons), alts) =>
-      val sty = tryMkMono(typeCheck(s)._1, s)
       val cls = ClassLikeType(cp.sym, Nil)
-      sv.updateWith(s)(_.orElse(S(freshVar(new TempSymbol(S(s), s.sym.nme)))))
-      val (ctx1, ctx2) = (ctx.nest, ctx.nest)
-      ctx1 += s.sym -> (cls & sty)
-      val p0 = LinkedHashMap(s -> cls) :: (Type.disjoint(cls, sty) match
-        case N => typeSplitImpl(cons, sign, eff, true, Ls(LinkedHashMap.empty))(using ctx1)
-        case S(k) =>
-          if k.isEmpty then Nil
-          else
-            val (nc, dss, cs) = constraintCollector
-            val p = typeSplitImpl(cons, sign, eff, true, Ls(LinkedHashMap.empty))(using ctx1, nc)
-            k.foreach(k => c.commit(DisjSub(LinkedHashSet.from(k), dss.toList, cs.toList)))
-            p)
-      p0.flatMap(_.keysIterator).distinct.foreach(s => ctx2 += s.sym -> sv(s))
-      val p = p0.flatMap(x => path.map: y =>
-        val m = y.clone()
-        x.foreachEntry((s, t) => m.updateWith(s)(_.map(_ | t).orElse(S(t))))
-        m)
-      val (nc, dss, cs) = constraintCollector
-      val p1 = typeSplitImpl(alts, sign, eff, br, p)(using ctx2, nc)
-      p.foreach: p =>
-        val ds = p.map { case (s, t) => Type.disjoint(NegType(t), tryMkMono(typeCheck(s)._1, s)) }.flatten
-          val scs = sv.toList.map:
-            case (s, v) => p.get(s) match
-              case N => (tryMkMono(typeCheck(s)._1, s), v)
-              case S(t) => (t.! & tryMkMono(typeCheck(s)._1, s), v)
-          if ds.isEmpty then
-            dss.foreach(c.commit(_))
-            (scs ++ cs).foreach(u => constrain(u._1, u._2))
-          else
-            ds.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
-              c.commit(DisjSub(LinkedHashSet.from(k), dss.toList, scs ++ cs))
-      if br then
-        p1.flatMap(x => p.map: y =>
-          val m = y.clone()
-          x.foreachEntry((s, t) => m.updateWith(s)(_.map(_ | t).orElse(S(t))))
-          m)
-      else Nil
+      val (r, sty) = sv.get(s) match
+        case N =>
+          val t = tryMkMono(typeCheck(s)._1, s)
+          sv += s -> t
+          (false, t)
+        case S(t) =>
+          (path.forall: p =>
+            p.find(_._1 === s).fold(false): u =>
+              Type.disjoint(u._2.!, cls).exists(_.isEmpty)) -> t
+      if r then typeSplitImpl(alts, sign, eff, br, false, path)
+      else
+        val ctx1 = ctx.nest
+        ctx1 += s.sym -> (cls & sty)
+        val p0 = Ls(s -> cls) :: (Type.disjoint(cls, sty) match
+          case N => typeSplitImpl(cons, sign, eff, true, true, path)(using ctx1)
+          case S(k) =>
+            if k.isEmpty then Nil
+            else
+              val (nc, dss, cs) = constraintCollector
+              val p = typeSplitImpl(cons, sign, eff, true, true, path)(using ctx1, nc)
+              k.foreach: k =>
+                val ks = LinkedHashSet.from(k)
+                dss.foreach(d => c.commit(DisjSub(ks ++ d.disjoint, d.dss, d.cs)))
+                if cs.nonEmpty then c.commit(DisjSub(ks, Nil, cs.toList))
+              p)
+        val p = path.flatMap(x => p0.map: y =>
+          val m = (x ++ y).groupMapReduce(_._1)(_._2)(_ | _)
+          (x.keys ++ y.keys).distinct.map(k => k -> m(k)).toList)
+        val p1 = typeSplitImpl(alts, sign, eff, br, false, p)
+        if br then
+          p1.flatMap(y => p0.map: x =>
+            val m = (x ++ y).groupMapReduce(_._1)(_._2)(_ | _)
+            (x.keys ++ y.keys).distinct.map(k => k -> m(k)).toList)
+        else Nil
     case Split.Cons(Branch(s: Ref, Pattern.Lit(lit), cons), alts) =>
       constrain(tryMkMono(typeCheck(s)._1, s), lit match
         case _: Tree.BoolLit => BbCtx.boolTy
@@ -373,39 +369,89 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
         case _: Tree.DecLit => BbCtx.numTy
         case _: Tree.StrLit => BbCtx.strTy
         case _: Tree.UnitLit => Top)
-      val p0 = typeSplitImpl(cons, sign, eff, true, List(LinkedHashMap.empty))
-      val p = p0.flatMap(x => path.map: y =>
-        val m = y.clone()
-        x.foreachEntry((s, t) => m.updateWith(s)(_.map(_ | t).orElse(S(t))))
-        m)
-      val p1 = typeSplitImpl(alts, sign, eff, br, p)
+      val p0 = typeSplitImpl(cons, sign, eff, true, true, path)
+      val p = path.flatMap(x => p0.map: y =>
+          val m = (x ++ y).groupMapReduce(_._1)(_._2)(_ | _)
+          (x.keys ++ y.keys).distinct.map(k => k -> m(k)).toList)
+      val p1 = typeSplitImpl(alts, sign, eff, br, false, p)
       if br then
-        p1.flatMap(x => p.map: y =>
-          val m = y.clone()
-          x.foreachEntry((s, t) => m.updateWith(s)(_.map(_ | t).orElse(S(t))))
-          m)
+        p1.flatMap(y => p0.map: x =>
+          val m = (x ++ y).groupMapReduce(_._1)(_._2)(_ | _)
+          (x.keys ++ y.keys).distinct.map(k => k -> m(k)).toList)
       else Nil
     case Split.Let(name, term, tail) =>
       val nestCtx = ctx.nest
       given BbCtx = nestCtx
-      val (termTy, termEff) = typeCheck(term)
+      val (nc, dss, cs) = constraintCollector
+      val sv0 = HashMap.empty[Ref, InfVar]
+      sv.keys.foreach: s =>
+        val v = freshVar(new TempSymbol(S(s), s.sym.nme))
+        nestCtx += s.sym -> v
+        sv0 += s -> v
+      val (termTy, termEff) = typeCheck(term)(using c = nc)
       val sk = freshSkolem(name)
       nestCtx += name -> termTy
-      constrain(termEff, eff)
-      typeSplitImpl(tail, sign, eff, br, path)
-    case Split.Else(e) =>
+      nc.constrain(termEff, eff)
+      path.foreach: p =>
+        val m = p.toMap
+        val d = p.flatMap { case (s, t) => Type.disjoint(t.!, sv(s)) }
+        val sc = p.iterator.map { case (s, t) => (t.! & sv(s), sv0(s)) }
+        if d.isEmpty then
+          dss.foreach(c.commit(_))
+          (sc ++ cs).foreach(u => constrain(u._1, u._2))
+        else
+          val ds = d.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
+            val c0 = sc ++ cs
+            val ks = LinkedHashSet.from(k)
+            dss.foreach(d => c.commit(DisjSub(ks ++ d.disjoint, d.dss, d.cs)))
+            c.commit(DisjSub(ks, Nil, c0.toList))
+      typeSplitImpl(tail, sign, eff, br, cons, path)
+    case Split.Else(e) if cons =>
       constrain(ascribe(e, sign)._2, eff)
       Nil
+    case Split.Else(e) =>
+      val (nc, dss, cs) = constraintCollector
+      val ctx1 = ctx.nest
+      val sv0 = HashMap.empty[Ref, InfVar]
+      sv.keys.foreach: s =>
+        val v = freshVar(new TempSymbol(S(s), s.sym.nme))
+        ctx1 += s.sym -> v
+        sv0 += s -> v
+      nc.constrain(ascribe(e, sign)(using ctx1, c = nc)._2, eff)
+      path.foreach: p =>
+        val m = p.toMap
+        val d = p.flatMap { case (s, t) => Type.disjoint(t.!, sv(s)) }
+        val sc = p.map { case (s, t) => (t.! & sv(s), sv0(s)) }
+        if d.isEmpty then
+          dss.foreach(c.commit(_))
+          (sc ++ cs).foreach(u => constrain(u._1, u._2))
+        else
+          val ds = d.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
+            val c0 = sc ++ cs
+            val ks = LinkedHashSet.from(k)
+            dss.foreach(d => c.commit(DisjSub(ks ++ d.disjoint, d.dss, d.cs)))
+            c.commit(DisjSub(ks, Nil, c0.toList))
+      Nil
     case Split.End =>
-      if !br then constrain(Top, Bot)
-      Ls(LinkedHashMap.empty)
+      if !br then
+        path.foreach: p =>
+          val m = p.toMap
+          val d = p.flatMap { case (s, t) => Type.disjoint(t.!, sv(s)) }
+          if d.isEmpty then
+            constrain(Top, Bot)
+          else
+            val ds = d.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
+              val c0 = Ls(Top -> Bot)
+              val ks = LinkedHashSet.from(k)
+              c.commit(DisjSub(ks, Nil, c0))
+      Ls(Nil)
 
   private def typeSplit
       (split: Split, sign: Opt[GeneralType], path: Ls[Ls[Type -> ClassLikeType]] = Ls(Nil))(using ctx: BbCtx, c: ConstraintHandler)(using CCtx, Scope)
       : (GeneralType, Type) =
     val res = sign.orElse(S(freshVar(new TempSymbol(N, "res")))).get
     val eff = freshVar(new TempSymbol(N, "eff"))
-    typeSplitImpl(split, res, eff, false, Ls(LinkedHashMap.empty))(using sv = HashMap.empty)
+    typeSplitImpl(split, res, eff, false, true, Ls(Nil))(using sv = HashMap.empty)
     (res, eff)
 
   // * Note: currently, the returned type is not used or useful, but it could be in the future

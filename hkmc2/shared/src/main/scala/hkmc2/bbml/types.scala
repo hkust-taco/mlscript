@@ -476,41 +476,20 @@ class VarState:
 
 case class DisjSub(disjoint: LinkedHashSet[InfVar -> BasicType], dss: Ls[DisjSub], cs: Ls[Type -> Type]):
   def commit() = disjoint.keys.foreach(_.state.disjsub += this)
-  def checkAndCommit()(using c: MutMap[BasicType -> BasicType, Opt[Set[Set[InfVar->BasicType]]]])(using TL): Ls[Type -> Type] =
-    if disjoint.nonEmpty then
-      disjoint.keys.foreach(_.state.disjsub -= this)
-      val d = disjoint.flatMap: u =>
-        Type.disjoint(u._2, u._1) match
-          case N =>
-            disjoint -= u
-            N
-          case k => k
-      if disjoint.isEmpty then
-        dss.flatMap(_.checkAndCommit()) ++ cs
-      else
-        if d.nonEmpty then
-          commit()
-          d.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
-            DisjSub(LinkedHashSet.from(k), dss, cs).commit()
-        Nil
-    else Nil
-  def checkImpl(v: InfVar)(using c: MutMap[BasicType -> BasicType, Opt[Set[Set[InfVar->BasicType]]]])(using TL) =
-    v.state.disjsub -= this
-    val (u, w) = disjoint.toList.partition(_._1.uid === v.uid)
-    val d = u.flatMap: u =>
-      Type.disjoint(u._2, u._1) match
-        case N =>
-          disjoint -= u
-          N
-        case k => k
-    if disjoint.isEmpty then
-      dss.flatMap(_.checkAndCommit()) ++ cs
+  def check(m: Map[InfVar, Type], subst: Bool)(using TL): (Ls[DisjSub], Ls[Type -> Type]) =
+    if disjoint.isEmpty then (Nil, Nil)
     else
-      if d.nonEmpty then
-        d.foldLeft(Set(w))((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
-          DisjSub(LinkedHashSet.from(k), dss, cs).commit()
-      Nil
-  def check(v: InfVar)(using TL) = checkImpl(v)(using c = MutMap.empty)
+      disjoint.keys.foreach(_.state.disjsub -= this)
+      val d = disjoint.toList.flatMap: u =>
+        m.get(u._1).fold(S(Set(Set(u._1 -> u._2)))): t =>
+          Type.disjoint(u._2, if subst then t else t | u._1).orElse { disjoint -= u; N }
+      if disjoint.isEmpty then
+        val (dss0, cs0) = dss.map(_.check(m, subst)).unzip
+        (dss0.flatten, cs0.flatten ++ cs)
+      else
+        val dss1 = d.reduce((x, y) => y.flatMap(y => x.map(_ ++  y))).map: k =>
+          DisjSub(LinkedHashSet.from(k), dss, cs)
+        (dss1.toList, Nil)
   def children(): (Ls[Type], Ls[Type]) =
     val (p, n) = dss.map(_.children()).unzip
     (p.flatten ++ disjoint.keys ++ cs.keys, n.flatten ++ cs.values)

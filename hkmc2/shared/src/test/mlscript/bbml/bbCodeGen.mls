@@ -169,7 +169,6 @@ fun pow(x) = case
 
 
 :sjs
-:fixme
 fun not = case
   true then false
   false then true
@@ -188,8 +187,6 @@ fun not = case
 //│   });
 //│   return lambda1
 //│ };
-//│ ╔══[ERROR] Type error in `if` expression
-//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: ⊤
 
 

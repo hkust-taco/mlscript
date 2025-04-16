@@ -28,7 +28,7 @@ idIB(true)
 //│ Type: Bool
 
 idIB(if true then 1 else true)
-//│ Type: Bool | Int
+//│ Type: Int
 
 x =>
   let y = x+1
@@ -278,7 +278,7 @@ fun k: ((Int | Str, Int) -> Int) & ((Bool | Str, Bool) -> Bool)
 //│ Type: ⊤
 
 k("", if true then 1 else true)
-//│ Type: Bool | Int
+//│ Type: Int
 
 fun k: ((Int, Int) -> Int) & ((Bool, Bool) -> Bool)
 //│ Type: ⊤
@@ -344,30 +344,25 @@ class
 fun wf: ((Z, Z) -> Z) & ((Z, S) -> S) & ((S, Z | S) -> S)
 //│ Type: ⊤
 
-let zs = if true then new Z() else new S()
-zs
-//│ Type: S | Z
+fun zs: Z | S
+//│ Type: ⊤
 
 :e
 wf(zs, zs)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.352: 	wf(zs, zs)
+//│ ║  l.351: 	wf(zs, zs)
 //│ ║         	^^^^^^^^^^
-//│ ╟── because: cannot constrain  (((Z, Z) -> Z) & ((Z, S) -> S)) & ((S, Z | S) -> S)  <:  ('res, 'res) ->{'eff} 'app
-//│ ╟── because: cannot constrain  {0: 'res, 1: 'res}  <:  ({0: Z, 1: Z} | {0: Z, 1: S}) | {0: S, 1: Z | S}
-//│ ╟── because: cannot constrain  {0: 'res, 1: 'res}  <:  {1: S}
-//│ ╟── because: cannot constrain  'res  <:  S
-//│ ╟── because: cannot constrain  'res  <:  ¬(¬{S})
-//│ ╙── because: cannot constrain  Z  <:  ¬(¬{S})
+//│ ╟── because: cannot constrain  (((Z, Z) -> Z) & ((Z, S) -> S)) & ((S, Z | S) -> S)  <:  (Z | S, Z | S) ->{'eff} 'app
+//│ ╟── because: cannot constrain  {0: Z | S, 1: Z | S}  <:  ({0: Z, 1: Z} | {0: Z, 1: S}) | {0: S, 1: Z | S}
+//│ ╟── because: cannot constrain  {0: Z ∨ S, 1: Z ∨ S}  <:  {1: S}
+//│ ╙── because: cannot constrain  Z ∨ S  <:  S
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.352: 	wf(zs, zs)
+//│ ║  l.351: 	wf(zs, zs)
 //│ ║         	^^^^^^^^^^
-//│ ╟── because: cannot constrain  (((Z, Z) -> Z) & ((Z, S) -> S)) & ((S, Z | S) -> S)  <:  ('res, 'res) ->{'eff} 'app
-//│ ╟── because: cannot constrain  {0: 'res, 1: 'res}  <:  ({0: Z, 1: Z} | {0: Z, 1: S}) | {0: S, 1: Z | S}
-//│ ╟── because: cannot constrain  {0: 'res, 1: 'res}  <:  {1: Z}
-//│ ╟── because: cannot constrain  'res  <:  Z
-//│ ╟── because: cannot constrain  'res  <:  ¬(¬{Z})
-//│ ╙── because: cannot constrain  S  <:  ¬(¬{Z})
+//│ ╟── because: cannot constrain  (((Z, Z) -> Z) & ((Z, S) -> S)) & ((S, Z | S) -> S)  <:  (Z | S, Z | S) ->{'eff} 'app
+//│ ╟── because: cannot constrain  {0: Z | S, 1: Z | S}  <:  ({0: Z, 1: Z} | {0: Z, 1: S}) | {0: S, 1: Z | S}
+//│ ╟── because: cannot constrain  {0: Z ∨ S, 1: Z ∨ S}  <:  {1: Z}
+//│ ╙── because: cannot constrain  Z ∨ S  <:  Z
 //│ Type: S | Z
 
 :e
@@ -376,11 +371,11 @@ fun ill:
   (([b: Bool, c: Bool]) -> Bool) &
   (([a: Str, c: Str]) -> Str)
 //│ ╔══[ERROR] Ill-formed functions intersection
-//│ ║  l.375: 	  (([a: Int, b:Int]) -> Int) &
+//│ ║  l.370: 	  (([a: Int, b:Int]) -> Int) &
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.376: 	  (([b: Bool, c: Bool]) -> Bool) &
+//│ ║  l.371: 	  (([b: Bool, c: Bool]) -> Bool) &
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.377: 	  (([a: Str, c: Str]) -> Str)
+//│ ║  l.372: 	  (([a: Str, c: Str]) -> Str)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
@@ -390,10 +385,10 @@ fun nested:
   (([tag: [b: Bool, c: Bool]]) -> Bool) &
   (([tag: [a: Str, c: Str]]) -> Str)
 //│ ╔══[ERROR] Ill-formed functions intersection
-//│ ║  l.389: 	  (([tag: [a: Int, b:Int]]) -> Int) &
+//│ ║  l.384: 	  (([tag: [a: Int, b:Int]]) -> Int) &
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.390: 	  (([tag: [b: Bool, c: Bool]]) -> Bool) &
+//│ ║  l.385: 	  (([tag: [b: Bool, c: Bool]]) -> Bool) &
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.391: 	  (([tag: [a: Str, c: Str]]) -> Str)
+//│ ║  l.386: 	  (([tag: [a: Str, c: Str]]) -> Str)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤

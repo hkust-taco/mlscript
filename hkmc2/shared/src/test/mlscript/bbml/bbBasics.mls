@@ -149,10 +149,10 @@ fun foofoo(x) =
   if x is Int then
     let t = x + 1 in "foo"
 foofoo
-//│ Type: ['x, 'res, 'eff, 'x1] -> 'x ->{'eff} 'res
+//│ Type: ['x, 'res, 'eff] -> 'x ->{'eff} 'res
 //│ Where:
 //│   'x#Int ∨ Int & 'x <: Int ∧ Int <: Int ∧ Str <: 'res ∧ ⊥ <: 'eff
-//│   'x#¬Int ∨ ¬Int & 'x <: 'x1 ∧ ⊤ <: ⊥
+//│   'x#¬Int ∨ ⊤ <: ⊥
 
 fun foofoo(x) =
   let t = x + 1 in "foo"
@@ -270,7 +270,7 @@ if 1 < 2 then 1 else 0
 
 
 if false then 1 else "1"
-//│ Type: Str | Int
+//│ Type: Int
 
 
 if 1 is Int then 1 else 0
