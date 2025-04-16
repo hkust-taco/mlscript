@@ -618,6 +618,13 @@ class Desugarer(val elaborator: Elaborator)
   /** Desugar a list of sub-patterns (with their corresponding scrutinees).
    *  This is called when handling nested patterns. The caller is responsible
    *  for providing the symbols of scrutinees.
+   * 
+   *  @param matches a list of pairs consisting of a scrutinee and a pattern.
+   *    Each scrutinee is represented by `Either[VarSymbol, BlockLocalSymbol]`.
+   *    If it is not accessible due to the corresponding parameter not being
+   *    declared with `val`, it will be the `Left` of the parameter symbol for
+   *    error reporting.
+   *  @param sequel the innermost split
    */
   def subMatches(matches: Ls[(Either[VarSymbol, BlockLocalSymbol], Tree)],
                  sequel: Sequel): Split => Sequel = matches match
@@ -628,8 +635,8 @@ class Desugarer(val elaborator: Elaborator)
       sequel(ctx)
     case (_, Under()) :: rest => subMatches(rest, sequel)
     case (L(paramSymbol), pattern) :: rest =>
-      error(msg"parameter ${paramSymbol.name} is not extractable" -> paramSymbol.toLoc,
-        msg"which corresponds to this pattern" -> pattern.toLoc)
+      error(msg"This pattern cannot be matched" -> pattern.toLoc,
+        msg"because the corresponding parameter ${paramSymbol.name} is not accessible" -> paramSymbol.toLoc)
       subMatches(rest, sequel)
     case (R(scrutinee), pattern) :: rest => fallback => trace(
       pre = s"subMatches (nested) <<< $scrutinee is $pattern",
