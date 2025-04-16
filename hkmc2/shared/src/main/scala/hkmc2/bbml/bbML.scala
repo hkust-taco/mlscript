@@ -324,7 +324,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
     case _ => error(msg"Function definition shape not yet supported for ${sym.nme}" -> lam.toLoc :: Nil)
 
   private def typeSplitImpl(split: Split, sign: GeneralType, eff: Type, br: Bool, cons: Bool, path: Ls[Ls[Ref -> Type]])
-    (using ctx: BbCtx, c: ConstraintHandler, sv: HashMap[Ref, Type])(using CCtx, Scope)
+    (using ctx: BbCtx, c: ConstraintHandler, sv: LinkedHashMap[Ref, Type])(using CCtx, Scope)
     : Ls[Ls[Ref -> Type]] = split match
     case Split.Cons(Branch(s: Ref, cp: Pattern.ClassLike, cons), alts) =>
       val cls = ClassLikeType(cp.sym, Nil)
@@ -341,6 +341,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
       else
         val ctx1 = ctx.nest
         ctx1 += s.sym -> (cls & sty)
+        sv -= s
         val p0 = Ls(s -> cls) :: (Type.disjoint(cls, sty) match
           case N => typeSplitImpl(cons, sign, eff, true, true, path)(using ctx1)
           case S(k) =>
@@ -356,6 +357,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
         val p = path.flatMap(x => p0.map: y =>
           val m = (x ++ y).groupMapReduce(_._1)(_._2)(_ | _)
           (x.keys ++ y.keys).distinct.map(k => k -> m(k)).toList)
+        sv += s -> sty
         val p1 = typeSplitImpl(alts, sign, eff, br, false, p)
         if br then
           p1.flatMap(y => p0.map: x =>
@@ -394,8 +396,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
       nc.constrain(termEff, eff)
       path.foreach: p =>
         val m = p.toMap
-        val d = p.flatMap { case (s, t) => Type.disjoint(t.!, sv(s)) }
-        val sc = p.iterator.map { case (s, t) => (t.! & sv(s), sv0(s)) }
+        val d = p.flatMap { case (s, t) => sv.get(s).flatMap(st => Type.disjoint(t.!, st)) }
+        val sc = sv.map { case (s, t) => (m.getOrElse(s, Bot).! & t, sv0(s)) }
         if d.isEmpty then
           dss.foreach(c.commit(_))
           (sc ++ cs).foreach(u => constrain(u._1, u._2))
@@ -406,9 +408,6 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
             dss.foreach(d => c.commit(DisjSub(ks ++ d.disjoint, d.dss, d.cs)))
             c.commit(DisjSub(ks, Nil, c0.toList))
       typeSplitImpl(tail, sign, eff, br, cons, path)
-    case Split.Else(e) if cons =>
-      constrain(ascribe(e, sign)._2, eff)
-      Nil
     case Split.Else(e) =>
       val (nc, dss, cs) = constraintCollector
       val ctx1 = ctx.nest
@@ -420,8 +419,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
       nc.constrain(ascribe(e, sign)(using ctx1, c = nc)._2, eff)
       path.foreach: p =>
         val m = p.toMap
-        val d = p.flatMap { case (s, t) => Type.disjoint(t.!, sv(s)) }
-        val sc = p.map { case (s, t) => (t.! & sv(s), sv0(s)) }
+        val d = p.flatMap { case (s, t) => sv.get(s).flatMap(st => Type.disjoint(t.!, st)) }
+        val sc = sv.map { case (s, t) => (m.getOrElse(s, Bot).! & t, sv0(s)) }
         if d.isEmpty then
           dss.foreach(c.commit(_))
           (sc ++ cs).foreach(u => constrain(u._1, u._2))
@@ -451,7 +450,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
       : (GeneralType, Type) =
     val res = sign.orElse(S(freshVar(new TempSymbol(N, "res")))).get
     val eff = freshVar(new TempSymbol(N, "eff"))
-    typeSplitImpl(split, res, eff, false, true, Ls(Nil))(using sv = HashMap.empty)
+    typeSplitImpl(split, res, eff, false, true, Ls(Nil))(using sv = LinkedHashMap.empty)
     (res, eff)
 
   // * Note: currently, the returned type is not used or useful, but it could be in the future

@@ -286,7 +286,7 @@ fun test(x) =
 test
 //│ Type: ['x, 'res, 'eff, 'x1] -> 'x ->{'eff} 'res
 //│ Where:
-//│   'x#Int ∨ Int & 'x <: Int ∧ Int <: Int ∧ Int <: 'res ∧ ⊥ <: 'eff
+//│   'x#Int ∨ Int & 'x <: Int ∧ Int <: 'res ∧ ⊥ <: 'eff
 //│   'x#¬Int ∨ ¬Int & 'x <: 'x1 ∧ Int <: 'res ∧ ⊥ <: 'eff
 
 test(1)
