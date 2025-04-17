@@ -480,7 +480,7 @@ class Desugarer(val elaborator: Elaborator)
       clsTrm.symbol.flatMap(_.asClsLike) match
       case S(cls: ClassSymbol) =>
         val paramSymbols = cls.defn match
-          case S(Parameterized(_, _, _, _, _, paramList, _, _, _, _)) =>
+          case S(Parameterized(params = paramList)) =>
             if paramList.params.size =/= args.length then
               val n = args.length.toString
               val m = paramList.params.size.toString
@@ -490,7 +490,7 @@ class Desugarer(val elaborator: Elaborator)
                 else
                   msg"mismatched arity: expect $m, found $n" -> app.toLoc
             scrutSymbol.getSubScrutinees(cls).iterator.zip(paramList.params).map:
-              case (symbol, Param(FldFlags(_, _, _, _, _, true), _, _)) => R(symbol)
+              case (symbol, Param(flags = FldFlags(value = true))) => R(symbol)
               case (_, Param(_, paramSymbol, _)) => L(paramSymbol) // to report errors
             .toList
           case S(_) | N =>
