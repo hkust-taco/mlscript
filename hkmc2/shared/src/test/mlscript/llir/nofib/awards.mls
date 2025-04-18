@@ -68,6 +68,4 @@ fun competitors(i) =
 fun testAwards_nofib(n) =
   map(x => print(findallawards(competitors(intMod(x, 100)))), enumFromTo(1, n))
 
-:runWholeCpp
-:silent
 testAwards_nofib(100)

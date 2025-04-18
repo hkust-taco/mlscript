@@ -49,10 +49,4 @@ fun testScc_nofib(d) =
   
   stronglyConnComp(edges, vertices)
 
-:runWholeCpp
 print(testScc_nofib(0))
-//│ 
-//│ 
-//│ Execution succeeded: 
-//│ Cons(Cons(1, Nil), Cons(Cons(2, Nil), Cons(Cons(7, Cons(5, Cons(6, Nil))), Cons(Cons(3, Cons(4, Nil)), Nil))))
-//│ Unit

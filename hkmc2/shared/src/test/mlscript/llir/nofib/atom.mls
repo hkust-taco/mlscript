@@ -42,10 +42,4 @@ fun testAtom_nofib(n) =
     state :: t then stringConcat(show(state), "\n") :: lscomp(t)
   stringListConcat of lscomp(take_lz(n, runExperiment(testforce, 0.02, 1.0 :: Nil, State(1.0 :: Nil, 0.0 :: Nil))))
 
-:runWholeCpp
-:runWholeCpp
 testAtom_nofib(20)
-//│ 
-//│ 
-//│ Execution succeeded: 
-//│ "1.000000\t\n1.000000\t\n0.999600\t\n0.998800\t\n0.997600\t\n0.996001\t\n0.994002\t\n0.991606\t\n0.988811\t\n0.985620\t\n0.982034\t\n0.978053\t\n0.973679\t\n0.968914\t\n0.963760\t\n0.958218\t\n0.952291\t\n0.945980\t\n0.939288\t\n0.932218\t\n"

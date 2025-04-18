@@ -184,7 +184,7 @@ enum Decl:
 enum Def:
   case StructDef(name: Str, fields: Ls[(Str, Type)], inherit: Opt[Ls[Str]], methods: Ls[Def], methodsDecl: Ls[Decl])
   case EnumDef(name: Str, fields: Ls[(Str, Opt[Int])])
-  case FuncDef(specret: Type, name: Str, args: Ls[(Str, Type)], body: Stmt.Block, isOverride: Bool, isVirtual: Bool = false, in_scope: Opt[Str])
+  case FuncDef(specret: Type, name: Str, args: Ls[(Str, Type)], body: Stmt.Block, isOverride: Bool, isVirtual: Bool, in_scope: Opt[Str])
   case VarDef(typ: Type, name: Str, init: Opt[Expr])
   case RawDef(raw: Str)
 

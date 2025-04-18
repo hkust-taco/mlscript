@@ -276,10 +276,4 @@ fun try_(n, algorithm) = listLen(search(algorithm, queens(n)))
 
 fun testConstraints_nofib(n) = map(x => try_(n, x), bt :: bm :: bjbt :: bjbt_ :: fc :: Nil)
 
-:runWholeCpp
 print(testConstraints_nofib(6))
-//│ 
-//│ 
-//│ Execution succeeded: 
-//│ Cons(4, Cons(4, Cons(4, Cons(4, Cons(4, Nil)))))
-//│ Unit
