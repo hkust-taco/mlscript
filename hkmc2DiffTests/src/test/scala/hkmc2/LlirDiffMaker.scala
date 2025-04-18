@@ -82,7 +82,7 @@ abstract class LlirDiffMaker extends BbmlDiffMaker:
               output(cpp.toDocument.toString)
             val rPath = os.Path(rootPath)
             val auxPath =  
-              if rPath.last == "mlscript" then 
+              if rPath.last =/= "shared" then 
                 rPath/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"cpp"
               else
                 rPath/"src"/"test"/"mlscript-compile"/"cpp"
