@@ -102,7 +102,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
             cctx.nest(bd -> v) givenIn:
               v.state.lowerBounds ::= bd
               v.state.upperBounds.foreach(ub => constrainImpl(bd, ub))
-              val (dss, cs) = v.state.disjsub.toList.map(_.check(Map(v -> bd), false)).unzip
+              val (dss, cs) = v.state.disjsub.toList.map(_.check(Map(v -> bd))).unzip
               dss.flatten.foreach(_.commit())
               cs.flatten.foreach(u => constrainImpl(u._1, u._2))
       case Conj(i, u, Nil) => (conj.i, conj.u) match

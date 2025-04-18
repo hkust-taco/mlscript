@@ -339,7 +339,8 @@ object Type:
         disjointDisj(lb.toDnf).map(_ + Set(v -> v))
       case (i, c, vs) =>
         val j = i match
-          case S(u: (ClassLikeType | RcdType)) => S(u)
+          case S(ClassLikeType(c, _)) => S(ClassLikeType(c, Nil))
+          case S(u: RcdType) => S(u)
           case _ => N
         val vd = vs.combinations(2).collect { case x :: y :: _ => Ls(x -> y, y -> x) }.flatten.toList
         val ds = vs.flatMap(v => (j ++ c.reduceOption[Type](_ | _).map(_.!)).map(x => v -> x.toBasic)).toSet ++ vd
@@ -476,15 +477,15 @@ class VarState:
 
 case class DisjSub(disjoint: LinkedHashSet[InfVar -> BasicType], dss: Ls[DisjSub], cs: Ls[Type -> Type]):
   def commit() = disjoint.keys.foreach(_.state.disjsub += this)
-  def check(m: Map[InfVar, Type], subst: Bool)(using TL): (Ls[DisjSub], Ls[Type -> Type]) =
+  def check(m: Map[InfVar, Type])(using TL): (Ls[DisjSub], Ls[Type -> Type]) =
     if disjoint.isEmpty then (Nil, Nil)
     else
       disjoint.keys.foreach(_.state.disjsub -= this)
       val d = disjoint.toList.flatMap: u =>
         m.get(u._1).fold(S(Set(Set(u._1 -> u._2)))): t =>
-          Type.disjoint(u._2, if subst then t else t | u._1).orElse { disjoint -= u; N }
+          Type.disjoint(u._2, t | u._1).orElse { disjoint -= u; N }
       if disjoint.isEmpty then
-        val (dss0, cs0) = dss.map(_.check(m, subst)).unzip
+        val (dss0, cs0) = dss.map(_.check(m)).unzip
         (dss0.flatten, cs0.flatten ++ cs)
       else
         val dss1 = d.reduce((x, y) => y.flatMap(y => x.map(_ ++  y))).map: k =>

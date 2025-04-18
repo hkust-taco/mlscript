@@ -1,0 +1,124 @@
+:bbml
+//│ Type: ⊤
+
+//│ Type: ⊤
+class
+  Nil()
+  Cons[A, Tl](val hd: A, val tl: Tl)
+//│ Type: ⊤
+
+let nil = new Nil()
+//│ Type: ⊤
+
+let cons(hd, tl) = new Cons(hd, tl)
+//│ Type: ⊤
+
+cons(0, 0)
+//│ Type: Cons['A, 'Tl]
+//│ Where:
+//│   Int <: 'A
+//│   Int <: 'Tl
+
+cons
+//│ Type: (⊤, ⊤) ->{⊥} Cons['A, 'Tl]
+//│ Where:
+//│   Int <: 'A
+//│   Int <: 'Tl
+
+fun cons(hd, tl) = new Cons(hd, tl)
+//│ Type: ⊤
+
+fun map(xs, f) =
+  if xs is
+    Nil then nil
+    Cons then new Cons(f(xs.Cons#hd), map(xs.Cons#tl, f))
+//│ Type: ⊤
+
+nil map(x => x)
+//│ Type: Nil
+
+let c = cons(1, nil)
+c map(x => x)
+//│ Type: Nil | Cons['A, 'Tl]
+//│ Where:
+//│   Int <: 'A
+//│   Nil <: 'res
+//│   Cons['A, 'Tl] <: 'res
+//│   'res <: 'Tl
+
+:e
+cons(1, 2) map(x => x)
+//│ ╔══[ERROR] Type error in function literal with expected type 'f
+//│ ║  l.50: 	cons(1, 2) map(x => x)
+//│ ║        	               ^^^^^^
+//│ ╟── because: cannot constrain  'x -> 'x  <:  'f
+//│ ╟── because: cannot constrain  ('x) ->{⊥} ('x)  <:  'f
+//│ ╟── because: cannot constrain  'Tl  <:  'xs
+//│ ╟── because: cannot constrain  'Tl  <:  ¬(¬'xs)
+//│ ╟── because: cannot constrain  Int  <:  ¬(¬'xs)
+//│ ╟── because: cannot constrain  Int  <:  'xs
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: Cons['A, 'Tl1]
+//│ Where:
+//│   Int <: 'A
+//│   Cons['A, 'Tl1] <: 'res
+//│   'res <: 'Tl1
+
+cons(1, cons("", nil)) map(x => cons(x, true))
+//│ Type: Nil | Cons['A, 'Tl]
+//│ Where:
+//│   Str | Int <: 'A1
+//│   Bool <: 'Tl1
+//│   Cons['A1, 'Tl1] <: 'A
+//│   Nil <: 'res
+//│   Cons['A, 'Tl] <: 'res
+//│   'res <: 'Tl
+
+
+fun maprec(xs, f, r) =
+  if xs is
+    Nil then nil
+    Cons then new Cons(f(xs.Cons#hd), r(xs.Cons#tl, f, r))
+fun map(xs, f) = maprec(xs, f, maprec)
+//│ Type: ⊤
+
+
+nil map(x => x)
+//│ Type: Nil
+
+let c = cons(1, nil)
+c map(x => x)
+//│ Type: Cons['A, 'Tl]
+//│ Where:
+//│   Int <: 'A
+//│   Nil <: 'Tl
+
+:e
+cons(1, 2) map(x => x)
+//│ ╔══[ERROR] Type error in function literal with expected type 'f
+//│ ║  l.97: 	cons(1, 2) map(x => x)
+//│ ║        	               ^^^^^^
+//│ ╟── because: cannot constrain  'x -> 'x  <:  'f
+//│ ╟── because: cannot constrain  ('x) ->{⊥} ('x)  <:  'f
+//│ ╟── because: cannot constrain  'Tl  <:  'xs
+//│ ╟── because: cannot constrain  'Tl  <:  'xs
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: Cons['A, 'Tl1]
+//│ Where:
+//│   Int <: 'A
+
+let c = cons(nil, nil)
+c map(x => x map(x => (a: x)))
+//│ Type: Cons['A, 'Tl]
+//│ Where:
+//│   Nil <: 'A
+//│   Nil <: 'Tl
+
+let c = cons(cons(nil, nil), nil)
+c map(x => x map(x => (a: x)))
+//│ Type: Cons['A, 'Tl]
+//│ Where:
+//│   {a: Nil} <: 'A1
+//│   Nil <: 'Tl1
+//│   Cons['A1, 'Tl1] <: 'A
+//│   Nil <: 'Tl

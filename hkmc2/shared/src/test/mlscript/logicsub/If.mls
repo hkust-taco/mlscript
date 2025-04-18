@@ -108,7 +108,7 @@ fun increv(x) = if x is
 increv
 //│ Type: ['x, 'res, 'eff, 'x1] -> 'x ->{'eff} 'res
 //│ Where:
-//│   'x#Int ∨ Int & 'x <: Int ∧ Int <: 'res ∧ ⊥ <: 'eff
+//│   'x#Int ∨ Int & 'x <: Int ∧ Int <: Int ∧ Int <: 'res ∧ ⊥ <: 'eff
 //│   'x#¬Int ∨ ¬Int & 'x <: 'x1 ∧ 'x1 <: Str ∧ Str <: 'res ∧ ⊥ <: 'eff
 
 fun increv'(x) = if x is
@@ -117,7 +117,7 @@ fun increv'(x) = if x is
 increv'
 //│ Type: ['x, 'res, 'eff] -> 'x ->{'eff} 'res
 //│ Where:
-//│   'x#Int ∨ Int & 'x <: Int ∧ Int <: 'res ∧ ⊥ <: 'eff
+//│   'x#Int ∨ Int & 'x <: Int ∧ Int <: Int ∧ Int <: 'res ∧ ⊥ <: 'eff
 //│   'x#Str ∨ Str & 'x <: Str ∧ Str <: 'res ∧ ⊥ <: 'eff
 //│   'x#¬Str & ¬Int ∨ ⊤ <: ⊥
 
@@ -168,7 +168,7 @@ fun f(x) = if
 f
 //│ Type: ['x, 'res, 'eff, 'x1] -> 'x ->{'eff} 'res
 //│ Where:
-//│   'x#Int ∨ Int & 'x <: Int ∧ Int <: 'res ∧ ⊥ <: 'eff
+//│   'x#Int ∨ Int & 'x <: Int ∧ Int <: Int ∧ Int <: 'res ∧ ⊥ <: 'eff
 //│   'x#Str ∨ Str & 'x <: Str ∧ Str <: 'res ∧ ⊥ <: 'eff
 //│   'x#¬Str & ¬Int ∨ (¬Int & ¬Str) & 'x <: 'x1 ∧ 'x1 <: Bool ∧ Bool <: 'res ∧ ⊥ <: 'eff
 
@@ -186,7 +186,7 @@ f
 //│ Where:
 //│   'x#Int ∨ 'y <: 'res ∧ ⊥ <: 'eff
 //│   'y#Str ∨ 'x#¬Int ∨ ¬Int & 'x <: 'x1 ∧ Int <: 'res ∧ ⊥ <: 'eff
-//│   'x#Str ∨ 'y#¬Str ∨ ¬Str & 'y <: 'y1 ∧ 'y1 <: Int ∧ Int <: 'res ∧ ⊥ <: 'eff
+//│   'x#Str ∨ 'y#¬Str ∨ ¬Str & 'y <: 'y1 ∧ 'y1 <: Int ∧ Int <: Int ∧ Int <: 'res ∧ ⊥ <: 'eff
 //│   'x#¬Str & ¬Int ∨ 'y#¬Str ∨ ¬Str & 'y <: 'y2 ∧ (¬Int & ¬Str) & 'x <: 'x2 ∧ 'x2 <: Bool ∧ Bool <: 'res ∧ ⊥ <: 'eff
 
 f(ib, sib)
@@ -202,7 +202,7 @@ f(ib, ib)
 //│   Bool <: 'x
 //│   Int <: 'x
 //│   'x <: ¬(¬{(Str | Int) | Bool})
-//│   'x#Str ∨ ¬Str & 'y <: 'y1 ∧ 'y1 <: Int ∧ Int <: 'res ∧ ⊥ <: 'eff
+//│   'x#Str ∨ ¬Str & 'y <: 'y1 ∧ 'y1 <: Int ∧ Int <: Int ∧ Int <: 'res ∧ ⊥ <: 'eff
 //│   'eff <: ¬()
 //│   Bool <: 'res
 //│   'y <: 'res
