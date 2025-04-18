@@ -74,7 +74,7 @@ g
 f(g)
 //│ Type: ('A) ->{⊥} Int
 //│ Where:
-//│   'A#C[in ⊥ out B] ∨ (  'A#C[in ⊥ out () & (B)] ∨ 'D <: B ∧ ⊥ <: ⊥ ∧ C[out B] & 'A <: C[in Int out 'D]){0: C[out B] & 'A} <: {0: C[?]}
+//│   'A#C ∨ (  'A#C ∨ 'D <: B ∧ ⊥ <: ⊥ ∧ C[out B] & 'A <: C[in Int out 'D]){0: C[out B] & 'A} <: {0: C[?]}
 
 fun foo: C[in Int out Nothing]
 foo
