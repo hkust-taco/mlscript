@@ -12,27 +12,27 @@ fun add_curried(x)(y) = x + y
 add(1)(2)
 //│ = 3
 //│ LLIR:
-//│   class Lambda_lambda(lam_arg0$742) extends Callable {
-//│     def apply1$744(y$724) =
-//│       let x$745 = +(lam_arg0$742,y$724) in
-//│       x$745
+//│   class Lambda_lambda(lam_arg0$751) extends Callable {
+//│     def apply1$753(y$733) =
+//│       let x$754 = +(lam_arg0$751,y$733) in
+//│       x$754
 //│   }
-//│   class Lambda(lam_arg0$750) extends Callable {
-//│     def apply1$744(y$729) =
-//│       let x$751 = +(lam_arg0$750,y$729) in
-//│       x$751
+//│   class Lambda(lam_arg0$759) extends Callable {
+//│     def apply1$753(y$738) =
+//│       let x$760 = +(lam_arg0$759,y$738) in
+//│       x$760
 //│   }
-//│   def add$720(x$723) =
-//│     let x$747 = Lambda_lambda$740(x$723) in
-//│     x$747
-//│   def add_curried$721(x$728) =
-//│     let x$752 = Lambda$748(x$728) in
-//│     x$752
-//│   def entry$755() =
-//│     let* (x$753) = add(1) in
-//│     let x$754 = Callable.apply1$744(x$753,2) in
-//│     x$754
-//│   entry = entry$755
+//│   def add$729(x$732) =
+//│     let x$756 = Lambda_lambda$749(x$732) in
+//│     x$756
+//│   def add_curried$730(x$737) =
+//│     let x$761 = Lambda$757(x$737) in
+//│     x$761
+//│   def entry$764() =
+//│     let* (x$762) = add(1) in
+//│     let x$763 = Callable.apply1$753(x$762,2) in
+//│     x$763
+//│   entry = entry$764
 //│ 
 //│ Interpreted:
 //│ 3

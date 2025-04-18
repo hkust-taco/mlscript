@@ -50,15 +50,6 @@ fun (???) notImplementedError = throw Error("Not implemented")
 
 fun tuple(...xs) = xs
 
-fun tupleSlice(xs, i, j) =
-  // * This is more robust than `xs.slice(i, xs.length - j)`
-  // * as it is not affected by users redefining `slice`
-  globalThis.Array.prototype.slice.call(xs, i, xs.length - j)
-
-fun tupleGet(xs, i) =
-  // * Contrary to `xs.[i]`, this supports negative indices (Python-style)
-  globalThis.Array.prototype.at.call(xs, i)
-
 val foldl = fold
 
 // fun foldr(f)(...rest, init) = // TODO allow this syntax
@@ -76,13 +67,6 @@ fun foldr(f)(first, ...rest) =
 
 fun mkStr(...xs) =
   fold((acc, x) => assert(x is Str); acc + x) of ...xs
-
-
-fun stringStartsWith(string, prefix) = string.startsWith(prefix)
-
-fun stringGet(string, i) = string.at(i)
-
-fun stringDrop(string, n) = string.slice(n)
 
 
 fun unreachable = throw Error("unreachable")

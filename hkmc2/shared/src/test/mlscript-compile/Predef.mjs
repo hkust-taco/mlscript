@@ -150,32 +150,24 @@ let Predef1;
   static tuple(...xs1) {
     return xs1
   } 
-  static tupleSlice(xs2, i, j) {
-    let tmp;
-    tmp = xs2.length - j;
-    return runtime.safeCall(globalThis.Array.prototype.slice.call(xs2, i, tmp))
-  } 
-  static tupleGet(xs3, i1) {
-    return globalThis.Array.prototype.at.call(xs3, i1)
-  } 
   static foldr(f9) {
     return (first, ...rest) => {
-      let len, i2, init, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+      let len, i, init, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
       len = rest.length;
       scrut1 = len == 0;
       if (scrut1 === true) {
         return first
       } else {
         tmp = len - 1;
-        i2 = tmp;
-        tmp1 = runtime.safeCall(rest.at(i2));
+        i = tmp;
+        tmp1 = runtime.safeCall(rest.at(i));
         init = tmp1;
         tmp6: while (true) {
-          scrut = i2 > 0;
+          scrut = i > 0;
           if (scrut === true) {
-            tmp2 = i2 - 1;
-            i2 = tmp2;
-            tmp3 = runtime.safeCall(rest.at(i2));
+            tmp2 = i - 1;
+            i = tmp2;
+            tmp3 = runtime.safeCall(rest.at(i));
             tmp4 = runtime.safeCall(f9(tmp3, init));
             init = tmp4;
             tmp5 = runtime.Unit;
@@ -189,7 +181,7 @@ let Predef1;
       }
     }
   } 
-  static mkStr(...xs4) {
+  static mkStr(...xs2) {
     let tmp, tmp1, lambda;
     lambda = (undefined, function (acc, x7) {
       let tmp2, tmp3, tmp4;
@@ -204,16 +196,7 @@ let Predef1;
     });
     tmp = lambda;
     tmp1 = runtime.safeCall(Predef.fold(tmp));
-    return runtime.safeCall(tmp1(...xs4))
-  } 
-  static stringStartsWith(string, prefix) {
-    return runtime.safeCall(string.startsWith(prefix))
-  } 
-  static stringGet(string1, i2) {
-    return runtime.safeCall(string1.at(i2))
-  } 
-  static stringDrop(string2, n) {
-    return runtime.safeCall(string2.slice(n))
+    return runtime.safeCall(tmp1(...xs2))
   } 
   static get unreachable() {
     throw globalThis.Error("unreachable");

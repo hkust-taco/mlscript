@@ -46,3 +46,40 @@ print of  checkCall(undefined)
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 
+print of Tuple.slice([1, 2, 3, 4], 1, -1)
+//│ > [2, 3, 4]
+
+print of Tuple.get([1, 2, 3, 4], 0)
+//│ > 1
+
+print of Tuple.get([1, 2, 3, 4], -1)
+//│ > 4
+
+:re
+print of Tuple.get([1, 2, 3, 4], 5)
+//│ ═══[RUNTIME ERROR] RangeError: Tuple.get: index out of bounds
+
+print of Str.drop("hello, world", 2)
+//│ > llo, world
+
+print of Str.drop("hello, world", -2)
+//│ > ld
+
+print of Str.get("hello, world", 2)
+//│ > l
+
+:re
+print of Str.get("hello, world", 22)
+//│ ═══[RUNTIME ERROR] RangeError: Str.get: index out of bounds
+
+print of Str.get("hello, world", -1)
+//│ > d
+
+print of Str.startsWith("hello, world", "hello")
+//│ > true
+
+print of Str.startsWith("hello, world", "")
+//│ > true
+
+print of Str.startsWith("hello, world", "farewell")
+//│ > false

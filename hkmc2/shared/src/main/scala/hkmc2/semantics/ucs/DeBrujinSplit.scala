@@ -347,7 +347,7 @@ extension (split: DeBrujinSplit)
                   go(body, ctx2)
               val select = scoped("ucs:sel"):
                 elab.reference(symbol).getOrElse(Term.Error)
-              val pattern = Pattern.ClassLike(symbol, select, S(subSymbols), false)(Empty())
+              val pattern = Pattern.ClassLike(symbol, select, S(subSymbols.map(S.apply)), false)(Empty())
               semantics.Branch(ctx(scrutinee - 1)(), pattern, consequent2) ~: go(alternative, ctx)
             case ClassLike(ConstructorLike.Symbol(symbol: ModuleSymbol)) =>
               val select = scoped("ucs:sel"):

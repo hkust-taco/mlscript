@@ -394,21 +394,33 @@ Foo(1, 2, 3).args
 
 :todo
 if Foo(1, 2, 3) is Foo(...args) then args
-//│ ╔══[ERROR] Unrecognized pattern (spread)
+//│ ╔══[ERROR] the constructor does not take any arguments but found 1
 //│ ║  l.396: 	if Foo(1, 2, 3) is Foo(...args) then args
-//│ ╙──       	                          ^^^^
+//│ ╙──       	                   ^^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: args
+//│ ║  l.396: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ╙──       	                                     ^^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
-//│ ╔══[ERROR] mismatched arity: expect 1, found 3
-//│ ║  l.402: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ╔══[ERROR] the constructor does not take any arguments but found 3
+//│ ║  l.405: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                   ^^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: a
+//│ ║  l.405: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ╙──       	                                      ^
 //│ ╔══[ERROR] Name not found: b
-//│ ║  l.402: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.405: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                                         ^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ╔══[ERROR] the constructor does not take any arguments but found 1
+//│ ║  l.417: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ╙──       	                   ^^^^^^^^
+//│ ╔══[ERROR] Name not found: arg
+//│ ║  l.417: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ╙──       	                                 ^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 // ——— ——— ———

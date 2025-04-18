@@ -1,0 +1,107 @@
+:js
+
+class Foo(a: Int, val b: Int)
+
+:e
+fun foo(x) = if x is Foo(p, q) then p + q
+//│ ╔══[ERROR] This pattern cannot be matched
+//│ ║  l.6: 	fun foo(x) = if x is Foo(p, q) then p + q
+//│ ║       	                         ^
+//│ ╟── because the corresponding parameter `a` is not publicly accessible
+//│ ║  l.3: 	class Foo(a: Int, val b: Int)
+//│ ║       	          ^
+//│ ╟── Suggestion: use a wildcard pattern `_` in this position
+//│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
+//│ ╔══[ERROR] Name not found: p
+//│ ║  l.6: 	fun foo(x) = if x is Foo(p, q) then p + q
+//│ ╙──     	                                    ^
+
+:re
+foo(Foo(2, 3))
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+
+fun foo(x) = if x is Foo(_, q) then q
+
+foo(Foo(2, 3))
+//│ = 3
+
+class Test(a, b, c, d, e, f)
+
+fun test(x) = if x is Test then "ok"
+
+:e
+fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ╔══[ERROR] This pattern cannot be matched
+//│ ║  l.33: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║        	                           ^
+//│ ╟── because the corresponding parameter `a` is not publicly accessible
+//│ ║  l.28: 	class Test(a, b, c, d, e, f)
+//│ ║        	           ^
+//│ ╟── Suggestion: use a wildcard pattern `_` in this position
+//│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
+//│ ╔══[ERROR] This pattern cannot be matched
+//│ ║  l.33: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║        	                              ^
+//│ ╟── because the corresponding parameter `b` is not publicly accessible
+//│ ║  l.28: 	class Test(a, b, c, d, e, f)
+//│ ║        	              ^
+//│ ╟── Suggestion: use a wildcard pattern `_` in this position
+//│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
+//│ ╔══[ERROR] This pattern cannot be matched
+//│ ║  l.33: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║        	                                 ^
+//│ ╟── because the corresponding parameter `c` is not publicly accessible
+//│ ║  l.28: 	class Test(a, b, c, d, e, f)
+//│ ║        	                 ^
+//│ ╟── Suggestion: use a wildcard pattern `_` in this position
+//│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
+//│ ╔══[ERROR] This pattern cannot be matched
+//│ ║  l.33: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║        	                                    ^
+//│ ╟── because the corresponding parameter `d` is not publicly accessible
+//│ ║  l.28: 	class Test(a, b, c, d, e, f)
+//│ ║        	                    ^
+//│ ╟── Suggestion: use a wildcard pattern `_` in this position
+//│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
+//│ ╔══[ERROR] This pattern cannot be matched
+//│ ║  l.33: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║        	                                       ^
+//│ ╟── because the corresponding parameter `e` is not publicly accessible
+//│ ║  l.28: 	class Test(a, b, c, d, e, f)
+//│ ║        	                       ^
+//│ ╟── Suggestion: use a wildcard pattern `_` in this position
+//│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
+//│ ╔══[ERROR] This pattern cannot be matched
+//│ ║  l.33: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║        	                                          ^
+//│ ╟── because the corresponding parameter `f` is not publicly accessible
+//│ ║  l.28: 	class Test(a, b, c, d, e, f)
+//│ ║        	                          ^
+//│ ╟── Suggestion: use a wildcard pattern `_` in this position
+//│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
+
+:e
+fun test(x) = if x is Test(_, _, _) then "ok"
+//│ ╔══[ERROR] mismatched arity: expect 6, found 3
+//│ ║  l.84: 	fun test(x) = if x is Test(_, _, _) then "ok"
+//│ ╙──      	                      ^^^^^^^^^^^^^
+
+fun test(x) = if x is Test(_, _, _, _, _, _) then "ok"
+
+:e
+fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
+//│ ╔══[ERROR] This pattern cannot be matched
+//│ ║  l.92: 	fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
+//│ ║        	                                    ^
+//│ ╟── because the corresponding parameter `d` is not publicly accessible
+//│ ║  l.28: 	class Test(a, b, c, d, e, f)
+//│ ║        	                    ^
+//│ ╟── Suggestion: use a wildcard pattern `_` in this position
+//│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
+
+class Point(val x: Int, val y: Int)
+
+fun point(p) = if p is Point(x, y) then x + y
+
+point(Point(2, 4))
+//│ = 6
