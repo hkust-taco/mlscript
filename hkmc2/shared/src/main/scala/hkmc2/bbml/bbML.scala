@@ -332,38 +332,39 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
         case N =>
           val t = tryMkMono(typeCheck(s)._1, s)
           sv += s -> t
-          (false, t)
+          (path, t)
         case S(t) =>
-          (path.forall: p =>
+          (path.filterNot: p =>
             p.find(_._1 === s).fold(false): u =>
               Type.disjoint(u._2.!, cls).exists(_.isEmpty)) -> t
-      if r then typeSplitImpl(alts, sign, eff, br, path)
+      if r.isEmpty then typeSplitImpl(alts, sign, eff, br, path)
       else
         val ctx1 = ctx.nest
         ctx1 += s.sym -> (cls & sty)
         sv -= s
-        val p0 = Ls(s -> cls) :: (Type.disjoint(cls, sty) match
-          case N => typeSplitImpl(cons, sign, eff, true, path)(using ctx1)
-          case S(k) =>
-            if k.isEmpty then Nil
-            else
-              val (nc, dss, cs) = constraintCollector
-              val p = typeSplitImpl(cons, sign, eff, true, path)(using ctx1, nc)
-              k.foreach: k =>
+        val (nc, dss, cs) = constraintCollector
+        val p0 = Ls(s -> cls) :: typeSplitImpl(cons, sign, eff, true, r)(using ctx1, nc)
+        sv += s -> sty
+        if p0.contains(Nil) then typeSplitImpl(alts, sign, eff, br, path)
+        else
+          Type.disjoint(cls, sty) match
+            case N =>
+              dss.foreach(c.commit)
+              cs.foreach(u => constrain(u._1, u._2))
+            case S(k) =>
+              if k.nonEmpty then k.foreach: k =>
                 val ks = LinkedHashSet.from(k)
                 dss.foreach(d => c.commit(DisjSub(ks ++ d.disjoint, d.dss, d.cs)))
                 if cs.nonEmpty then c.commit(DisjSub(ks, Nil, cs.toList))
-              p)
-        val p = path.flatMap(x => p0.map: y =>
-          val m = (x ++ y).groupMapReduce(_._1)(_._2)(_ | _)
-          (x.keys ++ y.keys).distinct.map(k => k -> m(k)).toList)
-        sv += s -> sty
-        val p1 = typeSplitImpl(alts, sign, eff, br, p)
-        if br then
-          p1.flatMap(y => p0.map: x =>
+          val p = path.flatMap(x => p0.map: y =>
             val m = (x ++ y).groupMapReduce(_._1)(_._2)(_ | _)
             (x.keys ++ y.keys).distinct.map(k => k -> m(k)).toList)
-        else Nil
+          val p1 = typeSplitImpl(alts, sign, eff, br, p)
+          if br then
+            p1.flatMap(y => p0.map: x =>
+              val m = (x ++ y).groupMapReduce(_._1)(_._2)(_ | _)
+              (x.keys ++ y.keys).distinct.map(k => k -> m(k)).toList)
+          else Nil
     case Split.Cons(Branch(s: Ref, Pattern.Lit(lit), cons), alts) =>
       constrain(tryMkMono(typeCheck(s)._1, s), lit match
         case _: Tree.BoolLit => BbCtx.boolTy

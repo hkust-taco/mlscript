@@ -41,14 +41,11 @@ test
 //│ Type: ['x, 'y, 'res, 'eff, 'y1, 'x1] -> ('x, 'y) ->{'eff} 'res
 //│ Where:
 //│   'x#Tru ∨ 'y#Tru ∨ Tru <: 'res ∧ ⊥ <: 'eff
-//│   'x#Tru ∨ 'y#Tru ∨ Tru <: 'res ∧ ⊥ <: 'eff ∧ Tru <: 'res ∧ ⊥ <: 'eff
-//│   'x#Tru ∨ 'y#Tru ∨ Tru <: 'res ∧ ⊥ <: 'eff ∧ Tru <: 'res ∧ ⊥ <: 'eff ∧ Tru <: 'res ∧ ⊥ <: 'eff ∧ Tru <: 'res ∧ ⊥ <: 'eff
 //│   'x#Fls ∨ 'y#¬Tru ∨ ¬Tru & 'y <: 'y1 ∧ Fls <: 'res ∧ ⊥ <: 'eff
 //│   'x#Fls ∨ 'y <: 'y1 ∧ Fls <: 'res ∧ ⊥ <: 'eff
 //│   'y#Fls ∨ 'x#¬Fls & ¬Tru ∨ (¬Tru & ¬Fls) & 'x <: 'x1 ∧ Fls <: 'res ∧ ⊥ <: 'eff
 //│   'y#Fls ∨ 'x#¬Fls ∨ ¬Fls & 'x <: 'x1 ∧ Fls <: 'res ∧ ⊥ <: 'eff
 //│   'x#¬Fls & ¬Tru ∨ 'y#¬Fls ∨ ⊤ <: ⊥
-//│   'x#¬Fls & ¬Tru ∨ 'y#¬Fls & ¬Tru ∨ ⊤ <: ⊥
 //│   'y#¬Fls & ¬Tru ∨ 'x#¬Fls ∨ ⊤ <: ⊥
 
 test(tru, tru)
