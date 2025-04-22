@@ -344,7 +344,7 @@ object TermDefFlags { val empty: TermDefFlags = TermDefFlags(false) }
  *
  * @param msym if None, the declaration is non-moduful; if Some of
  * symbol, the declaration is moduleful and the symbol is the symbol of
- * the module
+ * the module's type
  */
 final case class Modulefulness(msym: Opt[MemberSymbol[?]])(val modified: Bool):
   
