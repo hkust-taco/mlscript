@@ -79,7 +79,7 @@ id(+)(1)
 //│   return arg1 + arg2
 //│ });
 //│ tmp1 = Predef.id(lambda4);
-//│ tmp1(1)
+//│ runtime.safeCall(tmp1(1))
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
 
@@ -100,7 +100,7 @@ id(~)(2)
 //│   return ~ arg
 //│ });
 //│ tmp2 = Predef.id(lambda5);
-//│ tmp2(2)
+//│ runtime.safeCall(tmp2(2))
 //│ = -3
 
 2 |> ~

@@ -29,7 +29,7 @@ class EffectHandle(_reified) with
   fun resumeWith(value) =
     Runtime.try(() => resume(reified.contTrace)(value))
   fun raise() =
-    topLevelEffect(reified)
+    topLevelEffect(reified, null)
 
 fun try(f) =
   let res = f()

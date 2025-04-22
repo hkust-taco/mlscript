@@ -232,13 +232,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val p1 = Param(FldFlags.empty, VarSymbol(t1), N, Modulefulness.none)
           val p2 = Param(FldFlags.empty, VarSymbol(t2), N, Modulefulness.none)
           val ps = PlainParamList(p1 :: p2 :: Nil)
-          val bod = st.App(t, st.Tup(List(st.Ref(p1.sym)(t1, 666), st.Ref(p2.sym)(t2, 666)))
+          val bod = st.App(t, st.Tup(List(st.Ref(p1.sym)(t1, 666).noIArgs, st.Ref(p2.sym)(t2, 666).noIArgs))
             (Tree.Tup(Nil // FIXME should not be required (using dummy value)
               )))(
               Tree.App(Tree.Empty(), Tree.Empty()), // FIXME should not be required (using dummy value)
               N,
               FlowSymbol(sym.nme)
-            )
+            ).noIArgs
           val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
           tl.log(s"Ref builtin $sym")
           assert(paramLists.length === 1)
@@ -247,13 +247,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val t1 = new Tree.Ident("arg")
           val p1 = Param(FldFlags.empty, VarSymbol(t1), N, Modulefulness.none)
           val ps = PlainParamList(p1 :: Nil)
-          val bod = st.App(t, st.Tup(List(st.Ref(p1.sym)(t1, 666)))
+          val bod = st.App(t, st.Tup(List(st.Ref(p1.sym)(t1, 666).noIArgs))
             (Tree.Tup(Nil // FIXME should not be required (using dummy value)
               )))(
               Tree.App(Tree.Empty(), Tree.Empty()), // FIXME should not be required (using dummy value)
               N,
               FlowSymbol(sym.nme)
-            )
+            ).noIArgs
           val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
           tl.log(s"Ref builtin $sym")
           assert(paramLists.length === 1)
@@ -261,7 +261,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case bs: BlockMemberSymbol =>
         bs.defn match
         case S(d) if d.isDeclare.isDefined =>
-          return term(Sel(State.globalThisSymbol.ref(), ref.tree)(S(bs)))(k)
+          return term(Sel(State.globalThisSymbol.ref().noIArgs, ref.tree)(S(bs)).noIArgs)(k)
         case S(td: TermDefinition) if td.k is syntax.Fun =>
           // * Local functions with no parameter lists are getters
           // * and are lowered to functions with an empty parameter list
@@ -539,7 +539,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             Return(Call(Value.Ref(State.builtinOpsMap("super")), args)(true, true), implct = true)
         val clsDef = ClsLikeDefn(N, isym, sym, syntax.Cls, N, Nil, S(clsp),
           mtds, privateFlds, publicFlds, pctor, ctor)
-        Define(clsDef, term_nonTail(New(sym.ref(), Nil, N))(k))
+        Define(clsDef, term_nonTail(New(sym.ref().noIArgs, Nil, N))(k))
       
     case Try(sub, finallyDo) =>
       val l = new TempSymbol(S(sub))

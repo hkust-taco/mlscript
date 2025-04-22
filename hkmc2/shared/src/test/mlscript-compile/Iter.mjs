@@ -99,7 +99,7 @@ Iterator1.class = class Iterator {
           return Result1.Done
         } else {
           tmp1 = runtime.safeCall(op(next.value));
-          return Result1.Next(tmp1)
+          return runtime.safeCall(Result1.Next(tmp1))
         }
       });
       return lambda1
@@ -123,10 +123,10 @@ Iterator1.class = class Iterator {
           if (scrut1 === true) {
             return skipEmptyIterables()
           } else {
-            return Option.Some([
+            return runtime.safeCall(Option.Some([
               nextIterator,
               nextResult.value
-            ])
+            ]))
           }
         }
       };
@@ -138,7 +138,7 @@ Iterator1.class = class Iterator {
         tmp2 = Option.None;
       } else {
         tmp3 = Iter.getIterator(firstIterableResult.value);
-        tmp2 = Option.Some(tmp3);
+        tmp2 = runtime.safeCall(Option.Some(tmp3));
       }
       currentIterator = tmp2;
       lambda1 = (undefined, function () {
@@ -159,20 +159,20 @@ Iterator1.class = class Iterator {
                 first1 = param01[1];
                 nextIterator = first0;
                 value = first1;
-                tmp5 = Option.Some(nextIterator);
+                tmp5 = runtime.safeCall(Option.Some(nextIterator));
                 currentIterator = tmp5;
-                return Result1.Next(value)
+                return runtime.safeCall(Result1.Next(value))
               } else {
-                return Result1.Next(next.value)
+                return runtime.safeCall(Result1.Next(next.value))
               }
             } else if (scrut2 instanceof Option.None.class) {
               currentIterator = Option.None;
               return Result1.Done
             } else {
-              return Result1.Next(next.value)
+              return runtime.safeCall(Result1.Next(next.value))
             }
           } else {
-            return Result1.Next(next.value)
+            return runtime.safeCall(Result1.Next(next.value))
           }
         } else {
           throw new globalThis.Error("match error");
@@ -213,7 +213,7 @@ Iterator1.class = class Iterator {
         if (scrut2 === true) {
           return Result1.Done
         } else {
-          return Result1.Next(next.value)
+          return runtime.safeCall(Result1.Next(next.value))
         }
       });
       return lambda1
@@ -288,13 +288,13 @@ Iterator1.class = class Iterator {
             if (scrut2 === true) {
               return Result1.Done
             } else {
-              return Result1.Next(next1.value)
+              return runtime.safeCall(Result1.Next(next1.value))
             }
           } else {
             return Result1.Done
           }
         } else {
-          return Result1.Next(next.value)
+          return runtime.safeCall(Result1.Next(next.value))
         }
       });
       tmp2 = lambda1;
@@ -400,13 +400,13 @@ Iterator1.class = class Iterator {
       if (result instanceof Option.None.class) {
         scrut1 = next.done;
         if (scrut1 === true) {
-          tmp2 = Option.Some(false);
+          tmp2 = runtime.safeCall(Option.Some(false));
           result = tmp2;
           tmp3 = runtime.Unit;
         } else {
           scrut = runtime.safeCall(op7(next.value));
           if (scrut === true) {
-            tmp4 = Option.Some(true);
+            tmp4 = runtime.safeCall(Option.Some(true));
             result = tmp4;
             tmp3 = runtime.Unit;
           } else {
@@ -461,7 +461,7 @@ Iterator1.class = class Iterator {
           head = param0;
           tail = param1;
           current = tail;
-          return Result1.Next(head)
+          return runtime.safeCall(Result1.Next(head))
         } else if (current instanceof Stack.Nil.class) {
           return Result1.Done
         } else {

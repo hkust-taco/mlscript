@@ -1,5 +1,5 @@
 :bbml
-//│ Type: ⊤
+//│ Type: ⊥
 
 //│ Type: ⊤
 fun f(y) =

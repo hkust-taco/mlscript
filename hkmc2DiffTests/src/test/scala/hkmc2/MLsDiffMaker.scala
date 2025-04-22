@@ -245,20 +245,20 @@ abstract class MLsDiffMaker extends DiffMaker:
       output(s"Elaborated tree:")
       output(e.showAsTree(using post))
       
-    val resolver = Resolver(rtl)
-    curICtx = resolver.traverseBlock(e)(using curICtx)
-    
-    if showResolve.isSet then
-      output(s"Resolved: ${e.showDbg}")
-    showResolvedTree.get.foreach: post =>
-      output(s"Resolved tree:")
-      output(e.showAsTree(using post))
-    
     processTerm(e, inImport = false)
       
   
   
   def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
+    val resolver = Resolver(rtl)
+    curICtx = resolver.traverseBlock(trm)(using curICtx)
+    
+    if showResolve.isSet then
+      output(s"Resolved: ${trm.showDbg}")
+    showResolvedTree.get.foreach: post =>
+      output(s"Resolved tree:")
+      output(trm.showAsTree(using post))
+    
     if typeCheck.isSet then
       val typer = typing.TypeChecker()
       val ty = typer.typeProd(trm)

@@ -103,7 +103,7 @@ StyleAttributeValue1.class = class StyleAttributeValue {
     return (...elements) => {
       let tmp, tmp1;
       tmp = XML.elem("html", attributes2);
-      tmp1 = tmp(...elements);
+      tmp1 = runtime.safeCall(tmp(...elements));
       return "<!DOCTYPE html>" + tmp1
     }
   }

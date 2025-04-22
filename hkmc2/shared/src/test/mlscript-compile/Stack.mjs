@@ -108,10 +108,10 @@ let Stack1;
             tmp2 = Stack.Cons(h2, heads);
             tmp3 = Stack.Cons(t2, tails);
             tmp4 = go(tmp2, tmp3);
-            return tmp4(t)
+            return runtime.safeCall(tmp4(t))
           } else if (h instanceof Stack.Nil.class) {
             tmp5 = go(heads, tails);
-            return tmp5(t)
+            return runtime.safeCall(tmp5(t))
           } else {
             throw new globalThis.Error("match error");
           }
@@ -128,7 +128,7 @@ let Stack1;
             tmp8 = Stack.toReverseArray(heads);
             tmp9 = go(Stack.Nil, Stack.Nil);
             tmp10 = Stack.reverse(tails);
-            tmp11 = tmp9(tmp10);
+            tmp11 = runtime.safeCall(tmp9(tmp10));
             return Stack.Cons(tmp8, tmp11)
           }
         } else {
@@ -139,7 +139,7 @@ let Stack1;
     };
     tmp = go(Stack.Nil, Stack.Nil);
     tmp1 = Stack.fromArray(xss);
-    return tmp(tmp1)
+    return runtime.safeCall(tmp(tmp1))
   } 
   static concat(xs4, ys) {
     let param0, param1, head$_, tail$_, result, current, rest, param01, param11, head, tail1, next, tmp, tmp1, tmp2;

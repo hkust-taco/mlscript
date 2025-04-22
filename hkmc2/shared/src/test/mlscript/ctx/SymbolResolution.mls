@@ -41,7 +41,7 @@ M.baz()
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App{Some(member:baz), Some(module:M)}:
+//│   res = App{Some(module:M)}:
 //│     lhs = Sel{member:baz}:
 //│       prefix = Ref of member:M
 //│       nme = Ident of "baz"
@@ -51,7 +51,7 @@ M.foo.bar.baz()
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App{Some(member:baz), Some(module:M)}:
+//│   res = App{Some(module:M)}:
 //│     lhs = Sel{member:baz}:
 //│       prefix = Sel{module:M}:
 //│         prefix = Sel{module:M}:
@@ -101,7 +101,7 @@ R.foo()
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App{Some(member:foo), None}:
+//│   res = App{None}:
 //│     lhs = Sel{member:foo}:
 //│       prefix = Ref of member:R
 //│       nme = Ident of "foo"
@@ -111,8 +111,8 @@ R.foo()()
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App{Some(member:foo), Some(module:N)}:
-//│     lhs = App{Some(member:foo), None}:
+//│   res = App{Some(module:N)}:
+//│     lhs = App{None}:
 //│       lhs = Sel{member:foo}:
 //│         prefix = Ref of member:R
 //│         nme = Ident of "foo"
@@ -123,9 +123,9 @@ R.foo()()()
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App{Some(member:foo), None}:
-//│     lhs = App{Some(member:foo), Some(module:N)}:
-//│       lhs = App{Some(member:foo), None}:
+//│   res = App{None}:
+//│     lhs = App{Some(module:N)}:
+//│       lhs = App{None}:
 //│         lhs = Sel{member:foo}:
 //│           prefix = Ref of member:R
 //│           nme = Ident of "foo"

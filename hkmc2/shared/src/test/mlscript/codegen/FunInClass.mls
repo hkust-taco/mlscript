@@ -172,7 +172,7 @@ Bar(1)
 //│     let tmp1;
 //│     this.x = x;
 //│     tmp1 = this.foo();
-//│     tmp1()
+//│     runtime.safeCall(tmp1())
 //│   }
 //│   foo() {
 //│     return () => {

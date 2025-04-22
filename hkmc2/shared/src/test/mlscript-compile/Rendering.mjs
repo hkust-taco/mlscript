@@ -105,9 +105,9 @@ let Rendering1;
       tmp = Rendering.fold(lambda);
       tmp1 = Rendering.interleave(", ");
       tmp2 = Rendering.map(Rendering.render);
-      tmp3 = tmp2(...arg);
-      tmp4 = tmp1(...tmp3);
-      return tmp("[", ...tmp4, "]")
+      tmp3 = runtime.safeCall(tmp2(...arg));
+      tmp4 = runtime.safeCall(tmp1(...tmp3));
+      return runtime.safeCall(tmp("[", ...tmp4, "]"))
     } else if (typeof arg === 'string') {
       return runtime.safeCall(globalThis.JSON.stringify(arg))
     } else if (arg instanceof globalThis.Set) {
@@ -117,9 +117,9 @@ let Rendering1;
       tmp5 = Rendering.fold(lambda1);
       tmp6 = Rendering.interleave(", ");
       tmp7 = Rendering.map(Rendering.render);
-      tmp8 = tmp7(...arg);
-      tmp9 = tmp6(...tmp8);
-      return tmp5("Set{", ...tmp9, "}")
+      tmp8 = runtime.safeCall(tmp7(...arg));
+      tmp9 = runtime.safeCall(tmp6(...tmp8));
+      return runtime.safeCall(tmp5("Set{", ...tmp9, "}"))
     } else if (arg instanceof globalThis.Map) {
       lambda2 = (undefined, function (arg1, arg2) {
         return arg1 + arg2
@@ -127,9 +127,9 @@ let Rendering1;
       tmp10 = Rendering.fold(lambda2);
       tmp11 = Rendering.interleave(", ");
       tmp12 = Rendering.map(Rendering.render);
-      tmp13 = tmp12(...arg);
-      tmp14 = tmp11(...tmp13);
-      return tmp10("Map{", ...tmp14, "}")
+      tmp13 = runtime.safeCall(tmp12(...arg));
+      tmp14 = runtime.safeCall(tmp11(...tmp13));
+      return runtime.safeCall(tmp10("Map{", ...tmp14, "}"))
     } else if (arg instanceof globalThis.Function) {
       p = globalThis.Object.getOwnPropertyDescriptor(arg, "prototype");
       if (p instanceof globalThis.Object) {
@@ -184,9 +184,9 @@ let Rendering1;
           });
           tmp22 = lambda4;
           tmp23 = Rendering.map(tmp22);
-          tmp24 = tmp23(...es);
-          tmp25 = tmp21(...tmp24);
-          return tmp20("{", ...tmp25, "}")
+          tmp24 = runtime.safeCall(tmp23(...es));
+          tmp25 = runtime.safeCall(tmp21(...tmp24));
+          return runtime.safeCall(tmp20("{", ...tmp25, "}"))
         } else {
           return globalThis.String(arg)
         }
@@ -217,9 +217,9 @@ let Rendering1;
         });
         tmp29 = lambda6;
         tmp30 = Rendering.map(tmp29);
-        tmp31 = tmp30(...es);
-        tmp32 = tmp28(...tmp31);
-        return tmp27("{", ...tmp32, "}")
+        tmp31 = runtime.safeCall(tmp30(...es));
+        tmp32 = runtime.safeCall(tmp28(...tmp31));
+        return runtime.safeCall(tmp27("{", ...tmp32, "}"))
       } else {
         return globalThis.String(arg)
       }

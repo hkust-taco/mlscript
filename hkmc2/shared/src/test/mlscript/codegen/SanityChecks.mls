@@ -64,7 +64,7 @@ f(3)(4)
 //│   }
 //│ };
 //│ tmp = runtime.checkCall(f1(3));
-//│ block$res4 = runtime.checkCall(tmp(4));
+//│ block$res4 = runtime.safeCall(tmp(4));
 //│ undefined
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 

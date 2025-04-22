@@ -64,7 +64,7 @@ f(1, 2)
 //│   used2 = unused1;
 //│   unused2 = 2;
 //│   tmp = g$1(used1, used2, used2);
-//│   tmp1 = tmp(used2);
+//│   tmp1 = runtime.safeCall(tmp(used2));
 //│   return tmp1 + unused2
 //│ };
 //│ f1(1, 2)
@@ -481,7 +481,7 @@ g()(1)
 //│   return runtime.safeCall(f15(capture))
 //│ };
 //│ tmp15 = g13();
-//│ tmp15(1)
+//│ runtime.safeCall(tmp15(1))
 //│ = 1
 
 :expect 2

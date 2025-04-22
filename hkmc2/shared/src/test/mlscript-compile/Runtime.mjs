@@ -29,12 +29,12 @@ let Runtime1;
         lambda = (undefined, function () {
           let tmp;
           tmp = Runtime.resume(this$EffectHandle.reified.contTrace);
-          return tmp(value)
+          return runtime.safeCall(tmp(value))
         });
         return Runtime1.try(lambda)
       } 
       raise() {
-        return Runtime.topLevelEffect(this.reified)
+        return Runtime.topLevelEffect(this.reified, null)
       }
       toString() { return "EffectHandle(" + "" + ")"; }
     };
@@ -183,7 +183,7 @@ let Runtime1;
     tmp = runtime.safeCall(f());
     res = tmp;
     if (res instanceof Runtime.EffectSig.class) {
-      return Runtime.EffectHandle(res)
+      return runtime.safeCall(Runtime.EffectHandle(res))
     } else {
       return res
     }
@@ -199,7 +199,7 @@ let Runtime1;
         tmp = Runtime.showStackTrace("Stack Trace:", tr, debug, tr.handlerFun);
         tmp1 = runtime.safeCall(globalThis.console.log(tmp));
         tmp2 = Runtime.resume(tr.contTrace);
-        tmp3 = tmp2(runtime.Unit);
+        tmp3 = runtime.safeCall(tmp2(runtime.Unit));
         tr = tmp3;
         tmp4 = runtime.Unit;
         continue tmp6;

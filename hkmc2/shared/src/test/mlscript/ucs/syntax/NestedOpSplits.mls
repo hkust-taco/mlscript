@@ -30,33 +30,45 @@ fun f(x) =
 //│         kw = keyword 'if'
 //│         desugared = Let:
 //│           sym = $scrut
-//│           term = App{Some(builtin:==), None}:
-//│             lhs = Ref of builtin:==
+//│           term = App{None}:
+//│             lhs = Ref:
+//│               sym = builtin:==
+//│               iargs = N
 //│             rhs = Tup of Ls of 
 //│               Fld:
 //│                 flags = ()
-//│                 term = Ref of x
+//│                 term = Ref:
+//│                   sym = x
+//│                   iargs = N
 //│                 asc = N
 //│               Fld:
 //│                 flags = ()
 //│                 term = Lit of IntLit of 1
 //│                 asc = N
+//│             iargs = N
 //│           tail = Let: \
 //│           sym = $scrut
-//│           term = App{Some(builtin:+), None}:
-//│             lhs = Ref of builtin:+
+//│           term = App{None}:
+//│             lhs = Ref:
+//│               sym = builtin:+
+//│               iargs = N
 //│             rhs = Tup of Ls of 
 //│               Fld:
 //│                 flags = ()
-//│                 term = Ref of $scrut
+//│                 term = Ref:
+//│                   sym = $scrut
+//│                   iargs = N
 //│                 asc = N
 //│               Fld:
 //│                 flags = ()
 //│                 term = Lit of IntLit of 2
 //│                 asc = N
+//│             iargs = N
 //│           tail = Cons: \
 //│           head = Branch:
-//│             scrutinee = Ref of $scrut
+//│             scrutinee = Ref:
+//│               sym = $scrut
+//│               iargs = N
 //│             pattern = Lit of BoolLit of true
 //│             continuation = Else of Lit of IntLit of 0
 //│           tail = Else of Lit of IntLit of 1

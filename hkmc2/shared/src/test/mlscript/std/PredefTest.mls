@@ -196,7 +196,6 @@ foldr(+)()
 //│ ╔══[ERROR] Expected at least 1 arguments, got 0
 //│ ║  l.195: 	foldr(+)()
 //│ ╙──       	        ^^
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 
 // An alternative implementation of foldr

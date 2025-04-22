@@ -31,26 +31,23 @@ enum Annot extends AutoLocated:
 sealed trait Resolvable:
   t: Term =>
   
-  var iargsLs: Ls[Term.Tup] = Nil
+  var iargsLs: Opt[Ls[Term.Tup]] = N
   
-  override def show: Str = t.showDbg + iargsLs.map(_.showDbg)
+  override def show: Str = t.showDbg + iargsLs.map(_.map(_.showDbg))
   
   def withoutIArgs = t match
-    case t: Term.Ref => t.copy()(t.tree, t.refNum)
-    case t: Term.App => t.copy()(t.tree, t.resultSym, t.resSym)
-    case t: Term.TyApp => t.copy()
-    case t: Term.Sel => t.copy()(t.sym)
-    case t: Term.SynthSel => t.copy()(t.sym)
+    case t: Term.Ref => t.copy()(t.tree, t.refNum).noIArgs
+    case t: Term.App => t.copy()(t.tree, t.sym, t.resSym).noIArgs
+    case t: Term.TyApp => t.copy().noIArgs
+    case t: Term.Sel => t.copy()(t.sym).noIArgs
+    case t: Term.SynthSel => t.copy()(t.sym).noIArgs
   
-  def instantiate(using State): Term = 
-    t.iargsLs.foldLeft(t.withoutIArgs): (t, args) => 
-      Term.App(t, args)(Tree.DummyApp, N, FlowSymbol("implicit app")) // N: todo
+  def instantiate(using State): Term = iargsLs match
+    case N => lastWords(s"missing implicit arguments for term ${t}")
+    case S(iargsLs) => iargsLs.foldLeft(t.withoutIArgs): (t, args) => 
+      Term.App(t, args)(Tree.DummyApp, N, FlowSymbol("implicit app")).noIArgs // N: todo
   
-  def resultSymbol = t match
-    case t: Term.App => t.resultSym
-    case t => t.symbol
-  
-  def defn: Opt[Definition] = t.resultSymbol match
+  def defn: Opt[Definition] = t.symbol match
     case S(sym: MemberSymbol[?]) => sym.defn
     case S(sym: BlockLocalSymbol) => sym.decl match
       case S(td: Definition) => S(td)
@@ -64,6 +61,13 @@ sealed trait Resolvable:
   def typeDefn: Opt[ClassLikeDef] = t.defn match
     case S(td: ClassLikeDef) => S(td)
     case _ => N
+  
+  def withIArgs(iargsLs: Ls[Term.Tup]): Term = 
+    this.iargsLs = S(iargsLs)
+    this
+  
+  def noIArgs: Term = withIArgs(Nil)
+      
     
 
 enum Term extends Statement:
@@ -72,8 +76,8 @@ enum Term extends Statement:
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
   case Lit(lit: Literal)
   case Builtin(id: Tree.Ident, nme: Str)
-  case Ref(sym: Symbol)(val tree: Tree.Ident, val refNum: Int) extends Term with Resolvable
-  case App(lhs: Term, rhs: Term)(val tree: Tree.App, var resultSym: Opt[FieldSymbol], val resSym: FlowSymbol) extends Term with Resolvable
+  case Ref(var sym: Symbol)(val tree: Tree.Ident, val refNum: Int) extends Term with Resolvable
+  case App(lhs: Term, rhs: Term)(val tree: Tree.App, var sym: Opt[FieldSymbol], val resSym: FlowSymbol) extends Term with Resolvable
   case TyApp(lhs: Term, targs: Ls[Term]) extends Term with Resolvable
   case Sel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term with Resolvable
   case SynthSel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term with Resolvable
@@ -107,11 +111,11 @@ enum Term extends Statement:
   
   def symbol: Opt[Symbol] = this match
     case Ref(sym) => S(sym)
-    case sel: SynthSel => sel.sym
     case sel: Sel => sel.sym
+    case sel: SynthSel => sel.sym
     case sel: SelProj => sel.sym
-    case App(lhs, _) => lhs.symbol
-    case TyApp(lhs, _) => lhs.symbol
+    case app: App => app.sym
+    case tyApp: TyApp => tyApp.lhs.symbol
     case _ => N
   
   def sel(id: Tree.Ident, sym: Opt[FieldSymbol]): Sel =
@@ -172,7 +176,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
   def extraInfo: Str = this match
     case ref: Ref => ""
     case trm @ (_: Sel | _: SynthSel | _: SelProj) => trm.symbol.mkString
-    case r: (Resolvable & Term) => s"${r.symbol}, ${r.resultSymbol}"
+    case r: (Resolvable & Term) => s"${r.symbol}"
     case _ => ""
   
   def subStatements: Ls[Statement] = this match
@@ -195,7 +199,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Rcd(stats) => stats.flatMap(_.subTerms)
     case Quoted(term) => term :: Nil
     case Unquoted(term) => term :: Nil
-    case New(_, args, rft) => args ::: rft.toList.flatMap(_._2.blk.subTerms)
+    case New(cls, args, rft) => cls :: args ::: rft.toList.flatMap(_._2.blk.subTerms)
     case SelProj(pre, cls, _) => pre :: cls :: Nil
     case Asc(term, ty) => term :: ty :: Nil
     case Ret(res) => res :: Nil

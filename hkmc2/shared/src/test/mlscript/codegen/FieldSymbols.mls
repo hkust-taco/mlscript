@@ -12,14 +12,18 @@ Foo(42).x
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel:
-//│     prefix = App{Some(member:Foo), None}:
-//│       lhs = Ref of member:Foo
+//│     prefix = App{None}:
+//│       lhs = Ref:
+//│         sym = member:Foo
+//│         iargs = N
 //│       rhs = Tup of Ls of 
 //│         Fld:
 //│           flags = ()
 //│           term = Lit of IntLit of 42
 //│           asc = N
+//│       iargs = N
 //│     nme = Ident of "x"
+//│     iargs = N
 //│ = 42
 
 
@@ -33,8 +37,11 @@ foo.x
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel:
-//│     prefix = Ref of foo
+//│     prefix = Ref:
+//│       sym = foo
+//│       iargs = N
 //│     nme = Ident of "x"
+//│     iargs = N
 //│ = 42
 
 
@@ -45,8 +52,11 @@ foo.y
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel:
-//│     prefix = Ref of foo
+//│     prefix = Ref:
+//│       sym = foo
+//│       iargs = N
 //│     nme = Ident of "y"
+//│     iargs = N
 //│ = 42
 
 
@@ -72,19 +82,28 @@ case
 //│       kw = keyword 'if'
 //│       desugared = Cons:
 //│         head = Branch:
-//│           scrutinee = Ref of caseScrut
+//│           scrutinee = Ref:
+//│             sym = caseScrut
+//│             iargs = N
 //│           pattern = ClassLike:
 //│             sym = class:Foo
 //│             trm = SynthSel{class:Foo}:
-//│               prefix = Ref of member:Foo
+//│               prefix = Ref:
+//│                 sym = member:Foo
+//│                 iargs = N
 //│               nme = Ident of "class"
+//│               iargs = N
 //│             parameters = S of Ls of 
 //│               $param0
 //│             refined = false
 //│           continuation = Let:
 //│             sym = a
-//│             term = Ref of $param0
-//│             tail = Else of Ref of a
+//│             term = Ref:
+//│               sym = $param0
+//│               iargs = N
+//│             tail = Else of Ref:
+//│               sym = a
+//│               iargs = N
 //│         tail = End
 //│ Lowered:
 //│ Program:

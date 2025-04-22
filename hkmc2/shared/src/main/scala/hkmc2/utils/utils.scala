@@ -73,14 +73,19 @@ extension (t: Product)
         case str => "{" + str + "}"
       case _ => ""
     val prefix = t.productPrefix + midfix + (if postfix.isEmpty then "" else s" ($postfix)")
-    t.productArity match
+    
+    val productArity = t match
+      case t: Resolvable if t.iargsLs.forall(_.nonEmpty) => t.productArity + 1
+      case _ => t.productArity
+    
+    productArity match
       case 0 => prefix
       case 1 => prefix + " of " + aux(t.productElement(0))
       case a =>
         var args = t.productIterator.zipWithIndex.map:
           case (v, i) => t.productElementName(i) + " = " + aux(v, t.isInstanceOf[ProductWithTail] && i === a - 1)
         t match
-          case t: Resolvable if t.iargsLs.nonEmpty =>
+          case t: Resolvable if t.iargsLs.forall(_.nonEmpty) =>
             args = args ++ Iterator:
               "iargs = " + aux(t.iargsLs)
           case _ =>

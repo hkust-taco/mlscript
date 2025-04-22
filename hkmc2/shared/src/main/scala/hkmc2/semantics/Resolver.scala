@@ -231,28 +231,29 @@ class Resolver(tl: TraceLogger)
   
   def traverseBlock(blk: Term.Blk)(using ictx: ICtx): ICtx =
   trace(s"Traversing block: $blk"):
-    def go(rest: Ls[Statement])(using ictx: ICtx): ICtx = rest match
-      case Nil => ictx
-      case stmt :: rest => 
-        log(s"Traversing statement: $stmt")
-        given newICtx: ICtx = stmt match
-          case tdf: Definition =>
-            resolveDefn(tdf)
-          
-          case t: Term =>
-            traverse(t, expect = NonModule(N))
-            ictx
-          
-          // Default Case. Traverse the term or sub-terms.
-          case _ =>
-            stmt.subTerms.foreach(traverse(_, expect = NonModule(N)))
-            ictx
-        
-        go(rest)
-    
-    val newICtx = go(blk.stats)(using ictx)
+    val newICtx = traverseStmts(blk.stats)(using ictx)
     traverse(blk.res, expect = Any)(using newICtx)
     newICtx
+  
+  def traverseStmts(stmts: Ls[Statement])(using ictx: ICtx): ICtx = stmts match
+    case Nil => ictx
+    case stmt :: rest => 
+      log(s"Traversing statement: $stmt")
+      given newICtx: ICtx = stmt match
+        case tdf: Definition =>
+          resolveDefn(tdf)
+        
+        case t: Term =>
+          traverse(t, expect = NonModule(N))
+          ictx
+        
+        // Default Case. Traverse the term or sub-terms.
+        case _ =>
+          stmt.subTerms.foreach(traverse(_, expect = NonModule(N)))
+          ictx
+      
+      traverseStmts(rest)
+    
   
   def traverse(t: Term, expect: Expect)(using ictx: ICtx): Unit = 
   trace(s"Traversing term: $t"):
@@ -276,7 +277,10 @@ class Resolver(tl: TraceLogger)
         // we purely traverse the subterms with `expect = Any` here.
         case blk: Term.Blk => 
           traverseBlock(blk)
-        case Term.IfLike(_, s) =>
+        case Term.Rcd(stats) =>
+          traverseStmts(stats)
+        
+        case t: Term.IfLike =>
           def split(s: Split): Unit = s match
             case Split.Cons(head, tail) =>
               traverse(head.scrutinee, expect = NonModule(N))
@@ -289,7 +293,12 @@ class Resolver(tl: TraceLogger)
             case Split.Else(default) =>
               traverse(default, expect = Any)
             case Split.End =>
-          split(s)
+          // split(s)
+          split(t.normalized)
+        case Term.New(cls, args, rft) =>
+          traverse(cls, expect = Any)
+          args.foreach(traverse(_, expect = NonModule(N)))
+          rft.foreach((sym, bdy) => traverseBlock(bdy.blk))
         
         case t: Resolvable =>
           resolve(t)
@@ -314,8 +323,24 @@ class Resolver(tl: TraceLogger)
     defn match
     
     // Case: instance definition. Add the instance to the context.
-    case defn @ TermDefinition(k = Ins, sym = sym, sign = sign) =>
+    case defn @ TermDefinition(_, Ins, sym, pss, tps, sign, body, _, TermDefFlags(isMethod), modulefulness, annotations) =>
       log(s"Resolving instance definition ${defn.showDbg}")
+      
+      pss.foreach(_.params.foreach(resolveParam(_)))
+      tps.getOrElse(Nil).flatMap(_.subTerms).foreach(traverse(_, expect = NonModule(N)))
+      sign.foreach(traverse(_,
+        expect = if modulefulness.modified
+          then Module(S(msg"${defn.k.desc.capitalize} marked as returning a 'module' must have a module return type."))
+          else NonModule(S(msg"${defn.k.desc.capitalize} must be marked as returning a 'module' in order to have a module return type."))
+      ))
+
+      body.foreach(traverse(_,
+        expect = if modulefulness.modified
+          then Module(S(msg"${defn.k.desc.capitalize} marked as returning a 'module' but not returning a module."))
+          else NonModule(S(msg"${defn.k.desc.capitalize} must be marked as returning a 'module' in order to return a module."))
+      )(using resolveCtxParams(pss)))
+      annotations.flatMap(_.subTerms).foreach(traverse(_, expect = NonModule(N)))
+      
       sign match
         case N =>
           // By the syntax of instance defintiion, the type signature should be present.
@@ -357,6 +382,7 @@ class Resolver(tl: TraceLogger)
       
       defn.paramsOpt.foreach(_.params.foreach(resolveParam(_)))
       defn.annotations.flatMap(_.subTerms).foreach(traverse(_, expect = NonModule(N)))
+      defn.ext.foreach(traverse(_, expect = NonModule(N)))
 
       traverseBlock(defn.body.blk)(using resolveCtxParams(defn.paramsOpt.toList))
     
@@ -525,9 +551,10 @@ class Resolver(tl: TraceLogger)
           case _ => (pss, ass.reverse)
         
         val (pss, ass) = resolveParamList(defn.params, Nil)
-        t.iargsLs = ass
+        t.withIArgs(ass)
         (S(defn.copy(params = pss)), ictx)
       case _ =>
+        t.withIArgs(Nil)
         (N, ictx)
   
   /**
@@ -574,7 +601,7 @@ class Resolver(tl: TraceLogger)
           t match
             case t: Term.Sel => sym.map(sym => t.sym = S(sym))
             case t: Term.SynthSel => sym.map(sym => t.sym = S(sym))
-            case t: Term.App => sym.map(sym => t.resultSym = S(sym))
+            case t: Term.App => sym.map(sym => t.sym = S(sym))
             case _ =>
           log(s"Resolved symbol for ${t}: ${lhsDefn.sym}")
         case _ =>
@@ -708,7 +735,6 @@ object ModuleChecker:
       case Term.Blk(_, res) => evalsToModule(res)
       case Term.IfLike(`if`, split) => split.results.exists(evalsToModule(_))
       case t: Term.Ref => checkSym(t.sym)
-      case t: Term.App => t.resultSym.exists(checkSym)
       case t => t.symbol.exists(checkSym)
 
 extension [T](xs: Ls[Opt[T]])
