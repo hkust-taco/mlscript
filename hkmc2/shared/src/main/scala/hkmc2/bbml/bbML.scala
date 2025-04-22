@@ -442,16 +442,16 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             effBuff += eff
             ctx += sym -> rhsTy
             goStats(stats)
-          case TermDefinition(_, Fun, sym, ps :: Nil, _, sig, S(body), _, _, _, _) :: stats =>
-            typeFunDef(sym, Term.Lam(ps, body), sig, ctx)
+          case (td @ TermDefinition(k = Fun, params = ps :: Nil, sign = sig, body = S(body))) :: stats =>
+            typeFunDef(td.sym, Term.Lam(ps, body), sig, ctx)
             goStats(stats)
-          case TermDefinition(_, Fun, sym, Nil, _, sig, S(body), _, _, _, _) :: stats =>
-            typeFunDef(sym, body, sig, ctx)  // * may be a case expressions
+          case (td @ TermDefinition(k = Fun, params = Nil, sign = sig, body = S(body))) :: stats =>
+            typeFunDef(td.sym, body, sig, ctx)  // * may be a case expressions
             goStats(stats)
-          case TermDefinition(_, Fun, sym1, _, _, S(sig), None, _, _, _, _) :: (td @ TermDefinition(_, Fun, sym2, _, _, _, S(body), _, _, _, _)) :: stats
-            if sym1 === sym2 => goStats(td :: stats) // * avoid type check signatures twice
-          case TermDefinition(_, Fun, sym, _, _, S(sig), None, _, _, _, _) :: stats =>
-            ctx += sym -> typeType(sig)
+          case (td1 @ TermDefinition(k = Fun, sign = S(sig), body = None)) :: (td2 @ TermDefinition(k = Fun, body = S(body))) :: stats
+            if td1.sym === td2.sym => goStats(td2 :: stats) // * avoid type check signatures twice
+          case (td @ TermDefinition(k = Fun, sign = S(sig), body = None)) :: stats =>
+            ctx += td.sym -> typeType(sig)
             goStats(stats)
           case (clsDef: ClassDef) :: stats =>
             goStats(stats)
