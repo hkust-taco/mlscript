@@ -89,15 +89,16 @@ class Watcher(dirs: Ls[File]):
       val path = os.Path(file.pathAsString)
       val basePath = path.segments.drop(dirPaths.head.segmentCount).toList.init
       val relativeName = basePath.map(_ + "/").mkString + path.baseName
-      val preludePath = os.pwd/os.up/"hkmc2"/"shared"/"src"/"test"/"mlscript"/"decls"/"Prelude.mls"
-      val predefPath = os.pwd/os.up/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"Predef.mls"
+      val rootPath = os.pwd/os.up
+      val preludePath = rootPath/"hkmc2"/"shared"/"src"/"test"/"mlscript"/"decls"/"Prelude.mls"
+      val predefPath = rootPath/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"Predef.mls"
       val isModuleFile = path.segments.contains("mlscript-compile")
       if isModuleFile
       then
         given Config = Config.default
         MLsCompiler(preludePath, outputConsumer => outputConsumer(System.out.println)).compileModule(path)
       else
-        val dm = new MainDiffMaker((dirPaths.head/os.up).toString, path, preludePath, predefPath, relativeName):
+        val dm = new MainDiffMaker(rootPath.toString, path, preludePath, predefPath, relativeName):
           override def unhandled(blockLineNum: Int, exc: Throwable): Unit =
             exc.printStackTrace()
             super.unhandled(blockLineNum, exc)

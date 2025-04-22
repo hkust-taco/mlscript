@@ -41,12 +41,14 @@ abstract class LlirDiffMaker extends BbmlDiffMaker:
     try { op(p) } finally { p.close() }
 
   given Elaborator.Ctx = curCtx
-
-  var freshId = FreshInt()
-  var ctx = codegen.llir.Ctx.empty
-  val scope = Scope.empty
-  val wholeProg = ListBuffer.empty[Program]
-
+  
+  object Llir: // Avoid polluting the namespace
+    val freshId = FreshInt()
+    var ctx = codegen.llir.Ctx.empty
+    val scope = Scope.empty
+    val wholeProg = ListBuffer.empty[Program]
+  import Llir.*
+  
   def mkWholeProgram: Program =
     if wholeProg.length == 0 then
       throw new Exception("No program to make")
@@ -81,11 +83,7 @@ abstract class LlirDiffMaker extends BbmlDiffMaker:
               output(s"\n$name:")
               output(cpp.toDocument.toString)
             val rPath = os.Path(rootPath)
-            val auxPath =  
-              if rPath.last =/= "shared" then 
-                rPath/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"cpp"
-              else
-                rPath/"src"/"test"/"mlscript-compile"/"cpp"
+            val auxPath = rPath/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"cpp"
             if write.isDefined then
               printToFile(java.io.File((auxPath / s"${write.get}").toString)):
                 p => p.println(cpp.toDocument.toString)
