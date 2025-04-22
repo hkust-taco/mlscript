@@ -1,0 +1,298 @@
+:bbml
+//│ Type: ⊤
+
+//│ Type: ⊤
+// On Type-Cases, Union Elimination, and Occurrence Typing
+// https://www.irif.fr/~gc/papers/popl22.pdf
+
+fun f(x1, x2) = if
+  x1(x2) is Int then x2 + 1
+  else
+    x1(x2).Str#concat(x2)
+//│ Type: ⊤
+
+fun id: (Int -> Int) & (Str -> Str)
+//│ Type: ⊤
+
+f(id, 1)
+//│ Type: Int
+
+f(id, "")
+//│ Type: Str
+
+:e
+f as ((Int -> Int) & (Str -> Str), Int | Str) -> Int | Str
+//│ ╔══[ERROR] Type error in reference with expected type ((Int -> Int) & (Str -> Str), Int | Str) ->{⊥} Int | Str
+//│ ║  l.24: 	f as ((Int -> Int) & (Str -> Str), Int | Str) -> Int | Str
+//│ ║        	^
+//│ ╟── because: cannot constrain  ('x1, 'x2) ->{'eff} 'res  <:  ((Int -> Int) & (Str -> Str), Int | Str) -> (Int | Str)
+//│ ╟── because: cannot constrain  Int | Str  <:  'x2
+//│ ╟── because: cannot constrain  Str  <:  'x2
+//│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int})
+//│ ╔══[ERROR] Type error in reference with expected type ((Int -> Int) & (Str -> Str), Int | Str) ->{⊥} Int | Str
+//│ ║  l.24: 	f as ((Int -> Int) & (Str -> Str), Int | Str) -> Int | Str
+//│ ║        	^
+//│ ╟── because: cannot constrain  ('x1, 'x2) ->{'eff} 'res  <:  ((Int -> Int) & (Str -> Str), Int | Str) -> (Int | Str)
+//│ ╟── because: cannot constrain  Int | Str  <:  'x2
+//│ ╟── because: cannot constrain  Str  <:  'x2
+//│ ╟── because: cannot constrain  Str  <:  'app
+//│ ╟── because: cannot constrain  Str  <:  'app
+//│ ╟── because: cannot constrain  'app1  <:  Str
+//│ ╟── because: cannot constrain  'app1  <:  ¬(¬{Str})
+//│ ╙── because: cannot constrain  Int  <:  ¬(¬{Str})
+//│ ╔══[ERROR] Type error in reference with expected type ((Int -> Int) & (Str -> Str), Int | Str) ->{⊥} Int | Str
+//│ ║  l.24: 	f as ((Int -> Int) & (Str -> Str), Int | Str) -> Int | Str
+//│ ║        	^
+//│ ╟── because: cannot constrain  ('x1, 'x2) ->{'eff} 'res  <:  ((Int -> Int) & (Str -> Str), Int | Str) -> (Int | Str)
+//│ ╟── because: cannot constrain  Int | Str  <:  'x2
+//│ ╟── because: cannot constrain  Str  <:  'x2
+//│ ╟── because: cannot constrain  Str  <:  'app
+//│ ╟── because: cannot constrain  Str  <:  'app
+//│ ╟── because: cannot constrain  'x2  <:  Str
+//│ ╟── because: cannot constrain  'x2  <:  ¬(¬{Str})
+//│ ╙── because: cannot constrain  Int  <:  ¬(¬{Str})
+//│ ╔══[ERROR] Type error in reference with expected type ((Int -> Int) & (Str -> Str), Int | Str) ->{⊥} Int | Str
+//│ ║  l.24: 	f as ((Int -> Int) & (Str -> Str), Int | Str) -> Int | Str
+//│ ║        	^
+//│ ╟── because: cannot constrain  ('x1, 'x2) ->{'eff} 'res  <:  ((Int -> Int) & (Str -> Str), Int | Str) -> (Int | Str)
+//│ ╟── because: cannot constrain  Int | Str  <:  'x2
+//│ ╟── because: cannot constrain  Str  <:  'x2
+//│ ╟── because: cannot constrain  {0: 'x2}  <:  {0: Str}
+//│ ╟── because: cannot constrain  'x2  <:  Str
+//│ ╟── because: cannot constrain  'x2  <:  ¬(¬{Str})
+//│ ╙── because: cannot constrain  Int  <:  ¬(¬{Str})
+//│ Type: ((Int -> Int) & (Str -> Str), Int | Str) ->{⊥} Int | Str
+
+
+data class Prod[A, B](val fst: A, val snd: B)
+//│ Type: ⊤
+
+class
+  Tru()
+  Fls()
+  Z()
+//│ Type: ⊤
+
+let tru = new Tru()
+let fls = new Fls()
+//│ Type: ⊤
+
+fun prod(p, q) = new Prod(p, q)
+//│ Type: ⊤
+
+fun y: Any -> Tru | Fls
+//│ Type: ⊤
+
+prod(y(x => x), y(x => x)) as Prod[Tru, Tru] | Prod[Fls, Fls]
+//│ Type: Prod[Tru, Tru] | Prod[Fls, Fls]
+
+:e
+{ fst: y(x => x), snd: y(x => x) } as [ fst: Tru, snd: Tru ] | [ fst: Fls, snd: Fls ]
+//│ ╔══[ERROR] Type error in record with expected type {fst: Tru, snd: Tru} | {fst: Fls, snd: Fls}
+//│ ║  l.90: 	{ fst: y(x => x), snd: y(x => x) } as [ fst: Tru, snd: Tru ] | [ fst: Fls, snd: Fls ]
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  {fst: Tru | Fls, snd: Tru | Fls}  <:  {fst: Tru, snd: Tru} | {fst: Fls, snd: Fls}
+//│ ╟── because: cannot constrain  {fst: Tru ∨ Fls, snd: Tru ∨ Fls}  <:  {snd: Fls}
+//│ ╙── because: cannot constrain  Tru ∨ Fls  <:  Fls
+//│ ╔══[ERROR] Type error in record with expected type {fst: Tru, snd: Tru} | {fst: Fls, snd: Fls}
+//│ ║  l.90: 	{ fst: y(x => x), snd: y(x => x) } as [ fst: Tru, snd: Tru ] | [ fst: Fls, snd: Fls ]
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  {fst: Tru | Fls, snd: Tru | Fls}  <:  {fst: Tru, snd: Tru} | {fst: Fls, snd: Fls}
+//│ ╟── because: cannot constrain  {fst: Tru ∨ Fls, snd: Tru ∨ Fls}  <:  {snd: Tru}
+//│ ╙── because: cannot constrain  Tru ∨ Fls  <:  Tru
+//│ Type: {fst: Tru, snd: Tru} | {fst: Fls, snd: Fls}
+
+
+
+fun f(a, n) = if
+  a is Prod and
+    a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
+    else a.Prod#snd
+  a(n) is Int then a(n) < 42
+  else a(n)
+//│ Type: ⊤
+
+fun f(a, n) = if
+  a is Prod and
+    a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
+    else a.Prod#snd
+  let x = a(n)
+  x is Int then x < 42
+  else x
+//│ Type: ⊤
+
+fun a: (Int -> (Int | Bool)) | Prod[Int, Int | Bool]
+fun n: Int
+//│ Type: ⊤
+
+f(a, n)
+//│ Type: (((((Int & ¬Int) | (Bool & ¬Int)) | Bool) | Int) | Bool) | Bool
+
+
+fun is_int(x) =
+  if x is Int then tru else fls
+//│ Type: ⊤
+
+is_int as Int -> Tru
+is_int as ~Int -> Fls
+//│ Type: (¬Int) ->{⊥} Fls
+
+fun is_bool(x) = if x is
+  Tru then tru
+  Fls then tru
+  else fls
+//│ Type: ⊤
+
+is_bool as Tru | Fls -> Tru
+is_bool as ~(Tru | Fls) -> Fls
+//│ Type: (¬Tru & ¬Fls) ->{⊥} Fls
+
+fun not_(x) = if x is
+  Fls then tru
+  Z then tru
+  else fls
+//│ Type: ⊤
+
+not_ as Fls | Z -> Tru
+not_ as ~(Fls | Z) -> Fls
+//│ Type: (¬Fls & ¬Z) ->{⊥} Fls
+
+fun to_bool(x) = x not_() not_()
+//│ Type: ⊤
+
+to_bool as Fls | Z -> Fls
+to_bool as ~(Fls | Z) -> Tru
+//│ Type: (¬Fls & ¬Z) ->{⊥} Tru
+
+fun and_(x, y) = if x is
+  Fls then fls
+  Z then fls
+  else to_bool(y)
+//│ Type: ⊤
+
+and_ as (Fls | Z, Any) -> Fls
+and_ as (~(Fls | Z), ~(Fls | Z)) -> Tru
+and_ as (~(Fls | Z), Fls | Z) -> Fls
+//│ Type: (¬Fls & ¬Z, Fls | Z) ->{⊥} Fls
+
+
+fun or_(x, y) = not_(x) and_(not_(y)) not_()
+//│ Type: ⊤
+
+or_ as (~(Fls | Z), Any) -> Tru
+or_ as (Fls | Z, ~(Fls | Z)) -> Tru
+or_ as (Fls | Z, Fls | Z) -> Fls
+//│ Type: (Fls | Z, Fls | Z) ->{⊥} Fls
+
+fun strlen: Str -> Int
+fun plus: (Int | Z, Int | Z) -> Int | Z
+//│ Type: ⊤
+
+fun example14(input, extra) = if
+  input is_int() and_(extra.fst is_int()) is Tru then input + extra.fst
+  extra.fst is_int() is Tru then input strlen() + extra.fst
+  else new Z()
+//│ Type: ⊤
+
+example14 as (Int | Str, [fst: ~Int, snd: Any]) -> Z
+example14 as (~(Int | Str), [fst: ~Int, snd: Any]) -> Z
+//│ Type: (¬Int & ¬Str, {fst: ¬Int, snd: ⊤}) ->{⊥} Z
+
+:e
+example14 as (Int | Str, [fst: Int, snd: Any]) -> Int
+//│ ╔══[ERROR] Type error in reference with expected type (Int | Str, {fst: Int, snd: ⊤}) ->{⊥} Int
+//│ ║  l.202: 	example14 as (Int | Str, [fst: Int, snd: Any]) -> Int
+//│ ║         	^^^^^^^^^
+//│ ╟── because: cannot constrain  ('input, 'extra) ->{'eff} 'res  <:  (Int | Str, {fst: Int, snd: ⊤}) -> Int
+//│ ╟── because: cannot constrain  {fst: Int, snd: ⊤}  <:  'extra
+//│ ╟── because: cannot constrain  {fst: Int, snd: }  <:  'extra
+//│ ╟── because: cannot constrain  {fst: Int, snd: }  <:  ¬(¬{{fst: 'sel}})
+//│ ╟── because: cannot constrain  Int  <:  'sel
+//│ ╟── because: cannot constrain  Int  <:  'sel
+//│ ╟── because: cannot constrain  Int  <:  ¬(¬'x)
+//│ ╟── because: cannot constrain  Int  <:  'x
+//│ ╟── because: cannot constrain  Tru  <:  'res1
+//│ ╟── because: cannot constrain  Tru  <:  'res1
+//│ ╟── because: cannot constrain  'input  <:  Str
+//│ ╟── because: cannot constrain  'input  <:  ¬(¬{Str})
+//│ ╙── because: cannot constrain  Int  <:  ¬(¬{Str})
+//│ ╔══[ERROR] Type error in reference with expected type (Int | Str, {fst: Int, snd: ⊤}) ->{⊥} Int
+//│ ║  l.202: 	example14 as (Int | Str, [fst: Int, snd: Any]) -> Int
+//│ ║         	^^^^^^^^^
+//│ ╟── because: cannot constrain  ('input, 'extra) ->{'eff} 'res  <:  (Int | Str, {fst: Int, snd: ⊤}) -> Int
+//│ ╟── because: cannot constrain  {fst: Int, snd: ⊤}  <:  'extra
+//│ ╟── because: cannot constrain  {fst: Int, snd: }  <:  'extra
+//│ ╟── because: cannot constrain  {fst: Int, snd: }  <:  ¬¬{fst: 'sel1}
+//│ ╟── because: cannot constrain  Int  <:  'sel1
+//│ ╟── because: cannot constrain  Int  <:  'sel1
+//│ ╟── because: cannot constrain  Int  <:  ¬(¬⊥ & ¬'x1)
+//│ ╟── because: cannot constrain  Int  <:  'x1
+//│ ╟── because: cannot constrain  Tru  <:  'res2
+//│ ╟── because: cannot constrain  Tru  <:  'res2
+//│ ╟── because: cannot constrain  Tru  <:  ¬(¬⊥ & ¬'y)
+//│ ╟── because: cannot constrain  Tru  <:  'y
+//│ ╟── because: cannot constrain  Fls  <:  'res3
+//│ ╟── because: cannot constrain  Fls  <:  'res3
+//│ ╟── because: cannot constrain  Fls  <:  ¬(¬⊥ & ¬'x2)
+//│ ╟── because: cannot constrain  Fls  <:  'x2
+//│ ╟── because: cannot constrain  Tru  <:  'res4
+//│ ╟── because: cannot constrain  Tru  <:  'res4
+//│ ╟── because: cannot constrain  Tru  <:  ¬(¬'res5)
+//│ ╟── because: cannot constrain  Tru  <:  'res5
+//│ ╟── because: cannot constrain  'input  <:  Int
+//│ ╟── because: cannot constrain  'input  <:  ¬(¬{Int})
+//│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int})
+//│ Type: (Int | Str, {fst: Int, snd: ⊤}) ->{⊥} Int
+
+fun example14_(input, extra) = if
+  input is Int and extra.fst is Int then input + extra.fst
+  extra.fst is Int then input strlen() + extra.fst
+  else new Z()
+//│ Type: ⊤
+
+example14_ as (Int | Str, [fst: ~Int, snd: Any]) -> Z
+example14_ as (Int | Str, [fst: Int, snd: Any]) -> Int
+example14_ as (~(Int | Str), [fst: ~Int, snd: Any]) -> Z
+//│ Type: (¬Int & ¬Str, {fst: ¬Int, snd: ⊤}) ->{⊥} Z
+
+fun is_string: (Str -> Tru) & (~Str -> Fls)
+//│ Type: ⊤
+
+:e
+fun example6_wrong(x: Int | Str, y: Any) = if
+  x is_int() and_(y is_string()) is Tru then x + strlen(y)
+  else strlen(x)
+//│ ╔══[ERROR] Type error in `if` expression
+//│ ║  l.263: 	  x is_int() and_(y is_string()) is Tru then x + strlen(y)
+//│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.264: 	  else strlen(x)
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ╙── because: cannot constrain  Int | Str  <:  Int
+//│ ╔══[ERROR] Type error in `if` expression
+//│ ║  l.263: 	  x is_int() and_(y is_string()) is Tru then x + strlen(y)
+//│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.264: 	  else strlen(x)
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ╙── because: cannot constrain  ⊤  <:  Str
+//│ ╔══[ERROR] Type error in `if` expression
+//│ ║  l.263: 	  x is_int() and_(y is_string()) is Tru then x + strlen(y)
+//│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.264: 	  else strlen(x)
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ╙── because: cannot constrain  Int | Str  <:  Str
+//│ Type: ⊤
+
+fun example6_ok(x, y) = if
+  x is_int() and_(y is_string()) is Tru then x + strlen(y)
+  else strlen(x)
+//│ Type: ⊤
+
+example6_ok as (Str, Any) -> Int
+example6_ok as (Int, Str) -> Int
+//│ Type: (Int, Str) ->{⊥} Int
+
+// fun detailed_ex(a, n: Int) = if
+//  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
+//  a is Prod then a.Prod#snd
+//  a(n) is Int then a(n) < 42
+//  else a(n)

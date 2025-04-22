@@ -1,0 +1,161 @@
+:bbml
+//│ Type: ⊤
+
+//│ Type: ⊤
+// The Design Principles of the Elixir Type System
+// https://www.irif.fr/~gc/papers/elixir-type-design.pdf
+
+class
+  Nil()
+  Cons[A, B](val car: A, val cdr: B)
+  Tru()
+  Fls()
+//│ Type: ⊤
+
+let tru = new Tru
+let fls = new Fls
+fun not: Tru | Fls -> Tru | Fls
+fun not(x) = if x is
+  Tru then fls
+  Fls then tru
+fun car(x) = x.Cons#car
+fun cdr(x) = x.Cons#cdr
+//│ Type: ⊤
+
+
+
+fun negate: Int -> Int
+fun negate(x) = if x is
+  Int then 0 - x
+//│ Type: ⊤
+
+fun subtract: (Int, Int) -> Int
+fun subtract(a, b) = if
+  a is Int and b is Int then a + negate(b)
+//│ Type: ⊤
+
+fun negate: Int | Tru | Fls -> Int | Tru | Fls
+fun negate(x) = if x is
+  Int then 0 - x
+  Tru then not(x)
+  Fls then not(x)
+//│ Type: ⊤
+
+:e
+fun subtract: (Int, Int) -> Int
+fun subtract(a, b) = if
+  a is Int and b is Int then a + negate(b)
+//│ ╔══[ERROR] Type error in `if` expression with expected type Int
+//│ ║  l.47: 	  a is Int and b is Int then a + negate(b)
+//│ ║        	       ^^^
+//│ ╙── because: cannot constrain  (Int | Tru) | Fls  <:  Int
+//│ ╔══[ERROR] Type error in `if` expression with expected type Int
+//│ ║  l.47: 	  a is Int and b is Int then a + negate(b)
+//│ ║        	       ^^^
+//│ ╙── because: cannot constrain  (Int | Tru) | Fls  <:  Int
+//│ Type: ⊤
+
+// TODO impl
+fun negate: (Int -> Int) & (Tru | Fls -> Tru | Fls)
+//│ Type: ⊤
+
+fun subtract: (Int, Int) -> Int
+fun subtract(a, b) = if
+  a is Int and b is Int then a + negate(b)
+//│ Type: ⊤
+
+// fun negate: (Fls | Nil -> Tru) & (~(Fls | Nil) -> Fls)
+
+
+
+// type t = [a: Int | Str, b: Tru | Fls]
+// type s = [a: Int, b: Tru | Fls] | [a: Str, b: Tru | Fls]
+// s = t
+// fun apply: (t -> t, s) -> s
+fun apply: (([a: Int | Str, b: Tru | Fls]) -> [a: Int | Str, b: Tru | Fls], [a: Int, b: Tru | Fls] | [a: Str, b: Tru | Fls]) ->
+           [a: Int, b: Tru | Fls] | [a: Str, b: Tru | Fls]
+fun apply(f, x) = f(x)
+//│ Type: ⊤
+
+
+
+data class Ls[A](prim: [R] -> (() -> R, (A, Ls[A]) -> R) -> R)
+fun nil() = new Ls((n, _) => n())
+fun cons(p, q) = new Ls((n, r) => r(p, q))
+fun from(x) = x.Ls#prim(() => new Nil, (x, y) => new Cons(x, from(y)))
+//│ Type: ⊤
+
+fun _in(x) = if x is
+  Nil then nil()
+  Cons then cons(car(x), cdr(x))
+fun _out(x) = x.Ls#prim(() => new Nil, (x, y) => new Cons(x, y))
+//│ Type: ⊤
+
+// fun map: [A, B] -> (Ls[A], A -> B) -> Ls[B]
+fun map(xs, f) =
+  let x = _out(xs)
+  if x is
+    Cons then cons(f(car(x)), map(cdr(x), f))
+    Nil then nil()
+//│ Type: ⊤
+
+// fun reduce: [A, B] -> (Ls[A], B, (A, B) -> B) -> B
+fun reduce(xs, acc, f) =
+  let x = _out(xs)
+  if x is
+    Cons then reduce(cdr(x), f(car(x), acc), f)
+    Nil then acc
+//│ Type: ⊤
+
+let xs = cons(1, cons(4, nil()))
+//│ Type: ⊤
+
+xs map(negate)
+//│ Type: Ls['A] | Ls['A1]
+//│ Where:
+//│   Int <: 'A1
+//│   'A1 <: 'A
+//│   'A <: 'A1
+
+fun map(xs, f) = if xs is
+    Cons then cons(f(car(xs)), map(_out(cdr(xs)), f))
+    Nil then nil()
+//│ Type: ⊤
+
+fun reduce: [A, B] -> ((Cons[A, Ls[A]], B, (A, B) -> B) -> B) & ((Nil, B, Any) -> B)
+fun reduce(xs, acc, f) = if xs is
+    Cons then reduce(_out(cdr(xs)), f(car(xs), acc), f)
+    Nil then acc
+//│ Type: ⊤
+
+reduce(new Nil, 1, "function")
+//│ Type: Int
+
+let xs = cons(1, cons(4, nil()))
+//│ Type: ⊤
+
+xs _out() map(negate)
+//│ Type: Ls['A] | Ls['A1]
+//│ Where:
+//│   Int <: 'A1
+//│   'A1 <: 'A
+//│   'A <: 'A1
+
+
+
+// TODO
+// fun negate: (Int -> Int) & (Bool -> Bool) & (~(Int | Bool) -> ~(Int | Bool))
+fun negate(x) = if x is
+  Int then 0 - x
+  Tru then not(x)
+  Fls then not(x)
+  else
+    x
+//│ Type: ⊤
+
+negate as Int -> Int
+negate as Bool -> Bool
+negate as ~(Int | Bool) -> ~(Int | Bool)
+//│ Type: (¬Int & ¬Bool) ->{⊥} ¬Int & ¬Bool
+
+// type tree(a) = (a and not list()) or [tree(a)]

@@ -314,11 +314,14 @@ object Type:
     case c@ClassLikeType(_, Nil) => (c, Top)
     case ClassLikeType(c, t) => (ClassLikeType(c, t.map(_ => Wildcard.empty)), a)
     case a@RcdType(_ :: _) => discriminantRcd(a)
-    case a@ComposedType(l, r, true) => ((discriminant(l.toBasic)._1 | discriminant(r.toBasic)._1).toBasic, a)
+    case a@ComposedType(l, r, true) =>
+      val q = (discriminant(l.toBasic)._1 | discriminant(r.toBasic)._1).toBasic
+      (q, (a | q.!).toBasic)
     case ComposedType(l, r, false) =>
       val (u, w) = discriminant(l.toBasic)
       val (q, p) = discriminant(r.toBasic)
       ((u & q).toBasic, (w & p).toBasic)
+    case NegType(t) => (a, Top)
     case a => (Top, a)
   def disjointIU(i: Inter, u: Union)(using TL): Opt[Set[Set[InfVar -> BasicType]]] = (i.v, u.cls) match
     case (S(c: ClassLikeType), cs) if cs.exists(_.name.uid === c.name.uid) => S(Set.empty)
