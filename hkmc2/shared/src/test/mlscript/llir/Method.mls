@@ -1,0 +1,26 @@
+:js
+:llir
+:cpp
+
+:sllir
+class A(m) with
+  fun f() = m
+fun main() =
+  let a = A(1)
+  a.A#f()
+main()
+//│ = 1
+//│ LLIR:
+//│   class A(m$734) {
+//│     def f$729() =
+//│       m$735
+//│   }
+//│   def main$731() =
+//│     let x$749 = A$732(1) in
+//│     let x$750 = A.f$729(x$749) in
+//│     x$750
+//│   def entry$752() =
+//│     let* (x$751) = main() in
+//│     x$751
+//│   entry = entry$752
+

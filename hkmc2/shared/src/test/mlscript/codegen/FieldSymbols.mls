@@ -77,8 +77,8 @@ case
 //│             trm = SynthSel{class:Foo}:
 //│               prefix = Ref of member:Foo
 //│               nme = Ident of "class"
-//│             parameters = S of Ls of 
-//│               $param0
+//│             args = S of Ls of 
+//│               S of $param0
 //│             refined = false
 //│           continuation = Let:
 //│             sym = a

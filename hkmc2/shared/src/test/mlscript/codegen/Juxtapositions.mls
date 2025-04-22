@@ -34,12 +34,16 @@ fun add(x, y) = x + y
 42 add(2) inc()
 //│ = 45
 
+:e
 :re
 :w
 42
 add(2)
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.41: 	add(2)
+//│ ╙──      	^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.39: 	42
+//│ ║  l.40: 	42
 //│ ╙──      	^^
 //│ ═══[RUNTIME ERROR] Error: Function 'add' expected 2 arguments but got 1
 
@@ -80,14 +84,14 @@ add(2)
 :e
 42 { add(2) inc() }
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (juxtaposition).
-//│ ║  l.81: 	42 { add(2) inc() }
+//│ ║  l.85: 	42 { add(2) inc() }
 //│ ╙──      	     ^^^^^^^^^^^^
 //│ = 42
 
 :e
 42 { add(2) { inc() } }
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (juxtaposition).
-//│ ║  l.88: 	42 { add(2) { inc() } }
+//│ ║  l.92: 	42 { add(2) { inc() } }
 //│ ╙──      	     ^^^^^^^^^^^^^^^^
 //│ = 42
 
@@ -127,9 +131,9 @@ inc(2) * 2
   inc()
     add(2)
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (juxtaposition).
-//│ ║  l.127: 	  inc()
+//│ ║  l.131: 	  inc()
 //│ ║         	  ^^^^^
-//│ ║  l.128: 	    add(2)
+//│ ║  l.132: 	    add(2)
 //│ ╙──       	^^^^
 //│ = 42
 
@@ -174,17 +178,25 @@ inc(2) * 2
   inc()
 //│ = 7
 
+:e
 :re
 (2 * 2
   inc())
 inc()
+//│ ╔══[ERROR] Expected 1 arguments, got 0
+//│ ║  l.185: 	inc()
+//│ ╙──       	^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'inc' expected 1 argument but got 0
 
+:e
 :re
 (2 * 2
   inc()
 )
 inc()
+//│ ╔══[ERROR] Expected 1 arguments, got 0
+//│ ║  l.196: 	inc()
+//│ ╙──       	^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'inc' expected 1 argument but got 0
 
 
@@ -200,7 +212,7 @@ inc()
 :e
 42 console.log
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (selection).
-//│ ║  l.201: 	42 console.log
+//│ ║  l.213: 	42 console.log
 //│ ╙──       	   ^^^^^^^
 //│ = 42
 

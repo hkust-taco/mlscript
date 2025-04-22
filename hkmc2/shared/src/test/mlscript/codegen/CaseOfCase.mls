@@ -3,7 +3,7 @@
 
 data class Some[out A](value: A)
 
-module None
+object None
 
 
 :sjs
@@ -23,7 +23,7 @@ fun test(x) =
 //│     v = param0;
 //│     tmp = v + 1;
 //│     tmp1 = Some1(tmp);
-//│   } else if (x instanceof None1) {
+//│   } else if (x instanceof None1.class) {
 //│     tmp1 = None1;
 //│   } else {
 //│     throw new globalThis.Error("match error");
@@ -33,7 +33,7 @@ fun test(x) =
 //│     param01 = scrut.value;
 //│     v1 = param01;
 //│     return Predef.print(v1)
-//│   } else if (scrut instanceof None1) {
+//│   } else if (scrut instanceof None1.class) {
 //│     return Predef.print("none")
 //│   } else {
 //│     throw new globalThis.Error("match error");

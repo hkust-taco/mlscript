@@ -86,7 +86,7 @@ f(C(27))
 //│ = 1
 
 
-module M with
+object M with
   data class D(a)
   val d = D(27)
 

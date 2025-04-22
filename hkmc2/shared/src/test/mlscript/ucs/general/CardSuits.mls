@@ -3,10 +3,10 @@
 data class Card[T](color: T)
 
 class Suit
-module Heart extends Suit
-module Diamond extends Suit
-module Spade extends Suit
-module Club extends Suit
+object Heart extends Suit
+object Diamond extends Suit
+object Spade extends Suit
+object Club extends Suit
 
 fun suit(x) = if x is Card(a) then a
 

@@ -1,115 +1,179 @@
-:js
+module M
+module MM[T]
 
 
-class C with
-  // regular method foo
-  fun foo(x) = x
 
-module M with
-  // module method foo
-  fun foo(x) = x
-  // module method self
-  fun self(): module M = M
+// Parameters
 
 :e
-fun f1(module m)
-//│ ╔══[ERROR] Module parameters must have explicit types.
-//│ ║  l.15: 	fun f1(module m)
-//│ ╙──      	              ^
+fun f(m: M)
+//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ║  l.9: 	fun f(m: M)
+//│ ║       	         ^
+//│ ╙── Non-module parameter must have a non-module type.
+
+fun f(m)
 
 :e
-fun f2[T](module m: T)
-//│ ╔══[ERROR] Module parameters must have concrete types.
-//│ ║  l.21: 	fun f2[T](module m: T)
-//│ ╙──      	                 ^^^^
+f(M)
+//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ║  l.18: 	f(M)
+//│ ║        	  ^
+//│ ╙── Module argument passed to a non-module parameter.
+
+f(42)
 
 :e
-module N with
-  fun f3() = M
-//│ ╔══[ERROR] Functions returning module values must have explicit return types.
-//│ ║  l.28: 	  fun f3() = M
-//│ ╙──      	      ^^^^
+fun f(module m)
+//│ ╔══[ERROR] Module parameter must have explicit type.
+//│ ║  l.27: 	fun f(module m)
+//│ ╙──      	             ^
+
+fun f(module m: M)
+
+f(42)
+
+f(M)
+
+:e
+fun f[T](module m: T)
+//│ ╔══[ERROR] Expected a module, found non-moduleful reference.
+//│ ║  l.39: 	fun f[T](module m: T)
+//│ ║        	                   ^
+//│ ╙── Module parameter must have a module type.
+
+fun f[T](module m: MM[T])
+
+f[Int](42)
+
+
+f[Int](MM[Int])
+
+
+
+// Results
+
+fun assertM(module m: M)
+fun assertNonM(m)
+fun assertMM[T](module m: MM[T])
+fun assertNonMM[T](m)
+
+:e
+fun f() = M
+//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ║  l.62: 	fun f() = M
+//│ ║        	          ^
+//│ ╙── Function must be marked as returning a 'module' in order to return a module.
+
+:e
+fun f(): M = M
+//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ║  l.69: 	fun f(): M = M
+//│ ║        	         ^
+//│ ╙── Function must be marked as returning a 'module' in order to have a module return type.
+//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ║  l.69: 	fun f(): M = M
+//│ ║        	             ^
+//│ ╙── Function must be marked as returning a 'module' in order to return a module.
+
+fun f(): module M = M
+
+:e
+assertNonM(f())
+//│ ╔══[ERROR] Unexpected moduleful application.
+//│ ║  l.82: 	assertNonM(f())
+//│ ║        	           ^^^
+//│ ╙── Module argument passed to a non-module parameter.
+
+assertM(f())
+
+:e
+fun f4[T](): module T = M
+//│ ╔══[ERROR] Expected a module, found non-moduleful reference.
+//│ ║  l.91: 	fun f4[T](): module T = M
+//│ ║        	                    ^
+//│ ╙── Function marked as returning a 'module' must have a module return type.
+
+fun f[T](): module MM[T] = MM[T]
+
+:e
+assertNonM(f[Int]())
+//│ ╔══[ERROR] Unexpected moduleful application.
+//│ ║  l.100: 	assertNonM(f[Int]())
+//│ ║         	           ^^^^^^^^
+//│ ╙── Module argument passed to a non-module parameter.
+
+assertM(f[Int]())
+
 
 :todo
 :e
-module N with
-  fun f3() = return M
+fun f3() = return M
+//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ║  l.111: 	fun f3() = return M
+//│ ╙──       	                  ^
 
 :todo
 :e
-module N with
-  fun f3() = (() => M)()
+fun f3() = (() => M)()
+//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ║  l.118: 	fun f3() = (() => M)()
+//│ ╙──       	                  ^
 
 // * [test:T4]
 :todo
 :e
 :effectHandlers
-module N with
-  fun f3() = (() => return M)()
+fun f3() = (() => return M)()
+//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ║  l.127: 	fun f3() = (() => return M)()
+//│ ╙──       	                         ^
+
+
+
+// Parameters Modulefulness
 
 :e
-module N with
-  fun f4[T](): module T = M
-//│ ╔══[ERROR] Functions returning module values must have concrete return types.
-//│ ║  l.52: 	  fun f4[T](): module T = M
-//│ ╙──      	      ^^^^^^^^^^^^^^^^^
+fun f(module m: M) = m
+//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ║  l.137: 	fun f(module m: M) = m
+//│ ║         	                     ^
+//│ ╙── Function must be marked as returning a 'module' in order to return a module.
+
+fun f(module m: M): module M = m
+
+
+
+// Val Bindings
 
 :e
-module N with
-  fun f5(): M = M
-//│ ╔══[ERROR] The return type of functions returning module values must be prefixed with module keyword.
-//│ ║  l.59: 	  fun f5(): M = M
-//│ ╙──      	      ^^^^^^^
+val v = M
+//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ║  l.150: 	val v = M
+//│ ║         	        ^
+//│ ╙── Value must be marked as returning a 'module' in order to return a module.
+
+val v: module M = M
 
 
-fun f6(m: M) = m
 
-:e
-f6(M)
-//│ ╔══[ERROR] Only module parameters may receive module arguments (values).
-//│ ║  l.68: 	f6(M)
-//│ ╙──      	   ^
-//│ = M
-
-:e
-f6(M.self())
-//│ ╔══[ERROR] Only module parameters may receive module arguments (values).
-//│ ║  l.75: 	f6(M.self())
-//│ ╙──      	   ^^^^^^^^
-//│ = M
-
-:e
-fun f7(): module M
-//│ ╔══[ERROR] Only module methods may return module values.
-//│ ║  l.82: 	fun f7(): module M
-//│ ╙──      	    ^^^^^^^^^^^^^^
-
-
-:e
-fun f8(module m: M) = m
-//│ ╔══[ERROR] Functions returning module values must have explicit return types.
-//│ ║  l.89: 	fun f8(module m: M) = m
-//│ ╙──      	    ^^^^^^^^^^^^^^^
-
-:e
-fun f9(module m: M): module M = m
-//│ ╔══[ERROR] Only module methods may return module values.
-//│ ║  l.95: 	fun f9(module m: M): module M = m
-//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^
-
-module Test with
-  fun ok1(module m: M): module M = m
-
-let ok1 = Test.ok1
-//│ ok1 = [function ok1]
+// "Module" Methods
 
 module N with
-  fun ok2(): module M = M
+  fun foo(): module M = M
+  fun bar(module m: M): module M = foo()
 
-ok1(M)
-//│ = M
+N.bar(M)
 
-ok1(M.self())
-//│ = M
+// Methods / Fields
 
-
+:e
+class C with
+  fun foo: module M = M
+  val bar: module M = M
+//│ ╔══[ERROR] Function returning modules should not be a class member.
+//│ ║  l.172: 	  fun foo: module M = M
+//│ ╙──       	                  ^^^^^
+//│ ╔══[ERROR] Value returning modules should not be a class member.
+//│ ║  l.173: 	  val bar: module M = M
+//│ ╙──       	                  ^^^^^

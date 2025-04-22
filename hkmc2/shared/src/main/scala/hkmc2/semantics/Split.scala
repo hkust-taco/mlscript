@@ -38,7 +38,8 @@ enum Split extends AutoLocated with ProductWithTail:
     case Split.End => Nil
   
   def subTerms: Ls[Term] = this match
-    case Split.Cons(head, tail) => head.scrutinee :: head.pattern.subTerms ++ tail.subTerms
+    case Split.Cons(Branch(scrutinee, pattern, continuation), tail) => 
+      scrutinee :: pattern.subTerms ++ continuation.subTerms ++ tail.subTerms
     case Split.Let(_, term, tail) => term :: tail.subTerms
     case Split.Else(term) => term :: Nil
     case Split.End => Nil

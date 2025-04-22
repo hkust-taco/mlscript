@@ -5,7 +5,7 @@
 
 :ctx
 type List = Nil | Cons
-module Nil
+object Nil
 data class (::) Cons(head: Int, tail: List)
 //│ Env:
 //│   :: -> RefElem(member:Cons)

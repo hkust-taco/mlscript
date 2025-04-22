@@ -17,6 +17,7 @@ declare class Set
 declare class Map
 declare class Error
 declare class TypeError
+declare class RangeError
 declare class Symbol
 
 // MLscript-specific types
@@ -28,8 +29,18 @@ declare class Str with
   fun length: Int
   fun concat: Str -> Str
 
-// declare module Math // TODO: list members
-declare val Math // so we can, eg, `open { pow }` in the meantime
+declare module Math with
+  // TODO: add more functions
+  fun abs: Num -> Num
+  fun sqrt: Num -> Num
+  fun sin: Num -> Num
+  fun cos: Num -> Num
+  fun tan: Num -> Num
+  fun pow: Num -> Num
+  fun round: Num -> Num
+  fun trunc: Num -> Num
+  fun min: (Num, Num) -> Num
+  fun max: (Num, Num) -> Num
 
 declare val Reflect
 declare val console

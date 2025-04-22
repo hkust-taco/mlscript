@@ -396,6 +396,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     
     case Label(lbl, bod, rst) =>
       scope.allocateName(lbl)
+      
+      // [fixme:0] TODO check scope and allocate local variables here (see: https://github.com/hkust-taco/mlscript/pull/293#issuecomment-2792229849)
+      
       doc" # ${getVar(lbl)}: while (true) { #{ ${
         returningTerm(bod, endSemi = false)
       } # break; #}  # }${returningTerm(rst, endSemi)}"
@@ -618,7 +621,7 @@ trait JSBuilderArgNumSanityChecks(using Config, Elaborator.State)
         doc"\nlet ${nme} = ${paramsStr}[$i];"}.mkDocument("")
       val restAssign = paramRest match
         case N => doc""
-        case S(p) => doc"\nlet $p = globalThis.Predef.tupleSlice($paramsStr, ${params.paramCountLB}, 0);"
+        case S(p) => doc"\nlet $p = runtime.Tuple.slice($paramsStr, ${params.paramCountLB}, 0);"
       (doc"...$paramsStr", doc"$checkArgsNum$paramsAssign$restAssign${this.body(body, endSemi = false)}")
     else
       super.setupFunction(name, params, body)

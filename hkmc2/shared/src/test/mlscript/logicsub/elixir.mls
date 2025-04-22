@@ -47,11 +47,11 @@ fun subtract(a, b) = if
   a is Int and b is Int then a + negate(b)
 //│ ╔══[ERROR] Type error in `if` expression with expected type Int
 //│ ║  l.47: 	  a is Int and b is Int then a + negate(b)
-//│ ║        	       ^^^
+//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── because: cannot constrain  (Int | Tru) | Fls  <:  Int
 //│ ╔══[ERROR] Type error in `if` expression with expected type Int
 //│ ║  l.47: 	  a is Int and b is Int then a + negate(b)
-//│ ║        	       ^^^
+//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── because: cannot constrain  (Int | Tru) | Fls  <:  Int
 //│ Type: ⊤
 

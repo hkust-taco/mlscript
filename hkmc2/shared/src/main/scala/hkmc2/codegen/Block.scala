@@ -120,27 +120,24 @@ sealed abstract class Block extends Product with AutoLocated:
       (bod.freeVars - lhs) ++ rst.freeVars ++ hdr.flatMap(_.freeVars)
     case End(msg) => Set.empty
   
-  // TODO: freeVarsLLIR skips `fun` and `cls` in `Call` and `Instantiate` respectively, which is needed in some
-  // other places. However, adding them breaks some LLIR tests. Supposedly, once the IR uses the new symbol system, 
-  // this should no longer happen. This version should be removed once that is resolved.
   lazy val freeVarsLLIR: Set[Local] = this match
     case Match(scrut, arms, dflt, rest) =>
       scrut.freeVarsLLIR ++ dflt.toList.flatMap(_.freeVarsLLIR) ++ rest.freeVarsLLIR
       ++ arms.flatMap:
-        (pat, arm) => arm.freeVarsLLIR -- pat.freeVars
+        (pat, arm) => arm.freeVarsLLIR -- pat.freeVarsLLIR
     case Return(res, implct) => res.freeVarsLLIR
     case Throw(exc) => exc.freeVarsLLIR
     case Label(label, body, rest) => (body.freeVarsLLIR - label) ++ rest.freeVarsLLIR 
-    case Break(label) => Set(label)
-    case Continue(label) => Set(label)
+    case Break(label) => Set.empty
+    case Continue(label) => Set.empty
     case Begin(sub, rest) => sub.freeVarsLLIR ++ rest.freeVarsLLIR
     case TryBlock(sub, finallyDo, rest) => sub.freeVarsLLIR ++ finallyDo.freeVarsLLIR ++ rest.freeVarsLLIR
-    case Assign(lhs, rhs, rest) => Set(lhs) ++ rhs.freeVarsLLIR ++ rest.freeVarsLLIR
+    case Assign(lhs, rhs, rest) => rhs.freeVarsLLIR ++ (rest.freeVarsLLIR - lhs)
     case AssignField(lhs, nme, rhs, rest) => lhs.freeVarsLLIR ++ rhs.freeVarsLLIR ++ rest.freeVarsLLIR
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs.freeVarsLLIR ++ fld.freeVarsLLIR ++ rhs.freeVarsLLIR ++ rest.freeVarsLLIR
-    case Define(defn, rest) => defn.freeVarsLLIR ++ rest.freeVarsLLIR
+    case Define(defn, rest) => defn.freeVarsLLIR ++ (rest.freeVarsLLIR - defn.sym)
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
-      (bod.freeVarsLLIR - lhs) ++ rst.freeVarsLLIR ++ hdr.flatMap(_.freeVars)
+      (bod.freeVarsLLIR - lhs) ++ rst.freeVarsLLIR ++ hdr.flatMap(_.freeVarsLLIR)
     case End(msg) => Set.empty
   
   lazy val subBlocks: Ls[Block] = this match
@@ -385,8 +382,8 @@ final case class Handler(
     params: Ls[ParamList],
     body: Block,
 ):
-  lazy val freeVarsLLIR: Set[Local] = body.freeVarsLLIR -- params.flatMap(_.paramSyms) - sym - resumeSym
   lazy val freeVars: Set[Local] = body.freeVars -- params.flatMap(_.paramSyms) - sym - resumeSym
+  lazy val freeVarsLLIR: Set[Local] = body.freeVarsLLIR -- params.flatMap(_.paramSyms) - sym - resumeSym
 
 /* Represents either unreachable code (for functions that must return a result)
  * or the end of a non-returning function or a REPL block */
@@ -446,9 +443,13 @@ sealed abstract class Result extends AutoLocated:
     case Value.Rcd(args) => args.flatMap(arg => arg.idx.fold(Set.empty)(_.freeVars) ++ arg.value.freeVars).toSet
 
   lazy val freeVarsLLIR: Set[Local] = this match
-    case Call(fun, args) => args.flatMap(_.value.freeVarsLLIR).toSet
-    case Instantiate(cls, args) => args.flatMap(_.freeVarsLLIR).toSet
+    case Call(fun, args) => fun.freeVarsLLIR ++ args.flatMap(_.value.freeVarsLLIR).toSet
+    case Instantiate(cls, args) => cls.freeVarsLLIR ++ args.flatMap(_.freeVarsLLIR).toSet
     case Select(qual, name) => qual.freeVarsLLIR 
+    case Value.Ref(l: (BuiltinSymbol | TopLevelSymbol | ClassSymbol | TermSymbol)) => Set.empty
+    case Value.Ref(l: MemberSymbol[?]) => l.defn match
+      case Some(d: ClassLikeDef) => Set.empty
+      case _ => Set(l)
     case Value.Ref(l) => Set(l)
     case Value.This(sym) => Set.empty
     case Value.Lit(lit) => Set.empty

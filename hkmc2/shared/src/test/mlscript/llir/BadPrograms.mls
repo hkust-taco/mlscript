@@ -1,20 +1,17 @@
-
-:global
 :llir
 :cpp
 
-
-:todo
 :ge
 fun oops(a) =
   class A with
     fun m = a
   let x = 1
+//│ ═══[COMPILATION ERROR] Function without arguments not supported: 0
+//│ Stopped due to an error during the Llir generation
 
 :ge
 let x = "oops"
 x.m
 //│ ═══[COMPILATION ERROR] Unsupported selection by users
 //│ Stopped due to an error during the Llir generation
-
 

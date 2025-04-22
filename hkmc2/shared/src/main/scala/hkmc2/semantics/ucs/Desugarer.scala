@@ -11,6 +11,7 @@ import Keyword.{as, and, `do`, `else`, is, let, `then`}
 import collection.mutable.{HashMap, SortedSet}
 import Elaborator.{ctx, Ctxl}
 import scala.annotation.targetName
+import hkmc2.semantics.ClassDef.Parameterized
 
 object Desugarer:
   extension (op: Keyword.Infix)
@@ -478,19 +479,27 @@ class Desugarer(val elaborator: Elaborator)
       val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
       clsTrm.symbol.flatMap(_.asClsLike) match
       case S(cls: ClassSymbol) =>
-        val arity = cls.arity
-        if arity =/= args.length then
-          val m = args.length.toString
-          error:
-            if arity == 0 then
-              msg"the constructor does not take any arguments but found $m" -> app.toLoc
-            else
-              msg"mismatched arity: expect ${arity.toString}, found $m" -> app.toLoc
-        val params = scrutSymbol.getSubScrutinees(cls)
+        val paramSymbols = cls.defn match
+          case S(Parameterized(params = paramList)) =>
+            if paramList.params.size =/= args.length then
+              val n = args.length.toString
+              val m = paramList.params.size.toString
+              error:
+                if paramList.params.isEmpty then
+                  msg"the constructor does not take any arguments but found $n" -> app.toLoc
+                else
+                  msg"mismatched arity: expect $m, found $n" -> app.toLoc
+            scrutSymbol.getSubScrutinees(cls).iterator.zip(paramList.params).map:
+              case (symbol, Param(flags = FldFlags(value = true))) => R(symbol)
+              case (_, Param(_, paramSymbol, _)) => L(paramSymbol) // to report errors
+            .toList
+          case S(_) | N =>
+            error(msg"class ${cls.name} does not have parameters" -> ctor.toLoc)
+            Nil
         Branch(
           ref,
-          Pattern.ClassLike(cls, clsTrm, S(params), false)(ctor), // TODO: refined?
-          subMatches(params zip args, sequel)(Split.End)(ctx)
+          Pattern.ClassLike(cls, clsTrm, S(paramSymbols.map(_.toOption)), false)(ctor), // TODO: refined?
+          subMatches(paramSymbols.zip(args), sequel)(Split.End)(ctx)
         ) ~: fallback
       case S(pat: PatternSymbol) if compile =>
         // When we support extraction parameters, they need to be handled here.
@@ -550,12 +559,12 @@ class Desugarer(val elaborator: Elaborator)
         val (wrapRest, restMatches) = rest match
           case S((rest, last)) =>
             val (wrapLast, reversedLastMatches) = last.reverseIterator.zipWithIndex
-              .foldLeft[(Split => Split, Ls[(BlockLocalSymbol, Tree)])]((identity, Nil)):
+              .foldLeft[(Split => Split, Ls[(Right[Nothing, BlockLocalSymbol], Tree)])]((identity, Nil)):
                 case ((wrapInner, matches), (pat, lastIndex)) =>
                   val sym = scrutSymbol.getTupleLastSubScrutinee(lastIndex)
                   val wrap = (split: Split) =>
                     Split.Let(sym, callTupleGet(ref, -1 - lastIndex, sym), wrapInner(split))
-                  (wrap, (sym, pat) :: matches)
+                  (wrap, (R(sym), pat) :: matches)
             val lastMatches = reversedLastMatches.reverse
             rest match
               case N => (wrapLast, lastMatches)
@@ -563,13 +572,13 @@ class Desugarer(val elaborator: Elaborator)
                 val sym = TempSymbol(N, "rest")
                 val wrap = (split: Split) =>
                   Split.Let(sym, app(tupleSlice, tup(fld(ref), fld(int(lead.length)), fld(int(last.length))), sym), wrapLast(split))
-                (wrap, (sym, pat) :: lastMatches)
+                (wrap, (R(sym), pat) :: lastMatches)
           case N => (identity: Split => Split, Nil)
         val (wrap, matches) = lead.zipWithIndex.foldRight((wrapRest, restMatches)):
           case ((pat, i), (wrapInner, matches)) =>
             val sym = scrutSymbol.getTupleLeadSubScrutinee(i)
             val wrap = (split: Split) => Split.Let(sym, Term.SynthSel(ref, Ident(s"$i"))(N), wrapInner(split))
-            (wrap, (sym, pat) :: matches)
+            (wrap, (R(sym), pat) :: matches)
         Branch(
           ref,
           Pattern.Tuple(lead.length + rest.fold(0)(_._2.length), rest.isDefined),
@@ -609,8 +618,15 @@ class Desugarer(val elaborator: Elaborator)
   /** Desugar a list of sub-patterns (with their corresponding scrutinees).
    *  This is called when handling nested patterns. The caller is responsible
    *  for providing the symbols of scrutinees.
+   * 
+   *  @param matches a list of pairs consisting of a scrutinee and a pattern.
+   *    Each scrutinee is represented by `Either[VarSymbol, BlockLocalSymbol]`.
+   *    If it is not accessible due to the corresponding parameter not being
+   *    declared with `val`, it will be the `Left` of the parameter symbol for
+   *    error reporting.
+   *  @param sequel the innermost split
    */
-  def subMatches(matches: Ls[(BlockLocalSymbol, Tree)],
+  def subMatches(matches: Ls[(Either[VarSymbol, BlockLocalSymbol], Tree)],
                  sequel: Sequel): Split => Sequel = matches match
     case Nil => _ => ctx => trace(
       pre = s"subMatches (done) <<< Nil",
@@ -618,7 +634,13 @@ class Desugarer(val elaborator: Elaborator)
     ):
       sequel(ctx)
     case (_, Under()) :: rest => subMatches(rest, sequel)
-    case (scrutinee, pattern) :: rest => fallback => trace(
+    case (L(paramSymbol), pattern) :: rest =>
+      error(msg"This pattern cannot be matched" -> pattern.toLoc,
+        msg"because the corresponding parameter `${paramSymbol.name}` is not publicly accessible" -> paramSymbol.toLoc,
+        msg"Suggestion: use a wildcard pattern `_` in this position" -> N,
+        msg"Suggestion: mark this parameter with `val` so it becomes accessible" -> N)
+      subMatches(rest, sequel)
+    case (R(scrutinee), pattern) :: rest => fallback => trace(
       pre = s"subMatches (nested) <<< $scrutinee is $pattern",
       post = (r: Sequel) => s"subMatches (nested) >>>"
     ):

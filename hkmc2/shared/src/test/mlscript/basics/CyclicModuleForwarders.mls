@@ -1,0 +1,14 @@
+:js
+
+
+fun f = M.List.map
+module M with
+  fun List: module M2.List = M2.List
+module M2 with
+  fun List: module M.List = M.List
+
+:re
+f
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+
+

@@ -143,13 +143,6 @@ fun ppHang(p1, n, p2, width, is_vert) = if p1(width, false) is
           MkPrettyRep(cAppend(seq1, cAppend(cCh(" "), cIndent(ll1 + 1, seq2))), ll1 + 1 + ll2, false, andL(sl1, sl2))
         else MkPrettyRep(cAppend(seq1, cAppend(cNL, cIndent(n, seq2_))), ll2_, false, false)
 
-fun ppSep(ps, width, is_vert) = if
-  ps is Nil then ppNil(width, is_vert)
-  ps is p :: Nil then p(width, is_vert)
-  ppCat(ps, width, is_vert) is MkPrettyRep(seq, ll, emp, sl) and
-    sl then MkPrettyRep(seq, ll, emp, sl)
-    else ppAboves(ps, width, is_vert)
-
 fun testPretty_nofib() =
   fun pp_word(a, b) = ppStr(nofibStringToList("xxxxx"), a, b)
   let pp_words = replicate(50, pp_word)

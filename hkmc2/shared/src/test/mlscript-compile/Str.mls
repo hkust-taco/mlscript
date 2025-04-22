@@ -1,5 +1,5 @@
 
-module Str with ...
+object Str with ...
 
 
 fun (~) concat2(a, b) = a + b

@@ -5,7 +5,7 @@ open Predef
 open Iter { mapping, joined }
 
 
-class StyleAttributeValue(rules)
+data class StyleAttributeValue(rules)
 
 
 module XML with ...

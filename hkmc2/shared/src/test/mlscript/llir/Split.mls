@@ -1,0 +1,55 @@
+:llir
+
+:intl
+abstract class Iter[T]
+object Done
+data class Yield(n)
+data class Map(f, it)
+fun done(it) = if it is Done then true else false
+fun map(f, it) = Map(f, it)
+fun dec(n) = Yield(n)
+fun next(it) = if it is
+  Yield(n) then
+    if n == 0 then [0, Done]
+    else [n, Yield(n - 1)]
+  Map(f, it) then
+    if next(it) is [n, it] then
+      if done(it) then [f(n), Done]
+      else [f(n), Map(f, it)]
+fun fold(acc, it) =
+  if next(it) is [n, it] then
+    if done(it) then acc else fold(n + acc, it)
+fun map_sum(f, n) = let it = map(f, dec(n)) in fold(0, it)
+map_sum(x => x, 200)
+//│ 
+//│ Interpreted:
+//│ 20100
+
+:intl
+abstract class Iter[T]
+object Done
+data class Yield(n)
+data class Map(f, it)
+fun done(it) = if it is Done then true else false
+fun map(f, it) = Map(f, it)
+fun dec(n) = Yield(n)
+fun next(it) = if it is
+  Yield(n) then
+    if n == 0 then [0, Done]
+    else [n, Yield(n - 1)]
+  Map(f, it) then
+    if next(it) is [n, it] then
+      if done(it) then [f(n), Done]
+      else [f(n), Map(f, it)]
+fun fold(acc, iter) = if iter is
+  Yield(n) then
+    if n == 0 then acc
+    else fold(n + acc, Yield(n - 1))
+  Map(f, it) then
+    if next(it) is [n, it] then
+      if it is Done then acc else fold(f(n) + acc, Map(f, it))
+fun map_sum(f, n) = let it = map(f, dec(n)) in fold(0, it)
+map_sum(x => x, 200)
+//│ 
+//│ Interpreted:
+//│ 20100

@@ -1,0 +1,81 @@
+:js
+:llir
+:cpp
+
+:intl
+:sllir
+:scpp
+fun mkTup(x, y) = [x, y]
+fun fst(t) = if t is [x, y] then x 
+mkTup(1, 2)
+//│ = [1, 2]
+//│ LLIR:
+//│   
+//│   def mkTup$729(x$732,y$733) =
+//│     let x$745 = Tuple2$746(x$732,y$733) in
+//│     x$745
+//│   def fst$730(t$736) =
+//│     case t$736 of
+//│       Tuple2$746 =>
+//│         let x$749 = t$736.<Tuple2$746:0> in
+//│         let x$750 = t$736.<Tuple2$746:1> in
+//│         x$749
+//│       _ =>
+//│         panic "match error"
+//│   def j$748() =
+//│     undefined
+//│   def entry$752() =
+//│     let* (x$751) = mkTup(1,2) in
+//│     x$751
+//│   entry = entry$752
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_Tuple2;
+//│ _mlsValue _mls_mkTup(_mlsValue, _mlsValue);
+//│ _mlsValue _mls_j();
+//│ _mlsValue _mls_fst(_mlsValue);
+//│ _mlsValue _mls_entry1();
+//│ struct _mls_Tuple2: public _mlsObject {
+//│   _mlsValue _mls_field0;
+//│   _mlsValue _mls_field1;
+//│   constexpr static inline const char *typeName = "Tuple2";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_field0.print(); std::printf(", "); this->_mls_field1.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_field0); _mlsValue::destroy(this->_mls_field1);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   static _mlsValue create(_mlsValue _mls_field0, _mlsValue _mls_field1) { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_Tuple2; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_field0 = _mls_field0; _mlsVal->_mls_field1 = _mls_field1;  return _mlsValue(_mlsVal); }
+//│   
+//│ };
+//│ _mlsValue _mls_mkTup(_mlsValue _mls_x1, _mlsValue _mls_y) {
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x = _mlsValue::create<_mls_Tuple2>(_mls_x1, _mls_y);
+//│   _mls_retval = _mls_x;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j() {
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mlsValue::create<_mls_Unit>();
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_fst(_mlsValue _mls_t) {
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_Tuple2>(_mls_t)) {
+//│     auto _mls_x2 = _mlsValue::cast<_mls_Tuple2>(_mls_t)->_mls_field0;
+//│     auto _mls_x3 = _mlsValue::cast<_mls_Tuple2>(_mls_t)->_mls_field1;
+//│     _mls_retval = _mls_x2;
+//│   } else {
+//│     throw std::runtime_error("match error");
+//│   }
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_entry1() {
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x4 = _mls_mkTup(_mlsValue::fromIntLit(1), _mlsValue::fromIntLit(2));
+//│   _mls_retval = _mls_x4;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain() { return _mls_entry1(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
+//│ 
+//│ Interpreted:
+//│ Tuple2(1,2)
