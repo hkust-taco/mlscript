@@ -2,7 +2,7 @@
 
 
 module Mod with
-  fun print(x) = console.log(x)
+  fun printt(x) = console.log(x)
   fun (|>>) pipee(x, f) = f(x)
 
 :ctx
