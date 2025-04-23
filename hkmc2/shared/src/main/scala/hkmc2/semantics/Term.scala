@@ -67,8 +67,7 @@ sealed trait Resolvable:
     this
   
   def noIArgs: Term = withIArgs(Nil)
-      
-    
+
 
 enum Term extends Statement:
   case Error
