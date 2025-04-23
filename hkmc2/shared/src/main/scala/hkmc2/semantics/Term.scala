@@ -610,6 +610,7 @@ extends AutoLocated:
   def paramCountLB: Int = params.length
   def paramCountUB: Bool = restParam.isEmpty
   def paramSyms = params.map(_.sym) ++ restParam.map(_.sym)
+  def allParams = params ++ restParam.toList
   def subTerms: Ls[Term] = params.flatMap(_.subTerms) ++ restParam.toList.flatMap(_.subTerms)
   def showDbg: Str = flags.showDbg + (params :+ restParam.fold("")("..." + _)).mkString("(", ", ", ")")
 object PlainParamList:

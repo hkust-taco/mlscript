@@ -326,7 +326,7 @@ class Resolver(tl: TraceLogger)
     case defn @ TermDefinition(_, Ins, sym, pss, tps, sign, body, _, TermDefFlags(isMethod), modulefulness, annotations) =>
       log(s"Resolving instance definition ${defn.showDbg}")
       
-      pss.foreach(_.params.foreach(resolveParam(_)))
+      pss.foreach(_.allParams.foreach(resolveParam(_)))
       tps.getOrElse(Nil).flatMap(_.subTerms).foreach(traverse(_, expect = NonModule(N)))
       sign.foreach(traverse(_,
         expect = if modulefulness.modified
@@ -357,7 +357,7 @@ class Resolver(tl: TraceLogger)
       if isMethod && modulefulness.isModuleful then
         raise(ErrorReport(msg"${defn.k.desc.capitalize} returning modules should not be a class member." -> defn.toLoc :: Nil))
       
-      pss.foreach(_.params.foreach(resolveParam(_)))
+      pss.foreach(_.allParams.foreach(resolveParam(_)))
       tps.getOrElse(Nil).flatMap(_.subTerms).foreach(traverse(_, expect = NonModule(N)))
       sign.foreach(traverse(_,
         expect = if modulefulness.modified
