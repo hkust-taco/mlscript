@@ -69,5 +69,3 @@ declare fun (&&): (Bool, Bool) -> Bool
 declare fun (||): (Bool, Bool) -> Bool
 
 fun print(x) = @untyped globalThis.console.log(x)
-
-print(42)

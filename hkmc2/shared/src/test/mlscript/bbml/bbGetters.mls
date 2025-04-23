@@ -1,7 +1,6 @@
 :js
 :noSanityCheck // * For some reason, these cause problems
 :bbml
-//│ > 42
 //│ Error: hkmc2.ErrorReport: TypeError: Cannot read properties of undefined (reading 'printRaw')
 //│     at REPL6:1:19
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
@@ -13,7 +12,7 @@
 //│     at REPLServer.emit (node:domain:489:12)
 //│     at [_onLine] [as _onLine] (node:internal/readline/interface:415:12)
 //│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:609:22)
-//│ Type: ⊥
+//│ Type: ⊤
 
 //│ Type: ⊤
 
@@ -23,16 +22,16 @@ fun test1() =
   fun sayHi = print("Hi")
   sayHi, sayHi, sayHi
 //│ ╔══[ERROR] Function definition shape not yet supported for sayHi
-//│ ║  l.23: 	  fun sayHi = print("Hi")
+//│ ║  l.22: 	  fun sayHi = print("Hi")
 //│ ╙──      	              ^^^^^^^^^^^
 //│ ╔══[ERROR] Variable not found: sayHi
-//│ ║  l.24: 	  sayHi, sayHi, sayHi
+//│ ║  l.23: 	  sayHi, sayHi, sayHi
 //│ ╙──      	  ^^^^^
 //│ ╔══[ERROR] Variable not found: sayHi
-//│ ║  l.24: 	  sayHi, sayHi, sayHi
+//│ ║  l.23: 	  sayHi, sayHi, sayHi
 //│ ╙──      	         ^^^^^
 //│ ╔══[ERROR] Variable not found: sayHi
-//│ ║  l.24: 	  sayHi, sayHi, sayHi
+//│ ║  l.23: 	  sayHi, sayHi, sayHi
 //│ ╙──      	                ^^^^^
 //│ Type: ⊤
 
@@ -50,11 +49,11 @@ fun test2() =
     n then funny(n - 1) + 1
   funny
 //│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but () ->{⊥} [outer, 'caseScrut, 'eff] -> 'caseScrut ->{'eff} Int found
-//│ ║  l.49: 	    0 then 0
+//│ ║  l.48: 	    0 then 0
 //│ ║        	           ^
-//│ ║  l.50: 	    n then funny(n - 1) + 1
+//│ ║  l.49: 	    n then funny(n - 1) + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.51: 	  funny
+//│ ║  l.50: 	  funny
 //│ ╙──      	^^^^^^^
 //│ Type: ⊤
 
@@ -94,7 +93,7 @@ fun test2() =
     case n then funny(n - 1) + 1
   funny
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.93: 	    case 0 then 0
+//│ ║  l.92: 	    case 0 then 0
 //│ ╙──      	                ^
 //│ JS (unsanitized):
 //│ let test22;
@@ -116,15 +115,15 @@ fun test2() =
 //│   return tmp1
 //│ };
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.93: 	    case 0 then 0
+//│ ║  l.92: 	    case 0 then 0
 //│ ╙──      	                ^
 //│ ╔══[ERROR] Function definition shape not yet supported for funny
-//│ ║  l.93: 	    case 0 then 0
+//│ ║  l.92: 	    case 0 then 0
 //│ ║        	                ^
-//│ ║  l.94: 	    case n then funny(n - 1) + 1
+//│ ║  l.93: 	    case n then funny(n - 1) + 1
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Variable not found: funny
-//│ ║  l.95: 	  funny
+//│ ║  l.94: 	  funny
 //│ ╙──      	  ^^^^^
 //│ Type: ⊤
 
@@ -133,7 +132,7 @@ fun test2() =
 fun test3 =
   print("Hi")
 //│ ╔══[ERROR] Function definition shape not yet supported for test3
-//│ ║  l.134: 	  print("Hi")
+//│ ║  l.133: 	  print("Hi")
 //│ ╙──       	  ^^^^^^^^^^^
 //│ Type: ⊤
 

@@ -9,7 +9,7 @@ module Mod with
 open Mod
 //│ Env:
 //│   pipee -> SelElem(RefElem(member:Mod),pipee,Some(member:pipee),true)
-//│   print -> SelElem(RefElem(member:Mod),print,Some(member:print),true)
+//│   printt -> SelElem(RefElem(member:Mod),printt,Some(member:printt),true)
 //│   |>> -> SelElem(RefElem(member:Mod),pipee,Some(member:pipee),true)
 
 pipee
@@ -35,7 +35,7 @@ Mod.|>>
 //│ ╙──      	^^^
 
 
-1 |>> x => print(x)
+1 |>> x => printt(x)
 //│ > 1
 
 
@@ -60,12 +60,12 @@ open Mod { (|>>) }
 //│ > 12
 
 
-open Mod { print, |>> }
+open Mod { printt, |>> }
 
 :fixme
-12 |>> print
+12 |>> printt
 //│ ╔══[ERROR] Module 'Mod' does not contain member '|>>'
-//│ ║  l.66: 	12 |>> print
+//│ ║  l.66: 	12 |>> printt
 //│ ╙──      	   ^^^
 //│ ═══[RUNTIME ERROR] TypeError: Mod1.|>> is not a function
 

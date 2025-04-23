@@ -2,8 +2,7 @@
 
 :global
 :bbml
-//│ > 42
-//│ Type: ⊥
+//│ Type: ⊤
 
 
 :sjs
