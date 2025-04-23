@@ -23,7 +23,7 @@ abstract class Symbol(using State) extends Located:
   def ref(id: Tree.Ident =
     Tree.Ident("") // FIXME hack
   ): Term.Ref =
-    val res = new Term.Ref(this)(id, directRefs.size)
+    val res = new Term.Ref(this)(id, directRefs.size, N)
     directRefs += res
     res
   def refsNumber: Int = directRefs.size

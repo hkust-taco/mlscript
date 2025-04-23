@@ -36,9 +36,9 @@ sealed trait Resolvable:
   override def show: Str = t.showDbg + iargsLs.map(_.map(_.showDbg))
   
   def withoutIArgs = t match
-    case t: Term.Ref => t.copy()(t.tree, t.refNum).noIArgs
+    case t: Term.Ref => t.copy()(t.tree, t.refNum, t.resSym).noIArgs
     case t: Term.App => t.copy()(t.tree, t.sym, t.resSym).noIArgs
-    case t: Term.TyApp => t.copy().noIArgs
+    case t: Term.TyApp => t.copy()(t.sym).noIArgs
     case t: Term.Sel => t.copy()(t.sym).noIArgs
     case t: Term.SynthSel => t.copy()(t.sym).noIArgs
   
@@ -76,9 +76,9 @@ enum Term extends Statement:
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
   case Lit(lit: Literal)
   case Builtin(id: Tree.Ident, nme: Str)
-  case Ref(var sym: Symbol)(val tree: Tree.Ident, val refNum: Int) extends Term with Resolvable
+  case Ref(sym: Symbol)(val tree: Tree.Ident, val refNum: Int, var resSym: Opt[FieldSymbol]) extends Term with Resolvable
   case App(lhs: Term, rhs: Term)(val tree: Tree.App, var sym: Opt[FieldSymbol], val resSym: FlowSymbol) extends Term with Resolvable
-  case TyApp(lhs: Term, targs: Ls[Term]) extends Term with Resolvable
+  case TyApp(lhs: Term, targs: Ls[Term])(var sym: Opt[FieldSymbol]) extends Term with Resolvable
   case Sel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term with Resolvable
   case SynthSel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term with Resolvable
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
@@ -110,6 +110,7 @@ enum Term extends Statement:
     derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)
   
   def symbol: Opt[Symbol] = this match
+    case ref: Ref if ref.resSym.nonEmpty => ref.resSym
     case Ref(sym) => S(sym)
     case sel: Sel => sel.sym
     case sel: SynthSel => sel.sym
@@ -174,9 +175,8 @@ extension (self: Blk)
 sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
   
   def extraInfo: Str = this match
-    case ref: Ref => ""
-    case trm @ (_: Sel | _: SynthSel | _: SelProj) => trm.symbol.mkString
-    case r: (Resolvable & Term) => s"${r.symbol}"
+    case ref: Ref if ref.resSym.isEmpty => ""
+    case r: (Resolvable & Term) => r.symbol.mkString
     case _ => ""
   
   def subStatements: Ls[Statement] = this match

@@ -9,6 +9,13 @@ module N with
 
 module R with
   fun foo()(): module N = N
+  fun bar(using Int)(using Num)(using Str): module M = M
+
+fun foo(using Int)(using Num)(using Str): module M = M
+
+use Int = 42
+use Num = 4.2
+use Str = "42"
 
 :global
 :rt
@@ -41,7 +48,7 @@ M.baz()
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App{Some(module:M)}:
+//│   res = App{module:M}:
 //│     lhs = Sel{member:baz}:
 //│       prefix = Ref of member:M
 //│       nme = Ident of "baz"
@@ -51,7 +58,7 @@ M.foo.bar.baz()
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App{Some(module:M)}:
+//│   res = App{module:M}:
 //│     lhs = Sel{member:baz}:
 //│       prefix = Sel{module:M}:
 //│         prefix = Sel{module:M}:
@@ -101,7 +108,7 @@ R.foo()
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App{None}:
+//│   res = App:
 //│     lhs = Sel{member:foo}:
 //│       prefix = Ref of member:R
 //│       nme = Ident of "foo"
@@ -111,8 +118,8 @@ R.foo()()
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App{Some(module:N)}:
-//│     lhs = App{None}:
+//│   res = App{module:N}:
+//│     lhs = App:
 //│       lhs = Sel{member:foo}:
 //│         prefix = Ref of member:R
 //│         nme = Ident of "foo"
@@ -123,9 +130,9 @@ R.foo()()()
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App{None}:
-//│     lhs = App{Some(module:N)}:
-//│       lhs = App{None}:
+//│   res = App:
+//│     lhs = App{module:N}:
+//│       lhs = App:
 //│         lhs = Sel{member:foo}:
 //│           prefix = Ref of member:R
 //│           nme = Ident of "foo"
@@ -133,3 +140,54 @@ R.foo()()()
 //│       rhs = Tup of Nil
 //│     rhs = Tup of Nil
 
+
+
+
+// the symbol of this Sel should be M because of the implicit application
+R.bar
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Sel{module:M}:
+//│     prefix = Ref of member:R
+//│     nme = Ident of "bar"
+//│     iargs = S of Ls of 
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref of member:instance$Ident(Int)
+//│           asc = N
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref of member:instance$Ident(Num)
+//│           asc = N
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref of member:instance$Ident(Str)
+//│           asc = N
+
+// the symbol of this Ref should be M because of the implicit application
+foo
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Ref{module:M}:
+//│     sym = member:foo
+//│     iargs = S of Ls of 
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref of member:instance$Ident(Int)
+//│           asc = N
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref of member:instance$Ident(Num)
+//│           asc = N
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref of member:instance$Ident(Str)
+//│           asc = N

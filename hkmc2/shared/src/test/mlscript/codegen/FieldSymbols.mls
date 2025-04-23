@@ -12,7 +12,7 @@ Foo(42).x
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel:
-//│     prefix = App{None}:
+//│     prefix = App:
 //│       lhs = Ref:
 //│         sym = member:Foo
 //│         iargs = N

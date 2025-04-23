@@ -30,7 +30,7 @@ fun f(x) =
 //│         kw = keyword 'if'
 //│         desugared = Let:
 //│           sym = $scrut
-//│           term = App{None}:
+//│           term = App:
 //│             lhs = Ref:
 //│               sym = builtin:==
 //│               iargs = N
@@ -48,7 +48,7 @@ fun f(x) =
 //│             iargs = N
 //│           tail = Let: \
 //│           sym = $scrut
-//│           term = App{None}:
+//│           term = App:
 //│             lhs = Ref:
 //│               sym = builtin:+
 //│               iargs = N

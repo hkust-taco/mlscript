@@ -35,7 +35,7 @@ id(a: 0)
 //│ Elaborated tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = App{None}:
+//│   res = App:
 //│     lhs = SynthSel{member:id}:
 //│       prefix = Ref:
 //│         sym = member:Predef

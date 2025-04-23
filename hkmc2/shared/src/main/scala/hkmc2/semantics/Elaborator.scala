@@ -168,7 +168,7 @@ object Elaborator:
       def ref(id: Tree.Ident)(using Elaborator.State): Term =
         // * Note: due to symbolic ops, we may have `id.name =/= nme`;
         // * e.g., we can have `id.name = "|>"` and `nme = "pipe"`.
-        Term.Ref(sym)(id, 666) // FIXME: 666 is a temporary placeholder
+        Term.Ref(sym)(id, 666, N) // FIXME: 666 is a temporary placeholder
       def symbol = S(sym)
       def isImport: Bool = false
     final case class SelElem(base: Elem, nme: Str, symOpt: Opt[FieldSymbol], isImport: Bool) extends Elem:
@@ -397,7 +397,7 @@ extends Importer:
         case Tup(Modified(Keyword.`in`, inLoc, arg1) :: Modified(Keyword.`out`, outLoc, arg2) :: Nil) =>
           Term.WildcardTy(S(term(arg1)), S(term(arg2)))
         case arg => term(arg)
-      })
+      })(N)
     case InfixApp(TyTup(tvs), Keyword.`->`, body) =>
       val boundVars = mutable.HashMap.empty[Str, VarSymbol]
       def genSym(id: Tree.Ident) =
