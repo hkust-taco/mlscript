@@ -9,9 +9,9 @@ module N with
 
 module R with
   fun foo()(): module N = N
-  fun bar(using Int)(using Num)(using Str): module M = M
+  fun bar[T](using Int)(using Num)(using Str): module M = M
 
-fun foo(using Int)(using Num)(using Str): module M = M
+fun foo[T](using Int)(using Num)(using Str): module M = M
 
 use Int = 42
 use Num = 4.2
@@ -175,6 +175,62 @@ foo
 //│   stats = Nil
 //│   res = Ref{module:M}:
 //│     sym = member:foo
+//│     iargs = S of Ls of 
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref of member:instance$Ident(Int)
+//│           asc = N
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref of member:instance$Ident(Num)
+//│           asc = N
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref of member:instance$Ident(Str)
+//│           asc = N
+
+// the symbol of this TyApp should be M because of the implicit application
+// note that the resolved symbol for implicit application is on TyApp instead of on Sel
+R.bar[Int]
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = TyApp{module:M}:
+//│     lhs = Sel{member:bar}:
+//│       prefix = Ref of member:R
+//│       nme = Ident of "bar"
+//│     targs = Ls of 
+//│       Ref of member:Int
+//│     iargs = S of Ls of 
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref of member:instance$Ident(Int)
+//│           asc = N
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref of member:instance$Ident(Num)
+//│           asc = N
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref of member:instance$Ident(Str)
+//│           asc = N
+
+// the symbol of this TyApp should be M because of the implicit application
+// note that the resolved symbol for implicit application is on TyApp instead of on Ref
+foo[Int]
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = TyApp{module:M}:
+//│     lhs = Ref of member:foo
+//│     targs = Ls of 
+//│       Ref of member:Int
 //│     iargs = S of Ls of 
 //│       Tup of Ls of 
 //│         Fld:

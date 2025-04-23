@@ -610,6 +610,7 @@ class Resolver(tl: TraceLogger)
               msg"does not contain member '${id.name}'" -> t.toLoc :: Nil)
         case _ =>
     case _ =>
+    
     t match
     case t @ Apps(base: Resolvable, pss) =>
       base.termDefn match
@@ -620,6 +621,7 @@ class Resolver(tl: TraceLogger)
             case t: Term.Sel => sym.map(sym => t.sym = S(sym))
             case t: Term.SynthSel => sym.map(sym => t.sym = S(sym))
             case t: Term.App => sym.map(sym => t.sym = S(sym))
+            case t: Term.TyApp => sym.map(sym => t.sym = S(sym))
             case t: Term.Ref => sym.map(sym => t.resSym = S(sym))
             case _ =>
           log(s"Resolved symbol for ${t}: ${lhsDefn.sym}")

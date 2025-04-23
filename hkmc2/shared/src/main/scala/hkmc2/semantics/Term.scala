@@ -115,7 +115,8 @@ enum Term extends Statement:
     case sel: SynthSel => sel.sym
     case sel: SelProj => sel.sym
     case app: App => app.sym
-    case tyApp: TyApp => tyApp.lhs.symbol
+    case tyApp: TyApp if tyApp.sym.nonEmpty => tyApp.sym
+    case TyApp(prefix, _) => prefix.symbol
     case _ => N
   
   def sel(id: Tree.Ident, sym: Opt[FieldSymbol]): Sel =
