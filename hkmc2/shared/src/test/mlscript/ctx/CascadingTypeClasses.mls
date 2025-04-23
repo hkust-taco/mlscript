@@ -6,35 +6,36 @@ class Bar[B]
 class Baz
 
 
-fun foo[A](using Foo[A], A)
+fun foo[A](using Foo[A], A) = 42
 
 use Foo[Baz] = new Foo
 
 
 // FIXME: error message refers to `A`
-:e
-:fixme // Internal Error should never reach users
-foo[Baz]
-//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.17: 	foo[Baz]
-//│ ║        	^^^^^^^
-//│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.9: 	fun foo[A](using Foo[A], A)
-//│ ║       	                         ^
-//│ ╙── Expected: A; Available: (Foo[Baz])
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
 
 :e
-:fixme // Internal Error should never reach users
-foo
+:re
+foo[Baz]
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.29: 	foo
-//│ ║        	^^^
+//│ ║  l.18: 	foo[Baz]
+//│ ║        	^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.9: 	fun foo[A](using Foo[A], A)
+//│ ║  l.9: 	fun foo[A](using Foo[A], A) = 42
 //│ ║       	                         ^
 //│ ╙── Expected: A; Available: (Foo[Baz])
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 2 arguments but got 1
+
+:e
+:re
+foo
+//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ║  l.30: 	foo
+//│ ║        	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.9: 	fun foo[A](using Foo[A], A) = 42
+//│ ║       	                         ^
+//│ ╙── Expected: A; Available: (Foo[Baz])
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 2 arguments but got 1
 
 
 use Baz = new Baz
@@ -42,94 +43,96 @@ use Baz = new Baz
 :todo
 foo
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.43: 	foo
+//│ ║  l.44: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.9: 	fun foo[A](using Foo[A], A)
+//│ ║  l.9: 	fun foo[A](using Foo[A], A) = 42
 //│ ║       	                         ^
 //│ ╙── Expected: A; Available: (Foo[Baz], Baz)
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 2 arguments but got 1
 
 
-fun foo[A](using Foo[A])(using A)
+fun foo[A](using Foo[A])(using A) = 42
 
 :todo
 foo
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.57: 	foo
+//│ ║  l.58: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.54: 	fun foo[A](using Foo[A])(using A)
+//│ ║  l.55: 	fun foo[A](using Foo[A])(using A) = 42
 //│ ║        	                               ^
 //│ ╙── Expected: A; Available: (Foo[Baz], Baz)
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
+//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 0
 
 
-fun foo[A](using A)(using Foo[A])
+fun foo[A](using A)(using Foo[A]) = 42
 
 :todo
 foo
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.71: 	foo
+//│ ║  l.72: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.68: 	fun foo[A](using A)(using Foo[A])
+//│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ║        	                 ^
 //│ ╙── Expected: A; Available: (Foo[Baz], Baz)
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
 
 use Foo[Bar[Baz]] = new Foo
 
-:fixme // Internal Error should never reach users
 :e
+:re
 foo
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.86: 	foo
+//│ ║  l.87: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.68: 	fun foo[A](using A)(using Foo[A])
+//│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ║        	                 ^
 //│ ╙── Expected: A; Available: (Foo[Bar[Baz]], Foo[Baz], Baz)
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
 use Bar[Baz] = new Bar
 
-:fixme
+:e
+:re
 foo
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.99: 	foo
-//│ ║        	^^^
+//│ ║  l.101: 	foo
+//│ ║         	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.68: 	fun foo[A](using A)(using Foo[A])
+//│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ║        	                 ^
 //│ ╙── Expected: A; Available: (Foo[Bar[Baz]], Foo[Baz], Baz, Bar[Baz])
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
 use Bar[Int] = new Bar
 
-:fixme
+:e
+:re
 foo
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.112: 	foo
+//│ ║  l.115: 	foo
 //│ ║         	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.68: 	fun foo[A](using A)(using Foo[A])
+//│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ║        	                 ^
 //│ ╙── Expected: A; Available: (Foo[Bar[Baz]], Foo[Baz], Baz, Bar[Int], Bar[Baz])
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
 use Bar[Baz] = new Bar
 
 :todo
 foo
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.125: 	foo
+//│ ║  l.128: 	foo
 //│ ║         	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.68: 	fun foo[A](using A)(using Foo[A])
+//│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ║        	                 ^
 //│ ╙── Expected: A; Available: (Foo[Bar[Baz]], Foo[Baz], Baz, Bar[Baz], Bar[Int], Bar[Baz])
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
 

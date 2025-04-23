@@ -176,7 +176,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
   
   def extraInfo: Str = this match
     case ref: Ref if ref.resSym.isEmpty => ""
-    case r: (Resolvable & Term) => r.symbol.mkString
+    case r: (Resolvable & Term | SelProj) => r.symbol.mkString
     case _ => ""
   
   def subStatements: Ls[Statement] = this match
