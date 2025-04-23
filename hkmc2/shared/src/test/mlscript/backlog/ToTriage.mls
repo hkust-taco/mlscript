@@ -419,10 +419,10 @@ if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 
 if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.421: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ║  l.420: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                   ^^^^^^^^
 //│ ╔══[ERROR] Name not found: arg
-//│ ║  l.421: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ║  l.420: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                                 ^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
