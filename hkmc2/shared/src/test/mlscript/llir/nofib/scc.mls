@@ -1,0 +1,52 @@
+:llir
+
+:import NofibPrelude.mls
+//│ Imported 104 member(s)
+
+
+fun dfs(r, vsns, xs) = if vsns is [vs, ns] and
+  xs is
+    Nil then [vs, ns]
+    x :: xs and
+      inList(x, vs) then dfs(r, [vs, ns], xs)
+      dfs(r, [x :: vs, Nil], r(x)) is [vs', ns'] then dfs(r, [vs', (x :: ns') +: ns], xs)
+
+fun stronglyConnComp(es, vs) =
+  fun swap(a) = if a is [f, s] then [s, f]
+  
+  fun new_range(xys, w) = if xys is
+    Nil then Nil
+    [x, y] :: xys and
+      x == w then y :: new_range(xys, w)
+      else new_range(xys, w)
+  
+  fun span_tree(r, vsns, xs) = if vsns is [vs, ns] and
+    xs is
+      Nil then [vs, ns]
+      x :: xs and
+        inList(x, vs) then span_tree(r, [vs, ns], xs)
+        dfs(r, [x :: vs, Nil], r(x)) is [vs', ns'] then span_tree(r, [vs', (x :: ns') :: ns], xs)
+  
+  snd of span_tree of
+    x => new_range(map(swap, es), x)
+    [Nil, Nil]
+    snd of dfs of
+      x => new_range(es, x)
+      [Nil, Nil]
+      vs
+
+
+fun testScc_nofib(d) =
+  let a = 1
+  let b = 2
+  let c = 3
+  let d = 4
+  let f = 5
+  let g = 6
+  let h = 7
+  let vertices = a :: b :: c :: d :: f :: g :: h :: Nil
+  let edges = [b, a] :: [c, b] :: [c, d] :: [c, h] :: [d, c] :: [f, a] :: [f, g] :: [f, h] :: [g, f] :: [h, g] :: Nil
+  
+  stronglyConnComp(edges, vertices)
+
+print(testScc_nofib(0))

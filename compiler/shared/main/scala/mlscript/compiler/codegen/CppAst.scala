@@ -161,7 +161,7 @@ case class CompilationUnit(includes: Ls[Str], decls: Ls[Decl], defs: Ls[Def]):
       "HiddenTheseEntities", "True", "False", "Callable", "List", "Cons", "Nil", "Option", "Some", "None", "Pair", "Tuple2", "Tuple3", "Nat", "S", "O"
     )
     stack_list(defs.filterNot { 
-      case Def.StructDef(name, _, _, _) => hiddenNames.contains(name.stripPrefix("_mls_"))
+      case d: Def.StructDef => hiddenNames.contains(d.name.stripPrefix("_mls_"))
       case _ => false
     }.map(_.toDocument))
 

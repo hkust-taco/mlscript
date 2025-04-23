@@ -1,0 +1,166 @@
+:llir
+
+// This should ideally be a declaration.
+// Now it is a built-in class specially handled in the C++ backend,
+// with related logic defined in `mlsprelude.h`.
+abstract class Lazy[out A](init: () -> A) with
+  fun get: A
+fun lazy(x) = Lazy(x)
+fun force(x) = if x is Lazy then x.Lazy#get()
+type LazyList[out T] = Lazy[LzList[T]]
+abstract class LzList[out T]: LzCons[T] | LzNil
+data class LzCons[out T](head: T, tail: LazyList[T]) extends LzList[T]
+object LzNil extends LzList
+
+:sllir
+:showWholeCpp
+fun llist(x) =
+  fun f(x) = lazy(() => LzCons(x, f(x + 1)))
+  f(x)
+llist(1)
+//│ LLIR:
+//│   class Lambda_lambda(lam_arg0$794,lam_arg1$795) extends Callable {
+//│     def apply0$796() =
+//│       let x$797 = +(lam_arg0$794,1) in
+//│       let x$798 = Callable.apply1$791(lam_arg1$795,x$797) in
+//│       let x$800 = LzCons$756(lam_arg0$794,x$798) in
+//│       x$800
+//│   }
+//│   class Lambda_f() extends Callable {
+//│     def apply1$791(x$776) =
+//│       let x$801 = Lambda_lambda$792(x$776,<this>$790) in
+//│       let* (x$802) = lazy(x$801) in
+//│       x$802
+//│   }
+//│   def llist$772(x$774) =
+//│     let x$803 = Lambda_f$788() in
+//│     let x$804 = Callable.apply1$791(x$803,x$774) in
+//│     x$804
+//│   def entry$806() =
+//│     let* (x$805) = llist(1) in
+//│     x$805
+//│   entry = entry$806
+//│ 
+//│ WholeProgramCpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_LzList;
+//│ struct _mls_LzCons;
+//│ struct _mls_Lambda_f;
+//│ struct _mls_Lazy;
+//│ struct _mls_Lambda_lambda;
+//│ struct _mls_LzNil;
+//│ _mlsValue _mls_entry2();
+//│ _mlsValue _mls_entry();
+//│ _mlsValue _mls_llist(_mlsValue);
+//│ _mlsValue _mls_force(_mlsValue);
+//│ _mlsValue _mls_lazy(_mlsValue);
+//│ _mlsValue _mls_j();
+//│ _mlsValue _mls_entry1();
+//│ struct _mls_LzList: public _mlsObject {
+//│   
+//│   constexpr static inline const char *typeName = "LzList";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   static _mlsValue create() { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_LzList; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│   
+//│ };
+//│ struct _mls_LzCons: public _mls_LzList {
+//│   _mlsValue _mls_head;
+//│   _mlsValue _mls_tail;
+//│   constexpr static inline const char *typeName = "LzCons";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_head.print(); std::printf(", "); this->_mls_tail.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_head); _mlsValue::destroy(this->_mls_tail);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   static _mlsValue create(_mlsValue _mls_head, _mlsValue _mls_tail) { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_LzCons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_head = _mls_head; _mlsVal->_mls_tail = _mls_tail;  return _mlsValue(_mlsVal); }
+//│   
+//│ };
+//│ struct _mls_Lambda_f: public _mls_Callable {
+//│   
+//│   constexpr static inline const char *typeName = "Lambda_f";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   static _mlsValue create() { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_Lambda_f; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│   virtual _mlsValue _mls_apply1(_mlsValue);
+//│ };
+//│ struct _mls_Lambda_lambda: public _mls_Callable {
+//│   _mlsValue _mls_lam_arg0;
+//│   _mlsValue _mls_lam_arg1;
+//│   constexpr static inline const char *typeName = "Lambda_lambda";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_lam_arg0.print(); std::printf(", "); this->_mls_lam_arg1.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_lam_arg0); _mlsValue::destroy(this->_mls_lam_arg1);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   static _mlsValue create(_mlsValue _mls_lam_arg0, _mlsValue _mls_lam_arg1) { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_Lambda_lambda; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_lam_arg0 = _mls_lam_arg0; _mlsVal->_mls_lam_arg1 = _mls_lam_arg1;  return _mlsValue(_mlsVal); }
+//│   virtual _mlsValue _mls_apply0();
+//│ };
+//│ struct _mls_LzNil: public _mls_LzList {
+//│   
+//│   constexpr static inline const char *typeName = "LzNil";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   static _mlsValue create() { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_LzNil; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│   
+//│ };
+//│ _mlsValue _mls_j() {
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mlsValue::create<_mls_Unit>();
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_entry() {
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mlsValue::create<_mls_Unit>();
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_lazy(_mlsValue _mls_x7) {
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x6 = _mlsValue::create<_mls_Lazy>(_mls_x7);
+//│   _mls_retval = _mls_x6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_llist(_mlsValue _mls_x12) {
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x11 = _mlsValue::create<_mls_Lambda_f>();
+//│   auto _mls_x13 = _mlsMethodCall<_mls_Callable>(_mls_x11)->_mls_apply1(_mls_x12);
+//│   _mls_retval = _mls_x13;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_entry1() {
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x8 = _mls_llist(_mlsValue::fromIntLit(1));
+//│   _mls_retval = _mls_x8;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_entry2() {
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mlsValue::create<_mls_Unit>();
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_force(_mlsValue _mls_x9) {
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_Lazy>(_mls_x9)) {
+//│     auto _mls_x10 = _mlsMethodCall<_mls_Lazy>(_mls_x9)->_mls_get();
+//│     _mls_retval = _mls_x10;
+//│   } else {
+//│     throw std::runtime_error("match error");
+//│   }
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_Lambda_f::_mls_apply1(_mlsValue _mls_x1) {
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x = _mlsValue::create<_mls_Lambda_lambda>(_mls_x1, _mlsValue(this, _mlsValue::inc_ref_tag{}));
+//│   auto _mls_x2 = _mls_lazy(_mls_x);
+//│   _mls_retval = _mls_x2;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_Lambda_lambda::_mls_apply0() {
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x3 = (_mls_lam_arg0 + _mlsValue::fromIntLit(1));
+//│   auto _mls_x4 = _mlsMethodCall<_mls_Callable>(_mls_lam_arg1)->_mls_apply1(_mls_x3);
+//│   auto _mls_x5 = _mlsValue::create<_mls_LzCons>(_mls_lam_arg0, _mls_x4);
+//│   _mls_retval = _mls_x5;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain() { return _mls_entry1(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }

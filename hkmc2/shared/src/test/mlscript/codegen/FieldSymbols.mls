@@ -93,8 +93,8 @@ case
 //│                 iargs = N
 //│               nme = Ident of "class"
 //│               iargs = N
-//│             parameters = S of Ls of 
-//│               $param0
+//│             args = S of Ls of 
+//│               S of $param0
 //│             refined = false
 //│           continuation = Let:
 //│             sym = a

@@ -56,6 +56,47 @@ let Runtime1;
       }
       toString() { return "MatchFailure(" + globalThis.Predef.render(this.errors) + ")"; }
     };
+    (class Tuple {
+      static {
+        Runtime.Tuple = Tuple;
+      }
+      static slice(xs, i, j) {
+        let tmp;
+        tmp = xs.length - j;
+        return runtime.safeCall(globalThis.Array.prototype.slice.call(xs, i, tmp))
+      } 
+      static get(xs1, i1) {
+        let scrut;
+        scrut = i1 >= xs1.length;
+        if (scrut === true) {
+          throw globalThis.RangeError("Tuple.get: index out of bounds");
+        } else {
+          return globalThis.Array.prototype.at.call(xs1, i1)
+        }
+      }
+      static toString() { return "Tuple"; }
+    });
+    (class Str {
+      static {
+        Runtime.Str = Str;
+      }
+      static startsWith(string, prefix) {
+        return runtime.safeCall(string.startsWith(prefix))
+      } 
+      static get(string1, i) {
+        let scrut;
+        scrut = i >= string1.length;
+        if (scrut === true) {
+          throw globalThis.RangeError("Str.get: index out of bounds");
+        } else {
+          return runtime.safeCall(string1.at(i))
+        }
+      } 
+      static drop(string2, n) {
+        return runtime.safeCall(string2.slice(n))
+      }
+      static toString() { return "Str"; }
+    });
     const FatalEffect$class = class FatalEffect {
       constructor() {}
       toString() { return "FatalEffect"; }

@@ -1,0 +1,89 @@
+:llir
+
+// This should ideally be a declaration.
+// Now it is a built-in class specially handled in the C++ backend,
+// with related logic defined in `mlsprelude.h`.
+abstract class Lazy[out A](init: () -> A) with
+  fun get: A
+fun lazy(x) = Lazy(x)
+fun force(x) = if x is Lazy then x.Lazy#get()
+type LazyList[out T] = Lazy[LzList[T]]
+abstract class LzList[out T]: LzCons[T] | LzNil
+data class LzCons[out T](head: T, tail: LazyList[T]) extends LzList[T]
+object LzNil extends LzList
+
+:sllir
+:scpp
+fun side_effect() =
+  console.log("executed")
+  1
+fun main() =
+  let x = lazy(() => side_effect())
+  let y = force(x)
+  let y1 = force(x) // force again, but should not execute side_effect again
+  ()
+main()
+//│ LLIR:
+//│   class Lambda_lambda() extends Callable {
+//│     def apply0$797() =
+//│       let* (x$798) = side_effect() in
+//│       x$798
+//│   }
+//│   def side_effect$772() =
+//│     let* (x$792) = <builtin>("println","executed") in
+//│     1
+//│   def main$771() =
+//│     let x$800 = Lambda_lambda$794() in
+//│     let* (x$801) = lazy(x$800) in
+//│     let* (x$802) = force(x$801) in
+//│     let* (x$803) = force(x$801) in
+//│     undefined
+//│   def entry$805() =
+//│     let* (x$804) = main() in
+//│     x$804
+//│   entry = entry$805
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_Lambda_lambda;
+//│ _mlsValue _mls_side_effect();
+//│ _mlsValue _mls_main();
+//│ _mlsValue _mls_entry();
+//│ struct _mls_Lambda_lambda: public _mls_Callable {
+//│   
+//│   constexpr static inline const char *typeName = "Lambda_lambda";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   static _mlsValue create() { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_Lambda_lambda; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│   virtual _mlsValue _mls_apply0();
+//│ };
+//│ _mlsValue _mls_side_effect() {
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x1 = _mls_builtin_println(_mlsValue::create<_mls_Str>("executed"));
+//│   _mls_retval = _mlsValue::fromIntLit(1);
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main() {
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x2 = _mlsValue::create<_mls_Lambda_lambda>();
+//│   auto _mls_x3 = _mls_lazy(_mls_x2);
+//│   auto _mls_x4 = _mls_force(_mls_x3);
+//│   auto _mls_x5 = _mls_force(_mls_x3);
+//│   _mls_retval = _mlsValue::create<_mls_Unit>();
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_entry() {
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x6 = _mls_main();
+//│   _mls_retval = _mls_x6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_Lambda_lambda::_mls_apply0() {
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x = _mls_side_effect();
+//│   _mls_retval = _mls_x;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain() { return _mls_entry(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }

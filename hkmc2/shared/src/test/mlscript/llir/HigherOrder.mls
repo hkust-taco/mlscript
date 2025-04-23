@@ -1,0 +1,117 @@
+:js
+:llir
+:cpp
+:intl
+
+//│ 
+//│ Interpreted:
+//│ undefined
+:sllir
+fun add(x) = y => x + y
+fun add_curried(x)(y) = x + y
+add(1)(2)
+//│ = 3
+//│ LLIR:
+//│   class Lambda_lambda(lam_arg0$751) extends Callable {
+//│     def apply1$753(y$733) =
+//│       let x$754 = +(lam_arg0$751,y$733) in
+//│       x$754
+//│   }
+//│   class Lambda(lam_arg0$759) extends Callable {
+//│     def apply1$753(y$738) =
+//│       let x$760 = +(lam_arg0$759,y$738) in
+//│       x$760
+//│   }
+//│   def add$729(x$732) =
+//│     let x$756 = Lambda_lambda$749(x$732) in
+//│     x$756
+//│   def add_curried$730(x$737) =
+//│     let x$761 = Lambda$757(x$737) in
+//│     x$761
+//│   def entry$764() =
+//│     let* (x$762) = add(1) in
+//│     let x$763 = Callable.apply1$753(x$762,2) in
+//│     x$763
+//│   entry = entry$764
+//│ 
+//│ Interpreted:
+//│ 3
+
+fun add4(a, b) = (c, d) => a + b + c + d
+fun add4_curried(a, b)(c, d) = a + b + c + d
+add4(1, 2)(3, 4)
+//│ = 10
+//│ 
+//│ Interpreted:
+//│ 10
+
+fun add(a, b) = a + b
+fun dummy() = add
+dummy()(1, 2)
+//│ = 3
+//│ 
+//│ Interpreted:
+//│ 3
+
+abstract class List[out T]: Cons[T] | Nil
+data class (::) Cons[out T](head: T, tail: List[T]) extends List[T]
+object Nil extends List
+fun map(f, l) =
+  if l is
+    Cons(h, t) then Cons(f(h), map(f, t))
+    Nil then Nil
+fun inc(x) = x + 1
+fun main() =
+  map(x => inc(x), 1 :: 2 :: Nil)
+  map(inc, 3 :: 4 :: Nil)
+main()
+//│ = Cons(4, Cons(5, Nil))
+//│ 
+//│ Interpreted:
+//│ Cons(4,Cons(5,Nil()))
+
+abstract class List[out T]: Cons[T] | Nil
+data class (::) Cons[out T](head: T, tail: List[T]) extends List[T]
+object Nil extends List
+fun not(c) = if c then false else true
+fun filter(f, ls) = if ls is
+  Nil then Nil
+  h :: t and
+    f(h) then h :: filter(f, t)
+    else filter(f, t)
+fun nubBy(eq, ls) = if ls is
+  Nil then Nil
+  h :: t then h :: nubBy(eq, filter(y => not(eq(h, y)), t))
+nubBy((x, y) => x == y, 1 :: 2 :: 3 :: 3 :: Nil)
+//│ = Cons(1, Cons(2, Cons(3, Nil)))
+//│ 
+//│ Interpreted:
+//│ Cons(1,Cons(2,Cons(3,Nil())))
+
+:intl
+fun f(x) =
+  fun self_rec(x) =
+    if x == 0 then 0
+    else x + self_rec(x - 1)
+  self_rec(x)
+f(3)
+//│ = 6
+//│ 
+//│ Interpreted:
+//│ 6
+
+fun f(x) =
+  fun even(x) =
+    fun odd(x) =
+      if x == 0 then true
+      else if x == 1 then false
+      else even(x - 1)
+    if x == 0 then true
+    else if x == 1 then false
+    else odd(x - 1)
+  even(x)
+f(3)
+//│ = false
+//│ 
+//│ Interpreted:
+//│ false
