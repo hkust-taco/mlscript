@@ -755,7 +755,6 @@ object ModuleChecker:
     t match
       case Term.Blk(_, res) => evalsToModule(res)
       case Term.IfLike(`if`, split) => split.results.exists(evalsToModule(_))
-      case t: Term.Ref => checkSym(t.sym)
       case t => t.symbol.exists(checkSym)
 
 extension [T](xs: Ls[Opt[T]])
