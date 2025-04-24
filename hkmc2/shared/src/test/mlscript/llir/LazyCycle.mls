@@ -19,36 +19,36 @@ fun llist(x) =
   f(x)
 llist(1)
 //│ LLIR:
-//│   class Lambda_lambda(lam_arg0$918,lam_arg1$919) extends Callable {
-//│     def apply0$920() =
-//│       let x$921 = +(lam_arg0$918,1) in
-//│       let x$922 = Callable.apply1$915(lam_arg1$919,x$921) in
-//│       let x$924 = LzCons$880(lam_arg0$918,x$922) in
-//│       x$924
+//│   class Lambda_lambda(lam_arg0,lam_arg1) extends Callable {
+//│     def apply0() =
+//│       let x = +(lam_arg0,1) in
+//│       let x1 = Callable.apply1(lam_arg1,x) in
+//│       let x2 = LzCons(lam_arg0,x1) in
+//│       x2
 //│   }
 //│   class Lambda_f() extends Callable {
-//│     def apply1$915(x$900) =
-//│       let x$925 = Lambda_lambda$916(x$900,<this>$914) in
-//│       let* (x$926) = lazy(x$925) in
-//│       x$926
+//│     def apply1(x3) =
+//│       let x4 = Lambda_lambda(x3,$_this$_) in
+//│       let* (x5) = lazy(x4) in
+//│       x5
 //│   }
-//│   def llist$896(x$898) =
-//│     let x$927 = Lambda_f$912() in
-//│     let x$928 = Callable.apply1$915(x$927,x$898) in
-//│     x$928
-//│   def entry$930() =
-//│     let* (x$929) = llist(1) in
-//│     x$929
-//│   entry = entry$930
+//│   def llist(x6) =
+//│     let x7 = Lambda_f() in
+//│     let x8 = Callable.apply1(x7,x6) in
+//│     x8
+//│   def entry() =
+//│     let* (x9) = llist(1) in
+//│     x9
+//│   entry = entry
 //│ 
 //│ WholeProgramCpp:
 //│ #include "mlsprelude.h"
-//│ struct _mls_LzList;
-//│ struct _mls_Lazy;
-//│ struct _mls_LzNil;
-//│ struct _mls_LzCons;
 //│ struct _mls_Lambda_f;
 //│ struct _mls_Lambda_lambda;
+//│ struct _mls_Lazy;
+//│ struct _mls_LzList;
+//│ struct _mls_LzCons;
+//│ struct _mls_LzNil;
 //│ _mlsValue _mls_entry2();
 //│ _mlsValue _mls_entry();
 //│ _mlsValue _mls_llist(_mlsValue);
@@ -56,34 +56,6 @@ llist(1)
 //│ _mlsValue _mls_lazy(_mlsValue);
 //│ _mlsValue _mls_j();
 //│ _mlsValue _mls_entry1();
-//│ struct _mls_LzList: public _mlsObject {
-//│   
-//│   constexpr static inline const char *typeName = "LzList";
-//│   constexpr static inline uint32_t typeTag = nextTypeTag();
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
-//│   static _mlsValue create() { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_LzList; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
-//│   
-//│ };
-//│ struct _mls_LzNil: public _mls_LzList {
-//│   
-//│   constexpr static inline const char *typeName = "LzNil";
-//│   constexpr static inline uint32_t typeTag = nextTypeTag();
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
-//│   static _mlsValue create() { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_LzNil; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
-//│   
-//│ };
-//│ struct _mls_LzCons: public _mls_LzList {
-//│   _mlsValue _mls_head;
-//│   _mlsValue _mls_tail;
-//│   constexpr static inline const char *typeName = "LzCons";
-//│   constexpr static inline uint32_t typeTag = nextTypeTag();
-//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_head.print(); std::printf(", "); this->_mls_tail.print();  std::printf(")"); }
-//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_head); _mlsValue::destroy(this->_mls_tail);  operator delete (this, std::align_val_t(_mlsAlignment)); }
-//│   static _mlsValue create(_mlsValue _mls_head, _mlsValue _mls_tail) { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_LzCons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_head = _mls_head; _mlsVal->_mls_tail = _mls_tail;  return _mlsValue(_mlsVal); }
-//│   
-//│ };
 //│ struct _mls_Lambda_f: public _mls_Callable {
 //│   
 //│   constexpr static inline const char *typeName = "Lambda_f";
@@ -102,6 +74,34 @@ llist(1)
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_lam_arg0); _mlsValue::destroy(this->_mls_lam_arg1);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   static _mlsValue create(_mlsValue _mls_lam_arg0, _mlsValue _mls_lam_arg1) { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_Lambda_lambda; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_lam_arg0 = _mls_lam_arg0; _mlsVal->_mls_lam_arg1 = _mls_lam_arg1;  return _mlsValue(_mlsVal); }
 //│   virtual _mlsValue _mls_apply0();
+//│ };
+//│ struct _mls_LzList: public _mlsObject {
+//│   
+//│   constexpr static inline const char *typeName = "LzList";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   static _mlsValue create() { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_LzList; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│   
+//│ };
+//│ struct _mls_LzCons: public _mls_LzList {
+//│   _mlsValue _mls_head;
+//│   _mlsValue _mls_tail;
+//│   constexpr static inline const char *typeName = "LzCons";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_head.print(); std::printf(", "); this->_mls_tail.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_head); _mlsValue::destroy(this->_mls_tail);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   static _mlsValue create(_mlsValue _mls_head, _mlsValue _mls_tail) { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_LzCons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_head = _mls_head; _mlsVal->_mls_tail = _mls_tail;  return _mlsValue(_mlsVal); }
+//│   
+//│ };
+//│ struct _mls_LzNil: public _mls_LzList {
+//│   
+//│   constexpr static inline const char *typeName = "LzNil";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   static _mlsValue create() { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_LzNil; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│   
 //│ };
 //│ _mlsValue _mls_j() {
 //│   _mlsValue _mls_retval;

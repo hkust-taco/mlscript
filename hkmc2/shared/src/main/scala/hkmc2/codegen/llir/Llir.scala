@@ -20,7 +20,6 @@ private def raw(x: String): Document = doc"$x"
 
 final case class LowLevelIRError(message: String) extends Exception(message)
 
-private def docSymWithUid(sym: Local): Document = doc"${sym.nme}$$${sym.uid.toString()}"
 
 val hiddenPrefixes = Set("Tuple")
 
@@ -31,25 +30,7 @@ case class Program(
   classes: Set[ClassInfo],
   defs: Set[Func],
   entry: Local,
-):
-  override def toString: String =
-    val t1 = classes.toArray
-    val t2 = defs.toArray
-    Sorting.quickSort(t1)
-    Sorting.quickSort(t2)
-    s"Program({${t1.mkString(",\n")}}, {\n${t2.mkString("\n")}\n},\n$entry)"
-
-  def show(hide: Str => Bool = defaultHidden) = toDocument(hide).toString
-  def toDocument(hide: Str => Bool = defaultHidden) : Document =
-    val t1 = classes.iterator.filterNot(c => hide(c.symbol.nme)).toArray
-    val t2 = defs.toArray
-    Sorting.quickSort(t1)
-    Sorting.quickSort(t2)
-    given Conversion[String, Document] = raw
-    val docClasses = t1.map(_.toDocument).toList.mkDocument(doc" # ")
-    val docDefs = t2.map(_.toDocument).toList.mkDocument(doc" # ")
-    val docMain = doc"entry = ${entry.nme}$$${entry.uid.toString()}"
-    doc" #{ $docClasses\n$docDefs\n$docMain #} "
+)
 
 implicit object ClassInfoOrdering extends Ordering[ClassInfo] {
   def compare(a: ClassInfo, b: ClassInfo) = a.id.compare(b.id)
@@ -63,20 +44,6 @@ case class ClassInfo(
   methods: Map[Local, Func],
 ):
   override def hashCode: Int = id
-  override def toString: String =
-    s"ClassInfo($id, $symbol, [${fields mkString ","}], parents: ${parents mkString ","}, methods:\n${methods mkString ",\n"})"
-
-  def show = toDocument.toString
-  def toDocument: Document =
-    given Conversion[String, Document] = raw
-    val ext = if parents.isEmpty then "" else " extends " + parents.map(_.nme).mkString(", ")
-    if methods.isEmpty then
-      doc"class ${symbol.nme}(${fields.map(docSymWithUid).mkString(",")})$ext"
-    else
-      val docFirst = doc"class ${symbol.nme}(${fields.map(docSymWithUid).mkString(",")})$ext {"
-      val docMethods = methods.map { (_, func) => func.toDocument }.toList.mkDocument(doc" # ")
-      val docLast = doc"}"
-      doc"$docFirst #{  # $docMethods #}  # $docLast"
 
 class FuncRef(var func: Local):
   def name: String = func.nme
@@ -99,22 +66,8 @@ case class Func(
   var recBoundary: Opt[Int] = None
   override def hashCode: Int = id
 
-  override def toString: String =
-    val ps = params.map(_.toString).mkString("[", ",", "]")
-    s"Def($id, $name, $ps, \n$resultNum, \n$body\n)"
-
-  def show = toDocument
-  def toDocument: Document =
-    given Conversion[String, Document] = raw
-    val docFirst = doc"def ${docSymWithUid(name)}(${params.map(docSymWithUid).mkString(",")}) ="
-    val docBody = body.toDocument
-    doc"$docFirst #{  # $docBody #} "
-
 sealed trait TrivialExpr:
   import Expr._
-  override def toString: String
-  def show: String
-  def toDocument: Document
   def toExpr: Expr = this match { case x: Expr => x }
   def foldRef(f: Local => TrivialExpr): TrivialExpr = this match
     case Ref(sym) => f(sym)
@@ -123,8 +76,6 @@ sealed trait TrivialExpr:
     case Ref(sym) => f(sym)
     case _ => ()
 
-private def showArguments(args: Ls[TrivialExpr]) = args map (_.show) mkString ","
-
 enum Expr:
   case Ref(sym: Local) extends Expr, TrivialExpr 
   case Literal(lit: hkmc2.syntax.Literal) extends Expr, TrivialExpr
@@ -132,37 +83,11 @@ enum Expr:
   case Select(name: Local, cls: Local, field: Str)
   case BasicOp(name: BuiltinSymbol, args: Ls[TrivialExpr])
   case AssignField(assignee: Local, cls: Local, field: Str, value: TrivialExpr)
-  
-  override def toString: String = show
 
-  def show: String = toDocument.toString
-  
-  def toDocument: Document = 
-    given Conversion[String, Document] = raw
-    this match
-      case Ref(s) => docSymWithUid(s)
-      case Literal(Tree.BoolLit(lit)) => s"$lit"
-      case Literal(Tree.IntLit(lit)) => s"$lit"
-      case Literal(Tree.DecLit(lit)) => s"$lit"
-      case Literal(Tree.StrLit(lit)) => s"${lit.escaped}"
-      case Literal(Tree.UnitLit(isNullNotUndefined)) =>
-        if isNullNotUndefined then "null" else "undefined"
-      case CtorApp(cls, args) =>
-        doc"${docSymWithUid(cls)}(${args.map(_.toString).mkString(",")})"
-      case Select(s, cls, fld) =>
-        doc"${docSymWithUid(s)}.<${docSymWithUid(cls)}:$fld>"
-      case BasicOp(sym, args) =>
-        doc"${sym.nme}(${args.map(_.toString).mkString(",")})"
-      case AssignField(assignee, clsInfo, fieldName, value) => 
-        doc"${docSymWithUid(assignee)}.${fieldName} := ${value.toString}"
 
 enum Pat:
   case Lit(lit: hkmc2.syntax.Literal)
   case Class(cls: Local)
-
-  override def toString: String = this match
-    case Lit(lit) => s"$lit"
-    case Class(cls) => s"${{docSymWithUid(cls)}}"
 
 enum Node:
   // Terminal forms:
@@ -175,32 +100,150 @@ enum Node:
   case LetMethodCall(names: Ls[Local], cls: Local, method: Local, args: Ls[TrivialExpr], body: Node)
   case LetCall(names: Ls[Local], func: Local, args: Ls[TrivialExpr], body: Node)
 
-  override def toString: String = show
 
-  def show: String = toDocument.toString
+object LlirPrinter:
+  import hkmc2.utils.*
+  import hkmc2.semantics.Elaborator.State
 
-  def toDocument: Document =
+  def getVar(l: Local)(using Raise, Scope): String = l match
+    case ts: hkmc2.semantics.TermSymbol =>
+      ts.owner match
+      case S(owner) => summon[Scope].lookup_!(ts)
+      case N => summon[Scope].lookup_!(ts)
+    case ts: hkmc2.semantics.InnerSymbol =>
+      summon[Scope].lookup_!(ts)
+    case _ => summon[Scope].lookup_!(l)
+  def allocIfNew(l: Local)(using Raise, Scope): String =
+    summon[Scope].lookup(l) match
+      case S(_) => getVar(l)
+      case N =>
+        summon[Scope].allocateName(l)
+  def mkDocument(texpr: TrivialExpr)(using Raise, Scope): Document =
+    texpr match
+      case Expr.Ref(sym) => doc"${allocIfNew(sym)}"
+      case Expr.Literal(lit) => doc"${lit.idStr}"
+  def mkDocument(expr: Expr)(using Raise, Scope): Document =
+    expr match
+      case Expr.Ref(sym) => doc"${allocIfNew(sym)}"
+      case Expr.Literal(lit) => doc"${lit.idStr}"
+      case Expr.CtorApp(cls, args) =>
+        doc"${allocIfNew(cls)}(${args.map(mkDocument).mkString(",")})"
+      case Expr.Select(name, cls, field) =>
+        doc"${allocIfNew(name)}.<${allocIfNew(cls)}:$field>"
+      case Expr.BasicOp(sym, args) =>
+        doc"${sym.nme}(${args.map(mkDocument).mkString(",")})"
+      case Expr.AssignField(assignee, clsInfo, fieldName, value) => 
+        doc"${allocIfNew(assignee)}.${fieldName} := ${mkDocument(value)}"
+  def mkDocument(node: Node)(using Raise, Scope): Document =
+    node match
+      case Node.Result(res) => doc"${res.map(mkDocument).mkString(",")}"
+      case Node.Jump(func, args) =>
+        doc"jump ${allocIfNew(func)}(${args.map(mkDocument).mkString(",")})"
+      case Node.Case(scrutinee, cases, default) =>
+        val docFirst = doc"case ${mkDocument(scrutinee)} of"
+        val docCases = cases.map {
+          case (pat, node) => doc"${pat.toString} => #{  # ${mkDocument(node)} #} "
+        }.mkDocument(doc" # ")
+        default match
+          case N => doc"$docFirst #{  # $docCases #} "
+          case S(dc) =>
+            val docDeft = doc"_ => #{  # ${mkDocument(dc)} #} "
+            doc"$docFirst #{  # $docCases # $docDeft #} "
+      case Node.Panic(msg) =>
+        doc"panic ${s"\"$msg\""}"
+      case Node.LetExpr(x, expr, body) => 
+        doc"let ${allocIfNew(x)} = ${mkDocument(expr)} in # ${mkDocument(body)}"
+      case Node.LetMethodCall(xs, cls, method, args, body) =>
+        doc"let ${xs.map(allocIfNew).mkString(",")} = ${allocIfNew(cls)}.${allocIfNew(method)}(${args.map(mkDocument).mkString(",")}) in # ${mkDocument(body)}"
+      case Node.LetCall(xs, func, args, body) => 
+        doc"let* (${xs.map(allocIfNew).mkString(",")}) = ${allocIfNew(func)}(${args.map(mkDocument).mkString(",")}) in # ${mkDocument(body)}"
+  def mkDocument(defn: Func)(using Raise, Scope): Document =
+    def docParams(params: Ls[Local]): Document =
+      params.map(allocIfNew).mkString("(", ",", ")")
     given Conversion[String, Document] = raw
-    this match
-    case Result(res) => (res |> showArguments)
-    case Jump(jp, args) =>
-      doc"jump ${docSymWithUid(jp)}(${args |> showArguments})"
-    case Case(x, cases, default) =>
-      val docFirst = doc"case ${x.toString} of"
-      val docCases = cases.map {
-        case (pat, node) => doc"${pat.toString} => #{  # ${node.toDocument} #} "
-      }.mkDocument(doc" # ")
-      default match
-        case N => doc"$docFirst #{  # $docCases #} "
-        case S(dc) =>
-          val docDeft = doc"_ => #{  # ${dc.toDocument} #} "
-          doc"$docFirst #{  # $docCases # $docDeft #} "
-    case Panic(msg) =>
-      doc"panic ${s"\"$msg\""}"
-    case LetExpr(x, expr, body) => 
-      doc"let ${docSymWithUid(x)} = ${expr.toString} in # ${body.toDocument}"
-    case LetMethodCall(xs, cls, method, args, body) =>
-      doc"let ${xs.map(docSymWithUid).mkString(",")} = ${cls.nme}.${docSymWithUid(method)}(${args.map(_.toString).mkString(",")}) in # ${body.toDocument}"
-    case LetCall(xs, func, args, body) => 
-      doc"let* (${xs.map(docSymWithUid).mkString(",")}) = ${func.nme}(${args.map(_.toString).mkString(",")}) in # ${body.toDocument}"
+    val docFirst = doc"def ${allocIfNew(defn.name)}${docParams(defn.params)} ="
+    val docBody = mkDocument(defn.body)
+    doc"$docFirst #{  # $docBody #} "
+  def mkDocument(cls: ClassInfo)(using Raise, Scope): Document =
+    given Conversion[String, Document] = raw
+    val ext = if cls.parents.isEmpty then "" else " extends " + cls.parents.map(allocIfNew).mkString(", ")
+    val docFirst = doc"class ${allocIfNew(cls.symbol)}(${cls.fields.map(_.nme).mkString(",")})$ext {"
+    val docMethods = cls.methods.map { (_, func) => mkDocument(func) }.toList.mkDocument(doc" # ")
+    val docLast = doc"}"
+    doc"$docFirst #{  # $docMethods #}  # $docLast"
+  def mkDocument(prog: Program, hide: Str => Bool = defaultHidden)(using Raise, State): Document =
+    given Scope = Scope.empty
+    given Conversion[String, Document] = raw
+    val docClasses = prog.classes.filterNot(c => hide(c.symbol.nme)).map(mkDocument).toList.mkDocument(doc" # ")
+    val docDefs = prog.defs.map(mkDocument).toList.mkDocument(doc" # ")
+    val docMain = doc"entry = ${allocIfNew(prog.entry)}"
+    doc" #{ $docClasses\n$docDefs\n$docMain #} "
 
+object LlirDebugPrinter:
+  import hkmc2.utils.*
+  def docSymWithUid(sym: Local): Document = doc"${sym.nme}$$${sym.uid.toString()}"
+  def mkDocument(texpr: TrivialExpr): Document =
+    texpr match
+      case Expr.Ref(sym) => doc"${docSymWithUid(sym)}"
+      case Expr.Literal(lit) => doc"${lit.idStr}"
+  def mkDocument(expr: Expr): Document =
+    expr match
+      case Expr.Ref(sym) => doc"${docSymWithUid(sym)}"
+      case Expr.Literal(lit) => doc"${lit.idStr}"
+      case Expr.CtorApp(cls, args) =>
+        doc"${docSymWithUid(cls)}(${args.map(mkDocument).mkString(",")})"
+      case Expr.Select(name, cls, field) =>
+        doc"${docSymWithUid(name)}.<${docSymWithUid(cls)}:$field>"
+      case Expr.BasicOp(sym, args) =>
+        doc"${sym.nme}(${args.map(mkDocument).mkString(",")})"
+      case Expr.AssignField(assignee, clsInfo, fieldName, value) => 
+        doc"${docSymWithUid(assignee)}.${fieldName} := ${mkDocument(value)}"
+  def mkDocument(node: Node): Document =
+    node match
+      case Node.Result(res) => doc"${res.map(mkDocument).mkString(",")}"
+      case Node.Jump(func, args) =>
+        doc"jump ${docSymWithUid(func)}(${args.map(mkDocument).mkString(",")})"
+      case Node.Case(scrutinee, cases, default) =>
+        val docFirst = doc"case ${mkDocument(scrutinee)} of"
+        val docCases = cases.map {
+          case (pat, node) => doc"${pat.toString} => #{  # ${mkDocument(node)} #} "
+        }.mkDocument(doc" # ")
+        default match
+          case N => doc"$docFirst #{  # $docCases #} "
+          case S(dc) =>
+            val docDeft = doc"_ => #{  # ${mkDocument(dc)} #} "
+            doc"$docFirst #{  # $docCases # $docDeft #} "
+      case Node.Panic(msg) =>
+        doc"panic ${s"\"$msg\""}"
+      case Node.LetExpr(x, expr, body) => 
+        doc"let ${docSymWithUid(x)} = ${mkDocument(expr)} in # ${mkDocument(body)}"
+      case Node.LetMethodCall(xs, cls, method, args, body) =>
+        doc"let ${xs.map(docSymWithUid).mkString(",")} = ${docSymWithUid(cls)}.${docSymWithUid(method)}(${args.map(mkDocument).mkString(",")}) in # ${mkDocument(body)}"
+      case Node.LetCall(xs, func, args, body) => 
+        doc"let* (${xs.map(docSymWithUid).mkString(",")}) = ${docSymWithUid(func)}(${args.map(mkDocument).mkString(",")}) in # ${mkDocument(body)}"
+  def mkDocument(defn: Func): Document =
+    def docParams(params: Ls[Local]): Document =
+      params.map(docSymWithUid).mkString("(", ",", ")")
+    given Conversion[String, Document] = raw
+    val docFirst = doc"def ${docSymWithUid(defn.name)}${docParams(defn.params)} ="
+    val docBody = mkDocument(defn.body)
+    doc"$docFirst #{  # $docBody #} "
+  def mkDocument(cls: ClassInfo): Document =
+    given Conversion[String, Document] = raw
+    val ext = if cls.parents.isEmpty then "" else " extends " + cls.parents.map(docSymWithUid).mkString(", ")
+    val docFirst = doc"class ${docSymWithUid(cls.symbol)}(${cls.fields.map(docSymWithUid).mkString(",")})$ext"
+    if cls.methods.isEmpty then
+      doc"$docFirst"
+    else
+      val docMethods = cls.methods.map { (_, func) => mkDocument(func) }.toList.mkDocument(doc" # ")
+      doc"$docFirst { #{  # $docMethods #}  # }"
+  def mkDocument(prog: Program, hide: Str => Bool = defaultHidden): Document =
+    given Conversion[String, Document] = raw
+    val t1 = prog.classes.iterator.filterNot(c => hide(c.symbol.nme)).toArray
+    val t2 = prog.defs.toArray
+    Sorting.quickSort(t1)
+    Sorting.quickSort(t2)
+    val docClasses = t1.filterNot(c => hide(c.symbol.nme)).map(mkDocument).toList.mkDocument(doc" # ")
+    val docDefs = t2.map(mkDocument).toList.mkDocument(doc" # ")
+    val docMain = doc"entry = ${docSymWithUid(prog.entry)}"
+    doc" #{ $docClasses\n$docDefs\n$docMain #} "

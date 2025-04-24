@@ -19,8 +19,8 @@ enum Stuck:
 
   override def toString: String =
     this match
-      case StuckExpr(expr, msg) => s"StuckExpr(${expr.show}, $msg)"
-      case StuckNode(node, msg) => s"StuckNode(${node.show}, $msg)"
+      case StuckExpr(expr, msg) => s"StuckExpr(${LlirDebugPrinter.mkDocument(expr)}, $msg)"
+      case StuckNode(node, msg) => s"StuckNode(${LlirDebugPrinter.mkDocument(node)}, $msg)"
 
 final case class InterpreterError(message: String) extends Exception(message)
 
