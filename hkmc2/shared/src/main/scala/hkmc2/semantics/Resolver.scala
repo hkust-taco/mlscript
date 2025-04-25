@@ -177,7 +177,7 @@ type IResolvable = Resolvable
   * 2. Only declarations of static members may bind to a module value.
   *
   * If a term evaluates to a module value (e.g., an application to a
-  * function returning a module, a reference to a variable of module),
+  * function returning a module, a reference to a module variable),
   * it is said to be moduleful. All moduleful terms must only occur at
   * certain locations in the program. For example, a moduleful term must
   * not occur as a scrutinee because it may be re-bound to a different
