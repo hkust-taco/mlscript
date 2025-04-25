@@ -12,7 +12,7 @@ f(2)
 :sjs
 let f = foo(1, _, _)
 //│ JS (unsanitized):
-//│ let f2, f3; f3 = function f(_, _1) { return foo(1, _, _1) }; f2 = f3;
+//│ let f2, f3; f3 = function f(_0, _1) { return foo(1, _0, _1) }; f2 = f3;
 //│ f = [function f]
 
 f(2, 3)
@@ -25,26 +25,69 @@ g(2)
 //│ = [1, 2, 3]
 
 foo(_, _, 3) of 1, 2
+//│ = [function]
+
+{foo(_, _, 3)} of 1, 2
 //│ = [1, 2, 3]
 
-foo(_, _, 3)(1, 2)
+{foo(_, _, 3)}(1, 2)
 //│ = [1, 2, 3]
 
-:fixme
-foo(_, _, 3)(1, _)(2)
-//│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
+
+fun foo2(x, y, z)(a, b) = [x, y, z, a, b]
+
+{foo2(_, _, 3)(4, _)}(1, 2, 5)
+//│ = [1, 2, 3, 4, 5]
 
 
 :todo
 foo(..._)
-//│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 3 arguments but got 0
+//│ ═══[RUNTIME ERROR] TypeError: Spread syntax requires ...iterable[Symbol.iterator] to be a function
 
-:todo
+:sjs
+:de
 [..._]
-//│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ = []
+//│ Elab block List(Tup(List(Spread(keyword '...',Some(Loc(1,4,PartialApps.mls:+49)),Some(Under()))))) LocalScope
+//│ | Elab term Tup(List(Spread(keyword '...',Some(Loc(1,4,PartialApps.mls:+49)),Some(Under()))))
+//│ | | Elab subterm Tup(List(Spread(keyword '...',Some(Loc(1,4,PartialApps.mls:+49)),Some(Under()))))
+//│ | | | Elab term Under()
+//│ | | | | Elab subterm Under()
+//│ | | | | ~> Ref(_0‹818›)
+//│ | | | ~> Lam(ParamList(‹›,List(Param(‹›,_0‹818›,None)),None),Ref(_0‹818›))
+//│ | | ~> Tup(List(Spd(true,Lam(ParamList(‹›,List(Param(‹›,_0‹818›,None)),None),Ref(_0‹818›)))))
+//│ | ~> Tup(List(Spd(true,Lam(ParamList(‹›,List(Param(‹›,_0‹818›,None)),None),Ref(_0‹818›)))))
+//│ ~> Blk(List(),Tup(List(Spd(true,Lam(ParamList(‹›,List(Param(‹›,_0‹818›,None)),None),Ref(_0‹818›))))))
+//│ JS (unsanitized):
+//│ let lambda5; lambda5 = (undefined, function (_0) { return _0 }); [ ...lambda5 ]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:145)
+//│ ═══[RUNTIME ERROR] TypeError: lambda5 is not iterable
+//│     at REPL50:1:176
+//│     at ContextifyScript.runInThisContext (node:vm:136:12)
+//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at bound (node:domain:432:15)
+//│     at REPLServer.runBound [as eval] (node:domain:443:12)
+//│     at REPLServer.onLine (node:repl:927:10)
+//│     at REPLServer.emit (node:events:520:28)
+//│     at REPLServer.emit (node:domain:488:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:416:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:610:22)
+
+:sjs
+:fixme
+let f = [..._]
+f([])
+//│ JS (unsanitized):
+//│ let f4, lambda6;
+//│ lambda6 = (undefined, function (_0) {
+//│   return _0
+//│ });
+//│ f4 = [
+//│   ...lambda6
+//│ ];
+//│ runtime.safeCall(f4([]))
+//│ ═══[RUNTIME ERROR] TypeError: lambda6 is not iterable
+//│ f = undefined
 
 
 let h = _ - 2
@@ -54,86 +97,105 @@ h(1)
 //│ = -1
 
 
+:sjs
 let i = _(0, 1, _)
+//│ JS (unsanitized):
+//│ let i, i1; i1 = function i(_0, _1) { return runtime.safeCall(_0(0, 1, _1)) }; i = i1;
 //│ i = [function i]
 
+i(print, 2)
+//│ > 0 1 2
+
+:re
+i(print)(2)
+//│ ═══[RUNTIME ERROR] Error: Function 'i' expected 2 arguments but got 1
+
+// :re
 i((x, y, z) => x + y + z, 2)
 //│ = 3
 
+// :re
 i((...args) => [...args], _)(2)
-//│ = [0, 1, 2]
+//│ = [function]
 
 
 123 |> (_ + 1)
 //│ = 124
 
+// * Note: missing parens
 123 |> _ + 1
-//│ = 124
-
-123 |> (_ + 1 >> _ * 2)
-//│ = 248
-
-// * Note: lack of parens
-123 |> _ + 1 >> _ * 2
 //│ = [function]
 
-123 |> _ + 1 |> _ * 2
+123 |> ((_ + 1) >> (_ * 2))
 //│ = 248
 
-_ * 2 <| _ + 1 <| 123
+:re
+123 |> (_ + 1 >> _ * 2)
+//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
+
+(_ + 1 + _ * 2) of 123, 456
+//│ = 1036
+
+// * Note: lack of parens
+let f = _ * 2 + 1 |> print in f(3)
+//│ > 7
+
+123 |> (_ + 1) |> (_ * 2)
 //│ = 248
 
-_ + 1 >> _ * 2 <| 123
+(_ * 2) <| (_ + 1) <| 123
+//│ = 248
+
+(_ + 1) >> (_ * 2) <| 123
 //│ = 248
 
 
-:todo
-let j = _.x
-//│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: j (class hkmc2.semantics.VarSymbol)
+let j = _.x in j(x: 123)
+//│ = 123
 
-:todo
-let j = _.x(123)
-//│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: j (class hkmc2.semantics.VarSymbol)
+let j = _.x(123) in j(x: print)
+//│ > 123
 
-:todo
-let j = _.x(1, _)
-//│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ j = [function j]
 
-:todo // really support this?
-let j = _.x.y(1, _)
-//│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ j = [function j]
+let j = _.x(1, _) in j((x: tuple), 0)
+//│ = [1, 0]
+
+// ie
+let j = (obj, arg) => obj.x(1, arg) in j((x: tuple), 0)
+//│ = [1, 0]
+
+// TODO: really support this?
+let j = _.x.y(1, _) in j((x: y: tuple), 0)
+//│ = [1, 0]
 
 
 data class C(a, b, c)
 
 2 |> C(1, _, 3) |> print
-//│ > C(1, 2, 3)
+//│ = [function]
 
 :todo
 (2 |> new C(1, _, 3)) |> print
-//│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
+//│ > [function]
 
 :fixme // parsing precedence
-2 |> new C(1, _, 3) |> print
-//│ ═══[RUNTIME ERROR] TypeError: Predef.pipeInto.class is not a constructor
+2 |> (new C(1, _, 3)) |> print
+//│ > C(1, 2, 3)
+//│ FAILURE: Unexpected lack of error to fix
 
-
-_ - _ of 1, 2
-//│ = [function]
 
 (_ - _) of 1, 2
 //│ = -1
 
+// * Note: missing parens
+_ - _ of 1, 2
+//│ = [function]
 
-_ - 2 <| 1
+
+(_ - 2) <| 1
 //│ = -1
 
-1 |> _ - 2
+1 |> (_ - 2)
 //│ = -1
 
 :pe
@@ -141,36 +203,48 @@ _ - 2 <| 1
 1
 |> _ - 2
 //│ ╔══[PARSE ERROR] Expected end of input; found '_' keyword instead
-//│ ║  l.142: 	|> _ - 2
+//│ ║  l.204: 	|> _ - 2
 //│ ╙──       	   ^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.141: 	1
+//│ ║  l.203: 	1
 //│ ╙──       	^
 //│ = [function pipeInto]
 
 1
-  |> _ - 2
+  |> (_ - 2)
+//│ = -1
+
+1 |>
+  _ - 2
 //│ = -1
 
 :sjs
-1 . _ - 2
+1 . (_ - 2)
 //│ JS (unsanitized):
-//│ let lambda24; lambda24 = (undefined, function (_) { return Predef.passTo(1, _) }); lambda24 - 2
-//│ = NaN
+//│ let lambda31; lambda31 = (undefined, function (_0) { return _0 - 2 }); Predef.passTo(1, lambda31)
+//│ = [function]
 
 :sjs
 1 . (_ - 2)()
 //│ JS (unsanitized):
-//│ let tmp9, lambda25;
-//│ lambda25 = (undefined, function (_) {
-//│   return _ - 2
+//│ let tmp7, lambda32;
+//│ lambda32 = (undefined, function (_0) {
+//│   return _0 - 2
 //│ });
-//│ tmp9 = Predef.passTo(1, lambda25);
-//│ runtime.safeCall(tmp9())
+//│ tmp7 = Predef.passTo(1, lambda32);
+//│ runtime.safeCall(tmp7())
 //│ = -1
 
 1 . (_ - _)(2)
 //│ = -1
+
+
+// `_` here is interpreted as a UCS default case...
+:sjs
+let f = if _ then 1 else 0
+//│ JS (unsanitized):
+//│ let f7, tmp9; tmp9 = 1; f7 = tmp9;
+//│ f = 1
 
 
 

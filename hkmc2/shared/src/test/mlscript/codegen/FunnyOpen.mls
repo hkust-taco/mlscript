@@ -44,10 +44,10 @@ Mod.|>
 open Mod { |> }
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found end of input instead
 //│ ║  l.44: 	open Mod { |> }
-//│ ╙──      	              ^
+//│ ╙──      	               ^
 //│ ╔══[ERROR] Illegal 'open' statement shape.
 //│ ║  l.44: 	open Mod { |> }
-//│ ╙──      	     ^^^^^^^^^
+//│ ╙──      	     ^^^^^^^^^^
 
 
 :e

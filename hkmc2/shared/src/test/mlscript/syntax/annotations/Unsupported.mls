@@ -30,38 +30,34 @@ open Str
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.29: 	@debug 1 + 2
 //│ ║        	 ^^^^^
-//│ ╟── Such annotations are not supported on application terms.
-//│ ║  l.29: 	@debug 1 + 2
-//│ ╙──      	       ^^^^^
+//│ ╙── Such annotations are not supported on application terms.
 //│ = 3
 
 :w
 (@debug 1 + 2)
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.39: 	(@debug 1 + 2)
+//│ ║  l.37: 	(@debug 1 + 2)
 //│ ║        	  ^^^^^
-//│ ╟── Such annotations are not supported on application terms.
-//│ ║  l.39: 	(@debug 1 + 2)
-//│ ╙──      	        ^^^^^
+//│ ╙── Such annotations are not supported on application terms.
 //│ = 3
 
 :w
 (@debug 1) + 2
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.49: 	(@debug 1) + 2
+//│ ║  l.45: 	(@debug 1) + 2
 //│ ║        	  ^^^^^
 //│ ╟── Such annotations are not supported on integer literal terms.
-//│ ║  l.49: 	(@debug 1) + 2
+//│ ║  l.45: 	(@debug 1) + 2
 //│ ╙──      	        ^
 //│ = 3
 
 :w
 (1 + @debug 2)
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.59: 	(1 + @debug 2)
+//│ ║  l.55: 	(1 + @debug 2)
 //│ ║        	      ^^^^^
 //│ ╟── Such annotations are not supported on integer literal terms.
-//│ ║  l.59: 	(1 + @debug 2)
+//│ ║  l.55: 	(1 + @debug 2)
 //│ ╙──      	            ^
 //│ = 3
 
@@ -70,10 +66,10 @@ data class Log(msg: Str)
 :w
 id(@Log 5)
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.71: 	id(@Log 5)
+//│ ║  l.67: 	id(@Log 5)
 //│ ║        	    ^^^
 //│ ╟── Such annotations are not supported on integer literal terms.
-//│ ║  l.71: 	id(@Log 5)
+//│ ║  l.67: 	id(@Log 5)
 //│ ╙──      	        ^
 //│ = 5
 
@@ -81,12 +77,12 @@ id(@Log 5)
 :w
 @1 + 2 class Qux
 //│ ╔══[PARSE ERROR] Expected end of input; found 'class' keyword instead
-//│ ║  l.82: 	@1 + 2 class Qux
+//│ ║  l.78: 	@1 + 2 class Qux
 //│ ╙──      	       ^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.82: 	@1 + 2 class Qux
+//│ ║  l.78: 	@1 + 2 class Qux
 //│ ║        	 ^
 //│ ╟── Such annotations are not supported on application terms.
-//│ ║  l.82: 	@1 + 2 class Qux
+//│ ║  l.78: 	@1 + 2 class Qux
 //│ ╙──      	   ^^^
 //│ = 2

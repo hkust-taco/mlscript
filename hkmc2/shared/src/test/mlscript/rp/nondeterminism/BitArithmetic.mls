@@ -12,6 +12,18 @@ pattern Truthy =
 pattern Falsy =
   false | And(Falsy, Falsy) | And(Falsy, Truthy) |
   And(Truthy, Falsy) | Or(Falsy, Falsy) | Not(Truthy)
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpApp(OpApp(OpApp(OpApp(OpApp(BoolLit(true),Ident(|),List(App(Ident(And),Tup(List(Ident(Truthy), Ident(Truthy)))))),Ident(|),List(App(Ident(Or),Tup(List(Ident(Truthy), Ident(Truthy)))))),Ident(|),List(App(Ident(Or),Tup(List(Ident(Truthy), Ident(Falsy)))))),Ident(|),List(App(Ident(Or),Tup(List(Ident(Falsy), Ident(Truthy)))))),Ident(|),List(App(Ident(Not),Tup(List(Ident(Falsy)))))) (of class hkmc2.syntax.Tree$OpApp)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
 
 :expect [true, false, false, true]
 [
@@ -20,11 +32,74 @@ pattern Falsy =
   true is @compile Falsy,
   false is @compile Falsy
 ]
-//│ = [true, false, false, true]
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Truthy
+//│ ║  l.30: 	  true is @compile Truthy,
+//│ ╙──      	                   ^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.30: 	  true is @compile Truthy,
+//│ ╙──      	                   ^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Truthy
+//│ ║  l.31: 	  false is @compile Truthy,
+//│ ╙──      	                    ^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.31: 	  false is @compile Truthy,
+//│ ╙──      	                    ^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Falsy
+//│ ║  l.32: 	  true is @compile Falsy,
+//│ ╙──      	                   ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.32: 	  true is @compile Falsy,
+//│ ╙──      	                   ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Falsy
+//│ ║  l.33: 	  false is @compile Falsy
+//│ ╙──      	                    ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.33: 	  false is @compile Falsy
+//│ ╙──      	                    ^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: '[true, false, false, true]', got: '[false, false, false, false]'
+//│ = [false, false, false, false]
 
 fun isTruthy(value) = value is @compile Truthy
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Truthy
+//│ ║  l.80: 	fun isTruthy(value) = value is @compile Truthy
+//│ ╙──      	                                        ^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.80: 	fun isTruthy(value) = value is @compile Truthy
+//│ ╙──      	                                        ^^^^^^
 
 fun isFalsy(value) = value is @compile Falsy
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Falsy
+//│ ║  l.92: 	fun isFalsy(value) = value is @compile Falsy
+//│ ╙──      	                                       ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.92: 	fun isFalsy(value) = value is @compile Falsy
+//│ ╙──      	                                       ^^^^^
 
 :global
 :expect true
@@ -32,13 +107,22 @@ fun isFalsy(value) = value is @compile Falsy
 // Test each case of `Truthy`.
 
 isTruthy of true
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 isTruthy of true && true
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 isTruthy of true || true
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :re
 isTruthy of true || false
@@ -46,18 +130,30 @@ isTruthy of true || false
 //│ = false
 
 isTruthy of false || true
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 isTruthy of Not of false
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 // Test each case of `Falsy`.
 
 isFalsy of false
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 isFalsy of false && false
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :re
 // The compilation scheme does not handle non-determinism at all at the moment.
@@ -66,10 +162,19 @@ isFalsy of false && true
 //│ = false
 
 isFalsy of true && false
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 isFalsy of false || false
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 isFalsy of Not of true
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false

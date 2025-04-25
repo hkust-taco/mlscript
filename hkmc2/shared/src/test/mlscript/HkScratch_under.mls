@@ -1,0 +1,228 @@
+:js
+// :de
+// :sjs
+// :pt
+// :elt
+
+:global
+// :d
+// :todo
+
+
+:sjs
+_
+//│ JS (unsanitized):
+//│ let lambda; lambda = (undefined, function (_0) { return _0 }); lambda
+//│ = [function]
+
+:sjs
+(_)
+//│ JS (unsanitized):
+//│ let lambda1; lambda1 = (undefined, function (_0) { return _0 }); lambda1
+//│ = [function]
+
+:fixme // shouldn't crash
+:e
+y: _
+//│ ═══[ERROR] Illegal position for '_' placeholder.
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: y (class hkmc2.semantics.VarSymbol)
+
+:w
+_, _
+//│ ═══[WARNING] Pure expression in statement position
+//│ = [function]
+
+
+let inc = _ + 1
+//│ inc = [function inc]
+
+inc(2)
+//│ = 3
+
+:sjs
+_ + _
+//│ JS (unsanitized):
+//│ let lambda3; lambda3 = (undefined, function (_0, _1) { return _0 + _1 }); lambda3
+//│ = [function]
+
+let f = _ + _
+//│ f = [function f]
+
+f(2, 3)
+//│ = 5
+
+
+import "../mlscript-compile/Iter.mls"
+open Iter
+
+// :de
+filtering of [], _ =>
+  // set i = i + 1
+  // i <= n
+  1
+//│ = Iterable()
+
+// :de
+:sjs
+print(_)
+//│ JS (unsanitized):
+//│ let lambda5; lambda5 = (undefined, function (_0) { return Predef.print(_0) }); lambda5
+//│ = [function]
+
+
+:sjs
+let test = _.f(0, _, 2)
+//│ JS (unsanitized):
+//│ let test, test1;
+//│ test1 = function test(_0, _1) {
+//│   return runtime.safeCall(_0.f(0, _1, 2))
+//│ };
+//│ test = test1;
+//│ test = [function test]
+
+:re
+test(f: print)(1)
+//│ ═══[RUNTIME ERROR] Error: Function 'test' expected 2 arguments but got 1
+
+test((f: print), 1)
+//│ > 0 1 2
+
+test({f: print}, 1)
+//│ > 0 1 2
+
+{f: print}
+//│ = {f: [function print]}
+
+({f: print})
+//│ = {f: [function print]}
+
+[{f: print}]
+//│ = [{f: [function print]}]
+
+[{f: print}, 1]
+//│ = [{f: [function print]}, 1]
+
+
+:sjs
+print(inc(_))
+//│ JS (unsanitized):
+//│ let lambda6;
+//│ lambda6 = (undefined, function (_0) {
+//│   return runtime.safeCall(inc(_0))
+//│ });
+//│ Predef.print(lambda6)
+//│ > [function]
+
+:sjs
+_ is Int
+//│ JS (unsanitized):
+//│ let lambda7;
+//│ lambda7 = (undefined, function (_0) {
+//│   if (globalThis.Number.isInteger(_0)) {
+//│     return true
+//│   } else {
+//│     return false
+//│   }
+//│ });
+//│ lambda7
+//│ = [function]
+
+let f = _ is Int
+[f(1), f("1")]
+//│ = [true, false]
+//│ f = [function f]
+
+[1, "a", 3, true] filtering(_ is Int) toArray()
+//│ = [1, 3]
+
+42 is _
+//│ = true
+
+
+:sjs
+let x_to = x: _
+//│ JS (unsanitized):
+//│ let x_to, x_to1; x_to1 = function x_to(_0) { let x; x = _0; return { "x": x } }; x_to = x_to1;
+//│ x_to = [function x_to]
+
+x_to(42)
+//│ = {x: 42}
+
+
+// :sjs
+// :elt
+// :fixme // shouldn't crash
+// :e
+let mkObj = (x: _, y: _, z: 3)
+//│ mkObj = [function mkObj]
+
+mkObj(1, 2)
+//│ = {x: 1, y: 2, z: 3}
+
+// * Note: this is parsed as `{let mkObj = x: _}, y: _, z: 3`
+:fixme // shouldn't crash
+// :e
+// :slot
+let mkObj = x: _, y: _, z: 3
+//│ ═══[ERROR] Illegal position for '_' placeholder.
+//│ mkObj = [function mkObj]
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: y (class hkmc2.semantics.VarSymbol)
+
+// mkObj(1, 2)
+
+// :fixme // shouldn't crash
+// :e
+let mkObj =
+  x: _, y: _, z: 3
+//│ mkObj = [function mkObj]
+
+// :fixme // shouldn't crash
+mkObj(1, 2)
+//│ = {x: 1, y: 2, z: 3}
+
+
+let obj = f: _ + 1
+//│ obj = {f: [function f]}
+
+obj.f(123)
+//│ = 124
+
+{f: _ + 1}.f(123)
+//│ = 124
+
+
+:sjs
+_ => 1
+//│ JS (unsanitized):
+//│ let lambda9; lambda9 = (undefined, function (_) { return 1 }); lambda9
+//│ = [function]
+
+:sjs
+x => _
+//│ JS (unsanitized):
+//│ let lambda10;
+//│ lambda10 = (undefined, function (x) {
+//│   let lambda11;
+//│   lambda11 = (undefined, function (_0) {
+//│     return _0
+//│   });
+//│   return lambda11
+//│ });
+//│ lambda10
+//│ = [function]
+
+:sjs
+x => (_)
+//│ JS (unsanitized):
+//│ let lambda11;
+//│ lambda11 = (undefined, function (x) {
+//│   let lambda12;
+//│   lambda12 = (undefined, function (_0) {
+//│     return _0
+//│   });
+//│   return lambda12
+//│ });
+//│ lambda11
+//│ = [function]
+
+

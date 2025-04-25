@@ -71,7 +71,7 @@ class Translator(val elaborator: Elaborator)
       case Under() => inner(Map.empty)
       case ctor @ (_: Ident | _: Sel) =>
         lazy val resolved =
-          val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
+          val clsTrm = elaborator.cls(elaborator.term(ctor), inAppPrefix = false)
           clsTrm.symbol.flatMap(_.asClsLike) match
           case S(cls: (ClassSymbol | ModuleSymbol)) =>
             Branch(scrut(), Pattern.ClassLike(cls, clsTrm, N, false)(ctor), inner(Map.empty)) ~: Split.End
@@ -87,7 +87,7 @@ class Translator(val elaborator: Elaborator)
         case ctor: Sel => resolved
       case App(ctor @ (_: Ident | _: Sel), Tup(params)) =>
         lazy val resolved =
-          val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
+          val clsTrm = elaborator.cls(elaborator.term(ctor), inAppPrefix = false)
           clsTrm.symbol.flatMap(_.asClsLike) match
           case S(cls: (ClassSymbol | ModuleSymbol)) =>
             // TODO: handle parameters
@@ -138,7 +138,7 @@ class Translator(val elaborator: Elaborator)
           inner(captures2 ++ captures1, postfixScrut2)))
     case Under() => inner(Map.empty, scrut) // TODO: check if this is correct
     case ctor @ (_: Ident | _: Sel) =>
-      val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
+      val clsTrm = elaborator.cls(elaborator.term(ctor), inAppPrefix = false)
       clsTrm.symbol.flatMap(_.asClsLike) match
       case S(cls: (ClassSymbol | ModuleSymbol)) =>
         val kind = cls match { case _: ClassSymbol => "class" case _ => "module" }

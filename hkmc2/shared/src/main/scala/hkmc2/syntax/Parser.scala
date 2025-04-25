@@ -28,7 +28,8 @@ val charPrecList: List[Str] = List(
     "|",
     "&",
     "=",
-    "/ \\",
+    // "/ \\",
+    "/",
     "^",
     // "= !",
     "!",
@@ -39,7 +40,8 @@ val charPrecList: List[Str] = List(
     "~",
     "", // Precedence of prefix operators
     "", // Precedence of application
-    ".",
+    // ".",
+    ". \\",
   )
 
 
@@ -254,7 +256,8 @@ abstract class Parser(
             msg"since it is a continuation of the new line here" -> S(l0) :: 
             Nil))
         maybeIndented(f)
-      case (br @ BRACKETS(Indent | Curly, toks), _) :: _ =>
+      // case (br @ BRACKETS(Indent | Curly, toks), _) :: _ =>
+      case (br @ BRACKETS(Indent, toks), _) :: _ =>
         consume
         rec(toks, S(br.innerLoc), br.describe).concludeWith(f(_, true))
       case _ => f(this, false)
@@ -348,7 +351,7 @@ abstract class Parser(
       case N =>
         rule.emptyAlt match
         case S(res) =>
-          S(res)
+          S(res())
         case N =>
           err(msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> S(loc) :: Nil)
           N
@@ -359,7 +362,7 @@ abstract class Parser(
     wrap(prec, rule)(parseRuleImpl(prec, rule))
   def parseRuleImpl[A](prec: Int, rule: ParseRule[A]): Opt[A] =
     def tryEmpty(tok: Token, loc: Loc) = rule.emptyAlt match
-      case S(res) => S(res)
+      case S(res) => S(res())
       case N =>
         consume
         err(msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> S(loc) :: Nil)
@@ -409,7 +412,7 @@ abstract class Parser(
     case (tok @ (NEWLINE | SEMI | COMMA), l0) :: _ =>
       // TODO(cur)
       rule.emptyAlt match
-        case S(res) => S(res)
+        case S(res) => S(res())
         case N =>
           //err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> lastLoc :: Nil)
           err(msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> S(l0) :: Nil)
@@ -457,7 +460,7 @@ abstract class Parser(
     case Nil =>
       rule.emptyAlt match
         case S(res) =>
-          S(res)
+          S(res())
         case N =>
           err(msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found end of input instead" -> lastLoc :: Nil)
           N
@@ -679,13 +682,11 @@ abstract class Parser(
           consume; splitItem(e :: acc)
         case _ => printDbg(s"! end of split"); e :: acc
   
-  
-  /** Parse an operator block. Each block item should be a binary operator
-   *  followed by an expression, a `let` binding, or an `else` clause.
-   */
+  // TODO: rm
+  /* 
   def opBlock(using Line): OpBlock = wrap("")(OpBlock(opBlockItem(Nil).reverse))
   
-  @tailrec final private def opBlockItem(acc: Ls[Tree -> Tree])(using Line): Ls[Tree -> Tree] =
+  @tailrec final private def opBlockItem(acc: Ls[Tree -> Tree]): Ls[Tree -> Tree] =
     val item = wrap(s"index = ${acc.size + 1}"):
       cur match
       case Nil => false
@@ -714,6 +715,36 @@ abstract class Parser(
         case (COMMA | SEMI | NEWLINE, _) :: _ =>
           consume; opBlockItem(e :: acc)
         case _ => printDbg(s"! end of split"); e :: acc
+  */
+  
+  /** Parse an operator block. Each block item should be a binary operator
+   *  followed by an expression, a `let` binding, or an `else` clause.
+   *  TODO: parse let bindings
+   */
+  def opSplit(lhs: Tree, splittingOpLoc: Loc, prec: Int)(using Line): Tree =
+    wrap((lhs,splittingOpLoc,prec))(opSplitImpl(lhs, splittingOpLoc, prec, Nil))
+  def opSplitImpl(lhs: Tree, splittingOpLoc: Loc, prec: Int, acc: Ls[Tree]): Tree =
+    val e = exprCont(SplitPoint(), prec, allowNewlines = false)
+    yeetSpaces match
+    case Nil => OpSplit(lhs, acc reverse_::: e :: Nil)
+    case (NEWLINE, l0) :: _ =>
+      consume
+      opSplitImpl(lhs, splittingOpLoc, prec, e :: acc)
+    case (IDENT(op, true), l0) :: rest =>
+      assert(opPrec(op)._1 <= prec)
+      if rest.collectFirst{ case (NEWLINE, _) => }.isEmpty // TODO dedup
+      then
+        OpSplit(lhs, acc.reverse)
+      else
+        err(
+          msg"Operator cannot be used inside this operator split" -> S(l0) :: 
+          msg"as it has lower precedence than the splitting operator here" -> S(splittingOpLoc) :: 
+          Nil)
+        val rhs = expr(opPrec(op)._2)
+        opSplitImpl(OpApp(lhs, Ident(op).withLoc(S(l0)), rhs :: Nil), splittingOpLoc, prec, e :: acc)
+    case (tok, loc) :: _ => // TODO indented op block
+      err(msg"Unexpected ${tok.describe} in this position" -> S(loc) :: Nil)
+      OpSplit(lhs, acc reverse_::: errExpr :: Nil)
   
   
   final def exprCont(acc: Tree, prec: Int, allowNewlines: Bool)(using Line): Tree =
@@ -794,9 +825,19 @@ abstract class Parser(
         val newAcc = Subs(acc, idx).withLoc(S(l0 ++ l1 ++ idx.toLoc))
         exprCont(newAcc, prec, allowNewlines)
         */
-      case (br @ BRACKETS(Indent | Curly, toks @ ((IDENT(opStr, true), _) :: _)), loc) :: _ if opPrec(opStr)._1 > prec =>
+      case (br @ BRACKETS(Indent | Curly, toks @ ((IDENT(opStr, true), l0) :: _)), loc) :: _ if opPrec(opStr)._1 > prec =>
         consume
-        App(acc, rec(toks, S(loc), "operator block").concludeWith(_.opBlock))
+        if toks.collectFirst{ case (NEWLINE, _) => }.isEmpty then
+          cur = toks ::: cur
+          exprContImpl(acc, prec, allowNewlines)
+        else
+          val r = rec(toks, S(loc), "operator block")
+          val res = r.opSplit(acc, l0, prec)
+          r.yeetSpaces match
+          case Nil => res
+          case toks =>
+            cur = toks ::: cur
+            exprContImpl(res, prec, allowNewlines)
       
       case (OP("::"), l0) :: (IDENT(id, false), l1) :: _ =>
         consume
@@ -815,7 +856,7 @@ abstract class Parser(
             consume
             // rec(toks, S(br.innerLoc), br.describe).concludeWith(f(_, true))
             val rhs = rec(toks, S(l0), "operator split").concludeWith(_.split)
-            App(v, PlainTup(acc, Block(rhs).withLoc(S(l0))))
+            OpApp(acc, v, Block(rhs).withLoc(S(l0)) :: Nil)
           case _ => 
             // val rhs = simpleExpr(opPrec(opStr)._2)
             val rhs = expr(opPrec(opStr)._2)
@@ -831,7 +872,7 @@ abstract class Parser(
                     err(msg"record literal expected here; found ${rhs.describe}" -> rhs.toLoc :: Nil)
                     acc
                 }
-              case _ => App(v, PlainTup(acc, rhs))
+              case _ => OpApp(acc, v, rhs :: Nil)
             }, prec, allowNewlines)
         
         /*

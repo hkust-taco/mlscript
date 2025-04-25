@@ -59,18 +59,12 @@ print(1, 2, 3)
 1 . (print(_))()
 //│ > 1
 
-:e
-:re
-1 . print(_)()
-//│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ > 1
-//│ ═══[RUNTIME ERROR] TypeError: tmp6 is not a function
+{1 . print(_)}(2)
+//│ > 1 2
 
-// FIXME: should have the same semantics...
 1
   . print()
-//│ > 
-//│ = [function]
+//│ > 1
 
 
 2 + 2 |> print
@@ -194,7 +188,7 @@ foldr(tuple)(0, 1, 2, 3)
 :re
 foldr(+)()
 //│ ╔══[ERROR] Expected at least 1 arguments, got 0
-//│ ║  l.195: 	foldr(+)()
+//│ ║  l.189: 	foldr(+)()
 //│ ╙──       	^^^^^
 
 

@@ -3,6 +3,18 @@
 data class Box[A](val value: A)
 
 pattern NatBox = null | Box(NatBox)
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpApp(UnitLit(true),Ident(|),List(App(Ident(Box),Tup(List(Ident(NatBox)))))) (of class hkmc2.syntax.Tree$OpApp)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
 
 fun nat(n) = if n is 0 then null else Box(nat(n - 1))
 
@@ -18,70 +30,278 @@ int(nat(42))
 
 :expect true
 nat(0) is @compile NatBox
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: NatBox
+//│ ║  l.32: 	nat(0) is @compile NatBox
+//│ ╙──      	                   ^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.32: 	nat(0) is @compile NatBox
+//│ ╙──      	                   ^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 nat(1) is @compile NatBox
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: NatBox
+//│ ║  l.49: 	nat(1) is @compile NatBox
+//│ ╙──      	                   ^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.49: 	nat(1) is @compile NatBox
+//│ ╙──      	                   ^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect false
 Box(0) is @compile NatBox
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: NatBox
+//│ ║  l.66: 	Box(0) is @compile NatBox
+//│ ╙──      	                   ^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.66: 	Box(0) is @compile NatBox
+//│ ╙──      	                   ^^^^^^
 //│ = false
 
 :expect true
 nat(7) is @compile NatBox
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: NatBox
+//│ ║  l.80: 	nat(7) is @compile NatBox
+//│ ╙──      	                   ^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.80: 	nat(7) is @compile NatBox
+//│ ╙──      	                   ^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 nat(14) is @compile NatBox
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: NatBox
+//│ ║  l.97: 	nat(14) is @compile NatBox
+//│ ╙──      	                    ^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.97: 	nat(14) is @compile NatBox
+//│ ╙──      	                    ^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect false
 Box(Box(Box(Box(Box(Box(Box(0))))))) is @compile NatBox
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: NatBox
+//│ ║  l.114: 	Box(Box(Box(Box(Box(Box(Box(0))))))) is @compile NatBox
+//│ ╙──       	                                                 ^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.114: 	Box(Box(Box(Box(Box(Box(Box(0))))))) is @compile NatBox
+//│ ╙──       	                                                 ^^^^^^
 //│ = false
 
 pattern PosNatBox = Box(null | NatBox)
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpApp(UnitLit(true),Ident(|),List(Ident(NatBox))) (of class hkmc2.syntax.Tree$OpApp)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4$$anonfun$3(DeBrujinSplit.scala:39)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4(DeBrujinSplit.scala:39)
+//│ 	at: scala.collection.immutable.List.foldRight(List.scala:353)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1$$anonfun$3(DeBrujinSplit.scala:35)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1(DeBrujinSplit.scala:40)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$adapted$1(DeBrujinSplit.scala:30)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
 
 :expect false
 null is @compile PosNatBox
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: PosNatBox
+//│ ║  l.142: 	null is @compile PosNatBox
+//│ ╙──       	                 ^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.142: 	null is @compile PosNatBox
+//│ ╙──       	                 ^^^^^^^^^
 //│ = false
 
 nat(1) is @compile PosNatBox
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: PosNatBox
+//│ ║  l.155: 	nat(1) is @compile PosNatBox
+//│ ╙──       	                   ^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.155: 	nat(1) is @compile PosNatBox
+//│ ╙──       	                   ^^^^^^^^^
+//│ = false
 
 :expect true
 nat(2) is @compile PosNatBox
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: PosNatBox
+//│ ║  l.169: 	nat(2) is @compile PosNatBox
+//│ ╙──       	                   ^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.169: 	nat(2) is @compile PosNatBox
+//│ ╙──       	                   ^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 nat(3) is @compile PosNatBox
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: PosNatBox
+//│ ║  l.186: 	nat(3) is @compile PosNatBox
+//│ ╙──       	                   ^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.186: 	nat(3) is @compile PosNatBox
+//│ ╙──       	                   ^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect false
 Box(Box(Box(Box(42)))) is @compile PosNatBox
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: PosNatBox
+//│ ║  l.203: 	Box(Box(Box(Box(42)))) is @compile PosNatBox
+//│ ╙──       	                                   ^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.203: 	Box(Box(Box(Box(42)))) is @compile PosNatBox
+//│ ╙──       	                                   ^^^^^^^^^
 //│ = false
 
 pattern EvenNatBox = Box(Box(null | EvenNatBox))
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpApp(UnitLit(true),Ident(|),List(Ident(EvenNatBox))) (of class hkmc2.syntax.Tree$OpApp)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4$$anonfun$3(DeBrujinSplit.scala:39)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4(DeBrujinSplit.scala:39)
+//│ 	at: scala.collection.immutable.List.foldRight(List.scala:353)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1$$anonfun$3(DeBrujinSplit.scala:35)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1(DeBrujinSplit.scala:40)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$adapted$1(DeBrujinSplit.scala:30)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4$$anonfun$3(DeBrujinSplit.scala:39)
 
 :expect false
 nat(0) is @compile EvenNatBox
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: EvenNatBox
+//│ ║  l.231: 	nat(0) is @compile EvenNatBox
+//│ ╙──       	                   ^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.231: 	nat(0) is @compile EvenNatBox
+//│ ╙──       	                   ^^^^^^^^^^
 //│ = false
 
 :expect false
 nat(1) is @compile EvenNatBox
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: EvenNatBox
+//│ ║  l.245: 	nat(1) is @compile EvenNatBox
+//│ ╙──       	                   ^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.245: 	nat(1) is @compile EvenNatBox
+//│ ╙──       	                   ^^^^^^^^^^
 //│ = false
 
 :expect true
 nat(2) is @compile EvenNatBox
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: EvenNatBox
+//│ ║  l.259: 	nat(2) is @compile EvenNatBox
+//│ ╙──       	                   ^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.259: 	nat(2) is @compile EvenNatBox
+//│ ╙──       	                   ^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect false
 nat(3) is @compile EvenNatBox
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: EvenNatBox
+//│ ║  l.276: 	nat(3) is @compile EvenNatBox
+//│ ╙──       	                   ^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.276: 	nat(3) is @compile EvenNatBox
+//│ ╙──       	                   ^^^^^^^^^^
 //│ = false
 
 :expect true
 nat(4) is @compile EvenNatBox
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: EvenNatBox
+//│ ║  l.290: 	nat(4) is @compile EvenNatBox
+//│ ╙──       	                   ^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.290: 	nat(4) is @compile EvenNatBox
+//│ ╙──       	                   ^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 // Make the base case a new pattern.
 
@@ -91,27 +311,105 @@ null is Zero
 //│ = true
 
 pattern OddNatBox = Box(Zero | Box(OddNatBox))
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Ident(Zero),Ident(|),List(App(Ident(Box),Tup(List(Ident(OddNatBox)))))) (of class hkmc2.syntax.Tree$OpApp)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4$$anonfun$3(DeBrujinSplit.scala:39)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4(DeBrujinSplit.scala:39)
+//│ 	at: scala.collection.immutable.List.foldRight(List.scala:353)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1$$anonfun$3(DeBrujinSplit.scala:35)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1(DeBrujinSplit.scala:40)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$adapted$1(DeBrujinSplit.scala:30)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
 
 :expect false
 nat(0) is @compile OddNatBox
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: OddNatBox
+//│ ║  l.328: 	nat(0) is @compile OddNatBox
+//│ ╙──       	                   ^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.328: 	nat(0) is @compile OddNatBox
+//│ ╙──       	                   ^^^^^^^^^
 //│ = false
 
 :expect true
 nat(1) is @compile OddNatBox
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: OddNatBox
+//│ ║  l.342: 	nat(1) is @compile OddNatBox
+//│ ╙──       	                   ^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.342: 	nat(1) is @compile OddNatBox
+//│ ╙──       	                   ^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect false
 nat(2) is @compile OddNatBox
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: OddNatBox
+//│ ║  l.359: 	nat(2) is @compile OddNatBox
+//│ ╙──       	                   ^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.359: 	nat(2) is @compile OddNatBox
+//│ ╙──       	                   ^^^^^^^^^
 //│ = false
 
 :expect true
 nat(3) is @compile OddNatBox
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: OddNatBox
+//│ ║  l.373: 	nat(3) is @compile OddNatBox
+//│ ╙──       	                   ^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.373: 	nat(3) is @compile OddNatBox
+//│ ╙──       	                   ^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect false
 nat(4) is @compile OddNatBox
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: OddNatBox
+//│ ║  l.390: 	nat(4) is @compile OddNatBox
+//│ ╙──       	                   ^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.390: 	nat(4) is @compile OddNatBox
+//│ ╙──       	                   ^^^^^^^^^
 //│ = false
 
 :expect false
 Box(Box(78)) is @compile OddNatBox
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: OddNatBox
+//│ ║  l.404: 	Box(Box(78)) is @compile OddNatBox
+//│ ╙──       	                         ^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.404: 	Box(Box(78)) is @compile OddNatBox
+//│ ╙──       	                         ^^^^^^^^^
 //│ = false

@@ -12,54 +12,246 @@ pattern LaRbTree = Pair(LaTree, RbTree)
 pattern LaTree = A | Pair(A, AnyTree)
 pattern RbTree = B | Pair(AnyTree, B)
 pattern AnyTree = A | B | Pair(AnyTree, AnyTree)
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Ident(A),Ident(|),List(App(Ident(Pair),Tup(List(Ident(A), Ident(AnyTree)))))) (of class hkmc2.syntax.Tree$OpApp)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
 
 :global
 :expect true
 
 A is @compile LaTree
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: LaTree
+//│ ║  l.31: 	A is @compile LaTree
+//│ ╙──      	              ^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.31: 	A is @compile LaTree
+//│ ╙──      	              ^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 B is @compile RbTree
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: RbTree
+//│ ║  l.47: 	B is @compile RbTree
+//│ ╙──      	              ^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.47: 	B is @compile RbTree
+//│ ╙──      	              ^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 A is @compile AnyTree
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: AnyTree
+//│ ║  l.63: 	A is @compile AnyTree
+//│ ╙──      	              ^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.63: 	A is @compile AnyTree
+//│ ╙──      	              ^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 B is @compile AnyTree
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: AnyTree
+//│ ║  l.79: 	B is @compile AnyTree
+//│ ╙──      	              ^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.79: 	B is @compile AnyTree
+//│ ╙──      	              ^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 Pair(A, B) is @compile LaRbTree
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: LaRbTree
+//│ ║  l.95: 	Pair(A, B) is @compile LaRbTree
+//│ ╙──      	                       ^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.95: 	Pair(A, B) is @compile LaRbTree
+//│ ╙──      	                       ^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 Pair(Pair(A, A), Pair(B, B)) is @compile LaRbTree
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: LaRbTree
+//│ ║  l.111: 	Pair(Pair(A, A), Pair(B, B)) is @compile LaRbTree
+//│ ╙──       	                                         ^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.111: 	Pair(Pair(A, A), Pair(B, B)) is @compile LaRbTree
+//│ ╙──       	                                         ^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 Pair(Pair(A, B), B) is @compile LaRbTree
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: LaRbTree
+//│ ║  l.127: 	Pair(Pair(A, B), B) is @compile LaRbTree
+//│ ╙──       	                                ^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.127: 	Pair(Pair(A, B), B) is @compile LaRbTree
+//│ ╙──       	                                ^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 Pair(A, Pair(A, B)) is @compile LaRbTree
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: LaRbTree
+//│ ║  l.143: 	Pair(A, Pair(A, B)) is @compile LaRbTree
+//│ ╙──       	                                ^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.143: 	Pair(A, Pair(A, B)) is @compile LaRbTree
+//│ ╙──       	                                ^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 Pair(Pair(A, A), B) is @compile LaRbTree
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: LaRbTree
+//│ ║  l.159: 	Pair(Pair(A, A), B) is @compile LaRbTree
+//│ ╙──       	                                ^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.159: 	Pair(Pair(A, A), B) is @compile LaRbTree
+//│ ╙──       	                                ^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 Pair(A, Pair(B, B)) is @compile LaRbTree
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: LaRbTree
+//│ ║  l.175: 	Pair(A, Pair(B, B)) is @compile LaRbTree
+//│ ╙──       	                                ^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.175: 	Pair(A, Pair(B, B)) is @compile LaRbTree
+//│ ╙──       	                                ^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :global
 :expect false
 
 A is @compile LaRbTree
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: LaRbTree
+//│ ║  l.194: 	A is @compile LaRbTree
+//│ ╙──       	              ^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.194: 	A is @compile LaRbTree
+//│ ╙──       	              ^^^^^^^^
 //│ = false
 
 B is @compile LaRbTree
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: LaRbTree
+//│ ║  l.207: 	B is @compile LaRbTree
+//│ ╙──       	              ^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.207: 	B is @compile LaRbTree
+//│ ╙──       	              ^^^^^^^^
 //│ = false
 
 Pair(B, A) is @compile LaRbTree
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: LaRbTree
+//│ ║  l.220: 	Pair(B, A) is @compile LaRbTree
+//│ ╙──       	                       ^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.220: 	Pair(B, A) is @compile LaRbTree
+//│ ╙──       	                       ^^^^^^^^
 //│ = false
 
 Pair(A, A) is @compile LaRbTree
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: LaRbTree
+//│ ║  l.233: 	Pair(A, A) is @compile LaRbTree
+//│ ╙──       	                       ^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.233: 	Pair(A, A) is @compile LaRbTree
+//│ ╙──       	                       ^^^^^^^^
 //│ = false
 
 Pair(B, B) is @compile LaRbTree
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: LaRbTree
+//│ ║  l.246: 	Pair(B, B) is @compile LaRbTree
+//│ ╙──       	                       ^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.246: 	Pair(B, B) is @compile LaRbTree
+//│ ╙──       	                       ^^^^^^^^
 //│ = false

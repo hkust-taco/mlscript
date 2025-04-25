@@ -21,7 +21,7 @@ object DeBrujinSplit:
     /** Resolve the constructor in the elaborator context. */
     def resolve(ctor: Ident | Sel, params: Ls[Tree]): Opt[F] =
       val term = scoped("ucs:mute"):
-        elaborator.cls(ctor, inAppPrefix = false)
+        elaborator.cls(elaborator.term(ctor), inAppPrefix = false)
       term.symbol.flatMap(_.asClsLike).map:
         case symbol: (ClassSymbol | ModuleSymbol) =>
           val pattern = ClassLike(ConstructorLike.Symbol(symbol))

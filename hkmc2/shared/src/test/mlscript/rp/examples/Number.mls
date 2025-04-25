@@ -1,40 +1,179 @@
 :js
 
 pattern Digits = ("0"..="9") ~ (Digits | "")
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Bra(Round,OpApp(StrLit(0),Ident(..=),List(StrLit(9)))),Ident(~),List(Bra(Round,OpApp(Ident(Digits),Ident(|),List(StrLit()))))) (of class hkmc2.syntax.Tree$OpApp)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
 
 pattern Integer = "0" | ("1"..="9") ~ (Digits | "")
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpApp(StrLit(0),Ident(|),List(OpApp(Bra(Round,OpApp(StrLit(1),Ident(..=),List(StrLit(9)))),Ident(~),List(Bra(Round,OpApp(Ident(Digits),Ident(|),List(StrLit()))))))) (of class hkmc2.syntax.Tree$OpApp)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
 
 pattern FractionalPart = "." ~ Digits
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpApp(StrLit(.),Ident(~),List(Ident(Digits))) (of class hkmc2.syntax.Tree$OpApp)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
 
 ".1" is FractionalPart
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: FractionalPart
+//│ ║  l.45: 	".1" is FractionalPart
+//│ ╙──      	        ^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.45: 	".1" is FractionalPart
+//│ ╙──      	        ^^^^^^^^^^^^^^
+//│ = false
 
 pattern ExponentPart = ("e" | "E") ~ ("+" | "-" | "") ~ Integer
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpApp(OpApp(Bra(Round,OpApp(StrLit(e),Ident(|),List(StrLit(E)))),Ident(~),List(Bra(Round,OpApp(OpApp(StrLit(+),Ident(|),List(StrLit(-))),Ident(|),List(StrLit()))))),Ident(~),List(Ident(Integer))) (of class hkmc2.syntax.Tree$OpApp)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
 
 "e10" is ExponentPart
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: ExponentPart
+//│ ║  l.72: 	"e10" is ExponentPart
+//│ ╙──      	         ^^^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.72: 	"e10" is ExponentPart
+//│ ╙──      	         ^^^^^^^^^^^^
+//│ = false
 
 "e100" is ExponentPart
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: ExponentPart
+//│ ║  l.85: 	"e100" is ExponentPart
+//│ ╙──      	          ^^^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.85: 	"e100" is ExponentPart
+//│ ╙──      	          ^^^^^^^^^^^^
+//│ = false
 
 pattern Number = Integer ~ (FractionalPart | "") ~ (ExponentPart | "")
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpApp(OpApp(Ident(Integer),Ident(~),List(Bra(Round,OpApp(Ident(FractionalPart),Ident(|),List(StrLit()))))),Ident(~),List(Bra(Round,OpApp(Ident(ExponentPart),Ident(|),List(StrLit()))))) (of class hkmc2.syntax.Tree$OpApp)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
 
 // Test cases for Digits pattern
 // =============================
 :expect true
 "123" is Digits
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Digits
+//│ ║  l.115: 	"123" is Digits
+//│ ╙──       	         ^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.115: 	"123" is Digits
+//│ ╙──       	         ^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 "0" is Digits
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Digits
+//│ ║  l.132: 	"0" is Digits
+//│ ╙──       	       ^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.132: 	"0" is Digits
+//│ ╙──       	       ^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 "9" is Digits
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Digits
+//│ ║  l.149: 	"9" is Digits
+//│ ╙──       	       ^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.149: 	"9" is Digits
+//│ ╙──       	       ^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect false
 "a" is Digits
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Digits
+//│ ║  l.166: 	"a" is Digits
+//│ ╙──       	       ^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.166: 	"a" is Digits
+//│ ╙──       	       ^^^^^^
 //│ = false
 
 
@@ -42,18 +181,64 @@ pattern Number = Integer ~ (FractionalPart | "") ~ (ExponentPart | "")
 // ==============================
 :expect true
 "0" is Integer
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Integer
+//│ ║  l.183: 	"0" is Integer
+//│ ╙──       	       ^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.183: 	"0" is Integer
+//│ ╙──       	       ^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 "123" is Integer
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Integer
+//│ ║  l.200: 	"123" is Integer
+//│ ╙──       	         ^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.200: 	"123" is Integer
+//│ ╙──       	         ^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect false
 "001" is Integer
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Integer
+//│ ║  l.217: 	"001" is Integer
+//│ ╙──       	         ^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.217: 	"001" is Integer
+//│ ╙──       	         ^^^^^^^
 //│ = false
 
 :expect false
 "a" is Integer
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Integer
+//│ ║  l.231: 	"a" is Integer
+//│ ╙──       	       ^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.231: 	"a" is Integer
+//│ ╙──       	       ^^^^^^^
 //│ = false
 
 
@@ -61,18 +246,64 @@ pattern Number = Integer ~ (FractionalPart | "") ~ (ExponentPart | "")
 // =====================================
 :expect true
 ".123" is FractionalPart
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: FractionalPart
+//│ ║  l.248: 	".123" is FractionalPart
+//│ ╙──       	          ^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.248: 	".123" is FractionalPart
+//│ ╙──       	          ^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 ".0" is FractionalPart
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: FractionalPart
+//│ ║  l.265: 	".0" is FractionalPart
+//│ ╙──       	        ^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.265: 	".0" is FractionalPart
+//│ ╙──       	        ^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect false
 "." is FractionalPart
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: FractionalPart
+//│ ║  l.282: 	"." is FractionalPart
+//│ ╙──       	       ^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.282: 	"." is FractionalPart
+//│ ╙──       	       ^^^^^^^^^^^^^^
 //│ = false
 
 :expect false
 "0.1" is FractionalPart
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: FractionalPart
+//│ ║  l.296: 	"0.1" is FractionalPart
+//│ ╙──       	         ^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.296: 	"0.1" is FractionalPart
+//│ ╙──       	         ^^^^^^^^^^^^^^
 //│ = false
 
 
@@ -80,22 +311,81 @@ pattern Number = Integer ~ (FractionalPart | "") ~ (ExponentPart | "")
 // ===================================
 :expect true
 "e10" is ExponentPart
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: ExponentPart
+//│ ║  l.313: 	"e10" is ExponentPart
+//│ ╙──       	         ^^^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.313: 	"e10" is ExponentPart
+//│ ╙──       	         ^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 "E-10" is ExponentPart
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: ExponentPart
+//│ ║  l.330: 	"E-10" is ExponentPart
+//│ ╙──       	          ^^^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.330: 	"E-10" is ExponentPart
+//│ ╙──       	          ^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 "e+10" is ExponentPart
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: ExponentPart
+//│ ║  l.347: 	"e+10" is ExponentPart
+//│ ╙──       	          ^^^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.347: 	"e+10" is ExponentPart
+//│ ╙──       	          ^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect false
 "e" is ExponentPart
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: ExponentPart
+//│ ║  l.364: 	"e" is ExponentPart
+//│ ╙──       	       ^^^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.364: 	"e" is ExponentPart
+//│ ╙──       	       ^^^^^^^^^^^^
 //│ = false
 
 :expect false
 "e1a" is ExponentPart
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: ExponentPart
+//│ ║  l.378: 	"e1a" is ExponentPart
+//│ ╙──       	         ^^^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.378: 	"e1a" is ExponentPart
+//│ ╙──       	         ^^^^^^^^^^^^
 //│ = false
 
 
@@ -103,31 +393,52 @@ pattern Number = Integer ~ (FractionalPart | "") ~ (ExponentPart | "")
 // =============================
 :expect true
 "3.14" is Number
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 "42" is Number
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 "3.14e10" is Number
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 "1e100" is Number
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 "1234e-789" is Number
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 "0.0314E+2" is Number
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 "0.0314E-2" is Number
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect false
 "." is Number
@@ -143,32 +454,56 @@ pattern Number = Integer ~ (FractionalPart | "") ~ (ExponentPart | "")
 
 :expect true
 "3.14" is Number
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 "42" is Number
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 "3.14e10" is Number
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 "1e100" is Number
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 "1234e-789" is Number
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 "0.0314E+2" is Number
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 "0.0314E-2" is Number
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 "1.7976931348623158e+308" is Number
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false

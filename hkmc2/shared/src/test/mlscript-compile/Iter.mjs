@@ -106,6 +106,13 @@ Iterator1.class = class Iterator {
     });
     return Iter.adaptIterable(xs, lambda)
   } 
+  static withMap(op1) {
+    let lambda;
+    lambda = (undefined, function (_0) {
+      return Iter.mapping(_0, op1)
+    });
+    return lambda
+  } 
   static flattening(xss) {
     let tmp, lambda;
     lambda = (undefined, function () {
@@ -184,7 +191,7 @@ Iterator1.class = class Iterator {
     tmp = lambda;
     return Iterable1(tmp)
   } 
-  static filtering(xs1, op1) {
+  static filtering(xs1, op2) {
     let lambda;
     lambda = (undefined, function (iterator) {
       let lambda1;
@@ -195,7 +202,7 @@ Iterator1.class = class Iterator {
         tmp3: while (true) {
           scrut = next.done;
           if (scrut === false) {
-            scrut1 = runtime.safeCall(op1(next.value));
+            scrut1 = runtime.safeCall(op2(next.value));
             if (scrut1 === false) {
               tmp1 = runtime.safeCall(iterator.next());
               next = tmp1;
@@ -220,6 +227,13 @@ Iterator1.class = class Iterator {
     });
     return Iter.adaptIterable(xs1, lambda)
   } 
+  static withFilter(op3) {
+    let lambda;
+    lambda = (undefined, function (_0) {
+      return Iter.filtering(_0, op3)
+    });
+    return lambda
+  } 
   static taking(xs2, n) {
     let i, lambda;
     i = 0;
@@ -231,7 +245,32 @@ Iterator1.class = class Iterator {
     });
     return Iter.filtering(xs2, lambda)
   } 
-  static zippingWithIndex(xs3) {
+  static withMax(n1) {
+    let lambda;
+    lambda = (undefined, function (_0) {
+      return Iter.taking(_0, n1)
+    });
+    return lambda
+  } 
+  static dropping(xs3, n2) {
+    let i, lambda;
+    i = 0;
+    lambda = (undefined, function (_) {
+      let tmp;
+      tmp = i + 1;
+      i = tmp;
+      return i > n2
+    });
+    return Iter.filtering(xs3, lambda)
+  } 
+  static withoutAtLeast(n3) {
+    let lambda;
+    lambda = (undefined, function (_0) {
+      return Iter.dropping(_0, n3)
+    });
+    return lambda
+  } 
+  static zippingWithIndex(xs4) {
     let i, lambda;
     i = 0;
     lambda = (undefined, function (x) {
@@ -244,16 +283,16 @@ Iterator1.class = class Iterator {
         j
       ]
     });
-    return Iter.mapping(xs3, lambda)
+    return Iter.mapping(xs4, lambda)
   } 
-  static foldingImpl(iterator, acc, op2) {
+  static foldingImpl(iterator, acc, op4) {
     let next, scrut, tmp, tmp1, tmp2, tmp3;
     tmp = runtime.safeCall(iterator.next());
     next = tmp;
     tmp4: while (true) {
       scrut = next.done;
       if (scrut === false) {
-        tmp1 = runtime.safeCall(op2(acc, next.value));
+        tmp1 = runtime.safeCall(op4(acc, next.value));
         acc = tmp1;
         tmp2 = runtime.safeCall(iterator.next());
         next = tmp2;
@@ -266,11 +305,11 @@ Iterator1.class = class Iterator {
     }
     return acc
   } 
-  static appended(xs4, ys) {
+  static appended(xs5, ys) {
     let tmp, lambda;
     lambda = (undefined, function () {
       let xsIterator, currentIterator, tmp1, tmp2, lambda1;
-      tmp1 = Iter.getIterator(xs4);
+      tmp1 = Iter.getIterator(xs5);
       xsIterator = tmp1;
       currentIterator = xsIterator;
       lambda1 = (undefined, function () {
@@ -303,9 +342,16 @@ Iterator1.class = class Iterator {
     tmp = lambda;
     return Iterable1(tmp)
   } 
-  static reduced(xs5, op3) {
+  static withAppended(xs6) {
+    let lambda;
+    lambda = (undefined, function (_0) {
+      return Iter.appended(_0, xs6)
+    });
+    return lambda
+  } 
+  static reduced(xs7, op5) {
     let iterator1, next, scrut, tmp, tmp1, tmp2;
-    tmp = Iter.getIterator(xs5);
+    tmp = Iter.getIterator(xs7);
     iterator1 = tmp;
     tmp1 = runtime.safeCall(iterator1.next());
     next = tmp1;
@@ -315,15 +361,15 @@ Iterator1.class = class Iterator {
     } else {
       tmp2 = runtime.Unit;
     }
-    return Iter.foldingImpl(iterator1, next.value, op3)
+    return Iter.foldingImpl(iterator1, next.value, op5)
   } 
-  static folded(xs6, z, op4) {
+  static folded(xs8, z, op6) {
     let iterator1, tmp;
-    tmp = Iter.getIterator(xs6);
+    tmp = Iter.getIterator(xs8);
     iterator1 = tmp;
-    return Iter.foldingImpl(iterator1, z, op4)
+    return Iter.foldingImpl(iterator1, z, op6)
   } 
-  static rightFolded(xs7, z1, op5) {
+  static rightFolded(xs9, z1, op7) {
     let go, iterator1, tmp;
     go = function go() {
       let next, scrut, tmp1;
@@ -333,16 +379,16 @@ Iterator1.class = class Iterator {
         return z1
       } else {
         tmp1 = go();
-        return runtime.safeCall(op5(next.value, tmp1))
+        return runtime.safeCall(op7(next.value, tmp1))
       }
     };
-    tmp = Iter.getIterator(xs7);
+    tmp = Iter.getIterator(xs9);
     iterator1 = tmp;
     return go()
   } 
-  static joined(xs8, sep) {
+  static joined(xs10, sep) {
     let iterator1, next, sep$_, scrut, tmp, tmp1, tmp2, tmp3, lambda;
-    tmp = Iter.getIterator(xs8);
+    tmp = Iter.getIterator(xs10);
     iterator1 = tmp;
     tmp1 = runtime.safeCall(iterator1.next());
     next = tmp1;
@@ -362,9 +408,9 @@ Iterator1.class = class Iterator {
       return Iter.foldingImpl(iterator1, tmp3, lambda)
     }
   } 
-  static firstDefined(xs9, op6) {
+  static firstDefined(xs11, op8) {
     let iterator1, next, result, scrut, tmp, tmp1, tmp2, tmp3, tmp4;
-    tmp = Iter.getIterator(xs9);
+    tmp = Iter.getIterator(xs11);
     iterator1 = tmp;
     tmp1 = runtime.safeCall(iterator1.next());
     next = tmp1;
@@ -373,7 +419,7 @@ Iterator1.class = class Iterator {
       scrut = next.done;
       if (scrut === false) {
         if (result instanceof Option.None.class) {
-          tmp2 = runtime.safeCall(op6(next.value));
+          tmp2 = runtime.safeCall(op8(next.value));
           result = tmp2;
           tmp3 = runtime.safeCall(iterator1.next());
           next = tmp3;
@@ -389,9 +435,9 @@ Iterator1.class = class Iterator {
     }
     return result
   } 
-  static some(xs10, op7) {
+  static some(xs12, op9) {
     let iterator1, next, result, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
-    tmp = Iter.getIterator(xs10);
+    tmp = Iter.getIterator(xs12);
     iterator1 = tmp;
     tmp1 = runtime.safeCall(iterator1.next());
     next = tmp1;
@@ -404,7 +450,7 @@ Iterator1.class = class Iterator {
           result = tmp2;
           tmp3 = runtime.Unit;
         } else {
-          scrut = runtime.safeCall(op7(next.value));
+          scrut = runtime.safeCall(op9(next.value));
           if (scrut === true) {
             tmp4 = Option.Some(true);
             result = tmp4;
@@ -424,16 +470,16 @@ Iterator1.class = class Iterator {
     }
     return Option.getOrElse(result, false)
   } 
-  static each(xs11, op8) {
+  static each(xs13, op10) {
     let iterator1, next, scrut, tmp, tmp1, tmp2, tmp3, tmp4;
-    tmp = Iter.getIterator(xs11);
+    tmp = Iter.getIterator(xs13);
     iterator1 = tmp;
     tmp1 = runtime.safeCall(iterator1.next());
     next = tmp1;
     tmp5: while (true) {
       scrut = next.done;
       if (scrut === false) {
-        tmp2 = runtime.safeCall(op8(next.value));
+        tmp2 = runtime.safeCall(op10(next.value));
         tmp3 = runtime.safeCall(iterator1.next());
         next = tmp3;
         tmp4 = runtime.Unit;
@@ -473,8 +519,8 @@ Iterator1.class = class Iterator {
     });
     return Iterable1(lambda)
   } 
-  static toStack(xs12) {
-    return Iter.rightFolded(xs12, Stack.Nil, Stack.Cons)
+  static toStack(xs14) {
+    return Iter.rightFolded(xs14, Stack.Nil, Stack.Cons)
   }
   static toString() { return "Iter"; }
 });

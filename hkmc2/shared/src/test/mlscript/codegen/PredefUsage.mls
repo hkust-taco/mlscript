@@ -11,7 +11,8 @@ not(false)
 print(12)
 //│ > 12
 
-12 |> print(_)
+12 |>
+  print(_)
 //│ > 12
 
 :sjs

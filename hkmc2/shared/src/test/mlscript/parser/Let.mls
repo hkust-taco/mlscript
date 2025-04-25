@@ -53,7 +53,7 @@ let x = y class
 let x
   = 1
 //│ Parsed:
-//│ 	LetLike(keyword 'let',App(Ident(x),OpBlock(List((Ident(=),IntLit(1))))),None,None)
+//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None)
 
 let x
 = 1

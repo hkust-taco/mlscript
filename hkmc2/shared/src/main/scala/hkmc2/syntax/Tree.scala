@@ -70,6 +70,7 @@ enum Tree extends AutoLocated:
   case Tup(fields: Ls[Tree])
   case TyTup(tys: Ls[Tree])
   case App(lhs: Tree, rhs: Tree)
+  case OpApp(lhs: Tree, op: Tree, rhss: Ls[Tree])
   case Jux(lhs: Tree, rhs: Tree)
   case SynthSel(prefix: Tree, name: Ident)
   case Sel(prefix: Tree, name: Ident)
@@ -77,6 +78,8 @@ enum Tree extends AutoLocated:
   case InfixApp(lhs: Tree, kw: Keyword.Infix, rhs: Tree)
   case New(body: Opt[Tree], rft: Opt[Block])
   case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, kwLoc: Opt[Loc], split: Tree)
+  case SplitPoint()
+  case OpSplit(lhs: Tree, ops_rhss: Ls[Tree]) // the rhss trees are expressions rooted in `SplitPoint`s
   @deprecated("Use If instead", "hkmc2-ucs")
   case IfElse(cond: Tree, alt: Tree)
   case Case(kwLoc: Opt[Loc], branches: Tree)
@@ -86,7 +89,14 @@ enum Tree extends AutoLocated:
   case Outer(name: Opt[Tree])
   case Spread(kw: Keyword.Ellipsis, kwLoc: Opt[Loc], body: Opt[Tree])
   case Annotated(annotation: Tree, target: Tree)
-
+  
+  def splitOn(acc: Tree): Tree = this match
+    case SplitPoint() => acc
+    case App(lhs, rhs) => App(lhs.splitOn(acc), rhs)
+    case OpApp(lhs, op, rhss) => OpApp(lhs.splitOn(acc), op, rhss)
+    case OpSplit(lhs, rhss) => OpSplit(lhs.splitOn(acc), rhss)
+    case Error() => Error()
+  
   def children: Ls[Tree] = this match
     case _: Empty | _: Error | _: Ident | _: Literal | _: Under | _: Unt => Nil
     case Pun(_, e) => e :: Nil
@@ -105,6 +115,7 @@ enum Tree extends AutoLocated:
     case Unquoted(body) => Ls(body)
     case Tup(fields) => fields
     case App(lhs, rhs) => Ls(lhs, rhs)
+    case OpApp(lhs, op, rhss) => lhs :: op :: rhss
     case Jux(lhs, rhs) => Ls(lhs, rhs)
     case InfixApp(lhs, _, rhs) => Ls(lhs, rhs)
     case TermDef(k, head, rhs) => head :: rhs.toList
@@ -152,6 +163,7 @@ enum Tree extends AutoLocated:
     case Tup(fields) => "tuple"
     case TyTup(tys) => "type tuple"
     case App(lhs, rhs) => "application"
+    case OpApp(lhs, op, rhss) => "operator application"
     case Jux(lhs, rhs) => "juxtaposition"
     case Sel(prefix, name) => "selection"
     case SynthSel(prefix, name) => "synthetic selection"
@@ -204,9 +216,10 @@ enum Tree extends AutoLocated:
         case _ => m
       )
     
-    case PossiblyAnnotated(anns, LetLike(letLike, App(f @ Ident(nme), Tup((id: Ident) :: r :: Nil)), N, bodo))
+    case PossiblyAnnotated(anns, LetLike(letLike, OpApp(lhs, f @ Ident(nme), rhss), N, bodo))
     if nme.endsWith("=") =>
-      PossiblyAnnotated(anns, LetLike(letLike, id, S(App(Ident(nme.init), Tup(id :: r :: Nil))), bodo).withLocOf(this).desugared)
+      // TODO only do this if the lhs is non-expansive/a valid assignment receiver?
+      PossiblyAnnotated(anns, LetLike(letLike, lhs, S(OpApp(lhs, Ident(nme.init), rhss)), bodo).withLocOf(this).desugared)
     
     case _ => this
   
@@ -270,18 +283,6 @@ object PossiblyParenthesized:
   def unapply(t: Tree): S[Tree] = t match
     case Bra(BracketKind.Round, inner) => S(inner)
     case _ => S(t)
-
-/** Matches applications with underscores in some argument and/or prefix positions. */
-object PartialApp:
-  def unapply(t: App): Opt[(Tree \/ Under, Ls[Tree \/ Under])] = t match
-    case Apps(base, Tup(args) :: Nil) =>
-      var hasUnderscores = false
-      def opt(t: Tree) = t match
-        case u: Under => hasUnderscores = true; R(u)
-        case _ => L(t)
-      val res = (base |> opt, args.map(opt))
-      Opt.when(hasUnderscores)(res)
-    case _ => N
 
 
 sealed abstract class OuterKind(val desc: Str)

@@ -116,9 +116,14 @@ let Predef1;
       return runtime.safeCall(f7(receiver, ...args1))
     }
   } 
-  static call(receiver1, f8) {
+  static passTo2(receiver1, f8) {
     return (...args1) => {
-      return f8.call(receiver1, ...args1)
+      return runtime.safeCall(f8(receiver1, ...args1))
+    }
+  } 
+  static call(receiver2, f9) {
+    return (...args1) => {
+      return f9.call(receiver2, ...args1)
     }
   } 
   static print(...xs) {
@@ -150,7 +155,7 @@ let Predef1;
   static tuple(...xs1) {
     return xs1
   } 
-  static foldr(f9) {
+  static foldr(f10) {
     return (first, ...rest) => {
       let len, i, init, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
       len = rest.length;
@@ -168,7 +173,7 @@ let Predef1;
             tmp2 = i - 1;
             i = tmp2;
             tmp3 = runtime.safeCall(rest.at(i));
-            tmp4 = runtime.safeCall(f9(tmp3, init));
+            tmp4 = runtime.safeCall(f10(tmp3, init));
             init = tmp4;
             tmp5 = runtime.Unit;
             continue tmp6;
@@ -177,7 +182,7 @@ let Predef1;
           }
           break;
         }
-        return runtime.safeCall(f9(first, init))
+        return runtime.safeCall(f10(first, init))
       }
     }
   } 

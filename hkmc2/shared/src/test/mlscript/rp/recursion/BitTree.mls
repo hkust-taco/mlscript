@@ -3,61 +3,271 @@
 data class Pair[A, B](val first: A, val second: B)
 
 pattern Bit = 0 | 1
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpApp(IntLit(0),Ident(|),List(IntLit(1))) (of class hkmc2.syntax.Tree$OpApp)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
 
 :expect true
 0 is @compile Bit
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Bit
+//│ ║  l.20: 	0 is @compile Bit
+//│ ╙──      	              ^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.20: 	0 is @compile Bit
+//│ ╙──      	              ^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect true
 1 is @compile Bit
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Bit
+//│ ║  l.37: 	1 is @compile Bit
+//│ ╙──      	              ^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.37: 	1 is @compile Bit
+//│ ╙──      	              ^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :expect false
 42 is @compile Bit
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Bit
+//│ ║  l.54: 	42 is @compile Bit
+//│ ╙──      	               ^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.54: 	42 is @compile Bit
+//│ ╙──      	               ^^^
 //│ = false
 
 pattern BitTree = null | Pair(Bit | BitTree, Bit | BitTree)
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpApp(UnitLit(true),Ident(|),List(App(Ident(Pair),Tup(List(OpApp(Ident(Bit),Ident(|),List(Ident(BitTree))), OpApp(Ident(Bit),Ident(|),List(Ident(BitTree)))))))) (of class hkmc2.syntax.Tree$OpApp)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
 
 null is @compile BitTree
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: BitTree
+//│ ║  l.81: 	null is @compile BitTree
+//│ ╙──      	                 ^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.81: 	null is @compile BitTree
+//│ ╙──      	                 ^^^^^^^
+//│ = false
 
 Pair(null, null) is @compile BitTree
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: BitTree
+//│ ║  l.94: 	Pair(null, null) is @compile BitTree
+//│ ╙──      	                             ^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.94: 	Pair(null, null) is @compile BitTree
+//│ ╙──      	                             ^^^^^^^
+//│ = false
 
 pattern BitTreeAlt = null | Pair(BitTreeAlt | 0 | 1, BitTreeAlt | 0 | 1)
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpApp(UnitLit(true),Ident(|),List(App(Ident(Pair),Tup(List(OpApp(OpApp(Ident(BitTreeAlt),Ident(|),List(IntLit(0))),Ident(|),List(IntLit(1))), OpApp(OpApp(Ident(BitTreeAlt),Ident(|),List(IntLit(0))),Ident(|),List(IntLit(1)))))))) (of class hkmc2.syntax.Tree$OpApp)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
 
 :global
 :expect true
 
 null is @compile BitTreeAlt
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: BitTreeAlt
+//│ ║  l.124: 	null is @compile BitTreeAlt
+//│ ╙──       	                 ^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.124: 	null is @compile BitTreeAlt
+//│ ╙──       	                 ^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 Pair(null, null) is @compile BitTreeAlt
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: BitTreeAlt
+//│ ║  l.140: 	Pair(null, null) is @compile BitTreeAlt
+//│ ╙──       	                             ^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.140: 	Pair(null, null) is @compile BitTreeAlt
+//│ ╙──       	                             ^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 Pair(0, null) is @compile BitTreeAlt
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: BitTreeAlt
+//│ ║  l.156: 	Pair(0, null) is @compile BitTreeAlt
+//│ ╙──       	                          ^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.156: 	Pair(0, null) is @compile BitTreeAlt
+//│ ╙──       	                          ^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 Pair(0, Pair(0, null)) is @compile BitTreeAlt
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: BitTreeAlt
+//│ ║  l.172: 	Pair(0, Pair(0, null)) is @compile BitTreeAlt
+//│ ╙──       	                                   ^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.172: 	Pair(0, Pair(0, null)) is @compile BitTreeAlt
+//│ ╙──       	                                   ^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 Pair(0, Pair(0, Pair(1, Pair(0, null)))) is @compile BitTreeAlt
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: BitTreeAlt
+//│ ║  l.188: 	Pair(0, Pair(0, Pair(1, Pair(0, null)))) is @compile BitTreeAlt
+//│ ╙──       	                                                     ^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.188: 	Pair(0, Pair(0, Pair(1, Pair(0, null)))) is @compile BitTreeAlt
+//│ ╙──       	                                                     ^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 Pair(0, Pair(0, Pair(1, Pair(1, null)))) is @compile BitTreeAlt
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: BitTreeAlt
+//│ ║  l.204: 	Pair(0, Pair(0, Pair(1, Pair(1, null)))) is @compile BitTreeAlt
+//│ ╙──       	                                                     ^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.204: 	Pair(0, Pair(0, Pair(1, Pair(1, null)))) is @compile BitTreeAlt
+//│ ╙──       	                                                     ^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 :global
 :expect false
 
 Pair(2, Pair(0, Pair(1, null))) is @compile BitTreeAlt
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: BitTreeAlt
+//│ ║  l.223: 	Pair(2, Pair(0, Pair(1, null))) is @compile BitTreeAlt
+//│ ╙──       	                                            ^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.223: 	Pair(2, Pair(0, Pair(1, null))) is @compile BitTreeAlt
+//│ ╙──       	                                            ^^^^^^^^^^
 //│ = false
 
 Pair(0, Pair(0, Pair(2, null))) is @compile BitTreeAlt
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: BitTreeAlt
+//│ ║  l.236: 	Pair(0, Pair(0, Pair(2, null))) is @compile BitTreeAlt
+//│ ╙──       	                                            ^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.236: 	Pair(0, Pair(0, Pair(2, null))) is @compile BitTreeAlt
+//│ ╙──       	                                            ^^^^^^^^^^
 //│ = false
 
 Pair(0, Pair(0, Pair(1, Pair(2, null)))) is @compile BitTreeAlt
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: BitTreeAlt
+//│ ║  l.249: 	Pair(0, Pair(0, Pair(1, Pair(2, null)))) is @compile BitTreeAlt
+//│ ╙──       	                                                     ^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.249: 	Pair(0, Pair(0, Pair(1, Pair(2, null)))) is @compile BitTreeAlt
+//│ ╙──       	                                                     ^^^^^^^^^^
 //│ = false
 
 Pair(0, Pair(0, Pair(1, Pair(2, null)))) is @compile BitTreeAlt
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: BitTreeAlt
+//│ ║  l.262: 	Pair(0, Pair(0, Pair(1, Pair(2, null)))) is @compile BitTreeAlt
+//│ ╙──       	                                                     ^^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.262: 	Pair(0, Pair(0, Pair(1, Pair(2, null)))) is @compile BitTreeAlt
+//│ ╙──       	                                                     ^^^^^^^^^^
 //│ = false

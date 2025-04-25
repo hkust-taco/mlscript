@@ -1,64 +1,190 @@
 :js
 
 pattern Nullable(pattern T) = null | T
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpApp(UnitLit(true),Ident(|),List(Ident(T))) (of class hkmc2.syntax.Tree$OpApp)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
 
 object A
 
 :e
 null is @compile Nullable
-//│ ╔══[ERROR] Pattern `Nullable` expects 1 pattern argument
-//│ ║  l.3: 	pattern Nullable(pattern T) = null | T
-//│ ║       	                         ^
-//│ ╟── But no arguments were given
-//│ ║  l.8: 	null is @compile Nullable
-//│ ╙──     	                 ^^^^^^^^
+//│ ╔══[ERROR] Name not found: Nullable
+//│ ║  l.20: 	null is @compile Nullable
+//│ ╙──      	                 ^^^^^^^^
+//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ║  l.20: 	null is @compile Nullable
+//│ ╙──      	                 ^^^^^^^^
 //│ = false
 
 :e
 null is @compile Nullable(A, A)
-//│ ╔══[ERROR] Pattern `Nullable` expects 1 pattern argument
-//│ ║  l.3: 	pattern Nullable(pattern T) = null | T
-//│ ║       	                         ^
-//│ ╟── But 2 pattern arguments were given
-//│ ║  l.18: 	null is @compile Nullable(A, A)
-//│ ╙──      	                          ^^^^
+//│ ╔══[ERROR] Name not found: Nullable
+//│ ║  l.30: 	null is @compile Nullable(A, A)
+//│ ╙──      	                 ^^^^^^^^
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.30: 	null is @compile Nullable(A, A)
+//│ ╙──      	                 ^^^^^^^^
 //│ = false
 
 pattern Nullable(pattern T) = null | T
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpApp(UnitLit(true),Ident(|),List(Ident(T))) (of class hkmc2.syntax.Tree$OpApp)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
 
 null is @compile Nullable(A)
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Nullable
+//│ ║  l.53: 	null is @compile Nullable(A)
+//│ ╙──      	                 ^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithAppCtorCase (Desugarer.scala:557)
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.53: 	null is @compile Nullable(A)
+//│ ╙──      	                 ^^^^^^^^
+//│ = false
 
 A is @compile Nullable(A)
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Nullable
+//│ ║  l.66: 	A is @compile Nullable(A)
+//│ ╙──      	              ^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithAppCtorCase (Desugarer.scala:557)
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.66: 	A is @compile Nullable(A)
+//│ ╙──      	              ^^^^^^^^
+//│ = false
 
 2 is @compile Nullable(1 | 2)
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Nullable
+//│ ║  l.79: 	2 is @compile Nullable(1 | 2)
+//│ ╙──      	              ^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithAppCtorCase (Desugarer.scala:557)
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.79: 	2 is @compile Nullable(1 | 2)
+//│ ╙──      	              ^^^^^^^^
+//│ = false
 
 data class Pair[A, B](val first: A, val second: B)
 
 pattern Stack(pattern T) = null | Pair(T, Stack(T))
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpApp(UnitLit(true),Ident(|),List(App(Ident(Pair),Tup(List(Ident(T), App(Ident(Stack),Tup(List(Ident(T))))))))) (of class hkmc2.syntax.Tree$OpApp)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
+//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
 
 null is @compile Stack(A)
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Stack
+//│ ║  l.108: 	null is @compile Stack(A)
+//│ ╙──       	                 ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithAppCtorCase (Desugarer.scala:557)
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.108: 	null is @compile Stack(A)
+//│ ╙──       	                 ^^^^^
+//│ = false
 
 fun (#:) pair(a, b) = Pair(a, b)
 
 A #: null is @compile Stack(A)
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Stack
+//│ ║  l.123: 	A #: null is @compile Stack(A)
+//│ ╙──       	                      ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithAppCtorCase (Desugarer.scala:557)
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.123: 	A #: null is @compile Stack(A)
+//│ ╙──       	                      ^^^^^
+//│ = false
 
 A #: A #: null is @compile Stack(A)
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Stack
+//│ ║  l.136: 	A #: A #: null is @compile Stack(A)
+//│ ╙──       	                           ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithAppCtorCase (Desugarer.scala:557)
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.136: 	A #: A #: null is @compile Stack(A)
+//│ ╙──       	                           ^^^^^
+//│ = false
 
 A #: A #: A #: null is @compile Stack(A)
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Stack
+//│ ║  l.149: 	A #: A #: A #: null is @compile Stack(A)
+//│ ╙──       	                                ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithAppCtorCase (Desugarer.scala:557)
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.149: 	A #: A #: A #: null is @compile Stack(A)
+//│ ╙──       	                                ^^^^^
+//│ = false
 
 object B
 
 A #: B #: A #: null is @compile Stack(A)
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Stack
+//│ ║  l.164: 	A #: B #: A #: null is @compile Stack(A)
+//│ ╙──       	                                ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithAppCtorCase (Desugarer.scala:557)
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.164: 	A #: B #: A #: null is @compile Stack(A)
+//│ ╙──       	                                ^^^^^
 //│ = false
 
 A #: B #: A #: null is @compile Stack(B)
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Stack
+//│ ║  l.177: 	A #: B #: A #: null is @compile Stack(B)
+//│ ╙──       	                                ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithAppCtorCase (Desugarer.scala:557)
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.177: 	A #: B #: A #: null is @compile Stack(B)
+//│ ╙──       	                                ^^^^^
 //│ = false
 
 let zeroOne = 0 #: 1 #: null
@@ -70,31 +196,161 @@ let oneZero = 1 #: 0 #: null
 :expect true
 
 A #: B #: A #: null is @compile Stack(A | B)
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Stack
+//│ ║  l.198: 	A #: B #: A #: null is @compile Stack(A | B)
+//│ ╙──       	                                ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithAppCtorCase (Desugarer.scala:557)
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.198: 	A #: B #: A #: null is @compile Stack(A | B)
+//│ ╙──       	                                ^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 A #: B #: A #: null is @compile Stack(B | A)
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Stack
+//│ ║  l.214: 	A #: B #: A #: null is @compile Stack(B | A)
+//│ ╙──       	                                ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithAppCtorCase (Desugarer.scala:557)
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.214: 	A #: B #: A #: null is @compile Stack(B | A)
+//│ ╙──       	                                ^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 zeroOne is @compile Stack(0 | 1)
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Stack
+//│ ║  l.230: 	zeroOne is @compile Stack(0 | 1)
+//│ ╙──       	                    ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithAppCtorCase (Desugarer.scala:557)
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.230: 	zeroOne is @compile Stack(0 | 1)
+//│ ╙──       	                    ^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 oneZero is @compile Stack(0 | 1)
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Stack
+//│ ║  l.246: 	oneZero is @compile Stack(0 | 1)
+//│ ╙──       	                    ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithAppCtorCase (Desugarer.scala:557)
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.246: 	oneZero is @compile Stack(0 | 1)
+//│ ╙──       	                    ^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 null #: null is @compile Stack(Stack(0 | 1))
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Stack
+//│ ║  l.262: 	null #: null is @compile Stack(Stack(0 | 1))
+//│ ╙──       	                         ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithAppCtorCase (Desugarer.scala:557)
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.262: 	null #: null is @compile Stack(Stack(0 | 1))
+//│ ╙──       	                         ^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 zeroOne #: null is @compile Stack(Stack(0 | 1))
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Stack
+//│ ║  l.278: 	zeroOne #: null is @compile Stack(Stack(0 | 1))
+//│ ╙──       	                            ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithAppCtorCase (Desugarer.scala:557)
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.278: 	zeroOne #: null is @compile Stack(Stack(0 | 1))
+//│ ╙──       	                            ^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 null #: (1 #: null) #: null is @compile Stack(Stack(0 | 1))
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Stack
+//│ ║  l.294: 	null #: (1 #: null) #: null is @compile Stack(Stack(0 | 1))
+//│ ╙──       	                                        ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithAppCtorCase (Desugarer.scala:557)
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.294: 	null #: (1 #: null) #: null is @compile Stack(Stack(0 | 1))
+//│ ╙──       	                                        ^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 zeroOne #: oneZero #: null is @compile Stack(Stack(0 | 1))
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Stack
+//│ ║  l.310: 	zeroOne #: oneZero #: null is @compile Stack(Stack(0 | 1))
+//│ ╙──       	                                       ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithAppCtorCase (Desugarer.scala:557)
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.310: 	zeroOne #: oneZero #: null is @compile Stack(Stack(0 | 1))
+//│ ╙──       	                                       ^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 zeroOne #: null #: oneZero #: null is @compile Stack(Stack(0 | 1))
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Stack
+//│ ║  l.326: 	zeroOne #: null #: oneZero #: null is @compile Stack(Stack(0 | 1))
+//│ ╙──       	                                               ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithAppCtorCase (Desugarer.scala:557)
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.326: 	zeroOne #: null #: oneZero #: null is @compile Stack(Stack(0 | 1))
+//│ ╙──       	                                               ^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
 
 null #: zeroOne #: zeroOne #: null is @compile Stack(Stack(0 | 1))
-//│ = true
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ ╔══[ERROR] Name not found: Stack
+//│ ║  l.342: 	null #: zeroOne #: zeroOne #: null is @compile Stack(Stack(0 | 1))
+//│ ╙──       	                                               ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: dealWithAppCtorCase (Desugarer.scala:557)
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.342: 	null #: zeroOne #: zeroOne #: null is @compile Stack(Stack(0 | 1))
+//│ ╙──       	                                               ^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false

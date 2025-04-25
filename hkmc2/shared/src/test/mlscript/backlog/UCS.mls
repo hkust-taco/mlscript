@@ -101,13 +101,25 @@ else
 if 1 + 0
     == 0 then "X"
     == 1 then "A"
-//│ = "A"
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 if 1 + 1
     * 2 == 4 then "X"
     * 2 == 1 then "A"
     |> id is r then r
-//│ = 2
+//│ ╔══[PARSE ERROR] Operator cannot be used inside this operator split
+//│ ║  l.107: 	    * 2 == 4 then "X"
+//│ ║         	        ^^
+//│ ╟── as it has lower precedence than the splitting operator here
+//│ ║  l.107: 	    * 2 == 4 then "X"
+//│ ╙──       	    ^
+//│ ╔══[PARSE ERROR] Unexpected literal in this position
+//│ ║  l.107: 	    * 2 == 4 then "X"
+//│ ╙──       	           ^
+//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
+//│ ║  l.107: 	    * 2 == 4 then "X"
+//│ ╙──       	           ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 // ——— ——— ———
 
@@ -116,7 +128,7 @@ class Some(val v)
 Some(1) is
   Some of [process, rest] do "hi"
 //│ ╔══[ERROR] Unrecognized pattern (infix operator)
-//│ ║  l.117: 	  Some of [process, rest] do "hi"
+//│ ║  l.129: 	  Some of [process, rest] do "hi"
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^
 //│ = false
 
@@ -166,10 +178,10 @@ let foo =
   case
     Tuple(...elements) then elements
 //│ ╔══[ERROR] mismatched arity: expect 3, found 1
-//│ ║  l.167: 	    Tuple(...elements) then elements
+//│ ║  l.179: 	    Tuple(...elements) then elements
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern (spread)
-//│ ║  l.167: 	    Tuple(...elements) then elements
+//│ ║  l.179: 	    Tuple(...elements) then elements
 //│ ╙──       	             ^^^^^^^^
 //│ foo = [function]
 
@@ -187,28 +199,24 @@ fun foo(x) = if x is Foo.
   Bar then "Bar"
   Foo then "Foo"
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.186: 	fun foo(x) = if x is Foo.
-//│ ╙──       	                     ^^^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.186: 	fun foo(x) = if x is Foo.
-//│ ╙──       	                        ^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.186: 	fun foo(x) = if x is Foo.
-//│ ╙──       	                        ^
+//│ ║  l.198: 	fun foo(x) = if x is Foo.
+//│ ║         	                     ^^^^
+//│ ║  l.199: 	  Bar then "Bar"
+//│ ╙──       	^^
 
 fun foo(x) = if x is Foo
   .Bar then "Bar"
   .Foo then "Foo"
 //│ ╔══[PARSE ERROR] Expected an expression; found selector instead
-//│ ║  l.200: 	  .Bar then "Bar"
+//│ ║  l.208: 	  .Bar then "Bar"
 //│ ╙──       	  ^^^^
 //│ ╔══[PARSE ERROR] Unexpected selector here
-//│ ║  l.200: 	  .Bar then "Bar"
+//│ ║  l.208: 	  .Bar then "Bar"
 //│ ╙──       	  ^^^^
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.199: 	fun foo(x) = if x is Foo
+//│ ║  l.207: 	fun foo(x) = if x is Foo
 //│ ║         	                     ^^^
-//│ ║  l.200: 	  .Bar then "Bar"
+//│ ║  l.208: 	  .Bar then "Bar"
 //│ ╙──       	^^
 
 // ——— ——— ———

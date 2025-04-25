@@ -21,6 +21,7 @@ fun (>>) andThen(f, g)(x) = g(f(x))
 fun (<<) compose(f, g)(x) = f(g(x))
 
 fun (.) passTo(receiver, f)(...args) = f(receiver, ...args)
+fun (\) passTo2(receiver, f)(...args) = f(receiver, ...args)
 
 fun (|>.) call(receiver, f)(...args) = f.call(receiver, ...args)
 

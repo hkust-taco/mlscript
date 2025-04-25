@@ -38,13 +38,13 @@ fun (++) f2(a, b) = "(" + a + " + " + b + ")"
 1 ++ 2
   ** 3
     ** 4
-//│ = "(1 + [2 * [3 * 4]])"
+//│ = "(1 + [[2 * 3] * 4])"
 
 // TODO warn or error on such operator blocks
 1 ++ 2
   ** 3
   ++ 4
-//│ = "(1 + ([2 * 3] + 4))"
+//│ = "((1 + [2 * 3]) + 4)"
 
 1 ++ 2
     ** 3
@@ -68,25 +68,23 @@ if 1 + 2
 //│ IfLike:
 //│   kw = keyword 'if'
 //│   kwLoc = N
-//│   split = App:
-//│     lhs = Ident of "+"
-//│     rhs = Tup of Ls of 
-//│       IntLit of 1
-//│       App:
-//│         lhs = IntLit of 2
-//│         rhs = OpBlock of Ls of 
-//│           Tuple2:
-//│             _1 = Ident of "*"
-//│             _2 = InfixApp:
-//│               lhs = IntLit of 3
-//│               kw = keyword 'then'
-//│               rhs = IntLit of 0
+//│   split = InfixApp:
+//│     lhs = OpApp:
+//│       lhs = IntLit of 1
+//│       op = Ident of "+"
+//│       rhss = Ls of 
+//│         OpApp:
+//│           lhs = IntLit of 2
+//│           op = Ident of "*"
+//│           rhss = Ls of 
+//│             IntLit of 3
+//│     kw = keyword 'then'
+//│     rhs = IntLit of 0
 //│ JS (unsanitized):
-//│ let scrut, scrut1, scrut2;
-//│ scrut = 1;
-//│ scrut1 = scrut + 2;
-//│ scrut2 = scrut1 * 3;
-//│ if (scrut2 === true) {
+//│ let scrut, tmp17;
+//│ tmp17 = 2 * 3;
+//│ scrut = 1 + tmp17;
+//│ if (scrut === true) {
 //│   0
 //│ } else {
 //│   throw new this.Error("match error");
@@ -103,24 +101,23 @@ if 1 * 2
 //│ IfLike:
 //│   kw = keyword 'if'
 //│   kwLoc = N
-//│   split = App:
-//│     lhs = App:
-//│       lhs = Ident of "*"
-//│       rhs = Tup of Ls of 
-//│         IntLit of 1
-//│         IntLit of 2
-//│     rhs = OpBlock of Ls of 
-//│       Tuple2:
-//│         _1 = Ident of "+"
-//│         _2 = InfixApp:
-//│           lhs = IntLit of 3
-//│           kw = keyword 'then'
-//│           rhs = IntLit of 0
+//│   split = InfixApp:
+//│     lhs = OpApp:
+//│       lhs = OpApp:
+//│         lhs = IntLit of 1
+//│         op = Ident of "*"
+//│         rhss = Ls of 
+//│           IntLit of 2
+//│       op = Ident of "+"
+//│       rhss = Ls of 
+//│         IntLit of 3
+//│     kw = keyword 'then'
+//│     rhs = IntLit of 0
 //│ JS (unsanitized):
-//│ let scrut3, scrut4;
-//│ scrut3 = 1 * 2;
-//│ scrut4 = scrut3 + 3;
-//│ if (scrut4 === true) {
+//│ let scrut1, tmp18;
+//│ tmp18 = 1 * 2;
+//│ scrut1 = tmp18 + 3;
+//│ if (scrut1 === true) {
 //│   0
 //│ } else {
 //│   throw new this.Error("match error");
@@ -135,45 +132,45 @@ if 1 * 2
 if 1 + 2
   * 3 then 0
   + 4 then 0
+//│ FAILURE: Unexpected parse error
+//│ FAILURE LOCATION: opSplitImpl (Parser.scala:746)
+//│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this position
+//│ ║  l.133: 	  * 3 then 0
+//│ ╙──       	      ^^^^
 //│ Parsed tree:
 //│ IfLike:
 //│   kw = keyword 'if'
 //│   kwLoc = N
-//│   split = App:
+//│   split = InfixApp:
+//│     lhs = OpApp:
+//│       lhs = IntLit of 1
+//│       op = Ident of "+"
+//│       rhss = Ls of 
+//│         OpSplit:
+//│           lhs = IntLit of 2
+//│           ops_rhss = Ls of 
+//│             Error
+//│     kw = keyword 'then'
+//│     rhs = IntLit of 0
+//│ InfixApp:
+//│   lhs = App:
 //│     lhs = Ident of "+"
 //│     rhs = Tup of Ls of 
-//│       IntLit of 1
-//│       App:
-//│         lhs = IntLit of 2
-//│         rhs = OpBlock of Ls of 
-//│           Tuple2:
-//│             _1 = Ident of "*"
-//│             _2 = InfixApp:
-//│               lhs = IntLit of 3
-//│               kw = keyword 'then'
-//│               rhs = IntLit of 0
-//│           Tuple2:
-//│             _1 = Ident of "+"
-//│             _2 = InfixApp:
-//│               lhs = IntLit of 4
-//│               kw = keyword 'then'
-//│               rhs = IntLit of 0
-//│ JS (unsanitized):
-//│ let scrut5, scrut6, scrut7, scrut8;
-//│ scrut5 = 1;
-//│ scrut6 = scrut5 + 2;
-//│ scrut8 = scrut6 * 3;
-//│ if (scrut8 === true) {
-//│   0
-//│ } else {
-//│   scrut7 = scrut6 + 4;
-//│   if (scrut7 === true) {
-//│     0
-//│   } else {
-//│     throw new this.Error("match error");
-//│   }
-//│ }
-//│ ═══[RUNTIME ERROR] Error: match error
+//│       IntLit of 4
+//│   kw = keyword 'then'
+//│   rhs = IntLit of 0
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpSplit(IntLit(2),List(Error())) (of class hkmc2.syntax.Tree$OpSplit)
+//│ 	at: hkmc2.syntax.Tree.children(Tree.scala:141)
+//│ 	at: hkmc2.AutoLocated.subLocs$1(syntax.scala:40)
+//│ 	at: hkmc2.AutoLocated.toLoc(syntax.scala:42)
+//│ 	at: hkmc2.AutoLocated.toLoc$(syntax.scala:26)
+//│ 	at: hkmc2.syntax.Tree.toLoc(Tree.scala:41)
+//│ 	at: hkmc2.AutoLocated.subLocs$1$$anonfun$1(syntax.scala:40)
+//│ 	at: scala.collection.Iterator$$anon$10.nextCur(Iterator.scala:594)
+//│ 	at: scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:608)
+//│ 	at: scala.collection.Iterator$$anon$9.hasNext(Iterator.scala:583)
+//│ 	at: scala.collection.IterableOnceOps.minOption(IterableOnce.scala:918)
 
 
 1 ++

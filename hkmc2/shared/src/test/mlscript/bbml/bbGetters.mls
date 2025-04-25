@@ -108,9 +108,7 @@ fun test2() =
 //│ ╙──      	                ^
 //│ ╔══[ERROR] Function definition shape not yet supported for funny
 //│ ║  l.81: 	    case 0 then 0
-//│ ║        	                ^
-//│ ║  l.82: 	    case n then funny(n - 1) + 1
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	                ^
 //│ ╔══[ERROR] Variable not found: funny
 //│ ║  l.83: 	  funny
 //│ ╙──      	  ^^^^^
@@ -121,7 +119,7 @@ fun test2() =
 fun test3 =
   print("Hi")
 //│ ╔══[ERROR] Function definition shape not yet supported for test3
-//│ ║  l.122: 	  print("Hi")
+//│ ║  l.120: 	  print("Hi")
 //│ ╙──       	  ^^^^^^^^^^^
 //│ Type: ⊤
 

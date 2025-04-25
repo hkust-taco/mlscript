@@ -59,6 +59,23 @@ fun insert'(t, v) = if t is
     > v' then Node(v', l, insert(r, v))
     else t
   Empty then Node(v, Empty, Empty)
+//│ FAILURE: Unexpected parse error
+//│ FAILURE LOCATION: opSplitImpl (Parser.scala:746)
+//│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this position
+//│ ║  l.58: 	    < v' then Node(v', insert(l, v), r)
+//│ ╙──      	         ^^^^
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpSplit(Ident(v),List(Error())) (of class hkmc2.syntax.Tree$OpSplit)
+//│ 	at: hkmc2.syntax.Tree.children(Tree.scala:141)
+//│ 	at: hkmc2.AutoLocated.subLocs$1(syntax.scala:40)
+//│ 	at: hkmc2.AutoLocated.toLoc(syntax.scala:42)
+//│ 	at: hkmc2.AutoLocated.toLoc$(syntax.scala:26)
+//│ 	at: hkmc2.syntax.Tree.toLoc(Tree.scala:41)
+//│ 	at: hkmc2.AutoLocated.subLocs$1$$anonfun$1(syntax.scala:40)
+//│ 	at: scala.collection.Iterator$$anon$10.nextCur(Iterator.scala:594)
+//│ 	at: scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:608)
+//│ 	at: scala.collection.Iterator$$anon$9.hasNext(Iterator.scala:583)
+//│ 	at: scala.collection.IterableOnceOps.minOption(IterableOnce.scala:918)
 
 insert(Empty, 0) |> show
 insert(Node(0, Empty, Empty), 0) |> show
