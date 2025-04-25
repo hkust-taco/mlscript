@@ -140,7 +140,7 @@ type IResolvable = Resolvable
   * so should be good and not error prone. (See:
   * https://github.com/hkust-taco/mlscript-design-docs/blob/main/wiki/module-methods.md)
   * A consequence of this design is that, the definition of a method may
-  * not always present at compilation-time, because the type information
+  * not always be present at compilation-time, because the type information
   * of the object is absent.
   *
   * In contrast, for a (global or local) function, or a module method,
