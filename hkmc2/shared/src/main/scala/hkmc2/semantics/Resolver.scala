@@ -41,7 +41,6 @@ object Resolver:
    *    contextual arguments from the instance environment, and adds the
    *    type arguments to the type environment.
    *
-   *
    * @param parent the parent context, if any
    * @param iEnv the instance environment, mapping types to instances
    * @param tEnv the type environment, mapping type parameters to
