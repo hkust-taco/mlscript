@@ -216,9 +216,7 @@ class Resolver(tl: TraceLogger)
       case Expect.NonModule(msg) => msg.toList.map(_ -> N)
       case Expect.Any => Nil
     
-    def module = this match
-      case Expect.Module(_) => true
-      case _ => false
+    def module = isInstanceOf[Module]
     
     def nonModule = this match
       case Expect.NonModule(_) => true
