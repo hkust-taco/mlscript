@@ -1,0 +1,313 @@
+:js
+
+import "../../../mlscript-compile/apps/parsing/Test.mls"
+
+open Test { example }
+
+example of """
+type 'a foo == 'a list
+"""
+//│ > «type foo ('a) == list 'a»
+
+// (A, List[A])
+example of """
+type 'a foo == 'a * 'a list
+"""
+//│ > «type foo ('a) == 'a * list 'a»
+
+// (A, List[A], List[A])
+example of """
+:tree
+type 'a foo == 'a * 'a list * 'a list
+"""
+//│ > Define:
+//│ >   kind = Type
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`==`, 16, 16)
+//│ >       lhs = App:
+//│ >         callee = Ident of "foo"
+//│ >         argument = Tuple of Stack of 
+//│ >           Ident of "'a"
+//│ >       rhs = Infix:
+//│ >         op = Keyword(`*`, 22, 22)
+//│ >         lhs = Infix:
+//│ >           op = Keyword(`*`, 22, 22)
+//│ >           lhs = Ident of "'a"
+//│ >           rhs = App:
+//│ >             callee = Ident of "list"
+//│ >             argument = Ident of "'a"
+//│ >         rhs = App:
+//│ >           callee = Ident of "list"
+//│ >           argument = Ident of "'a"
+//│ > «type foo ('a) == 'a * list 'a * list 'a»
+
+example of """
+type ('a, 'b) foo == 'a * 'b list -> 'b
+"""
+//│ > «type foo ('a, 'b) == 'a * list 'b -> 'b»
+
+example of """
+type b == p * q * (r * s)
+"""
+//│ > «type b == p * q * r * s»
+
+example of """
+type b == (p * q)
+type f == int
+"""
+//│ > «type b == p * q»
+//│ > «type f == int»
+
+example of """
+type a == b
+type b == p * q * (r * s)
+type f == int -> int
+"""
+//│ > «type a == b»
+//│ > «type b == p * q * r * s»
+//│ > «type f == int -> int»
+
+example of """
+:tree
+type f == a -> b -> c
+type g == (a -> b) -> c
+"""
+//│ > Define:
+//│ >   kind = Type
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`==`, 16, 16)
+//│ >       lhs = Ident of "f"
+//│ >       rhs = Infix:
+//│ >         op = Keyword(`->`, 5, 3)
+//│ >         lhs = Ident of "a"
+//│ >         rhs = Infix:
+//│ >           op = Keyword(`->`, 5, 3)
+//│ >           lhs = Ident of "b"
+//│ >           rhs = Ident of "c"
+//│ > Define:
+//│ >   kind = Type
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`==`, 16, 16)
+//│ >       lhs = Ident of "g"
+//│ >       rhs = Infix:
+//│ >         op = Keyword(`->`, 5, 3)
+//│ >         lhs = Infix:
+//│ >           op = Keyword(`->`, 5, 3)
+//│ >           lhs = Ident of "a"
+//│ >           rhs = Ident of "b"
+//│ >         rhs = Ident of "c"
+//│ > «type f == a -> b -> c»
+//│ > «type g == a -> b -> c»
+
+example of """
+:tree
+type f == int * string -> float
+type g == int * (string -> float)
+"""
+//│ > Define:
+//│ >   kind = Type
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`==`, 16, 16)
+//│ >       lhs = Ident of "f"
+//│ >       rhs = Infix:
+//│ >         op = Keyword(`->`, 5, 3)
+//│ >         lhs = Infix:
+//│ >           op = Keyword(`*`, 22, 22)
+//│ >           lhs = Ident of "int"
+//│ >           rhs = Ident of "string"
+//│ >         rhs = Ident of "float"
+//│ > Define:
+//│ >   kind = Type
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`==`, 16, 16)
+//│ >       lhs = Ident of "g"
+//│ >       rhs = Infix:
+//│ >         op = Keyword(`*`, 22, 22)
+//│ >         lhs = Ident of "int"
+//│ >         rhs = Infix:
+//│ >           op = Keyword(`->`, 5, 3)
+//│ >           lhs = Ident of "string"
+//│ >           rhs = Ident of "float"
+//│ > «type f == int * string -> float»
+//│ > «type g == int * string -> float»
+
+example of """
+type 'a f == 'a * 'a
+"""
+//│ > «type f ('a) == 'a * 'a»
+
+example of """
+type foo = Bar | Qux
+let double n = n * 2
+"""
+//│ > «type foo = Bar | Qux»
+//│ > «let double n = n * 2»
+
+example of """
+type foo = Bar of int | Qux of int * int
+"""
+//│ > «type foo = Bar of int | Qux of int * int»
+
+example of """
+:tree
+type 'a option = Some of 'a | None
+"""
+//│ > Define:
+//│ >   kind = Type
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 3, 3)
+//│ >       lhs = App:
+//│ >         callee = Ident of "option"
+//│ >         argument = Tuple of Stack of 
+//│ >           Ident of "'a"
+//│ >       rhs = Infix:
+//│ >         op = Keyword(`|`, N/A, N/A)
+//│ >         lhs = Infix:
+//│ >           op = Keyword(`of`, N/A, N/A)
+//│ >           lhs = Ident of "Some"
+//│ >           rhs = Ident of "'a"
+//│ >         rhs = Ident of "None"
+//│ > «type option ('a) = Some of 'a | None»
+
+example of """
+:tree
+type 'a tree = Leaf | Node of 'a tree * 'a * 'a tree
+"""
+//│ > Define:
+//│ >   kind = Type
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 3, 3)
+//│ >       lhs = App:
+//│ >         callee = Ident of "tree"
+//│ >         argument = Tuple of Stack of 
+//│ >           Ident of "'a"
+//│ >       rhs = Infix:
+//│ >         op = Keyword(`|`, N/A, N/A)
+//│ >         lhs = Ident of "Leaf"
+//│ >         rhs = Infix:
+//│ >           op = Keyword(`of`, N/A, N/A)
+//│ >           lhs = Ident of "Node"
+//│ >           rhs = Infix:
+//│ >             op = Keyword(`*`, 22, 22)
+//│ >             lhs = Infix:
+//│ >               op = Keyword(`*`, 22, 22)
+//│ >               lhs = App:
+//│ >                 callee = Ident of "tree"
+//│ >                 argument = Ident of "'a"
+//│ >               rhs = Ident of "'a"
+//│ >             rhs = App:
+//│ >               callee = Ident of "tree"
+//│ >               argument = Ident of "'a"
+//│ > «type tree ('a) = Leaf | Node of tree 'a * 'a * tree 'a»
+
+example of """
+type ('a, 'b) twist == a list * b list
+"""
+//│ > «type twist ('a, 'b) == list a * list b»
+
+
+// example of """
+// type qux = Qux of { q : int; u: int; x :int }
+// """
+
+// example of """
+// type colour =
+//   | Red | Green | Blue | Yellow | Black | White
+//   | RGB of {r : int; g : int; b : int}
+// type 'a tree = Lf | Br of 'a * 'a tree * 'a;;
+// """
+
+example of """
+:tree
+type t = {decoration : string; substance : t'}
+and t' = Int of int | List of t list
+"""
+//│ > Define:
+//│ >   kind = Type
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 3, 3)
+//│ >       lhs = Ident of "t"
+//│ >       rhs = Bracketed#Curly of Sequence of Stack of 
+//│ >         Infix:
+//│ >           op = Keyword(`:`, 4, 3)
+//│ >           lhs = Ident of "decoration"
+//│ >           rhs = Ident of "string"
+//│ >         Infix:
+//│ >           op = Keyword(`:`, 4, 3)
+//│ >           lhs = Ident of "substance"
+//│ >           rhs = Ident of "t'"
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 3, 3)
+//│ >       lhs = Ident of "t'"
+//│ >       rhs = Infix:
+//│ >         op = Keyword(`|`, N/A, N/A)
+//│ >         lhs = Infix:
+//│ >           op = Keyword(`of`, N/A, N/A)
+//│ >           lhs = Ident of "Int"
+//│ >           rhs = Ident of "int"
+//│ >         rhs = Infix:
+//│ >           op = Keyword(`of`, N/A, N/A)
+//│ >           lhs = Ident of "List"
+//│ >           rhs = App:
+//│ >             callee = Ident of "list"
+//│ >             argument = Ident of "t"
+//│ > «type t = {decoration : string; substance : t'} and t' = Int of int | List of list t»
+
+example of """
+type int_to_int == int -> int
+"""
+//│ > «type int_to_int == int -> int»
+
+example of """
+:tree
+exception E of int * string
+"""
+//│ > Define:
+//│ >   kind = Exception
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`of`, N/A, N/A)
+//│ >       lhs = Ident of "E"
+//│ >       rhs = Infix:
+//│ >         op = Keyword(`*`, 22, 22)
+//│ >         lhs = Ident of "int"
+//│ >         rhs = Ident of "string"
+//│ > «exception E of int * string»
+
+example of """
+type 'a bst = E | N of 'a * 'a bst * 'a bst
+let rec insert x = function
+  | E -> N (x, E, E)
+  | N (y, l, r) ->
+      if x < y then N (y, insert x l, r)
+      else N (y, l, insert x r)
+let rec min_elt = function
+  | E -> failwith "min_elt called on empty tree"
+  | N (x, E, _) -> x
+  | N (_, l, _) -> min_elt l
+let rec remove x = function
+  | E -> E
+  | N (y, l, r) ->
+      if x < y then N (y, remove x l, r)
+      else if x > y then N (y, l, remove x r)
+      else
+        match (l, r) with
+        | (E, _) -> r
+        | (_, E) -> l
+        | _ ->
+            let m = min_elt r in
+            N (m, l, remove m r)
+"""
+//│ > «type bst ('a) = E | N of 'a * bst 'a * bst 'a»
+//│ > «let insert x = function E -> N (x, E, E) | N (y, l, r) -> if x < y then N (y, insert x l, r) then N (y, l, insert x r)»
+//│ > «let min_elt = function E -> failwith "min_e…" | N (x, E, _) -> x | N (_, l, _) -> min_elt l»
+//│ > «let remove x = function E -> E | N (y, l, r) -> if x < y then N (y, remove x l, r) then if x > y then N (y, l, remove x r) then match (l, r) with (E, _) -> r | (_, E) -> l | _ -> let m = min_elt r in N (m, l, remove m r)»
+

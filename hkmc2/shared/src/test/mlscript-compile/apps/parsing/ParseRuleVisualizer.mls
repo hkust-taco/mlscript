@@ -1,0 +1,94 @@
+import "../../Predef.mls"
+import "../../Stack.mls"
+import "../../Iter.mls"
+import "../../Option.mls"
+import "../../TreeTracer.mls"
+import "../../XML.mls"
+import "../../MutMap.mls"
+
+import "./ParseRule.mls"
+import "./Rules.mls"
+import "./Parser.mls"
+
+open Predef
+open Stack
+open Option
+open ParseRule { Choice }
+open Rules { syntaxKinds }
+open TreeTracer
+open XML { html, tag, style }
+
+module ParseRuleVisualizer with ...
+
+val tracer = new TreeTracer.TreeTracer()
+
+let defaultKinds = tuple of "type", "term", "typevar", "ident"
+
+let renderedKinds = new Set of defaultKinds
+
+fun reset() =
+  set renderedKinds = new Set of defaultKinds
+
+// * `rr` is the railroad library.
+fun render(rr, title: Str, rule: ParseRule.ParseRule) =
+  let helperRules = []
+  let referencedKinds = new Set()
+  let renderCache = new globalThis.Map()
+  fun sequence(lhs, rhsOpt) =
+    if rhsOpt is
+      Some(rhs) then rr.Sequence(lhs, rhs)
+      None then lhs
+  fun diagram(choicesOpt) =
+    rr.Diagram of if choicesOpt is Some(choices) then choices else []
+  fun renderChoice(parentRule, choice) = if choice is
+    Choice.End then
+      tracer.print of "found Choice.End"
+      None
+    Choice.Keyword(keyword, rest) then
+      tracer.print of "found Choice.Keyword"
+      Some of rr.Terminal(keyword.name) sequence(renderRule(rest))
+    Choice.Siding(rule, optional, rest, _) then
+      tracer.print of "found Choice.Siding"
+      Some of if renderRule(rule) is
+        let latterPart = renderRule(rest)
+        Some(optionalPart) and
+          optional then rr.Optional(optionalPart) sequence(latterPart)
+          else optionalPart sequence(latterPart)
+        None then latterPart
+    Choice.Ref(kind, _, outerPrec, innerPrec, rest) then
+      tracer.print of "found Choice.Ref to " + kind
+      if renderedKinds.has(kind) is false do
+        referencedKinds.add of kind
+      Some of rr.NonTerminal(kind, href: "#" + kind)
+        sequence(renderRule(rest))
+  fun renderRule(rule: ParseRule.ParseRule) = tracer.trace of
+    "renderRule <<< " + rule.name
+    result => "renderRule >>> "
+    () => ...
+    let
+      rest = rule.choices
+      optional = false
+      nodes = []
+    while rest is head :: tail do
+      if renderChoice(rule, head) is
+        Some(node) do nodes.push of node
+        None do set optional = true
+      set rest = tail
+    tracer.print of "nodes: ", nodes.length.toString()
+    if
+      nodes.length is 0 then None
+      let choice = rr.Choice(0, ...nodes)
+      optional is true then Some(rr.Optional(choice))
+      else Some(choice)
+  // Iteratively render the rule and its dependencies.
+  let diagrams = [[title, diagram of renderRule(rule)]]
+  while referencedKinds.size > 0 do
+    let currentKinds = referencedKinds
+    set renderedKinds = renderedKinds.union of currentKinds
+    referencedKinds = new Set()
+    diagrams.push of ...currentKinds
+      Iter.mapping of kind => 
+        let theRule = syntaxKinds |> MutMap.get(kind) |> Option.unsafe.get
+        [kind, diagram of renderRule(theRule)]
+      Iter.toArray()
+  diagrams

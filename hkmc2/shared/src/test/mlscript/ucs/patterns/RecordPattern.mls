@@ -1,10 +1,22 @@
+:js
 
-:e
+
+:todo
 fun take_1(p) =
   if p is
-    { x, y } then x + y
+    { x: a, y: b } then a + b
     else 0
-//│ ╔══[ERROR] Unrecognized pattern (curly brace section)
-//│ ║  l.5: 	    { x, y } then x + y
-//│ ╙──     	      ^^^^
+//│ ╔══[ERROR] Unrecognized pattern (block)
+//│ ║  l.7: 	    { x: a, y: b } then a + b
+//│ ╙──     	      ^^^^^^^^^^
+
+:todo
+fun take_1(p) =
+  if p is
+    { :x, :y } then x + y
+    else 0
+//│ ╔══[ERROR] Unrecognized pattern (block)
+//│ ║  l.16: 	    { :x, :y } then x + y
+//│ ╙──      	       ^^^^^
+
 

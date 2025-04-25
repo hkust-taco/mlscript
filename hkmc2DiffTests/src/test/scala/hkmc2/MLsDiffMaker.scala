@@ -112,7 +112,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       // * Perhaps this should be the default behavior of TraceLogger.
       if doTrace then super.trace(pre, post)(thunk)
       else thunk
-      
+  
   val rtl = new TraceLogger:
     override def doTrace = dbgResolving.isSet
     override def emitDbg(str: String): Unit = output(str)

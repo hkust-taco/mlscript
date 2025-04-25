@@ -44,7 +44,7 @@ fun test(x) =
 //│       this.a = a;
 //│       this.b = b;
 //│     }
-//│     toString() { return "Foo(" + globalThis.Predef.render(this.a) + ", " + globalThis.Predef.render(this.b) + ")"; }
+//│     toString() { return "Foo(" + runtime.render(this.a) + ", " + runtime.render(this.b) + ")"; }
 //│   };
 //│   tmp = x + 1;
 //│   return Foo2(x, tmp)

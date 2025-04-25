@@ -45,6 +45,7 @@ enum Tree extends AutoLocated:
   case Under()
   case Unt()
   case Ident(name: Str)
+  case Pun(eql: Bool, id: Ident) // `=ident` (eql) or `:ident` (!eql)
   case Keywrd(kw: Keyword)
   case IntLit(value: BigInt)             extends Tree with Literal
   case DecLit(value: BigDecimal)         extends Tree with Literal
@@ -88,6 +89,7 @@ enum Tree extends AutoLocated:
 
   def children: Ls[Tree] = this match
     case _: Empty | _: Error | _: Ident | _: Literal | _: Under | _: Unt => Nil
+    case Pun(_, e) => e :: Nil
     case Bra(_, e) => e :: Nil
     case Block(stmts) => stmts
     case OpBlock(items) => items.flatMap:
@@ -155,7 +157,7 @@ enum Tree extends AutoLocated:
     case SynthSel(prefix, name) => "synthetic selection"
     case DynAccess(prefix, name, true) => "dynamic index access"
     case DynAccess(prefix, name, false) => "dynamic field access"
-    case InfixApp(lhs, kw, rhs) => "infix operation"
+    case InfixApp(lhs, kw, rhs) => "infix operator"
     case New(body, _) => "new"
     case IfLike(Keyword.`if`, _, split) => "if expression"
     case IfLike(Keyword.`while`, _, split) => "while expression"
@@ -171,6 +173,7 @@ enum Tree extends AutoLocated:
     case Open(_) => "open"
     case MemberProj(_, _) => "member projection"
     case Keywrd(kw) => s"'${kw.name}' keyword"
+    case Unt() => "unit"
     case Dummy => "‹dummy›"
     
   def deparenthesized: Tree = this match
@@ -180,6 +183,9 @@ enum Tree extends AutoLocated:
   def showDbg: Str = toString // TODO
   
   lazy val desugared: Tree = this match
+    
+    case Pun(false, id) =>
+      InfixApp(id, Keyword.`:`, id)
     
     // TODO generalize to pattern-let and rm this special case
     case LetLike(kw, und @ Under(), r, b) =>

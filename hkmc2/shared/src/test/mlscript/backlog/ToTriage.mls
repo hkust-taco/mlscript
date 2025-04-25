@@ -214,7 +214,7 @@ data object Cls(x) with
 //│   get huh() {
 //│     return this.x;
 //│   }
-//│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ")"; }
+//│   toString() { return "Cls(" + runtime.render(this.x) + ")"; }
 //│ }; Cls1 = new Cls$class;
 //│ Cls1.class = Cls$class;
 

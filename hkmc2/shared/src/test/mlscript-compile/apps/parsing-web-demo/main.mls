@@ -1,0 +1,202 @@
+// Note: This file does not have a corresponding test file. It is recommended to
+// test it through the following steps.
+// 
+// 1. Install `serve` globally using `npm install -g serve`.
+// 2. Run `serve hkmc2/shared/src/test/mlscript-compile` in the project's root.
+// 3. Open the URL `http://localhost:3000/apps/parsing-web-demo` in your browser.
+//    If port 3000 is not available, use the URL suggested by the serve command.
+// 4. Try and test it in the browser.
+//
+// Note that after the file is updated, we need to manually refresh the browser.
+// Or we can use Live Server extension (or its alternatives) in VSCode to
+// automatically refresh the browser.
+
+import "../parsing/Parser.mls"
+import "../parsing/Lexer.mls"
+import "../../Iter.mls"
+import "../../XML.mls"
+import "../../Option.mls"
+import "../../Runtime.mls"
+import "../../Predef.mls"
+import "../parsing/TreeHelpers.mls"
+import "../parsing/Extension.mls"
+import "../parsing/ParseRuleVisualizer.mls"
+import "../parsing/Rules.mls"
+import "../parsing/vendors/railroad/railroad.mjs"
+import "./Examples.mls"
+
+open XML { elem }
+open Predef
+open Option { Some, None }
+open Examples
+
+module Main with ...
+
+let query = document.querySelector.bind(document)
+let editor = query("#editor")
+let selector = query("select#example")
+let parseButton = query("button#parse")
+let outputPanel = query("#output")
+
+examples Iter.each of case [key, example] then
+  let option = document.createElement of "option"
+  set option.value = key
+  set option.textContent = example.name
+  selector.appendChild of option
+  // Load the first example.
+  if editor.value is "" do
+    set editor.value = example.source
+
+// Make pressing <kbd>Tab</kbd> add two spaces at the caret's position.
+editor.addEventListener of "keydown", event =>
+  if event.key is "Tab" do
+    // Prevent the default tab behavior (focusing the next element).
+    event.preventDefault()
+    let start = editor.selectionStart
+    let end = editor.selectionEnd
+    set editor.value = editor.value.substring(0, start) + "  " + editor.value.substring(end)
+    set editor.selectionEnd = start + 2
+    set editor.selectionStart = editor.selectionEnd
+
+selector.addEventListener of "change", event =>
+  if examples.get(selector.value) is
+    Some(example) do set editor.value = example.source
+    None do throw new Error of "Example \"" + selector.value + "\" not found"
+
+parseButton.addEventListener of "click", event =>
+  let tokens = Lexer.lex(editor.value, noWhitespace: true)
+  set outputPanel.innerHTML = ""
+  Runtime.try_catch of
+    () =>
+      let trees = Parser.parse(tokens)
+      trees Iter.fromStack() Iter.each of tree => if
+        Extension.isDiagramDirective(tree) then displayRules()
+        else
+          let collapsibleTree = document.createElement("collapsible-tree")
+          set collapsibleTree.textContent = TreeHelpers.showAsTree(tree)
+          outputPanel.appendChild of collapsibleTree
+    error =>
+      let errorDisplay = document.createElement("error-display")
+      errorDisplay.setError of error
+      outputPanel.appendChild of errorDisplay
+
+let indentRegex = new RegExp("""^(\s*)""")
+
+fun parseIndentedText(text) =
+  let root = (text: "", children: [])
+  let stack = [(node: root, indent: -1)]
+  text.split("\n")
+    Iter.filtering(line => line.trim().length > 0)
+    Iter.each of line =>
+      let indent = line.match(indentRegex).[1].length
+      let text = line.substring(indent)
+      while indent <= stack.[stack.length - 1].indent do
+        stack.pop()
+      let newNode = (text: text, children: [])
+      stack.[stack.length - 1].node.children.push of newNode
+      stack.push of node: newNode, indent: indent
+  root.children
+
+// * CSS styles for the error display.
+// * The content in custom elements is placed inside the ShadowDOM, which is
+// * scoped. Therefore, styles placed directly in HTML won't be effective on
+// * elements inside custom elements. Placing CSS here is more convenient.
+let errorDisplayStyle = """
+.error-container {
+  background-color: #fdd;
+  padding: 0.375rem 0.75rem 0.5rem;
+  font-family: var(--monospace);
+  color: #991b1bff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.error-message {
+  margin: 0;
+  font-weight: bold;
+  font-size: 1.125rem;
+}
+.stack-trace {
+  font-size: 0.875rem;
+  margin: 0;
+  list-style-type: none;
+  padding-left: 0.5rem;
+}"""
+
+class CollapsibleTree extends HTMLElement with
+  fun connectedCallback() =
+    let rawText = this.textContent
+    set this.textContent = ""
+    let treeData = parseIndentedText(rawText)
+    let treeElement = createDetailsTree(treeData)
+    this.appendChild(treeElement)
+  
+  fun createDetailsTree(nodes) =
+    let fragment = document.createDocumentFragment()
+    nodes Iter.each of node =>
+      let details = document.createElement("details")
+      details.setAttribute("open", "")
+      let summary = document.createElement("summary")
+      set summary.textContent = node.text
+      details.appendChild of summary
+      if node.children.length > 0 then
+        details.appendChild of createDetailsTree(node.children)
+      else
+        details.setAttribute("leaf" ,"")
+      fragment.appendChild of details
+      let rule = document.createElement("rule")
+      rule.classList.add("rule")
+      fragment.appendChild of rule
+    fragment
+
+customElements.define of "collapsible-tree", CollapsibleTree
+
+class ErrorDisplay extends HTMLElement with
+  this.attachShadow(mode: "open")
+  
+  let _error = None
+  
+  fun connectedCallback() = this.render()
+  
+  fun setError(value) =
+    set _error = Some(value)
+    this.render()
+  
+  fun render() = if _error is Some(error) do
+    let stackLines = error.stack.split("\n")
+    if stackLines.[0].startsWith(error.name) do
+      stackLines.shift()
+    set this.shadowRoot.innerHTML = elem("div", "class": "error-container") of
+      elem("h3", "class": "error-message") of
+        error.name + ": " + error.message
+      elem("ul", "class": "stack-trace") of
+        stackLines
+          Iter.mapping of line => elem("li") of line.trim()
+          Iter.joined("")
+      elem("style") of errorDisplayStyle
+
+customElements.define of "error-display", ErrorDisplay
+
+fun makeFigures(entries) = entries
+  Iter.mapping of case [name, svg] then
+    elem("figure") of elem("figcaption")(name), svg
+  Iter.joined("")
+
+fun displayRules() =
+  open ParseRuleVisualizer
+  open Rules
+  reset()
+  set query("#syntax-diagrams>main").innerHTML = Str.concat of
+    elem("h3") of "Term"
+    makeFigures of render(railroad, "term", termRule)
+    elem("h3") of "Type"
+    makeFigures of render(railroad, "term", typeRule)
+    elem("h3") of "Definition"
+    makeFigures of render(railroad, "term", declRule)
+    elem("h3") of "Extension"
+    extendedKinds
+      Iter.mapping of kindName =>
+        makeFigures of render(railroad, kindName, getRuleByKind(kindName))
+      Iter.joined("")
+
+displayRules()

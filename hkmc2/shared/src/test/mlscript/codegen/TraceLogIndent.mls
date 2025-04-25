@@ -61,7 +61,7 @@ f(1,2)(3)
 :showRepl
 :traceJS
 f(1,2)(-3)
-//│ REPL> Sending: globalThis.Predef.TraceLogger.enabled = true; globalThis.Predef.TraceLogger.resetIndent(0)
+//│ REPL> Sending: runtime.TraceLogger.enabled = true; runtime.TraceLogger.resetIndent(0)
 //│ REPL> Collected:
 //│ >  Unit { class: [class Unit] }
 //│ REPL> Sending: block$res9 = undefined
@@ -90,10 +90,10 @@ f(1,2)(-3)
 //│ > | | => 42
 //│ > | => 42
 //│ > => 42
-//│ REPL> Sending: globalThis.Predef.TraceLogger.enabled = false
+//│ REPL> Sending: runtime.TraceLogger.enabled = false
 //│ REPL> Collected:
 //│ >  false
-//│ REPL> Sending: try { runtime.checkCall(this.Predef.printRaw(block$res9)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res9)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  45
 //│ >  Unit { class: [class Unit] }
@@ -112,7 +112,7 @@ f(1,2)(-4)
 //│ >  undefined
 //│ REPL> Parsed:
 //│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(this.Predef.printRaw(block$res10)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res10)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  45
 //│ >  Unit { class: [class Unit] }

@@ -7,7 +7,7 @@ fun f(x, y) = x + y
 f(2, 3)
 //│ JS:
 //│ f = function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 2, true, args.length);
+//│   runtime.checkArgs("f", 2, true, args.length);
 //│   let x = args[0];
 //│   let y = args[1];
 //│   return x + y
@@ -52,10 +52,10 @@ f(3)(4)
 //│ ╙──      	    ^^^
 //│ JS:
 //│ f1 = function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
+//│   runtime.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
 //│   return (...args1) => {
-//│     globalThis.Predef.checkArgs("", 2, true, args1.length);
+//│     runtime.checkArgs("", 2, true, args1.length);
 //│     let y = args1[0];
 //│     let z = args1[1];
 //│     let tmp1;
@@ -83,7 +83,7 @@ let f = (x, y) => x + y
 f(2)
 //│ JS:
 //│ f6 = function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 2, true, args.length);
+//│   runtime.checkArgs("f", 2, true, args.length);
 //│   let x = args[0];
 //│   let y = args[1];
 //│   return x + y
@@ -116,7 +116,7 @@ Cls(1, 2).f(3)
 //│     tmp3 = tmp2 + z;
 //│     return tmp3 + p
 //│   }
-//│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ", " + globalThis.Predef.render(this.y) + ")"; }
+//│   toString() { return "Cls(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; }
 //│ };
 //│ tmp1 = Cls1(1, 2);
 //│ block$res7 = runtime.safeCall(tmp1.f(3));
@@ -139,7 +139,7 @@ Cls(1, 2).f(3)
 //│   }
 //│   get f$__checkNotMethod() { runtime.deboundMethod("f", "Cls"); }
 //│   f(...args) {
-//│     globalThis.Predef.checkArgs("f", 2, true, args.length);
+//│     runtime.checkArgs("f", 2, true, args.length);
 //│     let z = args[0];
 //│     let p = args[1];
 //│     let tmp3, tmp4;
@@ -147,7 +147,7 @@ Cls(1, 2).f(3)
 //│     tmp4 = tmp3 + z;
 //│     return tmp4 + p
 //│   }
-//│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ", " + globalThis.Predef.render(this.y) + ")"; }
+//│   toString() { return "Cls(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; }
 //│ };
 //│ tmp2 = runtime.checkCall(Cls3(1, 2));
 //│ block$res8 = runtime.safeCall(tmp2.f(3));
@@ -171,11 +171,11 @@ Cls(1, 2).f(3, 4)(5)
 //│   }
 //│   get f$__checkNotMethod() { runtime.deboundMethod("f", "Cls"); }
 //│   f(...args) {
-//│     globalThis.Predef.checkArgs("f", 2, true, args.length);
+//│     runtime.checkArgs("f", 2, true, args.length);
 //│     let z = args[0];
 //│     let p = args[1];
 //│     return (...args1) => {
-//│       globalThis.Predef.checkArgs("", 2, true, args1.length);
+//│       runtime.checkArgs("", 2, true, args1.length);
 //│       let q = args1[0];
 //│       let s = args1[1];
 //│       let tmp5, tmp6, tmp7, tmp8;
@@ -186,7 +186,7 @@ Cls(1, 2).f(3, 4)(5)
 //│       return tmp8 + s
 //│     }
 //│   }
-//│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ", " + globalThis.Predef.render(this.y) + ")"; }
+//│   toString() { return "Cls(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; }
 //│ };
 //│ tmp3 = runtime.checkCall(Cls5(1, 2));
 //│ tmp4 = tmp3.f(3, 4);
@@ -251,11 +251,11 @@ if M.A(1).y is
 //│       }
 //│       get f$__checkNotMethod() { runtime.deboundMethod("f", "A"); }
 //│       f(...args) {
-//│         globalThis.Predef.checkArgs("f", 1, true, args.length);
+//│         runtime.checkArgs("f", 1, true, args.length);
 //│         let y = args[0];
 //│         return this.x + y
 //│       }
-//│       toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; }
+//│       toString() { return "A(" + runtime.render(this.x) + ")"; }
 //│     };
 //│   }
 //│   static toString() { return "M"; }

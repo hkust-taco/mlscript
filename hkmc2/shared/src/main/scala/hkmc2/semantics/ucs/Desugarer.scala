@@ -2,7 +2,7 @@ package hkmc2
 package semantics
 package ucs
 
-import syntax.{Keyword, Tree}, Tree.*
+import syntax.{Keyword, Tree, BracketKind}, Tree.*
 import mlscript.utils.*, shorthands.*
 import Message.MessageContext
 import utils.TraceLogger
@@ -523,7 +523,7 @@ class Desugarer(val elaborator: Elaborator)
         // Raise an error and discard `sequel`. Use `fallback` instead.
         raise(ErrorReport(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc :: Nil))
         fallback
-    pattern.deparenthesized match
+    pattern.deparenthesized.desugared match
       // A single wildcard pattern.
       case Under() => _ => ctx => sequel(ctx)
       // Alias pattern
@@ -610,6 +610,16 @@ class Desugarer(val elaborator: Elaborator)
       case Jux(Ident(".."), Ident(_)) => fallback => _ =>
         raise(ErrorReport(msg"Illegal rest pattern." -> pattern.toLoc :: Nil))
         fallback
+      case InfixApp(id: Ident, Keyword.`:`, pat) => fallback => ctx =>
+        val sym = VarSymbol(id)
+        val ctxWithAlias = ctx + (id.name -> sym)
+        Split.Let(sym, ref.sel(id, N),
+          expandMatch(sym, pat, sequel)(fallback)(ctxWithAlias))
+      case Block(st :: Nil) => fallback => ctx =>
+        expandMatch(scrutSymbol, st, sequel)(fallback)(ctx)
+      // case Block(sts) => fallback => ctx => // TODO
+      case Bra(BracketKind.Curly | BracketKind.Round, inner) => fallback => ctx =>
+        expandMatch(scrutSymbol, inner, sequel)(fallback)(ctx)
       case pattern => fallback => _ =>
         // Raise an error and discard `sequel`. Use `fallback` instead.
         raise(ErrorReport(msg"Unrecognized pattern (${pattern.describe})" -> pattern.toLoc :: Nil))

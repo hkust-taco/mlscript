@@ -55,7 +55,7 @@ fun foo(x, y) =
 //│   constructor(y0$) {
 //│     this.y0$ = y0$;
 //│   }
-//│   toString() { return "foo$capture(" + globalThis.Predef.render(this.y0$) + ")"; }
+//│   toString() { return "foo$capture(" + runtime.render(this.y0$) + ")"; }
 //│ };
 //│ foo1 = function foo(x, y) {
 //│   let tmp, M$, capture;
@@ -103,7 +103,7 @@ data class A(x) with
 //│   getA() {
 //│     return this.M$.getB()
 //│   }
-//│   toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; }
+//│   toString() { return "A(" + runtime.render(this.x) + ")"; }
 //│ };
 
 :expect 2
@@ -258,7 +258,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│       get newB() {
 //│         return B$(this);
 //│       }
-//│       toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; }
+//│       toString() { return "A(" + runtime.render(this.x) + ")"; }
 //│     };
 //│     scrut = 0;
 //│     if (scrut instanceof M18.A.class) {

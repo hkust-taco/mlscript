@@ -1,0 +1,245 @@
+
+import "../../Predef.mls"
+
+open Predef
+
+import "../../Char.mls"
+import "../../Stack.mls"
+import "../../Str.mls"
+import "../../Option.mls"
+import "../../Iter.mls"
+
+import "./Token.mls"
+
+open Stack
+open Str
+open Option { Some, None}
+open Token { LiteralKind, LineLookupTable }
+
+type StackType = Stack.Cons | Stack.Nil
+type TokenType = Token.Token
+type Opt[T] = Some[T] | None
+
+module Lexer with ...
+
+class Location(start: Int, end: Int)
+
+class Message(description: Str, location: Location)
+
+class Report(messages: StackType[Message])
+
+pattern IdentifierStart = Char.Letter | "_"
+
+pattern IdentifierBody = Char.Letter | Char.Digit | "_" | "'"
+
+pattern Operator =
+  "," | ";" |
+  "!" | "#" | "%" | "&" | "*" | "+" | "-" | "/" | ":" | "<" |
+  "=" | ">" | "?" | "@" | "\\" | "^" | "|" | "~" | "."
+
+pattern Bracket = "(" | ")" | "[" | "]" | "{" | "}"
+
+pattern IdentifierQuote = "'" | "`"
+
+fun makeLineLookupTable(text: Str): LineLookupTable =
+  let
+    i = 0
+    n = text.length
+    ns = []
+  while i < n do
+    let i' = text.indexOf("\n", i)
+    if i' == -1 then
+      set i = n
+      ns.push(n)
+    else
+      set i = i' + 1
+      ns.push(i')
+  LineLookupTable(ns)
+
+fun lex(str: Str, options) =
+  use LineLookupTable = makeLineLookupTable(str)
+  
+  fun char(idx: Int) = if idx < str.length
+    then (Some of str.charAt of idx) else None
+  
+  // Consume a sequence of characters that satisfy a predicate.
+  // The function returns the accumulated string and the following index.
+  fun take(pred: Str -> Bool, idx: Int, acc: Str): [Int, Str] =
+    while (char of idx) is Some(ch) and pred(ch)
+      then
+        set
+          idx += 1
+          acc += ch
+      else [idx, acc]
+  
+  fun whitespace(idx: Int): Int =
+    while char(idx) is Some(Char.Whitespace)
+      then set idx = idx + 1
+      else idx
+  
+  fun digits(idx: Int, acc: Str) =
+    while char(idx) is Some(Char.Digit as ch)
+      then
+        set idx = idx + 1
+        set acc = acc + ch
+      else [idx, acc]
+  
+  fun hex(idx: Int, acc: Str) =
+    while char(idx) is Some(Char.Digit as ch)
+      then
+        set idx = idx + 1
+        set acc = acc + ch
+      else [idx, acc]
+  
+  fun identifier(idx: Int, acc: Str) =
+    while char(idx) is Some(IdentifierBody as ch) then
+      set idx = idx + 1
+      set acc = acc + ch
+    else tuple of
+      idx
+      if acc is
+        "true" then Token.boolean("true", idx)
+        "false" then Token.boolean("false", idx)
+        else Token.identifier(acc, idx)
+  
+  fun operator(idx: Int, acc: Str) =
+    while char(idx) is Some(Operator as ch)
+      then
+        set idx = idx + 1
+        set acc = acc + ch
+      else [idx, Token.symbol(acc, idx)]
+      
+  fun comment(idx: Int) =
+    let start = idx
+    let content = ""
+    if char(idx) is
+      Some("/") then
+        set idx = idx + 1
+        while char(idx) is Some(ch)
+          and ch !== "\n" then
+            set idx = idx + 1
+            set content = content + ch
+          else [idx, Token.comment(content, start, idx)]
+      Some("*") then
+        let terminated = false
+        set idx = idx + 1
+        while terminated is false and char(idx) is
+          Some("*") and char(idx + 1) is Some("/") then
+            set idx = idx + 2
+            set terminated = true
+          Some(ch) then
+            set idx = idx + 1
+            set content = content + ch
+          else
+            if terminated then
+              [idx, Token.comment(content, start, idx)]
+            else
+              [idx, Token.error(start, idx)]
+      else operator(idx, "/")
+  
+  fun scanHexDigits(idx: Int, lim: Int, acc: Int, cnt: Int): [Int, Int, Int] =
+    if char(idx) is Some(Char.HexDigit as ch) and
+      cnt < lim then scanHexDigits(idx + 1, lim, acc * 16 + parseInt(ch, 16), cnt + 1)
+      else scanHexDigits(idx + 1, lim, acc, cnt + 1)
+    else [idx, acc, cnt]
+  
+  fun escape(idx: Int): [Int, Opt[Str]] = if char(idx) is
+    Some("n") then [idx + 1, Some("\n")]
+    Some("r") then [idx + 1, Some("\r")]
+    Some("t") then [idx + 1, Some("\t")]
+    Some("0") then [idx + 1, Some("\u{0}")]
+    Some("b") then [idx + 1, Some("\b")]
+    Some("f") then [idx + 1, Some("\f")]
+    Some("\"") then [idx + 1, Some("\"")]
+    Some("\\") then [idx + 1, Some("\\")]
+    Some("x") then
+      if scanHexDigits(idx + 1, 2, 0, 0) is [idx, cp, cnt] then ...
+      // TODO: ensure that `cnt == 2`
+      tuple of idx, if cnt is 0 then None else Some of String.fromCodePoint(cp)
+    Some("u") and
+      // Unicode code point escape: "\u{XXXXXX}"
+      char(idx + 1) is Some("{") then
+        if scanHexDigits(idx + 2, 6, 0, 0) is [idx, cp, cnt] then ...
+        // TODO: ensure that `1 <= cnt <= 6`
+        let idx = if char(idx) is Some("}") then idx + 1 else
+          // TODO: report missing "}"
+          idx
+        tuple of idx, if cnt is 0 then None else Some of String.fromCodePoint(cp)
+      // Trandition Unicode range: "\uXXXX"
+      else
+        if scanHexDigits(idx + 1, 4, 0, 0) is [idx, cp, cnt] then ...
+        // TODO: ensure that `cnt == 4`
+        tuple of idx, if cnt is 0 then None else Some of String.fromCodePoint(cp)
+    Some(ch) then [idx + 1, Some(ch)]
+    None then [idx, None]
+  
+  fun string(idx: Int): [Int, Token.Literal] =
+    let
+      startIndex = idx
+      content = ""
+      terminated = false
+    while terminated is false do
+      if char(idx) is
+        Some("\"") do
+          set
+            terminated = true
+            idx += 1
+        Some("\\") do
+          if escape(idx + 1) is [idx', chOpt] then ...
+          set idx = idx'
+          if chOpt is Some(ch) do set content += ch
+        Some(ch) do
+          set
+            idx += 1
+            content += ch
+        None do
+          // TODO report missing quote
+          set terminated = true
+    [idx, Token.string(content, startIndex, idx)]
+  
+  fun number(idx: Int, head: Str) = if
+    head is "0" and char(idx) is
+      None then [idx, Token.integer("0", idx)]
+      Some("b") and take(x => x is Char.BinDigit, idx + 1, "") is [idx', bs] then
+        [idx', Token.integer("0b" ~ bs, idx)]
+      Some("o") and take(x => x is Char.OctDigit, idx + 1, "") is [idx', os] then
+        [idx', Token.integer("0o" ~ os, idx)]
+      Some("x") and take(x => x is Char.HexDigit, idx + 1, "") is [idx', xs] then
+        [idx', Token.integer("0x" ~ xs, idx)]
+      Some(".") and digits(idx + 1, ".") is [idx', ds] then
+        [idx', Token.decimal("0." ~ ds, idx)]
+      Some(_) and digits(idx, head) is [idx', integer] then
+        [idx', Token.integer(integer, idx)]
+    digits(idx, head) is [idx', integer] and
+      char(idx') is Some(".") and digits(idx' + 1, "") is [idx'', fraction] then
+        [idx'', Token.decimal(integer ~ "." ~ fraction, idx)]
+      else [idx', Token.integer(integer, idx)]
+  
+  fun scan(idx: Int, acc: StackType[TokenType]): StackType[TokenType] =
+    fun go(idx: Int, tok: TokenType) = if
+      options.noWhitespace and tok is
+        Token.Comment then scan(idx, acc)
+        Token.Space then scan(idx, acc)
+      else scan(idx, tok :: acc)
+    
+    if char(idx) is
+      None then reverse of acc
+      Some(Char.Whitespace) and whitespace(idx) is idx' then
+        go(idx', Token.space(idx, idx'))
+      Some("\"") then go(..string(idx + 1))
+      Some(Bracket as b) then go(idx + 1, Token.symbol(b, idx))
+      Some("/") then go(..comment(idx + 1))
+      Some(Operator as ch) then go(..operator(idx + 1, ch))
+      Some(Char.Digit as ch) then go(..number(idx + 1, ch))
+      Some(IdentifierStart as ch) then go(..identifier(idx + 1, ch))
+      Some(IdentifierQuote as quote)
+        and char(idx + 1) is Some(IdentifierStart as ch)
+        and identifier(idx + 2, quote + ch) is [idx', token] and
+          token is Token.Identifier(name, _) then
+            go(idx', Token.identifier(name, idx))
+          else go(idx + 1, Token.error(idx, idx + 1))
+      Some(other) then
+        print("Unrecognized character: '" ~ other ~ "'")
+        go(idx + 1, Token.error(idx, idx + 1))
+  
+  scan(0, Nil)

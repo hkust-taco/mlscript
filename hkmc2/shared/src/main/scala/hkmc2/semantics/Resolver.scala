@@ -485,9 +485,14 @@ class Resolver(tl: TraceLogger)
           case tup: Term.Tup => (
             !tup.fields.exists(_.isInstanceOf[Spd]),
             tup.fields.map:
+              case Fld(asc = S(_)) => 0
               case _: Fld => 1
               case _: Spd => 0
-            .sum,
+            .sum +
+            tup.fields.exists:
+              case Fld(asc = S(_)) => true
+              case _ => false
+            .into(if _ then 1 else 0)
           )
           // Other: spread arguments
           case _ => (false, 0)
@@ -512,33 +517,41 @@ class Resolver(tl: TraceLogger)
            * try to pair as many as possible.
            */
           @tailrec
-          def zip(ps: Ls[Param], as: Ls[Elem], beforeSpread: Bool): Unit = (ps, as) match
+          def zip(ps: Ls[Param], as: Ls[Elem], recordArgs: Ls[Fld], beforeSpread: Bool): Ls[Fld] = (ps, as) match
             // The spread argument takes all the remaining arguments.
             case (ps, (a: Spd) :: as) =>
               traverse(a.term, expect = NonModule(N))
-              zip(ps, as, false)
+              zip(ps, as, recordArgs, false)
             case (ps, a :: as) if !beforeSpread =>
               a.subTerms.foreach(traverse(_, expect = NonModule(N)))
-              zip(ps, as, false)
+              zip(ps, as, recordArgs, false)
             
             // Pair the parameter and the argument.
-            case (p :: ps, (a: Fld) :: as) =>
+            case (p :: ps, (a @ Fld(asc = N)) :: as) =>
               traverse(a.term, 
                 // note: we accept regular arguments for module parameters
                 expect = if p.modulefulness.isModuleful
                   then Any
                   else NonModule(S(msg"Module argument passed to a non-module parameter."))
               )
-              zip(ps, as, true)
+              zip(ps, as, recordArgs, true)
             
-            // If there are more parameters, there must be a spread argument before.
-            case (p :: ps, Nil) => ()
+            // Record Arguments. They are pushed to the last parameter.
+            case (_, (a @ Fld(asc = S(_))) :: as) =>
+              zip(ps, as, a :: recordArgs, true)
+            
+            // If there are more parameters, there must be a spread
+            // argument, or some record arguments before.
+            case (p :: ps, Nil) =>
+              recordArgs.reverse
+              
             // If there are more arguments, all of them go to `restParam`.
             case (Nil, a :: as) =>
               a.subTerms.foreach(traverse(_, expect = NonModule(N)))
-              zip(Nil, as, beforeSpread)
+              zip(Nil, as, recordArgs, beforeSpread)
             
-            case (Nil, Nil) => ()
+            case (Nil, Nil) => 
+              recordArgs.reverse
           end zip
           
           val args = as match
@@ -547,7 +560,9 @@ class Resolver(tl: TraceLogger)
           
           // The lhs of the App is already traversed by the recursive
           // `traverse` or `resolve` at the beginning.
-          zip(ps.params, args, true)
+          val recordArgs = zip(ps.params, args, Nil, true)
+          recordArgs.foreach:
+            _.subTerms.foreach(traverse(_, expect = NonModule(N)))
           S(defn.copy(params = pss))
         case _ =>
           traverse(as, expect = NonModule(N))
@@ -623,7 +638,6 @@ class Resolver(tl: TraceLogger)
             case t: Term.App => sym.map(sym => t.sym = S(sym))
             case t: Term.TyApp => sym.map(sym => t.sym = S(sym))
             case t: Term.Ref => sym.map(sym => t.resSym = S(sym))
-            case _ =>
           log(s"Resolved symbol for ${t}: ${lhsDefn.sym}")
         case _ =>
     case _ => 

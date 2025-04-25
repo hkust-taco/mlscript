@@ -12,14 +12,14 @@ f1()
 //│ = 2
 //│ LLIR:
 //│   
-//│   def f1$729() =
-//│     let x$737 = 1 in
-//│     let x$738 = 2 in
-//│     x$738
-//│   def entry$740() =
-//│     let* (x$739) = f1() in
-//│     x$739
-//│   entry = entry$740
+//│   def f1$856() =
+//│     let x$864 = 1 in
+//│     let x$865 = 2 in
+//│     x$865
+//│   def entry$867() =
+//│     let* (x$866) = f1() in
+//│     x$866
+//│   entry = entry$867
 //│ 
 //│ Interpreted:
 //│ 2
@@ -33,20 +33,20 @@ f2()
 //│ = 3
 //│ LLIR:
 //│   
-//│   def f2$741() =
-//│     let x$750 = 0 in
-//│     let x$751 = ==(x$750,1) in
-//│     case x$751 of
+//│   def f2$868() =
+//│     let x$877 = 0 in
+//│     let x$878 = ==(x$877,1) in
+//│     case x$878 of
 //│       BoolLit(true) =>
 //│         2
 //│       _ =>
 //│         3
-//│   def j$752() =
+//│   def j$879() =
 //│     undefined
-//│   def entry$754() =
-//│     let* (x$753) = f2() in
-//│     x$753
-//│   entry = entry$754
+//│   def entry$881() =
+//│     let* (x$880) = f2() in
+//│     x$880
+//│   entry = entry$881
 //│ 
 //│ Interpreted:
 //│ 3
@@ -61,21 +61,21 @@ f3()
 //│ = 0
 //│ LLIR:
 //│   
-//│   def f3$755() =
-//│     let x$764 = 0 in
-//│     let x$765 = 1 in
-//│     let x$766 = true in
-//│     case x$766 of
+//│   def f3$882() =
+//│     let x$891 = 0 in
+//│     let x$892 = 1 in
+//│     let x$893 = true in
+//│     case x$893 of
 //│       BoolLit(true) =>
-//│         x$764
+//│         x$891
 //│       _ =>
-//│         x$765
-//│   def j$767() =
+//│         x$892
+//│   def j$894() =
 //│     undefined
-//│   def entry$769() =
-//│     let* (x$768) = f3() in
-//│     x$768
-//│   entry = entry$769
+//│   def entry$896() =
+//│     let* (x$895) = f3() in
+//│     x$895
+//│   entry = entry$896
 
 
 :sllir
@@ -88,22 +88,22 @@ f4()
 //│ = 3
 //│ LLIR:
 //│   
-//│   def f4$770() =
-//│     let x$782 = 0 in
-//│     let x$783 = ==(x$782,1) in
-//│     case x$783 of
+//│   def f4$897() =
+//│     let x$909 = 0 in
+//│     let x$910 = ==(x$909,1) in
+//│     case x$910 of
 //│       BoolLit(true) =>
-//│         let x$785 = 2 in
-//│         jump j$784(x$785)
+//│         let x$912 = 2 in
+//│         jump j$911(x$912)
 //│       _ =>
-//│         let x$786 = 3 in
-//│         jump j$784(x$786)
-//│   def j$784(tmp$781) =
-//│     tmp$781
-//│   def entry$788() =
-//│     let* (x$787) = f4() in
-//│     x$787
-//│   entry = entry$788
+//│         let x$913 = 3 in
+//│         jump j$911(x$913)
+//│   def j$911(tmp$908) =
+//│     tmp$908
+//│   def entry$915() =
+//│     let* (x$914) = f4() in
+//│     x$914
+//│   entry = entry$915
 //│ 
 //│ Interpreted:
 //│ 3
@@ -119,31 +119,31 @@ f5()
 //│ = 5
 //│ LLIR:
 //│   
-//│   def f5$789() =
-//│     let x$806 = 0 in
-//│     let x$807 = ==(x$806,1) in
-//│     case x$807 of
+//│   def f5$916() =
+//│     let x$933 = 0 in
+//│     let x$934 = ==(x$933,1) in
+//│     case x$934 of
 //│       BoolLit(true) =>
-//│         let x$809 = 2 in
-//│         jump j$808(x$809)
+//│         let x$936 = 2 in
+//│         jump j$935(x$936)
 //│       _ =>
-//│         let x$810 = 3 in
-//│         jump j$808(x$810)
-//│   def j$808(tmp$804) =
-//│     let x$811 = ==(tmp$804,2) in
-//│     case x$811 of
+//│         let x$937 = 3 in
+//│         jump j$935(x$937)
+//│   def j$935(tmp$931) =
+//│     let x$938 = ==(tmp$931,2) in
+//│     case x$938 of
 //│       BoolLit(true) =>
-//│         let x$813 = 4 in
-//│         jump j$812(x$813)
+//│         let x$940 = 4 in
+//│         jump j$939(x$940)
 //│       _ =>
-//│         let x$814 = 5 in
-//│         jump j$812(x$814)
-//│   def j$812(tmp$805) =
-//│     tmp$805
-//│   def entry$816() =
-//│     let* (x$815) = f5() in
-//│     x$815
-//│   entry = entry$816
+//│         let x$941 = 5 in
+//│         jump j$939(x$941)
+//│   def j$939(tmp$932) =
+//│     tmp$932
+//│   def entry$943() =
+//│     let* (x$942) = f5() in
+//│     x$942
+//│   entry = entry$943
 //│ 
 //│ Interpreted:
 //│ 5
@@ -153,39 +153,39 @@ fun test() =
   if true do test()
 //│ LLIR:
 //│   
-//│   def test$817() =
-//│     let x$824 = true in
-//│     case x$824 of
+//│   def test$944() =
+//│     let x$951 = true in
+//│     case x$951 of
 //│       BoolLit(true) =>
-//│         let* (x$826) = test() in
-//│         x$826
+//│         let* (x$953) = test() in
+//│         x$953
 //│       _ =>
 //│         undefined
-//│   def j$825() =
+//│   def j$952() =
 //│     undefined
-//│   def entry$827() =
+//│   def entry$954() =
 //│     undefined
-//│   entry = entry$827
+//│   entry = entry$954
 
 :sllir
 fun test() =
   (if true then test()) + 1
 //│ LLIR:
 //│   
-//│   def test$828() =
-//│     let x$838 = true in
-//│     case x$838 of
+//│   def test$955() =
+//│     let x$965 = true in
+//│     case x$965 of
 //│       BoolLit(true) =>
-//│         let* (x$840) = test() in
-//│         jump j$839(x$840)
+//│         let* (x$967) = test() in
+//│         jump j$966(x$967)
 //│       _ =>
 //│         panic "match error"
-//│   def j$839(tmp$837) =
-//│     let x$841 = +(tmp$837,1) in
-//│     x$841
-//│   def entry$842() =
+//│   def j$966(tmp$964) =
+//│     let x$968 = +(tmp$964,1) in
+//│     x$968
+//│   def entry$969() =
 //│     undefined
-//│   entry = entry$842
+//│   entry = entry$969
 
 
 :sllir
@@ -199,23 +199,23 @@ f()
 //│ = 11
 //│ LLIR:
 //│   
-//│   def f$843() =
-//│     let x$856 = 10 in
-//│     let x$857 = true in
-//│     case x$857 of
+//│   def f$970() =
+//│     let x$983 = 10 in
+//│     let x$984 = true in
+//│     case x$984 of
 //│       BoolLit(true) =>
-//│         let x$859 = +(x$856,1) in
-//│         let x$860 = undefined in
-//│         jump j$858(x$859)
+//│         let x$986 = +(x$983,1) in
+//│         let x$987 = undefined in
+//│         jump j$985(x$986)
 //│       _ =>
-//│         let x$861 = undefined in
-//│         jump j$858(x$856)
-//│   def j$858(x$845) =
-//│     x$845
-//│   def entry$863() =
-//│     let* (x$862) = f() in
-//│     x$862
-//│   entry = entry$863
+//│         let x$988 = undefined in
+//│         jump j$985(x$983)
+//│   def j$985(x$972) =
+//│     x$972
+//│   def entry$990() =
+//│     let* (x$989) = f() in
+//│     x$989
+//│   entry = entry$990
 //│ 
 //│ Interpreted:
 //│ 11
@@ -232,27 +232,27 @@ fun f(a) =
 f(A(1))
 //│ = 1
 //│ LLIR:
-//│   class A(x$869)
-//│   class B(y$874)
-//│   def f$866(a$878) =
-//│     case a$878 of
-//│       A$867 =>
-//│         let x$894 = a$878.<A$867:x> in
-//│         let x$895 = 1 in
-//│         jump j$893(x$895)
-//│       B$872 =>
-//│         let x$896 = a$878.<B$872:y> in
-//│         let x$897 = 2 in
-//│         jump j$893(x$897)
+//│   class A(x$996)
+//│   class B(y$1001)
+//│   def f$993(a$1005) =
+//│     case a$1005 of
+//│       A$994 =>
+//│         let x$1021 = a$1005.<A$994:x> in
+//│         let x$1022 = 1 in
+//│         jump j$1020(x$1022)
+//│       B$999 =>
+//│         let x$1023 = a$1005.<B$999:y> in
+//│         let x$1024 = 2 in
+//│         jump j$1020(x$1024)
 //│       _ =>
 //│         panic "match error"
-//│   def j$893(tmp$891) =
-//│     tmp$891
-//│   def entry$900() =
-//│     let x$898 = A$867(1) in
-//│     let* (x$899) = f(x$898) in
-//│     x$899
-//│   entry = entry$900
+//│   def j$1020(tmp$1018) =
+//│     tmp$1018
+//│   def entry$1027() =
+//│     let x$1025 = A$994(1) in
+//│     let* (x$1026) = f(x$1025) in
+//│     x$1026
+//│   entry = entry$1027
 //│ 
 //│ Interpreted:
 //│ 1
@@ -271,44 +271,44 @@ fun f(a) =
 f(A(1))
 //│ = 1
 //│ LLIR:
-//│   class A(x$906)
-//│   class B(y$911)
-//│   def f$903(a$915) =
-//│     case a$915 of
-//│       A$904 =>
-//│         let x$935 = a$915.<A$904:x> in
-//│         case a$915 of
-//│           A$904 =>
-//│             let x$937 = a$915.<A$904:x> in
-//│             case x$937 of
+//│   class A(x$1033)
+//│   class B(y$1038)
+//│   def f$1030(a$1042) =
+//│     case a$1042 of
+//│       A$1031 =>
+//│         let x$1062 = a$1042.<A$1031:x> in
+//│         case a$1042 of
+//│           A$1031 =>
+//│             let x$1064 = a$1042.<A$1031:x> in
+//│             case x$1064 of
 //│               IntLit(1) =>
-//│                 let x$939 = 1 in
-//│                 jump j$938(x$939)
+//│                 let x$1066 = 1 in
+//│                 jump j$1065(x$1066)
 //│               _ =>
 //│                 panic "match error"
-//│           B$909 =>
-//│             let x$940 = a$915.<B$909:y> in
-//│             let x$941 = 2 in
-//│             jump j$936(x$941)
+//│           B$1036 =>
+//│             let x$1067 = a$1042.<B$1036:y> in
+//│             let x$1068 = 2 in
+//│             jump j$1063(x$1068)
 //│           _ =>
 //│             panic "match error"
-//│       B$909 =>
-//│         let x$942 = a$915.<B$909:y> in
-//│         let x$943 = 3 in
-//│         jump j$934(x$943)
+//│       B$1036 =>
+//│         let x$1069 = a$1042.<B$1036:y> in
+//│         let x$1070 = 3 in
+//│         jump j$1061(x$1070)
 //│       _ =>
 //│         panic "match error"
-//│   def j$938(tmp$931) =
-//│     jump j$936(tmp$931)
-//│   def j$936(tmp$931) =
-//│     jump j$934(tmp$931)
-//│   def j$934(tmp$932) =
-//│     tmp$932
-//│   def entry$946() =
-//│     let x$944 = A$904(1) in
-//│     let* (x$945) = f(x$944) in
-//│     x$945
-//│   entry = entry$946
+//│   def j$1065(tmp$1058) =
+//│     jump j$1063(tmp$1058)
+//│   def j$1063(tmp$1058) =
+//│     jump j$1061(tmp$1058)
+//│   def j$1061(tmp$1059) =
+//│     tmp$1059
+//│   def entry$1073() =
+//│     let x$1071 = A$1031(1) in
+//│     let* (x$1072) = f(x$1071) in
+//│     x$1072
+//│   entry = entry$1073
 //│ 
 //│ Interpreted:
 //│ 1

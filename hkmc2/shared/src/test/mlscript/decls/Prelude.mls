@@ -29,18 +29,55 @@ declare class Str with
   fun length: Int
   fun concat: Str -> Str
 
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math
 declare module Math with
-  // TODO: add more functions
-  fun abs: Num -> Num
-  fun sqrt: Num -> Num
-  fun sin: Num -> Num
-  fun cos: Num -> Num
-  fun tan: Num -> Num
-  fun pow: Num -> Num
-  fun round: Num -> Num
-  fun trunc: Num -> Num
-  fun min: (Num, Num) -> Num
-  fun max: (Num, Num) -> Num
+  declare
+    val
+      E: Num
+      LN10: Num
+      LN2: Num
+      LOG10E: Num
+      LOG2E: Num
+      PI: Num
+      SQRT1_2: Num
+      SQRT2: Num
+    fun
+      abs: Num -> Num
+      acos: Num -> Num
+      acosh: Num -> Num
+      asin: Num -> Num
+      asinh: Num -> Num
+      atan: Num -> Num
+      atan2: (Num, Num) -> Num
+      atanh: Num -> Num
+      cbrt: Num -> Num
+      ceil: Num -> Num
+      clz32: Num -> Int
+      cos: Num -> Num
+      cosh: Num -> Num
+      exp: Num -> Num
+      expm1: Num -> Num
+      floor: Num -> Num
+      f16round: Num -> Num
+      fround: Num -> Num
+      hypot(...values): Num
+      imul: (Num, Num) -> Int
+      log: Num -> Num
+      log10: Num -> Num
+      log1p: Num -> Num
+      log2: Num -> Num
+      max(...values): Num
+      min(...values): Num
+      pow: (Num, Num) -> Num
+      random: () -> Num
+      round: Num -> Num
+      sign: Num -> (-1 | 0 | 1)
+      sin: Num -> Num
+      sinh: Num -> Num
+      sqrt: Num -> Num
+      tan: Num -> Num
+      tanh: Num -> Num
+      trunc: Num -> Num
 
 declare val Reflect
 declare val console
@@ -69,3 +106,8 @@ declare module debug with
   fun getLocals
 
 
+// HTML DOM API definitions.
+// Move them to a separate Prelude file when there are enough of them.
+declare val document
+declare val customElements
+declare class HTMLElement

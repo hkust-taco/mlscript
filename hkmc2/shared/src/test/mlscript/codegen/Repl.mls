@@ -10,12 +10,12 @@ fun res() = 1
 //│ REPL> Sending: block$res3 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: let res;try { res = function res(...args) {   globalThis.Predef.checkArgs("res", 0, true, args.length);   return 1 }; block$res3 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: let res;try { res = function res(...args) {   runtime.checkArgs("res", 0, true, args.length);   return 1 }; block$res3 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ REPL> Parsed:
 //│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(this.Predef.printRaw(block$res3)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res3)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ >  Unit { class: [class Unit] }
@@ -33,7 +33,7 @@ fun res() = 1
 //│ >  undefined
 //│ REPL> Parsed:
 //│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(this.Predef.printRaw(block$res4)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res4)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  4
 //│ >  Unit { class: [class Unit] }
@@ -52,7 +52,7 @@ res
 //│ >  undefined
 //│ REPL> Parsed:
 //│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(this.Predef.printRaw(block$res5)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res5)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  [function res]
 //│ >  Unit { class: [class Unit] }
@@ -75,7 +75,7 @@ let x = 1, print(x), x
 //│ >  1
 //│ >  undefined
 //│ > 1
-//│ REPL> Sending: try { runtime.checkCall(this.Predef.printRaw(block$res6)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res6)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
 //│ >  Unit { class: [class Unit] }
@@ -83,7 +83,7 @@ let x = 1, print(x), x
 //│ >  1
 //│ >  Unit { class: [class Unit] }
 //│ = 1
-//│ REPL> Sending: try { runtime.checkCall(this.Predef.printRaw(x)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(x)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
 //│ >  Unit { class: [class Unit] }

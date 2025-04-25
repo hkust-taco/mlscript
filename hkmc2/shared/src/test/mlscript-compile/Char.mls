@@ -1,0 +1,9 @@
+module Char with
+  pattern Lowercase = "a" ..= "z"
+  pattern Uppercase = "A" ..= "Z"
+  pattern Letter = Lowercase | Uppercase
+  pattern Digit = "0" ..= "9"
+  pattern HexDigit = Digit | "a" ..= "f" | "A" ..= "F"
+  pattern OctDigit = "0" ..= "7"
+  pattern BinDigit = "0" | "1"
+  pattern Whitespace = " " | "\t" | "\n" | "\r"

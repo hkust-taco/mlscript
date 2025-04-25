@@ -1,0 +1,34 @@
+import "../../Str.mls"
+import "../../Option.mls"
+import "../../Predef.mls"
+
+open Str { parenthesizedIf }
+open Option { Some, None }
+open Predef { mkStr }
+
+type OptionT[A] = Some[A] | None
+
+module BasicExpr with
+  type Expr = Lit | Var | Add | Mul | Err
+  
+  data
+    class
+      Lit(value: Int)
+      Var(name: Str)
+      Add(left: Expr, right: Expr)
+      Mul(left: Expr, right: Expr)
+      Err(expr: OptionT[Expr], msg: Str)
+  
+  fun withErr(expr, msg) = Err(Some(expr), msg)
+  fun justErr(msg) = Err(None, msg)
+  
+  fun prettyPrint(tree: Expr): Str = if tree is
+    Lit(value) then value.toString()
+    Var(name) then name
+    Add(left, right) then left prettyPrint() + " + " + right prettyPrint()
+    Mul(left, right) then Str.concat of
+      left prettyPrint() parenthesizedIf(left is Add)
+      " * "
+      right prettyPrint() parenthesizedIf(right is Add)
+    Err(Some(expr), msg) then "{ " + expr prettyPrint() + " | " + JSON.stringify(msg) + " }"
+    Err(None, msg) then "{ " + JSON.stringify(msg) + " }"

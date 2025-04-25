@@ -99,7 +99,7 @@ fun f() =
 //│         return "Debugging.mls:17:5"
 //│       }
 //│     }
-//│     toString() { return "Cont$func$f$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$func$f$(" + runtime.render(this.pc) + ")"; }
 //│   };
 //│   i = 0;
 //│   j = 100;

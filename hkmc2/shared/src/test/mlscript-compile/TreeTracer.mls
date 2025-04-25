@@ -1,0 +1,45 @@
+import "./Predef.mls"
+
+open Predef { fold }
+
+module TreeTracer with ...
+
+class TreeTracer with
+  mut val steps = 0
+  mut val enabled = false
+  fun output(outie, innie, innieAlt, message) = if enabled do
+    let lines = message.split("\n")
+    lines.forEach of (line, i, xs) => if
+      let postfix = if lines.length > 1 then " ↵" else ""
+      i is 0 then console.log(outie + innie + line + postfix)
+      i + 1 == lines.length then console.log(outie + innieAlt + line)
+      else console.log(outie + innieAlt + line + postfix)
+  fun enter(...pieces) =
+    output of
+      if steps > 0 then "│ ".repeat(steps - 1) + "├─" else ""
+      if steps > 0 then "┮ " else "┍ "
+      "│ "
+      fold(+) of ...pieces
+    set steps += 1
+  fun print(...pieces) =
+    let message = if pieces is
+      [..pieces, Int as line] then fold(+) of ...pieces, " [Ln " + line + "]"
+      else fold(+) of ...pieces
+    output of
+      if steps > 0 then "│ ".repeat(steps - 1) else ""
+      if steps > 0 then "├ " else ""
+      "│ "
+      message
+  fun leave(...pieces) =
+    set steps -= 1
+    output of
+      "│ ".repeat(steps)
+      "┕ "
+      "  "
+      fold(+) of ...pieces
+  fun trace[A](intro: Str, makeOutro: A -> Str, thunk: () -> A): A =
+    enter of intro
+    val result = thunk()
+    leave of makeOutro of result
+    result
+  fun reset() = set steps = 0
