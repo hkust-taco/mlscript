@@ -139,7 +139,7 @@ type IResolvable = Resolvable
   * compilable without type checking, and the user experience of doing
   * so should be good and not error prone. (See:
   * https://github.com/hkust-taco/mlscript-design-docs/blob/main/wiki/module-methods.md)
-  * A consequence of this design is that, the definition of a method may
+  * A consequence of this design is that the definition of a method may
   * not always be present at compilation-time, because the type information
   * of the object is absent.
   *
