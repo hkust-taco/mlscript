@@ -144,7 +144,7 @@ type IResolvable = Resolvable
   * of the object is absent.
   *
   * In contrast, for a (global or local) function, or a module method,
-  * the definition is always present at compilation-time. This is
+  * the definition is always known at the call sites at compilation time. This is
   * important because most call-site features require the definition to
   * be present. For example, by-name, lazy and implicit parameters all
   * require the definition so that the compiler can perform the correct
