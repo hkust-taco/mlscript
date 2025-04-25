@@ -1184,7 +1184,7 @@ extends Importer:
     else VarSymbol(id)
   
   def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Opt[Opt[Bool] -> Param]] =
-    // mm: `module` modified
+    // mm: `module`-modified
     def go(t: Tree, inUsing: Bool, flags: FldFlags, mm: Bool): Ctxl[Opt[Opt[Bool] -> Param]] = t match
     case TypeDef(Mod, inner, N, N) =>
       go(inner, inUsing, flags, true)
