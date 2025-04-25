@@ -28,7 +28,9 @@ enum Annot extends AutoLocated:
     case Trm(trm) => trm :: Nil
     case _: Modifier | Untyped => Nil
 
-sealed trait Resolvable:
+type Resolvable = Term & ResolvableImpl
+
+sealed trait ResolvableImpl:
   t: Term =>
   
   var iargsLs: Opt[Ls[Term.Tup]] = N
@@ -63,6 +65,11 @@ sealed trait Resolvable:
     case _ => N
   
   def withIArgs(iargsLs: Ls[Term.Tup]): Term = 
+    if !(this.iargsLs.isEmpty || this.iargsLs.get == iargsLs) then
+      lastWords:
+        s"the implicit arguments for term ${t.showDbg} " +
+        s"are already set to ${this.iargsLs.get}; " +
+        s"they cannot be set to some different terms ${iargsLs}"
     this.iargsLs = S(iargsLs)
     this
   
@@ -75,11 +82,11 @@ enum Term extends Statement:
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
   case Lit(lit: Literal)
   case Builtin(id: Tree.Ident, nme: Str)
-  case Ref(sym: Symbol)(val tree: Tree.Ident, val refNum: Int, var resSym: Opt[FieldSymbol]) extends Term with Resolvable
-  case App(lhs: Term, rhs: Term)(val tree: Tree.App, var sym: Opt[FieldSymbol], val resSym: FlowSymbol) extends Term with Resolvable
-  case TyApp(lhs: Term, targs: Ls[Term])(var sym: Opt[FieldSymbol]) extends Term with Resolvable
-  case Sel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term with Resolvable
-  case SynthSel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term with Resolvable
+  case Ref(sym: Symbol)(val tree: Tree.Ident, val refNum: Int, var resSym: Opt[Symbol]) extends Term with ResolvableImpl
+  case App(lhs: Term, rhs: Term)(val tree: Tree.App, var sym: Opt[FieldSymbol], val resSym: FlowSymbol) extends Term with ResolvableImpl
+  case TyApp(lhs: Term, targs: Ls[Term])(var sym: Opt[FieldSymbol]) extends Term with ResolvableImpl
+  case Sel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term with ResolvableImpl
+  case SynthSel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term with ResolvableImpl
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
   case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split)(val normalized: Split)

@@ -954,6 +954,9 @@ extends Importer:
               val r = FlowSymbol(s"‹result of ${sym}›")
               
               val mfn = st match
+                // TypeDef(Mod, _, N, N) indicates if the function marks
+                // its result as "module". e.g, `fun f: module M`
+                //                                      ^^^^^^
                 case S(TypeDef(Mod, _, N, N)) => 
                   Modulefulness.ofSign(s)(true)
                 case _ =>
@@ -1083,8 +1086,8 @@ extends Importer:
               case S(tree) =>
                 val (patternParams, extractionParams) = ps match // Filter out pattern parameters.
                   case S(ParamList(_, params, _)) => params.partition:
-                    case param @ Param(FldFlags(false, false, false, true, false), _, _, _) => true
-                    case param @ Param(FldFlags(_, _, _, false, _), _, _, _) => false
+                    case param @ Param(flags = FldFlags(false, false, false, true, false)) => true
+                    case param @ Param(flags = FldFlags(pat = false)) => false
                   case N => (Nil, Nil)
                 // TODO: Implement extraction parameters.
                 if extractionParams.nonEmpty then

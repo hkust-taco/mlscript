@@ -122,8 +122,6 @@ object Resolver:
     
   def ictx(using ICtx) = summon[ICtx]
 
-type IResolvable = Resolvable
-
 /**
   * Resolver for the module system.
   *
@@ -140,21 +138,21 @@ type IResolvable = Resolvable
   * so should be good and not error prone. (See:
   * https://github.com/hkust-taco/mlscript-design-docs/blob/main/wiki/module-methods.md)
   * A consequence of this design is that the definition of a method may
-  * not always be present at compilation-time, because the type information
-  * of the object is absent.
+  * not always be present at compilation-time, because the type
+  * information of the object is absent.
   *
-  * In contrast, for a (global or local) function, or a module method,
-  * the definition is always known at the call sites at compilation time. This is
-  * important because most call-site features require the definition to
-  * be known. For example, by-name, lazy and implicit parameters all
-  * require the definition so that the compiler can perform the correct
-  * elaboration and resolution.
+  * In contrast, for a function, the definition is always known at the
+  * call sites at compilation time. This is important because most
+  * call-site features require the definition to be known. For example,
+  * by-name, lazy and implicit parameters all require the definition so
+  * that the compiler can perform the correct elaboration and
+  * resolution.
   *
   * ### Module Methods & Modulefulness Check
   *
-  * In addition to (global or local) functions, module methods also
-  * always have the definition present at compilation-time. We will now
-  * start to refer to the module methods as "functions".
+  * In addition to functions, module methods also always have the
+  * definition present at compilation-time. We will now start to refer
+  * to the module methods as "functions".
   *
   * The definition of module functions are always present because of
   * some restrictions on modules. Only declarations that have a
@@ -176,8 +174,8 @@ type IResolvable = Resolvable
   * 2. Only declarations of static members may bind to a module value.
   *
   * If a term evaluates to a module value (e.g., an application to a
-  * function returning a module, a reference to a module variable),
-  * it is said to be moduleful. All moduleful terms must only occur at
+  * function returning a module, a reference to a module variable), it
+  * is said to be moduleful. All moduleful terms must only occur at
   * certain locations in the program. For example, a moduleful term must
   * not occur as a scrutinee because it may be re-bound to a different
   * name, during when the module definition is lost.
@@ -223,8 +221,6 @@ class Resolver(tl: TraceLogger)
     
   end Expect
   import Expect.*
-  
-  type Resolvable = Term & IResolvable
   
   /**
     * Traverse a block and resolve any resolvable sub-terms. This is
@@ -425,9 +421,8 @@ class Resolver(tl: TraceLogger)
         traverse(pre, expect = Any)
         (t.termDefn, ictx)
       
-      // The symbol of Ref changes only if some implicit arguments are
-      // resolved. This is handled later.
       case Term.Ref(_) =>
+        resolveSymbol(t)
         (t.termDefn, ictx)
     
     log(s"Resolving resolvable with defn = ${defn}")
@@ -637,7 +632,12 @@ class Resolver(tl: TraceLogger)
             case t: Term.Ref => sym.map(sym => t.resSym = S(sym))
           log(s"Resolved symbol for ${t}: ${lhsDefn.sym}")
         case _ =>
-    case _ => 
+    case _ =>
+    
+    t match
+    case t: Term.Ref if t.resSym.isEmpty =>
+      t.resSym = S(t.sym)
+    case _ =>
   
   def resolveArg(p: Param)(lhs: Term)(using ictx: ICtx): Elem =
     log(s"Resolving implicit argument, expecting a ${p.sign}")

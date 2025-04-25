@@ -195,6 +195,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     tl.log(s"Lowering.term ${t.showDbg.truncate(100, "[...]")}${
       if inStmtPos then " (in stmt)" else ""}${
       t.symbol.fold("")(" – symbol " + _)}")
+    
     def warnStmt = if inStmtPos then
       raise:
         WarningReport(msg"Pure expression in statement position" -> t.toLoc :: Nil, S(t))
