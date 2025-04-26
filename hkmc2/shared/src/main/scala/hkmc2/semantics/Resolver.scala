@@ -635,6 +635,8 @@ class Resolver(tl: TraceLogger)
     case _ =>
     
     t match
+    // If a reference was not resolved to take implicit arguments or return some module type,
+    // then its result symbol is the same as the symbol it refers to.
     case t: Term.Ref if t.resSym.isEmpty =>
       t.resSym = S(t.sym)
     case _ =>
