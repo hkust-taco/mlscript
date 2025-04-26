@@ -170,7 +170,7 @@ M.A().get
 //│       }
 //│       toString() { return "A(" + "" + ")"; }
 //│     };
-//│     scrut = M14.A();
+//│     scrut = runtime.safeCall(M14.A());
 //│     if (scrut instanceof M14.A.class) {
 //│       tmp4 = 2;
 //│     } else {
@@ -180,7 +180,7 @@ M.A().get
 //│   }
 //│   static toString() { return "M"; }
 //│ });
-//│ tmp3 = M15.A();
+//│ tmp3 = runtime.safeCall(M15.A());
 //│ tmp3.get
 //│ = 4
 
@@ -237,7 +237,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│     return this.A$instance$0.x;
 //│   } 
 //│   newA_B(y) {
-//│     return M19.A(y)
+//│     return runtime.safeCall(M19.A(y))
 //│   }
 //│   toString() { return "B(" + "" + ")"; }
 //│ };
@@ -253,7 +253,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│         this.x = x;
 //│       }
 //│       get newA() {
-//│         return M18.A();
+//│         return runtime.safeCall(M18.A());
 //│       } 
 //│       get newB() {
 //│         return B$(this);
@@ -269,7 +269,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│   }
 //│   static toString() { return "M"; }
 //│ });
-//│ tmp5 = M19.A(2);
+//│ tmp5 = runtime.safeCall(M19.A(2));
 //│ tmp6 = runtime.safeCall(tmp5.newB.newA_B(3));
 //│ tmp6.newB.get
 //│ = 3

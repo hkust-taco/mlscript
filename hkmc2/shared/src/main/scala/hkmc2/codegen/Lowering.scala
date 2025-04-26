@@ -194,7 +194,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   final def term(t: st, inStmtPos: Bool = false)(k: Result => Block)(using Subst): Block =
     tl.log(s"Lowering.term ${t.showDbg.truncate(100, "[...]")}${
       if inStmtPos then " (in stmt)" else ""}${
-      t.symbol.fold("")(" – symbol " + _)}")
+      t.resolvedSymbol.fold("")(" – symbol " + _)}")
     
     def warnStmt = if inStmtPos then
       raise:
@@ -306,7 +306,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         End("error")
     case st.TyApp(f, ts) => term(f)(k) // * Type arguments are erased
     case st.App(f, arg) =>
-      val isMlsFun = f.symbol.fold(f.isInstanceOf[st.Lam]):
+      val isMlsFun = f.resolvedSymbol.fold(f.isInstanceOf[st.Lam]):
         case _: sem.BuiltinSymbol => true
         case sym: sem.BlockMemberSymbol =>
           sym.trmImplTree.fold(sym.clsTree.isDefined)(_.k is syntax.Fun)
@@ -320,9 +320,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           subTerm_nonTail(arg): ar =>
             k(Call(fr, Arg(spread = true, ar) :: Nil)(isMlsFun, true).withLocOf(t))
       f match
-      case t if t.symbol.isDefined && (t.symbol.get is ctx.builtins.js.try_catch) =>
+      case t if t.resolvedSymbol.isDefined && (t.resolvedSymbol.get is ctx.builtins.js.try_catch) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("try_catch")))
-      case t if t.symbol.isDefined && (t.symbol.get is ctx.builtins.debug.printStack) =>
+      case t if t.resolvedSymbol.isDefined && (t.resolvedSymbol.get is ctx.builtins.debug.printStack) =>
         if !config.effectHandlers.exists(_.debug) then
           raise(ErrorReport(
             msg"Debugging functions are not enabled" ->
@@ -330,7 +330,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             source = Diagnostic.Source.Compilation))
           return End("error")
         conclude(Value.Ref(State.runtimeSymbol).selSN("raisePrintStackEffect").withLocOf(f))
-      case t if t.symbol.isDefined && (t.symbol.get is ctx.builtins.debug.getLocals) =>
+      case t if t.resolvedSymbol.isDefined && (t.resolvedSymbol.get is ctx.builtins.debug.getLocals) =>
         if !config.effectHandlers.exists(_.debug) then
           raise(ErrorReport(
             msg"Debugging functions are not enabled" ->
