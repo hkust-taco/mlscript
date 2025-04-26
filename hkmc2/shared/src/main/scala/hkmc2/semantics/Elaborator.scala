@@ -790,20 +790,25 @@ extends Importer:
       case _ =>
         t
   
+  def arg(tree: Tree)(using UnderCtx): Ctxl[Term] = tree match
+    case u: Under => subterm(tree)
+    case _ => term(tree)
   def fld(tree: Tree)(using UnderCtx): Ctxl[Elem] = tree match
     case InfixApp(id: Ident, Keyword.`:`, rhs) =>
-      Fld(FldFlags.empty, Term.Lit(StrLit(id.name).withLocOf(id)), S(term(rhs)))
+      Fld(FldFlags.empty, Term.Lit(StrLit(id.name).withLocOf(id)), S(arg(rhs)))
     case InfixApp(lhs, Keyword.`:`, rhs) =>
-      Fld(FldFlags.empty, term(lhs), S(term(rhs)))
+      Fld(FldFlags.empty, term(lhs), S(arg(rhs)))
     case Spread(Keyword.`..`, _, S(trm)) =>
-      Spd(false, term(trm))
+      Spd(false, arg(trm))
     case Spread(Keyword.`...`, _, S(trm)) =>
-      Spd(true, term(trm))
+      Spd(true, arg(trm))
     case _ =>
-      val t = tree match
-        case u: Under => subterm(tree)
-        case _ => term(tree)
+      // val t = tree match
+      //   case u: Under => subterm(tree)
+      //   case _ => term(tree)
+      val t = arg(tree)
       var flags = FldFlags.empty
+      // if ModuleChecker.evalsToModule(t)
       if ModuleChecker.evalsToModule(t)
         then flags = flags.copy(mod = true)
       Fld(flags, t, N)

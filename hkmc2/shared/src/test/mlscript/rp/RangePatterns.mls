@@ -7,12 +7,12 @@ pattern Lower = "a"..="z"
 //│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
 //│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
 //│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
 //│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 "a" is Lower
 //│ FAILURE: Unexpected type error
@@ -60,12 +60,12 @@ pattern Upper = "A"..="Z"
 //│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
 //│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
 //│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
 //│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 "A" is Upper
 //│ FAILURE: Unexpected type error
@@ -113,12 +113,12 @@ pattern UnsignedShort = 0 ..< 65536
 //│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
 //│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
 //│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
 //│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 0 is UnsignedShort
 //│ FAILURE: Unexpected type error
@@ -224,12 +224,12 @@ pattern UnsignedByte = 0..< 256
 //│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
 //│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
 //│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
 //│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 :e
 pattern BadRange = "s"..=0
@@ -239,12 +239,12 @@ pattern BadRange = "s"..=0
 //│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
 //│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
 //│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
 //│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 // It becomes an absurd pattern.
 0 is BadRange
@@ -268,12 +268,12 @@ pattern BadRange = 0 ..= "s"
 //│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
 //│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
 //│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
 //│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 :e
 pattern BadRange = "yolo" ..= "swag"
@@ -283,9 +283,9 @@ pattern BadRange = "yolo" ..= "swag"
 //│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
 //│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
 //│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1185)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1243)
+//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
 //│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1243)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:819)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1336)
+//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
+//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
+//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)

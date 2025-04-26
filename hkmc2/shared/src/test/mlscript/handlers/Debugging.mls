@@ -199,15 +199,15 @@ res.resumeWith(666)
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:145)
 //│ ═══[RUNTIME ERROR] TypeError: res11.resumeWith is not a function
 //│     at REPL53:1:351
-//│     at ContextifyScript.runInThisContext (node:vm:136:12)
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:598:22)
-//│     at bound (node:domain:432:15)
-//│     at REPLServer.runBound [as eval] (node:domain:443:12)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
 //│     at REPLServer.onLine (node:repl:927:10)
-//│     at REPLServer.emit (node:events:520:28)
-//│     at REPLServer.emit (node:domain:488:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:416:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:610:22)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:415:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:609:22)
 
 let i = 100
 fun f() =
