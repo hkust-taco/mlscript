@@ -104,7 +104,7 @@ enum Node:
   case LetCall(names: Ls[Local], func: Local, args: Ls[TrivialExpr], body: Node)
   def show = LlirDebugPrinter.mkDocument(this).toString
 
-trait LlirPrinting:
+class LlirPrinting:
   import hkmc2.utils.*
   import hkmc2.semantics.Elaborator.State
 
