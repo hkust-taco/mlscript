@@ -641,7 +641,7 @@ class Resolver(tl: TraceLogger)
     case t: Term.Ref if t.resSym.isEmpty =>
       t.resSym = S(t.sym)
     // If a type application was not resolved to take implicit
-    // arguments, then its result symbol is the same as the symbol its
+    // arguments, then its result symbol is the same as the symbol of its
     // LHS.
     case t: Term.TyApp if t.sym.isEmpty =>
       t.sym = t.lhs.resolvedSymbol
