@@ -77,7 +77,7 @@ abstract class LlirDiffMaker extends BbmlDiffMaker:
           if debug.isSet then
             output(LlirDebugPrinter.mkDocument(llirProg).toString)
           else
-            output(LlirPrinter.mkDocument(llirProg).toString)
+            output(LlirPrinter(using summon[Raise], Scope.empty).mkDocument(llirProg).toString)
         def cppGen(name: String, prog: Program, gen: Bool, show: Bool, run: Bool, write: Opt[Str]): Unit =
           tl.log(s"Generating $name")
           if gen || show || run || write.isDefined then

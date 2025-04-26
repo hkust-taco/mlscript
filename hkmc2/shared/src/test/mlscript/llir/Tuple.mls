@@ -14,8 +14,6 @@ mkTup(1, 2)
 //│   def mkTup(x,y) =
 //│     let x1 = Tuple2(x,y) in
 //│     x1
-//│   def j() =
-//│     undefined
 //│   def fst(t) =
 //│     case t of
 //│       Class(class:Tuple2) =>
@@ -24,6 +22,8 @@ mkTup(1, 2)
 //│         x2
 //│       _ =>
 //│         panic "match error"
+//│   def j() =
+//│     undefined
 //│   def entry() =
 //│     let* (x4) = mkTup(1,2) in
 //│     x4

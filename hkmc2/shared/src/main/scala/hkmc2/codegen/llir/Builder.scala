@@ -139,7 +139,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       case Some(value) => value
 
   private def bBind(name: Opt[Local], e: Result, body: Block)(k: TrivialExpr => Ctx ?=> Node)(ct: Block)(using ctx: Ctx)(using Raise, Scope): Node =
-    trace[Node](s"bBind begin: $name", x => s"bBind end: ${LlirDebugPrinter.mkDocument(x)}"):
+    trace[Node](s"bBind begin: $name", x => s"bBind end: ${x.show}"):
       bResult(e):
         case r: Expr.Ref =>
           given Ctx = ctx.addName(name.getOrElse(newTemp), r.sym)
@@ -152,7 +152,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
           Node.LetExpr(v, l, bBlock(body)(k)(ct))
   
   private def bArgs(e: Ls[Arg])(k: Ls[TrivialExpr] => Ctx ?=> Node)(using ctx: Ctx)(using Raise, Scope): Node =
-    trace[Node](s"bArgs begin", x => s"bArgs end: ${LlirDebugPrinter.mkDocument(x)}"):
+    trace[Node](s"bArgs begin", x => s"bArgs end: ${x.show}"):
       e match
       case Nil => k(Nil)
       case Arg(spread, x) :: xs => bPath(x):
@@ -160,7 +160,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
           case rs: Ls[TrivialExpr] => k(r :: rs)
   
   private def bPaths(e: Ls[Path])(k: Ls[TrivialExpr] => Ctx ?=> Node)(using ctx: Ctx)(using Raise, Scope): Node =
-    trace[Node](s"bArgs begin", x => s"bArgs end: ${LlirDebugPrinter.mkDocument(x)}"):
+    trace[Node](s"bArgs begin", x => s"bArgs end: ${x.show}"):
       e match
       case Nil => k(Nil)
       case x :: xs => bPath(x):
@@ -178,7 +178,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       bLam(Value.Lam(fstParams, wrappedLambda), S(sym.nme), S(sym))(k)(using ctx)
 
   private def bFunDef(e: FunDefn)(using ctx: Ctx)(using Raise, Scope): Func =
-    trace[Func](s"bFunDef begin: ${e.sym}", x => s"bFunDef end: ${LlirDebugPrinter.mkDocument(x)}"):
+    trace[Func](s"bFunDef begin: ${e.sym}", x => s"bFunDef end: ${x.show}"):
       val FunDefn(_own, sym, params, body) = e
       assert(ctx.isTopLevel)
       if params.length === 0 then
@@ -194,7 +194,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         )
 
   private def bMethodDef(e: FunDefn)(using ctx: Ctx)(using Raise, Scope): Func =
-    trace[Func](s"bFunDef begin: ${e.sym}", x => s"bFunDef end: ${LlirDebugPrinter.mkDocument(x)}"):
+    trace[Func](s"bFunDef begin: ${e.sym}", x => s"bFunDef end: ${x.show}"):
       val FunDefn(_own, sym, params, body) = e
       if !ctx.isTopLevel then
         bErrStop(msg"Non top-level definition ${sym.nme} not supported")
@@ -211,7 +211,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         )
 
   private def bClsLikeDef(e: ClsLikeDefn)(using ctx: Ctx)(using Raise, Scope): ClassInfo =
-    trace[ClassInfo](s"bClsLikeDef begin", x => s"bClsLikeDef end: ${LlirDebugPrinter.mkDocument(x)}"):
+    trace[ClassInfo](s"bClsLikeDef begin", x => s"bClsLikeDef end: ${x.show}"):
       val ClsLikeDefn(
         _own, isym, _sym, kind, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor) = e
       if !ctx.isTopLevel then
@@ -233,7 +233,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         )
   
   private def bLam(lam: Value.Lam, nameHint: Opt[Str], recName: Opt[Local])(k: TrivialExpr => Ctx ?=> Node)(using ctx: Ctx)(using Raise, Scope) : Node =
-    trace[Node](s"bLam begin", x => s"bLam end: ${LlirDebugPrinter.mkDocument(x)}"):
+    trace[Node](s"bLam begin", x => s"bLam end: ${x.show}"):
       val Value.Lam(params, body) = lam
       // Generate an auxiliary class inheriting from Callable
       val freeVars = lam.freeVarsLLIR -- body.definedVars -- recName.iterator -- ctx.fn_ctx.keySet
@@ -274,7 +274,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       Node.LetExpr(v, Expr.CtorApp(name, args.map(sr)), k(v |> sr)(using new_ctx))
 
   private def bValue(v: Value)(k: TrivialExpr => Ctx ?=> Node)(using ctx: Ctx)(using Raise, Scope) : Node =
-    trace[Node](s"bValue { $v } begin", x => s"bValue end: ${LlirDebugPrinter.mkDocument(x)}"):
+    trace[Node](s"bValue { $v } begin", x => s"bValue end: ${x.show}"):
       v match
       case Value.Ref(l: TermSymbol) if l.owner.nonEmpty =>
         k(l |> sr)
@@ -326,7 +326,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         
   
   private def bPath(p: Path)(k: TrivialExpr => Ctx ?=> Node)(using ctx: Ctx)(using Raise, Scope) : Node =
-    trace[Node](s"bPath { $p } begin", x => s"bPath end: ${LlirDebugPrinter.mkDocument(x)}"):
+    trace[Node](s"bPath { $p } begin", x => s"bPath end: ${x.show}"):
       p match
       case s @ Select(Value.Ref(sym), Tree.Ident("Unit")) if sym is ctx.builtinSym.runtimeSym.get =>
         bPath(Value.Lit(Tree.UnitLit(false)))(k)
@@ -370,7 +370,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       case x: Value => bValue(x)(k)
 
   private def bResult(r: Result)(k: TrivialExpr => Ctx ?=> Node)(using ctx: Ctx)(using Raise, Scope) : Node =
-    trace[Node](s"bResult begin", x => s"bResult end: ${LlirDebugPrinter.mkDocument(x)}"):
+    trace[Node](s"bResult begin", x => s"bResult end: ${x.show}"):
       r match
       case Call(Value.Ref(sym: BuiltinSymbol), args) =>
         bArgs(args):
@@ -437,7 +437,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
     bBlock(blk)(k)(End(""))
 
   private def bBlock(blk: Block)(k: TrivialExpr => Ctx ?=> Node)(ct: Block)(using ctx: Ctx)(using Raise, Scope) : Node =
-    trace[Node](s"bBlock begin", x => s"bBlock end: ${LlirDebugPrinter.mkDocument(x)}"):
+    trace[Node](s"bBlock begin", x => s"bBlock end: ${x.show}"):
       blk match
       case Match(scrut, arms, dflt, rest) =>
         bPath(scrut):
