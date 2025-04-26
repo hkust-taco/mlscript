@@ -157,7 +157,7 @@ val v: module M = M
 
 
 
-// "Module" Methods
+// *Module* Methods
 
 module N with
   fun foo(): module M = M

@@ -259,7 +259,7 @@ class Desugarer(val elaborator: Elaborator)
           val second = Fld(FldFlags.empty, rhsTerm, N)
           val arguments = Term.Tup(first :: second :: Nil)(rawTup)
           val joint = FlowSymbol("‹applied-result›")
-          Term.App(opRef, arguments)(tree, joint)
+          Term.App(opRef, arguments)(tree, N, joint)
         termSplit(rhs, finishInner)(fallback)
     case tree @ App(lhs, blk @ OpBlock(opRhsApps)) => fallback => ctx =>
       nominate(ctx, finish(term(lhs)(using ctx))): vs =>
@@ -269,7 +269,7 @@ class Desugarer(val elaborator: Elaborator)
           val rawTup = Tup(lhs :: Nil): Tup // <-- loc might be wrong
           val arguments = Term.Tup(first :: second :: Nil)(rawTup)
           val joint = FlowSymbol("‹applied-result›")
-          Term.App(op, arguments)(tree, joint)
+          Term.App(op, arguments)(tree, N, joint)
         opRhsApps.foldRight(Function.const(fallback): Sequel): (tt, elabFallback) =>
           tt match
           case (Tree.Empty(), LetLike(`let`, pat, termTree, N)) => ctx =>
@@ -491,7 +491,7 @@ class Desugarer(val elaborator: Elaborator)
                   msg"mismatched arity: expect $m, found $n" -> app.toLoc
             scrutSymbol.getSubScrutinees(cls).iterator.zip(paramList.params).map:
               case (symbol, Param(flags = FldFlags(value = true))) => R(symbol)
-              case (_, Param(_, paramSymbol, _)) => L(paramSymbol) // to report errors
+              case (_, Param(sym = paramSymbol)) => L(paramSymbol) // to report errors
             .toList
           case S(_) | N =>
             error(msg"class ${cls.name} does not have parameters" -> ctor.toLoc)

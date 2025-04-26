@@ -194,11 +194,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   final def term(t: st, inStmtPos: Bool = false)(k: Result => Block)(using Subst): Block =
     tl.log(s"Lowering.term ${t.showDbg.truncate(100, "[...]")}${
       if inStmtPos then " (in stmt)" else ""}${
-      t.symbol.fold("")(" – symbol " + _)}")
+      t.resolvedSymbol.fold("")(" – symbol " + _)}")
+    
     def warnStmt = if inStmtPos then
       raise:
         WarningReport(msg"Pure expression in statement position" -> t.toLoc :: Nil, S(t))
+    
+    // Funny Scala: the non-exhaustive match is actually the second match
     t match
+      case t: sem.Resolvable => t.instantiate
+      case t => t
+    match
     case st.UnitVal() => k(unit)
     case st.Lit(lit) =>
       warnStmt
@@ -224,29 +230,31 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         if sym.binary then
           val t1 = new Tree.Ident("arg1")
           val t2 = new Tree.Ident("arg2")
-          val p1 = Param(FldFlags.empty, VarSymbol(t1), N)
-          val p2 = Param(FldFlags.empty, VarSymbol(t2), N)
+          val p1 = Param(FldFlags.empty, VarSymbol(t1), N, Modulefulness.none)
+          val p2 = Param(FldFlags.empty, VarSymbol(t2), N, Modulefulness.none)
           val ps = PlainParamList(p1 :: p2 :: Nil)
-          val bod = st.App(t, st.Tup(List(st.Ref(p1.sym)(t1, 666), st.Ref(p2.sym)(t2, 666)))
+          val bod = st.App(t, st.Tup(List(st.Ref(p1.sym)(t1, 666, N).noIArgs, st.Ref(p2.sym)(t2, 666, N).noIArgs))
             (Tree.Tup(Nil // FIXME should not be required (using dummy value)
               )))(
               Tree.App(Tree.Empty(), Tree.Empty()), // FIXME should not be required (using dummy value)
+              N,
               FlowSymbol(sym.nme)
-            )
+            ).noIArgs
           val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
           tl.log(s"Ref builtin $sym")
           assert(paramLists.length === 1)
           return k(Value.Lam(paramLists.head, bodyBlock))
         if sym.unary then
           val t1 = new Tree.Ident("arg")
-          val p1 = Param(FldFlags.empty, VarSymbol(t1), N)
+          val p1 = Param(FldFlags.empty, VarSymbol(t1), N, Modulefulness.none)
           val ps = PlainParamList(p1 :: Nil)
-          val bod = st.App(t, st.Tup(List(st.Ref(p1.sym)(t1, 666)))
+          val bod = st.App(t, st.Tup(List(st.Ref(p1.sym)(t1, 666, N).noIArgs))
             (Tree.Tup(Nil // FIXME should not be required (using dummy value)
               )))(
               Tree.App(Tree.Empty(), Tree.Empty()), // FIXME should not be required (using dummy value)
+              N,
               FlowSymbol(sym.nme)
-            )
+            ).noIArgs
           val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
           tl.log(s"Ref builtin $sym")
           assert(paramLists.length === 1)
@@ -254,7 +262,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case bs: BlockMemberSymbol =>
         bs.defn match
         case S(d) if d.isDeclare.isDefined =>
-          return term(Sel(State.globalThisSymbol.ref(), ref.tree)(S(bs)))(k)
+          return term(Sel(State.globalThisSymbol.ref().noIArgs, ref.tree)(S(bs)).noIArgs)(k)
         case S(td: TermDefinition) if td.k is syntax.Fun =>
           // * Local functions with no parameter lists are getters
           // * and are lowered to functions with an empty parameter list
@@ -298,7 +306,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         End("error")
     case st.TyApp(f, ts) => term(f)(k) // * Type arguments are erased
     case st.App(f, arg) =>
-      val isMlsFun = f.symbol.fold(f.isInstanceOf[st.Lam]):
+      val isMlsFun = f.resolvedSymbol.fold(f.isInstanceOf[st.Lam]):
         case _: sem.BuiltinSymbol => true
         case sym: sem.BlockMemberSymbol =>
           sym.trmImplTree.fold(sym.clsTree.isDefined)(_.k is syntax.Fun)
@@ -312,9 +320,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           subTerm_nonTail(arg): ar =>
             k(Call(fr, Arg(spread = true, ar) :: Nil)(isMlsFun, true).withLocOf(t))
       f match
-      case t if t.symbol.isDefined && (t.symbol.get is ctx.builtins.js.try_catch) =>
+      case t if t.resolvedSymbol.isDefined && (t.resolvedSymbol.get is ctx.builtins.js.try_catch) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("try_catch")))
-      case t if t.symbol.isDefined && (t.symbol.get is ctx.builtins.debug.printStack) =>
+      case t if t.resolvedSymbol.isDefined && (t.resolvedSymbol.get is ctx.builtins.debug.printStack) =>
         if !config.effectHandlers.exists(_.debug) then
           raise(ErrorReport(
             msg"Debugging functions are not enabled" ->
@@ -322,7 +330,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             source = Diagnostic.Source.Compilation))
           return End("error")
         conclude(Value.Ref(State.runtimeSymbol).selSN("raisePrintStackEffect").withLocOf(f))
-      case t if t.symbol.isDefined && (t.symbol.get is ctx.builtins.debug.getLocals) =>
+      case t if t.resolvedSymbol.isDefined && (t.resolvedSymbol.get is ctx.builtins.debug.getLocals) =>
         if !config.effectHandlers.exists(_.debug) then
           raise(ErrorReport(
             msg"Debugging functions are not enabled" ->
@@ -532,7 +540,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             Return(Call(Value.Ref(State.builtinOpsMap("super")), args)(true, true), implct = true)
         val clsDef = ClsLikeDefn(N, isym, sym, syntax.Cls, N, Nil, S(clsp),
           mtds, privateFlds, publicFlds, pctor, ctor)
-        Define(clsDef, term_nonTail(New(sym.ref(), Nil, N))(k))
+        Define(clsDef, term_nonTail(New(sym.ref().noIArgs, Nil, N))(k))
       
     case Try(sub, finallyDo) =>
       val l = new TempSymbol(S(sub))
@@ -605,13 +613,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case sem.Fld(sem.FldFlags.benign(), idx, S(rhs)) => L(idx -> rhs)
       case arg @ sem.Fld(flags, value, asc) => TODO(s"Other argument forms: $arg")
       case spd: Spd => R(true -> spd.term)
-      case ca: sem.CtxArg => ca.term match
-        case S(t) => 
-          R(false -> t)
-        case N => 
-          // * All contextual arguments should have been
-          // * populated by implicit resolution before lowering.
-          lastWords(s"Found unpopulated contextual argument: ${ca}.")
     // * The straightforward way to lower arguments creates too much recursion depth
     // * and makes Lowering stack overflow when lowering functions with lots of arguments.
     /* 

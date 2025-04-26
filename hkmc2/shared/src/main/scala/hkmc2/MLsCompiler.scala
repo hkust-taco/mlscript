@@ -7,7 +7,7 @@ import utils.*
 
 import hkmc2.semantics.MemberSymbol
 import hkmc2.semantics.Elaborator
-import hkmc2.semantics.ImplicitResolver
+import hkmc2.semantics.Resolver
 import semantics.Elaborator.Ctx
 import hkmc2.syntax.Keyword.`override`
 import semantics.Elaborator.State
@@ -82,8 +82,8 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
       val elab = Elaborator(etl, wd, newCtx)
       val parsed = mainParse.resultBlk
       val (blk0, _) = elab.importFrom(parsed)
-      val resolver = ImplicitResolver(rtl)
-      resolver.resolveBlk(blk0)(using ImplicitResolver.ICtx.empty)
+      val resolver = Resolver(rtl)
+      resolver.traverseBlock(blk0)(using Resolver.ICtx.empty)
       val blk = new semantics.Term.Blk(
         semantics.Import(State.runtimeSymbol, runtimeFile.toString) :: blk0.stats,
         blk0.res

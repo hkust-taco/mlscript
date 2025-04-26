@@ -6,87 +6,133 @@ class Bar[B]
 class Baz
 
 
-fun foo[A](using Foo[A], A)
+fun foo[A](using Foo[A], A) = 42
 
 use Foo[Baz] = new Foo
 
 
-:todo
+// FIXME: error message refers to `A`
+
+:e
+:re
 foo[Baz]
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.15: 	foo[Baz]
+//│ ║  l.18: 	foo[Baz]
+//│ ║        	^^^^^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.9: 	fun foo[A](using Foo[A], A) = 42
+//│ ║       	                         ^
+//│ ╙── Expected: A; Available: (Foo[Baz])
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 2 arguments but got 1
+
+:e
+:re
+foo
+//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ║  l.30: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.9: 	fun foo[A](using Foo[A], A)
+//│ ║  l.9: 	fun foo[A](using Foo[A], A) = 42
 //│ ║       	                         ^
-//│ ╙── Expected: A; Available: Map(Sym(class:Foo) -> List((App(Sym(class:Foo),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Foo),TyTup(List(Ident(Baz))))))))
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Found unpopulated contextual argument: CtxArg(None).
+//│ ╙── Expected: A; Available: (Foo[Baz])
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 2 arguments but got 1
+
+
+use Baz = new Baz
 
 :todo
 foo
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.26: 	foo
+//│ ║  l.44: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.9: 	fun foo[A](using Foo[A], A)
+//│ ║  l.9: 	fun foo[A](using Foo[A], A) = 42
 //│ ║       	                         ^
-//│ ╙── Expected: A; Available: Map(Sym(class:Foo) -> List((App(Sym(class:Foo),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Foo),TyTup(List(Ident(Baz))))))))
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Found unpopulated contextual argument: CtxArg(None).
+//│ ╙── Expected: A; Available: (Foo[Baz], Baz)
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 2 arguments but got 1
 
 
-fun foo[A](using Foo[A])(using A)
+fun foo[A](using Foo[A])(using A) = 42
 
 :todo
 foo
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.40: 	foo
+//│ ║  l.58: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.37: 	fun foo[A](using Foo[A])(using A)
+//│ ║  l.55: 	fun foo[A](using Foo[A])(using A) = 42
 //│ ║        	                               ^
-//│ ╙── Expected: A; Available: Map(Sym(class:Foo) -> List((App(Sym(class:Foo),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Foo),TyTup(List(Ident(Baz))))))))
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Found unpopulated contextual argument: CtxArg(None).
+//│ ╙── Expected: A; Available: (Foo[Baz], Baz)
+//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 0
 
 
-fun foo[A](using A)(using Foo[A])
+fun foo[A](using A)(using Foo[A]) = 42
 
 :todo
 foo
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.54: 	foo
+//│ ║  l.72: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.51: 	fun foo[A](using A)(using Foo[A])
+//│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ║        	                 ^
-//│ ╙── Expected: A; Available: Map(Sym(class:Foo) -> List((App(Sym(class:Foo),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Foo),TyTup(List(Ident(Baz))))))))
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Found unpopulated contextual argument: CtxArg(None).
+//│ ╙── Expected: A; Available: (Foo[Baz], Baz)
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
 
 use Foo[Bar[Baz]] = new Foo
 
-:fixme // Internal Error should never reach users
 :e
+:re
 foo
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.69: 	foo
+//│ ║  l.87: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.51: 	fun foo[A](using A)(using Foo[A])
+//│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ║        	                 ^
-//│ ╙── Expected: A; Available: Map(Sym(class:Foo) -> List((App(Sym(class:Foo),List(App(Sym(class:Bar),List(Sym(class:Baz))))),Instance(member:instance$App(Ident(Foo),TyTup(List(App(Ident(Bar),TyTup(List(Ident(Baz))))))))), (App(Sym(class:Foo),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Foo),TyTup(List(Ident(Baz))))))))
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Found unpopulated contextual argument: CtxArg(None).
+//│ ╙── Expected: A; Available: (Foo[Bar[Baz]], Foo[Baz], Baz)
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
+
+use Bar[Baz] = new Bar
+
+:e
+:re
+foo
+//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ║  l.101: 	foo
+//│ ║         	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
+//│ ║        	                 ^
+//│ ╙── Expected: A; Available: (Foo[Bar[Baz]], Foo[Baz], Baz, Bar[Baz])
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
+
+use Bar[Int] = new Bar
+
+:e
+:re
+foo
+//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ║  l.115: 	foo
+//│ ║         	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
+//│ ║        	                 ^
+//│ ╙── Expected: A; Available: (Foo[Bar[Baz]], Foo[Baz], Baz, Bar[Int], Bar[Baz])
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
 use Bar[Baz] = new Bar
 
 :todo
 foo
 //│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.82: 	foo
-//│ ║        	^^^
+//│ ║  l.128: 	foo
+//│ ║         	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.51: 	fun foo[A](using A)(using Foo[A])
+//│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ║        	                 ^
-//│ ╙── Expected: A; Available: Map(Sym(class:Foo) -> List((App(Sym(class:Foo),List(App(Sym(class:Bar),List(Sym(class:Baz))))),Instance(member:instance$App(Ident(Foo),TyTup(List(App(Ident(Bar),TyTup(List(Ident(Baz))))))))), (App(Sym(class:Foo),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Foo),TyTup(List(Ident(Baz))))))), Sym(class:Bar) -> List((App(Sym(class:Bar),List(Sym(class:Baz))),Instance(member:instance$App(Ident(Bar),TyTup(List(Ident(Baz))))))))
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Found unpopulated contextual argument: CtxArg(None).
+//│ ╙── Expected: A; Available: (Foo[Bar[Baz]], Foo[Baz], Baz, Bar[Baz], Bar[Int], Bar[Baz])
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
 

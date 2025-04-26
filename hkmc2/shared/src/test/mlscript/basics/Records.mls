@@ -168,14 +168,14 @@ display(x: 88, y: 99, i: 0)
 t("group")
 //│ ╔══[ERROR] Expected 2 arguments, got 1
 //│ ║  l.168: 	t("group")
-//│ ╙──       	^
+//│ ╙──       	 ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 
 :todo
 t("group")
 //│ ╔══[ERROR] Expected 2 arguments, got 1
 //│ ║  l.175: 	t("group")
-//│ ╙──       	^
+//│ ╙──       	 ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 
 :todo

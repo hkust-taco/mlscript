@@ -20,7 +20,7 @@ trait DesugaringBase(using state: State):
   protected final def fld(t: Term) = Fld(FldFlags.empty, t, N)
   protected final def tup(xs: Fld*): Term.Tup = Term.Tup(xs.toList)(Tup(Nil))
   protected final def app(l: Term, r: Term, label: Str): Term.App = app(l, r, FlowSymbol(label))
-  protected final def app(l: Term, r: Term, s: FlowSymbol): Term.App = Term.App(l, r)(App(Empty(), Empty()), s)
+  protected final def app(l: Term, r: Term, s: FlowSymbol): Term.App = Term.App(l, r)(App(Empty(), Empty()), N, s)
 
   /** Make a term that looks like `runtime.MatchResult` with its symbol. */
   protected lazy val matchResultClass: Ctxl[(Term.Sel | Term.SynthSel, ClassSymbol)] =

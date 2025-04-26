@@ -13,13 +13,17 @@ Foo(42).x
 //│   stats = Nil
 //│   res = Sel:
 //│     prefix = App:
-//│       lhs = Ref of member:Foo
+//│       lhs = Ref:
+//│         sym = member:Foo
+//│         iargsLs = N
 //│       rhs = Tup of Ls of 
 //│         Fld:
 //│           flags = ()
 //│           term = Lit of IntLit of 42
 //│           asc = N
+//│       iargsLs = N
 //│     nme = Ident of "x"
+//│     iargsLs = N
 //│ = 42
 
 
@@ -33,8 +37,11 @@ foo.x
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel:
-//│     prefix = Ref of foo
+//│     prefix = Ref:
+//│       sym = foo
+//│       iargsLs = N
 //│     nme = Ident of "x"
+//│     iargsLs = N
 //│ = 42
 
 
@@ -45,8 +52,11 @@ foo.y
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel:
-//│     prefix = Ref of foo
+//│     prefix = Ref:
+//│       sym = foo
+//│       iargsLs = N
 //│     nme = Ident of "y"
+//│     iargsLs = N
 //│ = 42
 
 
@@ -66,24 +76,34 @@ case
 //│           flags = ()
 //│           sym = caseScrut
 //│           sign = N
+//│           modulefulness = Modulefulness of N
 //│       restParam = N
 //│     body = IfLike:
 //│       kw = keyword 'if'
 //│       desugared = Cons:
 //│         head = Branch:
-//│           scrutinee = Ref of caseScrut
+//│           scrutinee = Ref:
+//│             sym = caseScrut
+//│             iargsLs = N
 //│           pattern = ClassLike:
 //│             sym = class:Foo
 //│             trm = SynthSel{class:Foo}:
-//│               prefix = Ref of member:Foo
+//│               prefix = Ref:
+//│                 sym = member:Foo
+//│                 iargsLs = N
 //│               nme = Ident of "class"
+//│               iargsLs = N
 //│             args = S of Ls of 
 //│               S of $param0
 //│             refined = false
 //│           continuation = Let:
 //│             sym = a
-//│             term = Ref of $param0
-//│             tail = Else of Ref of a
+//│             term = Ref:
+//│               sym = $param0
+//│               iargsLs = N
+//│             tail = Else of Ref:
+//│               sym = a
+//│               iargsLs = N
 //│         tail = End
 //│ Lowered:
 //│ Program:
@@ -100,6 +120,7 @@ case
 //│               flags = ()
 //│               sym = caseScrut
 //│               sign = N
+//│               modulefulness = Modulefulness of N
 //│           restParam = N
 //│       body = Match:
 //│         scrut = Ref of caseScrut

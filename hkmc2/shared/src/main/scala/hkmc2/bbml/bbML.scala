@@ -165,7 +165,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       Type.mkComposedType(typeMonoType(lhs), typeMonoType(rhs), pol)
     case _ =>
       ty.symbol.flatMap(_.asTpe) match
-      case S(cls: (ClassSymbol | TypeAliasSymbol)) => typeAndSubstType(Term.TyApp(ty, Nil), pol)
+      case S(cls: (ClassSymbol | TypeAliasSymbol)) => typeAndSubstType(Term.TyApp(ty, Nil)(N), pol)
       case S(_) => error(msg"${ty.symbol.get.getClass.toString()} is not a valid type" -> ty.toLoc :: Nil)
       case N => error(msg"Invalid type" -> ty.toLoc :: Nil) // TODO
 
@@ -220,7 +220,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val nestCtx = ctx.nextLevel
       given BbCtx = nestCtx
       val bds = params.map:
-        case Param(_, sym, _) =>
+        case Param(sym = sym) =>
           val tv = freshVar(sym)
           val sk = freshSkolem(sym)
           nestCtx &= (sym, tv, sk)
@@ -239,7 +239,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       constrain(lhsTy, FunType(rhsTy.reverse, resTy, Bot)) // TODO: right
       (resTy, lhsCtx | rhsCtx, lhsEff | rhsEff)
     case sel @ Term.SynthSel(Term.Ref(_: TopLevelSymbol), _) if sel.symbol.isDefined =>
-      val (opTy, eff) = typeCheck(Ref(sel.symbol.get)(sel.nme, 666)) // FIXME 666
+      val (opTy, eff) = typeCheck(Ref(sel.symbol.get)(sel.nme, 666, N)) // FIXME 666
       (tryMkMono(opTy, sel), Bot, eff)
     case unq @ Term.Unquoted(body) =>
       val (ty, eff) = typeCheck(body)
@@ -343,7 +343,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       else
         val nestCtx = ctx.nest
         val argsTy = params.zip(args).map:
-          case (Param(_, sym, _), ty) =>
+          case (Param(sym = sym), ty) =>
             nestCtx += sym -> ty
             ty
         given BbCtx = nestCtx
@@ -421,7 +421,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       case Term.Annotated(Annot.Untyped, _) => (Bot, Bot)
       case sel @ Term.SynthSel(Ref(_: TopLevelSymbol), nme)
         if sel.symbol.isDefined =>
-        typeCheck(Ref(sel.symbol.get)(sel.nme, 666)) // FIXME 666
+        typeCheck(Ref(sel.symbol.get)(sel.nme, 666, N)) // FIXME 666
       case Ref(sym) =>
         ctx.get(sym) match
           case Some(ty) => (ty, Bot)
@@ -442,16 +442,16 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             effBuff += eff
             ctx += sym -> rhsTy
             goStats(stats)
-          case TermDefinition(_, Fun, sym, ps :: Nil, _, sig, S(body), _, _, _) :: stats =>
-            typeFunDef(sym, Term.Lam(ps, body), sig, ctx)
+          case (td @ TermDefinition(k = Fun, params = ps :: Nil, sign = sig, body = S(body))) :: stats =>
+            typeFunDef(td.sym, Term.Lam(ps, body), sig, ctx)
             goStats(stats)
-          case TermDefinition(_, Fun, sym, Nil, _, sig, S(body), _, _, _) :: stats =>
-            typeFunDef(sym, body, sig, ctx)  // * may be a case expressions
+          case (td @ TermDefinition(k = Fun, params = Nil, sign = sig, body = S(body))) :: stats =>
+            typeFunDef(td.sym, body, sig, ctx)  // * may be a case expressions
             goStats(stats)
-          case TermDefinition(_, Fun, sym1, _, _, S(sig), None, _, _, _) :: (td @ TermDefinition(_, Fun, sym2, _, _, _, S(body), _, _, _)) :: stats
-            if sym1 === sym2 => goStats(td :: stats) // * avoid type check signatures twice
-          case TermDefinition(_, Fun, sym, _, _, S(sig), None, _, _, _) :: stats =>
-            ctx += sym -> typeType(sig)
+          case (td1 @ TermDefinition(k = Fun, sign = S(sig), body = None)) :: (td2 @ TermDefinition(k = Fun, body = S(body))) :: stats
+            if td1.sym === td2.sym => goStats(td2 :: stats) // * avoid type check signatures twice
+          case (td @ TermDefinition(k = Fun, sign = S(sig), body = None)) :: stats =>
+            ctx += td.sym -> typeType(sig)
             goStats(stats)
           case (clsDef: ClassDef) :: stats =>
             goStats(stats)
@@ -475,7 +475,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         val nestCtx = ctx.nest
         given BbCtx = nestCtx
         val tvs = params.map:
-          case Param(_, sym, sign) =>
+          case Param(_, sym, sign, _) =>
             val ty = sign.map(s => typeType(s)(using nestCtx)).getOrElse(freshVar(sym))
             nestCtx += sym -> ty
             ty
@@ -495,7 +495,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             constrain(tryMkMono(ty, term), ClassLikeType(clsSym, targs))
             require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
             (clsDfn.paramsOpt.fold(Nil)(_.params).map {
-              case Param(_, sym, sign) =>
+              case Param(_, sym, sign, _) =>
                 if sym.nme === field.name then sign else N
             }.filter(_.isDefined)) match
               case S(res) :: Nil => (typeAndSubstType(res, pol = true)(using map.toMap), eff)
@@ -527,7 +527,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             val effBuff = ListBuffer.empty[Type]
             require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
             args.iterator.zip(clsDfn.params.params).foreach {
-              case (arg, Param(_, _, S(sign))) =>
+              case (arg, Param(sign = S(sign))) =>
                 val (ty, eff) = ascribe(arg, typeAndSubstType(sign, pol = true)(using map.toMap))
                 effBuff += eff
               case _ => ???

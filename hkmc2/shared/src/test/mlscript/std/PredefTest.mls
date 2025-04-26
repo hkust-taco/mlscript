@@ -11,7 +11,7 @@ id(123)
 id()
 //│ ╔══[ERROR] Expected 1 arguments, got 0
 //│ ║  l.11: 	id()
-//│ ╙──      	^^
+//│ ╙──      	  ^^
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 
@@ -177,7 +177,7 @@ foldr(tuple)(0, 1, 2, 3)
 foldr(+)()
 //│ ╔══[ERROR] Expected at least 1 arguments, got 0
 //│ ║  l.177: 	foldr(+)()
-//│ ╙──       	^^^^^
+//│ ╙──       	        ^^
 
 
 // An alternative implementation of foldr

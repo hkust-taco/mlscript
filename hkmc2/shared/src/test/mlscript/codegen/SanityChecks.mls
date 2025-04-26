@@ -25,7 +25,7 @@ fun f2(x, y) = x + y
 f2(2)
 //│ ╔══[ERROR] Expected 2 arguments, got 1
 //│ ║  l.25: 	f2(2)
-//│ ╙──      	^^
+//│ ╙──      	  ^^^
 //│ JS:
 //│ f2 = function f2(x, y) { return x + y }; block$res2 = f2(2); undefined
 //│ = NaN
@@ -36,7 +36,7 @@ f2(2)
 f(2)
 //│ ╔══[ERROR] Expected 2 arguments, got 1
 //│ ║  l.36: 	f(2)
-//│ ╙──      	^
+//│ ╙──      	 ^^^
 //│ JS:
 //│ block$res3 = runtime.checkCall(f(2)); undefined
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
@@ -49,7 +49,7 @@ fun f(x)(y, z) = x + y + z
 f(3)(4)
 //│ ╔══[ERROR] Expected 2 arguments, got 1
 //│ ║  l.49: 	f(3)(4)
-//│ ╙──      	^
+//│ ╙──      	    ^^^
 //│ JS:
 //│ f1 = function f(...args) {
 //│   runtime.checkArgs("f", 1, true, args.length);
@@ -260,7 +260,7 @@ if M.A(1).y is
 //│   }
 //│   static toString() { return "M"; }
 //│ });
-//│ tmp5 = runtime.checkCall(M1.A(1));
+//│ tmp5 = runtime.safeCall(M1.A(1));
 //│ selRes2 = tmp5.y;
 //│ discarded1 = tmp5.y$__checkNotMethod;
 //│ if (selRes2 === undefined) {
@@ -289,7 +289,7 @@ M.A(1).y
 //│ if (selRes3 === undefined) {
 //│   throw new this.Error("Access to required field 'console' yielded 'undefined'");
 //│ }
-//│ tmp6 = runtime.checkCall(M1.A(1));
+//│ tmp6 = runtime.safeCall(M1.A(1));
 //│ selRes4 = tmp6.y;
 //│ discarded2 = tmp6.y$__checkNotMethod;
 //│ if (selRes4 === undefined) {
@@ -306,7 +306,9 @@ M.A(1).y
 M.A(1).y
   console.log()
 //│ JS:
-//│ tmp7 = M1.A(1); block$res15 = runtime.safeCall(this.console.log(tmp7.y)); undefined
+//│ tmp7 = runtime.safeCall(M1.A(1));
+//│ block$res15 = runtime.safeCall(this.console.log(tmp7.y));
+//│ undefined
 //│ > undefined
 
 :noSanityCheck
@@ -322,7 +324,7 @@ M.A(2).y > 1
 :ssjs
 M.A(1).g(0)
 //│ JS:
-//│ tmp10 = runtime.checkCall(M1.A(1)); block$res18 = runtime.safeCall(tmp10.g(0)); undefined
+//│ tmp10 = runtime.safeCall(M1.A(1)); block$res18 = runtime.safeCall(tmp10.g(0)); undefined
 //│ ═══[RUNTIME ERROR] TypeError: tmp10.g is not a function
 
 
@@ -330,7 +332,7 @@ M.A(1).g(0)
 :ssjs
 M.A(1).f(0)
 //│ JS:
-//│ tmp11 = runtime.checkCall(M1.A(1)); block$res19 = runtime.safeCall(tmp11.f(0)); undefined
+//│ tmp11 = runtime.safeCall(M1.A(1)); block$res19 = runtime.safeCall(tmp11.f(0)); undefined
 //│ = 1
 
 

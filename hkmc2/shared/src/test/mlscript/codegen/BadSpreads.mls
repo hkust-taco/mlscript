@@ -32,7 +32,7 @@ fun foo(a, ...b) = [a, ...b]
 foo()
 //│ ╔══[ERROR] Expected at least 1 arguments, got 0
 //│ ║  l.32: 	foo()
-//│ ╙──      	^^^
+//│ ╙──      	   ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected at least 1 argument but got 0
 
 

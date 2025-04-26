@@ -139,7 +139,7 @@ let
 //│ ║  l.133: 	@inline @tailrec fun fib(n) =
 //│ ╙──       	         ^^^^^^^
 
-module internal
+object internal
 
 :w
 @internal object

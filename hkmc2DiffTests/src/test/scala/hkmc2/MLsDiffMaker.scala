@@ -6,7 +6,7 @@ import mlscript.utils.*, shorthands.*
 import utils.*
 
 import hkmc2.semantics.Elaborator
-import hkmc2.semantics.ImplicitResolver
+import hkmc2.semantics.Resolver
 
 import semantics.Elaborator.Ctx
 
@@ -118,7 +118,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     override def emitDbg(str: String): Unit = output(str)
   
   var curCtx = Elaborator.State.init
-  var curICtx = ImplicitResolver.ICtx.empty
+  var curICtx = Resolver.ICtx.empty
   
   var prelude = Elaborator.Ctx.empty
   
@@ -245,20 +245,20 @@ abstract class MLsDiffMaker extends DiffMaker:
       output(s"Elaborated tree:")
       output(e.showAsTree(using post))
       
-    val resolver = ImplicitResolver(rtl)
-    curICtx = resolver.resolveBlk(e)(using curICtx)
-    
-    if showResolve.isSet then
-      output(s"Resolved: ${e.showDbg}")
-    showResolvedTree.get.foreach: post =>
-      output(s"Resolved tree:")
-      output(e.showAsTree(using post))
-    
     processTerm(e, inImport = false)
       
   
   
   def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
+    val resolver = Resolver(rtl)
+    curICtx = resolver.traverseBlock(trm)(using curICtx)
+    
+    if showResolve.isSet then
+      output(s"Resolved: ${trm.showDbg}")
+    showResolvedTree.get.foreach: post =>
+      output(s"Resolved tree:")
+      output(trm.showAsTree(using post))
+    
     if typeCheck.isSet then
       val typer = typing.TypeChecker()
       val ty = typer.typeProd(trm)
