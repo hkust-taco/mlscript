@@ -311,7 +311,7 @@ let Runtime1;
     tmp = runtime.safeCall(f());
     res = tmp;
     if (res instanceof Runtime.EffectSig.class) {
-      return runtime.safeCall(Runtime.EffectHandle(res))
+      return Runtime.EffectHandle(res)
     } else {
       return res
     }
