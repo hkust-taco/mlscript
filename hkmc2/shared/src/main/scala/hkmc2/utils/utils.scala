@@ -87,7 +87,7 @@ extension (t: Product)
         t match
           case t: Resolvable if t.iargsLs.forall(_.nonEmpty) =>
             args = args ++ Iterator:
-              "iargs = " + aux(t.iargsLs)
+              "iargsLs = " + aux(t.iargsLs)
           case _ =>
         prefix + locally:
           if inTailPos then ": \\\n" + args.mkString("\n")

@@ -151,7 +151,7 @@ R.bar
 //│   res = Sel{module:M}:
 //│     prefix = Ref{member:R} of member:R
 //│     nme = Ident of "bar"
-//│     iargs = S of Ls of 
+//│     iargsLs = S of Ls of 
 //│       Tup of Ls of 
 //│         Fld:
 //│           flags = ()
@@ -175,7 +175,7 @@ foo
 //│   stats = Nil
 //│   res = Ref{module:M}:
 //│     sym = member:foo
-//│     iargs = S of Ls of 
+//│     iargsLs = S of Ls of 
 //│       Tup of Ls of 
 //│         Fld:
 //│           flags = ()
@@ -204,7 +204,7 @@ R.bar[Int]
 //│       nme = Ident of "bar"
 //│     targs = Ls of 
 //│       Ref{member:Int} of member:Int
-//│     iargs = S of Ls of 
+//│     iargsLs = S of Ls of 
 //│       Tup of Ls of 
 //│         Fld:
 //│           flags = ()
@@ -231,7 +231,7 @@ foo[Int]
 //│     lhs = Ref{member:foo} of member:foo
 //│     targs = Ls of 
 //│       Ref{member:Int} of member:Int
-//│     iargs = S of Ls of 
+//│     iargsLs = S of Ls of 
 //│       Tup of Ls of 
 //│         Fld:
 //│           flags = ()

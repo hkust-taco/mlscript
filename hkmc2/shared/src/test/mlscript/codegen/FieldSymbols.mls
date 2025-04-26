@@ -15,15 +15,15 @@ Foo(42).x
 //│     prefix = App:
 //│       lhs = Ref:
 //│         sym = member:Foo
-//│         iargs = N
+//│         iargsLs = N
 //│       rhs = Tup of Ls of 
 //│         Fld:
 //│           flags = ()
 //│           term = Lit of IntLit of 42
 //│           asc = N
-//│       iargs = N
+//│       iargsLs = N
 //│     nme = Ident of "x"
-//│     iargs = N
+//│     iargsLs = N
 //│ = 42
 
 
@@ -39,9 +39,9 @@ foo.x
 //│   res = Sel:
 //│     prefix = Ref:
 //│       sym = foo
-//│       iargs = N
+//│       iargsLs = N
 //│     nme = Ident of "x"
-//│     iargs = N
+//│     iargsLs = N
 //│ = 42
 
 
@@ -54,9 +54,9 @@ foo.y
 //│   res = Sel:
 //│     prefix = Ref:
 //│       sym = foo
-//│       iargs = N
+//│       iargsLs = N
 //│     nme = Ident of "y"
-//│     iargs = N
+//│     iargsLs = N
 //│ = 42
 
 
@@ -84,15 +84,15 @@ case
 //│         head = Branch:
 //│           scrutinee = Ref:
 //│             sym = caseScrut
-//│             iargs = N
+//│             iargsLs = N
 //│           pattern = ClassLike:
 //│             sym = class:Foo
 //│             trm = SynthSel{class:Foo}:
 //│               prefix = Ref:
 //│                 sym = member:Foo
-//│                 iargs = N
+//│                 iargsLs = N
 //│               nme = Ident of "class"
-//│               iargs = N
+//│               iargsLs = N
 //│             args = S of Ls of 
 //│               S of $param0
 //│             refined = false
@@ -100,10 +100,10 @@ case
 //│             sym = a
 //│             term = Ref:
 //│               sym = $param0
-//│               iargs = N
+//│               iargsLs = N
 //│             tail = Else of Ref:
 //│               sym = a
-//│               iargs = N
+//│               iargsLs = N
 //│         tail = End
 //│ Lowered:
 //│ Program:

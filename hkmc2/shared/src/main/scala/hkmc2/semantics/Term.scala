@@ -49,7 +49,7 @@ sealed trait ResolvableImpl:
     case S(iargsLs) => iargsLs.foldLeft(t.withoutIArgs): (t, args) => 
       Term.App(t, args)(Tree.DummyApp, N, FlowSymbol("implicit app")).noIArgs // N: todo
   
-  def defn: Opt[Definition] = t.symbol match
+  def defn: Opt[Definition] = t.resolvedSymbol match
     case S(sym: MemberSymbol[?]) => sym.defn
     case S(sym: BlockLocalSymbol) => sym.decl match
       case S(td: Definition) => S(td)
@@ -84,7 +84,7 @@ enum Term extends Statement:
   case Builtin(id: Tree.Ident, nme: Str)
   case Ref(sym: Symbol)(val tree: Tree.Ident, val refNum: Int, var resSym: Opt[Symbol]) extends Term with ResolvableImpl
   case App(lhs: Term, rhs: Term)(val tree: Tree.App, var sym: Opt[FieldSymbol], val resSym: FlowSymbol) extends Term with ResolvableImpl
-  case TyApp(lhs: Term, targs: Ls[Term])(var sym: Opt[FieldSymbol]) extends Term with ResolvableImpl
+  case TyApp(lhs: Term, targs: Ls[Term])(var sym: Opt[Symbol]) extends Term with ResolvableImpl
   case Sel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term with ResolvableImpl
   case SynthSel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term with ResolvableImpl
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
@@ -115,15 +115,29 @@ enum Term extends Statement:
   case Handle(lhs: LocalSymbol, rhs: Term, args: List[Term],
     derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)
   
-  def symbol: Opt[Symbol] = this match
-    case ref: Ref if ref.resSym.nonEmpty => ref.resSym
+  /**
+   * The prelinminary symbol for the term that is resolved during
+   * elaboration. 
+   */
+  lazy val symbol: Opt[Symbol] = this match
     case Ref(sym) => S(sym)
     case sel: Sel => sel.sym
     case sel: SynthSel => sel.sym
     case sel: SelProj => sel.sym
+    case TyApp(lhs = lhs) => lhs.symbol
+    case _ => N
+  
+  /**
+   * The symbol representing the evaluation result of the term. This
+   * symbol is resolved during the resolution stage.
+   */
+  def resolvedSymbol: Opt[Symbol] = this match
+    case ref: Ref => ref.resSym
+    case sel: Sel => sel.sym
+    case sel: SynthSel => sel.sym
+    case sel: SelProj => sel.sym
     case app: App => app.sym
-    case tyApp: TyApp if tyApp.sym.nonEmpty => tyApp.sym
-    case TyApp(prefix, _) => prefix.symbol
+    case tyApp: TyApp => tyApp.sym
     case _ => N
   
   def sel(id: Tree.Ident, sym: Opt[FieldSymbol]): Sel =
@@ -183,7 +197,8 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
   
   def extraInfo: Str = this match
     case ref: Ref if ref.resSym.isEmpty => ""
-    case r: (Resolvable & Term | SelProj) => r.symbol.mkString
+    case r: Resolvable => r.resolvedSymbol.mkString
+    case r: SelProj => r.symbol.mkString
     case _ => ""
   
   def subStatements: Ls[Statement] = this match

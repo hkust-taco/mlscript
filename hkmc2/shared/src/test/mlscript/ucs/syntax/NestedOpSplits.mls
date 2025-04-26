@@ -33,42 +33,42 @@ fun f(x) =
 //│           term = App:
 //│             lhs = Ref:
 //│               sym = builtin:==
-//│               iargs = N
+//│               iargsLs = N
 //│             rhs = Tup of Ls of 
 //│               Fld:
 //│                 flags = ()
 //│                 term = Ref:
 //│                   sym = x
-//│                   iargs = N
+//│                   iargsLs = N
 //│                 asc = N
 //│               Fld:
 //│                 flags = ()
 //│                 term = Lit of IntLit of 1
 //│                 asc = N
-//│             iargs = N
+//│             iargsLs = N
 //│           tail = Let: \
 //│           sym = $scrut
 //│           term = App:
 //│             lhs = Ref:
 //│               sym = builtin:+
-//│               iargs = N
+//│               iargsLs = N
 //│             rhs = Tup of Ls of 
 //│               Fld:
 //│                 flags = ()
 //│                 term = Ref:
 //│                   sym = $scrut
-//│                   iargs = N
+//│                   iargsLs = N
 //│                 asc = N
 //│               Fld:
 //│                 flags = ()
 //│                 term = Lit of IntLit of 2
 //│                 asc = N
-//│             iargs = N
+//│             iargsLs = N
 //│           tail = Cons: \
 //│           head = Branch:
 //│             scrutinee = Ref:
 //│               sym = $scrut
-//│               iargs = N
+//│               iargsLs = N
 //│             pattern = Lit of BoolLit of true
 //│             continuation = Else of Lit of IntLit of 0
 //│           tail = Else of Lit of IntLit of 1

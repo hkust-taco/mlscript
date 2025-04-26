@@ -640,6 +640,11 @@ class Resolver(tl: TraceLogger)
     // the symbol it refers to.
     case t: Term.Ref if t.resSym.isEmpty =>
       t.resSym = S(t.sym)
+    // If a type application was not resolved to take implicit
+    // arguments, then its result symbol is the same as the symbol its
+    // LHS.
+    case t: Term.TyApp if t.sym.isEmpty =>
+      t.sym = t.lhs.resolvedSymbol
     case _ =>
   
   def resolveArg(p: Param)(lhs: Term)(using ictx: ICtx): Elem =
@@ -769,7 +774,7 @@ object ModuleChecker:
     t match
       case Term.Blk(_, res) => evalsToModule(res)
       case Term.IfLike(`if`, split) => split.results.exists(evalsToModule(_))
-      case t => t.symbol.exists(checkSym)
+      case t => t.resolvedSymbol.exists(checkSym)
 
 extension [T](xs: Ls[Opt[T]])
   def sequence: Opt[Ls[T]] =
