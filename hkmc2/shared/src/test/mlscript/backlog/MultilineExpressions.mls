@@ -133,7 +133,7 @@ if 1 + 2
   * 3 then 0
   + 4 then 0
 //│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:746)
+//│ FAILURE LOCATION: opSplitImpl (Parser.scala:750)
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this position
 //│ ║  l.133: 	  * 3 then 0
 //│ ╙──       	      ^^^^
@@ -161,7 +161,7 @@ if 1 + 2
 //│   rhs = IntLit of 0
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: scala.MatchError: OpSplit(IntLit(2),List(Error())) (of class hkmc2.syntax.Tree$OpSplit)
-//│ 	at: hkmc2.syntax.Tree.children(Tree.scala:141)
+//│ 	at: hkmc2.syntax.Tree.children(Tree.scala:142)
 //│ 	at: hkmc2.AutoLocated.subLocs$1(syntax.scala:40)
 //│ 	at: hkmc2.AutoLocated.toLoc(syntax.scala:42)
 //│ 	at: hkmc2.AutoLocated.toLoc$(syntax.scala:26)

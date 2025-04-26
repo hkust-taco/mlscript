@@ -66,7 +66,8 @@ object Parser:
   // private val CommaPrec = prec(',')
   private val CommaPrec = 0
   private val CommaPrecNext = CommaPrec + 1
-  private val AppPrec = precOf('.') - 1
+  private val SelPrec = precOf('.')
+  private val AppPrec = SelPrec - 1
   private val PrefixOpsPrec = AppPrec - 1
   
   final def opCharPrec(opChar: Char): Int = precOf(opChar)
@@ -730,6 +731,9 @@ abstract class Parser(
     case (NEWLINE, l0) :: _ =>
       consume
       opSplitImpl(lhs, splittingOpLoc, prec, e :: acc)
+    case (SELECT(nme), l0) :: rest =>
+      assert(SelPrec <= prec)
+      ??? // TODO?
     case (IDENT(op, true), l0) :: rest =>
       assert(opPrec(op)._1 <= prec)
       if rest.collectFirst{ case (NEWLINE, _) => }.isEmpty // TODO dedup
@@ -825,7 +829,9 @@ abstract class Parser(
         val newAcc = Subs(acc, idx).withLoc(S(l0 ++ l1 ++ idx.toLoc))
         exprCont(newAcc, prec, allowNewlines)
         */
-      case (br @ BRACKETS(Indent | Curly, toks @ ((IDENT(opStr, true), l0) :: _)), loc) :: _ if opPrec(opStr)._1 > prec =>
+      case (br @ BRACKETS(Indent | Curly,
+          toks @ ((tok @ (IDENT(_, true) | SELECT(_)), l0) :: _)), loc) :: _
+      if tok.match { case id: IDENT => opPrec(id.name)._1; case sel: SELECT => SelPrec } > prec =>
         consume
         if toks.collectFirst{ case (NEWLINE, _) => }.isEmpty then
           cur = toks ::: cur
@@ -839,6 +845,10 @@ abstract class Parser(
             cur = toks ::: cur
             exprContImpl(res, prec, allowNewlines)
       
+      // TODO
+      // case (NEWLINE, _) :: (SELECT(nme), _) :: _
+      // =>
+        
       case (OP("::"), l0) :: (IDENT(id, false), l1) :: _ =>
         consume
         consume
@@ -890,7 +900,7 @@ abstract class Parser(
         acc match // TODO: looks fishy. a better way?
           case Sel(reg, Ident("ref")) => RegRef(reg, simpleExprImpl(0))
           case _ => exprCont(acc, prec, allowNewlines)
-      case (SELECT(name), l0) :: _ => // TODO precedence?
+      case (SELECT(name), l0) :: _ if SelPrec >= prec =>
         consume
         exprCont(Sel(acc, new Ident(name).withLoc(S(l0))), prec, allowNewlines)
         /*

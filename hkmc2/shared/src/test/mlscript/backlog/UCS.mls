@@ -207,17 +207,16 @@ fun foo(x) = if x is Foo.
 fun foo(x) = if x is Foo
   .Bar then "Bar"
   .Foo then "Foo"
+//│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this position
+//│ ║  l.208: 	  .Bar then "Bar"
+//│ ╙──       	       ^^^^
 //│ ╔══[PARSE ERROR] Expected an expression; found selector instead
-//│ ║  l.208: 	  .Bar then "Bar"
+//│ ║  l.209: 	  .Foo then "Foo"
 //│ ╙──       	  ^^^^
-//│ ╔══[PARSE ERROR] Unexpected selector here
-//│ ║  l.208: 	  .Bar then "Bar"
+//│ ╔══[PARSE ERROR] Expected end of input; found selector instead
+//│ ║  l.209: 	  .Foo then "Foo"
 //│ ╙──       	  ^^^^
-//│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.207: 	fun foo(x) = if x is Foo
-//│ ║         	                     ^^^
-//│ ║  l.208: 	  .Bar then "Bar"
-//│ ╙──       	^^
+//│ /!!!\ Uncaught error: scala.MatchError: OpSplit(Ident(Foo),List(Error())) (of class hkmc2.syntax.Tree$OpSplit)
 
 // ——— ——— ———
 

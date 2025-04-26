@@ -92,6 +92,7 @@ enum Tree extends AutoLocated:
   
   def splitOn(acc: Tree): Tree = this match
     case SplitPoint() => acc
+    case Sel(pre, id) => Sel(pre.splitOn(acc), id)
     case App(lhs, rhs) => App(lhs.splitOn(acc), rhs)
     case OpApp(lhs, op, rhss) => OpApp(lhs.splitOn(acc), op, rhss)
     case OpSplit(lhs, rhss) => OpSplit(lhs.splitOn(acc), rhss)

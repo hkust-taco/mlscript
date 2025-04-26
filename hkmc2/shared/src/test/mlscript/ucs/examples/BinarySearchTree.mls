@@ -60,13 +60,13 @@ fun insert'(t, v) = if t is
     else t
   Empty then Node(v, Empty, Empty)
 //│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:746)
+//│ FAILURE LOCATION: opSplitImpl (Parser.scala:750)
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this position
 //│ ║  l.58: 	    < v' then Node(v', insert(l, v), r)
 //│ ╙──      	         ^^^^
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: scala.MatchError: OpSplit(Ident(v),List(Error())) (of class hkmc2.syntax.Tree$OpSplit)
-//│ 	at: hkmc2.syntax.Tree.children(Tree.scala:141)
+//│ 	at: hkmc2.syntax.Tree.children(Tree.scala:142)
 //│ 	at: hkmc2.AutoLocated.subLocs$1(syntax.scala:40)
 //│ 	at: hkmc2.AutoLocated.toLoc(syntax.scala:42)
 //│ 	at: hkmc2.AutoLocated.toLoc$(syntax.scala:26)
