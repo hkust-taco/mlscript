@@ -64,7 +64,7 @@ let x
 let x
 =
 1
-//│ ╔══[PARSE ERROR] Expected expression or block after 'let' binding equals sign; found newline instead
+//│ ╔══[PARSE ERROR] Expected expression or block after 'let' binding equals sign; found new line instead
 //│ ║  l.65: 	=
 //│ ║        	 ^
 //│ ║  l.66: 	1
@@ -178,7 +178,7 @@ in x
 let
 x = 1
 in x
-//│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found newline instead
+//│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found new line instead
 //│ ║  l.178: 	let
 //│ ║         	   ^
 //│ ║  l.179: 	x = 1

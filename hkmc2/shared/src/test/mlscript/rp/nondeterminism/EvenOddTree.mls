@@ -3,7 +3,7 @@
 object A
 object B
 
-class Node[T](left: Node[T], value: T, right: Node[T])
+data class Node[T](left: Node[T], value: T, right: Node[T])
 
 // The patterns generate trees that have odd or even numbers of node `A`.
 

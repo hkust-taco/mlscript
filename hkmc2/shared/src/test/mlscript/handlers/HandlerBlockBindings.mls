@@ -35,21 +35,15 @@ x
 //│ ╙──      	^
 
 
-:e
-:re
 handle h = Effect with
   fun perform(arg)(k) =
     print(arg)
 val y = 123
-//│ ╔══[ERROR] Illegal definition in term position.
-//│ ║  l.43: 	val y = 123
-//│ ╙──      	    ^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 :e
 y
 //│ ╔══[ERROR] Name not found: y
-//│ ║  l.50: 	y
+//│ ║  l.44: 	y
 //│ ╙──      	^
 
 

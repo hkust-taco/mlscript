@@ -6,11 +6,12 @@
 
 abstract class CSeq: CNil | CAppend | CIndent | CNewline | CStr | CCh
 
-class
-  CAppend(a: CSeq, b: CSeq) extends CSeq
-  CIndent(a: Int, b: CSeq) extends CSeq
-  CStr(a: List[Char]) extends CSeq
-  CCh(a: Char) extends CSeq
+data
+  class
+    CAppend(a: CSeq, b: CSeq) extends CSeq
+    CIndent(a: Int, b: CSeq) extends CSeq
+    CStr(a: List[Char]) extends CSeq
+    CCh(a: Char) extends CSeq
 
 object
   CNil extends CSeq
@@ -64,7 +65,7 @@ fun flatten(n, nlp, cseq, seqs) = if cseq is
 
 fun cShow(seq) = flatten(0, true, seq, Nil)
 
-class MkPrettyRep(cseq: CSeq, n: Int, b1: Bool, b2: Bool)
+data class MkPrettyRep(cseq: CSeq, n: Int, b1: Bool, b2: Bool)
 
 fun ppShow(width, p) = if p(width, false) is
   MkPrettyRep(seq, ll, emp, sl) then cShow(seq)
@@ -141,13 +142,6 @@ fun ppHang(p1, n, p2, width, is_vert) = if p1(width, false) is
         orL(ll1 <= n, sl2) then
           MkPrettyRep(cAppend(seq1, cAppend(cCh(" "), cIndent(ll1 + 1, seq2))), ll1 + 1 + ll2, false, andL(sl1, sl2))
         else MkPrettyRep(cAppend(seq1, cAppend(cNL, cIndent(n, seq2_))), ll2_, false, false)
-
-fun ppSep(ps, width, is_vert) = if
-  ps is Nil then ppNil(width, is_vert)
-  ps is p :: Nil then p(width, is_vert)
-  ppCat(ps, width, is_vert) is MkPrettyRep(seq, ll, emp, sl) and
-    sl then MkPrettyRep(seq, ll, emp, sl)
-    else ppAboves(ps, width, is_vert)
 
 fun testPretty_nofib() =
   fun pp_word(a, b) = ppStr(nofibStringToList("xxxxx"), a, b)

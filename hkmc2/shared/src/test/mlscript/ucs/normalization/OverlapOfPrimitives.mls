@@ -138,9 +138,11 @@ fun f(arg) = if arg is
 //│ Normalized:
 //│ >  if arg is Object then member:String#666(arg#666)
 
+import "../../../mlscript-compile/Runtime.mls"
+
 fun f(arg) = if arg is
   Object then String(arg)
-  MatchResult then "just Foo"
+  Runtime.MatchResult then "just Foo"
 //│ Normalized:
 //│ >  if arg is Object then member:String#666(arg#666)
 

@@ -45,6 +45,7 @@ enum Tree extends AutoLocated:
   case Under()
   case Unt()
   case Ident(name: Str)
+  case Pun(eql: Bool, id: Ident) // `=ident` (eql) or `:ident` (!eql)
   case Keywrd(kw: Keyword)
   case IntLit(value: BigInt)             extends Tree with Literal
   case DecLit(value: BigDecimal)         extends Tree with Literal
@@ -89,6 +90,7 @@ enum Tree extends AutoLocated:
 
   def children: Ls[Tree] = this match
     case _: Empty | _: Error | _: Ident | _: Literal | _: Under | _: Unt => Nil
+    case Pun(_, e) => e :: Nil
     case Bra(_, e) => e :: Nil
     case Block(stmts) => stmts
     case OpBlock(items) => items.flatMap:
@@ -120,12 +122,14 @@ enum Tree extends AutoLocated:
     case SynthSel(prefix, name) => prefix :: Nil
     case DynAccess(prefix, fld, ai) => prefix :: fld :: Nil
     case Open(bod) => bod :: Nil
+    case OpenIn(opened, body) => opened :: body :: Nil
     case Def(lhs, rhs) => lhs :: rhs :: Nil
     case Spread(_, _, body) => body.toList
     case Annotated(annotation, target) => annotation :: target :: Nil
     case Constructor(decl) => decl :: Nil
     case MemberProj(cls, name) => cls :: Nil
     case Keywrd(kw) => Nil
+    case Dummy => Nil
   
   def describe: Str = this match
     case Empty() => "empty"
@@ -135,8 +139,9 @@ enum Tree extends AutoLocated:
     case IntLit(value) => "integer literal"
     case DecLit(value) => "decimal literal"
     case StrLit(value) => "string literal"
-    case UnitLit(value) => if value then "null" else "undefined"
     case BoolLit(value) => s"$value literal"
+    case UnitLit(value) => if value then "null" else "undefined"
+    case Unt() => "unit"
     case Bra(k, _) => k.name + " section"
     case Block(stmts) => "block"
     case OpBlock(_) => "operator block"
@@ -154,7 +159,7 @@ enum Tree extends AutoLocated:
     case SynthSel(prefix, name) => "synthetic selection"
     case DynAccess(prefix, name, true) => "dynamic index access"
     case DynAccess(prefix, name, false) => "dynamic field access"
-    case InfixApp(lhs, kw, rhs) => "infix operation"
+    case InfixApp(lhs, kw, rhs) => "infix operator"
     case New(body, _) => "new"
     case IfLike(Keyword.`if`, _, split) => "if expression"
     case IfLike(Keyword.`while`, _, split) => "while expression"
@@ -171,6 +176,8 @@ enum Tree extends AutoLocated:
     case Constructor(_) => "constructor"
     case MemberProj(_, _) => "member projection"
     case Keywrd(kw) => s"'${kw.name}' keyword"
+    case Unt() => "unit"
+    case Dummy => "‹dummy›"
     
   def deparenthesized: Tree = this match
     case Bra(BracketKind.Round, inner) => inner.deparenthesized
@@ -180,19 +187,31 @@ enum Tree extends AutoLocated:
   
   lazy val desugared: Tree = this match
     
+    case Pun(false, id) =>
+      InfixApp(id, Keyword.`:`, id)
+    
     // TODO generalize to pattern-let and rm this special case
     case LetLike(kw, und @ Under(), r, b) =>
       LetLike(kw, Ident("_").withLocOf(und), r, b)
     
-    case Modified(Keyword.`declare`, modLoc, s) =>
-      Annotated(Keywrd(Keyword.`declare`), s) // TODO properly attach location
-    case Modified(Keyword.`abstract`, modLoc, s) =>
-      Annotated(Keywrd(Keyword.`abstract`), s) // TODO properly attach location
-    case Modified(Keyword.`mut`, modLoc, TermDef(ImmutVal, anme, rhs)) =>
-      TermDef(MutVal, anme, rhs).withLocOf(this).desugared
-    case LetLike(letLike, App(f @ Ident(nme), Tup((id: Ident) :: r :: Nil)), N, bodo)
+    case PossiblyAnnotated(anns, m: Modified) =>
+      PossiblyAnnotated(anns,
+        m match
+        case Modified(Keyword.`declare`, modLoc, s) =>
+          Annotated(Keywrd(Keyword.`declare`), s.desugared) // TODO properly attach location
+        case Modified(Keyword.`data`, modLoc, s) =>
+          Annotated(Keywrd(Keyword.`data`), s.desugared) // TODO properly attach location
+        case Modified(Keyword.`abstract`, modLoc, s) =>
+          Annotated(Keywrd(Keyword.`abstract`), s.desugared) // TODO properly attach location
+        case Modified(Keyword.`mut`, modLoc, TermDef(ImmutVal, anme, rhs)) =>
+          TermDef(MutVal, anme, rhs).withLocOf(this).desugared
+        case _ => m
+      )
+    
+    case PossiblyAnnotated(anns, LetLike(letLike, App(f @ Ident(nme), Tup((id: Ident) :: r :: Nil)), N, bodo))
     if nme.endsWith("=") =>
-      LetLike(letLike, id, S(App(Ident(nme.init), Tup(id :: r :: Nil))), bodo).withLocOf(this).desugared
+      PossiblyAnnotated(anns, LetLike(letLike, id, S(App(Ident(nme.init), Tup(id :: r :: Nil))), bodo).withLocOf(this).desugared)
+    
     case _ => this
   
   /** 

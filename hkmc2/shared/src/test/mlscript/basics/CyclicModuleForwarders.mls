@@ -1,0 +1,12 @@
+:js
+
+fun f: module M2 = M1.List
+module M1 with
+  fun List: module M2 = M2.List
+module M2 with
+  fun List: module M1 = M1.List
+
+:todo
+:e
+f
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded

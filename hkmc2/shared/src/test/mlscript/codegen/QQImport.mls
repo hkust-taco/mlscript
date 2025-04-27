@@ -1,50 +1,47 @@
 :js
 
+import "../../mlscript-compile/Term.mls"
 
-import "../../mlscript-compile/Runtime.mls"
-open Runtime
-
-
-term.print
+Term.print
 //│ = [function print]
 
 
-term.print(`42)
+Term.print(`42)
 //│ > 42
 
 
-term.print(`+)
+Term.print(`+)
 //│ > +
 
 
-term.print(`1 `+ `2)
+Term.print(`1 `+ `2)
 //│ > (+)(1, 2)
 
 
-term.print(x `=> x)
+Term.print(x `=> x)
 //│ > (x_0) =>
 //│ >   x_0
 
 
-term.print((x, y) `=> x `+ y)
+Term.print((x, y) `=> x `+ y)
 //│ > (x_1, y_0) =>
 //│ >   (+)(x_1, y_0)
 
 
-term.print(`let x = `42 `in x)
+Term.print(`let x = `42 `in x)
 //│ > let x_2
 //│ > x_2 = 42
 //│ > x_2
 
 
-term.print(`if `true then `true else `false)
+Term.print(`if `true then `true else `false)
 //│ > if 
 //│ >   let scrut_0 = true
 //│ >   scrut_0 is true then true
 //│ >   else false
 
 
-term.print(x `=> `if x `== `0.0 then `1.0 else x)
+Term.print(x `=> `if x `== `0.0 then `1.0 else x)
 //│ > (x_3) =>
 //│ >   if 
 //│ >     let scrut_1 = (==)(x_3, 0)
@@ -74,7 +71,7 @@ QuoteInc.res(42)
 import "../../mlscript-compile/CSP.mls"
 
 
-term.codegen(CSP.foo(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPFoo.mls")
+Term.codegen(CSP.foo(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPFoo.mls")
 
 
 import "../../mlscript-compile/quotes/CSPFoo.mls"
@@ -84,7 +81,7 @@ CSPFoo.res
 //│ = 124
 
 
-term.codegen(CSP.bar(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPBar.mls")
+Term.codegen(CSP.bar(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPBar.mls")
 
 
 import "../../mlscript-compile/quotes/CSPBar.mls"

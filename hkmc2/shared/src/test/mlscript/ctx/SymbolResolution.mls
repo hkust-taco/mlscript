@@ -1,0 +1,249 @@
+
+module M with
+  val foo: module M = M
+  fun bar: module M = M
+  fun baz(): module M = M
+  fun that: module N = N
+module N with
+  fun that: module M = M
+
+module R with
+  fun foo()(): module N = N
+  fun bar[T](using Int)(using Num)(using Str): module M = M
+
+fun foo[T](using Int)(using Num)(using Str): module M = M
+
+use Int = 42
+use Num = 4.2
+use Str = "42"
+
+:global
+:rt
+
+M.foo
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Sel{module:M}:
+//│     prefix = Ref{member:M} of member:M
+//│     nme = Ident of "foo"
+
+M.bar
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Sel{module:M}:
+//│     prefix = Ref{member:M} of member:M
+//│     nme = Ident of "bar"
+
+M.baz
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Sel{member:baz}:
+//│     prefix = Ref{member:M} of member:M
+//│     nme = Ident of "baz"
+
+M.baz()
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = App{module:M}:
+//│     lhs = Sel{member:baz}:
+//│       prefix = Ref{member:M} of member:M
+//│       nme = Ident of "baz"
+//│     rhs = Tup of Nil
+
+M.foo.bar.baz()
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = App{module:M}:
+//│     lhs = Sel{member:baz}:
+//│       prefix = Sel{module:M}:
+//│         prefix = Sel{module:M}:
+//│           prefix = Ref{member:M} of member:M
+//│           nme = Ident of "foo"
+//│         nme = Ident of "bar"
+//│       nme = Ident of "baz"
+//│     rhs = Tup of Nil
+
+M.that.that
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Sel{module:M}:
+//│     prefix = Sel{module:N}:
+//│       prefix = Ref{member:M} of member:M
+//│       nme = Ident of "that"
+//│     nme = Ident of "that"
+
+M.that.that.that.that.that.that
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Sel{module:M}:
+//│     prefix = Sel{module:N}:
+//│       prefix = Sel{module:M}:
+//│         prefix = Sel{module:N}:
+//│           prefix = Sel{module:M}:
+//│             prefix = Sel{module:N}:
+//│               prefix = Ref{member:M} of member:M
+//│               nme = Ident of "that"
+//│             nme = Ident of "that"
+//│           nme = Ident of "that"
+//│         nme = Ident of "that"
+//│       nme = Ident of "that"
+//│     nme = Ident of "that"
+
+R.foo
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Sel{member:foo}:
+//│     prefix = Ref{member:R} of member:R
+//│     nme = Ident of "foo"
+
+R.foo()
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = App:
+//│     lhs = Sel{member:foo}:
+//│       prefix = Ref{member:R} of member:R
+//│       nme = Ident of "foo"
+//│     rhs = Tup of Nil
+
+R.foo()()
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = App{module:N}:
+//│     lhs = App:
+//│       lhs = Sel{member:foo}:
+//│         prefix = Ref{member:R} of member:R
+//│         nme = Ident of "foo"
+//│       rhs = Tup of Nil
+//│     rhs = Tup of Nil
+
+R.foo()()()
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = App:
+//│     lhs = App{module:N}:
+//│       lhs = App:
+//│         lhs = Sel{member:foo}:
+//│           prefix = Ref{member:R} of member:R
+//│           nme = Ident of "foo"
+//│         rhs = Tup of Nil
+//│       rhs = Tup of Nil
+//│     rhs = Tup of Nil
+
+
+
+
+// the symbol of this Sel should be M because of the implicit application
+R.bar
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Sel{module:M}:
+//│     prefix = Ref{member:R} of member:R
+//│     nme = Ident of "bar"
+//│     iargsLs = S of Ls of 
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref{member:instance$Ident(Int)} of member:instance$Ident(Int)
+//│           asc = N
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref{member:instance$Ident(Num)} of member:instance$Ident(Num)
+//│           asc = N
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref{member:instance$Ident(Str)} of member:instance$Ident(Str)
+//│           asc = N
+
+// the symbol of this Ref should be M because of the implicit application
+foo
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Ref{module:M}:
+//│     sym = member:foo
+//│     iargsLs = S of Ls of 
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref{member:instance$Ident(Int)} of member:instance$Ident(Int)
+//│           asc = N
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref{member:instance$Ident(Num)} of member:instance$Ident(Num)
+//│           asc = N
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref{member:instance$Ident(Str)} of member:instance$Ident(Str)
+//│           asc = N
+
+// the symbol of this TyApp should be M because of the implicit application
+// note that the resolved symbol for implicit application is on TyApp instead of on Sel
+R.bar[Int]
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = TyApp{module:M}:
+//│     lhs = Sel{member:bar}:
+//│       prefix = Ref{member:R} of member:R
+//│       nme = Ident of "bar"
+//│     targs = Ls of 
+//│       Ref{member:Int} of member:Int
+//│     iargsLs = S of Ls of 
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref{member:instance$Ident(Int)} of member:instance$Ident(Int)
+//│           asc = N
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref{member:instance$Ident(Num)} of member:instance$Ident(Num)
+//│           asc = N
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref{member:instance$Ident(Str)} of member:instance$Ident(Str)
+//│           asc = N
+
+// the symbol of this TyApp should be M because of the implicit application
+// note that the resolved symbol for implicit application is on TyApp instead of on Ref
+foo[Int]
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = TyApp{module:M}:
+//│     lhs = Ref{member:foo} of member:foo
+//│     targs = Ls of 
+//│       Ref{member:Int} of member:Int
+//│     iargsLs = S of Ls of 
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref{member:instance$Ident(Int)} of member:instance$Ident(Int)
+//│           asc = N
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref{member:instance$Ident(Num)} of member:instance$Ident(Num)
+//│           asc = N
+//│       Tup of Ls of 
+//│         Fld:
+//│           flags = ()
+//│           term = Ref{member:instance$Ident(Str)} of member:instance$Ident(Str)
+//│           asc = N

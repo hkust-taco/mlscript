@@ -3,13 +3,13 @@ package semantics
 package ucs
 
 import mlscript.utils.*, shorthands.*
-import syntax.Tree.*, Elaborator.{Ctxl, ctx}
+import syntax.Tree.*, Elaborator.{Ctxl, ctx}, Elaborator.State
 
 /** Contains some helpers that makes UCS desugaring easier. */
-trait DesugaringBase(using state: Elaborator.State):
+trait DesugaringBase(using state: State):
   val elaborator: Elaborator
 
-  import elaborator.tl.*, state.globalThisSymbol
+  import elaborator.tl.*
 
   protected final def sel(p: Term, k: Ident): Term.SynthSel = Term.SynthSel(p, k)(N)
   protected final def sel(p: Term, k: Ident, s: FieldSymbol): Term.SynthSel = Term.SynthSel(p, k)(S(s))
@@ -20,62 +20,52 @@ trait DesugaringBase(using state: Elaborator.State):
   protected final def fld(t: Term) = Fld(FldFlags.empty, t, N)
   protected final def tup(xs: Fld*): Term.Tup = Term.Tup(xs.toList)(Tup(Nil))
   protected final def app(l: Term, r: Term, label: Str): Term.App = app(l, r, FlowSymbol(label))
-  protected final def app(l: Term, r: Term, s: FlowSymbol): Term.App = Term.App(l, r)(App(Empty(), Empty()), s)
+  protected final def app(l: Term, r: Term, s: FlowSymbol): Term.App = Term.App(l, r)(App(Empty(), Empty()), N, s)
 
-  /** Get the class symbol defined in the `Predef` module. */
-  protected def resolvePredefMember(name: Str): Ctxl[(Term.SynthSel, ClassSymbol)] =
-    val predefSymbol = ctx.builtins.Predef
-    val innerSel = sel(globalThisSymbol.ref(), "Predef", predefSymbol)
-    val memberSymbol = predefSymbol.tree.definedSymbols.get(name).flatMap(_.asCls).getOrElse:
-      lastWords(s"Cannot resolve `$name` in `Predef`.")
-    (sel(innerSel, name, memberSymbol), memberSymbol)
+  /** Make a term that looks like `runtime.MatchResult` with its symbol. */
+  protected lazy val matchResultClass: Ctxl[(Term.Sel | Term.SynthSel, ClassSymbol)] =
+    (State.runtimeSymbol.ref().selNoSym("MatchResult", synth=true), State.matchResultClsSymbol)
 
-  /** Make a term looks like `globalThis.Predef.MatchResult` with its symbol. */
-  protected lazy val matchResultClass: Ctxl[(Term.SynthSel, ClassSymbol)] = resolvePredefMember("MatchResult")
-
-  /** Make a pattern looks like `globalThis.Predef.MatchResult.class`. */
+  /** Make a pattern that looks like `runtime.MatchResult.class`. */
   protected def matchResultPattern(parameters: Opt[List[BlockLocalSymbol]]): Ctxl[Pattern.ClassLike] =
     val (classRef, classSym) = matchResultClass
-    val classSel = Term.SynthSel(matchResultClass._1, Ident("class"))(S(classSym))
-    Pattern.ClassLike(classSym, classSel, parameters, false)(Empty())
+    val classSel = Term.SynthSel(classRef, Ident("class"))(S(classSym))
+    Pattern.ClassLike(classSym, classSel, parameters.map(_.map(S.apply)), false)(Empty())
 
-  /** Make a term looks like `globalThis.Predef.MatchFailure` with its symbol. */
-  protected lazy val matchFailureClass: Ctxl[(Term.SynthSel, ClassSymbol)] = resolvePredefMember("MatchFailure")
+  /** Make a term that looks like `runtime.MatchFailure` with its symbol. */
+  protected lazy val matchFailureClass: Ctxl[(Term.Sel | Term.SynthSel, ClassSymbol)] =
+    (State.runtimeSymbol.ref().selNoSym("MatchFailure", synth=true), State.matchFailureClsSymbol)
 
-  /** Make a pattern looks like `globalThis.Predef.MatchFailure.class`. */
+  /** Make a pattern that looks like `runtime.MatchFailure.class`. */
   protected def matchFailurePattern(parameters: Opt[List[BlockLocalSymbol]]): Ctxl[Pattern.ClassLike] =
     val (classRef, classSym) = matchResultClass
-    val classSel = Term.SynthSel(matchResultClass._1, Ident("class"))(S(classSym))
-    Pattern.ClassLike(classSym, classSel, parameters, false)(Empty())
+    val classSel = Term.SynthSel(classRef, Ident("class"))(S(classSym))
+    Pattern.ClassLike(classSym, classSel, parameters.map(_.map(S.apply)), false)(Empty())
 
-  /** Create a term that selects a method in the `Predef` module. */
-  protected final def selectPredefMethod =
-    sel(sel(globalThisSymbol.ref(), "Predef"), _: Str)
+  protected lazy val tupleSlice = sel(sel(state.runtimeSymbol.ref(), "Tuple"), "slice")
+  protected lazy val tupleGet = sel(sel(state.runtimeSymbol.ref(), "Tuple"), "get")
+  protected lazy val stringStartsWith = sel(sel(state.runtimeSymbol.ref(), "Str"), "startsWith")
+  protected lazy val stringGet = sel(sel(state.runtimeSymbol.ref(), "Str"), "get")
+  protected lazy val stringDrop = sel(sel(state.runtimeSymbol.ref(), "Str"), "drop")
 
-  protected lazy val tupleSlice = selectPredefMethod("tupleSlice")
-  protected lazy val tupleGet = selectPredefMethod("tupleGet")
-  protected lazy val stringStartsWith = selectPredefMethod("stringStartsWith")
-  protected lazy val stringGet = selectPredefMethod("stringGet")
-  protected lazy val stringDrop = selectPredefMethod("stringDrop")
-
-  /** Make a term that looks like `tupleGet(t, i)`. */
+  /** Make a term that looks like `runtime.Tuple.get(t, i)`. */
   protected final def callTupleGet(t: Term, i: Int, label: Str): Ctxl[Term] =
     callTupleGet(t, i, FlowSymbol(label))
 
-  /** Make a term that looks like `tupleGet(t, i)`. */
+  /** Make a term that looks like `runtime.Tuple.slice(t, i)`. */
   protected final def callTupleGet(t: Term, i: Int, s: FlowSymbol): Ctxl[Term] =
     app(tupleGet, tup(fld(t), fld(int(i))), s)
 
-  /** Make a term that looks like `stringStartsWith(t, p)`. */
-  protected final def callStringStartsWith(t: Term, p: Term, label: Str): Ctxl[Term] =
+  /** Make a term that looks like `runtime.Str.startsWith(t, p)`. */
+  protected final def callStringStartsWith(t: Term.Ref, p: Term, label: Str): Ctxl[Term] =
     app(stringStartsWith, tup(fld(t), fld(p)), FlowSymbol(label))
 
-  /** Make a term that looks like `stringStartsWith(t, i)`. */
-  protected final def callStringGet(t: Term, i: Int, label: Str): Ctxl[Term] =
+  /** Make a term that looks like `runtime.Str.get(t, i)`. */
+  protected final def callStringGet(t: Term.Ref, i: Int, label: Str): Ctxl[Term] =
     app(stringGet, tup(fld(t), fld(int(i))), FlowSymbol(label))
 
-  /** Make a term that looks like `stringStartsWith(t, n)`. */
-  protected final def callStringDrop(t: Term, n: Int, label: Str): Ctxl[Term] =
+  /** Make a term that looks like `runtime.Str.drop(t, n)`. */
+  protected final def callStringDrop(t: Term.Ref, n: Int, label: Str): Ctxl[Term] =
     app(stringDrop, tup(fld(t), fld(int(n))), FlowSymbol(label))
 
   protected final def tempLet(dbgName: Str, term: Term)(inner: TempSymbol => Split): Split =

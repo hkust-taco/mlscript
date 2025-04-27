@@ -35,7 +35,7 @@ print(12)
 //│ > 42
 
 
-globalThis.Predef.print(123)
+Predef.print(123)
 //│ > 123
 
 

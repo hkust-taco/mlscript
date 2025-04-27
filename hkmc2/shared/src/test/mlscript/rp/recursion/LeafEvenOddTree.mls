@@ -2,7 +2,7 @@
 
 object A
 object B
-class Pair[A, B](first: A, second: B)
+data class Pair[A, B](first: A, second: B)
 
 [A, B]
 //│ = [A, B]

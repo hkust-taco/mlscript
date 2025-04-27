@@ -1,0 +1,115 @@
+import "../../Option.mls"
+import "../../Predef.mls"
+
+open Option { Some, None }
+open Predef { mkStr }
+
+module Token with ...
+
+object
+  Angle
+  Round
+  Square
+  Curly
+  BeginEnd
+
+type BracketKind = Angle | Round | Square | Curly | BeginEnd
+
+module LiteralKind with
+  object
+    Integer
+    Decimal
+    String
+    Boolean
+
+abstract class Token with
+  let _location = None
+  fun withLocation(start, end, lookupTable) =
+    set _location = Some of start: start, end: end, lookupTable: lookupTable
+    this
+  fun location = _location
+  
+  fun displayLocation = if _location is
+    Some(location) then
+      let start = location.lookupTable.lookup(location.start)
+      let end = location.lookupTable.lookup(location.end)
+      mkStr of
+        start.0.toString(), ":", start.1.toString()
+        "-"
+        end.0.toString(), ":", end.1.toString()
+    else ""
+
+class LineLookupTable(lines: Array[Int]) with
+  fun lookup(index: Int): [Int, Int] =
+    if index < 0 do
+      set index = 0
+    let
+      begin = 0
+      end = lines.length
+      mid = Math.floor of (begin + end) / 2
+    while begin < end do
+      if index <= lines.at(mid) then
+        set end = mid
+      else
+        set begin = mid + 1
+      set mid = Math.floor of (begin + end) / 2
+    let line = mid + 1
+    let column = index - if mid == 0 then -1 else lines.at(mid - 1)
+    [line, column]
+
+data
+  class
+    Space() extends Token
+    Error() extends Token
+    Comment(content: Str) extends Token
+    Identifier(name: Str, symbolic: Bool) extends Token
+    Literal(kind, literal: Str) extends Token
+
+fun same(a, b) = if
+  a is Space and b is Space then true
+  a is Comment(c) and b is Comment(c') then c == c'
+  a is Identifier(n, s) and b is Identifier(n', s') then n == n' and s == s'
+  a is Literal(k, l) and b is Literal(k', l') then k == k' and l == l'
+  else false
+
+fun integer(literal, endIndex)(using llt: LineLookupTable) =
+  Literal(LiteralKind.Integer, literal).withLocation of
+    endIndex - literal.length, endIndex, llt
+fun decimal(literal, endIndex)(using llt: LineLookupTable) =
+  Literal(LiteralKind.Decimal, literal).withLocation of
+    endIndex - literal.length, endIndex, llt
+fun string(literal, startIndex, endIndex)(using llt: LineLookupTable) =
+  Literal(LiteralKind.String, literal).withLocation(startIndex, endIndex, llt)
+fun boolean(literal, endIndex)(using llt: LineLookupTable) =
+  Literal(LiteralKind.Boolean, literal).withLocation of
+    endIndex - literal.length, endIndex, llt
+fun identifier(name, endIndex)(using llt: LineLookupTable) =
+  Identifier(name, false).withLocation of
+    endIndex - name.length, endIndex, llt
+fun symbol(name, endIndex)(using llt: LineLookupTable) =
+  Identifier(name, true).withLocation of
+    endIndex - name.length, endIndex, llt
+fun comment(content, startIndex, endIndex)(using llt: LineLookupTable) =
+  Comment(content).withLocation(startIndex, endIndex, llt)
+fun error(startIndex, endIndex)(using llt: LineLookupTable) =
+  Error().withLocation(startIndex, endIndex, llt)
+fun space(startIndex, endIndex)(using llt: LineLookupTable) =
+  Space().withLocation(startIndex, endIndex, llt)
+  
+fun summary(token) = if token is
+  Space then "␠"
+  Error then "⚠"
+  Comment(_) then "\uD83D\uDCAC" // The text ballon emoji.
+  Identifier(name, _) then name
+  Literal(_, literal) then literal
+
+fun display(token) = (if token is
+  Space then "space"
+  Error then "error"
+  Comment then "comment"
+  Identifier(name, _) then "identifier `" + name + "`"
+  Literal(kind, value) then mkStr of
+    kind.toString().toLowerCase()
+    " "
+    JSON.stringify(value)
+  ) + " at " + token.displayLocation

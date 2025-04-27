@@ -1,6 +1,9 @@
 :js
 
 
+import "../../mlscript-compile/Term.mls"
+
+
 `42
 //│ = Lit(42)
 
@@ -35,12 +38,12 @@ x `=>
   x
 //│ JS (unsanitized):
 //│ let tmp6, x1, tmp7, tmp8, tmp9;
-//│ tmp6 = runtime.term.freshName("x");
-//│ x1 = new runtime.term.Symbol(tmp6);
-//│ tmp7 = new runtime.term.Ref(x1);
+//│ tmp6 = Term.freshName("x");
+//│ x1 = new Term.Symbol(tmp6);
+//│ tmp7 = new Term.Ref(x1);
 //│ tmp8 = Predef.print(tmp7);
-//│ tmp9 = new runtime.term.Ref(x1);
-//│ new runtime.term.Lam([
+//│ tmp9 = new Term.Ref(x1);
+//│ new Term.Lam([
 //│   x1
 //│ ], tmp9)
 //│ > Ref(Symbol("x_1"))
@@ -68,19 +71,19 @@ f`(`0)
 `if `true then `true else `false
 //│ JS (unsanitized):
 //│ let tmp33, tmp34, tmp35, tmp36, tmp37, tmp38, tmp39, tmp40, tmp41, tmp42, tmp43, tmp44;
-//│ tmp33 = runtime.term.freshName("scrut");
-//│ tmp34 = new runtime.term.Symbol(tmp33);
-//│ tmp35 = new runtime.term.Lit(true);
-//│ tmp36 = new runtime.term.Ref(tmp34);
-//│ tmp37 = new runtime.term.LitPattern(true);
-//│ tmp38 = new runtime.term.Lit(true);
-//│ tmp39 = new runtime.term.Else(tmp38);
-//│ tmp40 = new runtime.term.Branch(tmp36, tmp37, tmp39);
-//│ tmp41 = new runtime.term.Lit(false);
-//│ tmp42 = new runtime.term.Else(tmp41);
-//│ tmp43 = new runtime.term.Cons(tmp40, tmp42);
-//│ tmp44 = new runtime.term.Let(tmp34, tmp35, tmp43);
-//│ new runtime.term.IfLike(runtime.term.KeywordIf, tmp44)
+//│ tmp33 = Term.freshName("scrut");
+//│ tmp34 = new Term.Symbol(tmp33);
+//│ tmp35 = new Term.Lit(true);
+//│ tmp36 = new Term.Ref(tmp34);
+//│ tmp37 = new Term.LitPattern(true);
+//│ tmp38 = new Term.Lit(true);
+//│ tmp39 = new Term.Else(tmp38);
+//│ tmp40 = new Term.Branch(tmp36, tmp37, tmp39);
+//│ tmp41 = new Term.Lit(false);
+//│ tmp42 = new Term.Else(tmp41);
+//│ tmp43 = new Term.Cons(tmp40, tmp42);
+//│ tmp44 = new Term.Let(tmp34, tmp35, tmp43);
+//│ new Term.IfLike(Term.KeywordIf, tmp44)
 //│ = IfLike(KeywordIf, Let(Symbol("scrut_0"), Lit(true), Cons(Branch(Ref(Symbol("scrut_0")), LitPattern(true), Else(Lit(true))), Else(Lit(false)))))
 
 

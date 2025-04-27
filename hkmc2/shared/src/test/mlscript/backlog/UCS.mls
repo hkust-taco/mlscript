@@ -15,6 +15,7 @@ while
 // ——— ——— ———
 
 let arrMatches = ()
+//│ arrMatches = ()
 
 // * Note: produces a match error
 :fixme
@@ -37,7 +38,7 @@ if
   true and
   true do
     print("ok")
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: infix on newline at Ln 2 Col 11:Ln 2 Col 11
 
 if
   true and
@@ -51,7 +52,7 @@ if
   and
   true do
     print("ok")
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: infix on newline at Ln 3 Col 6:Ln 3 Col 6
 
 if
   true
@@ -87,9 +88,9 @@ else
   1
 //│ ╔══[ERROR] The following branches are unreachable.
 //│ ╟── Because the previous split is full.
-//│ ║  l.84: 	if audits.has(1) === true do
+//│ ║  l.85: 	if audits.has(1) === true do
 //│ ║        	   ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.85: 	  print("ok")
+//│ ║  l.86: 	  print("ok")
 //│ ╙──      	^^^^^^^^^^^^^
 //│ = 1
 
@@ -107,6 +108,108 @@ if 1 + 1
     * 2 == 1 then "A"
     |> id is r then r
 //│ = 2
+
+// ——— ——— ———
+
+class Some(val v)
+
+Some(1) is
+  Some of [process, rest] do "hi"
+//│ ╔══[ERROR] Unrecognized pattern (infix operator)
+//│ ║  l.117: 	  Some of [process, rest] do "hi"
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^
+//│ = false
+
+// ——— ——— ———
+
+class Some(val v)
+object None
+
+// :ucs normalized
+// Uncomment the line above to see the explosion: ~1200 lines of code.
+// If the number of branches continues to increase, the time duration of
+// compilation will noticeably slow down.
+fun parse(text: Str): [Int, Str] =
+  fun char(idx: Int) = if idx < text.length then
+    Some of text.charAt of idx
+  else
+    None
+  
+  // Some helper parsing utilities.
+  fun a(idx: Int): [Int, Str] = ???
+  fun b(idx: Int): [Int, Str] = ???
+  fun c(idx: Int): [Int, Str] = ???
+  fun d(idx: Int): [Int, Str] = ???
+  fun e(idx: Int): [Int, Str] = ???
+  fun f(idx: Int): [Int, Str] = ???
+  fun g(idx: Int): [Int, Str] = ???
+  
+  // Note: Use `is` instead `==` can mitigate the explosion. Because the
+  // specialization knows those literal string patterns are disjoint.
+  fun launch(idx: Int) = if char(idx) is Some(ch) and ch ==
+    "a" and a(idx + 1) is [idx', res] then ???
+    "b" and b(idx + 1) is [idx', res'] then ???
+    "c" and c(idx + 1) is [idx', res''] then ???
+    "d" and d(idx + 1) is [idx', res'''] then ???
+    "e" and e(idx + 1) is [idx', res''''] then ???
+    "f" and f(idx + 1) is [idx', res'''''] then ???
+    "g" and g(idx + 1) is [idx', res'''''''] then ???
+    else [idx, ""]
+  
+  launch(0)
+
+// ——— ——— ———
+
+data class Tuple(a, b, c)
+
+let foo =
+  case
+    Tuple(...elements) then elements
+//│ ╔══[ERROR] mismatched arity: expect 3, found 1
+//│ ║  l.167: 	    Tuple(...elements) then elements
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Unrecognized pattern (spread)
+//│ ║  l.167: 	    Tuple(...elements) then elements
+//│ ╙──       	             ^^^^^^^^
+//│ foo = [function]
+
+foo(Tuple(1, 2, 3))
+//│ ═══[RUNTIME ERROR] Error: match error
+
+// ——— ——— ———
+
+module Foo with
+  class
+    Bar
+    Baz
+
+fun foo(x) = if x is Foo.
+  Bar then "Bar"
+  Foo then "Foo"
+//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ║  l.186: 	fun foo(x) = if x is Foo.
+//│ ╙──       	                     ^^^
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.186: 	fun foo(x) = if x is Foo.
+//│ ╙──       	                        ^
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.186: 	fun foo(x) = if x is Foo.
+//│ ╙──       	                        ^
+
+fun foo(x) = if x is Foo
+  .Bar then "Bar"
+  .Foo then "Foo"
+//│ ╔══[PARSE ERROR] Expected an expression; found selector instead
+//│ ║  l.200: 	  .Bar then "Bar"
+//│ ╙──       	  ^^^^
+//│ ╔══[PARSE ERROR] Unexpected selector here
+//│ ║  l.200: 	  .Bar then "Bar"
+//│ ╙──       	  ^^^^
+//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ║  l.199: 	fun foo(x) = if x is Foo
+//│ ║         	                     ^^^
+//│ ║  l.200: 	  .Bar then "Bar"
+//│ ╙──       	^^
 
 // ——— ——— ———
 

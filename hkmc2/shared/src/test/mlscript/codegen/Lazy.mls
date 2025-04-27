@@ -1,7 +1,7 @@
 :js
 
 
-class Lazy[out A](init: () -> A) with
+data class Lazy[out A](init: () -> A) with
   mut val cached: A | () = ()
   fun get: A
   // fun eq(that: Lazy[A]) = this.cached == that.cached // TODO `this`

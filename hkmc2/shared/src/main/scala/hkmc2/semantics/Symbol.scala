@@ -23,7 +23,7 @@ abstract class Symbol(using State) extends Located:
   def ref(id: Tree.Ident =
     Tree.Ident("") // FIXME hack
   ): Term.Ref =
-    val res = new Term.Ref(this)(id, directRefs.size)
+    val res = new Term.Ref(this)(id, directRefs.size, N)
     directRefs += res
     res
   def refsNumber: Int = directRefs.size
@@ -117,6 +117,7 @@ class InstSymbol(val origin: Symbol)(using State) extends LocalSymbol:
 
 class VarSymbol(val id: Ident)(using State) extends BlockLocalSymbol(id.name) with NamedSymbol with LocalSymbol:
   val name: Str = id.name
+  override def toLoc: Opt[Loc] = id.toLoc
   // override def toString: Str = s"$name@$uid"
   override def subst(using s: SymbolSubst): VarSymbol = s.mapVarSym(this)
 
@@ -130,8 +131,10 @@ class BuiltinSymbol
 
 
 /** This is the outside-facing symbol associated to a possibly-overloaded
-  * definition living in a block – e.g., a module or class. */
-class BlockMemberSymbol(val nme: Str, val trees: Ls[Tree])(using State)
+  * definition living in a block – e.g., a module or class.
+  * `nameIsMeaningful` is `true` when the name comes from the user's source code;
+  *   it is false when the name is a default given by the compiler, such as "lambda" when lifting lambdas. */
+class BlockMemberSymbol(val nme: Str, val trees: Ls[Tree], val nameIsMeaningful: Bool = true)(using State)
     extends MemberSymbol[Definition]:
   
   def toLoc: Option[Loc] = Loc(trees)
@@ -205,6 +208,19 @@ type BaseTypeSymbol = ClassSymbol
 type TypeSymbol = BaseTypeSymbol | TypeAliasSymbol
 
 type FieldSymbol = MemberSymbol[?]
+
+/**
+  * ErrorSymbol is a placeholder symbol denoting error (during symbol
+  * resolution in the elaborator / resolver). This helps prevent the
+  * same error from throwing multiple times.
+  */
+case class ErrorSymbol(val nme: Str, tree: Tree)(using State) extends MemberSymbol[Nothing]:
+
+  override def toLoc: Option[Loc] = tree.toLoc
+
+  override def subst(using sub: SymbolSubst): MemberSymbol[Nothing] = sub.mapErrorSym(this)
+
+  override def toString = s"error:$nme"
 
 sealed trait ClassLikeSymbol extends Symbol:
   self: MemberSymbol[? <: ClassDef | ModuleDef] =>

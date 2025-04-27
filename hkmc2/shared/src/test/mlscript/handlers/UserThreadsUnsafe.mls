@@ -1,5 +1,5 @@
 :js
-:effectHandlers
+:effectHandlers debug
 
 
 class ThreadEffect with
@@ -31,6 +31,7 @@ fun drain() =
 
 
 // LIFO
+:re
 handle h = ThreadEffect with
   fun fork(thread)(k) =
     tasks.push(thread)
@@ -44,17 +45,15 @@ in
 //│ > main start
 //│ > main end
 //│ > f 2
-//│ > f 1
-//│ > f 0
-//│ > f 2
-//│ > f 1
-//│ > f 0
-//│ > f 2
-//│ > f 1
-//│ > f 0
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
+//│ 	at f (UserThreadsUnsafe.mls:12:3)
+//│ 	at drain (UserThreadsUnsafe.mls:29:5)
+//│ 	at fork (UserThreadsUnsafe.mls:38:5)
+//│ 	at fork (UserThreadsUnsafe.mls:38:5)
 
 
 // FIFO
+:re
 handle h = ThreadEffect with
   fun fork(thread)(k) =
     tasks.unshift(thread)
@@ -67,14 +66,11 @@ in
   main(h)
 //│ > main start
 //│ > main end
-//│ > f 0
 //│ > f 1
-//│ > f 2
-//│ > f 0
-//│ > f 1
-//│ > f 2
-//│ > f 0
-//│ > f 1
-//│ > f 2
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
+//│ 	at f (UserThreadsUnsafe.mls:12:3)
+//│ 	at drain (UserThreadsUnsafe.mls:29:5)
+//│ 	at fork (UserThreadsUnsafe.mls:60:5)
+//│ 	at fork (UserThreadsUnsafe.mls:60:5)
 
 

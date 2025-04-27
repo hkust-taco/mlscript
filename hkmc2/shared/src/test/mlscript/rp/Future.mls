@@ -17,7 +17,7 @@ pattern Rep0(pattern A, B, C)(head) =
 //│ ╔══[ERROR] Pattern extraction parameters are not yet supported.
 //│ ║  l.10: 	pattern Rep0(pattern A, B, C)(head) =
 //│ ╙──      	                        ^^^^
-//│ ╔══[ERROR] Unrecognized pattern (infix operation)
+//│ ╔══[ERROR] Unrecognized pattern (infix operator)
 //│ ║  l.11: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	        ^^^^^^^^^
 
@@ -27,7 +27,7 @@ pattern Email(name, domain) =
 //│ ╔══[ERROR] Pattern extraction parameters are not yet supported.
 //│ ║  l.25: 	pattern Email(name, domain) =
 //│ ╙──      	              ^^^^^^^^^^^^
-//│ ╔══[ERROR] Unrecognized pattern (infix operation)
+//│ ╔══[ERROR] Unrecognized pattern (infix operator)
 //│ ║  l.26: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
 //│ ╙──      	   ^^^^^^^^^^^^^^^^^^
 
@@ -80,7 +80,7 @@ pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 //│ ╔══[ERROR] Pattern extraction parameters are not yet supported.
 //│ ║  l.79: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 //│ ╙──      	             ^^^^^^^^
-//│ ╔══[ERROR] Unrecognized pattern (infix operation)
+//│ ╔══[ERROR] Unrecognized pattern (infix operator)
 //│ ║  l.79: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 //│ ╙──      	                          ^^^^^^^^^^^^
 

@@ -26,18 +26,17 @@ class Foo[A] with
 
 
 
-:fixme
 :e
 class Foo[A](x: Foo[A, A])
 //│ ╔══[ERROR] Wrong number of type arguments
-//│ ║  l.31: 	class Foo[A](x: Foo[A, A])
+//│ ║  l.30: 	class Foo[A](x: Foo[A, A])
 //│ ╙──      	                ^^^^^^^^
 
-:fixme
 :e
 class Foo[A](x: Bar[A])
 class Bar(x: Foo[Int])
 //│ ╔══[ERROR] Wrong number of type arguments
-//│ ║  l.38: 	class Foo[A](x: Bar[A])
+//│ ║  l.36: 	class Foo[A](x: Bar[A])
 //│ ╙──      	                ^^^^^
+
 

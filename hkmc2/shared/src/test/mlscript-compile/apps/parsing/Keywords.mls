@@ -1,0 +1,179 @@
+import "../../Option.mls"
+import "../../Iter.mls"
+import "../../Predef.mls"
+import "../../MutMap.mls"
+
+open Predef
+open Option { Some, None }
+
+module Keywords with ...
+
+// https://v8.dev/blog/pointer-compression
+// The maximal and minimal values of V8's Smi on 64-bit platforms.
+val INT_MIN = -2147483648
+val INT_MAX = 2147483647
+
+class Keyword(val name: Str, val leftPrec, val rightPrec) with  
+  fun leftPrecOrMin = if leftPrec is Some(prec) then prec else INT_MIN
+  fun rightPrecOrMin = if rightPrec is Some(prec) then prec else INT_MIN
+  fun leftPrecOrMax = if leftPrec is Some(prec) then prec else INT_MAX
+  fun rightPrecOrMax = if rightPrec is Some(prec) then prec else INT_MAX
+  
+  fun toString() = fold(+) of
+    "Keyword(`", name, "`, "
+    (if leftPrec is Some(prec) then prec.toString() else "N/A"), ", ",
+    (if rightPrec is Some(prec) then prec.toString() else "N/A"), ")"
+
+fun makePrecMap(startPrec: Int, ...ops) =
+  let
+    m = MutMap.empty
+    i = 0
+  while i < ops.length do
+    ops.at(i).split(" ").forEach of (op, _, _) =>
+      if op.length > 0 do
+        m |> MutMap.insert of op, i + startPrec
+    set i += 1
+  m
+
+val all = MutMap.empty
+fun keyword(name, leftPrec, rightPrec) =
+  let result = Keyword(name, leftPrec, rightPrec)
+  all |> MutMap.insert(name, result)
+  result
+let prec = 0 
+fun currPrec = Some(prec)
+fun nextPrec =
+  set prec = prec + 1
+  Some(prec)
+let basePrec = currPrec // the lowest precedence
+val _terminator = keyword(";;", basePrec, basePrec)
+val _class = keyword("class", None, basePrec)
+let semiPrec = nextPrec
+let commaPrec = nextPrec
+val _semicolon = keyword(";", semiPrec, basePrec)
+val _comma = keyword(",", commaPrec, semiPrec)
+let eqPrec = nextPrec
+let ascPrec = nextPrec
+val _equal = keyword("=", eqPrec, eqPrec)
+val _and = keyword("and", None, currPrec)
+val _bar = keyword of "|", None, None
+val _thinArrow = keyword of "->", nextPrec, eqPrec
+val _colon = keyword(":", ascPrec, eqPrec)
+val _match = keyword("match", nextPrec, currPrec)
+val _while = keyword of "while", nextPrec, currPrec
+val _for = keyword of "for", nextPrec, currPrec
+val _to = keyword of "to", None, None
+val _downto = keyword of "downto", None, None
+val _do = keyword of "do", None, None
+val _done = keyword of "done", None, None
+val _of = keyword of "of", None, None
+val _with = keyword("with", None, currPrec)
+val _case = keyword("case", None, currPrec)
+let thenPrec = nextPrec
+val _if = keyword("if", nextPrec, thenPrec)
+val _leftArrow = keyword of "<-", thenPrec, thenPrec
+val _then = keyword("then", thenPrec, thenPrec)
+val _else = keyword("else", thenPrec, thenPrec)
+val _let = keyword("let", eqPrec, semiPrec)
+val _in = keyword("in", thenPrec, thenPrec)
+val _true = keyword("true", None, None)
+val _false = keyword("false", None, None)
+// val _fatArrow = keyword of "=>", nextPrec, eqPrec
+val _as = keyword("as", nextPrec, currPrec)
+val _fun = keyword("fun", currPrec, _thinArrow.leftPrec)
+val _function = keyword("function", currPrec, eqPrec)
+val _type = keyword("type", currPrec, None)
+val _exception = keyword("exception", currPrec, None)
+val _rec = keyword("rec", currPrec, eqPrec)
+val _hash = keyword("#", None, None)
+val maxKeywordPrec = prec
+
+let precMap = makePrecMap of
+  maxKeywordPrec
+  ","
+  "@"
+  ":"
+  "|"
+  "&"
+  "="
+  "/ \\"
+  "^"
+  "!"
+  "< >"
+  "+ -"
+  "* %"
+  "~"
+  "" // prefix operators
+  "" // applications
+  "."
+
+// The largest precedence value of all operators.
+val periodPrec = precMap |> MutMap.get(".") |> Option.unsafe.get
+
+val _period = keyword of ".", Some(periodPrec), Some(periodPrec)
+
+val maxOperatorPrec = periodPrec
+val appPrec = maxOperatorPrec - 1
+val prefixPrec = appPrec - 1
+
+// Get the precedence of a single character operator.
+fun charPrec(op) = precMap |> MutMap.get(op) |> Option.unsafe.get
+
+fun charPrecOpt(op) = precMap |> MutMap.get(op)
+
+val _asterisk = keyword of "*", charPrecOpt("*"), charPrecOpt("*")
+val _equalequal = keyword of "==", charPrecOpt("="), charPrecOpt("=")
+
+let bracketPrec = Some(maxOperatorPrec + 1)
+
+val _leftRound = keyword of "(", bracketPrec, basePrec
+val _rightRound = keyword of ")", basePrec, None
+val _leftSquare = keyword of "[", bracketPrec, basePrec
+val _rightSquare = keyword of "]", basePrec, None
+val _leftCurly = keyword of "{", bracketPrec, basePrec
+val _rightCurly = keyword of "}", basePrec, None
+val _begin = keyword of "begin", bracketPrec, basePrec
+val _end = keyword of "end", basePrec, None
+
+let builtinKeywords = new Set(all |> MutMap.keysIterator)
+fun extended = all
+  Iter.filtering of case [k, _] then builtinKeywords.has(k) is false
+  Iter.toArray()
+  MutMap.toMap()
+
+pattern Letter = "a" ..= "z" | "A" ..= "Z"
+
+fun hasLetter(s) = [..s].some((ch, _, _) => ch is Letter)
+
+pattern FloatOperator = "+." | "-." | "*." | "/."
+
+pattern RightAssociative = "@" | "/" | "," | ":"
+
+fun opPrec(opStr) = if
+  opStr is FloatOperator then tuple of
+    Keywords.charPrec of opStr.at(0)
+    Keywords.charPrec of opStr.at(0)
+  opStr hasLetter() then tuple of
+    Keywords.maxKeywordPrec
+    Keywords.maxKeywordPrec
+  let lastChar = opStr.at(-1)
+  let rightPrec = Keywords.charPrec of lastChar
+  else tuple of
+    Keywords.charPrec of opStr.at(0)
+    (Keywords.charPrec of lastChar) +
+      if lastChar is RightAssociative then -1 else 0
+
+fun opPrecOpt(opStr) = if
+  opStr is "" then None
+  opStr is FloatOperator then Some of tuple of
+    Keywords.charPrec of opStr.at(0)
+    Keywords.charPrec of opStr.at(0)
+  opStr hasLetter() then Some of tuple of
+    Keywords.maxKeywordPrec
+    Keywords.maxKeywordPrec
+  let lastChar = opStr.at(-1)
+  Keywords.charPrecOpt(lastChar) is Some(rightPrec) and
+    Keywords.charPrecOpt(opStr.at(0)) is Some(leftPrec) then Some of tuple of
+      leftPrec
+      rightPrec + (if lastChar is RightAssociative then -1 else 0)
+  else None

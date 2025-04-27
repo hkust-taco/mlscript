@@ -1,0 +1,76 @@
+:js
+:lift
+
+
+let fs = []
+//│ fs = []
+
+fun foo() =
+  let x = 1
+  while x < 5 do
+    set x += 1
+    fs.push of () => x
+
+:expect 5
+foo()
+fs.0()
+//│ = 5
+
+
+let fs = []
+//│ fs = []
+
+fun foo() =
+  let i = 1
+  while i < 5 do
+    let x = i
+    set i += 1
+    fs.push of () => x
+
+// * Note that this also fails without lifting, as we need to fix [fixme:0]
+:fixme
+:expect 1
+foo()
+fs.0()
+//│ ═══[RUNTIME ERROR] Expected: '1', got: '4'
+//│ = 4
+
+
+:sjs
+fun foo() =
+  let x = 1
+  while true do
+    set x += 1
+    return () => x
+//│ JS (unsanitized):
+//│ let foo2, lambda2, lambda$2;
+//│ lambda$2 = function lambda$(x) {
+//│   return x
+//│ };
+//│ lambda2 = (undefined, function (x) {
+//│   return () => {
+//│     return lambda$2(x)
+//│   }
+//│ });
+//│ foo2 = function foo() {
+//│   let x, scrut, tmp2, tmp3;
+//│   x = 1;
+//│   tmp4: while (true) {
+//│     scrut = true;
+//│     if (scrut === true) {
+//│       tmp2 = x + 1;
+//│       x = tmp2;
+//│       return runtime.safeCall(lambda2(x))
+//│     } else {
+//│       tmp3 = runtime.Unit;
+//│     }
+//│     break;
+//│   }
+//│   return tmp3
+//│ };
+
+:expect 2
+foo()()
+//│ = 2
+
+

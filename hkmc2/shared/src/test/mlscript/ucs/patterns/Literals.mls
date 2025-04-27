@@ -2,7 +2,7 @@ import "../../../mlscript-compile/Option.mls"
 
 open Option
 
-class Pair[A, B](x: A, y: B)
+data class Pair[A, B](x: A, y: B)
 
 fun f(x) = if x is Some(1) then true else false
 
@@ -27,7 +27,7 @@ fun g(x) = if x is true then 1 else 2
 
 fun g(x) = if x && true is true then 1 else 2
 
-fun h(x) = if (x : Bool) then 1 else 2
+fun h(x) = if (x as Bool) then 1 else 2
 
 fun mix(x) = if x is
   true then "true"

@@ -1,9 +1,10 @@
 :js
 
-class
-  (&&) And(lhs: Bool, rhs: Bool)
-  (||) Or(lhs: Bool, rhs: Bool)
-  Not(arg: Bool)
+data
+  class
+    (&&) And(lhs: Bool, rhs: Bool)
+    (||) Or(lhs: Bool, rhs: Bool)
+    Not(arg: Bool)
 
 pattern Truthy =
   true | And(Truthy, Truthy) | Or(Truthy, Truthy) |

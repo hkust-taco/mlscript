@@ -1,17 +1,22 @@
+:js
 
-:pe
-:e
+
+:todo
 fun take_1(p) =
   if p is
-    { x, y } then x + y
+    { x: a, y: b } then a + b
     else 0
-//│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.7: 	    else 0
-//│ ╙──     	          ^
-//│ ╔══[PARSE ERROR] Unexpected curly brace section here
-//│ ║  l.6: 	    { x, y } then x + y
-//│ ╙──     	    ^^^^^^^^
-//│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.6: 	    { x, y } then x + y
-//│ ╙──     	    ^^^^^^^^
+//│ ╔══[ERROR] Unrecognized pattern (block)
+//│ ║  l.7: 	    { x: a, y: b } then a + b
+//│ ╙──     	      ^^^^^^^^^^
+
+:todo
+fun take_1(p) =
+  if p is
+    { :x, :y } then x + y
+    else 0
+//│ ╔══[ERROR] Unrecognized pattern (block)
+//│ ║  l.16: 	    { :x, :y } then x + y
+//│ ╙──      	       ^^^^^
+
 

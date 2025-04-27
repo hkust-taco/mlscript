@@ -40,7 +40,7 @@ Foo()
 //│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
 
 
-class Foo with { print("hi") }
+data class Foo with { print("hi") }
 print("ok")
 //│ JS (unsanitized):
 //│ let Foo3;
@@ -54,7 +54,7 @@ print("ok")
 //│ > ok
 
 fun test() =
-  class Foo with { print("hi") }
+  data class Foo with { print("hi") }
   print("ok")
   Foo
 //│ JS (unsanitized):
@@ -239,7 +239,7 @@ class Foo with val x = 1
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
 //│ ║  l.235: 	class Foo with val x = 1
 //│ ╙──       	                     ^
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side.
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
 //│ ║  l.235: 	class Foo with val x = 1
 //│ ╙──       	                   ^
 //│ JS (unsanitized):

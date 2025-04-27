@@ -26,7 +26,7 @@ object
   XWin extends Evaluation
   OWin extends Evaluation
 
-class Score(i: Int) extends Evaluation
+data class Score(i: Int) extends Evaluation
 
 fun evaluationEq(x, y) = if x is
   XWin and y is XWin then true
@@ -34,7 +34,7 @@ fun evaluationEq(x, y) = if x is
   Score(i) and y is Score(j) and i === j then true
   else false
 
-class Branch[A](a: A, cs: List[Branch[A]])
+data class Branch[A](a: A, cs: List[Branch[A]])
 
 fun showEvaluation(e) = if e is
   XWin then nofibStringToList("XWin")

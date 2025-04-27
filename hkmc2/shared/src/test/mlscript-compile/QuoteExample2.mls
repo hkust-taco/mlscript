@@ -1,15 +1,14 @@
-import "./Runtime.mls"
+import "./Term.mls"
 import "./QuoteExample.mls"
 
-open Runtime
 
 module QuoteExample2 with
   fun codegen() = 
-    term.codegen(QuoteExample.foo(), "./hkmc2/shared/src/test/mlscript-compile/quotes/QuoteFoo.mls")
-    term.codegen(QuoteExample.inc(), "./hkmc2/shared/src/test/mlscript-compile/quotes/QuoteInc.mls")
+    Term.codegen(QuoteExample.foo(), "./hkmc2/shared/src/test/mlscript-compile/quotes/QuoteFoo.mls")
+    Term.codegen(QuoteExample.inc(), "./hkmc2/shared/src/test/mlscript-compile/quotes/QuoteInc.mls")
   fun genCubic() =
-    term.codegen(x `=> QuoteExample.power(x)(3), "./hkmc2/shared/src/test/mlscript-compile/quotes/Cubic.mls")
+    Term.codegen(x `=> QuoteExample.power(x)(3), "./hkmc2/shared/src/test/mlscript-compile/quotes/Cubic.mls")
   fun genGib12() =
-    term.codegen(QuoteExample.gib(12), "./hkmc2/shared/src/test/mlscript-compile/quotes/Gib12.mls")
+    Term.codegen(QuoteExample.gib(12), "./hkmc2/shared/src/test/mlscript-compile/quotes/Gib12.mls")
   fun genSafeDiv() =
-    term.codegen(QuoteExample.safeDiv(), "./hkmc2/shared/src/test/mlscript-compile/quotes/SafeDiv.mls")
+    Term.codegen(QuoteExample.safeDiv(), "./hkmc2/shared/src/test/mlscript-compile/quotes/SafeDiv.mls")

@@ -1,0 +1,15 @@
+:js
+:lift
+
+fun f() = 3
+
+:effectHandlers
+module A with
+  data class Test with
+    f()
+    val a = 1
+
+:effectHandlers
+class Test with
+  f()
+  val a = 1

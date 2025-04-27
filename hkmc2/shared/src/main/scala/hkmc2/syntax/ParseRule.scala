@@ -324,6 +324,7 @@ class ParseRules(using State):
     modified(`virtual`),
     modified(`override`),
     modified(`declare`),
+    modified(`data`),
     modified(`public`),
     modified(`private`),
     modified(`out`),

@@ -1,0 +1,24 @@
+:js
+:lift
+
+import "../../mlscript-compile/Option.mls"
+
+:sjs
+module A with
+  fun f(x) = x is Option.Some
+//│ JS (unsanitized):
+//│ let A1;
+//│ (class A {
+//│   static {
+//│     A1 = A;
+//│   }
+//│   static f(x) {
+//│     if (x instanceof Option.Some.class) {
+//│       return true
+//│     } else {
+//│       return false
+//│     }
+//│   }
+//│   static toString() { return "A"; }
+//│ });
+

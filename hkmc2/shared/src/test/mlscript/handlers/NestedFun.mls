@@ -1,16 +1,22 @@
 :js
 :effectHandlers
 
-fun sum() = 0
-fun foo(x) =
+
+fun foo(f) =
   let y = 1
   fun bar() =
+    f()
     set y += 1
-    sum()
+  let lam = () => y
   bar()
-  y
-foo(42)
-//│ = 2
+  set y += 1
+  lam()
+
+:expect 3
+handle h = Object with
+  fun f()(k) = k(())
+foo(() => h.f())
+//│ = 3
 
 fun foo() =
   let y = 1

@@ -1,0 +1,47 @@
+:js
+:todo
+
+
+class Foo()(using Int)
+//│ ╔══[ERROR] Multiple parameter lists are not supported for this definition.
+//│ ║  l.5: 	class Foo()(using Int)
+//│ ╙──     	      ^^^^^^^^^^^^^^^^
+
+class Foo(using val n: Int)
+//│ ╔══[ERROR] Illegal definition in term position.
+//│ ║  l.10: 	class Foo(using val n: Int)
+//│ ╙──      	                    ^^^^^^
+//│ ═══[ERROR] Expected a type symbol, got <error>
+
+
+fun summon[A](using a: A) = a
+
+class Foo(using Int) with
+  fun foo() = summon[Int]
+//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ║  l.20: 	  fun foo() = summon[Int]
+//│ ║        	              ^^^^^^^^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.17: 	fun summon[A](using a: A) = a
+//│ ║        	                    ^^^^
+//│ ╙── Expected: A; Available: (Int)
+
+
+fun summon(using a: Int) = a
+
+class Foo(using Int) with
+  fun foo() = summon
+
+Foo()
+//│ = Foo()
+
+
+fun foo(using Int) = 1
+
+use Int = 1
+
+:re
+foo()
+//│ ═══[RUNTIME ERROR] TypeError: tmp is not a function
+
+

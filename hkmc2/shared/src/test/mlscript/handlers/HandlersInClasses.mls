@@ -47,7 +47,7 @@ Lol.x
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
 
-class Lol() with
+data class Lol() with
   handle h = Effect with
     fun perform(arg)(k) =
       print(arg)

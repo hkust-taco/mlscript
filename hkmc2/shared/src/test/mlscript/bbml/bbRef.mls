@@ -124,9 +124,9 @@ fun rid(x) =
 
 :e
 region x in
-  (let dz = x.ref 42 in 42): [A] -> Int
+  (let dz = x.ref 42 in 42) as [A] -> Int
 //│ ╔══[ERROR] Type error in block with expected type [outer, 'A] -> Int
-//│ ║  l.127: 	  (let dz = x.ref 42 in 42): [A] -> Int
+//│ ║  l.127: 	  (let dz = x.ref 42 in 42) as [A] -> Int
 //│ ║         	            ^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ¬()
@@ -158,7 +158,7 @@ fun foo(x) =
 
 
 region x in
-  x.ref ((x => x): [A] -> A -> A)
+  x.ref ((x => x) as [A] -> A -> A)
 //│ Type: Ref['A -> 'A, ?]
 
 

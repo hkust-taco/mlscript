@@ -1,7 +1,7 @@
 :js
 
 
-class Foo(x)
+data class Foo(x)
 
 let foo = Foo(null)
 //│ foo = Foo(null)

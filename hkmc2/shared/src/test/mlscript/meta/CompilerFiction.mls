@@ -1,0 +1,44 @@
+:js
+
+
+:ge
+source
+//│ ╔══[COMPILATION ERROR] Module 'source' is virtual (i.e., "compiler fiction"); cannot be used directly
+//│ ║  l.5: 	source
+//│ ╙──     	^^^^^^
+
+
+:ge
+js
+//│ ╔══[COMPILATION ERROR] Module 'js' is virtual (i.e., "compiler fiction"); cannot be used directly
+//│ ║  l.12: 	js
+//│ ╙──      	^^
+
+:e
+:ge
+js.oops
+//│ ╔══[ERROR] Module 'js' does not contain member 'oops'
+//│ ║  l.19: 	js.oops
+//│ ╙──      	  ^^^^^
+//│ ╔══[COMPILATION ERROR] Module 'js' is virtual (i.e., "compiler fiction"); cannot be used directly
+//│ ║  l.19: 	js.oops
+//│ ╙──      	^^
+
+:ge
+js.try_catch
+//│ ╔══[COMPILATION ERROR] Module 'js' is virtual (i.e., "compiler fiction"); cannot be used directly
+//│ ║  l.28: 	js.try_catch
+//│ ╙──      	^^
+
+:re
+js.try_catch()
+//│ ═══[RUNTIME ERROR] TypeError: onError is not a function
+
+:re
+js.try_catch(0)
+//│ ═══[RUNTIME ERROR] TypeError: onError is not a function
+
+js.try_catch(0, id)
+//│ = TypeError: computation is not a function
+
+

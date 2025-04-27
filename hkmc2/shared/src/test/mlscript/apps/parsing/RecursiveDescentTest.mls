@@ -1,0 +1,132 @@
+:js
+
+import "../../../mlscript-compile/apps/parsing/RecursiveDescent.mls"
+import "../../../mlscript-compile/apps/parsing/BasicExpr.mls"
+import "../../../mlscript-compile/apps/parsing/TokenHelpers.mls"
+import "../../../mlscript-compile/apps/parsing/Lexer.mls"
+
+open Lexer { lex }
+open RecursiveDescent { parse }
+open BasicExpr { Expr }
+
+fun example(input) =
+  let tokens = lex of input, false
+  print of "Tokens: " + TokenHelpers.panorama(tokens)
+  let expr = parse of tokens
+  print of "Parsed: " + expr.toString()
+  print of "Pretty-printed: " + expr BasicExpr.prettyPrint()
+
+example of "1 + 2 * 3"
+//│ > Tokens: ┃1│␠│+│␠│2│␠│*│␠│3┃
+//│ > Parsed: Add(Lit(1), Mul(Lit(2), Lit(3)))
+//│ > Pretty-printed: 1 + 2 * 3
+
+example of "3 * x + 1"
+//│ > Tokens: ┃3│␠│*│␠│x│␠│+│␠│1┃
+//│ > Parsed: Add(Mul(Lit(3), Var("x")), Lit(1))
+//│ > Pretty-printed: 3 * x + 1
+
+example of "1 + (1 + 1)"
+//│ > Tokens: ┃1│␠│+│␠│(│1│␠│+│␠│1│)┃
+//│ > Parsed: Add(Lit(1), Add(Lit(1), Lit(1)))
+//│ > Pretty-printed: 1 + 1 + 1
+
+example of "1 + (1 + 1"
+//│ > Tokens: ┃1│␠│+│␠│(│1│␠│+│␠│1┃
+//│ > Parsed: Add(Lit(1), Err(Some(Add(Lit(1), Lit(1))), "Expected token ), but found end of input"))
+//│ > Pretty-printed: 1 + { 1 + 1 | "Expected token ), but found end of input" }
+
+example of "1 + 1 +"
+//│ > Tokens: ┃1│␠│+│␠│1│␠│+┃
+//│ > Parsed: Add(Add(Lit(1), Lit(1)), Err(None, "Unexpected end of input"))
+//│ > Pretty-printed: 1 + 1 + { "Unexpected end of input" }
+
+example of "x + 5"
+//│ > Tokens: ┃x│␠│+│␠│5┃
+//│ > Parsed: Add(Var("x"), Lit(5))
+//│ > Pretty-printed: x + 5
+
+example of "3 * x + 2"
+//│ > Tokens: ┃3│␠│*│␠│x│␠│+│␠│2┃
+//│ > Parsed: Add(Mul(Lit(3), Var("x")), Lit(2))
+//│ > Pretty-printed: 3 * x + 2
+
+example of "(x + 1) * (y + 4)"
+//│ > Tokens: ┃(│x│␠│+│␠│1│)│␠│*│␠│(│y│␠│+│␠│4│)┃
+//│ > Parsed: Mul(Add(Var("x"), Lit(1)), Add(Var("y"), Lit(4)))
+//│ > Pretty-printed: (x + 1) * (y + 4)
+
+example of "2 + (3 * y)"
+//│ > Tokens: ┃2│␠│+│␠│(│3│␠│*│␠│y│)┃
+//│ > Parsed: Add(Lit(2), Mul(Lit(3), Var("y")))
+//│ > Pretty-printed: 2 + 3 * y
+
+example of "(x + 2) + (3 * y)"
+//│ > Tokens: ┃(│x│␠│+│␠│2│)│␠│+│␠│(│3│␠│*│␠│y│)┃
+//│ > Parsed: Add(Add(Var("x"), Lit(2)), Mul(Lit(3), Var("y")))
+//│ > Pretty-printed: x + 2 + 3 * y
+
+example of "3 * (x + y) + 7"
+//│ > Tokens: ┃3│␠│*│␠│(│x│␠│+│␠│y│)│␠│+│␠│7┃
+//│ > Parsed: Add(Mul(Lit(3), Add(Var("x"), Var("y"))), Lit(7))
+//│ > Pretty-printed: 3 * (x + y) + 7
+
+// Unbalanced parentheses
+example of "((x + y)"
+//│ > Tokens: ┃(│(│x│␠│+│␠│y│)┃
+//│ > Parsed: Err(Some(Add(Var("x"), Var("y"))), "Expected token ), but found end of input")
+//│ > Pretty-printed: { x + y | "Expected token ), but found end of input" }
+
+// Missing operand between '+' and '*'
+example of "x + * y"
+//│ > Tokens: ┃x│␠│+│␠│*│␠│y┃
+//│ > Parsed: Add(Var("x"), Mul(Err(None, "Unexpected token *"), Var("y")))
+//│ > Pretty-printed: x + { "Unexpected token *" } * y
+
+// Another unbalanced parenthesis
+example of "3 + (y"
+//│ > Tokens: ┃3│␠│+│␠│(│y┃
+//│ > Parsed: Add(Lit(3), Err(Some(Var("y")), "Expected token ), but found end of input"))
+//│ > Pretty-printed: 3 + { y | "Expected token ), but found end of input" }
+
+// Unbalanced parenthesis
+example of "3 + 7)"
+//│ > Tokens: ┃3│␠│+│␠│7│)┃
+//│ > Parsed: Err(Some(Add(Lit(3), Lit(7))), "Expect end of input, but found )")
+//│ > Pretty-printed: { 3 + 7 | "Expect end of input, but found )" }
+
+// Operator '+' missing a second operand
+example of "(x +) + y"
+//│ > Tokens: ┃(│x│␠│+│)│␠│+│␠│y┃
+//│ > Parsed: Add(Add(Var("x"), Err(None, "Unexpected token )")), Var("y"))
+//│ > Pretty-printed: x + { "Unexpected token )" } + y
+
+// Expression starting with an operator '*'
+example of "* x + 5"
+//│ > Tokens: ┃*│␠│x│␠│+│␠│5┃
+//│ > Parsed: Add(Mul(Err(None, "Unexpected token *"), Var("x")), Lit(5))
+//│ > Pretty-printed: { "Unexpected token *" } * x + 5
+
+// Double operator '+' without an operand in between
+example of "x + + 5"
+//│ > Tokens: ┃x│␠│+│␠│+│␠│5┃
+//│ > Parsed: Add(Add(Var("x"), Err(None, "Unexpected token +")), Lit(5))
+//│ > Pretty-printed: x + { "Unexpected token +" } + 5
+
+// Missing operator between 'x' and 'y'
+example of "x y"
+//│ > Tokens: ┃x│␠│y┃
+//│ > Parsed: Err(Some(Var("x")), "Expect end of input, but found y")
+//│ > Pretty-printed: { x | "Expect end of input, but found y" }
+
+// Empty parentheses with no expression
+example of "()"
+//│ > Tokens: ┃(│)┃
+//│ > Parsed: Err(None, "Unexpected token )")
+//│ > Pretty-printed: { "Unexpected token )" }
+
+// Operator '*' at the end with no following operand
+example of "3 + x *"
+//│ > Tokens: ┃3│␠│+│␠│x│␠│*┃
+//│ > Parsed: Add(Lit(3), Mul(Var("x"), Err(None, "Unexpected end of input")))
+//│ > Pretty-printed: 3 + x * { "Unexpected end of input" }

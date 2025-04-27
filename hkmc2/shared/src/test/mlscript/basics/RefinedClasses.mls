@@ -34,7 +34,7 @@ class Bar { val x: Int }
 :todo
 class Foo() extends Bar { x = 1 } with
   val y = this.x
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side.
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (defining assignment).
 //│ ║  l.35: 	class Foo() extends Bar { x = 1 } with
 //│ ╙──      	                          ^^^^^
 

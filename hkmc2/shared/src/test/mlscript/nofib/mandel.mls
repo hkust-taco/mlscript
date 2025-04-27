@@ -4,11 +4,11 @@
 :import NofibPrelude.mls
 
 
-class Pixmap(a: Int, b: Int, c: Int, d:List[[Int, Int, Int]])
+data class Pixmap(a: Int, b: Int, c: Int, d:List[[Int, Int, Int]])
 
 fun createPixmap(width, height, max, colours) = Pixmap(width, height, max, colours)
 
-class Complex(r: Num, i: Num)
+data class Complex(r: Num, i: Num)
 
 fun comp_magnitude(c) = if c is Complex(a, b) then sqrt(a * a + b * b)
 

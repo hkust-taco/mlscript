@@ -31,6 +31,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     utils.Scope.empty
   
   val runtimeNme = baseScp.allocateName(Elaborator.State.runtimeSymbol)
+  val termNme = baseScp.allocateName(Elaborator.State.termSymbol)
   
   val ltl = new TraceLogger:
     override def doTrace = debugLowering.isSet
@@ -45,6 +46,10 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     given TL = replTL
     val h = ReplHost(rootPath)
     h.execute(s"const $runtimeNme = (await import(\"${runtimeFile}\")).default;") match
+    case ReplHost.Result(msg) =>
+      if msg.startsWith("Uncaught") then output(s"Failed to load runtime: $msg")
+    case r => output(s"Failed to load runtime: $r")
+    h.execute(s"const $termNme = (await import(\"${termFile}\")).default;") match
     case ReplHost.Result(msg) =>
       if msg.startsWith("Uncaught") then output(s"Failed to load runtime: $msg")
     case r => output(s"Failed to load runtime: $r")
@@ -100,7 +105,6 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         case Return(res, implct) =>
           assert(implct)
           Assign(resSym, res, Return(Value.Lit(syntax.Tree.UnitLit(false)), true))
-        case _: HandleBlockReturn => ???
         case tl: (Throw | Break | Continue) => tl
       )
       if showLoweredTree.isSet then
@@ -149,8 +153,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
       if traceJS.isSet then
         host.execute(
-          "globalThis.Predef.TraceLogger.enabled = true; " +
-          "globalThis.Predef.TraceLogger.resetIndent(0)")
+          s"$runtimeNme.TraceLogger.enabled = true; " +
+          s"$runtimeNme.TraceLogger.resetIndent(0)")
       
       // * Sometimes the JS block won't execute due to a syntax or runtime error so we always set this first
       host.execute(s"$resNme = undefined")
@@ -160,12 +164,12 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
           .foreach: line =>
             output(s"> ${line}")
       if traceJS.isSet then
-        host.execute("globalThis.Predef.TraceLogger.enabled = false")
+        host.execute(s"$runtimeNme.TraceLogger.enabled = false")
       
       if silent.isUnset then 
         import Elaborator.Ctx.*
         def definedValues = curCtx.env.iterator.flatMap:
-          case (nme, e @ (_: RefElem | SelElem(RefElem(_: InnerSymbol), _, _))) =>
+          case (nme, e @ (_: RefElem | SelElem(base = RefElem(_: InnerSymbol)))) =>
             e.symbol match
             case S(ts: TermSymbol) if ts.k.isInstanceOf[syntax.ValLike] => S((nme, ts, N))
             case S(ts: BlockMemberSymbol)
@@ -179,7 +183,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             import codegen.*
             Return(
               Call(
-                Value.Ref(Elaborator.State.globalThisSymbol).selSN("Predef").selSN("printRaw"),
+                Value.Ref(Elaborator.State.runtimeSymbol).selSN("printRaw"),
                 Arg(false, Value.Ref(sym)) :: Nil)(true, false),
             implct = true)
           val je = nestedScp.givenIn:
@@ -192,10 +196,11 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
               ErrorReport(msg"Expected: '${expected}', got: '${result}'" -> N :: Nil,
                 source = Diagnostic.Source.Runtime)
             case _ => ()
+            val anon = nme.isEmpty
             result match
-            case "undefined" =>
-            case "()" =>
+            case "undefined" if anon =>
+            case "()" if anon =>
             case _ =>
-              output(s"${if nme.isEmpty then "" else s"$nme "}= ${result.indentNewLines("| ")}")
+              output(s"${if anon then "" else s"$nme "}= ${result.indentNewLines("| ")}")
       
 

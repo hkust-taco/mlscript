@@ -20,8 +20,8 @@ class Expr[A] with
 
 // * one can also go the TypeScript way
 
-class Lit(n: Int)
-class Add(lhs: Expr, rhs: Expr)
+data class Lit(n: Int)
+data class Add(lhs: Expr, rhs: Expr)
 
 type Expr = Lit | Add
 

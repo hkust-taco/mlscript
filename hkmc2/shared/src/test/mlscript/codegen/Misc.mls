@@ -1,14 +1,18 @@
 :js
 
 
+1 as Int
+//│ = 1
+
+1as Int
+//│ = 1
+
+(1)as(Int)
+//│ = 1
+
+:fixme // shouldn't allow using `Int` in term position
 1 : Int
-//│ = 1
-
-1: Int
-//│ = 1
-
-1 :Int
-//│ = 1
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'Int' yielded 'undefined'
 
 
 :sjs
@@ -17,5 +21,12 @@
 //│ JS (unsanitized):
 //│ 1 + 2
 //│ = 3
+
+
+set [].0 = 1
+
+let arr = []
+set arr.0 = 1
+//│ arr = [1]
 
 

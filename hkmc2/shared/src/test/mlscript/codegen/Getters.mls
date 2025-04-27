@@ -66,8 +66,9 @@ module T with
   val d = this.p
 //│ JS (unsanitized):
 //│ let T1;
-//│ T1 = class T {
+//│ (class T {
 //│   static {
+//│     T1 = T;
 //│     this.a = T.t;
 //│     this.b = T.t;
 //│     this.c = T.p;
@@ -80,7 +81,7 @@ module T with
 //│     return 2;
 //│   }
 //│   static toString() { return "T"; }
-//│ };
+//│ });
 
 
 T.a
@@ -100,7 +101,16 @@ T.d
 module M with
   fun t = 0
 //│ JS (unsanitized):
-//│ let M1; M1 = class M { static {} static get t() { return 0; } static toString() { return "M"; } };
+//│ let M1;
+//│ (class M {
+//│   static {
+//│     M1 = M;
+//│   }
+//│   static get t() {
+//│     return 0;
+//│   }
+//│   static toString() { return "M"; }
+//│ });
 
 
 :sjs
@@ -156,21 +166,22 @@ fun baz() =
 //│ JS (unsanitized):
 //│ let baz;
 //│ baz = function baz() {
-//│   let w, z;
+//│   let w, z, lambda;
 //│   w = function w() {
 //│     return 1
 //│   };
 //│   z = function z() {
 //│     return 2
 //│   };
-//│   return (x, y) => {
+//│   lambda = (undefined, function (x, y) {
 //│     let tmp1, tmp2, tmp3, tmp4;
 //│     tmp1 = x + y;
 //│     tmp2 = w();
 //│     tmp3 = tmp1 + tmp2;
 //│     tmp4 = z();
 //│     return tmp3 + tmp4
-//│   }
+//│   });
+//│   return lambda
 //│ };
 
 
@@ -272,11 +283,13 @@ c()
 
 
 :sjs
-class Foo(x) with
+data class Foo(x) with
   fun oops = x
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ Foo1 = function Foo(x1) { return new Foo.class(x1); };
+//│ Foo1 = function Foo(x1) {
+//│   return new Foo.class(x1);
+//│ };
 //│ Foo1.class = class Foo {
 //│   constructor(x) {
 //│     this.x = x;
@@ -284,7 +297,7 @@ class Foo(x) with
 //│   get oops() {
 //│     return this.x;
 //│   }
-//│   toString() { return "Foo(" + globalThis.Predef.render(this.x) + ")"; }
+//│   toString() { return "Foo(" + runtime.render(this.x) + ")"; }
 //│ };
 
 
@@ -299,7 +312,7 @@ foo(Foo(42))
 fun foo(f) =
   f.oops
 
-class Foo(x) with
+data class Foo(x) with
   fun oops = x
 
 foo(Foo(42))

@@ -7,7 +7,7 @@ fun f(x, y) = x + y
 f(2, 3)
 //│ JS:
 //│ f = function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 2, true, args.length);
+//│   runtime.checkArgs("f", 2, true, args.length);
 //│   let x = args[0];
 //│   let y = args[1];
 //│   return x + y
@@ -20,15 +20,23 @@ f(2, 3)
 :expect NaN
 :ssjs
 :noSanityCheck
+:e
 fun f2(x, y) = x + y
 f2(2)
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.25: 	f2(2)
+//│ ╙──      	  ^^^
 //│ JS:
 //│ f2 = function f2(x, y) { return x + y }; block$res2 = f2(2); undefined
 //│ = NaN
 
 :ssjs
 :re
+:e
 f(2)
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.36: 	f(2)
+//│ ╙──      	 ^^^
 //│ JS:
 //│ block$res3 = runtime.checkCall(f(2)); undefined
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
@@ -36,14 +44,18 @@ f(2)
 
 :ssjs
 :re
+:e
 fun f(x)(y, z) = x + y + z
 f(3)(4)
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.49: 	f(3)(4)
+//│ ╙──      	    ^^^
 //│ JS:
 //│ f1 = function f(...args) {
-//│   globalThis.Predef.checkArgs("f", 1, true, args.length);
+//│   runtime.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
 //│   return (...args1) => {
-//│     globalThis.Predef.checkArgs("", 2, true, args1.length);
+//│     runtime.checkArgs("", 2, true, args1.length);
 //│     let y = args1[0];
 //│     let z = args1[1];
 //│     let tmp1;
@@ -62,7 +74,7 @@ f(3)(4)
 :noSanityCheck
 let f = (x, y) => x + y in f(2)
 //│ JS:
-//│ f3 = (x, y) => { return x + y }; block$res5 = runtime.safeCall(f3(2)); undefined
+//│ f4 = function f(x, y) { return x + y }; f3 = f4; block$res5 = runtime.safeCall(f3(2)); undefined
 //│ = NaN
 
 :ssjs
@@ -70,26 +82,29 @@ let f = (x, y) => x + y in f(2)
 let f = (x, y) => x + y
 f(2)
 //│ JS:
-//│ f4 = (...args) => {
-//│   globalThis.Predef.checkArgs("", 2, true, args.length);
+//│ f6 = function f(...args) {
+//│   runtime.checkArgs("f", 2, true, args.length);
 //│   let x = args[0];
 //│   let y = args[1];
 //│   return x + y
 //│ };
-//│ block$res6 = runtime.safeCall(f4(2));
+//│ f5 = f6;
+//│ block$res6 = runtime.safeCall(f5(2));
 //│ undefined
-//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
-//│ f = [function f4]
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
+//│ f = [function f]
 
 
 :expect NaN
 :ssjs
 :noSanityCheck
-class Cls(x, y) with
+data class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 Cls(1, 2).f(3)
 //│ JS:
-//│ Cls1 = function Cls(x1, y1) { return new Cls.class(x1, y1); };
+//│ Cls1 = function Cls(x1, y1) {
+//│   return new Cls.class(x1, y1);
+//│ };
 //│ Cls1.class = class Cls {
 //│   constructor(x, y) {
 //│     this.x = x;
@@ -101,7 +116,7 @@ Cls(1, 2).f(3)
 //│     tmp3 = tmp2 + z;
 //│     return tmp3 + p
 //│   }
-//│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ", " + globalThis.Predef.render(this.y) + ")"; }
+//│   toString() { return "Cls(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; }
 //│ };
 //│ tmp1 = Cls1(1, 2);
 //│ block$res7 = runtime.safeCall(tmp1.f(3));
@@ -110,11 +125,13 @@ Cls(1, 2).f(3)
 
 :ssjs
 :re
-class Cls(x, y) with
+data class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 Cls(1, 2).f(3)
 //│ JS:
-//│ Cls3 = function Cls(...args1) { return new Cls.class(...args1); };
+//│ Cls3 = function Cls(...args1) {
+//│   return new Cls.class(...args1);
+//│ };
 //│ Cls3.class = class Cls2 {
 //│   constructor(x, y) {
 //│     this.x = x;
@@ -122,7 +139,7 @@ Cls(1, 2).f(3)
 //│   }
 //│   get f$__checkNotMethod() { runtime.deboundMethod("f", "Cls"); }
 //│   f(...args) {
-//│     globalThis.Predef.checkArgs("f", 2, true, args.length);
+//│     runtime.checkArgs("f", 2, true, args.length);
 //│     let z = args[0];
 //│     let p = args[1];
 //│     let tmp3, tmp4;
@@ -130,7 +147,7 @@ Cls(1, 2).f(3)
 //│     tmp4 = tmp3 + z;
 //│     return tmp4 + p
 //│   }
-//│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ", " + globalThis.Predef.render(this.y) + ")"; }
+//│   toString() { return "Cls(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; }
 //│ };
 //│ tmp2 = runtime.checkCall(Cls3(1, 2));
 //│ block$res8 = runtime.safeCall(tmp2.f(3));
@@ -140,11 +157,13 @@ Cls(1, 2).f(3)
 
 :ssjs
 :re
-class Cls(x, y) with
+data class Cls(x, y) with
   fun f(z, p)(q, s) = x + y + z + p + q + s
 Cls(1, 2).f(3, 4)(5)
 //│ JS:
-//│ Cls5 = function Cls(...args1) { return new Cls.class(...args1); };
+//│ Cls5 = function Cls(...args1) {
+//│   return new Cls.class(...args1);
+//│ };
 //│ Cls5.class = class Cls4 {
 //│   constructor(x, y) {
 //│     this.x = x;
@@ -152,11 +171,11 @@ Cls(1, 2).f(3, 4)(5)
 //│   }
 //│   get f$__checkNotMethod() { runtime.deboundMethod("f", "Cls"); }
 //│   f(...args) {
-//│     globalThis.Predef.checkArgs("f", 2, true, args.length);
+//│     runtime.checkArgs("f", 2, true, args.length);
 //│     let z = args[0];
 //│     let p = args[1];
 //│     return (...args1) => {
-//│       globalThis.Predef.checkArgs("", 2, true, args1.length);
+//│       runtime.checkArgs("", 2, true, args1.length);
 //│       let q = args1[0];
 //│       let s = args1[1];
 //│       let tmp5, tmp6, tmp7, tmp8;
@@ -167,7 +186,7 @@ Cls(1, 2).f(3, 4)(5)
 //│       return tmp8 + s
 //│     }
 //│   }
-//│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ", " + globalThis.Predef.render(this.y) + ")"; }
+//│   toString() { return "Cls(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; }
 //│ };
 //│ tmp3 = runtime.checkCall(Cls5(1, 2));
 //│ tmp4 = tmp3.f(3, 4);
@@ -214,31 +233,34 @@ globalThis.x()
 :re
 :ssjs
 module M with
-  class A(x) with
+  data class A(x) with
     fun f(y) = x + y
 if M.A(1).y is
   x and x == 1 then x
   else 0
 //│ JS:
-//│ M1 = class M {
+//│ (class M {
 //│   static {
-//│     this.A = function A(...args1) { return new A.class(...args1); };
+//│     M1 = M;
+//│     this.A = function A(...args1) {
+//│       return new A.class(...args1);
+//│     };
 //│     this.A.class = class A {
 //│       constructor(x1) {
 //│         this.x = x1;
 //│       }
 //│       get f$__checkNotMethod() { runtime.deboundMethod("f", "A"); }
 //│       f(...args) {
-//│         globalThis.Predef.checkArgs("f", 1, true, args.length);
+//│         runtime.checkArgs("f", 1, true, args.length);
 //│         let y = args[0];
 //│         return this.x + y
 //│       }
-//│       toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; }
+//│       toString() { return "A(" + runtime.render(this.x) + ")"; }
 //│     };
 //│   }
 //│   static toString() { return "M"; }
-//│ };
-//│ tmp5 = runtime.checkCall(M1.A(1));
+//│ });
+//│ tmp5 = runtime.safeCall(M1.A(1));
 //│ selRes2 = tmp5.y;
 //│ discarded1 = tmp5.y$__checkNotMethod;
 //│ if (selRes2 === undefined) {
@@ -267,7 +289,7 @@ M.A(1).y
 //│ if (selRes3 === undefined) {
 //│   throw new this.Error("Access to required field 'console' yielded 'undefined'");
 //│ }
-//│ tmp6 = runtime.checkCall(M1.A(1));
+//│ tmp6 = runtime.safeCall(M1.A(1));
 //│ selRes4 = tmp6.y;
 //│ discarded2 = tmp6.y$__checkNotMethod;
 //│ if (selRes4 === undefined) {
@@ -284,7 +306,9 @@ M.A(1).y
 M.A(1).y
   console.log()
 //│ JS:
-//│ tmp7 = M1.A(1); block$res15 = runtime.safeCall(this.console.log(tmp7.y)); undefined
+//│ tmp7 = runtime.safeCall(M1.A(1));
+//│ block$res15 = runtime.safeCall(this.console.log(tmp7.y));
+//│ undefined
 //│ > undefined
 
 :noSanityCheck
@@ -300,7 +324,7 @@ M.A(2).y > 1
 :ssjs
 M.A(1).g(0)
 //│ JS:
-//│ tmp10 = runtime.checkCall(M1.A(1)); block$res18 = runtime.safeCall(tmp10.g(0)); undefined
+//│ tmp10 = runtime.safeCall(M1.A(1)); block$res18 = runtime.safeCall(tmp10.g(0)); undefined
 //│ ═══[RUNTIME ERROR] TypeError: tmp10.g is not a function
 
 
@@ -308,7 +332,7 @@ M.A(1).g(0)
 :ssjs
 M.A(1).f(0)
 //│ JS:
-//│ tmp11 = runtime.checkCall(M1.A(1)); block$res19 = runtime.safeCall(tmp11.f(0)); undefined
+//│ tmp11 = runtime.safeCall(M1.A(1)); block$res19 = runtime.safeCall(tmp11.f(0)); undefined
 //│ = 1
 
 

@@ -82,7 +82,7 @@ class Translator(val elaborator: Elaborator)
             errorSplit
         ctor match
         case Ident(ctorName) => patternParams.find(_.sym.nme == ctorName) match
-          case S(Param(_, symbol, _)) => failure // TODO: handle input patterns
+          case S(Param(sym = symbol)) => failure // TODO: handle input patterns
           case N => resolved
         case ctor: Sel => resolved
       case App(ctor @ (_: Ident | _: Sel), Tup(params)) =>
@@ -100,7 +100,7 @@ class Translator(val elaborator: Elaborator)
             errorSplit
         ctor match
         case Ident(ctorName) => patternParams.find(_.sym.nme == ctorName) match
-          case S(Param(_, symbol, _)) => failure // TODO: handle input patterns
+          case S(Param(sym = symbol)) => failure // TODO: handle input patterns
           case N => resolved
         case ctor: Sel => resolved
       case pat =>
@@ -198,13 +198,13 @@ class Translator(val elaborator: Elaborator)
   private def errorSplit: Split = Split.Else(Term.Error)
   
   /** Create a function definition from the given UCS splits. */
-  private def makeMatcher(name: Str, scrut: TermSymbol, topmost: Split)(using Raise): TermDefinition =
+  private def makeMatcher(name: Str, scrut: VarSymbol, topmost: Split)(using Raise): TermDefinition =
     val normalize = new Normalization(elaborator)
     val sym = BlockMemberSymbol(name, Nil)
-    val ps = PlainParamList(Param(FldFlags.empty, scrut, N) :: Nil)
+    val ps = PlainParamList(Param(FldFlags.empty, scrut, N, Modulefulness.none) :: Nil)
     val body = Term.IfLike(Keyword.`if`, topmost)(normalize(topmost))
     val res = FlowSymbol(s"result of $name")
-    TermDefinition(N, Fun, sym, ps :: Nil, N, N, S(body), res, TermDefFlags.empty, Nil)
+    TermDefinition(N, Fun, sym, ps :: Nil, N, N, S(body), res, TermDefFlags.empty, Modulefulness.none, Nil)
   
   /** Translate a list of extractor/matching functions for the given pattern.
    *  There are currently two functions: `unapply` and `unapplyStringPrefix`.
@@ -221,7 +221,7 @@ class Translator(val elaborator: Elaborator)
     post = (blk: Ls[TermDefinition]) => s"Translator >>> $blk"
   ):
     val unapply = scoped("ucs:cp"):
-      val scrutSym = TermSymbol(ParamBind, N, Ident("scrut"))
+      val scrutSym = VarSymbol(Ident("scrut"))
       val topmost = full(() => scrutSym.ref(), body, success(params))(using patternParams, raise) ~~: failure
       log(s"Translated `unapply`: ${display(topmost)}")
       makeMatcher("unapply", scrutSym, topmost)
@@ -229,7 +229,7 @@ class Translator(val elaborator: Elaborator)
       // We don't report errors here because they are already reported in the
       // translation of `unapply` function.
       given Raise = Function.const(())
-      val scrutSym = TermSymbol(ParamBind, N, Ident("topic"))
+      val scrutSym = VarSymbol(Ident("topic"))
       stringPrefix(() => scrutSym.ref(), body, prefixSuccess(params)) match
       case Split.Else(Term.Error) =>
         makeMatcher("unapplyStringPrefix", scrutSym, failure)

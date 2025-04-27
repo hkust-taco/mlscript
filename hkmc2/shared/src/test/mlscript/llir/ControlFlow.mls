@@ -1,0 +1,314 @@
+:js
+:llir
+:cpp
+
+:sllir
+:intl
+fun f1() =
+  let x = 1
+  let x = 2
+  x
+f1()
+//│ = 2
+//│ LLIR:
+//│   
+//│   def f1() =
+//│     let x = 1 in
+//│     let x1 = 2 in
+//│     x1
+//│   def entry() =
+//│     let* (x2) = f1() in
+//│     x2
+//│   entry = entry
+//│ 
+//│ Interpreted:
+//│ 2
+
+:sllir
+:intl
+fun f2() =
+  let x = 0
+  if x == 1 then 2 else 3
+f2()
+//│ = 3
+//│ LLIR:
+//│   
+//│   def f2() =
+//│     let x = 0 in
+//│     let x1 = ==(x,1) in
+//│     case x1 of
+//│       Lit(BoolLit(true)) =>
+//│         2
+//│       _ =>
+//│         3
+//│   def j() =
+//│     undefined
+//│   def entry() =
+//│     let* (x2) = f2() in
+//│     x2
+//│   entry = entry
+//│ 
+//│ Interpreted:
+//│ 3
+
+
+:sllir
+fun f3() =
+  let x1 = 0
+  let x2 = 1
+  if true then x1 else x2
+f3()
+//│ = 0
+//│ LLIR:
+//│   
+//│   def f3() =
+//│     let x = 0 in
+//│     let x1 = 1 in
+//│     let x2 = true in
+//│     case x2 of
+//│       Lit(BoolLit(true)) =>
+//│         x
+//│       _ =>
+//│         x1
+//│   def j() =
+//│     undefined
+//│   def entry() =
+//│     let* (x3) = f3() in
+//│     x3
+//│   entry = entry
+
+
+:sllir
+:intl
+fun f4() =
+  let x = 0
+  let x = if x == 1 then 2 else 3
+  x
+f4()
+//│ = 3
+//│ LLIR:
+//│   
+//│   def f4() =
+//│     let x = 0 in
+//│     let x1 = ==(x,1) in
+//│     case x1 of
+//│       Lit(BoolLit(true)) =>
+//│         let x2 = 2 in
+//│         jump j(x2)
+//│       _ =>
+//│         let x3 = 3 in
+//│         jump j(x3)
+//│   def j(tmp) =
+//│     tmp
+//│   def entry() =
+//│     let* (x4) = f4() in
+//│     x4
+//│   entry = entry
+//│ 
+//│ Interpreted:
+//│ 3
+
+:sllir
+:intl
+fun f5() =
+  let x = 0
+  let x = if x == 1 then 2 else 3
+  let x = if x == 2 then 4 else 5
+  x
+f5()
+//│ = 5
+//│ LLIR:
+//│   
+//│   def f5() =
+//│     let x = 0 in
+//│     let x1 = ==(x,1) in
+//│     case x1 of
+//│       Lit(BoolLit(true)) =>
+//│         let x2 = 2 in
+//│         jump j(x2)
+//│       _ =>
+//│         let x3 = 3 in
+//│         jump j(x3)
+//│   def j(tmp) =
+//│     let x4 = ==(tmp,2) in
+//│     case x4 of
+//│       Lit(BoolLit(true)) =>
+//│         let x5 = 4 in
+//│         jump j1(x5)
+//│       _ =>
+//│         let x6 = 5 in
+//│         jump j1(x6)
+//│   def j1(tmp1) =
+//│     tmp1
+//│   def entry() =
+//│     let* (x7) = f5() in
+//│     x7
+//│   entry = entry
+//│ 
+//│ Interpreted:
+//│ 5
+
+:sllir
+fun test() =
+  if true do test()
+//│ LLIR:
+//│   
+//│   def test() =
+//│     let x = true in
+//│     case x of
+//│       Lit(BoolLit(true)) =>
+//│         let* (x1) = test() in
+//│         x1
+//│       _ =>
+//│         undefined
+//│   def j() =
+//│     undefined
+//│   def entry() =
+//│     undefined
+//│   entry = entry
+
+:sllir
+fun test() =
+  (if true then test()) + 1
+//│ LLIR:
+//│   
+//│   def test() =
+//│     let x = true in
+//│     case x of
+//│       Lit(BoolLit(true)) =>
+//│         let* (x1) = test() in
+//│         jump j(x1)
+//│       _ =>
+//│         panic "match error"
+//│   def j(tmp) =
+//│     let x2 = +(tmp,1) in
+//│     x2
+//│   def entry() =
+//│     undefined
+//│   entry = entry
+
+
+:sllir
+:intl
+fun f() =
+  let x = 10
+  if true do
+    set x += 1
+  x
+f()
+//│ = 11
+//│ LLIR:
+//│   
+//│   def f() =
+//│     let x = 10 in
+//│     let x1 = true in
+//│     case x1 of
+//│       Lit(BoolLit(true)) =>
+//│         let x2 = +(x,1) in
+//│         let x3 = undefined in
+//│         jump j(x2)
+//│       _ =>
+//│         let x4 = undefined in
+//│         jump j(x)
+//│   def j(x5) =
+//│     x5
+//│   def entry() =
+//│     let* (x6) = f() in
+//│     x6
+//│   entry = entry
+//│ 
+//│ Interpreted:
+//│ 11
+
+:sllir
+:intl
+data class A(x)
+data class B(y)
+fun f(a) =
+  let t = if a is
+    A(_) then 1
+    B(_) then 2
+  t
+f(A(1))
+//│ = 1
+//│ LLIR:
+//│   class A(x)
+//│   class B(y)
+//│   def f(a) =
+//│     case a of
+//│       Class(class:A) =>
+//│         let x = a.<A:x> in
+//│         let x1 = 1 in
+//│         jump j(x1)
+//│       Class(class:B) =>
+//│         let x2 = a.<B:y> in
+//│         let x3 = 2 in
+//│         jump j(x3)
+//│       _ =>
+//│         panic "match error"
+//│   def j(tmp) =
+//│     tmp
+//│   def entry() =
+//│     let x4 = A(1) in
+//│     let* (x5) = f(x4) in
+//│     x5
+//│   entry = entry
+//│ 
+//│ Interpreted:
+//│ 1
+
+:sllir
+:intl
+data class A(x)
+data class B(y)
+fun f(a) =
+  let t = if a is
+    A(_) then if a is
+      A(1) then 1
+      B(_) then 2
+    B(_) then 3
+  t
+f(A(1))
+//│ = 1
+//│ LLIR:
+//│   class A(x)
+//│   class B(y)
+//│   def f(a) =
+//│     case a of
+//│       Class(class:A) =>
+//│         let x = a.<A:x> in
+//│         case a of
+//│           Class(class:A) =>
+//│             let x1 = a.<A:x> in
+//│             case x1 of
+//│               Lit(IntLit(1)) =>
+//│                 let x2 = 1 in
+//│                 jump j(x2)
+//│               _ =>
+//│                 panic "match error"
+//│           Class(class:B) =>
+//│             let x3 = a.<B:y> in
+//│             let x4 = 2 in
+//│             jump j1(x4)
+//│           _ =>
+//│             panic "match error"
+//│       Class(class:B) =>
+//│         let x5 = a.<B:y> in
+//│         let x6 = 3 in
+//│         jump j2(x6)
+//│       _ =>
+//│         panic "match error"
+//│   def j(tmp) =
+//│     jump j1(tmp)
+//│   def j1(tmp) =
+//│     jump j2(tmp)
+//│   def j2(tmp1) =
+//│     tmp1
+//│   def entry() =
+//│     let x7 = A(1) in
+//│     let* (x8) = f(x7) in
+//│     x8
+//│   entry = entry
+//│ 
+//│ Interpreted:
+//│ 1

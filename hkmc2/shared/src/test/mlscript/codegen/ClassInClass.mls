@@ -2,8 +2,8 @@
 
 
 :sjs
-class Outer(a, b) with
-  class Inner(c) with
+data class Outer(a, b) with
+  data class Inner(c) with
     fun i1(d) = [b, c, d]
     print(a)
     print(c)
@@ -15,18 +15,22 @@ class Outer(a, b) with
   print(i.i1(1))
 //│ JS (unsanitized):
 //│ let Outer1;
-//│ Outer1 = function Outer(a1, b1) { return new Outer.class(a1, b1); };
+//│ Outer1 = function Outer(a1, b1) {
+//│   return new Outer.class(a1, b1);
+//│ };
 //│ Outer1.class = class Outer {
 //│   constructor(a, b) {
+//│     let tmp, tmp1, tmp2;
 //│     this.a = a;
 //│     this.b = b;
-//│     let tmp, tmp1, tmp2;
 //│     const this$Outer = this;
-//│     this.Inner = function Inner(c1) { return new Inner.class(c1); };
+//│     this.Inner = function Inner(c1) {
+//│       return new Inner.class(c1);
+//│     };
 //│     this.Inner.class = class Inner {
 //│       constructor(c) {
-//│         this.c = c;
 //│         let tmp3, tmp4, tmp5;
+//│         this.c = c;
 //│         tmp3 = Predef.print(this$Outer.a);
 //│         tmp4 = Predef.print(this.c);
 //│         tmp5 = this.i1(this$Outer.a);
@@ -39,7 +43,7 @@ class Outer(a, b) with
 //│           d
 //│         ]
 //│       }
-//│       toString() { return "Inner(" + globalThis.Predef.render(this.c) + ")"; }
+//│       toString() { return "Inner(" + runtime.render(this.c) + ")"; }
 //│     };
 //│     tmp = this.Inner(this.a);
 //│     this.i = tmp;
@@ -55,7 +59,7 @@ class Outer(a, b) with
 //│     tmp = this.Inner(c1);
 //│     return runtime.safeCall(tmp.i1(d))
 //│   }
-//│   toString() { return "Outer(" + globalThis.Predef.render(this.a) + ", " + globalThis.Predef.render(this.b) + ")"; }
+//│   toString() { return "Outer(" + runtime.render(this.a) + ", " + runtime.render(this.b) + ")"; }
 //│ };
 
 

@@ -9,27 +9,22 @@ print of foo
 //│ > ()
 
 
-:e
+:todo // warn about useless binding
+:w
 fun foo() =
   let x = 1
-//│ ╔══[ERROR] Expected a body for let bindings in expression position
-//│ ║  l.14: 	  let x = 1
-//│ ╙──      	      ^^^^^
 
 print of foo()
 //│ > ()
 
 
-:e
+:todo // warn about useless binding
+:w
 fun foo() =
   val x = 1
-//│ ╔══[ERROR] Illegal definition in term position.
-//│ ║  l.25: 	  val x = 1
-//│ ╙──      	      ^^^^^
 
-:re
 print of foo()
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ > ()
 
 
 :sjs
@@ -40,7 +35,7 @@ print of globalThis.console.log("Hello, world!")
 //│ > ()
 
 
-class Box(value)
+data class Box(value)
 
 fun foo() =
   if false do 0
@@ -78,7 +73,7 @@ print of Box(foo(1)).value
 :e
 fun f = let x = 1
 //│ ╔══[ERROR] Expected a body for let bindings in expression position
-//│ ║  l.79: 	fun f = let x = 1
+//│ ║  l.74: 	fun f = let x = 1
 //│ ╙──      	            ^^^^^
 
 print of f

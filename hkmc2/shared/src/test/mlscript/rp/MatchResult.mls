@@ -1,5 +1,10 @@
 :js
 
+import "../../mlscript-compile/Runtime.mls"
+
+open Runtime { MatchResult, MatchFailure }
+
+
 MatchResult(0)
 //│ = MatchResult(0)
 
@@ -12,7 +17,7 @@ MatchFailure("oops")
 if MatchFailure("oops") is MatchFailure(x) then x
 //│ = "oops"
 
-class MatchResult(x, y, z)
+data class MatchResult(x, y, z)
 
 MatchResult(0)
 //│ = MatchResult(0, undefined, undefined)
@@ -32,7 +37,7 @@ fun foo(x) = x is Cross
 //│ foo = function foo(x2) {
 //│   let matchResult;
 //│   matchResult = runtime.safeCall(Cross1.unapply(x2));
-//│   if (matchResult instanceof globalThis.Predef.MatchResult.class) {
+//│   if (matchResult instanceof runtime.MatchResult.class) {
 //│     return true
 //│   } else {
 //│     return false

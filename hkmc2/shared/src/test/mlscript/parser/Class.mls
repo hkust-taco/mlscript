@@ -85,7 +85,7 @@ class
 :pe
 class
 Foo
-//│ ╔══[PARSE ERROR] Expected expression after type declaration keyword; found newline instead
+//│ ╔══[PARSE ERROR] Expected expression after type declaration keyword; found new line instead
 //│ ║  l.86: 	class
 //│ ║        	     ^
 //│ ║  l.87: 	Foo

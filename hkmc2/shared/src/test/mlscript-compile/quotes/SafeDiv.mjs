@@ -1,9 +1,13 @@
 import runtime from "./../Runtime.mjs";
+import Term from "./../Term.mjs";
 let SafeDiv1;
-SafeDiv1 = class SafeDiv {
-  static {}
+(class SafeDiv {
+  static {
+    SafeDiv1 = SafeDiv;
+  }
   static get res() {
-    return (x_18, y_2, d_0) => {
+    let lambda;
+    lambda = (undefined, function (x_18, y_2, d_0) {
       let scrut_2;
       scrut_2 = y_2 == 0;
       if (scrut_2 === true) {
@@ -11,8 +15,9 @@ SafeDiv1 = class SafeDiv {
       } else {
         return x_18 / y_2
       }
-    };
+    });
+    return lambda
   }
   static toString() { return "SafeDiv"; }
-};
+});
 let SafeDiv = SafeDiv1; export default SafeDiv;

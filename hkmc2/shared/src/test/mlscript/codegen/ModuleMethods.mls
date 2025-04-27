@@ -27,9 +27,10 @@ s(123)
 
 :e
 Example |>. s(123)
-//│ ╔══[ERROR] Only module parameters may receive module arguments (values).
+//│ ╔══[ERROR] Unexpected moduleful reference.
 //│ ║  l.29: 	Example |>. s(123)
-//│ ╙──      	^^^^^^^
+//│ ║        	^^^^^^^
+//│ ╙── Module argument passed to a non-module parameter.
 //│ = [123, 456]
 
 
@@ -41,9 +42,10 @@ module Test with
   fun bar() = foo()
 //│ JS (unsanitized):
 //│ let Test1;
-//│ Test1 = class Test {
+//│ (class Test {
 //│   static #s;
 //│   static {
+//│     Test1 = Test;
 //│     let tmp1;
 //│     Test.#s = 1;
 //│     tmp1 = Predef.print(Test.#s);
@@ -55,7 +57,7 @@ module Test with
 //│     return Test.foo()
 //│   }
 //│   static toString() { return "Test"; }
-//│ };
+//│ });
 //│ > 1
 
 let f = Test.foo

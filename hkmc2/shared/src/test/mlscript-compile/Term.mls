@@ -10,50 +10,50 @@ open Predef
 
 module Term with...
 
-class Symbol(name: Str)
+class Symbol(val name: Str)
 type Literal = null | undefined | Str | Int | Num | Bool
 
 
 class ConstructorLike with
   constructor
-    SymbolCons(symbol: Symbol)
+    SymbolCons(val symbol: Symbol)
     StringJoin
-    TupleCapacity(size: Int, inf: Bool)
-    Instantiation(symbol: Symbol, args: Array[DebrujinSplit])
-    LocalPattern(id: Int)
-    Parameter(symbol: Symbol)
-    Nested(split: DebrujinSplit)
+    TupleCapacity(val size: Int, val inf: Bool)
+    Instantiation(val symbol: Symbol, val args: Array[DebrujinSplit])
+    LocalPattern(val id: Int)
+    Parameter(val symbol: Symbol)
+    Nested(val split: DebrujinSplit)
 
 class PatternStub with
   constructor
-    LiteralStub(value: Literal)
-    CharClass(start: Str, end: Str, inclusive: Bool)
-    ClassLikeStub(cons: ConstructorLike)
+    LiteralStub(val value: Literal)
+    CharClass(val start: Str, val end: Str, val inclusive: Bool)
+    ClassLikeStub(val cons: ConstructorLike)
     Wildcard
 
 class DebrujinSplit with
   constructor
-    Binder(body: DebrujinSplit)
-    DebrujinBranch(scrutinee: Int, ptrn, consequent: DebrujinSplit, alternative: DebrujinSplit)
-    Accept(outcome: Int)
+    Binder(val body: DebrujinSplit)
+    DebrujinBranch(val scrutinee: Int, val ptrn, val consequent: DebrujinSplit, val alternative: DebrujinSplit)
+    Accept(val outcome: Int)
     Reject
 
 class Pattern with
   constructor
-    LitPattern(lit: Literal)
-    Var(sym: Symbol)
-    ClassLike(sym: Symbol, trm: Term, parameters: Array[Symbol] | null)
-    Synonym(symbol: Symbol, patternArguments: Array[DebrujinSplit])
-    Tuple(size: Int, inf: Bool)
-    Record(entities: Array[(Str, Symbol)])
+    LitPattern(val lit: Literal)
+    Var(val sym: Symbol)
+    ClassLike(val sym: Symbol, val trm: Term, val parameters: Array[Symbol] | null)
+    Synonym(val symbol: Symbol, val patternArguments: Array[DebrujinSplit])
+    Tuple(val size: Int, val inf: Bool)
+    Record(val entities: Array[(Str, Symbol)])
 
-class Branch(scrutinee: Ref, ptrn: Pattern, continuation: Split)
+class Branch(val scrutinee: Ref, val ptrn: Pattern, val continuation: Split)
 
 class Split with
   constructor
-    Cons(head: Branch, tail: Split)
-    Let(sym: Symbol, term: Term, tail: Split)
-    Else(default: Term)
+    Cons(val head: Branch, val tail: Split)
+    Let(val sym: Symbol, val term: Term, val tail: Split)
+    Else(val default: Term)
     End
 
 
@@ -63,33 +63,33 @@ object KeywordWhile
 
 class Statement with
   constructor
-    LetDecl(sym: Symbol)
-    DefineVar(sym: Symbol, rhs: Term)
+    LetDecl(val sym: Symbol)
+    DefineVar(val sym: Symbol, val rhs: Term)
     // TODO: other statements
 
 
 class Term with
   constructor
-    Lit(lit: Literal)
-    Builtin(name: Str)
-    Ref(sym: Symbol)
-    CSRef(sym: Symbol, base: Str, file: Str | undefined)
-    App(lhs: Term, rhs: Term)
-    Sel(prefix: Term, nme: Str)
-    DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
-    Tup(fields: Array[Term])
-    IfLike(kw: KeywordIf | KeywordWhile, desugared: Split)
-    Lam(params: Array[Symbol], body: Term)
-    Blk(stats: Array[Statement], res: Term)
-    New(cls: Term, args: Array[Term])
-    Region(name: Symbol, body: Term)
-    RegRef(reg: Term, value: Term)
-    Assgn(lhs: Term, rhs: Term)
-    Deref(ref: Term)
-    SetRef(ref: Term, value: Term)
-    Ret(result: Term)
-    Throw(result: Term)
-    Try(body: Term, finallyDo: Term)
+    Lit(val lit: Literal)
+    Builtin(val name: Str)
+    Ref(val sym: Symbol)
+    CSRef(val sym: Symbol, val base: Str, val file: Str | undefined)
+    App(val lhs: Term, val rhs: Term)
+    Sel(val prefix: Term, val nme: Str)
+    DynSel(val prefix: Term, val fld: Term, val arrayIdx: Bool)
+    Tup(val fields: Array[Term])
+    IfLike(val kw: KeywordIf | KeywordWhile, val desugared: Split)
+    Lam(val params: Array[Symbol], val body: Term)
+    Blk(val stats: Array[Statement], val res: Term)
+    New(val cls: Term, val args: Array[Term])
+    Region(val name: Symbol, val body: Term)
+    RegRef(val reg: Term, val value: Term)
+    Assgn(val lhs: Term, val rhs: Term)
+    Deref(val ref: Term)
+    SetRef(val ref: Term, val value: Term)
+    Ret(val result: Term)
+    Throw(val result: Term)
+    Try(val body: Term, val finallyDo: Term)
 
 let names = new Map()
 fun freshName(name) =
@@ -100,7 +100,7 @@ fun freshName(name) =
   Str.concat of name, "_", i.toString()
     
 
-class Context(symbols: Set, dependencies: Set, printOnly: Bool) with
+class Context(val symbols: Set, val dependencies: Set, val printOnly: Bool) with
   fun isValid(name) = symbols.has(name) || printOnly
   fun nest = Context(new Set(symbols), dependencies, printOnly)
   fun add(name) = symbols.add(name)

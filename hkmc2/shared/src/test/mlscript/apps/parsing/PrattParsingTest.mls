@@ -1,0 +1,76 @@
+:js
+
+import "../../../mlscript-compile/apps/parsing/PrattParsing.mls"
+import "../../../mlscript-compile/apps/parsing/Expr.mls"
+import "../../../mlscript-compile/apps/parsing/TokenHelpers.mls"
+import "../../../mlscript-compile/apps/parsing/Lexer.mls"
+
+open Lexer { lex }
+open PrattParsing { parse }
+
+fun example(input) =
+  let tokens = lex of input, false
+  print of "Tokens: " + TokenHelpers.panorama(tokens)
+  let expr = parse of tokens
+  print of "Parsed: " + expr.toString()
+  print of "Pretty-printed: " + expr Expr.prettyPrint()
+
+example of "x + y - 3 * (a / b) ** 2"
+//│ > Tokens: ┃x│␠│+│␠│y│␠│-│␠│3│␠│*│␠│(│a│␠│/│␠│b│)│␠│**│␠│2┃
+//│ > Parsed: Inf("-", Inf("+", Var("x"), Var("y")), Inf("*", Lit(3), Inf("**", Inf("/", Var("a"), Var("b")), Lit(2))))
+//│ > Pretty-printed: x + y - 3 * (a / b) ** 2
+
+example of "((m - 2) / n) ** 3 + 5 * x"
+//│ > Tokens: ┃(│(│m│␠│-│␠│2│)│␠│/│␠│n│)│␠│**│␠│3│␠│+│␠│5│␠│*│␠│x┃
+//│ > Parsed: Inf("+", Inf("**", Inf("/", Inf("-", Var("m"), Lit(2)), Var("n")), Lit(3)), Inf("*", Lit(5), Var("x")))
+//│ > Pretty-printed: ((m - 2) / n) ** 3 + 5 * x
+
+example of "(a ** 2) - (b / 3) * (c + d)"
+//│ > Tokens: ┃(│a│␠│**│␠│2│)│␠│-│␠│(│b│␠│/│␠│3│)│␠│*│␠│(│c│␠│+│␠│d│)┃
+//│ > Parsed: Inf("-", Inf("**", Var("a"), Lit(2)), Inf("*", Inf("/", Var("b"), Lit(3)), Inf("+", Var("c"), Var("d"))))
+//│ > Pretty-printed: a ** 2 - b / 3 * (c + d)
+
+example of "x * y / (a - b) + c ** 4"
+//│ > Tokens: ┃x│␠│*│␠│y│␠│/│␠│(│a│␠│-│␠│b│)│␠│+│␠│c│␠│**│␠│4┃
+//│ > Parsed: Inf("+", Inf("/", Inf("*", Var("x"), Var("y")), Inf("-", Var("a"), Var("b"))), Inf("**", Var("c"), Lit(4)))
+//│ > Pretty-printed: x * y / (a - b) + c ** 4
+
+example of "2 + 3 - 4 * 5 / (x ** 2)"
+//│ > Tokens: ┃2│␠│+│␠│3│␠│-│␠│4│␠│*│␠│5│␠│/│␠│(│x│␠│**│␠│2│)┃
+//│ > Parsed: Inf("-", Inf("+", Lit(2), Lit(3)), Inf("/", Inf("*", Lit(4), Lit(5)), Inf("**", Var("x"), Lit(2))))
+//│ > Pretty-printed: 2 + 3 - 4 * 5 / x ** 2
+
+example of "(x - y) ** (z + 3 / w) * 2"
+//│ > Tokens: ┃(│x│␠│-│␠│y│)│␠│**│␠│(│z│␠│+│␠│3│␠│/│␠│w│)│␠│*│␠│2┃
+//│ > Parsed: Inf("*", Inf("**", Inf("-", Var("x"), Var("y")), Inf("+", Var("z"), Inf("/", Lit(3), Var("w")))), Lit(2))
+//│ > Pretty-printed: (x - y) ** (z + 3 / w) * 2
+
+example of "((a + b) ** 2) / (c - d) * e - f"
+//│ > Tokens: ┃(│(│a│␠│+│␠│b│)│␠│**│␠│2│)│␠│/│␠│(│c│␠│-│␠│d│)│␠│*│␠│e│␠│-│␠│f┃
+//│ > Parsed: Inf("-", Inf("*", Inf("/", Inf("**", Inf("+", Var("a"), Var("b")), Lit(2)), Inf("-", Var("c"), Var("d"))), Var("e")), Var("f"))
+//│ > Pretty-printed: (a + b) ** 2 / (c - d) * e - f
+
+example of "8 / (2 + (3 * x) - y) ** 2"
+//│ > Tokens: ┃8│␠│/│␠│(│2│␠│+│␠│(│3│␠│*│␠│x│)│␠│-│␠│y│)│␠│**│␠│2┃
+//│ > Parsed: Inf("/", Lit(8), Inf("**", Inf("-", Inf("+", Lit(2), Inf("*", Lit(3), Var("x"))), Var("y")), Lit(2)))
+//│ > Pretty-printed: 8 / (2 + 3 * x - y) ** 2
+
+example of "((p - q) * (r + s)) / (t ** (u - 1))"
+//│ > Tokens: ┃(│(│p│␠│-│␠│q│)│␠│*│␠│(│r│␠│+│␠│s│)│)│␠│/│␠│(│t│␠│**│␠│(│u│␠│-│␠│1│)│)┃
+//│ > Parsed: Inf("/", Inf("*", Inf("-", Var("p"), Var("q")), Inf("+", Var("r"), Var("s"))), Inf("**", Var("t"), Inf("-", Var("u"), Lit(1))))
+//│ > Pretty-printed: (p - q) * (r + s) / t ** (u - 1)
+
+example of "1 + 2 * 3 - 4 / (5 ** (6 - x))"
+//│ > Tokens: ┃1│␠│+│␠│2│␠│*│␠│3│␠│-│␠│4│␠│/│␠│(│5│␠│**│␠│(│6│␠│-│␠│x│)│)┃
+//│ > Parsed: Inf("-", Inf("+", Lit(1), Inf("*", Lit(2), Lit(3))), Inf("/", Lit(4), Inf("**", Lit(5), Inf("-", Lit(6), Var("x")))))
+//│ > Pretty-printed: 1 + 2 * 3 - 4 / 5 ** (6 - x)
+
+example of "5 ** 6 ** 7 ** 8"
+//│ > Tokens: ┃5│␠│**│␠│6│␠│**│␠│7│␠│**│␠│8┃
+//│ > Parsed: Inf("**", Lit(5), Inf("**", Lit(6), Inf("**", Lit(7), Lit(8))))
+//│ > Pretty-printed: 5 ** 6 ** 7 ** 8
+
+example of "(a ** 2) ** 5 ** e"
+//│ > Tokens: ┃(│a│␠│**│␠│2│)│␠│**│␠│5│␠│**│␠│e┃
+//│ > Parsed: Inf("**", Inf("**", Var("a"), Lit(2)), Inf("**", Lit(5), Var("e")))
+//│ > Pretty-printed: (a ** 2) ** 5 ** e

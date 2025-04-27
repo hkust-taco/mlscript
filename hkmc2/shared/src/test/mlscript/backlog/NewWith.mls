@@ -8,7 +8,7 @@ new
 //│ ╙──     	   ^
 
 new Object
-//│ = [object Object]
+//│ = {}
 
 :pe
 new with

@@ -1,0 +1,86 @@
+:js
+
+:silent
+import "../../../mlscript-compile/apps/parsing/Parser.mls"
+import "../../../mlscript-compile/apps/parsing/ParseRuleVisualizer.mls"
+import "../../../mlscript-compile/apps/parsing/Rules.mls"
+import "../../../mlscript-compile/apps/parsing/vendors/railroad/railroad.mjs"
+import "../../../mlscript-compile/Iter.mls"
+import "../../../mlscript-compile/XML.mls"
+import "path"
+
+open ParseRuleVisualizer { render }
+open Rules { termRule, declRule, typeRule }
+open XML { html, tag, elem, style }
+
+// Check if the given path exists.
+fun ensurePath(pathString) =
+  if fs.statSync(pathString).isDirectory() is false do
+    throw Error("The output directory does not exist.")
+  pathString
+
+// `process.cwd()` is different in `hkmc2AllTests / test` and
+// `~hkmc2DiffTests / Test / run`. This is a workaround to make the path.
+fun findProjectRoot =
+  let base = process.cwd()
+  let fragments = base.split(path.sep)
+  if fragments.at(-1) is "shared" and fragments.at(-2) is "hkmc2" then
+    base
+  else
+    base + path.sep + "hkmc2" + path.sep + "shared"
+
+fun outputPath = ensurePath of path.resolve of
+  findProjectRoot, "src", "test", "mlscript", "apps", "parsing"
+
+fun filePath(...fragments) = path.join(outputPath, ...fragments)
+
+fun libraryPath = ensurePath of path.resolve of
+  findProjectRoot, "src", "test", "mlscript-compile", "apps", "parsing", "vendors", "railroad"
+
+fun loadRailroadStylesheet = fs.readFileSync of path.join(libraryPath, "railroad.css"), "utf-8"
+
+fun toHTML(...elements) = html(lang: "en") of
+  elem("head") of
+    tag("meta") of charset: "UTF-8"
+    tag("meta") of
+      name: "viewport"
+      content: "width=device-width, initial-scale=1.0"
+    tag("link") of
+      href: "https://cdn.jsdelivr.net/npm/typeface-inconsolata@1.1.13/index.min.css"
+      rel: "stylesheet"
+    elem("title") of "Parse Rules"
+  elem("body", style(padding: "1em")) of
+    elem("div", style of
+      display: "flex"
+      "flex-direction": "column"
+      gap: "1em"
+    ) of
+      ...elements
+    elem("style") of
+      "body{margin:0;font-family:system-ui,sans-serif;font-size:16px}"
+      "figure{margin:0;display:flex;flex-direction:column;gap:0.5em}"
+      "figcaption{font-style:italic;font-weight:600}"
+      "figure:target figcaption{color:#007bff}"
+      "figure:target figcaption::before{font-style:normal;content:'⯈ '}"
+      "figure:target figcaption::after{font-style:normal;content:' ⯇'}"
+      loadRailroadStylesheet
+
+fun toElements(diagrams) =
+  diagrams
+    Iter.mapping of case [caption, svg] then
+      elem("figure", id: caption) of
+        elem("figcaption") of caption
+        svg
+    Iter.toArray()
+
+fs.writeFileSync of
+  filePath of "rule.html"
+  toHTML of
+    elem("h1") of "Parse Rules"
+    elem("h2") of "Terms"
+    ...toElements of render(railroad, "term", termRule)
+    elem("h2") of "Types"
+    ...toElements of render(railroad, "type", typeRule)
+    elem("h2") of "Definitions"
+    ...toElements of render(railroad, "definition", declRule)
+  "utf-8"

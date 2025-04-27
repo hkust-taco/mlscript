@@ -1,0 +1,74 @@
+import "../../Predef.mls"
+import "../../Stack.mls"
+import "../../Option.mls"
+import "../../Iter.mls"
+import "./Lexer.mls"
+import "./Token.mls"
+import "./Expr.mls"
+
+open Stack
+open Option { Some, None }
+open Token { Round, LiteralKind }
+
+type Stack[A] = Cons[A] | Nil
+
+module PrattParsing with ...
+
+fun parse(tokens) =
+  fun advance = if tokens is
+    Token.Space :: tail then
+      set tokens = tail
+      advance
+    head :: tail then
+      set tokens = tail
+      Some(head)
+    Nil then None
+  
+  let peek = advance
+  
+  fun consume = set peek = advance
+  
+  fun require(result: Expr.Expr, expected) = if peek is
+    Some(actual) and
+      expected Token.same(actual) then
+        consume
+        result
+      else result Expr.withErr of Str.concat of
+        "Expected token "
+        expected Token.summary()
+        ", but found "
+        actual Token.summary() 
+    None then result Expr.withErr of Str.concat of
+      "Expected token "
+      expected Token.summary()
+      ", but found end of input"
+  
+  fun expr(prec: Int): Expr.Expr = if peek is
+    Some of
+      Token.Literal(LiteralKind.Integer, literal) then
+        consume
+        Expr.Lit(parseInt(literal, 10)) exprCont(prec)
+      Token.Identifier(name, false) then
+        consume
+        Expr.Var(name) exprCont(prec)
+      Token.Identifier("(", true) then
+        consume
+        expr(0) require(Token.Identifier(")", true)) exprCont(prec)
+      token then Expr.justErr of "Unexpected token " + token Token.summary()
+    None then Expr.justErr of "Unexpected end of input"
+  
+  fun exprCont(acc: Expr.Expr, prec: Int): Expr.Expr =
+    if peek is Some(Token.Identifier(op, true))
+      and op !== ")" // * this is important
+      and Expr.opPrec(op) is [leftPrec, rightPrec]
+      and leftPrec > prec then
+        consume
+        let right = expr of rightPrec
+        Expr.Inf(op, acc, right) exprCont(prec)
+    else acc
+  
+  let result = expr(0)
+  if peek is
+    Some(token) then result Expr.withErr of
+      "Expect end of input, but found " + token Token.summary()
+    None then result

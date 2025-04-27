@@ -1,0 +1,52 @@
+:js
+
+
+module Option1 with { fun Some1 = 1 }
+
+open Option1
+fun Some1 = "111"
+Some1
+//│ = "111"
+
+
+module Option2 with { fun Some2 = 2 }
+
+// * Note that wildcard imports do not import names that are already defined in the same scope
+fun Some2 = "222"
+open Option2
+Some2
+//│ = "222"
+
+
+module Option3 with { fun Some3 = 3 }
+
+:w
+fun Some3 = "333"
+open Option3 { Some3 }
+Some3
+//│ ╔══[WARNING] Imported name 'Some3' is shadowed by a name already defined in the same scope
+//│ ║  l.25: 	open Option3 { Some3 }
+//│ ╙──      	               ^^^^^
+//│ = "333"
+
+
+module Option4 with { fun Some4 = 4 }
+
+fun Some4 = "444"
+fun bar =
+  open Option4 { Some4 }
+  Some4
+bar
+//│ = 4
+
+
+module Option5 with { fun Some5 = 5 }
+
+fun Some5 = "555"
+fun bar =
+  open Option5
+  Some5
+bar
+//│ = 5
+
+

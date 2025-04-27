@@ -3,7 +3,13 @@ import "./Predef.mls"
 open Predef
 
 
+fun privFun = "hi"
+
+
 module Example with ...
+
+
+fun pubFun = privFun
 
 
 fun (/) funnySlash(f, arg) = f(arg)
