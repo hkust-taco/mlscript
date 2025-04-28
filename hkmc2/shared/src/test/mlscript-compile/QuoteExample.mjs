@@ -60,14 +60,14 @@ let QuoteExample1;
     tmp = Term.freshName("x");
     x1 = new Term.Symbol(tmp);
     tmp1 = rhs;
-    tmp2 = new Term.Ref(x1);
-    tmp3 = runtime.safeCall(k(tmp2));
-    tmp4 = new Term.LetDecl(x1);
-    tmp5 = new Term.DefineVar(x1, tmp1);
+    tmp5 = new Term.Ref(x1);
+    tmp2 = runtime.safeCall(k(tmp5));
+    tmp3 = new Term.LetDecl(x1);
+    tmp4 = new Term.DefineVar(x1, tmp1);
     return new Term.Blk([
-      tmp4,
-      tmp5
-    ], tmp3)
+      tmp3,
+      tmp4
+    ], tmp2)
   } 
   static body(x1, y) {
     let lambda;
@@ -123,30 +123,30 @@ let QuoteExample1;
     d = new Term.Symbol(tmp2);
     tmp3 = Term.freshName("scrut");
     tmp4 = new Term.Symbol(tmp3);
-    tmp5 = new Term.Ref(y1);
-    tmp6 = new Term.Lit(0.0);
-    tmp7 = new Term.Builtin("==");
-    tmp8 = new Term.Tup([
-      tmp5,
-      tmp6
+    tmp7 = new Term.Ref(y1);
+    tmp8 = new Term.Lit(0.0);
+    tmp9 = new Term.Builtin("==");
+    tmp10 = new Term.Tup([
+      tmp7,
+      tmp8
     ]);
-    tmp9 = new Term.App(tmp7, tmp8);
-    tmp10 = new Term.Ref(tmp4);
-    tmp11 = new Term.LitPattern(true);
-    tmp12 = new Term.Ref(d);
-    tmp13 = new Term.Else(tmp12);
-    tmp14 = new Term.Branch(tmp10, tmp11, tmp13);
-    tmp15 = new Term.Ref(x2);
-    tmp16 = new Term.Ref(y1);
-    tmp17 = new Term.Builtin("/");
-    tmp18 = new Term.Tup([
-      tmp15,
-      tmp16
+    tmp5 = new Term.App(tmp9, tmp10);
+    tmp11 = new Term.Ref(tmp4);
+    tmp12 = new Term.LitPattern(true);
+    tmp16 = new Term.Ref(d);
+    tmp13 = new Term.Else(tmp16);
+    tmp14 = new Term.Branch(tmp11, tmp12, tmp13);
+    tmp17 = new Term.Ref(x2);
+    tmp18 = new Term.Ref(y1);
+    tmp19 = new Term.Builtin("/");
+    tmp20 = new Term.Tup([
+      tmp17,
+      tmp18
     ]);
-    tmp19 = new Term.App(tmp17, tmp18);
-    tmp20 = new Term.Else(tmp19);
-    tmp21 = new Term.Cons(tmp14, tmp20);
-    tmp22 = new Term.Let(tmp4, tmp9, tmp21);
+    tmp21 = new Term.App(tmp19, tmp20);
+    tmp15 = new Term.Else(tmp21);
+    tmp6 = new Term.Cons(tmp14, tmp15);
+    tmp22 = new Term.Let(tmp4, tmp5, tmp6);
     tmp23 = new Term.IfLike(Term.Keyword.If, tmp22);
     return new Term.Lam([
       x2,

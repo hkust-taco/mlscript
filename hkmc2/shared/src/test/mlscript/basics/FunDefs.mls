@@ -39,3 +39,5 @@ fun ~ concat(a, b) = a + b
 
 :todo // error
 fun not(b) = !b
+
+

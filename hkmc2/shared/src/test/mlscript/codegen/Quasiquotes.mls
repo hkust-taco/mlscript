@@ -74,15 +74,15 @@ f`(`0)
 //│ tmp33 = Term.freshName("scrut");
 //│ tmp34 = new Term.Symbol(tmp33);
 //│ tmp35 = new Term.Lit(true);
-//│ tmp36 = new Term.Ref(tmp34);
-//│ tmp37 = new Term.LitPattern(true);
-//│ tmp38 = new Term.Lit(true);
-//│ tmp39 = new Term.Else(tmp38);
-//│ tmp40 = new Term.Branch(tmp36, tmp37, tmp39);
-//│ tmp41 = new Term.Lit(false);
-//│ tmp42 = new Term.Else(tmp41);
-//│ tmp43 = new Term.Cons(tmp40, tmp42);
-//│ tmp44 = new Term.Let(tmp34, tmp35, tmp43);
+//│ tmp37 = new Term.Ref(tmp34);
+//│ tmp38 = new Term.LitPattern(true);
+//│ tmp42 = new Term.Lit(true);
+//│ tmp39 = new Term.Else(tmp42);
+//│ tmp40 = new Term.Branch(tmp37, tmp38, tmp39);
+//│ tmp43 = new Term.Lit(false);
+//│ tmp41 = new Term.Else(tmp43);
+//│ tmp36 = new Term.Cons(tmp40, tmp41);
+//│ tmp44 = new Term.Let(tmp34, tmp35, tmp36);
 //│ new Term.IfLike(Term.Keyword.If, tmp44)
 //│ = IfLike(If, Let(Symbol("scrut_0"), Lit(true), Cons(Branch(Ref(Symbol("scrut_0")), LitPattern(true), Else(Lit(true))), Else(Lit(false)))))
 

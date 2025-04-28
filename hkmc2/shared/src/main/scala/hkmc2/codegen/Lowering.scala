@@ -636,15 +636,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
 
   def quoteSplit(split: Split)(k: Result => Block)(using Subst): Block = split match
     case Split.Cons(Branch(scrutinee, pattern, continuation), tail) => quote(scrutinee): r1 =>
-      val l1 = new TempSymbol(N)
+      val l1, l2, l3, l4, l5 = new TempSymbol(N)
       Assign(l1, r1, quotePattern(pattern): r2 =>
-        val l2 = new TempSymbol(N)
         Assign(l2, r2, quoteSplit(continuation): r3 =>
-          val l3 = new TempSymbol(N)
           Assign(l3, r3, setupTerm("Branch", (l1 :: l2 :: l3 :: Nil).map(s => Value.Ref(s))): r4 =>
-            val l4 = new TempSymbol(N)
             Assign(l4, r4, quoteSplit(tail): r5 =>
-              val l5 = new TempSymbol(N)
               Assign(l5, r5, setupTerm("Cons", (l4 :: l5 :: Nil).map(s => Value.Ref(s)))(k))
             )
           )
@@ -652,12 +648,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       )
     case Split.Let(sym, term, tail) => setupSymbol(sym, true): r1 =>
       val subst = summon[Subst]
-      val l1 = new TempSymbol(N)
+      val l1, l2, l3 = new TempSymbol(N)
       Assign(l1, r1, quote(term)(r2 =>
-        val l2 = new TempSymbol(N)
         val nest = subst + ((sym -> true) -> Value.Ref(l1))
         Assign(l2, r2, quoteSplit(tail)(r3 =>
-          val l3 = new TempSymbol(N)
           Assign(l3, r3, setupTerm("Let", (l1 :: l2 :: l3 :: Nil).map(s => Value.Ref(s)))(k))
         )(using nest)))(using subst)
       )
@@ -690,20 +684,18 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           End("error")
     case SynthSel(Ref(sym: ModuleSymbol), name) => // Local cross-stage references
       setupSymbol(sym, false): r1 =>
-        val l1 = new TempSymbol(N)
+        val l1, l2 = new TempSymbol(N)
         Assign(l1, r1, setupTerm("CSRef", Value.Ref(l1) :: setupFilename :: Value.Lit(syntax.Tree.UnitLit(false)) :: Nil)(r2 =>
-          val l2 = new TempSymbol(N)
           Assign(l2, r2, setupTerm("Sel", Value.Ref(l2) :: Value.Lit(syntax.Tree.StrLit(name.name)) :: Nil)(k))
         ))
     case SynthSel(Ref(sym: BlockMemberSymbol), name) => // Multi-file cross-stage references
       (t.toLoc, sym.toLoc) match
         case (S(Loc(_, _, Origin(base, _, _))), S(Loc(_, _, Origin(filename, _, _)))) => setupSymbol(sym, false): r1 =>
-          val l1 = new TempSymbol(N)
+          val l1, l2 = new TempSymbol(N)
           val basePath = base / os.up
           val targetPath = filename
           val relPath = targetPath.relativeTo(basePath).toString
           Assign(l1, r1, setupTerm("CSRef", Value.Ref(l1) :: setupFilename :: Value.Lit(syntax.Tree.StrLit(relPath)) :: Nil)(r2 =>
-            val l2 = new TempSymbol(N)
             Assign(l2, r2, setupTerm("Sel", Value.Ref(l2) :: Value.Lit(syntax.Tree.StrLit(name.name)) :: Nil)(k))
           ))
         case _ =>
@@ -728,8 +720,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case App(lhs, Tup(rhs)) => quote(lhs): r1 =>
       def rec(es: Ls[Elem], xs: Ls[Path])(k: Result => Block): Block = es match
         case Nil => setupTerm("Tup", Value.Arr(xs.reverse.map(_.asArg)) :: Nil): r2 =>
-          val l1 = new TempSymbol(N)
-          val l2 = new TempSymbol(N)
+          val l1, l2 = new TempSymbol(N)
           Assign(l1, r1, Assign(l2, r2, setupTerm("App", Value.Ref(l1) :: Value.Ref(l2) :: Nil)(k)))
         case Fld(_, t, _) :: rest => quote(t): r2 =>
           val l = new TempSymbol(N)
@@ -739,16 +730,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       require(sym2 is sym)
       setupSymbol(sym, true): r1 =>
         val subst = summon[Subst]
-        val l1 = new TempSymbol(N)
+        val l1, l2, l3, l4, l5 = new TempSymbol(N)
         val nest = subst + ((sym -> false) -> Value.Ref(l1))
         Assign(l1, r1, quote(rhs)(r2 =>
-          val l2 = new TempSymbol(N)
           Assign(l2, r2, quote(res)(r3 =>
-            val l3 = new TempSymbol(N)
             Assign(l3, r3, setupTerm("LetDecl", Value.Ref(l1) :: Nil)(r4 =>
-              val l4 = new TempSymbol(N)
               Assign(l4, r4, setupTerm("DefineVar", Value.Ref(l1) :: Value.Ref(l2) :: Nil)(r5 =>
-                val l5 = new TempSymbol(N)
                 Assign(l5, r5, setupTerm("Blk", Value.Arr((l4 :: l5 :: Nil).map(s => Value.Ref(s).asArg)) :: Value.Ref(l3) :: Nil)(k))
               )(using nest))
             )(using nest))
