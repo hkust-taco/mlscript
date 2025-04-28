@@ -26,23 +26,23 @@ fun main() =
 main()
 //│ LLIR:
 //│   class Base() {
-//│     def get$758() =
+//│     def get() =
 //│       1
 //│   }
 //│   class Derived() extends Base {
-//│     def get$759() =
+//│     def get1() =
 //│       2
 //│   }
-//│   def main$761() =
-//│     let x$782 = Derived$767() in
-//│     let x$783 = Base.get$758(x$782) in
-//│     let x$784 = Derived.get$759(x$782) in
-//│     let x$785 = *(x$783,x$784) in
-//│     x$785
-//│   def entry$787() =
-//│     let* (x$786) = main() in
-//│     x$786
-//│   entry = entry$787
+//│   def main() =
+//│     let x = Derived() in
+//│     let x1 = Base.get(x) in
+//│     let x2 = Derived.get(x) in
+//│     let x3 = *(x1,x2) in
+//│     x3
+//│   def entry() =
+//│     let* (x4) = main() in
+//│     x4
+//│   entry = entry
 //│ 
 //│ Interpreted:
 //│ 4

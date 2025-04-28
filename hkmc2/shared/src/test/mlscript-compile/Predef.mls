@@ -14,14 +14,23 @@ fun (@) apply(f, ...args) = f(...args)
 fun (|>) pipeInto(x, f) = f(x)
 fun (<|) pipeFrom(f, x) = f(x)
 
+// Same as above but with high precedence
+fun (.>) pipeIntoHi(x, f) = f(x)
+fun (<.) pipeFromHi(f, x) = f(x)
+
 fun (!>) tap(x, f) = f(x); x
 fun (<!) pat(f, x) = f(x); x
 
 fun (>>) andThen(f, g)(x) = g(f(x))
 fun (<<) compose(f, g)(x) = f(g(x))
 
+// x . foo(a, b, c) == foo(x, a, b, c)
 fun (.) passTo(receiver, f)(...args) = f(receiver, ...args)
 
+// Same as above but with low precedence
+fun (|.) passToLo(receiver, f)(...args) = f(receiver, ...args)
+
+// x |>. foo(a, b, c) == foo.call(x, a, b, c)
 fun (|>.) call(receiver, f)(...args) = f.call(receiver, ...args)
 
 val pass1 = Rendering.pass1
@@ -35,9 +44,6 @@ val render = Rendering.render
 
 fun print(...xs) =
   console.log(...map(renderAsStr)(...xs))
-
-fun printRaw(x) =
-  console.log(render(x))
 
 fun renderAsStr(arg) =
   if arg is Str then arg else render(arg)
@@ -69,45 +75,6 @@ fun mkStr(...xs) =
   fold((acc, x) => assert(x is Str); acc + x) of ...xs
 
 
-fun unreachable = throw Error("unreachable")
-
-fun checkArgs(functionName, expected, isUB, got) =
-  if got < expected || isUB && got > expected do
-    let name = if functionName.length > 0 then " '" + functionName + "'" else ""
-    // throw globalThis.Error("Function" + name + " expected "
-    //   + (if isUB then "" else "at least ")
-    //   + expected
-    //   + " argument(s) but got " + got)
-    throw Error of fold(+) of
-      "Function", name, " expected "
-      if isUB then "" else "at least "
-      expected, " argument"
-      if expected === 1 then "" else "s"
-      " but got ", got
-
-
-module TraceLogger with
-  mut val enabled = false
-  mut val indentLvl = 0
-  fun indent() =
-    if enabled then
-      let prev = indentLvl
-      set indentLvl = prev + 1
-      prev
-    else ()
-  fun resetIndent(n) =
-    if enabled then
-      set indentLvl = n
-    else ()
-  fun log(msg) =
-    if enabled then
-      console.log("| ".repeat(indentLvl) + msg.replaceAll("\n", "\n" + "  ".repeat(indentLvl)))
-    else ()
-
-
-data class Test with
-  print("Test")
-  val y = 1
 
 // This binds the handler in body, which means body can raise effects in handler
 fun enterHandleBlock(handler, body) =

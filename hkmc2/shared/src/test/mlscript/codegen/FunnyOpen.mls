@@ -2,68 +2,71 @@
 
 
 module Mod with
-  fun print(x) = console.log(x)
-  fun (|>) pipe(x, f) = f(x)
+  fun printt(x) = console.log(x)
+  fun (|>>) pipee(x, f) = f(x)
 
 :ctx
 open Mod
 //│ Env:
-//│   pipe -> SelElem(RefElem(member:Mod),pipe,Some(member:pipe),true)
-//│   print -> SelElem(RefElem(member:Mod),print,Some(member:print),true)
-//│   |> -> SelElem(RefElem(member:Mod),pipe,Some(member:pipe),true)
+//│   pipee -> SelElem(RefElem(member:Mod),pipee,Some(member:pipee),true)
+//│   printt -> SelElem(RefElem(member:Mod),printt,Some(member:printt),true)
+//│   |>> -> SelElem(RefElem(member:Mod),pipee,Some(member:pipee),true)
 
-pipe
-//│ = [function pipe]
+pipee
+//│ = [function pipee]
 
-(|>)
-//│ = [function pipe]
+(|>>)
+//│ = [function pipee]
 
-|>
-//│ = [function pipe]
+|>>
+//│ = [function pipee]
 
 :pe
 :e
-Mod.|>
+Mod.|>>
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found end of input instead
-//│ ║  l.26: 	Mod.|>
-//│ ╙──      	      ^
-//│ ╔══[ERROR] Name not found: .|>
-//│ ║  l.26: 	Mod.|>
-//│ ╙──      	   ^^^
+//│ ║  l.26: 	Mod.|>>
+//│ ╙──      	       ^
+//│ ╔══[ERROR] Name not found: .|>>
+//│ ║  l.26: 	Mod.|>>
+//│ ╙──      	   ^^^^
 //│ ╔══[ERROR] Unexpected moduleful reference.
-//│ ║  l.26: 	Mod.|>
+//│ ║  l.26: 	Mod.|>>
 //│ ╙──      	^^^
 
 
-1 |> x => print(x)
+1 |>> x => printt(x)
 //│ > 1
 
 
 :pe
 :e
-open Mod { |> }
+open Mod { |>> }
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found end of input instead
-//│ ║  l.44: 	open Mod { |> }
-//│ ╙──      	              ^
+//│ ║  l.44: 	open Mod { |>> }
+//│ ╙──      	               ^
 //│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.44: 	open Mod { |> }
-//│ ╙──      	     ^^^^^^^^^
+//│ ║  l.44: 	open Mod { |>> }
+//│ ╙──      	     ^^^^^^^^^^
 
 
 :e
-open Mod { (|>) }
+open Mod { (|>>) }
 //│ ╔══[ERROR] Illegal 'open' statement element.
-//│ ║  l.54: 	open Mod { (|>) }
-//│ ╙──      	           ^^^^
+//│ ║  l.54: 	open Mod { (|>>) }
+//│ ╙──      	           ^^^^^
 
-12 |> print
+12 |>> print
 //│ > 12
 
 
-open Mod { print, |> }
+open Mod { printt, |>> }
 
 :fixme
-12 |> print
-//│ ═══[RUNTIME ERROR] TypeError: Mod1.|> is not a function
+12 |>> printt
+//│ ╔══[ERROR] Module 'Mod' does not contain member '|>>'
+//│ ║  l.66: 	12 |>> printt
+//│ ╙──      	   ^^^
+//│ ═══[RUNTIME ERROR] TypeError: Mod1.|>> is not a function
 
 

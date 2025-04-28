@@ -1,38 +1,6 @@
 :js
 
 
-Predef.Test
-//│ = class Test {      constructor() {        let tmp;        tmp = Predef.print("Test");        this.y = 1;      }      toString() { return "Test"; }    }
-
-Test === Predef.Test
-//│ = true
-
-Predef.Test === globalThis.Predef.Test
-//│ = true
-
-1 is Predef.Test
-//│ = false
-
-:fixme
-new Predef.Test is Predef.Test
-//│ ═══[RUNTIME ERROR] TypeError: tmp is not a constructor
-
-(new Predef.Test) is Predef.Test
-//│ > Test
-//│ = true
-
-new Predef.Test
-//│ > Test
-//│ = Test
-
-(new Predef.Test).y
-//│ > Test
-//│ = 1
-
-:re
-(new Predef.Test).x
-//│ > Test
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
 
 id(123)
@@ -42,8 +10,8 @@ id(123)
 :re
 id()
 //│ ╔══[ERROR] Expected 1 arguments, got 0
-//│ ║  l.43: 	id()
-//│ ╙──      	^^
+//│ ║  l.11: 	id()
+//│ ╙──      	  ^^
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 
@@ -64,7 +32,7 @@ print(1, 2, 3)
 1 . print(_)()
 //│ ═══[ERROR] Illegal position for '_' placeholder.
 //│ > 1
-//│ ═══[RUNTIME ERROR] TypeError: tmp6 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: tmp3 is not a function
 
 // FIXME: should have the same semantics...
 1
@@ -97,6 +65,20 @@ print <! 2 + 2 |> (_ + 1)
 (_ + 1) <| 2 + 2 !> print
 //│ > 4
 //│ = 5
+
+
+fun f(x)(a) = x + a
+
+123 |> f of 1
+//│ = 124
+
+123 |> f <| 1
+//│ = 124
+
+fun f(x)(y)(a) = x + y + a
+
+123 |> f(1) of 2
+//│ = 126
 
 
 tuple passing(1, 2, 3) <| 4
@@ -194,8 +176,8 @@ foldr(tuple)(0, 1, 2, 3)
 :re
 foldr(+)()
 //│ ╔══[ERROR] Expected at least 1 arguments, got 0
-//│ ║  l.195: 	foldr(+)()
-//│ ╙──       	^^^^^
+//│ ║  l.177: 	foldr(+)()
+//│ ╙──       	        ^^
 
 
 // An alternative implementation of foldr
@@ -224,5 +206,31 @@ fold(+) of
   "2"
   "3"
 //│ = "0123"
+
+import "../../mlscript-compile/Iter.mls"
+
+Iter.joined(_, "") of [
+  "0"
+  "1"
+  "2"
+  "3"
+]
+//│ = "0123"
+
+
+mkStr of
+  "0"
+  "1"
+  "2"
+  "3"
+//│ = "0123"
+
+mkStr of
+  "0"
+  1
+//│ // Standard Error:
+//│ Assertion failed
+//│ 
+//│ = "01"
 
 

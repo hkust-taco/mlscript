@@ -163,3 +163,24 @@ let display = t("group", x: 0, y: 0) of
 display(x: 88, y: 99, i: 0)
 //│ > group x: 88, y: 99 with
 //│ >   circle x: 98, y: 109, r: 42
+
+:todo
+t("group")
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.168: 	t("group")
+//│ ╙──       	 ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
+
+:todo
+t("group")
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.175: 	t("group")
+//│ ╙──       	 ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
+
+:todo
+let empty = Object.create of null
+//│ empty = [object]
+
+t("group", empty)
+//│ = [function]

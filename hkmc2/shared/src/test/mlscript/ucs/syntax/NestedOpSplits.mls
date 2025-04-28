@@ -22,6 +22,7 @@ fun f(x) =
 //│               flags = ()
 //│               sym = x
 //│               sign = N
+//│               modulefulness = Modulefulness of N
 //│           restParam = N
 //│       tparams = N
 //│       sign = N
@@ -30,37 +31,50 @@ fun f(x) =
 //│         desugared = Let:
 //│           sym = $scrut
 //│           term = App:
-//│             lhs = Ref of builtin:==
+//│             lhs = Ref:
+//│               sym = builtin:==
+//│               iargsLs = N
 //│             rhs = Tup of Ls of 
 //│               Fld:
 //│                 flags = ()
-//│                 term = Ref of x
+//│                 term = Ref:
+//│                   sym = x
+//│                   iargsLs = N
 //│                 asc = N
 //│               Fld:
 //│                 flags = ()
 //│                 term = Lit of IntLit of 1
 //│                 asc = N
+//│             iargsLs = N
 //│           tail = Let: \
 //│           sym = $scrut
 //│           term = App:
-//│             lhs = Ref of builtin:+
+//│             lhs = Ref:
+//│               sym = builtin:+
+//│               iargsLs = N
 //│             rhs = Tup of Ls of 
 //│               Fld:
 //│                 flags = ()
-//│                 term = Ref of $scrut
+//│                 term = Ref:
+//│                   sym = $scrut
+//│                   iargsLs = N
 //│                 asc = N
 //│               Fld:
 //│                 flags = ()
 //│                 term = Lit of IntLit of 2
 //│                 asc = N
+//│             iargsLs = N
 //│           tail = Cons: \
 //│           head = Branch:
-//│             scrutinee = Ref of $scrut
+//│             scrutinee = Ref:
+//│               sym = $scrut
+//│               iargsLs = N
 //│             pattern = Lit of BoolLit of true
 //│             continuation = Else of Lit of IntLit of 0
 //│           tail = Else of Lit of IntLit of 1
 //│       resSym = ‹result of member:f›
 //│       flags = ()
+//│       modulefulness = Modulefulness of N
 //│       annotations = Nil
 //│   res = Lit of UnitLit of false
 

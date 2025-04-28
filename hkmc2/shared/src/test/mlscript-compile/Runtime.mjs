@@ -34,7 +34,7 @@ let Runtime1;
         return Runtime1.try(lambda)
       } 
       raise() {
-        return Runtime.topLevelEffect(this.reified)
+        return Runtime.topLevelEffect(this.reified, false)
       }
       toString() { return "EffectHandle(" + "" + ")"; }
     };
@@ -45,7 +45,7 @@ let Runtime1;
       constructor(captures) {
         this.captures = captures;
       }
-      toString() { return "MatchResult(" + globalThis.Predef.render(this.captures) + ")"; }
+      toString() { return "MatchResult(" + runtime.render(this.captures) + ")"; }
     };
     this.MatchFailure = function MatchFailure(errors1) {
       return new MatchFailure.class(errors1);
@@ -54,7 +54,7 @@ let Runtime1;
       constructor(errors) {
         this.errors = errors;
       }
-      toString() { return "MatchFailure(" + globalThis.Predef.render(this.errors) + ")"; }
+      toString() { return "MatchFailure(" + runtime.render(this.errors) + ")"; }
     };
     (class Tuple {
       static {
@@ -97,6 +97,51 @@ let Runtime1;
       }
       static toString() { return "Str"; }
     });
+    this.render = Rendering.render;
+    (class TraceLogger {
+      static {
+        Runtime.TraceLogger = TraceLogger;
+        this.enabled = false;
+        this.indentLvl = 0;
+      }
+      static indent() {
+        let scrut, prev, tmp;
+        scrut = TraceLogger.enabled;
+        if (scrut === true) {
+          prev = TraceLogger.indentLvl;
+          tmp = prev + 1;
+          TraceLogger.indentLvl = tmp;
+          return prev
+        } else {
+          return runtime.Unit
+        }
+      } 
+      static resetIndent(n) {
+        let scrut;
+        scrut = TraceLogger.enabled;
+        if (scrut === true) {
+          TraceLogger.indentLvl = n;
+          return runtime.Unit
+        } else {
+          return runtime.Unit
+        }
+      } 
+      static log(msg) {
+        let scrut, tmp, tmp1, tmp2, tmp3, tmp4;
+        scrut = TraceLogger.enabled;
+        if (scrut === true) {
+          tmp = runtime.safeCall("| ".repeat(TraceLogger.indentLvl));
+          tmp1 = runtime.safeCall("  ".repeat(TraceLogger.indentLvl));
+          tmp2 = "\n" + tmp1;
+          tmp3 = msg.replaceAll("\n", tmp2);
+          tmp4 = tmp + tmp3;
+          return runtime.safeCall(globalThis.console.log(tmp4))
+        } else {
+          return runtime.Unit
+        }
+      }
+      static toString() { return "TraceLogger"; }
+    });
     const FatalEffect$class = class FatalEffect {
       constructor() {}
       toString() { return "FatalEffect"; }
@@ -116,7 +161,7 @@ let Runtime1;
       constructor(next) {
         this.next = next;
       }
-      toString() { return "FunctionContFrame(" + globalThis.Predef.render(this.next) + ")"; }
+      toString() { return "FunctionContFrame(" + runtime.render(this.next) + ")"; }
     };
     this.HandlerContFrame = function HandlerContFrame(next1, nextHandler1, handler1) {
       return new HandlerContFrame.class(next1, nextHandler1, handler1);
@@ -127,7 +172,7 @@ let Runtime1;
         this.nextHandler = nextHandler;
         this.handler = handler;
       }
-      toString() { return "HandlerContFrame(" + globalThis.Predef.render(this.next) + ", " + globalThis.Predef.render(this.nextHandler) + ", " + globalThis.Predef.render(this.handler) + ")"; }
+      toString() { return "HandlerContFrame(" + runtime.render(this.next) + ", " + runtime.render(this.nextHandler) + ", " + runtime.render(this.handler) + ")"; }
     };
     this.ContTrace = function ContTrace(next1, last1, nextHandler1, lastHandler1, resumed1) {
       return new ContTrace.class(next1, last1, nextHandler1, lastHandler1, resumed1);
@@ -140,7 +185,7 @@ let Runtime1;
         this.lastHandler = lastHandler;
         this.resumed = resumed;
       }
-      toString() { return "ContTrace(" + globalThis.Predef.render(this.next) + ", " + globalThis.Predef.render(this.last) + ", " + globalThis.Predef.render(this.nextHandler) + ", " + globalThis.Predef.render(this.lastHandler) + ", " + globalThis.Predef.render(this.resumed) + ")"; }
+      toString() { return "ContTrace(" + runtime.render(this.next) + ", " + runtime.render(this.last) + ", " + runtime.render(this.nextHandler) + ", " + runtime.render(this.lastHandler) + ", " + runtime.render(this.resumed) + ")"; }
     };
     this.EffectSig = function EffectSig(contTrace1, handler1, handlerFun1) {
       return new EffectSig.class(contTrace1, handler1, handlerFun1);
@@ -151,7 +196,7 @@ let Runtime1;
         this.handler = handler;
         this.handlerFun = handlerFun;
       }
-      toString() { return "EffectSig(" + globalThis.Predef.render(this.contTrace) + ", " + globalThis.Predef.render(this.handler) + ", " + globalThis.Predef.render(this.handlerFun) + ")"; }
+      toString() { return "EffectSig(" + runtime.render(this.contTrace) + ", " + runtime.render(this.handler) + ", " + runtime.render(this.handlerFun) + ")"; }
     };
     this.NonLocalReturn = class NonLocalReturn {
       constructor() {}
@@ -165,7 +210,7 @@ let Runtime1;
         this.fnName = fnName;
         this.locals = locals;
       }
-      toString() { return "FnLocalsInfo(" + globalThis.Predef.render(this.fnName) + ", " + globalThis.Predef.render(this.locals) + ")"; }
+      toString() { return "FnLocalsInfo(" + runtime.render(this.fnName) + ", " + runtime.render(this.locals) + ")"; }
     };
     this.LocalVarInfo = function LocalVarInfo(localName1, value1) {
       return new LocalVarInfo.class(localName1, value1);
@@ -175,7 +220,7 @@ let Runtime1;
         this.localName = localName;
         this.value = value;
       }
-      toString() { return "LocalVarInfo(" + globalThis.Predef.render(this.localName) + ", " + globalThis.Predef.render(this.value) + ")"; }
+      toString() { return "LocalVarInfo(" + runtime.render(this.localName) + ", " + runtime.render(this.value) + ")"; }
     };
     this.stackLimit = 0;
     this.stackDepth = 0;
@@ -197,6 +242,48 @@ let Runtime1;
     this.StackDelayHandler = new StackDelayHandler$class;
     this.StackDelayHandler.class = StackDelayHandler$class;
   }
+  static get unreachable() {
+    throw globalThis.Error("unreachable");
+  } 
+  static checkArgs(functionName, expected, isUB, got) {
+    let scrut, name, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14;
+    tmp = got < expected;
+    tmp1 = got > expected;
+    tmp2 = isUB && tmp1;
+    scrut = tmp || tmp2;
+    if (scrut === true) {
+      scrut1 = functionName.length > 0;
+      if (scrut1 === true) {
+        tmp3 = " '" + functionName;
+        tmp4 = tmp3 + "'";
+      } else {
+        tmp4 = "";
+      }
+      name = tmp4;
+      tmp5 = "Function" + name;
+      tmp6 = tmp5 + " expected ";
+      if (isUB === true) {
+        tmp7 = "";
+      } else {
+        tmp7 = "at least ";
+      }
+      tmp8 = tmp6 + tmp7;
+      tmp9 = expected + " argument";
+      tmp10 = tmp8 + tmp9;
+      scrut2 = expected === 1;
+      if (scrut2 === true) {
+        tmp11 = "";
+      } else {
+        tmp11 = "s";
+      }
+      tmp12 = tmp10 + tmp11;
+      tmp13 = " but got " + got;
+      tmp14 = tmp12 + tmp13;
+      throw globalThis.Error(tmp14);
+    } else {
+      return runtime.Unit
+    }
+  } 
   static safeCall(x) {
     if (x === undefined) {
       return Runtime.Unit
@@ -224,10 +311,15 @@ let Runtime1;
     tmp = runtime.safeCall(f());
     res = tmp;
     if (res instanceof Runtime.EffectSig.class) {
-      return Runtime.EffectHandle(res)
+      return runtime.safeCall(Runtime.EffectHandle(res))
     } else {
       return res
     }
+  } 
+  static printRaw(x2) {
+    let tmp;
+    tmp = runtime.safeCall(Runtime.render(x2));
+    return runtime.safeCall(globalThis.console.log(tmp))
   } 
   static raisePrintStackEffect(showLocals) {
     return Runtime.mkEffect(Runtime.PrintStackEffect, showLocals)

@@ -198,7 +198,7 @@ str
 //│                 break;
 //│               }
 //│             }
-//│             toString() { return "Cont$handler$h1$perform$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│             toString() { return "Cont$handler$h1$perform$(" + runtime.render(this.pc) + ")"; }
 //│           };
 //│           tmp12 = str + "A";
 //│           str = tmp12;
@@ -236,7 +236,7 @@ str
 //│           break;
 //│         }
 //│       }
-//│       toString() { return "Cont$handleBlock$h1$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│       toString() { return "Cont$handleBlock$h1$(" + runtime.render(this.pc) + ")"; }
 //│     };
 //│     handleBlock$8 = function handleBlock$() {
 //│       let h2, tmp12, res7, Cont$handleBlock$h2$2, Handler$h2$2;
@@ -281,7 +281,7 @@ str
 //│                   break;
 //│                 }
 //│               }
-//│               toString() { return "Cont$handler$h2$perform$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│               toString() { return "Cont$handler$h2$perform$(" + runtime.render(this.pc) + ")"; }
 //│             };
 //│             tmp13 = str + "B";
 //│             tmp14 = str + tmp13;
@@ -346,7 +346,7 @@ str
 //│             break;
 //│           }
 //│         }
-//│         toString() { return "Cont$handleBlock$h2$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│         toString() { return "Cont$handleBlock$h2$(" + runtime.render(this.pc) + ")"; }
 //│       };
 //│       tmp12 = runtime.safeCall(h2.perform(runtime.Unit));
 //│       if (tmp12 instanceof runtime.EffectSig.class) {

@@ -15,58 +15,6 @@ let Predef1;
     this.render = Rendering.render;
     this.assert = globalThis.console.assert;
     this.foldl = Predef.fold;
-    (class TraceLogger {
-      static {
-        Predef.TraceLogger = TraceLogger;
-        this.enabled = false;
-        this.indentLvl = 0;
-      }
-      static indent() {
-        let scrut, prev, tmp;
-        scrut = TraceLogger.enabled;
-        if (scrut === true) {
-          prev = TraceLogger.indentLvl;
-          tmp = prev + 1;
-          TraceLogger.indentLvl = tmp;
-          return prev
-        } else {
-          return runtime.Unit
-        }
-      } 
-      static resetIndent(n) {
-        let scrut;
-        scrut = TraceLogger.enabled;
-        if (scrut === true) {
-          TraceLogger.indentLvl = n;
-          return runtime.Unit
-        } else {
-          return runtime.Unit
-        }
-      } 
-      static log(msg) {
-        let scrut, tmp, tmp1, tmp2, tmp3, tmp4;
-        scrut = TraceLogger.enabled;
-        if (scrut === true) {
-          tmp = runtime.safeCall("| ".repeat(TraceLogger.indentLvl));
-          tmp1 = runtime.safeCall("  ".repeat(TraceLogger.indentLvl));
-          tmp2 = "\n" + tmp1;
-          tmp3 = msg.replaceAll("\n", tmp2);
-          tmp4 = tmp + tmp3;
-          return runtime.safeCall(globalThis.console.log(tmp4))
-        } else {
-          return runtime.Unit
-        }
-      }
-      static toString() { return "TraceLogger"; }
-    });
-    this.Test = class Test {
-      constructor() {
-        let tmp;
-        tmp = Predef.print("Test");
-        this.y = 1;
-      }
-      toString() { return "Test"; }
-    };
   }
   static id(x) {
     return x
@@ -87,38 +35,49 @@ let Predef1;
   static pipeFrom(f2, x3) {
     return runtime.safeCall(f2(x3))
   } 
-  static tap(x4, f3) {
-    let tmp;
-    tmp = runtime.safeCall(f3(x4));
-    return (tmp , x4)
+  static pipeIntoHi(x4, f3) {
+    return runtime.safeCall(f3(x4))
   } 
-  static pat(f4, x5) {
-    let tmp;
-    tmp = runtime.safeCall(f4(x5));
-    return (tmp , x5)
+  static pipeFromHi(f4, x5) {
+    return runtime.safeCall(f4(x5))
   } 
-  static andThen(f5, g) {
-    return (x6) => {
+  static tap(x6, f5) {
+    let tmp;
+    tmp = runtime.safeCall(f5(x6));
+    return (tmp , x6)
+  } 
+  static pat(f6, x7) {
+    let tmp;
+    tmp = runtime.safeCall(f6(x7));
+    return (tmp , x7)
+  } 
+  static andThen(f7, g) {
+    return (x8) => {
       let tmp;
-      tmp = runtime.safeCall(f5(x6));
+      tmp = runtime.safeCall(f7(x8));
       return runtime.safeCall(g(tmp))
     }
   } 
-  static compose(f6, g1) {
-    return (x6) => {
+  static compose(f8, g1) {
+    return (x8) => {
       let tmp;
-      tmp = runtime.safeCall(g1(x6));
-      return runtime.safeCall(f6(tmp))
+      tmp = runtime.safeCall(g1(x8));
+      return runtime.safeCall(f8(tmp))
     }
   } 
-  static passTo(receiver, f7) {
+  static passTo(receiver, f9) {
     return (...args1) => {
-      return runtime.safeCall(f7(receiver, ...args1))
+      return runtime.safeCall(f9(receiver, ...args1))
     }
   } 
-  static call(receiver1, f8) {
+  static passToLo(receiver1, f10) {
     return (...args1) => {
-      return f8.call(receiver1, ...args1)
+      return runtime.safeCall(f10(receiver1, ...args1))
+    }
+  } 
+  static call(receiver2, f11) {
+    return (...args1) => {
+      return f11.call(receiver2, ...args1)
     }
   } 
   static print(...xs) {
@@ -126,11 +85,6 @@ let Predef1;
     tmp = runtime.safeCall(Predef.map(Predef.renderAsStr));
     tmp1 = runtime.safeCall(tmp(...xs));
     return runtime.safeCall(globalThis.console.log(...tmp1))
-  } 
-  static printRaw(x6) {
-    let tmp;
-    tmp = runtime.safeCall(Predef.render(x6));
-    return runtime.safeCall(globalThis.console.log(tmp))
   } 
   static renderAsStr(arg) {
     if (typeof arg === 'string') {
@@ -150,7 +104,7 @@ let Predef1;
   static tuple(...xs1) {
     return xs1
   } 
-  static foldr(f9) {
+  static foldr(f12) {
     return (first, ...rest) => {
       let len, i, init, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
       len = rest.length;
@@ -168,7 +122,7 @@ let Predef1;
             tmp2 = i - 1;
             i = tmp2;
             tmp3 = runtime.safeCall(rest.at(i));
-            tmp4 = runtime.safeCall(f9(tmp3, init));
+            tmp4 = runtime.safeCall(f12(tmp3, init));
             init = tmp4;
             tmp5 = runtime.Unit;
             continue tmp6;
@@ -177,65 +131,26 @@ let Predef1;
           }
           break;
         }
-        return runtime.safeCall(f9(first, init))
+        return runtime.safeCall(f12(first, init))
       }
     }
   } 
   static mkStr(...xs2) {
     let tmp, tmp1, lambda;
-    lambda = (undefined, function (acc, x7) {
+    lambda = (undefined, function (acc, x8) {
       let tmp2, tmp3, tmp4;
-      if (typeof x7 === 'string') {
+      if (typeof x8 === 'string') {
         tmp2 = true;
       } else {
         tmp2 = false;
       }
       tmp3 = runtime.safeCall(Predef.assert(tmp2));
-      tmp4 = acc + x7;
+      tmp4 = acc + x8;
       return (tmp3 , tmp4)
     });
     tmp = lambda;
     tmp1 = runtime.safeCall(Predef.fold(tmp));
     return runtime.safeCall(tmp1(...xs2))
-  } 
-  static get unreachable() {
-    throw globalThis.Error("unreachable");
-  } 
-  static checkArgs(functionName, expected, isUB, got) {
-    let scrut, name, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, lambda;
-    tmp = got < expected;
-    tmp1 = got > expected;
-    tmp2 = isUB && tmp1;
-    scrut = tmp || tmp2;
-    if (scrut === true) {
-      scrut1 = functionName.length > 0;
-      if (scrut1 === true) {
-        tmp3 = " '" + functionName;
-        tmp4 = tmp3 + "'";
-      } else {
-        tmp4 = "";
-      }
-      name = tmp4;
-      lambda = (undefined, function (arg1, arg2) {
-        return arg1 + arg2
-      });
-      tmp5 = runtime.safeCall(Predef.fold(lambda));
-      if (isUB === true) {
-        tmp6 = "";
-      } else {
-        tmp6 = "at least ";
-      }
-      scrut2 = expected === 1;
-      if (scrut2 === true) {
-        tmp7 = "";
-      } else {
-        tmp7 = "s";
-      }
-      tmp8 = runtime.safeCall(tmp5("Function", name, " expected ", tmp6, expected, " argument", tmp7, " but got ", got));
-      throw globalThis.Error(tmp8);
-    } else {
-      return runtime.Unit
-    }
   } 
   static enterHandleBlock(handler, body) {
     return Runtime.enterHandleBlock(handler, body)

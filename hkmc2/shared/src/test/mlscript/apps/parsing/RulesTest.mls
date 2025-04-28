@@ -1,0 +1,150 @@
+:js
+
+import "../../../mlscript-compile/Iter.mls"
+import "../../../mlscript-compile/MutMap.mls"
+
+import "../../../mlscript-compile/apps/parsing/Keywords.mls"
+import "../../../mlscript-compile/apps/parsing/Rules.mls"
+import "../../../mlscript-compile/apps/parsing/Test.mls"
+
+open Keywords { opPrec, opPrecOpt }
+
+Keywords.maxKeywordPrec
+//│ = 11
+
+Keywords.maxOperatorPrec
+//│ = 26
+
+opPrec("|>")
+//│ = [14, 20]
+
+opPrec("<:")
+//│ = [20, 12]
+
+opPrec("::")
+//│ = [13, 12]
+
+opPrec of "+"
+//│ = [21, 21]
+
+opPrecOpt of "=="
+//│ = Some([16, 16])
+
+print of Keywords.all |> MutMap.valuesIterator |. Iter.joined("\n")
+//│ > Keyword(`;;`, 0, 0)
+//│ > Keyword(`class`, N/A, 0)
+//│ > Keyword(`;`, 1, 0)
+//│ > Keyword(`,`, 2, 1)
+//│ > Keyword(`=`, 3, 3)
+//│ > Keyword(`and`, N/A, 4)
+//│ > Keyword(`|`, N/A, N/A)
+//│ > Keyword(`->`, 5, 3)
+//│ > Keyword(`:`, 4, 3)
+//│ > Keyword(`match`, 6, 6)
+//│ > Keyword(`while`, 7, 7)
+//│ > Keyword(`for`, 8, 8)
+//│ > Keyword(`to`, N/A, N/A)
+//│ > Keyword(`downto`, N/A, N/A)
+//│ > Keyword(`do`, N/A, N/A)
+//│ > Keyword(`done`, N/A, N/A)
+//│ > Keyword(`of`, N/A, N/A)
+//│ > Keyword(`with`, N/A, 8)
+//│ > Keyword(`case`, N/A, 8)
+//│ > Keyword(`if`, 10, 9)
+//│ > Keyword(`<-`, 9, 9)
+//│ > Keyword(`then`, 9, 9)
+//│ > Keyword(`else`, 9, 9)
+//│ > Keyword(`let`, 3, 1)
+//│ > Keyword(`in`, 9, 9)
+//│ > Keyword(`true`, N/A, N/A)
+//│ > Keyword(`false`, N/A, N/A)
+//│ > Keyword(`as`, 11, 11)
+//│ > Keyword(`fun`, 11, 5)
+//│ > Keyword(`function`, 11, 3)
+//│ > Keyword(`type`, 11, N/A)
+//│ > Keyword(`exception`, 11, N/A)
+//│ > Keyword(`rec`, 11, 3)
+//│ > Keyword(`#`, N/A, N/A)
+//│ > Keyword(`.`, 26, 26)
+//│ > Keyword(`*`, 22, 22)
+//│ > Keyword(`==`, 16, 16)
+//│ > Keyword(`(`, 27, 0)
+//│ > Keyword(`)`, 0, N/A)
+//│ > Keyword(`[`, 27, 0)
+//│ > Keyword(`]`, 0, N/A)
+//│ > Keyword(`{`, 27, 0)
+//│ > Keyword(`}`, 0, N/A)
+//│ > Keyword(`begin`, 27, 0)
+//│ > Keyword(`end`, 0, N/A)
+
+print of Rules.termRule.display
+//│ > <prefix rules for expressions> ::= 
+//│ >   | "let" ["rec"] <let-bindings> ["in" <term>]
+//│ >   | "fun" <term> "->" <term>
+//│ >   | "match" <term> "with" ["|"] <term> "->" <term> ["|" <simple-matching>]
+//│ >   | "function" ["|"] <term> "->" <term> ["|" <simple-matching>]
+//│ >   | "if" <term> "then" <term> ["else" <term>]
+//│ >   | "while" <term> "do" <term> "done"
+//│ >   | "for" <term> "=" <term> ("to" | "downto") <term> "do" <term> "done"
+//│ >   | "(" <term> ")"
+//│ >   | "[" <term> "]"
+//│ >   | "{" <term> "}"
+//│ >   | "begin" <term> "end"
+//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <term>)
+
+print of Rules.typeRule.display
+//│ > <rules for types> ::= 
+//│ >   | "(" <type> (<type-arguments-tail> ")" <ident> | ")" [<ident>])
+//│ >   | <type> ("->" <type> | "*" <type> | <type>)
+
+print of Rules.declRule.display
+//│ > <prefix rules for module items> ::= 
+//│ >   | "let" ["rec"] <let-bindings>
+//│ >   | "type" <typedefs>
+//│ >   | "exception" <constr-decls>
+//│ >   | "#" <ident> <term>
+
+Rules.syntaxKinds
+  Iter.mapping of case [name, rule] then rule.display
+  Iter.joined("\n")
+  print()
+//│ > <let-bindings> ::= <term> "=" <term> ["and" <let-bindings>]
+//│ > <simple-matching> ::= <term> "->" <term> ["|" <simple-matching>]
+//│ > <pattern-list> ::= <term> <pattern-list>
+//│ > <multiple-matching> ::= <pattern-list> "->" <term> ["|" <multiple-matching>]
+//│ > <type-arguments-tail> ::= "," <type> [<type-arguments-tail>]
+//│ > <constr-decl> ::= <ident> ["of" <type>]
+//│ > <variants> ::= <constr-decl> ["|" <variants>]
+//│ > <typedefs> ::= <typedef-lhs> <typedef-rhs> ["and" <typedefs>]
+//│ > <typedef-rhs> ::= 
+//│ >   | "=" (<variants> | "{" <label-decls> "}")
+//│ >   | "==" <type>
+//│ > <label-decl> ::= <type> ":" <type>
+//│ > <label-decls> ::= <label-decl> [";" <label-decls>]
+//│ > <constr-decls> ::= <constr-decl> ["|" <constr-decls>]
+//│ > <typedef-lhs> ::= <type-params> <ident>
+//│ > <type-params> ::= 
+//│ >   | <typevar>
+//│ >   | "(" <typevar> <type-params-tail> ")"
+//│ > <type-params-tail> ::= "," <typevar> <type-params-tail>
+//│ > <prefix rules for expressions> ::= 
+//│ >   | "let" ["rec"] <let-bindings> ["in" <term>]
+//│ >   | "fun" <term> "->" <term>
+//│ >   | "match" <term> "with" ["|"] <term> "->" <term> ["|" <simple-matching>]
+//│ >   | "function" ["|"] <term> "->" <term> ["|" <simple-matching>]
+//│ >   | "if" <term> "then" <term> ["else" <term>]
+//│ >   | "while" <term> "do" <term> "done"
+//│ >   | "for" <term> "=" <term> ("to" | "downto") <term> "do" <term> "done"
+//│ >   | "(" <term> ")"
+//│ >   | "[" <term> "]"
+//│ >   | "{" <term> "}"
+//│ >   | "begin" <term> "end"
+//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <term>)
+//│ > <rules for types> ::= 
+//│ >   | "(" <type> (<type-arguments-tail> ")" <ident> | ")" [<ident>])
+//│ >   | <type> ("->" <type> | "*" <type> | <type>)
+//│ > <prefix rules for module items> ::= 
+//│ >   | "let" ["rec"] <let-bindings>
+//│ >   | "type" <typedefs>
+//│ >   | "exception" <constr-decls>
+//│ >   | "#" <ident> <term>

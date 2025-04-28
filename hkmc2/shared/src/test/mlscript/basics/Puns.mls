@@ -1,0 +1,85 @@
+:js
+
+
+let a = 1
+//│ a = 1
+
+(:a)
+//│ = {a: 1}
+
+
+:fixme // should we support this?
+fun foo(x) = :x
+//│ ╔══[PARSE ERROR] Expected expression or block after 'fun' binding equals sign; found ':' keyword instead
+//│ ║  l.12: 	fun foo(x) = :x
+//│ ╙──      	             ^
+
+fun foo(x) = (:x)
+foo(1)
+//│ = {x: 1}
+
+fun foo(x) =
+  :x
+  y: x + 1
+foo(1)
+//│ = {x: 1, y: 2}
+
+
+let r =
+  :a
+  b: 2
+//│ r = {a: 1, b: 2}
+
+if r is
+  { a: x } then x
+//│ = 1
+
+if r is
+  (a: x) then x
+//│ = 1
+
+:e
+if r is
+  a: x then x
+//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ║  l.43: 	  a: x then x
+//│ ╙──      	  ^^^^^^^^^^^
+
+if 1 is
+  (((1))) then true
+//│ = true
+
+if 1 is
+  {1} then true
+//│ = true
+
+
+let foo = case
+  (a: 0) then false
+  (a: 1) then true
+  (:a) then a
+//│ foo = [function]
+
+foo(r)
+//│ = true
+
+foo(a: 2)
+//│ = 2
+
+foo(:a)
+//│ = true
+
+
+:todo // would mean `val a = ‹the old a›`?
+val =a
+//│ ╔══[PARSE ERROR] Expected expression after 'val' binding keyword; found '=' keyword instead
+//│ ║  l.74: 	val =a
+//│ ╙──      	    ^
+
+:pe
+let =a
+//│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found '=' keyword instead
+//│ ║  l.80: 	let =a
+//│ ╙──      	    ^
+
+

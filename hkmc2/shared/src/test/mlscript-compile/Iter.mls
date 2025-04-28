@@ -168,13 +168,19 @@ fun firstDefined(xs, op) =
 fun some(xs, op) =
   let iterator = getIterator of xs
   let next = iterator.next()
-  let result = None
-  while result is None do
-    if ...
-    next.done then set result = Some(false)
-    op(next.value) then set result = Some(true)
-    else set next = iterator.next()
-  result Option.getOrElse(false)
+  while next.done is false do
+    if op(next.value) do return true
+    set next = iterator.next()
+  false
+
+// `forall` is a keyword
+fun every(xs, op) =
+  let iterator = getIterator of xs
+  let next = iterator.next()
+  while next.done is false do
+    if op(next.value) is false do return false
+    set next = iterator.next()
+  true
 
 fun each(xs, op) =
   let iterator = getIterator of xs

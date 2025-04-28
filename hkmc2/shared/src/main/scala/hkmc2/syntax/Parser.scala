@@ -281,7 +281,7 @@ abstract class Parser(
     case (IDENT("@", _), l0) :: rest if rest.nonEmpty =>
       consume
       blockOf(rule, simpleExpr(AppPrec) :: annotations, allowNewlines)
-    case (tok @ (id: IDENT), loc) :: _ =>
+    case (tok @ (id: IDENT), loc) :: _ if id.name =/= ":" =>
       Keyword.all.get(id.name) match
       case S(kw) =>
         consume
@@ -501,6 +501,14 @@ abstract class Parser(
   def simpleExpr(prec: Int)(using Line): Tree = wrap(prec)(simpleExprImpl(prec))
   def simpleExprImpl(prec: Int): Tree =
     yeetSpaces match
+    case (IDENT("=", _), l0) :: (IDENT(nme, false), l1) :: rest =>
+      consume
+      consume
+      Pun(true, new Ident(nme).withLoc(S(l1)))
+    case (IDENT(":", _), l0) :: (IDENT(nme, false), l1) :: rest =>
+      consume
+      consume
+      Pun(false, new Ident(nme).withLoc(S(l1)))
     case (IDENT("@", _), l0) :: rest if rest.nonEmpty =>
       consume
       val annotation = simpleExpr(AppPrec)

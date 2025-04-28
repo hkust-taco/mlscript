@@ -1,0 +1,301 @@
+import "../../MutMap.mls"
+import "../../Iter.mls"
+import "../../Option.mls"
+import "../../Stack.mls"
+import "../../Predef.mls"
+import "./Keywords.mls"
+import "./Token.mls"
+import "./Tree.mls"
+
+open Option { Some, None }
+open Predef { assert, tuple }
+open Stack
+
+type Opt[A] = Some[A] | None
+type StackT[A] = Stack.Cons[A] | Stack.Nil
+
+module ParseRule with ...
+
+module Choice with
+  abstract class Choice[A]
+  
+  data class Keyword[A](keyword: Keywords.Keyword, rest: ParseRule[A]) extends Choice[A]
+  
+  data class Ref[A, B](
+      kind: Str,
+      process: (Tree.Tree, B) -> A,
+      outerPrec: Opt[Int],
+      innerPrec: Opt[Int],
+      rest: ParseRule[B]
+  ) extends Choice[A]
+  
+  data class End[A](value: A) extends Choice[A]
+  
+  // * An alternative route that branches off from the main railroad and
+  // * eventually connects back to the main railroad. For example, `foo`, `bar`,
+  // * and `baz` are choices represented by `init`. If `optional` is set to
+  // * `true`, an additional empty choice is added to `rule`, making it possible
+  // * to skip the entire `rule`.
+  // *                     _______ foo ______
+  // *                    /                  \
+  // *                   /-------- bar -------\
+  // *                  /                      \
+  // * ----- start ----+---------- baz ---------+--- end ---------
+  data class Siding[A, B, C](
+      init: ParseRule[B],
+      optional: Bool,
+      rest: ParseRule[C],
+      process: (Opt[B], C) -> A
+  ) extends Choice[A]
+  
+  let ensureChoices(xs, name) = xs
+    Iter.zippingWithIndex()
+    Iter.each of case [item, index] then
+      assert(item is Choice, name + ": element [" + index + "] is not Choice")
+  
+  // Shorthands for constructing rule choices.
+  fun keyword(keyword)(...choices) =
+    ensureChoices(choices, "Choice.keyword")
+    Keyword(keyword, rule("`" + keyword.name + "` keyword", ...choices))
+  
+  let shouldHaveFunction(options, key: Str, defaultValue, callerName: Str) = if
+    let func = options.(key)
+    typeof(func) === "function" then func
+    func is undefined then defaultValue
+    else throw TypeError(callerName + ": `" + key + "` is not a string")
+  
+  let shouldHaveStr(options, key: Str, defaultValue: Str, callerName: Str) = if
+    let value = options.(key)
+    value is Str then value
+    value is undefined then defaultValue
+    else throw TypeError(callerName + ": `" + key + "` is not a string")
+  
+  let shouldHaveInt(options, key: Str, callerName: Str) = if
+    let value = options.(key)
+    value is Int then Some(value)
+    value is undefined then None
+    else throw TypeError(callerName + ": `" + key + "` is not an Int")
+  
+  let shouldHaveBool(options, key: Str, defaultValue: Bool, callerName: Str) = if
+    let value = options.(key)
+    value is Bool then value
+    value is undefined then defaultValue
+    else throw TypeError(callerName + ": `" + key + "` is not a Boolean")
+  
+  let shouldHaveRuleLike(options, key: Str, ruleName: Str, callerName: Str) = if
+    let choices = options.(key)
+    choices is ParseRule then choices
+    choices is Choice then rule(ruleName, choices)
+    choices is [..._] then
+      ensureChoices(choices, "Choice.reference")
+      rule(ruleName, ...choices)
+    choices is undefined then rule(ruleName)
+    else throw TypeError(callerName + ": `" + key + "` is neither a rule nor a choice")
+  
+  fun reference(kind: Str)(fields: Object) =
+    let ruleName = fields shouldHaveStr("name", "unnamed", "Choice.reference")
+    Ref of
+      kind
+      fields shouldHaveFunction("process", tuple, "Choice.reference")
+      fields shouldHaveInt("outerPrec", "Choice.reference")
+      fields shouldHaveInt("innerPrec", "Choice.reference")
+      fields shouldHaveRuleLike("choices", ruleName, "Choice.reference")
+  
+  val term = reference("term")
+  val typeExpr = reference("type")
+  val ident = reference("ident")
+  val typeVar = reference("typevar")
+  
+  fun optional(init, rest) =
+    assert(init is ParseRule, "Choice.optional: init is not ParseRule")
+    assert(rest is ParseRule, "Choice.optional: rest is not ParseRule")
+    Siding(init, true, rest, tuple)
+  
+  fun siding(fields) =
+    let optional = fields shouldHaveBool("optional", false, "Choice.siding")
+    let initName = fields shouldHaveStr("initName", "unnamed", "Choice.siding")
+    let restName = fields shouldHaveStr("restName", "unnamed", "Choice.siding")
+    let init = fields shouldHaveRuleLike("init", initName, "Choice.siding")
+    let rest = fields shouldHaveRuleLike("rest", restName, "Choice.siding")
+    let defaultProcess = if optional then tuple
+      else (initRes, restRes) => if initRes is Some(initRes) then [initRes, restRes]
+    let process = fields shouldHaveFunction("process", defaultProcess, "Choice.siding")
+    Siding of init, optional, rest, process
+  
+  fun end(value) = End(value)
+  
+  fun map[A, B](choice: ChoiceT[A], op: A -> B): ChoiceT[B] = if choice is
+    Keyword(keyword, rest) then Keyword(keyword, rest.map(op))
+    Ref(kind, process, outerPrec, innerPrec, rest) then
+      Ref(kind, (x, y) => op(process(x, y)), outerPrec, innerPrec, rest)
+    Siding(init, optional, rest, process) then
+      Siding(init, optional, rest, (x, y) => op(process(x, y)))
+    End(value) then End(op(value))
+
+type ChoiceT[A] = Choice.Choice[A]
+
+data class Lazy[out A](init: () -> A) with
+  mut val cached: Opt[A] = None
+  fun reset() = set cached = None
+  fun get() = if cached is
+    Some(v) then v
+    else
+      let v = init()
+      set cached = Some(v)
+      v
+
+//  ____                     ____        _
+// |  _ \ __ _ _ __ ___  ___|  _ \ _   _| | ___
+// | |_) / _` | '__/ __|/ _ \ |_) | | | | |/ _ \
+// |  __/ (_| | |  \__ \  __/  _ <| |_| | |  __/
+// |_|   \__,_|_|  |___/\___|_| \_\\__,_|_|\___|
+//
+// =============================================
+
+data class ParseRule[A](name: Str, choices: StackT[ChoiceT[A]]) with
+  open Choice { Keyword, Ref, End, Siding }
+  
+  fun map[B](op: A -> B) =
+    ParseRule of name, choices
+      Iter.fromStack()
+      Iter.mapping of choice => choice Choice.map(op)
+      Iter.toStack()
+  
+  fun andThen[B, C](rest: ParseRule[B], process: (A, B) -> C) =
+    fun go(rule: ParseRule) = ParseRule of rule.name, rule.choices
+      Iter.fromStack()
+      Iter.mapping of case
+        Keyword(keyword, rest') then [Keyword(keyword, go(rest'))]
+        Ref(kind, process, outerPrec, innerPrec, rest') then
+          let process' = (lhs, rhsInnerResult) => if
+            rhsInnerResult is [rhs, innerResult] then
+              [process(lhs, rhs), innerResult]
+            do assert(false, "illgeal result from inner")
+          [Ref(kind, process', outerPrec, innerPrec, go(rest'))]
+        End(value) then rest.choices
+          Iter.fromStack()
+          Iter.mapping of choice => choice Choice.map(result => [value, result])
+        Siding(rule, optional, rest', process) then
+          let process' = (initRes, restRes) => if
+            restRes is [restRes', innerRes] then [process(initRes, restRes'), innerRes]
+            do assert(false, "illegal result from inner")
+          [Siding(rule, optional, go(rest'), process')]
+      Iter.flattening()
+      Iter.toStack()
+    go(this).map of res => process(res.0, res.1)
+  
+  let _endChoice = Lazy of () => choices
+    Iter.fromStack()
+    Iter.firstDefined of case
+      End(value) then Some(value)
+      Siding(init, optional, rest, process) and
+        optional and rest.endChoice is Some(restRes) then
+          // It's actually ambiguous here.
+          process(None, restRes)
+        init.endChoice is Some(initRes) and
+          rest.endChoice is Some(restRes) then
+            process(Some(initRes), restRes)
+      else None
+  
+  // Collect the first end choice in this rule.
+  fun endChoice = _endChoice.get()
+  
+  let _keywordChoices = Lazy of () => choices
+    Iter.fromStack()
+    Iter.mapping of case
+      Keyword(keyword, rest) then [[keyword.name, rest]]
+      Siding(init, optional, rest, process) then init.keywordChoices
+        Iter.mapping of case [keyword, rule] then
+          [keyword, rule.map(Some).andThen(rest, process)]
+        Iter.appended of
+          if optional then rest.keywordChoices
+            Iter.mapping of case [keyword, rule] then
+              [keyword, rule.map(res => process(None, res))]
+          else []
+        Iter.toArray()
+      else []
+    Iter.flattening()
+    Iter.toArray()
+    MutMap.toMap()
+  
+  // Collect all keyword choices in this rule.
+  fun keywordChoices = _keywordChoices.get()
+  
+  let _refChoice = Lazy of () => choices
+    Iter.fromStack()
+    Iter.firstDefined of case
+      Ref as ref then Some(ref)
+      Siding(init, optional, rest, process) and
+        init.refChoice is Some(Ref(k, process', op, ip, rest')) then
+          let process''(exprRes, pairRes) =
+            if pairRes is [restRes', restRes] then
+              process(process'(exprRes, restRes'), restRes)
+          let rest'' = rest'.andThen(rest, tuple)
+          Some of Ref(k, process'', op, ip, rest'')
+        optional and rest.refChoice is Some(Ref(k, process', op, ip, rest')) then
+          let process''(exprRes, restRes) =
+            process(None, process'(exprRes, restRes))
+          Some of Ref(k, process'', op, ip, rest')
+      else None
+  
+  fun refChoice = _refChoice.get()
+  
+  fun extendChoices(newChoices: StackT[ChoiceT[A]]) =
+    set choices = choices ::: newChoices
+    _endChoice.reset()
+    _keywordChoices.reset()
+    _refChoice.reset()
+    this
+  
+  // Display parse rules as a tree in a BNF-like format.
+  fun display =
+    /// Display a single `Choice`.
+    fun displayChoice(choice: ChoiceT) = if choice is
+      Choice.Keyword(keyword, rest) then
+        "\"" + keyword.name + "\"" + tail(rest).1
+      Choice.Ref(kind, _, _, _, rest) then
+        "<" + kind + ">" + tail(rest).1
+      Choice.Siding(init, opt, rest, _) then
+        let init' = go(init, false).1
+        (if opt then "[" + init' + "]" else "(" + init' + ")") + tail(rest).1
+      Choice.End then ""
+      other then "<unknown:" + other + ">"
+    
+    // Display the remaining list of choices.
+    // ++ fun tail(rest) = if rest is ParseRule(_, choices) and
+    fun tail(rest) = if rest is ParseRule and // ---
+      let choices = rest.choices // ---
+      choices is Choice.End :: Nil then ["", ""]
+      go(rest, false) is [name, line] and
+        choices is _ :: _ :: _ and
+          choices Iter.fromStack() Iter.some(c => c is Choice.End) then
+            [name, " [" + line + "]"]
+          else [name, " (" + line + ")"]
+        else [name, " " + line]
+    
+    fun go(rule, top) =
+      let lines = rule.choices
+        Iter.fromStack()
+        Iter.filtering of case
+          Choice.End then false
+          else true
+        Iter.mapping of displayChoice
+        Iter.toArray()
+      tuple of
+        rule.name
+        if
+          lines is [] then "ε"
+          lines is [line] then line
+          top then "\n  | " + lines.join("\n  | ")
+          else lines.join(" | ")
+    
+    if go(this, true) is [name, line] then "<" + name + "> ::= " + line
+
+// Shorthands for constructing parse rules.
+// Automatically adds an end choice to the rule if no choices are provided.
+fun rule(name, ...choices) = ParseRule of
+  name
+  if choices.length == 0 then
+    Choice.end(()) :: Nil
+  else
+    choices Iter.toStack()

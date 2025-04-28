@@ -51,7 +51,7 @@ fun test(a) =
 //│       };
 //│       return h(d)
 //│     }
-//│     toString() { return "Inner(" + globalThis.Predef.render(this.b) + ")"; }
+//│     toString() { return "Inner(" + runtime.render(this.b) + ")"; }
 //│   };
 //│   return Inner1(42)
 //│ };
@@ -89,7 +89,7 @@ fun test(a) =
 //│         this.b
 //│       ])
 //│     }
-//│     toString() { return "C1(" + globalThis.Predef.render(this.b) + ")"; }
+//│     toString() { return "C1(" + runtime.render(this.b) + ")"; }
 //│   };
 //│   C21 = function C2(b1) {
 //│     return new C2.class(b1);
@@ -102,7 +102,7 @@ fun test(a) =
 //│         this.b
 //│       ])
 //│     }
-//│     toString() { return "C2(" + globalThis.Predef.render(this.b) + ")"; }
+//│     toString() { return "C2(" + runtime.render(this.b) + ")"; }
 //│   };
 //│   tmp1 = C11(1);
 //│   tmp2 = C21(2);
@@ -149,7 +149,7 @@ Foo(123)
 //│     tmp1 = bar();
 //│     return baz()
 //│   }
-//│   toString() { return "Foo(" + globalThis.Predef.render(this.a) + ")"; }
+//│   toString() { return "Foo(" + runtime.render(this.a) + ")"; }
 //│ };
 //│ Foo1(123)
 //│ = Foo(123)
@@ -184,7 +184,7 @@ Bar(1)
 //│       return bar()
 //│     }
 //│   }
-//│   toString() { return "Bar(" + globalThis.Predef.render(this.x) + ")"; }
+//│   toString() { return "Bar(" + runtime.render(this.x) + ")"; }
 //│ };
 //│ Bar1(1)
 //│ = Bar(1)

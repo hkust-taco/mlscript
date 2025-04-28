@@ -1,0 +1,118 @@
+:js
+
+import "../../../mlscript-compile/MutMap.mls"
+import "../../../mlscript-compile/Iter.mls"
+
+import "../../../mlscript-compile/apps/parsing/Test.mls"
+import "../../../mlscript-compile/apps/parsing/Rules.mls"
+import "../../../mlscript-compile/apps/parsing/Keywords.mls"
+
+open Test { example }
+
+example of """
+#open "hello";;
+  
+let f x = x + 1;;
+  
+let g x = x * 2;;
+"""
+//│ > «#open "hello"»
+//│ > «let f x = x + 1»
+//│ > «let g x = x * 2»
+
+example of """
+#newKeyword ("hello", None, None)
+#newKeyword ("world", Some 34, None)
+"""
+//│ > 
+
+print of Keywords.extended |> MutMap.valuesIterator |. Iter.joined("\n")
+//│ > Keyword(`hello`, N/A, N/A)
+//│ > Keyword(`world`, 34, N/A)
+
+example of """
+#newCategory "lol"
+"""
+//│ > 
+
+example of """
+#extendCategory "lol", [ keyword("hello"), "lol" ], foo
+#extendCategory "lol", [ keyword("world") ], bar
+#extendCategory "term", [ "lol" ], baz
+"""
+//│ > 
+
+Rules.getRuleByKind("lol").display print()
+//│ > <lol> ::= 
+//│ >   | "hello" <lol>
+//│ >   | "world"
+
+Rules.getRuleByKind("term").display print()
+//│ > <prefix rules for expressions> ::= 
+//│ >   | "let" ["rec"] <let-bindings> ["in" <term>]
+//│ >   | "fun" <term> "->" <term>
+//│ >   | "match" <term> "with" ["|"] <term> "->" <term> ["|" <simple-matching>]
+//│ >   | "function" ["|"] <term> "->" <term> ["|" <simple-matching>]
+//│ >   | "if" <term> "then" <term> ["else" <term>]
+//│ >   | "while" <term> "do" <term> "done"
+//│ >   | "for" <term> "=" <term> ("to" | "downto") <term> "do" <term> "done"
+//│ >   | "(" <term> ")"
+//│ >   | "[" <term> "]"
+//│ >   | "{" <term> "}"
+//│ >   | "begin" <term> "end"
+//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <term>)
+//│ >   | "hello" <lol>
+//│ >   | "world"
+
+example of """
+hello world
+"""
+//│ > «{}»
+//│ > «⚠»
+//│ > «⚠»
+
+example of """
+#newKeyword ("assert", None, None)
+#newCategory "assert"
+#extendCategory "assert", [ keyword "assert", "term" ], do_assert
+  
+assert 0
+"""
+//│ > «⚠»
+//│ > «⚠»
+
+example of """
+#newKeyword ("hello", Some 3, Some 3)
+#newKeyword ("goodbye", None, None)
+  
+#newCategory("greeting")
+  
+#extendCategory("greeting", [ keyword("hello"), "term", "greeting" ], foo)
+#extendCategory("greeting", [ keyword("goodbye") ], bar)
+  
+#extendCategory("decl", [ "greeting" ], baz)
+  
+  
+hello "Rob" hello "Bob" goodbye
+  
+#diagram ""
+"""
+//│ > «baz (foo "Rob" (foo "Bob" bar))»
+//│ > «#diagram ""»
+
+Rules.getRuleByKind("term").display print()
+//│ > <prefix rules for expressions> ::= 
+//│ >   | "let" ["rec"] <let-bindings> ["in" <term>]
+//│ >   | "fun" <term> "->" <term>
+//│ >   | "match" <term> "with" ["|"] <term> "->" <term> ["|" <simple-matching>]
+//│ >   | "function" ["|"] <term> "->" <term> ["|" <simple-matching>]
+//│ >   | "if" <term> "then" <term> ["else" <term>]
+//│ >   | "while" <term> "do" <term> "done"
+//│ >   | "for" <term> "=" <term> ("to" | "downto") <term> "do" <term> "done"
+//│ >   | "(" <term> ")"
+//│ >   | "[" <term> "]"
+//│ >   | "{" <term> "}"
+//│ >   | "begin" <term> "end"
+//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <term>)
+//│ >   | "hello" <lol>
+//│ >   | "world"

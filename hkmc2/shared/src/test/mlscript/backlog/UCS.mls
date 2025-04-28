@@ -115,7 +115,7 @@ class Some(val v)
 
 Some(1) is
   Some of [process, rest] do "hi"
-//│ ╔══[ERROR] Unrecognized pattern (infix operation)
+//│ ╔══[ERROR] Unrecognized pattern (infix operator)
 //│ ║  l.117: 	  Some of [process, rest] do "hi"
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^
 //│ = false

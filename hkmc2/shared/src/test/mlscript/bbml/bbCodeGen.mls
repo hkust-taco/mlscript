@@ -69,7 +69,7 @@ data class Foo(x: Int)
 //│   constructor(x1) {
 //│     this.x = x1;
 //│   }
-//│   toString() { return "Foo(" + globalThis.Predef.render(this.x) + ")"; }
+//│   toString() { return "Foo(" + runtime.render(this.x) + ")"; }
 //│ };
 //│ Type: ⊤
 

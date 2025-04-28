@@ -148,8 +148,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
       if traceJS.isSet then
         host.execute(
-          "globalThis.Predef.TraceLogger.enabled = true; " +
-          "globalThis.Predef.TraceLogger.resetIndent(0)")
+          s"$runtimeNme.TraceLogger.enabled = true; " +
+          s"$runtimeNme.TraceLogger.resetIndent(0)")
       
       // * Sometimes the JS block won't execute due to a syntax or runtime error so we always set this first
       host.execute(s"$resNme = undefined")
@@ -159,7 +159,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
           .foreach: line =>
             output(s"> ${line}")
       if traceJS.isSet then
-        host.execute("globalThis.Predef.TraceLogger.enabled = false")
+        host.execute(s"$runtimeNme.TraceLogger.enabled = false")
       
       if silent.isUnset then 
         import Elaborator.Ctx.*
@@ -178,7 +178,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             import codegen.*
             Return(
               Call(
-                Value.Ref(Elaborator.State.globalThisSymbol).selSN("Predef").selSN("printRaw"),
+                Value.Ref(Elaborator.State.runtimeSymbol).selSN("printRaw"),
                 Arg(false, Value.Ref(sym)) :: Nil)(true, false),
             implct = true)
           val je = nestedScp.givenIn:

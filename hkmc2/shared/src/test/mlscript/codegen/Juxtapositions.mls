@@ -41,7 +41,7 @@ fun add(x, y) = x + y
 add(2)
 //│ ╔══[ERROR] Expected 2 arguments, got 1
 //│ ║  l.41: 	add(2)
-//│ ╙──      	^^^
+//│ ╙──      	   ^^^
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.40: 	42
 //│ ╙──      	^^
@@ -185,7 +185,7 @@ inc(2) * 2
 inc()
 //│ ╔══[ERROR] Expected 1 arguments, got 0
 //│ ║  l.185: 	inc()
-//│ ╙──       	^^^
+//│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'inc' expected 1 argument but got 0
 
 :e
@@ -196,7 +196,7 @@ inc()
 inc()
 //│ ╔══[ERROR] Expected 1 arguments, got 0
 //│ ║  l.196: 	inc()
-//│ ╙──       	^^^
+//│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'inc' expected 1 argument but got 0
 
 
