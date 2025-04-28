@@ -169,7 +169,7 @@ fun f() = new Printer(foofoo)
 f
 //│ Type: ['T, 'x] -> () -> Printer['T]
 //│ Where:
-//│   'T#'T ∨ (  'T#'T ∨ Str <: Str ∧ ⊥ <: ⊥ ∧ 'T <: 'x){0: 'T} <: {0: ⊤}
+//│   'T#'T ∨ (  'T#'T ∨ Str <: Str ∧ ⊥ <: ⊥){0: 'T} <: {0: 'x}
 //│   'x <: Int
 
 f().Printer#f(42)
@@ -184,7 +184,8 @@ f().Printer#f("oops")
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  ¬(¬'T1)
 //│ ╟── because: cannot constrain  Str  <:  'T1
-//│ ╟── because: cannot constrain  'T1  <:  'x
+//│ ╟── because: cannot constrain  {0: 'T1}  <:  {0: ¬⊥ & 'x}
+//│ ╟── because: cannot constrain  'T1  <:  ¬⊥ & 'x
 //│ ╟── because: cannot constrain  'T1  <:  'x
 //│ ╟── because: cannot constrain  'T1  <:  Int
 //│ ╟── because: cannot constrain  'T1  <:  ¬(¬{Int})
@@ -197,12 +198,13 @@ let ip = new Printer(foofoo) in ip.Printer#f(42)
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ╔══[ERROR] Type error in string literal with expected type 'T
-//│ ║  l.198: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
+//│ ║  l.199: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ║         	                                             ^^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  ¬(¬'T)
 //│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╟── because: cannot constrain  {0: 'T}  <:  {0: 'x}
 //│ ╟── because: cannot constrain  'T  <:  'x
 //│ ╟── because: cannot constrain  'T  <:  'x
 //│ ╟── because: cannot constrain  'T  <:  ¬¬Int
@@ -219,7 +221,7 @@ fun inc(x) = x + 1
 new TFun(inc)
 //│ Type: TFun['T]
 //│ Where:
-//│   'T#'T ∨ (  'T#'T ∨ Int <: 'T ∧ ⊥ <: ⊥ ∧ 'T <: 'x){0: 'T} <: {0: ⊤}
+//│   'T#'T ∨ (  'T#'T ∨ Int <: 'T ∧ ⊥ <: ⊥){0: 'T} <: {0: 'x}
 //│   'x <: ¬¬Int
 
 let tf = new TFun(inc) in tf.TFun#f(1)
@@ -228,12 +230,13 @@ let tf = new TFun(inc) in tf.TFun#f(1)
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ╔══[ERROR] Type error in string literal with expected type 'T
-//│ ║  l.229: 	let tf = new TFun(inc) in tf.TFun#f("1")
+//│ ║  l.231: 	let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  ¬(¬'T)
 //│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╟── because: cannot constrain  {0: 'T}  <:  {0: 'x}
 //│ ╟── because: cannot constrain  'T  <:  'x
 //│ ╟── because: cannot constrain  'T  <:  'x
 //│ ╟── because: cannot constrain  'T  <:  ¬¬Int
@@ -345,7 +348,7 @@ f
 f(x => x).Foo#x
 //│ Type: ('A) ->{⊥} 'A
 //│ Where:
-//│   'A#'A ∨ (  'A#'A ∨ 'x <: 'A ∧ ⊥ <: ⊥ ∧ 'A <: 'x){0: 'A} <: {0: ⊤}
+//│   'A#'A ∨ (  'A#'A ∨ 'x <: 'A ∧ ⊥ <: ⊥){0: 'A} <: {0: 'x}
 
 g => (new Foo(g)).Foo#x
 //│ Type: ('A -> 'A) ->{⊥} ('A) ->{⊥} 'A
@@ -358,7 +361,7 @@ throw new Error("oops")
 :e
 throw 42
 //│ ╔══[ERROR] Type error in throw
-//│ ║  l.359: 	throw 42
+//│ ║  l.362: 	throw 42
 //│ ║         	      ^^
 //│ ╙── because: cannot constrain  Int  <:  Error
 //│ Type: ⊥

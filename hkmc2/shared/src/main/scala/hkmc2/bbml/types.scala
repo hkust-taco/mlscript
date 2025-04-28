@@ -300,53 +300,57 @@ object Type:
     then lhs | rhs
     else lhs & rhs
   def mkNegType(ty: Type): Type = ty.!
-  def discriminant(a: Ls[Type]): (RcdType, RcdType) =
-    discriminantRcd(RcdType(a.zipWithIndex.map(u => (s"${u._2}", u._1.toBasic))).flatten)
-  def discriminantRcd(a: RcdType): (RcdType, RcdType) =
-    val (u, w) = (a.fields.map:
-      case (a, t) =>
-        val (q, r) = discriminant(t.toBasic)
-        (RcdType(Ls(a -> q)), RcdType(Ls(a -> r)))
-    ).unzip
-    (u.reduce(_ & _), w.reduce(_ & _))
-  def discriminant(a: BasicType): (BasicType, BasicType) = a.simp.toBasic match
-    case Bot => (Bot, Bot)
-    case c@ClassLikeType(_, Nil) => (c, Top)
-    case ClassLikeType(c, t) => (ClassLikeType(c, t.map(_ => Wildcard.empty)), a)
-    case a@RcdType(_ :: _) => discriminantRcd(a)
-    case a@ComposedType(l, r, true) =>
-      val q = (discriminant(l.toBasic)._1 | discriminant(r.toBasic)._1).toBasic
-      (q, (a | q.!).toBasic)
-    case ComposedType(l, r, false) =>
-      val (u, w) = discriminant(l.toBasic)
-      val (q, p) = discriminant(r.toBasic)
-      ((u & q).toBasic, (w & p).toBasic)
-    case NegType(t) => (a, Top)
-    case a => (Top, a)
-  def disjointIU(i: Inter, u: Union)(using TL): Opt[Set[Set[InfVar -> BasicType]]] = (i.v, u.cls) match
-    case (S(c: ClassLikeType), cs) if cs.exists(_.name.uid === c.name.uid) => S(Set.empty)
-    case (S(RcdType(u)), _) =>
-      val kk = u.values.map(t => disjointDisj(t.toDnf)).toList
-      val k = kk.flatten.toList
-      if k.isEmpty then N
+  def discriminant(a: Ls[Type])(using TL): RcdType =
+    discriminantRcd(RcdType(a.zipWithIndex.map(u => (s"${u._2}", u._1.toBasic))))
+  def discriminantRcd(a: RcdType)(using TL): RcdType =
+    RcdType(a.fields.flatMap:
+      case (a, t) => discriminant(t) match
+        case Top => N
+        case t => S(a -> t))
+  def discriminantIU(i: Inter, u: Union)(using TL): BasicType = (i.v, u.cls) match
+    case (N, cs) => cs.reduceOption[Type](_ | _).fold(Top)(NegType(_))
+    case (S(ClassLikeType(c, t)), cs) => if cs.exists(_.name.uid === c.uid) then Bot else ClassLikeType(c, t.map(_ => Wildcard.empty))
+    case (S(u: RcdType), _) => discriminantRcd(u)
+    case _ => Top
+  def discriminant(t: Type)(using TL): BasicType =
+    t.toDnf.conjs.foldLeft(Bot: Type)((x, y) => x | discriminantIU(y.i, y.u)).simp.toBasic
+  def disjointIU(i: Inter, u: Union)(using TL): Opt[Set[Set[InfVar -> BasicType]]] = (i.v, u.cls, u.rcd) match
+    case (S(c: ClassLikeType), cs, _) if cs.exists(_.name.uid === c.name.uid) => S(Set.empty)
+    case (S(RcdType(u)), _, rs) =>
+      val k = u.values.flatMap(t => disjointDisj(t.toDnf)).toList
+      val rd =
+        if rs.isEmpty then Nil
+        else
+          val um = u.toMap
+          val p = rs.foldLeft[Ls[Ls[Str -> Type]]](Ls(Nil)): (p, w) =>
+            if w.fields.keys.forall(um.contains) then p.flatMap(x => w.fields.map(_ :: x)) else p
+          p.map: p =>
+            val m = p.groupMapReduce(_._1)(_._2)(_ | _)
+            val d = p.keys.distinct.flatMap(a => Type.disjoint(m(a).!, um(a)))
+            if d.isEmpty then N
+            else S(d.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))))
+      if k.isEmpty then
+        if rd.isEmpty || rd.contains(N) then N else S(rd.flatten.flatten.toSet)
       else if k.exists(_.isEmpty) then S(Set.empty)
-      else S(k.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))))
+      else
+        if rd.contains(N) then N
+        else S(k.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))) ++ rd.flatten.flatten)
     case _ => N
   def disjointConj(ty: Conj)(using TL): Opt[Set[Set[InfVar -> BasicType]]] =
     val d = disjointIU(ty.i, ty.u)
     if d.exists(_.isEmpty) then S(Set.empty)
-    else (ty.i.v, ty.u.cls, ty.vars.iterator.filter(_._2).keys.toList) match
-      case (_, _, Nil) => d
-      case (N, Nil, v :: Nil) =>
+    else (ty.i.v, ty.u.cls, ty.u.rcd, ty.vars.iterator.filter(_._2).keys.toList) match
+      case (_, _, _, Nil) => d
+      case (N, Nil, Nil, v :: Nil) =>
         val lb = v.state.lowerBounds.reduceOption(_ | _).orElse(S(Bot)).get
         disjointDisj(lb.toDnf).map(_ + Set(v -> v))
-      case (i, c, vs) =>
+      case (i, c, r, vs) =>
         val j = i match
           case S(ClassLikeType(c, _)) => S(ClassLikeType(c, Nil))
           case S(u: RcdType) => S(u)
           case _ => N
         val vd = vs.combinations(2).collect { case x :: y :: _ => Ls(x -> y, y -> x) }.flatten.toList
-        val ds = vs.flatMap(v => (j ++ c.reduceOption[Type](_ | _).map(_.!)).map(x => v -> x.toBasic)).toSet ++ vd
+        val ds = vs.flatMap(v => (j ++ (c ++ r).reduceOption[Type](_ | _).map(_.!)).map(x => v -> x.toBasic)).toSet ++ vd
         val lb = vs.flatMap(_.state.lowerBounds.reduceOption[Type](_ | _)).reduceOption(_ & _).orElse(S(Bot)).get
         val t = lb & Conj(Inter(j), Union(N, c, Nil), Nil)
         disjointDisj(t.toDnf).map(_ + ds)

@@ -116,9 +116,9 @@ f `=> x `=> y `=> f`(x, y)
 x `=> `if x `== `0.0 then `1.0 else x
 //│ Type: CodeBase[out 'x -> ('x | Num), ⊥, ?]
 //│ Where:
-//│   'x#'x ∨ (  'x#'x ∨ Bool <: 'app ∧ ⊥ <: ⊥ ∧ 'cde <: 'T ∧ 'cde1 <: 'T) ∧ (  'cde#'cde ∨ Bool <: 'app ∧ ⊥ <: ⊥ ∧ 'cde <: 'T ∧ 'cde1 <: 'T){0: 'cde, 1: 'cde1} <: {0: ⊤, 1: ⊤}
+//│   'x#'x ∨ (  'x#'x ∨ Bool <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde#'cde ∨ Bool <: 'app ∧ ⊥ <: ⊥){0: 'cde, 1: 'cde1} <: {0: 'T, 1: 'T}
 //│   'x <: 'cde
-//│   'cde#'cde ∨ (  'x#'x ∨ Bool <: 'app ∧ ⊥ <: ⊥ ∧ 'cde <: 'T ∧ 'cde1 <: 'T) ∧ (  'cde#'cde ∨ Bool <: 'app ∧ ⊥ <: ⊥ ∧ 'cde <: 'T ∧ 'cde1 <: 'T){0: 'cde, 1: 'cde1} <: {0: ⊤, 1: ⊤}
+//│   'cde#'cde ∨ (  'x#'x ∨ Bool <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde#'cde ∨ Bool <: 'app ∧ ⊥ <: ⊥){0: 'cde, 1: 'cde1} <: {0: 'T, 1: 'T}
 //│   Num <: 'cde1
 //│   'cde2 <: ¬(¬{Bool})
 //│   'app <: ¬(¬'cde2)

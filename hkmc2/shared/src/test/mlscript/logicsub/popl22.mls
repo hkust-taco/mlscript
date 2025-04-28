@@ -66,15 +66,6 @@ f(id, strint)
 //│ ╟── because: cannot constrain  'x2  <:  Str
 //│ ╟── because: cannot constrain  'x2  <:  ¬(¬{Str})
 //│ ╙── because: cannot constrain  Int  <:  ¬(¬{Str})
-//│ ╔══[ERROR] Type error in reference with expected type 'x2
-//│ ║  l.42: 	f(id, strint)
-//│ ║        	      ^^^^^^
-//│ ╟── because: cannot constrain  Int | Str  <:  'x2
-//│ ╟── because: cannot constrain  Str  <:  'x2
-//│ ╟── because: cannot constrain  {0: 'x2}  <:  {0: Str}
-//│ ╟── because: cannot constrain  'x2  <:  Str
-//│ ╟── because: cannot constrain  'x2  <:  ¬(¬{Str})
-//│ ╙── because: cannot constrain  Int  <:  ¬(¬{Str})
 //│ Type: Str | Int
 
 // without union elimination rule, type test on x2 is required
@@ -110,17 +101,10 @@ fun y: Any -> Tru | Fls
 :e
 { fst: y(x => x), snd: y(x => x) } as [ fst: Tru, snd: Tru ] | [ fst: Fls, snd: Fls ]
 //│ ╔══[ERROR] Type error in record with expected type {fst: Tru, snd: Tru} | {fst: Fls, snd: Fls}
-//│ ║  l.111: 	{ fst: y(x => x), snd: y(x => x) } as [ fst: Tru, snd: Tru ] | [ fst: Fls, snd: Fls ]
+//│ ║  l.102: 	{ fst: y(x => x), snd: y(x => x) } as [ fst: Tru, snd: Tru ] | [ fst: Fls, snd: Fls ]
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  {fst: Tru | Fls, snd: Tru | Fls}  <:  {fst: Tru, snd: Tru} | {fst: Fls, snd: Fls}
-//│ ╟── because: cannot constrain  {fst: Tru ∨ Fls, snd: Tru ∨ Fls}  <:  {snd: Fls}
-//│ ╙── because: cannot constrain  Tru ∨ Fls  <:  Fls
-//│ ╔══[ERROR] Type error in record with expected type {fst: Tru, snd: Tru} | {fst: Fls, snd: Fls}
-//│ ║  l.111: 	{ fst: y(x => x), snd: y(x => x) } as [ fst: Tru, snd: Tru ] | [ fst: Fls, snd: Fls ]
-//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  {fst: Tru | Fls, snd: Tru | Fls}  <:  {fst: Tru, snd: Tru} | {fst: Fls, snd: Fls}
-//│ ╟── because: cannot constrain  {fst: Tru ∨ Fls, snd: Tru ∨ Fls}  <:  {snd: Tru}
-//│ ╙── because: cannot constrain  Tru ∨ Fls  <:  Tru
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: {fst: Tru, snd: Tru} | {fst: Fls, snd: Fls}
 
 // The above expression is typed with the following MSC-forms
@@ -177,7 +161,7 @@ fun f(a, n) = if
 :e
 f(a, n)
 //│ ╔══[ERROR] Type error in reference with expected type 'n
-//│ ║  l.178: 	f(a, n)
+//│ ║  l.162: 	f(a, n)
 //│ ║         	     ^
 //│ ╟── because: cannot constrain  Int  <:  'n
 //│ ╟── because: cannot constrain  Int  <:  'n
@@ -280,10 +264,11 @@ example14 as (~(Int | Str), [fst: ~Int, snd: Any]) -> Z
 :e
 example14 as (Int | Str, [fst: Int, snd: Any]) -> Int
 //│ ╔══[ERROR] Type error in reference with expected type (Int | Str, {fst: Int, snd: ⊤}) ->{⊥} Int
-//│ ║  l.281: 	example14 as (Int | Str, [fst: Int, snd: Any]) -> Int
+//│ ║  l.265: 	example14 as (Int | Str, [fst: Int, snd: Any]) -> Int
 //│ ║         	^^^^^^^^^
 //│ ╟── because: cannot constrain  ('input, 'extra) ->{'eff} 'res  <:  (Int | Str, {fst: Int, snd: ⊤}) -> Int
-//│ ╟── because: cannot constrain  {fst: Int, snd: ⊤}  <:  'extra
+//│ ╟── because: cannot constrain  {0: Int | Str, 1: {fst: Int, snd: ⊤}}  <:  {0: 'input, 1: 'extra}
+//│ ╟── because: cannot constrain  {fst: Int, snd: }  <:  'extra
 //│ ╟── because: cannot constrain  {fst: Int, snd: }  <:  'extra
 //│ ╟── because: cannot constrain  {fst: Int, snd: }  <:  ¬(¬{{fst: 'sel}})
 //│ ╟── because: cannot constrain  Int  <:  'sel
@@ -296,10 +281,11 @@ example14 as (Int | Str, [fst: Int, snd: Any]) -> Int
 //│ ╟── because: cannot constrain  'input  <:  ¬(¬{Str})
 //│ ╙── because: cannot constrain  Int  <:  ¬(¬{Str})
 //│ ╔══[ERROR] Type error in reference with expected type (Int | Str, {fst: Int, snd: ⊤}) ->{⊥} Int
-//│ ║  l.281: 	example14 as (Int | Str, [fst: Int, snd: Any]) -> Int
+//│ ║  l.265: 	example14 as (Int | Str, [fst: Int, snd: Any]) -> Int
 //│ ║         	^^^^^^^^^
 //│ ╟── because: cannot constrain  ('input, 'extra) ->{'eff} 'res  <:  (Int | Str, {fst: Int, snd: ⊤}) -> Int
-//│ ╟── because: cannot constrain  {fst: Int, snd: ⊤}  <:  'extra
+//│ ╟── because: cannot constrain  {0: Int | Str, 1: {fst: Int, snd: ⊤}}  <:  {0: 'input, 1: 'extra}
+//│ ╟── because: cannot constrain  {fst: Int, snd: }  <:  'extra
 //│ ╟── because: cannot constrain  {fst: Int, snd: }  <:  'extra
 //│ ╟── because: cannot constrain  {fst: Int, snd: }  <:  ¬¬{fst: 'sel1}
 //│ ╟── because: cannot constrain  Int  <:  'sel1
@@ -346,21 +332,21 @@ fun example6_wrong(x: Int | Str, y: Any) = if
   x is_int() and_(y is_string()) is Tru then x + strlen(y)
   else strlen(x)
 //│ ╔══[ERROR] Type error in `if` expression
-//│ ║  l.346: 	  x is_int() and_(y is_string()) is Tru then x + strlen(y)
+//│ ║  l.332: 	  x is_int() and_(y is_string()) is Tru then x + strlen(y)
 //│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.347: 	  else strlen(x)
+//│ ║  l.333: 	  else strlen(x)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╙── because: cannot constrain  Int | Str  <:  Int
 //│ ╔══[ERROR] Type error in `if` expression
-//│ ║  l.346: 	  x is_int() and_(y is_string()) is Tru then x + strlen(y)
+//│ ║  l.332: 	  x is_int() and_(y is_string()) is Tru then x + strlen(y)
 //│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.347: 	  else strlen(x)
+//│ ║  l.333: 	  else strlen(x)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╙── because: cannot constrain  ⊤  <:  Str
 //│ ╔══[ERROR] Type error in `if` expression
-//│ ║  l.346: 	  x is_int() and_(y is_string()) is Tru then x + strlen(y)
+//│ ║  l.332: 	  x is_int() and_(y is_string()) is Tru then x + strlen(y)
 //│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.347: 	  else strlen(x)
+//│ ║  l.333: 	  else strlen(x)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╙── because: cannot constrain  Int | Str  <:  Str
 //│ Type: ⊤
@@ -370,17 +356,17 @@ fun example6_wrong(x: Int | Str, y: Any) = if
   x is Int and y is Str then x + strlen(y)
   else strlen(x)
 //│ ╔══[ERROR] Type error in `if` expression
-//│ ║  l.370: 	  x is Int and y is Str then x + strlen(y)
+//│ ║  l.356: 	  x is Int and y is Str then x + strlen(y)
 //│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.371: 	  else strlen(x)
+//│ ║  l.357: 	  else strlen(x)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  Int | Str  <:  'x
 //│ ╟── because: cannot constrain  Int  <:  'x
 //│ ╙── because: cannot constrain  Int  <:  ¬(¬{Str})
 //│ ╔══[ERROR] Type error in `if` expression
-//│ ║  l.370: 	  x is Int and y is Str then x + strlen(y)
+//│ ║  l.356: 	  x is Int and y is Str then x + strlen(y)
 //│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.371: 	  else strlen(x)
+//│ ║  l.357: 	  else strlen(x)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'x  <:  Str
 //│ ╟── because: cannot constrain  'x  <:  ¬(¬{Str})
@@ -405,25 +391,25 @@ fun detailed_ex(a: (Int -> (Int | Bool)) | Prod[Int, Int | Bool], n: Int) = if
   a(n) is Int then a(n) < 42
   else a(n)
 //│ ╔══[ERROR] Type error in `if` expression
-//│ ║  l.403: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
+//│ ║  l.389: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
 //│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.404: 	  a is Prod then a.Prod#snd
+//│ ║  l.390: 	  a is Prod then a.Prod#snd
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.405: 	  a(n) is Int then a(n) < 42
+//│ ║  l.391: 	  a(n) is Int then a(n) < 42
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.406: 	  else a(n)
+//│ ║  l.392: 	  else a(n)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'app  <:  Int
 //│ ╟── because: cannot constrain  'app  <:  ¬(¬{Int})
 //│ ╙── because: cannot constrain  Bool  <:  ¬(¬{Int})
 //│ ╔══[ERROR] Type error in `if` expression
-//│ ║  l.403: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
+//│ ║  l.389: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
 //│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.404: 	  a is Prod then a.Prod#snd
+//│ ║  l.390: 	  a is Prod then a.Prod#snd
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.405: 	  a(n) is Int then a(n) < 42
+//│ ║  l.391: 	  a(n) is Int then a(n) < 42
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.406: 	  else a(n)
+//│ ║  l.392: 	  else a(n)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ¬Prod[?, ?] & ((Int -> (Int | Bool)) | Prod[Int, Int | Bool])  <:  'a
 //│ ╟── because: cannot constrain  (Int) ->{⊥} (Int ∨ Bool) ∧ ¬{Prod[?, ?]}  <:  'a
@@ -432,13 +418,13 @@ fun detailed_ex(a: (Int -> (Int | Bool)) | Prod[Int, Int | Bool], n: Int) = if
 //│ ╟── because: cannot constrain  Bool  <:  'app
 //│ ╙── because: cannot constrain  Bool  <:  ¬(¬{Int})
 //│ ╔══[ERROR] Type error in `if` expression
-//│ ║  l.403: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
+//│ ║  l.389: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
 //│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.404: 	  a is Prod then a.Prod#snd
+//│ ║  l.390: 	  a is Prod then a.Prod#snd
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.405: 	  a(n) is Int then a(n) < 42
+//│ ║  l.391: 	  a(n) is Int then a(n) < 42
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.406: 	  else a(n)
+//│ ║  l.392: 	  else a(n)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'a  <:  Int ->{'eff} 'app
 //│ ╟── because: cannot constrain  'a  <:  ¬(¬{Int ->{'eff} 'app})
@@ -447,13 +433,13 @@ fun detailed_ex(a: (Int -> (Int | Bool)) | Prod[Int, Int | Bool], n: Int) = if
 //│ ╟── because: cannot constrain  Bool  <:  'app
 //│ ╙── because: cannot constrain  Bool  <:  ¬(¬{Int})
 //│ ╔══[ERROR] Type error in `if` expression
-//│ ║  l.403: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
+//│ ║  l.389: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
 //│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.404: 	  a is Prod then a.Prod#snd
+//│ ║  l.390: 	  a is Prod then a.Prod#snd
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.405: 	  a(n) is Int then a(n) < 42
+//│ ║  l.391: 	  a(n) is Int then a(n) < 42
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.406: 	  else a(n)
+//│ ║  l.392: 	  else a(n)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'a  <:  Int ->{'eff} 'app
 //│ ╟── because: cannot constrain  'a  <:  ¬(¬{Int ->{'eff} 'app})
@@ -462,49 +448,49 @@ fun detailed_ex(a: (Int -> (Int | Bool)) | Prod[Int, Int | Bool], n: Int) = if
 //│ ╟── because: cannot constrain  Bool  <:  'app
 //│ ╙── because: cannot constrain  Bool  <:  ¬(¬{Int})
 //│ ╔══[ERROR] Type error in `if` expression
-//│ ║  l.403: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
+//│ ║  l.389: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
 //│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.404: 	  a is Prod then a.Prod#snd
+//│ ║  l.390: 	  a is Prod then a.Prod#snd
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.405: 	  a(n) is Int then a(n) < 42
+//│ ║  l.391: 	  a(n) is Int then a(n) < 42
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.406: 	  else a(n)
+//│ ║  l.392: 	  else a(n)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'app  <:  Int
 //│ ╟── because: cannot constrain  'app  <:  ¬(¬{Int})
 //│ ╙── because: cannot constrain  Bool  <:  ¬(¬{Int})
 //│ ╔══[ERROR] Type error in `if` expression
-//│ ║  l.403: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
+//│ ║  l.389: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
 //│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.404: 	  a is Prod then a.Prod#snd
+//│ ║  l.390: 	  a is Prod then a.Prod#snd
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.405: 	  a(n) is Int then a(n) < 42
+//│ ║  l.391: 	  a(n) is Int then a(n) < 42
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.406: 	  else a(n)
+//│ ║  l.392: 	  else a(n)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'app  <:  Int
 //│ ╟── because: cannot constrain  'app  <:  ¬(¬{Int})
 //│ ╙── because: cannot constrain  Bool  <:  ¬(¬{Int})
 //│ ╔══[ERROR] Type error in `if` expression
-//│ ║  l.403: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
+//│ ║  l.389: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
 //│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.404: 	  a is Prod then a.Prod#snd
+//│ ║  l.390: 	  a is Prod then a.Prod#snd
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.405: 	  a(n) is Int then a(n) < 42
+//│ ║  l.391: 	  a(n) is Int then a(n) < 42
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.406: 	  else a(n)
+//│ ║  l.392: 	  else a(n)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'app  <:  Int
 //│ ╟── because: cannot constrain  'app  <:  ¬(¬{Int})
 //│ ╙── because: cannot constrain  Bool  <:  ¬(¬{Int})
 //│ ╔══[ERROR] Type error in `if` expression
-//│ ║  l.403: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
+//│ ║  l.389: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
 //│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.404: 	  a is Prod then a.Prod#snd
+//│ ║  l.390: 	  a is Prod then a.Prod#snd
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.405: 	  a(n) is Int then a(n) < 42
+//│ ║  l.391: 	  a(n) is Int then a(n) < 42
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.406: 	  else a(n)
+//│ ║  l.392: 	  else a(n)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'app  <:  Int
 //│ ╟── because: cannot constrain  'app  <:  ¬(¬{Int})
@@ -527,7 +513,7 @@ detailed_ex as ((Int -> Int | Bool) | Prod[Int, Int | Bool], Int) -> Int | Bool
 :todo
 detailed_ex as ((Int -> Int | Bool) | Prod[Int, Int | Bool], Int) -> Bool
 //│ ╔══[ERROR] Type error in reference with expected type ((Int -> (Int | Bool)) | Prod[Int, Int | Bool], Int) ->{⊥} Bool
-//│ ║  l.528: 	detailed_ex as ((Int -> Int | Bool) | Prod[Int, Int | Bool], Int) -> Bool
+//│ ║  l.514: 	detailed_ex as ((Int -> Int | Bool) | Prod[Int, Int | Bool], Int) -> Bool
 //│ ║         	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ((Int -> (Int | Bool)) | Prod[Int, Int | Bool], Int) ->{'eff} 'res  <:  ((Int -> (Int | Bool)) | Prod[Int, Int | Bool], Int) -> Bool
 //│ ╟── because: cannot constrain  'res  <:  Bool
@@ -543,11 +529,11 @@ if a is
   Prod then true
   else a(1)
 //│ ╔══[ERROR] Type error in `if` expression
-//│ ║  l.542: 	if a is
+//│ ║  l.528: 	if a is
 //│ ║         	   ^^^^
-//│ ║  l.543: 	  Prod then true
+//│ ║  l.529: 	  Prod then true
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.544: 	  else a(1)
+//│ ║  l.530: 	  else a(1)
 //│ ║         	^^^^^^^^^^^
 //│ ╙── because: cannot constrain  (Int -> (Int | Bool)) | Prod[Int, Int | Bool]  <:  Int ->{'eff} 'app
 //│ Type: (Int | Bool) | Bool

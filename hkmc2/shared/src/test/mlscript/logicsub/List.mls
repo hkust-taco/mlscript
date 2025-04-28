@@ -53,6 +53,7 @@ cons(1, 2) map(x => x)
 //│ ║        	               ^^^^^^
 //│ ╟── because: cannot constrain  'x -> 'x  <:  'f
 //│ ╟── because: cannot constrain  ('x) ->{⊥} ('x)  <:  'f
+//│ ╟── because: cannot constrain  {0: 'Tl, 1: 'f}  <:  {0: 'xs, 1: 'f}
 //│ ╟── because: cannot constrain  'Tl  <:  'xs
 //│ ╟── because: cannot constrain  'Tl  <:  ¬(¬'xs)
 //│ ╟── because: cannot constrain  Int  <:  ¬(¬'xs)
@@ -96,10 +97,11 @@ c map(x => x)
 :e
 cons(1, 2) map(x => x)
 //│ ╔══[ERROR] Type error in function literal with expected type 'f
-//│ ║  l.97: 	cons(1, 2) map(x => x)
+//│ ║  l.98: 	cons(1, 2) map(x => x)
 //│ ║        	               ^^^^^^
 //│ ╟── because: cannot constrain  'x -> 'x  <:  'f
 //│ ╟── because: cannot constrain  ('x) ->{⊥} ('x)  <:  'f
+//│ ╟── because: cannot constrain  {0: 'Tl, 1: 'f1, 2: 'r}  <:  {0: 'xs, 1: 'f2, 2: 'r1}
 //│ ╟── because: cannot constrain  'Tl  <:  'xs
 //│ ╟── because: cannot constrain  'Tl  <:  'xs
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥

@@ -173,15 +173,15 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
       if !pol then
         val lfa = l.toDnf.conjs.flatMap(_.i.v).collect:
           case (f :: fs) =>
-            val fd = Type.discriminant(f.args)._1
+            val fd = Type.discriminant(f.args).flatten
             fs.foldLeft(fd: Type, fd.fields.keys.toSet): (x, y) =>
-              val d = Type.discriminant(y.args)._1
+              val d = Type.discriminant(y.args).flatten
               (x._1 | d, x._2 & d.fields.keys.toSet)
         val rfa = r.toDnf.conjs.flatMap(_.i.v).collect:
           case (f :: fs) =>
-            val fd = Type.discriminant(f.args)._1
+            val fd = Type.discriminant(f.args).flatten
             fs.foldLeft(fd: Type, fd.fields.keys.toSet): (x, y) =>
-              val d = Type.discriminant(y.args)._1
+              val d = Type.discriminant(y.args).flatten
               (x._1 | d, x._2 & d.fields.keys.toSet)
         val d = lfa.iterator.flatMap(x => rfa.iterator.map(y => (x, y))).exists:
           case ((x, u), (y, w)) => (u & w).isEmpty || Type.disjoint(x, y) =/= S(Set.empty)
@@ -386,11 +386,9 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
       val nestCtx = ctx.nest
       given BbCtx = nestCtx
       val (nc, dss, cs) = constraintCollector
-      val sv0 = HashMap.empty[Ref, InfVar]
       sv.keys.foreach: s =>
         val v = freshVar(new TempSymbol(S(s), s.sym.nme))
         nestCtx += s.sym -> v
-        sv0 += s -> v
       val (termTy, termEff) = typeCheck(term)(using c = nc)
       val sk = freshSkolem(name)
       nestCtx += name -> termTy
@@ -398,7 +396,10 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
       path.foreach: p =>
         val m = p.toMap
         val d = p.flatMap { case (s, t) => sv.get(s).flatMap(st => Type.disjoint(t.!, st)) }
-        val sc = sv.toList.map { case (s, t) => (m.getOrElse(s, Bot).! & t, sv0(s)) }
+        val sc = sv.toList.map:
+          case (s, t) =>
+            val v = nestCtx.get(s.sym).get
+            (m.getOrElse(s, Bot).! & t, monoOrErr(v, s))
         if d.isEmpty then
           dss.foreach(c.commit(_))
           (sc ++ cs).distinct.foreach(u => constrain(u._1, u._2))
@@ -411,16 +412,17 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
     case Split.Else(e) =>
       val (nc, dss, cs) = constraintCollector
       val ctx1 = ctx.nest
-      val sv0 = HashMap.empty[Ref, InfVar]
       sv.keys.foreach: s =>
         val v = freshVar(new TempSymbol(S(s), s.sym.nme))
         ctx1 += s.sym -> v
-        sv0 += s -> v
       nc.constrain(ascribe(e, sign)(using ctx1, c = nc)._2, eff)
       path.foreach: p =>
         val m = p.toMap
         val d = p.flatMap { case (s, t) => sv.get(s).flatMap(st => Type.disjoint(t.!, st)) }
-        val sc = sv.toList.map { case (s, t) => (m.getOrElse(s, Bot).! & t, sv0(s)) }
+        val sc = sv.toList.map:
+          case (s, t) =>
+            val v = ctx1.get(s.sym).get
+            (m.getOrElse(s, Bot).! & t, monoOrErr(v, s))
         if d.isEmpty then
           dss.foreach(c.commit(_))
           (sc ++ cs).distinct.foreach(u => constrain(u._1, u._2))

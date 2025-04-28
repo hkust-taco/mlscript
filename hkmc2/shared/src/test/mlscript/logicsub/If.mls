@@ -90,6 +90,7 @@ foo(1, "")
 //│ ╟── because: cannot constrain  'r  <:  (Str & 'y1, 'x, 'r) ->{'eff} 'app
 //│ ╟── because: cannot constrain  'r  <:  ¬(¬{(Str & 'y1, 'x, 'r) ->{'eff} 'app})
 //│ ╟── because: cannot constrain  ((¬⊥ & 'x1, ¬⊥ & 'y2, ¬⊥ & 'r1) ->{¬⊥ & 'eff1} (¬⊥ & 'res)) & ¬⊥  <:  ¬(¬{(Str & 'y1, 'x, 'r) ->{'eff} 'app})
+//│ ╟── because: cannot constrain  {0: Str & 'y1, 1: 'x, 2: 'r}  <:  {0: 'x1, 1: 'y2, 2: 'r1}
 //│ ╟── because: cannot constrain  'x  <:  'y2
 //│ ╟── because: cannot constrain  'x  <:  'y2
 //│ ╟── because: cannot constrain  'x  <:  ¬(¬{Bool})
@@ -124,7 +125,7 @@ increv'
 :e
 increv(sib)
 //│ ╔══[ERROR] Type error in reference with expected type 'x
-//│ ║  l.125: 	increv(sib)
+//│ ║  l.126: 	increv(sib)
 //│ ║         	       ^^^
 //│ ╟── because: cannot constrain  (Str | Int) | Bool  <:  'x
 //│ ╟── because: cannot constrain  Bool  <:  'x
@@ -134,7 +135,7 @@ increv(sib)
 :e
 increv'(sib)
 //│ ╔══[ERROR] Type error in reference with expected type 'x
-//│ ║  l.135: 	increv'(sib)
+//│ ║  l.136: 	increv'(sib)
 //│ ║         	        ^^^
 //│ ╟── because: cannot constrain  (Str | Int) | Bool  <:  'x
 //│ ╟── because: cannot constrain  Bool  <:  'x

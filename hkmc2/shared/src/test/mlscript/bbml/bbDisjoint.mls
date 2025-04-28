@@ -224,6 +224,7 @@ fun foo(r1) =
 //│ ╟── because: cannot constrain  'r1 ->{'eff} 'app  <:  'foo
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  Region[in 'r2 out 'r21] ->{'eff1} 'app1
+//│ ╟── because: cannot constrain  {0: Region[in 'r2 out 'r21]}  <:  {0: 'r1}
 //│ ╟── because: cannot constrain  Region[in 'r2 out 'r21]  <:  'r1
 //│ ╟── because: cannot constrain  Region[in 'r2 out 'r21]  <:  'r1
 //│ ╟── because: cannot constrain  Region[in 'r2 out 'r21]  <:  Region[in 'reg out 'reg1]
@@ -246,6 +247,7 @@ fun foo(r1) =
 //│ ╟── because: cannot constrain  'r1 ->{'eff} 'app  <:  'foo
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  Region[in 'r2 out 'r21] ->{'eff1} 'app1
+//│ ╟── because: cannot constrain  {0: Region[in 'r2 out 'r21]}  <:  {0: 'r1}
 //│ ╟── because: cannot constrain  Region[in 'r2 out 'r21]  <:  'r1
 //│ ╟── because: cannot constrain  Region[in 'r2 out 'r21]  <:  'r1
 //│ ╟── because: cannot constrain  Region[in 'r2 out 'r21]  <:  Region[in 'reg out 'reg1]

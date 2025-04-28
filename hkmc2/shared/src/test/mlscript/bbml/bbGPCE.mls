@@ -76,15 +76,15 @@ inc
 inc(c => log(show(c)))
 //│ Type: CodeBase[out 'x -> 'cde, ⊥, ?]
 //│ Where:
-//│   'x1#'x ∨ (  'x#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
+//│   'x1#'x ∨ (  'x#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int & ¬⊥, 1: Int & ¬⊥}
 //│   'x <: 'cde1
-//│   'cde1#'cde1 ∨ (  'x#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
+//│   'cde1#'cde1 ∨ (  'x#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int & ¬⊥, 1: Int & ¬⊥}
 //│   Int <: 'cde2
 //│   'cde <: ⊤
 //│   'app <: 'cde
 //│   'app <: 'app1
 //│   'x1 <: 'x
-//│   'x#'x ∨ (  'x#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
+//│   'x#'x ∨ (  'x#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int & ¬⊥, 1: Int & ¬⊥}
 
 
 fun body: [T, C] -> (CodeBase[out Int, out T, out Any], CodeBase[out Int, out C, out Any]) -> Int -> CodeBase[out Int, out T | C, out Any]

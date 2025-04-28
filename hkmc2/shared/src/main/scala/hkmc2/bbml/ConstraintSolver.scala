@@ -122,27 +122,20 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
           if k.subsetOf(um.keySet) then
             k.foreach(k => constrainImpl(um(k), wm(k)))
           else cctx.err
-        case (Inter(S(u: RcdType)), Union(f, Nil, rs@(RcdType(w) :: _))) =>
-          val ws = rs.foldLeft(Nil): (x, w) =>
-            val d = Type.disjoint(w, u)
-            if d === S(Set.empty) then x else Ls(d -> w) ++ x
-          ws match
-            case Nil => cctx.err
-            case (_, w) :: Nil => constrainImpl(u, w)
-            case ((_, RcdType(w)) :: (_, RcdType(z)) :: _) =>
-              val (wm, zm) = (w.toMap, z.toMap)
-              val k = wm.keySet & zm.keySet
-              val dk = k.find(k => Type.disjoint(wm(k), zm(k)) === S(Set.empty)).get
-              val ku = ws.foldLeft(Bot: Type):
-                case (ku, (_, w)) => ku | w.fields.find(_._1 === dk).get._2
-              ws.foreach:
-                case (S(k), w) => k.foreach: k =>
-                  DisjSub(mutable.LinkedHashSet.from(k), Nil, Ls(u -> RcdType(w.fields.filter(_._1 =/= k)))).commit()
-                case _ =>
-              constrainImpl(u.fields.find(_._1 === dk).get._2, ku)
-              ws.foreach:
-                case (N, w) => constrainImpl(u, RcdType(w.fields.filter(_._1 =/= dk)))
-                case _ =>
+        case (Inter(S(u: RcdType)), Union(f, Nil, rs)) =>
+          val us = u.fields.keys.toSet
+          val ws = rs.filter(_.fields.keys.forall(us))
+          if ws.isEmpty then cctx.err
+          else
+            val q = ws.foldLeft(Bot: Type): (q, w) =>
+              val wq = Type.discriminant(w)
+              Type.disjoint(wq, u) match
+                case N => constrainImpl(u & wq, w)
+                case S(k) => k.foreach(k => DisjSub(mutable.LinkedHashSet.from(k), Nil, Ls(wq -> w)).commit())
+              q | wq
+            Type.disjoint(q.!, u) match
+              case N => constrainImpl(Top, Bot)
+              case S(k) => k.foreach(k => DisjSub(mutable.LinkedHashSet.from(k), Nil, Ls(Top -> Bot)).commit())
         case (Inter(S(fs: Ls[FunType])), Union(S(FunType(args2, ret2, eff2)), Nil, Nil)) =>
           val k = args2.flatMap(x => Type.disjoint(x, x))
           if k.forall(_.nonEmpty) then
@@ -154,19 +147,17 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
                 constrainImpl(f.ret, ret2)
                 constrainImpl(f.eff, eff2)
             else
-              val args = f.map(x => Type.discriminant(x.args))
+              val args = f.map(x => RcdType(x.args.zipWithIndex.map(u => (s"${u._2}", u._1))))
               val args2r = args2.zipWithIndex.map(u => (s"${u._2}", u._1))
               val args2q = RcdType(args2r)
-              val (cs, dss) = (args.iterator.zip(f).map:
-                case ((q, r), f) =>
-                  val rm = r.fields.toMap
-                  val rcs = args2r.flatMap(u => rm.get(u._1).filter(_ =/= Top).map(u._2 -> _))
-                  val cs = (f.ret, ret2) :: (f.eff, eff2) :: rcs
+              val (cs, dss) = (args.iterator.map(Type.discriminant).zip(f).map:
+                case (q, f) =>
+                  val cs = (f.ret, ret2) :: (f.eff, eff2) :: Nil //rcs
                   Type.disjoint(q, args2q) match
                     case N => (cs, Nil)
                     case S(k) =>
                       (Nil, k.map(k => DisjSub(mutable.LinkedHashSet.from(k), Nil, cs)))).toList.unzip
-              val c = (args2q, args.foldLeft(Bot: Type) { case (t, (q, _)) => t | q })
+              val c = (args2q, args.foldLeft(Bot: Type)(_ | _))
               if k.isEmpty then
                 if f.isEmpty then
                   cctx.err

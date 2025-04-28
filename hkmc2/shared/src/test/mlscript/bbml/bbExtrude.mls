@@ -74,7 +74,7 @@ g
 f(g)
 //│ Type: ('A) ->{⊥} Int
 //│ Where:
-//│   'A#C ∨ (  'A#C ∨ 'D <: B ∧ ⊥ <: ⊥ ∧ C[out B] & 'A <: C[in Int out 'D]){0: C[out B] & 'A} <: {0: C[?]}
+//│   'A#C ∨ (  'A#C ∨ 'D <: B ∧ ⊥ <: ⊥){0: C[out B] & 'A} <: {0: C[in Int out 'D]}
 
 fun foo: C[in Int out Nothing]
 foo
@@ -94,7 +94,8 @@ f(g)(bar)
 //│ ║        	     ^^^
 //│ ╟── because: cannot constrain  C[Int]  <:  'A
 //│ ╟── because: cannot constrain  C[in Int out Int]  <:  'A
-//│ ╟── because: cannot constrain  C[out B] & 'A  <:  C[in Int out 'D]
+//│ ╟── because: cannot constrain  {0: C[out B] & 'A}  <:  {0: C[in Int out 'D]}
+//│ ╟── because: cannot constrain  C[in ⊥ out B] ∧ 'A  <:  C[in Int out 'D]
 //│ ╟── because: cannot constrain  'A  <:  ¬C[in ⊥ out ¬⊥ & 'B1] | C[in Int out ¬⊥ & 'D1]
 //│ ╟── because: cannot constrain  C[in Int out Int]  <:  ¬C[in ⊥ out ¬⊥ & 'B1] | C[in Int out ¬⊥ & 'D1]
 //│ ╟── because: cannot constrain  (Int) & ('B1)  <:  ¬⊥ & 'D1
