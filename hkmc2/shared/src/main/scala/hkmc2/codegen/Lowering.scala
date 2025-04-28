@@ -611,8 +611,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       Value.Ref(State.termSymbol).selSN("freshName"),
       Value.Lit(Tree.StrLit(name)).asArg :: Nil)(true, true))
 
-  def setupObj(name: Str): Path =
-    Value.Ref(State.termSymbol).selSN(name)
+  def setupQuotedKeyword(kw: Str): Path =
+    Value.Ref(State.termSymbol).selSN("Keyword").selSN(kw)
 
   def setupSymbol(symbol: Local, fresh: Bool)(k: Result => Block)(using Subst): Block =
     if fresh then
@@ -756,7 +756,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         )(using nest))
     case IfLike(syntax.Keyword.`if`, split) => quoteSplit(split): r =>
       val l = new TempSymbol(N)
-      Assign(l, r, setupTerm("IfLike", setupObj("KeywordIf") :: Value.Ref(l) :: Nil)(k))
+      Assign(l, r, setupTerm("IfLike", setupQuotedKeyword("If") :: Value.Ref(l) :: Nil)(k))
     case Unquoted(body) => term(body)(k)
     case _ =>
       raise(ErrorReport(

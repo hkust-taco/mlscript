@@ -57,8 +57,10 @@ class Split with
     End
 
 
-object KeywordIf
-object KeywordWhile
+module Keyword with
+  object
+    If
+    While
 
 
 class Statement with
@@ -78,7 +80,7 @@ class Term with
     Sel(val prefix: Term, val nme: Str)
     DynSel(val prefix: Term, val fld: Term, val arrayIdx: Bool)
     Tup(val fields: Array[Term])
-    IfLike(val kw: KeywordIf | KeywordWhile, val desugared: Split)
+    IfLike(val kw: Keyword.If | Keyword.While, val desugared: Split)
     Lam(val params: Array[Symbol], val body: Term)
     Blk(val stats: Array[Statement], val res: Term)
     New(val cls: Term, val args: Array[Term])
@@ -166,7 +168,7 @@ fun show(t, ctx) =
     Blk(stats, res) then
       let nest = ctx.nest
       Str.concat of stats.map(s => showStmt(s, nest)).join("\n"), "\n", show(res, nest)
-    IfLike(KeywordIf, split) then Str.concat of "if \n", indent(showSplit(split, ctx, false), "  ", true)
+    IfLike(Keyword.If, split) then Str.concat of "if \n", indent(showSplit(split, ctx, false), "  ", true)
     // TODO: other terms
 
 fun print(t) =

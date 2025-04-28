@@ -83,10 +83,10 @@ f`(`0)
 //│ tmp42 = new Term.Else(tmp41);
 //│ tmp43 = new Term.Cons(tmp40, tmp42);
 //│ tmp44 = new Term.Let(tmp34, tmp35, tmp43);
-//│ new Term.IfLike(Term.KeywordIf, tmp44)
-//│ = IfLike(KeywordIf, Let(Symbol("scrut_0"), Lit(true), Cons(Branch(Ref(Symbol("scrut_0")), LitPattern(true), Else(Lit(true))), Else(Lit(false)))))
+//│ new Term.IfLike(Term.Keyword.If, tmp44)
+//│ = IfLike(If, Let(Symbol("scrut_0"), Lit(true), Cons(Branch(Ref(Symbol("scrut_0")), LitPattern(true), Else(Lit(true))), Else(Lit(false)))))
 
 
 x `=> `if x `== `0.0 then `1.0 else x
-//│ = Lam([Symbol("x_5")], IfLike(KeywordIf, Let(Symbol("scrut_1"), App(Builtin("=="), Tup([Ref(Symbol("x_5")), Lit(0)])), Cons(Branch(Ref(Symbol("scrut_1")), LitPattern(true), Else(Lit(1))), Else(Ref(Symbol("x_5")))))))
+//│ = Lam([Symbol("x_5")], IfLike(If, Let(Symbol("scrut_1"), App(Builtin("=="), Tup([Ref(Symbol("x_5")), Lit(0)])), Cons(Branch(Ref(Symbol("scrut_1")), LitPattern(true), Else(Lit(1))), Else(Ref(Symbol("x_5")))))))
 

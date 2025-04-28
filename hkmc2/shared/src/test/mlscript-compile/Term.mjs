@@ -300,18 +300,24 @@ let Term3;
       }
       toString() { return "End"; }
     };
-    const KeywordIf$class = class KeywordIf {
-      constructor() {}
-      toString() { return "KeywordIf"; }
-    };
-    this.KeywordIf = new KeywordIf$class;
-    this.KeywordIf.class = KeywordIf$class;
-    const KeywordWhile$class = class KeywordWhile {
-      constructor() {}
-      toString() { return "KeywordWhile"; }
-    };
-    this.KeywordWhile = new KeywordWhile$class;
-    this.KeywordWhile.class = KeywordWhile$class;
+    (class Keyword {
+      static {
+        Term.Keyword = Keyword;
+        const If$class = class If {
+          constructor() {}
+          toString() { return "If"; }
+        };
+        this.If = new If$class;
+        this.If.class = If$class;
+        const While$class = class While {
+          constructor() {}
+          toString() { return "While"; }
+        };
+        this.While = new While$class;
+        this.While.class = While$class;
+      }
+      static toString() { return "Keyword"; }
+    });
     this.Statement = class Statement {
       constructor() {}
       toString() { return "Statement"; }
@@ -838,7 +844,7 @@ let Term3;
     } else if (t1 instanceof Term.IfLike.class) {
       param0 = t1.kw;
       param1 = t1.desugared;
-      if (param0 instanceof Term.KeywordIf.class) {
+      if (param0 instanceof Term.Keyword.If.class) {
         split = param1;
         tmp17 = Term.showSplit(split, ctx4, false);
         tmp18 = Term.indent(tmp17, "  ", true);

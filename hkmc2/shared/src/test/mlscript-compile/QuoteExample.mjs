@@ -147,7 +147,7 @@ let QuoteExample1;
     tmp20 = new Term.Else(tmp19);
     tmp21 = new Term.Cons(tmp14, tmp20);
     tmp22 = new Term.Let(tmp4, tmp9, tmp21);
-    tmp23 = new Term.IfLike(Term.KeywordIf, tmp22);
+    tmp23 = new Term.IfLike(Term.Keyword.If, tmp22);
     return new Term.Lam([
       x2,
       y1,
