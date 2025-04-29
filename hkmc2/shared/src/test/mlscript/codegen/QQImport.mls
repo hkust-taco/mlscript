@@ -1,6 +1,7 @@
 :js
+:qq
 
-import "../../mlscript-compile/Term.mls"
+//│ Term = Term
 
 Term.print
 //│ = [function print]

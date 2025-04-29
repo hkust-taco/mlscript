@@ -1,8 +1,7 @@
 :js
+:qq
 
-
-import "../../mlscript-compile/Term.mls"
-
+//│ Term = Term
 
 `42
 //│ = Lit(42)

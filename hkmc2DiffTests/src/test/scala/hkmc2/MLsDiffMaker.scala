@@ -61,6 +61,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val effectHandlersOptions = Set("debug", "")
   val stackSafe = Command("stackSafe")(_.trim)
   val liftDefns = NullaryCommand("lift")
+  val importQQ = NullaryCommand("qq")
   
   def mkConfig: Config =
     import Config.*
@@ -145,6 +146,10 @@ abstract class MLsDiffMaker extends DiffMaker:
         Modified(`import`, N, StrLit(predefFile.toString))
         :: Open(Ident("Predef"))
         :: Nil)
+    if importQQ.isSet then
+      given Config = mkConfig
+      processTrees(
+        Modified(`import`, N, StrLit(termFile.toString)) :: Nil)
     super.init()
   
   

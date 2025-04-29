@@ -49,10 +49,11 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     case ReplHost.Result(msg) =>
       if msg.startsWith("Uncaught") then output(s"Failed to load runtime: $msg")
     case r => output(s"Failed to load runtime: $r")
-    h.execute(s"const $termNme = (await import(\"${termFile}\")).default;") match
-    case ReplHost.Result(msg) =>
-      if msg.startsWith("Uncaught") then output(s"Failed to load runtime: $msg")
-    case r => output(s"Failed to load runtime: $r")
+    if importQQ.isSet then
+      h.execute(s"const $termNme = (await import(\"${termFile}\")).default;") match
+      case ReplHost.Result(msg) =>
+        if msg.startsWith("Uncaught") then output(s"Failed to load runtime: $msg")
+      case r => output(s"Failed to load runtime: $r")
     h
   
   private var hostCreated = false
