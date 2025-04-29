@@ -36,15 +36,15 @@ x `=>
   print(x)
   x
 //│ JS (unsanitized):
-//│ let tmp6, x1, tmp7, tmp8, tmp9;
-//│ tmp6 = Term.freshName("x");
-//│ x1 = new Term.Symbol(tmp6);
-//│ tmp7 = new Term.Ref(x1);
-//│ tmp8 = Predef.print(tmp7);
-//│ tmp9 = new Term.Ref(x1);
+//│ let x1, tmp7, tmp8, tmp9, tmp10;
+//│ tmp7 = Term.freshName("x");
+//│ tmp8 = new Term.Symbol(tmp7);
+//│ x1 = new Term.Ref(tmp8);
+//│ tmp9 = Predef.print(x1);
+//│ tmp10 = x1;
 //│ new Term.Lam([
-//│   x1
-//│ ], tmp9)
+//│   tmp8
+//│ ], tmp10)
 //│ > Ref(Symbol("x_1"))
 //│ = Lam([Symbol("x_1")], Ref(Symbol("x_1")))
 
@@ -69,20 +69,21 @@ f`(`0)
 :sjs
 `if `true then `true else `false
 //│ JS (unsanitized):
-//│ let tmp33, tmp34, tmp35, tmp36, tmp37, tmp38, tmp39, tmp40, tmp41, tmp42, tmp43, tmp44;
-//│ tmp33 = Term.freshName("scrut");
-//│ tmp34 = new Term.Symbol(tmp33);
-//│ tmp35 = new Term.Lit(true);
-//│ tmp37 = new Term.Ref(tmp34);
-//│ tmp38 = new Term.LitPattern(true);
-//│ tmp42 = new Term.Lit(true);
-//│ tmp39 = new Term.Else(tmp42);
-//│ tmp40 = new Term.Branch(tmp37, tmp38, tmp39);
-//│ tmp43 = new Term.Lit(false);
-//│ tmp41 = new Term.Else(tmp43);
-//│ tmp36 = new Term.Cons(tmp40, tmp41);
-//│ tmp44 = new Term.Let(tmp34, tmp35, tmp36);
-//│ new Term.IfLike(Term.Keyword.If, tmp44)
+//│ let scrut, tmp35, tmp36, tmp37, tmp38, tmp39, tmp40, tmp41, tmp42, tmp43, tmp44, tmp45, tmp46;
+//│ tmp35 = Term.freshName("scrut");
+//│ tmp36 = new Term.Symbol(tmp35);
+//│ scrut = new Term.Ref(tmp36);
+//│ tmp37 = new Term.Lit(true);
+//│ tmp39 = scrut;
+//│ tmp40 = new Term.LitPattern(true);
+//│ tmp44 = new Term.Lit(true);
+//│ tmp41 = new Term.Else(tmp44);
+//│ tmp42 = new Term.Branch(tmp39, tmp40, tmp41);
+//│ tmp45 = new Term.Lit(false);
+//│ tmp43 = new Term.Else(tmp45);
+//│ tmp38 = new Term.Cons(tmp42, tmp43);
+//│ tmp46 = new Term.Let(tmp36, tmp37, tmp38);
+//│ new Term.IfLike(Term.Keyword.If, tmp46)
 //│ = IfLike(If, Let(Symbol("scrut_0"), Lit(true), Cons(Branch(Ref(Symbol("scrut_0")), LitPattern(true), Else(Lit(true))), Else(Lit(false)))))
 
 

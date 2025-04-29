@@ -15,14 +15,14 @@ let QuoteExample21;
     return Term1.codegen(tmp2, "./hkmc2/shared/src/test/mlscript-compile/quotes/QuoteInc.mls")
   } 
   static genCubic() {
-    let tmp, x, tmp1, tmp2, tmp3, tmp4;
+    let x, tmp, tmp1, tmp2, tmp3, tmp4;
     tmp = Term.freshName("x");
-    x = new Term.Symbol(tmp);
-    tmp1 = new Term.Ref(x);
-    tmp2 = QuoteExample.power(tmp1);
+    tmp1 = new Term.Symbol(tmp);
+    x = new Term.Ref(tmp1);
+    tmp2 = QuoteExample.power(x);
     tmp3 = runtime.safeCall(tmp2(3));
     tmp4 = new Term.Lam([
-      x
+      tmp1
     ], tmp3);
     return Term1.codegen(tmp4, "./hkmc2/shared/src/test/mlscript-compile/quotes/Cubic.mls")
   } 

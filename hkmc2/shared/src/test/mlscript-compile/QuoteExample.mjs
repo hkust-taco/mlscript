@@ -18,20 +18,21 @@ let QuoteExample1;
     return new Term.App(tmp2, tmp3)
   } 
   static inc() {
-    let tmp, x, tmp1, tmp2, tmp3, tmp4, tmp5;
+    let x, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
     tmp = Term.freshName("x");
-    x = new Term.Symbol(tmp);
-    tmp1 = new Term.Ref(x);
-    tmp2 = new Term.Lit(1);
-    tmp3 = new Term.Builtin("+");
-    tmp4 = new Term.Tup([
-      tmp1,
-      tmp2
+    tmp1 = new Term.Symbol(tmp);
+    x = new Term.Ref(tmp1);
+    tmp2 = x;
+    tmp3 = new Term.Lit(1);
+    tmp4 = new Term.Builtin("+");
+    tmp5 = new Term.Tup([
+      tmp2,
+      tmp3
     ]);
-    tmp5 = new Term.App(tmp3, tmp4);
+    tmp6 = new Term.App(tmp4, tmp5);
     return new Term.Lam([
-      x
-    ], tmp5)
+      tmp1
+    ], tmp6)
   } 
   static power(x) {
     let lambda;
@@ -56,18 +57,18 @@ let QuoteExample1;
     return lambda
   } 
   static bind(rhs, k) {
-    let tmp, x1, tmp1, tmp2, tmp3, tmp4, tmp5;
+    let x1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
     tmp = Term.freshName("x");
-    x1 = new Term.Symbol(tmp);
-    tmp1 = rhs;
-    tmp5 = new Term.Ref(x1);
-    tmp2 = runtime.safeCall(k(tmp5));
-    tmp3 = new Term.LetDecl(x1);
-    tmp4 = new Term.DefineVar(x1, tmp1);
+    tmp1 = new Term.Symbol(tmp);
+    x1 = new Term.Ref(tmp1);
+    tmp2 = rhs;
+    tmp3 = runtime.safeCall(k(x1));
+    tmp4 = new Term.LetDecl(tmp1);
+    tmp5 = new Term.DefineVar(tmp1, tmp2);
     return new Term.Blk([
-      tmp3,
-      tmp4
-    ], tmp2)
+      tmp4,
+      tmp5
+    ], tmp3)
   } 
   static body(x1, y) {
     let lambda;
@@ -99,60 +100,64 @@ let QuoteExample1;
     return lambda
   } 
   static gib(n) {
-    let tmp, x2, tmp1, y1, tmp2, tmp3, tmp4, tmp5;
+    let x2, y1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
     tmp = Term.freshName("x");
-    x2 = new Term.Symbol(tmp);
-    tmp1 = Term.freshName("y");
-    y1 = new Term.Symbol(tmp1);
-    tmp2 = new Term.Ref(x2);
-    tmp3 = new Term.Ref(y1);
-    tmp4 = QuoteExample.body(tmp2, tmp3);
+    tmp1 = new Term.Symbol(tmp);
+    x2 = new Term.Ref(tmp1);
+    tmp2 = Term.freshName("y");
+    tmp3 = new Term.Symbol(tmp2);
+    y1 = new Term.Ref(tmp3);
+    tmp4 = QuoteExample.body(x2, y1);
     tmp5 = runtime.safeCall(tmp4(n));
     return new Term.Lam([
-      x2,
-      y1
+      tmp1,
+      tmp3
     ], tmp5)
   } 
   static safeDiv() {
-    let tmp, x2, tmp1, y1, tmp2, d, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20, tmp21, tmp22, tmp23;
+    let x2, y1, d, scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20, tmp21, tmp22, tmp23, tmp24, tmp25, tmp26;
     tmp = Term.freshName("x");
-    x2 = new Term.Symbol(tmp);
-    tmp1 = Term.freshName("y");
-    y1 = new Term.Symbol(tmp1);
-    tmp2 = Term.freshName("d");
-    d = new Term.Symbol(tmp2);
-    tmp3 = Term.freshName("scrut");
-    tmp4 = new Term.Symbol(tmp3);
-    tmp7 = new Term.Ref(y1);
-    tmp8 = new Term.Lit(0.0);
-    tmp9 = new Term.Builtin("==");
-    tmp10 = new Term.Tup([
-      tmp7,
-      tmp8
+    tmp1 = new Term.Symbol(tmp);
+    x2 = new Term.Ref(tmp1);
+    tmp2 = Term.freshName("y");
+    tmp3 = new Term.Symbol(tmp2);
+    y1 = new Term.Ref(tmp3);
+    tmp4 = Term.freshName("d");
+    tmp5 = new Term.Symbol(tmp4);
+    d = new Term.Ref(tmp5);
+    tmp6 = Term.freshName("scrut");
+    tmp7 = new Term.Symbol(tmp6);
+    scrut = new Term.Ref(tmp7);
+    tmp10 = y1;
+    tmp11 = new Term.Lit(0.0);
+    tmp12 = new Term.Builtin("==");
+    tmp13 = new Term.Tup([
+      tmp10,
+      tmp11
     ]);
-    tmp5 = new Term.App(tmp9, tmp10);
-    tmp11 = new Term.Ref(tmp4);
-    tmp12 = new Term.LitPattern(true);
-    tmp16 = new Term.Ref(d);
-    tmp13 = new Term.Else(tmp16);
-    tmp14 = new Term.Branch(tmp11, tmp12, tmp13);
-    tmp17 = new Term.Ref(x2);
-    tmp18 = new Term.Ref(y1);
-    tmp19 = new Term.Builtin("/");
-    tmp20 = new Term.Tup([
-      tmp17,
-      tmp18
+    tmp8 = new Term.App(tmp12, tmp13);
+    tmp14 = scrut;
+    tmp15 = new Term.LitPattern(true);
+    tmp19 = d;
+    tmp16 = new Term.Else(tmp19);
+    tmp17 = new Term.Branch(tmp14, tmp15, tmp16);
+    tmp20 = x2;
+    tmp21 = y1;
+    tmp22 = new Term.Builtin("/");
+    tmp23 = new Term.Tup([
+      tmp20,
+      tmp21
     ]);
-    tmp21 = new Term.App(tmp19, tmp20);
-    tmp15 = new Term.Else(tmp21);
-    tmp6 = new Term.Cons(tmp14, tmp15);
-    tmp22 = new Term.Let(tmp4, tmp5, tmp6);
-    tmp23 = new Term.IfLike(Term.Keyword.If, tmp22);
+    tmp24 = new Term.App(tmp22, tmp23);
+    tmp18 = new Term.Else(tmp24);
+    tmp9 = new Term.Cons(tmp17, tmp18);
+    tmp25 = new Term.Let(tmp7, tmp8, tmp9);
+    tmp26 = new Term.IfLike(Term.Keyword.If, tmp25);
     return new Term.Lam([
-      x2,
-      y1,
-      d
-    ], tmp23)
+      tmp1,
+      tmp3,
+      tmp5
+    ], tmp26)
   }
   static toString() { return "QuoteExample"; }
 });
