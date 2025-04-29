@@ -177,7 +177,7 @@ fun print(t) =
 
 
 fun genImport(base, p) =
-  Str.concat of "import \"", path.relative(base, url.fileURLToPath(p)).slice(0, -4), ".mls\""
+  Str.concat of "import \"./", path.relative(base, url.fileURLToPath(p)).slice(0, -4), ".mls\""
 
 
 fun codegen(t, file) =

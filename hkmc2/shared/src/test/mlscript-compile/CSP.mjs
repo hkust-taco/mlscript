@@ -1,6 +1,7 @@
 import runtime from "./Runtime.mjs";
 import Term from "./Term.mjs";
 import Example from "./Example.mjs";
+import CSPNest from "./quotes/CSPNest.mjs";
 let CSP1;
 (class CSP {
   static {
@@ -34,6 +35,14 @@ let CSP1;
       tmp2
     ]);
     return new Term.App(tmp3, tmp4)
+  } 
+  static baz() {
+    let tmp, tmp1, tmp2, tmp3;
+    tmp = new Term.Symbol("CSPNest");
+    tmp1 = new Term.CSRef(tmp, import.meta.url, "quotes/CSPNest.mls");
+    tmp2 = new Term.Sel(tmp1, "nest_f");
+    tmp3 = new Term.Tup([]);
+    return new Term.App(tmp2, tmp3)
   }
   static toString() { return "CSP"; }
 });

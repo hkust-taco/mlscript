@@ -871,7 +871,7 @@ let Term3;
     tmp1 = path.relative(base, tmp);
     tmp2 = - 4;
     tmp3 = tmp1.slice(0, tmp2);
-    return Str.concat("import \"", tmp3, ".mls\"")
+    return Str.concat("import \"./", tmp3, ".mls\"")
   } 
   static codegen(t3, file) {
     let ctx5, moduleName, fullpath, code, dependencies, scrut, originData, newData, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, lambda;
