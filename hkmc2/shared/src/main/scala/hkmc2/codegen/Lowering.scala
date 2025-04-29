@@ -626,23 +626,19 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   def quoteSplit(split: Split)(k: Result => Block)(using Subst): Block = split match
     case Split.Cons(Branch(scrutinee, pattern, continuation), tail) => quote(scrutinee): r1 =>
       val l1, l2, l3, l4, l5 = new TempSymbol(N)
-      Assign(l1, r1, quotePattern(pattern): r2 =>
-        Assign(l2, r2, quoteSplit(continuation): r3 =>
-          Assign(l3, r3, setupTerm("Branch", (l1 :: l2 :: l3 :: Nil).map(s => Value.Ref(s))): r4 =>
-            Assign(l4, r4, quoteSplit(tail): r5 =>
-              Assign(l5, r5, setupTerm("Cons", (l4 :: l5 :: Nil).map(s => Value.Ref(s)))(k))
-            )
-          )
-        )
-      )
+      blockBuilder.assign(l1, r1)
+        .chain(b => quotePattern(pattern)(r2 => Assign(l2, r2, b)))
+        .chain(b => quoteSplit(continuation)(r3 => Assign(l3, r3, b)))
+        .chain(b => setupTerm("Branch", (l1 :: l2 :: l3 :: Nil).map(s => Value.Ref(s)))(r4 => Assign(l4, r4, b)))
+        .chain(b => quoteSplit(tail)(r5 => Assign(l5, r5, b)))
+        .rest(setupTerm("Cons", (l4 :: l5 :: Nil).map(s => Value.Ref(s)))(k))
     case Split.Let(sym, term, tail) => setupSymbol(sym, true): r1 =>
       val l1, l2, l3 = new TempSymbol(N)
-      Assign(l1, r1, setupTerm("Ref", Value.Ref(l1) :: Nil): r =>
-        Assign(sym, r, quote(term)(r2 =>
-        Assign(l2, r2, quoteSplit(tail)(r3 =>
-          Assign(l3, r3, setupTerm("Let", (l1 :: l2 :: l3 :: Nil).map(s => Value.Ref(s)))(k))
-        )))
-      ))
+      blockBuilder.assign(l1, r1)
+        .chain(b => setupTerm("Ref", Value.Ref(l1) :: Nil)(r => Assign(sym, r, b)))
+        .chain(b => quote(term)(r2 => Assign(l2, r2, b)))
+        .chain(b => quoteSplit(tail)(r3 => Assign(l3, r3, b)))
+        .rest(setupTerm("Let", (l1 :: l2 :: l3 :: Nil).map(s => Value.Ref(s)))(k))
     case Split.Else(default) => quote(default): r =>
       val l = new TempSymbol(N)
       Assign(l, r, setupTerm("Else", Value.Ref(l) :: Nil)(k))
@@ -705,18 +701,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       rec(rhs, Nil)(k)
     case Blk(LetDecl(sym, _) :: DefineVar(sym2, rhs) :: Nil, res) => // Let bindings
       require(sym2 is sym)
-      setupSymbol(sym, true): r1 =>
+      setupSymbol(sym, true){r1 =>
         val l1, l2, l3, l4, l5 = new TempSymbol(N)
-        Assign(l1, r1, setupTerm("Ref", Value.Ref(l1) :: Nil): r =>
-          Assign(sym, r, quote(rhs)(r2 =>
-            Assign(l2, r2, quote(res)(r3 =>
-              Assign(l3, r3, setupTerm("LetDecl", Value.Ref(l1) :: Nil)(r4 =>
-                Assign(l4, r4, setupTerm("DefineVar", Value.Ref(l1) :: Value.Ref(l2) :: Nil)(r5 =>
-                  Assign(l5, r5, setupTerm("Blk", Value.Arr((l4 :: l5 :: Nil).map(s => Value.Ref(s).asArg)) :: Value.Ref(l3) :: Nil)(k))
-                ))
-              ))
-            ))
-          )))
+        blockBuilder.assign(l1, r1)
+          .chain(b => setupTerm("Ref", Value.Ref(l1) :: Nil)(r => Assign(sym, r, b)))
+          .chain(b => quote(rhs)(r2 => Assign(l2, r2, b)))
+          .chain(b => quote(res)(r3 => Assign(l3, r3, b)))
+          .chain(b => setupTerm("LetDecl", Value.Ref(l1) :: Nil)(r4 => Assign(l4, r4, b)))
+          .chain(b => setupTerm("DefineVar", Value.Ref(l1) :: Value.Ref(l2) :: Nil)(r5 => Assign(l5, r5, b)))
+          .rest(setupTerm("Blk", Value.Arr((l4 :: l5 :: Nil).map(s => Value.Ref(s).asArg)) :: Value.Ref(l3) :: Nil)(k))
+      }
     case IfLike(syntax.Keyword.`if`, split) => quoteSplit(split): r =>
       val l = new TempSymbol(N)
       Assign(l, r, setupTerm("IfLike", setupQuotedKeyword("If") :: Value.Ref(l) :: Nil)(k))

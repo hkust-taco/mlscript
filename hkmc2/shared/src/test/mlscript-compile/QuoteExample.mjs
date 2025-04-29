@@ -128,36 +128,36 @@ let QuoteExample1;
     tmp6 = Term.freshName("scrut");
     tmp7 = new Term.Symbol(tmp6);
     scrut = new Term.Ref(tmp7);
-    tmp10 = y1;
-    tmp11 = new Term.Lit(0.0);
-    tmp12 = new Term.Builtin("==");
-    tmp13 = new Term.Tup([
-      tmp10,
-      tmp11
+    tmp23 = y1;
+    tmp24 = new Term.Lit(0.0);
+    tmp25 = new Term.Builtin("==");
+    tmp26 = new Term.Tup([
+      tmp23,
+      tmp24
     ]);
-    tmp8 = new Term.App(tmp12, tmp13);
-    tmp14 = scrut;
-    tmp15 = new Term.LitPattern(true);
-    tmp19 = d;
-    tmp16 = new Term.Else(tmp19);
-    tmp17 = new Term.Branch(tmp14, tmp15, tmp16);
-    tmp20 = x2;
-    tmp21 = y1;
-    tmp22 = new Term.Builtin("/");
-    tmp23 = new Term.Tup([
-      tmp20,
-      tmp21
+    tmp8 = new Term.App(tmp25, tmp26);
+    tmp12 = scrut;
+    tmp13 = new Term.LitPattern(true);
+    tmp22 = d;
+    tmp14 = new Term.Else(tmp22);
+    tmp15 = new Term.Branch(tmp12, tmp13, tmp14);
+    tmp17 = x2;
+    tmp18 = y1;
+    tmp19 = new Term.Builtin("/");
+    tmp20 = new Term.Tup([
+      tmp17,
+      tmp18
     ]);
-    tmp24 = new Term.App(tmp22, tmp23);
-    tmp18 = new Term.Else(tmp24);
-    tmp9 = new Term.Cons(tmp17, tmp18);
-    tmp25 = new Term.Let(tmp7, tmp8, tmp9);
-    tmp26 = new Term.IfLike(Term.Keyword.If, tmp25);
+    tmp21 = new Term.App(tmp19, tmp20);
+    tmp16 = new Term.Else(tmp21);
+    tmp9 = new Term.Cons(tmp15, tmp16);
+    tmp10 = new Term.Let(tmp7, tmp8, tmp9);
+    tmp11 = new Term.IfLike(Term.Keyword.If, tmp10);
     return new Term.Lam([
       tmp1,
       tmp3,
       tmp5
-    ], tmp26)
+    ], tmp11)
   }
   static toString() { return "QuoteExample"; }
 });
