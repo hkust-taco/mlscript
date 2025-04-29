@@ -44,7 +44,7 @@ fun mkIndent(n, s) = if n
   >= 8 then "\t" :: mkIndent(n - 8, s)
   else " " :: mkIndent(n - 1, s)
 //│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:750)
+//│ FAILURE LOCATION: opSplitImpl (Parser.scala:764)
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword in this position
 //│ ║  l.45: 	  else " " :: mkIndent(n - 1, s)
 //│ ╙──      	  ^^^^

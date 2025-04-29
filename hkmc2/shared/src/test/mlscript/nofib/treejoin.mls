@@ -33,7 +33,7 @@ fun insertT(k, e, t) = if t is
       else throw Error("already exist")
   Empty then Leaf(k, e)
 //│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:750)
+//│ FAILURE LOCATION: opSplitImpl (Parser.scala:764)
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword in this position
 //│ ║  l.33: 	      else throw Error("already exist")
 //│ ╙──      	      ^^^^

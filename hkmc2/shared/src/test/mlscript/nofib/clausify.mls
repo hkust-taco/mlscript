@@ -88,7 +88,7 @@ fun red(s) = if s is
   Ast(p) :: Lex("&") :: Ast(q) :: s then Ast(Con(q, p)) :: s
   Ast(p) :: Lex("~") :: s           then Ast(Not(p)) :: s
 //│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:750)
+//│ FAILURE LOCATION: opSplitImpl (Parser.scala:764)
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword in this position
 //│ ║  l.82: 	  else throw Error(c)
 //│ ╙──      	  ^^^^

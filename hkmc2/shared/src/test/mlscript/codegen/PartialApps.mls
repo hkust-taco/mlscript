@@ -184,17 +184,9 @@ _ - _ of 1, 2
 1 |> (_ - 2)
 //│ = -1
 
-:pe
-:w
 1
-|> _ - 2
-//│ ╔══[PARSE ERROR] Expected end of input; found '_' keyword instead
-//│ ║  l.190: 	|> _ - 2
-//│ ╙──       	   ^
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.189: 	1
-//│ ╙──       	^
-//│ = [function pipeInto]
+|> (_ - 2)
+//│ = -1
 
 1
   |> (_ - 2)
@@ -207,17 +199,17 @@ _ - _ of 1, 2
 :sjs
 1 . (_ - 2)
 //│ JS (unsanitized):
-//│ let lambda31; lambda31 = (undefined, function (_0) { return _0 - 2 }); Predef.passTo(1, lambda31)
+//│ let lambda32; lambda32 = (undefined, function (_0) { return _0 - 2 }); Predef.passTo(1, lambda32)
 //│ = [function]
 
 :sjs
 1 . (_ - 2)()
 //│ JS (unsanitized):
-//│ let tmp9, lambda32;
-//│ lambda32 = (undefined, function (_0) {
+//│ let tmp9, lambda33;
+//│ lambda33 = (undefined, function (_0) {
 //│   return _0 - 2
 //│ });
-//│ tmp9 = Predef.passTo(1, lambda32);
+//│ tmp9 = Predef.passTo(1, lambda33);
 //│ runtime.safeCall(tmp9())
 //│ = -1
 

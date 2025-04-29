@@ -60,7 +60,7 @@ fun insert'(t, v) = if t is
     else t
   Empty then Node(v, Empty, Empty)
 //│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:750)
+//│ FAILURE LOCATION: opSplitImpl (Parser.scala:764)
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this position
 //│ ║  l.58: 	    < v' then Node(v', insert(l, v), r)
 //│ ╙──      	         ^^^^

@@ -15,12 +15,12 @@ fun example(args) =
       < 10 then "small"
       else "medium"
 //│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:750)
+//│ FAILURE LOCATION: opSplitImpl (Parser.scala:764)
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword in this position
 //│ ║  l.16: 	      else "medium"
 //│ ╙──      	      ^^^^
 //│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:750)
+//│ FAILURE LOCATION: opSplitImpl (Parser.scala:764)
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword in this position
 //│ ║  l.16: 	      else "medium"
 //│ ╙──      	      ^^^^

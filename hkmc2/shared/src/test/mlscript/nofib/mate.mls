@@ -194,6 +194,11 @@ fun showMove(withPiece, m) = if m is MoveInFull([c, k], sq, Move(sq_, mcp, mpp))
   maybe("-" :: Nil, cp => "x" :: append(showPiece(cp), "/" :: Nil), mcp) +:
   showSquare(c, sq_) +:
   maybe(Nil, pp => "(" :: append(showPiece(pp), ")" :: Nil), mpp)
+//│ FAILURE: Unexpected parse error
+//│ FAILURE LOCATION: concludeWithImpl (Parser.scala:235)
+//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
+//│ ║  l.192: 	    else Nil
+//│ ╙──       	    ^^^^
 
 fun showMoveInFull(a) = showMove(true, a)
 
@@ -463,7 +468,7 @@ fun replies(bd, c, n) =
       null_(mds) then Some(Nil)
       else None
     > 0 then foldr_lz(solnAnd, Some(Nil), mds)
-    else throw Error("n < 0")
+  else throw Error("n < 0")
 
 fun solution(bd, c, n) =
   fun solnOr(mifb, other) = if mifb is
@@ -480,11 +485,6 @@ fun solution(bd, c, n) =
     let mds = moveDetailsFor(c, bd)
     foldr_lz(solnOr, None, mds)
   else throw Error("n <= 0")
-//│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:750)
-//│ ╔══[PARSE ERROR] Unexpected 'else' keyword in this position
-//│ ║  l.466: 	    else throw Error("n < 0")
-//│ ╙──       	    ^^^^
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)

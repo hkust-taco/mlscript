@@ -55,29 +55,24 @@ let x
 //│ Parsed:
 //│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None)
 
+// * Notice that this parses as an operator application...
 let x
 = 1
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None)
+//│ 	LetLike(keyword 'let',OpApp(Ident(x),Ident(=),List(IntLit(1))),None,None)
 
-:pe
+// * Notice that this parses as an operator application...
 let x
 =
 1
-//│ ╔══[PARSE ERROR] Expected expression or block after 'let' binding equals sign; found new line instead
-//│ ║  l.65: 	=
-//│ ║        	 ^
-//│ ║  l.66: 	1
-//│ ╙──      	
 //│ Parsed:
-//│ 	Error()
-//│ 	IntLit(1)
+//│ 	LetLike(keyword 'let',OpApp(Ident(x),Ident(=),List(IntLit(1))),None,None)
 
 
 :pe
 let {}
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of block instead
-//│ ║  l.78: 	let {}
+//│ ║  l.73: 	let {}
 //│ ╙──      	    ^^
 //│ Parsed:
 
@@ -88,7 +83,7 @@ let ()
 :pe
 let // a
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of input instead
-//│ ║  l.89: 	let // a
+//│ ║  l.84: 	let // a
 //│ ╙──      	        ^
 //│ Parsed:
 //│ 	Error()
@@ -97,7 +92,7 @@ let // a
 let
   // a
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of block instead
-//│ ║  l.98: 	  // a
+//│ ║  l.93: 	  // a
 //│ ╙──      	^^
 //│ Parsed:
 
@@ -106,9 +101,9 @@ let
   // a
 1
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of block instead
-//│ ║  l.106: 	  // a
+//│ ║  l.101: 	  // a
 //│ ║         	^^^^^^
-//│ ║  l.107: 	1
+//│ ║  l.102: 	1
 //│ ╙──       	^
 //│ Parsed:
 //│ 	IntLit(1)
@@ -179,9 +174,9 @@ let
 x = 1
 in x
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found new line instead
-//│ ║  l.178: 	let
+//│ ║  l.173: 	let
 //│ ║         	   ^
-//│ ║  l.179: 	x = 1
+//│ ║  l.174: 	x = 1
 //│ ╙──       	
 //│ Parsed:
 //│ 	Error()
@@ -202,7 +197,7 @@ let a = 1 in b
 let
   with
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found 'with' keyword instead
-//│ ║  l.203: 	  with
+//│ ║  l.198: 	  with
 //│ ╙──       	  ^^^^
 //│ Parsed:
 //│ 	Error()
@@ -254,7 +249,7 @@ x => let x = 1
 :pe
 if
 //│ ╔══[PARSE ERROR] Expected expression or block after 'if' keyword; found end of input instead
-//│ ║  l.255: 	if
+//│ ║  l.250: 	if
 //│ ╙──       	  ^
 //│ Parsed:
 //│ 	Error()
