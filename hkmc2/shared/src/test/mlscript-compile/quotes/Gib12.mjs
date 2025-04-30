@@ -7,31 +7,31 @@ let Gib121;
   }
   static get res() {
     let lambda;
-    lambda = (undefined, function (x_6, y_1) {
-      let x_7, x_8, x_9, x_10, x_11, x_12, x_13, x_14, x_15, x_16, x_17, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10;
-      tmp = x_6 + y_1;
-      x_7 = tmp;
-      tmp1 = y_1 + x_7;
-      x_8 = tmp1;
-      tmp2 = x_7 + x_8;
-      x_9 = tmp2;
-      tmp3 = x_8 + x_9;
-      x_10 = tmp3;
-      tmp4 = x_9 + x_10;
-      x_11 = tmp4;
-      tmp5 = x_10 + x_11;
-      x_12 = tmp5;
-      tmp6 = x_11 + x_12;
-      x_13 = tmp6;
-      tmp7 = x_12 + x_13;
-      x_14 = tmp7;
-      tmp8 = x_13 + x_14;
-      x_15 = tmp8;
-      tmp9 = x_14 + x_15;
-      x_16 = tmp9;
-      tmp10 = x_15 + x_16;
-      x_17 = tmp10;
-      return x_17
+    lambda = (undefined, function (x_0, y_0) {
+      let x_1, x_2, x_3, x_4, x_5, x_6, x_7, x_8, x_9, x_10, x_11, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10;
+      tmp = x_0 + y_0;
+      x_1 = tmp;
+      tmp1 = y_0 + x_1;
+      x_2 = tmp1;
+      tmp2 = x_1 + x_2;
+      x_3 = tmp2;
+      tmp3 = x_2 + x_3;
+      x_4 = tmp3;
+      tmp4 = x_3 + x_4;
+      x_5 = tmp4;
+      tmp5 = x_4 + x_5;
+      x_6 = tmp5;
+      tmp6 = x_5 + x_6;
+      x_7 = tmp6;
+      tmp7 = x_6 + x_7;
+      x_8 = tmp7;
+      tmp8 = x_7 + x_8;
+      x_9 = tmp8;
+      tmp9 = x_8 + x_9;
+      x_10 = tmp9;
+      tmp10 = x_9 + x_10;
+      x_11 = tmp10;
+      return x_11
     });
     return lambda
   }

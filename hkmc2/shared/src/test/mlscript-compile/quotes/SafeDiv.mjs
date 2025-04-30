@@ -7,13 +7,13 @@ let SafeDiv1;
   }
   static get res() {
     let lambda;
-    lambda = (undefined, function (x_18, y_2, d_0) {
-      let scrut_2;
-      scrut_2 = y_2 == 0;
-      if (scrut_2 === true) {
+    lambda = (undefined, function (x_0, y_0, d_0) {
+      let scrut_0;
+      scrut_0 = y_0 == 0;
+      if (scrut_0 === true) {
         return d_0
       } else {
-        return x_18 / y_2
+        return x_0 / y_0
       }
     });
     return lambda

@@ -7,8 +7,8 @@ let QuoteInc1;
   }
   static get res() {
     let lambda;
-    lambda = (undefined, function (x_4) {
-      return x_4 + 1
+    lambda = (undefined, function (x_0) {
+      return x_0 + 1
     });
     return lambda
   }

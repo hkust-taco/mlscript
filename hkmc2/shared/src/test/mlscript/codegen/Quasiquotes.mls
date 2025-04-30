@@ -28,7 +28,7 @@
 
 
 x `=> x
-//│ = Lam([Symbol("x_0")], Ref(Symbol("x_0")))
+//│ = Lam([Symbol("x")], Ref(Symbol("x")))
 
 
 :sjs
@@ -36,57 +36,55 @@ x `=>
   print(x)
   x
 //│ JS (unsanitized):
-//│ let x1, tmp7, tmp8, tmp9, tmp10;
-//│ tmp7 = Term.freshName("x");
-//│ tmp8 = new Term.Symbol(tmp7);
-//│ x1 = new Term.Ref(tmp8);
-//│ tmp9 = Predef.print(x1);
-//│ tmp10 = x1;
+//│ let x1, tmp6, tmp7, tmp8;
+//│ tmp6 = new Term.Symbol("x");
+//│ x1 = new Term.Ref(tmp6);
+//│ tmp7 = Predef.print(x1);
+//│ tmp8 = x1;
 //│ new Term.Lam([
-//│   tmp8
-//│ ], tmp10)
-//│ > Ref(Symbol("x_1"))
-//│ = Lam([Symbol("x_1")], Ref(Symbol("x_1")))
+//│   tmp6
+//│ ], tmp8)
+//│ > Ref(Symbol("x"))
+//│ = Lam([Symbol("x")], Ref(Symbol("x")))
 
 
 let f = x `=> x `+ `1
-//│ f = Lam([Symbol("x_2")], App(Builtin("+"), Tup([Ref(Symbol("x_2")), Lit(1)])))
+//│ f = Lam([Symbol("x")], App(Builtin("+"), Tup([Ref(Symbol("x")), Lit(1)])))
 
 
 f`(`0)
-//│ = App(Lam([Symbol("x_2")], App(Builtin("+"), Tup([Ref(Symbol("x_2")), Lit(1)]))), Tup([Lit(0)]))
+//│ = App(Lam([Symbol("x")], App(Builtin("+"), Tup([Ref(Symbol("x")), Lit(1)]))), Tup([Lit(0)]))
 
 
 `let x = `42 `in x
-//│ = Blk([LetDecl(Symbol("x_3")), DefineVar(Symbol("x_3"), Lit(42))], Ref(Symbol("x_3")))
+//│ = Blk([LetDecl(Symbol("x")), DefineVar(Symbol("x"), Lit(42))], Ref(Symbol("x")))
 
 
 `let x = `42 `in print(x); x
-//│ > Ref(Symbol("x_4"))
-//│ = Blk([LetDecl(Symbol("x_4")), DefineVar(Symbol("x_4"), Lit(42))], Ref(Symbol("x_4")))
+//│ > Ref(Symbol("x"))
+//│ = Blk([LetDecl(Symbol("x")), DefineVar(Symbol("x"), Lit(42))], Ref(Symbol("x")))
 
 
 :sjs
 `if `true then `true else `false
 //│ JS (unsanitized):
-//│ let scrut, tmp35, tmp36, tmp37, tmp38, tmp39, tmp40, tmp41, tmp42, tmp43, tmp44, tmp45, tmp46;
-//│ tmp35 = Term.freshName("scrut");
-//│ tmp36 = new Term.Symbol(tmp35);
-//│ scrut = new Term.Ref(tmp36);
-//│ tmp37 = new Term.Lit(true);
-//│ tmp40 = scrut;
-//│ tmp41 = new Term.LitPattern(true);
-//│ tmp46 = new Term.Lit(true);
-//│ tmp42 = new Term.Else(tmp46);
-//│ tmp43 = new Term.Branch(tmp40, tmp41, tmp42);
-//│ tmp45 = new Term.Lit(false);
-//│ tmp44 = new Term.Else(tmp45);
-//│ tmp38 = new Term.Cons(tmp43, tmp44);
-//│ tmp39 = new Term.Let(tmp36, tmp37, tmp38);
-//│ new Term.IfLike(Term.Keyword.If, tmp39)
-//│ = IfLike(If, Let(Symbol("scrut_0"), Lit(true), Cons(Branch(Ref(Symbol("scrut_0")), LitPattern(true), Else(Lit(true))), Else(Lit(false)))))
+//│ let scrut, tmp30, tmp31, tmp32, tmp33, tmp34, tmp35, tmp36, tmp37, tmp38, tmp39, tmp40;
+//│ tmp30 = new Term.Symbol("scrut");
+//│ scrut = new Term.Ref(tmp30);
+//│ tmp31 = new Term.Lit(true);
+//│ tmp34 = scrut;
+//│ tmp35 = new Term.LitPattern(true);
+//│ tmp40 = new Term.Lit(true);
+//│ tmp36 = new Term.Else(tmp40);
+//│ tmp37 = new Term.Branch(tmp34, tmp35, tmp36);
+//│ tmp39 = new Term.Lit(false);
+//│ tmp38 = new Term.Else(tmp39);
+//│ tmp32 = new Term.Cons(tmp37, tmp38);
+//│ tmp33 = new Term.Let(tmp30, tmp31, tmp32);
+//│ new Term.IfLike(Term.Keyword.If, tmp33)
+//│ = IfLike(If, Let(Symbol("scrut"), Lit(true), Cons(Branch(Ref(Symbol("scrut")), LitPattern(true), Else(Lit(true))), Else(Lit(false)))))
 
 
 x `=> `if x `== `0.0 then `1.0 else x
-//│ = Lam([Symbol("x_5")], IfLike(If, Let(Symbol("scrut_1"), App(Builtin("=="), Tup([Ref(Symbol("x_5")), Lit(0)])), Cons(Branch(Ref(Symbol("scrut_1")), LitPattern(true), Else(Lit(1))), Else(Ref(Symbol("x_5")))))))
+//│ = Lam([Symbol("x")], IfLike(If, Let(Symbol("scrut"), App(Builtin("=="), Tup([Ref(Symbol("x")), Lit(0)])), Cons(Branch(Ref(Symbol("scrut")), LitPattern(true), Else(Lit(1))), Else(Ref(Symbol("x")))))))
 

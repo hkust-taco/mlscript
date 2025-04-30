@@ -8,10 +8,8 @@ import Predef from "./Predef.mjs";
 import Str from "./Str.mjs";
 let Term3;
 (class Term {
-  static #names;
   static {
     Term3 = Term;
-    let tmp;
     this.Symbol = function Symbol(name1) {
       return new Symbol.class(name1);
     };
@@ -562,52 +560,65 @@ let Term3;
       }
       toString() { return "Try(" + runtime.render(this.body) + ", " + runtime.render(this.finallyDo) + ")"; }
     };
-    tmp = new globalThis.Map();
-    Term.#names = tmp;
-    this.Context = function Context(symbols1, dependencies1, printOnly1) {
-      return new Context.class(symbols1, dependencies1, printOnly1);
+    this.Context = function Context(names1, bindings1, dependencies1, printOnly1) {
+      return new Context.class(names1, bindings1, dependencies1, printOnly1);
     };
     this.Context.class = class Context {
-      constructor(symbols, dependencies, printOnly) {
-        this.symbols = symbols;
+      constructor(names, bindings, dependencies, printOnly) {
+        this.names = names;
+        this.bindings = bindings;
         this.dependencies = dependencies;
         this.printOnly = printOnly;
       }
-      isValid(name) {
-        let tmp1;
-        tmp1 = runtime.safeCall(this.symbols.has(name));
-        return tmp1 || this.printOnly
+      get(sym) {
+        let scrut, scrut1, tmp;
+        scrut1 = runtime.safeCall(this.bindings.has(sym));
+        if (scrut1 === true) {
+          return runtime.safeCall(this.bindings.get(sym))
+        } else {
+          scrut = this.printOnly;
+          if (scrut === true) {
+            return sym.name
+          } else {
+            tmp = Str.concat("Invalid binding name ", sym.name);
+            throw globalThis.Error(tmp);
+          }
+        }
       } 
       get nest() {
-        let tmp1;
-        tmp1 = new globalThis.Set(this.symbols);
-        return runtime.safeCall(Term.Context(tmp1, this.dependencies, this.printOnly));
+        let tmp;
+        tmp = new globalThis.Map(this.bindings);
+        return runtime.safeCall(Term.Context(this.names, tmp, this.dependencies, this.printOnly));
       } 
-      add(name1) {
-        return runtime.safeCall(this.symbols.add(name1))
+      add(sym1) {
+        let fn, tmp, tmp1;
+        tmp = this.freshName(sym1.name);
+        fn = tmp;
+        tmp1 = this.bindings.set(sym1, fn);
+        return fn
       } 
       depends(d) {
         return runtime.safeCall(this.dependencies.add(d))
+      } 
+      freshName(name) {
+        let scrut, i, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+        tmp = runtime.safeCall(this.names.has(name));
+        scrut = Predef.not(tmp);
+        if (scrut === true) {
+          tmp1 = this.names.set(name, 0);
+        } else {
+          tmp1 = runtime.Unit;
+        }
+        tmp2 = runtime.safeCall(this.names.get(name));
+        i = tmp2;
+        tmp3 = i + 1;
+        tmp4 = this.names.set(name, tmp3);
+        tmp5 = runtime.safeCall(i.toString());
+        return Str.concat(name, "_", tmp5)
       }
-      toString() { return "Context(" + runtime.render(this.symbols) + ", " + runtime.render(this.dependencies) + ", " + runtime.render(this.printOnly) + ")"; }
+      toString() { return "Context(" + runtime.render(this.names) + ", " + runtime.render(this.bindings) + ", " + runtime.render(this.dependencies) + ", " + runtime.render(this.printOnly) + ")"; }
     };
   }
-  static freshName(name) {
-    let scrut, i, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
-    tmp = runtime.safeCall(Term.#names.has(name));
-    scrut = Predef.not(tmp);
-    if (scrut === true) {
-      tmp1 = Term.#names.set(name, 0);
-    } else {
-      tmp1 = runtime.Unit;
-    }
-    tmp2 = runtime.safeCall(Term.#names.get(name));
-    i = tmp2;
-    tmp3 = i + 1;
-    tmp4 = Term.#names.set(name, tmp3);
-    tmp5 = runtime.safeCall(i.toString());
-    return Str.concat(name, "_", tmp5)
-  } 
   static indent(str, ind, keepLeading) {
     let res, tmp, tmp1, tmp2, lambda;
     tmp = runtime.safeCall(str.split("\n"));
@@ -624,29 +635,21 @@ let Term3;
     }
   } 
   static showStmt(s, ctx) {
-    let param0, param1, param01, name1, value, param02, param03, name2, tmp, tmp1;
+    let param0, param1, sym, value, param01, sym1, freshName, tmp, tmp1, tmp2;
     if (s instanceof Term.LetDecl.class) {
-      param02 = s.sym;
-      if (param02 instanceof Term.Symbol.class) {
-        param03 = param02.name;
-        name2 = param03;
-        tmp = runtime.safeCall(ctx.add(name2));
-        return Str.concat("let ", name2)
-      } else {
-        throw new globalThis.Error("match error");
-      }
+      param01 = s.sym;
+      sym1 = param01;
+      tmp = runtime.safeCall(ctx.add(sym1));
+      freshName = tmp;
+      return Str.concat("let ", freshName)
     } else if (s instanceof Term.DefineVar.class) {
       param0 = s.sym;
       param1 = s.rhs;
-      if (param0 instanceof Term.Symbol.class) {
-        param01 = param0.name;
-        name1 = param01;
-        value = param1;
-        tmp1 = Term.show(value, ctx);
-        return Str.concat(name1, " = ", tmp1)
-      } else {
-        throw new globalThis.Error("match error");
-      }
+      sym = param0;
+      value = param1;
+      tmp1 = runtime.safeCall(ctx.get(sym));
+      tmp2 = Term.show(value, ctx);
+      return Str.concat(tmp1, " = ", tmp2)
     } else {
       throw new globalThis.Error("match error");
     }
@@ -694,7 +697,7 @@ let Term3;
     }
   } 
   static showSplit(s1, ctx3, isCont) {
-    let param0, term, param01, param1, param2, sym, term1, split, nest, param02, param11, param03, param12, param21, scrut, ptrn, cont, tail, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+    let param0, term, param01, param1, param2, sym, term1, split, nest, freshName, param02, param11, param03, param12, param21, scrut, ptrn, cont, tail, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
     if (s1 instanceof Term.Cons.class) {
       param02 = s1.head;
       param11 = s1.tail;
@@ -722,10 +725,11 @@ let Term3;
       term1 = param1;
       split = param2;
       nest = ctx3.nest;
-      tmp4 = runtime.safeCall(nest.add(sym.name));
+      tmp4 = runtime.safeCall(nest.add(sym));
+      freshName = tmp4;
       tmp5 = Term.show(term1, nest);
       tmp6 = Term.showSplit(split, nest, false);
-      return Str.concat("let ", sym.name, " = ", tmp5, "\n", tmp6)
+      return Str.concat("let ", freshName, " = ", tmp5, "\n", tmp6)
     } else if (s1 instanceof Term.Else.class) {
       param0 = s1.default;
       term = param0;
@@ -742,39 +746,28 @@ let Term3;
     }
   } 
   static show(t1, ctx4) {
-    let param0, param1, split, param01, param11, stats, res, nest, param02, param12, params, body, nest1, param03, fields, param04, param13, lhs, rhs, param05, param14, prefix, name1, param06, name2, param07, lit, param08, param15, param2, param09, name3, baseFile, file, param010, param011, name4, scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, lambda, lambda1, lambda2, lambda3;
+    let param0, param1, split, param01, param11, stats, res, nest, param02, param12, params, body, nest1, freshParams, param03, fields, param04, param13, lhs, rhs, param05, param14, prefix, name, param06, name1, param07, lit, param08, param15, param2, param09, name2, baseFile, file, param010, sym, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, lambda, lambda1, lambda2;
     if (t1 instanceof Term.Ref.class) {
       param010 = t1.sym;
-      if (param010 instanceof Term.Symbol.class) {
-        param011 = param010.name;
-        name4 = param011;
-        scrut = runtime.safeCall(ctx4.isValid(name4));
-        if (scrut === true) {
-          return name4
-        } else {
-          tmp = Str.concat("Invalid binding name ", name4);
-          throw globalThis.Error(tmp);
-        }
-      } else {
-        throw new globalThis.Error("match error");
-      }
+      sym = param010;
+      return runtime.safeCall(ctx4.get(sym))
     } else if (t1 instanceof Term.CSRef.class) {
       param08 = t1.sym;
       param15 = t1.base;
       param2 = t1.file;
       if (param08 instanceof Term.Symbol.class) {
         param09 = param08.name;
-        name3 = param09;
+        name2 = param09;
         baseFile = param15;
         file = param2;
         if (file === undefined) {
-          tmp1 = runtime.safeCall(ctx4.depends(baseFile));
+          tmp = runtime.safeCall(ctx4.depends(baseFile));
         } else {
-          tmp2 = runtime.safeCall(path.dirname(baseFile));
-          tmp3 = path.join(tmp2, file);
-          tmp1 = runtime.safeCall(ctx4.depends(tmp3));
+          tmp1 = runtime.safeCall(path.dirname(baseFile));
+          tmp2 = path.join(tmp1, file);
+          tmp = runtime.safeCall(ctx4.depends(tmp2));
         }
-        return name3
+        return name2
       } else {
         throw new globalThis.Error("match error");
       }
@@ -784,32 +777,32 @@ let Term3;
       return runtime.safeCall(lit.toString())
     } else if (t1 instanceof Term.Builtin.class) {
       param06 = t1.name;
-      name2 = param06;
-      return name2
+      name1 = param06;
+      return name1
     } else if (t1 instanceof Term.Sel.class) {
       param05 = t1.prefix;
       param14 = t1.nme;
       prefix = param05;
-      name1 = param14;
-      tmp4 = Term.paren(prefix, ctx4);
-      return Str.concat(tmp4, ".", name1)
+      name = param14;
+      tmp3 = Term.paren(prefix, ctx4);
+      return Str.concat(tmp3, ".", name)
     } else if (t1 instanceof Term.App.class) {
       param04 = t1.lhs;
       param13 = t1.rhs;
       lhs = param04;
       rhs = param13;
-      tmp5 = Term.paren(lhs, ctx4);
-      tmp6 = Term.show(rhs, ctx4);
-      return Str.concat(tmp5, tmp6)
+      tmp4 = Term.paren(lhs, ctx4);
+      tmp5 = Term.show(rhs, ctx4);
+      return Str.concat(tmp4, tmp5)
     } else if (t1 instanceof Term.Tup.class) {
       param03 = t1.fields;
       fields = param03;
       lambda = (undefined, function (t2) {
         return Term.show(t2, ctx4)
       });
-      tmp7 = runtime.safeCall(fields.map(lambda));
-      tmp8 = runtime.safeCall(tmp7.join(", "));
-      return Str.concat("(", tmp8, ")")
+      tmp6 = runtime.safeCall(fields.map(lambda));
+      tmp7 = runtime.safeCall(tmp6.join(", "));
+      return Str.concat("(", tmp7, ")")
     } else if (t1 instanceof Term.Lam.class) {
       param02 = t1.params;
       param12 = t1.body;
@@ -817,38 +810,35 @@ let Term3;
       body = param12;
       nest1 = ctx4.nest;
       lambda1 = (undefined, function (s2) {
-        return runtime.safeCall(nest1.add(s2.name))
+        return runtime.safeCall(nest1.add(s2))
       });
-      tmp9 = runtime.safeCall(params.forEach(lambda1));
-      lambda2 = (undefined, function (s2) {
-        return s2.name
-      });
-      tmp10 = runtime.safeCall(params.map(lambda2));
-      tmp11 = runtime.safeCall(tmp10.join(", "));
-      tmp12 = Term.show(body, nest1);
-      tmp13 = Term.indent(tmp12, "  ", true);
-      return Str.concat("(", tmp11, ") =>\n", tmp13)
+      tmp8 = runtime.safeCall(params.map(lambda1));
+      freshParams = tmp8;
+      tmp9 = runtime.safeCall(freshParams.join(", "));
+      tmp10 = Term.show(body, nest1);
+      tmp11 = Term.indent(tmp10, "  ", true);
+      return Str.concat("(", tmp9, ") =>\n", tmp11)
     } else if (t1 instanceof Term.Blk.class) {
       param01 = t1.stats;
       param11 = t1.res;
       stats = param01;
       res = param11;
       nest = ctx4.nest;
-      lambda3 = (undefined, function (s2) {
+      lambda2 = (undefined, function (s2) {
         return Term.showStmt(s2, nest)
       });
-      tmp14 = runtime.safeCall(stats.map(lambda3));
-      tmp15 = runtime.safeCall(tmp14.join("\n"));
-      tmp16 = Term.show(res, nest);
-      return Str.concat(tmp15, "\n", tmp16)
+      tmp12 = runtime.safeCall(stats.map(lambda2));
+      tmp13 = runtime.safeCall(tmp12.join("\n"));
+      tmp14 = Term.show(res, nest);
+      return Str.concat(tmp13, "\n", tmp14)
     } else if (t1 instanceof Term.IfLike.class) {
       param0 = t1.kw;
       param1 = t1.desugared;
       if (param0 instanceof Term.Keyword.If.class) {
         split = param1;
-        tmp17 = Term.showSplit(split, ctx4, false);
-        tmp18 = Term.indent(tmp17, "  ", true);
-        return Str.concat("if \n", tmp18)
+        tmp15 = Term.showSplit(split, ctx4, false);
+        tmp16 = Term.indent(tmp15, "  ", true);
+        return Str.concat("if \n", tmp16)
       } else {
         throw new globalThis.Error("match error");
       }
@@ -857,13 +847,14 @@ let Term3;
     }
   } 
   static print(t2) {
-    let ctx5, tmp, tmp1, tmp2, tmp3;
-    tmp = new globalThis.Set();
-    tmp1 = new globalThis.Set();
-    tmp2 = runtime.safeCall(Term.Context(tmp, tmp1, true));
-    ctx5 = tmp2;
-    tmp3 = Term.show(t2, ctx5);
-    return runtime.safeCall(globalThis.console.log(tmp3))
+    let ctx5, tmp, tmp1, tmp2, tmp3, tmp4;
+    tmp = new globalThis.Map();
+    tmp1 = new globalThis.Map();
+    tmp2 = new globalThis.Set();
+    tmp3 = runtime.safeCall(Term.Context(tmp, tmp1, tmp2, true));
+    ctx5 = tmp3;
+    tmp4 = Term.show(t2, ctx5);
+    return runtime.safeCall(globalThis.console.log(tmp4))
   } 
   static genImport(base, p1) {
     let tmp, tmp1, tmp2, tmp3;
@@ -874,40 +865,41 @@ let Term3;
     return Str.concat("import \"./", tmp3, ".mls\"")
   } 
   static codegen(t3, file) {
-    let ctx5, moduleName, fullpath, code, dependencies, scrut, originData, newData, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, lambda;
-    tmp = new globalThis.Set();
-    tmp1 = new globalThis.Set();
-    tmp2 = runtime.safeCall(Term.Context(tmp, tmp1, false));
-    ctx5 = tmp2;
-    tmp3 = runtime.safeCall(path.parse(file));
-    moduleName = tmp3.name;
-    tmp4 = runtime.safeCall(process.cwd());
-    tmp5 = path.join(tmp4, file);
-    fullpath = tmp5;
-    tmp6 = Term.show(t3, ctx5);
-    tmp7 = Term.indent(tmp6, "  ", true);
-    tmp8 = Str.concat("module ", moduleName, " with ...\nfun res =\n", tmp7, "\n");
-    code = tmp8;
-    tmp9 = runtime.safeCall(globalThis.Array.from(ctx5.dependencies));
+    let ctx5, moduleName, fullpath, code, dependencies, scrut, originData, newData, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, lambda;
+    tmp = new globalThis.Map();
+    tmp1 = new globalThis.Map();
+    tmp2 = new globalThis.Set();
+    tmp3 = runtime.safeCall(Term.Context(tmp, tmp1, tmp2, false));
+    ctx5 = tmp3;
+    tmp4 = runtime.safeCall(path.parse(file));
+    moduleName = tmp4.name;
+    tmp5 = runtime.safeCall(process.cwd());
+    tmp6 = path.join(tmp5, file);
+    fullpath = tmp6;
+    tmp7 = Term.show(t3, ctx5);
+    tmp8 = Term.indent(tmp7, "  ", true);
+    tmp9 = Str.concat("module ", moduleName, " with ...\nfun res =\n", tmp8, "\n");
+    code = tmp9;
+    tmp10 = runtime.safeCall(globalThis.Array.from(ctx5.dependencies));
     lambda = (undefined, function (s2) {
-      let tmp16;
-      tmp16 = runtime.safeCall(path.dirname(fullpath));
-      return Term.genImport(tmp16, s2)
+      let tmp17;
+      tmp17 = runtime.safeCall(path.dirname(fullpath));
+      return Term.genImport(tmp17, s2)
     });
-    tmp10 = runtime.safeCall(tmp9.map(lambda));
-    dependencies = tmp10;
-    tmp11 = runtime.safeCall(fs.existsSync(file));
-    scrut = Predef.not(tmp11);
+    tmp11 = runtime.safeCall(tmp10.map(lambda));
+    dependencies = tmp11;
+    tmp12 = runtime.safeCall(fs.existsSync(file));
+    scrut = Predef.not(tmp12);
     if (scrut === true) {
-      tmp12 = runtime.safeCall(fs.writeFileSync(file, "", "utf8"));
+      tmp13 = runtime.safeCall(fs.writeFileSync(file, "", "utf8"));
     } else {
-      tmp12 = runtime.Unit;
+      tmp13 = runtime.Unit;
     }
-    tmp13 = fs.readFileSync(file, "utf8");
-    originData = tmp13;
-    tmp14 = runtime.safeCall(dependencies.join("\n"));
-    tmp15 = Str.concat(tmp14, "\n", code);
-    newData = tmp15;
+    tmp14 = fs.readFileSync(file, "utf8");
+    originData = tmp14;
+    tmp15 = runtime.safeCall(dependencies.join("\n"));
+    tmp16 = Str.concat(tmp15, "\n", code);
+    newData = tmp16;
     scrut1 = newData != originData;
     if (scrut1 === true) {
       return runtime.safeCall(fs.writeFileSync(file, newData, "utf8"))

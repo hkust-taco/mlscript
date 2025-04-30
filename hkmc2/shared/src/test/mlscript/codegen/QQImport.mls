@@ -25,14 +25,14 @@ Term.print(x `=> x)
 
 
 Term.print((x, y) `=> x `+ y)
-//│ > (x_1, y_0) =>
-//│ >   (+)(x_1, y_0)
+//│ > (x_0, y_0) =>
+//│ >   (+)(x_0, y_0)
 
 
 Term.print(`let x = `42 `in x)
-//│ > let x_2
-//│ > x_2 = 42
-//│ > x_2
+//│ > let x_0
+//│ > x_0 = 42
+//│ > x_0
 
 
 Term.print(`if `true then `true else `false)
@@ -43,11 +43,11 @@ Term.print(`if `true then `true else `false)
 
 
 Term.print(x `=> `if x `== `0.0 then `1.0 else x)
-//│ > (x_3) =>
+//│ > (x_0) =>
 //│ >   if 
-//│ >     let scrut_1 = (==)(x_3, 0)
-//│ >     scrut_1 is true then 1
-//│ >     else x_3
+//│ >     let scrut_0 = (==)(x_0, 0)
+//│ >     scrut_0 is true then 1
+//│ >     else x_0
 
 
 import "../../mlscript-compile/QuoteExample2.mls"

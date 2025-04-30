@@ -92,21 +92,25 @@ class Term with
     Ret(val result: Term)
     Throw(val result: Term)
     Try(val body: Term, val finallyDo: Term)
-
-let names = new Map()
-fun freshName(name) =
-  if not(names.has(name)) do
-    names.set(name, 0)
-  let i = names.get(name)
-  names.set(name, i + 1)
-  Str.concat of name, "_", i.toString()
     
 
-class Context(val symbols: Set, val dependencies: Set, val printOnly: Bool) with
-  fun isValid(name) = symbols.has(name) || printOnly
-  fun nest = Context(new Set(symbols), dependencies, printOnly)
-  fun add(name) = symbols.add(name)
+class Context(val names: Map, val bindings: Map, val dependencies: Set, val printOnly: Bool) with
+  fun get(sym) =
+    if bindings.has(sym) then bindings.get(sym)
+    else if printOnly then sym.name
+    else throw Error(Str.concat("Invalid binding name ", sym.name))
+  fun nest = Context(names, new Map(bindings), dependencies, printOnly)
+  fun add(sym) =
+    let fn = freshName(sym.name)
+    bindings.set(sym, fn)
+    fn
   fun depends(d) = dependencies.add(d)
+  fun freshName(name) =
+    if not(names.has(name)) do
+      names.set(name, 0)
+    let i = names.get(name)
+    names.set(name, i + 1)
+    Str.concat of name, "_", i.toString()
 
 
 fun indent(str, ind, keepLeading) =
@@ -116,10 +120,10 @@ fun indent(str, ind, keepLeading) =
 
 fun showStmt(s, ctx) =
   if s is
-    LetDecl(Symbol(name)) then
-      ctx.add(name)
-      Str.concat("let ", name)
-    DefineVar(Symbol(name), value) then Str.concat of name, " = ", show(value, ctx)
+    LetDecl(sym) then
+      let freshName = ctx.add(sym)
+      Str.concat("let ", freshName)
+    DefineVar(sym, value) then Str.concat of ctx.get(sym), " = ", show(value, ctx)
 
 
 fun showPattern(p, ctx) =
@@ -139,8 +143,8 @@ fun showSplit(s, ctx, isCont) =
       Str.concat of show(scrut, ctx), " is ", showPattern(ptrn, ctx), " then ", showSplit(cont, ctx, true), "\n", showSplit(tail, ctx, false)
     Let(sym, term, split) then
       let nest = ctx.nest
-      nest.add(sym.name)
-      Str.concat of "let ", sym.name, " = ", show(term, nest), "\n", showSplit(split, nest, false)
+      let freshName = nest.add(sym)
+      Str.concat of "let ", freshName, " = ", show(term, nest), "\n", showSplit(split, nest, false)
     Else(term) then
       if isCont then show(term, ctx)
       else Str.concat of "else ", show(term, ctx)
@@ -149,9 +153,7 @@ fun showSplit(s, ctx, isCont) =
 
 fun show(t, ctx) =
   if t is
-    Ref(Symbol(name)) then
-      if ctx.isValid(name) then name
-      else throw Error(Str.concat("Invalid binding name ", name))
+    Ref(sym) then ctx.get(sym)
     CSRef(Symbol(name), baseFile, file) then
       if file is undefined then ctx.depends(baseFile)
       else ctx.depends(path.join of path.dirname(baseFile), file)
@@ -163,8 +165,8 @@ fun show(t, ctx) =
     Tup(fields) then Str.concat of "(", fields.map(t => show(t, ctx)).join(", "), ")"
     Lam(params, body) then
       let nest = ctx.nest
-      params.forEach(s => nest.add(s.name))
-      Str.concat of "(", params.map(s => s.name).join(", "), ") =>\n", indent(show(body, nest), "  ", true)
+      let freshParams = params.map(s => nest.add(s))
+      Str.concat of "(", freshParams.join(", "), ") =>\n", indent(show(body, nest), "  ", true)
     Blk(stats, res) then
       let nest = ctx.nest
       Str.concat of stats.map(s => showStmt(s, nest)).join("\n"), "\n", show(res, nest)
@@ -172,7 +174,7 @@ fun show(t, ctx) =
     // TODO: other terms
 
 fun print(t) =
-  let ctx = Context(new Set(), new Set(), true)
+  let ctx = Context(new Map(), new Map(), new Set(), true)
   console.log(show(t, ctx))
 
 
@@ -181,7 +183,7 @@ fun genImport(base, p) =
 
 
 fun codegen(t, file) =
-  let ctx = Context(new Set(), new Set(), false)
+  let ctx = Context(new Map(), new Map(), new Set(), false)
   let moduleName = path.parse(file).name
   let fullpath = path.join of process.cwd(), file
   let code = Str.concat of "module ", moduleName, " with ...\nfun res =\n", indent(show(t, ctx), "  ", true), "\n"

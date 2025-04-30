@@ -7,11 +7,11 @@ let Cubic1;
   }
   static get res() {
     let lambda;
-    lambda = (undefined, function (x_5) {
+    lambda = (undefined, function (x_0) {
       let tmp, tmp1;
-      tmp = x_5 * 1;
-      tmp1 = x_5 * tmp;
-      return x_5 * tmp1
+      tmp = x_0 * 1;
+      tmp1 = x_0 * tmp;
+      return x_0 * tmp1
     });
     return lambda
   }
