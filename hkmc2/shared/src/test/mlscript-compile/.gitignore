@@ -1,5 +1,6 @@
 *.mjs
 !/Predef.mjs
 !/Runtime.mjs
+!/Term.mjs
 !/RuntimeJS.mjs
 !/apps/parsing/vendors/railroad/railroad.mjs

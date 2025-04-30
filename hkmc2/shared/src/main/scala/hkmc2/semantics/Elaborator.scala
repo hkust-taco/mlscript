@@ -705,6 +705,9 @@ extends Importer:
     case Keywrd(kw) =>
       raise(ErrorReport(msg"Unexpected keyword '${kw.name}' in this position." -> tree.toLoc :: Nil))
       Term.Error
+    case Constructor(delc) =>
+      raise(ErrorReport(msg"Unsupported constructor form." -> tree.toLoc :: Nil))
+      Term.Error
     // case _ =>
     //   ???
   

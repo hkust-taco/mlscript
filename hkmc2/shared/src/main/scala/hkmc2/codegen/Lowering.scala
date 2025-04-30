@@ -30,6 +30,7 @@ object ImplctRet extends TailOp:
 object Thrw extends TailOp:
   def apply(r: Result): Block = Throw(r)
 
+
 // * No longer in meaningful use and could be removed if we don't find a use for it:
 class Subst(initMap: Map[Local, Value]):
   val map = initMap

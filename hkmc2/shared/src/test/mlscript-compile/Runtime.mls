@@ -37,8 +37,6 @@ fun deboundMethod(mtdName, clsName) =
     "[debinding error] Method '" + mtdName + "' of class '" + clsName + "' was accessed without being called."
 
 
-// val term: module Term = Term
-
 val try_catch = RuntimeJS.try_catch
 
 class EffectHandle(_reified) with
