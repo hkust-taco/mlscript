@@ -105,6 +105,8 @@ declare module debug with
   fun getLocals
 
 
+declare val id"import"
+
 // HTML DOM API definitions.
 // Move them to a separate Prelude file when there are enough of them.
 declare val document
