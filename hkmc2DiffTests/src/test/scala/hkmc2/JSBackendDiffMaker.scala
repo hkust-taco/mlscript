@@ -45,15 +45,13 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     hostCreated = true
     given TL = replTL
     val h = ReplHost(rootPath)
-    h.execute(s"const $runtimeNme = (await import(\"${runtimeFile}\")).default;") match
-    case ReplHost.Result(msg) =>
-      if msg.startsWith("Uncaught") then output(s"Failed to load runtime: $msg")
-    case r => output(s"Failed to load runtime: $r")
-    if importQQ.isSet then
-      h.execute(s"const $termNme = (await import(\"${termFile}\")).default;") match
+    def importRuntimeModule(name: Str, file: os.Path) =
+      h.execute(s"const $name = (await import(\"${file}\")).default;") match
       case ReplHost.Result(msg) =>
-        if msg.startsWith("Uncaught") then output(s"Failed to load runtime: $msg")
-      case r => output(s"Failed to load runtime: $r")
+        if msg.startsWith("Uncaught") then output(s"Failed to load $name: $msg")
+      case r => output(s"Failed to load $name: $r")
+    importRuntimeModule(runtimeNme, runtimeFile)
+    if importQQ.isSet then importRuntimeModule(termNme, termFile)
     h
   
   private var hostCreated = false
