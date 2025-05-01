@@ -15,7 +15,7 @@ class Expr[A] with
   constructor
     Lit(n: Int) { A = Int }
     Add(lhs: Expr[Int], rhs: Expr[Int]) { A = Int }
-//│ ╔══[ERROR] Unsupported constructor form.
+//│ ╔══[ERROR] Unsupported constructor in this position.
 //│ ║  l.16: 	    Lit(n: Int) { A = Int }
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.17: 	    Add(lhs: Expr[Int], rhs: Expr[Int]) { A = Int }
