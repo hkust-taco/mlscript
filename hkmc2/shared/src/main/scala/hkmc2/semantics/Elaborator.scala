@@ -192,7 +192,7 @@ object Elaborator:
     val suid = new Uid.Symbol.State
     given State = this
     val globalThisSymbol = TopLevelSymbol("globalThis")
-    // a builtin symbol import can be used for getting current file paths via import.meta
+    // In JavaScript, `import` can be used for getting current file path, as `import.meta`
     val importSymbol = new VarSymbol(syntax.Tree.Ident("import"))
     val runtimeSymbol = TempSymbol(N, "runtime")
     val termSymbol = TempSymbol(N, "Term")
