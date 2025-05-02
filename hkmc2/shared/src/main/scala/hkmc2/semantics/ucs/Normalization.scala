@@ -82,7 +82,7 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
   ):
     def rec(split: Split)(using vs: VarSet): Split = split match
       case Split.Cons(Branch(scrutinee, pattern, consequent), alternative) => pattern match
-        case pattern: (Pattern.Lit | Pattern.ClassLike | Pattern.Tuple) =>
+        case pattern: (Pattern.Lit | Pattern.ClassLike | Pattern.Tuple | Pattern.Record) =>
           log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
           val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
           val whenFalse = rec(specialize(alternative, -, scrutinee, pattern).clearFallback)

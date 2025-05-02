@@ -21,6 +21,7 @@ object Desugarer:
   
   class ScrutineeData:
     val classes: HashMap[ClassSymbol, List[BlockLocalSymbol]] = HashMap.empty
+    val fields: HashMap[Ident, BlockLocalSymbol] = HashMap.empty
     val tupleLead: HashMap[Int, BlockLocalSymbol] = HashMap.empty
     val tupleLast: HashMap[Int, BlockLocalSymbol] = HashMap.empty
 end Desugarer
@@ -101,6 +102,7 @@ class Desugarer(val elaborator: Elaborator)
         case Split.Else(_) /* impossible */ | Split.End => fallback)
 
   private val subScrutineeMap = HashMap.empty[BlockLocalSymbol, ScrutineeData]
+  private val fieldScrutineeMap = HashMap.empty[BlockLocalSymbol, ScrutineeData]
 
   extension (symbol: BlockLocalSymbol)
     def getSubScrutinees(cls: ClassSymbol): List[BlockLocalSymbol] =
@@ -113,6 +115,11 @@ class Desugarer(val elaborator: Elaborator)
     def getTupleLastSubScrutinee(index: Int): BlockLocalSymbol =
       val data = subScrutineeMap.getOrElseUpdate(symbol, new ScrutineeData)
       data.tupleLast.getOrElseUpdate(index, TempSymbol(N, s"last$index"))
+    def getFieldScrutinee(fieldName: Ident): BlockLocalSymbol =
+      fieldScrutineeMap
+        .getOrElseUpdate(symbol, new ScrutineeData)
+        .fields
+        .getOrElseUpdate(fieldName, TempSymbol(N, s"field${fieldName.name}"))
       
 
   def default: Split => Sequel = split => _ => split
@@ -615,9 +622,24 @@ class Desugarer(val elaborator: Elaborator)
         val ctxWithAlias = ctx + (id.name -> sym)
         Split.Let(sym, ref.sel(id, N),
           expandMatch(sym, pat, sequel)(fallback)(ctxWithAlias))
-      case Block(st :: Nil) => fallback => ctx =>
-        expandMatch(scrutSymbol, st, sequel)(fallback)(ctx)
-      // case Block(sts) => fallback => ctx => // TODO
+      case Block(sts) => fallback => ctx => // we assume this is a record
+        sts.foldLeft[Option[List[(Tree.Ident, BlockLocalSymbol, Tree)]]](S(Nil)){
+          case (N, _) => N
+          case (S(tl), p) => p match
+            case InfixApp(fieldName: Ident, Keyword.`:`, pat) =>
+              S((fieldName, scrutSymbol.getFieldScrutinee(fieldName), pat) :: tl)
+            // TODO[Chrona] Puns
+            case p =>
+              // TODO[Chrona] raise an error properly
+              raise(ErrorReport(msg"illegal block pattern content" -> p.toLoc :: Nil))
+              None
+        }.fold(fallback)(recordContent =>
+          Branch(
+            ref,
+            Pattern.Record(recordContent.map((fieldName, symbol, _) => (fieldName, symbol))),
+            subMatches(recordContent.map((_, symbol, pat) => (R(symbol), pat)), sequel)(Split.End)(ctx)
+          ) ~: fallback
+        )
       case Bra(BracketKind.Curly | BracketKind.Round, inner) => fallback => ctx =>
         expandMatch(scrutSymbol, inner, sequel)(fallback)(ctx)
       case pattern => fallback => _ =>
@@ -656,7 +678,7 @@ class Desugarer(val elaborator: Elaborator)
     ):
       val innermostSplit = subMatches(rest, sequel)(fallback)
       expandMatch(scrutinee, pattern, innermostSplit)(fallback)
-  
+
   /** Desugar `case` expressions. */
   def apply(tree: Case, scrut: VarSymbol)(using Ctx): Split =
     val topmost = patternSplit(tree.branches, scrut)(Split.End)(ctx)
