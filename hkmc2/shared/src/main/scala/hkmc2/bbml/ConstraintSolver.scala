@@ -137,9 +137,10 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
     case _: ClassLikeType | _: FunType | _: InfVar | Top | Bot => ty
 
   private def constrainImpl(lhs: Type, rhs: Type)(using BbCtx, CCtx, TL): Unit =
-    if cctx.cache((lhs, rhs)) then log(s"Cached!")
+    val p = lhs.toBasic -> rhs.toBasic
+    if cctx.cache(p) then log(s"Cached!")
     else trace(s"CONSTRAINT ${lhs.showDbg} <: ${rhs.showDbg}"):
-      cctx.nest(lhs -> rhs) givenIn:
+      cctx.nest(p) givenIn:
         val ty = dnf(inlineSkolemBounds(lhs & rhs.!, true)(using Set.empty)) 
         constrainDNF(ty)
   def constrain(lhs: Type, rhs: Type)(using BbCtx, CCtx, TL): Unit =

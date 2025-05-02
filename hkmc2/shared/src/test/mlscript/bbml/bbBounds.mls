@@ -35,7 +35,7 @@ iid("42")
 //│ ║        	    ^^^^
 //│ ╟── because: cannot constrain  Str  <:  'A
 //│ ╟── because: cannot constrain  Str  <:  'A
-//│ ╙── because: cannot constrain  Str  <:  Int
+//│ ╙── because: cannot constrain  Str ∧ ¬⊥  <:  Int
 //│ Type: Str
 
 

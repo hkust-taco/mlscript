@@ -268,3 +268,40 @@ region x in let y = x.ref 42 in y := 0
 //│ let x5, y1, tmp5; x5 = new this.Region(); tmp5 = new this.Ref(x5, 42); y1 = tmp5; y1.value = 0; 0
 //│ = 0
 //│ Type: Int
+
+
+
+data class LsAlg[A, E](nil:() -> E, cons: (A, E) -> E)
+//│ Type: ⊤
+
+fun nil(x) = x.LsAlg#nil()
+fun cons(x, y, z) = x.LsAlg#cons(y, z)
+//│ Type: ⊤
+
+data class Nil()
+data class Cons[A, B](val x: A,val y: B)
+//│ Type: ⊤
+
+fun mk() = new LsAlg(() => new Nil, (x, y) => new Cons(x, y))
+//│ Type: ⊤
+
+// fun xs: [E] -> LsAlg[in Int, E] -> E
+fun xs(x) = x cons(1, x nil())
+//│ Type: ⊤
+
+fun ys: [E] -> LsAlg[in Nothing, E] -> E
+fun ys(x) = x nil()
+//│ Type: ⊤
+
+fun zs: [E] -> LsAlg[in Int | E, E] -> E
+fun zs(x) = x cons(xs(x), x cons(ys(x),x nil()))
+//│ Type: ⊤
+
+mk() zs()
+//│ = Cons(Cons(1, Nil()), Cons(Nil(), Nil()))
+//│ Type: Nil ∨ Cons['A, 'B]
+//│ Where:
+//│   ('E ∨ Cons['A, 'B]) ∨ Nil <: 'B
+//│   Nil <: 'E
+//│   Cons['A, 'B] <: 'E
+//│   'E ∨ Int <: 'A

@@ -94,7 +94,7 @@ letreg of r =>
 //│ ╟── because: cannot constrain  'E  <:  ¬()
 //│ ╟── because: cannot constrain  ¬⊥ ∧ ¬'Rg  <:  ¬()
 //│ ╟── because: cannot constrain    <:  'Rg
-//│ ╙── because: cannot constrain    <:  ¬()
+//│ ╙── because: cannot constrain  ⊤ ∧ ¬⊥  <:  ¬()
 //│ Type: ⊥
 
 :e
@@ -130,7 +130,7 @@ letreg of r =>
 //│ ╟── because: cannot constrain  'E  <:  ¬()
 //│ ╟── because: cannot constrain  ¬⊥ ∧ 'Rg  <:  ¬()
 //│ ╟── because: cannot constrain  'Rg  <:  ¬()
-//│ ╙── because: cannot constrain    <:  ¬()
+//│ ╙── because: cannot constrain  ⊤ ∧ ¬⊥  <:  ¬()
 //│ Type: Reg[?, 'E]
 //│ Where:
 //│   ⊤ <: 'E
@@ -174,7 +174,7 @@ letreg of r =>
 //│ ╟── because: cannot constrain  'E  <:  ¬()
 //│ ╟── because: cannot constrain  ¬⊥ ∧ 'Rg  <:  ¬()
 //│ ╟── because: cannot constrain  'Rg  <:  ¬()
-//│ ╙── because: cannot constrain    <:  ¬()
+//│ ╙── because: cannot constrain  ⊤ ∧ ¬⊥  <:  ¬()
 //│ Type: Reg[?, 'E]
 //│ Where:
 //│   ⊤ <: 'E
