@@ -1,0 +1,198 @@
+import "fs"
+import "process"
+import "path"
+import "url"
+
+import "./Predef.mls"
+import "./Str.mls"
+
+open Predef
+
+module Term with...
+
+class Symbol(val name: Str)
+type Literal = null | undefined | Str | Int | Num | Bool
+
+
+class ConstructorLike with
+  constructor
+    SymbolCons(val symbol: Symbol)
+    StringJoin
+    TupleCapacity(val size: Int, val inf: Bool)
+    Instantiation(val symbol: Symbol, val args: Array[DebrujinSplit])
+    LocalPattern(val id: Int)
+    Parameter(val symbol: Symbol)
+    Nested(val split: DebrujinSplit)
+
+class PatternStub with
+  constructor
+    LiteralStub(val value: Literal)
+    CharClass(val start: Str, val end: Str, val inclusive: Bool)
+    ClassLikeStub(val cons: ConstructorLike)
+    Wildcard
+
+class DebrujinSplit with
+  constructor
+    Binder(val body: DebrujinSplit)
+    DebrujinBranch(val scrutinee: Int, val ptrn, val consequent: DebrujinSplit, val alternative: DebrujinSplit)
+    Accept(val outcome: Int)
+    Reject
+
+class Pattern with
+  constructor
+    LitPattern(val lit: Literal)
+    Var(val sym: Symbol)
+    ClassLike(val sym: Symbol, val trm: Term, val parameters: Array[Symbol] | null)
+    Synonym(val symbol: Symbol, val patternArguments: Array[DebrujinSplit])
+    Tuple(val size: Int, val inf: Bool)
+    Record(val entities: Array[(Str, Symbol)])
+
+class Branch(val scrutinee: Ref, val ptrn: Pattern, val continuation: Split)
+
+class Split with
+  constructor
+    Cons(val head: Branch, val tail: Split)
+    Let(val sym: Symbol, val term: Term, val tail: Split)
+    Else(val default: Term)
+    End
+
+
+module Keyword with
+  object
+    If
+    While
+
+
+class Statement with
+  constructor
+    LetDecl(val sym: Symbol)
+    DefineVar(val sym: Symbol, val rhs: Term)
+    // TODO: other statements
+
+
+class Term with
+  constructor
+    Lit(val lit: Literal)
+    Builtin(val name: Str)
+    Ref(val sym: Symbol)
+    CSRef(val sym: Symbol, val base: Str, val file: Str | undefined)
+    App(val lhs: Term, val rhs: Term)
+    Sel(val prefix: Term, val nme: Str)
+    DynSel(val prefix: Term, val fld: Term, val arrayIdx: Bool)
+    Tup(val fields: Array[Term])
+    IfLike(val kw: Keyword.If | Keyword.While, val desugared: Split)
+    Lam(val params: Array[Symbol], val body: Term)
+    Blk(val stats: Array[Statement], val res: Term)
+    New(val cls: Term, val args: Array[Term])
+    Region(val name: Symbol, val body: Term)
+    RegRef(val reg: Term, val value: Term)
+    Assgn(val lhs: Term, val rhs: Term)
+    Deref(val ref: Term)
+    SetRef(val ref: Term, val value: Term)
+    Ret(val result: Term)
+    Throw(val result: Term)
+    Try(val body: Term, val finallyDo: Term)
+    
+
+class Context(val names: Map, val bindings: Map, val dependencies: Set, val printOnly: Bool) with
+  fun get(sym) =
+    if bindings.has(sym) then bindings.get(sym)
+    else if printOnly then sym.name
+    else throw Error(Str.concat("Invalid binding name ", sym.name))
+  fun nest = Context(names, new Map(bindings), dependencies, printOnly)
+  fun add(sym) =
+    let fn = freshName(sym.name)
+    bindings.set(sym, fn)
+    fn
+  fun depends(d) = dependencies.add(d)
+  fun freshName(name) =
+    if not(names.has(name)) do
+      names.set(name, 0)
+    let i = names.get(name)
+    names.set(name, i + 1)
+    Str.concat of name, "_", i.toString()
+
+
+fun indent(str, ind, keepLeading) =
+  let res = str.split("\n").map(s => Str.concat(ind, s)).join("\n")
+  if keepLeading then res
+  else res.substring(ind.length)
+
+fun showStmt(s, ctx) =
+  if s is
+    LetDecl(sym) then
+      let freshName = ctx.add(sym)
+      Str.concat("let ", freshName)
+    DefineVar(sym, value) then Str.concat of ctx.get(sym), " = ", show(value, ctx)
+
+
+fun showPattern(p, ctx) =
+  if p is
+    LitPattern(lit) then lit.toString()
+  // TODO: other patterns
+
+
+fun paren(t, ctx) =
+  if (t is Ref) || (t is CSRef) || (t is Lit) || (t is Sel) then show(t, ctx)
+  else Str.concat of "(", show(t, ctx), ")"
+
+
+fun showSplit(s, ctx, isCont) =
+  if s is
+    Cons(Branch(scrut, ptrn, cont), tail) then
+      Str.concat of show(scrut, ctx), " is ", showPattern(ptrn, ctx), " then ", showSplit(cont, ctx, true), "\n", showSplit(tail, ctx, false)
+    Let(sym, term, split) then
+      let nest = ctx.nest
+      let freshName = nest.add(sym)
+      Str.concat of "let ", freshName, " = ", show(term, nest), "\n", showSplit(split, nest, false)
+    Else(term) then
+      if isCont then show(term, ctx)
+      else Str.concat of "else ", show(term, ctx)
+    End then ""
+
+
+fun show(t, ctx) =
+  if t is
+    Ref(sym) then ctx.get(sym)
+    CSRef(Symbol(name), baseFile, file) then
+      if file is undefined then ctx.depends(baseFile)
+      else ctx.depends(path.join of path.dirname(baseFile), file)
+      name
+    Lit(lit) then lit.toString()
+    Builtin(name) then name
+    Sel(prefix, name) then Str.concat of paren(prefix, ctx), ".", name
+    App(lhs, rhs) then Str.concat of paren(lhs, ctx), show(rhs, ctx)
+    Tup(fields) then Str.concat of "(", fields.map(t => show(t, ctx)).join(", "), ")"
+    Lam(params, body) then
+      let nest = ctx.nest
+      let freshParams = params.map(s => nest.add(s))
+      Str.concat of "(", freshParams.join(", "), ") =>\n", indent(show(body, nest), "  ", true)
+    Blk(stats, res) then
+      let nest = ctx.nest
+      Str.concat of stats.map(s => showStmt(s, nest)).join("\n"), "\n", show(res, nest)
+    IfLike(Keyword.If, split) then Str.concat of "if \n", indent(showSplit(split, ctx, false), "  ", true)
+    // TODO: other terms
+
+fun print(t) =
+  let ctx = Context(new Map(), new Map(), new Set(), true)
+  console.log(show(t, ctx))
+
+
+fun genImport(base, p) =
+  Str.concat of "import \"./", path.relative(base, url.fileURLToPath(p)).slice(0, -4), ".mls\""
+
+
+fun codegen(t, file) =
+  let ctx = Context(new Map(), new Map(), new Set(), false)
+  let moduleName = path.parse(file).name
+  let fullpath = path.join of process.cwd(), file
+  let code = Str.concat of "module ", moduleName, " with ...\nfun res =\n", indent(show(t, ctx), "  ", true), "\n"
+  let dependencies =
+    Array.from(ctx.dependencies).map(s => genImport(path.dirname(fullpath), s))
+  if not(fs.existsSync(file)) do
+    fs.writeFileSync(file, "", "utf8")
+  let originData = fs.readFileSync(file, "utf8")
+  let newData = Str.concat of dependencies.join("\n"), "\n", code
+  if newData != originData do
+    fs.writeFileSync(file, newData, "utf8")
+

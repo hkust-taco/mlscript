@@ -86,6 +86,7 @@ enum Tree extends AutoLocated:
   case Outer(name: Opt[Tree])
   case Spread(kw: Keyword.Ellipsis, kwLoc: Opt[Loc], body: Opt[Tree])
   case Annotated(annotation: Tree, target: Tree)
+  case Constructor(decl: Tree)
 
   def children: Ls[Tree] = this match
     case _: Empty | _: Error | _: Ident | _: Literal | _: Under | _: Unt => Nil
@@ -125,6 +126,7 @@ enum Tree extends AutoLocated:
     case Def(lhs, rhs) => lhs :: rhs :: Nil
     case Spread(_, _, body) => body.toList
     case Annotated(annotation, target) => annotation :: target :: Nil
+    case Constructor(decl) => decl :: Nil
     case MemberProj(cls, name) => cls :: Nil
     case Keywrd(kw) => Nil
     case Dummy => Nil
@@ -171,6 +173,7 @@ enum Tree extends AutoLocated:
     case Spread(_, _, _) => "spread"
     case Annotated(_, _) => "annotated"
     case Open(_) => "open"
+    case Constructor(_) => "constructor"
     case MemberProj(_, _) => "member projection"
     case Keywrd(kw) => s"'${kw.name}' keyword"
     case Unt() => "unit"

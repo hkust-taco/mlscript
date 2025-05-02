@@ -29,6 +29,7 @@ sealed abstract class Token:
     case COMMENT(text) => "comment"
     case SUSPENSION(true) => "'...' ellipsis"
     case SUSPENSION(false) => "'..' ellipsis"
+    case ESC_IDENT(_) => "identifier"
 
 /** Type of 'Structured Tokens' aka 'Strokens',
   * which use a `BRACKETS` construct instead of `OPEN_BRACKET`/`CLOSE_BRACKET` and `INDENT`/`DEINDENT` */
@@ -51,6 +52,7 @@ final case class CLOSE_BRACKET(k: BracketKind) extends Token
 final case class BRACKETS(k: BracketKind, contents: Ls[Stroken -> Loc])(val innerLoc: Loc) extends Token with Stroken
 final case class COMMENT(text: String) extends Token with Stroken
 final case class SUSPENSION(dotDotDot: Bool) extends Token with Stroken
+final case class ESC_IDENT(name: String) extends Token with Stroken
 
 
 sealed abstract class BracketKind:

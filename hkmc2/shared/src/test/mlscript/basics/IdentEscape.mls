@@ -1,0 +1,23 @@
+let id"of" = 42
+fun id"fun"(x: Int) = x + 1
+
+id"fun"(id"of")
+
+let id"if" = 1
+id"if" + 1
+
+module id"object" with
+  object id"class"
+  class id"module"(x: Int)
+
+:pe
+id""
+//│ ╔══[LEXICAL ERROR] unexpected identifier escape
+//│ ║  l.14: 	id""
+//│ ╙──      	^
+//│ ╔══[PARSE ERROR] Expected an expression; found error instead
+//│ ║  l.14: 	id""
+//│ ╙──      	^^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found error instead
+//│ ║  l.14: 	id""
+//│ ╙──      	^^^^

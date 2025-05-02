@@ -192,7 +192,10 @@ object Elaborator:
     val suid = new Uid.Symbol.State
     given State = this
     val globalThisSymbol = TopLevelSymbol("globalThis")
+    // In JavaScript, `import` can be used for getting current file path, as `import.meta`
+    val importSymbol = new VarSymbol(syntax.Tree.Ident("import"))
     val runtimeSymbol = TempSymbol(N, "runtime")
+    val termSymbol = TempSymbol(N, "Term")
     val effectSigSymbol = ClassSymbol(TypeDef(syntax.Cls, Dummy, N, N), Ident("EffectSig"))
     val nonLocalRetHandlerTrm =
       val id = new Ident("NonLocalReturn")
@@ -701,6 +704,9 @@ extends Importer:
         Term.Annotated(ann, term(rhs)))
     case Keywrd(kw) =>
       raise(ErrorReport(msg"Unexpected keyword '${kw.name}' in this position." -> tree.toLoc :: Nil))
+      Term.Error
+    case Constructor(delc) =>
+      raise(ErrorReport(msg"Unsupported constructor in this position." -> tree.toLoc :: Nil))
       Term.Error
     // case _ =>
     //   ???

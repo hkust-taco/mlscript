@@ -56,6 +56,7 @@ fun (???) notImplementedError = throw Error("Not implemented")
 
 fun tuple(...xs) = xs
 
+
 val foldl = fold
 
 // fun foldr(f)(...rest, init) = // TODO allow this syntax

@@ -619,9 +619,10 @@ class Desugarer(val elaborator: Elaborator)
         fallback
       case InfixApp(id: Ident, Keyword.`:`, pat) => fallback => ctx =>
         val sym = VarSymbol(id)
-        val ctxWithAlias = ctx + (id.name -> sym)
+        val ctx2 = ctx
+          // + (id.name -> sym) // * This binds the field's name in the context; probably surprising
         Split.Let(sym, ref.sel(id, N),
-          expandMatch(sym, pat, sequel)(fallback)(ctxWithAlias))
+          expandMatch(sym, pat, sequel)(fallback)(ctx2))
       case Block(sts) => fallback => ctx => // we assume this is a record
         sts.foldLeft[Option[List[(Tree.Ident, BlockLocalSymbol, Tree)]]](S(Nil)){
           case (N, _) => N

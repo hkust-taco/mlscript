@@ -1,0 +1,14 @@
+import "./Term.mls"
+import "./QuoteExample.mls"
+
+
+module QuoteExample2 with
+  fun codegen() = 
+    Term.codegen(QuoteExample.foo(), "./hkmc2/shared/src/test/mlscript-compile/quotes/QuoteFoo.mls")
+    Term.codegen(QuoteExample.inc(), "./hkmc2/shared/src/test/mlscript-compile/quotes/QuoteInc.mls")
+  fun genCubic() =
+    Term.codegen(x `=> QuoteExample.power(x)(3), "./hkmc2/shared/src/test/mlscript-compile/quotes/Cubic.mls")
+  fun genGib12() =
+    Term.codegen(QuoteExample.gib(12), "./hkmc2/shared/src/test/mlscript-compile/quotes/Gib12.mls")
+  fun genSafeDiv() =
+    Term.codegen(QuoteExample.safeDiv(), "./hkmc2/shared/src/test/mlscript-compile/quotes/SafeDiv.mls")
