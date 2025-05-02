@@ -21,7 +21,7 @@ case class CCtx(cache: Cache, parents: Ls[(Type, Type)], origin: Term, exp: Opt[
           case N => msg""
         }" -> origin.toLoc
       :: parents.reverse.map(p =>
-        msg"because: cannot constrain  ${p._1.show}  <:  ${p._2.show}" -> N
+        msg"because: cannot constrain  ${p._1.simp.show}  <:  ${p._2.simp.show}" -> N
       )
     ))
   def nest(sub: (Type, Type)): CCtx =
@@ -87,16 +87,17 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
         else
           val bd = if v.lvl >= rest.lvl then rest else extrude(rest)(using v.lvl, true, mutable.HashMap.empty)
           if pol then
-            val nc = Type.mkNegType(bd)
+            val nc = Type.mkNegType(bd).toBasic
             log(s"New bound: ${v.showDbg} <: ${nc.showDbg}")
             cctx.nest(v -> nc) givenIn:
               v.state.upperBounds ::= nc
               v.state.lowerBounds.foreach(lb => constrainImpl(lb, nc))
           else
-            log(s"New bound: ${v.showDbg} :> ${bd.showDbg}")
-            cctx.nest(bd -> v) givenIn:
-              v.state.lowerBounds ::= bd
-              v.state.upperBounds.foreach(ub => constrainImpl(bd, ub))
+            val c = bd.toBasic
+            log(s"New bound: ${v.showDbg} :> ${c.showDbg}")
+            cctx.nest(c -> v) givenIn:
+              v.state.lowerBounds ::= c
+              v.state.upperBounds.foreach(ub => constrainImpl(c, ub))
       case Conj(i, u, Nil) => (conj.i, conj.u) match
         case (_, Union(N, Nil)) =>
           // raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} ∧ ¬⊥" -> N :: Nil))
