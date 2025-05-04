@@ -309,7 +309,12 @@ fun foo(f) =
     borrow(r) of it =>
       foo(f)
 foo
-//│ Type: [outer, 'n, 'eff] -> (('n ->{¬outer} ('n ∨ Int)) ->{'eff} ⊤) ->{'eff} ⊥
+//│ Type: [outer, 'f, 'n, 'eff, 'app, 'eff1, 'eff2, 'T] -> 'f ->{'eff | 'eff1} 'app
 //│ Where:
 //│   'n <: Int
-//│   'eff <: outer
+//│   'f <: ('n ->{¬outer} ('n | Int)) ->{'eff} ⊤
+//│   'f#'f ∨ (  'f#'f ∨ 'T <: 'app ∧ 'eff1 <: 'eff2){0: 'f} <: {0: 'f}
+//│   'app <: 'T
+//│   'eff2 <: outer
+//│   'eff <: 'eff1
+//│   'eff2 <: 'eff1
