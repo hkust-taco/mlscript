@@ -20,3 +20,50 @@ fun take_1(p) =
 //│ ╙──      	       ^^^^^
 
 
+let f = case
+  { a: 1 as a } then a
+//│ f = [function]
+
+f(a: 1)
+//│ = 1
+
+
+// * It would probably be surprising to bind `a` in the RHS here
+:e
+let f = case
+  { a: 1 } then a
+//│ ╔══[ERROR] Name not found: a
+//│ ║  l.34: 	  { a: 1 } then a
+//│ ╙──      	                ^
+//│ f = [function]
+
+// * OTOH, note that `a` is bound here
+let rcd =
+  a: 1
+  b: a + 1
+//│ rcd = {a: 1, b: 2}
+
+// * As that will make sense when we have dependent types,
+// * as in: `{ n: Int, v: Vec[Int, n] }`
+
+
+:todo
+let f = case
+  { a: 1 & a } then a
+//│ ╔══[ERROR] Name not found: &
+//│ ║  l.52: 	  { a: 1 & a } then a
+//│ ╙──      	         ^
+//│ ╔══[ERROR] Cannot use this identifier as an extractor
+//│ ║  l.52: 	  { a: 1 & a } then a
+//│ ╙──      	         ^
+//│ f = [function]
+
+
+let f = case
+  { :a } then a
+//│ f = [function]
+
+f(a: 1)
+//│ = 1
+
+

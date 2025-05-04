@@ -1,0 +1,13 @@
+import "./Example.mls"
+import "./quotes/CSPNest.mls"
+open Example
+open CSPNest
+
+module CSP with ...
+
+fun test() = 123
+fun foo() =
+  `test`() `+ `1
+fun bar() =
+  `inc`(`0)
+fun baz() = `nest_f`()

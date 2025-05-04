@@ -1,0 +1,4 @@
+import "./CSPNest.mls"
+module CSPBaz with ...
+fun res =
+  CSPNest.nest_f()

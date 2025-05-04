@@ -17,6 +17,10 @@ trait BlockImpl(using Elaborator.State):
         stmt.desugared match
         case PossiblyAnnotated(anns, h @ Hndl(body = N)) =>
           PossiblyAnnotated(anns, h.copy(body = S(Block(stmts)))) :: Nil
+        case PossiblyAnnotated(anns, TypeDef(syntax.Cls, Ident(name), rhs, S(Block(Constructor(Block(ctors)) :: rest)))) =>
+          PossiblyAnnotated(anns, TypeDef(syntax.Cls, Ident(name), rhs, if rest.isEmpty then N else S(Block(rest)))) ::
+            (ctors.map(head => PossiblyAnnotated(anns, TypeDef(syntax.Cls, InfixApp(head, syntax.Keyword.`extends`, Ident(name)), N, N))))
+          ::: desug(stmts)
         case stmt => stmt :: desug(stmts)
       case Nil => Nil
     desug(stmts)
