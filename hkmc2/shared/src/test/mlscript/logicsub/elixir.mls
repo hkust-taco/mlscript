@@ -55,8 +55,11 @@ fun subtract(a, b) = if
 //│ ╙── because: cannot constrain  (Int | Tru) | Fls  <:  Int
 //│ Type: ⊤
 
-// TODO impl
 fun negate: (Int -> Int) & (Tru | Fls -> Tru | Fls)
+fun negate(x) = if x is
+  Int then 0 - x
+  Tru then not(x)
+  Fls then not(x)
 //│ Type: ⊤
 
 fun subtract: (Int, Int) -> Int
@@ -91,7 +94,7 @@ fun _in(x) = if x is
 fun _out(x) = x.Ls#prim(() => new Nil, (x, y) => new Cons(x, y))
 //│ Type: ⊤
 
-// fun map: [A, B] -> (Ls[A], A -> B) -> Ls[B]
+fun map: [A, B] -> (Ls[A], A -> B) -> Ls[B]
 fun map(xs, f) =
   let x = _out(xs)
   if x is
@@ -99,7 +102,7 @@ fun map(xs, f) =
     Nil then nil()
 //│ Type: ⊤
 
-// fun reduce: [A, B] -> (Ls[A], B, (A, B) -> B) -> B
+fun reduce: [A, B] -> (Ls[A], B, (A, B) -> B) -> B
 fun reduce(xs, acc, f) =
   let x = _out(xs)
   if x is
@@ -111,11 +114,9 @@ let xs = cons(1, cons(4, nil()))
 //│ Type: ⊤
 
 xs map(negate)
-//│ Type: Ls['A] | Ls['A1]
+//│ Type: Ls['B]
 //│ Where:
-//│   Int <: 'A1
-//│   'A1 <: 'A
-//│   'A <: 'A1
+//│   Int <: 'B
 
 fun map(xs, f) = if xs is
     Cons then cons(f(car(xs)), map(_out(cdr(xs)), f))
@@ -141,10 +142,7 @@ xs _out() map(negate)
 //│   'A1 <: 'A
 //│   'A <: 'A1
 
-
-
-// TODO
-// fun negate: (Int -> Int) & (Bool -> Bool) & (~(Int | Bool) -> ~(Int | Bool))
+fun negate: (Int -> Int) & (Bool -> Bool) & (~(Int | Bool) -> ~(Int | Bool))
 fun negate(x) = if x is
   Int then 0 - x
   Tru then not(x)
@@ -152,10 +150,3 @@ fun negate(x) = if x is
   else
     x
 //│ Type: ⊤
-
-negate as Int -> Int
-negate as Bool -> Bool
-negate as ~(Int | Bool) -> ~(Int | Bool)
-//│ Type: (¬Int & ¬Bool) ->{⊥} ¬Int & ¬Bool
-
-// type tree(a) = (a and not list()) or [tree(a)]

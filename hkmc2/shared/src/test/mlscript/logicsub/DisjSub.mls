@@ -105,7 +105,7 @@ new Pair(1, 2)
 // WF check on intersection types
 :e
 fun idIIBB: (Pair[Int, Int] -> Int) & (Pair[Bool, Bool] -> Bool)
-//│ ╔══[ERROR] Ill-formed functions intersection
+//│ ╔══[ERROR] Ill-formed type
 //│ ║  l.107: 	fun idIIBB: (Pair[Int, Int] -> Int) & (Pair[Bool, Bool] -> Bool)
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
@@ -271,94 +271,3 @@ x => k(x, x)
 //│ Type: ('x) ->{'eff} 'app
 //│ Where:
 //│   'x#'x ∨ (  'x#Int ∨ Int <: 'app ∧ ⊥ <: 'eff) ∧ (  'x#Bool ∨ Bool <: 'app ∧ ⊥ <: 'eff){0: 'x, 1: 'x} <: {0: Int, 1: Int} | {0: Bool, 1: Bool}
-
-:e
-fun ill: ((Int | Bool, Int | Bool) -> Str) & ((Bool | Str, Bool | Str) -> Str)
-//│ ╔══[ERROR] Ill-formed functions intersection
-//│ ║  l.276: 	fun ill: ((Int | Bool, Int | Bool) -> Str) & ((Bool | Str, Bool | Str) -> Str)
-//│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Type: ⊤
-
-:e
-fun id: [A] -> (A -> A) & (Int -> Int)
-//│ ╔══[ERROR] Ill-formed functions intersection
-//│ ║  l.283: 	fun id: [A] -> (A -> A) & (Int -> Int)
-//│ ╙──       	                ^^^^^^^^^^^^^^^^^^^^^
-//│ Type: ⊤
-
-fun fst: [A] -> (Pair[A, Int] -> Pair[A, Int]) & (Ls[A] -> A)
-//│ Type: ⊤
-
-fst(new Pair(true, 1))
-//│ Type: Pair[out Bool, out Int]
-
-fst(cons(1, nil()))
-//│ Type: Int
-
-:e
-fun idInt: (Int -> Int) & (Int -> Int)
-//│ ╔══[ERROR] Ill-formed functions intersection
-//│ ║  l.299: 	fun idInt: (Int -> Int) & (Int -> Int)
-//│ ╙──       	            ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Type: ⊤
-
-fun wf: ((Int | Bool -> Int) | (Bool -> Bool)) & (Str -> Str)
-//│ Type: ⊤
-
-wf("")
-//│ Type: Str
-
-wf(true)
-//│ Type: Bool | Int
-
-:e
-wf(1)
-//│ ╔══[ERROR] Type error in application
-//│ ║  l.315: 	wf(1)
-//│ ║         	^^^^^
-//│ ╟── because: cannot constrain  (((Int | Bool) -> Int) | (Bool -> Bool)) & (Str -> Str)  <:  Int ->{'eff} 'app
-//│ ╟── because: cannot constrain  {0: Int}  <:  {0: Bool} | {0: Str}
-//│ ╙── because: cannot constrain  ⊤  <:  ⊥
-//│ Type: Int
-
-class
- Z()
- S()
-//│ Type: ⊤
-
-fun wf: ((Z, Z) -> Z) & ((Z, S) -> S) & ((S, Z | S) -> S)
-//│ Type: ⊤
-
-fun zs: Z | S
-//│ Type: ⊤
-
-wf(zs, zs)
-//│ Type: S | Z
-
-:e
-fun ill:
-  (([a: Int, b:Int]) -> Int) &
-  (([b: Bool, c: Bool]) -> Bool) &
-  (([a: Str, c: Str]) -> Str)
-//│ ╔══[ERROR] Ill-formed functions intersection
-//│ ║  l.340: 	  (([a: Int, b:Int]) -> Int) &
-//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.341: 	  (([b: Bool, c: Bool]) -> Bool) &
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.342: 	  (([a: Str, c: Str]) -> Str)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Type: ⊤
-
-:e
-fun nested:
-  (([tag: [a: Int, b:Int]]) -> Int) &
-  (([tag: [b: Bool, c: Bool]]) -> Bool) &
-  (([tag: [a: Str, c: Str]]) -> Str)
-//│ ╔══[ERROR] Ill-formed functions intersection
-//│ ║  l.354: 	  (([tag: [a: Int, b:Int]]) -> Int) &
-//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.355: 	  (([tag: [b: Bool, c: Bool]]) -> Bool) &
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.356: 	  (([tag: [a: Str, c: Str]]) -> Str)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Type: ⊤

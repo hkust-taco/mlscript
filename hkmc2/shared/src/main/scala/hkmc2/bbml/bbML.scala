@@ -169,24 +169,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
     case Neg(rhs) =>
       mono(rhs, !pol).!
     case CompType(lhs, rhs, pol) =>
-      val (l, r) = (typeMonoType(lhs), typeMonoType(rhs))
-      if !pol then
-        val lfa = l.toDnf.conjs.flatMap(_.i.v).collect:
-          case (f :: fs) =>
-            val fd = Type.discriminant(f.args).flatten
-            fs.foldLeft(fd: Type, fd.fields.keys.toSet): (x, y) =>
-              val d = Type.discriminant(y.args).flatten
-              (x._1 | d, x._2 & d.fields.keys.toSet)
-        val rfa = r.toDnf.conjs.flatMap(_.i.v).collect:
-          case (f :: fs) =>
-            val fd = Type.discriminant(f.args).flatten
-            fs.foldLeft(fd: Type, fd.fields.keys.toSet): (x, y) =>
-              val d = Type.discriminant(y.args).flatten
-              (x._1 | d, x._2 & d.fields.keys.toSet)
-        val d = lfa.iterator.flatMap(x => rfa.iterator.map(y => (x, y))).exists:
-          case ((x, u), (y, w)) => (u & w).isEmpty || Type.disjoint(x, y) =/= S(Set.empty)
-        if d then error(msg"Ill-formed functions intersection" -> ty.toLoc :: Nil)
-      Type.mkComposedType(l, r, pol)
+      Type.mkComposedType(typeMonoType(lhs), typeMonoType(rhs), pol)
     case _ =>
       ty.symbol.flatMap(_.asTpe) match
       case S(cls: (ClassSymbol | TypeAliasSymbol)) => typeAndSubstType(Term.TyApp(ty, Nil)(N), pol)
@@ -201,17 +184,39 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
         tv -> qv
     bds.foreach:
       case (tv, QuantVar(_, ub, lb)) =>
-        ub.foreach(ub => tv.state.upperBounds ::= typeMonoType(ub))
-        lb.foreach(lb => tv.state.lowerBounds ::= typeMonoType(lb))
+        ub.foreach(ub => tv.state.upperBounds ::= monoOrErr(typeType(ub), ub))
+        lb.foreach(lb => tv.state.lowerBounds ::= monoOrErr(typeType(lb), lb))
         val lbty = tv.state.lowerBounds.foldLeft[Type](Bot)(_ | _)
         val ubty = tv.state.upperBounds.foldLeft[Type](Top)(_ & _)
         solver.constrain(lbty, ubty)
     PolyType(bds.map(_._1), S(outer), body)
 
-  private def typeMonoType(ty: Term)(using ctx: BbCtx, cctx: CCtx): Type = monoOrErr(typeType(ty), ty)
+  private def typeMonoType(ty: Term)(using ctx: BbCtx, cctx: CCtx): Type = monoOrErr(typeAndSubstType(ty, true)(using Map.empty), ty)
 
-  private def typeType(ty: Term)(using ctx: BbCtx, cctx: CCtx): GeneralType =
-    typeAndSubstType(ty, pol = true)(using Map.empty)
+  private def wffuns(fs: Ls[FunType]) =
+    val wf = fs.forall(f => (f.ret :: f.eff :: f.args).forall(wftype))
+    wf && fs.combinations(2).forall: u =>
+      Type.disjoint(Type.discriminant(u.head.args), Type.discriminant(u.tail.head.args)).exists(_.isEmpty)
+  private def wfrcds(rs: Ls[RcdType]) =
+    val wf = rs.forall(_.fields.forall(u => wftype(u._2)))
+    wf && rs.combinations(2).forall: u =>
+      Type.disjoint(u.head, u.tail.head).exists(_.isEmpty)
+  private def wfcls(cs: Ls[ClassLikeType]) =
+    cs.forall(_.targs.forall(u => wftype(u.posPart) && wftype(u.negPart)))
+  private def wftype(ty: GeneralType): Bool = ty match
+    case t: PolyType => wftype(t.body)
+    case t: PolyFunType => (t.ret :: t.eff :: t.args).forall(wftype)
+    case t: Type =>
+      val n = t.!.toDnf.conjs
+      val nf = n.iterator.map(_.i.v).forall:
+        case S(f: Ls[FunType]) => false
+        case _ => true
+      nf && wffuns(n.flatMap(_.u.fun)) && n.forall(c => wfrcds(c.u.rcd) && wfcls(c.u.cls))
+
+  private def typeType(ty: Term, map: Map[Uid[Symbol], TypeArg] = Map.empty)(using ctx: BbCtx, cctx: CCtx): GeneralType =
+    val t = typeAndSubstType(ty, pol = true)(using map)
+    if !wftype(t) then error(msg"Ill-formed type" -> ty.toLoc :: Nil)
+    t
   
   private def instantiate(ty: PolyType)(using ctx: BbCtx): GeneralType =
     ty.instantiate(infVarState.nextUid, freshEnv(new TempSymbol(N, "env")), ctx.lvl)
@@ -486,13 +491,29 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
       ascribe(term, typeType(ty))
       ascribe(term, rhs)
     case _ =>
-      val (lhsTy, eff) = typeCheck(lhs)
       rhs match
         case pf: PolyFunType if pf.isPoly =>
           (error(msg"Cannot type non-function term ${lhs.toString} as ${rhs.show}" -> lhs.toLoc :: Nil), Bot)
         case _ =>
-          constrain(tryMkMono(lhsTy, lhs), monoOrErr(rhs, lhs))
-          (rhs, eff)
+          val r = monoOrErr(rhs, lhs)
+          val n = r.!.toDnf.conjs
+          if n.flatMap(_.u.fun).length > 1 then
+            val eff = n.foldLeft(Bot: Type): (e, c) =>
+              (c.i.v, c.u, c.vars) match
+                case (i, u, v) =>
+                  val n = i.fold(Bot: Type):
+                    case x: (ClassLikeType | RcdType) => x.!
+                    case x: Ls[FunType] => x.reduce[Type](_ & _).!
+                  val k = Ls(u.fun, u.cls, u.cls).flatten.foldLeft(Bot: Type)(_ | _)
+                  val vs = v.foldLeft(Bot: Type): (x, y) =>
+                    x | (if y._2 then y._1.! else y._1)
+                  val (_, eff) = ascribe(lhs, n | k | vs)
+                  e | eff
+            (rhs, eff)
+          else
+            val (lhsTy, eff) = typeCheck(lhs)
+            constrain(tryMkMono(lhsTy, lhs), r)
+            (rhs, eff)
 
   // TODO: t -> loc when toLoc is implemented
   private def app(lhs: (GeneralType, Type), rhs: Ls[Elem], t: Term)
@@ -620,7 +641,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
               case Param(_, sym, sign, _) =>
                 if sym.nme === field.name then sign else N
             }.filter(_.isDefined)) match
-              case S(res) :: Nil => (typeAndSubstType(res, pol = true)(using map.toMap), eff)
+              case S(res) :: Nil => (typeType(res, map.toMap), eff)
               case _ => (error(msg"${field.name} is not a valid member in class ${clsSym.nme}" -> t.toLoc :: Nil), Bot)
           case N => 
             (error(msg"Not a valid class: ${cls.describe}" -> cls.toLoc :: Nil), Bot)
@@ -650,7 +671,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
             require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
             args.iterator.zip(clsDfn.params.params).foreach {
               case (arg, Param(sign = S(sign))) =>
-                val (ty, eff) = ascribe(arg, typeAndSubstType(sign, pol = true)(using map.toMap))
+                val (ty, eff) = ascribe(arg, typeType(sign, map.toMap))
                 effBuff += eff
               case _ => ???
             }
