@@ -9,7 +9,7 @@ import utils.Scope
 
 abstract class BbmlDiffMaker extends JSBackendDiffMaker:
   
-  val bbPreludeFile = file / os.up / os.RelPath("bbPrelude.mls")
+  val bbPreludeFile = file / os.up / os.up / "bbml" / os.RelPath("bbPrelude.mls")
   
   val bbmlOpt = new NullaryCommand("bbml"):
     override def onSet(): Unit =
@@ -43,8 +43,12 @@ abstract class BbmlDiffMaker extends JSBackendDiffMaker:
       val ty = typer.typePurely(trm)
       val printer = PrettyPrinter((msg: String) => output(msg))
       if debug.isSet then printer.print(ty)
-      val simplif = TypeSimplifier(tl)
-      val sty = simplif(true, 0)(ty)
+      val sty =
+        if config.simplifyTypes then
+          given hkmc2.utils.TL = tl
+          val simplif = new TypeSimplifier
+          simplif(true, 0)(ty)
+        else ty
       printer.print(sty)
   
 

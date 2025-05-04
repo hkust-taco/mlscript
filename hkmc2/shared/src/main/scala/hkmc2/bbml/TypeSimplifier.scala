@@ -14,7 +14,7 @@ final def printPol(pol: Bool): Str = pol match {
     case false => "-"
   }
 
-class TypeSimplifier(tl: TraceLogger):
+class TypeSimplifier(using tl: TL):
   import tl.{trace, log}
   
   def apply(pol: Bool, lvl: Int)(ty: GeneralType): GeneralType =
@@ -60,6 +60,8 @@ class TypeSimplifier(tl: TraceLogger):
       val varSubst: MutMap[IV, IV] = MutMap.empty
       
       val traversedTVs: MutSet[IV] = MutSet.empty
+
+      val traversedDisjSub: MutSet[DisjSub] = MutSet.empty
       
       def getRepr(tv: IV): IV = varSubst.get(tv) match {
         case S(tv2) =>
@@ -129,6 +131,13 @@ class TypeSimplifier(tl: TraceLogger):
                 // traversingTVs += tv
                 // traversedTVs += tv
                 super.apply(pol)(ty)
+                val (p, n) = (tv.state.disjsub.flatMap: ds =>
+                  ds.subDisjSub.map: k =>
+                    if traversedDisjSub.add(ds) then
+                      ds.children()
+                    else (Nil, Nil)).unzip
+                p.flatten.foreach(apply(true))
+                n.flatten.foreach(apply(false))
                 // traversingTVs -= tv
                 curPath = oldPath
             case pt @ PolyType(tvs, outer, _) => // Avoid simplify outer variables to Top unexpectedly
@@ -191,15 +200,17 @@ class TypeSimplifier(tl: TraceLogger):
             tv.state.upperBounds = newUBs
             val isPos = Analysis.posVars.contains(tv)
             val isNeg = Analysis.negVars.contains(tv)
-            // if (isPos && !isNeg && (Analysis.occsNum(tv) === 1 && {newLBs match { case (tv: IV) :: Nil => true; case _ => false }} || newLBs.forall(_.isSmall))) {
-            if isPos && !isNeg && ({newLBs match { case (tv: IV) :: Nil => true; case _ => false }} || newLBs.forall(_ => true)) then {
-            // if (isPos && !isNeg && ({newLBs match { case (tv: IV) :: Nil => true; case _ => false }})) {
-              newLBs.foldLeft(Bot: Type)(_ | _)
-            } else
-            // if (isNeg && !isPos && (Analysis.occsNum(tv) === 1 && {newUBs match { case (tv: IV) :: Nil => true; case _ => false }} || newUBs.forall(_.isSmall))) {
-            if isNeg && !isPos && ({newUBs match { case (tv: IV) :: Nil => true; case _ => false }} || newUBs.forall(_ => true)) then
-            // if (isNeg && !isPos && ({newUBs match { case (tv: IV) :: Nil => true; case _ => false }})) {
-              newUBs.foldLeft(Top: Type)(_ & _)
+            if tv.state.disjsub.isEmpty then
+              // if (isPos && !isNeg && (Analysis.occsNum(tv) === 1 && {newLBs match { case (tv: IV) :: Nil => true; case _ => false }} || newLBs.forall(_.isSmall))) {
+              if isPos && !isNeg && ({newLBs match { case (tv: IV) :: Nil => true; case _ => false }} || newLBs.forall(_ => true)) then {
+              // if (isPos && !isNeg && ({newLBs match { case (tv: IV) :: Nil => true; case _ => false }})) {
+                newLBs.foldLeft(Bot: Type)(_ | _)
+              } else
+              // if (isNeg && !isPos && (Analysis.occsNum(tv) === 1 && {newUBs match { case (tv: IV) :: Nil => true; case _ => false }} || newUBs.forall(_.isSmall))) {
+              if isNeg && !isPos && ({newUBs match { case (tv: IV) :: Nil => true; case _ => false }} || newUBs.forall(_ => true)) then
+              // if (isNeg && !isPos && ({newUBs match { case (tv: IV) :: Nil => true; case _ => false }})) {
+                newUBs.foldLeft(Top: Type)(_ & _)
+              else tv
             else
               // tv.lowerBounds = newLBs
               // tv.upperBounds = newUBs
@@ -211,7 +222,7 @@ class TypeSimplifier(tl: TraceLogger):
     
     subst(ty)
 
-  def simplifyForall(ty: GeneralType): GeneralType = ty match
+  def simplifyForall(ty: GeneralType)(using TL): GeneralType = ty match
     case PolyType(tvs, outer, body) =>
       val newBody = simplifyForall(body)
       val visited = PolyType.collectTVs(newBody)

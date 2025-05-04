@@ -1,0 +1,229 @@
+:bbml
+//│ Type: ⊤
+
+//│ Type: ⊤
+
+fun ib: Int | Bool
+fun si: Str | Int
+fun sib: Str | Int | Bool
+fun rev: Str -> Str
+fun not: Bool -> Bool
+//│ Type: ⊤
+
+fun f(x) = if x is
+  Int then 0
+  Bool then x
+f
+//│ Type: ['x, 'res, 'eff] -> 'x ->{'eff} 'res
+//│ Where:
+//│   'x#Int ∨ Int <: 'res ∧ ⊥ <: 'eff
+//│   'x#Bool ∨ Bool & 'x <: 'res ∧ ⊥ <: 'eff
+//│   'x#¬Int & ¬Bool ∨ ⊤ <: ⊥
+
+f(ib) as Int | Bool
+//│ Type: Int | Bool
+
+f(f(ib)) as Int | Bool
+f(f(ib))
+//│ Type: Int | (Bool & 'x)
+//│ Where:
+//│   Int <: 'x
+//│   Bool <: 'x
+//│   'x#¬Int & ¬Bool ∨ ⊤ <: ⊥
+
+:e
+f(si)
+//│ ╔══[ERROR] Type error in reference with expected type 'x
+//│ ║  l.35: 	f(si)
+//│ ║        	  ^^
+//│ ╟── because: cannot constrain  Str | Int  <:  'x
+//│ ╟── because: cannot constrain  Str  <:  'x
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: Int
+
+
+// order-dependent (expected)
+
+fun f(x, y) = if
+  x is Int then 1
+  y is Str then ""
+f(1, "")
+//│ Type: Int
+
+f(1, sib)
+//│ Type: Int
+
+fun f(x, y) = if
+  y is Str then ""
+  x is Int then 1
+f(1, "")
+//│ Type: Str
+
+f(1, sib)
+//│ Type: Int | Str
+
+
+fun foorec(x, y, r) = if
+  x is Int and y is Int then x + y
+  x is Str then not(y)
+  y is Str then r(y, x, r)
+//│ Type: ⊤
+
+fun foo(x, y) = foorec(x, y, foorec)
+//│ Type: ⊤
+
+foo(true, "")
+foo(1, 2)
+foo as (Int, Int) -> Int
+foo as (Str, Bool) -> Bool
+(x => foo(x, true)) as Str -> Bool
+(x => foo(x, "")) as Bool -> Bool
+//│ Type: (Bool) ->{⊥} Bool
+
+:e
+foo(1, "")
+//│ ╔══[ERROR] Type error in string literal with expected type 'y
+//│ ║  l.84: 	foo(1, "")
+//│ ║        	       ^^
+//│ ╟── because: cannot constrain  Str  <:  'y
+//│ ╟── because: cannot constrain  Str  <:  'y
+//│ ╟── because: cannot constrain  'r  <:  (Str & 'y1, 'x, 'r) ->{'eff} 'app
+//│ ╟── because: cannot constrain  'r  <:  ¬(¬{(Str & 'y1, 'x, 'r) ->{'eff} 'app})
+//│ ╟── because: cannot constrain  ((¬⊥ & 'x1, ¬⊥ & 'y2, ¬⊥ & 'r1) ->{¬⊥ & 'eff1} (¬⊥ & 'res)) & ¬⊥  <:  ¬(¬{(Str & 'y1, 'x, 'r) ->{'eff} 'app})
+//│ ╟── because: cannot constrain  {0: Str & 'y1, 1: 'x, 2: 'r}  <:  {0: 'x1, 1: 'y2, 2: 'r1}
+//│ ╟── because: cannot constrain  'x  <:  'y2
+//│ ╟── because: cannot constrain  'x  <:  'y2
+//│ ╟── because: cannot constrain  'x  <:  ¬(¬{Bool})
+//│ ╟── because: cannot constrain  'x  <:  ¬(¬{Bool})
+//│ ╟── because: cannot constrain  ¬{Str} ∧ 'x2  <:  ¬(¬{Bool})
+//│ ╟── because: cannot constrain  'x2  <:  ¬(¬{Str | Bool})
+//│ ╟── because: cannot constrain  ¬⊥ & 'x3  <:  ¬(¬{Str | Bool})
+//│ ╟── because: cannot constrain  'x3  <:  ¬(¬{Str | Bool})
+//│ ╙── because: cannot constrain  Int  <:  ¬(¬{Str | Bool})
+//│ Type: Bool
+
+fun increv(x) = if x is
+  Int then x + 1
+  else
+    rev(x)
+increv
+//│ Type: ['x, 'res, 'eff, 'x1] -> 'x ->{'eff} 'res
+//│ Where:
+//│   'x#Int ∨ Int & 'x <: Int ∧ Int <: Int ∧ Int <: 'res ∧ ⊥ <: 'eff
+//│   'x#¬Int ∨ ¬Int & 'x <: 'x1 ∧ 'x1 <: Str ∧ Str <: 'res ∧ ⊥ <: 'eff
+
+fun increv'(x) = if x is
+  Int then x + 1
+  Str then rev(x)
+increv'
+//│ Type: ['x, 'res, 'eff] -> 'x ->{'eff} 'res
+//│ Where:
+//│   'x#Int ∨ Int & 'x <: Int ∧ Int <: Int ∧ Int <: 'res ∧ ⊥ <: 'eff
+//│   'x#Str ∨ Str & 'x <: Str ∧ Str <: 'res ∧ ⊥ <: 'eff
+//│   'x#¬Str & ¬Int ∨ ⊤ <: ⊥
+
+:e
+increv(sib)
+//│ ╔══[ERROR] Type error in reference with expected type 'x
+//│ ║  l.126: 	increv(sib)
+//│ ║         	       ^^^
+//│ ╟── because: cannot constrain  (Str | Int) | Bool  <:  'x
+//│ ╟── because: cannot constrain  Bool  <:  'x
+//│ ╙── because: cannot constrain  Bool  <:  ¬(¬{Str | Int})
+//│ Type: Int | Str
+
+:e
+increv'(sib)
+//│ ╔══[ERROR] Type error in reference with expected type 'x
+//│ ║  l.136: 	increv'(sib)
+//│ ║         	        ^^^
+//│ ╟── because: cannot constrain  (Str | Int) | Bool  <:  'x
+//│ ╟── because: cannot constrain  Bool  <:  'x
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: Int | Str
+
+increv(si)
+//│ Type: Int | Str
+
+increv'(si)
+//│ Type: Int | Str
+
+fun f(x, y) = if
+  x is Int and y is Int then 1
+  x is Bool then y
+//│ Type: ⊤
+
+// literal matching not yet implemented
+
+:todo
+x => if x is
+ true then 0
+ false then 0
+//│ Type: (Bool) ->{⊥} Int
+
+fun f(x) = if
+  x is Int then x + 2
+  x is Str then rev(x)
+  else
+    not(x)
+f
+//│ Type: ['x, 'res, 'eff, 'x1] -> 'x ->{'eff} 'res
+//│ Where:
+//│   'x#Int ∨ Int & 'x <: Int ∧ Int <: Int ∧ Int <: 'res ∧ ⊥ <: 'eff
+//│   'x#Str ∨ Str & 'x <: Str ∧ Str <: 'res ∧ ⊥ <: 'eff
+//│   'x#¬Str & ¬Int ∨ (¬Int & ¬Str) & 'x <: 'x1 ∧ 'x1 <: Bool ∧ Bool <: 'res ∧ ⊥ <: 'eff
+
+f(sib)
+//│ Type: (Bool | Int) | Str
+
+fun f(x, y) = if
+  x is Int then y
+  y is Str then 1
+  x is Str then y + 1
+  else
+    not(x)
+f
+//│ Type: ['x, 'y, 'res, 'eff, 'x1, 'y1, 'y2, 'x2] -> ('x, 'y) ->{'eff} 'res
+//│ Where:
+//│   'x#Int ∨ 'y <: 'res ∧ ⊥ <: 'eff
+//│   'y#Str ∨ 'x#¬Int ∨ ¬Int & 'x <: 'x1 ∧ Int <: 'res ∧ ⊥ <: 'eff
+//│   'x#Str ∨ 'y#¬Str ∨ ¬Str & 'y <: 'y1 ∧ 'y1 <: Int ∧ Int <: Int ∧ Int <: 'res ∧ ⊥ <: 'eff
+//│   'x#¬Str & ¬Int ∨ 'y#¬Str ∨ ¬Str & 'y <: 'y2 ∧ (¬Int & ¬Str) & 'x <: 'x2 ∧ 'x2 <: Bool ∧ Bool <: 'res ∧ ⊥ <: 'eff
+
+f(ib, sib)
+//│ Type: (((Bool | Int) | Bool) | Int) | Str
+
+:ns
+f(ib, ib)
+//│ Type: 'res
+//│ Where:
+//│   Bool <: 'y
+//│   Int <: 'y
+//│   'y#Str ∨ ¬Int & 'x <: 'x1 ∧ Int <: 'res ∧ ⊥ <: 'eff
+//│   Bool <: 'x
+//│   Int <: 'x
+//│   'x <: ¬(¬{(Str | Int) | Bool})
+//│   'x#Str ∨ ¬Str & 'y <: 'y1 ∧ 'y1 <: Int ∧ Int <: Int ∧ Int <: 'res ∧ ⊥ <: 'eff
+//│   'eff <: ¬()
+//│   Bool <: 'res
+//│   'y <: 'res
+
+:todo
+f(ib, ib)
+//│ Type: Bool | 'res
+//│ Where:
+//│   Bool <: 'res
+//│   'res <: 'res
+
+fun f(x, y) = if
+  x is Int then 1
+  y is Int then not(x)
+f
+//│ Type: ['x, 'y, 'res, 'eff, 'x1] -> ('x, 'y) ->{'eff} 'res
+//│ Where:
+//│   'x#Int ∨ Int <: 'res ∧ ⊥ <: 'eff
+//│   'y#Int ∨ 'x#¬Int ∨ ¬Int & 'x <: 'x1 ∧ 'x1 <: Bool ∧ Bool <: 'res ∧ ⊥ <: 'eff
+//│   'x#¬Int ∨ 'y#¬Int ∨ ⊤ <: ⊥
+
+f(ib, 1)
+//│ Type: Bool | Int

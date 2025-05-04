@@ -1,0 +1,106 @@
+:bbml
+//│ Type: ⊤
+:js
+
+//│ Type: ⊤
+
+
+// * Sec. 9 of A Practical Subtyping System For Erlang
+// * (https://homepages.inf.ed.ac.uk/wadler/papers/erlang/erlang.pdf)
+
+
+class
+  Tru()
+  Fls()
+//│ Type: ⊤
+
+let
+  tru = new Tru()
+  fls = new Fls()
+//│ fls = Fls()
+//│ tru = Tru()
+//│ Type: ⊤
+
+// :ucs desugared
+:ucs normalized
+fun test(x, y) = if
+  x is Tru and y is Tru then tru
+  x is Tru and y is Tru then tru
+  x is Tru and y is Tru then tru
+  x is Fls then fls
+  y is Fls then fls
+test
+//│ Normalized:
+//│ >  if
+//│ >    x is Tru and
+//│ >      y is Tru then tru#666
+//│ >      y is Fls then fls#666
+//│ >    x is Fls then fls#666
+//│ >    y is Fls then fls#666
+//│ = [function test]
+//│ Type: ['x, 'y, 'res, 'eff, 'y1, 'x1] -> ('x, 'y) ->{'eff} 'res
+//│ Where:
+//│   'x#Tru ∨ 'y#Tru ∨ Tru <: 'res ∧ ⊥ <: 'eff
+//│   'x#Fls ∨ 'y#¬Tru ∨ ¬Tru & 'y <: 'y1 ∧ Fls <: 'res ∧ ⊥ <: 'eff
+//│   'x#Fls ∨ 'y <: 'y1 ∧ Fls <: 'res ∧ ⊥ <: 'eff
+//│   'y#Fls ∨ 'x#¬Fls & ¬Tru ∨ (¬Tru & ¬Fls) & 'x <: 'x1 ∧ Fls <: 'res ∧ ⊥ <: 'eff
+//│   'y#Fls ∨ 'x#¬Fls ∨ ¬Fls & 'x <: 'x1 ∧ Fls <: 'res ∧ ⊥ <: 'eff
+//│   'x#¬Fls & ¬Tru ∨ 'y#¬Fls ∨ ⊤ <: ⊥
+//│   'y#¬Fls & ¬Tru ∨ 'x#¬Fls ∨ ⊤ <: ⊥
+
+test(tru, tru)
+//│ = Tru()
+//│ Type: Tru
+
+test(tru, fls)
+//│ = Fls()
+//│ Type: Fls
+
+test(fls, tru)
+//│ = Fls()
+//│ Type: Fls
+
+test(fls, fls)
+//│ = Fls()
+//│ Type: Fls
+
+test("hi", fls)
+//│ = Fls()
+//│ Type: Fls
+
+
+:todo
+:e
+test(true, false)
+//│ ═══[RUNTIME ERROR] Error: match error
+//│ ╔══[ERROR] Type error in boolean literal with expected type 'y
+//│ ╟── because: cannot constrain  Bool  <:  'y
+//│ ╟── because: cannot constrain  Bool  <:  'y
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ ╔══[ERROR] Type error in boolean literal with expected type 'y
+//│ ╟── because: cannot constrain  Bool  <:  'y
+//│ ╟── because: cannot constrain  Bool  <:  'y
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: ⊥
+
+
+// * Note: this version generates a large type
+
+fun test(x, y) = if
+  x is Tru and y is Tru then tru
+  x is Fls and y is Tru then fls
+  y is Fls then fls
+// test
+//│ Type: ⊤
+
+// * Note: and this one even larger
+
+fun test(x, y) = if
+  x is Tru and y is Tru then tru
+  x is Fls and y is Tru then fls
+  y is Fls then fls
+  y is Fls then fls
+// test
+//│ Type: ⊤
+
+

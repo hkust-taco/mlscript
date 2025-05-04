@@ -47,9 +47,9 @@ fun mapi = s => f =>
 //│ ╟── because: cannot constrain  Seq[out 'B, out 'E1]  <:  Seq[out A, out E]
 //│ ╟── because: cannot constrain  'E1  <:  E
 //│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ & 'reg  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  (¬⊥ ∧ 'r) ∧ ¬outer  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  (¬⊥ & 'r) & ¬outer  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  'r  <:  ¬(¬E ∧ ¬outer)
 //│ ╙── because: cannot constrain  ¬outer  <:  ¬(¬E ∧ ¬outer)
 //│ ╔══[ERROR] Type error in region expression with expected type Seq[out A, out E]
@@ -64,9 +64,9 @@ fun mapi = s => f =>
 //│ ╟── because: cannot constrain  Seq[out 'B, out 'E1]  <:  Seq[out A, out E]
 //│ ╟── because: cannot constrain  'E1  <:  E
 //│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ & 'reg  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  (¬⊥ ∧ 'r) ∧ ¬outer  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  (¬⊥ & 'r) & ¬outer  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  'r  <:  ¬(¬E ∧ ¬outer)
 //│ ╙── because: cannot constrain  ¬outer  <:  ¬(¬E ∧ ¬outer)
 //│ ╔══[ERROR] Type error in region expression with expected type Seq[out A, out E]
@@ -81,9 +81,9 @@ fun mapi = s => f =>
 //│ ╟── because: cannot constrain  Seq[out 'B, out 'E1]  <:  Seq[out A, out E]
 //│ ╟── because: cannot constrain  'E1  <:  E
 //│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  ¬⊥ & 'reg  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  (¬⊥ ∧ 'r) ∧ ¬outer  <:  ¬(¬E)
+//│ ╟── because: cannot constrain  (¬⊥ & 'r) & ¬outer  <:  ¬(¬E)
 //│ ╟── because: cannot constrain  'r  <:  ¬(¬E ∧ ¬outer)
 //│ ╙── because: cannot constrain  ¬outer  <:  ¬(¬E ∧ ¬outer)
 //│ Type: ⊤
@@ -96,7 +96,7 @@ fun mapi = s => f =>
       i := !i + 1
       f(!i, x)
 mapi
-//│ Type: [outer, 'A, 'E, 'app, 'eff] -> Seq[out 'A, out 'E] -> (((Int, 'A) ->{'eff} 'app) -> Seq[out 'app, out (¬outer ∨ 'eff) ∨ 'E])
+//│ Type: [outer, 'A, 'E, 'app, 'eff] -> Seq[out 'A, out 'E] -> (((Int, 'A) ->{'eff} 'app) -> Seq[out 'app, out (¬outer | 'eff) | 'E])
 
 // * This version is correct as it keeps the mutation encapsulated within the region
 fun mapi_force: [A, E] -> Seq[out A, out E] -> ((Int, A) ->{E} A) ->{E} Seq[out A, Nothing]

@@ -35,13 +35,12 @@ f
 
 fun f(x) = f(x)
 f
-//│ Type: ⊤ -> ⊥
+//│ Type: ['x, 'eff, 'app] -> 'x ->{'eff} 'app
+//│ Where:
+//│   'x#'x ∨ (  'x#'x ∨ 'app <: 'app ∧ 'eff <: 'eff){0: 'x} <: {0: 'x}
 
-:todo
+
 fun f(x) = f(x.a)
-//│ ╔══[ERROR] Term shape not yet supported by BbML: Sel(Ref(x),Ident(a))
-//│ ║  l.41: 	fun f(x) = f(x.a)
-//│ ╙──      	             ^^^
 //│ Type: ⊤
 
 
@@ -51,7 +50,7 @@ data class Foo[A](a: A)
 :todo proper error
 Foo(123)
 //│ ╔══[ERROR] Variable not found: Foo
-//│ ║  l.52: 	Foo(123)
+//│ ║  l.51: 	Foo(123)
 //│ ╙──      	^^^
 //│ Type: ⊥
 
@@ -62,15 +61,16 @@ new Foo(123)
 
 :todo proper error
 fun f(x) = f(Foo.a(x))
-//│ ╔══[ERROR] Term shape not yet supported by BbML: Sel(Ref(member:Foo),Ident(a))
-//│ ║  l.64: 	fun f(x) = f(Foo.a(x))
-//│ ╙──      	             ^^^^^
+//│ ╔══[ERROR] Variable not found: Foo
+//│ ║  l.63: 	fun f(x) = f(Foo.a(x))
+//│ ╙──      	             ^^^
 //│ Type: ⊤
 
 fun f(x) = f(x.Foo#a)
 f
-//│ Type: ['x] -> Foo[out 'x] -> ⊥
+//│ Type: ['x, 'A, 'eff, 'app] -> Foo[out 'A] ->{'eff} 'app
 //│ Where:
-//│   'x <: Foo[out 'x]
+//│   'A#'A ∨ (  'A#'A ∨ 'app <: 'app ∧ 'eff <: 'eff){0: 'A} <: {0: 'x}
+//│   'x <: Foo[out 'A]
 
 

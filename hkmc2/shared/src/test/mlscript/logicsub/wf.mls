@@ -1,0 +1,189 @@
+:bbml
+//│ Type: ⊤
+
+//│ Type: ⊤
+
+// functions intersection requires disjoint parameters
+
+fun wf: (Int -> Int) & (Str -> Str)
+//│ Type: ⊤
+
+:e
+fun ill: (Int -> Int) & (Int -> Any)
+fun ill(x) = x
+//│ ╔══[ERROR] Ill-formed type
+//│ ║  l.12: 	fun ill: (Int -> Int) & (Int -> Any)
+//│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Type: ⊤
+
+:e
+fun ill: [a: Int] -> Int & [b: Int] -> Int
+//│ ╔══[ERROR] Illegal forall annotation.
+//│ ║  l.20: 	fun ill: [a: Int] -> Int & [b: Int] -> Int
+//│ ╙──      	         ^^^^^^^^
+//│ ═══[ERROR] Invalid type
+//│ Type: ⊤
+
+:e
+fun ill: [A] -> (A -> A) & (Int -> Int)
+//│ ╔══[ERROR] Ill-formed type
+//│ ║  l.28: 	fun ill: [A] -> (A -> A) & (Int -> Int)
+//│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^
+//│ Type: ⊤
+
+fun wf: [a: (Int -> Int) & (Str -> Str)]
+//│ Type: ⊤
+
+:e
+fun ill: [a: (Int -> Int) & (Int -> Any)]
+//│ ╔══[ERROR] Ill-formed type
+//│ ║  l.38: 	fun ill: [a: (Int -> Int) & (Int -> Any)]
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Type: ⊤
+
+// intersection of the same function type may not always be simplified
+
+fun wf: (Int -> Int) & (Int -> Int)
+//│ Type: ⊤
+
+:e
+fun ill: (Int -> Int) & (Str -> Str) & (Int -> Int)
+//│ ╔══[ERROR] Ill-formed type
+//│ ║  l.50: 	fun ill: (Int -> Int) & (Str -> Str) & (Int -> Int)
+//│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Type: ⊤
+
+// same rules apply on negative position
+:e
+fun ill: (Int -> Int) & (Int -> Any) -> Str
+//│ ╔══[ERROR] Ill-formed type
+//│ ║  l.58: 	fun ill: (Int -> Int) & (Int -> Any) -> Str
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Type: ⊤
+
+// similarly, records union requires pairwise disjointness
+
+fun wf: [a: Int] | [a: Str]
+//│ Type: ⊤
+
+:e
+fun ill: [A] -> (Int | Str, A) -> [a: Int, b: A] | [a: Int, b: Str]
+fun ill(x, p) = if x is
+  Int then { a: x, b: p }
+  Str then { a: 0, b: x }
+//│ ╔══[ERROR] Ill-formed type
+//│ ║  l.70: 	fun ill: [A] -> (Int | Str, A) -> [a: Int, b: A] | [a: Int, b: Str]
+//│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type error in `if` expression with expected type {a: Int, b: A} | {a: Int, b: Str}
+//│ ║  l.72: 	  Int then { a: x, b: p }
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.73: 	  Str then { a: 0, b: x }
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  {a: Int, b: Str & (Int | Str)}  <:  {a: Int, b: A} | {a: Int, b: Str}
+//│ ╟── because: cannot constrain  {a: Int, b: Str} & {a: Int}  <:  {a: Int, b: A}
+//│ ╙── because: cannot constrain  Str  <:  A
+//│ Type: ⊤
+
+// it is not required that all records shares the same discriminant field
+
+fun wf:
+  (([a: Int, b:Int]) -> Int) &
+  (([b: Bool, c: Bool]) -> Bool) &
+  (([a: Str, c: Str]) -> Str)
+//│ Type: ⊤
+
+fun wf:
+  (([tag: [a: Int, b:Int]]) -> Int) &
+  (([tag: [b: Str, c: Bool]]) -> Bool) &
+  (([tag: [a: Str, c: Str]]) -> Str)
+//│ Type: ⊤
+
+// functions union merges
+
+fun wf: ((([a: Int]) -> Int) | (([b: Str]) -> Str)) & (([b: Int]) -> Int)
+fun wf(u) = u.b
+//│ Type: ⊤
+
+fun wf: ((Int | Bool -> Int) | (Bool -> Bool)) & (Str -> Str)
+//│ Type: ⊤
+
+wf("")
+//│ Type: Str
+
+wf(true)
+//│ Type: Bool | Int
+
+:e
+wf(1)
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.117: 	wf(1)
+//│ ║         	^^^^^
+//│ ╟── because: cannot constrain  (((Int | Bool) -> Int) | (Bool -> Bool)) & (Str -> Str)  <:  Int ->{'eff} 'app
+//│ ╟── because: cannot constrain  {0: Int}  <:  {0: Bool} | {0: Str}
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: Int
+
+// function negation is not wf
+
+:e
+fun ill: ~(Int -> Int)
+//│ ╔══[ERROR] Ill-formed type
+//│ ║  l.129: 	fun ill: ~(Int -> Int)
+//│ ╙──       	           ^^^^^^^^^^
+//│ Type: ⊤
+
+// class declaration has no wf check
+
+class F(f: (Int -> Int) & (Int -> Any))
+//│ Type: ⊤
+
+// wf check on use site
+
+:e
+fun k(f)=f.F#f
+//│ ╔══[ERROR] Ill-formed type
+//│ ║  l.137: 	class F(f: (Int -> Int) & (Int -> Any))
+//│ ╙──       	            ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Type: ⊤
+
+// Class not disjoint with itself
+
+class Pair[A, B](val a: A, val b: B)
+class Tri[A, B, C](val a: A, val b: B, val c: C)
+//│ Type: ⊤
+
+:e
+fun ill: (Pair[Int, Int] -> Int) & (Pair[Str, Str] -> Str)
+//│ ╔══[ERROR] Ill-formed type
+//│ ║  l.156: 	fun ill: (Pair[Int, Int] -> Int) & (Pair[Str, Str] -> Str)
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Type: ⊤
+
+fun wf: [A] -> (Pair[A, Any] -> A) & (Tri[A, Any, Any] -> A)
+fun wf(x) = if x is
+  Pair then x.Pair#a
+  Tri then x.Tri#a
+//│ Type: ⊤
+
+wf(new Pair(0, ""))
+//│ Type: Int
+
+wf(new Tri(new Pair(0, ""), 0, ""))
+//│ Type: Pair['A, 'B]
+//│ Where:
+//│   Int <: 'A
+//│   Str <: 'B
+
+class
+ Z()
+ S()
+//│ Type: ⊤
+
+fun wf: ((Z, Z) -> Z) & ((Z, S) -> S) & ((S, Z | S) -> S)
+//│ Type: ⊤
+
+fun zs: Z | S
+//│ Type: ⊤
+
+wf(zs, zs)
+//│ Type: S | Z

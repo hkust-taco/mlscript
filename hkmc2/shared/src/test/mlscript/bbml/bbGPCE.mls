@@ -17,7 +17,20 @@ fun id(x) = x
 
 
 run(x `=> id(x) `* x)
-//│ Type: Int -> Int
+//│ Type: 'x -> 'cde
+//│ Where:
+//│   'x#'x1 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
+//│   'cde1#'cde1 ∨ 'x#'x1 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
+//│   'x#'x1 ∨ 'cde2#'cde2 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
+//│   'x <: 'x1
+//│   'x1#'x1 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
+//│   'cde1#'cde1 ∨ 'x1#'x1 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
+//│   'x1#'x1 ∨ 'cde2#'cde2 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
+//│   'x1 <: 'cde1
+//│   'cde1#'cde1 ∨ 'cde2#'cde2 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'x1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ 'cde2#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int, 1: Int}
+//│   'x1 <: 'cde2
+//│   'cde3 <: 'cde
+//│   'app <: ¬(¬'cde3)
 
 
 fun assertNotZero: [C] -> CodeBase[out Num, out C, out Any] -> CodeBase[out Num, out C, out Any]
@@ -25,7 +38,17 @@ fun assertNotZero(x) =
   `if (x `== `0.0) then `error else x
 let checkedDiv = x `=> y `=> x `/. (assertNotZero(y))
 run(checkedDiv)
-//│ Type: Num -> (Num -> Num)
+//│ Type: 'x -> (Num -> 'cde)
+//│ Where:
+//│   'x#'x1 ∨ (  'x1#Num ∨ Num <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Num ∨ Num <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Num, 1: Num}
+//│   'x <: 'x1
+//│   'x1#'x1 ∨ (  'x1#Num ∨ Num <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Num ∨ Num <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Num, 1: Num}
+//│   'x1 <: 'cde1
+//│   'cde1#'cde1 ∨ (  'x1#Num ∨ Num <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Num ∨ Num <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Num, 1: Num}
+//│   Num <: 'cde2
+//│   'cde3 <: 'cde
+//│   'cde4 <: 'cde3
+//│   'app <: ¬(¬'cde4)
 
 
 
@@ -38,10 +61,30 @@ show
 fun inc(dbg) =
   x `=> let c = x `+ `1 in let t = dbg(c) in c
 inc
-//│ Type: ['eff] -> (CodeBase[out Int, ?, ?] ->{'eff} ⊤) ->{'eff} CodeBase[out Int -> Int, ⊥, ?]
+//│ Type: ['x, 'cde, 'cde1, 'app, 'app1, 'eff, 'cde2, 'x1] -> (CodeBase[out 'app1, ?, ?] ->{'eff} ⊤) ->{'eff} CodeBase[out 'x -> 'cde2, ⊥, ?]
+//│ Where:
+//│   'x#'x1 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde, 1: 'cde1} <: {0: Int, 1: Int}
+//│   'x1 <: 'cde
+//│   'cde#'cde ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde, 1: 'cde1} <: {0: Int, 1: Int}
+//│   Int <: 'cde1
+//│   'cde2 <: ⊤
+//│   'app <: 'cde2
+//│   'app <: 'app1
+//│   'x <: 'x1
+//│   'x1#'x1 ∨ (  'x1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde, 1: 'cde1} <: {0: Int, 1: Int}
 
 inc(c => log(show(c)))
-//│ Type: CodeBase[out Int -> Int, ⊥, ?]
+//│ Type: CodeBase[out 'x -> 'cde, ⊥, ?]
+//│ Where:
+//│   'x1#'x ∨ (  'x#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int & ¬⊥, 1: Int & ¬⊥}
+//│   'x <: 'cde1
+//│   'cde1#'cde1 ∨ (  'x#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int & ¬⊥, 1: Int & ¬⊥}
+//│   Int <: 'cde2
+//│   'cde <: ⊤
+//│   'app <: 'cde
+//│   'app <: 'app1
+//│   'x1 <: 'x
+//│   'x#'x ∨ (  'x#Int ∨ Int <: 'app ∧ ⊥ <: ⊥) ∧ (  'cde1#Int ∨ Int <: 'app ∧ ⊥ <: ⊥){0: 'cde1, 1: 'cde2} <: {0: Int & ¬⊥, 1: Int & ¬⊥}
 
 
 fun body: [T, C] -> (CodeBase[out Int, out T, out Any], CodeBase[out Int, out C, out Any]) -> Int -> CodeBase[out Int, out T | C, out Any]
@@ -56,29 +99,21 @@ let gn5 = run(gib_naive(5))
 
 fun bind(rhs, k) = `let x = rhs `in k(x)
 bind
-//│ Type: ['cde, 'ctx, 'cde1, 'eff, 'cde2, 'ctx1] -> (CodeBase[out 'cde, out 'ctx, ?], CodeBase[in 'cde1 out 'cde1 ∨ 'cde, ?, ⊥] ->{'eff} CodeBase[out 'cde2, out 'ctx1, ?]) ->{'eff} CodeBase[out 'cde2, out 'ctx ∨ 'ctx1, ?]
+//│ Type: ['cde, 'ctx, 'cde1, 'eff, 'cde2, 'ctx1] -> (CodeBase[out 'cde, out 'ctx, ?], CodeBase[in 'cde1 out 'cde1 | 'cde, ?, ⊥] ->{'eff} CodeBase[out 'cde2, out 'ctx1, ?]) ->{'eff} CodeBase[out 'cde2, out 'ctx | 'ctx1, ?]
 
+:todo
 :e
 fun body: [G] -> (CodeBase[out Int, out G, out Any], CodeBase[out Int, out G, out Any]) -> Int -> CodeBase[out Int, out G, out Any]
 fun body(x, y) = case
   0 then x
   1 then y
   n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
-//│ ╔══[ERROR] Type error in application with expected type CodeBase[out Int, out G, ?]
-//│ ║  l.66: 	  n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
-//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  CodeBase[out 'cde, out 'ctx ∨ 'ctx1, ?]  <:  CodeBase[out Int, out G, ?]
-//│ ╟── because: cannot constrain  'ctx ∨ 'ctx1  <:  G
-//│ ╟── because: cannot constrain  'ctx1  <:  ¬(¬G)
-//│ ╟── because: cannot constrain  'ctx2  <:  ¬(¬G)
-//│ ╟── because: cannot constrain  'ctx2  <:  ¬(¬G)
-//│ ╙── because: cannot constrain    <:  ¬(¬G)
 //│ Type: ⊤
 
 fun bind: [G] -> (CodeBase[out Int, out G, out Any], [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out Int, out C | G, out Any]) -> CodeBase[out Int, out G, out Any]
 fun bind(rhs, k) = `let x = rhs `in k(x)
 bind
-//│ Type: ['G] -> (CodeBase[out Int, out 'G, ?], ['C] -> (CodeBase[out Int, out 'C, ?]) ->{⊥} CodeBase[out Int, out 'C ∨ 'G, ?]) ->{⊥} CodeBase[out Int, out 'G, ?]
+//│ Type: ['G] -> (CodeBase[out Int, out 'G, ?], ['C] -> (CodeBase[out Int, out 'C, ?]) ->{⊥} CodeBase[out Int, out 'C | 'G, ?]) ->{⊥} CodeBase[out Int, out 'G, ?]
 
 
 fun body: [G] -> (CodeBase[out Int, out G, out Any], CodeBase[out Int, out G, out Any]) -> Int -> CodeBase[out Int, out G, out Any]

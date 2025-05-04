@@ -151,14 +151,14 @@ id as [A] -> A -> A
 //│ Type: ['A] -> ('A) ->{⊥} 'A
 
 42 as Int | Num
-//│ Type: Int ∨ Num
+//│ Type: Int | Num
 
 42 as [A] -> Int
 //│ Type: Int
 
 
 42 as [A] -> Int | Num
-//│ Type: Int ∨ Num
+//│ Type: Int | Num
 
 fun foo: Int -> Int
 foo
@@ -215,14 +215,14 @@ f
 
 fun f: ([A] -> ([B] -> A | B -> B | A) -> A) -> ([A] -> ([B] -> A | B -> B | A) -> A)
 f
-//│ Type: (['A] -> (['B] -> ('A ∨ 'B) ->{⊥} 'B ∨ 'A) ->{⊥} 'A) ->{⊥} ['A] -> (['B] -> ('A ∨ 'B) ->{⊥} 'B ∨ 'A) ->{⊥} 'A
+//│ Type: (['A] -> (['B] -> ('A | 'B) ->{⊥} 'B | 'A) ->{⊥} 'A) ->{⊥} ['A] -> (['B] -> ('A | 'B) ->{⊥} 'B | 'A) ->{⊥} 'A
 
 
 fun f: [A] -> [B] -> ([C] -> A | B -> B | C -> A | C) -> B
 f
-//│ Type: ['A] -> (['C] -> ('A) ->{⊥} ('C) ->{⊥} 'A ∨ 'C) ->{⊥} ⊥
+//│ Type: ['A] -> (['C] -> ('A) ->{⊥} ('C) ->{⊥} 'A | 'C) ->{⊥} ⊥
 
 
 fun f: [A, B] -> ([C] -> A | B -> B | C -> A | B | C) -> B
 f
-//│ Type: ['A, 'B] -> (['C] -> ('A ∨ 'B) ->{⊥} ('B ∨ 'C) ->{⊥} ('A ∨ 'B) ∨ 'C) ->{⊥} 'B
+//│ Type: ['A, 'B] -> (['C] -> ('A | 'B) ->{⊥} ('B | 'C) ->{⊥} ('A | 'B) | 'C) ->{⊥} 'B

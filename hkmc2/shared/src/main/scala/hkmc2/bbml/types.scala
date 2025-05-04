@@ -5,7 +5,7 @@ import mlscript.utils.*, shorthands.*
 import syntax.*
 import semantics.*, semantics.Term.*
 import utils.*
-import scala.collection.mutable.{Set => MutSet}
+import scala.collection.mutable.{Set => MutSet, Map => MutMap, LinkedHashSet}
 import utils.Scope
 import Elaborator.State
 
@@ -133,11 +133,11 @@ sealed abstract class Type extends GeneralType with TypeArg:
     case _ => NegType(this)
   
   protected[bbml] def paren(using Scope): Str = toBasic match
-    case _: InfVar | _: ClassLikeType | _: NegType | Top | Bot => show
+    case _: InfVar | _: ClassLikeType | _: RcdType | _: NegType | Top | Bot => show
     case _: ComposedType | _: FunType => s"($show)"
 
   protected[bbml] def parenDbg: Str = toBasic match
-    case _: InfVar | _: ClassLikeType | _: NegType | Top | Bot => showDbg
+    case _: InfVar | _: ClassLikeType | _: RcdType | _: NegType | Top | Bot => showDbg
     case _: ComposedType | _: FunType => s"($showDbg)"
 
 sealed abstract class BasicType extends Type:
@@ -148,6 +148,7 @@ sealed abstract class BasicType extends Type:
     case InfVar(lvl, _, _, _) => lvl
     case FunType(args, ret, eff) =>
       (ret :: eff :: args).map(_.lvl).max
+    case RcdType(fields) => fields.values.map(_.lvl).maxOption.getOrElse(0)
     case ComposedType(lhs, rhs, _) =>
       lhs.lvl.max(rhs.lvl)
     case NegType(ty) => ty.lvl
@@ -156,6 +157,7 @@ sealed abstract class BasicType extends Type:
   def mapBasic(f: Type => Type): Type = this match
     case ClassLikeType(name, targs) => ClassLikeType(name, targs.map(_.mapArg(f)))
     case FunType(args, ret, eff) => FunType(args.map(f), f(ret), f(eff))
+    case RcdType(fields) => RcdType(fields.mapValues(f))
     case ComposedType(lhs, rhs, pol) => Type.mkComposedType(f(lhs), f(rhs), pol)
     case NegType(ty) => Type.mkNegType(f(ty))
     case Top | Bot | _: InfVar => this
@@ -173,11 +175,12 @@ sealed abstract class BasicType extends Type:
       if isSkolem then name else s"'${name}"
     case FunType(arg :: Nil, ret, eff) => s"${arg.paren} ->${printEff(eff)} ${ret.paren}"
     case FunType(args, ret, eff) => s"(${args.map(_.show).mkString(", ")}) ->${printEff(eff)} ${ret.paren}"
-    case ComposedType(lhs, rhs, pol) => s"${lhs.paren} ${if pol then "∨" else "∧"} ${rhs.paren}"
+    case RcdType(fields) => s"{${fields.map { case (l, t) => s"$l: ${t.show}" }.mkString(", ")}}"
+    case ComposedType(lhs, rhs, pol) => s"${lhs.paren} ${if pol then "|" else "&"} ${rhs.paren}"
     case NegType(ty) => s"¬${ty.paren}"
     case Top => "⊤"
     case Bot => "⊥"
-
+  
   override def showDbg: Str = this match
     case ClassLikeType(name, targs) =>
       if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.map(_.showDbg).mkString(", ")}]"
@@ -186,7 +189,8 @@ sealed abstract class BasicType extends Type:
       if isSkolem then s"${name}${uid}_${lvl}" else s"'${name}${uid}_${lvl}"
     case FunType(arg :: Nil, ret, eff) => s"${arg.parenDbg} ->{${eff.showDbg}} ${ret.parenDbg}"
     case FunType(args, ret, eff) => s"(${args.map(_.showDbg).mkString(", ")}) ->{${eff.showDbg}} ${ret.parenDbg}"
-    case ComposedType(lhs, rhs, pol) => s"${lhs.parenDbg} ${if pol then "∨" else "∧"} ${rhs.parenDbg}"
+    case RcdType(fields) => s"{${fields.map { case (l, t) => s"$l: ${t.showDbg}" }.mkString(", ")}}"
+    case ComposedType(lhs, rhs, pol) => s"${lhs.parenDbg} ${if pol then "|" else "&"} ${rhs.parenDbg}"
     case NegType(ty) => s"¬${ty.parenDbg}"
     case Top => "⊤"
     case Bot => "⊥"
@@ -223,7 +227,7 @@ trait CachedNorm[A <: AnyRef]:
       _norm = d
       d
     else _norm
-  
+
 
 object BasicType:
   // TOOD dedup
@@ -251,6 +255,8 @@ case class ClassLikeType(name: TypeSymbol | ModuleSymbol, targs: Ls[TypeArg]) ex
 
 final case class InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, isSkolem: Bool)(val sym: Symbol, val hint: Str) extends BasicType:
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = map.get(uid).getOrElse(this)
+  def showBounds: Str =
+    s"lower: ${state.lowerBounds.map(_.showDbg).mkString(", ")} upper: ${state.upperBounds.map(_.showDbg).mkString(", ")} disjsub: ${state.disjsub}"
 
 given Ordering[InfVar] = Ordering.by(_.uid)
 
@@ -259,6 +265,14 @@ case class FunType(args: Ls[Type], ret: Type, eff: Type) extends BasicType with 
     FunType(args.map(_.toDnf), ret.toDnf, eff.toDnf)
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
     FunType(args.map(_.subst), ret.subst, eff.subst)
+
+case class RcdType(fields: Ls[Str -> Type]) extends BasicType with CachedNorm[RcdType]:
+  def mkNorm(using TL): RcdType =
+    RcdType(fields.mapValues(_.toDnf))
+  override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
+    RcdType(fields.mapValues(_.subst))
+  def & (that: RcdType): RcdType =
+    RcdType((fields ++ that.fields).groupMapReduce(_._1)(_._2)(_ & _).toList)
 
 case class ComposedType(lhs: Type, rhs: Type, pol: Bool) extends BasicType: // * Positive -> union
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
@@ -281,6 +295,69 @@ object Type:
     then lhs | rhs
     else lhs & rhs
   def mkNegType(ty: Type): Type = ty.!
+  def discriminant(a: Ls[Type])(using TL): RcdType =
+    discriminantRcd(RcdType(a.zipWithIndex.map(u => (s"${u._2}", u._1.toBasic))))
+  def discriminantRcd(a: RcdType)(using TL): RcdType =
+    RcdType(a.fields.flatMap:
+      case (a, t) => discriminant(t) match
+        case Top => N
+        case t => S(a -> t))
+  def discriminantIU(i: Inter, u: Union)(using TL): BasicType = (i.v, u.cls) match
+    case (N, cs) => cs.reduceOption[Type](_ | _).fold(Top)(NegType(_))
+    case (S(ClassLikeType(c, t)), cs) => if cs.exists(_.name.uid === c.uid) then Bot else ClassLikeType(c, t.map(_ => Wildcard.empty))
+    case (S(u: RcdType), _) => discriminantRcd(u)
+    case _ => Top
+  def discriminant(t: Type)(using TL): BasicType =
+    t.toDnf.conjs.foldLeft(Bot: Type)((x, y) => x | discriminantIU(y.i, y.u)).simp.toBasic
+  def disjointIU(i: Inter, u: Union)(using TL): Opt[Set[Set[InfVar -> BasicType]]] = (i.v, u.cls, u.rcd) match
+    case (S(c: ClassLikeType), cs, _) if cs.exists(_.name.uid === c.name.uid) => S(Set.empty)
+    case (S(RcdType(u)), _, rs) =>
+      val k = u.values.flatMap(t => disjointDisj(t.toDnf)).toList
+      val rd =
+        if rs.isEmpty then Nil
+        else
+          val um = u.toMap
+          val p = rs.foldLeft[Ls[Ls[Str -> Type]]](Ls(Nil)): (p, w) =>
+            if w.fields.keys.forall(um.contains) then p.flatMap(x => w.fields.map(_ :: x)) else p
+          p.map: p =>
+            val m = p.groupMapReduce(_._1)(_._2)(_ | _)
+            val d = p.keys.distinct.flatMap(a => Type.disjoint(m(a).!, um(a)))
+            if d.isEmpty then N
+            else S(d.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))))
+      if k.isEmpty then
+        if rd.isEmpty || rd.contains(N) then N else S(rd.flatten.flatten.toSet)
+      else if k.exists(_.isEmpty) then S(Set.empty)
+      else
+        if rd.contains(N) then N
+        else S(k.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))) ++ rd.flatten.flatten)
+    case _ => N
+  def disjointConj(ty: Conj)(using TL): Opt[Set[Set[InfVar -> BasicType]]] =
+    val d = disjointIU(ty.i, ty.u)
+    if d.exists(_.isEmpty) then S(Set.empty)
+    else (ty.i.v, ty.u.cls, ty.u.rcd, ty.vars.iterator.filter(_._2).keys.toList) match
+      case (_, _, _, Nil) => d
+      case (N, Nil, Nil, v :: Nil) =>
+        val lb = v.state.lowerBounds.reduceOption(_ | _).orElse(S(Bot)).get
+        disjointDisj(lb.toDnf).map(_ + Set(v -> v))
+      case (i, c, r, vs) =>
+        val j = i match
+          case S(ClassLikeType(c, _)) => S(ClassLikeType(c, Nil))
+          case S(u: RcdType) => S(u)
+          case _ => N
+        val vd = vs.combinations(2).collect { case x :: y :: _ => Ls(x -> y, y -> x) }.flatten.toList
+        val ds = vs.flatMap(v => (j ++ (c ++ r).reduceOption[Type](_ | _).map(_.!)).map(x => v -> x.toBasic)).toSet ++ vd
+        val lb = vs.flatMap(_.state.lowerBounds.reduceOption[Type](_ | _)).reduceOption(_ & _).orElse(S(Bot)).get
+        val t = lb & Conj(Inter(j), Union(N, c, Nil), Nil)
+        disjointDisj(t.toDnf).map(_ + ds)
+  def disjointDisj(t: Disj)(using TL): Opt[Set[Set[InfVar -> BasicType]]] =
+    if t.conjs.isEmpty then S(Set.empty)
+    else
+      val ds = t.conjs.map(disjointConj)
+      if ds.contains(N) then N
+      else S(ds.flatten.flatten.toSet)
+  def disjoint(a: Type, b: Type)(using TL): Opt[Set[Set[InfVar->BasicType]]] =
+    disjointDisj((a & b).toDnf)
+
 
 // * Poly types can not be used as type arguments
 case class PolyType(tvs: Ls[InfVar], outer: Opt[InfVar], body: GeneralType) extends GeneralType:
@@ -307,21 +384,25 @@ case class PolyType(tvs: Ls[InfVar], outer: Opt[InfVar], body: GeneralType) exte
         val newSt = new VarState()
         newSt.lowerBounds = state.lowerBounds.map(_.subst)
         newSt.upperBounds = state.upperBounds.map(_.subst)
+        newSt.disjsub ++= state.disjsub.map(_.subst)
         InfVar(lvl, uid, newSt, skolem)(v.sym, v.hint)
     }, outer, body.subst) // * outer should have no bound!
-
+  
   // * This function will only return the body after substitution
   // * and \dom(map) should cover all tvs.
   // * This function is dedicated to `skolemize` and `instantiate`.
-  private def substAndGetBody(using map: Map[Uid[InfVar], InfVar]): GeneralType =
+  private def substAndGetBody(using map: Map[Uid[InfVar], InfVar])(using TL): GeneralType =
     tvs.foreach:
       case InfVar(lvl, uid, state, skolem) =>
         val v = map(uid)
         v.state.lowerBounds = state.lowerBounds.map(_.subst)
         v.state.upperBounds = state.upperBounds.map(_.subst)
+        v.state.disjsub ++= state.disjsub.map(_.subst)
+        v.state.disjsub.foreach(_.commit())
+        tl.log(s"adding bounds to $v: ${v.showBounds}")
     body.subst
-
-  def skolemize(nextUid: => Uid[InfVar], lvl: Int)(tl: TL) =
+  
+  def skolemize(nextUid: => Uid[InfVar], lvl: Int)(using TL) =
     // * Note that by this point, the state is supposed to be frozen/treated as immutable
     // * `outer` is already skolemized when it is declared
     val map = tvs.map(v =>
@@ -331,31 +412,36 @@ case class PolyType(tvs: Ls[InfVar], outer: Opt[InfVar], body: GeneralType) exte
     ).toMap
     substAndGetBody(using map)
   
-  def instantiate(nextUid: => Uid[InfVar], env: InfVar, lvl: Int)(tl: TL)(using State): GeneralType =
+  def instantiate(nextUid: => Uid[InfVar], env: InfVar, lvl: Int)(using State, TL): GeneralType =
     val map = (outer.map(_.uid -> env).toList ++ tvs.map(v =>
       val nv = InfVar(lvl, nextUid, new VarState(), false)(new InstSymbol(v.sym), v.hint)
       tl.log(s"instantiate ${v.showDbg} ~> ${nv.showDbg}")
+      // tl.log(s"where ${nv.showBounds}")
       v.uid -> nv
     )).toMap
     substAndGetBody(using map)
 
 object PolyType:
-  def collectTVs(ty: GeneralType): Set[InfVar] =
+  def collectTVs(ty: GeneralType)(using TL): Set[InfVar] =
     val visited = MutSet.empty[InfVar]
     object CollectTVs extends TypeTraverser:
       override def apply(pol: Boolean)(ty: GeneralType): Unit = ty match
         case v @ InfVar(_, _, state, _) =>
+          tl.log(s"collect ${v.showDbg} ${state.upperBounds}")
           if visited.add(v) then
             state.lowerBounds.foreach: bd =>
               apply(true)(bd)
             state.upperBounds.foreach: bd =>
               apply(false)(bd)
+            val (p, n) = state.disjsub.map(_.children()).unzip
+            p.flatten.foreach(apply(true))
+            n.flatten.foreach(apply(false))
             super.apply(pol)(ty)
         case _ => super.apply(pol)(ty)
     CollectTVs(true)(ty)
     visited.toSet
 
-  def generalize(ty: GeneralType, outer: Opt[InfVar], lvl: Int): PolyType =
+  def generalize(ty: GeneralType, outer: Opt[InfVar], lvl: Int)(using TL): PolyType =
     PolyType(collectTVs(ty).filter(v => outer.map(_.uid != v.uid).getOrElse(true)).toList.sorted, outer, ty)
 
 // * Functions that accept/return a polymorphic type.
@@ -388,3 +474,30 @@ case class PolyFunType(args: Ls[GeneralType], ret: GeneralType, eff: Type) exten
 class VarState:
   var lowerBounds: Ls[Type] = Nil
   var upperBounds: Ls[Type] = Nil
+  val disjsub: LinkedHashSet[DisjSub] = LinkedHashSet.empty
+  override def toString = "<>"
+
+case class DisjSub(disjoint: LinkedHashSet[InfVar -> BasicType], dss: Ls[DisjSub], cs: Ls[Type -> Type]):
+  def commit() = disjoint.keys.foreach(_.state.disjsub += this)
+  def check(m: Map[InfVar, Type])(using TL): (Ls[DisjSub], Ls[Type -> Type]) =
+    if disjoint.isEmpty then (Nil, Nil)
+    else
+      disjoint.keys.foreach(_.state.disjsub -= this)
+      val d = disjoint.toList.flatMap: u =>
+        m.get(u._1).fold(S(Set(Set(u._1 -> u._2)))): t =>
+          Type.disjoint(u._2, t | u._1).orElse { disjoint -= u; N }
+      if disjoint.isEmpty then
+        val (dss0, cs0) = dss.map(_.check(m)).unzip
+        (dss0.flatten, cs0.flatten ++ cs)
+      else
+        val dss1 = d.reduce((x, y) => y.flatMap(y => x.map(_ ++  y))).map: k =>
+          DisjSub(LinkedHashSet.from(k), dss, cs)
+        (dss1.toList, Nil)
+  def children(): (Ls[Type], Ls[Type]) =
+    val (p, n) = dss.map(_.children()).unzip
+    (p.flatten ++ disjoint.keys ++ cs.keys, n.flatten ++ cs.values)
+  def subDisjSub: Ls[DisjSub] = this :: dss.flatMap(_.subDisjSub)
+  def subst(using map: Map[Uid[InfVar], InfVar]): DisjSub =
+    val d = disjoint.map:
+      case (v, t) => (map.get(v.uid).getOrElse(v), t.subst.toBasic)
+    DisjSub(d, dss.map(_.subst), cs.map(u => (u._1.subst, u._2.subst)))
