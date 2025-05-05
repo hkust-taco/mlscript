@@ -47,7 +47,17 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
       case (c1: Pattern.ClassLike, c2: Pattern.ClassLike) => c1.sym === c2.sym
       case (Pattern.Lit(l1), Pattern.Lit(l2)) => l1 === l2
       case (Pattern.Tuple(n1, b1), Pattern.Tuple(n2, b2)) => n1 === n2 && b1 === b2
-      case (_, _) => false
+      case (Pattern.Record(ls1), Pattern.Record(ls2)) =>
+        ls1.zip(ls2)
+           .forall{case ((fieldName1, p1), (fieldName2, p2)) =>
+            fieldName1 == fieldName2 && p1 =:= p2
+        }
+      case (Pattern.Synonym(sym1, args1), Pattern.Synonym(sym2, args2)) =>
+        // TODO : there is surely some other conditions
+        // and we may want to accept equality beween a synonym and its input pattern
+        sym1 === sym2
+      case (_:Pattern.ClassLike, _) | (_:Pattern.Lit, _) |
+        (_:Pattern.Tuple, _) | (_:Pattern.Synonym, _) | (_:Pattern.Record, _) => false
     /** Checks if `lhs` can be subsumed under `rhs`. */
     def <:<(rhs: Pattern): Bool = compareCasePattern(lhs, rhs)
     /**
@@ -68,6 +78,16 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
       case lhs: Pattern.ClassLike => lhs.refined = true
       case _ => ()
   
+  extension (lhs: Pattern.Record)
+    /** reduces the record pattern `lhs` assuming we have matched `rhs`.
+      * It removes field matches that may now be unnecessary
+      */
+    infix def assuming(rhs: Pattern.Record): Pattern.Record =
+      val filteredEntries = lhs.entries.filter { (fieldName1, _) =>
+        rhs.entries.forall { (fieldName2, _) => ! (fieldName1 === fieldName2)}
+      }
+      Pattern.Record(filteredEntries)
+
   inline def apply(split: Split): Split = normalize(split)(using VarSet())
   
   /**
@@ -152,10 +172,12 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
       case Split.End => Split.End
     rec(split)
   
+  // TODO : update documentation
   /**
     * Specialize `split` with the assumption that `scrutinee` matches `pattern`.
-    * If `matchOrNot` is `true`, the function _keeps_ branches that agree on
-    * `scrutinee` matches `pattern`. Otherwise, the function _removes_ branches
+    * If `mode` is `+`, the function _keeps_ branches that agree on
+    * `scrutinee` matches `pattern` and simplifies the record patterns it sees if the fields were already matched.
+    * Otherwise (if `mode is `-`), the function _removes_ branches
     * that agree on `scrutinee` matches `pattern`.
     */
   private def specialize(
@@ -188,6 +210,10 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
             else if split.isFallback then
               log(s"Case 1.1.3: $pattern is unrelated with $thatPattern")
               rec(tail)
+            // TODO
+            // else if let r1 @ Record(entries1), r2 @ Record(entries2) = thatPattern, pattern then
+            //   val refinedPattern = r1 assuming r2
+            //   Split.Cons(Branch(thatScrutinee, refinedPattern, continuation), tail)
             else if pattern <:< thatPattern then
               // TODO: the warning will be useful when we have inheritance information
               // raiseDesugaringWarning(
@@ -249,7 +275,11 @@ object Normalization:
     case (Lit(Tree.StrLit(_)), ClassLike(blt.`Str`, _, _, _)) => true
     case (Lit(Tree.DecLit(_)), ClassLike(blt.`Num`, _, _, _)) => true
     case (Lit(Tree.BoolLit(_)), ClassLike(blt.`Bool`, _, _, _)) => true
-    case (_, _) => false
+    case (_:Synonym, _) => false
+      // TODO there is probably a sensible condition
+    case (Record(entries1), Record(entries2)) =>
+      entries1.forall { (fieldName1, _) => entries2.exists { (fieldName2, _) => fieldName1 === fieldName2 } }
+    case (_:ClassLike, _) | (_:Tuple, _) | (_:Lit, _) | (_:Record, _) => false
 
   final case class VarSet(declared: Set[BlockLocalSymbol]):
     def +(nme: BlockLocalSymbol): VarSet = copy(declared + nme)

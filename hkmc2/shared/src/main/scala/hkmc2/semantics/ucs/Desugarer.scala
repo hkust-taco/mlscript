@@ -617,21 +617,32 @@ class Desugarer(val elaborator: Elaborator)
       case Jux(Ident(".."), Ident(_)) => fallback => _ =>
         raise(ErrorReport(msg"Illegal rest pattern." -> pattern.toLoc :: Nil))
         fallback
-      case InfixApp(id: Ident, Keyword.`:`, pat) => fallback => ctx =>
-        val sym = VarSymbol(id)
-        val ctx2 = ctx
-          // + (id.name -> sym) // * This binds the field's name in the context; probably surprising
-        Split.Let(sym, ref.sel(id, N),
-          expandMatch(sym, pat, sequel)(fallback)(ctx2))
+      case InfixApp(fieldName: Ident, Keyword.`:`, pat) => fallback => ctx =>
+        val symbol = scrutSymbol.getFieldScrutinee(fieldName)
+        Branch(
+          ref,
+          Pattern.Record((fieldName, symbol) :: Nil),
+          expandMatch(symbol, pat, sequel)(fallback)(ctx)
+        ) ~: fallback
+      case Pun(false, fieldName) => fallback => ctx =>
+        val symbol = scrutSymbol.getFieldScrutinee(fieldName)
+        Branch(
+          ref,
+          Pattern.Record((fieldName, symbol) :: Nil),
+          expandMatch(symbol, fieldName, sequel)(fallback)(ctx)
+        ) ~: fallback
+      case Block(st :: Nil) => fallback => ctx =>
+        expandMatch(scrutSymbol, st, sequel)(fallback)(ctx)
       case Block(sts) => fallback => ctx => // we assume this is a record
-        sts.foldLeft[Option[List[(Tree.Ident, BlockLocalSymbol, Tree)]]](S(Nil)){
-          case (N, _) => N
-          case (S(tl), p) => p match
+        sts.foldRight[Option[List[(Tree.Ident, BlockLocalSymbol, Tree)]]](S(Nil)){
+          case (_, N) => N
+          case (p, S(tl)) => p match
             case InfixApp(fieldName: Ident, Keyword.`:`, pat) =>
               S((fieldName, scrutSymbol.getFieldScrutinee(fieldName), pat) :: tl)
             // TODO[Chrona] Puns
+            case Pun(false, fieldName) =>
+              S((fieldName, scrutSymbol.getFieldScrutinee(fieldName), fieldName) :: tl)
             case p =>
-              // TODO[Chrona] raise an error properly
               raise(ErrorReport(msg"illegal block pattern content" -> p.toLoc :: Nil))
               None
         }.fold(fallback)(recordContent =>
