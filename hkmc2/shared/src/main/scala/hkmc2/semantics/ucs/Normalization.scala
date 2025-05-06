@@ -82,11 +82,21 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
     /** reduces the record pattern `lhs` assuming we have matched `rhs`.
       * It removes field matches that may now be unnecessary
       */
-    infix def assuming(rhs: Pattern.Record): Pattern.Record =
-      val filteredEntries = lhs.entries.filter { (fieldName1, _) =>
-        rhs.entries.forall { (fieldName2, _) => ! (fieldName1 === fieldName2)}
-      }
-      Pattern.Record(filteredEntries)
+    infix def assuming(rhs: Pattern): Pattern.Record = rhs match
+      case Pattern.Record(rhsEntries) =>
+        val filteredEntries = lhs.entries.filter { (fieldName1, _) =>
+          rhsEntries.forall { (fieldName2, _) => ! (fieldName1 === fieldName2)}
+        }
+        Pattern.Record(filteredEntries)
+      case Pattern.ClassLike(sym = cls : ClassSymbol) =>
+        cls.defn match
+        case S(ClassDef.Parameterized(params = paramList)) =>
+          val filteredEntries = lhs.entries.filter { (fieldName1, _) =>
+          paramList.params.forall { (param:Param) => ! (fieldName1 === param.sym.id)}
+          }
+          Pattern.Record(filteredEntries)
+        case S(_) | N => lhs
+      case _ => lhs
 
   inline def apply(split: Split): Split = normalize(split)(using VarSet())
   
@@ -210,10 +220,16 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
             else if split.isFallback then
               log(s"Case 1.1.3: $pattern is unrelated with $thatPattern")
               rec(tail)
-            // TODO
-            // else if let r1 @ Record(entries1), r2 @ Record(entries2) = thatPattern, pattern then
-            //   val refinedPattern = r1 assuming r2
-            //   Split.Cons(Branch(thatScrutinee, refinedPattern, continuation), tail)
+            else if thatPattern.isRecord then
+              thatPattern match
+              case thatPattern :Pattern.Record => // so the type system is happy
+                // we can use information if pattern is itself a record, or if it is a constructor with arguments
+                val simplifiedRecord = thatPattern assuming pattern
+                if simplifiedRecord.entries.isEmpty then
+                  tail
+                else
+                  Split.Cons(Branch(thatScrutinee, simplifiedRecord, continuation), tail)
+              case _ => tail // impossible
             else if pattern <:< thatPattern then
               // TODO: the warning will be useful when we have inheritance information
               // raiseDesugaringWarning(

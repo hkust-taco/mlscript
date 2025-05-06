@@ -1,24 +1,34 @@
 :js
 
 
-:todo
 fun take_1(p) =
   if p is
     { x: a, y: b } then a + b
     else 0
-//│ ╔══[ERROR] Unrecognized pattern (block)
-//│ ║  l.7: 	    { x: a, y: b } then a + b
-//│ ╙──     	      ^^^^^^^^^^
-
-:todo
-fun take_1(p) =
+fun take_2(p) =
   if p is
     { :x, :y } then x + y
     else 0
-//│ ╔══[ERROR] Unrecognized pattern (block)
-//│ ║  l.16: 	    { :x, :y } then x + y
-//│ ╙──      	       ^^^^^
 
+take_1({x: 0, y: 10})
+//│ = 10
+
+take_1({t: 5, x: 0, y: 10, z: 42})
+//│ = 10
+
+take_2({x: 0, y: 10})
+//│ = 10
+
+take_2({t: 5, x: 0, y: 10, z: 42})
+//│ = 10
+
+take_1({x:"a", y:"b"})
+//│ = "ab"
+
+let r = {z:4}
+take_1(r)
+//│ = 0
+//│ r = {z: 4}
 
 let f = case
   { a: 1 as a } then a
@@ -27,13 +37,12 @@ let f = case
 f(a: 1)
 //│ = 1
 
-
 // * It would probably be surprising to bind `a` in the RHS here
 :e
 let f = case
   { a: 1 } then a
 //│ ╔══[ERROR] Name not found: a
-//│ ║  l.34: 	  { a: 1 } then a
+//│ ║  l.43: 	  { a: 1 } then a
 //│ ╙──      	                ^
 //│ f = [function]
 
@@ -46,17 +55,31 @@ let rcd =
 // * As that will make sense when we have dependent types,
 // * as in: `{ n: Int, v: Vec[Int, n] }`
 
+:js
+let r = {x: 2, y : 4}
+if r is
+  {x:a, y:a} then a
+//│ = 4
+//│ r = {x: 2, y: 4}
+
+
+let rr = {x: {y:10, z:100}, t:1000}
+if rr is
+  {x : {:y, z:t}} then y+t
+//│ = 110
+//│ rr = {x: {y: 10, z: 100}, t: 1000}
+
 
 :todo
 let f = case
   { a: 1 & a } then a
 //│ ╔══[ERROR] Name not found: &
-//│ ║  l.52: 	  { a: 1 & a } then a
+//│ ║  l.75: 	  { a: 1 & a } then a
 //│ ╙──      	         ^
 //│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.52: 	  { a: 1 & a } then a
+//│ ║  l.75: 	  { a: 1 & a } then a
 //│ ╙──      	         ^
-//│ f = [function]
+//│ f = [function f]
 
 
 let f = case

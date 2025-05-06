@@ -635,11 +635,12 @@ class Desugarer(val elaborator: Elaborator)
         expandMatch(scrutSymbol, st, sequel)(fallback)(ctx)
       case Block(sts) => fallback => ctx => // we assume this is a record
         sts.foldRight[Option[List[(Tree.Ident, BlockLocalSymbol, Tree)]]](S(Nil)){
-          case (_, N) => N
+          // this collects the record parts, or fails if some statement does not correspond
+          // to a record field
+          case (_, N) => N // we only need to fail once to return N
           case (p, S(tl)) => p match
             case InfixApp(fieldName: Ident, Keyword.`:`, pat) =>
               S((fieldName, scrutSymbol.getFieldScrutinee(fieldName), pat) :: tl)
-            // TODO[Chrona] Puns
             case Pun(false, fieldName) =>
               S((fieldName, scrutSymbol.getFieldScrutinee(fieldName), fieldName) :: tl)
             case p =>

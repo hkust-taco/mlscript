@@ -50,3 +50,7 @@ enum Pattern extends AutoLocated:
     case Record(Nil) => "{}"
     case Record(entries) =>
       entries.iterator.map(_.name + ": " + _).mkString("{ ", ", ", " }")
+
+  def isRecord = this match
+    case _:Record => true
+    case _ => false
