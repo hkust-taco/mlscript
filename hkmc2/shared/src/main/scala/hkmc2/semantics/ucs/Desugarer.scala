@@ -653,6 +653,12 @@ class Desugarer(val elaborator: Elaborator)
             subMatches(recordContent.map((_, symbol, pat) => (R(symbol), pat)), sequel)(Split.End)(ctx)
           ) ~: fallback
         )
+      case InfixApp(lhs, Keyword.`&`, rhs) => fallback => ctx =>
+        val newSequel = expandMatch(scrutSymbol, rhs, sequel)(fallback)
+        expandMatch(scrutSymbol, lhs, newSequel)(fallback)(ctx)
+      case InfixApp(lhs, Keyword.`|`, rhs) => fallback => ctx =>
+        val newFallback = expandMatch(scrutSymbol, rhs, sequel)(fallback)(ctx)
+        expandMatch(scrutSymbol, lhs, sequel)(newFallback)(ctx)
       case Bra(BracketKind.Curly | BracketKind.Round, inner) => fallback => ctx =>
         expandMatch(scrutSymbol, inner, sequel)(fallback)(ctx)
       case pattern => fallback => _ =>

@@ -25,12 +25,17 @@ enum Pattern extends AutoLocated:
 
   case Record(entries: List[(Ident -> BlockLocalSymbol)])
 
+  case And(lhs: Pattern, rhs: Pattern)
+
+  case Or(lhs: Pattern, rhs: Pattern)
+
   def subTerms: Ls[Term] = this match
     case Lit(_) => Nil
     case ClassLike(_, t, _, _) => t :: Nil
     case Synonym(_, _) => Nil
     case Tuple(_, _) => Nil
     case Record(_) => Nil
+    case _:(And | Or) => Nil 
   
   def children: Ls[Located] = this match
     case Lit(literal) => literal :: Nil
@@ -39,6 +44,8 @@ enum Pattern extends AutoLocated:
     case Synonym(_, arguments) => arguments.map(_.tree)
     case Tuple(fields, _) => Nil
     case Record(entries) => entries.flatMap { case (nme, als) => nme :: als :: Nil }
+    case And(lhs, rhs) => lhs.children ++ rhs.children
+    case Or(lhs, rhs) => lhs.children ++ rhs.children
   
   def showDbg: Str = this match
     case Lit(literal) => literal.idStr
@@ -50,6 +57,8 @@ enum Pattern extends AutoLocated:
     case Record(Nil) => "{}"
     case Record(entries) =>
       entries.iterator.map(_.name + ": " + _).mkString("{ ", ", ", " }")
+    case And(rhs, lhs) => s"( ${rhs.showDbg} & ${rhs.showDbg} )"
+    case Or(rhs, lhs) => s"( ${rhs.showDbg} | ${rhs.showDbg} )"
 
   def isRecord = this match
     case _:Record => true
