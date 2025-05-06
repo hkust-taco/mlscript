@@ -67,12 +67,12 @@ fun body(x, y) = case
 //│ ╔══[ERROR] Type error in application with expected type CodeBase[out Int, out G, ?]
 //│ ║  l.66: 	  n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  CodeBase[out 'cde, out 'ctx ∨ 'ctx1, ?]  <:  CodeBase[out Int, out G, ?]
+//│ ╟── because: cannot constrain  CodeBase[in ⊥ out 'cde, in ⊥ out 'ctx ∨ 'ctx1, in ⊥ out ⊤]  <:  CodeBase[in ⊥ out Int, in ⊥ out G, in ⊥ out ⊤]
 //│ ╟── because: cannot constrain  'ctx ∨ 'ctx1  <:  G
-//│ ╟── because: cannot constrain  'ctx1  <:  ¬(¬G)
-//│ ╟── because: cannot constrain  'ctx2  <:  ¬(¬G)
-//│ ╟── because: cannot constrain  'ctx2  <:  ¬(¬G)
-//│ ╙── because: cannot constrain  ⊤  <:  ¬(¬G)
+//│ ╟── because: cannot constrain  'ctx1  <:  G
+//│ ╟── because: cannot constrain  'ctx2  <:  G
+//│ ╟── because: cannot constrain  'ctx2  <:  G
+//│ ╙── because: cannot constrain  ⊤  <:  G
 //│ Type: ⊤
 
 fun bind: [G] -> (CodeBase[out Int, out G, out Any], [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out Int, out C | G, out Any]) -> CodeBase[out Int, out G, out Any]

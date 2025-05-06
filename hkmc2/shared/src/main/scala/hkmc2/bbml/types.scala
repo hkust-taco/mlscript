@@ -80,8 +80,6 @@ trait CachedBasicType extends Type:
 abstract class TypeExt extends Type:
   override def hashCode: Int =
     toBasic.hashCode
-  override def equals(that: Any): Bool =
-    toBasic === that
   
 sealed abstract class Type extends GeneralType with TypeArg:
   

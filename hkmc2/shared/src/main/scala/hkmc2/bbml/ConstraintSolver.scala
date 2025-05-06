@@ -21,7 +21,7 @@ case class CCtx(cache: Cache, parents: Ls[(Type, Type)], origin: Term, exp: Opt[
           case N => msg""
         }" -> origin.toLoc
       :: parents.reverse.map(p =>
-        msg"because: cannot constrain  ${p._1.simp.show}  <:  ${p._2.simp.show}" -> N
+        msg"because: cannot constrain  ${p._1.show}  <:  ${p._2.show}" -> N
       )
     ))
   def nest(sub: (Type, Type)): CCtx =
@@ -87,13 +87,13 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
         else
           val bd = if v.lvl >= rest.lvl then rest else extrude(rest)(using v.lvl, true, mutable.HashMap.empty)
           if pol then
-            val nc = Type.mkNegType(bd).toBasic
+            val nc = Type.mkNegType(bd).toDnf
             log(s"New bound: ${v.showDbg} <: ${nc.showDbg}")
             cctx.nest(v -> nc) givenIn:
               v.state.upperBounds ::= nc
               v.state.lowerBounds.foreach(lb => constrainImpl(lb, nc))
           else
-            val c = bd.toBasic
+            val c = bd.toDnf
             log(s"New bound: ${v.showDbg} :> ${c.showDbg}")
             cctx.nest(c -> v) givenIn:
               v.state.lowerBounds ::= c
@@ -138,7 +138,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
     case _: ClassLikeType | _: FunType | _: InfVar | Top | Bot => ty
 
   private def constrainImpl(lhs: Type, rhs: Type)(using BbCtx, CCtx, TL): Unit =
-    val p = lhs.toBasic -> rhs.toBasic
+    val p = lhs.toDnf -> rhs.toDnf
     if cctx.cache(p) then log(s"Cached!")
     else trace(s"CONSTRAINT ${lhs.showDbg} <: ${rhs.showDbg}"):
       cctx.nest(p) givenIn:
