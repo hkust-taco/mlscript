@@ -42,29 +42,7 @@ fun checkSomeZeroOneTwo(x) = if x is
 //│ >    else ()
 
 pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Bra(Round,OpApp(StrLit(0),Ident(~),List(Bra(Round,OpApp(Ident(ManyZero),Ident(|),List(StrLit())))))),Ident(|),List(StrLit())) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 let res = "1" is @compile ManyZero
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: ManyZero
-//│ ║  l.58: 	let res = "1" is @compile ManyZero
-//│ ╙──      	                          ^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.58: 	let res = "1" is @compile ManyZero
-//│ ╙──      	                          ^^^^^^^^
 //│ res = false
 

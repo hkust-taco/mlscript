@@ -7,618 +7,139 @@ pattern Zero = "0"
 //│ = true
 
 pattern Binary = "0" | "1"
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(StrLit(0),Ident(|),List(StrLit(1))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 :expect false
 "2" is Binary
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Binary
-//│ ║  l.24: 	"2" is Binary
-//│ ╙──      	       ^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.24: 	"2" is Binary
-//│ ╙──      	       ^^^^^^
 //│ = false
 
 pattern Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(OpApp(OpApp(OpApp(OpApp(OpApp(OpApp(OpApp(OpApp(StrLit(0),Ident(|),List(StrLit(1))),Ident(|),List(StrLit(2))),Ident(|),List(StrLit(3))),Ident(|),List(StrLit(4))),Ident(|),List(StrLit(5))),Ident(|),List(StrLit(6))),Ident(|),List(StrLit(7))),Ident(|),List(StrLit(8))),Ident(|),List(StrLit(9))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 :expect true
 "0" is Digit
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Digit
-//│ ║  l.52: 	"0" is Digit
-//│ ╙──      	       ^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.52: 	"0" is Digit
-//│ ╙──      	       ^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect true
 "9" is Digit
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Digit
-//│ ║  l.69: 	"9" is Digit
-//│ ╙──      	       ^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.69: 	"9" is Digit
-//│ ╙──      	       ^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect false
 "a" is Digit
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Digit
-//│ ║  l.86: 	"a" is Digit
-//│ ╙──      	       ^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.86: 	"a" is Digit
-//│ ╙──      	       ^^^^^
 //│ = false
 
 pattern Lower = "a"..="z"
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(StrLit(a),Ident(..=),List(StrLit(z))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 :expect true
 "a" is Lower
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Lower
-//│ ║  l.114: 	"a" is Lower
-//│ ╙──       	       ^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.114: 	"a" is Lower
-//│ ╙──       	       ^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect true
 "z" is Lower
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Lower
-//│ ║  l.131: 	"z" is Lower
-//│ ╙──       	       ^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.131: 	"z" is Lower
-//│ ╙──       	       ^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect false
 "0" is Lower
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Lower
-//│ ║  l.148: 	"0" is Lower
-//│ ╙──       	       ^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.148: 	"0" is Lower
-//│ ╙──       	       ^^^^^
 //│ = false
 
 pattern Upper = "A"..="Z"
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(StrLit(A),Ident(..=),List(StrLit(Z))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 :expect true
 "A" is Upper
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Upper
-//│ ║  l.176: 	"A" is Upper
-//│ ╙──       	       ^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.176: 	"A" is Upper
-//│ ╙──       	       ^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect true
 "Q" is Upper
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Upper
-//│ ║  l.193: 	"Q" is Upper
-//│ ╙──       	       ^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.193: 	"Q" is Upper
-//│ ╙──       	       ^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect false
 "b" is Upper
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Upper
-//│ ║  l.210: 	"b" is Upper
-//│ ╙──       	       ^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.210: 	"b" is Upper
-//│ ╙──       	       ^^^^^
 //│ = false
 
 pattern Letter = Lower | Upper
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Ident(Lower),Ident(|),List(Ident(Upper))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 :expect true
 "b" is Letter
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Letter
-//│ ║  l.238: 	"b" is Letter
-//│ ╙──       	       ^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.238: 	"b" is Letter
-//│ ╙──       	       ^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect true
 "V" is Letter
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Letter
-//│ ║  l.255: 	"V" is Letter
-//│ ╙──       	       ^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.255: 	"V" is Letter
-//│ ╙──       	       ^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect false
 "0" is Letter
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Letter
-//│ ║  l.272: 	"0" is Letter
-//│ ╙──       	       ^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.272: 	"0" is Letter
-//│ ╙──       	       ^^^^^^
 //│ = false
 
 :expect false
 "9" is Letter
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Letter
-//│ ║  l.286: 	"9" is Letter
-//│ ╙──       	       ^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.286: 	"9" is Letter
-//│ ╙──       	       ^^^^^^
 //│ = false
 
 pattern Word = Letter ~ (Word | "")
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Ident(Letter),Ident(~),List(Bra(Round,OpApp(Ident(Word),Ident(|),List(StrLit()))))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 :expect false
 "" is Word
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Word
-//│ ║  l.314: 	"" is Word
-//│ ╙──       	      ^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.314: 	"" is Word
-//│ ╙──       	      ^^^^
 //│ = false
 
 :expect true
 "b" is Word
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Word
-//│ ║  l.328: 	"b" is Word
-//│ ╙──       	       ^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.328: 	"b" is Word
-//│ ╙──       	       ^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect true
 "pattern" is Word
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Word
-//│ ║  l.345: 	"pattern" is Word
-//│ ╙──       	             ^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.345: 	"pattern" is Word
-//│ ╙──       	             ^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect false
 "b0rked" is Word
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Word
-//│ ║  l.362: 	"b0rked" is Word
-//│ ╙──       	            ^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.362: 	"b0rked" is Word
-//│ ╙──       	            ^^^^
 //│ = false
 
 pattern ManyDigits = ("0" ..= "9") ~ (ManyDigits | "")
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Bra(Round,OpApp(StrLit(0),Ident(..=),List(StrLit(9)))),Ident(~),List(Bra(Round,OpApp(Ident(ManyDigits),Ident(|),List(StrLit()))))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 :expect true
 "0" is ManyDigits
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: ManyDigits
-//│ ║  l.390: 	"0" is ManyDigits
-//│ ╙──       	       ^^^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.390: 	"0" is ManyDigits
-//│ ╙──       	       ^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect true
 "42" is ManyDigits
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: ManyDigits
-//│ ║  l.407: 	"42" is ManyDigits
-//│ ╙──       	        ^^^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.407: 	"42" is ManyDigits
-//│ ╙──       	        ^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect true
 "1234" is ManyDigits
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: ManyDigits
-//│ ║  l.424: 	"1234" is ManyDigits
-//│ ╙──       	          ^^^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.424: 	"1234" is ManyDigits
-//│ ╙──       	          ^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 pattern Integer = "0" | ("1" ..= "9") ~ (ManyDigits | "")
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(StrLit(0),Ident(|),List(OpApp(Bra(Round,OpApp(StrLit(1),Ident(..=),List(StrLit(9)))),Ident(~),List(Bra(Round,OpApp(Ident(ManyDigits),Ident(|),List(StrLit()))))))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 :expect true
 "0" is Integer
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Integer
-//│ ║  l.455: 	"0" is Integer
-//│ ╙──       	       ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.455: 	"0" is Integer
-//│ ╙──       	       ^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect false
 "012" is Integer
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Integer
-//│ ║  l.472: 	"012" is Integer
-//│ ╙──       	         ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.472: 	"012" is Integer
-//│ ╙──       	         ^^^^^^^
 //│ = false
 
 :expect true
 "42" is Integer
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Integer
-//│ ║  l.486: 	"42" is Integer
-//│ ╙──       	        ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.486: 	"42" is Integer
-//│ ╙──       	        ^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 pattern IdentifierStart = Letter | "_"
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Ident(Letter),Ident(|),List(StrLit(_))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 pattern IdentifierBody = (Letter | Digit | "_") ~ (IdentifierBody | "")
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Bra(Round,OpApp(OpApp(Ident(Letter),Ident(|),List(Ident(Digit))),Ident(|),List(StrLit(_)))),Ident(~),List(Bra(Round,OpApp(Ident(IdentifierBody),Ident(|),List(StrLit()))))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 pattern Identifier = IdentifierStart ~ (IdentifierBody | "")
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Ident(IdentifierStart),Ident(~),List(Bra(Round,OpApp(Ident(IdentifierBody),Ident(|),List(StrLit()))))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 :expect true
 "abc" is Identifier
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Identifier
-//│ ║  l.545: 	"abc" is Identifier
-//│ ╙──       	         ^^^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.545: 	"abc" is Identifier
-//│ ╙──       	         ^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect true
 "abc123" is Identifier
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Identifier
-//│ ║  l.562: 	"abc123" is Identifier
-//│ ╙──       	            ^^^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.562: 	"abc123" is Identifier
-//│ ╙──       	            ^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect true
 "abc_123" is Identifier
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Identifier
-//│ ║  l.579: 	"abc_123" is Identifier
-//│ ╙──       	             ^^^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.579: 	"abc_123" is Identifier
-//│ ╙──       	             ^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect true
 "_abc_123" is Identifier
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Identifier
-//│ ║  l.596: 	"_abc_123" is Identifier
-//│ ╙──       	              ^^^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.596: 	"_abc_123" is Identifier
-//│ ╙──       	              ^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect false
 "123abc" is Identifier
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Identifier
-//│ ║  l.613: 	"123abc" is Identifier
-//│ ╙──       	            ^^^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.613: 	"123abc" is Identifier
-//│ ╙──       	            ^^^^^^^^^^
 //│ = false

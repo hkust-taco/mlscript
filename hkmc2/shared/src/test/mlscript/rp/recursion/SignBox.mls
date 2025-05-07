@@ -3,176 +3,32 @@
 data class Box[A](val value: A)
 
 pattern Sign = -1 | 0 | 1
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(OpApp(App(Ident(-),Tup(List(IntLit(1)))),Ident(|),List(IntLit(0))),Ident(|),List(IntLit(1))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 [-1 is Sign, 0 is Sign, 1 is Sign]
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Sign
-//│ ║  l.19: 	[-1 is Sign, 0 is Sign, 1 is Sign]
-//│ ╙──      	       ^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.19: 	[-1 is Sign, 0 is Sign, 1 is Sign]
-//│ ╙──      	       ^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Sign
-//│ ║  l.19: 	[-1 is Sign, 0 is Sign, 1 is Sign]
-//│ ╙──      	                  ^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.19: 	[-1 is Sign, 0 is Sign, 1 is Sign]
-//│ ╙──      	                  ^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Sign
-//│ ║  l.19: 	[-1 is Sign, 0 is Sign, 1 is Sign]
-//│ ╙──      	                             ^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.19: 	[-1 is Sign, 0 is Sign, 1 is Sign]
-//│ ╙──      	                             ^^^^
-//│ = [false, false, false]
+//│ = [true, true, true]
 
 pattern SignBox = Box(Sign | SignBox)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Ident(Sign),Ident(|),List(Ident(SignBox))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4$$anonfun$3(DeBrujinSplit.scala:39)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4(DeBrujinSplit.scala:39)
-//│ 	at: scala.collection.immutable.List.foldRight(List.scala:353)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1$$anonfun$3(DeBrujinSplit.scala:35)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1(DeBrujinSplit.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$adapted$1(DeBrujinSplit.scala:30)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
 
 [
   Box(-1) is @compile SignBox,
   Box(0) is @compile SignBox,
   Box(1) is @compile SignBox
 ]
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: SignBox
-//│ ║  l.67: 	  Box(-1) is @compile SignBox,
-//│ ╙──      	                      ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.67: 	  Box(-1) is @compile SignBox,
-//│ ╙──      	                      ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: SignBox
-//│ ║  l.68: 	  Box(0) is @compile SignBox,
-//│ ╙──      	                     ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.68: 	  Box(0) is @compile SignBox,
-//│ ╙──      	                     ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: SignBox
-//│ ║  l.69: 	  Box(1) is @compile SignBox
-//│ ╙──      	                     ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.69: 	  Box(1) is @compile SignBox
-//│ ╙──      	                     ^^^^^^^
-//│ = [false, false, false]
+//│ = [true, true, true]
 
 [
   Box(Box(-1)) is @compile SignBox,
   Box(Box(0)) is @compile SignBox,
   Box(Box(1)) is @compile SignBox
 ]
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: SignBox
-//│ ║  l.104: 	  Box(Box(-1)) is @compile SignBox,
-//│ ╙──       	                           ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.104: 	  Box(Box(-1)) is @compile SignBox,
-//│ ╙──       	                           ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: SignBox
-//│ ║  l.105: 	  Box(Box(0)) is @compile SignBox,
-//│ ╙──       	                          ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.105: 	  Box(Box(0)) is @compile SignBox,
-//│ ╙──       	                          ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: SignBox
-//│ ║  l.106: 	  Box(Box(1)) is @compile SignBox
-//│ ╙──       	                          ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.106: 	  Box(Box(1)) is @compile SignBox
-//│ ╙──       	                          ^^^^^^^
-//│ = [false, false, false]
+//│ = [true, true, true]
 
 [
   Box(Box(Box(-1))) is @compile SignBox,
   Box(Box(Box(0))) is @compile SignBox,
   Box(Box(Box(1))) is @compile SignBox
 ]
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: SignBox
-//│ ║  l.141: 	  Box(Box(Box(-1))) is @compile SignBox,
-//│ ╙──       	                                ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.141: 	  Box(Box(Box(-1))) is @compile SignBox,
-//│ ╙──       	                                ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: SignBox
-//│ ║  l.142: 	  Box(Box(Box(0))) is @compile SignBox,
-//│ ╙──       	                               ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.142: 	  Box(Box(Box(0))) is @compile SignBox,
-//│ ╙──       	                               ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: SignBox
-//│ ║  l.143: 	  Box(Box(Box(1))) is @compile SignBox
-//│ ╙──       	                               ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.143: 	  Box(Box(Box(1))) is @compile SignBox
-//│ ╙──       	                               ^^^^^^^
-//│ = [false, false, false]
+//│ = [true, true, true]
 
 :expect [false, false, false]
 [
@@ -180,34 +36,4 @@ pattern SignBox = Box(Sign | SignBox)
   Box(Box(Box(null))) is @compile SignBox,
   -1 is SignBox
 ]
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: SignBox
-//│ ║  l.179: 	  Box(Box(Box(2))) is @compile SignBox,
-//│ ╙──       	                               ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.179: 	  Box(Box(Box(2))) is @compile SignBox,
-//│ ╙──       	                               ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: SignBox
-//│ ║  l.180: 	  Box(Box(Box(null))) is @compile SignBox,
-//│ ╙──       	                                  ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.180: 	  Box(Box(Box(null))) is @compile SignBox,
-//│ ╙──       	                                  ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: SignBox
-//│ ║  l.181: 	  -1 is SignBox
-//│ ╙──       	        ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.181: 	  -1 is SignBox
-//│ ╙──       	        ^^^^^^^
 //│ = [false, false, false]

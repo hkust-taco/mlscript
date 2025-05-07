@@ -15,18 +15,6 @@ pattern EvenTree =
   B |
   Node(EvenTree, A, OddTree) | Node(OddTree, A, EvenTree) |
   Node(EvenTree, B, EvenTree) | Node(OddTree, B, OddTree)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(OpApp(OpApp(OpApp(Ident(A),Ident(|),List(App(Ident(Node),Tup(List(Ident(EvenTree), Ident(A), Ident(EvenTree)))))),Ident(|),List(App(Ident(Node),Tup(List(Ident(OddTree), Ident(A), Ident(OddTree)))))),Ident(|),List(App(Ident(Node),Tup(List(Ident(EvenTree), Ident(B), Ident(OddTree)))))),Ident(|),List(App(Ident(Node),Tup(List(Ident(OddTree), Ident(B), Ident(EvenTree)))))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 fun a(lc, rc) = Node(lc, A, rc)
 
@@ -38,185 +26,47 @@ fun b(lc, rc) = Node(lc, B, rc)
 // Test each case of `EvenTree`.
 
 B is @compile EvenTree
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: EvenTree
-//│ ║  l.40: 	B is @compile EvenTree
-//│ ╙──      	              ^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.40: 	B is @compile EvenTree
-//│ ╙──      	              ^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 not of A is @compile EvenTree
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: EvenTree
-//│ ║  l.56: 	not of A is @compile EvenTree
-//│ ╙──      	                     ^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.56: 	not of A is @compile EvenTree
-//│ ╙──      	                     ^^^^^^^^
 //│ = true
 
 not of a(B, B) is @compile EvenTree
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: EvenTree
-//│ ║  l.69: 	not of a(B, B) is @compile EvenTree
-//│ ╙──      	                           ^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.69: 	not of a(B, B) is @compile EvenTree
-//│ ╙──      	                           ^^^^^^^^
 //│ = true
 
 a(B, A) is @compile EvenTree
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: EvenTree
-//│ ║  l.82: 	a(B, A) is @compile EvenTree
-//│ ╙──      	                    ^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.82: 	a(B, A) is @compile EvenTree
-//│ ╙──      	                    ^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 a(A, B) is @compile EvenTree
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: EvenTree
-//│ ║  l.98: 	a(A, B) is @compile EvenTree
-//│ ╙──      	                    ^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.98: 	a(A, B) is @compile EvenTree
-//│ ╙──      	                    ^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :re
 b(A, A) is @compile EvenTree
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: EvenTree
-//│ ║  l.115: 	b(A, A) is @compile EvenTree
-//│ ╙──       	                    ^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.115: 	b(A, A) is @compile EvenTree
-//│ ╙──       	                    ^^^^^^^^
 //│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
 //│ = false
 
 :re
 b(B, B) is @compile EvenTree
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: EvenTree
-//│ ║  l.130: 	b(B, B) is @compile EvenTree
-//│ ╙──       	                    ^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.130: 	b(B, B) is @compile EvenTree
-//│ ╙──       	                    ^^^^^^^^
 //│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
 //│ = false
 
 // Test each case of `OddTree`.
 
 A is @compile OddTree
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: OddTree
-//│ ║  l.146: 	A is @compile OddTree
-//│ ╙──       	              ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.146: 	A is @compile OddTree
-//│ ╙──       	              ^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 a(B, B) is @compile OddTree
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: OddTree
-//│ ║  l.162: 	a(B, B) is @compile OddTree
-//│ ╙──       	                    ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.162: 	a(B, B) is @compile OddTree
-//│ ╙──       	                    ^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 a(A, A) is @compile OddTree
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: OddTree
-//│ ║  l.178: 	a(A, A) is @compile OddTree
-//│ ╙──       	                    ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.178: 	a(A, A) is @compile OddTree
-//│ ╙──       	                    ^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :re
 b(B, A) is @compile OddTree
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: OddTree
-//│ ║  l.195: 	b(B, A) is @compile OddTree
-//│ ╙──       	                    ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.195: 	b(B, A) is @compile OddTree
-//│ ╙──       	                    ^^^^^^^
 //│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
 //│ = false
 
 :re
 b(A, B) is @compile OddTree
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: OddTree
-//│ ║  l.210: 	b(A, B) is @compile OddTree
-//│ ╙──       	                    ^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.210: 	b(A, B) is @compile OddTree
-//│ ╙──       	                    ^^^^^^^
 //│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
 //│ = false

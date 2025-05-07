@@ -1,111 +1,30 @@
 :js
 
 pattern SimpleJoin = ("abc" | "xyz") ~ ("def" | "")
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Bra(Round,OpApp(StrLit(abc),Ident(|),List(StrLit(xyz)))),Ident(~),List(Bra(Round,OpApp(StrLit(def),Ident(|),List(StrLit()))))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 :expect true
 "abc" is SimpleJoin
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: SimpleJoin
-//│ ║  l.18: 	"abc" is SimpleJoin
-//│ ╙──      	         ^^^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.18: 	"abc" is SimpleJoin
-//│ ╙──      	         ^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect true
 "abcdef" is SimpleJoin
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: SimpleJoin
-//│ ║  l.35: 	"abcdef" is SimpleJoin
-//│ ╙──      	            ^^^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.35: 	"abcdef" is SimpleJoin
-//│ ╙──      	            ^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect true
 "xyzdef" is SimpleJoin
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: SimpleJoin
-//│ ║  l.52: 	"xyzdef" is SimpleJoin
-//│ ╙──      	            ^^^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.52: 	"xyzdef" is SimpleJoin
-//│ ╙──      	            ^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect true
 "xyz" is SimpleJoin
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: SimpleJoin
-//│ ║  l.69: 	"xyz" is SimpleJoin
-//│ ╙──      	         ^^^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.69: 	"xyz" is SimpleJoin
-//│ ╙──      	         ^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect false
 "abcxyzdef" is SimpleJoin
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: SimpleJoin
-//│ ║  l.86: 	"abcxyzdef" is SimpleJoin
-//│ ╙──      	               ^^^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.86: 	"abcxyzdef" is SimpleJoin
-//│ ╙──      	               ^^^^^^^^^^
 //│ = false
 
 :todo
 pattern Exponential = ("a" | "b") ~ ("c" | "d") ~ ("e" | "f") // ~ ("g" | "h") ~ ("i" | "j") ~ ("k" | "l") ~ ("m" | "n") ~ ("o" | "p") ~ ("q" | "r") ~ ("s" | "t") ~ ("u" | "v") ~ ("w" | "x") ~ ("y" | "z")
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(OpApp(Bra(Round,OpApp(StrLit(a),Ident(|),List(StrLit(b)))),Ident(~),List(Bra(Round,OpApp(StrLit(c),Ident(|),List(StrLit(d)))))),Ident(~),List(Bra(Round,OpApp(StrLit(e),Ident(|),List(StrLit(f)))))) (of class hkmc2.syntax.Tree$OpApp)
 
 :todo
 "abcdefghijklm" is Exponential
-//│ ╔══[ERROR] Name not found: Exponential
-//│ ║  l.104: 	"abcdefghijklm" is Exponential
-//│ ╙──       	                   ^^^^^^^^^^^
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.104: 	"abcdefghijklm" is Exponential
-//│ ╙──       	                   ^^^^^^^^^^^
 //│ = false

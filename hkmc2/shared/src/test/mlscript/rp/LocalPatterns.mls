@@ -6,186 +6,64 @@ module Playground with
   pattern Zero = "0"
   pattern DoubleZero = Zero ~ Zero
   pattern ZeroOne = Zero ~ One
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Ident(Zero),Ident(~),List(Ident(Zero))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.$anonfun$59(Elaborator.scala:1212)
 
 Playground
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Playground
-//│ ║  l.22: 	Playground
-//│ ╙──      	^^^^^^^^^^
+//│ = Playground
 
 // Pattern defined in a module can be used with qualified name.
 // ============================================================
 
 Playground.Zero
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Playground
-//│ ║  l.32: 	Playground.Zero
-//│ ╙──      	^^^^^^^^^^
+//│ = Zero
 
 Playground.Zero.unapply("0")
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Playground
-//│ ║  l.39: 	Playground.Zero.unapply("0")
-//│ ╙──      	^^^^^^^^^^
+//│ = MatchResult([])
 
 :expect true
 "0" is Playground.Zero
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Playground
-//│ ║  l.47: 	"0" is Playground.Zero
-//│ ╙──      	       ^^^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this selection as a pattern
-//│ ║  l.47: 	"0" is Playground.Zero
-//│ ╙──      	       ^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 // Patterns defined in a module can refer to other patterns in the same module.
 // ============================================================================
 
 Playground.DoubleZero
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Playground
-//│ ║  l.66: 	Playground.DoubleZero
-//│ ╙──      	^^^^^^^^^^
+//│ = DoubleZero
 
 Playground.DoubleZero.unapply("00")
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Playground
-//│ ║  l.73: 	Playground.DoubleZero.unapply("00")
-//│ ╙──      	^^^^^^^^^^
+//│ = MatchResult([])
 
 :expect true
 "00" is Playground.DoubleZero
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Playground
-//│ ║  l.81: 	"00" is Playground.DoubleZero
-//│ ╙──      	        ^^^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this selection as a pattern
-//│ ║  l.81: 	"00" is Playground.DoubleZero
-//│ ╙──      	        ^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 // Patterns defined in a module can refer to patterns in the global scope.
 // =======================================================================
 
 Playground.ZeroOne
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Playground
-//│ ║  l.100: 	Playground.ZeroOne
-//│ ╙──       	^^^^^^^^^^
+//│ = ZeroOne
 
 Playground.ZeroOne.unapply("01")
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Playground
-//│ ║  l.107: 	Playground.ZeroOne.unapply("01")
-//│ ╙──       	^^^^^^^^^^
+//│ = MatchResult([])
 
 :expect true
 "01" is Playground.ZeroOne
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: Playground
-//│ ║  l.115: 	"01" is Playground.ZeroOne
-//│ ╙──       	        ^^^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this selection as a pattern
-//│ ║  l.115: 	"01" is Playground.ZeroOne
-//│ ╙──       	        ^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 // Patterns defined in the global scope can refer to patterns in a module.
 // =======================================================================
 
 pattern TripleZero = Playground.DoubleZero ~ Playground.Zero
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Sel(Ident(Playground),Ident(DoubleZero)),Ident(~),List(Sel(Ident(Playground),Ident(Zero)))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 TripleZero
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: TripleZero
-//│ ║  l.148: 	TripleZero
-//│ ╙──       	^^^^^^^^^^
+//│ = TripleZero
 
 TripleZero.unapply("000")
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: TripleZero
-//│ ║  l.155: 	TripleZero.unapply("000")
-//│ ╙──       	^^^^^^^^^^
+//│ = MatchResult([])
 
 :expect true
 "000" is TripleZero
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: TripleZero
-//│ ║  l.163: 	"000" is TripleZero
-//│ ╙──       	         ^^^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.163: 	"000" is TripleZero
-//│ ╙──       	         ^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect false
 "001" is TripleZero
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: TripleZero
-//│ ║  l.180: 	"001" is TripleZero
-//│ ╙──       	         ^^^^^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.180: 	"001" is TripleZero
-//│ ╙──       	         ^^^^^^^^^^
 //│ = false

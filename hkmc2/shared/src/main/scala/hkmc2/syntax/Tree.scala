@@ -164,7 +164,9 @@ enum Tree extends AutoLocated:
     case Tup(fields) => "tuple"
     case TyTup(tys) => "type tuple"
     case App(lhs, rhs) => "application"
-    case OpApp(lhs, op, rhss) => "operator application"
+    case OpApp(lhs, op, rhss) => "operator application" + (op match
+      case Ident(nme) => s" `$nme`"
+      case _ => "")
     case Jux(lhs, rhs) => "juxtaposition"
     case Sel(prefix, name) => "selection"
     case SynthSel(prefix, name) => "synthetic selection"

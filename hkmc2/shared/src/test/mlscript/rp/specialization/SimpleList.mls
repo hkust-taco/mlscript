@@ -16,31 +16,9 @@ pattern Everything = _
 //│ = true
 
 pattern A = Box | Box
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Ident(Box),Ident(|),List(Ident(Box))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 Box(0) is @compile A
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: A
-//│ ║  l.32: 	Box(0) is @compile A
-//│ ╙──      	                   ^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.32: 	Box(0) is @compile A
-//│ ╙──      	                   ^
-//│ = false
+//│ = true
 
 pattern BoxedAnswer = Box(42)
 
@@ -48,283 +26,49 @@ Box(42) is @compile BoxedAnswer
 //│ = true
 
 pattern A_0 = Box(_) | Box(_)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(App(Ident(Box),Tup(List(Under()))),Ident(|),List(App(Ident(Box),Tup(List(Under()))))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 Box(0) is @compile A_0
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: A_0
-//│ ║  l.64: 	Box(0) is @compile A_0
-//│ ╙──      	                   ^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.64: 	Box(0) is @compile A_0
-//│ ╙──      	                   ^^^
-//│ = false
+//│ = true
 
 pattern A_1 = Box | Bowl
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Ident(Box),Ident(|),List(Ident(Bowl))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 Box(0) is @compile A_1
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: A_1
-//│ ║  l.91: 	Box(0) is @compile A_1
-//│ ╙──      	                   ^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.91: 	Box(0) is @compile A_1
-//│ ╙──      	                   ^^^
-//│ = false
+//│ = true
 
 Bowl(0) is @compile A_1
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: A_1
-//│ ║  l.104: 	Bowl(0) is @compile A_1
-//│ ╙──       	                    ^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.104: 	Bowl(0) is @compile A_1
-//│ ╙──       	                    ^^^
-//│ = false
+//│ = true
 
 pattern A_2 = _ | Box
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Under(),Ident(|),List(Ident(Box))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 pattern A_3 = Box | _
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Ident(Box),Ident(|),List(Under())) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 pattern A_4 = Box(_) | Bowl(_)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(App(Ident(Box),Tup(List(Under()))),Ident(|),List(App(Ident(Bowl),Tup(List(Under()))))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 pattern A_3 = Box(Box) | Bowl
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(App(Ident(Box),Tup(List(Ident(Box)))),Ident(|),List(Ident(Bowl))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 pattern B = Box(Box) | Bowl(Box)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(App(Ident(Box),Tup(List(Ident(Box)))),Ident(|),List(App(Ident(Bowl),Tup(List(Ident(Box)))))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 pattern B_0 = Box(Box) | Box(Bowl)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(App(Ident(Box),Tup(List(Ident(Box)))),Ident(|),List(App(Ident(Box),Tup(List(Ident(Bowl)))))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 pattern C = Box(Box(Box))
 
 pattern C_1 = Box(Box | Bowl)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Ident(Box),Ident(|),List(Ident(Bowl))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4$$anonfun$3(DeBrujinSplit.scala:39)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4(DeBrujinSplit.scala:39)
-//│ 	at: scala.collection.immutable.List.foldRight(List.scala:353)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1$$anonfun$3(DeBrujinSplit.scala:35)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1(DeBrujinSplit.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$adapted$1(DeBrujinSplit.scala:30)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
 
 pattern C_2 = Box(Box | Box)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(Ident(Box),Ident(|),List(Ident(Box))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4$$anonfun$3(DeBrujinSplit.scala:39)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4(DeBrujinSplit.scala:39)
-//│ 	at: scala.collection.immutable.List.foldRight(List.scala:353)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1$$anonfun$3(DeBrujinSplit.scala:35)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1(DeBrujinSplit.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$adapted$1(DeBrujinSplit.scala:30)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
 
 pattern C_2 = Box(Box | Bowl | Box)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(OpApp(Ident(Box),Ident(|),List(Ident(Bowl))),Ident(|),List(Ident(Box))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4$$anonfun$3(DeBrujinSplit.scala:39)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4(DeBrujinSplit.scala:39)
-//│ 	at: scala.collection.immutable.List.foldRight(List.scala:353)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1$$anonfun$3(DeBrujinSplit.scala:35)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1(DeBrujinSplit.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$adapted$1(DeBrujinSplit.scala:30)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
 
 pattern D = Box(Box(Box) | Bowl)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(App(Ident(Box),Tup(List(Ident(Box)))),Ident(|),List(Ident(Bowl))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4$$anonfun$3(DeBrujinSplit.scala:39)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4(DeBrujinSplit.scala:39)
-//│ 	at: scala.collection.immutable.List.foldRight(List.scala:353)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1$$anonfun$3(DeBrujinSplit.scala:35)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1(DeBrujinSplit.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$adapted$1(DeBrujinSplit.scala:30)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
 
 pattern D_0 = Box(Box(Box) | Box(Bowl))
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(App(Ident(Box),Tup(List(Ident(Box)))),Ident(|),List(App(Ident(Box),Tup(List(Ident(Bowl)))))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4$$anonfun$3(DeBrujinSplit.scala:39)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4(DeBrujinSplit.scala:39)
-//│ 	at: scala.collection.immutable.List.foldRight(List.scala:353)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1$$anonfun$3(DeBrujinSplit.scala:35)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1(DeBrujinSplit.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$adapted$1(DeBrujinSplit.scala:30)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
 
 pattern D_1 = Box(Box(Bowl) | Box)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(App(Ident(Box),Tup(List(Ident(Bowl)))),Ident(|),List(Ident(Box))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4$$anonfun$3(DeBrujinSplit.scala:39)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4(DeBrujinSplit.scala:39)
-//│ 	at: scala.collection.immutable.List.foldRight(List.scala:353)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1$$anonfun$3(DeBrujinSplit.scala:35)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1(DeBrujinSplit.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$adapted$1(DeBrujinSplit.scala:30)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
 
 pattern D_2 = Box(Bowl | Bowl | Bowl)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(OpApp(Ident(Bowl),Ident(|),List(Ident(Bowl))),Ident(|),List(Ident(Bowl))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4$$anonfun$3(DeBrujinSplit.scala:39)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4(DeBrujinSplit.scala:39)
-//│ 	at: scala.collection.immutable.List.foldRight(List.scala:353)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1$$anonfun$3(DeBrujinSplit.scala:35)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1(DeBrujinSplit.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$adapted$1(DeBrujinSplit.scala:30)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
 
 pattern D_2 = Box(Box(Bowl) | Box(Basket) | Box(Box))
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(OpApp(App(Ident(Box),Tup(List(Ident(Bowl)))),Ident(|),List(App(Ident(Box),Tup(List(Ident(Basket)))))),Ident(|),List(App(Ident(Box),Tup(List(Ident(Box)))))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4$$anonfun$3(DeBrujinSplit.scala:39)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4(DeBrujinSplit.scala:39)
-//│ 	at: scala.collection.immutable.List.foldRight(List.scala:353)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1$$anonfun$3(DeBrujinSplit.scala:35)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1(DeBrujinSplit.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$adapted$1(DeBrujinSplit.scala:30)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
 
 pattern E = Box(Box(Box) | Bowl(Box(Basket)))
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(App(Ident(Box),Tup(List(Ident(Box)))),Ident(|),List(App(Ident(Bowl),Tup(List(App(Ident(Box),Tup(List(Ident(Basket))))))))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4$$anonfun$3(DeBrujinSplit.scala:39)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.$anonfun$4(DeBrujinSplit.scala:39)
-//│ 	at: scala.collection.immutable.List.foldRight(List.scala:353)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1$$anonfun$3(DeBrujinSplit.scala:35)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$1(DeBrujinSplit.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.resolve$1$$anonfun$2$$anonfun$adapted$1(DeBrujinSplit.scala:30)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
 
 pattern F = Pair(Pair(Box, Bowl), Pair(Box, Basket))
 
@@ -335,122 +79,38 @@ Pair(Box(42), Bowl(42)) is @compile F_0
 //│ = true
 
 pattern F_1 = Pair(Box, Box) | Pair(Box, Bowl)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(App(Ident(Pair),Tup(List(Ident(Box), Ident(Box)))),Ident(|),List(App(Ident(Pair),Tup(List(Ident(Box), Ident(Bowl)))))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 :expect true
 Pair(Box(42), Box(42)) is @compile F_1
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: F_1
-//│ ║  l.352: 	Pair(Box(42), Box(42)) is @compile F_1
-//│ ╙──       	                                   ^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.352: 	Pair(Box(42), Box(42)) is @compile F_1
-//│ ╙──       	                                   ^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect true
 Pair(Box(42), Bowl(42)) is @compile F_1
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: F_1
-//│ ║  l.369: 	Pair(Box(42), Bowl(42)) is @compile F_1
-//│ ╙──       	                                    ^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.369: 	Pair(Box(42), Bowl(42)) is @compile F_1
-//│ ╙──       	                                    ^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:191)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect false
 Pair(Box(42), Basket(42)) is @compile F_1
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: F_1
-//│ ║  l.386: 	Pair(Box(42), Basket(42)) is @compile F_1
-//│ ╙──       	                                      ^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.386: 	Pair(Box(42), Basket(42)) is @compile F_1
-//│ ╙──       	                                      ^^^
 //│ = false
 
 :expect false
 Pair(Bowl(42), Bowl(42)) is @compile F_1
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: F_1
-//│ ║  l.400: 	Pair(Bowl(42), Bowl(42)) is @compile F_1
-//│ ╙──       	                                     ^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.400: 	Pair(Bowl(42), Bowl(42)) is @compile F_1
-//│ ╙──       	                                     ^^^
 //│ = false
 
 pattern G = Triplet(Triplet(Box, Bowl, Basket), Pair(0, 1), Basket)
 
 pattern G_0 = Triplet(Box, Bowl, Basket) | Triplet(Box, Bowl, Basket)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(App(Ident(Triplet),Tup(List(Ident(Box), Ident(Bowl), Ident(Basket)))),Ident(|),List(App(Ident(Triplet),Tup(List(Ident(Box), Ident(Bowl), Ident(Basket)))))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 pattern G_0 = Triplet(Triplet(Box, Box, Box), Bowl, Basket) | Triplet(Triplet(Box, Box, Box), Bowl, Basket)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(App(Ident(Triplet),Tup(List(App(Ident(Triplet),Tup(List(Ident(Box), Ident(Box), Ident(Box)))), Ident(Bowl), Ident(Basket)))),Ident(|),List(App(Ident(Triplet),Tup(List(App(Ident(Triplet),Tup(List(Ident(Box), Ident(Box), Ident(Box)))), Ident(Bowl), Ident(Basket)))))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1248)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1248)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:824)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1341)
 
 :todo
 pattern G_1 =
   Triplet(Triplet(Box, Bowl, Box), Bowl, Basket) |
   Triplet(Triplet(Box, Box, Box), Bowl, Basket) |
   Triplet(Triplet(Box, Box, Bowl), Bowl, Basket)
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(OpApp(App(Ident(Triplet),Tup(List(App(Ident(Triplet),Tup(List(Ident(Box), Ident(Bowl), Ident(Box)))), Ident(Bowl), Ident(Basket)))),Ident(|),List(App(Ident(Triplet),Tup(List(App(Ident(Triplet),Tup(List(Ident(Box), Ident(Box), Ident(Box)))), Ident(Bowl), Ident(Basket)))))),Ident(|),List(App(Ident(Triplet),Tup(List(App(Ident(Triplet),Tup(List(Ident(Box), Ident(Box), Ident(Bowl)))), Ident(Bowl), Ident(Basket)))))) (of class hkmc2.syntax.Tree$OpApp)
 
 :todo
 // pattern BinSeq(pattern D) = D | Pair(0 | 1, BinSeq)
 pattern BinSeq = null | Pair(0 | 1, BinSeq)
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(UnitLit(true),Ident(|),List(App(Ident(Pair),Tup(List(OpApp(IntLit(0),Ident(|),List(IntLit(1))), Ident(BinSeq)))))) (of class hkmc2.syntax.Tree$OpApp)
 
 fun (::) cons(head, tail) = Pair(head, tail)
 
@@ -466,107 +126,19 @@ fun (::) cons(head, tail) = Pair(head, tail)
   1 is @compile BinSeq,
   0 :: 1 :: 2 :: null is @compile BinSeq,
 ]
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: BinSeq
-//│ ║  l.461: 	  null is @compile BinSeq,
-//│ ╙──       	                   ^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.461: 	  null is @compile BinSeq,
-//│ ╙──       	                   ^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: BinSeq
-//│ ║  l.462: 	  0 :: null is @compile BinSeq,
-//│ ╙──       	                        ^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.462: 	  0 :: null is @compile BinSeq,
-//│ ╙──       	                        ^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: BinSeq
-//│ ║  l.463: 	  0 :: 1 :: null is @compile BinSeq,
-//│ ╙──       	                             ^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.463: 	  0 :: 1 :: null is @compile BinSeq,
-//│ ╙──       	                             ^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: BinSeq
-//│ ║  l.464: 	  0 :: 1 :: 0 :: null is @compile BinSeq,
-//│ ╙──       	                                  ^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.464: 	  0 :: 1 :: 0 :: null is @compile BinSeq,
-//│ ╙──       	                                  ^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: BinSeq
-//│ ║  l.465: 	  0 is @compile BinSeq,
-//│ ╙──       	                ^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.465: 	  0 is @compile BinSeq,
-//│ ╙──       	                ^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: BinSeq
-//│ ║  l.466: 	  1 is @compile BinSeq,
-//│ ╙──       	                ^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.466: 	  1 is @compile BinSeq,
-//│ ╙──       	                ^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: BinSeq
-//│ ║  l.467: 	  0 :: 1 :: 2 :: null is @compile BinSeq,
-//│ ╙──       	                                  ^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.467: 	  0 :: 1 :: 2 :: null is @compile BinSeq,
-//│ ╙──       	                                  ^^^^^^
-//│ = [false, false, false, false, false, false, false]
+//│ = [true, true, true, true, false, false, false]
 
 0 :: 1 :: 0 :: null is @compile BinSeq
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: BinSeq
-//│ ║  l.541: 	0 :: 1 :: 0 :: null is @compile BinSeq
-//│ ╙──       	                                ^^^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.541: 	0 :: 1 :: 0 :: null is @compile BinSeq
-//│ ╙──       	                                ^^^^^^
-//│ = false
+//│ = true
 
 :todo
 pattern List(a) = null | Pair(a, List)
 //│ ╔══[ERROR] Pattern extraction parameters are not yet supported.
-//│ ║  l.555: 	pattern List(a) = null | Pair(a, List)
+//│ ║  l.135: 	pattern List(a) = null | Pair(a, List)
 //│ ╙──       	             ^
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(UnitLit(true),Ident(|),List(App(Ident(Pair),Tup(List(Ident(a), Ident(List)))))) (of class hkmc2.syntax.Tree$OpApp)
+//│ ╔══[ERROR] Name not found: a
+//│ ║  l.135: 	pattern List(a) = null | Pair(a, List)
+//│ ╙──       	                              ^
 
 null is @compile List
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
-//│ ╔══[ERROR] Name not found: List
-//│ ║  l.561: 	null is @compile List
-//│ ╙──       	                 ^^^^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: dealWithCtorCase (Desugarer.scala:506)
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
-//│ ║  l.561: 	null is @compile List
-//│ ╙──       	                 ^^^^
-//│ = false
+//│ = true
