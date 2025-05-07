@@ -89,14 +89,20 @@ enum Tree extends AutoLocated:
   case Outer(name: Opt[Tree])
   case Spread(kw: Keyword.Ellipsis, kwLoc: Opt[Loc], body: Opt[Tree])
   case Annotated(annotation: Tree, target: Tree)
-  
+  /** It represents a term that has already been elaborated. When desugaring the
+   *  operator splits in UCS, the `lhs` of `OpSplit` has already been elaborated
+   *  into a `Term`, we need to embed `Term` into `Tree` using `Trm`.
+   */
+  case Trm(term: semantics.Term)
+
   def splitOn(acc: Tree): Tree = this match
     case SplitPoint() => acc
     case Sel(pre, id) => Sel(pre.splitOn(acc), id)
     case App(lhs, rhs) => App(lhs.splitOn(acc), rhs)
     case OpApp(lhs, op, rhss) => OpApp(lhs.splitOn(acc), op, rhss)
     case OpSplit(lhs, rhss) => OpSplit(lhs.splitOn(acc), rhss)
-    case Error() => Error()
+    case InfixApp(lhs, kw, rhs) => InfixApp(lhs.splitOn(acc), kw, rhs)
+    case _: (Ident | Literal | Error) => acc
   
   def children: Ls[Tree] = this match
     case _: Empty | _: Error | _: Ident | _: Literal | _: Under | _: Unt => Nil
@@ -140,6 +146,7 @@ enum Tree extends AutoLocated:
     case MemberProj(cls, name) => cls :: Nil
     case Keywrd(kw) => Nil
     case Dummy => Nil
+    case Trm(_) => Nil
   
   def describe: Str = this match
     case Empty() => "empty"
@@ -189,6 +196,7 @@ enum Tree extends AutoLocated:
     case MemberProj(_, _) => "member projection"
     case Keywrd(kw) => s"'${kw.name}' keyword"
     case Dummy => "‹dummy›"
+    case Trm(_) => "term"
     
   def deparenthesized: Tree = this match
     case Bra(BracketKind.Round, inner) => inner.deparenthesized

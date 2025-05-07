@@ -309,6 +309,7 @@ extends Importer:
       then maybeFunctionApp(t)
       else t
     tree.desugared match
+    case Trm(term) => term
     case unt @ Unt() => unit.withLocOf(unt)
     case Bra(k, e) =>
       k match

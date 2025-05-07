@@ -564,18 +564,18 @@ fun nicest1(w, r, sl, p, q) = if fits(min(w, r) - sl, p) then p else q
 
 fun nicest(w, r, p, q) = nicest1(w, r, 0, p, q)
 //│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:750)
+//│ FAILURE LOCATION: opSplitImpl (Parser.scala:758)
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this position
 //│ ║  l.512: 	          >= gapWidth then txt(nlText, txt(NoAnnot(Str(replicate(shift, "/")), shift), txt(nlText, lay1(k - shift, s, p))))
 //│ ╙──       	                      ^^^^
 //│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: concludeWithImpl (Parser.scala:235)
+//│ FAILURE LOCATION: concludeWithImpl (Parser.scala:240)
 //│ ╔══[PARSE ERROR] Unexpected literal here
 //│ ║  l.513: 	          < 0 then txt(nlText, txt(NoAnnot(Str(replicate(shift, "|")), shift), txt(nlText, lay1(k + shift, s, p))))
 //│ ╙──       	            ^
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: scala.MatchError: OpSplit(Ident(k),List(Error())) (of class hkmc2.syntax.Tree$OpSplit)
-//│ 	at: hkmc2.syntax.Tree.children(Tree.scala:142)
+//│ 	at: hkmc2.syntax.Tree.children(Tree.scala:149)
 //│ 	at: hkmc2.AutoLocated.subLocs$1(syntax.scala:40)
 //│ 	at: hkmc2.AutoLocated.toLoc(syntax.scala:42)
 //│ 	at: hkmc2.AutoLocated.toLoc$(syntax.scala:26)
@@ -593,12 +593,12 @@ fun testLastPiece_nofib() =
   let solutions = search([1,2], Female, initialBoard, initialPieces)
   printDoc(display(solutions))
 //│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ FAILURE LOCATION: subterm (Elaborator.scala:410)
 //│ ╔══[ERROR] Name not found: printDoc
 //│ ║  l.594: 	  printDoc(display(solutions))
 //│ ╙──       	  ^^^^^^^^
 //│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:409)
+//│ FAILURE LOCATION: subterm (Elaborator.scala:410)
 //│ ╔══[ERROR] Name not found: display
 //│ ║  l.594: 	  printDoc(display(solutions))
 //│ ╙──       	           ^^^^^^^

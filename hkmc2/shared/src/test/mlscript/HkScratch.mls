@@ -123,7 +123,7 @@ if x >
 if x
   > 1 then true
   == 1 then false
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ = false
 
 
 let x += 1

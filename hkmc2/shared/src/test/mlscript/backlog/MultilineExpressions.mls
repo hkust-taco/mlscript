@@ -133,7 +133,7 @@ if 1 + 2
   * 3 then 0
   + 4 then 0
 //│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:750)
+//│ FAILURE LOCATION: opSplitImpl (Parser.scala:758)
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this position
 //│ ║  l.133: 	  * 3 then 0
 //│ ╙──       	      ^^^^
@@ -161,7 +161,7 @@ if 1 + 2
 //│   rhs = IntLit of 0
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: scala.MatchError: OpSplit(IntLit(2),List(Error())) (of class hkmc2.syntax.Tree$OpSplit)
-//│ 	at: hkmc2.syntax.Tree.children(Tree.scala:142)
+//│ 	at: hkmc2.syntax.Tree.children(Tree.scala:149)
 //│ 	at: hkmc2.AutoLocated.subLocs$1(syntax.scala:40)
 //│ 	at: hkmc2.AutoLocated.toLoc(syntax.scala:42)
 //│ 	at: hkmc2.AutoLocated.toLoc$(syntax.scala:26)
@@ -171,44 +171,3 @@ if 1 + 2
 //│ 	at: scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:608)
 //│ 	at: scala.collection.Iterator$$anon$9.hasNext(Iterator.scala:583)
 //│ 	at: scala.collection.IterableOnceOps.minOption(IterableOnce.scala:918)
-
-
-1 ++
-  2
-//│ = "(1 + 2)"
-
-// TODO reject – hard to read; should be a postfix op
-// But then what about versions with many indented lines? -> require putting the op at line starts
-1 ++
-2
-//│ = "(1 + 2)"
-
-// FIXME should respect the usual assoc+prec
-1 ++
-  2 ++
-  3
-//│ = "(1 + (2 + 3))"
-
-1 ++
-2 ++
-3
-//│ = "((1 + 2) + 3)"
-
-1 ++
-  2 **
-  3
-//│ = "(1 + [2 * 3])"
-
-// FIXME should respect the usual assoc+prec
-1 **
-  2 ++
-  3
-//│ = "[1 * (2 + 3)]"
-
-1 ++
-  2 ++
-  3 ++
-  4
-//│ = "(1 + ((2 + 3) + 4))"
-
-

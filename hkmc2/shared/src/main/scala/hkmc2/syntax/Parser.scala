@@ -127,6 +127,11 @@ abstract class Parser(
   
   import rules.*
   
+  object PrefixRule:
+    def unapply(t: Token): Opt[(Keyword, ParseRule[Tree])] = t match
+      case KEYWORD(kw) => prefixRules.kwAlts.get(kw.name).map(kw -> _)
+      case _ => N
+  
   protected def doPrintDbg(msg: => Str): Unit
   protected def printDbg(msg: => Any): Unit =
     doPrintDbg("│ " * this.indent + msg)
@@ -301,7 +306,7 @@ abstract class Parser(
             blk.map(annotations.annotate) ::: blockContOf(rule)
           case _ =>
             val res = parseRule(CommaPrecNext, subRule).getOrElse(errExpr)
-            annotations.annotate(exprCont(res, CommaPrecNext, false)) :: blockContOf(rule)
+            annotations.annotate(exprCont(res, CommaPrecNext, false)(using N)) :: blockContOf(rule)
         case N =>
           
           // TODO dedup this common-looking logic:
@@ -399,7 +404,8 @@ abstract class Parser(
             prefixRules.kwAlts.get(id.name) match
             case S(subRule) =>
               // parse(subRule)
-              val e = exprCont(parseRule(kw.rightPrecOrMin, subRule).getOrElse(errExpr), prec, false)
+              val ep = kw.rightPrecOrMin
+              val e = exprCont(parseRule(ep, subRule).getOrElse(errExpr), prec, false)(using S(ep))
               parseRule(prec, exprAlt.rest).map(res => exprAlt.k(e, res))
             case N =>
               tryEmpty(tok, loc)
@@ -725,7 +731,10 @@ abstract class Parser(
   def opSplit(lhs: Tree, splittingOpLoc: Loc, prec: Int)(using Line): Tree =
     wrap((lhs,splittingOpLoc,prec))(opSplitImpl(lhs, splittingOpLoc, prec, Nil))
   def opSplitImpl(lhs: Tree, splittingOpLoc: Loc, prec: Int, acc: Ls[Tree]): Tree =
-    val e = exprCont(SplitPoint(), prec, allowNewlines = false)
+    val e = yeetSpaces match
+      case (PrefixRule((kw, rule)), _) :: _ =>
+        consume; parseRule(kw.rightPrecOrMin, rule).getOrElse(errExpr)
+      case _ => exprCont(SplitPoint(), prec, allowNewlines = false)
     yeetSpaces match
     case Nil => OpSplit(lhs, acc reverse_::: e :: Nil)
     case (NEWLINE, l0) :: _ =>
@@ -747,13 +756,15 @@ abstract class Parser(
         val rhs = expr(opPrec(op)._2)
         opSplitImpl(OpApp(lhs, Ident(op).withLoc(S(l0)), rhs :: Nil), splittingOpLoc, prec, e :: acc)
     case (tok, loc) :: _ => // TODO indented op block
+      // More tokens (instead of newline or indent) after e
+      println(s"found ${tok.describe} in opSplit after e")
       err(msg"Unexpected ${tok.describe} in this position" -> S(loc) :: Nil)
       OpSplit(lhs, acc reverse_::: errExpr :: Nil)
   
   
-  final def exprCont(acc: Tree, prec: Int, allowNewlines: Bool)(using Line): Tree =
+  final def exprCont(acc: Tree, prec: Int, allowNewlines: Bool)(using basePrec: Opt[Int])(using Line): Tree =
     wrap(prec, s"`$acc`", allowNewlines)(exprContImpl(acc, prec, allowNewlines))
-  final def exprContImpl(acc: Tree, prec: Int, allowNewlines: Bool): Tree =
+  final def exprContImpl(acc: Tree, prec: Int, allowNewlines: Bool)(using basePrec: Opt[Int]): Tree =
     cur match
       case (QUOTE, l) :: _ => cur match {
         case _ :: (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ if kw.leftPrecOrMin > prec =>
@@ -860,7 +871,7 @@ abstract class Parser(
           case (NEWLINE, l0) :: _ => consume
           case _ =>
         }
-        printDbg(s"found an infix operator: $opStr")
+        printDbg(s"! found operator `$opStr` with prec ${opPrec(opStr)}")
         yeetSpaces match
           case (BRACKETS(Indent | Curly, toks), l0) :: _ =>
             consume
