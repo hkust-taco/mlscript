@@ -133,7 +133,7 @@ if 1 + 2
   * 3 then 0
   + 4 then 0
 //│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:758)
+//│ FAILURE LOCATION: opSplitImpl (Parser.scala:760)
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this position
 //│ ║  l.133: 	  * 3 then 0
 //│ ╙──       	      ^^^^

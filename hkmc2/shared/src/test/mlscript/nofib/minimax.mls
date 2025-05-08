@@ -189,7 +189,7 @@ fun prune(n, t) = if t is Branch(a, l) and n
   < 0 then throw Error("Tree.prune: < 0")
   else Branch(a, map(x => prune(n - 1, x), l))
 //│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:758)
+//│ FAILURE LOCATION: opSplitImpl (Parser.scala:760)
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this position
 //│ ║  l.188: 	  === 0 then Branch(a, Nil)
 //│ ╙──       	        ^^^^

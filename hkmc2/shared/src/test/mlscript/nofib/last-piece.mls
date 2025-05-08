@@ -564,7 +564,7 @@ fun nicest1(w, r, sl, p, q) = if fits(min(w, r) - sl, p) then p else q
 
 fun nicest(w, r, p, q) = nicest1(w, r, 0, p, q)
 //│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:758)
+//│ FAILURE LOCATION: opSplitImpl (Parser.scala:760)
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this position
 //│ ║  l.512: 	          >= gapWidth then txt(nlText, txt(NoAnnot(Str(replicate(shift, "/")), shift), txt(nlText, lay1(k - shift, s, p))))
 //│ ╙──       	                      ^^^^

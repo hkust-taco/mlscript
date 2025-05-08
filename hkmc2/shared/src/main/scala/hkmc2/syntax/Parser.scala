@@ -306,7 +306,7 @@ abstract class Parser(
             blk.map(annotations.annotate) ::: blockContOf(rule)
           case _ =>
             val res = parseRule(CommaPrecNext, subRule).getOrElse(errExpr)
-            annotations.annotate(exprCont(res, CommaPrecNext, false)(using N)) :: blockContOf(rule)
+            annotations.annotate(exprCont(res, CommaPrecNext, false)) :: blockContOf(rule)
         case N =>
           
           // TODO dedup this common-looking logic:
@@ -404,8 +404,7 @@ abstract class Parser(
             prefixRules.kwAlts.get(id.name) match
             case S(subRule) =>
               // parse(subRule)
-              val ep = kw.rightPrecOrMin
-              val e = exprCont(parseRule(ep, subRule).getOrElse(errExpr), prec, false)(using S(ep))
+              val e = exprCont(parseRule(kw.rightPrecOrMin, subRule).getOrElse(errExpr), prec, false)
               parseRule(prec, exprAlt.rest).map(res => exprAlt.k(e, res))
             case N =>
               tryEmpty(tok, loc)
@@ -762,9 +761,9 @@ abstract class Parser(
       OpSplit(lhs, acc reverse_::: errExpr :: Nil)
   
   
-  final def exprCont(acc: Tree, prec: Int, allowNewlines: Bool)(using basePrec: Opt[Int])(using Line): Tree =
+  final def exprCont(acc: Tree, prec: Int, allowNewlines: Bool)(using Line): Tree =
     wrap(prec, s"`$acc`", allowNewlines)(exprContImpl(acc, prec, allowNewlines))
-  final def exprContImpl(acc: Tree, prec: Int, allowNewlines: Bool)(using basePrec: Opt[Int]): Tree =
+  final def exprContImpl(acc: Tree, prec: Int, allowNewlines: Bool): Tree =
     cur match
       case (QUOTE, l) :: _ => cur match {
         case _ :: (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ if kw.leftPrecOrMin > prec =>
