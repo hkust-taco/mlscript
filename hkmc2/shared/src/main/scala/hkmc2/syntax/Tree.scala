@@ -146,6 +146,8 @@ enum Tree extends AutoLocated:
     case MemberProj(cls, name) => cls :: Nil
     case Keywrd(kw) => Nil
     case Dummy => Nil
+    case OpSplit(lhs, ops_rhss) => lhs :: ops_rhss
+    case SplitPoint() => Nil
     case Trm(_) => Nil
   
   def describe: Str = this match

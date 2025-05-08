@@ -136,7 +136,7 @@ if 1 + 2
 //│ ╟── Note: the operator split starts here
 //│ ║  l.125: 	  * 3 then 0
 //│ ╙──       	  ^
-//│ /!!!\ Uncaught error: scala.MatchError: OpSplit(OpApp(IntLit(2),Ident(+),List(App(Ident(+),Tup(List(IntLit(4)))))),List(InfixApp(OpApp(SplitPoint(),Ident(*),List(IntLit(3))),keyword 'then',IntLit(0)), Error())) (of class hkmc2.syntax.Tree$OpSplit)
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(OpApp(OpApp(IntLit(2),Ident(+),List(App(Ident(+),Tup(List(IntLit(4)))))),Ident(*),List(IntLit(3))),keyword 'then',IntLit(0)) (of class hkmc2.syntax.Tree$InfixApp)
 
 :todo
 :pt
@@ -206,7 +206,7 @@ if 1 + 2
 //│             Error
 //│     kw = keyword 'then'
 //│     rhs = IntLit of 0
-//│ /!!!\ Uncaught error: scala.MatchError: OpSplit(IntLit(2),List(InfixApp(OpApp(SplitPoint(),Ident(*),List(IntLit(3))),keyword 'then',IntLit(0)), Error())) (of class hkmc2.syntax.Tree$OpSplit)
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(OpApp(IntLit(2),Ident(*),List(IntLit(3))),keyword 'then',IntLit(0)) (of class hkmc2.syntax.Tree$InfixApp)
 
 :todo
 :pt

@@ -185,6 +185,7 @@ class Desugarer(val elaborator: Elaborator)(using UnderCtx)
    *          matches and splits
    */
   def termSplit(tree: Tree, finish: Term => Term): Split => Sequel =
+    log(s"termSplit: $tree")
     tree match
     case blk: Block =>
       blk.desugStmts.foldRight(default): (t, elabFallback) =>

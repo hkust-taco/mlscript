@@ -129,24 +129,21 @@ if 1 * 2
 // :elt
 :sjs
 :re
+:todo
 if 1 + 2
   * 3 then 0
   + 4 then 0
-//│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:782)
 //│ ╔══[PARSE ERROR] Operator cannot be used inside this operator split
-//│ ║  l.134: 	  + 4 then 0
+//│ ║  l.135: 	  + 4 then 0
 //│ ║         	  ^
 //│ ╟── as it has lower precedence than the splitting operator here
-//│ ║  l.133: 	  * 3 then 0
+//│ ║  l.134: 	  * 3 then 0
 //│ ╙──       	  ^
-//│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:790)
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this operator split inner position
-//│ ║  l.134: 	  + 4 then 0
+//│ ║  l.135: 	  + 4 then 0
 //│ ║         	      ^^^^
 //│ ╟── Note: the operator split starts here
-//│ ║  l.133: 	  * 3 then 0
+//│ ║  l.134: 	  * 3 then 0
 //│ ╙──       	  ^
 //│ Parsed tree:
 //│ IfLike:
@@ -178,15 +175,4 @@ if 1 + 2
 //│             Error
 //│     kw = keyword 'then'
 //│     rhs = IntLit of 0
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpSplit(OpApp(IntLit(2),Ident(+),List(App(Ident(+),Tup(List(IntLit(4)))))),List(InfixApp(OpApp(SplitPoint(),Ident(*),List(IntLit(3))),keyword 'then',IntLit(0)), Error())) (of class hkmc2.syntax.Tree$OpSplit)
-//│ 	at: hkmc2.syntax.Tree.children(Tree.scala:149)
-//│ 	at: hkmc2.AutoLocated.subLocs$1(syntax.scala:40)
-//│ 	at: hkmc2.AutoLocated.toLoc(syntax.scala:42)
-//│ 	at: hkmc2.AutoLocated.toLoc$(syntax.scala:26)
-//│ 	at: hkmc2.syntax.Tree.toLoc(Tree.scala:41)
-//│ 	at: hkmc2.AutoLocated.subLocs$1$$anonfun$1(syntax.scala:40)
-//│ 	at: scala.collection.Iterator$$anon$10.nextCur(Iterator.scala:594)
-//│ 	at: scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:608)
-//│ 	at: scala.collection.Iterator$$anon$9.hasNext(Iterator.scala:583)
-//│ 	at: scala.collection.IterableOnceOps.minOption(IterableOnce.scala:918)
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(OpApp(OpApp(IntLit(2),Ident(+),List(App(Ident(+),Tup(List(IntLit(4)))))),Ident(*),List(IntLit(3))),keyword 'then',IntLit(0)) (of class hkmc2.syntax.Tree$InfixApp)

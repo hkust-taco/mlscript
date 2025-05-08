@@ -110,6 +110,7 @@ object DeBrujinSplit:
         (_, _, alternative) => alternative
       // END TODO: Support range patterns
       case App(ctor: (Ident | Sel), Tup(params)) => dealWithCtor(ctor, params)
+      case OpApp(lhs, op: Ident, rhs :: Nil) => dealWithCtor(op, Ls(lhs, rhs))
       case literal: syntax.Literal => Branch(_, Literal(literal), _, _)
     scoped("ucs:rp:elaborate"):
       log(s"tree: ${tree.showDbg}")

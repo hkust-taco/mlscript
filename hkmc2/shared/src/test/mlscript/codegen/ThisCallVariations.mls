@@ -85,7 +85,7 @@ new Example2(1)
 new Example2(1)
   . oops2(2)
   . oops2(2)
-//│ /!!!\ Uncaught error: scala.MatchError: OpSplit(App(Ident(Example2),Tup(List(IntLit(1)))),List(App(OpApp(SplitPoint(),Ident(.),List(Ident(oops2))),Tup(List(IntLit(2)))), App(OpApp(SplitPoint(),Ident(.),List(Ident(oops2))),Tup(List(IntLit(2)))))) (of class hkmc2.syntax.Tree$OpSplit)
+//│ ═══[RUNTIME ERROR] TypeError: tmp21 is not a constructor
 
 
 // * Alternative syntax – precedence is now inappropriate
@@ -105,7 +105,7 @@ Example .> oops(2)
 //│       rhs = Tup of Ls of 
 //│         IntLit of 2
 //│ JS (unsanitized):
-//│ let tmp17; tmp17 = runtime.safeCall(oops(2)); call1(Example1, tmp17)
+//│ let tmp22; tmp22 = runtime.safeCall(oops(2)); call1(Example1, tmp22)
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
 
 // * Note:

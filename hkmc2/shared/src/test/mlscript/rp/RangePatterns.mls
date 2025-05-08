@@ -52,23 +52,20 @@ pattern UnsignedByte = 0..< 256
 //│ ╔══[LEXICAL ERROR] Expect at least one digit after the  decimal point
 //│ ║  l.51: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                         ^
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpApp(DecLit(0),Ident(.<),List(IntLit(256))) (of class hkmc2.syntax.Tree$OpApp)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.go$4(DeBrujinSplit.scala:113)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate$$anonfun$1(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.utils.TraceLogger.scoped(TraceLogger.scala:40)
-//│ 	at: hkmc2.semantics.ucs.DeBrujinSplit$.elaborate(DeBrujinSplit.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:1191)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1249)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1249)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:825)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1342)
+//│ ╔══[ERROR] Name not found: .<
+//│ ║  l.51: 	pattern UnsignedByte = 0..< 256
+//│ ╙──      	                         ^^
+//│ ╔══[ERROR] Name not found: .<
+//│ ║  l.51: 	pattern UnsignedByte = 0..< 256
+//│ ╙──      	                         ^^
+//│ ╔══[ERROR] Unrecognized pattern (operator application `.<`)
+//│ ║  l.51: 	pattern UnsignedByte = 0..< 256
+//│ ╙──      	                       ^^^^^^^^
 
 :e
 pattern BadRange = "s"..=0
 //│ ╔══[ERROR] Incompatible range types: string literal to integer literal
-//│ ║  l.69: 	pattern BadRange = "s"..=0
+//│ ║  l.66: 	pattern BadRange = "s"..=0
 //│ ╙──      	                   ^^^^^^^
 
 // It becomes an absurd pattern.
@@ -78,14 +75,14 @@ pattern BadRange = "s"..=0
 :e
 pattern BadRange = 0 ..= "s"
 //│ ╔══[ERROR] Incompatible range types: integer literal to string literal
-//│ ║  l.79: 	pattern BadRange = 0 ..= "s"
+//│ ║  l.76: 	pattern BadRange = 0 ..= "s"
 //│ ╙──      	                   ^^^^^^^^^
 
 :e
 pattern BadRange = "yolo" ..= "swag"
 //│ ╔══[ERROR] String range bounds must have only one character.
-//│ ║  l.85: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║  l.82: 	pattern BadRange = "yolo" ..= "swag"
 //│ ║        	                   ^^^^^^
 //│ ╟── String range bounds must have only one character.
-//│ ║  l.85: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║  l.82: 	pattern BadRange = "yolo" ..= "swag"
 //│ ╙──      	                              ^^^^^^

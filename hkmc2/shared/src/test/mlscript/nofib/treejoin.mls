@@ -32,18 +32,6 @@ fun insertT(k, e, t) = if t is
       > k_ then Node(k_, Leaf(k_, k__), l_)
       else throw Error("already exist")
   Empty then Leaf(k, e)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpSplit(Ident(k),List(InfixApp(OpApp(SplitPoint(),Ident(<),List(Ident(k_))),keyword 'then',App(Ident(Node),Tup(List(Ident(k), Ident(l_), App(Ident(Leaf),Tup(List(Ident(k_), Ident(k__)))))))), InfixApp(OpApp(SplitPoint(),Ident(>),List(Ident(k_))),keyword 'then',App(Ident(Node),Tup(List(Ident(k_), App(Ident(Leaf),Tup(List(Ident(k_), Ident(k__)))), Ident(l_))))), Modified(keyword 'else',None,Modified(keyword 'throw',None,App(Ident(Error),Tup(List(StrLit(already exist)))))))) (of class hkmc2.syntax.Tree$OpSplit)
-//│ 	at: hkmc2.syntax.Tree.children(Tree.scala:149)
-//│ 	at: hkmc2.AutoLocated.subLocs$1(syntax.scala:40)
-//│ 	at: hkmc2.AutoLocated.toLoc(syntax.scala:42)
-//│ 	at: hkmc2.AutoLocated.toLoc$(syntax.scala:26)
-//│ 	at: hkmc2.syntax.Tree.toLoc(Tree.scala:41)
-//│ 	at: hkmc2.AutoLocated.subLocs$1$$anonfun$1(syntax.scala:40)
-//│ 	at: scala.collection.Iterator$$anon$10.nextCur(Iterator.scala:594)
-//│ 	at: scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:608)
-//│ 	at: scala.collection.Iterator$$anon$9.hasNext(Iterator.scala:583)
-//│ 	at: scala.collection.IterableOnceOps.minOption(IterableOnce.scala:916)
 
 fun lookupT(k, t) = if t is
   Node(k_, l, r) and
@@ -68,11 +56,6 @@ fun join(t1, t2, j) = if
     None then j
     Some([d, e, f]) then insertT(c, [a, b, c, d, e], j)
   t1 is Node(k, l, r) then join(l, t2, join(r, t2, j))
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:410)
-//│ ╔══[ERROR] Name not found: insertT
-//│ ║  l.86: 	    Some([d, e, f]) then insertT(c, [a, b, c, d, e], j)
-//│ ╙──      	                         ^^^^^^^
 
 fun readTree(fk, s, t) = if
   s is Nil then t
@@ -82,11 +65,6 @@ fun readTree(fk, s, t) = if
         let e = [f, g, h]
         let k = fk(e)
         readTree(fk, s___, insertT(k, e, t))
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:410)
-//│ ╔══[ERROR] Name not found: insertT
-//│ ║  l.107: 	        readTree(fk, s___, insertT(k, e, t))
-//│ ╙──       	                           ^^^^^^^
 
 
 fun testTreejoin_nofib(n) =

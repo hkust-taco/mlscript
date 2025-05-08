@@ -185,10 +185,10 @@ let foo =
   case
     Tuple(...elements) then elements
 //│ ╔══[ERROR] mismatched arity: expect 3, found 1
-//│ ║  l.192: 	    Tuple(...elements) then elements
+//│ ║  l.186: 	    Tuple(...elements) then elements
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern (spread)
-//│ ║  l.192: 	    Tuple(...elements) then elements
+//│ ║  l.186: 	    Tuple(...elements) then elements
 //│ ╙──       	             ^^^^^^^^
 //│ foo = [function]
 
@@ -206,15 +206,21 @@ fun foo(x) = if x is Foo.
   Bar then "Bar"
   Foo then "Foo"
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.223: 	fun foo(x) = if x is Foo.
+//│ ║  l.205: 	fun foo(x) = if x is Foo.
 //│ ║         	                     ^^^^
-//│ ║  l.224: 	  Bar then "Bar"
+//│ ║  l.206: 	  Bar then "Bar"
 //│ ╙──       	^^
 
 fun foo(x) = if x is Foo
   .Bar then "Bar"
   .Foo then "Foo"
-//│ /!!!\ Uncaught error: scala.MatchError: OpSplit(Ident(Foo),List(InfixApp(Sel(SplitPoint(),Ident(Bar)),keyword 'then',StrLit(Bar)), InfixApp(Sel(SplitPoint(),Ident(Foo)),keyword 'then',StrLit(Foo)))) (of class hkmc2.syntax.Tree$OpSplit)
+//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ║  l.214: 	fun foo(x) = if x is Foo
+//│ ║         	                     ^^^
+//│ ║  l.215: 	  .Bar then "Bar"
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.216: 	  .Foo then "Foo"
+//│ ╙──       	^^^^^^^^^^^^^^^^^
 
 // ——— ——— ———
 
