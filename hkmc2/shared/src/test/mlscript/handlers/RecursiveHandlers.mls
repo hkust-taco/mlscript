@@ -73,11 +73,12 @@ handle h2 = Effect with
 //│ ╔══[ERROR] Name not found: h2
 //│ ║  l.65: 	      then h2.perform(arg - 1) + " " + arg
 //│ ╙──      	           ^^
+//│ ═══[ERROR] Illegal position for 'else' modifier.
 //│ > –––
 //│ > performing 2
 //│ > –––
 //│ > performing 3
-//│ = [undefined, undefined]
+//│ = "0"
 
 
 // passing additional handlers to the handler body

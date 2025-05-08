@@ -188,28 +188,6 @@ fun prune(n, t) = if t is Branch(a, l) and n
   === 0 then Branch(a, Nil)
   < 0 then throw Error("Tree.prune: < 0")
   else Branch(a, map(x => prune(n - 1, x), l))
-//│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:760)
-//│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this position
-//│ ║  l.188: 	  === 0 then Branch(a, Nil)
-//│ ╙──       	        ^^^^
-//│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: parseAll (Parser.scala:227)
-//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.189: 	  < 0 then throw Error("Tree.prune: < 0")
-//│ ╙──       	    ^
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpSplit(Ident(n),List(Error())) (of class hkmc2.syntax.Tree$OpSplit)
-//│ 	at: hkmc2.syntax.Tree.children(Tree.scala:149)
-//│ 	at: hkmc2.AutoLocated.subLocs$1(syntax.scala:40)
-//│ 	at: hkmc2.AutoLocated.toLoc(syntax.scala:42)
-//│ 	at: hkmc2.AutoLocated.toLoc$(syntax.scala:26)
-//│ 	at: hkmc2.syntax.Tree.toLoc(Tree.scala:41)
-//│ 	at: hkmc2.AutoLocated.subLocs$1$$anonfun$1(syntax.scala:40)
-//│ 	at: scala.collection.Iterator$$anon$10.nextCur(Iterator.scala:594)
-//│ 	at: scala.collection.Iterator$$anon$10.hasNext(Iterator.scala:608)
-//│ 	at: scala.collection.Iterator$$anon$9.hasNext(Iterator.scala:583)
-//│ 	at: scala.collection.IterableOnceOps.minOption(IterableOnce.scala:918)
 
 fun opposite(p) = if p is
   X then O
@@ -256,11 +234,6 @@ fun searchTree(p, board) =
       x => newPositions(p, x),
       x => newPositions(opposite(p), x),
       board
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:410)
-//│ ╔══[ERROR] Name not found: prune
-//│ ║  l.253: 	  prune of
-//│ ╙──       	  ^^^^^
 
 fun cropTree(t) = if t is
   Branch(a, Nil) then Branch(a, Nil)
@@ -295,16 +268,40 @@ fun prog(input) =
   concat of map(showMove, game)
 
 print(nofibListToString(prog("180000")))
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:145)
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
-//│     at Runtime.checkCall (file:///Users/chengluyu/Developer/hkmc2-op-splits/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:209:24)
-//│     at bestMove (REPL152:1:250)
-//│     at lambda (REPL155:1:1098)
-//│     at map (REPL8:1:12824)
-//│     at alternate (REPL155:1:1176)
-//│     at prog (REPL158:1:1322)
-//│     at REPL161:1:53
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:597:22)
-//│     at bound (node:domain:433:15)
+//│ > OXO
+//│ > XWin
+//│ > X|O| 
+//│ > ------
+//│ >  |X| 
+//│ > ------
+//│ >  | | 
+//│ > 
+//│ > XWin
+//│ > X|O|O
+//│ > ------
+//│ >  |X| 
+//│ > ------
+//│ >  | | 
+//│ > 
+//│ > XWin
+//│ > X|O|O
+//│ > ------
+//│ > X|X| 
+//│ > ------
+//│ >  | | 
+//│ > 
+//│ > XWin
+//│ > X|O|O
+//│ > ------
+//│ > X|X|O
+//│ > ------
+//│ >  | | 
+//│ > 
+//│ > XWin
+//│ > X|O|O
+//│ > ------
+//│ > X|X|O
+//│ > ------
+//│ > X| | 
+//│ > 
+//│ > 

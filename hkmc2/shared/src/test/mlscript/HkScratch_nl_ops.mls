@@ -1,0 +1,140 @@
+:js
+// :de
+// :sjs
+// :pt
+// :elt
+
+:global
+// :d
+// :todo
+
+
+:p
+2
++
+2
+//│ |2|↵|+|↵|2|
+//│ Parsed:
+//│ 	OpApp(IntLit(2),Ident(+),List(IntLit(2)))
+//│ = 4
+
+// :pt
+2
++
+2
+*
+2
+//│ = 8
+
+2
++ 2
+* 2
+//│ = 8
+
+
+2 + 2
+. print()
+//│ > 4
+
+2 + 2
+  . print()
+//│ > 2
+//│ = "2()"
+
+
+let xs = [1, 2, 3]
+let ys = [4, 5, 6]
+fun len(xs) = xs.length
+//│ xs = [1, 2, 3]
+//│ ys = [4, 5, 6]
+
+xs |> len
++
+xs |> len
+|> print
+//│ > 6
+
+
+
+:pt
+let r = 10 in r
+-1
+//│ Parsed tree:
+//│ LetLike:
+//│   kw = keyword 'let'
+//│   lhs = Ident of "r"
+//│   rhs = S of IntLit of 10
+//│   body = S of Ident of "r"
+//│ App:
+//│   lhs = Ident of "-"
+//│   rhs = Tup of Ls of 
+//│     IntLit of 1
+//│ = -1
+
+let r = 10 in id(r)
+-1
+//│ = -1
+
+let r = 10
+-1
+//│ = -1
+//│ r = 10
+
+let r = id(id)(10)
+-1
+//│ = -1
+//│ r = 10
+
+:pt
+let r = id(10)
+!r
+//│ Parsed tree:
+//│ LetLike:
+//│   kw = keyword 'let'
+//│   lhs = Ident of "r"
+//│   rhs = S of App:
+//│     lhs = Ident of "id"
+//│     rhs = Tup of Ls of 
+//│       IntLit of 10
+//│   body = N
+//│ App:
+//│   lhs = Ident of "!"
+//│   rhs = Tup of Ls of 
+//│     Ident of "r"
+//│ r = 10
+
+
+
+// fun solution(bd, c, n) =
+//   if true then
+//     let a = 1
+//     a
+//   else ???
+
+
+if 0
+  === 1 then 2
+  else 3
+//│ = 3
+
+
+:fixme // strange error
+let x
+= 1
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.122: 	let x
+//│ ╙──       	    ^
+//│ ═══[ERROR] Name not found: 
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: x (class hkmc2.semantics.VarSymbol)
+
+let x = 1
+//│ x = 1
+
+:fixme // strange error
+let x
+= 1
+//│ ═══[ERROR] Name not found: 
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: x (class hkmc2.semantics.VarSymbol)
+
+
+

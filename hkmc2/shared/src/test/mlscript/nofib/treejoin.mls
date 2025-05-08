@@ -71,7 +71,7 @@ fun join(t1, t2, j) = if
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:410)
 //│ ╔══[ERROR] Name not found: insertT
-//│ ║  l.69: 	    Some([d, e, f]) then insertT(c, [a, b, c, d, e], j)
+//│ ║  l.86: 	    Some([d, e, f]) then insertT(c, [a, b, c, d, e], j)
 //│ ╙──      	                         ^^^^^^^
 
 fun readTree(fk, s, t) = if
@@ -85,8 +85,8 @@ fun readTree(fk, s, t) = if
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:410)
 //│ ╔══[ERROR] Name not found: insertT
-//│ ║  l.84: 	        readTree(fk, s___, insertT(k, e, t))
-//│ ╙──      	                           ^^^^^^^
+//│ ║  l.107: 	        readTree(fk, s___, insertT(k, e, t))
+//│ ╙──       	                           ^^^^^^^
 
 
 fun testTreejoin_nofib(n) =

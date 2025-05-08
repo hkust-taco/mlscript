@@ -194,6 +194,11 @@ fun showMove(withPiece, m) = if m is MoveInFull([c, k], sq, Move(sq_, mcp, mpp))
   maybe("-" :: Nil, cp => "x" :: append(showPiece(cp), "/" :: Nil), mcp) +:
   showSquare(c, sq_) +:
   maybe(Nil, pp => "(" :: append(showPiece(pp), ")" :: Nil), mpp)
+//│ FAILURE: Unexpected parse error
+//│ FAILURE LOCATION: concludeWithImpl (Parser.scala:240)
+//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
+//│ ║  l.192: 	    else Nil
+//│ ╙──       	    ^^^^
 
 fun showMoveInFull(a) = showMove(true, a)
 
@@ -463,7 +468,7 @@ fun replies(bd, c, n) =
       null_(mds) then Some(Nil)
       else None
     > 0 then foldr_lz(solnAnd, Some(Nil), mds)
-    else throw Error("n < 0")
+  else throw Error("n < 0")
 
 fun solution(bd, c, n) =
   fun solnOr(mifb, other) = if mifb is
@@ -480,6 +485,18 @@ fun solution(bd, c, n) =
     let mds = moveDetailsFor(c, bd)
     foldr_lz(solnOr, None, mds)
   else throw Error("n <= 0")
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: OpSplit(Ident(n),List(InfixApp(OpApp(SplitPoint(),Ident(===),List(IntLit(0))),keyword 'and',Block(List(InfixApp(App(Ident(null_),Tup(List(Ident(mds)))),keyword 'then',App(Ident(Some),Tup(List(Ident(Nil))))), Modified(keyword 'else',None,Ident(None))))), InfixApp(OpApp(SplitPoint(),Ident(>),List(IntLit(0))),keyword 'then',App(Ident(foldr_lz),Tup(List(Ident(solnAnd), App(Ident(Some),Tup(List(Ident(Nil)))), Ident(mds))))))) (of class hkmc2.syntax.Tree$OpSplit)
+//│ 	at: hkmc2.syntax.Tree.children(Tree.scala:149)
+//│ 	at: hkmc2.AutoLocated.subLocs$1(syntax.scala:40)
+//│ 	at: hkmc2.AutoLocated.toLoc(syntax.scala:42)
+//│ 	at: hkmc2.AutoLocated.toLoc$(syntax.scala:26)
+//│ 	at: hkmc2.syntax.Tree.toLoc(Tree.scala:41)
+//│ 	at: hkmc2.AutoLocated.withLocOf(syntax.scala:37)
+//│ 	at: hkmc2.AutoLocated.withLocOf$(syntax.scala:26)
+//│ 	at: hkmc2.semantics.Split.withLocOf(Split.scala:15)
+//│ 	at: hkmc2.semantics.ucs.Desugarer.termSplit$$anonfun$1$$anonfun$4$$anonfun$1$$anonfun$3(Desugarer.scala:216)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:114)
 //│ ————————————————————————————————————————————————————————————————————————————————
 
 data class Soln(a: MoveInFull, b: List[[List[MoveInFull],Soln]])
@@ -541,6 +558,11 @@ fun showResult(s) = if s is
   Some(s) then showSoln(compact(s), 1)
 
 fun solve(bd, c, n) = showResult(solution(bd, c, (2 * n) - 1))
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:410)
+//│ ╔══[ERROR] Name not found: solution
+//│ ║  l.581: 	fun solve(bd, c, n) = showResult(solution(bd, c, (2 * n) - 1))
+//│ ╙──       	                                 ^^^^^^^^
 
 fun testMate_nofib(dummy) = 
   let input = nofibStringToList of
@@ -557,22 +579,16 @@ fun testMate_nofib(dummy) =
     solve(bd, c, n)
 
 print(nofibListToString(testMate_nofib(0)))
-//│ >  - - - - - - - -
-//│ >  - - - - - - - -
-//│ >  - - - - - - - -
-//│ >  - - - - P - - -
-//│ >  - - - - p - k b
-//│ >  - P n - K - - -
-//│ >  - P - - - - - -
-//│ >  - q - - - - - -
-//│ > 
-//│ > White to move and mate in 3
-//│ > 
-//│ > 1. N/QB3-QR2,
-//│ >  if K-Q5; 2. B/KR4-KB2, K-QB5; 3. Q/QN1-KB1++
-//│ >  if K-Q7; 2. K-KB3, P/QN6xN/QR7; 3. B/KR4-K1++
-//│ >  if K-K7; 2. N/QR2-QN4,
-//│ >   if K-Q7; 3. Q/QN1-K1++
-//│ >   if K-K6; 3. Q/QN1-Q3++
-//│ >  if P/QN6xN/QR7; 2. Q/QN1-QB2, ...; 3. B/KR4-KB2++
-//│ > 
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:145)
+//│ ═══[RUNTIME ERROR] Error: Function 'showResult' expected 1 argument but got 0
+//│     at Predef.checkArgs (file:///Users/chengluyu/Developer/hkmc2-op-splits/hkmc2/shared/src/test/mlscript-compile/Predef.mjs:240:24)
+//│     at showResult (REPL217:1:86)
+//│     at solve (REPL220:1:198)
+//│     at testMate_nofib (REPL223:1:1403)
+//│     at REPL226:1:47
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:597:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:926:10)

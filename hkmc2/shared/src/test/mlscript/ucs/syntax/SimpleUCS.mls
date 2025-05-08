@@ -92,13 +92,6 @@ fun f(x, y) =
       >  0 then "gt"
       <  0 then "le"
       == 0 then "eq"
-//│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this position
-//│ ║  l.92: 	      >  0 then "gt"
-//│ ╙──      	           ^^^^
-//│ ╔══[PARSE ERROR] Unexpected literal here
-//│ ║  l.93: 	      <  0 then "le"
-//│ ╙──      	         ^
-//│ /!!!\ Uncaught error: scala.MatchError: OpSplit(Ident(y),List(Error())) (of class hkmc2.syntax.Tree$OpSplit)
 
 
 fun isValid(x) = if x then false else true
@@ -132,13 +125,13 @@ fun f(x, y, b) =
     Some(xv) and b then xv + b
     _ then "roll"
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found 'is' keyword instead
-//│ ║  l.131: 	      is None then "bruh"
+//│ ║  l.125: 	      is None then "bruh"
 //│ ╙──       	      ^^
 //│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.131: 	      is None then "bruh"
+//│ ║  l.125: 	      is None then "bruh"
 //│ ╙──       	         ^^^^
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.131: 	      is None then "bruh"
+//│ ║  l.125: 	      is None then "bruh"
 //│ ╙──       	         ^^^^
 
 :fixme
@@ -150,13 +143,13 @@ fun g(x, y, b) =
     Some(xv) and b then xv + b
     _ then "roll"
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found 'is' keyword instead
-//│ ║  l.149: 	      is None then "bruh"
+//│ ║  l.143: 	      is None then "bruh"
 //│ ╙──       	      ^^
 //│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.149: 	      is None then "bruh"
+//│ ║  l.143: 	      is None then "bruh"
 //│ ╙──       	         ^^^^
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.149: 	      is None then "bruh"
+//│ ║  l.143: 	      is None then "bruh"
 //│ ╙──       	         ^^^^
 
 
@@ -219,9 +212,9 @@ fun f(x) =
     0 ::
       Nil() then "oh"
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.219: 	    0 ::
+//│ ║  l.213: 	    0 ::
 //│ ║         	    ^^^^
-//│ ║  l.220: 	      Nil() then "oh"
+//│ ║  l.214: 	      Nil() then "oh"
 //│ ╙──       	^^^^^^
 
 

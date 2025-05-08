@@ -133,10 +133,21 @@ if 1 + 2
   * 3 then 0
   + 4 then 0
 //│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:760)
-//│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this position
+//│ FAILURE LOCATION: opSplitImpl (Parser.scala:782)
+//│ ╔══[PARSE ERROR] Operator cannot be used inside this operator split
+//│ ║  l.134: 	  + 4 then 0
+//│ ║         	  ^
+//│ ╟── as it has lower precedence than the splitting operator here
 //│ ║  l.133: 	  * 3 then 0
-//│ ╙──       	      ^^^^
+//│ ╙──       	  ^
+//│ FAILURE: Unexpected parse error
+//│ FAILURE LOCATION: opSplitImpl (Parser.scala:790)
+//│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this operator split inner position
+//│ ║  l.134: 	  + 4 then 0
+//│ ║         	      ^^^^
+//│ ╟── Note: the operator split starts here
+//│ ║  l.133: 	  * 3 then 0
+//│ ╙──       	  ^
 //│ Parsed tree:
 //│ IfLike:
 //│   kw = keyword 'if'
@@ -147,20 +158,28 @@ if 1 + 2
 //│       op = Ident of "+"
 //│       rhss = Ls of 
 //│         OpSplit:
-//│           lhs = IntLit of 2
+//│           lhs = OpApp:
+//│             lhs = IntLit of 2
+//│             op = Ident of "+"
+//│             rhss = Ls of 
+//│               App:
+//│                 lhs = Ident of "+"
+//│                 rhs = Tup of Ls of 
+//│                   IntLit of 4
 //│           ops_rhss = Ls of 
+//│             InfixApp:
+//│               lhs = OpApp:
+//│                 lhs = SplitPoint
+//│                 op = Ident of "*"
+//│                 rhss = Ls of 
+//│                   IntLit of 3
+//│               kw = keyword 'then'
+//│               rhs = IntLit of 0
 //│             Error
 //│     kw = keyword 'then'
 //│     rhs = IntLit of 0
-//│ InfixApp:
-//│   lhs = App:
-//│     lhs = Ident of "+"
-//│     rhs = Tup of Ls of 
-//│       IntLit of 4
-//│   kw = keyword 'then'
-//│   rhs = IntLit of 0
 //│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: OpSplit(IntLit(2),List(Error())) (of class hkmc2.syntax.Tree$OpSplit)
+//│ /!!!\ Uncaught error: scala.MatchError: OpSplit(OpApp(IntLit(2),Ident(+),List(App(Ident(+),Tup(List(IntLit(4)))))),List(InfixApp(OpApp(SplitPoint(),Ident(*),List(IntLit(3))),keyword 'then',IntLit(0)), Error())) (of class hkmc2.syntax.Tree$OpSplit)
 //│ 	at: hkmc2.syntax.Tree.children(Tree.scala:149)
 //│ 	at: hkmc2.AutoLocated.subLocs$1(syntax.scala:40)
 //│ 	at: hkmc2.AutoLocated.toLoc(syntax.scala:42)

@@ -136,11 +136,30 @@ fun head: [A, E] -> Seq[out A, out E] ->{E} A
 region r in
   let sum = r.ref 0
   let s1 = mkSeq of () =>
-    sum := !sum + 1
+    sum := !sum + 1,
     !sum
   let s2 = mapi(s1, r) of (x, i) => x * i
   !sum + head(s2)
 //│ Type: Int
 
+
+fun r: Ref[Int, Nothing]
+//│ Type: ⊤
+
+r := 1
+!r
+//│ Type: Int
+
+:e
+r := 1
+! r // because of the space, this is a NL-op
+//│ ╔══[ERROR] Variable not found: !
+//│ ║  l.155: 	! r // because of the space, this is a NL-op
+//│ ╙──       	^
+//│ Type: ⊥
+
+r := 1, // `,` to avoid parsing `! r` on next line as continuation of expression
+! r
+//│ Type: Int
 
 
