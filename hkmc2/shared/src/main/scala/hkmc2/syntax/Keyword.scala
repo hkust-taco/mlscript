@@ -122,10 +122,6 @@ object Keyword:
   val `outer` = Keyword("outer", N, N)
   val `pattern` = Keyword("pattern", N, N)
 
-  val `&` = Keyword("&", nextPrec, nextPrec) // used for conjunction pattern
-  val `|` = Keyword("|", nextPrec, nextPrec) // used for disjunction pattern
-
-
   val `->` = Keyword("->", nextPrec, eqPrec)
   
   val maxPrec = curPrec
@@ -143,7 +139,7 @@ object Keyword:
     `abstract`, mut, virtual, `override`, declare, public, `private`)
   
   type Infix = `and`.type | `or`.type | `then`.type | `else`.type | `is`.type | `:`.type | `->`.type |
-    `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type | `&`.type | `|`.type
+    `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type
 
   type Ellipsis = `...`.type | `..`.type
   

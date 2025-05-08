@@ -708,9 +708,9 @@ extends Importer:
     case Constructor(delc) =>
       raise(ErrorReport(msg"Unsupported constructor in this position." -> tree.toLoc :: Nil))
       Term.Error
-    case _ =>
-      raise(ErrorReport(msg"Unrecognized term creation" -> tree.toLoc :: Nil))
-      Term.Error
+    // case _ =>
+    //   raise(ErrorReport(msg"Unrecognized term creation" -> tree.toLoc :: Nil))
+    //   Term.Error
   
   def fld(tree: Tree): Ctxl[Elem] = tree match
     case InfixApp(id: Ident, Keyword.`:`, rhs) =>

@@ -396,8 +396,6 @@ class ParseRules(using State):
     genInfixRule(`extends`, (rhs, _: Unit) => lhs => InfixApp(lhs, `extends`, rhs)),
     genInfixRule(`restricts`, (rhs, _: Unit) => lhs => InfixApp(lhs, `restricts`, rhs)),
     genInfixRule(`do`, (rhs, _: Unit) => lhs => InfixApp(lhs, `do`, rhs)),
-    genInfixRule(`&`, (rhs, _: Unit) => lhs => InfixApp(lhs, `&`, rhs)),
-    genInfixRule(`|`, (rhs, _: Unit) => lhs => InfixApp(lhs, `|`, rhs)),
   )
 
 end ParseRules
