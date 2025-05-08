@@ -118,9 +118,12 @@ let r = id(10)
 if 0
   === 1 then 2
   else 3
-//│ ╔══[PARSE ERROR] Unexpected 'else' keyword in this position
+//│ ╔══[PARSE ERROR] Unexpected 'else' keyword in this operator split inner position
 //│ ║  l.120: 	  else 3
-//│ ╙──       	  ^^^^
+//│ ║         	  ^^^^
+//│ ╟── Note: the operator split starts here
+//│ ║  l.119: 	  === 1 then 2
+//│ ╙──       	  ^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 
@@ -128,7 +131,7 @@ if 0
 let x
 = 1
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.128: 	let x
+//│ ║  l.131: 	let x
 //│ ╙──       	    ^
 //│ ═══[ERROR] Name not found: 
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: x (class hkmc2.semantics.VarSymbol)

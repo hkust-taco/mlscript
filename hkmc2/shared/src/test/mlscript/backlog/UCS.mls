@@ -113,9 +113,12 @@ if 1 + 1
 //│ ╟── as it has lower precedence than the splitting operator here
 //│ ║  l.107: 	    * 2 == 4 then "X"
 //│ ╙──       	    ^
-//│ ╔══[PARSE ERROR] Unexpected literal in this position
+//│ ╔══[PARSE ERROR] Unexpected literal in this operator split inner position
 //│ ║  l.107: 	    * 2 == 4 then "X"
-//│ ╙──       	           ^
+//│ ║         	           ^
+//│ ╟── Note: the operator split starts here
+//│ ║  l.107: 	    * 2 == 4 then "X"
+//│ ╙──       	    ^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
 //│ ║  l.107: 	    * 2 == 4 then "X"
 //│ ╙──       	           ^
@@ -128,7 +131,7 @@ class Some(val v)
 Some(1) is
   Some of [process, rest] do "hi"
 //│ ╔══[ERROR] Unrecognized pattern (infix operator)
-//│ ║  l.129: 	  Some of [process, rest] do "hi"
+//│ ║  l.132: 	  Some of [process, rest] do "hi"
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^
 //│ = false
 
@@ -178,10 +181,10 @@ let foo =
   case
     Tuple(...elements) then elements
 //│ ╔══[ERROR] mismatched arity: expect 3, found 1
-//│ ║  l.179: 	    Tuple(...elements) then elements
+//│ ║  l.182: 	    Tuple(...elements) then elements
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern (spread)
-//│ ║  l.179: 	    Tuple(...elements) then elements
+//│ ║  l.182: 	    Tuple(...elements) then elements
 //│ ╙──       	             ^^^^^^^^
 //│ foo = [function]
 
@@ -199,24 +202,15 @@ fun foo(x) = if x is Foo.
   Bar then "Bar"
   Foo then "Foo"
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.198: 	fun foo(x) = if x is Foo.
+//│ ║  l.201: 	fun foo(x) = if x is Foo.
 //│ ║         	                     ^^^^
-//│ ║  l.199: 	  Bar then "Bar"
+//│ ║  l.202: 	  Bar then "Bar"
 //│ ╙──       	^^
 
 fun foo(x) = if x is Foo
   .Bar then "Bar"
   .Foo then "Foo"
-//│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this position
-//│ ║  l.208: 	  .Bar then "Bar"
-//│ ╙──       	       ^^^^
-//│ ╔══[PARSE ERROR] Expected an expression; found selector instead
-//│ ║  l.209: 	  .Foo then "Foo"
-//│ ╙──       	  ^^^^
-//│ ╔══[PARSE ERROR] Expected end of input; found selector instead
-//│ ║  l.209: 	  .Foo then "Foo"
-//│ ╙──       	  ^^^^
-//│ /!!!\ Uncaught error: scala.MatchError: OpSplit(Ident(Foo),List(Error())) (of class hkmc2.syntax.Tree$OpSplit)
+//│ /!!!\ Uncaught error: scala.MatchError: OpSplit(Ident(Foo),List(InfixApp(Sel(SplitPoint(),Ident(Bar)),keyword 'then',StrLit(Bar)), InfixApp(Sel(SplitPoint(),Ident(Foo)),keyword 'then',StrLit(Foo)))) (of class hkmc2.syntax.Tree$OpSplit)
 
 // ——— ——— ———
 

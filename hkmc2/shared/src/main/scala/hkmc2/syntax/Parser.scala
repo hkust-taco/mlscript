@@ -739,29 +739,43 @@ abstract class Parser(
   def opSplit(lhs: Tree, splittingOpLoc: Loc, prec: Int)(using Line): Tree =
     wrap((lhs,splittingOpLoc,prec))(opSplitImpl(lhs, splittingOpLoc, prec, Nil))
   def opSplitImpl(lhs: Tree, splittingOpLoc: Loc, prec: Int, acc: Ls[Tree]): Tree =
-    val e = exprCont(SplitPoint(), prec, allowNewlines = false)
+    val (newAcc, e) = exprCont(SplitPoint(), prec, allowNewlines = false) match
+      case SplitPoint() => // * Note: nothing was parsed!
+        // * Kludge to accommodate the kludge for `then` below
+        (acc, N)
+      case e => (e :: acc, S(e))
     yeetSpaces match
-    case Nil => OpSplit(lhs, acc reverse_::: e :: Nil)
+    case Nil => OpSplit(lhs, newAcc.reverse)
     case (NEWLINE, l0) :: _ =>
       consume
-      opSplitImpl(lhs, splittingOpLoc, prec, e :: acc)
+      opSplitImpl(lhs, splittingOpLoc, prec, newAcc)
     case (SELECT(nme), l0) :: rest =>
       assert(SelPrec <= prec)
       ??? // TODO?
+    case (IDENT("then", false), l0) :: rest if e.isDefined =>
+      // * Kludge – when we have a proper generally splittable syntax, this will be handled by construction
+      consume
+      val rhs = expr(Keyword.`then`.rightPrecOrMin)
+      e match
+      case N => die
+      case S(e) =>
+        opSplitImpl(lhs, splittingOpLoc, prec, InfixApp(e, Keyword.`then`, rhs) :: acc)
     case (IDENT(op, true), l0) :: rest =>
       assert(opPrec(op)._1 <= prec)
-      if rest.collectFirst{ case (NEWLINE, _) => }.isEmpty // TODO dedup
+      if rest.collectFirst{ case (NEWLINE | IDENT("then", false), _) => }.isEmpty // TODO dedup
       then
         OpSplit(lhs, acc.reverse)
       else
         err(
-          msg"Operator cannot be used inside this operator split" -> S(l0) :: 
-          msg"as it has lower precedence than the splitting operator here" -> S(splittingOpLoc) :: 
+          msg"Operator cannot be used inside this operator split" -> S(l0) ::
+          msg"as it has lower precedence than the splitting operator here" -> S(splittingOpLoc) ::
           Nil)
         val rhs = expr(opPrec(op)._2)
-        opSplitImpl(OpApp(lhs, Ident(op).withLoc(S(l0)), rhs :: Nil), splittingOpLoc, prec, e :: acc)
+        opSplitImpl(OpApp(lhs, Ident(op).withLoc(S(l0)), rhs :: Nil), splittingOpLoc, prec, newAcc)
     case (tok, loc) :: _ => // TODO indented op block
-      err(msg"Unexpected ${tok.describe} in this position" -> S(loc) :: Nil)
+      err(msg"Unexpected ${tok.describe} in this operator split inner position" -> S(loc)::
+          msg"Note: the operator split starts here" -> S(splittingOpLoc)
+          :: Nil)
       OpSplit(lhs, acc reverse_::: errExpr :: Nil)
   
   

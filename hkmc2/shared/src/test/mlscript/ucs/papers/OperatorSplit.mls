@@ -15,15 +15,21 @@ fun example(args) =
       < 10 then "small"
       else "medium"
 //│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:764)
-//│ ╔══[PARSE ERROR] Unexpected 'else' keyword in this position
+//│ FAILURE LOCATION: opSplitImpl (Parser.scala:778)
+//│ ╔══[PARSE ERROR] Unexpected 'else' keyword in this operator split inner position
 //│ ║  l.16: 	      else "medium"
-//│ ╙──      	      ^^^^
+//│ ║        	      ^^^^
+//│ ╟── Note: the operator split starts here
+//│ ║  l.14: 	      > 100 then "large"
+//│ ╙──      	      ^
 //│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: opSplitImpl (Parser.scala:764)
-//│ ╔══[PARSE ERROR] Unexpected 'else' keyword in this position
+//│ FAILURE LOCATION: opSplitImpl (Parser.scala:778)
+//│ ╔══[PARSE ERROR] Unexpected 'else' keyword in this operator split inner position
 //│ ║  l.16: 	      else "medium"
-//│ ╙──      	      ^^^^
+//│ ║        	      ^^^^
+//│ ╟── Note: the operator split starts here
+//│ ║  l.11: 	    < 0 then "invalid"
+//│ ╙──      	    ^
 //│ Parsed tree:
 //│ TermDef:
 //│   k = Fun
