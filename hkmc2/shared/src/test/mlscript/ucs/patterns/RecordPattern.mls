@@ -70,16 +70,10 @@ if rr is
 //│ rr = {x: {y: 10, z: 100}, t: 1000}
 
 
-:todo
+
 let f = case
   { a: 1 & a } then a
-//│ ╔══[ERROR] Name not found: &
-//│ ║  l.75: 	  { a: 1 & a } then a
-//│ ╙──      	         ^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.75: 	  { a: 1 & a } then a
-//│ ╙──      	         ^
-//│ f = [function f]
+//│ f = [function]
 
 
 let f = case

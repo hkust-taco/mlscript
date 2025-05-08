@@ -15,7 +15,6 @@ Pair(0, 1) is Pair(0, _)
 
 if Pair(0, 1) is Pair(a, b) then true else false
 
-
 fun foo(x) = x is Pair(a, b)
 
 
@@ -28,6 +27,7 @@ fun foo(x) = x is Pair(a, b) and a > b
 
 fun foo(x) = if x is Pair(a, b) then a > b else false
 
+:todo // function prototype defintion is not there yet
 fun foo(x) = f(x) and g(x) and h(x)
 
 :e
@@ -50,23 +50,14 @@ fun foo(x) = x is
 //│ ║  l.46: 	  Int
 //│ ╙──      	^^^^^
 
-:todo // support `|`
+
 fun foo(x) = x is Pair(a, b) | Int
-//│ ╔══[ERROR] Name not found: |
-//│ ║  l.54: 	fun foo(x) = x is Pair(a, b) | Int
-//│ ╙──      	                             ^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.54: 	fun foo(x) = x is Pair(a, b) | Int
-//│ ╙──      	                             ^
 
 :todo
 fun foo(x) = x is (Pair(a, b) and a > b) | Int
-//│ ╔══[ERROR] Name not found: |
-//│ ║  l.63: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
-//│ ╙──      	                                         ^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.63: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
-//│ ╙──      	                                         ^
+//│ ╔══[ERROR] Unrecognized term split (identifier).
+//│ ║  l.57: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╙──      	                                      ^
 
 
 
