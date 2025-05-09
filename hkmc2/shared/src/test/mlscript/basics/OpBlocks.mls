@@ -21,11 +21,13 @@
 //│ = 4
 
 // TODO reject or parse differently
-:todo
+:pe
 2
     + 1
   * 2
 //│ = 4
+//│ FAILURE: Unexpected lack of parse error
+
 
 let f = x => x * 2
 //│ f = [function f]
@@ -109,7 +111,7 @@ f(123)
 :pe
 fun f(x) = x { + 1, * 2 }
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.110: 	fun f(x) = x { + 1, * 2 }
+//│ ║  l.112: 	fun f(x) = x { + 1, * 2 }
 //│ ╙──       	                      ^
 //│ = [function]
 
@@ -172,9 +174,9 @@ fun f(x) = if x
   foo(A) then a
   bar(B) then b
 //│ ╔══[ERROR] Unrecognized term split (juxtaposition).
-//│ ║  l.171: 	fun f(x) = if x
+//│ ║  l.173: 	fun f(x) = if x
 //│ ║         	              ^
-//│ ║  l.172: 	  foo(A) then a
+//│ ║  l.174: 	  foo(A) then a
 //│ ╙──       	^^
 
 
@@ -183,10 +185,10 @@ fun f(x) = if x
   is 0 then "a"
   is 1 then "b"
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found 'is' keyword instead
-//│ ║  l.184: 	  is 1 then "b"
+//│ ║  l.186: 	  is 1 then "b"
 //│ ╙──       	  ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.184: 	  is 1 then "b"
+//│ ║  l.186: 	  is 1 then "b"
 //│ ╙──       	     ^
 
 
