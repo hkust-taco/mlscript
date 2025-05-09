@@ -83,4 +83,26 @@ fun f(x, y) =
   if x
     then y
 
+(if true then
+    5
+  else 1
+) + 3
 
+:fixme
+(if true
+  then
+    5
+  else 1
+) + 3
+//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
+//│ ║  l.95: 	  else 1
+//│ ╙──      	  ^^^^
+
+:fixme
+(if true
+  then
+    5 else 1
+) + 3
+//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
+//│ ║  l.104: 	    5 else 1
+//│ ╙──       	      ^^^^

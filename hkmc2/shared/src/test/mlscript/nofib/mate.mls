@@ -185,8 +185,7 @@ let emptyBoard = Board(Nil, Nil)
 fun showMove(withPiece, m) = if m is MoveInFull([c, k], sq, Move(sq_, mcp, mpp)) then
   let capt = mcp is Some(_)
   let prom = mpp is Some(_)
-  (if withPiece
-    then
+  (if withPiece then
       showPiece([c, k]) +:
       if ((k === King) || (k is Pawn and not(capt || prom))) then Nil else "/" :: showSquare(c, sq)
     else Nil
@@ -194,11 +193,6 @@ fun showMove(withPiece, m) = if m is MoveInFull([c, k], sq, Move(sq_, mcp, mpp))
   maybe("-" :: Nil, cp => "x" :: append(showPiece(cp), "/" :: Nil), mcp) +:
   showSquare(c, sq_) +:
   maybe(Nil, pp => "(" :: append(showPiece(pp), ")" :: Nil), mpp)
-//│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: concludeWithImpl (Parser.scala:240)
-//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.192: 	    else Nil
-//│ ╙──       	    ^^^^
 
 fun showMoveInFull(a) = showMove(true, a)
 

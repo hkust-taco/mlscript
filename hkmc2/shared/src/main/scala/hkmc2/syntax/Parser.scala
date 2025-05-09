@@ -275,7 +275,7 @@ abstract class Parser(
   def block(allowNewlines: Bool)(using Line): Ls[Tree] = blockOf(prefixRules, Nil, allowNewlines)
   
   def blockOf(rule: ParseRule[Tree], annotations: Ls[Tree], allowNewlines: Bool)(using Line): Ls[Tree] =
-    wrap(rule.name)(blockOfImpl(rule, annotations, allowNewlines))
+    wrap(rule.name, s"allowNewlines = $allowNewlines")(blockOfImpl(rule, annotations, allowNewlines))
   def blockOfImpl(rule: ParseRule[Tree], annotations: Ls[Tree], allowNewlines: Bool): Ls[Tree] =
     def blockContOf(rule: ParseRule[Tree], annotations: Ls[Tree] = Nil): Ls[Tree] =
       yeetSpaces match
@@ -367,7 +367,7 @@ abstract class Parser(
   
   /** A result of None means there was an error (already reported) and nothing could be parsed. */
   def parseRule[A](prec: Int, rule: ParseRule[A], allowNewlines: Bool)(using Line): Opt[A] =
-    wrap(prec, rule)(parseRuleImpl(prec, rule, allowNewlines = allowNewlines))
+    wrap(prec, rule, s"allowNewlines = $allowNewlines")(parseRuleImpl(prec, rule, allowNewlines = allowNewlines))
   def parseRuleImpl[A](prec: Int, rule: ParseRule[A], allowNewlines: Bool): Opt[A] =
     def tryEmpty(tok: Token, loc: Loc) = rule.emptyAlt match
       case S(res) => S(res())
