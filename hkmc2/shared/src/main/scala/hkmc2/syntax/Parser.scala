@@ -788,7 +788,7 @@ abstract class Parser(
         opSplitImpl(OpApp(lhs, Ident(op).withLoc(S(l0)), rhs :: Nil), splittingOpLoc, prec, newAcc)
     case (tok, loc) :: _ => // TODO indented op block
       // More tokens (instead of newline or indent) after e
-      println(s"found ${tok.describe} in opSplit after e")
+      // println(s"found ${tok.describe} in opSplit after e")
       err(msg"Unexpected ${tok.describe} in this operator split inner position" -> S(loc)::
           msg"Note: the operator split starts here" -> S(splittingOpLoc)
           :: Nil)
