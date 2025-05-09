@@ -1,0 +1,89 @@
+import "../../Predef.mls"
+import "../../Stack.mls"
+import "../../Option.mls"
+import "../../Iter.mls"
+import "./Token.mls"
+import "./BasicExpr.mls"
+
+open Predef { mkStr }
+open Stack
+open Option { Some, None }
+open Token { Round, LiteralKind }
+open BasicExpr { Expr }
+
+type StackT[A] = Cons[A] | Nil
+
+module RecursiveDescent with ...
+
+fun parse(tokens) =
+  fun advance = if tokens is
+    Token.Space :: tail then
+      set tokens = tail
+      advance
+    head :: tail then
+      set tokens = tail
+      Some(head)
+    Nil then None
+  
+  let peek = advance
+  
+  fun consume = set peek = advance
+  
+  fun require(result: Expr, expected) = if peek is
+    Some(actual) and
+      expected Token.same(actual) then
+        consume
+        result
+      else result BasicExpr.withErr of mkStr of
+        "Expected token "
+        expected Token.summary()
+        ", but found "
+        actual Token.summary()
+    None then result BasicExpr.withErr of mkStr of
+      "Expected token "
+      expected Token.summary()
+      ", but found end of input"
+  
+  fun atom: Expr = if peek is
+    Some of
+      Token.Literal(LiteralKind.Integer, literal) then
+        consume
+        BasicExpr.Lit(parseInt(literal, 10))
+      Token.Identifier("(", true) then
+        consume
+        expr require of Token.Identifier(")", true)
+      Token.Identifier(name, false) then
+        consume
+        BasicExpr.Var(name)
+      token then BasicExpr.justErr of "Unexpected token " + token Token.summary()
+    None then BasicExpr.justErr of "Unexpected end of input"
+  
+  fun expr: Expr =
+    let leftmost = product
+    addSeq
+      Iter.fromStack()
+      Iter.folded of leftmost, BasicExpr.Add
+  
+  fun addSeq: StackT[Expr] = if peek is
+    Some(Token.Identifier("+", _)) then
+      consume
+      product :: addSeq
+    else Nil
+  
+  fun product: Expr =
+    let leftmost = atom
+    mulSeq
+      Iter.fromStack()
+      Iter.folded of leftmost, BasicExpr.Mul
+  
+  fun mulSeq: StackT[Expr] = if peek is
+    Some(Token.Identifier("*", _)) then
+      consume
+      atom :: mulSeq
+    else Nil
+  
+  let result = expr
+  if peek is
+    Some(token) then result BasicExpr.withErr of
+      "Expect end of input, but found " + token Token.summary()
+    None then result

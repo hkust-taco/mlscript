@@ -298,6 +298,11 @@ class ParseRules(using State):
         ){ (body, _: Unit) => Outer(S(body)) },
         end(Outer(N))
       ),
+    Kw(`constructor`):
+      ParseRule("constructor keyword"):
+        Blk(
+          ParseRule(s"constructor block")(end(()))
+        ) { case (body, _) => Tree.Constructor(body) },
     Kw(`fun`)(termDefBody(Fun)),
     Kw(`val`)(termDefBody(ImmutVal)),
     Kw(`use`)(termDefBody(Ins)),

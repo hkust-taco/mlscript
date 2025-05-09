@@ -19,7 +19,7 @@
 \(0)
 //│ ╔══[ERROR] Expected 2 arguments, got 1
 //│ ║  l.19: 	\(0)
-//│ ╙──      	^
+//│ ╙──      	 ^^^
 //│ = [function]
 
 fun (\) huh(x) = x

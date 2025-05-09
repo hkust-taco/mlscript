@@ -170,7 +170,7 @@ object Elaborator:
       def ref(id: Tree.Ident)(using Elaborator.State): Term =
         // * Note: due to symbolic ops, we may have `id.name =/= nme`;
         // * e.g., we can have `id.name = "|>"` and `nme = "pipe"`.
-        Term.Ref(sym)(id, 666) // FIXME: 666 is a temporary placeholder
+        Term.Ref(sym)(id, 666, N) // FIXME: 666 is a temporary placeholder
       def symbol = S(sym)
       def isImport: Bool = false
     final case class SelElem(base: Elem, nme: Str, symOpt: Opt[FieldSymbol], isImport: Bool) extends Elem:
@@ -194,7 +194,10 @@ object Elaborator:
     val suid = new Uid.Symbol.State
     given State = this
     val globalThisSymbol = TopLevelSymbol("globalThis")
+    // In JavaScript, `import` can be used for getting current file path, as `import.meta`
+    val importSymbol = new VarSymbol(syntax.Tree.Ident("import"))
     val runtimeSymbol = TempSymbol(N, "runtime")
+    val termSymbol = TempSymbol(N, "Term")
     val effectSigSymbol = ClassSymbol(TypeDef(syntax.Cls, Dummy, N, N), Ident("EffectSig"))
     val nonLocalRetHandlerTrm =
       val id = new Ident("NonLocalReturn")
@@ -253,7 +256,7 @@ extends Importer:
         case N =>
           raise(ErrorReport(msg"${cls.k.desc.capitalize} '${cls.symbol.nme
             }' does not contain member '${nme.name}'" -> srcTree.toLoc :: Nil))
-          N
+          S(ErrorSymbol(nme.name, srcTree))
       case N =>
         N
     case _ => N
@@ -273,7 +276,8 @@ extends Importer:
     case S(cls: ClassSymbol) =>
       trm
     case S(mem: BlockMemberSymbol) =>
-      if !mem.hasLiftedClass then trm
+      // FIXME: `defn` is not available before elaboration. See pull/277#discussion_r2051448677
+      if !mem.hasLiftedClass || mem.defn.exists(_.isDeclare.isDefined) then trm
       else Term.SynthSel(trm, Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol))
     case _ => trm
   
@@ -297,17 +301,13 @@ extends Importer:
     given UnderCtx = new UnderCtx(S(unders))
     val st = subterm(tree, inAppPrefix = false, inTyAppPrefix = false)
     val params = unders.iterator.map: sym =>
-        Param(FldFlags.empty, sym, N)
+        Param(FldFlags.empty, sym, N, Modulefulness.none)
       .toList
     if params.isEmpty then st
     else Term.Lam(PlainParamList(params), st)
   
   def subterm(tree: Tree, inAppPrefix: Bool = false, inTyAppPrefix: Bool = false)(using Ctx)(using UnderCtx): Term =
   trace[Term](s"Elab subterm ${tree.showDbg}", r => s"~> $r"):
-    def maybeApp(t: Term): Ctxl[Term] =
-      if !inAppPrefix && !inTyAppPrefix // to ensure that nested App/TyApp are only wrapped once.
-      then maybeFunctionApp(t)
-      else t
     tree.desugared match
     case Trm(term) => term
     case unt @ Unt() => unit.withLocOf(unt)
@@ -367,10 +367,10 @@ extends Importer:
       case trm => raise(WarningReport(msg"Terms in handler block do nothing" -> trm.toLoc :: Nil))
       
       val tds = elabed.stats.map {
-          case td @ TermDefinition(owner, Fun, sym, params, tparams, sign, body, resSym, flags, annotations) =>
+          case td @ TermDefinition(owner, Fun, sym, params, tparams, sign, body, resSym, flags, mf, annotations) =>
             params.reverse match
               case ParamList(_, value :: Nil, _) :: newParams =>
-                val newTd = TermDefinition(owner, Fun, sym, newParams.reverse, tparams, sign, body, resSym, flags, annotations)
+                val newTd = TermDefinition(owner, Fun, sym, newParams.reverse, tparams, sign, body, resSym, flags, mf, annotations)
                 S(HandlerTermDefinition(value.sym, newTd))
               case _ => 
                 raise(ErrorReport(msg"Handler function is missing resumption parameter" -> td.toLoc :: Nil))
@@ -394,13 +394,13 @@ extends Importer:
         msg"Unsupported handle binding shape" ->
           h.toLoc :: Nil))
       Term.Error
-    case id @ Ident("this") => maybeApp:
+    case id @ Ident("this") =>
       ctx.getOuter match
       case S(sym) => sym.ref(id)
       case N =>
         raise(ErrorReport(msg"Cannot use 'this' outside of an object scope." -> tree.toLoc :: Nil))
         Term.Error
-    case id @ Ident(name) => maybeApp:
+    case id @ Ident(name) =>
       ctx.get(name) match
       case S(elem) => elem.ref(id)
       case N =>
@@ -409,14 +409,14 @@ extends Importer:
         case N =>
           raise(ErrorReport(msg"Name not found: $name" -> tree.toLoc :: Nil))
           Term.Error
-    case TyApp(lhs, targs) => maybeApp:
+    case TyApp(lhs, targs) =>
       Term.TyApp(subterm(lhs, inTyAppPrefix = true), targs.map {
         case Modified(Keyword.`in`, inLoc, arg) => Term.WildcardTy(S(subterm(arg)), N)
         case Modified(Keyword.`out`, outLoc, arg) => Term.WildcardTy(N, S(subterm(arg)))
         case Tup(Modified(Keyword.`in`, inLoc, arg1) :: Modified(Keyword.`out`, outLoc, arg2) :: Nil) =>
           Term.WildcardTy(S(subterm(arg1)), S(subterm(arg2)))
         case arg => subterm(arg)
-      })
+      })(N)
     case InfixApp(TyTup(tvs), Keyword.`->`, body) =>
       val boundVars = mutable.HashMap.empty[Str, VarSymbol]
       def genSym(id: Tree.Ident) =
@@ -504,27 +504,25 @@ extends Importer:
         case (acc, (op, arg)) =>
           val sym = FlowSymbol("‹app-res›")
           val tup = new Tup(Nil) // TODO
-          Term.App(subterm(op), Term.Tup(PlainFld(acc) :: PlainFld(subterm(arg)) :: Nil)(tup))(tree, sym)
+          Term.App(subterm(op), Term.Tup(PlainFld(acc) :: PlainFld(subterm(arg)) :: Nil)(tup))(tree, N, sym)
     case tree @ App(lhs, rhs) =>
       val sym = FlowSymbol("‹app-res›")
       val lt = subterm(lhs, inAppPrefix = true)
       val rt = subterm(rhs)
-      maybeApp:
-        Term.App(lt, rt)(tree, sym)
+      Term.App(lt, rt)(tree, N, sym)
     case tree @ OpApp(lhs, op, rhss) =>
       val sym = FlowSymbol("‹app-res›")
       val lt = subterm(lhs, inAppPrefix = true)
       val ot = subterm(op, inAppPrefix = true)
       val rts = rhss.map(r => PlainFld(subterm(r)))
-      maybeApp:
-        Term.App(ot, Term.Tup(PlainFld(lt) :: rts)(Tree.DummyTup))(
-          Tree.DummyApp,
-          sym)
+      Term.App(ot, Term.Tup(PlainFld(lt) :: rts)(Tree.DummyTup))(
+        Tree.DummyApp,
+        N,
+        sym)
     case SynthSel(pre, nme) =>
       val preTrm = subterm(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
-      maybeApp:
-        Term.SynthSel(preTrm, nme)(sym)
+      Term.SynthSel(preTrm, nme)(sym)
     case Sel(pre, nme) =>
       val preTrm = subterm(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
@@ -546,8 +544,7 @@ extends Importer:
         val loc = tree.toLoc.getOrElse(???)
         Term.Lit(Tree.StrLit(loc.origin.fileName.toString))
       else
-        maybeApp:
-          Term.Sel(preTrm, nme)(sym)
+        Term.Sel(preTrm, nme)(sym)
     case MemberProj(ct, nme) =>
       val c = cls(subterm(ct), inAppPrefix = false)
       val f = c.symbol.flatMap(_.asCls) match
@@ -568,15 +565,15 @@ extends Importer:
       val self = VarSymbol(Ident("self"))
       val args = VarSymbol(Ident("args"))
       val ps = ParamList(ParamListFlags.empty,
-        Param(FldFlags.empty, self, N) :: Nil,
+        Param(FldFlags.empty, self, N, Modulefulness.none) :: Nil,
         S:
-          Param(FldFlags.empty, args, N)
+          Param(FldFlags.empty, args, N, Modulefulness.none)
       )
       val rs = FlowSymbol("‹app-res›")
       Term.Lam(ps,
         Term.App(Term.SelProj(self.ref(), c, nme)(f), args.ref())(
           Tree.App(nme, Tree.Tup(Nil)) // FIXME
-          , rs)
+          , N, rs)
       )
     case tree @ Tup(fields) =>
       Term.Tup(fields.map(fld(_)))(tree)
@@ -617,7 +614,7 @@ extends Importer:
       scoped("ucs:normalized"):
         log(s"Normalized:\n${Split.display(nor)}")
       Term.Lam(PlainParamList(
-          Param(FldFlags.empty, scrut, N) :: Nil
+          Param(FldFlags.empty, scrut, N, Modulefulness.none) :: Nil
         ), Term.IfLike(Keyword.`if`, des)(nor))
     case Modified(Keyword.`return`, kwLoc, body) =>
       ctx.getRetHandler match
@@ -630,7 +627,7 @@ extends Importer:
         Term.App(
           Term.Sel(sym.ref(dummyIdent), retMtdTree)(S(state.nonLocalRet)),
           Term.Tup(PlainFld(subterm(body)) :: Nil)(argTree)
-        )(Tree.App(Tree.Sel(dummyIdent, retMtdTree), argTree), rs)
+        )(Tree.App(Tree.Sel(dummyIdent, retMtdTree), argTree), N, rs)
       case ReturnHandler.NotInFunction =>
         raise:
           ErrorReport(msg"Return statements are not allowed outside of a function." -> tree.toLoc :: Nil)
@@ -686,13 +683,13 @@ extends Importer:
           val sym = FlowSymbol("‹app-res›")
           val fl = Fld(FldFlags.empty, res, N)
           val app = Term.App(subterm(f, inAppPrefix = true), Term.Tup(
-            fl :: args.map(fld))(tup))(ap, sym)
+            fl :: args.map(fld))(tup))(ap, N, sym)
           go(app, trees)
         case (ap @ App(f, tup @ Tup(args))) :: trees =>
           val sym = FlowSymbol("‹app-res›")
           go(Term.App(subterm(f, inAppPrefix = true),
               Term.Tup(Fld(FldFlags.empty, acc, N) :: args.map(fld))(tup)
-            )(ap, sym), trees)
+            )(ap, N, sym), trees)
         case Block(sts) :: trees =>
           go(acc, sts ::: trees)
         case tree :: trees =>
@@ -725,71 +722,11 @@ extends Importer:
     case Keywrd(kw) =>
       raise(ErrorReport(msg"Unexpected keyword '${kw.name}' in this position." -> tree.toLoc :: Nil))
       Term.Error
+    case Constructor(delc) =>
+      raise(ErrorReport(msg"Unsupported constructor in this position." -> tree.toLoc :: Nil))
+      Term.Error
     // case _ =>
     //   ???
-  
-  /** 
-   * Function (as opposed to method) applications 
-   * that may require further elaboration with type information. 
-   */
-  def maybeFunctionApp(t: Term): Ctxl[Term] =
-    // * Some function definitions might not be fully elaborated yet.
-    // * We need to do some very lightweight tree parsing here.
-    case class Param(ctx: Bool)(tree: Tree)
-    case class ParamList(ps: Ls[Param], ctx: Bool)(tree: Tree)
-    def param(tree: Tree): Param = tree match
-      case Tree.Modified(Keyword.`using`, _, tree) => Param(true)(tree)
-      case _ => Param(false)(tree)
-    def paramList(tree: Tree.Tup): ParamList =
-      val ps = tree.fields.map(param)
-      ParamList(ps, ps.exists(_.ctx))(tree)
-      
-    /**
-     * Zips a `fun` application term along with its parameter lists,
-     * inserting any missing contextual argument lists.
-     * 
-     * M.foo -> M.foo(<using> ...)
-     * M.foo(a, b) -> M.foo(<using> ...)(a, b)(<using> ...)
-     * 
-     * Note: This *doesn't* handle explicit contextual arguments.
-     */
-    def zip(t: Term, paramLists: Ls[ParamList]): Term = (t, paramLists) match
-      case (t, ps :: pss) if ps.ctx =>
-        val appTree = new Tree.App(Tree.Empty(), Tree.Empty())
-        val tupTree = new Tree.Tup(Nil)
-        val args = Term.Tup(ps.ps.map(_ => CtxArgImpl()))(tupTree)
-        Term.App(zip(t, pss), args)(appTree, FlowSymbol("‹app-res›"))
-      case (t @ Term.App(lhs, rhs), ps :: pss) =>
-        Term.App(zip(lhs, pss), rhs)(t.tree, t.resSym)
-      case (t, params :: pRest) =>
-        // LHS is not a app but it still expects more param lists - a partial application.
-        // Just suppose it is legal and don't fail here. 
-        // TODO: Check in the implicit resolver.
-        t
-      case (_, Nil) => t
-    
-    /**
-     * An extractor that extracts the (tree) definition of a `fun`.
-     */
-    object FunctionTreeDef:
-      def unapply(t: Term): Opt[Tree.TermDef] = t.symbol match
-        case S(sym: BlockMemberSymbol) => sym.trmTree match
-          case S(tree @ Tree.TermDef(k = Fun)) => S(tree)
-          case _ => N
-        case _ => N
-    
-    t match
-      // f[T](foo)(bar)
-      case semantics.Apps(Term.TyApp(FunctionTreeDef(tree), _), argss) =>
-        trace[Term](s"Elab `fun` application ${t.showDbg}", r => s"~> $r"):
-          zip(t, tree.paramLists.map(paramList).reverse)
-      // f(foo)(bar)
-      case semantics.Apps(FunctionTreeDef(tree), argss) =>
-        trace[Term](s"Elab `fun` application ${t.showDbg}", r => s"~> $r"):
-          zip(t, tree.paramLists.map(paramList).reverse)
-      // The definition does not exist.
-      case _ =>
-        t
   
   def arg(tree: Tree)(using UnderCtx): Ctxl[Term] = tree match
     case u: Under => subterm(tree)
@@ -809,9 +746,6 @@ extends Importer:
       //   case _ => term(tree)
       val t = arg(tree)
       var flags = FldFlags.empty
-      // if ModuleChecker.evalsToModule(t)
-      if ModuleChecker.evalsToModule(t)
-        then flags = flags.copy(mod = true)
       Fld(flags, t, N)
   
   def unit: Term.UnitVal = Term.UnitVal()
@@ -1047,17 +981,23 @@ extends Importer:
                 val resumeSym = VarSymbol(Ident("resume"))
                 val mtdSym = BlockMemberSymbol("ret", Nil, true)
                 val td = TermDefinition(
-                  N, Fun, mtdSym, PlainParamList(Param(FldFlags.empty, valueSym, N) :: Nil) :: Nil,
-                  N, N, S(valueSym.ref(Ident("value"))), FlowSymbol(s"‹result of non-local return›"), TermDefFlags.empty, Nil)
+                  N, Fun, mtdSym, PlainParamList(Param(FldFlags.empty, valueSym, N, Modulefulness.none) :: Nil) :: Nil,
+                  N, N, S(valueSym.ref(Ident("value"))), FlowSymbol(s"‹result of non-local return›"), TermDefFlags.empty, Modulefulness.none, Nil)
                 val htd = HandlerTermDefinition(resumeSym, td)
                 Term.Handle(nonLocalRetHandler, state.nonLocalRetHandlerTrm, Nil, clsSym, htd :: Nil, inner)
               val r = FlowSymbol(s"‹result of ${sym}›")
-              // indicates if the function marks its result as "module"
-              val isModTyped = st match
-                case Some(TypeDef(Mod, _, N, N)) => true
-                case _ => false
+              
+              val mfn = st match
+                // TypeDef(Mod, _, N, N) indicates if the function marks
+                // its result as "module". e.g, `fun f: module M`
+                //                                      ^^^^^^
+                case S(TypeDef(Mod, _, N, N)) => 
+                  Modulefulness.ofSign(s)(true)
+                case _ =>
+                  Modulefulness.none
+              
               val tdf = TermDefinition(owner, k, sym, pss, tps, s, nb, r, 
-                TermDefFlags.empty.copy(isMethod = isMethod, isModTyped = isModTyped), annotations)
+                TermDefFlags.empty.copy(isMethod = isMethod), mfn, annotations)
               sym.defn = S(tdf)
               
               tdf
@@ -1132,9 +1072,10 @@ extends Importer:
                   ImmutVal,
                   fsym,
                   Nil, N, N,
-                  S(Term.Ref(p.sym)(p.sym.id, 666)), // FIXME: 666 is a dummy value
+                  S(p.sym.ref()),
                   FlowSymbol("‹class-param-res›"),
                   TermDefFlags.empty.copy(isMethod = (k is Cls)),
+                  p.modulefulness,
                   Nil
                 )
                 sym.defn = S(fdef)
@@ -1142,7 +1083,7 @@ extends Importer:
               else
                 val psym = TermSymbol(LetBind, owner, p.sym.id)
                 val decl = LetDecl(psym, Nil)
-                val defn = DefineVar(psym, Term.Ref(p.sym)(p.sym.id, 666)) // FIXME: 666 is a dummy value
+                val defn = DefineVar(psym, p.sym.ref())
                 decl :: defn :: Nil
               
           val ctxWithFields = ctx
@@ -1179,8 +1120,8 @@ extends Importer:
               case S(tree) =>
                 val (patternParams, extractionParams) = ps match // Filter out pattern parameters.
                   case S(ParamList(_, params, _)) => params.partition:
-                    case param @ Param(FldFlags(false, false, false, false, true, false), _, _) => true
-                    case param @ Param(FldFlags(_, _, _, _, false, _), _, _) => false
+                    case param @ Param(flags = FldFlags(false, false, false, true, false)) => true
+                    case param @ Param(flags = FldFlags(pat = false)) => false
                   case N => (Nil, Nil)
                 // TODO: Implement extraction parameters.
                 if extractionParams.nonEmpty then
@@ -1280,21 +1221,22 @@ extends Importer:
     else VarSymbol(id)
   
   def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Opt[Opt[Bool] -> Param]] =
-    def go(t: Tree, inUsing: Bool, flags: FldFlags): Ctxl[Opt[Opt[Bool] -> Param]] = t match
+    // mm: `module`-modified
+    def go(t: Tree, inUsing: Bool, flags: FldFlags, mm: Bool): Ctxl[Opt[Opt[Bool] -> Param]] = t match
     case TypeDef(Mod, inner, N, N) =>
-      go(inner, inUsing, flags.copy(mod = true))
+      go(inner, inUsing, flags, true)
     case TypeDef(Pat, inner, N, N) =>
-      go(inner, inUsing, flags.copy(pat = true))
+      go(inner, inUsing, flags.copy(pat = true), mm)
     case TermDef(ImmutVal, inner, _) =>
-      go(inner, inUsing, flags.copy(value = true))
+      go(inner, inUsing, flags.copy(value = true), mm)
     case _ =>
       t.asParam(inUsing).map: (isSpd, p, t) =>
         val sym = VarSymbol(p)
         val sign = t.map(term(_))
-        val param = Param(flags, sym, sign)
+        val param = Param(flags, sym, sign, Modulefulness.ofSign(sign)(mm))
         sym.decl = S(param)
         isSpd -> param
-    go(t, inUsing, if inDataClass then FldFlags.empty.copy(value = true) else FldFlags.empty)
+    go(t, inUsing, if inDataClass then FldFlags.empty.copy(value = true) else FldFlags.empty, false)
       
   
   def params(t: Tree, inDataClass: Bool): Ctxl[(ParamList, Ctx)] = t match
@@ -1328,7 +1270,7 @@ extends Importer:
         case id: Ident =>
           val sym = VarSymbol(id)
           sym.decl = S(TyParam(FldFlags.empty, N, sym))
-          Param(FldFlags.empty, sym, N)
+          Param(FldFlags.empty, sym, N, Modulefulness.none)
       (vs, ctx ++ vs.map(p => p.sym.name -> p.sym))
   
   def importFrom(sts: Tree.Block)(using c: Ctx): (Blk, Ctx) =
@@ -1346,7 +1288,7 @@ extends Importer:
   def computeVariances(s: Statement): Unit =
     val trav = VarianceTraverser()
     def go(s: Statement): Unit = s match
-      case TermDefinition(_, k, sym, pss, _, sign, body, r, _, _) =>
+      case TermDefinition(_, k, sym, pss, _, sign, body, r, _, _, _) =>
         pss.foreach(ps => ps.params.foreach(trav.traverseType(S(false))))
         sign.foreach(trav.traverseType(S(true)))
         body match

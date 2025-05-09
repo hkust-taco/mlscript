@@ -96,7 +96,7 @@ M.d
 fun f(x) = if x is M.D then 1 else 0
 
 M.D.class
-//│ = class D {       constructor(a) {         this.a = a;       }       toString() { return "D(" + globalThis.Predef.render(this.a) + ")"; }     }
+//│ = class D {       constructor(a) {         this.a = a;       }       toString() { return "D(" + runtime.render(this.a) + ")"; }     }
 
 M is M.D
 //│ = false

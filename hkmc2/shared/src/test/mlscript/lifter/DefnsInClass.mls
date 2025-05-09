@@ -36,7 +36,7 @@ data class A(x) with
 //│   getB() {
 //│     return this.A$instance$0.x + this.y
 //│   }
-//│   toString() { return "B(" + globalThis.Predef.render(this.y) + ")"; }
+//│   toString() { return "B(" + runtime.render(this.y) + ")"; }
 //│ };
 //│ A1 = function A(x1) {
 //│   return new A.class(x1);
@@ -50,7 +50,7 @@ data class A(x) with
 //│     tmp = B$(this, 2);
 //│     return runtime.safeCall(tmp.getB())
 //│   }
-//│   toString() { return "A(" + globalThis.Predef.render(this.x) + ")"; }
+//│   toString() { return "A(" + runtime.render(this.x) + ")"; }
 //│ };
 
 :expect 3

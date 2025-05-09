@@ -261,7 +261,7 @@ class Desugarer(val elaborator: Elaborator)(using UnderCtx)
           val second = Fld(FldFlags.empty, rhsTerm, N)
           val arguments = Term.Tup(first :: second :: Nil)(Tree.DummyTup)
           val joint = FlowSymbol("‹applied-result›")
-          Term.App(opRef, arguments)(Tree.DummyApp, joint)
+          Term.App(opRef, arguments)(Tree.DummyApp, N, joint)
         rhss match
         case rhs :: Nil => termSplit(rhs, finishInner)(fallback)
         case _ => ???
@@ -279,7 +279,7 @@ class Desugarer(val elaborator: Elaborator)(using UnderCtx)
           val second = Fld(FldFlags.empty, rhsTerm, N)
           val arguments = Term.Tup(first :: second :: Nil)(rawTup)
           val joint = FlowSymbol("‹applied-result›")
-          Term.App(opRef, arguments)(tree, joint)
+          Term.App(opRef, arguments)(tree, N, joint)
         termSplit(rhs, finishInner)(fallback)
     // Handle operator splits.
     case tree @ OpSplit(lhs, rhss) => fallback => ctx =>
@@ -290,7 +290,7 @@ class Desugarer(val elaborator: Elaborator)(using UnderCtx)
           val rawTup = Tup(lhs :: Nil): Tup // <-- loc might be wrong
           val arguments = Term.Tup(first :: second :: Nil)(rawTup)
           val joint = FlowSymbol("‹applied-result›")
-          Term.App(op, arguments)(Tree.DummyApp, joint)
+          Term.App(op, arguments)(Tree.DummyApp, N, joint)
         rhss.foldRight(Function.const(fallback): Sequel): (branch, elabFallback) =>
           branch match
           case LetLike(`let`, pat, termTree, N) => ctx =>
@@ -329,7 +329,7 @@ class Desugarer(val elaborator: Elaborator)(using UnderCtx)
           val rawTup = Tup(lhs :: Nil): Tup // <-- loc might be wrong
           val arguments = Term.Tup(first :: second :: Nil)(rawTup)
           val joint = FlowSymbol("‹applied-result›")
-          Term.App(op, arguments)(tree, joint)
+          Term.App(op, arguments)(tree, N, joint)
         opRhsApps.foldRight(Function.const(fallback): Sequel): (tt, elabFallback) =>
           tt match
           case (Tree.Empty(), LetLike(`let`, pat, termTree, N)) => ctx =>
@@ -551,7 +551,7 @@ class Desugarer(val elaborator: Elaborator)(using UnderCtx)
                   msg"mismatched arity: expect $m, found $n" -> app.toLoc
             scrutSymbol.getSubScrutinees(cls).iterator.zip(paramList.params).map:
               case (symbol, Param(flags = FldFlags(value = true))) => R(symbol)
-              case (_, Param(_, paramSymbol, _)) => L(paramSymbol) // to report errors
+              case (_, Param(sym = paramSymbol)) => L(paramSymbol) // to report errors
             .toList
           case S(_) | N =>
             error(msg"class ${cls.name} does not have parameters" -> ctor.toLoc)
@@ -675,9 +675,10 @@ class Desugarer(val elaborator: Elaborator)(using UnderCtx)
         fallback
       case InfixApp(id: Ident, Keyword.`:`, pat) => fallback => ctx =>
         val sym = VarSymbol(id)
-        val ctxWithAlias = ctx + (id.name -> sym)
+        val ctx2 = ctx
+          // + (id.name -> sym) // * This binds the field's name in the context; probably surprising
         Split.Let(sym, ref.sel(id, N),
-          expandMatch(sym, pat, sequel)(fallback)(ctxWithAlias))
+          expandMatch(sym, pat, sequel)(fallback)(ctx2))
       case Block(st :: Nil) => fallback => ctx =>
         expandMatch(scrutSymbol, st, sequel)(fallback)(ctx)
       // case Block(sts) => fallback => ctx => // TODO

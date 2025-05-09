@@ -1,0 +1,164 @@
+:js
+
+import "../../../mlscript-compile/apps/parsing/Test.mls"
+
+open Test { example }
+
+example of ":tree ((x) ==> x"
+//│ > Error of "unexpected end of input"
+//│ > «⚠»
+
+example of ":tree ((x) ==> x))"
+//│ > App:
+//│ >   callee = Ident of "==>"
+//│ >   argument = Stack of 
+//│ >     Ident of "x"
+//│ >     Ident of "x"
+//│ > Error of "unexpected token Identifier(\")\", true)"
+//│ > «x ==> x»
+//│ > «⚠»
+
+example of """
+type a = b and b = c
+"""
+//│ > «type a = b and b = c»
+
+example of """
+:tree
+type test = Bar | Test | Foo
+and test' = Bar' | Test' | Foo'
+"""
+//│ > Define:
+//│ >   kind = Type
+//│ >   items = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 3, 3)
+//│ >       lhs = Ident of "test"
+//│ >       rhs = Infix:
+//│ >         op = Keyword(`|`, N/A, N/A)
+//│ >         lhs = Ident of "Bar"
+//│ >         rhs = Infix:
+//│ >           op = Keyword(`|`, N/A, N/A)
+//│ >           lhs = Ident of "Test"
+//│ >           rhs = Ident of "Foo"
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 3, 3)
+//│ >       lhs = Ident of "test'"
+//│ >       rhs = Infix:
+//│ >         op = Keyword(`|`, N/A, N/A)
+//│ >         lhs = Ident of "Bar'"
+//│ >         rhs = Infix:
+//│ >           op = Keyword(`|`, N/A, N/A)
+//│ >           lhs = Ident of "Test'"
+//│ >           rhs = Ident of "Foo'"
+//│ > «type test = Bar | Test | Foo and test' = Bar' | Test' | Foo'»
+
+example of """
+:tree
+-2 * 3
+~2 * 3
+"""
+//│ > App:
+//│ >   callee = Ident of "*"
+//│ >   argument = Stack of 
+//│ >     App:
+//│ >       callee = Ident of "*"
+//│ >       argument = Stack of 
+//│ >         App:
+//│ >           callee = Ident of "-"
+//│ >           argument = Literal#Integer of "2"
+//│ >         App:
+//│ >           callee = Ident of "~"
+//│ >           argument = Stack of 
+//│ >             Literal#Integer of "3"
+//│ >             Literal#Integer of "2"
+//│ >     Literal#Integer of "3"
+//│ > «(-2) * 3 ~ 2 * 3»
+
+example of """
+:tree
+let foo = -2 * 3
+2 * 3
+"""
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 3, 3)
+//│ >       lhs = Ident of "foo"
+//│ >       rhs = App:
+//│ >         callee = Ident of "*"
+//│ >         argument = Stack of 
+//│ >           App:
+//│ >             callee = Ident of "*"
+//│ >             argument = Stack of 
+//│ >               App:
+//│ >                 callee = Ident of "-"
+//│ >                 argument = Literal#Integer of "2"
+//│ >               App:
+//│ >                 callee = Literal#Integer of "3"
+//│ >                 argument = Literal#Integer of "2"
+//│ >           Literal#Integer of "3"
+//│ >   body = None
+//│ > «let foo = (-2) * 3 2 * 3»
+
+
+
+// TODO should fail
+example of """
+=> xx
+"""
+//│ > «=>xx»
+
+example of """
+:tree
+id fun x -> x
+"""
+//│ > Ident of "id"
+//│ > Error of "unexpected token Identifier(\"fun\", false)"
+//│ > Error of "unexpected token Identifier(\"x\", false)"
+//│ > Error of "unexpected token Identifier(\"->\", true)"
+//│ > Error of "unexpected token Identifier(\"x\", false)"
+//│ > «id»
+//│ > «⚠»
+//│ > «⚠»
+//│ > «⚠»
+//│ > «⚠»
+
+example of """
+:tree
+id if true then 1 else 0
+"""
+//│ > Ident of "id"
+//│ > Error of "unexpected token Identifier(\"if\", false)"
+//│ > Error of "unexpected token Literal(Boolean, \"true\")"
+//│ > Error of "unexpected token Identifier(\"then\", false)"
+//│ > Error of "unexpected token Literal(Integer, \"1\")"
+//│ > Error of "unexpected token Identifier(\"else\", false)"
+//│ > Error of "unexpected token Literal(Integer, \"0\")"
+//│ > «id»
+//│ > «⚠»
+//│ > «⚠»
+//│ > «⚠»
+//│ > «⚠»
+//│ > «⚠»
+//│ > «⚠»
+
+example of """
+type;;
+"""
+//│ > «⚠»
+
+example of """
+function;;
+"""
+//│ > «⚠»
+
+example of """
+let foo_bar = function;;
+"""
+//│ > «⚠»
+
+example of """
+let let = 0;;
+"""
+//│ > «⚠»

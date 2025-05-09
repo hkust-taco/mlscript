@@ -105,3 +105,12 @@ fun point(p) = if p is Point(x, y) then x + y
 
 point(Point(2, 4))
 //│ = 6
+
+:fixme
+object Main with
+  fun run(input) = if input is Data(count) then 0
+data class Data(value: Int)
+//│ ╔══[ERROR] class Data does not have parameters
+//│ ║  l.111: 	  fun run(input) = if input is Data(count) then 0
+//│ ╙──       	                               ^^^^
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed

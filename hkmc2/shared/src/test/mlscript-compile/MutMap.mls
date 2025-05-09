@@ -1,0 +1,47 @@
+import "./Option.mls"
+import "./Predef.mls"
+
+open Predef
+open Option { Some, None }
+
+
+module MutMap with ...
+
+class MutMap(val underlying) with
+  
+  set this.(Symbol.iterator) =
+    () => underlying.(Symbol.iterator)()
+
+fun get(key)(m) =
+  if m.underlying.has(key)
+  then Some of m.underlying.get(key)
+  else None
+
+fun insert(key, value)(m) =
+  m.underlying.set(key, value)
+  ()
+
+fun updateWith(key)(op)(m) =
+  if op(m |> get(key)) is
+    Some(value) then m.underlying.set(key, value)
+    None then m.underlying.delete(key)
+
+fun keysIterator(m) = m.underlying.keys()
+
+fun valuesIterator(m) = m.underlying.values()
+
+fun values(m) = Array.from of m.underlying.values()
+
+fun toMap(entries) =
+  let
+    m = empty
+    i = 0
+    length = entries.length
+  while i < length do
+    m |> insert of ...entries.at(i)
+    set i += 1
+  m
+
+fun empty = new MutMap(new Map())
+
+

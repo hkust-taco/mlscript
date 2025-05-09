@@ -16,3 +16,4 @@ class SymbolSubst:
   def mapTypeAliasSym(s: TypeAliasSymbol): TypeAliasSymbol = s
   def mapPatSym(s: PatternSymbol): PatternSymbol = s
   def mapTopLevelSym(s: TopLevelSymbol): TopLevelSymbol = s
+  def mapErrorSym(s: ErrorSymbol): ErrorSymbol = s

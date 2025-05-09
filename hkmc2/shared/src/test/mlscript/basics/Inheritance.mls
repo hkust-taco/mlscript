@@ -65,7 +65,7 @@ data class Baz(z) extends Bar(z * 1) with
 //│   get baz() {
 //│     return this.bar * 2;
 //│   }
-//│   toString() { return "Baz(" + globalThis.Predef.render(this.z) + ")"; }
+//│   toString() { return "Baz(" + runtime.render(this.z) + ")"; }
 //│ };
 
 let b = Baz(42)

@@ -25,23 +25,23 @@ fun main() =
 main()
 //│ LLIR:
 //│   class Lambda_lambda() extends Callable {
-//│     def apply0$803() =
-//│       let* (x$804) = side_effect() in
-//│       x$804
+//│     def apply0() =
+//│       let* (x) = side_effect() in
+//│       x
 //│   }
-//│   def side_effect$778() =
-//│     let* (x$798) = <builtin>("println","executed") in
+//│   def side_effect() =
+//│     let* (x1) = $_builtin$_("println","executed") in
 //│     1
-//│   def main$777() =
-//│     let x$806 = Lambda_lambda$800() in
-//│     let* (x$807) = lazy(x$806) in
-//│     let* (x$808) = force(x$807) in
-//│     let* (x$809) = force(x$807) in
+//│   def main() =
+//│     let x2 = Lambda_lambda() in
+//│     let* (x3) = lazy(x2) in
+//│     let* (x4) = force(x3) in
+//│     let* (x5) = force(x3) in
 //│     undefined
-//│   def entry$811() =
-//│     let* (x$810) = main() in
-//│     x$810
-//│   entry = entry$811
+//│   def entry() =
+//│     let* (x6) = main() in
+//│     x6
+//│   entry = entry
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"

@@ -21,8 +21,9 @@ let c = C
 new c("Bob")
 //│ = [object Object]
 
+:re
 globalThis.MyClass
-//│ = class MyClass {  constructor(name) {    this.name = name;  }  greet() {    console.log(`Hello from ${this.name}!`);  }}
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'MyClass' yielded 'undefined'
 
 
 :ge
@@ -30,7 +31,7 @@ fun foo() =
   import "../../js/MyClass.mjs"
   ()
 //│ ╔══[COMPILATION ERROR] Imports must be at the top level
-//│ ║  l.30: 	  import "../../js/MyClass.mjs"
+//│ ║  l.31: 	  import "../../js/MyClass.mjs"
 //│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^
 
 

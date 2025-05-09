@@ -306,6 +306,12 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
             IDENT(n, false),
             loc(i + 1, j)
           ) :: Nil)(loc(i, j))))
+      case 'i' if i + 2 < length && bytes(i + 1) === 'd' && bytes(i + 2) === '"' =>
+        val (n, j) = takeWhile(i + 3)(isIdentChar)
+        lex(j + 1, ind, next(j + 1,
+          if bytes(j) === '"' && !n.isEmpty() then ESC_IDENT(n)
+          else { pe(msg"unexpected identifier escape"); ERROR }
+        ))
       case ';' =>
         val j = i + 1
         // lex(j, ind, next(j, SEMI))
@@ -611,6 +617,7 @@ object Lexer:
     case (COMMENT(text: String), _) => "/*" + text + "*/"
     case (SUSPENSION(true), _) => "..."
     case (SUSPENSION(false), _) => ".."
+    case (ESC_IDENT(name), _) => name
   def printTokens(ts: Ls[TokLoc]): Str =
     ts.iterator.map(printToken).mkString("|", "|", "|")
   

@@ -1,0 +1,129 @@
+:js
+
+import "../../mlscript-compile/Iter.mls"
+import "../../mlscript-compile/Stack.mls"
+import "../../mlscript-compile/MutMap.mls"
+
+open Iter
+open Stack { Cons, Nil }
+
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  filtering of x => x % 2 is 0
+  mapping of x => x * 2
+  toArray()
+//│ = [4, 8, 12, 16, 20]
+
+([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  filtering of x => x % 2 is 0
+  folded of "[", (x, y) => if x is "[" then x + y else x + ", " + y) + "]"
+//│ = "[2, 4, 6, 8, 10]"
+
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  filtering of x => x % 2 is 1
+  rightFolded of Nil, Cons
+//│ = Cons(1, Cons(3, Cons(5, Cons(7, Cons(9, Nil)))))
+
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  filtering of x => x % 2 is 0
+  reduced of (x, y) => x + y
+//│ = 30
+
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  filtering of x => x % 2 is 0
+  folded of 1, *
+//│ = 3840
+
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  taking(5)
+  toArray()
+//│ = [1, 2, 3, 4, 5]
+
+["foo", "bar", "baz"]
+  zippingWithIndex()
+  toArray()
+//│ = [["foo", 0], ["bar", 1], ["baz", 2]]
+
+["foo", "bar", "baz"]
+  zippingWithIndex()
+  mapping of case [x, y] then [y, x]
+  toArray()
+//│ = [[0, "foo"], [1, "bar"], [2, "baz"]]
+
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10] joined(" <> ")
+//│ = "1 <> 2 <> 3 <> 4 <> 5 <> 6 <> 7 <> 8 <> 9 <> 10"
+
+["foo", "bar", "", "", "baz"]
+  flattening()
+  toArray()
+//│ = ["f", "o", "o", "b", "a", "r", "b", "a", "z"]
+
+["", "foo", "", "bar", "", "", "baz"]
+  mapping of str => Array.from(str).reverse()
+  flattening()
+  toArray()
+//│ = ["o", "o", "f", "r", "a", "b", "z", "a", "b"]
+
+["", "", "", "", ""]
+  flattening()
+  toArray()
+//│ = []
+
+["foo", "bar", [], ["qax"], "", "baz"]
+  flattening()
+  toArray()
+//│ = ["f", "o", "o", "b", "a", "r", "qax", "b", "a", "z"]
+
+[1, 3, 5, 7, 9]
+  mapping of x => x * 2
+  appended of [2, 4, 6, 8, 10]
+  mapping of x => x / 2
+  toArray()
+//│ = [1, 3, 5, 7, 9, 1, 2, 3, 4, 5]
+
+[7, 8, 9, 10]
+  filtering of x => x % 2 is 0
+  mapping of x => x * 2
+  appended of []
+  toArray()
+//│ = [16, 20]
+
+[["foo", 1]]
+  MutMap.toMap()
+  mapping of case [k, v] then [k + "!", v * 2]
+  appended of MutMap.toMap([["bar", 2]])
+  toArray()
+//│ = [["foo!", 2], ["bar", 2]]
+
+[1, 2, 3, 4, 5, 6]
+  Iter.some of x => x % 3 == 0
+//│ = true
+
+[1, 2, 3, 4, 5, 6]
+  Iter.some of x => x % 9 == 0
+//│ = false
+
+[1, 2, 3, 4, 5, 6]
+  Iter.every of x => x % 2 == 0
+//│ = false
+
+[1, 2, 3, 4, 5, 6]
+  Iter.mapping of x => x * 2
+  Iter.every of x => x % 2 == 0
+//│ = true
+
+[1, 2, -3, 4, 5, 6]
+  Iter.mapping of x => () => print(x + " was accessed"); x
+  Iter.some of get => get() < 0
+//│ > 1 was accessed
+//│ > 2 was accessed
+//│ > -3 was accessed
+//│ = true
+
+[1, 2, 3, -4, 5, 6]
+  Iter.mapping of x => () => print(x + " was accessed"); x
+  Iter.every of get => get() > 0
+//│ > 1 was accessed
+//│ > 2 was accessed
+//│ > 3 was accessed
+//│ > -4 was accessed
+//│ = false

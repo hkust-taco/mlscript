@@ -199,7 +199,7 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
       else if op.unary && args.length === 1 then
         Expr.Unary(op2, toExpr(args(0)))
       else
-        TODO(s"codegenOps ${op.nme} ${args.size} ${op.binary} ${op.unary} ${args.map(_.show)}")
+        TODO(s"codegenOps ${op.nme} ${args.size} ${op.binary} ${op.unary} ${args.map(_.show).mkString(", ")}")
 
 
   def codegen(expr: IExpr)(using Ctx, Raise, Scope): Expr = expr match
@@ -241,8 +241,8 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
       case Node.LetExpr(name, expr, body) =>
         val stmts2 = stmts ++ Ls(Stmt.AutoBind(Ls(name |> allocIfNew), codegen(expr)))
         codegen(body, storeInto)(using decls, stmts2)
-      case Node.LetCall(names, bin: BuiltinSymbol, args, body) if bin.nme === "<builtin>" =>
-        val stmts2 = stmts ++ codegenBuiltin(names, args.head.toString.replace("\"", ""), args.tail)
+      case Node.LetCall(names, bin: BuiltinSymbol, IExpr.Literal(syntax.Tree.StrLit(s)) :: tail, body) if bin.nme === "<builtin>" =>
+        val stmts2 = stmts ++ codegenBuiltin(names, s.replace("\"", ""), tail)
         codegen(body, storeInto)(using decls, stmts2)
       case Node.LetMethodCall(names, cls, method, IExpr.Ref(bin: BuiltinSymbol) :: args, body) if bin.nme === "<this>" =>
         val call = mlsThisCall(cls, method |> directName, args.map(toExpr))
@@ -285,13 +285,15 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
       depgraph = depgraph.view.mapValues(_.filter(_ =/= node)).toMap
       degree = depgraph.view.mapValues(_.size).toMap
     val sorted = ListBuffer.empty[ClassInfo]
-    var work = degree.filter(_._2 === 0).keys.toSet
+    given Ordering[Local] with
+      def compare(x: Local, y: Local): Int = x.nme.compareTo(y.nme)
+    var work = degree.filter(_._2 === 0).keys.toSortedSet()
     while work.nonEmpty do
       val node = work.head
       work -= node
       prog.classes.find(x => (x.symbol) === node).foreach(sorted.addOne)
       removeNode(node)
-      val next = degree.filter(_._2 === 0).keys
+      val next = degree.filter(_._2 === 0).keys.toSortedSet()
       work ++= next
     if depgraph.nonEmpty then
       val cycle = depgraph.keys.mkString(", ")

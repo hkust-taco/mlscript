@@ -25,7 +25,7 @@ import hkmc2.semantics.FldFlags
 import hkmc2.semantics.ParamListFlags
 import scala.collection.mutable.Buffer
 import mlscript.utils.StringOps
-import hkmc2.semantics.CtxArg
+import hkmc2.semantics.Resolvable
 
 trait ProductWithTail extends Product
 
@@ -43,17 +43,15 @@ extension (t: Product)
       case xs: List[_] => "Ls of \n" + xs.iterator.map(aux(_)).mkString("\n").indent("  ")
       case xs: Vector[_] => "Vector of \n" + xs.iterator.map(aux(_)).mkString("\n").indent("  ")
       case s: String => s.escaped
-      case TermDefFlags(isMethod, isModTyped) =>
+      case TermDefFlags(isMethod) =>
         val flags = Buffer.empty[String]
         if isMethod then flags += "method"
-        if isModTyped then flags += "modTyped"
         flags.mkString("(", ", ", ")")
-      case FldFlags(mut, spec, genGetter, mod, pat, value) =>
+      case FldFlags(mut, spec, genGetter, pat, value) =>
         val flags = Buffer.empty[String]
         if mut then flags += "mut"
         if spec then flags += "spec"
         if genGetter then flags += "gen"
-        if mod then flags += "module"
         if pat then flags += "pat"
         if value then flags += "val"
         flags.mkString("(", ", ", ")")
@@ -65,11 +63,6 @@ extension (t: Product)
         val (sl, _, sc) = origin.fph.getLineColAt(start)
         val (el, _, ec) = origin.fph.getLineColAt(end)
         s"Loc at :$sl:$sc-$el:$ec"
-      case arg: CtxArg => arg.term match
-        case N =>
-          s"CtxArg"
-        case Some(t) => 
-          t.showAsTree
       
       case t: Product => t.showAsTree(inTailPos)
       case v => v.toString
@@ -80,12 +73,22 @@ extension (t: Product)
         case str => "{" + str + "}"
       case _ => ""
     val prefix = t.productPrefix + midfix + (if postfix.isEmpty then "" else s" ($postfix)")
-    t.productArity match
+    
+    val productArity = t match
+      case t: Resolvable if t.iargsLs.forall(_.nonEmpty) => t.productArity + 1
+      case _ => t.productArity
+    
+    productArity match
       case 0 => prefix
       case 1 => prefix + " of " + aux(t.productElement(0))
       case a =>
-        val args = t.productIterator.zipWithIndex.map:
+        var args = t.productIterator.zipWithIndex.map:
           case (v, i) => t.productElementName(i) + " = " + aux(v, t.isInstanceOf[ProductWithTail] && i === a - 1)
+        t match
+          case t: Resolvable if t.iargsLs.forall(_.nonEmpty) =>
+            args = args ++ Iterator:
+              "iargsLs = " + aux(t.iargsLs)
+          case _ =>
         prefix + locally:
           if inTailPos then ": \\\n" + args.mkString("\n")
           else ":\n" + args.mkString("\n").indent("  ")

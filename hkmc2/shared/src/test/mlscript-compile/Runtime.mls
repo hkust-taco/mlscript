@@ -9,6 +9,21 @@ object Unit with
   fun toString() = "()"
 
 
+fun unreachable = throw Error("unreachable")
+
+fun checkArgs(functionName, expected, isUB, got) =
+  if got < expected || isUB && got > expected do
+    let name = if functionName.length > 0 then " '" + functionName + "'" else ""
+    // throw globalThis.Error("Function" + name + " expected "
+    //   + (if isUB then "" else "at least ")
+    //   + expected
+    //   + " argument(s) but got " + got)
+    throw Error of "Function" + name + " expected "
+      + (if isUB then "" else "at least " )
+      + expected + " argument"
+      + (if expected === 1 then "" else "s")
+      + " but got " + got
+
 fun safeCall(x) =
   if x is undefined then Unit else x
 
@@ -29,7 +44,7 @@ class EffectHandle(_reified) with
   fun resumeWith(value) =
     Runtime.try(() => resume(reified.contTrace)(value))
   fun raise() =
-    topLevelEffect(reified)
+    topLevelEffect(reified, false)
 
 fun try(f) =
   let res = f()
@@ -62,6 +77,31 @@ module Str with
     else string.at(i)
 
   fun drop(string, n) = string.slice(n)
+
+// Re-export rendering functions
+val render = Rendering.render
+
+fun printRaw(x) = console.log(render(x))
+
+// TraceLogger
+
+module TraceLogger with
+  mut val enabled = false
+  mut val indentLvl = 0
+  fun indent() =
+    if enabled then
+      let prev = indentLvl
+      set indentLvl = prev + 1
+      prev
+    else ()
+  fun resetIndent(n) =
+    if enabled then
+      set indentLvl = n
+    else ()
+  fun log(msg) =
+    if enabled then
+      console.log("| ".repeat(indentLvl) + msg.replaceAll("\n", "\n" + "  ".repeat(indentLvl)))
+    else ()
 
 // Private definitions for algebraic effects
 

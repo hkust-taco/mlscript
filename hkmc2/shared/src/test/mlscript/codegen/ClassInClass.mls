@@ -43,7 +43,7 @@ data class Outer(a, b) with
 //│           d
 //│         ]
 //│       }
-//│       toString() { return "Inner(" + globalThis.Predef.render(this.c) + ")"; }
+//│       toString() { return "Inner(" + runtime.render(this.c) + ")"; }
 //│     };
 //│     tmp = this.Inner(this.a);
 //│     this.i = tmp;
@@ -59,7 +59,7 @@ data class Outer(a, b) with
 //│     tmp = this.Inner(c1);
 //│     return runtime.safeCall(tmp.i1(d))
 //│   }
-//│   toString() { return "Outer(" + globalThis.Predef.render(this.a) + ", " + globalThis.Predef.render(this.b) + ")"; }
+//│   toString() { return "Outer(" + runtime.render(this.a) + ", " + runtime.render(this.b) + ")"; }
 //│ };
 
 

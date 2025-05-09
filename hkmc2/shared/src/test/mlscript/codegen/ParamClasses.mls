@@ -41,7 +41,7 @@ data class Foo(a)
 //│   constructor(a) {
 //│     this.a = a;
 //│   }
-//│   toString() { return "Foo(" + globalThis.Predef.render(this.a) + ")"; }
+//│   toString() { return "Foo(" + runtime.render(this.a) + ")"; }
 //│ };
 
 Foo
@@ -77,7 +77,7 @@ data class Foo(a, b)
 //│     this.a = a;
 //│     this.b = b;
 //│   }
-//│   toString() { return "Foo(" + globalThis.Predef.render(this.a) + ", " + globalThis.Predef.render(this.b) + ")"; }
+//│   toString() { return "Foo(" + runtime.render(this.a) + ", " + runtime.render(this.b) + ")"; }
 //│ };
 
 let foo = Foo
@@ -144,7 +144,7 @@ data class Inner(c) with
 //│   i1(d) {
 //│     return this.c + d
 //│   }
-//│   toString() { return "Inner(" + globalThis.Predef.render(this.c) + ")"; }
+//│   toString() { return "Inner(" + runtime.render(this.c) + ")"; }
 //│ };
 
 let i = new Inner(100)

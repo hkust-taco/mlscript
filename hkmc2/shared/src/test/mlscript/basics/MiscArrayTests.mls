@@ -47,7 +47,7 @@ xs.
 //│ 	OpApp(Ident(xs),Ident(.),List(Block(List(App(Ident(map),Tup(List(InfixApp(Tup(List(Ident(x))),keyword '=>',OpApp(Ident(x),Ident(*),List(IntLit(2)))))))))))
 //│ ╔══[ERROR] Expected 2 arguments, got 1
 //│ ║  l.44: 	  map(x => x * 2)
-//│ ╙──      	  ^^^
+//│ ╙──      	     ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 
 :pt

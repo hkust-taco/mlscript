@@ -99,7 +99,7 @@ fun f() =
 //│         return "Debugging.mls:17:5"
 //│       }
 //│     }
-//│     toString() { return "Cont$func$f$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$func$f$(" + runtime.render(this.pc) + ")"; }
 //│   };
 //│   i = 0;
 //│   j = 100;
@@ -197,29 +197,17 @@ res
 set res = res.resumeWith(42)
 
 res
-//│ = "(...args1) => {       globalThis.Predef.checkArgs(\"\", 1, true, args1.length);       let dbg = args1[0];       let i, k, scrut, tmp1, tmp2, getLocals12, Cont$func$test$1;       getLocals12 = function getLocals(...args2) {         globalThis.Predef.checkArgs(\"getLocals\", 0, true, args2.length);         let j1, dbg1, i1, k1, prev, thisInfo, tmp3;         prev = runtime.checkCall(getLocals11());         j1 = new runtime.LocalVarInfo.class(\"j\", j);         dbg1 = new runtime.LocalVarInfo.class(\"dbg\", dbg);         i1 = new runtime.LocalVarInfo.class(\"i\", i);         k1 = new runtime.LocalVarInfo.class(\"k\", k);         thisInfo = new runtime.FnLocalsInfo.class(\"test\", [           j1,           dbg1,           i1,           k1         ]);         tmp3 = runtime.safeCall(prev.push(thisInfo));         return prev       };       Cont$func$test$1 = function Cont$func$test$(...args3) {         return new Cont$func$test$.class(...args3);       };       Cont$func$test$1.class = class Cont$func$test$ extends runtime.FunctionContFrame.class {         constructor(pc) {           let tmp3;           tmp3 = super(null);           this.pc = pc;         }         get resume$__checkNotMethod() { runtime.deboundMethod(\"resume\", \"Cont$func$test$\"); }         resume(...args2) {           globalThis.Predef.checkArgs(\"resume\", 1, true, args2.length);           let value$ = args2[0];           if (this.pc === 0) {             tmp1 = value$;           }           contLoop: while (true) {             if (this.pc === 1) {               return j / i             } else if (this.pc === 2) {               tmp1 = runtime.safeCall(dbg.break(\"whoops\"));               if (tmp1 instanceof runtime.EffectSig.class) {                 this.pc = 0;                 tmp1.contTrace.last.next = this;                 tmp1.contTrace.last = this;                 return tmp1               }               this.pc = 0;               continue contLoop;             } else if (this.pc === 0) {               i = tmp1;               tmp2 = runtime.Unit;               this.pc = 1;               continue contLoop;             }             break;           }         }          get getLocals() {           return runtime.checkCall(getLocals12());         }          get getLoc() {           if (this.pc === 0) {             return \"Debugging.mls:175:15\"           }         }         toString() { return \"Cont$func$test$(\" + globalThis.Predef.render(this.pc) + \")\"; }       };       i = 0;       k = 2000;       scrut = i == 0;       if (scrut === true) {         tmp1 = runtime.safeCall(dbg.break(\"whoops\"));         if (tmp1 instanceof runtime.EffectSig.class) {           tmp1.contTrace.last.next = new Cont$func$test$1.class(0);           tmp1.contTrace.last = tmp1.contTrace.last.next;           return tmp1         }         i = tmp1;         tmp2 = runtime.Unit;       } else {         tmp2 = runtime.Unit;       }       return j / i     }0.8095238095238095"
+//│ = EffectHandle()
 
 :re
 res.raise()
-//│ ═══[RUNTIME ERROR] TypeError: res11.raise is not a function
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
 
 res
-//│ = "(...args1) => {       globalThis.Predef.checkArgs(\"\", 1, true, args1.length);       let dbg = args1[0];       let i, k, scrut, tmp1, tmp2, getLocals12, Cont$func$test$1;       getLocals12 = function getLocals(...args2) {         globalThis.Predef.checkArgs(\"getLocals\", 0, true, args2.length);         let j1, dbg1, i1, k1, prev, thisInfo, tmp3;         prev = runtime.checkCall(getLocals11());         j1 = new runtime.LocalVarInfo.class(\"j\", j);         dbg1 = new runtime.LocalVarInfo.class(\"dbg\", dbg);         i1 = new runtime.LocalVarInfo.class(\"i\", i);         k1 = new runtime.LocalVarInfo.class(\"k\", k);         thisInfo = new runtime.FnLocalsInfo.class(\"test\", [           j1,           dbg1,           i1,           k1         ]);         tmp3 = runtime.safeCall(prev.push(thisInfo));         return prev       };       Cont$func$test$1 = function Cont$func$test$(...args3) {         return new Cont$func$test$.class(...args3);       };       Cont$func$test$1.class = class Cont$func$test$ extends runtime.FunctionContFrame.class {         constructor(pc) {           let tmp3;           tmp3 = super(null);           this.pc = pc;         }         get resume$__checkNotMethod() { runtime.deboundMethod(\"resume\", \"Cont$func$test$\"); }         resume(...args2) {           globalThis.Predef.checkArgs(\"resume\", 1, true, args2.length);           let value$ = args2[0];           if (this.pc === 0) {             tmp1 = value$;           }           contLoop: while (true) {             if (this.pc === 1) {               return j / i             } else if (this.pc === 2) {               tmp1 = runtime.safeCall(dbg.break(\"whoops\"));               if (tmp1 instanceof runtime.EffectSig.class) {                 this.pc = 0;                 tmp1.contTrace.last.next = this;                 tmp1.contTrace.last = this;                 return tmp1               }               this.pc = 0;               continue contLoop;             } else if (this.pc === 0) {               i = tmp1;               tmp2 = runtime.Unit;               this.pc = 1;               continue contLoop;             }             break;           }         }          get getLocals() {           return runtime.checkCall(getLocals12());         }          get getLoc() {           if (this.pc === 0) {             return \"Debugging.mls:175:15\"           }         }         toString() { return \"Cont$func$test$(\" + globalThis.Predef.render(this.pc) + \")\"; }       };       i = 0;       k = 2000;       scrut = i == 0;       if (scrut === true) {         tmp1 = runtime.safeCall(dbg.break(\"whoops\"));         if (tmp1 instanceof runtime.EffectSig.class) {           tmp1.contTrace.last.next = new Cont$func$test$1.class(0);           tmp1.contTrace.last = tmp1.contTrace.last.next;           return tmp1         }         i = tmp1;         tmp2 = runtime.Unit;       } else {         tmp2 = runtime.Unit;       }       return j / i     }0.8095238095238095"
+//│ = EffectHandle()
 
 res.resumeWith(666)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:145)
-//│ ═══[RUNTIME ERROR] TypeError: res11.resumeWith is not a function
-//│     at REPL65:1:351
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:597:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:926:10)
-//│     at REPLServer.emit (node:events:507:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:420:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:614:22)
+//│ = 0.33676533676533676
 
 let i = 100
 fun f() =

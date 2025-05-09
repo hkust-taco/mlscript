@@ -297,7 +297,7 @@ data class Foo(x) with
 //│   get oops() {
 //│     return this.x;
 //│   }
-//│   toString() { return "Foo(" + globalThis.Predef.render(this.x) + ")"; }
+//│   toString() { return "Foo(" + runtime.render(this.x) + ")"; }
 //│ };
 
 

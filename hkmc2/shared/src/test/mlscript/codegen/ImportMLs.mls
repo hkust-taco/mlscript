@@ -4,10 +4,6 @@
 import "../../mlscript-compile/Option.mls"
 
 
-Option.test()
-//│ > 2134
-
-
 open Option { isDefined }
 
 Option.None isDefined()
@@ -72,14 +68,14 @@ None == Option.None
 :re
 Option.oops
 //│ ╔══[ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.73: 	Option.oops
+//│ ║  l.69: 	Option.oops
 //│ ╙──      	      ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 :e
 open Option { oops }
 //│ ╔══[ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.80: 	open Option { oops }
+//│ ║  l.76: 	open Option { oops }
 //│ ╙──      	              ^^^^
 
 oops
@@ -88,7 +84,7 @@ oops
 :re
 Option.None.oops
 //│ ╔══[ERROR] Object 'None' does not contain member 'oops'
-//│ ║  l.89: 	Option.None.oops
+//│ ║  l.85: 	Option.None.oops
 //│ ╙──      	           ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 

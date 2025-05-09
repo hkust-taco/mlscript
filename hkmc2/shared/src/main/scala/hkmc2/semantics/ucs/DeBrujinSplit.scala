@@ -71,7 +71,7 @@ object DeBrujinSplit:
       */
     def dealWithCtor(ctor: Ident | Sel, params: Ls[Tree]): F = ctor match
       case Ident(ctorName) => patternParams.find(_.sym.name == ctorName) match
-        case S(Param(_, symbol, _)) => (scrutinee, innermost, alternative) =>
+        case S(Param(sym = symbol)) => (scrutinee, innermost, alternative) =>
           log(s"found an input pattern: ${symbol.name}")
           val arity = 0 // TODO: fill in the arity
           Branch(scrutinee, ClassLike(ConstructorLike.Parameter(symbol)), innermost.increment(arity), alternative)

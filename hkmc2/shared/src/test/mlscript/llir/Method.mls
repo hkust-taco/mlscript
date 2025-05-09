@@ -11,16 +11,16 @@ fun main() =
 main()
 //│ = 1
 //│ LLIR:
-//│   class A(m$740) {
-//│     def f$735() =
-//│       m$741
+//│   class A(m) {
+//│     def f() =
+//│       m
 //│   }
-//│   def main$737() =
-//│     let x$755 = A$738(1) in
-//│     let x$756 = A.f$735(x$755) in
-//│     x$756
-//│   def entry$758() =
-//│     let* (x$757) = main() in
-//│     x$757
-//│   entry = entry$758
+//│   def main() =
+//│     let x = A(1) in
+//│     let x1 = A.f(x) in
+//│     x1
+//│   def entry() =
+//│     let* (x2) = main() in
+//│     x2
+//│   entry = entry
 

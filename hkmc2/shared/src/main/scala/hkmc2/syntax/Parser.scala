@@ -536,6 +536,10 @@ abstract class Parser(
       consume
       val annotation = simpleExpr(AppPrec, allowNewlines = allowNewlines)
       Annotated(annotation, simpleExpr(prec, allowNewlines = allowNewlines))
+    case (ESC_IDENT(name), loc) :: _ =>
+      consume
+      val id = Tree.Ident(name).withLoc(S(loc))
+      exprCont(id, prec, allowNewlines = true)
     case (IDENT(nme, sym), loc) :: _ =>
       Keyword.all.get(nme) match
         case S(kw) => // * Expressions starting with keywords should be handled in parseRule

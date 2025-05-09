@@ -121,7 +121,7 @@ f() + f() + f()
 //│       break;
 //│     }
 //│   }
-//│   toString() { return "Cont$handleBlock$h$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│   toString() { return "Cont$handleBlock$h$(" + runtime.render(this.pc) + ")"; }
 //│ };
 //│ Cont$func$f$$ = function Cont$func$f$$(h$0, tmp$1, pc) {
 //│   let tmp1;
@@ -172,7 +172,7 @@ f() + f() + f()
 //│       break;
 //│     }
 //│   }
-//│   toString() { return "Cont$func$f$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│   toString() { return "Cont$func$f$(" + runtime.render(this.pc) + ")"; }
 //│ };
 //│ f$ = function f$(h) {
 //│   let tmp1;
@@ -323,7 +323,7 @@ f(1, 2).get()
 //│   get() {
 //│     return this.used1$0
 //│   }
-//│   toString() { return "Test(" + globalThis.Predef.render(this.a) + ")"; }
+//│   toString() { return "Test(" + runtime.render(this.a) + ")"; }
 //│ };
 //│ f2 = function f(used1, unused1) {
 //│   let unused2;
@@ -463,7 +463,7 @@ f(1)
 //│   constructor(x0$) {
 //│     this.x0$ = x0$;
 //│   }
-//│   toString() { return "f$capture(" + globalThis.Predef.render(this.x0$) + ")"; }
+//│   toString() { return "f$capture(" + runtime.render(this.x0$) + ")"; }
 //│ };
 //│ f5 = function f(x) {
 //│   let tmp5, tmp6, capture;
@@ -568,7 +568,7 @@ f().foo()
 //│   constructor(w0$) {
 //│     this.w0$ = w0$;
 //│   }
-//│   toString() { return "f$capture(" + globalThis.Predef.render(this.w0$) + ")"; }
+//│   toString() { return "f$capture(" + runtime.render(this.w0$) + ")"; }
 //│ };
 //│ f6 = function f() {
 //│   let x, y, z, tmp6, tmp7, capture;
