@@ -53,7 +53,7 @@ open Mod { |>> }
 :e
 open Mod { (|>>) }
 //│ ╔══[ERROR] Illegal 'open' statement element.
-//│ ║  l.70: 	open Mod { (|>>) }
+//│ ║  l.54: 	open Mod { (|>>) }
 //│ ╙──      	           ^^^^^
 
 12 |>> print
@@ -65,7 +65,7 @@ open Mod { printt, |>> }
 :fixme
 12 |>> printt
 //│ ╔══[ERROR] Module 'Mod' does not contain member '|>>'
-//│ ║  l.82: 	12 |>> printt
+//│ ║  l.66: 	12 |>> printt
 //│ ╙──      	   ^^^
 //│ ═══[RUNTIME ERROR] TypeError: Mod1.|>> is not a function
 

@@ -213,7 +213,7 @@ inc()
 )
 inc()
 //│ ╔══[ERROR] Expected 1 arguments, got 0
-//│ ║  l.222: 	inc()
+//│ ║  l.214: 	inc()
 //│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'inc' expected 1 argument but got 0
 
@@ -230,7 +230,7 @@ inc()
 :e
 42 console.log
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (selection).
-//│ ║  l.247: 	42 console.log
+//│ ║  l.231: 	42 console.log
 //│ ╙──       	   ^^^^^^^
 //│ = 42
 
