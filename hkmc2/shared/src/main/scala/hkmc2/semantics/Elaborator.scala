@@ -56,6 +56,7 @@ object Elaborator:
     case NotInFunction
     case Forbidden
   
+  /** Context used to keep track of underscores representing lambda shorthands, eg `_ + 1`. */
   class UnderCtx(val unders: Opt[mutable.ArrayBuffer[VarSymbol]])
   
   case class Ctx(outer: OuterCtx, parent: Opt[Ctx], env: Map[Str, Ctx.Elem], 

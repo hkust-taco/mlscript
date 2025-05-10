@@ -130,7 +130,7 @@ let t = new Some(true) in t.Some#value
 //│ ╔══[LEXICAL ERROR] Expect at least one digit after the  decimal point
 //│ ║  l.129: 	42.Some#value
 //│ ╙──       	   ^
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application `#`).
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application).
 //│ ║  l.129: 	42.Some#value
 //│ ╙──       	   ^^^^^^^^^^
 //│ Type: Num

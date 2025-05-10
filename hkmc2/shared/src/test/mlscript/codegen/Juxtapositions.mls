@@ -125,7 +125,7 @@ inc(2) * 2
 42
   inc() * 1
     add(2)
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application `*`).
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application).
 //│ ║  l.126: 	  inc() * 1
 //│ ║         	  ^^^^^^^^^
 //│ ║  l.127: 	    add(2)
@@ -148,7 +148,7 @@ inc(2) * 2
 :todo // ?
 42
   inc() + 1
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application `+`).
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application).
 //│ ║  l.150: 	  inc() + 1
 //│ ╙──       	  ^^^^^^^^^
 //│ = 42
@@ -157,7 +157,7 @@ inc(2) * 2
 42
   add(2) + 1
   inc()
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application `+`).
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application).
 //│ ║  l.158: 	  add(2) + 1
 //│ ╙──       	  ^^^^^^^^^^
 //│ = 43
@@ -166,7 +166,7 @@ inc(2) * 2
 42
   add(2)
   inc() + 1
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application `+`).
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application).
 //│ ║  l.168: 	  inc() + 1
 //│ ╙──       	  ^^^^^^^^^
 //│ = 44

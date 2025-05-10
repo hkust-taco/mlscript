@@ -80,8 +80,6 @@ enum Tree extends AutoLocated:
   case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, kwLoc: Opt[Loc], split: Tree)
   case SplitPoint()
   case OpSplit(lhs: Tree, ops_rhss: Ls[Tree]) // the rhss trees are expressions rooted in `SplitPoint`s
-  @deprecated("Use If instead", "hkmc2-ucs")
-  case IfElse(cond: Tree, alt: Tree)
   case Case(kwLoc: Opt[Loc], branches: Tree)
   case Region(name: Tree, body: Tree)
   case RegRef(reg: Tree, value: Tree)
@@ -90,10 +88,9 @@ enum Tree extends AutoLocated:
   case Spread(kw: Keyword.Ellipsis, kwLoc: Opt[Loc], body: Opt[Tree])
   case Annotated(annotation: Tree, target: Tree)
   case Constructor(decl: Tree)
-  /** It represents a term that has already been elaborated. When desugaring the
-   *  operator splits in UCS, the `lhs` of `OpSplit` has already been elaborated
-   *  into a `Term`, we need to embed `Term` into `Tree` using `Trm`.
-   */
+  /** Represents a term that has already been elaborated. When desugaring
+   *  operator splits in the UCS, the `lhs` of `OpSplit` has already been elaborated
+   *  into a `Term`, so we need to embed `Term` into `Tree` using `Trm`. */
   case Trm(term: semantics.Term)
 
   def splitOn(acc: Tree): Tree = this match
@@ -105,7 +102,7 @@ enum Tree extends AutoLocated:
     case InfixApp(lhs, kw, rhs) => InfixApp(lhs.splitOn(acc), kw, rhs)
     case _: (Ident | Literal | Error) => acc
   
-  def children: Ls[Tree] = this match
+  def children: Ls[Located] = this match
     case _: Empty | _: Error | _: Ident | _: Literal | _: Under | _: Unt => Nil
     case Pun(_, e) => e :: Nil
     case Bra(_, e) => e :: Nil
@@ -129,7 +126,6 @@ enum Tree extends AutoLocated:
     case TermDef(k, head, rhs) => head :: rhs.toList
     case New(body, rft) => body.toList ::: rft.toList
     case IfLike(_, _, split) => split :: Nil
-    case IfElse(cond, alt) => cond :: alt :: Nil
     case Case(_, bs) => Ls(bs)
     case Region(name, body) => name :: body :: Nil
     case RegRef(reg, value) => reg :: value :: Nil
@@ -150,7 +146,7 @@ enum Tree extends AutoLocated:
     case Dummy => Nil
     case OpSplit(lhs, ops_rhss) => lhs :: ops_rhss
     case SplitPoint() => Nil
-    case Trm(_) => Nil
+    case Trm(trm) => trm :: Nil
   
   def describe: Str = this match
     case Empty() => "empty"
@@ -175,9 +171,7 @@ enum Tree extends AutoLocated:
     case Tup(fields) => "tuple"
     case TyTup(tys) => "type tuple"
     case App(lhs, rhs) => "application"
-    case OpApp(lhs, op, rhss) => "operator application" + (op match
-      case Ident(nme) => s" `$nme`"
-      case _ => "")
+    case OpApp(lhs, op, rhss) => "operator application"
     case Jux(lhs, rhs) => "juxtaposition"
     case Sel(prefix, name) => "selection"
     case SynthSel(prefix, name) => "synthetic selection"
@@ -200,9 +194,8 @@ enum Tree extends AutoLocated:
     case Constructor(_) => "constructor"
     case MemberProj(_, _) => "member projection"
     case Keywrd(kw) => s"'${kw.name}' keyword"
-    case Unt() => "unit"
     case Dummy => "‹dummy›"
-    case Trm(_) => "term"
+    case Trm(t) => t.describe + " term"
     
   def deparenthesized: Tree = this match
     case Bra(BracketKind.Round, inner) => inner.deparenthesized

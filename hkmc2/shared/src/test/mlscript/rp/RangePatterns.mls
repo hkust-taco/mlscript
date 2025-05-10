@@ -58,7 +58,7 @@ pattern UnsignedByte = 0..< 256
 //│ ╔══[ERROR] Name not found: .<
 //│ ║  l.51: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                         ^^
-//│ ╔══[ERROR] Unrecognized pattern (operator application `.<`)
+//│ ╔══[ERROR] Unrecognized pattern (operator application)
 //│ ║  l.51: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                       ^^^^^^^^
 
