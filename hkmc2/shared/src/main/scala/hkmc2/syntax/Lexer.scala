@@ -595,6 +595,8 @@ object Lexer:
     "virtual"
   )
   
+  private val SEP = "┊"
+  
   def printToken(tl: TokLoc): Str = tl match
     case (SPACE, _) => " "
     case (COMMA, _) => ","
@@ -610,16 +612,15 @@ object Lexer:
     case (SELECT(name: String), _) => "." + name
     case (OPEN_BRACKET(k), _) => k.beg
     case (CLOSE_BRACKET(k), _) => k.end
-    case (BRACKETS(k @ BracketKind.Indent, contents), _) =>
-      k.beg + printTokens(contents) + k.end
     case (BRACKETS(k, contents), _) =>
-      k.beg + printTokens(contents) + k.end
+      k.beg + "⟨" + printTokens(contents) + "⟩" + k.end
     case (COMMENT(text: String), _) => "/*" + text + "*/"
     case (SUSPENSION(true), _) => "..."
     case (SUSPENSION(false), _) => ".."
     case (ESC_IDENT(name), _) => name
+  
   def printTokens(ts: Ls[TokLoc]): Str =
-    ts.iterator.map(printToken).mkString("|", "|", "|")
+    ts.iterator.map(printToken).mkString(SEP, SEP, SEP)
   
   
 

@@ -190,7 +190,7 @@ abstract class Parser(
     _cur
   
   private def cur_=(using l: Line, n: Name)(newCur: Ls[TokLoc]) =
-    if dbg then printDbg(s"! ${n.value}\t\tresets ${newCur}    [at syntax/Parser.scala:${l.value}]")
+    if dbg then printDbg(s"! ${n.value}\t\tresets ${Lexer.printTokens(newCur)}    [at syntax/Parser.scala:${l.value}]")
     _cur = newCur
   
   final def consume(implicit l: Line, n: Name): Unit =
@@ -354,8 +354,12 @@ abstract class Parser(
     rule.exprAlt match
       case S(exprAlt) =>
         val e = simpleExpr(prec, allowNewlines = allowNewlines)
+        // val e2 = exprCont(e, prec, allowNewlines = allowNewlines)
+        // val e3 = exprCont(e2, prec, allowNewlines = allowNewlines)
+        // val e3 = e2
+        val e3 = e
         if verbose then printDbg("$ proceed with rule: " + exprAlt)
-        parseRule(prec, exprAlt.rest, allowNewlines = allowNewlines).map(res => exprAlt.k(e, res))
+        parseRule(prec, exprAlt.rest, allowNewlines = allowNewlines).map(res => exprAlt.k(e3, res))
       case N =>
         rule.emptyAlt match
         case S(res) =>
@@ -879,15 +883,19 @@ abstract class Parser(
         consume
         if toks.collectFirst{ case (NEWLINE, _) => }.isEmpty then
           cur = toks ::: cur
-          exprContImpl(acc, prec, allowNewlines)
+          // exprContImpl(acc, prec, allowNewlines = allowNewlines)
+          exprCont(acc, prec, allowNewlines = allowNewlines)
         else
           val r = rec(toks, S(loc), "operator block")
           val res = r.opSplit(acc, l0, prec)
           r.yeetSpaces match
-          case Nil => res
+          case Nil =>
+            // res
+            exprCont(res, prec, allowNewlines = allowNewlines)
           case toks =>
             cur = toks ::: cur
-            exprContImpl(res, prec, allowNewlines)
+            // exprContImpl(res, prec, allowNewlines = allowNewlines)
+            exprCont(res, prec, allowNewlines = allowNewlines)
       
       // TODO
       // case (NEWLINE, _) :: (SELECT(nme), _) :: _
@@ -924,12 +932,12 @@ abstract class Parser(
           //       acc
           //   }
           case _ => OpApp(acc, v, rhs :: Nil)
-        }, prec, allowNewlines)
+        }, prec, allowNewlines = allowNewlines)
         
       case (OP("::"), l0) :: (IDENT(id, false), l1) :: _ =>
         consume
         consume
-        exprCont(MemberProj(acc, new Ident(id).withLoc(S(l1))).withLoc(S(l0 ++ l1)), prec, allowNewlines)
+        exprCont(MemberProj(acc, new Ident(id).withLoc(S(l1))).withLoc(S(l0 ++ l1)), prec, allowNewlines = allowNewlines)
       case (OP(opStr), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
         consume
         val v = Ident(opStr).withLoc(S(l0))
@@ -943,7 +951,8 @@ abstract class Parser(
             consume
             // rec(toks, S(br.innerLoc), br.describe).concludeWith(f(_, true))
             val rhs = rec(toks, S(l0), "operator split").concludeWith(_.split)
-            OpApp(acc, v, Block(rhs).withLoc(S(l0)) :: Nil)
+            exprCont(OpApp(acc, v, Block(rhs).withLoc(S(l0)) :: Nil),
+              prec, allowNewlines = allowNewlines)
           case _ => 
             // val rhs = simpleExpr(opPrec(opStr)._2)
             val rhs = expr(opPrec(opStr)._2)
@@ -960,7 +969,7 @@ abstract class Parser(
                     acc
                 }
               case _ => OpApp(acc, v, rhs :: Nil)
-            }, prec, allowNewlines)
+            }, prec, allowNewlines = allowNewlines)
         
         /*
       case (KEYWORD(":"), l0) :: _ if prec <= NewParser.prec(':') =>
@@ -976,10 +985,10 @@ abstract class Parser(
         consume
         acc match // TODO: looks fishy. a better way?
           case Sel(reg, Ident("ref")) => RegRef(reg, simpleExprImpl(0, allowNewlines = false))
-          case _ => exprCont(acc, prec, allowNewlines)
+          case _ => exprCont(acc, prec, allowNewlines = allowNewlines)
       case (SELECT(name), l0) :: _ if SelPrec >= prec =>
         consume
-        exprCont(Sel(acc, new Ident(name).withLoc(S(l0))), prec, allowNewlines)
+        exprCont(Sel(acc, new Ident(name).withLoc(S(l0))), prec, allowNewlines = allowNewlines)
         /*
       // case (br @ BRACKETS(Indent, (SELECT(name), l0) :: toks), _) :: _ =>
       case (br @ BRACKETS(Indent, (SELECT(name), l0) :: toks), _) :: _ if prec <= 1 =>
@@ -1060,7 +1069,7 @@ abstract class Parser(
         val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
         // val res = TyApp(acc, as.map(_.mapSecond.to))
         val res = TyApp(acc, as).withLoc(acc.toLoc.fold(some(loc))(_ ++ loc |> some))
-        exprCont(res, prec, allowNewlines)
+        exprCont(res, prec, allowNewlines = allowNewlines)
         /*
       /*case (br @ BRACKETS(Square, toks), loc) :: _ => // * Currently unreachable because we match Square brackets as tparams
         consume
@@ -1072,12 +1081,12 @@ abstract class Parser(
         consume
         val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
         val res = App(acc, Tup(as).withLoc(S(loc)))
-        exprCont(res, prec, allowNewlines)
+        exprCont(res, prec, allowNewlines = allowNewlines)
       case (KEYWORD(Keyword.`of`), _) :: _ =>
         consume
         val as = blockMaybeIndented
         val res = App(acc, Tup(as))
-        exprCont(res, prec, allowNewlines)
+        exprCont(res, prec, allowNewlines = allowNewlines)
       /*
       case c @ (h :: _) if (h._1 match {
         case KEYWORD(":" | "of" | "where" | "extends") | SEMI | BRACKETS(Round | Square, _)
@@ -1122,7 +1131,7 @@ abstract class Parser(
             printDbg(s"!! REDUCING BRACKET")
             cur = (NEWLINE, l.left) :: rest ::: cur
           case _ =>
-        exprCont(res, prec, allowNewlines)
+        exprCont(res, prec, allowNewlines = allowNewlines)
         
       
       case (KEYWORD(kw), l0) :: _ if kw.leftPrecOrMin > prec =>

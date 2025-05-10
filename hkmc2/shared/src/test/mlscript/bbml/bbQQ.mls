@@ -8,7 +8,7 @@
 
 :p
 `false
-//│ |`|false|
+//│ ┊`┊false┊
 //│ Parsed:
 //│ 	Quoted(BoolLit(false))
 //│ Type: CodeBase[out Bool, ⊥, ?]

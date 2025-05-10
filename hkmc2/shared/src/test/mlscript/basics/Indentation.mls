@@ -62,7 +62,7 @@ module A with {
 :p
 tuple(
 )
-//│ |tuple|(|↵|)|
+//│ ┊tuple┊(⟨┊↵┊⟩)┊
 //│ Parsed:
 //│ 	App(Ident(tuple),Tup(List()))
 //│ = []
@@ -103,7 +103,7 @@ id(
 id(
   2)
   print()
-//│ |id|(|→|2|←|)|→|print|(||)|←|
+//│ ┊id┊(⟨┊→⟨┊2┊⟩←┊⟩)┊→⟨┊print┊(⟨┊┊⟩)┊⟩←┊
 //│ Parsed:
 //│ 	Jux(App(Ident(id),Tup(List(IntLit(2)))),Block(List(App(Ident(print),Tup(List())))))
 //│ > 2
@@ -117,7 +117,7 @@ id(
   2
 )
   print()
-//│ |id|(|→|2|←|↵|)|→|print|(||)|←|
+//│ ┊id┊(⟨┊→⟨┊2┊⟩←┊↵┊⟩)┊→⟨┊print┊(⟨┊┊⟩)┊⟩←┊
 //│ Parsed:
 //│ 	Jux(App(Ident(id),Tup(List(IntLit(2)))),Block(List(App(Ident(print),Tup(List())))))
 //│ > 2
@@ -126,7 +126,7 @@ id(
 id(
   id
 )(1)
-//│ |id|(|→|id|←|↵|)|(|1|)|
+//│ ┊id┊(⟨┊→⟨┊id┊⟩←┊↵┊⟩)┊(⟨┊1┊⟩)┊
 //│ Parsed:
 //│ 	App(App(Ident(id),Tup(List(Ident(id)))),Tup(List(IntLit(1))))
 //│ = 1
@@ -135,7 +135,7 @@ id(
 :p
 id
   1
-//│ |id|→|1|←|
+//│ ┊id┊→⟨┊1┊⟩←┊
 //│ Parsed:
 //│ 	Jux(Ident(id),Block(List(IntLit(1))))
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (integer literal).
@@ -148,7 +148,7 @@ id
 :p
 id(0
   id)(1)
-//│ |id|(|0|→|id|←|)|(|1|)|
+//│ ┊id┊(⟨┊0┊→⟨┊id┊⟩←┊⟩)┊(⟨┊1┊⟩)┊
 //│ Parsed:
 //│ 	App(App(Ident(id),Tup(List(Jux(IntLit(0),Block(List(Ident(id))))))),Tup(List(IntLit(1))))
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).

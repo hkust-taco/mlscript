@@ -97,7 +97,7 @@ object Printer:
     case Value.Arr(elems) =>
       val docElems = elems.map(x => mkDocument(x)).mkString(", ")
       doc"[${docElems}]"
-    case Value.Rcd(args) => // case Rcd(elems: Ls[RcdArg])
+    case Value.Rcd(args) =>
       doc"{ ${
         args.map(x => x.idx.fold(doc"...")(p => mkDocument(p) :: ": ") :: mkDocument(x.value)).mkString(", ")
       } }"

@@ -13,7 +13,7 @@
 2
 +
 2
-//│ |2|↵|+|↵|2|
+//│ ┊2┊↵┊+┊↵┊2┊
 //│ Parsed:
 //│ 	OpApp(IntLit(2),Ident(+),List(IntLit(2)))
 //│ = 4
@@ -137,4 +137,301 @@ let x
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: x (class hkmc2.semantics.VarSymbol)
 
 
+2
+  + 1
+* 2
+//│ = 6
+
+2
+  |> (a: _)
+  .a
+//│ = 2
+
+:re
+2
+  |> (a: _)
+    .a
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'a' yielded 'undefined'
+
+:pe
+2
+  |> (a: _)
+.a
+//│ ╔══[PARSE ERROR] Expected an expression; found selector instead
+//│ ║  l.159: 	.a
+//│ ╙──       	^^
+//│ ╔══[PARSE ERROR] Expected end of input; found selector instead
+//│ ║  l.159: 	.a
+//│ ╙──       	^^
+
+
+// :dp
+2
+    * 1
+  + 2
+//│ = 4
+
+// :dp
+2
+    * 1
+      + 2
+//│ = 4
+
+2
+    * 1
+      + 2
+      + 2
+//│ = 6
+
+2
+    * 1
+      + 2
+    + 2
+//│ = 6
+
+// :dp
+2 {+ 1} * 2
+//│ = 4
+
+{2
+  + 1} * 2
+//│ = 6
+
+{2 { + 1 }} * 2
+//│ = 6
+
+2 { * 1 { + 2 } }
+//│ = 4
+
+// :dp
+2
+    + 1
+      * 2
+//│ = 4
+
+2
+    + 1
+      * 2
+      * 2
+//│ = 6
+
+2
+    + 1
+      * 2
+    * 2
+//│ = 8
+
+
+2
+    + 1
+      |> print
+//│ > 3
+
+2
+    + 1
+    + 1
+      |> print
+//│ > 4
+
+2
+    + 1 |> print
+//│ > 3
+
+2
+    + 1
+    + 1 |> print
+//│ > 4
+
+2
+    + 1
+  |> print
+//│ > 3
+
+let incr = _ + 1
+//│ incr = [function incr]
+
+// :dp
+2
+    + 1
+    + 1
+  |> print
+//│ > 4
+
+2
+    + 1
+    + 1
+  |> incr
+  |> print
+//│ > 5
+
+2
+    + 1
+    + 1
+  |> incr
+    |> print
+//│ > 5
+
+2
+      + 1
+      + 1
+    |> incr
+  |> print
+//│ > 5
+
+// Uh...
+2
+      + 1
+      !> print
+      + 1
+    |> incr
+      !> print
+  |> print
+//│ > 3
+//│ > 5
+//│ > 5
+
+
+{1} + {1}
+//│ = 2
+
+:dp
+{111} + {222} + {333}
+//│ ┊{⟨┊111┊⟩}┊ ┊+┊ ┊{⟨┊222┊⟩}┊ ┊+┊ ┊{⟨┊333┊⟩}┊
+//│ @ blockOf(start of statement,allowNewlines = true)    [at syntax/Parser.scala:212]
+//│ │ ? blockOfImpl		inspects ┊{⟨┊111┊⟩}┊ ┊+┊ ┊{⟨┊222┊⟩}┊...    [at syntax/Parser.scala:286]
+//│ │ @ simpleExpr(1)    [at syntax/Parser.scala:356]
+//│ │ │ ? simpleExprImpl		inspects ┊{⟨┊111┊⟩}┊ ┊+┊ ┊{⟨┊222┊⟩}┊...    [at syntax/Parser.scala:530]
+//│ │ │ ! simpleExprImpl		consumes ┊{⟨┊111┊⟩}┊    [at syntax/Parser.scala:568]
+//│ │ │ > @ concludeWith(())    [at syntax/Parser.scala:569]
+//│ │ │ > │ ? maybeIndented		inspects ┊111┊    [at syntax/Parser.scala:253]
+//│ │ │ > │ @ blockOf(start of statement,allowNewlines = false)    [at syntax/Parser.scala:272]
+//│ │ │ > │ │ ? blockOfImpl		inspects ┊111┊    [at syntax/Parser.scala:286]
+//│ │ │ > │ │ @ simpleExpr(1)    [at syntax/Parser.scala:356]
+//│ │ │ > │ │ │ ? simpleExprImpl		inspects ┊111┊    [at syntax/Parser.scala:530]
+//│ │ │ > │ │ │ ! simpleExprImpl		consumes ┊111┊    [at syntax/Parser.scala:565]
+//│ │ │ > │ │ │ @ exprCont(1,`IntLit(111)`,false)    [at syntax/Parser.scala:566]
+//│ │ │ > │ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:805]
+//│ │ │ > │ │ │ │ @ exprJux(1,`IntLit(111)`,false)    [at syntax/Parser.scala:1161]
+//│ │ │ > │ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1168]
+//│ │ │ > │ │ │ │ │ stops at the end of input
+//│ │ │ > │ │ │ │ = IntLit(111)
+//│ │ │ > │ │ │ = IntLit(111)
+//│ │ │ > │ │ = IntLit(111)
+//│ │ │ > │ │ @ parseRule(1,expression ::= End(),allowNewlines = false)    [at syntax/Parser.scala:362]
+//│ │ │ > │ │ │ ? parseRuleImpl		inspects ┊┊    [at syntax/Parser.scala:382]
+//│ │ │ > │ │ = Some(())
+//│ │ │ > │ │ ? blockContOf		inspects ┊┊    [at syntax/Parser.scala:281]
+//│ │ │ > │ = List(IntLit(111))
+//│ │ │ > │ ? concludeWithImpl		inspects ┊┊    [at syntax/Parser.scala:237]
+//│ │ │ > │ Concluded with List(IntLit(111))
+//│ │ │ > = List(IntLit(111))
+//│ │ │ ? simpleExprImpl		inspects ┊ ┊+┊ ┊{⟨┊222┊⟩}┊ ┊...    [at syntax/Parser.scala:570]
+//│ │ │ ! simpleExprImpl		consumes ┊ ┊    [at syntax/Parser.scala:570]
+//│ │ │ @ exprCont(1,`Bra(Curly,Block(List(IntLit(111))))`,true)    [at syntax/Parser.scala:601]
+//│ │ │ │ ? exprContImpl		inspects ┊+┊ ┊{⟨┊222┊⟩}┊ ┊+┊...    [at syntax/Parser.scala:805]
+//│ │ │ │ ! exprContImpl		consumes ┊+┊    [at syntax/Parser.scala:942]
+//│ │ │ │ ? exprContImpl		inspects ┊ ┊{⟨┊222┊⟩}┊ ┊+┊ ┊...    [at syntax/Parser.scala:944]
+//│ │ │ │ ! exprContImpl		consumes ┊ ┊    [at syntax/Parser.scala:944]
+//│ │ │ │ ! found operator `+` with prec (30,30)
+//│ │ │ │ ? exprContImpl		inspects ┊{⟨┊222┊⟩}┊ ┊+┊ ┊{⟨┊333┊⟩}┊    [at syntax/Parser.scala:949]
+//│ │ │ │ ! exprContImpl		consumes ┊{⟨┊222┊⟩}┊    [at syntax/Parser.scala:951]
+//│ │ │ │ > @ concludeWith(())    [at syntax/Parser.scala:953]
+//│ │ │ │ > │ @ split()    [at syntax/Parser.scala:953]
+//│ │ │ │ > │ │ @ item(index = 1)    [at syntax/Parser.scala:693]
+//│ │ │ │ > │ │ │ ? item		inspects ┊222┊    [at syntax/Parser.scala:694]
+//│ │ │ │ > │ │ │ @ parseRule(0,start of statement ::= Kw(keyword 'let') | Kw(keyword 'set') | Kw(keyword 'handle') | Kw(keyword 'new') | Kw(keyword 'in') | Kw(keyword 'if') | Kw(keyword 'while') | Kw(keyword 'else') | Kw(keyword 'case') | Kw(keyword 'region') | Kw(keyword 'outer') | Kw(keyword 'constructor') | Kw(keyword 'fun') | Kw(keyword 'val') | Kw(keyword 'use') | Kw(keyword 'type') | Kw(keyword 'pattern') | Kw(keyword 'class') | Kw(keyword 'trait') | Kw(keyword 'module') | Kw(keyword 'object') | Kw(keyword 'open') | Kw(keyword 'abstract') | Kw(keyword 'mut') | Kw(keyword 'do') | Kw(keyword 'virtual') | Kw(keyword 'override') | Kw(keyword 'declare') | Kw(keyword 'data') | Kw(keyword 'public') | Kw(keyword 'private') | Kw(keyword 'out') | Kw(keyword 'return') | Kw(keyword 'throw') | Kw(keyword 'import') | Kw(keyword 'using') | Kw(keyword 'true') | Kw(keyword 'false') | Kw(keyword 'undefined') | Kw(keyword 'null') | Kw(keyword 'this') | Kw(keyword '_') | Expr(expression ::= End()) | Blk(block ::= End()),allowNewlines = true)    [at syntax/Parser.scala:703]
+//│ │ │ │ > │ │ │ │ ? parseRuleImpl		inspects ┊222┊    [at syntax/Parser.scala:382]
+//│ │ │ │ > │ │ │ │ @ simpleExpr(0)    [at syntax/Parser.scala:356]
+//│ │ │ │ > │ │ │ │ │ ? simpleExprImpl		inspects ┊222┊    [at syntax/Parser.scala:530]
+//│ │ │ │ > │ │ │ │ │ ! simpleExprImpl		consumes ┊222┊    [at syntax/Parser.scala:565]
+//│ │ │ │ > │ │ │ │ │ @ exprCont(0,`IntLit(222)`,true)    [at syntax/Parser.scala:566]
+//│ │ │ │ > │ │ │ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:805]
+//│ │ │ │ > │ │ │ │ │ │ @ exprJux(0,`IntLit(222)`,false)    [at syntax/Parser.scala:1161]
+//│ │ │ │ > │ │ │ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1168]
+//│ │ │ │ > │ │ │ │ │ │ │ stops at the end of input
+//│ │ │ │ > │ │ │ │ │ │ = IntLit(222)
+//│ │ │ │ > │ │ │ │ │ = IntLit(222)
+//│ │ │ │ > │ │ │ │ = IntLit(222)
+//│ │ │ │ > │ │ │ │ @ parseRule(0,expression ::= End(),allowNewlines = true)    [at syntax/Parser.scala:362]
+//│ │ │ │ > │ │ │ │ │ ? parseRuleImpl		inspects ┊┊    [at syntax/Parser.scala:382]
+//│ │ │ │ > │ │ │ │ = Some(())
+//│ │ │ │ > │ │ │ = Some(IntLit(222))
+//│ │ │ │ > │ │ │ @ exprCont(0,`IntLit(222)`,true)    [at syntax/Parser.scala:703]
+//│ │ │ │ > │ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:805]
+//│ │ │ │ > │ │ │ │ @ exprJux(0,`IntLit(222)`,false)    [at syntax/Parser.scala:1161]
+//│ │ │ │ > │ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1168]
+//│ │ │ │ > │ │ │ │ │ stops at the end of input
+//│ │ │ │ > │ │ │ │ = IntLit(222)
+//│ │ │ │ > │ │ │ = IntLit(222)
+//│ │ │ │ > │ │ = IntLit(222)
+//│ │ │ │ > │ │ ? splitItem		inspects ┊┊    [at syntax/Parser.scala:708]
+//│ │ │ │ > │ │ ! end of split
+//│ │ │ │ > │ = List(IntLit(222))
+//│ │ │ │ > │ ? concludeWithImpl		inspects ┊┊    [at syntax/Parser.scala:237]
+//│ │ │ │ > │ Concluded with List(IntLit(222))
+//│ │ │ │ > = List(IntLit(222))
+//│ │ │ │ @ exprCont(1,`OpApp(Bra(Curly,Block(List(IntLit(111)))),Ident(+),List(Block(List(IntLit(222)))))`,true)    [at syntax/Parser.scala:955]
+//│ │ │ │ │ ? exprContImpl		inspects ┊ ┊+┊ ┊{⟨┊333┊⟩}┊    [at syntax/Parser.scala:805]
+//│ │ │ │ │ ! exprContImpl		consumes ┊ ┊    [at syntax/Parser.scala:985]
+//│ │ │ │ │ @ exprCont(1,`OpApp(Bra(Curly,Block(List(IntLit(111)))),Ident(+),List(Block(List(IntLit(222)))))`,true)    [at syntax/Parser.scala:988]
+//│ │ │ │ │ │ ? exprContImpl		inspects ┊+┊ ┊{⟨┊333┊⟩}┊    [at syntax/Parser.scala:805]
+//│ │ │ │ │ │ ! exprContImpl		consumes ┊+┊    [at syntax/Parser.scala:942]
+//│ │ │ │ │ │ ? exprContImpl		inspects ┊ ┊{⟨┊333┊⟩}┊    [at syntax/Parser.scala:944]
+//│ │ │ │ │ │ ! exprContImpl		consumes ┊ ┊    [at syntax/Parser.scala:944]
+//│ │ │ │ │ │ ! found operator `+` with prec (30,30)
+//│ │ │ │ │ │ ? exprContImpl		inspects ┊{⟨┊333┊⟩}┊    [at syntax/Parser.scala:949]
+//│ │ │ │ │ │ ! exprContImpl		consumes ┊{⟨┊333┊⟩}┊    [at syntax/Parser.scala:951]
+//│ │ │ │ │ │ > @ concludeWith(())    [at syntax/Parser.scala:953]
+//│ │ │ │ │ │ > │ @ split()    [at syntax/Parser.scala:953]
+//│ │ │ │ │ │ > │ │ @ item(index = 1)    [at syntax/Parser.scala:693]
+//│ │ │ │ │ │ > │ │ │ ? item		inspects ┊333┊    [at syntax/Parser.scala:694]
+//│ │ │ │ │ │ > │ │ │ @ parseRule(0,start of statement ::= Kw(keyword 'let') | Kw(keyword 'set') | Kw(keyword 'handle') | Kw(keyword 'new') | Kw(keyword 'in') | Kw(keyword 'if') | Kw(keyword 'while') | Kw(keyword 'else') | Kw(keyword 'case') | Kw(keyword 'region') | Kw(keyword 'outer') | Kw(keyword 'constructor') | Kw(keyword 'fun') | Kw(keyword 'val') | Kw(keyword 'use') | Kw(keyword 'type') | Kw(keyword 'pattern') | Kw(keyword 'class') | Kw(keyword 'trait') | Kw(keyword 'module') | Kw(keyword 'object') | Kw(keyword 'open') | Kw(keyword 'abstract') | Kw(keyword 'mut') | Kw(keyword 'do') | Kw(keyword 'virtual') | Kw(keyword 'override') | Kw(keyword 'declare') | Kw(keyword 'data') | Kw(keyword 'public') | Kw(keyword 'private') | Kw(keyword 'out') | Kw(keyword 'return') | Kw(keyword 'throw') | Kw(keyword 'import') | Kw(keyword 'using') | Kw(keyword 'true') | Kw(keyword 'false') | Kw(keyword 'undefined') | Kw(keyword 'null') | Kw(keyword 'this') | Kw(keyword '_') | Expr(expression ::= End()) | Blk(block ::= End()),allowNewlines = true)    [at syntax/Parser.scala:703]
+//│ │ │ │ │ │ > │ │ │ │ ? parseRuleImpl		inspects ┊333┊    [at syntax/Parser.scala:382]
+//│ │ │ │ │ │ > │ │ │ │ @ simpleExpr(0)    [at syntax/Parser.scala:356]
+//│ │ │ │ │ │ > │ │ │ │ │ ? simpleExprImpl		inspects ┊333┊    [at syntax/Parser.scala:530]
+//│ │ │ │ │ │ > │ │ │ │ │ ! simpleExprImpl		consumes ┊333┊    [at syntax/Parser.scala:565]
+//│ │ │ │ │ │ > │ │ │ │ │ @ exprCont(0,`IntLit(333)`,true)    [at syntax/Parser.scala:566]
+//│ │ │ │ │ │ > │ │ │ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:805]
+//│ │ │ │ │ │ > │ │ │ │ │ │ @ exprJux(0,`IntLit(333)`,false)    [at syntax/Parser.scala:1161]
+//│ │ │ │ │ │ > │ │ │ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1168]
+//│ │ │ │ │ │ > │ │ │ │ │ │ │ stops at the end of input
+//│ │ │ │ │ │ > │ │ │ │ │ │ = IntLit(333)
+//│ │ │ │ │ │ > │ │ │ │ │ = IntLit(333)
+//│ │ │ │ │ │ > │ │ │ │ = IntLit(333)
+//│ │ │ │ │ │ > │ │ │ │ @ parseRule(0,expression ::= End(),allowNewlines = true)    [at syntax/Parser.scala:362]
+//│ │ │ │ │ │ > │ │ │ │ │ ? parseRuleImpl		inspects ┊┊    [at syntax/Parser.scala:382]
+//│ │ │ │ │ │ > │ │ │ │ = Some(())
+//│ │ │ │ │ │ > │ │ │ = Some(IntLit(333))
+//│ │ │ │ │ │ > │ │ │ @ exprCont(0,`IntLit(333)`,true)    [at syntax/Parser.scala:703]
+//│ │ │ │ │ │ > │ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:805]
+//│ │ │ │ │ │ > │ │ │ │ @ exprJux(0,`IntLit(333)`,false)    [at syntax/Parser.scala:1161]
+//│ │ │ │ │ │ > │ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1168]
+//│ │ │ │ │ │ > │ │ │ │ │ stops at the end of input
+//│ │ │ │ │ │ > │ │ │ │ = IntLit(333)
+//│ │ │ │ │ │ > │ │ │ = IntLit(333)
+//│ │ │ │ │ │ > │ │ = IntLit(333)
+//│ │ │ │ │ │ > │ │ ? splitItem		inspects ┊┊    [at syntax/Parser.scala:708]
+//│ │ │ │ │ │ > │ │ ! end of split
+//│ │ │ │ │ │ > │ = List(IntLit(333))
+//│ │ │ │ │ │ > │ ? concludeWithImpl		inspects ┊┊    [at syntax/Parser.scala:237]
+//│ │ │ │ │ │ > │ Concluded with List(IntLit(333))
+//│ │ │ │ │ │ > = List(IntLit(333))
+//│ │ │ │ │ │ @ exprCont(1,`OpApp(OpApp(Bra(Curly,Block(List(IntLit(111)))),Ident(+),List(Block(List(IntLit(222))))),Ident(+),List(Block(List(IntLit(333)))))`,true)    [at syntax/Parser.scala:955]
+//│ │ │ │ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:805]
+//│ │ │ │ │ │ │ @ exprJux(1,`OpApp(OpApp(Bra(Curly,Block(List(IntLit(111)))),Ident(+),List(Block(List(IntLit(222))))),Ident(+),List(Block(List(IntLit(333)))))`,false)    [at syntax/Parser.scala:1161]
+//│ │ │ │ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1168]
+//│ │ │ │ │ │ │ │ stops at the end of input
+//│ │ │ │ │ │ │ = OpApp(OpApp(Bra(Curly,Block(List(IntLit(111)))),Ident(+),List(Block(List(IntLit(222))))),Ident(+),List(Block(List(IntLit(333)))))
+//│ │ │ │ │ │ = OpApp(OpApp(Bra(Curly,Block(List(IntLit(111)))),Ident(+),List(Block(List(IntLit(222))))),Ident(+),List(Block(List(IntLit(333)))))
+//│ │ │ │ │ = OpApp(OpApp(Bra(Curly,Block(List(IntLit(111)))),Ident(+),List(Block(List(IntLit(222))))),Ident(+),List(Block(List(IntLit(333)))))
+//│ │ │ │ = OpApp(OpApp(Bra(Curly,Block(List(IntLit(111)))),Ident(+),List(Block(List(IntLit(222))))),Ident(+),List(Block(List(IntLit(333)))))
+//│ │ │ = OpApp(OpApp(Bra(Curly,Block(List(IntLit(111)))),Ident(+),List(Block(List(IntLit(222))))),Ident(+),List(Block(List(IntLit(333)))))
+//│ │ = OpApp(OpApp(Bra(Curly,Block(List(IntLit(111)))),Ident(+),List(Block(List(IntLit(222))))),Ident(+),List(Block(List(IntLit(333)))))
+//│ │ @ parseRule(1,expression ::= End(),allowNewlines = true)    [at syntax/Parser.scala:362]
+//│ │ │ ? parseRuleImpl		inspects ┊┊    [at syntax/Parser.scala:382]
+//│ │ = Some(())
+//│ │ ? blockContOf		inspects ┊┊    [at syntax/Parser.scala:281]
+//│ = List(OpApp(OpApp(Bra(Curly,Block(List(IntLit(111)))),Ident(+),List(Block(List(IntLit(222))))),Ident(+),List(Block(List(IntLit(333))))))
+//│ ? parseAll		inspects ┊┊    [at syntax/Parser.scala:224]
+//│ = 666
 

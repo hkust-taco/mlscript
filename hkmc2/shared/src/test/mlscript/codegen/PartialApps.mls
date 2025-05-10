@@ -156,12 +156,20 @@ data class C(a, b, c)
 2 |> (C(1, _, 3)) |> print
 //│ > C(1, 2, 3)
 
-:fixme
 2 |> {C(1, _, 3)} |> print
-//│ ╔══[PARSE ERROR] Expected end of input; found operator instead
-//│ ║  l.160: 	2 |> {C(1, _, 3)} |> print
-//│ ╙──       	                  ^^
+//│ > C(1, 2, 3)
+
+2 |> {C(1, _, 3)} !> print
+//│ > C(1, 2, 3)
 //│ = C(1, 2, 3)
+
+{2 |> {C(1, _, 3)}} !> print
+//│ > C(1, 2, 3)
+//│ = C(1, 2, 3)
+
+2 |> {C(1, _, 3)} !> {print(_)} |> {print(_)}
+//│ > C(1, 2, 3)
+//│ > C(1, 2, 3)
 
 (2 |> (new C(1, _, 3))) |> print
 //│ > C(1, 2, 3)
@@ -199,18 +207,18 @@ _ - _ of 1, 2
 :sjs
 1 . (_ - 2)
 //│ JS (unsanitized):
-//│ let lambda32; lambda32 = (undefined, function (_0) { return _0 - 2 }); Predef.passTo(1, lambda32)
+//│ let lambda37; lambda37 = (undefined, function (_0) { return _0 - 2 }); Predef.passTo(1, lambda37)
 //│ = [function]
 
 :sjs
 1 . (_ - 2)()
 //│ JS (unsanitized):
-//│ let tmp9, lambda33;
-//│ lambda33 = (undefined, function (_0) {
+//│ let tmp14, lambda38;
+//│ lambda38 = (undefined, function (_0) {
 //│   return _0 - 2
 //│ });
-//│ tmp9 = Predef.passTo(1, lambda33);
-//│ runtime.safeCall(tmp9())
+//│ tmp14 = Predef.passTo(1, lambda38);
+//│ runtime.safeCall(tmp14())
 //│ = -1
 
 1 . (_ - _)(2)
@@ -221,7 +229,7 @@ _ - _ of 1, 2
 :sjs
 let f = if _ then 1 else 0
 //│ JS (unsanitized):
-//│ let f15, tmp11; tmp11 = 1; f15 = tmp11;
+//│ let f15, tmp16; tmp16 = 1; f15 = tmp16;
 //│ f = 1
 
 
