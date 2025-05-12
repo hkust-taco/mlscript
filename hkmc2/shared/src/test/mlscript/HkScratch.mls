@@ -222,7 +222,13 @@ if 1 + 2
 //│ ╟── Note: the operator split starts here
 //│ ║  l.211: 	  * 3 then 0
 //│ ╙──       	  ^
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(OpApp(OpApp(IntLit(2),Ident(+),List(App(Ident(+),Tup(List(IntLit(4)))))),Ident(*),List(IntLit(3))),keyword 'then',IntLit(0)) (of class hkmc2.syntax.Tree$InfixApp)
+//│ ╔══[ERROR] Unexpected infix use of 'then' keyword here
+//│ ║  l.210: 	if 1 + 2
+//│ ║         	       ^
+//│ ║  l.211: 	  * 3 then 0
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.212: 	  + 4 then 0
+//│ ╙──       	^^^^^
 
 :todo
 :pt
@@ -264,10 +270,10 @@ if 1 + 2
   * 3 then 0
   then 0
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this operator split inner position
-//│ ║  l.265: 	  then 0
+//│ ║  l.271: 	  then 0
 //│ ║         	  ^^^^
 //│ ╟── Note: the operator split starts here
-//│ ║  l.264: 	  * 3 then 0
+//│ ║  l.270: 	  * 3 then 0
 //│ ╙──       	  ^
 //│ Parsed tree:
 //│ IfLike:
@@ -292,7 +298,11 @@ if 1 + 2
 //│             Error
 //│     kw = keyword 'then'
 //│     rhs = IntLit of 0
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(OpApp(IntLit(2),Ident(*),List(IntLit(3))),keyword 'then',IntLit(0)) (of class hkmc2.syntax.Tree$InfixApp)
+//│ ╔══[ERROR] Unexpected infix use of 'then' keyword here
+//│ ║  l.269: 	if 1 + 2
+//│ ║         	       ^
+//│ ║  l.270: 	  * 3 then 0
+//│ ╙──       	^^^^^^^^^^^^
 
 :todo
 :pt

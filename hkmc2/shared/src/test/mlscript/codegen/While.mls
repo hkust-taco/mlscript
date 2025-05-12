@@ -269,7 +269,12 @@ while print("Hello World"); false
 while { print("Hello World"), false }
   then 0(0)
   else 1
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',None,Block(List(App(Ident(print),Tup(List(StrLit(Hello World)))), BoolLit(false)))),keyword 'then',App(IntLit(0),Tup(List(IntLit(0))))) (of class hkmc2.syntax.Tree$InfixApp)
+//│ ╔══[ERROR] Unexpected infix use of 'then' keyword here
+//│ ║  l.269: 	while { print("Hello World"), false }
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  then 0(0)
+//│ ╙──       	^^^^^^^^^^^
+//│ ═══[ERROR] Illegal position for 'else' modifier.
 
 :fixme
 while
@@ -277,6 +282,13 @@ while
     false
   then 0(0)
   else 1
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',None,Block(List(App(Ident(print),Tup(List(StrLit(Hello World)))), BoolLit(false)))),keyword 'then',App(IntLit(0),Tup(List(IntLit(0))))) (of class hkmc2.syntax.Tree$InfixApp)
+//│ ╔══[ERROR] Unexpected infix use of 'then' keyword here
+//│ ║  l.281: 	    print("Hello World")
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    false
+//│ ║         	^^^^^^^^^
+//│ ║  l.283: 	  then 0(0)
+//│ ╙──       	^^^^^^^^^^^
+//│ ═══[ERROR] Illegal position for 'else' modifier.
 
 

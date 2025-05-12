@@ -1,8 +1,7 @@
 :js
 
 
-let rcd =
-  a: b: c: 1
+let rcd = a: b: c: 1
 //│ rcd = {a: {b: {c: 1}}}
 
 rcd.a.b.c
@@ -35,6 +34,19 @@ rcd
   .a.b
   .c
 //│ = 1
+
+:todo
+rcd
+.a
+//│ ╔══[PARSE ERROR] Expected an expression; found selector instead
+//│ ║  l.40: 	.a
+//│ ╙──      	^^
+//│ ╔══[PARSE ERROR] Expected end of input; found selector instead
+//│ ║  l.40: 	.a
+//│ ╙──      	^^
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.39: 	rcd
+//│ ╙──      	^^^
 
 
 let rcd =

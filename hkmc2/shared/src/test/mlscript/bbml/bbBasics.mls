@@ -127,7 +127,7 @@ let t = new Some(true) in t.Some#value
 :fixme
 :pe
 42.Some#value
-//│ ╔══[LEXICAL ERROR] Expect at least one digit after the  decimal point
+//│ ╔══[LEXICAL ERROR] Expected at least one digit after the  decimal point
 //│ ║  l.129: 	42.Some#value
 //│ ╙──       	   ^
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application).

@@ -79,7 +79,7 @@ enum Tree extends AutoLocated:
   case New(body: Opt[Tree], rft: Opt[Block])
   case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, kwLoc: Opt[Loc], split: Tree)
   case SplitPoint()
-  case OpSplit(lhs: Tree, ops_rhss: Ls[Tree]) // the rhss trees are expressions rooted in `SplitPoint`s
+  case OpSplit(lhs: Tree, ops_rhss: Ls[Tree]) // * the rhss trees are expressions rooted in `SplitPoint`s
   case Case(kwLoc: Opt[Loc], branches: Tree)
   case Region(name: Tree, body: Tree)
   case RegRef(reg: Tree, value: Tree)
@@ -92,7 +92,7 @@ enum Tree extends AutoLocated:
    *  operator splits in the UCS, the `lhs` of `OpSplit` has already been elaborated
    *  into a `Term`, so we need to embed `Term` into `Tree` using `Trm`. */
   case Trm(term: semantics.Term)
-
+  
   def splitOn(acc: Tree): Tree = this match
     case SplitPoint() => acc
     case Sel(pre, id) => Sel(pre.splitOn(acc), id)
@@ -101,6 +101,7 @@ enum Tree extends AutoLocated:
     case OpSplit(lhs, rhss) => OpSplit(lhs.splitOn(acc), rhss)
     case InfixApp(lhs, kw, rhs) => InfixApp(lhs.splitOn(acc), kw, rhs)
     case _: (Ident | Literal | Error) => acc
+    case _ => die
   
   def children: Ls[Located] = this match
     case _: Empty | _: Error | _: Ident | _: Literal | _: Under | _: Unt => Nil

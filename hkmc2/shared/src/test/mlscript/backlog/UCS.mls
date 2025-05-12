@@ -88,47 +88,15 @@ else
   1
 //│ ╔══[ERROR] The following branches are unreachable.
 //│ ╟── Because the previous split is full.
+//│ ║  l.85: 	if audits.has(1) === true do
+//│ ║        	   ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.86: 	  print("ok")
-//│ ║        	  ^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^
 //│ ║  l.87: 	else
 //│ ║        	^^^^
 //│ ║  l.88: 	  1
-//│ ╙──      	^^^
+//│ ╙──      	^^^^
 //│ = 1
-
-// ——— ——— ———
-
-// * Example confusing parses that should be fixed when we fix the parsing of operator splits
-
-if 1 + 0
-    == 0 then "X"
-    == 1 then "A"
-//│ = "A"
-
-if 1 + 1
-    * 2 == 4 then "X"
-    * 2 == 1 then "A"
-    |> id is r then r
-//│ ╔══[PARSE ERROR] Operator cannot be used inside this operator split
-//│ ║  l.107: 	    * 2 == 4 then "X"
-//│ ║         	        ^^
-//│ ╟── as it has lower precedence than the splitting operator here
-//│ ║  l.107: 	    * 2 == 4 then "X"
-//│ ╙──       	    ^
-//│ ╔══[PARSE ERROR] Unexpected literal in this operator split inner position
-//│ ║  l.107: 	    * 2 == 4 then "X"
-//│ ║         	           ^
-//│ ╟── Note: the operator split starts here
-//│ ║  l.107: 	    * 2 == 4 then "X"
-//│ ╙──       	    ^
-//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.107: 	    * 2 == 4 then "X"
-//│ ╙──       	           ^
-//│ ═══[ERROR] Unrecognized term split (reference term).
-//│ ╔══[ERROR] Unrecognized term split (integer literal).
-//│ ║  l.107: 	    * 2 == 4 then "X"
-//│ ╙──       	      ^
-//│ ═══[RUNTIME ERROR] Error: match error
 
 // ——— ——— ———
 
@@ -137,7 +105,7 @@ class Some(val v)
 Some(1) is
   Some of [process, rest] do "hi"
 //│ ╔══[ERROR] Unrecognized pattern (infix operator)
-//│ ║  l.136: 	  Some of [process, rest] do "hi"
+//│ ║  l.106: 	  Some of [process, rest] do "hi"
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^
 //│ = false
 
@@ -187,10 +155,10 @@ let foo =
   case
     Tuple(...elements) then elements
 //│ ╔══[ERROR] mismatched arity: expect 3, found 1
-//│ ║  l.187: 	    Tuple(...elements) then elements
+//│ ║  l.156: 	    Tuple(...elements) then elements
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern (spread)
-//│ ║  l.187: 	    Tuple(...elements) then elements
+//│ ║  l.156: 	    Tuple(...elements) then elements
 //│ ╙──       	             ^^^^^^^^
 //│ foo = [function]
 
@@ -208,20 +176,20 @@ fun foo(x) = if x is Foo.
   Bar then "Bar"
   Foo then "Foo"
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.206: 	fun foo(x) = if x is Foo.
+//│ ║  l.175: 	fun foo(x) = if x is Foo.
 //│ ║         	                     ^^^^
-//│ ║  l.207: 	  Bar then "Bar"
+//│ ║  l.176: 	  Bar then "Bar"
 //│ ╙──       	^^
 
 fun foo(x) = if x is Foo
   .Bar then "Bar"
   .Foo then "Foo"
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.215: 	fun foo(x) = if x is Foo
+//│ ║  l.184: 	fun foo(x) = if x is Foo
 //│ ║         	                     ^^^
-//│ ║  l.216: 	  .Bar then "Bar"
+//│ ║  l.185: 	  .Bar then "Bar"
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.217: 	  .Foo then "Foo"
+//│ ║  l.186: 	  .Foo then "Foo"
 //│ ╙──       	^^^^^^^^^^^^^^^^^
 
 // ——— ——— ———

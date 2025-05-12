@@ -38,15 +38,30 @@ fun map(xs, f) = xs.map((x, ...bs) => f(x))
 xs. map(x => x * 2). print()
 //│ > [4, 2, 0]
 
-:fixme
-:p
+// * Note: the RHS of `.` is a self-contained block, thus implicitly parenthesized.
+:sjs
+:e
+:re
+xs .
+  map(x => x * 2)
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.46: 	  map(x => x * 2)
+//│ ╙──      	     ^^^^^^^^^^^^
+//│ JS (unsanitized):
+//│ let tmp5, lambda4;
+//│ lambda4 = (undefined, function (x) {
+//│   return x * 2
+//│ });
+//│ tmp5 = map(lambda4);
+//│ Predef.passTo(xs, tmp5)
+//│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
+
+:e
+:re
 xs.
   map(x => x * 2)
-//│ ┊xs┊.┊→⟨┊map┊(⟨┊x┊ ┊=>┊ ┊x┊ ┊*┊ ┊2┊⟩)┊⟩←┊
-//│ Parsed:
-//│ 	OpApp(Ident(xs),Ident(.),List(Block(List(App(Ident(map),Tup(List(InfixApp(Tup(List(Ident(x))),keyword '=>',OpApp(Ident(x),Ident(*),List(IntLit(2)))))))))))
 //│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.44: 	  map(x => x * 2)
+//│ ║  l.62: 	  map(x => x * 2)
 //│ ╙──      	     ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 

@@ -56,7 +56,8 @@ object Elaborator:
     case NotInFunction
     case Forbidden
   
-  /** Context used to keep track of underscores representing lambda shorthands, eg `_ + 1`. */
+  /** Context used to keep track of underscores representing lambda shorthands, eg in `_ + 1`. */
+  // TODO: use TempSymbol instead of VarSymbol? (currently creates lot of problems)
   class UnderCtx(val unders: Opt[mutable.ArrayBuffer[VarSymbol]])
   
   case class Ctx(outer: OuterCtx, parent: Opt[Ctx], env: Map[Str, Ctx.Elem], 
@@ -318,7 +319,7 @@ extends Importer:
       case BracketKind.Curly =>
       case _ =>
         raise(ErrorReport(msg"Unsupported ${k.name} in this position" -> tree.toLoc :: Nil))
-      term(e) // not `subterm` as `e` could be an implicit underscores-lambda
+      term(e) // * not `subterm` as `e` could be a lambda shorthand
     case b: Block =>
       ctx.nestLocal.givenIn:
         block(b, hasResult = true)._1 match
@@ -470,6 +471,10 @@ extends Importer:
       scoped("ucs:normalized"):
         log(s"Normalized:\n${Split.display(nor)}")
       Term.IfLike(Keyword.`if`, des)(nor)
+    case InfixApp(lhs, Keyword.`then`, rhs) =>
+      raise:
+        ErrorReport(msg"Unexpected infix use of 'then' keyword here" -> tree.toLoc :: Nil)
+      Term.Error
     case OpApp(lhs, Ident("|"), rhs :: Nil) =>
       Term.CompType(subterm(lhs), subterm(rhs), true)
     case OpApp(lhs, Ident("&"), rhs :: Nil) =>
@@ -517,9 +522,7 @@ extends Importer:
       val ot = subterm(op, inAppPrefix = true)
       val rts = rhss.map(r => PlainFld(subterm(r)))
       Term.App(ot, Term.Tup(PlainFld(lt) :: rts)(Tree.DummyTup))(
-        Tree.DummyApp,
-        N,
-        sym)
+        Tree.DummyApp, N, sym)
     case SynthSel(pre, nme) =>
       val preTrm = subterm(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
@@ -714,7 +717,7 @@ extends Importer:
         raise(ErrorReport(msg"Illegal position for '_' placeholder." -> tree.toLoc :: Nil))
         Term.Error
       case S(unds) =>
-        val sym = VarSymbol(Ident("_" + unds.size)) // TODO: use TempSymbol instead?
+        val sym = VarSymbol(Ident("_" + unds.size))
         unds += sym
         sym.ref()
     case Annotated(lhs, rhs) =>
@@ -730,7 +733,7 @@ extends Importer:
     //   ???
   
   def arg(tree: Tree)(using UnderCtx): Ctxl[Term] = tree match
-    case u: Under => subterm(tree)
+    case u: Under => subterm(tree) // Note: currently `f(a, _, c)` is treated the same as `f of a, _, c`
     case _ => term(tree)
   def fld(tree: Tree)(using UnderCtx): Ctxl[Elem] = tree match
     case InfixApp(id: Ident, Keyword.`:`, rhs) =>
@@ -742,9 +745,6 @@ extends Importer:
     case Spread(Keyword.`...`, _, S(trm)) =>
       Spd(true, arg(trm))
     case _ =>
-      // val t = tree match
-      //   case u: Under => subterm(tree)
-      //   case _ => term(tree)
       val t = arg(tree)
       var flags = FldFlags.empty
       Fld(flags, t, N)

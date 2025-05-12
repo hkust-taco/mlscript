@@ -64,11 +64,14 @@ test @ (x) => x + 1
 test @ (_ + 1)
 //│ = 43
 
+test @ {_ + 1}
+//│ = 43
+
 test @
   _ + 1
 //│ = 43
 
-// Note: implicit function includes the whole term
+// * Note: this lambda shorthand includes the whole term, as `_ + 1` is not delimited/parenthesized
 test @ _ + 1
 //│ = [function]
 
@@ -98,8 +101,8 @@ pipeInto(1, _) @ inc
 :re
 1 pipeInto @ inc
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
-//│ ║  l.99: 	1 pipeInto @ inc
-//│ ╙──      	  ^^^^^^^^
+//│ ║  l.102: 	1 pipeInto @ inc
+//│ ╙──       	  ^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
 (1 pipeInto(_)) @ inc
@@ -123,7 +126,7 @@ inc @ 1 . pipeInto @ inc
 :fixme
 1 . pipeInto of inc
 //│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.124: 	1 . pipeInto of inc
+//│ ║  l.127: 	1 . pipeInto of inc
 //│ ╙──       	                ^^^
 //│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
 

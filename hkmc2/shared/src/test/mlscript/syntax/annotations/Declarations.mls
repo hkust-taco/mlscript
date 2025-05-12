@@ -65,7 +65,9 @@ module Foo with
 
 :w
 @(1 + 2) class Qux
-//│ ═══[WARNING] This annotation has no effect.
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.67: 	@(1 + 2) class Qux
+//│ ╙──      	  ^^^^^
 
 object inline
 
@@ -76,10 +78,10 @@ fun
   min(x, y) = if x < y then x else y
   max(x, y) = if x > y then x else y
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.74: 	@inline
+//│ ║  l.76: 	@inline
 //│ ╙──      	 ^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.74: 	@inline
+//│ ║  l.76: 	@inline
 //│ ╙──      	 ^^^^^^
 
 :w
@@ -87,22 +89,22 @@ fun
   abs(x) = if x < 0 then -x else x
   clamp(x, lo, hi) = min(max(x, lo), hi)
 //│ ╔══[WARNING] This annotation has no effect
-//│ ║  l.86: 	@inline let
+//│ ║  l.88: 	@inline let
 //│ ║        	 ^^^^^^
 //│ ╟── Annotations are not supported on let terms.
-//│ ║  l.87: 	  abs(x) = if x < 0 then -x else x
+//│ ║  l.89: 	  abs(x) = if x < 0 then -x else x
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect
-//│ ║  l.86: 	@inline let
+//│ ║  l.88: 	@inline let
 //│ ║        	 ^^^^^^
 //│ ╟── Annotations are not supported on let terms.
-//│ ║  l.88: 	  clamp(x, lo, hi) = min(max(x, lo), hi)
+//│ ║  l.90: 	  clamp(x, lo, hi) = min(max(x, lo), hi)
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.86: 	@inline let
+//│ ║  l.88: 	@inline let
 //│ ╙──      	 ^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.86: 	@inline let
+//│ ║  l.88: 	@inline let
 //│ ╙──      	 ^^^^^^
 //│ abs = [function abs]
 //│ clamp = [function clamp]
@@ -113,13 +115,13 @@ let
   @inline success = 0
   failure = 1
 //│ ╔══[WARNING] This annotation has no effect
-//│ ║  l.113: 	  @inline success = 0
+//│ ║  l.115: 	  @inline success = 0
 //│ ║         	   ^^^^^^
 //│ ╟── Annotations are not supported on let terms.
-//│ ║  l.113: 	  @inline success = 0
+//│ ║  l.115: 	  @inline success = 0
 //│ ╙──       	          ^^^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.113: 	  @inline success = 0
+//│ ║  l.115: 	  @inline success = 0
 //│ ╙──       	   ^^^^^^
 //│ failure = 1
 //│ success = 0
@@ -131,10 +133,10 @@ let
 @inline @tailrec fun fib(n) =
   if n < 2 then n else fib(n - 1) + fib(n - 2)
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.131: 	@inline @tailrec fun fib(n) =
+//│ ║  l.133: 	@inline @tailrec fun fib(n) =
 //│ ╙──       	 ^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.131: 	@inline @tailrec fun fib(n) =
+//│ ║  l.133: 	@inline @tailrec fun fib(n) =
 //│ ╙──       	         ^^^^^^^
 
 object internal
@@ -146,16 +148,16 @@ object internal
   transient
   volatile
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.143: 	@internal object
+//│ ║  l.145: 	@internal object
 //│ ╙──       	 ^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.143: 	@internal object
+//│ ║  l.145: 	@internal object
 //│ ╙──       	 ^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.143: 	@internal object
+//│ ║  l.145: 	@internal object
 //│ ╙──       	 ^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.143: 	@internal object
+//│ ║  l.145: 	@internal object
 //│ ╙──       	 ^^^^^^^^
 
 :w
@@ -165,67 +167,67 @@ object internal
   @volatile @transient empty = ""
   normal = ()
 //│ ╔══[WARNING] This annotation has no effect
-//│ ║  l.162: 	@volatile let
+//│ ║  l.164: 	@volatile let
 //│ ║         	 ^^^^^^^^^^^^
-//│ ║  l.163: 	  @shared counter = 0
+//│ ║  l.165: 	  @shared counter = 0
 //│ ║         	^^^^^^^^^
 //│ ╟── Annotations are not supported on let terms.
-//│ ║  l.163: 	  @shared counter = 0
+//│ ║  l.165: 	  @shared counter = 0
 //│ ╙──       	          ^^^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect
-//│ ║  l.162: 	@volatile let
+//│ ║  l.164: 	@volatile let
 //│ ║         	 ^^^^^^^^^^^^
-//│ ║  l.163: 	  @shared counter = 0
+//│ ║  l.165: 	  @shared counter = 0
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.164: 	  @transient @thread_local cache = ()
+//│ ║  l.166: 	  @transient @thread_local cache = ()
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Annotations are not supported on let terms.
-//│ ║  l.164: 	  @transient @thread_local cache = ()
+//│ ║  l.166: 	  @transient @thread_local cache = ()
 //│ ╙──       	                           ^^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect
-//│ ║  l.162: 	@volatile let
+//│ ║  l.164: 	@volatile let
 //│ ║         	 ^^^^^^^^^^^^
-//│ ║  l.163: 	  @shared counter = 0
+//│ ║  l.165: 	  @shared counter = 0
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.164: 	  @transient @thread_local cache = ()
+//│ ║  l.166: 	  @transient @thread_local cache = ()
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.165: 	  @volatile @transient empty = ""
+//│ ║  l.167: 	  @volatile @transient empty = ""
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Annotations are not supported on let terms.
-//│ ║  l.165: 	  @volatile @transient empty = ""
+//│ ║  l.167: 	  @volatile @transient empty = ""
 //│ ╙──       	                       ^^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect
-//│ ║  l.162: 	@volatile let
+//│ ║  l.164: 	@volatile let
 //│ ║         	 ^^^^^^^^
 //│ ╟── Annotations are not supported on let terms.
-//│ ║  l.166: 	  normal = ()
+//│ ║  l.168: 	  normal = ()
 //│ ╙──       	  ^^^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.162: 	@volatile let
+//│ ║  l.164: 	@volatile let
 //│ ╙──       	 ^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.163: 	  @shared counter = 0
+//│ ║  l.165: 	  @shared counter = 0
 //│ ╙──       	   ^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.162: 	@volatile let
+//│ ║  l.164: 	@volatile let
 //│ ╙──       	 ^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.164: 	  @transient @thread_local cache = ()
+//│ ║  l.166: 	  @transient @thread_local cache = ()
 //│ ╙──       	   ^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.164: 	  @transient @thread_local cache = ()
+//│ ║  l.166: 	  @transient @thread_local cache = ()
 //│ ╙──       	              ^^^^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.162: 	@volatile let
+//│ ║  l.164: 	@volatile let
 //│ ╙──       	 ^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.165: 	  @volatile @transient empty = ""
+//│ ║  l.167: 	  @volatile @transient empty = ""
 //│ ╙──       	   ^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.165: 	  @volatile @transient empty = ""
+//│ ║  l.167: 	  @volatile @transient empty = ""
 //│ ╙──       	             ^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.162: 	@volatile let
+//│ ║  l.164: 	@volatile let
 //│ ╙──       	 ^^^^^^^^
 //│ cache = ()
 //│ counter = 0
