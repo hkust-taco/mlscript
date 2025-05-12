@@ -125,13 +125,13 @@ fun f(x, y, b) =
     Some(xv) and b then xv + b
     _ then "roll"
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found 'is' keyword instead
-//│ ║  l.124: 	      is None then "bruh"
+//│ ║  l.136: 	      is None then "bruh"
 //│ ╙──       	      ^^
 //│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.124: 	      is None then "bruh"
+//│ ║  l.136: 	      is None then "bruh"
 //│ ╙──       	         ^^^^
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.124: 	      is None then "bruh"
+//│ ║  l.136: 	      is None then "bruh"
 //│ ╙──       	         ^^^^
 
 :fixme
@@ -143,13 +143,13 @@ fun g(x, y, b) =
     Some(xv) and b then xv + b
     _ then "roll"
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found 'is' keyword instead
-//│ ║  l.142: 	      is None then "bruh"
+//│ ║  l.154: 	      is None then "bruh"
 //│ ╙──       	      ^^
 //│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.142: 	      is None then "bruh"
+//│ ║  l.154: 	      is None then "bruh"
 //│ ╙──       	         ^^^^
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.142: 	      is None then "bruh"
+//│ ║  l.154: 	      is None then "bruh"
 //│ ╙──       	         ^^^^
 
 
@@ -212,9 +212,9 @@ fun f(x) =
     0 ::
       Nil() then "oh"
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.212: 	    0 ::
+//│ ║  l.224: 	    0 ::
 //│ ║         	    ^^^^
-//│ ║  l.213: 	      Nil() then "oh"
+//│ ║  l.225: 	      Nil() then "oh"
 //│ ╙──       	^^^^^^
 
 

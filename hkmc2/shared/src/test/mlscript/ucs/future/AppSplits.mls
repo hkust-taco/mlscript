@@ -5,12 +5,17 @@
 fun foo(x) = x > 1
 
 :todo
-:pe
 :e
 if foo of
   0 then "a"
   1 then "b"
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IntLit(0),keyword 'then',StrLit(a)) (of class hkmc2.syntax.Tree$InfixApp)
+//│ ╔══[ERROR] Unrecognized term split (application).
+//│ ║  l.9: 	if foo of
+//│ ║       	   ^^^^^^
+//│ ║  l.10: 	  0 then "a"
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.11: 	  1 then "b"
+//│ ╙──      	^^^^^^^^^^^^
 
 :todo
 :pe
@@ -19,12 +24,12 @@ if foo of 1,
   0 then "a"
   1 then "b"
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.19: 	  0 then "a"
+//│ ║  l.24: 	  0 then "a"
 //│ ╙──      	  ^
 //│ ╔══[ERROR] Unrecognized term split (juxtaposition).
-//│ ║  l.18: 	if foo of 1,
+//│ ║  l.23: 	if foo of 1,
 //│ ║        	   ^^^^^^^^^
-//│ ║  l.19: 	  0 then "a"
+//│ ║  l.24: 	  0 then "a"
 //│ ╙──      	^^
 
 :todo
@@ -34,9 +39,9 @@ if foo
   (0) then "a"
   (1) then "b"
 //│ ╔══[ERROR] Unrecognized term split (juxtaposition).
-//│ ║  l.33: 	if foo
+//│ ║  l.38: 	if foo
 //│ ║        	   ^^^
-//│ ║  l.34: 	  (0) then "a"
+//│ ║  l.39: 	  (0) then "a"
 //│ ╙──      	^^
 
 

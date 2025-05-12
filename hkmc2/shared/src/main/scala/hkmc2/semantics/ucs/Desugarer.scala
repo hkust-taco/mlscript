@@ -176,6 +176,35 @@ class Desugarer(val elaborator: Elaborator)(using UnderCtx)
             nominate(ctx, term(coda)(using ctx)):
               expandMatch(_, pat, sequel)(fallback)
       expandMatch(scrutSymbol, headPattern, tailSplit)(fallback)
+  
+  def termSplit(trees: Ls[Tree], finish: Term => Term): Split => Sequel =
+    trees.foldRight(default): (t, elabFallback) =>
+      t match
+      case LetLike(`let`, ident @ Ident(_), N, N) => ???
+      case LetLike(`let`, ident @ Ident(_), S(termTree), N) => fallback => ctx => trace(
+        pre = s"termSplit: let ${ident.name} = $termTree",
+        post = (res: Split) => s"termSplit: let >>> $res"
+      ):
+        val sym = VarSymbol(ident)
+        val fallbackCtx = ctx + (ident.name -> sym)
+        Split.Let(sym, term(termTree)(using ctx), elabFallback(fallback)(fallbackCtx)).withLocOf(t)
+      case Modified(Keyword.`do`, doLoc, computation) => fallback => ctx => trace(
+        pre = s"termSplit: do $computation",
+        post = (res: Split) => s"termSplit: else >>> $res"
+      ):
+        val sym = TempSymbol(N, "doTemp")
+        Split.Let(sym, term(computation)(using ctx), elabFallback(fallback)(ctx)).withLocOf(t)
+      case Modified(Keyword.`else`, elsLoc, default) => fallback => ctx => trace(
+        pre = s"termSplit: else $default",
+        post = (res: Split) => s"termSplit: else >>> $res"
+      ):
+        // TODO: report `rest` as unreachable
+        Split.default(term(default)(using ctx)).withLocOf(t)
+      case branch => fallback => ctx => trace(
+        pre = s"termSplit: $branch",
+        post = (res: Split) => s"termSplit >>> $res"
+      ):
+        termSplit(branch, finish)(elabFallback(fallback)(ctx))(ctx)
 
   /** Desugar a _term split_ (TS) into a _split_ of core abstract syntax.
    *  @param tree the tree representing the term split.
@@ -187,34 +216,7 @@ class Desugarer(val elaborator: Elaborator)(using UnderCtx)
   def termSplit(tree: Tree, finish: Term => Term): Split => Sequel =
     log(s"termSplit: $tree")
     tree match
-    case blk: Block =>
-      blk.desugStmts.foldRight(default): (t, elabFallback) =>
-        t match
-        case LetLike(`let`, ident @ Ident(_), N, N) => ???
-        case LetLike(`let`, ident @ Ident(_), S(termTree), N) => fallback => ctx => trace(
-          pre = s"termSplit: let ${ident.name} = $termTree",
-          post = (res: Split) => s"termSplit: let >>> $res"
-        ):
-          val sym = VarSymbol(ident)
-          val fallbackCtx = ctx + (ident.name -> sym)
-          Split.Let(sym, term(termTree)(using ctx), elabFallback(fallback)(fallbackCtx)).withLocOf(t)
-        case Modified(Keyword.`do`, doLoc, computation) => fallback => ctx => trace(
-          pre = s"termSplit: do $computation",
-          post = (res: Split) => s"termSplit: else >>> $res"
-        ):
-          val sym = TempSymbol(N, "doTemp")
-          Split.Let(sym, term(computation)(using ctx), elabFallback(fallback)(ctx)).withLocOf(t)
-        case Modified(Keyword.`else`, elsLoc, default) => fallback => ctx => trace(
-          pre = s"termSplit: else $default",
-          post = (res: Split) => s"termSplit: else >>> $res"
-        ):
-          // TODO: report `rest` as unreachable
-          Split.default(term(default)(using ctx)).withLocOf(t)
-        case branch => fallback => ctx => trace(
-          pre = s"termSplit: $branch",
-          post = (res: Split) => s"termSplit >>> $res"
-        ):
-          termSplit(branch, finish)(elabFallback(fallback)(ctx))(ctx).withLocOf(t)
+    case blk: Block => termSplit(blk.desugStmts, finish)
     case coda is rhs => fallback => ctx =>
       nominate(ctx, finish(term(coda)(using ctx))):
         patternSplit(rhs, _)(fallback)
@@ -246,6 +248,7 @@ class Desugarer(val elaborator: Elaborator)(using UnderCtx)
         ):
           nominate(ctx, finish(term(headCoda)(using ctx))):
             expandMatch(_, headPattern, tailSplit)(fallback)
+    // Handle binary operators.
     case tree @ OpApp(lhs, opIdent @ Ident(opName), rhss) => fallback => ctx => trace(
       pre = s"termSplit: after op <<< $opName",
       post = (res: Split) => s"termSplit: after op >>> $res"
@@ -261,35 +264,10 @@ class Desugarer(val elaborator: Elaborator)(using UnderCtx)
           val arguments = Term.Tup(first :: second :: Nil)(Tree.DummyTup)
           val joint = FlowSymbol("‹applied-result›")
           Term.App(opRef, arguments)(Tree.DummyApp, N, joint)
-        rhss match
-        case rhs :: Nil => termSplit(rhs, finishInner)(fallback)
-        case _ => ???
-    case tree @ App(opIdent @ Ident(opName), rawTup @ Tup(lhs :: rhs :: Nil)) => fallback => ctx => trace(
-      pre = s"termSplit: after op <<< $opName",
-      post = (res: Split) => s"termSplit: after op >>> $res"
-    ):
-      // Resolve the operator.
-      val opRef = term(opIdent)
-      // Elaborate and finish the LHS. Nominate the LHS if necessary.
-      nominate(ctx, finish(term(lhs)(using ctx))): lhsSymbol =>
-        // Compose a function that takes the RHS and finishes the application.
-        val finishInner = (rhsTerm: Term) =>
-          val first = Fld(FldFlags.empty, lhsSymbol.ref(/* FIXME ident? */), N)
-          val second = Fld(FldFlags.empty, rhsTerm, N)
-          val arguments = Term.Tup(first :: second :: Nil)(rawTup)
-          val joint = FlowSymbol("‹applied-result›")
-          Term.App(opRef, arguments)(tree, N, joint)
-        termSplit(rhs, finishInner)(fallback)
+        termSplit(rhss, finishInner)(fallback)
     // Handle operator splits.
     case tree @ OpSplit(lhs, rhss) => fallback => ctx =>
       nominate(ctx, finish(term(lhs)(using ctx))): vs =>
-        val mkInnerFinish = (op: Term) => (rhsTerm: Term) =>
-          val first = Fld(FldFlags.empty, vs.ref(/* FIXME ident? */), N)
-          val second = Fld(FldFlags.empty, rhsTerm, N)
-          val rawTup = Tup(lhs :: Nil): Tup // <-- loc might be wrong
-          val arguments = Term.Tup(first :: second :: Nil)(rawTup)
-          val joint = FlowSymbol("‹applied-result›")
-          Term.App(op, arguments)(Tree.DummyApp, N, joint)
         rhss.foldRight(Function.const(fallback): Sequel): (branch, elabFallback) =>
           branch match
           case LetLike(`let`, pat, termTree, N) => ctx =>
