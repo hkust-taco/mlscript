@@ -46,6 +46,7 @@ final case class BbCtx(
   def getRegEnv: Type = outVar match
     case S(v) => v | outRegAcc
     case N => outRegAcc
+  def isTopLevel = parent.isEmpty
   
 
 given (using ctx: BbCtx): Raise = ctx.raise
@@ -283,7 +284,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         val funTy = tryMkMono(res, lam)
         given CCtx = CCtx.init(lam, N)
         constrain(funTy, funTyV)(using ctx)
-        pctx += sym -> PolyType.generalize(funTy, S(outer), 1)
+        if pctx.isTopLevel then // only generalize top-level definitions
+          pctx += sym -> PolyType.generalize(funTy, S(outer), 1)
     case _ => error(msg"Function definition shape not yet supported for ${sym.nme}" -> lam.toLoc :: Nil)
 
   private def typeSplit
