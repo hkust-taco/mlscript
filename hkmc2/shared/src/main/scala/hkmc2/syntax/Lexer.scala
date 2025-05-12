@@ -600,7 +600,7 @@ object Lexer:
   def printToken(tl: TokLoc): Str = tl match
     case (SPACE, _) => " "
     case (COMMA, _) => ","
-    case (SEMI, _) => ";"
+    // case (SEMI, _) => ";"
     case (NEWLINE, _) => "↵"
     case (INDENT, _) => "→"
     case (DEINDENT, _) => "←"

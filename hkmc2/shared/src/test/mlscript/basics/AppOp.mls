@@ -122,13 +122,9 @@ inc @ 1 . pipeInto @ inc
 //│ = 3
 
 
-// * Maybe `of` shouldn't have more binding power than `.`
-:fixme
+// * Now `of` has the same left-binding power as normal application
 1 . pipeInto of inc
-//│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.127: 	1 . pipeInto of inc
-//│ ╙──       	                ^^^
-//│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
+//│ = 2
 
 (1 . pipeInto) of inc
 //│ = 2

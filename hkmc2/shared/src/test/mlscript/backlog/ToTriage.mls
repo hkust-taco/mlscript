@@ -126,30 +126,6 @@ Test.Infinity
 
 // ——— ——— ———
 
-fun f(a)(b) = [a, b]
-fun g(a, b) = [a, b]
-
-// TODO support?
-:pe
-f of
-    g of
-      1
-      2
-  of 3
-//│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.138: 	  of 3
-//│ ╙──       	^^
-//│ = [function]
-
-(f of
-  g of
-    1
-    2
-) of 3
-//│ = [[1, 2], 3]
-
-// ——— ——— ———
-
 fun p: Int
 
 :fixme // make this a proper error
@@ -210,7 +186,7 @@ data object Cls(x) with
 :e
 Cls.x
 //│ ╔══[ERROR] Object 'Cls' does not contain member 'x'
-//│ ║  l.211: 	Cls.x
+//│ ║  l.187: 	Cls.x
 //│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
@@ -228,7 +204,7 @@ c.x
 
 class Foo' with
   class Bar'
-//│ > let Foo$_1;try { Foo$_1 = class Foo$_ {   constructor() {     this.Bar' = class Bar$_ {       constructor() {}       toString() { return "Bar'"; }     };   }   toString() { return "Foo'"; } }; block$res30 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ > let Foo$_1;try { Foo$_1 = class Foo$_ {   constructor() {     this.Bar' = class Bar$_ {       constructor() {}       toString() { return "Bar'"; }     };   }   toString() { return "Foo'"; } }; block$res27 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ >                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string
 
@@ -238,15 +214,15 @@ module Example with
 // whoops
   val a = this
 //│ ╔══[PARSE ERROR] Expected block after type declaration body; found new line instead
-//│ ║  l.237: 	module Example with
+//│ ║  l.213: 	module Example with
 //│ ║         	                   ^
-//│ ║  l.238: 	// whoops
+//│ ║  l.214: 	// whoops
 //│ ╙──       	
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.239: 	  val a = this
+//│ ║  l.215: 	  val a = this
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.239: 	  val a = this
+//│ ║  l.215: 	  val a = this
 //│ ╙──       	^^
 
 // ——— ——— ———
@@ -254,7 +230,7 @@ module Example with
 :fixme // ("Not in scope" error)
 let xs = new Oopsie
 //│ ╔══[ERROR] Name not found: Oopsie
-//│ ║  l.255: 	let xs = new Oopsie
+//│ ║  l.231: 	let xs = new Oopsie
 //│ ╙──       	             ^^^^^^
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: xs (class hkmc2.semantics.VarSymbol)
 
@@ -317,9 +293,9 @@ fun bar() = baz
 //│   return 1
 //│ };
 //│ bar = function bar() {
-//│   let tmp9;
-//│   tmp9 = baz();
-//│   return tmp9
+//│   let tmp6;
+//│   tmp6 = baz();
+//│   return tmp6
 //│ };
 
 // ——— ——— ———
@@ -328,20 +304,14 @@ import "../../mlscript-compile/Stack.mls"
 
 // The parser rejects this, but it should be allowed.
 open Stack { ::, Nil }
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found comma instead
-//│ ║  l.330: 	open Stack { ::, Nil }
-//│ ╙──       	               ^
 //│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.330: 	open Stack { ::, Nil }
-//│ ╙──       	     ^^^^^^^^^^^
-//│ ╔══[ERROR] Name not found: Nil
-//│ ║  l.330: 	open Stack { ::, Nil }
-//│ ╙──       	                 ^^^
+//│ ║  l.306: 	open Stack { ::, Nil }
+//│ ╙──       	     ^^^^^^^^^^^^^^^
 
 // Instead, if we parenthesize the operator, it is rejected by the elaborator.
 open Stack { (::), Nil }
 //│ ╔══[ERROR] Illegal 'open' statement element.
-//│ ║  l.342: 	open Stack { (::), Nil }
+//│ ║  l.312: 	open Stack { (::), Nil }
 //│ ╙──       	             ^^^^
 
 open Stack { Nil, :: }
@@ -349,7 +319,7 @@ open Stack { Nil, :: }
 :sjs
 1 :: Nil
 //│ ╔══[ERROR] Module 'Stack' does not contain member '::'
-//│ ║  l.350: 	1 :: Nil
+//│ ║  l.320: 	1 :: Nil
 //│ ╙──       	  ^^
 //│ JS (unsanitized):
 //│ Stack["::"](1, Stack.Nil)
@@ -360,9 +330,9 @@ open Stack { Nil, :: }
 mkStr of ... // hello
 "oops"
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found new line instead
-//│ ║  l.360: 	mkStr of ... // hello
+//│ ║  l.330: 	mkStr of ... // hello
 //│ ║         	                     ^
-//│ ║  l.361: 	"oops"
+//│ ║  l.331: 	"oops"
 //│ ╙──       	
 //│ = "oops"
 
@@ -384,31 +354,31 @@ Foo(1, 2, 3).args
 :todo
 if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.385: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.355: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                   ^^^^^^^^^^^^
 //│ ╔══[ERROR] Name not found: args
-//│ ║  l.385: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.355: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                                     ^^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╔══[ERROR] the constructor does not take any arguments but found 3
-//│ ║  l.394: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.364: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                   ^^^^^^^^^^^^
 //│ ╔══[ERROR] Name not found: a
-//│ ║  l.394: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.364: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                                      ^
 //│ ╔══[ERROR] Name not found: b
-//│ ║  l.394: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.364: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                                         ^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.406: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ║  l.376: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                   ^^^^^^^^
 //│ ╔══[ERROR] Name not found: arg
-//│ ║  l.406: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ║  l.376: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                                 ^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 

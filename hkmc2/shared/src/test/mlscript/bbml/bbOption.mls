@@ -15,33 +15,13 @@ opt => opt.Option#inspect(
 )
 //│ Type: (Option[out Int]) ->{⊥} Int
 
-:fixme // properly parse `#`
 opt => opt.Option#inspect of () => 42, n => n + 1
-//│ ╔══[ERROR] Name not found: #
-//│ ║  l.19: 	opt => opt.Option#inspect of () => 42, n => n + 1
-//│ ╙──      	                 ^
-//│ ╔══[ERROR] Name not found: inspect
-//│ ║  l.19: 	opt => opt.Option#inspect of () => 42, n => n + 1
-//│ ╙──      	                  ^^^^^^^
-//│ ╔══[ERROR] Term shape not yet supported by BbML: Sel(Ref(opt),Ident(Option))
-//│ ║  l.19: 	opt => opt.Option#inspect of () => 42, n => n + 1
-//│ ╙──      	       ^^^^^^^^^^
-//│ Type: (⊤) ->{⊥} ⊥
+//│ Type: (Option[out Int]) ->{⊥} Int
 
-:fixme // properly parse `#`
 opt => opt.Option#inspect of
   () => 42
   n => n + 1
-//│ ╔══[ERROR] Name not found: #
-//│ ║  l.32: 	opt => opt.Option#inspect of
-//│ ╙──      	                 ^
-//│ ╔══[ERROR] Name not found: inspect
-//│ ║  l.32: 	opt => opt.Option#inspect of
-//│ ╙──      	                  ^^^^^^^
-//│ ╔══[ERROR] Term shape not yet supported by BbML: Sel(Ref(opt),Ident(Option))
-//│ ║  l.32: 	opt => opt.Option#inspect of
-//│ ╙──      	       ^^^^^^^^^^
-//│ Type: (⊤) ->{⊥} ⊥
+//│ Type: (Option[out Int]) ->{⊥} Int
 
 
 opt => opt as Option[out Int]
