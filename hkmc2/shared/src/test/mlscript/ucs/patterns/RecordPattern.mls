@@ -83,4 +83,63 @@ let f = case
 f(a: 1)
 //│ = 1
 
+import "../../../mlscript-compile/Option.mls"
+import "../../../mlscript-compile/Stack.mls"
 
+open Option { Some, None }
+open Stack
+
+Some(42) is { value: 42 }
+//│ = true
+
+1 :: 2 :: 3 :: Nil is { tail: { tail: Nil } }
+//│ = false
+
+1 :: 2 :: 3 :: Nil is { tail: { tail: _ } }
+//│ = true
+
+1 :: 2 :: 3 :: Nil is { tail: { tail: { tail: Nil } } }
+//│ = true
+
+1 :: 2 :: 3 :: Nil is { head: 42 }
+//│ = false
+
+fun pairwise(xs) = if xs is
+  { head: a, tail: { head: b, tail: xs' } } then [a, b] :: pairwise(xs')
+  else Nil
+
+pairwise(49)
+//│ = Nil
+
+pairwise("hello" :: "world" :: "bonjour" :: "le monde" :: Nil)
+//│ = Cons(["hello", "world"], Cons(["bonjour", "le monde"], Nil))
+
+pairwise(1 :: 2 :: 3 :: Nil)
+//│ = Cons([1, 2], Nil)
+
+fun foo(xs) = if xs is
+  { tail: { tail: { tail: _ } } } then "at least three of them"
+  { tail: { tail: Nil } } then "there are two of them"
+  { tail: Nil } then "only one left"
+  else "yeah we're done"
+
+foo(Nil)
+//│ = "yeah we're done"
+
+foo(999)
+//│ = "yeah we're done"
+
+foo(1 :: Nil)
+//│ = "only one left"
+
+foo(1 :: "this is invalid")
+//│ = "yeah we're done"
+
+foo(1 :: 2 :: Nil)
+//│ = "there are two of them"
+
+foo(1 :: 2 :: 4 :: Nil)
+//│ = "at least three of them"
+
+foo(1 :: 2 :: 4 :: 8 :: Nil)
+//│ = "at least three of them"
