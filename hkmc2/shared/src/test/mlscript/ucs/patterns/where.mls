@@ -34,3 +34,27 @@ foo(Pair(0, 4))
 
 foo(Pair(4, 0))
 //│ = false
+
+
+fun bar(p) = p is
+    (Pair(a, b) where a > b) | Int
+
+bar(4)
+//│ = true
+
+bar(Pair(4, 5))
+//│ = false
+
+bar(Pair(4, 3))
+//│ = true
+
+:e
+fun baz(p) = p is
+    (Pair(a, b) | Int) where a > b
+//│ ╔══[ERROR] Name not found: a
+//│ ║  l.53: 	    (Pair(a, b) | Int) where a > b
+//│ ╙──      	                             ^
+//│ ╔══[ERROR] Name not found: b
+//│ ║  l.53: 	    (Pair(a, b) | Int) where a > b
+//│ ╙──      	                                 ^
+
