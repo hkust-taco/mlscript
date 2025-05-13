@@ -1,0 +1,36 @@
+:js
+
+
+object A
+object B
+
+if A is
+    A & A & B then 0
+    B & A & B then 1
+    A & A & A then 2
+    else 3
+//│ = 2
+
+:e
+if A is
+    A & A & B then 0
+    B & A & B then 1
+    A & A & A then 2
+    else 3
+//│ = 2
+//│ FAILURE: Unexpected lack of type error
+
+:sjs
+:todo
+if A is
+    A & y then y
+    else 0
+//│ ╔══[ERROR] The following branches are unreachable.
+//│ ║  l.27: 	    else 0
+//│ ║        	         ^
+//│ ╟── Because the previous split is full.
+//│ ║  l.26: 	    A & y then y
+//│ ╙──      	               ^
+//│ JS (unsanitized):
+//│ let scrut2, y; scrut2 = A1; if (scrut2 instanceof A1.class) { y = scrut2; y } else { 0 }
+//│ = A

@@ -181,8 +181,7 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
         Split.Else(default)
       case Split.End => Split.End
     rec(split)
-  
-  // TODO : update documentation
+
   /**
     * Specialize `split` with the assumption that `scrutinee` matches `pattern`.
     * If `mode` is `+`, the function _keeps_ branches that agree on
