@@ -110,7 +110,7 @@ class Desugarer(val elaborator: Elaborator)
       val data = subScrutineeMap.getOrElseUpdate(symbol, new ScrutineeData)
       data.tupleLast.getOrElseUpdate(index, TempSymbol(N, s"last$index"))
     def getFieldScrutinee(fieldName: Ident): BlockLocalSymbol =
-      fieldScrutineeMap
+      subScrutineeMap
         .getOrElseUpdate(symbol, new ScrutineeData)
         .fields
         .getOrElseUpdate(fieldName, TempSymbol(N, s"field${fieldName.name}"))
@@ -616,14 +616,14 @@ class Desugarer(val elaborator: Elaborator)
         Branch(
           ref,
           Pattern.Record((fieldName, symbol) :: Nil),
-          expandMatch(symbol, pat, sequel)(fallback)(ctx)
+          subMatches((R(symbol), pat) :: Nil, sequel)(Split.End)(ctx)
         ) ~: fallback
       case Pun(false, fieldName) => fallback => ctx =>
         val symbol = scrutSymbol.getFieldScrutinee(fieldName)
         Branch(
           ref,
           Pattern.Record((fieldName, symbol) :: Nil),
-          expandMatch(symbol, fieldName, sequel)(fallback)(ctx)
+          subMatches((R(symbol), fieldName) :: Nil, sequel)(Split.End)(ctx)
         ) ~: fallback
       case Block(st :: Nil) => fallback => ctx =>
         expandMatch(scrutSymbol, st, sequel)(fallback)(ctx)

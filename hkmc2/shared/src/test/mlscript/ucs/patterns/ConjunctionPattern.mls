@@ -15,14 +15,12 @@ if A is
     else 3
 //│ = 2
 
-:e
 if A is
     A & A & B then 0
     B & A & B then 1
     A & A & A then 2
     else 3
 //│ = 2
-//│ FAILURE: Unexpected lack of type error
 
 :sjs
 fun foo(v) =
@@ -52,46 +50,71 @@ suffixes(range(0, 0))
 if 5 is a & b & c then a+b+c
 //│ = 15
 
-:e
+
 fun foo(x) = if x is
     {a:_ & a} & C and
         a is 1 then 10
         a is 2 then 20
         else 30
     else 40
-//│ ╔══[ERROR] The following branches are unreachable.
-//│ ║  l.61: 	    else 40
-//│ ║        	         ^^
-//│ ╟── Because the previous split is full.
-//│ ║  l.57: 	    {a:_ & a} & C and
-//│ ║        	                ^^^^^
-//│ ║  l.58: 	        a is 1 then 10
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.59: 	        a is 2 then 20
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.60: 	        else 30
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.61: 	    else 40
-//│ ╙──      	^^^^^^^^^^^
 
 foo(C(1))
-//│ = 40
+//│ = 10
 
 foo(4)
 //│ = 40
 
-:ucs desugared
-:ucs normalized
-C(1) is C & {:a}
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: ++ (Desugarer.scala:95)
-//│ ╔══[ERROR] The following branches are unreachable.
-//│ ╙── Because the previous split is full.
-//│ Normalized:
-//│ >  if
-//│ >    let $scrut = member:C#666(1)
-//│ >    $scrut is C and
-//│ >      let a = $scrut#1
-//│ >      else true
-//│ >    else false
-//│ = true
+foo(C(2))
+//│ = 20
+
+foo(C("a"))
+//│ = 30
+
+:pt
+if C(1) is {:a} & C then a
+//│ Parsed tree:
+//│ IfLike:
+//│   kw = keyword 'if'
+//│   kwLoc = N
+//│   split = InfixApp:
+//│     lhs = InfixApp:
+//│       lhs = App:
+//│         lhs = Ident of "C"
+//│         rhs = Tup of Ls of 
+//│           IntLit of 1
+//│       kw = keyword 'is'
+//│       rhs = App:
+//│         lhs = Ident of "&"
+//│         rhs = Tup of Ls of 
+//│           Block of Ls of 
+//│             Pun:
+//│               eql = false
+//│               id = Ident of "a"
+//│           Ident of "C"
+//│     kw = keyword 'then'
+//│     rhs = Ident of "a"
+//│ = 1
+
+:todo // parser does not recognize the pun??
+:pt
+if C(1) is C & {:a} then a
+//│ Parsed tree:
+//│ IfLike:
+//│   kw = keyword 'if'
+//│   kwLoc = N
+//│   split = InfixApp:
+//│     lhs = InfixApp:
+//│       lhs = App:
+//│         lhs = Ident of "C"
+//│         rhs = Tup of Ls of 
+//│           IntLit of 1
+//│       kw = keyword 'is'
+//│       rhs = App:
+//│         lhs = Ident of "&"
+//│         rhs = Tup of Ls of 
+//│           Ident of "C"
+//│           Block of Ls of 
+//│             Ident of "a"
+//│     kw = keyword 'then'
+//│     rhs = Ident of "a"
+//│ = C(1)

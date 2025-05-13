@@ -6,6 +6,7 @@ import mlscript.utils.*, shorthands.*
 import syntax.{Literal, Tree}, utils.TraceLogger
 import Message.MessageContext
 import Elaborator.Ctx
+import hkmc2.semantics.ClassDef.Parameterized
 
 class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
   import Normalization.*, Mode.*
@@ -220,6 +221,7 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
               log(s"Case 1.1.3: $pattern is unrelated with $thatPattern")
               rec(tail)
             else if thatPattern.isRecord then
+              log(s"Case 1.1.4: $thatPattern is a record")
               thatPattern match
               case thatPattern :Pattern.Record => // so the type system is happy
                 // we can use information if pattern is itself a record, or if it is a constructor with arguments
@@ -238,13 +240,15 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
               //     case Pattern.Class(cls, _, _) => cls.toLoc
               //     case _ => thatPattern.toLoc
               //   }))
-              rec(continuation) ++ rec(tail)
+              log(s"case 1.1.5: $pattern <:< $thatPattern")
+              split
             else
               // TODO: the warning will be useful when we have inheritance information
               // raiseDesugaringWarning(
               //   msg"possibly conflicting patterns for this scrutinee" -> scrutinee.toLoc,
               //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
               //   msg"which is unrelated with ${thatPattern.toString}" -> thatPattern.toLoc)
+              log(s"Case 1.1._ else : ${tail}")
               rec(tail)
           case - =>
             log(s"Case 1.2: $scrutinee === $thatScrutinee")
@@ -294,6 +298,13 @@ object Normalization:
       // TODO there is probably a sensible condition
     case (Record(entries1), Record(entries2)) =>
       entries1.forall { (fieldName1, _) => entries2.exists { (fieldName2, _) => fieldName1 === fieldName2 } }
+    case (Record(entries), ClassLike(cs: ClassSymbol, _, _, _)) =>
+      val clsParams = cs.defn match
+        case S(Parameterized(params = paramList)) => paramList.params
+        case (S(_)|N) => List()
+      entries.forall { (fieldName, _) => clsParams.exists {
+        case Param(flags = FldFlags(value = value), sym = sym) => value && fieldName === sym.id
+      }}
     case (_:ClassLike, _) | (_:Tuple, _) | (_:Lit, _) | (_:Record, _) => false
 
   final case class VarSet(declared: Set[BlockLocalSymbol]):
