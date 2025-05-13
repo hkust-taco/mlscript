@@ -111,3 +111,41 @@ k(_ => "")
 
 k(_ => 42)
 //│ Type: Int
+
+
+fun k(x) =
+  fun f: [S, T] -> S -> T
+  fun f(y) = x(y)
+  f(0) + 0
+k
+//│ Type: (⊤ -> ⊥) -> Int
+
+
+:e
+k(_ => "")
+//│ ╔══[ERROR] Type error in function literal with expected type 'x
+//│ ║  l.125: 	k(_ => "")
+//│ ║         	       ^^
+//│ ╟── because: cannot constrain  ('_) ->{⊥} (Str)  <:  'x
+//│ ╟── because: cannot constrain  ('_) ->{⊥} (Str)  <:  'x
+//│ ╟── because: cannot constrain  ('_) ->{⊥} (Str)  <:  (⊤) ->{⊥} ⊥
+//│ ╙── because: cannot constrain  Str  <:  ⊥
+//│ Type: Int
+
+:e
+k(_ => 42)
+//│ ╔══[ERROR] Type error in function literal with expected type 'x
+//│ ║  l.136: 	k(_ => 42)
+//│ ║         	       ^^
+//│ ╟── because: cannot constrain  ('_) ->{⊥} (Int)  <:  'x
+//│ ╟── because: cannot constrain  ('_) ->{⊥} (Int)  <:  'x
+//│ ╟── because: cannot constrain  ('_) ->{⊥} (Int)  <:  (⊤) ->{⊥} ⊥
+//│ ╙── because: cannot constrain  Int  <:  ⊥
+//│ Type: Int
+
+
+fun k(x) =
+  let f = y => x(y)
+  f(0) + 0
+k
+//│ Type: ['eff] -> (Int ->{'eff} Int) ->{'eff} Int
