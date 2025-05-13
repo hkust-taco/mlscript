@@ -220,18 +220,16 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
             else if split.isFallback then
               log(s"Case 1.1.3: $pattern is unrelated with $thatPattern")
               rec(tail)
-            else if thatPattern.isRecord then
+            else thatPattern match
+            case thatPattern :Pattern.Record =>
               log(s"Case 1.1.4: $thatPattern is a record")
-              thatPattern match
-              case thatPattern :Pattern.Record => // so the type system is happy
-                // we can use information if pattern is itself a record, or if it is a constructor with arguments
-                val simplifiedRecord = thatPattern assuming pattern
-                if simplifiedRecord.entries.isEmpty then
-                  tail
-                else
-                  Split.Cons(Branch(thatScrutinee, simplifiedRecord, continuation), tail)
-              case _ => tail // impossible
-            else if pattern <:< thatPattern then
+              // we can use information if pattern is itself a record, or if it is a constructor with arguments
+              val simplifiedRecord = thatPattern assuming pattern
+              if simplifiedRecord.entries.isEmpty then
+                tail
+              else
+                Split.Cons(Branch(thatScrutinee, simplifiedRecord, continuation), tail)
+            case _ => (if pattern <:< thatPattern then
               // TODO: the warning will be useful when we have inheritance information
               // raiseDesugaringWarning(
               //   msg"the pattern always matches" -> thatPattern.toLoc,
@@ -249,7 +247,7 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
               //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
               //   msg"which is unrelated with ${thatPattern.toString}" -> thatPattern.toLoc)
               log(s"Case 1.1._ else : ${tail}")
-              rec(tail)
+              rec(tail))
           case - =>
             log(s"Case 1.2: $scrutinee === $thatScrutinee")
             thatPattern reportInconsistentRefinedWith pattern
