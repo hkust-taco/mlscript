@@ -55,9 +55,9 @@ fun foo(x) = x is Pair(a, b) | Int
 
 :todo
 fun foo(x) = x is (Pair(a, b) where a > b) | Int
-//│ ╔══[ERROR] Unrecognized term split (identifier).
-//│ ║  l.57: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
-//│ ╙──      	                                      ^
+//│ ╔══[PARSE ERROR] Unexpected 'where' keyword here
+//│ ║  l.57: 	fun foo(x) = x is (Pair(a, b) where a > b) | Int
+//│ ╙──      	                              ^^^^^
 
 
 
