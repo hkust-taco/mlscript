@@ -15,27 +15,22 @@ if A is
     else 3
 //│ = 2
 
+:e
 if A is
     A & A & B then 0
     B & A & B then 1
     A & A & A then 2
     else 3
 //│ = 2
+//│ FAILURE: Unexpected lack of type error
 
 :sjs
-:todo
-if A is
-    A & y then y
+fun foo(v) =
+  if v is
+    A & B then 1
     else 0
-//│ ╔══[ERROR] The following branches are unreachable.
-//│ ║  l.29: 	    else 0
-//│ ║        	         ^
-//│ ╟── Because the previous split is full.
-//│ ║  l.28: 	    A & y then y
-//│ ╙──      	               ^
 //│ JS (unsanitized):
-//│ let scrut2, y; scrut2 = A1; if (scrut2 instanceof A1.class) { y = scrut2; y } else { 0 }
-//│ = A
+//│ let foo; foo = function foo(v) { if (v instanceof A1.class) { return 0 } else { return 0 } };
 
 fun range(i, j) =
     if i > j then Nil
@@ -65,18 +60,18 @@ fun foo(x) = if x is
         else 30
     else 40
 //│ ╔══[ERROR] The following branches are unreachable.
-//│ ║  l.66: 	    else 40
+//│ ║  l.61: 	    else 40
 //│ ║        	         ^^
 //│ ╟── Because the previous split is full.
-//│ ║  l.62: 	    {a:_ & a} & C and
+//│ ║  l.57: 	    {a:_ & a} & C and
 //│ ║        	                ^^^^^
-//│ ║  l.63: 	        a is 1 then 10
+//│ ║  l.58: 	        a is 1 then 10
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.64: 	        a is 2 then 20
+//│ ║  l.59: 	        a is 2 then 20
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	        else 30
+//│ ║  l.60: 	        else 30
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.66: 	    else 40
+//│ ║  l.61: 	    else 40
 //│ ╙──      	^^^^^^^^^^^
 
 foo(C(1))

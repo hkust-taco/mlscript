@@ -90,16 +90,10 @@ class Desugarer(val elaborator: Elaborator)
     def ++(fallback: Split): Split =
       if fallback == Split.End then
         split
-      else if split.isFull then
-        raise:
-          ErrorReport:
-            msg"The following branches are unreachable." -> fallback.toLoc ::
-            msg"Because the previous split is full." -> split.toLoc :: Nil
-        split
       else (split match
         case Split.Cons(head, tail) => Split.Cons(head, tail ++ fallback)
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ++ fallback)
-        case Split.Else(_) /* impossible */ | Split.End => fallback)
+        case Split.Else(_) | Split.End => fallback)
 
   private val subScrutineeMap = HashMap.empty[BlockLocalSymbol, ScrutineeData]
   private val fieldScrutineeMap = HashMap.empty[BlockLocalSymbol, ScrutineeData]
@@ -466,9 +460,7 @@ class Desugarer(val elaborator: Elaborator)
         if pat.patternParams.size > 0 then
           error(
             msg"Pattern `${pat.nme}` expects ${"pattern argument".pluralize(pat.patternParams.size, true)}" ->
-              pat.patternParams.foldLeft[Opt[Loc]](N):
-              case (N, param) => param.sym.toLoc
-              case (S(loc), param) => S(loc ++ param.sym.toLoc),
+              Loc(pat.patternParams.iterator.map(_.sym)),
             msg"But no arguments were given" -> ctor.toLoc)
           fallback
         else
@@ -515,12 +507,8 @@ class Desugarer(val elaborator: Elaborator)
         if pat.patternParams.size != patArgs.size then
           error(
             msg"Pattern `${pat.nme}` expects ${"pattern argument".pluralize(pat.patternParams.size, true)}" ->
-              pat.patternParams.foldLeft[Opt[Loc]](N):
-              case (N, param) => param.sym.toLoc
-              case (S(loc), param) => S(loc ++ param.sym.toLoc),
-            msg"But ${"pattern argument".pluralize(patArgs.size, true)} were given" -> args.foldLeft[Opt[Loc]](N):
-              case (N, arg) => arg.toLoc
-              case (S(loc), arg) => S(loc ++ arg.toLoc))
+              Loc(pat.patternParams.iterator.map(_.sym)),
+            msg"But ${"pattern argument".pluralize(patArgs.size, true)} were given" -> Loc(args))
           fallback
         else
           Branch(ref, Pattern.Synonym(pat, patArgs.zip(args)), sequel(ctx)) ~: fallback
