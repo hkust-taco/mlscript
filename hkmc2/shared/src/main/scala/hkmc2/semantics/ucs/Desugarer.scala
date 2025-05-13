@@ -7,11 +7,12 @@ import mlscript.utils.*, shorthands.*
 import Message.MessageContext
 import utils.TraceLogger
 import syntax.Literal
-import Keyword.{as, and, `do`, `else`, is, let, `then`}
+import Keyword.{as, and, `do`, `else`, is, let, `then`, where}
 import collection.mutable.{HashMap, SortedSet}
 import Elaborator.{ctx, Ctxl}
 import scala.annotation.targetName
 import hkmc2.semantics.ClassDef.Parameterized
+import hkmc2.codegen.Case.Lit
 
 object Desugarer:
   extension (op: Keyword.Infix)
@@ -608,6 +609,11 @@ class Desugarer(val elaborator: Elaborator)
       case pattern and consequent => fallback => ctx =>
         val innerSplit = termSplit(consequent, identity)(Split.End)
         expandMatch(scrutSymbol, pattern, innerSplit)(fallback)(ctx)
+      case pattern where condition => fallback => ctx =>
+        val sym = TempSymbol(N, "conditionTemp")
+        val newSequel = expandMatch(sym, Tree.BoolLit(true), sequel)(fallback)
+        val newNewSequel = (ctx: Ctx) => Split.Let(sym, term(condition)(using ctx), newSequel(ctx))
+        expandMatch(scrutSymbol, pattern, newNewSequel)(fallback)(ctx)
       case Jux(Ident(".."), Ident(_)) => fallback => _ =>
         raise(ErrorReport(msg"Illegal rest pattern." -> pattern.toLoc :: Nil))
         fallback
