@@ -294,7 +294,7 @@ object Normalization:
     case (Lit(Tree.StrLit(_)), ClassLike(blt.`Str`, _, _, _)) => true
     case (Lit(Tree.DecLit(_)), ClassLike(blt.`Num`, _, _, _)) => true
     case (Lit(Tree.BoolLit(_)), ClassLike(blt.`Bool`, _, _, _)) => true
-    case (_:Synonym, _) => false
+    case (_: Synonym, _) => false
       // TODO there is probably a sensible condition
     case (Record(entries1), Record(entries2)) =>
       entries1.forall { (fieldName1, _) => entries2.exists { (fieldName2, _) => fieldName1 === fieldName2 } }
