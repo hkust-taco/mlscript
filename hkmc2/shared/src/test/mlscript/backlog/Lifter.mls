@@ -199,5 +199,5 @@ fun f =
   M.g
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ╔══[COMPILATION ERROR] No definition found in scope for: member:M (class hkmc2.semantics.BlockMemberSymbol)
-//│ ║  l.192: 	  module M with
+//│ ║  l.195: 	  module M with
 //│ ╙──       	         ^
