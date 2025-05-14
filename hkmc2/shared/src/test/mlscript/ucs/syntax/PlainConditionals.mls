@@ -27,7 +27,7 @@ fun foo(x) = x is Pair(a, b) and a > b
 
 fun foo(x) = if x is Pair(a, b) then a > b else false
 
-:todo // function prototype defintion is not there yet
+
 fun foo(x) = f(x) and g(x) and h(x)
 
 :e

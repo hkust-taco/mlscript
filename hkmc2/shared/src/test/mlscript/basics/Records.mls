@@ -78,7 +78,10 @@ let rcd =
 //│ ╔══[ERROR] Name not found: bar
 //│ ║  l.73: 	  bar =
 //│ ╙──      	  ^^^
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: rcd (class hkmc2.semantics.VarSymbol)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for: rcd (class hkmc2.semantics.VarSymbol)
+//│ ║  l.71: 	let rcd =
+//│ ╙──      	    ^^^
+//│ rcd = {foo: 1, bar: "..."}
 
 
 // * How about this syntax?
