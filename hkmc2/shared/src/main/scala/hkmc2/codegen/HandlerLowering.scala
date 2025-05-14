@@ -31,7 +31,17 @@ object HandlerLowering:
   extension (b: Block) def userDefinedVars: Set[Local] = b.definedVars.collect:
     case s: VarSymbol => s
   
-  private case class LinkState(res: Local, cls: Path, uid: StateId)
+  private class LazyVal[T](value: => T):
+    var evaled: Opt[T] = N
+    def empty = evaled.isEmpty 
+    def get = evaled match
+      case None => 
+        val e = value
+        evaled = S(e)
+        e
+      case Some(v) => v
+        
+  private case class LinkState(res: Local, cls: Path, uid: StateId, doUnwind: LazyVal[Path], tmpSym: Local)
   
   // isTopLevel:
   // whether the current block is the top level block, as we do not emit code for continuation class on the top level
@@ -85,11 +95,12 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   private def funcLikeHandlerCtx(ctorThis: Option[Path], isHandlerMtd: Bool, contNme: Str, debugNme: Str)(using h: HandlerCtx) =
     HandlerCtx(false, false, contNme, ctorThis, h.debugInfo.copy(debugNme), state =>
       blockBuilder
-        .assignFieldN(state.res.asPath.contTrace.last, nextIdent, Instantiate(
-          state.cls.selN(Tree.Ident("class")),
-          Value.Lit(Tree.IntLit(state.uid)) :: Nil))
-        .assignFieldN(state.res.asPath.contTrace, lastIdent, state.res.asPath.contTrace.last.next)
-        .ret(state.res.asPath))
+        .assign(state.tmpSym, Call(
+            state.doUnwind.get,
+            state.res.asPath.asArg :: Value.Lit(Tree.IntLit(state.uid)).asArg :: Nil
+          )(true, false))
+        .ret(state.tmpSym.asPath)
+    )
   private def functionHandlerCtx(nme: Str, debugNme: Str)(using HandlerCtx) = funcLikeHandlerCtx(N, false, nme, debugNme)
   private def topLevelCtx(nme: Str, debugNme: Str) = HandlerCtx(true, false, nme, N, DebugInfo.topLevel(debugNme), state => Assign(
       state.res,
@@ -407,12 +418,46 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         case c: ClsLikeDefn => translateCls(c)
         case _: ValDefn => super.applyDefn(defn)
     transformer.applyBlock(b)
-  
-  private def secondPass(b: Block, getLocalsFn: FunDefn)(using HandlerCtx): Block =
+    
+  private def secondPass(b: Block, getLocalsFn: FunDefn)(using h: HandlerCtx): Block =
     val cls = if handlerCtx.isTopLevel then N else genContClass(b)
+
     val ret = cls match
-      case None => genNormalBody(b, BlockMemberSymbol("", Nil))
-      case Some(cls) => Define(cls, genNormalBody(b, cls.sym))
+      case None => genNormalBody(b, BlockMemberSymbol("", Nil), LazyVal(Value.Lit(Tree.UnitLit(false))))
+      case Some(cls) => 
+        // create the doUnwind function
+        val doUnwindSym = BlockMemberSymbol("doUnwind", Nil, true)
+        val pcSym = VarSymbol(Tree.Ident("pc"))
+        val resSym = VarSymbol(Tree.Ident("res"))
+        val doUnwindBlk = blockBuilder
+          .assignFieldN(
+              resSym.asPath.contTrace.last, nextIdent, 
+              Instantiate(
+                cls.sym.asPath.selN(Tree.Ident("class")),
+                pcSym.asPath :: Nil
+              )
+            )
+          .assignFieldN(resSym.asPath.contTrace, lastIdent, resSym.asPath.contTrace.last.next)
+          .ret(resSym.asPath)
+        
+        def simpleParam(sym: VarSymbol) = Param(FldFlags.empty, sym, N, Modulefulness.none)
+        val doUnwindDef = FunDefn(
+          N, doUnwindSym,
+          PlainParamList(simpleParam(resSym) :: simpleParam(pcSym) :: Nil) :: Nil,
+          doUnwindBlk
+        )
+        val doUnwindLazy = LazyVal(doUnwindSym.asPath)
+        val rst = genNormalBody(b, cls.sym, doUnwindLazy)
+        
+        if doUnwindLazy.empty then
+          blockBuilder
+            .define(cls)
+            .rest(rst)
+        else
+          blockBuilder
+          .define(cls)
+          .define(doUnwindDef)
+          .rest(rst)
     if opt.debug then
       Define(getLocalsFn, ret)
     else
@@ -458,14 +503,17 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         .ret(PureCall(paths.handleBlockImplPath, state.res.asPath :: h.lhs.asPath :: Nil))))
     
     val handlerMtds = h.handlers.map: handler =>
-      val lam = Value.Lam(
-        PlainParamList(Param(FldFlags.empty, handler.resumeSym, N, Modulefulness.none) :: Nil),
-        translateBlock(handler.body,
-          handler.params.flatMap(_.paramSyms).toSet,
-          handlerMtdCtx(s"Cont$$handler$$${symToStr(h.lhs)}$$${symToStr(handler.sym)}$$", handler.sym.nme)))
+      val mtdBdy = translateBlock(handler.body,
+        handler.params.flatMap(_.paramSyms).toSet,
+        handlerMtdCtx(s"Cont$$handler$$${symToStr(h.lhs)}$$${symToStr(handler.sym)}$$", handler.sym.nme))
+      val sym = BlockMemberSymbol("hdlrFun", Nil, true)
+      val fDef = FunDefn(
+        N, sym, PlainParamList(Param(FldFlags.empty, handler.resumeSym, N, Modulefulness.none) :: Nil) :: Nil,
+        mtdBdy 
+        )
       FunDefn(
         S(h.cls),
-        handler.sym, handler.params, Return(PureCall(paths.mkEffectPath, h.cls.asPath :: lam :: Nil), false))
+        handler.sym, handler.params, Define(fDef, Return(PureCall(paths.mkEffectPath, h.cls.asPath :: Value.Ref(sym) :: Nil), false)))
     
     val clsDefn = ClsLikeDefn(
       N, // no owner
@@ -497,12 +545,32 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     )
     
     val pcVar = VarSymbol(pcIdent)
+    
+    val loopLbl = freshTmp("contLoop")
+    val pcSymbol = TermSymbol(ParamBind, S(clsSym), pcIdent)
 
     // This maps each state id to an optional location
     // Note that the value is an Option, and None must be inserted even if the location is not known
     // so that we can use the same map to enumerate all possible state id and check if there is any state id
     val pcToLoc = collection.mutable.Map.empty[StateId, Option[Loc]]
     
+    // Create the DoUnwind function
+    val doUnwindSym = BlockMemberSymbol("doUnwind", Nil, true)
+    val newPcSym = VarSymbol(Tree.Ident("newPc"))
+    val resSym = VarSymbol(Tree.Ident("res"))
+    val doUnwindBlk = blockBuilder
+      .assign(pcSymbol, newPcSym.asPath)
+      .assignFieldN(resSym.asPath.contTrace.last, nextIdent, clsSym.asPath)
+      .assignFieldN(resSym.asPath.contTrace, lastIdent, clsSym.asPath)
+      .ret(resSym.asPath)
+    def simpleParam(sym: VarSymbol) = Param(FldFlags.empty, sym, N, Modulefulness.none)
+    val doUnwindDef = FunDefn(
+      S(clsSym), doUnwindSym,
+      PlainParamList(simpleParam(resSym) :: simpleParam(newPcSym) :: Nil) :: Nil,
+      doUnwindBlk
+    )
+    
+    // Replaces ResultPlaceholders to check for effects and link the effect trace
     def prepareBlock(b: Block): Block =
       val transform = new BlockTransformerShallow(SymbolSubst()):
         override def applyBlock(b: Block): Block = b match
@@ -527,18 +595,19 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     if pcToLoc.isEmpty then return N
     
     val parts = partitionBlock(actualBlock)
-    val loopLbl = freshTmp("contLoop")
-    val pcSymbol = TermSymbol(ParamBind, S(clsSym), pcIdent)
+    
+    val unwindTmp = TempSymbol(N, "tmp")
     
     def transformPart(blk: Block): Block = 
       val transform = new BlockTransformerShallow(SymbolSubst()):
         override def applyBlock(b: Block): Block = b match
           case ReturnCont(res, uid) =>
             blockBuilder
-              .assign(pcSymbol, Value.Lit(Tree.IntLit(uid)))
-              .assignFieldN(res.asPath.contTrace.last, nextIdent, clsSym.asPath)
-              .assignFieldN(res.asPath.contTrace, lastIdent, clsSym.asPath)
-              .ret(res.asPath)
+              .assign(unwindTmp, Call(
+                  Select(clsSym.asPath, Tree.Ident("doUnwind"))(S(doUnwindSym)), 
+                  res.asPath.asArg :: Value.Lit(Tree.IntLit(uid)).asArg :: Nil)(true, false)
+                )
+              .ret(unwindTmp.asPath)
           case StateTransition(uid) =>
             blockBuilder
               .assign(pcSymbol, Value.Lit(Tree.IntLit(uid)))
@@ -630,7 +699,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       } :: Nil)),
       Nil,
       S(paths.contClsPath),
-      resumeFnDef :: debugMtds,
+      doUnwindDef :: resumeFnDef :: debugMtds,
       Nil,
       Nil,
       Assign(freshTmp(), PureCall(
@@ -643,7 +712,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         End()
       )(S(pcSymbol))))
   
-  private def genNormalBody(b: Block, clsSym: BlockMemberSymbol)(using HandlerCtx): Block =
+  private def genNormalBody(b: Block, clsSym: BlockMemberSymbol, doUnwind: LazyVal[Path])(using HandlerCtx): Block =
+    val doUnwindTmp = TempSymbol(N, "tmp")
     val transform = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
         case ResultPlaceholder(res, uid, c, rest) =>
@@ -652,7 +722,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
             .ifthen(
               res.asPath,
               Case.Cls(paths.effectSigSym, paths.effectSigPath),
-              handlerCtx.linkAndHandle(LinkState(res, clsSym.asPath, uid))
+              handlerCtx.linkAndHandle(LinkState(res, clsSym.asPath, uid, doUnwind, doUnwindTmp))
             )
             .rest(applyBlock(rest))
         case _ => super.applyBlock(b)

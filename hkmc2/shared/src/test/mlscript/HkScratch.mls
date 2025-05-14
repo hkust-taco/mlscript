@@ -9,4 +9,57 @@
 :todo
 
 
+:sjs
+:effectHandlers
+fun dummy = 0
+fun f(x) =
+    dummy
+//│ Elab: ( ‹› fun member:dummy‹851› = 0; ‹› fun member:f‹852›(Param(‹›,x‹856›,None,Modulefulness(None)), ) = member:dummy‹851›#666; )
+//│ JS (unsanitized):
+//│ let dummy, f;
+//│ dummy = function dummy() {
+//│   return 0
+//│ };
+//│ f = function f(x) {
+//│   let tmp, Cont$func$f$1, doUnwind, tmp1;
+//│   Cont$func$f$1 = function Cont$func$f$(pc1) {
+//│     return new Cont$func$f$.class(pc1);
+//│   };
+//│   Cont$func$f$1.class = class Cont$func$f$ extends runtime.FunctionContFrame.class {
+//│     constructor(pc) {
+//│       let tmp2;
+//│       tmp2 = super(null);
+//│       this.pc = pc;
+//│     }
+//│     doUnwind(res, newPc) {
+//│       this.pc = newPc;
+//│       res.contTrace.last.next = this;
+//│       res.contTrace.last = this;
+//│       return res
+//│     } 
+//│     resume(value$) {
+//│       if (this.pc === 0) {
+//│         tmp = value$;
+//│       }
+//│       contLoop: while (true) {
+//│         if (this.pc === 0) {
+//│           return tmp
+//│         }
+//│         break;
+//│       }
+//│     }
+//│     toString() { return "Cont$func$f$(" + runtime.render(this.pc) + ")"; }
+//│   };
+//│   doUnwind = function doUnwind(res, pc) {
+//│     res.contTrace.last.next = new Cont$func$f$1.class(pc);
+//│     res.contTrace.last = res.contTrace.last.next;
+//│     return res
+//│   };
+//│   tmp = dummy();
+//│   if (tmp instanceof runtime.EffectSig.class) {
+//│     tmp1 = doUnwind(tmp, 0);
+//│     return tmp1
+//│   }
+//│   return tmp
+//│ };
 

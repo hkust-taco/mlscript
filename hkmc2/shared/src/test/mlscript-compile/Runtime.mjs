@@ -225,7 +225,6 @@ let Runtime1;
     };
     this.stackLimit = 0;
     this.stackDepth = 0;
-    this.stackOffset = 0;
     this.stackHandler = null;
     this.stackResume = null;
     const StackDelayHandler$class = class StackDelayHandler {
@@ -778,11 +777,10 @@ let Runtime1;
     return tmp4
   } 
   static checkDepth() {
-    let scrut, tmp, tmp1, tmp2;
-    tmp = Runtime.stackDepth - Runtime.stackOffset;
-    tmp1 = tmp >= Runtime.stackLimit;
-    tmp2 = Runtime.stackHandler !== null;
-    scrut = tmp1 && tmp2;
+    let scrut, tmp, tmp1;
+    tmp = Runtime.stackDepth >= Runtime.stackLimit;
+    tmp1 = Runtime.stackHandler !== null;
+    scrut = tmp && tmp1;
     if (scrut === true) {
       return runtime.safeCall(Runtime.stackHandler.delay())
     } else {
@@ -790,22 +788,13 @@ let Runtime1;
     }
   } 
   static resetDepth(tmp, curDepth) {
-    let scrut, tmp1;
     Runtime.stackDepth = curDepth;
-    scrut = curDepth < Runtime.stackOffset;
-    if (scrut === true) {
-      Runtime.stackOffset = curDepth;
-      tmp1 = runtime.Unit;
-    } else {
-      tmp1 = runtime.Unit;
-    }
     return tmp
   } 
   static runStackSafe(limit, f1) {
     let result, scrut, saved, tmp1, tmp2, tmp3;
     Runtime.stackLimit = limit;
     Runtime.stackDepth = 1;
-    Runtime.stackOffset = 0;
     Runtime.stackHandler = Runtime.StackDelayHandler;
     tmp1 = Runtime.enterHandleBlock(Runtime.StackDelayHandler, f1);
     result = tmp1;
@@ -814,7 +803,6 @@ let Runtime1;
       if (scrut === true) {
         saved = Runtime.stackResume;
         Runtime.stackResume = null;
-        Runtime.stackOffset = Runtime.stackDepth;
         tmp2 = runtime.safeCall(saved());
         result = tmp2;
         tmp3 = runtime.Unit;
@@ -826,7 +814,6 @@ let Runtime1;
     }
     Runtime.stackLimit = 0;
     Runtime.stackDepth = 0;
-    Runtime.stackOffset = 0;
     Runtime.stackHandler = null;
     return result
   }

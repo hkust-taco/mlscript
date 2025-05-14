@@ -165,9 +165,11 @@ if true do
 //│       tmp12 = super();
 //│     }
 //│     perform(arg) {
-//│       return runtime.mkEffect(this, (k) => {
+//│       let hdlrFun;
+//│       hdlrFun = function hdlrFun(k) {
 //│         return arg
-//│       })
+//│       };
+//│       return runtime.mkEffect(this, hdlrFun)
 //│     }
 //│     toString() { return "Handler$h$"; }
 //│   };
@@ -181,7 +183,14 @@ if true do
 //│       tmp12 = super(null);
 //│       this.pc = pc;
 //│     }
+//│     doUnwind(res1, newPc) {
+//│       this.pc = newPc;
+//│       res1.contTrace.last.next = this;
+//│       res1.contTrace.last = this;
+//│       return res1
+//│     } 
 //│     resume(value$) {
+//│       let tmp12;
 //│       if (this.pc === 0) {
 //│         res = value$;
 //│       }
@@ -191,10 +200,8 @@ if true do
 //│         } else if (this.pc === 2) {
 //│           res = f();
 //│           if (res instanceof runtime.EffectSig.class) {
-//│             this.pc = 0;
-//│             res.contTrace.last.next = this;
-//│             res.contTrace.last = this;
-//│             return res
+//│             tmp12 = this.doUnwind(res, 0);
+//│             return tmp12
 //│           }
 //│           this.pc = 0;
 //│           continue contLoop;

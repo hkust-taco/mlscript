@@ -361,8 +361,6 @@ fun checkDepth() =
 
 fun resetDepth(tmp, curDepth) =
   set stackDepth = curDepth
-  if curDepth < stackOffset do
-    set stackOffset = curDepth
   tmp
 
 fun runStackSafe(limit, f) =
@@ -375,7 +373,6 @@ fun runStackSafe(limit, f) =
     let saved = stackResume
     set
       stackResume = null
-      stackOffset = stackDepth
       result = saved()
   set
     stackLimit = 0

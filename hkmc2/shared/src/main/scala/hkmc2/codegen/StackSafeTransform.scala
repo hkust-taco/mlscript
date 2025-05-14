@@ -31,7 +31,6 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
         .ret(res)
     else
       val tmp = sym getOrElse TempSymbol(None, "tmp")
-      val offsetGtDepth = TempSymbol(None, "offsetGtDepth")
       blockBuilder
         .assignFieldN(runtimePath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(1)))
         .assign(tmp, res)
@@ -73,30 +72,12 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
             extract(applyResult(r), false, _ => applyBlock(rest), S(lhs), curDepth)
           else
             super.applyBlock(b)
-        case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
-          val l2 = applyLocal(l)
-          val res2 = applyLocal(res)
-          val par2 = applyPath(par)
-          val args2 = args.mapConserve(applyPath)
-          val cls2 = cls.subst
-          val hdr2 = hdr.mapConserve(applyHandler)
-          val bod2 = rewriteBlk(bod)
-          val rst2 = applyBlock(rst)
-          if isTopLevel then
-            val newRes = TempSymbol(N, "res")
-            val newHandler = HandleBlock(l2, newRes, par2, args2, cls2, hdr2, bod2, Ret(newRes.asPath))
-            wrapStackSafe(newHandler, res2, rst2)
-          else
-            HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod2, rst2)
+        
+        case HandleBlock(l, res, par, args, cls, hdr, bod, rst) => lastWords("HandleBlock in stack safe transformation")
         
         case _ => super.applyBlock(b)
         
-        override def applyHandler(hdr: Handler): Handler =
-          val sym2 = hdr.sym.subst
-          val resumeSym2 = hdr.resumeSym.subst
-          val params2 = hdr.params.mapConserve(applyParamList)
-          val body2 = rewriteBlk(hdr.body)
-          Handler(sym2, resumeSym2, params2, body2)
+        override def applyHandler(hdr: Handler): Handler = lastWords("HandleBlock in stack safe transformation")
       
       override def applyResult2(r: Result)(k: Result => Block): Block =
         if usesStack(r) then
@@ -104,8 +85,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
         else
           super.applyResult2(r)(k)
       
-      override def applyLam(lam: Value.Lam): Value.Lam =
-        Value.Lam(lam.params, rewriteBlk(lam.body))
+      override def applyLam(lam: Value.Lam): Value.Lam = lastWords("Lambda in stack safe transformation")
   
     transform.applyBlock(b)
   
@@ -142,6 +122,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
       blockBuilder
         .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
         .assign(resSym, Call(checkDepthPath, Nil)(true, true))
+        // .ifthen(resSym, Case.Lit(BoolLit(true)),  N)
         .rest(newBody)
      
   def rewriteFn(defn: FunDefn) = FunDefn(defn.owner, defn.sym, defn.params, rewriteBlk(defn.body))
