@@ -164,7 +164,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     val localPaths: Map[Local, Local] = Map.empty,
     val isymPaths: Map[InnerSymbol, Local] = Map.empty,
     val replacedDefns: Map[BlockMemberSymbol, Defn] = Map.empty,
-    val higherOrdFns: Set[BlockMemberSymbol] = Set.empty,
+    val firstClsFns: Set[BlockMemberSymbol] = Set.empty,
   ):
     // gets the function to which a local belongs
     def lookup(l: Local) = usedLocals.lookup(l)
@@ -187,7 +187,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     def withNestedDefns(mp: Map[BlockMemberSymbol, List[Defn]]) = copy(nestedDefns = mp)
     def withAccesses(mp: Map[BlockMemberSymbol, AccessInfo]) = copy(accessInfo = mp)
     def withInScopes(mp: Map[BlockMemberSymbol, Set[BlockMemberSymbol]]) = copy(inScopeDefns = mp)
-    def withHigherOrdFns(fns: Set[BlockMemberSymbol]) = copy(higherOrdFns = fns)
+    def withFirstClsFns(fns: Set[BlockMemberSymbol]) = copy(firstClsFns = fns)
     def addFnLocals(f: FreeVars) = copy(prevFnLocals = prevFnLocals ++ f)
     def addClsDefn(c: ClsLikeDefn) = copy(prevClsDefns = c :: prevClsDefns)
     def addLocalCaptureSyms(m: Map[Local, VarSymbol]) = copy(localCaptureSyms = localCaptureSyms ++ m)
@@ -342,14 +342,14 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     unliftable: Set[BlockMemberSymbol],
     modules: List[ClsLikeDefn],
     objects: List[ClsLikeDefn],
-    higherOrdFns: Set[BlockMemberSymbol]
+    firstClsFns: Set[BlockMemberSymbol]
   )
   
   // d is a top-level definition
   // returns (ignored classes, modules, objects)
   private def createMetadata(d: Defn, ctx: LifterCtx): LifterMetadata =
     var ignored: Set[BlockMemberSymbol] = Set.empty
-    var higherOrdFns: Set[BlockMemberSymbol] = Set.empty
+    var firstClsFns: Set[BlockMemberSymbol] = Set.empty
     var unliftable: Set[BlockMemberSymbol] = Set.empty
     var clsSymToBms: Map[Local, BlockMemberSymbol] = Map.empty
     var modules: List[ClsLikeDefn] = Nil
@@ -473,7 +473,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           unliftable += l
         case RefOfBms(l) if ctx.defns.contains(l) && isFun(ctx.defns(l)) =>
           // naked reference to a function definition
-          higherOrdFns += l
+          firstClsFns += l
         case _ => super.applyValue(v)
 
     // analyze the extends graph
@@ -496,7 +496,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     for s <- ignored do
       dfs(s)
     
-    LifterMetadata(ignored ++ newUnliftable, modules, objects, higherOrdFns)
+    LifterMetadata(ignored ++ newUnliftable, modules, objects, firstClsFns)
 
   extension (b: Block)
     private def floatOut(ctx: LifterCtx) =
@@ -824,7 +824,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           val mainDefn = FunDefn(f.owner, f.sym, PlainParamList(extraParamsCpy) :: headPlistCopy :: Nil, bdy)
           val auxDefn = FunDefn(N, singleCallBms, flatPlist, lifted.body)
           
-          if ctx.higherOrdFns.contains(f.sym) then
+          if ctx.firstClsFns.contains(f.sym) then
             Lifted(mainDefn, auxDefn :: extras)
           else
             Lifted(auxDefn, extras) // we can just include the flattened defn
@@ -1051,7 +1051,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     val walker1 = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
         case Define(d, rest) =>
-          val LifterMetadata(unliftable, modules, objects, higherOrdFns) = createMetadata(d, ctx)
+          val LifterMetadata(unliftable, modules, objects, firstClsFns) = createMetadata(d, ctx)
 
           val modLocals = (modules ++ objects).map: c =>
               analyzer.nestedIn.get(c.sym) match
@@ -1068,7 +1068,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           val ctxx = ctx
             .addIgnored(unliftable)
             .withModLocals(modLocals)
-            .withHigherOrdFns(higherOrdFns)
+            .withFirstClsFns(firstClsFns)
           
           val Lifted(lifted, extra) = d match
             case f: FunDefn => 
