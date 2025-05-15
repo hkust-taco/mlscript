@@ -8,11 +8,8 @@ let a = 1
 //│ = {a: 1}
 
 
-:fixme // should we support this?
+
 fun foo(x) = :x
-//│ ╔══[PARSE ERROR] Expected expression or block after 'fun' binding equals sign; found ':' keyword instead
-//│ ║  l.12: 	fun foo(x) = :x
-//│ ╙──      	             ^
 
 fun foo(x) = (:x)
 foo(1)
@@ -42,7 +39,7 @@ if r is
 if r is
   a: x then x
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.43: 	  a: x then x
+//│ ║  l.41: 	  a: x then x
 //│ ╙──      	  ^^^^^^^^^^^
 
 if 1 is
@@ -83,13 +80,13 @@ foo(:a)
 :todo // would mean `val a = ‹the old a›`?
 val =a
 //│ ╔══[PARSE ERROR] Expected expression after 'val' binding keyword; found '=' keyword instead
-//│ ║  l.84: 	val =a
+//│ ║  l.82: 	val =a
 //│ ╙──      	    ^
 
 :pe
 let =a
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found '=' keyword instead
-//│ ║  l.90: 	let =a
+//│ ║  l.88: 	let =a
 //│ ╙──      	    ^
 
 
