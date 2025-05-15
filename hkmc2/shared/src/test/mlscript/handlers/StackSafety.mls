@@ -59,6 +59,7 @@ hi(0)
 //│     res1.contTrace.last = res1.contTrace.last.next;
 //│     return res1
 //│   };
+//│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
 //│     return doUnwind_fun$1(stackDelayRes, 0)
@@ -68,7 +69,6 @@ hi(0)
 //│     return 0
 //│   } else {
 //│     tmp = n - 1;
-//│     runtime.stackDepth = runtime.stackDepth + 1;
 //│     return hi(tmp)
 //│   }
 //│ };
@@ -150,6 +150,7 @@ sum(10000)
 //│     return res2
 //│   };
 //│   curDepth = runtime.stackDepth;
+//│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
 //│     return doUnwind_fun$4(stackDelayRes, 0)
@@ -159,7 +160,6 @@ sum(10000)
 //│     return 0
 //│   } else {
 //│     tmp = n - 1;
-//│     runtime.stackDepth = runtime.stackDepth + 1;
 //│     tmp1 = sum1(tmp);
 //│     tmp1 = runtime.resetDepth(tmp1, curDepth);
 //│     if (tmp1 instanceof runtime.EffectSig.class) {

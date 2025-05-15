@@ -30,15 +30,11 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
 
   // Increases the stack depth, assigns the call to a value, then decreases the stack depth
   // then binds that value to a desired block
-  def extractRes(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol], curDepth: => Symbol) =
-    if isTailCall then
-      blockBuilder
-        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(1)))
-        .ret(res)
+  def extractRes(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol], curDepth: => Symbol): Block =
+    if isTailCall then Return(res, false)
     else
       val tmp = sym getOrElse TempSymbol(None, "tmp")
       blockBuilder
-        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(1)))
         .assign(tmp, res)
         .assign(tmp, Call(resetDepthPath, tmp.asPath.asArg :: curDepth.asPath.asArg :: Nil)(true, false))
         .rest(f(tmp.asPath))
@@ -114,11 +110,11 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
       // TODO: handle preCtor (seems this is not handled in HandlerLowering either)
       ClsLikeDefn(
         owner, isym, sym, k, paramsOpt, auxParams, parentPath, methods.map(rewriteFn), privateFields,
-        publicFields, rewriteBlk(preCtor, L(BlockMemberSymbol("TODO", Nil))),
-        if isTopLevel && (defn.k is syntax.Mod) then transformTopLevel(ctor) else rewriteBlk(ctor, R(isym))
+        publicFields, rewriteBlk(preCtor, L(BlockMemberSymbol("TODO", Nil)), 1),
+        if isTopLevel && (defn.k is syntax.Mod) then transformTopLevel(ctor) else rewriteBlk(ctor, R(isym), 1)
       )
 
-  def rewriteBlk(blk: Block, fnOrCls: FnOrCls) =
+  def rewriteBlk(blk: Block, fnOrCls: FnOrCls, increment: Int) =
     var usedDepth = false
     lazy val curDepth =
       usedDepth = true
@@ -138,6 +134,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
       val resSym = TempSymbol(None, "stackDelayRes")
       val rewritten = blockBuilder
         .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
+        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(increment)))
         .assign(resSym, Call(checkDepthPath, Nil)(true, true))
         .ifthen(
           resSym.asPath,
@@ -158,6 +155,6 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
      
   def rewriteFn(defn: FunDefn) = 
     if doUnwindFns.contains(defn.sym) then defn
-    else FunDefn(defn.owner, defn.sym, defn.params, rewriteBlk(defn.body, L(defn.sym)))
+    else FunDefn(defn.owner, defn.sym, defn.params, rewriteBlk(defn.body, L(defn.sym), 1))
 
   def transformTopLevel(b: Block) = transform(b, TempSymbol(N), true)
