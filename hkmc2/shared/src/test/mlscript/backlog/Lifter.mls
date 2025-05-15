@@ -158,7 +158,7 @@ fun foo(x, y) =
   fun foo = M.foo()
   foo
 //│ ═══[WARNING] Modules are not yet lifted.
-//│ ╔══[COMPILATION ERROR] No definition found in scope for: member:M (class hkmc2.semantics.BlockMemberSymbol)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'M'
 //│ ║  l.154: 	  module M with
 //│ ╙──       	         ^
 
@@ -186,7 +186,7 @@ fun foo(x) =
   class Bar extends Foo
   (new Bar).self2
 foo(2)
-//│ ═══[COMPILATION ERROR] No definition found in scope for: Foo$ (class hkmc2.semantics.VarSymbol)
+//│ ═══[COMPILATION ERROR] No definition found in scope for 'Foo$'
 //│ ═══[RUNTIME ERROR] TypeError: Foo1 is not a function
 
 // `h` is lifted out, but then cannot access the BlockMemberSymbol M.
@@ -198,6 +198,6 @@ fun f =
       h
   M.g
 //│ ═══[WARNING] Modules are not yet lifted.
-//│ ╔══[COMPILATION ERROR] No definition found in scope for: member:M (class hkmc2.semantics.BlockMemberSymbol)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'M'
 //│ ║  l.195: 	  module M with
 //│ ╙──       	         ^

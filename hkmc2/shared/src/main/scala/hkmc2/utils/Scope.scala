@@ -99,7 +99,6 @@ class Scope
       raise(ErrorReport(msg"No definition found in scope for '${l.nme}'" -> loc :: Nil,
         extraInfo = Some(l -> l.getClass),
         source = Diagnostic.Source.Compilation))
-        source = Diagnostic.Source.Compilation))
       l.nme
   
   def allocateName(l: Local, prefix: Str = ""): Str =

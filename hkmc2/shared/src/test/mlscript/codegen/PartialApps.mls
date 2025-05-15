@@ -90,7 +90,7 @@ _ + 1 >> _ * 2 <| 123
 :todo
 let j = _.x
 //│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ ╔══[COMPILATION ERROR] No definition found in scope for: j (class hkmc2.semantics.VarSymbol)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'j'
 //│ ║  l.91: 	let j = _.x
 //│ ╙──      	    ^
 //│ ═══[RUNTIME ERROR] ReferenceError: j is not defined
@@ -98,7 +98,7 @@ let j = _.x
 :todo
 let j = _.x(123)
 //│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ ╔══[COMPILATION ERROR] No definition found in scope for: j (class hkmc2.semantics.VarSymbol)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'j'
 //│ ║  l.99: 	let j = _.x(123)
 //│ ╙──      	    ^
 //│ ═══[RUNTIME ERROR] ReferenceError: j is not defined

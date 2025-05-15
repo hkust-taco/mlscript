@@ -78,7 +78,7 @@ let rcd =
 //│ ╔══[ERROR] Name not found: bar
 //│ ║  l.73: 	  bar =
 //│ ╙──      	  ^^^
-//│ ╔══[COMPILATION ERROR] No definition found in scope for: rcd (class hkmc2.semantics.VarSymbol)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'rcd'
 //│ ║  l.71: 	let rcd =
 //│ ╙──      	    ^^^
 //│ rcd = {foo: 1, bar: "..."}
