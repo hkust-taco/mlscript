@@ -13,6 +13,8 @@ import semantics.*
 import semantics.Elaborator.ctx
 import semantics.Elaborator.State
 import hkmc2.Config.EffectHandlers
+import mlscript.utils.algorithms.topologicalSort
+import mlscript.utils.algorithms.CyclicGraphError
 
 object HandlerLowering:
 
@@ -192,8 +194,74 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   // id: the id of the current state
   // blk: the block of code within this state
   // sym: the variable to which the resumed value should set
-  class BlockState(val id: StateId, val blk: Block, val sym: Opt[Local])
+  case class BlockState(id: StateId, blk: Block, sym: Opt[Local])
   
+  // coalesce useless states
+  def optParts(entryState: BlockState, states: Ls[BlockState]): (BlockState, Ls[BlockState]) =
+    val statesMap = (entryState :: states).map(state => state.id -> state).toMap
+    def findEdges(state: BlockState) =
+      var edges: List[BlockState] = Nil
+      new BlockTraverser:
+        applyBlock(state.blk)
+        override def applyBlock(b: Block): Unit = b match
+          case StateTransition(id) => edges ::= statesMap(id)
+          case _ => super.applyBlock(b)
+      state.id -> edges
+    // build edges
+    val edges = (entryState :: states).map(findEdges).toMap
+    // assume that all states are reachable from the entry point
+    var dests: Map[StateId, StateId] = Map.empty
+    var visited: Set[StateId] = Set.empty
+    
+    // whether a state purely jumps to another state, and if so, which state it jumps to
+    def getJmp(state: BlockState): Opt[StateId] =
+      if state.sym.isDefined then N
+      else state.blk match
+        case StateTransition(id) => S(id)
+        case _ => N
+    
+    // build the `dests` map by doing a dfs from the entry state
+    def dfs(state: BlockState): Unit =
+      visited += state.id
+      getJmp(state) match
+        case None => ()
+        case Some(value) =>
+          dests += (state.id -> value)
+      for e <- edges(state.id) do
+        if !visited.contains(e.id) then
+          dfs(e)
+    dfs(entryState)
+    
+    // cycles should be impossible -- if there are, just don't bother
+    val sorted = 
+      try topologicalSort(dests).toList
+      catch case c: CyclicGraphError => 
+        return (entryState, states)
+    
+    var finalDests: Map[StateId, StateId] = Map.empty
+    def dp(state: StateId): StateId = finalDests.get(state) match
+      case Some(value) => value
+      case None =>
+        val ret = dests.get(state) match
+          case None => state
+          case Some(dest) => dp(dest)
+        finalDests += (state -> ret)
+        ret
+    
+    val transformer = new BlockTransformer(SymbolSubst()):
+      override def applyBlock(b: Block): Block = b match
+        case StateTransition(uid) => StateTransition(dp(uid))
+        case _ => super.applyBlock(b)
+    
+    def rewriteState(s: BlockState) = s.copy(blk = transformer.applyBlock(s.blk))
+    
+    val rewrittenEntry = rewriteState(entryState)
+    val rewrittenStates = states.map(rewriteState)
+    
+    println(finalDests)
+    
+    (rewrittenEntry, rewrittenStates)
+      
   def partitionBlock(blk: Block, inclEntryPoint: Bool, labelIds: Map[Symbol, (StateId, StateId)] = Map.empty): Ls[BlockState] =
     // for some reason, functions sometimes start with Begin(End, ...)
     blk match
@@ -322,10 +390,10 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
     val PartRet(head, states) = go(blk)(using labelIds, N)
     
-    if inclEntryPoint then
-      BlockState(0, head, N) :: states // entry point always state 0
-    else
-      states
+    val (headState, restStates) = optParts(BlockState(0, head, N), states)
+    
+    if inclEntryPoint then headState :: restStates
+    else restStates
   
   val runtimePath = State.runtimeSymbol.asPath
   val fnLocalsPath: Path = runtimePath.selSN("FnLocalsInfo").selSN("class")
@@ -633,7 +701,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       // case (2)
       BlockState(0, actualBlock, N) :: Nil
     else
-      partitionBlock(actualBlock, opt.stackSafety.isDefined)
+      partitionBlock(actualBlock, opt.stackSafety.isDefined || true) // TODO: remove
     
     def transformPart(blk: Block): Block = 
       val transform = new BlockTransformerShallow(SymbolSubst()):
