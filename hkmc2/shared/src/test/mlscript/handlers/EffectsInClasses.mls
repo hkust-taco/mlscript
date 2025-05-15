@@ -16,7 +16,7 @@ data class Lol(h) with
 //│ };
 //│ Lol1.class = class Lol {
 //│   constructor(h) {
-//│     let tmp, res, Cont$ctor$Lol$1, doUnwind_fun$6;
+//│     let tmp, res, Cont$ctor$Lol$1, doUnwind;
 //│     const this$Lol = this;
 //│     Cont$ctor$Lol$1 = function Cont$ctor$Lol$(pc1) {
 //│       return new Cont$ctor$Lol$.class(pc1);
@@ -68,7 +68,7 @@ data class Lol(h) with
 //│       }
 //│       toString() { return "Cont$ctor$Lol$(" + runtime.render(this.pc) + ")"; }
 //│     };
-//│     doUnwind_fun$6 = function doUnwind_fun$6(res1, pc) {
+//│     doUnwind = function doUnwind(res1, pc) {
 //│       res1.contTrace.last.next = new Cont$ctor$Lol$1.class(pc);
 //│       res1.contTrace.last = res1.contTrace.last.next;
 //│       return res1
@@ -76,11 +76,11 @@ data class Lol(h) with
 //│     this.h = h;
 //│     tmp = runtime.safeCall(this.h.perform("k"));
 //│     if (tmp instanceof runtime.EffectSig.class) {
-//│       return doUnwind_fun$6(tmp, 1)
+//│       return doUnwind(tmp, 1)
 //│     }
 //│     res = Predef.print(tmp);
 //│     if (res instanceof runtime.EffectSig.class) {
-//│       return doUnwind_fun$6(res, 2)
+//│       return doUnwind(res, 2)
 //│     }
 //│     res
 //│   }

@@ -166,7 +166,7 @@ str
 //│       perform(arg) {
 //│         let hdlrFun;
 //│         hdlrFun = function hdlrFun(k) {
-//│           let tmp12, tmp13, tmp14, Cont$handler$h1$perform$2, doUnwind_fun$12;
+//│           let tmp12, tmp13, tmp14, Cont$handler$h1$perform$2, doUnwind;
 //│           Cont$handler$h1$perform$2 = function Cont$handler$h1$perform$(pc1) {
 //│             return new Cont$handler$h1$perform$.class(pc1);
 //│           };
@@ -183,18 +183,18 @@ str
 //│               return res7
 //│             } 
 //│             resume(value$) {
-//│               if (this.pc === 10) {
+//│               if (this.pc === 7) {
 //│                 tmp13 = value$;
 //│               }
 //│               contLoop: while (true) {
-//│                 if (this.pc === 11) {
+//│                 if (this.pc === 8) {
 //│                   tmp13 = runtime.safeCall(k(arg));
 //│                   if (tmp13 instanceof runtime.EffectSig.class) {
-//│                     return this.doUnwind(tmp13, 10)
+//│                     return this.doUnwind(tmp13, 7)
 //│                   }
-//│                   this.pc = 10;
+//│                   this.pc = 7;
 //│                   continue contLoop;
-//│                 } else if (this.pc === 10) {
+//│                 } else if (this.pc === 7) {
 //│                   tmp14 = str + "A";
 //│                   str = tmp14;
 //│                   return runtime.Unit
@@ -204,7 +204,7 @@ str
 //│             }
 //│             toString() { return "Cont$handler$h1$perform$(" + runtime.render(this.pc) + ")"; }
 //│           };
-//│           doUnwind_fun$12 = function doUnwind_fun$12(res7, pc) {
+//│           doUnwind = function doUnwind(res7, pc) {
 //│             res7.contTrace.last.next = new Cont$handler$h1$perform$2.class(pc);
 //│             res7.contTrace.last = res7.contTrace.last.next;
 //│             return res7
@@ -213,7 +213,7 @@ str
 //│           str = tmp12;
 //│           tmp13 = runtime.safeCall(k(arg));
 //│           if (tmp13 instanceof runtime.EffectSig.class) {
-//│             return doUnwind_fun$12(tmp13, 10)
+//│             return doUnwind(tmp13, 7)
 //│           }
 //│           tmp14 = str + "A";
 //│           str = tmp14;
@@ -234,11 +234,11 @@ str
 //│         this.pc = pc;
 //│       }
 //│       resume(value$) {
-//│         if (this.pc === 8) {
+//│         if (this.pc === 6) {
 //│           tmp11 = value$;
 //│         }
 //│         contLoop: while (true) {
-//│           if (this.pc === 8) {
+//│           if (this.pc === 6) {
 //│             return tmp11
 //│           }
 //│           break;
@@ -256,7 +256,7 @@ str
 //│         perform(arg) {
 //│           let hdlrFun;
 //│           hdlrFun = function hdlrFun(k) {
-//│             let tmp13, tmp14, tmp15, tmp16, tmp17, Cont$handler$h2$perform$2, doUnwind_fun$7;
+//│             let tmp13, tmp14, tmp15, tmp16, tmp17, Cont$handler$h2$perform$2, doUnwind;
 //│             Cont$handler$h2$perform$2 = function Cont$handler$h2$perform$(pc1) {
 //│               return new Cont$handler$h2$perform$.class(pc1);
 //│             };
@@ -273,18 +273,18 @@ str
 //│                 return res8
 //│               } 
 //│               resume(value$) {
-//│                 if (this.pc === 5) {
+//│                 if (this.pc === 4) {
 //│                   tmp15 = value$;
 //│                 }
 //│                 contLoop: while (true) {
-//│                   if (this.pc === 6) {
+//│                   if (this.pc === 5) {
 //│                     tmp15 = runtime.safeCall(k(arg));
 //│                     if (tmp15 instanceof runtime.EffectSig.class) {
-//│                       return this.doUnwind(tmp15, 5)
+//│                       return this.doUnwind(tmp15, 4)
 //│                     }
-//│                     this.pc = 5;
+//│                     this.pc = 4;
 //│                     continue contLoop;
-//│                   } else if (this.pc === 5) {
+//│                   } else if (this.pc === 4) {
 //│                     tmp16 = str + "B";
 //│                     tmp17 = str + tmp16;
 //│                     str = tmp17;
@@ -295,7 +295,7 @@ str
 //│               }
 //│               toString() { return "Cont$handler$h2$perform$(" + runtime.render(this.pc) + ")"; }
 //│             };
-//│             doUnwind_fun$7 = function doUnwind_fun$7(res8, pc) {
+//│             doUnwind = function doUnwind(res8, pc) {
 //│               res8.contTrace.last.next = new Cont$handler$h2$perform$2.class(pc);
 //│               res8.contTrace.last = res8.contTrace.last.next;
 //│               return res8
@@ -305,7 +305,7 @@ str
 //│             str = tmp14;
 //│             tmp15 = runtime.safeCall(k(arg));
 //│             if (tmp15 instanceof runtime.EffectSig.class) {
-//│               return doUnwind_fun$7(tmp15, 5)
+//│               return doUnwind(tmp15, 4)
 //│             }
 //│             tmp16 = str + "B";
 //│             tmp17 = str + tmp16;
@@ -371,7 +371,7 @@ str
 //│     };
 //│     tmp11 = handleBlock$8();
 //│     if (tmp11 instanceof runtime.EffectSig.class) {
-//│       tmp11.contTrace.last.next = Cont$handleBlock$h1$2(8);
+//│       tmp11.contTrace.last.next = Cont$handleBlock$h1$2(6);
 //│       return runtime.handleBlockImpl(tmp11, h1)
 //│     }
 //│     return tmp11

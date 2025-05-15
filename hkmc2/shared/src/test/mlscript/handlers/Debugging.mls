@@ -26,7 +26,7 @@ fun f() =
 //│   return prev
 //│ };
 //│ f = function f() {
-//│   let i, j, k, scrut, tmp, tmp1, getLocals3, Cont$func$f$1, doUnwind_fun$6;
+//│   let i, j, k, scrut, tmp, tmp1, getLocals3, Cont$func$f$1, doUnwind;
 //│   getLocals3 = function getLocals() {
 //│     let i1, j1, k1, prev, thisInfo, tmp2;
 //│     prev = getLocals2();
@@ -101,7 +101,7 @@ fun f() =
 //│     }
 //│     toString() { return "Cont$func$f$(" + runtime.render(this.pc) + ")"; }
 //│   };
-//│   doUnwind_fun$6 = function doUnwind_fun$6(res1, pc) {
+//│   doUnwind = function doUnwind(res1, pc) {
 //│     res1.contTrace.last.next = new Cont$func$f$1.class(pc);
 //│     res1.contTrace.last = res1.contTrace.last.next;
 //│     return res1
@@ -113,11 +113,11 @@ fun f() =
 //│   if (scrut === true) {
 //│     tmp = Predef.raiseUnhandledEffect();
 //│     if (tmp instanceof runtime.EffectSig.class) {
-//│       return doUnwind_fun$6(tmp, 1)
+//│       return doUnwind(tmp, 1)
 //│     }
 //│     tmp1 = Predef.print(tmp);
 //│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       return doUnwind_fun$6(tmp1, 2)
+//│       return doUnwind(tmp1, 2)
 //│     }
 //│   } else {
 //│     tmp1 = runtime.Unit;

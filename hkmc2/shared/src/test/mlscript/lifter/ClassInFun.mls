@@ -13,7 +13,7 @@ fun f() =
   1
 f() + f() + f()
 //│ JS (unsanitized):
-//│ let Effect1, tmp, handleBlock$, Cont$func$f$1, Cont$handleBlock$h$1, hdlrFun, Handler$h$1, f$, doUnwind_fun$2$, Cont$func$f$$ctor, Cont$func$f$$, Cont$handleBlock$h$$ctor, Cont$handleBlock$h$$, hdlrFun$;
+//│ let Effect1, tmp, handleBlock$, Cont$func$f$1, Cont$handleBlock$h$1, hdlrFun, Handler$h$1, f$, doUnwind$, Cont$func$f$$ctor, Cont$func$f$$, Cont$handleBlock$h$$ctor, Cont$handleBlock$h$$, hdlrFun$;
 //│ Effect1 = class Effect {
 //│   constructor() {}
 //│   toString() { return "Effect"; }
@@ -76,36 +76,36 @@ f() + f() + f()
 //│     return res
 //│   } 
 //│   resume(value$) {
-//│     if (this.pc === 3) {
+//│     if (this.pc === 2) {
 //│       this.tmp$1 = value$;
-//│     } else if (this.pc === 4) {
+//│     } else if (this.pc === 3) {
 //│       this.tmp$2 = value$;
-//│     } else if (this.pc === 5) {
+//│     } else if (this.pc === 4) {
 //│       this.tmp$4 = value$;
 //│     }
 //│     contLoop: while (true) {
-//│       if (this.pc === 3) {
-//│         this.pc = 7;
+//│       if (this.pc === 2) {
+//│         this.pc = 6;
 //│         continue contLoop;
-//│       } else if (this.pc === 7) {
+//│       } else if (this.pc === 6) {
 //│         this.tmp$2 = f$(this.h$0);
 //│         if (this.tmp$2 instanceof runtime.EffectSig.class) {
-//│           return this.doUnwind(this.tmp$2, 4)
+//│           return this.doUnwind(this.tmp$2, 3)
+//│         }
+//│         this.pc = 3;
+//│         continue contLoop;
+//│       } else if (this.pc === 3) {
+//│         this.tmp$3 = this.tmp$1 + this.tmp$2;
+//│         this.pc = 5;
+//│         continue contLoop;
+//│       } else if (this.pc === 5) {
+//│         this.tmp$4 = f$(this.h$0);
+//│         if (this.tmp$4 instanceof runtime.EffectSig.class) {
+//│           return this.doUnwind(this.tmp$4, 4)
 //│         }
 //│         this.pc = 4;
 //│         continue contLoop;
 //│       } else if (this.pc === 4) {
-//│         this.tmp$3 = this.tmp$1 + this.tmp$2;
-//│         this.pc = 6;
-//│         continue contLoop;
-//│       } else if (this.pc === 6) {
-//│         this.tmp$4 = f$(this.h$0);
-//│         if (this.tmp$4 instanceof runtime.EffectSig.class) {
-//│           return this.doUnwind(this.tmp$4, 5)
-//│         }
-//│         this.pc = 5;
-//│         continue contLoop;
-//│       } else if (this.pc === 5) {
 //│         return this.tmp$3 + this.tmp$4
 //│       }
 //│       break;
@@ -153,7 +153,7 @@ f() + f() + f()
 //│   }
 //│   toString() { return "Cont$func$f$(" + runtime.render(this.pc) + ")"; }
 //│ };
-//│ doUnwind_fun$2$ = function doUnwind_fun$2$(tmp1, res, pc) {
+//│ doUnwind$ = function doUnwind$(tmp1, res, pc) {
 //│   res.contTrace.last.next = Cont$func$f$$(tmp1, pc);
 //│   res.contTrace.last = res.contTrace.last.next;
 //│   return res
@@ -162,7 +162,7 @@ f() + f() + f()
 //│   let tmp1;
 //│   tmp1 = runtime.safeCall(h.perform());
 //│   if (tmp1 instanceof runtime.EffectSig.class) {
-//│     return doUnwind_fun$2$(tmp1, tmp1, 1)
+//│     return doUnwind$(tmp1, tmp1, 1)
 //│   }
 //│   return 1
 //│ };
@@ -171,18 +171,18 @@ f() + f() + f()
 //│   h = new Handler$h$1();
 //│   tmp1 = f$(h);
 //│   if (tmp1 instanceof runtime.EffectSig.class) {
-//│     tmp1.contTrace.last.next = Cont$handleBlock$h$$(h, tmp1, tmp2, tmp3, tmp4, 3);
+//│     tmp1.contTrace.last.next = Cont$handleBlock$h$$(h, tmp1, tmp2, tmp3, tmp4, 2);
 //│     return runtime.handleBlockImpl(tmp1, h)
 //│   }
 //│   tmp2 = f$(h);
 //│   if (tmp2 instanceof runtime.EffectSig.class) {
-//│     tmp2.contTrace.last.next = Cont$handleBlock$h$$(h, tmp1, tmp2, tmp3, tmp4, 4);
+//│     tmp2.contTrace.last.next = Cont$handleBlock$h$$(h, tmp1, tmp2, tmp3, tmp4, 3);
 //│     return runtime.handleBlockImpl(tmp2, h)
 //│   }
 //│   tmp3 = tmp1 + tmp2;
 //│   tmp4 = f$(h);
 //│   if (tmp4 instanceof runtime.EffectSig.class) {
-//│     tmp4.contTrace.last.next = Cont$handleBlock$h$$(h, tmp1, tmp2, tmp3, tmp4, 5);
+//│     tmp4.contTrace.last.next = Cont$handleBlock$h$$(h, tmp1, tmp2, tmp3, tmp4, 4);
 //│     return runtime.handleBlockImpl(tmp4, h)
 //│   }
 //│   return tmp3 + tmp4

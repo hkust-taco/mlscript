@@ -439,7 +439,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       case None => genNormalBody(b, BlockMemberSymbol("", Nil), N)
       case Some(cls) => 
         // create the doUnwind function
-        val doUnwindSym = BlockMemberSymbol("doUnwind_fun$" + freshId(), Nil, true)
+        val doUnwindSym = BlockMemberSymbol("doUnwind", Nil, true)
         doUnwindMap += fnOrCls -> doUnwindSym.asPath
         val pcSym = VarSymbol(Tree.Ident("pc"))
         val resSym = VarSymbol(Tree.Ident("res"))

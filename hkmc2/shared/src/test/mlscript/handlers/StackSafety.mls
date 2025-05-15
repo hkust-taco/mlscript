@@ -22,7 +22,7 @@ hi(0)
 //│ JS (unsanitized):
 //│ let hi, res, $_stack$_safe$_body$_;
 //│ hi = function hi(n) {
-//│   let scrut, tmp, Cont$func$hi$1, doUnwind_fun$1, stackDelayRes;
+//│   let scrut, tmp, Cont$func$hi$1, doUnwind, stackDelayRes;
 //│   Cont$func$hi$1 = function Cont$func$hi$(pc1) {
 //│     return new Cont$func$hi$.class(pc1);
 //│   };
@@ -48,7 +48,7 @@ hi(0)
 //│     }
 //│     toString() { return "Cont$func$hi$(" + runtime.render(this.pc) + ")"; }
 //│   };
-//│   doUnwind_fun$1 = function doUnwind_fun$1(res1, pc) {
+//│   doUnwind = function doUnwind(res1, pc) {
 //│     res1.contTrace.last.next = new Cont$func$hi$1.class(pc);
 //│     res1.contTrace.last = res1.contTrace.last.next;
 //│     return res1
@@ -56,7 +56,7 @@ hi(0)
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return doUnwind_fun$1(stackDelayRes, 0)
+//│     return doUnwind(stackDelayRes, 0)
 //│   }
 //│   scrut = n == 0;
 //│   if (scrut === true) {
@@ -89,7 +89,7 @@ sum(10000)
 //│ JS (unsanitized):
 //│ let sum1, res1, $_stack$_safe$_body$_1;
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, Cont$func$sum$1, doUnwind_fun$4, curDepth, stackDelayRes;
+//│   let scrut, tmp, tmp1, Cont$func$sum$1, doUnwind, curDepth, stackDelayRes;
 //│   Cont$func$sum$1 = function Cont$func$sum$(pc1) {
 //│     return new Cont$func$sum$.class(pc1);
 //│   };
@@ -138,7 +138,7 @@ sum(10000)
 //│     }
 //│     toString() { return "Cont$func$sum$(" + runtime.render(this.pc) + ")"; }
 //│   };
-//│   doUnwind_fun$4 = function doUnwind_fun$4(res2, pc) {
+//│   doUnwind = function doUnwind(res2, pc) {
 //│     res2.contTrace.last.next = new Cont$func$sum$1.class(pc);
 //│     res2.contTrace.last = res2.contTrace.last.next;
 //│     return res2
@@ -147,7 +147,7 @@ sum(10000)
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return doUnwind_fun$4(stackDelayRes, 0)
+//│     return doUnwind(stackDelayRes, 0)
 //│   }
 //│   scrut = n == 0;
 //│   if (scrut === true) {
@@ -157,7 +157,7 @@ sum(10000)
 //│     tmp1 = sum1(tmp);
 //│     tmp1 = runtime.resetDepth(tmp1, curDepth);
 //│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       return doUnwind_fun$4(tmp1, 1)
+//│       return doUnwind(tmp1, 1)
 //│     }
 //│     return n + tmp1
 //│   }
