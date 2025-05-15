@@ -39,7 +39,7 @@ if r is
 if r is
   a: x then x
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.41: 	  a: x then x
+//│ ║  l.40: 	  a: x then x
 //│ ╙──      	  ^^^^^^^^^^^
 
 if 1 is
@@ -80,13 +80,13 @@ foo(:a)
 :todo // would mean `val a = ‹the old a›`?
 val =a
 //│ ╔══[PARSE ERROR] Expected expression after 'val' binding keyword; found '=' keyword instead
-//│ ║  l.82: 	val =a
+//│ ║  l.81: 	val =a
 //│ ╙──      	    ^
 
 :pe
 let =a
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found '=' keyword instead
-//│ ║  l.88: 	let =a
+//│ ║  l.87: 	let =a
 //│ ╙──      	    ^
 
 
