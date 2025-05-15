@@ -148,3 +148,13 @@ fun should_reject_null(x) = if x is { a: 0 } then 42 else -42
 
 should_reject_null(null)
 //│ = -42
+
+:todo
+:sjs
+fun is_record(x) = if x is {} then 0 else 1
+//│ JS (unsanitized):
+//│ let is_record; is_record = function is_record(x2) { return 0 };
+
+:todo
+fun is_record_alt(x) = x is {}
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: encountered empty block
