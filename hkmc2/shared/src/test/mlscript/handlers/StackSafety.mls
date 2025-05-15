@@ -349,3 +349,21 @@ handle h = Object with
 h.whoops()
 //│ = 0
 //│ depth = 50000
+
+// TODO: the stack depth is not accurately tracked in the runtime functions
+// for now this works, but it's not very safe
+:effectHandlers
+:stackSafe
+:expect 10000
+fun dummy = ()
+fun f(h) =
+  let n = 0
+  while n < 10000 do
+    h.perform()
+    set n += 1
+  n
+handle h = Object with
+  fun perform()(k) = 
+    k()
+f(h)
+//│ = 10000
