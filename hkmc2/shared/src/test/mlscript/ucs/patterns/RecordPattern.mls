@@ -143,3 +143,8 @@ foo(1 :: 2 :: 4 :: Nil)
 
 foo(1 :: 2 :: 4 :: 8 :: Nil)
 //│ = "at least three of them"
+
+fun should_reject_null(x) = if x is { a: 0 } then 42 else -42
+
+should_reject_null(null)
+//│ = -42
