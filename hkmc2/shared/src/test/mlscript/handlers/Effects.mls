@@ -190,22 +190,20 @@ if true do
 //│       return res1
 //│     } 
 //│     resume(value$) {
-//│       let tmp12;
-//│       if (this.pc === 0) {
+//│       if (this.pc === 1) {
 //│         res = value$;
 //│       }
 //│       contLoop: while (true) {
-//│         if (this.pc === 1) {
+//│         if (this.pc === 2) {
 //│           break contLoop;
-//│         } else if (this.pc === 2) {
+//│         } else if (this.pc === 3) {
 //│           res = f();
 //│           if (res instanceof runtime.EffectSig.class) {
-//│             tmp12 = this.doUnwind(res, 0);
-//│             return tmp12
+//│             return this.doUnwind(res, 1)
 //│           }
-//│           this.pc = 0;
+//│           this.pc = 1;
 //│           continue contLoop;
-//│         } else if (this.pc === 0) {
+//│         } else if (this.pc === 1) {
 //│           return res
 //│         }
 //│         break;
@@ -220,7 +218,7 @@ if true do
 //│   if (scrut === true) {
 //│     res = f();
 //│     if (res instanceof runtime.EffectSig.class) {
-//│       res.contTrace.last.next = Cont$handleBlock$h$11(0);
+//│       res.contTrace.last.next = Cont$handleBlock$h$11(1);
 //│       return runtime.handleBlockImpl(res, h)
 //│     }
 //│     return res

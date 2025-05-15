@@ -22,14 +22,14 @@ hi(0)
 //│ JS (unsanitized):
 //│ let hi, res, $_stack$_safe$_body$_;
 //│ hi = function hi(n) {
-//│   let scrut, tmp, stackDelayRes, Cont$func$hi$1, doUnwind, tmp1;
+//│   let scrut, tmp, Cont$func$hi$1, doUnwind_fun$1, stackDelayRes;
 //│   Cont$func$hi$1 = function Cont$func$hi$(pc1) {
 //│     return new Cont$func$hi$.class(pc1);
 //│   };
 //│   Cont$func$hi$1.class = class Cont$func$hi$ extends runtime.FunctionContFrame.class {
 //│     constructor(pc) {
-//│       let tmp2;
-//│       tmp2 = super(null);
+//│       let tmp1;
+//│       tmp1 = super(null);
 //│       this.pc = pc;
 //│     }
 //│     doUnwind(res1, newPc) {
@@ -39,9 +39,6 @@ hi(0)
 //│       return res1
 //│     } 
 //│     resume(value$) {
-//│       if (this.pc === 0) {
-//│         stackDelayRes = value$;
-//│       }
 //│       contLoop: while (true) {
 //│         if (this.pc === 0) {
 //│           scrut = n == 0;
@@ -49,31 +46,22 @@ hi(0)
 //│             return 0
 //│           } else {
 //│             tmp = n - 1;
-//│             this.pc = 2;
-//│             continue contLoop;
+//│             return hi(tmp)
 //│           }
-//│           this.pc = 1;
-//│           continue contLoop;
-//│         } else if (this.pc === 1) {
-//│           break contLoop;
-//│         } else if (this.pc === 2) {
-//│           runtime.stackDepth = runtime.stackDepth + 1;
-//│           return hi(tmp)
 //│         }
 //│         break;
 //│       }
 //│     }
 //│     toString() { return "Cont$func$hi$(" + runtime.render(this.pc) + ")"; }
 //│   };
-//│   doUnwind = function doUnwind(res1, pc) {
+//│   doUnwind_fun$1 = function doUnwind_fun$1(res1, pc) {
 //│     res1.contTrace.last.next = new Cont$func$hi$1.class(pc);
 //│     res1.contTrace.last = res1.contTrace.last.next;
 //│     return res1
 //│   };
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     tmp1 = doUnwind(stackDelayRes, 0);
-//│     return tmp1
+//│     return doUnwind_fun$1(stackDelayRes, 0)
 //│   }
 //│   scrut = n == 0;
 //│   if (scrut === true) {
@@ -98,11 +86,96 @@ hi(0)
 :stackSafe 1000
 :effectHandlers
 :expect 50005000
+:sjs
 fun sum(n) =
   if n == 0 then 0
   else
     n + sum(n - 1)
 sum(10000)
+//│ JS (unsanitized):
+//│ let sum1, res1, $_stack$_safe$_body$_1;
+//│ sum1 = function sum(n) {
+//│   let scrut, tmp, tmp1, Cont$func$sum$1, doUnwind_fun$4, curDepth, stackDelayRes;
+//│   Cont$func$sum$1 = function Cont$func$sum$(pc1) {
+//│     return new Cont$func$sum$.class(pc1);
+//│   };
+//│   Cont$func$sum$1.class = class Cont$func$sum$ extends runtime.FunctionContFrame.class {
+//│     constructor(pc) {
+//│       let tmp2;
+//│       tmp2 = super(null);
+//│       this.pc = pc;
+//│     }
+//│     doUnwind(res2, newPc) {
+//│       this.pc = newPc;
+//│       res2.contTrace.last.next = this;
+//│       res2.contTrace.last = this;
+//│       return res2
+//│     } 
+//│     resume(value$) {
+//│       if (this.pc === 1) {
+//│         tmp1 = value$;
+//│       }
+//│       contLoop: while (true) {
+//│         if (this.pc === 0) {
+//│           scrut = n == 0;
+//│           if (scrut === true) {
+//│             return 0
+//│           } else {
+//│             tmp = n - 1;
+//│             this.pc = 3;
+//│             continue contLoop;
+//│           }
+//│           this.pc = 2;
+//│           continue contLoop;
+//│         } else if (this.pc === 2) {
+//│           break contLoop;
+//│         } else if (this.pc === 3) {
+//│           tmp1 = sum1(tmp);
+//│           if (tmp1 instanceof runtime.EffectSig.class) {
+//│             return this.doUnwind(tmp1, 1)
+//│           }
+//│           this.pc = 1;
+//│           continue contLoop;
+//│         } else if (this.pc === 1) {
+//│           return n + tmp1
+//│         }
+//│         break;
+//│       }
+//│     }
+//│     toString() { return "Cont$func$sum$(" + runtime.render(this.pc) + ")"; }
+//│   };
+//│   doUnwind_fun$4 = function doUnwind_fun$4(res2, pc) {
+//│     res2.contTrace.last.next = new Cont$func$sum$1.class(pc);
+//│     res2.contTrace.last = res2.contTrace.last.next;
+//│     return res2
+//│   };
+//│   curDepth = runtime.stackDepth;
+//│   stackDelayRes = runtime.checkDepth();
+//│   if (stackDelayRes instanceof runtime.EffectSig.class) {
+//│     return doUnwind_fun$4(stackDelayRes, 0)
+//│   }
+//│   scrut = n == 0;
+//│   if (scrut === true) {
+//│     return 0
+//│   } else {
+//│     tmp = n - 1;
+//│     runtime.stackDepth = runtime.stackDepth + 1;
+//│     tmp1 = sum1(tmp);
+//│     tmp1 = runtime.resetDepth(tmp1, curDepth);
+//│     if (tmp1 instanceof runtime.EffectSig.class) {
+//│       return doUnwind_fun$4(tmp1, 1)
+//│     }
+//│     return n + tmp1
+//│   }
+//│ };
+//│ $_stack$_safe$_body$_1 = (undefined, function () {
+//│   return sum1(10000)
+//│ });
+//│ res1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
+//│ if (res1 instanceof runtime.EffectSig.class) {
+//│   res1 = runtime.topLevelEffect(res1, false);
+//│ }
+//│ res1
 //│ = 50005000
 
 // stack-overflows without :stackSafe
@@ -177,18 +250,7 @@ handle h = Eff with
       else n + f(n-1)
     resume(f(10000))
 foo(h)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: HandleBlock in stack safe transformation
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
-//│ 	at: hkmc2.StackSafeTransform$$anon$1.applyBlock(StackSafeTransform.scala:76)
-//│ 	at: hkmc2.codegen.BlockTransformer.applySubBlock(BlockTransformer.scala:16)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:72)
-//│ 	at: hkmc2.StackSafeTransform$$anon$1.applyBlock(StackSafeTransform.scala:78)
-//│ 	at: hkmc2.StackSafeTransform.transform(StackSafeTransform.scala:90)
-//│ 	at: hkmc2.StackSafeTransform.transformTopLevel(StackSafeTransform.scala:130)
-//│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:805)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:100)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
+//│ = 50005000
 
 // function call and defn inside handler
 :effectHandlers
@@ -204,18 +266,7 @@ handle h = Eff with
 in
   fun foo(h) = h.perform
   foo(h)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: HandleBlock in stack safe transformation
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
-//│ 	at: hkmc2.StackSafeTransform$$anon$1.applyBlock(StackSafeTransform.scala:76)
-//│ 	at: hkmc2.StackSafeTransform.transform(StackSafeTransform.scala:90)
-//│ 	at: hkmc2.StackSafeTransform.transformTopLevel(StackSafeTransform.scala:130)
-//│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:805)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:100)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
-//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:63)
-//│ 	at: hkmc2.MLsDiffMaker.processTrees(MLsDiffMaker.scala:254)
-//│ 	at: hkmc2.MLsDiffMaker.processOrigin(MLsDiffMaker.scala:226)
+//│ = 50005000
 
 :effectHandlers
 :stackSafe 100
@@ -296,15 +347,5 @@ handle h = Object with
       set depth += 1
       enterHandleBlock(this, () => whoops())
 h.whoops()
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: HandleBlock in stack safe transformation
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
-//│ 	at: hkmc2.StackSafeTransform$$anon$1.applyBlock(StackSafeTransform.scala:76)
-//│ 	at: hkmc2.codegen.BlockTransformer.applySubBlock(BlockTransformer.scala:16)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:39)
-//│ 	at: hkmc2.StackSafeTransform$$anon$1.applyBlock(StackSafeTransform.scala:78)
-//│ 	at: hkmc2.codegen.BlockTransformer.applySubBlock(BlockTransformer.scala:16)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock$$anonfun$3(BlockTransformer.scala:61)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyResult2(BlockTransformer.scala:96)
-//│ 	at: hkmc2.StackSafeTransform$$anon$1.applyResult2(StackSafeTransform.scala:86)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:59)
+//│ = 0
+//│ depth = 50000

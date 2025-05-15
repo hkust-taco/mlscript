@@ -171,7 +171,7 @@ sealed abstract class Block extends Product with AutoLocated:
     var defns: List[Defn] = Nil
     val transformer = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
-        case Define(defn, rest) if !ignore(defn) => defn match
+        case Define(defn, rest) if !ignore(defn) => defn match // TODO: don't touch object or modules
           case v: ValDefn => super.applyBlock(b)
           case _ =>
             defns ::= defn

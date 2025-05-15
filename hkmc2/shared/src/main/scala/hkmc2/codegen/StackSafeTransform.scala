@@ -7,9 +7,15 @@ import hkmc2.codegen.*
 import hkmc2.semantics.Elaborator.State
 import hkmc2.semantics.*
 import hkmc2.syntax.Tree
+import hkmc2.codegen.HandlerLowering.FnOrCls
 
-class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
+class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[FnOrCls, Path])(using State):
   private val STACK_DEPTH_IDENT: Tree.Ident = Tree.Ident("stackDepth")
+  
+  val doUnwindFns = doUnwindMap.values.collect:
+      case s: Select if s.symbol.isDefined => s.symbol.get
+      case Value.Ref(sym) => sym
+    .toSet
 
   private val runtimePath: Path = State.runtimeSymbol.asPath
   private val checkDepthPath: Path = runtimePath.selN(Tree.Ident("checkDepth"))
@@ -50,6 +56,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
   def transform(b: Block, curDepth: => Symbol, isTopLevel: Bool = false): Block =
     def usesStack(r: Result) = r match
       case Call(Value.Ref(_: BuiltinSymbol), _) => false
+      case c: Call if !c.mayRaiseEffects => false // a call can only trigger a stack delay if it can raise effects
       case _: Call | _: Instantiate => true
       case _ => false
 
@@ -99,32 +106,58 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
         case _ => ()
     trivial
 
-  def rewriteCls(defn: ClsLikeDefn, isTopLevel: Bool): ClsLikeDefn = 
-    val ClsLikeDefn(owner, isym, sym, k, paramsOpt, auxParams,
-      parentPath, methods, privateFields, publicFields, preCtor, ctor) = defn
-    ClsLikeDefn(
-      owner, isym, sym, k, paramsOpt, auxParams, parentPath, methods.map(rewriteFn), privateFields,
-      publicFields, rewriteBlk(preCtor),
-      if isTopLevel && (defn.k is syntax.Mod) then transformTopLevel(ctor) else rewriteBlk(ctor)
-    )
+  def rewriteCls(defn: ClsLikeDefn, isTopLevel: Bool): ClsLikeDefn = defn.parentPath match
+    case Some(value) if value eq paths.contClsPath => defn
+    case _ =>
+      val ClsLikeDefn(owner, isym, sym, k, paramsOpt, auxParams,
+        parentPath, methods, privateFields, publicFields, preCtor, ctor) = defn
+      // TODO: handle preCtor (seems this is not handled in HandlerLowering either)
+      ClsLikeDefn(
+        owner, isym, sym, k, paramsOpt, auxParams, parentPath, methods.map(rewriteFn), privateFields,
+        publicFields, rewriteBlk(preCtor, L(BlockMemberSymbol("TODO", Nil))),
+        if isTopLevel && (defn.k is syntax.Mod) then transformTopLevel(ctor) else rewriteBlk(ctor, R(isym))
+      )
 
-  def rewriteBlk(blk: Block) =
+  def rewriteBlk(blk: Block, fnOrCls: FnOrCls) =
     var usedDepth = false
     lazy val curDepth =
       usedDepth = true
       TempSymbol(None, "curDepth")
+      
+    val doUnwindPath = doUnwindMap.get(fnOrCls)
     val newBody = transform(blk, curDepth)
-
+    
     if isTrivial(blk) then
       newBody
-    else
+    else if doUnwindPath.isEmpty then
       val resSym = TempSymbol(None, "stackDelayRes")
       blockBuilder
         .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
-        .assign(resSym, Call(checkDepthPath, Nil)(true, true))
-        // .ifthen(resSym, Case.Lit(BoolLit(true)),  N)
         .rest(newBody)
+    else
+      val resSym = TempSymbol(None, "stackDelayRes")
+      val rewritten = blockBuilder
+        .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
+        .assign(resSym, Call(checkDepthPath, Nil)(true, true))
+        .ifthen(
+          resSym.asPath,
+          Case.Cls(paths.effectSigSym, paths.effectSigPath),
+          Return(
+            // Call(Value.Lit(Tree.StrLit(doUnwindPath.get.toString())), resSym.asPath.asArg :: intLit(0).asArg :: Nil)(true, false),
+            Call(doUnwindPath.get, resSym.asPath.asArg :: intLit(0).asArg :: Nil)(true, false),
+            false
+          )
+        )
+        .rest(newBody)
+      // float out defns to move the doUnwind function behind 
+      val (blk, defns) = doUnwindPath.get match
+        case Value.Ref(sym) => rewritten.floatOutDefns()
+        case _ => (rewritten, Nil)
+      defns.foldLeft(blk)((acc, defn) => Define(defn, acc))
+
      
-  def rewriteFn(defn: FunDefn) = FunDefn(defn.owner, defn.sym, defn.params, rewriteBlk(defn.body))
+  def rewriteFn(defn: FunDefn) = 
+    if doUnwindFns.contains(defn.sym) then defn
+    else FunDefn(defn.owner, defn.sym, defn.params, rewriteBlk(defn.body, L(defn.sym)))
 
   def transformTopLevel(b: Block) = transform(b, TempSymbol(N), true)

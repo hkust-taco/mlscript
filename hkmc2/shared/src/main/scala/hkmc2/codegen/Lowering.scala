@@ -800,13 +800,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val desug = LambdaRewriter.desugar(blk)
     
     val handlerPaths = new HandlerPaths
-    val stackSafe = config.stackSafety match
-      case N => desug
-      case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths).transformTopLevel(desug)
-    val withHandlers = config.effectHandlers.fold(stackSafe): opt =>
-      HandlerLowering(handlerPaths, opt).translateTopLevel(stackSafe)
     
-    val flattened = withHandlers.flattened
+    val (withHandlers, doUnwindPaths) = config.effectHandlers.fold((desug, Map.empty)): opt =>
+      HandlerLowering(handlerPaths, opt).translateTopLevel(desug)
+      
+    val stackSafe = config.stackSafety match
+      case N => withHandlers
+      case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths, doUnwindPaths).transformTopLevel(withHandlers)
+    
+    val flattened = stackSafe.flattened
     
     val lifted = 
       if lift then Lifter(S(handlerPaths)).transform(flattened)
