@@ -96,7 +96,9 @@ class Scope
             case t: syntax.Tree.TypeDef => t.head.toLoc
           .flatten.orElse(l.toLoc)
         case other => other.toLoc
-      raise(ErrorReport(msg"No definition found in scope for: ${l.toString} (${l.getClass.toString})" -> loc :: Nil,
+      raise(ErrorReport(msg"No definition found in scope for '${l.nme}'" -> loc :: Nil,
+        extraInfo = Some(l -> l.getClass),
+        source = Diagnostic.Source.Compilation))
         source = Diagnostic.Source.Compilation))
       l.nme
   
