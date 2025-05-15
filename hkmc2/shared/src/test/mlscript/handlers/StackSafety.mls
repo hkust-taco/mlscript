@@ -32,12 +32,6 @@ hi(0)
 //│       tmp1 = super(null);
 //│       this.pc = pc;
 //│     }
-//│     doUnwind(res1, newPc) {
-//│       this.pc = newPc;
-//│       res1.contTrace.last.next = this;
-//│       res1.contTrace.last = this;
-//│       return res1
-//│     } 
 //│     resume(value$) {
 //│       contLoop: while (true) {
 //│         if (this.pc === 0) {

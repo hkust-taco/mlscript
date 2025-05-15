@@ -198,7 +198,12 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   // sym: the variable to which the resumed value should set
   class BlockState(val id: StateId, val blk: Block, val sym: Opt[Local])
   
-  def partitionBlock(blk: Block, inclEntryPoint: Bool, labelIds: Map[Symbol, (StateId, StateId)] = Map.empty): Ls[BlockState] = 
+  def partitionBlock(blk: Block, inclEntryPoint: Bool, labelIds: Map[Symbol, (StateId, StateId)] = Map.empty): Ls[BlockState] =
+    // for some reason, functions sometimes start with Begin(End, ...)
+    blk match
+      case Begin(End(_), blkk) => return partitionBlock(blkk, inclEntryPoint, labelIds)
+      case _ => ()
+    
     // for readability :)
     case class PartRet(head: Block, states: Ls[BlockState])
 
@@ -369,7 +374,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   private def translateBlock(b: Block, extraLocals: Set[Local], fnOrCls: FnOrCls, h: HandlerCtx): Block =
     val getLocalsFn = createGetLocalsFn(b, extraLocals)(using h)
     given HandlerCtx = h.nestDebugScope(b.userDefinedVars ++ extraLocals, getLocalsFn.sym.asPath)
-    
     val stage1 = firstPass(b)
     val stage2 = secondPass(stage1, fnOrCls, getLocalsFn)
     if h.isTopLevel then stage2 else thirdPass(stage2)
@@ -583,6 +587,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       doUnwindBlk
     )
     
+    val doUnwindLazy = LazyVal(doUnwindSym)
+    
     // Replaces ResultPlaceholders to check for effects and link the effect trace
     def prepareBlock(b: Block): Block =
       val transform = new BlockTransformerShallow(SymbolSubst()):
@@ -637,7 +643,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       val transform = new BlockTransformerShallow(SymbolSubst()):
         override def applyBlock(b: Block): Block = b match
           case ReturnCont(res, uid) => Return(Call(
-              Select(clsSym.asPath, Tree.Ident("doUnwind"))(S(doUnwindSym)), 
+              Select(clsSym.asPath, Tree.Ident("doUnwind"))(S(doUnwindLazy.get)), 
               res.asPath.asArg :: Value.Lit(Tree.IntLit(uid)).asArg :: Nil)(true, false),
               false
             )
@@ -720,6 +726,11 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
       getLocalsFnDef :: getLocFnDef :: Nil
     
+    val mtds = if doUnwindLazy.empty then
+      resumeFnDef :: debugMtds
+    else
+      doUnwindDef :: resumeFnDef :: debugMtds
+    
     S(ClsLikeDefn(
       N, // no owner
       clsSym,
@@ -732,7 +743,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       } :: Nil)),
       Nil,
       S(paths.contClsPath),
-      doUnwindDef :: resumeFnDef :: debugMtds,
+      mtds,
       Nil,
       Nil,
       Assign(freshTmp(), PureCall(

@@ -51,12 +51,6 @@ hi(0)
 //│       return this;
 //│     }
 //│   }
-//│   doUnwind(res1, newPc) {
-//│     this.pc = newPc;
-//│     res1.contTrace.last.next = this;
-//│     res1.contTrace.last = this;
-//│     return res1
-//│   } 
 //│   resume(value$) {
 //│     contLoop: while (true) {
 //│       if (this.pc === 0) {
@@ -80,6 +74,7 @@ hi(0)
 //│ };
 //│ hi = function hi(n) {
 //│   let scrut, tmp, stackDelayRes;
+//│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
 //│     return doUnwind_fun$1$(n, scrut, tmp, stackDelayRes, 0)
@@ -89,7 +84,6 @@ hi(0)
 //│     return 0
 //│   } else {
 //│     tmp = n - 1;
-//│     runtime.stackDepth = runtime.stackDepth + 1;
 //│     return hi(tmp)
 //│   }
 //│ };
@@ -191,6 +185,7 @@ sum(10000)
 //│ sum1 = function sum(n) {
 //│   let scrut, tmp, tmp1, curDepth, stackDelayRes;
 //│   curDepth = runtime.stackDepth;
+//│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
 //│     return doUnwind_fun$4$(n, scrut, tmp, tmp1, stackDelayRes, 0)
@@ -200,7 +195,6 @@ sum(10000)
 //│     return 0
 //│   } else {
 //│     tmp = n - 1;
-//│     runtime.stackDepth = runtime.stackDepth + 1;
 //│     tmp1 = sum1(tmp);
 //│     tmp1 = runtime.resetDepth(tmp1, curDepth);
 //│     if (tmp1 instanceof runtime.EffectSig.class) {
