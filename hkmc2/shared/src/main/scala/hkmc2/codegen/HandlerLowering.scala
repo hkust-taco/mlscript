@@ -44,10 +44,6 @@ object HandlerLowering:
   private case class LinkState(res: Local, cls: Path, uid: StateId, doUnwind: Opt[LazyVal[Path]])
   
   type FnOrCls = Either[BlockMemberSymbol, MemberSymbol[? <: ClassLikeDef] & InnerSymbol]
-  case class DoUnwindInfo(
-    funOrCtor: FnOrCls,
-    sym: BlockMemberSymbol
-  )
   
   // isTopLevel:
   // whether the current block is the top level block, as we do not emit code for continuation class on the top level
