@@ -22,14 +22,9 @@ fun foo(x, y) =
   fun foo3 = M.foo2()
   foo3
 //│ JS (unsanitized):
-//│ let M3, foo3, foo1, foo3$, foo$capture1;
+//│ let M3, foo1, foo3$, foo$capture1;
 //│ foo3$ = function foo3$(M4, x, foo$capture2) {
 //│   return M4.foo2()
-//│ };
-//│ foo3 = function foo3(M4, x, foo$capture2) {
-//│   return () => {
-//│     return foo3$(M4, x, foo$capture2)
-//│   }
 //│ };
 //│ M3 = function M(x$11, foo$capture$01) {
 //│   return new M.class()(x$11, foo$capture$01);
@@ -332,14 +327,9 @@ module A with
     f() + g()
 A.x
 //│ JS (unsanitized):
-//│ let h, A16, h$;
+//│ let A16, h$;
 //│ h$ = function h$(f$member) {
 //│   return f$member()
-//│ };
-//│ h = function h(f$member) {
-//│   return () => {
-//│     return h$(f$member)
-//│   }
 //│ };
 //│ (class A15 {
 //│   static {

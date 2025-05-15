@@ -4,93 +4,9 @@
 // :pt
 // :elt
 
-:global
-:d
-:todo
 
-:sjs
-fun dummy() = 0
-//│ Elab: ( ‹› fun member:dummy‹851›() = 0; )
-//│ JS (unsanitized):
-//│ let dummy; dummy = function dummy() { return 0 };
 
-:lift
-:effectHandlers
-:sjs
-fun f() =
-  dummy()
-  2
-//│ Elab: ( ‹› fun member:f‹856›() = ( member:dummy‹851›#666(); 2 ); )
-//│ JS (unsanitized):
-//│ let f, Cont$func$f$1, doUnwind_fun$3, doUnwind_fun$3$, Cont$func$f$$ctor, Cont$func$f$$;
-//│ Cont$func$f$$ = function Cont$func$f$$(tmp$0, pc) {
-//│   let tmp;
-//│   tmp = new Cont$func$f$1.class(pc);
-//│   return tmp(tmp$0)
-//│ };
-//│ Cont$func$f$$ctor = function Cont$func$f$$ctor(tmp$0) {
-//│   return (pc) => {
-//│     let tmp;
-//│     tmp = new Cont$func$f$1.class(pc);
-//│     return tmp(tmp$0)
-//│   }
-//│ };
-//│ Cont$func$f$1 = function Cont$func$f$(pc1) {
-//│   return (tmp$01) => {
-//│     return new Cont$func$f$.class(pc1)(tmp$01);
-//│   }
-//│ };
-//│ Cont$func$f$1.class = class Cont$func$f$ extends runtime.FunctionContFrame.class {
-//│   constructor(pc) {
-//│     return (tmp$0) => {
-//│       let tmp;
-//│       tmp = super(null);
-//│       this.tmp$0 = tmp$0;
-//│       this.pc = pc;
-//│       return this;
-//│     }
-//│   }
-//│   doUnwind(res, newPc) {
-//│     this.pc = newPc;
-//│     res.contTrace.last.next = this;
-//│     res.contTrace.last = this;
-//│     return res
-//│   } 
-//│   resume(value$) {
-//│     if (this.pc === 1) {
-//│       this.tmp$0 = value$;
-//│     }
-//│     contLoop: while (true) {
-//│       if (this.pc === 2) {
-//│         this.tmp$0 = dummy();
-//│         if (this.tmp$0 instanceof runtime.EffectSig.class) {
-//│           return this.doUnwind(this.tmp$0, 1)
-//│         }
-//│         this.pc = 1;
-//│         continue contLoop;
-//│       } else if (this.pc === 1) {
-//│         return 2
-//│       }
-//│       break;
-//│     }
-//│   }
-//│   toString() { return "Cont$func$f$(" + runtime.render(this.pc) + ")"; }
-//│ };
-//│ doUnwind_fun$3$ = function doUnwind_fun$3$(tmp, res, pc) {
-//│   res.contTrace.last.next = Cont$func$f$$(tmp, pc);
-//│   res.contTrace.last = res.contTrace.last.next;
-//│   return res
-//│ };
-//│ doUnwind_fun$3 = function doUnwind_fun$3(tmp) {
-//│   return (res, pc) => {
-//│     return doUnwind_fun$3$(tmp, res, pc)
-//│   }
-//│ };
-//│ f = function f() {
-//│   let tmp;
-//│   tmp = dummy();
-//│   if (tmp instanceof runtime.EffectSig.class) {
-//│     return doUnwind_fun$3$(tmp, tmp, 1)
-//│   }
-//│   return 2
-//│ };
+
+
+
+
