@@ -13,28 +13,28 @@ fun f() =
   1
 f() + f() + f()
 //│ JS (unsanitized):
-//│ let f, Effect1, tmp, handleBlock$, Cont$func$f$1, Cont$handleBlock$h$1, Handler$h$1, lambda, f$, Cont$func$f$$ctor, Cont$func$f$$, Cont$handleBlock$h$$ctor, Cont$handleBlock$h$$, lambda$;
+//│ let f, Effect1, tmp, handleBlock$, Cont$func$f$1, doUnwind_fun$3, Cont$handleBlock$h$1, hdlrFun, Handler$h$1, f$, doUnwind_fun$3$, Cont$func$f$$ctor, Cont$func$f$$, Cont$handleBlock$h$$ctor, Cont$handleBlock$h$$, hdlrFun$;
 //│ Effect1 = class Effect {
 //│   constructor() {}
 //│   toString() { return "Effect"; }
 //│ };
-//│ lambda$ = function lambda$(Handler$h$$instance, k) {
+//│ hdlrFun$ = function hdlrFun$(Handler$h$$instance, k) {
 //│   return runtime.safeCall(k())
 //│ };
-//│ lambda = (undefined, function (Handler$h$$instance) {
+//│ hdlrFun = function hdlrFun(Handler$h$$instance) {
 //│   return (k) => {
-//│     return lambda$(Handler$h$$instance, k)
+//│     return hdlrFun$(Handler$h$$instance, k)
 //│   }
-//│ });
+//│ };
 //│ Handler$h$1 = class Handler$h$ extends Effect1 {
 //│   constructor() {
 //│     let tmp1;
 //│     tmp1 = super();
 //│   }
 //│   perform() {
-//│     let lambda$this;
-//│     lambda$this = runtime.safeCall(lambda(this));
-//│     return runtime.mkEffect(this, lambda$this)
+//│     let hdlrFun$this;
+//│     hdlrFun$this = runtime.safeCall(hdlrFun(this));
+//│     return runtime.mkEffect(this, hdlrFun$this)
 //│   }
 //│   toString() { return "Handler$h$"; }
 //│ };
@@ -69,53 +69,50 @@ f() + f() + f()
 //│       return this;
 //│     }
 //│   }
+//│   doUnwind(res, newPc) {
+//│     this.pc = newPc;
+//│     res.contTrace.last.next = this;
+//│     res.contTrace.last = this;
+//│     return res
+//│   } 
 //│   resume(value$) {
-//│     if (this.pc === 2) {
+//│     if (this.pc === 4) {
 //│       this.tmp$1 = value$;
-//│     } else if (this.pc === 3) {
+//│     } else if (this.pc === 5) {
 //│       this.tmp$2 = value$;
-//│     } else if (this.pc === 4) {
+//│     } else if (this.pc === 6) {
 //│       this.tmp$4 = value$;
 //│     }
 //│     contLoop: while (true) {
-//│       if (this.pc === 7) {
+//│       if (this.pc === 9) {
 //│         this.tmp$1 = f$(this.h$0);
 //│         if (this.tmp$1 instanceof runtime.EffectSig.class) {
-//│           this.pc = 2;
-//│           this.tmp$1.contTrace.last.next = this;
-//│           this.tmp$1.contTrace.last = this;
-//│           return this.tmp$1
-//│         }
-//│         this.pc = 2;
-//│         continue contLoop;
-//│       } else if (this.pc === 2) {
-//│         this.pc = 6;
-//│         continue contLoop;
-//│       } else if (this.pc === 6) {
-//│         this.tmp$2 = f$(this.h$0);
-//│         if (this.tmp$2 instanceof runtime.EffectSig.class) {
-//│           this.pc = 3;
-//│           this.tmp$2.contTrace.last.next = this;
-//│           this.tmp$2.contTrace.last = this;
-//│           return this.tmp$2
-//│         }
-//│         this.pc = 3;
-//│         continue contLoop;
-//│       } else if (this.pc === 3) {
-//│         this.tmp$3 = this.tmp$1 + this.tmp$2;
-//│         this.pc = 5;
-//│         continue contLoop;
-//│       } else if (this.pc === 5) {
-//│         this.tmp$4 = f$(this.h$0);
-//│         if (this.tmp$4 instanceof runtime.EffectSig.class) {
-//│           this.pc = 4;
-//│           this.tmp$4.contTrace.last.next = this;
-//│           this.tmp$4.contTrace.last = this;
-//│           return this.tmp$4
+//│           return this.doUnwind(this.tmp$1, 4)
 //│         }
 //│         this.pc = 4;
 //│         continue contLoop;
 //│       } else if (this.pc === 4) {
+//│         this.pc = 8;
+//│         continue contLoop;
+//│       } else if (this.pc === 8) {
+//│         this.tmp$2 = f$(this.h$0);
+//│         if (this.tmp$2 instanceof runtime.EffectSig.class) {
+//│           return this.doUnwind(this.tmp$2, 5)
+//│         }
+//│         this.pc = 5;
+//│         continue contLoop;
+//│       } else if (this.pc === 5) {
+//│         this.tmp$3 = this.tmp$1 + this.tmp$2;
+//│         this.pc = 7;
+//│         continue contLoop;
+//│       } else if (this.pc === 7) {
+//│         this.tmp$4 = f$(this.h$0);
+//│         if (this.tmp$4 instanceof runtime.EffectSig.class) {
+//│           return this.doUnwind(this.tmp$4, 6)
+//│         }
+//│         this.pc = 6;
+//│         continue contLoop;
+//│       } else if (this.pc === 6) {
 //│         return this.tmp$3 + this.tmp$4
 //│       }
 //│       break;
@@ -151,22 +148,25 @@ f() + f() + f()
 //│       return this;
 //│     }
 //│   }
+//│   doUnwind(res, newPc) {
+//│     this.pc = newPc;
+//│     res.contTrace.last.next = this;
+//│     res.contTrace.last = this;
+//│     return res
+//│   } 
 //│   resume(value$) {
-//│     if (this.pc === 0) {
+//│     if (this.pc === 1) {
 //│       this.tmp$1 = value$;
 //│     }
 //│     contLoop: while (true) {
-//│       if (this.pc === 1) {
+//│       if (this.pc === 2) {
 //│         this.tmp$1 = runtime.safeCall(this.h$0.perform());
 //│         if (this.tmp$1 instanceof runtime.EffectSig.class) {
-//│           this.pc = 0;
-//│           this.tmp$1.contTrace.last.next = this;
-//│           this.tmp$1.contTrace.last = this;
-//│           return this.tmp$1
+//│           return this.doUnwind(this.tmp$1, 1)
 //│         }
-//│         this.pc = 0;
+//│         this.pc = 1;
 //│         continue contLoop;
-//│       } else if (this.pc === 0) {
+//│       } else if (this.pc === 1) {
 //│         return 1
 //│       }
 //│       break;
@@ -174,13 +174,21 @@ f() + f() + f()
 //│   }
 //│   toString() { return "Cont$func$f$(" + runtime.render(this.pc) + ")"; }
 //│ };
+//│ doUnwind_fun$3$ = function doUnwind_fun$3$(h, tmp1, res, pc) {
+//│   res.contTrace.last.next = Cont$func$f$$(h, tmp1, pc);
+//│   res.contTrace.last = res.contTrace.last.next;
+//│   return res
+//│ };
+//│ doUnwind_fun$3 = function doUnwind_fun$3(h, tmp1) {
+//│   return (res, pc) => {
+//│     return doUnwind_fun$3$(h, tmp1, res, pc)
+//│   }
+//│ };
 //│ f$ = function f$(h) {
 //│   let tmp1;
 //│   tmp1 = runtime.safeCall(h.perform());
 //│   if (tmp1 instanceof runtime.EffectSig.class) {
-//│     tmp1.contTrace.last.next = Cont$func$f$$(h, tmp1, 0);
-//│     tmp1.contTrace.last = tmp1.contTrace.last.next;
-//│     return tmp1
+//│     return doUnwind_fun$3$(h, tmp1, tmp1, 1)
 //│   }
 //│   return 1
 //│ };
@@ -194,18 +202,18 @@ f() + f() + f()
 //│   h = new Handler$h$1();
 //│   tmp1 = f$(h);
 //│   if (tmp1 instanceof runtime.EffectSig.class) {
-//│     tmp1.contTrace.last.next = Cont$handleBlock$h$$(h, tmp1, tmp2, tmp3, tmp4, 2);
+//│     tmp1.contTrace.last.next = Cont$handleBlock$h$$(h, tmp1, tmp2, tmp3, tmp4, 4);
 //│     return runtime.handleBlockImpl(tmp1, h)
 //│   }
 //│   tmp2 = f$(h);
 //│   if (tmp2 instanceof runtime.EffectSig.class) {
-//│     tmp2.contTrace.last.next = Cont$handleBlock$h$$(h, tmp1, tmp2, tmp3, tmp4, 3);
+//│     tmp2.contTrace.last.next = Cont$handleBlock$h$$(h, tmp1, tmp2, tmp3, tmp4, 5);
 //│     return runtime.handleBlockImpl(tmp2, h)
 //│   }
 //│   tmp3 = tmp1 + tmp2;
 //│   tmp4 = f$(h);
 //│   if (tmp4 instanceof runtime.EffectSig.class) {
-//│     tmp4.contTrace.last.next = Cont$handleBlock$h$$(h, tmp1, tmp2, tmp3, tmp4, 4);
+//│     tmp4.contTrace.last.next = Cont$handleBlock$h$$(h, tmp1, tmp2, tmp3, tmp4, 6);
 //│     return runtime.handleBlockImpl(tmp4, h)
 //│   }
 //│   return tmp3 + tmp4

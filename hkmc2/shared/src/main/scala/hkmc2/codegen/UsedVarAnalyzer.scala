@@ -166,7 +166,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
         blkAccessesShallow(f.body).withoutLocals(fVars)
       case c: ClsLikeDefn =>
         val methodSyms = c.methods.map(_.sym).toSet
-        c.methods.foldLeft(blkAccessesShallow(c.preCtor) ++ blkAccessesShallow(c.ctor)):
+        val ret = c.methods.foldLeft(blkAccessesShallow(c.preCtor) ++ blkAccessesShallow(c.ctor)):
           case (acc, fDefn) =>
             // class methods do not need to be lifted, so we don't count calls to their methods.
             // a previous reference to this class's block member symbol is enough to assume any
@@ -175,6 +175,11 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
             // however, we must keep references to the class itself!
             val defnAccess = findAccessesShallow(fDefn)
             acc ++ defnAccess.withoutBms(methodSyms)
+        if c.parentPath.isDefined && isHandlerClsPath(c.parentPath.get) then
+          // for continuation classes, treat them like they only read variables
+          AccessInfo(ret.accessed ++ ret.mutated, Set.empty, ret.refdDefns)
+        else
+          ret
       case _: ValDefn => AccessInfo.empty
     
     accessedCache.getOrElseUpdate(defn.sym, create)
@@ -323,16 +328,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
 
         def handleCalledBms(called: BlockMemberSymbol): Unit = defnSyms.get(called) match
           case None => ()
-          case Some(defn) =>
-            // special case continuation classes
-            defn match
-              case c: ClsLikeDefn => c.parentPath match
-                case S(path) if isHandlerClsPath(path) => return
-                    // treat the continuation class as if it does not exist
-                case _ => ()
-              case _ => ()
-            
-
+          case Some(defn) => 
             val AccessInfo(accessed, muted, refd) = accessMap(defn.sym)
             val muts = muted.intersect(thisVars)
             val reads = defn.freeVars.intersect(thisVars) -- muts

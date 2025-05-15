@@ -21,10 +21,74 @@ fun hi(n) =
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
-//│ let hi, res, $_stack$_safe$_body$_, $_stack$_safe$_body$_1;
+//│ let hi, Cont$func$hi$1, doUnwind_fun$1, res, $_stack$_safe$_body$_, doUnwind_fun$1$, Cont$func$hi$$ctor, Cont$func$hi$$;
+//│ Cont$func$hi$$ = function Cont$func$hi$$(n$0, scrut$1, tmp$2, pc) {
+//│   let tmp;
+//│   tmp = new Cont$func$hi$1.class(pc);
+//│   return tmp(n$0, scrut$1, tmp$2)
+//│ };
+//│ Cont$func$hi$$ctor = function Cont$func$hi$$ctor(n$0, scrut$1, tmp$2) {
+//│   return (pc) => {
+//│     let tmp;
+//│     tmp = new Cont$func$hi$1.class(pc);
+//│     return tmp(n$0, scrut$1, tmp$2)
+//│   }
+//│ };
+//│ Cont$func$hi$1 = function Cont$func$hi$(pc1) {
+//│   return (n$01, scrut$11, tmp$21) => {
+//│     return new Cont$func$hi$.class(pc1)(n$01, scrut$11, tmp$21);
+//│   }
+//│ };
+//│ Cont$func$hi$1.class = class Cont$func$hi$ extends runtime.FunctionContFrame.class {
+//│   constructor(pc) {
+//│     return (n$0, scrut$1, tmp$2) => {
+//│       let tmp;
+//│       tmp = super(null);
+//│       this.n$0 = n$0;
+//│       this.scrut$1 = scrut$1;
+//│       this.tmp$2 = tmp$2;
+//│       this.pc = pc;
+//│       return this;
+//│     }
+//│   }
+//│   doUnwind(res1, newPc) {
+//│     this.pc = newPc;
+//│     res1.contTrace.last.next = this;
+//│     res1.contTrace.last = this;
+//│     return res1
+//│   } 
+//│   resume(value$) {
+//│     contLoop: while (true) {
+//│       if (this.pc === 0) {
+//│         this.scrut$1 = this.n$0 == 0;
+//│         if (this.scrut$1 === true) {
+//│           return 0
+//│         } else {
+//│           this.tmp$2 = this.n$0 - 1;
+//│           return hi(this.tmp$2)
+//│         }
+//│       }
+//│       break;
+//│     }
+//│   }
+//│   toString() { return "Cont$func$hi$(" + runtime.render(this.pc) + ")"; }
+//│ };
+//│ doUnwind_fun$1$ = function doUnwind_fun$1$(n, scrut, tmp, res1, pc) {
+//│   res1.contTrace.last.next = Cont$func$hi$$(n, scrut, tmp, pc);
+//│   res1.contTrace.last = res1.contTrace.last.next;
+//│   return res1
+//│ };
+//│ doUnwind_fun$1 = function doUnwind_fun$1(n, scrut, tmp) {
+//│   return (res1, pc) => {
+//│     return doUnwind_fun$1$(n, scrut, tmp, res1, pc)
+//│   }
+//│ };
 //│ hi = function hi(n) {
 //│   let scrut, tmp, stackDelayRes;
 //│   stackDelayRes = runtime.checkDepth();
+//│   if (stackDelayRes instanceof runtime.EffectSig.class) {
+//│     return doUnwind_fun$1$(n, scrut, tmp, stackDelayRes, 0)
+//│   }
 //│   scrut = n == 0;
 //│   if (scrut === true) {
 //│     return 0
@@ -34,15 +98,12 @@ hi(0)
 //│     return hi(tmp)
 //│   }
 //│ };
-//│ $_stack$_safe$_body$_1 = (undefined, function () {
+//│ $_stack$_safe$_body$_ = (undefined, function () {
 //│   return hi(0)
 //│ });
-//│ res = runtime.runStackSafe(5, $_stack$_safe$_body$_1);
+//│ res = runtime.runStackSafe(5, $_stack$_safe$_body$_);
 //│ if (res instanceof runtime.EffectSig.class) {
-//│   $_stack$_safe$_body$_ = (undefined, function () {
-//│     return runtime.topLevelEffect(res, false)
-//│   });
-//│   res = runtime.runStackSafe(5, $_stack$_safe$_body$_);
+//│   res = runtime.topLevelEffect(res, false);
 //│ }
 //│ res
 //│ = 0
@@ -57,70 +118,93 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ JS (unsanitized):
-//│ let sum1, Cont$func$sum$1, res1, $_stack$_safe$_body$_2, $_stack$_safe$_body$_3, Cont$func$sum$$ctor, Cont$func$sum$$;
-//│ Cont$func$sum$$ = function Cont$func$sum$$(n$0, tmp$1, tmp$2, pc) {
+//│ let sum1, Cont$func$sum$1, doUnwind_fun$4, res1, $_stack$_safe$_body$_1, doUnwind_fun$4$, Cont$func$sum$$ctor, Cont$func$sum$$;
+//│ Cont$func$sum$$ = function Cont$func$sum$$(n$0, scrut$1, tmp$2, tmp$3, pc) {
 //│   let tmp;
 //│   tmp = new Cont$func$sum$1.class(pc);
-//│   return tmp(n$0, tmp$1, tmp$2)
+//│   return tmp(n$0, scrut$1, tmp$2, tmp$3)
 //│ };
-//│ Cont$func$sum$$ctor = function Cont$func$sum$$ctor(n$0, tmp$1, tmp$2) {
+//│ Cont$func$sum$$ctor = function Cont$func$sum$$ctor(n$0, scrut$1, tmp$2, tmp$3) {
 //│   return (pc) => {
 //│     let tmp;
 //│     tmp = new Cont$func$sum$1.class(pc);
-//│     return tmp(n$0, tmp$1, tmp$2)
+//│     return tmp(n$0, scrut$1, tmp$2, tmp$3)
 //│   }
 //│ };
 //│ Cont$func$sum$1 = function Cont$func$sum$(pc1) {
-//│   return (n$01, tmp$11, tmp$21) => {
-//│     return new Cont$func$sum$.class(pc1)(n$01, tmp$11, tmp$21);
+//│   return (n$01, scrut$11, tmp$21, tmp$31) => {
+//│     return new Cont$func$sum$.class(pc1)(n$01, scrut$11, tmp$21, tmp$31);
 //│   }
 //│ };
 //│ Cont$func$sum$1.class = class Cont$func$sum$ extends runtime.FunctionContFrame.class {
 //│   constructor(pc) {
-//│     return (n$0, tmp$1, tmp$2) => {
+//│     return (n$0, scrut$1, tmp$2, tmp$3) => {
 //│       let tmp;
 //│       tmp = super(null);
 //│       this.n$0 = n$0;
-//│       this.tmp$1 = tmp$1;
+//│       this.scrut$1 = scrut$1;
 //│       this.tmp$2 = tmp$2;
+//│       this.tmp$3 = tmp$3;
 //│       this.pc = pc;
 //│       return this;
 //│     }
 //│   }
+//│   doUnwind(res2, newPc) {
+//│     this.pc = newPc;
+//│     res2.contTrace.last.next = this;
+//│     res2.contTrace.last = this;
+//│     return res2
+//│   } 
 //│   resume(value$) {
-//│     let curDepth, stackDelayRes;
-//│     curDepth = runtime.stackDepth;
-//│     stackDelayRes = runtime.checkDepth();
-//│     if (this.pc === 0) {
-//│       this.tmp$2 = value$;
+//│     if (this.pc === 1) {
+//│       this.tmp$3 = value$;
 //│     }
 //│     contLoop: while (true) {
-//│       if (this.pc === 1) {
-//│         break contLoop;
-//│       } else if (this.pc === 2) {
-//│         runtime.stackDepth = runtime.stackDepth + 1;
-//│         this.tmp$2 = sum1(this.tmp$1);
-//│         this.tmp$2 = runtime.resetDepth(this.tmp$2, curDepth);
-//│         if (this.tmp$2 instanceof runtime.EffectSig.class) {
-//│           this.pc = 0;
-//│           this.tmp$2.contTrace.last.next = this;
-//│           this.tmp$2.contTrace.last = this;
-//│           return this.tmp$2
+//│       if (this.pc === 0) {
+//│         this.scrut$1 = this.n$0 == 0;
+//│         if (this.scrut$1 === true) {
+//│           return 0
+//│         } else {
+//│           this.tmp$2 = this.n$0 - 1;
+//│           this.pc = 3;
+//│           continue contLoop;
 //│         }
-//│         this.pc = 0;
+//│         this.pc = 2;
 //│         continue contLoop;
-//│       } else if (this.pc === 0) {
-//│         return this.n$0 + this.tmp$2
+//│       } else if (this.pc === 2) {
+//│         break contLoop;
+//│       } else if (this.pc === 3) {
+//│         this.tmp$3 = sum1(this.tmp$2);
+//│         if (this.tmp$3 instanceof runtime.EffectSig.class) {
+//│           return this.doUnwind(this.tmp$3, 1)
+//│         }
+//│         this.pc = 1;
+//│         continue contLoop;
+//│       } else if (this.pc === 1) {
+//│         return this.n$0 + this.tmp$3
 //│       }
 //│       break;
 //│     }
 //│   }
 //│   toString() { return "Cont$func$sum$(" + runtime.render(this.pc) + ")"; }
 //│ };
+//│ doUnwind_fun$4$ = function doUnwind_fun$4$(n, scrut, tmp, tmp1, res2, pc) {
+//│   res2.contTrace.last.next = Cont$func$sum$$(n, scrut, tmp, tmp1, pc);
+//│   res2.contTrace.last = res2.contTrace.last.next;
+//│   return res2
+//│ };
+//│ doUnwind_fun$4 = function doUnwind_fun$4(n, scrut, tmp, tmp1) {
+//│   return (res2, pc) => {
+//│     return doUnwind_fun$4$(n, scrut, tmp, tmp1, res2, pc)
+//│   }
+//│ };
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, curDepth, tmp2, stackDelayRes;
+//│   let scrut, tmp, tmp1, curDepth, stackDelayRes;
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
+//│   if (stackDelayRes instanceof runtime.EffectSig.class) {
+//│     return doUnwind_fun$4$(n, scrut, tmp, tmp1, stackDelayRes, 0)
+//│   }
 //│   scrut = n == 0;
 //│   if (scrut === true) {
 //│     return 0
@@ -130,43 +214,20 @@ sum(10000)
 //│     tmp1 = sum1(tmp);
 //│     tmp1 = runtime.resetDepth(tmp1, curDepth);
 //│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       runtime.stackDepth = runtime.stackDepth + 1;
-//│       tmp2 = Cont$func$sum$$(n, tmp, tmp1, 0);
-//│       tmp2 = runtime.resetDepth(tmp2, curDepth);
-//│       tmp1.contTrace.last.next = tmp2;
-//│       tmp1.contTrace.last = tmp1.contTrace.last.next;
-//│       return tmp1
+//│       return doUnwind_fun$4$(n, scrut, tmp, tmp1, tmp1, 1)
 //│     }
 //│     return n + tmp1
 //│   }
 //│ };
-//│ $_stack$_safe$_body$_3 = (undefined, function () {
+//│ $_stack$_safe$_body$_1 = (undefined, function () {
 //│   return sum1(10000)
 //│ });
-//│ res1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_3);
+//│ res1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
 //│ if (res1 instanceof runtime.EffectSig.class) {
-//│   $_stack$_safe$_body$_2 = (undefined, function () {
-//│     return runtime.topLevelEffect(res1, false)
-//│   });
-//│   res1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_2);
+//│   res1 = runtime.topLevelEffect(res1, false);
 //│ }
 //│ res1
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:149)
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
-//│     at StackDelayHandler.delay (file:///storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:232:12)
-//│     at Runtime.checkDepth (file:///storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:785:52)
-//│     at sum (REPL14:1:2624)
-//│     at sum (REPL14:1:2800)
-//│     at sum (REPL14:1:2800)
-//│     at sum (REPL14:1:2800)
-//│     at sum (REPL14:1:2800)
-//│     at sum (REPL14:1:2800)
-//│     at sum (REPL14:1:2800)
-//│     at sum (REPL14:1:2800)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:195)
-//│ ═══[RUNTIME ERROR] Expected: '50005000', got: 'undefined'
+//│ = 50005000
 
 // stack-overflows without :stackSafe
 :re
@@ -187,20 +248,8 @@ fun foo(f) =
     set ctr += 1
     dummy(f(f))
 foo(foo)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:149)
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
-//│     at StackDelayHandler.delay (file:///storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:232:12)
-//│     at Runtime.checkDepth (file:///storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:785:52)
-//│     at foo (REPL20:1:2811)
-//│     at foo (REPL20:1:3008)
-//│     at foo (REPL20:1:3008)
-//│     at foo (REPL20:1:3008)
-//│     at foo (REPL20:1:3008)
-//│     at foo (REPL20:1:3008)
-//│     at foo (REPL20:1:3008)
-//│     at foo (REPL20:1:3008)
-//│ ctr = 4910
+//│ = 0
+//│ ctr = 10001
 
 :stackSafe 1000
 :effectHandlers
@@ -211,23 +260,8 @@ val foo =
     else n + f(n-1)
   f(10000)
 foo
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:149)
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
-//│     at Runtime.checkDepth (file:///storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:779:20)
-//│     at lambda (REPL24:1:2707)
-//│     at lambda (REPL24:1:2883)
-//│     at lambda (REPL24:1:2883)
-//│     at lambda (REPL24:1:2883)
-//│     at lambda (REPL24:1:2883)
-//│     at lambda (REPL24:1:2883)
-//│     at lambda (REPL24:1:2883)
-//│     at lambda (REPL24:1:2883)
-//│     at lambda (REPL24:1:2883)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:195)
-//│ ═══[RUNTIME ERROR] Expected: '50005000', got: 'undefined'
-//│ foo = undefined
+//│ = 50005000
+//│ foo = 50005000
 
 :re
 fun foo() =
@@ -255,22 +289,7 @@ handle h = Eff with
       else n + f(n-1)
     resume(f(10000))
 foo(h)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:149)
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
-//│     at StackDelayHandler.delay (file:///storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:232:12)
-//│     at Runtime.checkDepth (file:///storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:785:52)
-//│     at lambda$ (REPL34:1:8824)
-//│     at lambda$capture.f0$ (REPL34:1:9765)
-//│     at lambda$ (REPL34:1:9016)
-//│     at lambda$capture.f0$ (REPL34:1:9765)
-//│     at lambda$ (REPL34:1:9016)
-//│     at lambda$capture.f0$ (REPL34:1:9765)
-//│     at lambda$ (REPL34:1:9016)
-//│     at lambda$capture.f0$ (REPL34:1:9765)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:195)
-//│ ═══[RUNTIME ERROR] Expected: '50005000', got: 'undefined'
+//│ = 50005000
 
 // function call and defn inside handler
 :effectHandlers
@@ -286,22 +305,7 @@ handle h = Eff with
 in
   fun foo(h) = h.perform
   foo(h)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:149)
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
-//│     at StackDelayHandler.delay (file:///storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:232:12)
-//│     at Runtime.checkDepth (file:///storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:785:52)
-//│     at lambda$ (REPL37:1:6311)
-//│     at lambda$capture2.f0$ (REPL37:1:7252)
-//│     at lambda$ (REPL37:1:6503)
-//│     at lambda$capture2.f0$ (REPL37:1:7252)
-//│     at lambda$ (REPL37:1:6503)
-//│     at lambda$capture2.f0$ (REPL37:1:7252)
-//│     at lambda$ (REPL37:1:6503)
-//│     at lambda$capture2.f0$ (REPL37:1:7252)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:195)
-//│ ═══[RUNTIME ERROR] Expected: '50005000', got: 'undefined'
+//│ = 50005000
 
 :re
 :effectHandlers
@@ -357,20 +361,5 @@ fun sum(n) =
     n + sum(n - 1)
 fun bad() = sum(10000) + sum(10000)
 bad()
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:149)
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
-//│     at Runtime.mkEffect (file:///storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:612:18)
-//│     at StackDelayHandler.delay (file:///storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:238:24)
-//│     at Runtime.checkDepth (file:///storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:785:52)
-//│     at sum (REPL52:1:2700)
-//│     at sum (REPL52:1:2877)
-//│     at sum (REPL52:1:2877)
-//│     at sum (REPL52:1:2877)
-//│     at sum (REPL52:1:2877)
-//│     at sum (REPL52:1:2877)
-//│     at sum (REPL52:1:2877)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:195)
-//│ ═══[RUNTIME ERROR] Expected: '100010000', got: 'undefined'
+//│ = 100010000
 
