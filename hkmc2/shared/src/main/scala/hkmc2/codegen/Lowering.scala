@@ -497,7 +497,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                   entries.foldRight(go(tail, topLevel = false)) {
                     case ((fieldName, fieldSymbol), blk) =>
                       mkMatch(
-                        Case.Field(fieldName, safe = true), // we have checked object type already
+                        Case.Field(fieldName, safe = true), // we know we have an object, no need to check again
                         Assign(fieldSymbol, Select(sr, fieldName)(N), blk)
                       )
                   }

@@ -394,9 +394,9 @@ enum Case:
   case Cls(cls: ClassLikeSymbol, path: Path)
   case Tup(len: Int, inf: Bool)
   /** checks field existence
-    * @param safe true will omit the Object type check
+    * @param safe true will omit the instanceof Object check
   */
-  case Field(name: Tree.Ident, safe: Bool = false)
+  case Field(name: Tree.Ident, safe: Bool)
 
   lazy val freeVars: Set[Local] = this match
     case Lit(_) => Set.empty
