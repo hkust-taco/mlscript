@@ -149,11 +149,28 @@ fun should_reject_null(x) = if x is { a: 0 } then 42 else -42
 should_reject_null(null)
 //│ = -42
 
-:todo
-:sjs
-fun is_record(x) = if x is {} then 0 else 1
-//│ JS (unsanitized):
-//│ let is_record; is_record = function is_record(x2) { return 0 };
+fun is_object(x) = if x is {} then true else false
+
+is_object(null)
+//│ = false
+
+is_object(Object)
+//│ = true
+
+is_object(0)
+//│ = false
+
+is_object("")
+//│ = false
+
+is_object(Nil)
+//│ = true
+
+is_object([1, 2])
+//│ = true
+
+is_object(is_object)
+//│ = true
 
 :todo
 fun is_record_alt(x) = x is {}
