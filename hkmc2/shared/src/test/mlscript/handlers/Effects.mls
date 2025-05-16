@@ -156,24 +156,9 @@ if true do
   fun f() = 3
   f()
 //│ JS (unsanitized):
-//│ let tmp11, handleBlock$11;
+//│ let h11, tmp11, handleBlock$11, Handler$h$23;
 //│ handleBlock$11 = function handleBlock$() {
-//│   let f, h, scrut, res, Cont$handleBlock$h$11, Handler$h$12;
-//│   Handler$h$12 = class Handler$h$11 extends Effect1 {
-//│     constructor() {
-//│       let tmp12;
-//│       tmp12 = super();
-//│     }
-//│     perform(arg) {
-//│       let hdlrFun;
-//│       hdlrFun = function hdlrFun(k) {
-//│         return arg
-//│       };
-//│       return runtime.mkEffect(this, hdlrFun)
-//│     }
-//│     toString() { return "Handler$h$"; }
-//│   };
-//│   h = new Handler$h$12();
+//│   let f, scrut, res, Cont$handleBlock$h$11, doUnwind;
 //│   Cont$handleBlock$h$11 = function Cont$handleBlock$h$(pc1) {
 //│     return new Cont$handleBlock$h$.class(pc1);
 //│   };
@@ -194,7 +179,17 @@ if true do
 //│         res = value$;
 //│       }
 //│       contLoop: while (true) {
-//│         if (this.pc === 2) {
+//│         if (this.pc === 0) {
+//│           scrut = true;
+//│           if (scrut === true) {
+//│             this.pc = 3;
+//│             continue contLoop;
+//│           } else {
+//│             return runtime.Unit
+//│           }
+//│           this.pc = 2;
+//│           continue contLoop;
+//│         } else if (this.pc === 2) {
 //│           break contLoop;
 //│         } else if (this.pc === 3) {
 //│           res = f();
@@ -211,6 +206,10 @@ if true do
 //│     }
 //│     toString() { return "Cont$handleBlock$h$(" + runtime.render(this.pc) + ")"; }
 //│   };
+//│   doUnwind = function doUnwind(res1, pc) {
+//│     res1.contTrace.last.next = Cont$handleBlock$h$11(pc);
+//│     return runtime.handleBlockImpl(res1, h11)
+//│   };
 //│   f = function f() {
 //│     return 3
 //│   };
@@ -218,17 +217,31 @@ if true do
 //│   if (scrut === true) {
 //│     res = f();
 //│     if (res instanceof runtime.EffectSig.class) {
-//│       res.contTrace.last.next = Cont$handleBlock$h$11(1);
-//│       return runtime.handleBlockImpl(res, h)
+//│       return doUnwind(res, 1)
 //│     }
 //│     return res
 //│   } else {
 //│     return runtime.Unit
 //│   }
 //│ };
+//│ Handler$h$23 = class Handler$h$22 extends Effect1 {
+//│   constructor() {
+//│     let tmp12;
+//│     tmp12 = super();
+//│   }
+//│   perform(arg) {
+//│     let hdlrFun;
+//│     hdlrFun = function hdlrFun(k) {
+//│       return arg
+//│     };
+//│     return runtime.mkEffect(this, hdlrFun)
+//│   }
+//│   toString() { return "Handler$h$"; }
+//│ };
+//│ h11 = new Handler$h$23();
 //│ tmp11 = handleBlock$11();
 //│ if (tmp11 instanceof runtime.EffectSig.class) {
-//│   tmp11 = runtime.topLevelEffect(tmp11, false);
+//│   runtime.topLevelEffect(tmp11, false)
 //│ }
 //│ tmp11
 //│ = 3

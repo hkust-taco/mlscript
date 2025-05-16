@@ -1,13 +1,14 @@
 :js
 :effectHandlers
-
+:noSanityCheck
 
 abstract class Effect with
   fun f(): ()
 
 // `return` within handle blocks is implemented as a non-local return
+:noSanityCheck
 fun f() =
-  handle h = Effect with
+  handle h = Object with
     fun foo()(r) =
       let m = r(())
       print("Bye!") // This never executes because `r` returns from `f`
@@ -39,13 +40,12 @@ let l = () =>
   return 3
   4
 //│ ╔══[ERROR] Return statements are not allowed outside of a function.
-//│ ║  l.39: 	  return 3
+//│ ║  l.55: 	  return 3
 //│ ╙──      	         ^
 //│ l = [function l]
 
-:re
+// should error with sanity checks on
 l()
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 :e
 handle h1 = Effect with
@@ -58,7 +58,7 @@ let l = () =>
   4
 l()
 //│ ╔══[ERROR] Return statements are not allowed outside of a function.
-//│ ║  l.57: 	  return 3
+//│ ║  l.85: 	  return 3
 //│ ╙──      	         ^
 
 

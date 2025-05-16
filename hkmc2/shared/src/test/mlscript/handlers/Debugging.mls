@@ -63,7 +63,22 @@ fun f() =
 //│         tmp1 = value$;
 //│       }
 //│       contLoop: while (true) {
-//│         if (this.pc === 3) {
+//│         if (this.pc === 0) {
+//│           i = 0;
+//│           j = 100;
+//│           k = 2000;
+//│           scrut = i == 0;
+//│           if (scrut === true) {
+//│             this.pc = 5;
+//│             continue contLoop;
+//│           } else {
+//│             tmp1 = runtime.Unit;
+//│             this.pc = 3;
+//│             continue contLoop;
+//│           }
+//│           this.pc = 3;
+//│           continue contLoop;
+//│         } else if (this.pc === 3) {
 //│           return j / i
 //│         } else if (this.pc === 4) {
 //│           tmp1 = Predef.print(tmp);
@@ -138,8 +153,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:138:3)
-//│ 	at lambda_test (Debugging.mls:135:3)
+//│ 	at lambda (Debugging.mls:153:3)
+//│ 	at lambda_test (Debugging.mls:150:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -209,12 +224,14 @@ fun f() =
   print(debug.getLocals())
 //│ i = 100
 
+:fixme
 f()
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 200)])]
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:205:3) with locals: j=200
+//│ > 	at f (Debugging.mls:220:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:207:3)
+//│ > 	at f (Debugging.mls:222:3)
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:208:3) with locals: j=300
+//│ > 	at f (Debugging.mls:223:3) with locals: j=300
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 300)])]
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded

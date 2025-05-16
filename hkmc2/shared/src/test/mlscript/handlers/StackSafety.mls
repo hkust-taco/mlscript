@@ -71,7 +71,7 @@ hi(0)
 //│ });
 //│ res = runtime.runStackSafe(5, $_stack$_safe$_body$_);
 //│ if (res instanceof runtime.EffectSig.class) {
-//│   res = runtime.topLevelEffect(res, false);
+//│   runtime.topLevelEffect(res, false)
 //│ }
 //│ res
 //│ = 0
@@ -167,7 +167,7 @@ sum(10000)
 //│ });
 //│ res1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
 //│ if (res1 instanceof runtime.EffectSig.class) {
-//│   res1 = runtime.topLevelEffect(res1, false);
+//│   runtime.topLevelEffect(res1, false)
 //│ }
 //│ res1
 //│ = 50005000
@@ -361,3 +361,42 @@ handle h = Object with
     k()
 f(h)
 //│ = 10000
+
+abstract class Eff with
+  fun raise()
+
+:re
+:effectHandlers
+fun shift_stack(n, f) =
+  if n >= 0 then
+    shift_stack(n - 1, f)
+  else
+    f()
+fun handler_stack(n) =
+  handle h = Eff with
+    fun raise()(k) =
+      shift_stack(100, k)
+  h.raise()
+  if n >= 0 do
+    handler_stack(n - 1)
+  "ok"
+handler_stack(100)
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+
+:stackSafe
+:effectHandlers
+fun shift_stack(n, f) =
+  if n >= 0 then
+    shift_stack(n - 1, f)
+  else
+    f()
+fun handler_stack(n) =
+  handle h = Eff with
+    fun raise()(k) =
+      shift_stack(100, k)
+  h.raise()
+  if n >= 0 do
+    handler_stack(n - 1)
+  "ok"
+handler_stack(100)
+//│ = "ok"
