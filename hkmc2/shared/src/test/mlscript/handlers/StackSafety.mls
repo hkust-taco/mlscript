@@ -71,7 +71,7 @@ hi(0)
 //│ });
 //│ res = runtime.runStackSafe(5, $_stack$_safe$_body$_);
 //│ if (res instanceof runtime.EffectSig.class) {
-//│   runtime.topLevelEffect(res, false)
+//│   res = runtime.topLevelEffect(res, false);
 //│ }
 //│ res
 //│ = 0
@@ -167,7 +167,7 @@ sum(10000)
 //│ });
 //│ res1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
 //│ if (res1 instanceof runtime.EffectSig.class) {
-//│   runtime.topLevelEffect(res1, false)
+//│   res1 = runtime.topLevelEffect(res1, false);
 //│ }
 //│ res1
 //│ = 50005000

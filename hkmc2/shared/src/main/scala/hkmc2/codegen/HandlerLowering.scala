@@ -207,6 +207,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   
   // coalesce useless states
   def optParts(entryState: BlockState, states: Ls[BlockState]): (BlockState, Ls[BlockState]) =
+    return (entryState, states)
     val statesMap = (entryState :: states).map(state => state.id -> state).toMap
     def findEdges(state: BlockState) =
       var edges: List[BlockState] = Nil
@@ -831,15 +832,15 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val transform = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
         case ResultPlaceholder(res, uid, c, rest) => 
-          val (doUnwindCall, implct) = doUnwind match
-            case None => (topLevelCall(LinkState(res, clsSym.asPath, Value.Lit(Tree.IntLit(uid)))), true)
-            case Some(doUnwind) => (PureCall(doUnwind.get, res.asPath :: Value.Lit(Tree.IntLit(uid)) :: Nil), false)
+          val doUnwindBlk = doUnwind match
+            case None => Assign(res, topLevelCall(LinkState(res, clsSym.asPath, Value.Lit(Tree.IntLit(uid)))), End())
+            case Some(doUnwind) => Return(PureCall(doUnwind.get, res.asPath :: Value.Lit(Tree.IntLit(uid)) :: Nil), false)
           blockBuilder
             .assign(res, c)
             .ifthen(
               res.asPath,
               Case.Cls(paths.effectSigSym, paths.effectSigPath),
-              Return(doUnwindCall, implct)
+              doUnwindBlk
             )
             .rest(applyBlock(rest))
         case _ => super.applyBlock(b)

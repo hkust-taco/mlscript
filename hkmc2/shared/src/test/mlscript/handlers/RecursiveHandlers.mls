@@ -415,7 +415,7 @@ str
 //│   h11 = new Handler$h1$3();
 //│   tmp9 = handleBlock$7();
 //│   if (tmp9 instanceof runtime.EffectSig.class) {
-//│     runtime.topLevelEffect(tmp9, false)
+//│     tmp9 = runtime.topLevelEffect(tmp9, false);
 //│   }
 //│   tmp10 = tmp9;
 //│ } else {

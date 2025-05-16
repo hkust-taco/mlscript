@@ -20,7 +20,7 @@ h.oops
 //│ h = new Handler$h$1();
 //│ tmp = handleBlock$();
 //│ if (tmp instanceof runtime.EffectSig.class) {
-//│   runtime.topLevelEffect(tmp, false)
+//│   tmp = runtime.topLevelEffect(tmp, false);
 //│ }
 //│ tmp
 

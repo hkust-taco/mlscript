@@ -224,7 +224,6 @@ fun f() =
   print(debug.getLocals())
 //│ i = 100
 
-:fixme
 f()
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 200)])]
 //│ > Stack Trace:
@@ -234,4 +233,3 @@ f()
 //│ > Stack Trace:
 //│ > 	at f (Debugging.mls:223:3) with locals: j=300
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 300)])]
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
