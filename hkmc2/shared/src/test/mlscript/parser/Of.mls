@@ -64,7 +64,7 @@ f of
 :pe
 log
 of 1
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found 'of' keyword instead
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'of' keyword instead
 //│ ║  l.66: 	of 1
 //│ ╙──      	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead

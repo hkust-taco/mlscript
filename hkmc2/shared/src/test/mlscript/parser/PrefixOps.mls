@@ -57,7 +57,7 @@
 :pe
 1
 *
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found end of input instead
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
 //│ ║  l.59: 	*
 //│ ╙──      	 ^
 

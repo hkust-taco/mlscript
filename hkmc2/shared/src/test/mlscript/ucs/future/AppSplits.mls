@@ -26,7 +26,10 @@ if foo of 1,
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
 //│ ║  l.24: 	  0 then "a"
 //│ ╙──      	  ^
-//│ ╔══[ERROR] Unrecognized term split (juxtaposition).
+//│ ╔══[PARSE ERROR] Unexpected literal here
+//│ ║  l.24: 	  0 then "a"
+//│ ╙──      	  ^
+//│ ╔══[ERROR] Unrecognized term split (application).
 //│ ║  l.23: 	if foo of 1,
 //│ ║        	   ^^^^^^^^^
 //│ ║  l.24: 	  0 then "a"
@@ -39,9 +42,9 @@ if foo
   (0) then "a"
   (1) then "b"
 //│ ╔══[ERROR] Unrecognized term split (juxtaposition).
-//│ ║  l.38: 	if foo
+//│ ║  l.41: 	if foo
 //│ ║        	   ^^^
-//│ ║  l.39: 	  (0) then "a"
+//│ ║  l.42: 	  (0) then "a"
 //│ ╙──      	^^
 
 

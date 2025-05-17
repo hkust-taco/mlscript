@@ -1,8 +1,15 @@
 
-import "./Runtime.mls"
-import "./Rendering.mls"
+// * Importing the mjs for now to avoid reparsing/re-elaborating these files Runtime all the time
+// * TODO: proper caching of parsed/elaborated files
+import "./Runtime.mjs"
+import "./Rendering.mjs"
+// import "./Runtime.mls"
+// import "./Rendering.mls"
+
+
 
 module Predef with ...
+
 
 fun id(x) = x
 

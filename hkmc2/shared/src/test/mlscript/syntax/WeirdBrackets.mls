@@ -35,13 +35,13 @@ fun f(x) = if x is {( Int then 1, Bool then 2 )}
 
 :e
 fun f(x) = if x is ( Int then 1, Bool then 2 )
-//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ╔══[ERROR] Unrecognized pattern split (parenthesis section).
 //│ ║  l.37: 	fun f(x) = if x is ( Int then 1, Bool then 2 )
 //│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 fun f(x) = if x is \{ Int then 1, Bool then 2 }
-//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ╔══[ERROR] Unrecognized pattern split (juxtaposition).
 //│ ║  l.43: 	fun f(x) = if x is \{ Int then 1, Bool then 2 }
 //│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -19,7 +19,7 @@
 "a" +
 // a
 "b"
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found new line instead
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
 //│ ║  l.20: 	// a
 //│ ║        	    ^
 //│ ║  l.21: 	"b"
@@ -329,7 +329,7 @@ open Stack { Nil, :: }
 
 mkStr of ... // hello
 "oops"
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found new line instead
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
 //│ ║  l.330: 	mkStr of ... // hello
 //│ ║         	                     ^
 //│ ║  l.331: 	"oops"

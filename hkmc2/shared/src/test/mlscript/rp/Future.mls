@@ -48,7 +48,7 @@ fun foo(x) = if x is
   view as
     Unit then ....
     Arrow(...) then ....
-//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ╔══[ERROR] Unrecognized pattern split (infix operator).
 //│ ║  l.48: 	  view as
 //│ ║        	  ^^^^^^^
 //│ ║  l.49: 	    Unit then ....
@@ -103,7 +103,7 @@ pattern Lines(pattern L) = case
   
 :todo
 if input is Lines of Email then
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found end of input instead
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
 //│ ║  l.105: 	if input is Lines of Email then
 //│ ╙──       	                               ^
 //│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Tup(List())), TypeDef(Pat,Ident(Tail),Some(Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Tup(List())), InfixApp(InfixApp(OpApp(StrLit(

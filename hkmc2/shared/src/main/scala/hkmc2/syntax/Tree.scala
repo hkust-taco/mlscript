@@ -151,7 +151,7 @@ enum Tree extends AutoLocated:
   
   def describe: Str = this match
     case Empty() => "empty"
-    case Error() => "<erroneous syntax>"
+    case Error() => "‹erroneous syntax›"
     case Under() => "underscore"
     case Ident(name) => "identifier"
     case IntLit(value) => "integer literal"

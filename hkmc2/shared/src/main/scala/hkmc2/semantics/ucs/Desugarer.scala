@@ -294,9 +294,6 @@ class Desugarer(val elaborator: Elaborator)(using UnderCtx)
             val rhs = rawRhs.splitOn(Trm(vs.ref(/* FIXME ident? */)))
             log(s"rhs: $rhs")
             termSplit(rhs, identity)(elabFallback(ctx))(ctx)
-          case rhs => ctx =>
-            raise(ErrorReport(msg"Unrecognized operator branch." -> rhs.toLoc :: Nil))
-            elabFallback(ctx)
     case _ => fallback => _ =>
       raise(ErrorReport(msg"Unrecognized term split (${tree.describe})." -> tree.toLoc :: Nil))
       fallback.withoutLoc // Hacky... a loc is always added for the result
@@ -432,7 +429,7 @@ class Desugarer(val elaborator: Elaborator)(using UnderCtx)
         pre = s"patternBranch <<< $patternAndMatches -> ${consequent.fold(_.showDbg, _.showDbg)}",
         post = (res: Split) => s"patternBranch >>> ${res.showDbg}")
     case _ =>
-      raise(ErrorReport(msg"Unrecognized pattern split." -> tree.toLoc :: Nil))
+      raise(ErrorReport(msg"Unrecognized pattern split (${tree.describe})." -> tree.toLoc :: Nil))
       _ => _ => Split.default(Term.Error)
 
   /** Elaborate a single match (a scrutinee and a pattern) and forms a split

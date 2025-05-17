@@ -214,7 +214,7 @@ class ParseRules(using State):
           )
         ) { (lhs, rhs) => TypeDef(kind, lhs, rhs, N) }
   
-  val prefixRules: ParseRule[Tree] = ParseRule("start of statement", omitAltsStr = true)(
+  val prefixRules: ParseRule[Tree] = ParseRule("start of expression", omitAltsStr = true)(
     letLike(`let`),
     letLike(`set`),
     
@@ -387,7 +387,7 @@ class ParseRules(using State):
         // exprOrBlk(ParseRule(s"'${kw}' operator right-hand side")(End(())))(k)*
       )
   
-  val infixRules: ParseRule[Tree => Tree] = ParseRule("continuation of statement")(
+  val infixRules: ParseRule[Tree => Tree] = ParseRule("continuation of expression")(
     genInfixRule(`and`, (rhs, _: Unit) => lhs => InfixApp(lhs, `and`, rhs)),
     genInfixRule(`or`, (rhs, _: Unit) => lhs => InfixApp(lhs, `or`, rhs)),
     genInfixRule(`is`, (rhs, _: Unit) => lhs => InfixApp(lhs, `is`, rhs)),
