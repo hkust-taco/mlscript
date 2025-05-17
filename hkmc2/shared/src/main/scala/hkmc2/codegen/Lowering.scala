@@ -502,11 +502,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           Throw(Instantiate(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Error"))(N),
             Value.Lit(syntax.Tree.StrLit("match error")) :: Nil)) // TODO add failed-match scrutinee info
       
-      if k.isInstanceOf[TailOp] && isIf then go(iftrm.normalized, topLevel = true)
+      val normalize = ucs.Normalization()
+      val normalized = normalize(iftrm.desugared)
+      tl.scoped("ucs:normalized"):
+        tl.log(s"Normalized:\n${Split.display(normalized)}")
+
+      if k.isInstanceOf[TailOp] && isIf then go(normalized, topLevel = true)
       else
         val body = if isWhile
-          then Label(lbl, go(iftrm.normalized, topLevel = true), End())
-          else go(iftrm.normalized, topLevel = true)
+          then Label(lbl, go(normalized, topLevel = true), End())
+          else go(normalized, topLevel = true)
         Begin(
           body,
           if usesResTmp then k(Value.Ref(l))

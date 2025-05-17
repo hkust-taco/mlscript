@@ -458,7 +458,7 @@ class Desugarer(val elaborator: Elaborator)
             msg"But no arguments were given" -> ctor.toLoc)
           fallback
         else
-          Branch(ref, Pattern.Synonym(pat, Nil), sequel(ctx)) ~: fallback
+          compilePattern(ref, pat, Nil, fallback, sequel(ctx))
       case S(_: PatternSymbol) =>
         makeUnapplyBranch(ref, clsTrm, sequel(ctx))(fallback)
       case N =>
@@ -505,7 +505,7 @@ class Desugarer(val elaborator: Elaborator)
             msg"But ${"pattern argument".pluralize(patArgs.size, true)} were given" -> Loc(args))
           fallback
         else
-          Branch(ref, Pattern.Synonym(pat, patArgs.zip(args)), sequel(ctx)) ~: fallback
+          compilePattern(ref, pat, patArgs.zip(args), fallback, sequel(ctx))
       case S(_: PatternSymbol) =>
         makeUnapplyBranch(ref, clsTrm, sequel(ctx))(fallback)
       case _ =>
@@ -646,6 +646,70 @@ class Desugarer(val elaborator: Elaborator)
     ):
       val innermostSplit = subMatches(rest, sequel)(fallback)
       expandMatch(scrutinee, pattern, innermostSplit)(fallback)
+  
+  /** Compile a pattern symbol into a split. This expands the pattern definition
+   *  into several match functions and a main split at the call site. Do not
+   *  modify or understand the code here, because it will be replaced by the new
+   *  compilation scheme soon.
+   * 
+   *  Note that this method is moved from `Normalization`.
+   */
+  def compilePattern(
+      scrutinee: Term.Ref,
+      symbol: PatternSymbol,
+      arguments: List[(split : DeBrujinSplit, tree : Tree)],
+      fallback: Split,
+      consequent: Split,
+  ): Split = scoped("ucs:rp"):
+    log(s"SYNONYM: ${scrutinee.showDbg} is $symbol")
+    import DeBrujinSplit.*, PatternStub.*
+    val pattern2 = ClassLike(ConstructorLike.Instantiation(symbol, arguments))
+    val mainSplit = Binder(Branch(Outermost, pattern2, Accept(42), Reject))
+    log(s"the initial split:\n${mainSplit.display}")
+    val (normalizedMainSplit, idSplitMap) = scoped("ucs:rpn"):
+      mainSplit.normalize(using elaborator.tl)
+    log(s"the normalized main split:\n${normalizedMainSplit.display}")
+    // The entry in the local pattern map.
+    val desugaring = new DesugaringBase {}
+    val idSplitSymbolMap = idSplitMap.map:
+      case (id, split) => (id, (split, TempSymbol(N, s"match$id")))
+    val idSymbolMap = idSplitSymbolMap.map(_ -> _._2)
+    val compiledMainSplit = normalizedMainSplit.toSplit(
+      scrutinees = Vector(() => scrutinee),
+      localPatterns = idSymbolMap,
+      outcomes = Map(S(42) -> consequent),
+    )(using elaborator.tl)
+    log(s"the compiled main split:\n${Split.display(compiledMainSplit)}")
+    // Insert local pattern bindings before the split.
+    val compiled = idSplitSymbolMap.foldRight(compiledMainSplit ++ fallback):
+      case ((id, (split, symbol)), inner) =>
+        val definition =
+          log(s"making definition for ${split.display}")
+          import syntax.{Fun, Keyword, ParamBind, Tree}, Tree.Ident
+          // The memorized splits may have free variables. We will count
+          // the number of free variables, bind them, and substitute them
+          // with the new indices.
+          val paramSymbols = (1 to split.arity).map: i =>
+            VarSymbol(Ident(s"param$i"))
+          .toVector
+          val paramList = PlainParamList:
+            paramSymbols.iterator.map(Param(FldFlags.empty, _, N, Modulefulness.none)).toList
+          val success = Split.Else(desugaring.makeMatchResult(Term.Tup(Nil)(Tree.Tup(Nil))))
+          val failure = Split.Else(desugaring.makeMatchFailure)
+          val bodySplit = scoped("ucs:rp:split"):
+            val bodySplit = split.toSplit(
+              scrutinees = paramSymbols.map(symbol => () => symbol.ref()),
+              localPatterns = idSymbolMap,
+              outcomes = Map(S(0) -> success, N -> failure)
+            )(using elaborator.tl) ++ Split.Else(desugaring.makeMatchFailure)
+            log(s"the compiled local pattern ${id}:\n${Split.display(bodySplit)}")
+            bodySplit
+          val funcBody: Term = Term.IfLike(Keyword.`if`, bodySplit)
+          Term.Lam(paramList, funcBody)
+        Split.Let(symbol, definition, inner)
+    scoped("ucs:compiled"):
+      log(s"the compiled split:\n${compiledMainSplit.toString()}")
+    compiled
   
   /** Desugar `case` expressions. */
   def apply(tree: Case, scrut: VarSymbol)(using Ctx): Split =

@@ -289,7 +289,7 @@ class Resolver(tl: TraceLogger)
             case Split.Else(default) =>
               traverse(default, expect = Any)
             case Split.End =>
-          split(t.normalized)
+          split(t.desugared)
         
         case Term.New(cls, args, rft) =>
           traverse(cls, expect = Any)

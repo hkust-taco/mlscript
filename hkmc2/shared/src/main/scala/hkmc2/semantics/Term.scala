@@ -89,7 +89,7 @@ enum Term extends Statement:
   case SynthSel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term with ResolvableImpl
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
-  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split)(val normalized: Split)
+  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split)
   case Lam(params: ParamList, body: Term)
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
   case Forall(tvs: Ls[QuantVar], outer: Opt[VarSymbol], body: Term)

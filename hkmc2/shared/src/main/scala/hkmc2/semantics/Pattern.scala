@@ -19,8 +19,6 @@ enum Pattern extends AutoLocated:
     var refined: Bool,
   )(val tree: Tree)
   
-  case Synonym(symbol: PatternSymbol, patternArguments: Ls[(split: DeBrujinSplit, tree: Tree)])
-  
   case Tuple(size: Int, inf: Bool)
   
   case Record(entries: List[(Ident -> BlockLocalSymbol)])
@@ -28,7 +26,6 @@ enum Pattern extends AutoLocated:
   def subTerms: Ls[Term] = this match
     case Lit(_) => Nil
     case ClassLike(_, t, _, _) => t :: Nil
-    case Synonym(_, _) => Nil
     case Tuple(_, _) => Nil
     case Record(_) => Nil
   
@@ -36,7 +33,6 @@ enum Pattern extends AutoLocated:
     case Lit(literal) => literal :: Nil
     case ClassLike(_, t, args, _) =>
       t :: args.fold(Nil)(_.collect { case S(symbol) => symbol })
-    case Synonym(_, arguments) => arguments.map(_.tree)
     case Tuple(fields, _) => Nil
     case Record(entries) => entries.flatMap { case (nme, als) => nme :: als :: Nil }
   
@@ -44,8 +40,6 @@ enum Pattern extends AutoLocated:
     case Lit(literal) => literal.idStr
     case ClassLike(sym, t, ps, rfd) => (if rfd then "refined " else "") +
       sym.nme + ps.fold("")(_.iterator.map(_.fold("_")(_.toString)).mkString("(", ", ", ")"))
-    case Synonym(symbol, arguments) =>
-      symbol.nme + arguments.iterator.map(_.tree.showDbg).mkString("(", ", ", ")")
     case Tuple(size, inf) => "[]" + (if inf then ">=" else "=") + size
     case Record(Nil) => "{}"
     case Record(entries) =>

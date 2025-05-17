@@ -7,10 +7,6 @@ import syntax.Tree.*, Elaborator.{Ctxl, ctx}, Elaborator.State
 
 /** Contains some helpers that makes UCS desugaring easier. */
 trait DesugaringBase(using state: State):
-  val elaborator: Elaborator
-
-  import elaborator.tl.*
-
   protected final def sel(p: Term, k: Ident): Term.SynthSel = Term.SynthSel(p, k)(N)
   protected final def sel(p: Term, k: Ident, s: FieldSymbol): Term.SynthSel = Term.SynthSel(p, k)(S(s))
   protected final def sel(p: Term, k: Str): Term.SynthSel = sel(p, Ident(k): Ident)

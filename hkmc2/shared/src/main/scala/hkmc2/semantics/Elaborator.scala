@@ -259,14 +259,6 @@ extends Importer:
         N
     case _ => N
   
-  /** To perform a reverse lookup for a term that references a symbol in the current context. */
-  def reference(target: ClassSymbol | ModuleSymbol): Ctxl[Opt[Term]] =
-    def go(ctx: Ctx): Opt[Term] =
-      ctx.env.values.collectFirst:
-        case elem if elem.symbol.flatMap(_.asClsLike).contains(target) => elem.ref(target.id)
-      .orElse(ctx.parent.flatMap(go))
-    go(ctx).map(Term.SynthSel(_, Ident("class"))(S(target)))
-  
   def cls(tree: Tree, inAppPrefix: Bool): Ctxl[Term] = trace[Term](s"Elab class ${tree.showDbg}", r => s"~> $r"):
     val trm = term(tree, inAppPrefix)
     trm.symbol match
@@ -449,10 +441,7 @@ extends Importer:
       val des = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
         log(s"Desugared:\n${Split.display(des)}")
-      val nor = new ucs.Normalization(this)(des)
-      scoped("ucs:normalized"):
-        log(s"Normalized:\n${Split.display(nor)}")
-      Term.IfLike(Keyword.`if`, des)(nor)
+      Term.IfLike(Keyword.`if`, des)
     case app @ PartialApp(lhs, args) =>
       var params: Ls[Param] = Nil
       def mkParam =
@@ -588,10 +577,7 @@ extends Importer:
       val desugared = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
         log(s"Desugared:\n${Split.display(desugared)}")
-      val normalized = new ucs.Normalization(this)(desugared)
-      scoped("ucs:normalized"):
-        log(s"Normalized:\n${Split.display(normalized)}")
-      Term.IfLike(kw, desugared)(normalized)
+      Term.IfLike(kw, desugared)
     case Tree.Quoted(body) => Term.Quoted(term(body))
     case Tree.Unquoted(body) => Term.Unquoted(term(body))
     case tree @ Tree.Case(_, branches) =>
@@ -599,12 +585,9 @@ extends Importer:
       val des = new ucs.Desugarer(this)(tree, scrut)
       scoped("ucs:desugared"):
         log(s"Desugared:\n${Split.display(des)}")
-      val nor = new ucs.Normalization(this)(des)
-      scoped("ucs:normalized"):
-        log(s"Normalized:\n${Split.display(nor)}")
       Term.Lam(PlainParamList(
           Param(FldFlags.empty, scrut, N, Modulefulness.none) :: Nil
-        ), Term.IfLike(Keyword.`if`, des)(nor))
+        ), Term.IfLike(Keyword.`if`, des))
     case Modified(Keyword.`return`, kwLoc, body) =>
       ctx.getRetHandler match
       case ReturnHandler.Required(sym) =>

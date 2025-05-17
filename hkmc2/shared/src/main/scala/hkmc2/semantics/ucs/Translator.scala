@@ -199,10 +199,9 @@ class Translator(val elaborator: Elaborator)
   
   /** Create a function definition from the given UCS splits. */
   private def makeMatcher(name: Str, scrut: VarSymbol, topmost: Split)(using Raise): TermDefinition =
-    val normalize = new Normalization(elaborator)
     val sym = BlockMemberSymbol(name, Nil)
     val ps = PlainParamList(Param(FldFlags.empty, scrut, N, Modulefulness.none) :: Nil)
-    val body = Term.IfLike(Keyword.`if`, topmost)(normalize(topmost))
+    val body = Term.IfLike(Keyword.`if`, topmost)
     val res = FlowSymbol(s"result of $name")
     TermDefinition(N, Fun, sym, ps :: Nil, N, N, S(body), res, TermDefFlags.empty, Modulefulness.none, Nil)
   
