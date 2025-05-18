@@ -397,34 +397,25 @@ Foo(1, 2, 3).args
 
 :todo
 if Foo(1, 2, 3) is Foo(...args) then args
+//│ ╔══[ERROR] Unrecognized pattern (spread)
+//│ ║  l.399: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ╙──       	                          ^^^^
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
 //│ ║  l.399: 	if Foo(1, 2, 3) is Foo(...args) then args
-//│ ╙──       	                   ^^^^^^^^^^^^
-//│ ╔══[ERROR] Name not found: args
-//│ ║  l.399: 	if Foo(1, 2, 3) is Foo(...args) then args
-//│ ╙──       	                                     ^^^^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╙──       	                          ^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╔══[ERROR] the constructor does not take any arguments but found 3
 //│ ║  l.408: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
-//│ ╙──       	                   ^^^^^^^^^^^^
-//│ ╔══[ERROR] Name not found: a
-//│ ║  l.408: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
-//│ ╙──       	                                      ^
-//│ ╔══[ERROR] Name not found: b
-//│ ║  l.408: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
-//│ ╙──       	                                         ^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╙──       	                       ^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.420: 	if Foo(1, 2, 3) is Foo(arg) then arg
-//│ ╙──       	                   ^^^^^^^^
-//│ ╔══[ERROR] Name not found: arg
-//│ ║  l.420: 	if Foo(1, 2, 3) is Foo(arg) then arg
-//│ ╙──       	                                 ^^^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ║  l.414: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ╙──       	                       ^^^
+//│ ═══[RUNTIME ERROR] Error: match error
 
 // ——— ——— ———
 

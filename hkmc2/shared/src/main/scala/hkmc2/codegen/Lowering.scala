@@ -466,29 +466,28 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               )
             pat match
               case Pattern.Lit(lit) => mkMatch(Case.Lit(lit) -> go(tail, topLevel = false))
-              case Pattern.ClassLike(cls: ClassSymbol, _trm, _args0, _refined)
-                  // Do not elaborate `_trm` when the `cls` is virtual.
-                  if Elaborator.ctx.builtins.virtualClasses contains cls =>
+              // Do not elaborate `_trm` when the `cls` is virtual.
+              case pat @ Pattern.ClassLike(ctor, _, _, _) if pat.isVirtualClass =>
                 // [invariant:0] Some classes (e.g., `Int`) from `Prelude` do
                 // not exist at runtime. If we do lowering on `trm`, backends
                 // (e.g., `JSBuilder`) will not be able to handle the corresponding selections.
                 // In this case the second parameter of `Case.Cls` will not be used.
                 // So we make it `Predef.unreachable` here.
-                mkMatch(Case.Cls(cls, unreachableFn) -> go(tail, topLevel = false))
-              case Pattern.ClassLike(cls, trm, args0, _refined) =>
-                subTerm_nonTail(trm): st =>
-                  val args = args0.getOrElse(Nil)
-                  val clsParams = cls match
-                    case cls: ClassSymbol => cls.tree.clsParams
-                    case _: ModuleSymbol => Nil
-                  assert(args0.isEmpty || clsParams.length === args.length)
+                mkMatch(Case.Cls(pat.ctorSym.asClsOrMod.get, unreachableFn) -> go(tail, topLevel = false))
+              case Pattern.ClassLike(ctor, args0, _, _refined) =>
+                subTerm_nonTail(ctor): st =>
+                  val args = args0.map(_.map(_.scrutinee)).getOrElse(Nil)
+                  val (ctorSym, clsParams) = ctor.symbol.flatMap(_.asClsOrMod) match // TODO(ucs)
+                    case S(cls: ClassSymbol) => (cls, cls.tree.clsParams)
+                    case S(mod: ModuleSymbol) => (mod, Nil)
+                  // assert(args0.isEmpty || clsParams.length === args.length) // TODO(ucs): Is this really needed?
                   def mkArgs(args: Ls[TermSymbol -> BlockLocalSymbol])(using Subst): Case -> Block = args match
                     case Nil =>
-                      Case.Cls(cls, st) -> go(tail, topLevel = false)
+                      Case.Cls(ctorSym, st) -> go(tail, topLevel = false)
                     case (param, arg) :: args =>
                       val (cse, blk) = mkArgs(args)
                       (cse, Assign(arg, Select(sr, param.id/*FIXME incorrect Ident?*/)(S(param)), blk))
-                  mkMatch(mkArgs(clsParams.iterator.zip(args).collect { case (s1, S(s2)) => (s1, s2) }.toList))
+                  mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
               case Pattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> go(tail, topLevel = false))
         case Split.Else(els) =>
           if k.isInstanceOf[TailOp] && isIf then term_nonTail(els)(k)
@@ -503,7 +502,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             Value.Lit(syntax.Tree.StrLit("match error")) :: Nil)) // TODO add failed-match scrutinee info
       
       val normalize = ucs.Normalization()
-      val normalized = normalize(iftrm.desugared)
+      val normalized = tl.scoped("ucs:normalize"):
+        normalize(iftrm.desugared)
       tl.scoped("ucs:normalized"):
         tl.log(s"Normalized:\n${Split.display(normalized)}")
 

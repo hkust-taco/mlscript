@@ -3,6 +3,7 @@ package semantics
 
 import mlscript.utils.*, shorthands.*
 import syntax.*, Tree.Ident
+import Elaborator.{Ctx, ctx}
 import ucs.DeBrujinSplit
 
 /** Flat patterns for pattern matching */
@@ -13,40 +14,85 @@ enum Pattern extends AutoLocated:
   /** An individual argument is None when it is not matched, i.e. when an underscore is used there.
     * The whole argument list is None when no argument list is being matched at all, as in `x is Some then ...`. */
   case ClassLike(
-    sym: ClassSymbol | ModuleSymbol,
-    trm: Term,
-    args: Opt[List[Opt[BlockLocalSymbol]]],
-    var refined: Bool,
-  )(val tree: Tree)
-  
-  case Synonym(symbol: PatternSymbol, patternArguments: Ls[(split: DeBrujinSplit, tree: Tree)])
+      val constructor: Term,
+      // field `pattern` is only for error messages
+      // field `split` is for pattern compilation
+      // TODO(ucs/rp): replace with suitable representation after the new
+      // pattern compilation is implemented
+      val arguments: Opt[Ls[(scrutinee : BlockLocalSymbol, pattern : Tree, split : Opt[DeBrujinSplit])]],
+      val mode: Pattern.MatchMode,
+      var refined: Bool
+  )(val tree: Tree) extends Pattern with Pattern.ClassLikeImpl
   
   case Tuple(size: Int, inf: Bool)
   
   case Record(entries: List[(Ident -> BlockLocalSymbol)])
+
   
   def subTerms: Ls[Term] = this match
     case Lit(_) => Nil
-    case ClassLike(_, t, _, _) => t :: Nil
-    case Synonym(_, _) => Nil
+    case ClassLike(ctor, _, _, _) => ctor :: Nil
     case Tuple(_, _) => Nil
     case Record(_) => Nil
   
   def children: Ls[Located] = this match
     case Lit(literal) => literal :: Nil
-    case ClassLike(_, t, args, _) =>
-      t :: args.fold(Nil)(_.collect { case S(symbol) => symbol })
-    case Synonym(_, arguments) => arguments.map(_.tree)
+    case ClassLike(ctor, scruts, _, _) => ctor :: scruts.map(_.map(_.scrutinee)).getOrElse(Nil)
     case Tuple(fields, _) => Nil
     case Record(entries) => entries.flatMap { case (nme, als) => nme :: als :: Nil }
   
   def showDbg: Str = this match
     case Lit(literal) => literal.idStr
-    case ClassLike(sym, t, ps, rfd) => (if rfd then "refined " else "") +
-      sym.nme + ps.fold("")(_.iterator.map(_.fold("_")(_.toString)).mkString("(", ", ", ")"))
-    case Synonym(symbol, arguments) =>
-      symbol.nme + arguments.iterator.map(_.tree.showDbg).mkString("(", ", ", ")")
+    case ClassLike(ctor, args, _, rfd) =>
+      def showCtor(ctor: Term): Str = ctor match
+        case Term.Ref(sym: BlockMemberSymbol) => sym.nme // w/o `refNum`` and prefix
+        case Term.Ref(sym) => sym.toString // w/o `refNum`
+        case Term.Sel(p, i) => s"${showCtor(p)}.${i.name}"
+        case Term.SynthSel(p, i) => s"${showCtor(p)}.${i.name}"
+        case _ => ctor.showDbg
+      (if rfd then "refined " else "") + showCtor(ctor) +
+        args.fold("")(_.iterator.map(_.scrutinee.nme).mkString("(", ", ", ")"))
     case Tuple(size, inf) => "[]" + (if inf then ">=" else "=") + size
     case Record(Nil) => "{}"
     case Record(entries) =>
       entries.iterator.map(_.name + ": " + _).mkString("{ ", ", ", " }")
+
+object Pattern:
+  /** A class-like pattern whose symbol is resolved to a class. */
+  object Class:
+    def unapply(p: Pattern): Opt[ClassSymbol] = p match
+      case Pattern.ClassLike(ctor, _, _, _) => ctor.symbol.flatMap(_.asCls)
+      case _ => N
+  
+  /** A class-like pattern whose symbol is resolved to a module. */
+  object Module:
+    def unapply(p: Pattern): Opt[ModuleSymbol] = p match
+      case Pattern.ClassLike(ctor, _, _, _) => ctor.symbol.flatMap(_.asModOrObj)
+      case _ => N
+
+  private[Pattern] sealed trait ClassLikeImpl:
+    p: Pattern.ClassLike =>
+    
+    def ctorSym: ClassSymbol | ModuleSymbol | PatternSymbol =
+      constructor.symbol.flatMap(_.asClsLike).getOrElse:
+        lastWords("Pattern.ClassLike: constructor is not a class or module")
+
+    def isVirtualClass(using Ctx): Bool = ctorSym match
+      case cls: ClassSymbol => ctx.builtins.virtualClasses contains cls
+      case _: (ModuleSymbol | PatternSymbol) => false
+  
+  enum MatchMode:
+    /** The default mode. If the constructor resolves to:
+     *  - a class symbol, then check if the scrutinee is an instance;
+     *  - a module symbol, then check if the scrutinee is the module itself;
+     *  - a pattern symbol, then call `unapply` on the pattern.
+     */
+    case Default
+    /** Call `unapplyStringPrefix` instead of `unapply`. */
+    case StringPrefix(prefix: TempSymbol, postfix: TempSymbol)
+    /** Compile the pattern at call site. */
+    case Compiled(ident: Ident)
+    
+  object ClassLike:
+    def apply(constructor: Term, arguments: Opt[Ls[BlockLocalSymbol]]): ClassLike =
+      ClassLike(constructor, arguments.map(_.map(s => (s, Tree.Dummy, N))), MatchMode.Default, false)(Tree.Dummy)

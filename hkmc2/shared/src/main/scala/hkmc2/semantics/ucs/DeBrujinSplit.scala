@@ -112,6 +112,7 @@ object DeBrujinSplit:
       // END TODO: Support range patterns
       case App(ctor: (Ident | Sel), Tup(params)) => dealWithCtor(ctor, params)
       case literal: syntax.Literal => Branch(_, Literal(literal), _, _)
+      case Tree.TypeDef(syntax.Pat, body, N, N) => go(body)
     scoped("ucs:rp:elaborate"):
       log(s"tree: ${tree.showDbg}")
       Binder(go(tree)(Outermost, Accept(0), Reject))
@@ -324,7 +325,12 @@ extension (split: DeBrujinSplit)
             case ref: Term.Ref => ref.withIArgs(Nil)
             case other => other
       .orElse(ctx.parent.flatMap(go))
-    go(ctx).map(Term.SynthSel(_, syntax.Tree.Ident("class"))(S(target)).withIArgs(Nil))
+    go(ctx).map: term =>
+      // If the `target` is a virtual class, then do not select `class`.
+      target match
+        case s: ClassSymbol if ctx.builtins.virtualClasses contains s => term
+        case _ =>
+          Term.SynthSel(term, syntax.Tree.Ident("class"))(S(target)).withIArgs(Nil)
   
   def toSplit(scrutinees: Vector[() => Term.Ref],
               localPatterns: Map[Int, TempSymbol],
@@ -357,12 +363,15 @@ extension (split: DeBrujinSplit)
                   go(body, ctx2)
               val select = scoped("ucs:sel"):
                 reference(symbol).getOrElse(Term.Error)
-              val pattern = Pattern.ClassLike(symbol, select, S(subSymbols.map(S.apply)), false)(Empty())
+              // Here we add a speical case as a workaround:
+              // If the class is virtual, then we don't make arguments empty.
+              val arguments = if Elaborator.ctx.builtins.virtualClasses contains symbol then N else S(subSymbols)
+              val pattern = Pattern.ClassLike(select, arguments) // TODO(ucs): don't we need to add `symbol` to `select`?
               semantics.Branch(ctx(scrutinee - 1)(), pattern, consequent2) ~: go(alternative, ctx)
             case ClassLike(ConstructorLike.Symbol(symbol: ModuleSymbol)) =>
               val select = scoped("ucs:sel"):
                 reference(symbol).getOrElse(Term.Error)
-              val pattern = Pattern.ClassLike(symbol, select, N, false)(Empty())
+              val pattern = Pattern.ClassLike(select, N) // TODO(ucs): don't we need to add `symbol` to `select`?
               semantics.Branch(ctx(scrutinee - 1)(), pattern, nullaryConsequent) ~: go(alternative, ctx)
             case ClassLike(ConstructorLike.LocalPattern(id)) =>
               log(s"apply scrutinee $scrutinee to local pattern $id")

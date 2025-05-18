@@ -26,7 +26,7 @@ import Translator.*
  */
 class Translator(val elaborator: Elaborator)
     (using state: Elaborator.State, c: Elaborator.Ctx) extends DesugaringBase:
-  import elaborator.tl.*, HelperExtractors.*
+  import elaborator.term, elaborator.tl.*, HelperExtractors.*, Pattern.MatchMode
   
   /** Each scrutinee is represented by a function that creates a reference to
    *  the scrutinee symbol. It is sufficient for current implementation.
@@ -70,39 +70,60 @@ class Translator(val elaborator: Elaborator)
           full(postfixScrut, postfix, captures2 => inner(captures2 ++ captures1)))
       case Under() => inner(Map.empty)
       case ctor @ (_: Ident | _: Sel) =>
-        lazy val resolved =
-          val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
-          clsTrm.symbol.flatMap(_.asClsLike) match
-          case S(cls: (ClassSymbol | ModuleSymbol)) =>
-            Branch(scrut(), Pattern.ClassLike(cls, clsTrm, N, false)(ctor), inner(Map.empty)) ~: Split.End
-          case S(psym: PatternSymbol) =>
-            makeUnapplyBranch(scrut(), clsTrm, inner(Map.empty))(Split.End)
-          case _ =>
-            error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
-            errorSplit
-        ctor match
-        case Ident(ctorName) => patternParams.find(_.sym.nme == ctorName) match
-          case S(Param(sym = symbol)) => failure // TODO: handle input patterns
-          case N => resolved
-        case ctor: Sel => resolved
+        val ctorTrm = term(ctor, inAppPrefix = false)
+        val pattern = Pattern.ClassLike(ctorTrm, N, MatchMode.Default, false)(ctor)
+        Branch(scrut(), pattern, inner(Map.empty)) ~: Split.End
+        
+        // Because we don't resolve the symbol of `ctor` here, we don't know if
+        // it is a class, a module, or a pattern symbol. We no longer need to
+        // make the unapply branch here and it will be done in normalization.
+        // - - - - - //
+        // OLD CODE FOR REFERENCE:
+        // lazy val resolved =
+        //   val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
+        //   clsTrm.symbol.flatMap(_.asClsLike) match
+        //   case S(cls: (ClassSymbol | ModuleSymbol)) =>
+        //     ??? // TODO(ucs)
+        //     // Branch(scrut(), Pattern.ClassLike(cls, clsTrm, N, false)(ctor), inner(Map.empty)) ~: Split.End
+        //   case S(psym: PatternSymbol) =>
+        //     makeUnapplyBranch(scrut(), clsTrm, inner(Map.empty))(Split.End)
+        //   case _ =>
+        //     error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
+        //     errorSplit
+        // ctor match
+        // case Ident(ctorName) => patternParams.find(_.sym.nme == ctorName) match
+        //   case S(Param(sym = symbol)) => failure // TODO: handle input patterns
+        //   case N => resolved
+        // case ctor: Sel => resolved
       case App(ctor @ (_: Ident | _: Sel), Tup(params)) =>
-        lazy val resolved =
-          val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
-          clsTrm.symbol.flatMap(_.asClsLike) match
-          case S(cls: (ClassSymbol | ModuleSymbol)) =>
-            // TODO: handle parameters
-            Branch(scrut(), Pattern.ClassLike(cls, clsTrm, N, false)(ctor), inner(Map.empty)) ~: Split.End
-          case S(psym: PatternSymbol) =>
-            // TODO: handle parameters
-            makeUnapplyBranch(scrut(), clsTrm, inner(Map.empty))(Split.End)
-          case _ =>
-            error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
-            errorSplit
-        ctor match
-        case Ident(ctorName) => patternParams.find(_.sym.nme == ctorName) match
-          case S(Param(sym = symbol)) => failure // TODO: handle input patterns
-          case N => resolved
-        case ctor: Sel => resolved
+        // TODO(rp/str): handle input params
+        val ctorTrm = term(ctor, inAppPrefix = false)
+        val pattern = Pattern.ClassLike(ctorTrm, N, MatchMode.Default, false)(ctor)
+        Branch(scrut(), pattern, inner(Map.empty)) ~: Split.End
+        
+        // Because we don't resolve the symbol of `ctor` here, we don't know if
+        // it is a class, a module, or a pattern symbol. We no longer need to
+        // make the unapply branch here and it will be done in normalization.
+        // - - - - - //
+        // OLD CODE FOR REFERENCE:
+        // lazy val resolved =
+        //   val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
+        //   clsTrm.symbol.flatMap(_.asClsLike) match
+        //   case S(cls: (ClassSymbol | ModuleSymbol)) =>
+        //     // TODO: handle parameters
+        //     ??? // TODO(ucs)
+        //     // Branch(scrut(), Pattern.ClassLike(cls, clsTrm, N, false)(ctor), inner(Map.empty)) ~: Split.End
+        //   case S(psym: PatternSymbol) =>
+        //     // TODO: handle parameters
+        //     makeUnapplyBranch(scrut(), clsTrm, inner(Map.empty))(Split.End)
+        //   case _ =>
+        //     error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
+        //     errorSplit
+        // ctor match
+        // case Ident(ctorName) => patternParams.find(_.sym.nme == ctorName) match
+        //   case S(Param(sym = symbol)) => failure // TODO: handle input patterns
+        //   case N => resolved
+        // case ctor: Sel => resolved
       case pat =>
         error(msg"Unrecognized pattern (${pat.describe})" -> pat.toLoc)
         errorSplit
@@ -138,19 +159,31 @@ class Translator(val elaborator: Elaborator)
           inner(captures2 ++ captures1, postfixScrut2)))
     case Under() => inner(Map.empty, scrut) // TODO: check if this is correct
     case ctor @ (_: Ident | _: Sel) =>
-      val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
-      clsTrm.symbol.flatMap(_.asClsLike) match
-      case S(cls: (ClassSymbol | ModuleSymbol)) =>
-        val kind = cls match { case _: ClassSymbol => "class" case _ => "module" }
-        error(msg"Cannot treat this $kind as a string prefix" -> ctor.toLoc)
-        errorSplit
-      case S(psym: PatternSymbol) =>
-        makeUnapplyStringPrefixBranch(scrut(), clsTrm, postfixSym =>
-          inner(Map.empty, () => postfixSym.ref())
-        )(Split.End)
-      case _ =>
-        error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
-        errorSplit
+      val ctorTrm = term(ctor, inAppPrefix = false)
+      val prefixSymbol = new TempSymbol(N, "prefix")
+      val postfixSymbol = new TempSymbol(N, "postfix")
+      val mode = MatchMode.StringPrefix(prefixSymbol, postfixSymbol)
+      val pattern = Pattern.ClassLike(ctorTrm, N, mode, false)(ctor)
+      Branch(scrut(), pattern, inner(Map.empty, () => postfixSymbol.ref())) ~: Split.End
+      
+      // Because we don't resolve the symbol of `ctor` here, we don't know if
+      // it is a class, a module, or a pattern symbol. We no longer need to
+      // make the unapply branch here and it will be done in normalization.
+      // - - - - - //
+      // OLD CODE FOR REFERENCE:
+      // val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
+      // clsTrm.symbol.flatMap(_.asClsLike) match
+      // case S(cls: (ClassSymbol | ModuleSymbol)) =>
+      //   val kind = cls match { case _: ClassSymbol => "class" case _ => "module" }
+      //   error(msg"Cannot treat this $kind as a string prefix" -> ctor.toLoc)
+      //   errorSplit
+      // case S(psym: PatternSymbol) =>
+      //   makeUnapplyStringPrefixBranch(scrut(), clsTrm, postfixSym =>
+      //     inner(Map.empty, () => postfixSym.ref())
+      //   )(Split.End)
+      // case _ =>
+      //   error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
+      //   errorSplit
     case pat =>
       error(msg"Unrecognized pattern (${pat.describe})" -> pat.toLoc)
       errorSplit
@@ -219,21 +252,26 @@ class Translator(val elaborator: Elaborator)
     pre = s"Translator <<< ${params.mkString(", ")} $body", 
     post = (blk: Ls[TermDefinition]) => s"Translator >>> $blk"
   ):
-    val unapply = scoped("ucs:cp"):
-      val scrutSym = VarSymbol(Ident("scrut"))
-      val topmost = full(() => scrutSym.ref(), body, success(params))(using patternParams, raise) ~~: failure
-      log(s"Translated `unapply`: ${display(topmost)}")
-      makeMatcher("unapply", scrutSym, topmost)
-    val unapplyStringPrefix = scoped("ucs:cp"):
-      // We don't report errors here because they are already reported in the
-      // translation of `unapply` function.
-      given Raise = Function.const(())
-      val scrutSym = VarSymbol(Ident("topic"))
-      stringPrefix(() => scrutSym.ref(), body, prefixSuccess(params)) match
-      case Split.Else(Term.Error) =>
-        makeMatcher("unapplyStringPrefix", scrutSym, failure)
-      case split =>
-        val topmost = split ~~: failure
-        log(s"Translated `unapplyStringPrefix`: ${display(topmost)}")
-        makeMatcher("unapplyStringPrefix", scrutSym, topmost)
-    unapply :: unapplyStringPrefix :: Nil
+    if patternParams.nonEmpty then
+      // Temporarily disable the translation of pattern with pattern parameters.
+      // TODO(rp): pass pattern parameters as to the `unapply` function
+      Nil
+    else
+      val unapply = scoped("ucs:cp"):
+        val scrutSym = VarSymbol(Ident("scrut"))
+        val topmost = full(() => scrutSym.ref(), body, success(params))(using patternParams, raise) ~~: failure
+        log(s"Translated `unapply`: ${display(topmost)}")
+        makeMatcher("unapply", scrutSym, topmost)
+      val unapplyStringPrefix = scoped("ucs:cp"):
+        // We don't report errors here because they are already reported in the
+        // translation of `unapply` function.
+        given Raise = Function.const(())
+        val scrutSym = VarSymbol(Ident("topic"))
+        stringPrefix(() => scrutSym.ref(), body, prefixSuccess(params)) match
+        case Split.Else(Term.Error) =>
+          makeMatcher("unapplyStringPrefix", scrutSym, failure)
+        case split =>
+          val topmost = split ~~: failure
+          log(s"Translated `unapplyStringPrefix`: ${display(topmost)}")
+          makeMatcher("unapplyStringPrefix", scrutSym, topmost)
+      unapply :: unapplyStringPrefix :: Nil

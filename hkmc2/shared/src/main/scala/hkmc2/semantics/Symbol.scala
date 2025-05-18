@@ -40,6 +40,7 @@ abstract class Symbol(using State) extends Located:
     case _ => N
   def asMod: Opt[ModuleSymbol] = asModOrObj.filter(_.tree.k is Mod)
   def asObj: Opt[ModuleSymbol] = asModOrObj.filter(_.tree.k is Obj)
+  def asClsOrMod: Opt[ClassSymbol | ModuleSymbol] = asCls orElse asModOrObj
   /* 
   def asTrm: Opt[TermSymbol] = this match
     case trm: TermSymbol => S(trm)

@@ -246,7 +246,7 @@ fun take(pattern P, idx: Str, acc: Str) =
 //│ ╔══[ERROR] Name not found: str
 //│ ║  l.238: 	  while idx < str.length and str.charAt(idx) is ch and ch is P
 //│ ╙──       	                             ^^^
-//│ ╔══[ERROR] Cannot use this identifier as a pattern
+//│ ╔══[ERROR] Cannot use this reference as a pattern
 //│ ║  l.238: 	  while idx < str.length and str.charAt(idx) is ch and ch is P
 //│ ╙──       	                                                             ^
 

@@ -147,13 +147,13 @@ data class Tuple(a, b, c)
 let foo =
   case
     Tuple(...elements) then elements
-//│ ╔══[ERROR] mismatched arity: expect 3, found 1
-//│ ║  l.149: 	    Tuple(...elements) then elements
-//│ ╙──       	    ^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern (spread)
 //│ ║  l.149: 	    Tuple(...elements) then elements
 //│ ╙──       	             ^^^^^^^^
-//│ foo = [function]
+//│ ╔══[ERROR] mismatched arity: expect 3, found 1
+//│ ║  l.149: 	    Tuple(...elements) then elements
+//│ ╙──       	             ^^^^^^^^
+//│ foo = [function foo]
 
 foo(Tuple(1, 2, 3))
 //│ ═══[RUNTIME ERROR] Error: match error
@@ -171,26 +171,23 @@ fun foo(x) = if x is Foo.
 //│ ╔══[ERROR] Unrecognized pattern split.
 //│ ║  l.168: 	fun foo(x) = if x is Foo.
 //│ ╙──       	                     ^^^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.168: 	fun foo(x) = if x is Foo.
-//│ ╙──       	                        ^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.168: 	fun foo(x) = if x is Foo.
-//│ ╙──       	                        ^
+//│ ╔══[ERROR] Name not found: Bar
+//│ ║  l.169: 	  Bar then "Bar"
+//│ ╙──       	  ^^^
 
 fun foo(x) = if x is Foo
   .Bar then "Bar"
   .Foo then "Foo"
 //│ ╔══[PARSE ERROR] Expected an expression; found selector instead
-//│ ║  l.182: 	  .Bar then "Bar"
+//│ ║  l.179: 	  .Bar then "Bar"
 //│ ╙──       	  ^^^^
 //│ ╔══[PARSE ERROR] Unexpected selector here
-//│ ║  l.182: 	  .Bar then "Bar"
+//│ ║  l.179: 	  .Bar then "Bar"
 //│ ╙──       	  ^^^^
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.181: 	fun foo(x) = if x is Foo
+//│ ║  l.178: 	fun foo(x) = if x is Foo
 //│ ║         	                     ^^^
-//│ ║  l.182: 	  .Bar then "Bar"
+//│ ║  l.179: 	  .Bar then "Bar"
 //│ ╙──       	^^
 
 // ——— ——— ———

@@ -5,10 +5,13 @@ package ucs
 import mlscript.utils.*, shorthands.*
 import syntax.Tree.*, Elaborator.{Ctxl, ctx}, Elaborator.State
 
+// TODO(ucs): remove useless methods before merging the PR
 /** Contains some helpers that makes UCS desugaring easier. */
 trait DesugaringBase(using state: State):
-  protected final def sel(p: Term, k: Ident): Term.SynthSel = Term.SynthSel(p, k)(N)
-  protected final def sel(p: Term, k: Ident, s: FieldSymbol): Term.SynthSel = Term.SynthSel(p, k)(S(s))
+  protected final def sel(p: Term, k: Ident): Term.SynthSel =
+    (Term.SynthSel(p, k)(N): Term.SynthSel).withIArgs(Nil)
+  protected final def sel(p: Term, k: Ident, s: FieldSymbol): Term.SynthSel =
+    (Term.SynthSel(p, k)(S(s)): Term.SynthSel).withIArgs(Nil)
   protected final def sel(p: Term, k: Str): Term.SynthSel = sel(p, Ident(k): Ident)
   protected final def sel(p: Term, k: Str, s: FieldSymbol): Term.SynthSel = sel(p, Ident(k): Ident, s)
   protected final def int(i: Int) = Term.Lit(IntLit(BigInt(i)))
@@ -18,32 +21,38 @@ trait DesugaringBase(using state: State):
   protected final def app(l: Term, r: Term, label: Str): Term.App = app(l, r, FlowSymbol(label))
   protected final def app(l: Term, r: Term, s: FlowSymbol): Term.App =
     (Term.App(l, r)(App(Dummy, Dummy), N, s): Term.App).withIArgs(Nil)
+    
+  private lazy val runtimeRef: Term.Ref = state.runtimeSymbol.ref().withIArgs(Nil)
 
   /** Make a term that looks like `runtime.MatchResult` with its symbol. */
-  protected lazy val matchResultClass: Ctxl[(Term.Sel | Term.SynthSel, ClassSymbol)] =
-    (State.runtimeSymbol.ref().withIArgs(Nil).selNoSym("MatchResult", synth=true).withIArgs(Nil), State.matchResultClsSymbol)
+  protected lazy val matchResultClass: Ctxl[(Term.SynthSel, ClassSymbol)] =
+    val classRef: Term.SynthSel = Term.SynthSel(runtimeRef, Ident("MatchResult"))(S(State.matchResultClsSymbol))
+    (classRef.withIArgs(Nil), State.matchResultClsSymbol)
 
   /** Make a pattern that looks like `runtime.MatchResult.class`. */
   protected def matchResultPattern(parameters: Opt[List[BlockLocalSymbol]]): Ctxl[Pattern.ClassLike] =
     val (classRef, classSym) = matchResultClass
     val classSel = Term.SynthSel(classRef, Ident("class"))(S(classSym)).withIArgs(Nil)
-    Pattern.ClassLike(classSym, classSel, parameters.map(_.map(S.apply)), false)(Empty())
+    Pattern.ClassLike(classSel, parameters)
+    // Pattern.ClassLike(classSym, classSel, parameters.map(_.map(S.apply)), false)(Empty())
 
   /** Make a term that looks like `runtime.MatchFailure` with its symbol. */
   protected lazy val matchFailureClass: Ctxl[(Term.Sel | Term.SynthSel, ClassSymbol)] =
-    (State.runtimeSymbol.ref().withIArgs(Nil).selNoSym("MatchFailure", synth=true).withIArgs(Nil), State.matchFailureClsSymbol)
+    val classRef: Term.SynthSel = Term.SynthSel(runtimeRef, Ident("MatchFailure"))(S(State.matchFailureClsSymbol))
+    (classRef.withIArgs(Nil), State.matchFailureClsSymbol)
 
   /** Make a pattern that looks like `runtime.MatchFailure.class`. */
   protected def matchFailurePattern(parameters: Opt[List[BlockLocalSymbol]]): Ctxl[Pattern.ClassLike] =
     val (classRef, classSym) = matchResultClass
     val classSel = Term.SynthSel(classRef, Ident("class"))(S(classSym)).withIArgs(Nil)
-    Pattern.ClassLike(classSym, classSel, parameters.map(_.map(S.apply)), false)(Empty())
+    Pattern.ClassLike(classSel, parameters)
+    // Pattern.ClassLike(classSym, classSel, parameters.map(_.map(S.apply)), false)(Empty())
 
-  protected lazy val tupleSlice = sel(sel(state.runtimeSymbol.ref(), "Tuple"), "slice")
-  protected lazy val tupleGet = sel(sel(state.runtimeSymbol.ref(), "Tuple"), "get")
-  protected lazy val stringStartsWith = sel(sel(state.runtimeSymbol.ref(), "Str"), "startsWith")
-  protected lazy val stringGet = sel(sel(state.runtimeSymbol.ref(), "Str"), "get")
-  protected lazy val stringDrop = sel(sel(state.runtimeSymbol.ref(), "Str"), "drop")
+  protected lazy val tupleSlice = sel(sel(runtimeRef, "Tuple"), "slice")
+  protected lazy val tupleGet = sel(sel(runtimeRef, "Tuple"), "get")
+  protected lazy val stringStartsWith = sel(sel(runtimeRef, "Str"), "startsWith")
+  protected lazy val stringGet = sel(sel(runtimeRef, "Str"), "get")
+  protected lazy val stringDrop = sel(sel(runtimeRef, "Str"), "drop")
 
   /** Make a term that looks like `runtime.Tuple.get(t, i)`. */
   protected final def callTupleGet(t: Term, i: Int, label: Str): Ctxl[Term] =
@@ -100,12 +109,12 @@ trait DesugaringBase(using state: State):
       inner: => Split,
       method: Str = "unapply"
   )(fallback: Split): Ctxl[Split] =
-    val call = app(sel(clsTerm, method), tup(fld(scrut)), FlowSymbol(s"result of $method"))
+    val call = app(sel(clsTerm, method).withIArgs(Nil), tup(fld(scrut)), FlowSymbol(s"result of $method")).withIArgs(Nil)
     tempLet("matchResult", call): resultSymbol =>
       Branch(resultSymbol.ref().withIArgs(Nil), matchResultPattern(N), inner) ~: fallback
 
   /** Make a `Branch` that calls `Pattern` symbols' `unapplyStringPrefix` functions. */
-  def makeUnapplyStringPrefixBranch(
+  def makeUnapplyStringPrefixBranch_OLD(
       scrut: => Term.Ref,
       clsTerm: Term,
       inner: TempSymbol => Split,
@@ -115,7 +124,35 @@ trait DesugaringBase(using state: State):
     tempLet("matchResult", call): resultSymbol =>
       val argSym = TempSymbol(N, "arg")
       Branch(
-        resultSymbol.ref(),
+        resultSymbol.ref().withIArgs(Nil),
         matchResultPattern(S(argSym :: Nil)),
-        tempLet("postfix", callTupleGet(argSym.ref(), 0, "postfix"))(inner)
+        tempLet("postfix", callTupleGet(argSym.ref().withIArgs(Nil), 0, "postfix"))(inner)
       ) ~: fallback
+  
+  /** Make a `Branch` that calls `Pattern` symbols' `unapplyStringPrefix` functions. */
+  def makeUnapplyStringPrefixBranch_NEW(
+      scrut: => Term.Ref,
+      clsTerm: Term,
+      postfixSymbol: TempSymbol,
+      inner: => Split,
+      method: Str = "unapplyStringPrefix"
+  )(fallback: Split): Ctxl[Split] =
+    val call = app(sel(clsTerm, method).withIArgs(Nil), tup(fld(scrut)), FlowSymbol(s"result of $method")).withIArgs(Nil)
+    tempLet("matchResult", call): resultSymbol =>
+      // let `matchResult` be the return value
+      val argSym = TempSymbol(N, "arg")
+      // let `arg` be the first element of `matchResult`
+      Branch(
+        resultSymbol.ref().withIArgs(Nil),
+        matchResultPattern(S(argSym :: Nil)),
+        Split.Let(postfixSymbol, callTupleGet(argSym.ref().withIArgs(Nil), 0, "postfix"), inner)
+      ) ~: fallback
+  
+  
+  private lazy val fldFlagVal = FldFlags(false, false, false, false, true)
+  
+  protected lazy val matchResultClassParamOpt: Opt[ParamList] = S:
+    PlainParamList(Param(fldFlagVal, VarSymbol(Ident("captures")), N, Modulefulness(N)(false)) :: Nil)
+  
+  protected lazy val matchFailureClassParamOpt: Opt[ParamList] = S:
+    PlainParamList(Param(fldFlagVal, VarSymbol(Ident("errors")), N, Modulefulness(N)(false)) :: Nil)

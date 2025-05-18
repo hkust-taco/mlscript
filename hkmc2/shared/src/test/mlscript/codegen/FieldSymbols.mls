@@ -86,15 +86,15 @@ case
 //│             sym = caseScrut
 //│             iargsLs = N
 //│           pattern = ClassLike:
-//│             sym = class:Foo
-//│             trm = SynthSel{class:Foo}:
-//│               prefix = Ref:
-//│                 sym = member:Foo
-//│                 iargsLs = N
-//│               nme = Ident of "class"
+//│             constructor = Ref:
+//│               sym = member:Foo
 //│               iargsLs = N
-//│             args = S of Ls of 
-//│               S of $param0
+//│             arguments = S of Ls of 
+//│               Tuple3:
+//│                 _1 = $param0
+//│                 _2 = Ident of "a"
+//│                 _3 = N
+//│             mode = Default
 //│             refined = false
 //│           continuation = Let:
 //│             sym = a

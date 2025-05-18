@@ -53,9 +53,7 @@ let f = case
 //│ ╔══[ERROR] Name not found: &
 //│ ║  l.52: 	  { a: 1 & a } then a
 //│ ╙──      	         ^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.52: 	  { a: 1 & a } then a
-//│ ╙──      	         ^
+//│ ═══[ERROR] Cannot use this <error> as a pattern
 //│ f = [function]
 
 

@@ -295,9 +295,10 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val nestCtx1 = ctx.nest
       val nestCtx2 = ctx.nest
       val patTy = pattern match
-      case Pattern.ClassLike(sym, _, _, _) =>
-        val (clsTy, tv, emptyTy) = sym.asCls.flatMap(_.defn) match
-        case S(cls) =>
+      case pat @ Pattern.ClassLike(_, _, _, _) =>
+        val sym = pat.ctorSym
+        val (clsTy, tv, emptyTy) = sym.asCls.flatMap(sym => sym.defn.map(sym -> _)) match
+        case S((sym, cls)) =>
           (ClassLikeType(sym, cls.tparams.map(_ => freshWildcard(sym))), (freshVar(new TempSymbol(S(scrutinee), "scrut"))), ClassLikeType(sym, cls.tparams.map(_ => Wildcard.empty)))
         case _ =>
           error(msg"Cannot match ${scrutinee.toString} as ${sym.toString}" -> split.toLoc :: Nil)

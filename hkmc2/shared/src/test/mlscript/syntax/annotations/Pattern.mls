@@ -1,9 +1,15 @@
+:js
+
 module compile
 
 class SomePattern
 
 :w
 fun foo(x) = if x is @compile SomePattern then "yes" else "no"
-//│ ╔══[WARNING] Cannot compile the class `SomePattern`
-//│ ║  l.6: 	fun foo(x) = if x is @compile SomePattern then "yes" else "no"
-//│ ╙──     	                              ^^^^^^^^^^^
+//│ ╔══[WARNING] Cannot compile `SomePattern`
+//│ ║  l.8: 	fun foo(x) = if x is @compile SomePattern then "yes" else "no"
+//│ ║       	                      ^^^^^^^
+//│ ╟── Because it is a class
+//│ ║  l.5: 	class SomePattern
+//│ ║       	      ^^^^^^^^^^^
+//│ ╙── Note: only patterns can be compiled

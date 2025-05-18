@@ -151,7 +151,7 @@ fun f(arg) = if arg is
   Object then String(arg)
 //│ Normalized:
 //│ >  if
-//│ >    arg is Foo then "just Foo"
+//│ >    arg is Foo.class then "just Foo"
 //│ >    arg is Object then member:String#666(arg#666)
 
 fun f(arg) = if arg is
