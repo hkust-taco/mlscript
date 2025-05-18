@@ -57,7 +57,7 @@ object Elaborator:
     case Forbidden
   
   /** Context used to keep track of underscores representing lambda shorthands, eg in `_ + 1`. */
-  // TODO: use TempSymbol instead of VarSymbol? (currently creates lot of problems)
+  // TODO later: use TempSymbol instead of VarSymbol? (currently, trying that creates lot of problems)
   class UnderCtx(val unders: Opt[mutable.ArrayBuffer[VarSymbol]])
   
   case class Ctx(outer: OuterCtx, parent: Opt[Ctx], env: Map[Str, Ctx.Elem], 
@@ -505,12 +505,6 @@ extends Importer:
         case (acc, rhs) =>
           rhs.splitOn(acc)
       subterm(tree)
-    case tree @ App(lhs, OpBlock(ops)) =>
-      ops.foldLeft(subterm(lhs)):
-        case (acc, (op, arg)) =>
-          val sym = FlowSymbol("‹app-res›")
-          val tup = new Tup(Nil) // TODO
-          Term.App(subterm(op), Term.Tup(PlainFld(acc) :: PlainFld(subterm(arg)) :: Nil)(tup))(tree, N, sym)
     case tree @ App(lhs, rhs) =>
       val sym = FlowSymbol("‹app-res›")
       val lt = subterm(lhs, inAppPrefix = true)

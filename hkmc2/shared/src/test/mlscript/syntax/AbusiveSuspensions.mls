@@ -5,6 +5,7 @@ data class Ok[A](value: A)
 data class Error[A](value: A)
 type Result[A, B] = Ok[A] | Error[B]
 
+
 fun foo[A, B](expr1, expr2, expr3): Result[A, B] =
   if expr1 is...
   Error(b) then b
@@ -29,22 +30,22 @@ fun foo(expr1) =
   Ok(a) then...
   a
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.27: 	  if expr1 is
+//│ ║  l.28: 	  if expr1 is
 //│ ║        	             ^
-//│ ║  l.28: 	  Error(b) then b
+//│ ║  l.29: 	  Error(b) then b
 //│ ╙──      	^^
 //│ ╔══[ERROR] Unrecognized pattern split (‹erroneous syntax›).
-//│ ║  l.27: 	  if expr1 is
+//│ ║  l.28: 	  if expr1 is
 //│ ║        	             ^
-//│ ║  l.28: 	  Error(b) then b
+//│ ║  l.29: 	  Error(b) then b
 //│ ╙──      	^^
 //│ ╔══[ERROR] Unexpected infix use of 'then' keyword here
-//│ ║  l.28: 	  Error(b) then b
+//│ ║  l.29: 	  Error(b) then b
 //│ ╙──      	  ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unexpected infix use of 'then' keyword here
-//│ ║  l.29: 	  Ok(a) then...
+//│ ║  l.30: 	  Ok(a) then...
 //│ ║        	  ^^^^^^^^^^^^^
-//│ ║  l.30: 	  a
+//│ ║  l.31: 	  a
 //│ ╙──      	^^^
 
 fun foo(expr1) =
@@ -60,13 +61,13 @@ fun foo(expr1) =
   is Ok(a) then...
   a
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.59: 	  is Error(b) then b
+//│ ║  l.60: 	  is Error(b) then b
 //│ ╙──      	  ^^
 //│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.59: 	  is Error(b) then b
+//│ ║  l.60: 	  is Error(b) then b
 //│ ╙──      	     ^^^^^
 //│ ╔══[ERROR] Unrecognized term split (identifier).
-//│ ║  l.58: 	  if expr1
+//│ ║  l.59: 	  if expr1
 //│ ╙──      	     ^^^^^
 
 

@@ -34,9 +34,10 @@ open Stack { Cons, Nil }
 //│ = 3840
 
 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  dropping(2)
   taking(5)
   toArray()
-//│ = [1, 2, 3, 4, 5]
+//│ = [3, 4, 5, 6, 7]
 
 ["foo", "bar", "baz"]
   zippingWithIndex()

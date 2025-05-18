@@ -54,7 +54,6 @@ enum Tree extends AutoLocated:
   case BoolLit(value: Bool)              extends Tree with Literal
   case Bra(k: BracketKind, inner: Tree)
   case Block(stmts: Ls[Tree])(using State) extends Tree with semantics.BlockImpl
-  case OpBlock(items: Ls[Tree -> Tree])
   case LetLike(kw: Keyword.letLike, lhs: Tree, rhs: Opt[Tree], body: Opt[Tree])
   case Hndl(lhs: Tree, cls: Tree, defs: Tree, body: Opt[Tree])
   case Def(lhs: Tree, rhs: Tree)
@@ -108,8 +107,6 @@ enum Tree extends AutoLocated:
     case Pun(_, e) => e :: Nil
     case Bra(_, e) => e :: Nil
     case Block(stmts) => stmts
-    case OpBlock(items) => items.flatMap:
-      case (op, body) => op :: body :: Nil
     case LetLike(kw, lhs, rhs, body) => lhs :: Nil ++ rhs ++ body
     case Hndl(lhs, rhs, defs, body) => body match
       case Some(value) => lhs :: rhs :: defs :: value :: Nil
@@ -162,7 +159,6 @@ enum Tree extends AutoLocated:
     case Unt() => "unit"
     case Bra(k, _) => k.name + " section"
     case Block(stmts) => "block"
-    case OpBlock(_) => "operator block"
     case LetLike(kw, lhs, rhs, body) => kw.name
     case TermDef(k, alphaName, rhs) => "term definition"
     case TypeDef(k, head, extension, body) => "type definition"

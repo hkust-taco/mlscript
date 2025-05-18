@@ -488,6 +488,12 @@ abstract class Parser(
             then 0(0)
             else 1
           ```
+          and this parse incorrectly (as a kw stutter):
+          ```
+          mut
+            let x = 1
+            in x
+          ```
         */)
       // TODO(tok)
     case Nil =>
@@ -721,43 +727,8 @@ abstract class Parser(
           consume; splitItem(e :: acc)
         case _ => printDbg(s"! end of split"); e :: acc
   
-  // TODO: rm
-  /* 
-  def opBlock(using Line): OpBlock = wrap("")(OpBlock(opBlockItem(Nil).reverse))
   
-  @tailrec final private def opBlockItem(acc: Ls[Tree -> Tree]): Ls[Tree -> Tree] =
-    val item = wrap(s"index = ${acc.size + 1}"):
-      cur match
-      case Nil => false
-      case (NEWLINE | SPACE, _) :: _ => true
-      case (tok @ KEYWORD(kw @ (Keyword.`let` | Keyword.`else`)), loc) :: _ =>
-        prefixRules.kwAlts.get(kw.name) match
-        case S(subRule) =>
-          consume
-          val rhs = parseRule(kw.rightPrecOrMin, subRule).getOrElse(errExpr)
-          Tree.Empty().withLoc(S(loc)) -> rhs
-        case N => lastWords(s"missing the parse rule for `${kw.name}`")
-      case (tok @ IDENT(opStr, true), loc) :: _ if opPrec(opStr)._1 > 0 =>
-        consume
-        (Ident(opStr).withLoc(S(loc)) ->
-          expr(0)
-          // expr(CommaPrecNext, false) // FIXME this weirdly leads to "java.lang.OutOfMemoryError: Required array length 2147483638 + 44 is too large"
-        )
-      case (tok, loc) :: _ =>
-        err(msg"Expect an operator instead of ${tok.describe}" -> S(loc) :: Nil)
-        (Tree.Error() -> Tree.Error())
-    item match
-      case true => opBlockItem(acc) // continue
-      case false => printDbg(s"! end of split"); acc // break
-      case e: (Tree, Tree) => // needs further inspection
-        yeetSpaces match
-        case (COMMA | SEMI | NEWLINE, _) :: _ =>
-          consume; opBlockItem(e :: acc)
-        case _ => printDbg(s"! end of split"); e :: acc
-  */
-  
-  /** Parse an operator block. Each block item should be a binary operator
-   *  followed by an expression, a `let` binding, or an `else` clause.
+  /** Parse an operator split (block of lines starting by an operator).
    *  TODO: parse let bindings
    */
   def opSplit(lhs: Tree, splittingOpLoc: Loc, prec: Int)(using Line): Tree =
@@ -802,8 +773,6 @@ abstract class Parser(
         val rhs = expr(opPrec(op)._2, allowNewlines = false)
         opSplitImpl(OpApp(lhs, Ident(op).withLoc(S(l0)), rhs :: Nil), splittingOpLoc, prec, newAcc)
     case (tok, loc) :: _ => // TODO indented op block
-      // More tokens (instead of newline or indent) after e
-      // println(s"found ${tok.describe} in opSplit after e")
       err(msg"Unexpected ${tok.describe} in this operator split inner position" -> S(loc)::
           msg"Note: the operator split starts here" -> S(splittingOpLoc)
           :: Nil)
@@ -888,6 +857,8 @@ abstract class Parser(
         val newAcc = Subs(acc, idx).withLoc(S(l0 ++ l1 ++ idx.toLoc))
         exprCont(newAcc, prec, allowNewlines)
         */
+      
+      // * Parse operator splits
       case (br @ BRACKETS(Indent_Curly(),
           toks @ ((tok @ (IDENT(_, true) | SELECT(_) | KEYWORD(_: Keyword.InfixSplittable)), l0) :: _)), loc) :: _
       if tok.match {
@@ -899,29 +870,29 @@ abstract class Parser(
       =>
         consume
         if toks.collectFirst{ case (NEWLINE_COMMA(), _) => }.isEmpty then
+          // * If the indented block doens't have any newlines or commas,
+          // * this is not truly a split, and we can parse it as a normal expression continuation.
           cur = toks ::: cur
-          // exprContImpl(acc, prec, allowNewlines = allowNewlines)
           exprCont(acc, prec, allowNewlines = allowNewlines)
         else
           val r = rec(toks, S(loc), "operator block")
           val res = r.opSplit(acc, l0, prec)
           r.yeetSpaces match
           case Nil =>
-            // res
             exprCont(res, prec, allowNewlines = allowNewlines)
           case toks =>
             cur = toks ::: cur
-            // exprContImpl(res, prec, allowNewlines = allowNewlines)
             exprCont(res, prec, allowNewlines = allowNewlines)
       
       // TODO
       // case (NEWLINE, _) :: (SELECT(nme), _) :: _
       // =>
       
+      // * Parse newline-operators, eg `2 + 2\n*\n2 + 2` <=> `(2 + 2) * (2 + 2)`
       // TODO also allow uses of SELECT
       case (NEWLINE_COMMA(), _) :: (OP(opStr), l0) :: rest
       if allowNewlines
-      && prec <= 1 // why doesn't 0 work?
+      && prec <= NoElsePrec // (Q: why doesn't MinPrec work?)
       && (!prefixOps.contains(opStr) || rest.match
         case (NEWLINE_COMMA(), _) :: _ | (SPACE, _) :: _ | (BRACKETS(Indent_Curly(), _), _) :: _ | Nil => true
         case _ => false
@@ -935,22 +906,8 @@ abstract class Parser(
           CommaPrecNext2 // for chained nl ops: left assoc
         case _ =>
           opPrec(opStr)._2
-        // val rhs = expr(opPrec(opStr)._2)
         val rhs = expr(rhsPrec, allowNewlines = allowNewlines)
-        exprCont(opStr match {
-          // case "with" =>
-          //   rhs match {
-          //     // TODO?
-          //     // case rhs: Rcd =>
-          //     //   With(acc, rhs)//.withLocOf(term)
-          //     // case Bra(true, rhs: Rcd) =>
-          //     //   With(acc, rhs)//.withLocOf(term)
-          //     case _ =>
-          //       err(msg"record literal expected here; found ${rhs.describe}" -> rhs.toLoc :: Nil)
-          //       acc
-          //   }
-          case _ => OpApp(acc, v, rhs :: Nil)
-        }, prec, allowNewlines = allowNewlines)
+        exprCont(OpApp(acc, v, rhs :: Nil), prec, allowNewlines = allowNewlines)
         
       case (OP("::"), l0) :: (IDENT(id, false), l1) :: _ =>
         consume

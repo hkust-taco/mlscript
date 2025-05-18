@@ -1,0 +1,38 @@
+:js
+
+
+// TODO `fun` does not return anything; the returned value should be the result of `bar + 1`
+fun foo =
+  bar + 1
+  fun bar = 1
+
+foo
+
+
+fun foo =
+  print(bar)
+  fun bar = 1
+
+foo
+//│ > 1
+
+
+// TODO maybe warn that this can be confusing: one might think that `bar` is the one defined above
+fun bar = 0
+fun foo =
+  print(bar)
+  
+  
+  print("...")
+  
+  
+  fun bar = 1
+
+:sjs
+foo
+//│ JS (unsanitized):
+//│ let tmp2; tmp2 = foo2(); tmp2
+//│ > 1
+//│ > ...
+
+
