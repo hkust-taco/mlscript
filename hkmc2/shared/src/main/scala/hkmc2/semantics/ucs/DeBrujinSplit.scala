@@ -319,9 +319,12 @@ extension (split: DeBrujinSplit)
   def reference(target: ClassSymbol | ModuleSymbol)(using Ctx, State): Opt[Term] =
     def go(ctx: Ctx): Opt[Term] =
       ctx.env.values.collectFirst:
-        case elem if elem.symbol.flatMap(_.asClsLike).contains(target) => elem.ref(target.id)
+        case elem if elem.symbol.flatMap(_.asClsLike).contains(target) =>
+          elem.ref(target.id) match
+            case ref: Term.Ref => ref.withIArgs(Nil)
+            case other => other
       .orElse(ctx.parent.flatMap(go))
-    go(ctx).map(Term.SynthSel(_, syntax.Tree.Ident("class"))(S(target)))
+    go(ctx).map(Term.SynthSel(_, syntax.Tree.Ident("class"))(S(target)).withIArgs(Nil))
   
   def toSplit(scrutinees: Vector[() => Term.Ref],
               localPatterns: Map[Int, TempSymbol],
@@ -349,7 +352,7 @@ extension (split: DeBrujinSplit)
               log(s"class case ${symbol.name} with ${subSymbols.length} sub-scrutinees")
               val consequent2 = consequence.unbind match
                 case (level, body) => // TODO: check level == arity
-                  val ctx2 = subSymbols.reverseIterator.map(s => () => s.ref()).toVector ++ ctx
+                  val ctx2 = subSymbols.reverseIterator.map(s => () => s.ref().withIArgs(Nil)).toVector ++ ctx
                   log(s"now there are ${ctx2.length} elements in the new context")
                   go(body, ctx2)
               val select = scoped("ucs:sel"):

@@ -16,26 +16,27 @@ trait DesugaringBase(using state: State):
   protected final def fld(t: Term) = Fld(FldFlags.empty, t, N)
   protected final def tup(xs: Fld*): Term.Tup = Term.Tup(xs.toList)(Tup(Nil))
   protected final def app(l: Term, r: Term, label: Str): Term.App = app(l, r, FlowSymbol(label))
-  protected final def app(l: Term, r: Term, s: FlowSymbol): Term.App = Term.App(l, r)(App(Empty(), Empty()), N, s)
+  protected final def app(l: Term, r: Term, s: FlowSymbol): Term.App =
+    (Term.App(l, r)(App(Dummy, Dummy), N, s): Term.App).withIArgs(Nil)
 
   /** Make a term that looks like `runtime.MatchResult` with its symbol. */
   protected lazy val matchResultClass: Ctxl[(Term.Sel | Term.SynthSel, ClassSymbol)] =
-    (State.runtimeSymbol.ref().selNoSym("MatchResult", synth=true), State.matchResultClsSymbol)
+    (State.runtimeSymbol.ref().withIArgs(Nil).selNoSym("MatchResult", synth=true).withIArgs(Nil), State.matchResultClsSymbol)
 
   /** Make a pattern that looks like `runtime.MatchResult.class`. */
   protected def matchResultPattern(parameters: Opt[List[BlockLocalSymbol]]): Ctxl[Pattern.ClassLike] =
     val (classRef, classSym) = matchResultClass
-    val classSel = Term.SynthSel(classRef, Ident("class"))(S(classSym))
+    val classSel = Term.SynthSel(classRef, Ident("class"))(S(classSym)).withIArgs(Nil)
     Pattern.ClassLike(classSym, classSel, parameters.map(_.map(S.apply)), false)(Empty())
 
   /** Make a term that looks like `runtime.MatchFailure` with its symbol. */
   protected lazy val matchFailureClass: Ctxl[(Term.Sel | Term.SynthSel, ClassSymbol)] =
-    (State.runtimeSymbol.ref().selNoSym("MatchFailure", synth=true), State.matchFailureClsSymbol)
+    (State.runtimeSymbol.ref().withIArgs(Nil).selNoSym("MatchFailure", synth=true).withIArgs(Nil), State.matchFailureClsSymbol)
 
   /** Make a pattern that looks like `runtime.MatchFailure.class`. */
   protected def matchFailurePattern(parameters: Opt[List[BlockLocalSymbol]]): Ctxl[Pattern.ClassLike] =
     val (classRef, classSym) = matchResultClass
-    val classSel = Term.SynthSel(classRef, Ident("class"))(S(classSym))
+    val classSel = Term.SynthSel(classRef, Ident("class"))(S(classSym)).withIArgs(Nil)
     Pattern.ClassLike(classSym, classSel, parameters.map(_.map(S.apply)), false)(Empty())
 
   protected lazy val tupleSlice = sel(sel(state.runtimeSymbol.ref(), "Tuple"), "slice")
@@ -77,20 +78,20 @@ trait DesugaringBase(using state: State):
   protected lazy val eq = state.builtinOpsMap("==")
   
   def makeMatchResult(captures: Term)(using Elaborator.Ctx) =
-    app(matchResultClass._1, tup(fld(captures)), FlowSymbol("result of `MatchResult`"))
+    app(matchResultClass._1, tup(fld(captures)), FlowSymbol("result of `MatchResult`")).withIArgs(Nil)
     
   def makeMatchFailure(using Elaborator.Ctx) =
-    app(matchFailureClass._1, tup(), FlowSymbol("result of `MatchFailure`"))
-  
+    app(matchFailureClass._1, tup(), FlowSymbol("result of `MatchFailure`")).withIArgs(Nil)
+
   /** Make a `Branch` that calls `Pattern` symbols' `unapply` functions. */
   def makeLocalPatternBranch(
       scrut: => Term.Ref,
       localPatternSymbol: BlockLocalSymbol,
       inner: => Split,
   )(fallback: Split): Ctxl[Split] =
-    val call = app(localPatternSymbol.ref(), tup(fld(scrut)), FlowSymbol(s"result of ${localPatternSymbol.nme}"))
+    val call = app(localPatternSymbol.ref().withIArgs(Nil), tup(fld(scrut)), FlowSymbol(s"result of ${localPatternSymbol.nme}"))
     tempLet("matchResult", call): resultSymbol =>
-      Branch(resultSymbol.ref(), matchResultPattern(N), inner) ~: fallback
+      Branch(resultSymbol.ref().withIArgs(Nil), matchResultPattern(N), inner) ~: fallback
 
   /** Make a `Branch` that calls `Pattern` symbols' `unapply` functions. */
   def makeUnapplyBranch(
@@ -101,7 +102,7 @@ trait DesugaringBase(using state: State):
   )(fallback: Split): Ctxl[Split] =
     val call = app(sel(clsTerm, method), tup(fld(scrut)), FlowSymbol(s"result of $method"))
     tempLet("matchResult", call): resultSymbol =>
-      Branch(resultSymbol.ref(), matchResultPattern(N), inner) ~: fallback
+      Branch(resultSymbol.ref().withIArgs(Nil), matchResultPattern(N), inner) ~: fallback
 
   /** Make a `Branch` that calls `Pattern` symbols' `unapplyStringPrefix` functions. */
   def makeUnapplyStringPrefixBranch(

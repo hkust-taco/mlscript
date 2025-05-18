@@ -64,7 +64,7 @@ sealed trait ResolvableImpl:
     case S(td: ClassLikeDef) => S(td)
     case _ => N
   
-  def withIArgs(iargsLs: Ls[Term.Tup]): Term = 
+  def withIArgs(iargsLs: Ls[Term.Tup]): this.type = 
     if !(this.iargsLs.isEmpty || this.iargsLs.get == iargsLs) then
       lastWords:
         s"the implicit arguments for term ${t.showDbg} " +

@@ -88,6 +88,61 @@ class Normalization(using raise: Raise, tl: TL, ctx: Ctx, state: State):
           val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
           val whenFalse = rec(specialize(alternative, -, scrutinee, pattern).clearFallback)
           Branch(scrutinee, pattern, whenTrue) ~: whenFalse
+        case Pattern.Synonym(symbol, arguments) => scoped("ucs:rp"):
+          log(s"SYNONYM: ${scrutinee.showDbg} is $symbol")
+          import DeBrujinSplit.*, PatternStub.*
+          val mainSplit = Binder:
+            Branch(
+              scrutinee = Outermost,
+              pattern = ClassLike(ConstructorLike.Instantiation(symbol, arguments)),
+              consequent = Accept(42),
+              alternative = Reject
+            )
+          log(s"the initial split:\n${mainSplit.display}")
+          val (normalizedMainSplit, idSplitMap) = scoped("ucs:rpn"):
+            mainSplit.normalize
+          log(s"the normalized main split:\n${normalizedMainSplit.display}")
+          // The entry in the local pattern map.
+          val desugaring = new DesugaringBase {}
+          val idSplitSymbolMap = idSplitMap.map:
+            case (id, split) => (id, (split, TempSymbol(N, s"match$id")))
+          val idSymbolMap = idSplitSymbolMap.map(_ -> _._2)
+          val compiledMainSplit = normalizedMainSplit.toSplit(
+            scrutinees = Vector(() => scrutinee),
+            localPatterns = idSymbolMap,
+            outcomes = Map(S(42) -> consequent),
+          )
+          log(s"the compiled main split:\n${Split.display(compiledMainSplit)}")
+          // Insert local pattern bindings before the split.
+          val compiled = idSplitSymbolMap.foldRight(rec(compiledMainSplit ++ alternative)):
+            case ((id, (split, symbol)), inner) =>
+              val definition =
+                log(s"making definition for ${split.display}")
+                import syntax.{Fun, Keyword, ParamBind, Tree}, Tree.Ident
+                // The memorized splits may have free variables. We will count
+                // the number of free variables, bind them, and substitute them
+                // with the new indices.
+                val paramSymbols = (1 to split.arity).map: i =>
+                  VarSymbol(Ident(s"param$i"))
+                .toVector
+                val paramList = PlainParamList:
+                  paramSymbols.iterator.map(Param(FldFlags.empty, _, N, Modulefulness.none)).toList
+                val success = Split.Else(desugaring.makeMatchResult(Term.Tup(Nil)(Tree.Tup(Nil))))
+                val failure = Split.Else(desugaring.makeMatchFailure)
+                val bodySplit = scoped("ucs:rp:split"):
+                  val bodySplit = split.toSplit(
+                    scrutinees = paramSymbols.map(symbol => () => symbol.ref().withIArgs(Nil)),
+                    localPatterns = idSymbolMap,
+                    outcomes = Map(S(0) -> success, N -> failure)
+                  ) ++ Split.Else(desugaring.makeMatchFailure)
+                  log(s"the compiled local pattern ${id}:\n${Split.display(bodySplit)}")
+                  bodySplit
+                val funcBody: Term = Term.IfLike(Keyword.`if`, bodySplit)
+                Term.Lam(paramList, funcBody)
+              Split.Let(symbol, definition, inner)
+          scoped("ucs:compiled"):
+            log(s"the compiled split:\n${compiledMainSplit.toString()}")
+          compiled
         case _ =>
           raiseDesugaringError(msg"unsupported pattern matching: ${scrutinee.toString} is ${pattern.toString}" -> pattern.toLoc)
           Split.default(Term.Error)
