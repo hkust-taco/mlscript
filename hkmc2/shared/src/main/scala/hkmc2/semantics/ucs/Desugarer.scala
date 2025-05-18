@@ -89,11 +89,13 @@ class Desugarer(val elaborator: Elaborator)
     def ++(fallback: Split): Split =
       if fallback == Split.End then
         split
-      else (split match
+      else if split.isFull then
+        split
+      else split match
         case Split.Cons(head, tail) => Split.Cons(head, tail ++ fallback)
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ++ fallback)
-        case Split.Else(_) => split
-        case Split.End => fallback)
+        case Split.Else(_) => die
+        case Split.End => fallback
 
   private val subScrutineeMap = HashMap.empty[BlockLocalSymbol, ScrutineeData]
 
