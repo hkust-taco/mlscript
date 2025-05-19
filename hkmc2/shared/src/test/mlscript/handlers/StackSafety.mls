@@ -33,21 +33,8 @@ hi(0)
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
-//│       let curDepth, tmp1;
-//│       curDepth = runtime.stackDepth;
-//│       contLoop: while (true) {
-//│         tmp1 = runtime.resetDepth(tmp1, curDepth);
-//│         if (this.pc === 0) {
-//│           scrut = n == 0;
-//│           if (scrut === true) {
-//│             return 0
-//│           } else {
-//│             tmp = n - 1;
-//│             return hi(tmp)
-//│           }
-//│         }
-//│         break;
-//│       }
+//│       runtime.skipOnce = true;
+//│       return hi(n)
 //│     }
 //│     toString() { return "Cont$func$hi$(" + runtime.render(this.pc) + ")"; }
 //│   };
@@ -117,16 +104,8 @@ sum(10000)
 //│       contLoop: while (true) {
 //│         tmp2 = runtime.resetDepth(tmp2, curDepth1);
 //│         if (this.pc === 0) {
-//│           scrut = n == 0;
-//│           if (scrut === true) {
-//│             return 0
-//│           } else {
-//│             tmp = n - 1;
-//│             this.pc = 3;
-//│             continue contLoop;
-//│           }
-//│           this.pc = 2;
-//│           continue contLoop;
+//│           runtime.skipOnce = true;
+//│           return sum1(n)
 //│         } else if (this.pc === 2) {
 //│           break contLoop;
 //│         } else if (this.pc === 3) {
@@ -212,7 +191,7 @@ foo
 //│ = 50005000
 //│ foo = 50005000
 
-:stackSafe 0
+:stackSafe 10
 :effectHandlers
 :expect 50005000
 val foo =

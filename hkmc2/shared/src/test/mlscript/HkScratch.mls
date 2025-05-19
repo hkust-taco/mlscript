@@ -9,75 +9,69 @@
 :todo
 
 
-:stackSafe 1000
+
+:stackSafe 0
 :effectHandlers
 :expect 50005000
 :sjs
-fun sum(n) =
-  if n == 0 then 0
-  else
-    n + sum(n - 1)
-sum(10000)
-//│ Elab: ( ‹› fun member:sum‹851›(Param(‹›,n‹853›,None,Modulefulness(None)), ) = if { let $scrut‹858› = builtin:==‹20›#0(n‹853›#666, 0); scrut is true -> { else 0 }; else builtin:+‹29›#0(n‹853›#666, member:sum‹851›#666(builtin:-‹18›#1(n‹853›#666, 1))) }; member:sum‹851›#666(10000) )
+val foo =
+  val f = n =>
+    if n <= 0 then 0
+    else n + f(n-1)
+  f(10000)
+foo
+//│ Elab: ( ‹› val member:foo‹855› = ( ‹› val member:f‹854› = λ(Param(‹›,n‹858›,None,Modulefulness(None)), ). if { let $scrut‹863› = builtin:<=‹24›#0(n‹858›#666, 0); scrut is true -> { else 0 }; else builtin:+‹29›#0(n‹858›#666, member:f‹854›#666(builtin:-‹18›#1(n‹858›#666, 1))) }; member:f‹854›#666(10000) ); member:foo‹855›#666 )
 //│ JS (unsanitized):
-//│ let sum, res, $_stack$_safe$_body$_;
-//│ sum = function sum(n) {
-//│   let scrut, tmp, tmp1, Cont$func$sum$1, doUnwind, curDepth, stackDelayRes;
-//│   Cont$func$sum$1 = function Cont$func$sum$(pc1) {
-//│     return new Cont$func$sum$.class(pc1);
+//│ let f, foo, tmp, tmp1, lambda, $_stack$_safe$_body$_;
+//│ lambda = (undefined, function (n) {
+//│   let scrut, tmp2, tmp3, Cont$func$lambda$1, doUnwind, curDepth, stackDelayRes;
+//│   Cont$func$lambda$1 = function Cont$func$lambda$(pc1) {
+//│     return new Cont$func$lambda$.class(pc1);
 //│   };
-//│   Cont$func$sum$1.class = class Cont$func$sum$ extends runtime.FunctionContFrame.class {
+//│   Cont$func$lambda$1.class = class Cont$func$lambda$ extends runtime.FunctionContFrame.class {
 //│     constructor(pc) {
-//│       let tmp2;
-//│       tmp2 = super(null);
+//│       let tmp4;
+//│       tmp4 = super(null);
 //│       this.pc = pc;
 //│     }
-//│     doUnwind(res1, newPc) {
+//│     doUnwind(res, newPc) {
 //│       this.pc = newPc;
-//│       res1.contTrace.last.next = this;
-//│       res1.contTrace.last = this;
-//│       return res1
+//│       res.contTrace.last.next = this;
+//│       res.contTrace.last = this;
+//│       return res
 //│     } 
 //│     resume(value$) {
-//│       let curDepth1, tmp2;
+//│       let curDepth1, tmp4;
 //│       curDepth1 = runtime.stackDepth;
 //│       if (this.pc === 1) {
-//│         tmp1 = value$;
+//│         tmp3 = value$;
 //│       }
 //│       contLoop: while (true) {
-//│         tmp2 = runtime.resetDepth(tmp2, curDepth1);
+//│         tmp4 = runtime.resetDepth(tmp4, curDepth1);
 //│         if (this.pc === 0) {
-//│           scrut = n == 0;
-//│           if (scrut === true) {
-//│             return 0
-//│           } else {
-//│             tmp = n - 1;
-//│             this.pc = 3;
-//│             continue contLoop;
-//│           }
-//│           this.pc = 2;
-//│           continue contLoop;
+//│           runtime.skipOnce = true;
+//│           return lambda(n)
 //│         } else if (this.pc === 2) {
 //│           break contLoop;
 //│         } else if (this.pc === 3) {
-//│           tmp1 = sum(tmp);
-//│           if (tmp1 instanceof runtime.EffectSig.class) {
-//│             return this.doUnwind(tmp1, 1)
+//│           tmp3 = runtime.safeCall(f(tmp2));
+//│           if (tmp3 instanceof runtime.EffectSig.class) {
+//│             return this.doUnwind(tmp3, 1)
 //│           }
 //│           this.pc = 1;
 //│           continue contLoop;
 //│         } else if (this.pc === 1) {
-//│           return n + tmp1
+//│           return n + tmp3
 //│         }
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$func$sum$(" + runtime.render(this.pc) + ")"; }
+//│     toString() { return "Cont$func$lambda$(" + runtime.render(this.pc) + ")"; }
 //│   };
-//│   doUnwind = function doUnwind(res1, pc) {
-//│     res1.contTrace.last.next = new Cont$func$sum$1.class(pc);
-//│     res1.contTrace.last = res1.contTrace.last.next;
-//│     return res1
+//│   doUnwind = function doUnwind(res, pc) {
+//│     res.contTrace.last.next = new Cont$func$lambda$1.class(pc);
+//│     res.contTrace.last = res.contTrace.last.next;
+//│     return res
 //│   };
 //│   curDepth = runtime.stackDepth;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
@@ -85,25 +79,29 @@ sum(10000)
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
 //│     return doUnwind(stackDelayRes, 0)
 //│   }
-//│   scrut = n == 0;
+//│   scrut = n <= 0;
 //│   if (scrut === true) {
 //│     return 0
 //│   } else {
-//│     tmp = n - 1;
-//│     tmp1 = sum(tmp);
-//│     tmp1 = runtime.resetDepth(tmp1, curDepth);
-//│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       return doUnwind(tmp1, 1)
+//│     tmp2 = n - 1;
+//│     tmp3 = runtime.safeCall(f(tmp2));
+//│     tmp3 = runtime.resetDepth(tmp3, curDepth);
+//│     if (tmp3 instanceof runtime.EffectSig.class) {
+//│       return doUnwind(tmp3, 1)
 //│     }
-//│     return n + tmp1
+//│     return n + tmp3
 //│   }
-//│ };
-//│ $_stack$_safe$_body$_ = (undefined, function () {
-//│   return sum(10000)
 //│ });
-//│ res = runtime.runStackSafe(1000, $_stack$_safe$_body$_);
-//│ if (res instanceof runtime.EffectSig.class) {
-//│   res = runtime.topLevelEffect(res, false);
+//│ tmp = lambda;
+//│ f = tmp;
+//│ $_stack$_safe$_body$_ = (undefined, function () {
+//│   return runtime.safeCall(f(10000))
+//│ });
+//│ tmp1 = runtime.runStackSafe(0, $_stack$_safe$_body$_);
+//│ if (tmp1 instanceof runtime.EffectSig.class) {
+//│   tmp1 = runtime.topLevelEffect(tmp1, false);
 //│ }
-//│ res
+//│ foo = tmp1;
+//│ foo
 //│ = 50005000
+//│ foo = 50005000

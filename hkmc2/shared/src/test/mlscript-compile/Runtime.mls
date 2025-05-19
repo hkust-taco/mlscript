@@ -348,6 +348,7 @@ fun resumeContTrace(contTrace, value) =
 // stack safety
 mut val stackLimit = 0 // How deep the stack can go before heapifying the stack
 mut val stackDepth = 0
+mut val skipOnce = false
 mut val stackHandler = null
 mut val stackResume = null
 
@@ -356,7 +357,9 @@ object StackDelayHandler with
     set stackResume = k
 
 fun checkDepth() =
-  if stackDepth >= stackLimit && stackHandler !== null then
+  if skipOnce then // failsafe against infinite loops
+    set skipOnce = false
+  else if stackDepth >= stackLimit && stackHandler !== null then
     // this is a tail call to effectful function
     stackHandler.delay()
   else
@@ -371,7 +374,9 @@ fun runStackSafe(limit, f) =
     stackLimit = limit
     stackDepth = 1
     stackHandler = StackDelayHandler
+    skipOnce = false
   let result = enterHandleBlock(StackDelayHandler, f)
+  set stackDepth = 1
   while stackResume !== null do
     let saved = stackResume
     set

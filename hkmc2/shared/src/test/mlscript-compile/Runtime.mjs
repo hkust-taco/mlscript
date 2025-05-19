@@ -225,6 +225,7 @@ let Runtime1;
     };
     this.stackLimit = 0;
     this.stackDepth = 0;
+    this.skipOnce = false;
     this.stackHandler = null;
     this.stackResume = null;
     const StackDelayHandler$class = class StackDelayHandler {
@@ -737,9 +738,9 @@ let Runtime1;
     curDepth = Runtime.stackDepth;
     tmp5: while (true) {
       if (cont4 instanceof Runtime.FunctionContFrame.class) {
-        Runtime.stackDepth = curDepth;
         tmp = runtime.safeCall(cont4.resume(value));
         value = tmp;
+        Runtime.stackDepth = curDepth;
         if (value instanceof Runtime.EffectSig.class) {
           value.contTrace.last.next = cont4.next;
           value.contTrace.lastHandler.nextHandler = handlerCont;
@@ -779,14 +780,20 @@ let Runtime1;
     return tmp4
   } 
   static checkDepth() {
-    let scrut, tmp, tmp1;
-    tmp = Runtime.stackDepth >= Runtime.stackLimit;
-    tmp1 = Runtime.stackHandler !== null;
-    scrut = tmp && tmp1;
-    if (scrut === true) {
-      return runtime.safeCall(Runtime.stackHandler.delay())
-    } else {
+    let scrut, scrut1, tmp, tmp1;
+    scrut1 = Runtime.skipOnce;
+    if (scrut1 === true) {
+      Runtime.skipOnce = false;
       return runtime.Unit
+    } else {
+      tmp = Runtime.stackDepth >= Runtime.stackLimit;
+      tmp1 = Runtime.stackHandler !== null;
+      scrut = tmp && tmp1;
+      if (scrut === true) {
+        return runtime.safeCall(Runtime.stackHandler.delay())
+      } else {
+        return runtime.Unit
+      }
     }
   } 
   static resetDepth(tmp, curDepth) {
@@ -798,8 +805,10 @@ let Runtime1;
     Runtime.stackLimit = limit;
     Runtime.stackDepth = 1;
     Runtime.stackHandler = Runtime.StackDelayHandler;
+    Runtime.skipOnce = false;
     tmp1 = Runtime.enterHandleBlock(Runtime.StackDelayHandler, f1);
     result = tmp1;
+    Runtime.stackDepth = 1;
     tmp4: while (true) {
       scrut = Runtime.stackResume !== null;
       if (scrut === true) {
