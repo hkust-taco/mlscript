@@ -52,7 +52,10 @@ hi(0)
 //│     }
 //│   }
 //│   resume(value$) {
+//│     let curDepth, tmp;
+//│     curDepth = runtime.stackDepth;
 //│     contLoop: while (true) {
+//│       tmp = runtime.resetDepth(tmp, curDepth);
 //│       if (this.pc === 0) {
 //│         this.scrut$1 = this.n$0 == 0;
 //│         if (this.scrut$1 === true) {
@@ -145,10 +148,13 @@ sum(10000)
 //│     return res2
 //│   } 
 //│   resume(value$) {
+//│     let curDepth, tmp;
+//│     curDepth = runtime.stackDepth;
 //│     if (this.pc === 1) {
 //│       this.tmp$3 = value$;
 //│     }
 //│     contLoop: while (true) {
+//│       tmp = runtime.resetDepth(tmp, curDepth);
 //│       if (this.pc === 0) {
 //│         this.scrut$1 = this.n$0 == 0;
 //│         if (this.scrut$1 === true) {

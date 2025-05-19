@@ -403,9 +403,11 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     if inclEntryPoint then headState :: restStates
     else restStates
   
-  val runtimePath = State.runtimeSymbol.asPath
-  val fnLocalsPath: Path = runtimePath.selSN("FnLocalsInfo").selSN("class")
-  val localVarInfoPath: Path = runtimePath.selSN("LocalVarInfo").selSN("class")
+  private val runtimePath = State.runtimeSymbol.asPath
+  private val resetDepthPath: Path = runtimePath.selN(Tree.Ident("resetDepth"))
+  private val stackDepthPath: Path = runtimePath.selN(Tree.Ident("stackDepth"))
+  private val fnLocalsPath: Path = runtimePath.selSN("FnLocalsInfo").selSN("class")
+  private val localVarInfoPath: Path = runtimePath.selSN("LocalVarInfo").selSN("class")
   private def createGetLocalsFn(b: Block, extraLocals: Set[Local])(using h: HandlerCtx) =
     val locals = (b.userDefinedVars ++ extraLocals) -- h.debugInfo.inScopeLocals
     val localsInfo = locals.toList.sortBy(_.uid).map: s =>
@@ -605,9 +607,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       syntax.Cls,
       N, Nil,
       S(h.par), handlerMtds, Nil, Nil,
-      End(),
-      ctorT
-    ) // TODO: handle effect in super call
+      ctor, End() // TODO: handle effect in super call
+    )
     // NOTE: the super call is inside the preCtor
     // during resumption we need to resume both the this.x = x bindings done in JSBuilder and the ctor
     
@@ -747,8 +748,15 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       N,
       End()
     )
+    
+    val depthSym = freshTmp("curDepth")
+    val tmp = freshTmp()
+    val withResetDepth = 
+      if opt.stackSafety.isDefined then
+        Assign(tmp, PureCall(resetDepthPath, tmp.asPath :: depthSym.asPath :: Nil), mainMatchBlk)
+      else mainMatchBlk
 
-    val lbl = blockBuilder.label(loopLbl, mainMatchBlk).rest(End())
+    val lbl = blockBuilder.label(loopLbl, withResetDepth).rest(End())
     
     val resumedVal = VarSymbol(Tree.Ident("value$"))
 
@@ -770,13 +778,20 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           N,
           lbl
         )
+        
+    val withSetDepth =
+      if opt.stackSafety.isDefined then 
+        Assign(depthSym, stackDepthPath, resumeBody)
+      else
+        resumeBody
+      
     
     val resumeSym = BlockMemberSymbol("resume", List())
     val resumeFnDef = FunDefn(
       S(clsSym), // owner
       resumeSym,
       List(PlainParamList(List(Param(FldFlags.empty, resumedVal, N, Modulefulness.none)))),
-      resumeBody
+      withSetDepth
     )
 
     val debugMtds = if !opt.debug then Nil else

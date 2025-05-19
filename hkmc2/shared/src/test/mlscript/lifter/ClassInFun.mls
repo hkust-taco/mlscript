@@ -55,43 +55,36 @@ f() + f() + f()
 //│     return res
 //│   } 
 //│   resume(value$) {
-//│     if (this.pc === 2) {
+//│     if (this.pc === 4) {
 //│       this.tmp$0 = value$;
-//│     } else if (this.pc === 3) {
+//│     } else if (this.pc === 5) {
 //│       this.tmp$1 = value$;
-//│     } else if (this.pc === 4) {
+//│     } else if (this.pc === 6) {
 //│       this.tmp$3 = value$;
 //│     }
 //│     contLoop: while (true) {
-//│       if (this.pc === 0) {
-//│         this.tmp$0 = f();
-//│         if (this.tmp$0 instanceof runtime.EffectSig.class) {
-//│           return this.doUnwind(this.tmp$0, 2)
-//│         }
-//│         this.pc = 2;
+//│       if (this.pc === 4) {
+//│         this.pc = 8;
 //│         continue contLoop;
-//│       } else if (this.pc === 2) {
-//│         this.pc = 6;
-//│         continue contLoop;
-//│       } else if (this.pc === 6) {
+//│       } else if (this.pc === 8) {
 //│         this.tmp$1 = f();
 //│         if (this.tmp$1 instanceof runtime.EffectSig.class) {
-//│           return this.doUnwind(this.tmp$1, 3)
+//│           return this.doUnwind(this.tmp$1, 5)
 //│         }
-//│         this.pc = 3;
-//│         continue contLoop;
-//│       } else if (this.pc === 3) {
-//│         this.tmp$2 = this.tmp$0 + this.tmp$1;
 //│         this.pc = 5;
 //│         continue contLoop;
 //│       } else if (this.pc === 5) {
+//│         this.tmp$2 = this.tmp$0 + this.tmp$1;
+//│         this.pc = 7;
+//│         continue contLoop;
+//│       } else if (this.pc === 7) {
 //│         this.tmp$3 = f();
 //│         if (this.tmp$3 instanceof runtime.EffectSig.class) {
-//│           return this.doUnwind(this.tmp$3, 4)
+//│           return this.doUnwind(this.tmp$3, 6)
 //│         }
-//│         this.pc = 4;
+//│         this.pc = 6;
 //│         continue contLoop;
-//│       } else if (this.pc === 4) {
+//│       } else if (this.pc === 6) {
 //│         return this.tmp$2 + this.tmp$3
 //│       }
 //│       break;
@@ -130,25 +123,12 @@ f() + f() + f()
 //│       return this;
 //│     }
 //│   }
-//│   doUnwind(res, newPc) {
-//│     this.pc = newPc;
-//│     res.contTrace.last.next = this;
-//│     res.contTrace.last = this;
-//│     return res
-//│   } 
 //│   resume(value$) {
-//│     if (this.pc === 1) {
+//│     if (this.pc === 3) {
 //│       this.tmp$0 = value$;
 //│     }
 //│     contLoop: while (true) {
-//│       if (this.pc === 0) {
-//│         this.tmp$0 = runtime.safeCall(h.perform());
-//│         if (this.tmp$0 instanceof runtime.EffectSig.class) {
-//│           return this.doUnwind(this.tmp$0, 1)
-//│         }
-//│         this.pc = 1;
-//│         continue contLoop;
-//│       } else if (this.pc === 1) {
+//│       if (this.pc === 3) {
 //│         return 1
 //│       }
 //│       break;
@@ -165,7 +145,7 @@ f() + f() + f()
 //│   let tmp1;
 //│   tmp1 = runtime.safeCall(h.perform());
 //│   if (tmp1 instanceof runtime.EffectSig.class) {
-//│     return doUnwind$(tmp1, tmp1, 1)
+//│     return doUnwind$(tmp1, tmp1, 3)
 //│   }
 //│   return 1
 //│ };
@@ -173,16 +153,16 @@ f() + f() + f()
 //│   let tmp1, tmp2, tmp3, tmp4;
 //│   tmp1 = f();
 //│   if (tmp1 instanceof runtime.EffectSig.class) {
-//│     return doUnwind$1(tmp1, tmp2, tmp3, tmp4, tmp1, 2)
+//│     return doUnwind$1(tmp1, tmp2, tmp3, tmp4, tmp1, 4)
 //│   }
 //│   tmp2 = f();
 //│   if (tmp2 instanceof runtime.EffectSig.class) {
-//│     return doUnwind$1(tmp1, tmp2, tmp3, tmp4, tmp2, 3)
+//│     return doUnwind$1(tmp1, tmp2, tmp3, tmp4, tmp2, 5)
 //│   }
 //│   tmp3 = tmp1 + tmp2;
 //│   tmp4 = f();
 //│   if (tmp4 instanceof runtime.EffectSig.class) {
-//│     return doUnwind$1(tmp1, tmp2, tmp3, tmp4, tmp4, 4)
+//│     return doUnwind$1(tmp1, tmp2, tmp3, tmp4, tmp4, 6)
 //│   }
 //│   return tmp3 + tmp4
 //│ };
@@ -198,6 +178,7 @@ f() + f() + f()
 //│   constructor() {
 //│     let tmp1;
 //│     tmp1 = super();
+//│     return this;
 //│   }
 //│   perform() {
 //│     let hdlrFun$this;

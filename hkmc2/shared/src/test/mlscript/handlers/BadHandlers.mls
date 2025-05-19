@@ -14,6 +14,7 @@ h.oops
 //│   constructor() {
 //│     let tmp1;
 //│     tmp1 = super();
+//│     return this;
 //│   }
 //│   toString() { return "Handler$h$"; }
 //│ };
@@ -35,7 +36,7 @@ x + 1
 :e
 x
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.36: 	x
+//│ ║  l.37: 	x
 //│ ╙──      	^
 
 
@@ -62,7 +63,7 @@ object Foo with
 :re
 Foo.x
 //│ ╔══[ERROR] Object 'Foo' does not contain member 'x'
-//│ ║  l.63: 	Foo.x
+//│ ║  l.64: 	Foo.x
 //│ ╙──      	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 

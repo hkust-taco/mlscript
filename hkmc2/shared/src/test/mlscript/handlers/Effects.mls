@@ -6,8 +6,35 @@ abstract class Effect with
   fun perform(arg: Str): Str
 
 
+:sjs
 handle h = Effect with
   fun perform()(k) = "b"
+//│ JS (unsanitized):
+//│ let h, tmp, handleBlock$, Handler$h$1;
+//│ handleBlock$ = function handleBlock$() {
+//│   return runtime.Unit
+//│ };
+//│ Handler$h$1 = class Handler$h$ extends Effect1 {
+//│   constructor() {
+//│     let tmp1;
+//│     tmp1 = super();
+//│     return this;
+//│   }
+//│   perform() {
+//│     let hdlrFun;
+//│     hdlrFun = function hdlrFun(k) {
+//│       return "b"
+//│     };
+//│     return runtime.mkEffect(this, hdlrFun)
+//│   }
+//│   toString() { return "Handler$h$"; }
+//│ };
+//│ h = new Handler$h$1();
+//│ tmp = handleBlock$();
+//│ if (tmp instanceof runtime.EffectSig.class) {
+//│   tmp = runtime.topLevelEffect(tmp, false);
+//│ }
+//│ tmp
 
 :expect 42
 handle h = Effect with
@@ -175,30 +202,20 @@ if true do
 //│       return res1
 //│     } 
 //│     resume(value$) {
-//│       if (this.pc === 1) {
+//│       if (this.pc === 3) {
 //│         res = value$;
 //│       }
 //│       contLoop: while (true) {
-//│         if (this.pc === 0) {
-//│           scrut = true;
-//│           if (scrut === true) {
-//│             this.pc = 3;
-//│             continue contLoop;
-//│           } else {
-//│             return runtime.Unit
-//│           }
-//│           this.pc = 2;
-//│           continue contLoop;
-//│         } else if (this.pc === 2) {
+//│         if (this.pc === 4) {
 //│           break contLoop;
-//│         } else if (this.pc === 3) {
+//│         } else if (this.pc === 5) {
 //│           res = f();
 //│           if (res instanceof runtime.EffectSig.class) {
-//│             return this.doUnwind(res, 1)
+//│             return this.doUnwind(res, 3)
 //│           }
-//│           this.pc = 1;
+//│           this.pc = 3;
 //│           continue contLoop;
-//│         } else if (this.pc === 1) {
+//│         } else if (this.pc === 3) {
 //│           return res
 //│         }
 //│         break;
@@ -217,7 +234,7 @@ if true do
 //│   if (scrut === true) {
 //│     res = f();
 //│     if (res instanceof runtime.EffectSig.class) {
-//│       return doUnwind(res, 1)
+//│       return doUnwind(res, 3)
 //│     }
 //│     return res
 //│   } else {
@@ -228,6 +245,7 @@ if true do
 //│   constructor() {
 //│     let tmp12;
 //│     tmp12 = super();
+//│     return this;
 //│   }
 //│   perform(arg) {
 //│     let hdlrFun;

@@ -40,11 +40,7 @@ data class Lol(h) with
 //│           res = value$;
 //│         }
 //│         contLoop: while (true) {
-//│           if (this.pc === 0) {
-//│             this$Lol.h = h;
-//│             this.pc = 5;
-//│             continue contLoop;
-//│           } else if (this.pc === 3) {
+//│           if (this.pc === 3) {
 //│             return this$Lol
 //│           } else if (this.pc === 4) {
 //│             res = Predef.print(tmp);

@@ -33,7 +33,10 @@ hi(0)
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
+//│       let curDepth, tmp1;
+//│       curDepth = runtime.stackDepth;
 //│       contLoop: while (true) {
+//│         tmp1 = runtime.resetDepth(tmp1, curDepth);
 //│         if (this.pc === 0) {
 //│           scrut = n == 0;
 //│           if (scrut === true) {
@@ -106,10 +109,13 @@ sum(10000)
 //│       return res2
 //│     } 
 //│     resume(value$) {
+//│       let curDepth1, tmp2;
+//│       curDepth1 = runtime.stackDepth;
 //│       if (this.pc === 1) {
 //│         tmp1 = value$;
 //│       }
 //│       contLoop: while (true) {
+//│         tmp2 = runtime.resetDepth(tmp2, curDepth1);
 //│         if (this.pc === 0) {
 //│           scrut = n == 0;
 //│           if (scrut === true) {

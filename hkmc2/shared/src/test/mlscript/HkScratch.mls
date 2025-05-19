@@ -9,3 +9,101 @@
 :todo
 
 
+:stackSafe 1000
+:effectHandlers
+:expect 50005000
+:sjs
+fun sum(n) =
+  if n == 0 then 0
+  else
+    n + sum(n - 1)
+sum(10000)
+//│ Elab: ( ‹› fun member:sum‹851›(Param(‹›,n‹853›,None,Modulefulness(None)), ) = if { let $scrut‹858› = builtin:==‹20›#0(n‹853›#666, 0); scrut is true -> { else 0 }; else builtin:+‹29›#0(n‹853›#666, member:sum‹851›#666(builtin:-‹18›#1(n‹853›#666, 1))) }; member:sum‹851›#666(10000) )
+//│ JS (unsanitized):
+//│ let sum, res, $_stack$_safe$_body$_;
+//│ sum = function sum(n) {
+//│   let scrut, tmp, tmp1, Cont$func$sum$1, doUnwind, curDepth, stackDelayRes;
+//│   Cont$func$sum$1 = function Cont$func$sum$(pc1) {
+//│     return new Cont$func$sum$.class(pc1);
+//│   };
+//│   Cont$func$sum$1.class = class Cont$func$sum$ extends runtime.FunctionContFrame.class {
+//│     constructor(pc) {
+//│       let tmp2;
+//│       tmp2 = super(null);
+//│       this.pc = pc;
+//│     }
+//│     doUnwind(res1, newPc) {
+//│       this.pc = newPc;
+//│       res1.contTrace.last.next = this;
+//│       res1.contTrace.last = this;
+//│       return res1
+//│     } 
+//│     resume(value$) {
+//│       let curDepth1, tmp2;
+//│       curDepth1 = runtime.stackDepth;
+//│       if (this.pc === 1) {
+//│         tmp1 = value$;
+//│       }
+//│       contLoop: while (true) {
+//│         tmp2 = runtime.resetDepth(tmp2, curDepth1);
+//│         if (this.pc === 0) {
+//│           scrut = n == 0;
+//│           if (scrut === true) {
+//│             return 0
+//│           } else {
+//│             tmp = n - 1;
+//│             this.pc = 3;
+//│             continue contLoop;
+//│           }
+//│           this.pc = 2;
+//│           continue contLoop;
+//│         } else if (this.pc === 2) {
+//│           break contLoop;
+//│         } else if (this.pc === 3) {
+//│           tmp1 = sum(tmp);
+//│           if (tmp1 instanceof runtime.EffectSig.class) {
+//│             return this.doUnwind(tmp1, 1)
+//│           }
+//│           this.pc = 1;
+//│           continue contLoop;
+//│         } else if (this.pc === 1) {
+//│           return n + tmp1
+//│         }
+//│         break;
+//│       }
+//│     }
+//│     toString() { return "Cont$func$sum$(" + runtime.render(this.pc) + ")"; }
+//│   };
+//│   doUnwind = function doUnwind(res1, pc) {
+//│     res1.contTrace.last.next = new Cont$func$sum$1.class(pc);
+//│     res1.contTrace.last = res1.contTrace.last.next;
+//│     return res1
+//│   };
+//│   curDepth = runtime.stackDepth;
+//│   runtime.stackDepth = runtime.stackDepth + 1;
+//│   stackDelayRes = runtime.checkDepth();
+//│   if (stackDelayRes instanceof runtime.EffectSig.class) {
+//│     return doUnwind(stackDelayRes, 0)
+//│   }
+//│   scrut = n == 0;
+//│   if (scrut === true) {
+//│     return 0
+//│   } else {
+//│     tmp = n - 1;
+//│     tmp1 = sum(tmp);
+//│     tmp1 = runtime.resetDepth(tmp1, curDepth);
+//│     if (tmp1 instanceof runtime.EffectSig.class) {
+//│       return doUnwind(tmp1, 1)
+//│     }
+//│     return n + tmp1
+//│   }
+//│ };
+//│ $_stack$_safe$_body$_ = (undefined, function () {
+//│   return sum(10000)
+//│ });
+//│ res = runtime.runStackSafe(1000, $_stack$_safe$_body$_);
+//│ if (res instanceof runtime.EffectSig.class) {
+//│   res = runtime.topLevelEffect(res, false);
+//│ }
+//│ res
+//│ = 50005000
