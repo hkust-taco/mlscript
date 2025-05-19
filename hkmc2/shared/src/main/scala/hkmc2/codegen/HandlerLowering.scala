@@ -559,7 +559,12 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   
   private def translateFun(f: FunDefn)(using HandlerCtx): FunDefn =
     val callSelf = f.params match
-      case pList :: Nil => S(Call(f.sym.asPath, pList.params.map(p => p.sym.asPath.asArg))(true, true))
+      case pList :: Nil => 
+        val params = pList.params.map(p => p.sym.asPath.asArg)
+        f.owner match
+        case None => S(Call(f.sym.asPath, params)(true, true))
+        case Some(owner) => 
+          S(Call(Select(owner.asPath, Tree.Ident(f.sym.nme))(S(f.sym)), params)(true, true))
       case _ => None // TODO: more than one plist
     
     FunDefn(f.owner, f.sym, f.params, translateBlock(f.body,
