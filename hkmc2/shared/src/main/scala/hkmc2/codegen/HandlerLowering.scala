@@ -589,6 +589,15 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         S(h.cls),
         handler.sym, handler.params, Define(fDef, Return(PureCall(paths.mkEffectPath, h.cls.asPath :: Value.Ref(sym) :: Nil), false)))
     
+    val tmp = freshTmp()
+    val ctor = blockBuilder
+      .assign(tmp, Call(Value.Ref(State.builtinOpsMap("super")), h.args.map(_.asArg))(true, true))
+      .ret(h.cls.asPath)
+    
+    val ctorT = translateBlock(ctor, Set.empty, R(h.cls), 
+      ctorCtx(h.cls.asPath, s"Cont$$ctor$$${symToStr(sym)}$$", s"‹constructor of ${sym.nme}›")
+    )
+    
     val clsDefn = ClsLikeDefn(
       N, // no owner
       h.cls,
@@ -596,7 +605,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       syntax.Cls,
       N, Nil,
       S(h.par), handlerMtds, Nil, Nil,
-      Assign(freshTmp(), Call(Value.Ref(State.builtinOpsMap("super")), h.args.map(_.asArg))(true, true), End()), End()) // TODO: handle effect in super call
+      End(),
+      ctorT
+    ) // TODO: handle effect in super call
     // NOTE: the super call is inside the preCtor
     // during resumption we need to resume both the this.x = x bindings done in JSBuilder and the ctor
     
@@ -709,7 +720,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       // case (2)
       BlockState(0, actualBlock, N) :: Nil
     else
-      partitionBlock(actualBlock, opt.stackSafety.isDefined || true) // TODO: remove
+      partitionBlock(actualBlock, opt.stackSafety.isDefined)
     
     def transformPart(blk: Block): Block = 
       val transform = new BlockTransformerShallow(SymbolSubst()):
