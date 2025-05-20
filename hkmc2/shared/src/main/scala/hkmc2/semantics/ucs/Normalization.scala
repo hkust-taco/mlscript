@@ -268,13 +268,25 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
   )(using VarSet): Split = scoped("ucs:rp"):
     log(s"SYNONYM: ${scrutinee.showDbg} is $symbol")
     import DeBrujinSplit.*, PatternStub.*
-    // The reason why we don't check the number of pattern arguments is that
-    // it is checked during elaboration, because the old pattern compilation
+    // The reason why we comment the pattern arguments number check is that
+    // it has been checked during elaboration, as the old pattern compilation
     // scheme still resolves symbols. The new pattern compilation scheme, which
     // will be implemented in the near future, should not do this.
     val arguments = argsOpt match
-      case S(args) => args.map(arg => (arg.split.get, arg.pattern))
-      case N => Nil
+      case S(args) =>
+        val patternArgs = args.collect:
+          case (_, pattern, S(split)) => (split, pattern)
+        // if symbol.patternParams.size != patternArgs.size then error(
+        //   msg"Pattern `${symbol.nme}` expects ${"pattern argument".pluralize(symbol.patternParams.size, true)}" ->
+        //     Loc(symbol.patternParams.iterator.map(_.sym)),
+        //   msg"But ${"pattern argument".pluralize(patternArgs.size, true)} were given" -> Loc(args.iterator.map(_.pattern)))
+        patternArgs
+      case N =>
+        // if symbol.patternParams.size > 0 then error(
+        //   msg"Pattern `${symbol.nme}` expects ${"pattern argument".pluralize(symbol.patternParams.size, true)}" ->
+        //     Loc(symbol.patternParams.iterator.map(_.sym)),
+        //   msg"But no arguments were given" -> ctorTerm.toLoc)
+        Nil
     val mainSplit = Binder:
       Branch(
         scrutinee = Outermost,

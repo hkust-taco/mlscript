@@ -2,16 +2,15 @@ package hkmc2
 package semantics
 package ucs
 
-import syntax.{Keyword, Tree, BracketKind}, Tree.*
+import syntax.{BracketKind, Keyword, Literal, Tree}, Tree.*
 import mlscript.utils.*, shorthands.*
 import Message.MessageContext
 import utils.TraceLogger
-import syntax.Literal
 import Keyword.{as, and, `do`, `else`, is, let, `then`}
 import collection.mutable.{Buffer, HashMap, SortedSet}
-import Elaborator.{ctx, Ctxl}
+import Elaborator.{Ctx, Ctxl, State, ctx}
 import scala.annotation.targetName
-import hkmc2.semantics.ClassDef.Parameterized
+import Pattern.MatchMode
 
 object Desugarer:
   extension (op: Keyword.Infix)
@@ -25,12 +24,8 @@ object Desugarer:
     val tupleLast: HashMap[Int, BlockLocalSymbol] = HashMap.empty
 end Desugarer
 
-class Desugarer(val elaborator: Elaborator)
-    (using raise: Raise, state: Elaborator.State, c: Elaborator.Ctx) extends DesugaringBase:
-  import Desugarer.*
-  import Elaborator.Ctx
-  import elaborator.term, elaborator.tl.*
-  import Pattern.MatchMode
+class Desugarer(elaborator: Elaborator)(using Raise, State, Ctx) extends DesugaringBase:
+  import Desugarer.*, elaborator.term, elaborator.tl.*
   
   given Ordering[Loc] = Ordering.by: loc =>
     (loc.spanStart, loc.spanEnd)
@@ -449,34 +444,6 @@ class Desugarer(val elaborator: Elaborator)
     def ref = scrutSymbol.ref(/* FIXME ident? */)
     def dealWithCtorCase(ctor: Ctor, mode: MatchMode)(fallback: Split): Sequel = ctx =>
       Branch(ref, Pattern.ClassLike(term(ctor), N, mode, false)(ctor), sequel(ctx)) ~: fallback
-    // @deprecated("Remove before merging the PR.")
-    // def dealWithCtorCase_OLD(ctor: Ctor, compile: Bool)(fallback: Split): Sequel = ctx =>
-    //   val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
-    //   clsTrm.symbol.flatMap(_.asClsLike) match
-    //   case S(cls: ClassSymbol) =>
-    //     if compile then warn(msg"Cannot compile the class `${cls.name}`" -> ctor.toLoc)
-    //     // Branch(ref, Pattern.ClassLike(cls, clsTrm, N, false)(ctor), sequel(ctx)) ~: fallback
-    //     ???
-    //   case S(mod: ModuleSymbol) =>
-    //     if compile then warn(msg"Cannot compile the module `${mod.name}`" -> ctor.toLoc)
-    //     // Branch(ref, Pattern.ClassLike(mod, clsTrm, N, false)( ctor), sequel(ctx)) ~: fallback
-    //     ???
-    //   case S(pat: PatternSymbol) if compile =>
-    //     if pat.patternParams.size > 0 then
-    //       error(
-    //         msg"Pattern `${pat.nme}` expects ${"pattern argument".pluralize(pat.patternParams.size, true)}" ->
-    //           Loc(pat.patternParams.iterator.map(_.sym)),
-    //         msg"But no arguments were given" -> ctor.toLoc)
-    //       fallback
-    //     else
-    //       ???
-    //       // Branch(ref, Pattern.Synonym(pat, Nil), sequel(ctx)) ~: fallback
-    //   case S(_: PatternSymbol) =>
-    //     makeUnapplyBranch(ref, clsTrm, sequel(ctx))(fallback)
-    //   case N =>
-    //     // Raise an error and discard `sequel`. Use `fallback` instead.
-    //     raise(ErrorReport(msg"Cannot use this ${ctor.describe} as a pattern" -> ctor.toLoc :: Nil))
-    //     fallback
     def dealWithAppCtorCase(
         app: App, ctor: Ctor, args: Ls[Tree], mode: MatchMode
     )(fallback: Split): Sequel = ctx =>
@@ -495,57 +462,6 @@ class Desugarer(val elaborator: Elaborator)
         Pattern.ClassLike(term(ctor), S(matches), mode, false)(app), // TODO: refined?
         subMatches(matches, sequel)(Split.End)(ctx)
       ) ~: fallback
-    // @deprecated("Remove before merging the PR.")
-    // def dealWithAppCtorCase_OLD(app: App, ctor: Ctor, args: Ls[Tree], compile: Bool)(fallback: Split): Sequel = ctx => trace(
-    //   pre = s"expandMatch <<< ${ctor}(${args.iterator.map(_.showDbg).mkString(", ")})",
-    //   post = (r: Split) => s"expandMatch >>> ${r.showDbg}"
-    // ):
-    //   val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
-    //   clsTrm.symbol.flatMap(_.asClsLike) match
-    //   case S(cls: ClassSymbol) =>
-    //     val paramSymbols = cls.defn match
-    //       case S(Parameterized(params = paramList)) =>
-    //         if paramList.params.size =/= args.length then
-    //           val n = args.length.toString
-    //           val m = paramList.params.size.toString
-    //           error:
-    //             if paramList.params.isEmpty then
-    //               msg"the constructor does not take any arguments but found $n" -> app.toLoc
-    //             else
-    //               msg"mismatched arity: expect $m, found $n" -> app.toLoc
-    //         ???
-    //         // scrutSymbol.getSubScrutinees(cls).iterator.zip(paramList.params).map:
-    //         //   case (symbol, Param(flags = FldFlags(value = true))) => R(symbol)
-    //         //   case (_, Param(sym = paramSymbol)) => L(paramSymbol) // to report errors
-    //         // .toList
-    //       case S(_) | N =>
-    //         error(msg"class ${cls.name} does not have parameters" -> ctor.toLoc)
-    //         Nil
-    //     ???
-    //     // Branch(
-    //     //   ref,
-    //     //   Pattern.ClassLike(cls, clsTrm, S(paramSymbols.map(_.toOption)), false)(ctor), // TODO: refined?
-    //     //   subMatches(paramSymbols.zip(args), sequel)(Split.End)(ctx)
-    //     // ) ~: fallback
-    //   case S(pat: PatternSymbol) if compile =>
-    //     // When we support extraction parameters, they need to be handled here.
-    //     val patArgs = args.map:
-    //       DeBrujinSplit.elaborate(Nil, _, elaborator)
-    //     if pat.patternParams.size != patArgs.size then
-    //       error(
-    //         msg"Pattern `${pat.nme}` expects ${"pattern argument".pluralize(pat.patternParams.size, true)}" ->
-    //           Loc(pat.patternParams.iterator.map(_.sym)),
-    //         msg"But ${"pattern argument".pluralize(patArgs.size, true)} were given" -> Loc(args))
-    //       fallback
-    //     else
-    //       ???
-    //       // Branch(ref, Pattern.Synonym(pat, patArgs.zip(args)), sequel(ctx)) ~: fallback
-    //   case S(_: PatternSymbol) =>
-    //     makeUnapplyBranch(ref, clsTrm, sequel(ctx))(fallback)
-    //   case _ =>
-    //     // Raise an error and discard `sequel`. Use `fallback` instead.
-    //     raise(ErrorReport(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc :: Nil))
-    //     fallback
     pattern.deparenthesized.desugared match
       // A single wildcard pattern.
       case Under() => _ => ctx => sequel(ctx)

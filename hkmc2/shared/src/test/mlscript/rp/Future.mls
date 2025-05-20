@@ -28,17 +28,17 @@ pattern Rep0(pattern A, B, C)(head) =
 pattern Email(name, domain) =
   (Identifier as name) ~ "@" ~ (Identifier as domain)
 //│ ╔══[ERROR] Pattern extraction parameters are not yet supported.
-//│ ║  l.31: 	pattern Email(name, domain) =
+//│ ║  l.28: 	pattern Email(name, domain) =
 //│ ╙──      	              ^^^^^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern (infix operator)
-//│ ║  l.32: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
+//│ ║  l.29: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
 //│ ╙──      	   ^^^^^^^^^^^^^^^^^^
 
 :todo // View patterns
 pattern GreaterThan(value) = case
   n and n > value then n
 //│ ╔══[ERROR] Pattern extraction parameters are not yet supported.
-//│ ║  l.41: 	pattern GreaterThan(value) = case
+//│ ║  l.38: 	pattern GreaterThan(value) = case
 //│ ╙──      	                    ^^^^^
 //│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(InfixApp(Ident(n),keyword 'and',App(Ident(>),Tup(List(Ident(n), Ident(value))))),keyword 'then',Ident(n))))) (of class hkmc2.syntax.Tree$Case)
 
@@ -52,11 +52,11 @@ fun foo(x) = if x is
     Unit then ....
     Arrow(...) then ....
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.54: 	  view as
+//│ ║  l.51: 	  view as
 //│ ║        	  ^^^^^^^
-//│ ║  l.55: 	    Unit then ....
+//│ ║  l.52: 	    Unit then ....
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.56: 	    Arrow(...) then ....
+//│ ║  l.53: 	    Arrow(...) then ....
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -74,17 +74,17 @@ pattern Star(pattern T) = "" | Many(T)
 pattern Email(name, domains) =
   Rep(Char | ".") as name ~ "@" ~ Rep(Rep(Char) ~ ) as domain
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.74: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+//│ ║  l.71: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 //│ ╙──      	                      ^^^
 //│ /!!!\ Uncaught error: scala.MatchError: Jux(StrLit(a),Ident(to)) (of class hkmc2.syntax.Tree$Jux)
 
 :todo
 pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 //│ ╔══[ERROR] Pattern extraction parameters are not yet supported.
-//│ ║  l.85: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
+//│ ║  l.82: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 //│ ╙──      	             ^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern (infix operator)
-//│ ║  l.85: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
+//│ ║  l.82: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 //│ ╙──      	                          ^^^^^^^^^^^^
 
 :todo
@@ -93,7 +93,7 @@ pattern LineSep(pattern P) = case
   L(...nd) ~
     ""                   then nd :: Nil
     "\n" ~ LineSep(P, t) then nd :: t
-//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Ident(Nil)), App(Ident(~),Tup(List(App(Ident(L),Tup(List(Spread(keyword '...',Some(Loc(52,55,Future.mls:+94)),Some(Ident(nd)))))), Block(List(InfixApp(StrLit(),keyword 'then',App(Ident(::),Tup(List(Ident(nd), Ident(Nil))))), InfixApp(App(Ident(~),Tup(List(StrLit(
+//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Ident(Nil)), App(Ident(~),Tup(List(App(Ident(L),Tup(List(Spread(keyword '...',Some(Loc(52,55,Future.mls:+91)),Some(Ident(nd)))))), Block(List(InfixApp(StrLit(),keyword 'then',App(Ident(::),Tup(List(Ident(nd), Ident(Nil))))), InfixApp(App(Ident(~),Tup(List(StrLit(
 //│ ), App(Ident(LineSep),Tup(List(Ident(P), Ident(t))))))),keyword 'then',App(Ident(::),Tup(List(Ident(nd), Ident(t))))))))))))) (of class hkmc2.syntax.Tree$Case)
 
 :todo
@@ -107,10 +107,10 @@ pattern Lines(pattern L) = case
 :todo
 if input is Lines of Email then
 //│ ╔══[PARSE ERROR] Expected start of statement in this position; found end of input instead
-//│ ║  l.111: 	if input is Lines of Email then
+//│ ║  l.108: 	if input is Lines of Email then
 //│ ╙──       	                               ^
 //│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Tup(List())), TypeDef(Pat,Ident(Tail),Some(Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Tup(List())), InfixApp(InfixApp(App(Ident(~),Tup(List(StrLit(
-//│ ), Bra(Round,App(Ident(Lines),Tup(List(Ident(L)))))))),keyword 'as',Ident(t)),keyword 'then',Ident(t)))))),None), InfixApp(InfixApp(InfixApp(Ident(L),keyword 'as',App(Ident(~),Tup(List(Ident(h), Ident(Tail))))),keyword 'as',Ident(t)),keyword 'then',Tup(List(Ident(h), Spread(keyword '...',Some(Loc(148,151,Future.mls:+103)),Some(Ident(t))))))))),keyword ':',Ident(todo)) (of class hkmc2.syntax.Tree$InfixApp)
+//│ ), Bra(Round,App(Ident(Lines),Tup(List(Ident(L)))))))),keyword 'as',Ident(t)),keyword 'then',Ident(t)))))),None), InfixApp(InfixApp(InfixApp(Ident(L),keyword 'as',App(Ident(~),Tup(List(Ident(h), Ident(Tail))))),keyword 'as',Ident(t)),keyword 'then',Tup(List(Ident(h), Spread(keyword '...',Some(Loc(148,151,Future.mls:+100)),Some(Ident(t))))))))),keyword ':',Ident(todo)) (of class hkmc2.syntax.Tree$InfixApp)
 
 :todo
 pattern Opt(pattern P) = case
@@ -124,16 +124,16 @@ pattern Email(name, domain) = ...
 :todo
 if input is Opt(Email, Some((n, d))) then ...
 //│ ╔══[ERROR] Name not found: input
-//│ ║  l.128: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.125: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	   ^^^^^
 //│ ╔══[ERROR] Name not found: Opt
-//│ ║  l.128: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.125: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	            ^^^
 //│ ╔══[ERROR] Name not found: Some
-//│ ║  l.128: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.125: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	                       ^^^^
 //│ ╔══[ERROR] Unrecognized pattern (block)
-//│ ║  l.128: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.125: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	                            ^^^^^^
 //│ ═══[ERROR] Cannot use this <error> as a pattern
 
@@ -141,17 +141,17 @@ if input is Opt(Email, Some((n, d))) then ...
 pattern Opt(pattern P) = case
   P(...values) then (Some(values))
   ""           then (None)
-//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(App(Ident(P),Tup(List(Spread(keyword '...',Some(Loc(34,37,Future.mls:+144)),Some(Ident(values)))))),keyword 'then',Bra(Round,App(Ident(Some),Tup(List(Ident(values)))))), InfixApp(StrLit(),keyword 'then',Bra(Round,Ident(None)))))) (of class hkmc2.syntax.Tree$Case)
+//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(App(Ident(P),Tup(List(Spread(keyword '...',Some(Loc(34,37,Future.mls:+141)),Some(Ident(values)))))),keyword 'then',Bra(Round,App(Ident(Some),Tup(List(Ident(values)))))), InfixApp(StrLit(),keyword 'then',Bra(Round,Ident(None)))))) (of class hkmc2.syntax.Tree$Case)
 
 :todo
 pattern Opt(pattern P) = case
   P(...values) then Some(values)
   ""           then None
-//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(App(Ident(P),Tup(List(Spread(keyword '...',Some(Loc(34,37,Future.mls:+150)),Some(Ident(values)))))),keyword 'then',App(Ident(Some),Tup(List(Ident(values))))), InfixApp(StrLit(),keyword 'then',Ident(None))))) (of class hkmc2.syntax.Tree$Case)
+//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(App(Ident(P),Tup(List(Spread(keyword '...',Some(Loc(34,37,Future.mls:+147)),Some(Ident(values)))))),keyword 'then',App(Ident(Some),Tup(List(Ident(values))))), InfixApp(StrLit(),keyword 'then',Ident(None))))) (of class hkmc2.syntax.Tree$Case)
 
 :todo  
 pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.156: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ║  l.153: 	pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╙──       	                        ^^^
 //│ /!!!\ Uncaught error: scala.MatchError: Jux(StrLit(0),Ident(to)) (of class hkmc2.syntax.Tree$Jux)
