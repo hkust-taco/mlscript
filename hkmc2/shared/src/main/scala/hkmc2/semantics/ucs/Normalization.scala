@@ -54,7 +54,7 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
             fieldName1 == fieldName2 && p1 =:= p2
         }
       case (Pattern.Synonym(sym1, args1), Pattern.Synonym(sym2, args2)) =>
-        args1 == args2 && sym1.params == sym2.params && sym1.body == sym2.body
+        args1 === args2 && sym1.params === sym2.params && sym1.body === sym2.body
       case (_:Pattern.ClassLike, _) | (_:Pattern.Lit, _) |
         (_:Pattern.Tuple, _) | (_:Pattern.Synonym, _) | (_:Pattern.Record, _) => false
     /** Checks if `lhs` can be subsumed under `rhs`. */
