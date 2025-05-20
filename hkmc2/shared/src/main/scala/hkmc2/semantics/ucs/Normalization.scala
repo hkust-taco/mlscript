@@ -54,9 +54,7 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
             fieldName1 == fieldName2 && p1 =:= p2
         }
       case (Pattern.Synonym(sym1, args1), Pattern.Synonym(sym2, args2)) =>
-        // TODO : there is surely some other conditions
-        // and we may want to accept equality beween a synonym and its input pattern
-        sym1 === sym2
+        args1 == args2 && sym1.params == sym2.params && sym1.body == sym2.body
       case (_:Pattern.ClassLike, _) | (_:Pattern.Lit, _) |
         (_:Pattern.Tuple, _) | (_:Pattern.Synonym, _) | (_:Pattern.Record, _) => false
     /** Checks if `lhs` can be subsumed under `rhs`. */
@@ -292,8 +290,7 @@ object Normalization:
     case (Lit(Tree.StrLit(_)), ClassLike(blt.`Str`, _, _, _)) => true
     case (Lit(Tree.DecLit(_)), ClassLike(blt.`Num`, _, _, _)) => true
     case (Lit(Tree.BoolLit(_)), ClassLike(blt.`Bool`, _, _, _)) => true
-    case (_: Synonym, _) => false
-      // TODO there is probably a sensible condition
+    case (_: Synonym, _: Synonym) => lhs =:= rhs
     case (Record(entries1), Record(entries2)) =>
       entries1.forall { (fieldName1, _) => entries2.exists { (fieldName2, _) => fieldName1 === fieldName2 } }
     case (Record(entries), ClassLike(cs: ClassSymbol, _, _, _)) =>
@@ -303,7 +300,7 @@ object Normalization:
       entries.forall { (fieldName, _) => clsParams.exists {
         case Param(flags = FldFlags(value = value), sym = sym) => value && fieldName === sym.id
       }}
-    case (_:ClassLike, _) | (_:Tuple, _) | (_:Lit, _) | (_:Record, _) => false
+    case (_: (ClassLike | Tuple | Lit | Record | Synonym), _)  => false
 
   final case class VarSet(declared: Set[BlockLocalSymbol]):
     def +(nme: BlockLocalSymbol): VarSet = copy(declared + nme)
