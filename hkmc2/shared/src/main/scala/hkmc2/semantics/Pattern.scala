@@ -22,9 +22,9 @@ enum Pattern extends AutoLocated:
   case Synonym(symbol: PatternSymbol, patternArguments: Ls[(split: DeBrujinSplit, tree: Tree)])
   
   case Tuple(size: Int, inf: Bool)
-
+  
   case Record(entries: List[(Ident -> BlockLocalSymbol)])
-
+  
   def subTerms: Ls[Term] = this match
     case ClassLike(_, t, _, _) => t :: Nil
     case _:(Lit | Synonym | Tuple | Record) => Nil 

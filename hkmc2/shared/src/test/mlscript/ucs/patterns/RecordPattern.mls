@@ -37,12 +37,13 @@ let f = case
 f(a: 1)
 //│ = 1
 
+
 // * It would probably be surprising to bind `a` in the RHS here
 :e
 let f = case
   { a: 1 } then a
 //│ ╔══[ERROR] Name not found: a
-//│ ║  l.43: 	  { a: 1 } then a
+//│ ║  l.44: 	  { a: 1 } then a
 //│ ╙──      	                ^
 //│ f = [function]
 

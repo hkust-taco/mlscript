@@ -121,7 +121,7 @@ object Keyword:
   val `this` = Keyword("this", N, N)
   val `outer` = Keyword("outer", N, N)
   val `pattern` = Keyword("pattern", N, N)
-
+  
   val `->` = Keyword("->", nextPrec, eqPrec)
   
   val maxPrec = curPrec

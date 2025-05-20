@@ -691,7 +691,7 @@ class Desugarer(val elaborator: Elaborator)
     ):
       val innermostSplit = subMatches(rest, sequel)(fallback)
       expandMatch(scrutinee, pattern, innermostSplit)(fallback)
-
+  
   /** Desugar `case` expressions. */
   def apply(tree: Case, scrut: VarSymbol)(using Ctx): Split =
     val topmost = patternSplit(tree.branches, scrut)(Split.End)(ctx)
