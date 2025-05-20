@@ -87,13 +87,13 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
         else
           val bd = if v.lvl >= rest.lvl then rest else extrude(rest)(using v.lvl, true, mutable.HashMap.empty)
           if pol then
-            val nc = Type.mkNegType(bd).toDnf
+            val nc = Type.mkNegType(bd).toDnf // always cache the normal form to avoid unexpected cache misses
             log(s"New bound: ${v.showDbg} <: ${nc.showDbg}")
             cctx.nest(v -> nc) givenIn:
               v.state.upperBounds ::= nc
               v.state.lowerBounds.foreach(lb => constrainImpl(lb, nc))
           else
-            val c = bd.toDnf
+            val c = bd.toDnf // always cache the normal form to avoid unexpected cache misses
             log(s"New bound: ${v.showDbg} :> ${c.showDbg}")
             cctx.nest(c -> v) givenIn:
               v.state.lowerBounds ::= c
