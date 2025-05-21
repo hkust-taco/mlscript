@@ -45,8 +45,10 @@ enum Pattern extends AutoLocated:
     case Lit(literal) => literal.idStr
     case ClassLike(ctor, args, _, rfd) =>
       def showCtor(ctor: Term): Str = ctor match
-        case Term.Ref(sym: BlockMemberSymbol) => sym.nme // w/o `refNum`` and prefix
-        case Term.Ref(sym) => sym.toString // w/o `refNum`
+        // This prints the symbol name without `refNum` and "member:" prefix.
+        case Term.Ref(sym: BlockMemberSymbol) => sym.nme
+        // This prints the symbol without `refNum`.
+        case Term.Ref(sym) => sym.toString
         case Term.Sel(p, i) => s"${showCtor(p)}.${i.name}"
         case Term.SynthSel(p, i) => s"${showCtor(p)}.${i.name}"
         case _ => ctor.showDbg
@@ -83,9 +85,9 @@ object Pattern:
   
   enum MatchMode:
     /** The default mode. If the constructor resolves to:
-     *  - a class symbol, then check if the scrutinee is an instance;
-     *  - a module symbol, then check if the scrutinee is the module itself;
-     *  - a pattern symbol, then call `unapply` on the pattern.
+     *  - a `ClassSymbol`, then check if the scrutinee is an instance;
+     *  - a `ModuleSymbol`, then check if the scrutinee is the object;
+     *  - a `PatternSymbol`, then call `unapply` on the pattern.
      */
     case Default
     /** Call `unapplyStringPrefix` instead of `unapply`. */
