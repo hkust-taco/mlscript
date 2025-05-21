@@ -477,10 +477,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               case Pattern.ClassLike(ctor, args0, _, _refined) =>
                 subTerm_nonTail(ctor): st =>
                   val args = args0.map(_.map(_.scrutinee)).getOrElse(Nil)
-                  val (ctorSym, clsParams) = ctor.symbol.flatMap(_.asClsOrMod) match // TODO(ucs)
+                  val (ctorSym, clsParams) = ctor.symbol.flatMap(_.asClsOrMod) match
                     case S(cls: ClassSymbol) => (cls, cls.tree.clsParams)
                     case S(mod: ModuleSymbol) => (mod, Nil)
-                  // assert(args0.isEmpty || clsParams.length === args.length) // TODO(ucs): Is this really needed?
+                    case N =>
+                      // Normalization have already checked the constructor
+                      // resolves to a class or module. Branches with unresolved
+                      // constructors should have been removed.
+                      lastWords("Pattern.ClassLike: constructor is not a class or module")
+                  // Normalization should reject cases where the user provides
+                  // more sub-patterns than there are actual class parameters.
+                  assert(args0.isEmpty || args.length <= clsParams.length)
                   def mkArgs(args: Ls[TermSymbol -> BlockLocalSymbol])(using Subst): Case -> Block = args match
                     case Nil =>
                       Case.Cls(ctorSym, st) -> go(tail, topLevel = false)
