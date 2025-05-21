@@ -45,22 +45,24 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
   extension (lhs: Pattern)
     /** Generate a term that really resolves to the class at runtime. */
     def selectClass: Pattern = lhs match
-      case lhs @ Pattern.ClassLike(ctor, _, _, _) =>
-        lhs.copy(
-          constructor = ctor.symbol match
-            case S(cls: ClassSymbol) => ctor
-            case S(mem: BlockMemberSymbol) =>
-              // If the class is declaration-only, we do not need to select the
-              // class.
-              if !mem.hasLiftedClass || mem.defn.exists(_.isDeclare.isDefined) then ctor
-              else Term.SynthSel(ctor, Tree.Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol)).withIArgs(Nil)
-            case _ => ctor
-        )(lhs.tree)
+      case lhs: Pattern.ClassLike =>
+        val constructor = lhs.constructor.symbol match
+          case S(cls: ClassSymbol) => lhs.constructor
+          case S(mem: BlockMemberSymbol) =>
+            // If the class is declaration-only, we do not need to select the
+            // class.
+            if !mem.hasLiftedClass || mem.defn.exists(_.isDeclare.isDefined) then
+              lhs.constructor
+            else
+              Term.SynthSel(lhs.constructor, Tree.Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol)).withIArgs(Nil)
+          case _ => lhs.constructor
+        lhs.copy(constructor)(lhs.tree)
       case _: (Pattern.Lit | Pattern.Tuple | Pattern.Record) => lhs
      
     /** Checks if two patterns are the same. */
     def =:=(rhs: Pattern): Bool = (lhs, rhs) match
-      case (Pattern.ClassLike(c1, _, _, _), Pattern.ClassLike(c2, _, _, _)) => c1.symbol === c2.symbol
+      case (lhs: Pattern.ClassLike, rhs: Pattern.ClassLike) =>
+        lhs.constructor.symbol === rhs.constructor.symbol
       case (Pattern.Lit(l1), Pattern.Lit(l2)) => l1 === l2
       case (Pattern.Tuple(n1, b1), Pattern.Tuple(n2, b2)) => n1 === n2 && b1 === b2
       case (_, _) => false
@@ -154,7 +156,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
                         msg"mismatched arity: expect $m, found $n" -> argsLoc
                   // Check the fields are accessible.
                   paramList.params.iterator.zip(args).map:
-                    case (Param(_, _, _, _), (_, Tree.Under(), _)) => false
+                    case (_, (_, Tree.Under(), _)) => false
                     case (Param(flags, sym, _, _), arg) if !flags.value =>
                       error(msg"This pattern cannot be matched" -> arg.pattern.toLoc, // TODO: use correct location
                         msg"because the corresponding parameter `${sym.name}` is not publicly accessible" -> sym.toLoc,

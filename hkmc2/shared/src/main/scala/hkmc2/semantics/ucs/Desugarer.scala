@@ -452,7 +452,7 @@ class Desugarer(elaborator: Elaborator)(using Raise, State, Ctx) extends Desugar
         case (symbol, tree) =>
           val argument = tree match
             case TypeDef(syntax.Pat, body, N, N) => S(DeBrujinSplit.elaborate(Nil, body, elaborator))
-            case td @ TypeDef(syntax.Pat, _, _, _) =>
+            case td @ TypeDef(k = syntax.Pat) =>
               error(msg"Ill-formed pattern argument" -> td.toLoc); N
             case _ => N
           (symbol, tree, argument)

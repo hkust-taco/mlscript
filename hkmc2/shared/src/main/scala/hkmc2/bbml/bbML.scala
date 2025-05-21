@@ -295,7 +295,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val nestCtx1 = ctx.nest
       val nestCtx2 = ctx.nest
       val patTy = pattern match
-      case pat @ Pattern.ClassLike(_, _, _, _) =>
+      case pat: Pattern.ClassLike =>
         val sym = pat.ctorSym
         val (clsTy, tv, emptyTy) = sym.asCls.flatMap(sym => sym.defn.map(sym -> _)) match
         case S((sym, cls)) =>

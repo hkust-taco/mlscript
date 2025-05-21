@@ -467,7 +467,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             pat match
               case Pattern.Lit(lit) => mkMatch(Case.Lit(lit) -> go(tail, topLevel = false))
               // Do not elaborate `_trm` when the `cls` is virtual.
-              case pat @ Pattern.ClassLike(ctor, _, _, _) if pat.isVirtualClass =>
+              case pat: Pattern.ClassLike if pat.isVirtualClass =>
                 // [invariant:0] Some classes (e.g., `Int`) from `Prelude` do
                 // not exist at runtime. If we do lowering on `trm`, backends
                 // (e.g., `JSBuilder`) will not be able to handle the corresponding selections.

@@ -31,7 +31,7 @@ enum Pattern extends AutoLocated:
   
   def subTerms: Ls[Term] = this match
     case Lit(_) => Nil
-    case ClassLike(ctor, _, _, _) => ctor :: Nil
+    case p: ClassLike => p.constructor :: Nil
     case Tuple(_, _) => Nil
     case Record(_) => Nil
   
@@ -61,13 +61,13 @@ object Pattern:
   /** A class-like pattern whose symbol is resolved to a class. */
   object Class:
     def unapply(p: Pattern): Opt[ClassSymbol] = p match
-      case Pattern.ClassLike(ctor, _, _, _) => ctor.symbol.flatMap(_.asCls)
+      case p: Pattern.ClassLike => p.constructor.symbol.flatMap(_.asCls)
       case _ => N
   
   /** A class-like pattern whose symbol is resolved to a module. */
   object Module:
     def unapply(p: Pattern): Opt[ModuleSymbol] = p match
-      case Pattern.ClassLike(ctor, _, _, _) => ctor.symbol.flatMap(_.asModOrObj)
+      case p: Pattern.ClassLike => p.constructor.symbol.flatMap(_.asModOrObj)
       case _ => N
 
   private[Pattern] sealed trait ClassLikeImpl:
