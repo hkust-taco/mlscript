@@ -225,6 +225,7 @@ case class ErrorSymbol(val nme: Str, tree: Tree)(using State) extends MemberSymb
 
 sealed trait ClassLikeSymbol extends Symbol:
   self: MemberSymbol[? <: ClassDef | ModuleDef] =>
+  val tree: Tree.TypeDef
   def subst(using sub: SymbolSubst): ClassLikeSymbol
 
 

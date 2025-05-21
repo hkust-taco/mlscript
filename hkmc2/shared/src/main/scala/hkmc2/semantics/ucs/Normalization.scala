@@ -5,7 +5,7 @@ package ucs
 import mlscript.utils.*, shorthands.*
 import syntax.{Literal, Tree}, utils.TraceLogger
 import Message.MessageContext
-import Elaborator.{Ctx, State}
+import Elaborator.{Ctx, State, ctx}
 import utils.*
 
 class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBase:
@@ -135,12 +135,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
                 cls.defn match
                   case N => lastWords(s"Class ${cls.name} does not have a definition")
                   case S(cd) => cls.id -> cd.paramsOpt
-            mode match
-              case MatchMode.Default | _: MatchMode.StringPrefix => ()
-              case MatchMode.Compiled(ident) =>
-                warn(msg"Cannot compile `${cls.name}`" -> ident.toLoc,
-                  msg"Because it is a class" -> classHead.toLoc,
-                  msg"Note: only patterns can be compiled" -> N)
+            validateMatchMode(ctor, cls, mode)
             val broken: Bool = paramsOpt match
               case S(paramList) => argsOpt match
                 case S(args) =>
@@ -195,12 +190,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
               val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
               Branch(scrutinee, pattern.selectClass, whenTrue) ~: whenFalse
           case S(mod: ModuleSymbol) =>
-            mode match
-              case MatchMode.Default | _: MatchMode.StringPrefix => ()
-              case MatchMode.Compiled(ident) =>
-                warn(msg"Cannot compile `${mod.name}`" -> ident.toLoc,
-                  msg"Because it is a module" -> mod.defn.flatMap(_.toLoc),
-                  msg"Note: only patterns can be compiled" -> N)
+            validateMatchMode(ctor, mod, mode)
             val broken = argsOpt match
               case S(args) =>
                 // This means the pattern is an application of a module.
@@ -224,8 +214,17 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
             case MatchMode.StringPrefix(prefix, postfix) =>
               // TODO(rp): `argsOpt` is not useless for now
               normalizeStringPrefixPattern(scrutinee, pat, ctor, postfix, consequent, alternative)
-            case MatchMode.Compiled(ident) =>
-              normalizeCompiledPattern(scrutinee, pat, ctor, argsOpt, mode, consequent, alternative)
+            case MatchMode.Annotated(annotation) => annotation.symbol.flatMap(_.asObj) match
+              case S(symbol) if symbol === ctx.builtins.compile =>
+                normalizeCompiledPattern(scrutinee, pat, ctor, argsOpt, mode, consequent, alternative)
+              case S(_) =>
+                warn(msg"Unknown annotation on pattern" -> annotation.toLoc,
+                  msg"Note: only `@compile` is supported." -> N)
+                normalizeExtractorPattern(scrutinee, pat, ctor, consequent, alternative)
+              case N =>
+                // Name resolution should have already reported an error. We
+                // treat this as an extractor pattern.
+                normalizeExtractorPattern(scrutinee, pat, ctor, consequent, alternative)
       case _ =>
           raiseDesugaringError(msg"unsupported pattern matching: ${scrutinee.toString} is ${pattern.toString}" -> pattern.toLoc)
           Split.default(Term.Error)
@@ -239,6 +238,19 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
       log(s"DFLT: ${default.showDbg}")
       Split.Else(default)
     case Split.End => Split.End
+  
+  private def validateMatchMode(ctorTerm: Term, ctorSymbol: ClassSymbol | ModuleSymbol, mode: MatchMode): Unit = mode match
+    case MatchMode.Default | _: MatchMode.StringPrefix => ()
+    case MatchMode.Annotated(annotation) => annotation.symbol.flatMap(_.asObj) match
+      case S(symbol) if symbol === ctx.builtins.compile =>
+        warn(msg"Cannot compile `${ctorSymbol.name}`," -> Loc(annotation :: ctorTerm :: Nil),
+          msg"because it is a ${ctorSymbol.tree.k.desc}." -> ctorSymbol.toLoc,
+          msg"Note: only patterns can be compiled." -> N)
+      case S(_) =>
+        warn(msg"Unknown annotation on pattern" -> annotation.toLoc,
+        msg"Note: only `@compile` is supported on patterns." -> N)
+      // Name resolution should have already reported an error.
+      case N => ()
   
   private def normalizeExtractorPattern(
       scrutinee: Term.Ref,

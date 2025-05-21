@@ -6,6 +6,8 @@ import syntax.*, Tree.Ident
 import Elaborator.{Ctx, ctx}
 import ucs.DeBrujinSplit
 
+import Pattern.MatchMode
+
 /** Flat patterns for pattern matching */
 enum Pattern extends AutoLocated:
   
@@ -20,7 +22,7 @@ enum Pattern extends AutoLocated:
       // TODO(ucs/rp): replace with suitable representation after the new
       // pattern compilation is implemented
       val arguments: Opt[Ls[(scrutinee : BlockLocalSymbol, pattern : Tree, split : Opt[DeBrujinSplit])]],
-      val mode: Pattern.MatchMode,
+      val mode: MatchMode,
       var refined: Bool
   )(val tree: Tree) extends Pattern with Pattern.ClassLikeImpl
   
@@ -31,7 +33,9 @@ enum Pattern extends AutoLocated:
   
   def subTerms: Ls[Term] = this match
     case Lit(_) => Nil
-    case p: ClassLike => p.constructor :: Nil
+    case p: ClassLike => p.constructor :: (p.mode match
+      case MatchMode.Default | _: MatchMode.StringPrefix => Nil
+      case MatchMode.Annotated(annotation) => annotation :: Nil)
     case Tuple(_, _) => Nil
     case Record(_) => Nil
   
@@ -92,8 +96,10 @@ object Pattern:
     case Default
     /** Call `unapplyStringPrefix` instead of `unapply`. */
     case StringPrefix(prefix: TempSymbol, postfix: TempSymbol)
-    /** Compile the pattern at call site. */
-    case Compiled(ident: Ident)
+    /** The pattern is annotated. The normalization will intepret the pattern
+     *  matching behavior based on the resolved symbol
+     */
+    case Annotated(annotation: Term)
     
   object ClassLike:
     def apply(constructor: Term, arguments: Opt[Ls[BlockLocalSymbol]]): ClassLike =

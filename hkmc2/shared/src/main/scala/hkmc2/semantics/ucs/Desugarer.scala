@@ -477,11 +477,8 @@ class Desugarer(elaborator: Elaborator)(using Raise, State, Ctx) extends Desugar
         val ctxWithAlias = ctx + (nme -> aliasSymbol)
         Split.Let(aliasSymbol, ref, sequel(ctxWithAlias) ++ fallback)
       case ctor: Ctor => dealWithCtorCase(ctor, MatchMode.Default)
-      case Annotated(compiled @ Ident("compile"), ctor: Ctor) =>
-        dealWithCtorCase(ctor, MatchMode.Compiled(compiled))
       case Annotated(annotation, ctor: Ctor) =>
-        error(msg"Unrecognized annotation on patterns." -> annotation.toLoc)
-        dealWithCtorCase(ctor, MatchMode.Default)
+        dealWithCtorCase(ctor, MatchMode.Annotated(term(annotation)))
       case Tree.Tup(args) => fallback => ctx => trace(
         pre = s"expandMatch <<< ${args.mkString(", ")}",
         post = (r: Split) => s"expandMatch >>> ${r.showDbg}"
@@ -531,11 +528,8 @@ class Desugarer(elaborator: Elaborator)(using Raise, State, Ctx) extends Desugar
       case App(Ident("-"), Tup(DecLit(value) :: Nil)) => fallback => ctx =>
         Branch(ref, Pattern.Lit(DecLit(-value)), sequel(ctx)) ~: fallback
       // A single constructor pattern.
-      case Annotated(compiled @ Ident("compile"), app @ App(ctor: Ctor, Tup(args))) =>
-        dealWithAppCtorCase(app, ctor, args, MatchMode.Compiled(compiled))
       case Annotated(annotation, app @ App(ctor: Ctor, Tup(args))) =>
-        error(msg"Unrecognized annotation on patterns." -> annotation.toLoc)
-        dealWithAppCtorCase(app, ctor, args, MatchMode.Default)
+        dealWithAppCtorCase(app, ctor, args, MatchMode.Annotated(term(annotation)))
       case app @ App(ctor: Ctor, Tup(args)) =>
         dealWithAppCtorCase(app, ctor, args, MatchMode.Default)
       // A single literal pattern
