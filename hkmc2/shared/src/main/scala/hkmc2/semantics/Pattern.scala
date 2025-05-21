@@ -37,7 +37,7 @@ enum Pattern extends AutoLocated:
   
   def children: Ls[Located] = this match
     case Lit(literal) => literal :: Nil
-    case ClassLike(ctor, scruts, _, _) => ctor :: scruts.map(_.map(_.scrutinee)).getOrElse(Nil)
+    case ClassLike(ctor, scruts, _, _) => ctor :: scruts.fold(Nil)(_.map(_.scrutinee))
     case Tuple(fields, _) => Nil
     case Record(entries) => entries.flatMap { case (nme, als) => nme :: als :: Nil }
   
