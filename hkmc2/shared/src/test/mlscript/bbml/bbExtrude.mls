@@ -38,12 +38,12 @@ y `=> (let t = run(x `=> x `+ y) in y)
 //│ ╔══[ERROR] Type error in quoted term with expected type CodeBase[out 'T, ⊥, ?]
 //│ ║  l.37: 	y `=> (let t = run(x `=> x `+ y) in y)
 //│ ║        	                   ^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  CodeBase[out 'x -> 'cde, out 'ctx, ?]  <:  CodeBase[out 'T, ⊥, ?]
+//│ ╟── because: cannot constrain  CodeBase[in ⊥ out ('x) ->{⊥} ('cde), in ⊥ out 'ctx, in ⊥ out ⊤]  <:  CodeBase[in ⊥ out 'T, ⊥, in ⊥ out ⊤]
 //│ ╟── because: cannot constrain  'ctx  <:  ⊥
-//│ ╟── because: cannot constrain  'ctx  <:  ¬()
-//│ ╟── because: cannot constrain  (¬⊥ ∧ ¬'x1) ∧ y  <:  ¬()
+//│ ╟── because: cannot constrain  'ctx  <:  ⊥
+//│ ╟── because: cannot constrain  ¬'x1 ∧ y  <:  ⊥
 //│ ╟── because: cannot constrain  y  <:  'x1
-//│ ╙── because: cannot constrain  y  <:  ¬()
+//│ ╙── because: cannot constrain  y  <:  ⊥
 //│ Type: CodeBase[out 'y -> 'y, ⊥, ?]
 //│ Where:
 //│   'y <: Int
@@ -81,13 +81,71 @@ f(g)(bar)
 //│ ║  l.79: 	f(g)(bar)
 //│ ║        	     ^^^
 //│ ╟── because: cannot constrain  C[Int]  <:  'A
-//│ ╟── because: cannot constrain  C[in Int out Int]  <:  'A
-//│ ╟── because: cannot constrain  C[in Int out Int]  <:  ¬C[in ⊥ out ¬⊥ ∧ 'B] ∨ C[in Int out ¬⊥ ∧ 'D]
-//│ ╟── because: cannot constrain  (Int) ∧ ('B)  <:  ¬⊥ ∧ 'D
+//│ ╟── because: cannot constrain  C[Int]  <:  'A
+//│ ╟── because: cannot constrain  C[Int]  <:  ¬{C[in ⊥ out ¬⊥ ∧ 'B]} ∨ C[in Int out 'D]
+//│ ╟── because: cannot constrain  Int ∧ 'B  <:  'D
 //│ ╟── because: cannot constrain  Int ∧ 'B  <:  'D
 //│ ╟── because: cannot constrain  Int ∧ 'B  <:  'B1
 //│ ╟── because: cannot constrain  Int ∧ 'B  <:  'B1
-//│ ╟── because: cannot constrain  Int ∧ 'B  <:  ¬()
-//│ ╟── because: cannot constrain  'B  <:  ¬(Int)
-//│ ╙── because: cannot constrain    <:  ¬(Int)
+//│ ╟── because: cannot constrain  Int ∧ 'B  <:  ⊥
+//│ ╟── because: cannot constrain  'B  <:  ¬{Int}
+//│ ╙── because: cannot constrain  ⊤  <:  ¬{Int}
 //│ Type: Int
+
+fun k(x) =
+  fun f(y) = x(y)
+  f(0) + 0
+k
+//│ Type: ['eff] -> (Int ->{'eff} Int) ->{'eff} Int
+
+:e
+k(_ => "")
+//│ ╔══[ERROR] Type error in function literal with expected type 'x
+//│ ║  l.102: 	k(_ => "")
+//│ ║         	       ^^
+//│ ╟── because: cannot constrain  ('_) ->{⊥} (Str)  <:  'x
+//│ ╟── because: cannot constrain  ('_) ->{⊥} (Str)  <:  'x
+//│ ╟── because: cannot constrain  ('_) ->{⊥} (Str)  <:  (Int) ->{'eff} (Int)
+//│ ╙── because: cannot constrain  Str  <:  Int
+//│ Type: Int
+
+k(_ => 42)
+//│ Type: Int
+
+
+fun k(x) =
+  fun f: [S, T] -> S -> T
+  fun f(y) = x(y)
+  f(0) + 0
+k
+//│ Type: (⊤ -> ⊥) -> Int
+
+
+:e
+k(_ => "")
+//│ ╔══[ERROR] Type error in function literal with expected type 'x
+//│ ║  l.125: 	k(_ => "")
+//│ ║         	       ^^
+//│ ╟── because: cannot constrain  ('_) ->{⊥} (Str)  <:  'x
+//│ ╟── because: cannot constrain  ('_) ->{⊥} (Str)  <:  'x
+//│ ╟── because: cannot constrain  ('_) ->{⊥} (Str)  <:  (⊤) ->{⊥} ⊥
+//│ ╙── because: cannot constrain  Str  <:  ⊥
+//│ Type: Int
+
+:e
+k(_ => 42)
+//│ ╔══[ERROR] Type error in function literal with expected type 'x
+//│ ║  l.136: 	k(_ => 42)
+//│ ║         	       ^^
+//│ ╟── because: cannot constrain  ('_) ->{⊥} (Int)  <:  'x
+//│ ╟── because: cannot constrain  ('_) ->{⊥} (Int)  <:  'x
+//│ ╟── because: cannot constrain  ('_) ->{⊥} (Int)  <:  (⊤) ->{⊥} ⊥
+//│ ╙── because: cannot constrain  Int  <:  ⊥
+//│ Type: Int
+
+
+fun k(x) =
+  let f = y => x(y)
+  f(0) + 0
+k
+//│ Type: ['eff] -> (Int ->{'eff} Int) ->{'eff} Int

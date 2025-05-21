@@ -25,3 +25,35 @@ id(id) as [A] -> A -> A
 //│ Type: ['A] -> ('A) ->{⊥} 'A
 
 
+
+data class Nil()
+data class Cons[A, B](val car: A, val cdr: B)
+data class Ls[A](prim: [R] -> (() -> R, (A, Ls[A]) -> R) -> R)
+//│ Type: ⊤
+
+fun nil() = new Ls((n, _) => n())
+fun cons(p, q) = new Ls((n, r) => r(p, q))
+fun from(x) = x.Ls#prim(() => new Nil, (x, y) => new Cons(x, from(y)))
+fun to(x) = if x is
+  Nil then nil()
+  Cons then cons(x.Cons#car, to(x.Cons#cdr))
+//│ Type: ⊤
+
+let foo = nil() from()
+foo
+//│ Type: Cons['A, 'B] ∨ Nil
+//│ Where:
+//│   ⊥ <: 'A
+//│   Cons['A, 'B] <: 'R
+//│   Nil <: 'R
+//│   'R <: 'B
+
+
+foo to()
+//│ Type: Ls['A] ∨ Ls['A1]
+//│ Where:
+//│   ⊥ <: 'A
+//│   'A <: 'A1
+//│   ⊥ <: 'A1
+//│   'A1 <: 'A
+

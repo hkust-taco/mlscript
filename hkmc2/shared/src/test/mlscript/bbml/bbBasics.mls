@@ -164,9 +164,9 @@ let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ║         	                                             ^^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
-//│ ╟── because: cannot constrain  Str  <:  ¬(¬'T)
 //│ ╟── because: cannot constrain  Str  <:  'T
-//│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int})
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Str
 
 data class TFun[T](f: T -> T)
@@ -191,9 +191,9 @@ let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
-//│ ╟── because: cannot constrain  Str  <:  ¬(¬'T)
 //│ ╟── because: cannot constrain  Str  <:  'T
-//│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int})
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Str ∨ Int
 
 data class Pair[A, B](fst: A, snd: B)

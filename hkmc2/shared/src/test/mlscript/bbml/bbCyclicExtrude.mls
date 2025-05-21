@@ -23,10 +23,10 @@ f => (let g = x => f(x(x)) in g) as [A] -> A -> A
 //│ ╔══[ERROR] Type error in block with expected type (A) ->{⊥} A
 //│ ║  l.22: 	f => (let g = x => f(x(x)) in g) as [A] -> A -> A
 //│ ║        	              ^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  'x ->{'eff ∨ 'eff1} 'app  <:  A -> A
+//│ ╟── because: cannot constrain  ('x) ->{'eff ∨ 'eff1} ('app)  <:  (A) ->{⊥} (A)
 //│ ╟── because: cannot constrain  A  <:  'x
 //│ ╟── because: cannot constrain  A  <:  'x
-//│ ╙── because: cannot constrain  A  <:  ¬(¬{'x ->{'eff1} 'app1})
+//│ ╙── because: cannot constrain  A  <:  ('x) ->{'eff1} ('app1)
 //│ Type: (⊥ -> ⊥) ->{⊥} ['A] -> ('A) ->{⊥} 'A
 
 f => (x => f(x(x)) as [A] -> A -> A)

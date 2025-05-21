@@ -180,8 +180,8 @@ foo(42, 1)
 //│ ║  l.178: 	foo(42, 1)
 //│ ║         	        ^
 //│ ╟── because: cannot constrain  Int  <:  ¬'A
-//│ ╟── because: cannot constrain  'A  <:  ¬(Int)
-//│ ╙── because: cannot constrain  Int  <:  ¬(Int)
+//│ ╟── because: cannot constrain  'A  <:  ¬{Int}
+//│ ╙── because: cannot constrain  Int  <:  ¬{Int}
 //│ Type: Int
 
 foo(42, false)
