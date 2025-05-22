@@ -270,7 +270,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
       consequent: Split,
       alternative: Split,
   )(using VarSet): Split =
-    normalize(makeUnapplyStringPrefixBranch_NEW(scrutinee, ctorTerm, postfixSymbol, consequent)(alternative))
+    normalize(makeUnapplyStringPrefixBranch(scrutinee, ctorTerm, postfixSymbol, consequent)(alternative))
   
   private def normalizeCompiledPattern(
       scrutinee: Term.Ref,

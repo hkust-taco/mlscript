@@ -366,12 +366,12 @@ extension (split: DeBrujinSplit)
               // Here we add a speical case as a workaround:
               // If the class is virtual, then we don't make arguments empty.
               val arguments = if Elaborator.ctx.builtins.virtualClasses contains symbol then N else S(subSymbols)
-              val pattern = Pattern.ClassLike(select, arguments) // TODO(ucs): don't we need to add `symbol` to `select`?
+              val pattern = Pattern.ClassLike(select, arguments)
               semantics.Branch(ctx(scrutinee - 1)(), pattern, consequent2) ~: go(alternative, ctx)
             case ClassLike(ConstructorLike.Symbol(symbol: ModuleSymbol)) =>
               val select = scoped("ucs:sel"):
                 reference(symbol).getOrElse(Term.Error)
-              val pattern = Pattern.ClassLike(select, N) // TODO(ucs): don't we need to add `symbol` to `select`?
+              val pattern = Pattern.ClassLike(select, N)
               semantics.Branch(ctx(scrutinee - 1)(), pattern, nullaryConsequent) ~: go(alternative, ctx)
             case ClassLike(ConstructorLike.LocalPattern(id)) =>
               log(s"apply scrutinee $scrutinee to local pattern $id")

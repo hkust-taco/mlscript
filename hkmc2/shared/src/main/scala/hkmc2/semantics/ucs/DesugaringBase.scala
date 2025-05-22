@@ -112,25 +112,9 @@ trait DesugaringBase(using state: State):
     val call = app(sel(clsTerm, method).withIArgs(Nil), tup(fld(scrut)), FlowSymbol(s"result of $method")).withIArgs(Nil)
     tempLet("matchResult", call): resultSymbol =>
       Branch(resultSymbol.ref().withIArgs(Nil), matchResultPattern(N), inner) ~: fallback
-
-  /** Make a `Branch` that calls `Pattern` symbols' `unapplyStringPrefix` functions. */
-  def makeUnapplyStringPrefixBranch_OLD(
-      scrut: => Term.Ref,
-      clsTerm: Term,
-      inner: TempSymbol => Split,
-      method: Str = "unapplyStringPrefix"
-  )(fallback: Split): Ctxl[Split] =
-    val call = app(sel(clsTerm, method), tup(fld(scrut)), FlowSymbol(s"result of $method"))
-    tempLet("matchResult", call): resultSymbol =>
-      val argSym = TempSymbol(N, "arg")
-      Branch(
-        resultSymbol.ref().withIArgs(Nil),
-        matchResultPattern(S(argSym :: Nil)),
-        tempLet("postfix", callTupleGet(argSym.ref().withIArgs(Nil), 0, "postfix"))(inner)
-      ) ~: fallback
   
   /** Make a `Branch` that calls `Pattern` symbols' `unapplyStringPrefix` functions. */
-  def makeUnapplyStringPrefixBranch_NEW(
+  def makeUnapplyStringPrefixBranch(
       scrut: => Term.Ref,
       clsTerm: Term,
       postfixSymbol: TempSymbol,

@@ -73,57 +73,11 @@ class Translator(val elaborator: Elaborator)
         val ctorTrm = term(ctor, inAppPrefix = false)
         val pattern = Pattern.ClassLike(ctorTrm, N, MatchMode.Default, false)(ctor)
         Branch(scrut(), pattern, inner(Map.empty)) ~: Split.End
-        
-        // Because we don't resolve the symbol of `ctor` here, we don't know if
-        // it is a class, a module, or a pattern symbol. We no longer need to
-        // make the unapply branch here and it will be done in normalization.
-        // - - - - - //
-        // OLD CODE FOR REFERENCE:
-        // lazy val resolved =
-        //   val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
-        //   clsTrm.symbol.flatMap(_.asClsLike) match
-        //   case S(cls: (ClassSymbol | ModuleSymbol)) =>
-        //     ??? // TODO(ucs)
-        //     // Branch(scrut(), Pattern.ClassLike(cls, clsTrm, N, false)(ctor), inner(Map.empty)) ~: Split.End
-        //   case S(psym: PatternSymbol) =>
-        //     makeUnapplyBranch(scrut(), clsTrm, inner(Map.empty))(Split.End)
-        //   case _ =>
-        //     error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
-        //     errorSplit
-        // ctor match
-        // case Ident(ctorName) => patternParams.find(_.sym.nme == ctorName) match
-        //   case S(Param(sym = symbol)) => failure // TODO: handle input patterns
-        //   case N => resolved
-        // case ctor: Sel => resolved
       case App(ctor @ (_: Ident | _: Sel), Tup(params)) =>
         // TODO(rp/str): handle input params
         val ctorTrm = term(ctor, inAppPrefix = false)
         val pattern = Pattern.ClassLike(ctorTrm, N, MatchMode.Default, false)(ctor)
         Branch(scrut(), pattern, inner(Map.empty)) ~: Split.End
-        
-        // Because we don't resolve the symbol of `ctor` here, we don't know if
-        // it is a class, a module, or a pattern symbol. We no longer need to
-        // make the unapply branch here and it will be done in normalization.
-        // - - - - - //
-        // OLD CODE FOR REFERENCE:
-        // lazy val resolved =
-        //   val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
-        //   clsTrm.symbol.flatMap(_.asClsLike) match
-        //   case S(cls: (ClassSymbol | ModuleSymbol)) =>
-        //     // TODO: handle parameters
-        //     ??? // TODO(ucs)
-        //     // Branch(scrut(), Pattern.ClassLike(cls, clsTrm, N, false)(ctor), inner(Map.empty)) ~: Split.End
-        //   case S(psym: PatternSymbol) =>
-        //     // TODO: handle parameters
-        //     makeUnapplyBranch(scrut(), clsTrm, inner(Map.empty))(Split.End)
-        //   case _ =>
-        //     error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
-        //     errorSplit
-        // ctor match
-        // case Ident(ctorName) => patternParams.find(_.sym.nme == ctorName) match
-        //   case S(Param(sym = symbol)) => failure // TODO: handle input patterns
-        //   case N => resolved
-        // case ctor: Sel => resolved
       case pat =>
         error(msg"Unrecognized pattern (${pat.describe})" -> pat.toLoc)
         errorSplit
