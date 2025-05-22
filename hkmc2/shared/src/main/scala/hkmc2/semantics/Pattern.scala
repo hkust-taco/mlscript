@@ -68,7 +68,7 @@ object Pattern:
    *    **TODO(ucs/rp)**: Replace with suitable representation when implement
    *    the new pattern compilation.
    */
-  type Argument = (scrutinee : BlockLocalSymbol, pattern : Tree, split : Opt[DeBrujinSplit])
+  type Argument = (scrutinee: BlockLocalSymbol, pattern: Tree, split: Opt[DeBrujinSplit])
   
   /** A class-like pattern whose symbol is resolved to a class. */
   object Class:
