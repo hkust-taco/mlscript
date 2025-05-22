@@ -135,23 +135,22 @@ if input is Opt(Email, Some((n, d))) then ...
 //│ ╔══[ERROR] Unrecognized pattern (block)
 //│ ║  l.125: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	                            ^^^^^^
-//│ ═══[ERROR] Cannot use this <error> as a pattern
 
 :todo
 pattern Opt(pattern P) = case
   P(...values) then (Some(values))
   ""           then (None)
-//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(App(Ident(P),Tup(List(Spread(keyword '...',Some(Loc(34,37,Future.mls:+141)),Some(Ident(values)))))),keyword 'then',Bra(Round,App(Ident(Some),Tup(List(Ident(values)))))), InfixApp(StrLit(),keyword 'then',Bra(Round,Ident(None)))))) (of class hkmc2.syntax.Tree$Case)
+//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(App(Ident(P),Tup(List(Spread(keyword '...',Some(Loc(34,37,Future.mls:+140)),Some(Ident(values)))))),keyword 'then',Bra(Round,App(Ident(Some),Tup(List(Ident(values)))))), InfixApp(StrLit(),keyword 'then',Bra(Round,Ident(None)))))) (of class hkmc2.syntax.Tree$Case)
 
 :todo
 pattern Opt(pattern P) = case
   P(...values) then Some(values)
   ""           then None
-//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(App(Ident(P),Tup(List(Spread(keyword '...',Some(Loc(34,37,Future.mls:+147)),Some(Ident(values)))))),keyword 'then',App(Ident(Some),Tup(List(Ident(values))))), InfixApp(StrLit(),keyword 'then',Ident(None))))) (of class hkmc2.syntax.Tree$Case)
+//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(App(Ident(P),Tup(List(Spread(keyword '...',Some(Loc(34,37,Future.mls:+146)),Some(Ident(values)))))),keyword 'then',App(Ident(Some),Tup(List(Ident(values))))), InfixApp(StrLit(),keyword 'then',Ident(None))))) (of class hkmc2.syntax.Tree$Case)
 
 :todo  
 pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.153: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ║  l.152: 	pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╙──       	                        ^^^
 //│ /!!!\ Uncaught error: scala.MatchError: Jux(StrLit(0),Ident(to)) (of class hkmc2.syntax.Tree$Jux)

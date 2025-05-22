@@ -6,7 +6,7 @@ import syntax.*, Tree.Ident
 import Elaborator.{Ctx, ctx}
 import ucs.DeBrujinSplit
 
-import Pattern.MatchMode
+import Pattern.*
 
 /** Flat patterns for pattern matching */
 enum Pattern extends AutoLocated:
@@ -17,11 +17,7 @@ enum Pattern extends AutoLocated:
     * The whole argument list is None when no argument list is being matched at all, as in `x is Some then ...`. */
   case ClassLike(
       val constructor: Term,
-      // field `pattern` is only for error messages
-      // field `split` is for pattern compilation
-      // TODO(ucs/rp): replace with suitable representation after the new
-      // pattern compilation is implemented
-      val arguments: Opt[Ls[(scrutinee : BlockLocalSymbol, pattern : Tree, split : Opt[DeBrujinSplit])]],
+      val arguments: Opt[Ls[Argument]],
       val mode: MatchMode,
       var refined: Bool
   )(val tree: Tree)
@@ -64,6 +60,16 @@ enum Pattern extends AutoLocated:
       entries.iterator.map(_.name + ": " + _).mkString("{ ", ", ", " }")
 
 object Pattern:
+  /** Represent the type of arguments in `ClassLike` patterns. This type alias
+   *  is used to reduce repetition in the code.
+   * 
+   *  - Field `pattern` is for error messages.
+   *  - Field `split` is for pattern compilation.
+   *    **TODO(ucs/rp)**: Replace with suitable representation when implement
+   *    the new pattern compilation.
+   */
+  type Argument = (scrutinee : BlockLocalSymbol, pattern : Tree, split : Opt[DeBrujinSplit])
+  
   /** A class-like pattern whose symbol is resolved to a class. */
   object Class:
     def unapply(p: Pattern): Opt[ClassSymbol] = p match

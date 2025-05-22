@@ -12,14 +12,8 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
   import Normalization.*, Mode.*, Pattern.MatchMode
   import tl.*
 
-  def raiseDesugaringError(msgs: (Message -> Opt[Loc])*): Unit =
-    raise(ErrorReport(msgs.toList, source = Diagnostic.Source.Typing))
-
-  def raiseDesugaringWarning(msgs: (Message -> Opt[Loc])*): Unit =
-    raise(WarningReport(msgs.toList, source = Diagnostic.Source.Typing))
-
   def reportUnreachableCase[T <: Located](unreachable: Located, subsumedBy: T, when: Bool = true): T =
-    if when then raiseDesugaringWarning(
+    if when then warn(
       msg"this case is unreachable" -> unreachable.toLoc,
       msg"because it is subsumed by the branch" -> subsumedBy.toLoc)
     subsumedBy
@@ -42,23 +36,22 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ++ those)
         case Split.Else(_) /* impossible */ | Split.End => those)
 
-  extension (lhs: Pattern)
+  extension (lhs: Pattern.ClassLike)
     /** Generate a term that really resolves to the class at runtime. */
-    def selectClass: Pattern = lhs match
-      case lhs: Pattern.ClassLike =>
-        val constructor = lhs.constructor.symbol match
-          case S(cls: ClassSymbol) => lhs.constructor
-          case S(mem: BlockMemberSymbol) =>
-            // If the class is declaration-only, we do not need to select the
-            // class.
-            if !mem.hasLiftedClass || mem.defn.exists(_.isDeclare.isDefined) then
-              lhs.constructor
-            else
-              Term.SynthSel(lhs.constructor, Tree.Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol)).withIArgs(Nil)
-          case _ => lhs.constructor
-        lhs.copy(constructor)(lhs.tree)
-      case _: (Pattern.Lit | Pattern.Tuple | Pattern.Record) => lhs
-     
+    def selectClass: Pattern.ClassLike =
+      val constructor = lhs.constructor.symbol match
+        case S(cls: ClassSymbol) => lhs.constructor
+        case S(mem: BlockMemberSymbol) =>
+          // If the class is declaration-only, we do not need to select the
+          // class.
+          if !mem.hasLiftedClass || mem.defn.exists(_.isDeclare.isDefined) then
+            lhs.constructor
+          else
+            Term.SynthSel(lhs.constructor, Tree.Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol)).withIArgs(Nil)
+        case _ => lhs.constructor
+      lhs.copy(constructor)(lhs.tree)
+  
+  extension (lhs: Pattern)
     /** Checks if two patterns are the same. */
     def =:=(rhs: Pattern): Bool = (lhs, rhs) match
       case (lhs: Pattern.ClassLike, rhs: Pattern.ClassLike) =>
@@ -76,12 +69,10 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
       // case (Pattern.Class(n1, _, r1), Pattern.Class(n2, _, r2)) if r1 =/= r2 =>
       case (Pattern.ClassLike(c1, _, _, rfd1), Pattern.ClassLike(c2, _, _, rfd2)) if rfd1 =/= rfd2 =>
         def be(value: Bool): Str = if value then "is" else "is not"
-        val sym1 = c1.symbol.get // TODO(ucs)
-        val sym2 = c2.symbol.get // TODO(ucs)
-        raiseDesugaringWarning(
-          msg"inconsistent refined pattern" -> rhs.toLoc,
-          msg"pattern `${sym1.nme}` ${be(rfd1)} refined" -> sym1.toLoc,
-          msg"but pattern `${sym2.nme}` ${be(rfd2)} refined" -> sym2.toLoc)
+        warn(
+          msg"Found two inconsistently refined patterns:" -> rhs.toLoc,
+          msg"one ${be(rfd1)} refined," -> c1.toLoc,
+          msg"but the other ${be(rfd2)} refined." -> c2.toLoc)
       case (_, _) => ()
     /** If the pattern is a class-like pattern, override its `refined` flag. */
     def markAsRefined: Unit = lhs match
@@ -109,105 +100,37 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
         // TODO(ucs): deduplicate [1]
         val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
         val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
-        Branch(scrutinee, pattern.selectClass, whenTrue) ~: whenFalse
-      case Pattern.ClassLike(ctor, argsOpt, mode, _) =>
+        Branch(scrutinee, pattern, whenTrue) ~: whenFalse
+      case pattern @ Pattern.ClassLike(ctor, argsOpt, mode, _) =>
         log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
         // Make sure that the pattern has correct arity and fields are accessible.
-        ctor.symbol.flatMap(_.asClsLike) match
-          case N =>
-            // The constructor is not resolved. Report the error and skip the branch.
+        ctor.symbol.map(_.asClsLike) match
+          case N => // The constructor is not resolved. The error should have been reported.
+            normalizeImpl(alternative)
+          case S(N) =>
+            // The constructor is not a class-like symbol. Report the error and skip the branch.
             error(msg"Cannot use this ${ctor.describe} as a pattern" -> ctor.toLoc)
-            log("BROKEN"); normalizeImpl(alternative)
-          case S(cls: (ClassSymbol | ModuleSymbol)) if mode.isInstanceOf[MatchMode.StringPrefix] =>
+            normalizeImpl(alternative)
+          case S(S(cls: (ClassSymbol | ModuleSymbol))) if mode.isInstanceOf[MatchMode.StringPrefix] =>
             // Match classes and modules are disallowed in the string mode.
-            log("incompatible"); normalizeImpl(alternative)
-          case S(cls: ClassSymbol) =>
-            // Error messages should use the location from `classHead`.
-            val (classHead, paramsOpt) =
-              // Unfortunately, class symbols of `MatchResult` and `MatchFailure`
-              // are coined in the elaborator state, so it does not have `defn`.
-              // TODO(ucs): do not make special case for them
-              if cls == State.matchResultClsSymbol then
-                (cls.id: Located) -> matchResultClassParamOpt
-              else if cls == State.matchFailureClsSymbol then
-                (cls.id: Located) -> matchFailureClassParamOpt
-              else
-                cls.defn match
-                  case N => lastWords(s"Class ${cls.name} does not have a definition")
-                  case S(cd) => cls.id -> cd.paramsOpt
+            normalizeImpl(alternative)
+          case S(S(cls: ClassSymbol)) =>
             validateMatchMode(ctor, cls, mode)
-            val broken: Bool = paramsOpt match
-              case S(paramList) => argsOpt match
-                case S(args) =>
-                  // Check the number of parameters is correct.
-                  val n = args.size.toString
-                  val m = paramList.params.size.toString
-                  if n != m then
-                    val argsLoc = Loc(args.iterator.map(_.pattern))
-                    error:
-                      if paramList.params.isEmpty then
-                        msg"the constructor does not take any arguments but found $n" -> argsLoc
-                      else
-                        msg"mismatched arity: expect $m, found $n" -> argsLoc
-                  // Check the fields are accessible.
-                  paramList.params.iterator.zip(args).map:
-                    case (_, (_, Tree.Under(), _)) => false
-                    case (Param(flags, sym, _, _), arg) if !flags.value =>
-                      error(msg"This pattern cannot be matched" -> arg.pattern.toLoc, // TODO: use correct location
-                        msg"because the corresponding parameter `${sym.name}` is not publicly accessible" -> sym.toLoc,
-                        msg"Suggestion: use a wildcard pattern `_` in this position" -> N,
-                        msg"Suggestion: mark this parameter with `val` so it becomes accessible" -> N)
-                      true
-                    case _ => false
-                  // If patterns are more than parameters, or one of parameters
-                  // is incessible we cannot make the branch.
-                  .foldLeft(n > m)(_ || _)
-                case N => argsOpt match
-                  case S(args) =>
-                    error(msg"class ${cls.name} does not have parameters" -> classHead.toLoc,
-                      msg"but the pattern has ${"sub-pattern".pluralize(args.size, true, false)}" -> Loc(args.iterator.map(_.pattern)))
-                    true
-                  case N => false // No parameters, no arguments. This is fine.
-              case N =>
-                // The class doesn't have parameters. Check if scruts are empty.
-                argsOpt match
-                  case S(Nil) =>
-                    error(msg"Class ${cls.name} does not have a parameter list" -> ctor.toLoc)
-                    false
-                  case S(args) =>
-                    error(msg"Class ${cls.name} does not have a parameter list" -> ctor.toLoc,
-                      msg"but the pattern has ${"sub-pattern".pluralize(args.size, true, false)}" -> Loc(args.iterator.map(_.pattern)))
-                    true
-                  case N => false
-            // end match
-            if broken then
-              // If `broken` is true, we skip the branch and continue to the next.
-              log("BROKEN")
-              normalizeImpl(alternative)
-            else
-              // TODO(ucs): deduplicate [1]
+            if validateClassPattern(ctor, cls, argsOpt) then // TODO(ucs): deduplicate [1]
               val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
               val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
               Branch(scrutinee, pattern.selectClass, whenTrue) ~: whenFalse
-          case S(mod: ModuleSymbol) =>
+            else // If any errors were raised, we skip the branch.
+              log("BROKEN"); normalizeImpl(alternative)
+          case S(S(mod: ModuleSymbol)) =>
             validateMatchMode(ctor, mod, mode)
-            val broken = argsOpt match
-              case S(args) =>
-                // This means the pattern is an application of a module.
-                error(msg"the constructor ${ctor.showDbg} is a module" -> ctor.toLoc,
-                  msg"but the pattern has scrutinees" -> pattern.toLoc)
-                false
-              case N => false
-            if broken then
-              // If `broken` is true, we skip the branch and continue to the next.
-              log("BROKEN")
-              normalizeImpl(alternative)
-            else
-              // TODO(ucs): deduplicate [1]
+            if validateObjectPattern(pattern, mod, argsOpt) then // TODO(ucs): deduplicate [1]
               val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
               val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
               Branch(scrutinee, pattern.selectClass, whenTrue) ~: whenFalse
-          case S(pat: PatternSymbol) => mode match
+            else // If any errors were raised, we skip the branch.
+              log("BROKEN"); normalizeImpl(alternative)
+          case S(S(pat: PatternSymbol)) => mode match
             // Note: `argsOpt` is supposed to be used in following cases, but
             // the current implementation does not use it. The future version
             // should properly handle the pattern arguments.
@@ -227,8 +150,8 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
                 // treat this as an extractor pattern.
                 normalizeExtractorPattern(scrutinee, pat, ctor, consequent, alternative)
       case _ =>
-          raiseDesugaringError(msg"unsupported pattern matching: ${scrutinee.toString} is ${pattern.toString}" -> pattern.toLoc)
-          Split.default(Term.Error)
+        error(msg"unsupported pattern matching: ${scrutinee.toString} is ${pattern.toString}" -> pattern.toLoc)
+        normalizeImpl(alternative)
     case Split.Let(v, _, tail) if vs has v =>
       log(s"LET: SKIP already declared scrutinee $v")
       normalizeImpl(tail)
@@ -240,7 +163,92 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
       Split.Else(default)
     case Split.End => Split.End
   
-  private def validateMatchMode(ctorTerm: Term, ctorSymbol: ClassSymbol | ModuleSymbol, mode: MatchMode): Unit = mode match
+  /** Check whether the number of parameters in class-like patterns matches the
+   *  number in their definition, and whether each parameter is accessible.
+   */
+  private def validateClassPattern(
+      ctorTerm: Term,
+      ctorSymbol: ClassSymbol,
+      argsOpt: Opt[Ls[Pattern.Argument]]
+  ): Bool =
+    // Obtain the `classHead` used for error reporting and the parameter list
+    // from the class definitions.
+    val (classHead, paramsOpt) =
+      // Unfortunately, class symbols of `MatchResult` and `MatchFailure`
+      // are forged in the elaborator state, so it does not have `defn`.
+      // TODO(ucs): do not make special case for them
+      if ctorSymbol == State.matchResultClsSymbol then
+        (ctorSymbol.id: Located) -> matchResultClassParamOpt
+      else if ctorSymbol == State.matchFailureClsSymbol then
+        (ctorSymbol.id: Located) -> matchFailureClassParamOpt
+      else
+        ctorSymbol.defn match
+          case N => lastWords(s"Class ${ctorSymbol.name} does not have a definition")
+          case S(cd) => ctorSymbol.id -> cd.paramsOpt
+    paramsOpt match
+      case S(paramList) => argsOpt match
+        case S(args) =>
+          // Check the number of parameters is correct.
+          val n = args.size.toString
+          val m = paramList.params.size.toString
+          if n != m then
+            val argsLoc = Loc(args.iterator.map(_.pattern))
+            error:
+              if paramList.params.isEmpty then
+                msg"the constructor does not take any arguments but found $n" -> argsLoc
+              else
+                msg"mismatched arity: expect $m, found $n" -> argsLoc
+          // Check the fields are accessible.
+          paramList.params.iterator.zip(args).map:
+            case (_, (_, Tree.Under(), _)) => true
+            case (Param(flags, sym, _, _), arg) if !flags.value =>
+              error(msg"This pattern cannot be matched" -> arg.pattern.toLoc, // TODO: use correct location
+                msg"because the corresponding parameter `${sym.name}` is not publicly accessible" -> sym.toLoc,
+                msg"Suggestion: use a wildcard pattern `_` in this position" -> N,
+                msg"Suggestion: mark this parameter with `val` so it becomes accessible" -> N)
+              false
+            case _ => true
+          // If patterns are more than parameters, or one of parameters is
+          // incessible, we cannot make the branch.
+          .foldLeft(n <= m)(_ && _)
+        case N => argsOpt match
+          case S(args) =>
+            error(msg"class ${ctorSymbol.name} does not have parameters" -> classHead.toLoc,
+              msg"but the pattern has ${"sub-pattern".pluralize(args.size, true, false)}" -> Loc(args.iterator.map(_.pattern)))
+            false
+          case N => true // No parameters, no arguments. This is fine.
+      case N =>
+        // The class doesn't have parameters. Check if scruts are empty.
+        argsOpt match
+          case S(Nil) =>
+            error(msg"Class ${ctorSymbol.name} does not have a parameter list" -> ctorTerm.toLoc)
+            true
+          case S(args) =>
+            error(msg"Class ${ctorSymbol.name} does not have a parameter list" -> ctorTerm.toLoc,
+              msg"but the pattern has ${"sub-pattern".pluralize(args.size, true, false)}" -> Loc(args.iterator.map(_.pattern)))
+            false
+          case N => true
+  
+  /** Check whether the object pattern has a parameter list. */
+  private def validateObjectPattern(pattern: Pattern.ClassLike, mod: ModuleSymbol, argsOpt: Opt[Ls[Pattern.Argument]]): Bool = argsOpt match
+    case S(Nil) =>
+      // This means the pattern has an unnecessary parameter list.
+      error(msg"`${mod.name}` is an object." -> mod.id.toLoc,
+        msg"Its pattern cannot have a parameter list." -> pattern.tree.toLoc)
+      true
+    case S(_ :: _) =>
+      // This means the pattern is an object with parameters.
+      error(msg"`${mod.name}` is an object." -> mod.id.toLoc,
+        msg"Its pattern cannot have parameters." -> pattern.tree.toLoc)
+      false
+    case N => true
+  
+  /** Warn about inappropriate annotations used on class or object patterns. */
+  private def validateMatchMode(
+      ctorTerm: Term,
+      ctorSymbol: ClassSymbol | ModuleSymbol,
+      mode: MatchMode
+  ): Unit = mode match
     case MatchMode.Default | _: MatchMode.StringPrefix => ()
     case MatchMode.Annotated(annotation) => annotation.symbol.flatMap(_.asObj) match
       case S(symbol) if symbol === ctx.builtins.compile =>
@@ -272,11 +280,12 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
   )(using VarSet): Split =
     normalize(makeUnapplyStringPrefixBranch(scrutinee, ctorTerm, postfixSymbol, consequent)(alternative))
   
+  // Note: This function will be overhauled in the new pattern compilation scheme.
   private def normalizeCompiledPattern(
       scrutinee: Term.Ref,
       symbol: PatternSymbol,
       ctorTerm: Term,
-      argsOpt: Opt[Ls[(scrutinee : BlockLocalSymbol, pattern : Tree, split : Opt[DeBrujinSplit])]],
+      argsOpt: Opt[Ls[Pattern.Argument]],
       mode: MatchMode,
       consequent: Split,
       alternative: Split,

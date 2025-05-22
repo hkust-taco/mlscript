@@ -104,3 +104,28 @@ point(Point(2, 4))
 object Main with
   fun run(input) = if input is Data(count) then 0
 data class Data(value: Int)
+
+// Validation on object patterns
+
+object A
+
+:e
+fun foo(x) = if x is A() then 0
+//│ ╔══[ERROR] `A` is an object.
+//│ ║  l.110: 	object A
+//│ ║         	       ^
+//│ ╟── Its pattern cannot have a parameter list.
+//│ ║  l.113: 	fun foo(x) = if x is A() then 0
+//│ ╙──       	                     ^^^
+
+:e
+fun foo(x) = if x is A(y) then y
+//│ ╔══[ERROR] `A` is an object.
+//│ ║  l.110: 	object A
+//│ ║         	       ^
+//│ ╟── Its pattern cannot have parameters.
+//│ ║  l.122: 	fun foo(x) = if x is A(y) then y
+//│ ╙──       	                     ^^^^
+
+0 is Foo
+//│ = false
