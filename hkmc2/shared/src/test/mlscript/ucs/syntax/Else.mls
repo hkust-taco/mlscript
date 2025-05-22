@@ -83,7 +83,6 @@ fun f(x, y) =
   if x
     then y
 
-// ——— ——— ———
 
 let audits = new Set()
 
@@ -91,5 +90,3 @@ if audits.has(1) === true do
   print("ok")
 else
   1
-
-// ——— ——— ———
