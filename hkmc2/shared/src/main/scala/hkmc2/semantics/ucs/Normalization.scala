@@ -208,11 +208,12 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
               val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
               Branch(scrutinee, pattern.selectClass, whenTrue) ~: whenFalse
           case S(pat: PatternSymbol) => mode match
+            // Note: `argsOpt` is supposed to be used in following cases, but
+            // the current implementation does not use it. The future version
+            // should properly handle the pattern arguments.
             case MatchMode.Default =>
-              // TODO(rp): `argsOpt` is not useless for now
               normalizeExtractorPattern(scrutinee, pat, ctor, consequent, alternative)
             case MatchMode.StringPrefix(prefix, postfix) =>
-              // TODO(rp): `argsOpt` is not useless for now
               normalizeStringPrefixPattern(scrutinee, pat, ctor, postfix, consequent, alternative)
             case MatchMode.Annotated(annotation) => annotation.symbol.flatMap(_.asObj) match
               case S(symbol) if symbol === ctx.builtins.compile =>
