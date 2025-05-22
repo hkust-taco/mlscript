@@ -114,7 +114,7 @@ fun foo(x) = if x is A() then 0
 //│ ╔══[ERROR] `A` is an object.
 //│ ║  l.110: 	object A
 //│ ║         	       ^
-//│ ╟── Its pattern cannot have a parameter list.
+//│ ╟── Its pattern cannot have an argument list.
 //│ ║  l.113: 	fun foo(x) = if x is A() then 0
 //│ ╙──       	                     ^^^
 
@@ -123,7 +123,7 @@ fun foo(x) = if x is A(y) then y
 //│ ╔══[ERROR] `A` is an object.
 //│ ║  l.110: 	object A
 //│ ║         	       ^
-//│ ╟── Its pattern cannot have parameters.
+//│ ╟── Its pattern cannot have arguments.
 //│ ║  l.122: 	fun foo(x) = if x is A(y) then y
 //│ ╙──       	                     ^^^^
 

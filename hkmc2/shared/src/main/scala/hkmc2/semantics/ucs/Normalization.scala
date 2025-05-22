@@ -229,17 +229,17 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
             false
           case N => true
   
-  /** Check whether the object pattern has a parameter list. */
+  /** Check whether the object pattern has an argument list. */
   private def validateObjectPattern(pattern: Pattern.ClassLike, mod: ModuleSymbol, argsOpt: Opt[Ls[Pattern.Argument]]): Bool = argsOpt match
     case S(Nil) =>
       // This means the pattern has an unnecessary parameter list.
       error(msg"`${mod.name}` is an object." -> mod.id.toLoc,
-        msg"Its pattern cannot have a parameter list." -> pattern.tree.toLoc)
+        msg"Its pattern cannot have an argument list." -> pattern.tree.toLoc)
       true
     case S(_ :: _) =>
       // This means the pattern is an object with parameters.
       error(msg"`${mod.name}` is an object." -> mod.id.toLoc,
-        msg"Its pattern cannot have parameters." -> pattern.tree.toLoc)
+        msg"Its pattern cannot have arguments." -> pattern.tree.toLoc)
       false
     case N => true
   
