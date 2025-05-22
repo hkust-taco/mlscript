@@ -336,7 +336,6 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
       mainSplit.normalize
     log(s"the normalized main split:\n${normalizedMainSplit.display}")
     // The entry in the local pattern map.
-    val desugaring = new DesugaringBase {}
     val indexSplitSymbolMap = indexSplitMap.map:
       case (index, split) => (index, (split, TempSymbol(N, s"match$index")))
     val idSymbolMap = indexSplitSymbolMap.map(_ -> _._2)
@@ -360,14 +359,14 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
           .toVector
           val paramList = PlainParamList:
             paramSymbols.iterator.map(Param(FldFlags.empty, _, N, Modulefulness.none)).toList
-          val success = Split.Else(desugaring.makeMatchResult(Term.Tup(Nil)(Tree.Tup(Nil))))
-          val failure = Split.Else(desugaring.makeMatchFailure)
+          val success = Split.Else(makeMatchResult(Term.Tup(Nil)(Tree.Tup(Nil))))
+          val failure = Split.Else(makeMatchFailure)
           val bodySplit = scoped("ucs:rp:split"):
             val bodySplit = split.toSplit(
               scrutinees = paramSymbols.map(symbol => () => symbol.ref().withIArgs(Nil)),
               localPatterns = idSymbolMap,
               outcomes = Map(S(0) -> success, N -> failure)
-            ) ++ Split.Else(desugaring.makeMatchFailure)
+            ) ++ Split.Else(makeMatchFailure)
             log(s"the compiled local pattern $index:\n${Split.display(bodySplit)}")
             bodySplit
           val funcBody: Term = Term.IfLike(Keyword.`if`, bodySplit)

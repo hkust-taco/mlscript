@@ -7,6 +7,7 @@ import Message.MessageContext
 import Split.display, ucs.Normalization
 import syntax.{Fun, Keyword, Literal, ParamBind, Tree}, Tree.*, Keyword.`as`
 import scala.collection.mutable.{Buffer, Set as MutSet}
+import Elaborator.{Ctx, State}
 
 object Translator:
   /** String range bounds must be single characters. */
@@ -24,8 +25,7 @@ import Translator.*
 /** This class translates a tree describing a pattern into functions that can
  *  perform pattern matching on terms described by the pattern.
  */
-class Translator(val elaborator: Elaborator)
-    (using state: Elaborator.State, c: Elaborator.Ctx) extends DesugaringBase:
+class Translator(val elaborator: Elaborator)(using State, Ctx) extends DesugaringBase:
   import elaborator.term, elaborator.tl.*, HelperExtractors.*, Pattern.MatchMode
   
   /** Each scrutinee is represented by a function that creates a reference to
@@ -38,6 +38,10 @@ class Translator(val elaborator: Elaborator)
   private type Inner = CaptureMap => Split
   
   private type PrefixInner = (CaptureMap, Scrut) => Split
+  
+  private lazy val lteq = State.builtinOpsMap("<=")
+  private lazy val lt = State.builtinOpsMap("<")
+  private lazy val eq = State.builtinOpsMap("==")
   
   private def makeRange(scrut: Scrut, lo: Literal, hi: Literal, rightInclusive: Bool, inner: Inner) =
     def scrutFld = fld(scrut())
