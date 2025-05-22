@@ -296,19 +296,23 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val nestCtx2 = ctx.nest
       val patTy = pattern match
       case pat: Pattern.ClassLike =>
-        val sym = pat.ctorSym
-        val (clsTy, tv, emptyTy) = sym.asCls.flatMap(sym => sym.defn.map(sym -> _)) match
-        case S((sym, cls)) =>
-          (ClassLikeType(sym, cls.tparams.map(_ => freshWildcard(sym))), (freshVar(new TempSymbol(S(scrutinee), "scrut"))), ClassLikeType(sym, cls.tparams.map(_ => Wildcard.empty)))
-        case _ =>
-          error(msg"Cannot match ${scrutinee.toString} as ${sym.toString}" -> split.toLoc :: Nil)
-          (Bot, Bot, Bot)
-        scrutinee match // * refine
-          case Ref(sym: LocalSymbol) =>
-            nestCtx1 += sym -> clsTy
-            nestCtx2 += sym -> tv
-          case _ => () // TODO: refine all variables holding this value?
-        clsTy | (tv & Type.mkNegType(emptyTy))
+        pat.constructor.symbol.flatMap(_.asCls) match
+          case S(sym) =>
+            val (clsTy, tv, emptyTy) = sym.defn.map(sym -> _) match
+            case S((sym, cls)) =>
+              (ClassLikeType(sym, cls.tparams.map(_ => freshWildcard(sym))), (freshVar(new TempSymbol(S(scrutinee), "scrut"))), ClassLikeType(sym, cls.tparams.map(_ => Wildcard.empty)))
+            case _ =>
+              error(msg"Cannot match ${scrutinee.toString} as ${sym.toString}" -> split.toLoc :: Nil)
+              (Bot, Bot, Bot)
+            scrutinee match // * refine
+              case Ref(sym: LocalSymbol) =>
+                nestCtx1 += sym -> clsTy
+                nestCtx2 += sym -> tv
+              case _ => () // TODO: refine all variables holding this value?
+            clsTy | (tv & Type.mkNegType(emptyTy))
+          case N =>
+            error(msg"Not a valid class: ${pat.constructor.describe}" -> pat.constructor.toLoc :: Nil)
+            Bot
       case Pattern.Lit(lit) => lit match
         case _: Tree.BoolLit => BbCtx.boolTy
         case _: Tree.IntLit => BbCtx.intTy

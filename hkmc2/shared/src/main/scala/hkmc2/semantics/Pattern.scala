@@ -24,7 +24,7 @@ enum Pattern extends AutoLocated:
       val arguments: Opt[Ls[(scrutinee : BlockLocalSymbol, pattern : Tree, split : Opt[DeBrujinSplit])]],
       val mode: MatchMode,
       var refined: Bool
-  )(val tree: Tree) extends Pattern with Pattern.ClassLikeImpl
+  )(val tree: Tree)
   
   case Tuple(size: Int, inf: Bool)
   
@@ -75,17 +75,6 @@ object Pattern:
     def unapply(p: Pattern): Opt[ModuleSymbol] = p match
       case p: Pattern.ClassLike => p.constructor.symbol.flatMap(_.asModOrObj)
       case _ => N
-
-  private[Pattern] sealed trait ClassLikeImpl:
-    p: Pattern.ClassLike =>
-    
-    def ctorSym: ClassSymbol | ModuleSymbol | PatternSymbol =
-      constructor.symbol.flatMap(_.asClsLike).getOrElse:
-        lastWords("Pattern.ClassLike: constructor is not a class or module")
-
-    def isVirtualClass(using Ctx): Bool = ctorSym match
-      case cls: ClassSymbol => ctx.builtins.virtualClasses contains cls
-      case _: (ModuleSymbol | PatternSymbol) => false
   
   enum MatchMode:
     /** The default mode. If the constructor resolves to:

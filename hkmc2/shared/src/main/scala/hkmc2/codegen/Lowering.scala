@@ -466,28 +466,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               )
             pat match
               case Pattern.Lit(lit) => mkMatch(Case.Lit(lit) -> go(tail, topLevel = false))
-              // Do not elaborate `_trm` when the `cls` is virtual.
-              case pat: Pattern.ClassLike if pat.isVirtualClass =>
-                // [invariant:0] Some classes (e.g., `Int`) from `Prelude` do
-                // not exist at runtime. If we do lowering on `trm`, backends
-                // (e.g., `JSBuilder`) will not be able to handle the corresponding selections.
-                // In this case the second parameter of `Case.Cls` will not be used.
-                // So we make it `Predef.unreachable` here.
-                mkMatch(Case.Cls(pat.ctorSym.asClsOrMod.get, unreachableFn) -> go(tail, topLevel = false))
-              case Pattern.ClassLike(ctor, args0, _, _refined) =>
-                subTerm_nonTail(ctor): st =>
-                  val args = args0.map(_.map(_.scrutinee)).getOrElse(Nil)
-                  val (ctorSym, clsParams) = ctor.symbol.flatMap(_.asClsOrMod) match
-                    case S(cls: ClassSymbol) => (cls, cls.tree.clsParams)
-                    case S(mod: ModuleSymbol) => (mod, Nil)
-                    case N =>
-                      // Normalization have already checked the constructor
-                      // resolves to a class or module. Branches with unresolved
-                      // constructors should have been removed.
-                      lastWords("Pattern.ClassLike: constructor is not a class or module")
+              case Pattern.ClassLike(ctor, argsOpt, _mode, _refined) =>
+                /** Make a continuation that creates the match. */
+                def k(ctorSym: ClassLikeSymbol, clsParams: Ls[TermSymbol])(st: Path): Block =
+                  val args = argsOpt.map(_.map(_.scrutinee)).getOrElse(Nil)
                   // Normalization should reject cases where the user provides
                   // more sub-patterns than there are actual class parameters.
-                  assert(args0.isEmpty || args.length <= clsParams.length)
+                  assert(argsOpt.isEmpty || args.length <= clsParams.length)
                   def mkArgs(args: Ls[TermSymbol -> BlockLocalSymbol])(using Subst): Case -> Block = args match
                     case Nil =>
                       Case.Cls(ctorSym, st) -> go(tail, topLevel = false)
@@ -495,6 +480,22 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                       val (cse, blk) = mkArgs(args)
                       (cse, Assign(arg, Select(sr, param.id/*FIXME incorrect Ident?*/)(S(param)), blk))
                   mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
+                ctor.symbol.flatMap(_.asClsOrMod) match
+                  case S(cls: ClassSymbol) if ctx.builtins.virtualClasses contains cls =>
+                    // [invariant:0] Some classes (e.g., `Int`) from `Prelude` do
+                    // not exist at runtime. If we do lowering on `trm`, backends
+                    // (e.g., `JSBuilder`) will not be able to handle the corresponding selections.
+                    // In this case the second parameter of `Case.Cls` will not be used.
+                    // So we do not elaborate `ctor` when the `cls` is virtual
+                    // and use it `Predef.unreachable` here.
+                    k(cls, Nil)(unreachableFn)
+                  case S(cls: ClassSymbol) => subTerm_nonTail(ctor)(k(cls, cls.tree.clsParams))
+                  case S(mod: ModuleSymbol) => subTerm_nonTail(ctor)(k(mod, Nil))
+                  case N =>
+                    // Normalization have already checked the constructor
+                    // resolves to a class or module. Branches with unresolved
+                    // constructors should have been removed.
+                    lastWords("Pattern.ClassLike: constructor is neither a class nor a module")
               case Pattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> go(tail, topLevel = false))
         case Split.Else(els) =>
           if k.isInstanceOf[TailOp] && isIf then term_nonTail(els)(k)
