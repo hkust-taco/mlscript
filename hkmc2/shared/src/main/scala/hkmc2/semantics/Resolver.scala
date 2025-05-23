@@ -420,6 +420,24 @@ class Resolver(tl: TraceLogger)
       case Term.Ref(_) =>
         resolveSymbol(t)
         (t.termDefn, ictx)
+          
+      case use @ Term.Summon(ty) =>
+        traverse(ty, expect = NonModule(N))
+        resolveType(ty) match
+          case S(tpe: Type.Concrete) =>
+            ictx.get(tpe) match
+              case S(i) =>
+                log(s"Resolved type ${tpe} with instance ${i}")
+                use.sym = S(i.sym)
+              case N =>
+                use.sym = S(ErrorSymbol("Missing Instance", use.tree))
+                raise(ErrorReport(
+                  msg"Missing instance for use[${tpe.show}]" -> t.toLoc ::
+                  msg"Expected: ${tpe.show}; Available: ${ictx.showEnv}" -> N :: Nil))
+          case N =>
+            // There is an error during resolving the type signature.
+            // The error should have been reported.
+        (t.termDefn, ictx)
     
     log(s"Resolving resolvable with defn = ${defn}")
     

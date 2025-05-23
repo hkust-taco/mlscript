@@ -651,6 +651,27 @@ extends Importer:
       Term.Error
     case Error() =>
       Term.Error
+    // A use[T] construct: analogous to Scala's summon[T].
+    case TermDef(Ins, Tree.Tup(tyArgs), N) => 
+      if tyArgs.length != 1 then
+        raise(ErrorReport(msg"Illegal use[T] construct. Only one type is allowed." -> tree.toLoc :: Nil))
+        Term.Error
+      val ty = term(tyArgs.head)
+      Term.Summon(ty)(tree, N)
+    // A funny parsing problem: 
+    //  - use[T].foo is parsed as (use ([T].foo) )
+    //  - use[T](...) is parsed as (use ([T]()) )
+    case TermDef(Ins, head, N) =>
+      // We try to pull out the [T] part from the tree.
+      def go(t: Tree): Tree = t match
+        case App(lhs, rhs) => App(go(lhs), rhs)
+        case InfixApp(lhs, kw, rhs) => InfixApp(go(lhs), kw, rhs)
+        case Sel(lhs, rhs) => Sel(go(lhs), rhs)
+        case SynthSel(lhs, rhs) => SynthSel(go(lhs), rhs)
+        case Jux(lhs, rhs) => Jux(go(lhs), rhs)
+        case tyArgs: Tup =>
+          TermDef(Ins, tyArgs, N)
+      term(go(head))
     case TermDef(k, nme, rhs) =>
       raise(ErrorReport(msg"Illegal definition in term position." -> tree.toLoc :: Nil))
       Term.Error
@@ -917,6 +938,13 @@ extends Importer:
           raise(ErrorReport(msg"Unrecognized definitional assignment left-hand side: ${lhs.describe}"
             -> lhs.toLoc :: Nil)) // TODO BE
           go(sts, Nil, Term.Error :: acc)
+      // A use[T] construct: analogous to Scala's summon[T].
+      case (tree @ TermDef(Ins, _, N)) :: sts =>
+        val res = annotations.foldLeft(term(tree)):
+          case (acc, ann) => Term.Annotated(ann, acc)
+        sts match
+        case Nil => (mkBlk(acc, S(res), hasResult), ctx)
+        case _ => go(sts, Nil, res :: acc)
       case (td @ TermDef(k, nme, rhs)) :: sts =>
         log(s"Processing term definition $nme")
         td.symbName match

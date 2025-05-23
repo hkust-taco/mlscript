@@ -1,0 +1,71 @@
+:js
+
+
+use Int = 42
+use Str = "42"
+
+:expect 42
+use[Int]
+//│ = 42
+
+:expect "42"
+use[Str]
+//│ = "42"
+
+:e
+use[Num]
+//│ ╔══[ERROR] Missing instance for use[Num]
+//│ ║  l.16: 	use[Num]
+//│ ║        	    ^^^
+//│ ╙── Expected: Num; Available: (Int, Str)
+
+:expect 42
+let x = use[Int]
+x
+//│ = 42
+//│ x = 42
+
+
+:expect -42
+fun f(using Int) = use[Int]
+use Int = -42
+f
+//│ = -42
+
+:expect "42"
+fun f(using Int) = use[Str]
+use Str = "-42"
+f
+//│ = "42"
+
+:e
+fun f(using Int) = use[Num]
+//│ ╔══[ERROR] Missing instance for use[Num]
+//│ ║  l.42: 	fun f(using Int) = use[Num]
+//│ ║        	                       ^^^
+//│ ╙── Expected: Num; Available: (Int, Int, Int, Str, Str)
+
+
+data class Some[T](x: T)
+
+
+:expect 42
+fun f[T](using Some[T]) = use[Some[T]].x
+use Some[Int] = Some(42)
+f
+//│ = 42
+
+
+:todo
+fun f[T](using T) = use[T]
+use Int = 42
+f[Int]
+//│ ╔══[ERROR] Missing instance for contextual parameter of type `T` in this call
+//│ ║  l.62: 	f[Int]
+//│ ║        	^^^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.60: 	fun f[T](using T) = use[T]
+//│ ║        	               ^
+//│ ╙── Expected: T; Available: (Int, Int, Int, Str, Str, Some[Int])
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 1 argument but got 0
+
