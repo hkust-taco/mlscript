@@ -58,7 +58,12 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
         lhs.constructor.symbol === rhs.constructor.symbol
       case (Pattern.Lit(l1), Pattern.Lit(l2)) => l1 === l2
       case (Pattern.Tuple(n1, b1), Pattern.Tuple(n2, b2)) => n1 === n2 && b1 === b2
-      case (_, _) => false
+      case (Pattern.Record(ls1), Pattern.Record(ls2)) =>
+        ls1.lazyZip(ls2).forall:
+          case ((fieldName1, p1), (fieldName2, p2)) =>
+            fieldName1 === fieldName2 && p1 === p2
+      case (_: Pattern.ClassLike, _) | (_: Pattern.Lit, _) |
+        (_: Pattern.Tuple, _) | (_: Pattern.Record, _) => false
     /** Checks if `lhs` can be subsumed under `rhs`. */
     def <:<(rhs: Pattern): Bool = compareCasePattern(lhs, rhs)
     /**
@@ -79,6 +84,25 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
       case lhs: Pattern.ClassLike => lhs.refined = true
       case _ => ()
   
+  extension (lhs: Pattern.Record)
+    /** reduces the record pattern `lhs` assuming we have matched `rhs`.
+      * It removes field matches that may now be unnecessary
+      */
+    infix def assuming(rhs: Pattern): Pattern.Record = rhs match
+      case Pattern.Record(rhsEntries) =>
+        val filteredEntries = lhs.entries.filter:
+          (fieldName1, _) => rhsEntries.forall { (fieldName2, _) => !(fieldName1 === fieldName2)}
+        Pattern.Record(filteredEntries)
+      case rhs: Pattern.ClassLike => rhs.constructor.symbol.flatMap(_.asCls) match
+        case S(cls: ClassSymbol) => cls.defn match
+          case S(ClassDef.Parameterized(params = paramList)) =>
+            val filteredEntries = lhs.entries.filter:
+              (fieldName1, _) => paramList.params.forall { (param:Param) => !(fieldName1 === param.sym.id)}
+            Pattern.Record(filteredEntries)
+          case S(_) | N => lhs
+        case S(_) | N => lhs
+      case _ => lhs
+
   inline def apply(split: Split): Split = normalize(split)(using VarSet())
   
   /**
@@ -95,7 +119,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
   
   def normalizeImpl(split: Split)(using vs: VarSet): Split = split match
     case Split.Cons(Branch(scrutinee, pattern, consequent), alternative) => pattern match
-      case pattern: (Pattern.Lit | Pattern.Tuple) =>
+      case pattern: (Pattern.Lit | Pattern.Tuple | Pattern.Record) =>
         log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
         // TODO(ucs): deduplicate [1]
         val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
@@ -149,9 +173,6 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
                 // Name resolution should have already reported an error. We
                 // treat this as an extractor pattern.
                 normalizeExtractorPattern(scrutinee, pat, ctor, consequent, alternative)
-      case _ =>
-        error(msg"unsupported pattern matching: ${scrutinee.toString} is ${pattern.toString}" -> pattern.toLoc)
-        normalizeImpl(alternative)
     case Split.Let(v, _, tail) if vs has v =>
       log(s"LET: SKIP already declared scrutinee $v")
       normalizeImpl(tail)
@@ -378,8 +399,9 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
 
   /**
     * Specialize `split` with the assumption that `scrutinee` matches `pattern`.
-    * If `matchOrNot` is `true`, the function _keeps_ branches that agree on
-    * `scrutinee` matches `pattern`. Otherwise, the function _removes_ branches
+    * If `mode` is `+`, the function _keeps_ branches that agree on
+    * `scrutinee` matching `pattern` and simplifies the record patterns it sees if the fields were already matched.
+    * Otherwise (if `mode` is `-`), the function _removes_ branches
     * that agree on `scrutinee` matches `pattern`.
     */
   private def specialize(
@@ -412,23 +434,35 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
             else if split.isFallback then
               log(s"Case 1.1.3: $pattern is unrelated with $thatPattern")
               rec(tail)
-            else if pattern <:< thatPattern then
-              // TODO: the warning will be useful when we have inheritance information
-              // raiseDesugaringWarning(
-              //   msg"the pattern always matches" -> thatPattern.toLoc,
-              //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
-              //   msg"which is a subtype of ${thatPattern.toString}" -> (pattern match {
-              //     case Pattern.Class(cls, _, _) => cls.toLoc
-              //     case _ => thatPattern.toLoc
-              //   }))
-              rec(continuation) ++ rec(tail)
-            else
-              // TODO: the warning will be useful when we have inheritance information
-              // raiseDesugaringWarning(
-              //   msg"possibly conflicting patterns for this scrutinee" -> scrutinee.toLoc,
-              //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
-              //   msg"which is unrelated with ${thatPattern.toString}" -> thatPattern.toLoc)
-              rec(tail)
+            else thatPattern match
+            case thatPattern: Pattern.Record =>
+              log(s"Case 1.1.4: $thatPattern is a record")
+              // we can use information if pattern is itself a record, or if it is a constructor with arguments
+              val simplifiedRecord = thatPattern assuming pattern
+              if simplifiedRecord.entries.isEmpty then
+                tail
+              else
+                Split.Cons(Branch(thatScrutinee, simplifiedRecord, continuation), tail)
+            case _ =>
+              if pattern <:< thatPattern then
+                // TODO: the warning will be useful when we have inheritance information
+                // raiseDesugaringWarning(
+                //   msg"the pattern always matches" -> thatPattern.toLoc,
+                //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
+                //   msg"which is a subtype of ${thatPattern.toString}" -> (pattern match {
+                //     case Pattern.Class(cls, _, _) => cls.toLoc
+                //     case _ => thatPattern.toLoc
+                //   }))
+                log(s"case 1.1.5: $pattern <:< $thatPattern")
+                split
+              else
+                // TODO: the warning will be useful when we have inheritance information
+                // raiseDesugaringWarning(
+                //   msg"possibly conflicting patterns for this scrutinee" -> scrutinee.toLoc,
+                //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
+                //   msg"which is unrelated with ${thatPattern.toString}" -> thatPattern.toLoc)
+                log(s"Case 1.1._ else : ${tail}")
+                rec(tail)
           case - =>
             log(s"Case 1.2: $scrutinee === $thatScrutinee")
             thatPattern reportInconsistentRefinedWith pattern
@@ -473,7 +507,18 @@ object Normalization:
     case (Lit(Tree.StrLit(_)), Class(blt.`Str`)) => true
     case (Lit(Tree.DecLit(_)), Class(blt.`Num`)) => true
     case (Lit(Tree.BoolLit(_)), Class(blt.`Bool`)) => true
-    case (_, _) => false
+    case (Record(entries1), Record(entries2)) =>
+      entries1.forall { (fieldName1, _) => entries2.exists { (fieldName2, _) => fieldName1 === fieldName2 } }
+    case (Record(entries), rhs: ClassLike) =>
+      val clsParams = rhs.constructor.symbol.flatMap(_.asCls) match
+        case S(symbol) => symbol.defn match
+          case S(ClassDef.Parameterized(params = paramList)) => paramList.params
+          case S(_) | N => Nil
+        case (S(_) | N) => Nil
+      entries.forall { (fieldName, _) => clsParams.exists {
+        case Param(flags = FldFlags(value = value), sym = sym) => value && fieldName === sym.id
+      }}
+    case (_: Pattern, _: Pattern)  => false
 
   final case class VarSet(declared: Set[BlockLocalSymbol]):
     def +(nme: BlockLocalSymbol): VarSet = copy(declared + nme)

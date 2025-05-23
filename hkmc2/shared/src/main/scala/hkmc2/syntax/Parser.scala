@@ -376,6 +376,9 @@ abstract class Parser(
     //       N
     case (tok @ (id: IDENT), loc) :: _ =>
       Keyword.all.get(id.name) match
+      case S(Keyword.`:`) | N =>
+        // encountering `:` should lead to parsing an expr (likely a pun)
+        tryParseExp(prec, tok, loc, rule)
       case S(kw) =>
         rule.kwAlts.get(id.name) match
         case S(subRule) =>
@@ -401,8 +404,6 @@ abstract class Parser(
               tryEmpty(tok, loc)
           case N =>
             tryEmpty(tok, loc)
-      case N =>
-        tryParseExp(prec, tok, loc, rule)
     case (tok @ NEWLINE, l0) :: (id: IDENT, l1) :: _ if rule.kwAlts.contains(id.name) =>
       consume
       parseRule(prec, rule)
@@ -668,9 +669,9 @@ abstract class Parser(
       case Nil => false
       case (NEWLINE | SPACE, _) :: _ => consume; true
       case (KEYWORD(kw), loc) :: _ if kw isnt Keyword.__ =>
-        consume
         prefixRules.kwAlts.get(kw.name) match
         case S(subRule) =>
+          consume
           parseRule(CommaPrecNext, subRule).getOrElse(errExpr)
         case N => expr(0)
       case _ => expr(0)

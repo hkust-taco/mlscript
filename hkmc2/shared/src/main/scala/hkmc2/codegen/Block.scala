@@ -393,16 +393,22 @@ enum Case:
   case Lit(lit: Literal)
   case Cls(cls: ClassLikeSymbol, path: Path)
   case Tup(len: Int, inf: Bool)
+  /** checks field existence
+    * @param safe true will omit the instanceof Object check
+  */
+  case Field(name: Tree.Ident, safe: Bool)
 
   lazy val freeVars: Set[Local] = this match
     case Lit(_) => Set.empty
     case Cls(_, path) => path.freeVars
     case Tup(_, _) => Set.empty
+    case Field(_, _) => Set.empty
   
   lazy val freeVarsLLIR: Set[Local] = this match
     case Lit(_) => Set.empty
     case Cls(_, path) => path.freeVarsLLIR
     case Tup(_, _) => Set.empty
+    case Field(_, _) => Set.empty
 
 sealed trait TrivialResult extends Result
 

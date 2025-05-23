@@ -202,6 +202,7 @@ class BlockTransformer(subst: SymbolSubst):
       val path2 = applyPath(path)
       if (cls2 is cls) && (path2 is path) then cse else Case.Cls(cls2, path2)
     case Case.Tup(len, inf) => cse
+    case Case.Field(name, safe) => cse
   
   def applyHandler(hdr: Handler): Handler =
     val sym2 = hdr.sym.subst

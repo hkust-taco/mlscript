@@ -23,6 +23,9 @@ use Bar[Str] = new Bar
 // * and thus picks the Bar[Int] instance
 :fixme
 foo
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'foo'
+//│ ║  l.13: 	fun foo[A](using f: Foo[A], b: Bar[A]): A
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: foo is not defined
 
 

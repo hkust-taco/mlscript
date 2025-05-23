@@ -28,12 +28,10 @@ enum Pattern extends AutoLocated:
 
   
   def subTerms: Ls[Term] = this match
-    case Lit(_) => Nil
     case p: ClassLike => p.constructor :: (p.mode match
       case MatchMode.Default | _: MatchMode.StringPrefix => Nil
       case MatchMode.Annotated(annotation) => annotation :: Nil)
-    case Tuple(_, _) => Nil
-    case Record(_) => Nil
+    case _: (Lit | Tuple | Record) => Nil 
   
   def children: Ls[Located] = this match
     case Lit(literal) => literal :: Nil

@@ -132,9 +132,9 @@ if input is Opt(Email, Some((n, d))) then ...
 //│ ╔══[ERROR] Name not found: Some
 //│ ║  l.125: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	                       ^^^^
-//│ ╔══[ERROR] Unrecognized pattern (block)
+//│ ╔══[ERROR] invalid record field pattern
 //│ ║  l.125: 	if input is Opt(Email, Some((n, d))) then ...
-//│ ╙──       	                            ^^^^^^
+//│ ╙──       	                                ^
 
 :todo
 pattern Opt(pattern P) = case
