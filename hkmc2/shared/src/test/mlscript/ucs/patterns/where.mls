@@ -4,7 +4,7 @@ data class Pair[A, B](fst: A, snd: B)
 
 
 fun orderedPair(p) = p is
-    Pair(a, b) where a <= b
+  Pair(a, b) where a <= b
 
 orderedPair(Pair(4, 5))
 //│ = true
@@ -19,9 +19,9 @@ orderedPair(Pair(2, 1))
 //│ = false
 
 fun foo(p) = p is
-    Pair(a, b) where
-        let c = a
-        a == 0
+  Pair(a, b) where
+    let c = a
+    a == 0
 
 foo(Pair(5, 5))
 //│ = false
@@ -37,7 +37,7 @@ foo(Pair(4, 0))
 
 
 fun bar(p) = p is
-    (Pair(a, b) where a > b) | Int
+  (Pair(a, b) where a > b) | Int
 
 bar(4)
 //│ = true
@@ -50,11 +50,11 @@ bar(Pair(4, 3))
 
 :e
 fun baz(p) = p is
-    (Pair(a, b) | Int) where a > b
+  (Pair(a, b) | Int) where a > b
 //│ ╔══[ERROR] Name not found: a
-//│ ║  l.53: 	    (Pair(a, b) | Int) where a > b
-//│ ╙──      	                             ^
+//│ ║  l.53: 	  (Pair(a, b) | Int) where a > b
+//│ ╙──      	                           ^
 //│ ╔══[ERROR] Name not found: b
-//│ ║  l.53: 	    (Pair(a, b) | Int) where a > b
-//│ ╙──      	                                 ^
+//│ ║  l.53: 	  (Pair(a, b) | Int) where a > b
+//│ ╙──      	                               ^
 

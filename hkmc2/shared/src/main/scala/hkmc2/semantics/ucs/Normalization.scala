@@ -54,8 +54,8 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
             fieldName1 === fieldName2 && p1 === p2
       case (Pattern.Synonym(sym1, args1), Pattern.Synonym(sym2, args2)) =>
         args1 === args2 && sym1.params === sym2.params && sym1.body === sym2.body
-      case (_:Pattern.ClassLike, _) | (_:Pattern.Lit, _) |
-        (_:Pattern.Tuple, _) | (_:Pattern.Synonym, _) | (_:Pattern.Record, _) => false
+      case (_: Pattern.ClassLike, _) | (_: Pattern.Lit, _) |
+        (_: Pattern.Tuple, _) | (_: Pattern.Synonym, _) | (_: Pattern.Record, _) => false
     /** Checks if `lhs` can be subsumed under `rhs`. */
     def <:<(rhs: Pattern): Bool = compareCasePattern(lhs, rhs)
     /**
@@ -82,16 +82,13 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
       */
     infix def assuming(rhs: Pattern): Pattern.Record = rhs match
       case Pattern.Record(rhsEntries) =>
-        val filteredEntries = lhs.entries.filter: (fieldName1, _) =>
-          rhsEntries.forall { (fieldName2, _) => !(fieldName1 === fieldName2)}
-        }
+        val filteredEntries = lhs.entries.filter:
+          (fieldName1, _) => rhsEntries.forall { (fieldName2, _) => !(fieldName1 === fieldName2)}
         Pattern.Record(filteredEntries)
-      case Pattern.ClassLike(sym = cls : ClassSymbol) =>
-        cls.defn match
+      case Pattern.ClassLike(sym = cls : ClassSymbol) => cls.defn match
         case S(ClassDef.Parameterized(params = paramList)) =>
-          val filteredEntries = lhs.entries.filter: (fieldName1, _) =>
-          paramList.params.forall { (param:Param) => ! (fieldName1 === param.sym.id)}
-          }
+          val filteredEntries = lhs.entries.filter:
+            (fieldName1, _) => paramList.params.forall { (param:Param) => !(fieldName1 === param.sym.id)}
           Pattern.Record(filteredEntries)
         case S(_) | N => lhs
       case _ => lhs
@@ -226,25 +223,26 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
                 tail
               else
                 Split.Cons(Branch(thatScrutinee, simplifiedRecord, continuation), tail)
-            case _ => (if pattern <:< thatPattern then
-              // TODO: the warning will be useful when we have inheritance information
-              // raiseDesugaringWarning(
-              //   msg"the pattern always matches" -> thatPattern.toLoc,
-              //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
-              //   msg"which is a subtype of ${thatPattern.toString}" -> (pattern match {
-              //     case Pattern.Class(cls, _, _) => cls.toLoc
-              //     case _ => thatPattern.toLoc
-              //   }))
-              log(s"case 1.1.5: $pattern <:< $thatPattern")
-              split
-            else
-              // TODO: the warning will be useful when we have inheritance information
-              // raiseDesugaringWarning(
-              //   msg"possibly conflicting patterns for this scrutinee" -> scrutinee.toLoc,
-              //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
-              //   msg"which is unrelated with ${thatPattern.toString}" -> thatPattern.toLoc)
-              log(s"Case 1.1._ else : ${tail}")
-              rec(tail))
+            case _ =>
+              if pattern <:< thatPattern then
+                // TODO: the warning will be useful when we have inheritance information
+                // raiseDesugaringWarning(
+                //   msg"the pattern always matches" -> thatPattern.toLoc,
+                //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
+                //   msg"which is a subtype of ${thatPattern.toString}" -> (pattern match {
+                //     case Pattern.Class(cls, _, _) => cls.toLoc
+                //     case _ => thatPattern.toLoc
+                //   }))
+                log(s"case 1.1.5: $pattern <:< $thatPattern")
+                split
+              else
+                // TODO: the warning will be useful when we have inheritance information
+                // raiseDesugaringWarning(
+                //   msg"possibly conflicting patterns for this scrutinee" -> scrutinee.toLoc,
+                //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
+                //   msg"which is unrelated with ${thatPattern.toString}" -> thatPattern.toLoc)
+                log(s"Case 1.1._ else : ${tail}")
+                rec(tail)
           case - =>
             log(s"Case 1.2: $scrutinee === $thatScrutinee")
             thatPattern reportInconsistentRefinedWith pattern

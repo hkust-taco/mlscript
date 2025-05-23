@@ -491,7 +491,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                   mkMatch(mkArgs(clsParams.iterator.zip(args).collect { case (s1, S(s2)) => (s1, s2) }.toList))
               case Pattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> go(tail, topLevel = false))
               case Pattern.Record(entries) =>
-                val objectSym = summon[Ctx].builtins.Object
+                val objectSym = ctx.builtins.Object
                 mkMatch( // checking that we have an object
                   Case.Cls(objectSym, Value.Ref(BuiltinSymbol(objectSym.nme, false, false, true, false))),
                   entries.foldRight(go(tail, topLevel = false)):

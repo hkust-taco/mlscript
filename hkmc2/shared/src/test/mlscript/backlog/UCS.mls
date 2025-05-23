@@ -78,16 +78,6 @@ if
 
 // ——— ——— ———
 
-let audits = new Set()
-//│ audits = Set{}
-
-if audits.has(1) === true do
-  print("ok")
-else
-  1
-
-// ——— ——— ———
-
 // * Example confusing parses that should be fixed when we fix the parsing of operator splits
 
 if 1 + 0
@@ -108,8 +98,8 @@ class Some(val v)
 Some(1) is
   Some of [process, rest] do "hi"
 //│ ╔══[ERROR] Unrecognized pattern (infix operator)
-//│ ║  l.109: 	  Some of [process, rest] do "hi"
-//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.99: 	  Some of [process, rest] do "hi"
+//│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^
 //│ = false
 
 // ——— ——— ———
@@ -158,10 +148,10 @@ let foo =
   case
     Tuple(...elements) then elements
 //│ ╔══[ERROR] mismatched arity: expect 3, found 1
-//│ ║  l.159: 	    Tuple(...elements) then elements
+//│ ║  l.149: 	    Tuple(...elements) then elements
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern (spread)
-//│ ║  l.159: 	    Tuple(...elements) then elements
+//│ ║  l.149: 	    Tuple(...elements) then elements
 //│ ╙──       	             ^^^^^^^^
 //│ foo = [function]
 
@@ -179,28 +169,28 @@ fun foo(x) = if x is Foo.
   Bar then "Bar"
   Foo then "Foo"
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.178: 	fun foo(x) = if x is Foo.
+//│ ║  l.168: 	fun foo(x) = if x is Foo.
 //│ ╙──       	                     ^^^
 //│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.178: 	fun foo(x) = if x is Foo.
+//│ ║  l.168: 	fun foo(x) = if x is Foo.
 //│ ╙──       	                        ^
 //│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.178: 	fun foo(x) = if x is Foo.
+//│ ║  l.168: 	fun foo(x) = if x is Foo.
 //│ ╙──       	                        ^
 
 fun foo(x) = if x is Foo
   .Bar then "Bar"
   .Foo then "Foo"
 //│ ╔══[PARSE ERROR] Expected an expression; found selector instead
-//│ ║  l.192: 	  .Bar then "Bar"
+//│ ║  l.182: 	  .Bar then "Bar"
 //│ ╙──       	  ^^^^
 //│ ╔══[PARSE ERROR] Unexpected selector here
-//│ ║  l.192: 	  .Bar then "Bar"
+//│ ║  l.182: 	  .Bar then "Bar"
 //│ ╙──       	  ^^^^
 //│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.191: 	fun foo(x) = if x is Foo
+//│ ║  l.181: 	fun foo(x) = if x is Foo
 //│ ║         	                     ^^^
-//│ ║  l.192: 	  .Bar then "Bar"
+//│ ║  l.182: 	  .Bar then "Bar"
 //│ ╙──       	^^
 
 // ——— ——— ———

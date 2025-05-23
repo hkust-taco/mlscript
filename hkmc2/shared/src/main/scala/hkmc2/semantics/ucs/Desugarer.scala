@@ -12,7 +12,6 @@ import collection.mutable.{HashMap, SortedSet}
 import Elaborator.{ctx, Ctxl}
 import scala.annotation.targetName
 import hkmc2.semantics.ClassDef.Parameterized
-import hkmc2.codegen.Case.Lit
 
 object Desugarer:
   extension (op: Keyword.Infix)

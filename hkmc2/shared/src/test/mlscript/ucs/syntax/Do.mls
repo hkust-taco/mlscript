@@ -58,6 +58,13 @@ f(42)
 f(41)
 //│ = Some(41)
 
+let audits = new Set()
+//│ audits = Set{}
+
+if audits.has(1) === true do
+  print("ok")
+else
+  1
 
 // Mix using `then` and `do`
 // =========================
@@ -71,10 +78,10 @@ fun g(y) =
   x
 //│ ╔══[ERROR] Mixed use of `do` and `then` in the `if` expression.
 //│ ╟── Keyword `then` is used here.
-//│ ║  l.70: 	    Some(v) and v % 2 == 0 then set x = Some(v / 2)
+//│ ║  l.77: 	    Some(v) and v % 2 == 0 then set x = Some(v / 2)
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Keyword `do` is used here.
-//│ ║  l.69: 	    Some(0) do set x = None
+//│ ║  l.76: 	    Some(0) do set x = None
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^
 
 g(0)
