@@ -15,7 +15,7 @@ object HelperExtractors:
   
   /** A helper extractor for matching the tree of `x a y`.*/
   object and:
-    infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match
+    infix def unapply(tree: App): Opt[(Tree, Tree)] = tree match
       case App(Ident("&"), Tup(lhs :: rhs :: Nil)) => S(lhs, rhs)
       case _ => N
 

@@ -27,7 +27,7 @@ enum Pattern extends AutoLocated:
   
   def subTerms: Ls[Term] = this match
     case ClassLike(_, t, _, _) => t :: Nil
-    case _:(Lit | Synonym | Tuple | Record) => Nil 
+    case _: (Lit | Synonym | Tuple | Record) => Nil 
   
   def children: Ls[Located] = this match
     case Lit(literal) => literal :: Nil

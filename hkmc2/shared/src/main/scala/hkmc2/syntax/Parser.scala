@@ -401,7 +401,8 @@ abstract class Parser(
               tryEmpty(tok, loc)
           case N =>
             tryEmpty(tok, loc)
-      case S(_) | N => // should only include the case S(Keyword.`:`) and N
+      case S(kw) | N =>
+        assert(kw is Keyword.`:`)
         tryParseExp(prec, tok, loc, rule)
     case (tok @ NEWLINE, l0) :: (id: IDENT, l1) :: _ if rule.kwAlts.contains(id.name) =>
       consume

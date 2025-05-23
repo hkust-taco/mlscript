@@ -49,10 +49,9 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
       case (Pattern.Lit(l1), Pattern.Lit(l2)) => l1 === l2
       case (Pattern.Tuple(n1, b1), Pattern.Tuple(n2, b2)) => n1 === n2 && b1 === b2
       case (Pattern.Record(ls1), Pattern.Record(ls2)) =>
-        ls1.zip(ls2)
-           .forall{case ((fieldName1, p1), (fieldName2, p2)) =>
-            fieldName1 == fieldName2 && p1 =:= p2
-        }
+        ls1.lazyZip(ls2).forall:
+          case ((fieldName1, p1), (fieldName2, p2)) =>
+            fieldName1 === fieldName2 && p1 === p2
       case (Pattern.Synonym(sym1, args1), Pattern.Synonym(sym2, args2)) =>
         args1 === args2 && sym1.params === sym2.params && sym1.body === sym2.body
       case (_:Pattern.ClassLike, _) | (_:Pattern.Lit, _) |
@@ -83,14 +82,14 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
       */
     infix def assuming(rhs: Pattern): Pattern.Record = rhs match
       case Pattern.Record(rhsEntries) =>
-        val filteredEntries = lhs.entries.filter { (fieldName1, _) =>
-          rhsEntries.forall { (fieldName2, _) => ! (fieldName1 === fieldName2)}
+        val filteredEntries = lhs.entries.filter: (fieldName1, _) =>
+          rhsEntries.forall { (fieldName2, _) => !(fieldName1 === fieldName2)}
         }
         Pattern.Record(filteredEntries)
       case Pattern.ClassLike(sym = cls : ClassSymbol) =>
         cls.defn match
         case S(ClassDef.Parameterized(params = paramList)) =>
-          val filteredEntries = lhs.entries.filter { (fieldName1, _) =>
+          val filteredEntries = lhs.entries.filter: (fieldName1, _) =>
           paramList.params.forall { (param:Param) => ! (fieldName1 === param.sym.id)}
           }
           Pattern.Record(filteredEntries)
@@ -184,8 +183,8 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
   /**
     * Specialize `split` with the assumption that `scrutinee` matches `pattern`.
     * If `mode` is `+`, the function _keeps_ branches that agree on
-    * `scrutinee` matches `pattern` and simplifies the record patterns it sees if the fields were already matched.
-    * Otherwise (if `mode is `-`), the function _removes_ branches
+    * `scrutinee` matching `pattern` and simplifies the record patterns it sees if the fields were already matched.
+    * Otherwise (if `mode` is `-`), the function _removes_ branches
     * that agree on `scrutinee` matches `pattern`.
     */
   private def specialize(
@@ -293,10 +292,10 @@ object Normalization:
     case (_: Synonym, _: Synonym) => lhs =:= rhs
     case (Record(entries1), Record(entries2)) =>
       entries1.forall { (fieldName1, _) => entries2.exists { (fieldName2, _) => fieldName1 === fieldName2 } }
-    case (Record(entries), ClassLike(cs: ClassSymbol, _, _, _)) =>
+    case (Record(entries), ClassLike(sym = cs: ClassSymbol)) =>
       val clsParams = cs.defn match
         case S(Parameterized(params = paramList)) => paramList.params
-        case (S(_)|N) => List()
+        case (S(_) | N) => Nil
       entries.forall { (fieldName, _) => clsParams.exists {
         case Param(flags = FldFlags(value = value), sym = sym) => value && fieldName === sym.id
       }}

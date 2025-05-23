@@ -494,13 +494,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                 val objectSym = summon[Ctx].builtins.Object
                 mkMatch( // checking that we have an object
                   Case.Cls(objectSym, Value.Ref(BuiltinSymbol(objectSym.nme, false, false, true, false))),
-                  entries.foldRight(go(tail, topLevel = false)) {
+                  entries.foldRight(go(tail, topLevel = false)):
                     case ((fieldName, fieldSymbol), blk) =>
                       mkMatch(
                         Case.Field(fieldName, safe = true), // we know we have an object, no need to check again
                         Assign(fieldSymbol, Select(sr, fieldName)(N), blk)
                       )
-                  }
                 )
         case Split.Else(els) =>
           if k.isInstanceOf[TailOp] && isIf then term_nonTail(els)(k)
