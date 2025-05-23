@@ -78,7 +78,10 @@ let rcd =
 //│ ╔══[ERROR] Name not found: bar
 //│ ║  l.73: 	  bar =
 //│ ╙──      	  ^^^
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: rcd (class hkmc2.semantics.VarSymbol)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'rcd'
+//│ ║  l.71: 	let rcd =
+//│ ╙──      	    ^^^
+//│ rcd = {foo: 1, bar: "..."}
 
 
 // * How about this syntax?
@@ -89,10 +92,10 @@ let rcd = new with
   bar =
     "..."
 //│ ╔══[ERROR] Name not found: foo
-//│ ║  l.88: 	  foo = 1
+//│ ║  l.91: 	  foo = 1
 //│ ╙──      	  ^^^
 //│ ╔══[ERROR] Name not found: bar
-//│ ║  l.89: 	  bar =
+//│ ║  l.92: 	  bar =
 //│ ╙──      	  ^^^
 //│ rcd = $anon
 
@@ -167,14 +170,14 @@ display(x: 88, y: 99, i: 0)
 :todo
 t("group")
 //│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.168: 	t("group")
+//│ ║  l.171: 	t("group")
 //│ ╙──       	 ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 
 :todo
 t("group")
 //│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.175: 	t("group")
+//│ ║  l.178: 	t("group")
 //│ ╙──       	 ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 

@@ -401,6 +401,9 @@ abstract class Parser(
     //       N
     case (tok @ (id: IDENT), loc) :: _ =>
       Keyword.all.get(id.name) match
+      case S(Keyword.`:`) | N =>
+        // encountering `:` should lead to parsing an expr (likely a pun)
+        tryParseExp(prec, tok, loc, rule, allowNewlines = allowNewlines)
       case S(kw) =>
         rule.kwAlts.get(id.name) match
         case S(subRule) =>
@@ -429,8 +432,6 @@ abstract class Parser(
               tryEmpty(tok, loc)
           case N =>
             tryEmpty(tok, loc)
-      case N =>
-        tryParseExp(prec, tok, loc, rule, allowNewlines = allowNewlines)
     case (tok @ (NEWLINE_COMMA()), l0) :: (id: IDENT, l1) :: _ if allowNewlines && rule.kwAlts.contains(id.name) =>
       consume
       parseRule(prec, rule, allowNewlines = allowNewlines)

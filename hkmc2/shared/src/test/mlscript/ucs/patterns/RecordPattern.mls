@@ -1,24 +1,34 @@
 :js
 
 
-:todo
 fun take_1(p) =
   if p is
     { x: a, y: b } then a + b
     else 0
-//│ ╔══[ERROR] Unrecognized pattern (block)
-//│ ║  l.7: 	    { x: a, y: b } then a + b
-//│ ╙──     	      ^^^^^^^^^^
-
-:todo
-fun take_1(p) =
+fun take_2(p) =
   if p is
     { :x, :y } then x + y
     else 0
-//│ ╔══[ERROR] Unrecognized pattern (block)
-//│ ║  l.16: 	    { :x, :y } then x + y
-//│ ╙──      	       ^^^^^
 
+take_1({x: 0, y: 10})
+//│ = 10
+
+take_1({t: 5, x: 0, y: 10, z: 42})
+//│ = 10
+
+take_2({x: 0, y: 10})
+//│ = 10
+
+take_2({t: 5, x: 0, y: 10, z: 42})
+//│ = 10
+
+take_1({x:"a", y:"b"})
+//│ = "ab"
+
+let r = {z:4}
+take_1(r)
+//│ = 0
+//│ r = {z: 4}
 
 let f = case
   { a: 1 as a } then a
@@ -33,7 +43,7 @@ f(a: 1)
 let f = case
   { a: 1 } then a
 //│ ╔══[ERROR] Name not found: a
-//│ ║  l.34: 	  { a: 1 } then a
+//│ ║  l.44: 	  { a: 1 } then a
 //│ ╙──      	                ^
 //│ f = [function]
 
@@ -46,16 +56,24 @@ let rcd =
 // * As that will make sense when we have dependent types,
 // * as in: `{ n: Int, v: Vec[Int, n] }`
 
+:js
+let r = {x: 2, y : 4}
+if r is
+  {x:a, y:a} then a
+//│ = 4
+//│ r = {x: 2, y: 4}
 
-:todo
+
+let rr = {x: {y:10, z:100}, t:1000}
+if rr is
+  {x : {:y, z:t}} then y+t
+//│ = 110
+//│ rr = {x: {y: 10, z: 100}, t: 1000}
+
+
+
 let f = case
   { a: 1 & a } then a
-//│ ╔══[ERROR] Name not found: &
-//│ ║  l.52: 	  { a: 1 & a } then a
-//│ ╙──      	         ^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.52: 	  { a: 1 & a } then a
-//│ ╙──      	         ^
 //│ f = [function]
 
 
@@ -66,4 +84,95 @@ let f = case
 f(a: 1)
 //│ = 1
 
+import "../../../mlscript-compile/Option.mls"
+import "../../../mlscript-compile/Stack.mls"
 
+open Option { Some, None }
+open Stack
+
+Some(42) is { value: 42 }
+//│ = true
+
+1 :: 2 :: 3 :: Nil is { tail: { tail: Nil } }
+//│ = false
+
+1 :: 2 :: 3 :: Nil is { tail: { tail: _ } }
+//│ = true
+
+1 :: 2 :: 3 :: Nil is { tail: { tail: { tail: Nil } } }
+//│ = true
+
+1 :: 2 :: 3 :: Nil is { head: 42 }
+//│ = false
+
+fun pairwise(xs) = if xs is
+  { head: a, tail: { head: b, tail: xs' } } then [a, b] :: pairwise(xs')
+  else Nil
+
+pairwise(49)
+//│ = Nil
+
+pairwise("hello" :: "world" :: "bonjour" :: "le monde" :: Nil)
+//│ = Cons(["hello", "world"], Cons(["bonjour", "le monde"], Nil))
+
+pairwise(1 :: 2 :: 3 :: Nil)
+//│ = Cons([1, 2], Nil)
+
+fun foo(xs) = if xs is
+  { tail: { tail: { tail: _ } } } then "at least three of them"
+  { tail: { tail: Nil } } then "there are two of them"
+  { tail: Nil } then "only one left"
+  else "yeah we're done"
+
+foo(Nil)
+//│ = "yeah we're done"
+
+foo(999)
+//│ = "yeah we're done"
+
+foo(1 :: Nil)
+//│ = "only one left"
+
+foo(1 :: "this is invalid")
+//│ = "yeah we're done"
+
+foo(1 :: 2 :: Nil)
+//│ = "there are two of them"
+
+foo(1 :: 2 :: 4 :: Nil)
+//│ = "at least three of them"
+
+foo(1 :: 2 :: 4 :: 8 :: Nil)
+//│ = "at least three of them"
+
+fun should_reject_null(x) = if x is { a: 0 } then 42 else -42
+
+should_reject_null(null)
+//│ = -42
+
+fun is_object(x) = if x is {} then true else false
+
+is_object(null)
+//│ = false
+
+is_object(Object)
+//│ = true
+
+is_object(0)
+//│ = false
+
+is_object("")
+//│ = false
+
+is_object(Nil)
+//│ = true
+
+is_object([1, 2])
+//│ = true
+
+is_object(is_object)
+//│ = true
+
+:todo
+fun is_record_alt(x) = x is {}
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: encountered empty block

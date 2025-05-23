@@ -6,6 +6,7 @@ import mlscript.utils.*, shorthands.*
 import syntax.{Literal, Tree}, utils.TraceLogger
 import Message.MessageContext
 import Elaborator.Ctx
+import hkmc2.semantics.ClassDef.Parameterized
 
 class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
   import Normalization.*, Mode.*
@@ -47,7 +48,14 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
       case (c1: Pattern.ClassLike, c2: Pattern.ClassLike) => c1.sym === c2.sym
       case (Pattern.Lit(l1), Pattern.Lit(l2)) => l1 === l2
       case (Pattern.Tuple(n1, b1), Pattern.Tuple(n2, b2)) => n1 === n2 && b1 === b2
-      case (_, _) => false
+      case (Pattern.Record(ls1), Pattern.Record(ls2)) =>
+        ls1.lazyZip(ls2).forall:
+          case ((fieldName1, p1), (fieldName2, p2)) =>
+            fieldName1 === fieldName2 && p1 === p2
+      case (Pattern.Synonym(sym1, args1), Pattern.Synonym(sym2, args2)) =>
+        args1 === args2 && sym1.params === sym2.params && sym1.body === sym2.body
+      case (_: Pattern.ClassLike, _) | (_: Pattern.Lit, _) |
+        (_: Pattern.Tuple, _) | (_: Pattern.Synonym, _) | (_: Pattern.Record, _) => false
     /** Checks if `lhs` can be subsumed under `rhs`. */
     def <:<(rhs: Pattern): Bool = compareCasePattern(lhs, rhs)
     /**
@@ -68,6 +76,23 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
       case lhs: Pattern.ClassLike => lhs.refined = true
       case _ => ()
   
+  extension (lhs: Pattern.Record)
+    /** reduces the record pattern `lhs` assuming we have matched `rhs`.
+      * It removes field matches that may now be unnecessary
+      */
+    infix def assuming(rhs: Pattern): Pattern.Record = rhs match
+      case Pattern.Record(rhsEntries) =>
+        val filteredEntries = lhs.entries.filter:
+          (fieldName1, _) => rhsEntries.forall { (fieldName2, _) => !(fieldName1 === fieldName2)}
+        Pattern.Record(filteredEntries)
+      case Pattern.ClassLike(sym = cls : ClassSymbol) => cls.defn match
+        case S(ClassDef.Parameterized(params = paramList)) =>
+          val filteredEntries = lhs.entries.filter:
+            (fieldName1, _) => paramList.params.forall { (param:Param) => !(fieldName1 === param.sym.id)}
+          Pattern.Record(filteredEntries)
+        case S(_) | N => lhs
+      case _ => lhs
+
   inline def apply(split: Split): Split = normalize(split)(using VarSet())
   
   /**
@@ -82,7 +107,7 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
   ):
     def rec(split: Split)(using vs: VarSet): Split = split match
       case Split.Cons(Branch(scrutinee, pattern, consequent), alternative) => pattern match
-        case pattern: (Pattern.Lit | Pattern.ClassLike | Pattern.Tuple) =>
+        case pattern: (Pattern.Lit | Pattern.ClassLike | Pattern.Tuple | Pattern.Record) =>
           log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
           val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
           val whenFalse = rec(specialize(alternative, -, scrutinee, pattern).clearFallback)
@@ -154,8 +179,9 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
   
   /**
     * Specialize `split` with the assumption that `scrutinee` matches `pattern`.
-    * If `matchOrNot` is `true`, the function _keeps_ branches that agree on
-    * `scrutinee` matches `pattern`. Otherwise, the function _removes_ branches
+    * If `mode` is `+`, the function _keeps_ branches that agree on
+    * `scrutinee` matching `pattern` and simplifies the record patterns it sees if the fields were already matched.
+    * Otherwise (if `mode` is `-`), the function _removes_ branches
     * that agree on `scrutinee` matches `pattern`.
     */
   private def specialize(
@@ -188,23 +214,35 @@ class Normalization(elaborator: Elaborator)(using raise: Raise, ctx: Ctx):
             else if split.isFallback then
               log(s"Case 1.1.3: $pattern is unrelated with $thatPattern")
               rec(tail)
-            else if pattern <:< thatPattern then
-              // TODO: the warning will be useful when we have inheritance information
-              // raiseDesugaringWarning(
-              //   msg"the pattern always matches" -> thatPattern.toLoc,
-              //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
-              //   msg"which is a subtype of ${thatPattern.toString}" -> (pattern match {
-              //     case Pattern.Class(cls, _, _) => cls.toLoc
-              //     case _ => thatPattern.toLoc
-              //   }))
-              rec(continuation) ++ rec(tail)
-            else
-              // TODO: the warning will be useful when we have inheritance information
-              // raiseDesugaringWarning(
-              //   msg"possibly conflicting patterns for this scrutinee" -> scrutinee.toLoc,
-              //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
-              //   msg"which is unrelated with ${thatPattern.toString}" -> thatPattern.toLoc)
-              rec(tail)
+            else thatPattern match
+            case thatPattern :Pattern.Record =>
+              log(s"Case 1.1.4: $thatPattern is a record")
+              // we can use information if pattern is itself a record, or if it is a constructor with arguments
+              val simplifiedRecord = thatPattern assuming pattern
+              if simplifiedRecord.entries.isEmpty then
+                tail
+              else
+                Split.Cons(Branch(thatScrutinee, simplifiedRecord, continuation), tail)
+            case _ =>
+              if pattern <:< thatPattern then
+                // TODO: the warning will be useful when we have inheritance information
+                // raiseDesugaringWarning(
+                //   msg"the pattern always matches" -> thatPattern.toLoc,
+                //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
+                //   msg"which is a subtype of ${thatPattern.toString}" -> (pattern match {
+                //     case Pattern.Class(cls, _, _) => cls.toLoc
+                //     case _ => thatPattern.toLoc
+                //   }))
+                log(s"case 1.1.5: $pattern <:< $thatPattern")
+                split
+              else
+                // TODO: the warning will be useful when we have inheritance information
+                // raiseDesugaringWarning(
+                //   msg"possibly conflicting patterns for this scrutinee" -> scrutinee.toLoc,
+                //   msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
+                //   msg"which is unrelated with ${thatPattern.toString}" -> thatPattern.toLoc)
+                log(s"Case 1.1._ else : ${tail}")
+                rec(tail)
           case - =>
             log(s"Case 1.2: $scrutinee === $thatScrutinee")
             thatPattern reportInconsistentRefinedWith pattern
@@ -249,7 +287,17 @@ object Normalization:
     case (Lit(Tree.StrLit(_)), ClassLike(blt.`Str`, _, _, _)) => true
     case (Lit(Tree.DecLit(_)), ClassLike(blt.`Num`, _, _, _)) => true
     case (Lit(Tree.BoolLit(_)), ClassLike(blt.`Bool`, _, _, _)) => true
-    case (_, _) => false
+    case (_: Synonym, _: Synonym) => lhs =:= rhs
+    case (Record(entries1), Record(entries2)) =>
+      entries1.forall { (fieldName1, _) => entries2.exists { (fieldName2, _) => fieldName1 === fieldName2 } }
+    case (Record(entries), ClassLike(sym = cs: ClassSymbol)) =>
+      val clsParams = cs.defn match
+        case S(Parameterized(params = paramList)) => paramList.params
+        case (S(_) | N) => Nil
+      entries.forall { (fieldName, _) => clsParams.exists {
+        case Param(flags = FldFlags(value = value), sym = sym) => value && fieldName === sym.id
+      }}
+    case (_: (ClassLike | Tuple | Lit | Record | Synonym), _)  => false
 
   final case class VarSet(declared: Set[BlockLocalSymbol]):
     def +(nme: BlockLocalSymbol): VarSet = copy(declared + nme)

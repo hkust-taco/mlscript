@@ -196,6 +196,24 @@ _ - _ of 1, 2
 |> (_ - 2)
 //│ = -1
 
+:pe
+|> 1
+//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
+//│ ║  l.200: 	|> 1
+//│ ╙──       	   ^
+//│ = [function pipeInto]
+
+:e
+:re
+|> (1)
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.208: 	|> (1)
+//│ ╙──       	   ^^^
+//│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
+
+|> (1, _ - 2)
+//│ = -1
+
 1
   |> (_ - 2)
 //│ = -1
@@ -207,17 +225,17 @@ _ - _ of 1, 2
 :sjs
 1 . (_ - 2)
 //│ JS (unsanitized):
-//│ let lambda37; lambda37 = (undefined, function (_0) { return _0 - 2 }); Predef.passTo(1, lambda37)
+//│ let lambda38; lambda38 = (undefined, function (_0) { return _0 - 2 }); Predef.passTo(1, lambda38)
 //│ = [function]
 
 :sjs
 1 . (_ - 2)()
 //│ JS (unsanitized):
-//│ let tmp14, lambda38;
-//│ lambda38 = (undefined, function (_0) {
+//│ let tmp14, lambda39;
+//│ lambda39 = (undefined, function (_0) {
 //│   return _0 - 2
 //│ });
-//│ tmp14 = Predef.passTo(1, lambda38);
+//│ tmp14 = Predef.passTo(1, lambda39);
 //│ runtime.safeCall(tmp14())
 //│ = -1
 

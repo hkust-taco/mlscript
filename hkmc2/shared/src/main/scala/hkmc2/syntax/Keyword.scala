@@ -103,7 +103,7 @@ object Keyword:
   val `object` = Keyword("object", N, curPrec)
   val `open` = Keyword("open", N, curPrec)
   val `type` = Keyword("type", N, N)
-  val `where` = Keyword("where", N, N)
+  val `where` = Keyword("where", curPrec, curPrec)
   val `forall` = Keyword("forall", N, N)
   val `exists` = Keyword("exists", N, N)
   val `null` = Keyword("null", N, N)
@@ -139,11 +139,11 @@ object Keyword:
     `abstract`, mut, virtual, `override`, declare, public, `private`)
   
   type Infix =
-    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type |
+    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type | `where`.type |
     `and`.type | `or`.type | `then`.type | `else`.type
   
   type InfixSplittable =
-    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type |
+    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type | `where`.type |
     `of`.type
   
   type Ellipsis = `...`.type | `..`.type

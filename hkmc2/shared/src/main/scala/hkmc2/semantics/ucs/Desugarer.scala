@@ -7,7 +7,7 @@ import mlscript.utils.*, shorthands.*
 import Message.MessageContext
 import utils.TraceLogger
 import syntax.Literal
-import Keyword.{as, and, `do`, `else`, is, let, `then`}
+import Keyword.{as, and, `do`, `else`, is, let, `then`, where}
 import collection.mutable.{HashMap, SortedSet}
 import Elaborator.{ctx, Ctxl, UnderCtx}
 import scala.annotation.targetName
@@ -21,6 +21,7 @@ object Desugarer:
   
   class ScrutineeData:
     val classes: HashMap[ClassSymbol, List[BlockLocalSymbol]] = HashMap.empty
+    val fields: HashMap[Ident, BlockLocalSymbol] = HashMap.empty
     val tupleLead: HashMap[Int, BlockLocalSymbol] = HashMap.empty
     val tupleLast: HashMap[Int, BlockLocalSymbol] = HashMap.empty
 end Desugarer
@@ -89,18 +90,13 @@ class Desugarer(val elaborator: Elaborator)(using UnderCtx)
     def ++(fallback: Split): Split =
       if fallback == Split.End then
         split
-      else if split.isFull then
-        raise:
-          ErrorReport:
-            msg"The following branches are unreachable." -> fallback.toLoc ::
-            msg"Because the previous split is full." -> split.toLoc :: Nil
-        split
       else (split match
         case Split.Cons(head, tail) => Split.Cons(head, tail ++ fallback)
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ++ fallback)
-        case Split.Else(_) /* impossible */ | Split.End => fallback)
+        case Split.Else(_) | Split.End => fallback)
 
   private val subScrutineeMap = HashMap.empty[BlockLocalSymbol, ScrutineeData]
+  private val fieldScrutineeMap = HashMap.empty[BlockLocalSymbol, ScrutineeData]
 
   extension (symbol: BlockLocalSymbol)
     def getSubScrutinees(cls: ClassSymbol): List[BlockLocalSymbol] =
@@ -113,6 +109,11 @@ class Desugarer(val elaborator: Elaborator)(using UnderCtx)
     def getTupleLastSubScrutinee(index: Int): BlockLocalSymbol =
       val data = subScrutineeMap.getOrElseUpdate(symbol, new ScrutineeData)
       data.tupleLast.getOrElseUpdate(index, TempSymbol(N, s"last$index"))
+    def getFieldScrutinee(fieldName: Ident): BlockLocalSymbol =
+      subScrutineeMap
+        .getOrElseUpdate(symbol, new ScrutineeData)
+        .fields
+        .getOrElseUpdate(fieldName, TempSymbol(N, s"field${fieldName.name}"))
       
 
   def default: Split => Sequel = split => _ => split
@@ -454,9 +455,7 @@ class Desugarer(val elaborator: Elaborator)(using UnderCtx)
         if pat.patternParams.size > 0 then
           error(
             msg"Pattern `${pat.nme}` expects ${"pattern argument".pluralize(pat.patternParams.size, true)}" ->
-              pat.patternParams.foldLeft[Opt[Loc]](N):
-              case (N, param) => param.sym.toLoc
-              case (S(loc), param) => S(loc ++ param.sym.toLoc),
+              Loc(pat.patternParams.iterator.map(_.sym)),
             msg"But no arguments were given" -> ctor.toLoc)
           fallback
         else
@@ -503,12 +502,8 @@ class Desugarer(val elaborator: Elaborator)(using UnderCtx)
         if pat.patternParams.size != patArgs.size then
           error(
             msg"Pattern `${pat.nme}` expects ${"pattern argument".pluralize(pat.patternParams.size, true)}" ->
-              pat.patternParams.foldLeft[Opt[Loc]](N):
-              case (N, param) => param.sym.toLoc
-              case (S(loc), param) => S(loc ++ param.sym.toLoc),
-            msg"But ${"pattern argument".pluralize(patArgs.size, true)} were given" -> args.foldLeft[Opt[Loc]](N):
-              case (N, arg) => arg.toLoc
-              case (S(loc), arg) => S(loc ++ arg.toLoc))
+              Loc(pat.patternParams.iterator.map(_.sym)),
+            msg"But ${"pattern argument".pluralize(patArgs.size, true)} were given" -> Loc(args))
           fallback
         else
           Branch(ref, Pattern.Synonym(pat, patArgs.zip(args)), sequel(ctx)) ~: fallback
@@ -584,6 +579,12 @@ class Desugarer(val elaborator: Elaborator)(using UnderCtx)
         Branch(ref, Pattern.Lit(IntLit(-value)), sequel(ctx)) ~: fallback
       case App(Ident("-"), Tup(DecLit(value) :: Nil)) => fallback => ctx =>
         Branch(ref, Pattern.Lit(DecLit(-value)), sequel(ctx)) ~: fallback
+      case OpApp(lhs, Ident("&"), rhs :: Nil) => fallback => ctx =>
+        val newSequel = expandMatch(scrutSymbol, rhs, sequel)(fallback)
+        expandMatch(scrutSymbol, lhs, newSequel)(fallback)(ctx)
+      case OpApp(lhs, Ident("|"), rhs :: Nil) => fallback => ctx =>
+        val newFallback = expandMatch(scrutSymbol, rhs, sequel)(fallback)(ctx)
+        expandMatch(scrutSymbol, lhs, sequel)(newFallback)(ctx)
       // A single constructor pattern.
       case Annotated(Ident("compile"), app @ App(ctor: Ctor, Tup(args))) =>
         dealWithAppCtorCase(app, ctor, args, true)
@@ -605,18 +606,50 @@ class Desugarer(val elaborator: Elaborator)(using UnderCtx)
       case pattern and consequent => fallback => ctx =>
         val innerSplit = termSplit(consequent, identity)(Split.End)
         expandMatch(scrutSymbol, pattern, innerSplit)(fallback)(ctx)
+      case pattern where condition => fallback => ctx =>
+        val sym = TempSymbol(N, "conditionTemp")
+        val newSequel = expandMatch(sym, Tree.BoolLit(true), sequel)(fallback)
+        val newNewSequel = (ctx: Ctx) => Split.Let(sym, term(condition)(using ctx), newSequel(ctx))
+        expandMatch(scrutSymbol, pattern, newNewSequel)(fallback)(ctx)
       case Jux(Ident(".."), Ident(_)) => fallback => _ =>
         raise(ErrorReport(msg"Illegal rest pattern." -> pattern.toLoc :: Nil))
         fallback
-      case InfixApp(id: Ident, Keyword.`:`, pat) => fallback => ctx =>
-        val sym = VarSymbol(id)
-        val ctx2 = ctx
-          // + (id.name -> sym) // * This binds the field's name in the context; probably surprising
-        Split.Let(sym, ref.sel(id, N),
-          expandMatch(sym, pat, sequel)(fallback)(ctx2))
+      case InfixApp(fieldName: Ident, Keyword.`:`, pat) => fallback => ctx =>
+        val symbol = scrutSymbol.getFieldScrutinee(fieldName)
+        Branch(
+          ref,
+          Pattern.Record((fieldName, symbol) :: Nil),
+          subMatches((R(symbol), pat) :: Nil, sequel)(Split.End)(ctx)
+        ) ~: fallback
+      case Pun(false, fieldName) => fallback => ctx =>
+        val symbol = scrutSymbol.getFieldScrutinee(fieldName)
+        Branch(
+          ref,
+          Pattern.Record((fieldName, symbol) :: Nil),
+          subMatches((R(symbol), fieldName) :: Nil, sequel)(Split.End)(ctx)
+        ) ~: fallback
       case Block(st :: Nil) => fallback => ctx =>
         expandMatch(scrutSymbol, st, sequel)(fallback)(ctx)
-      // case Block(sts) => fallback => ctx => // TODO
+      case Block(sts) => fallback => ctx => // we assume this is a record
+        sts.foldRight[Option[List[(Tree.Ident, BlockLocalSymbol, Tree)]]](S(Nil)){
+          // this collects the record parts, or fails if some statement does not correspond
+          // to a record field
+          case (_, N) => N // we only need to fail once to return N
+          case (p, S(tl)) => p match
+            case InfixApp(fieldName: Ident, Keyword.`:`, pat) =>
+              S((fieldName, scrutSymbol.getFieldScrutinee(fieldName), pat) :: tl)
+            case Pun(false, fieldName) =>
+              S((fieldName, scrutSymbol.getFieldScrutinee(fieldName), fieldName) :: tl)
+            case p =>
+              raise(ErrorReport(msg"invalid record field pattern" -> p.toLoc :: Nil))
+              None
+        }.fold(fallback)(recordContent =>
+          Branch(
+            ref,
+            Pattern.Record(recordContent.map((fieldName, symbol, _) => (fieldName, symbol))),
+            subMatches(recordContent.map((_, symbol, pat) => (R(symbol), pat)), sequel)(Split.End)(ctx)
+          ) ~: fallback
+        )
       case Bra(BracketKind.Curly | BracketKind.Round, inner) => fallback => ctx =>
         expandMatch(scrutSymbol, inner, sequel)(fallback)(ctx)
       case pattern => fallback => _ =>

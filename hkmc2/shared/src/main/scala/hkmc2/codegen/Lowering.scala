@@ -490,6 +490,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                       (cse, Assign(arg, Select(sr, param.id/*FIXME incorrect Ident?*/)(S(param)), blk))
                   mkMatch(mkArgs(clsParams.iterator.zip(args).collect { case (s1, S(s2)) => (s1, s2) }.toList))
               case Pattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> go(tail, topLevel = false))
+              case Pattern.Record(entries) =>
+                val objectSym = ctx.builtins.Object
+                mkMatch( // checking that we have an object
+                  Case.Cls(objectSym, Value.Ref(BuiltinSymbol(objectSym.nme, false, false, true, false))),
+                  entries.foldRight(go(tail, topLevel = false)):
+                    case ((fieldName, fieldSymbol), blk) =>
+                      mkMatch(
+                        Case.Field(fieldName, safe = true), // we know we have an object, no need to check again
+                        Assign(fieldSymbol, Select(sr, fieldName)(N), blk)
+                      )
+                )
         case Split.Else(els) =>
           if k.isInstanceOf[TailOp] && isIf then term_nonTail(els)(k)
           else

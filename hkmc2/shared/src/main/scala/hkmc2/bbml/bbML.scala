@@ -267,23 +267,23 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
     case _ =>
       (error(msg"Cannot quote ${code.toString}" -> code.toLoc :: Nil), Bot, Bot)
 
-  private def typeFunDef(sym: Symbol, lam: Term, sig: Opt[Term], pctx: BbCtx)(using ctx: BbCtx, cctx: CCtx, scope: Scope) = lam match
+  private def typeFunDef(sym: Symbol, lam: Term, sig: Opt[Term])(using ctx: BbCtx, cctx: CCtx, scope: Scope) = lam match
     case Term.Lam(params, body) => sig match
       case S(sig) =>
         val sigTy = typeType(sig)(using ctx)
-        pctx += sym -> sigTy
+        ctx += sym -> sigTy
         ascribe(lam, sigTy)
         ()
       case N =>
         val outer = freshOuter(new TempSymbol(S(lam), "outer"))(using ctx)
         given BbCtx = ctx.nestWithOuter(outer)
         val funTyV = freshVar(sym)
-        pctx += sym -> funTyV // for recursive functions
+        ctx += sym -> funTyV // for recursive functions
         val (res, _) = typeCheck(lam)
         val funTy = tryMkMono(res, lam)
         given CCtx = CCtx.init(lam, N)
         constrain(funTy, funTyV)(using ctx)
-        pctx += sym -> PolyType.generalize(funTy, S(outer), 1)
+        ctx += sym -> PolyType.generalize(funTy, S(outer), ctx.lvl + 1)
     case _ => error(msg"Function definition shape not yet supported for ${sym.nme}" -> lam.toLoc :: Nil)
 
   private def typeSplit
@@ -443,10 +443,10 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             ctx += sym -> rhsTy
             goStats(stats)
           case (td @ TermDefinition(k = Fun, params = ps :: Nil, sign = sig, body = S(body))) :: stats =>
-            typeFunDef(td.sym, Term.Lam(ps, body), sig, ctx)
+            typeFunDef(td.sym, Term.Lam(ps, body), sig)
             goStats(stats)
           case (td @ TermDefinition(k = Fun, params = Nil, sign = sig, body = S(body))) :: stats =>
-            typeFunDef(td.sym, body, sig, ctx)  // * may be a case expressions
+            typeFunDef(td.sym, body, sig)  // * may be a case expressions
             goStats(stats)
           case (td1 @ TermDefinition(k = Fun, sign = S(sig), body = None)) :: (td2 @ TermDefinition(k = Fun, body = S(body))) :: stats
             if td1.sym === td2.sym => goStats(td2 :: stats) // * avoid type check signatures twice
@@ -568,7 +568,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
         constrain(tryMkMono(refTy, ref), BbCtx.refTy(ctnt, sk))
         (ctnt, sk | refEff)
       case Term.Quoted(body) =>
-        val nestCtx = ctx.nextLevel
+        val nestCtx = ctx.nest
         given BbCtx = nestCtx
         val (ty, ctxTy, eff) = typeCode(body)
         (BbCtx.codeTy(ty, ctxTy), eff)

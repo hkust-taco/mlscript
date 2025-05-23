@@ -128,9 +128,11 @@ Test.Infinity
 
 fun p: Int
 
-:fixme // make this a proper error
 p
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:p (class hkmc2.semantics.BlockMemberSymbol)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'p'
+//│ ║  l.129: 	fun p: Int
+//│ ╙──       	    ^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: p is not defined
 
 
 :ctx
@@ -140,11 +142,19 @@ fun (++) test: (Int, Int) -> Int
 //│   test -> RefElem(member:test)
 
 test(1, 2)
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:test (class hkmc2.semantics.BlockMemberSymbol)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'test'
+//│ ║  l.139: 	fun (++) test: (Int, Int) -> Int
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: test is not defined
 
 :sjs
 1 ++ 1
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:test (class hkmc2.semantics.BlockMemberSymbol)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'test'
+//│ ║  l.139: 	fun (++) test: (Int, Int) -> Int
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^
+//│ JS (unsanitized):
+//│ let tmp4; tmp4 = test(); runtime.safeCall(tmp4(1, 1))
+//│ ═══[RUNTIME ERROR] ReferenceError: test is not defined
 
 // ——— ——— ———
 
@@ -186,7 +196,7 @@ data object Cls(x) with
 :e
 Cls.x
 //│ ╔══[ERROR] Object 'Cls' does not contain member 'x'
-//│ ║  l.187: 	Cls.x
+//│ ║  l.197: 	Cls.x
 //│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
@@ -204,7 +214,7 @@ c.x
 
 class Foo' with
   class Bar'
-//│ > let Foo$_1;try { Foo$_1 = class Foo$_ {   constructor() {     this.Bar' = class Bar$_ {       constructor() {}       toString() { return "Bar'"; }     };   }   toString() { return "Foo'"; } }; block$res27 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ > let Foo$_1;try { Foo$_1 = class Foo$_ {   constructor() {     this.Bar' = class Bar$_ {       constructor() {}       toString() { return "Bar'"; }     };   }   toString() { return "Foo'"; } }; block$res28 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ >                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string
 
@@ -214,25 +224,27 @@ module Example with
 // whoops
   val a = this
 //│ ╔══[PARSE ERROR] Expected block after type declaration body; found new line instead
-//│ ║  l.213: 	module Example with
+//│ ║  l.223: 	module Example with
 //│ ║         	                   ^
-//│ ║  l.214: 	// whoops
+//│ ║  l.224: 	// whoops
 //│ ╙──       	
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.215: 	  val a = this
+//│ ║  l.225: 	  val a = this
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.215: 	  val a = this
+//│ ║  l.225: 	  val a = this
 //│ ╙──       	^^
 
 // ——— ——— ———
 
-:fixme // ("Not in scope" error)
 let xs = new Oopsie
 //│ ╔══[ERROR] Name not found: Oopsie
-//│ ║  l.231: 	let xs = new Oopsie
+//│ ║  l.240: 	let xs = new Oopsie
 //│ ╙──       	             ^^^^^^
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: xs (class hkmc2.semantics.VarSymbol)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'xs'
+//│ ║  l.240: 	let xs = new Oopsie
+//│ ╙──       	    ^^
+//│ ═══[RUNTIME ERROR] ReferenceError: xs is not defined
 
 // ——— ——— ———
 
@@ -293,9 +305,9 @@ fun bar() = baz
 //│   return 1
 //│ };
 //│ bar = function bar() {
-//│   let tmp6;
-//│   tmp6 = baz();
-//│   return tmp6
+//│   let tmp7;
+//│   tmp7 = baz();
+//│   return tmp7
 //│ };
 
 // ——— ——— ———
@@ -305,13 +317,13 @@ import "../../mlscript-compile/Stack.mls"
 // The parser rejects this, but it should be allowed.
 open Stack { ::, Nil }
 //│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.306: 	open Stack { ::, Nil }
+//│ ║  l.318: 	open Stack { ::, Nil }
 //│ ╙──       	     ^^^^^^^^^^^^^^^
 
 // Instead, if we parenthesize the operator, it is rejected by the elaborator.
 open Stack { (::), Nil }
 //│ ╔══[ERROR] Illegal 'open' statement element.
-//│ ║  l.312: 	open Stack { (::), Nil }
+//│ ║  l.324: 	open Stack { (::), Nil }
 //│ ╙──       	             ^^^^
 
 open Stack { Nil, :: }
@@ -319,7 +331,7 @@ open Stack { Nil, :: }
 :sjs
 1 :: Nil
 //│ ╔══[ERROR] Module 'Stack' does not contain member '::'
-//│ ║  l.320: 	1 :: Nil
+//│ ║  l.332: 	1 :: Nil
 //│ ╙──       	  ^^
 //│ JS (unsanitized):
 //│ Stack["::"](1, Stack.Nil)
@@ -330,9 +342,9 @@ open Stack { Nil, :: }
 mkStr of ... // hello
 "oops"
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.330: 	mkStr of ... // hello
+//│ ║  l.342: 	mkStr of ... // hello
 //│ ║         	                     ^
-//│ ║  l.331: 	"oops"
+//│ ║  l.343: 	"oops"
 //│ ╙──       	
 //│ = "oops"
 
@@ -354,31 +366,31 @@ Foo(1, 2, 3).args
 :todo
 if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.355: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.367: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                   ^^^^^^^^^^^^
 //│ ╔══[ERROR] Name not found: args
-//│ ║  l.355: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.367: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                                     ^^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╔══[ERROR] the constructor does not take any arguments but found 3
-//│ ║  l.364: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.376: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                   ^^^^^^^^^^^^
 //│ ╔══[ERROR] Name not found: a
-//│ ║  l.364: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.376: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                                      ^
 //│ ╔══[ERROR] Name not found: b
-//│ ║  l.364: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.376: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                                         ^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.376: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ║  l.388: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                   ^^^^^^^^
 //│ ╔══[ERROR] Name not found: arg
-//│ ║  l.376: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ║  l.388: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                                 ^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 

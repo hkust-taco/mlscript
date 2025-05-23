@@ -26,11 +26,8 @@ enum Pattern extends AutoLocated:
   case Record(entries: List[(Ident -> BlockLocalSymbol)])
   
   def subTerms: Ls[Term] = this match
-    case Lit(_) => Nil
     case ClassLike(_, t, _, _) => t :: Nil
-    case Synonym(_, _) => Nil
-    case Tuple(_, _) => Nil
-    case Record(_) => Nil
+    case _: (Lit | Synonym | Tuple | Record) => Nil 
   
   def children: Ls[Located] = this match
     case Lit(literal) => literal :: Nil

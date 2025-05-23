@@ -1,0 +1,77 @@
+:js
+import "../../../mlscript-compile/Stack.mls"
+
+open Stack
+
+
+object A
+object B
+data class C(a)
+
+if A is
+  A & A & B then 0
+  B & A & B then 1
+  A & A & A then 2
+  else 3
+//│ = 2
+
+if A is
+  A & A & B then 0
+  B & A & B then 1
+  A & A & A then 2
+  else 3
+//│ = 2
+
+:sjs
+fun foo(v) =
+  if v is
+    A & B then 1
+    else 0
+//│ JS (unsanitized):
+//│ let foo; foo = function foo(v) { if (v instanceof A1.class) { return 0 } else { return 0 } };
+
+fun range(i, j) =
+  if i > j then Nil
+  else i :: range(i+1, j)
+
+fun suffixes(l) = if l is
+  Nil then Cons(Nil, Nil)
+  l & (_ :: tl) then l :: suffixes(tl)
+
+suffixes(range(0, 5))
+//│ = Cons(Cons(0, Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Nil)))))), Cons(Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Nil))))), Cons(Cons(2, Cons(3, Cons(4, Cons(5, Nil)))), Cons(Cons(3, Cons(4, Cons(5, Nil))), Cons(Cons(4, Cons(5, Nil)), Cons(Cons(5, Nil), Cons(Nil, Nil)))))))
+
+suffixes(range(0, -1))
+//│ = Cons(Nil, Nil)
+
+suffixes(range(0, 0))
+//│ = Cons(Cons(0, Nil), Cons(Nil, Nil))
+
+if 5 is a & b & c then a+b+c
+//│ = 15
+
+
+fun foo(x) = if x is
+  {a:_ & a} & C and
+    a is 1 then 10
+    a is 2 then 20
+    else 30
+  else 40
+
+foo(C(1))
+//│ = 10
+
+foo(4)
+//│ = 40
+
+foo(C(2))
+//│ = 20
+
+foo(C("a"))
+//│ = 30
+
+if C(1) is {:a} & C then a
+//│ = 1
+
+if C(1) is C & {:a} then a
+//│ = 1
