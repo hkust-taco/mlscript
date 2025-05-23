@@ -5,7 +5,7 @@ import mlscript.utils.*, shorthands.*
 import utils.TraceLogger
 
 import syntax.Tree
-import syntax.{Fun, Ins, Mod, ImmutVal}
+import syntax.{Fun, Ins, Mod, ImmutVal, MutVal}
 import syntax.Keyword.{`if`}
 import semantics.Term
 import semantics.Elaborator.State
@@ -13,11 +13,7 @@ import Resolver.ICtx.Type
 
 import Message.MessageContext
 import scala.annotation.tailrec
-import hkmc2.syntax.MutVal
-import hkmc2.semantics.ClassDef.Parameterized
-import hkmc2.semantics.ClassDef.Plain
-import hkmc2.syntax.Tree.Ident
-import java.sql.Ref
+import hkmc2.semantics.Resolver.ICtx.Instance
 
 object Resolver:
   
