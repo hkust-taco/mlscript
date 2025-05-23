@@ -80,8 +80,6 @@ trait CachedBasicType extends Type:
 abstract class TypeExt extends Type:
   override def hashCode: Int =
     toBasic.hashCode
-  override def equals(that: Any): Bool =
-    toBasic === that
   
 sealed abstract class Type extends GeneralType with TypeArg:
   
@@ -356,7 +354,7 @@ object PolyType:
     visited.toSet
 
   def generalize(ty: GeneralType, outer: Opt[InfVar], lvl: Int): PolyType =
-    PolyType(collectTVs(ty).filter(v => outer.map(_.uid != v.uid).getOrElse(true)).toList.sorted, outer, ty)
+    PolyType(collectTVs(ty).filter(v => v.lvl == lvl && outer.map(_.uid != v.uid).getOrElse(true)).toList.sorted, outer, ty)
 
 // * Functions that accept/return a polymorphic type.
 // * Note that effects are always monomorphic

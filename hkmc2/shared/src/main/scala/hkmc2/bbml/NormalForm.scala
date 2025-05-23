@@ -54,20 +54,22 @@ extends NormalForm with CachedBasicType:
     })
   def toDnf(using TL): Disj = Disj(this :: Nil)
   override def show(using Scope): Str =
-    ((i :: Nil).filterNot(_.isTop).map(_.show) :::
+    val s = ((i :: Nil).filterNot(_.isTop).map(_.show) :::
       (u :: Nil).filterNot(_.isBot).map("¬{"+_.show+"}") :::
       vars.map:
         case (tv, true) => tv.show
         case (tv, false) => "¬" + tv.show
     ).mkString(" ∧ ")
+    if s.isEmpty then "⊤" else s
 
   override def showDbg: Str =
-    ((i :: Nil).filterNot(_.isTop).map(_.showDbg) :::
+    val s = ((i :: Nil).filterNot(_.isTop).map(_.showDbg) :::
       (u :: Nil).filterNot(_.isBot).map("~{"+_.showDbg+"}") :::
       vars.map:
         case (tv, true) => tv.showDbg
         case (tv, false) => "~" + tv.showDbg
     ).mkString(" && ")
+    if s.isEmpty then "⊤" else s
 object Conj:
   // * Conj objects cannot be created with `new` except in this file.
   // * This is because we want to sort the vars in the apply function.
