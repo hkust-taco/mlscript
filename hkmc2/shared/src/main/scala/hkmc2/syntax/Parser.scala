@@ -401,11 +401,10 @@ abstract class Parser(
               tryEmpty(tok, loc)
           case N =>
             tryEmpty(tok, loc)
+      case S(Keyword.`:`) | N =>
+        tryParseExp(prec, tok, loc, rule)
       case S(kw) =>
-        assert(kw is Keyword.`:`)
-        tryParseExp(prec, tok, loc, rule)
-      case N =>
-        tryParseExp(prec, tok, loc, rule)
+        lastWords(s"invalid keyword $kw")
     case (tok @ NEWLINE, l0) :: (id: IDENT, l1) :: _ if rule.kwAlts.contains(id.name) =>
       consume
       parseRule(prec, rule)
