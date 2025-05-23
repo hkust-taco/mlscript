@@ -7,7 +7,7 @@ class Simple(val x) with
     fun inner = x
 id(Simple(1))
 //│ JS (unsanitized):
-//│ let id, Simple1, id_class_Simple__val_x__l__inner__l_, id_arg0;
+//│ let id, Simple1, id_class_Simple__val_x__l__inner__l_, id_param0;
 //│ id = function id(x) {
 //│   return x
 //│ };
@@ -24,9 +24,9 @@ id(Simple(1))
 //│   }
 //│   toString() { return "Simple(" + globalThis.Predef.render(this.x) + ")"; }
 //│ };
-//│ id_arg0 = Simple1(1);
-//│ if (id_arg0 instanceof Simple1.class) {
-//│   runtime.safeCall(id_class_Simple__val_x__l__inner__l_(id_arg0))
+//│ id_param0 = Simple1(1);
+//│ if (id_param0 instanceof Simple1.class) {
+//│   runtime.safeCall(id_class_Simple__val_x__l__inner__l_(id_param0))
 //│ } else {
 //│   throw new this.Error("match error");
 //│ }
@@ -75,7 +75,7 @@ fun id(spec x) = x
 let a = Some(1)
 id(a)
 //│ JS (unsanitized):
-//│ let Opt1, Some3, id1, None3, a, id_class_Some__val_value__l_, id_arg01, tmp1;
+//│ let Opt1, Some3, id1, None3, a, id_class_Some__val_value__l_, id_param01, tmp1;
 //│ id1 = function id(x) {
 //│   return x
 //│ };
@@ -102,9 +102,9 @@ id(a)
 //│ };
 //│ tmp1 = Some3(1);
 //│ a = tmp1;
-//│ id_arg01 = a;
-//│ if (id_arg01 instanceof Some3.class) {
-//│   runtime.safeCall(id_class_Some__val_value__l_(id_arg01))
+//│ id_param01 = a;
+//│ if (id_param01 instanceof Some3.class) {
+//│   runtime.safeCall(id_class_Some__val_value__l_(id_param01))
 //│ } else {
 //│   throw new this.Error("match error");
 //│ }
