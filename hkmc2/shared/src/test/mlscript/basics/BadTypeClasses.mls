@@ -11,7 +11,7 @@ module M with
 
 :e
 M.f
-//│ ╔══[ERROR] Missing instance for contextual parameter of type `Int` in this call
+//│ ╔══[ERROR] Missing instance for contextual parameter of type Int in this call
 //│ ║  l.13: 	M.f
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 

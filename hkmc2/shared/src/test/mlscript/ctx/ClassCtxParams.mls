@@ -18,13 +18,13 @@ fun summon[A](using a: A) = a
 
 class Foo(using Int) with
   fun foo() = summon[Int]
-//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ╔══[ERROR] Missing instance for contextual parameter of type Int (A) in this call
 //│ ║  l.20: 	  fun foo() = summon[Int]
 //│ ║        	              ^^^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.17: 	fun summon[A](using a: A) = a
 //│ ║        	                    ^^^^
-//│ ╙── Expected: A; Available: (Int)
+//│ ╙── Expected: Int (A); Available: (Int)
 
 
 fun summon(using a: Int) = a

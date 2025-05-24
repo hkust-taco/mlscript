@@ -82,6 +82,12 @@ object Resolver:
         .flatMap(_.map((typ, instance) => s"${typ.show}"))
         .mkString("(", ", ", ")")
     
+    def describeType(tpe: Type): Str = tpe match
+      case Type.Sym(sym: VarSymbol) =>
+        s"${tEnv.get(sym).getOrElse(Type.Unspecified).show} (${tpe.show})"
+      case _ => 
+        s"${tpe.show}"
+    
   object ICtx:
     
     enum Type:
@@ -432,7 +438,7 @@ class Resolver(tl: TraceLogger)
               case N =>
                 use.sym = S(ErrorSymbol("Missing Instance", use.tree))
                 raise(ErrorReport(
-                  msg"Missing instance for use[${tpe.show}]" -> t.toLoc ::
+                  msg"Missing instance for use expression of type ${ictx.describeType(tpe)}" -> t.toLoc ::
                   msg"Expected: ${tpe.show}; Available: ${ictx.showEnv}" -> N :: Nil))
           case N =>
             // There is an error during resolving the type signature.
@@ -679,9 +685,9 @@ class Resolver(tl: TraceLogger)
               Fld(p.flags, ref, N)
             case N =>
               raise(ErrorReport(
-                msg"Missing instance for contextual parameter of type `${tpe.show}` in this call" -> lhs.toLoc ::
+                msg"Missing instance for contextual parameter of type ${ictx.describeType(tpe)} in this call" -> lhs.toLoc ::
                 msg"Required by contextual parameter declaration: " -> p.toLoc ::
-                msg"Expected: ${tpe.show}; Available: ${ictx.showEnv}" -> N :: Nil))
+                msg"Expected: ${ictx.describeType(tpe)}; Available: ${ictx.showEnv}" -> N :: Nil))
               Fld(FldFlags.empty, Term.Error, N)
         case N =>
           // There is an error during resolving the type signature.
