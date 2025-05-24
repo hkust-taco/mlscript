@@ -8,6 +8,9 @@ open Predef
 
 module Option with ...
 
+// TODO support type/module overloading
+type T[A]
+
 data class Some(value)
 object None
 

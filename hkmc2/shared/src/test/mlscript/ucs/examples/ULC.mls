@@ -1,0 +1,345 @@
+:js
+
+import "../../../mlscript-compile/Option.mls"
+import "../../../mlscript-compile/Stack.mls"
+import "../../../mlscript-compile/Iter.mls"
+
+open Option { Some, None }
+open Stack
+
+fun par(a) = "(" + a + ")"
+
+fun showList(xs) = "[" + xs Iter.fromStack() Iter.joined(", ") + "]"
+
+fun contains(xs, x) = xs Iter.fromStack() Iter.some of _ === x
+
+contains("x" :: "y" :: "z" :: Nil, "y")
+//│ = true
+
+contains("x" :: "y" :: "z" :: Nil, "w")
+//│ = false
+
+fun exclude(xs, x) =
+  if xs is
+    Nil then Nil
+    Cons(x', xs') and
+      x === x' then exclude(xs', x)
+      else Cons(x', exclude(xs', x))
+
+exclude("x" :: "y" :: "z" :: Nil, "y") |> showList
+//│ = "[x, z]"
+
+exclude("x" :: "y" :: "z" :: Nil, "w") |> showList
+//│ = "[x, y, z]"
+
+//  _____
+// |_   _|___  _ __  _ __ ___
+//   | | / _ \| '__|| '_ ` _ \
+//   | ||  __/| |   | | | | | |
+//   |_| \___||_|   |_| |_| |_|
+//
+
+type Term = Var | Abs | App
+data class Var(name: Str)
+data class Abs(lhs: Var, rhs: Term)
+data class App(lhs: Term, rhs: Term)
+
+fun showTerm(t) =
+  if t is
+    Var(name) then String(name)
+    Abs(lhs, rhs) then "λ" + showTerm(lhs) + ". " + showTerm(rhs)
+    App(Abs(lhs0, lhs1), rhs) then
+      "((" + "λ" + showTerm(lhs0) + ". " + showTerm(lhs1) + ") " + showTerm(rhs) + ")"
+    App(lhs, rhs) then par(showTerm(lhs) + " " + showTerm(rhs))
+
+showTerm(Var("x"))
+//│ = "x"
+
+showTerm(Abs(Var("x"), Var("y")))
+//│ = "λx. y"
+
+showTerm(App(Var("x"), Var("y")))
+//│ = "(x y)"
+
+showTerm(App(Abs(Var("x"), Var("y")), Var("z")))
+//│ = "((λx. y) z)"
+
+fun (=:=) equalTerm(t1: Term, t2: Term) =
+  if t1 is
+    Var(x1)        and t2 is Var(x2)        then x1 === x2
+    Abs(x1, t1')   and t2 is Abs(x2, t2')   then (x1 =:= x2) && (t1' =:= t2')
+    App(t1', t1'') and t2 is App(t2', t2'') then (t1' =:= t2') && (t1'' =:= t2'')
+    else false
+
+Var("x") =:= Var("x")
+Var("x") =:= Var("y")
+Abs(Var("x"), Var("x")) =:= Abs(Var("x"), Var("x"))
+Abs(Var("x"), Var("x")) =:= Abs(Var("x"), Var("y"))
+Abs(Var("x"), Var("y")) =:= Abs(Var("x"), Var("x"))
+//│ = false
+
+fun isValue(t) =
+  if t is
+    Abs then true
+    Var then false
+    App then false
+
+isValue(Var("x"))
+isValue(Abs(Var("x"), Var("y")))
+isValue(App(Var("x"), Var("y")))
+//│ = false
+
+fun hasFree(t, x) =
+  if t is
+    Var(x') then x === x'
+    Abs(Var(x'), body) and x === x' then false
+    Abs(Var(_), body) then hasFree(body, x)
+    App(lhs, rhs) then hasFree(lhs, x) || hasFree(rhs, x)
+    _ then false
+
+fun showHasFree(t, n) =
+  showTerm(t) + (if hasFree(t, n) then " has " else " DOES NOT have ") + "free variable " + n
+
+showHasFree(Var("x"), "x")
+//│ = "x has free variable x"
+
+showHasFree(Var("x"), "y")
+//│ = "x DOES NOT have free variable y"
+
+showHasFree(Abs(Var("x"), Var("x")), "x")
+//│ = "λx. x DOES NOT have free variable x"
+
+showHasFree(Abs(Var("x"), Var("x")), "y")
+//│ = "λx. x DOES NOT have free variable y"
+
+showHasFree(Abs(Var("x"), Var("y")), "x")
+//│ = "λx. y DOES NOT have free variable x"
+
+showHasFree(Abs(Var("x"), Var("y")), "y")
+//│ = "λx. y has free variable y"
+
+showHasFree(App(Var("x"), Var("y")), "x")
+//│ = "(x y) has free variable x"
+
+showHasFree(App(Var("x"), Var("y")), "y")
+//│ = "(x y) has free variable y"
+
+showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "x")
+//│ = "((λx. x) x) has free variable x"
+
+showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
+//│ = "((λx. x) x) DOES NOT have free variable y"
+
+showHasFree(App(Abs(Var("x"), Var("x")), Var("y")), "y")
+//│ = "((λx. x) y) has free variable y"
+
+showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
+//│ = "((λx. x) x) DOES NOT have free variable y"
+
+fun freeVars(t) =
+  if t is
+    Var(x) then x :: Nil
+    Abs(Var(x), body) then exclude(freeVars(body), x)
+    App(lhs, rhs) then freeVars(lhs) ::: freeVars(rhs)
+
+(freeVars of Var("x")) |> showList
+//│ = "[x]"
+
+(freeVars of Abs(Var("x"), Var("x"))) |> showList
+//│ = "[]"
+
+(freeVars of Abs(Var("x"), Var("y"))) |> showList
+//│ = "[y]"
+
+(freeVars of App(Var("x"), Var("y"))) |> showList
+//│ = "[x, y]"
+
+(freeVars of App(Abs(Var("x"), Var("x")), Var("x"))) |> showList
+//│ = "[x]"
+
+:silent
+let alphabet = Iter.toStack("abcdefghijklmnopqrstuvwxyz")
+
+showList of alphabet
+//│ = "[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z]"
+
+fun nextVar[T](n: Int, alphabet: Stack.T[T], used: Stack.T[Str]): Option.T[Str] =
+  fun enumerate(n, acc, alphabet) =
+    if n <= 0 then
+      let x = reverse(acc) Iter.fromStack() Iter.joined("")
+      if used contains(x) then None else Some(x)
+    else
+      alphabet Iter.fromStack() Iter.firstDefined of x =>
+        nextVar(n - 1, x :: acc, alphabet)
+  enumerate(n, Nil, alphabet)
+
+let oneTwoThree = 1 :: 2 :: 3 :: Nil
+//│ oneTwoThree = Cons(1, Cons(2, Cons(3, Nil)))
+
+nextVar(1, oneTwoThree, Nil)
+//│ = Some("")
+
+nextVar(1, oneTwoThree, "1" :: "2" :: "3" :: Nil)
+//│ = Some("")
+
+nextVar(2, oneTwoThree, Nil)
+//│ = Some("")
+
+nextVar(3, oneTwoThree, Nil)
+//│ = Some("")
+
+nextVar(1, oneTwoThree, "1" :: "3" :: Nil)
+//│ = Some("")
+
+nextVar(2, oneTwoThree, "11" :: "12" :: "13" :: Nil)
+//│ = Some("")
+
+nextVar(3, oneTwoThree, "111" :: "112" :: "113" :: "121" :: Nil)
+//│ = Some("")
+
+
+fun freshVar(t: Term): Str =
+  let fvs = freeVars(t)
+  fun aux(n: Int): Str =
+    if nextVar(n, alphabet, fvs) is
+      Some(x) then x
+      None then aux(n + 1)
+  aux(1)
+
+freshVar(Var("x"))
+//│ = ""
+
+freshVar(App(Var("a"), Var("b")))
+//│ = ""
+
+freshVar(App(Abs(Var("a"), Var("a")), Var("b")))
+//│ = ""
+
+fun subst(t: Term, x: Str, v: Term): Term =
+  if t is
+    Var(y) and x === y then v
+    Abs(Var(y), t') and x !== y and
+      hasFree(v, y) then
+        let y' = freshVar(t')
+        let t'' = subst(t', y, Var(y'))
+        Abs(Var(y'), subst(t'', x, v))
+      else
+        Abs(Var(y), subst(t', x, v))
+    App(lhs, rhs) then App(subst(lhs, x, v), subst(rhs, x, v))
+    else t
+
+fun showSubst(t, n, v) =
+  showTerm(t) + " [" + n + " / " + showTerm(v) + "]" + " = " + showTerm(subst(t, n, v))
+
+showSubst(Var("x"), "x", Var("y"))
+//│ = "x [x / y] = y"
+
+showSubst(Abs(Var("x"), Var("x")), "x", Var("z"))
+//│ = "λx. x [x / z] = λx. x"
+
+showSubst(App(Var("x"), Var("y")), "x", Abs(Var("x"), Var("x")))
+//│ = "(x y) [x / λx. x] = ((λx. x) y)"
+
+showSubst(App(Abs(Var("x"), Var("x")), Var("x")), "x", Abs(Var("y"), Var("y")))
+//│ = "((λx. x) x) [x / λy. y] = ((λx. x) λy. y)"
+
+showSubst(Abs(Var("x"), App(Var("x"), Var("y"))), "y", Var("x"))
+//│ = "λx. (x y) [y / x] = λ. ( x)"
+
+showSubst(Abs(Var("z"), Abs(Var("x"), App(Var("z"), App(Var("x"), Var("y"))))), "y", Var("x"))
+//│ = "λz. λx. (z (x y)) [y / x] = λz. λ. (z ( x))"
+
+showSubst(Abs(Var("z"), Abs(Var("x"), App(Var("z"), App(Var("x"), Var("y"))))), "y", App(Var("x"), Var("z")))
+//│ = "λz. λx. (z (x y)) [y / (x z)] = λ. λ. ( ( (x z)))"
+
+//  ____                     _  _   ____   _
+// / ___|  _ __ ___    __ _ | || | / ___| | |_  ___  _ __
+// \___ \ | '_ ` _ \  / _` || || | \___ \ | __|/ _ \| '_ \
+//  ___) || | | | | || (_| || || |  ___) || |_|  __/| |_) |
+// |____/ |_| |_| |_| \__,_||_||_| |____/  \__|\___|| .__/
+//                                                  |_|
+
+type Result = Normal | Stuck | Stepped
+data class Normal(term: Term) with
+  fun toString() = "Normal form: " + showTerm(term)
+data class Stuck(term: Term, part: Term) with
+  fun toString() = "Stuck: " + showTerm(part) + " in " + showTerm(term)
+data class Stepped(from: Term, to: Term) with
+  fun toString() = showTerm(from) + " => " + showTerm(to)
+
+
+fun stepByValue(t) =
+  if t is
+    Var then Stuck(t, t)
+    Abs then Normal(t)
+    App(lhs, rhs) and stepByValue(lhs) is
+      Stepped(_, lhs) then Stepped(t, App(lhs, rhs))
+      Stuck(_, part) then Stuck(t, part)
+      Normal and stepByValue(rhs) is
+        Stepped(_, rhs) then Stepped(t, App(lhs, rhs))
+        Stuck(_, part) then Stuck(t, part)
+        Normal and lhs is
+          Abs(Var(name), body) then Stepped(t, subst(body, name, rhs))
+          _ then Stuck(t, lhs)
+
+String of stepByValue of Var("x")
+//│ = "Stuck: x in x"
+
+String of stepByValue of Abs(Var("x"), Var("y"))
+//│ = "Normal form: λx. y"
+
+String of stepByValue of App(Var("x"), Var("y"))
+//│ = "Stuck: x in (x y)"
+
+String of stepByValue of App(Abs(Var("x"), Var("x")), Var("x"))
+//│ = "Stuck: x in ((λx. x) x)"
+
+String of stepByValue of App(Abs(Var("x"), Var("x")), Abs(Var("y"), Var("y")))
+//│ = "((λx. x) λy. y) => λy. y"
+
+//  _____               _                _    _
+// | ____|__   __ __ _ | | _   _   __ _ | |_ (_)  ___   _ __
+// |  _|  \ \ / // _` || || | | | / _` || __|| | / _ \ | '_ \
+// | |___  \ V /| (_| || || |_| || (_| || |_ | || (_) || | | |
+// |_____|  \_/  \__,_||_| \__,_| \__,_| \__||_| \___/ |_| |_|
+//
+
+fun eval(step) =
+  fun aux(t) =
+    if step(t) is result and result is
+      Stepped(_, t') then aux(t')
+      else result
+  aux
+
+let evalByValue = eval(stepByValue)
+//│ evalByValue = [function aux]
+
+// Let's program with Church encoding!
+
+let zero = Abs(Var("f"), Abs(Var("x"), Var("x")))
+//│ zero = Abs(Var("f"), Abs(Var("x"), Var("x")))
+
+let one = Abs(Var("f"), Abs(Var("x"), App(Var("f"), Var("x"))))
+//│ one = Abs(Var("f"), Abs(Var("x"), App(Var("f"), Var("x"))))
+
+String of stepByValue of zero
+//│ = "Normal form: λf. λx. x"
+
+String of stepByValue of one
+//│ = "Normal form: λf. λx. (f x)"
+
+let succ = Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))))
+//│ succ = Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))))
+
+String of stepByValue of succ
+//│ = "Normal form: λn. λf. λx. (f ((n f) x))"
+
+String of stepByValue of App(succ, zero)
+//│ = "((λn. λf. λx. (f ((n f) x))) λf. λx. x) => λf. λx. (f (((λf. λx. x) f) x))"
+
+String of evalByValue of App(succ, App(succ, zero))
+//│ = "Normal form: λf. λx. (f (((λf. λx. (f (((λf. λx. x) f) x))) f) x))"
+
+String of evalByValue of App(succ, App(succ, App(succ, App(succ, zero))))
+//│ = "Normal form: λf. λx. (f (((λf. λx. (f (((λf. λx. (f (((λf. λx. (f (((λf. λx. x) f) x))) f) x))) f) x))) f) x))"
+
