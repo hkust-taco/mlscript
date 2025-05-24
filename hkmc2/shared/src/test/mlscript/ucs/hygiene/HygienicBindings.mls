@@ -29,21 +29,40 @@ fun h0'(a) =
     a is Some(x) and x is Right(z) then z
     a is None then 0
 
-// However, if the class parameter is bound to different variables in different
-// branches, the bindings cannot be merged and the type will miss the latter
-// branch. See the desugared version below.
+:ucs normalized
+// If a class parameter is bound to different variables in different
+// branches, the bindings with the same name in different branches should not
+// interfere with each other, and normalization should be able to factorize.
 fun h1(a) =
   if
     a is Some(x) and x is Left(y) then y
     a is Some(y) and y is Right(z) then z
     a is None then 0
+//│ Normalized:
+//│ >  if
+//│ >    a is Option.Some.class(param0) and
+//│ >      let x = $param0#1
+//│ >      x is Left.class(param0) and
+//│ >        let y = $param0#0
+//│ >        else y#666
+//│ >      let y = $param0#0
+//│ >      y is Right.class(param0) and
+//│ >        let z = $param0#0
+//│ >        else z#666
+//│ >    a is Option.None.class then 0
 
-// FIXME
 h1(Some(Left(42)))
 //│ = 42
 
-// FIXME: It is also impossible to merge bindings of different variables if one
-// of them is bound via a let binding.
+h1(Some(Right(8)))
+//│ = 8
+
+h1(None)
+//│ = 0
+
+:ucs normalized
+// But it is difficult to merge bindings of different variables if one
+// of them is bound via a let binding. Maybe this can be left for future work.
 fun h2(a) =
   if
     a is Some(x) and x is x' and x' is Left(y) then y
@@ -51,6 +70,20 @@ fun h2(a) =
       let y' = y
       y' is Right(z) then z
     a is None then 0
+//│ Normalized:
+//│ >  if
+//│ >    a is Option.Some.class(param0) and
+//│ >      let x = $param0#1
+//│ >      let x' = x#0
+//│ >      x' is Left.class(param0) and
+//│ >        let y = $param0#0
+//│ >        else y#666
+//│ >      let y = $param0#0
+//│ >      let y' = y#666
+//│ >      y' is Right.class(param0) and
+//│ >        let z = $param0#0
+//│ >        else z#666
+//│ >    a is Option.None.class then 0
 
 // :ucs desugared
 // :w
