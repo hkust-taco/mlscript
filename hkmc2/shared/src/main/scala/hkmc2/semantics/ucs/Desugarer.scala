@@ -471,7 +471,7 @@ class Desugarer(elaborator: Elaborator)(using Raise, State, Ctx) extends Desugar
       ) ~: fallback
     pattern.deparenthesized.desugared match
       // A single wildcard pattern.
-      case Under() => _ => ctx => sequel(ctx)
+      case Under() => fallback => ctx => sequel(ctx) ++ fallback
       // Alias pattern
       case pat as (alias @ Ident(_)) => fallback =>
         val aliasSymbol = VarSymbol(alias)
