@@ -1,3 +1,5 @@
+:js
+
 // Else.mls
 // ========
 // Examine how the `else` keyword is parsed.
@@ -75,7 +77,7 @@ fun f(x, y, z) =
   if
     x then y else z
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.76: 	    x then y else z
+//│ ║  l.78: 	    x then y else z
 //│ ╙──      	             ^^^^
 
 
@@ -85,8 +87,10 @@ fun f(x, y) =
 
 
 let audits = new Set()
+//│ audits = Set{}
 
 if audits.has(1) === true do
   print("ok")
 else
   1
+//│ = 1
