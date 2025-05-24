@@ -1,15 +1,10 @@
 :js
 
-fun foo(x) = true
-
-// :pt
-// :elt
-// :ucs normalized
-:todo
 fun example(x) =
-  if Math.sign(x)
-    < 0 then "invalid"
-    == 0 then "null"
+  if x
+    |> Math.sign
+      < 0 then "invalid"
+      == 0 then "null"
     |> Math.abs
       > 100 then "large"
       < 10 then "small"
@@ -21,17 +16,14 @@ example(0)
 example(-24)
 //│ = "invalid"
 
-:fixme
 :expect "large"
 example(200)
-//│ ═══[RUNTIME ERROR] Expected: '"large"', got: '"small"'
-//│ = "small"
+//│ = "large"
 
+:expect "small"
 example(5)
 //│ = "small"
 
-:fixme
 :expect "medium"
 example(79)
-//│ ═══[RUNTIME ERROR] Expected: '"medium"', got: '"small"'
-//│ = "small"
+//│ = "medium"
