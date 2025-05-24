@@ -457,6 +457,7 @@ class Resolver(tl: TraceLogger)
                   msgs
                 ))
           case N =>
+            use.sym = S(ErrorSymbol("Missing Type", use.tree))
             // There is an error during resolving the type signature.
             // The error should have been reported.
         (t.termDefn, ictx)
