@@ -1,20 +1,14 @@
+:js
 
+import "../../../mlscript-compile/Option.mls"
 
-fun error = ()
+open Option { Some, None }
 
-fun (~~>) expect(a, b) = if a == b then () else error
-
-type Option[out T] = None | Some[T]
-object None
-data class Some[out T](val value: T)
+fun (~~>) expect(a, b) = if a == b then () else throw Error("unexpected result")
 
 type Either[A, B] = Left[A] | Right[B]
 data class Left[A](val leftValue: A)
 data class Right[B](val rightValue: B)
-
-type List[out A] = Nil | Cons[A]
-object Nil
-data class Cons[out A](head: A, tail: List[A])
 
 fun justTrue(_) = true
 fun justFalse(_) = false
@@ -45,7 +39,8 @@ fun h1(a) =
     a is None then 0
 
 // FIXME
-h1(Some(Left(0)))
+h1(Some(Left(42)))
+//│ = 42
 
 // FIXME: It is also impossible to merge bindings of different variables if one
 // of them is bound via a let binding.
@@ -57,8 +52,9 @@ fun h2(a) =
       y' is Right(z) then z
     a is None then 0
 
-// :ducs:postprocess.result
+// :ucs desugared
 // :w
+:todo
 fun h3(x, y, f, p) =
   if x is
     _ and f(x) is y and p(x) then y
@@ -67,8 +63,14 @@ fun h3(x, y, f, p) =
 
 
 h3("anything", "not me", _ => "should be me", _ => true) ~~> "should be me"
+
+:fixme
 h3(None, "should be me", _ => "not me", _ => false) ~~> "should be me"
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:fixme
 h3("anything", "anything", _ => "not me", _ => false) ~~> "anyway"
+//│ ═══[RUNTIME ERROR] Error: match error
 
 
 // :ducs:postprocess.result
@@ -79,10 +81,21 @@ fun h4(x, y, p) =
     None then y
     _ then "default"
 
-h4("should be me", "not me", _ => true)
-h4(None, "not me", _ => true)
-h4(None, "should be me", _ => false)
-h4("anything", "not me", _ => false)
+:expect "should be me"
+h4("should be me", "not me", justTrue)
+//│ = "should be me"
+
+:expect None
+h4(None, "not me", justTrue)
+//│ = None
+
+:expect "should be me"
+h4(None, "should be me", justFalse)
+//│ = "should be me"
+
+:expect "default"
+h4("anything", "not me", justFalse)
+//│ = "default"
 
 // :ducs:postprocess.result
 fun h5(x, y, p) =
@@ -92,8 +105,13 @@ fun h5(x, y, p) =
     _ then y
 
 h5(Some(1), 2, justTrue) ~~> 1
+
 h5(Some(1), 2, justFalse) ~~> 2
+
 h5(None, 0, justTrue) ~~> 0
+
 h5(None, 0, justFalse) ~~> 0
+
 h5("foo", 42, justTrue) ~~> 42
+
 h5("foo", 42, justFalse) ~~> 42

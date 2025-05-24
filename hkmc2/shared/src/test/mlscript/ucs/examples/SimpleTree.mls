@@ -1,8 +1,8 @@
+:js
 
+import "../../../mlscript-compile/Option.mls"
 
-type Option[out A] = Some[A] | None
-data class Some[out A](value: A)
-object None
+open Option { Some, None }
 
 type Tree[out A] = Node[A] | Empty
 object Empty
@@ -23,7 +23,12 @@ fun insert(t, v) = if t is
   Empty then Node(v, Empty, Empty)
 
 find(Empty, 0)
+//│ = None
+
 find(Node(0, Empty, Empty), 0)
+//│ = Some(0)
+
 find(Node(1, Empty, Empty), 0)
+//│ = None
 
 

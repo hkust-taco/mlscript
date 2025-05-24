@@ -1,3 +1,5 @@
+:js
+
 import "../../../mlscript-compile/Stack.mls"
 import "../../../mlscript-compile/Option.mls"
 import "../../../mlscript-compile/Str.mls"
@@ -17,6 +19,7 @@ fun findFirst(f, xs) =
 fun (::) cons(head, tail) = Cons(head, tail)
 
 let oneTwoThree = 1 :: 2 :: 3 :: Nil
+//│ oneTwoThree = Cons(1, Cons(2, Cons(3, Nil)))
 
 // Note that JavaScript doesn't have tail call optimization. Therefore, this
 // implementation is still inefficient in practice.
@@ -32,6 +35,7 @@ fun join(sep) =
 
 join(", ")(1 :: 2 :: 3 :: Nil)
 (1 :: 2 :: 3 :: Nil) |> join(", ")
+//│ = "1, 2, 3"
 
 fun showList(xs) = "[" ~ join(", ")(xs) ~ "]"
 
@@ -41,6 +45,7 @@ fun (:::) appendAll(xs, ys) =
     Cons(x, xs') then x :: (xs' ::: ys)
 
 ((1 :: 2 :: 3 :: Nil) ::: (4 :: 5 :: 6 :: Nil)) |> showList
+//│ = "[1, 2, 3, 4, 5, 6]"
 
 fun reverse(xs) =
   fun aux(acc, xs) =
@@ -51,6 +56,7 @@ fun reverse(xs) =
 
 (1 :: 2 :: 3 :: Nil) |> showList
 reverse(1 :: 2 :: 3 :: Nil) |> showList
+//│ = "[3, 2, 1]"
 
 //   __       _     _ _          __ _
 //  / _| ___ | | __| | |    ___ / _| |_
@@ -67,20 +73,46 @@ fun foldLeft(f)(z) =
   (xs) => aux(z, xs)
 
 let sum = foldLeft((acc, x) => acc + x)(0)
+//│ sum = [function]
+
+:expect 0
 sum(Nil)
+//│ = 0
+
+:expect 6
 sum(1 :: 2 :: 3 :: Nil)
+//│ = 6
 
 let product = foldLeft((acc, x) => acc * x)(1)
+//│ product = [function]
+
+:expect 1
 product(Nil)
+//│ = 1
+
+:expect 6
 product(1 :: 2 :: 3 :: Nil)
+//│ = 6
 
 let length = foldLeft((acc, _) => acc + 1)(0)
+//│ length = [function]
+
+:expect 0
 length(Nil)
+//│ = 0
+
+:expect 3
 length(1 :: 2 :: 3 :: Nil)
+//│ = 3
 
 let reverse' = foldLeft((acc, x) => x :: acc)(Nil)
+//│ reverse' = [function]
+
 reverse'(Nil)
+//│ = Nil
+
 reverse'(1 :: 2 :: 3 :: Nil) |> showList
+//│ = "[3, 2, 1]"
 
 
 //   __       _     _ ____  _       _     _
@@ -98,12 +130,22 @@ fun foldRight(f)(z) =
   (xs) => aux(z, xs)
 
 let double = foldRight((x, acc) => x :: x :: acc)(Nil)
+//│ double = [function]
+
 double(Nil) |> showList
+//│ = "[]"
+
 double(1 :: 2 :: 3 :: Nil) |> showList
+//│ = "[1, 1, 2, 2, 3, 3]"
 
 let flatten = foldRight((xs, acc) => xs ::: acc)(Nil)
+//│ flatten = [function]
+
 flatten(Nil) |> showList
+//│ = "[]"
+
 flatten(oneTwoThree :: oneTwoThree :: oneTwoThree :: Nil) |> showList
+//│ = "[1, 2, 3, 1, 2, 3, 1, 2, 3]"
 
 fun id(x) = x
 
@@ -112,10 +154,20 @@ fun foldLeft'[A, B](f: (A, B) -> A)(z: A) =
   (xs) => foldRight(g)(id)(xs)(z)
 
 let minus = foldLeft'((acc, x) => acc - x)(0)
+//│ minus = [function]
+
 minus(Nil)
+//│ = 0
+
 minus(1 :: 2 :: 3 :: Nil)
+//│ = -6
 
 let reverse'' = foldLeft'((acc, x) => x :: acc)(Nil)
+//│ reverse'' = [function]
+
 reverse(Nil)
+//│ = Nil
+
 reverse(1 :: 2 :: 3 :: Nil) |> showList
+//│ = "[3, 2, 1]"
 

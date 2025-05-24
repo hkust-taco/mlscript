@@ -1,4 +1,4 @@
-
+:js
 
 data class Numb(n: Int)
 
@@ -12,7 +12,9 @@ fun process(e) =
 //│ ╙──     	                 ^
 
 
+:re
 process(Numb(-10))
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 fun process(e, n) =
   if e is
@@ -22,12 +24,18 @@ fun process(e, n) =
 process(Numb(0), 10)
 process(Numb(-1), 10)
 process(Numb(1), 10)
+//│ = 1
 
 
 // class Vec(xs: Array[Numb | Vec]) // Array is not available
 data abstract class Vec[out T](n: Int)
 data class Cons[out T](head: T, tail: Vec[T]) extends Vec[T]
 module Nil extends Vec[Nothing]
+//│ > let Nil1, Cons1, Vec1;try { Vec1 = function Vec(...args) {   return new Vec.class(...args); }; Vec1.class = class Vec {   constructor(n) {     this.n = n;   }   toString() { return "Vec(" + runtime.render(this.n) + ")"; } }; Cons1 = function Cons(...args) {   return new Cons.class(...args); }; Cons1.class = class Cons extends Vec1.class {   constructor(head, tail) {     super();     this.head = head;     this.tail = tail;   }   toString() { return "Cons(" + runtime.render(this.head) + ", " + runtime.render(this.tail) + ")"; } }; (class Nil extends Vec1.class {   static {     Nil1 = Nil;     super();   }   static toString() { return "Nil"; } }); block$res6 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ >                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       ^^^^^
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:146)
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] 'super' keyword unexpected here
 
 data class Pair[A, B](a: A, b: B)
 
@@ -39,7 +47,7 @@ fun process(e) =
     Pair(Vec(n),  Numb(n)) then n
     Pair(Numb(n), Vec(n))  then n
 //│ ╔══[ERROR] Name not found: n
-//│ ║  l.38: 	    Pair(Vec(xs), Vec(ys)) then n
+//│ ║  l.46: 	    Pair(Vec(xs), Vec(ys)) then n
 //│ ╙──      	                                ^
 
 
@@ -49,5 +57,6 @@ fun process(e) =
     Pair(Numb(n), Numb(n)) then n
 
 process(Pair(Numb(1), Numb(2)))
+//│ = 2
 
 

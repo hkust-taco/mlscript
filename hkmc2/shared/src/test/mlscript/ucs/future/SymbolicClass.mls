@@ -1,4 +1,4 @@
-
+:js
 
 // :de
 // type List = Nil | Cons
@@ -14,8 +14,10 @@ data class (::) Cons(head: Int, tail: List)
 //│   Nil -> RefElem(member:Nil)
 
 Cons(1, Nil)
+//│ = Cons(1, Nil)
 
 1 :: 2
+//│ = Cons(1, 2)
 
 fun map(f, xs) = if xs is
   Nil then Nil
