@@ -85,9 +85,7 @@ fun h2(a) =
 //│ >        else z#666
 //│ >    a is Option.None.class then 0
 
-// :ucs desugared
 // :w
-:todo
 fun h3(x, y, f, p) =
   if x is
     _ and f(x) is y and p(x) then y
@@ -97,13 +95,9 @@ fun h3(x, y, f, p) =
 
 h3("anything", "not me", _ => "should be me", _ => true) ~~> "should be me"
 
-:fixme
 h3(None, "should be me", _ => "not me", _ => false) ~~> "should be me"
-//│ ═══[RUNTIME ERROR] Error: match error
 
-:fixme
 h3("anything", "anything", _ => "not me", _ => false) ~~> "anyway"
-//│ ═══[RUNTIME ERROR] Error: match error
 
 
 // :ducs:postprocess.result
