@@ -14,10 +14,10 @@ use[Str]
 
 :e
 use[Num]
-//│ ╔══[ERROR] Missing instance for use expression of type Num
+//│ ╔══[ERROR] Cannot query instance for use-expression of type Num
 //│ ║  l.16: 	use[Num]
 //│ ║        	    ^^^
-//│ ╙── Expected: Num; Available: (Int, Str)
+//│ ╙── Missing instance: Expected: Num; Available: (Int, Str)
 
 :expect 42
 let x = use[Int]
@@ -40,10 +40,10 @@ f
 
 :e
 fun f(using Int) = use[Num]
-//│ ╔══[ERROR] Missing instance for use expression of type Num
+//│ ╔══[ERROR] Cannot query instance for use-expression of type Num
 //│ ║  l.42: 	fun f(using Int) = use[Num]
 //│ ║        	                       ^^^
-//│ ╙── Expected: Num; Available: (Int, Int, Int, Str, Str)
+//│ ╙── Missing instance: Expected: Num; Available: (Int, Int, Int, Str, Str)
 
 
 data class Some[T](x: T)
@@ -56,16 +56,9 @@ f
 //│ = 42
 
 
-:todo
+:expect 42
 fun f[T](using T) = use[T]
 use Int = 42
 f[Int]
-//│ ╔══[ERROR] Missing instance for contextual parameter of type Int (T) in this call
-//│ ║  l.62: 	f[Int]
-//│ ║        	^^^^^
-//│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.60: 	fun f[T](using T) = use[T]
-//│ ║        	               ^
-//│ ╙── Expected: Int (T); Available: (Int, Int, Int, Str, Str, Some[Int])
-//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 1 argument but got 0
+//│ = 42
 

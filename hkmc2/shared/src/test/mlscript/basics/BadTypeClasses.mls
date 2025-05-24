@@ -11,13 +11,13 @@ module M with
 
 :e
 M.f
-//│ ╔══[ERROR] Missing instance for contextual parameter of type Int in this call
+//│ ╔══[ERROR] Cannot query instance of type Int for call: 
 //│ ║  l.13: 	M.f
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.10: 	  fun f(using Int)
 //│ ║        	              ^^^
-//│ ╙── Expected: Int; Available: ()
+//│ ╙── Missing instance: Expected: Int; Available: ()
 
 :e
 use 42 = 42
@@ -57,3 +57,14 @@ module M with
 :todo
 :e
 M.foo()
+
+:e
+fun f[T](using t: T) = t
+f
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (T) for call: 
+//│ ║  l.63: 	f
+//│ ║        	^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.62: 	fun f[T](using t: T) = t
+//│ ║        	               ^^^^
+//│ ╙── Illegal query for an unspecified type variable T.
