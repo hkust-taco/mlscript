@@ -8,10 +8,6 @@ class Foo()(using Int)
 //│ ╙──     	      ^^^^^^^^^^^^^^^^
 
 class Foo(using val n: Int)
-//│ ╔══[ERROR] Illegal definition in term position.
-//│ ║  l.10: 	class Foo(using val n: Int)
-//│ ╙──      	                    ^^^^^^
-//│ ═══[ERROR] Expected a type symbol, got <error>
 
 
 fun summon[A](using a: A) = a
@@ -24,7 +20,7 @@ class Foo(using Int) with
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.17: 	fun summon[A](using a: A) = a
 //│ ║        	                    ^^^^
-//│ ╙── Expected: A; Available: (Int)
+//│ ╙── Expected: A; Available: (Int, Int)
 
 
 fun summon(using a: Int) = a

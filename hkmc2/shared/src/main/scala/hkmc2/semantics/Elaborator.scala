@@ -1221,6 +1221,8 @@ extends Importer:
       go(inner, inUsing, flags.copy(pat = true), mm)
     case TermDef(ImmutVal, inner, _) =>
       go(inner, inUsing, flags.copy(value = true), mm)
+    case Modified(Keyword.`using`, _, inner) =>
+      go(inner, inUsing, flags, mm)
     case _ =>
       t.asParam(inUsing).map: (isSpd, p, t) =>
         val sym = VarSymbol(p)
@@ -1237,14 +1239,14 @@ extends Importer:
         ps match
         case Nil => (ParamList(flags, acc.reverse, N), ctx)
         case hd :: tl =>
-          param(hd, flags.ctx, inDataClass)(using ctx) match
+          val isCtxParam = hd match
+            case Modified(Keyword.`using`, _, _) => true
+            case _ => false
+          param(hd, flags.ctx || isCtxParam, inDataClass)(using ctx) match
           case S((isSpd, p)) =>
-            val isCtx = hd match
-              case Modified(Keyword.`using`, _, _) => true
-              case _ => false
             val newCtx = ctx + (p.sym.name -> p.sym)
-            val newFlags = if isCtx then flags.copy(ctx = true) else flags
-            if isCtx && acc.nonEmpty then
+            val newFlags = if isCtxParam then flags.copy(ctx = true) else flags
+            if isCtxParam && acc.nonEmpty then
               raise(ErrorReport(msg"Keyword `using` must occur before all parameters." -> hd.toLoc :: Nil))
             isSpd match
             case S(spdKnd) =>
