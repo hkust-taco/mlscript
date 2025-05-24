@@ -24,15 +24,18 @@ fun rank(t) = if t is
 
 fun merge(t1: Tree[Num], t2: Tree[Num]): Tree[Num] =
   if
+    t1 is Empty then t2
+    t2 is Empty then t1
     t1 is Node(v1, l1, r1, _) and t2 is Node(v2, _, _, _) and
-      v1 > v2 then merge(t2, t1)
-      _ and merge(r1, t2) is merged and
-        rank(l1) is rank_left and rank(r1) is rank_right and
-          rank_left >= rank_right then Node(v1, l1, merged, rank_right + 1)
-          else Node(v1, merged, l1, rank_left + 1)
-    t1 is Empty and t2 is Node then t2
-    t1 is Node and t2 is Empty then t1
-    t1 is Empty and t2 is Empty then Empty
+      v1 <= v2 and
+        let merged = merge(r1, t2)
+        let rank_left = rank of l1
+        let rank_right = rank of r1
+        rank_left >= rank_right then
+          Node(v1, l1, merged, rank_right + 1)
+        else
+          Node(v1, merged, l1, rank_left + 1)
+      else merge(t2, t1)
 
 fun insert(t, v) = merge(t, singleton(v))
 
