@@ -12,10 +12,11 @@ new 2
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not a constructor
 
 :sjs
+:re
 new 2 + 2
 //│ JS (unsanitized):
-//│ let lambda; lambda = (undefined, function (arg1, arg2) { return arg1 + arg2 }); new lambda(2, 2)
-//│ = [object Object]
+//│ let tmp; tmp = 2 + 2; new tmp()
+//│ ═══[RUNTIME ERROR] TypeError: tmp is not a constructor
 
 :re
 new()
@@ -40,7 +41,7 @@ new { x = 1 }
 //│       rhs = IntLit of 1
 //│   rft = N
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.34: 	new { x = 1 }
+//│ ║  l.35: 	new { x = 1 }
 //│ ╙──      	      ^
 
 

@@ -85,7 +85,6 @@ fun f(x, y) =
   if x
     then y
 
-
 let audits = new Set()
 //│ audits = Set{}
 
@@ -94,3 +93,31 @@ if audits.has(1) === true do
 else
   1
 //│ = 1
+
+
+(if true then
+    5
+  else 1
+) + 3
+//│ = 8
+
+:fixme
+(if true
+  then
+    5
+  else 1
+) + 3
+//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
+//│ ║  l.108: 	  else 1
+//│ ╙──       	  ^^^^
+//│ = 8
+
+:fixme
+(if true
+  then
+    5 else 1
+) + 3
+//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
+//│ ║  l.118: 	    5 else 1
+//│ ╙──       	      ^^^^
+//│ = 8

@@ -19,7 +19,9 @@ object Printer:
       // ts.trmTree
     case ts: semantics.InnerSymbol => ts.nme
     case ts: semantics.BuiltinSymbol => ts.nme
-    case _ => summon[Scope].lookup_!(l)
+    case _ => summon[Scope].lookup(l) match
+      case S(str) => str
+      case N => s"‹not in scope: ${l}›"
 
   def mkDocument(blk: Block)(using Raise, Scope): Document = blk match
     case Match(scrut, arms, dflt, rest) =>
@@ -95,6 +97,10 @@ object Printer:
     case Value.Arr(elems) =>
       val docElems = elems.map(x => mkDocument(x)).mkString(", ")
       doc"[${docElems}]"
+    case Value.Rcd(args) =>
+      doc"{ ${
+        args.map(x => x.idx.fold(doc"...")(p => mkDocument(p) :: ": ") :: mkDocument(x.value)).mkString(", ")
+      } }"
   
   def mkDocument(path: Path)(using Raise, Scope): Document = path match
     case Select(qual, name) =>

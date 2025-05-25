@@ -40,7 +40,7 @@ pattern GreaterThan(value) = case
 //│ ╔══[ERROR] Pattern extraction parameters are not yet supported.
 //│ ║  l.38: 	pattern GreaterThan(value) = case
 //│ ╙──      	                    ^^^^^
-//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(InfixApp(Ident(n),keyword 'and',App(Ident(>),Tup(List(Ident(n), Ident(value))))),keyword 'then',Ident(n))))) (of class hkmc2.syntax.Tree$Case)
+//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(InfixApp(Ident(n),keyword 'and',OpApp(Ident(n),Ident(>),List(Ident(value)))),keyword 'then',Ident(n))))) (of class hkmc2.syntax.Tree$Case)
 
 :todo
 // Normal view pattern
@@ -51,7 +51,7 @@ fun foo(x) = if x is
   view as
     Unit then ....
     Arrow(...) then ....
-//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ╔══[ERROR] Unrecognized pattern split (infix operator).
 //│ ║  l.51: 	  view as
 //│ ║        	  ^^^^^^^
 //│ ║  l.52: 	    Unit then ....
@@ -93,8 +93,8 @@ pattern LineSep(pattern P) = case
   L(...nd) ~
     ""                   then nd :: Nil
     "\n" ~ LineSep(P, t) then nd :: t
-//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Ident(Nil)), App(Ident(~),Tup(List(App(Ident(L),Tup(List(Spread(keyword '...',Some(Loc(52,55,Future.mls:+91)),Some(Ident(nd)))))), Block(List(InfixApp(StrLit(),keyword 'then',App(Ident(::),Tup(List(Ident(nd), Ident(Nil))))), InfixApp(App(Ident(~),Tup(List(StrLit(
-//│ ), App(Ident(LineSep),Tup(List(Ident(P), Ident(t))))))),keyword 'then',App(Ident(::),Tup(List(Ident(nd), Ident(t))))))))))))) (of class hkmc2.syntax.Tree$Case)
+//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Ident(Nil)), OpApp(App(Ident(L),Tup(List(Spread(keyword '...',Some(Loc(52,55,Future.mls:+91)),Some(Ident(nd)))))),Ident(~),List(Block(List(InfixApp(StrLit(),keyword 'then',OpApp(Ident(nd),Ident(::),List(Ident(Nil)))), InfixApp(OpApp(StrLit(
+//│ ),Ident(~),List(App(Ident(LineSep),Tup(List(Ident(P), Ident(t)))))),keyword 'then',OpApp(Ident(nd),Ident(::),List(Ident(t))))))))))) (of class hkmc2.syntax.Tree$Case)
 
 :todo
 pattern Lines(pattern L) = case
@@ -106,11 +106,11 @@ pattern Lines(pattern L) = case
   
 :todo
 if input is Lines of Email then
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found end of input instead
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
 //│ ║  l.108: 	if input is Lines of Email then
 //│ ╙──       	                               ^
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Tup(List())), TypeDef(Pat,Ident(Tail),Some(Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Tup(List())), InfixApp(InfixApp(App(Ident(~),Tup(List(StrLit(
-//│ ), Bra(Round,App(Ident(Lines),Tup(List(Ident(L)))))))),keyword 'as',Ident(t)),keyword 'then',Ident(t)))))),None), InfixApp(InfixApp(InfixApp(Ident(L),keyword 'as',App(Ident(~),Tup(List(Ident(h), Ident(Tail))))),keyword 'as',Ident(t)),keyword 'then',Tup(List(Ident(h), Spread(keyword '...',Some(Loc(148,151,Future.mls:+100)),Some(Ident(t))))))))),keyword ':',Ident(todo)) (of class hkmc2.syntax.Tree$InfixApp)
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Tup(List())), TypeDef(Pat,Ident(Tail),Some(Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Tup(List())), InfixApp(InfixApp(OpApp(StrLit(
+//│ ),Ident(~),List(Bra(Round,App(Ident(Lines),Tup(List(Ident(L))))))),keyword 'as',Ident(t)),keyword 'then',Ident(t)))))),None), InfixApp(InfixApp(InfixApp(Ident(L),keyword 'as',OpApp(Ident(h),Ident(~),List(Ident(Tail)))),keyword 'as',Ident(t)),keyword 'then',Tup(List(Ident(h), Spread(keyword '...',Some(Loc(148,151,Future.mls:+100)),Some(Ident(t))))))))),keyword ':',Ident(todo)) (of class hkmc2.syntax.Tree$InfixApp)
 
 :todo
 pattern Opt(pattern P) = case

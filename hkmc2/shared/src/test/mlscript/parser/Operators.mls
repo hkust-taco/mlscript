@@ -11,27 +11,27 @@
 
 1 + 2
 //│ Parsed:
-//│ 	App(Ident(+),Tup(List(IntLit(1), IntLit(2))))
+//│ 	OpApp(IntLit(1),Ident(+),List(IntLit(2)))
 
 1 + +2
 //│ Parsed:
-//│ 	App(Ident(+),Tup(List(IntLit(1), App(Ident(+),Tup(List(IntLit(2)))))))
+//│ 	OpApp(IntLit(1),Ident(+),List(App(Ident(+),Tup(List(IntLit(2))))))
 
 +1 + +2
 //│ Parsed:
-//│ 	App(Ident(+),Tup(List(App(Ident(+),Tup(List(IntLit(1)))), App(Ident(+),Tup(List(IntLit(2)))))))
+//│ 	OpApp(App(Ident(+),Tup(List(IntLit(1)))),Ident(+),List(App(Ident(+),Tup(List(IntLit(2))))))
 
 + + 1 + + + 2
 //│ Parsed:
-//│ 	App(Ident(+),Tup(List(App(Ident(+),Tup(List(App(Ident(+),Tup(List(IntLit(1))))))), App(Ident(+),Tup(List(App(Ident(+),Tup(List(IntLit(2))))))))))
+//│ 	OpApp(App(Ident(+),Tup(List(App(Ident(+),Tup(List(IntLit(1))))))),Ident(+),List(App(Ident(+),Tup(List(App(Ident(+),Tup(List(IntLit(2)))))))))
 
 1 + 2 * 3
 //│ Parsed:
-//│ 	App(Ident(+),Tup(List(IntLit(1), App(Ident(*),Tup(List(IntLit(2), IntLit(3)))))))
+//│ 	OpApp(IntLit(1),Ident(+),List(OpApp(IntLit(2),Ident(*),List(IntLit(3)))))
 
 1 + 2 * 3 - 4
 //│ Parsed:
-//│ 	App(Ident(-),Tup(List(App(Ident(+),Tup(List(IntLit(1), App(Ident(*),Tup(List(IntLit(2), IntLit(3))))))), IntLit(4))))
+//│ 	OpApp(OpApp(IntLit(1),Ident(+),List(OpApp(IntLit(2),Ident(*),List(IntLit(3))))),Ident(-),List(IntLit(4)))
 
 1 => 2
 //│ Parsed:
@@ -61,7 +61,7 @@ x =>
 1 +
  2
 //│ Parsed:
-//│ 	App(Ident(+),Tup(List(IntLit(1), Block(List(IntLit(2))))))
+//│ 	OpApp(IntLit(1),Ident(+),List(Block(List(IntLit(2)))))
 
 
 :pt
@@ -69,14 +69,14 @@ x =>
 2 +
 3
 //│ Parsed tree:
-//│ App:
-//│   lhs = Ident of "+"
-//│   rhs = Tup of Ls of 
-//│     App:
-//│       lhs = Ident of "+"
-//│       rhs = Tup of Ls of 
-//│         IntLit of 1
-//│         IntLit of 2
+//│ OpApp:
+//│   lhs = OpApp:
+//│     lhs = IntLit of 1
+//│     op = Ident of "+"
+//│     rhss = Ls of 
+//│       IntLit of 2
+//│   op = Ident of "+"
+//│   rhss = Ls of 
 //│     IntLit of 3
 
 1 +
@@ -85,7 +85,7 @@ x =>
  x
  42
 //│ Parsed:
-//│ 	App(Ident(+),Tup(List(IntLit(1), Block(List(LetLike(keyword 'let',Ident(x),Some(IntLit(2)),None), TypeDef(Cls,Ident(A),None,None), Ident(x), IntLit(42))))))
+//│ 	OpApp(IntLit(1),Ident(+),List(Block(List(LetLike(keyword 'let',Ident(x),Some(IntLit(2)),None), TypeDef(Cls,Ident(A),None,None), Ident(x), IntLit(42)))))
 
 :pe
 1 +
@@ -95,11 +95,11 @@ x =>
 //│ ║  l.92: 	 2,
 //│ ╙──      	  ^
 //│ Parsed:
-//│ 	App(Ident(+),Tup(List(IntLit(1), Block(List(IntLit(2), IntLit(3))))))
+//│ 	OpApp(IntLit(1),Ident(+),List(Block(List(IntLit(2), IntLit(3)))))
 
 
 a === "a" || b === "b"
 //│ Parsed:
-//│ 	App(Ident(||),Tup(List(App(Ident(===),Tup(List(Ident(a), StrLit(a)))), App(Ident(===),Tup(List(Ident(b), StrLit(b)))))))
+//│ 	OpApp(OpApp(Ident(a),Ident(===),List(StrLit(a))),Ident(||),List(OpApp(Ident(b),Ident(===),List(StrLit(b)))))
 
 

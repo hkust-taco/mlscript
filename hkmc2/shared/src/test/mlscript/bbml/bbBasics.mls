@@ -127,19 +127,13 @@ let t = new Some(true) in t.Some#value
 :fixme
 :pe
 42.Some#value
-//│ ╔══[LEXICAL ERROR] Expect at least one digit after the  decimal point
+//│ ╔══[LEXICAL ERROR] Expected at least one digit after the  decimal point
 //│ ║  l.129: 	42.Some#value
 //│ ╙──       	   ^
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application).
 //│ ║  l.129: 	42.Some#value
-//│ ╙──       	   ^^^^
-//│ ╔══[ERROR] Name not found: #
-//│ ║  l.129: 	42.Some#value
-//│ ╙──       	       ^
-//│ ╔══[ERROR] Name not found: value
-//│ ║  l.129: 	42.Some#value
-//│ ╙──       	        ^^^^^
-//│ Type: ⊥
+//│ ╙──       	   ^^^^^^^^^^
+//│ Type: Num
 
 
 data class Printer[T](f: T -> Str)
@@ -160,7 +154,7 @@ let ip = new Printer(foofoo) in ip.Printer#f(42)
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ╔══[ERROR] Type error in string literal with expected type 'T
-//│ ║  l.161: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
+//│ ║  l.155: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ║         	                                             ^^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
@@ -187,7 +181,7 @@ let tf = new TFun(inc) in tf.TFun#f(1)
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ╔══[ERROR] Type error in string literal with expected type 'T
-//│ ║  l.188: 	let tf = new TFun(inc) in tf.TFun#f("1")
+//│ ║  l.182: 	let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
@@ -308,7 +302,7 @@ throw new Error("oops")
 :e
 throw 42
 //│ ╔══[ERROR] Type error in throw
-//│ ║  l.309: 	throw 42
+//│ ║  l.303: 	throw 42
 //│ ║         	      ^^
 //│ ╙── because: cannot constrain  Int  <:  Error
 //│ Type: ⊥

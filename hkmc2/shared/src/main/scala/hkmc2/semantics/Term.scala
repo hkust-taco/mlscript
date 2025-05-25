@@ -252,12 +252,18 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Neg(e) => e :: Nil
     case Annotated(ann, target) => ann.subTerms ::: target :: Nil
   
+  // private def treeOrSubterms(t: Tree, t: Term): Ls[Located] = t match
+  private def treeOrSubterms(t: Tree): Ls[Located] = t match
+    case Tree.DummyApp | Tree.DummyTup => subTerms
+    case _ => t :: Nil
+  
   protected def children: Ls[Located] = this match
     case t: Lit => t.lit.asTree :: Nil
-    case t: Ref => t.tree :: Nil
-    case t: Tup => t.tree :: Nil
+    case t: Ref => treeOrSubterms(t.tree)
+    case t: Tup => treeOrSubterms(t.tree)
     case l: Lam => l.params.paramSyms.map(_.id) ::: l.body :: Nil
-    case t: App => t.tree :: Nil
+    case t: App => treeOrSubterms(t.tree)
+    case IfLike(kw, desug) => desug :: Nil
     case SynthSel(pre, nme) => pre :: nme :: Nil
     case Sel(pre, nme) => pre :: nme :: Nil
     case SelProj(prefix, cls, proj) => prefix :: cls :: proj :: Nil

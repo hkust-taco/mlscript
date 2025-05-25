@@ -11,13 +11,13 @@ fun checkZeroOneTwo(x) = if x is
   @compile One then 1
   @compile Two then 2
   else ()
-//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ╔══[ERROR] Unrecognized pattern split (annotated).
 //│ ║  l.10: 	  @compile Zero then 0
 //│ ╙──      	   ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ╔══[ERROR] Unrecognized pattern split (annotated).
 //│ ║  l.11: 	  @compile One then 1
 //│ ╙──      	   ^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ╔══[ERROR] Unrecognized pattern split (annotated).
 //│ ║  l.12: 	  @compile Two then 2
 //│ ╙──      	   ^^^^^^^^^^^^^^^^^^
 //│ Normalized:

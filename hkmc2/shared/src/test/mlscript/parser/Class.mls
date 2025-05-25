@@ -15,7 +15,7 @@ class Foo
 
 :pe
 class Foo extends
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found end of input instead
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
 //│ ║  l.17: 	class Foo extends
 //│ ╙──      	                 ^
 //│ Parsed:
@@ -54,7 +54,7 @@ class Foo with
 
 :pe
 with
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found 'with' keyword instead
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'with' keyword instead
 //│ ║  l.56: 	with
 //│ ╙──      	^^^^
 //│ Parsed:
@@ -98,7 +98,7 @@ Foo
 class
   Foo
 extends Bar
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found 'extends' keyword instead
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'extends' keyword instead
 //│ ║  l.100: 	extends Bar
 //│ ╙──       	^^^^^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead

@@ -8,7 +8,6 @@
 // :d
 :todo
 
-
 class A
 
 :sjs
@@ -20,18 +19,18 @@ class BadPair(x, y)
 
 fun foo(x) = if x is BadPair(a, b) then a + b
 //│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.21: 	fun foo(x) = if x is BadPair(a, b) then a + b
+//│ ║  l.20: 	fun foo(x) = if x is BadPair(a, b) then a + b
 //│ ║        	                             ^
 //│ ╟── because the corresponding parameter `x` is not publicly accessible
-//│ ║  l.19: 	class BadPair(x, y)
+//│ ║  l.18: 	class BadPair(x, y)
 //│ ║        	              ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
 //│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.21: 	fun foo(x) = if x is BadPair(a, b) then a + b
+//│ ║  l.20: 	fun foo(x) = if x is BadPair(a, b) then a + b
 //│ ║        	                                ^
 //│ ╟── because the corresponding parameter `y` is not publicly accessible
-//│ ║  l.19: 	class BadPair(x, y)
+//│ ║  l.18: 	class BadPair(x, y)
 //│ ║        	                 ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
@@ -41,34 +40,34 @@ data class Pair(x, y)
 // Less parameters should also work.
 fun foo(x) = if x is Pair(y) then y
 //│ ╔══[ERROR] mismatched arity: expect 2, found 1
-//│ ║  l.42: 	fun foo(x) = if x is Pair(y) then y
+//│ ║  l.41: 	fun foo(x) = if x is Pair(y) then y
 //│ ╙──      	                          ^
 
 // More parameters should not be generated.
 :sjs
 fun foo(x) = if x is Pair(u, v, w) then u + v + w
 //│ ╔══[ERROR] mismatched arity: expect 2, found 3
-//│ ║  l.49: 	fun foo(x) = if x is Pair(u, v, w) then u + v + w
+//│ ║  l.48: 	fun foo(x) = if x is Pair(u, v, w) then u + v + w
 //│ ╙──      	                          ^^^^^^^
 //│ JS (unsanitized):
 //│ let foo3; foo3 = function foo(x) { throw new globalThis.Error("match error"); };
 //│ ╔══[ERROR] mismatched arity: expect 2, found 3
-//│ ║  l.49: 	fun foo(x) = if x is Pair(u, v, w) then u + v + w
+//│ ║  l.48: 	fun foo(x) = if x is Pair(u, v, w) then u + v + w
 //│ ╙──      	                          ^^^^^^^
 
 class B
 
 fun foo(x) = if x is B() then 0
 //│ ╔══[ERROR] Class B does not have a parameter list
-//│ ║  l.61: 	fun foo(x) = if x is B() then 0
+//│ ║  l.60: 	fun foo(x) = if x is B() then 0
 //│ ╙──      	                     ^
 
 fun foo(x) = if x is B(x) then 0
 //│ ╔══[ERROR] Class B does not have a parameter list
-//│ ║  l.66: 	fun foo(x) = if x is B(x) then 0
+//│ ║  l.65: 	fun foo(x) = if x is B(x) then 0
 //│ ║        	                     ^
 //│ ╟── but the pattern has 1 sub-pattern
-//│ ║  l.66: 	fun foo(x) = if x is B(x) then 0
+//│ ║  l.65: 	fun foo(x) = if x is B(x) then 0
 //│ ╙──      	                       ^
 
 // Test merging branches

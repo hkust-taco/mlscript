@@ -61,8 +61,19 @@ test @ x => x + 1
 test @ (x) => x + 1
 //│ = 43
 
-test @ _ + 1
+test @ (_ + 1)
 //│ = 43
+
+test @ {_ + 1}
+//│ = 43
+
+test @
+  _ + 1
+//│ = 43
+
+// * Note: this lambda shorthand includes the whole term, as `_ + 1` is not delimited/parenthesized
+test @ _ + 1
+//│ = [function]
 
 
 pipeInto of 1, inc
@@ -73,6 +84,12 @@ pipeInto @ 1, inc
 //│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
 
 pipeInto(1, _) @ inc
+//│ = [function]
+
+(pipeInto(1, _)) @ inc
+//│ = 2
+
+(pipeInto of 1, _) @ inc
 //│ = 2
 
 1 pipeInto(inc)
@@ -84,14 +101,12 @@ pipeInto(1, _) @ inc
 :re
 1 pipeInto @ inc
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
-//│ ║  l.85: 	1 pipeInto @ inc
-//│ ╙──      	  ^^^^^^^^
+//│ ║  l.102: 	1 pipeInto @ inc
+//│ ╙──       	  ^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
-:fixme
-1 pipeInto(_) @ inc
-//│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
+(1 pipeInto(_)) @ inc
+//│ = 2
 
 
 // * Another argument for using `.` rather than juxtaposition
@@ -107,13 +122,9 @@ inc @ 1 . pipeInto @ inc
 //│ = 3
 
 
-// * Maybe `of` shouldn't have more binding power than `.`
-:fixme
+// * Now `of` has the same left-binding power as normal application
 1 . pipeInto of inc
-//│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.112: 	1 . pipeInto of inc
-//│ ╙──       	                ^^^
-//│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
+//│ = 2
 
 (1 . pipeInto) of inc
 //│ = 2
@@ -129,6 +140,6 @@ n. pipeInto @ inc
 n
   . pipeInto @ inc
   . pipeInto @ inc
-//│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
+//│ = 45
 
 

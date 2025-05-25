@@ -18,19 +18,17 @@ set xs.(0) = 4
 xs.(0)
 //│ = 4
 
-:todo
 set xs.[0] += 1
-//│ /!!!\ Uncaught error: scala.MatchError: LetLike(keyword 'set',App(Ident(+=),Tup(List(DynAccess(Ident(xs),IntLit(0),true), IntLit(1)))),None,None) (of class hkmc2.syntax.Tree$LetLike)
 
 set xs.[0] = xs.[0] + 1
 
 xs.[0]
-//│ = 5
+//│ = 6
 
 set xs.("lol") = "wat"
 
 xs
-//│ = [5, 2, 3]
+//│ = [6, 2, 3]
 
 
 class Foo(val x)

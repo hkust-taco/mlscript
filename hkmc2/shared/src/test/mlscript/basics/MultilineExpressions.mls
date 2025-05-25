@@ -1,0 +1,233 @@
+:js
+
+
+2 * 2 + 1
+//│ = 5
+
+2 *
+  2 + 1
+//│ = 6
+
+2 *
+  2 +
+  1
+//│ = 6
+
+
+fun (**) f1(a, b) = "[" + a + " * " + b + "]"
+fun (++) f2(a, b) = "(" + a + " + " + b + ")"
+
+
+1 ** 2 ++ 3
+//│ = "([1 * 2] + 3)"
+
+1 ** 2
+  ++ 3
+//│ = "([1 * 2] + 3)"
+
+1 ** 2
+  ++ 3
+  ++ 4
+//│ = "(([1 * 2] + 3) + 4)"
+
+1 ++ 2
+  ** 3
+  ** 4
+//│ = "(1 + [[2 * 3] * 4])"
+
+1 ++ 2
+  ** 3
+    ** 4
+//│ = "(1 + [[2 * 3] * 4])"
+
+// TODO warn or error on such operator blocks
+1 ++ 2
+  ** 3
+  ++ 4
+//│ = "((1 + [2 * 3]) + 4)"
+
+1 ++ 2
+    ** 3
+  ++ 4
+//│ = "((1 + [2 * 3]) + 4)"
+
+1 ++ 2
+    ** 3
+  ** 4
+//│ = "(1 + [[2 * 3] * 4])"
+
+
+// FIXME problematic elaboration? or not?
+:pt
+// :elt
+:sjs
+:re
+if 1 + 2
+  * 3 then 0
+//│ Parsed tree:
+//│ IfLike:
+//│   kw = keyword 'if'
+//│   kwLoc = N
+//│   split = InfixApp:
+//│     lhs = OpApp:
+//│       lhs = IntLit of 1
+//│       op = Ident of "+"
+//│       rhss = Ls of 
+//│         OpApp:
+//│           lhs = IntLit of 2
+//│           op = Ident of "*"
+//│           rhss = Ls of 
+//│             IntLit of 3
+//│     kw = keyword 'then'
+//│     rhs = IntLit of 0
+//│ JS (unsanitized):
+//│ let scrut, tmp17;
+//│ tmp17 = 2 * 3;
+//│ scrut = 1 + tmp17;
+//│ if (scrut === true) {
+//│   0
+//│ } else {
+//│   throw new this.Error("match error");
+//│ }
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:pt
+:re
+if 1 * 2
+  + 3 then 0
+//│ Parsed tree:
+//│ IfLike:
+//│   kw = keyword 'if'
+//│   kwLoc = N
+//│   split = InfixApp:
+//│     lhs = OpApp:
+//│       lhs = OpApp:
+//│         lhs = IntLit of 1
+//│         op = Ident of "*"
+//│         rhss = Ls of 
+//│           IntLit of 2
+//│       op = Ident of "+"
+//│       rhss = Ls of 
+//│         IntLit of 3
+//│     kw = keyword 'then'
+//│     rhs = IntLit of 0
+//│ ═══[RUNTIME ERROR] Error: match error
+
+// TODO perhaps we should just require parenthesizing (1 + 2) here
+:pe
+:e
+if 1 + 2
+  * 3 then 0
+  + 4 then 1
+//│ ╔══[PARSE ERROR] Operator cannot be used inside this operator split
+//│ ║  l.121: 	  + 4 then 1
+//│ ║         	  ^
+//│ ╟── as it has lower precedence than the splitting operator here
+//│ ║  l.120: 	  * 3 then 0
+//│ ╙──       	  ^
+//│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this operator split inner position
+//│ ║  l.121: 	  + 4 then 1
+//│ ║         	      ^^^^
+//│ ╟── Note: the operator split starts here
+//│ ║  l.120: 	  * 3 then 0
+//│ ╙──       	  ^
+//│ ╔══[ERROR] Unexpected infix use of 'then' keyword here
+//│ ║  l.119: 	if 1 + 2
+//│ ║         	       ^
+//│ ║  l.120: 	  * 3 then 0
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.121: 	  + 4 then 1
+//│ ╙──       	^^^^^
+
+:pt
+:re
+if (1 + 2)
+  * 3 then 0
+  + 4 then 1
+//│ Parsed tree:
+//│ IfLike:
+//│   kw = keyword 'if'
+//│   kwLoc = N
+//│   split = OpSplit:
+//│     lhs = Bra:
+//│       k = Round
+//│       inner = OpApp:
+//│         lhs = IntLit of 1
+//│         op = Ident of "+"
+//│         rhss = Ls of 
+//│           IntLit of 2
+//│     ops_rhss = Ls of 
+//│       InfixApp:
+//│         lhs = OpApp:
+//│           lhs = SplitPoint
+//│           op = Ident of "*"
+//│           rhss = Ls of 
+//│             IntLit of 3
+//│         kw = keyword 'then'
+//│         rhs = IntLit of 0
+//│       InfixApp:
+//│         lhs = OpApp:
+//│           lhs = SplitPoint
+//│           op = Ident of "+"
+//│           rhss = Ls of 
+//│             IntLit of 4
+//│         kw = keyword 'then'
+//│         rhs = IntLit of 1
+//│ ═══[RUNTIME ERROR] Error: match error
+
+if (1 + 2)
+  * 3 === 8 then 0
+  + 4 === 7 then 1
+//│ = 1
+
+if 1 + 0
+    == 0 then "X"
+    == 1 then "A"
+//│ = "A"
+
+if (1 + 1)
+    * 2 == 4 then "X"
+    * 2 == 1 then "A"
+    |> id is r then r
+//│ = "X"
+
+
+1 ++
+  2
+//│ = "(1 + 2)"
+
+// TODO reject – hard to read; should be a postfix op
+// But then what about versions with many indented lines? -> require putting the op at line starts
+1 ++
+2
+//│ = "(1 + 2)"
+
+// * Note that the argument to the first `++` is a self-contained block, thus implicitly parenthesized.
+1 ++
+  2 ++
+  3
+//│ = "(1 + (2 + 3))"
+
+1 ++
+2 ++
+3
+//│ = "((1 + 2) + 3)"
+
+1 ++
+  2 **
+  3
+//│ = "(1 + [2 * 3])"
+
+// * Note that the argument to `**` is a self-contained block, thus implicitly parenthesized.
+1 **
+  2 ++
+  3
+//│ = "[1 * (2 + 3)]"
+
+1 ++
+  2 ++
+  3 ++
+  4
+//│ = "(1 + ((2 + 3) + 4))"
+
+

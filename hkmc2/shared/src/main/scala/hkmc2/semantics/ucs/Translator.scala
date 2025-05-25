@@ -69,17 +69,16 @@ class Translator(val elaborator: Elaborator)(using State, Ctx) extends Desugarin
         Branch(scrut(), Pattern.Lit(IntLit(-value)), inner(Map.empty)) ~: Split.End
       case App(Ident("-"), Tup(DecLit(value) :: Nil)) =>
         Branch(scrut(), Pattern.Lit(DecLit(-value)), inner(Map.empty)) ~: Split.End
-      case App(Ident("~"), Tup(prefix :: postfix :: Nil)) =>
-        stringPrefix(scrut, prefix, (captures1, postfixScrut) =>
-          full(postfixScrut, postfix, captures2 => inner(captures2 ++ captures1)))
+      case prefix ~ postfix => stringPrefix(scrut, prefix, (captures1, postfixScrut) =>
+        full(postfixScrut, postfix, captures2 => inner(captures2 ++ captures1)))
       case Under() => inner(Map.empty)
       case ctor @ (_: Ident | _: Sel) =>
-        val ctorTrm = term(ctor, inAppPrefix = false)
+        val ctorTrm = term(ctor)
         val pattern = Pattern.ClassLike(ctorTrm, N, MatchMode.Default, false)(ctor)
         Branch(scrut(), pattern, inner(Map.empty)) ~: Split.End
       case App(ctor @ (_: Ident | _: Sel), Tup(params)) =>
         // TODO(rp/str): handle input params
-        val ctorTrm = term(ctor, inAppPrefix = false)
+        val ctorTrm = term(ctor)
         val pattern = Pattern.ClassLike(ctorTrm, N, MatchMode.Default, false)(ctor)
         Branch(scrut(), pattern, inner(Map.empty)) ~: Split.End
       case pat =>
@@ -111,13 +110,13 @@ class Translator(val elaborator: Elaborator)(using State, Ctx) extends Desugarin
       plainTest(callStringStartsWith(scrut(), Term.Lit(lit), "startsWith")):
         tempLet("sliced", callStringDrop(scrut(), value.length, "sliced")): slicedSym =>
           inner(Map.empty, () => slicedSym.ref())
-    case App(Ident("~"), Tup(prefix :: postfix :: Nil)) =>
+    case prefix ~ postfix =>
       stringPrefix(scrut, prefix, (captures1, postfixScrut1) =>
         stringPrefix(postfixScrut1, postfix, (captures2, postfixScrut2) =>
           inner(captures2 ++ captures1, postfixScrut2)))
     case Under() => inner(Map.empty, scrut) // TODO: check if this is correct
     case ctor @ (_: Ident | _: Sel) =>
-      val ctorTrm = term(ctor, inAppPrefix = false)
+      val ctorTrm = term(ctor)
       val prefixSymbol = new TempSymbol(N, "prefix")
       val postfixSymbol = new TempSymbol(N, "postfix")
       val mode = MatchMode.StringPrefix(prefixSymbol, postfixSymbol)

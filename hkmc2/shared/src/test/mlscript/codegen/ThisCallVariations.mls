@@ -32,10 +32,10 @@ fun (.) call(receiver, f)(arg) = f.call(receiver, arg)
 Example . oops(2)
 //│ Parsed tree:
 //│ App:
-//│   lhs = App:
-//│     lhs = Ident of "."
-//│     rhs = Tup of Ls of 
-//│       Ident of "Example"
+//│   lhs = OpApp:
+//│     lhs = Ident of "Example"
+//│     op = Ident of "."
+//│     rhss = Ls of 
 //│       Ident of "oops"
 //│   rhs = Tup of Ls of 
 //│     IntLit of 2
@@ -79,13 +79,13 @@ Example2(1). oops2(2). oops2(2)
 :todo
 new Example2(1)
   . oops2(2)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
+//│ ═══[RUNTIME ERROR] TypeError: tmp16 is not a constructor
 
 :todo
 new Example2(1)
   . oops2(2)
   . oops2(2)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
+//│ ═══[RUNTIME ERROR] TypeError: tmp21 is not a constructor
 
 
 // * Alternative syntax – precedence is now inappropriate
@@ -96,16 +96,16 @@ fun (.>) call(receiver, f)(arg) = f.call(receiver, arg)
 :re
 Example .> oops(2)
 //│ Parsed tree:
-//│ App:
-//│   lhs = Ident of ".>"
-//│   rhs = Tup of Ls of 
-//│     Ident of "Example"
+//│ OpApp:
+//│   lhs = Ident of "Example"
+//│   op = Ident of ".>"
+//│   rhss = Ls of 
 //│     App:
 //│       lhs = Ident of "oops"
 //│       rhs = Tup of Ls of 
 //│         IntLit of 2
 //│ JS (unsanitized):
-//│ let tmp23; tmp23 = runtime.safeCall(oops(2)); call1(Example1, tmp23)
+//│ let tmp22; tmp22 = runtime.safeCall(oops(2)); call1(Example1, tmp22)
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
 
 // * Note:
@@ -127,11 +127,10 @@ Example |>. oops(2)
 Example2(1) |>. oops2(2) |>. oops2(2)
 //│ = Example2(1)
 
-:fixme
 (Example2(1)
   |>. oops2(2)
   |>. oops2(2)
 ).a
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
+//│ = 1
 
 

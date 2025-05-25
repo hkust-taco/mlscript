@@ -48,6 +48,8 @@ fun mapping(xs, op) =
     else
       Result.Next of op(next.value)
 
+fun withMap(op) = _ mapping(op)
+
 fun flattening(xss) =
   Iterable of () =>
     let iterableIterator = getIterator of xss
@@ -88,11 +90,23 @@ fun filtering(xs, op) =
     else
       Result.Next of next.value
 
+fun withFilter(op) = _ filtering(op)
+
 fun taking(xs, n) =
-  let i = 0
+  let i = 1
   filtering of xs, _ =>
-    set i = i + 1
-    i <= n
+    i <= n &&
+      set i = i + 1
+
+fun withMax(n) = _ taking(n)
+
+fun dropping(xs, n) =
+  let i = 1
+  filtering of xs, _ =>
+    i > n &&
+      set i += 1
+
+fun withoutAtLeast(n) = _ dropping(n)
 
 fun zippingWithIndex(xs) =
   let i = 0
@@ -122,6 +136,8 @@ fun appended(xs, ys) =
           else Result.Next of next.value
         else Result.Done
       else Result.Next of next.value
+
+fun withAppended(xs) = _ appended(xs)
 
 fun reduced(xs, op) =
   let iterator = getIterator of xs

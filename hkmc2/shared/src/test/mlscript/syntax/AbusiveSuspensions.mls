@@ -1,0 +1,73 @@
+:js
+
+
+data class Ok[A](value: A)
+data class Error[A](value: A)
+type Result[A, B] = Ok[A] | Error[B]
+
+
+fun foo[A, B](expr1, expr2, expr3): Result[A, B] =
+  if expr1 is...
+  Error(b) then b
+  Ok(a) then...
+  if expr2 is...
+  Error(d) then d
+  Ok(c) then...
+  expr3
+
+foo(Ok(1), Ok(2), 3)
+//│ = 3
+
+foo(Ok(1), Error(2), 3)
+//│ = 2
+
+
+:pe
+:e
+fun foo(expr1) =
+  if expr1 is
+  Error(b) then b
+  Ok(a) then...
+  a
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
+//│ ║  l.28: 	  if expr1 is
+//│ ║        	             ^
+//│ ║  l.29: 	  Error(b) then b
+//│ ╙──      	^^
+//│ ╔══[ERROR] Unrecognized pattern split (‹erroneous syntax›).
+//│ ║  l.28: 	  if expr1 is
+//│ ║        	             ^
+//│ ║  l.29: 	  Error(b) then b
+//│ ╙──      	^^
+//│ ╔══[ERROR] Unexpected infix use of 'then' keyword here
+//│ ║  l.29: 	  Error(b) then b
+//│ ╙──      	  ^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Unexpected infix use of 'then' keyword here
+//│ ║  l.30: 	  Ok(a) then...
+//│ ║        	  ^^^^^^^^^^^^^
+//│ ║  l.31: 	  a
+//│ ╙──      	^^^
+
+fun foo(expr1) =
+  if expr1
+    is Error(b) then b
+    is Ok(a) then...
+    a
+
+:todo
+fun foo(expr1) =
+  if expr1
+  is Error(b) then b
+  is Ok(a) then...
+  a
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
+//│ ║  l.60: 	  is Error(b) then b
+//│ ╙──      	  ^^
+//│ ╔══[PARSE ERROR] Unexpected identifier here
+//│ ║  l.60: 	  is Error(b) then b
+//│ ╙──      	     ^^^^^
+//│ ╔══[ERROR] Unrecognized term split (identifier).
+//│ ║  l.59: 	  if expr1
+//│ ╙──      	     ^^^^^
+
+

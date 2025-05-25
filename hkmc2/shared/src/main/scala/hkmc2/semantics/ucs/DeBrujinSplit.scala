@@ -22,7 +22,7 @@ object DeBrujinSplit:
     /** Resolve the constructor in the elaborator context. */
     def resolve(ctor: Ident | Sel, params: Ls[Tree]): Opt[F] =
       val term = scoped("ucs:mute"):
-        elaborator.cls(ctor, inAppPrefix = false)
+        elaborator.cls(elaborator.term(ctor), inAppPrefix = false)
       term.symbol.flatMap(_.asClsLike).map:
         case symbol: (ClassSymbol | ModuleSymbol) =>
           val pattern = ClassLike(ConstructorLike.Symbol(symbol))
@@ -71,9 +71,6 @@ object DeBrujinSplit:
       * not found.
       */
     def dealWithCtor(ctor: Ident | Sel, params: Ls[Tree]): F = ctor match
-      case Ident("~") => (scrutinee, innermost, alternative) =>
-        Branch(scrutinee, ClassLike(ConstructorLike.StringJoin), innermost.increment(2), alternative)
-        alternative
       case Ident(ctorName) => patternParams.find(_.sym.name == ctorName) match
         case S(Param(sym = symbol)) => (scrutinee, innermost, alternative) =>
           log(s"found an input pattern: ${symbol.name}")
@@ -94,6 +91,9 @@ object DeBrujinSplit:
         val buildRight = go(rhs)
         val latter = buildRight(scrutinee, consequence, alternative)
         buildLeft(scrutinee, consequence, latter)
+      case lhs ~ rhs => (scrutinee, innermost, alternative) =>
+        Branch(scrutinee, ClassLike(ConstructorLike.StringJoin), innermost.increment(2), alternative)
+        alternative
       case Under() => (_, consequence, _) => consequence
       case ctor: (Ident | Sel) => dealWithCtor(ctor, Nil)
       case App(Ident("-"), Tup(IntLit(n) :: Nil)) =>
@@ -111,6 +111,7 @@ object DeBrujinSplit:
         (_, _, alternative) => alternative
       // END TODO: Support range patterns
       case App(ctor: (Ident | Sel), Tup(params)) => dealWithCtor(ctor, params)
+      case OpApp(lhs, op: Ident, rhs :: Nil) => dealWithCtor(op, Ls(lhs, rhs))
       case literal: syntax.Literal => Branch(_, Literal(literal), _, _)
       case Tree.TypeDef(syntax.Pat, body, N, N) => go(body)
     scoped("ucs:rp:elaborate"):
