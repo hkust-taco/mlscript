@@ -532,7 +532,6 @@ abstract class Parser(
   }
   
   
-  // TODO: rm `allowIndentedBlock`? Seems it can always be `true`
   def expr(prec: Int, allowNewlines: Bool)(using Line): Tree =
     val res = parseRule(prec,
         prefixRulesAllowIndentedBlock,
@@ -1056,7 +1055,7 @@ abstract class Parser(
         val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
         val res = App(acc, Tup(as).withLoc(S(loc)))
         exprCont(res, prec, allowNewlines = allowNewlines)
-      case (KEYWORD(kw @ Keyword.`of`), _) :: _ if prec <= AppPrec =>
+      case (KEYWORD(Keyword.`of`), _) :: _ if prec <= AppPrec =>
         consume
         val as = blockMaybeIndented
         val res = App(acc, Tup(as))
