@@ -192,7 +192,7 @@ class Translator(val elaborator: Elaborator)(using State, Ctx) extends Desugarin
   ):
     if patternParams.nonEmpty then
       // Temporarily disable the translation of pattern with pattern parameters.
-      // TODO(rp): pass pattern parameters as to the `unapply` function
+      // TODO(rp): pass pattern parameters as objects to the `unapply` function
       Nil
     else
       val unapply = scoped("ucs:cp"):
