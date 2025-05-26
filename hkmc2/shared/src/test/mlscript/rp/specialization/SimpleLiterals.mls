@@ -1,5 +1,7 @@
 :js
 
+open annotations { compile }
+
 pattern Zero = "0"
 pattern One = "1"
 pattern Two = "2"
@@ -12,13 +14,13 @@ fun checkZeroOneTwo(x) = if x is
   @compile Two then 2
   else ()
 //│ ╔══[ERROR] Unrecognized pattern split (annotated).
-//│ ║  l.10: 	  @compile Zero then 0
+//│ ║  l.12: 	  @compile Zero then 0
 //│ ╙──      	   ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern split (annotated).
-//│ ║  l.11: 	  @compile One then 1
+//│ ║  l.13: 	  @compile One then 1
 //│ ╙──      	   ^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern split (annotated).
-//│ ║  l.12: 	  @compile Two then 2
+//│ ║  l.14: 	  @compile Two then 2
 //│ ╙──      	   ^^^^^^^^^^^^^^^^^^
 //│ Normalized:
 //│ >  if then <error>

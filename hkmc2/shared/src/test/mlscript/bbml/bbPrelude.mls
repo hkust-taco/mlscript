@@ -44,7 +44,8 @@ declare module debug with
   fun printStack
   fun getLocals
 
-declare object compile
+declare module annotations with
+  object compile
 
 
 declare fun run: [T] -> CodeBase[out T, out Nothing, out Any] -> T

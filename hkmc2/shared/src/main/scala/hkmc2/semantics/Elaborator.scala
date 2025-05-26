@@ -130,9 +130,6 @@ object Elaborator:
       private def assumeBuiltinMod(nme: Str): ModuleSymbol =
         assumeBuiltin(nme).asMod.getOrElse(throw new NoSuchElementException(
           s"builtin module symbol $nme"))
-      private def assumeBuiltinObj(nme: Str): ModuleSymbol =
-        assumeBuiltin(nme).asObj.getOrElse(throw new NoSuchElementException(
-          s"builtin module symbol $nme"))
       val Unit = assumeBuiltinCls("Unit")
       val Int = assumeBuiltinCls("Int")
       val Num = assumeBuiltinCls("Num")
@@ -159,7 +156,8 @@ object Elaborator:
       object debug extends VirtualModule(assumeBuiltinMod("debug")):
         val printStack = assumeObject("printStack")
         val getLocals = assumeObject("getLocals")
-      val compile = assumeBuiltinObj("compile")
+      object annotations extends VirtualModule(assumeBuiltinMod("annotations")):
+        val compile = assumeObject("compile")
       def getBuiltinOp(op: Str): Opt[Str] =
         if getBuiltin(op).isDefined then builtinBinOps.get(op) else N
       /** Classes that do not use `instanceof` in pattern matching. */

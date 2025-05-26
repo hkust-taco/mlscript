@@ -162,12 +162,12 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
               normalizeExtractorPattern(scrutinee, pat, ctor, consequent, alternative)
             case MatchMode.StringPrefix(prefix, postfix) =>
               normalizeStringPrefixPattern(scrutinee, pat, ctor, postfix, consequent, alternative)
-            case MatchMode.Annotated(annotation) => annotation.symbol.flatMap(_.asObj) match
-              case S(symbol) if symbol === ctx.builtins.compile =>
+            case MatchMode.Annotated(annotation) => annotation.symbol match
+              case S(symbol) if symbol === ctx.builtins.annotations.compile =>
                 normalizeCompiledPattern(scrutinee, pat, ctor, argsOpt, mode, consequent, alternative)
               case S(_) =>
-                warn(msg"Unknown annotation on pattern" -> annotation.toLoc,
-                  msg"Note: only `@compile` is supported." -> N)
+                warn(msg"Unknown annotation on this pattern." -> annotation.toLoc,
+                  msg"Note: only `@compile` is supported as an annotation on patterns." -> N)
                 normalizeExtractorPattern(scrutinee, pat, ctor, consequent, alternative)
               case N =>
                 // Name resolution should have already reported an error. We
@@ -272,13 +272,13 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
   ): Unit = mode match
     case MatchMode.Default | _: MatchMode.StringPrefix => ()
     case MatchMode.Annotated(annotation) => annotation.symbol.flatMap(_.asObj) match
-      case S(symbol) if symbol === ctx.builtins.compile =>
+      case S(symbol) if symbol === ctx.builtins.annotations.compile =>
         warn(msg"Cannot compile `${ctorSymbol.name}`," -> Loc(annotation :: ctorTerm :: Nil),
           msg"because it is a ${ctorSymbol.tree.k.desc}." -> ctorSymbol.toLoc,
           msg"Note: only patterns can be compiled." -> N)
       case S(_) =>
-        warn(msg"Unknown annotation on pattern" -> annotation.toLoc,
-        msg"Note: only `@compile` is supported on patterns." -> N)
+        warn(msg"Unknown annotation on this ${ctorSymbol.tree.k.desc}." -> annotation.toLoc,
+        msg"Note: `@compile` is only supported on patterns." -> N)
       // `Resolver` should have already reported an error.
       case N => ()
   

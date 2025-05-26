@@ -1,25 +1,24 @@
 :js
 
+open annotations { compile }
+
 class Box()
 
 :w
 fun foo(x) = if x is @compile Box then "yes" else "no"
-//│ ╔══[WARNING] Cannot compile `Box`,
-//│ ║  l.6: 	fun foo(x) = if x is @compile Box then "yes" else "no"
-//│ ║       	                      ^^^^^^^^^^^
-//│ ╟── because it is a class.
-//│ ║  l.3: 	class Box()
-//│ ║       	      ^^^
-//│ ╙── Note: only patterns can be compiled.
+//│ ╔══[WARNING] Unknown annotation on this class.
+//│ ║  l.8: 	fun foo(x) = if x is @compile Box then "yes" else "no"
+//│ ║       	                      ^^^^^^^
+//│ ╙── Note: `@compile` is only supported on patterns.
 
 object do_not_compile
 
 :w
 fun foo(x) = if x is @do_not_compile Box then "yes" else "no"
-//│ ╔══[WARNING] Unknown annotation on pattern
-//│ ║  l.18: 	fun foo(x) = if x is @do_not_compile Box then "yes" else "no"
+//│ ╔══[WARNING] Unknown annotation on this class.
+//│ ║  l.17: 	fun foo(x) = if x is @do_not_compile Box then "yes" else "no"
 //│ ║        	                      ^^^^^^^^^^^^^^
-//│ ╙── Note: only `@compile` is supported on patterns.
+//│ ╙── Note: `@compile` is only supported on patterns.
 
 pattern Box' = Box
 
@@ -27,7 +26,7 @@ fun foo(x) = if x is @compile Box' then "yes" else "no"
 
 :w
 fun foo(x) = if x is @do_not_compile Box' then "yes" else "no"
-//│ ╔══[WARNING] Unknown annotation on pattern
-//│ ║  l.29: 	fun foo(x) = if x is @do_not_compile Box' then "yes" else "no"
+//│ ╔══[WARNING] Unknown annotation on this pattern.
+//│ ║  l.28: 	fun foo(x) = if x is @do_not_compile Box' then "yes" else "no"
 //│ ║        	                      ^^^^^^^^^^^^^^
-//│ ╙── Note: only `@compile` is supported.
+//│ ╙── Note: only `@compile` is supported as an annotation on patterns.
