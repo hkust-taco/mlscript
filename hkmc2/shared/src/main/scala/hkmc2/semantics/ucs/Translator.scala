@@ -122,25 +122,6 @@ class Translator(val elaborator: Elaborator)(using State, Ctx) extends Desugarin
       val mode = MatchMode.StringPrefix(prefixSymbol, postfixSymbol)
       val pattern = Pattern.ClassLike(ctorTrm, N, mode, false)(ctor)
       Branch(scrut(), pattern, inner(Map.empty, () => postfixSymbol.ref())) ~: Split.End
-      
-      // Because we don't resolve the symbol of `ctor` here, we don't know if
-      // it is a class, a module, or a pattern symbol. We no longer need to
-      // make the unapply branch here and it will be done in normalization.
-      // - - - - - //
-      // OLD CODE FOR REFERENCE:
-      // val clsTrm = elaborator.cls(ctor, inAppPrefix = false)
-      // clsTrm.symbol.flatMap(_.asClsLike) match
-      // case S(cls: (ClassSymbol | ModuleSymbol)) =>
-      //   val kind = cls match { case _: ClassSymbol => "class" case _ => "module" }
-      //   error(msg"Cannot treat this $kind as a string prefix" -> ctor.toLoc)
-      //   errorSplit
-      // case S(psym: PatternSymbol) =>
-      //   makeUnapplyStringPrefixBranch(scrut(), clsTrm, postfixSym =>
-      //     inner(Map.empty, () => postfixSym.ref())
-      //   )(Split.End)
-      // case _ =>
-      //   error(msg"Cannot use this ${ctor.describe} as an extractor" -> ctor.toLoc)
-      //   errorSplit
     case pat =>
       error(msg"Unrecognized pattern (${pat.describe})" -> pat.toLoc)
       errorSplit
