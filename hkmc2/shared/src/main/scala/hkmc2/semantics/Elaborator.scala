@@ -267,14 +267,6 @@ extends Importer:
         N
     case _ => N
   
-  /** To perform a reverse lookup for a term that references a symbol in the current context. */
-  def reference(target: ClassSymbol | ModuleSymbol): Ctxl[Opt[Term]] =
-    def go(ctx: Ctx): Opt[Term] =
-      ctx.env.values.collectFirst:
-        case elem if elem.symbol.flatMap(_.asClsLike).contains(target) => elem.ref(target.id)
-      .orElse(ctx.parent.flatMap(go))
-    go(ctx).map(Term.SynthSel(_, Ident("class"))(S(target)))
-  
   def cls(trm: Term, inAppPrefix: Bool)
       : Ctxl[Term]
       = trace[Term](s"Elab class ${trm}", r => s"~> $r"):
