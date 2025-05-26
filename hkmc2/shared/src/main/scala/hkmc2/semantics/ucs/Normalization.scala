@@ -279,7 +279,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
       case S(_) =>
         warn(msg"Unknown annotation on pattern" -> annotation.toLoc,
         msg"Note: only `@compile` is supported on patterns." -> N)
-      // Name resolution should have already reported an error.
+      // `Resolver` should have already reported an error.
       case N => ()
   
   private def normalizeExtractorPattern(
