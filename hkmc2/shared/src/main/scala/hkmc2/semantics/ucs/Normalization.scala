@@ -166,7 +166,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
               case S(symbol) if symbol === ctx.builtins.annotations.compile =>
                 normalizeCompiledPattern(scrutinee, pat, ctor, argsOpt, mode, consequent, alternative)
               case S(_) =>
-                warn(msg"The annotation is not supported here." -> annotation.toLoc,
+                warn(msg"This annotation is not supported here." -> annotation.toLoc,
                   msg"Note: Patterns (like `${pat.nme}`) only support the `@compile` annotation." -> N)
                 normalizeExtractorPattern(scrutinee, pat, ctor, consequent, alternative)
               case N =>
@@ -264,10 +264,10 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
     case MatchMode.Default | _: MatchMode.StringPrefix => ()
     case MatchMode.Annotated(annotation) => annotation.symbol match
       case S(symbol) if symbol === ctx.builtins.annotations.compile =>
-        warn(msg"`@compile` cannot annotate the ${ctorSymbol.tree.k.desc} instance pattern" -> annotation.toLoc,
-          msg"Note: The `@compile` annotation is intended for pattern compilation." -> N)
+        warn(msg"`@compile` cannot be used on ${ctorSymbol.tree.k.desc} instance patterns." -> annotation.toLoc,
+          msg"Note: The `@compile` annotation is for compiling pattern definitions." -> N)
       case S(_) =>
-        warn(msg"The annotation is not supported on the ${ctorSymbol.tree.k.desc} instance pattern." -> annotation.toLoc)
+        warn(msg"This annotation is not supported on ${ctorSymbol.tree.k.desc} instance patterns." -> annotation.toLoc)
       case N => () // `Resolver` should have already reported an error.
   
   private def normalizeExtractorPattern(
