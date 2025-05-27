@@ -166,8 +166,8 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
               case S(symbol) if symbol === ctx.builtins.annotations.compile =>
                 normalizeCompiledPattern(scrutinee, pat, ctor, argsOpt, mode, consequent, alternative)
               case S(_) =>
-                warn(msg"Unknown annotation on this pattern." -> annotation.toLoc,
-                  msg"Note: only `@compile` is supported as an annotation on patterns." -> N)
+                warn(msg"The annotation is not supported here." -> annotation.toLoc,
+                  msg"Note: Patterns (like `${pat.nme}`) only support the `@compile` annotation." -> N)
                 normalizeExtractorPattern(scrutinee, pat, ctor, consequent, alternative)
               case N =>
                 // Name resolution should have already reported an error. We
@@ -271,16 +271,13 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
       mode: MatchMode
   ): Unit = mode match
     case MatchMode.Default | _: MatchMode.StringPrefix => ()
-    case MatchMode.Annotated(annotation) => annotation.symbol.flatMap(_.asObj) match
+    case MatchMode.Annotated(annotation) => annotation.symbol match
       case S(symbol) if symbol === ctx.builtins.annotations.compile =>
-        warn(msg"Cannot compile `${ctorSymbol.name}`," -> Loc(annotation :: ctorTerm :: Nil),
-          msg"because it is a ${ctorSymbol.tree.k.desc}." -> ctorSymbol.toLoc,
-          msg"Note: only patterns can be compiled." -> N)
+        warn(msg"`@compile` cannot annotate the ${ctorSymbol.tree.k.desc} instance pattern" -> annotation.toLoc,
+          msg"Note: The `@compile` annotation is intended for pattern compilation." -> N)
       case S(_) =>
-        warn(msg"Unknown annotation on this ${ctorSymbol.tree.k.desc}." -> annotation.toLoc,
-        msg"Note: `@compile` is only supported on patterns." -> N)
-      // `Resolver` should have already reported an error.
-      case N => ()
+        warn(msg"The annotation is not supported on the ${ctorSymbol.tree.k.desc} instance pattern." -> annotation.toLoc)
+      case N => () // `Resolver` should have already reported an error.
   
   private def normalizeExtractorPattern(
       scrutinee: Term.Ref,
