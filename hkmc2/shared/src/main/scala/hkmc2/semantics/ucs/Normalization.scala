@@ -194,18 +194,9 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
   ): Bool =
     // Obtain the `classHead` used for error reporting and the parameter list
     // from the class definitions.
-    val (classHead, paramsOpt) =
-      // Unfortunately, class symbols of `MatchResult` and `MatchFailure`
-      // are forged in the elaborator state, so it does not have `defn`.
-      // TODO(ucs): do not make special case for them
-      if ctorSymbol == State.matchResultClsSymbol then
-        (ctorSymbol.id: Located) -> matchResultClassParamOpt
-      else if ctorSymbol == State.matchFailureClsSymbol then
-        (ctorSymbol.id: Located) -> matchFailureClassParamOpt
-      else
-        ctorSymbol.defn match
-          case N => lastWords(s"Class ${ctorSymbol.name} does not have a definition")
-          case S(cd) => ctorSymbol.id -> cd.paramsOpt
+    val (classHead, paramsOpt) = ctorSymbol.defn match
+      case N => lastWords(s"Class ${ctorSymbol.name} does not have a definition")
+      case S(cd) => ctorSymbol.id -> cd.paramsOpt
     paramsOpt match
       case S(paramList) => argsOpt match
         case S(args) =>

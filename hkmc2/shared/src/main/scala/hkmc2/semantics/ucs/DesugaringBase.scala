@@ -118,11 +118,3 @@ trait DesugaringBase(using Ctx, State):
         matchResultPattern(S(argSym :: Nil)),
         Split.Let(postfixSymbol, callTupleGet(argSym.ref().withIArgs(Nil), 0, "postfix"), inner)
       ) ~: fallback
-  
-  private lazy val fldFlagVal = FldFlags(false, false, false, false, true)
-  
-  protected lazy val matchResultClassParamOpt: Opt[ParamList] = S:
-    PlainParamList(Param(fldFlagVal, VarSymbol(Ident("captures")), N, Modulefulness(N)(false)) :: Nil)
-  
-  protected lazy val matchFailureClassParamOpt: Opt[ParamList] = S:
-    PlainParamList(Param(fldFlagVal, VarSymbol(Ident("errors")), N, Modulefulness(N)(false)) :: Nil)

@@ -212,10 +212,22 @@ object Elaborator:
       BlockMemberSymbol(id.name, Nil, true)
     val matchResultClsSymbol =
       val id = new Ident("MatchResult")
-      ClassSymbol(TypeDef(syntax.Cls, App(id, Tup(Ident("captures") :: Nil)), N, N), id)
+      val td = TypeDef(syntax.Cls, App(id, Tup(Ident("captures") :: Nil)), N, N)
+      val cs = ClassSymbol(td, id)
+      val flag = FldFlags.empty.copy(value = true)
+      val ps = PlainParamList(Param(flag, VarSymbol(Ident("captures")), N, Modulefulness(N)(false)) :: Nil)
+      cs.defn = S(ClassDef.Parameterized(N, syntax.Cls, cs, BlockMemberSymbol(cs.name, Nil),
+        Nil, ps, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N, Nil))
+      cs
     val matchFailureClsSymbol =
       val id = new Ident("MatchFailure")
-      ClassSymbol(TypeDef(syntax.Cls, App(id, Tup(Ident("errors") :: Nil)), N, N), id)
+      val td = TypeDef(syntax.Cls, App(id, Tup(Ident("errors") :: Nil)), N, N)
+      val cs = ClassSymbol(td, id)
+      val flag = FldFlags.empty.copy(value = true)
+      val ps = PlainParamList(Param(flag, VarSymbol(Ident("errors")), N, Modulefulness(N)(false)) :: Nil)
+      cs.defn = S(ClassDef.Parameterized(N, syntax.Cls, cs, BlockMemberSymbol(cs.name, Nil),
+        Nil, ps, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N, Nil))
+      cs
     val builtinOpsMap =
       val baseBuiltins = builtins.map: op =>
           op -> BuiltinSymbol(op,
