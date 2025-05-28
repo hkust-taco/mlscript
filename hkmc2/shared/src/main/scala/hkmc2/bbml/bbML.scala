@@ -196,11 +196,11 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
   private def wffuns(fs: Ls[FunType]) =
     val wf = fs.forall(f => (f.ret :: f.eff :: f.args).forall(wftype))
     wf && fs.combinations(2).forall: u =>
-      Type.disjoint(Type.discriminant(u.head.args), Type.discriminant(u.tail.head.args)).exists(_.isEmpty)
+      Type.disjoint(Type.discriminant(u.head.args), Type.discriminant(u.tail.head.args)).isEmpty
   private def wfrcds(rs: Ls[RcdType]) =
     val wf = rs.forall(_.fields.forall(u => wftype(u._2)))
     wf && rs.combinations(2).forall: u =>
-      Type.disjoint(u.head, u.tail.head).exists(_.isEmpty)
+      Type.disjoint(u.head, u.tail.head).isEmpty
   private def wfcls(cs: Ls[ClassLikeType]) =
     cs.forall(_.targs.forall(u => wftype(u.posPart) && wftype(u.negPart)))
   private def wftype(ty: GeneralType): Bool = ty match
@@ -209,7 +209,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
     case t: Type =>
       val n = t.!.toDnf.conjs
       val nf = n.iterator.map(_.i.v).forall:
-        case S(f: Ls[FunType]) => false
+        case S(f: (Ls[FunType] | RcdType)) => false
         case _ => true
       nf && wffuns(n.flatMap(_.u.fun)) && n.forall(c => wfrcds(c.u.rcd) && wfcls(c.u.cls))
 
@@ -341,7 +341,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
         case S(t) =>
           (path.filterNot: p =>
             p.find(_._1 === s).fold(false): u =>
-              Type.disjoint(u._2.!, cls).exists(_.isEmpty)) -> t
+              Type.disjoint(u._2.!, cls).isEmpty) -> t
       if r.isEmpty then typeSplitImpl(alts, sign, eff, br, path)
       else
         val ctx1 = ctx.nest
@@ -352,15 +352,14 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
         sv += s -> sty
         if p0.contains(Nil) then typeSplitImpl(alts, sign, eff, br, path)
         else
-          Type.disjoint(cls, sty) match
-            case N =>
+          Type.disjoint(cls, sty).foreach: k =>
+            if k.isEmpty then
               dss.foreach(c.commit)
               cs.foreach(u => constrain(u._1, u._2))
-            case S(k) =>
-              if k.nonEmpty then k.foreach: k =>
-                val ks = LinkedHashSet.from(k)
-                dss.foreach(d => c.commit(DisjSub(ks ++ d.disjoint, d.dss, d.cs)))
-                if cs.nonEmpty then c.commit(DisjSub(ks, Nil, cs.toList))
+            else
+              val ks = LinkedHashSet.from(k)
+              dss.foreach(d => c.commit(DisjSub(ks ++ d.disjoint, d.dss, d.cs)))
+              if cs.nonEmpty then c.commit(DisjSub(ks, Nil, cs.toList))
           val p = path.flatMap(x => p0.map: y =>
             val m = (x ++ y).groupMapReduce(_._1)(_._2)(_ | _)
             (x.keys ++ y.keys).distinct.map(k => k -> m(k)).toList)
@@ -400,19 +399,19 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
       nc.constrain(termEff, eff)
       path.foreach: p =>
         val m = p.toMap
-        val d = p.flatMap { case (s, t) => sv.get(s).flatMap(st => Type.disjoint(t.!, st)) }
+        val d = p.flatMap { case (s, t) => sv.get(s).map(st => Type.disjoint(t.!, st)) }
         val sc = sv.toList.map:
           case (s, t) =>
             val v = nestCtx.get(s.sym).get
             (m.getOrElse(s, Bot).! & t, monoOrErr(v, s))
-        if d.isEmpty then
+        val ds = d.foldLeft(Set(Set.empty[InfVar -> BasicType]))((x, y) => y.flatMap(y => x.map(_ ++ y)))
+        if ds.exists(_.isEmpty) then
           dss.foreach(c.commit(_))
           (sc ++ cs).distinct.foreach(u => constrain(u._1, u._2))
-        else
-          val ds = d.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
-            val ks = LinkedHashSet.from(k)
-            dss.foreach(d => c.commit(DisjSub(ks ++ d.disjoint, d.dss, d.cs)))
-            c.commit(DisjSub(ks, Nil, (sc ++ cs).distinct))
+        else ds.foreach: k =>
+          val ks = LinkedHashSet.from(k)
+          dss.foreach(d => c.commit(DisjSub(ks ++ d.disjoint, d.dss, d.cs)))
+          c.commit(DisjSub(ks, Nil, (sc ++ cs).distinct))
       typeSplitImpl(tail, sign, eff, br, path)
     case Split.Else(e) =>
       val (nc, dss, cs) = constraintCollector
@@ -423,32 +422,31 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Config):
       nc.constrain(ascribe(e, sign)(using ctx1, c = nc)._2, eff)
       path.foreach: p =>
         val m = p.toMap
-        val d = p.flatMap { case (s, t) => sv.get(s).flatMap(st => Type.disjoint(t.!, st)) }
+        val d = p.flatMap { case (s, t) => sv.get(s).map(st => Type.disjoint(t.!, st)) }
         val sc = sv.toList.map:
           case (s, t) =>
             val v = ctx1.get(s.sym).get
             (m.getOrElse(s, Bot).! & t, monoOrErr(v, s))
-        if d.isEmpty then
+        val ds = d.foldLeft(Set(Set.empty[InfVar -> BasicType]))((x, y) => y.flatMap(y => x.map(_ ++ y)))
+        if ds.exists(_.isEmpty) then
           dss.foreach(c.commit(_))
           (sc ++ cs).distinct.foreach(u => constrain(u._1, u._2))
-        else
-          val ds = d.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
-            val ks = LinkedHashSet.from(k)
-            dss.foreach(d => c.commit(DisjSub(ks ++ d.disjoint, d.dss, d.cs)))
-            c.commit(DisjSub(ks, Nil, (sc ++ cs).distinct))
+        else ds.foreach: k =>
+          val ks = LinkedHashSet.from(k)
+          dss.foreach(d => c.commit(DisjSub(ks ++ d.disjoint, d.dss, d.cs)))
+          c.commit(DisjSub(ks, Nil, (sc ++ cs).distinct))
       Nil
     case Split.End =>
       if !br then
         path.foreach: p =>
           val m = p.toMap
-          val d = p.flatMap { case (s, t) => Type.disjoint(t.!, sv(s)) }
-          if d.isEmpty then
-            constrain(Top, Bot)
-          else
-            val ds = d.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
-              val c0 = Ls(Top -> Bot)
-              val ks = LinkedHashSet.from(k)
-              c.commit(DisjSub(ks, Nil, c0))
+          val d = p.map { case (s, t) => Type.disjoint(t.!, sv(s)) }
+          val ds = d.foldLeft(Set(Set.empty[InfVar -> BasicType]))((x, y) => y.flatMap(y => x.map(_ ++ y)))
+          if ds.exists(_.isEmpty) then constrain(Top, Bot)
+          else ds.foreach: k =>
+            val c0 = Ls(Top -> Bot)
+            val ks = LinkedHashSet.from(k)
+            c.commit(DisjSub(ks, Nil, c0))
       Ls(Nil)
 
   private def typeSplit

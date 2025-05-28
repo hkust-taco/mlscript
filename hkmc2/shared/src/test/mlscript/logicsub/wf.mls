@@ -123,13 +123,30 @@ wf(1)
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: Int
 
-// function negation is not wf
+// function negation and record negation are not wf
 
 :e
 fun ill: ~(Int -> Int)
 //│ ╔══[ERROR] Ill-formed type
 //│ ║  l.129: 	fun ill: ~(Int -> Int)
 //│ ╙──       	           ^^^^^^^^^^
+//│ Type: ⊤
+
+:e
+fun ill: ~[a: Int]
+//│ ╔══[ERROR] Ill-formed type
+//│ ║  l.136: 	fun ill: ~[a: Int]
+//│ ╙──       	          ^^^^^^^^
+//│ Type: ⊤
+
+:e
+fun ill: (([a: Int]) -> Int) & (~[a: Int] -> ~Int)
+//│ ╔══[ERROR] Ill-formed type
+//│ ║  l.143: 	fun ill: (([a: Int]) -> Int) & (~[a: Int] -> ~Int)
+//│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Type: ⊤
+
+fun wf: (([a: Int]) -> Int) & (([a: ~Int]) -> ~Int)
 //│ Type: ⊤
 
 // class declaration has no wf check
@@ -142,7 +159,7 @@ class F(f: (Int -> Int) & (Int -> Any))
 :e
 fun k(f)=f.F#f
 //│ ╔══[ERROR] Ill-formed type
-//│ ║  l.137: 	class F(f: (Int -> Int) & (Int -> Any))
+//│ ║  l.154: 	class F(f: (Int -> Int) & (Int -> Any))
 //│ ╙──       	            ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
@@ -155,7 +172,7 @@ class Tri[A, B, C](val a: A, val b: B, val c: C)
 :e
 fun ill: (Pair[Int, Int] -> Int) & (Pair[Str, Str] -> Str)
 //│ ╔══[ERROR] Ill-formed type
-//│ ║  l.156: 	fun ill: (Pair[Int, Int] -> Int) & (Pair[Str, Str] -> Str)
+//│ ║  l.173: 	fun ill: (Pair[Int, Int] -> Int) & (Pair[Str, Str] -> Str)
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 

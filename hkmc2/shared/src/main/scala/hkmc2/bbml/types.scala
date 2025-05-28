@@ -309,53 +309,44 @@ object Type:
     case _ => Top
   def discriminant(t: Type)(using TL): BasicType =
     t.toDnf.conjs.foldLeft(Bot: Type)((x, y) => x | discriminantIU(y.i, y.u)).simp.toBasic
-  def disjointIU(i: Inter, u: Union)(using TL): Opt[Set[Set[InfVar -> BasicType]]] = (i.v, u.cls, u.rcd) match
-    case (S(c: ClassLikeType), cs, _) if cs.exists(_.name.uid === c.name.uid) => S(Set.empty)
+  def disjointIU(i: Inter, u: Union)(using TL): Set[Set[InfVar -> BasicType]] = (i.v, u.cls, u.rcd) match
+    case (S(c: ClassLikeType), cs, _) if cs.exists(_.name.uid === c.name.uid) => Set.empty
     case (S(RcdType(u)), _, rs) =>
-      val k = u.values.flatMap(t => disjointDisj(t.toDnf)).toList
-      val rd =
-        if rs.isEmpty then Nil
-        else
-          val um = u.toMap
-          val p = rs.foldLeft[Ls[Ls[Str -> Type]]](Ls(Nil)): (p, w) =>
-            if w.fields.keys.forall(um.contains) then p.flatMap(x => w.fields.map(_ :: x)) else p
-          p.map: p =>
-            val m = p.groupMapReduce(_._1)(_._2)(_ | _)
-            val d = p.keys.distinct.flatMap(a => Type.disjoint(m(a).!, um(a)))
-            if d.isEmpty then N
-            else S(d.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))))
-      if k.isEmpty then
-        if rd.isEmpty || rd.contains(N) then N else S(rd.flatten.flatten.toSet)
-      else if k.exists(_.isEmpty) then S(Set.empty)
-      else
-        if rd.contains(N) then N
-        else S(k.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))) ++ rd.flatten.flatten)
-    case _ => N
-  def disjointConj(ty: Conj)(using TL): Opt[Set[Set[InfVar -> BasicType]]] =
+      val k = u.iterator.map(u => u._1 -> disjointDisj(u._2.toDnf)).toMap
+      val p = rs.foldLeft[Ls[Ls[Str -> Type]]](Ls(Nil)): (p, w) =>
+        if w.fields.keys.forall(k.contains) then p.flatMap(x => w.fields.map(_ :: x)) else p
+      val rd = p.flatMap: p =>
+        val m = p.groupMapReduce(_._1)(_._2)(_ | _)
+        val d = u.map:
+          case (a, t) => m.get(a).fold(k(a))(q => Type.disjoint(q.!, t))
+        d.foldLeft(Set(Set.empty[InfVar -> BasicType]))((x, y) => y.flatMap(y => x.map(_ ++ y)))
+      if rd.exists(_.isEmpty) then Set(Set.empty) else rd.toSet
+    case _ => Set(Set.empty)
+  def disjointConj(ty: Conj)(using TL): Set[Set[InfVar -> BasicType]] =
     val d = disjointIU(ty.i, ty.u)
-    if d.exists(_.isEmpty) then S(Set.empty)
+    if d.isEmpty then Set.empty
     else (ty.i.v, ty.u.cls, ty.u.rcd, ty.vars.iterator.filter(_._2).keys.toList) match
       case (_, _, _, Nil) => d
       case (N, Nil, Nil, v :: Nil) =>
-        val lb = v.state.lowerBounds.reduceOption(_ | _).orElse(S(Bot)).get
-        disjointDisj(lb.toDnf).map(_ + Set(v -> v))
+        val lb = v.state.lowerBounds.foldLeft(Bot: Type)(_ | _)
+        disjointDisj(lb.toDnf) + Set(v -> v)
       case (i, c, r, vs) =>
         val j = i match
           case S(ClassLikeType(c, _)) => S(ClassLikeType(c, Nil))
           case S(u: RcdType) => S(u)
           case _ => N
-        val vd = vs.combinations(2).collect { case x :: y :: _ => Ls(x -> y, y -> x) }.flatten.toList
+        val vd = vs.combinations(2).collect { case x :: y :: _ => Ls(x -> y) }.flatten.toList
         val ds = vs.flatMap(v => (j ++ (c ++ r).reduceOption[Type](_ | _).map(_.!)).map(x => v -> x.toBasic)).toSet ++ vd
         val lb = vs.flatMap(_.state.lowerBounds.reduceOption[Type](_ | _)).reduceOption(_ & _).orElse(S(Bot)).get
         val t = lb & Conj(Inter(j), Union(N, c, Nil), Nil)
-        disjointDisj(t.toDnf).map(_ + ds)
-  def disjointDisj(t: Disj)(using TL): Opt[Set[Set[InfVar -> BasicType]]] =
-    if t.conjs.isEmpty then S(Set.empty)
+        disjointDisj(t.toDnf) + ds
+  def disjointDisj(t: Disj)(using TL): Set[Set[InfVar -> BasicType]] =
+    if t.conjs.isEmpty then Set.empty
     else
-      val ds = t.conjs.map(disjointConj)
-      if ds.contains(N) then N
-      else S(ds.flatten.flatten.toSet)
-  def disjoint(a: Type, b: Type)(using TL): Opt[Set[Set[InfVar->BasicType]]] =
+      val ds = t.conjs.flatMap(disjointConj)
+      if ds.exists(_.isEmpty) then Set(Set.empty)
+      else ds.toSet
+  def disjoint(a: Type, b: Type)(using TL): Set[Set[InfVar -> BasicType]] =
     disjointDisj((a & b).toDnf)
 
 
@@ -483,9 +474,11 @@ case class DisjSub(disjoint: LinkedHashSet[InfVar -> BasicType], dss: Ls[DisjSub
     if disjoint.isEmpty then (Nil, Nil)
     else
       disjoint.keys.foreach(_.state.disjsub -= this)
-      val d = disjoint.toList.flatMap: u =>
-        m.get(u._1).fold(S(Set(Set(u._1 -> u._2)))): t =>
-          Type.disjoint(u._2, t | u._1).orElse { disjoint -= u; N }
+      val d = disjoint.toList.map: u =>
+        m.get(u._1).fold(Set(Set(u._1 -> u._2))): t =>
+          val k = Type.disjoint(u._2, t | u._1)
+          k.foreach(x => if x.isEmpty then disjoint -= u)
+          k
       if disjoint.isEmpty then
         val (dss0, cs0) = dss.map(_.check(m)).unzip
         (dss0.flatten, cs0.flatten ++ cs)

@@ -79,6 +79,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
       })
     case ft @ FunType(args, ret, eff) =>
       FunType(args.map(arg => extrude(arg)(using lvl, !pol)), extrude(ret), extrude(eff))
+    case RcdType(u) => RcdType(u.mapValues(extrude))
     case ComposedType(lhs, rhs, p) =>
       Type.mkComposedType(extrude(lhs), extrude(rhs), p)
     case NegType(ty) => Type.mkNegType(extrude(ty)(using lvl, !pol))
@@ -129,15 +130,15 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
           else
             val q = ws.foldLeft(Bot: Type): (q, w) =>
               val wq = Type.discriminant(w)
-              Type.disjoint(wq, u) match
-                case N => constrainImpl(u & wq, w)
-                case S(k) => k.foreach(k => DisjSub(mutable.LinkedHashSet.from(k), Nil, Ls(wq -> w)).commit())
+              Type.disjoint(wq, u).foreach: k =>
+                if k.isEmpty then constrainImpl(u & wq, w)
+                else DisjSub(mutable.LinkedHashSet.from(k), Nil, Ls(wq -> w)).commit()
               q | wq
-            Type.disjoint(q.!, u) match
-              case N => constrainImpl(Top, Bot)
-              case S(k) => k.foreach(k => DisjSub(mutable.LinkedHashSet.from(k), Nil, Ls(Top -> Bot)).commit())
+            Type.disjoint(q.!, u).foreach: k =>
+              if k.isEmpty then constrainImpl(Top, Bot)
+              else DisjSub(mutable.LinkedHashSet.from(k), Nil, Ls(Top -> Bot)).commit()
         case (Inter(S(fs: Ls[FunType])), Union(S(FunType(args2, ret2, eff2)), Nil, Nil)) =>
-          val k = args2.flatMap(x => Type.disjoint(x, x))
+          val k = args2.map(x => Type.disjoint(x, x))
           if k.forall(_.nonEmpty) then
             val f = fs.filter(_.args.length === args2.length)
             if args2.isEmpty then
@@ -152,13 +153,13 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
               val args2q = RcdType(args2r)
               val (cs, dss) = (args.iterator.map(Type.discriminant).zip(f).map:
                 case (q, f) =>
-                  val cs = (f.ret, ret2) :: (f.eff, eff2) :: Nil //rcs
-                  Type.disjoint(q, args2q) match
-                    case N => (cs, Nil)
-                    case S(k) =>
-                      (Nil, k.map(k => DisjSub(mutable.LinkedHashSet.from(k), Nil, cs)))).toList.unzip
+                  val cs = (f.ret, ret2) :: (f.eff, eff2) :: Nil
+                  val ds = Type.disjoint(q, args2q)
+                  if ds.exists(_.isEmpty) then (cs, Nil)
+                  else (Nil, ds.map(k => DisjSub(mutable.LinkedHashSet.from(k), Nil, cs)))).toList.unzip
               val c = (args2q, args.foldLeft(Bot: Type)(_ | _))
-              if k.isEmpty then
+              val u = k.foldLeft(Set(Set.empty[InfVar -> BasicType]))((x, y) => y.flatMap(y => x.map(_ ++ y)))
+              if u.exists(_.isEmpty) then
                 if f.isEmpty then
                   cctx.err
                 else
@@ -168,8 +169,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
               else
                 val cs0 = c :: cs.flatten
                 val dss0 = dss.flatten
-                k.reduce((x, y) => y.flatMap(y => x.map(_ ++ y))).foreach: k =>
-                  DisjSub(mutable.LinkedHashSet.from(k), dss0, cs0).commit()
+                u.foreach(k => DisjSub(mutable.LinkedHashSet.from(k), dss0, cs0).commit())
         case _ =>
           // raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
           cctx.err
