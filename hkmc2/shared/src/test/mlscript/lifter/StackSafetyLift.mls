@@ -132,13 +132,13 @@ sum(10000)
 //│     return res2
 //│   } 
 //│   resume(value$) {
-//│     let curDepth, tmp;
+//│     let curDepth;
 //│     curDepth = runtime.stackDepth;
 //│     if (this.pc === 1) {
 //│       this.tmp$2 = value$;
 //│     }
 //│     contLoop: while (true) {
-//│       tmp = runtime.resetDepth(tmp, curDepth);
+//│       runtime.stackDepth = curDepth;
 //│       if (this.pc === 0) {
 //│         runtime.skipOnce = true;
 //│         return sum1(this.n$0)
@@ -178,7 +178,7 @@ sum(10000)
 //│   } else {
 //│     tmp = n - 1;
 //│     tmp1 = sum1(tmp);
-//│     tmp1 = runtime.resetDepth(tmp1, curDepth);
+//│     runtime.stackDepth = curDepth;
 //│     if (tmp1 instanceof runtime.EffectSig.class) {
 //│       return doUnwind$1(n, tmp, tmp1, tmp1, 1)
 //│     }

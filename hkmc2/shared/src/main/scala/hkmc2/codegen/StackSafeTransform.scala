@@ -19,7 +19,6 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
 
   private val runtimePath: Path = State.runtimeSymbol.asPath
   private val checkDepthPath: Path = runtimePath.selN(Tree.Ident("checkDepth"))
-  private val resetDepthPath: Path = runtimePath.selN(Tree.Ident("resetDepth"))
   private val runStackSafePath: Path = runtimePath.selN(Tree.Ident("runStackSafe"))
   private val stackDepthPath: Path = runtimePath.selN(STACK_DEPTH_IDENT)
 
@@ -36,7 +35,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
       val tmp = sym getOrElse TempSymbol(None, "tmp")
       blockBuilder
         .assign(tmp, res)
-        .assign(tmp, Call(resetDepthPath, tmp.asPath.asArg :: curDepth.asPath.asArg :: Nil)(true, false))
+        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, curDepth.asPath)
         .rest(f(tmp.asPath))
   
   def wrapStackSafe(body: Block, resSym: Local, rest: Block) =

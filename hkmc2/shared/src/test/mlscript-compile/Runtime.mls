@@ -365,10 +365,6 @@ fun checkDepth() =
   else
     ()
 
-fun resetDepth(tmp, curDepth) =
-  set stackDepth = curDepth
-  tmp
-
 fun runStackSafe(limit, f) =
   set
     stackLimit = limit

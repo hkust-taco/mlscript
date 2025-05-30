@@ -404,9 +404,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     else restStates
   
   private val runtimePath = State.runtimeSymbol.asPath
-  private val resetDepthPath: Path = runtimePath.selN(Tree.Ident("resetDepth"))
   private val skipOncePath: Path = runtimePath.selN(Tree.Ident("skipOnce"))
-  private val stackDepthPath: Path = runtimePath.selN(Tree.Ident("stackDepth"))
+  private val stackDepthIdent = new Tree.Ident("stackDepth")
+  private val stackDepthPath: Path = runtimePath.selN(stackDepthIdent)
   private val fnLocalsPath: Path = runtimePath.selSN("FnLocalsInfo").selSN("class")
   private val localVarInfoPath: Path = runtimePath.selSN("LocalVarInfo").selSN("class")
   private def createGetLocalsFn(b: Block, extraLocals: Set[Local])(using h: HandlerCtx) =
@@ -773,7 +773,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       val tmp = freshTmp()
       val withResetDepth =
         if opt.stackSafety.isDefined && !trivial then
-          Assign(tmp, PureCall(resetDepthPath, tmp.asPath :: depthSym.asPath :: Nil), mainMatchBlk)
+          AssignField(runtimePath, stackDepthIdent, depthSym.asPath, mainMatchBlk)(N)
         else mainMatchBlk
 
       val lbl = blockBuilder.label(loopLbl, withResetDepth).rest(End())

@@ -796,30 +796,26 @@ let Runtime1;
       }
     }
   } 
-  static resetDepth(tmp, curDepth) {
-    Runtime.stackDepth = curDepth;
-    return tmp
-  } 
   static runStackSafe(limit, f1) {
-    let result, scrut, saved, tmp1, tmp2, tmp3;
+    let result, scrut, saved, tmp, tmp1, tmp2;
     Runtime.stackLimit = limit;
     Runtime.stackDepth = 1;
     Runtime.stackHandler = Runtime.StackDelayHandler;
     Runtime.skipOnce = false;
-    tmp1 = Runtime.enterHandleBlock(Runtime.StackDelayHandler, f1);
-    result = tmp1;
+    tmp = Runtime.enterHandleBlock(Runtime.StackDelayHandler, f1);
+    result = tmp;
     Runtime.stackDepth = 1;
-    tmp4: while (true) {
+    tmp3: while (true) {
       scrut = Runtime.stackResume !== null;
       if (scrut === true) {
         saved = Runtime.stackResume;
         Runtime.stackResume = null;
-        tmp2 = runtime.safeCall(saved());
-        result = tmp2;
-        tmp3 = runtime.Unit;
-        continue tmp4;
+        tmp1 = runtime.safeCall(saved());
+        result = tmp1;
+        tmp2 = runtime.Unit;
+        continue tmp3;
       } else {
-        tmp3 = runtime.Unit;
+        tmp2 = runtime.Unit;
       }
       break;
     }
